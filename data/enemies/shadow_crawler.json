@@ -1,0 +1,16 @@
+{
+    "id": "shadow_crawler",
+    "name": "Rampant d'Ombre",
+    "type": "melee",
+    "stats": {
+        "hp": 30,
+        "speed": 60,
+        "damage": 5,
+        "xp_reward": 10
+    },
+    "visual": {
+        "color": "#CC3333",
+        "shape": "square",
+        "size": 16
+    }
+}

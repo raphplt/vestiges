@@ -96,3 +96,4 @@ vestiges/
 - **Itérer vite, ne pas chercher la perfection.** Placeholders OK, code sale non. Un prototype propre vaut mieux qu'une architecture parfaite qui ne tourne pas.
 - **Un système à la fois.** Finir et valider un lot avant de passer au suivant.
 - **Tester le fun tôt.** Si ce n'est pas fun en placeholder, ça ne le sera pas en production.
+- **Checklist roadmap obligatoire.** Dans `doc/VESTIGES-ROADMAP.md`, cocher chaque case (`- [x]`) dès qu'un lot, un critère ou un rappel est validé.

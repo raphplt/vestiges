@@ -1,0 +1,8 @@
+{
+    "base_spawn_interval": 2.0,
+    "min_spawn_interval": 0.3,
+    "spawn_interval_decay_per_minute": 0.05,
+    "hp_scaling_per_minute": 1.08,
+    "damage_scaling_per_minute": 1.05,
+    "max_enemies_on_screen": 150
+}

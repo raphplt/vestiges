@@ -1,0 +1,14 @@
+{
+    "id": "recipe_id",
+    "name": "Nom de la structure",
+    "category": "defense",
+    "ingredients": [
+        { "resource": "wood", "amount": 5 },
+        { "resource": "stone", "amount": 3 }
+    ],
+    "build_time": 2.0,
+    "result": {
+        "scene": "res://scenes/structures/structure_id.tscn",
+        "stats": {}
+    }
+}

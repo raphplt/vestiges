@@ -1,0 +1,8 @@
+{
+    "id": "loot_table_id",
+    "entries": [
+        { "item": "xp_orb", "weight": 70, "min_amount": 1, "max_amount": 3 },
+        { "item": "wood", "weight": 20, "min_amount": 1, "max_amount": 2 },
+        { "item": "rare_fragment", "weight": 10, "min_amount": 1, "max_amount": 1 }
+    ]
+}

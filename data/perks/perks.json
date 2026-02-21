@@ -1,0 +1,56 @@
+[
+    {
+        "id": "damage_up",
+        "name": "Force Brute",
+        "description": "+15% dégâts",
+        "stat": "damage",
+        "modifier": 1.15,
+        "modifier_type": "multiplicative",
+        "max_stacks": 5
+    },
+    {
+        "id": "speed_up",
+        "name": "Pas Vif",
+        "description": "+10% vitesse de déplacement",
+        "stat": "speed",
+        "modifier": 1.10,
+        "modifier_type": "multiplicative",
+        "max_stacks": 5
+    },
+    {
+        "id": "hp_up",
+        "name": "Résilience",
+        "description": "+20 HP max",
+        "stat": "max_hp",
+        "modifier": 20,
+        "modifier_type": "additive",
+        "max_stacks": 5
+    },
+    {
+        "id": "attack_speed_up",
+        "name": "Frénésie",
+        "description": "+12% vitesse d'attaque",
+        "stat": "attack_speed",
+        "modifier": 1.12,
+        "modifier_type": "multiplicative",
+        "max_stacks": 5
+    },
+    {
+        "id": "extra_projectile",
+        "name": "Écho",
+        "description": "+1 projectile",
+        "stat": "projectile_count",
+        "modifier": 1,
+        "modifier_type": "additive",
+        "max_stacks": 3
+    },
+    {
+        "id": "aoe_up",
+        "name": "Onde",
+        "description": "+20% zone d'effet",
+        "stat": "aoe_radius",
+        "modifier": 1.20,
+        "modifier_type": "multiplicative",
+        "max_stacks": 4
+    }
+]

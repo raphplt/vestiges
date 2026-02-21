@@ -1,0 +1,9 @@
+{
+    "id": "biome_id",
+    "name": "Nom du biome",
+    "tile_palette": "res://assets/tiles/biome_id.tres",
+    "enemy_pool": ["shadow_crawler", "fading_spitter"],
+    "resource_pool": ["wood", "stone"],
+    "ambient_color": "#445566",
+    "danger_level": 1
+}
