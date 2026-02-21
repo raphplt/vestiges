@@ -77,24 +77,24 @@ Les niveaux de complexité servent à prioriser l'effort et le risque. Ils n'imp
 - [x] Résultat : le joueur se déplace et son personnage attaque automatiquement.
 
 **Lot 1.2 — Ennemis basiques (`Complexité : C3`)**
-- [ ] Créer 2 types d'ennemis (carré rouge = mêlée, triangle rouge = distance).
-- [ ] Les ennemis spawn autour du joueur en continu depuis un **object pool** (pas d'instanciation/destruction à chaque spawn).
-- [ ] Les ennemis se déplacent vers le joueur (pathfinding basique).
-- [ ] Les ennemis ont des HP, meurent (effet de désintégration en particules sombres — dès le prototype, même simple), droppent de l'XP (orbes dorées attirées vers le joueur).
-- [ ] Stats d'ennemis chargées depuis JSON (data-driven dès le départ).
-- [ ] Résultat : une arène infinie avec des ennemis qui spawn et se désagrègent.
+- [x] Créer 2 types d'ennemis (carré rouge = mêlée, triangle rouge = distance).
+- [x] Les ennemis spawn autour du joueur en continu depuis un **object pool** (pas d'instanciation/destruction à chaque spawn).
+- [x] Les ennemis se déplacent vers le joueur (pathfinding basique).
+- [x] Les ennemis ont des HP, meurent (effet de désintégration en particules sombres — dès le prototype, même simple), droppent de l'XP (orbes dorées attirées vers le joueur).
+- [x] Stats d'ennemis chargées depuis JSON (data-driven dès le départ).
+- [x] Résultat : une arène infinie avec des ennemis qui spawn et se désagrègent.
 
 **Lot 1.3 — XP et Level Up (`Complexité : C3`)**
-- [ ] Le joueur ramasse l'XP automatiquement (rayon d'attraction, comme VS/Megabonk).
-- [ ] Barre d'XP visible. Au level up → écran de choix de 3 perks.
-- [ ] Implémenter 6-8 perks basiques (dégâts+, vitesse+, HP+, vitesse d'attaque+, projectile supplémentaire, AoE).
-- [ ] Les perks s'appliquent immédiatement et se stackent.
-- [ ] Résultat : le joueur level up et sent la montée en puissance.
+- [x] Le joueur ramasse l'XP automatiquement (rayon d'attraction, comme VS/Megabonk).
+- [x] Barre d'XP visible. Au level up → écran de choix de 3 perks.
+- [x] Implémenter 6-8 perks basiques (dégâts+, vitesse+, HP+, vitesse d'attaque+, projectile supplémentaire, AoE).
+- [x] Les perks s'appliquent immédiatement et se stackent.
+- [x] Résultat : le joueur level up et sent la montée en puissance.
 
 **Lot 1.4 — Polish et test du fun (`Complexité : C2`)**
-- [ ] Score basique (kills).
-- [ ] HP du joueur + mort + écran de game over avec score.
-- [ ] Équilibrage basique (spawn rate, HP ennemis, scaling).
+- [x] Score basique (kills).
+- [x] HP du joueur + mort + écran de game over avec score.
+- [x] Équilibrage basique (spawn rate, HP ennemis, scaling).
 - [ ] **TEST CRITIQUE : est-ce que c'est fun ?** Faire tester à 2-3 personnes.
 - [ ] Résultat : un mini-jeu complet et jouable. La boucle combat est validée (ou pas → itérer).
 

@@ -1,8 +1,17 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=14 format=3]
 
 [ext_resource type="TileSet" path="res://assets/tiles/iso_tileset.tres" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/Player.tscn" id="2"]
 [ext_resource type="Script" path="res://scripts/World/WorldSetup.cs" id="3"]
+[ext_resource type="Script" path="res://scripts/Spawn/EnemyPool.cs" id="4"]
+[ext_resource type="Script" path="res://scripts/Spawn/SpawnManager.cs" id="5"]
+[ext_resource type="Script" path="res://scripts/Progression/PlayerProgression.cs" id="6"]
+[ext_resource type="Script" path="res://scripts/Progression/PerkManager.cs" id="7"]
+[ext_resource type="PackedScene" path="res://scenes/ui/HUD.tscn" id="8"]
+[ext_resource type="PackedScene" path="res://scenes/ui/LevelUpScreen.tscn" id="9"]
+[ext_resource type="Script" path="res://scripts/World/GameBootstrap.cs" id="10"]
+[ext_resource type="Script" path="res://scripts/Score/ScoreManager.cs" id="11"]
+[ext_resource type="PackedScene" path="res://scenes/ui/GameOverScreen.tscn" id="12"]
 
 [node name="Main" type="Node2D"]
 script = ExtResource("3")
@@ -17,3 +26,29 @@ tile_set = ExtResource("1")
 position_smoothing_enabled = true
 position_smoothing_speed = 5.0
 zoom = Vector2(2, 2)
+
+[node name="PlayerProgression" type="Node" parent="Player"]
+script = ExtResource("6")
+
+[node name="EnemyPool" type="Node" parent="."]
+script = ExtResource("4")
+
+[node name="EnemyContainer" type="Node2D" parent="."]
+
+[node name="SpawnManager" type="Node2D" parent="."]
+script = ExtResource("5")
+
+[node name="PerkManager" type="Node" parent="."]
+script = ExtResource("7")
+
+[node name="ScoreManager" type="Node" parent="."]
+script = ExtResource("11")
+
+[node name="HUD" parent="." instance=ExtResource("8")]
+
+[node name="LevelUpScreen" parent="." instance=ExtResource("9")]
+
+[node name="GameOverScreen" parent="." instance=ExtResource("12")]
+
+[node name="GameBootstrap" type="Node" parent="."]
+script = ExtResource("10")

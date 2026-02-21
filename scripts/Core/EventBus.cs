@@ -14,6 +14,8 @@ public partial class EventBus : Node
     // --- Combat ---
     [Signal] public delegate void EntityDamagedEventHandler(Node entity, float amount);
     [Signal] public delegate void EntityDiedEventHandler(Node entity);
+    [Signal] public delegate void EnemyKilledEventHandler(string enemyId, Vector2 position);
+    [Signal] public delegate void PlayerDamagedEventHandler(float currentHp, float maxHp);
 
     // --- Progression ---
     [Signal] public delegate void XpGainedEventHandler(float amount);
