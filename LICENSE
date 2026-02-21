@@ -1,0 +1,199 @@
+VESTIGES — Proprietary Source-Available License
+Version 1.0, February 2026
+
+Copyright (c) 2026 Raphaël Plassart
+Auto-entrepreneur — SIRET : 942 906 157
+All rights reserved. Tous droits réservés.
+
+=======================================================================
+
+DEFINITIONS
+
+"Software" refers to the video game VESTIGES, including all source code,
+scripts, configuration files, data files, documentation, and any other
+files contained in this repository or distributed alongside this license.
+
+"Assets" refers to all graphical assets, sprites, illustrations, icons,
+textures, audio files, music, sound effects, fonts, written content,
+narrative texts, game design documents, and any other creative works
+contained in this repository or distributed alongside this license.
+
+"Licensor" refers to Raphaël [NOM DE FAMILLE], sole author and rights
+holder of the Software and Assets, unless otherwise specified for
+individual Assets created by third-party contributors under separate
+agreements.
+
+"You" refers to any individual or legal entity accessing, viewing, or
+interacting with the Software or Assets.
+
+=======================================================================
+
+1. GRANT OF LIMITED RIGHTS
+
+Subject to the terms of this License, the Licensor grants You the
+following limited, non-exclusive, non-transferable, revocable rights:
+
+  a) RIGHT TO VIEW. You may view, read, and study the source code of
+     the Software for personal educational purposes only.
+
+  b) RIGHT TO FORK FOR CONTRIBUTION. You may fork this repository and
+     submit modifications back to the Licensor via pull requests or
+     patches. Any such contribution is subject to Section 4 below.
+
+=======================================================================
+
+2. RESTRICTIONS
+
+Unless You have obtained prior written authorization from the Licensor,
+You may NOT:
+
+  a) Use the Software or Assets, in whole or in part, for any commercial
+     purpose, including but not limited to selling, licensing,
+     sublicensing, renting, or offering the Software or Assets as part
+     of a paid product or service.
+
+  b) Copy, reproduce, distribute, publish, or make publicly available
+     the Software or Assets, in whole or in part, in any form or medium.
+
+  c) Modify, adapt, translate, or create derivative works based on the
+     Software or Assets for any purpose other than submitting
+     contributions back to the Licensor as described in Section 1(b).
+
+  d) Use the Software or Assets, in whole or in part, in any other
+     software, game, application, product, or project, whether
+     commercial or non-commercial.
+
+  e) Remove, alter, or obscure any copyright notice, license text,
+     trademark, or other proprietary marking contained in the Software
+     or Assets.
+
+  f) Use the name "VESTIGES", the game's logo, or any associated
+     trademarks for any purpose without prior written consent from
+     the Licensor.
+
+  g) Use any Asset created by a third-party contributor for any purpose
+     outside the context of this project, unless that contributor has
+     provided separate authorization.
+
+=======================================================================
+
+3. INTELLECTUAL PROPERTY
+
+  a) The Software and all associated intellectual property rights remain
+     the exclusive property of the Licensor.
+
+  b) Assets created by third-party contributors (including but not
+     limited to graphic designers, musicians, and sound designers)
+     remain the property of their respective authors unless a separate
+     intellectual property transfer agreement has been executed. In all
+     cases, the use of such Assets is restricted to this project and
+     governed by this License.
+
+  c) Nothing in this License shall be construed as granting You any
+     right, title, or interest in the Software, Assets, or any
+     associated intellectual property, except for the limited rights
+     expressly stated in Section 1.
+
+=======================================================================
+
+4. CONTRIBUTIONS
+
+  a) By submitting any contribution (code, documentation, data, or any
+     other material) to the Licensor, You agree to grant the Licensor
+     a perpetual, worldwide, non-exclusive, royalty-free, irrevocable
+     license to use, reproduce, modify, distribute, sublicense, and
+     otherwise exploit Your contribution in any form and for any
+     purpose, including commercial purposes, without compensation or
+     attribution obligations beyond those the Licensor may voluntarily
+     provide.
+
+  b) You represent and warrant that You are the sole author of Your
+     contribution, that You have the right to grant this license, and
+     that Your contribution does not infringe on the intellectual
+     property rights of any third party.
+
+  c) Contributions do not grant You any ownership right over the
+     Software, Assets, or project.
+
+=======================================================================
+
+5. DISCLAIMER OF WARRANTIES
+
+THE SOFTWARE AND ASSETS ARE PROVIDED "AS IS", WITHOUT WARRANTY OF ANY
+KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT.
+
+THE LICENSOR MAKES NO WARRANTY THAT THE SOFTWARE WILL BE ERROR-FREE,
+UNINTERRUPTED, OR FREE OF HARMFUL COMPONENTS.
+
+=======================================================================
+
+6. LIMITATION OF LIABILITY
+
+IN NO EVENT SHALL THE LICENSOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING BUT
+NOT LIMITED TO PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES, LOSS OF USE,
+DATA, OR PROFITS, OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+OR INABILITY TO USE THE SOFTWARE OR ASSETS, EVEN IF THE LICENSOR HAS
+BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
+
+=======================================================================
+
+7. TERMINATION
+
+  a) This License is effective until terminated. Your rights under this
+     License will terminate automatically and without notice if You
+     fail to comply with any of its terms.
+
+  b) Upon termination, You must immediately cease all use of the
+     Software and Assets and destroy all copies in Your possession.
+
+  c) The Licensor reserves the right to revoke this License at any time,
+     for any reason, with or without notice. Upon such revocation, You
+     must immediately comply with Section 7(b).
+
+  d) Sections 2, 3, 5, 6, and 8 shall survive any termination of this
+     License.
+
+=======================================================================
+
+8. GOVERNING LAW AND JURISDICTION
+
+This License shall be governed by and construed in accordance with the
+laws of France. Any dispute arising out of or in connection with this
+License shall be submitted to the exclusive jurisdiction of the courts
+of [VILLE — ex: Paris, Évry, etc.], France.
+
+=======================================================================
+
+9. MISCELLANEOUS
+
+  a) If any provision of this License is held to be unenforceable, such
+     provision shall be reformed only to the extent necessary to make it
+     enforceable, and the remaining provisions shall continue in full
+     force and effect.
+
+  b) The Licensor's failure to enforce any right or provision of this
+     License shall not constitute a waiver of such right or provision.
+
+  c) This License constitutes the entire agreement between You and the
+     Licensor with respect to the Software and Assets and supersedes
+     all prior or contemporaneous communications regarding its subject
+     matter.
+
+  d) The Licensor reserves the right to modify this License at any time.
+     Any modifications will apply to future access and use of the
+     Software and Assets. Continued access after modification
+     constitutes acceptance of the revised License.
+
+=======================================================================
+
+For licensing inquiries, commercial use requests, or any questions
+regarding this License, contact:
+
+Raphaël [NOM DE FAMILLE]
+[ADRESSE EMAIL]
+
+=======================================================================

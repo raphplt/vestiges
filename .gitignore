@@ -1,0 +1,31 @@
+# Godot 4 editor/cache
+.godot/
+
+# Godot 3 legacy cache (safe to ignore if ever present)
+.import/
+
+# Export presets (often machine/local-path specific)
+export_presets.cfg
+
+# .NET / C# build artifacts
+bin/
+obj/
+.mono/
+
+# IDE files
+.vs/
+.vscode/
+.idea/
+*.suo
+*.user
+*.userprefs
+*.csproj.user
+*.DotSettings.user
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs / temp
+*.log
+*.tmp
