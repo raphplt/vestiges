@@ -38,28 +38,28 @@ Les niveaux de complexité servent à prioriser l'effort et le risque. Ils n'imp
 ### Tâches
 
 **Lot 0.1 — Apprendre Godot (`Complexité : C2`)**
-- [ ] Installer Godot 4 avec le support C# (version stable.mono).
-- [ ] Moteur de rendu : **Compatibilité** (OpenGL, optimal pour la 2D, meilleure compatibilité hardware).
+- [x] Installer Godot 4 avec le support C# (version stable.mono).
+- [x] Moteur de rendu : **Compatibilité** (OpenGL, optimal pour la 2D, meilleure compatibilité hardware).
 - [ ] Suivre 2-3 tutoriels officiels Godot (le "Getting Started" + un tuto isométrique).
 - [ ] Comprendre : Scenes, Nodes, Signals, TileMaps, le système de coordonnées iso, PointLight2D, CanvasModulate.
-- [ ] Résultat : un projet vide qui compile avec une scène de test.
+- [x] Résultat : un projet vide qui compile avec une scène de test.
 
 **Lot 0.2 — Mouvement isométrique (`Complexité : C3`)**
-- [ ] Créer un TileMap isométrique basique (tiles placeholder carrés/colorés).
-- [ ] Implémenter un personnage (carré) avec mouvement ZQSD en coordonnées isométriques.
-- [ ] Caméra qui suit le joueur avec un léger smoothing.
-- [ ] Résultat : le joueur se déplace fluidement sur une map iso.
+- [x] Créer un TileMap isométrique basique (tiles placeholder carrés/colorés).
+- [x] Implémenter un personnage (carré) avec mouvement ZQSD en coordonnées isométriques.
+- [x] Caméra qui suit le joueur avec un léger smoothing.
+- [x] Résultat : le joueur se déplace fluidement sur une map iso.
 
 **Lot 0.3 — Structure du projet (`Complexité : C2`)**
-- [ ] Mettre en place la structure de dossiers du projet (cf. Architecture v2.1 pour les couches logiques).
-- [ ] Mettre en place Git + .gitignore Godot. Branches : `main` ← `dev` ← `feature/xxx`.
-- [ ] Créer les premiers fichiers de données JSON (template pour les stats, les ennemis, les perks).
-- [ ] Documenter les conventions de code (nommage, architecture).
-- [ ] Mettre en place les autoloads essentiels : GameManager (machine d'états), EventBus (signaux typés).
-- [ ] Résultat : un projet propre, versionné, prêt à scaler.
+- [x] Mettre en place la structure de dossiers du projet (cf. Architecture v2.1 pour les couches logiques).
+- [x] Mettre en place Git + .gitignore Godot. Branches : `main` ← `dev` ← `feature/xxx`.
+- [x] Créer les premiers fichiers de données JSON (template pour les stats, les ennemis, les perks).
+- [x] Documenter les conventions de code (nommage, architecture).
+- [x] Mettre en place les autoloads essentiels : GameManager (machine d'états), EventBus (signaux typés).
+- [x] Résultat : un projet propre, versionné, prêt à scaler.
 
 ### Critère de validation
-- [ ] Je peux lancer le jeu, déplacer un carré sur une map iso, et la caméra suit. Le projet est sur Git avec la bonne structure. Les autoloads de base (GameManager, EventBus) existent.
+- [x] Je peux lancer le jeu, déplacer un carré sur une map iso, et la caméra suit. Le projet est sur Git avec la bonne structure. Les autoloads de base (GameManager, EventBus) existent.
 
 ---
 
@@ -71,10 +71,10 @@ Les niveaux de complexité servent à prioriser l'effort et le risque. Ils n'imp
 ### Tâches
 
 **Lot 1.1 — Auto-attaque (`Complexité : C2`)**
-- [ ] Le personnage a une auto-attaque (projectile simple ou frappe en arc selon l'arme).
-- [ ] L'attaque touche les ennemis et leur retire des HP.
-- [ ] Feedback visuel : flash de hit, nombre de dégâts qui pop.
-- [ ] Résultat : le joueur se déplace et son personnage attaque automatiquement.
+- [x] Le personnage a une auto-attaque (projectile simple ou frappe en arc selon l'arme).
+- [x] L'attaque touche les ennemis et leur retire des HP.
+- [x] Feedback visuel : flash de hit, nombre de dégâts qui pop.
+- [x] Résultat : le joueur se déplace et son personnage attaque automatiquement.
 
 **Lot 1.2 — Ennemis basiques (`Complexité : C3`)**
 - [ ] Créer 2 types d'ennemis (carré rouge = mêlée, triangle rouge = distance).
