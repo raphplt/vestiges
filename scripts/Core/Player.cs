@@ -10,6 +10,7 @@ public partial class Player : CharacterBody2D
     [Export] public float AttackSpeed = 1.0f;
     [Export] public float AttackRange = 300f;
     [Export] public float MaxHp = 100f;
+    [Export] public float BaseRegenRate = 0.5f;
 
     private float _currentHp;
     private bool _isDead;
@@ -65,6 +66,7 @@ public partial class Player : CharacterBody2D
         }
 
         MoveAndSlide();
+        ApplyRegen((float)delta);
     }
 
     public void ApplyPerkModifier(string stat, float value, string modifierType)
@@ -136,6 +138,17 @@ public partial class Player : CharacterBody2D
         {
             GetTree().Paused = true;
         }));
+    }
+
+    private void ApplyRegen(float delta)
+    {
+        if (_currentHp >= EffectiveMaxHp)
+            return;
+
+        _currentHp = Mathf.Min(_currentHp + BaseRegenRate * delta, EffectiveMaxHp);
+
+        EventBus eventBus = GetNode<EventBus>("/root/EventBus");
+        eventBus.EmitSignal(EventBus.SignalName.PlayerDamaged, _currentHp, EffectiveMaxHp);
     }
 
     private void HitFlash()

@@ -5,7 +5,7 @@
     "hp_scaling_per_minute": 1.08,
     "damage_scaling_per_minute": 1.05,
     "max_enemies_on_screen": 150,
-    "night_hp_multiplier": 1.25,
-    "night_damage_multiplier": 1.15,
-    "night_spawn_rate_multiplier": 0.85
+    "night_hp_multiplier": 1.20,
+    "night_damage_multiplier": 1.10,
+    "night_spawn_rate_multiplier": 0.88
 }
