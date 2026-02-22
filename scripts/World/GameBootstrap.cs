@@ -16,11 +16,13 @@ public partial class GameBootstrap : Node
         PlayerProgression progression = GetNode<PlayerProgression>("../Player/PlayerProgression");
         PerkManager perkManager = GetNode<PerkManager>("../PerkManager");
         ScoreManager scoreManager = GetNode<ScoreManager>("../ScoreManager");
+        DayNightCycle dayNightCycle = GetNode<DayNightCycle>("../DayNightCycle");
         HUD hud = GetNode<HUD>("../HUD");
         LevelUpScreen levelUpScreen = GetNode<LevelUpScreen>("../LevelUpScreen");
         GameOverScreen gameOverScreen = GetNode<GameOverScreen>("../GameOverScreen");
 
         hud.SetProgression(progression);
+        hud.SetDayNightCycle(dayNightCycle);
         levelUpScreen.SetPerkManager(perkManager);
         gameOverScreen.SetScoreManager(scoreManager);
 

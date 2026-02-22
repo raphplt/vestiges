@@ -1,0 +1,16 @@
+{
+    "id": "shade",
+    "name": "Ombre",
+    "type": "melee",
+    "stats": {
+        "hp": 10,
+        "speed": 100,
+        "damage": 3,
+        "xp_reward": 5
+    },
+    "visual": {
+        "color": "#222233",
+        "shape": "square",
+        "size": 10
+    }
+}

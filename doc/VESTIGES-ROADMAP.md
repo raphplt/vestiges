@@ -95,11 +95,11 @@ Les niveaux de complexité servent à prioriser l'effort et le risque. Ils n'imp
 - [x] Score basique (kills).
 - [x] HP du joueur + mort + écran de game over avec score.
 - [x] Équilibrage basique (spawn rate, HP ennemis, scaling).
-- [ ] **TEST CRITIQUE : est-ce que c'est fun ?** Faire tester à 2-3 personnes.
-- [ ] Résultat : un mini-jeu complet et jouable. La boucle combat est validée (ou pas → itérer).
+- [x] **TEST CRITIQUE : est-ce que c'est fun ?** Faire tester à 2-3 personnes.
+- [x] Résultat : un mini-jeu complet et jouable. La boucle combat est validée (ou pas → itérer).
 
 ### Critère de validation
-- [ ] Un ami peut jouer 15 minutes et avoir envie de relancer pour battre son score. Si non → itérer sur cette phase AVANT de continuer.
+- [x] Un ami peut jouer 15 minutes et avoir envie de relancer pour battre son score. Si non → itérer sur cette phase AVANT de continuer.
 
 ---
 
@@ -111,30 +111,30 @@ Les niveaux de complexité servent à prioriser l'effort et le risque. Ils n'imp
 ### Tâches
 
 **Lot 2.1 — Timer et cycle visuel (`Complexité : C2`)**
-- [ ] Implémenter le timer jour/nuit avec barre de progression visible (soleil qui s'éteint — pas de lune, la nuit est du vide).
-- [ ] Transition visuelle via CanvasModulate : palette vivante (jour doré) → crépuscule (désaturation, bleu-violet) → palette corrompue (noir vrai, seules les lumières existent).
-- [ ] Sources de lumière basiques avec PointLight2D (le Foyer = carré jaune avec halo orange-doré).
-- [ ] Résultat : la map change visuellement, un timer défile, la nuit est SOMBRE.
+- [x] Implémenter le timer jour/nuit avec barre de progression visible (soleil qui s'éteint — pas de lune, la nuit est du vide).
+- [x] Transition visuelle via CanvasModulate : palette vivante (jour doré) → crépuscule (désaturation, bleu-violet) → palette corrompue (noir vrai, seules les lumières existent).
+- [x] Sources de lumière basiques avec PointLight2D (le Foyer = carré jaune avec halo orange-doré).
+- [x] Résultat : la map change visuellement, un timer défile, la nuit est SOMBRE.
 
 **Lot 2.2 — Comportement jour vs nuit (`Complexité : C3`)**
-- [ ] **Jour :** Les ennemis spawnent de manière dispersée sur la map (hors rayon du Foyer). Le joueur va vers eux.
-- [ ] **Nuit :** Les ennemis spawnent en vagues depuis les bords et convergent vers le Foyer (ils cherchent à consommer la lumière/mémoire).
-- [ ] Le Foyer a un rayon de sécurité visuel : les tiles à l'intérieur sont plus nets/colorés que l'extérieur (même en placeholder, le contraste doit exister).
-- [ ] Résultat : le jeu a deux phases distinctes et ça se ressent. Le Foyer EST la base.
+- [x] **Jour :** Les ennemis spawnent de manière dispersée sur la map (hors rayon du Foyer). Le joueur va vers eux.
+- [x] **Nuit :** Les ennemis spawnent en vagues depuis les bords et convergent vers le Foyer (ils cherchent à consommer la lumière/mémoire).
+- [x] Le Foyer a un rayon de sécurité visuel : les tiles à l'intérieur sont plus nets/colorés que l'extérieur (même en placeholder, le contraste doit exister).
+- [x] Résultat : le jeu a deux phases distinctes et ça se ressent. Le Foyer EST la base.
 
 **Lot 2.3 — Scaling et nuits multiples (`Complexité : C3`)**
-- [ ] À l'aube, résumé basique (kills, score de nuit).
-- [ ] La difficulté des nuits augmente (nombre d'ennemis, HP).
-- [ ] Ajouter 2-3 types d'ennemis supplémentaires (lent+résistant, rapide+fragile, à distance).
-- [ ] Résultat : le joueur peut survivre plusieurs nuits avec un scaling qui monte.
+- [x] À l'aube, résumé basique (kills, score de nuit).
+- [x] La difficulté des nuits augmente (nombre d'ennemis, HP).
+- [x] Ajouter 2-3 types d'ennemis supplémentaires (lent+résistant, rapide+fragile, à distance).
+- [x] Résultat : le joueur peut survivre plusieurs nuits avec un scaling qui monte.
 
 **Lot 2.4 — Score et mort (`Complexité : C2`)**
-- [ ] Système de score complet (survie + kills + bonus nuit sans dégât).
-- [ ] Effet de mort : le monde se décompose visuellement autour du joueur (même en placeholder : tiles qui disparaissent, fade to white). Transition vers écran de score.
-- [ ] Écran de mort avec score détaillé + record personnel.
-- [ ] Bouton "Relancer" immédiat — zéro friction.
-- [ ] Sauvegarde locale du meilleur score.
-- [ ] Résultat : la boucle complète fonctionne — jouer → mourir → score → relancer.
+- [x] Système de score complet (survie + kills + bonus nuit sans dégât).
+- [x] Effet de mort : le monde se décompose visuellement autour du joueur (même en placeholder : tiles qui disparaissent, fade to white). Transition vers écran de score.
+- [x] Écran de mort avec score détaillé + record personnel.
+- [x] Bouton "Relancer" immédiat — zéro friction.
+- [x] Sauvegarde locale du meilleur score.
+- [x] Résultat : la boucle complète fonctionne — jouer → mourir → score → relancer.
 
 ### Critère de validation
 - [ ] Le cycle jour/nuit change vraiment la dynamique. Le joueur se dit "merde la nuit arrive" et change de comportement. Le score donne envie de faire mieux.

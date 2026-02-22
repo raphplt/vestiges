@@ -10,6 +10,7 @@ public partial class Enemy : CharacterBody2D
 	private const float MeleeAttackCooldown = 1.0f;
 	private const float RangedAttackCooldown = 1.5f;
 	private const float DeathTweenDuration = 0.3f;
+	private const float PlayerProximityRange = 80f;
 
 	private float _maxHp;
 	private float _currentHp;
@@ -21,6 +22,9 @@ public partial class Enemy : CharacterBody2D
 	private string _enemyId;
 	private bool _isDying;
 	private float _attackTimer;
+
+	private bool _nightMode;
+	private Vector2 _foyerPosition;
 
 	private Polygon2D _visual;
 	private Color _originalColor;
@@ -52,6 +56,7 @@ public partial class Enemy : CharacterBody2D
 		_xpReward = data.Stats.XpReward;
 		_isDying = false;
 		_attackTimer = 0f;
+		_nightMode = false;
 		IsActive = true;
 
 		ConfigureVisual(data);
@@ -66,10 +71,18 @@ public partial class Enemy : CharacterBody2D
 			AddToGroup("enemies");
 	}
 
+	/// <summary>Configure le comportement nuit : cibler le Foyer au lieu du joueur.</summary>
+	public void SetNightTarget(bool nightMode, Vector2 foyerPosition)
+	{
+		_nightMode = nightMode;
+		_foyerPosition = foyerPosition;
+	}
+
 	public void Reset()
 	{
 		IsActive = false;
 		_isDying = false;
+		_nightMode = false;
 		_currentHp = 0;
 		Velocity = Vector2.Zero;
 		Visible = false;
@@ -90,13 +103,49 @@ public partial class Enemy : CharacterBody2D
 			return;
 
 		float distToPlayer = GlobalPosition.DistanceTo(_player.GlobalPosition);
+		float dt = (float)delta;
 
-		if (_enemyType == "melee")
-			ProcessMelee(distToPlayer, (float)delta);
+		if (_nightMode && distToPlayer > PlayerProximityRange)
+		{
+			ProcessNightMovement(distToPlayer, dt);
+		}
+		else if (_enemyType == "melee")
+		{
+			ProcessMelee(distToPlayer, dt);
+		}
 		else if (_enemyType == "ranged")
-			ProcessRanged(distToPlayer, (float)delta);
+		{
+			ProcessRanged(distToPlayer, dt);
+		}
 
 		MoveAndSlide();
+	}
+
+	/// <summary>Nuit : l'ennemi converge vers le Foyer, sauf si le joueur est proche.</summary>
+	private void ProcessNightMovement(float distToPlayer, float delta)
+	{
+		Vector2 directionToFoyer = (_foyerPosition - GlobalPosition).Normalized();
+		Velocity = directionToFoyer * _speed;
+
+		_attackTimer -= delta;
+		if (_enemyType == "melee")
+		{
+			float distToFoyer = GlobalPosition.DistanceTo(_foyerPosition);
+			if (distToFoyer < MeleeRange && distToPlayer < PlayerProximityRange * 2f && _attackTimer <= 0f)
+			{
+				_player.TakeDamage(_damage);
+				_attackTimer = MeleeAttackCooldown;
+			}
+		}
+		else if (_enemyType == "ranged" && _attackTimer <= 0f)
+		{
+			float distToFoyer = GlobalPosition.DistanceTo(_foyerPosition);
+			if (distToFoyer <= _attackRange)
+			{
+				ShootProjectile();
+				_attackTimer = RangedAttackCooldown;
+			}
+		}
 	}
 
 	private void ProcessMelee(float distToPlayer, float delta)
@@ -227,9 +276,9 @@ public partial class Enemy : CharacterBody2D
 
 		float s = data.Visual.Size;
 		if (data.Visual.Shape == "triangle")
-			_visual.Polygon = new Vector2[] { new(-s * 0.75f, -s * 0.5f), new(s * 0.75f, 0), new(-s * 0.75f, s * 0.5f) };
+			_visual.Polygon = new Vector2[] { new(-s * 0.75f, -s * 0.375f), new(s * 0.75f, 0), new(-s * 0.75f, s * 0.375f) };
 		else
-			_visual.Polygon = new Vector2[] { new(-s, 0), new(0, -s * 0.625f), new(s, 0), new(0, s * 0.625f) };
+			_visual.Polygon = new Vector2[] { new(-s, 0), new(0, -s * 0.5f), new(s, 0), new(0, s * 0.5f) };
 	}
 
 	private void CachePlayer()

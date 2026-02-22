@@ -27,4 +27,7 @@ public partial class EventBus : Node
 
     // --- Score ---
     [Signal] public delegate void ScoreChangedEventHandler(int newScore);
+
+    // --- Résumé de nuit ---
+    [Signal] public delegate void NightSummaryEventHandler(int nightNumber, int kills, int score);
 }

@@ -4,39 +4,169 @@ using Vestiges.Core;
 namespace Vestiges.Score;
 
 /// <summary>
-/// Compteur de score basique : points par kill.
+/// Score complet : combat + survie + bonus nuit sans dégât.
+/// Sauvegarde du meilleur score en local.
 /// </summary>
 public partial class ScoreManager : Node
 {
     private const int PointsPerMeleeKill = 10;
     private const int PointsPerRangedKill = 15;
+    private const int PointsPerBruteKill = 30;
+    private const int PointsPerShadeKill = 5;
+    private const int PointsPerSentinelKill = 25;
+    private const int NoDamageNightBonus = 500;
+    private const string HighScorePath = "user://highscore.save";
 
-    private int _currentScore;
+    private int _combatScore;
+    private int _survivalScore;
+    private int _bonusScore;
     private int _totalKills;
+    private int _nightKills;
+    private int _nightScore;
+    private int _nightsSurvived;
+    private bool _tookDamageThisNight;
+    private int _noDamageNights;
+    private int _bestScore;
     private EventBus _eventBus;
 
-    public int CurrentScore => _currentScore;
+    public int CurrentScore => _combatScore + _survivalScore + _bonusScore;
+    public int CombatScore => _combatScore;
+    public int SurvivalScore => _survivalScore;
+    public int BonusScore => _bonusScore;
     public int TotalKills => _totalKills;
+    public int NightsSurvived => _nightsSurvived;
+    public int NoDamageNights => _noDamageNights;
+    public int BestScore => _bestScore;
+    public bool IsNewRecord => CurrentScore > _bestScore;
 
     public override void _Ready()
     {
         _eventBus = GetNode<EventBus>("/root/EventBus");
         _eventBus.EnemyKilled += OnEnemyKilled;
+        _eventBus.DayPhaseChanged += OnDayPhaseChanged;
+        _eventBus.PlayerDamaged += OnPlayerDamaged;
+
+        LoadBestScore();
     }
 
     public override void _ExitTree()
     {
         if (_eventBus != null)
+        {
             _eventBus.EnemyKilled -= OnEnemyKilled;
+            _eventBus.DayPhaseChanged -= OnDayPhaseChanged;
+            _eventBus.PlayerDamaged -= OnPlayerDamaged;
+        }
+    }
+
+    /// <summary>Sauvegarde le score si c'est un nouveau record.</summary>
+    public void SaveIfRecord()
+    {
+        if (CurrentScore > _bestScore)
+        {
+            _bestScore = CurrentScore;
+            SaveBestScore();
+        }
     }
 
     private void OnEnemyKilled(string enemyId, Vector2 position)
     {
         _totalKills++;
+        _nightKills++;
 
-        int points = enemyId == "fading_spitter" ? PointsPerRangedKill : PointsPerMeleeKill;
-        _currentScore += points;
+        int points = GetPointsForEnemy(enemyId);
+        _combatScore += points;
+        _nightScore += points;
 
-        _eventBus.EmitSignal(EventBus.SignalName.ScoreChanged, _currentScore);
+        _eventBus.EmitSignal(EventBus.SignalName.ScoreChanged, CurrentScore);
+    }
+
+    private void OnPlayerDamaged(float currentHp, float maxHp)
+    {
+        _tookDamageThisNight = true;
+    }
+
+    private int GetPointsForEnemy(string enemyId)
+    {
+        return enemyId switch
+        {
+            "shadow_crawler" => PointsPerMeleeKill,
+            "fading_spitter" => PointsPerRangedKill,
+            "void_brute" => PointsPerBruteKill,
+            "shade" => PointsPerShadeKill,
+            "wailing_sentinel" => PointsPerSentinelKill,
+            _ => PointsPerMeleeKill
+        };
+    }
+
+    private void OnDayPhaseChanged(string phase)
+    {
+        if (phase == "Dawn")
+        {
+            _nightsSurvived++;
+
+            int survivalPoints = GetSurvivalPoints(_nightsSurvived);
+            _survivalScore += survivalPoints;
+
+            if (!_tookDamageThisNight && _nightsSurvived > 0)
+            {
+                _bonusScore += NoDamageNightBonus;
+                _noDamageNights++;
+            }
+
+            _eventBus.EmitSignal(EventBus.SignalName.ScoreChanged, CurrentScore);
+            _eventBus.EmitSignal(EventBus.SignalName.NightSummary, _nightsSurvived, _nightKills, _nightScore);
+            GD.Print($"[ScoreManager] Night {_nightsSurvived} — Kills: {_nightKills}, Score: +{_nightScore}, Survival: +{survivalPoints}, NoDmg: {!_tookDamageThisNight}");
+
+            _nightKills = 0;
+            _nightScore = 0;
+            _tookDamageThisNight = false;
+        }
+        else if (phase == "Night")
+        {
+            _tookDamageThisNight = false;
+        }
+    }
+
+    /// <summary>Score de survie exponentiel par nuit (GDD : nuit1=100, nuit2=250, nuit5=1500, nuit10=8000).</summary>
+    private int GetSurvivalPoints(int nightNumber)
+    {
+        return (int)(100 * Mathf.Pow(1.6f, nightNumber - 1));
+    }
+
+    private void LoadBestScore()
+    {
+        if (!FileAccess.FileExists(HighScorePath))
+        {
+            _bestScore = 0;
+            return;
+        }
+
+        FileAccess file = FileAccess.Open(HighScorePath, FileAccess.ModeFlags.Read);
+        if (file == null)
+        {
+            _bestScore = 0;
+            return;
+        }
+
+        string content = file.GetAsText().StripEdges();
+        file.Close();
+
+        if (int.TryParse(content, out int score))
+            _bestScore = score;
+    }
+
+    private void SaveBestScore()
+    {
+        FileAccess file = FileAccess.Open(HighScorePath, FileAccess.ModeFlags.Write);
+        if (file == null)
+        {
+            GD.PushError("[ScoreManager] Cannot save high score");
+            return;
+        }
+
+        file.StoreString(_bestScore.ToString());
+        file.Close();
+        GD.Print($"[ScoreManager] New record saved: {_bestScore}");
     }
 }

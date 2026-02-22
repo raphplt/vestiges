@@ -1,0 +1,17 @@
+{
+    "id": "wailing_sentinel",
+    "name": "Sentinelle Hurlante",
+    "type": "ranged",
+    "stats": {
+        "hp": 25,
+        "speed": 30,
+        "damage": 10,
+        "attack_range": 250,
+        "xp_reward": 20
+    },
+    "visual": {
+        "color": "#44CC44",
+        "shape": "triangle",
+        "size": 16
+    }
+}

@@ -1,0 +1,16 @@
+{
+    "id": "void_brute",
+    "name": "Brute du Vide",
+    "type": "melee",
+    "stats": {
+        "hp": 80,
+        "speed": 35,
+        "damage": 12,
+        "xp_reward": 25
+    },
+    "visual": {
+        "color": "#663366",
+        "shape": "square",
+        "size": 22
+    }
+}

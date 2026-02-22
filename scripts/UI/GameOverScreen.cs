@@ -5,13 +5,19 @@ using Vestiges.Score;
 namespace Vestiges.UI;
 
 /// <summary>
-/// Écran de game over : score final, kills, bouton relancer.
+/// Écran de game over : score détaillé, record, nuits survécues, bouton relancer.
+/// Effet de mort : fade to white avant affichage.
 /// </summary>
 public partial class GameOverScreen : CanvasLayer
 {
     private PanelContainer _panel;
     private Label _titleLabel;
-    private Label _scoreLabel;
+    private Label _nightsLabel;
+    private Label _combatLabel;
+    private Label _survivalLabel;
+    private Label _bonusLabel;
+    private Label _totalLabel;
+    private Label _recordLabel;
     private Label _killsLabel;
     private Button _restartButton;
     private EventBus _eventBus;
@@ -19,18 +25,11 @@ public partial class GameOverScreen : CanvasLayer
 
     public override void _Ready()
     {
-        _panel = GetNode<PanelContainer>("Panel");
-        _titleLabel = GetNode<Label>("Panel/VBox/Title");
-        _scoreLabel = GetNode<Label>("Panel/VBox/Score");
-        _killsLabel = GetNode<Label>("Panel/VBox/Kills");
-        _restartButton = GetNode<Button>("Panel/VBox/RestartButton");
-
-        _restartButton.Pressed += OnRestartPressed;
-
+        ProcessMode = ProcessModeEnum.Always;
         _eventBus = GetNode<EventBus>("/root/EventBus");
         _eventBus.EntityDied += OnEntityDied;
 
-        ProcessMode = ProcessModeEnum.Always;
+        BuildUI();
         Hide();
     }
 
@@ -45,31 +44,149 @@ public partial class GameOverScreen : CanvasLayer
         _scoreManager = scoreManager;
     }
 
+    private void BuildUI()
+    {
+        _panel = new PanelContainer();
+        _panel.AnchorLeft = 0.5f;
+        _panel.AnchorRight = 0.5f;
+        _panel.AnchorTop = 0.5f;
+        _panel.AnchorBottom = 0.5f;
+        _panel.OffsetLeft = -180;
+        _panel.OffsetRight = 180;
+        _panel.OffsetTop = -160;
+        _panel.OffsetBottom = 160;
+        _panel.GrowHorizontal = Control.GrowDirection.Both;
+        _panel.GrowVertical = Control.GrowDirection.Both;
+
+        StyleBoxFlat style = new();
+        style.BgColor = new Color(0.05f, 0.03f, 0.08f, 0.9f);
+        style.CornerRadiusBottomLeft = 8;
+        style.CornerRadiusBottomRight = 8;
+        style.CornerRadiusTopLeft = 8;
+        style.CornerRadiusTopRight = 8;
+        style.ContentMarginLeft = 24;
+        style.ContentMarginRight = 24;
+        style.ContentMarginTop = 20;
+        style.ContentMarginBottom = 20;
+        _panel.AddThemeStyleboxOverride("panel", style);
+
+        VBoxContainer vbox = new();
+        vbox.AddThemeConstantOverride("separation", 10);
+        _panel.AddChild(vbox);
+
+        _titleLabel = CreateLabel("GAME OVER", 28, HorizontalAlignment.Center);
+        vbox.AddChild(_titleLabel);
+
+        vbox.AddChild(CreateSeparator());
+
+        _nightsLabel = CreateLabel("", 18, HorizontalAlignment.Center);
+        vbox.AddChild(_nightsLabel);
+
+        vbox.AddChild(CreateSeparator());
+
+        _combatLabel = CreateLabel("", 14, HorizontalAlignment.Left);
+        vbox.AddChild(_combatLabel);
+
+        _survivalLabel = CreateLabel("", 14, HorizontalAlignment.Left);
+        vbox.AddChild(_survivalLabel);
+
+        _bonusLabel = CreateLabel("", 14, HorizontalAlignment.Left);
+        vbox.AddChild(_bonusLabel);
+
+        _killsLabel = CreateLabel("", 14, HorizontalAlignment.Left);
+        vbox.AddChild(_killsLabel);
+
+        vbox.AddChild(CreateSeparator());
+
+        _totalLabel = CreateLabel("", 22, HorizontalAlignment.Center);
+        vbox.AddChild(_totalLabel);
+
+        _recordLabel = CreateLabel("", 14, HorizontalAlignment.Center);
+        vbox.AddChild(_recordLabel);
+
+        _restartButton = new Button();
+        _restartButton.Text = "Relancer";
+        _restartButton.Pressed += OnRestartPressed;
+        vbox.AddChild(_restartButton);
+
+        AddChild(_panel);
+    }
+
+    private Label CreateLabel(string text, int fontSize, HorizontalAlignment alignment)
+    {
+        Label label = new();
+        label.Text = text;
+        label.HorizontalAlignment = alignment;
+        label.AddThemeFontSizeOverride("font_size", fontSize);
+        return label;
+    }
+
+    private HSeparator CreateSeparator()
+    {
+        return new HSeparator();
+    }
+
     private void OnEntityDied(Node entity)
     {
         if (entity is not Player)
             return;
 
-        int score = _scoreManager?.CurrentScore ?? 0;
+        _scoreManager?.SaveIfRecord();
+        StartDeathSequence();
+    }
+
+    private void StartDeathSequence()
+    {
+        CanvasModulate canvasModulate = GetTree().CurrentScene.GetNodeOrNull<CanvasModulate>("CanvasModulate");
+
+        if (canvasModulate != null)
+        {
+            Tween tween = CreateTween();
+            tween.TweenProperty(canvasModulate, "color", new Color(0.95f, 0.93f, 0.9f), 1.5f)
+                .SetTrans(Tween.TransitionType.Expo)
+                .SetEase(Tween.EaseType.In);
+            tween.TweenCallback(Callable.From(ShowGameOver));
+        }
+        else
+        {
+            ShowGameOver();
+        }
+    }
+
+    private void ShowGameOver()
+    {
+        int total = _scoreManager?.CurrentScore ?? 0;
+        int combat = _scoreManager?.CombatScore ?? 0;
+        int survival = _scoreManager?.SurvivalScore ?? 0;
+        int bonus = _scoreManager?.BonusScore ?? 0;
         int kills = _scoreManager?.TotalKills ?? 0;
+        int nights = _scoreManager?.NightsSurvived ?? 0;
+        int best = _scoreManager?.BestScore ?? 0;
+        bool isRecord = _scoreManager?.IsNewRecord ?? false;
 
-        _titleLabel.Text = "GAME OVER";
-        _scoreLabel.Text = $"Score : {score}";
+        _nightsLabel.Text = nights > 0
+            ? $"{nights} nuit{(nights > 1 ? "s" : "")} survécue{(nights > 1 ? "s" : "")}"
+            : "Mort avant la première nuit";
+
+        _combatLabel.Text = $"Combat : {combat}";
+        _survivalLabel.Text = $"Survie : {survival}";
+        _bonusLabel.Text = $"Bonus (nuits sans dégât) : {bonus}";
         _killsLabel.Text = $"Kills : {kills}";
+        _totalLabel.Text = $"SCORE : {total}";
 
-        Show();
+        if (isRecord)
+            _recordLabel.Text = $"NOUVEAU RECORD !";
+        else
+            _recordLabel.Text = $"Meilleur : {best}";
+
+        _panel.Visible = true;
+        Visible = true;
     }
 
     private void OnRestartPressed()
     {
         GetTree().Paused = false;
         GetTree().ReloadCurrentScene();
-    }
-
-    private new void Show()
-    {
-        _panel.Visible = true;
-        Visible = true;
     }
 
     private new void Hide()
