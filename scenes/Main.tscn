@@ -1,4 +1,4 @@
-[gd_scene load_steps=18 format=3]
+[gd_scene load_steps=23 format=3]
 
 [ext_resource type="TileSet" path="res://assets/tiles/iso_tileset.tres" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/Player.tscn" id="2"]
@@ -14,6 +14,11 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/GameOverScreen.tscn" id="12"]
 [ext_resource type="Script" path="res://scripts/World/DayNightCycle.cs" id="13"]
 [ext_resource type="Script" path="res://scripts/World/Foyer.cs" id="14"]
+[ext_resource type="Script" path="res://scripts/Base/Inventory.cs" id="15"]
+[ext_resource type="Script" path="res://scripts/Base/CraftManager.cs" id="16"]
+[ext_resource type="Script" path="res://scripts/UI/CraftPanel.cs" id="17"]
+[ext_resource type="Script" path="res://scripts/Base/StructureManager.cs" id="18"]
+[ext_resource type="Script" path="res://scripts/Base/StructurePlacer.cs" id="19"]
 
 [sub_resource type="Gradient" id="Gradient_light"]
 colors = PackedColorArray(1, 1, 1, 1, 1, 1, 1, 0)
@@ -60,8 +65,15 @@ zoom = Vector2(2, 2)
 [node name="PlayerProgression" type="Node" parent="Player"]
 script = ExtResource("6")
 
+[node name="Inventory" type="Node" parent="Player"]
+script = ExtResource("15")
+
 [node name="EnemyPool" type="Node" parent="."]
 script = ExtResource("4")
+
+[node name="ResourceContainer" type="Node2D" parent="."]
+
+[node name="StructureContainer" type="Node2D" parent="."]
 
 [node name="EnemyContainer" type="Node2D" parent="."]
 
@@ -74,6 +86,9 @@ script = ExtResource("7")
 [node name="ScoreManager" type="Node" parent="."]
 script = ExtResource("11")
 
+[node name="CraftManager" type="Node" parent="."]
+script = ExtResource("16")
+
 [node name="DayNightCycle" type="Node" parent="."]
 script = ExtResource("13")
 
@@ -82,6 +97,15 @@ script = ExtResource("13")
 [node name="LevelUpScreen" parent="." instance=ExtResource("9")]
 
 [node name="GameOverScreen" parent="." instance=ExtResource("12")]
+
+[node name="CraftPanel" type="CanvasLayer" parent="."]
+script = ExtResource("17")
+
+[node name="StructureManager" type="Node" parent="."]
+script = ExtResource("18")
+
+[node name="StructurePlacer" type="Node2D" parent="."]
+script = ExtResource("19")
 
 [node name="GameBootstrap" type="Node" parent="."]
 script = ExtResource("10")

@@ -1,0 +1,109 @@
+[
+    {
+        "id": "wood_wall",
+        "name": "Mur de Bois",
+        "category": "defense",
+        "ingredients": [
+            { "resource": "wood", "amount": 5 }
+        ],
+        "build_time": 1.5,
+        "result": {
+            "type": "wall",
+            "stats": { "hp": 50 }
+        }
+    },
+    {
+        "id": "stone_wall",
+        "name": "Mur de Pierre",
+        "category": "defense",
+        "ingredients": [
+            { "resource": "stone", "amount": 5 }
+        ],
+        "build_time": 2.5,
+        "result": {
+            "type": "wall",
+            "stats": { "hp": 120 }
+        }
+    },
+    {
+        "id": "metal_wall",
+        "name": "Mur de Métal",
+        "category": "defense",
+        "ingredients": [
+            { "resource": "metal", "amount": 5 },
+            { "resource": "stone", "amount": 3 }
+        ],
+        "build_time": 3.0,
+        "result": {
+            "type": "wall",
+            "stats": { "hp": 200 }
+        }
+    },
+    {
+        "id": "barricade",
+        "name": "Barricade",
+        "category": "defense",
+        "ingredients": [
+            { "resource": "wood", "amount": 3 }
+        ],
+        "build_time": 0.8,
+        "result": {
+            "type": "wall",
+            "stats": { "hp": 25 }
+        }
+    },
+    {
+        "id": "spike_trap",
+        "name": "Piège à Pointes",
+        "category": "trap",
+        "ingredients": [
+            { "resource": "wood", "amount": 3 },
+            { "resource": "metal", "amount": 2 }
+        ],
+        "build_time": 2.0,
+        "result": {
+            "type": "trap",
+            "stats": { "damage": 15, "uses": 5 }
+        }
+    },
+    {
+        "id": "turret_basic",
+        "name": "Tourelle Basique",
+        "category": "defense",
+        "ingredients": [
+            { "resource": "wood", "amount": 5 },
+            { "resource": "metal", "amount": 5 }
+        ],
+        "build_time": 3.0,
+        "result": {
+            "type": "turret",
+            "stats": { "damage": 8, "attack_speed": 1.5, "range": 200 }
+        }
+    },
+    {
+        "id": "torch",
+        "name": "Torche",
+        "category": "utility",
+        "ingredients": [
+            { "resource": "wood", "amount": 2 }
+        ],
+        "build_time": 0.5,
+        "result": {
+            "type": "light",
+            "stats": { "radius": 80, "duration": 180 }
+        }
+    },
+    {
+        "id": "bandage",
+        "name": "Bandage",
+        "category": "consumable",
+        "ingredients": [
+            { "resource": "wood", "amount": 1 }
+        ],
+        "build_time": 0.5,
+        "result": {
+            "type": "consumable",
+            "stats": { "heal": 25 }
+        }
+    }
+]

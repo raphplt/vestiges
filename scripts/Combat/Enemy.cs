@@ -1,4 +1,5 @@
 using Godot;
+using Vestiges.Base;
 using Vestiges.Core;
 using Vestiges.Infrastructure;
 
@@ -11,6 +12,7 @@ public partial class Enemy : CharacterBody2D
 	private const float RangedAttackCooldown = 1.5f;
 	private const float DeathTweenDuration = 0.3f;
 	private const float PlayerProximityRange = 80f;
+	private const float StructureDetectRange = 40f;
 
 	private float _maxHp;
 	private float _currentHp;
@@ -71,7 +73,6 @@ public partial class Enemy : CharacterBody2D
 			AddToGroup("enemies");
 	}
 
-	/// <summary>Configure le comportement nuit : cibler le Foyer au lieu du joueur.</summary>
 	public void SetNightTarget(bool nightMode, Vector2 foyerPosition)
 	{
 		_nightMode = nightMode;
@@ -121,13 +122,29 @@ public partial class Enemy : CharacterBody2D
 		MoveAndSlide();
 	}
 
-	/// <summary>Nuit : l'ennemi converge vers le Foyer, sauf si le joueur est proche.</summary>
 	private void ProcessNightMovement(float distToPlayer, float delta)
 	{
+		_attackTimer -= delta;
+
+		// Check for structures blocking the path
+		Structure blockingWall = FindNearestStructure();
+		if (blockingWall != null && _enemyType == "melee")
+		{
+			float distToWall = GlobalPosition.DistanceTo(blockingWall.GlobalPosition);
+			Vector2 dirToWall = (blockingWall.GlobalPosition - GlobalPosition).Normalized();
+			Velocity = dirToWall * _speed;
+
+			if (distToWall < MeleeRange && _attackTimer <= 0f)
+			{
+				blockingWall.TakeDamage(_damage);
+				_attackTimer = MeleeAttackCooldown;
+			}
+			return;
+		}
+
 		Vector2 directionToFoyer = (_foyerPosition - GlobalPosition).Normalized();
 		Velocity = directionToFoyer * _speed;
 
-		_attackTimer -= delta;
 		if (_enemyType == "melee")
 		{
 			float distToFoyer = GlobalPosition.DistanceTo(_foyerPosition);
@@ -179,6 +196,37 @@ public partial class Enemy : CharacterBody2D
 			ShootProjectile();
 			_attackTimer = RangedAttackCooldown;
 		}
+	}
+
+	/// <summary>Trouve la structure la plus proche sur le chemin vers le Foyer.</summary>
+	private Structure FindNearestStructure()
+	{
+		Godot.Collections.Array<Node> structures = GetTree().GetNodesInGroup("structures");
+		Structure nearest = null;
+		float nearestDist = StructureDetectRange;
+
+		Vector2 dirToFoyer = (_foyerPosition - GlobalPosition).Normalized();
+
+		foreach (Node node in structures)
+		{
+			if (node is Structure structure && !structure.IsDestroyed)
+			{
+				float dist = GlobalPosition.DistanceTo(structure.GlobalPosition);
+				if (dist >= nearestDist)
+					continue;
+
+				// Only target structures roughly between us and the Foyer
+				Vector2 dirToStructure = (structure.GlobalPosition - GlobalPosition).Normalized();
+				float dot = dirToFoyer.Dot(dirToStructure);
+				if (dot > 0.3f)
+				{
+					nearest = structure;
+					nearestDist = dist;
+				}
+			}
+		}
+
+		return nearest;
 	}
 
 	private void ShootProjectile()

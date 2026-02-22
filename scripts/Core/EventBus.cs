@@ -30,4 +30,16 @@ public partial class EventBus : Node
 
     // --- Résumé de nuit ---
     [Signal] public delegate void NightSummaryEventHandler(int nightNumber, int kills, int score);
+
+    // --- Ressources & Inventaire ---
+    [Signal] public delegate void ResourceCollectedEventHandler(string resourceId, int amount);
+    [Signal] public delegate void InventoryChangedEventHandler(string resourceId, int newAmount);
+
+    // --- Craft ---
+    [Signal] public delegate void CraftStartedEventHandler(string recipeId);
+    [Signal] public delegate void CraftCompletedEventHandler(string recipeId);
+
+    // --- Structures ---
+    [Signal] public delegate void StructurePlacedEventHandler(string structureId, Vector2 position);
+    [Signal] public delegate void StructureDestroyedEventHandler(string structureId, Vector2 position);
 }

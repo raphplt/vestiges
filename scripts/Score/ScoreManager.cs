@@ -15,11 +15,14 @@ public partial class ScoreManager : Node
     private const int PointsPerShadeKill = 5;
     private const int PointsPerSentinelKill = 25;
     private const int NoDamageNightBonus = 500;
+    private const int PointsPerStructurePlaced = 20;
+    private const int PointsPerStructureSurvived = 50;
     private const string HighScorePath = "user://highscore.save";
 
     private int _combatScore;
     private int _survivalScore;
     private int _bonusScore;
+    private int _buildScore;
     private int _totalKills;
     private int _nightKills;
     private int _nightScore;
@@ -29,7 +32,7 @@ public partial class ScoreManager : Node
     private int _bestScore;
     private EventBus _eventBus;
 
-    public int CurrentScore => _combatScore + _survivalScore + _bonusScore;
+    public int CurrentScore => _combatScore + _survivalScore + _bonusScore + _buildScore;
     public int CombatScore => _combatScore;
     public int SurvivalScore => _survivalScore;
     public int BonusScore => _bonusScore;
@@ -45,6 +48,7 @@ public partial class ScoreManager : Node
         _eventBus.EnemyKilled += OnEnemyKilled;
         _eventBus.DayPhaseChanged += OnDayPhaseChanged;
         _eventBus.PlayerDamaged += OnPlayerDamaged;
+        _eventBus.StructurePlaced += OnStructurePlaced;
 
         LoadBestScore();
     }
@@ -56,6 +60,7 @@ public partial class ScoreManager : Node
             _eventBus.EnemyKilled -= OnEnemyKilled;
             _eventBus.DayPhaseChanged -= OnDayPhaseChanged;
             _eventBus.PlayerDamaged -= OnPlayerDamaged;
+            _eventBus.StructurePlaced -= OnStructurePlaced;
         }
     }
 
@@ -99,6 +104,12 @@ public partial class ScoreManager : Node
         };
     }
 
+    private void OnStructurePlaced(string structureId, Vector2 position)
+    {
+        _buildScore += PointsPerStructurePlaced;
+        _eventBus.EmitSignal(EventBus.SignalName.ScoreChanged, CurrentScore);
+    }
+
     private void OnDayPhaseChanged(string phase)
     {
         if (phase == "Dawn")
@@ -108,6 +119,9 @@ public partial class ScoreManager : Node
             int survivalPoints = GetSurvivalPoints(_nightsSurvived);
             _survivalScore += survivalPoints;
 
+            int structureBonus = CountSurvivingStructures() * PointsPerStructureSurvived;
+            _buildScore += structureBonus;
+
             if (!_tookDamageThisNight && _nightsSurvived > 0)
             {
                 _bonusScore += NoDamageNightBonus;
@@ -116,7 +130,7 @@ public partial class ScoreManager : Node
 
             _eventBus.EmitSignal(EventBus.SignalName.ScoreChanged, CurrentScore);
             _eventBus.EmitSignal(EventBus.SignalName.NightSummary, _nightsSurvived, _nightKills, _nightScore);
-            GD.Print($"[ScoreManager] Night {_nightsSurvived} — Kills: {_nightKills}, Score: +{_nightScore}, Survival: +{survivalPoints}, NoDmg: {!_tookDamageThisNight}");
+            GD.Print($"[ScoreManager] Night {_nightsSurvived} — Kills: {_nightKills}, Score: +{_nightScore}, Survival: +{survivalPoints}, Structures: +{structureBonus}, NoDmg: {!_tookDamageThisNight}");
 
             _nightKills = 0;
             _nightScore = 0;
@@ -126,6 +140,12 @@ public partial class ScoreManager : Node
         {
             _tookDamageThisNight = false;
         }
+    }
+
+    private int CountSurvivingStructures()
+    {
+        Godot.Collections.Array<Node> structures = GetTree().GetNodesInGroup("structures");
+        return structures.Count;
     }
 
     /// <summary>Score de survie exponentiel par nuit (GDD : nuit1=100, nuit2=250, nuit5=1500, nuit10=8000).</summary>

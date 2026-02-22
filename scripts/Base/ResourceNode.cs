@@ -1,0 +1,88 @@
+using Godot;
+using Vestiges.Infrastructure;
+
+namespace Vestiges.Base;
+
+/// <summary>
+/// Noeud de ressource récoltable (arbre, rocher, débris).
+/// Le joueur s'approche et interagit pour récolter.
+/// </summary>
+public partial class ResourceNode : StaticBody2D
+{
+    private string _resourceId;
+    private int _amountMin;
+    private int _amountMax;
+    private float _harvestTime;
+    private int _harvestsRemaining;
+
+    private Polygon2D _visual;
+    private Color _originalColor;
+
+    public bool IsExhausted => _harvestsRemaining <= 0;
+    public string ResourceId => _resourceId;
+    public float HarvestTime => _harvestTime;
+
+    public override void _Ready()
+    {
+        _visual = GetNode<Polygon2D>("Visual");
+        AddToGroup("resources");
+    }
+
+    public void Initialize(ResourceData data)
+    {
+        _resourceId = data.Id;
+        _amountMin = data.AmountMin;
+        _amountMax = data.AmountMax;
+        _harvestTime = data.HarvestTime;
+        _harvestsRemaining = data.Harvests;
+
+        float s = data.Size;
+        _visual.Polygon = new Vector2[] { new(-s, 0), new(0, -s * 0.5f), new(s, 0), new(0, s * 0.5f) };
+        _visual.Color = data.Color;
+        _originalColor = data.Color;
+    }
+
+    /// <summary>Récolte le noeud. Retourne la quantité récoltée, ou 0 si épuisé.</summary>
+    public int Harvest()
+    {
+        if (IsExhausted)
+            return 0;
+
+        _harvestsRemaining--;
+        int amount = (int)GD.RandRange(_amountMin, _amountMax + 1);
+
+        HarvestFlash();
+
+        if (IsExhausted)
+            Exhaust();
+
+        return amount;
+    }
+
+    private void HarvestFlash()
+    {
+        _visual.Color = Colors.White;
+        Tween tween = CreateTween();
+        tween.TweenProperty(_visual, "color", _originalColor, 0.2f)
+            .SetDelay(0.05f);
+
+        Tween shake = CreateTween();
+        Vector2 basePos = Position;
+        shake.TweenProperty(this, "position", basePos + new Vector2(3, 0), 0.05f);
+        shake.TweenProperty(this, "position", basePos + new Vector2(-3, 0), 0.05f);
+        shake.TweenProperty(this, "position", basePos, 0.05f);
+    }
+
+    private void Exhaust()
+    {
+        Tween tween = CreateTween();
+        tween.SetParallel();
+        tween.TweenProperty(this, "scale", Vector2.One * 0.3f, 0.5f);
+        tween.TweenProperty(this, "modulate:a", 0f, 0.5f);
+        tween.Chain().TweenCallback(Callable.From(() =>
+        {
+            RemoveFromGroup("resources");
+            QueueFree();
+        }));
+    }
+}

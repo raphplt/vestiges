@@ -1,4 +1,5 @@
 using Godot;
+using Vestiges.Base;
 using Vestiges.Combat;
 
 namespace Vestiges.Core;
@@ -11,6 +12,7 @@ public partial class Player : CharacterBody2D
     [Export] public float AttackRange = 300f;
     [Export] public float MaxHp = 100f;
     [Export] public float BaseRegenRate = 0.5f;
+    [Export] public float InteractRange = 60f;
 
     private float _currentHp;
     private bool _isDead;
@@ -27,9 +29,17 @@ public partial class Player : CharacterBody2D
     private int _extraProjectiles;
     private float _aoeMultiplier = 1f;
 
+    // Harvest system
+    private ResourceNode _harvestTarget;
+    private float _harvestProgress;
+    private bool _isHarvesting;
+    private ProgressBar _harvestBar;
+    private Inventory _inventory;
+
     public float CurrentHp => _currentHp;
     public float EffectiveMaxHp => MaxHp + _bonusMaxHp;
     public bool IsDead => _isDead;
+    public bool IsHarvesting => _isHarvesting;
 
     public override void _Ready()
     {
@@ -46,6 +56,8 @@ public partial class Player : CharacterBody2D
         _attackTimer.Autostart = true;
         _attackTimer.Timeout += OnAttackTimerTimeout;
         AddChild(_attackTimer);
+
+        CreateHarvestBar();
     }
 
     public override void _PhysicsProcess(double delta)
@@ -53,10 +65,12 @@ public partial class Player : CharacterBody2D
         if (_isDead)
             return;
 
+        float dt = (float)delta;
         Vector2 inputDir = Input.GetVector("move_left", "move_right", "move_up", "move_down");
 
         if (inputDir != Vector2.Zero)
         {
+            CancelHarvest();
             Vector2 isoDir = CartesianToIsometric(inputDir);
             Velocity = isoDir * (Speed * _speedMultiplier);
         }
@@ -66,7 +80,30 @@ public partial class Player : CharacterBody2D
         }
 
         MoveAndSlide();
-        ApplyRegen((float)delta);
+        ApplyRegen(dt);
+        ProcessHarvest(dt);
+    }
+
+    public override void _UnhandledInput(InputEvent @event)
+    {
+        if (_isDead)
+            return;
+
+        if (@event.IsActionPressed("interact"))
+        {
+            if (_isHarvesting)
+            {
+                CancelHarvest();
+            }
+            else if (TryRepairNearbyStructure())
+            {
+                // Repair took priority
+            }
+            else
+            {
+                TryStartHarvest();
+            }
+        }
     }
 
     public void ApplyPerkModifier(string stat, float value, string modifierType)
@@ -108,6 +145,7 @@ public partial class Player : CharacterBody2D
             return;
 
         _currentHp -= damage;
+        CancelHarvest();
         HitFlash();
 
         EventBus eventBus = GetNode<EventBus>("/root/EventBus");
@@ -120,11 +158,146 @@ public partial class Player : CharacterBody2D
         }
     }
 
+    // --- Harvest ---
+
+    private void TryStartHarvest()
+    {
+        ResourceNode nearest = FindNearestResource();
+        if (nearest == null || nearest.IsExhausted)
+            return;
+
+        _harvestTarget = nearest;
+        _harvestProgress = 0f;
+        _isHarvesting = true;
+        _harvestBar.Visible = true;
+        _harvestBar.MaxValue = nearest.HarvestTime;
+        _harvestBar.Value = 0;
+    }
+
+    private void ProcessHarvest(float delta)
+    {
+        if (!_isHarvesting || _harvestTarget == null)
+            return;
+
+        if (!IsInstanceValid(_harvestTarget) || _harvestTarget.IsExhausted)
+        {
+            CancelHarvest();
+            return;
+        }
+
+        float dist = GlobalPosition.DistanceTo(_harvestTarget.GlobalPosition);
+        if (dist > InteractRange * 1.5f)
+        {
+            CancelHarvest();
+            return;
+        }
+
+        _harvestProgress += delta;
+        _harvestBar.Value = _harvestProgress;
+
+        if (_harvestProgress >= _harvestTarget.HarvestTime)
+            CompleteHarvest();
+    }
+
+    private void CompleteHarvest()
+    {
+        if (_harvestTarget == null || !IsInstanceValid(_harvestTarget))
+        {
+            CancelHarvest();
+            return;
+        }
+
+        int amount = _harvestTarget.Harvest();
+        string resourceId = _harvestTarget.ResourceId;
+
+        if (amount > 0)
+        {
+            CacheInventory();
+            _inventory?.Add(resourceId, amount);
+        }
+
+        _isHarvesting = false;
+        _harvestBar.Visible = false;
+        _harvestTarget = null;
+        _harvestProgress = 0f;
+    }
+
+    private void CancelHarvest()
+    {
+        if (!_isHarvesting)
+            return;
+
+        _isHarvesting = false;
+        _harvestBar.Visible = false;
+        _harvestTarget = null;
+        _harvestProgress = 0f;
+    }
+
+    private ResourceNode FindNearestResource()
+    {
+        Godot.Collections.Array<Node> resources = GetTree().GetNodesInGroup("resources");
+        ResourceNode nearest = null;
+        float nearestDist = InteractRange;
+
+        foreach (Node node in resources)
+        {
+            if (node is ResourceNode res && !res.IsExhausted)
+            {
+                float dist = GlobalPosition.DistanceTo(res.GlobalPosition);
+                if (dist < nearestDist)
+                {
+                    nearest = res;
+                    nearestDist = dist;
+                }
+            }
+        }
+
+        return nearest;
+    }
+
+    private void CreateHarvestBar()
+    {
+        _harvestBar = new ProgressBar();
+        _harvestBar.CustomMinimumSize = new Vector2(40, 5);
+        _harvestBar.Position = new Vector2(-20, -25);
+        _harvestBar.ShowPercentage = false;
+        _harvestBar.Visible = false;
+
+        StyleBoxFlat fillStyle = new();
+        fillStyle.BgColor = new Color(0.9f, 0.75f, 0.2f);
+        fillStyle.CornerRadiusBottomLeft = 2;
+        fillStyle.CornerRadiusBottomRight = 2;
+        fillStyle.CornerRadiusTopLeft = 2;
+        fillStyle.CornerRadiusTopRight = 2;
+        _harvestBar.AddThemeStyleboxOverride("fill", fillStyle);
+
+        StyleBoxFlat bgStyle = new();
+        bgStyle.BgColor = new Color(0.1f, 0.1f, 0.1f, 0.7f);
+        bgStyle.CornerRadiusBottomLeft = 2;
+        bgStyle.CornerRadiusBottomRight = 2;
+        bgStyle.CornerRadiusTopLeft = 2;
+        bgStyle.CornerRadiusTopRight = 2;
+        _harvestBar.AddThemeStyleboxOverride("background", bgStyle);
+
+        AddChild(_harvestBar);
+    }
+
+    private void CacheInventory()
+    {
+        if (_inventory != null)
+            return;
+
+        _inventory = GetNodeOrNull<Inventory>("Inventory");
+    }
+
+    // --- Combat ---
+
     private void Die()
     {
         _isDead = true;
         Velocity = Vector2.Zero;
         _attackTimer.Stop();
+        CancelHarvest();
         RemoveFromGroup("player");
 
         EventBus eventBus = GetNode<EventBus>("/root/EventBus");
@@ -206,6 +379,44 @@ public partial class Player : CharacterBody2D
             result.Add(inRange[i].enemy);
 
         return result;
+    }
+
+    // --- Repair ---
+
+    private bool TryRepairNearbyStructure()
+    {
+        Structure target = FindDamagedStructure();
+        if (target == null)
+            return false;
+
+        float repairAmount = target.HpRatio < 1f ? (1f - target.HpRatio) * 100f : 0f;
+        if (repairAmount <= 0f)
+            return false;
+
+        target.Repair(repairAmount);
+        return true;
+    }
+
+    private Structure FindDamagedStructure()
+    {
+        Godot.Collections.Array<Node> structures = GetTree().GetNodesInGroup("structures");
+        Structure nearest = null;
+        float nearestDist = InteractRange;
+
+        foreach (Node node in structures)
+        {
+            if (node is Structure structure && !structure.IsDestroyed && structure.HpRatio < 1f)
+            {
+                float dist = GlobalPosition.DistanceTo(structure.GlobalPosition);
+                if (dist < nearestDist)
+                {
+                    nearest = structure;
+                    nearestDist = dist;
+                }
+            }
+        }
+
+        return nearest;
     }
 
     private static Vector2 CartesianToIsometric(Vector2 cartesian)

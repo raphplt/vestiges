@@ -1,7 +1,7 @@
 # VESTIGES — Roadmap & Milestones
 
 > **Version :** 1.2
-> **Dernière mise à jour :** 21 février 2026
+> **Dernière mise à jour :** 22 février 2026
 > **Objectif final :** Early Access Steam
 > **Docs liés :** GDD v1.3, Bible Artistique & Narrative v1.0, Architecture v2.1
 
@@ -137,7 +137,7 @@ Les niveaux de complexité servent à prioriser l'effort et le risque. Ils n'imp
 - [x] Résultat : la boucle complète fonctionne — jouer → mourir → score → relancer.
 
 ### Critère de validation
-- [ ] Le cycle jour/nuit change vraiment la dynamique. Le joueur se dit "merde la nuit arrive" et change de comportement. Le score donne envie de faire mieux.
+- [x] Le cycle jour/nuit change vraiment la dynamique. Le joueur se dit "merde la nuit arrive" et change de comportement. Le score donne envie de faire mieux.
 
 ---
 
@@ -149,38 +149,38 @@ Les niveaux de complexité servent à prioriser l'effort et le risque. Ils n'imp
 ### Tâches
 
 **Lot 3.1 — Récolte de ressources (`Complexité : C2`)**
-- [ ] Nœuds de ressources sur la map (arbres = bois, rochers = pierre, débris = métal).
-- [ ] Interaction : le joueur s'approche, touche une touche, animation courte, ressources dans l'inventaire.
-- [ ] Inventaire basique (liste de ressources avec quantités).
-- [ ] Résultat : le joueur peut récolter en explorant.
+- [x] Nœuds de ressources sur la map (arbres = bois, rochers = pierre, débris = métal).
+- [x] Interaction : le joueur s'approche, touche une touche, animation courte, ressources dans l'inventaire.
+- [x] Inventaire basique (liste de ressources avec quantités).
+- [x] Résultat : le joueur peut récolter en explorant.
 
 **Lot 3.2 — Système de craft (`Complexité : C3`)**
-- [ ] Menu de craft (panneau latéral, pas plein écran).
-- [ ] 8-10 recettes de base : mur bois, mur pierre, piège à pointes, barricade, torche, bandage, arme T2.
-- [ ] Craft en temps réel (timer court, le joueur est vulnérable... mais il est dans la zone safe du Foyer).
-- [ ] Résultat : le joueur craft des objets à partir des ressources récoltées.
+- [x] Menu de craft (panneau latéral, pas plein écran).
+- [x] 8-10 recettes de base : mur bois, mur pierre, piège à pointes, barricade, torche, bandage, arme T2.
+- [x] Craft en temps réel (timer court, le joueur est vulnérable... mais il est dans la zone safe du Foyer).
+- [x] Résultat : le joueur craft des objets à partir des ressources récoltées.
 
 **Lot 3.3 — Placement de structures (`Complexité : C4`)**
-- [ ] Système de placement sur grille iso (prévisualisation fantôme vert/rouge).
-- [ ] Murs avec HP (les ennemis les attaquent la nuit).
-- [ ] Pièges qui infligent des dégâts aux ennemis qui marchent dessus.
-- [ ] Le Foyer comme ancrage central fixe autour duquel on construit. Son rayon de sécurité définit la zone constructible.
-- [ ] Résultat : le joueur peut construire une base fonctionnelle.
+- [x] Système de placement sur grille iso (prévisualisation fantôme vert/rouge).
+- [x] Murs avec HP (les ennemis les attaquent la nuit).
+- [x] Pièges qui infligent des dégâts aux ennemis qui marchent dessus.
+- [x] Le Foyer comme ancrage central fixe autour duquel on construit. Son rayon de sécurité définit la zone constructible.
+- [x] Résultat : le joueur peut construire une base fonctionnelle.
 
 **Lot 3.4 — Défenses actives (`Complexité : C4`)**
-- [ ] Tourelle basique (auto-attaque sur les ennemis proches, consomme des ressources).
-- [ ] Réparation des structures endommagées (coût en ressources réduit).
-- [ ] Les ennemis ciblent intelligemment : murs d'abord si ils bloquent, ou contournement.
-- [ ] Résultat : la nuit devient un vrai siège — les défenses travaillent avec le joueur.
+- [x] Tourelle basique (auto-attaque sur les ennemis proches, consomme des ressources).
+- [x] Réparation des structures endommagées (coût en ressources réduit).
+- [x] Les ennemis ciblent intelligemment : murs d'abord si ils bloquent, ou contournement.
+- [x] Résultat : la nuit devient un vrai siège — les défenses travaillent avec le joueur.
 
 **Lot 3.5 — Intégration et équilibrage (`Complexité : C3`)**
-- [ ] Équilibrer le coût des structures vs la puissance des ennemis.
-- [ ] S'assurer que la boucle récolte → craft → placement est fluide et pas tedious.
-- [ ] Tester que le jeu est toujours fun AVEC la base (pas juste un obstacle entre les combats).
-- [ ] Résultat : la base ajoute de la profondeur stratégique sans casser le rythme.
+- [x] Équilibrer le coût des structures vs la puissance des ennemis.
+- [x] S'assurer que la boucle récolte → craft → placement est fluide et pas tedious.
+- [x] Tester que le jeu est toujours fun AVEC la base (pas juste un obstacle entre les combats).
+- [x] Résultat : la base ajoute de la profondeur stratégique sans casser le rythme.
 
 ### Critère de validation
-- [ ] Le joueur fait des choix stratégiques sur sa base ("je mets le mur ici pour canaliser les ennemis vers les pièges"). La base a un impact réel sur la survie. Construire est satisfaisant, pas une corvée.
+- [x] Le joueur fait des choix stratégiques sur sa base ("je mets le mur ici pour canaliser les ennemis vers les pièges"). La base a un impact réel sur la survie. Construire est satisfaisant, pas une corvée.
 
 ---
 
