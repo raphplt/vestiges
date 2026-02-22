@@ -62,7 +62,7 @@ public partial class XpOrb : Area2D
             _collected = true;
             EventBus eventBus = GetNode<EventBus>("/root/EventBus");
             eventBus.EmitSignal(EventBus.SignalName.XpGained, _xpValue);
-            QueueFree();
+            CallDeferred(MethodName.QueueFree);
         }
     }
 

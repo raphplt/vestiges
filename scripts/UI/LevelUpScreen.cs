@@ -19,8 +19,8 @@ public partial class LevelUpScreen : CanvasLayer
     public override void _Ready()
     {
         _panel = GetNode<PanelContainer>("Panel");
-        _container = GetNode<VBoxContainer>("Panel/VBox");
-        _title = GetNode<Label>("Panel/VBox/Title");
+        _container = GetNode<VBoxContainer>("Panel/Padding/VBox");
+        _title = GetNode<Label>("Panel/Padding/VBox/Title");
         Hide();
     }
 
@@ -56,9 +56,11 @@ public partial class LevelUpScreen : CanvasLayer
             int currentStacks = _perkManager.GetStacks(perkId);
             string stackText = $"({currentStacks}/{data.MaxStacks})";
 
-            Button button = new();
-            button.CustomMinimumSize = new Vector2(300, 50);
-            button.Text = $"{data.Name} — {data.Description} {stackText}";
+            Button button = new()
+            {
+                CustomMinimumSize = new Vector2(300, 50),
+                Text = $"{data.Name} — {data.Description} {stackText}"
+            };
 
             string capturedId = perkId;
             button.Pressed += () => OnPerkSelected(capturedId);

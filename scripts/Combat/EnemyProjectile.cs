@@ -34,7 +34,7 @@ public partial class EnemyProjectile : Area2D
         if (body is Player player)
         {
             player.TakeDamage(_damage);
-            QueueFree();
+            CallDeferred(MethodName.QueueFree);
         }
     }
 }

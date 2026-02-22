@@ -207,7 +207,7 @@ public partial class Enemy : CharacterBody2D
 			);
 			orb.GlobalPosition = GlobalPosition + offset;
 			orb.Initialize(xpPerOrb);
-			GetTree().CurrentScene.AddChild(orb);
+			GetTree().CurrentScene.CallDeferred(Node.MethodName.AddChild, orb);
 		}
 	}
 

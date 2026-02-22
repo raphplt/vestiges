@@ -33,7 +33,7 @@ public partial class Projectile : Area2D
         if (body is Enemy enemy && !enemy.IsQueuedForDeletion())
         {
             enemy.TakeDamage(_damage);
-            QueueFree();
+            CallDeferred(MethodName.QueueFree);
         }
     }
 }
