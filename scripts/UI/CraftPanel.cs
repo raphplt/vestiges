@@ -20,6 +20,7 @@ public partial class CraftPanel : CanvasLayer
     private ProgressBar _craftBar;
     private CraftManager _craftManager;
     private Inventory _inventory;
+    private StructureManager _structureManager;
     private EventBus _eventBus;
     private bool _isOpen;
 
@@ -75,6 +76,11 @@ public partial class CraftPanel : CanvasLayer
     public void SetInventory(Inventory inventory)
     {
         _inventory = inventory;
+    }
+
+    public void SetStructureManager(StructureManager manager)
+    {
+        _structureManager = manager;
     }
 
     private void TogglePanel()
@@ -182,7 +188,9 @@ public partial class CraftPanel : CanvasLayer
         PanelContainer entry = new();
 
         bool canAfford = _craftManager?.CanCraft(recipe.Id) ?? false;
-        bool canCraft = canAfford && nearFoyer && !(_craftManager?.IsCrafting ?? false);
+        bool isStructure = recipe.Result.Type is "wall" or "trap" or "turret" or "light";
+        bool capReached = isStructure && _structureManager != null && !_structureManager.CanPlaceType(recipe.Result.Type);
+        bool canCraft = canAfford && nearFoyer && !capReached && !(_craftManager?.IsCrafting ?? false);
 
         StyleBoxFlat style = new();
         style.BgColor = canCraft ? new Color(0.12f, 0.15f, 0.12f, 0.8f) : new Color(0.12f, 0.1f, 0.1f, 0.6f);
@@ -200,8 +208,16 @@ public partial class CraftPanel : CanvasLayer
         vbox.AddThemeConstantOverride("separation", 2);
         entry.AddChild(vbox);
 
+        string nameText = recipe.Name;
+        if (isStructure && _structureManager != null)
+        {
+            int count = _structureManager.GetCountForType(recipe.Result.Type);
+            int max = _structureManager.GetMaxForType(recipe.Result.Type);
+            nameText += $"  ({count}/{max})";
+        }
+
         Label nameLabel = new();
-        nameLabel.Text = recipe.Name;
+        nameLabel.Text = nameText;
         nameLabel.AddThemeFontSizeOverride("font_size", 14);
         nameLabel.AddThemeColorOverride("font_color", canCraft ? Colors.White : new Color(0.5f, 0.5f, 0.5f));
         vbox.AddChild(nameLabel);
@@ -222,7 +238,15 @@ public partial class CraftPanel : CanvasLayer
         ingLabel.AddThemeFontSizeOverride("normal_font_size", 11);
         vbox.AddChild(ingLabel);
 
-        if (canCraft)
+        if (capReached)
+        {
+            Label capLabel = new();
+            capLabel.Text = "Limite atteinte";
+            capLabel.AddThemeFontSizeOverride("font_size", 11);
+            capLabel.AddThemeColorOverride("font_color", new Color(0.8f, 0.4f, 0.2f));
+            vbox.AddChild(capLabel);
+        }
+        else if (canCraft)
         {
             Button craftButton = new();
             craftButton.Text = $"Fabriquer ({recipe.BuildTime:0.#}s)";

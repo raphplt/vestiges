@@ -4,32 +4,32 @@
         "name": "Bois",
         "color": "#8B6914",
         "harvest_time": 0.4,
-        "amount_min": 3,
-        "amount_max": 6,
+        "amount_min": 2,
+        "amount_max": 4,
         "size": 18,
         "shape": "diamond",
-        "harvests": 3
+        "harvests": 2
     },
     {
         "id": "stone",
         "name": "Pierre",
         "color": "#888888",
         "harvest_time": 0.5,
-        "amount_min": 2,
-        "amount_max": 5,
+        "amount_min": 1,
+        "amount_max": 3,
         "size": 16,
         "shape": "diamond",
-        "harvests": 3
+        "harvests": 2
     },
     {
         "id": "metal",
         "name": "Métal",
         "color": "#7088A0",
         "harvest_time": 0.6,
-        "amount_min": 2,
-        "amount_max": 4,
+        "amount_min": 1,
+        "amount_max": 2,
         "size": 14,
         "shape": "diamond",
-        "harvests": 2
+        "harvests": 1
     }
 ]

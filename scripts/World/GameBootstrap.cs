@@ -35,6 +35,7 @@ public partial class GameBootstrap : Node
         craftManager.SetInventory(inventory);
         craftPanel.SetCraftManager(craftManager);
         craftPanel.SetInventory(inventory);
+        craftPanel.SetStructureManager(structureManager);
         structurePlacer.SetStructureManager(structureManager);
 
         GD.Print("[GameBootstrap] Systems wired");

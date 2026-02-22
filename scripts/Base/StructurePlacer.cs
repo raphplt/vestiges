@@ -94,6 +94,11 @@ public partial class StructurePlacer : Node2D
         string type = recipe.Result.Type;
         if (type == "wall" || type == "trap" || type == "turret" || type == "light")
         {
+            if (_structureManager != null && !_structureManager.CanPlaceType(type))
+            {
+                GD.Print($"[StructurePlacer] Cap atteint pour {type} ({_structureManager.GetCountForType(type)}/{_structureManager.GetMaxForType(type)})");
+                return;
+            }
             StartPlacement(recipeId, recipe);
         }
     }
