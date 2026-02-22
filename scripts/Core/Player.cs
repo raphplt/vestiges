@@ -1,6 +1,7 @@
 using Godot;
 using Vestiges.Base;
 using Vestiges.Combat;
+using Vestiges.Infrastructure;
 
 namespace Vestiges.Core;
 
@@ -137,6 +138,17 @@ public partial class Player : CharacterBody2D
                 if (modifierType == "multiplicative") _aoeMultiplier *= value;
                 break;
         }
+    }
+
+    public void Heal(float amount)
+    {
+        if (_isDead || amount <= 0)
+            return;
+
+        _currentHp = Mathf.Min(_currentHp + amount, EffectiveMaxHp);
+
+        EventBus eventBus = GetNode<EventBus>("/root/EventBus");
+        eventBus.EmitSignal(EventBus.SignalName.PlayerDamaged, _currentHp, EffectiveMaxHp);
     }
 
     public void TakeDamage(float damage)
@@ -393,6 +405,19 @@ public partial class Player : CharacterBody2D
         if (repairAmount <= 0f)
             return false;
 
+        CacheInventory();
+        if (_inventory == null)
+            return false;
+
+        RecipeData recipe = RecipeDataLoader.Get(target.Recipe);
+        if (recipe == null || recipe.Ingredients.Count == 0)
+            return false;
+
+        RecipeIngredient primaryIngredient = recipe.Ingredients[0];
+        if (!_inventory.Has(primaryIngredient.Resource, 1))
+            return false;
+
+        _inventory.Remove(primaryIngredient.Resource, 1);
         target.Repair(repairAmount);
         return true;
     }

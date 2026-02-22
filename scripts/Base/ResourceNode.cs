@@ -42,21 +42,23 @@ public partial class ResourceNode : StaticBody2D
         _originalColor = data.Color;
     }
 
-    /// <summary>Récolte le noeud. Retourne la quantité récoltée, ou 0 si épuisé.</summary>
+    /// <summary>Récolte le noeud entièrement en un seul coup. Retourne la quantité totale.</summary>
     public int Harvest()
     {
         if (IsExhausted)
             return 0;
 
-        _harvestsRemaining--;
-        int amount = (int)GD.RandRange(_amountMin, _amountMax + 1);
+        int totalAmount = 0;
+        while (_harvestsRemaining > 0)
+        {
+            _harvestsRemaining--;
+            totalAmount += (int)GD.RandRange(_amountMin, _amountMax + 1);
+        }
 
         HarvestFlash();
+        Exhaust();
 
-        if (IsExhausted)
-            Exhaust();
-
-        return amount;
+        return totalAmount;
     }
 
     private void HarvestFlash()

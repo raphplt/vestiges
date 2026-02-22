@@ -19,6 +19,7 @@ public partial class Structure : StaticBody2D
 
     public bool IsDestroyed => CurrentHp <= 0;
     public float HpRatio => MaxHp > 0 ? CurrentHp / MaxHp : 0;
+    public string Recipe => RecipeId;
 
     public override void _Ready()
     {

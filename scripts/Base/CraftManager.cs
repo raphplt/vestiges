@@ -133,7 +133,28 @@ public partial class CraftManager : Node
         _currentRecipeId = null;
         _craftProgress = 0f;
 
-        _eventBus.EmitSignal(EventBus.SignalName.CraftCompleted, recipeId);
+        RecipeData recipe = RecipeDataLoader.Get(recipeId);
+        if (recipe != null && recipe.Result.Type == "consumable")
+        {
+            ApplyConsumable(recipe);
+        }
+        else
+        {
+            _eventBus.EmitSignal(EventBus.SignalName.CraftCompleted, recipeId);
+        }
+
         GD.Print($"[CraftManager] Craft completed: {recipeId}");
+    }
+
+    private void ApplyConsumable(RecipeData recipe)
+    {
+        Node playerNode = GetTree().GetFirstNodeInGroup("player");
+        if (playerNode is not Player player)
+            return;
+
+        if (recipe.Result.Stats.TryGetValue("heal", out float healAmount))
+        {
+            player.Heal(healAmount);
+        }
     }
 }

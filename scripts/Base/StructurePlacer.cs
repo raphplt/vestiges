@@ -148,6 +148,18 @@ public partial class StructurePlacer : Node2D
             turret.Initialize(_recipeId, _recipeData.Id, hp, _currentCell, structureColor);
             turret.SetTurretStats(damage, atkSpeed, range);
         }
+        else if (type == "light")
+        {
+            Torch torch = new();
+            float radius = _recipeData.Result.Stats.TryGetValue("radius", out float r) ? r : 80f;
+            float duration = _recipeData.Result.Stats.TryGetValue("duration", out float dur) ? dur : 180f;
+            structure = torch;
+            AddStructureChildren(torch);
+            torch.GlobalPosition = worldPos;
+            _structureContainer.AddChild(torch);
+            torch.Initialize(_recipeId, _recipeData.Id, hp, _currentCell, structureColor);
+            torch.SetTorchStats(radius, duration);
+        }
         else
         {
             Wall wall = new();
