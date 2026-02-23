@@ -29,19 +29,31 @@ public partial class WorldSetup : Node2D
     /// <summary>Référence publique au générateur pour les autres systèmes.</summary>
     public WorldGenerator Generator => _generator;
 
-    /// <summary>Checks if a world position is on water terrain.</summary>
+    /// <summary>Checks if a world position is impassable (water or erased void).</summary>
     public bool IsWaterAt(Vector2 worldPos)
     {
         if (_generator == null || _ground == null)
             return false;
         Vector2I cell = _ground.LocalToMap(_ground.ToLocal(worldPos));
+        if (_generator.IsErased(cell.X, cell.Y))
+            return true;
         return _generator.GetTerrain(cell.X, cell.Y) == TerrainType.Water;
+    }
+
+    /// <summary>Retourne le BiomeData à une position monde, ou null.</summary>
+    public BiomeData GetBiomeAt(Vector2 worldPos)
+    {
+        if (_generator == null || _ground == null)
+            return null;
+        Vector2I cell = _ground.LocalToMap(_ground.ToLocal(worldPos));
+        return _generator.GetBiome(cell.X, cell.Y);
     }
 
     public override void _Ready()
     {
         EnemyDataLoader.Load();
         ResourceDataLoader.Load();
+        BiomeDataLoader.Load();
 
         _ground = GetNode<TileMapLayer>("Ground");
         _resourceContainer = GetNode<Node2D>("ResourceContainer");
@@ -61,10 +73,24 @@ public partial class WorldSetup : Node2D
             _config.FoyerClearance,
             _config.CaIterations,
             _config.Zones,
-            Seed
+            Seed,
+            _config.EdgeFadeWidth
         );
 
-        TerrainType[,] terrain = _generator.Generate();
+        // Charger les biomes disponibles et générer avec secteurs
+        List<BiomeData> availableBiomes = LoadAvailableBiomes();
+        TerrainType[,] terrain;
+
+        if (availableBiomes.Count >= 2)
+        {
+            terrain = _generator.Generate(availableBiomes, _config.BiomeCount);
+        }
+        else
+        {
+            terrain = _generator.Generate();
+        }
+
+        CreateVoidBackground();
         ApplyTerrain(terrain);
         SpawnResources();
 
@@ -75,6 +101,45 @@ public partial class WorldSetup : Node2D
         AddChild(_respawnTimer);
 
         GD.Print($"[WorldSetup] World generated with seed {Seed}");
+    }
+
+    private List<BiomeData> LoadAvailableBiomes()
+    {
+        List<BiomeData> biomes = new();
+
+        if (_config.AvailableBiomes != null && _config.AvailableBiomes.Count > 0)
+        {
+            foreach (string biomeId in _config.AvailableBiomes)
+            {
+                BiomeData biome = BiomeDataLoader.Get(biomeId);
+                if (biome != null)
+                    biomes.Add(biome);
+                else
+                    GD.PushWarning($"[WorldSetup] Biome '{biomeId}' not found in data");
+            }
+        }
+        else
+        {
+            biomes = BiomeDataLoader.GetAll();
+        }
+
+        return biomes;
+    }
+
+    /// <summary>
+    /// Fond noir derrière le TileMap : le vide, l'Effacé.
+    /// Au-delà de la carte et dans les trous de décomposition, c'est le néant.
+    /// </summary>
+    private void CreateVoidBackground()
+    {
+        ColorRect voidBg = new();
+        float worldSize = _config.MapRadius * 64f * 2f;
+        voidBg.Size = new Vector2(worldSize, worldSize);
+        voidBg.Position = new Vector2(-worldSize * 0.5f, -worldSize * 0.5f);
+        voidBg.Color = new Color(0f, 0f, 0f, 1f);
+        voidBg.ZIndex = -100;
+        AddChild(voidBg);
+        MoveChild(voidBg, 0);
     }
 
     private void ApplyTerrain(TerrainType[,] terrain)
@@ -88,6 +153,11 @@ public partial class WorldSetup : Node2D
             {
                 int x = gx - radius;
                 int y = gy - radius;
+
+                // Hors limites ou effacé : pas de tile, le vide noir transparaît
+                if (!_generator.IsWithinBounds(x, y) || _generator.IsErased(x, y))
+                    continue;
+
                 Vector2I cell = new(x, y);
                 int sourceId = (int)terrain[gx, gy];
                 _ground.SetCell(cell, sourceId, Vector2I.Zero);
@@ -118,8 +188,7 @@ public partial class WorldSetup : Node2D
         if (cell == new Vector2I(int.MinValue, int.MinValue))
             return null;
 
-        TerrainType terrain = _generator.GetTerrain(cell.X, cell.Y);
-        string resourceId = PickResourceForTerrain(terrain);
+        string resourceId = PickResourceForCell(cell);
 
         ResourceData data = ResourceDataLoader.Get(resourceId);
         if (data == null)
@@ -169,9 +238,22 @@ public partial class WorldSetup : Node2D
         }
     }
 
-    private string PickResourceForTerrain(TerrainType terrain)
+    private string PickResourceForCell(Vector2I cell)
     {
-        Dictionary<string, float> bias = _config.GetTerrainBias(terrain);
+        // Priorité au biome s'il existe, sinon fallback terrain
+        BiomeData biome = _generator.GetBiome(cell.X, cell.Y);
+
+        Dictionary<string, float> bias;
+        if (biome != null && biome.ResourceBias.Count > 0)
+        {
+            bias = biome.ResourceBias;
+        }
+        else
+        {
+            TerrainType terrain = _generator.GetTerrain(cell.X, cell.Y);
+            bias = _config.GetTerrainBias(terrain);
+        }
+
         float roll = (float)GD.Randf();
         float cumulative = 0f;
 
@@ -189,15 +271,20 @@ public partial class WorldSetup : Node2D
     {
         int radius = _config.MapRadius;
         int foyerExclusion = _config.FoyerClearance + 1;
+        int safeRadius = radius - _config.EdgeFadeWidth;
 
         Node playerNode = GetTree().GetFirstNodeInGroup("player");
         Vector2 playerPos = playerNode is Node2D player ? player.GlobalPosition : Vector2.Zero;
 
         for (int attempt = 0; attempt < 30; attempt++)
         {
-            int x = (int)GD.RandRange(-radius + 1, radius);
-            int y = (int)GD.RandRange(-radius + 1, radius);
+            int x = (int)GD.RandRange(-safeRadius + 1, safeRadius);
+            int y = (int)GD.RandRange(-safeRadius + 1, safeRadius);
             Vector2I cell = new(x, y);
+
+            // Rester dans le cercle (hors zone de décomposition)
+            if (x * x + y * y > safeRadius * safeRadius)
+                continue;
 
             if (used.Contains(cell))
                 continue;
@@ -234,6 +321,9 @@ public class WorldGenConfig
     public int ResourceCount;
     public float RespawnInterval;
     public int RespawnThreshold;
+    public int BiomeCount = 3;
+    public int EdgeFadeWidth = 5;
+    public List<string> AvailableBiomes = new();
 
     private readonly Dictionary<string, Dictionary<string, float>> _terrainBias = new();
 
@@ -279,6 +369,19 @@ public class WorldGenConfig
         config.ResourceCount = (int)dict["resource_count"].AsDouble();
         config.RespawnInterval = (float)dict["respawn_interval"].AsDouble();
         config.RespawnThreshold = (int)dict["respawn_threshold"].AsDouble();
+
+        if (dict.ContainsKey("biome_count"))
+            config.BiomeCount = (int)dict["biome_count"].AsDouble();
+
+        if (dict.ContainsKey("edge_fade_width"))
+            config.EdgeFadeWidth = (int)dict["edge_fade_width"].AsDouble();
+
+        if (dict.ContainsKey("available_biomes"))
+        {
+            Godot.Collections.Array biomesArray = dict["available_biomes"].AsGodotArray();
+            foreach (Variant biomeItem in biomesArray)
+                config.AvailableBiomes.Add(biomeItem.AsString());
+        }
 
         Godot.Collections.Array zonesArray = dict["zones"].AsGodotArray();
         foreach (Variant zoneVar in zonesArray)

@@ -42,6 +42,8 @@ public partial class HubScreen : Control
         SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
         BuildUI();
 
+        EnsureDefaultCharacterSelection(gm);
+
         if (!string.IsNullOrEmpty(_selectedCharacterId))
             HighlightSelectedCharacter(_selectedCharacterId);
 
@@ -51,6 +53,25 @@ public partial class HubScreen : Control
 
         if (gm.LastRunData != null)
             gm.LastRunData = null;
+    }
+
+    private void EnsureDefaultCharacterSelection(GameManager gm)
+    {
+        if (!string.IsNullOrEmpty(_selectedCharacterId))
+            return;
+
+        foreach (CharacterData character in CharacterDataLoader.GetAll())
+        {
+            if (!MetaSaveManager.IsCharacterUnlocked(character.Id))
+                continue;
+
+            _selectedCharacterId = character.Id;
+            gm.SelectedCharacterId = character.Id;
+            GD.Print($"[Hub] Default character selected: {character.Id}");
+            return;
+        }
+
+        GD.PushWarning("[Hub] No unlocked character available for default selection.");
     }
 
     private void BuildUI()
@@ -79,21 +100,27 @@ public partial class HubScreen : Control
         titleBox.AddThemeConstantOverride("separation", 4);
         titleMargin.AddChild(titleBox);
 
-        Label title = new();
-        title.Text = "VESTIGES";
-        title.HorizontalAlignment = HorizontalAlignment.Center;
+        Label title = new()
+        {
+            Text = "VESTIGES",
+            HorizontalAlignment = HorizontalAlignment.Center
+        };
         title.AddThemeFontSizeOverride("font_size", 36);
         title.AddThemeColorOverride("font_color", new Color(0.9f, 0.82f, 0.55f));
         titleBox.AddChild(title);
 
         // Subtitle + Vestiges on same row
-        HBoxContainer subtitleRow = new();
-        subtitleRow.Alignment = BoxContainer.AlignmentMode.Center;
+        HBoxContainer subtitleRow = new()
+        {
+            Alignment = BoxContainer.AlignmentMode.Center
+        };
         subtitleRow.AddThemeConstantOverride("separation", 20);
         titleBox.AddChild(subtitleRow);
 
-        Label subtitle = new();
-        subtitle.Text = "Le Hub";
+        Label subtitle = new()
+        {
+            Text = "Le Hub"
+        };
         subtitle.AddThemeFontSizeOverride("font_size", 14);
         subtitle.AddThemeColorOverride("font_color", new Color(0.5f, 0.5f, 0.6f));
         subtitleRow.AddChild(subtitle);
@@ -104,8 +131,10 @@ public partial class HubScreen : Control
         subtitleRow.AddChild(_vestigesLabel);
 
         // Center: 3-column layout
-        HBoxContainer columns = new();
-        columns.SizeFlagsVertical = SizeFlags.ExpandFill;
+        HBoxContainer columns = new()
+        {
+            SizeFlagsVertical = SizeFlags.ExpandFill
+        };
         columns.AddThemeConstantOverride("separation", 20);
         columns.Alignment = BoxContainer.AlignmentMode.Center;
         mainVBox.AddChild(columns);
@@ -131,8 +160,10 @@ public partial class HubScreen : Control
         bottomBox.AddThemeConstantOverride("separation", 10);
         bottomMargin.AddChild(bottomBox);
 
-        _selectedCharLabel = new Label();
-        _selectedCharLabel.HorizontalAlignment = HorizontalAlignment.Center;
+        _selectedCharLabel = new Label
+        {
+            HorizontalAlignment = HorizontalAlignment.Center
+        };
         _selectedCharLabel.AddThemeFontSizeOverride("font_size", 16);
         _selectedCharLabel.AddThemeColorOverride("font_color", new Color(0.7f, 0.7f, 0.75f));
         bottomBox.AddChild(_selectedCharLabel);
@@ -140,9 +171,11 @@ public partial class HubScreen : Control
         CenterContainer buttonCenter = new();
         bottomBox.AddChild(buttonCenter);
 
-        _enterVoidButton = new Button();
-        _enterVoidButton.Text = "Entrer dans le Vide";
-        _enterVoidButton.CustomMinimumSize = new Vector2(250, 50);
+        _enterVoidButton = new Button
+        {
+            Text = "Entrer dans le Vide",
+            CustomMinimumSize = new Vector2(250, 50)
+        };
         _enterVoidButton.AddThemeFontSizeOverride("font_size", 18);
         _enterVoidButton.Pressed += OnEnterVoidPressed;
         buttonCenter.AddChild(_enterVoidButton);
@@ -162,9 +195,11 @@ public partial class HubScreen : Control
 
         VBoxContainer content = GetSectionContent(panel);
 
-        Label desc = new();
-        desc.Text = "Choisir un personnage";
-        desc.HorizontalAlignment = HorizontalAlignment.Center;
+        Label desc = new()
+        {
+            Text = "Choisir un personnage",
+            HorizontalAlignment = HorizontalAlignment.Center
+        };
         desc.AddThemeFontSizeOverride("font_size", 12);
         desc.AddThemeColorOverride("font_color", new Color(0.5f, 0.5f, 0.55f));
         content.AddChild(desc);
@@ -184,28 +219,32 @@ public partial class HubScreen : Control
     {
         bool isUnlocked = MetaSaveManager.IsCharacterUnlocked(character.Id);
 
-        PanelContainer card = new();
-        card.CustomMinimumSize = new Vector2(340, 0);
+        PanelContainer card = new()
+        {
+            CustomMinimumSize = new Vector2(340, 0)
+        };
 
-        StyleBoxFlat cardStyle = new();
-        cardStyle.BgColor = isUnlocked
-            ? new Color(0.06f, 0.06f, 0.1f, 0.9f)
-            : new Color(0.04f, 0.04f, 0.06f, 0.7f);
-        cardStyle.BorderColor = isUnlocked
-            ? new Color(0.2f, 0.2f, 0.25f, 0.6f)
-            : new Color(0.15f, 0.15f, 0.18f, 0.4f);
-        cardStyle.BorderWidthBottom = 2;
-        cardStyle.BorderWidthTop = 2;
-        cardStyle.BorderWidthLeft = 2;
-        cardStyle.BorderWidthRight = 2;
-        cardStyle.CornerRadiusBottomLeft = 6;
-        cardStyle.CornerRadiusBottomRight = 6;
-        cardStyle.CornerRadiusTopLeft = 6;
-        cardStyle.CornerRadiusTopRight = 6;
-        cardStyle.ContentMarginLeft = 14;
-        cardStyle.ContentMarginRight = 14;
-        cardStyle.ContentMarginTop = 10;
-        cardStyle.ContentMarginBottom = 10;
+        StyleBoxFlat cardStyle = new()
+        {
+            BgColor = isUnlocked
+                ? new Color(0.06f, 0.06f, 0.1f, 0.9f)
+                : new Color(0.04f, 0.04f, 0.06f, 0.7f),
+            BorderColor = isUnlocked
+                ? new Color(0.2f, 0.2f, 0.25f, 0.6f)
+                : new Color(0.15f, 0.15f, 0.18f, 0.4f),
+            BorderWidthBottom = 2,
+            BorderWidthTop = 2,
+            BorderWidthLeft = 2,
+            BorderWidthRight = 2,
+            CornerRadiusBottomLeft = 6,
+            CornerRadiusBottomRight = 6,
+            CornerRadiusTopLeft = 6,
+            CornerRadiusTopRight = 6,
+            ContentMarginLeft = 14,
+            ContentMarginRight = 14,
+            ContentMarginTop = 10,
+            ContentMarginBottom = 10
+        };
         card.AddThemeStyleboxOverride("panel", cardStyle);
 
         VBoxContainer cardContent = new();
@@ -219,13 +258,17 @@ public partial class HubScreen : Control
         header.AddThemeConstantOverride("separation", 8);
         cardContent.AddChild(header);
 
-        ColorRect colorIndicator = new();
-        colorIndicator.Color = isUnlocked ? character.VisualColor : new Color(0.25f, 0.25f, 0.3f);
-        colorIndicator.CustomMinimumSize = new Vector2(8, 8);
+        ColorRect colorIndicator = new()
+        {
+            Color = isUnlocked ? character.VisualColor : new Color(0.25f, 0.25f, 0.3f),
+            CustomMinimumSize = new Vector2(8, 8)
+        };
         header.AddChild(colorIndicator);
 
-        Label nameLabel = new();
-        nameLabel.Text = character.Name;
+        Label nameLabel = new()
+        {
+            Text = character.Name
+        };
         nameLabel.AddThemeFontSizeOverride("font_size", 16);
         nameLabel.AddThemeColorOverride("font_color", textColor);
         header.AddChild(nameLabel);
@@ -233,8 +276,10 @@ public partial class HubScreen : Control
         if (isUnlocked)
         {
             // Description
-            Label descLabel = new();
-            descLabel.Text = character.Description;
+            Label descLabel = new()
+            {
+                Text = character.Description
+            };
             descLabel.AddThemeFontSizeOverride("font_size", 12);
             descLabel.AddThemeColorOverride("font_color", new Color(0.6f, 0.6f, 0.65f));
             cardContent.AddChild(descLabel);
@@ -242,8 +287,10 @@ public partial class HubScreen : Control
             // Stats
             CharacterStats stats = character.BaseStats;
             string statsText = $"PV:{stats.MaxHp}  ATK:{stats.AttackDamage}  VIT:{stats.Speed}  PORT:{stats.AttackRange}";
-            Label statsLabel = new();
-            statsLabel.Text = statsText;
+            Label statsLabel = new()
+            {
+                Text = statsText
+            };
             statsLabel.AddThemeFontSizeOverride("font_size", 11);
             statsLabel.AddThemeColorOverride("font_color", new Color(0.45f, 0.45f, 0.5f));
             cardContent.AddChild(statsLabel);
@@ -252,8 +299,10 @@ public partial class HubScreen : Control
             PerkData passive = PerkDataLoader.Get(character.PassivePerk);
             if (passive != null)
             {
-                Label passiveLabel = new();
-                passiveLabel.Text = $"Passif : {passive.Name}";
+                Label passiveLabel = new()
+                {
+                    Text = $"Passif : {passive.Name}"
+                };
                 passiveLabel.AddThemeFontSizeOverride("font_size", 11);
                 passiveLabel.AddThemeColorOverride("font_color", new Color(0.75f, 0.65f, 0.35f));
                 cardContent.AddChild(passiveLabel);
@@ -263,8 +312,10 @@ public partial class HubScreen : Control
                 ?? WeaponDataLoader.GetDefaultForCharacter(character.Id);
             if (startingWeapon != null)
             {
-                Label weaponLabel = new();
-                weaponLabel.Text = $"Arme de départ : {startingWeapon.Name}";
+                Label weaponLabel = new()
+                {
+                    Text = $"Arme de départ : {startingWeapon.Name}"
+                };
                 weaponLabel.AddThemeFontSizeOverride("font_size", 11);
                 weaponLabel.AddThemeColorOverride("font_color", new Color(0.55f, 0.75f, 0.85f));
                 cardContent.AddChild(weaponLabel);
@@ -281,8 +332,10 @@ public partial class HubScreen : Control
         else
         {
             // Locked: show unlock condition
-            Label conditionLabel = new();
-            conditionLabel.Text = GetUnlockConditionText(character.UnlockCondition);
+            Label conditionLabel = new()
+            {
+                Text = GetUnlockConditionText(character.UnlockCondition)
+            };
             conditionLabel.AddThemeFontSizeOverride("font_size", 12);
             conditionLabel.AddThemeColorOverride("font_color", new Color(0.4f, 0.35f, 0.3f));
             cardContent.AddChild(conditionLabel);
@@ -389,11 +442,13 @@ public partial class HubScreen : Control
         int bestScore = RunHistoryManager.GetBestScore();
         int maxNights = RunHistoryManager.GetMaxNights();
 
-        Label recordLabel = new();
-        recordLabel.Text = bestScore > 0
-            ? $"Record : {bestScore}\nNuits max : {maxNights}"
-            : "Aucune run enregistrée";
-        recordLabel.HorizontalAlignment = HorizontalAlignment.Center;
+        Label recordLabel = new()
+        {
+            Text = bestScore > 0
+                ? $"Record : {bestScore}\nNuits max : {maxNights}"
+                : "Aucune run enregistrée",
+            HorizontalAlignment = HorizontalAlignment.Center
+        };
         recordLabel.AddThemeFontSizeOverride("font_size", 14);
         recordLabel.AddThemeColorOverride("font_color", new Color(0.85f, 0.75f, 0.4f));
         _chroniquesContent.AddChild(recordLabel);
@@ -406,16 +461,20 @@ public partial class HubScreen : Control
         List<RunRecord> history = RunHistoryManager.GetHistory();
         if (history.Count == 0)
         {
-            Label emptyLabel = new();
-            emptyLabel.Text = "Pas encore d'historique.";
+            Label emptyLabel = new()
+            {
+                Text = "Pas encore d'historique."
+            };
             emptyLabel.AddThemeFontSizeOverride("font_size", 12);
             emptyLabel.AddThemeColorOverride("font_color", new Color(0.4f, 0.4f, 0.45f));
             _chroniquesContent.AddChild(emptyLabel);
             return;
         }
 
-        Label histTitle = new();
-        histTitle.Text = "Dernières runs";
+        Label histTitle = new()
+        {
+            Text = "Dernières runs"
+        };
         histTitle.AddThemeFontSizeOverride("font_size", 12);
         histTitle.AddThemeColorOverride("font_color", new Color(0.55f, 0.55f, 0.6f));
         _chroniquesContent.AddChild(histTitle);
@@ -443,9 +502,11 @@ public partial class HubScreen : Control
 
         _etabliContent = GetSectionContent(panel);
 
-        Label desc = new();
-        desc.Text = "Kits de départ";
-        desc.HorizontalAlignment = HorizontalAlignment.Center;
+        Label desc = new()
+        {
+            Text = "Kits de départ",
+            HorizontalAlignment = HorizontalAlignment.Center
+        };
         desc.AddThemeFontSizeOverride("font_size", 12);
         desc.AddThemeColorOverride("font_color", new Color(0.5f, 0.5f, 0.55f));
         _etabliContent.AddChild(desc);
@@ -517,10 +578,12 @@ public partial class HubScreen : Control
                 // Not owned: add buy button
                 VBoxContainer content = kitCard.GetChild<VBoxContainer>(0);
 
-                Button buyButton = new();
-                buyButton.Text = $"Acheter ({kit.Cost} V)";
-                buyButton.CustomMinimumSize = new Vector2(0, 28);
-                buyButton.Disabled = vestiges < kit.Cost;
+                Button buyButton = new()
+                {
+                    Text = $"Acheter ({kit.Cost} V)",
+                    CustomMinimumSize = new Vector2(0, 28),
+                    Disabled = vestiges < kit.Cost
+                };
 
                 string capturedKitId = kit.Id;
                 int capturedCost = kit.Cost;
@@ -534,8 +597,10 @@ public partial class HubScreen : Control
 
     private PanelContainer CreateKitCard(string name, string description, int cost, bool owned, bool selected)
     {
-        PanelContainer card = new();
-        card.CustomMinimumSize = new Vector2(260, 0);
+        PanelContainer card = new()
+        {
+            CustomMinimumSize = new Vector2(260, 0)
+        };
 
         StyleBoxFlat style = new();
         if (selected)
@@ -576,9 +641,11 @@ public partial class HubScreen : Control
         header.AddThemeConstantOverride("separation", 8);
         content.AddChild(header);
 
-        Label nameLabel = new();
-        nameLabel.Text = name;
-        nameLabel.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+        Label nameLabel = new()
+        {
+            Text = name,
+            SizeFlagsHorizontal = SizeFlags.ExpandFill
+        };
         nameLabel.AddThemeFontSizeOverride("font_size", 14);
         nameLabel.AddThemeColorOverride("font_color", owned
             ? new Color(0.8f, 0.78f, 0.7f)
@@ -587,24 +654,30 @@ public partial class HubScreen : Control
 
         if (selected)
         {
-            Label checkLabel = new();
-            checkLabel.Text = "ACTIF";
+            Label checkLabel = new()
+            {
+                Text = "ACTIF"
+            };
             checkLabel.AddThemeFontSizeOverride("font_size", 11);
             checkLabel.AddThemeColorOverride("font_color", new Color(0.85f, 0.75f, 0.4f));
             header.AddChild(checkLabel);
         }
         else if (owned)
         {
-            Label ownedLabel = new();
-            ownedLabel.Text = "Acheté";
+            Label ownedLabel = new()
+            {
+                Text = "Acheté"
+            };
             ownedLabel.AddThemeFontSizeOverride("font_size", 11);
             ownedLabel.AddThemeColorOverride("font_color", new Color(0.4f, 0.6f, 0.4f));
             header.AddChild(ownedLabel);
         }
 
         // Description
-        Label descLabel = new();
-        descLabel.Text = description;
+        Label descLabel = new()
+        {
+            Text = description
+        };
         descLabel.AddThemeFontSizeOverride("font_size", 11);
         descLabel.AddThemeColorOverride("font_color", new Color(0.5f, 0.5f, 0.55f));
         content.AddChild(descLabel);
@@ -638,34 +711,40 @@ public partial class HubScreen : Control
 
     private PanelContainer CreateSectionPanel(string title, float minWidth)
     {
-        PanelContainer panel = new();
-        panel.CustomMinimumSize = new Vector2(minWidth, 0);
-        panel.SizeFlagsVertical = SizeFlags.ShrinkCenter;
+        PanelContainer panel = new()
+        {
+            CustomMinimumSize = new Vector2(minWidth, 0),
+            SizeFlagsVertical = SizeFlags.ShrinkCenter
+        };
 
-        StyleBoxFlat style = new();
-        style.BgColor = new Color(0.04f, 0.04f, 0.07f, 0.8f);
-        style.BorderColor = new Color(0.15f, 0.15f, 0.2f, 0.5f);
-        style.BorderWidthBottom = 1;
-        style.BorderWidthTop = 1;
-        style.BorderWidthLeft = 1;
-        style.BorderWidthRight = 1;
-        style.CornerRadiusBottomLeft = 8;
-        style.CornerRadiusBottomRight = 8;
-        style.CornerRadiusTopLeft = 8;
-        style.CornerRadiusTopRight = 8;
-        style.ContentMarginLeft = 16;
-        style.ContentMarginRight = 16;
-        style.ContentMarginTop = 14;
-        style.ContentMarginBottom = 14;
+        StyleBoxFlat style = new()
+        {
+            BgColor = new Color(0.04f, 0.04f, 0.07f, 0.8f),
+            BorderColor = new Color(0.15f, 0.15f, 0.2f, 0.5f),
+            BorderWidthBottom = 1,
+            BorderWidthTop = 1,
+            BorderWidthLeft = 1,
+            BorderWidthRight = 1,
+            CornerRadiusBottomLeft = 8,
+            CornerRadiusBottomRight = 8,
+            CornerRadiusTopLeft = 8,
+            CornerRadiusTopRight = 8,
+            ContentMarginLeft = 16,
+            ContentMarginRight = 16,
+            ContentMarginTop = 14,
+            ContentMarginBottom = 14
+        };
         panel.AddThemeStyleboxOverride("panel", style);
 
         VBoxContainer vbox = new();
         vbox.AddThemeConstantOverride("separation", 10);
         panel.AddChild(vbox);
 
-        Label titleLabel = new();
-        titleLabel.Text = title;
-        titleLabel.HorizontalAlignment = HorizontalAlignment.Center;
+        Label titleLabel = new()
+        {
+            Text = title,
+            HorizontalAlignment = HorizontalAlignment.Center
+        };
         titleLabel.AddThemeFontSizeOverride("font_size", 16);
         titleLabel.AddThemeColorOverride("font_color", new Color(0.75f, 0.7f, 0.55f));
         titleLabel.SetMeta("section_title", true);

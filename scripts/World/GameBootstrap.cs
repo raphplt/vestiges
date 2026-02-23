@@ -38,9 +38,11 @@ public partial class GameBootstrap : Node
         GameOverScreen gameOverScreen = GetNode<GameOverScreen>("../GameOverScreen");
         CraftPanel craftPanel = GetNode<CraftPanel>("../CraftPanel");
         Player player = GetNode<Player>("../Player");
+        Node2D foyer = GetNodeOrNull<Node2D>("../Foyer");
 
         hud.SetProgression(progression);
         hud.SetDayNightCycle(dayNightCycle);
+        hud.SetCompassTargets(player, foyer);
         levelUpScreen.SetPerkManager(perkManager);
         gameOverScreen.SetScoreManager(scoreManager);
 

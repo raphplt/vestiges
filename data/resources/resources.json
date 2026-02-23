@@ -34,5 +34,17 @@
         "size": 14,
         "shape": "crystal",
         "harvests": 1
+    },
+    {
+        "id": "fiber",
+        "name": "Fibre",
+        "color": "#5A8A4A",
+        "outline_color": "#3A6A2A",
+        "harvest_time": 0.3,
+        "amount_min": 2,
+        "amount_max": 5,
+        "size": 14,
+        "shape": "tree",
+        "harvests": 2
     }
 ]

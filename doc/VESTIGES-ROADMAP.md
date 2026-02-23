@@ -241,10 +241,10 @@ Les niveaux de complexité servent à prioriser l'effort et le risque. Ils n'imp
 - [x] Résultat : chaque run a une map différente.
 
 **Lot 5.2 — Biomes (`Complexité : C3`)**
-- [ ] Implémenter 3 biomes pour l'EA : Forêt reconquise, Ruines urbaines, Marécages (cf. Bible section 5 pour palettes, ambiances, détails de décor).
+- [x] Implémenter 3 biomes pour l'EA : Forêt reconquise, Ruines urbaines, Marécages (cf. Bible section 5 pour palettes, ambiances, détails de décor).
 - [ ] 4ème biome (Carrière effondrée) en bonus si la capacité le permet.
-- [ ] Chaque biome a ses propres tiles, ambiance, types de ressources, et ennemis dominants.
-- [ ] La map est composée de 2-3 biomes par run.
+- [x] Chaque biome a ses propres tiles, ambiance, types de ressources, et ennemis dominants.
+- [x] La map est composée de 2-3 biomes par run.
 - [ ] Le Sanctuaire comme POI rare inter-biomes (lieu intact, plus saturé que le reste — cf. Bible section 5.5).
 - [ ] Résultat : la variété visuelle et gameplay entre les zones est visible.
 

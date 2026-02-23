@@ -2,6 +2,7 @@ using Godot;
 using Vestiges.Base;
 using Vestiges.Combat;
 using Vestiges.Infrastructure;
+using Vestiges.World;
 
 namespace Vestiges.Core;
 
@@ -173,7 +174,8 @@ public partial class Player : CharacterBody2D
         {
             CancelHarvest();
             Vector2 isoDir = CartesianToIsometric(inputDir);
-            Velocity = isoDir * (Speed * _speedMultiplier);
+            float terrainSpeedFactor = IsOnWater() ? 0.5f : 1f;
+            Velocity = isoDir * (Speed * _speedMultiplier * terrainSpeedFactor);
         }
         else
         {
@@ -181,6 +183,7 @@ public partial class Player : CharacterBody2D
         }
 
         MoveAndSlide();
+        ClampToWorldBounds();
         ApplyRegen(dt);
         ProcessHarvest(dt);
         ProcessKillSpeedDecay(dt);
@@ -206,6 +209,53 @@ public partial class Player : CharacterBody2D
                 TryStartHarvest();
             }
         }
+    }
+
+    // --- World Bounds ---
+
+    private WorldSetup _worldSetup;
+    private float _worldBoundsRadius = -1f;
+
+    /// <summary>
+    /// Empêche le joueur de sortir du monde circulaire.
+    /// La réalité s'arrête au-delà : barrière invisible de sécurité en plus des tiles d'eau.
+    /// </summary>
+    private void ClampToWorldBounds()
+    {
+        if (_worldBoundsRadius < 0f)
+            CacheWorldBounds();
+
+        if (_worldBoundsRadius <= 0f)
+            return;
+
+        float dist = GlobalPosition.Length();
+        if (dist > _worldBoundsRadius)
+            GlobalPosition = GlobalPosition.Normalized() * _worldBoundsRadius;
+    }
+
+    private void CacheWorldBounds()
+    {
+        _worldSetup = GetNodeOrNull<WorldSetup>("/root/Main");
+        if (_worldSetup?.Generator == null)
+            return;
+
+        int mapRadius = _worldSetup.Generator.MapRadius;
+        _worldBoundsRadius = (mapRadius - 3) * 32f;
+    }
+
+    private bool IsOnWater()
+    {
+        if (_worldSetup == null)
+            CacheWorldBounds();
+        if (_worldSetup == null)
+            return false;
+
+        TileMapLayer ground = _worldSetup.GetNodeOrNull<TileMapLayer>("Ground");
+        if (ground == null)
+            return false;
+
+        Vector2I cell = ground.LocalToMap(ground.ToLocal(GlobalPosition));
+        return _worldSetup.Generator.GetTerrain(cell.X, cell.Y) == TerrainType.Water;
     }
 
     // --- Stat Modifiers ---
@@ -350,7 +400,7 @@ public partial class Player : CharacterBody2D
         OnAttackHit(enemy, damage, isCrit, isRicochet);
     }
 
-    private void OnAttackHit(Enemy enemy, float damage, bool isCrit, bool isRicochet)
+    private void OnAttackHit(Enemy enemy, float damage, bool isCrit, bool isRicochet, int triggerCount = 1)
     {
         if (_isDead)
             return;
@@ -358,12 +408,14 @@ public partial class Player : CharacterBody2D
         if (!IsInstanceValid(enemy) || enemy.IsQueuedForDeletion())
             return;
 
+        int procRollCount = Mathf.Max(1, triggerCount);
+
         // Vampirism: heal % of damage dealt
         if (_vampirismPercent > 0f)
             Heal(damage * _vampirismPercent);
 
         // Ignite: chance to apply DOT
-        if (_igniteChance > 0f && GD.Randf() < _igniteChance)
+        if (_igniteChance > 0f && GD.Randf() < GetCombinedProcChance(_igniteChance, procRollCount))
             enemy.ApplyIgnite(_igniteDamage, _igniteDuration);
 
         // Execution: instant kill enemies below HP threshold
@@ -371,8 +423,19 @@ public partial class Player : CharacterBody2D
             enemy.Execute();
 
         // Ricochet: bounce to nearby enemy (only from original projectiles)
-        if (!isRicochet && _ricochetChance > 0f && GD.Randf() < _ricochetChance)
+        if (!isRicochet && _ricochetChance > 0f && GD.Randf() < GetCombinedProcChance(_ricochetChance, procRollCount))
             SpawnRicochet(enemy, damage, isCrit);
+    }
+
+    private float GetCombinedProcChance(float perHitChance, int triggerCount)
+    {
+        float clampedChance = Mathf.Clamp(perHitChance, 0f, 1f);
+        if (clampedChance <= 0f || triggerCount <= 0)
+            return 0f;
+        if (clampedChance >= 1f)
+            return 1f;
+
+        return 1f - Mathf.Pow(1f - clampedChance, triggerCount);
     }
 
     private void SpawnRicochet(Enemy sourceEnemy, float damage, bool isCrit)
@@ -732,31 +795,124 @@ public partial class Player : CharacterBody2D
 
         float baseDamage = ComputeBaseAttackDamage();
         int strikeCount = Mathf.Max(1, 1 + _extraProjectiles);
-        float spreadAngle = Mathf.Clamp(GetWeaponStat("spread_angle", 20f), 0f, 120f);
+        float spreadAngle = strikeCount > 1
+            ? Mathf.Clamp(GetWeaponStat("spread_angle", 20f), 0f, 120f)
+            : 0f;
         float startOffset = strikeCount == 1 ? 0f : -spreadAngle * 0.5f;
-        float step = strikeCount == 1 ? 0f : spreadAngle / (strikeCount - 1);
+        float step = strikeCount <= 1 || spreadAngle <= 0.001f ? 0f : spreadAngle / (strikeCount - 1);
+        bool fullCircle = arcAngle >= 359f;
+        float arcHalf = arcAngle * 0.5f;
 
-        for (int strikeIndex = 0; strikeIndex < strikeCount; strikeIndex++)
+        SpawnMeleeSlashVisuals(attackDirection, range, arcAngle, strikeCount, spreadAngle);
+
+        float coverageArc = fullCircle ? 360f : Mathf.Clamp(arcAngle + spreadAngle, arcAngle, 360f);
+        System.Collections.Generic.List<Enemy> strikeCandidates = FindEnemiesInArc(range, coverageArc, attackDirection);
+        if (strikeCandidates.Count == 0)
+            return;
+
+        float clampedCritChance = Mathf.Clamp(_critChance, 0f, 1f);
+        float critDamageFactor = 1f + clampedCritChance * Mathf.Max(0f, _critMultiplier - 1f);
+
+        foreach (Enemy enemy in strikeCandidates)
         {
-            float angleOffset = startOffset + step * strikeIndex;
-            Vector2 strikeDirection = attackDirection.Rotated(Mathf.DegToRad(angleOffset)).Normalized();
-            SpawnSlashEffect(strikeDirection, range, arcAngle);
+            if (!IsInstanceValid(enemy) || enemy.IsDying)
+                continue;
 
-            // Extra melee strikes from projectile_count are slightly weaker to keep scaling controllable.
-            float strikeDamageMultiplier = strikeIndex == 0
-                ? 1f
-                : Mathf.Clamp(0.85f - ((strikeIndex - 1) * 0.1f), 0.55f, 0.85f);
+            int firstHitIndex;
+            int lastHitIndex;
 
-            System.Collections.Generic.List<Enemy> strikeEnemies = FindEnemiesInArc(range, arcAngle, strikeDirection);
-            foreach (Enemy enemy in strikeEnemies)
+            if (fullCircle)
             {
-                bool isCrit = _critChance > 0f && GD.Randf() < _critChance;
-                float strikeDamage = baseDamage * strikeDamageMultiplier;
-                float effectiveDamage = isCrit ? strikeDamage * _critMultiplier : strikeDamage;
-                enemy.TakeDamage(effectiveDamage, isCrit);
-                OnAttackHit(enemy, effectiveDamage, isCrit, isRicochet: false);
+                firstHitIndex = 0;
+                lastHitIndex = strikeCount - 1;
             }
+            else
+            {
+                Vector2 toEnemy = enemy.GlobalPosition - GlobalPosition;
+                if (toEnemy.LengthSquared() <= 0.0001f)
+                    continue;
+
+                float enemyOffset = Mathf.RadToDeg(attackDirection.AngleTo(toEnemy.Normalized()));
+                if (step <= 0.0001f)
+                {
+                    if (Mathf.Abs(enemyOffset - startOffset) > arcHalf)
+                        continue;
+
+                    firstHitIndex = 0;
+                    lastHitIndex = strikeCount - 1;
+                }
+                else
+                {
+                    float hitMin = (enemyOffset - arcHalf - startOffset) / step;
+                    float hitMax = (enemyOffset + arcHalf - startOffset) / step;
+                    firstHitIndex = Mathf.Clamp(Mathf.CeilToInt(hitMin), 0, strikeCount - 1);
+                    lastHitIndex = Mathf.Clamp(Mathf.FloorToInt(hitMax), 0, strikeCount - 1);
+                    if (lastHitIndex < firstHitIndex)
+                        continue;
+                }
+            }
+
+            int hitCount = lastHitIndex - firstHitIndex + 1;
+            if (hitCount <= 0)
+                continue;
+
+            float hitMultiplierSum = SumMeleeStrikeDamageMultipliers(firstHitIndex, lastHitIndex);
+            if (hitMultiplierSum <= 0f)
+                continue;
+
+            float totalDamage = baseDamage * hitMultiplierSum * critDamageFactor;
+            bool hasCrit = clampedCritChance > 0f && GD.Randf() < GetCombinedProcChance(clampedCritChance, hitCount);
+            enemy.TakeDamage(totalDamage, hasCrit);
+            OnAttackHit(enemy, totalDamage, hasCrit, isRicochet: false, triggerCount: hitCount);
         }
+    }
+
+    private void SpawnMeleeSlashVisuals(Vector2 baseDirection, float range, float arcAngle, int strikeCount, float spreadAngle)
+    {
+        const int maxSlashVisuals = 7;
+        int visualCount = Mathf.Min(strikeCount, maxSlashVisuals);
+        float visualStart = visualCount == 1 ? 0f : -spreadAngle * 0.5f;
+        float visualStep = visualCount == 1 ? 0f : spreadAngle / (visualCount - 1);
+
+        for (int visualIndex = 0; visualIndex < visualCount; visualIndex++)
+        {
+            float angleOffset = visualStart + (visualStep * visualIndex);
+            Vector2 visualDirection = baseDirection.Rotated(Mathf.DegToRad(angleOffset)).Normalized();
+            SpawnSlashEffect(visualDirection, range, arcAngle);
+        }
+    }
+
+    private float SumMeleeStrikeDamageMultipliers(int fromIndex, int toIndex)
+    {
+        if (toIndex < fromIndex)
+            return 0f;
+
+        int start = Mathf.Max(0, fromIndex);
+        int end = Mathf.Max(start, toIndex);
+        float sum = 0f;
+
+        if (start == 0)
+        {
+            sum += 1f;
+            start = 1;
+        }
+
+        if (start > end)
+            return sum;
+
+        int linearEnd = Mathf.Min(end, 3);
+        if (start <= linearEnd)
+        {
+            int count = linearEnd - start + 1;
+            float sumIndices = (start + linearEnd) * count * 0.5f;
+            sum += (0.95f * count) - (0.1f * sumIndices);
+            start = linearEnd + 1;
+        }
+
+        if (start <= end)
+            sum += (end - start + 1) * 0.55f;
+
+        return sum;
     }
 
     private void SpawnBurstProjectiles(int count, float spreadAngle, Vector2 baseDirection, float baseDamage, float projectileSpeed, int pierce)
@@ -842,10 +998,16 @@ public partial class Player : CharacterBody2D
         if (candidates.Count == 0)
             return new System.Collections.Generic.List<Enemy>();
 
-        candidates.Sort((a, b) => a.dist.CompareTo(b.dist));
-        Vector2 forward = forwardOverride.HasValue && forwardOverride.Value.LengthSquared() > 0.0001f
-            ? forwardOverride.Value.Normalized()
-            : candidates[0].dir;
+        Vector2 forward;
+        if (forwardOverride.HasValue && forwardOverride.Value.LengthSquared() > 0.0001f)
+        {
+            forward = forwardOverride.Value.Normalized();
+        }
+        else
+        {
+            candidates.Sort((a, b) => a.dist.CompareTo(b.dist));
+            forward = candidates[0].dir;
+        }
 
         bool fullCircle = arcAngle >= 359f;
         float dotThreshold = fullCircle ? -1f : Mathf.Cos(Mathf.DegToRad(arcAngle * 0.5f));

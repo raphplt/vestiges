@@ -23,6 +23,8 @@ public partial class HUD : CanvasLayer
     private EventBus _eventBus;
     private PlayerProgression _progression;
     private DayNightCycle _dayNightCycle;
+    private Player _compassPlayer;
+    private Node2D _mapCenterAnchor;
 
     // Resource display
     private Label _woodLabel;
@@ -33,6 +35,11 @@ public partial class HUD : CanvasLayer
 
     // Contextual hint
     private Label _interactHint;
+    private PanelContainer _compassPanel;
+    private Node2D _compassArrowRoot;
+    private Polygon2D _compassArrowHead;
+    private Polygon2D _compassArrowTail;
+    private Label _compassDistanceLabel;
 
     private static readonly Color DayBarColor = new(0.9f, 0.75f, 0.2f);
     private static readonly Color DuskBarColor = new(0.55f, 0.35f, 0.7f);
@@ -83,6 +90,8 @@ public partial class HUD : CanvasLayer
         CreateDawnSummaryPanel();
         CreateResourcePanel();
         CreateInteractHint();
+        CreateCompassWidget();
+        ResolveCompassTargets();
         UpdateBarColor("Day");
     }
 
@@ -91,6 +100,7 @@ public partial class HUD : CanvasLayer
         if (_dayNightCycle != null)
             _dayNightBar.Value = _dayNightCycle.PhaseProgress;
 
+        UpdateCompass();
         UpdateInteractHint();
     }
 
@@ -116,6 +126,12 @@ public partial class HUD : CanvasLayer
     public void SetDayNightCycle(DayNightCycle cycle)
     {
         _dayNightCycle = cycle;
+    }
+
+    public void SetCompassTargets(Player player, Node2D mapCenterAnchor)
+    {
+        _compassPlayer = player;
+        _mapCenterAnchor = mapCenterAnchor;
     }
 
     // --- Resource Panel ---
@@ -271,6 +287,126 @@ public partial class HUD : CanvasLayer
         _interactHint.AddThemeConstantOverride("shadow_offset_y", 1);
         _interactHint.Visible = false;
         AddChild(_interactHint);
+    }
+
+    private void CreateCompassWidget()
+    {
+        _compassPanel = new PanelContainer();
+        _compassPanel.AnchorLeft = 0.5f;
+        _compassPanel.AnchorRight = 0.5f;
+        _compassPanel.AnchorTop = 0f;
+        _compassPanel.AnchorBottom = 0f;
+        _compassPanel.OffsetLeft = -64f;
+        _compassPanel.OffsetRight = 64f;
+        _compassPanel.OffsetTop = 38f;
+        _compassPanel.OffsetBottom = 84f;
+
+        StyleBoxFlat style = new();
+        style.BgColor = new Color(0f, 0f, 0f, 0.55f);
+        style.CornerRadiusBottomLeft = 6;
+        style.CornerRadiusBottomRight = 6;
+        style.CornerRadiusTopLeft = 6;
+        style.CornerRadiusTopRight = 6;
+        style.ContentMarginLeft = 8;
+        style.ContentMarginRight = 8;
+        style.ContentMarginTop = 6;
+        style.ContentMarginBottom = 6;
+        _compassPanel.AddThemeStyleboxOverride("panel", style);
+
+        VBoxContainer vbox = new();
+        vbox.Alignment = BoxContainer.AlignmentMode.Center;
+        vbox.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+        vbox.AddThemeConstantOverride("separation", 4);
+        _compassPanel.AddChild(vbox);
+
+        Control arrowHost = new();
+        arrowHost.CustomMinimumSize = new Vector2(32f, 32f);
+        arrowHost.SizeFlagsHorizontal = Control.SizeFlags.ShrinkCenter;
+        arrowHost.SizeFlagsVertical = Control.SizeFlags.ShrinkCenter;
+        vbox.AddChild(arrowHost);
+
+        _compassArrowRoot = new Node2D();
+        _compassArrowRoot.Position = new Vector2(16f, 16f);
+        arrowHost.AddChild(_compassArrowRoot);
+
+        _compassArrowHead = new Polygon2D();
+        _compassArrowHead.Color = new Color(1f, 0.9f, 0.55f, 0.95f);
+        _compassArrowHead.Polygon = new Vector2[]
+        {
+            new(0f, -12f),
+            new(8f, 4f),
+            new(-8f, 4f)
+        };
+        _compassArrowRoot.AddChild(_compassArrowHead);
+
+        _compassArrowTail = new Polygon2D();
+        _compassArrowTail.Color = new Color(1f, 0.9f, 0.55f, 0.9f);
+        _compassArrowTail.Polygon = new Vector2[]
+        {
+            new(-2f, 4f),
+            new(2f, 4f),
+            new(2f, 12f),
+            new(-2f, 12f)
+        };
+        _compassArrowRoot.AddChild(_compassArrowTail);
+
+        _compassDistanceLabel = new Label();
+        _compassDistanceLabel.Text = "Centre";
+        _compassDistanceLabel.HorizontalAlignment = HorizontalAlignment.Center;
+        _compassDistanceLabel.AddThemeFontSizeOverride("font_size", 11);
+        _compassDistanceLabel.AddThemeColorOverride("font_color", new Color(0.86f, 0.86f, 0.9f));
+        vbox.AddChild(_compassDistanceLabel);
+
+        AddChild(_compassPanel);
+    }
+
+    private void ResolveCompassTargets()
+    {
+        if (_compassPlayer == null || !IsInstanceValid(_compassPlayer))
+            _compassPlayer = GetTree().GetFirstNodeInGroup("player") as Player;
+
+        if (_mapCenterAnchor == null || !IsInstanceValid(_mapCenterAnchor))
+        {
+            Node sceneRoot = GetTree().CurrentScene;
+            _mapCenterAnchor = sceneRoot?.GetNodeOrNull<Node2D>("Foyer");
+        }
+    }
+
+    private void UpdateCompass()
+    {
+        if (_compassPanel == null || _compassArrowRoot == null || _compassArrowHead == null || _compassArrowTail == null || _compassDistanceLabel == null)
+            return;
+
+        if (_compassPlayer == null || _mapCenterAnchor == null || !IsInstanceValid(_compassPlayer) || !IsInstanceValid(_mapCenterAnchor))
+        {
+            ResolveCompassTargets();
+            if (_compassPlayer == null || _mapCenterAnchor == null || !IsInstanceValid(_compassPlayer) || !IsInstanceValid(_mapCenterAnchor))
+            {
+                _compassPanel.Visible = false;
+                return;
+            }
+        }
+
+        _compassPanel.Visible = true;
+
+        Vector2 toCenter = _mapCenterAnchor.GlobalPosition - _compassPlayer.GlobalPosition;
+        float distance = toCenter.Length();
+
+        if (distance < 12f)
+        {
+            _compassArrowRoot.Rotation = 0f;
+            _compassArrowHead.Visible = false;
+            _compassArrowTail.Visible = false;
+            _compassDistanceLabel.Text = "Centre";
+            return;
+        }
+
+        Vector2 direction = toCenter / distance;
+        float angle = Mathf.Atan2(direction.Y, direction.X);
+        _compassArrowHead.Visible = true;
+        _compassArrowTail.Visible = true;
+        _compassArrowRoot.Rotation = angle + (Mathf.Pi * 0.5f);
+        _compassDistanceLabel.Text = $"Centre {Mathf.RoundToInt(distance)}";
     }
 
     private void UpdateInteractHint()

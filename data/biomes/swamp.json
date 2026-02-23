@@ -1,0 +1,21 @@
+{
+    "id": "swamp",
+    "name": "Marécages",
+    "terrain_weights": {
+        "grass": 0.25,
+        "concrete": 0.05,
+        "water": 0.20,
+        "forest": 0.50
+    },
+    "day_enemy_pool": ["shadow_crawler", "fading_spitter"],
+    "night_enemy_pool": ["shade", "shade", "shade", "void_brute", "wailing_sentinel"],
+    "resource_bias": {
+        "wood": 0.20,
+        "stone": 0.10,
+        "metal": 0.10,
+        "fiber": 0.60
+    },
+    "ambient_color_day": "#A0B0A8",
+    "ambient_color_dusk": "#6B6E8A",
+    "danger_level": 3
+}

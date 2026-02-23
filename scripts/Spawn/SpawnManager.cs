@@ -38,14 +38,14 @@ public partial class SpawnManager : Node2D
     private Node _enemyContainer;
     private EventBus _eventBus;
 
-    // Day enemies (basic types)
-    private static readonly string[] DayEnemyPool = { "shadow_crawler", "fading_spitter" };
-    // Night enemies (all types, including stronger ones)
-    private static readonly string[] NightEnemyPool = { "shadow_crawler", "shade", "shade", "fading_spitter", "void_brute", "wailing_sentinel" };
+    // Fallback quand aucun biome n'est disponible
+    private static readonly List<string> FallbackDayPool = new() { "shadow_crawler", "fading_spitter" };
+    private static readonly List<string> FallbackNightPool = new() { "shadow_crawler", "shade", "shade", "fading_spitter", "void_brute", "wailing_sentinel" };
 
     public override void _Ready()
     {
         EnemyDataLoader.Load();
+        BiomeDataLoader.Load();
         LoadScalingConfig();
 
         _enemyIds = EnemyDataLoader.GetAllIds();
@@ -113,7 +113,9 @@ public partial class SpawnManager : Node2D
         if (_pool.ActiveCount >= _maxEnemies)
             return;
 
-        string enemyId = PickEnemyType();
+        // Position d'abord, puis on interroge le biome à cet endroit
+        Vector2 spawnPos = GetSpawnPosition();
+        string enemyId = PickEnemyForPosition(spawnPos);
         EnemyData data = EnemyDataLoader.Get(enemyId);
         if (data == null)
             return;
@@ -130,19 +132,36 @@ public partial class SpawnManager : Node2D
         }
 
         Enemy enemy = _pool.Get();
-        enemy.GlobalPosition = GetSpawnPosition();
+        enemy.GlobalPosition = spawnPos;
         _enemyContainer.AddChild(enemy);
         enemy.Initialize(data, hpScale, dmgScale);
         enemy.SetNightTarget(_currentPhase == DayPhase.Night, _foyerPosition);
     }
 
-    private string PickEnemyType()
+    /// <summary>
+    /// Sélectionne un ennemi en fonction du biome à la position donnée.
+    /// Jour : pool diurne du biome. Nuit/Crépuscule : pool nocturne.
+    /// </summary>
+    private string PickEnemyForPosition(Vector2 worldPos)
     {
-        string[] pool = (_currentPhase == DayPhase.Night || _currentPhase == DayPhase.Dusk)
-            ? NightEnemyPool
-            : DayEnemyPool;
+        bool isNight = _currentPhase == DayPhase.Night || _currentPhase == DayPhase.Dusk;
 
-        int index = (int)(GD.Randi() % pool.Length);
+        CacheWorldSetup();
+        BiomeData biome = _worldSetup?.GetBiomeAt(worldPos);
+
+        List<string> pool;
+        if (biome != null)
+        {
+            pool = isNight ? biome.NightEnemyPool : biome.DayEnemyPool;
+            if (pool == null || pool.Count == 0)
+                pool = isNight ? FallbackNightPool : FallbackDayPool;
+        }
+        else
+        {
+            pool = isNight ? FallbackNightPool : FallbackDayPool;
+        }
+
+        int index = (int)(GD.Randi() % pool.Count);
         return pool[index];
     }
 
@@ -281,6 +300,9 @@ public partial class SpawnManager : Node2D
 
     private void CacheWorldSetup()
     {
+        if (_worldSetup != null && IsInstanceValid(_worldSetup))
+            return;
+
         _worldSetup = GetNodeOrNull<WorldSetup>("/root/Main");
     }
 }

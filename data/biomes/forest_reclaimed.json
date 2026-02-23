@@ -1,0 +1,21 @@
+{
+    "id": "forest_reclaimed",
+    "name": "Forêt Reconquise",
+    "terrain_weights": {
+        "grass": 0.30,
+        "concrete": 0.05,
+        "water": 0.05,
+        "forest": 0.60
+    },
+    "day_enemy_pool": ["charognard", "charognard", "treant_corrompu"],
+    "night_enemy_pool": ["shade", "shade", "charognard", "void_brute"],
+    "resource_bias": {
+        "wood": 0.55,
+        "stone": 0.20,
+        "metal": 0.10,
+        "fiber": 0.15
+    },
+    "ambient_color_day": "#D4C89A",
+    "ambient_color_dusk": "#8B7DBB",
+    "danger_level": 1
+}

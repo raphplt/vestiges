@@ -1,16 +1,23 @@
 {
-    "map_radius": 30,
+    "map_radius": 60,
     "foyer_clearance": 4,
     "ca_iterations": 4,
+    "edge_fade_width": 5,
+    "biome_count": 3,
+    "available_biomes": [
+        "forest_reclaimed",
+        "urban_ruins",
+        "swamp"
+    ],
     "zones": [
         {
             "name": "close",
-            "max_radius": 10,
+            "max_radius": 15,
             "weights": { "grass": 0.75, "concrete": 0.20, "water": 0.0, "forest": 0.05 }
         },
         {
             "name": "medium",
-            "max_radius": 20,
+            "max_radius": 30,
             "weights": { "grass": 0.45, "concrete": 0.20, "water": 0.10, "forest": 0.25 }
         },
         {
@@ -19,12 +26,12 @@
             "weights": { "grass": 0.25, "concrete": 0.15, "water": 0.20, "forest": 0.40 }
         }
     ],
-    "resource_count": 50,
+    "resource_count": 120,
     "resource_terrain_bias": {
         "grass": { "wood": 0.40, "stone": 0.35, "metal": 0.25 },
         "concrete": { "wood": 0.10, "stone": 0.50, "metal": 0.40 },
         "forest": { "wood": 0.70, "stone": 0.20, "metal": 0.10 }
     },
     "respawn_interval": 30,
-    "respawn_threshold": 35
+    "respawn_threshold": 85
 }

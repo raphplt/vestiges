@@ -1,0 +1,16 @@
+{
+    "id": "charognard",
+    "name": "Charognard",
+    "type": "melee",
+    "stats": {
+        "hp": 18,
+        "speed": 85,
+        "damage": 4,
+        "xp_reward": 8
+    },
+    "visual": {
+        "color": "#558844",
+        "shape": "square",
+        "size": 12
+    }
+}
