@@ -10,7 +10,7 @@ namespace Vestiges.Progression;
 public partial class PlayerProgression : Node
 {
     private const float BaseXpToLevel = 20f;
-    private const float XpScalingExponent = 1.5f;
+    private const float XpScalingExponent = 1.35f;
 
     private float _currentXp;
     private int _currentLevel = 1;

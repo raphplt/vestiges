@@ -357,7 +357,11 @@ public partial class CraftPanel : CanvasLayer
 
     private void OnCraftCompleted(string _recipeId)
     {
-        _statusLabel.Text = "Fabrication terminée !";
+        RecipeData recipe = RecipeDataLoader.Get(_recipeId);
+        bool isStructure = recipe != null && recipe.Result.Type is "wall" or "trap" or "turret" or "light";
+        _statusLabel.Text = isStructure
+            ? "Fabrication terminée : place puis maintiens clic pour construire en chaine"
+            : "Fabrication terminée !";
 
         if (_isOpen)
             RefreshRecipes();

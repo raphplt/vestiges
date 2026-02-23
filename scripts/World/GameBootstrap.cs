@@ -21,6 +21,8 @@ public partial class GameBootstrap : Node
     {
         CharacterDataLoader.Load();
         PerkDataLoader.Load();
+        MetaSaveManager.Load();
+        StartingKitDataLoader.Load();
 
         PlayerProgression progression = GetNode<PlayerProgression>("../Player/PlayerProgression");
         Inventory inventory = GetNode<Inventory>("../Player/Inventory");
@@ -46,6 +48,7 @@ public partial class GameBootstrap : Node
         craftPanel.SetInventory(inventory);
         craftPanel.SetStructureManager(structureManager);
         structurePlacer.SetStructureManager(structureManager);
+        structurePlacer.SetCraftManager(craftManager);
 
         // Read character from GameManager (selected in the Hub)
         GameManager gm = GetNode<GameManager>("/root/GameManager");
@@ -63,6 +66,19 @@ public partial class GameBootstrap : Node
         player.InitializeCharacter(data);
         perkManager.ApplyPassivePerks(data.Id);
         scoreManager.SetCharacterMultiplier(data.ScoreMultiplier);
+
+        // Apply starting kit to inventory
+        string selectedKit = MetaSaveManager.GetSelectedKit();
+        if (!string.IsNullOrEmpty(selectedKit))
+        {
+            StartingKitData kit = StartingKitDataLoader.Get(selectedKit);
+            if (kit != null)
+            {
+                foreach (System.Collections.Generic.KeyValuePair<string, int> item in kit.Contents)
+                    inventory.Add(item.Key, item.Value);
+                GD.Print($"[GameBootstrap] Applied starting kit: {kit.Name}");
+            }
+        }
 
         gm.ChangeState(GameManager.GameState.Run);
 

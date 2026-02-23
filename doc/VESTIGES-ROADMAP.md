@@ -204,10 +204,10 @@ Les niveaux de complexité servent à prioriser l'effort et le risque. Ils n'imp
 - [x] Résultat : entre deux runs, le joueur passe par le Hub et choisit son perso.
 
 **Lot 4.3 — Vestiges et déblocages (`Complexité : C3`)**
-- [ ] Monnaie "Vestiges" gagnée proportionnellement au score.
-- [ ] Arbre de déblocages basique : kits de départ (commencer avec une arme T2, +10 bois, etc.).
-- [ ] Déblocage de personnages via accomplissements (survivre 3 nuits → La Forgeuse, etc.).
-- [ ] Résultat : le joueur accumule des Vestiges et débloque des trucs entre les runs.
+- [x] Monnaie "Vestiges" gagnée proportionnellement au score.
+- [x] Arbre de déblocages basique : kits de départ (commencer avec une arme T2, +10 bois, etc.).
+- [x] Déblocage de personnages via accomplissements (survivre 3 nuits → La Forgeuse, etc.).
+- [x] Résultat : le joueur accumule des Vestiges et débloque des trucs entre les runs.
 
 **Lot 4.4 — Pool de perks étendue (`Complexité : C4`)**
 - [ ] Étendre la pool de perks à 25-30 (stats, combat, survie, Essence, rares).

@@ -8,21 +8,28 @@ namespace Vestiges.Base;
 /// <summary>
 /// Système de placement de structures sur la grille iso.
 /// Activé après un craft de structure. Affiche un fantôme de prévisualisation.
-/// Click gauche pour placer, Escape pour annuler.
+/// Clic gauche pour placer (maintenir pour poser en chaîne), clic droit ou Escape pour annuler.
 /// </summary>
 public partial class StructurePlacer : Node2D
 {
     private bool _isPlacing;
     private string _recipeId;
     private RecipeData _recipeData;
+    private int _pendingPlacements;
+    private bool _waitingForNextCraft;
     private Polygon2D _ghost;
     private TileMapLayer _ground;
     private StructureManager _structureManager;
+    private CraftManager _craftManager;
     private Node2D _structureContainer;
     private EventBus _eventBus;
+    private CanvasLayer _hintLayer;
+    private Label _hintLabel;
 
     private Vector2I _currentCell;
+    private Vector2I _lastPlacedCell;
     private bool _isValidPlacement;
+    private bool _hasLastPlacedCell;
 
     private static readonly Color ValidColor = new(0.2f, 0.8f, 0.2f, 0.5f);
     private static readonly Color InvalidColor = new(0.8f, 0.2f, 0.2f, 0.5f);
@@ -38,6 +45,7 @@ public partial class StructurePlacer : Node2D
         _structureContainer = GetNode<Node2D>("/root/Main/StructureContainer");
 
         CreateGhost();
+        CreatePlacementHint();
     }
 
     public override void _ExitTree()
@@ -49,6 +57,11 @@ public partial class StructurePlacer : Node2D
     public void SetStructureManager(StructureManager manager)
     {
         _structureManager = manager;
+    }
+
+    public void SetCraftManager(CraftManager manager)
+    {
+        _craftManager = manager;
     }
 
     public override void _Process(double delta)
@@ -63,8 +76,20 @@ public partial class StructurePlacer : Node2D
         _ghost.GlobalPosition = snapPos;
         _currentCell = cell;
 
+        if (_pendingPlacements <= 0)
+        {
+            _isValidPlacement = false;
+            _ghost.Visible = false;
+            return;
+        }
+
+        _ghost.Visible = true;
         _isValidPlacement = CheckPlacementValid(cell, snapPos);
         _ghost.Color = _isValidPlacement ? ValidColor : InvalidColor;
+
+        // Drag-friendly chain placement: hold left click and sweep cells.
+        if (Input.IsMouseButtonPressed(MouseButton.Left))
+            TryPlaceCurrentCell(continuous: true);
     }
 
     public override void _UnhandledInput(InputEvent @event)
@@ -74,8 +99,12 @@ public partial class StructurePlacer : Node2D
 
         if (@event is InputEventMouseButton mb && mb.Pressed && mb.ButtonIndex == MouseButton.Left)
         {
-            if (_isValidPlacement)
-                PlaceStructure();
+            TryPlaceCurrentCell(continuous: false);
+            GetViewport().SetInputAsHandled();
+        }
+        else if (@event is InputEventMouseButton rightClick && rightClick.Pressed && rightClick.ButtonIndex == MouseButton.Right)
+        {
+            CancelPlacement();
             GetViewport().SetInputAsHandled();
         }
         else if (@event.IsActionPressed("ui_cancel"))
@@ -97,6 +126,8 @@ public partial class StructurePlacer : Node2D
             if (_structureManager != null && !_structureManager.CanPlaceType(type))
             {
                 GD.Print($"[StructurePlacer] Cap atteint pour {type} ({_structureManager.GetCountForType(type)}/{_structureManager.GetMaxForType(type)})");
+                if (_isPlacing && _recipeId == recipeId)
+                    CancelPlacement();
                 return;
             }
             StartPlacement(recipeId, recipe);
@@ -105,18 +136,48 @@ public partial class StructurePlacer : Node2D
 
     private void StartPlacement(string recipeId, RecipeData recipe)
     {
+        if (_isPlacing && _recipeId != null && _recipeId != recipeId)
+            CancelPlacement();
+
         _recipeId = recipeId;
         _recipeData = recipe;
         _isPlacing = true;
+        _waitingForNextCraft = false;
+        _pendingPlacements++;
         _ghost.Visible = true;
+        UpdatePlacementHint();
     }
 
     private void CancelPlacement()
     {
+        if (_waitingForNextCraft
+            && _craftManager != null
+            && _craftManager.IsCrafting
+            && _craftManager.CurrentRecipeId == _recipeId)
+        {
+            _craftManager.CancelCraft();
+        }
+
         _isPlacing = false;
+        _pendingPlacements = 0;
+        _waitingForNextCraft = false;
         _ghost.Visible = false;
         _recipeId = null;
         _recipeData = null;
+        _hasLastPlacedCell = false;
+        UpdatePlacementHint();
+    }
+
+    private bool TryPlaceCurrentCell(bool continuous)
+    {
+        if (_pendingPlacements <= 0 || !_isValidPlacement)
+            return false;
+
+        if (continuous && _hasLastPlacedCell && _lastPlacedCell == _currentCell)
+            return false;
+
+        PlaceStructure();
+        return true;
     }
 
     private void PlaceStructure()
@@ -182,6 +243,24 @@ public partial class StructurePlacer : Node2D
         _structureManager?.Register(_currentCell, structure);
 
         _eventBus.EmitSignal(EventBus.SignalName.StructurePlaced, _recipeData.Id, worldPos);
+        _pendingPlacements = Mathf.Max(0, _pendingPlacements - 1);
+        _lastPlacedCell = _currentCell;
+        _hasLastPlacedCell = true;
+
+        if (_pendingPlacements > 0)
+        {
+            UpdatePlacementHint();
+            return;
+        }
+
+        if (TryStartChainCraft())
+        {
+            _waitingForNextCraft = true;
+            _ghost.Visible = false;
+            _isValidPlacement = false;
+            UpdatePlacementHint();
+            return;
+        }
 
         CancelPlacement();
     }
@@ -242,5 +321,81 @@ public partial class StructurePlacer : Node2D
         _ghost.Visible = false;
         _ghost.ZIndex = 10;
         AddChild(_ghost);
+    }
+
+    private bool TryStartChainCraft()
+    {
+        if (_craftManager == null || string.IsNullOrEmpty(_recipeId) || _recipeData == null)
+            return false;
+
+        string type = _recipeData.Result.Type;
+        if (_structureManager != null && !_structureManager.CanPlaceType(type))
+            return false;
+
+        return _craftManager.StartCraft(_recipeId);
+    }
+
+    private void CreatePlacementHint()
+    {
+        _hintLayer = new CanvasLayer { Layer = 50 };
+        AddChild(_hintLayer);
+
+        PanelContainer panel = new();
+        panel.AnchorLeft = 0.5f;
+        panel.AnchorRight = 0.5f;
+        panel.AnchorTop = 1f;
+        panel.AnchorBottom = 1f;
+        panel.OffsetLeft = -300f;
+        panel.OffsetRight = 300f;
+        panel.OffsetTop = -62f;
+        panel.OffsetBottom = -28f;
+
+        StyleBoxFlat style = new();
+        style.BgColor = new Color(0.06f, 0.06f, 0.08f, 0.85f);
+        style.CornerRadiusTopLeft = 6;
+        style.CornerRadiusTopRight = 6;
+        style.CornerRadiusBottomLeft = 6;
+        style.CornerRadiusBottomRight = 6;
+        style.ContentMarginLeft = 10;
+        style.ContentMarginRight = 10;
+        style.ContentMarginTop = 6;
+        style.ContentMarginBottom = 6;
+        panel.AddThemeStyleboxOverride("panel", style);
+
+        _hintLabel = new Label();
+        _hintLabel.HorizontalAlignment = HorizontalAlignment.Center;
+        _hintLabel.VerticalAlignment = VerticalAlignment.Center;
+        _hintLabel.AddThemeFontSizeOverride("font_size", 12);
+        _hintLabel.AddThemeColorOverride("font_color", new Color(0.92f, 0.92f, 0.92f));
+        panel.AddChild(_hintLabel);
+
+        _hintLayer.AddChild(panel);
+        _hintLayer.Visible = false;
+    }
+
+    private void UpdatePlacementHint()
+    {
+        if (_hintLayer == null || _hintLabel == null)
+            return;
+
+        if (!_isPlacing)
+        {
+            _hintLayer.Visible = false;
+            return;
+        }
+
+        _hintLayer.Visible = true;
+        if (_pendingPlacements > 0)
+        {
+            _hintLabel.Text = "Construction: clic gauche pour poser, maintiens pour poser en chaine, clic droit ou Echap pour annuler";
+        }
+        else if (_waitingForNextCraft)
+        {
+            _hintLabel.Text = "Construction en chaine: fabrication suivante en cours...";
+        }
+        else
+        {
+            _hintLabel.Text = "Construction active";
+        }
     }
 }

@@ -1,11 +1,11 @@
 {
-    "base_spawn_interval": 1.5,
+    "base_spawn_interval": 1.65,
     "min_spawn_interval": 0.25,
-    "spawn_interval_decay_per_minute": 0.07,
+    "spawn_interval_decay_per_minute": 0.06,
     "hp_scaling_per_minute": 1.08,
     "damage_scaling_per_minute": 1.05,
-    "max_enemies_on_screen": 150,
+    "max_enemies_on_screen": 140,
     "night_hp_multiplier": 1.20,
     "night_damage_multiplier": 1.10,
-    "night_spawn_rate_multiplier": 0.88
+    "night_spawn_rate_multiplier": 0.91
 }

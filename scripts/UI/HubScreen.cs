@@ -7,10 +7,9 @@ namespace Vestiges.UI;
 
 /// <summary>
 /// Scène Hub entre les runs.
-/// Placeholder visuel (fond bleu-noir) avec UI fonctionnelle :
-/// - Miroirs : sélection de personnage
+/// - Miroirs : sélection de personnage (verrouillage selon MetaSaveManager)
 /// - Chroniques : historique des runs
-/// - Établi : placeholder (Lot 4.3)
+/// - Établi : achat et sélection de kits de départ
 /// - Le Vide : lancer une run
 /// </summary>
 public partial class HubScreen : Control
@@ -18,8 +17,10 @@ public partial class HubScreen : Control
     private string _selectedCharacterId;
     private Button _enterVoidButton;
     private Label _selectedCharLabel;
+    private Label _vestigesLabel;
     private VBoxContainer _characterCards;
     private VBoxContainer _chroniquesContent;
+    private VBoxContainer _etabliContent;
     private Dictionary<string, PanelContainer> _cardsByCharacterId = new();
 
     public override void _Ready()
@@ -27,9 +28,15 @@ public partial class HubScreen : Control
         CharacterDataLoader.Load();
         PerkDataLoader.Load();
         RunHistoryManager.Load();
+        MetaSaveManager.Load();
+        StartingKitDataLoader.Load();
 
         GameManager gm = GetNode<GameManager>("/root/GameManager");
         _selectedCharacterId = gm.SelectedCharacterId;
+
+        // If the selected character is locked, clear selection
+        if (!string.IsNullOrEmpty(_selectedCharacterId) && !MetaSaveManager.IsCharacterUnlocked(_selectedCharacterId))
+            _selectedCharacterId = null;
 
         SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
         BuildUI();
@@ -39,6 +46,7 @@ public partial class HubScreen : Control
 
         UpdateVoidButton();
         UpdateChroniques();
+        UpdateVestigesDisplay();
 
         if (gm.LastRunData != null)
             gm.LastRunData = null;
@@ -77,12 +85,22 @@ public partial class HubScreen : Control
         title.AddThemeColorOverride("font_color", new Color(0.9f, 0.82f, 0.55f));
         titleBox.AddChild(title);
 
+        // Subtitle + Vestiges on same row
+        HBoxContainer subtitleRow = new();
+        subtitleRow.Alignment = BoxContainer.AlignmentMode.Center;
+        subtitleRow.AddThemeConstantOverride("separation", 20);
+        titleBox.AddChild(subtitleRow);
+
         Label subtitle = new();
         subtitle.Text = "Le Hub";
-        subtitle.HorizontalAlignment = HorizontalAlignment.Center;
         subtitle.AddThemeFontSizeOverride("font_size", 14);
         subtitle.AddThemeColorOverride("font_color", new Color(0.5f, 0.5f, 0.6f));
-        titleBox.AddChild(subtitle);
+        subtitleRow.AddChild(subtitle);
+
+        _vestigesLabel = new Label();
+        _vestigesLabel.AddThemeFontSizeOverride("font_size", 14);
+        _vestigesLabel.AddThemeColorOverride("font_color", new Color(0.85f, 0.75f, 0.4f));
+        subtitleRow.AddChild(_vestigesLabel);
 
         // Center: 3-column layout
         HBoxContainer columns = new();
@@ -97,7 +115,7 @@ public partial class HubScreen : Control
         // Center column: Miroirs (character select)
         columns.AddChild(BuildMiroirsPanel());
 
-        // Right column: Etabli (placeholder)
+        // Right column: Etabli
         columns.AddChild(BuildEtabliPanel());
 
         // Bottom: selected character + void button
@@ -129,6 +147,12 @@ public partial class HubScreen : Control
         buttonCenter.AddChild(_enterVoidButton);
     }
 
+    private void UpdateVestigesDisplay()
+    {
+        int vestiges = MetaSaveManager.GetVestiges();
+        _vestigesLabel.Text = $"Vestiges : {vestiges}";
+    }
+
     // --- Miroirs (Character Selection) ---
 
     private PanelContainer BuildMiroirsPanel()
@@ -157,12 +181,18 @@ public partial class HubScreen : Control
 
     private void CreateCharacterCard(CharacterData character)
     {
+        bool isUnlocked = MetaSaveManager.IsCharacterUnlocked(character.Id);
+
         PanelContainer card = new();
         card.CustomMinimumSize = new Vector2(340, 0);
 
         StyleBoxFlat cardStyle = new();
-        cardStyle.BgColor = new Color(0.06f, 0.06f, 0.1f, 0.9f);
-        cardStyle.BorderColor = new Color(0.2f, 0.2f, 0.25f, 0.6f);
+        cardStyle.BgColor = isUnlocked
+            ? new Color(0.06f, 0.06f, 0.1f, 0.9f)
+            : new Color(0.04f, 0.04f, 0.06f, 0.7f);
+        cardStyle.BorderColor = isUnlocked
+            ? new Color(0.2f, 0.2f, 0.25f, 0.6f)
+            : new Color(0.15f, 0.15f, 0.18f, 0.4f);
         cardStyle.BorderWidthBottom = 2;
         cardStyle.BorderWidthTop = 2;
         cardStyle.BorderWidthLeft = 2;
@@ -181,59 +211,83 @@ public partial class HubScreen : Control
         cardContent.AddThemeConstantOverride("separation", 4);
         card.AddChild(cardContent);
 
+        Color textColor = isUnlocked ? character.VisualColor : new Color(0.35f, 0.35f, 0.4f);
+
         // Header: color + name
         HBoxContainer header = new();
         header.AddThemeConstantOverride("separation", 8);
         cardContent.AddChild(header);
 
         ColorRect colorIndicator = new();
-        colorIndicator.Color = character.VisualColor;
+        colorIndicator.Color = isUnlocked ? character.VisualColor : new Color(0.25f, 0.25f, 0.3f);
         colorIndicator.CustomMinimumSize = new Vector2(8, 8);
         header.AddChild(colorIndicator);
 
         Label nameLabel = new();
         nameLabel.Text = character.Name;
         nameLabel.AddThemeFontSizeOverride("font_size", 16);
-        nameLabel.AddThemeColorOverride("font_color", character.VisualColor);
+        nameLabel.AddThemeColorOverride("font_color", textColor);
         header.AddChild(nameLabel);
 
-        // Description
-        Label descLabel = new();
-        descLabel.Text = character.Description;
-        descLabel.AddThemeFontSizeOverride("font_size", 12);
-        descLabel.AddThemeColorOverride("font_color", new Color(0.6f, 0.6f, 0.65f));
-        cardContent.AddChild(descLabel);
-
-        // Stats
-        CharacterStats stats = character.BaseStats;
-        string statsText = $"PV:{stats.MaxHp}  ATK:{stats.AttackDamage}  VIT:{stats.Speed}  PORT:{stats.AttackRange}";
-        Label statsLabel = new();
-        statsLabel.Text = statsText;
-        statsLabel.AddThemeFontSizeOverride("font_size", 11);
-        statsLabel.AddThemeColorOverride("font_color", new Color(0.45f, 0.45f, 0.5f));
-        cardContent.AddChild(statsLabel);
-
-        // Passive perk
-        PerkData passive = PerkDataLoader.Get(character.PassivePerk);
-        if (passive != null)
+        if (isUnlocked)
         {
-            Label passiveLabel = new();
-            passiveLabel.Text = $"Passif : {passive.Name}";
-            passiveLabel.AddThemeFontSizeOverride("font_size", 11);
-            passiveLabel.AddThemeColorOverride("font_color", new Color(0.75f, 0.65f, 0.35f));
-            cardContent.AddChild(passiveLabel);
+            // Description
+            Label descLabel = new();
+            descLabel.Text = character.Description;
+            descLabel.AddThemeFontSizeOverride("font_size", 12);
+            descLabel.AddThemeColorOverride("font_color", new Color(0.6f, 0.6f, 0.65f));
+            cardContent.AddChild(descLabel);
+
+            // Stats
+            CharacterStats stats = character.BaseStats;
+            string statsText = $"PV:{stats.MaxHp}  ATK:{stats.AttackDamage}  VIT:{stats.Speed}  PORT:{stats.AttackRange}";
+            Label statsLabel = new();
+            statsLabel.Text = statsText;
+            statsLabel.AddThemeFontSizeOverride("font_size", 11);
+            statsLabel.AddThemeColorOverride("font_color", new Color(0.45f, 0.45f, 0.5f));
+            cardContent.AddChild(statsLabel);
+
+            // Passive perk
+            PerkData passive = PerkDataLoader.Get(character.PassivePerk);
+            if (passive != null)
+            {
+                Label passiveLabel = new();
+                passiveLabel.Text = $"Passif : {passive.Name}";
+                passiveLabel.AddThemeFontSizeOverride("font_size", 11);
+                passiveLabel.AddThemeColorOverride("font_color", new Color(0.75f, 0.65f, 0.35f));
+                cardContent.AddChild(passiveLabel);
+            }
+
+            // Make unlocked card clickable
+            string capturedId = character.Id;
+            card.GuiInput += (InputEvent @event) =>
+            {
+                if (@event is InputEventMouseButton mouse && mouse.Pressed && mouse.ButtonIndex == MouseButton.Left)
+                    OnCharacterClicked(capturedId);
+            };
         }
-
-        // Make the card clickable
-        string capturedId = character.Id;
-        card.GuiInput += (InputEvent @event) =>
+        else
         {
-            if (@event is InputEventMouseButton mouse && mouse.Pressed && mouse.ButtonIndex == MouseButton.Left)
-                OnCharacterClicked(capturedId);
-        };
+            // Locked: show unlock condition
+            Label conditionLabel = new();
+            conditionLabel.Text = GetUnlockConditionText(character.UnlockCondition);
+            conditionLabel.AddThemeFontSizeOverride("font_size", 12);
+            conditionLabel.AddThemeColorOverride("font_color", new Color(0.4f, 0.35f, 0.3f));
+            cardContent.AddChild(conditionLabel);
+        }
 
         _cardsByCharacterId[character.Id] = card;
         _characterCards.AddChild(card);
+    }
+
+    private static string GetUnlockConditionText(string condition)
+    {
+        return condition switch
+        {
+            "survive_3_nights" => "Survivre 3 nuits",
+            "kill_200_in_run" => "200 kills en une run",
+            _ => "???"
+        };
     }
 
     private void OnCharacterClicked(string characterId)
@@ -251,9 +305,14 @@ public partial class HubScreen : Control
     {
         Color goldBorder = new(0.9f, 0.8f, 0.4f, 0.9f);
         Color defaultBorder = new(0.2f, 0.2f, 0.25f, 0.6f);
+        Color lockedBorder = new(0.15f, 0.15f, 0.18f, 0.4f);
 
         foreach (KeyValuePair<string, PanelContainer> pair in _cardsByCharacterId)
         {
+            bool isUnlocked = MetaSaveManager.IsCharacterUnlocked(pair.Key);
+            if (!isUnlocked)
+                continue;
+
             StyleBoxFlat style = pair.Value.GetThemeStylebox("panel") as StyleBoxFlat;
             if (style == null) continue;
 
@@ -364,24 +423,203 @@ public partial class HubScreen : Control
         }
     }
 
-    // --- Établi (Placeholder) ---
+    // --- Établi (Starting Kits) ---
 
     private PanelContainer BuildEtabliPanel()
     {
-        PanelContainer panel = CreateSectionPanel("ÉTABLI", 220);
+        PanelContainer panel = CreateSectionPanel("ÉTABLI", 300);
 
-        VBoxContainer content = GetSectionContent(panel);
+        _etabliContent = GetSectionContent(panel);
 
-        Label placeholder = new();
-        placeholder.Text = "Kits de départ\n\nBientôt disponible\n(Lot 4.3)";
-        placeholder.HorizontalAlignment = HorizontalAlignment.Center;
-        placeholder.AddThemeFontSizeOverride("font_size", 13);
-        placeholder.AddThemeColorOverride("font_color", new Color(0.3f, 0.3f, 0.35f));
-        content.AddChild(placeholder);
+        Label desc = new();
+        desc.Text = "Kits de départ";
+        desc.HorizontalAlignment = HorizontalAlignment.Center;
+        desc.AddThemeFontSizeOverride("font_size", 12);
+        desc.AddThemeColorOverride("font_color", new Color(0.5f, 0.5f, 0.55f));
+        _etabliContent.AddChild(desc);
 
-        panel.Modulate = new Color(0.6f, 0.6f, 0.6f, 0.5f);
+        RebuildEtabliKits();
 
         return panel;
+    }
+
+    private void RebuildEtabliKits()
+    {
+        // Remove all kit cards (keep section title + description label)
+        List<Node> toRemove = new();
+        int index = 0;
+        foreach (Node child in _etabliContent.GetChildren())
+        {
+            // Keep first two children (section title label + description label)
+            if (index >= 2)
+                toRemove.Add(child);
+            index++;
+        }
+        foreach (Node node in toRemove)
+            node.QueueFree();
+
+        // Wait a frame for QueueFree to process, then add new kits
+        CallDeferred(MethodName.BuildKitCards);
+    }
+
+    private void BuildKitCards()
+    {
+        // Remove leftover deferred-freed nodes
+        while (_etabliContent.GetChildCount() > 2)
+            _etabliContent.RemoveChild(_etabliContent.GetChild(_etabliContent.GetChildCount() - 1));
+
+        HashSet<string> purchased = MetaSaveManager.GetPurchasedKits();
+        string selectedKit = MetaSaveManager.GetSelectedKit();
+        int vestiges = MetaSaveManager.GetVestiges();
+
+        List<StartingKitData> kits = StartingKitDataLoader.GetAll();
+
+        // "None" option to deselect kits
+        PanelContainer noneCard = CreateKitCard("Aucun", "Pas de kit de départ", 0, true, string.IsNullOrEmpty(selectedKit));
+        noneCard.GuiInput += (InputEvent @event) =>
+        {
+            if (@event is InputEventMouseButton mouse && mouse.Pressed && mouse.ButtonIndex == MouseButton.Left)
+                OnKitSelected("");
+        };
+        _etabliContent.AddChild(noneCard);
+
+        foreach (StartingKitData kit in kits)
+        {
+            bool owned = purchased.Contains(kit.Id);
+            bool selected = kit.Id == selectedKit;
+
+            PanelContainer kitCard = CreateKitCard(kit.Name, kit.Description, kit.Cost, owned, selected);
+
+            if (owned)
+            {
+                // Owned: click to select
+                string capturedId = kit.Id;
+                kitCard.GuiInput += (InputEvent @event) =>
+                {
+                    if (@event is InputEventMouseButton mouse && mouse.Pressed && mouse.ButtonIndex == MouseButton.Left)
+                        OnKitSelected(capturedId);
+                };
+            }
+            else
+            {
+                // Not owned: add buy button
+                VBoxContainer content = kitCard.GetChild<VBoxContainer>(0);
+
+                Button buyButton = new();
+                buyButton.Text = $"Acheter ({kit.Cost} V)";
+                buyButton.CustomMinimumSize = new Vector2(0, 28);
+                buyButton.Disabled = vestiges < kit.Cost;
+
+                string capturedKitId = kit.Id;
+                int capturedCost = kit.Cost;
+                buyButton.Pressed += () => OnKitPurchased(capturedKitId, capturedCost);
+                content.AddChild(buyButton);
+            }
+
+            _etabliContent.AddChild(kitCard);
+        }
+    }
+
+    private PanelContainer CreateKitCard(string name, string description, int cost, bool owned, bool selected)
+    {
+        PanelContainer card = new();
+        card.CustomMinimumSize = new Vector2(260, 0);
+
+        StyleBoxFlat style = new();
+        if (selected)
+        {
+            style.BgColor = new Color(0.1f, 0.09f, 0.15f, 0.95f);
+            style.BorderColor = new Color(0.85f, 0.75f, 0.4f, 0.8f);
+        }
+        else if (owned)
+        {
+            style.BgColor = new Color(0.06f, 0.06f, 0.1f, 0.9f);
+            style.BorderColor = new Color(0.2f, 0.2f, 0.25f, 0.6f);
+        }
+        else
+        {
+            style.BgColor = new Color(0.04f, 0.04f, 0.06f, 0.7f);
+            style.BorderColor = new Color(0.15f, 0.15f, 0.18f, 0.4f);
+        }
+        style.BorderWidthBottom = 2;
+        style.BorderWidthTop = 2;
+        style.BorderWidthLeft = 2;
+        style.BorderWidthRight = 2;
+        style.CornerRadiusBottomLeft = 6;
+        style.CornerRadiusBottomRight = 6;
+        style.CornerRadiusTopLeft = 6;
+        style.CornerRadiusTopRight = 6;
+        style.ContentMarginLeft = 10;
+        style.ContentMarginRight = 10;
+        style.ContentMarginTop = 8;
+        style.ContentMarginBottom = 8;
+        card.AddThemeStyleboxOverride("panel", style);
+
+        VBoxContainer content = new();
+        content.AddThemeConstantOverride("separation", 3);
+        card.AddChild(content);
+
+        // Header row: name + status
+        HBoxContainer header = new();
+        header.AddThemeConstantOverride("separation", 8);
+        content.AddChild(header);
+
+        Label nameLabel = new();
+        nameLabel.Text = name;
+        nameLabel.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+        nameLabel.AddThemeFontSizeOverride("font_size", 14);
+        nameLabel.AddThemeColorOverride("font_color", owned
+            ? new Color(0.8f, 0.78f, 0.7f)
+            : new Color(0.45f, 0.45f, 0.5f));
+        header.AddChild(nameLabel);
+
+        if (selected)
+        {
+            Label checkLabel = new();
+            checkLabel.Text = "ACTIF";
+            checkLabel.AddThemeFontSizeOverride("font_size", 11);
+            checkLabel.AddThemeColorOverride("font_color", new Color(0.85f, 0.75f, 0.4f));
+            header.AddChild(checkLabel);
+        }
+        else if (owned)
+        {
+            Label ownedLabel = new();
+            ownedLabel.Text = "Acheté";
+            ownedLabel.AddThemeFontSizeOverride("font_size", 11);
+            ownedLabel.AddThemeColorOverride("font_color", new Color(0.4f, 0.6f, 0.4f));
+            header.AddChild(ownedLabel);
+        }
+
+        // Description
+        Label descLabel = new();
+        descLabel.Text = description;
+        descLabel.AddThemeFontSizeOverride("font_size", 11);
+        descLabel.AddThemeColorOverride("font_color", new Color(0.5f, 0.5f, 0.55f));
+        content.AddChild(descLabel);
+
+        return card;
+    }
+
+    private void OnKitSelected(string kitId)
+    {
+        MetaSaveManager.SelectKit(kitId);
+        RebuildEtabliKits();
+        GD.Print($"[Hub] Kit selected: {(string.IsNullOrEmpty(kitId) ? "none" : kitId)}");
+    }
+
+    private void OnKitPurchased(string kitId, int cost)
+    {
+        if (!MetaSaveManager.PurchaseKit(kitId, cost))
+        {
+            GD.Print($"[Hub] Cannot purchase kit {kitId} (not enough Vestiges)");
+            return;
+        }
+
+        // Auto-select the purchased kit
+        MetaSaveManager.SelectKit(kitId);
+        UpdateVestigesDisplay();
+        RebuildEtabliKits();
+        GD.Print($"[Hub] Kit purchased and selected: {kitId}");
     }
 
     // --- Helpers ---

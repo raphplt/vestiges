@@ -1,5 +1,7 @@
+using System.Collections.Generic;
 using Godot;
 using Vestiges.Core;
+using Vestiges.Infrastructure;
 using Vestiges.Score;
 
 namespace Vestiges.UI;
@@ -19,6 +21,8 @@ public partial class GameOverScreen : CanvasLayer
     private Label _totalLabel;
     private Label _recordLabel;
     private Label _killsLabel;
+    private Label _vestigesLabel;
+    private Label _unlocksLabel;
     private Button _restartButton;
     private Button _hubButton;
     private EventBus _eventBus;
@@ -105,6 +109,14 @@ public partial class GameOverScreen : CanvasLayer
         _recordLabel = CreateLabel("", 14, HorizontalAlignment.Center);
         vbox.AddChild(_recordLabel);
 
+        _vestigesLabel = CreateLabel("", 14, HorizontalAlignment.Center);
+        _vestigesLabel.AddThemeColorOverride("font_color", new Color(0.85f, 0.75f, 0.4f));
+        vbox.AddChild(_vestigesLabel);
+
+        _unlocksLabel = CreateLabel("", 14, HorizontalAlignment.Center);
+        _unlocksLabel.AddThemeColorOverride("font_color", new Color(0.4f, 0.9f, 0.5f));
+        vbox.AddChild(_unlocksLabel);
+
         HBoxContainer buttonRow = new();
         buttonRow.AddThemeConstantOverride("separation", 12);
         buttonRow.Alignment = BoxContainer.AlignmentMode.Center;
@@ -144,7 +156,7 @@ public partial class GameOverScreen : CanvasLayer
         if (entity is not Player)
             return;
 
-        _scoreManager?.SaveIfRecord();
+        _scoreManager?.SaveEndOfRun();
         StartDeathSequence();
     }
 
@@ -188,9 +200,33 @@ public partial class GameOverScreen : CanvasLayer
         _totalLabel.Text = $"SCORE : {total}";
 
         if (isRecord)
-            _recordLabel.Text = $"NOUVEAU RECORD !";
+            _recordLabel.Text = "NOUVEAU RECORD !";
         else
             _recordLabel.Text = $"Meilleur : {best}";
+
+        // Vestiges earned
+        int vestigesEarned = _scoreManager?.VestigesEarned ?? 0;
+        _vestigesLabel.Text = vestigesEarned > 0
+            ? $"+{vestigesEarned} Vestiges"
+            : "";
+
+        // Character unlocks
+        GameManager gm = GetNode<GameManager>("/root/GameManager");
+        List<string> unlocks = gm.LastUnlocks;
+        if (unlocks != null && unlocks.Count > 0)
+        {
+            List<string> names = new();
+            foreach (string id in unlocks)
+            {
+                CharacterData data = CharacterDataLoader.Get(id);
+                names.Add(data?.Name ?? id);
+            }
+            _unlocksLabel.Text = string.Join(", ", names) + " débloqué !";
+        }
+        else
+        {
+            _unlocksLabel.Text = "";
+        }
 
         _panel.Visible = true;
         Visible = true;

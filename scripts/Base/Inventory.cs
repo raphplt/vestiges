@@ -10,7 +10,7 @@ namespace Vestiges.Base;
 /// </summary>
 public partial class Inventory : Node
 {
-    public const int MaxCapacity = 50;
+    public const int MaxCapacity = 100;
 
     private readonly Dictionary<string, int> _resources = new();
     private EventBus _eventBus;

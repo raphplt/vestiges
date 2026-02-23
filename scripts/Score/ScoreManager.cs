@@ -43,6 +43,7 @@ public partial class ScoreManager : Node
     public int NoDamageNights => _noDamageNights;
     public int BestScore => _bestScore;
     public bool IsNewRecord => CurrentScore > _bestScore;
+    public int VestigesEarned { get; private set; }
 
     public override void _Ready()
     {
@@ -72,8 +73,8 @@ public partial class ScoreManager : Node
         GD.Print($"[ScoreManager] Score multiplier set to x{multiplier}");
     }
 
-    /// <summary>Sauvegarde le score si c'est un nouveau record + enregistre la run dans l'historique.</summary>
-    public void SaveIfRecord()
+    /// <summary>Sauvegarde le score, enregistre la run, calcule les Vestiges, vérifie les déblocages.</summary>
+    public void SaveEndOfRun()
     {
         if (CurrentScore > _bestScore)
         {
@@ -84,8 +85,18 @@ public partial class ScoreManager : Node
         RunRecord record = BuildRunRecord();
         RunHistoryManager.SaveRun(record);
 
+        // Vestiges = score / 10
+        VestigesEarned = CurrentScore / 10;
+        MetaSaveManager.AddVestiges(VestigesEarned);
+
+        // Update meta stats and check unlocks
+        MetaSaveManager.UpdateStats(record);
+        System.Collections.Generic.List<string> newUnlocks = MetaSaveManager.CheckUnlocks();
+
         GameManager gm = GetNode<GameManager>("/root/GameManager");
         gm.LastRunData = record;
+        gm.LastVestigesEarned = VestigesEarned;
+        gm.LastUnlocks = newUnlocks;
     }
 
     /// <summary>Construit un RunRecord depuis l'état courant de la run.</summary>

@@ -1,154 +1,1126 @@
 [
+    "_comment_common_stats",
+    "========== PERKS COMMUNS — STATS (pool de base, tous personnages) ==========",
     {
         "id": "damage_up",
         "name": "Force Brute",
         "description": "+15% dégâts",
+        "category": "stat",
+        "rarity": "common",
         "stat": "damage",
         "modifier": 1.15,
         "modifier_type": "multiplicative",
-        "max_stacks": 5
+        "max_stacks": 10,
+        "tags": [
+            "damage"
+        ]
     },
     {
         "id": "speed_up",
         "name": "Pas Vif",
         "description": "+10% vitesse de déplacement",
+        "category": "stat",
+        "rarity": "common",
         "stat": "speed",
         "modifier": 1.10,
         "modifier_type": "multiplicative",
-        "max_stacks": 5
+        "max_stacks": 10,
+        "tags": [
+            "mobility"
+        ]
     },
     {
         "id": "hp_up",
         "name": "Résilience",
         "description": "+20 HP max",
+        "category": "stat",
+        "rarity": "common",
         "stat": "max_hp",
         "modifier": 20,
         "modifier_type": "additive",
-        "max_stacks": 5
+        "max_stacks": 10,
+        "tags": [
+            "defense"
+        ]
     },
     {
         "id": "attack_speed_up",
         "name": "Frénésie",
         "description": "+12% vitesse d'attaque",
+        "category": "stat",
+        "rarity": "common",
         "stat": "attack_speed",
         "modifier": 1.12,
         "modifier_type": "multiplicative",
-        "max_stacks": 5
+        "max_stacks": 10,
+        "tags": [
+            "damage"
+        ]
     },
     {
         "id": "extra_projectile",
         "name": "Écho",
         "description": "+1 projectile",
+        "category": "stat",
+        "rarity": "common",
         "stat": "projectile_count",
         "modifier": 1,
         "modifier_type": "additive",
-        "max_stacks": 3
+        "max_stacks": 6,
+        "tags": [
+            "damage"
+        ]
     },
     {
         "id": "aoe_up",
         "name": "Onde",
         "description": "+20% zone d'effet",
+        "category": "stat",
+        "rarity": "common",
         "stat": "aoe_radius",
         "modifier": 1.20,
         "modifier_type": "multiplicative",
-        "max_stacks": 4
+        "max_stacks": 8,
+        "tags": [
+            "damage"
+        ]
     },
-
+    {
+        "id": "armor_up",
+        "name": "Peau Dure",
+        "description": "+3 armure (réduit les dégâts reçus)",
+        "category": "stat",
+        "rarity": "common",
+        "stat": "armor",
+        "modifier": 3,
+        "modifier_type": "additive",
+        "max_stacks": 10,
+        "tags": [
+            "defense"
+        ]
+    },
+    {
+        "id": "regen_up",
+        "name": "Cicatrisation",
+        "description": "+0.5 HP/sec",
+        "category": "stat",
+        "rarity": "common",
+        "stat": "regen_rate",
+        "modifier": 0.5,
+        "modifier_type": "additive",
+        "max_stacks": 8,
+        "tags": [
+            "defense",
+            "sustain"
+        ]
+    },
+    {
+        "id": "range_up",
+        "name": "Longue Portée",
+        "description": "+15% portée d'attaque",
+        "category": "stat",
+        "rarity": "common",
+        "stat": "attack_range",
+        "modifier": 1.15,
+        "modifier_type": "multiplicative",
+        "max_stacks": 8,
+        "tags": [
+            "damage"
+        ]
+    },
+    {
+        "id": "xp_magnet",
+        "name": "Attraction",
+        "description": "+25% rayon de collecte XP",
+        "category": "stat",
+        "rarity": "common",
+        "stat": "xp_magnet_radius",
+        "modifier": 1.25,
+        "modifier_type": "multiplicative",
+        "max_stacks": 6,
+        "tags": [
+            "utility"
+        ]
+    },
+    "_comment_combat",
+    "========== PERKS COMMUNS — COMBAT (mécaniques, tous personnages) ==========",
+    {
+        "id": "vampirism",
+        "name": "Vampirisme",
+        "description": "Soigne 2% des dégâts infligés",
+        "category": "combat",
+        "rarity": "uncommon",
+        "max_stacks": 5,
+        "tags": [
+            "sustain",
+            "damage"
+        ],
+        "effect": {
+            "trigger": "on_damage_dealt",
+            "action": "heal_percent_of_damage",
+            "value": 0.02
+        }
+    },
+    {
+        "id": "berserker",
+        "name": "Berserker",
+        "description": "+30% dégâts quand <30% HP",
+        "category": "combat",
+        "rarity": "uncommon",
+        "max_stacks": 3,
+        "tags": [
+            "damage",
+            "risk"
+        ],
+        "effect": {
+            "trigger": "passive_conditional",
+            "condition": "hp_percent_below",
+            "condition_value": 0.30,
+            "action": "modify_stat",
+            "stat": "damage",
+            "modifier": 1.30,
+            "modifier_type": "multiplicative"
+        }
+    },
+    {
+        "id": "piercing_shot",
+        "name": "Perforation",
+        "description": "Les projectiles traversent +1 ennemi",
+        "category": "combat",
+        "rarity": "uncommon",
+        "max_stacks": 3,
+        "tags": [
+            "damage"
+        ],
+        "effect": {
+            "trigger": "passive",
+            "action": "modify_stat",
+            "stat": "projectile_pierce",
+            "modifier": 1,
+            "modifier_type": "additive"
+        }
+    },
+    {
+        "id": "ricochet",
+        "name": "Ricochet",
+        "description": "20% de chance que les projectiles rebondissent sur un ennemi proche",
+        "category": "combat",
+        "rarity": "uncommon",
+        "max_stacks": 4,
+        "tags": [
+            "damage"
+        ],
+        "effect": {
+            "trigger": "on_projectile_hit",
+            "action": "bounce_to_nearby",
+            "chance": 0.20,
+            "bounce_range": 120
+        }
+    },
+    {
+        "id": "crit_chance",
+        "name": "Point Faible",
+        "description": "+8% de chance de coup critique (×2 dégâts)",
+        "category": "combat",
+        "rarity": "uncommon",
+        "max_stacks": 8,
+        "tags": [
+            "damage"
+        ],
+        "effect": {
+            "trigger": "passive",
+            "action": "modify_stat",
+            "stat": "crit_chance",
+            "modifier": 0.08,
+            "modifier_type": "additive"
+        }
+    },
+    {
+        "id": "crit_damage",
+        "name": "Coup Fatal",
+        "description": "+25% dégâts critiques",
+        "category": "combat",
+        "rarity": "uncommon",
+        "max_stacks": 6,
+        "tags": [
+            "damage"
+        ],
+        "effect": {
+            "trigger": "passive",
+            "action": "modify_stat",
+            "stat": "crit_multiplier",
+            "modifier": 0.25,
+            "modifier_type": "additive"
+        }
+    },
+    {
+        "id": "ignite",
+        "name": "Embrasement",
+        "description": "15% de chance d'enflammer l'ennemi (3 dég/sec pendant 3s)",
+        "category": "combat",
+        "rarity": "uncommon",
+        "max_stacks": 5,
+        "tags": [
+            "damage",
+            "dot"
+        ],
+        "effect": {
+            "trigger": "on_damage_dealt",
+            "action": "apply_dot",
+            "chance": 0.15,
+            "dot_damage": 3,
+            "dot_duration": 3.0
+        }
+    },
+    {
+        "id": "thorns",
+        "name": "Épines",
+        "description": "Renvoie 20% des dégâts reçus à l'attaquant",
+        "category": "combat",
+        "rarity": "uncommon",
+        "max_stacks": 5,
+        "tags": [
+            "defense",
+            "damage"
+        ],
+        "effect": {
+            "trigger": "on_damage_received",
+            "action": "reflect_damage_percent",
+            "value": 0.20
+        }
+    },
+    {
+        "id": "execution",
+        "name": "Exécution",
+        "description": "Tue instantanément les ennemis en dessous de 10% HP",
+        "category": "combat",
+        "rarity": "uncommon",
+        "max_stacks": 3,
+        "tags": [
+            "damage"
+        ],
+        "effect": {
+            "trigger": "on_damage_dealt",
+            "action": "execute_below_percent",
+            "value": 0.10
+        }
+    },
+    {
+        "id": "kill_speed",
+        "name": "Soif de Sang",
+        "description": "+5% vitesse d'attaque pendant 3s après chaque kill (stacks)",
+        "category": "combat",
+        "rarity": "uncommon",
+        "max_stacks": 3,
+        "tags": [
+            "damage"
+        ],
+        "effect": {
+            "trigger": "on_kill",
+            "action": "temporary_buff",
+            "stat": "attack_speed",
+            "modifier": 1.05,
+            "duration": 3.0,
+            "max_buff_stacks": 10
+        }
+    },
+    "_comment_survival",
+    "========== PERKS COMMUNS — SURVIE & BASE ==========",
+    {
+        "id": "architect",
+        "name": "Architecte",
+        "description": "+25% HP des structures",
+        "category": "survival",
+        "rarity": "uncommon",
+        "stat": "structure_hp",
+        "modifier": 1.25,
+        "modifier_type": "multiplicative",
+        "max_stacks": 6,
+        "tags": [
+            "base"
+        ]
+    },
+    {
+        "id": "salvager",
+        "name": "Récupérateur",
+        "description": "Les structures détruites rendent 75% des matériaux (au lieu de 50%)",
+        "category": "survival",
+        "rarity": "uncommon",
+        "max_stacks": 1,
+        "tags": [
+            "base",
+            "economy"
+        ],
+        "effect": {
+            "trigger": "passive",
+            "action": "modify_stat",
+            "stat": "salvage_return",
+            "modifier": 0.75,
+            "modifier_type": "override"
+        }
+    },
+    {
+        "id": "torch_bearer",
+        "name": "Torche Vivante",
+        "description": "Le joueur émet de la lumière, renforçant la réalité et repoussant les créatures proches",
+        "category": "survival",
+        "rarity": "uncommon",
+        "max_stacks": 3,
+        "tags": [
+            "defense",
+            "light"
+        ],
+        "effect": {
+            "trigger": "passive",
+            "action": "emit_light",
+            "base_radius": 60,
+            "radius_per_stack": 20,
+            "pushback_force": 30
+        }
+    },
+    {
+        "id": "quick_fix",
+        "name": "Réparation Express",
+        "description": "Répare les structures 40% plus vite",
+        "category": "survival",
+        "rarity": "common",
+        "stat": "repair_speed",
+        "modifier": 1.40,
+        "modifier_type": "multiplicative",
+        "max_stacks": 4,
+        "tags": [
+            "base"
+        ]
+    },
+    {
+        "id": "harvest_bounty",
+        "name": "Récolte Abondante",
+        "description": "+1 ressource par récolte",
+        "category": "survival",
+        "rarity": "uncommon",
+        "max_stacks": 3,
+        "tags": [
+            "economy"
+        ],
+        "effect": {
+            "trigger": "on_harvest",
+            "action": "bonus_resource",
+            "value": 1
+        }
+    },
+    {
+        "id": "night_vision",
+        "name": "Vision Nocturne",
+        "description": "+30% rayon de vision la nuit",
+        "category": "survival",
+        "rarity": "common",
+        "max_stacks": 3,
+        "tags": [
+            "utility"
+        ],
+        "effect": {
+            "trigger": "passive_conditional",
+            "condition": "is_night",
+            "action": "modify_stat",
+            "stat": "vision_radius",
+            "modifier": 1.30,
+            "modifier_type": "multiplicative"
+        }
+    },
+    "_comment_essence",
+    "========== PERKS COMMUNS — ESSENCE ==========",
+    {
+        "id": "channeling",
+        "name": "Canalisation",
+        "description": "Les capacités d'Essence coûtent 20% de moins",
+        "category": "essence",
+        "rarity": "uncommon",
+        "stat": "essence_cost",
+        "modifier": 0.80,
+        "modifier_type": "multiplicative",
+        "max_stacks": 4,
+        "tags": [
+            "essence"
+        ]
+    },
+    {
+        "id": "siphon",
+        "name": "Siphon",
+        "description": "Les créatures tuées droppent ×2 Essence",
+        "category": "essence",
+        "rarity": "uncommon",
+        "stat": "essence_drop_multiplier",
+        "modifier": 2.0,
+        "modifier_type": "multiplicative",
+        "max_stacks": 3,
+        "tags": [
+            "essence",
+            "economy"
+        ]
+    },
+    {
+        "id": "instability",
+        "name": "Instabilité",
+        "description": "Capacités d'Essence : 30% de chance de coûter 0, 10% de chance de backfire",
+        "category": "essence",
+        "rarity": "uncommon",
+        "max_stacks": 1,
+        "tags": [
+            "essence",
+            "risk"
+        ],
+        "effect": {
+            "trigger": "on_essence_cast",
+            "action": "gamble_cost",
+            "free_chance": 0.30,
+            "backfire_chance": 0.10,
+            "backfire_damage_percent": 0.15
+        }
+    },
+    {
+        "id": "essence_regen",
+        "name": "Méditation",
+        "description": "+0.3 Essence/sec de jour",
+        "category": "essence",
+        "rarity": "uncommon",
+        "max_stacks": 5,
+        "tags": [
+            "essence"
+        ],
+        "effect": {
+            "trigger": "passive_conditional",
+            "condition": "is_day",
+            "action": "regen_resource",
+            "resource": "essence",
+            "value": 0.3
+        }
+    },
+    "_comment_rare",
+    "========== PERKS RARES (apparaissent rarement, très puissants) ==========",
+    {
+        "id": "second_wind",
+        "name": "Deuxième Souffle",
+        "description": "Revient à 50% HP après être tombé à 0 (une fois par run)",
+        "category": "rare",
+        "rarity": "rare",
+        "max_stacks": 1,
+        "tags": [
+            "defense",
+            "clutch"
+        ],
+        "weight": 0.3,
+        "effect": {
+            "trigger": "on_death",
+            "action": "revive",
+            "heal_percent": 0.50,
+            "uses": 1
+        }
+    },
+    {
+        "id": "time_master",
+        "name": "Maître du Temps",
+        "description": "Le jour dure 20% plus longtemps",
+        "category": "rare",
+        "rarity": "rare",
+        "max_stacks": 1,
+        "tags": [
+            "utility"
+        ],
+        "weight": 0.3,
+        "effect": {
+            "trigger": "passive",
+            "action": "modify_stat",
+            "stat": "day_duration",
+            "modifier": 1.20,
+            "modifier_type": "multiplicative"
+        }
+    },
+    {
+        "id": "awakened_sight",
+        "name": "Éveillé",
+        "description": "Voir les créatures nocturnes à travers les murs et le fog",
+        "category": "rare",
+        "rarity": "rare",
+        "max_stacks": 1,
+        "tags": [
+            "utility"
+        ],
+        "weight": 0.3,
+        "effect": {
+            "trigger": "passive",
+            "action": "reveal_enemies_in_fog"
+        }
+    },
+    {
+        "id": "glass_cannon",
+        "name": "Canon de Verre",
+        "description": "+50% dégâts, -30% HP max",
+        "category": "rare",
+        "rarity": "rare",
+        "max_stacks": 1,
+        "tags": [
+            "damage",
+            "risk"
+        ],
+        "weight": 0.4,
+        "effects": [
+            {
+                "stat": "damage",
+                "modifier": 1.50,
+                "modifier_type": "multiplicative"
+            },
+            {
+                "stat": "max_hp",
+                "modifier": 0.70,
+                "modifier_type": "multiplicative"
+            }
+        ]
+    },
+    {
+        "id": "last_stand",
+        "name": "Dernier Rempart",
+        "description": "+5% dégâts par structure détruite cette nuit (reset à l'aube)",
+        "category": "rare",
+        "rarity": "rare",
+        "max_stacks": 1,
+        "tags": [
+            "damage",
+            "base",
+            "clutch"
+        ],
+        "weight": 0.4,
+        "effect": {
+            "trigger": "on_structure_destroyed",
+            "action": "stack_buff",
+            "stat": "damage",
+            "modifier_per_stack": 1.05,
+            "reset_on": "dawn"
+        }
+    },
+    {
+        "id": "memory_anchor",
+        "name": "Ancrage Mémoriel",
+        "description": "Le Foyer gagne +20% de rayon. Les créatures dans le rayon subissent 2 dég/sec",
+        "category": "rare",
+        "rarity": "rare",
+        "max_stacks": 1,
+        "tags": [
+            "base",
+            "light",
+            "damage"
+        ],
+        "weight": 0.3,
+        "effect": {
+            "trigger": "passive",
+            "actions": [
+                {
+                    "action": "modify_stat",
+                    "stat": "foyer_radius",
+                    "modifier": 1.20,
+                    "modifier_type": "multiplicative"
+                },
+                {
+                    "action": "foyer_aura_damage",
+                    "dps": 2
+                }
+            ]
+        }
+    },
+    "_comment_synergies",
+    "========== SYNERGIES (combos activés quand le joueur possède les perks requis) ==========",
+    {
+        "id": "synergy_blood_rage",
+        "name": "Rage Sanguinaire",
+        "type": "synergy",
+        "description": "Vampirisme soigne ×2 quand <30% HP",
+        "required_perks": [
+            "vampirism",
+            "berserker"
+        ],
+        "effect": {
+            "trigger": "synergy_active",
+            "action": "modify_perk_value",
+            "target_perk": "vampirism",
+            "condition": "hp_percent_below",
+            "condition_value": 0.30,
+            "multiplier": 2.0
+        },
+        "notification": "⚡ RAGE SANGUINAIRE activée"
+    },
+    {
+        "id": "synergy_crit_master",
+        "name": "Maîtrise Fatale",
+        "type": "synergy",
+        "description": "Les crits enflamment toujours la cible",
+        "required_perks": [
+            "crit_chance",
+            "ignite"
+        ],
+        "effect": {
+            "trigger": "on_crit",
+            "action": "guaranteed_ignite"
+        },
+        "notification": "⚡ MAÎTRISE FATALE activée"
+    },
+    {
+        "id": "synergy_essence_storm",
+        "name": "Tempête d'Essence",
+        "type": "synergy",
+        "description": "Les kills sous Instabilité free-cast génèrent une explosion d'Essence (AoE)",
+        "required_perks": [
+            "siphon",
+            "instability"
+        ],
+        "effect": {
+            "trigger": "on_free_cast_kill",
+            "action": "essence_explosion",
+            "aoe_radius": 100,
+            "damage": 15
+        },
+        "notification": "⚡ TEMPÊTE D'ESSENCE activée"
+    },
+    {
+        "id": "synergy_fortress",
+        "name": "Forteresse",
+        "type": "synergy",
+        "description": "Les structures dans le rayon du Foyer se réparent lentement (1 HP/sec)",
+        "required_perks": [
+            "architect",
+            "memory_anchor"
+        ],
+        "effect": {
+            "trigger": "passive",
+            "action": "structures_regen_in_foyer",
+            "regen_rate": 1.0
+        },
+        "notification": "⚡ FORTERESSE activée"
+    },
+    {
+        "id": "synergy_glass_berserker",
+        "name": "Kamikaze",
+        "type": "synergy",
+        "description": "Quand <15% HP : +80% dégâts, +30% vitesse d'attaque, mais plus de soin possible",
+        "required_perks": [
+            "glass_cannon",
+            "berserker"
+        ],
+        "effect": {
+            "trigger": "passive_conditional",
+            "condition": "hp_percent_below",
+            "condition_value": 0.15,
+            "actions": [
+                {
+                    "stat": "damage",
+                    "modifier": 1.80,
+                    "modifier_type": "multiplicative"
+                },
+                {
+                    "stat": "attack_speed",
+                    "modifier": 1.30,
+                    "modifier_type": "multiplicative"
+                },
+                {
+                    "stat": "healing_received",
+                    "modifier": 0,
+                    "modifier_type": "override"
+                }
+            ]
+        },
+        "notification": "💀 KAMIKAZE activé"
+    },
+    {
+        "id": "synergy_torchfire",
+        "name": "Feu Intérieur",
+        "type": "synergy",
+        "description": "L'aura de Torche Vivante enflamme les créatures qui entrent dedans",
+        "required_perks": [
+            "torch_bearer",
+            "ignite"
+        ],
+        "effect": {
+            "trigger": "on_enter_light_aura",
+            "action": "apply_dot",
+            "dot_damage": 3,
+            "dot_duration": 3.0
+        },
+        "notification": "⚡ FEU INTÉRIEUR activé"
+    },
+    {
+        "id": "synergy_ricochet_crit",
+        "name": "Rebond Mortel",
+        "type": "synergy",
+        "description": "Les ricochets sont toujours des coups critiques",
+        "required_perks": [
+            "ricochet",
+            "crit_chance"
+        ],
+        "effect": {
+            "trigger": "on_ricochet",
+            "action": "force_crit"
+        },
+        "notification": "⚡ REBOND MORTEL activé"
+    },
+    {
+        "id": "synergy_executioner",
+        "name": "Bourreau",
+        "type": "synergy",
+        "description": "Le seuil d'Exécution monte à 20%. Les exécutions soignent 5 HP",
+        "required_perks": [
+            "execution",
+            "vampirism"
+        ],
+        "effect": {
+            "trigger": "synergy_active",
+            "actions": [
+                {
+                    "action": "modify_perk_value",
+                    "target_perk": "execution",
+                    "field": "value",
+                    "new_value": 0.20
+                },
+                {
+                    "action": "on_execute_heal",
+                    "value": 5
+                }
+            ]
+        },
+        "notification": "⚡ BOURREAU activé"
+    },
+    "_comment_vagabond",
+    "========== PERKS SPÉCIFIQUES — VAGABOND ==========",
     {
         "id": "vagabond_harvest",
-        "name": "Instinct de cueilleur",
+        "name": "Instinct de Cueilleur",
         "description": "Récolte 25% plus vite",
+        "category": "passive",
+        "rarity": "passive",
         "stat": "harvest_speed",
         "modifier": 1.25,
         "modifier_type": "multiplicative",
         "max_stacks": 1,
         "is_passive": true,
-        "character_id": "vagabond"
-    },
-    {
-        "id": "forgeuse_fortify",
-        "name": "Maître bâtisseur",
-        "description": "Structures +30% HP",
-        "stat": "structure_hp",
-        "modifier": 1.30,
-        "modifier_type": "multiplicative",
-        "max_stacks": 1,
-        "is_passive": true,
-        "character_id": "forgeuse"
-    },
-    {
-        "id": "traqueur_precision",
-        "name": "Œil d'aigle",
-        "description": "Portée +20%, vitesse d'attaque +10%",
-        "max_stacks": 1,
-        "is_passive": true,
-        "character_id": "traqueur",
-        "effects": [
-            { "stat": "attack_range", "modifier": 1.20, "modifier_type": "multiplicative" },
-            { "stat": "attack_speed", "modifier": 1.10, "modifier_type": "multiplicative" }
+        "character_id": "vagabond",
+        "tags": [
+            "economy"
         ]
     },
-
     {
         "id": "vagabond_adaptability",
         "name": "Adaptabilité",
         "description": "+5% dégâts et +5% vitesse",
-        "max_stacks": 4,
+        "category": "character",
+        "rarity": "common",
+        "max_stacks": 10,
         "character_id": "vagabond",
+        "tags": [
+            "damage",
+            "mobility"
+        ],
         "effects": [
-            { "stat": "damage", "modifier": 1.05, "modifier_type": "multiplicative" },
-            { "stat": "speed", "modifier": 1.05, "modifier_type": "multiplicative" }
+            {
+                "stat": "damage",
+                "modifier": 1.05,
+                "modifier_type": "multiplicative"
+            },
+            {
+                "stat": "speed",
+                "modifier": 1.05,
+                "modifier_type": "multiplicative"
+            }
         ]
     },
     {
         "id": "vagabond_survivalist",
         "name": "Survivaliste",
         "description": "+15 HP max et +0.3 régénération",
+        "category": "character",
+        "rarity": "common",
+        "max_stacks": 8,
+        "character_id": "vagabond",
+        "tags": [
+            "defense",
+            "sustain"
+        ],
+        "effects": [
+            {
+                "stat": "max_hp",
+                "modifier": 15,
+                "modifier_type": "additive"
+            },
+            {
+                "stat": "regen_rate",
+                "modifier": 0.3,
+                "modifier_type": "additive"
+            }
+        ]
+    },
+    {
+        "id": "vagabond_jack_of_all",
+        "name": "Touche-à-tout",
+        "description": "Les perks de stats donnent +3% de bonus en plus",
+        "category": "character",
+        "rarity": "uncommon",
+        "max_stacks": 1,
+        "character_id": "vagabond",
+        "tags": [
+            "utility"
+        ],
+        "effect": {
+            "trigger": "on_perk_acquired",
+            "condition": "perk_category_is_stat",
+            "action": "amplify_perk_modifier",
+            "bonus": 0.03
+        }
+    },
+    {
+        "id": "vagabond_nomad",
+        "name": "Nomade",
+        "description": "+15% vitesse hors du rayon du Foyer",
+        "category": "character",
+        "rarity": "uncommon",
         "max_stacks": 3,
         "character_id": "vagabond",
-        "effects": [
-            { "stat": "max_hp", "modifier": 15, "modifier_type": "additive" },
-            { "stat": "regen_rate", "modifier": 0.3, "modifier_type": "additive" }
+        "tags": [
+            "mobility"
+        ],
+        "effect": {
+            "trigger": "passive_conditional",
+            "condition": "outside_foyer_radius",
+            "action": "modify_stat",
+            "stat": "speed",
+            "modifier": 1.15,
+            "modifier_type": "multiplicative"
+        }
+    },
+    {
+        "id": "vagabond_scrounger",
+        "name": "Fouineur",
+        "description": "Les coffres donnent +1 objet supplémentaire",
+        "category": "character",
+        "rarity": "uncommon",
+        "max_stacks": 2,
+        "character_id": "vagabond",
+        "tags": [
+            "economy"
+        ],
+        "effect": {
+            "trigger": "on_chest_opened",
+            "action": "bonus_loot",
+            "value": 1
+        }
+    },
+    "_comment_forgeuse",
+    "========== PERKS SPÉCIFIQUES — FORGEUSE ==========",
+    {
+        "id": "forgeuse_fortify",
+        "name": "Maître Bâtisseur",
+        "description": "Structures +30% HP",
+        "category": "passive",
+        "rarity": "passive",
+        "stat": "structure_hp",
+        "modifier": 1.30,
+        "modifier_type": "multiplicative",
+        "max_stacks": 1,
+        "is_passive": true,
+        "character_id": "forgeuse",
+        "tags": [
+            "base"
         ]
     },
     {
         "id": "forgeuse_quick_craft",
-        "name": "Forge rapide",
+        "name": "Forge Rapide",
         "description": "Craft 30% plus rapide",
+        "category": "character",
+        "rarity": "common",
         "stat": "craft_speed",
         "modifier": 1.30,
         "modifier_type": "multiplicative",
-        "max_stacks": 3,
-        "character_id": "forgeuse"
+        "max_stacks": 8,
+        "character_id": "forgeuse",
+        "tags": [
+            "economy",
+            "base"
+        ]
     },
     {
         "id": "forgeuse_reinforce",
         "name": "Renforcement",
         "description": "+25% HP des structures",
+        "category": "character",
+        "rarity": "common",
         "stat": "structure_hp",
         "modifier": 1.25,
         "modifier_type": "multiplicative",
+        "max_stacks": 8,
+        "character_id": "forgeuse",
+        "tags": [
+            "base"
+        ]
+    },
+    {
+        "id": "forgeuse_overcharge",
+        "name": "Surcharge",
+        "description": "Les tourelles tirent 20% plus vite",
+        "category": "character",
+        "rarity": "uncommon",
+        "stat": "turret_attack_speed",
+        "modifier": 1.20,
+        "modifier_type": "multiplicative",
+        "max_stacks": 5,
+        "character_id": "forgeuse",
+        "tags": [
+            "base",
+            "damage"
+        ]
+    },
+    {
+        "id": "forgeuse_recycler",
+        "name": "Recyclage",
+        "description": "Tuer un ennemi près d'une structure donne 15% de chance de drop métal",
+        "category": "character",
+        "rarity": "uncommon",
         "max_stacks": 3,
-        "character_id": "forgeuse"
+        "character_id": "forgeuse",
+        "tags": [
+            "economy",
+            "base"
+        ],
+        "effect": {
+            "trigger": "on_kill_near_structure",
+            "action": "drop_resource",
+            "resource": "metal",
+            "chance": 0.15,
+            "range": 150
+        }
+    },
+    {
+        "id": "forgeuse_last_wall",
+        "name": "Dernier Mur",
+        "description": "+10% dégâts personnels par structure active sur la map (max 5 stacks)",
+        "category": "character",
+        "rarity": "uncommon",
+        "max_stacks": 1,
+        "character_id": "forgeuse",
+        "tags": [
+            "damage",
+            "base"
+        ],
+        "effect": {
+            "trigger": "passive_dynamic",
+            "action": "damage_per_structure",
+            "modifier_per_structure": 1.10,
+            "max_structures_counted": 5
+        }
+    },
+    "_comment_traqueur",
+    "========== PERKS SPÉCIFIQUES — TRAQUEUR ==========",
+    {
+        "id": "traqueur_precision",
+        "name": "Œil d'Aigle",
+        "description": "Portée +20%, vitesse d'attaque +10%",
+        "category": "passive",
+        "rarity": "passive",
+        "max_stacks": 1,
+        "is_passive": true,
+        "character_id": "traqueur",
+        "tags": [
+            "damage"
+        ],
+        "effects": [
+            {
+                "stat": "attack_range",
+                "modifier": 1.20,
+                "modifier_type": "multiplicative"
+            },
+            {
+                "stat": "attack_speed",
+                "modifier": 1.10,
+                "modifier_type": "multiplicative"
+            }
+        ]
     },
     {
         "id": "traqueur_piercing",
-        "name": "Tir perçant",
-        "description": "+1 projectile supplémentaire",
-        "stat": "projectile_count",
+        "name": "Tir Perçant",
+        "description": "+1 ennemi traversé par projectile",
+        "category": "character",
+        "rarity": "common",
+        "stat": "projectile_pierce",
         "modifier": 1,
         "modifier_type": "additive",
-        "max_stacks": 2,
-        "character_id": "traqueur"
+        "max_stacks": 5,
+        "character_id": "traqueur",
+        "tags": [
+            "damage"
+        ]
     },
     {
         "id": "traqueur_swiftness",
         "name": "Célérité",
         "description": "+12% vitesse de déplacement",
+        "category": "character",
+        "rarity": "common",
         "stat": "speed",
         "modifier": 1.12,
         "modifier_type": "multiplicative",
-        "max_stacks": 3,
-        "character_id": "traqueur"
+        "max_stacks": 8,
+        "character_id": "traqueur",
+        "tags": [
+            "mobility"
+        ]
+    },
+    {
+        "id": "traqueur_ambush",
+        "name": "Embuscade",
+        "description": "La première attaque après 3s sans toucher fait ×2.5 dégâts",
+        "category": "character",
+        "rarity": "uncommon",
+        "max_stacks": 1,
+        "character_id": "traqueur",
+        "tags": [
+            "damage"
+        ],
+        "effect": {
+            "trigger": "on_attack_after_idle",
+            "idle_threshold": 3.0,
+            "action": "multiply_damage",
+            "multiplier": 2.5
+        }
+    },
+    {
+        "id": "traqueur_evasion",
+        "name": "Esquive Instinctive",
+        "description": "8% de chance d'esquiver complètement une attaque",
+        "category": "character",
+        "rarity": "uncommon",
+        "max_stacks": 5,
+        "character_id": "traqueur",
+        "tags": [
+            "defense"
+        ],
+        "effect": {
+            "trigger": "on_damage_received",
+            "action": "dodge",
+            "chance": 0.08
+        }
+    },
+    {
+        "id": "traqueur_marked",
+        "name": "Proie Marquée",
+        "description": "Le 3ème hit consécutif sur la même cible fait +50% dégâts",
+        "category": "character",
+        "rarity": "uncommon",
+        "max_stacks": 1,
+        "character_id": "traqueur",
+        "tags": [
+            "damage"
+        ],
+        "effect": {
+            "trigger": "on_consecutive_hit_same_target",
+            "hit_count": 3,
+            "action": "bonus_damage",
+            "modifier": 1.50
+        }
     }
 ]

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Godot;
 using Vestiges.Infrastructure;
 
@@ -25,6 +26,12 @@ public partial class GameManager : Node
 
     /// <summary>Données de la dernière run terminée (pour affichage dans le Hub).</summary>
     public RunRecord LastRunData { get; set; }
+
+    /// <summary>Vestiges gagnés lors de la dernière run.</summary>
+    public int LastVestigesEarned { get; set; }
+
+    /// <summary>Personnages débloqués lors de la dernière run.</summary>
+    public List<string> LastUnlocks { get; set; }
 
     public GameState CurrentState => _currentState;
 
