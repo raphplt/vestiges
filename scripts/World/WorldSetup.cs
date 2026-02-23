@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using Godot;
 using Vestiges.Base;
 using Vestiges.Infrastructure;
@@ -62,24 +63,34 @@ public partial class WorldSetup : Node2D
 
     private void SpawnResources()
     {
+        Dictionary<string, int> spawnCounts = new();
         for (int i = 0; i < ResourceCount; i++)
         {
-            SpawnSingleResource();
+            string spawned = SpawnSingleResource();
+            if (spawned != null)
+            {
+                spawnCounts.TryGetValue(spawned, out int count);
+                spawnCounts[spawned] = count + 1;
+            }
         }
 
-        GD.Print($"[WorldSetup] Spawned {_usedCells.Count} resource nodes");
+        string breakdown = string.Join(", ", spawnCounts.Select(kv => $"{kv.Key}={kv.Value}"));
+        GD.Print($"[WorldSetup] Spawned {_usedCells.Count} resource nodes ({breakdown})");
     }
 
-    private void SpawnSingleResource(float minDistFromPlayer = 0f)
+    private string SpawnSingleResource(float minDistFromPlayer = 0f)
     {
         string resourceId = PickResourceType();
         ResourceData data = ResourceDataLoader.Get(resourceId);
         if (data == null)
-            return;
+        {
+            GD.PushWarning($"[WorldSetup] ResourceData null for '{resourceId}'");
+            return null;
+        }
 
         Vector2I cell = PickResourceCell(_usedCells, minDistFromPlayer);
         if (cell == new Vector2I(int.MinValue, int.MinValue))
-            return;
+            return null;
 
         _usedCells.Add(cell);
 
@@ -89,6 +100,7 @@ public partial class WorldSetup : Node2D
         node.GlobalPosition = worldPos;
         _resourceContainer.AddChild(node);
         node.Initialize(data);
+        return resourceId;
     }
 
     private void OnRespawnTimer()
@@ -124,15 +136,15 @@ public partial class WorldSetup : Node2D
 
     private string PickResourceType()
     {
-        float roll = (float)GD.RandRange(0, 1);
+        float roll = GD.Randf();
         float cumulative = 0f;
         foreach ((string id, float weight) in ResourceDistribution)
         {
             cumulative += weight;
-            if (roll <= cumulative)
+            if (roll < cumulative)
                 return id;
         }
-        return ResourceDistribution[0].id;
+        return ResourceDistribution[^1].id;
     }
 
     private Vector2I PickResourceCell(HashSet<Vector2I> used, float minDistFromPlayer = 0f)

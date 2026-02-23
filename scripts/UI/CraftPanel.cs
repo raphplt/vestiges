@@ -174,13 +174,44 @@ public partial class CraftPanel : CanvasLayer
         List<RecipeData> recipes = RecipeDataLoader.GetAll();
         bool nearFoyer = _craftManager?.IsPlayerNearFoyer() ?? false;
 
+        _statusLabel.Text = nearFoyer ? "" : "Trop loin du Foyer pour fabriquer";
+
+        string lastCategory = "";
         foreach (RecipeData recipe in recipes)
         {
+            string category = GetCategoryDisplayName(recipe.Category);
+            if (category != lastCategory)
+            {
+                _recipeList.AddChild(CreateCategoryHeader(category));
+                lastCategory = category;
+            }
+
             PanelContainer entry = CreateRecipeEntry(recipe, nearFoyer);
             _recipeList.AddChild(entry);
         }
+    }
 
-        _statusLabel.Text = nearFoyer ? "" : "Trop loin du Foyer";
+    private static Control CreateCategoryHeader(string category)
+    {
+        HBoxContainer row = new();
+        row.AddThemeConstantOverride("separation", 6);
+
+        HSeparator sepLeft = new();
+        sepLeft.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+        row.AddChild(sepLeft);
+
+        Label label = new();
+        label.Text = category;
+        label.AddThemeFontSizeOverride("font_size", 12);
+        label.AddThemeColorOverride("font_color", new Color(0.7f, 0.6f, 0.3f));
+        label.HorizontalAlignment = HorizontalAlignment.Center;
+        row.AddChild(label);
+
+        HSeparator sepRight = new();
+        sepRight.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+        row.AddChild(sepRight);
+
+        return row;
     }
 
     private PanelContainer CreateRecipeEntry(RecipeData recipe, bool nearFoyer)
@@ -208,36 +239,59 @@ public partial class CraftPanel : CanvasLayer
         vbox.AddThemeConstantOverride("separation", 2);
         entry.AddChild(vbox);
 
-        string nameText = recipe.Name;
+        // Recipe name + structure count
+        HBoxContainer nameRow = new();
+        vbox.AddChild(nameRow);
+
+        Label nameLabel = new();
+        nameLabel.Text = recipe.Name;
+        nameLabel.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+        nameLabel.AddThemeFontSizeOverride("font_size", 14);
+        nameLabel.AddThemeColorOverride("font_color", canCraft ? Colors.White : new Color(0.5f, 0.5f, 0.5f));
+        nameRow.AddChild(nameLabel);
+
         if (isStructure && _structureManager != null)
         {
             int count = _structureManager.GetCountForType(recipe.Result.Type);
             int max = _structureManager.GetMaxForType(recipe.Result.Type);
-            nameText += $"  ({count}/{max})";
+            Label countLabel = new();
+            countLabel.Text = $"{count}/{max}";
+            countLabel.AddThemeFontSizeOverride("font_size", 12);
+            countLabel.AddThemeColorOverride("font_color",
+                capReached ? new Color(0.8f, 0.4f, 0.2f) : new Color(0.5f, 0.5f, 0.5f));
+            nameRow.AddChild(countLabel);
         }
 
-        Label nameLabel = new();
-        nameLabel.Text = nameText;
-        nameLabel.AddThemeFontSizeOverride("font_size", 14);
-        nameLabel.AddThemeColorOverride("font_color", canCraft ? Colors.White : new Color(0.5f, 0.5f, 0.5f));
-        vbox.AddChild(nameLabel);
+        // Result stats description
+        string statsText = FormatResultStats(recipe);
+        if (statsText.Length > 0)
+        {
+            Label statsLabel = new();
+            statsLabel.Text = statsText;
+            statsLabel.AddThemeFontSizeOverride("font_size", 11);
+            statsLabel.AddThemeColorOverride("font_color", new Color(0.6f, 0.7f, 0.8f));
+            vbox.AddChild(statsLabel);
+        }
 
-        string ingredientText = "";
+        // Ingredients
+        HBoxContainer ingRow = new();
+        ingRow.AddThemeConstantOverride("separation", 8);
+        vbox.AddChild(ingRow);
+
         foreach (RecipeIngredient ing in recipe.Ingredients)
         {
             int have = _inventory?.GetAmount(ing.Resource) ?? 0;
-            Color color = have >= ing.Amount ? new Color(0.5f, 0.8f, 0.5f) : new Color(0.8f, 0.3f, 0.3f);
-            string colorHex = color.ToHtml(false);
-            ingredientText += $"[color=#{colorHex}]{GetResourceName(ing.Resource)}: {have}/{ing.Amount}[/color]  ";
+            bool enough = have >= ing.Amount;
+
+            Label ingLabel = new();
+            ingLabel.Text = $"{GetResourceSymbol(ing.Resource)} {have}/{ing.Amount}";
+            ingLabel.AddThemeFontSizeOverride("font_size", 12);
+            ingLabel.AddThemeColorOverride("font_color",
+                enough ? new Color(0.5f, 0.8f, 0.5f) : new Color(0.8f, 0.3f, 0.3f));
+            ingRow.AddChild(ingLabel);
         }
 
-        RichTextLabel ingLabel = new();
-        ingLabel.BbcodeEnabled = true;
-        ingLabel.Text = ingredientText;
-        ingLabel.FitContent = true;
-        ingLabel.AddThemeFontSizeOverride("normal_font_size", 11);
-        vbox.AddChild(ingLabel);
-
+        // Action area
         if (capReached)
         {
             Label capLabel = new();
@@ -257,6 +311,31 @@ public partial class CraftPanel : CanvasLayer
         }
 
         return entry;
+    }
+
+    private static string FormatResultStats(RecipeData recipe)
+    {
+        List<string> parts = new();
+        Dictionary<string, float> stats = recipe.Result.Stats;
+
+        if (stats.TryGetValue("hp", out float hp))
+            parts.Add($"{hp} PV");
+        if (stats.TryGetValue("damage", out float dmg))
+            parts.Add($"{dmg} dégâts");
+        if (stats.TryGetValue("attack_speed", out float atkSpd))
+            parts.Add($"{atkSpd:0.#}/s");
+        if (stats.TryGetValue("range", out float range))
+            parts.Add($"portée {range}");
+        if (stats.TryGetValue("uses", out float uses))
+            parts.Add($"{uses} utilisations");
+        if (stats.TryGetValue("radius", out float radius))
+            parts.Add($"rayon {radius}");
+        if (stats.TryGetValue("duration", out float dur))
+            parts.Add($"{dur}s");
+        if (stats.TryGetValue("heal", out float heal))
+            parts.Add($"+{heal} PV");
+
+        return string.Join(" · ", parts);
     }
 
     private void OnCraftPressed(string recipeId)
@@ -284,7 +363,7 @@ public partial class CraftPanel : CanvasLayer
             RefreshRecipes();
     }
 
-    private static string GetResourceName(string id)
+    private static string GetResourceSymbol(string id)
     {
         return id switch
         {
@@ -294,4 +373,17 @@ public partial class CraftPanel : CanvasLayer
             _ => id
         };
     }
+
+    private static string GetCategoryDisplayName(string category)
+    {
+        return category switch
+        {
+            "defense" => "Défense",
+            "trap" => "Pièges",
+            "utility" => "Utilitaire",
+            "consumable" => "Consommables",
+            _ => category
+        };
+    }
+
 }

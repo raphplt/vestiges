@@ -98,9 +98,9 @@ public partial class SpawnManager : Node2D
 
         float nightFactor = _currentPhase switch
         {
-            DayPhase.Day => 1f,
-            DayPhase.Dusk => 0.7f,
-            DayPhase.Night => 0.4f * Mathf.Pow(_nightSpawnRateMultiplier, _currentNight - 1),
+            DayPhase.Day => 0.8f,
+            DayPhase.Dusk => 0.55f,
+            DayPhase.Night => 0.3f * Mathf.Pow(_nightSpawnRateMultiplier, _currentNight - 1),
             _ => 1f
         };
 

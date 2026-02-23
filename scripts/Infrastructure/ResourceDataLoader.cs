@@ -8,6 +8,7 @@ public class ResourceData
     public string Id { get; set; }
     public string Name { get; set; }
     public Color Color { get; set; }
+    public Color OutlineColor { get; set; }
     public float HarvestTime { get; set; }
     public int AmountMin { get; set; }
     public int AmountMax { get; set; }
@@ -48,11 +49,16 @@ public static class ResourceDataLoader
         foreach (Variant item in array)
         {
             Godot.Collections.Dictionary dict = item.AsGodotDictionary();
+            string outlineHex = dict.ContainsKey("outline_color")
+                ? dict["outline_color"].AsString()
+                : dict["color"].AsString();
+
             ResourceData data = new()
             {
                 Id = dict["id"].AsString(),
                 Name = dict["name"].AsString(),
                 Color = Color.FromHtml(dict["color"].AsString()),
+                OutlineColor = Color.FromHtml(outlineHex),
                 HarvestTime = (float)dict["harvest_time"].AsDouble(),
                 AmountMin = (int)dict["amount_min"].AsDouble(),
                 AmountMax = (int)dict["amount_max"].AsDouble(),

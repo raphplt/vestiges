@@ -11,6 +11,7 @@ namespace Vestiges.UI;
 public partial class HUD : CanvasLayer
 {
     private ProgressBar _hpBar;
+    private Label _hpValueLabel;
     private ProgressBar _xpBar;
     private Label _levelLabel;
     private Label _scoreLabel;
@@ -27,6 +28,8 @@ public partial class HUD : CanvasLayer
     private Label _woodLabel;
     private Label _stoneLabel;
     private Label _metalLabel;
+    private Label _capacityLabel;
+    private ProgressBar _capacityBar;
 
     // Contextual hint
     private Label _interactHint;
@@ -35,10 +38,14 @@ public partial class HUD : CanvasLayer
     private static readonly Color DuskBarColor = new(0.55f, 0.35f, 0.7f);
     private static readonly Color NightBarColor = new(0.5f, 0.15f, 0.15f);
     private static readonly Color DawnBarColor = new(0.85f, 0.85f, 0.9f);
+    private static readonly Color HpHighColor = Colors.White;
+    private static readonly Color HpMediumColor = new(1f, 0.7f, 0.2f);
+    private static readonly Color HpLowColor = new(1f, 0.2f, 0.2f);
 
     public override void _Ready()
     {
         _hpBar = GetNode<ProgressBar>("HpBar");
+        _hpValueLabel = GetNode<Label>("HpBar/HpValueLabel");
         _xpBar = GetNode<ProgressBar>("XpBar");
         _levelLabel = GetNode<Label>("LevelLabel");
         _scoreLabel = GetNode<Label>("ScoreLabel");
@@ -58,6 +65,7 @@ public partial class HUD : CanvasLayer
         _hpBar.MinValue = 0;
         _hpBar.MaxValue = 100;
         _hpBar.Value = 100;
+        UpdateHpDisplay(100f, 100f);
 
         _xpBar.MinValue = 0;
         _xpBar.MaxValue = 1;
@@ -120,8 +128,8 @@ public partial class HUD : CanvasLayer
         panel.AnchorTop = 1f;
         panel.AnchorBottom = 1f;
         panel.OffsetLeft = 10;
-        panel.OffsetRight = 160;
-        panel.OffsetTop = -80;
+        panel.OffsetRight = 180;
+        panel.OffsetTop = -140;
         panel.OffsetBottom = -10;
 
         StyleBoxFlat style = new();
@@ -137,24 +145,65 @@ public partial class HUD : CanvasLayer
         panel.AddThemeStyleboxOverride("panel", style);
 
         VBoxContainer vbox = new();
-        vbox.AddThemeConstantOverride("separation", 2);
+        vbox.AddThemeConstantOverride("separation", 3);
         panel.AddChild(vbox);
 
-        _woodLabel = CreateResourceLabel("Bois", new Color(0.55f, 0.4f, 0.08f));
-        _stoneLabel = CreateResourceLabel("Pierre", new Color(0.53f, 0.53f, 0.53f));
-        _metalLabel = CreateResourceLabel("Métal", new Color(0.44f, 0.53f, 0.63f));
+        // Title
+        Label titleLabel = new();
+        titleLabel.Text = "Inventaire";
+        titleLabel.AddThemeFontSizeOverride("font_size", 12);
+        titleLabel.AddThemeColorOverride("font_color", new Color(0.7f, 0.7f, 0.7f));
+        titleLabel.HorizontalAlignment = HorizontalAlignment.Center;
+        vbox.AddChild(titleLabel);
+
+        // Resource rows
+        _woodLabel = CreateResourceRow("Bois", new Color(0.55f, 0.4f, 0.08f));
+        _stoneLabel = CreateResourceRow("Pierre", new Color(0.66f, 0.6f, 0.47f));
+        _metalLabel = CreateResourceRow("Métal", new Color(0.44f, 0.53f, 0.63f));
 
         vbox.AddChild(_woodLabel);
         vbox.AddChild(_stoneLabel);
         vbox.AddChild(_metalLabel);
 
+        // Capacity bar
+        _capacityBar = new ProgressBar();
+        _capacityBar.CustomMinimumSize = new Vector2(0, 6);
+        _capacityBar.ShowPercentage = false;
+        _capacityBar.MinValue = 0;
+        _capacityBar.MaxValue = Base.Inventory.MaxCapacity;
+        _capacityBar.Value = 0;
+
+        StyleBoxFlat fillStyle = new();
+        fillStyle.BgColor = new Color(0.6f, 0.6f, 0.6f, 0.8f);
+        fillStyle.CornerRadiusBottomLeft = 2;
+        fillStyle.CornerRadiusBottomRight = 2;
+        fillStyle.CornerRadiusTopLeft = 2;
+        fillStyle.CornerRadiusTopRight = 2;
+        _capacityBar.AddThemeStyleboxOverride("fill", fillStyle);
+
+        StyleBoxFlat bgStyle = new();
+        bgStyle.BgColor = new Color(0.15f, 0.15f, 0.15f, 0.6f);
+        bgStyle.CornerRadiusBottomLeft = 2;
+        bgStyle.CornerRadiusBottomRight = 2;
+        bgStyle.CornerRadiusTopLeft = 2;
+        bgStyle.CornerRadiusTopRight = 2;
+        _capacityBar.AddThemeStyleboxOverride("background", bgStyle);
+        vbox.AddChild(_capacityBar);
+
+        _capacityLabel = new Label();
+        _capacityLabel.Text = $"0 / {Base.Inventory.MaxCapacity}";
+        _capacityLabel.AddThemeFontSizeOverride("font_size", 11);
+        _capacityLabel.AddThemeColorOverride("font_color", new Color(0.5f, 0.5f, 0.5f));
+        _capacityLabel.HorizontalAlignment = HorizontalAlignment.Center;
+        vbox.AddChild(_capacityLabel);
+
         AddChild(panel);
     }
 
-    private Label CreateResourceLabel(string name, Color color)
+    private Label CreateResourceRow(string name, Color color)
     {
         Label label = new();
-        label.Text = $"{name}: 0";
+        label.Text = $"{name}  0";
         label.AddThemeColorOverride("font_color", color);
         label.AddThemeFontSizeOverride("font_size", 14);
         return label;
@@ -165,15 +214,42 @@ public partial class HUD : CanvasLayer
         switch (resourceId)
         {
             case "wood":
-                _woodLabel.Text = $"Bois: {newAmount}";
+                _woodLabel.Text = $"Bois  {newAmount}";
                 break;
             case "stone":
-                _stoneLabel.Text = $"Pierre: {newAmount}";
+                _stoneLabel.Text = $"Pierre  {newAmount}";
                 break;
             case "metal":
-                _metalLabel.Text = $"Métal: {newAmount}";
+                _metalLabel.Text = $"Métal  {newAmount}";
                 break;
         }
+
+        UpdateCapacityDisplay();
+    }
+
+    private void UpdateCapacityDisplay()
+    {
+        Node playerNode = GetTree().GetFirstNodeInGroup("player");
+        if (playerNode == null)
+            return;
+
+        Base.Inventory inventory = playerNode.GetNodeOrNull<Base.Inventory>("Inventory");
+        if (inventory == null)
+            return;
+
+        int total = inventory.TotalCount;
+        int max = Base.Inventory.MaxCapacity;
+        _capacityBar.Value = total;
+        _capacityLabel.Text = $"{total} / {max}";
+
+        Color barColor = total >= max
+            ? new Color(0.8f, 0.3f, 0.3f, 0.8f)
+            : total >= max * 0.8f
+                ? new Color(0.8f, 0.6f, 0.2f, 0.8f)
+                : new Color(0.6f, 0.6f, 0.6f, 0.8f);
+
+        StyleBoxFlat fillStyle = (StyleBoxFlat)_capacityBar.GetThemeStylebox("fill");
+        fillStyle.BgColor = barColor;
     }
 
     // --- Interact Hint ---
@@ -239,7 +315,8 @@ public partial class HUD : CanvasLayer
                 float dist = playerPos.DistanceTo(res.GlobalPosition);
                 if (dist < interactRange)
                 {
-                    _interactHint.Text = $"[E] Récolter";
+                    string resName = GetResourceDisplayName(res.ResourceId);
+                    _interactHint.Text = $"[E] Récolter {resName}";
                     _interactHint.Visible = true;
                     return;
                 }
@@ -288,16 +365,25 @@ public partial class HUD : CanvasLayer
 
     private void OnPlayerDamaged(float currentHp, float maxHp)
     {
-        _hpBar.MaxValue = maxHp;
-        _hpBar.Value = Mathf.Max(0, currentHp);
+        UpdateHpDisplay(currentHp, maxHp);
+    }
 
-        float ratio = currentHp / maxHp;
+    private void UpdateHpDisplay(float currentHp, float maxHp)
+    {
+        float clampedMaxHp = Mathf.Max(1f, maxHp);
+        float clampedHp = Mathf.Clamp(currentHp, 0f, clampedMaxHp);
+
+        _hpBar.MaxValue = clampedMaxHp;
+        _hpBar.Value = clampedHp;
+        _hpValueLabel.Text = $"PV : {Mathf.RoundToInt(clampedHp)} / {Mathf.RoundToInt(clampedMaxHp)}";
+
+        float ratio = clampedHp / clampedMaxHp;
         if (ratio < 0.25f)
-            _hpBar.Modulate = new Color(1f, 0.2f, 0.2f);
+            _hpBar.Modulate = HpLowColor;
         else if (ratio < 0.5f)
-            _hpBar.Modulate = new Color(1f, 0.7f, 0.2f);
+            _hpBar.Modulate = HpMediumColor;
         else
-            _hpBar.Modulate = Colors.White;
+            _hpBar.Modulate = HpHighColor;
     }
 
     private void OnXpChanged(float _amount)
@@ -361,6 +447,17 @@ public partial class HUD : CanvasLayer
     private void HideDawnSummary()
     {
         _dawnSummary.Visible = false;
+    }
+
+    private static string GetResourceDisplayName(string id)
+    {
+        return id switch
+        {
+            "wood" => "Bois",
+            "stone" => "Pierre",
+            "metal" => "Métal",
+            _ => id
+        };
     }
 
     private void UpdateBarColor(string phase)
