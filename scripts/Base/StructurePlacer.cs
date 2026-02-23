@@ -121,7 +121,7 @@ public partial class StructurePlacer : Node2D
             return;
 
         string type = recipe.Result.Type;
-        if (type == "wall" || type == "trap" || type == "turret" || type == "light")
+        if (type == "wall" || type == "trap" || type == "turret" || type == "light" || type == "memorial")
         {
             if (_structureManager != null && !_structureManager.CanPlaceType(type))
             {
@@ -243,6 +243,9 @@ public partial class StructurePlacer : Node2D
         _structureManager?.Register(_currentCell, structure);
 
         _eventBus.EmitSignal(EventBus.SignalName.StructurePlaced, _recipeData.Id, worldPos);
+
+        if (type == "memorial")
+            _eventBus.EmitSignal(EventBus.SignalName.MemorialActivated);
         _pendingPlacements = Mathf.Max(0, _pendingPlacements - 1);
         _lastPlacedCell = _currentCell;
         _hasLastPlacedCell = true;
@@ -294,6 +297,11 @@ public partial class StructurePlacer : Node2D
         if (playerNode is Node2D player && player.GlobalPosition.DistanceTo(worldPos) < 20f)
             return false;
 
+        // No building on water
+        WorldSetup world = GetNodeOrNull<WorldSetup>("/root/Main");
+        if (world != null && world.IsWaterAt(worldPos))
+            return false;
+
         return true;
     }
 
@@ -308,6 +316,7 @@ public partial class StructurePlacer : Node2D
             "spike_trap" => new Color(0.5f, 0.35f, 0.2f),
             "turret_basic" => new Color(0.4f, 0.5f, 0.4f),
             "torch" => new Color(1f, 0.8f, 0.3f),
+            "memorial" => new Color(0.6f, 0.5f, 0.8f),
             _ => new Color(0.5f, 0.5f, 0.5f)
         };
     }

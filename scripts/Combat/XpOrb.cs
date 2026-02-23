@@ -5,8 +5,8 @@ namespace Vestiges.Combat;
 
 public partial class XpOrb : Area2D
 {
-    private const float AttractionRadius = 150f;
-    private const float DriftRadius = 250f;
+    private const float BaseAttractionRadius = 150f;
+    private const float BaseDriftRadius = 250f;
     private const float MaxSpeed = 500f;
     private const float Acceleration = 800f;
     private const float DriftSpeed = 40f;
@@ -37,15 +37,18 @@ public partial class XpOrb : Area2D
         if (_player == null || !IsInstanceValid(_player))
             return;
 
+        float magnetMult = _player.XpMagnetMultiplier;
+        float attractionRadius = BaseAttractionRadius * magnetMult;
+        float driftRadius = BaseDriftRadius * magnetMult;
         float dist = GlobalPosition.DistanceTo(_player.GlobalPosition);
 
-        if (dist < AttractionRadius)
+        if (dist < attractionRadius)
         {
             _currentSpeed = Mathf.Min(_currentSpeed + Acceleration * (float)delta, MaxSpeed);
             Vector2 direction = (_player.GlobalPosition - GlobalPosition).Normalized();
             GlobalPosition += direction * _currentSpeed * (float)delta;
         }
-        else if (dist < DriftRadius)
+        else if (dist < driftRadius)
         {
             Vector2 direction = (_player.GlobalPosition - GlobalPosition).Normalized();
             GlobalPosition += direction * DriftSpeed * (float)delta;

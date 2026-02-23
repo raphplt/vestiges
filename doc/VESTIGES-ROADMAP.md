@@ -210,19 +210,19 @@ Les niveaux de complexité servent à prioriser l'effort et le risque. Ils n'imp
 - [x] Résultat : le joueur accumule des Vestiges et débloque des trucs entre les runs.
 
 **Lot 4.4 — Pool de perks étendue (`Complexité : C4`)**
-- [ ] Étendre la pool de perks à 25-30 (stats, combat, survie, Essence, rares).
-- [ ] Implémenter les synergies/combos entre perks.
-- [ ] Perks spécifiques par personnage (5-6 par perso).
-- [ ] Résultat : chaque run produit un build différent. Les combos sont excitants.
+- [x] Étendre la pool de perks à 25-30 (stats, combat, survie, Essence, rares).
+- [x] Implémenter les synergies/combos entre perks.
+- [x] Perks spécifiques par personnage (5-6 par perso).
+- [x] Résultat : chaque run produit un build différent. Les combos sont excitants.
 
 **Lot 4.5 — Équilibrage méta (`Complexité : C3`)**
-- [ ] Équilibrer les personnages (win rate, score moyen par perso).
-- [ ] Équilibrer les perks (aucun perk ne doit être "always pick" ou "never pick").
-- [ ] S'assurer que la méta-progression donne de la variété, pas de la puissance brute.
-- [ ] Résultat : chaque personnage est viable, chaque run est différente.
+- [x] Équilibrer les personnages (win rate, score moyen par perso).
+- [x] Équilibrer les perks (aucun perk ne doit être "always pick" ou "never pick").
+- [x] S'assurer que la méta-progression donne de la variété, pas de la puissance brute.
+- [x] Résultat : chaque personnage est viable, chaque run est différente.
 
 ### Critère de validation
-- [ ] Le joueur dit "je veux essayer Le Traqueur maintenant" après avoir joué Le Vagabond. Les Vestiges donnent une raison de relancer même après une run ratée. Les perks créent des moments "oh ce combo est CASSÉ" qui sont satisfaisants.
+- [x] Le joueur dit "je veux essayer Le Traqueur maintenant" après avoir joué Le Vagabond. Les Vestiges donnent une raison de relancer même après une run ratée. Les perks créent des moments "oh ce combo est CASSÉ" qui sont satisfaisants.
 
 ---
 
@@ -234,11 +234,11 @@ Les niveaux de complexité servent à prioriser l'effort et le risque. Ils n'imp
 ### Tâches
 
 **Lot 5.1 — Génération procédurale basique (`Complexité : C4`)**
-- [ ] Remplacer la map fixe par une génération procédurale (Cellular Automata ou WFC simple).
-- [ ] Foyer au centre, zones concentriques (proche/médiane/lointaine).
-- [ ] Tiles variés : herbe, béton, eau (infranchissable), forêt dense.
-- [ ] Seed reproductible (même seed = même monde).
-- [ ] Résultat : chaque run a une map différente.
+- [x] Remplacer la map fixe par une génération procédurale (Cellular Automata ou WFC simple).
+- [x] Foyer au centre, zones concentriques (proche/médiane/lointaine).
+- [x] Tiles variés : herbe, béton, eau (infranchissable), forêt dense.
+- [x] Seed reproductible (même seed = même monde).
+- [x] Résultat : chaque run a une map différente.
 
 **Lot 5.2 — Biomes (`Complexité : C3`)**
 - [ ] Implémenter 3 biomes pour l'EA : Forêt reconquise, Ruines urbaines, Marécages (cf. Bible section 5 pour palettes, ambiances, détails de décor).

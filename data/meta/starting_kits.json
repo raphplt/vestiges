@@ -2,17 +2,17 @@
     {
         "id": "kit_wood",
         "name": "Bûcheron",
-        "description": "+10 Bois",
-        "cost": 50,
+        "description": "+12 Bois",
+        "cost": 40,
         "contents": {
-            "wood": 10
+            "wood": 12
         }
     },
     {
         "id": "kit_stone",
         "name": "Carrier",
         "description": "+10 Pierre",
-        "cost": 50,
+        "cost": 40,
         "contents": {
             "stone": 10
         }
@@ -20,21 +20,22 @@
     {
         "id": "kit_mixed",
         "name": "Préparé",
-        "description": "+5 Bois, +5 Pierre, +3 Métal",
-        "cost": 100,
+        "description": "+5 Bois, +4 Pierre, +2 Métal",
+        "cost": 75,
         "contents": {
             "wood": 5,
-            "stone": 5,
-            "metal": 3
+            "stone": 4,
+            "metal": 2
         }
     },
     {
         "id": "kit_combat",
         "name": "Guerrier",
-        "description": "+5 Métal",
-        "cost": 75,
+        "description": "+4 Métal, +3 Pierre",
+        "cost": 60,
         "contents": {
-            "metal": 5
+            "metal": 4,
+            "stone": 3
         }
     }
 ]

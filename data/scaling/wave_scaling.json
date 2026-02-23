@@ -1,5 +1,5 @@
 {
-    "base_spawn_interval": 1.65,
+    "base_spawn_interval": 1.80,
     "min_spawn_interval": 0.25,
     "spawn_interval_decay_per_minute": 0.06,
     "hp_scaling_per_minute": 1.08,

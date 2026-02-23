@@ -105,5 +105,19 @@
             "type": "consumable",
             "stats": { "heal": 25 }
         }
+    },
+    {
+        "id": "memorial",
+        "name": "Mémorial",
+        "category": "special",
+        "ingredients": [
+            { "resource": "stone", "amount": 10 },
+            { "resource": "metal", "amount": 5 }
+        ],
+        "build_time": 5.0,
+        "result": {
+            "type": "memorial",
+            "stats": { "hp": 80 }
+        }
     }
 ]

@@ -21,6 +21,7 @@ public partial class EventBus : Node
     [Signal] public delegate void XpGainedEventHandler(float amount);
     [Signal] public delegate void LevelUpEventHandler(int newLevel);
     [Signal] public delegate void PerkChosenEventHandler(string perkId);
+    [Signal] public delegate void SynergyActivatedEventHandler(string synergyId, string notification);
 
     // --- Cycle Jour/Nuit ---
     [Signal] public delegate void DayPhaseChangedEventHandler(string phase);
@@ -42,4 +43,7 @@ public partial class EventBus : Node
     // --- Structures ---
     [Signal] public delegate void StructurePlacedEventHandler(string structureId, Vector2 position);
     [Signal] public delegate void StructureDestroyedEventHandler(string structureId, Vector2 position);
+
+    // --- Mémorial ---
+    [Signal] public delegate void MemorialActivatedEventHandler();
 }

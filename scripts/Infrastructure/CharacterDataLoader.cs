@@ -19,6 +19,7 @@ public class CharacterData
     public string Id { get; set; }
     public string Name { get; set; }
     public string Description { get; set; }
+    public string StartingWeaponId { get; set; }
     public CharacterStats BaseStats { get; set; }
     public string PassivePerk { get; set; }
     public List<string> ExclusivePerks { get; set; } = new();
@@ -83,6 +84,7 @@ public static class CharacterDataLoader
                 Id = dict["id"].AsString(),
                 Name = dict["name"].AsString(),
                 Description = dict["description"].AsString(),
+                StartingWeaponId = dict.ContainsKey("starting_weapon") ? dict["starting_weapon"].AsString() : null,
                 BaseStats = stats,
                 PassivePerk = dict["passive_perk"].AsString(),
                 ExclusivePerks = exclusivePerks,

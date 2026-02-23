@@ -20,6 +20,7 @@ public partial class GameBootstrap : Node
     public override void _Ready()
     {
         CharacterDataLoader.Load();
+        WeaponDataLoader.Load();
         PerkDataLoader.Load();
         MetaSaveManager.Load();
         StartingKitDataLoader.Load();

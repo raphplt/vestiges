@@ -28,6 +28,10 @@ public partial class Enemy : CharacterBody2D
 	private bool _nightMode;
 	private Vector2 _foyerPosition;
 
+	// Ignite DOT
+	private float _igniteDps;
+	private float _igniteTimer;
+
 	private Polygon2D _visual;
 	private Color _originalColor;
 	private Player _player;
@@ -36,6 +40,8 @@ public partial class Enemy : CharacterBody2D
 	private static PackedScene _xpOrbScene;
 
 	public bool IsActive { get; private set; }
+	public bool IsDying => _isDying;
+	public float HpRatio => _maxHp > 0 ? _currentHp / _maxHp : 0f;
 
 	public override void _Ready()
 	{
@@ -59,6 +65,8 @@ public partial class Enemy : CharacterBody2D
 		_isDying = false;
 		_attackTimer = 0f;
 		_nightMode = false;
+		_igniteDps = 0f;
+		_igniteTimer = 0f;
 		IsActive = true;
 
 		ConfigureVisual(data);
@@ -85,6 +93,8 @@ public partial class Enemy : CharacterBody2D
 		_isDying = false;
 		_nightMode = false;
 		_currentHp = 0;
+		_igniteDps = 0f;
+		_igniteTimer = 0f;
 		Velocity = Vector2.Zero;
 		Visible = false;
 		SetPhysicsProcess(false);
@@ -106,6 +116,8 @@ public partial class Enemy : CharacterBody2D
 		float distToPlayer = GlobalPosition.DistanceTo(_player.GlobalPosition);
 		float dt = (float)delta;
 
+		ProcessIgnite(dt);
+
 		if (_nightMode && distToPlayer > PlayerProximityRange)
 		{
 			ProcessNightMovement(distToPlayer, dt);
@@ -126,7 +138,6 @@ public partial class Enemy : CharacterBody2D
 	{
 		_attackTimer -= delta;
 
-		// Check for structures blocking the path
 		Structure blockingWall = FindNearestStructure();
 		if (blockingWall != null && _enemyType == "melee")
 		{
@@ -198,7 +209,6 @@ public partial class Enemy : CharacterBody2D
 		}
 	}
 
-	/// <summary>Trouve la structure la plus proche sur le chemin vers le Foyer.</summary>
 	private Structure FindNearestStructure()
 	{
 		Godot.Collections.Array<Node> structures = GetTree().GetNodesInGroup("structures");
@@ -215,7 +225,6 @@ public partial class Enemy : CharacterBody2D
 				if (dist >= nearestDist)
 					continue;
 
-				// Only target structures roughly between us and the Foyer
 				Vector2 dirToStructure = (structure.GlobalPosition - GlobalPosition).Normalized();
 				float dot = dirToFoyer.Dot(dirToStructure);
 				if (dot > 0.3f)
@@ -235,22 +244,99 @@ public partial class Enemy : CharacterBody2D
 			return;
 
 		Vector2 direction = (_player.GlobalPosition - GlobalPosition).Normalized();
+		PlayRangedAttackVfx(direction);
 		EnemyProjectile projectile = _enemyProjectileScene.Instantiate<EnemyProjectile>();
 		projectile.GlobalPosition = GlobalPosition;
 		projectile.Initialize(direction, _damage);
 		GetTree().CurrentScene.AddChild(projectile);
 	}
 
-	public void TakeDamage(float damage)
+	private void PlayRangedAttackVfx(Vector2 direction)
+	{
+		if (_visual == null)
+			return;
+
+		_visual.Scale = new Vector2(1.08f, 0.92f);
+		Tween recoil = CreateTween();
+		recoil.TweenProperty(_visual, "scale", Vector2.One, 0.1f)
+			.SetTrans(Tween.TransitionType.Quad)
+			.SetEase(Tween.EaseType.Out);
+
+		Node2D flashRoot = new();
+		flashRoot.GlobalPosition = GlobalPosition + direction * 14f;
+		flashRoot.Rotation = direction.Angle();
+
+		Polygon2D flash = new();
+		flash.Color = new Color(0.7f, 1f, 0.35f, 0.8f);
+		flash.Polygon = new Vector2[]
+		{
+			new(-2.5f, 0f),
+			new(6f, -3f),
+			new(11f, 0f),
+			new(6f, 3f)
+		};
+		flashRoot.AddChild(flash);
+		GetTree().CurrentScene.AddChild(flashRoot);
+
+		Tween flashTween = flashRoot.CreateTween();
+		flashTween.SetParallel();
+		flashTween.TweenProperty(flash, "scale", new Vector2(1.4f, 1.15f), 0.08f);
+		flashTween.TweenProperty(flash, "modulate:a", 0f, 0.08f);
+		flashTween.Chain().TweenCallback(Callable.From(() => flashRoot.QueueFree()));
+	}
+
+	// --- Damage & Death ---
+
+	public void TakeDamage(float damage, bool isCrit = false)
 	{
 		if (_currentHp <= 0 || _isDying)
 			return;
 
 		_currentHp -= damage;
 		HitFlash();
-		SpawnDamageNumber(damage);
+		SpawnDamageNumber(damage, isCrit);
 
 		if (_currentHp <= 0)
+			Die();
+	}
+
+	/// <summary>Instant kill from execution perk.</summary>
+	public void Execute()
+	{
+		if (_currentHp <= 0 || _isDying)
+			return;
+
+		SpawnDamageNumber(_currentHp, false);
+		_currentHp = 0;
+		Die();
+	}
+
+	/// <summary>Apply ignite DOT (damage over time). Refreshes if already ignited.</summary>
+	public void ApplyIgnite(float dps, float duration)
+	{
+		_igniteDps = dps;
+		_igniteTimer = duration;
+
+		// Visual feedback: tint orange while ignited
+		_visual.Color = new Color(1f, 0.5f, 0.1f);
+	}
+
+	private void ProcessIgnite(float delta)
+	{
+		if (_igniteTimer <= 0f)
+			return;
+
+		_igniteTimer -= delta;
+		float igniteDamage = _igniteDps * delta;
+		_currentHp -= igniteDamage;
+
+		if (_igniteTimer <= 0f)
+		{
+			_igniteDps = 0f;
+			_visual.Color = _originalColor;
+		}
+
+		if (_currentHp <= 0 && !_isDying)
 			Die();
 	}
 
@@ -262,17 +348,19 @@ public partial class Enemy : CharacterBody2D
 			.SetDelay(0.05f);
 	}
 
-	private void SpawnDamageNumber(float damage)
+	private void SpawnDamageNumber(float damage, bool isCrit = false)
 	{
 		DamageNumber dmgNum = _damageNumberScene.Instantiate<DamageNumber>();
 		dmgNum.GlobalPosition = GlobalPosition + new Vector2(0, -20);
-		dmgNum.SetDamage(damage);
+		dmgNum.SetDamage(damage, isCrit);
 		GetTree().CurrentScene.AddChild(dmgNum);
 	}
 
 	private void Die()
 	{
 		_isDying = true;
+		_igniteDps = 0f;
+		_igniteTimer = 0f;
 		Velocity = Vector2.Zero;
 
 		if (IsInGroup("enemies"))

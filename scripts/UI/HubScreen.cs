@@ -26,6 +26,7 @@ public partial class HubScreen : Control
     public override void _Ready()
     {
         CharacterDataLoader.Load();
+        WeaponDataLoader.Load();
         PerkDataLoader.Load();
         RunHistoryManager.Load();
         MetaSaveManager.Load();
@@ -256,6 +257,17 @@ public partial class HubScreen : Control
                 passiveLabel.AddThemeFontSizeOverride("font_size", 11);
                 passiveLabel.AddThemeColorOverride("font_color", new Color(0.75f, 0.65f, 0.35f));
                 cardContent.AddChild(passiveLabel);
+            }
+
+            WeaponData startingWeapon = WeaponDataLoader.Get(character.StartingWeaponId)
+                ?? WeaponDataLoader.GetDefaultForCharacter(character.Id);
+            if (startingWeapon != null)
+            {
+                Label weaponLabel = new();
+                weaponLabel.Text = $"Arme de départ : {startingWeapon.Name}";
+                weaponLabel.AddThemeFontSizeOverride("font_size", 11);
+                weaponLabel.AddThemeColorOverride("font_color", new Color(0.55f, 0.75f, 0.85f));
+                cardContent.AddChild(weaponLabel);
             }
 
             // Make unlocked card clickable

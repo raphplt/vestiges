@@ -1,0 +1,679 @@
+[
+    "_comment_design_rules",
+    "========== RÈGLES DE DESIGN ==========",
+    "// Le joueur porte 3 armes max. Les deux auto-attaquent en parallèle.",
+    "// Chaque arme a un pattern distinct qui change le feel du combat.",
+    "// Les armes ne sont PAS des upgrades linéaires — chaque tier a des tradeoffs.",
+    "// Lore : les armes sont des vestiges — objets ancrés dans la mémoire, qui refusent d'être oubliés.",
+    "// attack_pattern : linear | arc | circular | orbital | ground | burst | chain | homing",
+    "// damage_type : physical | essence | hybrid",
+    "_comment_tier1",
+    "========== TIER 1 — ARMES DE FORTUNE (craft basique, début de run) ==========",
+    {
+        "id": "chipped_blade",
+        "name": "Lame Ébréchée",
+        "description": "Un morceau de métal qui se souvient d'avoir été un couteau.",
+        "tier": 1,
+        "type": "melee",
+        "damage_type": "physical",
+        "attack_pattern": "arc",
+        "stats": {
+            "damage": 10,
+            "attack_speed": 1.0,
+            "range": 60,
+            "arc_angle": 90,
+            "knockback": 10
+        },
+        "default_for": "vagabond",
+        "source": "default",
+        "craft_recipe": null,
+        "lore_flavor": "La lame est fissurée sur toute sa longueur. Elle devrait se briser au premier impact. Elle ne se brise pas."
+    },
+    {
+        "id": "heavy_hammer",
+        "name": "Marteau Lourd",
+        "description": "Un outil d'un ouvrier oublié. Chaque coup fait trembler le sol.",
+        "tier": 1,
+        "type": "melee",
+        "damage_type": "physical",
+        "attack_pattern": "arc",
+        "stats": {
+            "damage": 16,
+            "attack_speed": 0.65,
+            "range": 55,
+            "arc_angle": 120,
+            "knockback": 40
+        },
+        "default_for": "forgeuse",
+        "source": "default",
+        "craft_recipe": null,
+        "lore_flavor": "La tête du marteau porte des initiales gravées. Quelqu'un y tenait assez pour qu'il survive à l'Effacement."
+    },
+    {
+        "id": "makeshift_bow",
+        "name": "Arc de Fortune",
+        "description": "Du bois courbé et une corde qui n'existe plus vraiment. Tire quand même.",
+        "tier": 1,
+        "type": "ranged",
+        "damage_type": "physical",
+        "attack_pattern": "linear",
+        "stats": {
+            "damage": 8,
+            "attack_speed": 1.2,
+            "range": 300,
+            "projectile_speed": 400,
+            "projectile_count": 1
+        },
+        "default_for": "traqueur",
+        "source": "default",
+        "craft_recipe": null,
+        "lore_flavor": "La corde vibre avec un son qui ressemble presque à une voix. Presque."
+    },
+    {
+        "id": "sling",
+        "name": "Fronde Rouillée",
+        "description": "Lance des éclats de pierre en rafale. Peu précis, mais ça couvre large.",
+        "tier": 1,
+        "type": "ranged",
+        "damage_type": "physical",
+        "attack_pattern": "burst",
+        "stats": {
+            "damage": 4,
+            "attack_speed": 1.8,
+            "range": 200,
+            "projectile_speed": 300,
+            "projectile_count": 3,
+            "spread_angle": 30
+        },
+        "source": "craft",
+        "craft_recipe": {
+            "ingredients": [
+                {
+                    "resource": "wood",
+                    "amount": 3
+                },
+                {
+                    "resource": "stone",
+                    "amount": 2
+                }
+            ]
+        },
+        "lore_flavor": "Chaque pierre qu'elle lance existait avant. C'est déjà beaucoup."
+    },
+    {
+        "id": "sharpened_pipe",
+        "name": "Tuyau Affûté",
+        "description": "Court, rapide, vicieux. Frappe en estoc devant le joueur.",
+        "tier": 1,
+        "type": "melee",
+        "damage_type": "physical",
+        "attack_pattern": "linear",
+        "stats": {
+            "damage": 7,
+            "attack_speed": 1.5,
+            "range": 45,
+            "knockback": 5
+        },
+        "source": "craft",
+        "craft_recipe": {
+            "ingredients": [
+                {
+                    "resource": "metal",
+                    "amount": 3
+                }
+            ]
+        },
+        "lore_flavor": "Il faisait partie d'une machine. On ne sait plus laquelle. Lui non plus."
+    },
+    "_comment_tier2",
+    "========== TIER 2 — ARMES ARTISANALES (craft intermédiaire, mid-run) ==========",
+    {
+        "id": "crossbow",
+        "name": "Arbalète Artisanale",
+        "description": "Lente mais chaque carreau transperce les ennemis en ligne.",
+        "tier": 2,
+        "type": "ranged",
+        "damage_type": "physical",
+        "attack_pattern": "linear",
+        "stats": {
+            "damage": 22,
+            "attack_speed": 0.6,
+            "range": 350,
+            "projectile_speed": 500,
+            "projectile_count": 1,
+            "projectile_pierce": 3
+        },
+        "source": "craft",
+        "craft_recipe": {
+            "ingredients": [
+                {
+                    "resource": "wood",
+                    "amount": 5
+                },
+                {
+                    "resource": "metal",
+                    "amount": 5
+                }
+            ]
+        },
+        "lore_flavor": "Le mécanisme est trop précis pour avoir été fabriqué ici. Comme s'il avait été assemblé par le souvenir de quelqu'un qui savait."
+    },
+    {
+        "id": "cleaver",
+        "name": "Couperet du Boucher",
+        "description": "Arc de frappe large et brutal. Touche tout devant.",
+        "tier": 2,
+        "type": "melee",
+        "damage_type": "physical",
+        "attack_pattern": "arc",
+        "stats": {
+            "damage": 18,
+            "attack_speed": 0.8,
+            "range": 65,
+            "arc_angle": 160,
+            "knockback": 25
+        },
+        "source": "craft",
+        "craft_recipe": {
+            "ingredients": [
+                {
+                    "resource": "metal",
+                    "amount": 6
+                },
+                {
+                    "resource": "wood",
+                    "amount": 2
+                }
+            ]
+        },
+        "lore_flavor": "L'enseigne de la boucherie a disparu. Le couperet, non. Certaines choses survivent par la peur qu'elles inspirent."
+    },
+    {
+        "id": "whip",
+        "name": "Fouet de Câbles",
+        "description": "Frappe en cercle complet autour du joueur. Portée moyenne, dégâts faibles, mais touche tout.",
+        "tier": 2,
+        "type": "melee",
+        "damage_type": "physical",
+        "attack_pattern": "circular",
+        "stats": {
+            "damage": 9,
+            "attack_speed": 0.9,
+            "range": 80,
+            "arc_angle": 360,
+            "knockback": 15
+        },
+        "source": "craft",
+        "craft_recipe": {
+            "ingredients": [
+                {
+                    "resource": "metal",
+                    "amount": 4
+                },
+                {
+                    "resource": "wood",
+                    "amount": 3
+                }
+            ]
+        },
+        "lore_flavor": "Des câbles électriques torsadés ensemble. Ils ne conduisent plus de courant. Ils conduisent autre chose."
+    },
+    {
+        "id": "throwing_axes",
+        "name": "Haches de Jet",
+        "description": "Lance 2 haches en éventail. Rapide, bon coverage.",
+        "tier": 2,
+        "type": "ranged",
+        "damage_type": "physical",
+        "attack_pattern": "burst",
+        "stats": {
+            "damage": 11,
+            "attack_speed": 1.1,
+            "range": 220,
+            "projectile_speed": 350,
+            "projectile_count": 2,
+            "spread_angle": 25
+        },
+        "source": "craft",
+        "craft_recipe": {
+            "ingredients": [
+                {
+                    "resource": "metal",
+                    "amount": 5
+                },
+                {
+                    "resource": "wood",
+                    "amount": 3
+                }
+            ]
+        },
+        "lore_flavor": "Elles reviennent presque toujours. Comme si elles savaient où est la main qui les a lancées."
+    },
+    {
+        "id": "nail_mace",
+        "name": "Masse Cloutée",
+        "description": "Frappe lente et dévastatrice. Les ennemis touchés saignent.",
+        "tier": 2,
+        "type": "melee",
+        "damage_type": "physical",
+        "attack_pattern": "arc",
+        "stats": {
+            "damage": 25,
+            "attack_speed": 0.5,
+            "range": 50,
+            "arc_angle": 100,
+            "knockback": 45
+        },
+        "on_hit_effect": {
+            "type": "dot",
+            "damage": 2,
+            "duration": 4.0
+        },
+        "source": "craft",
+        "craft_recipe": {
+            "ingredients": [
+                {
+                    "resource": "metal",
+                    "amount": 7
+                },
+                {
+                    "resource": "stone",
+                    "amount": 3
+                }
+            ]
+        },
+        "lore_flavor": "Chaque clou est un souvenir planté dans le métal. On ne sait pas de quoi. De douleur, probablement."
+    },
+    "_comment_tier3",
+    "========== TIER 3 — ARMES DE VESTIGE (drops de coffres épiques / POI rares) ==========",
+    "// Ces armes ne se craftent pas — elles se TROUVENT. Ce sont des vestiges purs.",
+    {
+        "id": "teachers_bell",
+        "name": "La Cloche de l'Institutrice",
+        "description": "Émet une onde sonore circulaire qui étourdit et repousse. Les créatures touchées ralentissent 50% pendant 2s.",
+        "tier": 3,
+        "type": "melee",
+        "damage_type": "hybrid",
+        "attack_pattern": "circular",
+        "stats": {
+            "damage": 12,
+            "attack_speed": 0.7,
+            "range": 100,
+            "arc_angle": 360,
+            "knockback": 60
+        },
+        "on_hit_effect": {
+            "type": "slow",
+            "value": 0.50,
+            "duration": 2.0
+        },
+        "source": "loot_epic",
+        "craft_recipe": null,
+        "lore_flavor": "Elle sonne encore. Quelque part, des enfants se souviennent de ce son. Ça suffit pour qu'elle existe."
+    },
+    {
+        "id": "surgeons_scalpel",
+        "name": "Le Scalpel du Chirurgien",
+        "description": "Attaque extrêmement rapide, courte portée. Chaque 5ème hit soigne le joueur.",
+        "tier": 3,
+        "type": "melee",
+        "damage_type": "physical",
+        "attack_pattern": "linear",
+        "stats": {
+            "damage": 6,
+            "attack_speed": 2.5,
+            "range": 35,
+            "knockback": 0
+        },
+        "special_effect": {
+            "type": "heal_every_n_hits",
+            "n": 5,
+            "heal_amount": 4
+        },
+        "source": "loot_epic",
+        "craft_recipe": null,
+        "lore_flavor": "Celui qui tenait ce scalpel a sauvé des centaines de vies. Le métal s'en souvient — il veut encore réparer."
+    },
+    {
+        "id": "lighthouse_shard",
+        "name": "Éclat de Phare",
+        "description": "Projette un rayon de lumière concentrée. Traverse tous les ennemis en ligne. Portée immense.",
+        "tier": 3,
+        "type": "ranged",
+        "damage_type": "essence",
+        "attack_pattern": "linear",
+        "stats": {
+            "damage": 30,
+            "attack_speed": 0.4,
+            "range": 500,
+            "projectile_speed": 800,
+            "projectile_count": 1,
+            "projectile_pierce": 999
+        },
+        "source": "loot_epic",
+        "craft_recipe": null,
+        "lore_flavor": "Un morceau de la lentille d'un phare. Le phare est oublié. La lumière, non. Les marins comptaient trop sur elle."
+    },
+    {
+        "id": "music_box",
+        "name": "La Boîte à Musique",
+        "description": "Émet des notes qui orbitent autour du joueur et touchent les ennemis proches. 3 notes en rotation permanente.",
+        "tier": 3,
+        "type": "special",
+        "damage_type": "essence",
+        "attack_pattern": "orbital",
+        "stats": {
+            "damage": 7,
+            "attack_speed": 0.0,
+            "range": 90,
+            "orbital_count": 3,
+            "orbital_speed": 180
+        },
+        "source": "loot_epic",
+        "craft_recipe": null,
+        "lore_flavor": "Elle joue une berceuse que personne ne reconnaît. Mais tout le monde sait qu'on la leur a chantée."
+    },
+    {
+        "id": "chain_of_names",
+        "name": "La Chaîne des Noms",
+        "description": "Frappe le plus proche puis SAUTE à 2 ennemis adjacents. Plus il y a de cibles, plus ça fait mal.",
+        "tier": 3,
+        "type": "melee",
+        "damage_type": "hybrid",
+        "attack_pattern": "chain",
+        "stats": {
+            "damage": 14,
+            "attack_speed": 0.8,
+            "range": 55,
+            "chain_targets": 2,
+            "chain_range": 100,
+            "chain_damage_falloff": 0.8
+        },
+        "source": "loot_epic",
+        "craft_recipe": null,
+        "lore_flavor": "Chaque maillon porte un nom gravé. Des centaines de noms. Aucun n'est lisible — mais la chaîne se souvient de chacun."
+    },
+    {
+        "id": "compass_needle",
+        "name": "L'Aiguille de Boussole",
+        "description": "Lance des aiguilles à tête chercheuse. Lentes mais ne ratent jamais leur cible.",
+        "tier": 3,
+        "type": "ranged",
+        "damage_type": "physical",
+        "attack_pattern": "homing",
+        "stats": {
+            "damage": 13,
+            "attack_speed": 1.0,
+            "range": 280,
+            "projectile_speed": 200,
+            "projectile_count": 1,
+            "homing_strength": 0.9
+        },
+        "source": "loot_epic",
+        "craft_recipe": null,
+        "lore_flavor": "Elle ne pointe plus le nord. Elle pointe ce qui reste. C'est pareil, dans un sens."
+    },
+    {
+        "id": "photographers_flash",
+        "name": "Le Flash du Photographe",
+        "description": "Burst court. Explose un flash de lumière en cône devant le joueur. Aveugle les créatures (désorientation 1.5s).",
+        "tier": 3,
+        "type": "ranged",
+        "damage_type": "essence",
+        "attack_pattern": "burst",
+        "stats": {
+            "damage": 18,
+            "attack_speed": 0.5,
+            "range": 150,
+            "projectile_count": 5,
+            "spread_angle": 45,
+            "projectile_speed": 600
+        },
+        "on_hit_effect": {
+            "type": "disorient",
+            "duration": 1.5
+        },
+        "source": "loot_epic",
+        "craft_recipe": null,
+        "lore_flavor": "Chaque flash capture un instant. L'instant existe encore dans l'appareil. Les créatures voient ce qui a été et ça les déchire."
+    },
+    "_comment_tier4_essence",
+    "========== TIER 4 — ARMES D'ESSENCE (craft Essence, late-run) ==========",
+    {
+        "id": "essence_staff",
+        "name": "Bâton d'Essence",
+        "description": "Tire des orbes d'Essence à tête chercheuse. Consomme de l'Essence à chaque tir.",
+        "tier": 4,
+        "type": "ranged",
+        "damage_type": "essence",
+        "attack_pattern": "homing",
+        "stats": {
+            "damage": 20,
+            "attack_speed": 0.8,
+            "range": 320,
+            "projectile_speed": 250,
+            "projectile_count": 1,
+            "homing_strength": 0.85,
+            "essence_cost_per_attack": 0.5
+        },
+        "source": "craft",
+        "requires_souvenir": "memory_flame",
+        "craft_recipe": {
+            "ingredients": [
+                {
+                    "resource": "wood",
+                    "amount": 5
+                },
+                {
+                    "resource": "essence",
+                    "amount": 15
+                }
+            ]
+        },
+        "lore_flavor": "Le bâton ne lance pas de l'Essence. Il lance des SOUVENIRS compressés. Chaque impact est un moment de vie projeté dans le néant."
+    },
+    {
+        "id": "void_edge",
+        "name": "Tranchant du Vide",
+        "description": "Lame invisible. Extrêmement rapide. Les ennemis tués se désintègrent instantanément (pas de particules — ils cessent d'exister).",
+        "tier": 4,
+        "type": "melee",
+        "damage_type": "essence",
+        "attack_pattern": "arc",
+        "stats": {
+            "damage": 15,
+            "attack_speed": 1.8,
+            "range": 50,
+            "arc_angle": 70,
+            "knockback": 0
+        },
+        "special_effect": {
+            "type": "instant_disintegrate",
+            "description": "Les ennemis tués n'ont pas d'animation de mort — ils disparaissent"
+        },
+        "source": "craft",
+        "requires_souvenir": "void_knowledge",
+        "craft_recipe": {
+            "ingredients": [
+                {
+                    "resource": "metal",
+                    "amount": 5
+                },
+                {
+                    "resource": "essence",
+                    "amount": 20
+                }
+            ]
+        },
+        "lore_flavor": "Ce n'est pas une arme. C'est un concept. L'idée de trancher appliquée directement à la réalité. Il n'y a pas de lame — juste l'absence de ce qui était là."
+    },
+    {
+        "id": "memory_lantern",
+        "name": "Lanterne Mémorielle",
+        "description": "Projette des flammes lentes qui persistent au sol (2s), créant des zones de dégâts. Aussi : éclaire la nuit.",
+        "tier": 4,
+        "type": "ranged",
+        "damage_type": "essence",
+        "attack_pattern": "linear",
+        "stats": {
+            "damage": 10,
+            "attack_speed": 0.6,
+            "range": 250,
+            "projectile_speed": 180,
+            "projectile_count": 1,
+            "essence_cost_per_attack": 0.3
+        },
+        "special_effect": {
+            "type": "ground_fire",
+            "ground_damage": 5,
+            "ground_duration": 2.0,
+            "ground_radius": 30,
+            "emits_light": true,
+            "light_radius": 50
+        },
+        "source": "craft",
+        "requires_souvenir": "lantern_memory",
+        "craft_recipe": {
+            "ingredients": [
+                {
+                    "resource": "metal",
+                    "amount": 3
+                },
+                {
+                    "resource": "stone",
+                    "amount": 3
+                },
+                {
+                    "resource": "essence",
+                    "amount": 12
+                }
+            ]
+        },
+        "lore_flavor": "La flamme brûle un combustible qui n'existe pas. Elle se nourrit de ce qu'on se rappelle. Plus le souvenir est vif, plus la flamme est chaude."
+    },
+    {
+        "id": "echo_gauntlets",
+        "name": "Gantelets d'Écho",
+        "description": "Frappe mêlée rapide. Chaque coup crée un écho retardé qui refrappe 0.3s plus tard au même endroit.",
+        "tier": 4,
+        "type": "melee",
+        "damage_type": "essence",
+        "attack_pattern": "arc",
+        "stats": {
+            "damage": 11,
+            "attack_speed": 1.4,
+            "range": 45,
+            "arc_angle": 90,
+            "knockback": 15,
+            "essence_cost_per_attack": 0.2
+        },
+        "special_effect": {
+            "type": "delayed_echo",
+            "echo_delay": 0.3,
+            "echo_damage_percent": 0.60
+        },
+        "source": "craft",
+        "requires_souvenir": "echo_fragment",
+        "craft_recipe": {
+            "ingredients": [
+                {
+                    "resource": "metal",
+                    "amount": 8
+                },
+                {
+                    "resource": "essence",
+                    "amount": 10
+                }
+            ]
+        },
+        "lore_flavor": "Le monde se souvient de chaque coup. Avec un léger retard — comme le souvenir d'un son après l'avoir entendu."
+    },
+    "_comment_tier5_legendary",
+    "========== TIER 5 — ARMES LÉGENDAIRES (drop L'Indicible ou conditions spéciales) ==========",
+    "// 1 seule de ces armes peut exister par run. Trouvée, jamais craftée.",
+    {
+        "id": "childs_drawing",
+        "name": "Le Dessin d'Enfant",
+        "description": "Un crayon de couleur. Dessine des formes en l'air qui prennent vie et attaquent les ennemis. Les formes sont aléatoires et imprévisibles.",
+        "tier": 5,
+        "type": "special",
+        "damage_type": "essence",
+        "attack_pattern": "homing",
+        "stats": {
+            "damage": 25,
+            "attack_speed": 0.6,
+            "range": 250,
+            "projectile_speed": 150,
+            "projectile_count": 2,
+            "homing_strength": 1.0
+        },
+        "special_effect": {
+            "type": "random_shape",
+            "shapes": [
+                "star",
+                "circle",
+                "house",
+                "sun"
+            ],
+            "shape_aoe_on_impact": 50,
+            "shape_visual": "crayon_drawn"
+        },
+        "source": "loot_legendary",
+        "drop_condition": "Coffre légendaire du Sanctuaire",
+        "craft_recipe": null,
+        "lore_flavor": "Un dessin de maison avec un soleil et deux bonhommes bâtons. L'encre n'a pas séché depuis des mois. Ou des années. Les dessins d'enfants sont les dernières choses que le monde oublie."
+    },
+    {
+        "id": "last_broadcast",
+        "name": "La Dernière Émission",
+        "description": "Un micro de radio cassé. Émet une fréquence qui fait vibrer la réalité. Onde en cône qui grossit avec la distance. Les créatures touchées subissent des dégâts croissants tant qu'elles restent dans le cône.",
+        "tier": 5,
+        "type": "ranged",
+        "damage_type": "essence",
+        "attack_pattern": "linear",
+        "stats": {
+            "damage": 8,
+            "attack_speed": 0.3,
+            "range": 400,
+            "projectile_speed": 0,
+            "cone_angle_start": 15,
+            "cone_angle_end": 60
+        },
+        "special_effect": {
+            "type": "sustained_cone",
+            "duration": 2.0,
+            "damage_ramp_per_sec": 1.5,
+            "visual": "radio_static_wave"
+        },
+        "source": "loot_legendary",
+        "drop_condition": "L'Indicible (boss nuit 10+)",
+        "craft_recipe": null,
+        "lore_flavor": "La dernière voix humaine diffusée sur les ondes. Personne ne l'a éteinte. Elle émet encore. Le message est incompréhensible — mais les créatures le comprennent, et ça les terrife."
+    },
+    {
+        "id": "clock_hand",
+        "name": "L'Aiguille de l'Horloge",
+        "description": "Frappe lente et massive. Chaque coup RALENTIT LE TEMPS localement pendant 0.5s dans un rayon autour de l'impact.",
+        "tier": 5,
+        "type": "melee",
+        "damage_type": "hybrid",
+        "attack_pattern": "arc",
+        "stats": {
+            "damage": 35,
+            "attack_speed": 0.35,
+            "range": 70,
+            "arc_angle": 140,
+            "knockback": 50
+        },
+        "special_effect": {
+            "type": "local_time_slow",
+            "slow_radius": 80,
+            "slow_factor": 0.3,
+            "slow_duration": 0.5
+        },
+        "source": "loot_legendary",
+        "drop_condition": "Coffre légendaire — Ruines urbaines uniquement",
+        "craft_recipe": null,
+        "lore_flavor": "L'aiguille des heures d'une horloge de gare. Des milliers de regards l'ont consultée chaque jour. Elle ne peut pas oublier le temps. Elle l'impose encore."
+    }
+]

@@ -1,6 +1,5 @@
 [
     "_comment_common_stats",
-    "========== PERKS COMMUNS — STATS (pool de base, tous personnages) ==========",
     {
         "id": "damage_up",
         "name": "Force Brute",
@@ -62,11 +61,11 @@
         "name": "Écho",
         "description": "+1 projectile",
         "category": "stat",
-        "rarity": "common",
+        "rarity": "uncommon",
         "stat": "projectile_count",
         "modifier": 1,
         "modifier_type": "additive",
-        "max_stacks": 6,
+        "max_stacks": 4,
         "tags": [
             "damage"
         ]
@@ -94,7 +93,7 @@
         "stat": "armor",
         "modifier": 3,
         "modifier_type": "additive",
-        "max_stacks": 10,
+        "max_stacks": 6,
         "tags": [
             "defense"
         ]
@@ -143,7 +142,6 @@
         ]
     },
     "_comment_combat",
-    "========== PERKS COMMUNS — COMBAT (mécaniques, tous personnages) ==========",
     {
         "id": "vampirism",
         "name": "Vampirisme",
@@ -223,7 +221,7 @@
         "description": "+8% de chance de coup critique (×2 dégâts)",
         "category": "combat",
         "rarity": "uncommon",
-        "max_stacks": 8,
+        "max_stacks": 5,
         "tags": [
             "damage"
         ],
@@ -278,7 +276,7 @@
         "description": "Renvoie 20% des dégâts reçus à l'attaquant",
         "category": "combat",
         "rarity": "uncommon",
-        "max_stacks": 5,
+        "max_stacks": 3,
         "tags": [
             "defense",
             "damage"
@@ -325,7 +323,6 @@
         }
     },
     "_comment_survival",
-    "========== PERKS COMMUNS — SURVIE & BASE ==========",
     {
         "id": "architect",
         "name": "Architecte",
@@ -428,7 +425,6 @@
         }
     },
     "_comment_essence",
-    "========== PERKS COMMUNS — ESSENCE ==========",
     {
         "id": "channeling",
         "name": "Canalisation",
@@ -461,7 +457,6 @@
     {
         "id": "instability",
         "name": "Instabilité",
-        "description": "Capacités d'Essence : 30% de chance de coûter 0, 10% de chance de backfire",
         "category": "essence",
         "rarity": "uncommon",
         "max_stacks": 1,
@@ -496,7 +491,6 @@
         }
     },
     "_comment_rare",
-    "========== PERKS RARES (apparaissent rarement, très puissants) ==========",
     {
         "id": "second_wind",
         "name": "Deuxième Souffle",
@@ -627,7 +621,6 @@
         }
     },
     "_comment_synergies",
-    "========== SYNERGIES (combos activés quand le joueur possède les perks requis) ==========",
     {
         "id": "synergy_blood_rage",
         "name": "Rage Sanguinaire",
@@ -787,7 +780,6 @@
         "notification": "⚡ BOURREAU activé"
     },
     "_comment_vagabond",
-    "========== PERKS SPÉCIFIQUES — VAGABOND ==========",
     {
         "id": "vagabond_harvest",
         "name": "Instinct de Cueilleur",
@@ -910,7 +902,6 @@
         }
     },
     "_comment_forgeuse",
-    "========== PERKS SPÉCIFIQUES — FORGEUSE ==========",
     {
         "id": "forgeuse_fortify",
         "name": "Maître Bâtisseur",
@@ -1014,7 +1005,6 @@
         }
     },
     "_comment_traqueur",
-    "========== PERKS SPÉCIFIQUES — TRAQUEUR ==========",
     {
         "id": "traqueur_precision",
         "name": "Œil d'Aigle",
@@ -1094,7 +1084,7 @@
         "description": "8% de chance d'esquiver complètement une attaque",
         "category": "character",
         "rarity": "uncommon",
-        "max_stacks": 5,
+        "max_stacks": 3,
         "character_id": "traqueur",
         "tags": [
             "defense"

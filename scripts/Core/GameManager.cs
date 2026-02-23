@@ -27,6 +27,9 @@ public partial class GameManager : Node
     /// <summary>Données de la dernière run terminée (pour affichage dans le Hub).</summary>
     public RunRecord LastRunData { get; set; }
 
+    /// <summary>Seed de la run. 0 = aléatoire au lancement.</summary>
+    public ulong RunSeed { get; set; }
+
     /// <summary>Vestiges gagnés lors de la dernière run.</summary>
     public int LastVestigesEarned { get; set; }
 

@@ -33,6 +33,7 @@ public partial class SpawnManager : Node2D
 
     private EnemyPool _pool;
     private Player _player;
+    private WorldSetup _worldSetup;
     private List<string> _enemyIds;
     private Node _enemyContainer;
     private EventBus _eventBus;
@@ -153,17 +154,22 @@ public partial class SpawnManager : Node2D
         return GetDaySpawnPosition();
     }
 
-    /// <summary>Jour : spawn autour du joueur, en dehors du rayon de sécurité du Foyer.</summary>
+    /// <summary>Jour : spawn autour du joueur, en dehors du rayon de sécurité du Foyer et not on water.</summary>
     private Vector2 GetDaySpawnPosition()
     {
-        for (int attempt = 0; attempt < 10; attempt++)
+        for (int attempt = 0; attempt < 15; attempt++)
         {
             float angle = (float)GD.RandRange(0, Mathf.Tau);
             float radius = (float)GD.RandRange(SpawnRadiusMin, SpawnRadiusMax);
             Vector2 position = _player.GlobalPosition + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * radius;
 
-            if (position.DistanceTo(_foyerPosition) > FoyerSafeRadius)
-                return position;
+            if (position.DistanceTo(_foyerPosition) <= FoyerSafeRadius)
+                continue;
+
+            if (IsWaterAt(position))
+                continue;
+
+            return position;
         }
 
         float fallbackAngle = (float)GD.RandRange(0, Mathf.Tau);
@@ -174,9 +180,25 @@ public partial class SpawnManager : Node2D
     /// <summary>Nuit : spawn depuis les bords, loin du Foyer, convergent ensuite vers lui.</summary>
     private Vector2 GetNightSpawnPosition()
     {
-        float angle = (float)GD.RandRange(0, Mathf.Tau);
-        float radius = NightSpawnRadius;
-        return _foyerPosition + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * radius;
+        for (int attempt = 0; attempt < 10; attempt++)
+        {
+            float angle = (float)GD.RandRange(0, Mathf.Tau);
+            float radius = NightSpawnRadius;
+            Vector2 position = _foyerPosition + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * radius;
+
+            if (!IsWaterAt(position))
+                return position;
+        }
+
+        float fallbackAngle = (float)GD.RandRange(0, Mathf.Tau);
+        return _foyerPosition + new Vector2(Mathf.Cos(fallbackAngle), Mathf.Sin(fallbackAngle)) * NightSpawnRadius;
+    }
+
+    private bool IsWaterAt(Vector2 worldPos)
+    {
+        if (_worldSetup == null)
+            CacheWorldSetup();
+        return _worldSetup != null && _worldSetup.IsWaterAt(worldPos);
     }
 
     private void OnDayPhaseChanged(string phase)
@@ -255,5 +277,10 @@ public partial class SpawnManager : Node2D
         Node playerNode = GetTree().GetFirstNodeInGroup("player");
         if (playerNode is Player p)
             _player = p;
+    }
+
+    private void CacheWorldSetup()
+    {
+        _worldSetup = GetNodeOrNull<WorldSetup>("/root/Main");
     }
 }

@@ -2,34 +2,41 @@ using System.Collections.Generic;
 using System.Linq;
 using Godot;
 using Vestiges.Base;
+using Vestiges.Core;
 using Vestiges.Infrastructure;
 
 namespace Vestiges.World;
 
 /// <summary>
-/// Génère le sol isométrique et place les nœuds de ressource au lancement.
+/// Génère le monde procédural au lancement : terrain via WorldGenerator,
+/// puis place les nœuds de ressource en fonction du terrain.
 /// Gère le respawn périodique des ressources épuisées.
-/// Prototype — sera remplacé par la génération procédurale.
 /// </summary>
 public partial class WorldSetup : Node2D
 {
-    [Export] public int MapRadius = 30;
-    [Export] public int ResourceCount = 40;
-    [Export] public float RespawnIntervalSeconds = 30f;
-    [Export] public int RespawnThreshold = 30;
-
-    private static readonly (string id, float weight)[] ResourceDistribution =
-    {
-        ("wood", 0.50f),
-        ("stone", 0.35f),
-        ("metal", 0.15f)
-    };
-
     private TileMapLayer _ground;
     private Node2D _resourceContainer;
     private PackedScene _resourceScene;
     private HashSet<Vector2I> _usedCells = new();
     private Timer _respawnTimer;
+
+    private WorldGenerator _generator;
+    private WorldGenConfig _config;
+
+    /// <summary>Seed de la run, injectée par GameBootstrap.</summary>
+    public ulong Seed { get; set; }
+
+    /// <summary>Référence publique au générateur pour les autres systèmes.</summary>
+    public WorldGenerator Generator => _generator;
+
+    /// <summary>Checks if a world position is on water terrain.</summary>
+    public bool IsWaterAt(Vector2 worldPos)
+    {
+        if (_generator == null || _ground == null)
+            return false;
+        Vector2I cell = _ground.LocalToMap(_ground.ToLocal(worldPos));
+        return _generator.GetTerrain(cell.X, cell.Y) == TerrainType.Water;
+    }
 
     public override void _Ready()
     {
@@ -40,23 +47,50 @@ public partial class WorldSetup : Node2D
         _resourceContainer = GetNode<Node2D>("ResourceContainer");
         _resourceScene = GD.Load<PackedScene>("res://scenes/base/ResourceNode.tscn");
 
-        GenerateFloor(_ground);
+        _config = WorldGenConfig.Load();
+
+        // Read seed from GameManager (set in Hub or 0 = random)
+        GameManager gm = GetNodeOrNull<GameManager>("/root/GameManager");
+        if (gm != null && gm.RunSeed != 0)
+            Seed = gm.RunSeed;
+        if (Seed == 0)
+            Seed = GD.Randi();
+
+        _generator = new WorldGenerator(
+            _config.MapRadius,
+            _config.FoyerClearance,
+            _config.CaIterations,
+            _config.Zones,
+            Seed
+        );
+
+        TerrainType[,] terrain = _generator.Generate();
+        ApplyTerrain(terrain);
         SpawnResources();
 
         _respawnTimer = new Timer();
-        _respawnTimer.WaitTime = RespawnIntervalSeconds;
+        _respawnTimer.WaitTime = _config.RespawnInterval;
         _respawnTimer.Autostart = true;
         _respawnTimer.Timeout += OnRespawnTimer;
         AddChild(_respawnTimer);
+
+        GD.Print($"[WorldSetup] World generated with seed {Seed}");
     }
 
-    private void GenerateFloor(TileMapLayer tileMap)
+    private void ApplyTerrain(TerrainType[,] terrain)
     {
-        for (int x = -MapRadius; x <= MapRadius; x++)
+        int radius = _config.MapRadius;
+        int size = radius * 2 + 1;
+
+        for (int gx = 0; gx < size; gx++)
         {
-            for (int y = -MapRadius; y <= MapRadius; y++)
+            for (int gy = 0; gy < size; gy++)
             {
-                tileMap.SetCell(new Vector2I(x, y), 0, Vector2I.Zero);
+                int x = gx - radius;
+                int y = gy - radius;
+                Vector2I cell = new(x, y);
+                int sourceId = (int)terrain[gx, gy];
+                _ground.SetCell(cell, sourceId, Vector2I.Zero);
             }
         }
     }
@@ -64,7 +98,7 @@ public partial class WorldSetup : Node2D
     private void SpawnResources()
     {
         Dictionary<string, int> spawnCounts = new();
-        for (int i = 0; i < ResourceCount; i++)
+        for (int i = 0; i < _config.ResourceCount; i++)
         {
             string spawned = SpawnSingleResource();
             if (spawned != null)
@@ -80,7 +114,13 @@ public partial class WorldSetup : Node2D
 
     private string SpawnSingleResource(float minDistFromPlayer = 0f)
     {
-        string resourceId = PickResourceType();
+        Vector2I cell = PickResourceCell(_usedCells, minDistFromPlayer);
+        if (cell == new Vector2I(int.MinValue, int.MinValue))
+            return null;
+
+        TerrainType terrain = _generator.GetTerrain(cell.X, cell.Y);
+        string resourceId = PickResourceForTerrain(terrain);
+
         ResourceData data = ResourceDataLoader.Get(resourceId);
         if (data == null)
         {
@@ -88,14 +128,9 @@ public partial class WorldSetup : Node2D
             return null;
         }
 
-        Vector2I cell = PickResourceCell(_usedCells, minDistFromPlayer);
-        if (cell == new Vector2I(int.MinValue, int.MinValue))
-            return null;
-
         _usedCells.Add(cell);
 
         Vector2 worldPos = _ground.MapToLocal(cell);
-
         ResourceNode node = _resourceScene.Instantiate<ResourceNode>();
         node.GlobalPosition = worldPos;
         _resourceContainer.AddChild(node);
@@ -108,10 +143,10 @@ public partial class WorldSetup : Node2D
         RefreshUsedCells();
 
         int activeCount = _resourceContainer.GetChildCount();
-        if (activeCount >= RespawnThreshold)
+        if (activeCount >= _config.RespawnThreshold)
             return;
 
-        int toSpawn = Mathf.Min(ResourceCount - activeCount, 5);
+        int toSpawn = Mathf.Min(_config.ResourceCount - activeCount, 5);
         for (int i = 0; i < toSpawn; i++)
         {
             SpawnSingleResource(300f);
@@ -134,36 +169,43 @@ public partial class WorldSetup : Node2D
         }
     }
 
-    private string PickResourceType()
+    private string PickResourceForTerrain(TerrainType terrain)
     {
-        float roll = GD.Randf();
+        Dictionary<string, float> bias = _config.GetTerrainBias(terrain);
+        float roll = (float)GD.Randf();
         float cumulative = 0f;
-        foreach ((string id, float weight) in ResourceDistribution)
+
+        foreach (KeyValuePair<string, float> kv in bias)
         {
-            cumulative += weight;
+            cumulative += kv.Value;
             if (roll < cumulative)
-                return id;
+                return kv.Key;
         }
-        return ResourceDistribution[^1].id;
+
+        return "wood";
     }
 
     private Vector2I PickResourceCell(HashSet<Vector2I> used, float minDistFromPlayer = 0f)
     {
-        int foyerExclusionRadius = 5;
+        int radius = _config.MapRadius;
+        int foyerExclusion = _config.FoyerClearance + 1;
 
         Node playerNode = GetTree().GetFirstNodeInGroup("player");
         Vector2 playerPos = playerNode is Node2D player ? player.GlobalPosition : Vector2.Zero;
 
         for (int attempt = 0; attempt < 30; attempt++)
         {
-            int x = (int)GD.RandRange(-MapRadius + 1, MapRadius);
-            int y = (int)GD.RandRange(-MapRadius + 1, MapRadius);
+            int x = (int)GD.RandRange(-radius + 1, radius);
+            int y = (int)GD.RandRange(-radius + 1, radius);
             Vector2I cell = new(x, y);
 
             if (used.Contains(cell))
                 continue;
 
-            if (Mathf.Abs(x) <= foyerExclusionRadius && Mathf.Abs(y) <= foyerExclusionRadius)
+            if (Mathf.Abs(x) <= foyerExclusion && Mathf.Abs(y) <= foyerExclusion)
+                continue;
+
+            if (_generator.GetTerrain(x, y) == TerrainType.Water)
                 continue;
 
             if (minDistFromPlayer > 0f)
@@ -177,5 +219,125 @@ public partial class WorldSetup : Node2D
         }
 
         return new Vector2I(int.MinValue, int.MinValue);
+    }
+}
+
+/// <summary>
+/// Données de configuration chargées depuis world_gen.json.
+/// </summary>
+public class WorldGenConfig
+{
+    public int MapRadius;
+    public int FoyerClearance;
+    public int CaIterations;
+    public List<WorldGenerator.ZoneConfig> Zones = new();
+    public int ResourceCount;
+    public float RespawnInterval;
+    public int RespawnThreshold;
+
+    private readonly Dictionary<string, Dictionary<string, float>> _terrainBias = new();
+
+    private static readonly Dictionary<string, float> DefaultBias = new()
+    {
+        { "wood", 0.50f }, { "stone", 0.35f }, { "metal", 0.15f }
+    };
+
+    public Dictionary<string, float> GetTerrainBias(TerrainType terrain)
+    {
+        string key = terrain.ToString().ToLowerInvariant();
+        return _terrainBias.TryGetValue(key, out Dictionary<string, float> bias) ? bias : DefaultBias;
+    }
+
+    public static WorldGenConfig Load()
+    {
+        WorldGenConfig config = new();
+
+        FileAccess file = FileAccess.Open("res://data/world/world_gen.json", FileAccess.ModeFlags.Read);
+        if (file == null)
+        {
+            GD.PushError("[WorldGenConfig] Cannot open world_gen.json, using defaults");
+            config.SetDefaults();
+            return config;
+        }
+
+        string jsonText = file.GetAsText();
+        file.Close();
+
+        Json json = new();
+        if (json.Parse(jsonText) != Error.Ok)
+        {
+            GD.PushError($"[WorldGenConfig] Parse error: {json.GetErrorMessage()}");
+            config.SetDefaults();
+            return config;
+        }
+
+        Godot.Collections.Dictionary dict = json.Data.AsGodotDictionary();
+
+        config.MapRadius = (int)dict["map_radius"].AsDouble();
+        config.FoyerClearance = (int)dict["foyer_clearance"].AsDouble();
+        config.CaIterations = (int)dict["ca_iterations"].AsDouble();
+        config.ResourceCount = (int)dict["resource_count"].AsDouble();
+        config.RespawnInterval = (float)dict["respawn_interval"].AsDouble();
+        config.RespawnThreshold = (int)dict["respawn_threshold"].AsDouble();
+
+        Godot.Collections.Array zonesArray = dict["zones"].AsGodotArray();
+        foreach (Variant zoneVar in zonesArray)
+        {
+            Godot.Collections.Dictionary zoneDict = zoneVar.AsGodotDictionary();
+            Godot.Collections.Dictionary weights = zoneDict["weights"].AsGodotDictionary();
+
+            WorldGenerator.ZoneConfig zone = new()
+            {
+                MaxRadius = (float)zoneDict["max_radius"].AsDouble(),
+                GrassWeight = (float)weights["grass"].AsDouble(),
+                ConcreteWeight = (float)weights["concrete"].AsDouble(),
+                WaterWeight = (float)weights["water"].AsDouble(),
+                ForestWeight = (float)weights["forest"].AsDouble()
+            };
+            config.Zones.Add(zone);
+        }
+
+        if (dict.ContainsKey("resource_terrain_bias"))
+        {
+            Godot.Collections.Dictionary biasDict = dict["resource_terrain_bias"].AsGodotDictionary();
+            foreach (Variant terrainKey in biasDict.Keys)
+            {
+                string terrainName = terrainKey.AsString();
+                Godot.Collections.Dictionary resWeights = biasDict[terrainKey].AsGodotDictionary();
+                Dictionary<string, float> bias = new();
+                foreach (Variant resKey in resWeights.Keys)
+                    bias[resKey.AsString()] = (float)resWeights[resKey].AsDouble();
+                config._terrainBias[terrainName] = bias;
+            }
+        }
+
+        GD.Print($"[WorldGenConfig] Loaded — radius={config.MapRadius}, zones={config.Zones.Count}, resources={config.ResourceCount}");
+        return config;
+    }
+
+    private void SetDefaults()
+    {
+        MapRadius = 30;
+        FoyerClearance = 4;
+        CaIterations = 4;
+        ResourceCount = 50;
+        RespawnInterval = 30f;
+        RespawnThreshold = 35;
+
+        Zones.Add(new WorldGenerator.ZoneConfig
+        {
+            MaxRadius = 10, GrassWeight = 0.75f, ConcreteWeight = 0.20f,
+            WaterWeight = 0f, ForestWeight = 0.05f
+        });
+        Zones.Add(new WorldGenerator.ZoneConfig
+        {
+            MaxRadius = 20, GrassWeight = 0.45f, ConcreteWeight = 0.20f,
+            WaterWeight = 0.10f, ForestWeight = 0.25f
+        });
+        Zones.Add(new WorldGenerator.ZoneConfig
+        {
+            MaxRadius = 999, GrassWeight = 0.25f, ConcreteWeight = 0.15f,
+            WaterWeight = 0.20f, ForestWeight = 0.40f
+        });
     }
 }
