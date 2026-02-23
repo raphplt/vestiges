@@ -125,6 +125,10 @@ public partial class StructurePlacer : Node2D
         string type = _recipeData.Result.Type;
         float hp = _recipeData.Result.Stats.TryGetValue("hp", out float hpVal) ? hpVal : 50f;
 
+        Node playerNode = GetTree().GetFirstNodeInGroup("player");
+        if (playerNode is Core.Player player)
+            hp *= player.StructureHpMultiplier;
+
         Color structureColor = GetStructureColor();
 
         Structure structure;

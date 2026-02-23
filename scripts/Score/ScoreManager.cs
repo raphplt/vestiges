@@ -1,5 +1,6 @@
 using Godot;
 using Vestiges.Core;
+using Vestiges.Infrastructure;
 
 namespace Vestiges.Score;
 
@@ -30,9 +31,10 @@ public partial class ScoreManager : Node
     private bool _tookDamageThisNight;
     private int _noDamageNights;
     private int _bestScore;
+    private float _scoreMultiplier = 1f;
     private EventBus _eventBus;
 
-    public int CurrentScore => _combatScore + _survivalScore + _bonusScore + _buildScore;
+    public int CurrentScore => (int)((_combatScore + _survivalScore + _bonusScore + _buildScore) * _scoreMultiplier);
     public int CombatScore => _combatScore;
     public int SurvivalScore => _survivalScore;
     public int BonusScore => _bonusScore;
@@ -64,7 +66,13 @@ public partial class ScoreManager : Node
         }
     }
 
-    /// <summary>Sauvegarde le score si c'est un nouveau record.</summary>
+    public void SetCharacterMultiplier(float multiplier)
+    {
+        _scoreMultiplier = multiplier;
+        GD.Print($"[ScoreManager] Score multiplier set to x{multiplier}");
+    }
+
+    /// <summary>Sauvegarde le score si c'est un nouveau record + enregistre la run dans l'historique.</summary>
     public void SaveIfRecord()
     {
         if (CurrentScore > _bestScore)
@@ -72,6 +80,30 @@ public partial class ScoreManager : Node
             _bestScore = CurrentScore;
             SaveBestScore();
         }
+
+        RunRecord record = BuildRunRecord();
+        RunHistoryManager.SaveRun(record);
+
+        GameManager gm = GetNode<GameManager>("/root/GameManager");
+        gm.LastRunData = record;
+    }
+
+    /// <summary>Construit un RunRecord depuis l'état courant de la run.</summary>
+    public RunRecord BuildRunRecord()
+    {
+        GameManager gm = GetNode<GameManager>("/root/GameManager");
+        string characterId = gm.SelectedCharacterId ?? "unknown";
+        CharacterData charData = CharacterDataLoader.Get(characterId);
+
+        return new RunRecord
+        {
+            CharacterId = characterId,
+            CharacterName = charData?.Name ?? characterId,
+            Score = CurrentScore,
+            NightsSurvived = _nightsSurvived,
+            TotalKills = _totalKills,
+            Date = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm")
+        };
     }
 
     private void OnEnemyKilled(string enemyId, Vector2 position)

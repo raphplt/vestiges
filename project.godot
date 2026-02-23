@@ -11,10 +11,10 @@ config_version=5
 [application]
 
 config/name="Vestiges"
-run/main_scene="res://scenes/Main.tscn"
+run/main_scene="res://scenes/Hub.tscn"
 config/features=PackedStringArray("4.6", "C#", "GL Compatibility")
 config/icon="res://icon.svg"
-config/run/main_scene="res://scenes/Main.tscn"
+config/run/main_scene="res://scenes/Hub.tscn"
 
 [autoload]
 

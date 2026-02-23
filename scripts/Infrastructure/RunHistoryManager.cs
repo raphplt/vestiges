@@ -1,0 +1,135 @@
+using System.Collections.Generic;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using Godot;
+
+namespace Vestiges.Infrastructure;
+
+public class RunRecord
+{
+    [JsonPropertyName("character_id")]
+    public string CharacterId { get; set; }
+
+    [JsonPropertyName("character_name")]
+    public string CharacterName { get; set; }
+
+    [JsonPropertyName("score")]
+    public int Score { get; set; }
+
+    [JsonPropertyName("nights_survived")]
+    public int NightsSurvived { get; set; }
+
+    [JsonPropertyName("total_kills")]
+    public int TotalKills { get; set; }
+
+    [JsonPropertyName("date")]
+    public string Date { get; set; }
+}
+
+/// <summary>
+/// Gestionnaire statique de l'historique des runs.
+/// Sauvegarde/charge depuis user://run_history.json.
+/// Garde les 20 dernières runs.
+/// </summary>
+public static class RunHistoryManager
+{
+    private const string HistoryPath = "user://run_history.json";
+    private const int MaxEntries = 20;
+
+    private static List<RunRecord> _history = new();
+    private static bool _loaded;
+
+    public static void Load()
+    {
+        if (_loaded)
+            return;
+
+        _loaded = true;
+
+        if (!FileAccess.FileExists(HistoryPath))
+        {
+            _history = new List<RunRecord>();
+            return;
+        }
+
+        FileAccess file = FileAccess.Open(HistoryPath, FileAccess.ModeFlags.Read);
+        if (file == null)
+        {
+            _history = new List<RunRecord>();
+            return;
+        }
+
+        string json = file.GetAsText();
+        file.Close();
+
+        try
+        {
+            _history = JsonSerializer.Deserialize<List<RunRecord>>(json) ?? new List<RunRecord>();
+        }
+        catch (JsonException ex)
+        {
+            GD.PushWarning($"[RunHistoryManager] Failed to parse history: {ex.Message}");
+            _history = new List<RunRecord>();
+        }
+
+        GD.Print($"[RunHistoryManager] Loaded {_history.Count} run(s)");
+    }
+
+    public static void SaveRun(RunRecord record)
+    {
+        Load();
+
+        _history.Insert(0, record);
+
+        if (_history.Count > MaxEntries)
+            _history.RemoveRange(MaxEntries, _history.Count - MaxEntries);
+
+        Save();
+        GD.Print($"[RunHistoryManager] Saved run: {record.CharacterName} — Score {record.Score}, {record.NightsSurvived} nuits");
+    }
+
+    public static List<RunRecord> GetHistory()
+    {
+        Load();
+        return new List<RunRecord>(_history);
+    }
+
+    public static int GetBestScore()
+    {
+        Load();
+        int best = 0;
+        foreach (RunRecord run in _history)
+        {
+            if (run.Score > best)
+                best = run.Score;
+        }
+        return best;
+    }
+
+    public static int GetMaxNights()
+    {
+        Load();
+        int max = 0;
+        foreach (RunRecord run in _history)
+        {
+            if (run.NightsSurvived > max)
+                max = run.NightsSurvived;
+        }
+        return max;
+    }
+
+    private static void Save()
+    {
+        FileAccess file = FileAccess.Open(HistoryPath, FileAccess.ModeFlags.Write);
+        if (file == null)
+        {
+            GD.PushError("[RunHistoryManager] Cannot save history");
+            return;
+        }
+
+        var options = new JsonSerializerOptions { WriteIndented = true };
+        string json = JsonSerializer.Serialize(_history, options);
+        file.StoreString(json);
+        file.Close();
+    }
+}

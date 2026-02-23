@@ -1,10 +1,12 @@
 using Godot;
+using Vestiges.Infrastructure;
 
 namespace Vestiges.Core;
 
 /// <summary>
 /// Gestionnaire global de l'état du jeu.
 /// Autoload — pilote les transitions entre états (Hub, Run, Death).
+/// Porte l'état qui survit aux changements de scène.
 /// </summary>
 public partial class GameManager : Node
 {
@@ -17,6 +19,12 @@ public partial class GameManager : Node
 
     private GameState _currentState = GameState.Hub;
     private EventBus _eventBus;
+
+    /// <summary>Personnage sélectionné dans le Hub. Persiste entre scènes.</summary>
+    public string SelectedCharacterId { get; set; }
+
+    /// <summary>Données de la dernière run terminée (pour affichage dans le Hub).</summary>
+    public RunRecord LastRunData { get; set; }
 
     public GameState CurrentState => _currentState;
 

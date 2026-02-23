@@ -192,16 +192,16 @@ Les niveaux de complexité servent à prioriser l'effort et le risque. Ils n'imp
 ### Tâches
 
 **Lot 4.1 — Système de personnages (`Complexité : C4`)**
-- [ ] Refactorer le code joueur pour supporter des personnages avec des stats et perks différents.
-- [ ] Implémenter 3 personnages : Le Vagabond (équilibré), La Forgeuse (craft/défense), Le Traqueur (distance/agilité).
-- [ ] Chaque perso a un perk passif unique + pool de perks de level-up modifiée.
-- [ ] Résultat : jouer La Forgeuse se sent différent de jouer Le Traqueur.
+- [x] Refactorer le code joueur pour supporter des personnages avec des stats et perks différents.
+- [x] Implémenter 3 personnages : Le Vagabond (équilibré), La Forgeuse (craft/défense), Le Traqueur (distance/agilité).
+- [x] Chaque perso a un perk passif unique + pool de perks de level-up modifiée.
+- [x] Résultat : jouer La Forgeuse se sent différent de jouer Le Traqueur.
 
 **Lot 4.2 — Le Hub (`Complexité : C3`)**
-- [ ] Scène Hub entre les runs — espace onirique minimaliste (plateformes flottantes, vide blanc-bleuté, cf. Bible section 10).
-- [ ] En placeholder : fond simple + UI fonctionnelle. L'aspect visuel évolutif (Hub qui grandit avec les Souvenirs) est repoussé à la Phase 7.
-- [ ] Éléments fonctionnels : sélection de personnage (Miroirs), Établi (kits de départ), Chroniques (historique/scores), accès au Vide (lancer une run).
-- [ ] Résultat : entre deux runs, le joueur passe par le Hub et choisit son perso.
+- [x] Scène Hub entre les runs — espace onirique minimaliste (plateformes flottantes, vide blanc-bleuté, cf. Bible section 10).
+- [x] En placeholder : fond simple + UI fonctionnelle. L'aspect visuel évolutif (Hub qui grandit avec les Souvenirs) est repoussé à la Phase 7.
+- [x] Éléments fonctionnels : sélection de personnage (Miroirs), Établi (kits de départ), Chroniques (historique/scores), accès au Vide (lancer une run).
+- [x] Résultat : entre deux runs, le joueur passe par le Hub et choisit son perso.
 
 **Lot 4.3 — Vestiges et déblocages (`Complexité : C3`)**
 - [ ] Monnaie "Vestiges" gagnée proportionnellement au score.

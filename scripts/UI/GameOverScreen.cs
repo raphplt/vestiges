@@ -20,6 +20,7 @@ public partial class GameOverScreen : CanvasLayer
     private Label _recordLabel;
     private Label _killsLabel;
     private Button _restartButton;
+    private Button _hubButton;
     private EventBus _eventBus;
     private ScoreManager _scoreManager;
 
@@ -104,10 +105,22 @@ public partial class GameOverScreen : CanvasLayer
         _recordLabel = CreateLabel("", 14, HorizontalAlignment.Center);
         vbox.AddChild(_recordLabel);
 
+        HBoxContainer buttonRow = new();
+        buttonRow.AddThemeConstantOverride("separation", 12);
+        buttonRow.Alignment = BoxContainer.AlignmentMode.Center;
+        vbox.AddChild(buttonRow);
+
         _restartButton = new Button();
         _restartButton.Text = "Relancer";
+        _restartButton.CustomMinimumSize = new Vector2(130, 38);
         _restartButton.Pressed += OnRestartPressed;
-        vbox.AddChild(_restartButton);
+        buttonRow.AddChild(_restartButton);
+
+        _hubButton = new Button();
+        _hubButton.Text = "Retour au Hub";
+        _hubButton.CustomMinimumSize = new Vector2(130, 38);
+        _hubButton.Pressed += OnHubPressed;
+        buttonRow.AddChild(_hubButton);
 
         AddChild(_panel);
     }
@@ -187,6 +200,12 @@ public partial class GameOverScreen : CanvasLayer
     {
         GetTree().Paused = false;
         GetTree().ReloadCurrentScene();
+    }
+
+    private void OnHubPressed()
+    {
+        GetTree().Paused = false;
+        GetTree().ChangeSceneToFile("res://scenes/Hub.tscn");
     }
 
     private new void Hide()

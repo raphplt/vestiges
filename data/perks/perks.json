@@ -52,5 +52,103 @@
         "modifier": 1.20,
         "modifier_type": "multiplicative",
         "max_stacks": 4
+    },
+
+    {
+        "id": "vagabond_harvest",
+        "name": "Instinct de cueilleur",
+        "description": "Récolte 25% plus vite",
+        "stat": "harvest_speed",
+        "modifier": 1.25,
+        "modifier_type": "multiplicative",
+        "max_stacks": 1,
+        "is_passive": true,
+        "character_id": "vagabond"
+    },
+    {
+        "id": "forgeuse_fortify",
+        "name": "Maître bâtisseur",
+        "description": "Structures +30% HP",
+        "stat": "structure_hp",
+        "modifier": 1.30,
+        "modifier_type": "multiplicative",
+        "max_stacks": 1,
+        "is_passive": true,
+        "character_id": "forgeuse"
+    },
+    {
+        "id": "traqueur_precision",
+        "name": "Œil d'aigle",
+        "description": "Portée +20%, vitesse d'attaque +10%",
+        "max_stacks": 1,
+        "is_passive": true,
+        "character_id": "traqueur",
+        "effects": [
+            { "stat": "attack_range", "modifier": 1.20, "modifier_type": "multiplicative" },
+            { "stat": "attack_speed", "modifier": 1.10, "modifier_type": "multiplicative" }
+        ]
+    },
+
+    {
+        "id": "vagabond_adaptability",
+        "name": "Adaptabilité",
+        "description": "+5% dégâts et +5% vitesse",
+        "max_stacks": 4,
+        "character_id": "vagabond",
+        "effects": [
+            { "stat": "damage", "modifier": 1.05, "modifier_type": "multiplicative" },
+            { "stat": "speed", "modifier": 1.05, "modifier_type": "multiplicative" }
+        ]
+    },
+    {
+        "id": "vagabond_survivalist",
+        "name": "Survivaliste",
+        "description": "+15 HP max et +0.3 régénération",
+        "max_stacks": 3,
+        "character_id": "vagabond",
+        "effects": [
+            { "stat": "max_hp", "modifier": 15, "modifier_type": "additive" },
+            { "stat": "regen_rate", "modifier": 0.3, "modifier_type": "additive" }
+        ]
+    },
+    {
+        "id": "forgeuse_quick_craft",
+        "name": "Forge rapide",
+        "description": "Craft 30% plus rapide",
+        "stat": "craft_speed",
+        "modifier": 1.30,
+        "modifier_type": "multiplicative",
+        "max_stacks": 3,
+        "character_id": "forgeuse"
+    },
+    {
+        "id": "forgeuse_reinforce",
+        "name": "Renforcement",
+        "description": "+25% HP des structures",
+        "stat": "structure_hp",
+        "modifier": 1.25,
+        "modifier_type": "multiplicative",
+        "max_stacks": 3,
+        "character_id": "forgeuse"
+    },
+    {
+        "id": "traqueur_piercing",
+        "name": "Tir perçant",
+        "description": "+1 projectile supplémentaire",
+        "stat": "projectile_count",
+        "modifier": 1,
+        "modifier_type": "additive",
+        "max_stacks": 2,
+        "character_id": "traqueur"
+    },
+    {
+        "id": "traqueur_swiftness",
+        "name": "Célérité",
+        "description": "+12% vitesse de déplacement",
+        "stat": "speed",
+        "modifier": 1.12,
+        "modifier_type": "multiplicative",
+        "max_stacks": 3,
+        "character_id": "traqueur"
     }
 ]

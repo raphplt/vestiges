@@ -36,11 +36,20 @@ public partial class CraftManager : Node
         if (!_isCrafting)
             return;
 
-        _craftProgress += (float)delta;
+        float craftSpeedMult = GetPlayerCraftSpeedMultiplier();
+        _craftProgress += (float)delta * craftSpeedMult;
         EmitSignal(SignalName.CraftProgressUpdated, CraftProgress);
 
         if (_craftProgress >= _craftDuration)
             CompleteCraft();
+    }
+
+    private float GetPlayerCraftSpeedMultiplier()
+    {
+        Node playerNode = GetTree().GetFirstNodeInGroup("player");
+        if (playerNode is Player player)
+            return player.CraftSpeedMultiplier;
+        return 1f;
     }
 
     public void SetInventory(Inventory inventory)

@@ -1,0 +1,59 @@
+[
+    {
+        "id": "vagabond",
+        "name": "Le Vagabond",
+        "description": "Équilibré, polyvalent. Bonus de récolte.",
+        "base_stats": {
+            "speed": 200,
+            "attack_damage": 10,
+            "attack_speed": 1.0,
+            "attack_range": 300,
+            "max_hp": 100,
+            "regen_rate": 0.5,
+            "interact_range": 60
+        },
+        "passive_perk": "vagabond_harvest",
+        "exclusive_perks": ["vagabond_adaptability", "vagabond_survivalist"],
+        "score_multiplier": 1.0,
+        "visual_color": [0.2, 0.45, 0.85, 1.0],
+        "unlock_condition": "default"
+    },
+    {
+        "id": "forgeuse",
+        "name": "La Forgeuse",
+        "description": "Craft rapide, structures solides, dégâts réduits.",
+        "base_stats": {
+            "speed": 180,
+            "attack_damage": 8,
+            "attack_speed": 0.85,
+            "attack_range": 250,
+            "max_hp": 120,
+            "regen_rate": 0.6,
+            "interact_range": 70
+        },
+        "passive_perk": "forgeuse_fortify",
+        "exclusive_perks": ["forgeuse_quick_craft", "forgeuse_reinforce"],
+        "score_multiplier": 1.0,
+        "visual_color": [0.85, 0.45, 0.15, 1.0],
+        "unlock_condition": "survive_3_nights"
+    },
+    {
+        "id": "traqueur",
+        "name": "Le Traqueur",
+        "description": "Agile, dégâts à distance, fragile.",
+        "base_stats": {
+            "speed": 240,
+            "attack_damage": 12,
+            "attack_speed": 1.2,
+            "attack_range": 380,
+            "max_hp": 70,
+            "regen_rate": 0.3,
+            "interact_range": 55
+        },
+        "passive_perk": "traqueur_precision",
+        "exclusive_perks": ["traqueur_piercing", "traqueur_swiftness"],
+        "score_multiplier": 1.1,
+        "visual_color": [0.2, 0.7, 0.3, 1.0],
+        "unlock_condition": "kill_200_in_run"
+    }
+]

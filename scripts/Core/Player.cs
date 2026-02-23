@@ -15,6 +15,7 @@ public partial class Player : CharacterBody2D
     [Export] public float BaseRegenRate = 0.5f;
     [Export] public float InteractRange = 60f;
 
+    private string _characterId;
     private float _currentHp;
     private bool _isDead;
     private PackedScene _projectileScene;
@@ -29,6 +30,11 @@ public partial class Player : CharacterBody2D
     private float _bonusMaxHp;
     private int _extraProjectiles;
     private float _aoeMultiplier = 1f;
+    private float _harvestSpeedMultiplier = 1f;
+    private float _structureHpMultiplier = 1f;
+    private float _craftSpeedMultiplier = 1f;
+    private float _attackRangeMultiplier = 1f;
+    private float _bonusRegenRate;
 
     // Harvest system
     private ResourceNode _harvestTarget;
@@ -39,8 +45,12 @@ public partial class Player : CharacterBody2D
 
     public float CurrentHp => _currentHp;
     public float EffectiveMaxHp => MaxHp + _bonusMaxHp;
+    public float EffectiveAttackRange => AttackRange * _attackRangeMultiplier;
+    public float StructureHpMultiplier => _structureHpMultiplier;
+    public float CraftSpeedMultiplier => _craftSpeedMultiplier;
     public bool IsDead => _isDead;
     public bool IsHarvesting => _isHarvesting;
+    public string CharacterId => _characterId;
 
     public override void _Ready()
     {
@@ -59,6 +69,28 @@ public partial class Player : CharacterBody2D
         AddChild(_attackTimer);
 
         CreateHarvestBar();
+    }
+
+    public void InitializeCharacter(CharacterData data)
+    {
+        _characterId = data.Id;
+
+        Speed = data.BaseStats.Speed;
+        AttackDamage = data.BaseStats.AttackDamage;
+        AttackSpeed = data.BaseStats.AttackSpeed;
+        AttackRange = data.BaseStats.AttackRange;
+        MaxHp = data.BaseStats.MaxHp;
+        BaseRegenRate = data.BaseStats.RegenRate;
+        InteractRange = data.BaseStats.InteractRange;
+
+        _currentHp = MaxHp;
+
+        _attackTimer.WaitTime = 1.0 / AttackSpeed;
+
+        _visual.Color = data.VisualColor;
+        _originalColor = data.VisualColor;
+
+        GD.Print($"[Player] Initialized as {data.Name} (HP:{MaxHp}, ATK:{AttackDamage}, SPD:{Speed})");
     }
 
     public override void _PhysicsProcess(double delta)
@@ -137,6 +169,21 @@ public partial class Player : CharacterBody2D
             case "aoe_radius":
                 if (modifierType == "multiplicative") _aoeMultiplier *= value;
                 break;
+            case "harvest_speed":
+                if (modifierType == "multiplicative") _harvestSpeedMultiplier *= value;
+                break;
+            case "structure_hp":
+                if (modifierType == "multiplicative") _structureHpMultiplier *= value;
+                break;
+            case "craft_speed":
+                if (modifierType == "multiplicative") _craftSpeedMultiplier *= value;
+                break;
+            case "attack_range":
+                if (modifierType == "multiplicative") _attackRangeMultiplier *= value;
+                break;
+            case "regen_rate":
+                if (modifierType == "additive") _bonusRegenRate += value;
+                break;
         }
     }
 
@@ -204,7 +251,7 @@ public partial class Player : CharacterBody2D
             return;
         }
 
-        _harvestProgress += delta;
+        _harvestProgress += delta * _harvestSpeedMultiplier;
         _harvestBar.Value = _harvestProgress;
 
         if (_harvestProgress >= _harvestTarget.HarvestTime)
@@ -330,7 +377,8 @@ public partial class Player : CharacterBody2D
         if (_currentHp >= EffectiveMaxHp)
             return;
 
-        _currentHp = Mathf.Min(_currentHp + BaseRegenRate * delta, EffectiveMaxHp);
+        float effectiveRegen = BaseRegenRate + _bonusRegenRate;
+        _currentHp = Mathf.Min(_currentHp + effectiveRegen * delta, EffectiveMaxHp);
 
         EventBus eventBus = GetNode<EventBus>("/root/EventBus");
         eventBus.EmitSignal(EventBus.SignalName.PlayerDamaged, _currentHp, EffectiveMaxHp);
@@ -373,12 +421,14 @@ public partial class Player : CharacterBody2D
         Godot.Collections.Array<Node> enemies = GetTree().GetNodesInGroup("enemies");
         System.Collections.Generic.List<(Node2D enemy, float dist)> inRange = new();
 
+        float effectiveRange = EffectiveAttackRange;
+
         foreach (Node node in enemies)
         {
             if (node is Node2D enemy)
             {
                 float dist = GlobalPosition.DistanceTo(enemy.GlobalPosition);
-                if (dist < AttackRange)
+                if (dist < effectiveRange)
                     inRange.Add((enemy, dist));
             }
         }
