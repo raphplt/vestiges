@@ -1,0 +1,10 @@
+{
+    "id": "chest_common",
+    "entries": [
+        { "type": "resource", "item": "wood", "weight": 35, "min_amount": 3, "max_amount": 6 },
+        { "type": "resource", "item": "stone", "weight": 25, "min_amount": 2, "max_amount": 4 },
+        { "type": "resource", "item": "metal", "weight": 15, "min_amount": 1, "max_amount": 2 },
+        { "type": "resource", "item": "fiber", "weight": 15, "min_amount": 2, "max_amount": 4 },
+        { "type": "xp", "item": "xp", "weight": 10, "min_amount": 15, "max_amount": 30 }
+    ]
+}

@@ -249,32 +249,32 @@ Les niveaux de complexité servent à prioriser l'effort et le risque. Ils n'imp
 - [ ] Résultat : la variété visuelle et gameplay entre les zones est visible.
 
 **Lot 5.3 — Points d'intérêt (POI) (`Complexité : C3`)**
-- [ ] Système de placement de POI procédural dans les biomes.
-- [ ] 5-6 POI types : bâtiment fouillable, cache de ressources, coffre gardé, ruine avec lore, NPC marchand, anomalie.
-- [ ] Les POI sont des "scènes" hand-crafted placées procéduralement.
-- [ ] Résultat : l'exploration a des objectifs concrets ("je vois un bâtiment là-bas").
+- [x] Système de placement de POI procédural dans les biomes.
+- [x] 5-6 POI types : bâtiment fouillable, cache de ressources, coffre gardé, ruine avec lore, NPC marchand, anomalie.
+- [x] Les POI sont des "scènes" hand-crafted placées procéduralement.
+- [x] Résultat : l'exploration a des objectifs concrets ("je vois un bâtiment là-bas").
 
 **Lot 5.4 — Coffres et loot (`Complexité : C2`)**
-- [ ] Implémenter les 4 types de coffres (commun, rare, épique, lore).
-- [ ] Loot tables en JSON (facile à équilibrer).
+- [x] Implémenter les 4 types de coffres (commun, rare, épique, lore).
+- [x] Loot tables en JSON (facile à équilibrer).
 - [ ] Coffres épiques gardés par des ennemis élites.
-- [ ] Résultat : trouver un coffre est un moment de dopamine.
+- [x] Résultat : trouver un coffre est un moment de dopamine.
 
 **Lot 5.5 — Fog of war et extension de map (`Complexité : C3`)**
-- [ ] Fog of war : les zones non explorées ne sont pas "sombres" mais "pas encore réelles" — voile blanc-bleuté animé (cf. Bible section 7.1). Les tiles se matérialisent quand le joueur explore.
-- [ ] Bords de map : les tiles se dégradent visuellement (couleurs qui fuient, formes floues) au lieu d'un mur invisible. La réalité s'arrête.
-- [ ] À chaque aube, la map s'étend en périphérie (nouveaux chunks, nouveaux POI).
-- [ ] Résultat : l'exploration est progressive et le monde a une limite organique.
+- [x] Fog of war : les zones non explorées ne sont pas "sombres" mais "pas encore réelles" — voile blanc-bleuté animé (cf. Bible section 7.1). Les tiles se matérialisent quand le joueur explore.
+- [x] Bords de map : les tiles se dégradent visuellement (couleurs qui fuient, formes floues) au lieu d'un mur invisible. La réalité s'arrête.
+- [x] À chaque aube, la map s'étend en périphérie (nouveaux chunks, nouveaux POI).
+- [x] Résultat : l'exploration est progressive et le monde a une limite organique.
 
 **Lot 5.6 — Lore (`Complexité : C2`)**
-- [ ] Implémenter les Souvenirs comme objets trouvables dans les coffres de lore et POI.
-- [ ] Interface journal : fragments collectés, classés par constellation (L'Avant, Les Signes, L'Effacement, Les Créatures, Le Foyer, Le Joueur — cf. Bible section 3).
-- [ ] 10-15 premiers fragments de lore écrits. Ton : humain, court (2-5 phrases), ambigu. Pas d'exposition directe.
-- [ ] Les Souvenirs débloquent des recettes/perks dans la méta-progression (se souvenir = rendre possible).
-- [ ] Résultat : le joueur qui explore trouve des indices sur l'histoire du monde.
+- [x] Implémenter les Souvenirs comme objets trouvables dans les coffres de lore et POI.
+- [x] Interface journal : fragments collectés, classés par constellation (L'Avant, Les Signes, L'Effacement, Les Créatures, Le Foyer, Le Joueur — cf. Bible section 3).
+- [x] 10-15 premiers fragments de lore écrits. Ton : humain, court (2-5 phrases), ambigu. Pas d'exposition directe.
+- [x] Les Souvenirs débloquent des recettes/perks dans la méta-progression (se souvenir = rendre possible).
+- [x] Résultat : le joueur qui explore trouve des indices sur l'histoire du monde.
 
 ### Critère de validation
-- [ ] Chaque run se sent comme un nouveau monde. L'exploration est récompensante (coffres, lore, ressources). Le joueur a des décisions à prendre ("je vais explorer cette ruine loin ou je reste safe près de la base ?").
+- [x] Chaque run se sent comme un nouveau monde. L'exploration est récompensante (coffres, lore, ressources). Le joueur a des décisions à prendre ("je vais explorer cette ruine loin ou je reste safe près de la base ?").
 
 ---
 

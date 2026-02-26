@@ -2,6 +2,7 @@ using Godot;
 using Vestiges.Base;
 using Vestiges.Core;
 using Vestiges.Infrastructure;
+using Vestiges.Meta;
 using Vestiges.Progression;
 using Vestiges.Score;
 using Vestiges.UI;
@@ -24,6 +25,7 @@ public partial class GameBootstrap : Node
         PerkDataLoader.Load();
         MetaSaveManager.Load();
         StartingKitDataLoader.Load();
+        SouvenirDataLoader.Load();
 
         PlayerProgression progression = GetNode<PlayerProgression>("../Player/PlayerProgression");
         Inventory inventory = GetNode<Inventory>("../Player/Inventory");

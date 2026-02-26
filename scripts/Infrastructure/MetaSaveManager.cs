@@ -21,6 +21,9 @@ public class MetaSaveData
 
     [JsonPropertyName("stats")]
     public MetaStats Stats { get; set; } = new();
+
+    [JsonPropertyName("discovered_souvenirs")]
+    public List<string> DiscoveredSouvenirs { get; set; } = new();
 }
 
 public class MetaStats
@@ -213,6 +216,37 @@ public static class MetaSaveManager
     {
         Load();
         return _data.Stats;
+    }
+
+    // --- Souvenirs ---
+
+    public static bool IsSouvenirDiscovered(string souvenirId)
+    {
+        Load();
+        return _data.DiscoveredSouvenirs.Contains(souvenirId);
+    }
+
+    public static void DiscoverSouvenir(string souvenirId)
+    {
+        Load();
+        if (!_data.DiscoveredSouvenirs.Contains(souvenirId))
+        {
+            _data.DiscoveredSouvenirs.Add(souvenirId);
+            Save();
+            GD.Print($"[MetaSaveManager] Souvenir discovered: {souvenirId} (total: {_data.DiscoveredSouvenirs.Count})");
+        }
+    }
+
+    public static List<string> GetDiscoveredSouvenirs()
+    {
+        Load();
+        return new List<string>(_data.DiscoveredSouvenirs);
+    }
+
+    public static int GetDiscoveredSouvenirCount()
+    {
+        Load();
+        return _data.DiscoveredSouvenirs.Count;
     }
 
     // --- Starting Kits ---

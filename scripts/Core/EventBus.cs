@@ -46,4 +46,18 @@ public partial class EventBus : Node
 
     // --- Mémorial ---
     [Signal] public delegate void MemorialActivatedEventHandler();
+
+    // --- Points d'Intérêt ---
+    [Signal] public delegate void PoiDiscoveredEventHandler(string poiId, string poiType, Vector2 position);
+    [Signal] public delegate void PoiExploredEventHandler(string poiId, string poiType);
+
+    // --- Coffres & Loot ---
+    [Signal] public delegate void ChestOpenedEventHandler(string chestId, string rarity, Vector2 position);
+    [Signal] public delegate void LootReceivedEventHandler(string itemType, string itemId, int amount);
+
+    // --- Fog of War ---
+    [Signal] public delegate void ZoneDiscoveredEventHandler(int cellX, int cellY, int cellCount);
+
+    // --- Souvenirs ---
+    [Signal] public delegate void SouvenirDiscoveredEventHandler(string souvenirId, string souvenirName, string constellationId);
 }

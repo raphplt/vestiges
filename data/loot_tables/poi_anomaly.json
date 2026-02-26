@@ -1,0 +1,8 @@
+{
+    "id": "poi_anomaly",
+    "entries": [
+        { "type": "perk", "item": "random_perk", "weight": 50, "min_amount": 1, "max_amount": 1 },
+        { "type": "xp", "item": "xp", "weight": 30, "min_amount": 40, "max_amount": 80 },
+        { "type": "resource", "item": "metal", "weight": 20, "min_amount": 3, "max_amount": 6 }
+    ]
+}

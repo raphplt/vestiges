@@ -1,0 +1,10 @@
+{
+    "id": "poi_searchable",
+    "entries": [
+        { "type": "resource", "item": "wood", "weight": 25, "min_amount": 2, "max_amount": 5 },
+        { "type": "resource", "item": "stone", "weight": 25, "min_amount": 2, "max_amount": 4 },
+        { "type": "resource", "item": "metal", "weight": 20, "min_amount": 1, "max_amount": 3 },
+        { "type": "resource", "item": "fiber", "weight": 15, "min_amount": 2, "max_amount": 4 },
+        { "type": "xp", "item": "xp", "weight": 15, "min_amount": 10, "max_amount": 25 }
+    ]
+}

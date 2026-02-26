@@ -76,6 +76,16 @@ public partial class Player : CharacterBody2D
     private ProgressBar _harvestBar;
     private Inventory _inventory;
 
+    // POI interaction
+    private PointOfInterest _poiTarget;
+    private float _poiProgress;
+    private bool _isExploringPoi;
+
+    // Chest interaction
+    private Chest _chestTarget;
+    private float _chestProgress;
+    private bool _isOpeningChest;
+
     public float CurrentHp => _currentHp;
     public float EffectiveMaxHp => MaxHp + _bonusMaxHp;
     public float EffectiveAttackRange => AttackRange * _attackRangeMultiplier;
@@ -173,6 +183,8 @@ public partial class Player : CharacterBody2D
         if (inputDir != Vector2.Zero)
         {
             CancelHarvest();
+            CancelPoiExplore();
+            CancelChestOpen();
             Vector2 isoDir = CartesianToIsometric(inputDir);
             float terrainSpeedFactor = IsOnWater() ? 0.5f : 1f;
             Velocity = isoDir * (Speed * _speedMultiplier * terrainSpeedFactor);
@@ -186,6 +198,8 @@ public partial class Player : CharacterBody2D
         ClampToWorldBounds();
         ApplyRegen(dt);
         ProcessHarvest(dt);
+        ProcessPoiExplore(dt);
+        ProcessChestOpen(dt);
         ProcessKillSpeedDecay(dt);
     }
 
@@ -194,11 +208,27 @@ public partial class Player : CharacterBody2D
         if (_isDead)
             return;
 
+        if (@event is InputEventKey key && key.Pressed && key.Keycode == Key.J)
+        {
+            ToggleJournal();
+            return;
+        }
+
         if (@event.IsActionPressed("interact"))
         {
-            if (_isHarvesting)
+            if (_isHarvesting || _isExploringPoi || _isOpeningChest)
             {
                 CancelHarvest();
+                CancelPoiExplore();
+                CancelChestOpen();
+            }
+            else if (TryStartPoiExplore())
+            {
+                // POI interaction takes priority
+            }
+            else if (TryStartChestOpen())
+            {
+                // Chest interaction
             }
             else if (TryRepairNearbyStructure())
             {
@@ -209,6 +239,14 @@ public partial class Player : CharacterBody2D
                 TryStartHarvest();
             }
         }
+    }
+
+    // --- Journal ---
+
+    private void ToggleJournal()
+    {
+        UI.JournalScreen journal = GetNodeOrNull<UI.JournalScreen>("/root/Main/JournalScreen");
+        journal?.Toggle();
     }
 
     // --- World Bounds ---
@@ -665,6 +703,234 @@ public partial class Player : CharacterBody2D
         _harvestBar.AddThemeStyleboxOverride("background", bgStyle);
 
         AddChild(_harvestBar);
+    }
+
+    // --- POI Exploration ---
+
+    private bool TryStartPoiExplore()
+    {
+        PointOfInterest nearest = FindNearestPoi();
+        if (nearest == null || !nearest.CanInteract)
+            return false;
+
+        // Les POI sans temps de recherche sont explorés instantanément
+        if (nearest.SearchTime <= 0f)
+        {
+            nearest.Explore();
+            _eventBus?.EmitSignal(EventBus.SignalName.PoiDiscovered,
+                nearest.PoiId, nearest.PoiType, nearest.GlobalPosition);
+            return true;
+        }
+
+        _poiTarget = nearest;
+        _poiProgress = 0f;
+        _isExploringPoi = true;
+        _harvestBar.Visible = true;
+        _harvestBar.MaxValue = nearest.SearchTime;
+        _harvestBar.Value = 0;
+        return true;
+    }
+
+    private void ProcessPoiExplore(float delta)
+    {
+        if (!_isExploringPoi || _poiTarget == null)
+            return;
+
+        if (!IsInstanceValid(_poiTarget) || _poiTarget.IsExplored)
+        {
+            CancelPoiExplore();
+            return;
+        }
+
+        float dist = GlobalPosition.DistanceTo(_poiTarget.GlobalPosition);
+        if (dist > InteractRange * 2f)
+        {
+            CancelPoiExplore();
+            return;
+        }
+
+        _poiProgress += delta * _harvestSpeedMultiplier;
+        _harvestBar.Value = _poiProgress;
+
+        if (_poiProgress >= _poiTarget.SearchTime)
+            CompletePoiExplore();
+    }
+
+    private void CompletePoiExplore()
+    {
+        if (_poiTarget == null || !IsInstanceValid(_poiTarget))
+        {
+            CancelPoiExplore();
+            return;
+        }
+
+        _poiTarget.Explore();
+        _eventBus?.EmitSignal(EventBus.SignalName.PoiDiscovered,
+            _poiTarget.PoiId, _poiTarget.PoiType, _poiTarget.GlobalPosition);
+
+        _isExploringPoi = false;
+        _harvestBar.Visible = false;
+        _poiTarget = null;
+        _poiProgress = 0f;
+    }
+
+    private void CancelPoiExplore()
+    {
+        if (!_isExploringPoi)
+            return;
+
+        _isExploringPoi = false;
+        _harvestBar.Visible = false;
+        _poiTarget = null;
+        _poiProgress = 0f;
+    }
+
+    private PointOfInterest FindNearestPoi()
+    {
+        Godot.Collections.Array<Node> pois = GetTree().GetNodesInGroup("pois");
+        PointOfInterest nearest = null;
+        float nearestDist = InteractRange * 1.5f;
+
+        foreach (Node node in pois)
+        {
+            if (node is PointOfInterest poi && poi.CanInteract)
+            {
+                float dist = GlobalPosition.DistanceTo(poi.GlobalPosition);
+                if (dist < nearestDist)
+                {
+                    nearest = poi;
+                    nearestDist = dist;
+                }
+            }
+        }
+
+        return nearest;
+    }
+
+    // --- Chest Opening ---
+
+    private bool TryStartChestOpen()
+    {
+        Chest nearest = FindNearestChest();
+        if (nearest == null || !nearest.CanOpen)
+            return false;
+
+        if (nearest.OpenTime <= 0f)
+        {
+            ApplyChestLoot(nearest);
+            return true;
+        }
+
+        _chestTarget = nearest;
+        _chestProgress = 0f;
+        _isOpeningChest = true;
+        _harvestBar.Visible = true;
+        _harvestBar.MaxValue = nearest.OpenTime;
+        _harvestBar.Value = 0;
+        return true;
+    }
+
+    private void ProcessChestOpen(float delta)
+    {
+        if (!_isOpeningChest || _chestTarget == null)
+            return;
+
+        if (!IsInstanceValid(_chestTarget) || _chestTarget.IsOpened)
+        {
+            CancelChestOpen();
+            return;
+        }
+
+        float dist = GlobalPosition.DistanceTo(_chestTarget.GlobalPosition);
+        if (dist > InteractRange * 1.5f)
+        {
+            CancelChestOpen();
+            return;
+        }
+
+        _chestProgress += delta;
+        _harvestBar.Value = _chestProgress;
+
+        if (_chestProgress >= _chestTarget.OpenTime)
+            CompleteChestOpen();
+    }
+
+    private void CompleteChestOpen()
+    {
+        if (_chestTarget == null || !IsInstanceValid(_chestTarget))
+        {
+            CancelChestOpen();
+            return;
+        }
+
+        ApplyChestLoot(_chestTarget);
+
+        _isOpeningChest = false;
+        _harvestBar.Visible = false;
+        _chestTarget = null;
+        _chestProgress = 0f;
+    }
+
+    private void ApplyChestLoot(Chest chest)
+    {
+        System.Collections.Generic.List<LootResolver.LootResult> loots = chest.Open();
+        CacheInventory();
+
+        foreach (LootResolver.LootResult loot in loots)
+        {
+            switch (loot.Type)
+            {
+                case "resource":
+                    _inventory?.Add(loot.ItemId, loot.Amount);
+                    _eventBus?.EmitSignal(EventBus.SignalName.LootReceived,
+                        loot.Type, loot.ItemId, loot.Amount);
+                    break;
+                case "xp":
+                    _eventBus?.EmitSignal(EventBus.SignalName.XpGained, (float)loot.Amount);
+                    break;
+                case "perk":
+                    _eventBus?.EmitSignal(EventBus.SignalName.LootReceived,
+                        loot.Type, loot.ItemId, loot.Amount);
+                    break;
+                case "souvenir":
+                    _eventBus?.EmitSignal(EventBus.SignalName.LootReceived,
+                        loot.Type, loot.ItemId, loot.Amount);
+                    break;
+            }
+        }
+    }
+
+    private void CancelChestOpen()
+    {
+        if (!_isOpeningChest)
+            return;
+
+        _isOpeningChest = false;
+        _harvestBar.Visible = false;
+        _chestTarget = null;
+        _chestProgress = 0f;
+    }
+
+    private Chest FindNearestChest()
+    {
+        Godot.Collections.Array<Node> chests = GetTree().GetNodesInGroup("chests");
+        Chest nearest = null;
+        float nearestDist = InteractRange;
+
+        foreach (Node node in chests)
+        {
+            if (node is Chest chest && chest.CanOpen)
+            {
+                float dist = GlobalPosition.DistanceTo(chest.GlobalPosition);
+                if (dist < nearestDist)
+                {
+                    nearest = chest;
+                    nearestDist = dist;
+                }
+            }
+        }
+
+        return nearest;
     }
 
     private void CacheInventory()

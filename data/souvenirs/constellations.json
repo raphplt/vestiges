@@ -1,0 +1,44 @@
+[
+    {
+        "id": "avant",
+        "name": "L'Avant",
+        "description": "Ce que le monde était avant l'Effacement.",
+        "color": "#D4C89A",
+        "order": 0
+    },
+    {
+        "id": "signes",
+        "name": "Les Signes",
+        "description": "Les premiers symptômes de l'Effacement.",
+        "color": "#A0B0C8",
+        "order": 1
+    },
+    {
+        "id": "effacement",
+        "name": "L'Effacement",
+        "description": "La catastrophe elle-même.",
+        "color": "#8B6E9A",
+        "order": 2
+    },
+    {
+        "id": "creatures",
+        "name": "Les Créatures",
+        "description": "Ce qui remplace le vide.",
+        "color": "#7A4A4A",
+        "order": 3
+    },
+    {
+        "id": "foyer",
+        "name": "Le Foyer",
+        "description": "L'origine et la nature de la lumière.",
+        "color": "#E0A840",
+        "order": 4
+    },
+    {
+        "id": "joueur",
+        "name": "Le Joueur",
+        "description": "Qui es-tu ?",
+        "color": "#88AACC",
+        "order": 5
+    }
+]

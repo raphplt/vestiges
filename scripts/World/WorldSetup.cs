@@ -16,9 +16,12 @@ public partial class WorldSetup : Node2D
 {
     private TileMapLayer _ground;
     private Node2D _resourceContainer;
+    private Node2D _poiContainer;
     private PackedScene _resourceScene;
     private HashSet<Vector2I> _usedCells = new();
     private Timer _respawnTimer;
+    private PoiManager _poiManager;
+    private FogOfWar _fogOfWar;
 
     private WorldGenerator _generator;
     private WorldGenConfig _config;
@@ -54,9 +57,13 @@ public partial class WorldSetup : Node2D
         EnemyDataLoader.Load();
         ResourceDataLoader.Load();
         BiomeDataLoader.Load();
+        PoiDataLoader.Load();
+        LootTableLoader.Load();
+        ChestDataLoader.Load();
 
         _ground = GetNode<TileMapLayer>("Ground");
         _resourceContainer = GetNode<Node2D>("ResourceContainer");
+        _poiContainer = GetNode<Node2D>("PoiContainer");
         _resourceScene = GD.Load<PackedScene>("res://scenes/base/ResourceNode.tscn");
 
         _config = WorldGenConfig.Load();
@@ -92,7 +99,10 @@ public partial class WorldSetup : Node2D
 
         CreateVoidBackground();
         ApplyTerrain(terrain);
+        InitializeFog();
         SpawnResources();
+        SpawnPois();
+        SpawnChests();
 
         _respawnTimer = new Timer();
         _respawnTimer.WaitTime = _config.RespawnInterval;
@@ -163,6 +173,37 @@ public partial class WorldSetup : Node2D
                 _ground.SetCell(cell, sourceId, Vector2I.Zero);
             }
         }
+    }
+
+    private void InitializeFog()
+    {
+        _fogOfWar = GetNodeOrNull<FogOfWar>("FogOfWar");
+        if (_fogOfWar == null)
+        {
+            _fogOfWar = new FogOfWar();
+            _fogOfWar.Name = "FogOfWar";
+            AddChild(_fogOfWar);
+        }
+
+        _fogOfWar.Initialize(
+            _ground,
+            _generator,
+            _config.FogRevealRadius,
+            _config.DawnFogExpansion,
+            _config.FogInitialClearRadius
+        );
+    }
+
+    private void SpawnPois()
+    {
+        _poiManager = new PoiManager();
+        AddChild(_poiManager);
+        _poiManager.SpawnPois(_generator, _ground, _poiContainer, _usedCells, _config.PoiMinDistanceBetween);
+    }
+
+    private void SpawnChests()
+    {
+        ChestSpawner.SpawnChests(_generator, _ground, _poiContainer, _usedCells);
     }
 
     private void SpawnResources()
@@ -323,6 +364,10 @@ public class WorldGenConfig
     public int RespawnThreshold;
     public int BiomeCount = 3;
     public int EdgeFadeWidth = 5;
+    public int PoiMinDistanceBetween = 8;
+    public int FogRevealRadius = 6;
+    public int DawnFogExpansion = 5;
+    public int FogInitialClearRadius = 8;
     public List<string> AvailableBiomes = new();
 
     private readonly Dictionary<string, Dictionary<string, float>> _terrainBias = new();
@@ -375,6 +420,18 @@ public class WorldGenConfig
 
         if (dict.ContainsKey("edge_fade_width"))
             config.EdgeFadeWidth = (int)dict["edge_fade_width"].AsDouble();
+
+        if (dict.ContainsKey("poi_min_distance_between"))
+            config.PoiMinDistanceBetween = (int)dict["poi_min_distance_between"].AsDouble();
+
+        if (dict.ContainsKey("fog_reveal_radius"))
+            config.FogRevealRadius = (int)dict["fog_reveal_radius"].AsDouble();
+
+        if (dict.ContainsKey("dawn_fog_expansion"))
+            config.DawnFogExpansion = (int)dict["dawn_fog_expansion"].AsDouble();
+
+        if (dict.ContainsKey("fog_initial_clear_radius"))
+            config.FogInitialClearRadius = (int)dict["fog_initial_clear_radius"].AsDouble();
 
         if (dict.ContainsKey("available_biomes"))
         {

@@ -17,5 +17,15 @@
     },
     "ambient_color_day": "#C8C0B4",
     "ambient_color_dusk": "#7A6E9A",
-    "danger_level": 2
+    "danger_level": 2,
+    "poi_pool": {
+        "searchable_building": 1.5,
+        "resource_cache": 1.0,
+        "guarded_chest": 1.2,
+        "lore_ruin": 1.0,
+        "merchant_npc": 0.8,
+        "anomaly": 0.8
+    },
+    "poi_count_min": 4,
+    "poi_count_max": 8
 }

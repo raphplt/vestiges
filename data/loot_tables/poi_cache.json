@@ -1,0 +1,9 @@
+{
+    "id": "poi_cache",
+    "entries": [
+        { "type": "resource", "item": "wood", "weight": 30, "min_amount": 4, "max_amount": 8 },
+        { "type": "resource", "item": "stone", "weight": 30, "min_amount": 3, "max_amount": 6 },
+        { "type": "resource", "item": "metal", "weight": 25, "min_amount": 2, "max_amount": 5 },
+        { "type": "resource", "item": "fiber", "weight": 15, "min_amount": 3, "max_amount": 6 }
+    ]
+}

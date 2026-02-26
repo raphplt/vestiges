@@ -14,6 +14,9 @@ public class BiomeData
     public string AmbientColorDay;
     public string AmbientColorDusk;
     public int DangerLevel;
+    public Dictionary<string, float> PoiPool = new();
+    public int PoiCountMin = 3;
+    public int PoiCountMax = 5;
 }
 
 public static class BiomeDataLoader
@@ -136,6 +139,19 @@ public static class BiomeDataLoader
             foreach (Variant key in bias.Keys)
                 biome.ResourceBias[key.AsString()] = (float)bias[key].AsDouble();
         }
+
+        if (dict.ContainsKey("poi_pool"))
+        {
+            Godot.Collections.Dictionary pool = dict["poi_pool"].AsGodotDictionary();
+            foreach (Variant key in pool.Keys)
+                biome.PoiPool[key.AsString()] = (float)pool[key].AsDouble();
+        }
+
+        if (dict.ContainsKey("poi_count_min"))
+            biome.PoiCountMin = (int)dict["poi_count_min"].AsDouble();
+
+        if (dict.ContainsKey("poi_count_max"))
+            biome.PoiCountMax = (int)dict["poi_count_max"].AsDouble();
 
         return biome;
     }

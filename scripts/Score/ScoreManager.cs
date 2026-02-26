@@ -18,12 +18,14 @@ public partial class ScoreManager : Node
     private const int NoDamageNightBonus = 500;
     private const int PointsPerStructurePlaced = 20;
     private const int PointsPerStructureSurvived = 50;
+    private const int PointsPerPoiExplored = 50;
     private const string HighScorePath = "user://highscore.save";
 
     private int _combatScore;
     private int _survivalScore;
     private int _bonusScore;
     private int _buildScore;
+    private int _explorationScore;
     private int _totalKills;
     private int _nightKills;
     private int _nightScore;
@@ -34,7 +36,7 @@ public partial class ScoreManager : Node
     private float _scoreMultiplier = 1f;
     private EventBus _eventBus;
 
-    public int CurrentScore => (int)((_combatScore + _survivalScore + _bonusScore + _buildScore) * _scoreMultiplier);
+    public int CurrentScore => (int)((_combatScore + _survivalScore + _bonusScore + _buildScore + _explorationScore) * _scoreMultiplier);
     public int CombatScore => _combatScore;
     public int SurvivalScore => _survivalScore;
     public int BonusScore => _bonusScore;
@@ -52,6 +54,8 @@ public partial class ScoreManager : Node
         _eventBus.DayPhaseChanged += OnDayPhaseChanged;
         _eventBus.PlayerDamaged += OnPlayerDamaged;
         _eventBus.StructurePlaced += OnStructurePlaced;
+        _eventBus.PoiExplored += OnPoiExplored;
+        _eventBus.ChestOpened += OnChestOpened;
 
         LoadBestScore();
     }
@@ -64,6 +68,8 @@ public partial class ScoreManager : Node
             _eventBus.DayPhaseChanged -= OnDayPhaseChanged;
             _eventBus.PlayerDamaged -= OnPlayerDamaged;
             _eventBus.StructurePlaced -= OnStructurePlaced;
+            _eventBus.PoiExplored -= OnPoiExplored;
+            _eventBus.ChestOpened -= OnChestOpened;
         }
     }
 
@@ -151,6 +157,28 @@ public partial class ScoreManager : Node
     {
         _buildScore += PointsPerStructurePlaced;
         _eventBus.EmitSignal(EventBus.SignalName.ScoreChanged, CurrentScore);
+    }
+
+    private void OnPoiExplored(string poiId, string poiType)
+    {
+        _explorationScore += PointsPerPoiExplored;
+        _eventBus.EmitSignal(EventBus.SignalName.ScoreChanged, CurrentScore);
+        GD.Print($"[ScoreManager] POI explored: {poiId} ({poiType}) +{PointsPerPoiExplored}pts");
+    }
+
+    private void OnChestOpened(string chestId, string rarity, Vector2 position)
+    {
+        int points = rarity switch
+        {
+            "common" => 25,
+            "rare" => 75,
+            "epic" => 200,
+            "lore" => 100,
+            _ => 25
+        };
+        _explorationScore += points;
+        _eventBus.EmitSignal(EventBus.SignalName.ScoreChanged, CurrentScore);
+        GD.Print($"[ScoreManager] Chest opened: {chestId} ({rarity}) +{points}pts");
     }
 
     private void OnDayPhaseChanged(string phase)

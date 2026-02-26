@@ -1,4 +1,4 @@
-[gd_scene load_steps=23 format=3]
+[gd_scene load_steps=27 format=3]
 
 [ext_resource type="TileSet" path="res://assets/tiles/iso_tileset.tres" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/Player.tscn" id="2"]
@@ -19,6 +19,10 @@
 [ext_resource type="Script" path="res://scripts/UI/CraftPanel.cs" id="17"]
 [ext_resource type="Script" path="res://scripts/Base/StructureManager.cs" id="18"]
 [ext_resource type="Script" path="res://scripts/Base/StructurePlacer.cs" id="19"]
+[ext_resource type="Script" path="res://scripts/World/FogOfWar.cs" id="20"]
+[ext_resource type="Script" path="res://scripts/Meta/SouvenirManager.cs" id="21"]
+[ext_resource type="Script" path="res://scripts/UI/SouvenirPopup.cs" id="22"]
+[ext_resource type="Script" path="res://scripts/UI/JournalScreen.cs" id="23"]
 
 [sub_resource type="Gradient" id="Gradient_light"]
 colors = PackedColorArray(1, 1, 1, 1, 1, 1, 1, 0)
@@ -73,6 +77,8 @@ script = ExtResource("4")
 
 [node name="ResourceContainer" type="Node2D" parent="."]
 
+[node name="PoiContainer" type="Node2D" parent="."]
+
 [node name="StructureContainer" type="Node2D" parent="."]
 
 [node name="EnemyContainer" type="Node2D" parent="."]
@@ -106,6 +112,18 @@ script = ExtResource("18")
 
 [node name="StructurePlacer" type="Node2D" parent="."]
 script = ExtResource("19")
+
+[node name="FogOfWar" type="Node2D" parent="."]
+script = ExtResource("20")
+
+[node name="SouvenirManager" type="Node" parent="."]
+script = ExtResource("21")
+
+[node name="SouvenirPopup" type="CanvasLayer" parent="."]
+script = ExtResource("22")
+
+[node name="JournalScreen" type="CanvasLayer" parent="."]
+script = ExtResource("23")
 
 [node name="GameBootstrap" type="Node" parent="."]
 script = ExtResource("10")

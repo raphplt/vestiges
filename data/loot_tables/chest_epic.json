@@ -1,0 +1,9 @@
+{
+    "id": "chest_epic",
+    "entries": [
+        { "type": "perk", "item": "random_perk", "weight": 40, "min_amount": 1, "max_amount": 1 },
+        { "type": "resource", "item": "metal", "weight": 25, "min_amount": 5, "max_amount": 10 },
+        { "type": "xp", "item": "xp", "weight": 25, "min_amount": 50, "max_amount": 100 },
+        { "type": "resource", "item": "stone", "weight": 10, "min_amount": 5, "max_amount": 8 }
+    ]
+}
