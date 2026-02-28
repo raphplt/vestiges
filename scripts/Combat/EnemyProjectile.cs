@@ -10,13 +10,15 @@ public partial class EnemyProjectile : Area2D
 
     private Vector2 _direction;
     private float _damage;
+    private string _sourceEnemyId = "enemy_projectile";
     private Polygon2D _visual;
     private bool _isDespawning;
 
-    public void Initialize(Vector2 direction, float damage)
+    public void Initialize(Vector2 direction, float damage, string sourceEnemyId = "enemy_projectile")
     {
         _direction = direction.Normalized();
         _damage = damage;
+        _sourceEnemyId = sourceEnemyId;
         Rotation = _direction.Angle();
     }
 
@@ -49,6 +51,7 @@ public partial class EnemyProjectile : Area2D
     {
         if (body is Player player)
         {
+            GetNode<EventBus>("/root/EventBus").EmitSignal(EventBus.SignalName.PlayerHitBy, _sourceEnemyId, _damage);
             player.TakeDamage(_damage);
             StartDespawn();
         }
@@ -60,7 +63,7 @@ public partial class EnemyProjectile : Area2D
             return;
 
         _isDespawning = true;
-        Monitoring = false;
+        SetDeferred("monitoring", false);
 
         if (_visual == null)
         {

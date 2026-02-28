@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Godot;
 using Vestiges.Infrastructure;
+using Vestiges.Simulation;
 
 namespace Vestiges.Core;
 
@@ -8,6 +9,7 @@ namespace Vestiges.Core;
 /// Gestionnaire global de l'état du jeu.
 /// Autoload — pilote les transitions entre états (Hub, Run, Death).
 /// Porte l'état qui survit aux changements de scène.
+/// F2 = lancer la simulation AI depuis n'importe quelle scène.
 /// </summary>
 public partial class GameManager : Node
 {
@@ -41,6 +43,16 @@ public partial class GameManager : Node
     public override void _Ready()
     {
         _eventBus = GetNode<EventBus>("/root/EventBus");
+    }
+
+    public override void _UnhandledInput(InputEvent @event)
+    {
+        if (@event is InputEventKey keyEvent && keyEvent.Pressed && !keyEvent.Echo && keyEvent.Keycode == Key.F2)
+        {
+            GD.Print("[GameManager] F2 — Launching AI simulation batch...");
+            BatchRunner.StartBatch("res://data/simulation/default_batch.json");
+            GetViewport().SetInputAsHandled();
+        }
     }
 
     public void ChangeState(GameState newState)

@@ -16,6 +16,10 @@ public partial class Player : CharacterBody2D
     [Export] public float BaseRegenRate = 0.5f;
     [Export] public float InteractRange = 60f;
 
+    // AI Control (set by AIController in simulation mode)
+    public bool IsAIControlled;
+    public Vector2 AIInputOverride;
+
     private string _characterId;
     private float _currentHp;
     private bool _isDead;
@@ -306,7 +310,9 @@ public partial class Player : CharacterBody2D
             return;
 
         float dt = (float)delta;
-        Vector2 inputDir = Input.GetVector("move_left", "move_right", "move_up", "move_down");
+        Vector2 inputDir = IsAIControlled
+            ? AIInputOverride
+            : Input.GetVector("move_left", "move_right", "move_up", "move_down");
 
         if (inputDir != Vector2.Zero)
         {
@@ -369,6 +375,24 @@ public partial class Player : CharacterBody2D
                 TryStartHarvest();
             }
         }
+    }
+
+    // --- AI Interaction ---
+
+    /// <summary>Programmatic interact trigger for AI simulation. Same logic as the interact input handler.</summary>
+    public void AITriggerInteract()
+    {
+        if (_isDead || !IsAIControlled) return;
+        if (_isHarvesting || _isExploringPoi || _isOpeningChest)
+        {
+            CancelHarvest();
+            CancelPoiExplore();
+            CancelChestOpen();
+        }
+        else if (TryStartPoiExplore()) { }
+        else if (TryStartChestOpen()) { }
+        else if (TryRepairNearbyStructure()) { }
+        else { TryStartHarvest(); }
     }
 
     // --- Journal ---

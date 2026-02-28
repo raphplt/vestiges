@@ -136,6 +136,8 @@ public partial class SpawnManager : Node2D
         _enemyContainer.AddChild(enemy);
         enemy.Initialize(data, hpScale, dmgScale);
         enemy.SetNightTarget(_currentPhase == DayPhase.Night, _foyerPosition);
+
+        _eventBus.EmitSignal(EventBus.SignalName.EnemySpawned, enemyId, hpScale, dmgScale);
     }
 
     /// <summary>
@@ -286,6 +288,30 @@ public partial class SpawnManager : Node2D
         _nightHpMultiplier = 1.25f;
         _nightDmgMultiplier = 1.15f;
         _nightSpawnRateMultiplier = 0.85f;
+    }
+
+    /// <summary>
+    /// Override scaling values at runtime for simulation.
+    /// Only overrides keys present in the dictionary. Does NOT modify the JSON file on disk.
+    /// </summary>
+    public void ApplyScalingOverrides(Dictionary<string, float> overrides)
+    {
+        foreach (KeyValuePair<string, float> kv in overrides)
+        {
+            switch (kv.Key)
+            {
+                case "base_spawn_interval": _baseSpawnInterval = kv.Value; break;
+                case "min_spawn_interval": _minSpawnInterval = kv.Value; break;
+                case "spawn_interval_decay_per_minute": _spawnIntervalDecay = kv.Value; break;
+                case "hp_scaling_per_minute": _hpScalingPerMinute = kv.Value; break;
+                case "damage_scaling_per_minute": _dmgScalingPerMinute = kv.Value; break;
+                case "max_enemies_on_screen": _maxEnemies = (int)kv.Value; break;
+                case "night_hp_multiplier": _nightHpMultiplier = kv.Value; break;
+                case "night_damage_multiplier": _nightDmgMultiplier = kv.Value; break;
+                case "night_spawn_rate_multiplier": _nightSpawnRateMultiplier = kv.Value; break;
+            }
+        }
+        GD.Print($"[SpawnManager] Applied {overrides.Count} scaling override(s)");
     }
 
     private void CachePlayer()

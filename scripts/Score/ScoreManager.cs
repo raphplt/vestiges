@@ -40,12 +40,16 @@ public partial class ScoreManager : Node
     public int CombatScore => _combatScore;
     public int SurvivalScore => _survivalScore;
     public int BonusScore => _bonusScore;
+    public int BuildScore => _buildScore;
+    public int ExplorationScore => _explorationScore;
     public int TotalKills => _totalKills;
     public int NightsSurvived => _nightsSurvived;
     public int NoDamageNights => _noDamageNights;
     public int BestScore => _bestScore;
     public bool IsNewRecord => CurrentScore > _bestScore;
     public int VestigesEarned { get; private set; }
+
+    private RunTracker _runTracker;
 
     public override void _Ready()
     {
@@ -71,6 +75,11 @@ public partial class ScoreManager : Node
             _eventBus.PoiExplored -= OnPoiExplored;
             _eventBus.ChestOpened -= OnChestOpened;
         }
+    }
+
+    public void SetRunTracker(RunTracker runTracker)
+    {
+        _runTracker = runTracker;
     }
 
     public void SetCharacterMultiplier(float multiplier)
@@ -105,22 +114,56 @@ public partial class ScoreManager : Node
         gm.LastUnlocks = newUnlocks;
     }
 
-    /// <summary>Construit un RunRecord depuis l'état courant de la run.</summary>
+    /// <summary>Construit un RunRecord enrichi depuis l'état courant + RunTracker.</summary>
     public RunRecord BuildRunRecord()
     {
         GameManager gm = GetNode<GameManager>("/root/GameManager");
         string characterId = gm.SelectedCharacterId ?? "unknown";
         CharacterData charData = CharacterDataLoader.Get(characterId);
 
-        return new RunRecord
+        Player player = GetTree().GetFirstNodeInGroup("player") as Player;
+        string weaponId = player?.EquippedWeapon?.Id ?? "unknown";
+
+        RunRecord record = new()
         {
             CharacterId = characterId,
             CharacterName = charData?.Name ?? characterId,
             Score = CurrentScore,
             NightsSurvived = _nightsSurvived,
             TotalKills = _totalKills,
-            Date = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm")
+            Date = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm"),
+            WeaponId = weaponId,
+            CombatScoreDetail = _combatScore,
+            SurvivalScoreDetail = _survivalScore,
+            BonusScoreDetail = _bonusScore,
+            BuildScoreDetail = _buildScore,
+            ExplorationScoreDetail = _explorationScore,
+            Seed = gm.RunSeed
         };
+
+        if (_runTracker != null)
+        {
+            record.DeathCause = _runTracker.LastHitByEnemyId;
+            record.DeathNight = _runTracker.CurrentNight;
+            record.DeathPhase = _runTracker.CurrentPhase;
+            record.PerkIds = new System.Collections.Generic.List<string>(_runTracker.PerkIds);
+            record.TotalDamageDealt = _runTracker.TotalDamageDealt;
+            record.TotalDamageTaken = _runTracker.TotalDamageTaken;
+            record.ResourcesCollected = new System.Collections.Generic.Dictionary<string, int>(_runTracker.ResourcesCollected);
+            record.StructuresPlaced = _runTracker.StructuresPlaced;
+            record.StructuresLost = _runTracker.StructuresLost;
+            record.PoisExplored = _runTracker.PoisExplored;
+            record.ChestsOpened = _runTracker.ChestsOpened;
+            record.MaxLevel = _runTracker.MaxLevel;
+            record.RunDurationSec = _runTracker.RunDurationSeconds;
+            record.TotalSpawned = _runTracker.TotalSpawned;
+            record.PeakEnemies = _runTracker.PeakEnemies;
+            record.AvgPressure = _runTracker.PressureRatio;
+            record.FinalHpScale = _runTracker.LastHpScale;
+            record.FinalDmgScale = _runTracker.LastDmgScale;
+        }
+
+        return record;
     }
 
     private void OnEnemyKilled(string enemyId, Vector2 position)

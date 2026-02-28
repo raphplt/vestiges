@@ -161,6 +161,7 @@ public partial class Enemy : CharacterBody2D
 			float distToFoyer = GlobalPosition.DistanceTo(_foyerPosition);
 			if (distToFoyer < MeleeRange && distToPlayer < PlayerProximityRange * 2f && _attackTimer <= 0f)
 			{
+				GetNode<EventBus>("/root/EventBus").EmitSignal(EventBus.SignalName.PlayerHitBy, _enemyId, _damage);
 				_player.TakeDamage(_damage);
 				_attackTimer = MeleeAttackCooldown;
 			}
@@ -184,6 +185,7 @@ public partial class Enemy : CharacterBody2D
 		_attackTimer -= delta;
 		if (distToPlayer < MeleeRange && _attackTimer <= 0f)
 		{
+			GetNode<EventBus>("/root/EventBus").EmitSignal(EventBus.SignalName.PlayerHitBy, _enemyId, _damage);
 			_player.TakeDamage(_damage);
 			_attackTimer = MeleeAttackCooldown;
 		}
@@ -247,7 +249,7 @@ public partial class Enemy : CharacterBody2D
 		PlayRangedAttackVfx(direction);
 		EnemyProjectile projectile = _enemyProjectileScene.Instantiate<EnemyProjectile>();
 		projectile.GlobalPosition = GlobalPosition;
-		projectile.Initialize(direction, _damage);
+		projectile.Initialize(direction, _damage, _enemyId);
 		GetTree().CurrentScene.AddChild(projectile);
 	}
 

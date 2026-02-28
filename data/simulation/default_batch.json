@@ -1,0 +1,66 @@
+{
+    "name": "difficulty_curve_sweep",
+    "runs_per_config": 10,
+    "configs": [
+        {
+            "label": "baseline",
+            "character_id": "traqueur",
+            "profile": "medium",
+            "perk_strategy": "balanced",
+            "time_scale": 5.0,
+            "max_duration_sec": 1800
+        },
+        {
+            "label": "easier_hp_scaling",
+            "character_id": "traqueur",
+            "profile": "medium",
+            "perk_strategy": "balanced",
+            "time_scale": 5.0,
+            "max_duration_sec": 1800,
+            "scaling_overrides": {
+                "hp_scaling_per_minute": 1.05,
+                "damage_scaling_per_minute": 1.03
+            }
+        },
+        {
+            "label": "harder_hp_scaling",
+            "character_id": "traqueur",
+            "profile": "medium",
+            "perk_strategy": "balanced",
+            "time_scale": 5.0,
+            "max_duration_sec": 1800,
+            "scaling_overrides": {
+                "hp_scaling_per_minute": 1.12,
+                "damage_scaling_per_minute": 1.08
+            }
+        },
+        {
+            "label": "faster_spawns",
+            "character_id": "traqueur",
+            "profile": "medium",
+            "perk_strategy": "balanced",
+            "time_scale": 5.0,
+            "max_duration_sec": 1800,
+            "scaling_overrides": {
+                "base_spawn_interval": 1.2,
+                "spawn_interval_decay_per_minute": 0.08
+            }
+        },
+        {
+            "label": "pro_player_baseline",
+            "character_id": "traqueur",
+            "profile": "pro",
+            "perk_strategy": "damage",
+            "time_scale": 5.0,
+            "max_duration_sec": 1800
+        },
+        {
+            "label": "noob_player_baseline",
+            "character_id": "traqueur",
+            "profile": "noob",
+            "perk_strategy": "random",
+            "time_scale": 5.0,
+            "max_duration_sec": 1800
+        }
+    ]
+}

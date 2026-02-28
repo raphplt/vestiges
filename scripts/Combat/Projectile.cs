@@ -102,7 +102,7 @@ public partial class Projectile : Area2D
             return;
 
         _isDespawning = true;
-        Monitoring = false;
+        SetDeferred("monitoring", false);
 
         if (_visual == null)
         {
