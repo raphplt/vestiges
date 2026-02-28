@@ -19,13 +19,22 @@ public partial class Player : CharacterBody2D
     private string _characterId;
     private float _currentHp;
     private bool _isDead;
-    private WeaponData _equippedWeapon;
+    private WeaponData _equippedWeapon; // Active weapon context for attack helpers
     private PackedScene _projectileScene;
-    private Timer _attackTimer;
     private Polygon2D _visual;
     private Color _originalColor;
     private EventBus _eventBus;
     private Tween _attackFeedbackTween;
+
+    // Weapon inventory (max 3 weapons, all auto-attack in parallel)
+    public const int MaxWeaponSlots = 3;
+    private readonly System.Collections.Generic.List<WeaponData> _weaponSlots = new();
+    private readonly System.Collections.Generic.List<Timer> _weaponTimers = new();
+
+    // Weapon visual
+    private Node2D _weaponPivot;
+    private Polygon2D _weaponVisual;
+    private Vector2 _facingDirection = new(1f, 0f);
 
     // Perk stat modifiers
     private float _damageMultiplier = 1f;
@@ -99,7 +108,8 @@ public partial class Player : CharacterBody2D
     public bool IsDead => _isDead;
     public bool IsHarvesting => _isHarvesting;
     public string CharacterId => _characterId;
-    public WeaponData EquippedWeapon => _equippedWeapon;
+    public WeaponData EquippedWeapon => _weaponSlots.Count > 0 ? _weaponSlots[0] : null;
+    public System.Collections.Generic.IReadOnlyList<WeaponData> WeaponSlots => _weaponSlots;
 
     public override void _Ready()
     {
@@ -111,16 +121,12 @@ public partial class Player : CharacterBody2D
 
         _projectileScene = GD.Load<PackedScene>("res://scenes/combat/Projectile.tscn");
 
-        _attackTimer = new Timer();
-        _attackTimer.WaitTime = 1.0 / AttackSpeed;
-        _attackTimer.Autostart = true;
-        _attackTimer.Timeout += OnAttackTimerTimeout;
-        AddChild(_attackTimer);
-
         CreateHarvestBar();
 
         _eventBus = GetNode<EventBus>("/root/EventBus");
         _eventBus.EnemyKilled += OnEnemyKilled;
+
+        CreateWeaponVisual();
     }
 
     public override void _ExitTree()
@@ -150,6 +156,8 @@ public partial class Player : CharacterBody2D
         _visual.Color = data.VisualColor;
         _originalColor = data.VisualColor;
 
+        UpdateWeaponVisual();
+
         GD.Print($"[Player] Initialized as {data.Name} (HP:{MaxHp}, ATK:{AttackDamage}, SPD:{Speed})");
     }
 
@@ -168,8 +176,128 @@ public partial class Player : CharacterBody2D
             return;
         }
 
+        AddWeapon(weapon);
+    }
+
+    public bool AddWeapon(WeaponData weapon)
+    {
+        if (weapon == null || _weaponSlots.Count >= MaxWeaponSlots)
+            return false;
+
+        foreach (WeaponData existing in _weaponSlots)
+        {
+            if (existing.Id == weapon.Id)
+                return false;
+        }
+
+        _weaponSlots.Add(weapon);
         _equippedWeapon = weapon;
-        GD.Print($"[Player] Equipped weapon: {_equippedWeapon.Name} ({_equippedWeapon.Id})");
+
+        int capturedIndex = _weaponSlots.Count - 1;
+        Timer timer = new();
+        float weaponAtkSpd = weapon.Stats.TryGetValue("attack_speed", out float spd) ? spd : 1f;
+        timer.WaitTime = 1.0f / Mathf.Max(0.05f, AttackSpeed * weaponAtkSpd * _attackSpeedMultiplier);
+        timer.Autostart = true;
+        timer.Timeout += () => OnWeaponAttackTimeout(capturedIndex);
+        AddChild(timer);
+        _weaponTimers.Add(timer);
+
+        _eventBus?.EmitSignal(EventBus.SignalName.WeaponEquipped, weapon.Id, capturedIndex);
+        _eventBus?.EmitSignal(EventBus.SignalName.WeaponInventoryChanged);
+
+        UpdateWeaponVisual();
+        GD.Print($"[Player] Weapon added [{capturedIndex}]: {weapon.Name} ({weapon.Id})");
+        return true;
+    }
+
+    // --- Weapon Visual ---
+
+    private void CreateWeaponVisual()
+    {
+        _weaponPivot = new Node2D { Name = "WeaponPivot" };
+        AddChild(_weaponPivot);
+
+        _weaponVisual = new Polygon2D { Name = "WeaponVisual" };
+        _weaponPivot.AddChild(_weaponVisual);
+
+        UpdateWeaponVisual();
+    }
+
+    private void UpdateWeaponVisual()
+    {
+        if (_weaponVisual == null)
+            return;
+
+        WeaponData primaryWeapon = _weaponSlots.Count > 0 ? _weaponSlots[0] : null;
+        if (primaryWeapon == null)
+        {
+            _weaponVisual.Visible = false;
+            return;
+        }
+
+        _weaponVisual.Visible = true;
+        string weaponType = primaryWeapon.Type?.ToLower() ?? "ranged";
+
+        if (weaponType == "melee")
+        {
+            // Blade shape: elongated polygon offset from the body
+            _weaponVisual.Polygon = new Vector2[]
+            {
+                new(10f, -2f),
+                new(24f, -1.5f),
+                new(26f, 0f),
+                new(24f, 1.5f),
+                new(10f, 2f)
+            };
+            _weaponVisual.Color = new Color(0.75f, 0.75f, 0.8f, 0.9f);
+        }
+        else if (weaponType == "ranged")
+        {
+            // Bow shape: curved arc offset from the body
+            _weaponVisual.Polygon = new Vector2[]
+            {
+                new(10f, -6f),
+                new(14f, -4f),
+                new(16f, 0f),
+                new(14f, 4f),
+                new(10f, 6f),
+                new(12f, 4f),
+                new(13f, 0f),
+                new(12f, -4f)
+            };
+            _weaponVisual.Color = new Color(0.65f, 0.5f, 0.3f, 0.9f);
+        }
+        else
+        {
+            // Special weapons: small orb
+            _weaponVisual.Polygon = new Vector2[]
+            {
+                new(12f, -3f),
+                new(16f, -2f),
+                new(18f, 0f),
+                new(16f, 2f),
+                new(12f, 3f),
+                new(14f, 0f)
+            };
+            _weaponVisual.Color = new Color(0.45f, 0.85f, 1f, 0.9f);
+        }
+
+        // Tint weapon based on damage type
+        string damageType = primaryWeapon.DamageType?.ToLower() ?? "physical";
+        if (damageType == "essence")
+            _weaponVisual.Color = new Color(0.45f, 0.85f, 1f, 0.9f);
+        else if (damageType == "hybrid")
+            _weaponVisual.Color = new Color(0.85f, 0.65f, 1f, 0.9f);
+
+        UpdateWeaponPivotRotation();
+    }
+
+    private void UpdateWeaponPivotRotation()
+    {
+        if (_weaponPivot == null)
+            return;
+
+        _weaponPivot.Rotation = _facingDirection.Angle();
     }
 
     public override void _PhysicsProcess(double delta)
@@ -188,6 +316,8 @@ public partial class Player : CharacterBody2D
             Vector2 isoDir = CartesianToIsometric(inputDir);
             float terrainSpeedFactor = IsOnWater() ? 0.5f : 1f;
             Velocity = isoDir * (Speed * _speedMultiplier * terrainSpeedFactor);
+            _facingDirection = isoDir.Normalized();
+            UpdateWeaponPivotRotation();
         }
         else
         {
@@ -896,8 +1026,45 @@ public partial class Player : CharacterBody2D
                     _eventBus?.EmitSignal(EventBus.SignalName.LootReceived,
                         loot.Type, loot.ItemId, loot.Amount);
                     break;
+                case "weapon":
+                    WeaponData weaponLoot = ResolveWeaponLoot(loot.ItemId);
+                    if (weaponLoot != null && AddWeapon(weaponLoot))
+                    {
+                        _eventBus?.EmitSignal(EventBus.SignalName.LootReceived,
+                            loot.Type, weaponLoot.Id, loot.Amount);
+                    }
+                    break;
             }
         }
+    }
+
+    private WeaponData ResolveWeaponLoot(string itemId)
+    {
+        if (itemId != "random_weapon")
+            return WeaponDataLoader.Get(itemId);
+
+        System.Collections.Generic.List<WeaponData> allWeapons = WeaponDataLoader.GetAll();
+        System.Collections.Generic.List<WeaponData> candidates = new();
+
+        System.Collections.Generic.HashSet<string> ownedIds = new();
+        foreach (WeaponData owned in _weaponSlots)
+            ownedIds.Add(owned.Id);
+
+        foreach (WeaponData weapon in allWeapons)
+        {
+            if (ownedIds.Contains(weapon.Id))
+                continue;
+            if (!string.IsNullOrEmpty(weapon.DefaultFor))
+                continue;
+            if (weapon.Tier >= 5)
+                continue;
+            candidates.Add(weapon);
+        }
+
+        if (candidates.Count == 0)
+            return null;
+
+        return candidates[(int)(GD.Randf() * candidates.Count)];
     }
 
     private void CancelChestOpen()
@@ -958,7 +1125,8 @@ public partial class Player : CharacterBody2D
 
         _isDead = true;
         Velocity = Vector2.Zero;
-        _attackTimer.Stop();
+        foreach (Timer timer in _weaponTimers)
+            timer.Stop();
         CancelHarvest();
         RemoveFromGroup("player");
 
@@ -993,13 +1161,12 @@ public partial class Player : CharacterBody2D
             .SetDelay(0.05f);
     }
 
-    private void OnAttackTimerTimeout()
+    private void OnWeaponAttackTimeout(int slotIndex)
     {
-        if (_isDead)
+        if (_isDead || slotIndex >= _weaponSlots.Count)
             return;
 
-        if (_equippedWeapon == null)
-            return;
+        _equippedWeapon = _weaponSlots[slotIndex];
 
         string type = _equippedWeapon.Type?.ToLower() ?? "ranged";
         string pattern = _equippedWeapon.AttackPattern?.ToLower() ?? "linear";
@@ -1333,6 +1500,9 @@ public partial class Player : CharacterBody2D
         if (_visual == null)
             return;
 
+        _facingDirection = direction.Normalized();
+        UpdateWeaponPivotRotation();
+
         if (_attackFeedbackTween != null && _attackFeedbackTween.IsValid())
             _attackFeedbackTween.Kill();
 
@@ -1458,9 +1628,13 @@ public partial class Player : CharacterBody2D
         if (_killSpeedActiveStacks > 0 && _killSpeedBonusPerKill > 0f)
             mult *= 1f + _killSpeedBonusPerKill * _killSpeedActiveStacks;
 
-        float weaponAttackSpeed = GetWeaponStat("attack_speed", 1f);
-        float attacksPerSecond = AttackSpeed * weaponAttackSpeed * mult;
-        _attackTimer.WaitTime = 1.0f / Mathf.Max(0.05f, attacksPerSecond);
+        for (int i = 0; i < _weaponSlots.Count && i < _weaponTimers.Count; i++)
+        {
+            WeaponData weapon = _weaponSlots[i];
+            float weaponAtkSpd = weapon.Stats.TryGetValue("attack_speed", out float spd) ? spd : 1f;
+            float attacksPerSecond = AttackSpeed * weaponAtkSpd * mult;
+            _weaponTimers[i].WaitTime = 1.0f / Mathf.Max(0.05f, attacksPerSecond);
+        }
     }
 
     // --- Repair ---

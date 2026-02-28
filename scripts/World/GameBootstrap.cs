@@ -16,7 +16,7 @@ namespace Vestiges.World;
 /// </summary>
 public partial class GameBootstrap : Node
 {
-    private const string FallbackCharacterId = "vagabond";
+    private const string FallbackCharacterId = "traqueur";
 
     public override void _Ready()
     {
@@ -45,6 +45,10 @@ public partial class GameBootstrap : Node
         hud.SetProgression(progression);
         hud.SetDayNightCycle(dayNightCycle);
         hud.SetCompassTargets(player, foyer);
+
+        WorldSetup worldSetup = GetNode<WorldSetup>("..");
+        FogOfWar fogOfWar = GetNodeOrNull<FogOfWar>("../FogOfWar");
+        hud.InitializeMinimap(worldSetup, fogOfWar);
         levelUpScreen.SetPerkManager(perkManager);
         gameOverScreen.SetScoreManager(scoreManager);
 

@@ -1,5 +1,6 @@
 using Godot;
 using Vestiges.Core;
+using Vestiges.Infrastructure;
 using Vestiges.Progression;
 using Vestiges.World;
 
@@ -32,6 +33,14 @@ public partial class HUD : CanvasLayer
     private Label _metalLabel;
     private Label _capacityLabel;
     private ProgressBar _capacityBar;
+
+    // Weapon slots display
+    private VBoxContainer _weaponSlotsContainer;
+    private readonly Label[] _weaponSlotLabels = new Label[Player.MaxWeaponSlots];
+    private readonly PanelContainer[] _weaponSlotPanels = new PanelContainer[Player.MaxWeaponSlots];
+
+    // Minimap
+    private Minimap _minimap;
 
     // Contextual hint
     private Label _interactHint;
@@ -68,6 +77,7 @@ public partial class HUD : CanvasLayer
         _eventBus.DayPhaseChanged += OnDayPhaseChanged;
         _eventBus.NightSummary += OnNightSummary;
         _eventBus.InventoryChanged += OnInventoryChanged;
+        _eventBus.WeaponInventoryChanged += OnWeaponInventoryChanged;
 
         _hpBar.MinValue = 0;
         _hpBar.MaxValue = 100;
@@ -89,6 +99,8 @@ public partial class HUD : CanvasLayer
 
         CreateDawnSummaryPanel();
         CreateResourcePanel();
+        CreateWeaponPanel();
+        CreateMinimap();
         CreateInteractHint();
         CreateCompassWidget();
         ResolveCompassTargets();
@@ -115,6 +127,7 @@ public partial class HUD : CanvasLayer
             _eventBus.DayPhaseChanged -= OnDayPhaseChanged;
             _eventBus.NightSummary -= OnNightSummary;
             _eventBus.InventoryChanged -= OnInventoryChanged;
+            _eventBus.WeaponInventoryChanged -= OnWeaponInventoryChanged;
         }
     }
 
@@ -266,6 +279,142 @@ public partial class HUD : CanvasLayer
 
         StyleBoxFlat fillStyle = (StyleBoxFlat)_capacityBar.GetThemeStylebox("fill");
         fillStyle.BgColor = barColor;
+    }
+
+    // --- Weapon Panel ---
+
+    private void CreateWeaponPanel()
+    {
+        PanelContainer panel = new();
+        panel.AnchorLeft = 1f;
+        panel.AnchorRight = 1f;
+        panel.AnchorTop = 1f;
+        panel.AnchorBottom = 1f;
+        panel.OffsetLeft = -180;
+        panel.OffsetRight = -10;
+        panel.OffsetTop = -140;
+        panel.OffsetBottom = -10;
+
+        StyleBoxFlat style = new();
+        style.BgColor = new Color(0f, 0f, 0f, 0.6f);
+        style.CornerRadiusBottomLeft = 6;
+        style.CornerRadiusBottomRight = 6;
+        style.CornerRadiusTopLeft = 6;
+        style.CornerRadiusTopRight = 6;
+        style.ContentMarginLeft = 10;
+        style.ContentMarginRight = 10;
+        style.ContentMarginTop = 6;
+        style.ContentMarginBottom = 6;
+        panel.AddThemeStyleboxOverride("panel", style);
+
+        VBoxContainer vbox = new();
+        vbox.AddThemeConstantOverride("separation", 3);
+        panel.AddChild(vbox);
+
+        Label titleLabel = new();
+        titleLabel.Text = "Armes";
+        titleLabel.AddThemeFontSizeOverride("font_size", 12);
+        titleLabel.AddThemeColorOverride("font_color", new Color(0.7f, 0.7f, 0.7f));
+        titleLabel.HorizontalAlignment = HorizontalAlignment.Center;
+        vbox.AddChild(titleLabel);
+
+        _weaponSlotsContainer = vbox;
+
+        for (int i = 0; i < Player.MaxWeaponSlots; i++)
+        {
+            PanelContainer slotPanel = new();
+            StyleBoxFlat slotStyle = new();
+            slotStyle.BgColor = new Color(0.12f, 0.12f, 0.12f, 0.5f);
+            slotStyle.CornerRadiusBottomLeft = 4;
+            slotStyle.CornerRadiusBottomRight = 4;
+            slotStyle.CornerRadiusTopLeft = 4;
+            slotStyle.CornerRadiusTopRight = 4;
+            slotStyle.ContentMarginLeft = 6;
+            slotStyle.ContentMarginRight = 6;
+            slotStyle.ContentMarginTop = 3;
+            slotStyle.ContentMarginBottom = 3;
+            slotPanel.AddThemeStyleboxOverride("panel", slotStyle);
+
+            Label slotLabel = new();
+            slotLabel.Text = "— vide —";
+            slotLabel.AddThemeFontSizeOverride("font_size", 12);
+            slotLabel.AddThemeColorOverride("font_color", new Color(0.35f, 0.35f, 0.35f));
+            slotPanel.AddChild(slotLabel);
+
+            _weaponSlotLabels[i] = slotLabel;
+            _weaponSlotPanels[i] = slotPanel;
+            vbox.AddChild(slotPanel);
+        }
+
+        AddChild(panel);
+    }
+
+    private void OnWeaponInventoryChanged()
+    {
+        Node playerNode = GetTree().GetFirstNodeInGroup("player");
+        if (playerNode is not Player player)
+            return;
+
+        System.Collections.Generic.IReadOnlyList<WeaponData> weapons = player.WeaponSlots;
+
+        for (int i = 0; i < Player.MaxWeaponSlots; i++)
+        {
+            if (i < weapons.Count)
+            {
+                WeaponData weapon = weapons[i];
+                string typeIcon = weapon.Type?.ToLower() switch
+                {
+                    "melee" => "[M]",
+                    "ranged" => "[D]",
+                    _ => "[S]"
+                };
+                _weaponSlotLabels[i].Text = $"{typeIcon} {weapon.Name}";
+
+                Color tierColor = weapon.Tier switch
+                {
+                    1 => new Color(0.7f, 0.7f, 0.7f),
+                    2 => new Color(0.4f, 0.7f, 1f),
+                    3 => new Color(0.9f, 0.6f, 0.1f),
+                    4 => new Color(0.6f, 0.4f, 1f),
+                    5 => new Color(1f, 0.85f, 0.2f),
+                    _ => new Color(0.7f, 0.7f, 0.7f)
+                };
+                _weaponSlotLabels[i].AddThemeColorOverride("font_color", tierColor);
+
+                StyleBoxFlat slotStyle = (StyleBoxFlat)_weaponSlotPanels[i].GetThemeStylebox("panel");
+                slotStyle.BgColor = new Color(tierColor.R * 0.15f, tierColor.G * 0.15f, tierColor.B * 0.15f, 0.6f);
+            }
+            else
+            {
+                _weaponSlotLabels[i].Text = "— vide —";
+                _weaponSlotLabels[i].AddThemeColorOverride("font_color", new Color(0.35f, 0.35f, 0.35f));
+
+                StyleBoxFlat slotStyle = (StyleBoxFlat)_weaponSlotPanels[i].GetThemeStylebox("panel");
+                slotStyle.BgColor = new Color(0.12f, 0.12f, 0.12f, 0.5f);
+            }
+        }
+    }
+
+    // --- Minimap ---
+
+    private void CreateMinimap()
+    {
+        _minimap = new Minimap();
+        _minimap.AnchorLeft = 1f;
+        _minimap.AnchorRight = 1f;
+        _minimap.AnchorTop = 0f;
+        _minimap.AnchorBottom = 0f;
+        _minimap.OffsetLeft = -156;
+        _minimap.OffsetRight = -10;
+        _minimap.OffsetTop = 10;
+        _minimap.OffsetBottom = 156;
+        AddChild(_minimap);
+    }
+
+    public void InitializeMinimap(WorldSetup worldSetup, FogOfWar fogOfWar)
+    {
+        if (_minimap != null && worldSetup?.Generator != null)
+            _minimap.Initialize(worldSetup.Generator, fogOfWar);
     }
 
     // --- Interact Hint ---

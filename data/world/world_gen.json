@@ -35,7 +35,7 @@
     "respawn_interval": 30,
     "respawn_threshold": 130,
     "poi_min_distance_between": 8,
-    "fog_reveal_radius": 6,
-    "dawn_fog_expansion": 5,
-    "fog_initial_clear_radius": 8
+    "fog_reveal_radius": 25,
+    "dawn_fog_expansion": 8,
+    "fog_initial_clear_radius": 25
 }

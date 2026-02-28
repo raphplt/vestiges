@@ -1,5 +1,25 @@
 [
     {
+        "id": "traqueur",
+        "name": "Le Traqueur",
+        "description": "Agile, dégâts à distance, fragile.",
+        "starting_weapon": "makeshift_bow",
+        "base_stats": {
+            "speed": 240,
+            "attack_damage": 12,
+            "attack_speed": 1.2,
+            "attack_range": 380,
+            "max_hp": 70,
+            "regen_rate": 0.3,
+            "interact_range": 55
+        },
+        "passive_perk": "traqueur_precision",
+        "exclusive_perks": ["traqueur_piercing", "traqueur_swiftness", "traqueur_ambush", "traqueur_evasion", "traqueur_marked"],
+        "score_multiplier": 1.1,
+        "visual_color": [0.2, 0.7, 0.3, 1.0],
+        "unlock_condition": "default"
+    },
+    {
         "id": "vagabond",
         "name": "Le Vagabond",
         "description": "Équilibré, polyvalent. Bonus de récolte.",
@@ -17,7 +37,7 @@
         "exclusive_perks": ["vagabond_adaptability", "vagabond_survivalist", "vagabond_jack_of_all", "vagabond_nomad", "vagabond_scrounger"],
         "score_multiplier": 1.0,
         "visual_color": [0.2, 0.45, 0.85, 1.0],
-        "unlock_condition": "default"
+        "unlock_condition": "survive_3_nights"
     },
     {
         "id": "forgeuse",
@@ -37,26 +57,6 @@
         "exclusive_perks": ["forgeuse_quick_craft", "forgeuse_reinforce", "forgeuse_overcharge", "forgeuse_recycler", "forgeuse_last_wall"],
         "score_multiplier": 1.0,
         "visual_color": [0.85, 0.45, 0.15, 1.0],
-        "unlock_condition": "survive_3_nights"
-    },
-    {
-        "id": "traqueur",
-        "name": "Le Traqueur",
-        "description": "Agile, dégâts à distance, fragile.",
-        "starting_weapon": "makeshift_bow",
-        "base_stats": {
-            "speed": 240,
-            "attack_damage": 12,
-            "attack_speed": 1.2,
-            "attack_range": 380,
-            "max_hp": 70,
-            "regen_rate": 0.3,
-            "interact_range": 55
-        },
-        "passive_perk": "traqueur_precision",
-        "exclusive_perks": ["traqueur_piercing", "traqueur_swiftness", "traqueur_ambush", "traqueur_evasion", "traqueur_marked"],
-        "score_multiplier": 1.1,
-        "visual_color": [0.2, 0.7, 0.3, 1.0],
         "unlock_condition": "kill_200_in_run"
     }
 ]

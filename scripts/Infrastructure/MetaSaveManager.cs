@@ -11,7 +11,7 @@ public class MetaSaveData
     public int Vestiges { get; set; }
 
     [JsonPropertyName("unlocked_characters")]
-    public List<string> UnlockedCharacters { get; set; } = new() { "vagabond" };
+    public List<string> UnlockedCharacters { get; set; } = new() { "traqueur" };
 
     [JsonPropertyName("purchased_kits")]
     public List<string> PurchasedKits { get; set; } = new();
@@ -85,9 +85,9 @@ public static class MetaSaveManager
             _data = new MetaSaveData();
         }
 
-        // Vagabond is always unlocked
-        if (!_data.UnlockedCharacters.Contains("vagabond"))
-            _data.UnlockedCharacters.Add("vagabond");
+        // Traqueur is always unlocked (default ranged character)
+        if (!_data.UnlockedCharacters.Contains("traqueur"))
+            _data.UnlockedCharacters.Add("traqueur");
 
         GD.Print($"[MetaSaveManager] Loaded — {_data.Vestiges} Vestiges, {_data.UnlockedCharacters.Count} characters unlocked");
     }

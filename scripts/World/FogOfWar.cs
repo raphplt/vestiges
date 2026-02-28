@@ -26,7 +26,13 @@ public partial class FogOfWar : Node2D
     private int _fogInitialClearRadius;
     private int _mapRadius;
 
-    private static readonly Color FogColor = new(0.04f, 0.02f, 0.08f, 0.95f);
+    // Deferred initialization
+    private bool _initPhase;
+    private int _initX;
+    private int _initY;
+    private const int InitBatchSize = 800;
+
+    private static readonly Color FogColor = new(0.04f, 0.02f, 0.08f, 0.85f);
 
     public bool IsRevealed(Vector2I cell) => _revealedCells.Contains(cell);
 
@@ -46,7 +52,7 @@ public partial class FogOfWar : Node2D
         _mapRadius = generator.MapRadius;
 
         CreateFogLayer();
-        InitializeFog();
+        StartDeferredInit();
 
         _eventBus = GetNode<EventBus>("/root/EventBus");
         _eventBus.DayPhaseChanged += OnDayPhaseChanged;
@@ -63,6 +69,12 @@ public partial class FogOfWar : Node2D
         if (_ground == null)
             return;
 
+        if (_initPhase)
+        {
+            ProcessDeferredInit();
+            return;
+        }
+
         if (_player == null)
         {
             Node playerNode = GetTree().GetFirstNodeInGroup("player");
@@ -75,8 +87,9 @@ public partial class FogOfWar : Node2D
         if (playerCell == _lastPlayerCell)
             return;
 
+        Vector2I prevCell = _lastPlayerCell;
         _lastPlayerCell = playerCell;
-        RevealAroundCell(playerCell, _fogRevealRadius);
+        RevealAroundPlayer(playerCell, prevCell);
     }
 
     private void CreateFogLayer()
@@ -108,14 +121,40 @@ public partial class FogOfWar : Node2D
         _ground.GetParent().AddChild(_fogLayer);
     }
 
-    private void InitializeFog()
-    {
-        int fogged = 0;
+    // --- Deferred initialization (spread across frames to avoid lag) ---
 
-        for (int x = -_mapRadius; x <= _mapRadius; x++)
+    private void StartDeferredInit()
+    {
+        // Pre-populate initial clear area
+        int clearR = _fogInitialClearRadius;
+        int clearSq = clearR * clearR;
+        for (int x = -clearR; x <= clearR; x++)
         {
-            for (int y = -_mapRadius; y <= _mapRadius; y++)
+            for (int y = -clearR; y <= clearR; y++)
             {
+                if (x * x + y * y <= clearSq)
+                    _revealedCells.Add(new Vector2I(x, y));
+            }
+        }
+
+        _initX = -_mapRadius;
+        _initY = -_mapRadius;
+        _initPhase = true;
+    }
+
+    private void ProcessDeferredInit()
+    {
+        int processed = 0;
+
+        while (_initX <= _mapRadius && processed < InitBatchSize)
+        {
+            while (_initY <= _mapRadius && processed < InitBatchSize)
+            {
+                int x = _initX;
+                int y = _initY;
+                _initY++;
+                processed++;
+
                 if (!_generator.IsWithinBounds(x, y))
                     continue;
                 if (_generator.IsErased(x, y))
@@ -123,39 +162,79 @@ public partial class FogOfWar : Node2D
 
                 Vector2I cell = new(x, y);
 
-                if (Mathf.Abs(x) <= _fogInitialClearRadius && Mathf.Abs(y) <= _fogInitialClearRadius)
-                {
-                    _revealedCells.Add(cell);
-                    continue;
-                }
-
-                _fogLayer.SetCell(cell, 0, Vector2I.Zero);
-                fogged++;
-            }
-        }
-
-        GD.Print($"[FogOfWar] Initialized — {_revealedCells.Count} cells clear, {fogged} cells fogged");
-    }
-
-    private void RevealAroundCell(Vector2I center, int radius)
-    {
-        int newlyRevealed = 0;
-        int radiusSq = radius * radius;
-
-        for (int dx = -radius; dx <= radius; dx++)
-        {
-            for (int dy = -radius; dy <= radius; dy++)
-            {
-                if (dx * dx + dy * dy > radiusSq)
-                    continue;
-
-                Vector2I cell = new(center.X + dx, center.Y + dy);
-
                 if (_revealedCells.Contains(cell))
                     continue;
 
-                MaterializeCell(cell);
-                newlyRevealed++;
+                _fogLayer.SetCell(cell, 0, Vector2I.Zero);
+            }
+
+            if (_initY > _mapRadius)
+            {
+                _initX++;
+                _initY = -_mapRadius;
+            }
+        }
+
+        if (_initX > _mapRadius)
+        {
+            _initPhase = false;
+            GD.Print($"[FogOfWar] Initialization complete — {_revealedCells.Count} cells clear");
+        }
+    }
+
+    // --- Per-frame reveal (only check newly-entered cells) ---
+
+    private void RevealAroundPlayer(Vector2I center, Vector2I prevCenter)
+    {
+        int newlyRevealed = 0;
+        int radiusSq = _fogRevealRadius * _fogRevealRadius;
+
+        // Only iterate the full circle on first reveal or large movement
+        int dx = center.X - prevCenter.X;
+        int dy = center.Y - prevCenter.Y;
+        bool fullScan = prevCenter.X == int.MinValue || Mathf.Abs(dx) > 2 || Mathf.Abs(dy) > 2;
+
+        if (fullScan)
+        {
+            for (int cx = -_fogRevealRadius; cx <= _fogRevealRadius; cx++)
+            {
+                for (int cy = -_fogRevealRadius; cy <= _fogRevealRadius; cy++)
+                {
+                    if (cx * cx + cy * cy > radiusSq)
+                        continue;
+
+                    Vector2I cell = new(center.X + cx, center.Y + cy);
+                    if (_revealedCells.Contains(cell))
+                        continue;
+
+                    MaterializeCell(cell);
+                    newlyRevealed++;
+                }
+            }
+        }
+        else
+        {
+            // Incremental: only check cells in the strip that moved into range
+            for (int cx = -_fogRevealRadius; cx <= _fogRevealRadius; cx++)
+            {
+                for (int cy = -_fogRevealRadius; cy <= _fogRevealRadius; cy++)
+                {
+                    if (cx * cx + cy * cy > radiusSq)
+                        continue;
+
+                    Vector2I cell = new(center.X + cx, center.Y + cy);
+                    if (_revealedCells.Contains(cell))
+                        continue;
+
+                    // Check if this cell was outside the previous reveal circle
+                    int prevDx = cell.X - prevCenter.X;
+                    int prevDy = cell.Y - prevCenter.Y;
+                    if (prevDx * prevDx + prevDy * prevDy <= radiusSq)
+                        continue; // Was already in range
+
+                    MaterializeCell(cell);
+                    newlyRevealed++;
+                }
             }
         }
 
@@ -189,7 +268,6 @@ public partial class FogOfWar : Node2D
             new(1, 1), new(1, -1), new(-1, 1), new(-1, -1)
         };
 
-        // Trouver les cellules frontières (révélées avec au moins un voisin non révélé)
         List<Vector2I> boundary = new();
         foreach (Vector2I cell in _revealedCells)
         {
@@ -204,20 +282,19 @@ public partial class FogOfWar : Node2D
             }
         }
 
-        // Révéler N cellules autour de chaque cellule frontière
         HashSet<Vector2I> toReveal = new();
         int expansionSq = _dawnFogExpansion * _dawnFogExpansion;
 
         foreach (Vector2I bCell in boundary)
         {
-            for (int dx = -_dawnFogExpansion; dx <= _dawnFogExpansion; dx++)
+            for (int bx = -_dawnFogExpansion; bx <= _dawnFogExpansion; bx++)
             {
-                for (int dy = -_dawnFogExpansion; dy <= _dawnFogExpansion; dy++)
+                for (int by = -_dawnFogExpansion; by <= _dawnFogExpansion; by++)
                 {
-                    if (dx * dx + dy * dy > expansionSq)
+                    if (bx * bx + by * by > expansionSq)
                         continue;
 
-                    Vector2I candidate = new(bCell.X + dx, bCell.Y + dy);
+                    Vector2I candidate = new(bCell.X + bx, bCell.Y + by);
                     if (!_revealedCells.Contains(candidate))
                         toReveal.Add(candidate);
                 }

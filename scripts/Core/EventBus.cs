@@ -55,6 +55,10 @@ public partial class EventBus : Node
     [Signal] public delegate void ChestOpenedEventHandler(string chestId, string rarity, Vector2 position);
     [Signal] public delegate void LootReceivedEventHandler(string itemType, string itemId, int amount);
 
+    // --- Armes ---
+    [Signal] public delegate void WeaponEquippedEventHandler(string weaponId, int slotIndex);
+    [Signal] public delegate void WeaponInventoryChangedEventHandler();
+
     // --- Fog of War ---
     [Signal] public delegate void ZoneDiscoveredEventHandler(int cellX, int cellY, int cellCount);
 
