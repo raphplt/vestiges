@@ -295,6 +295,7 @@ public partial class Enemy : CharacterBody2D
 			return;
 
 		_currentHp -= damage;
+		GetNode<EventBus>("/root/EventBus").EmitSignal(EventBus.SignalName.EntityDamaged, this, damage);
 		HitFlash();
 		SpawnDamageNumber(damage, isCrit);
 
@@ -331,6 +332,7 @@ public partial class Enemy : CharacterBody2D
 		_igniteTimer -= delta;
 		float igniteDamage = _igniteDps * delta;
 		_currentHp -= igniteDamage;
+		GetNode<EventBus>("/root/EventBus").EmitSignal(EventBus.SignalName.EntityDamaged, this, igniteDamage);
 
 		if (_igniteTimer <= 0f)
 		{

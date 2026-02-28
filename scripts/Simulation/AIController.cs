@@ -116,17 +116,22 @@ public partial class AIController : Node
     {
         float hpRatio = _player.CurrentHp / _player.EffectiveMaxHp;
 
+        // Priority 1: Retreat when HP is critical
         if (_profile.RetreatThreshold > 0f && hpRatio < _profile.RetreatThreshold)
             return AIState.Retreat;
 
+        // Priority 2: Fight nearby enemies (day or night)
+        bool hasEnemy = FindNearestEnemy(out _, out float dist);
+        if (hasEnemy && dist < _player.EffectiveAttackRange * 2f)
+            return AIState.Fight;
+
+        // Priority 3: During night, move toward Foyer when no enemies close
         if (_isNight && _profile.DefendAtNight)
             return AIState.NightDefend;
 
+        // Priority 4: Interact with POIs/chests during day
         if (_profile.InteractsDuringDay && !_isNight && hpRatio > 0.5f && FindInteractable() != null)
             return AIState.Interact;
-
-        if (FindNearestEnemy(out _, out float dist) && dist < _player.EffectiveAttackRange * 2f)
-            return AIState.Fight;
 
         return AIState.Roam;
     }
@@ -177,10 +182,19 @@ public partial class AIController : Node
         Vector2 toEnemy = (enemyPos - _player.GlobalPosition).Normalized();
         float attackRange = _player.EffectiveAttackRange;
 
-        if (_profile.CanKite && dist < attackRange * 0.3f)
+        if (_profile.CanKite && dist < attackRange * 0.5f)
         {
-            // Kite : reculer quand l'ennemi est trop proche
-            _player.AIInputOverride = -toEnemy;
+            // Kite : reculer + strafe quand l'ennemi est trop proche
+            Vector2 away = -toEnemy;
+            Vector2 strafe = new Vector2(-toEnemy.Y, toEnemy.X) * (_strafeRight ? 1f : -1f);
+            _player.AIInputOverride = (away * 0.7f + strafe * 0.3f).Normalized();
+
+            _strafeFlipTimer -= dt;
+            if (_strafeFlipTimer <= 0f)
+            {
+                _strafeRight = !_strafeRight;
+                _strafeFlipTimer = (float)GD.RandRange(0.5, 1.2);
+            }
         }
         else if (dist > attackRange * 0.8f)
         {
@@ -189,15 +203,15 @@ public partial class AIController : Node
         }
         else
         {
-            // En range : strafe pour esquiver
+            // En range : strafe pour esquiver tout en maintenant la distance
             _strafeFlipTimer -= dt;
             if (_strafeFlipTimer <= 0f)
             {
                 _strafeRight = !_strafeRight;
-                _strafeFlipTimer = (float)GD.RandRange(0.8, 2.0);
+                _strafeFlipTimer = (float)GD.RandRange(0.6, 1.5);
             }
-            Vector2 strafe = new(-toEnemy.Y, toEnemy.X);
-            _player.AIInputOverride = strafe * (_strafeRight ? 1f : -1f);
+            Vector2 strafe = new Vector2(-toEnemy.Y, toEnemy.X) * (_strafeRight ? 1f : -1f);
+            _player.AIInputOverride = strafe;
         }
     }
 

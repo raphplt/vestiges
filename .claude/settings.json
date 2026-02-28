@@ -2,7 +2,9 @@
   "permissions": {
     "allow": [
       "Read(//c/Users/rapha/.claude/projects/c--Users-rapha-Documents-Travail-Projets-vestiges/e77a6fae-9ac6-4381-a725-66ccc9cd1de5/tool-results/**)",
-      "Bash(weapon \")"
+      "Bash(weapon \")",
+      "Read(//c/tmp/**)",
+      "Read(//c/Users/rapha/AppData/Roaming/Godot/**)"
     ],
     "additionalDirectories": [
       "C:\\Users\\rapha\\.claude\\projects\\c--Users-rapha-Documents-Travail-Projets-vestiges\\memory"

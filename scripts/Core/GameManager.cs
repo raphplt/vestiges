@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Godot;
 using Vestiges.Infrastructure;
 using Vestiges.Simulation;
+using Vestiges.Simulation.MathSim;
 
 namespace Vestiges.Core;
 
@@ -10,6 +11,7 @@ namespace Vestiges.Core;
 /// Autoload — pilote les transitions entre états (Hub, Run, Death).
 /// Porte l'état qui survit aux changements de scène.
 /// F2 = lancer la simulation AI depuis n'importe quelle scène.
+/// F3 = lancer la simulation mathématique (instantanée, pas de scène).
 /// </summary>
 public partial class GameManager : Node
 {
@@ -47,10 +49,19 @@ public partial class GameManager : Node
 
     public override void _UnhandledInput(InputEvent @event)
     {
-        if (@event is InputEventKey keyEvent && keyEvent.Pressed && !keyEvent.Echo && keyEvent.Keycode == Key.F2)
+        if (@event is not InputEventKey keyEvent || !keyEvent.Pressed || keyEvent.Echo)
+            return;
+
+        if (keyEvent.Keycode == Key.F2)
         {
             GD.Print("[GameManager] F2 — Launching AI simulation batch...");
             BatchRunner.StartBatch("res://data/simulation/default_batch.json");
+            GetViewport().SetInputAsHandled();
+        }
+        else if (keyEvent.Keycode == Key.F3)
+        {
+            GD.Print("[GameManager] F3 — Launching math simulation batch...");
+            MathSimBatchRunner.RunBatch("res://data/simulation/default_batch.json");
             GetViewport().SetInputAsHandled();
         }
     }

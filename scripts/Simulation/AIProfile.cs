@@ -25,7 +25,7 @@ public class AIProfile
     {
         Name = "noob",
         DecisionInterval = 0.5f,
-        RetreatThreshold = 0f,
+        RetreatThreshold = 0.2f,
         DefendAtNight = false,
         CanKite = false,
         RoamChangeDirInterval = 3f,
@@ -36,10 +36,10 @@ public class AIProfile
     public static AIProfile Medium() => new()
     {
         Name = "medium",
-        DecisionInterval = 0.2f,
-        RetreatThreshold = 0.3f,
+        DecisionInterval = 0.15f,
+        RetreatThreshold = 0.5f,
         DefendAtNight = true,
-        CanKite = false,
+        CanKite = true,
         RoamChangeDirInterval = 2f,
         RoamMaxRadius = 600f,
         InteractsDuringDay = true
@@ -48,8 +48,8 @@ public class AIProfile
     public static AIProfile Pro() => new()
     {
         Name = "pro",
-        DecisionInterval = 0.1f,
-        RetreatThreshold = 0.4f,
+        DecisionInterval = 0.08f,
+        RetreatThreshold = 0.5f,
         DefendAtNight = true,
         CanKite = true,
         RoamChangeDirInterval = 1.5f,
