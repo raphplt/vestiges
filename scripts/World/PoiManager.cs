@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using Godot;
+using Vestiges.Combat;
 using Vestiges.Infrastructure;
+using Vestiges.Spawn;
 
 namespace Vestiges.World;
 
@@ -8,15 +10,22 @@ namespace Vestiges.World;
 /// Gère le spawn procédural des Points d'Intérêt sur la map.
 /// Chaque biome a son propre pool de POI et un nombre min/max.
 /// Les POI sont placés en respectant des distances minimales entre eux et par rapport au Foyer.
+/// Spawn aussi les ennemis gardes autour des POI gardés.
 /// </summary>
 public partial class PoiManager : Node
 {
+    private const float GuardSpawnRadius = 60f;
+    private const float GuardHpScale = 1.5f;
+    private const float GuardDmgScale = 1.2f;
+
     private readonly HashSet<Vector2I> _usedPoiCells = new();
     private readonly List<PointOfInterest> _spawnedPois = new();
     private PackedScene _poiScene;
     private WorldGenerator _generator;
     private TileMapLayer _ground;
     private int _minDistanceBetween = 8;
+    private EnemyPool _enemyPool;
+    private Node _enemyContainer;
 
     public List<PointOfInterest> SpawnedPois => _spawnedPois;
 
@@ -29,11 +38,15 @@ public partial class PoiManager : Node
         TileMapLayer ground,
         Node2D container,
         HashSet<Vector2I> occupiedCells,
-        int minDistanceBetween)
+        int minDistanceBetween,
+        EnemyPool enemyPool = null,
+        Node enemyContainer = null)
     {
         _generator = generator;
         _ground = ground;
         _minDistanceBetween = minDistanceBetween;
+        _enemyPool = enemyPool;
+        _enemyContainer = enemyContainer;
         _poiScene = GD.Load<PackedScene>("res://scenes/world/PointOfInterest.tscn");
 
         // Copier les cellules occupées pour éviter le chevauchement avec les ressources
@@ -210,6 +223,38 @@ public partial class PoiManager : Node
         container.AddChild(poi);
         poi.Initialize(data);
 
+        // Spawn des gardes autour des POI gardés
+        if (data.EnemyGuards.Count > 0 && _enemyPool != null && _enemyContainer != null)
+            SpawnGuards(poi, data.EnemyGuards, worldPos);
+
         _spawnedPois.Add(poi);
+    }
+
+    /// <summary>Spawn les ennemis gardes autour d'un POI gardé.</summary>
+    private void SpawnGuards(PointOfInterest poi, List<string> guardIds, Vector2 poiPos)
+    {
+        EnemyDataLoader.Load();
+        int spawnedCount = 0;
+
+        for (int i = 0; i < guardIds.Count; i++)
+        {
+            EnemyData data = EnemyDataLoader.Get(guardIds[i]);
+            if (data == null)
+                continue;
+
+            float angle = Mathf.Tau * i / guardIds.Count;
+            Vector2 offset = new(Mathf.Cos(angle) * GuardSpawnRadius, Mathf.Sin(angle) * GuardSpawnRadius * 0.5f);
+            Vector2 guardPos = poiPos + offset;
+
+            Enemy guard = _enemyPool.Get();
+            guard.GlobalPosition = guardPos;
+            _enemyContainer.AddChild(guard);
+            guard.Initialize(data, GuardHpScale, GuardDmgScale);
+            guard.SetGuardTarget(poi);
+            spawnedCount++;
+        }
+
+        poi.SetGuardCount(spawnedCount);
+        GD.Print($"[PoiManager] Spawned {spawnedCount} guards for {poi.PoiId}");
     }
 }

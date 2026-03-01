@@ -107,6 +107,14 @@ public partial class CraftManager : Node
             _inventory.Remove(ingredient.Resource, ingredient.Amount);
         }
 
+        bool isInstantWall = recipe.Result.Type == "wall";
+        if (isInstantWall)
+        {
+            _eventBus.EmitSignal(EventBus.SignalName.CraftStarted, recipeId);
+            _eventBus.EmitSignal(EventBus.SignalName.CraftCompleted, recipeId);
+            return true;
+        }
+
         _currentRecipeId = recipeId;
         _craftDuration = recipe.BuildTime;
         _craftProgress = 0f;

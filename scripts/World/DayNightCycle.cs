@@ -168,4 +168,11 @@ public partial class DayNightCycle : Node
         _nightDuration = 90f;
         _dawnDuration = 10f;
     }
+
+    /// <summary>Multiplie la durée de la nuit (utilisé par les mutateurs).</summary>
+    public void ApplyNightDurationMultiplier(float multiplier)
+    {
+        _nightDuration *= multiplier;
+        GD.Print($"[DayNightCycle] Night duration multiplied by {multiplier} → {_nightDuration}s");
+    }
 }

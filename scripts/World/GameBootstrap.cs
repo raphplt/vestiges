@@ -29,6 +29,7 @@ public partial class GameBootstrap : Node
         MetaSaveManager.Load();
         StartingKitDataLoader.Load();
         SouvenirDataLoader.Load();
+        MutatorDataLoader.Load();
 
         // Detect simulation mode
         BatchRunner batchRunner = GetNodeOrNull<BatchRunner>("/root/BatchRunner");
@@ -86,6 +87,7 @@ public partial class GameBootstrap : Node
         structurePlacer.SetCraftManager(craftManager);
 
         InitializeCharacterAndRun(player, perkManager, scoreManager, runTracker, inventory);
+        ApplyMutators(scoreManager, dayNightCycle, worldSetup, foyer as Foyer);
 
         GD.Print($"[GameBootstrap] Run started with {player.CharacterId}");
     }
@@ -214,6 +216,60 @@ public partial class GameBootstrap : Node
         }
 
         gm.ChangeState(GameManager.GameState.Run);
+    }
+
+    private void ApplyMutators(ScoreManager scoreManager, DayNightCycle dayNightCycle,
+        WorldSetup worldSetup, Foyer foyer)
+    {
+        GameManager gm = GetNode<GameManager>("/root/GameManager");
+        System.Collections.Generic.List<string> activeMutators = gm.ActiveMutators;
+        if (activeMutators == null || activeMutators.Count == 0)
+            return;
+
+        float totalMultiplier = 1f;
+        System.Collections.Generic.Dictionary<string, float> scalingOverrides = new();
+
+        foreach (string mutatorId in activeMutators)
+        {
+            MutatorData mutator = MutatorDataLoader.Get(mutatorId);
+            if (mutator == null)
+                continue;
+
+            totalMultiplier *= mutator.ScoreMultiplier;
+
+            switch (mutator.EffectType)
+            {
+                case "night_duration":
+                    dayNightCycle.ApplyNightDurationMultiplier(mutator.EffectValue);
+                    break;
+                case "enemy_hp":
+                    scalingOverrides["flat_hp_multiplier"] = mutator.EffectValue;
+                    break;
+                case "enemy_damage":
+                    scalingOverrides["flat_dmg_multiplier"] = mutator.EffectValue;
+                    break;
+                case "no_safe_zone":
+                    foyer?.DisableSafeZone();
+                    break;
+                case "spawn_rate":
+                    scalingOverrides["base_spawn_interval"] = 1.80f * mutator.EffectValue;
+                    break;
+                case "no_pois":
+                    worldSetup.PoisDisabled = true;
+                    break;
+            }
+
+            GD.Print($"[GameBootstrap] Mutator applied: {mutator.Name}");
+        }
+
+        if (scalingOverrides.Count > 0)
+        {
+            SpawnManager spawnManager = GetNode<SpawnManager>("../SpawnManager");
+            spawnManager.ApplyScalingOverrides(scalingOverrides);
+        }
+
+        scoreManager.SetMutatorMultiplier(totalMultiplier);
+        GD.Print($"[GameBootstrap] {activeMutators.Count} mutator(s) active — score multiplier: x{totalMultiplier:F2}");
     }
 
     private void RemoveNodeIfExists(string path)

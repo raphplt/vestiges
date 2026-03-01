@@ -11,6 +11,8 @@ public partial class EnemyProjectile : Area2D
     private Vector2 _direction;
     private float _damage;
     private string _sourceEnemyId = "enemy_projectile";
+    private float _slowDuration;
+    private float _slowFactor = 1f;
     private Polygon2D _visual;
     private bool _isDespawning;
 
@@ -20,6 +22,12 @@ public partial class EnemyProjectile : Area2D
         _damage = damage;
         _sourceEnemyId = sourceEnemyId;
         Rotation = _direction.Angle();
+    }
+
+    public void SetSlow(float factor, float duration)
+    {
+        _slowFactor = factor;
+        _slowDuration = duration;
     }
 
     public override void _Ready()
@@ -53,6 +61,8 @@ public partial class EnemyProjectile : Area2D
         {
             GetNode<EventBus>("/root/EventBus").EmitSignal(EventBus.SignalName.PlayerHitBy, _sourceEnemyId, _damage);
             player.TakeDamage(_damage);
+            if (_slowDuration > 0f)
+                player.ApplySlow(_slowFactor, _slowDuration);
             StartDespawn();
         }
     }

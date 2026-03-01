@@ -15,6 +15,12 @@ public partial class ScoreManager : Node
     private const int PointsPerBruteKill = 30;
     private const int PointsPerShadeKill = 5;
     private const int PointsPerSentinelKill = 25;
+    private const int PointsPerHurleurKill = 30;
+    private const int PointsPerTisseuseKill = 20;
+    private const int PointsPerRampantKill = 15;
+    private const int PointsPerRodeurKill = 15;
+    private const int PointsPerColosseKill = 200;
+    private const int PointsPerIndicibleKill = 5000;
     private const int NoDamageNightBonus = 500;
     private const int PointsPerStructurePlaced = 20;
     private const int PointsPerStructureSurvived = 50;
@@ -34,9 +40,10 @@ public partial class ScoreManager : Node
     private int _noDamageNights;
     private int _bestScore;
     private float _scoreMultiplier = 1f;
+    private float _mutatorMultiplier = 1f;
     private EventBus _eventBus;
 
-    public int CurrentScore => (int)((_combatScore + _survivalScore + _bonusScore + _buildScore + _explorationScore) * _scoreMultiplier);
+    public int CurrentScore => (int)((_combatScore + _survivalScore + _bonusScore + _buildScore + _explorationScore) * _scoreMultiplier * _mutatorMultiplier);
     public int CombatScore => _combatScore;
     public int SurvivalScore => _survivalScore;
     public int BonusScore => _bonusScore;
@@ -48,6 +55,8 @@ public partial class ScoreManager : Node
     public int BestScore => _bestScore;
     public bool IsNewRecord => CurrentScore > _bestScore;
     public int VestigesEarned { get; private set; }
+    public float CharacterMultiplier => _scoreMultiplier;
+    public float MutatorMultiplier => _mutatorMultiplier;
 
     private RunTracker _runTracker;
 
@@ -85,7 +94,13 @@ public partial class ScoreManager : Node
     public void SetCharacterMultiplier(float multiplier)
     {
         _scoreMultiplier = multiplier;
-        GD.Print($"[ScoreManager] Score multiplier set to x{multiplier}");
+        GD.Print($"[ScoreManager] Character multiplier set to x{multiplier}");
+    }
+
+    public void SetMutatorMultiplier(float multiplier)
+    {
+        _mutatorMultiplier = multiplier;
+        GD.Print($"[ScoreManager] Mutator multiplier set to x{multiplier:F2}");
     }
 
     /// <summary>Sauvegarde le score, enregistre la run, calcule les Vestiges, vérifie les déblocages.</summary>
@@ -138,7 +153,9 @@ public partial class ScoreManager : Node
             BonusScoreDetail = _bonusScore,
             BuildScoreDetail = _buildScore,
             ExplorationScoreDetail = _explorationScore,
-            Seed = gm.RunSeed
+            Seed = gm.RunSeed,
+            ActiveMutators = new System.Collections.Generic.List<string>(gm.ActiveMutators),
+            MutatorMultiplier = _mutatorMultiplier
         };
 
         if (_runTracker != null)
@@ -192,6 +209,12 @@ public partial class ScoreManager : Node
             "void_brute" => PointsPerBruteKill,
             "shade" => PointsPerShadeKill,
             "wailing_sentinel" => PointsPerSentinelKill,
+            "hurleur" => PointsPerHurleurKill,
+            "tisseuse" => PointsPerTisseuseKill,
+            "rampant" => PointsPerRampantKill,
+            "rodeur" => PointsPerRodeurKill,
+            "colosse_forest" or "colosse_urban" or "colosse_swamp" => PointsPerColosseKill,
+            "indicible" => PointsPerIndicibleKill,
             _ => PointsPerMeleeKill
         };
     }

@@ -1,0 +1,106 @@
+[
+    {
+        "id": "caravan",
+        "name": "Caravane de passage",
+        "phase": "day",
+        "weight": 1.0,
+        "duration": 120,
+        "description": "Un marchand temporaire apparaît avec des objets rares.",
+        "effects": {
+            "type": "merchant_spawn"
+        }
+    },
+    {
+        "id": "storm",
+        "name": "Tempête",
+        "phase": "day",
+        "weight": 1.0,
+        "duration": 60,
+        "description": "Visibilité réduite, feux extérieurs éteints, timer de jour raccourci.",
+        "effects": {
+            "type": "visibility_reduction",
+            "visibility_factor": 0.4,
+            "day_time_reduction": 30
+        }
+    },
+    {
+        "id": "tremor",
+        "name": "Tremblement",
+        "phase": "day",
+        "weight": 0.8,
+        "duration": 5,
+        "description": "Révèle une grotte cachée OU effondre un bâtiment.",
+        "effects": {
+            "type": "tremor",
+            "chest_chance": 0.6,
+            "structure_damage": 50
+        }
+    },
+    {
+        "id": "smoke_signal",
+        "name": "Signal de fumée",
+        "phase": "day",
+        "weight": 0.8,
+        "duration": 90,
+        "description": "Un survivant en détresse. Le sauver donne une récompense. Possible piège.",
+        "effects": {
+            "type": "rescue_poi",
+            "trap_chance": 0.25,
+            "reward_xp": 100,
+            "reward_resources": 10
+        }
+    },
+    {
+        "id": "migration",
+        "name": "Migration",
+        "phase": "day",
+        "weight": 0.7,
+        "duration": 45,
+        "description": "Un troupeau de créatures traverse la zone. Les chasser donne du loot massif.",
+        "effects": {
+            "type": "horde_spawn",
+            "enemy_count": 12,
+            "enemy_id": "charognard",
+            "xp_multiplier": 2.0
+        }
+    },
+    {
+        "id": "thick_fog",
+        "name": "Brume épaisse",
+        "phase": "night",
+        "weight": 1.0,
+        "duration": 0,
+        "description": "Visibilité quasi nulle. Les créatures arrivent sans prévenir.",
+        "effects": {
+            "type": "visibility_reduction",
+            "visibility_factor": 0.15
+        }
+    },
+    {
+        "id": "resurgence",
+        "name": "Résurgence",
+        "phase": "night",
+        "weight": 0.8,
+        "duration": 0,
+        "description": "La réalité se fissure. Créatures renforcées, mais droppent plus d'XP.",
+        "effects": {
+            "type": "enemy_buff",
+            "hp_multiplier": 1.5,
+            "damage_multiplier": 1.3,
+            "xp_multiplier": 2.0
+        }
+    },
+    {
+        "id": "the_call",
+        "name": "L'Appel",
+        "phase": "night",
+        "weight": 0.6,
+        "duration": 0,
+        "description": "Une créature spéciale tente d'attirer le joueur loin de sa base.",
+        "effects": {
+            "type": "lure_spawn",
+            "lure_distance": 400,
+            "reward_xp": 200
+        }
+    }
+]

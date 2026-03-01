@@ -20,6 +20,7 @@ public class PoiData
     public string InteractionType;
     public float SearchTime;
     public string LootTableId;
+    public int LootRolls = 2;
     public List<string> EnemyGuards = new();
     public int ScorePoints;
 }
@@ -105,6 +106,7 @@ public static class PoiDataLoader
             InteractionType = dict.ContainsKey("interaction_type") ? dict["interaction_type"].AsString() : "search",
             SearchTime = dict.ContainsKey("search_time") ? (float)dict["search_time"].AsDouble() : 1f,
             LootTableId = dict.ContainsKey("loot_table_id") ? dict["loot_table_id"].AsString() : "",
+            LootRolls = dict.ContainsKey("loot_rolls") ? (int)dict["loot_rolls"].AsDouble() : 2,
             ScorePoints = dict.ContainsKey("score_points") ? (int)dict["score_points"].AsDouble() : 50
         };
 

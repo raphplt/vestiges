@@ -1,0 +1,16 @@
+{
+    "id": "rodeur",
+    "name": "Rôdeur",
+    "type": "melee",
+    "stats": {
+        "hp": 60,
+        "speed": 30,
+        "damage": 15,
+        "xp_reward": 20
+    },
+    "visual": {
+        "color": "#7A6855",
+        "shape": "square",
+        "size": 20
+    }
+}

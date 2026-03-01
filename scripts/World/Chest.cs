@@ -65,6 +65,7 @@ public partial class Chest : StaticBody2D
             _glowEffect.Visible = false;
 
         PlayOpenAnimation();
+        SpawnOpenParticles();
 
         _eventBus?.EmitSignal(EventBus.SignalName.ChestOpened,
             _chestData?.Id ?? "", _chestData?.Rarity ?? "common", GlobalPosition);
@@ -150,9 +151,87 @@ public partial class Chest : StaticBody2D
 
     private void PlayOpenAnimation()
     {
+        // Flash blanc bref
+        Color prevColor = _visual.Color;
+        _visual.Color = Colors.White;
+
         Tween tween = CreateTween();
-        tween.TweenProperty(this, "scale", Vector2.One * 1.2f, 0.1f);
-        tween.TweenProperty(this, "scale", Vector2.One * 0.9f, 0.15f);
-        tween.TweenProperty(this, "scale", Vector2.One, 0.1f);
+        tween.TweenProperty(_visual, "color", prevColor, 0.15f).SetDelay(0.05f);
+
+        Tween scaleTween = CreateTween();
+        scaleTween.TweenProperty(this, "scale", Vector2.One * 1.3f, 0.08f)
+            .SetTrans(Tween.TransitionType.Back)
+            .SetEase(Tween.EaseType.Out);
+        scaleTween.TweenProperty(this, "scale", Vector2.One * 0.85f, 0.1f);
+        scaleTween.TweenProperty(this, "scale", Vector2.One, 0.08f);
+    }
+
+    /// <summary>Burst de particules colorées à l'ouverture, proportionnel à la rareté.</summary>
+    private void SpawnOpenParticles()
+    {
+        string rarity = _chestData?.Rarity ?? "common";
+        int count = rarity switch
+        {
+            "epic" => 12,
+            "rare" => 8,
+            "lore" => 10,
+            _ => 5
+        };
+
+        Color particleColor = rarity switch
+        {
+            "epic" => new Color(0.9f, 0.6f, 0.15f),
+            "rare" => new Color(0.5f, 0.4f, 0.8f),
+            "lore" => new Color(0.8f, 0.85f, 1f),
+            _ => new Color(0.9f, 0.85f, 0.6f)
+        };
+
+        for (int i = 0; i < count; i++)
+        {
+            Polygon2D particle = new();
+            float ps = (float)GD.RandRange(2f, 5f);
+            particle.Polygon = new Vector2[]
+            {
+                new(-ps, 0), new(0, -ps * 0.6f), new(ps, 0), new(0, ps * 0.6f)
+            };
+
+            float hueShift = (float)GD.RandRange(-0.08f, 0.08f);
+            particle.Color = new Color(
+                Mathf.Clamp(particleColor.R + hueShift, 0, 1),
+                Mathf.Clamp(particleColor.G + hueShift, 0, 1),
+                Mathf.Clamp(particleColor.B + hueShift * 0.5f, 0, 1)
+            );
+
+            particle.GlobalPosition = GlobalPosition;
+            GetTree().CurrentScene.CallDeferred(Node.MethodName.AddChild, particle);
+
+            float angle = (float)GD.RandRange(0, Mathf.Tau);
+            float dist = (float)GD.RandRange(20f, 50f);
+            Vector2 target = GlobalPosition + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * dist;
+
+            // Capture pour la lambda
+            Polygon2D p = particle;
+            Callable cleanup = Callable.From(() =>
+            {
+                if (IsInstanceValid(p))
+                    p.QueueFree();
+            });
+
+            SceneTreeTimer timer = GetTree().CreateTimer(0f);
+            timer.Timeout += () =>
+            {
+                if (!IsInstanceValid(p))
+                    return;
+                Tween t = p.CreateTween();
+                t.SetParallel();
+                t.TweenProperty(p, "global_position", target, 0.4f)
+                    .SetTrans(Tween.TransitionType.Quad)
+                    .SetEase(Tween.EaseType.Out);
+                t.TweenProperty(p, "modulate:a", 0f, 0.4f)
+                    .SetDelay(0.15f);
+                t.TweenProperty(p, "scale", Vector2.One * 0.3f, 0.4f);
+                t.Chain().TweenCallback(cleanup);
+            };
+        }
     }
 }

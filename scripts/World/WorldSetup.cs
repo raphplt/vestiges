@@ -29,6 +29,9 @@ public partial class WorldSetup : Node2D
     /// <summary>Seed de la run, injectée par GameBootstrap.</summary>
     public ulong Seed { get; set; }
 
+    /// <summary>Si true, aucun POI ni coffre n'est généré (mutateur "Isolement").</summary>
+    public bool PoisDisabled { get; set; }
+
     /// <summary>Référence publique au générateur pour les autres systèmes.</summary>
     public WorldGenerator Generator => _generator;
 
@@ -101,8 +104,11 @@ public partial class WorldSetup : Node2D
         ApplyTerrain(terrain);
         InitializeFog();
         SpawnResources();
-        SpawnPois();
-        SpawnChests();
+        if (!PoisDisabled)
+        {
+            SpawnPois();
+            SpawnChests();
+        }
 
         _respawnTimer = new Timer();
         _respawnTimer.WaitTime = _config.RespawnInterval;
@@ -198,7 +204,13 @@ public partial class WorldSetup : Node2D
     {
         _poiManager = new PoiManager();
         AddChild(_poiManager);
-        _poiManager.SpawnPois(_generator, _ground, _poiContainer, _usedCells, _config.PoiMinDistanceBetween);
+
+        Spawn.EnemyPool enemyPool = GetNodeOrNull<Spawn.EnemyPool>("EnemyPool");
+        Node enemyContainer = GetNodeOrNull("EnemyContainer");
+
+        _poiManager.SpawnPois(
+            _generator, _ground, _poiContainer, _usedCells, _config.PoiMinDistanceBetween,
+            enemyPool, enemyContainer);
     }
 
     private void SpawnChests()

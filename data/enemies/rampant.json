@@ -1,0 +1,17 @@
+{
+    "id": "rampant",
+    "name": "Rampant",
+    "type": "melee",
+    "stats": {
+        "hp": 25,
+        "speed": 45,
+        "damage": 8,
+        "xp_reward": 15
+    },
+    "visual": {
+        "color": "#5A4A3A",
+        "shape": "square",
+        "size": 11
+    },
+    "behavior": "burrower"
+}

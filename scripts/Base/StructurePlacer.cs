@@ -258,6 +258,14 @@ public partial class StructurePlacer : Node2D
 
         if (TryStartChainCraft())
         {
+            if (_pendingPlacements > 0)
+            {
+                _waitingForNextCraft = false;
+                _ghost.Visible = true;
+                UpdatePlacementHint();
+                return;
+            }
+
             _waitingForNextCraft = true;
             _ghost.Visible = false;
             _isValidPlacement = false;
@@ -273,6 +281,14 @@ public partial class StructurePlacer : Node2D
         Polygon2D visual = new();
         visual.Name = "Visual";
         structure.AddChild(visual);
+
+        Polygon2D leftFace = new();
+        leftFace.Name = "LeftFace";
+        structure.AddChild(leftFace);
+
+        Polygon2D rightFace = new();
+        rightFace.Name = "RightFace";
+        structure.AddChild(rightFace);
 
         CircleShape2D shape = new();
         shape.Radius = 14f;
@@ -325,7 +341,13 @@ public partial class StructurePlacer : Node2D
     {
         _ghost = new Polygon2D();
         float s = 14f;
-        _ghost.Polygon = new Vector2[] { new(-s, 0), new(0, -s * 0.5f), new(s, 0), new(0, s * 0.5f) };
+        float h = 7f;
+        // Contour hexagonal de la boîte iso (top + sides visibles)
+        _ghost.Polygon = new Vector2[]
+        {
+            new(0, -s * 0.5f), new(s, 0), new(s, h),
+            new(0, s * 0.5f + h), new(-s, h), new(-s, 0)
+        };
         _ghost.Color = ValidColor;
         _ghost.Visible = false;
         _ghost.ZIndex = 10;

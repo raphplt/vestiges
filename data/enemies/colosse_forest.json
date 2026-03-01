@@ -1,0 +1,18 @@
+{
+    "id": "colosse_forest",
+    "name": "Colosse Sylvestre",
+    "type": "melee",
+    "stats": {
+        "hp": 400,
+        "speed": 22,
+        "damage": 25,
+        "xp_reward": 100
+    },
+    "visual": {
+        "color": "#2D4A1C",
+        "shape": "square",
+        "size": 36
+    },
+    "behavior": "colosse",
+    "tier": "miniboss"
+}

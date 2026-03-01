@@ -24,6 +24,8 @@ public class EnemyData
     public string Id { get; set; }
     public string Name { get; set; }
     public string Type { get; set; }
+    public string Behavior { get; set; } = "default";
+    public string Tier { get; set; } = "normal";
     public EnemyStats Stats { get; set; }
     public EnemyVisual Visual { get; set; }
 }
@@ -121,6 +123,8 @@ public static class EnemyDataLoader
             Id = dict["id"].AsString(),
             Name = dict["name"].AsString(),
             Type = dict["type"].AsString(),
+            Behavior = dict.ContainsKey("behavior") ? dict["behavior"].AsString() : "default",
+            Tier = dict.ContainsKey("tier") ? dict["tier"].AsString() : "normal",
             Stats = new EnemyStats
             {
                 Hp = (float)stats["hp"].AsDouble(),

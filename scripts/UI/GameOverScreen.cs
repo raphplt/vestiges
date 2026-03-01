@@ -18,9 +18,13 @@ public partial class GameOverScreen : CanvasLayer
     private Label _combatLabel;
     private Label _survivalLabel;
     private Label _bonusLabel;
+    private Label _buildLabel;
+    private Label _explorationLabel;
+    private Label _multiplierLabel;
     private Label _totalLabel;
     private Label _recordLabel;
     private Label _killsLabel;
+    private Label _seedLabel;
     private Label _vestigesLabel;
     private Label _unlocksLabel;
     private Button _restartButton;
@@ -58,8 +62,8 @@ public partial class GameOverScreen : CanvasLayer
         _panel.AnchorBottom = 0.5f;
         _panel.OffsetLeft = -180;
         _panel.OffsetRight = 180;
-        _panel.OffsetTop = -160;
-        _panel.OffsetBottom = 160;
+        _panel.OffsetTop = -210;
+        _panel.OffsetBottom = 210;
         _panel.GrowHorizontal = Control.GrowDirection.Both;
         _panel.GrowVertical = Control.GrowDirection.Both;
 
@@ -98,16 +102,30 @@ public partial class GameOverScreen : CanvasLayer
         _bonusLabel = CreateLabel("", 14, HorizontalAlignment.Left);
         vbox.AddChild(_bonusLabel);
 
+        _buildLabel = CreateLabel("", 14, HorizontalAlignment.Left);
+        vbox.AddChild(_buildLabel);
+
+        _explorationLabel = CreateLabel("", 14, HorizontalAlignment.Left);
+        vbox.AddChild(_explorationLabel);
+
         _killsLabel = CreateLabel("", 14, HorizontalAlignment.Left);
         vbox.AddChild(_killsLabel);
 
         vbox.AddChild(CreateSeparator());
+
+        _multiplierLabel = CreateLabel("", 13, HorizontalAlignment.Center);
+        _multiplierLabel.AddThemeColorOverride("font_color", new Color(0.7f, 0.65f, 0.45f));
+        vbox.AddChild(_multiplierLabel);
 
         _totalLabel = CreateLabel("", 22, HorizontalAlignment.Center);
         vbox.AddChild(_totalLabel);
 
         _recordLabel = CreateLabel("", 14, HorizontalAlignment.Center);
         vbox.AddChild(_recordLabel);
+
+        _seedLabel = CreateLabel("", 12, HorizontalAlignment.Center);
+        _seedLabel.AddThemeColorOverride("font_color", new Color(0.45f, 0.45f, 0.5f));
+        vbox.AddChild(_seedLabel);
 
         _vestigesLabel = CreateLabel("", 14, HorizontalAlignment.Center);
         _vestigesLabel.AddThemeColorOverride("font_color", new Color(0.85f, 0.75f, 0.4f));
@@ -184,10 +202,14 @@ public partial class GameOverScreen : CanvasLayer
         int combat = _scoreManager?.CombatScore ?? 0;
         int survival = _scoreManager?.SurvivalScore ?? 0;
         int bonus = _scoreManager?.BonusScore ?? 0;
+        int build = _scoreManager?.BuildScore ?? 0;
+        int exploration = _scoreManager?.ExplorationScore ?? 0;
         int kills = _scoreManager?.TotalKills ?? 0;
         int nights = _scoreManager?.NightsSurvived ?? 0;
         int best = _scoreManager?.BestScore ?? 0;
         bool isRecord = _scoreManager?.IsNewRecord ?? false;
+        float charMult = _scoreManager?.CharacterMultiplier ?? 1f;
+        float mutMult = _scoreManager?.MutatorMultiplier ?? 1f;
 
         _nightsLabel.Text = nights > 0
             ? $"{nights} nuit{(nights > 1 ? "s" : "")} survécue{(nights > 1 ? "s" : "")}"
@@ -196,13 +218,35 @@ public partial class GameOverScreen : CanvasLayer
         _combatLabel.Text = $"Combat : {combat}";
         _survivalLabel.Text = $"Survie : {survival}";
         _bonusLabel.Text = $"Bonus (nuits sans dégât) : {bonus}";
+        _buildLabel.Text = build > 0 ? $"Construction : {build}" : "";
+        _explorationLabel.Text = exploration > 0 ? $"Exploration : {exploration}" : "";
         _killsLabel.Text = $"Kills : {kills}";
+
+        // Multiplier line (only if relevant)
+        float totalMult = charMult * mutMult;
+        if (totalMult > 1f + 0.001f)
+        {
+            string multParts = $"x{charMult:F2}";
+            if (mutMult > 1f + 0.001f)
+                multParts += $" x {mutMult:F2} (mutateurs)";
+            _multiplierLabel.Text = $"Multiplicateur : {multParts} = x{totalMult:F2}";
+        }
+        else
+        {
+            _multiplierLabel.Text = "";
+        }
+
         _totalLabel.Text = $"SCORE : {total}";
 
         if (isRecord)
             _recordLabel.Text = "NOUVEAU RECORD !";
         else
             _recordLabel.Text = $"Meilleur : {best}";
+
+        // Seed display
+        GameManager gm = GetNode<GameManager>("/root/GameManager");
+        ulong seed = gm.RunSeed;
+        _seedLabel.Text = seed > 0 ? $"Seed : {seed}" : "";
 
         // Vestiges earned
         int vestigesEarned = _scoreManager?.VestigesEarned ?? 0;
@@ -211,7 +255,6 @@ public partial class GameOverScreen : CanvasLayer
             : "";
 
         // Character unlocks
-        GameManager gm = GetNode<GameManager>("/root/GameManager");
         List<string> unlocks = gm.LastUnlocks;
         if (unlocks != null && unlocks.Count > 0)
         {

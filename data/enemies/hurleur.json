@@ -1,0 +1,18 @@
+{
+    "id": "hurleur",
+    "name": "Hurleur",
+    "type": "ranged",
+    "stats": {
+        "hp": 35,
+        "speed": 25,
+        "damage": 4,
+        "attack_range": 300,
+        "xp_reward": 30
+    },
+    "visual": {
+        "color": "#44AA55",
+        "shape": "triangle",
+        "size": 18
+    },
+    "behavior": "screamer"
+}

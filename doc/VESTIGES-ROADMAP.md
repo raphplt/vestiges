@@ -245,8 +245,8 @@ Les niveaux de complexité servent à prioriser l'effort et le risque. Ils n'imp
 - [ ] 4ème biome (Carrière effondrée) en bonus si la capacité le permet.
 - [x] Chaque biome a ses propres tiles, ambiance, types de ressources, et ennemis dominants.
 - [x] La map est composée de 2-3 biomes par run.
-- [ ] Le Sanctuaire comme POI rare inter-biomes (lieu intact, plus saturé que le reste — cf. Bible section 5.5).
-- [ ] Résultat : la variété visuelle et gameplay entre les zones est visible.
+- [x] Le Sanctuaire comme POI rare inter-biomes (lieu intact, plus saturé que le reste — cf. Bible section 5.5).
+- [x] Résultat : la variété visuelle et gameplay entre les zones est visible.
 
 **Lot 5.3 — Points d'intérêt (POI) (`Complexité : C3`)**
 - [x] Système de placement de POI procédural dans les biomes.
@@ -257,7 +257,7 @@ Les niveaux de complexité servent à prioriser l'effort et le risque. Ils n'imp
 **Lot 5.4 — Coffres et loot (`Complexité : C2`)**
 - [x] Implémenter les 4 types de coffres (commun, rare, épique, lore).
 - [x] Loot tables en JSON (facile à équilibrer).
-- [ ] Coffres épiques gardés par des ennemis élites.
+- [x] Coffres épiques gardés par des ennemis élites.
 - [x] Résultat : trouver un coffre est un moment de dopamine.
 
 **Lot 5.5 — Fog of war et extension de map (`Complexité : C3`)**
@@ -286,31 +286,31 @@ Les niveaux de complexité servent à prioriser l'effort et le risque. Ils n'imp
 ### Tâches
 
 **Lot 6.1 — Bestiaire complet (`Complexité : C4`)**
-- [ ] Implémenter tous les types d'ennemis du GDD : Rôdeurs, Charognards, Sentinelles, Tréants corrompus (jour) + Ombres, Brutes, Tisseuses, Hurleurs, Rampants (nuit).
-- [ ] Mini-boss (Colosses) visuellement uniques par biome (cf. Bible section 6.2 : faits de ce qui a été effacé dans leur zone).
-- [ ] Élites nocturnes (Aberrations) : versions corrompues avec excroissances, aura de particules sombres, propriétés aléatoires.
-- [ ] L'Indicible (boss rare nuit 10+) : trop grand pour l'écran, son infrasonore.
-- [ ] Tous les ennemis se désagrègent en particules noires à la mort (pas de cadavre — retour au néant).
-- [ ] Résultat : la variété d'ennemis rend chaque nuit différente.
+- [x] Implémenter tous les types d'ennemis du GDD : Rôdeurs, Charognards, Sentinelles, Tréants corrompus (jour) + Ombres, Brutes, Tisseuses, Hurleurs, Rampants (nuit).
+- [x] Mini-boss (Colosses) visuellement uniques par biome (cf. Bible section 6.2 : faits de ce qui a été effacé dans leur zone).
+- [x] Élites nocturnes (Aberrations) : versions corrompues avec excroissances, aura de particules sombres, propriétés aléatoires.
+- [x] L'Indicible (boss rare nuit 10+) : trop grand pour l'écran, son infrasonore.
+- [x] Tous les ennemis se désagrègent en particules noires à la mort (pas de cadavre — retour au néant).
+- [x] Résultat : la variété d'ennemis rend chaque nuit différente.
 
 **Lot 6.2 — Événements aléatoires (`Complexité : C3`)**
-- [ ] Implémenter 5 événements de jour (Caravane, Tempête, Tremblement, Signal de fumée, Migration).
-- [ ] Implémenter 3 événements de nuit (Brume épaisse, Résurgence, L'Appel).
-- [ ] Résultat : des surprises cassent la routine et forcent l'adaptation.
+- [x] Implémenter 5 événements de jour (Caravane, Tempête, Tremblement, Signal de fumée, Migration).
+- [x] Implémenter 3 événements de nuit (Brume épaisse, Résurgence, L'Appel).
+- [x] Résultat : des surprises cassent la routine et forcent l'adaptation.
 
 **Lot 6.3 — Score avancé et leaderboard (`Complexité : C3`)**
-- [ ] Score complet : survie + combat + exploration + multiplicateurs (personnage, mutateurs).
-- [ ] Leaderboard local complet (global, par personnage, par record de nuits).
-- [ ] Seed de défi fixe (en local, même seed pour tous).
-- [ ] Résultat : la compétition de score fonctionne.
+- [x] Score complet : survie + combat + exploration + multiplicateurs (personnage, mutateurs).
+- [x] Leaderboard local complet (global, par personnage, par record de nuits).
+- [x] Seed de défi fixe (en local, même seed pour tous).
+- [x] Résultat : la compétition de score fonctionne.
 
 **Lot 6.4 — Mutateurs de difficulté (`Complexité : C3`)**
-- [ ] Implémenter 5-6 mutateurs dans le Hub (ennemis +HP, pas de Foyer safe, nuit plus longue, etc.).
-- [ ] Chaque mutateur augmente le multiplicateur de score.
-- [ ] Résultat : les joueurs avancés ont des défis supplémentaires.
+- [x] Implémenter 5-6 mutateurs dans le Hub (ennemis +HP, pas de Foyer safe, nuit plus longue, etc.).
+- [x] Chaque mutateur augmente le multiplicateur de score.
+- [x] Résultat : les joueurs avancés ont des défis supplémentaires.
 
 ### Critère de validation
-- [ ] Le jeu a assez de variété pour que 10 runs d'affilée se sentent toutes différentes. Le score pousse à relancer. Les mutateurs donnent un challenge aux joueurs qui maîtrisent le jeu.
+- [x] Le jeu a assez de variété pour que 10 runs d'affilée se sentent toutes différentes. Le score pousse à relancer. Les mutateurs donnent un challenge aux joueurs qui maîtrisent le jeu.
 
 ---
 

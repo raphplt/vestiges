@@ -1,0 +1,18 @@
+{
+    "id": "indicible",
+    "name": "L'Indicible",
+    "type": "boss",
+    "stats": {
+        "hp": 2000,
+        "speed": 0,
+        "damage": 15,
+        "xp_reward": 500
+    },
+    "visual": {
+        "color": "#1A0A2E",
+        "shape": "boss",
+        "size": 64
+    },
+    "behavior": "indicible",
+    "tier": "boss"
+}

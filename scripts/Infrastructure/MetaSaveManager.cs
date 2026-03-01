@@ -24,6 +24,12 @@ public class MetaSaveData
 
     [JsonPropertyName("discovered_souvenirs")]
     public List<string> DiscoveredSouvenirs { get; set; } = new();
+
+    [JsonPropertyName("unlocked_mutators")]
+    public List<string> UnlockedMutators { get; set; } = new();
+
+    [JsonPropertyName("active_mutators")]
+    public List<string> ActiveMutators { get; set; } = new();
 }
 
 public class MetaStats
@@ -193,6 +199,9 @@ public static class MetaSaveManager
         if (newUnlocks.Count > 0)
             Save();
 
+        // Also check mutator unlocks
+        CheckMutatorUnlocks();
+
         return newUnlocks;
     }
 
@@ -283,5 +292,71 @@ public static class MetaSaveManager
         Load();
         _data.SelectedKit = kitId;
         Save();
+    }
+
+    // --- Mutators ---
+
+    public static bool IsMutatorUnlocked(string mutatorId)
+    {
+        Load();
+        return _data.UnlockedMutators.Contains(mutatorId);
+    }
+
+    public static List<string> GetUnlockedMutators()
+    {
+        Load();
+        return new List<string>(_data.UnlockedMutators);
+    }
+
+    public static List<string> GetActiveMutators()
+    {
+        Load();
+        return new List<string>(_data.ActiveMutators);
+    }
+
+    public static void SetActiveMutators(List<string> mutatorIds)
+    {
+        Load();
+        _data.ActiveMutators = new List<string>(mutatorIds);
+        Save();
+    }
+
+    public static void ToggleMutator(string mutatorId)
+    {
+        Load();
+        if (_data.ActiveMutators.Contains(mutatorId))
+            _data.ActiveMutators.Remove(mutatorId);
+        else
+            _data.ActiveMutators.Add(mutatorId);
+        Save();
+    }
+
+    /// <summary>
+    /// Vérifie les déblocages de mutateurs selon les nuits survivées.
+    /// Retourne la liste des mutateurs nouvellement débloqués.
+    /// </summary>
+    public static List<string> CheckMutatorUnlocks()
+    {
+        Load();
+        MutatorDataLoader.Load();
+        List<string> newUnlocks = new();
+
+        foreach (MutatorData mutator in MutatorDataLoader.GetAll())
+        {
+            if (_data.UnlockedMutators.Contains(mutator.Id))
+                continue;
+
+            if (_data.Stats.MaxNightsSurvived >= mutator.UnlockNights)
+            {
+                _data.UnlockedMutators.Add(mutator.Id);
+                newUnlocks.Add(mutator.Id);
+                GD.Print($"[MetaSaveManager] Mutator unlocked: {mutator.Name} ({mutator.UnlockNights} nights)");
+            }
+        }
+
+        if (newUnlocks.Count > 0)
+            Save();
+
+        return newUnlocks;
     }
 }

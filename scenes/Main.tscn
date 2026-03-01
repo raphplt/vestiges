@@ -1,4 +1,4 @@
-[gd_scene load_steps=29 format=3]
+[gd_scene load_steps=30 format=3]
 
 [ext_resource type="TileSet" path="res://assets/tiles/iso_tileset.tres" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/Player.tscn" id="2"]
@@ -25,6 +25,7 @@
 [ext_resource type="Script" path="res://scripts/UI/JournalScreen.cs" id="23"]
 [ext_resource type="Script" path="res://scripts/Infrastructure/RunTracker.cs" id="24"]
 [ext_resource type="Script" path="res://scripts/UI/DebugOverlay.cs" id="25"]
+[ext_resource type="Script" path="res://scripts/Events/RandomEventManager.cs" id="26"]
 
 [sub_resource type="Gradient" id="Gradient_light"]
 colors = PackedColorArray(1, 1, 1, 1, 1, 1, 1, 0)
@@ -132,6 +133,9 @@ script = ExtResource("24")
 
 [node name="DebugOverlay" type="CanvasLayer" parent="."]
 script = ExtResource("25")
+
+[node name="RandomEventManager" type="Node" parent="."]
+script = ExtResource("26")
 
 [node name="GameBootstrap" type="Node" parent="."]
 script = ExtResource("10")

@@ -1,0 +1,18 @@
+{
+    "id": "colosse_swamp",
+    "name": "Colosse des Profondeurs",
+    "type": "melee",
+    "stats": {
+        "hp": 300,
+        "speed": 28,
+        "damage": 22,
+        "xp_reward": 100
+    },
+    "visual": {
+        "color": "#3A5A4A",
+        "shape": "square",
+        "size": 32
+    },
+    "behavior": "colosse",
+    "tier": "miniboss"
+}

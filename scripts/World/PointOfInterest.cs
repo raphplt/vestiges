@@ -15,9 +15,11 @@ public partial class PointOfInterest : StaticBody2D
     private PoiData _data;
     private bool _isExplored;
     private bool _guardsDefeated;
+    private int _guardCount;
     private Polygon2D _visual;
     private Polygon2D _outline;
     private Polygon2D _indicator;
+    private Polygon2D _guardRing;
     private Color _originalColor;
     private EventBus _eventBus;
 
@@ -27,6 +29,7 @@ public partial class PointOfInterest : StaticBody2D
     public string InteractionType => _data?.InteractionType ?? "";
     public float SearchTime => _data?.SearchTime ?? 1f;
     public string LootTableId => _data?.LootTableId ?? "";
+    public int LootRolls => _data?.LootRolls ?? 2;
     public int ScorePoints => _data?.ScorePoints ?? 0;
 
     public bool CanInteract
@@ -64,7 +67,14 @@ public partial class PointOfInterest : StaticBody2D
 
         // Les POI gardés sans gardes actifs sont directement accessibles
         if (data.EnemyGuards.Count == 0)
+        {
             _guardsDefeated = true;
+        }
+        else
+        {
+            _guardCount = data.EnemyGuards.Count;
+            CreateGuardRing(s);
+        }
     }
 
     /// <summary>Marque le POI comme exploré. Émet le signal PoiExplored.</summary>
@@ -75,20 +85,151 @@ public partial class PointOfInterest : StaticBody2D
 
         _isExplored = true;
 
-        // Feedback visuel : couleur atténuée, indicateur masqué
-        _visual.Color = new Color(_originalColor, 0.4f);
+        PlayExploreEffect();
+
+        // Feedback visuel : couleur atténuée, indicateur masqué (après le flash)
+        Tween fadeTween = CreateTween();
+        fadeTween.TweenProperty(_visual, "color", new Color(_originalColor, 0.4f), 0.3f).SetDelay(0.15f);
         if (_outline != null)
-            _outline.Color = new Color(_outline.Color, 0.3f);
+            fadeTween.Parallel().TweenProperty(_outline, "color", new Color(_outline.Color, 0.3f), 0.3f).SetDelay(0.15f);
         if (_indicator != null)
             _indicator.Visible = false;
 
         _eventBus?.EmitSignal(EventBus.SignalName.PoiExplored, _poiId, _data?.Type ?? "");
     }
 
-    /// <summary>Appelé quand les gardes du POI sont vaincus.</summary>
-    public void MarkGuardsDefeated()
+    private void PlayExploreEffect()
     {
-        _guardsDefeated = true;
+        // Flash blanc
+        Color prevColor = _visual.Color;
+        _visual.Color = Colors.White;
+        Tween flashTween = CreateTween();
+        flashTween.TweenProperty(_visual, "color", prevColor, 0.2f).SetDelay(0.06f);
+
+        // Scale bounce
+        Tween scaleTween = CreateTween();
+        scaleTween.TweenProperty(this, "scale", Vector2.One * 1.2f, 0.08f);
+        scaleTween.TweenProperty(this, "scale", Vector2.One * 0.9f, 0.1f);
+        scaleTween.TweenProperty(this, "scale", Vector2.One, 0.08f);
+
+        // Particules dorées qui s'envolent
+        SpawnExploreParticles();
+    }
+
+    private void SpawnExploreParticles()
+    {
+        int count = 8;
+        Color particleColor = new(0.9f, 0.8f, 0.4f);
+
+        for (int i = 0; i < count; i++)
+        {
+            Polygon2D particle = new();
+            float ps = (float)GD.RandRange(2f, 4.5f);
+            particle.Polygon = new Vector2[]
+            {
+                new(-ps, 0), new(0, -ps * 0.6f), new(ps, 0), new(0, ps * 0.6f)
+            };
+
+            float hueShift = (float)GD.RandRange(-0.06f, 0.06f);
+            particle.Color = new Color(
+                Mathf.Clamp(particleColor.R + hueShift, 0, 1),
+                Mathf.Clamp(particleColor.G + hueShift, 0, 1),
+                Mathf.Clamp(particleColor.B + hueShift * 0.5f, 0, 1)
+            );
+
+            particle.GlobalPosition = GlobalPosition;
+            GetTree().CurrentScene.CallDeferred(Node.MethodName.AddChild, particle);
+
+            float angle = (float)GD.RandRange(0, Mathf.Tau);
+            float dist = (float)GD.RandRange(25f, 55f);
+            Vector2 target = GlobalPosition + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * dist
+                + new Vector2(0, -15f);
+
+            Polygon2D p = particle;
+            Callable cleanup = Callable.From(() =>
+            {
+                if (IsInstanceValid(p))
+                    p.QueueFree();
+            });
+
+            SceneTreeTimer timer = GetTree().CreateTimer(0f);
+            timer.Timeout += () =>
+            {
+                if (!IsInstanceValid(p))
+                    return;
+                Tween t = p.CreateTween();
+                t.SetParallel();
+                t.TweenProperty(p, "global_position", target, 0.5f)
+                    .SetTrans(Tween.TransitionType.Quad)
+                    .SetEase(Tween.EaseType.Out);
+                t.TweenProperty(p, "modulate:a", 0f, 0.5f)
+                    .SetDelay(0.2f);
+                t.TweenProperty(p, "scale", Vector2.One * 0.2f, 0.5f);
+                t.Chain().TweenCallback(cleanup);
+            };
+        }
+    }
+
+    /// <summary>Appelé par un garde quand il meurt. Quand tous les gardes sont éliminés, le POI devient accessible.</summary>
+    public void OnGuardKilled()
+    {
+        _guardCount--;
+        if (_guardCount <= 0)
+        {
+            _guardsDefeated = true;
+            _guardCount = 0;
+
+            // Feedback : anneau rouge disparaît, flash vert
+            if (_guardRing != null)
+            {
+                Tween ringTween = CreateTween();
+                ringTween.TweenProperty(_guardRing, "modulate:a", 0f, 0.4f);
+                ringTween.TweenCallback(Callable.From(() => { _guardRing.QueueFree(); _guardRing = null; }));
+            }
+
+            FlashColor(new Color(0.3f, 1f, 0.4f));
+        }
+    }
+
+    /// <summary>Initialise le nombre de gardes attendus (appelé par PoiManager).</summary>
+    public void SetGuardCount(int count)
+    {
+        _guardCount = count;
+        if (count == 0)
+            _guardsDefeated = true;
+    }
+
+    /// <summary>Anneau rouge pulsant autour des POI gardés.</summary>
+    private void CreateGuardRing(float size)
+    {
+        _guardRing = new Polygon2D();
+        float r = size * 0.8f;
+        int segments = 16;
+        Vector2[] ring = new Vector2[segments];
+        for (int i = 0; i < segments; i++)
+        {
+            float angle = Mathf.Tau * i / segments;
+            ring[i] = new Vector2(Mathf.Cos(angle) * r, Mathf.Sin(angle) * r * 0.5f);
+        }
+        _guardRing.Polygon = ring;
+        _guardRing.Color = new Color(0.9f, 0.2f, 0.15f, 0.35f);
+        _guardRing.ZIndex = -1;
+        _visual.AddChild(_guardRing);
+
+        Tween tween = CreateTween();
+        tween.SetLoops();
+        tween.TweenProperty(_guardRing, "modulate:a", 0.4f, 1.0f)
+            .SetTrans(Tween.TransitionType.Sine);
+        tween.TweenProperty(_guardRing, "modulate:a", 1f, 1.0f)
+            .SetTrans(Tween.TransitionType.Sine);
+    }
+
+    private void FlashColor(Color flashColor)
+    {
+        Color prev = _visual.Color;
+        _visual.Color = flashColor;
+        Tween tween = CreateTween();
+        tween.TweenProperty(_visual, "color", prev, 0.5f).SetDelay(0.2f);
     }
 
     private static Vector2[] BuildShape(string shape, float s)
@@ -150,6 +291,17 @@ public partial class PointOfInterest : StaticBody2D
                 new(s * 0.3f, 0),
                 new(0, s * 0.7f),
                 new(-s * 0.3f, 0)
+            },
+            // Sanctuaire : bâtiment intact, symétrique, avec toit pointu
+            "sanctuary" => new Vector2[]
+            {
+                new(0, -s * 0.7f),
+                new(s * 0.35f, -s * 0.35f),
+                new(s * 0.5f, -s * 0.35f),
+                new(s * 0.5f, s * 0.4f),
+                new(-s * 0.5f, s * 0.4f),
+                new(-s * 0.5f, -s * 0.35f),
+                new(-s * 0.35f, -s * 0.35f)
             },
             // Fallback : diamant isométrique
             _ => new Vector2[] { new(-s, 0), new(0, -s * 0.5f), new(s, 0), new(0, s * 0.5f) }

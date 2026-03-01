@@ -20,6 +20,17 @@ public partial class Wall : Structure
         base.Initialize(recipeId, structureId, maxHp, gridPos, color);
 
         float s = 14f;
+        float h = 7f;
+
+        // Face du dessus (losange iso)
         Visual.Polygon = new Vector2[] { new(-s, 0), new(0, -s * 0.5f), new(s, 0), new(0, s * 0.5f) };
+
+        // Face gauche (extrusion vers le bas)
+        if (LeftFace != null)
+            LeftFace.Polygon = new Vector2[] { new(-s, 0), new(0, s * 0.5f), new(0, s * 0.5f + h), new(-s, h) };
+
+        // Face droite (extrusion vers le bas)
+        if (RightFace != null)
+            RightFace.Polygon = new Vector2[] { new(0, s * 0.5f), new(s, 0), new(s, h), new(0, s * 0.5f + h) };
     }
 }

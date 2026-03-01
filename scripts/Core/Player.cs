@@ -321,7 +321,7 @@ public partial class Player : CharacterBody2D
             CancelChestOpen();
             Vector2 isoDir = CartesianToIsometric(inputDir);
             float terrainSpeedFactor = IsOnWater() ? 0.5f : 1f;
-            Velocity = isoDir * (Speed * _speedMultiplier * terrainSpeedFactor);
+            Velocity = isoDir * (Speed * _speedMultiplier * _slowFactor * terrainSpeedFactor);
             _facingDirection = isoDir.Normalized();
             UpdateWeaponPivotRotation();
         }
@@ -333,6 +333,7 @@ public partial class Player : CharacterBody2D
         MoveAndSlide();
         ClampToWorldBounds();
         ApplyRegen(dt);
+        ProcessSlowDecay(dt);
         ProcessHarvest(dt);
         ProcessPoiExplore(dt);
         ProcessChestOpen(dt);
@@ -734,6 +735,30 @@ public partial class Player : CharacterBody2D
         nearestEnemy?.TakeDamage(reflectedDamage);
     }
 
+    // --- Debuffs ---
+
+    private float _slowTimer;
+    private float _slowFactor = 1f;
+
+    public void ApplySlow(float factor, float duration)
+    {
+        _slowFactor = factor;
+        _slowTimer = duration;
+    }
+
+    private void ProcessSlowDecay(float delta)
+    {
+        if (_slowTimer <= 0f)
+            return;
+
+        _slowTimer -= delta;
+        if (_slowTimer <= 0f)
+        {
+            _slowFactor = 1f;
+            _slowTimer = 0f;
+        }
+    }
+
     // --- Harvest ---
 
     private void TryStartHarvest()
@@ -870,6 +895,7 @@ public partial class Player : CharacterBody2D
         // Les POI sans temps de recherche sont explorés instantanément
         if (nearest.SearchTime <= 0f)
         {
+            ApplyPoiLoot(nearest);
             nearest.Explore();
             _eventBus?.EmitSignal(EventBus.SignalName.PoiDiscovered,
                 nearest.PoiId, nearest.PoiType, nearest.GlobalPosition);
@@ -918,6 +944,7 @@ public partial class Player : CharacterBody2D
             return;
         }
 
+        ApplyPoiLoot(_poiTarget);
         _poiTarget.Explore();
         _eventBus?.EmitSignal(EventBus.SignalName.PoiDiscovered,
             _poiTarget.PoiId, _poiTarget.PoiType, _poiTarget.GlobalPosition);
@@ -937,6 +964,69 @@ public partial class Player : CharacterBody2D
         _harvestBar.Visible = false;
         _poiTarget = null;
         _poiProgress = 0f;
+    }
+
+    private void ApplyPoiLoot(PointOfInterest poi)
+    {
+        if (string.IsNullOrEmpty(poi.LootTableId))
+            return;
+
+        System.Collections.Generic.List<LootResolver.LootResult> loots =
+            LootResolver.Roll(poi.LootTableId, poi.LootRolls);
+        CacheInventory();
+
+        int lootIndex = 0;
+        foreach (LootResolver.LootResult loot in loots)
+        {
+            string displayName = loot.ItemId;
+            Color displayColor = new(0.9f, 0.85f, 0.6f);
+
+            switch (loot.Type)
+            {
+                case "resource":
+                    _inventory?.Add(loot.ItemId, loot.Amount);
+                    _eventBus?.EmitSignal(EventBus.SignalName.LootReceived,
+                        loot.Type, loot.ItemId, loot.Amount);
+                    displayName = $"{loot.ItemId} x{loot.Amount}";
+                    break;
+                case "xp":
+                    _eventBus?.EmitSignal(EventBus.SignalName.XpGained, (float)loot.Amount);
+                    displayName = $"+{loot.Amount} XP";
+                    displayColor = new Color(0.4f, 0.8f, 1f);
+                    break;
+                case "perk":
+                    _eventBus?.EmitSignal(EventBus.SignalName.LootReceived,
+                        loot.Type, loot.ItemId, loot.Amount);
+                    displayName = $"Perk: {loot.ItemId}";
+                    displayColor = new Color(0.5f, 1f, 0.5f);
+                    break;
+                case "souvenir":
+                    _eventBus?.EmitSignal(EventBus.SignalName.LootReceived,
+                        loot.Type, loot.ItemId, loot.Amount);
+                    displayName = $"Souvenir: {loot.ItemId}";
+                    displayColor = new Color(0.8f, 0.85f, 1f);
+                    break;
+                case "weapon":
+                    WeaponData weaponLoot = ResolveWeaponLoot(loot.ItemId);
+                    if (weaponLoot != null && AddWeapon(weaponLoot))
+                    {
+                        _eventBus?.EmitSignal(EventBus.SignalName.LootReceived,
+                            loot.Type, weaponLoot.Id, loot.Amount);
+                        displayName = weaponLoot.Name;
+                        displayColor = new Color(1f, 0.7f, 0.2f);
+                    }
+                    else
+                    {
+                        continue;
+                    }
+                    break;
+                default:
+                    continue;
+            }
+
+            SpawnLootPopup(displayName, displayColor, poi.GlobalPosition, lootIndex);
+            lootIndex++;
+        }
     }
 
     private PointOfInterest FindNearestPoi()
@@ -1030,25 +1120,36 @@ public partial class Player : CharacterBody2D
         System.Collections.Generic.List<LootResolver.LootResult> loots = chest.Open();
         CacheInventory();
 
+        int lootIndex = 0;
         foreach (LootResolver.LootResult loot in loots)
         {
+            string displayName = loot.ItemId;
+            Color displayColor = new(0.9f, 0.85f, 0.6f);
+
             switch (loot.Type)
             {
                 case "resource":
                     _inventory?.Add(loot.ItemId, loot.Amount);
                     _eventBus?.EmitSignal(EventBus.SignalName.LootReceived,
                         loot.Type, loot.ItemId, loot.Amount);
+                    displayName = $"{loot.ItemId} x{loot.Amount}";
                     break;
                 case "xp":
                     _eventBus?.EmitSignal(EventBus.SignalName.XpGained, (float)loot.Amount);
+                    displayName = $"+{loot.Amount} XP";
+                    displayColor = new Color(0.4f, 0.8f, 1f);
                     break;
                 case "perk":
                     _eventBus?.EmitSignal(EventBus.SignalName.LootReceived,
                         loot.Type, loot.ItemId, loot.Amount);
+                    displayName = $"Perk: {loot.ItemId}";
+                    displayColor = new Color(0.5f, 1f, 0.5f);
                     break;
                 case "souvenir":
                     _eventBus?.EmitSignal(EventBus.SignalName.LootReceived,
                         loot.Type, loot.ItemId, loot.Amount);
+                    displayName = $"Souvenir: {loot.ItemId}";
+                    displayColor = new Color(0.8f, 0.85f, 1f);
                     break;
                 case "weapon":
                     WeaponData weaponLoot = ResolveWeaponLoot(loot.ItemId);
@@ -1056,9 +1157,20 @@ public partial class Player : CharacterBody2D
                     {
                         _eventBus?.EmitSignal(EventBus.SignalName.LootReceived,
                             loot.Type, weaponLoot.Id, loot.Amount);
+                        displayName = weaponLoot.Name;
+                        displayColor = new Color(1f, 0.7f, 0.2f);
+                    }
+                    else
+                    {
+                        continue;
                     }
                     break;
+                default:
+                    continue;
             }
+
+            SpawnLootPopup(displayName, displayColor, chest.GlobalPosition, lootIndex);
+            lootIndex++;
         }
     }
 
@@ -1089,6 +1201,44 @@ public partial class Player : CharacterBody2D
             return null;
 
         return candidates[(int)(GD.Randf() * candidates.Count)];
+    }
+
+    /// <summary>Texte flottant montrant le loot obtenu, empilé verticalement.</summary>
+    private void SpawnLootPopup(string text, Color color, Vector2 worldPos, int stackIndex)
+    {
+        Label label = new()
+        {
+            Text = $"+ {text}",
+            HorizontalAlignment = HorizontalAlignment.Center,
+            GlobalPosition = worldPos + new Vector2(-40, -25 - stackIndex * 16)
+        };
+        label.AddThemeColorOverride("font_color", color);
+        label.AddThemeFontSizeOverride("font_size", 10);
+        label.Size = new Vector2(80, 16);
+
+        GetTree().CurrentScene.CallDeferred(Node.MethodName.AddChild, label);
+
+        Vector2 startPos = label.GlobalPosition;
+        Callable cleanup = Callable.From(() =>
+        {
+            if (IsInstanceValid(label))
+                label.QueueFree();
+        });
+
+        SceneTreeTimer timer = GetTree().CreateTimer(0f);
+        timer.Timeout += () =>
+        {
+            if (!IsInstanceValid(label))
+                return;
+            Tween tween = label.CreateTween();
+            tween.SetParallel();
+            tween.TweenProperty(label, "global_position", startPos + new Vector2(0, -35), 1.5f)
+                .SetTrans(Tween.TransitionType.Quad)
+                .SetEase(Tween.EaseType.Out);
+            tween.TweenProperty(label, "modulate:a", 0f, 1.5f)
+                .SetDelay(0.6f);
+            tween.Chain().TweenCallback(cleanup);
+        };
     }
 
     private void CancelChestOpen()

@@ -11,7 +11,9 @@ namespace Vestiges.World;
 public partial class Foyer : Node2D
 {
     public const float SafeRadius = 150f;
+    public const float DefaultSafeRadius = 150f;
 
+    private float _effectiveSafeRadius = DefaultSafeRadius;
     private PointLight2D _light;
     private Polygon2D _safeZone;
     private EventBus _eventBus;
@@ -49,13 +51,24 @@ public partial class Foyer : Node2D
         for (int i = 0; i < segments; i++)
         {
             float angle = Mathf.Tau * i / segments;
-            points[i] = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * SafeRadius;
+            points[i] = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * _effectiveSafeRadius;
         }
 
         _safeZone.Polygon = points;
         _safeZone.Color = new Color(1f, 0.85f, 0.4f, 0.06f);
         _safeZone.ZIndex = -1;
         AddChild(_safeZone);
+    }
+
+    public float EffectiveSafeRadius => _effectiveSafeRadius;
+
+    /// <summary>Désactive la zone de sécurité (mutateur "Foyer éteint").</summary>
+    public void DisableSafeZone()
+    {
+        _effectiveSafeRadius = 0f;
+        if (_safeZone != null)
+            _safeZone.Visible = false;
+        GD.Print("[Foyer] Safe zone disabled (mutator)");
     }
 
     private void OnDayPhaseChanged(string phase)

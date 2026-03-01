@@ -1,0 +1,56 @@
+[
+    {
+        "id": "endurance",
+        "name": "Nuit allongée",
+        "description": "La nuit dure 50% plus longtemps.",
+        "score_multiplier": 1.15,
+        "unlock_nights": 3,
+        "effect_type": "night_duration",
+        "effect_value": 1.5
+    },
+    {
+        "id": "iron_skin",
+        "name": "Ennemis résistants",
+        "description": "Les créatures ont 30% de PV en plus.",
+        "score_multiplier": 1.20,
+        "unlock_nights": 5,
+        "effect_type": "enemy_hp",
+        "effect_value": 1.3
+    },
+    {
+        "id": "rage",
+        "name": "Ennemis enragés",
+        "description": "Les créatures infligent 25% de dégâts en plus.",
+        "score_multiplier": 1.15,
+        "unlock_nights": 5,
+        "effect_type": "enemy_damage",
+        "effect_value": 1.25
+    },
+    {
+        "id": "exposed",
+        "name": "Foyer éteint",
+        "description": "Le Foyer ne protège plus. Pas de zone de sécurité.",
+        "score_multiplier": 1.25,
+        "unlock_nights": 7,
+        "effect_type": "no_safe_zone",
+        "effect_value": 0
+    },
+    {
+        "id": "relentless",
+        "name": "Vagues incessantes",
+        "description": "Les ennemis apparaissent 20% plus vite.",
+        "score_multiplier": 1.20,
+        "unlock_nights": 7,
+        "effect_type": "spawn_rate",
+        "effect_value": 0.8
+    },
+    {
+        "id": "solitude",
+        "name": "Isolement",
+        "description": "Aucun point d'intérêt ni coffre sur la carte.",
+        "score_multiplier": 1.15,
+        "unlock_nights": 10,
+        "effect_type": "no_pois",
+        "effect_value": 0
+    }
+]

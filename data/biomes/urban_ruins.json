@@ -7,8 +7,8 @@
         "water": 0.05,
         "forest": 0.25
     },
-    "day_enemy_pool": ["shadow_crawler", "shadow_crawler", "fading_spitter"],
-    "night_enemy_pool": ["shadow_crawler", "shade", "fading_spitter", "void_brute", "wailing_sentinel"],
+    "day_enemy_pool": ["shadow_crawler", "shadow_crawler", "fading_spitter", "rodeur"],
+    "night_enemy_pool": ["shadow_crawler", "shade", "fading_spitter", "void_brute", "wailing_sentinel", "rampant", "hurleur"],
     "resource_bias": {
         "wood": 0.10,
         "stone": 0.40,
@@ -24,7 +24,8 @@
         "guarded_chest": 1.2,
         "lore_ruin": 1.0,
         "merchant_npc": 0.8,
-        "anomaly": 0.8
+        "anomaly": 0.8,
+        "sanctuary": 0.15
     },
     "poi_count_min": 4,
     "poi_count_max": 8

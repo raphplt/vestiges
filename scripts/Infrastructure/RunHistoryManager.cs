@@ -104,6 +104,14 @@ public class RunRecord
     [JsonPropertyName("final_dmg_scale")]
     public float FinalDmgScale { get; set; }
 
+    // --- Mutators ---
+
+    [JsonPropertyName("active_mutators")]
+    public List<string> ActiveMutators { get; set; }
+
+    [JsonPropertyName("mutator_multiplier")]
+    public float MutatorMultiplier { get; set; } = 1f;
+
     // --- Simulation metadata (null for normal runs) ---
 
     [JsonPropertyName("sim_label")]
@@ -206,6 +214,28 @@ public static class RunHistoryManager
                 max = run.NightsSurvived;
         }
         return max;
+    }
+
+    /// <summary>Top N runs triées par score décroissant.</summary>
+    public static List<RunRecord> GetTopByScore(int count = 10)
+    {
+        Load();
+        List<RunRecord> sorted = new(_history);
+        sorted.Sort((a, b) => b.Score.CompareTo(a.Score));
+        return sorted.GetRange(0, System.Math.Min(count, sorted.Count));
+    }
+
+    /// <summary>Top N runs triées par nuits survivées décroissantes.</summary>
+    public static List<RunRecord> GetTopByNights(int count = 10)
+    {
+        Load();
+        List<RunRecord> sorted = new(_history);
+        sorted.Sort((a, b) =>
+        {
+            int cmp = b.NightsSurvived.CompareTo(a.NightsSurvived);
+            return cmp != 0 ? cmp : b.Score.CompareTo(a.Score);
+        });
+        return sorted.GetRange(0, System.Math.Min(count, sorted.Count));
     }
 
     /// <summary>Force un rechargement au prochain Load() (utile entre runs de simulation).</summary>

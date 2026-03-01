@@ -7,8 +7,8 @@
         "water": 0.05,
         "forest": 0.60
     },
-    "day_enemy_pool": ["charognard", "charognard", "treant_corrompu"],
-    "night_enemy_pool": ["shade", "shade", "charognard", "void_brute"],
+    "day_enemy_pool": ["charognard", "charognard", "treant_corrompu", "rodeur"],
+    "night_enemy_pool": ["shade", "shade", "charognard", "void_brute", "hurleur"],
     "resource_bias": {
         "wood": 0.55,
         "stone": 0.20,
@@ -24,7 +24,8 @@
         "guarded_chest": 0.8,
         "lore_ruin": 1.0,
         "merchant_npc": 1.0,
-        "anomaly": 0.5
+        "anomaly": 0.5,
+        "sanctuary": 0.15
     },
     "poi_count_min": 4,
     "poi_count_max": 7

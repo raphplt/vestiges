@@ -1,0 +1,18 @@
+{
+    "id": "colosse_urban",
+    "name": "Colosse de Béton",
+    "type": "melee",
+    "stats": {
+        "hp": 350,
+        "speed": 25,
+        "damage": 30,
+        "xp_reward": 100
+    },
+    "visual": {
+        "color": "#5A5A6E",
+        "shape": "square",
+        "size": 34
+    },
+    "behavior": "colosse",
+    "tier": "miniboss"
+}

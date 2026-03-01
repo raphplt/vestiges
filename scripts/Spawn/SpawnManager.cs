@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Godot;
 using Vestiges.Combat;
 using Vestiges.Core;
+using Vestiges.Events;
 using Vestiges.Infrastructure;
 using Vestiges.World;
 
@@ -23,6 +24,8 @@ public partial class SpawnManager : Node2D
     private float _nightHpMultiplier;
     private float _nightDmgMultiplier;
     private float _nightSpawnRateMultiplier;
+    private float _flatHpMultiplier = 1f;
+    private float _flatDmgMultiplier = 1f;
 
     private float _elapsedTime;
     private float _spawnTimer;
@@ -41,6 +44,22 @@ public partial class SpawnManager : Node2D
     // Fallback quand aucun biome n'est disponible
     private static readonly List<string> FallbackDayPool = new() { "shadow_crawler", "fading_spitter" };
     private static readonly List<string> FallbackNightPool = new() { "shadow_crawler", "shade", "shade", "fading_spitter", "void_brute", "wailing_sentinel" };
+
+    // Mapping biome → colosse (mini-boss biome-spécifique, nuit 3+)
+    private static readonly Dictionary<string, string> BiomeColosseMap = new()
+    {
+        { "forest_reclaimed", "colosse_forest" },
+        { "urban_ruins", "colosse_urban" },
+        { "swamp", "colosse_swamp" }
+    };
+    private const int ColosseMinNight = 3;
+    private const string FallbackColosse = "colosse_forest";
+    private const int AberrationMinNight = 7;
+    private const float AberrationBaseChance = 0.15f;
+    private const float AberrationChancePerNight = 0.05f;
+    private const int IndicibleMinNight = 10;
+    private bool _indicibleSpawned;
+    private RandomEventManager _randomEventManager;
 
     public override void _Ready()
     {
@@ -100,7 +119,7 @@ public partial class SpawnManager : Node2D
         float nightFactor = _currentPhase switch
         {
             DayPhase.Day => 0.8f,
-            DayPhase.Dusk => 0.55f,
+            DayPhase.Dusk => 0.65f,
             DayPhase.Night => 0.3f * Mathf.Pow(_nightSpawnRateMultiplier, _currentNight - 1),
             _ => 1f
         };
@@ -120,8 +139,8 @@ public partial class SpawnManager : Node2D
         if (data == null)
             return;
 
-        float hpScale = Mathf.Pow(_hpScalingPerMinute, elapsedMinutes);
-        float dmgScale = Mathf.Pow(_dmgScalingPerMinute, elapsedMinutes);
+        float hpScale = Mathf.Pow(_hpScalingPerMinute, elapsedMinutes) * _flatHpMultiplier;
+        float dmgScale = Mathf.Pow(_dmgScalingPerMinute, elapsedMinutes) * _flatDmgMultiplier;
 
         if (_currentPhase == DayPhase.Night && _currentNight > 1)
         {
@@ -131,11 +150,27 @@ public partial class SpawnManager : Node2D
             dmgScale *= dmgBonus;
         }
 
+        // Résurgence : buff ennemis pendant l'événement
+        CacheRandomEventManager();
+        if (_randomEventManager != null && _randomEventManager.ResurgenceActive)
+        {
+            hpScale *= _randomEventManager.ResurgenceHpMultiplier;
+            dmgScale *= _randomEventManager.ResurgenceDmgMultiplier;
+        }
+
         Enemy enemy = _pool.Get();
         enemy.GlobalPosition = spawnPos;
         _enemyContainer.AddChild(enemy);
         enemy.Initialize(data, hpScale, dmgScale);
         enemy.SetNightTarget(_currentPhase == DayPhase.Night, _foyerPosition);
+
+        // Aberration : nuit 7+, chance croissante de corrompre l'ennemi
+        if (_currentPhase == DayPhase.Night && _currentNight >= AberrationMinNight && data.Tier == "normal")
+        {
+            float chance = AberrationBaseChance + AberrationChancePerNight * (_currentNight - AberrationMinNight);
+            if (GD.Randf() < chance)
+                enemy.Aberrate();
+        }
 
         _eventBus.EmitSignal(EventBus.SignalName.EnemySpawned, enemyId, hpScale, dmgScale);
     }
@@ -234,12 +269,78 @@ public partial class SpawnManager : Node2D
         };
 
         if (_currentPhase == DayPhase.Night)
+        {
             _currentNight++;
+            if (_currentNight >= ColosseMinNight)
+                SpawnColosse();
+            if (_currentNight >= IndicibleMinNight && !_indicibleSpawned)
+                SpawnIndicible();
+        }
 
         if (_currentPhase == DayPhase.Dawn)
             _spawnTimer = 0f;
 
         GD.Print($"[SpawnManager] Phase → {_currentPhase} (Night #{_currentNight})");
+    }
+
+    /// <summary>Spawn un Colosse biome-spécifique au début de la nuit.</summary>
+    private void SpawnColosse()
+    {
+        CachePlayer();
+        if (_player == null || !IsInstanceValid(_player))
+            return;
+
+        // Trouver le biome au Foyer pour déterminer le type de colosse
+        CacheWorldSetup();
+        BiomeData biome = _worldSetup?.GetBiomeAt(_foyerPosition);
+        string colosseId = FallbackColosse;
+        if (biome != null && BiomeColosseMap.TryGetValue(biome.Id, out string mapped))
+            colosseId = mapped;
+
+        EnemyData data = EnemyDataLoader.Get(colosseId);
+        if (data == null)
+            return;
+
+        // Scaling basé sur le temps écoulé + bonus nuit
+        float elapsedMinutes = _elapsedTime / 60f;
+        float hpScale = Mathf.Pow(_hpScalingPerMinute, elapsedMinutes) * _flatHpMultiplier;
+        float dmgScale = Mathf.Pow(_dmgScalingPerMinute, elapsedMinutes) * _flatDmgMultiplier;
+        float nightBonus = Mathf.Pow(_nightHpMultiplier, _currentNight - 1);
+        float dmgBonus = Mathf.Pow(_nightDmgMultiplier, _currentNight - 1);
+        hpScale *= nightBonus;
+        dmgScale *= dmgBonus;
+
+        // Position de spawn : bord opposé au joueur par rapport au foyer
+        Vector2 dirFromPlayer = (_foyerPosition - _player.GlobalPosition).Normalized();
+        if (dirFromPlayer == Vector2.Zero)
+            dirFromPlayer = Vector2.Right;
+        Vector2 spawnPos = _foyerPosition + dirFromPlayer * NightSpawnRadius;
+
+        Enemy enemy = _pool.Get();
+        enemy.GlobalPosition = spawnPos;
+        _enemyContainer.AddChild(enemy);
+        enemy.Initialize(data, hpScale, dmgScale);
+        enemy.SetNightTarget(true, _foyerPosition);
+
+        _eventBus.EmitSignal(EventBus.SignalName.EnemySpawned, colosseId, hpScale, dmgScale);
+        GD.Print($"[SpawnManager] Colosse spawned: {colosseId} (Night #{_currentNight}, HP scale: {hpScale:F1}x)");
+    }
+
+    /// <summary>Fait émerger L'Indicible au début de la nuit 10.</summary>
+    private void SpawnIndicible()
+    {
+        _indicibleSpawned = true;
+
+        float elapsedMinutes = _elapsedTime / 60f;
+        float hpScale = Mathf.Pow(_hpScalingPerMinute, elapsedMinutes) * Mathf.Pow(_nightHpMultiplier, _currentNight - 1) * _flatHpMultiplier;
+        float dmgScale = Mathf.Pow(_dmgScalingPerMinute, elapsedMinutes) * Mathf.Pow(_nightDmgMultiplier, _currentNight - 1) * _flatDmgMultiplier;
+
+        Indicible boss = new();
+        boss.Name = "Indicible";
+        _enemyContainer.AddChild(boss);
+        boss.Initialize(hpScale, dmgScale, _foyerPosition);
+
+        GD.Print($"[SpawnManager] L'Indicible émerge... (Night #{_currentNight})");
     }
 
     private void LoadScalingConfig()
@@ -309,6 +410,8 @@ public partial class SpawnManager : Node2D
                 case "night_hp_multiplier": _nightHpMultiplier = kv.Value; break;
                 case "night_damage_multiplier": _nightDmgMultiplier = kv.Value; break;
                 case "night_spawn_rate_multiplier": _nightSpawnRateMultiplier = kv.Value; break;
+                case "flat_hp_multiplier": _flatHpMultiplier = kv.Value; break;
+                case "flat_dmg_multiplier": _flatDmgMultiplier = kv.Value; break;
             }
         }
         GD.Print($"[SpawnManager] Applied {overrides.Count} scaling override(s)");
@@ -330,5 +433,13 @@ public partial class SpawnManager : Node2D
             return;
 
         _worldSetup = GetNodeOrNull<WorldSetup>("/root/Main");
+    }
+
+    private void CacheRandomEventManager()
+    {
+        if (_randomEventManager != null && IsInstanceValid(_randomEventManager))
+            return;
+
+        _randomEventManager = GetNodeOrNull<RandomEventManager>("../RandomEventManager");
     }
 }

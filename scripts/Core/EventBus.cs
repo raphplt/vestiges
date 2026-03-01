@@ -66,4 +66,8 @@ public partial class EventBus : Node
 
     // --- Souvenirs ---
     [Signal] public delegate void SouvenirDiscoveredEventHandler(string souvenirId, string souvenirName, string constellationId);
+
+    // --- Événements aléatoires ---
+    [Signal] public delegate void RandomEventTriggeredEventHandler(string eventId, string eventName);
+    [Signal] public delegate void RandomEventEndedEventHandler(string eventId);
 }

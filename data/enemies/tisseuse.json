@@ -1,0 +1,18 @@
+{
+    "id": "tisseuse",
+    "name": "Tisseuse",
+    "type": "ranged",
+    "stats": {
+        "hp": 20,
+        "speed": 55,
+        "damage": 6,
+        "attack_range": 180,
+        "xp_reward": 18
+    },
+    "visual": {
+        "color": "#556B5A",
+        "shape": "triangle",
+        "size": 13
+    },
+    "behavior": "weaver"
+}

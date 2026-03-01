@@ -303,7 +303,8 @@ public partial class CraftPanel : CanvasLayer
         else if (canCraft)
         {
             Button craftButton = new();
-            craftButton.Text = $"Fabriquer ({recipe.BuildTime:0.#}s)";
+            bool isInstant = recipe.Result.Type == "wall";
+            craftButton.Text = isInstant ? "Fabriquer (instantané)" : $"Fabriquer ({recipe.BuildTime:0.#}s)";
             craftButton.CustomMinimumSize = new Vector2(0, 28);
             string recipeId = recipe.Id;
             craftButton.Pressed += () => OnCraftPressed(recipeId);

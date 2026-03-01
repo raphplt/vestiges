@@ -136,7 +136,7 @@ public class SimCombatModel
         float phaseFactor = phase switch
         {
             SimDayPhase.Day => 0.8f,
-            SimDayPhase.Dusk => 0.55f,
+            SimDayPhase.Dusk => 0.65f,
             SimDayPhase.Night => 0.3f * MathF.Pow(_nightSpawnRateMultiplier, Math.Max(0, nightNumber - 1)),
             _ => 1f
         };

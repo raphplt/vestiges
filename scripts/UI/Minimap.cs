@@ -23,16 +23,16 @@ public partial class Minimap : PanelContainer
     private float _entityTimer;
     private bool _initialized;
 
-    private static readonly Color ColorGrass = new(0.25f, 0.45f, 0.2f);
-    private static readonly Color ColorConcrete = new(0.45f, 0.42f, 0.38f);
-    private static readonly Color ColorWater = new(0.15f, 0.25f, 0.45f);
-    private static readonly Color ColorForest = new(0.12f, 0.32f, 0.12f);
-    private static readonly Color ColorFog = new(0.06f, 0.04f, 0.1f);
-    private static readonly Color ColorPlayer = new(0.2f, 1f, 0.4f);
-    private static readonly Color ColorEnemy = new(1f, 0.2f, 0.2f);
-    private static readonly Color ColorStructure = new(0.4f, 0.7f, 1f);
+    private static readonly Color ColorGrass = new(0.4f, 0.65f, 0.3f);
+    private static readonly Color ColorConcrete = new(0.6f, 0.58f, 0.52f);
+    private static readonly Color ColorWater = new(0.2f, 0.35f, 0.6f);
+    private static readonly Color ColorForest = new(0.2f, 0.5f, 0.2f);
+    private static readonly Color ColorFog = new(0.08f, 0.06f, 0.12f);
+    private static readonly Color ColorPlayer = new(0.3f, 1f, 0.5f);
+    private static readonly Color ColorEnemy = new(1f, 0.25f, 0.25f);
+    private static readonly Color ColorStructure = new(0.5f, 0.8f, 1f);
     private static readonly Color ColorFoyer = new(1f, 0.9f, 0.4f);
-    private static readonly Color ColorPoi = new(1f, 0.75f, 0.2f);
+    private static readonly Color ColorPoi = new(1f, 0.8f, 0.3f);
 
     public void Initialize(WorldGenerator generator, FogOfWar fogOfWar)
     {
@@ -155,10 +155,10 @@ public partial class Minimap : PanelContainer
                 DrawEntityDot(enemy.GlobalPosition, ColorEnemy);
         }
 
-        // Draw player
+        // Draw player (larger dot for visibility)
         Node playerNode = GetTree().GetFirstNodeInGroup("player");
         if (playerNode is Node2D player)
-            DrawEntityDot(player.GlobalPosition, ColorPlayer, 2);
+            DrawEntityDot(player.GlobalPosition, ColorPlayer, 3);
 
         _texture.Update(_composite);
     }

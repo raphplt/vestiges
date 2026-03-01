@@ -40,6 +40,9 @@ public partial class GameManager : Node
     /// <summary>Personnages débloqués lors de la dernière run.</summary>
     public List<string> LastUnlocks { get; set; }
 
+    /// <summary>Mutateurs actifs pour la prochaine run (sélectionnés dans le Hub).</summary>
+    public List<string> ActiveMutators { get; set; } = new();
+
     public GameState CurrentState => _currentState;
 
     public override void _Ready()
