@@ -18,6 +18,7 @@ public partial class FragmentManager : Node
 
 	private EventBus _eventBus;
 	private Player _player;
+	private int _currentLevel = 1;
 
 	// Pending fusion (offered at next chest)
 	private FusionData _pendingFusion;
@@ -52,26 +53,67 @@ public partial class FragmentManager : Node
 
 	private void OnLevelUp(int newLevel)
 	{
+		GD.Print($"[FragmentManager] OnLevelUp called: level {newLevel}");
 		CachePlayer();
 		if (_player == null)
 		{
-			GD.PushWarning("[FragmentManager] OnLevelUp: player is null");
+			GD.PushWarning("[FragmentManager] OnLevelUp: player is null — level-up sera rattrapé par GameBootstrap");
 			return;
 		}
 
+		OfferFragments(newLevel);
+	}
+
+	/// <summary>
+	/// Appelé par GameBootstrap pour rattraper des level-ups manqués
+	/// (XP gagnée avant que le setup soit complet).
+	/// </summary>
+	public void TriggerLevelUp(int currentLevel)
+	{
+		GD.Print($"[FragmentManager] TriggerLevelUp (rattrapage): level {currentLevel}");
+		CachePlayer();
+		if (_player == null)
+		{
+			GD.PushWarning("[FragmentManager] TriggerLevelUp: player is null");
+			return;
+		}
+
+		OfferFragments(currentLevel);
+	}
+
+	private void OfferFragments(int level)
+	{
+		_currentLevel = level;
 		List<FragmentOption> options = BuildFragmentPool();
 		if (options.Count == 0)
 		{
-			GD.PushWarning("[FragmentManager] OnLevelUp: pool is empty");
+			GD.PushWarning($"[FragmentManager] OfferFragments: pool is empty (level {level})");
 			return;
 		}
 
 		_pendingChoices.Clear();
 		_pendingChoices.AddRange(PickRandom(options, FragmentsPerChoice));
 
-		GD.Print($"[FragmentManager] Level {newLevel}: offering {_pendingChoices.Count} fragments");
+		GD.Print($"[FragmentManager] Level {level} (maxTier={GetMaxFragmentTier(level)}): offering {_pendingChoices.Count} fragments (pool had {options.Count})");
 
 		_eventBus.EmitSignal(EventBus.SignalName.FragmentChoicesReady, _pendingChoices.Count);
+	}
+
+	/// <summary>
+	/// Tier max autorisé dans le pool de fragments selon le niveau du joueur.
+	/// Progression graduelle : Tier 1 tôt, Tier 3 mid-game, Tier 4-5 très tard.
+	/// </summary>
+	private static int GetMaxFragmentTier(int playerLevel)
+	{
+		if (playerLevel < 5)
+			return 1;
+		if (playerLevel < 10)
+			return 2;
+		if (playerLevel < 15)
+			return 3;
+		if (playerLevel < 20)
+			return 4;
+		return 5;
 	}
 
 	private List<FragmentOption> BuildFragmentPool()
@@ -83,6 +125,7 @@ public partial class FragmentManager : Node
 		bool passiveSlotsFull = passiveCount >= Player.MaxPassiveSlots;
 
 		// Armes nouvelles (si slots dispo)
+		int maxTier = GetMaxFragmentTier(_currentLevel);
 		if (!weaponSlotsFull)
 		{
 			HashSet<string> equippedIds = new();
@@ -95,9 +138,9 @@ public partial class FragmentManager : Node
 					continue;
 				if (weapon.Source == "craft")
 					continue;
-				if (!string.IsNullOrEmpty(weapon.RequiresSouvenir) && !MetaSaveManager.HasSouvenir(weapon.RequiresSouvenir))
+				if (weapon.Tier > maxTier)
 					continue;
-				if (!string.IsNullOrEmpty(weapon.DefaultFor) && weapon.DefaultFor != _player.CharacterId)
+				if (!string.IsNullOrEmpty(weapon.RequiresSouvenir) && !MetaSaveManager.HasSouvenir(weapon.RequiresSouvenir))
 					continue;
 
 				pool.Add(new FragmentOption(weapon.Id, "weapon_new", weapon.Name, weapon.Tier));

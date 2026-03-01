@@ -218,7 +218,7 @@ public partial class Enemy : CharacterBody2D
 		_aberrationAura.ZIndex = -1;
 		AddChild(_aberrationAura);
 
-		Tween auraTween = CreateTween();
+		Tween auraTween = _aberrationAura.CreateTween();
 		auraTween.SetLoops();
 		auraTween.TweenProperty(_aberrationAura, "scale", Vector2.One * 1.3f, 0.8f)
 			.SetTrans(Tween.TransitionType.Sine);
@@ -674,7 +674,7 @@ public partial class Enemy : CharacterBody2D
 		_modifierAura.ZIndex = -1;
 		AddChild(_modifierAura);
 
-		Tween pulse = CreateTween().SetLoops();
+		Tween pulse = _modifierAura.CreateTween().SetLoops();
 		pulse.TweenProperty(_modifierAura, "scale", Vector2.One * 1.2f, 0.6f).SetTrans(Tween.TransitionType.Sine);
 		pulse.TweenProperty(_modifierAura, "scale", Vector2.One, 0.6f).SetTrans(Tween.TransitionType.Sine);
 	}

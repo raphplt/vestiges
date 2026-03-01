@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Godot;
 using Vestiges.Base;
 using Vestiges.Core;
@@ -29,6 +30,7 @@ public partial class AIController : Node
 
     private Player _player;
     private PerkManager _perkManager;
+    private FragmentManager _fragmentManager;
     private ScoreManager _scoreManager;
     private EventBus _eventBus;
     private AIProfile _profile;
@@ -51,10 +53,11 @@ public partial class AIController : Node
     private Node2D _interactTarget;
 
     public void Initialize(Player player, PerkManager perkManager, ScoreManager scoreManager,
-        AIProfile profile, PerkStrategy perkStrategy)
+        AIProfile profile, PerkStrategy perkStrategy, FragmentManager fragmentManager = null)
     {
         _player = player;
         _perkManager = perkManager;
+        _fragmentManager = fragmentManager;
         _scoreManager = scoreManager;
         _profile = profile;
         _perkStrategy = perkStrategy;
@@ -67,6 +70,7 @@ public partial class AIController : Node
         _eventBus = GetNode<EventBus>("/root/EventBus");
         _eventBus.DayPhaseChanged += OnDayPhaseChanged;
         _eventBus.EntityDied += OnEntityDied;
+        _eventBus.FragmentChoicesReady += OnFragmentChoicesReady;
 
         if (_perkManager != null)
             _perkManager.PerkChoicesReady += OnPerkChoicesReady;
@@ -81,6 +85,7 @@ public partial class AIController : Node
         {
             _eventBus.DayPhaseChanged -= OnDayPhaseChanged;
             _eventBus.EntityDied -= OnEntityDied;
+            _eventBus.FragmentChoicesReady -= OnFragmentChoicesReady;
         }
 
         if (_perkManager != null)
@@ -408,6 +413,93 @@ public partial class AIController : Node
     private void DeferredSelectPerk(string perkId)
     {
         _perkManager?.SelectPerk(perkId);
+    }
+
+    private void OnFragmentChoicesReady(int count)
+    {
+        if (count == 0 || _fragmentManager == null) return;
+
+        // Unpause si nécessaire (LevelUpScreen pourrait avoir pausé)
+        if (GetTree().Paused)
+            GetTree().Paused = false;
+
+        CallDeferred(MethodName.DeferredSelectFragment);
+    }
+
+    private void DeferredSelectFragment()
+    {
+        if (_fragmentManager == null) return;
+
+        IReadOnlyList<FragmentOption> choices = _fragmentManager.PendingChoices;
+        if (choices.Count == 0) return;
+
+        FragmentOption best = SelectBestFragment(choices);
+        _fragmentManager.SelectFragment(best.Id, best.Type);
+    }
+
+    /// <summary>
+    /// Sélection de fragment par l'IA selon la stratégie de perks.
+    /// Priorité : upgrades existantes > nouvelles armes > nouveaux passifs.
+    /// Modulé par la stratégie (damage → armes, survival → passifs).
+    /// </summary>
+    private FragmentOption SelectBestFragment(IReadOnlyList<FragmentOption> choices)
+    {
+        if (choices.Count == 1 || _perkStrategy == null)
+            return choices[0];
+
+        FragmentOption best = choices[0];
+        float bestScore = -1f;
+
+        foreach (FragmentOption frag in choices)
+        {
+            float score = ScoreFragment(frag);
+            if (score > bestScore)
+            {
+                bestScore = score;
+                best = frag;
+            }
+        }
+
+        return best;
+    }
+
+    private float ScoreFragment(FragmentOption frag)
+    {
+        // Base score par type d'action
+        float score = frag.Type switch
+        {
+            "weapon_upgrade" => 8f,
+            "passive_upgrade" => 7f,
+            "weapon_new" => 5f,
+            "passive_new" => 4f,
+            _ => 1f
+        };
+
+        // Moduler selon la stratégie
+        bool isWeapon = frag.Type.StartsWith("weapon");
+        bool isPassive = frag.Type.StartsWith("passive");
+
+        if (_perkStrategy != null)
+        {
+            PerkStrategyType strategy = _perkStrategy.StrategyType;
+            if (strategy == PerkStrategyType.Damage && isWeapon)
+                score *= 1.5f;
+            else if (strategy == PerkStrategyType.Survival && isPassive)
+                score *= 1.5f;
+            else if (strategy == PerkStrategyType.Balanced)
+            {
+                if (isWeapon) score *= 1.2f;
+                if (isPassive) score *= 1.2f;
+            }
+        }
+
+        // Bonus léger pour le tier (armes de tier plus élevé sont généralement meilleures)
+        score += frag.SortWeight * 0.5f;
+
+        // Ajouter un peu de variance
+        score += (float)GD.RandRange(0, 1.5);
+
+        return score;
     }
 
     private void OnEntityDied(Node entity)

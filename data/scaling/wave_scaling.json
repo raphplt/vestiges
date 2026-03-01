@@ -7,5 +7,8 @@
     "max_enemies_on_screen": 140,
     "night_hp_multiplier": 1.20,
     "night_damage_multiplier": 1.10,
-    "night_spawn_rate_multiplier": 0.91
+    "night_spawn_rate_multiplier": 0.91,
+    "day_spawn_rate_multiplier": 0.72,
+    "dusk_spawn_rate_multiplier": 0.65,
+    "night_base_spawn_rate_multiplier": 0.30
 }

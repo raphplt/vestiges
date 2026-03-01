@@ -24,6 +24,9 @@ public partial class SpawnManager : Node2D
     private float _nightHpMultiplier;
     private float _nightDmgMultiplier;
     private float _nightSpawnRateMultiplier;
+    private float _daySpawnRateMultiplier;
+    private float _duskSpawnRateMultiplier;
+    private float _nightBaseSpawnRateMultiplier;
     private float _flatHpMultiplier = 1f;
     private float _flatDmgMultiplier = 1f;
 
@@ -118,9 +121,9 @@ public partial class SpawnManager : Node2D
 
         float nightFactor = _currentPhase switch
         {
-            DayPhase.Day => 0.8f,
-            DayPhase.Dusk => 0.65f,
-            DayPhase.Night => 0.3f * Mathf.Pow(_nightSpawnRateMultiplier, _currentNight - 1),
+            DayPhase.Day => _daySpawnRateMultiplier,
+            DayPhase.Dusk => _duskSpawnRateMultiplier,
+            DayPhase.Night => _nightBaseSpawnRateMultiplier * Mathf.Pow(_nightSpawnRateMultiplier, _currentNight - 1),
             _ => 1f
         };
 
@@ -386,6 +389,9 @@ public partial class SpawnManager : Node2D
         _nightHpMultiplier = dict.ContainsKey("night_hp_multiplier") ? (float)dict["night_hp_multiplier"].AsDouble() : 1.25f;
         _nightDmgMultiplier = dict.ContainsKey("night_damage_multiplier") ? (float)dict["night_damage_multiplier"].AsDouble() : 1.15f;
         _nightSpawnRateMultiplier = dict.ContainsKey("night_spawn_rate_multiplier") ? (float)dict["night_spawn_rate_multiplier"].AsDouble() : 0.85f;
+        _daySpawnRateMultiplier = dict.ContainsKey("day_spawn_rate_multiplier") ? (float)dict["day_spawn_rate_multiplier"].AsDouble() : 0.8f;
+        _duskSpawnRateMultiplier = dict.ContainsKey("dusk_spawn_rate_multiplier") ? (float)dict["dusk_spawn_rate_multiplier"].AsDouble() : 0.65f;
+        _nightBaseSpawnRateMultiplier = dict.ContainsKey("night_base_spawn_rate_multiplier") ? (float)dict["night_base_spawn_rate_multiplier"].AsDouble() : 0.3f;
 
         GD.Print($"[SpawnManager] Config loaded — interval: {_baseSpawnInterval}s, max: {_maxEnemies}, nightHP: x{_nightHpMultiplier}");
     }
@@ -401,6 +407,9 @@ public partial class SpawnManager : Node2D
         _nightHpMultiplier = 1.25f;
         _nightDmgMultiplier = 1.15f;
         _nightSpawnRateMultiplier = 0.85f;
+        _daySpawnRateMultiplier = 0.8f;
+        _duskSpawnRateMultiplier = 0.65f;
+        _nightBaseSpawnRateMultiplier = 0.3f;
     }
 
     /// <summary>
@@ -422,6 +431,9 @@ public partial class SpawnManager : Node2D
                 case "night_hp_multiplier": _nightHpMultiplier = kv.Value; break;
                 case "night_damage_multiplier": _nightDmgMultiplier = kv.Value; break;
                 case "night_spawn_rate_multiplier": _nightSpawnRateMultiplier = kv.Value; break;
+                case "day_spawn_rate_multiplier": _daySpawnRateMultiplier = kv.Value; break;
+                case "dusk_spawn_rate_multiplier": _duskSpawnRateMultiplier = kv.Value; break;
+                case "night_base_spawn_rate_multiplier": _nightBaseSpawnRateMultiplier = kv.Value; break;
                 case "flat_hp_multiplier": _flatHpMultiplier = kv.Value; break;
                 case "flat_dmg_multiplier": _flatDmgMultiplier = kv.Value; break;
             }

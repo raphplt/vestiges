@@ -33,6 +33,8 @@ public static class MathSimBatchRunner
         WeaponDataLoader.Load();
         PerkDataLoader.Load();
         EnemyDataLoader.Load();
+        PassiveSouvenirDataLoader.Load();
+        WeaponUpgradeDataLoader.Load();
         SimCombatModel.InitStaticData();
 
         Stopwatch sw = Stopwatch.StartNew();

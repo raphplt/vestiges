@@ -656,7 +656,6 @@ public partial class Player : CharacterBody2D
         }
 
         MoveAndSlide();
-        ClampToWorldBounds();
         ApplyRegen(dt);
         ProcessSlowDecay(dt);
         ProcessHarvest(dt);
@@ -731,42 +730,19 @@ public partial class Player : CharacterBody2D
         journal?.Toggle();
     }
 
-    // --- World Bounds ---
+    // --- World Queries ---
 
     private WorldSetup _worldSetup;
-    private float _worldBoundsRadius = -1f;
 
-    /// <summary>
-    /// Empêche le joueur de sortir du monde circulaire.
-    /// La réalité s'arrête au-delà : barrière invisible de sécurité en plus des tiles d'eau.
-    /// </summary>
-    private void ClampToWorldBounds()
-    {
-        if (_worldBoundsRadius < 0f)
-            CacheWorldBounds();
-
-        if (_worldBoundsRadius <= 0f)
-            return;
-
-        float dist = GlobalPosition.Length();
-        if (dist > _worldBoundsRadius)
-            GlobalPosition = GlobalPosition.Normalized() * _worldBoundsRadius;
-    }
-
-    private void CacheWorldBounds()
+    private void CacheWorldSetup()
     {
         _worldSetup = GetNodeOrNull<WorldSetup>("/root/Main");
-        if (_worldSetup?.Generator == null)
-            return;
-
-        int mapRadius = _worldSetup.Generator.MapRadius;
-        _worldBoundsRadius = (mapRadius - 3) * 32f;
     }
 
     private bool IsOnWater()
     {
         if (_worldSetup == null)
-            CacheWorldBounds();
+            CacheWorldSetup();
         if (_worldSetup == null)
             return false;
 

@@ -161,7 +161,11 @@ public class SimulationReport
         file.StoreString(json);
         file.Close();
 
-        GD.Print($"[SimulationReport] Saved to {filename}");
+        string absolutePath = ProjectSettings.GlobalizePath(filename);
+        if (string.IsNullOrWhiteSpace(absolutePath))
+            absolutePath = filename;
+
+        GD.Print($"[SimulationReport] Saved to {absolutePath}");
     }
 
     private List<ConfigSummary> BuildSummaries()

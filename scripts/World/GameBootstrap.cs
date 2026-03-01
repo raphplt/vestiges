@@ -34,6 +34,16 @@ public partial class GameBootstrap : Node
         SouvenirDataLoader.Load();
         MutatorDataLoader.Load();
 
+        // FragmentManager DOIT exister avant tout LevelUp —
+        // certains nodes émettent XpGained/LevelUp pendant leur _Ready(),
+        // avant que GameBootstrap ne finisse son setup.
+        FragmentManager fragmentManager = GetNodeOrNull<FragmentManager>("../FragmentManager");
+        if (fragmentManager == null)
+        {
+            fragmentManager = new FragmentManager { Name = "FragmentManager" };
+            GetNode("..").CallDeferred("add_child", fragmentManager);
+        }
+
         // Detect simulation mode
         BatchRunner batchRunner = GetNodeOrNull<BatchRunner>("/root/BatchRunner");
         bool isSimulation = batchRunner != null;
@@ -51,19 +61,21 @@ public partial class GameBootstrap : Node
         if (isSimulation)
         {
             SetupSimulation(batchRunner, player, perkManager, scoreManager, runTracker,
-                craftManager, inventory, progression);
+                craftManager, inventory, progression, fragmentManager);
         }
         else
         {
             SetupNormalGame(player, perkManager, scoreManager, runTracker,
-                craftManager, structureManager, inventory, progression, foyer);
+                craftManager, structureManager, inventory, progression, foyer,
+                fragmentManager);
         }
     }
 
     private void SetupNormalGame(Player player, PerkManager perkManager,
         ScoreManager scoreManager, RunTracker runTracker, CraftManager craftManager,
         StructureManager structureManager, Inventory inventory,
-        PlayerProgression progression, Node2D foyer)
+        PlayerProgression progression, Node2D foyer,
+        FragmentManager fragmentManager)
     {
         StructurePlacer structurePlacer = GetNode<StructurePlacer>("../StructurePlacer");
         DayNightCycle dayNightCycle = GetNode<DayNightCycle>("../DayNightCycle");
@@ -80,13 +92,7 @@ public partial class GameBootstrap : Node
         FogOfWar fogOfWar = GetNodeOrNull<FogOfWar>("../FogOfWar");
         hud.InitializeMinimap(worldSetup, fogOfWar);
 
-        // Fragment Manager : gère le level-up (armes + passifs)
-        FragmentManager fragmentManager = GetNodeOrNull<FragmentManager>("../FragmentManager");
-        if (fragmentManager == null)
-        {
-            fragmentManager = new FragmentManager { Name = "FragmentManager" };
-            GetNode("..").AddChild(fragmentManager);
-        }
+        // FragmentManager déjà créé dans _Ready() — juste wire l'UI
         levelUpScreen.SetFragmentManager(fragmentManager);
 
         // Perk Manager : gère les perks du monde (mémorial, coffres, POI)
@@ -103,12 +109,20 @@ public partial class GameBootstrap : Node
         InitializeCharacterAndRun(player, perkManager, scoreManager, runTracker, inventory);
         ApplyMutators(scoreManager, dayNightCycle, worldSetup, foyer as Foyer);
 
+        // Rattraper les level-ups manqués (XP gagnée avant que le setup soit complet)
+        if (progression.CurrentLevel > 1 && fragmentManager.PendingChoices.Count == 0)
+        {
+            GD.Print($"[GameBootstrap] Catching up missed level-ups: player is level {progression.CurrentLevel}");
+            fragmentManager.TriggerLevelUp(progression.CurrentLevel);
+        }
+
         GD.Print($"[GameBootstrap] Run started with {player.CharacterId}");
     }
 
     private void SetupSimulation(BatchRunner batchRunner, Player player,
         PerkManager perkManager, ScoreManager scoreManager, RunTracker runTracker,
-        CraftManager craftManager, Inventory inventory, PlayerProgression progression)
+        CraftManager craftManager, Inventory inventory, PlayerProgression progression,
+        FragmentManager fragmentManager)
     {
         SimulationRunConfig runConfig = batchRunner.CurrentRunConfig;
 
@@ -153,13 +167,13 @@ public partial class GameBootstrap : Node
             spawnManager.ApplyScalingOverrides(runConfig.ScalingOverrides);
         }
 
-        // Create and wire AIController
+        // Create and wire AIController (avec FragmentManager pour les level-ups)
         AIProfile profile = AIProfile.FromName(runConfig.ProfileName);
         PerkStrategy perkStrategy = PerkStrategy.FromName(runConfig.PerkStrategyName);
 
         AIController aiController = new() { Name = "AIController" };
         // Initialize before adding to tree — _Ready() needs the fields set by Initialize
-        aiController.Initialize(player, perkManager, scoreManager, profile, perkStrategy);
+        aiController.Initialize(player, perkManager, scoreManager, profile, perkStrategy, fragmentManager);
         player.IsAIControlled = true;
 
         // Deferred add — parent is still setting up children during _Ready()
@@ -190,6 +204,13 @@ public partial class GameBootstrap : Node
         GetNode("..").CallDeferred("add_child", maxDurationTimer);
 
         gm.ChangeState(GameManager.GameState.Run);
+
+        // Rattraper les level-ups manqués en simulation
+        if (progression.CurrentLevel > 1 && fragmentManager.PendingChoices.Count == 0)
+        {
+            GD.Print($"[GameBootstrap] SIM: Catching up missed level-ups: player is level {progression.CurrentLevel}");
+            fragmentManager.TriggerLevelUp(progression.CurrentLevel);
+        }
 
         GD.Print($"[GameBootstrap] SIMULATION run started — {data.Name}, " +
                  $"profile={profile.Name}, perks={runConfig.PerkStrategyName}, " +

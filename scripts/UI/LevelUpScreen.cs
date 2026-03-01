@@ -137,33 +137,96 @@ public partial class LevelUpScreen : CanvasLayer
         {
             case "weapon_new":
                 WeaponData weapon = WeaponDataLoader.Get(id);
-                return weapon != null
-                    ? $"\u2694 {weapon.Name} — {weapon.Description ?? weapon.AttackPattern} [NOUVEAU]"
-                    : $"\u2694 {id} [NOUVEAU]";
+                if (weapon == null)
+                    return $"\u2694 {id} [NOUVEAU]";
+                string wStats = FormatWeaponStats(weapon);
+                return $"\u2694 {weapon.Name} — {wStats} [NOUVEAU]";
 
             case "weapon_upgrade":
                 WeaponData wUpgrade = WeaponDataLoader.Get(id);
                 int wLevel = player?.GetWeaponFragmentLevel(id) ?? 0;
-                return wUpgrade != null
-                    ? $"\u2694 {wUpgrade.Name} — Niveau {wLevel} \u2192 {wLevel + 1}"
-                    : $"\u2694 {id} — Upgrade";
+                if (wUpgrade == null)
+                    return $"\u2694 {id} — Upgrade";
+                string uStats = FormatWeaponStats(wUpgrade);
+                return $"\u2694 {wUpgrade.Name} Niv.{wLevel}\u2192{wLevel + 1} — {uStats}";
 
             case "passive_new":
                 PassiveSouvenirData passive = PassiveSouvenirDataLoader.Get(id);
-                return passive != null
-                    ? $"\u25C8 {passive.Name} — {passive.Description} [NOUVEAU]"
-                    : $"\u25C8 {id} [NOUVEAU]";
+                if (passive == null)
+                    return $"\u25C8 {id} [NOUVEAU]";
+                string pStat = FormatPassiveStats(passive, 1);
+                return $"\u25C8 {passive.Name} — {pStat} [NOUVEAU]";
 
             case "passive_upgrade":
                 PassiveSouvenirData pUpgrade = PassiveSouvenirDataLoader.Get(id);
                 int pLevel = player?.GetPassiveLevel(id) ?? 0;
-                return pUpgrade != null
-                    ? $"\u25C8 {pUpgrade.Name} — Niveau {pLevel} \u2192 {pLevel + 1}"
-                    : $"\u25C8 {id} — Upgrade";
+                if (pUpgrade == null)
+                    return $"\u25C8 {id} — Upgrade";
+                string puStat = FormatPassiveStats(pUpgrade, pLevel + 1);
+                return $"\u25C8 {pUpgrade.Name} Niv.{pLevel}\u2192{pLevel + 1} — {puStat}";
 
             default:
                 return id;
         }
+    }
+
+    private static string FormatWeaponStats(WeaponData w)
+    {
+        string patternLabel = w.AttackPattern switch
+        {
+            "arc" => "Arc",
+            "linear" => "Ligne",
+            "circular" => "Cercle",
+            "orbital" => "Orbital",
+            "burst" => "Rafale",
+            "chain" => "Chaîne",
+            "homing" => "Guidé",
+            "ground" => "Sol",
+            _ => w.AttackPattern
+        };
+
+        float dmg = w.Stats.TryGetValue("damage", out float d) ? d : 0;
+        float spd = w.Stats.TryGetValue("attack_speed", out float s) ? s : 0;
+        float range = w.Stats.TryGetValue("range", out float r) ? r : 0;
+
+        return $"{patternLabel} | {dmg:0} dég | {spd:0.0}/s | {range:0}m";
+    }
+
+    private static string FormatPassiveStats(PassiveSouvenirData p, int level)
+    {
+        if (p.PerLevel == null || p.PerLevel.Length == 0)
+            return p.Description;
+
+        int idx = System.Math.Clamp(level - 1, 0, p.PerLevel.Length - 1);
+        float value = p.PerLevel[idx];
+
+        string statLabel = p.Stat switch
+        {
+            "damage" => "Dégâts",
+            "attack_speed" => "Vit. attaque",
+            "max_hp" => "PV max",
+            "speed" => "Vitesse",
+            "aoe_radius" => "Zone d'effet",
+            "xp_magnet_radius" => "Rayon XP",
+            "armor" => "Armure",
+            "crit_chance" => "Chance crit",
+            "regen_rate" => "Régén HP/s",
+            "attack_range" => "Portée",
+            "projectile_count" => "Projectiles",
+            "cooldown_reduction" => "Réduction CD",
+            "projectile_pierce" => "Perçage",
+            _ => p.Stat
+        };
+
+        if (p.ModifierType == "multiplicative")
+        {
+            float percent = (value - 1f) * 100f;
+            string sign = percent >= 0 ? "+" : "";
+            return $"{statLabel} {sign}{percent:0}%";
+        }
+
+        string addSign = value >= 0 ? "+" : "";
+        return $"{statLabel} {addSign}{value:0.#}";
     }
 
     private static Color GetFragmentColor(string type)

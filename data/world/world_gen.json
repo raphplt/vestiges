@@ -1,5 +1,5 @@
 {
-    "map_radius": 120,
+    "map_radius": 100,
     "foyer_clearance": 4,
     "ca_iterations": 4,
     "edge_fade_width": 5,

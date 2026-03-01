@@ -20,6 +20,7 @@ public enum PerkStrategyType
 public class PerkStrategy
 {
     private readonly PerkStrategyType _type;
+    public PerkStrategyType StrategyType => _type;
 
     private static readonly HashSet<string> SurvivalStats = new()
         { "max_hp", "regen_rate", "armor", "speed" };
