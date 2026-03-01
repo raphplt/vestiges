@@ -42,6 +42,17 @@ public partial class RandomEventManager : Node
 	private float _resurgenceDmgMult = 1f;
 	private float _resurgenceXpMult = 1f;
 
+	// Caravane : nœud marchand temporaire
+	private Node2D _caravanNode;
+
+	// Signal de fumée : nœud visuel + zone de détection
+	private Node2D _smokeSignalNode;
+
+	// L'Appel : leurre + ennemis traqués
+	private Node2D _lureNode;
+	private readonly List<Enemy> _lureEnemies = new();
+	private bool _lureRewardGranted;
+
 	public bool ResurgenceActive => _resurgenceActive;
 	public float ResurgenceHpMultiplier => _resurgenceHpMult;
 	public float ResurgenceDmgMultiplier => _resurgenceDmgMult;
@@ -196,22 +207,135 @@ public partial class RandomEventManager : Node
 	{
 		switch (ev.EffectType)
 		{
+			case "merchant_spawn":
+				CleanupCaravan();
+				break;
 			case "visibility_reduction":
 				RevertVisibilityReduction();
+				break;
+			case "rescue_poi":
+				CleanupSmokeSignal();
 				break;
 			case "enemy_buff":
 				RevertResurgence();
 				break;
+			case "lure_spawn":
+				CleanupLure();
+				break;
 		}
+	}
+
+	private void CleanupCaravan()
+	{
+		if (_caravanNode != null && IsInstanceValid(_caravanNode))
+			_caravanNode.QueueFree();
+		_caravanNode = null;
+	}
+
+	private void CleanupSmokeSignal()
+	{
+		if (_smokeSignalNode != null && IsInstanceValid(_smokeSignalNode))
+			_smokeSignalNode.QueueFree();
+		_smokeSignalNode = null;
+	}
+
+	private void CleanupLure()
+	{
+		if (_lureNode != null && IsInstanceValid(_lureNode))
+			_lureNode.QueueFree();
+		_lureNode = null;
+		_lureEnemies.Clear();
 	}
 
 	// --- Caravane de passage ---
 
 	private void ApplyCaravan(EventData ev)
 	{
-		// Marchand temporaire : pour l'instant on signale via EventBus.
-		// Le système de marchand sera implémenté dans un lot futur.
-		GD.Print($"[RandomEventManager] Caravane de passage — marchand disponible pendant {ev.Duration}s");
+		Player player = GetTree().GetFirstNodeInGroup("player") as Player;
+		if (player == null)
+			return;
+
+		// Position du marchand : 150-200 unités du joueur
+		float angle = (float)GD.RandRange(0, Mathf.Tau);
+		float dist = (float)GD.RandRange(150, 200);
+		Vector2 merchantPos = player.GlobalPosition + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * dist;
+
+		// Créer le nœud marchand
+		Node2D merchant = new() { Name = "CaravanMerchant", GlobalPosition = merchantPos };
+
+		// Visuel : losange doré (icône marchand)
+		Polygon2D body = new()
+		{
+			Color = new Color(0.85f, 0.7f, 0.2f, 0.9f),
+			Polygon = new Vector2[]
+			{
+				new(0, -18), new(12, 0), new(0, 18), new(-12, 0)
+			}
+		};
+		merchant.AddChild(body);
+
+		// Petit chapeau (triangle au-dessus)
+		Polygon2D hat = new()
+		{
+			Color = new Color(0.6f, 0.45f, 0.1f),
+			Polygon = new Vector2[]
+			{
+				new(-10, -18), new(10, -18), new(0, -30)
+			}
+		};
+		merchant.AddChild(hat);
+
+		// Zone d'interaction (Area2D + CollisionShape2D)
+		Area2D interactArea = new() { Name = "InteractArea" };
+		interactArea.CollisionLayer = 0;
+		interactArea.CollisionMask = 1; // Layer 1 = player
+		CollisionShape2D interactShape = new();
+		CircleShape2D circleShape = new() { Radius = 50f };
+		interactShape.Shape = circleShape;
+		interactArea.AddChild(interactShape);
+		merchant.AddChild(interactArea);
+
+		// Pulsation douce pour attirer l'attention
+		Tween pulseTween = CreateTween().SetLoops();
+		pulseTween.TweenProperty(body, "scale", new Vector2(1.15f, 1.15f), 1.0f)
+			.SetTrans(Tween.TransitionType.Sine);
+		pulseTween.TweenProperty(body, "scale", Vector2.One, 1.0f)
+			.SetTrans(Tween.TransitionType.Sine);
+
+		GetNode("..").CallDeferred("add_child", merchant);
+
+		// Quand le joueur entre dans la zone, donner une ressource aléatoire
+		bool rewardGiven = false;
+		interactArea.BodyEntered += (Node2D bodyNode) =>
+		{
+			if (rewardGiven)
+				return;
+			if (bodyNode is not Player)
+				return;
+
+			rewardGiven = true;
+
+			// Ressources utiles possibles
+			string[] resources = { "wood", "stone", "iron", "herb", "crystal" };
+			string chosenResource = resources[GD.Randi() % resources.Length];
+			int amount = (int)GD.RandRange(5, 15);
+
+			_eventBus.EmitSignal(EventBus.SignalName.LootReceived, "resource", chosenResource, amount);
+			GD.Print($"[RandomEventManager] Caravane — joueur reçoit {amount}x {chosenResource}");
+
+			// Feedback visuel : le marchand disparaît progressivement
+			Tween fadeTween = merchant.CreateTween();
+			fadeTween.TweenProperty(merchant, "modulate", new Color(1, 1, 1, 0), 1.5f);
+			fadeTween.TweenCallback(Callable.From(() =>
+			{
+				if (IsInstanceValid(merchant))
+					merchant.QueueFree();
+			}));
+		};
+
+		_caravanNode = merchant;
+
+		GD.Print($"[RandomEventManager] Caravane de passage à {merchantPos} — marchand disponible pendant {ev.Duration}s");
 	}
 
 	// --- Visibilité réduite (Tempête / Brume épaisse) ---
@@ -313,15 +437,141 @@ public partial class RandomEventManager : Node
 		if (player == null)
 			return;
 
-		// Signaler un POI de secours via EventBus
+		// Position du signal à ~300 unités du joueur
 		float angle = (float)GD.RandRange(0, Mathf.Tau);
 		Vector2 poiPos = player.GlobalPosition + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * 300f;
 
 		bool isTrap = GD.Randf() < ev.GetFloat("trap_chance", 0.25f);
 		string poiType = isTrap ? "trap" : "rescue";
 
+		// Signaler le POI sur la minimap via EventBus
 		_eventBus.EmitSignal(EventBus.SignalName.PoiDiscovered, "smoke_signal", poiType, poiPos);
+
+		// Créer la colonne de fumée visuelle
+		Node2D smokeNode = new() { Name = "SmokeSignal", GlobalPosition = poiPos };
+
+		// Base : petit feu (triangle orange)
+		Polygon2D fireBase = new()
+		{
+			Color = new Color(0.9f, 0.5f, 0.1f, 0.8f),
+			Polygon = new Vector2[]
+			{
+				new(-6, 0), new(6, 0), new(0, -12)
+			}
+		};
+		smokeNode.AddChild(fireBase);
+
+		// Colonne de fumée : ellipses empilées de plus en plus transparentes
+		for (int i = 0; i < 4; i++)
+		{
+			float yOff = -18f - i * 14f;
+			float alpha = 0.5f - i * 0.1f;
+			float size = 8f + i * 3f;
+
+			Polygon2D smokePuff = new()
+			{
+				Color = new Color(0.6f, 0.6f, 0.6f, alpha),
+				Polygon = CreateCirclePolygon(size, 6),
+				Position = new Vector2(0, yOff)
+			};
+			smokeNode.AddChild(smokePuff);
+
+			// Légère ondulation de chaque bouffée
+			Tween puffTween = CreateTween().SetLoops();
+			float drift = 3f + i * 1.5f;
+			puffTween.TweenProperty(smokePuff, "position",
+				new Vector2(drift, yOff - 4f), 1.2f + i * 0.3f)
+				.SetTrans(Tween.TransitionType.Sine);
+			puffTween.TweenProperty(smokePuff, "position",
+				new Vector2(-drift, yOff + 2f), 1.2f + i * 0.3f)
+				.SetTrans(Tween.TransitionType.Sine);
+		}
+
+		// Zone de détection du joueur
+		Area2D detectArea = new() { Name = "DetectArea" };
+		detectArea.CollisionLayer = 0;
+		detectArea.CollisionMask = 1; // Layer 1 = player
+		CollisionShape2D detectShape = new();
+		CircleShape2D detectCircle = new() { Radius = 60f };
+		detectShape.Shape = detectCircle;
+		detectArea.AddChild(detectShape);
+		smokeNode.AddChild(detectArea);
+
+		GetNode("..").CallDeferred("add_child", smokeNode);
+
+		// Capturer les données pour la lambda
+		float rewardXp = ev.GetFloat("reward_xp", 100f);
+		int rewardResources = (int)ev.GetFloat("reward_resources", 10f);
+		bool activated = false;
+
+		detectArea.BodyEntered += (Node2D bodyNode) =>
+		{
+			if (activated)
+				return;
+			if (bodyNode is not Player)
+				return;
+
+			activated = true;
+
+			if (isTrap)
+			{
+				// Piège : spawn 4-5 ennemis agressifs
+				GD.Print("[RandomEventManager] Signal de fumée — PIÈGE !");
+				SpawnTrapEnemies(poiPos, 4 + (int)(GD.Randi() % 2));
+			}
+			else
+			{
+				// Secours : récompense XP + ressources
+				_eventBus.EmitSignal(EventBus.SignalName.XpGained, rewardXp);
+				_eventBus.EmitSignal(EventBus.SignalName.LootReceived, "resource", "herb", rewardResources);
+				GD.Print($"[RandomEventManager] Signal de fumée — survivant secouru ! +{rewardXp} XP, +{rewardResources} herbes");
+			}
+
+			// Dissoudre le nœud après interaction
+			Tween fadeTween = smokeNode.CreateTween();
+			fadeTween.TweenProperty(smokeNode, "modulate", new Color(1, 1, 1, 0), 1.0f);
+			fadeTween.TweenCallback(Callable.From(() =>
+			{
+				if (IsInstanceValid(smokeNode))
+					smokeNode.QueueFree();
+			}));
+		};
+
+		_smokeSignalNode = smokeNode;
+
 		GD.Print($"[RandomEventManager] Signal de fumée à {poiPos} ({poiType})");
+	}
+
+	/// <summary>Spawn des ennemis de piège autour d'une position.</summary>
+	private void SpawnTrapEnemies(Vector2 center, int count)
+	{
+		EnemyPool pool = GetNodeOrNull<EnemyPool>("../EnemyPool");
+		Node enemyContainer = GetNodeOrNull("../EnemyContainer");
+		if (pool == null || enemyContainer == null)
+			return;
+
+		// Utiliser shade (coriace) pour le piège
+		EnemyData data = EnemyDataLoader.Get("shade");
+		if (data == null)
+		{
+			data = EnemyDataLoader.Get("shadow_crawler");
+			if (data == null) return;
+		}
+
+		for (int i = 0; i < count; i++)
+		{
+			float spawnAngle = Mathf.Tau * i / count;
+			Vector2 spawnPos = center + new Vector2(Mathf.Cos(spawnAngle), Mathf.Sin(spawnAngle)) * 40f;
+
+			Enemy enemy = pool.Get();
+			enemy.GlobalPosition = spawnPos;
+			enemyContainer.AddChild(enemy);
+			enemy.Initialize(data, 1.2f, 1.2f);
+
+			_eventBus.EmitSignal(EventBus.SignalName.EnemySpawned, data.Id, 1.2f, 1.2f);
+		}
+
+		GD.Print($"[RandomEventManager] Piège — {count} {data.Id} spawned !");
 	}
 
 	// --- Migration (horde de jour) ---
@@ -400,6 +650,7 @@ public partial class RandomEventManager : Node
 			return;
 
 		float lureDistance = ev.GetFloat("lure_distance", 400f);
+		float rewardXp = ev.GetFloat("reward_xp", 200f);
 		float angle = (float)GD.RandRange(0, Mathf.Tau);
 		Vector2 lurePos = (_foyerNode?.GlobalPosition ?? player.GlobalPosition) +
 			new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * lureDistance;
@@ -414,6 +665,14 @@ public partial class RandomEventManager : Node
 		};
 		lure.AddChild(glow);
 
+		// Halo extérieur pour renforcer l'attraction visuelle
+		Polygon2D halo = new()
+		{
+			Color = new Color(0.3f, 0.8f, 0.4f, 0.2f),
+			Polygon = CreateCirclePolygon(35f, 12)
+		};
+		lure.AddChild(halo);
+
 		GetNode("..").CallDeferred("add_child", lure);
 
 		// Pulsation lumineuse
@@ -423,14 +682,106 @@ public partial class RandomEventManager : Node
 		pulseTween.TweenProperty(glow, "scale", Vector2.One, 0.8f)
 			.SetTrans(Tween.TransitionType.Sine);
 
+		// Préparer le tracking des ennemis du leurre
+		_lureEnemies.Clear();
+		_lureRewardGranted = false;
+		_lureNode = lure;
+
+		// Spawn des ennemis coriaces après un délai de 3 secondes
+		GetTree().CreateTimer(3f).Timeout += () =>
+		{
+			if (!IsInstanceValid(lure))
+				return;
+
+			SpawnLureEnemies(lurePos, rewardXp);
+		};
+
 		// Auto-destruction après la phase
 		GetTree().CreateTimer(90f).Timeout += () =>
 		{
 			if (IsInstanceValid(lure))
 				lure.QueueFree();
+			_lureEnemies.Clear();
 		};
 
 		GD.Print($"[RandomEventManager] L'Appel — leurre à {lurePos}");
+	}
+
+	/// <summary>Spawn 2-3 ennemis coriaces autour du leurre et traque leur mort.</summary>
+	private void SpawnLureEnemies(Vector2 lurePos, float rewardXp)
+	{
+		EnemyPool pool = GetNodeOrNull<EnemyPool>("../EnemyPool");
+		Node enemyContainer = GetNodeOrNull("../EnemyContainer");
+		if (pool == null || enemyContainer == null)
+			return;
+
+		// Alterner entre void_brute et shade pour la variété
+		string[] lureEnemyIds = { "void_brute", "shade" };
+		int count = 2 + (int)(GD.Randi() % 2); // 2 ou 3
+
+		for (int i = 0; i < count; i++)
+		{
+			string enemyId = lureEnemyIds[i % lureEnemyIds.Length];
+			EnemyData data = EnemyDataLoader.Get(enemyId);
+			if (data == null)
+			{
+				data = EnemyDataLoader.Get("shadow_crawler");
+				if (data == null) continue;
+			}
+
+			float spawnAngle = Mathf.Tau * i / count;
+			Vector2 spawnPos = lurePos + new Vector2(Mathf.Cos(spawnAngle), Mathf.Sin(spawnAngle)) * 60f;
+
+			// Scaling renforcé : ce sont des ennemis dangereux
+			float hpScale = 1.5f;
+			float dmgScale = 1.3f;
+
+			Enemy enemy = pool.Get();
+			enemy.GlobalPosition = spawnPos;
+			enemyContainer.AddChild(enemy);
+			enemy.Initialize(data, hpScale, dmgScale);
+
+			_lureEnemies.Add(enemy);
+			_eventBus.EmitSignal(EventBus.SignalName.EnemySpawned, data.Id, hpScale, dmgScale);
+		}
+
+		// Écouter les kills pour vérifier si tous les ennemis du leurre sont morts
+		_eventBus.EnemyKilled += OnLureEnemyKilled;
+
+		// Capturer rewardXp pour la vérification
+		void OnLureEnemyKilled(string enemyId, Vector2 position)
+		{
+			if (_lureRewardGranted)
+				return;
+
+			// Retirer les ennemis morts de la liste
+			_lureEnemies.RemoveAll(e => !IsInstanceValid(e) || !e.IsActive);
+
+			if (_lureEnemies.Count == 0)
+			{
+				// Tous les ennemis du leurre sont morts : récompense bonus
+				_lureRewardGranted = true;
+				_eventBus.EmitSignal(EventBus.SignalName.XpGained, rewardXp);
+				GD.Print($"[RandomEventManager] L'Appel — défi relevé ! +{rewardXp} XP bonus");
+
+				// Dissoudre le leurre
+				if (IsInstanceValid(_lureNode))
+				{
+					Tween fadeTween = _lureNode.CreateTween();
+					fadeTween.TweenProperty(_lureNode, "modulate", new Color(1, 1, 1, 0), 1.0f);
+					fadeTween.TweenCallback(Callable.From(() =>
+					{
+						if (IsInstanceValid(_lureNode))
+							_lureNode.QueueFree();
+					}));
+				}
+
+				// Se désabonner
+				_eventBus.EnemyKilled -= OnLureEnemyKilled;
+			}
+		}
+
+		GD.Print($"[RandomEventManager] L'Appel — {count} ennemis coriaces spawned près du leurre !");
 	}
 
 	// --- Chargement des données ---

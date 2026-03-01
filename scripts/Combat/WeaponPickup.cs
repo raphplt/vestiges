@@ -8,6 +8,7 @@ namespace Vestiges.Combat;
 /// Arme lâchée au sol par un ennemi ou un événement.
 /// Le joueur s'approche pour la ramasser automatiquement (pas d'interaction requise).
 /// Affiche le nom de l'arme et une lueur pulsante.
+/// Si les slots sont pleins, flash rouge (pas de swap — les armes viennent du level-up).
 /// </summary>
 public partial class WeaponPickup : Area2D
 {
@@ -35,7 +36,6 @@ public partial class WeaponPickup : Area2D
 		GlobalPosition = position;
 		_basePosition = position;
 
-		// Scatter : léger mouvement initial aléatoire
 		float angle = (float)GD.RandRange(0, Mathf.Tau);
 		_scatterVelocity = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * SpawnScatterSpeed;
 		_scatterTimer = 0.3f;
@@ -44,9 +44,8 @@ public partial class WeaponPickup : Area2D
 	public override void _Ready()
 	{
 		CollisionLayer = 0;
-		CollisionMask = 1; // Joueur
+		CollisionMask = 1;
 
-		// Hitbox circulaire
 		CollisionShape2D shape = new();
 		CircleShape2D circle = new() { Radius = PickupRadius };
 		shape.Shape = circle;
@@ -57,14 +56,12 @@ public partial class WeaponPickup : Area2D
 
 		BodyEntered += OnBodyEntered;
 
-		// Auto-despawn
 		GetTree().CreateTimer(DespawnTime).Timeout += () =>
 		{
 			if (!_collected && IsInstanceValid(this))
 				Despawn();
 		};
 
-		// Animation d'apparition
 		Scale = Vector2.Zero;
 		Tween spawnTween = CreateTween();
 		spawnTween.TweenProperty(this, "scale", Vector2.One, 0.25f)
@@ -78,7 +75,6 @@ public partial class WeaponPickup : Area2D
 	{
 		float dt = (float)delta;
 
-		// Scatter initial
 		if (_scatterTimer > 0f)
 		{
 			_scatterTimer -= dt;
@@ -87,7 +83,6 @@ public partial class WeaponPickup : Area2D
 			_basePosition = GlobalPosition;
 		}
 
-		// Bob vertical
 		_bobTimer += dt * BobSpeed;
 		float bobOffset = Mathf.Sin(_bobTimer) * BobAmplitude;
 		if (_visual != null)
@@ -99,29 +94,27 @@ public partial class WeaponPickup : Area2D
 		if (_collected)
 			return;
 
-		if (body is Player player)
+		if (body is not Player player)
+			return;
+
+		if (player.AddWeapon(_weaponData))
 		{
-			if (player.AddWeapon(_weaponData))
-			{
-				_collected = true;
-				PlayPickupEffect(player);
+			_collected = true;
+			PlayPickupEffect(player);
 
-				EventBus eventBus = GetNodeOrNull<EventBus>("/root/EventBus");
-				eventBus?.EmitSignal(EventBus.SignalName.LootReceived, "weapon", _weaponData.Id, 1);
+			EventBus eventBus = GetNodeOrNull<EventBus>("/root/EventBus");
+			eventBus?.EmitSignal(EventBus.SignalName.LootReceived, "weapon", _weaponData.Id, 1);
 
-				GD.Print($"[WeaponPickup] {_weaponData.Name} ramassée !");
-			}
-			else
-			{
-				// Inventaire plein : flash rouge
-				FlashFull();
-			}
+			GD.Print($"[WeaponPickup] {_weaponData.Name} ramassée !");
+		}
+		else
+		{
+			FlashFull();
 		}
 	}
 
 	private void PlayPickupEffect(Player player)
 	{
-		// Flash blanc + scale up puis disparition
 		Tween tween = CreateTween();
 		tween.SetParallel();
 		tween.TweenProperty(this, "scale", Vector2.One * 1.5f, 0.1f);
@@ -131,7 +124,6 @@ public partial class WeaponPickup : Area2D
 		tween.TweenProperty(this, "modulate:a", 0f, 0.15f);
 		tween.Chain().TweenCallback(Callable.From(QueueFree));
 
-		// Texte flottant avec le nom de l'arme
 		SpawnFloatingText(player);
 	}
 
@@ -148,7 +140,6 @@ public partial class WeaponPickup : Area2D
 
 		GetTree().Root.CallDeferred("add_child", floatLabel);
 
-		// Pas de lambda capturant "this" après QueueFree
 		Vector2 startPos = floatLabel.GlobalPosition;
 		Callable cleanup = Callable.From(() =>
 		{
@@ -191,7 +182,6 @@ public partial class WeaponPickup : Area2D
 
 	private void CreateVisual()
 	{
-		// Glow de rareté en arrière-plan
 		_glow = new Polygon2D();
 		float gr = 14f;
 		_glow.Polygon = new Vector2[]
@@ -203,7 +193,6 @@ public partial class WeaponPickup : Area2D
 		_glow.ZIndex = -1;
 		AddChild(_glow);
 
-		// Pulsation du glow
 		Tween glowTween = CreateTween();
 		glowTween.SetLoops();
 		glowTween.TweenProperty(_glow, "modulate:a", 0.4f, 0.7f)
@@ -211,7 +200,6 @@ public partial class WeaponPickup : Area2D
 		glowTween.TweenProperty(_glow, "modulate:a", 1f, 0.7f)
 			.SetTrans(Tween.TransitionType.Sine);
 
-		// Icône de l'arme : forme selon le type
 		_visual = new Polygon2D();
 		string weaponType = _weaponData?.Type?.ToLower() ?? "ranged";
 
@@ -253,11 +241,11 @@ public partial class WeaponPickup : Area2D
 		int tier = _weaponData?.Tier ?? 1;
 		return tier switch
 		{
-			1 => new Color(0.7f, 0.7f, 0.7f),     // Gris — Fortune
-			2 => new Color(0.4f, 0.7f, 1f),        // Bleu — Artisanal
-			3 => new Color(0.9f, 0.6f, 0.15f),     // Orange — Vestige
-			4 => new Color(0.7f, 0.3f, 1f),        // Violet — Essence
-			5 => new Color(1f, 0.85f, 0.2f),       // Or — Légendaire
+			1 => new Color(0.7f, 0.7f, 0.7f),
+			2 => new Color(0.4f, 0.7f, 1f),
+			3 => new Color(0.9f, 0.6f, 0.15f),
+			4 => new Color(0.7f, 0.3f, 1f),
+			5 => new Color(1f, 0.85f, 0.2f),
 			_ => Colors.White
 		};
 	}

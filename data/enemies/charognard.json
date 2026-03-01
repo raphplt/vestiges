@@ -2,11 +2,15 @@
     "id": "charognard",
     "name": "Charognard",
     "type": "melee",
+    "behavior": "pack",
     "stats": {
         "hp": 18,
         "speed": 85,
         "damage": 4,
-        "xp_reward": 8
+        "xp_reward": 8,
+        "pack_bonus_damage": 0.15,
+        "pack_bonus_speed": 0.10,
+        "pack_radius": 120
     },
     "visual": {
         "color": "#558844",

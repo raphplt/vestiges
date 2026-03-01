@@ -1,9 +1,9 @@
 {
-    "map_radius": 80,
+    "map_radius": 120,
     "foyer_clearance": 4,
     "ca_iterations": 4,
     "edge_fade_width": 5,
-    "biome_count": 3,
+    "biome_count": 4,
     "available_biomes": [
         "forest_reclaimed",
         "urban_ruins",
@@ -34,7 +34,7 @@
     },
     "respawn_interval": 30,
     "respawn_threshold": 130,
-    "poi_min_distance_between": 8,
+    "poi_min_distance_between": 18,
     "fog_reveal_radius": 25,
     "dawn_fog_expansion": 8,
     "fog_initial_clear_radius": 25

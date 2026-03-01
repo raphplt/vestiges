@@ -235,6 +235,12 @@ public static class MetaSaveManager
         return _data.DiscoveredSouvenirs.Contains(souvenirId);
     }
 
+    /// <summary>Alias pour la vérification de souvenir requis (utilisé par CraftManager).</summary>
+    public static bool HasSouvenir(string souvenirId)
+    {
+        return IsSouvenirDiscovered(souvenirId);
+    }
+
     public static void DiscoverSouvenir(string souvenirId)
     {
         Load();

@@ -25,7 +25,10 @@ public partial class GameBootstrap : Node
     {
         CharacterDataLoader.Load();
         WeaponDataLoader.Load();
+        WeaponUpgradeDataLoader.Load();
         PerkDataLoader.Load();
+        PassiveSouvenirDataLoader.Load();
+        FusionDataLoader.Load();
         MetaSaveManager.Load();
         StartingKitDataLoader.Load();
         SouvenirDataLoader.Load();
@@ -76,6 +79,17 @@ public partial class GameBootstrap : Node
         WorldSetup worldSetup = GetNode<WorldSetup>("..");
         FogOfWar fogOfWar = GetNodeOrNull<FogOfWar>("../FogOfWar");
         hud.InitializeMinimap(worldSetup, fogOfWar);
+
+        // Fragment Manager : gère le level-up (armes + passifs)
+        FragmentManager fragmentManager = GetNodeOrNull<FragmentManager>("../FragmentManager");
+        if (fragmentManager == null)
+        {
+            fragmentManager = new FragmentManager { Name = "FragmentManager" };
+            GetNode("..").AddChild(fragmentManager);
+        }
+        levelUpScreen.SetFragmentManager(fragmentManager);
+
+        // Perk Manager : gère les perks du monde (mémorial, coffres, POI)
         levelUpScreen.SetPerkManager(perkManager);
         gameOverScreen.SetScoreManager(scoreManager);
 

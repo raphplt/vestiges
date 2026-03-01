@@ -1,6 +1,6 @@
 {
-  "day_duration": 120,
-  "dusk_duration": 30,
-  "night_duration": 90,
-  "dawn_duration": 10
+  "day_duration": 540,
+  "dusk_duration": 90,
+  "night_duration": 390,
+  "dawn_duration": 30
 }

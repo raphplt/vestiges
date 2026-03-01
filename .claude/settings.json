@@ -5,7 +5,8 @@
       "Bash(weapon \")",
       "Read(//c/tmp/**)",
       "Read(//c/Users/rapha/AppData/Roaming/Godot/**)",
-      "Read(//c/Users/rapha/Documents/**)"
+      "Read(//c/Users/rapha/Documents/**)",
+      "Read(//c/Users/rapha/**)"
     ],
     "additionalDirectories": [
       "C:\\Users\\rapha\\.claude\\projects\\c--Users-rapha-Documents-Travail-Projets-vestiges\\memory"

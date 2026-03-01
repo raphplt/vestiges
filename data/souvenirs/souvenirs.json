@@ -118,5 +118,37 @@
         "text": "SOUVIENS-TOI, ET LE MONDE RESTERA. Les lettres sont profondes dans la pierre. Quelqu'un a voulu que ces mots survivent à tout. Même à l'oubli. Surtout à l'oubli.",
         "unlock_type": "",
         "unlock_id": ""
+    },
+    {
+        "id": "memory_flame",
+        "name": "Flamme de mémoire",
+        "constellation": "foyer",
+        "text": "Un éclat de lumière capturé dans un cristal. Il pulse au rythme d'un cœur. Le cristal est froid, mais la lumière est chaude. Comme un souvenir qu'on refuse de lâcher. Comme une flamme qui brûle sans combustible.",
+        "unlock_type": "recipe",
+        "unlock_id": "essence_staff"
+    },
+    {
+        "id": "void_knowledge",
+        "name": "Connaissance du Vide",
+        "constellation": "creatures",
+        "text": "Un journal de recherche, pages couvertes de diagrammes. Les créatures ne VIENNENT pas du néant — elles SONT le néant qui prend forme. Comprendre le Vide, c'est pouvoir le trancher.",
+        "unlock_type": "recipe",
+        "unlock_id": "void_edge"
+    },
+    {
+        "id": "lantern_memory",
+        "name": "Mémoire de la Lanterne",
+        "constellation": "effacement",
+        "text": "Plans détaillés d'un objet impossible : une lanterne qui brûle des souvenirs comme combustible. Plus on se souvient, plus elle brille. Le constructeur a noté en marge : fonctionne aussi avec les regrets.",
+        "unlock_type": "recipe",
+        "unlock_id": "lantern_of_names"
+    },
+    {
+        "id": "echo_fragment",
+        "name": "Fragment d'écho",
+        "constellation": "signes",
+        "text": "Un morceau de pierre qui vibre quand on le touche. Il répète le dernier son qu'il a entendu, en boucle, de plus en plus faiblement. Le son ressemble à un nom. Celui de quelqu'un qui n'existe plus.",
+        "unlock_type": "recipe",
+        "unlock_id": "resonance_hammer"
     }
 ]

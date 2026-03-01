@@ -22,7 +22,7 @@ public partial class PerkManager : Node
     /// </summary>
     private static readonly HashSet<string> _disabledPerks = new()
     {
-        // Essence system not implemented
+        // Essence system : perks spécifiques essence pas encore câblés
         "channeling", "siphon", "instability", "essence_regen",
         // Light / vision / fog system not implemented
         "torch_bearer", "night_vision", "awakened_sight",
@@ -32,8 +32,6 @@ public partial class PerkManager : Node
         "memory_anchor", "last_stand",
         // Salvage system not implemented
         "salvager",
-        // AoE system not implemented (stat applies but unused in combat)
-        "aoe_up",
         // Turret stat not implemented
         "forgeuse_overcharge",
         // Complex character perks requiring unbuilt systems
@@ -56,16 +54,18 @@ public partial class PerkManager : Node
     {
         PerkDataLoader.Load();
         _eventBus = GetNode<EventBus>("/root/EventBus");
-        _eventBus.LevelUp += OnLevelUp;
+        // Level-up choices are now handled by FragmentManager (weapons + passives).
+        // PerkManager only handles Memorial perks and world perks (chests, POIs, events).
         _eventBus.MemorialActivated += OnMemorialActivated;
+        _eventBus.LootReceived += OnLootReceived;
     }
 
     public override void _ExitTree()
     {
         if (_eventBus != null)
         {
-            _eventBus.LevelUp -= OnLevelUp;
             _eventBus.MemorialActivated -= OnMemorialActivated;
+            _eventBus.LootReceived -= OnLootReceived;
         }
     }
 
@@ -85,17 +85,27 @@ public partial class PerkManager : Node
         }
     }
 
-    private void OnLevelUp(int newLevel)
-    {
-        string[] choices = PickRandomPerks(PerksPerChoice);
-        EmitSignal(SignalName.PerkChoicesReady, choices);
-    }
-
     private void OnMemorialActivated()
     {
         string[] choices = PickRandomPerks(PerksPerChoice);
         if (choices.Length > 0)
             EmitSignal(SignalName.PerkChoicesReady, choices);
+    }
+
+    /// <summary>
+    /// Auto-applique un perk reçu depuis le monde (coffre, POI, événement).
+    /// Le perkId est déjà résolu par Player.ResolvePerkLoot().
+    /// </summary>
+    private void OnLootReceived(string itemType, string itemId, int amount)
+    {
+        if (itemType != "perk")
+            return;
+
+        if (string.IsNullOrEmpty(itemId))
+            return;
+
+        for (int i = 0; i < amount; i++)
+            SelectPerk(itemId);
     }
 
     public void SelectPerk(string perkId)

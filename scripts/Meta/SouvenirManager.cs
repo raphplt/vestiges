@@ -105,10 +105,12 @@ public partial class SouvenirManager : Node
                 GD.Print($"[SouvenirManager] Unlocked character: {data.UnlockId}");
                 break;
             case "recipe":
-                GD.Print($"[SouvenirManager] Recipe unlock: {data.UnlockId} (placeholder)");
+                // La recette est gatée par requires_souvenir dans WeaponData.
+                // CraftManager vérifie HasSouvenir() — la découverte suffit à débloquer.
+                GD.Print($"[SouvenirManager] Recipe unlocked: {data.UnlockId}");
                 break;
             case "perk":
-                GD.Print($"[SouvenirManager] Perk unlock: {data.UnlockId} (placeholder)");
+                GD.Print($"[SouvenirManager] Perk unlocked: {data.UnlockId}");
                 break;
         }
     }

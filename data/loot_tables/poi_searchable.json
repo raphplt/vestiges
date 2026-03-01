@@ -1,10 +1,11 @@
 {
     "id": "poi_searchable",
     "entries": [
-        { "type": "resource", "item": "wood", "weight": 25, "min_amount": 2, "max_amount": 5 },
-        { "type": "resource", "item": "stone", "weight": 25, "min_amount": 2, "max_amount": 4 },
-        { "type": "resource", "item": "metal", "weight": 20, "min_amount": 1, "max_amount": 3 },
-        { "type": "resource", "item": "fiber", "weight": 15, "min_amount": 2, "max_amount": 4 },
-        { "type": "xp", "item": "xp", "weight": 15, "min_amount": 10, "max_amount": 25 }
+        { "type": "resource", "item": "wood", "weight": 22, "min_amount": 2, "max_amount": 5 },
+        { "type": "resource", "item": "stone", "weight": 22, "min_amount": 2, "max_amount": 4 },
+        { "type": "resource", "item": "metal", "weight": 18, "min_amount": 1, "max_amount": 3 },
+        { "type": "resource", "item": "fiber", "weight": 13, "min_amount": 2, "max_amount": 4 },
+        { "type": "xp", "item": "xp", "weight": 13, "min_amount": 10, "max_amount": 25 },
+        { "type": "perk", "item": "random_perk", "weight": 12, "min_amount": 1, "max_amount": 1 }
     ]
 }

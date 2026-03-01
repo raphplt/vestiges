@@ -1,0 +1,43 @@
+{
+	"weapon_max_level": 8,
+	"stats": {
+		"damage": {
+			"max_level": 5,
+			"per_level": 0.15,
+			"mode": "multiplicative",
+			"display_name": "Dégâts"
+		},
+		"attack_speed": {
+			"max_level": 5,
+			"per_level": 0.10,
+			"mode": "multiplicative",
+			"display_name": "Vitesse d'attaque"
+		},
+		"knockback": {
+			"max_level": 3,
+			"per_level": 0.25,
+			"mode": "multiplicative",
+			"display_name": "Recul"
+		},
+		"projectile_count": {
+			"max_level": 3,
+			"per_level": 1,
+			"mode": "additive",
+			"display_name": "Projectiles",
+			"types": ["ranged"]
+		},
+		"projectile_pierce": {
+			"max_level": 3,
+			"per_level": 1,
+			"mode": "additive",
+			"display_name": "Perçage",
+			"types": ["ranged"]
+		},
+		"range": {
+			"max_level": 3,
+			"per_level": 0.15,
+			"mode": "multiplicative",
+			"display_name": "Portée"
+		}
+	}
+}

@@ -163,10 +163,10 @@ public partial class DayNightCycle : Node
 
     private void SetDefaults()
     {
-        _dayDuration = 120f;
-        _duskDuration = 30f;
-        _nightDuration = 90f;
-        _dawnDuration = 10f;
+        _dayDuration = 540f;
+        _duskDuration = 90f;
+        _nightDuration = 390f;
+        _dawnDuration = 30f;
     }
 
     /// <summary>Multiplie la durée de la nuit (utilisé par les mutateurs).</summary>

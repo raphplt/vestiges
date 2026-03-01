@@ -27,6 +27,6 @@
         "anomaly": 1.5,
         "sanctuary": 0.15
     },
-    "poi_count_min": 3,
-    "poi_count_max": 5
+    "poi_count_min": 2,
+    "poi_count_max": 3
 }

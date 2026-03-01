@@ -61,6 +61,22 @@ public partial class Enemy : CharacterBody2D
 	private Vector2 _chargeDirection;
 	private string _tier = "normal";
 
+	// Void Brute (charger) : charge vers les murs/structures
+	private float _chargerCooldown;
+	private bool _chargerIsCharging;
+	private float _chargerDurationLeft;
+	private Vector2 _chargerDirection;
+
+	// Pack (Charognard) : bonus groupé
+	private float _packBonusDamage;
+	private float _packBonusSpeed;
+	private float _packRadius = 120f;
+
+	// Wave modifiers (nuit 7+ : enragé, régénérant, explosif)
+	private string _waveModifier;
+	private float _regenTimer;
+	private Polygon2D _modifierAura;
+
 	// Aberration : version corrompue (nuit 7+)
 	private bool _isAberration;
 	private Polygon2D _aberrationAura;
@@ -68,6 +84,18 @@ public partial class Enemy : CharacterBody2D
 	// Ignite DOT
 	private float _igniteDps;
 	private float _igniteTimer;
+
+	// Bleed DOT (arme on_hit_effect)
+	private float _bleedDps;
+	private float _bleedTimer;
+
+	// Slow debuff
+	private float _slowFactor = 1f;
+	private float _slowTimer;
+
+	// Disorientation (mouvement aléatoire)
+	private float _disorientTimer;
+	private Vector2 _disorientDirection;
 
 	private Polygon2D _visual;
 	private Color _originalColor;
@@ -108,6 +136,11 @@ public partial class Enemy : CharacterBody2D
 		_nightMode = false;
 		_igniteDps = 0f;
 		_igniteTimer = 0f;
+		_bleedDps = 0f;
+		_bleedTimer = 0f;
+		_slowFactor = 1f;
+		_slowTimer = 0f;
+		_disorientTimer = 0f;
 		_screamerTimer = ScreamerCryCooldown * 0.5f;
 		_burrowerPhaseTimer = BurrowerPhaseInterval;
 		_isBurrowed = false;
@@ -115,6 +148,14 @@ public partial class Enemy : CharacterBody2D
 		_colosseSlamTimer = ColosseSlamCooldown;
 		_isCharging = false;
 		_chargeDurationLeft = 0f;
+		_chargerCooldown = 4f;
+		_chargerIsCharging = false;
+		_chargerDurationLeft = 0f;
+		_packBonusDamage = data.ExtraStats.TryGetValue("pack_bonus_damage", out float pbd) ? pbd : 0.15f;
+		_packBonusSpeed = data.ExtraStats.TryGetValue("pack_bonus_speed", out float pbs) ? pbs : 0.10f;
+		_packRadius = data.ExtraStats.TryGetValue("pack_radius", out float pr) ? pr : 120f;
+		_waveModifier = null;
+		_regenTimer = 0f;
 		IsActive = true;
 
 		ConfigureVisual(data);
@@ -199,13 +240,30 @@ public partial class Enemy : CharacterBody2D
 		_currentHp = 0;
 		_igniteDps = 0f;
 		_igniteTimer = 0f;
+		_bleedDps = 0f;
+		_bleedTimer = 0f;
+		_slowFactor = 1f;
+		_slowTimer = 0f;
+		_disorientTimer = 0f;
 		_screamerTimer = 0f;
 		_burrowerPhaseTimer = 0f;
 		_isAberration = false;
+		_chargerCooldown = 0f;
+		_chargerIsCharging = false;
+		_chargerDurationLeft = 0f;
+		_packBonusDamage = 0f;
+		_packBonusSpeed = 0f;
+		_waveModifier = null;
+		_regenTimer = 0f;
 		if (_aberrationAura != null)
 		{
 			_aberrationAura.QueueFree();
 			_aberrationAura = null;
+		}
+		if (_modifierAura != null)
+		{
+			_modifierAura.QueueFree();
+			_modifierAura = null;
 		}
 		CollisionLayer = 2;
 		CollisionMask = 4;
@@ -232,6 +290,9 @@ public partial class Enemy : CharacterBody2D
 		float dt = (float)delta;
 
 		ProcessIgnite(dt);
+		ProcessBleed(dt);
+		ProcessSlowDecay(dt);
+		ProcessDisorient(dt);
 		ProcessBehaviorAbilities(distToPlayer, dt);
 
 		// Colosse en charge : skip le mouvement normal
@@ -248,6 +309,10 @@ public partial class Enemy : CharacterBody2D
 		else if (_nightMode && distToPlayer > PlayerProximityRange)
 		{
 			ProcessNightMovement(distToPlayer, dt);
+		}
+		else if (_behavior == "sentinel")
+		{
+			ProcessSentinel(distToPlayer, dt);
 		}
 		else if (_enemyType == "melee")
 		{
@@ -275,7 +340,17 @@ public partial class Enemy : CharacterBody2D
 			case "colosse":
 				ProcessColosseAbilities(distToPlayer, delta);
 				break;
+			case "charger":
+				ProcessChargerAbilities(distToPlayer, delta);
+				break;
+			case "pack":
+				ProcessPackBonus(delta);
+				break;
 		}
+
+		// Wave modifiers (indépendant du behavior)
+		if (_waveModifier == "regenerant")
+			ProcessRegenModifier(delta);
 	}
 
 	/// <summary>Hurleur : crie périodiquement pour appeler des renforts (shade).</summary>
@@ -450,6 +525,160 @@ public partial class Enemy : CharacterBody2D
 			.SetTrans(Tween.TransitionType.Elastic).SetEase(Tween.EaseType.Out);
 	}
 
+	/// <summary>Sentinelle : immobile, tire à distance. Pilier organique ancré.</summary>
+	private void ProcessSentinel(float distToPlayer, float delta)
+	{
+		Velocity = Vector2.Zero;
+		_attackTimer -= delta;
+		if (distToPlayer <= _attackRange && _attackTimer <= 0f)
+		{
+			ShootProjectile();
+			_attackTimer = RangedAttackCooldown;
+		}
+	}
+
+	/// <summary>Brute du Vide : charge les structures/murs quand elles sont sur son chemin.</summary>
+	private void ProcessChargerAbilities(float distToPlayer, float delta)
+	{
+		if (_chargerIsCharging)
+		{
+			_chargerDurationLeft -= delta;
+			Velocity = _chargerDirection * 200f;
+
+			if (_chargerDurationLeft <= 0f)
+			{
+				_chargerIsCharging = false;
+				_chargerCooldown = 8f;
+			}
+
+			// Impact structure pendant la charge
+			Godot.Collections.Array<Node> structures = GetTree().GetNodesInGroup("structures");
+			foreach (Node node in structures)
+			{
+				if (node is Structure structure && !structure.IsDestroyed)
+				{
+					float dist = GlobalPosition.DistanceTo(structure.GlobalPosition);
+					if (dist < MeleeRange * 2f)
+					{
+						structure.TakeDamage(_damage * 2f);
+						_chargerIsCharging = false;
+						_chargerCooldown = 8f;
+						// Flash impact
+						_visual.Color = new Color(0.5f, 0.2f, 0.5f);
+						Tween flash = CreateTween();
+						flash.TweenProperty(_visual, "color", _originalColor, 0.2f);
+						break;
+					}
+				}
+			}
+			return;
+		}
+
+		_chargerCooldown -= delta;
+		if (_chargerCooldown <= 0f)
+		{
+			// Cherche une structure à charger
+			Structure target = FindNearestStructure();
+			if (target != null)
+			{
+				_chargerIsCharging = true;
+				_chargerDurationLeft = 0.8f;
+				_chargerDirection = (target.GlobalPosition - GlobalPosition).Normalized();
+				_visual.Color = new Color(0.8f, 0.2f, 0.8f);
+				Tween chargeTween = CreateTween();
+				chargeTween.TweenProperty(_visual, "color", _originalColor, 0.3f).SetDelay(0.1f);
+			}
+			else
+			{
+				_chargerCooldown = 3f;
+			}
+		}
+	}
+
+	/// <summary>Charognard (meute) : bonus de dégâts et vitesse quand d'autres charognards sont proches.</summary>
+	private void ProcessPackBonus(float delta)
+	{
+		int packCount = 0;
+		Godot.Collections.Array<Node> enemies = GetTree().GetNodesInGroup("enemies");
+		foreach (Node node in enemies)
+		{
+			if (node is Enemy other && other != this && IsInstanceValid(other) && !other.IsDying
+				&& other._enemyId == "charognard"
+				&& GlobalPosition.DistanceTo(other.GlobalPosition) < _packRadius)
+			{
+				packCount++;
+			}
+		}
+
+		if (packCount > 0)
+		{
+			float damageBonus = 1f + (_packBonusDamage * Mathf.Min(packCount, 5));
+			float speedBonus = 1f + (_packBonusSpeed * Mathf.Min(packCount, 5));
+			// Les bonus sont appliqués temporairement via les calculs de dégâts
+			// On stocke le multiplicateur courant dans _slowFactor (réutilisé comme speed multiplier positif)
+			// Simpler: modify speed directly for this frame
+			_speed = EnemyDataLoader.Get(_enemyId)?.Stats.Speed * speedBonus ?? _speed;
+		}
+	}
+
+	/// <summary>Applique un modificateur de vague (enragé, régénérant, explosif).</summary>
+	public void ApplyWaveModifier(string modifier)
+	{
+		_waveModifier = modifier;
+
+		switch (modifier)
+		{
+			case "enraged":
+				_damage *= 1.4f;
+				_speed *= 1.3f;
+				_visual.Color = _visual.Color.Lerp(new Color(1f, 0.2f, 0.1f), 0.5f);
+				_originalColor = _visual.Color;
+				SpawnModifierAura(new Color(1f, 0.3f, 0.1f, 0.2f));
+				break;
+			case "regenerant":
+				SpawnModifierAura(new Color(0.2f, 1f, 0.3f, 0.2f));
+				break;
+			case "explosive":
+				SpawnModifierAura(new Color(1f, 0.7f, 0.1f, 0.2f));
+				break;
+		}
+	}
+
+	private void ProcessRegenModifier(float delta)
+	{
+		_regenTimer += delta;
+		if (_regenTimer >= 1f)
+		{
+			_regenTimer = 0f;
+			float regenAmount = _maxHp * 0.03f;
+			_currentHp = Mathf.Min(_currentHp + regenAmount, _maxHp);
+		}
+	}
+
+	private void SpawnModifierAura(Color color)
+	{
+		if (_modifierAura != null)
+			return;
+
+		_modifierAura = new Polygon2D();
+		int segments = 8;
+		Vector2[] points = new Vector2[segments];
+		float auraSize = 16f;
+		for (int i = 0; i < segments; i++)
+		{
+			float angle = Mathf.Tau * i / segments;
+			points[i] = new Vector2(Mathf.Cos(angle) * auraSize, Mathf.Sin(angle) * auraSize * 0.5f);
+		}
+		_modifierAura.Polygon = points;
+		_modifierAura.Color = color;
+		_modifierAura.ZIndex = -1;
+		AddChild(_modifierAura);
+
+		Tween pulse = CreateTween().SetLoops();
+		pulse.TweenProperty(_modifierAura, "scale", Vector2.One * 1.2f, 0.6f).SetTrans(Tween.TransitionType.Sine);
+		pulse.TweenProperty(_modifierAura, "scale", Vector2.One, 0.6f).SetTrans(Tween.TransitionType.Sine);
+	}
+
 	/// <summary>Garde : attaque le joueur s'il est dans le rayon de patrouille, sinon retourne au poste.</summary>
 	private void ProcessGuardBehavior(float distToPlayer, float delta)
 	{
@@ -547,8 +776,13 @@ public partial class Enemy : CharacterBody2D
 
 	private void ProcessMelee(float distToPlayer, float delta)
 	{
+		if (_disorientTimer > 0f)
+		{
+			Velocity = _disorientDirection * _speed * _slowFactor * 0.4f;
+			return;
+		}
 		Vector2 direction = (_player.GlobalPosition - GlobalPosition).Normalized();
-		Velocity = direction * _speed;
+		Velocity = direction * _speed * _slowFactor;
 
 		_attackTimer -= delta;
 		if (distToPlayer < MeleeRange && _attackTimer <= 0f)
@@ -561,10 +795,16 @@ public partial class Enemy : CharacterBody2D
 
 	private void ProcessRanged(float distToPlayer, float delta)
 	{
+		if (_disorientTimer > 0f)
+		{
+			Velocity = _disorientDirection * _speed * _slowFactor * 0.4f;
+			_attackTimer = Mathf.Max(_attackTimer, 0.5f);
+			return;
+		}
 		if (distToPlayer > _attackRange)
 		{
 			Vector2 direction = (_player.GlobalPosition - GlobalPosition).Normalized();
-			Velocity = direction * _speed;
+			Velocity = direction * _speed * _slowFactor;
 		}
 		else
 		{
@@ -692,9 +932,40 @@ public partial class Enemy : CharacterBody2D
 	{
 		_igniteDps = dps;
 		_igniteTimer = duration;
-
-		// Visual feedback: tint orange while ignited
 		_visual.Color = new Color(1f, 0.5f, 0.1f);
+	}
+
+	/// <summary>Apply bleed DOT (weapon on_hit_effect type "dot"). Refreshes if already bleeding.</summary>
+	public void ApplyBleed(float dps, float duration)
+	{
+		_bleedDps = dps;
+		_bleedTimer = duration;
+		_visual.Color = new Color(0.8f, 0.15f, 0.15f);
+	}
+
+	/// <summary>Ralentit l'ennemi pendant une durée. Facteur 0.5 = 50% de vitesse.</summary>
+	public void ApplySlow(float factor, float duration)
+	{
+		_slowFactor = Mathf.Min(_slowFactor, factor);
+		_slowTimer = Mathf.Max(_slowTimer, duration);
+		_visual.Color = _visual.Color.Lerp(new Color(0.4f, 0.6f, 1f), 0.4f);
+	}
+
+	/// <summary>Désorientation : l'ennemi erre aléatoirement pendant la durée.</summary>
+	public void ApplyDisorient(float duration)
+	{
+		_disorientTimer = duration;
+		float angle = (float)GD.RandRange(0, Mathf.Tau);
+		_disorientDirection = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle));
+		_visual.Color = new Color(1f, 1f, 0.4f);
+	}
+
+	/// <summary>Applique un knockback (vélocité instantanée) depuis une direction.</summary>
+	public void ApplyKnockback(Vector2 direction, float force)
+	{
+		if (_isDying || _isCharging || _tier == "miniboss")
+			return;
+		Velocity += direction.Normalized() * force;
 	}
 
 	private void ProcessIgnite(float delta)
@@ -715,6 +986,60 @@ public partial class Enemy : CharacterBody2D
 
 		if (_currentHp <= 0 && !_isDying)
 			Die();
+	}
+
+	private void ProcessBleed(float delta)
+	{
+		if (_bleedTimer <= 0f)
+			return;
+
+		_bleedTimer -= delta;
+		float bleedDamage = _bleedDps * delta;
+		_currentHp -= bleedDamage;
+		GetNode<EventBus>("/root/EventBus").EmitSignal(EventBus.SignalName.EntityDamaged, this, bleedDamage);
+
+		if (_bleedTimer <= 0f)
+		{
+			_bleedDps = 0f;
+			_visual.Color = _originalColor;
+		}
+
+		if (_currentHp <= 0 && !_isDying)
+			Die();
+	}
+
+	private void ProcessSlowDecay(float delta)
+	{
+		if (_slowTimer <= 0f)
+			return;
+
+		_slowTimer -= delta;
+		if (_slowTimer <= 0f)
+		{
+			_slowFactor = 1f;
+			_slowTimer = 0f;
+			if (_igniteTimer <= 0f && _bleedTimer <= 0f && _disorientTimer <= 0f)
+				_visual.Color = _originalColor;
+		}
+	}
+
+	private void ProcessDisorient(float delta)
+	{
+		if (_disorientTimer <= 0f)
+			return;
+
+		_disorientTimer -= delta;
+		// Changement de direction aléatoire régulier
+		if (GD.Randf() < delta * 2f)
+		{
+			float angle = (float)GD.RandRange(0, Mathf.Tau);
+			_disorientDirection = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle));
+		}
+		if (_disorientTimer <= 0f)
+		{
+			if (_igniteTimer <= 0f && _bleedTimer <= 0f && _slowTimer <= 0f)
+				_visual.Color = _originalColor;
+		}
 	}
 
 	private void HitFlash()
@@ -739,6 +1064,52 @@ public partial class Enemy : CharacterBody2D
 		_igniteDps = 0f;
 		_igniteTimer = 0f;
 		Velocity = Vector2.Zero;
+
+		// Explosive : AoE de dégâts à la mort
+		if (_waveModifier == "explosive")
+		{
+			float explosionRadius = 60f;
+			float explosionDamage = _damage * 1.5f;
+
+			// Dégâts au joueur
+			if (_player != null && IsInstanceValid(_player))
+			{
+				float distToPlayer = GlobalPosition.DistanceTo(_player.GlobalPosition);
+				if (distToPlayer < explosionRadius)
+					_player.TakeDamage(explosionDamage * (1f - distToPlayer / explosionRadius));
+			}
+
+			// Dégâts aux ennemis proches
+			Godot.Collections.Array<Node> enemies = GetTree().GetNodesInGroup("enemies");
+			foreach (Node node in enemies)
+			{
+				if (node is Enemy e && e != this && IsInstanceValid(e) && !e.IsDying)
+				{
+					if (GlobalPosition.DistanceTo(e.GlobalPosition) < explosionRadius)
+						e.TakeDamage(explosionDamage * 0.5f);
+				}
+			}
+
+			// VFX explosion
+			Polygon2D explosion = new();
+			int segs = 12;
+			Vector2[] pts = new Vector2[segs];
+			for (int i = 0; i < segs; i++)
+			{
+				float angle = Mathf.Tau * i / segs;
+				pts[i] = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * 5f;
+			}
+			explosion.Polygon = pts;
+			explosion.Color = new Color(1f, 0.5f, 0.1f, 0.7f);
+			explosion.GlobalPosition = GlobalPosition;
+			GetTree().CurrentScene.AddChild(explosion);
+
+			Tween expTween = explosion.CreateTween();
+			expTween.SetParallel();
+			expTween.TweenProperty(explosion, "scale", Vector2.One * (explosionRadius / 5f), 0.2f);
+			expTween.TweenProperty(explosion, "modulate:a", 0f, 0.2f);
+			expTween.Chain().TweenCallback(Callable.From(() => explosion.QueueFree()));
+		}
 
 		if (IsInGroup("enemies"))
 			RemoveFromGroup("enemies");

@@ -172,6 +172,18 @@ public partial class SpawnManager : Node2D
                 enemy.Aberrate();
         }
 
+        // Wave modifiers : nuit 7+, chance d'appliquer enragé/régénérant/explosif
+        if (_currentPhase == DayPhase.Night && _currentNight >= AberrationMinNight && data.Tier == "normal")
+        {
+            float modChance = 0.1f + 0.03f * (_currentNight - AberrationMinNight);
+            if (GD.Randf() < modChance)
+            {
+                string[] modifiers = { "enraged", "regenerant", "explosive" };
+                string modifier = modifiers[(int)(GD.Randi() % modifiers.Length)];
+                enemy.ApplyWaveModifier(modifier);
+            }
+        }
+
         _eventBus.EmitSignal(EventBus.SignalName.EnemySpawned, enemyId, hpScale, dmgScale);
     }
 

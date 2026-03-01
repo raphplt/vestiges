@@ -2,11 +2,15 @@
     "id": "void_brute",
     "name": "Brute du Vide",
     "type": "melee",
+    "behavior": "charger",
     "stats": {
         "hp": 80,
         "speed": 35,
         "damage": 12,
-        "xp_reward": 25
+        "xp_reward": 25,
+        "charge_speed": 200,
+        "charge_cooldown": 8,
+        "charge_range": 200
     },
     "visual": {
         "color": "#663366",

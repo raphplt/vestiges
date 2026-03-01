@@ -60,6 +60,21 @@ public partial class EventBus : Node
     // --- Armes ---
     [Signal] public delegate void WeaponEquippedEventHandler(string weaponId, int slotIndex);
     [Signal] public delegate void WeaponInventoryChangedEventHandler();
+    [Signal] public delegate void WeaponUpgradedEventHandler(string weaponId, int slotIndex, string stat, int newLevel);
+    [Signal] public delegate void WeaponDroppedEventHandler(string weaponId);
+
+    // --- Passive Souvenirs (level-up) ---
+    [Signal] public delegate void PassiveSouvenirAddedEventHandler(string passiveId, int slotIndex);
+    [Signal] public delegate void PassiveSouvenirUpgradedEventHandler(string passiveId, int newLevel);
+    [Signal] public delegate void PassiveSouvenirSlotsChangedEventHandler();
+
+    // --- Fragments de Mémoire (level-up choices) ---
+    [Signal] public delegate void FragmentChoicesReadyEventHandler(int count);
+    [Signal] public delegate void FragmentChosenEventHandler(string fragmentId, string fragmentType);
+
+    // --- Fusions (Vestiges) ---
+    [Signal] public delegate void FusionAvailableEventHandler(string fusionId, string weaponId, string passiveId);
+    [Signal] public delegate void FusionCompletedEventHandler(string fusionId);
 
     // --- Fog of War ---
     [Signal] public delegate void ZoneDiscoveredEventHandler(int cellX, int cellY, int cellCount);

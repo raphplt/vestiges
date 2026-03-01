@@ -28,6 +28,7 @@ public class EnemyData
     public string Tier { get; set; } = "normal";
     public EnemyStats Stats { get; set; }
     public EnemyVisual Visual { get; set; }
+    public Dictionary<string, float> ExtraStats { get; set; } = new();
 }
 
 public static class EnemyDataLoader
@@ -118,7 +119,7 @@ public static class EnemyDataLoader
         Godot.Collections.Dictionary stats = dict["stats"].AsGodotDictionary();
         Godot.Collections.Dictionary visual = dict["visual"].AsGodotDictionary();
 
-        return new EnemyData
+        EnemyData data = new()
         {
             Id = dict["id"].AsString(),
             Name = dict["name"].AsString(),
@@ -140,5 +141,21 @@ public static class EnemyDataLoader
                 Size = (float)visual["size"].AsDouble()
             }
         };
+
+        // Extra stats non-standard (pack_bonus, charge_speed, etc.)
+        string[] coreStats = { "hp", "speed", "damage", "attack_range", "xp_reward" };
+        HashSet<string> coreSet = new(coreStats);
+        foreach (Variant key in stats.Keys)
+        {
+            string k = key.AsString();
+            if (!coreSet.Contains(k))
+            {
+                Variant val = stats[key];
+                if (val.VariantType is Variant.Type.Int or Variant.Type.Float)
+                    data.ExtraStats[k] = (float)val.AsDouble();
+            }
+        }
+
+        return data;
     }
 }

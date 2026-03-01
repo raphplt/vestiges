@@ -1,4 +1,5 @@
 using Godot;
+using Vestiges.Combat;
 using Vestiges.Core;
 using Vestiges.Infrastructure;
 using Vestiges.Progression;
@@ -39,6 +40,10 @@ public partial class HUD : CanvasLayer
     private readonly Label[] _weaponSlotLabels = new Label[Player.MaxWeaponSlots];
     private readonly PanelContainer[] _weaponSlotPanels = new PanelContainer[Player.MaxWeaponSlots];
 
+    // Passive souvenir display
+    private readonly Label[] _passiveSlotLabels = new Label[Player.MaxPassiveSlots];
+    private readonly PanelContainer[] _passiveSlotPanels = new PanelContainer[Player.MaxPassiveSlots];
+
     // Minimap
     private Minimap _minimap;
 
@@ -78,6 +83,8 @@ public partial class HUD : CanvasLayer
         _eventBus.NightSummary += OnNightSummary;
         _eventBus.InventoryChanged += OnInventoryChanged;
         _eventBus.WeaponInventoryChanged += OnWeaponInventoryChanged;
+        _eventBus.WeaponUpgraded += OnWeaponUpgraded;
+        _eventBus.PassiveSouvenirSlotsChanged += OnPassiveSlotsChanged;
 
         _hpBar.MinValue = 0;
         _hpBar.MaxValue = 100;
@@ -99,7 +106,7 @@ public partial class HUD : CanvasLayer
 
         CreateDawnSummaryPanel();
         CreateResourcePanel();
-        CreateWeaponPanel();
+        CreateEquipmentPanel();
         CreateMinimap();
         CreateInteractHint();
         CreateCompassWidget();
@@ -128,6 +135,8 @@ public partial class HUD : CanvasLayer
             _eventBus.NightSummary -= OnNightSummary;
             _eventBus.InventoryChanged -= OnInventoryChanged;
             _eventBus.WeaponInventoryChanged -= OnWeaponInventoryChanged;
+            _eventBus.WeaponUpgraded -= OnWeaponUpgraded;
+            _eventBus.PassiveSouvenirSlotsChanged -= OnPassiveSlotsChanged;
         }
     }
 
@@ -281,9 +290,9 @@ public partial class HUD : CanvasLayer
         fillStyle.BgColor = barColor;
     }
 
-    // --- Weapon Panel ---
+    // --- Equipment Panel (Armes + Souvenirs) ---
 
-    private void CreateWeaponPanel()
+    private void CreateEquipmentPanel()
     {
         PanelContainer panel = new();
         panel.AnchorLeft = 1f;
@@ -292,7 +301,7 @@ public partial class HUD : CanvasLayer
         panel.AnchorBottom = 1f;
         panel.OffsetLeft = -180;
         panel.OffsetRight = -10;
-        panel.OffsetTop = -140;
+        panel.OffsetTop = -280;
         panel.OffsetBottom = -10;
 
         StyleBoxFlat style = new();
@@ -311,12 +320,13 @@ public partial class HUD : CanvasLayer
         vbox.AddThemeConstantOverride("separation", 3);
         panel.AddChild(vbox);
 
-        Label titleLabel = new();
-        titleLabel.Text = "Armes";
-        titleLabel.AddThemeFontSizeOverride("font_size", 12);
-        titleLabel.AddThemeColorOverride("font_color", new Color(0.7f, 0.7f, 0.7f));
-        titleLabel.HorizontalAlignment = HorizontalAlignment.Center;
-        vbox.AddChild(titleLabel);
+        // --- Armes ---
+        Label weaponTitle = new();
+        weaponTitle.Text = "Armes";
+        weaponTitle.AddThemeFontSizeOverride("font_size", 12);
+        weaponTitle.AddThemeColorOverride("font_color", new Color(0.7f, 0.7f, 0.7f));
+        weaponTitle.HorizontalAlignment = HorizontalAlignment.Center;
+        vbox.AddChild(weaponTitle);
 
         _weaponSlotsContainer = vbox;
 
@@ -331,18 +341,52 @@ public partial class HUD : CanvasLayer
             slotStyle.CornerRadiusTopRight = 4;
             slotStyle.ContentMarginLeft = 6;
             slotStyle.ContentMarginRight = 6;
-            slotStyle.ContentMarginTop = 3;
-            slotStyle.ContentMarginBottom = 3;
+            slotStyle.ContentMarginTop = 2;
+            slotStyle.ContentMarginBottom = 2;
             slotPanel.AddThemeStyleboxOverride("panel", slotStyle);
 
             Label slotLabel = new();
             slotLabel.Text = "— vide —";
-            slotLabel.AddThemeFontSizeOverride("font_size", 12);
+            slotLabel.AddThemeFontSizeOverride("font_size", 11);
             slotLabel.AddThemeColorOverride("font_color", new Color(0.35f, 0.35f, 0.35f));
             slotPanel.AddChild(slotLabel);
 
             _weaponSlotLabels[i] = slotLabel;
             _weaponSlotPanels[i] = slotPanel;
+            vbox.AddChild(slotPanel);
+        }
+
+        // --- Séparateur + Souvenirs ---
+        Label passiveTitle = new();
+        passiveTitle.Text = "Souvenirs";
+        passiveTitle.AddThemeFontSizeOverride("font_size", 12);
+        passiveTitle.AddThemeColorOverride("font_color", new Color(0.7f, 0.7f, 0.7f));
+        passiveTitle.HorizontalAlignment = HorizontalAlignment.Center;
+        vbox.AddChild(passiveTitle);
+
+        for (int i = 0; i < Player.MaxPassiveSlots; i++)
+        {
+            PanelContainer slotPanel = new();
+            StyleBoxFlat slotStyle = new();
+            slotStyle.BgColor = new Color(0.12f, 0.12f, 0.12f, 0.5f);
+            slotStyle.CornerRadiusBottomLeft = 4;
+            slotStyle.CornerRadiusBottomRight = 4;
+            slotStyle.CornerRadiusTopLeft = 4;
+            slotStyle.CornerRadiusTopRight = 4;
+            slotStyle.ContentMarginLeft = 6;
+            slotStyle.ContentMarginRight = 6;
+            slotStyle.ContentMarginTop = 2;
+            slotStyle.ContentMarginBottom = 2;
+            slotPanel.AddThemeStyleboxOverride("panel", slotStyle);
+
+            Label slotLabel = new();
+            slotLabel.Text = "— vide —";
+            slotLabel.AddThemeFontSizeOverride("font_size", 11);
+            slotLabel.AddThemeColorOverride("font_color", new Color(0.35f, 0.35f, 0.35f));
+            slotPanel.AddChild(slotLabel);
+
+            _passiveSlotLabels[i] = slotLabel;
+            _passiveSlotPanels[i] = slotPanel;
             vbox.AddChild(slotPanel);
         }
 
@@ -355,20 +399,22 @@ public partial class HUD : CanvasLayer
         if (playerNode is not Player player)
             return;
 
-        System.Collections.Generic.IReadOnlyList<WeaponData> weapons = player.WeaponSlots;
+        System.Collections.Generic.IReadOnlyList<WeaponInstance> weapons = player.WeaponSlots;
 
         for (int i = 0; i < Player.MaxWeaponSlots; i++)
         {
             if (i < weapons.Count)
             {
-                WeaponData weapon = weapons[i];
+                WeaponInstance weapon = weapons[i];
                 string typeIcon = weapon.Type?.ToLower() switch
                 {
                     "melee" => "[M]",
                     "ranged" => "[D]",
                     _ => "[S]"
                 };
-                _weaponSlotLabels[i].Text = $"{typeIcon} {weapon.Name}";
+                int fragLevel = player.GetWeaponFragmentLevel(weapon.Id);
+                string levelText = fragLevel > 1 ? $" Nv{fragLevel}" : "";
+                _weaponSlotLabels[i].Text = $"{typeIcon} {weapon.Name}{levelText}";
 
                 Color tierColor = weapon.Tier switch
                 {
@@ -390,6 +436,44 @@ public partial class HUD : CanvasLayer
                 _weaponSlotLabels[i].AddThemeColorOverride("font_color", new Color(0.35f, 0.35f, 0.35f));
 
                 StyleBoxFlat slotStyle = (StyleBoxFlat)_weaponSlotPanels[i].GetThemeStylebox("panel");
+                slotStyle.BgColor = new Color(0.12f, 0.12f, 0.12f, 0.5f);
+            }
+        }
+    }
+
+    private void OnWeaponUpgraded(string _weaponId, int _slotIndex, string _stat, int _newLevel)
+    {
+        OnWeaponInventoryChanged();
+    }
+
+    private void OnPassiveSlotsChanged()
+    {
+        Node playerNode = GetTree().GetFirstNodeInGroup("player");
+        if (playerNode is not Player player)
+            return;
+
+        System.Collections.Generic.IReadOnlyList<ActivePassiveSouvenir> passives = player.PassiveSlots;
+
+        for (int i = 0; i < Player.MaxPassiveSlots; i++)
+        {
+            if (i < passives.Count)
+            {
+                ActivePassiveSouvenir passive = passives[i];
+                string levelText = passive.Level > 1 ? $" Nv{passive.Level}" : "";
+                _passiveSlotLabels[i].Text = $"{passive.Data.Name}{levelText}";
+
+                Color iconColor = passive.Data.IconColor;
+                _passiveSlotLabels[i].AddThemeColorOverride("font_color", iconColor);
+
+                StyleBoxFlat slotStyle = (StyleBoxFlat)_passiveSlotPanels[i].GetThemeStylebox("panel");
+                slotStyle.BgColor = new Color(iconColor.R * 0.15f, iconColor.G * 0.15f, iconColor.B * 0.15f, 0.6f);
+            }
+            else
+            {
+                _passiveSlotLabels[i].Text = "— vide —";
+                _passiveSlotLabels[i].AddThemeColorOverride("font_color", new Color(0.35f, 0.35f, 0.35f));
+
+                StyleBoxFlat slotStyle = (StyleBoxFlat)_passiveSlotPanels[i].GetThemeStylebox("panel");
                 slotStyle.BgColor = new Color(0.12f, 0.12f, 0.12f, 0.5f);
             }
         }

@@ -1,13 +1,14 @@
 using Godot;
+using Vestiges.Core;
 using Vestiges.Infrastructure;
 using Vestiges.Progression;
 
 namespace Vestiges.UI;
 
 /// <summary>
-/// Écran de choix de perk au level up.
-/// Pause le jeu, affiche 3 choix avec couleur de rarity, reprend après sélection.
-/// Affiche les notifications de synergies activées.
+/// Écran de choix au level up — affiche des Fragments de Mémoire (armes + passifs).
+/// Pause le jeu, affiche 3 choix avec icônes type, reprend après sélection.
+/// Supporte aussi les choix de perks via Mémorial (source monde).
 /// </summary>
 public partial class LevelUpScreen : CanvasLayer
 {
@@ -16,7 +17,8 @@ public partial class LevelUpScreen : CanvasLayer
     private Label _title;
     private Label _synergyNotification;
     private PerkManager _perkManager;
-    private string[] _currentChoices;
+    private FragmentManager _fragmentManager;
+    private EventBus _eventBus;
 
     public override void _Ready()
     {
@@ -24,8 +26,17 @@ public partial class LevelUpScreen : CanvasLayer
         _container = GetNode<VBoxContainer>("Panel/Padding/VBox");
         _title = GetNode<Label>("Panel/Padding/VBox/Title");
 
+        _eventBus = GetNode<EventBus>("/root/EventBus");
+        _eventBus.FragmentChoicesReady += OnFragmentChoicesReady;
+
         CreateSynergyNotification();
         Hide();
+    }
+
+    public override void _ExitTree()
+    {
+        if (_eventBus != null)
+            _eventBus.FragmentChoicesReady -= OnFragmentChoicesReady;
     }
 
     public void SetPerkManager(PerkManager perkManager)
@@ -33,6 +44,12 @@ public partial class LevelUpScreen : CanvasLayer
         _perkManager = perkManager;
         _perkManager.PerkChoicesReady += OnPerkChoicesReady;
         _perkManager.SynergyActivated += OnSynergyActivated;
+    }
+
+    public void SetFragmentManager(FragmentManager fragmentManager)
+    {
+        _fragmentManager = fragmentManager;
+        GD.Print($"[LevelUpScreen] FragmentManager wired, listening on EventBus.FragmentChoicesReady");
     }
 
     private void CreateSynergyNotification()
@@ -61,24 +78,132 @@ public partial class LevelUpScreen : CanvasLayer
         tween.TweenCallback(Callable.From(() => _synergyNotification.Visible = false));
     }
 
-    private void OnPerkChoicesReady(string[] perkIds)
+    // --- Fragment Mode (level-up: armes + passifs) ---
+
+    private void OnFragmentChoicesReady(int count)
     {
-        _currentChoices = perkIds;
-        if (_currentChoices.Length == 0)
+        GD.Print($"[LevelUpScreen] OnFragmentChoicesReady received: count={count}");
+
+        if (count <= 0 || _fragmentManager == null)
+        {
+            GD.PushWarning($"[LevelUpScreen] Aborting: count={count}, fragmentManager={(_fragmentManager != null ? "OK" : "NULL")}");
+            return;
+        }
+
+        System.Collections.Generic.IReadOnlyList<FragmentOption> choices = _fragmentManager.PendingChoices;
+        GD.Print($"[LevelUpScreen] PendingChoices.Count={choices.Count}");
+        if (choices.Count == 0)
             return;
 
         ClearButtons();
-        BuildButtons();
+        BuildFragmentButtons(choices);
+        Show();
+        GetTree().Paused = true;
+        ProcessMode = ProcessModeEnum.Always;
+        GD.Print($"[LevelUpScreen] Fragment screen shown with {choices.Count} choices");
+    }
+
+    private void BuildFragmentButtons(System.Collections.Generic.IReadOnlyList<FragmentOption> choices)
+    {
+        _title.Text = "FRAGMENT DE MÉMOIRE";
+
+        foreach (FragmentOption choice in choices)
+        {
+            string label = BuildFragmentLabel(choice.Id, choice.Type);
+            Color color = GetFragmentColor(choice.Type);
+
+            Button button = new()
+            {
+                CustomMinimumSize = new Vector2(380, 55),
+                Text = label
+            };
+
+            button.AddThemeColorOverride("font_color", color);
+            button.AddThemeColorOverride("font_hover_color", color);
+
+            string capturedId = choice.Id;
+            string capturedType = choice.Type;
+            button.Pressed += () => OnFragmentSelected(capturedId, capturedType);
+
+            _container.AddChild(button);
+        }
+    }
+
+    private string BuildFragmentLabel(string id, string type)
+    {
+        Player player = GetTree().GetFirstNodeInGroup("player") as Player;
+
+        switch (type)
+        {
+            case "weapon_new":
+                WeaponData weapon = WeaponDataLoader.Get(id);
+                return weapon != null
+                    ? $"\u2694 {weapon.Name} — {weapon.Description ?? weapon.AttackPattern} [NOUVEAU]"
+                    : $"\u2694 {id} [NOUVEAU]";
+
+            case "weapon_upgrade":
+                WeaponData wUpgrade = WeaponDataLoader.Get(id);
+                int wLevel = player?.GetWeaponFragmentLevel(id) ?? 0;
+                return wUpgrade != null
+                    ? $"\u2694 {wUpgrade.Name} — Niveau {wLevel} \u2192 {wLevel + 1}"
+                    : $"\u2694 {id} — Upgrade";
+
+            case "passive_new":
+                PassiveSouvenirData passive = PassiveSouvenirDataLoader.Get(id);
+                return passive != null
+                    ? $"\u25C8 {passive.Name} — {passive.Description} [NOUVEAU]"
+                    : $"\u25C8 {id} [NOUVEAU]";
+
+            case "passive_upgrade":
+                PassiveSouvenirData pUpgrade = PassiveSouvenirDataLoader.Get(id);
+                int pLevel = player?.GetPassiveLevel(id) ?? 0;
+                return pUpgrade != null
+                    ? $"\u25C8 {pUpgrade.Name} — Niveau {pLevel} \u2192 {pLevel + 1}"
+                    : $"\u25C8 {id} — Upgrade";
+
+            default:
+                return id;
+        }
+    }
+
+    private static Color GetFragmentColor(string type)
+    {
+        return type switch
+        {
+            "weapon_new" => new Color(1f, 0.85f, 0.3f),
+            "weapon_upgrade" => new Color(1f, 0.65f, 0.2f),
+            "passive_new" => new Color(0.5f, 0.85f, 1f),
+            "passive_upgrade" => new Color(0.3f, 0.7f, 0.95f),
+            _ => new Color(0.9f, 0.9f, 0.9f)
+        };
+    }
+
+    private void OnFragmentSelected(string fragmentId, string fragmentType)
+    {
+        _fragmentManager?.SelectFragment(fragmentId, fragmentType);
+        Hide();
+        GetTree().Paused = false;
+    }
+
+    // --- Perk Mode (mémorial, world perks) ---
+
+    private void OnPerkChoicesReady(string[] perkIds)
+    {
+        if (perkIds == null || perkIds.Length == 0)
+            return;
+
+        ClearButtons();
+        BuildPerkButtons(perkIds);
         Show();
         GetTree().Paused = true;
         ProcessMode = ProcessModeEnum.Always;
     }
 
-    private void BuildButtons()
+    private void BuildPerkButtons(string[] perkIds)
     {
-        _title.Text = "LEVEL UP !";
+        _title.Text = "MÉMORIAL";
 
-        foreach (string perkId in _currentChoices)
+        foreach (string perkId in perkIds)
         {
             PerkData data = PerkDataLoader.Get(perkId);
             if (data == null)
@@ -121,6 +246,8 @@ public partial class LevelUpScreen : CanvasLayer
         Hide();
         GetTree().Paused = false;
     }
+
+    // --- Common ---
 
     private void ClearButtons()
     {

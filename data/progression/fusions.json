@@ -1,0 +1,114 @@
+[
+    {
+        "id": "vestige_lame_souvenir",
+        "name": "Lame qui se Souvient",
+        "description": "Frappe en arc de feu. Les ennemis tués restaurent du temps de jour.",
+        "weapon_id": "chipped_blade",
+        "passive_id": "flamme_interieure",
+        "type": "melee",
+        "damage_type": "hybrid",
+        "attack_pattern": "arc",
+        "stats": {
+            "damage": 35,
+            "attack_speed": 1.2,
+            "range": 80,
+            "arc_angle": 120,
+            "knockback": 20
+        },
+        "special_effect": {
+            "type": "kill_restore_day",
+            "seconds_per_kill": 0.5
+        },
+        "lore_flavor": "Quand la flamme se souvient de la lame, les deux ne font plus qu'un."
+    },
+    {
+        "id": "vestige_arc_chasseur",
+        "name": "L'Arc du Dernier Chasseur",
+        "description": "Projectiles à tête chercheuse. Vitesse augmente avec la distance parcourue.",
+        "weapon_id": "makeshift_bow",
+        "passive_id": "memoire_vive",
+        "type": "ranged",
+        "damage_type": "physical",
+        "attack_pattern": "homing",
+        "stats": {
+            "damage": 28,
+            "attack_speed": 1.5,
+            "range": 400,
+            "projectile_speed": 350,
+            "projectile_count": 2,
+            "homing_strength": 0.9
+        },
+        "special_effect": {
+            "type": "distance_speed_buff",
+            "speed_per_1000_units": 0.05
+        },
+        "lore_flavor": "Le chasseur ne se souvient pas de son nom. Il se souvient de comment viser."
+    },
+    {
+        "id": "vestige_fouet_noms",
+        "name": "Le Fouet des Noms",
+        "description": "Frappe circulaire étendue. Chaque ennemi touché amplifie le prochain coup.",
+        "weapon_id": "cable_whip",
+        "passive_id": "instinct",
+        "type": "melee",
+        "damage_type": "physical",
+        "attack_pattern": "circular",
+        "stats": {
+            "damage": 22,
+            "attack_speed": 0.9,
+            "range": 100,
+            "arc_angle": 360,
+            "knockback": 15
+        },
+        "special_effect": {
+            "type": "stacking_damage",
+            "bonus_per_hit_in_swing": 0.15
+        },
+        "lore_flavor": "Chaque claquement du fouet prononce un nom oublié. Les créatures reconnaissent les noms. Elles reculent."
+    },
+    {
+        "id": "vestige_berceuse",
+        "name": "La Berceuse Éternelle",
+        "description": "5 notes orbitales. Ennemis dans le rayon ralentissent et subissent des dégâts croissants.",
+        "weapon_id": "music_box",
+        "passive_id": "ancrage",
+        "type": "special",
+        "damage_type": "essence",
+        "attack_pattern": "orbital",
+        "stats": {
+            "damage": 18,
+            "attack_speed": 0.5,
+            "range": 120,
+            "orbital_count": 5,
+            "orbital_speed": 200
+        },
+        "special_effect": {
+            "type": "aura_slow_ramp",
+            "slow_factor": 0.4,
+            "damage_ramp_per_sec": 1.3
+        },
+        "lore_flavor": "La mélodie ne s'arrête jamais. Les créatures qui l'entendent oublient de bouger."
+    },
+    {
+        "id": "vestige_trait_oubli",
+        "name": "Le Trait d'Oubli",
+        "description": "Carreau qui traverse tout et absorbe l'Essence de chaque ennemi percé.",
+        "weapon_id": "crossbow",
+        "passive_id": "siphon_essence",
+        "type": "ranged",
+        "damage_type": "essence",
+        "attack_pattern": "linear",
+        "stats": {
+            "damage": 30,
+            "attack_speed": 0.7,
+            "range": 500,
+            "projectile_speed": 500,
+            "projectile_pierce": 99
+        },
+        "special_effect": {
+            "type": "essence_siphon",
+            "essence_per_pierce": 1
+        },
+        "lore_flavor": "Le trait ne tue pas. Il efface. Chaque ennemi percé laisse un peu de ce qu'il était."
+    }
+]
