@@ -9,7 +9,6 @@ namespace Vestiges.UI;
 /// </summary>
 public partial class Minimap : PanelContainer
 {
-    private const int MinimapPixelSize = 161; // 1 pixel per cell (-80 to +80)
     private const float EntityUpdateInterval = 0.25f;
 
     private Image _baseTerrain;
@@ -20,6 +19,7 @@ public partial class Minimap : PanelContainer
     private WorldGenerator _generator;
     private FogOfWar _fogOfWar;
     private int _mapRadius;
+    private int _minimapPixelSize;
     private float _entityTimer;
     private bool _initialized;
 
@@ -39,6 +39,7 @@ public partial class Minimap : PanelContainer
         _generator = generator;
         _fogOfWar = fogOfWar;
         _mapRadius = generator.MapRadius;
+        _minimapPixelSize = _mapRadius * 2 + 1;
 
         SetupVisuals();
         BuildBaseTerrain();
@@ -65,8 +66,8 @@ public partial class Minimap : PanelContainer
         _display.ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize;
         AddChild(_display);
 
-        _baseTerrain = Image.CreateEmpty(MinimapPixelSize, MinimapPixelSize, false, Image.Format.Rgb8);
-        _composite = Image.CreateEmpty(MinimapPixelSize, MinimapPixelSize, false, Image.Format.Rgb8);
+        _baseTerrain = Image.CreateEmpty(_minimapPixelSize, _minimapPixelSize, false, Image.Format.Rgb8);
+        _composite = Image.CreateEmpty(_minimapPixelSize, _minimapPixelSize, false, Image.Format.Rgb8);
         _texture = ImageTexture.CreateFromImage(_composite);
         _display.Texture = _texture;
     }
@@ -185,7 +186,7 @@ public partial class Minimap : PanelContainer
             {
                 int fx = px + dx;
                 int fy = py + dy;
-                if (fx >= 0 && fx < MinimapPixelSize && fy >= 0 && fy < MinimapPixelSize)
+                if (fx >= 0 && fx < _minimapPixelSize && fy >= 0 && fy < _minimapPixelSize)
                     _composite.SetPixel(fx, fy, color);
             }
         }

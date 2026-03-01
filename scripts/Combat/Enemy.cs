@@ -29,6 +29,7 @@ public partial class Enemy : CharacterBody2D
 
 	private float _maxHp;
 	private float _currentHp;
+	private float _baseSpeed;
 	private float _speed;
 	private float _damage;
 	private float _attackRange;
@@ -38,6 +39,11 @@ public partial class Enemy : CharacterBody2D
 	private string _behavior = "default";
 	private bool _isDying;
 	private float _attackTimer;
+	private float _meleeAttackCooldown;
+	private float _rangedAttackCooldown;
+	private float _playerProximityRange;
+	private float _spawnSpeedMultiplier = 1f;
+	private float _spawnAggressionMultiplier = 1f;
 
 	private bool _nightMode;
 	private Vector2 _foyerPosition;
@@ -127,12 +133,18 @@ public partial class Enemy : CharacterBody2D
 		_tier = data.Tier ?? "normal";
 		_maxHp = data.Stats.Hp * hpScale;
 		_currentHp = _maxHp;
-		_speed = data.Stats.Speed;
+		_baseSpeed = data.Stats.Speed;
+		_speed = _baseSpeed;
 		_damage = data.Stats.Damage * dmgScale;
 		_attackRange = data.Stats.AttackRange;
 		_xpReward = data.Stats.XpReward;
 		_isDying = false;
 		_attackTimer = 0f;
+		_meleeAttackCooldown = MeleeAttackCooldown;
+		_rangedAttackCooldown = RangedAttackCooldown;
+		_playerProximityRange = PlayerProximityRange;
+		_spawnSpeedMultiplier = 1f;
+		_spawnAggressionMultiplier = 1f;
 		_nightMode = false;
 		_igniteDps = 0f;
 		_igniteTimer = 0f;
@@ -174,6 +186,17 @@ public partial class Enemy : CharacterBody2D
 	{
 		_nightMode = nightMode;
 		_foyerPosition = foyerPosition;
+	}
+
+	public void ApplySpawnTuning(float speedMultiplier, float aggressionMultiplier)
+	{
+		_spawnSpeedMultiplier = Mathf.Max(0.5f, speedMultiplier);
+		_spawnAggressionMultiplier = Mathf.Clamp(aggressionMultiplier, 0.7f, 3f);
+		_speed = _baseSpeed * _spawnSpeedMultiplier;
+		_meleeAttackCooldown = MeleeAttackCooldown / _spawnAggressionMultiplier;
+		_rangedAttackCooldown = RangedAttackCooldown / _spawnAggressionMultiplier;
+		_playerProximityRange = PlayerProximityRange * (1f + (_spawnAggressionMultiplier - 1f) * 0.9f);
+		_damage *= 1f + (_spawnAggressionMultiplier - 1f) * 0.2f;
 	}
 
 	/// <summary>Assigne cet ennemi comme garde d'un POI. Il patrouillera autour.</summary>
@@ -306,7 +329,7 @@ public partial class Enemy : CharacterBody2D
 		{
 			ProcessGuardBehavior(distToPlayer, dt);
 		}
-		else if (_nightMode && distToPlayer > PlayerProximityRange)
+		else if (_nightMode && distToPlayer > _playerProximityRange)
 		{
 			ProcessNightMovement(distToPlayer, dt);
 		}
@@ -533,7 +556,7 @@ public partial class Enemy : CharacterBody2D
 		if (distToPlayer <= _attackRange && _attackTimer <= 0f)
 		{
 			ShootProjectile();
-			_attackTimer = RangedAttackCooldown;
+			_attackTimer = _rangedAttackCooldown;
 		}
 	}
 
@@ -617,7 +640,11 @@ public partial class Enemy : CharacterBody2D
 			// Les bonus sont appliqués temporairement via les calculs de dégâts
 			// On stocke le multiplicateur courant dans _slowFactor (réutilisé comme speed multiplier positif)
 			// Simpler: modify speed directly for this frame
-			_speed = EnemyDataLoader.Get(_enemyId)?.Stats.Speed * speedBonus ?? _speed;
+			_speed = _baseSpeed * _spawnSpeedMultiplier * speedBonus;
+		}
+		else
+		{
+			_speed = _baseSpeed * _spawnSpeedMultiplier;
 		}
 	}
 
@@ -697,7 +724,7 @@ public partial class Enemy : CharacterBody2D
 				{
 					GetNode<EventBus>("/root/EventBus").EmitSignal(EventBus.SignalName.PlayerHitBy, _enemyId, _damage);
 					_player.TakeDamage(_damage);
-					_attackTimer = MeleeAttackCooldown;
+					_attackTimer = _meleeAttackCooldown;
 				}
 			}
 			else if (_enemyType == "ranged")
@@ -715,7 +742,7 @@ public partial class Enemy : CharacterBody2D
 				if (distToPlayer <= _attackRange && _attackTimer <= 0f)
 				{
 					ShootProjectile();
-					_attackTimer = RangedAttackCooldown;
+					_attackTimer = _rangedAttackCooldown;
 				}
 			}
 		}
@@ -745,7 +772,7 @@ public partial class Enemy : CharacterBody2D
 			if (distToWall < MeleeRange && _attackTimer <= 0f)
 			{
 				blockingWall.TakeDamage(_damage);
-				_attackTimer = MeleeAttackCooldown;
+				_attackTimer = _meleeAttackCooldown;
 			}
 			return;
 		}
@@ -756,11 +783,11 @@ public partial class Enemy : CharacterBody2D
 		if (_enemyType == "melee")
 		{
 			float distToFoyer = GlobalPosition.DistanceTo(_foyerPosition);
-			if (distToFoyer < MeleeRange && distToPlayer < PlayerProximityRange * 2f && _attackTimer <= 0f)
+			if (distToFoyer < MeleeRange && distToPlayer < _playerProximityRange * 2f && _attackTimer <= 0f)
 			{
 				GetNode<EventBus>("/root/EventBus").EmitSignal(EventBus.SignalName.PlayerHitBy, _enemyId, _damage);
 				_player.TakeDamage(_damage);
-				_attackTimer = MeleeAttackCooldown;
+				_attackTimer = _meleeAttackCooldown;
 			}
 		}
 		else if (_enemyType == "ranged" && _attackTimer <= 0f)
@@ -769,7 +796,7 @@ public partial class Enemy : CharacterBody2D
 			if (distToFoyer <= _attackRange)
 			{
 				ShootProjectile();
-				_attackTimer = RangedAttackCooldown;
+				_attackTimer = _rangedAttackCooldown;
 			}
 		}
 	}
@@ -789,7 +816,7 @@ public partial class Enemy : CharacterBody2D
 		{
 			GetNode<EventBus>("/root/EventBus").EmitSignal(EventBus.SignalName.PlayerHitBy, _enemyId, _damage);
 			_player.TakeDamage(_damage);
-			_attackTimer = MeleeAttackCooldown;
+			_attackTimer = _meleeAttackCooldown;
 		}
 	}
 
@@ -815,7 +842,7 @@ public partial class Enemy : CharacterBody2D
 		if (distToPlayer <= _attackRange && _attackTimer <= 0f)
 		{
 			ShootProjectile();
-			_attackTimer = RangedAttackCooldown;
+			_attackTimer = _rangedAttackCooldown;
 		}
 	}
 

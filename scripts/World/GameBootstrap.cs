@@ -134,6 +134,7 @@ public partial class GameBootstrap : Node
         RemoveNodeIfExists("../LevelUpScreen");
         RemoveNodeIfExists("../GameOverScreen");
         RemoveNodeIfExists("../CraftPanel");
+        RemoveNodeIfExists("../PauseMenu");
         RemoveNodeIfExists("../StructurePlacer");
         RemoveNodeIfExists("../SouvenirPopup");
         RemoveNodeIfExists("../JournalScreen");

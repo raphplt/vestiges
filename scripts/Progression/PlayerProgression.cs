@@ -51,6 +51,15 @@ public partial class PlayerProgression : Node
 
     private static float CalculateXpForLevel(int level)
     {
-        return BaseXpToLevel * Mathf.Pow(level, XpScalingExponent);
+        float baseXp = BaseXpToLevel * Mathf.Pow(level, XpScalingExponent);
+
+        if (level <= 5)
+        {
+            float t = (level - 1) / 4f;
+            float earlyMultiplier = Mathf.Lerp(1.65f, 1.20f, t);
+            return baseXp * earlyMultiplier;
+        }
+
+        return baseXp;
     }
 }
