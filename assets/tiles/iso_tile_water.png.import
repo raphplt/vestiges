@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bfupvffhi2q7n"
-path="res://.godot/imported/iso_tile_forest.svg-b8521bf17151cc700f0da21c5c317a85.ctex"
+uid="uid://brymfv7bfu0ts"
+path="res://.godot/imported/iso_tile_water.png-ab22c9ae0a4ed316e4fe841f7e59021c.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/tiles/iso_tile_forest.svg"
-dest_files=["res://.godot/imported/iso_tile_forest.svg-b8521bf17151cc700f0da21c5c317a85.ctex"]
+source_file="res://assets/tiles/iso_tile_water.png"
+dest_files=["res://.godot/imported/iso_tile_water.png-ab22c9ae0a4ed316e4fe841f7e59021c.ctex"]
 
 [params]
 
@@ -38,6 +38,3 @@ process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
 detect_3d/compress_to=1
-svg/scale=1.0
-editor/scale_with_editor_scale=false
-editor/convert_colors_with_editor_theme=false

@@ -1,8 +1,8 @@
 # VESTIGES — Bible Artistique & Narrative
 
-> **Version :** 1.0
+> **Version :** 1.1
 > **Auteur :** Raphaël Plassart
-> **Dernière mise à jour :** 21 février 2026
+> **Dernière mise à jour :** 2 mars 2026
 > **Statut :** Document de référence créative
 > **Audience :** Développeur, Graphic Designer, toute personne contribuant à l'identité du jeu
 
@@ -184,20 +184,26 @@ Le jeu a fondamentalement DEUX identités visuelles qui coexistent et se battent
 
 ### 4.3 Le style graphique
 
-**Semi-réaliste stylisé en isométrique 2D.**
+**Pixel art atmosphérique en isométrique 2D.**
 
-Ce n'est ni du pixel art, ni du cartoon, ni du réalisme. C'est de la **peinture numérique transposée en sprites** — des formes lisibles avec des textures riches, comme des illustrations de livre.
+VESTIGES utilise du pixel art détaillé avec des palettes restreintes et une forte identité de silhouette. Le pixel art n'est pas un compromis — c'est un choix esthétique. La contrainte du pixel force la lisibilité, et la lisibilité est la priorité absolue d'un jeu de survie en vue iso. Chaque pixel compte, chaque couleur est intentionnelle.
+
+Le style se situe entre le minimalisme graphique et le pixel art "HD" : pas du 8-bit rétro nostalgique, mais du pixel art moderne qui utilise la contrainte comme outil expressif. Les limitations de résolution créent naturellement l'ambiguïté visuelle que VESTIGES recherche — les formes des créatures sont d'autant plus inquiétantes qu'on ne peut pas les détailler clairement.
 
 **Références de style :**
-- **Hades** — Pour la lisibilité en combat et la qualité des sprites. La façon dont chaque personnage et ennemi a une silhouette immédiatement reconnaissable.
-- **Darkest Dungeon** — Pour l'atmosphère, le poids émotionnel des visuels, les textures grungy.
-- **Hollow Knight** — Pour la façon de rendre un monde "mort" visuellement vivant et poétique.
-- **Gris** — Pour la palette de couleurs et l'usage de la couleur comme mécanique narrative.
+- **Hyper Light Drifter** — La référence principale. Pixel art atmosphérique avec une palette maîtrisée, des silhouettes expressives, un monde beau et hostile. La façon dont la lumière et la couleur portent l'émotion sans détail haute résolution.
+- **Eastward** — Pixel art détaillé avec des environnements post-civilisation envahis par la nature. La richesse du décor dans un format pixel.
+- **Dead Cells** — Pour la lisibilité en combat rapide, l'animation fluide en pixel art, et les effets de particules qui compensent la résolution limitée des sprites.
+- **Crawl** — Pour son pixel art isométrique sombre, ses créatures lovecraftiennes, et la preuve qu'on peut faire du body horror efficace en pixels.
+- **Hollow Knight** — Pour l'atmosphère d'un monde "mort" visuellement poétique (pas du pixel art, mais l'émotion cible reste la même).
+- **Gris** — Pour l'usage de la couleur comme mécanique narrative (la palette restreinte du pixel art rend ce concept encore plus puissant).
 
 **Règles de style :**
-- Les silhouettes priment sur les détails. Chaque entité (joueur, ennemi, structure, ressource) doit être identifiable par sa silhouette seule, même à petite taille.
-- Les textures sont "organiques" — coups de pinceau visibles, imperfections, aspérités. Pas de lignes parfaitement droites (sauf le béton humain, et encore — il est fissuré).
-- La profondeur est créée par la couleur et la lumière, pas par les ombres portées classiques. L'isométrique 2D n'a pas de "soleil qui projette des ombres" — la profondeur vient des contrastes de valeur.
+- **Silhouettes d'abord.** Chaque entité (joueur, ennemi, structure, ressource) doit être identifiable par sa silhouette seule, même à l'échelle la plus petite. En pixel art, c'est non négociable — si la silhouette ne marche pas, rien ne marche.
+- **Palettes restreintes par contexte.** Chaque biome a une palette limitée (12-16 couleurs max hors effets de lumière). Les couleurs sont choisies, pas mélangées. Les transitions entre teintes se font par dithering ou par à-plats, jamais par dégradés lisses.
+- **Le sub-pixel animation pour la fluidité.** Les animations critiques (marche joueur, attaques) utilisent le sub-pixel shifting pour créer une illusion de mouvement fluide sans augmenter la résolution des sprites.
+- **Profondeur par valeur et couleur.** Pas d'ombres portées réalistes — la profondeur vient du contraste de valeur (clair/sombre) et de la saturation (proche = saturé, loin = désaturé). Le pixel art excelle dans ce registre.
+- **Détails sélectifs.** Chaque sprite a UN point focal de détail (les yeux verts des créatures, la flamme du Foyer, les outils du Vagabond). Le reste est suggéré, pas explicité. Laisser le cerveau du joueur compléter.
 
 ---
 
@@ -356,12 +362,12 @@ Chaque biome est un type de lieu que le monde "se souvient" encore. Plus le biom
 
 ### 7.1 L'Effacement comme effet visuel
 
-Le concept d'effacement doit être visible partout, subtilement :
+Le concept d'effacement doit être visible partout, subtilement. **En pixel art, l'effacement est d'autant plus puissant : les pixels eux-mêmes se dispersent, la grille se casse, la forme se dissout.** C'est le style qui sert la narration.
 
-- **Bords de map :** Les tiles aux extrémités de la carte explorée ne s'arrêtent pas net. Ils se **décomposent** — les pixels se dispersent, les couleurs se délavent vers le blanc, les formes perdent leur netteté. Comme une aquarelle qui n'est pas finie.
-- **Fog of war :** Ce n'est pas un brouillard classique. Les zones non explorées ne sont pas "sombres" — elles sont "pas encore réelles". Visuellement : un voile blanc-bleuté, légèrement animé, comme de la vapeur. Quand le joueur explore, les tiles se "matérialisent" devant lui (animation subtile de transition).
-- **Mort d'ennemi :** Les ennemis ne laissent pas de cadavre. Ils se désagrègent en particules sombres qui se dissolvent dans l'air. Rapide (1-2 secondes), visuellement satisfaisant (explosion de particules + flash).
-- **Mort du joueur :** L'écran ne devient pas noir. Le monde autour du joueur commence à se décomposer — les tiles se désagrègent, les couleurs fuient, tout devient blanc. La dernière chose qu'on voit est le Foyer qui s'éteint. Puis le Hub.
+- **Bords de map :** Les tiles aux extrémités de la carte explorée ne s'arrêtent pas net. Ils se **décomposent** — les pixels se dispersent via un dithering progressif, les couleurs se délavent vers le blanc, la forme du tile se fragmente. Techniquement : un shader qui augmente le seuil de dissolution pixel par pixel, de l'extérieur vers l'intérieur. L'effet "aquarelle inachevée" se traduit en pixel art par des pixels épars, de plus en plus rares, sur fond blanc.
+- **Fog of war :** Ce n'est pas un brouillard classique. Les zones non explorées ne sont pas "sombres" — elles sont "pas encore réelles". Visuellement : un dithering blanc-bleuté animé (les pixels du pattern de dithering changent lentement de position, donnant un effet de vapeur pixelisée). Quand le joueur explore, les tiles se "matérialisent" devant lui — les pixels apparaissent d'abord épars puis se densifient pour former le tile complet (animation de 0.3-0.5s).
+- **Mort d'ennemi :** Les ennemis ne laissent pas de cadavre. Ils se désagrègent — le sprite se décompose en pixels individuels qui se dispersent et s'estompent (shader de dissolution + GPUParticles2D pour les particules sombres supplémentaires). Rapide (1-2 secondes), visuellement satisfaisant (flash blanc d'1 frame + dissolution).
+- **Mort du joueur :** L'écran ne devient pas noir. Le monde autour du joueur commence à se décomposer — les tiles se dissolvent pixel par pixel en partant des bords de l'écran vers le centre, les couleurs se délavent, tout devient blanc. La dernière chose qu'on voit est le Foyer dont les pixels s'éteignent un par un. Puis le Hub.
 
 ### 7.2 Lumière et ombre
 
@@ -527,62 +533,77 @@ Le Hub n'est PAS un lieu physique. C'est l'intérieur de la conscience du joueur
 
 ### 11.2 Specs techniques des assets
 
+**Principes pixel art :**
+- Tout l'art du jeu est en pixel art. Le rendu en jeu utilise le nearest-neighbor scaling (pas de filtrage bilinéaire) pour préserver la netteté des pixels.
+- Résolution de référence du canvas de jeu : 480×270 (ratio 16:9), upscalé ×4 en 1920×1080. Cela signifie que le joueur voit environ 480×270 "vrais pixels" à l'écran.
+- Palette par biome : 12-16 couleurs max (hors effets de lumière Godot). Utiliser Lospec pour créer/choisir les palettes.
+- Les sprites sont créés à taille réelle (1 pixel = 1 pixel). Pas de downscale depuis du HD.
+
 **Tiles isométriques :**
-- Taille de base : 128×64 pixels (standard iso).
+- Taille de base : 32×16 pixels (standard iso pixel art) ou 64×32 si plus de détail est nécessaire. Tester les deux et choisir.
 - Format : PNG avec transparence.
-- Chaque tile a un état "ancré" (normal) et un état "effiloché" (pour les bords de map).
-- Les tiles de transition entre biomes sont nécessaires (forêt→ruines, ruines→marécage, etc.).
+- Chaque tile a un état "ancré" (normal) et un état "effiloché" (pixels qui se dispersent, dithering vers le blanc — pour les bords de map).
+- Les tiles de transition entre biomes utilisent du dithering ou des tiles de bordure dédiées (forêt→ruines, ruines→marécage, etc.).
+- Auto-tiling : concevoir les tiles pour fonctionner avec le système de TileMap de Godot 4 (terrains, bitmask).
 
 **Sprites personnages :**
-- Taille : 64×64 pixels (bounding box).
-- Directions : 4 (haut-droite, bas-droite, bas-gauche, haut-gauche) ou 8 si le budget le permet.
+- Taille : 16×24 pixels (bounding box) ou 24×32 si la lisibilité l'exige. Le personnage doit être lisible sur un tile iso.
+- Directions : 4 (haut-droite, bas-droite, bas-gauche, haut-gauche). Le pixel art en 4 directions est le sweet spot effort/résultat.
 - Animations par personnage :
-  - Idle (4 frames, loop)
-  - Walk (6 frames, loop)
-  - Dash (3 frames)
+  - Idle (2-4 frames, loop) — le sub-pixel shifting suffit pour un idle vivant
+  - Walk (4 frames, loop)
+  - Dash (2-3 frames)
   - Hurt (2 frames)
-  - Death (6 frames, one-shot)
-- Total par personnage (4 directions) : ~84 frames minimum.
+  - Death (4 frames, one-shot)
+- Total par personnage (4 directions) : ~56-68 frames minimum.
+- Chaque personnage a une palette propre de 6-8 couleurs (sous-ensemble de la palette biome + couleurs identitaires).
 
 **Sprites ennemis :**
-- Taille : variable selon le type (Ombre 48×48, Brute 96×96, Colosse 192×192).
-- Directions : 4 minimum.
+- Taille : variable selon le type (Ombre 12×12, Charognard 12×10, Rôdeur 16×20, Brute 24×24, Colosse 48×48).
+- Directions : 4 minimum. Les petits ennemis (Ombre, Charognard) peuvent n'avoir que 2 directions si nécessaire.
 - Animations :
-  - Idle (4 frames)
-  - Walk (6 frames)
-  - Attack (4 frames)
-  - Death/Désintégration (6 frames)
-- Les élites sont des recolors/modifications des sprites de base (ajout de particules, changement de teinte).
+  - Idle (2-4 frames)
+  - Walk (4 frames)
+  - Attack (3-4 frames)
+  - Death/Désintégration (3-4 frames + particules Godot pour compléter l'effet)
+- Les élites (Aberrations) sont des recolors/modifications des sprites de base : palette shift, 1-2 pixels d'excroissance ajoutés, aura via shader/particules Godot.
+- Tous les yeux de créatures utilisent la même couleur vert-acide exacte (#7FFF00 ou similaire) pour la cohérence.
 
 **Éléments de décor :**
-- Taille : variable, multiples de 32px.
+- Taille : variable, multiples de 8px.
 - Au minimum 8-10 éléments par biome (arbres, rochers, débris, mobilier, végétation).
-- Chaque élément a un variant "intact" et "détruit" pour les structures.
+- Chaque élément a un variant "intact" et "détruit" pour les structures destructibles.
+- Les éléments de décor partagent la palette du biome — pas de couleurs supplémentaires.
+- Prévoir des variations mineures (flip horizontal, décalage de 1-2 pixels) pour éviter la répétition.
 
 **UI :**
-- Résolution de référence : 1920×1080.
-- Tous les éléments UI en PNG avec transparence.
-- 9-slice pour les panneaux et bordures.
-- Icônes : 32×32 et 64×64 (perks, ressources, items).
+- L'UI est rendue à une résolution plus haute que le jeu (natif 1920×1080 ou au minimum 960×540) pour la lisibilité du texte. L'UI ne suit PAS la contrainte pixel art du gameplay.
+- Icônes d'inventaire/perks : 16×16 pixels (style pixel art, cohérent avec le jeu).
+- Les panneaux UI utilisent des bordures pixel art en 9-slice.
+- Barres (HP, XP) : pixel art, hauteur de 3-5 pixels, avec des couleurs de la palette UI.
 
 ### 11.3 Ce qu'on NE veut PAS voir
 
-- Pas de couleurs saturées pétantes (sauf les accents gameplay : feu, Essence, yeux des créatures).
-- Pas de contours noirs épais façon cartoon.
-- Pas de pixel art.
-- Pas de style "chibi" ou déformé cute.
-- Pas de sang rouge. Le fluide des créatures est noir iridescent.
+- Pas de couleurs saturées pétantes (sauf les accents gameplay : feu, Essence, yeux des créatures). Le pixel art restreint rend la discipline de palette encore plus critique.
+- Pas de contours noirs épais systématiques (outlines). Les sprites utilisent du sel-out (contour coloré plus sombre que le sprite) ou pas de contour du tout — jamais du noir pur #000000 pour les outlines.
+- Pas de style rétro 8-bit / NES nostalgique. Ce n'est pas un hommage au passé — c'est du pixel art moderne, détaillé, atmosphérique.
+- Pas de style "chibi" ou déformé cute. Les proportions sont réalistes dans la mesure du pixel.
+- Pas de sang rouge. Le fluide des créatures est noir iridescent (2-3 pixels sombres avec un pixel de highlight bleu/violet pour l'iridescence).
 - Pas de zombies reconnaissables. Les créatures sont organiques mais étranges, pas des "humains morts".
-- Pas de lune ou d'étoiles la nuit. Le ciel nocturne est VIDE.
+- Pas de lune ou d'étoiles la nuit. Le ciel nocturne est VIDE — en pixel art, c'est un aplat noir ou très sombre, pas un gradient.
+- Pas de dithering excessif. Le dithering est un outil, pas un style. L'utiliser pour les transitions et les ombres, pas partout.
+- Pas de pillow shading (ombrage concentrique). Les sources de lumière sont directionnelles et cohérentes.
 
 ### 11.4 Ce qu'on VEUT voir
 
-- Des textures qui ont l'air peintes.
-- De la végétation PARTOUT — le monde appartient à la nature maintenant.
-- Du contraste émotionnel : beau ET dangereux, calme ET inquiétant.
-- Des détails narratifs dans le décor (pas besoin de texte — un jouet d'enfant posé quelque part raconte une histoire).
-- Des silhouettes DISTINCTES pour chaque entité.
-- La lumière comme personnage : chaude, protectrice, précieuse.
+- Du **pixel art lisible** avant tout. Chaque sprite fonctionne en silhouette à 100% de zoom ET à 50%.
+- De la **végétation PARTOUT** — le monde appartient à la nature maintenant. En pixel art, les feuillages sont un excellent terrain d'expression (clusters de pixels verts avec variation de teinte).
+- Du **contraste émotionnel** : beau ET dangereux, calme ET inquiétant. Le pixel art excelle là-dedans — quelques pixels bien placés suffisent pour basculer d'un mood à l'autre.
+- Des **détails narratifs dans le décor** — même à petite échelle, un sprite de 8×8 pixels peut raconter une histoire (un jouet, une chaussure, un livre ouvert). Le pixel art force la synecdoque : un détail = un monde.
+- Des **silhouettes DISTINCTES** pour chaque entité. C'est la règle #1 du pixel art de jeu : si deux sprites se ressemblent en silhouette, l'un des deux doit être redesigné.
+- La **lumière comme personnage** : les effets de lumière Godot (PointLight2D, CanvasModulate) sur du pixel art créent un contraste saisissant entre la netteté des pixels et la douceur de la lumière. Exploiter ce contraste au maximum.
+- Des **animations expressives avec peu de frames**. 4 frames d'animation en pixel art avec du sub-pixel shifting et du squash & stretch valent mieux que 12 frames molles. Chaque frame doit avoir des poses clés lisibles.
+- Du **dithering narratif** aux frontières de l'effacement. Les bords de map, le fog of war, la mort du joueur — le dithering pixel art EST l'effacement. Les pixels se dispersent, la forme se perd. C'est le style qui sert la narration.
 
 ---
 

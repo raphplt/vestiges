@@ -11,8 +11,12 @@ Toute la vision, les mécaniques et l'architecture sont documentées dans `doc/`
 - [VESTIGES-BIBLE.md](doc/VESTIGES-BIBLE.md) — Bible Artistique & Narrative (lore, cosmologie, direction artistique, audio, 6 constellations)
 - [VESTIGES-ARCHITECTURE.md](doc/VESTIGES-ARCHITECTURE.md) — Architecture Technique (couches, systèmes, data flow, principes)
 - [VESTIGES-ROADMAP.md](doc/VESTIGES-ROADMAP.md) — Roadmap & Milestones (phases 0-5+, lots, critères de validation)
+- [CHARTE-GRAPHIQUE.md](doc/CHARTE-GRAPHIQUE.md) — Charte Graphique Pixel Art (palettes master/biomes, conventions sprites, contours, animation, nommage)
+- [ASSET-LIST.md](doc/ASSET-LIST.md) — Asset List Exhaustive (tous les sprites/tiles/UI à produire, tailles, priorités, statuts)
+- [STRATEGIE-BIOMES-ET-WORKFLOW.md](doc/STRATEGIE-BIOMES-ET-WORKFLOW.md) — Stratégie Biomes Isométriques & Workflow (layered iso, fausse 3D, pipeline AI→Aseprite→Godot)
+- [GUIDE-PIXEL-ART.md](doc/GUIDE-PIXEL-ART.md) — Guide de Démarrage Pixel Art (Aseprite, fondamentaux, techniques, ressources)
 
-Toujours consulter ces docs avant de proposer une feature ou un changement architectural. Le GDD fait autorité sur le gameplay, l'Architecture sur le code.
+Toujours consulter ces docs avant de proposer une feature ou un changement architectural. Le GDD fait autorité sur le gameplay, l'Architecture sur le code. La Charte Graphique fait autorité sur les palettes et conventions visuelles.
 
 ## Stack technique
 

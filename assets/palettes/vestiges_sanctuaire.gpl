@@ -1,0 +1,32 @@
+GIMP Palette
+Name: VESTIGES Sanctuaire
+Columns: 8
+#
+# === Universelles ===
+ 26  26  46	Noir profond
+ 22  33  62	Noir bleuté
+ 58  53  53	Gris chaud foncé
+107  97  97	Gris chaud
+158 148 148	Gris clair
+232 224 212	Blanc cassé
+245 240 235	Blanc effacement
+212 168  67	Or Foyer
+224 123  57	Orange flamme
+196  67  43	Rouge sang joueur
+127 255   0	Vert-acide créatures
+ 94 196 196	Cyan Essence
+ 45  27  61	Noir iridescent
+ 74  48 102	Violet brume
+# === Sanctuaire ===
+200 184 152	Pierre claire dorée
+ 90  74  58	Pierre sombre
+ 58 122 206	Vitrail bleu
+206  58  58	Vitrail rouge
+224 192  64	Vitrail or
+122  90  58	Bois poli
+138 106  74	Livre usé
+240 224 192	Lumière intérieure
+ 74 138  74	Mousse sacrée
+154 138 122	Sol carrelé
+106  74 174	Gardien aura
+240 192  48	Or saturé

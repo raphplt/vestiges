@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cel67lp8jq6qw"
-path="res://.godot/imported/iso_tile_concrete.svg-59d647e2eaa2c36fe029e1955a0a06bc.ctex"
+uid="uid://dc8wcbigx4yc7"
+path="res://.godot/imported/iso_tile_concrete.png-59563aaa058486508a47ea182eb26377.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/tiles/iso_tile_concrete.svg"
-dest_files=["res://.godot/imported/iso_tile_concrete.svg-59d647e2eaa2c36fe029e1955a0a06bc.ctex"]
+source_file="res://assets/tiles/iso_tile_concrete.png"
+dest_files=["res://.godot/imported/iso_tile_concrete.png-59563aaa058486508a47ea182eb26377.ctex"]
 
 [params]
 
@@ -38,6 +38,3 @@ process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
 detect_3d/compress_to=1
-svg/scale=1.0
-editor/scale_with_editor_scale=false
-editor/convert_colors_with_editor_theme=false

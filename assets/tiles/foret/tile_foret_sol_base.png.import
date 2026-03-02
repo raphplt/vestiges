@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dvh3yf3yvxt50"
-path="res://.godot/imported/iso_tile_grass.svg-3effd2df6eac6303a6f4d173b5c75936.ctex"
+uid="uid://cdlxdsaic06pp"
+path="res://.godot/imported/tile_foret_sol_base.png-2b5a3b767147dca71d897b6b70ae5136.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/tiles/iso_tile_grass.svg"
-dest_files=["res://.godot/imported/iso_tile_grass.svg-3effd2df6eac6303a6f4d173b5c75936.ctex"]
+source_file="res://assets/tiles/foret/tile_foret_sol_base.png"
+dest_files=["res://.godot/imported/tile_foret_sol_base.png-2b5a3b767147dca71d897b6b70ae5136.ctex"]
 
 [params]
 
@@ -38,6 +38,3 @@ process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
 detect_3d/compress_to=1
-svg/scale=1.0
-editor/scale_with_editor_scale=false
-editor/convert_colors_with_editor_theme=false

@@ -1,0 +1,32 @@
+GIMP Palette
+Name: VESTIGES Marécages
+Columns: 8
+#
+# === Universelles ===
+ 26  26  46	Noir profond
+ 22  33  62	Noir bleuté
+ 58  53  53	Gris chaud foncé
+107  97  97	Gris chaud
+158 148 148	Gris clair
+232 224 212	Blanc cassé
+245 240 235	Blanc effacement
+212 168  67	Or Foyer
+224 123  57	Orange flamme
+196  67  43	Rouge sang joueur
+127 255   0	Vert-acide créatures
+ 94 196 196	Cyan Essence
+ 45  27  61	Noir iridescent
+ 74  48 102	Violet brume
+# === Marécages ===
+138 168 154	Eau trouble claire
+ 74 106  94	Eau trouble sombre
+184 200 190	Eau laiteuse
+ 58 106  56	Mousse humide
+ 58  46  34	Tourbe
+154 142 122	Bois blanchi
+138 154  74	Lichen jaune-vert
+106 202  90	Spore verte
+122 138 154	Brume bleu-gris
+ 74  42  90	Violet profond
+ 42  30  22	Racine sombre
+196 208 212	Reflet argenté

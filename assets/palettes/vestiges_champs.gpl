@@ -1,0 +1,32 @@
+GIMP Palette
+Name: VESTIGES Champs Sauvages
+Columns: 8
+#
+# === Universelles ===
+ 26  26  46	Noir profond
+ 22  33  62	Noir bleuté
+ 58  53  53	Gris chaud foncé
+107  97  97	Gris chaud
+158 148 148	Gris clair
+232 224 212	Blanc cassé
+245 240 235	Blanc effacement
+212 168  67	Or Foyer
+224 123  57	Orange flamme
+196  67  43	Rouge sang joueur
+127 255   0	Vert-acide créatures
+ 94 196 196	Cyan Essence
+ 45  27  61	Noir iridescent
+ 74  48 102	Violet brume
+# === Champs ===
+ 58 106  48	Herbe sombre
+ 90 168  72	Herbe vive
+168 180  88	Herbe dorée
+200 212 128	Herbe pale
+138 112  88	Terre sèche
+184 160 128	Terre claire
+122 122 106	Pierre de champ
+196  74  58	Fleur rouge
+ 90 122 202	Fleur bleue
+138 176 208	Ciel reflet
+106  90  66	Clôture bois
+208 216 208	Vent visible

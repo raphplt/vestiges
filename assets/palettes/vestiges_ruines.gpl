@@ -1,0 +1,32 @@
+GIMP Palette
+Name: VESTIGES Ruines Urbaines
+Columns: 8
+#
+# === Universelles ===
+ 26  26  46	Noir profond
+ 22  33  62	Noir bleuté
+ 58  53  53	Gris chaud foncé
+107  97  97	Gris chaud
+158 148 148	Gris clair
+232 224 212	Blanc cassé
+245 240 235	Blanc effacement
+212 168  67	Or Foyer
+224 123  57	Orange flamme
+196  67  43	Rouge sang joueur
+127 255   0	Vert-acide créatures
+ 94 196 196	Cyan Essence
+ 45  27  61	Noir iridescent
+ 74  48 102	Violet brume
+# === Ruines ===
+ 74  74  74	Gris béton foncé
+115 115 115	Gris béton moyen
+160 160 160	Gris béton clair
+107  58  36	Rouille foncée
+168  92  48	Rouille orange
+ 90 154 138	Cuivre oxydé
+138  90  66	Brique ternie
+ 90 122 154	Bleu peinture écaillée
+196 168  48	Jaune signalisation
+ 74 122  58	Vert nature reconquérante
+ 90  74  56	Bois pourri
+138 184 196	Verre brisé

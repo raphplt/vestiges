@@ -1,9 +1,9 @@
 [gd_resource type="TileSet" format=3 uid="uid://c6evevvl38now"]
 
-[ext_resource type="Texture2D" uid="uid://dvh3yf3yvxt50" path="res://assets/tiles/iso_tile_grass.svg" id="1"]
-[ext_resource type="Texture2D" path="res://assets/tiles/iso_tile_concrete.svg" id="2"]
-[ext_resource type="Texture2D" path="res://assets/tiles/iso_tile_water.svg" id="3"]
-[ext_resource type="Texture2D" path="res://assets/tiles/iso_tile_forest.svg" id="4"]
+[ext_resource type="Texture2D" path="res://assets/tiles/iso_tile_grass.png" id="1"]
+[ext_resource type="Texture2D" path="res://assets/tiles/iso_tile_concrete.png" id="2"]
+[ext_resource type="Texture2D" path="res://assets/tiles/iso_tile_water.png" id="3"]
+[ext_resource type="Texture2D" path="res://assets/tiles/iso_tile_forest.png" id="4"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_1"]
 texture = ExtResource("1")
