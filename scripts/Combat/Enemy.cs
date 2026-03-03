@@ -111,6 +111,13 @@ public partial class Enemy : CharacterBody2D
 	private static PackedScene _xpOrbScene;
 	private static PackedScene _chestScene;
 
+	// Sprite animé (remplace Polygon2D quand sprite_folder est défini)
+	private AnimatedSprite2D _sprite;
+	private bool _hasSprite;
+	private string _lastDirection = "SE";
+	private string _currentAnimName;
+	private float _attackAnimTimer;
+
 	public bool IsActive { get; private set; }
 	public bool IsDying => _isDying;
 	public float HpRatio => _maxHp > 0 ? _currentHp / _maxHp : 0f;
@@ -118,6 +125,7 @@ public partial class Enemy : CharacterBody2D
 	public override void _Ready()
 	{
 		_visual = GetNode<Polygon2D>("Visual");
+		_sprite = GetNode<AnimatedSprite2D>("Sprite");
 		_originalColor = _visual.Color;
 		_damageNumberScene ??= GD.Load<PackedScene>("res://scenes/combat/DamageNumber.tscn");
 		_enemyProjectileScene ??= GD.Load<PackedScene>("res://scenes/combat/EnemyProjectile.tscn");
@@ -296,6 +304,19 @@ public partial class Enemy : CharacterBody2D
 		SetPhysicsProcess(false);
 		SetProcess(false);
 
+		// Reset sprite
+		if (_hasSprite)
+		{
+			_sprite.Visible = false;
+			_sprite.Stop();
+			_sprite.SelfModulate = Colors.White;
+			_visual.Visible = true;
+			_hasSprite = false;
+			_lastDirection = "SE";
+			_currentAnimName = null;
+			_attackAnimTimer = 0f;
+		}
+
 		if (IsInGroup("enemies"))
 			RemoveFromGroup("enemies");
 	}
@@ -346,6 +367,7 @@ public partial class Enemy : CharacterBody2D
 			ProcessRanged(distToPlayer, dt);
 		}
 
+		UpdateSpriteAnimation(dt);
 		MoveAndSlide();
 	}
 
@@ -557,6 +579,7 @@ public partial class Enemy : CharacterBody2D
 		{
 			ShootProjectile();
 			_attackTimer = _rangedAttackCooldown;
+			TriggerAttackAnim();
 		}
 	}
 
@@ -725,6 +748,7 @@ public partial class Enemy : CharacterBody2D
 					GetNode<EventBus>("/root/EventBus").EmitSignal(EventBus.SignalName.PlayerHitBy, _enemyId, _damage);
 					_player.TakeDamage(_damage);
 					_attackTimer = _meleeAttackCooldown;
+					TriggerAttackAnim();
 				}
 			}
 			else if (_enemyType == "ranged")
@@ -743,6 +767,7 @@ public partial class Enemy : CharacterBody2D
 				{
 					ShootProjectile();
 					_attackTimer = _rangedAttackCooldown;
+					TriggerAttackAnim();
 				}
 			}
 		}
@@ -773,6 +798,7 @@ public partial class Enemy : CharacterBody2D
 			{
 				blockingWall.TakeDamage(_damage);
 				_attackTimer = _meleeAttackCooldown;
+				TriggerAttackAnim();
 			}
 			return;
 		}
@@ -788,6 +814,7 @@ public partial class Enemy : CharacterBody2D
 				GetNode<EventBus>("/root/EventBus").EmitSignal(EventBus.SignalName.PlayerHitBy, _enemyId, _damage);
 				_player.TakeDamage(_damage);
 				_attackTimer = _meleeAttackCooldown;
+				TriggerAttackAnim();
 			}
 		}
 		else if (_enemyType == "ranged" && _attackTimer <= 0f)
@@ -797,6 +824,7 @@ public partial class Enemy : CharacterBody2D
 			{
 				ShootProjectile();
 				_attackTimer = _rangedAttackCooldown;
+				TriggerAttackAnim();
 			}
 		}
 	}
@@ -817,6 +845,7 @@ public partial class Enemy : CharacterBody2D
 			GetNode<EventBus>("/root/EventBus").EmitSignal(EventBus.SignalName.PlayerHitBy, _enemyId, _damage);
 			_player.TakeDamage(_damage);
 			_attackTimer = _meleeAttackCooldown;
+			TriggerAttackAnim();
 		}
 	}
 
@@ -843,6 +872,7 @@ public partial class Enemy : CharacterBody2D
 		{
 			ShootProjectile();
 			_attackTimer = _rangedAttackCooldown;
+			TriggerAttackAnim();
 		}
 	}
 
@@ -1075,6 +1105,13 @@ public partial class Enemy : CharacterBody2D
 		Tween tween = CreateTween();
 		tween.TweenProperty(_visual, "color", _originalColor, 0.15f)
 			.SetDelay(0.05f);
+
+		if (_hasSprite)
+		{
+			_sprite.SelfModulate = new Color(5f, 5f, 5f, 1f);
+			tween.Parallel().TweenProperty(_sprite, "self_modulate", new Color(1f, 1f, 1f, 1f), 0.15f)
+				.SetDelay(0.05f);
+		}
 	}
 
 	private void SpawnDamageNumber(float damage, bool isCrit = false)
@@ -1091,6 +1128,10 @@ public partial class Enemy : CharacterBody2D
 		_igniteDps = 0f;
 		_igniteTimer = 0f;
 		Velocity = Vector2.Zero;
+
+		// Lancer l'animation de mort sur le sprite
+		if (_hasSprite)
+			PlaySpriteAnim($"{_lastDirection}_death");
 
 		// Explosive : AoE de dégâts à la mort
 		if (_waveModifier == "explosive")
@@ -1315,6 +1356,82 @@ public partial class Enemy : CharacterBody2D
 			_visual.Polygon = new Vector2[] { new(-s, -s * 0.5f), new(s, -s * 0.5f), new(s, s * 0.5f), new(-s, s * 0.5f) };
 		else
 			_visual.Polygon = new Vector2[] { new(-s, 0), new(0, -s * 0.5f), new(s, 0), new(0, s * 0.5f) };
+
+		// Sprite animé : remplace le Polygon2D si sprite_folder est défini
+		if (!string.IsNullOrEmpty(data.Visual.SpriteFolder))
+		{
+			SpriteFrames frames = EnemySpriteLoader.LoadOrGet(data.Id, data.Visual.SpriteFolder);
+			if (frames == null)
+				GD.PushWarning($"[Enemy] Sprite load failed for '{data.Id}' (folder: {data.Visual.SpriteFolder})");
+
+			if (frames != null)
+			{
+				_sprite.SpriteFrames = frames;
+				_sprite.Visible = true;
+				_sprite.SelfModulate = Colors.White;
+				_visual.Visible = false;
+				_hasSprite = true;
+				_lastDirection = "SE";
+				_currentAnimName = null;
+				_attackAnimTimer = 0f;
+				PlaySpriteAnim("SE_idle");
+			}
+		}
+	}
+
+	// --- Sprite Animation ---
+
+	private void UpdateSpriteAnimation(float delta)
+	{
+		if (!_hasSprite)
+			return;
+
+		_attackAnimTimer = Mathf.Max(_attackAnimTimer - delta, 0f);
+
+		// Direction depuis la vélocité (conserve la dernière si immobile)
+		if (Velocity.LengthSquared() > 1f)
+		{
+			float angle = Velocity.Angle();
+			if (angle >= -Mathf.Pi * 0.5f && angle < 0f)
+				_lastDirection = "NE";
+			else if (angle >= 0f && angle < Mathf.Pi * 0.5f)
+				_lastDirection = "SE";
+			else if (angle >= Mathf.Pi * 0.5f && angle <= Mathf.Pi)
+				_lastDirection = "SW";
+			else
+				_lastDirection = "NW";
+		}
+
+		// Action : death > attack > walk > idle
+		string action;
+		if (_isDying)
+			action = "death";
+		else if (_attackAnimTimer > 0f)
+			action = "attack";
+		else if (Velocity.LengthSquared() > 1f)
+			action = "walk";
+		else
+			action = "idle";
+
+		PlaySpriteAnim($"{_lastDirection}_{action}");
+	}
+
+	private void PlaySpriteAnim(string animName)
+	{
+		if (animName == _currentAnimName)
+			return;
+
+		if (_sprite.SpriteFrames != null && _sprite.SpriteFrames.HasAnimation(animName))
+		{
+			_sprite.Play(animName);
+			_currentAnimName = animName;
+		}
+	}
+
+	private void TriggerAttackAnim()
+	{
+		if (_hasSprite)
+			_attackAnimTimer = 0.4f;
 	}
 
 	private void CachePlayer()

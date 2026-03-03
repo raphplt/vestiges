@@ -17,6 +17,7 @@ public class EnemyVisual
     public Color Color { get; set; }
     public string Shape { get; set; }
     public float Size { get; set; }
+    public string SpriteFolder { get; set; }
 }
 
 public class EnemyData
@@ -138,7 +139,8 @@ public static class EnemyDataLoader
             {
                 Color = Color.FromHtml(visual["color"].AsString()),
                 Shape = visual["shape"].AsString(),
-                Size = (float)visual["size"].AsDouble()
+                Size = (float)visual["size"].AsDouble(),
+                SpriteFolder = visual.ContainsKey("sprite_folder") ? visual["sprite_folder"].AsString() : null
             }
         };
 

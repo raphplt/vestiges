@@ -96,6 +96,13 @@ public partial class Player : CharacterBody2D
     private Polygon2D _weaponVisual;
     private Vector2 _facingDirection = new(1f, 0f);
 
+    // Sprite animé (remplace Polygon2D quand sprite_folder est défini)
+    private AnimatedSprite2D _sprite;
+    private bool _hasSprite;
+    private string _lastDirection = "SE";
+    private string _currentAnimName;
+    private float _hurtAnimTimer;
+
     // Perk stat modifiers
     private float _damageMultiplier = 1f;
     private float _speedMultiplier = 1f;
@@ -199,6 +206,7 @@ public partial class Player : CharacterBody2D
     {
         _currentHp = MaxHp;
         _visual = GetNode<Polygon2D>("Visual");
+        _sprite = GetNode<AnimatedSprite2D>("Sprite");
         _originalColor = _visual.Color;
 
         AddToGroup("player");
@@ -241,6 +249,24 @@ public partial class Player : CharacterBody2D
 
         _visual.Color = data.VisualColor;
         _originalColor = data.VisualColor;
+
+        // Sprite animé : remplace le Polygon2D si sprite_folder est défini
+        if (!string.IsNullOrEmpty(data.SpriteFolder))
+        {
+            SpriteFrames frames = CharacterSpriteLoader.LoadOrGet(data.Id, data.SpriteFolder);
+            if (frames != null)
+            {
+                _sprite.SpriteFrames = frames;
+                _sprite.Visible = true;
+                _sprite.SelfModulate = Colors.White;
+                _visual.Visible = false;
+                _hasSprite = true;
+                _lastDirection = "SE";
+                _currentAnimName = null;
+                _hurtAnimTimer = 0f;
+                PlaySpriteAnim("SE_idle");
+            }
+        }
 
         UpdateWeaponVisual();
 
@@ -655,6 +681,7 @@ public partial class Player : CharacterBody2D
             Velocity = Vector2.Zero;
         }
 
+        UpdateSpriteAnimation(dt);
         MoveAndSlide();
         ApplyRegen(dt);
         ProcessSlowDecay(dt);
@@ -1452,6 +1479,8 @@ public partial class Player : CharacterBody2D
         _currentHp -= reduced;
         CancelHarvest();
         HitFlash();
+        if (_hasSprite)
+            _hurtAnimTimer = 0.2f;
 
         _eventBus.EmitSignal(EventBus.SignalName.PlayerDamaged, _currentHp, EffectiveMaxHp);
 
@@ -2023,6 +2052,9 @@ public partial class Player : CharacterBody2D
         DeactivateSustainedCone();
         RemoveFromGroup("player");
 
+        if (_hasSprite)
+            PlaySpriteAnim($"{_lastDirection}_death");
+
         _eventBus.EmitSignal(EventBus.SignalName.EntityDied, this);
 
         Tween tween = CreateTween();
@@ -2052,6 +2084,62 @@ public partial class Player : CharacterBody2D
         Tween tween = CreateTween();
         tween.TweenProperty(_visual, "color", _originalColor, 0.2f)
             .SetDelay(0.05f);
+
+        if (_hasSprite)
+        {
+            _sprite.SelfModulate = new Color(5f, 5f, 5f, 1f);
+            tween.Parallel().TweenProperty(_sprite, "self_modulate", new Color(1f, 1f, 1f, 1f), 0.2f)
+                .SetDelay(0.05f);
+        }
+    }
+
+    // --- Sprite Animation ---
+
+    private void UpdateSpriteAnimation(float delta)
+    {
+        if (!_hasSprite)
+            return;
+
+        _hurtAnimTimer = Mathf.Max(_hurtAnimTimer - delta, 0f);
+
+        // Direction depuis la vélocité (conserve la dernière si immobile)
+        if (Velocity.LengthSquared() > 1f)
+        {
+            float angle = Velocity.Angle();
+            if (angle >= -Mathf.Pi * 0.5f && angle < 0f)
+                _lastDirection = "NE";
+            else if (angle >= 0f && angle < Mathf.Pi * 0.5f)
+                _lastDirection = "SE";
+            else if (angle >= Mathf.Pi * 0.5f && angle <= Mathf.Pi)
+                _lastDirection = "SW";
+            else
+                _lastDirection = "NW";
+        }
+
+        // Action : death > hurt > walk > idle
+        string action;
+        if (_isDead)
+            action = "death";
+        else if (_hurtAnimTimer > 0f)
+            action = "hurt";
+        else if (Velocity.LengthSquared() > 1f)
+            action = "walk";
+        else
+            action = "idle";
+
+        PlaySpriteAnim($"{_lastDirection}_{action}");
+    }
+
+    private void PlaySpriteAnim(string animName)
+    {
+        if (animName == _currentAnimName)
+            return;
+
+        if (_sprite.SpriteFrames != null && _sprite.SpriteFrames.HasAnimation(animName))
+        {
+            _sprite.Play(animName);
+            _currentAnimName = animName;
+        }
     }
 
     private void OnWeaponAttackTimeout(int slotIndex)

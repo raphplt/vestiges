@@ -5,86 +5,102 @@ namespace Vestiges.Combat;
 
 public partial class EnemyProjectile : Area2D
 {
-    [Export] public float Speed = 185f;
-    [Export] public float MaxLifetime = 4f;
+	[Export] public float Speed = 185f;
+	[Export] public float MaxLifetime = 4f;
 
-    private Vector2 _direction;
-    private float _damage;
-    private string _sourceEnemyId = "enemy_projectile";
-    private float _slowDuration;
-    private float _slowFactor = 1f;
-    private Polygon2D _visual;
-    private bool _isDespawning;
+	private Vector2 _direction;
+	private float _damage;
+	private string _sourceEnemyId = "enemy_projectile";
+	private float _slowDuration;
+	private float _slowFactor = 1f;
+	private Polygon2D _visual;
+	private Polygon2D _trail;
+	private bool _isDespawning;
 
-    public void Initialize(Vector2 direction, float damage, string sourceEnemyId = "enemy_projectile")
-    {
-        _direction = direction.Normalized();
-        _damage = damage;
-        _sourceEnemyId = sourceEnemyId;
-        Rotation = _direction.Angle();
-    }
+	public void Initialize(Vector2 direction, float damage, string sourceEnemyId = "enemy_projectile")
+	{
+		_direction = direction.Normalized();
+		_damage = damage;
+		_sourceEnemyId = sourceEnemyId;
+		Rotation = _direction.Angle();
+	}
 
-    public void SetSlow(float factor, float duration)
-    {
-        _slowFactor = factor;
-        _slowDuration = duration;
-    }
+	public void SetSlow(float factor, float duration)
+	{
+		_slowFactor = factor;
+		_slowDuration = duration;
+	}
 
-    public override void _Ready()
-    {
-        _visual = GetNodeOrNull<Polygon2D>("Visual");
-        BodyEntered += OnBodyEntered;
-        GetTree().CreateTimer(MaxLifetime).Timeout += QueueFree;
+	public override void _Ready()
+	{
+		_visual = GetNodeOrNull<Polygon2D>("Visual");
+		_trail = GetNodeOrNull<Polygon2D>("Trail");
+		BodyEntered += OnBodyEntered;
+		GetTree().CreateTimer(MaxLifetime).Timeout += QueueFree;
 
-        if (_visual != null)
-        {
-            _visual.Scale = new Vector2(0.75f, 0.75f);
-            _visual.Modulate = new Color(1f, 1f, 1f, 0.92f);
-            Tween spawnTween = CreateTween();
-            spawnTween.TweenProperty(_visual, "scale", Vector2.One, 0.08f)
-                .SetTrans(Tween.TransitionType.Quad)
-                .SetEase(Tween.EaseType.Out);
-        }
-    }
+		// Animation d'apparition
+		if (_visual != null)
+		{
+			_visual.Scale = new Vector2(0.3f, 0.3f);
+			Tween spawnTween = CreateTween();
+			spawnTween.TweenProperty(_visual, "scale", Vector2.One, 0.1f)
+				.SetTrans(Tween.TransitionType.Back)
+				.SetEase(Tween.EaseType.Out);
+		}
 
-    public override void _PhysicsProcess(double delta)
-    {
-        if (_isDespawning)
-            return;
+		if (_trail != null)
+		{
+			_trail.Scale = new Vector2(0f, 0.3f);
+			Tween trailTween = CreateTween();
+			trailTween.TweenProperty(_trail, "scale", Vector2.One, 0.15f)
+				.SetTrans(Tween.TransitionType.Quad)
+				.SetEase(Tween.EaseType.Out);
+		}
+	}
 
-        Position += _direction * Speed * (float)delta;
-    }
+	public override void _PhysicsProcess(double delta)
+	{
+		if (_isDespawning)
+			return;
 
-    private void OnBodyEntered(Node2D body)
-    {
-        if (body is Player player)
-        {
-            GetNode<EventBus>("/root/EventBus").EmitSignal(EventBus.SignalName.PlayerHitBy, _sourceEnemyId, _damage);
-            player.TakeDamage(_damage);
-            if (_slowDuration > 0f)
-                player.ApplySlow(_slowFactor, _slowDuration);
-            StartDespawn();
-        }
-    }
+		Position += _direction * Speed * (float)delta;
+	}
 
-    private void StartDespawn()
-    {
-        if (_isDespawning)
-            return;
+	private void OnBodyEntered(Node2D body)
+	{
+		if (body is Player player)
+		{
+			GetNode<EventBus>("/root/EventBus").EmitSignal(EventBus.SignalName.PlayerHitBy, _sourceEnemyId, _damage);
+			player.TakeDamage(_damage);
+			if (_slowDuration > 0f)
+				player.ApplySlow(_slowFactor, _slowDuration);
+			StartDespawn();
+		}
+	}
 
-        _isDespawning = true;
-        SetDeferred("monitoring", false);
+	private void StartDespawn()
+	{
+		if (_isDespawning)
+			return;
 
-        if (_visual == null)
-        {
-            QueueFree();
-            return;
-        }
+		_isDespawning = true;
+		SetDeferred("monitoring", false);
 
-        Tween tween = CreateTween();
-        tween.SetParallel();
-        tween.TweenProperty(_visual, "scale", new Vector2(0.2f, 0.2f), 0.08f);
-        tween.TweenProperty(_visual, "modulate:a", 0f, 0.08f);
-        tween.Chain().TweenCallback(Callable.From(QueueFree));
-    }
+		if (_visual == null)
+		{
+			QueueFree();
+			return;
+		}
+
+		Tween tween = CreateTween();
+		tween.SetParallel();
+		tween.TweenProperty(_visual, "scale", new Vector2(1.5f, 1.5f), 0.06f);
+		tween.TweenProperty(_visual, "modulate:a", 0f, 0.06f);
+		if (_trail != null)
+		{
+			tween.TweenProperty(_trail, "scale", new Vector2(0.2f, 0.2f), 0.06f);
+			tween.TweenProperty(_trail, "modulate:a", 0f, 0.06f);
+		}
+		tween.Chain().TweenCallback(Callable.From(QueueFree));
+	}
 }

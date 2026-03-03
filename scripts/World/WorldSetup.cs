@@ -25,6 +25,7 @@ public partial class WorldSetup : Node2D
 
     private WorldGenerator _generator;
     private WorldGenConfig _config;
+    private BiomeTileMapper _tileMapper;
 
     /// <summary>Seed de la run, injectée par GameBootstrap.</summary>
     public ulong Seed { get; set; }
@@ -100,6 +101,12 @@ public partial class WorldSetup : Node2D
             terrain = _generator.Generate();
         }
 
+        // Dupliquer le TileSet pour ne pas modifier la ressource partagée
+        _ground.TileSet = _ground.TileSet.Duplicate() as TileSet;
+
+        _tileMapper = new BiomeTileMapper();
+        _tileMapper.Initialize(_ground.TileSet, _generator.ActiveBiomes);
+
         CreateVoidBackground();
         ApplyTerrain(terrain);
         InitializeFog();
@@ -162,6 +169,8 @@ public partial class WorldSetup : Node2D
     {
         int radius = _config.MapRadius;
         int size = radius * 2 + 1;
+        float fadeStart = radius - _config.EdgeFadeWidth;
+        bool hasDissolution = _tileMapper.HasDissolutionTiles;
 
         for (int gx = 0; gx < size; gx++)
         {
@@ -170,12 +179,31 @@ public partial class WorldSetup : Node2D
                 int x = gx - radius;
                 int y = gy - radius;
 
-                // Hors limites ou effacé : pas de tile, le vide noir transparaît
-                if (!_generator.IsWithinBounds(x, y) || _generator.IsErased(x, y))
+                if (!_generator.IsWithinBounds(x, y))
                     continue;
 
                 Vector2I cell = new(x, y);
-                int sourceId = (int)terrain[gx, gy];
+                float dist = Mathf.Sqrt(x * x + y * y);
+
+                // Cellule effacée dans la zone de decay : tile de dissolution si dispo
+                if (_generator.IsErased(x, y))
+                {
+                    if (hasDissolution && dist <= radius)
+                    {
+                        float decay = Mathf.Clamp((dist - fadeStart) / _config.EdgeFadeWidth, 0f, 1f);
+                        int dissId = _tileMapper.GetDissolutionSourceId(decay);
+                        if (dissId >= 0)
+                        {
+                            _ground.SetCell(cell, dissId, Vector2I.Zero);
+                            continue;
+                        }
+                    }
+                    continue;
+                }
+
+                TerrainType terrainType = terrain[gx, gy];
+                int biomeIndex = _generator.GetBiomeIndex(x, y);
+                int sourceId = _tileMapper.GetSourceId(biomeIndex, terrainType, x, y);
                 _ground.SetCell(cell, sourceId, Vector2I.Zero);
             }
         }

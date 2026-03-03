@@ -25,6 +25,7 @@ public class CharacterData
     public List<string> ExclusivePerks { get; set; } = new();
     public float ScoreMultiplier { get; set; } = 1f;
     public Color VisualColor { get; set; }
+    public string SpriteFolder { get; set; }
     public string UnlockCondition { get; set; }
 }
 
@@ -95,6 +96,7 @@ public static class CharacterDataLoader
                     (float)colorArr[2].AsDouble(),
                     (float)colorArr[3].AsDouble()
                 ),
+                SpriteFolder = dict.ContainsKey("sprite_folder") ? dict["sprite_folder"].AsString() : null,
                 UnlockCondition = dict["unlock_condition"].AsString()
             };
 

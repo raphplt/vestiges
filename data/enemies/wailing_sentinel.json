@@ -13,6 +13,7 @@
     "visual": {
         "color": "#44CC44",
         "shape": "triangle",
-        "size": 16
+        "size": 16,
+        "sprite_folder": "sentinelle"
     }
 }

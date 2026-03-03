@@ -17,6 +17,7 @@
         "exclusive_perks": ["traqueur_piercing", "traqueur_swiftness", "traqueur_ambush", "traqueur_evasion", "traqueur_marked"],
         "score_multiplier": 1.1,
         "visual_color": [0.2, 0.7, 0.3, 1.0],
+        "sprite_folder": "traqueur",
         "unlock_condition": "default"
     },
     {

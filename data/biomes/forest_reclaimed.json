@@ -28,5 +28,26 @@
         "sanctuary": 0.15
     },
     "poi_count_min": 2,
-    "poi_count_max": 4
+    "poi_count_max": 4,
+    "tile_sources": {
+        "grass": [
+            "foret/tile_foret_sol_base",
+            "foret/tile_foret_sol_v2",
+            "foret/tile_foret_sol_v3"
+        ],
+        "forest": [
+            "foret/tile_foret_terre_base",
+            "foret/tile_foret_terre_v2",
+            "foret/tile_foret_sousbois_base",
+            "foret/tile_foret_sousbois_v2"
+        ],
+        "concrete": [
+            "foret/tile_foret_fondation_base",
+            "foret/tile_foret_fondation_v2",
+            "foret/tile_foret_autoroute_droit",
+            "foret/tile_foret_autoroute_effondre",
+            "foret/tile_foret_autoroute_fissure",
+            "foret/tile_foret_autoroute_herbe"
+        ]
+    }
 }

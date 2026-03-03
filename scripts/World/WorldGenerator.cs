@@ -127,6 +127,19 @@ public class WorldGenerator
         return _activeBiomes[index];
     }
 
+    public int GetBiomeIndex(int x, int y)
+    {
+        if (_activeBiomes.Count == 0)
+            return -1;
+
+        int gx = x + _mapRadius;
+        int gy = y + _mapRadius;
+        if (gx < 0 || gy < 0 || gx >= _size || gy >= _size)
+            return 0;
+
+        return _biomeGrid[gx, gy];
+    }
+
     public string GetBiomeId(int x, int y)
     {
         BiomeData biome = GetBiome(x, y);

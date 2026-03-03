@@ -17,6 +17,12 @@ public class BiomeData
     public Dictionary<string, float> PoiPool = new();
     public int PoiCountMin = 3;
     public int PoiCountMax = 5;
+
+    /// <summary>
+    /// Mapping terrain_type → liste de chemins de textures (relatifs à assets/tiles/).
+    /// Ex: "grass" → ["foret/tile_foret_sol_base", "foret/tile_foret_sol_v2"]
+    /// </summary>
+    public Dictionary<string, List<string>> TileSources = new();
 }
 
 public static class BiomeDataLoader
@@ -152,6 +158,20 @@ public static class BiomeDataLoader
 
         if (dict.ContainsKey("poi_count_max"))
             biome.PoiCountMax = (int)dict["poi_count_max"].AsDouble();
+
+        if (dict.ContainsKey("tile_sources"))
+        {
+            Godot.Collections.Dictionary srcDict = dict["tile_sources"].AsGodotDictionary();
+            foreach (Variant key in srcDict.Keys)
+            {
+                string terrainName = key.AsString();
+                Godot.Collections.Array paths = srcDict[key].AsGodotArray();
+                List<string> pathList = new();
+                foreach (Variant p in paths)
+                    pathList.Add(p.AsString());
+                biome.TileSources[terrainName] = pathList;
+            }
+        }
 
         return biome;
     }

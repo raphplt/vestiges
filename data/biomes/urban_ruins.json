@@ -28,5 +28,18 @@
         "sanctuary": 0.15
     },
     "poi_count_min": 2,
-    "poi_count_max": 4
+    "poi_count_max": 4,
+    "tile_sources": {
+        "concrete": [
+            "ruines/tile_ruines_sol_base",
+            "ruines/tile_ruines_sol_v2",
+            "ruines/tile_ruines_sol_v3",
+            "ruines/tile_ruines_carrelage_base",
+            "ruines/tile_ruines_carrelage_v2"
+        ],
+        "grass": [
+            "ruines/tile_ruines_trottoir_base",
+            "ruines/tile_ruines_trottoir_v2"
+        ]
+    }
 }

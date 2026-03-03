@@ -28,5 +28,21 @@
         "sanctuary": 0.15
     },
     "poi_count_min": 2,
-    "poi_count_max": 3
+    "poi_count_max": 3,
+    "tile_sources": {
+        "grass": [
+            "marecages/tile_marecages_sol_base",
+            "marecages/tile_marecages_sol_v2",
+            "marecages/tile_marecages_sol_v3"
+        ],
+        "forest": [
+            "marecages/tile_marecages_sol_base",
+            "marecages/tile_marecages_sol_v2",
+            "marecages/tile_marecages_sol_v3"
+        ],
+        "water": [
+            "commun/tile_eau_peu_profonde_base",
+            "commun/tile_eau_peu_profonde_v2"
+        ]
+    }
 }

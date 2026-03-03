@@ -11,6 +11,7 @@
     "visual": {
         "color": "#7A6855",
         "shape": "square",
-        "size": 20
+        "size": 20,
+        "sprite_folder": "rodeur"
     }
 }
