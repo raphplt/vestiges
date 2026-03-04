@@ -16,6 +16,19 @@ public static class EnemySpriteLoader
 	private static readonly string[] Directions = { "NE", "NW", "SE", "SW" };
 	private static readonly string[] Actions = { "idle", "walk", "attack", "death" };
 
+	// Certains sprites utilisent "move" au lieu de "walk"
+	private static readonly Dictionary<string, string> ActionAliases = new()
+	{
+		{ "walk", "move" }
+	};
+
+	// Directions miroir : NE ↔ SE, NW ↔ SW (flip horizontal)
+	private static readonly Dictionary<string, string> MirrorDirections = new()
+	{
+		{ "NE", "SE" },
+		{ "NW", "SW" }
+	};
+
 	private static readonly Dictionary<string, float> AnimSpeeds = new()
 	{
 		{ "idle", 5f },
@@ -49,12 +62,29 @@ public static class EnemySpriteLoader
 				// Format directionnel : enemy_{folder}_{DIR}_{ACTION}_{FRAME}
 				List<Texture2D> textures = LoadFrameSequence(basePath, folder, $"{dir}_{action}");
 
+				// Alias d'action (ex: "walk" → "move")
+				if (textures.Count == 0 && ActionAliases.TryGetValue(action, out string alias))
+					textures = LoadFrameSequence(basePath, folder, $"{dir}_{alias}");
+
+				// Fallback miroir : NE→SE flippé, NW→SW flippé
+				bool mirrored = false;
+				if (textures.Count == 0 && MirrorDirections.TryGetValue(dir, out string mirrorDir))
+				{
+					textures = LoadFrameSequence(basePath, folder, $"{mirrorDir}_{action}");
+					if (textures.Count == 0 && ActionAliases.TryGetValue(action, out string mirrorAlias))
+						textures = LoadFrameSequence(basePath, folder, $"{mirrorDir}_{mirrorAlias}");
+					if (textures.Count > 0)
+						mirrored = true;
+				}
+
 				// Fallback non-directionnel : enemy_{folder}_{ACTION}_{FRAME}
 				if (textures.Count == 0)
 				{
 					if (!nonDirCache.TryGetValue(action, out textures))
 					{
 						textures = LoadFrameSequence(basePath, folder, action);
+						if (textures.Count == 0 && ActionAliases.TryGetValue(action, out string ndAlias))
+							textures = LoadFrameSequence(basePath, folder, ndAlias);
 						nonDirCache[action] = textures;
 					}
 				}
@@ -67,8 +97,20 @@ public static class EnemySpriteLoader
 				frames.SetAnimationSpeed(animName, AnimSpeeds[action]);
 				frames.SetAnimationLoop(animName, LoopingAnims.Contains(action));
 
-				foreach (Texture2D tex in textures)
-					frames.AddFrame(animName, tex);
+				if (mirrored)
+				{
+					// Flip horizontal pour simuler la direction miroir
+					foreach (Texture2D tex in textures)
+					{
+						Texture2D flipped = FlipTextureH(tex);
+						frames.AddFrame(animName, flipped);
+					}
+				}
+				else
+				{
+					foreach (Texture2D tex in textures)
+						frames.AddFrame(animName, tex);
+				}
 
 				totalAnims++;
 			}
@@ -107,5 +149,13 @@ public static class EnemySpriteLoader
 		}
 
 		return textures;
+	}
+
+	/// <summary>Flip horizontal d'une texture via copie Image.</summary>
+	private static ImageTexture FlipTextureH(Texture2D source)
+	{
+		Image img = source.GetImage();
+		img.FlipX();
+		return ImageTexture.CreateFromImage(img);
 	}
 }

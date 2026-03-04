@@ -90,5 +90,6 @@ void fragment() {
 	// --- Hit flash (appliqué en dernier, par-dessus tout) ---
 	result = mix(result, flash_color.rgb, flash_amount);
 
-	COLOR = vec4(result, tex.a);
+	// Intègre SelfModulate / Modulate du node (COLOR vertex = modulate combiné)
+	COLOR = vec4(result * COLOR.rgb, tex.a * COLOR.a);
 }

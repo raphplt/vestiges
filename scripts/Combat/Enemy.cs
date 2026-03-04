@@ -1145,20 +1145,34 @@ public partial class Enemy : CharacterBody2D
 
 	private void HitFlash()
 	{
-		// Flash blanc sur le Polygon2D
-		_visual.Color = Colors.White;
 		Tween tween = CreateTween();
-		tween.TweenProperty(_visual, "color", _originalColor, 0.15f)
-			.SetDelay(0.05f);
 
-		// Flash shader sur le sprite
 		if (_hasSprite && _spriteMaterial != null)
 		{
+			// Flash shader sur le sprite
 			_spriteMaterial.SetShaderParameter("flash_amount", 1.0f);
-			tween.Parallel().TweenMethod(
-				Callable.From((float v) => _spriteMaterial.SetShaderParameter("flash_amount", v)),
+			ShaderMaterial mat = _spriteMaterial;
+			tween.TweenMethod(
+				Callable.From((float v) =>
+				{
+					if (mat != null)
+						mat.SetShaderParameter("flash_amount", v);
+				}),
 				1.0f, 0.0f, 0.15f
-			).SetDelay(0.05f);
+			).SetDelay(0.06f);
+
+			// SelfModulate flash redondant 
+			// TODO : à refactor
+			_sprite.SelfModulate = new Color(3f, 3f, 3f, 1f);
+			tween.Parallel().TweenProperty(_sprite, "self_modulate", Colors.White, 0.15f)
+				.SetDelay(0.06f);
+		}
+		else
+		{
+			// Flash blanc sur le Polygon2D
+			_visual.Color = Colors.White;
+			tween.TweenProperty(_visual, "color", _originalColor, 0.15f)
+				.SetDelay(0.06f);
 		}
 
 		// Squash-stretch : compression rapide puis rebond élastique
@@ -1464,6 +1478,8 @@ public partial class Enemy : CharacterBody2D
 				_sprite.SpriteFrames = frames;
 				_sprite.Visible = true;
 				_sprite.SelfModulate = Colors.White;
+				// Offset vers le haut : les pieds du sprite doivent toucher le sol isométrique
+				_sprite.Offset = new Vector2(0, -frames.GetFrameTexture("SE_idle", 0).GetHeight() * 0.35f);
 				_visual.Visible = false;
 				_hasSprite = true;
 				_lastDirection = "SE";
