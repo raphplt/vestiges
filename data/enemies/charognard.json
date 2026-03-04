@@ -15,7 +15,7 @@
     "visual": {
         "color": "#558844",
         "shape": "square",
-        "size": 14,
+        "size": 20,
         "sprite_folder": "charognard"
     }
 }

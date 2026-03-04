@@ -1,4 +1,5 @@
 using Godot;
+using Vestiges.Combat;
 using Vestiges.Core;
 
 namespace Vestiges.World;
@@ -23,6 +24,8 @@ public partial class Foyer : Node2D
     private float _dayRange = 1.0f;
     private float _nightRange = 1.5f;
 
+    private GpuParticles2D _flame;
+
     public override void _Ready()
     {
         _light = GetNode<PointLight2D>("Light");
@@ -32,6 +35,10 @@ public partial class Foyer : Node2D
 
         _light.Energy = _dayEnergy;
         _light.TextureScale = _dayRange;
+
+        _flame = VfxFactory.CreateFlameParticles(1.5f);
+        _flame.Position = new Vector2(0, -8);
+        AddChild(_flame);
 
         CreateSafeZoneVisual();
     }

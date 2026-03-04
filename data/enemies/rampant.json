@@ -11,7 +11,8 @@
     "visual": {
         "color": "#5A4A3A",
         "shape": "square",
-        "size": 11
+        "size": 11,
+        "sprite_folder": "rampant"
     },
     "behavior": "burrower"
 }

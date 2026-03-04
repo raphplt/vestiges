@@ -25,6 +25,7 @@ public partial class FogOfWar : Node2D
     private int _dawnFogExpansion;
     private int _fogInitialClearRadius;
     private int _mapRadius;
+    private int _revealRevision;
 
     // Deferred initialization
     private bool _initPhase;
@@ -33,6 +34,8 @@ public partial class FogOfWar : Node2D
     private const int InitBatchSize = 800;
 
     private static readonly Color FogColor = new(0.04f, 0.02f, 0.08f, 0.85f);
+
+    public int RevealRevision => _revealRevision;
 
     public bool IsRevealed(Vector2I cell) => _revealedCells.Contains(cell);
 
@@ -244,8 +247,11 @@ public partial class FogOfWar : Node2D
 
     private void MaterializeCell(Vector2I cell)
     {
-        _revealedCells.Add(cell);
+        if (!_revealedCells.Add(cell))
+            return;
+
         _fogLayer.EraseCell(cell);
+        _revealRevision++;
     }
 
     private void OnDayPhaseChanged(string phase)

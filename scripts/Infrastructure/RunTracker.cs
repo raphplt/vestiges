@@ -41,6 +41,9 @@ public partial class RunTracker : Node
     private readonly List<float> _spawnTimestamps = new();
     private readonly List<float> _killTimestamps = new();
     private const float RateWindowSeconds = 60f;
+    private float _maintenanceTimer;
+
+    private const float MaintenanceInterval = 0.25f;
 
     public float TotalDamageDealt => _totalDamageDealt;
     public float TotalDamageTaken => _totalDamageTaken;
@@ -179,6 +182,11 @@ public partial class RunTracker : Node
 
     public override void _Process(double delta)
     {
+        _maintenanceTimer += (float)delta;
+        if (_maintenanceTimer < MaintenanceInterval)
+            return;
+        _maintenanceTimer = 0f;
+
         float now = Time.GetTicksMsec() / 1000f;
 
         // Purge old DPS entries

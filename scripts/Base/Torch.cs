@@ -1,4 +1,5 @@
 using Godot;
+using Vestiges.Combat;
 
 namespace Vestiges.Base;
 
@@ -9,6 +10,7 @@ namespace Vestiges.Base;
 public partial class Torch : Wall
 {
     private PointLight2D _light;
+    private GpuParticles2D _flame;
     private float _duration;
     private float _elapsed;
 
@@ -32,6 +34,10 @@ public partial class Torch : Wall
         _light.Energy = 0.8f;
         _light.TextureScale = radius / 128f;
         AddChild(_light);
+
+        _flame = VfxFactory.CreateFlameParticles(0.7f);
+        _flame.Position = new Vector2(0, -6);
+        AddChild(_flame);
     }
 
     public override void _Process(double delta)
@@ -42,10 +48,13 @@ public partial class Torch : Wall
         _elapsed += (float)delta;
 
         // Flickering effect in the last 20% of duration
-        if (_elapsed > _duration * 0.8f && _light != null)
+        if (_elapsed > _duration * 0.8f)
         {
             float fade = 1f - (_elapsed - _duration * 0.8f) / (_duration * 0.2f);
-            _light.Energy = 0.8f * fade;
+            if (_light != null)
+                _light.Energy = 0.8f * fade;
+            if (_flame != null)
+                _flame.Modulate = new Color(1f, 1f, 1f, fade);
         }
 
         if (_elapsed >= _duration)

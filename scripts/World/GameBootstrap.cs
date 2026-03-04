@@ -116,6 +116,28 @@ public partial class GameBootstrap : Node
             fragmentManager.TriggerLevelUp(progression.CurrentLevel);
         }
 
+        // Screen shake
+        Combat.ScreenShake screenShake = new() { Name = "ScreenShake" };
+        screenShake.SetCamera(player.GetNode<Camera2D>("Camera"));
+        GetNode("..").CallDeferred("add_child", screenShake);
+
+        // Particules ambiantes jour/nuit
+        AmbientParticles ambientParticles = new() { Name = "AmbientParticles" };
+        GetNode("..").CallDeferred("add_child", ambientParticles);
+
+        // VFX level up : burst doré + screen shake léger
+        EventBus eventBus = GetNode<EventBus>("/root/EventBus");
+        Player levelUpPlayer = player;
+        eventBus.LevelUp += (int _level) =>
+        {
+            if (IsInstanceValid(levelUpPlayer))
+            {
+                Node2D burst = Combat.VfxFactory.CreateLevelUpBurst(levelUpPlayer.GlobalPosition);
+                GetTree().CurrentScene.AddChild(burst);
+                Combat.ScreenShake.Instance?.ShakeMedium();
+            }
+        };
+
         GD.Print($"[GameBootstrap] Run started with {player.CharacterId}");
     }
 

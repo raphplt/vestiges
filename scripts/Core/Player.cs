@@ -103,6 +103,10 @@ public partial class Player : CharacterBody2D
     private string _currentAnimName;
     private float _hurtAnimTimer;
 
+    // Shader VFX unifié (outline + hit flash + dissolve)
+    private static Shader _entityShader;
+    private ShaderMaterial _spriteMaterial;
+
     // Perk stat modifiers
     private float _damageMultiplier = 1f;
     private float _speedMultiplier = 1f;
@@ -212,6 +216,7 @@ public partial class Player : CharacterBody2D
         AddToGroup("player");
 
         _projectileScene = GD.Load<PackedScene>("res://scenes/combat/Projectile.tscn");
+        _entityShader ??= GD.Load<Shader>("res://assets/shaders/entity.gdshader");
 
         CreateHarvestBar();
 
@@ -264,6 +269,15 @@ public partial class Player : CharacterBody2D
                 _lastDirection = "SE";
                 _currentAnimName = null;
                 _hurtAnimTimer = 0f;
+
+                _spriteMaterial = new ShaderMaterial { Shader = _entityShader };
+                _spriteMaterial.SetShaderParameter("outline_enabled", true);
+                // Sel-out : version sombre de la couleur du personnage
+                Color oc = data.VisualColor;
+                _spriteMaterial.SetShaderParameter("outline_color",
+                    new Color(oc.R * 0.3f + 0.05f, oc.G * 0.3f + 0.05f, oc.B * 0.3f + 0.05f, 0.9f));
+                _sprite.Material = _spriteMaterial;
+
                 PlaySpriteAnim("SE_idle");
             }
         }
@@ -2057,14 +2071,27 @@ public partial class Player : CharacterBody2D
 
         _eventBus.EmitSignal(EventBus.SignalName.EntityDied, this);
 
-        Tween tween = CreateTween();
-        tween.SetParallel();
-        tween.TweenProperty(_visual, "modulate:a", 0.3f, 0.8f);
-        tween.TweenProperty(this, "scale", Vector2.One * 0.5f, 0.8f);
-        tween.Chain().TweenCallback(Callable.From(() =>
+        if (_hasSprite && _spriteMaterial != null)
         {
-            GetTree().Paused = true;
-        }));
+            // Dissolution via le shader unifié (pas de swap)
+            _spriteMaterial.SetShaderParameter("outline_enabled", false);
+
+            Tween tween = CreateTween();
+            tween.TweenMethod(
+                Callable.From((float v) => _spriteMaterial.SetShaderParameter("dissolve_amount", v)),
+                0.0f, 1.0f, 0.8f
+            );
+            tween.TweenCallback(Callable.From(() => GetTree().Paused = true));
+        }
+        else
+        {
+            // Fallback Polygon2D
+            Tween tween = CreateTween();
+            tween.SetParallel();
+            tween.TweenProperty(_visual, "modulate:a", 0.3f, 0.8f);
+            tween.TweenProperty(this, "scale", Vector2.One * 0.5f, 0.8f);
+            tween.Chain().TweenCallback(Callable.From(() => GetTree().Paused = true));
+        }
     }
 
     private void ApplyRegen(float delta)
@@ -2085,12 +2112,16 @@ public partial class Player : CharacterBody2D
         tween.TweenProperty(_visual, "color", _originalColor, 0.2f)
             .SetDelay(0.05f);
 
-        if (_hasSprite)
+        if (_hasSprite && _spriteMaterial != null)
         {
-            _sprite.SelfModulate = new Color(5f, 5f, 5f, 1f);
-            tween.Parallel().TweenProperty(_sprite, "self_modulate", new Color(1f, 1f, 1f, 1f), 0.2f)
-                .SetDelay(0.05f);
+            _spriteMaterial.SetShaderParameter("flash_amount", 1.0f);
+            tween.Parallel().TweenMethod(
+                Callable.From((float v) => _spriteMaterial.SetShaderParameter("flash_amount", v)),
+                1.0f, 0.0f, 0.2f
+            ).SetDelay(0.05f);
         }
+
+        Combat.ScreenShake.Instance?.ShakeMedium();
     }
 
     // --- Sprite Animation ---
@@ -2595,12 +2626,15 @@ public partial class Player : CharacterBody2D
 
     private void SpawnSlashEffect(Vector2 direction, float range, float arcAngle)
     {
+        Color slashColor = new(1f, 0.9f, 0.7f, 0.75f);
+
+        // Polygon2D classique (conservé pour la forme visible du slash)
         Node2D fxRoot = new();
         fxRoot.GlobalPosition = GlobalPosition + direction * 8f;
         fxRoot.Rotation = direction.Angle();
 
         Polygon2D slash = new();
-        slash.Color = new Color(1f, 0.9f, 0.7f, 0.75f);
+        slash.Color = slashColor;
 
         if (arcAngle >= 359f)
         {
@@ -2641,6 +2675,11 @@ public partial class Player : CharacterBody2D
         if (sweep > 0f)
             tween.TweenProperty(fxRoot, "rotation", fxRoot.Rotation + sweep, 0.11f);
         tween.Chain().TweenCallback(Callable.From(() => fxRoot.QueueFree()));
+
+        // Particules de slash (étincelles en arc)
+        Node2D slashParticles = Combat.VfxFactory.CreateSlashVfx(
+            GlobalPosition, direction, range, arcAngle, slashColor);
+        GetTree().CurrentScene.AddChild(slashParticles);
     }
 
     // --- Kill Speed Buff ---

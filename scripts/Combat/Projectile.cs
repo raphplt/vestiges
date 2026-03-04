@@ -71,6 +71,11 @@ public partial class Projectile : Area2D
             spawnTween.TweenProperty(_visual, "scale", Vector2.One, 0.08f)
                 .SetTrans(Tween.TransitionType.Quad)
                 .SetEase(Tween.EaseType.Out);
+
+            // Trail de particules derrière le projectile
+            Color trailColor = _visual.Color;
+            GpuParticles2D trail = VfxFactory.CreateProjectileTrail(trailColor, _isCrit);
+            AddChild(trail);
         }
     }
 
@@ -243,6 +248,11 @@ public partial class Projectile : Area2D
 
         _isDespawning = true;
         SetDeferred("monitoring", false);
+
+        // Particules d'impact
+        Color impactColor = _visual?.Color ?? new Color(1f, 0.85f, 0.2f);
+        Node2D impact = VfxFactory.CreateProjectileImpact(GlobalPosition, impactColor);
+        GetTree().CurrentScene.AddChild(impact);
 
         if (_visual == null)
         {

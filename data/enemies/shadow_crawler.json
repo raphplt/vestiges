@@ -11,6 +11,7 @@
     "visual": {
         "color": "#CC3333",
         "shape": "square",
-        "size": 16
+        "size": 16,
+        "sprite_folder": "shadow_crawler"
     }
 }

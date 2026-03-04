@@ -23,9 +23,14 @@ public partial class XpOrb : Area2D
         _collected = false;
     }
 
+    private GpuParticles2D _glow;
+
     public override void _Ready()
     {
         BodyEntered += OnBodyEntered;
+
+        _glow = VfxFactory.CreateXpOrbGlow();
+        AddChild(_glow);
     }
 
     public override void _PhysicsProcess(double delta)
@@ -63,6 +68,11 @@ public partial class XpOrb : Area2D
         if (body is Player)
         {
             _collected = true;
+
+            // Burst doré à la collecte
+            Node2D burst = VfxFactory.CreateXpCollectBurst(GlobalPosition);
+            GetTree().CurrentScene.AddChild(burst);
+
             EventBus eventBus = GetNode<EventBus>("/root/EventBus");
             eventBus.EmitSignal(EventBus.SignalName.XpGained, _xpValue);
             CallDeferred(MethodName.QueueFree);

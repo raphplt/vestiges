@@ -15,6 +15,7 @@
     "visual": {
         "color": "#663366",
         "shape": "square",
-        "size": 22
+        "size": 22,
+        "sprite_folder": "void_brute"
     }
 }

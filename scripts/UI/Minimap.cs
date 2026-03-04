@@ -9,9 +9,10 @@ namespace Vestiges.UI;
 /// </summary>
 public partial class Minimap : PanelContainer
 {
-    private const float EntityUpdateInterval = 0.25f;
+    private const float EntityUpdateInterval = 0.4f;
 
     private Image _baseTerrain;
+    private Image _foggedTerrain;
     private Image _composite;
     private ImageTexture _texture;
     private TextureRect _display;
@@ -22,6 +23,7 @@ public partial class Minimap : PanelContainer
     private int _minimapPixelSize;
     private float _entityTimer;
     private bool _initialized;
+    private int _lastFogRevision = -1;
 
     private static readonly Color ColorGrass = new(0.4f, 0.65f, 0.3f);
     private static readonly Color ColorConcrete = new(0.6f, 0.58f, 0.52f);
@@ -67,6 +69,7 @@ public partial class Minimap : PanelContainer
         AddChild(_display);
 
         _baseTerrain = Image.CreateEmpty(_minimapPixelSize, _minimapPixelSize, false, Image.Format.Rgb8);
+        _foggedTerrain = Image.CreateEmpty(_minimapPixelSize, _minimapPixelSize, false, Image.Format.Rgb8);
         _composite = Image.CreateEmpty(_minimapPixelSize, _minimapPixelSize, false, Image.Format.Rgb8);
         _texture = ImageTexture.CreateFromImage(_composite);
         _display.Texture = _texture;
@@ -117,20 +120,27 @@ public partial class Minimap : PanelContainer
 
     private void UpdateMinimap()
     {
-        _composite.CopyFrom(_baseTerrain);
-
-        // Apply fog of war
-        if (_fogOfWar != null)
+        bool fogChanged = _fogOfWar == null || _fogOfWar.RevealRevision != _lastFogRevision;
+        if (fogChanged)
         {
-            for (int x = -_mapRadius; x <= _mapRadius; x++)
+            _foggedTerrain.CopyFrom(_baseTerrain);
+
+            if (_fogOfWar != null)
             {
-                for (int y = -_mapRadius; y <= _mapRadius; y++)
+                for (int x = -_mapRadius; x <= _mapRadius; x++)
                 {
-                    if (!_fogOfWar.IsRevealed(new Vector2I(x, y)))
-                        _composite.SetPixel(x + _mapRadius, y + _mapRadius, ColorFog);
+                    for (int y = -_mapRadius; y <= _mapRadius; y++)
+                    {
+                        if (!_fogOfWar.IsRevealed(new Vector2I(x, y)))
+                            _foggedTerrain.SetPixel(x + _mapRadius, y + _mapRadius, ColorFog);
+                    }
                 }
+
+                _lastFogRevision = _fogOfWar.RevealRevision;
             }
         }
+
+        _composite.CopyFrom(_foggedTerrain);
 
         // Draw foyer (center)
         DrawDot(_mapRadius, _mapRadius, ColorFoyer, 2);

@@ -12,6 +12,7 @@ public partial class Enemy : CharacterBody2D
 	private const float MeleeAttackCooldown = 1.0f;
 	private const float RangedAttackCooldown = 1.5f;
 	private const float DeathTweenDuration = 0.3f;
+	private const float DissolveDuration = 0.6f;
 	private const float PlayerProximityRange = 80f;
 	private const float StructureDetectRange = 40f;
 	private const float GuardPatrolRadius = 150f;
@@ -118,6 +119,10 @@ public partial class Enemy : CharacterBody2D
 	private string _currentAnimName;
 	private float _attackAnimTimer;
 
+	// Shader VFX unifié (outline + hit flash + dissolve + aberration)
+	private static Shader _entityShader;
+	private ShaderMaterial _spriteMaterial;
+
 	public bool IsActive { get; private set; }
 	public bool IsDying => _isDying;
 	public float HpRatio => _maxHp > 0 ? _currentHp / _maxHp : 0f;
@@ -131,6 +136,7 @@ public partial class Enemy : CharacterBody2D
 		_enemyProjectileScene ??= GD.Load<PackedScene>("res://scenes/combat/EnemyProjectile.tscn");
 		_xpOrbScene ??= GD.Load<PackedScene>("res://scenes/combat/XpOrb.tscn");
 		_chestScene ??= GD.Load<PackedScene>("res://scenes/world/Chest.tscn");
+		_entityShader ??= GD.Load<Shader>("res://assets/shaders/entity.gdshader");
 	}
 
 	public void Initialize(EnemyData data, float hpScale, float dmgScale)
@@ -229,32 +235,53 @@ public partial class Enemy : CharacterBody2D
 		// Taille accrue
 		Scale = Vector2.One * 1.4f;
 
-		// Teinte sombre violacée
+		// Teinte sombre violacée via le shader unifié
 		Color aberrationTint = new(0.4f, 0.15f, 0.5f);
 		_visual.Color = _visual.Color.Lerp(aberrationTint, 0.5f);
 		_originalColor = _visual.Color;
 
-		// Aura de particules sombres (ellipse pulsante)
-		_aberrationAura = new Polygon2D();
-		int segments = 12;
-		Vector2[] points = new Vector2[segments];
-		float auraSize = 20f;
-		for (int i = 0; i < segments; i++)
+		if (_hasSprite && _spriteMaterial != null)
 		{
-			float angle = Mathf.Tau * i / segments;
-			points[i] = new Vector2(Mathf.Cos(angle) * auraSize, Mathf.Sin(angle) * auraSize * 0.5f);
+			_spriteMaterial.SetShaderParameter("aberration_amount", 1.0f);
+			_spriteMaterial.SetShaderParameter("outline_color", new Color(0.25f, 0.08f, 0.35f, 1f));
 		}
-		_aberrationAura.Polygon = points;
-		_aberrationAura.Color = new Color(0.15f, 0.05f, 0.2f, 0.3f);
-		_aberrationAura.ZIndex = -1;
-		AddChild(_aberrationAura);
 
-		Tween auraTween = _aberrationAura.CreateTween();
-		auraTween.SetLoops();
-		auraTween.TweenProperty(_aberrationAura, "scale", Vector2.One * 1.3f, 0.8f)
-			.SetTrans(Tween.TransitionType.Sine);
-		auraTween.TweenProperty(_aberrationAura, "scale", Vector2.One, 0.8f)
-			.SetTrans(Tween.TransitionType.Sine);
+		// Aura GPU particules pulsantes (remplace l'ancien Polygon2D)
+		_aberrationAura = null;
+		var aura = new GpuParticles2D
+		{
+			Amount = 10,
+			Lifetime = 1.2f,
+			SpeedScale = 0.6f,
+			Explosiveness = 0f,
+			ZIndex = -1,
+			Texture = VfxFactory.CircleTexture,
+			TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
+		};
+
+		var gradient = new GradientTexture1D();
+		var g = new Gradient();
+		g.SetColor(0, new Color(0.15f, 0.05f, 0.2f, 0f));
+		g.AddPoint(0.3f, new Color(0.25f, 0.08f, 0.35f, 0.35f));
+		g.SetColor(g.GetPointCount() - 1, new Color(0.15f, 0.05f, 0.2f, 0f));
+		gradient.Gradient = g;
+
+		var mat = new ParticleProcessMaterial
+		{
+			EmissionShape = ParticleProcessMaterial.EmissionShapeEnum.Box,
+			EmissionBoxExtents = new Vector3(14, 8, 0),
+			Direction = new Vector3(0, -0.3f, 0),
+			Spread = 180f,
+			InitialVelocityMin = 3f,
+			InitialVelocityMax = 8f,
+			Gravity = new Vector3(0, -5, 0),
+			ScaleMin = 0.6f,
+			ScaleMax = 1.4f,
+			ColorRamp = gradient,
+		};
+		aura.ProcessMaterial = mat;
+		aura.Name = "AberrationAura";
+		AddChild(aura);
 	}
 
 	public void Reset()
@@ -286,6 +313,10 @@ public partial class Enemy : CharacterBody2D
 		_packBonusSpeed = 0f;
 		_waveModifier = null;
 		_regenTimer = 0f;
+		// Nettoyage aura aberration (GPU particles ou Polygon2D legacy)
+		Node auraNode = GetNodeOrNull("AberrationAura");
+		if (auraNode != null)
+			auraNode.QueueFree();
 		if (_aberrationAura != null)
 		{
 			_aberrationAura.QueueFree();
@@ -304,12 +335,14 @@ public partial class Enemy : CharacterBody2D
 		SetPhysicsProcess(false);
 		SetProcess(false);
 
-		// Reset sprite
+		// Reset sprite et shaders
 		if (_hasSprite)
 		{
 			_sprite.Visible = false;
 			_sprite.Stop();
 			_sprite.SelfModulate = Colors.White;
+			_sprite.Material = null;
+			_spriteMaterial = null;
 			_visual.Visible = true;
 			_hasSprite = false;
 			_lastDirection = "SE";
@@ -969,6 +1002,17 @@ public partial class Enemy : CharacterBody2D
 		HitFlash();
 		SpawnDamageNumber(damage, isCrit);
 
+		// Screen shake + hitstop selon l'intensité
+		if (isCrit)
+		{
+			ScreenShake.Instance?.ShakeHeavy();
+			ScreenShake.Instance?.Hitstop(0.045f);
+		}
+		else if (damage > 20f)
+		{
+			ScreenShake.Instance?.ShakeLight();
+		}
+
 		if (_currentHp <= 0)
 			Die();
 	}
@@ -1101,16 +1145,39 @@ public partial class Enemy : CharacterBody2D
 
 	private void HitFlash()
 	{
+		// Flash blanc sur le Polygon2D
 		_visual.Color = Colors.White;
 		Tween tween = CreateTween();
 		tween.TweenProperty(_visual, "color", _originalColor, 0.15f)
 			.SetDelay(0.05f);
 
-		if (_hasSprite)
+		// Flash shader sur le sprite
+		if (_hasSprite && _spriteMaterial != null)
 		{
-			_sprite.SelfModulate = new Color(5f, 5f, 5f, 1f);
-			tween.Parallel().TweenProperty(_sprite, "self_modulate", new Color(1f, 1f, 1f, 1f), 0.15f)
-				.SetDelay(0.05f);
+			_spriteMaterial.SetShaderParameter("flash_amount", 1.0f);
+			tween.Parallel().TweenMethod(
+				Callable.From((float v) => _spriteMaterial.SetShaderParameter("flash_amount", v)),
+				1.0f, 0.0f, 0.15f
+			).SetDelay(0.05f);
+		}
+
+		// Squash-stretch : compression rapide puis rebond élastique
+		Node2D target = _hasSprite ? (Node2D)_sprite : _visual;
+		Vector2 originalScale = target.Scale;
+		target.Scale = new Vector2(originalScale.X * 1.25f, originalScale.Y * 0.75f);
+		tween.Parallel().TweenProperty(target, "scale", originalScale, 0.15f)
+			.SetTrans(Tween.TransitionType.Elastic)
+			.SetEase(Tween.EaseType.Out);
+
+		// Micro-recul dans la direction opposée au joueur
+		if (_player != null && IsInstanceValid(_player))
+		{
+			Vector2 knockDir = (GlobalPosition - _player.GlobalPosition).Normalized();
+			Vector2 basePos = Position;
+			Position += knockDir * 3f;
+			tween.Parallel().TweenProperty(this, "position", basePos, 0.1f)
+				.SetTrans(Tween.TransitionType.Quad)
+				.SetEase(Tween.EaseType.Out);
 		}
 	}
 
@@ -1128,6 +1195,17 @@ public partial class Enemy : CharacterBody2D
 		_igniteDps = 0f;
 		_igniteTimer = 0f;
 		Velocity = Vector2.Zero;
+
+		// Screen shake à la mort (plus fort pour les mini-boss/aberrations)
+		if (_tier == "miniboss")
+		{
+			ScreenShake.Instance?.ShakeHeavy();
+			ScreenShake.Instance?.Hitstop(0.07f);
+		}
+		else if (_isAberration)
+		{
+			ScreenShake.Instance?.ShakeMedium();
+		}
 
 		// Lancer l'animation de mort sur le sprite
 		if (_hasSprite)
@@ -1198,61 +1276,78 @@ public partial class Enemy : CharacterBody2D
 
 		SpawnDisintegrationParticles();
 
-		Tween tween = CreateTween();
-		tween.SetParallel();
-		tween.TweenProperty(this, "scale", Vector2.Zero, DeathTweenDuration);
-		tween.TweenProperty(this, "modulate:a", 0f, DeathTweenDuration);
-		tween.Chain().TweenCallback(Callable.From(OnDeathComplete));
+		if (_hasSprite && _spriteMaterial != null)
+		{
+			// Dissolution via le shader unifié (pas de swap de shader)
+			_spriteMaterial.SetShaderParameter("outline_enabled", false);
+
+			Tween tween = CreateTween();
+			tween.TweenMethod(
+				Callable.From((float v) => _spriteMaterial.SetShaderParameter("dissolve_amount", v)),
+				0.0f, 1.0f, DissolveDuration
+			);
+			tween.TweenCallback(Callable.From(OnDeathComplete));
+		}
+		else
+		{
+			// Fallback Polygon2D : ancien comportement scale + fade
+			Tween tween = CreateTween();
+			tween.SetParallel();
+			tween.TweenProperty(this, "scale", Vector2.Zero, DeathTweenDuration);
+			tween.TweenProperty(this, "modulate:a", 0f, DeathTweenDuration);
+			tween.Chain().TweenCallback(Callable.From(OnDeathComplete));
+		}
 	}
 
 	/// <summary>Désintégration en particules sombres iridescentes — retour au néant.</summary>
 	private void SpawnDisintegrationParticles()
 	{
-		int count = _tier == "miniboss" ? 16 : (_isAberration ? 10 : 6);
-		float baseSize = _visual != null ? Mathf.Max(_visual.Scale.X * 3f, 3f) : 3f;
-		Vector2 origin = GlobalPosition;
-		Color baseColor = _originalColor.Lerp(new Color(0.08f, 0.05f, 0.12f), 0.6f);
+		int count = _tier == "miniboss" ? 20 : (_isAberration ? 14 : 8);
+		float emissionRadius = _tier == "miniboss" ? 20f : (_isAberration ? 12f : 6f);
 
-		for (int i = 0; i < count; i++)
+		var particles = new GpuParticles2D
 		{
-			Polygon2D particle = new();
-			float ps = (float)GD.RandRange(baseSize * 0.4f, baseSize);
-			particle.Polygon = new Vector2[]
-			{
-				new(-ps, 0), new(0, -ps * 0.6f), new(ps, 0), new(0, ps * 0.6f)
-			};
+			Amount = count,
+			Lifetime = 0.6f,
+			Explosiveness = 0.9f,
+			OneShot = true,
+			GlobalPosition = GlobalPosition,
+			Texture = VfxFactory.SparkTexture,
+			TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
+		};
 
-			// Teinte iridescente : variation violet/bleu/noir
-			float hueShift = (float)GD.RandRange(-0.08f, 0.08f);
-			particle.Color = new Color(
-				Mathf.Clamp(baseColor.R + hueShift, 0f, 0.3f),
-				Mathf.Clamp(baseColor.G + hueShift * 0.5f, 0f, 0.2f),
-				Mathf.Clamp(baseColor.B + hueShift + 0.1f, 0f, 0.4f),
-				0.85f
-			);
+		// Gradient : noir iridescent → violet → transparent
+		var gradient = new GradientTexture1D();
+		var g = new Gradient();
+		g.SetColor(0, new Color(0.176f, 0.106f, 0.239f, 0.9f)); // #2D1B3D
+		g.AddPoint(0.5f, new Color(0.353f, 0.227f, 0.478f, 0.6f)); // #5A3A7A
+		g.SetColor(g.GetPointCount() - 1, new Color(0.08f, 0.05f, 0.12f, 0f));
+		gradient.Gradient = g;
 
-			float angle = (float)GD.RandRange(0, Mathf.Tau);
-			float dist = (float)GD.RandRange(2f, 6f);
-			particle.GlobalPosition = origin + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * dist;
-			particle.Rotation = (float)GD.RandRange(0, Mathf.Tau);
+		var mat = new ParticleProcessMaterial
+		{
+			EmissionShape = ParticleProcessMaterial.EmissionShapeEnum.Sphere,
+			EmissionSphereRadius = emissionRadius,
+			Direction = new Vector3(0, -0.5f, 0),
+			Spread = 180f,
+			InitialVelocityMin = 20f,
+			InitialVelocityMax = 60f,
+			Gravity = new Vector3(0, -15, 0),
+			ScaleMin = 0.5f,
+			ScaleMax = 1.5f,
+			ColorRamp = gradient,
+			DampingMin = 30f,
+			DampingMax = 60f,
+		};
+		particles.ProcessMaterial = mat;
+		particles.Emitting = true;
 
-			GetTree().CurrentScene.AddChild(particle);
+		GetTree().CurrentScene.AddChild(particles);
 
-			// Trajectoire : s'éloigne du centre puis fade
-			float speed = (float)GD.RandRange(30f, 80f);
-			float lifetime = (float)GD.RandRange(0.3f, 0.6f);
-			Vector2 targetPos = particle.GlobalPosition + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * speed * lifetime;
-
-			Tween pTween = particle.CreateTween();
-			pTween.SetParallel();
-			pTween.TweenProperty(particle, "global_position", targetPos, lifetime)
-				.SetTrans(Tween.TransitionType.Quad).SetEase(Tween.EaseType.Out);
-			pTween.TweenProperty(particle, "modulate:a", 0f, lifetime)
-				.SetTrans(Tween.TransitionType.Quad).SetEase(Tween.EaseType.In);
-			pTween.TweenProperty(particle, "scale", Vector2.Zero, lifetime)
-				.SetTrans(Tween.TransitionType.Quad).SetEase(Tween.EaseType.In);
-			pTween.Chain().TweenCallback(Callable.From(() => particle.QueueFree()));
-		}
+		// Auto-nettoyage
+		var timer = new Timer { WaitTime = 1f, OneShot = true, Autostart = true };
+		timer.Timeout += particles.QueueFree;
+		particles.AddChild(timer);
 	}
 
 	private void SpawnMinibossChest()
@@ -1374,6 +1469,13 @@ public partial class Enemy : CharacterBody2D
 				_lastDirection = "SE";
 				_currentAnimName = null;
 				_attackAnimTimer = 0f;
+
+				// Shader unifié : outline + hit flash + dissolve
+				_spriteMaterial = new ShaderMaterial { Shader = _entityShader };
+				_spriteMaterial.SetShaderParameter("outline_enabled", true);
+				_spriteMaterial.SetShaderParameter("outline_color", GetOutlineColor(data));
+				_sprite.Material = _spriteMaterial;
+
 				PlaySpriteAnim("SE_idle");
 			}
 		}
@@ -1432,6 +1534,19 @@ public partial class Enemy : CharacterBody2D
 	{
 		if (_hasSprite)
 			_attackAnimTimer = 0.4f;
+	}
+
+	/// <summary>Couleur de contour sel-out basée sur la couleur de l'ennemi (version sombre).</summary>
+	private static Color GetOutlineColor(EnemyData data)
+	{
+		Color baseColor = data.Visual.Color;
+		// Sel-out : version assombrie de la couleur de base, jamais noir pur
+		return new Color(
+			baseColor.R * 0.3f + 0.05f,
+			baseColor.G * 0.3f + 0.05f,
+			baseColor.B * 0.3f + 0.05f,
+			0.9f
+		);
 	}
 
 	private void CachePlayer()

@@ -17,6 +17,7 @@ public partial class HUD : CanvasLayer
     private ProgressBar _xpBar;
     private Label _levelLabel;
     private Label _scoreLabel;
+    private Label _fpsLabel;
     private ProgressBar _dayNightBar;
     private Label _phaseLabel;
     private Label _nightLabel;
@@ -54,6 +55,11 @@ public partial class HUD : CanvasLayer
     private Polygon2D _compassArrowHead;
     private Polygon2D _compassArrowTail;
     private Label _compassDistanceLabel;
+    private float _fpsUpdateTimer;
+    private float _interactHintUpdateTimer;
+
+    private const float FpsUpdateInterval = 0.25f;
+    private const float InteractHintUpdateInterval = 0.15f;
 
     private static readonly Color DayBarColor = new(0.9f, 0.75f, 0.2f);
     private static readonly Color DuskBarColor = new(0.55f, 0.35f, 0.7f);
@@ -70,6 +76,7 @@ public partial class HUD : CanvasLayer
         _xpBar = GetNode<ProgressBar>("XpBar");
         _levelLabel = GetNode<Label>("LevelLabel");
         _scoreLabel = GetNode<Label>("ScoreLabel");
+        _fpsLabel = GetNode<Label>("FpsLabel");
         _dayNightBar = GetNode<ProgressBar>("DayNightBar");
         _phaseLabel = GetNode<Label>("PhaseLabel");
         _nightLabel = GetNode<Label>("NightLabel");
@@ -116,11 +123,24 @@ public partial class HUD : CanvasLayer
 
     public override void _Process(double delta)
     {
+        _fpsUpdateTimer += (float)delta;
+        if (_fpsUpdateTimer >= FpsUpdateInterval)
+        {
+            _fpsUpdateTimer = 0f;
+            _fpsLabel.Text = $"FPS : {Engine.GetFramesPerSecond()}";
+        }
+
         if (_dayNightCycle != null)
             _dayNightBar.Value = _dayNightCycle.PhaseProgress;
 
         UpdateCompass();
-        UpdateInteractHint();
+
+        _interactHintUpdateTimer += (float)delta;
+        if (_interactHintUpdateTimer >= InteractHintUpdateInterval)
+        {
+            _interactHintUpdateTimer = 0f;
+            UpdateInteractHint();
+        }
     }
 
     public override void _ExitTree()

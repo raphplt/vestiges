@@ -60,8 +60,11 @@ public partial class SpawnManager : Node2D
     private float _elapsedTime;
     private float _spawnTimer;
     private float _cullTimer;
+    private float _localDensityTimer;
     private int _currentNight;
     private float _dayDurationSec = 540f;
+
+    private const float LocalDensityCheckInterval = 0.25f;
 
     private DayPhase _currentPhase = DayPhase.Day;
     private Vector2 _foyerPosition = Vector2.Zero;
@@ -158,7 +161,12 @@ public partial class SpawnManager : Node2D
             safety++;
         }
 
-        EnsureDayLocalDensity(elapsedMinutes);
+        _localDensityTimer += dt;
+        if (_localDensityTimer >= LocalDensityCheckInterval)
+        {
+            _localDensityTimer = 0f;
+            EnsureDayLocalDensity(elapsedMinutes);
+        }
     }
 
     private void EnsureDayLocalDensity(float elapsedMinutes)
