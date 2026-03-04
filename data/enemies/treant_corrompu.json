@@ -11,6 +11,7 @@
     "visual": {
         "color": "#3D5C28",
         "shape": "square",
-        "size": 26
+        "size": 26,
+        "sprite_folder": "treant_corrompu"
     }
 }

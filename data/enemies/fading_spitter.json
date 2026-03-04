@@ -12,6 +12,7 @@
     "visual": {
         "color": "#CC5533",
         "shape": "triangle",
-        "size": 14
+        "size": 14,
+        "sprite_folder": "cracheur"
     }
 }

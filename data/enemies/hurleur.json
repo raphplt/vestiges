@@ -12,7 +12,8 @@
     "visual": {
         "color": "#44AA55",
         "shape": "triangle",
-        "size": 18
+        "size": 18,
+        "sprite_folder": "hurleur"
     },
     "behavior": "screamer"
 }
