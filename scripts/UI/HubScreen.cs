@@ -83,6 +83,8 @@ public partial class HubScreen : Control
 		if (!string.IsNullOrEmpty(_selectedCharacterId) && !MetaSaveManager.IsCharacterUnlocked(_selectedCharacterId))
 			_selectedCharacterId = null;
 
+		Infrastructure.AudioManager.Instance?.PlayHubMusic();
+
 		LoadTextures();
 
 		SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);

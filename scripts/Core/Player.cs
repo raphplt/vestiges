@@ -179,6 +179,13 @@ public partial class Player : CharacterBody2D
     private ProgressBar _harvestBar;
     private Inventory _inventory;
 
+    // Footsteps
+    private float _footstepTimer;
+    private const float FootstepInterval = 0.38f;
+
+    // Harvest hit sound
+    private float _harvestHitTimer;
+
     // POI interaction
     private PointOfInterest _poiTarget;
     private float _poiProgress;
@@ -697,6 +704,7 @@ public partial class Player : CharacterBody2D
 
         UpdateSpriteAnimation(dt);
         MoveAndSlide();
+        ProcessFootsteps(dt, inputDir != Vector2.Zero);
         ApplyRegen(dt);
         ProcessSlowDecay(dt);
         ProcessHarvest(dt);
@@ -1569,10 +1577,29 @@ public partial class Player : CharacterBody2D
 
         _harvestTarget = nearest;
         _harvestProgress = 0f;
+        _harvestHitTimer = 0f;
         _isHarvesting = true;
         _harvestBar.Visible = true;
         _harvestBar.MaxValue = nearest.HarvestTime;
         _harvestBar.Value = 0;
+    }
+
+    private void ProcessFootsteps(float delta, bool isMoving)
+    {
+        if (!isMoving)
+        {
+            _footstepTimer = 0f;
+            return;
+        }
+
+        _footstepTimer -= delta;
+        if (_footstepTimer > 0f)
+            return;
+
+        _footstepTimer = FootstepInterval / (_speedMultiplier > 0f ? _speedMultiplier : 1f);
+
+        string key = IsOnWater() ? "sfx_pas_eau" : "sfx_pas_herbe";
+        Infrastructure.AudioManager.Play(key, 0.1f);
     }
 
     private void ProcessHarvest(float delta)
@@ -1595,6 +1622,15 @@ public partial class Player : CharacterBody2D
 
         _harvestProgress += delta * _harvestSpeedMultiplier;
         _harvestBar.Value = _harvestProgress;
+
+        // Son de coup périodique pendant la récolte
+        _harvestHitTimer -= delta;
+        if (_harvestHitTimer <= 0f)
+        {
+            float hitInterval = _harvestTarget.HarvestTime * 0.4f;
+            _harvestHitTimer = hitInterval > 0f ? hitInterval : 0.4f;
+            Infrastructure.AudioManager.Play(_harvestTarget.HarvestSoundKey, 0.08f);
+        }
 
         if (_harvestProgress >= _harvestTarget.HarvestTime)
             CompleteHarvest();

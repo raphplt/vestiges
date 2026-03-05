@@ -1,0 +1,467 @@
+using System.Collections.Generic;
+using Godot;
+
+namespace Vestiges.Infrastructure;
+
+/// <summary>
+/// Gestionnaire audio central — Autoload singleton.
+/// Gère la musique adaptative (jour/nuit/hub) et tous les SFX du jeu
+/// via abonnement à l'EventBus. Crée les buses audio si absentes.
+/// </summary>
+public partial class AudioManager : Node
+{
+	public static AudioManager Instance { get; private set; }
+
+	// --- Buses ---
+	private const string BusMusic = "Music";
+	private const string BusSfx = "SFX";
+	private const string BusAmbiance = "Ambiance";
+
+	// --- Music players (cross-fade A/B) ---
+	private AudioStreamPlayer _musicPlayerA;
+	private AudioStreamPlayer _musicPlayerB;
+	private bool _usingA = true;
+	private string _currentMusicKey = "";
+	private Tween _musicFadeTween;
+
+	// --- SFX pool (non-positionnel) ---
+	private readonly List<AudioStreamPlayer> _sfxPool = new();
+	private const int SfxPoolSize = 10;
+
+	// --- Ambiance player ---
+	private AudioStreamPlayer _ambiancePlayer;
+
+	// --- Stream cache ---
+	private readonly Dictionary<string, AudioStream> _streams = new();
+
+	// --- Musique adaptative ---
+	private int _activeEnemyCount;
+	private const int CombatThreshold = 3;
+	private string _currentPhase = "Day";
+	private float _nightTimer;
+	// La nuit dure 390s par défaut — bascule vers chaos à 130s
+	private const float NightChaosDelay = 130f;
+
+	// --- Chemins de tous les streams ---
+	private static readonly Dictionary<string, string> Paths = new()
+	{
+		// Musique
+		["mus_jour_exploration"] = "res://assets/audio/musique/mus_jour_exploration.ogg",
+		["mus_jour_combat"]      = "res://assets/audio/musique/mus_jour_combat.ogg",
+		["mus_crepuscule"]       = "res://assets/audio/musique/mus_crepuscule.ogg",
+		["mus_nuit_vagues"]      = "res://assets/audio/musique/mus_nuit_vagues.ogg",
+		["mus_nuit_chaos"]       = "res://assets/audio/musique/mus_nuit_chaos.ogg",
+		["mus_aube"]             = "res://assets/audio/musique/mus_aube.ogg",
+		["mus_hub"]              = "res://assets/audio/musique/mus_hub.ogg",
+		["mus_mort"]             = "res://assets/audio/musique/mus_mort..ogg",
+
+		// Pas du joueur
+		["sfx_pas_herbe"]   = "res://assets/audio/sfx/joueur/pas/sfx_pas_herbe.wav",
+		["sfx_pas_eau"]     = "res://assets/audio/sfx/joueur/pas/sfx_pas_eau.wav",
+		["sfx_pas_beton"]   = "res://assets/audio/sfx/joueur/pas/sfx_pas_beton.wav",
+		["sfx_pas_bois"]    = "res://assets/audio/sfx/joueur/pas/sfx_pas_bois.wav",
+		["sfx_pas_gravier"] = "res://assets/audio/sfx/joueur/pas/sfx_pas_gravier.wav",
+
+		// Récolte
+		["sfx_recolte_hache"]   = "res://assets/audio/sfx/gameplay/sfx_recolte_hache.wav",
+		["sfx_recolte_pioche"]  = "res://assets/audio/sfx/gameplay/sfx_recolte_pioche.wav",
+		["sfx_recolte_obtenu"]  = "res://assets/audio/sfx/gameplay/sfx_recolte_obtenu.wav",
+
+		// Craft & construction
+		["sfx_craft_termine"]   = "res://assets/audio/sfx/gameplay/sfx_craft_termine.wav",
+		["sfx_structure_pose"]  = "res://assets/audio/sfx/gameplay/sfx_structure_pose.wav",
+		["sfx_craft_impossible"]= "res://assets/audio/sfx/gameplay/sfx_craft_impossible.wav",
+
+		// Progression
+		["sfx_perk_choix"]      = "res://assets/audio/sfx/gameplay/sfx_perk_choix.wav",
+		["sfx_souvenir_trouve"] = "res://assets/audio/sfx/gameplay/sfx_souvenir_trouve.wav",
+
+		// Monde
+		["sfx_monde_tuile_apparait"] = "res://assets/audio/sfx/gameplay/sfx_monde_tuile_apparait.wav",
+		["sfx_monde_dissolution"]    = "res://assets/audio/sfx/gameplay/sfx_monde_dissolution.wav",
+		["sfx_monde_bord_map"]       = "res://assets/audio/sfx/gameplay/sfx_monde_bord_map.wav",
+		["sfx_monde_crepuscule"]     = "res://assets/audio/sfx/gameplay/sfx_monde_crepuscule.wav",
+		["sfx_monde_aube"]           = "res://assets/audio/sfx/gameplay/sfx_monde_aube.wav",
+
+		// Combat
+		["sfx_hit_ennemi"]        = "res://assets/audio/sfx/combat/sfx_hit_ennemi.wav",
+		["sfx_hit_critique"]      = "res://assets/audio/sfx/combat/sfx_hit_critique.wav",
+		["sfx_hit_joueur"]        = "res://assets/audio/sfx/combat/sfx_hit_joueur.wav",
+		["sfx_projectile_vol"]    = "res://assets/audio/sfx/combat/sfx_projectile_vol.wav",
+		["sfx_projectile_impact"] = "res://assets/audio/sfx/combat/sfx_projectile_impact.wav",
+
+		// Ambiance biomes
+		["sfx_ambiance_foret"]    = "res://assets/audio/sfx/ambiance/sfx_ambiance_foret.wav",
+		["sfx_ambiance_ruines"]   = "res://assets/audio/sfx/ambiance/sfx_ambiance_ruines.wav",
+		["sfx_ambiance_marecages"]= "res://assets/audio/sfx/ambiance/sfx_ambiance_marecages.wav",
+		["sfx_ambiance_oiseaux_1"]= "res://assets/audio/sfx/ambiance/sfx_ambiance_oiseaux_1.wav",
+		["sfx_ambiance_oiseaux_2"]= "res://assets/audio/sfx/ambiance/sfx_ambiance_oiseaux_2.wav",
+		["sfx_ambiance_bulle"]    = "res://assets/audio/sfx/ambiance/sfx_ambiance_bulle.wav",
+
+		// Foyer
+		["sfx_foyer_crepitement"] = "res://assets/audio/sfx/foyer/sfx_foyer_crepitement.wav",
+		["sfx_foyer_aura"]        = "res://assets/audio/sfx/foyer/sfx_foyer_aura.wav",
+		["sfx_foyer_upgrade"]     = "res://assets/audio/sfx/foyer/sfx_foyer_upgrade.wav",
+
+		// Créatures
+		["sfx_rodeur_idle"]            = "res://assets/audio/sfx/creatures/sfx_rodeur_idle.wav",
+		["sfx_rodeur_attaque"]         = "res://assets/audio/sfx/creatures/sfx_rodeur_attaque.wav",
+		["sfx_charognard_idle"]        = "res://assets/audio/sfx/creatures/sfx_charognard_idle.wav",
+		["sfx_charognard_meute"]       = "res://assets/audio/sfx/creatures/sfx_charognard_meute.wav",
+		["sfx_sentinelle_activation"]  = "res://assets/audio/sfx/creatures/sfx_sentinelle_activation.wav",
+		["sfx_sentinelle_tir"]         = "res://assets/audio/sfx/creatures/sfx_sentinelle_tir.wav",
+		["sfx_ombre_idle"]             = "res://assets/audio/sfx/creatures/sfx_ombre_idle.wav",
+		["sfx_ombre_attaque"]          = "res://assets/audio/sfx/creatures/sfx_ombre_attaque.wav",
+		["sfx_brute_pas"]              = "res://assets/audio/sfx/creatures/sfx_brute_pas.wav",
+		["sfx_brute_charge"]           = "res://assets/audio/sfx/creatures/sfx_brute_charge.wav",
+		["sfx_tisseuse_idle"]          = "res://assets/audio/sfx/creatures/sfx_tisseuse_idle.wav",
+		["sfx_hurleur_cri"]            = "res://assets/audio/sfx/creatures/sfx_hurleur_cri.wav",
+		["sfx_rampant_deplacement"]    = "res://assets/audio/sfx/creatures/sfx_rampant_deplacement.wav",
+		["sfx_rampant_surgissement"]   = "res://assets/audio/sfx/creatures/sfx_rampant_surgissement.wav",
+		["sfx_indicible_presence"]     = "res://assets/audio/sfx/creatures/sfx_indicible_presence.wav",
+	};
+
+	public override void _Ready()
+	{
+		Instance = this;
+
+		EnsureAudioBuses();
+		PreloadStreams();
+
+		// Lecteurs de musique (cross-fade A/B)
+		_musicPlayerA = new AudioStreamPlayer { Bus = BusMusic, Name = "MusicA", VolumeDb = -80f };
+		_musicPlayerB = new AudioStreamPlayer { Bus = BusMusic, Name = "MusicB", VolumeDb = -80f };
+		AddChild(_musicPlayerA);
+		AddChild(_musicPlayerB);
+
+		// Lecteur d'ambiance
+		_ambiancePlayer = new AudioStreamPlayer { Bus = BusAmbiance, Name = "Ambiance" };
+		AddChild(_ambiancePlayer);
+
+		// Pool SFX
+		for (int i = 0; i < SfxPoolSize; i++)
+		{
+			AudioStreamPlayer p = new() { Bus = BusSfx, Name = $"Sfx{i}" };
+			_sfxPool.Add(p);
+			AddChild(p);
+		}
+
+		Core.EventBus eventBus = GetNodeOrNull<Core.EventBus>("/root/EventBus");
+		if (eventBus != null)
+			ConnectEventBus(eventBus);
+
+		GD.Print($"[AudioManager] Ready — {_streams.Count}/{Paths.Count} streams chargés");
+	}
+
+	public override void _ExitTree()
+	{
+		Instance = null;
+		Core.EventBus eventBus = GetNodeOrNull<Core.EventBus>("/root/EventBus");
+		if (eventBus != null)
+			DisconnectEventBus(eventBus);
+	}
+
+	// --- Buses ---
+
+	private static void EnsureAudioBuses()
+	{
+		EnsureBus(BusMusic,    -6f);
+		EnsureBus(BusSfx,      0f);
+		EnsureBus(BusAmbiance, -8f);
+	}
+
+	private static void EnsureBus(string name, float volumeDb)
+	{
+		if (AudioServer.GetBusIndex(name) >= 0)
+			return;
+		AudioServer.AddBus();
+		int idx = AudioServer.BusCount - 1;
+		AudioServer.SetBusName(idx, name);
+		AudioServer.SetBusVolumeDb(idx, volumeDb);
+		GD.Print($"[AudioManager] Bus créé : {name}");
+	}
+
+	// --- Preloading ---
+
+	private void PreloadStreams()
+	{
+		foreach (KeyValuePair<string, string> kv in Paths)
+		{
+			AudioStream stream = GD.Load<AudioStream>(kv.Value);
+			if (stream != null)
+				_streams[kv.Key] = stream;
+			else
+				GD.PushWarning($"[AudioManager] Stream introuvable : {kv.Value}");
+		}
+	}
+
+	// --- API publique ---
+
+	/// <summary>Joue un SFX depuis le pool. Appel statique via Instance.</summary>
+	public static void Play(string key, float pitchVariance = 0.05f)
+	{
+		Instance?.PlaySfx(key, pitchVariance);
+	}
+
+	/// <summary>Joue un SFX via l'instance.</summary>
+	public void PlaySfx(string key, float pitchVariance = 0.05f)
+	{
+		if (!_streams.TryGetValue(key, out AudioStream stream))
+			return;
+
+		AudioStreamPlayer player = GetFreePoolPlayer();
+		if (player == null)
+			return;
+
+		player.Stream = stream;
+		player.PitchScale = 1f + (float)GD.RandRange(-pitchVariance, pitchVariance);
+		player.Play();
+	}
+
+	/// <summary>Démarre la musique du Hub (cross-fade).</summary>
+	public void PlayHubMusic()
+	{
+		PlayMusic("mus_hub", loop: true, fadeDuration: 2f);
+	}
+
+	/// <summary>Joue le stinger de mort et coupe la musique.</summary>
+	public void PlayDeathStinger()
+	{
+		FadeOutMusic(0.4f);
+		FadeOutAmbiance(0.3f);
+		PlaySfx("mus_mort", 0f);
+	}
+
+	// --- Musique ---
+
+	private void PlayMusic(string key, float fadeDuration = 2.5f, bool loop = true)
+	{
+		if (_currentMusicKey == key)
+			return;
+
+		if (!_streams.TryGetValue(key, out AudioStream stream))
+		{
+			GD.PushWarning($"[AudioManager] Musique introuvable : {key}");
+			return;
+		}
+
+		_currentMusicKey = key;
+
+		AudioStreamPlayer incoming = _usingA ? _musicPlayerA : _musicPlayerB;
+		AudioStreamPlayer outgoing = _usingA ? _musicPlayerB : _musicPlayerA;
+		_usingA = !_usingA;
+
+		if (stream is AudioStreamOggVorbis ogg)
+			ogg.Loop = loop;
+
+		incoming.Stream = stream;
+		incoming.VolumeDb = -80f;
+		incoming.Play();
+
+		_musicFadeTween?.Kill();
+		_musicFadeTween = CreateTween().SetParallel();
+		_musicFadeTween.TweenProperty(incoming, "volume_db", 0f, fadeDuration)
+			.SetTrans(Tween.TransitionType.Sine);
+		_musicFadeTween.TweenProperty(outgoing, "volume_db", -80f, fadeDuration)
+			.SetTrans(Tween.TransitionType.Sine);
+	}
+
+	private void FadeOutMusic(float duration = 1.5f)
+	{
+		_currentMusicKey = "";
+		_musicFadeTween?.Kill();
+		_musicFadeTween = CreateTween().SetParallel();
+		_musicFadeTween.TweenProperty(_musicPlayerA, "volume_db", -80f, duration);
+		_musicFadeTween.TweenProperty(_musicPlayerB, "volume_db", -80f, duration);
+	}
+
+	// --- Ambiance ---
+
+	private void PlayAmbiance(string key)
+	{
+		if (!_streams.TryGetValue(key, out AudioStream stream))
+			return;
+
+		if (stream is AudioStreamWav wav)
+			wav.LoopMode = AudioStreamWav.LoopModeEnum.Forward;
+
+		_ambiancePlayer.Stream = stream;
+		_ambiancePlayer.VolumeDb = 0f;
+		_ambiancePlayer.Play();
+	}
+
+	private void FadeOutAmbiance(float duration = 2f)
+	{
+		Tween tween = CreateTween();
+		tween.TweenProperty(_ambiancePlayer, "volume_db", -80f, duration);
+		tween.TweenCallback(Callable.From(_ambiancePlayer.Stop));
+	}
+
+	// --- Pool SFX ---
+
+	private AudioStreamPlayer GetFreePoolPlayer()
+	{
+		foreach (AudioStreamPlayer p in _sfxPool)
+		{
+			if (!p.Playing)
+				return p;
+		}
+		// Si tous occupés, prendre le premier (overwrite du moins important)
+		return _sfxPool.Count > 0 ? _sfxPool[0] : null;
+	}
+
+	// --- _Process : musique adaptative ---
+
+	public override void _Process(double delta)
+	{
+		// Progression nuit : bascule vagues → chaos après NightChaosDelay
+		if (_currentPhase == "Night")
+		{
+			_nightTimer += (float)delta;
+			if (_nightTimer >= NightChaosDelay && _currentMusicKey == "mus_nuit_vagues")
+				PlayMusic("mus_nuit_chaos", fadeDuration: 5f);
+		}
+
+		// Musique adaptative jour : check périodique tous les ~2s
+		if (_currentPhase == "Day" && Engine.GetProcessFrames() % 120 == 0)
+			RefreshDayMusic();
+	}
+
+	private void RefreshDayMusic()
+	{
+		string target = _activeEnemyCount >= CombatThreshold
+			? "mus_jour_combat"
+			: "mus_jour_exploration";
+		PlayMusic(target, fadeDuration: 3f);
+	}
+
+	// --- Connexion EventBus ---
+
+	private void ConnectEventBus(Core.EventBus eb)
+	{
+		eb.DayPhaseChanged     += OnDayPhaseChanged;
+		eb.EnemySpawned        += OnEnemySpawned;
+		eb.EnemyKilled         += OnEnemyKilled;
+		eb.PlayerDamaged       += OnPlayerDamaged;
+		eb.CraftCompleted      += OnCraftCompleted;
+		eb.StructurePlaced     += OnStructurePlaced;
+		eb.SouvenirDiscovered  += OnSouvenirDiscovered;
+		eb.ZoneDiscovered      += OnZoneDiscovered;
+		eb.PerkChosen          += OnPerkChosen;
+		eb.FragmentChosen      += OnFragmentChosen;
+		eb.ResourceCollected   += OnResourceCollected;
+		eb.GameStateChanged    += OnGameStateChanged;
+	}
+
+	private void DisconnectEventBus(Core.EventBus eb)
+	{
+		eb.DayPhaseChanged     -= OnDayPhaseChanged;
+		eb.EnemySpawned        -= OnEnemySpawned;
+		eb.EnemyKilled         -= OnEnemyKilled;
+		eb.PlayerDamaged       -= OnPlayerDamaged;
+		eb.CraftCompleted      -= OnCraftCompleted;
+		eb.StructurePlaced     -= OnStructurePlaced;
+		eb.SouvenirDiscovered  -= OnSouvenirDiscovered;
+		eb.ZoneDiscovered      -= OnZoneDiscovered;
+		eb.PerkChosen          -= OnPerkChosen;
+		eb.FragmentChosen      -= OnFragmentChosen;
+		eb.ResourceCollected   -= OnResourceCollected;
+		eb.GameStateChanged    -= OnGameStateChanged;
+	}
+
+	// --- Handlers EventBus ---
+
+	private void OnDayPhaseChanged(string phase)
+	{
+		_currentPhase = phase;
+		_nightTimer = 0f;
+
+		switch (phase)
+		{
+			case "Day":
+				RefreshDayMusic();
+				PlayAmbiance("sfx_ambiance_foret");
+				break;
+			case "Dusk":
+				PlayMusic("mus_crepuscule", fadeDuration: 4f);
+				PlaySfx("sfx_monde_crepuscule", 0f);
+				FadeOutAmbiance(3f);
+				break;
+			case "Night":
+				PlayMusic("mus_nuit_vagues", fadeDuration: 3f);
+				FadeOutAmbiance(2f);
+				break;
+			case "Dawn":
+				PlayMusic("mus_aube", fadeDuration: 3f, loop: false);
+				PlaySfx("sfx_monde_aube", 0f);
+				break;
+		}
+	}
+
+	private void OnEnemySpawned(string enemyId, float hpScale, float dmgScale)
+	{
+		_activeEnemyCount++;
+	}
+
+	private void OnEnemyKilled(string enemyId, Vector2 position)
+	{
+		_activeEnemyCount = Mathf.Max(0, _activeEnemyCount - 1);
+		PlaySfx("sfx_monde_dissolution");
+	}
+
+	private void OnPlayerDamaged(float currentHp, float maxHp)
+	{
+		PlaySfx("sfx_hit_joueur");
+	}
+
+	private void OnCraftCompleted(string recipeId)
+	{
+		PlaySfx("sfx_craft_termine");
+	}
+
+	private void OnStructurePlaced(string structureId, Vector2 position)
+	{
+		PlaySfx("sfx_structure_pose");
+	}
+
+	private void OnSouvenirDiscovered(string souvenirId, string souvenirName, string constellationId)
+	{
+		PlaySfx("sfx_souvenir_trouve", 0f);
+	}
+
+	private void OnZoneDiscovered(int cellX, int cellY, int cellCount)
+	{
+		PlaySfx("sfx_monde_tuile_apparait");
+	}
+
+	private void OnPerkChosen(string perkId)
+	{
+		PlaySfx("sfx_perk_choix", 0f);
+	}
+
+	private void OnFragmentChosen(string fragmentId, string fragmentType)
+	{
+		PlaySfx("sfx_perk_choix", 0f);
+	}
+
+	private void OnResourceCollected(string resourceId, int amount)
+	{
+		PlaySfx("sfx_recolte_obtenu");
+	}
+
+	private void OnGameStateChanged(string oldState, string newState)
+	{
+		if (newState == "Hub")
+		{
+			_currentMusicKey = "";
+			_activeEnemyCount = 0;
+			PlayHubMusic();
+		}
+		else if (newState == "Run" && oldState == "Hub")
+		{
+			// La musique de run démarre via OnDayPhaseChanged à l'init de DayNightCycle
+			_currentMusicKey = "";
+			_activeEnemyCount = 0;
+		}
+	}
+}

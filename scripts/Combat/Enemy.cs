@@ -79,6 +79,10 @@ public partial class Enemy : CharacterBody2D
 	private float _packBonusSpeed;
 	private float _packRadius = 120f;
 
+	// Audio
+	private float _idleSoundTimer;
+	private float _idleSoundInterval;
+
 	// Wave modifiers (nuit 7+ : enragé, régénérant, explosif)
 	private string _waveModifier;
 	private float _regenTimer;
@@ -183,6 +187,15 @@ public partial class Enemy : CharacterBody2D
 		_waveModifier = null;
 		_regenTimer = 0f;
 		IsActive = true;
+
+		// Son idle : intervalle aléatoire selon le type d'ennemi
+		_idleSoundInterval = _behavior switch
+		{
+			"screamer" => 8f,   // Le hurleur crie via ProcessScreamerCry
+			"burrower" => 10f,
+			_ => (float)GD.RandRange(5.0, 10.0)
+		};
+		_idleSoundTimer = (float)GD.RandRange(0.0, _idleSoundInterval);
 
 		ConfigureVisual(data);
 
@@ -370,6 +383,7 @@ public partial class Enemy : CharacterBody2D
 		ProcessBleed(dt);
 		ProcessSlowDecay(dt);
 		ProcessDisorient(dt);
+		ProcessIdleSound(dt);
 		ProcessBehaviorAbilities(distToPlayer, dt);
 
 		// Colosse en charge : skip le mouvement normal
@@ -442,6 +456,7 @@ public partial class Enemy : CharacterBody2D
 			return;
 
 		_screamerTimer = ScreamerCryCooldown;
+		Infrastructure.AudioManager.Play("sfx_hurleur_cri", 0.05f);
 
 		// Flash vert + pulse visuel pour indiquer le cri
 		_visual.Color = new Color(0.2f, 1f, 0.3f);
@@ -487,6 +502,7 @@ public partial class Enemy : CharacterBody2D
 			_burrowerPhaseTimer = BurrowerPhaseInterval;
 			CollisionLayer = 2;
 			Modulate = new Color(1f, 1f, 1f, 1f);
+			Infrastructure.AudioManager.Play("sfx_rampant_surgissement", 0.05f);
 		}
 		else
 		{
@@ -532,6 +548,7 @@ public partial class Enemy : CharacterBody2D
 			_isCharging = true;
 			_chargeDurationLeft = ColosseChargeDuration;
 			_chargeDirection = (_player.GlobalPosition - GlobalPosition).Normalized();
+			Infrastructure.AudioManager.Play("sfx_brute_charge", 0.05f);
 
 			// VFX : flash rouge + tremblement
 			_visual.Color = new Color(1f, 0.2f, 0.2f);
@@ -738,6 +755,19 @@ public partial class Enemy : CharacterBody2D
 		}
 	}
 
+	private void ProcessIdleSound(float delta)
+	{
+		_idleSoundTimer -= delta;
+		if (_idleSoundTimer > 0f)
+			return;
+
+		_idleSoundTimer = _idleSoundInterval;
+
+		// Joue le son idle associé à cet ennemi
+		string key = $"sfx_{_enemyId}_idle";
+		Infrastructure.AudioManager.Play(key, 0.08f);
+	}
+
 	private void SpawnModifierAura(Color color)
 	{
 		if (_modifierAura != null)
@@ -879,6 +909,7 @@ public partial class Enemy : CharacterBody2D
 			_player.TakeDamage(_damage);
 			_attackTimer = _meleeAttackCooldown;
 			TriggerAttackAnim();
+			Infrastructure.AudioManager.Play($"sfx_{_enemyId}_attaque", 0.08f);
 		}
 	}
 
@@ -945,6 +976,9 @@ public partial class Enemy : CharacterBody2D
 
 		Vector2 direction = (_player.GlobalPosition - GlobalPosition).Normalized();
 		PlayRangedAttackVfx(direction);
+		// Son de tir spécifique selon le type d'ennemi
+		string tirKey = $"sfx_{_enemyId}_tir";
+		Infrastructure.AudioManager.Play(tirKey, 0.06f);
 		EnemyProjectile projectile = _enemyProjectileScene.Instantiate<EnemyProjectile>();
 		projectile.GlobalPosition = GlobalPosition;
 		projectile.Initialize(direction, _damage, _enemyId);
@@ -1001,6 +1035,7 @@ public partial class Enemy : CharacterBody2D
 		GetNode<EventBus>("/root/EventBus").EmitSignal(EventBus.SignalName.EntityDamaged, this, damage);
 		HitFlash();
 		SpawnDamageNumber(damage, isCrit);
+		Infrastructure.AudioManager.Play(isCrit ? "sfx_hit_critique" : "sfx_hit_ennemi", 0.07f);
 
 		// Screen shake + hitstop selon l'intensité
 		if (isCrit)

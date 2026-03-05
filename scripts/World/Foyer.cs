@@ -25,6 +25,8 @@ public partial class Foyer : Node2D
     private float _nightRange = 1.5f;
 
     private GpuParticles2D _flame;
+    private AudioStreamPlayer _crackleSfx;
+    private AudioStreamPlayer _auraSfx;
 
     public override void _Ready()
     {
@@ -41,6 +43,34 @@ public partial class Foyer : Node2D
         AddChild(_flame);
 
         CreateSafeZoneVisual();
+        StartFoyerAudio();
+    }
+
+    private void StartFoyerAudio()
+    {
+        _crackleSfx = new AudioStreamPlayer { Bus = "SFX", Name = "FoyerCrackle" };
+        _auraSfx    = new AudioStreamPlayer { Bus = "Ambiance", Name = "FoyerAura", VolumeDb = -6f };
+        AddChild(_crackleSfx);
+        AddChild(_auraSfx);
+        LoadAndLoop(_crackleSfx, "res://assets/audio/sfx/foyer/sfx_foyer_crepitement.wav");
+        LoadAndLoop(_auraSfx,    "res://assets/audio/sfx/foyer/sfx_foyer_aura.wav");
+    }
+
+    private static void LoadAndLoop(AudioStreamPlayer player, string path)
+    {
+        AudioStream stream = GD.Load<AudioStream>(path);
+        if (stream == null)
+            return;
+        if (stream is AudioStreamWav wav)
+            wav.LoopMode = AudioStreamWav.LoopModeEnum.Forward;
+        player.Stream = stream;
+        player.Play();
+    }
+
+    /// <summary>Joue le son d'intensification du foyer (upgrade ou buff).</summary>
+    public void PlayUpgradeSound()
+    {
+        Infrastructure.AudioManager.Play("sfx_foyer_upgrade", 0f);
     }
 
     public override void _ExitTree()

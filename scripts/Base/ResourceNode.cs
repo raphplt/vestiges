@@ -11,6 +11,7 @@ namespace Vestiges.Base;
 public partial class ResourceNode : StaticBody2D
 {
     private string _resourceId;
+    private string _shape;
     private int _amountMin;
     private int _amountMax;
     private float _harvestTime;
@@ -23,6 +24,7 @@ public partial class ResourceNode : StaticBody2D
     public bool IsExhausted => _harvestsRemaining <= 0;
     public string ResourceId => _resourceId;
     public float HarvestTime => _harvestTime;
+    public string HarvestSoundKey => _shape == "tree" ? "sfx_recolte_hache" : "sfx_recolte_pioche";
 
     public override void _Ready()
     {
@@ -33,6 +35,7 @@ public partial class ResourceNode : StaticBody2D
     public void Initialize(ResourceData data)
     {
         _resourceId = data.Id;
+        _shape = data.Shape;
         _amountMin = data.AmountMin;
         _amountMax = data.AmountMax;
         _harvestTime = data.HarvestTime;

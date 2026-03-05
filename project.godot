@@ -20,6 +20,7 @@ config/run/main_scene="res://scenes/Hub.tscn"
 
 EventBus="*res://scripts/Core/EventBus.cs"
 GameManager="*res://scripts/Core/GameManager.cs"
+AudioManager="*res://scripts/Infrastructure/AudioManager.cs"
 
 [display]
 
