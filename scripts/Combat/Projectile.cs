@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using Godot;
 using Vestiges.Core;
-using Vestiges.Infrastructure;
 
 namespace Vestiges.Combat;
 
@@ -63,8 +62,6 @@ public partial class Projectile : Area2D
         _visual = GetNodeOrNull<Polygon2D>("Visual");
         BodyEntered += OnBodyEntered;
         GetTree().CreateTimer(MaxLifetime).Timeout += QueueFree;
-
-        AudioManager.Play("sfx_projectile_vol", 0.08f);
 
         if (_visual != null)
         {
@@ -136,7 +133,6 @@ public partial class Projectile : Area2D
 
             _hitEnemies.Add(id);
             enemy.TakeDamage(_damage, _isCrit);
-            AudioManager.Play("sfx_projectile_impact", 0.08f);
 
             // Notify owner for perk effects (vampirism, ignite, execution, ricochet)
             if (_owner != null && IsInstanceValid(_owner))

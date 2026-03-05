@@ -348,6 +348,10 @@ public partial class CraftPanel : CanvasLayer
         {
             RefreshRecipes();
         }
+        else
+        {
+            Infrastructure.AudioManager.Play("sfx_craft_impossible", 0f);
+        }
     }
 
     private void OnInventoryChanged(string _resourceId, int _newAmount)

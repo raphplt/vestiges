@@ -1,4 +1,5 @@
 using Godot;
+using Vestiges.Infrastructure;
 
 namespace Vestiges.UI;
 
@@ -34,7 +35,6 @@ public partial class PauseMenu : CanvasLayer
 		}
 		else if (!GetTree().Paused)
 		{
-			// Ouvrir seulement si rien d'autre n'a déjà pausé le jeu
 			Pause();
 			GetViewport().SetInputAsHandled();
 		}
@@ -52,6 +52,7 @@ public partial class PauseMenu : CanvasLayer
 		_isPaused = false;
 		_root.Visible = false;
 		GetTree().Paused = false;
+		AudioManager.Instance?.SaveSettings();
 	}
 
 	private void ReturnToHub()
@@ -59,11 +60,13 @@ public partial class PauseMenu : CanvasLayer
 		_isPaused = false;
 		_root.Visible = false;
 		GetTree().Paused = false;
+		AudioManager.Instance?.SaveSettings();
 		GetTree().ChangeSceneToFile("res://scenes/Hub.tscn");
 	}
 
 	private void QuitGame()
 	{
+		AudioManager.Instance?.SaveSettings();
 		GetTree().Quit();
 	}
 
@@ -74,21 +77,21 @@ public partial class PauseMenu : CanvasLayer
 		_root.ProcessMode = ProcessModeEnum.Always;
 		AddChild(_root);
 
-		// Overlay sombre semi-transparent
+		// Overlay sombre
 		ColorRect overlay = new();
 		overlay.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
 		overlay.Color = new Color(0.02f, 0.02f, 0.05f, 0.75f);
 		_root.AddChild(overlay);
 
-		// Panel central
+		// Panel central — élargi pour contenir les sliders
 		PanelContainer panel = new();
 		panel.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.Center);
 		panel.GrowHorizontal = Control.GrowDirection.Both;
 		panel.GrowVertical = Control.GrowDirection.Both;
-		panel.OffsetLeft = -140;
-		panel.OffsetRight = 140;
-		panel.OffsetTop = -120;
-		panel.OffsetBottom = 120;
+		panel.OffsetLeft = -180;
+		panel.OffsetRight = 180;
+		panel.OffsetTop = -230;
+		panel.OffsetBottom = 230;
 		_root.AddChild(panel);
 
 		MarginContainer margin = new();
@@ -101,7 +104,7 @@ public partial class PauseMenu : CanvasLayer
 		panel.AddChild(margin);
 
 		VBoxContainer vbox = new();
-		vbox.AddThemeConstantOverride("separation", 16);
+		vbox.AddThemeConstantOverride("separation", 12);
 		vbox.LayoutMode = 1;
 		vbox.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
 		margin.AddChild(vbox);
@@ -116,11 +119,10 @@ public partial class PauseMenu : CanvasLayer
 		title.AddThemeColorOverride("font_color", new Color(0.9f, 0.82f, 0.5f));
 		vbox.AddChild(title);
 
-		// Spacer
-		Control spacer = new() { CustomMinimumSize = new Vector2(0, 8) };
-		vbox.AddChild(spacer);
+		// Séparateur visuel
+		vbox.AddChild(new HSeparator());
 
-		// Boutons
+		// --- Boutons ---
 		Button resumeBtn = CreateButton("Reprendre");
 		resumeBtn.Pressed += Resume;
 		vbox.AddChild(resumeBtn);
@@ -133,6 +135,23 @@ public partial class PauseMenu : CanvasLayer
 		quitBtn.Pressed += QuitGame;
 		vbox.AddChild(quitBtn);
 
+		// --- Section audio ---
+		vbox.AddChild(new HSeparator());
+
+		Label audioLabel = new()
+		{
+			Text = "AUDIO",
+			HorizontalAlignment = HorizontalAlignment.Center
+		};
+		audioLabel.AddThemeFontSizeOverride("font_size", 13);
+		audioLabel.AddThemeColorOverride("font_color", new Color(0.6f, 0.6f, 0.65f));
+		vbox.AddChild(audioLabel);
+
+		vbox.AddChild(BuildSlider("Global",   "Master"));
+		vbox.AddChild(BuildSlider("Musique",  "Music"));
+		vbox.AddChild(BuildSlider("SFX",      "SFX"));
+		vbox.AddChild(BuildSlider("Ambiance", "Ambiance"));
+
 		// Hint
 		Label hint = new()
 		{
@@ -144,12 +163,58 @@ public partial class PauseMenu : CanvasLayer
 		vbox.AddChild(hint);
 	}
 
+	private static HBoxContainer BuildSlider(string label, string busName)
+	{
+		HBoxContainer row = new();
+		row.AddThemeConstantOverride("separation", 8);
+
+		Label lbl = new() { Text = label, CustomMinimumSize = new Vector2(72, 0) };
+		lbl.AddThemeFontSizeOverride("font_size", 13);
+		lbl.AddThemeColorOverride("font_color", new Color(0.75f, 0.75f, 0.8f));
+		lbl.VerticalAlignment = VerticalAlignment.Center;
+		row.AddChild(lbl);
+
+		HSlider slider = new()
+		{
+			MinValue = 0.0,
+			MaxValue = 1.0,
+			Step = 0.01,
+			CustomMinimumSize = new Vector2(160, 0),
+			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill
+		};
+		slider.ProcessMode = ProcessModeEnum.Always;
+
+		// Initialise depuis l'état courant du bus
+		if (AudioManager.Instance != null)
+			slider.Value = AudioManager.Instance.GetBusVolumeLinear(busName);
+		else
+			slider.Value = 1.0;
+
+		slider.ValueChanged += (double v) =>
+		{
+			AudioManager.Instance?.SetBusVolumeLinear(busName, (float)v);
+		};
+		row.AddChild(slider);
+
+		// Pourcentage live
+		Label pct = new() { CustomMinimumSize = new Vector2(38, 0) };
+		pct.AddThemeFontSizeOverride("font_size", 12);
+		pct.AddThemeColorOverride("font_color", new Color(0.55f, 0.55f, 0.6f));
+		pct.VerticalAlignment = VerticalAlignment.Center;
+		pct.Text = $"{(int)(slider.Value * 100)}%";
+
+		slider.ValueChanged += (double v) => pct.Text = $"{(int)(v * 100)}%";
+		row.AddChild(pct);
+
+		return row;
+	}
+
 	private static Button CreateButton(string text)
 	{
 		Button btn = new()
 		{
 			Text = text,
-			CustomMinimumSize = new Vector2(200, 36)
+			CustomMinimumSize = new Vector2(240, 34)
 		};
 		btn.AddThemeFontSizeOverride("font_size", 15);
 		return btn;

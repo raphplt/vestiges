@@ -7,14 +7,15 @@ namespace Vestiges.Infrastructure;
 /// Gestionnaire audio central — Autoload singleton.
 /// Gère la musique adaptative (jour/nuit/hub) et tous les SFX du jeu
 /// via abonnement à l'EventBus. Crée les buses audio si absentes.
+/// Persiste les réglages dans user://audio_settings.cfg.
 /// </summary>
 public partial class AudioManager : Node
 {
 	public static AudioManager Instance { get; private set; }
 
 	// --- Buses ---
-	private const string BusMusic = "Music";
-	private const string BusSfx = "SFX";
+	private const string BusMusic    = "Music";
+	private const string BusSfx      = "SFX";
 	private const string BusAmbiance = "Ambiance";
 
 	// --- Music players (cross-fade A/B) ---
@@ -24,9 +25,9 @@ public partial class AudioManager : Node
 	private string _currentMusicKey = "";
 	private Tween _musicFadeTween;
 
-	// --- SFX pool (non-positionnel) ---
+	// --- SFX pool ---
 	private readonly List<AudioStreamPlayer> _sfxPool = new();
-	private const int SfxPoolSize = 10;
+	private const int SfxPoolSize = 12;
 
 	// --- Ambiance player ---
 	private AudioStreamPlayer _ambiancePlayer;
@@ -37,10 +38,15 @@ public partial class AudioManager : Node
 	// --- Musique adaptative ---
 	private int _activeEnemyCount;
 	private const int CombatThreshold = 3;
-	private string _currentPhase = "Day";
+	private string _currentPhase = "";
 	private float _nightTimer;
-	// La nuit dure 390s par défaut — bascule vers chaos à 130s
 	private const float NightChaosDelay = 130f;
+
+	// --- Ambiance oiseaux ---
+	private float _birdTimer;
+
+	// --- Persistence ---
+	private const string SettingsPath = "user://audio_settings.cfg";
 
 	// --- Chemins de tous les streams ---
 	private static readonly Dictionary<string, string> Paths = new()
@@ -63,14 +69,14 @@ public partial class AudioManager : Node
 		["sfx_pas_gravier"] = "res://assets/audio/sfx/joueur/pas/sfx_pas_gravier.wav",
 
 		// Récolte
-		["sfx_recolte_hache"]   = "res://assets/audio/sfx/gameplay/sfx_recolte_hache.wav",
-		["sfx_recolte_pioche"]  = "res://assets/audio/sfx/gameplay/sfx_recolte_pioche.wav",
-		["sfx_recolte_obtenu"]  = "res://assets/audio/sfx/gameplay/sfx_recolte_obtenu.wav",
+		["sfx_recolte_hache"]    = "res://assets/audio/sfx/gameplay/sfx_recolte_hache.wav",
+		["sfx_recolte_pioche"]   = "res://assets/audio/sfx/gameplay/sfx_recolte_pioche.wav",
+		["sfx_recolte_obtenu"]   = "res://assets/audio/sfx/gameplay/sfx_recolte_obtenu.wav",
 
 		// Craft & construction
-		["sfx_craft_termine"]   = "res://assets/audio/sfx/gameplay/sfx_craft_termine.wav",
-		["sfx_structure_pose"]  = "res://assets/audio/sfx/gameplay/sfx_structure_pose.wav",
-		["sfx_craft_impossible"]= "res://assets/audio/sfx/gameplay/sfx_craft_impossible.wav",
+		["sfx_craft_termine"]    = "res://assets/audio/sfx/gameplay/sfx_craft_termine.wav",
+		["sfx_structure_pose"]   = "res://assets/audio/sfx/gameplay/sfx_structure_pose.wav",
+		["sfx_craft_impossible"] = "res://assets/audio/sfx/gameplay/sfx_craft_impossible.wav",
 
 		// Progression
 		["sfx_perk_choix"]      = "res://assets/audio/sfx/gameplay/sfx_perk_choix.wav",
@@ -84,19 +90,17 @@ public partial class AudioManager : Node
 		["sfx_monde_aube"]           = "res://assets/audio/sfx/gameplay/sfx_monde_aube.wav",
 
 		// Combat
-		["sfx_hit_ennemi"]        = "res://assets/audio/sfx/combat/sfx_hit_ennemi.wav",
-		["sfx_hit_critique"]      = "res://assets/audio/sfx/combat/sfx_hit_critique.wav",
-		["sfx_hit_joueur"]        = "res://assets/audio/sfx/combat/sfx_hit_joueur.wav",
-		["sfx_projectile_vol"]    = "res://assets/audio/sfx/combat/sfx_projectile_vol.wav",
-		["sfx_projectile_impact"] = "res://assets/audio/sfx/combat/sfx_projectile_impact.wav",
+		["sfx_hit_ennemi"]   = "res://assets/audio/sfx/combat/sfx_hit_ennemi.wav",
+		["sfx_hit_critique"] = "res://assets/audio/sfx/combat/sfx_hit_critique.wav",
+		["sfx_hit_joueur"]   = "res://assets/audio/sfx/combat/sfx_hit_joueur.wav",
 
 		// Ambiance biomes
-		["sfx_ambiance_foret"]    = "res://assets/audio/sfx/ambiance/sfx_ambiance_foret.wav",
-		["sfx_ambiance_ruines"]   = "res://assets/audio/sfx/ambiance/sfx_ambiance_ruines.wav",
-		["sfx_ambiance_marecages"]= "res://assets/audio/sfx/ambiance/sfx_ambiance_marecages.wav",
-		["sfx_ambiance_oiseaux_1"]= "res://assets/audio/sfx/ambiance/sfx_ambiance_oiseaux_1.wav",
-		["sfx_ambiance_oiseaux_2"]= "res://assets/audio/sfx/ambiance/sfx_ambiance_oiseaux_2.wav",
-		["sfx_ambiance_bulle"]    = "res://assets/audio/sfx/ambiance/sfx_ambiance_bulle.wav",
+		["sfx_ambiance_foret"]     = "res://assets/audio/sfx/ambiance/sfx_ambiance_foret.wav",
+		["sfx_ambiance_ruines"]    = "res://assets/audio/sfx/ambiance/sfx_ambiance_ruines.wav",
+		["sfx_ambiance_marecages"] = "res://assets/audio/sfx/ambiance/sfx_ambiance_marecages.wav",
+		["sfx_ambiance_oiseaux_1"] = "res://assets/audio/sfx/ambiance/sfx_ambiance_oiseaux_1.wav",
+		["sfx_ambiance_oiseaux_2"] = "res://assets/audio/sfx/ambiance/sfx_ambiance_oiseaux_2.wav",
+		["sfx_ambiance_bulle"]     = "res://assets/audio/sfx/ambiance/sfx_ambiance_bulle.wav",
 
 		// Foyer
 		["sfx_foyer_crepitement"] = "res://assets/audio/sfx/foyer/sfx_foyer_crepitement.wav",
@@ -104,21 +108,21 @@ public partial class AudioManager : Node
 		["sfx_foyer_upgrade"]     = "res://assets/audio/sfx/foyer/sfx_foyer_upgrade.wav",
 
 		// Créatures
-		["sfx_rodeur_idle"]            = "res://assets/audio/sfx/creatures/sfx_rodeur_idle.wav",
-		["sfx_rodeur_attaque"]         = "res://assets/audio/sfx/creatures/sfx_rodeur_attaque.wav",
-		["sfx_charognard_idle"]        = "res://assets/audio/sfx/creatures/sfx_charognard_idle.wav",
-		["sfx_charognard_meute"]       = "res://assets/audio/sfx/creatures/sfx_charognard_meute.wav",
-		["sfx_sentinelle_activation"]  = "res://assets/audio/sfx/creatures/sfx_sentinelle_activation.wav",
-		["sfx_sentinelle_tir"]         = "res://assets/audio/sfx/creatures/sfx_sentinelle_tir.wav",
-		["sfx_ombre_idle"]             = "res://assets/audio/sfx/creatures/sfx_ombre_idle.wav",
-		["sfx_ombre_attaque"]          = "res://assets/audio/sfx/creatures/sfx_ombre_attaque.wav",
-		["sfx_brute_pas"]              = "res://assets/audio/sfx/creatures/sfx_brute_pas.wav",
-		["sfx_brute_charge"]           = "res://assets/audio/sfx/creatures/sfx_brute_charge.wav",
-		["sfx_tisseuse_idle"]          = "res://assets/audio/sfx/creatures/sfx_tisseuse_idle.wav",
-		["sfx_hurleur_cri"]            = "res://assets/audio/sfx/creatures/sfx_hurleur_cri.wav",
-		["sfx_rampant_deplacement"]    = "res://assets/audio/sfx/creatures/sfx_rampant_deplacement.wav",
-		["sfx_rampant_surgissement"]   = "res://assets/audio/sfx/creatures/sfx_rampant_surgissement.wav",
-		["sfx_indicible_presence"]     = "res://assets/audio/sfx/creatures/sfx_indicible_presence.wav",
+		["sfx_rodeur_idle"]           = "res://assets/audio/sfx/creatures/sfx_rodeur_idle.wav",
+		["sfx_rodeur_attaque"]        = "res://assets/audio/sfx/creatures/sfx_rodeur_attaque.wav",
+		["sfx_charognard_idle"]       = "res://assets/audio/sfx/creatures/sfx_charognard_idle.wav",
+		["sfx_charognard_meute"]      = "res://assets/audio/sfx/creatures/sfx_charognard_meute.wav",
+		["sfx_sentinelle_activation"] = "res://assets/audio/sfx/creatures/sfx_sentinelle_activation.wav",
+		["sfx_sentinelle_tir"]        = "res://assets/audio/sfx/creatures/sfx_sentinelle_tir.wav",
+		["sfx_ombre_idle"]            = "res://assets/audio/sfx/creatures/sfx_ombre_idle.wav",
+		["sfx_ombre_attaque"]         = "res://assets/audio/sfx/creatures/sfx_ombre_attaque.wav",
+		["sfx_brute_pas"]             = "res://assets/audio/sfx/creatures/sfx_brute_pas.wav",
+		["sfx_brute_charge"]          = "res://assets/audio/sfx/creatures/sfx_brute_charge.wav",
+		["sfx_tisseuse_idle"]         = "res://assets/audio/sfx/creatures/sfx_tisseuse_idle.wav",
+		["sfx_hurleur_cri"]           = "res://assets/audio/sfx/creatures/sfx_hurleur_cri.wav",
+		["sfx_rampant_deplacement"]   = "res://assets/audio/sfx/creatures/sfx_rampant_deplacement.wav",
+		["sfx_rampant_surgissement"]  = "res://assets/audio/sfx/creatures/sfx_rampant_surgissement.wav",
+		["sfx_indicible_presence"]    = "res://assets/audio/sfx/creatures/sfx_indicible_presence.wav",
 	};
 
 	public override void _Ready()
@@ -126,19 +130,17 @@ public partial class AudioManager : Node
 		Instance = this;
 
 		EnsureAudioBuses();
+		LoadSettings();
 		PreloadStreams();
 
-		// Lecteurs de musique (cross-fade A/B)
 		_musicPlayerA = new AudioStreamPlayer { Bus = BusMusic, Name = "MusicA", VolumeDb = -80f };
 		_musicPlayerB = new AudioStreamPlayer { Bus = BusMusic, Name = "MusicB", VolumeDb = -80f };
 		AddChild(_musicPlayerA);
 		AddChild(_musicPlayerB);
 
-		// Lecteur d'ambiance
 		_ambiancePlayer = new AudioStreamPlayer { Bus = BusAmbiance, Name = "Ambiance" };
 		AddChild(_ambiancePlayer);
 
-		// Pool SFX
 		for (int i = 0; i < SfxPoolSize; i++)
 		{
 			AudioStreamPlayer p = new() { Bus = BusSfx, Name = $"Sfx{i}" };
@@ -149,6 +151,8 @@ public partial class AudioManager : Node
 		Core.EventBus eventBus = GetNodeOrNull<Core.EventBus>("/root/EventBus");
 		if (eventBus != null)
 			ConnectEventBus(eventBus);
+
+		_birdTimer = (float)GD.RandRange(15.0, 35.0);
 
 		GD.Print($"[AudioManager] Ready — {_streams.Count}/{Paths.Count} streams chargés");
 	}
@@ -161,7 +165,9 @@ public partial class AudioManager : Node
 			DisconnectEventBus(eventBus);
 	}
 
-	// --- Buses ---
+	// =========================================================
+	// BUS MANAGEMENT
+	// =========================================================
 
 	private static void EnsureAudioBuses()
 	{
@@ -170,18 +176,64 @@ public partial class AudioManager : Node
 		EnsureBus(BusAmbiance, -8f);
 	}
 
-	private static void EnsureBus(string name, float volumeDb)
+	private static void EnsureBus(string name, float defaultDb)
 	{
 		if (AudioServer.GetBusIndex(name) >= 0)
 			return;
 		AudioServer.AddBus();
 		int idx = AudioServer.BusCount - 1;
 		AudioServer.SetBusName(idx, name);
-		AudioServer.SetBusVolumeDb(idx, volumeDb);
-		GD.Print($"[AudioManager] Bus créé : {name}");
+		AudioServer.SetBusVolumeDb(idx, defaultDb);
 	}
 
-	// --- Preloading ---
+	// =========================================================
+	// SETTINGS (persistence user://)
+	// =========================================================
+
+	public void LoadSettings()
+	{
+		ConfigFile cfg = new();
+		if (cfg.Load(SettingsPath) != Error.Ok)
+			return;
+
+		SetBusVolumeLinear("Master",   (float)cfg.GetValue("audio", "master",   1.0).AsDouble());
+		SetBusVolumeLinear(BusMusic,   (float)cfg.GetValue("audio", "music",    1.0).AsDouble());
+		SetBusVolumeLinear(BusSfx,     (float)cfg.GetValue("audio", "sfx",      1.0).AsDouble());
+		SetBusVolumeLinear(BusAmbiance,(float)cfg.GetValue("audio", "ambiance", 0.7).AsDouble());
+	}
+
+	public void SaveSettings()
+	{
+		ConfigFile cfg = new();
+		cfg.SetValue("audio", "master",   GetBusVolumeLinear("Master"));
+		cfg.SetValue("audio", "music",    GetBusVolumeLinear(BusMusic));
+		cfg.SetValue("audio", "sfx",      GetBusVolumeLinear(BusSfx));
+		cfg.SetValue("audio", "ambiance", GetBusVolumeLinear(BusAmbiance));
+		cfg.Save(SettingsPath);
+	}
+
+	/// <summary>Retourne le volume d'un bus en linéaire [0..1].</summary>
+	public float GetBusVolumeLinear(string busName)
+	{
+		int idx = AudioServer.GetBusIndex(busName);
+		if (idx < 0)
+			return 1f;
+		return Mathf.DbToLinear(AudioServer.GetBusVolumeDb(idx));
+	}
+
+	/// <summary>Définit le volume d'un bus depuis une valeur linéaire [0..1].</summary>
+	public void SetBusVolumeLinear(string busName, float linear)
+	{
+		int idx = AudioServer.GetBusIndex(busName);
+		if (idx < 0)
+			return;
+		float db = linear <= 0.001f ? -80f : Mathf.LinearToDb(linear);
+		AudioServer.SetBusVolumeDb(idx, db);
+	}
+
+	// =========================================================
+	// PRELOADING
+	// =========================================================
 
 	private void PreloadStreams()
 	{
@@ -195,16 +247,21 @@ public partial class AudioManager : Node
 		}
 	}
 
-	// --- API publique ---
+	// =========================================================
+	// API PUBLIQUE
+	// =========================================================
 
-	/// <summary>Joue un SFX depuis le pool. Appel statique via Instance.</summary>
-	public static void Play(string key, float pitchVariance = 0.05f)
+	/// <summary>
+	/// Joue un SFX depuis le pool.
+	/// pitchVariance : variation aléatoire de pitch (+/-).
+	/// volumeDb      : offset de volume en dB (0 = nominal, négatif = plus silencieux).
+	/// </summary>
+	public static void Play(string key, float pitchVariance = 0.05f, float volumeDb = 0f)
 	{
-		Instance?.PlaySfx(key, pitchVariance);
+		Instance?.PlaySfx(key, pitchVariance, volumeDb);
 	}
 
-	/// <summary>Joue un SFX via l'instance.</summary>
-	public void PlaySfx(string key, float pitchVariance = 0.05f)
+	public void PlaySfx(string key, float pitchVariance = 0.05f, float volumeDb = 0f)
 	{
 		if (!_streams.TryGetValue(key, out AudioStream stream))
 			return;
@@ -215,10 +272,11 @@ public partial class AudioManager : Node
 
 		player.Stream = stream;
 		player.PitchScale = 1f + (float)GD.RandRange(-pitchVariance, pitchVariance);
+		player.VolumeDb = volumeDb;
 		player.Play();
 	}
 
-	/// <summary>Démarre la musique du Hub (cross-fade).</summary>
+	/// <summary>Démarre la musique du Hub.</summary>
 	public void PlayHubMusic()
 	{
 		PlayMusic("mus_hub", loop: true, fadeDuration: 2f);
@@ -232,7 +290,9 @@ public partial class AudioManager : Node
 		PlaySfx("mus_mort", 0f);
 	}
 
-	// --- Musique ---
+	// =========================================================
+	// MUSIQUE
+	// =========================================================
 
 	private void PlayMusic(string key, float fadeDuration = 2.5f, bool loop = true)
 	{
@@ -275,7 +335,9 @@ public partial class AudioManager : Node
 		_musicFadeTween.TweenProperty(_musicPlayerB, "volume_db", -80f, duration);
 	}
 
-	// --- Ambiance ---
+	// =========================================================
+	// AMBIANCE
+	// =========================================================
 
 	private void PlayAmbiance(string key)
 	{
@@ -297,7 +359,9 @@ public partial class AudioManager : Node
 		tween.TweenCallback(Callable.From(_ambiancePlayer.Stop));
 	}
 
-	// --- Pool SFX ---
+	// =========================================================
+	// POOL SFX
+	// =========================================================
 
 	private AudioStreamPlayer GetFreePoolPlayer()
 	{
@@ -306,25 +370,40 @@ public partial class AudioManager : Node
 			if (!p.Playing)
 				return p;
 		}
-		// Si tous occupés, prendre le premier (overwrite du moins important)
 		return _sfxPool.Count > 0 ? _sfxPool[0] : null;
 	}
 
-	// --- _Process : musique adaptative ---
+	// =========================================================
+	// _PROCESS — musique adaptative + oiseaux
+	// =========================================================
 
 	public override void _Process(double delta)
 	{
-		// Progression nuit : bascule vagues → chaos après NightChaosDelay
+		float dt = (float)delta;
+
+		// Bascule nuit vagues → chaos
 		if (_currentPhase == "Night")
 		{
-			_nightTimer += (float)delta;
+			_nightTimer += dt;
 			if (_nightTimer >= NightChaosDelay && _currentMusicKey == "mus_nuit_vagues")
 				PlayMusic("mus_nuit_chaos", fadeDuration: 5f);
 		}
 
-		// Musique adaptative jour : check périodique tous les ~2s
+		// Musique adaptative jour (check toutes les 2s ~)
 		if (_currentPhase == "Day" && Engine.GetProcessFrames() % 120 == 0)
 			RefreshDayMusic();
+
+		// Oiseaux ambiants aléatoires le jour
+		if (_currentPhase == "Day")
+		{
+			_birdTimer -= dt;
+			if (_birdTimer <= 0f)
+			{
+				_birdTimer = (float)GD.RandRange(20.0, 45.0);
+				string birdKey = GD.Randi() % 2 == 0 ? "sfx_ambiance_oiseaux_1" : "sfx_ambiance_oiseaux_2";
+				PlaySfx(birdKey, 0.05f, -4f);
+			}
+		}
 	}
 
 	private void RefreshDayMusic()
@@ -335,41 +414,41 @@ public partial class AudioManager : Node
 		PlayMusic(target, fadeDuration: 3f);
 	}
 
-	// --- Connexion EventBus ---
+	// =========================================================
+	// EVENTBUS
+	// =========================================================
 
 	private void ConnectEventBus(Core.EventBus eb)
 	{
-		eb.DayPhaseChanged     += OnDayPhaseChanged;
-		eb.EnemySpawned        += OnEnemySpawned;
-		eb.EnemyKilled         += OnEnemyKilled;
-		eb.PlayerDamaged       += OnPlayerDamaged;
-		eb.CraftCompleted      += OnCraftCompleted;
-		eb.StructurePlaced     += OnStructurePlaced;
-		eb.SouvenirDiscovered  += OnSouvenirDiscovered;
-		eb.ZoneDiscovered      += OnZoneDiscovered;
-		eb.PerkChosen          += OnPerkChosen;
-		eb.FragmentChosen      += OnFragmentChosen;
-		eb.ResourceCollected   += OnResourceCollected;
-		eb.GameStateChanged    += OnGameStateChanged;
+		eb.DayPhaseChanged    += OnDayPhaseChanged;
+		eb.EnemySpawned       += OnEnemySpawned;
+		eb.EnemyKilled        += OnEnemyKilled;
+		eb.PlayerDamaged      += OnPlayerDamaged;
+		eb.CraftCompleted     += OnCraftCompleted;
+		eb.StructurePlaced    += OnStructurePlaced;
+		eb.SouvenirDiscovered += OnSouvenirDiscovered;
+		eb.ZoneDiscovered     += OnZoneDiscovered;
+		eb.PerkChosen         += OnPerkChosen;
+		eb.FragmentChosen     += OnFragmentChosen;
+		eb.ResourceCollected  += OnResourceCollected;
+		eb.GameStateChanged   += OnGameStateChanged;
 	}
 
 	private void DisconnectEventBus(Core.EventBus eb)
 	{
-		eb.DayPhaseChanged     -= OnDayPhaseChanged;
-		eb.EnemySpawned        -= OnEnemySpawned;
-		eb.EnemyKilled         -= OnEnemyKilled;
-		eb.PlayerDamaged       -= OnPlayerDamaged;
-		eb.CraftCompleted      -= OnCraftCompleted;
-		eb.StructurePlaced     -= OnStructurePlaced;
-		eb.SouvenirDiscovered  -= OnSouvenirDiscovered;
-		eb.ZoneDiscovered      -= OnZoneDiscovered;
-		eb.PerkChosen          -= OnPerkChosen;
-		eb.FragmentChosen      -= OnFragmentChosen;
-		eb.ResourceCollected   -= OnResourceCollected;
-		eb.GameStateChanged    -= OnGameStateChanged;
+		eb.DayPhaseChanged    -= OnDayPhaseChanged;
+		eb.EnemySpawned       -= OnEnemySpawned;
+		eb.EnemyKilled        -= OnEnemyKilled;
+		eb.PlayerDamaged      -= OnPlayerDamaged;
+		eb.CraftCompleted     -= OnCraftCompleted;
+		eb.StructurePlaced    -= OnStructurePlaced;
+		eb.SouvenirDiscovered -= OnSouvenirDiscovered;
+		eb.ZoneDiscovered     -= OnZoneDiscovered;
+		eb.PerkChosen         -= OnPerkChosen;
+		eb.FragmentChosen     -= OnFragmentChosen;
+		eb.ResourceCollected  -= OnResourceCollected;
+		eb.GameStateChanged   -= OnGameStateChanged;
 	}
-
-	// --- Handlers EventBus ---
 
 	private void OnDayPhaseChanged(string phase)
 	{
@@ -379,8 +458,11 @@ public partial class AudioManager : Node
 		switch (phase)
 		{
 			case "Day":
+				// Démarre la musique de jour — DayPhaseChanged est la source de vérité
+				// pour la transition Hub → Run (pas OnGameStateChanged).
 				RefreshDayMusic();
 				PlayAmbiance("sfx_ambiance_foret");
+				_birdTimer = (float)GD.RandRange(5.0, 15.0);
 				break;
 			case "Dusk":
 				PlayMusic("mus_crepuscule", fadeDuration: 4f);
@@ -406,7 +488,9 @@ public partial class AudioManager : Node
 	private void OnEnemyKilled(string enemyId, Vector2 position)
 	{
 		_activeEnemyCount = Mathf.Max(0, _activeEnemyCount - 1);
-		PlaySfx("sfx_monde_dissolution");
+		// Son de dissolution discret — pas sur chaque kill pour éviter la saturation
+		if (GD.Randf() < 0.5f)
+			PlaySfx("sfx_monde_dissolution", 0.08f, -6f);
 	}
 
 	private void OnPlayerDamaged(float currentHp, float maxHp)
@@ -431,7 +515,7 @@ public partial class AudioManager : Node
 
 	private void OnZoneDiscovered(int cellX, int cellY, int cellCount)
 	{
-		PlaySfx("sfx_monde_tuile_apparait");
+		PlaySfx("sfx_monde_tuile_apparait", 0.05f, -3f);
 	}
 
 	private void OnPerkChosen(string perkId)
@@ -446,21 +530,23 @@ public partial class AudioManager : Node
 
 	private void OnResourceCollected(string resourceId, int amount)
 	{
-		PlaySfx("sfx_recolte_obtenu");
+		PlaySfx("sfx_recolte_obtenu", 0.05f, -2f);
 	}
 
 	private void OnGameStateChanged(string oldState, string newState)
 	{
 		if (newState == "Hub")
 		{
+			// Retour au hub : réinitialise et joue la musique hub
 			_currentMusicKey = "";
 			_activeEnemyCount = 0;
+			_currentPhase = "";
 			PlayHubMusic();
 		}
-		else if (newState == "Run" && oldState == "Hub")
+		else if (newState == "Run")
 		{
-			// La musique de run démarre via OnDayPhaseChanged à l'init de DayNightCycle
-			_currentMusicKey = "";
+			// La musique démarre via OnDayPhaseChanged (DayNightCycle._Ready émet "Day")
+			// Ne pas toucher _currentMusicKey ici pour ne pas interrompre la transition
 			_activeEnemyCount = 0;
 		}
 	}

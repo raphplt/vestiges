@@ -763,9 +763,9 @@ public partial class Enemy : CharacterBody2D
 
 		_idleSoundTimer = _idleSoundInterval;
 
-		// Joue le son idle associé à cet ennemi
-		string key = $"sfx_{_enemyId}_idle";
-		Infrastructure.AudioManager.Play(key, 0.08f);
+		// L'Indicible utilise "presence" au lieu de "idle"
+		string key = _enemyId == "indicible" ? "sfx_indicible_presence" : $"sfx_{_enemyId}_idle";
+		Infrastructure.AudioManager.Play(key, 0.06f, -10f);
 	}
 
 	private void SpawnModifierAura(Color color)
@@ -909,7 +909,7 @@ public partial class Enemy : CharacterBody2D
 			_player.TakeDamage(_damage);
 			_attackTimer = _meleeAttackCooldown;
 			TriggerAttackAnim();
-			Infrastructure.AudioManager.Play($"sfx_{_enemyId}_attaque", 0.08f);
+			Infrastructure.AudioManager.Play($"sfx_{_enemyId}_attaque", 0.08f, -6f);
 		}
 	}
 
