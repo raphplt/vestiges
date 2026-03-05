@@ -273,6 +273,11 @@ public partial class AudioManager : Node
 		player.Stream = stream;
 		player.PitchScale = 1f + (float)GD.RandRange(-pitchVariance, pitchVariance);
 		player.VolumeDb = volumeDb;
+
+		// Désactive la boucle pour les WAV avec marqueurs intégrés (sinon le pool se sature)
+		if (stream is AudioStreamWav sfxWav)
+			sfxWav.LoopMode = AudioStreamWav.LoopModeEnum.Disabled;
+
 		player.Play();
 	}
 
