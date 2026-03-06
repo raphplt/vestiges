@@ -241,7 +241,7 @@ public partial class ChestLootScreen : CanvasLayer
         ShowScreen();
 
         // Play chest opening sound
-        AudioManager.Play("sfx_chest_opening", 0f);
+        AudioManager.PlayUI("sfx_chest_opening", 0f);
     }
 
     // ==============================
@@ -419,7 +419,7 @@ public partial class ChestLootScreen : CanvasLayer
         SpawnRevealParticles(slot.Card);
 
         // Sound — perk_choix for each reveal
-        AudioManager.Play("sfx_perk_choix", 0.05f);
+        AudioManager.PlayUI("sfx_perk_choix", 0.05f);
 
         // Screen shake on last reveal
         if (_slotsRevealed >= _slots.Count)

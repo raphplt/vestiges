@@ -675,14 +675,14 @@ public partial class LevelUpScreen : CanvasLayer
         GetTree().Paused = true;
         ProcessMode = ProcessModeEnum.Always;
 
-        // Play intro sound, then start loop when intro finishes
-        Infrastructure.AudioManager.Play("sfx_level_up", 0f);
+        // Play intro sound (uses UI pool that works during pause)
+        Infrastructure.AudioManager.PlayUI("sfx_level_up");
         StartLoopAfterIntro();
     }
 
     private void StartLoopAfterIntro()
     {
-        // Delay the loop start to let the intro play (~1s estimate)
+        // Delay the loop start to let the intro play
         SceneTreeTimer timer = GetTree().CreateTimer(1.0, processAlways: true);
         timer.Timeout += () =>
         {
@@ -698,6 +698,7 @@ public partial class LevelUpScreen : CanvasLayer
         _panel.Visible = false;
         Visible = false;
         Infrastructure.AudioManager.StopLoop();
+        Infrastructure.AudioManager.PlayUI("sfx_level_up_after");
     }
 
     private static StyleBoxTexture CreateNinePatch(Texture2D texture, int left, int top, int right, int bottom)

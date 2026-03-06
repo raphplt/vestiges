@@ -36,6 +36,10 @@ public partial class AudioManager : Node
 	private AudioStreamPlayer _loopingSfxPlayer;
 	private string _loopingSfxKey = "";
 
+	// --- UI SFX pool (plays even when paused) ---
+	private readonly List<AudioStreamPlayer> _uiSfxPool = new();
+	private const int UiSfxPoolSize = 3;
+
 	// --- Stream cache ---
 	private readonly Dictionary<string, AudioStream> _streams = new();
 
@@ -100,6 +104,7 @@ public partial class AudioManager : Node
 		["sfx_souvenir_trouve"] = "res://assets/audio/sfx/gameplay/sfx_souvenir_trouve.wav",
 		["sfx_level_up"]        = "res://assets/audio/sfx/gameplay/level_up.wav",
 		["sfx_level_up_loop"]   = "res://assets/audio/sfx/gameplay/level_up_loop.wav",
+		["sfx_level_up_after"]  = "res://assets/audio/sfx/gameplay/level_up_after.wav",
 		["sfx_chest_opening"]   = "res://assets/audio/sfx/gameplay/chest_opening.wav",
 
 		// Monde
@@ -161,8 +166,15 @@ public partial class AudioManager : Node
 		_ambiancePlayer = new AudioStreamPlayer { Bus = BusAmbiance, Name = "Ambiance" };
 		AddChild(_ambiancePlayer);
 
-		_loopingSfxPlayer = new AudioStreamPlayer { Bus = BusSfx, Name = "LoopingSfx" };
+		_loopingSfxPlayer = new AudioStreamPlayer { Bus = BusSfx, Name = "LoopingSfx", ProcessMode = ProcessModeEnum.Always };
 		AddChild(_loopingSfxPlayer);
+
+		for (int i = 0; i < UiSfxPoolSize; i++)
+		{
+			AudioStreamPlayer uiP = new() { Bus = BusSfx, Name = $"UiSfx{i}", ProcessMode = ProcessModeEnum.Always };
+			_uiSfxPool.Add(uiP);
+			AddChild(uiP);
+		}
 
 		for (int i = 0; i < SfxPoolSize; i++)
 		{
@@ -312,6 +324,37 @@ public partial class AudioManager : Node
 		player.Play();
 	}
 
+	/// <summary>Joue un SFX UI qui fonctionne même en pause (level-up, coffre, etc.).</summary>
+	public static void PlayUI(string key, float pitchVariance = 0f, float volumeDb = 0f)
+	{
+		Instance?.PlayUiSfx(key, pitchVariance, volumeDb);
+	}
+
+	public void PlayUiSfx(string key, float pitchVariance = 0f, float volumeDb = 0f)
+	{
+		if (!_streams.TryGetValue(key, out AudioStream stream))
+			return;
+
+		AudioStreamPlayer player = GetFreeUiPoolPlayer();
+		if (player == null)
+			return;
+
+		player.Stream = stream;
+		player.PitchScale = 1f + (float)GD.RandRange(-pitchVariance, pitchVariance);
+		player.VolumeDb = volumeDb;
+		player.Play();
+	}
+
+	private AudioStreamPlayer GetFreeUiPoolPlayer()
+	{
+		foreach (AudioStreamPlayer p in _uiSfxPool)
+		{
+			if (!p.Playing)
+				return p;
+		}
+		return _uiSfxPool.Count > 0 ? _uiSfxPool[0] : null;
+	}
+
 	/// <summary>Joue un SFX en boucle (ex : ambiance UI). Un seul loop SFX à la fois.</summary>
 	public static void PlayLoop(string key, float volumeDb = 0f)
 	{
@@ -331,6 +374,15 @@ public partial class AudioManager : Node
 		{
 			clone = (AudioStreamWav)wav.Duplicate();
 			clone.LoopMode = AudioStreamWav.LoopModeEnum.Forward;
+			clone.LoopBegin = 0;
+			int bytesPerFrame = clone.Format switch
+			{
+				AudioStreamWav.FormatEnum.Format8Bits => clone.Stereo ? 2 : 1,
+				AudioStreamWav.FormatEnum.Format16Bits => clone.Stereo ? 4 : 2,
+				_ => clone.Stereo ? 4 : 2
+			};
+			if (clone.Data != null && clone.Data.Length > 0)
+				clone.LoopEnd = clone.Data.Length / bytesPerFrame;
 		}
 
 		_loopingSfxPlayer.Stream = clone ?? stream;
