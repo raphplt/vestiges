@@ -67,6 +67,7 @@ public partial class Player : CharacterBody2D
     public Vector2 AIInputOverride;
 
     private GameManager _gameManager;
+    private GroupCache _groupCache;
 
     private string _characterId;
     private float _currentHp;
@@ -91,9 +92,6 @@ public partial class Player : CharacterBody2D
     public const int MaxWeaponFragmentLevel = 8;
     private readonly Dictionary<string, int> _weaponFragmentLevels = new();
 
-    // Weapon visual
-    private Node2D _weaponPivot;
-    private Polygon2D _weaponVisual;
     private Vector2 _facingDirection = new(1f, 0f);
 
     // Sprite animé (remplace Polygon2D quand sprite_folder est défini)
@@ -230,9 +228,8 @@ public partial class Player : CharacterBody2D
         _eventBus = GetNode<EventBus>("/root/EventBus");
         _eventBus.EnemyKilled += OnEnemyKilled;
 
-        CreateWeaponVisual();
-
         _gameManager = GetNode<GameManager>("/root/GameManager");
+        _groupCache = GetNode<GroupCache>("/root/GroupCache");
     }
 
     public override void _ExitTree()
@@ -289,8 +286,6 @@ public partial class Player : CharacterBody2D
             }
         }
 
-        UpdateWeaponVisual();
-
         GD.Print($"[Player] Initialized as {data.Name} (HP:{MaxHp}, ATK:{AttackDamage}, SPD:{Speed})");
     }
 
@@ -340,7 +335,6 @@ public partial class Player : CharacterBody2D
         _eventBus?.EmitSignal(EventBus.SignalName.WeaponInventoryChanged);
 
         InitWeaponFragmentLevel(weapon.Id);
-        UpdateWeaponVisual();
         GD.Print($"[Player] Weapon added [{capturedIndex}]: {weapon.Name} ({weapon.Id})");
         return true;
     }
@@ -369,7 +363,6 @@ public partial class Player : CharacterBody2D
         _eventBus?.EmitSignal(EventBus.SignalName.WeaponDropped, removed.Id);
         _eventBus?.EmitSignal(EventBus.SignalName.WeaponInventoryChanged);
 
-        UpdateWeaponVisual();
         UpdateAttackSpeed();
 
         GD.Print($"[Player] Weapon removed [{slotIndex}]: {removed.Name} ({removed.Id})");
@@ -585,96 +578,6 @@ public partial class Player : CharacterBody2D
             _weaponFragmentLevels[weaponId] = 1;
     }
 
-    // --- Weapon Visual ---
-
-    private void CreateWeaponVisual()
-    {
-        _weaponPivot = new Node2D { Name = "WeaponPivot" };
-        AddChild(_weaponPivot);
-
-        _weaponVisual = new Polygon2D { Name = "WeaponVisual" };
-        _weaponPivot.AddChild(_weaponVisual);
-
-        UpdateWeaponVisual();
-    }
-
-    private void UpdateWeaponVisual()
-    {
-        if (_weaponVisual == null)
-            return;
-
-        WeaponInstance primaryWeapon = _weaponSlots.Count > 0 ? _weaponSlots[0] : null;
-        if (primaryWeapon == null)
-        {
-            _weaponVisual.Visible = false;
-            return;
-        }
-
-        _weaponVisual.Visible = true;
-        string weaponType = primaryWeapon.Type?.ToLower() ?? "ranged";
-
-        if (weaponType == "melee")
-        {
-            // Blade shape: elongated polygon offset from the body
-            _weaponVisual.Polygon = new Vector2[]
-            {
-                new(10f, -2f),
-                new(24f, -1.5f),
-                new(26f, 0f),
-                new(24f, 1.5f),
-                new(10f, 2f)
-            };
-            _weaponVisual.Color = new Color(0.75f, 0.75f, 0.8f, 0.9f);
-        }
-        else if (weaponType == "ranged")
-        {
-            // Bow shape: curved arc offset from the body
-            _weaponVisual.Polygon = new Vector2[]
-            {
-                new(10f, -6f),
-                new(14f, -4f),
-                new(16f, 0f),
-                new(14f, 4f),
-                new(10f, 6f),
-                new(12f, 4f),
-                new(13f, 0f),
-                new(12f, -4f)
-            };
-            _weaponVisual.Color = new Color(0.65f, 0.5f, 0.3f, 0.9f);
-        }
-        else
-        {
-            // Special weapons: small orb
-            _weaponVisual.Polygon = new Vector2[]
-            {
-                new(12f, -3f),
-                new(16f, -2f),
-                new(18f, 0f),
-                new(16f, 2f),
-                new(12f, 3f),
-                new(14f, 0f)
-            };
-            _weaponVisual.Color = new Color(0.45f, 0.85f, 1f, 0.9f);
-        }
-
-        // Tint weapon based on damage type
-        string damageType = primaryWeapon.DamageType?.ToLower() ?? "physical";
-        if (damageType == "essence")
-            _weaponVisual.Color = new Color(0.45f, 0.85f, 1f, 0.9f);
-        else if (damageType == "hybrid")
-            _weaponVisual.Color = new Color(0.85f, 0.65f, 1f, 0.9f);
-
-        UpdateWeaponPivotRotation();
-    }
-
-    private void UpdateWeaponPivotRotation()
-    {
-        if (_weaponPivot == null)
-            return;
-
-        _weaponPivot.Rotation = _facingDirection.Angle();
-    }
-
     public override void _PhysicsProcess(double delta)
     {
         if (_isDead)
@@ -695,7 +598,6 @@ public partial class Player : CharacterBody2D
             float terrainSpeedFactor = IsOnWater() ? 0.5f : 1f;
             Velocity = isoDir * (Speed * _speedMultiplier * _slowFactor * terrainSpeedFactor);
             _facingDirection = isoDir.Normalized();
-            UpdateWeaponPivotRotation();
         }
         else
         {
@@ -782,25 +684,35 @@ public partial class Player : CharacterBody2D
     // --- World Queries ---
 
     private WorldSetup _worldSetup;
+    private TileMapLayer _groundLayer;
+    private bool _isOnWaterCached;
+    private ulong _isOnWaterFrame;
 
     private void CacheWorldSetup()
     {
         _worldSetup = GetNodeOrNull<WorldSetup>("/root/Main");
+        if (_worldSetup != null)
+            _groundLayer = _worldSetup.GetNodeOrNull<TileMapLayer>("Ground");
     }
 
     private bool IsOnWater()
     {
+        ulong frame = Engine.GetProcessFrames();
+        if (frame == _isOnWaterFrame)
+            return _isOnWaterCached;
+        _isOnWaterFrame = frame;
+
         if (_worldSetup == null)
             CacheWorldSetup();
-        if (_worldSetup == null)
+        if (_worldSetup == null || _groundLayer == null)
+        {
+            _isOnWaterCached = false;
             return false;
+        }
 
-        TileMapLayer ground = _worldSetup.GetNodeOrNull<TileMapLayer>("Ground");
-        if (ground == null)
-            return false;
-
-        Vector2I cell = ground.LocalToMap(ground.ToLocal(GlobalPosition));
-        return _worldSetup.Generator.GetTerrain(cell.X, cell.Y) == TerrainType.Water;
+        Vector2I cell = _groundLayer.LocalToMap(_groundLayer.ToLocal(GlobalPosition));
+        _isOnWaterCached = _worldSetup.Generator.GetTerrain(cell.X, cell.Y) == TerrainType.Water;
+        return _isOnWaterCached;
     }
 
     // --- Stat Modifiers ---
@@ -1016,7 +928,7 @@ public partial class Player : CharacterBody2D
 
     private void SpawnRicochet(Enemy sourceEnemy, float damage, bool isCrit)
     {
-        Godot.Collections.Array<Node> enemies = GetTree().GetNodesInGroup("enemies");
+        Godot.Collections.Array<Node> enemies = _groupCache.GetEnemies();
         Node2D bounceTarget = null;
         float nearestDist = _ricochetRange;
 
@@ -1091,7 +1003,7 @@ public partial class Player : CharacterBody2D
                 GetTree().CreateTimer(delay).Timeout += () =>
                 {
                     // Réapplique les dégâts à la position d'origine (AoE fantôme)
-                    Godot.Collections.Array<Node> enemies = GetTree().GetNodesInGroup("enemies");
+                    Godot.Collections.Array<Node> enemies = _groupCache.GetEnemies();
                     foreach (Node node in enemies)
                     {
                         if (node is Enemy e && IsInstanceValid(e) && !e.IsDying)
@@ -1115,7 +1027,7 @@ public partial class Player : CharacterBody2D
                 float factor = se.Params.TryGetValue("slow_factor", out float f) ? f : 0.3f;
                 float duration = se.Params.TryGetValue("slow_duration", out float dur) ? dur : 0.5f;
                 Vector2 impactPos = enemy.GlobalPosition;
-                Godot.Collections.Array<Node> enemies = GetTree().GetNodesInGroup("enemies");
+                Godot.Collections.Array<Node> enemies = _groupCache.GetEnemies();
                 foreach (Node node in enemies)
                 {
                     if (node is Enemy e && IsInstanceValid(e) && !e.IsDying)
@@ -1131,7 +1043,7 @@ public partial class Player : CharacterBody2D
             {
                 float aoeRadius = se.Params.TryGetValue("shape_aoe_on_impact", out float aoe) ? aoe : 50f;
                 Vector2 impactPos = enemy.GlobalPosition;
-                Godot.Collections.Array<Node> enemies = GetTree().GetNodesInGroup("enemies");
+                Godot.Collections.Array<Node> enemies = _groupCache.GetEnemies();
                 foreach (Node node in enemies)
                 {
                     if (node is Enemy e && IsInstanceValid(e) && !e.IsDying && e != enemy)
@@ -1218,17 +1130,6 @@ public partial class Player : CharacterBody2D
             CircleShape2D circle = new() { Radius = 8f };
             shape.Shape = circle;
             orb.AddChild(shape);
-
-            Polygon2D visual = new();
-            Vector2[] points = new Vector2[6];
-            for (int j = 0; j < 6; j++)
-            {
-                float angle = Mathf.Tau * j / 6;
-                points[j] = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * 5f;
-            }
-            visual.Polygon = points;
-            visual.Color = new Color(0.45f, 0.85f, 1f, 0.8f);
-            orb.AddChild(visual);
 
             float capturedDamage = damage;
             orb.BodyEntered += (Node2D body) =>
@@ -1329,7 +1230,7 @@ public partial class Player : CharacterBody2D
         float damage = _coneBaseDamage * (1f + elapsed * _coneDamageRampPerSec) * delta;
 
         // Application des dégâts aux ennemis dans le cône
-        Godot.Collections.Array<Node> enemies = GetTree().GetNodesInGroup("enemies");
+        Godot.Collections.Array<Node> enemies = _groupCache.GetEnemies();
         foreach (Node node in enemies)
         {
             if (node is not Enemy enemy || enemy.IsDying || !IsInstanceValid(enemy))
@@ -1438,7 +1339,7 @@ public partial class Player : CharacterBody2D
 
     private Enemy FindNearestEnemyExcluding(Vector2 from, float maxRange, HashSet<ulong> excludeIds)
     {
-        Godot.Collections.Array<Node> enemies = GetTree().GetNodesInGroup("enemies");
+        Godot.Collections.Array<Node> enemies = _groupCache.GetEnemies();
         Enemy nearest = null;
         float nearestDist = maxRange;
 
@@ -1523,7 +1424,7 @@ public partial class Player : CharacterBody2D
         if (reflectedDamage <= 0f)
             return;
 
-        Godot.Collections.Array<Node> enemies = GetTree().GetNodesInGroup("enemies");
+        Godot.Collections.Array<Node> enemies = _groupCache.GetEnemies();
         float nearestDist = 60f;
         Enemy nearestEnemy = null;
 
@@ -2498,7 +2399,7 @@ public partial class Player : CharacterBody2D
 
     private System.Collections.Generic.List<Node2D> FindNearestEnemies(int count, float maxRange)
     {
-        Godot.Collections.Array<Node> enemies = GetTree().GetNodesInGroup("enemies");
+        Godot.Collections.Array<Node> enemies = _groupCache.GetEnemies();
         System.Collections.Generic.List<(Node2D enemy, float dist)> inRange = new();
 
         foreach (Node node in enemies)
@@ -2523,7 +2424,7 @@ public partial class Player : CharacterBody2D
 
     private System.Collections.Generic.List<Enemy> FindEnemiesInArc(float maxRange, float arcAngle, Vector2? forwardOverride = null)
     {
-        Godot.Collections.Array<Node> enemies = GetTree().GetNodesInGroup("enemies");
+        Godot.Collections.Array<Node> enemies = _groupCache.GetEnemies();
         System.Collections.Generic.List<(Enemy enemy, float dist, Vector2 dir)> candidates = new();
 
         foreach (Node node in enemies)
@@ -2615,8 +2516,6 @@ public partial class Player : CharacterBody2D
             return;
 
         _facingDirection = direction.Normalized();
-        UpdateWeaponPivotRotation();
-
         if (_attackFeedbackTween != null && _attackFeedbackTween.IsValid())
             _attackFeedbackTween.Kill();
 
@@ -2715,7 +2614,8 @@ public partial class Player : CharacterBody2D
         // Particules de slash (étincelles en arc)
         Node2D slashParticles = Combat.VfxFactory.CreateSlashVfx(
             GlobalPosition, direction, range, arcAngle, slashColor);
-        GetTree().CurrentScene.AddChild(slashParticles);
+        if (slashParticles != null)
+            GetTree().CurrentScene.AddChild(slashParticles);
     }
 
     // --- Kill Speed Buff ---
@@ -2790,7 +2690,7 @@ public partial class Player : CharacterBody2D
 
     private Structure FindDamagedStructure()
     {
-        Godot.Collections.Array<Node> structures = GetTree().GetNodesInGroup("structures");
+        Godot.Collections.Array<Node> structures = _groupCache.GetStructures();
         Structure nearest = null;
         float nearestDist = InteractRange;
 

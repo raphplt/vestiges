@@ -8,34 +8,20 @@ uniform bool enabled = true;
 
 void fragment() {
 	vec4 tex = texture(TEXTURE, UV);
+	vec4 final_color = tex;
 
-	if (!enabled || outline_width <= 0.0) {
-		COLOR = tex;
-		return;
-	}
-
-	// Si le pixel courant est transparent, vérifier les voisins
-	if (tex.a < 0.1) {
+	if (enabled && outline_width > 0.0 && tex.a < 0.1) {
 		vec2 size = TEXTURE_PIXEL_SIZE * outline_width;
 
-		// Échantillonner les 4 voisins cardinaux
 		float a = texture(TEXTURE, UV + vec2(size.x, 0)).a;
 		a = max(a, texture(TEXTURE, UV + vec2(-size.x, 0)).a);
 		a = max(a, texture(TEXTURE, UV + vec2(0, size.y)).a);
 		a = max(a, texture(TEXTURE, UV + vec2(0, -size.y)).a);
 
-		// Aussi les diagonales pour un contour plus lisse
-		a = max(a, texture(TEXTURE, UV + vec2(size.x, size.y)).a);
-		a = max(a, texture(TEXTURE, UV + vec2(-size.x, size.y)).a);
-		a = max(a, texture(TEXTURE, UV + vec2(size.x, -size.y)).a);
-		a = max(a, texture(TEXTURE, UV + vec2(-size.x, -size.y)).a);
-
 		if (a > 0.1) {
-			COLOR = vec4(outline_color.rgb, outline_color.a * a);
-		} else {
-			COLOR = tex;
+			final_color = vec4(outline_color.rgb, outline_color.a * a);
 		}
-	} else {
-		COLOR = tex;
 	}
+
+	COLOR = final_color;
 }

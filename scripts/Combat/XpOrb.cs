@@ -30,7 +30,8 @@ public partial class XpOrb : Area2D
         BodyEntered += OnBodyEntered;
 
         _glow = VfxFactory.CreateXpOrbGlow();
-        AddChild(_glow);
+        if (_glow != null)
+            AddChild(_glow);
     }
 
     public override void _PhysicsProcess(double delta)
@@ -43,17 +44,17 @@ public partial class XpOrb : Area2D
             return;
 
         float magnetMult = _player.XpMagnetMultiplier;
-        float attractionRadius = BaseAttractionRadius * magnetMult;
-        float driftRadius = BaseDriftRadius * magnetMult;
-        float dist = GlobalPosition.DistanceTo(_player.GlobalPosition);
+        float attractionRadiusSq = BaseAttractionRadius * magnetMult * BaseAttractionRadius * magnetMult;
+        float driftRadiusSq = BaseDriftRadius * magnetMult * BaseDriftRadius * magnetMult;
+        float distSq = GlobalPosition.DistanceSquaredTo(_player.GlobalPosition);
 
-        if (dist < attractionRadius)
+        if (distSq < attractionRadiusSq)
         {
             _currentSpeed = Mathf.Min(_currentSpeed + Acceleration * (float)delta, MaxSpeed);
             Vector2 direction = (_player.GlobalPosition - GlobalPosition).Normalized();
             GlobalPosition += direction * _currentSpeed * (float)delta;
         }
-        else if (dist < driftRadius)
+        else if (distSq < driftRadiusSq)
         {
             Vector2 direction = (_player.GlobalPosition - GlobalPosition).Normalized();
             GlobalPosition += direction * DriftSpeed * (float)delta;
@@ -71,7 +72,8 @@ public partial class XpOrb : Area2D
 
             // Burst doré à la collecte
             Node2D burst = VfxFactory.CreateXpCollectBurst(GlobalPosition);
-            GetTree().CurrentScene.AddChild(burst);
+            if (burst != null)
+                GetTree().CurrentScene.AddChild(burst);
 
             EventBus eventBus = GetNode<EventBus>("/root/EventBus");
             eventBus.EmitSignal(EventBus.SignalName.XpGained, _xpValue);

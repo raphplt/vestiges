@@ -41,55 +41,51 @@ float noise(vec2 p) {
 
 void fragment() {
 	vec4 tex = texture(TEXTURE, UV);
+	vec4 final_color = tex;
+	bool done = false;
 
 	// --- Outline pass : si pixel transparent, vérifier les voisins ---
 	if (outline_enabled && outline_width > 0.0 && tex.a < 0.1) {
 		vec2 size = TEXTURE_PIXEL_SIZE * outline_width;
-		float a = 0.0;
-		// 8 voisins (cardinaux + diagonales)
-		a = max(a, texture(TEXTURE, UV + vec2(size.x, 0)).a);
+		float a = texture(TEXTURE, UV + vec2(size.x, 0)).a;
 		a = max(a, texture(TEXTURE, UV + vec2(-size.x, 0)).a);
 		a = max(a, texture(TEXTURE, UV + vec2(0, size.y)).a);
 		a = max(a, texture(TEXTURE, UV + vec2(0, -size.y)).a);
-		a = max(a, texture(TEXTURE, UV + vec2(size.x, size.y)).a);
-		a = max(a, texture(TEXTURE, UV + vec2(-size.x, size.y)).a);
-		a = max(a, texture(TEXTURE, UV + vec2(size.x, -size.y)).a);
-		a = max(a, texture(TEXTURE, UV + vec2(-size.x, -size.y)).a);
 
 		if (a > 0.1) {
-			COLOR = vec4(outline_color.rgb, outline_color.a * a);
+			final_color = vec4(outline_color.rgb, outline_color.a * a);
 		} else {
-			COLOR = vec4(0.0);
+			final_color = vec4(0.0);
 		}
-		return;
+		done = true;
 	}
 
 	// --- Dissolve pass ---
-	if (dissolve_amount > 0.001) {
+	if (!done && dissolve_amount > 0.001) {
 		float n = noise(UV * noise_scale);
 		float vertical = mix(n, 1.0 - UV.y, vertical_bias);
 		float diff = vertical - dissolve_amount;
 
 		if (diff < 0.0) {
-			COLOR.a = 0.0;
-			return;
+			final_color = vec4(tex.rgb, 0.0);
+			done = true;
 		} else if (diff < edge_width) {
 			float edge_t = 1.0 - (diff / edge_width);
 			vec4 edge = mix(edge_color, edge_highlight, edge_t * edge_t);
-			COLOR = vec4(mix(tex.rgb, edge.rgb, edge_t * 0.8), tex.a);
-			return;
+			final_color = vec4(mix(tex.rgb, edge.rgb, edge_t * 0.8), tex.a);
+			done = true;
 		}
 	}
 
-	// --- Aberration tint ---
-	vec3 result = tex.rgb;
-	if (aberration_amount > 0.0) {
-		result = mix(result, aberration_color.rgb, aberration_amount * 0.3);
+	// --- Normal rendering (aberration + flash) ---
+	if (!done) {
+		vec3 result = tex.rgb;
+		if (aberration_amount > 0.0) {
+			result = mix(result, aberration_color.rgb, aberration_amount * 0.3);
+		}
+		result = mix(result, flash_color.rgb, flash_amount);
+		final_color = vec4(result * COLOR.rgb, tex.a * COLOR.a);
 	}
 
-	// --- Hit flash (appliqué en dernier, par-dessus tout) ---
-	result = mix(result, flash_color.rgb, flash_amount);
-
-	// Intègre SelfModulate / Modulate du node (COLOR vertex = modulate combiné)
-	COLOR = vec4(result * COLOR.rgb, tex.a * COLOR.a);
+	COLOR = final_color;
 }

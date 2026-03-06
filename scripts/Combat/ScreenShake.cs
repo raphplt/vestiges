@@ -56,13 +56,7 @@ public partial class ScreenShake : Node
 	/// <summary>Hitstop : gèle le jeu pendant quelques frames pour accentuer un impact.</summary>
 	public void Hitstop(float duration = 0.04f)
 	{
-		if (_hitstopActive)
-			return;
-
-		_hitstopActive = true;
-		_savedTimeScale = (float)Engine.TimeScale;
-		Engine.TimeScale = 0.05;
-		_hitstopTimer = duration;
+		// Désactivé — l'effet de gel causait un ressenti désagréable sur les crits.
 	}
 
 	public override void _Process(double delta)

@@ -8,79 +8,142 @@ using Vestiges.World;
 namespace Vestiges.UI;
 
 /// <summary>
-/// HUD en jeu : barre de vie, barre d'XP, indicateur de niveau, score, timer jour/nuit, ressources, résumé d'aube.
+/// HUD pixel art : barres dessinées manuellement, icônes 16×16, slots d'armes visuels,
+/// style semi-diégétique (parchemin usé, métal oxydé) comme décrit dans le GDD §9.
+/// Layout: top=jour/nuit + HP/XP + score, bottom-center=weapon slots, bottom-left=inventaire.
+///
+/// Scaling : tous les éléments sont enfants d'un Control racine dont le Scale est ajusté.
+/// Modifier HudScale (export, défaut 1.5) pour agrandir/réduire le HUD uniformément.
+/// Appeler SetHudScale(float) au runtime pour changer dynamiquement.
 /// </summary>
 public partial class HUD : CanvasLayer
 {
-    private ProgressBar _hpBar;
+    // --- Scale system ---
+    /// <summary>
+    /// Facteur de zoom du HUD entier. 1.0 = taille native (petit), 1.5 = défaut, 2.0 = grand.
+    /// Modifiable depuis l'inspecteur Godot ou via SetHudScale() au runtime.
+    /// </summary>
+    [Export(PropertyHint.Range, "0.75,3.0,0.25")]
+    public float HudScale
+    {
+        get => _hudScale;
+        set
+        {
+            _hudScale = Mathf.Clamp(value, 0.75f, 3f);
+            if (_hudRoot != null)
+                ApplyScale();
+        }
+    }
+    private float _hudScale = 1.5f;
+    private Control _hudRoot;
+
+    // --- Top-left vitals ---
+    private TextureRect _heartIcon;
+    private Control _hpBarContainer;
+    private ColorRect _hpBarFill;
+    private ColorRect _hpBarBg;
     private Label _hpValueLabel;
-    private ProgressBar _xpBar;
+    private TextureRect _levelIcon;
     private Label _levelLabel;
-    private Label _scoreLabel;
-    private Label _fpsLabel;
-    private ProgressBar _dayNightBar;
+    private Control _xpBarContainer;
+    private ColorRect _xpBarFill;
+    private ColorRect _xpBarBg;
+
+    // --- Top-center day/night ---
+    private Control _dayNightContainer;
+    private ColorRect _dayNightBg;
+    private ColorRect _dayNightFill;
+    private TextureRect _phaseIcon;
     private Label _phaseLabel;
     private Label _nightLabel;
+
+    // --- Top-right score ---
+    private TextureRect _scoreIcon;
+    private Label _scoreLabel;
+    private Label _fpsLabel;
+
+    // --- Bottom-center: weapon quick bar ---
+    private HBoxContainer _weaponBar;
+    private readonly NinePatchRect[] _weaponSlotFrames = new NinePatchRect[Player.MaxWeaponSlots];
+    private readonly TextureRect[] _weaponSlotIcons = new TextureRect[Player.MaxWeaponSlots];
+    private readonly Label[] _weaponSlotLabels = new Label[Player.MaxWeaponSlots];
+    private readonly Label[] _weaponSlotLevels = new Label[Player.MaxWeaponSlots];
+
+    // --- Bottom-center: passive souvenir bar ---
+    private HBoxContainer _passiveBar;
+    private readonly NinePatchRect[] _passiveSlotFrames = new NinePatchRect[Player.MaxPassiveSlots];
+    private readonly Label[] _passiveSlotLabels = new Label[Player.MaxPassiveSlots];
+
+    // --- Bottom-left: inventory ---
+    private TextureRect _woodIcon;
+    private Label _woodLabel;
+    private TextureRect _stoneIcon;
+    private Label _stoneLabel;
+    private TextureRect _metalIcon;
+    private Label _metalLabel;
+    private Control _capacityBarContainer;
+    private ColorRect _capacityBarFill;
+    private ColorRect _capacityBarBg;
+    private Label _capacityLabel;
+
+    // --- Dawn summary ---
     private PanelContainer _dawnSummary;
     private Label _dawnSummaryLabel;
-    private EventBus _eventBus;
-    private PlayerProgression _progression;
-    private DayNightCycle _dayNightCycle;
-    private Player _compassPlayer;
-    private Node2D _mapCenterAnchor;
 
-    // Resource display
-    private Label _woodLabel;
-    private Label _stoneLabel;
-    private Label _metalLabel;
-    private Label _capacityLabel;
-    private ProgressBar _capacityBar;
-
-    // Weapon slots display
-    private VBoxContainer _weaponSlotsContainer;
-    private readonly Label[] _weaponSlotLabels = new Label[Player.MaxWeaponSlots];
-    private readonly PanelContainer[] _weaponSlotPanels = new PanelContainer[Player.MaxWeaponSlots];
-
-    // Passive souvenir display
-    private readonly Label[] _passiveSlotLabels = new Label[Player.MaxPassiveSlots];
-    private readonly PanelContainer[] _passiveSlotPanels = new PanelContainer[Player.MaxPassiveSlots];
-
-    // Minimap
+    // --- Minimap ---
     private Minimap _minimap;
 
-    // Contextual hint
+    // --- Interact hint ---
     private Label _interactHint;
+
+    // --- Compass ---
     private PanelContainer _compassPanel;
     private Node2D _compassArrowRoot;
     private Polygon2D _compassArrowHead;
     private Polygon2D _compassArrowTail;
     private Label _compassDistanceLabel;
+
+    // --- State ---
+    private EventBus _eventBus;
+    private PlayerProgression _progression;
+    private DayNightCycle _dayNightCycle;
+    private Player _compassPlayer;
+    private Node2D _mapCenterAnchor;
     private float _fpsUpdateTimer;
     private float _interactHintUpdateTimer;
+    private float _currentHpRatio = 1f;
 
     private const float FpsUpdateInterval = 0.25f;
     private const float InteractHintUpdateInterval = 0.15f;
 
-    private static readonly Color DayBarColor = new(0.9f, 0.75f, 0.2f);
-    private static readonly Color DuskBarColor = new(0.55f, 0.35f, 0.7f);
-    private static readonly Color NightBarColor = new(0.5f, 0.15f, 0.15f);
-    private static readonly Color DawnBarColor = new(0.85f, 0.85f, 0.9f);
-    private static readonly Color HpHighColor = Colors.White;
-    private static readonly Color HpMediumColor = new(1f, 0.7f, 0.2f);
-    private static readonly Color HpLowColor = new(1f, 0.2f, 0.2f);
+    // Palette from charte graphique
+    private static readonly Color PalBlackDeep = new(0x1A / 255f, 0x1A / 255f, 0x2E / 255f);
+    private static readonly Color PalBlackBlue = new(0x16 / 255f, 0x21 / 255f, 0x3E / 255f);
+    private static readonly Color PalGrayDark = new(0x3A / 255f, 0x35 / 255f, 0x35 / 255f);
+    private static readonly Color PalGrayWarm = new(0x6B / 255f, 0x61 / 255f, 0x61 / 255f);
+    private static readonly Color PalGrayLight = new(0x9E / 255f, 0x94 / 255f, 0x94 / 255f);
+    private static readonly Color PalWhiteOff = new(0xE8 / 255f, 0xE0 / 255f, 0xD4 / 255f);
+    private static readonly Color PalGoldFoyer = new(0xD4 / 255f, 0xA8 / 255f, 0x43 / 255f);
+    private static readonly Color PalOrangeFlame = new(0xE0 / 255f, 0x7B / 255f, 0x39 / 255f);
+    private static readonly Color PalRedBlood = new(0xC4 / 255f, 0x43 / 255f, 0x2B / 255f);
+    private static readonly Color PalCyanEssence = new(0x5E / 255f, 0xC4 / 255f, 0xC4 / 255f);
+    private static readonly Color PalVioletMist = new(0x4A / 255f, 0x30 / 255f, 0x66 / 255f);
+
+    // Day/night bar colors
+    private static readonly Color DayBarColor = PalGoldFoyer;
+    private static readonly Color DuskBarColor = PalVioletMist;
+    private static readonly Color NightBarColor = PalRedBlood;
+    private static readonly Color DawnBarColor = PalWhiteOff;
+
+    // Tier colors
+    private static readonly Color TierT1 = PalGrayLight;
+    private static readonly Color TierT2 = new(0.4f, 0.7f, 1f);
+    private static readonly Color TierT3 = PalOrangeFlame;
+    private static readonly Color TierT4 = new(0.6f, 0.4f, 1f);
+    private static readonly Color TierT5 = PalGoldFoyer;
 
     public override void _Ready()
     {
-        _hpBar = GetNode<ProgressBar>("HpBar");
-        _hpValueLabel = GetNode<Label>("HpBar/HpValueLabel");
-        _xpBar = GetNode<ProgressBar>("XpBar");
-        _levelLabel = GetNode<Label>("LevelLabel");
-        _scoreLabel = GetNode<Label>("ScoreLabel");
-        _fpsLabel = GetNode<Label>("FpsLabel");
-        _dayNightBar = GetNode<ProgressBar>("DayNightBar");
-        _phaseLabel = GetNode<Label>("PhaseLabel");
-        _nightLabel = GetNode<Label>("NightLabel");
-
         _eventBus = GetNode<EventBus>("/root/EventBus");
         _eventBus.PlayerDamaged += OnPlayerDamaged;
         _eventBus.XpGained += OnXpChanged;
@@ -93,32 +156,51 @@ public partial class HUD : CanvasLayer
         _eventBus.WeaponUpgraded += OnWeaponUpgraded;
         _eventBus.PassiveSouvenirSlotsChanged += OnPassiveSlotsChanged;
 
-        _hpBar.MinValue = 0;
-        _hpBar.MaxValue = 100;
-        _hpBar.Value = 100;
-        UpdateHpDisplay(100f, 100f);
+        // Root container : tous les éléments du HUD sont enfants de ce Control.
+        // On le dimensionne à viewport/scale et on applique Scale dessus,
+        // ce qui fait que les anchors (0-1) correspondent aux bords réels de l'écran.
+        _hudRoot = new Control();
+        _hudRoot.Name = "HudRoot";
+        _hudRoot.MouseFilter = Control.MouseFilterEnum.Ignore;
+        AddChild(_hudRoot);
+        ApplyScale();
+        GetViewport().SizeChanged += OnViewportResized;
 
-        _xpBar.MinValue = 0;
-        _xpBar.MaxValue = 1;
-        _xpBar.Value = 0;
-
-        _dayNightBar.MinValue = 0;
-        _dayNightBar.MaxValue = 1;
-        _dayNightBar.Value = 0;
-
-        _levelLabel.Text = "Niv. 1";
-        _scoreLabel.Text = "0";
-        _phaseLabel.Text = "Jour";
-        _nightLabel.Text = "";
-
+        BuildTopBar();
+        BuildVitals();
+        BuildScoreArea();
+        BuildWeaponBar();
+        BuildPassiveBar();
+        BuildInventoryPanel();
         CreateDawnSummaryPanel();
-        CreateResourcePanel();
-        CreateEquipmentPanel();
         CreateMinimap();
         CreateInteractHint();
         CreateCompassWidget();
         ResolveCompassTargets();
-        UpdateBarColor("Day");
+    }
+
+    /// <summary>Change la taille du HUD au runtime. Valeur recommandée : 1.0–2.5.</summary>
+    public void SetHudScale(float scale)
+    {
+        HudScale = scale;
+    }
+
+    private void ApplyScale()
+    {
+        Vector2 viewport = GetViewport().GetVisibleRect().Size;
+        if (viewport.X < 1 || viewport.Y < 1)
+            viewport = new Vector2(960, 540);
+
+        _hudRoot.Position = Vector2.Zero;
+        _hudRoot.Size = viewport / _hudScale;
+        _hudRoot.Scale = new Vector2(_hudScale, _hudScale);
+        _hudRoot.PivotOffset = Vector2.Zero;
+    }
+
+    private void OnViewportResized()
+    {
+        if (_hudRoot != null)
+            ApplyScale();
     }
 
     public override void _Process(double delta)
@@ -127,11 +209,11 @@ public partial class HUD : CanvasLayer
         if (_fpsUpdateTimer >= FpsUpdateInterval)
         {
             _fpsUpdateTimer = 0f;
-            _fpsLabel.Text = $"FPS : {Engine.GetFramesPerSecond()}";
+            _fpsLabel.Text = $"{Engine.GetFramesPerSecond()}";
         }
 
         if (_dayNightCycle != null)
-            _dayNightBar.Value = _dayNightCycle.PhaseProgress;
+            UpdateDayNightBar(_dayNightCycle.PhaseProgress);
 
         UpdateCompass();
 
@@ -158,599 +240,445 @@ public partial class HUD : CanvasLayer
             _eventBus.WeaponUpgraded -= OnWeaponUpgraded;
             _eventBus.PassiveSouvenirSlotsChanged -= OnPassiveSlotsChanged;
         }
+
+        if (GetViewport() != null)
+            GetViewport().SizeChanged -= OnViewportResized;
     }
 
-    public void SetProgression(PlayerProgression progression)
-    {
-        _progression = progression;
-    }
-
-    public void SetDayNightCycle(DayNightCycle cycle)
-    {
-        _dayNightCycle = cycle;
-    }
-
+    public void SetProgression(PlayerProgression progression) => _progression = progression;
+    public void SetDayNightCycle(DayNightCycle cycle) => _dayNightCycle = cycle;
     public void SetCompassTargets(Player player, Node2D mapCenterAnchor)
     {
         _compassPlayer = player;
         _mapCenterAnchor = mapCenterAnchor;
     }
 
-    // --- Resource Panel ---
+    // ==================== BUILD UI ====================
 
-    private void CreateResourcePanel()
-    {
-        PanelContainer panel = new();
-        panel.AnchorLeft = 0f;
-        panel.AnchorRight = 0f;
-        panel.AnchorTop = 1f;
-        panel.AnchorBottom = 1f;
-        panel.OffsetLeft = 10;
-        panel.OffsetRight = 180;
-        panel.OffsetTop = -140;
-        panel.OffsetBottom = -10;
-
-        StyleBoxFlat style = new();
-        style.BgColor = new Color(0f, 0f, 0f, 0.6f);
-        style.CornerRadiusBottomLeft = 6;
-        style.CornerRadiusBottomRight = 6;
-        style.CornerRadiusTopLeft = 6;
-        style.CornerRadiusTopRight = 6;
-        style.ContentMarginLeft = 10;
-        style.ContentMarginRight = 10;
-        style.ContentMarginTop = 6;
-        style.ContentMarginBottom = 6;
-        panel.AddThemeStyleboxOverride("panel", style);
-
-        VBoxContainer vbox = new();
-        vbox.AddThemeConstantOverride("separation", 3);
-        panel.AddChild(vbox);
-
-        // Title
-        Label titleLabel = new();
-        titleLabel.Text = "Inventaire";
-        titleLabel.AddThemeFontSizeOverride("font_size", 12);
-        titleLabel.AddThemeColorOverride("font_color", new Color(0.7f, 0.7f, 0.7f));
-        titleLabel.HorizontalAlignment = HorizontalAlignment.Center;
-        vbox.AddChild(titleLabel);
-
-        // Resource rows
-        _woodLabel = CreateResourceRow("Bois", new Color(0.55f, 0.4f, 0.08f));
-        _stoneLabel = CreateResourceRow("Pierre", new Color(0.66f, 0.6f, 0.47f));
-        _metalLabel = CreateResourceRow("Métal", new Color(0.44f, 0.53f, 0.63f));
-
-        vbox.AddChild(_woodLabel);
-        vbox.AddChild(_stoneLabel);
-        vbox.AddChild(_metalLabel);
-
-        // Capacity bar
-        _capacityBar = new ProgressBar();
-        _capacityBar.CustomMinimumSize = new Vector2(0, 6);
-        _capacityBar.ShowPercentage = false;
-        _capacityBar.MinValue = 0;
-        _capacityBar.MaxValue = Base.Inventory.MaxCapacity;
-        _capacityBar.Value = 0;
-
-        StyleBoxFlat fillStyle = new();
-        fillStyle.BgColor = new Color(0.6f, 0.6f, 0.6f, 0.8f);
-        fillStyle.CornerRadiusBottomLeft = 2;
-        fillStyle.CornerRadiusBottomRight = 2;
-        fillStyle.CornerRadiusTopLeft = 2;
-        fillStyle.CornerRadiusTopRight = 2;
-        _capacityBar.AddThemeStyleboxOverride("fill", fillStyle);
-
-        StyleBoxFlat bgStyle = new();
-        bgStyle.BgColor = new Color(0.15f, 0.15f, 0.15f, 0.6f);
-        bgStyle.CornerRadiusBottomLeft = 2;
-        bgStyle.CornerRadiusBottomRight = 2;
-        bgStyle.CornerRadiusTopLeft = 2;
-        bgStyle.CornerRadiusTopRight = 2;
-        _capacityBar.AddThemeStyleboxOverride("background", bgStyle);
-        vbox.AddChild(_capacityBar);
-
-        _capacityLabel = new Label();
-        _capacityLabel.Text = $"0 / {Base.Inventory.MaxCapacity}";
-        _capacityLabel.AddThemeFontSizeOverride("font_size", 11);
-        _capacityLabel.AddThemeColorOverride("font_color", new Color(0.5f, 0.5f, 0.5f));
-        _capacityLabel.HorizontalAlignment = HorizontalAlignment.Center;
-        vbox.AddChild(_capacityLabel);
-
-        AddChild(panel);
-    }
-
-    private Label CreateResourceRow(string name, Color color)
+    private static Label MakeLabel(string text, int size, Color color, bool shadow = true)
     {
         Label label = new();
-        label.Text = $"{name}  0";
+        label.Text = text;
+        label.AddThemeFontSizeOverride("font_size", size);
         label.AddThemeColorOverride("font_color", color);
-        label.AddThemeFontSizeOverride("font_size", 14);
+        if (shadow)
+        {
+            label.AddThemeColorOverride("font_shadow_color", new Color(0f, 0f, 0f, 0.85f));
+            label.AddThemeConstantOverride("shadow_offset_x", 1);
+            label.AddThemeConstantOverride("shadow_offset_y", 1);
+        }
         return label;
     }
 
-    private void OnInventoryChanged(string resourceId, int newAmount)
+    private static TextureRect MakeIcon(string path, int size = 16)
     {
-        switch (resourceId)
+        TextureRect icon = new();
+        icon.CustomMinimumSize = new Vector2(size, size);
+        icon.ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize;
+        icon.StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered;
+        icon.TextureFilter = CanvasItem.TextureFilterEnum.Nearest;
+        if (ResourceLoader.Exists(path))
+            icon.Texture = GD.Load<Texture2D>(path);
+        return icon;
+    }
+
+    private static ColorRect MakeColorBar(Color color, Vector2 size)
+    {
+        ColorRect rect = new();
+        rect.Color = color;
+        rect.CustomMinimumSize = size;
+        rect.Size = size;
+        return rect;
+    }
+
+    // --- Top bar: day/night progress ---
+    private void BuildTopBar()
+    {
+        _dayNightContainer = new Control();
+        _dayNightContainer.AnchorLeft = 0.15f;
+        _dayNightContainer.AnchorRight = 0.85f;
+        _dayNightContainer.AnchorTop = 0f;
+        _dayNightContainer.OffsetTop = 4;
+        _dayNightContainer.OffsetBottom = 14;
+        _hudRoot.AddChild(_dayNightContainer);
+
+        _dayNightBg = MakeColorBar(PalBlackDeep with { A = 0.7f }, new Vector2(0, 10));
+        _dayNightBg.AnchorRight = 1f;
+        _dayNightBg.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
+        _dayNightContainer.AddChild(_dayNightBg);
+
+        _dayNightFill = MakeColorBar(DayBarColor, new Vector2(0, 10));
+        _dayNightFill.AnchorTop = 0f;
+        _dayNightFill.AnchorBottom = 1f;
+        _dayNightFill.AnchorLeft = 0f;
+        _dayNightFill.AnchorRight = 0f;
+        _dayNightFill.OffsetLeft = 1;
+        _dayNightFill.OffsetTop = 1;
+        _dayNightFill.OffsetBottom = -1;
+        _dayNightContainer.AddChild(_dayNightFill);
+
+        // Phase icon (left of bar)
+        _phaseIcon = MakeIcon("res://assets/ui/hud/hud_icon_sun.png");
+        _phaseIcon.AnchorLeft = 0.15f;
+        _phaseIcon.AnchorTop = 0f;
+        _phaseIcon.OffsetLeft = -22;
+        _phaseIcon.OffsetTop = 1;
+        _phaseIcon.OffsetRight = _phaseIcon.OffsetLeft + 16;
+        _phaseIcon.OffsetBottom = _phaseIcon.OffsetTop + 16;
+        _hudRoot.AddChild(_phaseIcon);
+
+        // Phase label centered below bar
+        _phaseLabel = MakeLabel("Jour", 10, PalGoldFoyer);
+        _phaseLabel.AnchorLeft = 0.5f;
+        _phaseLabel.AnchorRight = 0.5f;
+        _phaseLabel.OffsetLeft = -30;
+        _phaseLabel.OffsetRight = 30;
+        _phaseLabel.OffsetTop = 16;
+        _phaseLabel.OffsetBottom = 28;
+        _phaseLabel.HorizontalAlignment = HorizontalAlignment.Center;
+        _hudRoot.AddChild(_phaseLabel);
+
+        // Night label (right of bar)
+        _nightLabel = MakeLabel("", 10, PalGrayLight);
+        _nightLabel.AnchorLeft = 0.85f;
+        _nightLabel.OffsetLeft = 4;
+        _nightLabel.OffsetRight = 64;
+        _nightLabel.OffsetTop = 2;
+        _nightLabel.OffsetBottom = 16;
+        _hudRoot.AddChild(_nightLabel);
+    }
+
+    private void UpdateDayNightBar(float progress)
+    {
+        float barWidth = _dayNightContainer.Size.X - 2;
+        _dayNightFill.OffsetRight = _dayNightFill.OffsetLeft + barWidth * Mathf.Clamp(progress, 0f, 1f);
+    }
+
+    // --- Top-left vitals: heart + HP bar + level star + XP ---
+    private void BuildVitals()
+    {
+        float baseY = 22;
+
+        // Heart icon
+        _heartIcon = MakeIcon("res://assets/ui/hud/hud_icon_heart.png");
+        _heartIcon.OffsetLeft = 6;
+        _heartIcon.OffsetTop = baseY;
+        _heartIcon.OffsetRight = 22;
+        _heartIcon.OffsetBottom = baseY + 16;
+        _hudRoot.AddChild(_heartIcon);
+
+        // HP bar (custom drawn)
+        float hpBarX = 24;
+        float hpBarW = 100;
+        float hpBarH = 10;
+        _hpBarContainer = new Control();
+        _hpBarContainer.OffsetLeft = hpBarX;
+        _hpBarContainer.OffsetTop = baseY + 3;
+        _hpBarContainer.OffsetRight = hpBarX + hpBarW;
+        _hpBarContainer.OffsetBottom = baseY + 3 + hpBarH;
+        _hudRoot.AddChild(_hpBarContainer);
+
+        _hpBarBg = MakeColorBar(PalBlackDeep with { A = 0.8f }, new Vector2(hpBarW, hpBarH));
+        _hpBarContainer.AddChild(_hpBarBg);
+
+        _hpBarFill = MakeColorBar(PalRedBlood, new Vector2(hpBarW - 2, hpBarH - 2));
+        _hpBarFill.Position = new Vector2(1, 1);
+        _hpBarContainer.AddChild(_hpBarFill);
+
+        // HP border (1px outline)
+        ColorRect hpBorderTop = MakeColorBar(PalGrayWarm with { A = 0.6f }, new Vector2(hpBarW, 1));
+        _hpBarContainer.AddChild(hpBorderTop);
+        ColorRect hpBorderBot = MakeColorBar(PalGrayWarm with { A = 0.6f }, new Vector2(hpBarW, 1));
+        hpBorderBot.Position = new Vector2(0, hpBarH - 1);
+        _hpBarContainer.AddChild(hpBorderBot);
+        ColorRect hpBorderLeft = MakeColorBar(PalGrayWarm with { A = 0.6f }, new Vector2(1, hpBarH));
+        _hpBarContainer.AddChild(hpBorderLeft);
+        ColorRect hpBorderRight = MakeColorBar(PalGrayWarm with { A = 0.6f }, new Vector2(1, hpBarH));
+        hpBorderRight.Position = new Vector2(hpBarW - 1, 0);
+        _hpBarContainer.AddChild(hpBorderRight);
+
+        _hpValueLabel = MakeLabel("100/100", 8, PalWhiteOff);
+        _hpValueLabel.Position = new Vector2(2, -1);
+        _hpValueLabel.Size = new Vector2(hpBarW - 4, hpBarH);
+        _hpValueLabel.HorizontalAlignment = HorizontalAlignment.Center;
+        _hpValueLabel.VerticalAlignment = VerticalAlignment.Center;
+        _hpBarContainer.AddChild(_hpValueLabel);
+
+        // Level row
+        float levelY = baseY + 16;
+        _levelIcon = MakeIcon("res://assets/ui/hud/hud_icon_level.png");
+        _levelIcon.OffsetLeft = 6;
+        _levelIcon.OffsetTop = levelY;
+        _levelIcon.OffsetRight = 22;
+        _levelIcon.OffsetBottom = levelY + 16;
+        _hudRoot.AddChild(_levelIcon);
+
+        _levelLabel = MakeLabel("1", 10, PalCyanEssence);
+        _levelLabel.OffsetLeft = 24;
+        _levelLabel.OffsetTop = levelY + 1;
+        _levelLabel.OffsetRight = 44;
+        _levelLabel.OffsetBottom = levelY + 15;
+        _hudRoot.AddChild(_levelLabel);
+
+        // XP bar
+        float xpBarW = 80;
+        float xpBarH = 6;
+        _xpBarContainer = new Control();
+        _xpBarContainer.OffsetLeft = 46;
+        _xpBarContainer.OffsetTop = levelY + 5;
+        _xpBarContainer.OffsetRight = 46 + xpBarW;
+        _xpBarContainer.OffsetBottom = levelY + 5 + xpBarH;
+        _hudRoot.AddChild(_xpBarContainer);
+
+        _xpBarBg = MakeColorBar(PalBlackDeep with { A = 0.8f }, new Vector2(xpBarW, xpBarH));
+        _xpBarContainer.AddChild(_xpBarBg);
+
+        _xpBarFill = MakeColorBar(PalCyanEssence, new Vector2(0, xpBarH - 2));
+        _xpBarFill.Position = new Vector2(1, 1);
+        _xpBarContainer.AddChild(_xpBarFill);
+
+        // XP border
+        ColorRect xpBorder = MakeColorBar(PalGrayDark with { A = 0.6f }, new Vector2(xpBarW, 1));
+        _xpBarContainer.AddChild(xpBorder);
+        ColorRect xpBorderBot = MakeColorBar(PalGrayDark with { A = 0.6f }, new Vector2(xpBarW, 1));
+        xpBorderBot.Position = new Vector2(0, xpBarH - 1);
+        _xpBarContainer.AddChild(xpBorderBot);
+
+        // FPS (debug, small, bottom-left)
+        _fpsLabel = MakeLabel("0", 8, PalGrayWarm with { A = 0.5f });
+        _fpsLabel.OffsetLeft = 6;
+        _fpsLabel.OffsetTop = levelY + 18;
+        _fpsLabel.OffsetRight = 40;
+        _fpsLabel.OffsetBottom = levelY + 30;
+        _hudRoot.AddChild(_fpsLabel);
+    }
+
+    // --- Top-right: score ---
+    private void BuildScoreArea()
+    {
+        _scoreIcon = MakeIcon("res://assets/ui/hud/hud_icon_score.png");
+        _scoreIcon.AnchorLeft = 1f;
+        _scoreIcon.AnchorRight = 1f;
+        _scoreIcon.OffsetLeft = -70;
+        _scoreIcon.OffsetTop = 20;
+        _scoreIcon.OffsetRight = -54;
+        _scoreIcon.OffsetBottom = 36;
+        _hudRoot.AddChild(_scoreIcon);
+
+        _scoreLabel = MakeLabel("0", 14, PalGoldFoyer);
+        _scoreLabel.AnchorLeft = 1f;
+        _scoreLabel.AnchorRight = 1f;
+        _scoreLabel.OffsetLeft = -52;
+        _scoreLabel.OffsetTop = 18;
+        _scoreLabel.OffsetRight = -8;
+        _scoreLabel.OffsetBottom = 36;
+        _scoreLabel.HorizontalAlignment = HorizontalAlignment.Right;
+        _hudRoot.AddChild(_scoreLabel);
+    }
+
+    // --- Bottom-center: weapon quick bar ---
+    private void BuildWeaponBar()
+    {
+        _weaponBar = new HBoxContainer();
+        _weaponBar.AnchorLeft = 0.5f;
+        _weaponBar.AnchorRight = 0.5f;
+        _weaponBar.AnchorTop = 1f;
+        _weaponBar.AnchorBottom = 1f;
+
+        float totalWidth = Player.MaxWeaponSlots * 42;
+        _weaponBar.OffsetLeft = -totalWidth / 2;
+        _weaponBar.OffsetRight = totalWidth / 2;
+        _weaponBar.OffsetTop = -64;
+        _weaponBar.OffsetBottom = -22;
+        _weaponBar.AddThemeConstantOverride("separation", 6);
+        _weaponBar.Alignment = BoxContainer.AlignmentMode.Center;
+        _hudRoot.AddChild(_weaponBar);
+
+        Texture2D slotEmptyTex = GD.Load<Texture2D>("res://assets/ui/hud/hud_slot_empty.png");
+        Texture2D slotFilledTex = GD.Load<Texture2D>("res://assets/ui/hud/hud_slot_filled.png");
+
+        for (int i = 0; i < Player.MaxWeaponSlots; i++)
         {
-            case "wood":
-                _woodLabel.Text = $"Bois  {newAmount}";
-                break;
-            case "stone":
-                _stoneLabel.Text = $"Pierre  {newAmount}";
-                break;
-            case "metal":
-                _metalLabel.Text = $"Métal  {newAmount}";
-                break;
+            Control slotRoot = new();
+            slotRoot.CustomMinimumSize = new Vector2(40, 42);
+
+            // Slot frame (NinePatch)
+            NinePatchRect frame = new();
+            frame.Texture = slotEmptyTex;
+            frame.PatchMarginLeft = 4;
+            frame.PatchMarginRight = 4;
+            frame.PatchMarginTop = 4;
+            frame.PatchMarginBottom = 4;
+            frame.TextureFilter = CanvasItem.TextureFilterEnum.Nearest;
+            frame.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
+            slotRoot.AddChild(frame);
+
+            // Weapon icon (centered in slot)
+            TextureRect weaponIcon = new();
+            weaponIcon.CustomMinimumSize = new Vector2(32, 32);
+            weaponIcon.ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize;
+            weaponIcon.StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered;
+            weaponIcon.TextureFilter = CanvasItem.TextureFilterEnum.Nearest;
+            weaponIcon.Position = new Vector2(4, 2);
+            weaponIcon.Size = new Vector2(32, 32);
+            weaponIcon.Visible = false;
+            slotRoot.AddChild(weaponIcon);
+
+            // Level indicator (small, bottom-right corner)
+            Label lvlLabel = MakeLabel("", 7, PalGoldFoyer);
+            lvlLabel.Position = new Vector2(26, 30);
+            lvlLabel.Size = new Vector2(14, 12);
+            lvlLabel.HorizontalAlignment = HorizontalAlignment.Right;
+            slotRoot.AddChild(lvlLabel);
+
+            _weaponSlotFrames[i] = frame;
+            _weaponSlotIcons[i] = weaponIcon;
+            _weaponSlotLevels[i] = lvlLabel;
+            _weaponBar.AddChild(slotRoot);
         }
-
-        UpdateCapacityDisplay();
     }
 
-    private void UpdateCapacityDisplay()
+    // --- Bottom-center: passive souvenir bar (below weapons) ---
+    private void BuildPassiveBar()
     {
-        Node playerNode = GetTree().GetFirstNodeInGroup("player");
-        if (playerNode == null)
-            return;
+        _passiveBar = new HBoxContainer();
+        _passiveBar.AnchorLeft = 0.5f;
+        _passiveBar.AnchorRight = 0.5f;
+        _passiveBar.AnchorTop = 1f;
+        _passiveBar.AnchorBottom = 1f;
 
-        Base.Inventory inventory = playerNode.GetNodeOrNull<Base.Inventory>("Inventory");
-        if (inventory == null)
-            return;
+        float totalWidth = Player.MaxPassiveSlots * 26;
+        _passiveBar.OffsetLeft = -totalWidth / 2;
+        _passiveBar.OffsetRight = totalWidth / 2;
+        _passiveBar.OffsetTop = -20;
+        _passiveBar.OffsetBottom = -2;
+        _passiveBar.AddThemeConstantOverride("separation", 4);
+        _passiveBar.Alignment = BoxContainer.AlignmentMode.Center;
+        _hudRoot.AddChild(_passiveBar);
 
-        int total = inventory.TotalCount;
-        int max = Base.Inventory.MaxCapacity;
-        _capacityBar.Value = total;
-        _capacityLabel.Text = $"{total} / {max}";
+        Texture2D passiveEmptyTex = GD.Load<Texture2D>("res://assets/ui/hud/hud_slot_passive.png");
 
-        Color barColor = total >= max
-            ? new Color(0.8f, 0.3f, 0.3f, 0.8f)
-            : total >= max * 0.8f
-                ? new Color(0.8f, 0.6f, 0.2f, 0.8f)
-                : new Color(0.6f, 0.6f, 0.6f, 0.8f);
+        for (int i = 0; i < Player.MaxPassiveSlots; i++)
+        {
+            Control slotRoot = new();
+            slotRoot.CustomMinimumSize = new Vector2(22, 22);
 
-        StyleBoxFlat fillStyle = (StyleBoxFlat)_capacityBar.GetThemeStylebox("fill");
-        fillStyle.BgColor = barColor;
+            NinePatchRect frame = new();
+            frame.Texture = passiveEmptyTex;
+            frame.PatchMarginLeft = 3;
+            frame.PatchMarginRight = 3;
+            frame.PatchMarginTop = 3;
+            frame.PatchMarginBottom = 3;
+            frame.TextureFilter = CanvasItem.TextureFilterEnum.Nearest;
+            frame.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
+            slotRoot.AddChild(frame);
+
+            Label nameLabel = MakeLabel("", 6, PalGrayWarm);
+            nameLabel.Position = new Vector2(0, 18);
+            nameLabel.Size = new Vector2(22, 10);
+            nameLabel.HorizontalAlignment = HorizontalAlignment.Center;
+            nameLabel.ClipText = true;
+            slotRoot.AddChild(nameLabel);
+
+            _passiveSlotFrames[i] = frame;
+            _passiveSlotLabels[i] = nameLabel;
+            _passiveBar.AddChild(slotRoot);
+        }
     }
 
-    // --- Equipment Panel (Armes + Souvenirs) ---
-
-    private void CreateEquipmentPanel()
+    // --- Bottom-left: inventory ---
+    private void BuildInventoryPanel()
     {
-        PanelContainer panel = new();
-        panel.AnchorLeft = 1f;
-        panel.AnchorRight = 1f;
+        Control panel = new();
         panel.AnchorTop = 1f;
         panel.AnchorBottom = 1f;
-        panel.OffsetLeft = -180;
-        panel.OffsetRight = -10;
-        panel.OffsetTop = -280;
-        panel.OffsetBottom = -10;
+        panel.OffsetLeft = 6;
+        panel.OffsetRight = 110;
+        panel.OffsetTop = -70;
+        panel.OffsetBottom = -4;
+        _hudRoot.AddChild(panel);
 
-        StyleBoxFlat style = new();
-        style.BgColor = new Color(0f, 0f, 0f, 0.6f);
-        style.CornerRadiusBottomLeft = 6;
-        style.CornerRadiusBottomRight = 6;
-        style.CornerRadiusTopLeft = 6;
-        style.CornerRadiusTopRight = 6;
-        style.ContentMarginLeft = 10;
-        style.ContentMarginRight = 10;
-        style.ContentMarginTop = 6;
-        style.ContentMarginBottom = 6;
-        panel.AddThemeStyleboxOverride("panel", style);
+        // Semi-transparent background
+        ColorRect bg = MakeColorBar(PalBlackDeep with { A = 0.55f }, new Vector2(104, 66));
+        panel.AddChild(bg);
 
-        VBoxContainer vbox = new();
-        vbox.AddThemeConstantOverride("separation", 3);
-        panel.AddChild(vbox);
+        // Border
+        ColorRect borderTop = MakeColorBar(PalGrayDark with { A = 0.5f }, new Vector2(104, 1));
+        panel.AddChild(borderTop);
+        ColorRect borderLeft = MakeColorBar(PalGrayDark with { A = 0.5f }, new Vector2(1, 66));
+        panel.AddChild(borderLeft);
+        ColorRect borderRight = MakeColorBar(PalGrayDark with { A = 0.5f }, new Vector2(1, 66));
+        borderRight.Position = new Vector2(103, 0);
+        panel.AddChild(borderRight);
+        ColorRect borderBot = MakeColorBar(PalGrayDark with { A = 0.5f }, new Vector2(104, 1));
+        borderBot.Position = new Vector2(0, 65);
+        panel.AddChild(borderBot);
 
-        // --- Armes ---
-        Label weaponTitle = new();
-        weaponTitle.Text = "Armes";
-        weaponTitle.AddThemeFontSizeOverride("font_size", 12);
-        weaponTitle.AddThemeColorOverride("font_color", new Color(0.7f, 0.7f, 0.7f));
-        weaponTitle.HorizontalAlignment = HorizontalAlignment.Center;
-        vbox.AddChild(weaponTitle);
+        // Wood row
+        _woodIcon = MakeIcon("res://assets/ui/hud/hud_icon_wood.png");
+        _woodIcon.Position = new Vector2(4, 4);
+        _woodIcon.Size = new Vector2(16, 16);
+        panel.AddChild(_woodIcon);
 
-        _weaponSlotsContainer = vbox;
+        _woodLabel = MakeLabel("0", 10, new Color(0.75f, 0.58f, 0.2f));
+        _woodLabel.Position = new Vector2(22, 5);
+        _woodLabel.Size = new Vector2(36, 14);
+        panel.AddChild(_woodLabel);
 
-        for (int i = 0; i < Player.MaxWeaponSlots; i++)
-        {
-            PanelContainer slotPanel = new();
-            StyleBoxFlat slotStyle = new();
-            slotStyle.BgColor = new Color(0.12f, 0.12f, 0.12f, 0.5f);
-            slotStyle.CornerRadiusBottomLeft = 4;
-            slotStyle.CornerRadiusBottomRight = 4;
-            slotStyle.CornerRadiusTopLeft = 4;
-            slotStyle.CornerRadiusTopRight = 4;
-            slotStyle.ContentMarginLeft = 6;
-            slotStyle.ContentMarginRight = 6;
-            slotStyle.ContentMarginTop = 2;
-            slotStyle.ContentMarginBottom = 2;
-            slotPanel.AddThemeStyleboxOverride("panel", slotStyle);
+        // Stone row
+        _stoneIcon = MakeIcon("res://assets/ui/hud/hud_icon_stone.png");
+        _stoneIcon.Position = new Vector2(4, 22);
+        _stoneIcon.Size = new Vector2(16, 16);
+        panel.AddChild(_stoneIcon);
 
-            Label slotLabel = new();
-            slotLabel.Text = "— vide —";
-            slotLabel.AddThemeFontSizeOverride("font_size", 11);
-            slotLabel.AddThemeColorOverride("font_color", new Color(0.35f, 0.35f, 0.35f));
-            slotPanel.AddChild(slotLabel);
+        _stoneLabel = MakeLabel("0", 10, new Color(0.72f, 0.66f, 0.52f));
+        _stoneLabel.Position = new Vector2(22, 23);
+        _stoneLabel.Size = new Vector2(36, 14);
+        panel.AddChild(_stoneLabel);
 
-            _weaponSlotLabels[i] = slotLabel;
-            _weaponSlotPanels[i] = slotPanel;
-            vbox.AddChild(slotPanel);
-        }
+        // Metal row
+        _metalIcon = MakeIcon("res://assets/ui/hud/hud_icon_metal.png");
+        _metalIcon.Position = new Vector2(4, 40);
+        _metalIcon.Size = new Vector2(16, 16);
+        panel.AddChild(_metalIcon);
 
-        // --- Séparateur + Souvenirs ---
-        Label passiveTitle = new();
-        passiveTitle.Text = "Souvenirs";
-        passiveTitle.AddThemeFontSizeOverride("font_size", 12);
-        passiveTitle.AddThemeColorOverride("font_color", new Color(0.7f, 0.7f, 0.7f));
-        passiveTitle.HorizontalAlignment = HorizontalAlignment.Center;
-        vbox.AddChild(passiveTitle);
+        _metalLabel = MakeLabel("0", 10, new Color(0.56f, 0.67f, 0.75f));
+        _metalLabel.Position = new Vector2(22, 41);
+        _metalLabel.Size = new Vector2(36, 14);
+        panel.AddChild(_metalLabel);
 
-        for (int i = 0; i < Player.MaxPassiveSlots; i++)
-        {
-            PanelContainer slotPanel = new();
-            StyleBoxFlat slotStyle = new();
-            slotStyle.BgColor = new Color(0.12f, 0.12f, 0.12f, 0.5f);
-            slotStyle.CornerRadiusBottomLeft = 4;
-            slotStyle.CornerRadiusBottomRight = 4;
-            slotStyle.CornerRadiusTopLeft = 4;
-            slotStyle.CornerRadiusTopRight = 4;
-            slotStyle.ContentMarginLeft = 6;
-            slotStyle.ContentMarginRight = 6;
-            slotStyle.ContentMarginTop = 2;
-            slotStyle.ContentMarginBottom = 2;
-            slotPanel.AddThemeStyleboxOverride("panel", slotStyle);
+        // Capacity bar (right side of inventory)
+        float capX = 62;
+        float capW = 36;
 
-            Label slotLabel = new();
-            slotLabel.Text = "— vide —";
-            slotLabel.AddThemeFontSizeOverride("font_size", 11);
-            slotLabel.AddThemeColorOverride("font_color", new Color(0.35f, 0.35f, 0.35f));
-            slotPanel.AddChild(slotLabel);
+        _capacityBarContainer = new Control();
+        _capacityBarContainer.Position = new Vector2(capX, 8);
+        _capacityBarContainer.Size = new Vector2(capW, 48);
+        panel.AddChild(_capacityBarContainer);
 
-            _passiveSlotLabels[i] = slotLabel;
-            _passiveSlotPanels[i] = slotPanel;
-            vbox.AddChild(slotPanel);
-        }
+        // Vertical capacity bar (fills from bottom)
+        _capacityBarBg = MakeColorBar(PalBlackDeep with { A = 0.6f }, new Vector2(capW, 48));
+        _capacityBarContainer.AddChild(_capacityBarBg);
 
-        AddChild(panel);
+        _capacityBarFill = MakeColorBar(PalGrayWarm with { A = 0.5f }, new Vector2(capW - 2, 0));
+        _capacityBarFill.Position = new Vector2(1, 47);
+        _capacityBarContainer.AddChild(_capacityBarFill);
+
+        // Capacity border
+        ColorRect capBorder = MakeColorBar(PalGrayDark with { A = 0.4f }, new Vector2(capW, 1));
+        _capacityBarContainer.AddChild(capBorder);
+        ColorRect capBorderB = MakeColorBar(PalGrayDark with { A = 0.4f }, new Vector2(capW, 1));
+        capBorderB.Position = new Vector2(0, 47);
+        _capacityBarContainer.AddChild(capBorderB);
+
+        _capacityLabel = MakeLabel("0", 8, PalGrayLight);
+        _capacityLabel.Position = new Vector2(capX, 50);
+        _capacityLabel.Size = new Vector2(capW, 12);
+        _capacityLabel.HorizontalAlignment = HorizontalAlignment.Center;
+        panel.AddChild(_capacityLabel);
     }
 
-    private void OnWeaponInventoryChanged()
-    {
-        Node playerNode = GetTree().GetFirstNodeInGroup("player");
-        if (playerNode is not Player player)
-            return;
-
-        System.Collections.Generic.IReadOnlyList<WeaponInstance> weapons = player.WeaponSlots;
-
-        for (int i = 0; i < Player.MaxWeaponSlots; i++)
-        {
-            if (i < weapons.Count)
-            {
-                WeaponInstance weapon = weapons[i];
-                string typeIcon = weapon.Type?.ToLower() switch
-                {
-                    "melee" => "[M]",
-                    "ranged" => "[D]",
-                    _ => "[S]"
-                };
-                int fragLevel = player.GetWeaponFragmentLevel(weapon.Id);
-                string levelText = fragLevel > 1 ? $" Nv{fragLevel}" : "";
-                _weaponSlotLabels[i].Text = $"{typeIcon} {weapon.Name}{levelText}";
-
-                Color tierColor = weapon.Tier switch
-                {
-                    1 => new Color(0.7f, 0.7f, 0.7f),
-                    2 => new Color(0.4f, 0.7f, 1f),
-                    3 => new Color(0.9f, 0.6f, 0.1f),
-                    4 => new Color(0.6f, 0.4f, 1f),
-                    5 => new Color(1f, 0.85f, 0.2f),
-                    _ => new Color(0.7f, 0.7f, 0.7f)
-                };
-                _weaponSlotLabels[i].AddThemeColorOverride("font_color", tierColor);
-
-                StyleBoxFlat slotStyle = (StyleBoxFlat)_weaponSlotPanels[i].GetThemeStylebox("panel");
-                slotStyle.BgColor = new Color(tierColor.R * 0.15f, tierColor.G * 0.15f, tierColor.B * 0.15f, 0.6f);
-            }
-            else
-            {
-                _weaponSlotLabels[i].Text = "— vide —";
-                _weaponSlotLabels[i].AddThemeColorOverride("font_color", new Color(0.35f, 0.35f, 0.35f));
-
-                StyleBoxFlat slotStyle = (StyleBoxFlat)_weaponSlotPanels[i].GetThemeStylebox("panel");
-                slotStyle.BgColor = new Color(0.12f, 0.12f, 0.12f, 0.5f);
-            }
-        }
-    }
-
-    private void OnWeaponUpgraded(string _weaponId, int _slotIndex, string _stat, int _newLevel)
-    {
-        OnWeaponInventoryChanged();
-    }
-
-    private void OnPassiveSlotsChanged()
-    {
-        Node playerNode = GetTree().GetFirstNodeInGroup("player");
-        if (playerNode is not Player player)
-            return;
-
-        System.Collections.Generic.IReadOnlyList<ActivePassiveSouvenir> passives = player.PassiveSlots;
-
-        for (int i = 0; i < Player.MaxPassiveSlots; i++)
-        {
-            if (i < passives.Count)
-            {
-                ActivePassiveSouvenir passive = passives[i];
-                string levelText = passive.Level > 1 ? $" Nv{passive.Level}" : "";
-                _passiveSlotLabels[i].Text = $"{passive.Data.Name}{levelText}";
-
-                Color iconColor = passive.Data.IconColor;
-                _passiveSlotLabels[i].AddThemeColorOverride("font_color", iconColor);
-
-                StyleBoxFlat slotStyle = (StyleBoxFlat)_passiveSlotPanels[i].GetThemeStylebox("panel");
-                slotStyle.BgColor = new Color(iconColor.R * 0.15f, iconColor.G * 0.15f, iconColor.B * 0.15f, 0.6f);
-            }
-            else
-            {
-                _passiveSlotLabels[i].Text = "— vide —";
-                _passiveSlotLabels[i].AddThemeColorOverride("font_color", new Color(0.35f, 0.35f, 0.35f));
-
-                StyleBoxFlat slotStyle = (StyleBoxFlat)_passiveSlotPanels[i].GetThemeStylebox("panel");
-                slotStyle.BgColor = new Color(0.12f, 0.12f, 0.12f, 0.5f);
-            }
-        }
-    }
-
-    // --- Minimap ---
-
-    private void CreateMinimap()
-    {
-        _minimap = new Minimap();
-        _minimap.AnchorLeft = 1f;
-        _minimap.AnchorRight = 1f;
-        _minimap.AnchorTop = 0f;
-        _minimap.AnchorBottom = 0f;
-        _minimap.OffsetLeft = -156;
-        _minimap.OffsetRight = -10;
-        _minimap.OffsetTop = 10;
-        _minimap.OffsetBottom = 156;
-        AddChild(_minimap);
-    }
-
-    public void InitializeMinimap(WorldSetup worldSetup, FogOfWar fogOfWar)
-    {
-        if (_minimap != null && worldSetup?.Generator != null)
-            _minimap.Initialize(worldSetup.Generator, fogOfWar);
-    }
-
-    // --- Interact Hint ---
-
-    private void CreateInteractHint()
-    {
-        _interactHint = new Label();
-        _interactHint.AnchorLeft = 0.5f;
-        _interactHint.AnchorRight = 0.5f;
-        _interactHint.AnchorTop = 0.75f;
-        _interactHint.AnchorBottom = 0.75f;
-        _interactHint.OffsetLeft = -120;
-        _interactHint.OffsetRight = 120;
-        _interactHint.HorizontalAlignment = HorizontalAlignment.Center;
-        _interactHint.AddThemeFontSizeOverride("font_size", 14);
-        _interactHint.AddThemeColorOverride("font_color", new Color(1f, 1f, 1f, 0.8f));
-        _interactHint.AddThemeColorOverride("font_shadow_color", new Color(0f, 0f, 0f, 0.6f));
-        _interactHint.AddThemeConstantOverride("shadow_offset_x", 1);
-        _interactHint.AddThemeConstantOverride("shadow_offset_y", 1);
-        _interactHint.Visible = false;
-        AddChild(_interactHint);
-    }
-
-    private void CreateCompassWidget()
-    {
-        _compassPanel = new PanelContainer();
-        _compassPanel.AnchorLeft = 0.5f;
-        _compassPanel.AnchorRight = 0.5f;
-        _compassPanel.AnchorTop = 0f;
-        _compassPanel.AnchorBottom = 0f;
-        _compassPanel.OffsetLeft = -64f;
-        _compassPanel.OffsetRight = 64f;
-        _compassPanel.OffsetTop = 38f;
-        _compassPanel.OffsetBottom = 84f;
-
-        StyleBoxFlat style = new();
-        style.BgColor = new Color(0f, 0f, 0f, 0.55f);
-        style.CornerRadiusBottomLeft = 6;
-        style.CornerRadiusBottomRight = 6;
-        style.CornerRadiusTopLeft = 6;
-        style.CornerRadiusTopRight = 6;
-        style.ContentMarginLeft = 8;
-        style.ContentMarginRight = 8;
-        style.ContentMarginTop = 6;
-        style.ContentMarginBottom = 6;
-        _compassPanel.AddThemeStyleboxOverride("panel", style);
-
-        VBoxContainer vbox = new();
-        vbox.Alignment = BoxContainer.AlignmentMode.Center;
-        vbox.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
-        vbox.AddThemeConstantOverride("separation", 4);
-        _compassPanel.AddChild(vbox);
-
-        Control arrowHost = new();
-        arrowHost.CustomMinimumSize = new Vector2(32f, 32f);
-        arrowHost.SizeFlagsHorizontal = Control.SizeFlags.ShrinkCenter;
-        arrowHost.SizeFlagsVertical = Control.SizeFlags.ShrinkCenter;
-        vbox.AddChild(arrowHost);
-
-        _compassArrowRoot = new Node2D();
-        _compassArrowRoot.Position = new Vector2(16f, 16f);
-        arrowHost.AddChild(_compassArrowRoot);
-
-        _compassArrowHead = new Polygon2D();
-        _compassArrowHead.Color = new Color(1f, 0.9f, 0.55f, 0.95f);
-        _compassArrowHead.Polygon = new Vector2[]
-        {
-            new(0f, -12f),
-            new(8f, 4f),
-            new(-8f, 4f)
-        };
-        _compassArrowRoot.AddChild(_compassArrowHead);
-
-        _compassArrowTail = new Polygon2D();
-        _compassArrowTail.Color = new Color(1f, 0.9f, 0.55f, 0.9f);
-        _compassArrowTail.Polygon = new Vector2[]
-        {
-            new(-2f, 4f),
-            new(2f, 4f),
-            new(2f, 12f),
-            new(-2f, 12f)
-        };
-        _compassArrowRoot.AddChild(_compassArrowTail);
-
-        _compassDistanceLabel = new Label();
-        _compassDistanceLabel.Text = "Centre";
-        _compassDistanceLabel.HorizontalAlignment = HorizontalAlignment.Center;
-        _compassDistanceLabel.AddThemeFontSizeOverride("font_size", 11);
-        _compassDistanceLabel.AddThemeColorOverride("font_color", new Color(0.86f, 0.86f, 0.9f));
-        vbox.AddChild(_compassDistanceLabel);
-
-        AddChild(_compassPanel);
-    }
-
-    private void ResolveCompassTargets()
-    {
-        if (_compassPlayer == null || !IsInstanceValid(_compassPlayer))
-            _compassPlayer = GetTree().GetFirstNodeInGroup("player") as Player;
-
-        if (_mapCenterAnchor == null || !IsInstanceValid(_mapCenterAnchor))
-        {
-            Node sceneRoot = GetTree().CurrentScene;
-            _mapCenterAnchor = sceneRoot?.GetNodeOrNull<Node2D>("Foyer");
-        }
-    }
-
-    private void UpdateCompass()
-    {
-        if (_compassPanel == null || _compassArrowRoot == null || _compassArrowHead == null || _compassArrowTail == null || _compassDistanceLabel == null)
-            return;
-
-        if (_compassPlayer == null || _mapCenterAnchor == null || !IsInstanceValid(_compassPlayer) || !IsInstanceValid(_mapCenterAnchor))
-        {
-            ResolveCompassTargets();
-            if (_compassPlayer == null || _mapCenterAnchor == null || !IsInstanceValid(_compassPlayer) || !IsInstanceValid(_mapCenterAnchor))
-            {
-                _compassPanel.Visible = false;
-                return;
-            }
-        }
-
-        _compassPanel.Visible = true;
-
-        Vector2 toCenter = _mapCenterAnchor.GlobalPosition - _compassPlayer.GlobalPosition;
-        float distance = toCenter.Length();
-
-        if (distance < 12f)
-        {
-            _compassArrowRoot.Rotation = 0f;
-            _compassArrowHead.Visible = false;
-            _compassArrowTail.Visible = false;
-            _compassDistanceLabel.Text = "Centre";
-            return;
-        }
-
-        Vector2 direction = toCenter / distance;
-        float angle = Mathf.Atan2(direction.Y, direction.X);
-        _compassArrowHead.Visible = true;
-        _compassArrowTail.Visible = true;
-        _compassArrowRoot.Rotation = angle + (Mathf.Pi * 0.5f);
-        _compassDistanceLabel.Text = $"Centre {Mathf.RoundToInt(distance)}";
-    }
-
-    private void UpdateInteractHint()
-    {
-        Node playerNode = GetTree().GetFirstNodeInGroup("player");
-        if (playerNode is not Core.Player player || player.IsDead)
-        {
-            _interactHint.Visible = false;
-            return;
-        }
-
-        if (player.IsHarvesting)
-        {
-            _interactHint.Visible = false;
-            return;
-        }
-
-        float interactRange = player.InteractRange;
-        Vector2 playerPos = player.GlobalPosition;
-
-        // Check for damaged structures first
-        foreach (Node node in GetTree().GetNodesInGroup("structures"))
-        {
-            if (node is Base.Structure structure && !structure.IsDestroyed && structure.HpRatio < 1f)
-            {
-                float dist = playerPos.DistanceTo(structure.GlobalPosition);
-                if (dist < interactRange)
-                {
-                    int hpPercent = (int)(structure.HpRatio * 100);
-                    _interactHint.Text = $"[E] Réparer ({hpPercent}%)";
-                    _interactHint.Visible = true;
-                    return;
-                }
-            }
-        }
-
-        // Check for harvestable resources
-        foreach (Node node in GetTree().GetNodesInGroup("resources"))
-        {
-            if (node is Base.ResourceNode res && !res.IsExhausted)
-            {
-                float dist = playerPos.DistanceTo(res.GlobalPosition);
-                if (dist < interactRange)
-                {
-                    string resName = GetResourceDisplayName(res.ResourceId);
-                    _interactHint.Text = $"[E] Récolter {resName}";
-                    _interactHint.Visible = true;
-                    return;
-                }
-            }
-        }
-
-        _interactHint.Visible = false;
-    }
-
-    // --- Dawn Summary ---
-
-    private void CreateDawnSummaryPanel()
-    {
-        _dawnSummary = new PanelContainer();
-        _dawnSummary.AnchorLeft = 0.5f;
-        _dawnSummary.AnchorRight = 0.5f;
-        _dawnSummary.AnchorTop = 0.3f;
-        _dawnSummary.AnchorBottom = 0.3f;
-        _dawnSummary.OffsetLeft = -140;
-        _dawnSummary.OffsetRight = 140;
-        _dawnSummary.OffsetTop = 0;
-        _dawnSummary.OffsetBottom = 80;
-        _dawnSummary.Visible = false;
-
-        StyleBoxFlat style = new();
-        style.BgColor = new Color(0f, 0f, 0f, 0.7f);
-        style.CornerRadiusBottomLeft = 8;
-        style.CornerRadiusBottomRight = 8;
-        style.CornerRadiusTopLeft = 8;
-        style.CornerRadiusTopRight = 8;
-        style.ContentMarginLeft = 16;
-        style.ContentMarginRight = 16;
-        style.ContentMarginTop = 12;
-        style.ContentMarginBottom = 12;
-        _dawnSummary.AddThemeStyleboxOverride("panel", style);
-
-        _dawnSummaryLabel = new Label();
-        _dawnSummaryLabel.HorizontalAlignment = HorizontalAlignment.Center;
-        _dawnSummaryLabel.VerticalAlignment = VerticalAlignment.Center;
-        _dawnSummary.AddChild(_dawnSummaryLabel);
-
-        AddChild(_dawnSummary);
-    }
-
-    // --- Callbacks ---
+    // ==================== CALLBACKS ====================
 
     private void OnPlayerDamaged(float currentHp, float maxHp)
     {
@@ -761,38 +689,37 @@ public partial class HUD : CanvasLayer
     {
         float clampedMaxHp = Mathf.Max(1f, maxHp);
         float clampedHp = Mathf.Clamp(currentHp, 0f, clampedMaxHp);
+        _currentHpRatio = clampedHp / clampedMaxHp;
 
-        _hpBar.MaxValue = clampedMaxHp;
-        _hpBar.Value = clampedHp;
-        _hpValueLabel.Text = $"PV : {Mathf.RoundToInt(clampedHp)} / {Mathf.RoundToInt(clampedMaxHp)}";
+        // Update fill width
+        float barInnerW = _hpBarContainer.Size.X - 2;
+        _hpBarFill.Size = new Vector2(barInnerW * _currentHpRatio, _hpBarFill.Size.Y);
 
-        float ratio = clampedHp / clampedMaxHp;
-        if (ratio < 0.25f)
-            _hpBar.Modulate = HpLowColor;
-        else if (ratio < 0.5f)
-            _hpBar.Modulate = HpMediumColor;
+        // Update fill color based on HP
+        Color hpColor;
+        if (_currentHpRatio < 0.25f)
+            hpColor = PalRedBlood;
+        else if (_currentHpRatio < 0.5f)
+            hpColor = PalOrangeFlame;
         else
-            _hpBar.Modulate = HpHighColor;
+            hpColor = new Color(0.3f, 0.75f, 0.3f); // healthy green
+        _hpBarFill.Color = hpColor;
+
+        _hpValueLabel.Text = $"{Mathf.RoundToInt(clampedHp)}/{Mathf.RoundToInt(clampedMaxHp)}";
     }
 
     private void OnXpChanged(float _amount)
     {
-        if (_progression == null)
-            return;
-
-        _xpBar.MaxValue = _progression.XpToNextLevel;
-        _xpBar.Value = _progression.CurrentXp;
+        if (_progression == null) return;
+        float ratio = _progression.XpToNextLevel > 0 ? _progression.CurrentXp / _progression.XpToNextLevel : 0f;
+        float barInnerW = _xpBarContainer.Size.X - 2;
+        _xpBarFill.Size = new Vector2(barInnerW * Mathf.Clamp(ratio, 0f, 1f), _xpBarFill.Size.Y);
     }
 
     private void OnLevelUp(int newLevel)
     {
-        _levelLabel.Text = $"Niv. {newLevel}";
-
-        if (_progression != null)
-        {
-            _xpBar.MaxValue = _progression.XpToNextLevel;
-            _xpBar.Value = _progression.CurrentXp;
-        }
+        _levelLabel.Text = $"{newLevel}";
+        OnXpChanged(0);
     }
 
     private void OnScoreChanged(int newScore)
@@ -812,13 +739,433 @@ public partial class HUD : CanvasLayer
         };
         _phaseLabel.Text = phaseText;
 
+        // Update phase icon
+        string iconPath = phase is "Night" or "Dusk"
+            ? "res://assets/ui/hud/hud_icon_void.png"
+            : "res://assets/ui/hud/hud_icon_sun.png";
+        if (ResourceLoader.Exists(iconPath))
+            _phaseIcon.Texture = GD.Load<Texture2D>(iconPath);
+
+        // Phase label color
+        Color phaseColor = phase switch
+        {
+            "Day" => PalGoldFoyer,
+            "Dusk" => PalVioletMist,
+            "Night" => PalRedBlood,
+            "Dawn" => PalWhiteOff,
+            _ => PalGoldFoyer
+        };
+        _phaseLabel.AddThemeColorOverride("font_color", phaseColor);
+
         if (_dayNightCycle != null && _dayNightCycle.CurrentNight > 0)
-            _nightLabel.Text = $"Nuit {_dayNightCycle.CurrentNight}";
+            _nightLabel.Text = $"N{_dayNightCycle.CurrentNight}";
 
         if (phase == "Day")
             HideDawnSummary();
 
-        UpdateBarColor(phase);
+        // Animate bar color
+        Color barColor = phase switch
+        {
+            "Day" => DayBarColor,
+            "Dusk" => DuskBarColor,
+            "Night" => NightBarColor,
+            "Dawn" => DawnBarColor,
+            _ => DayBarColor
+        };
+        Tween tween = CreateTween();
+        tween.TweenProperty(_dayNightFill, "color", barColor, 1f);
+    }
+
+    private void OnInventoryChanged(string resourceId, int newAmount)
+    {
+        switch (resourceId)
+        {
+            case "wood":
+                _woodLabel.Text = newAmount.ToString();
+                break;
+            case "stone":
+                _stoneLabel.Text = newAmount.ToString();
+                break;
+            case "metal":
+                _metalLabel.Text = newAmount.ToString();
+                break;
+        }
+        UpdateCapacityDisplay();
+    }
+
+    private void UpdateCapacityDisplay()
+    {
+        Node playerNode = GetTree().GetFirstNodeInGroup("player");
+        if (playerNode == null) return;
+
+        Base.Inventory inventory = playerNode.GetNodeOrNull<Base.Inventory>("Inventory");
+        if (inventory == null) return;
+
+        int total = inventory.TotalCount;
+        int max = Base.Inventory.MaxCapacity;
+        float ratio = max > 0 ? (float)total / max : 0f;
+
+        // Vertical fill from bottom
+        float barH = 46f;
+        float fillH = barH * Mathf.Clamp(ratio, 0f, 1f);
+        _capacityBarFill.Position = new Vector2(1, 47 - fillH);
+        _capacityBarFill.Size = new Vector2(_capacityBarFill.Size.X, fillH);
+
+        Color barColor = ratio >= 1f
+            ? PalRedBlood with { A = 0.7f }
+            : ratio >= 0.8f
+                ? PalOrangeFlame with { A = 0.6f }
+                : PalGrayWarm with { A = 0.5f };
+        _capacityBarFill.Color = barColor;
+
+        _capacityLabel.Text = $"{total}/{max}";
+    }
+
+    // --- Weapon slots ---
+    private void OnWeaponInventoryChanged()
+    {
+        Node playerNode = GetTree().GetFirstNodeInGroup("player");
+        if (playerNode is not Player player) return;
+
+        System.Collections.Generic.IReadOnlyList<WeaponInstance> weapons = player.WeaponSlots;
+        Texture2D slotEmptyTex = GD.Load<Texture2D>("res://assets/ui/hud/hud_slot_empty.png");
+        Texture2D slotFilledTex = GD.Load<Texture2D>("res://assets/ui/hud/hud_slot_filled.png");
+
+        for (int i = 0; i < Player.MaxWeaponSlots; i++)
+        {
+            if (i < weapons.Count)
+            {
+                WeaponInstance weapon = weapons[i];
+                _weaponSlotFrames[i].Texture = slotFilledTex;
+
+                // Tint frame border by tier
+                Color tierColor = GetTierColor(weapon.Tier);
+                _weaponSlotFrames[i].Modulate = tierColor;
+
+                // Load weapon sprite
+                LoadWeaponIcon(i, weapon.Sprite);
+
+                // Level
+                int fragLevel = player.GetWeaponFragmentLevel(weapon.Id);
+                _weaponSlotLevels[i].Text = fragLevel > 1 ? $"{fragLevel}" : "";
+            }
+            else
+            {
+                _weaponSlotFrames[i].Texture = slotEmptyTex;
+                _weaponSlotFrames[i].Modulate = Colors.White;
+                _weaponSlotIcons[i].Visible = false;
+                _weaponSlotLevels[i].Text = "";
+            }
+        }
+    }
+
+    private void LoadWeaponIcon(int slotIndex, string spritePath)
+    {
+        TextureRect icon = _weaponSlotIcons[slotIndex];
+        if (string.IsNullOrEmpty(spritePath))
+        {
+            icon.Visible = false;
+            return;
+        }
+
+        string resPath = spritePath.StartsWith("res://") ? spritePath : $"res://{spritePath}";
+        if (!ResourceLoader.Exists(resPath))
+        {
+            icon.Visible = false;
+            return;
+        }
+
+        Texture2D texture = GD.Load<Texture2D>(resPath);
+        if (texture != null)
+        {
+            icon.Texture = texture;
+            icon.Visible = true;
+        }
+        else
+        {
+            icon.Visible = false;
+        }
+    }
+
+    private void OnWeaponUpgraded(string _weaponId, int _slotIndex, string _stat, int _newLevel)
+    {
+        OnWeaponInventoryChanged();
+    }
+
+    // --- Passive slots ---
+    private void OnPassiveSlotsChanged()
+    {
+        Node playerNode = GetTree().GetFirstNodeInGroup("player");
+        if (playerNode is not Player player) return;
+
+        System.Collections.Generic.IReadOnlyList<ActivePassiveSouvenir> passives = player.PassiveSlots;
+        Texture2D passiveEmptyTex = GD.Load<Texture2D>("res://assets/ui/hud/hud_slot_passive.png");
+        Texture2D passiveFilledTex = GD.Load<Texture2D>("res://assets/ui/hud/hud_slot_passive_filled.png");
+
+        for (int i = 0; i < Player.MaxPassiveSlots; i++)
+        {
+            if (i < passives.Count)
+            {
+                ActivePassiveSouvenir passive = passives[i];
+                _passiveSlotFrames[i].Texture = passiveFilledTex;
+                _passiveSlotFrames[i].Modulate = passive.Data.IconColor;
+                _passiveSlotLabels[i].Text = passive.Level > 1 ? $"{passive.Level}" : "";
+            }
+            else
+            {
+                _passiveSlotFrames[i].Texture = passiveEmptyTex;
+                _passiveSlotFrames[i].Modulate = Colors.White;
+                _passiveSlotLabels[i].Text = "";
+            }
+        }
+    }
+
+    private static Color GetTierColor(int tier)
+    {
+        return tier switch
+        {
+            1 => TierT1,
+            2 => TierT2,
+            3 => TierT3,
+            4 => TierT4,
+            5 => TierT5,
+            _ => TierT1
+        };
+    }
+
+    // ==================== MINIMAP ====================
+
+    private void CreateMinimap()
+    {
+        _minimap = new Minimap();
+        _minimap.AnchorLeft = 1f;
+        _minimap.AnchorRight = 1f;
+        _minimap.AnchorTop = 0f;
+        _minimap.AnchorBottom = 0f;
+        _minimap.OffsetLeft = -106;
+        _minimap.OffsetRight = -6;
+        _minimap.OffsetTop = 42;
+        _minimap.OffsetBottom = 142;
+        _hudRoot.AddChild(_minimap);
+    }
+
+    public void InitializeMinimap(WorldSetup worldSetup, FogOfWar fogOfWar)
+    {
+        if (_minimap != null && worldSetup?.Generator != null)
+            _minimap.Initialize(worldSetup.Generator, fogOfWar);
+    }
+
+    // ==================== INTERACT HINT ====================
+
+    private void CreateInteractHint()
+    {
+        _interactHint = MakeLabel("", 11, PalWhiteOff);
+        _interactHint.AnchorLeft = 0.5f;
+        _interactHint.AnchorRight = 0.5f;
+        _interactHint.AnchorTop = 0.72f;
+        _interactHint.OffsetLeft = -80;
+        _interactHint.OffsetRight = 80;
+        _interactHint.HorizontalAlignment = HorizontalAlignment.Center;
+        _interactHint.Visible = false;
+        _hudRoot.AddChild(_interactHint);
+    }
+
+    private void UpdateInteractHint()
+    {
+        Node playerNode = GetTree().GetFirstNodeInGroup("player");
+        if (playerNode is not Player player || player.IsDead)
+        {
+            _interactHint.Visible = false;
+            return;
+        }
+
+        if (player.IsHarvesting)
+        {
+            _interactHint.Visible = false;
+            return;
+        }
+
+        float interactRange = player.InteractRange;
+        Vector2 playerPos = player.GlobalPosition;
+
+        foreach (Node node in GetTree().GetNodesInGroup("structures"))
+        {
+            if (node is Base.Structure structure && !structure.IsDestroyed && structure.HpRatio < 1f)
+            {
+                float dist = playerPos.DistanceTo(structure.GlobalPosition);
+                if (dist < interactRange)
+                {
+                    int hpPercent = (int)(structure.HpRatio * 100);
+                    _interactHint.Text = $"[E] Réparer ({hpPercent}%)";
+                    _interactHint.Visible = true;
+                    return;
+                }
+            }
+        }
+
+        foreach (Node node in GetTree().GetNodesInGroup("resources"))
+        {
+            if (node is Base.ResourceNode res && !res.IsExhausted)
+            {
+                float dist = playerPos.DistanceTo(res.GlobalPosition);
+                if (dist < interactRange)
+                {
+                    _interactHint.Text = $"[E] Récolter {GetResourceDisplayName(res.ResourceId)}";
+                    _interactHint.Visible = true;
+                    return;
+                }
+            }
+        }
+
+        _interactHint.Visible = false;
+    }
+
+    // ==================== COMPASS ====================
+
+    private void CreateCompassWidget()
+    {
+        _compassPanel = new PanelContainer();
+        _compassPanel.AnchorLeft = 0.5f;
+        _compassPanel.AnchorRight = 0.5f;
+        _compassPanel.OffsetLeft = -28;
+        _compassPanel.OffsetRight = 28;
+        _compassPanel.OffsetTop = 30;
+        _compassPanel.OffsetBottom = 68;
+
+        StyleBoxFlat style = new();
+        style.BgColor = PalBlackDeep with { A = 0.55f };
+        style.ContentMarginLeft = 4;
+        style.ContentMarginRight = 4;
+        style.ContentMarginTop = 4;
+        style.ContentMarginBottom = 2;
+        // No rounded corners — pixel art!
+        _compassPanel.AddThemeStyleboxOverride("panel", style);
+
+        VBoxContainer vbox = new();
+        vbox.Alignment = BoxContainer.AlignmentMode.Center;
+        vbox.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+        vbox.AddThemeConstantOverride("separation", 2);
+        _compassPanel.AddChild(vbox);
+
+        Control arrowHost = new();
+        arrowHost.CustomMinimumSize = new Vector2(24f, 24f);
+        arrowHost.SizeFlagsHorizontal = Control.SizeFlags.ShrinkCenter;
+        arrowHost.SizeFlagsVertical = Control.SizeFlags.ShrinkCenter;
+        vbox.AddChild(arrowHost);
+
+        _compassArrowRoot = new Node2D();
+        _compassArrowRoot.Position = new Vector2(12f, 12f);
+        arrowHost.AddChild(_compassArrowRoot);
+
+        _compassArrowHead = new Polygon2D();
+        _compassArrowHead.Color = PalGoldFoyer with { A = 0.95f };
+        _compassArrowHead.Polygon = new Vector2[]
+        {
+            new(0f, -9f),
+            new(6f, 3f),
+            new(-6f, 3f)
+        };
+        _compassArrowRoot.AddChild(_compassArrowHead);
+
+        _compassArrowTail = new Polygon2D();
+        _compassArrowTail.Color = PalGoldFoyer with { A = 0.85f };
+        _compassArrowTail.Polygon = new Vector2[]
+        {
+            new(-1.5f, 3f),
+            new(1.5f, 3f),
+            new(1.5f, 9f),
+            new(-1.5f, 9f)
+        };
+        _compassArrowRoot.AddChild(_compassArrowTail);
+
+        _compassDistanceLabel = MakeLabel("", 7, PalGrayLight, shadow: false);
+        _compassDistanceLabel.HorizontalAlignment = HorizontalAlignment.Center;
+        vbox.AddChild(_compassDistanceLabel);
+
+        _hudRoot.AddChild(_compassPanel);
+    }
+
+    private void ResolveCompassTargets()
+    {
+        if (_compassPlayer == null || !IsInstanceValid(_compassPlayer))
+            _compassPlayer = GetTree().GetFirstNodeInGroup("player") as Player;
+
+        if (_mapCenterAnchor == null || !IsInstanceValid(_mapCenterAnchor))
+        {
+            Node sceneRoot = GetTree().CurrentScene;
+            _mapCenterAnchor = sceneRoot?.GetNodeOrNull<Node2D>("Foyer");
+        }
+    }
+
+    private void UpdateCompass()
+    {
+        if (_compassPanel == null || _compassArrowRoot == null) return;
+
+        if (_compassPlayer == null || _mapCenterAnchor == null || !IsInstanceValid(_compassPlayer) || !IsInstanceValid(_mapCenterAnchor))
+        {
+            ResolveCompassTargets();
+            if (_compassPlayer == null || _mapCenterAnchor == null || !IsInstanceValid(_compassPlayer) || !IsInstanceValid(_mapCenterAnchor))
+            {
+                _compassPanel.Visible = false;
+                return;
+            }
+        }
+
+        _compassPanel.Visible = true;
+        Vector2 toCenter = _mapCenterAnchor.GlobalPosition - _compassPlayer.GlobalPosition;
+        float distance = toCenter.Length();
+
+        if (distance < 12f)
+        {
+            _compassArrowRoot.Rotation = 0f;
+            _compassArrowHead.Visible = false;
+            _compassArrowTail.Visible = false;
+            _compassDistanceLabel.Text = "";
+            return;
+        }
+
+        Vector2 direction = toCenter / distance;
+        float angle = Mathf.Atan2(direction.Y, direction.X);
+        _compassArrowHead.Visible = true;
+        _compassArrowTail.Visible = true;
+        _compassArrowRoot.Rotation = angle + (Mathf.Pi * 0.5f);
+        _compassDistanceLabel.Text = $"{Mathf.RoundToInt(distance)}";
+    }
+
+    // ==================== DAWN SUMMARY ====================
+
+    private void CreateDawnSummaryPanel()
+    {
+        _dawnSummary = new PanelContainer();
+        _dawnSummary.AnchorLeft = 0.5f;
+        _dawnSummary.AnchorRight = 0.5f;
+        _dawnSummary.AnchorTop = 0.3f;
+        _dawnSummary.AnchorBottom = 0.3f;
+        _dawnSummary.OffsetLeft = -100;
+        _dawnSummary.OffsetRight = 100;
+        _dawnSummary.OffsetTop = 0;
+        _dawnSummary.OffsetBottom = 60;
+        _dawnSummary.Visible = false;
+
+        StyleBoxFlat style = new();
+        style.BgColor = PalBlackDeep with { A = 0.85f };
+        style.BorderColor = PalGoldFoyer with { A = 0.6f };
+        style.BorderWidthBottom = 1;
+        style.BorderWidthTop = 1;
+        style.BorderWidthLeft = 1;
+        style.BorderWidthRight = 1;
+        style.ContentMarginLeft = 12;
+        style.ContentMarginRight = 12;
+        style.ContentMarginTop = 8;
+        style.ContentMarginBottom = 8;
+        _dawnSummary.AddThemeStyleboxOverride("panel", style);
+
+        _dawnSummaryLabel = MakeLabel("", 11, PalGoldFoyer);
+        _dawnSummaryLabel.HorizontalAlignment = HorizontalAlignment.Center;
+        _dawnSummaryLabel.VerticalAlignment = VerticalAlignment.Center;
+        _dawnSummary.AddChild(_dawnSummaryLabel);
+
+        _hudRoot.AddChild(_dawnSummary);
     }
 
     private void OnNightSummary(int nightNumber, int kills, int score)
@@ -833,10 +1180,7 @@ public partial class HUD : CanvasLayer
         tween.TweenCallback(Callable.From(HideDawnSummary));
     }
 
-    private void HideDawnSummary()
-    {
-        _dawnSummary.Visible = false;
-    }
+    private void HideDawnSummary() => _dawnSummary.Visible = false;
 
     private static string GetResourceDisplayName(string id)
     {
@@ -847,20 +1191,5 @@ public partial class HUD : CanvasLayer
             "metal" => "Métal",
             _ => id
         };
-    }
-
-    private void UpdateBarColor(string phase)
-    {
-        Color barColor = phase switch
-        {
-            "Day" => DayBarColor,
-            "Dusk" => DuskBarColor,
-            "Night" => NightBarColor,
-            "Dawn" => DawnBarColor,
-            _ => DayBarColor
-        };
-
-        Tween tween = CreateTween();
-        tween.TweenProperty(_dayNightBar, "modulate", barColor, 1f);
     }
 }

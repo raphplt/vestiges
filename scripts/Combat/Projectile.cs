@@ -29,6 +29,9 @@ public partial class Projectile : Area2D
     private float _groundDuration;
     private float _groundRadius;
 
+    // Performance cache
+    private GroupCache _groupCache;
+
     // Weapon reference for on-hit effects
     public Infrastructure.WeaponData SourceWeapon { get; set; }
 
@@ -60,6 +63,7 @@ public partial class Projectile : Area2D
     public override void _Ready()
     {
         _visual = GetNodeOrNull<Polygon2D>("Visual");
+        _groupCache = GetNode<GroupCache>("/root/GroupCache");
         BodyEntered += OnBodyEntered;
         GetTree().CreateTimer(MaxLifetime).Timeout += QueueFree;
 
@@ -75,7 +79,8 @@ public partial class Projectile : Area2D
             // Trail de particules derrière le projectile
             Color trailColor = _visual.Color;
             GpuParticles2D trail = VfxFactory.CreateProjectileTrail(trailColor, _isCrit);
-            AddChild(trail);
+            if (trail != null)
+                AddChild(trail);
         }
     }
 
@@ -104,7 +109,7 @@ public partial class Projectile : Area2D
 
     private Node2D FindNearestEnemy()
     {
-        Godot.Collections.Array<Node> enemies = GetTree().GetNodesInGroup("enemies");
+        Godot.Collections.Array<Node> enemies = _groupCache.GetEnemies();
         Node2D nearest = null;
         float nearestDist = 500f;
 
@@ -157,6 +162,8 @@ public partial class Projectile : Area2D
         }
     }
 
+    private static Texture2D _groundFireTexture;
+
     private void SpawnGroundFire(Vector2 position)
     {
         Node2D fire = new() { Name = "GroundFire", GlobalPosition = position };
@@ -176,50 +183,48 @@ public partial class Projectile : Area2D
         };
         fire.AddChild(glow);
 
+        _groundFireTexture ??= GD.Load<Texture2D>("res://icon.svg");
         PointLight2D light = new()
         {
             Color = new Color(1f, 0.6f, 0.2f),
             Energy = 0.6f,
-            TextureScale = _groundRadius / 64f
+            TextureScale = _groundRadius / 64f,
+            Texture = _groundFireTexture
         };
-        light.Texture = GD.Load<Texture2D>("res://icon.svg");
         fire.AddChild(light);
 
         GetTree().CurrentScene.AddChild(fire);
 
-        // Damage tick toutes les 0.5s
-        float elapsed = 0f;
-        float tickInterval = 0.5f;
-        float tickAccumulator = 0f;
         float totalDuration = _groundDuration;
         float dmg = _groundDamage;
         float radius = _groundRadius;
+        float radiusSq = radius * radius;
+        GroupCache groupCache = _groupCache;
 
-        fire.SetProcess(true);
-        fire.TreeExiting += () => { };
-
-        SceneTreeTimer timer = GetTree().CreateTimer(totalDuration);
-        SceneTreeTimer tickTimer = GetTree().CreateTimer(tickInterval);
-
-        // Tick damage loop via recursive timers
-        void DoTick()
+        // Single timer with repeat instead of recursive timer creation
+        Timer tickTimer = new() { WaitTime = 0.5f, Autostart = true };
+        float elapsed = 0f;
+        tickTimer.Timeout += () =>
         {
             if (!IsInstanceValid(fire))
+            {
+                tickTimer.QueueFree();
                 return;
-            Godot.Collections.Array<Node> enemies = GetTree().GetNodesInGroup("enemies");
+            }
+            Godot.Collections.Array<Node> enemies = groupCache.GetEnemies();
             foreach (Node node in enemies)
             {
                 if (node is Enemy e && IsInstanceValid(e) && !e.IsDying)
                 {
-                    if (e.GlobalPosition.DistanceTo(position) < radius)
+                    if (e.GlobalPosition.DistanceSquaredTo(position) < radiusSq)
                         e.TakeDamage(dmg);
                 }
             }
-            elapsed += tickInterval;
-            if (elapsed < totalDuration && IsInstanceValid(fire))
-                GetTree().CreateTimer(tickInterval).Timeout += DoTick;
-        }
-        GetTree().CreateTimer(tickInterval).Timeout += DoTick;
+            elapsed += 0.5f;
+            if (elapsed >= totalDuration)
+                tickTimer.Stop();
+        };
+        fire.AddChild(tickTimer);
 
         // Fade out et destruction
         Tween tween = fire.CreateTween();
@@ -252,7 +257,8 @@ public partial class Projectile : Area2D
         // Particules d'impact
         Color impactColor = _visual?.Color ?? new Color(1f, 0.85f, 0.2f);
         Node2D impact = VfxFactory.CreateProjectileImpact(GlobalPosition, impactColor);
-        GetTree().CurrentScene.AddChild(impact);
+        if (impact != null)
+            GetTree().CurrentScene.AddChild(impact);
 
         if (_visual == null)
         {

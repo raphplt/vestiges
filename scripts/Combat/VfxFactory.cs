@@ -2,12 +2,53 @@ using Godot;
 
 namespace Vestiges.Combat;
 
+public enum ParticleLevel
+{
+	Full,
+	Reduced,
+	Off
+}
+
 /// <summary>
 /// Fabrique centralisée de VFX (particules, flash, slash).
 /// Produit des nodes prêtes à ajouter à la scène, auto-nettoyées.
 /// </summary>
 public static class VfxFactory
 {
+	// --- Réglage global particules ---
+	private static ParticleLevel _particleLevel = ParticleLevel.Full;
+	private const string SettingsPath = "user://display_settings.cfg";
+
+	public static ParticleLevel CurrentParticleLevel
+	{
+		get => _particleLevel;
+		set => _particleLevel = value;
+	}
+
+	public static void LoadSettings()
+	{
+		ConfigFile cfg = new();
+		if (cfg.Load(SettingsPath) != Error.Ok)
+			return;
+		int level = (int)cfg.GetValue("display", "particle_level", 0).AsInt32();
+		_particleLevel = (ParticleLevel)Mathf.Clamp(level, 0, 2);
+	}
+
+	public static void SaveSettings()
+	{
+		ConfigFile cfg = new();
+		cfg.SetValue("display", "particle_level", (int)_particleLevel);
+		cfg.Save(SettingsPath);
+	}
+
+	/// <summary>Applique le multiplicateur Reduced aux quantités de particules.</summary>
+	private static int ScaleAmount(int amount)
+	{
+		return _particleLevel == ParticleLevel.Reduced
+			? Mathf.Max(amount / 2, 1)
+			: amount;
+	}
+
 	// --- Textures procédurales (créées une seule fois, cachées en static) ---
 	private static Texture2D _circleTexture;
 	private static Texture2D _sparkTexture;
@@ -22,9 +63,12 @@ public static class VfxFactory
 
 	public static GpuParticles2D CreateXpOrbGlow()
 	{
+		if (_particleLevel == ParticleLevel.Off)
+			return null;
+
 		var particles = new GpuParticles2D
 		{
-			Amount = 4,
+			Amount = ScaleAmount(3),
 			Lifetime = 0.5f,
 			SpeedScale = 1f,
 			Explosiveness = 0f,
@@ -35,15 +79,15 @@ public static class VfxFactory
 		var mat = new ParticleProcessMaterial
 		{
 			EmissionShape = ParticleProcessMaterial.EmissionShapeEnum.Sphere,
-			EmissionSphereRadius = 3f,
+			EmissionSphereRadius = 2f,
 			Direction = new Vector3(0, -1, 0),
 			Spread = 30f,
 			InitialVelocityMin = 5f,
 			InitialVelocityMax = 12f,
 			Gravity = new Vector3(0, -10, 0),
-			ScaleMin = 0.4f,
-			ScaleMax = 0.8f,
-			Color = new Color(1f, 0.92f, 0.5f, 0.8f),
+			ScaleMin = 0.25f,
+			ScaleMax = 0.5f,
+			Color = new Color(0.55f, 0.82f, 1f, 0.8f),
 		};
 		particles.ProcessMaterial = mat;
 
@@ -54,11 +98,14 @@ public static class VfxFactory
 
 	public static Node2D CreateProjectileImpact(Vector2 position, Color color)
 	{
+		if (_particleLevel == ParticleLevel.Off)
+			return null;
+
 		var root = new Node2D { GlobalPosition = position };
 
 		var particles = new GpuParticles2D
 		{
-			Amount = 6,
+			Amount = ScaleAmount(6),
 			Lifetime = 0.25f,
 			Explosiveness = 1f,
 			OneShot = true,
@@ -96,10 +143,13 @@ public static class VfxFactory
 
 	public static GpuParticles2D CreateFlameParticles(float intensity = 1f)
 	{
-		int amount = Mathf.RoundToInt(8 * intensity);
+		if (_particleLevel == ParticleLevel.Off)
+			return null;
+
+		int amount = ScaleAmount(Mathf.RoundToInt(8 * intensity));
 		var particles = new GpuParticles2D
 		{
-			Amount = Mathf.Max(amount, 4),
+			Amount = Mathf.Max(amount, 2),
 			Lifetime = 0.4f,
 			SpeedScale = 1.2f,
 			Explosiveness = 0f,
@@ -171,6 +221,9 @@ public static class VfxFactory
 
 	public static Node2D CreateSlashVfx(Vector2 position, Vector2 direction, float range, float arcAngle, Color color)
 	{
+		if (_particleLevel == ParticleLevel.Off)
+			return null;
+
 		var root = new Node2D
 		{
 			GlobalPosition = position + direction * 8f,
@@ -180,7 +233,7 @@ public static class VfxFactory
 		// Particules de slash en arc
 		var particles = new GpuParticles2D
 		{
-			Amount = Mathf.RoundToInt(Mathf.Clamp(arcAngle / 30f, 4, 12)),
+			Amount = ScaleAmount(Mathf.RoundToInt(Mathf.Clamp(arcAngle / 30f, 4, 12))),
 			Lifetime = 0.15f,
 			Explosiveness = 1f,
 			OneShot = true,
@@ -223,7 +276,10 @@ public static class VfxFactory
 
 	public static GpuParticles2D CreateProjectileTrail(Color color, bool isCrit = false)
 	{
-		int amount = isCrit ? 8 : 5;
+		if (_particleLevel == ParticleLevel.Off)
+			return null;
+
+		int amount = ScaleAmount(isCrit ? 8 : 5);
 		var particles = new GpuParticles2D
 		{
 			Amount = amount,
@@ -264,11 +320,14 @@ public static class VfxFactory
 
 	public static Node2D CreateXpCollectBurst(Vector2 position)
 	{
+		if (_particleLevel == ParticleLevel.Off)
+			return null;
+
 		var root = new Node2D { GlobalPosition = position };
 
 		var particles = new GpuParticles2D
 		{
-			Amount = 6,
+			Amount = ScaleAmount(4),
 			Lifetime = 0.3f,
 			Explosiveness = 1f,
 			OneShot = true,
@@ -285,9 +344,9 @@ public static class VfxFactory
 			InitialVelocityMin = 25f,
 			InitialVelocityMax = 50f,
 			Gravity = new Vector3(0, 20, 0),
-			ScaleMin = 0.3f,
-			ScaleMax = 0.8f,
-			Color = new Color(1f, 0.92f, 0.5f, 0.9f),
+			ScaleMin = 0.2f,
+			ScaleMax = 0.5f,
+			Color = new Color(0.55f, 0.82f, 1f, 0.9f),
 		};
 		particles.ProcessMaterial = mat;
 		particles.Emitting = true;
@@ -305,11 +364,14 @@ public static class VfxFactory
 
 	public static Node2D CreateLevelUpBurst(Vector2 position)
 	{
+		if (_particleLevel == ParticleLevel.Off)
+			return null;
+
 		var root = new Node2D { GlobalPosition = position };
 
 		var particles = new GpuParticles2D
 		{
-			Amount = 20,
+			Amount = ScaleAmount(20),
 			Lifetime = 0.6f,
 			Explosiveness = 0.95f,
 			OneShot = true,

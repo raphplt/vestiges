@@ -36,8 +36,11 @@ public partial class Torch : Wall
         AddChild(_light);
 
         _flame = VfxFactory.CreateFlameParticles(0.7f);
-        _flame.Position = new Vector2(0, -6);
-        AddChild(_flame);
+        if (_flame != null)
+        {
+            _flame.Position = new Vector2(0, -6);
+            AddChild(_flame);
+        }
     }
 
     public override void _Process(double delta)

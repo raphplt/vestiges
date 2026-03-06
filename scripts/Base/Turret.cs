@@ -1,5 +1,6 @@
 using Godot;
 using Vestiges.Combat;
+using Vestiges.Core;
 
 namespace Vestiges.Base;
 
@@ -19,6 +20,7 @@ public partial class Turret : Structure
     private PackedScene _projectileScene;
     private Polygon2D _dirIndicator;
     private Label _ammoLabel;
+    private GroupCache _groupCache;
 
     public bool IsEmpty => _ammo <= 0;
 
@@ -29,6 +31,7 @@ public partial class Turret : Structure
         CollisionMask = 0;
 
         _projectileScene = GD.Load<PackedScene>("res://scenes/combat/Projectile.tscn");
+        _groupCache = GetNode<GroupCache>("/root/GroupCache");
         CreateDirectionIndicator();
         CreateAmmoLabel();
     }
@@ -102,7 +105,7 @@ public partial class Turret : Structure
 
     private Node2D FindNearestEnemy()
     {
-        Godot.Collections.Array<Node> enemies = GetTree().GetNodesInGroup("enemies");
+        Godot.Collections.Array<Node> enemies = _groupCache.GetEnemies();
         Node2D nearest = null;
         float nearestDist = _range;
 

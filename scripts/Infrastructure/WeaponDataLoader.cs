@@ -36,6 +36,7 @@ public class WeaponData
 	public string DamageType { get; set; }
 	public string AttackPattern { get; set; }
 	public string DefaultFor { get; set; }
+	public string Sprite { get; set; }
 	public string Source { get; set; }
 	public string RequiresSouvenir { get; set; }
 	public WeaponCraftRecipe CraftRecipe { get; set; }
@@ -154,6 +155,7 @@ public static class WeaponDataLoader
             DamageType = dict.ContainsKey("damage_type") ? dict["damage_type"].AsString() : "physical",
             AttackPattern = dict.ContainsKey("attack_pattern") ? dict["attack_pattern"].AsString() : "linear",
             DefaultFor = dict.ContainsKey("default_for") ? dict["default_for"].AsString() : null,
+            Sprite = dict.ContainsKey("sprite") ? dict["sprite"].AsString() : null,
             Source = dict.ContainsKey("source") ? dict["source"].AsString() : null,
             RequiresSouvenir = dict.ContainsKey("requires_souvenir") ? dict["requires_souvenir"].AsString() : null
         };

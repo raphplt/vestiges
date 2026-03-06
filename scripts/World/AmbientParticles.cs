@@ -15,14 +15,20 @@ public partial class AmbientParticles : Node2D
 	private GpuParticles2D _nightParticles;
 	private EventBus _eventBus;
 	private Node2D _followTarget;
+	private bool _disabled;
 
 	public override void _Ready()
 	{
 		_eventBus = GetNode<EventBus>("/root/EventBus");
 		_eventBus.DayPhaseChanged += OnDayPhaseChanged;
 
-		_dayParticles = CreateDayParticles();
-		_nightParticles = CreateNightParticles();
+		_disabled = VfxFactory.CurrentParticleLevel == ParticleLevel.Off;
+		if (_disabled)
+			return;
+
+		bool reduced = VfxFactory.CurrentParticleLevel == ParticleLevel.Reduced;
+		_dayParticles = CreateDayParticles(reduced);
+		_nightParticles = CreateNightParticles(reduced);
 		AddChild(_dayParticles);
 		AddChild(_nightParticles);
 
@@ -39,20 +45,21 @@ public partial class AmbientParticles : Node2D
 
 	public override void _Process(double delta)
 	{
-		// Suivre le joueur
 		if (_followTarget == null || !IsInstanceValid(_followTarget))
 		{
-			Node node = GetTree().GetFirstNodeInGroup("player");
-			if (node is Node2D target)
-				_followTarget = target;
+			_followTarget = GetTree().GetFirstNodeInGroup("player") as Node2D;
+			if (_followTarget == null)
+				return;
 		}
 
-		if (_followTarget != null && IsInstanceValid(_followTarget))
-			GlobalPosition = _followTarget.GlobalPosition;
+		GlobalPosition = _followTarget.GlobalPosition;
 	}
 
 	private void OnDayPhaseChanged(string phase)
 	{
+		if (_disabled)
+			return;
+
 		switch (phase)
 		{
 			case "Day":
@@ -89,11 +96,11 @@ public partial class AmbientParticles : Node2D
 			.SetTrans(Tween.TransitionType.Sine);
 	}
 
-	private static GpuParticles2D CreateDayParticles()
+	private static GpuParticles2D CreateDayParticles(bool reduced)
 	{
 		var particles = new GpuParticles2D
 		{
-			Amount = 12,
+			Amount = reduced ? 6 : 12,
 			Lifetime = 3f,
 			SpeedScale = 0.5f,
 			Explosiveness = 0f,
@@ -119,11 +126,11 @@ public partial class AmbientParticles : Node2D
 		return particles;
 	}
 
-	private static GpuParticles2D CreateNightParticles()
+	private static GpuParticles2D CreateNightParticles(bool reduced)
 	{
 		var particles = new GpuParticles2D
 		{
-			Amount = 16,
+			Amount = reduced ? 8 : 16,
 			Lifetime = 4f,
 			SpeedScale = 0.3f,
 			Explosiveness = 0f,

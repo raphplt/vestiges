@@ -79,6 +79,7 @@ public partial class SpawnManager : Node2D
     private List<string> _enemyIds;
     private Node _enemyContainer;
     private EventBus _eventBus;
+    private GroupCache _groupCache;
 
     // Fallback quand aucun biome n'est disponible
     private static readonly List<string> FallbackDayPool = new() { "shadow_crawler", "fading_spitter" };
@@ -113,6 +114,7 @@ public partial class SpawnManager : Node2D
 
         _eventBus = GetNode<EventBus>("/root/EventBus");
         _eventBus.DayPhaseChanged += OnDayPhaseChanged;
+        _groupCache = GetNode<GroupCache>("/root/GroupCache");
 
         _dayNightCycle = GetNodeOrNull<DayNightCycle>("../DayNightCycle");
         LoadDayNightConfig();
@@ -195,7 +197,7 @@ public partial class SpawnManager : Node2D
 
         float radiusSq = radius * radius;
         int count = 0;
-        Godot.Collections.Array<Node> enemies = GetTree().GetNodesInGroup("enemies");
+        Godot.Collections.Array<Node> enemies = _groupCache.GetEnemies();
         foreach (Node node in enemies)
         {
             if (node is not Enemy enemy || !enemy.IsActive || enemy.IsDying)
@@ -271,7 +273,7 @@ public partial class SpawnManager : Node2D
         if (_player == null || !IsInstanceValid(_player))
             return;
 
-        Godot.Collections.Array<Node> enemies = GetTree().GetNodesInGroup("enemies");
+        Godot.Collections.Array<Node> enemies = _groupCache.GetEnemies();
         if (enemies.Count == 0)
             return;
 

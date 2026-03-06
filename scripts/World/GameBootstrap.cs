@@ -23,6 +23,7 @@ public partial class GameBootstrap : Node
 
     public override void _Ready()
     {
+        Combat.VfxFactory.LoadSettings();
         CharacterDataLoader.Load();
         WeaponDataLoader.Load();
         WeaponUpgradeDataLoader.Load();
@@ -133,7 +134,8 @@ public partial class GameBootstrap : Node
             if (IsInstanceValid(levelUpPlayer))
             {
                 Node2D burst = Combat.VfxFactory.CreateLevelUpBurst(levelUpPlayer.GlobalPosition);
-                GetTree().CurrentScene.AddChild(burst);
+                if (burst != null)
+                    GetTree().CurrentScene.AddChild(burst);
                 Combat.ScreenShake.Instance?.ShakeMedium();
             }
         };

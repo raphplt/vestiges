@@ -82,6 +82,16 @@ public partial class Enemy : CharacterBody2D
 	// Audio
 	private float _idleSoundTimer;
 	private float _idleSoundInterval;
+	private string _idleSoundKey;
+
+	// Performance caches
+	private Core.GroupCache _groupCache;
+	private EventBus _eventBus;
+	private string _attackAudioKey;
+	private string _rangedAudioKey;
+	private float _meleeRangeSq;
+	private float _attackRangeSq;
+	private float _packRadiusSq;
 
 	// Wave modifiers (nuit 7+ : enragé, régénérant, explosif)
 	private string _waveModifier;
@@ -126,6 +136,7 @@ public partial class Enemy : CharacterBody2D
 	// Shader VFX unifié (outline + hit flash + dissolve + aberration)
 	private static Shader _entityShader;
 	private ShaderMaterial _spriteMaterial;
+	private Tween _hitFlashTween;
 
 	public bool IsActive { get; private set; }
 	public bool IsDying => _isDying;
@@ -141,6 +152,7 @@ public partial class Enemy : CharacterBody2D
 		_xpOrbScene ??= GD.Load<PackedScene>("res://scenes/combat/XpOrb.tscn");
 		_chestScene ??= GD.Load<PackedScene>("res://scenes/world/Chest.tscn");
 		_entityShader ??= GD.Load<Shader>("res://assets/shaders/entity.gdshader");
+		_eventBus ??= GetNode<EventBus>("/root/EventBus");
 	}
 
 	public void Initialize(EnemyData data, float hpScale, float dmgScale)
@@ -196,6 +208,14 @@ public partial class Enemy : CharacterBody2D
 			_ => (float)GD.RandRange(5.0, 10.0)
 		};
 		_idleSoundTimer = (float)GD.RandRange(0.0, _idleSoundInterval);
+		_idleSoundKey = _enemyId == "indicible" ? "sfx_indicible_presence" : $"sfx_{_enemyId}_idle";
+		_attackAudioKey = $"sfx_{_enemyId}_attaque";
+		_rangedAudioKey = $"sfx_{_enemyId}_tir";
+		_meleeRangeSq = MeleeRange * MeleeRange;
+		_attackRangeSq = _attackRange * _attackRange;
+		_packRadiusSq = _packRadius * _packRadius;
+
+		_groupCache ??= GetNode<Core.GroupCache>("/root/GroupCache");
 
 		ConfigureVisual(data);
 
@@ -261,9 +281,13 @@ public partial class Enemy : CharacterBody2D
 
 		// Aura GPU particules pulsantes (remplace l'ancien Polygon2D)
 		_aberrationAura = null;
+		if (VfxFactory.CurrentParticleLevel == ParticleLevel.Off)
+			return;
+
+		int auraAmount = VfxFactory.CurrentParticleLevel == ParticleLevel.Reduced ? 5 : 10;
 		var aura = new GpuParticles2D
 		{
-			Amount = 10,
+			Amount = auraAmount,
 			Lifetime = 1.2f,
 			SpeedScale = 0.6f,
 			Explosiveness = 0f,
@@ -534,7 +558,7 @@ public partial class Enemy : CharacterBody2D
 			{
 				_isCharging = false;
 				_colosseChargeTimer = ColosseChargeInterval;
-				GetNode<EventBus>("/root/EventBus").EmitSignal(EventBus.SignalName.PlayerHitBy, _enemyId, _damage * 1.5f);
+				_eventBus.EmitSignal(EventBus.SignalName.PlayerHitBy, _enemyId, _damage * 1.5f);
 				_player.TakeDamage(_damage * 1.5f);
 				PlayColosseSlamVfx();
 			}
@@ -567,7 +591,7 @@ public partial class Enemy : CharacterBody2D
 
 	private void PerformGroundSlam()
 	{
-		GetNode<EventBus>("/root/EventBus").EmitSignal(EventBus.SignalName.PlayerHitBy, _enemyId, _damage * 2f);
+		_eventBus.EmitSignal(EventBus.SignalName.PlayerHitBy, _enemyId, _damage * 2f);
 		_player.TakeDamage(_damage * 2f);
 
 		// Knockback joueur
@@ -575,7 +599,7 @@ public partial class Enemy : CharacterBody2D
 		_player.Velocity += knockbackDir * 300f;
 
 		// Dégâts AoE aux structures proches
-		Godot.Collections.Array<Node> structures = GetTree().GetNodesInGroup("structures");
+		Godot.Collections.Array<Node> structures = _groupCache.GetStructures();
 		foreach (Node node in structures)
 		{
 			if (node is Base.Structure structure && !structure.IsDestroyed)
@@ -648,7 +672,7 @@ public partial class Enemy : CharacterBody2D
 			}
 
 			// Impact structure pendant la charge
-			Godot.Collections.Array<Node> structures = GetTree().GetNodesInGroup("structures");
+			Godot.Collections.Array<Node> structures = _groupCache.GetStructures();
 			foreach (Node node in structures)
 			{
 				if (node is Structure structure && !structure.IsDestroyed)
@@ -695,12 +719,12 @@ public partial class Enemy : CharacterBody2D
 	private void ProcessPackBonus(float delta)
 	{
 		int packCount = 0;
-		Godot.Collections.Array<Node> enemies = GetTree().GetNodesInGroup("enemies");
+		Godot.Collections.Array<Node> enemies = _groupCache.GetEnemies();
 		foreach (Node node in enemies)
 		{
 			if (node is Enemy other && other != this && IsInstanceValid(other) && !other.IsDying
 				&& other._enemyId == "charognard"
-				&& GlobalPosition.DistanceTo(other.GlobalPosition) < _packRadius)
+				&& GlobalPosition.DistanceSquaredTo(other.GlobalPosition) < _packRadiusSq)
 			{
 				packCount++;
 			}
@@ -763,9 +787,7 @@ public partial class Enemy : CharacterBody2D
 
 		_idleSoundTimer = _idleSoundInterval;
 
-		// L'Indicible utilise "presence" au lieu de "idle"
-		string key = _enemyId == "indicible" ? "sfx_indicible_presence" : $"sfx_{_enemyId}_idle";
-		Infrastructure.AudioManager.Play(key, 0.06f, -10f);
+		Infrastructure.AudioManager.Play(_idleSoundKey, 0.06f, -10f);
 	}
 
 	private void SpawnModifierAura(Color color)
@@ -808,7 +830,7 @@ public partial class Enemy : CharacterBody2D
 
 				if (distToPlayer < MeleeRange && _attackTimer <= 0f)
 				{
-					GetNode<EventBus>("/root/EventBus").EmitSignal(EventBus.SignalName.PlayerHitBy, _enemyId, _damage);
+					_eventBus.EmitSignal(EventBus.SignalName.PlayerHitBy, _enemyId, _damage);
 					_player.TakeDamage(_damage);
 					_attackTimer = _meleeAttackCooldown;
 					TriggerAttackAnim();
@@ -874,7 +896,7 @@ public partial class Enemy : CharacterBody2D
 			float distToFoyer = GlobalPosition.DistanceTo(_foyerPosition);
 			if (distToFoyer < MeleeRange && distToPlayer < _playerProximityRange * 2f && _attackTimer <= 0f)
 			{
-				GetNode<EventBus>("/root/EventBus").EmitSignal(EventBus.SignalName.PlayerHitBy, _enemyId, _damage);
+				_eventBus.EmitSignal(EventBus.SignalName.PlayerHitBy, _enemyId, _damage);
 				_player.TakeDamage(_damage);
 				_attackTimer = _meleeAttackCooldown;
 				TriggerAttackAnim();
@@ -905,11 +927,11 @@ public partial class Enemy : CharacterBody2D
 		_attackTimer -= delta;
 		if (distToPlayer < MeleeRange && _attackTimer <= 0f)
 		{
-			GetNode<EventBus>("/root/EventBus").EmitSignal(EventBus.SignalName.PlayerHitBy, _enemyId, _damage);
+			_eventBus.EmitSignal(EventBus.SignalName.PlayerHitBy, _enemyId, _damage);
 			_player.TakeDamage(_damage);
 			_attackTimer = _meleeAttackCooldown;
 			TriggerAttackAnim();
-			Infrastructure.AudioManager.Play($"sfx_{_enemyId}_attaque", 0.08f, -6f);
+			Infrastructure.AudioManager.Play(_attackAudioKey, 0.08f, -6f);
 		}
 	}
 
@@ -940,11 +962,13 @@ public partial class Enemy : CharacterBody2D
 		}
 	}
 
+	private static readonly float StructureDetectRangeSq = StructureDetectRange * StructureDetectRange;
+
 	private Structure FindNearestStructure()
 	{
-		Godot.Collections.Array<Node> structures = GetTree().GetNodesInGroup("structures");
+		Godot.Collections.Array<Node> structures = _groupCache.GetStructures();
 		Structure nearest = null;
-		float nearestDist = StructureDetectRange;
+		float nearestDistSq = StructureDetectRangeSq;
 
 		Vector2 dirToFoyer = (_foyerPosition - GlobalPosition).Normalized();
 
@@ -952,8 +976,8 @@ public partial class Enemy : CharacterBody2D
 		{
 			if (node is Structure structure && !structure.IsDestroyed)
 			{
-				float dist = GlobalPosition.DistanceTo(structure.GlobalPosition);
-				if (dist >= nearestDist)
+				float distSq = GlobalPosition.DistanceSquaredTo(structure.GlobalPosition);
+				if (distSq >= nearestDistSq)
 					continue;
 
 				Vector2 dirToStructure = (structure.GlobalPosition - GlobalPosition).Normalized();
@@ -961,7 +985,7 @@ public partial class Enemy : CharacterBody2D
 				if (dot > 0.3f)
 				{
 					nearest = structure;
-					nearestDist = dist;
+					nearestDistSq = distSq;
 				}
 			}
 		}
@@ -977,8 +1001,7 @@ public partial class Enemy : CharacterBody2D
 		Vector2 direction = (_player.GlobalPosition - GlobalPosition).Normalized();
 		PlayRangedAttackVfx(direction);
 		// Son de tir spécifique selon le type d'ennemi
-		string tirKey = $"sfx_{_enemyId}_tir";
-		Infrastructure.AudioManager.Play(tirKey, 0.06f);
+		Infrastructure.AudioManager.Play(_rangedAudioKey, 0.06f);
 		EnemyProjectile projectile = _enemyProjectileScene.Instantiate<EnemyProjectile>();
 		projectile.GlobalPosition = GlobalPosition;
 		projectile.Initialize(direction, _damage, _enemyId);
@@ -1032,7 +1055,7 @@ public partial class Enemy : CharacterBody2D
 			return;
 
 		_currentHp -= damage;
-		GetNode<EventBus>("/root/EventBus").EmitSignal(EventBus.SignalName.EntityDamaged, this, damage);
+		_eventBus.EmitSignal(EventBus.SignalName.EntityDamaged, this, damage);
 		HitFlash();
 		SpawnDamageNumber(damage, isCrit);
 		Infrastructure.AudioManager.Play(isCrit ? "sfx_hit_critique" : "sfx_hit_ennemi", 0.07f);
@@ -1112,7 +1135,7 @@ public partial class Enemy : CharacterBody2D
 		_igniteTimer -= delta;
 		float igniteDamage = _igniteDps * delta;
 		_currentHp -= igniteDamage;
-		GetNode<EventBus>("/root/EventBus").EmitSignal(EventBus.SignalName.EntityDamaged, this, igniteDamage);
+		_eventBus.EmitSignal(EventBus.SignalName.EntityDamaged, this, igniteDamage);
 
 		if (_igniteTimer <= 0f)
 		{
@@ -1132,7 +1155,7 @@ public partial class Enemy : CharacterBody2D
 		_bleedTimer -= delta;
 		float bleedDamage = _bleedDps * delta;
 		_currentHp -= bleedDamage;
-		GetNode<EventBus>("/root/EventBus").EmitSignal(EventBus.SignalName.EntityDamaged, this, bleedDamage);
+		_eventBus.EmitSignal(EventBus.SignalName.EntityDamaged, this, bleedDamage);
 
 		if (_bleedTimer <= 0f)
 		{
@@ -1180,7 +1203,9 @@ public partial class Enemy : CharacterBody2D
 
 	private void HitFlash()
 	{
+		_hitFlashTween?.Kill();
 		Tween tween = CreateTween();
+		_hitFlashTween = tween;
 
 		if (_hasSprite && _spriteMaterial != null)
 		{
@@ -1275,7 +1300,7 @@ public partial class Enemy : CharacterBody2D
 			}
 
 			// Dégâts aux ennemis proches
-			Godot.Collections.Array<Node> enemies = GetTree().GetNodesInGroup("enemies");
+			Godot.Collections.Array<Node> enemies = _groupCache.GetEnemies();
 			foreach (Node node in enemies)
 			{
 				if (node is Enemy e && e != this && IsInstanceValid(e) && !e.IsDying)
@@ -1313,8 +1338,7 @@ public partial class Enemy : CharacterBody2D
 		if (_guardTarget != null && IsInstanceValid(_guardTarget))
 			_guardTarget.OnGuardKilled();
 
-		EventBus eventBus = GetNode<EventBus>("/root/EventBus");
-		eventBus.EmitSignal(EventBus.SignalName.EnemyKilled, _enemyId, GlobalPosition);
+		_eventBus.EmitSignal(EventBus.SignalName.EnemyKilled, _enemyId, GlobalPosition);
 
 		SpawnXpOrbs();
 		TryDropWeapon();
@@ -1351,7 +1375,12 @@ public partial class Enemy : CharacterBody2D
 	/// <summary>Désintégration en particules sombres iridescentes — retour au néant.</summary>
 	private void SpawnDisintegrationParticles()
 	{
+		if (VfxFactory.CurrentParticleLevel == ParticleLevel.Off)
+			return;
+
 		int count = _tier == "miniboss" ? 20 : (_isAberration ? 14 : 8);
+		if (VfxFactory.CurrentParticleLevel == ParticleLevel.Reduced)
+			count = Mathf.Max(count / 2, 1);
 		float emissionRadius = _tier == "miniboss" ? 20f : (_isAberration ? 12f : 6f);
 
 		var particles = new GpuParticles2D
@@ -1600,13 +1629,27 @@ public partial class Enemy : CharacterBody2D
 		);
 	}
 
+	private static Player _cachedPlayer;
+	private static ulong _cachedPlayerFrame;
+
 	private void CachePlayer()
 	{
 		if (_player != null && IsInstanceValid(_player))
 			return;
 
+		ulong frame = Engine.GetProcessFrames();
+		if (frame == _cachedPlayerFrame && _cachedPlayer != null && IsInstanceValid(_cachedPlayer))
+		{
+			_player = _cachedPlayer;
+			return;
+		}
+
 		Node playerNode = GetTree().GetFirstNodeInGroup("player");
 		if (playerNode is Player p)
+		{
 			_player = p;
+			_cachedPlayer = p;
+			_cachedPlayerFrame = frame;
+		}
 	}
 }

@@ -18,6 +18,7 @@ public class WeaponInstance
 	public string Type => Base.Type;
 	public string DamageType => Base.DamageType;
 	public string AttackPattern => Base.AttackPattern;
+	public string Sprite => Base.Sprite;
 	public string DefaultFor => Base.DefaultFor;
 
 	public int Level => _level;

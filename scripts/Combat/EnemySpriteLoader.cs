@@ -50,6 +50,9 @@ public static class EnemySpriteLoader
 			frames.RemoveAnimation("default");
 
 		string basePath = $"res://assets/enemies/{folder}";
+
+		// Détecter le préfixe réel des fichiers dans le dossier
+		string prefix = DetectSpritePrefix(basePath, folder);
 		int totalAnims = 0;
 
 		// Pré-charger les séquences non-directionnelles (partagées entre les 4 dirs)
@@ -59,8 +62,8 @@ public static class EnemySpriteLoader
 		{
 			foreach (string action in Actions)
 			{
-				// Format directionnel : enemy_{folder}_{DIR}_{ACTION}_{FRAME}
-				List<Texture2D> textures = LoadFrameSequence(basePath, folder, $"{dir}_{action}");
+				// Format directionnel : enemy_{prefix}_{DIR}_{ACTION}_{FRAME}
+				List<Texture2D> textures = LoadFrameSequence(basePath, prefix, $"{dir}_{action}");
 
 				// Alias d'action (ex: "walk" → "move")
 				if (textures.Count == 0 && ActionAliases.TryGetValue(action, out string alias))
@@ -125,6 +128,30 @@ public static class EnemySpriteLoader
 
 		GD.PushWarning($"[EnemySpriteLoader] Aucun sprite trouvé pour '{enemyId}' dans {basePath}");
 		return null;
+	}
+
+	/// <summary>
+	/// Détecte le préfixe réel des sprites dans un dossier.
+	/// Teste d'abord le nom du dossier (ex: "void_brute"), puis des variantes courtes.
+	/// </summary>
+	private static string DetectSpritePrefix(string basePath, string folder)
+	{
+		// Tester le nom du dossier tel quel
+		if (ResourceLoader.Exists($"{basePath}/enemy_{folder}_SE_idle_00.png"))
+			return folder;
+
+		// Tenter des variantes : retirer les préfixes avant le dernier underscore
+		// ex: "void_brute" → "brute", "treant_corrompu" → "corrompu"
+		int underscoreIdx = folder.IndexOf('_');
+		while (underscoreIdx >= 0 && underscoreIdx < folder.Length - 1)
+		{
+			string shortPrefix = folder.Substring(underscoreIdx + 1);
+			if (ResourceLoader.Exists($"{basePath}/enemy_{shortPrefix}_SE_idle_00.png"))
+				return shortPrefix;
+			underscoreIdx = folder.IndexOf('_', underscoreIdx + 1);
+		}
+
+		return folder;
 	}
 
 	private static List<Texture2D> LoadFrameSequence(string basePath, string folder, string suffix)

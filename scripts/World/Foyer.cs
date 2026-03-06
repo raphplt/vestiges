@@ -39,8 +39,11 @@ public partial class Foyer : Node2D
         _light.TextureScale = _dayRange;
 
         _flame = VfxFactory.CreateFlameParticles(1.5f);
-        _flame.Position = new Vector2(0, -8);
-        AddChild(_flame);
+        if (_flame != null)
+        {
+            _flame.Position = new Vector2(0, -8);
+            AddChild(_flame);
+        }
 
         CreateSafeZoneVisual();
         StartFoyerAudio();

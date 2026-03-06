@@ -1,4 +1,5 @@
 using Godot;
+using Vestiges.Combat;
 using Vestiges.Infrastructure;
 
 namespace Vestiges.UI;
@@ -53,6 +54,7 @@ public partial class PauseMenu : CanvasLayer
 		_root.Visible = false;
 		GetTree().Paused = false;
 		AudioManager.Instance?.SaveSettings();
+		VfxFactory.SaveSettings();
 	}
 
 	private void ReturnToHub()
@@ -61,12 +63,14 @@ public partial class PauseMenu : CanvasLayer
 		_root.Visible = false;
 		GetTree().Paused = false;
 		AudioManager.Instance?.SaveSettings();
+		VfxFactory.SaveSettings();
 		GetTree().ChangeSceneToFile("res://scenes/Hub.tscn");
 	}
 
 	private void QuitGame()
 	{
 		AudioManager.Instance?.SaveSettings();
+		VfxFactory.SaveSettings();
 		GetTree().Quit();
 	}
 
@@ -90,8 +94,8 @@ public partial class PauseMenu : CanvasLayer
 		panel.GrowVertical = Control.GrowDirection.Both;
 		panel.OffsetLeft = -180;
 		panel.OffsetRight = 180;
-		panel.OffsetTop = -230;
-		panel.OffsetBottom = 230;
+		panel.OffsetTop = -300;
+		panel.OffsetBottom = 300;
 		_root.AddChild(panel);
 
 		MarginContainer margin = new();
@@ -134,6 +138,50 @@ public partial class PauseMenu : CanvasLayer
 		Button quitBtn = CreateButton("Quitter");
 		quitBtn.Pressed += QuitGame;
 		vbox.AddChild(quitBtn);
+
+		// --- Section affichage ---
+		vbox.AddChild(new HSeparator());
+
+		Label displayLabel = new()
+		{
+			Text = "AFFICHAGE",
+			HorizontalAlignment = HorizontalAlignment.Center
+		};
+		displayLabel.AddThemeFontSizeOverride("font_size", 13);
+		displayLabel.AddThemeColorOverride("font_color", new Color(0.6f, 0.6f, 0.65f));
+		vbox.AddChild(displayLabel);
+
+		Button fullscreenBtn = CreateButton(
+			DisplayServer.WindowGetMode() == DisplayServer.WindowMode.Windowed
+				? "Plein écran"
+				: "Fenêtré");
+		fullscreenBtn.Pressed += () =>
+		{
+			if (DisplayServer.WindowGetMode() == DisplayServer.WindowMode.Windowed)
+			{
+				DisplayServer.WindowSetMode(DisplayServer.WindowMode.Fullscreen);
+				fullscreenBtn.Text = "Fenêtré";
+			}
+			else
+			{
+				DisplayServer.WindowSetMode(DisplayServer.WindowMode.Windowed);
+				fullscreenBtn.Text = "Plein écran";
+			}
+		};
+		vbox.AddChild(fullscreenBtn);
+
+		Button particleBtn = CreateButton(ParticleLevelLabel(VfxFactory.CurrentParticleLevel));
+		particleBtn.Pressed += () =>
+		{
+			VfxFactory.CurrentParticleLevel = VfxFactory.CurrentParticleLevel switch
+			{
+				ParticleLevel.Full => ParticleLevel.Reduced,
+				ParticleLevel.Reduced => ParticleLevel.Off,
+				_ => ParticleLevel.Full,
+			};
+			particleBtn.Text = ParticleLevelLabel(VfxFactory.CurrentParticleLevel);
+		};
+		vbox.AddChild(particleBtn);
 
 		// --- Section audio ---
 		vbox.AddChild(new HSeparator());
@@ -207,6 +255,16 @@ public partial class PauseMenu : CanvasLayer
 		row.AddChild(pct);
 
 		return row;
+	}
+
+	private static string ParticleLevelLabel(ParticleLevel level)
+	{
+		return level switch
+		{
+			ParticleLevel.Full => "Particules : Toutes",
+			ParticleLevel.Reduced => "Particules : Réduites",
+			_ => "Particules : Désactivées",
+		};
 	}
 
 	private static Button CreateButton(string text)

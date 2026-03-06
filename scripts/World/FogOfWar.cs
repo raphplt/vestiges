@@ -78,12 +78,11 @@ public partial class FogOfWar : Node2D
             return;
         }
 
-        if (_player == null)
+        if (_player == null || !IsInstanceValid(_player))
         {
-            Node playerNode = GetTree().GetFirstNodeInGroup("player");
-            if (playerNode is Node2D p)
-                _player = p;
-            return;
+            _player = GetTree().GetFirstNodeInGroup("player") as Node2D;
+            if (_player == null)
+                return;
         }
 
         Vector2I playerCell = _ground.LocalToMap(_ground.ToLocal(_player.GlobalPosition));
