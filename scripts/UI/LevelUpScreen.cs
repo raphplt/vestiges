@@ -115,8 +115,34 @@ public partial class LevelUpScreen : CanvasLayer
             Button button = new()
             {
                 CustomMinimumSize = new Vector2(380, 55),
-                Text = label
             };
+
+            HBoxContainer hbox = new();
+            hbox.AddThemeConstantOverride("separation", 8);
+            hbox.Alignment = BoxContainer.AlignmentMode.Center;
+            button.AddChild(hbox);
+
+            // Try to load sprite icon for weapon or passive
+            string spritePath = GetFragmentSpritePath(choice.Id, choice.Type);
+            if (!string.IsNullOrEmpty(spritePath))
+            {
+                string resPath = spritePath.StartsWith("res://") ? spritePath : $"res://{spritePath}";
+                if (ResourceLoader.Exists(resPath))
+                {
+                    TextureRect icon = new();
+                    icon.CustomMinimumSize = new Vector2(28, 28);
+                    icon.ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize;
+                    icon.StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered;
+                    icon.TextureFilter = CanvasItem.TextureFilterEnum.Nearest;
+                    icon.Texture = GD.Load<Texture2D>(resPath);
+                    hbox.AddChild(icon);
+                }
+            }
+
+            Label textLabel = new();
+            textLabel.Text = label;
+            textLabel.AddThemeColorOverride("font_color", color);
+            hbox.AddChild(textLabel);
 
             button.AddThemeColorOverride("font_color", color);
             button.AddThemeColorOverride("font_hover_color", color);
@@ -127,6 +153,38 @@ public partial class LevelUpScreen : CanvasLayer
 
             _container.AddChild(button);
         }
+    }
+
+    private static string GetFragmentSpritePath(string id, string type)
+    {
+        if (type is "weapon_new" or "weapon_upgrade")
+        {
+            WeaponData weapon = WeaponDataLoader.Get(id);
+            return weapon?.Sprite;
+        }
+
+        // Passive souvenirs use stat-based perk icons as fallback
+        if (type is "passive_new" or "passive_upgrade")
+        {
+            PassiveSouvenirData passive = PassiveSouvenirDataLoader.Get(id);
+            if (passive == null) return null;
+            return passive.Stat switch
+            {
+                "damage" => "assets/ui/icons/ui_icon_perk_degats.png",
+                "attack_speed" => "assets/ui/icons/ui_icon_perk_vitesse.png",
+                "max_hp" => "assets/ui/icons/ui_icon_perk_hp.png",
+                "speed" => "assets/ui/icons/ui_icon_perk_vitesse.png",
+                "armor" => "assets/ui/icons/ui_icon_perk_armure.png",
+                "aoe_radius" => "assets/ui/icons/ui_icon_perk_echo.png",
+                "projectile_count" => "assets/ui/icons/ui_icon_perk_echo.png",
+                "crit_chance" => "assets/ui/icons/ui_icon_perk_degats.png",
+                "regen_rate" => "assets/ui/icons/ui_icon_perk_hp.png",
+                "attack_range" => "assets/ui/icons/ui_icon_perk_vitesse.png",
+                _ => "assets/ui/icons/ui_icon_perk_degats.png"
+            };
+        }
+
+        return null;
     }
 
     private string BuildFragmentLabel(string id, string type)
@@ -278,10 +336,33 @@ public partial class LevelUpScreen : CanvasLayer
             Button button = new()
             {
                 CustomMinimumSize = new Vector2(340, 55),
-                Text = $"{data.Name} — {data.Description} {stackText}"
             };
 
+            HBoxContainer hbox = new();
+            hbox.AddThemeConstantOverride("separation", 8);
+            hbox.Alignment = BoxContainer.AlignmentMode.Center;
+            button.AddChild(hbox);
+
+            // Perk icon
+            if (!string.IsNullOrEmpty(data.Icon))
+            {
+                string iconResPath = data.Icon.StartsWith("res://") ? data.Icon : $"res://{data.Icon}";
+                TextureRect icon = new();
+                icon.CustomMinimumSize = new Vector2(24, 24);
+                icon.ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize;
+                icon.StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered;
+                icon.TextureFilter = CanvasItem.TextureFilterEnum.Nearest;
+                if (ResourceLoader.Exists(iconResPath))
+                    icon.Texture = GD.Load<Texture2D>(iconResPath);
+                hbox.AddChild(icon);
+            }
+
+            Label label = new();
+            label.Text = $"{data.Name} — {data.Description} {stackText}";
             Color rarityColor = GetRarityColor(data.Rarity);
+            label.AddThemeColorOverride("font_color", rarityColor);
+            hbox.AddChild(label);
+
             button.AddThemeColorOverride("font_color", rarityColor);
             button.AddThemeColorOverride("font_hover_color", rarityColor);
 

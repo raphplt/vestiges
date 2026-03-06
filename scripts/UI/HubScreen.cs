@@ -58,14 +58,14 @@ public partial class HubScreen : Control
 	private Texture2D _iconVestiges;
 
 	// --- Colors (from Charte Graphique) ---
-	private static readonly Color GoldColor = new(0.83f, 0.66f, 0.26f);       // #D4A843
-	private static readonly Color GoldBright = new(0.9f, 0.78f, 0.39f);       // bright gold
-	private static readonly Color GoldDim = new(0.63f, 0.47f, 0.16f);         // dim gold
-	private static readonly Color TextColor = new(0.72f, 0.7f, 0.66f);        // warm grey text
-	private static readonly Color TextDim = new(0.5f, 0.5f, 0.55f);           // dim text
-	private static readonly Color TextVeryDim = new(0.35f, 0.35f, 0.4f);      // locked text
-	private static readonly Color BgDark = new(0.04f, 0.05f, 0.09f);          // dark bg
-	private static readonly Color CyanEssence = new(0.37f, 0.77f, 0.77f);     // #5EC4C4
+	private static readonly Color GoldColor = new(0.83f, 0.66f, 0.26f);
+	private static readonly Color GoldBright = new(0.9f, 0.78f, 0.39f);
+	private static readonly Color GoldDim = new(0.63f, 0.47f, 0.16f);
+	private static readonly Color TextColor = new(0.72f, 0.7f, 0.66f);
+	private static readonly Color TextDim = new(0.5f, 0.5f, 0.55f);
+	private static readonly Color TextVeryDim = new(0.35f, 0.35f, 0.4f);
+	private static readonly Color BgDark = new(0.04f, 0.05f, 0.09f);
+	private static readonly Color CyanEssence = new(0.37f, 0.77f, 0.77f);
 	private static readonly Color GreenKit = new(0.4f, 0.6f, 0.4f);
 
 	public override void _Ready()
@@ -247,7 +247,7 @@ public partial class HubScreen : Control
 				Text = "VESTIGES",
 				HorizontalAlignment = HorizontalAlignment.Center
 			};
-			titleLabel.AddThemeFontSizeOverride("font_size", 48);
+			titleLabel.AddThemeFontSizeOverride("font_size", 64);
 			titleLabel.AddThemeColorOverride("font_color", GoldColor);
 			row.AddChild(titleLabel);
 		}

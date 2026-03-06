@@ -205,35 +205,35 @@ Chaque arme a un sprite d'icône inventaire (16×16) + sprite in-world optionnel
 
 | # | Arme | Niveaux | Icône 16×16 | Priorité | Statut |
 |---|------|---------|------------|----------|--------|
-| 97 | **Épée** | Bois → Pierre → Métal → Essence | 4 icônes | P0 | 🔲 |
-| 98 | **Masse** | Bois → Pierre → Métal → Essence | 4 icônes | P1 | 🔲 |
-| 99 | **Lance** | Bois → Pierre → Métal → Essence | 4 icônes | P1 | 🔲 |
+| 97 | **Épée** | Bois → Pierre → Métal → Essence | 4 icônes | P0 | ✅ |
+| 98 | **Masse** | Bois → Pierre → Métal → Essence | 4 icônes | P1 | ✅ |
+| 99 | **Lance** | Bois → Pierre → Métal → Essence | 4 icônes | P1 | ✅ |
 
 ### 4.2 Distance
 
 | # | Arme | Niveaux | Icône 16×16 | Priorité | Statut |
 |---|------|---------|------------|----------|--------|
-| 100 | **Arc** | Bois → Pierre → Métal → Essence | 4 icônes | P0 | 🔲 |
-| 101 | **Arbalète** | Bois → Métal → Essence | 3 icônes | P1 | 🔲 |
-| 102 | **Lance-pierres** | Bois → Pierre → Métal | 3 icônes | P2 | 🔲 |
+| 100 | **Arc** | Bois → Pierre → Métal → Essence | 4 icônes | P0 | ✅ |
+| 101 | **Arbalète** | Bois → Métal → Essence | 3 icônes | P1 | ✅ |
+| 102 | **Lance-pierres** | Bois → Pierre → Métal | 3 icônes | P2 | ✅ (1 tier) |
 
 ### 4.3 Spéciales (débloquables méta)
 
 | # | Arme | Icône 16×16 | Priorité | Statut |
 |---|------|------------|----------|--------|
-| 103 | **Bâton d'Essence** | 1 icône | P3 | 🔲 |
-| 104 | **Fouet** | 1 icône | P3 | 🔲 |
+| 103 | **Bâton d'Essence** | 1 icône | P3 | ✅ |
+| 104 | **Fouet** | 1 icône | P3 | ✅ |
 
 ### 4.4 Effets d'auto-attaque (VFX)
 
 | # | Effet | Frames | Priorité | Statut |
 |---|-------|--------|----------|--------|
-| 105 | Slash épée (arc) | 3 frames | P0 | 🔲 |
-| 106 | Impact masse (AoE cercle) | 3 frames | P1 | 🔲 |
+| 105 | Slash épée (arc) | 3 frames | P0 | ✅ |
+| 106 | Impact masse (AoE cercle) | 3 frames | P1 | ✅ |
 | 107 | Thrust lance (ligne) | 3 frames | P1 | 🔲 |
-| 108 | Projectile flèche | 1 sprite + trail | P0 | 🔲 |
-| 109 | Projectile carreau arbalète | 1 sprite + trail | P1 | 🔲 |
-| 110 | Projectile pierre | 1 sprite | P2 | 🔲 |
+| 108 | Projectile flèche | 1 sprite + trail | P0 | ✅ |
+| 109 | Projectile carreau arbalète | 1 sprite + trail | P1 | ✅ |
+| 110 | Projectile pierre | 1 sprite | P2 | ✅ |
 | 111 | Orbe Essence (tête chercheuse) | 3 frames loop | P3 | 🔲 |
 | 112 | Frappe circulaire fouet | 4 frames | P3 | 🔲 |
 
@@ -243,9 +243,9 @@ Chaque arme a un sprite d'icône inventaire (16×16) + sprite in-world optionnel
 
 | # | Outil | Niveaux | Icône 16×16 | Priorité | Statut |
 |---|-------|---------|------------|----------|--------|
-| 113 | **Hache** | Bois → Pierre → Métal → Essence | 4 icônes | P0 | 🔲 |
-| 114 | **Pioche** | Bois → Pierre → Métal → Essence | 4 icônes | P0 | 🔲 |
-| 115 | **Couteau** | Bois → Pierre → Métal → Essence | 4 icônes | P1 | 🔲 |
+| 113 | **Hache** | Bois → Pierre → Métal → Essence | 4 icônes | P0 | ✅ |
+| 114 | **Pioche** | Bois → Pierre → Métal → Essence | 4 icônes | P0 | ✅ |
+| 115 | **Couteau** | Bois → Pierre → Métal → Essence | 4 icônes | P1 | ✅ |
 
 ---
 
@@ -253,14 +253,14 @@ Chaque arme a un sprite d'icône inventaire (16×16) + sprite in-world optionnel
 
 | # | Ressource | Icône 16×16 | In-world (nœud de récolte) | Priorité | Statut |
 |---|-----------|------------|---------------------------|----------|--------|
-| 116 | **Bois** | 1 icône | Intégré aux arbres/décor | P0 | 🔲 |
-| 117 | **Pierre** | 1 icône | Rochers interactifs 16×12 | P0 | 🔲 |
-| 118 | **Métal** | 1 icône | Ferraille/ruines interactives | P0 | 🔲 |
-| 119 | **Fibre** | 1 icône | Plantes interactives | P1 | 🔲 |
-| 120 | **Nourriture** (générique) | 1 icône | Buissons à baies, etc. | P1 | 🔲 |
-| 121 | **Combustible** | 1 icône | Charbon, bidons | P1 | 🔲 |
-| 122 | **Composants** | 1 icône | Épaves tech, tiroirs | P2 | 🔲 |
-| 123 | **Essence** (cristal) | 1 icône | Veines cristallines (voir tiles) | P0 | 🔲 |
+| 116 | **Bois** | 1 icône | Intégré aux arbres/décor | P0 | ✅ |
+| 117 | **Pierre** | 1 icône | Rochers interactifs 16×12 | P0 | ✅ |
+| 118 | **Métal** | 1 icône | Ferraille/ruines interactives | P0 | ✅ |
+| 119 | **Fibre** | 1 icône | Plantes interactives | P1 | ✅ |
+| 120 | **Nourriture** (générique) | 1 icône | Buissons à baies, etc. | P1 | ✅ |
+| 121 | **Combustible** | 1 icône | Charbon, bidons | P1 | ✅ |
+| 122 | **Composants** | 1 icône | Épaves tech, tiroirs | P2 | ✅ |
+| 123 | **Essence** (cristal) | 1 icône | Veines cristallines (voir tiles) | P0 | ✅ |
 
 ---
 
@@ -268,14 +268,14 @@ Chaque arme a un sprite d'icône inventaire (16×16) + sprite in-world optionnel
 
 | # | Item | Icône 16×16 | Priorité | Statut |
 |---|------|------------|----------|--------|
-| 124 | **Bandage** | 1 | P0 | 🔲 |
-| 125 | **Potion de soin** | 1 | P1 | 🔲 |
-| 126 | **Antidote** | 1 | P2 | 🔲 |
-| 127 | **Nourriture — baies** | 1 | P1 | 🔲 |
-| 128 | **Nourriture — viande** | 1 | P2 | 🔲 |
-| 129 | **Nourriture — pain** (craft four) | 1 | P2 | 🔲 |
-| 130 | **Bombe** | 1 | P2 | 🔲 |
-| 131 | **Torche portable** | 1 | P0 | 🔲 |
+| 124 | **Bandage** | 1 | P0 | ✅ |
+| 125 | **Potion de soin** | 1 | P1 | ✅ |
+| 126 | **Antidote** | 1 | P2 | ✅ |
+| 127 | **Nourriture — baies** | 1 | P1 | ✅ |
+| 128 | **Nourriture — viande** | 1 | P2 | ✅ |
+| 129 | **Nourriture — pain** (craft four) | 1 | P2 | ✅ |
+| 130 | **Bombe** | 1 | P2 | ✅ |
+| 131 | **Torche portable** | 1 | P0 | ✅ |
 
 ---
 
@@ -285,7 +285,7 @@ Chaque arme a un sprite d'icône inventaire (16×16) + sprite in-world optionnel
 
 | # | Structure | Niveaux | Taille | Priorité | Statut |
 |---|-----------|---------|--------|----------|--------|
-| 132 | **Mur** | Bois → Pierre → Métal → Renforcé | 32×24 chacun | P0 | 🔲 |
+| 132 | **Mur** | Bois → Pierre → Métal → Renforcé | 32×24 chacun | P0 | ✅ (3 niveaux) |
 | 133 | **Porte** (mur avec passage) | Bois → Pierre → Métal | 32×24 chacun | P1 | 🔲 |
 | — | Variants : intact, endommagé, détruit | ×3 par niveau | — | P1 | 🔲 |
 
@@ -309,11 +309,11 @@ Chaque arme a un sprite d'icône inventaire (16×16) + sprite in-world optionnel
 
 | # | Structure | Taille | Priorité | Statut |
 |---|-----------|--------|----------|--------|
-| 140 | **Barricade** (rapide, temporaire) | 32×12 | P0 | 🔲 |
-| 141 | **Feu de camp** | 16×16 + anim feu 3f | P0 | 🔲 |
-| 142 | **Torche plantée** | 8×16 + anim flamme 3f | P0 | 🔲 |
+| 140 | **Barricade** (rapide, temporaire) | 32×12 | P0 | ✅ |
+| 141 | **Feu de camp** | 16×16 + anim feu 3f | P0 | ✅ (sprite, anim TODO) |
+| 142 | **Torche plantée** | 8×16 + anim flamme 3f | P0 | ✅ (sprite + 3f flamme) |
 | 143 | **Lanterne** | 8×12 + anim 2f | P1 | 🔲 |
-| 144 | **Station de craft** | 24×20 | P0 | 🔲 |
+| 144 | **Station de craft** | 24×20 | P0 | ✅ |
 | 145 | **Four** (débloquable) | 20×20 | P2 | 🔲 |
 
 ---
@@ -322,7 +322,7 @@ Chaque arme a un sprite d'icône inventaire (16×16) + sprite in-world optionnel
 
 | # | Asset | Taille | Variants/Animations | Priorité | Statut |
 |---|-------|--------|-------------------|----------|--------|
-| 146 | **Foyer — niveau 1** (base) | 24×32 | Anim flamme 4 frames (orange-doré) | P0 | 🔲 |
+| 146 | **Foyer — niveau 1** (base) | 24×32 | Anim flamme 4 frames (orange-doré) | P0 | ✅ (sprite, anim TODO) |
 | 147 | **Foyer — niveau 2** | 24×32 | Flamme plus grande, symboles lumineux | P2 | 🔲 |
 | 148 | **Foyer — niveau 3** | 28×36 | Flamme bleutée au cœur + particules or | P3 | 🔲 |
 | 149 | **Transition rayon de sécurité** | Shader/overlay | Dégradé tiles nets → effilochés | P1 | 🔲 |
@@ -333,8 +333,8 @@ Chaque arme a un sprite d'icône inventaire (16×16) + sprite in-world optionnel
 
 | # | Asset | Taille | Animations | Priorité | Statut |
 |---|-------|--------|-----------|----------|--------|
-| 150 | **Coffre commun** (bois) | 16×12 | Fermé + ouverture 3f | P0 | 🔲 |
-| 151 | **Coffre rare** (métal) | 16×12 | Fermé + ouverture 3f + lueur | P1 | 🔲 |
+| 150 | **Coffre commun** (bois) | 16×12 | Fermé + ouverture 3f | P0 | ✅ (fermé, anim TODO) |
+| 151 | **Coffre rare** (métal) | 16×12 | Fermé + ouverture 3f + lueur | P1 | ✅ (fermé, anim TODO) |
 | 152 | **Coffre épique** (essence) | 16×14 | Fermé + ouverture 4f + particules | P2 | 🔲 |
 | 153 | **Coffre de lore** (ancien) | 16×14 | Fermé + ouverture 3f, aspect unique | P2 | 🔲 |
 
@@ -346,14 +346,14 @@ Les effets sont complétés par GPUParticles2D dans Godot, mais les sprites de b
 
 | # | Effet | Taille | Frames | Priorité | Statut |
 |---|-------|--------|--------|----------|--------|
-| 154 | **Flash de hit** (blanc) | 1 frame overlay | 1 | P0 | 🔲 |
+| 154 | **Flash de hit** (blanc) | 1 frame overlay | 1 | P0 | ✅ |
 | 155 | **Nombres de dégâts** (pop) | Font pixel | — | P0 | 🔲 |
-| 156 | **Orbes XP** (blanc-doré) | 4×4 | 2 frames | P0 | 🔲 |
+| 156 | **Orbes XP** (blanc-doré) | 4×4 | 2 frames | P0 | ✅ (1 frame) |
 | 157 | **Dissolution ennemi** (particules noires) | Shader + | 4 frames | P1 | 🔲 |
-| 158 | **Impact projectile** | 8×8 | 3 frames | P0 | 🔲 |
+| 158 | **Impact projectile** | 8×8 | 3 frames | P0 | ✅ (1 frame) |
 | 159 | **Explosion** (bombe/mine) | 24×24 | 5 frames | P2 | 🔲 |
-| 160 | **Flamme de torche/feu** | 8×12 | 3 frames loop | P0 | 🔲 |
-| 161 | **Étincelle de craft** | 4×4 | 2 frames | P1 | 🔲 |
+| 160 | **Flamme de torche/feu** | 8×12 | 3 frames loop | P0 | ✅ |
+| 161 | **Étincelle de craft** | 4×4 | 2 frames | P1 | ✅ (1 frame) |
 | 162 | **Dash trail** | Overlay | 3 frames fade | P1 | 🔲 |
 | 163 | **Aura Essence** (joueur) | Overlay | 3 frames loop | P2 | 🔲 |
 | 164 | **Pulse de lumière** (capacité) | 32×32 → 64×64 | 4 frames | P2 | 🔲 |
@@ -374,7 +374,7 @@ Les effets sont complétés par GPUParticles2D dans Godot, mais les sprites de b
 | 170 | **Barre rapide** (3-4 slots capacités) | Cadre pixel art, bordures métal oxydé | P0 | 🔲 |
 | 171 | **Indicateur de sélection** (slot actif) | Bordure dorée | P0 | 🔲 |
 | 172 | **Popup +points** (kill) | Font pixel, blanc→doré | P0 | 🔲 |
-| 173 | **Indicateurs de statut** (icônes) | 8×8 chacun (saignement, poison, etc.) | P1 | 🔲 |
+| 173 | **Indicateurs de statut** (icônes) | 8×8 chacun (saignement, poison, etc.) | P1 | ✅ (8 icônes) |
 | 174 | **Mini-map cadre** | Bordure pixel art | P2 | 🔲 |
 | 175 | **Touche d'interaction contextuelle** | "E" ou icône | P1 | 🔲 |
 
@@ -394,20 +394,20 @@ Les effets sont complétés par GPUParticles2D dans Godot, mais les sprites de b
 
 | # | Perk | Priorité | Statut |
 |---|------|----------|--------|
-| 183 | Écho | P1 | 🔲 |
-| 184 | Vampirisme | P1 | 🔲 |
-| 185 | Berserker | P1 | 🔲 |
-| 186 | Barrage | P1 | 🔲 |
-| 187 | Architecte | P1 | 🔲 |
+| 183 | Écho | P1 | ✅ |
+| 184 | Vampirisme | P1 | ✅ |
+| 185 | Berserker | P1 | ✅ |
+| 186 | Barrage | P1 | ✅ |
+| 187 | Architecte | P1 | ✅ |
 | 188 | Récupérateur | P2 | 🔲 |
-| 189 | Torche vivante | P1 | 🔲 |
+| 189 | Torche vivante | P1 | ✅ |
 | 190 | Canalisation | P2 | 🔲 |
 | 191 | Siphon | P2 | 🔲 |
 | 192 | Instabilité | P2 | 🔲 |
 | 193 | Deuxième souffle | P2 | 🔲 |
 | 194 | Maître du temps | P3 | 🔲 |
 | 195 | Éveillé | P3 | 🔲 |
-| 196 | +HP / +Dégâts / +Vitesse / +Armure (×4) | P0 | 🔲 |
+| 196 | +HP / +Dégâts / +Vitesse / +Armure (×4) | P0 | ✅ |
 
 ---
 

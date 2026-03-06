@@ -4,6 +4,7 @@
         "id": "damage_up",
         "name": "Force Brute",
         "description": "+15% dégâts",
+        "icon": "assets/ui/icons/ui_icon_perk_degats.png",
         "category": "stat",
         "rarity": "common",
         "stat": "damage",
@@ -18,10 +19,11 @@
         "id": "speed_up",
         "name": "Pas Vif",
         "description": "+10% vitesse de déplacement",
+        "icon": "assets/ui/icons/ui_icon_perk_vitesse.png",
         "category": "stat",
         "rarity": "common",
         "stat": "speed",
-        "modifier": 1.10,
+        "modifier": 1.1,
         "modifier_type": "multiplicative",
         "max_stacks": 10,
         "tags": [
@@ -32,6 +34,7 @@
         "id": "hp_up",
         "name": "Résilience",
         "description": "+20 HP max",
+        "icon": "assets/ui/icons/ui_icon_perk_hp.png",
         "category": "stat",
         "rarity": "common",
         "stat": "max_hp",
@@ -46,6 +49,7 @@
         "id": "attack_speed_up",
         "name": "Frénésie",
         "description": "+12% vitesse d'attaque",
+        "icon": "assets/ui/icons/ui_icon_perk_vitesse.png",
         "category": "stat",
         "rarity": "common",
         "stat": "attack_speed",
@@ -60,6 +64,7 @@
         "id": "extra_projectile",
         "name": "Écho",
         "description": "+1 projectile",
+        "icon": "assets/ui/icons/ui_icon_perk_echo.png",
         "category": "stat",
         "rarity": "uncommon",
         "stat": "projectile_count",
@@ -74,10 +79,11 @@
         "id": "aoe_up",
         "name": "Onde",
         "description": "+20% zone d'effet",
+        "icon": "assets/ui/icons/ui_icon_perk_degats.png",
         "category": "stat",
         "rarity": "common",
         "stat": "aoe_radius",
-        "modifier": 1.20,
+        "modifier": 1.2,
         "modifier_type": "multiplicative",
         "max_stacks": 8,
         "tags": [
@@ -88,6 +94,7 @@
         "id": "armor_up",
         "name": "Peau Dure",
         "description": "+3 armure (réduit les dégâts reçus)",
+        "icon": "assets/ui/icons/ui_icon_perk_armure.png",
         "category": "stat",
         "rarity": "common",
         "stat": "armor",
@@ -102,6 +109,7 @@
         "id": "regen_up",
         "name": "Cicatrisation",
         "description": "+0.5 HP/sec",
+        "icon": "assets/ui/icons/ui_icon_perk_armure.png",
         "category": "stat",
         "rarity": "common",
         "stat": "regen_rate",
@@ -117,6 +125,7 @@
         "id": "range_up",
         "name": "Longue Portée",
         "description": "+15% portée d'attaque",
+        "icon": "assets/ui/icons/ui_icon_perk_degats.png",
         "category": "stat",
         "rarity": "common",
         "stat": "attack_range",
@@ -131,6 +140,7 @@
         "id": "xp_magnet",
         "name": "Attraction",
         "description": "+25% rayon de collecte XP",
+        "icon": "assets/ui/icons/ui_icon_perk_vitesse.png",
         "category": "stat",
         "rarity": "common",
         "stat": "xp_magnet_radius",
@@ -146,6 +156,7 @@
         "id": "vampirism",
         "name": "Vampirisme",
         "description": "Soigne 2% des dégâts infligés",
+        "icon": "assets/ui/icons/ui_icon_perk_vampirisme.png",
         "category": "combat",
         "rarity": "uncommon",
         "max_stacks": 5,
@@ -163,6 +174,7 @@
         "id": "berserker",
         "name": "Berserker",
         "description": "+30% dégâts quand <30% HP",
+        "icon": "assets/ui/icons/ui_icon_perk_berserker.png",
         "category": "combat",
         "rarity": "uncommon",
         "max_stacks": 3,
@@ -173,10 +185,10 @@
         "effect": {
             "trigger": "passive_conditional",
             "condition": "hp_percent_below",
-            "condition_value": 0.30,
+            "condition_value": 0.3,
             "action": "modify_stat",
             "stat": "damage",
-            "modifier": 1.30,
+            "modifier": 1.3,
             "modifier_type": "multiplicative"
         }
     },
@@ -184,6 +196,7 @@
         "id": "piercing_shot",
         "name": "Perforation",
         "description": "Les projectiles traversent +1 ennemi",
+        "icon": "assets/ui/icons/ui_icon_perk_degats.png",
         "category": "combat",
         "rarity": "uncommon",
         "max_stacks": 3,
@@ -202,6 +215,7 @@
         "id": "ricochet",
         "name": "Ricochet",
         "description": "20% de chance que les projectiles rebondissent sur un ennemi proche",
+        "icon": "assets/ui/icons/ui_icon_perk_degats.png",
         "category": "combat",
         "rarity": "uncommon",
         "max_stacks": 4,
@@ -211,7 +225,7 @@
         "effect": {
             "trigger": "on_projectile_hit",
             "action": "bounce_to_nearby",
-            "chance": 0.20,
+            "chance": 0.2,
             "bounce_range": 120
         }
     },
@@ -219,6 +233,7 @@
         "id": "crit_chance",
         "name": "Point Faible",
         "description": "+8% de chance de coup critique (×2 dégâts)",
+        "icon": "assets/ui/icons/ui_icon_perk_degats.png",
         "category": "combat",
         "rarity": "uncommon",
         "max_stacks": 5,
@@ -237,6 +252,7 @@
         "id": "crit_damage",
         "name": "Coup Fatal",
         "description": "+25% dégâts critiques",
+        "icon": "assets/ui/icons/ui_icon_perk_degats.png",
         "category": "combat",
         "rarity": "uncommon",
         "max_stacks": 6,
@@ -255,6 +271,7 @@
         "id": "ignite",
         "name": "Embrasement",
         "description": "15% de chance d'enflammer l'ennemi (3 dég/sec pendant 3s)",
+        "icon": "assets/ui/icons/ui_icon_perk_degats.png",
         "category": "combat",
         "rarity": "uncommon",
         "max_stacks": 5,
@@ -274,6 +291,7 @@
         "id": "thorns",
         "name": "Épines",
         "description": "Renvoie 20% des dégâts reçus à l'attaquant",
+        "icon": "assets/ui/icons/ui_icon_perk_armure.png",
         "category": "combat",
         "rarity": "uncommon",
         "max_stacks": 3,
@@ -284,13 +302,14 @@
         "effect": {
             "trigger": "on_damage_received",
             "action": "reflect_damage_percent",
-            "value": 0.20
+            "value": 0.2
         }
     },
     {
         "id": "execution",
         "name": "Exécution",
         "description": "Tue instantanément les ennemis en dessous de 10% HP",
+        "icon": "assets/ui/icons/ui_icon_perk_degats.png",
         "category": "combat",
         "rarity": "uncommon",
         "max_stacks": 3,
@@ -300,13 +319,14 @@
         "effect": {
             "trigger": "on_damage_dealt",
             "action": "execute_below_percent",
-            "value": 0.10
+            "value": 0.1
         }
     },
     {
         "id": "kill_speed",
         "name": "Soif de Sang",
         "description": "+5% vitesse d'attaque pendant 3s après chaque kill (stacks)",
+        "icon": "assets/ui/icons/ui_icon_perk_degats.png",
         "category": "combat",
         "rarity": "uncommon",
         "max_stacks": 3,
@@ -327,6 +347,7 @@
         "id": "architect",
         "name": "Architecte",
         "description": "+25% HP des structures",
+        "icon": "assets/ui/icons/ui_icon_perk_architecte.png",
         "category": "survival",
         "rarity": "uncommon",
         "stat": "structure_hp",
@@ -341,6 +362,7 @@
         "id": "salvager",
         "name": "Récupérateur",
         "description": "Les structures détruites rendent 75% des matériaux (au lieu de 50%)",
+        "icon": "assets/ui/icons/ui_icon_perk_architecte.png",
         "category": "survival",
         "rarity": "uncommon",
         "max_stacks": 1,
@@ -360,6 +382,7 @@
         "id": "torch_bearer",
         "name": "Torche Vivante",
         "description": "Le joueur émet de la lumière, renforçant la réalité et repoussant les créatures proches",
+        "icon": "assets/ui/icons/ui_icon_perk_torche_vivante.png",
         "category": "survival",
         "rarity": "uncommon",
         "max_stacks": 3,
@@ -379,10 +402,11 @@
         "id": "quick_fix",
         "name": "Réparation Express",
         "description": "Répare les structures 40% plus vite",
+        "icon": "assets/ui/icons/ui_icon_perk_architecte.png",
         "category": "survival",
         "rarity": "common",
         "stat": "repair_speed",
-        "modifier": 1.40,
+        "modifier": 1.4,
         "modifier_type": "multiplicative",
         "max_stacks": 4,
         "tags": [
@@ -393,6 +417,7 @@
         "id": "harvest_bounty",
         "name": "Récolte Abondante",
         "description": "+1 ressource par récolte",
+        "icon": "assets/ui/icons/ui_icon_perk_architecte.png",
         "category": "survival",
         "rarity": "uncommon",
         "max_stacks": 3,
@@ -409,6 +434,7 @@
         "id": "night_vision",
         "name": "Vision Nocturne",
         "description": "+30% rayon de vision la nuit",
+        "icon": "assets/ui/icons/ui_icon_perk_vitesse.png",
         "category": "survival",
         "rarity": "common",
         "max_stacks": 3,
@@ -420,7 +446,7 @@
             "condition": "is_night",
             "action": "modify_stat",
             "stat": "vision_radius",
-            "modifier": 1.30,
+            "modifier": 1.3,
             "modifier_type": "multiplicative"
         }
     },
@@ -429,10 +455,11 @@
         "id": "channeling",
         "name": "Canalisation",
         "description": "Les capacités d'Essence coûtent 20% de moins",
+        "icon": "assets/ui/icons/ui_icon_perk_echo.png",
         "category": "essence",
         "rarity": "uncommon",
         "stat": "essence_cost",
-        "modifier": 0.80,
+        "modifier": 0.8,
         "modifier_type": "multiplicative",
         "max_stacks": 4,
         "tags": [
@@ -443,6 +470,7 @@
         "id": "siphon",
         "name": "Siphon",
         "description": "Les créatures tuées droppent ×2 Essence",
+        "icon": "assets/ui/icons/ui_icon_perk_echo.png",
         "category": "essence",
         "rarity": "uncommon",
         "stat": "essence_drop_multiplier",
@@ -457,6 +485,7 @@
     {
         "id": "instability",
         "name": "Instabilité",
+        "icon": "assets/ui/icons/ui_icon_perk_echo.png",
         "category": "essence",
         "rarity": "uncommon",
         "max_stacks": 1,
@@ -467,8 +496,8 @@
         "effect": {
             "trigger": "on_essence_cast",
             "action": "gamble_cost",
-            "free_chance": 0.30,
-            "backfire_chance": 0.10,
+            "free_chance": 0.3,
+            "backfire_chance": 0.1,
             "backfire_damage_percent": 0.15
         }
     },
@@ -476,6 +505,7 @@
         "id": "essence_regen",
         "name": "Méditation",
         "description": "+0.3 Essence/sec de jour",
+        "icon": "assets/ui/icons/ui_icon_perk_echo.png",
         "category": "essence",
         "rarity": "uncommon",
         "max_stacks": 5,
@@ -495,6 +525,7 @@
         "id": "second_wind",
         "name": "Deuxième Souffle",
         "description": "Revient à 50% HP après être tombé à 0 (une fois par run)",
+        "icon": "assets/ui/icons/ui_icon_perk_armure.png",
         "category": "rare",
         "rarity": "rare",
         "max_stacks": 1,
@@ -506,7 +537,7 @@
         "effect": {
             "trigger": "on_death",
             "action": "revive",
-            "heal_percent": 0.50,
+            "heal_percent": 0.5,
             "uses": 1
         }
     },
@@ -514,6 +545,7 @@
         "id": "time_master",
         "name": "Maître du Temps",
         "description": "Le jour dure 20% plus longtemps",
+        "icon": "assets/ui/icons/ui_icon_perk_vitesse.png",
         "category": "rare",
         "rarity": "rare",
         "max_stacks": 1,
@@ -525,7 +557,7 @@
             "trigger": "passive",
             "action": "modify_stat",
             "stat": "day_duration",
-            "modifier": 1.20,
+            "modifier": 1.2,
             "modifier_type": "multiplicative"
         }
     },
@@ -533,6 +565,7 @@
         "id": "awakened_sight",
         "name": "Éveillé",
         "description": "Voir les créatures nocturnes à travers les murs et le fog",
+        "icon": "assets/ui/icons/ui_icon_perk_vitesse.png",
         "category": "rare",
         "rarity": "rare",
         "max_stacks": 1,
@@ -549,6 +582,7 @@
         "id": "glass_cannon",
         "name": "Canon de Verre",
         "description": "+50% dégâts, -30% HP max",
+        "icon": "assets/ui/icons/ui_icon_perk_degats.png",
         "category": "rare",
         "rarity": "rare",
         "max_stacks": 1,
@@ -560,12 +594,12 @@
         "effects": [
             {
                 "stat": "damage",
-                "modifier": 1.50,
+                "modifier": 1.5,
                 "modifier_type": "multiplicative"
             },
             {
                 "stat": "max_hp",
-                "modifier": 0.70,
+                "modifier": 0.7,
                 "modifier_type": "multiplicative"
             }
         ]
@@ -574,6 +608,7 @@
         "id": "last_stand",
         "name": "Dernier Rempart",
         "description": "+5% dégâts par structure détruite cette nuit (reset à l'aube)",
+        "icon": "assets/ui/icons/ui_icon_perk_degats.png",
         "category": "rare",
         "rarity": "rare",
         "max_stacks": 1,
@@ -595,6 +630,7 @@
         "id": "memory_anchor",
         "name": "Ancrage Mémoriel",
         "description": "Le Foyer gagne +20% de rayon. Les créatures dans le rayon subissent 2 dég/sec",
+        "icon": "assets/ui/icons/ui_icon_perk_architecte.png",
         "category": "rare",
         "rarity": "rare",
         "max_stacks": 1,
@@ -610,7 +646,7 @@
                 {
                     "action": "modify_stat",
                     "stat": "foyer_radius",
-                    "modifier": 1.20,
+                    "modifier": 1.2,
                     "modifier_type": "multiplicative"
                 },
                 {
@@ -635,7 +671,7 @@
             "action": "modify_perk_value",
             "target_perk": "vampirism",
             "condition": "hp_percent_below",
-            "condition_value": 0.30,
+            "condition_value": 0.3,
             "multiplier": 2.0
         },
         "notification": "⚡ RAGE SANGUINAIRE activée"
@@ -704,12 +740,12 @@
             "actions": [
                 {
                     "stat": "damage",
-                    "modifier": 1.80,
+                    "modifier": 1.8,
                     "modifier_type": "multiplicative"
                 },
                 {
                     "stat": "attack_speed",
-                    "modifier": 1.30,
+                    "modifier": 1.3,
                     "modifier_type": "multiplicative"
                 },
                 {
@@ -769,7 +805,7 @@
                     "action": "modify_perk_value",
                     "target_perk": "execution",
                     "field": "value",
-                    "new_value": 0.20
+                    "new_value": 0.2
                 },
                 {
                     "action": "on_execute_heal",
@@ -784,6 +820,7 @@
         "id": "vagabond_harvest",
         "name": "Instinct de Cueilleur",
         "description": "Récolte 25% plus vite",
+        "icon": "assets/ui/icons/ui_icon_perk_architecte.png",
         "category": "passive",
         "rarity": "passive",
         "stat": "harvest_speed",
@@ -800,6 +837,7 @@
         "id": "vagabond_adaptability",
         "name": "Adaptabilité",
         "description": "+5% dégâts et +5% vitesse",
+        "icon": "assets/ui/icons/ui_icon_perk_degats.png",
         "category": "character",
         "rarity": "common",
         "max_stacks": 10,
@@ -825,6 +863,7 @@
         "id": "vagabond_survivalist",
         "name": "Survivaliste",
         "description": "+15 HP max et +0.3 régénération",
+        "icon": "assets/ui/icons/ui_icon_perk_armure.png",
         "category": "character",
         "rarity": "common",
         "max_stacks": 8,
@@ -850,6 +889,7 @@
         "id": "vagabond_jack_of_all",
         "name": "Touche-à-tout",
         "description": "Les perks de stats donnent +3% de bonus en plus",
+        "icon": "assets/ui/icons/ui_icon_perk_vitesse.png",
         "category": "character",
         "rarity": "uncommon",
         "max_stacks": 1,
@@ -868,6 +908,7 @@
         "id": "vagabond_nomad",
         "name": "Nomade",
         "description": "+15% vitesse hors du rayon du Foyer",
+        "icon": "assets/ui/icons/ui_icon_perk_vitesse.png",
         "category": "character",
         "rarity": "uncommon",
         "max_stacks": 3,
@@ -888,6 +929,7 @@
         "id": "vagabond_scrounger",
         "name": "Fouineur",
         "description": "Les coffres donnent +1 objet supplémentaire",
+        "icon": "assets/ui/icons/ui_icon_perk_architecte.png",
         "category": "character",
         "rarity": "uncommon",
         "max_stacks": 2,
@@ -906,10 +948,11 @@
         "id": "forgeuse_fortify",
         "name": "Maître Bâtisseur",
         "description": "Structures +30% HP",
+        "icon": "assets/ui/icons/ui_icon_perk_architecte.png",
         "category": "passive",
         "rarity": "passive",
         "stat": "structure_hp",
-        "modifier": 1.30,
+        "modifier": 1.3,
         "modifier_type": "multiplicative",
         "max_stacks": 1,
         "is_passive": true,
@@ -922,10 +965,11 @@
         "id": "forgeuse_quick_craft",
         "name": "Forge Rapide",
         "description": "Craft 30% plus rapide",
+        "icon": "assets/ui/icons/ui_icon_perk_architecte.png",
         "category": "character",
         "rarity": "common",
         "stat": "craft_speed",
-        "modifier": 1.30,
+        "modifier": 1.3,
         "modifier_type": "multiplicative",
         "max_stacks": 8,
         "character_id": "forgeuse",
@@ -938,6 +982,7 @@
         "id": "forgeuse_reinforce",
         "name": "Renforcement",
         "description": "+25% HP des structures",
+        "icon": "assets/ui/icons/ui_icon_perk_architecte.png",
         "category": "character",
         "rarity": "common",
         "stat": "structure_hp",
@@ -953,10 +998,11 @@
         "id": "forgeuse_overcharge",
         "name": "Surcharge",
         "description": "Les tourelles tirent 20% plus vite",
+        "icon": "assets/ui/icons/ui_icon_perk_architecte.png",
         "category": "character",
         "rarity": "uncommon",
         "stat": "turret_attack_speed",
-        "modifier": 1.20,
+        "modifier": 1.2,
         "modifier_type": "multiplicative",
         "max_stacks": 5,
         "character_id": "forgeuse",
@@ -969,6 +1015,7 @@
         "id": "forgeuse_recycler",
         "name": "Recyclage",
         "description": "Tuer un ennemi près d'une structure donne 15% de chance de drop métal",
+        "icon": "assets/ui/icons/ui_icon_perk_architecte.png",
         "category": "character",
         "rarity": "uncommon",
         "max_stacks": 3,
@@ -989,6 +1036,7 @@
         "id": "forgeuse_last_wall",
         "name": "Dernier Mur",
         "description": "+10% dégâts personnels par structure active sur la map (max 5 stacks)",
+        "icon": "assets/ui/icons/ui_icon_perk_degats.png",
         "category": "character",
         "rarity": "uncommon",
         "max_stacks": 1,
@@ -1000,7 +1048,7 @@
         "effect": {
             "trigger": "passive_dynamic",
             "action": "damage_per_structure",
-            "modifier_per_structure": 1.10,
+            "modifier_per_structure": 1.1,
             "max_structures_counted": 5
         }
     },
@@ -1009,6 +1057,7 @@
         "id": "traqueur_precision",
         "name": "Œil d'Aigle",
         "description": "Portée +20%, vitesse d'attaque +10%",
+        "icon": "assets/ui/icons/ui_icon_perk_degats.png",
         "category": "passive",
         "rarity": "passive",
         "max_stacks": 1,
@@ -1020,12 +1069,12 @@
         "effects": [
             {
                 "stat": "attack_range",
-                "modifier": 1.20,
+                "modifier": 1.2,
                 "modifier_type": "multiplicative"
             },
             {
                 "stat": "attack_speed",
-                "modifier": 1.10,
+                "modifier": 1.1,
                 "modifier_type": "multiplicative"
             }
         ]
@@ -1034,6 +1083,7 @@
         "id": "traqueur_piercing",
         "name": "Tir Perçant",
         "description": "+1 ennemi traversé par projectile",
+        "icon": "assets/ui/icons/ui_icon_perk_degats.png",
         "category": "character",
         "rarity": "common",
         "stat": "projectile_pierce",
@@ -1049,6 +1099,7 @@
         "id": "traqueur_swiftness",
         "name": "Célérité",
         "description": "+12% vitesse de déplacement",
+        "icon": "assets/ui/icons/ui_icon_perk_vitesse.png",
         "category": "character",
         "rarity": "common",
         "stat": "speed",
@@ -1064,6 +1115,7 @@
         "id": "traqueur_ambush",
         "name": "Embuscade",
         "description": "La première attaque après 3s sans toucher fait ×2.5 dégâts",
+        "icon": "assets/ui/icons/ui_icon_perk_degats.png",
         "category": "character",
         "rarity": "uncommon",
         "max_stacks": 1,
@@ -1082,6 +1134,7 @@
         "id": "traqueur_evasion",
         "name": "Esquive Instinctive",
         "description": "8% de chance d'esquiver complètement une attaque",
+        "icon": "assets/ui/icons/ui_icon_perk_armure.png",
         "category": "character",
         "rarity": "uncommon",
         "max_stacks": 3,
@@ -1099,6 +1152,7 @@
         "id": "traqueur_marked",
         "name": "Proie Marquée",
         "description": "Le 3ème hit consécutif sur la même cible fait +50% dégâts",
+        "icon": "assets/ui/icons/ui_icon_perk_degats.png",
         "category": "character",
         "rarity": "uncommon",
         "max_stacks": 1,
@@ -1110,7 +1164,7 @@
             "trigger": "on_consecutive_hit_same_target",
             "hit_count": 3,
             "action": "bonus_damage",
-            "modifier": 1.50
+            "modifier": 1.5
         }
     }
 ]

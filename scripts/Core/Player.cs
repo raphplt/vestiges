@@ -179,7 +179,7 @@ public partial class Player : CharacterBody2D
 
     // Footsteps
     private float _footstepTimer;
-    private const float FootstepInterval = 0.38f;
+    private const float FootstepInterval = 0.55f;
 
     // Harvest hit sound
     private float _harvestHitTimer;
@@ -1500,7 +1500,7 @@ public partial class Player : CharacterBody2D
         _footstepTimer = FootstepInterval / (_speedMultiplier > 0f ? _speedMultiplier : 1f);
 
         string key = IsOnWater() ? "sfx_pas_eau" : "sfx_pas_herbe";
-        Infrastructure.AudioManager.Play(key, 0.1f);
+        Infrastructure.AudioManager.Play(key, 0.1f, -4f);
     }
 
     private void ProcessHarvest(float delta)

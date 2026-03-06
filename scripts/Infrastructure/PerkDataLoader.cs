@@ -44,6 +44,7 @@ public class PerkData
     public bool IsPassive { get; set; }
     public string CharacterId { get; set; }
     public float Weight { get; set; } = 1.0f;
+    public string Icon { get; set; }
     public List<string> Tags { get; set; }
     public List<PerkEffect> Effects { get; set; }
     public ComplexEffect Effect { get; set; }
@@ -180,6 +181,7 @@ public static class PerkDataLoader
                 IsPassive = dict.ContainsKey("is_passive") && dict["is_passive"].AsBool(),
                 CharacterId = dict.ContainsKey("character_id") ? dict["character_id"].AsString() : null,
                 Weight = dict.ContainsKey("weight") ? (float)dict["weight"].AsDouble() : defaultWeight,
+                Icon = dict.ContainsKey("icon") ? dict["icon"].AsString() : null,
                 Tags = tags,
                 Effects = effects,
                 Effect = complexEffect,

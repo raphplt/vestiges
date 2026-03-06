@@ -35,6 +35,19 @@ public partial class AudioManager : Node
 	// --- Stream cache ---
 	private readonly Dictionary<string, AudioStream> _streams = new();
 
+	// --- SFX throttle (prevents spam of the same sound) ---
+	private readonly Dictionary<string, ulong> _sfxLastPlayTime = new();
+	private static readonly Dictionary<string, ulong> SfxMinIntervals = new()
+	{
+		["sfx_hit_joueur"] = 150,
+		["sfx_hit_ennemi"] = 80,
+		["sfx_hit_critique"] = 80,
+		["sfx_monde_tuile_apparait"] = 120,
+		["sfx_monde_dissolution"] = 200,
+		["sfx_recolte_obtenu"] = 100,
+	};
+	private const ulong DefaultMinInterval = 0;
+
 	// --- Musique adaptative ---
 	private int _activeEnemyCount;
 	private const int CombatThreshold = 3;
@@ -44,10 +57,6 @@ public partial class AudioManager : Node
 
 	// --- Ambiance oiseaux ---
 	private float _birdTimer;
-
-	// --- Debug ---
-	private float _debugTimer;
-	private const float DebugInterval = 3f;
 
 	// --- Persistence ---
 	private const string SettingsPath = "user://audio_settings.cfg";
@@ -158,16 +167,6 @@ public partial class AudioManager : Node
 
 		_birdTimer = (float)GD.RandRange(15.0, 35.0);
 
-		// Diagnostic audio
-		for (int i = 0; i < AudioServer.BusCount; i++)
-		{
-			string busName = AudioServer.GetBusName(i);
-			string send = AudioServer.GetBusSend(i);
-			float vol = AudioServer.GetBusVolumeDb(i);
-			bool muted = AudioServer.IsBusMute(i);
-			GD.Print($"[AudioManager] Bus[{i}] \"{busName}\" → send=\"{send}\" vol={vol:F1}dB mute={muted}");
-		}
-		GD.Print($"[AudioManager] Ready — {_streams.Count}/{Paths.Count} streams chargés");
 	}
 
 	public override void _ExitTree()
@@ -285,18 +284,22 @@ public partial class AudioManager : Node
 		if (!_streams.TryGetValue(key, out AudioStream stream))
 			return;
 
+		// Throttle: skip if same SFX was played too recently
+		ulong now = Time.GetTicksMsec();
+		ulong minInterval = SfxMinIntervals.TryGetValue(key, out ulong interval) ? interval : DefaultMinInterval;
+		if (minInterval > 0 && _sfxLastPlayTime.TryGetValue(key, out ulong lastTime) && now - lastTime < minInterval)
+			return;
+		_sfxLastPlayTime[key] = now;
+
 		AudioStreamPlayer player = GetFreePoolPlayer();
 		if (player == null)
-		{
-			GD.PrintErr($"[Audio t={Time.GetTicksMsec()}ms] SFX POOL FULL — cannot play \"{key}\". All {SfxPoolSize} slots busy.");
 			return;
-		}
+
 
 		player.Stream = stream;
 		player.PitchScale = 1f + (float)GD.RandRange(-pitchVariance, pitchVariance);
 		player.VolumeDb = volumeDb;
 		player.Play();
-		GD.Print($"[Audio t={Time.GetTicksMsec()}ms] SFX play \"{key}\" on {player.Name} (vol={volumeDb:F1}dB)");
 	}
 
 	/// <summary>Démarre la musique du Hub.</summary>
@@ -328,7 +331,6 @@ public partial class AudioManager : Node
 			return;
 		}
 
-		GD.Print($"[Audio t={Time.GetTicksMsec()}ms] MUSIC switch \"{_currentMusicKey}\" → \"{key}\" (loop={loop}, fade={fadeDuration:F1}s)");
 		_currentMusicKey = key;
 
 		AudioStreamPlayer incoming = _usingA ? _musicPlayerA : _musicPlayerB;
@@ -376,7 +378,6 @@ public partial class AudioManager : Node
 			stream = clone;
 		}
 
-		GD.Print($"[Audio t={Time.GetTicksMsec()}ms] AMBIANCE start \"{key}\" (len={stream.GetLength():F1}s)");
 		_ambiancePlayer.Stream = stream;
 		_ambiancePlayer.VolumeDb = 0f;
 		_ambiancePlayer.Play();
@@ -411,14 +412,6 @@ public partial class AudioManager : Node
 	{
 		float dt = (float)delta;
 
-		// --- Debug : dump tous les players actifs toutes les N secondes ---
-		_debugTimer += dt;
-		if (_debugTimer >= DebugInterval)
-		{
-			_debugTimer = 0f;
-			DumpActivePlayers();
-		}
-
 		// Bascule nuit vagues → chaos
 		if (_currentPhase == "Night")
 		{
@@ -442,42 +435,6 @@ public partial class AudioManager : Node
 				PlaySfx(birdKey, 0.05f, -4f);
 			}
 		}
-	}
-
-	private void DumpActivePlayers()
-	{
-		int activeSfx = 0;
-		foreach (AudioStreamPlayer p in _sfxPool)
-		{
-			if (p.Playing)
-			{
-				string streamName = p.Stream?.ResourcePath ?? p.Stream?.GetType().Name ?? "null";
-				float pos = p.GetPlaybackPosition();
-				double len = p.Stream?.GetLength() ?? 0.0;
-				bool looping = false;
-				if (p.Stream is AudioStreamWav wav)
-					looping = wav.LoopMode != AudioStreamWav.LoopModeEnum.Disabled;
-				else if (p.Stream is AudioStreamOggVorbis ogg)
-					looping = ogg.Loop;
-				GD.Print($"[Audio t={Time.GetTicksMsec()}ms] ACTIVE SFX {p.Name}: \"{streamName}\" pos={pos:F1}/{len:F1}s loop={looping}");
-				activeSfx++;
-			}
-		}
-
-		if (_musicPlayerA.Playing)
-			GD.Print($"[Audio t={Time.GetTicksMsec()}ms] ACTIVE MusicA: \"{_musicPlayerA.Stream?.ResourcePath}\" pos={_musicPlayerA.GetPlaybackPosition():F1}s vol={_musicPlayerA.VolumeDb:F1}dB");
-		if (_musicPlayerB.Playing)
-			GD.Print($"[Audio t={Time.GetTicksMsec()}ms] ACTIVE MusicB: \"{_musicPlayerB.Stream?.ResourcePath}\" pos={_musicPlayerB.GetPlaybackPosition():F1}s vol={_musicPlayerB.VolumeDb:F1}dB");
-		if (_ambiancePlayer.Playing)
-		{
-			bool ambLoop = false;
-			if (_ambiancePlayer.Stream is AudioStreamWav ambWav)
-				ambLoop = ambWav.LoopMode != AudioStreamWav.LoopModeEnum.Disabled;
-			GD.Print($"[Audio t={Time.GetTicksMsec()}ms] ACTIVE Ambiance: \"{_ambiancePlayer.Stream?.ResourcePath}\" pos={_ambiancePlayer.GetPlaybackPosition():F1}s loop={ambLoop}");
-		}
-
-		if (activeSfx >= SfxPoolSize - 2)
-			GD.PrintErr($"[Audio t={Time.GetTicksMsec()}ms] WARNING: SFX pool near saturation ({activeSfx}/{SfxPoolSize} active)");
 	}
 
 	private void RefreshDayMusic()

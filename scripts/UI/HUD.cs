@@ -642,7 +642,7 @@ public partial class HUD : CanvasLayer
         float iconSize = 14;
 
         // Wood row
-        _woodIcon = MakeIcon("res://assets/ui/hud/hud_icon_wood.png", (int)iconSize);
+        _woodIcon = MakeIcon("res://assets/sprites/items/item_bois.png", (int)iconSize);
         _woodIcon.Position = new Vector2(5, 5);
         _woodIcon.Size = new Vector2(iconSize, iconSize);
         panel.AddChild(_woodIcon);
@@ -653,7 +653,7 @@ public partial class HUD : CanvasLayer
         panel.AddChild(_woodLabel);
 
         // Stone row
-        _stoneIcon = MakeIcon("res://assets/ui/hud/hud_icon_stone.png", (int)iconSize);
+        _stoneIcon = MakeIcon("res://assets/sprites/items/item_pierre.png", (int)iconSize);
         _stoneIcon.Position = new Vector2(5, 5 + rowH);
         _stoneIcon.Size = new Vector2(iconSize, iconSize);
         panel.AddChild(_stoneIcon);
@@ -664,7 +664,7 @@ public partial class HUD : CanvasLayer
         panel.AddChild(_stoneLabel);
 
         // Metal row
-        _metalIcon = MakeIcon("res://assets/ui/hud/hud_icon_metal.png", (int)iconSize);
+        _metalIcon = MakeIcon("res://assets/sprites/items/item_metal.png", (int)iconSize);
         _metalIcon.Position = new Vector2(5, 5 + rowH * 2);
         _metalIcon.Size = new Vector2(iconSize, iconSize);
         panel.AddChild(_metalIcon);

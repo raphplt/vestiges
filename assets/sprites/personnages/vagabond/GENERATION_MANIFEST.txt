@@ -1,0 +1,229 @@
+================================================================================
+LE VAGABOND - CHARACTER SPRITE SHEET GENERATION MANIFEST
+VESTIGES - Roguelike 2D Isométrique
+================================================================================
+
+GENERATED: 2026-03-06
+GENERATOR: generate_vagabond.py (Python 3 + Pillow)
+
+================================================================================
+SPRITE SPECIFICATIONS
+================================================================================
+
+Frame Size:         16×24 pixels (per CHARTE-GRAPHIQUE)
+Total Frames:       68 frames (4 directions × 17 frames per direction)
+Directions:         SE (front), SW (front-left), NE (back-right), NW (back)
+Color Space:        RGBA (24-bit RGB + 8-bit alpha transparency)
+
+================================================================================
+COLOR PALETTE (from VESTIGES Charte Graphique)
+================================================================================
+
+Dominant Colors:
+  • Cloak (Brun terreux):        #7A5C42 (122, 92, 66)
+  • Tool Belt (Orange outil):    #D4853A (212, 133, 58)
+  • Skin (Light warm tone):      #D4A880 (212, 168, 128)
+  • Hair/Hat (Dark brown):       #4A3728 (74, 55, 40)
+  • Boots (Very dark brown):     #3A2E22 (58, 46, 34)
+
+Details:
+  • Shirt (Off-white):           #C8B8A0 (200, 184, 160)
+  • Outline (Sel-out):           #3A2E22 (58, 46, 34) — NOT pure black
+  • Shadows (Rare):              #1A1A2E (26, 26, 46)
+  • Highlights (Blanc cassé):    #E8E0D4 (232, 224, 212)
+
+Lighting: Top-left, giving highlights on top/left, shadows on bottom/right
+
+================================================================================
+ANIMATION FRAMES BREAKDOWN
+================================================================================
+
+Per Direction (SE, SW, NE, NW):
+
+1. IDLE (4 frames)
+   • Frame 1: Base pose (neutral standing)
+   • Frame 2: Subtle chest rise (breathing)
+   • Frame 3: Slight arm position shift
+   • Frame 4: Return to base
+
+2. WALK (4 frames)
+   • Frame 1: Left leg forward (contact)
+   • Frame 2: Legs crossing center (passing phase)
+   • Frame 3: Right leg forward (contact, alternate)
+   • Frame 4: Legs at center (passing phase return)
+
+3. DASH (3 frames)
+   • Frame 1: Anticipation (squat, bent knees)
+   • Frame 2: Stretch (lean forward, extended stride)
+   • Frame 3: Recovery (landing, stabilizing)
+
+4. HURT (2 frames)
+   • Frame 1: White flash (#E8E0D4 full body)
+   • Frame 2: Recoil pose (lean back, pain expression)
+
+5. DEATH (4 frames)
+   • Frame 1: Stagger (tilted, eyes closed)
+   • Frame 2: Knees buckling (lowered)
+   • Frame 3: Falling forward (horizontal)
+   • Frame 4: Prone on ground (final state)
+
+================================================================================
+FILE NAMING CONVENTION
+================================================================================
+
+Pattern: char_vagabond_[DIRECTION]_[ANIMATION]_[FRAME].png
+
+Examples:
+  • char_vagabond_SE_idle_01.png       (South-East, idle, frame 1)
+  • char_vagabond_SW_walk_02.png       (South-West, walk, frame 2)
+  • char_vagabond_NE_dash_03.png       (North-East, dash, frame 3)
+  • char_vagabond_NW_death_04.png      (North-West, death, frame 4)
+
+PREVIEW: PREVIEW_VAGABOND.png (all animations, all directions)
+
+================================================================================
+DIRECTIONAL LOGIC
+================================================================================
+
+SE (South-East):
+  • Primary view: facing south-east toward camera-right
+  • Shows front of character, full face visible
+  • Source direction for most hand-drawn frames
+
+SW (South-West):
+  • Horizontal flip of SE
+  • Facing south-west toward camera-left
+  • Mirrors SE for left-facing movement
+
+NE (North-East):
+  • Back view, facing away from camera
+  • Generated from flipped SE (shows cloak back)
+  • Character moving to upper-right of screen
+
+NW (North-West):
+  • Back view, facing away from camera
+  • Generated from flipped NE
+  • Character moving to upper-left of screen
+
+Light source maintained from top-left in all directions.
+
+================================================================================
+PIXEL ART METHODOLOGY
+================================================================================
+
+Anatomy at 16×24:
+  • Rows 0-1:    Hat/hair (3-4px wide)
+  • Rows 2-4:    Head (5-6px), face details, neck
+  • Rows 5-10:   Torso, cloak, shirt front, belt accent
+  • Rows 11-15:  Legs, pants, darker brown coloring
+  • Rows 16-18:  Boots, stance indicator
+
+Centered horizontally: character occupies ~8-10px width, centered in 16px frame.
+
+Key Pixel Art Rules Applied:
+  • Sel-out outlines use #3A2E22 (never pure black #000000)
+  • Light from top-left: bright edges on top-left, dark on bottom-right
+  • Each frame readable as standalone pose
+  • Intentional pixel placement for silhouette clarity
+  • Subtle movement: 1-2px shifts between frames for smooth animation
+
+================================================================================
+OUTPUT STRUCTURE
+================================================================================
+
+Location: /sessions/epic-inspiring-hamilton/mnt/vestiges/assets/sprites/personnages/vagabond/
+
+Files Generated:
+  • 68 individual PNG frames (char_vagabond_*.png)
+  • 1 preview sheet (PREVIEW_VAGABOND.png)
+  • This manifest (GENERATION_MANIFEST.txt)
+
+Total Size: ~284 KB (optimized PNG compression)
+
+Each frame:
+  • 16×24 pixels
+  • Transparent background (RGBA, alpha channel)
+  • Lossless compression (PNG)
+
+================================================================================
+USAGE IN GODOT
+================================================================================
+
+Expected Integration:
+
+1. Import each frame as individual texture resource
+2. Create AnimatedSprite2D nodes for each direction:
+   - vagabond_SE, vagabond_SW, vagabond_NE, vagabond_NW
+
+3. Animation setup per direction:
+   - idle: 4 frames, 8 FPS (slower breathing animation)
+   - walk: 4 frames, 12 FPS (standard walking pace)
+   - dash: 3 frames, 20 FPS (quick action)
+   - hurt: 2 frames, 15 FPS (reaction)
+   - death: 4 frames, 10 FPS (dramatic fall)
+
+4. Direction control via script:
+   - Monitor player input/velocity
+   - Switch visible AnimatedSprite2D based on movement vector
+   - Cross-fade animations smoothly
+
+5. Z-sort: Ensure vagabond renders above environment but below UI
+
+================================================================================
+QUALITY NOTES
+================================================================================
+
+SE Direction (Primary):
+  • Hand-drawn pixel precision
+  • Detailed face (2 eyes), expression changes in hurt/death
+  • Clear silhouette for walk cycle leg differentiation
+  • Cloak drape suggested through color variation
+  • Tool belt accent (#D4853A) clearly visible
+
+All Directions:
+  • Consistent anatomy across 4 views
+  • Recognizable character shape at 16px width
+  • Animation frames flow logically (no frame pops)
+  • Idle breathing is subtle (won't distract gameplay)
+  • Dash anticipation→stretch→recovery reads clearly
+
+================================================================================
+ROAD TO POLISH (Future)
+================================================================================
+
+Optional enhancements post-release:
+
+1. Add subtle screen-shake particle effects on dash/hurt
+2. Implement equipment visual swaps (holds tool in hand during work)
+3. Add equipped item silhouettes to cloak side
+4. Expand to 8+ directions for smoother omni-directional movement
+5. Create alt costumes (Vagabond variations for meta progression)
+6. Animate held torch glow overlay on idle/walk at night
+
+================================================================================
+GENERATION SCRIPT
+================================================================================
+
+Source: generate_vagabond.py
+Language: Python 3.8+
+Dependencies: Pillow (PIL)
+
+Key Classes:
+  • VagabondSpriteGenerator: Main orchestrator
+  • Methods for each frame type: draw_se_idle_01(), etc.
+  • Directional transformations: flip_horizontal(), generate_sw_frame()
+  • Batch export: generate_all_frames(), generate_preview_sheet()
+
+Script features:
+  • Procedural pixel placement (no external graphics)
+  • Modular frame-by-frame animation control
+  • Automatic direction mirroring
+  • Preview sheet generation
+  • Full RGBA transparency support
+
+Re-run capability: Script is fully deterministic. Re-running will regenerate
+identical frames.
+
+================================================================================
+END OF MANIFEST
+================================================================================

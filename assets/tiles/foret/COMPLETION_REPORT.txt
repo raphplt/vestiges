@@ -1,0 +1,139 @@
+FORÊT RECONQUISE TILESET - GENERATION COMPLETE
+================================================
+
+PROJECT: VESTIGES (Roguelike Survival & Construction, Godot 4.6, C#)
+BIOME: Forêt Reconquise (Reclaimed Forest)
+STATUS: 20 P0 Priority Tiles Successfully Generated
+DATE: March 6, 2026
+
+TILE SUMMARY
+============
+
+Ground Tiles (32×16 isometric diamonds): 9 tiles
+  ✓ tile_foret_herbe_1.png          - Main grass/moss ground
+  ✓ tile_foret_herbe_2.png          - Moss-dominant variant
+  ✓ tile_foret_herbe_3.png          - Grass with wildflowers
+  ✓ tile_foret_terre_1.png          - Dirt with roots
+  ✓ tile_foret_terre_2.png          - Packed earth
+  ✓ tile_foret_chemin_droit.png     - Straight path
+  ✓ tile_foret_chemin_courbe.png    - Curved path
+  ✓ tile_foret_autoroute_1.png      - Cracked highway
+  ✓ tile_foret_autoroute_2.png      - Overgrown highway
+
+Tree Sprites: 5 tiles
+  Large Trees (32×48):
+    ✓ tile_foret_arbre_grand.png    - Thick trunk, dense canopy
+    ✓ tile_foret_arbre_grand_2.png  - Asymmetric canopy variant
+
+  Medium Trees (16×32):
+    ✓ tile_foret_arbre_moyen_1.png  - Compact canopy
+    ✓ tile_foret_arbre_moyen_2.png  - Variant 2
+    ✓ tile_foret_arbre_moyen_3.png  - Autumn color mix
+
+Bush/Rock Sprites (16×12): 5 tiles
+  Bushes:
+    ✓ tile_foret_buisson_1.png      - Rounded moss clump
+    ✓ tile_foret_buisson_2.png      - With berry accents
+    ✓ tile_foret_buisson_3.png      - Wide, flat variant
+
+  Mossy Rocks:
+    ✓ tile_foret_rocher_mousse_1.png - Gray stone with moss
+    ✓ tile_foret_rocher_mousse_2.png - Variant 2
+
+Structures (32×32): 1 tile
+  ✓ tile_foret_mur_ruine.png        - Ruined wall with ivy
+
+Deliverables:
+  ✓ PREVIEW_FORET_TILES.png         - Contact sheet (5×4 grid)
+  ✓ README.md                       - Usage documentation
+  ✓ GENERATION_SUMMARY.md           - Technical details
+
+TECHNICAL SPECIFICATIONS
+========================
+
+Format: PNG 8-bit/color RGBA, non-interlaced
+Rendering: Pixel-perfect, no anti-aliasing
+Palette: 12-16 colors per tile (Forêt Reconquise palette)
+Technique: Intentional pixel placement (no random noise)
+Outlines: Sel-out colored outlines (never pure black)
+
+Dimensions:
+  - Ground tiles: 32×16 (isometric diamond shape)
+  - Large trees: 32×48
+  - Medium trees: 16×32
+  - Bushes/rocks: 16×12
+  - Structures: 32×32
+
+Colors Used:
+  Primary Greens:
+    #2D5A27 (Vert canopée sombre)
+    #4A8C3F (Vert mousse)
+    #7BC558 (Vert clair)
+    #A4D65E (Vert-jaune)
+    #1E3A1A (Lierre sombre)
+
+  Browns & Earths:
+    #4A3728 (Brun tronc foncé)
+    #7A5C42 (Brun terreux)
+    #A68B6B (Brun clair)
+
+  Accents:
+    #C49B3E (Ocre automne)
+    #8B6BAE (Fleur violette)
+    #E0C84A (Fleur jaune)
+
+  Grays & Whites:
+    #7A7A70 (Gris béton)
+    #6B6161 (Gris chaud)
+    #3A3535 (Gris chaud foncé)
+    #1A1A2E (Noir profond)
+    #E8E0D4 (Blanc cassé)
+
+FILE LOCATIONS
+==============
+
+Output Directory:
+  /sessions/epic-inspiring-hamilton/mnt/vestiges/assets/tiles/foret/
+
+Generation Script:
+  /sessions/epic-inspiring-hamilton/mnt/vestiges/scripts/generate_foret_tiles.py
+
+Documentation:
+  - README.md (comprehensive usage guide)
+  - GENERATION_SUMMARY.md (technical details)
+  - PREVIEW_FORET_TILES.png (visual preview)
+
+PIXEL ART QUALITY
+=================
+
+Design Principles Applied:
+  ✓ Organic leaf clustering (non-uniform placement)
+  ✓ Intentional pixel placement (no procedural generation)
+  ✓ Subtle material transitions using dithering
+  ✓ Sel-out technique for refined outlines
+  ✓ Careful color transitions within palette
+  ✓ Ground texture variation (avoiding repetition)
+
+All pixels placed deliberately with artistic intent.
+Zero random noise or procedural generation used.
+
+INTEGRATION READY
+=================
+
+All tiles are ready for Godot 4.6:
+  - Proper isometric diamond shapes for ground tiles
+  - Free-standing sprites with transparency
+  - Optimized PNG format
+  - Strict palette adherence
+  - Pixel-perfect rendering
+
+Next Steps:
+  1. Import all PNG files into Godot project
+  2. Create AtlasTexture resources as needed
+  3. Add tiles to TileSet for use in TileMap nodes
+  4. Test isometric rendering and Y-sorting
+
+COMPLETION STATUS: 100%
+======================
+All 20 P0 priority tiles generated successfully.
+Ready for biome implementation in VESTIGES.
