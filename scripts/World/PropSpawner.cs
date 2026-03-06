@@ -187,12 +187,12 @@ public partial class PropSpawner : Node2D
 		GD.Print($"[PropSpawner] Skip terrain mismatch: {skipTerrain}");
 		GD.Print($"[PropSpawner] Skip too close: {skipDistance}");
 		GD.Print($"[PropSpawner] Skip texture missing: {skipTexture}");
-		GD.Print($"[PropSpawner] TOTAL SPAWNED: {totalSpawned} ({_canopyProps.Count} with canopy)");
+		GD.Print($"[PropSpawner] TOTAL SPAWNED: {totalSpawned} ({_solidProps.Count} with occlusion tracking)");
 	}
 
 	public override void _PhysicsProcess(double delta)
 	{
-		if (_canopyProps.Count == 0)
+		if (_solidProps.Count == 0)
 			return;
 
 		if (_player == null || !IsInstanceValid(_player))
@@ -206,25 +206,34 @@ public partial class PropSpawner : Node2D
 
 		Vector2 playerPos = _player.GlobalPosition;
 
-		for (int i = _canopyProps.Count - 1; i >= 0; i--)
+		// Technique iso classique : le prop devient transparent quand le joueur
+		// est "derrière" lui (= position Y du joueur > position Y du prop,
+		// et assez proche horizontalement pour être caché visuellement).
+		for (int i = _solidProps.Count - 1; i >= 0; i--)
 		{
-			EnvironmentProp prop = _canopyProps[i];
+			EnvironmentProp prop = _solidProps[i];
 			if (!IsInstanceValid(prop))
 			{
-				_canopyProps.RemoveAt(i);
+				_solidProps.RemoveAt(i);
 				continue;
 			}
 
-			float dist = playerPos.DistanceTo(prop.CanopyWorldPosition);
-			if (dist < CanopyFadeDistance)
+			Vector2 propPos = prop.GlobalPosition;
+			float dx = Mathf.Abs(playerPos.X - propPos.X);
+			// dy négatif = joueur plus haut sur l'écran = "derrière" en iso
+			float dy = playerPos.Y - propPos.Y;
+
+			bool playerBehind = dy < 8f && dy > -prop.BaseHeight && dx < OcclusionDistanceX;
+
+			if (playerBehind)
 			{
-				float t = dist / CanopyFadeDistance;
-				float alpha = Mathf.Lerp(CanopyMinAlpha, 0.85f, t);
-				prop.SetCanopyTransparency(alpha);
+				float tX = 1f - (dx / OcclusionDistanceX);
+				float alpha = Mathf.Lerp(1f, OccludedAlpha, tX);
+				prop.SetOverallTransparency(alpha);
 			}
 			else
 			{
-				prop.SetCanopyTransparency(0.85f);
+				prop.SetOverallTransparency(1f);
 			}
 		}
 	}

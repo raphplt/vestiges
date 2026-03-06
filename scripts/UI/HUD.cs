@@ -77,6 +77,7 @@ public partial class HUD : CanvasLayer
     // --- Bottom-center: passive souvenir bar ---
     private HBoxContainer _passiveBar;
     private readonly NinePatchRect[] _passiveSlotFrames = new NinePatchRect[Player.MaxPassiveSlots];
+    private readonly TextureRect[] _passiveSlotIcons = new TextureRect[Player.MaxPassiveSlots];
     private readonly Label[] _passiveSlotLabels = new Label[Player.MaxPassiveSlots];
 
     // --- Bottom-left: inventory ---
@@ -620,6 +621,18 @@ public partial class HUD : CanvasLayer
             frame.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
             slotRoot.AddChild(frame);
 
+            TextureRect icon = new();
+            icon.ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize;
+            icon.StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered;
+            icon.TextureFilter = CanvasItem.TextureFilterEnum.Nearest;
+            icon.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
+            icon.OffsetLeft = 2;
+            icon.OffsetTop = 2;
+            icon.OffsetRight = -2;
+            icon.OffsetBottom = -2;
+            icon.Visible = false;
+            slotRoot.AddChild(icon);
+
             Label nameLabel = MakeLabel("", 6, PalGrayWarm);
             nameLabel.Position = new Vector2(0, passiveSize - 1);
             nameLabel.Size = new Vector2(passiveSize, 10);
@@ -628,6 +641,7 @@ public partial class HUD : CanvasLayer
             slotRoot.AddChild(nameLabel);
 
             _passiveSlotFrames[i] = frame;
+            _passiveSlotIcons[i] = icon;
             _passiveSlotLabels[i] = nameLabel;
             _passiveBar.AddChild(slotRoot);
         }
@@ -961,16 +975,52 @@ public partial class HUD : CanvasLayer
             {
                 ActivePassiveSouvenir passive = passives[i];
                 _passiveSlotFrames[i].Texture = passiveFilledTex;
-                _passiveSlotFrames[i].Modulate = passive.Data.IconColor;
+                _passiveSlotFrames[i].Modulate = Colors.White;
                 _passiveSlotLabels[i].Text = passive.Level > 1 ? $"{passive.Level}" : "";
+
+                string iconPath = GetPassiveIconPath(passive.Data.Stat);
+                Texture2D iconTex = GD.Load<Texture2D>($"res://{iconPath}");
+                if (iconTex != null)
+                {
+                    _passiveSlotIcons[i].Texture = iconTex;
+                    _passiveSlotIcons[i].Modulate = passive.Data.IconColor;
+                    _passiveSlotIcons[i].Visible = true;
+                }
+                else
+                {
+                    _passiveSlotIcons[i].Visible = false;
+                    _passiveSlotFrames[i].Modulate = passive.Data.IconColor;
+                }
             }
             else
             {
                 _passiveSlotFrames[i].Texture = passiveEmptyTex;
                 _passiveSlotFrames[i].Modulate = Colors.White;
+                _passiveSlotIcons[i].Visible = false;
                 _passiveSlotLabels[i].Text = "";
             }
         }
+    }
+
+    private static string GetPassiveIconPath(string stat)
+    {
+        return stat switch
+        {
+            "damage" => "assets/ui/icons/ui_icon_perk_degats.png",
+            "attack_speed" => "assets/ui/icons/ui_icon_perk_vitesse.png",
+            "max_hp" => "assets/ui/icons/ui_icon_perk_hp.png",
+            "speed" => "assets/ui/icons/ui_icon_perk_vitesse.png",
+            "armor" => "assets/ui/icons/ui_icon_perk_armure.png",
+            "aoe_radius" => "assets/ui/icons/ui_icon_perk_echo.png",
+            "projectile_count" => "assets/ui/icons/ui_icon_perk_echo.png",
+            "crit_chance" => "assets/ui/icons/ui_icon_perk_degats.png",
+            "regen_rate" => "assets/ui/icons/ui_icon_perk_hp.png",
+            "attack_range" => "assets/ui/icons/ui_icon_perk_vitesse.png",
+            "xp_magnet_radius" => "assets/ui/icons/ui_icon_perk_siphon.png",
+            "cooldown_reduction" => "assets/ui/icons/ui_icon_perk_canalisation.png",
+            "projectile_pierce" => "assets/ui/icons/ui_icon_perk_barrage.png",
+            _ => "assets/ui/icons/ui_icon_perk_degats.png"
+        };
     }
 
     private static Color GetTierColor(int tier)

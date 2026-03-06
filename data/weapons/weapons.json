@@ -53,7 +53,7 @@
         "stats": {
             "damage": 8,
             "attack_speed": 1.2,
-            "range": 300,
+            "range": 150,
             "projectile_speed": 400,
             "projectile_count": 1
         },
@@ -74,7 +74,7 @@
         "stats": {
             "damage": 4,
             "attack_speed": 1.8,
-            "range": 200,
+            "range": 120,
             "projectile_speed": 300,
             "projectile_count": 3,
             "spread_angle": 30
@@ -132,7 +132,7 @@
         "stats": {
             "damage": 22,
             "attack_speed": 0.6,
-            "range": 350,
+            "range": 180,
             "projectile_speed": 500,
             "projectile_count": 1,
             "projectile_pierce": 3
@@ -226,7 +226,7 @@
         "stats": {
             "damage": 11,
             "attack_speed": 1.1,
-            "range": 220,
+            "range": 140,
             "projectile_speed": 350,
             "projectile_count": 2,
             "spread_angle": 25
@@ -343,7 +343,7 @@
         "stats": {
             "damage": 30,
             "attack_speed": 0.4,
-            "range": 500,
+            "range": 250,
             "projectile_speed": 800,
             "projectile_count": 1,
             "projectile_pierce": 999
@@ -405,7 +405,7 @@
         "stats": {
             "damage": 13,
             "attack_speed": 1.0,
-            "range": 280,
+            "range": 180,
             "projectile_speed": 200,
             "projectile_count": 1,
             "homing_strength": 0.9
@@ -426,7 +426,7 @@
         "stats": {
             "damage": 18,
             "attack_speed": 0.5,
-            "range": 150,
+            "range": 130,
             "projectile_count": 5,
             "spread_angle": 45,
             "projectile_speed": 600
@@ -451,7 +451,7 @@
         "stats": {
             "damage": 20,
             "attack_speed": 0.8,
-            "range": 320,
+            "range": 200,
             "projectile_speed": 250,
             "projectile_count": 1,
             "homing_strength": 0.85,
@@ -521,7 +521,7 @@
         "stats": {
             "damage": 10,
             "attack_speed": 0.6,
-            "range": 250,
+            "range": 170,
             "projectile_speed": 180,
             "projectile_count": 1,
             "essence_cost_per_attack": 0.3
@@ -604,7 +604,7 @@
         "stats": {
             "damage": 25,
             "attack_speed": 0.6,
-            "range": 250,
+            "range": 200,
             "projectile_speed": 150,
             "projectile_count": 2,
             "homing_strength": 1.0
@@ -637,7 +637,7 @@
         "stats": {
             "damage": 8,
             "attack_speed": 0.3,
-            "range": 400,
+            "range": 250,
             "projectile_speed": 0,
             "cone_angle_start": 15,
             "cone_angle_end": 60
