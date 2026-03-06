@@ -32,6 +32,7 @@ public partial class HubScreen : Control
 	private readonly Dictionary<string, Button> _tabButtons = new();
 	private readonly Dictionary<string, PanelContainer> _cardsByCharacterId = new();
 	private LineEdit _seedInput;
+	private SettingsScreen _settingsScreen;
 
 	// --- Cached textures ---
 	private Texture2D _panelTex;
@@ -183,6 +184,31 @@ public partial class HubScreen : Control
 
 		// --- BOTTOM BAR ---
 		mainVBox.AddChild(BuildBottomBar());
+
+		// --- GEAR BUTTON (top-right) ---
+		Button gearBtn = new()
+		{
+			Text = "\u2699",
+			Flat = true,
+			FocusMode = FocusModeEnum.None,
+			CustomMinimumSize = new Vector2(48, 48)
+		};
+		gearBtn.AddThemeFontSizeOverride("font_size", 28);
+		gearBtn.AddThemeColorOverride("font_color", new Color(0.6f, 0.58f, 0.5f));
+		gearBtn.AddThemeColorOverride("font_hover_color", GoldColor);
+		gearBtn.AnchorLeft = 1f;
+		gearBtn.AnchorRight = 1f;
+		gearBtn.AnchorTop = 0f;
+		gearBtn.OffsetLeft = -60;
+		gearBtn.OffsetRight = -12;
+		gearBtn.OffsetTop = 12;
+		gearBtn.OffsetBottom = 60;
+		gearBtn.Pressed += () => _settingsScreen?.Open();
+		AddChild(gearBtn);
+
+		// --- SETTINGS SCREEN ---
+		_settingsScreen = new SettingsScreen();
+		AddChild(_settingsScreen);
 	}
 
 	// ----------------------------------------------------------------
@@ -441,149 +467,7 @@ public partial class HubScreen : Control
 		_enterVoidButton.Pressed += OnEnterVoidPressed;
 		buttonCenter.AddChild(_enterVoidButton);
 
-		// Bouton Audio discret sous le bouton principal
-		CenterContainer audioCenter = new();
-		bottomBox.AddChild(audioCenter);
-
-		Button audioBtn = new()
-		{
-			Text = "⚙ Audio",
-			CustomMinimumSize = new Vector2(120, 28)
-		};
-		audioBtn.AddThemeFontSizeOverride("font_size", 13);
-		audioBtn.AddThemeColorOverride("font_color", new Color(0.55f, 0.55f, 0.6f));
-		audioBtn.Pressed += ToggleAudioOverlay;
-		audioCenter.AddChild(audioBtn);
-
-		BuildAudioOverlay();
-
 		return margin;
-	}
-
-	// ----------------------------------------------------------------
-	// OVERLAY AUDIO
-	// ----------------------------------------------------------------
-
-	private Control _audioOverlay;
-
-	private void BuildAudioOverlay()
-	{
-		// Overlay plein écran semi-transparent
-		_audioOverlay = new Control();
-		_audioOverlay.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
-		_audioOverlay.Visible = false;
-		AddChild(_audioOverlay);
-
-		ColorRect dimmer = new() { Color = new Color(0, 0, 0, 0.55f) };
-		dimmer.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
-		_audioOverlay.AddChild(dimmer);
-
-		// Panel central
-		PanelContainer panel = new();
-		panel.SetAnchorsAndOffsetsPreset(LayoutPreset.Center);
-		panel.GrowHorizontal = Control.GrowDirection.Both;
-		panel.GrowVertical = Control.GrowDirection.Both;
-		panel.OffsetLeft = -200;
-		panel.OffsetRight = 200;
-		panel.OffsetTop = -170;
-		panel.OffsetBottom = 170;
-		_audioOverlay.AddChild(panel);
-
-		MarginContainer margin = new();
-		margin.LayoutMode = 1;
-		margin.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
-		margin.AddThemeConstantOverride("margin_left", 28);
-		margin.AddThemeConstantOverride("margin_top", 22);
-		margin.AddThemeConstantOverride("margin_right", 28);
-		margin.AddThemeConstantOverride("margin_bottom", 22);
-		panel.AddChild(margin);
-
-		VBoxContainer vbox = new();
-		vbox.AddThemeConstantOverride("separation", 14);
-		vbox.LayoutMode = 1;
-		vbox.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
-		margin.AddChild(vbox);
-
-		Label title = new()
-		{
-			Text = "PARAMÈTRES AUDIO",
-			HorizontalAlignment = HorizontalAlignment.Center
-		};
-		title.AddThemeFontSizeOverride("font_size", 18);
-		title.AddThemeColorOverride("font_color", GoldColor);
-		vbox.AddChild(title);
-
-		vbox.AddChild(new HSeparator());
-		vbox.AddChild(BuildAudioSlider("Global",   "Master"));
-		vbox.AddChild(BuildAudioSlider("Musique",  "Music"));
-		vbox.AddChild(BuildAudioSlider("SFX",      "SFX"));
-		vbox.AddChild(BuildAudioSlider("Ambiance", "Ambiance"));
-		vbox.AddChild(new HSeparator());
-
-		Button closeBtn = new()
-		{
-			Text = "Fermer",
-			CustomMinimumSize = new Vector2(160, 34)
-		};
-		closeBtn.AddThemeFontSizeOverride("font_size", 14);
-		CenterContainer closeCtr = new();
-		closeCtr.AddChild(closeBtn);
-		vbox.AddChild(closeCtr);
-
-		closeBtn.Pressed += () =>
-		{
-			_audioOverlay.Visible = false;
-			Infrastructure.AudioManager.Instance?.SaveSettings();
-		};
-	}
-
-	private void ToggleAudioOverlay()
-	{
-		if (_audioOverlay == null)
-			return;
-		_audioOverlay.Visible = !_audioOverlay.Visible;
-		if (!_audioOverlay.Visible)
-			Infrastructure.AudioManager.Instance?.SaveSettings();
-	}
-
-	private static HBoxContainer BuildAudioSlider(string labelText, string busName)
-	{
-		HBoxContainer row = new();
-		row.AddThemeConstantOverride("separation", 10);
-
-		Label lbl = new() { Text = labelText, CustomMinimumSize = new Vector2(80, 0) };
-		lbl.AddThemeFontSizeOverride("font_size", 14);
-		lbl.AddThemeColorOverride("font_color", new Color(0.8f, 0.8f, 0.85f));
-		lbl.VerticalAlignment = VerticalAlignment.Center;
-		row.AddChild(lbl);
-
-		HSlider slider = new()
-		{
-			MinValue = 0.0,
-			MaxValue = 1.0,
-			Step = 0.01,
-			CustomMinimumSize = new Vector2(220, 0),
-			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill
-		};
-
-		if (Infrastructure.AudioManager.Instance != null)
-			slider.Value = Infrastructure.AudioManager.Instance.GetBusVolumeLinear(busName);
-		else
-			slider.Value = 1.0;
-
-		slider.ValueChanged += (double v) =>
-			Infrastructure.AudioManager.Instance?.SetBusVolumeLinear(busName, (float)v);
-		row.AddChild(slider);
-
-		Label pct = new() { CustomMinimumSize = new Vector2(42, 0) };
-		pct.AddThemeFontSizeOverride("font_size", 13);
-		pct.AddThemeColorOverride("font_color", new Color(0.55f, 0.55f, 0.6f));
-		pct.VerticalAlignment = VerticalAlignment.Center;
-		pct.Text = $"{(int)(slider.Value * 100)}%";
-		slider.ValueChanged += (double v) => pct.Text = $"{(int)(v * 100)}%";
-		row.AddChild(pct);
-
-		return row;
 	}
 
 	private void ApplyButtonStyle(Button btn)

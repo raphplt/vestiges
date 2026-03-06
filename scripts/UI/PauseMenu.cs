@@ -1,5 +1,4 @@
 using Godot;
-using Vestiges.Combat;
 using Vestiges.Infrastructure;
 
 namespace Vestiges.UI;
@@ -8,11 +7,13 @@ namespace Vestiges.UI;
 /// Menu pause — Escape pour ouvrir/fermer.
 /// Garde anti-conflit : ne s'ouvre pas si le jeu est déjà pausé
 /// par un autre écran (LevelUpScreen, GameOverScreen, JournalScreen).
+/// Les paramètres audio/graphiques sont délégués au SettingsScreen.
 /// </summary>
 public partial class PauseMenu : CanvasLayer
 {
 	private Control _root;
 	private bool _isPaused;
+	private SettingsScreen _settingsScreen;
 
 	public bool IsOpen => _isPaused;
 
@@ -20,6 +21,10 @@ public partial class PauseMenu : CanvasLayer
 	{
 		Layer = 50;
 		ProcessMode = ProcessModeEnum.Always;
+
+		_settingsScreen = new SettingsScreen();
+		AddChild(_settingsScreen);
+
 		BuildUI();
 		_root.Visible = false;
 	}
@@ -28,6 +33,13 @@ public partial class PauseMenu : CanvasLayer
 	{
 		if (!@event.IsActionPressed("ui_cancel"))
 			return;
+
+		if (_settingsScreen.IsOpen)
+		{
+			_settingsScreen.Close();
+			GetViewport().SetInputAsHandled();
+			return;
+		}
 
 		if (_isPaused)
 		{
@@ -53,8 +65,11 @@ public partial class PauseMenu : CanvasLayer
 		_isPaused = false;
 		_root.Visible = false;
 		GetTree().Paused = false;
-		AudioManager.Instance?.SaveSettings();
-		VfxFactory.SaveSettings();
+	}
+
+	private void OpenSettings()
+	{
+		_settingsScreen.Open();
 	}
 
 	private void ReturnToHub()
@@ -62,15 +77,12 @@ public partial class PauseMenu : CanvasLayer
 		_isPaused = false;
 		_root.Visible = false;
 		GetTree().Paused = false;
-		AudioManager.Instance?.SaveSettings();
-		VfxFactory.SaveSettings();
 		GetTree().ChangeSceneToFile("res://scenes/Hub.tscn");
 	}
 
 	private void QuitGame()
 	{
 		AudioManager.Instance?.SaveSettings();
-		VfxFactory.SaveSettings();
 		GetTree().Quit();
 	}
 
@@ -87,15 +99,15 @@ public partial class PauseMenu : CanvasLayer
 		overlay.Color = new Color(0.02f, 0.02f, 0.05f, 0.75f);
 		_root.AddChild(overlay);
 
-		// Panel central — élargi pour contenir les sliders
+		// Panel central
 		PanelContainer panel = new();
 		panel.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.Center);
 		panel.GrowHorizontal = Control.GrowDirection.Both;
 		panel.GrowVertical = Control.GrowDirection.Both;
-		panel.OffsetLeft = -180;
-		panel.OffsetRight = 180;
-		panel.OffsetTop = -300;
-		panel.OffsetBottom = 300;
+		panel.OffsetLeft = -140;
+		panel.OffsetRight = 140;
+		panel.OffsetTop = -140;
+		panel.OffsetBottom = 140;
 		_root.AddChild(panel);
 
 		MarginContainer margin = new();
@@ -123,13 +135,15 @@ public partial class PauseMenu : CanvasLayer
 		title.AddThemeColorOverride("font_color", new Color(0.9f, 0.82f, 0.5f));
 		vbox.AddChild(title);
 
-		// Séparateur visuel
 		vbox.AddChild(new HSeparator());
 
-		// --- Boutons ---
 		Button resumeBtn = CreateButton("Reprendre");
 		resumeBtn.Pressed += Resume;
 		vbox.AddChild(resumeBtn);
+
+		Button settingsBtn = CreateButton("Parametres");
+		settingsBtn.Pressed += OpenSettings;
+		vbox.AddChild(settingsBtn);
 
 		Button hubBtn = CreateButton("Retour au Hub");
 		hubBtn.Pressed += ReturnToHub;
@@ -138,67 +152,6 @@ public partial class PauseMenu : CanvasLayer
 		Button quitBtn = CreateButton("Quitter");
 		quitBtn.Pressed += QuitGame;
 		vbox.AddChild(quitBtn);
-
-		// --- Section affichage ---
-		vbox.AddChild(new HSeparator());
-
-		Label displayLabel = new()
-		{
-			Text = "AFFICHAGE",
-			HorizontalAlignment = HorizontalAlignment.Center
-		};
-		displayLabel.AddThemeFontSizeOverride("font_size", 13);
-		displayLabel.AddThemeColorOverride("font_color", new Color(0.6f, 0.6f, 0.65f));
-		vbox.AddChild(displayLabel);
-
-		Button fullscreenBtn = CreateButton(
-			DisplayServer.WindowGetMode() == DisplayServer.WindowMode.Windowed
-				? "Plein écran"
-				: "Fenêtré");
-		fullscreenBtn.Pressed += () =>
-		{
-			if (DisplayServer.WindowGetMode() == DisplayServer.WindowMode.Windowed)
-			{
-				DisplayServer.WindowSetMode(DisplayServer.WindowMode.Fullscreen);
-				fullscreenBtn.Text = "Fenêtré";
-			}
-			else
-			{
-				DisplayServer.WindowSetMode(DisplayServer.WindowMode.Windowed);
-				fullscreenBtn.Text = "Plein écran";
-			}
-		};
-		vbox.AddChild(fullscreenBtn);
-
-		Button particleBtn = CreateButton(ParticleLevelLabel(VfxFactory.CurrentParticleLevel));
-		particleBtn.Pressed += () =>
-		{
-			VfxFactory.CurrentParticleLevel = VfxFactory.CurrentParticleLevel switch
-			{
-				ParticleLevel.Full => ParticleLevel.Reduced,
-				ParticleLevel.Reduced => ParticleLevel.Off,
-				_ => ParticleLevel.Full,
-			};
-			particleBtn.Text = ParticleLevelLabel(VfxFactory.CurrentParticleLevel);
-		};
-		vbox.AddChild(particleBtn);
-
-		// --- Section audio ---
-		vbox.AddChild(new HSeparator());
-
-		Label audioLabel = new()
-		{
-			Text = "AUDIO",
-			HorizontalAlignment = HorizontalAlignment.Center
-		};
-		audioLabel.AddThemeFontSizeOverride("font_size", 13);
-		audioLabel.AddThemeColorOverride("font_color", new Color(0.6f, 0.6f, 0.65f));
-		vbox.AddChild(audioLabel);
-
-		vbox.AddChild(BuildSlider("Global",   "Master"));
-		vbox.AddChild(BuildSlider("Musique",  "Music"));
-		vbox.AddChild(BuildSlider("SFX",      "SFX"));
-		vbox.AddChild(BuildSlider("Ambiance", "Ambiance"));
 
 		// Hint
 		Label hint = new()
@@ -211,68 +164,12 @@ public partial class PauseMenu : CanvasLayer
 		vbox.AddChild(hint);
 	}
 
-	private static HBoxContainer BuildSlider(string label, string busName)
-	{
-		HBoxContainer row = new();
-		row.AddThemeConstantOverride("separation", 8);
-
-		Label lbl = new() { Text = label, CustomMinimumSize = new Vector2(72, 0) };
-		lbl.AddThemeFontSizeOverride("font_size", 13);
-		lbl.AddThemeColorOverride("font_color", new Color(0.75f, 0.75f, 0.8f));
-		lbl.VerticalAlignment = VerticalAlignment.Center;
-		row.AddChild(lbl);
-
-		HSlider slider = new()
-		{
-			MinValue = 0.0,
-			MaxValue = 1.0,
-			Step = 0.01,
-			CustomMinimumSize = new Vector2(160, 0),
-			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill
-		};
-		slider.ProcessMode = ProcessModeEnum.Always;
-
-		// Initialise depuis l'état courant du bus
-		if (AudioManager.Instance != null)
-			slider.Value = AudioManager.Instance.GetBusVolumeLinear(busName);
-		else
-			slider.Value = 1.0;
-
-		slider.ValueChanged += (double v) =>
-		{
-			AudioManager.Instance?.SetBusVolumeLinear(busName, (float)v);
-		};
-		row.AddChild(slider);
-
-		// Pourcentage live
-		Label pct = new() { CustomMinimumSize = new Vector2(38, 0) };
-		pct.AddThemeFontSizeOverride("font_size", 12);
-		pct.AddThemeColorOverride("font_color", new Color(0.55f, 0.55f, 0.6f));
-		pct.VerticalAlignment = VerticalAlignment.Center;
-		pct.Text = $"{(int)(slider.Value * 100)}%";
-
-		slider.ValueChanged += (double v) => pct.Text = $"{(int)(v * 100)}%";
-		row.AddChild(pct);
-
-		return row;
-	}
-
-	private static string ParticleLevelLabel(ParticleLevel level)
-	{
-		return level switch
-		{
-			ParticleLevel.Full => "Particules : Toutes",
-			ParticleLevel.Reduced => "Particules : Réduites",
-			_ => "Particules : Désactivées",
-		};
-	}
-
 	private static Button CreateButton(string text)
 	{
 		Button btn = new()
 		{
 			Text = text,
-			CustomMinimumSize = new Vector2(240, 34)
+			CustomMinimumSize = new Vector2(200, 34)
 		};
 		btn.AddThemeFontSizeOverride("font_size", 15);
 		return btn;

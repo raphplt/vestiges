@@ -204,6 +204,8 @@ public partial class WorldSetup : Node2D
                 TerrainType terrainType = terrain[gx, gy];
                 int biomeIndex = _generator.GetBiomeIndex(x, y);
                 int sourceId = _tileMapper.GetSourceId(biomeIndex, terrainType, x, y);
+                if (sourceId < 0)
+                    continue;
                 _ground.SetCell(cell, sourceId, Vector2I.Zero);
             }
         }

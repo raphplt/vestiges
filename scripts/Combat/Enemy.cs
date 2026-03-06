@@ -93,6 +93,19 @@ public partial class Enemy : CharacterBody2D
 	private float _attackRangeSq;
 	private float _packRadiusSq;
 
+	// Off-screen culling
+	private const float ActiveProcessingRange = 600f;
+	private const float ActiveProcessingRangeSq = ActiveProcessingRange * ActiveProcessingRange;
+
+	// Pack bonus throttle (évite O(n²) chaque frame)
+	private float _packBonusTimer;
+	private const float PackBonusInterval = 0.5f;
+
+	// FindNearestStructure cache
+	private Structure _cachedNearestStructure;
+	private float _structureCacheTimer;
+	private const float StructureCacheInterval = 1f;
+
 	// Wave modifiers (nuit 7+ : enragé, régénérant, explosif)
 	private string _waveModifier;
 	private float _regenTimer;
@@ -198,6 +211,9 @@ public partial class Enemy : CharacterBody2D
 		_packRadius = data.ExtraStats.TryGetValue("pack_radius", out float pr) ? pr : 120f;
 		_waveModifier = null;
 		_regenTimer = 0f;
+		_packBonusTimer = (float)GD.RandRange(0.0, PackBonusInterval);
+		_cachedNearestStructure = null;
+		_structureCacheTimer = 0f;
 		IsActive = true;
 
 		// Son idle : intervalle aléatoire selon le type d'ennemi
@@ -350,6 +366,9 @@ public partial class Enemy : CharacterBody2D
 		_packBonusSpeed = 0f;
 		_waveModifier = null;
 		_regenTimer = 0f;
+		_packBonusTimer = 0f;
+		_cachedNearestStructure = null;
+		_structureCacheTimer = 0f;
 		// Nettoyage aura aberration (GPU particles ou Polygon2D legacy)
 		Node auraNode = GetNodeOrNull("AberrationAura");
 		if (auraNode != null)
@@ -400,8 +419,30 @@ public partial class Enemy : CharacterBody2D
 		if (_player == null || !IsInstanceValid(_player))
 			return;
 
-		float distToPlayer = GlobalPosition.DistanceTo(_player.GlobalPosition);
+		float distToPlayerSq = GlobalPosition.DistanceSquaredTo(_player.GlobalPosition);
 		float dt = (float)delta;
+
+		// Off-screen culling : ennemis loin du joueur → traitement minimal
+		if (distToPlayerSq > ActiveProcessingRangeSq)
+		{
+			ProcessIgnite(dt);
+			ProcessBleed(dt);
+
+			// Mouvement simplifié vers la cible sans MoveAndSlide complet
+			if (_nightMode)
+			{
+				Vector2 directionToFoyer = (_foyerPosition - GlobalPosition).Normalized();
+				GlobalPosition += directionToFoyer * _speed * dt;
+			}
+			else
+			{
+				Vector2 direction = (_player.GlobalPosition - GlobalPosition).Normalized();
+				GlobalPosition += direction * _speed * _slowFactor * dt;
+			}
+			return;
+		}
+
+		float distToPlayer = Mathf.Sqrt(distToPlayerSq);
 
 		ProcessIgnite(dt);
 		ProcessBleed(dt);
@@ -599,13 +640,14 @@ public partial class Enemy : CharacterBody2D
 		_player.Velocity += knockbackDir * 300f;
 
 		// Dégâts AoE aux structures proches
+		float slamAoeRadiusSq = ColosseSlamAoeRadius * ColosseSlamAoeRadius;
 		Godot.Collections.Array<Node> structures = _groupCache.GetStructures();
 		foreach (Node node in structures)
 		{
 			if (node is Base.Structure structure && !structure.IsDestroyed)
 			{
-				float dist = GlobalPosition.DistanceTo(structure.GlobalPosition);
-				if (dist < ColosseSlamAoeRadius)
+				float distSq = GlobalPosition.DistanceSquaredTo(structure.GlobalPosition);
+				if (distSq < slamAoeRadiusSq)
 					structure.TakeDamage(_damage * 1.5f);
 			}
 		}
@@ -672,13 +714,14 @@ public partial class Enemy : CharacterBody2D
 			}
 
 			// Impact structure pendant la charge
+			float chargeImpactRangeSq = (MeleeRange * 2f) * (MeleeRange * 2f);
 			Godot.Collections.Array<Node> structures = _groupCache.GetStructures();
 			foreach (Node node in structures)
 			{
 				if (node is Structure structure && !structure.IsDestroyed)
 				{
-					float dist = GlobalPosition.DistanceTo(structure.GlobalPosition);
-					if (dist < MeleeRange * 2f)
+					float distSq = GlobalPosition.DistanceSquaredTo(structure.GlobalPosition);
+					if (distSq < chargeImpactRangeSq)
 					{
 						structure.TakeDamage(_damage * 2f);
 						_chargerIsCharging = false;
@@ -718,6 +761,11 @@ public partial class Enemy : CharacterBody2D
 	/// <summary>Charognard (meute) : bonus de dégâts et vitesse quand d'autres charognards sont proches.</summary>
 	private void ProcessPackBonus(float delta)
 	{
+		_packBonusTimer -= delta;
+		if (_packBonusTimer > 0f)
+			return;
+		_packBonusTimer = PackBonusInterval;
+
 		int packCount = 0;
 		Godot.Collections.Array<Node> enemies = _groupCache.GetEnemies();
 		foreach (Node node in enemies)
@@ -727,16 +775,14 @@ public partial class Enemy : CharacterBody2D
 				&& GlobalPosition.DistanceSquaredTo(other.GlobalPosition) < _packRadiusSq)
 			{
 				packCount++;
+				if (packCount >= 5)
+					break;
 			}
 		}
 
 		if (packCount > 0)
 		{
-			float damageBonus = 1f + (_packBonusDamage * Mathf.Min(packCount, 5));
-			float speedBonus = 1f + (_packBonusSpeed * Mathf.Min(packCount, 5));
-			// Les bonus sont appliqués temporairement via les calculs de dégâts
-			// On stocke le multiplicateur courant dans _slowFactor (réutilisé comme speed multiplier positif)
-			// Simpler: modify speed directly for this frame
+			float speedBonus = 1f + (_packBonusSpeed * packCount);
 			_speed = _baseSpeed * _spawnSpeedMultiplier * speedBonus;
 		}
 		else
@@ -818,7 +864,7 @@ public partial class Enemy : CharacterBody2D
 	private void ProcessGuardBehavior(float distToPlayer, float delta)
 	{
 		_attackTimer -= delta;
-		float distToPost = GlobalPosition.DistanceTo(_guardPosition);
+		float distToPostSq = GlobalPosition.DistanceSquaredTo(_guardPosition);
 
 		if (distToPlayer < GuardPatrolRadius)
 		{
@@ -856,7 +902,7 @@ public partial class Enemy : CharacterBody2D
 				}
 			}
 		}
-		else if (distToPost > 10f)
+		else if (distToPostSq > 100f)
 		{
 			// Joueur hors zone : retour au poste de garde
 			Vector2 returnDir = (_guardPosition - GlobalPosition).Normalized();
@@ -875,11 +921,11 @@ public partial class Enemy : CharacterBody2D
 		Structure blockingWall = FindNearestStructure();
 		if (blockingWall != null && _enemyType == "melee")
 		{
-			float distToWall = GlobalPosition.DistanceTo(blockingWall.GlobalPosition);
+			float distToWallSq = GlobalPosition.DistanceSquaredTo(blockingWall.GlobalPosition);
 			Vector2 dirToWall = (blockingWall.GlobalPosition - GlobalPosition).Normalized();
 			Velocity = dirToWall * _speed;
 
-			if (distToWall < MeleeRange && _attackTimer <= 0f)
+			if (distToWallSq < _meleeRangeSq && _attackTimer <= 0f)
 			{
 				blockingWall.TakeDamage(_damage);
 				_attackTimer = _meleeAttackCooldown;
@@ -893,8 +939,8 @@ public partial class Enemy : CharacterBody2D
 
 		if (_enemyType == "melee")
 		{
-			float distToFoyer = GlobalPosition.DistanceTo(_foyerPosition);
-			if (distToFoyer < MeleeRange && distToPlayer < _playerProximityRange * 2f && _attackTimer <= 0f)
+			float distToFoyerSq = GlobalPosition.DistanceSquaredTo(_foyerPosition);
+			if (distToFoyerSq < _meleeRangeSq && distToPlayer < _playerProximityRange * 2f && _attackTimer <= 0f)
 			{
 				_eventBus.EmitSignal(EventBus.SignalName.PlayerHitBy, _enemyId, _damage);
 				_player.TakeDamage(_damage);
@@ -904,8 +950,8 @@ public partial class Enemy : CharacterBody2D
 		}
 		else if (_enemyType == "ranged" && _attackTimer <= 0f)
 		{
-			float distToFoyer = GlobalPosition.DistanceTo(_foyerPosition);
-			if (distToFoyer <= _attackRange)
+			float distToFoyerSq = GlobalPosition.DistanceSquaredTo(_foyerPosition);
+			if (distToFoyerSq <= _attackRangeSq)
 			{
 				ShootProjectile();
 				_attackTimer = _rangedAttackCooldown;
@@ -966,6 +1012,14 @@ public partial class Enemy : CharacterBody2D
 
 	private Structure FindNearestStructure()
 	{
+		_structureCacheTimer -= 0.016f; // Approximation d'un frame à 60 FPS
+		if (_structureCacheTimer > 0f && _cachedNearestStructure != null)
+		{
+			if (IsInstanceValid(_cachedNearestStructure) && !_cachedNearestStructure.IsDestroyed)
+				return _cachedNearestStructure;
+		}
+		_structureCacheTimer = StructureCacheInterval;
+
 		Godot.Collections.Array<Node> structures = _groupCache.GetStructures();
 		Structure nearest = null;
 		float nearestDistSq = StructureDetectRangeSq;
@@ -990,6 +1044,7 @@ public partial class Enemy : CharacterBody2D
 			}
 		}
 
+		_cachedNearestStructure = nearest;
 		return nearest;
 	}
 
@@ -1292,11 +1347,15 @@ public partial class Enemy : CharacterBody2D
 			float explosionDamage = _damage * 1.5f;
 
 			// Dégâts au joueur
+			float explosionRadiusSq = explosionRadius * explosionRadius;
 			if (_player != null && IsInstanceValid(_player))
 			{
-				float distToPlayer = GlobalPosition.DistanceTo(_player.GlobalPosition);
-				if (distToPlayer < explosionRadius)
+				float distToPlayerSq = GlobalPosition.DistanceSquaredTo(_player.GlobalPosition);
+				if (distToPlayerSq < explosionRadiusSq)
+				{
+					float distToPlayer = Mathf.Sqrt(distToPlayerSq);
 					_player.TakeDamage(explosionDamage * (1f - distToPlayer / explosionRadius));
+				}
 			}
 
 			// Dégâts aux ennemis proches
@@ -1305,7 +1364,7 @@ public partial class Enemy : CharacterBody2D
 			{
 				if (node is Enemy e && e != this && IsInstanceValid(e) && !e.IsDying)
 				{
-					if (GlobalPosition.DistanceTo(e.GlobalPosition) < explosionRadius)
+					if (GlobalPosition.DistanceSquaredTo(e.GlobalPosition) < explosionRadiusSq)
 						e.TakeDamage(explosionDamage * 0.5f);
 				}
 			}

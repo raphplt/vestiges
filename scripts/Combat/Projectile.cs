@@ -111,17 +111,17 @@ public partial class Projectile : Area2D
     {
         Godot.Collections.Array<Node> enemies = _groupCache.GetEnemies();
         Node2D nearest = null;
-        float nearestDist = 500f;
+        float nearestDistSq = 500f * 500f;
 
         foreach (Node node in enemies)
         {
             if (node is Node2D candidate && !candidate.IsQueuedForDeletion())
             {
-                float dist = GlobalPosition.DistanceTo(candidate.GlobalPosition);
-                if (dist < nearestDist)
+                float distSq = GlobalPosition.DistanceSquaredTo(candidate.GlobalPosition);
+                if (distSq < nearestDistSq)
                 {
                     nearest = candidate;
-                    nearestDist = dist;
+                    nearestDistSq = distSq;
                 }
             }
         }

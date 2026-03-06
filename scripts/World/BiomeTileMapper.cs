@@ -11,23 +11,14 @@ namespace Vestiges.World;
 /// </summary>
 public class BiomeTileMapper
 {
-	// biomeIndex → (TerrainType → sourceIds[])
 	private readonly Dictionary<int, Dictionary<TerrainType, int[]>> _biomeSourceMap = new();
+	private readonly Dictionary<TerrainType, int[]> _fallbackSourceMap = new();
 
 	// Tiles d'eau communes (remplacement global du water générique)
 	private int[] _commonWaterSources;
 
 	// Tiles de dissolution pour le dégradé visuel en bordure de carte
-	// Index 0 = légère dissolution, dernier = quasi-vide
 	private int[] _dissolutionSources;
-
-	private static readonly Dictionary<TerrainType, int> GenericSources = new()
-	{
-		{ TerrainType.Grass, 0 },
-		{ TerrainType.Concrete, 1 },
-		{ TerrainType.Water, 2 },
-		{ TerrainType.Forest, 3 }
-	};
 
 	private static readonly Dictionary<string, TerrainType> TerrainNameMap = new()
 	{
@@ -39,14 +30,20 @@ public class BiomeTileMapper
 
 	public void Initialize(TileSet tileSet, List<BiomeData> activeBiomes)
 	{
-		// Charger les tiles d'eau communes (eau profonde par défaut)
+		_biomeSourceMap.Clear();
+		_fallbackSourceMap.Clear();
+
+		// Charger les tiles d'eau communes
 		_commonWaterSources = LoadTileGroup(tileSet, new List<string>
 		{
 			"commun/tile_eau_profonde_base",
 			"commun/tile_eau_profonde_v2"
 		});
 
-		// Charger les tiles de dissolution (n1 = léger → n3 = quasi-vide)
+		if (_commonWaterSources.Length > 0)
+			_fallbackSourceMap[TerrainType.Water] = _commonWaterSources;
+
+		// Charger les tiles de dissolution
 		_dissolutionSources = LoadTileGroup(tileSet, new List<string>
 		{
 			"commun/tile_dissolution_n1",
@@ -72,7 +69,11 @@ public class BiomeTileMapper
 
 				int[] sources = LoadTileGroup(tileSet, kv.Value);
 				if (sources.Length > 0)
+				{
 					terrainMap[terrainType] = sources;
+					if (!_fallbackSourceMap.ContainsKey(terrainType))
+						_fallbackSourceMap[terrainType] = sources;
+				}
 			}
 
 			if (terrainMap.Count > 0)
@@ -82,7 +83,7 @@ public class BiomeTileMapper
 			}
 		}
 
-		GD.Print($"[BiomeTileMapper] Initialisé — {_biomeSourceMap.Count} biome(s), {_commonWaterSources.Length} eau commune");
+		GD.Print($"[BiomeTileMapper] Initialisé — {_biomeSourceMap.Count} biome(s), {_fallbackSourceMap.Count} fallback(s), {_commonWaterSources.Length} eau commune");
 	}
 
 	/// <summary>
@@ -101,15 +102,15 @@ public class BiomeTileMapper
 			}
 		}
 
-		// Fallback eau commune (remplace le water générique partout)
-		if (terrain == TerrainType.Water && _commonWaterSources.Length > 0)
+		// Fallback par terrain basé sur les tiles réellement chargées
+		if (_fallbackSourceMap.TryGetValue(terrain, out int[] fallbackSources) && fallbackSources.Length > 0)
 		{
 			int hash = HashCell(x, y);
-			return _commonWaterSources[hash % _commonWaterSources.Length];
+			return fallbackSources[hash % fallbackSources.Length];
 		}
 
-		// Fallback tiles génériques (sources 0-3 du tileset original)
-		return GenericSources[terrain];
+		GD.PushWarning($"[BiomeTileMapper] Aucun sourceId pour terrain {terrain} (biomeIndex={biomeIndex}, cell={x},{y})");
+		return -1;
 	}
 
 	/// <summary>

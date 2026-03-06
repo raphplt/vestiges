@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using Godot;
+using Vestiges.Core;
 using Vestiges.World;
 
 namespace Vestiges.UI;
@@ -6,6 +8,7 @@ namespace Vestiges.UI;
 /// <summary>
 /// Minimap affichée dans le HUD. Rendu par Image pour la performance.
 /// Montre le terrain, le brouillard, le joueur, les ennemis et les structures.
+/// Optimisation : les dots d'entités sont effacés/redessinés sans recopier l'image entière.
 /// </summary>
 public partial class Minimap : PanelContainer
 {
@@ -13,17 +16,20 @@ public partial class Minimap : PanelContainer
 
     private Image _baseTerrain;
     private Image _foggedTerrain;
-    private Image _composite;
     private ImageTexture _texture;
     private TextureRect _display;
 
     private WorldGenerator _generator;
     private FogOfWar _fogOfWar;
+    private GroupCache _groupCache;
     private int _mapRadius;
     private int _minimapPixelSize;
     private float _entityTimer;
     private bool _initialized;
     private int _lastFogRevision = -1;
+
+    // Tracked dots: pixel positions that were drawn last frame, to erase them efficiently
+    private readonly List<(int px, int py, int size)> _drawnDots = new();
 
     private static readonly Color ColorGrass = new(0.4f, 0.65f, 0.3f);
     private static readonly Color ColorConcrete = new(0.6f, 0.58f, 0.52f);
@@ -42,9 +48,11 @@ public partial class Minimap : PanelContainer
         _fogOfWar = fogOfWar;
         _mapRadius = generator.MapRadius;
         _minimapPixelSize = _mapRadius * 2 + 1;
+        _groupCache = GetNodeOrNull<GroupCache>("/root/GroupCache");
 
         SetupVisuals();
         BuildBaseTerrain();
+        _foggedTerrain.CopyFrom(_baseTerrain);
         _initialized = true;
     }
 
@@ -63,15 +71,15 @@ public partial class Minimap : PanelContainer
         AddThemeStyleboxOverride("panel", style);
 
         _display = new TextureRect();
-        _display.CustomMinimumSize = new Vector2(140, 140);
+        _display.CustomMinimumSize = new Vector2(100, 100);
         _display.StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered;
         _display.ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize;
+        _display.TextureFilter = CanvasItem.TextureFilterEnum.Nearest;
         AddChild(_display);
 
         _baseTerrain = Image.CreateEmpty(_minimapPixelSize, _minimapPixelSize, false, Image.Format.Rgb8);
         _foggedTerrain = Image.CreateEmpty(_minimapPixelSize, _minimapPixelSize, false, Image.Format.Rgb8);
-        _composite = Image.CreateEmpty(_minimapPixelSize, _minimapPixelSize, false, Image.Format.Rgb8);
-        _texture = ImageTexture.CreateFromImage(_composite);
+        _texture = ImageTexture.CreateFromImage(_foggedTerrain);
         _display.Texture = _texture;
     }
 
@@ -138,47 +146,54 @@ public partial class Minimap : PanelContainer
 
                 _lastFogRevision = _fogOfWar.RevealRevision;
             }
+
+            _drawnDots.Clear();
+        }
+        else
+        {
+            // Erase previous entity dots by restoring pixels from _foggedTerrain
+            foreach ((int px, int py, int size) in _drawnDots)
+            {
+                RestoreDot(px, py, size);
+            }
         }
 
-        _composite.CopyFrom(_foggedTerrain);
+        _drawnDots.Clear();
 
         // Draw foyer (center)
         DrawDot(_mapRadius, _mapRadius, ColorFoyer, 2);
 
         // Draw structures
-        foreach (Node node in GetTree().GetNodesInGroup("structures"))
+        if (_groupCache != null)
         {
-            if (node is Node2D structure)
-                DrawEntityDot(structure.GlobalPosition, ColorStructure);
+            foreach (Node node in _groupCache.GetStructures())
+            {
+                if (node is Node2D structure)
+                    DrawEntityDot(structure.GlobalPosition, ColorStructure);
+            }
+
+            foreach (Node node in _groupCache.GetPois())
+            {
+                if (node is Node2D poi)
+                    DrawEntityDot(poi.GlobalPosition, ColorPoi);
+            }
+
+            foreach (Node node in _groupCache.GetEnemies())
+            {
+                if (node is Node2D enemy)
+                    DrawEntityDot(enemy.GlobalPosition, ColorEnemy);
+            }
+
+            Node playerNode = _groupCache.GetPlayer();
+            if (playerNode is Node2D player)
+                DrawEntityDot(player.GlobalPosition, ColorPlayer, 3);
         }
 
-        // Draw POIs
-        foreach (Node node in GetTree().GetNodesInGroup("pois"))
-        {
-            if (node is Node2D poi)
-                DrawEntityDot(poi.GlobalPosition, ColorPoi);
-        }
-
-        // Draw enemies
-        foreach (Node node in GetTree().GetNodesInGroup("enemies"))
-        {
-            if (node is Node2D enemy)
-                DrawEntityDot(enemy.GlobalPosition, ColorEnemy);
-        }
-
-        // Draw player (larger dot for visibility)
-        Node playerNode = GetTree().GetFirstNodeInGroup("player");
-        if (playerNode is Node2D player)
-            DrawEntityDot(player.GlobalPosition, ColorPlayer, 3);
-
-        _texture.Update(_composite);
+        _texture.Update(_foggedTerrain);
     }
 
     private void DrawEntityDot(Vector2 worldPos, Color color, int size = 1)
     {
-        // Convert world position to tile coordinates
-        // Isometric: world_x = (tile_x - tile_y) * 32, world_y = (tile_x + tile_y) * 16
-        // Inverse: tile_x = (world_x/32 + world_y/16) / 2, tile_y = (world_y/16 - world_x/32) / 2
         float tileX = (worldPos.X / 32f + worldPos.Y / 16f) / 2f;
         float tileY = (worldPos.Y / 16f - worldPos.X / 32f) / 2f;
 
@@ -190,6 +205,7 @@ public partial class Minimap : PanelContainer
 
     private void DrawDot(int px, int py, Color color, int size = 1)
     {
+        _drawnDots.Add((px, py, size));
         for (int dx = -size; dx <= size; dx++)
         {
             for (int dy = -size; dy <= size; dy++)
@@ -197,7 +213,27 @@ public partial class Minimap : PanelContainer
                 int fx = px + dx;
                 int fy = py + dy;
                 if (fx >= 0 && fx < _minimapPixelSize && fy >= 0 && fy < _minimapPixelSize)
-                    _composite.SetPixel(fx, fy, color);
+                    _foggedTerrain.SetPixel(fx, fy, color);
+            }
+        }
+    }
+
+    private void RestoreDot(int px, int py, int size)
+    {
+        for (int dx = -size; dx <= size; dx++)
+        {
+            for (int dy = -size; dy <= size; dy++)
+            {
+                int fx = px + dx;
+                int fy = py + dy;
+                if (fx >= 0 && fx < _minimapPixelSize && fy >= 0 && fy < _minimapPixelSize)
+                {
+                    // Restore from base terrain + fog check
+                    Color baseColor = _baseTerrain.GetPixel(fx, fy);
+                    if (_fogOfWar != null && !_fogOfWar.IsRevealed(new Vector2I(fx - _mapRadius, fy - _mapRadius)))
+                        baseColor = ColorFog;
+                    _foggedTerrain.SetPixel(fx, fy, baseColor);
+                }
             }
         }
     }
