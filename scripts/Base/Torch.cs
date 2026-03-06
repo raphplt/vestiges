@@ -5,12 +5,14 @@ namespace Vestiges.Base;
 
 /// <summary>
 /// Torche placée par le joueur. Émet de la lumière via PointLight2D.
+/// Combine un sprite animé pixel art (3 frames) avec des particules procédurales.
 /// S'éteint et se détruit après une durée définie par les stats JSON.
 /// </summary>
 public partial class Torch : Wall
 {
     private PointLight2D _light;
     private GpuParticles2D _flame;
+    private AnimatedSprite2D _flameSprite;
     private float _duration;
     private float _elapsed;
 
@@ -35,6 +37,12 @@ public partial class Torch : Wall
         _light.TextureScale = radius / 128f;
         AddChild(_light);
 
+        // Sprite animé pixel art de flamme
+        _flameSprite = VfxFactory.CreateFlameSprite();
+        _flameSprite.Position = new Vector2(0, -6);
+        AddChild(_flameSprite);
+
+        // Particules procédurales complémentaires
         _flame = VfxFactory.CreateFlameParticles(0.7f);
         if (_flame != null)
         {
@@ -58,6 +66,8 @@ public partial class Torch : Wall
                 _light.Energy = 0.8f * fade;
             if (_flame != null)
                 _flame.Modulate = new Color(1f, 1f, 1f, fade);
+            if (_flameSprite != null)
+                _flameSprite.Modulate = new Color(1f, 1f, 1f, fade);
         }
 
         if (_elapsed >= _duration)

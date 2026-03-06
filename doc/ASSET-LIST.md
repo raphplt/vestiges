@@ -1,7 +1,7 @@
 # VESTIGES — Asset List Exhaustive
 
 > **Version :** 1.0
-> **Dernière mise à jour :** 2 mars 2026
+> **Dernière mise à jour :** 6 mars 2026
 > **Source :** GDD v1.3, Bible v1.1, Charte Graphique v1.0
 > **Convention :** ✅ = fait, 🔲 = à faire, ⏳ = en cours, 🔁 = placeholder en place
 
@@ -230,7 +230,7 @@ Chaque arme a un sprite d'icône inventaire (16×16) + sprite in-world optionnel
 |---|-------|--------|----------|--------|
 | 105 | Slash épée (arc) | 3 frames | P0 | ✅ |
 | 106 | Impact masse (AoE cercle) | 3 frames | P1 | ✅ |
-| 107 | Thrust lance (ligne) | 3 frames | P1 | 🔲 |
+| 107 | Thrust lance (ligne) | 3 frames | P1 | ✅ |
 | 108 | Projectile flèche | 1 sprite + trail | P0 | ✅ |
 | 109 | Projectile carreau arbalète | 1 sprite + trail | P1 | ✅ |
 | 110 | Projectile pierre | 1 sprite | P2 | ✅ |
@@ -286,14 +286,14 @@ Chaque arme a un sprite d'icône inventaire (16×16) + sprite in-world optionnel
 | # | Structure | Niveaux | Taille | Priorité | Statut |
 |---|-----------|---------|--------|----------|--------|
 | 132 | **Mur** | Bois → Pierre → Métal → Renforcé | 32×24 chacun | P0 | ✅ (3 niveaux) |
-| 133 | **Porte** (mur avec passage) | Bois → Pierre → Métal | 32×24 chacun | P1 | 🔲 |
+| 133 | **Porte** (mur avec passage) | Bois → Pierre → Métal | 32×24 chacun | P1 | ✅ |
 | — | Variants : intact, endommagé, détruit | ×3 par niveau | — | P1 | 🔲 |
 
 ### 8.2 Pièges
 
 | # | Structure | Taille | Priorité | Statut |
 |---|-----------|--------|----------|--------|
-| 134 | **Piques** | 32×16 (au sol) | P1 | 🔲 |
+| 134 | **Piques** | 32×16 (au sol) | P1 | ✅ |
 | 135 | **Collets** | 16×8 | P2 | 🔲 |
 | 136 | **Mine** | 8×8 | P2 | 🔲 |
 | 137 | **Piège à feu** | 16×16 + anim activation | P2 | 🔲 |
@@ -312,9 +312,9 @@ Chaque arme a un sprite d'icône inventaire (16×16) + sprite in-world optionnel
 | 140 | **Barricade** (rapide, temporaire) | 32×12 | P0 | ✅ |
 | 141 | **Feu de camp** | 16×16 + anim feu 3f | P0 | ✅ (sprite, anim TODO) |
 | 142 | **Torche plantée** | 8×16 + anim flamme 3f | P0 | ✅ (sprite + 3f flamme) |
-| 143 | **Lanterne** | 8×12 + anim 2f | P1 | 🔲 |
+| 143 | **Lanterne** | 8×12 + anim 2f | P1 | ✅ |
 | 144 | **Station de craft** | 24×20 | P0 | ✅ |
-| 145 | **Four** (débloquable) | 20×20 | P2 | 🔲 |
+| 145 | **Four** (débloquable) | 20×20 | P2 | ✅ |
 
 ---
 
@@ -348,14 +348,14 @@ Les effets sont complétés par GPUParticles2D dans Godot, mais les sprites de b
 |---|-------|--------|--------|----------|--------|
 | 154 | **Flash de hit** (blanc) | 1 frame overlay | 1 | P0 | ✅ |
 | 155 | **Nombres de dégâts** (pop) | Font pixel | — | P0 | 🔲 |
-| 156 | **Orbes XP** (blanc-doré) | 4×4 | 2 frames | P0 | ✅ (1 frame) |
-| 157 | **Dissolution ennemi** (particules noires) | Shader + | 4 frames | P1 | 🔲 |
-| 158 | **Impact projectile** | 8×8 | 3 frames | P0 | ✅ (1 frame) |
-| 159 | **Explosion** (bombe/mine) | 24×24 | 5 frames | P2 | 🔲 |
+| 156 | **Orbes XP** (blanc-doré) | 4×4 | 2 frames | P0 | ✅ |
+| 157 | **Dissolution ennemi** (particules noires) | Shader + | 4 frames | P1 | ✅ |
+| 158 | **Impact projectile** | 8×8 | 3 frames | P0 | ✅ |
+| 159 | **Explosion** (bombe/mine) | 24×24 | 5 frames | P2 | ✅ |
 | 160 | **Flamme de torche/feu** | 8×12 | 3 frames loop | P0 | ✅ |
 | 161 | **Étincelle de craft** | 4×4 | 2 frames | P1 | ✅ (1 frame) |
-| 162 | **Dash trail** | Overlay | 3 frames fade | P1 | 🔲 |
-| 163 | **Aura Essence** (joueur) | Overlay | 3 frames loop | P2 | 🔲 |
+| 162 | **Dash trail** | Overlay | 3 frames fade | P1 | ✅ |
+| 163 | **Aura Essence** (joueur) | Overlay | 3 frames loop | P2 | ✅ |
 | 164 | **Pulse de lumière** (capacité) | 32×32 → 64×64 | 4 frames | P2 | 🔲 |
 | 165 | **Bouclier d'Essence** | Overlay joueur | 3 frames loop | P2 | 🔲 |
 
@@ -399,12 +399,12 @@ Les effets sont complétés par GPUParticles2D dans Godot, mais les sprites de b
 | 185 | Berserker | P1 | ✅ |
 | 186 | Barrage | P1 | ✅ |
 | 187 | Architecte | P1 | ✅ |
-| 188 | Récupérateur | P2 | 🔲 |
+| 188 | Récupérateur | P2 | ✅ |
 | 189 | Torche vivante | P1 | ✅ |
-| 190 | Canalisation | P2 | 🔲 |
-| 191 | Siphon | P2 | 🔲 |
-| 192 | Instabilité | P2 | 🔲 |
-| 193 | Deuxième souffle | P2 | 🔲 |
+| 190 | Canalisation | P2 | ✅ |
+| 191 | Siphon | P2 | ✅ |
+| 192 | Instabilité | P2 | ✅ |
+| 193 | Deuxième souffle | P2 | ✅ |
 | 194 | Maître du temps | P3 | 🔲 |
 | 195 | Éveillé | P3 | 🔲 |
 | 196 | +HP / +Dégâts / +Vitesse / +Armure (×4) | P0 | ✅ |

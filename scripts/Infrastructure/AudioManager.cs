@@ -50,8 +50,7 @@ public partial class AudioManager : Node
 		["sfx_hit_joueur"] = 150,
 		["sfx_hit_ennemi"] = 80,
 		["sfx_hit_critique"] = 80,
-		["sfx_monde_tuile_apparait"] = 120,
-		["sfx_monde_dissolution"] = 200,
+["sfx_monde_dissolution"] = 200,
 		["sfx_recolte_obtenu"] = 100,
 	};
 	private const ulong DefaultMinInterval = 0;
@@ -272,14 +271,19 @@ public partial class AudioManager : Node
 
 	private void PreloadStreams()
 	{
+		float serverRate = AudioServer.GetMixRate();
 		foreach (KeyValuePair<string, string> kv in Paths)
 		{
 			AudioStream stream = GD.Load<AudioStream>(kv.Value);
 			if (stream != null)
 			{
-				// Fixer le LoopMode au chargement pour éviter de muter les streams partagés à chaud
 				if (stream is AudioStreamWav wav)
+				{
 					wav.LoopMode = AudioStreamWav.LoopModeEnum.Disabled;
+					// Diagnostic : un MixRate incorrect cause un pitch aigu (ex: 22050 Hz importé comme 44100 Hz)
+					if (wav.MixRate > 0 && wav.MixRate != serverRate)
+						GD.PushWarning($"[AudioManager] MixRate mismatch sur '{kv.Key}': WAV={wav.MixRate} Hz, serveur={serverRate} Hz → pitch incorrect probable. Réimporter dans l'éditeur Godot.");
+				}
 				_streams[kv.Key] = stream;
 			}
 			else
@@ -625,9 +629,14 @@ public partial class AudioManager : Node
 			PlaySfx("sfx_monde_dissolution", 0.08f, -6f);
 	}
 
+	private float _lastKnownHp = -1f;
+
 	private void OnPlayerDamaged(float currentHp, float maxHp)
 	{
-		PlaySfx("sfx_hit_joueur");
+		bool isDamage = _lastKnownHp >= 0f && currentHp < _lastKnownHp - 0.01f;
+		_lastKnownHp = currentHp;
+		if (isDamage)
+			PlaySfx("sfx_hit_joueur");
 	}
 
 	private void OnCraftCompleted(string recipeId)
@@ -647,7 +656,6 @@ public partial class AudioManager : Node
 
 	private void OnZoneDiscovered(int cellX, int cellY, int cellCount)
 	{
-		PlaySfx("sfx_monde_tuile_apparait", 0.05f, -3f);
 	}
 
 	private void OnPerkChosen(string perkId)

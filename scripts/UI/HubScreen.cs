@@ -6,10 +6,9 @@ using Vestiges.Infrastructure;
 namespace Vestiges.UI;
 
 /// <summary>
-/// Hub screen between runs — pixel art UI with tabbed navigation.
-/// Tabs: Miroirs (character select), Chroniques (leaderboard),
-///        Obélisque (mutators), Établi (starting kits).
-/// Bottom bar: seed input, selected character summary, "Entrer dans le Vide" button.
+/// Hub screen between runs — two-state menu system.
+/// MainMenu: centered title, nav buttons, "Entrer dans le Vide".
+/// SubScreen: back button + full-screen tab content (Miroirs, Chroniques, Obélisque, Établi).
 ///
 /// All UI frames use NinePatchRect with pixel art assets from assets/ui/.
 /// Viewport: 1920×1080 (Hub runs at full display resolution, NOT 480×270).
@@ -21,15 +20,24 @@ public partial class HubScreen : Control
 	private const string MenusPath = UiPath + "menus/";
 	private const string IconsPath = UiPath + "icons/";
 
+	// --- Hub state machine ---
+	private enum HubState { MainMenu, SubScreen }
+	private HubState _currentState = HubState.MainMenu;
+
 	// --- State ---
 	private string _selectedCharacterId;
 	private string _activeTab = "miroirs";
 	private string _currentChroniquesSubTab = "global";
 	private Button _enterVoidButton;
+	private Button _subScreenVoidButton;
 	private Label _selectedCharLabel;
 	private Label _vestigesLabel;
+	private Label _subScreenVestigesLabel;
+	private Label _subScreenTitle;
 	private Control _contentArea;
-	private readonly Dictionary<string, Button> _tabButtons = new();
+	private Control _mainMenuLayer;
+	private Control _subScreenLayer;
+	private CenterContainer _subScreenSeedRow;
 	private readonly Dictionary<string, PanelContainer> _cardsByCharacterId = new();
 	private LineEdit _seedInput;
 	private SettingsScreen _settingsScreen;
@@ -56,6 +64,10 @@ public partial class HubScreen : Control
 	private Texture2D _iconEtabli;
 	private Texture2D _iconVide;
 	private Texture2D _iconVestiges;
+	private Texture2D _cornerTL;
+	private Texture2D _cornerTR;
+	private Texture2D _cornerBL;
+	private Texture2D _cornerBR;
 
 	// --- Colors (from Charte Graphique) ---
 	private static readonly Color GoldColor = new(0.83f, 0.66f, 0.26f);
@@ -67,6 +79,15 @@ public partial class HubScreen : Control
 	private static readonly Color BgDark = new(0.04f, 0.05f, 0.09f);
 	private static readonly Color CyanEssence = new(0.37f, 0.77f, 0.77f);
 	private static readonly Color GreenKit = new(0.4f, 0.6f, 0.4f);
+
+	// --- Tab display names ---
+	private static readonly Dictionary<string, string> TabDisplayNames = new()
+	{
+		{ "miroirs", "MIROIRS" },
+		{ "chroniques", "CHRONIQUES" },
+		{ "obelisque", "OBÉLISQUE" },
+		{ "etabli", "ÉTABLI" }
+	};
 
 	public override void _Ready()
 	{
@@ -95,10 +116,25 @@ public partial class HubScreen : Control
 
 		UpdateVoidButton();
 		UpdateVestigesDisplay();
-		ShowTab(_activeTab);
+		SetState(HubState.MainMenu);
 
 		if (gm.LastRunData != null)
 			gm.LastRunData = null;
+	}
+
+	public override void _UnhandledInput(InputEvent @event)
+	{
+		if (@event.IsActionPressed("ui_cancel"))
+		{
+			if (_settingsScreen != null && _settingsScreen.IsOpen)
+				return;
+
+			if (_currentState == HubState.SubScreen)
+			{
+				SetState(HubState.MainMenu);
+				GetViewport().SetInputAsHandled();
+			}
+		}
 	}
 
 	private void LoadTextures()
@@ -116,7 +152,7 @@ public partial class HubScreen : Control
 		_btnPressedTex = LoadTex(MenusPath + "ui_button_pressed.png");
 		_btnDisabledTex = LoadTex(MenusPath + "ui_button_disabled.png");
 		_separatorTex = LoadTex(MenusPath + "ui_separator_simple.png");
-		_bgTex = LoadTex(MenusPath + "ui_hub_background.png");
+		_bgTex = LoadTex("res://assets/bg_menu_1920x1080.png");
 		_titleTex = LoadTex(MenusPath + "ui_hub_title.png");
 		_iconChroniques = LoadTex(IconsPath + "ui_icon_chroniques.png");
 		_iconMiroirs = LoadTex(IconsPath + "ui_icon_miroirs.png");
@@ -124,6 +160,10 @@ public partial class HubScreen : Control
 		_iconEtabli = LoadTex(IconsPath + "ui_icon_etabli.png");
 		_iconVide = LoadTex(IconsPath + "ui_icon_vide.png");
 		_iconVestiges = LoadTex(IconsPath + "ui_icon_vestiges.png");
+		_cornerTL = LoadTex(MenusPath + "ui_corner_tl.png");
+		_cornerTR = LoadTex(MenusPath + "ui_corner_tr.png");
+		_cornerBL = LoadTex(MenusPath + "ui_corner_bl.png");
+		_cornerBR = LoadTex(MenusPath + "ui_corner_br.png");
 	}
 
 	private static Texture2D LoadTex(string path)
@@ -136,19 +176,59 @@ public partial class HubScreen : Control
 	}
 
 	// ================================================================
+	// STATE MANAGEMENT
+	// ================================================================
+
+	private void SetState(HubState state)
+	{
+		_currentState = state;
+		_mainMenuLayer.Visible = state == HubState.MainMenu;
+		_subScreenLayer.Visible = state == HubState.SubScreen;
+
+		if (state == HubState.MainMenu)
+		{
+			UpdateCharacterSummary();
+			UpdateVoidButton();
+			UpdateVestigesDisplay();
+		}
+	}
+
+	private void NavigateToTab(string tabId)
+	{
+		_activeTab = tabId;
+		_subScreenTitle.Text = TabDisplayNames.GetValueOrDefault(tabId, tabId.ToUpper());
+		SetState(HubState.SubScreen);
+		UpdateSubScreenVestigesDisplay();
+		ShowTab(tabId);
+		UpdateSubScreenVoidButton();
+	}
+
+	// ================================================================
 	// BUILD UI — Viewport is 1920×1080
 	// ================================================================
 
 	private void BuildUI()
 	{
-		// Background
+		BuildBackground();
+		BuildMainMenu();
+		BuildSubScreen();
+
+		_settingsScreen = new SettingsScreen();
+		AddChild(_settingsScreen);
+	}
+
+	// ----------------------------------------------------------------
+	// BACKGROUND + CORNER DECORATIONS
+	// ----------------------------------------------------------------
+	private void BuildBackground()
+	{
 		if (_bgTex != null)
 		{
 			TextureRect bg = new()
 			{
 				Texture = _bgTex,
 				ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
-				StretchMode = TextureRect.StretchModeEnum.Scale
+				StretchMode = TextureRect.StretchModeEnum.KeepAspectCovered
 			};
 			bg.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
 			AddChild(bg);
@@ -163,82 +243,92 @@ public partial class HubScreen : Control
 			AddChild(bg);
 		}
 
-		// Main vertical layout
-		VBoxContainer mainVBox = new();
-		mainVBox.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
-		mainVBox.AddThemeConstantOverride("separation", 0);
-		AddChild(mainVBox);
+		AddCornerDecoration(_cornerTL, 0f, 0f, false, false);
+		AddCornerDecoration(_cornerTR, 1f, 0f, true, false);
+		AddCornerDecoration(_cornerBL, 0f, 1f, false, true);
+		AddCornerDecoration(_cornerBR, 1f, 1f, true, true);
+	}
 
-		// --- TITLE AREA ---
-		mainVBox.AddChild(BuildTitleArea());
+	private void AddCornerDecoration(Texture2D tex, float anchorX, float anchorY, bool flipH, bool flipV)
+	{
+		if (tex == null) return;
 
-		// --- TAB BAR ---
-		mainVBox.AddChild(BuildTabBar());
+		float w = tex.GetWidth();
+		float h = tex.GetHeight();
 
-		// --- CONTENT AREA (swapped per tab) ---
-		_contentArea = new Control
+		TextureRect corner = new()
 		{
-			SizeFlagsVertical = SizeFlags.ExpandFill
+			Texture = tex,
+			ExpandMode = TextureRect.ExpandModeEnum.KeepSize,
+			FlipH = flipH,
+			FlipV = flipV,
+			MouseFilter = MouseFilterEnum.Ignore
 		};
-		mainVBox.AddChild(_contentArea);
 
-		// --- BOTTOM BAR ---
-		mainVBox.AddChild(BuildBottomBar());
+		corner.AnchorLeft = anchorX;
+		corner.AnchorRight = anchorX;
+		corner.AnchorTop = anchorY;
+		corner.AnchorBottom = anchorY;
+		corner.OffsetLeft = flipH ? -w : 0;
+		corner.OffsetRight = flipH ? 0 : w;
+		corner.OffsetTop = flipV ? -h : 0;
+		corner.OffsetBottom = flipV ? 0 : h;
 
-		// --- GEAR BUTTON (top-right) ---
-		Button gearBtn = new()
-		{
-			Text = "\u2699",
-			Flat = true,
-			FocusMode = FocusModeEnum.None,
-			CustomMinimumSize = new Vector2(48, 48)
-		};
-		gearBtn.AddThemeFontSizeOverride("font_size", 28);
-		gearBtn.AddThemeColorOverride("font_color", new Color(0.6f, 0.58f, 0.5f));
-		gearBtn.AddThemeColorOverride("font_hover_color", GoldColor);
-		gearBtn.AnchorLeft = 1f;
-		gearBtn.AnchorRight = 1f;
-		gearBtn.AnchorTop = 0f;
-		gearBtn.OffsetLeft = -60;
-		gearBtn.OffsetRight = -12;
-		gearBtn.OffsetTop = 12;
-		gearBtn.OffsetBottom = 60;
-		gearBtn.Pressed += () => _settingsScreen?.Open();
-		AddChild(gearBtn);
-
-		// --- SETTINGS SCREEN ---
-		_settingsScreen = new SettingsScreen();
-		AddChild(_settingsScreen);
+		AddChild(corner);
 	}
 
 	// ----------------------------------------------------------------
-	// TITLE AREA
+	// MAIN MENU LAYER
 	// ----------------------------------------------------------------
-	private MarginContainer BuildTitleArea()
+	private void BuildMainMenu()
 	{
-		MarginContainer margin = new();
-		margin.AddThemeConstantOverride("margin_top", 40);
-		margin.AddThemeConstantOverride("margin_bottom", 10);
-		margin.AddThemeConstantOverride("margin_left", 0);
-		margin.AddThemeConstantOverride("margin_right", 0);
+		_mainMenuLayer = new Control();
+		_mainMenuLayer.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
+		_mainMenuLayer.MouseFilter = MouseFilterEnum.Ignore;
+		AddChild(_mainMenuLayer);
 
-		HBoxContainer row = new()
+		// Centered content with dark backdrop for readability
+		CenterContainer center = new();
+		center.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
+		center.MouseFilter = MouseFilterEnum.Ignore;
+		_mainMenuLayer.AddChild(center);
+
+		PanelContainer backdrop = new();
+		StyleBoxFlat backdropStyle = new()
+		{
+			BgColor = new Color(0.02f, 0.02f, 0.06f, 0.65f),
+			CornerRadiusTopLeft = 8,
+			CornerRadiusTopRight = 8,
+			CornerRadiusBottomLeft = 8,
+			CornerRadiusBottomRight = 8,
+			ContentMarginLeft = 60,
+			ContentMarginRight = 60,
+			ContentMarginTop = 30,
+			ContentMarginBottom = 30
+		};
+		backdrop.AddThemeStyleboxOverride("panel", backdropStyle);
+		center.AddChild(backdrop);
+
+		VBoxContainer vbox = new()
 		{
 			Alignment = BoxContainer.AlignmentMode.Center
 		};
-		row.AddThemeConstantOverride("separation", 30);
-		margin.AddChild(row);
+		vbox.AddThemeConstantOverride("separation", 0);
+		backdrop.AddChild(vbox);
 
-		// Title sprite
+		// --- Title ---
 		if (_titleTex != null)
 		{
+			CenterContainer titleCenter = new();
+			vbox.AddChild(titleCenter);
+
 			TextureRect titleImg = new()
 			{
 				Texture = _titleTex,
 				StretchMode = TextureRect.StretchModeEnum.KeepAspect,
 				CustomMinimumSize = new Vector2(_titleTex.GetWidth(), _titleTex.GetHeight())
 			};
-			row.AddChild(titleImg);
+			titleCenter.AddChild(titleImg);
 		}
 		else
 		{
@@ -249,13 +339,18 @@ public partial class HubScreen : Control
 			};
 			titleLabel.AddThemeFontSizeOverride("font_size", 64);
 			titleLabel.AddThemeColorOverride("font_color", GoldColor);
-			row.AddChild(titleLabel);
+			vbox.AddChild(titleLabel);
 		}
 
-		// Vestiges currency
+		// --- Spacer + Vestiges currency ---
+		vbox.AddChild(CreateSpacer(24));
+
+		CenterContainer vestigesCenter = new();
+		vbox.AddChild(vestigesCenter);
+
 		HBoxContainer vestigesRow = new();
 		vestigesRow.AddThemeConstantOverride("separation", 8);
-		row.AddChild(vestigesRow);
+		vestigesCenter.AddChild(vestigesRow);
 
 		if (_iconVestiges != null)
 		{
@@ -269,157 +364,256 @@ public partial class HubScreen : Control
 		}
 
 		_vestigesLabel = new Label();
-		_vestigesLabel.AddThemeFontSizeOverride("font_size", 20);
+		_vestigesLabel.AddThemeFontSizeOverride("font_size", 22);
 		_vestigesLabel.AddThemeColorOverride("font_color", GoldColor);
 		vestigesRow.AddChild(_vestigesLabel);
 
-		return margin;
-	}
+		// --- Spacer + Selected character summary ---
+		vbox.AddChild(CreateSpacer(36));
 
-	// ----------------------------------------------------------------
-	// TAB BAR
-	// ----------------------------------------------------------------
-	private MarginContainer BuildTabBar()
-	{
-		MarginContainer margin = new();
-		margin.AddThemeConstantOverride("margin_top", 6);
-		margin.AddThemeConstantOverride("margin_bottom", 10);
-		margin.AddThemeConstantOverride("margin_left", 200);
-		margin.AddThemeConstantOverride("margin_right", 200);
-
-		HBoxContainer tabRow = new()
-		{
-			Alignment = BoxContainer.AlignmentMode.Center
-		};
-		tabRow.AddThemeConstantOverride("separation", 12);
-		margin.AddChild(tabRow);
-
-		CreateTabButton(tabRow, "miroirs", "Miroirs", _iconMiroirs);
-		CreateTabButton(tabRow, "chroniques", "Chroniques", _iconChroniques);
-		CreateTabButton(tabRow, "obelisque", "Obélisque", _iconObelisque);
-		CreateTabButton(tabRow, "etabli", "Établi", _iconEtabli);
-
-		return margin;
-	}
-
-	private void CreateTabButton(HBoxContainer parent, string tabId, string label, Texture2D icon)
-	{
-		Button btn = new()
-		{
-			Text = "  " + label,
-			CustomMinimumSize = new Vector2(200, 44),
-			ToggleMode = true,
-			ButtonPressed = tabId == _activeTab,
-			Flat = true,
-			IconAlignment = HorizontalAlignment.Left
-		};
-
-		if (icon != null)
-			btn.Icon = icon;
-
-		btn.AddThemeFontSizeOverride("font_size", 18);
-
-		// Style with NinePatchRect textures
-		ApplyTabStyle(btn, tabId == _activeTab);
-
-		string capturedId = tabId;
-		btn.Pressed += () => OnTabPressed(capturedId);
-
-		_tabButtons[tabId] = btn;
-		parent.AddChild(btn);
-	}
-
-	private void ApplyTabStyle(Button btn, bool active)
-	{
-		Texture2D tex = active ? _tabActiveTex : _tabNormalTex;
-		if (tex == null) return;
-
-		StyleBoxTexture style = CreateNinePatch(tex, 4, 4, 4, 4);
-		btn.AddThemeStyleboxOverride("normal", active ? style : style);
-		btn.AddThemeStyleboxOverride("hover", CreateNinePatch(_tabHoverTex ?? tex, 4, 4, 4, 4));
-		btn.AddThemeStyleboxOverride("pressed", CreateNinePatch(_tabActiveTex ?? tex, 4, 4, 4, 4));
-
-		Color fontColor = active ? GoldBright : TextDim;
-		btn.AddThemeColorOverride("font_color", fontColor);
-		btn.AddThemeColorOverride("font_hover_color", GoldColor);
-		btn.AddThemeColorOverride("font_pressed_color", GoldBright);
-	}
-
-	private void OnTabPressed(string tabId)
-	{
-		_activeTab = tabId;
-
-		foreach (KeyValuePair<string, Button> pair in _tabButtons)
-		{
-			pair.Value.ButtonPressed = pair.Key == tabId;
-			ApplyTabStyle(pair.Value, pair.Key == tabId);
-		}
-
-		ShowTab(tabId);
-	}
-
-	// ----------------------------------------------------------------
-	// CONTENT AREA — Show/hide tab content
-	// ----------------------------------------------------------------
-	private void ShowTab(string tabId)
-	{
-		// Clear current content
-		foreach (Node child in _contentArea.GetChildren())
-			child.QueueFree();
-
-		CallDeferred(MethodName.BuildTabContent, tabId);
-	}
-
-	private void BuildTabContent(string tabId)
-	{
-		// Clean up deferred
-		while (_contentArea.GetChildCount() > 0)
-			_contentArea.RemoveChild(_contentArea.GetChild(0));
-
-		Control content = tabId switch
-		{
-			"miroirs" => BuildMiroirsContent(),
-			"chroniques" => BuildChroniquesContent(),
-			"obelisque" => BuildObelisqueContent(),
-			"etabli" => BuildEtabliContent(),
-			_ => new Control()
-		};
-
-		content.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
-		_contentArea.AddChild(content);
-	}
-
-	// ----------------------------------------------------------------
-	// BOTTOM BAR
-	// ----------------------------------------------------------------
-	private MarginContainer BuildBottomBar()
-	{
-		MarginContainer margin = new();
-		margin.AddThemeConstantOverride("margin_top", 8);
-		margin.AddThemeConstantOverride("margin_bottom", 30);
-		margin.AddThemeConstantOverride("margin_left", 0);
-		margin.AddThemeConstantOverride("margin_right", 0);
-
-		VBoxContainer bottomBox = new();
-		bottomBox.AddThemeConstantOverride("separation", 10);
-		margin.AddChild(bottomBox);
-
-		// Selected character label
 		_selectedCharLabel = new Label
 		{
 			HorizontalAlignment = HorizontalAlignment.Center
 		};
 		_selectedCharLabel.AddThemeFontSizeOverride("font_size", 18);
 		_selectedCharLabel.AddThemeColorOverride("font_color", TextColor);
-		bottomBox.AddChild(_selectedCharLabel);
+		vbox.AddChild(_selectedCharLabel);
+
+		// --- Spacer + Void button ---
+		vbox.AddChild(CreateSpacer(16));
+
+		CenterContainer voidCenter = new();
+		vbox.AddChild(voidCenter);
+
+		_enterVoidButton = new Button
+		{
+			Text = "Entrer dans le Vide",
+			CustomMinimumSize = new Vector2(360, 60)
+		};
+		_enterVoidButton.AddThemeFontSizeOverride("font_size", 24);
+		if (_iconVide != null)
+			_enterVoidButton.Icon = _iconVide;
+		ApplyButtonStyle(_enterVoidButton);
+		_enterVoidButton.Pressed += OnEnterVoidPressed;
+		voidCenter.AddChild(_enterVoidButton);
+
+		// --- Spacer + Separator ---
+		vbox.AddChild(CreateSpacer(30));
+
+		if (_separatorTex != null)
+		{
+			CenterContainer sepCenter = new();
+			vbox.AddChild(sepCenter);
+
+			TextureRect sep = new()
+			{
+				Texture = _separatorTex,
+				StretchMode = TextureRect.StretchModeEnum.KeepAspect,
+				CustomMinimumSize = new Vector2(340, 6)
+			};
+			sepCenter.AddChild(sep);
+		}
+
+		// --- Spacer + Navigation buttons ---
+		vbox.AddChild(CreateSpacer(20));
+
+		VBoxContainer navBox = new();
+		navBox.AddThemeConstantOverride("separation", 12);
+		vbox.AddChild(navBox);
+
+		CreateNavButton(navBox, "miroirs", "Miroirs", _iconMiroirs);
+		CreateNavButton(navBox, "chroniques", "Chroniques", _iconChroniques);
+		CreateNavButton(navBox, "obelisque", "Obélisque", _iconObelisque);
+		CreateNavButton(navBox, "etabli", "Établi", _iconEtabli);
+
+		// --- Spacer + Paramètres ---
+		vbox.AddChild(CreateSpacer(20));
+
+		CenterContainer settingsCenter = new();
+		vbox.AddChild(settingsCenter);
+
+		Button settingsBtn = new()
+		{
+			Text = "Paramètres",
+			CustomMinimumSize = new Vector2(320, 50),
+			FocusMode = FocusModeEnum.None
+		};
+		settingsBtn.AddThemeFontSizeOverride("font_size", 20);
+		ApplyButtonStyle(settingsBtn);
+		settingsBtn.Pressed += () => _settingsScreen?.Open();
+		settingsCenter.AddChild(settingsBtn);
+
+		// --- Spacer + Quitter ---
+		vbox.AddChild(CreateSpacer(12));
+
+		CenterContainer quitCenter = new();
+		vbox.AddChild(quitCenter);
+
+		Button quitBtn = new()
+		{
+			Text = "Quitter",
+			CustomMinimumSize = new Vector2(320, 50),
+			FocusMode = FocusModeEnum.None
+		};
+		quitBtn.AddThemeFontSizeOverride("font_size", 20);
+		ApplyButtonStyle(quitBtn);
+		quitBtn.Pressed += () => GetTree().Quit();
+		quitCenter.AddChild(quitBtn);
+
+	}
+
+	private void CreateNavButton(VBoxContainer parent, string tabId, string label, Texture2D icon)
+	{
+		CenterContainer btnCenter = new();
+		parent.AddChild(btnCenter);
+
+		Button btn = new()
+		{
+			Text = "  " + label,
+			CustomMinimumSize = new Vector2(320, 50),
+			Flat = true,
+			IconAlignment = HorizontalAlignment.Left,
+			FocusMode = FocusModeEnum.None
+		};
+
+		if (icon != null)
+			btn.Icon = icon;
+
+		btn.AddThemeFontSizeOverride("font_size", 20);
+		ApplyButtonStyle(btn);
+
+		string capturedId = tabId;
+		btn.Pressed += () => NavigateToTab(capturedId);
+
+		btnCenter.AddChild(btn);
+	}
+
+	private void UpdateCharacterSummary()
+	{
+		CharacterData data = !string.IsNullOrEmpty(_selectedCharacterId)
+			? CharacterDataLoader.Get(_selectedCharacterId)
+			: null;
+
+		if (data != null)
+		{
+			CharacterStats stats = data.BaseStats;
+			_selectedCharLabel.Text = $"{data.Name}  —  PV:{stats.MaxHp}  ATK:{stats.AttackDamage}  VIT:{stats.Speed}";
+		}
+		else
+		{
+			_selectedCharLabel.Text = "Aucun personnage sélectionné";
+		}
+	}
+
+	// ----------------------------------------------------------------
+	// SUB-SCREEN LAYER
+	// ----------------------------------------------------------------
+	private void BuildSubScreen()
+	{
+		_subScreenLayer = new Control();
+		_subScreenLayer.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
+		_subScreenLayer.MouseFilter = MouseFilterEnum.Ignore;
+		_subScreenLayer.Visible = false;
+		AddChild(_subScreenLayer);
+
+		VBoxContainer mainVBox = new();
+		mainVBox.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
+		mainVBox.AddThemeConstantOverride("separation", 0);
+		_subScreenLayer.AddChild(mainVBox);
+
+		// --- TOP BAR ---
+		MarginContainer topMargin = new();
+		topMargin.AddThemeConstantOverride("margin_top", 16);
+		topMargin.AddThemeConstantOverride("margin_bottom", 8);
+		topMargin.AddThemeConstantOverride("margin_left", 30);
+		topMargin.AddThemeConstantOverride("margin_right", 30);
+		mainVBox.AddChild(topMargin);
+
+		HBoxContainer topBar = new();
+		topBar.AddThemeConstantOverride("separation", 16);
+		topMargin.AddChild(topBar);
+
+		// Back button
+		Button backBtn = new()
+		{
+			Text = "< Retour",
+			CustomMinimumSize = new Vector2(140, 44),
+			FocusMode = FocusModeEnum.None
+		};
+		backBtn.AddThemeFontSizeOverride("font_size", 16);
+		ApplyButtonStyle(backBtn);
+		backBtn.Pressed += () => SetState(HubState.MainMenu);
+		topBar.AddChild(backBtn);
+
+		// Spacer
+		Control leftSpacer = new() { SizeFlagsHorizontal = SizeFlags.ExpandFill };
+		topBar.AddChild(leftSpacer);
+
+		// Sub-screen title
+		_subScreenTitle = new Label
+		{
+			Text = "",
+			HorizontalAlignment = HorizontalAlignment.Center,
+			VerticalAlignment = VerticalAlignment.Center
+		};
+		_subScreenTitle.AddThemeFontSizeOverride("font_size", 28);
+		_subScreenTitle.AddThemeColorOverride("font_color", GoldColor);
+		topBar.AddChild(_subScreenTitle);
+
+		// Spacer
+		Control rightSpacer = new() { SizeFlagsHorizontal = SizeFlags.ExpandFill };
+		topBar.AddChild(rightSpacer);
+
+		// Vestiges display (small)
+		HBoxContainer vestigesRow = new();
+		vestigesRow.AddThemeConstantOverride("separation", 6);
+		topBar.AddChild(vestigesRow);
+
+		if (_iconVestiges != null)
+		{
+			TextureRect vestigesIcon = new()
+			{
+				Texture = _iconVestiges,
+				CustomMinimumSize = new Vector2(24, 24),
+				StretchMode = TextureRect.StretchModeEnum.KeepAspect
+			};
+			vestigesRow.AddChild(vestigesIcon);
+		}
+
+		_subScreenVestigesLabel = new Label();
+		_subScreenVestigesLabel.AddThemeFontSizeOverride("font_size", 18);
+		_subScreenVestigesLabel.AddThemeColorOverride("font_color", GoldDim);
+		vestigesRow.AddChild(_subScreenVestigesLabel);
+
+		// --- CONTENT AREA ---
+		_contentArea = new Control
+		{
+			SizeFlagsVertical = SizeFlags.ExpandFill
+		};
+		mainVBox.AddChild(_contentArea);
+
+		// --- BOTTOM ACTION BAR (seed + void button) ---
+		MarginContainer bottomMargin = new();
+		bottomMargin.AddThemeConstantOverride("margin_top", 8);
+		bottomMargin.AddThemeConstantOverride("margin_bottom", 20);
+		bottomMargin.AddThemeConstantOverride("margin_left", 0);
+		bottomMargin.AddThemeConstantOverride("margin_right", 0);
+		mainVBox.AddChild(bottomMargin);
+
+		VBoxContainer bottomVBox = new()
+		{
+			Alignment = BoxContainer.AlignmentMode.Center
+		};
+		bottomVBox.AddThemeConstantOverride("separation", 10);
+		bottomMargin.AddChild(bottomVBox);
 
 		// Seed input row
-		CenterContainer seedCenter = new();
-		bottomBox.AddChild(seedCenter);
+		_subScreenSeedRow = new CenterContainer();
+		bottomVBox.AddChild(_subScreenSeedRow);
 
 		HBoxContainer seedRow = new();
 		seedRow.AddThemeConstantOverride("separation", 10);
-		seedCenter.AddChild(seedRow);
+		_subScreenSeedRow.AddChild(seedRow);
 
 		Label seedLabel = new()
 		{
@@ -447,44 +641,66 @@ public partial class HubScreen : Control
 		}
 		seedRow.AddChild(_seedInput);
 
-		// Void button with icon
-		CenterContainer buttonCenter = new();
-		bottomBox.AddChild(buttonCenter);
+		// Void button
+		CenterContainer bottomCenter = new();
+		bottomVBox.AddChild(bottomCenter);
 
-		_enterVoidButton = new Button
+		_subScreenVoidButton = new Button
 		{
 			Text = "Entrer dans le Vide",
-			CustomMinimumSize = new Vector2(300, 55)
+			CustomMinimumSize = new Vector2(300, 50),
+			Visible = false
 		};
-		_enterVoidButton.AddThemeFontSizeOverride("font_size", 22);
-
+		_subScreenVoidButton.AddThemeFontSizeOverride("font_size", 20);
 		if (_iconVide != null)
-			_enterVoidButton.Icon = _iconVide;
-
-		// Apply pixel art button style
-		ApplyButtonStyle(_enterVoidButton);
-
-		_enterVoidButton.Pressed += OnEnterVoidPressed;
-		buttonCenter.AddChild(_enterVoidButton);
-
-		return margin;
+			_subScreenVoidButton.Icon = _iconVide;
+		ApplyButtonStyle(_subScreenVoidButton);
+		_subScreenVoidButton.Pressed += OnEnterVoidPressed;
+		bottomCenter.AddChild(_subScreenVoidButton);
 	}
 
-	private void ApplyButtonStyle(Button btn)
+	private void UpdateSubScreenVoidButton()
 	{
-		if (_btnNormalTex != null)
-			btn.AddThemeStyleboxOverride("normal", CreateNinePatch(_btnNormalTex, 4, 4, 4, 4));
-		if (_btnHoverTex != null)
-			btn.AddThemeStyleboxOverride("hover", CreateNinePatch(_btnHoverTex, 4, 4, 4, 4));
-		if (_btnPressedTex != null)
-			btn.AddThemeStyleboxOverride("pressed", CreateNinePatch(_btnPressedTex, 4, 4, 4, 4));
-		if (_btnDisabledTex != null)
-			btn.AddThemeStyleboxOverride("disabled", CreateNinePatch(_btnDisabledTex, 4, 4, 4, 4));
+		bool isMiroirs = _activeTab == "miroirs";
+		bool hasChar = !string.IsNullOrEmpty(_selectedCharacterId);
+		_subScreenVoidButton.Visible = isMiroirs && hasChar;
+		_subScreenVoidButton.Disabled = !hasChar;
+		_subScreenSeedRow.Visible = isMiroirs;
+	}
 
-		btn.AddThemeColorOverride("font_color", GoldColor);
-		btn.AddThemeColorOverride("font_hover_color", GoldBright);
-		btn.AddThemeColorOverride("font_pressed_color", GoldBright);
-		btn.AddThemeColorOverride("font_disabled_color", TextVeryDim);
+	private void UpdateSubScreenVestigesDisplay()
+	{
+		int vestiges = MetaSaveManager.GetVestiges();
+		_subScreenVestigesLabel.Text = $"{vestiges}";
+	}
+
+	// ================================================================
+	// CONTENT AREA — Show/hide tab content
+	// ================================================================
+	private void ShowTab(string tabId)
+	{
+		foreach (Node child in _contentArea.GetChildren())
+			child.QueueFree();
+
+		CallDeferred(MethodName.BuildTabContent, tabId);
+	}
+
+	private void BuildTabContent(string tabId)
+	{
+		while (_contentArea.GetChildCount() > 0)
+			_contentArea.RemoveChild(_contentArea.GetChild(0));
+
+		Control content = tabId switch
+		{
+			"miroirs" => BuildMiroirsContent(),
+			"chroniques" => BuildChroniquesContent(),
+			"obelisque" => BuildObelisqueContent(),
+			"etabli" => BuildEtabliContent(),
+			_ => new Control()
+		};
+
+		content.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
+		_contentArea.AddChild(content);
 	}
 
 	// ================================================================
@@ -518,7 +734,6 @@ public partial class HubScreen : Control
 		desc.AddThemeColorOverride("font_color", TextDim);
 		vbox.AddChild(desc);
 
-		// Character cards in a horizontal flow
 		HFlowContainer flow = new();
 		flow.AddThemeConstantOverride("h_separation", 16);
 		flow.AddThemeConstantOverride("v_separation", 16);
@@ -543,7 +758,6 @@ public partial class HubScreen : Control
 			CustomMinimumSize = new Vector2(280, 0)
 		};
 
-		// Apply pixel art card frame
 		Texture2D cardTex = isSelected ? _cardSelectedTex : (isUnlocked ? _cardNormalTex : _cardLockedTex);
 		if (cardTex != null)
 		{
@@ -561,7 +775,6 @@ public partial class HubScreen : Control
 
 		Color textColor = isUnlocked ? character.VisualColor : TextVeryDim;
 
-		// Name
 		Label nameLabel = new()
 		{
 			Text = character.Name,
@@ -573,7 +786,6 @@ public partial class HubScreen : Control
 
 		if (isUnlocked)
 		{
-			// Description
 			Label descLabel = new()
 			{
 				Text = character.Description,
@@ -584,7 +796,6 @@ public partial class HubScreen : Control
 			descLabel.AddThemeColorOverride("font_color", TextDim);
 			content.AddChild(descLabel);
 
-			// Stats compact
 			CharacterStats stats = character.BaseStats;
 			Label statsLabel = new()
 			{
@@ -595,7 +806,6 @@ public partial class HubScreen : Control
 			statsLabel.AddThemeColorOverride("font_color", new Color(0.45f, 0.45f, 0.5f));
 			content.AddChild(statsLabel);
 
-			// Passive
 			PerkData passive = PerkDataLoader.Get(character.PassivePerk);
 			if (passive != null)
 			{
@@ -609,7 +819,6 @@ public partial class HubScreen : Control
 				content.AddChild(passiveLabel);
 			}
 
-			// Starting weapon
 			WeaponData weapon = WeaponDataLoader.Get(character.StartingWeaponId)
 				?? WeaponDataLoader.GetDefaultForCharacter(character.Id);
 			if (weapon != null)
@@ -624,7 +833,6 @@ public partial class HubScreen : Control
 				content.AddChild(weaponLabel);
 			}
 
-			// Selection indicator
 			if (isSelected)
 			{
 				Label selLabel = new()
@@ -637,7 +845,6 @@ public partial class HubScreen : Control
 				content.AddChild(selLabel);
 			}
 
-			// Click handler
 			string capturedId = character.Id;
 			card.GuiInput += (InputEvent @event) =>
 			{
@@ -679,7 +886,6 @@ public partial class HubScreen : Control
 		vbox.SizeFlagsHorizontal = SizeFlags.ExpandFill;
 		margin.AddChild(vbox);
 
-		// Sub-tab row
 		HBoxContainer subTabRow = new()
 		{
 			Alignment = BoxContainer.AlignmentMode.Center
@@ -691,7 +897,6 @@ public partial class HubScreen : Control
 		CreateChroniquesSubTab(subTabRow, "personnage", "Par Perso.");
 		CreateChroniquesSubTab(subTabRow, "nuits", "Par Nuits");
 
-		// Separator
 		if (_separatorTex != null)
 		{
 			TextureRect sep = new()
@@ -704,7 +909,6 @@ public partial class HubScreen : Control
 			vbox.AddChild(sep);
 		}
 
-		// Content area for sub-tab
 		ScrollContainer scroll = new()
 		{
 			SizeFlagsVertical = SizeFlags.ExpandFill,
@@ -717,7 +921,6 @@ public partial class HubScreen : Control
 		scrollContent.SizeFlagsHorizontal = SizeFlags.ExpandFill;
 		scroll.AddChild(scrollContent);
 
-		// Build sub-tab content
 		switch (_currentChroniquesSubTab)
 		{
 			case "global":
@@ -889,7 +1092,6 @@ public partial class HubScreen : Control
 		vbox.SizeFlagsHorizontal = SizeFlags.ExpandFill;
 		margin.AddChild(vbox);
 
-		// Description
 		Label desc = new()
 		{
 			Text = "Mutateurs de difficulté",
@@ -899,7 +1101,6 @@ public partial class HubScreen : Control
 		desc.AddThemeColorOverride("font_color", TextDim);
 		vbox.AddChild(desc);
 
-		// Multiplier
 		List<string> activeMutators = MetaSaveManager.GetActiveMutators();
 		float totalMult = 1f;
 		foreach (string id in activeMutators)
@@ -917,10 +1118,8 @@ public partial class HubScreen : Control
 		multLabel.AddThemeColorOverride("font_color", GoldColor);
 		vbox.AddChild(multLabel);
 
-		// Separator
 		AddSeparator(vbox);
 
-		// Mutator cards
 		ScrollContainer scroll = new()
 		{
 			SizeFlagsVertical = SizeFlags.ExpandFill,
@@ -969,7 +1168,6 @@ public partial class HubScreen : Control
 		content.AddThemeConstantOverride("separation", 4);
 		card.AddChild(content);
 
-		// Header
 		HBoxContainer header = new();
 		header.AddThemeConstantOverride("separation", 10);
 		content.AddChild(header);
@@ -985,13 +1183,13 @@ public partial class HubScreen : Control
 
 		if (isUnlocked)
 		{
-			Label multLabel = new()
+			Label mutMultLabel = new()
 			{
 				Text = $"x{mutator.ScoreMultiplier:F2}"
 			};
-			multLabel.AddThemeFontSizeOverride("font_size", 14);
-			multLabel.AddThemeColorOverride("font_color", isActive ? GoldBright : TextDim);
-			header.AddChild(multLabel);
+			mutMultLabel.AddThemeFontSizeOverride("font_size", 14);
+			mutMultLabel.AddThemeColorOverride("font_color", isActive ? GoldBright : TextDim);
+			header.AddChild(mutMultLabel);
 		}
 
 		if (isUnlocked)
@@ -1070,7 +1268,6 @@ public partial class HubScreen : Control
 		string selectedKit = MetaSaveManager.GetSelectedKit();
 		int vestiges = MetaSaveManager.GetVestiges();
 
-		// "None" option
 		PanelContainer noneCard = CreateKitCard("Aucun", "Pas de kit de départ", 0, true, string.IsNullOrEmpty(selectedKit));
 		noneCard.GuiInput += (InputEvent @event) =>
 		{
@@ -1143,7 +1340,6 @@ public partial class HubScreen : Control
 		content.AddThemeConstantOverride("separation", 4);
 		card.AddChild(content);
 
-		// Header
 		HBoxContainer header = new();
 		header.AddThemeConstantOverride("separation", 12);
 		content.AddChild(header);
@@ -1192,7 +1388,7 @@ public partial class HubScreen : Control
 	{
 		_selectedCharacterId = characterId;
 		GetNode<GameManager>("/root/GameManager").SelectedCharacterId = characterId;
-		UpdateVoidButton();
+		UpdateSubScreenVoidButton();
 		ShowTab("miroirs");
 	}
 
@@ -1220,6 +1416,7 @@ public partial class HubScreen : Control
 
 		MetaSaveManager.SelectKit(kitId);
 		UpdateVestigesDisplay();
+		UpdateSubScreenVestigesDisplay();
 		ShowTab("etabli");
 		GD.Print($"[Hub] Kit purchased: {kitId}");
 	}
@@ -1268,20 +1465,17 @@ public partial class HubScreen : Control
 	{
 		bool hasSelection = !string.IsNullOrEmpty(_selectedCharacterId);
 		_enterVoidButton.Disabled = !hasSelection;
-
-		CharacterData data = !string.IsNullOrEmpty(_selectedCharacterId)
-			? CharacterDataLoader.Get(_selectedCharacterId)
-			: null;
-
-		_selectedCharLabel.Text = data != null
-			? $"Personnage : {data.Name}"
-			: "Aucun personnage sélectionné";
 	}
 
 	private void UpdateVestigesDisplay()
 	{
 		int vestiges = MetaSaveManager.GetVestiges();
 		_vestigesLabel.Text = $"{vestiges}";
+	}
+
+	private static Control CreateSpacer(int height)
+	{
+		return new Control { CustomMinimumSize = new Vector2(0, height) };
 	}
 
 	private static string GetUnlockConditionText(string condition)
@@ -1331,6 +1525,39 @@ public partial class HubScreen : Control
 		}
 	}
 
+	private void ApplyButtonStyle(Button btn)
+	{
+		if (_btnNormalTex != null)
+			btn.AddThemeStyleboxOverride("normal", CreateNinePatch(_btnNormalTex, 4, 4, 4, 4));
+		if (_btnHoverTex != null)
+			btn.AddThemeStyleboxOverride("hover", CreateNinePatch(_btnHoverTex, 4, 4, 4, 4));
+		if (_btnPressedTex != null)
+			btn.AddThemeStyleboxOverride("pressed", CreateNinePatch(_btnPressedTex, 4, 4, 4, 4));
+		if (_btnDisabledTex != null)
+			btn.AddThemeStyleboxOverride("disabled", CreateNinePatch(_btnDisabledTex, 4, 4, 4, 4));
+
+		btn.AddThemeColorOverride("font_color", GoldColor);
+		btn.AddThemeColorOverride("font_hover_color", GoldBright);
+		btn.AddThemeColorOverride("font_pressed_color", GoldBright);
+		btn.AddThemeColorOverride("font_disabled_color", TextVeryDim);
+	}
+
+	private void ApplyTabStyle(Button btn, bool active)
+	{
+		Texture2D tex = active ? _tabActiveTex : _tabNormalTex;
+		if (tex == null) return;
+
+		StyleBoxTexture style = CreateNinePatch(tex, 4, 4, 4, 4);
+		btn.AddThemeStyleboxOverride("normal", active ? style : style);
+		btn.AddThemeStyleboxOverride("hover", CreateNinePatch(_tabHoverTex ?? tex, 4, 4, 4, 4));
+		btn.AddThemeStyleboxOverride("pressed", CreateNinePatch(_tabActiveTex ?? tex, 4, 4, 4, 4));
+
+		Color fontColor = active ? GoldBright : TextDim;
+		btn.AddThemeColorOverride("font_color", fontColor);
+		btn.AddThemeColorOverride("font_hover_color", GoldColor);
+		btn.AddThemeColorOverride("font_pressed_color", GoldBright);
+	}
+
 	/// <summary>
 	/// Create a StyleBoxTexture configured as a NinePatch from a texture.
 	/// Margins define the non-stretchable border regions.
@@ -1345,13 +1572,11 @@ public partial class HubScreen : Control
 			AxisStretchVertical = StyleBoxTexture.AxisStretchMode.Tile
 		};
 
-		// NinePatch margins (Godot 4.x uses TextureMargin*)
 		sbt.TextureMarginLeft = left;
 		sbt.TextureMarginTop = top;
 		sbt.TextureMarginRight = right;
 		sbt.TextureMarginBottom = bottom;
 
-		// Content margins for padding
 		sbt.ContentMarginLeft = left + 2;
 		sbt.ContentMarginTop = top + 2;
 		sbt.ContentMarginRight = right + 2;

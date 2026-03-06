@@ -658,27 +658,10 @@ public partial class Enemy : CharacterBody2D
 
 	private void PlayColosseSlamVfx()
 	{
-		// Onde de choc visuelle
-		Polygon2D shockwave = new();
-		int segments = 16;
-		Vector2[] points = new Vector2[segments];
-		for (int i = 0; i < segments; i++)
-		{
-			float angle = Mathf.Tau * i / segments;
-			points[i] = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * 10f;
-		}
-		shockwave.Polygon = points;
-		shockwave.Color = new Color(_originalColor.R, _originalColor.G, _originalColor.B, 0.5f);
-		shockwave.GlobalPosition = GlobalPosition;
-
-		GetTree().CurrentScene.AddChild(shockwave);
-
-		Tween tween = shockwave.CreateTween();
-		tween.SetParallel();
-		tween.TweenProperty(shockwave, "scale", new Vector2(ColosseSlamAoeRadius / 10f, ColosseSlamAoeRadius / 10f), 0.3f)
-			.SetTrans(Tween.TransitionType.Quad).SetEase(Tween.EaseType.Out);
-		tween.TweenProperty(shockwave, "modulate:a", 0f, 0.3f);
-		tween.Chain().TweenCallback(Callable.From(() => shockwave.QueueFree()));
+		// VFX d'impact avec sprite pixel art animé + particules
+		Node2D masseVfx = VfxFactory.CreateMasseImpactVfx(GlobalPosition, _originalColor);
+		if (masseVfx != null)
+			GetTree().CurrentScene.AddChild(masseVfx);
 
 		// Shake visuel du colosse
 		_visual.Scale = new Vector2(1.3f, 0.7f);
@@ -1113,6 +1096,7 @@ public partial class Enemy : CharacterBody2D
 		_currentHp -= damage;
 		_eventBus.EmitSignal(EventBus.SignalName.EntityDamaged, this, damage);
 		HitFlash();
+		SpawnHitFlashSprite();
 		SpawnDamageNumber(damage, isCrit);
 		Infrastructure.AudioManager.Play(isCrit ? "sfx_hit_critique" : "sfx_hit_ennemi", 0.07f);
 
@@ -1311,6 +1295,17 @@ public partial class Enemy : CharacterBody2D
 		}
 	}
 
+	/// <summary>
+	/// Affiche le sprite pixel art de hit flash (vfx_hit_flash) à la position de l'ennemi.
+	/// Complète le shader flash avec un feedback visuel sprite.
+	/// </summary>
+	private void SpawnHitFlashSprite()
+	{
+		Node2D flashSprite = VfxFactory.CreateHitFlashSprite(GlobalPosition + new Vector2(0, -8));
+		if (flashSprite != null)
+			GetTree().CurrentScene.AddChild(flashSprite);
+	}
+
 	private void SpawnDamageNumber(float damage, bool isCrit = false)
 	{
 		DamageNumber dmgNum = _damageNumberScene.Instantiate<DamageNumber>();
@@ -1371,25 +1366,10 @@ public partial class Enemy : CharacterBody2D
 				}
 			}
 
-			// VFX explosion
-			Polygon2D explosion = new();
-			int segs = 12;
-			Vector2[] pts = new Vector2[segs];
-			for (int i = 0; i < segs; i++)
-			{
-				float angle = Mathf.Tau * i / segs;
-				pts[i] = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * 5f;
-			}
-			explosion.Polygon = pts;
-			explosion.Color = new Color(1f, 0.5f, 0.1f, 0.7f);
-			explosion.GlobalPosition = GlobalPosition;
-			GetTree().CurrentScene.AddChild(explosion);
-
-			Tween expTween = explosion.CreateTween();
-			expTween.SetParallel();
-			expTween.TweenProperty(explosion, "scale", Vector2.One * (explosionRadius / 5f), 0.2f);
-			expTween.TweenProperty(explosion, "modulate:a", 0f, 0.2f);
-			expTween.Chain().TweenCallback(Callable.From(() => explosion.QueueFree()));
+			// VFX explosion (sprite animé 5 frames + particules)
+			Node2D explosionVfx = VfxFactory.CreateExplosionVfx(GlobalPosition);
+			if (explosionVfx != null)
+				GetTree().CurrentScene.AddChild(explosionVfx);
 		}
 
 		if (IsInGroup("enemies"))
@@ -1409,6 +1389,11 @@ public partial class Enemy : CharacterBody2D
 			SpawnMinibossChest();
 
 		SpawnDisintegrationParticles();
+
+		// VFX dissolution sprite animé (particules noires iridescentes montantes)
+		Node2D dissolutionVfx = VfxFactory.CreateDissolutionVfx(GlobalPosition);
+		if (dissolutionVfx != null)
+			GetTree().CurrentScene.AddChild(dissolutionVfx);
 
 		if (_hasSprite && _spriteMaterial != null)
 		{

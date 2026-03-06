@@ -162,6 +162,20 @@ public partial class CraftManager : Node
         }
 
         GD.Print($"[CraftManager] Craft completed: {recipeId}");
+
+        // VFX d'étincelles à la position du joueur (craft terminé)
+        SpawnCraftSparks();
+    }
+
+    private void SpawnCraftSparks()
+    {
+        Node playerNode = GetTree().GetFirstNodeInGroup("player");
+        if (playerNode is not Node2D player)
+            return;
+
+        Node2D sparks = Combat.VfxFactory.CreateCraftSparkVfx(player.GlobalPosition + new Vector2(0, -10));
+        if (sparks != null)
+            GetTree().CurrentScene.AddChild(sparks);
     }
 
     private void ApplyConsumable(RecipeData recipe)

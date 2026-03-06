@@ -15,7 +15,7 @@ public partial class Projectile : Area2D
     private bool _isCrit;
     private bool _isRicochet;
     private Player _owner;
-    private Polygon2D _visual;
+    private Sprite2D _sprite;
     private bool _isDespawning;
     private readonly HashSet<ulong> _hitEnemies = new();
 
@@ -34,6 +34,17 @@ public partial class Projectile : Area2D
 
     // Weapon reference for on-hit effects
     public Infrastructure.WeaponData SourceWeapon { get; set; }
+
+    // --- Textures des projectiles (chargées une seule fois, cachées en static) ---
+    private static Texture2D _arrowTexture;
+    private static Texture2D _boltTexture;
+    private static Texture2D _stoneTexture;
+    private static Texture2D _impactTexture;
+
+    private static Texture2D ArrowTexture => _arrowTexture ??= GD.Load<Texture2D>("res://assets/vfx/vfx_arrow.png");
+    private static Texture2D BoltTexture => _boltTexture ??= GD.Load<Texture2D>("res://assets/vfx/vfx_bolt.png");
+    private static Texture2D StoneTexture => _stoneTexture ??= GD.Load<Texture2D>("res://assets/vfx/vfx_stone_projectile.png");
+    private static Texture2D ImpactTexture => _impactTexture ??= GD.Load<Texture2D>("res://assets/vfx/vfx_impact_projectile.png");
 
     public void Initialize(Vector2 direction, float damage, int pierce = 0, bool isCrit = false, Player owner = null, bool isRicochet = false)
     {
@@ -62,26 +73,61 @@ public partial class Projectile : Area2D
 
     public override void _Ready()
     {
-        _visual = GetNodeOrNull<Polygon2D>("Visual");
+        _sprite = GetNodeOrNull<Sprite2D>("Visual");
         _groupCache = GetNode<GroupCache>("/root/GroupCache");
         BodyEntered += OnBodyEntered;
         GetTree().CreateTimer(MaxLifetime).Timeout += QueueFree;
 
-        if (_visual != null)
+        if (_sprite != null)
         {
-            _visual.Scale = _isCrit ? new Vector2(1.35f, 1.35f) : new Vector2(0.75f, 0.75f);
-            _visual.Modulate = new Color(1f, 1f, 1f, 0.92f);
+            // Assigner le bon sprite selon l'arme source
+            AssignProjectileSprite();
+
+            _sprite.Scale = _isCrit ? new Vector2(1.35f, 1.35f) : Vector2.One;
+            _sprite.Modulate = new Color(1f, 1f, 1f, 0.92f);
             Tween spawnTween = CreateTween();
-            spawnTween.TweenProperty(_visual, "scale", Vector2.One, 0.08f)
+            spawnTween.TweenProperty(_sprite, "scale", _isCrit ? new Vector2(1.2f, 1.2f) : Vector2.One, 0.08f)
                 .SetTrans(Tween.TransitionType.Quad)
                 .SetEase(Tween.EaseType.Out);
 
             // Trail de particules derrière le projectile
-            Color trailColor = _visual.Color;
+            Color trailColor = _sprite.SelfModulate;
             GpuParticles2D trail = VfxFactory.CreateProjectileTrail(trailColor, _isCrit);
             if (trail != null)
                 AddChild(trail);
         }
+    }
+
+    /// <summary>
+    /// Assigne le sprite de projectile correspondant à l'arme équipée.
+    /// Arc → flèche, Arbalète → carreau, Fronde → pierre, autre → flèche par défaut.
+    /// Applique la teinte DamageType via SelfModulate.
+    /// </summary>
+    private void AssignProjectileSprite()
+    {
+        string weaponId = SourceWeapon?.Id ?? "";
+
+        // Sélection du sprite basée sur l'ID de l'arme
+        Texture2D texture;
+        if (weaponId.Contains("bow") || weaponId.Contains("arc"))
+            texture = ArrowTexture;
+        else if (weaponId.Contains("crossbow") || weaponId.Contains("arbalete"))
+            texture = BoltTexture;
+        else if (weaponId.Contains("sling") || weaponId.Contains("fronde") || weaponId.Contains("throwing"))
+            texture = StoneTexture;
+        else
+            texture = ArrowTexture; // Projectile par défaut
+
+        _sprite.Texture = texture;
+
+        // Appliquer la teinte DamageType
+        string damageType = SourceWeapon?.DamageType ?? "physical";
+        _sprite.SelfModulate = damageType switch
+        {
+            "essence" => new Color(0.45f, 0.85f, 1f),
+            "hybrid" => new Color(0.85f, 0.65f, 1f),
+            _ => new Color(1f, 0.85f, 0.2f)
+        };
     }
 
     public override void _PhysicsProcess(double delta)
@@ -234,16 +280,16 @@ public partial class Projectile : Area2D
 
     private void PulseOnHit()
     {
-        if (_visual == null || _isDespawning)
+        if (_sprite == null || _isDespawning)
             return;
 
         Tween pulse = CreateTween();
         pulse.SetParallel();
-        pulse.TweenProperty(_visual, "scale", new Vector2(1.25f, 0.85f), 0.04f);
-        pulse.TweenProperty(_visual, "modulate:a", 0.8f, 0.04f);
+        pulse.TweenProperty(_sprite, "scale", new Vector2(1.25f, 0.85f), 0.04f);
+        pulse.TweenProperty(_sprite, "modulate:a", 0.8f, 0.04f);
         pulse.Chain().SetParallel();
-        pulse.TweenProperty(_visual, "scale", Vector2.One, 0.05f);
-        pulse.TweenProperty(_visual, "modulate:a", 0.95f, 0.05f);
+        pulse.TweenProperty(_sprite, "scale", Vector2.One, 0.05f);
+        pulse.TweenProperty(_sprite, "modulate:a", 0.95f, 0.05f);
     }
 
     private void StartDespawn()
@@ -254,13 +300,18 @@ public partial class Projectile : Area2D
         _isDespawning = true;
         SetDeferred("monitoring", false);
 
-        // Particules d'impact
-        Color impactColor = _visual?.Color ?? new Color(1f, 0.85f, 0.2f);
+        // Impact animé 3 frames (remplace l'ancien sprite statique)
+        Color impactColor = _sprite?.SelfModulate ?? new Color(1f, 0.85f, 0.2f);
+        Node2D animatedImpact = VfxFactory.CreateAnimatedImpactVfx(GlobalPosition, impactColor);
+        if (animatedImpact != null)
+            GetTree().CurrentScene.CallDeferred("add_child", animatedImpact);
+
+        // Particules d'impact complémentaires
         Node2D impact = VfxFactory.CreateProjectileImpact(GlobalPosition, impactColor);
         if (impact != null)
             GetTree().CurrentScene.CallDeferred("add_child", impact);
 
-        if (_visual == null)
+        if (_sprite == null)
         {
             CallDeferred(MethodName.QueueFree);
             return;
@@ -268,8 +319,38 @@ public partial class Projectile : Area2D
 
         Tween tween = CreateTween();
         tween.SetParallel();
-        tween.TweenProperty(_visual, "scale", new Vector2(0.25f, 0.25f), 0.08f);
-        tween.TweenProperty(_visual, "modulate:a", 0f, 0.08f);
+        tween.TweenProperty(_sprite, "scale", new Vector2(0.25f, 0.25f), 0.08f);
+        tween.TweenProperty(_sprite, "modulate:a", 0f, 0.08f);
         tween.Chain().TweenCallback(Callable.From(QueueFree));
+    }
+
+    /// <summary>
+    /// Affiche le sprite d'impact (vfx_impact_projectile) à la position de collision.
+    /// </summary>
+    private void SpawnImpactSprite()
+    {
+        Texture2D impactTex = ImpactTexture;
+        if (impactTex == null)
+            return;
+
+        Sprite2D impactSprite = new()
+        {
+            GlobalPosition = GlobalPosition,
+            Texture = impactTex,
+            TextureFilter = TextureFilterEnum.Nearest,
+            SelfModulate = _sprite?.SelfModulate ?? new Color(1f, 0.85f, 0.2f),
+        };
+
+        GetTree().CurrentScene.CallDeferred("add_child", impactSprite);
+
+        // Appeler le tween après ajout à l'arbre
+        impactSprite.TreeEntered += () =>
+        {
+            Tween tween = impactSprite.CreateTween();
+            tween.SetParallel();
+            tween.TweenProperty(impactSprite, "scale", new Vector2(1.8f, 1.8f), 0.12f);
+            tween.TweenProperty(impactSprite, "modulate:a", 0f, 0.15f);
+            tween.Chain().TweenCallback(Callable.From(impactSprite.QueueFree));
+        };
     }
 }

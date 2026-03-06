@@ -15,6 +15,14 @@ public partial class XpOrb : Area2D
     private float _currentSpeed;
     private Player _player;
     private bool _collected;
+    private Node2D _visualRoot;
+    private float _floatTime;
+
+    // Textures statiques pour l'animation 2 frames
+    private static Texture2D _orbFrame1;
+    private static Texture2D _orbFrame2;
+    private static Texture2D OrbFrame1 => _orbFrame1 ??= GD.Load<Texture2D>("res://assets/vfx/vfx_orb_xp.png");
+    private static Texture2D OrbFrame2 => _orbFrame2 ??= GD.Load<Texture2D>("res://assets/vfx/vfx_orb_xp_f2.png");
 
     public void Initialize(float xpValue)
     {
@@ -29,15 +37,51 @@ public partial class XpOrb : Area2D
     {
         BodyEntered += OnBodyEntered;
 
+        // Remplacer le Sprite2D statique (défini dans la scène) par un AnimatedSprite2D 2 frames
+        Sprite2D oldSprite = GetNodeOrNull<Sprite2D>("Visual");
+        if (oldSprite != null)
+        {
+            // RemoveChild immédiat pour libérer le nom "Visual" avant d'ajouter le nouveau
+            RemoveChild(oldSprite);
+            oldSprite.QueueFree();
+        }
+
+        SpriteFrames frames = new();
+        frames.AddAnimation("pulse");
+        frames.SetAnimationSpeed("pulse", 4);
+        frames.SetAnimationLoop("pulse", true);
+        frames.AddFrame("pulse", OrbFrame1);
+        frames.AddFrame("pulse", OrbFrame2);
+
+        AnimatedSprite2D animSprite = new()
+        {
+            Name = "Visual",
+            SpriteFrames = frames,
+            TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
+        };
+        animSprite.Play("pulse");
+        AddChild(animSprite);
+        _visualRoot = animSprite;
+
         _glow = VfxFactory.CreateXpOrbGlow();
         if (_glow != null)
             AddChild(_glow);
+
+        // Léger offset aléatoire pour désynchroniser les orbes entre elles
+        _floatTime = (float)GD.RandRange(0, Mathf.Tau);
     }
 
     public override void _PhysicsProcess(double delta)
     {
         if (_collected)
             return;
+
+        float dt = (float)delta;
+
+        // Animation de flottement subtile (sub-pixel bobbing)
+        _floatTime += dt * 3f;
+        if (_visualRoot != null)
+            _visualRoot.Position = new Vector2(0, Mathf.Sin(_floatTime) * 1.5f);
 
         CachePlayer();
         if (_player == null || !IsInstanceValid(_player))
@@ -50,14 +94,14 @@ public partial class XpOrb : Area2D
 
         if (distSq < attractionRadiusSq)
         {
-            _currentSpeed = Mathf.Min(_currentSpeed + Acceleration * (float)delta, MaxSpeed);
+            _currentSpeed = Mathf.Min(_currentSpeed + Acceleration * dt, MaxSpeed);
             Vector2 direction = (_player.GlobalPosition - GlobalPosition).Normalized();
-            GlobalPosition += direction * _currentSpeed * (float)delta;
+            GlobalPosition += direction * _currentSpeed * dt;
         }
         else if (distSq < driftRadiusSq)
         {
             Vector2 direction = (_player.GlobalPosition - GlobalPosition).Normalized();
-            GlobalPosition += direction * DriftSpeed * (float)delta;
+            GlobalPosition += direction * DriftSpeed * dt;
         }
     }
 

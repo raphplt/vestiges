@@ -79,10 +79,10 @@ public partial class SettingsScreen : CanvasLayer
 		mainPanel.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.Center);
 		mainPanel.GrowHorizontal = Control.GrowDirection.Both;
 		mainPanel.GrowVertical = Control.GrowDirection.Both;
-		mainPanel.OffsetLeft = -280;
-		mainPanel.OffsetRight = 280;
-		mainPanel.OffsetTop = -240;
-		mainPanel.OffsetBottom = 240;
+		mainPanel.OffsetLeft = -340;
+		mainPanel.OffsetRight = 340;
+		mainPanel.OffsetTop = -260;
+		mainPanel.OffsetBottom = 260;
 
 		StyleBoxFlat panelStyle = new();
 		panelStyle.BgColor = PanelBg;

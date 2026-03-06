@@ -686,8 +686,8 @@ public partial class Player : CharacterBody2D
 
     private WorldSetup _worldSetup;
     private TileMapLayer _groundLayer;
-    private bool _isOnWaterCached;
-    private ulong _isOnWaterFrame;
+    private TerrainType _cachedTerrain;
+    private ulong _cachedTerrainFrame;
 
     private void CacheWorldSetup()
     {
@@ -696,25 +696,27 @@ public partial class Player : CharacterBody2D
             _groundLayer = _worldSetup.GetNodeOrNull<TileMapLayer>("Ground");
     }
 
-    private bool IsOnWater()
+    private TerrainType GetCurrentTerrain()
     {
         ulong frame = Engine.GetProcessFrames();
-        if (frame == _isOnWaterFrame)
-            return _isOnWaterCached;
-        _isOnWaterFrame = frame;
+        if (frame == _cachedTerrainFrame)
+            return _cachedTerrain;
+        _cachedTerrainFrame = frame;
 
         if (_worldSetup == null)
             CacheWorldSetup();
         if (_worldSetup == null || _groundLayer == null)
         {
-            _isOnWaterCached = false;
-            return false;
+            _cachedTerrain = TerrainType.Grass;
+            return _cachedTerrain;
         }
 
         Vector2I cell = _groundLayer.LocalToMap(_groundLayer.ToLocal(GlobalPosition));
-        _isOnWaterCached = _worldSetup.Generator.GetTerrain(cell.X, cell.Y) == TerrainType.Water;
-        return _isOnWaterCached;
+        _cachedTerrain = _worldSetup.Generator.GetTerrain(cell.X, cell.Y);
+        return _cachedTerrain;
     }
+
+    private bool IsOnWater() => GetCurrentTerrain() == TerrainType.Water;
 
     // --- Stat Modifiers ---
 
@@ -956,10 +958,7 @@ public partial class Player : CharacterBody2D
         projectile.MaxLifetime = Mathf.Clamp(_ricochetRange / Mathf.Max(projectile.Speed, 1f), 0.2f, 2f);
         projectile.Initialize(direction, damage * 0.75f, 0, isCrit, this, isRicochet: true);
 
-        Polygon2D visual = projectile.GetNodeOrNull<Polygon2D>("Visual");
-        if (visual != null)
-            visual.Color = GetWeaponProjectileColor();
-
+        projectile.SourceWeapon = _equippedWeapon?.Base;
         GetTree().CurrentScene.AddChild(projectile);
     }
 
@@ -1500,8 +1499,13 @@ public partial class Player : CharacterBody2D
 
         _footstepTimer = FootstepInterval / (_speedMultiplier > 0f ? _speedMultiplier : 1f);
 
-        string key = IsOnWater() ? "sfx_pas_eau" : "sfx_pas_herbe";
-        Infrastructure.AudioManager.Play(key, 0.1f, -4f);
+        string key = GetCurrentTerrain() switch
+        {
+            TerrainType.Water    => "sfx_pas_eau",
+            TerrainType.Concrete => "sfx_pas_beton",
+            _                    => "sfx_pas_herbe",
+        };
+        Infrastructure.AudioManager.Play(key, 0.05f, -4f);
     }
 
     private void ProcessHarvest(float delta)
@@ -2417,10 +2421,6 @@ public partial class Player : CharacterBody2D
         projectile.Initialize(direction, damage, pierce, isCrit, this);
         projectile.SourceWeapon = _equippedWeapon?.Base;
 
-        Polygon2D visual = projectile.GetNodeOrNull<Polygon2D>("Visual");
-        if (visual != null)
-            visual.Color = GetWeaponProjectileColor();
-
         GetTree().CurrentScene.AddChild(projectile);
         return projectile;
     }
@@ -2639,11 +2639,23 @@ public partial class Player : CharacterBody2D
             tween.TweenProperty(fxRoot, "rotation", fxRoot.Rotation + sweep, 0.11f);
         tween.Chain().TweenCallback(Callable.From(() => fxRoot.QueueFree()));
 
-        // Particules de slash (étincelles en arc)
-        Node2D slashParticles = Combat.VfxFactory.CreateSlashVfx(
-            GlobalPosition, direction, range, arcAngle, slashColor);
-        if (slashParticles != null)
-            GetTree().CurrentScene.AddChild(slashParticles);
+        // VFX sprite animé selon le type d'arme
+        string weaponId = _equippedWeapon?.Id ?? "";
+        if (weaponId.Contains("lance") || weaponId.Contains("spear"))
+        {
+            // Lance : thrust linéaire au lieu du slash en arc
+            Node2D thrustVfx = Combat.VfxFactory.CreateThrustVfx(GlobalPosition, direction, slashColor);
+            if (thrustVfx != null)
+                GetTree().CurrentScene.AddChild(thrustVfx);
+        }
+        else
+        {
+            // Épée/masse : slash en arc classique
+            Node2D slashParticles = Combat.VfxFactory.CreateSlashVfx(
+                GlobalPosition, direction, range, arcAngle, slashColor);
+            if (slashParticles != null)
+                GetTree().CurrentScene.AddChild(slashParticles);
+        }
     }
 
     // --- Kill Speed Buff ---
