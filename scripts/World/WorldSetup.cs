@@ -22,6 +22,7 @@ public partial class WorldSetup : Node2D
     private Timer _respawnTimer;
     private PoiManager _poiManager;
     private FogOfWar _fogOfWar;
+    private PropSpawner _propSpawner;
 
     private WorldGenerator _generator;
     private WorldGenConfig _config;
@@ -117,6 +118,8 @@ public partial class WorldSetup : Node2D
             SpawnChests();
         }
 
+        SpawnEnvironmentProps();
+
         _respawnTimer = new Timer();
         _respawnTimer.WaitTime = _config.RespawnInterval;
         _respawnTimer.Autostart = true;
@@ -156,7 +159,7 @@ public partial class WorldSetup : Node2D
     private void CreateVoidBackground()
     {
         ColorRect voidBg = new();
-        float worldSize = _config.MapRadius * 64f * 2f;
+        float worldSize = _config.MapRadius * 64f * 4f;
         voidBg.Size = new Vector2(worldSize, worldSize);
         voidBg.Position = new Vector2(-worldSize * 0.5f, -worldSize * 0.5f);
         voidBg.Color = new Color(0f, 0f, 0f, 1f);
@@ -288,6 +291,25 @@ public partial class WorldSetup : Node2D
         _resourceContainer.AddChild(node);
         node.Initialize(data);
         return resourceId;
+    }
+
+    private void SpawnEnvironmentProps()
+    {
+        // Créer le container pour les props (si pas déjà dans la scène)
+        Node2D propContainer = GetNodeOrNull<Node2D>("PropContainer");
+        if (propContainer == null)
+        {
+            propContainer = new Node2D { Name = "PropContainer" };
+            AddChild(propContainer);
+            // Placer juste après Ground (index 1) pour que les props soient
+            // dessinés SOUS le joueur, ennemis et structures (pas de y_sort global)
+            Node ground = GetNode("Ground");
+            MoveChild(propContainer, ground.GetIndex() + 1);
+        }
+
+        _propSpawner = new PropSpawner { Name = "PropSpawner" };
+        AddChild(_propSpawner);
+        _propSpawner.SpawnProps(_generator, _ground, propContainer, _usedCells, Seed);
     }
 
     private void OnRespawnTimer()

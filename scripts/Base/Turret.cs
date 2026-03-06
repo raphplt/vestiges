@@ -11,16 +11,22 @@ namespace Vestiges.Base;
 /// </summary>
 public partial class Turret : Structure
 {
-    private float _damage = 8f;
-    private float _attackSpeed = 1.5f;
-    private float _range = 200f;
+    private float _baseDamage = 12f;
+    private float _damage = 12f;
+    private float _attackSpeed = 2.0f;
+    private float _range = 220f;
     private float _attackTimer;
     private int _ammo;
     private int _maxAmmo;
+    private int _nightNumber;
     private PackedScene _projectileScene;
     private Polygon2D _dirIndicator;
     private Label _ammoLabel;
     private GroupCache _groupCache;
+    private EventBus _eventBus;
+
+    // Turret damage scales with night to stay relevant
+    private static readonly float[] NightDamageScale = { 1f, 1.3f, 1.7f, 2.2f, 3f, 4f, 5.5f, 7.5f, 10f, 14f };
 
     public bool IsEmpty => _ammo <= 0;
 
@@ -32,8 +38,16 @@ public partial class Turret : Structure
 
         _projectileScene = GD.Load<PackedScene>("res://scenes/combat/Projectile.tscn");
         _groupCache = GetNode<GroupCache>("/root/GroupCache");
+        _eventBus = GetNode<EventBus>("/root/EventBus");
+        _eventBus.DayPhaseChanged += OnDayPhaseChanged;
         CreateDirectionIndicator();
         CreateAmmoLabel();
+    }
+
+    public override void _ExitTree()
+    {
+        if (_eventBus != null)
+            _eventBus.DayPhaseChanged -= OnDayPhaseChanged;
     }
 
     public override void Initialize(string recipeId, string structureId, float maxHp, Vector2I gridPos, Color color)
@@ -57,12 +71,30 @@ public partial class Turret : Structure
 
     public void SetTurretStats(float damage, float attackSpeed, float range)
     {
+        _baseDamage = damage;
         _damage = damage;
         _attackSpeed = attackSpeed;
         _range = range;
-        _maxAmmo = 30;
+        _maxAmmo = 50;
         _ammo = _maxAmmo;
         UpdateAmmoLabel();
+    }
+
+    private void OnDayPhaseChanged(string phase)
+    {
+        if (phase == "Night")
+        {
+            _nightNumber++;
+            int idx = Mathf.Min(_nightNumber - 1, NightDamageScale.Length - 1);
+            _damage = _baseDamage * NightDamageScale[idx];
+            // Refill ammo at start of each night
+            _ammo = _maxAmmo;
+            UpdateAmmoLabel();
+            if (UsesSprite && SpriteVisual != null)
+                SpriteVisual.Modulate = Colors.White;
+            else if (Visual != null)
+                Visual.Color = new Color(OriginalColor, 1f);
+        }
     }
 
     public override void _PhysicsProcess(double delta)

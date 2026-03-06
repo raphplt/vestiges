@@ -10,7 +10,7 @@
         "build_time": 1.5,
         "result": {
             "type": "wall",
-            "stats": { "hp": 50 }
+            "stats": { "hp": 150 }
         }
     },
     {
@@ -24,7 +24,7 @@
         "build_time": 2.5,
         "result": {
             "type": "wall",
-            "stats": { "hp": 120 }
+            "stats": { "hp": 350 }
         }
     },
     {
@@ -39,7 +39,7 @@
         "build_time": 3.0,
         "result": {
             "type": "wall",
-            "stats": { "hp": 200 }
+            "stats": { "hp": 600 }
         }
     },
     {
@@ -53,7 +53,7 @@
         "build_time": 0.8,
         "result": {
             "type": "wall",
-            "stats": { "hp": 25 }
+            "stats": { "hp": 60 }
         }
     },
     {
@@ -68,7 +68,7 @@
         "build_time": 2.0,
         "result": {
             "type": "trap",
-            "stats": { "damage": 15, "uses": 5 }
+            "stats": { "damage": 25, "uses": 8, "slow_factor": 0.4, "slow_duration": 2.5 }
         }
     },
     {
@@ -82,7 +82,7 @@
         "build_time": 3.0,
         "result": {
             "type": "turret",
-            "stats": { "damage": 8, "attack_speed": 1.5, "range": 200 }
+            "stats": { "damage": 12, "attack_speed": 2.0, "range": 220 }
         }
     },
     {
@@ -137,7 +137,7 @@
         "build_time": 1.5,
         "result": {
             "type": "wall",
-            "stats": { "hp": 40 }
+            "stats": { "hp": 120 }
         }
     },
     {
@@ -151,7 +151,7 @@
         "build_time": 2.0,
         "result": {
             "type": "wall",
-            "stats": { "hp": 100 }
+            "stats": { "hp": 280 }
         }
     },
     {
@@ -166,7 +166,7 @@
         "build_time": 2.5,
         "result": {
             "type": "wall",
-            "stats": { "hp": 160 }
+            "stats": { "hp": 480 }
         }
     },
     {

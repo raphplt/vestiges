@@ -39,6 +39,7 @@ public class WorldGenerator
     private const float BoundaryNoiseFrequency = 3.0f;
 
     public int MapRadius => _mapRadius;
+    public int FoyerClearance => _foyerClearance;
     public List<BiomeData> ActiveBiomes => _activeBiomes;
 
     public struct ZoneConfig

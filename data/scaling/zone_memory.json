@@ -1,0 +1,14 @@
+{
+    "cell_size": 128,
+    "initial_memory": 0.5,
+    "decay_per_minute": 0.03,
+    "player_presence_rate": 0.15,
+    "player_radius_cells": 3,
+    "foyer_radius_cells": 6,
+    "foyer_memory": 1.0,
+    "lore_stabilize_radius_cells": 5,
+    "lore_stabilize_duration_min": 20,
+    "faded_spawn_density_mult": 1.8,
+    "faded_enemy_speed_bonus": 0.2,
+    "update_interval_sec": 1.0
+}

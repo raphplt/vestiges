@@ -15,10 +15,20 @@ namespace Vestiges.Progression;
 public partial class FragmentManager : Node
 {
 	private const int FragmentsPerChoice = 3;
+	private const int DefaultRerolls = 3;
+	private const int DefaultBanishes = 3;
 
 	private EventBus _eventBus;
 	private Player _player;
 	private int _currentLevel = 1;
+
+	// Reroll & Banish
+	private int _rerollsRemaining = DefaultRerolls;
+	private int _banishesRemaining = DefaultBanishes;
+	private readonly HashSet<string> _banishedIds = new();
+
+	public int RerollsRemaining => _rerollsRemaining;
+	public int BanishesRemaining => _banishesRemaining;
 
 	// Pending fusion (offered at next chest)
 	private FusionData _pendingFusion;
@@ -136,6 +146,8 @@ public partial class FragmentManager : Node
 			{
 				if (equippedIds.Contains(weapon.Id))
 					continue;
+				if (_banishedIds.Contains(weapon.Id))
+					continue;
 				if (weapon.Source == "craft")
 					continue;
 				if (weapon.Tier > maxTier)
@@ -168,6 +180,8 @@ public partial class FragmentManager : Node
 			{
 				if (equippedPassiveIds.Contains(passive.Id))
 					continue;
+				if (_banishedIds.Contains(passive.Id))
+					continue;
 				pool.Add(new FragmentOption(passive.Id, "passive_new", passive.Name, 1));
 			}
 		}
@@ -181,6 +195,32 @@ public partial class FragmentManager : Node
 
 		return pool;
 	}
+
+	/// <summary>Relance les choix de fragments (consomme un reroll).</summary>
+	public void Reroll()
+	{
+		if (_rerollsRemaining <= 0)
+			return;
+
+		_rerollsRemaining--;
+		GD.Print($"[FragmentManager] Reroll used ({_rerollsRemaining} remaining)");
+		OfferFragments(_currentLevel);
+	}
+
+	/// <summary>Bannit un fragment du pool de la run entière et re-propose des choix.</summary>
+	public void BanishFragment(string id)
+	{
+		if (_banishesRemaining <= 0)
+			return;
+
+		_banishedIds.Add(id);
+		_banishesRemaining--;
+		GD.Print($"[FragmentManager] Banished '{id}' ({_banishesRemaining} remaining, total banished: {_banishedIds.Count})");
+		OfferFragments(_currentLevel);
+	}
+
+	public void AddRerolls(int count) => _rerollsRemaining += count;
+	public void AddBanishes(int count) => _banishesRemaining += count;
 
 	public void SelectFragment(string fragmentId, string fragmentType)
 	{

@@ -10,6 +10,7 @@ namespace Vestiges.Base;
 /// </summary>
 public partial class Structure : StaticBody2D
 {
+	protected float BaseMaxHp;
 	protected float MaxHp;
 	protected float CurrentHp;
 	protected string StructureId;
@@ -39,6 +40,7 @@ public partial class Structure : StaticBody2D
 	{
 		RecipeId = recipeId;
 		StructureId = structureId;
+		BaseMaxHp = maxHp;
 		MaxHp = maxHp;
 		CurrentHp = maxHp;
 		GridPosition = gridPos;
@@ -113,6 +115,28 @@ public partial class Structure : StaticBody2D
 			return;
 
 		CurrentHp = Mathf.Min(CurrentHp + amount, MaxHp);
+		UpdateVisualDamage();
+	}
+
+	/// <summary>Augmente les HP max pour la nuit (basé sur BaseMaxHp, non cumulatif).</summary>
+	public void FortifyForNight(float nightScale)
+	{
+		if (IsDestroyed)
+			return;
+
+		float ratio = HpRatio;
+		MaxHp = BaseMaxHp * nightScale;
+		CurrentHp = MaxHp * ratio;
+		UpdateVisualDamage();
+	}
+
+	/// <summary>Repare un pourcentage des HP max.</summary>
+	public void RepairPercent(float percent)
+	{
+		if (IsDestroyed)
+			return;
+
+		CurrentHp = Mathf.Min(CurrentHp + MaxHp * percent, MaxHp);
 		UpdateVisualDamage();
 	}
 

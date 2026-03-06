@@ -28,6 +28,9 @@ public class ComplexEffect
     public int MaxBuffStacks { get; set; }
     public float HealPercent { get; set; }
     public int Uses { get; set; }
+
+    // Per-stack arrays for toggleable perks (Appel du Vide)
+    public Dictionary<string, float[]> PerStack { get; set; }
 }
 
 public class PerkData
@@ -42,6 +45,7 @@ public class PerkData
     public string ModifierType { get; set; }
     public int MaxStacks { get; set; }
     public bool IsPassive { get; set; }
+    public bool IsToggleable { get; set; }
     public string CharacterId { get; set; }
     public float Weight { get; set; } = 1.0f;
     public string Icon { get; set; }
@@ -135,6 +139,22 @@ public static class PerkDataLoader
                     HealPercent = fxDict.ContainsKey("heal_percent") ? (float)fxDict["heal_percent"].AsDouble() : 0f,
                     Uses = fxDict.ContainsKey("uses") ? (int)fxDict["uses"].AsDouble() : 0
                 };
+
+                // Parse per_stack arrays (for toggleable perks like Appel du Vide)
+                if (fxDict.ContainsKey("per_stack"))
+                {
+                    complexEffect.PerStack = new Dictionary<string, float[]>();
+                    Godot.Collections.Dictionary perStackDict = fxDict["per_stack"].AsGodotDictionary();
+                    foreach (Variant key in perStackDict.Keys)
+                    {
+                        string keyStr = key.AsString();
+                        Godot.Collections.Array valArr = perStackDict[key].AsGodotArray();
+                        float[] values = new float[valArr.Count];
+                        for (int vi = 0; vi < valArr.Count; vi++)
+                            values[vi] = (float)valArr[vi].AsDouble();
+                        complexEffect.PerStack[keyStr] = values;
+                    }
+                }
             }
 
             List<string> tags = null;
@@ -179,6 +199,7 @@ public static class PerkDataLoader
                 ModifierType = dict.ContainsKey("modifier_type") ? dict["modifier_type"].AsString() : null,
                 MaxStacks = dict.ContainsKey("max_stacks") ? (int)dict["max_stacks"].AsDouble() : 1,
                 IsPassive = dict.ContainsKey("is_passive") && dict["is_passive"].AsBool(),
+                IsToggleable = dict.ContainsKey("is_toggleable") && dict["is_toggleable"].AsBool(),
                 CharacterId = dict.ContainsKey("character_id") ? dict["character_id"].AsString() : null,
                 Weight = dict.ContainsKey("weight") ? (float)dict["weight"].AsDouble() : defaultWeight,
                 Icon = dict.ContainsKey("icon") ? dict["icon"].AsString() : null,

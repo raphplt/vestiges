@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://djfqyoh7j2dwb"
-path="res://.godot/imported/bg_menu_480x270_raw.png-f212be86bc507c9089066aa0d7b202cf.ctex"
+uid="uid://q0rckaw7jgd"
+path="res://.godot/imported/prop_car_overgrown.png-1ac616f8c77bd271173db45d1987b379.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/bg_menu_480x270_raw.png"
-dest_files=["res://.godot/imported/bg_menu_480x270_raw.png-f212be86bc507c9089066aa0d7b202cf.ctex"]
+source_file="res://assets/sprites/props/forest/prop_car_overgrown.png"
+dest_files=["res://.godot/imported/prop_car_overgrown.png-1ac616f8c77bd271173db45d1987b379.ctex"]
 
 [params]
 

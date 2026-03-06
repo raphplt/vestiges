@@ -85,4 +85,12 @@ public partial class EventBus : Node
     // --- Événements aléatoires ---
     [Signal] public delegate void RandomEventTriggeredEventHandler(string eventId, string eventName);
     [Signal] public delegate void RandomEventEndedEventHandler(string eventId);
+
+    // --- Difficulte dynamique ---
+    [Signal] public delegate void DifficultyModifierChangedEventHandler(float enemyCountMult, float enemyHpMult, float enemyDmgMult, float xpMult);
+
+    // --- Vagues de nuit ---
+    [Signal] public delegate void NightWaveStartedEventHandler(int waveNumber, int totalWaves);
+    [Signal] public delegate void NightWaveCompletedEventHandler(int waveNumber, int totalWaves);
+    [Signal] public delegate void NightWavePauseEventHandler(float pauseDuration);
 }

@@ -11,6 +11,8 @@ public partial class Trap : Structure
 {
     private float _damage;
     private int _usesRemaining;
+    private float _slowFactor;
+    private float _slowDuration;
     private float _hitCooldown = 0.5f;
     private float _cooldownTimer;
     private Area2D _detectionArea;
@@ -44,10 +46,12 @@ public partial class Trap : Structure
         };
     }
 
-    public void SetTrapStats(float damage, int uses)
+    public void SetTrapStats(float damage, int uses, float slowFactor = 0f, float slowDuration = 0f)
     {
         _damage = damage;
         _usesRemaining = uses;
+        _slowFactor = slowFactor;
+        _slowDuration = slowDuration;
     }
 
     public override void _PhysicsProcess(double delta)
@@ -80,6 +84,8 @@ public partial class Trap : Structure
         if (body is Enemy enemy)
         {
             enemy.TakeDamage(_damage);
+            if (_slowFactor > 0f && _slowDuration > 0f)
+                enemy.ApplySlow(_slowFactor, _slowDuration);
             _usesRemaining--;
             _cooldownTimer = _hitCooldown;
 

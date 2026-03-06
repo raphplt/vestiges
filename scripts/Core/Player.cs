@@ -4,6 +4,7 @@ using Godot;
 using Vestiges.Base;
 using Vestiges.Combat;
 using Vestiges.Infrastructure;
+using Vestiges.Progression;
 using Vestiges.World;
 
 namespace Vestiges.Core;
@@ -1747,6 +1748,11 @@ public partial class Player : CharacterBody2D
                     displayName = $"Souvenir: {loot.ItemId}";
                     displayColor = new Color(0.8f, 0.85f, 1f);
                     break;
+                case "cursed_item":
+                    string poiCurseName = ResolveCursedItemLoot(loot.ItemId);
+                    displayName = poiCurseName;
+                    displayColor = new Color(0.6f, 0.15f, 0.3f);
+                    break;
                 default:
                     continue;
             }
@@ -1904,6 +1910,11 @@ public partial class Player : CharacterBody2D
                     displayName = $"Souvenir: {loot.ItemId}";
                     displayColor = new Color(0.8f, 0.85f, 1f);
                     break;
+                case "cursed_item":
+                    string curseDisplayName = ResolveCursedItemLoot(loot.ItemId);
+                    displayName = curseDisplayName;
+                    displayColor = new Color(0.6f, 0.15f, 0.3f);
+                    break;
                 default:
                     continue;
             }
@@ -1931,6 +1942,26 @@ public partial class Player : CharacterBody2D
 
         PerkData data = PerkDataLoader.Get(resolvedId);
         return data != null ? data.Name : resolvedId;
+    }
+
+    /// <summary>
+    /// Resout un cursed_item loot (random_curse → curse concrete), l'applique via CursedItemManager.
+    /// </summary>
+    private string ResolveCursedItemLoot(string curseItemId)
+    {
+        List<CursedItemData> allCurses = CursedItemManager.GetAllCurseData();
+        if (allCurses == null || allCurses.Count == 0)
+            return "???";
+
+        string resolvedId = curseItemId;
+        if (resolvedId == "random_curse")
+            resolvedId = allCurses[(int)(GD.Randi() % allCurses.Count)].Id;
+
+        CursedItemManager cursedMgr = GetNodeOrNull<CursedItemManager>("/root/Main/CursedItemManager");
+        cursedMgr?.AddCurse(resolvedId);
+
+        CursedItemData data = CursedItemManager.GetCurseData(resolvedId);
+        return data != null ? $"Malediction: {data.Name}" : resolvedId;
     }
 
     /// <summary>Texte flottant montrant le loot obtenu, empilé verticalement.</summary>

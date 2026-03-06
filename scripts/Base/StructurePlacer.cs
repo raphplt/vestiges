@@ -199,13 +199,15 @@ public partial class StructurePlacer : Node2D
             Trap trap = new();
             float damage = _recipeData.Result.Stats.TryGetValue("damage", out float d) ? d : 10f;
             int uses = _recipeData.Result.Stats.TryGetValue("uses", out float u) ? (int)u : 5;
+            float slowFactor = _recipeData.Result.Stats.TryGetValue("slow_factor", out float sf) ? sf : 0f;
+            float slowDuration = _recipeData.Result.Stats.TryGetValue("slow_duration", out float sd) ? sd : 0f;
             structure = trap;
             AddStructureChildren(trap);
             trap.TrySetSprite(spritePath);
             trap.GlobalPosition = worldPos;
             _structureContainer.AddChild(trap);
             trap.Initialize(_recipeId, _recipeData.Id, hp, _currentCell, structureColor);
-            trap.SetTrapStats(damage, uses);
+            trap.SetTrapStats(damage, uses, slowFactor, slowDuration);
         }
         else if (type == "turret")
         {

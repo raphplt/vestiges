@@ -1,0 +1,41 @@
+[
+    {
+        "id": "curse_oblivion",
+        "name": "Marque de l'Oubli",
+        "description": "Les créatures sont plus résistantes, mais le butin est meilleur.",
+        "icon": "assets/ui/icons/ui_icon_perk_degats.png",
+        "enemy_hp_multiplier": 1.25,
+        "enemy_dmg_multiplier": 1.0,
+        "enemy_count_multiplier": 1.0,
+        "enemy_speed_multiplier": 1.0,
+        "xp_multiplier": 1.0,
+        "loot_multiplier": 1.15,
+        "rare_drop_bonus": 0.0
+    },
+    {
+        "id": "curse_swarm",
+        "name": "Essaim Persistant",
+        "description": "Plus de créatures apparaissent, mais l'expérience est meilleure.",
+        "icon": "assets/ui/icons/ui_icon_perk_echo.png",
+        "enemy_hp_multiplier": 1.0,
+        "enemy_dmg_multiplier": 1.0,
+        "enemy_count_multiplier": 1.2,
+        "enemy_speed_multiplier": 1.0,
+        "xp_multiplier": 1.2,
+        "loot_multiplier": 1.0,
+        "rare_drop_bonus": 0.0
+    },
+    {
+        "id": "curse_fury",
+        "name": "Fureur des Effaces",
+        "description": "Les créatures frappent plus fort et plus vite, mais les drops rares sont plus fréquents.",
+        "icon": "assets/ui/icons/ui_icon_perk_berserker.png",
+        "enemy_hp_multiplier": 1.0,
+        "enemy_dmg_multiplier": 1.3,
+        "enemy_count_multiplier": 1.0,
+        "enemy_speed_multiplier": 1.15,
+        "xp_multiplier": 1.0,
+        "loot_multiplier": 1.0,
+        "rare_drop_bonus": 0.1
+    }
+]

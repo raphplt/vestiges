@@ -108,6 +108,12 @@ public partial class HUD : CanvasLayer
     private Polygon2D _compassArrowTail;
     private Label _compassDistanceLabel;
 
+    // --- Biome ---
+    private Label _biomeLabel;
+    private WorldSetup _worldSetupRef;
+    private string _lastBiomeName;
+    private float _biomeUpdateTimer;
+
     // --- State ---
     private EventBus _eventBus;
     private GroupCache _groupCache;
@@ -121,6 +127,7 @@ public partial class HUD : CanvasLayer
 
     private const float FpsUpdateInterval = 0.25f;
     private const float InteractHintUpdateInterval = 0.25f;
+    private const float BiomeUpdateInterval = 0.5f;
 
     // Palette from charte graphique
     private static readonly Color PalBlackDeep = new(0x1A / 255f, 0x1A / 255f, 0x2E / 255f);
@@ -241,6 +248,13 @@ public partial class HUD : CanvasLayer
         {
             _interactHintUpdateTimer = 0f;
             UpdateInteractHint();
+        }
+
+        _biomeUpdateTimer += (float)delta;
+        if (_biomeUpdateTimer >= BiomeUpdateInterval)
+        {
+            _biomeUpdateTimer = 0f;
+            UpdateBiomeLabel();
         }
     }
 
@@ -365,6 +379,17 @@ public partial class HUD : CanvasLayer
         _nightLabel.OffsetTop = 2;
         _nightLabel.OffsetBottom = 14;
         _hudRoot.AddChild(_nightLabel);
+
+        // Biome label (below phase label)
+        _biomeLabel = MakeLabel("", 8, PalGrayWarm);
+        _biomeLabel.AnchorLeft = 0.5f;
+        _biomeLabel.AnchorRight = 0.5f;
+        _biomeLabel.OffsetLeft = -50;
+        _biomeLabel.OffsetRight = 50;
+        _biomeLabel.OffsetTop = 27;
+        _biomeLabel.OffsetBottom = 37;
+        _biomeLabel.HorizontalAlignment = HorizontalAlignment.Center;
+        _hudRoot.AddChild(_biomeLabel);
     }
 
     private void UpdateDayNightBar(float progress)
@@ -1036,6 +1061,28 @@ public partial class HUD : CanvasLayer
         }
 
         _interactHint.Visible = false;
+    }
+
+    private void UpdateBiomeLabel()
+    {
+        if (_worldSetupRef == null || !IsInstanceValid(_worldSetupRef))
+            _worldSetupRef = GetNodeOrNull<WorldSetup>("/root/Main");
+
+        if (_worldSetupRef == null)
+            return;
+
+        Node playerNode = _groupCache?.GetPlayer() ?? GetTree().GetFirstNodeInGroup("player");
+        if (playerNode is not Player player)
+            return;
+
+        BiomeData biome = _worldSetupRef.GetBiomeAt(player.GlobalPosition);
+        string biomeName = biome?.Name ?? "";
+
+        if (biomeName != _lastBiomeName)
+        {
+            _lastBiomeName = biomeName;
+            _biomeLabel.Text = biomeName;
+        }
     }
 
     // ==================== COMPASS ====================

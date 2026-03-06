@@ -171,6 +171,10 @@ public partial class Enemy : CharacterBody2D
 
 	public void Initialize(EnemyData data, float hpScale, float dmgScale)
 	{
+		//TODO : nécessaire ?
+		_hitFlashTween?.Kill();
+		_hitFlashTween = null;
+
 		_enemyId = data.Id;
 		_enemyType = data.Type;
 		_behavior = data.Behavior ?? "default";
@@ -241,6 +245,8 @@ public partial class Enemy : CharacterBody2D
 		SetProcess(true);
 		Modulate = Colors.White;
 		Scale = Vector2.One;
+		if (_visual != null) _visual.Scale = Vector2.One;
+		if (_sprite != null) _sprite.Scale = Vector2.One;
 
 		if (!IsInGroup("enemies"))
 			AddToGroup("enemies");
@@ -340,6 +346,13 @@ public partial class Enemy : CharacterBody2D
 
 	public void Reset()
 	{
+		// Tuer tous les tweens actifs pour eviter qu'ils reprennent apres re-pooling
+		// (les tweens Godot sont pauses quand le node quitte l'arbre et reprennent quand il y revient)
+		_hitFlashTween?.Kill();
+		_hitFlashTween = null;
+		_modifierAuraTween?.Kill();
+		_modifierAuraTween = null;
+
 		IsActive = false;
 		_isDying = false;
 		_nightMode = false;
@@ -398,6 +411,7 @@ public partial class Enemy : CharacterBody2D
 			_sprite.Visible = false;
 			_sprite.Stop();
 			_sprite.SelfModulate = Colors.White;
+			_sprite.Scale = Vector2.One;
 			_sprite.Material = null;
 			_spriteMaterial = null;
 			_visual.Visible = true;
@@ -406,6 +420,10 @@ public partial class Enemy : CharacterBody2D
 			_currentAnimName = null;
 			_attackAnimTimer = 0f;
 		}
+
+		// Reset visual scale (peut etre distordu par un squash-stretch interrompu)
+		if (_visual != null)
+			_visual.Scale = Vector2.One;
 
 		if (IsInGroup("enemies"))
 			RemoveFromGroup("enemies");
@@ -1276,10 +1294,10 @@ public partial class Enemy : CharacterBody2D
 		}
 
 		// Squash-stretch : compression rapide puis rebond élastique
+		// Toujours utiliser Vector2.One comme base pour eviter les distorsions cumulatives
 		Node2D target = _hasSprite ? (Node2D)_sprite : _visual;
-		Vector2 originalScale = target.Scale;
-		target.Scale = new Vector2(originalScale.X * 1.25f, originalScale.Y * 0.75f);
-		tween.Parallel().TweenProperty(target, "scale", originalScale, 0.15f)
+		target.Scale = new Vector2(1.25f, 0.75f);
+		tween.Parallel().TweenProperty(target, "scale", Vector2.One, 0.15f)
 			.SetTrans(Tween.TransitionType.Elastic)
 			.SetEase(Tween.EaseType.Out);
 

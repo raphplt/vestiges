@@ -40,15 +40,25 @@ public partial class LevelUpScreen : CanvasLayer
     private static readonly Color RayColorA = new(0.83f, 0.66f, 0.26f, 0.08f);
     private static readonly Color RayColorB = new(0.9f, 0.78f, 0.39f, 0.04f);
 
+    // --- Banish mode colors ---
+    private static readonly Color BanishBorderColor = new(0.85f, 0.2f, 0.2f);
+    private static readonly Color BanishBgColor = new(0.15f, 0.05f, 0.05f, 0.95f);
+    private static readonly Color BanishLabelColor = new(1f, 0.3f, 0.3f);
+
     // --- UI nodes ---
     private ColorRect _overlay;
     private LightRaysControl _rays;
     private PanelContainer _panel;
     private VBoxContainer _cardsContainer;
+    private HBoxContainer _actionButtons;
+    private Button _rerollButton;
+    private Button _banishButton;
     private Label _title;
     private Label _synergyNotification;
     private readonly List<PanelContainer> _cards = new();
+    private readonly List<FragmentOption> _cardOptions = new();
     private int _hoveredCardIndex = -1;
+    private bool _banishMode;
 
     // --- Managers ---
     private PerkManager _perkManager;
@@ -363,13 +373,16 @@ public partial class LevelUpScreen : CanvasLayer
             return;
 
         ClearCards();
+        _banishMode = false;
         _title.Text = "FRAGMENT DE MÉMOIRE";
 
         foreach (FragmentOption choice in choices)
         {
+            _cardOptions.Add(choice);
             BuildFragmentCard(choice);
         }
 
+        BuildActionButtons();
         ShowScreen();
         GD.Print($"[LevelUpScreen] Fragment screen shown with {choices.Count} choices");
     }
@@ -544,8 +557,130 @@ public partial class LevelUpScreen : CanvasLayer
         return $"{statLabel} {addSign}{value:0.#}";
     }
 
+    private void BuildActionButtons()
+    {
+        // Remove old action buttons if any
+        if (_actionButtons != null && IsInstanceValid(_actionButtons))
+        {
+            _actionButtons.QueueFree();
+            _actionButtons = null;
+        }
+
+        _actionButtons = new HBoxContainer();
+        _actionButtons.AddThemeConstantOverride("separation", 16);
+        _actionButtons.Alignment = BoxContainer.AlignmentMode.Center;
+
+        _rerollButton = CreateActionButton(
+            $"Relancer ({_fragmentManager.RerollsRemaining})",
+            _fragmentManager.RerollsRemaining > 0,
+            OnRerollPressed);
+
+        _banishButton = CreateActionButton(
+            $"Bannir ({_fragmentManager.BanishesRemaining})",
+            _fragmentManager.BanishesRemaining > 0,
+            OnBanishPressed);
+
+        _actionButtons.AddChild(_rerollButton);
+        _actionButtons.AddChild(_banishButton);
+
+        // Add to the inner VBox (parent of _cardsContainer)
+        _cardsContainer.GetParent().AddChild(_actionButtons);
+    }
+
+    private Button CreateActionButton(string text, bool enabled, System.Action onPressed)
+    {
+        Button btn = new();
+        btn.Text = text;
+        btn.CustomMinimumSize = new Vector2(140, 36);
+        btn.Disabled = !enabled;
+
+        StyleBoxFlat normalStyle = new();
+        normalStyle.BgColor = enabled ? new Color(0.1f, 0.1f, 0.15f, 0.9f) : new Color(0.08f, 0.08f, 0.1f, 0.5f);
+        normalStyle.SetBorderWidthAll(1);
+        normalStyle.BorderColor = enabled ? GoldDim : new Color(0.3f, 0.3f, 0.3f, 0.3f);
+        normalStyle.SetCornerRadiusAll(3);
+        normalStyle.ContentMarginLeft = 12;
+        normalStyle.ContentMarginRight = 12;
+        normalStyle.ContentMarginTop = 6;
+        normalStyle.ContentMarginBottom = 6;
+        btn.AddThemeStyleboxOverride("normal", normalStyle);
+
+        StyleBoxFlat hoverStyle = new();
+        hoverStyle.BgColor = new Color(0.15f, 0.15f, 0.22f, 0.95f);
+        hoverStyle.SetBorderWidthAll(1);
+        hoverStyle.BorderColor = GoldColor;
+        hoverStyle.SetCornerRadiusAll(3);
+        hoverStyle.ContentMarginLeft = 12;
+        hoverStyle.ContentMarginRight = 12;
+        hoverStyle.ContentMarginTop = 6;
+        hoverStyle.ContentMarginBottom = 6;
+        btn.AddThemeStyleboxOverride("hover", hoverStyle);
+
+        btn.AddThemeFontSizeOverride("font_size", 13);
+        btn.AddThemeColorOverride("font_color", enabled ? TextColor : TextDim);
+
+        btn.Pressed += () => onPressed?.Invoke();
+        btn.ProcessMode = ProcessModeEnum.Always;
+
+        return btn;
+    }
+
+    private void OnRerollPressed()
+    {
+        if (_banishMode)
+        {
+            _banishMode = false;
+            UpdateBanishVisuals();
+        }
+        _fragmentManager?.Reroll();
+    }
+
+    private void OnBanishPressed()
+    {
+        if (_fragmentManager.BanishesRemaining <= 0)
+            return;
+
+        _banishMode = !_banishMode;
+        UpdateBanishVisuals();
+    }
+
+    private void UpdateBanishVisuals()
+    {
+        for (int i = 0; i < _cards.Count; i++)
+        {
+            PanelContainer card = _cards[i];
+            if (_banishMode)
+            {
+                StyleBoxFlat banishStyle = new();
+                banishStyle.BgColor = BanishBgColor;
+                banishStyle.SetBorderWidthAll(2);
+                banishStyle.BorderColor = BanishBorderColor;
+                banishStyle.SetCornerRadiusAll(3);
+                card.AddThemeStyleboxOverride("panel", banishStyle);
+            }
+            else
+            {
+                ApplyCardStyle(card, i == _hoveredCardIndex);
+            }
+        }
+
+        if (_banishButton != null)
+        {
+            _banishButton.Text = _banishMode
+                ? "Annuler"
+                : $"Bannir ({_fragmentManager.BanishesRemaining})";
+        }
+    }
+
     private void OnFragmentSelected(string fragmentId, string fragmentType)
     {
+        if (_banishMode)
+        {
+            _banishMode = false;
+            _fragmentManager?.BanishFragment(fragmentId);
+            return;
+        }
+
         _fragmentManager?.SelectFragment(fragmentId, fragmentType);
         HideScreen();
         GetTree().Paused = false;
@@ -662,7 +797,15 @@ public partial class LevelUpScreen : CanvasLayer
             child.QueueFree();
         }
         _cards.Clear();
+        _cardOptions.Clear();
         _hoveredCardIndex = -1;
+        _banishMode = false;
+
+        if (_actionButtons != null && IsInstanceValid(_actionButtons))
+        {
+            _actionButtons.QueueFree();
+            _actionButtons = null;
+        }
     }
 
     private void ShowScreen()

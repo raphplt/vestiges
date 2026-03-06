@@ -1,0 +1,142 @@
+{
+    "biome_id": "forest_reclaimed",
+    "density": 0.22,
+    "props": [
+        {
+            "id": "tree_large",
+            "name": "Grand arbre",
+            "weight": 2.5,
+            "terrain": ["forest", "grass"],
+            "sprite_base": "assets/sprites/props/forest/prop_tree_large_base.png",
+            "sprite_canopy": "assets/sprites/props/forest/prop_tree_large_canopy.png",
+            "canopy_offset_y": -48,
+            "collision_radius": 6,
+            "collision_offset_y": 0,
+            "min_distance": 2,
+            "variants": 1
+        },
+        {
+            "id": "tree_medium",
+            "name": "Arbre moyen",
+            "weight": 2.0,
+            "terrain": ["forest", "grass"],
+            "sprite_base": "assets/sprites/props/forest/prop_tree_medium_base.png",
+            "sprite_canopy": "assets/sprites/props/forest/prop_tree_medium_canopy.png",
+            "canopy_offset_y": -36,
+            "collision_radius": 5,
+            "collision_offset_y": 0,
+            "min_distance": 2,
+            "variants": 1
+        },
+        {
+            "id": "bush",
+            "name": "Buisson",
+            "weight": 1.5,
+            "terrain": ["forest", "grass"],
+            "sprite_base": "assets/sprites/props/forest/prop_bush.png",
+            "collision_radius": 0,
+            "collision_offset_y": 0,
+            "min_distance": 1,
+            "variants": 1
+        },
+        {
+            "id": "stump",
+            "name": "Souche",
+            "weight": 0.6,
+            "terrain": ["forest", "grass"],
+            "sprite_base": "assets/sprites/props/forest/prop_stump.png",
+            "collision_radius": 4,
+            "collision_offset_y": 0,
+            "min_distance": 2,
+            "variants": 1
+        },
+        {
+            "id": "rock_mossy",
+            "name": "Rocher moussu",
+            "weight": 0.8,
+            "terrain": ["forest", "grass"],
+            "sprite_base": "assets/sprites/props/forest/prop_rock_mossy.png",
+            "collision_radius": 6,
+            "collision_offset_y": 0,
+            "min_distance": 2,
+            "variants": 1
+        },
+        {
+            "id": "fallen_log",
+            "name": "Tronc tombé",
+            "weight": 0.4,
+            "terrain": ["forest"],
+            "sprite_base": "assets/sprites/props/forest/prop_fallen_log.png",
+            "collision_radius": 8,
+            "collision_offset_y": 0,
+            "min_distance": 3,
+            "variants": 1
+        },
+        {
+            "id": "car_overgrown",
+            "name": "Voiture envahie",
+            "weight": 0.3,
+            "terrain": ["concrete", "grass"],
+            "sprite_base": "assets/sprites/props/forest/prop_car_overgrown.png",
+            "collision_radius": 12,
+            "collision_offset_y": 0,
+            "min_distance": 5,
+            "variants": 1
+        },
+        {
+            "id": "lamppost_broken",
+            "name": "Lampadaire cassé",
+            "weight": 0.25,
+            "terrain": ["concrete"],
+            "sprite_base": "assets/sprites/props/forest/prop_lamppost.png",
+            "collision_radius": 3,
+            "collision_offset_y": 0,
+            "min_distance": 4,
+            "variants": 1
+        },
+        {
+            "id": "sign_rusty",
+            "name": "Panneau rouillé",
+            "weight": 0.3,
+            "terrain": ["concrete", "grass"],
+            "sprite_base": "assets/sprites/props/forest/prop_sign_rusty.png",
+            "collision_radius": 0,
+            "collision_offset_y": 0,
+            "min_distance": 4,
+            "variants": 1
+        },
+        {
+            "id": "ruin_wall",
+            "name": "Mur ruiné",
+            "weight": 0.2,
+            "terrain": ["concrete"],
+            "sprite_base": "assets/sprites/props/forest/prop_ruin_wall.png",
+            "collision_radius": 10,
+            "collision_offset_y": 0,
+            "min_distance": 5,
+            "variants": 1
+        },
+        {
+            "id": "mushroom_cluster",
+            "name": "Champignons",
+            "weight": 0.6,
+            "terrain": ["forest"],
+            "sprite_base": "assets/sprites/props/forest/prop_mushrooms.png",
+            "collision_radius": 0,
+            "collision_offset_y": 0,
+            "min_distance": 2,
+            "variants": 1
+        },
+        {
+            "id": "flowers",
+            "name": "Fleurs sauvages",
+            "weight": 0.5,
+            "terrain": ["grass"],
+            "sprite_base": "assets/sprites/props/forest/prop_flowers.png",
+            "collision_radius": 0,
+            "collision_offset_y": 0,
+            "min_distance": 2,
+            "variants": 1
+        }
+    ]
+}

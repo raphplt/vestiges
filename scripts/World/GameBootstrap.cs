@@ -121,6 +121,15 @@ public partial class GameBootstrap : Node
             fragmentManager.TriggerLevelUp(progression.CurrentLevel);
         }
 
+        // Zone Memory Manager — doit exister avant SpawnManager._Process
+        ZoneMemoryManager zoneMemoryManager = new() { Name = "ZoneMemoryManager" };
+        GetNode("..").CallDeferred("add_child", zoneMemoryManager);
+
+        // Cursed Item Manager — wire avec PerkManager pour propager les modifiers
+        CursedItemManager cursedItemManager = new() { Name = "CursedItemManager" };
+        cursedItemManager.SetPerkManager(perkManager);
+        GetNode("..").CallDeferred("add_child", cursedItemManager);
+
         // Screen shake
         Combat.ScreenShake screenShake = new() { Name = "ScreenShake" };
         screenShake.SetCamera(player.GetNode<Camera2D>("Camera"));

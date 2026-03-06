@@ -46,6 +46,17 @@ public partial class PerkManager : Node
     private Player _player;
     private string _characterId;
 
+    // Appel du Vide (difficulty toggle)
+    private bool _appelDuVideActive;
+    public bool IsAppelDuVideActive => _appelDuVideActive;
+    public int AppelDuVideLevel => _activeStacks.GetValueOrDefault("appel_du_vide", 0);
+
+    // Aggregated difficulty modifiers (Appel du Vide + Cursed Items)
+    private float _diffEnemyCountMult = 1f;
+    private float _diffEnemyHpMult = 1f;
+    private float _diffEnemyDmgMult = 1f;
+    private float _diffXpMult = 1f;
+
     [Signal] public delegate void PerkChoicesReadyEventHandler(string[] perkIds);
     [Signal] public delegate void PerkAppliedEventHandler(string perkId, int stacks);
     [Signal] public delegate void SynergyActivatedEventHandler(string synergyId, string notification);
@@ -288,6 +299,64 @@ public partial class PerkManager : Node
         }
 
         return perks[perks.Count - 1];
+    }
+
+    /// <summary>Active/desactive l'Appel du Vide et emet les modificateurs de difficulte.</summary>
+    public void ToggleAppelDuVide()
+    {
+        int level = AppelDuVideLevel;
+        if (level <= 0)
+            return;
+
+        _appelDuVideActive = !_appelDuVideActive;
+        RecalculateDifficultyModifiers();
+        GD.Print($"[PerkManager] Appel du Vide {(_appelDuVideActive ? "ON" : "OFF")} (level {level})");
+    }
+
+    /// <summary>
+    /// Applique des multiplicateurs de difficulte externes (cursed items).
+    /// Multiplie les valeurs existantes (stack avec Appel du Vide).
+    /// </summary>
+    public void ApplyExternalDifficultyModifiers(float enemyCountMult, float enemyHpMult, float enemyDmgMult, float xpMult)
+    {
+        _diffEnemyCountMult *= enemyCountMult;
+        _diffEnemyHpMult *= enemyHpMult;
+        _diffEnemyDmgMult *= enemyDmgMult;
+        _diffXpMult *= xpMult;
+        EmitDifficultyChanged();
+    }
+
+    private void RecalculateDifficultyModifiers()
+    {
+        // Reset to 1.0 then apply Appel du Vide if active
+        _diffEnemyCountMult = 1f;
+        _diffEnemyHpMult = 1f;
+        _diffEnemyDmgMult = 1f;
+        _diffXpMult = 1f;
+
+        if (_appelDuVideActive)
+        {
+            int level = AppelDuVideLevel;
+            PerkData data = PerkDataLoader.Get("appel_du_vide");
+            if (data?.Effect?.PerStack != null && level > 0)
+            {
+                int idx = Mathf.Min(level - 1, 2);
+                if (data.Effect.PerStack.TryGetValue("enemy_count_mult", out float[] countArr) && idx < countArr.Length)
+                    _diffEnemyCountMult = countArr[idx];
+                if (data.Effect.PerStack.TryGetValue("enemy_hp_mult", out float[] hpArr) && idx < hpArr.Length)
+                    _diffEnemyHpMult = hpArr[idx];
+                if (data.Effect.PerStack.TryGetValue("xp_mult", out float[] xpArr) && idx < xpArr.Length)
+                    _diffXpMult = xpArr[idx];
+            }
+        }
+
+        EmitDifficultyChanged();
+    }
+
+    private void EmitDifficultyChanged()
+    {
+        _eventBus?.EmitSignal(EventBus.SignalName.DifficultyModifierChanged,
+            _diffEnemyCountMult, _diffEnemyHpMult, _diffEnemyDmgMult, _diffXpMult);
     }
 
     public int GetStacks(string perkId)
