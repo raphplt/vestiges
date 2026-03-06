@@ -191,6 +191,7 @@ public partial class StructurePlacer : Node2D
             hp *= player.StructureHpMultiplier;
 
         Color structureColor = GetStructureColor();
+        string spritePath = _recipeData.Sprite;
 
         Structure structure;
         if (type == "trap")
@@ -200,6 +201,7 @@ public partial class StructurePlacer : Node2D
             int uses = _recipeData.Result.Stats.TryGetValue("uses", out float u) ? (int)u : 5;
             structure = trap;
             AddStructureChildren(trap);
+            trap.TrySetSprite(spritePath);
             trap.GlobalPosition = worldPos;
             _structureContainer.AddChild(trap);
             trap.Initialize(_recipeId, _recipeData.Id, hp, _currentCell, structureColor);
@@ -213,6 +215,7 @@ public partial class StructurePlacer : Node2D
             float range = _recipeData.Result.Stats.TryGetValue("range", out float tr) ? tr : 200f;
             structure = turret;
             AddStructureChildren(turret);
+            turret.TrySetSprite(spritePath);
             turret.GlobalPosition = worldPos;
             _structureContainer.AddChild(turret);
             turret.Initialize(_recipeId, _recipeData.Id, hp, _currentCell, structureColor);
@@ -225,6 +228,7 @@ public partial class StructurePlacer : Node2D
             float duration = _recipeData.Result.Stats.TryGetValue("duration", out float dur) ? dur : 180f;
             structure = torch;
             AddStructureChildren(torch);
+            torch.TrySetSprite(spritePath);
             torch.GlobalPosition = worldPos;
             _structureContainer.AddChild(torch);
             torch.Initialize(_recipeId, _recipeData.Id, hp, _currentCell, structureColor);
@@ -235,6 +239,7 @@ public partial class StructurePlacer : Node2D
             Wall wall = new();
             structure = wall;
             AddStructureChildren(wall);
+            wall.TrySetSprite(spritePath);
             wall.GlobalPosition = worldPos;
             _structureContainer.AddChild(wall);
             wall.Initialize(_recipeId, _recipeData.Id, hp, _currentCell, structureColor);

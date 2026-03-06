@@ -10,6 +10,8 @@ public class ChestData
     public string Rarity;
     public Color Color;
     public Color OutlineColor;
+    public string SpriteClosed;
+    public string SpriteOpen;
     public float Size;
     public float OpenTime;
     public string LootTableId;
@@ -59,6 +61,8 @@ public static class ChestDataLoader
                 Rarity = dict.ContainsKey("rarity") ? dict["rarity"].AsString() : "common",
                 Color = Color.FromHtml(dict["color"].AsString()),
                 OutlineColor = Color.FromHtml(outlineHex),
+                SpriteClosed = dict.ContainsKey("sprite_closed") ? dict["sprite_closed"].AsString() : null,
+                SpriteOpen = dict.ContainsKey("sprite_open") ? dict["sprite_open"].AsString() : null,
                 Size = dict.ContainsKey("size") ? (float)dict["size"].AsDouble() : 12f,
                 OpenTime = dict.ContainsKey("open_time") ? (float)dict["open_time"].AsDouble() : 0.5f,
                 LootTableId = dict.ContainsKey("loot_table_id") ? dict["loot_table_id"].AsString() : "",

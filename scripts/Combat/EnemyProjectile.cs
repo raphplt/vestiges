@@ -88,7 +88,7 @@ public partial class EnemyProjectile : Area2D
 
 		if (_visual == null)
 		{
-			QueueFree();
+			CallDeferred(MethodName.QueueFree);
 			return;
 		}
 

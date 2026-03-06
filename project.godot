@@ -31,6 +31,10 @@ window/size/mode=4
 window/stretch/mode="canvas_items"
 window/stretch/aspect="keep"
 
+[gui]
+
+theme/custom="res://assets/ui/theme/vestiges_ui_theme.tres"
+
 [dotnet]
 
 project/assembly_name="Vestiges"

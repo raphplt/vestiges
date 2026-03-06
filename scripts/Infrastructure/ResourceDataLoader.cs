@@ -15,6 +15,7 @@ public class ResourceData
     public float Size { get; set; }
     public string Shape { get; set; }
     public int Harvests { get; set; }
+    public List<string> Sprites { get; set; }
 }
 
 public static class ResourceDataLoader
@@ -53,6 +54,14 @@ public static class ResourceDataLoader
                 ? dict["outline_color"].AsString()
                 : dict["color"].AsString();
 
+            List<string> sprites = new();
+            if (dict.ContainsKey("sprites"))
+            {
+                Godot.Collections.Array spriteArray = dict["sprites"].AsGodotArray();
+                foreach (Variant sprite in spriteArray)
+                    sprites.Add(sprite.AsString());
+            }
+
             ResourceData data = new()
             {
                 Id = dict["id"].AsString(),
@@ -64,7 +73,8 @@ public static class ResourceDataLoader
                 AmountMax = (int)dict["amount_max"].AsDouble(),
                 Size = (float)dict["size"].AsDouble(),
                 Shape = dict["shape"].AsString(),
-                Harvests = (int)dict["harvests"].AsDouble()
+                Harvests = (int)dict["harvests"].AsDouble(),
+                Sprites = sprites
             };
             _cache[data.Id] = data;
         }

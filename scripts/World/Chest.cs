@@ -7,6 +7,7 @@ namespace Vestiges.World;
 /// <summary>
 /// Coffre récupérable dans le monde. 4 raretés : common, rare, epic, lore.
 /// Le joueur interagit pour ouvrir avec une barre de progression.
+/// Utilise des sprites pixel art quand disponibles, sinon rendu procédural.
 /// </summary>
 public partial class Chest : StaticBody2D
 {
@@ -15,8 +16,13 @@ public partial class Chest : StaticBody2D
     private Polygon2D _visual;
     private Polygon2D _outline;
     private Polygon2D _glowEffect;
+    private Sprite2D _sprite;
+    private Texture2D _closedTexture;
+    private Texture2D _openTexture;
+    private bool _usesSprite;
     private Color _originalColor;
     private EventBus _eventBus;
+    private Tween _glowTween;
 
     public bool IsOpened => _isOpened;
     public float OpenTime => _chestData?.OpenTime ?? 0.5f;
@@ -30,7 +36,7 @@ public partial class Chest : StaticBody2D
 
     public override void _Ready()
     {
-        _visual = GetNode<Polygon2D>("Visual");
+        _visual = GetNodeOrNull<Polygon2D>("Visual");
         _eventBus = GetNode<EventBus>("/root/EventBus");
         AddToGroup("chests");
     }
@@ -40,13 +46,58 @@ public partial class Chest : StaticBody2D
         _chestData = data;
         _originalColor = data.Color;
 
-        float s = data.Size;
-        Vector2[] shape = BuildChestShape(s);
-        _visual.Polygon = shape;
-        _visual.Color = data.Color;
+        if (TryLoadSprites(data))
+        {
+            _usesSprite = true;
+            if (_visual != null)
+                _visual.Visible = false;
+            CreateRarityGlow(data.Rarity, data.Size);
+        }
+        else
+        {
+            _usesSprite = false;
+            float s = data.Size;
+            Vector2[] shape = BuildChestShape(s);
+            _visual.Polygon = shape;
+            _visual.Color = data.Color;
+            CreateOutline(shape, data.OutlineColor);
+            CreateRarityGlow(data.Rarity, s);
+        }
+    }
 
-        CreateOutline(shape, data.OutlineColor);
-        CreateRarityGlow(data.Rarity, s);
+    private bool TryLoadSprites(ChestData data)
+    {
+        if (string.IsNullOrEmpty(data.SpriteClosed))
+            return false;
+
+        string closedPath = data.SpriteClosed.StartsWith("res://") ? data.SpriteClosed : $"res://{data.SpriteClosed}";
+        if (!ResourceLoader.Exists(closedPath))
+        {
+            GD.PushWarning($"[Chest] Sprite not found: {closedPath}, using polygon fallback");
+            return false;
+        }
+
+        _closedTexture = GD.Load<Texture2D>(closedPath);
+        if (_closedTexture == null)
+            return false;
+
+        // Charger la texture ouverte (optionnelle)
+        if (!string.IsNullOrEmpty(data.SpriteOpen))
+        {
+            string openPath = data.SpriteOpen.StartsWith("res://") ? data.SpriteOpen : $"res://{data.SpriteOpen}";
+            if (ResourceLoader.Exists(openPath))
+                _openTexture = GD.Load<Texture2D>(openPath);
+        }
+
+        _sprite = new Sprite2D
+        {
+            Texture = _closedTexture,
+            TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
+            Offset = new Vector2(0, -_closedTexture.GetHeight() * 0.5f + 2)
+        };
+        AddChild(_sprite);
+
+        return true;
     }
 
     /// <summary>Ouvre le coffre. Émet ChestOpened. Retourne la liste des loots.</summary>
@@ -57,10 +108,26 @@ public partial class Chest : StaticBody2D
 
         _isOpened = true;
 
-        // Feedback visuel
-        _visual.Color = new Color(_originalColor, 0.3f);
-        if (_outline != null)
-            _outline.Color = new Color(_outline.Color, 0.2f);
+        if (_usesSprite && _sprite != null)
+        {
+            // Swap vers le sprite ouvert
+            if (_openTexture != null)
+            {
+                _sprite.Texture = _openTexture;
+                _sprite.Offset = new Vector2(0, -_openTexture.GetHeight() * 0.5f + 2);
+            }
+            else
+            {
+                _sprite.Modulate = new Color(1f, 1f, 1f, 0.4f);
+            }
+        }
+        else
+        {
+            _visual.Color = new Color(_originalColor, 0.3f);
+            if (_outline != null)
+                _outline.Color = new Color(_outline.Color, 0.2f);
+        }
+
         if (_glowEffect != null)
             _glowEffect.Visible = false;
 
@@ -131,7 +198,11 @@ public partial class Chest : StaticBody2D
         };
         _glowEffect.Color = glowColor;
         _glowEffect.ZIndex = -2;
-        _visual.AddChild(_glowEffect);
+
+        if (_usesSprite && _sprite != null)
+            _sprite.AddChild(_glowEffect);
+        else if (_visual != null)
+            _visual.AddChild(_glowEffect);
 
         AnimateGlow();
     }
@@ -141,22 +212,32 @@ public partial class Chest : StaticBody2D
         if (_glowEffect == null)
             return;
 
-        Tween tween = CreateTween();
-        tween.SetLoops();
-        tween.TweenProperty(_glowEffect, "modulate:a", 0.4f, 1f)
+        _glowTween = CreateTween();
+        _glowTween.SetLoops();
+        _glowTween.TweenProperty(_glowEffect, "modulate:a", 0.4f, 1f)
             .SetTrans(Tween.TransitionType.Sine);
-        tween.TweenProperty(_glowEffect, "modulate:a", 1f, 1f)
+        _glowTween.TweenProperty(_glowEffect, "modulate:a", 1f, 1f)
             .SetTrans(Tween.TransitionType.Sine);
     }
 
     private void PlayOpenAnimation()
     {
-        // Flash blanc bref
-        Color prevColor = _visual.Color;
-        _visual.Color = Colors.White;
+        _glowTween?.Kill();
 
-        Tween tween = CreateTween();
-        tween.TweenProperty(_visual, "color", prevColor, 0.15f).SetDelay(0.05f);
+        if (_usesSprite && _sprite != null)
+        {
+            _sprite.Modulate = new Color(10f, 10f, 10f, 1f);
+            Tween flashTween = CreateTween();
+            flashTween.TweenProperty(_sprite, "modulate", Colors.White, 0.15f)
+                .SetDelay(0.05f);
+        }
+        else
+        {
+            Color prevColor = _visual.Color;
+            _visual.Color = Colors.White;
+            Tween tween = CreateTween();
+            tween.TweenProperty(_visual, "color", prevColor, 0.15f).SetDelay(0.05f);
+        }
 
         Tween scaleTween = CreateTween();
         scaleTween.TweenProperty(this, "scale", Vector2.One * 1.3f, 0.08f)
@@ -209,7 +290,6 @@ public partial class Chest : StaticBody2D
             float dist = (float)GD.RandRange(20f, 50f);
             Vector2 target = GlobalPosition + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * dist;
 
-            // Capture pour la lambda
             Polygon2D p = particle;
             Callable cleanup = Callable.From(() =>
             {

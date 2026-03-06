@@ -193,6 +193,7 @@ public partial class Player : CharacterBody2D
     private Chest _chestTarget;
     private float _chestProgress;
     private bool _isOpeningChest;
+    private UI.ChestLootScreen _chestLootScreen;
 
     public float CurrentHp => _currentHp;
     public float EffectiveMaxHp => MaxHp + _bonusMaxHp;
@@ -1775,6 +1776,8 @@ public partial class Player : CharacterBody2D
 
     // --- Chest Opening ---
 
+    public void SetChestLootScreen(UI.ChestLootScreen screen) => _chestLootScreen = screen;
+
     private bool TryStartChestOpen()
     {
         Chest nearest = FindNearestChest();
@@ -1783,7 +1786,19 @@ public partial class Player : CharacterBody2D
 
         if (nearest.OpenTime <= 0f)
         {
-            ApplyChestLoot(nearest);
+            System.Collections.Generic.List<LootResolver.LootResult> loots = nearest.Open();
+            if (_chestLootScreen != null && loots.Count > 0)
+            {
+                Chest instantChest = nearest;
+                _chestLootScreen.ShowLoot(loots, instantChest.Rarity, () =>
+                {
+                    ApplyChestLootResults(loots, instantChest);
+                });
+            }
+            else
+            {
+                ApplyChestLootResults(loots, nearest);
+            }
             return true;
         }
 
@@ -1829,17 +1844,30 @@ public partial class Player : CharacterBody2D
             return;
         }
 
-        ApplyChestLoot(_chestTarget);
+        System.Collections.Generic.List<LootResolver.LootResult> loots = _chestTarget.Open();
+        Chest openedChest = _chestTarget;
 
         _isOpeningChest = false;
         _harvestBar.Visible = false;
         _chestTarget = null;
         _chestProgress = 0f;
+
+        if (_chestLootScreen != null && loots.Count > 0)
+        {
+            // Show roulette screen — loot is applied after animation
+            _chestLootScreen.ShowLoot(loots, openedChest.Rarity, () =>
+            {
+                ApplyChestLootResults(loots, openedChest);
+            });
+        }
+        else
+        {
+            ApplyChestLootResults(loots, openedChest);
+        }
     }
 
-    private void ApplyChestLoot(Chest chest)
+    private void ApplyChestLootResults(System.Collections.Generic.List<LootResolver.LootResult> loots, Chest chest)
     {
-        System.Collections.Generic.List<LootResolver.LootResult> loots = chest.Open();
         CacheInventory();
 
         int lootIndex = 0;

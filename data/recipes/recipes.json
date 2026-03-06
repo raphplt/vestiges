@@ -3,6 +3,7 @@
         "id": "wood_wall",
         "name": "Mur de Bois",
         "category": "defense",
+        "sprite": "assets/sprites/structures/structure_mur_bois.png",
         "ingredients": [
             { "resource": "wood", "amount": 5 }
         ],
@@ -16,6 +17,7 @@
         "id": "stone_wall",
         "name": "Mur de Pierre",
         "category": "defense",
+        "sprite": "assets/sprites/structures/structure_mur_pierre.png",
         "ingredients": [
             { "resource": "stone", "amount": 5 }
         ],
@@ -29,6 +31,7 @@
         "id": "metal_wall",
         "name": "Mur de Métal",
         "category": "defense",
+        "sprite": "assets/sprites/structures/structure_mur_metal.png",
         "ingredients": [
             { "resource": "metal", "amount": 5 },
             { "resource": "stone", "amount": 3 }
@@ -43,6 +46,7 @@
         "id": "barricade",
         "name": "Barricade",
         "category": "defense",
+        "sprite": "assets/sprites/structures/structure_barricade.png",
         "ingredients": [
             { "resource": "wood", "amount": 3 }
         ],
@@ -84,6 +88,7 @@
         "id": "torch",
         "name": "Torche",
         "category": "utility",
+        "sprite": "assets/sprites/structures/structure_torche.png",
         "ingredients": [
             { "resource": "wood", "amount": 2 }
         ],

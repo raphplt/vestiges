@@ -20,6 +20,7 @@ public class RecipeData
     public string Id { get; set; }
     public string Name { get; set; }
     public string Category { get; set; }
+    public string Sprite { get; set; }
     public List<RecipeIngredient> Ingredients { get; set; } = new();
     public float BuildTime { get; set; }
     public RecipeResult Result { get; set; }
@@ -93,6 +94,7 @@ public static class RecipeDataLoader
             Id = dict["id"].AsString(),
             Name = dict["name"].AsString(),
             Category = dict["category"].AsString(),
+            Sprite = dict.ContainsKey("sprite") ? dict["sprite"].AsString() : null,
             BuildTime = (float)dict["build_time"].AsDouble()
         };
 

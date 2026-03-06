@@ -4,9 +4,9 @@ using Vestiges.Infrastructure;
 namespace Vestiges.Base;
 
 /// <summary>
-/// Noeud de ressource récoltable (arbre, rocher, débris).
+/// Noeud de ressource récoltable (arbre, rocher, débris, cristal).
 /// Le joueur s'approche et interagit pour récolter.
-/// Chaque type a une forme visuelle distincte : tree, rock, crystal, diamond.
+/// Utilise un sprite pixel art quand disponible, sinon fallback sur forme procédurale.
 /// </summary>
 public partial class ResourceNode : StaticBody2D
 {
@@ -19,7 +19,9 @@ public partial class ResourceNode : StaticBody2D
 
     private Polygon2D _visual;
     private Polygon2D _outline;
+    private Sprite2D _sprite;
     private Color _originalColor;
+    private bool _usesSprite;
 
     public bool IsExhausted => _harvestsRemaining <= 0;
     public string ResourceId => _resourceId;
@@ -28,7 +30,7 @@ public partial class ResourceNode : StaticBody2D
 
     public override void _Ready()
     {
-        _visual = GetNode<Polygon2D>("Visual");
+        _visual = GetNodeOrNull<Polygon2D>("Visual");
         AddToGroup("resources");
     }
 
@@ -40,13 +42,61 @@ public partial class ResourceNode : StaticBody2D
         _amountMax = data.AmountMax;
         _harvestTime = data.HarvestTime;
         _harvestsRemaining = data.Harvests;
+        _originalColor = data.Color;
+
+        if (TryLoadSprite(data))
+        {
+            _usesSprite = true;
+            if (_visual != null)
+                _visual.Visible = false;
+        }
+        else
+        {
+            _usesSprite = false;
+            BuildPolygonFallback(data);
+        }
+    }
+
+    private bool TryLoadSprite(ResourceData data)
+    {
+        if (data.Sprites == null || data.Sprites.Count == 0)
+            return false;
+
+        int variantIndex = (int)(GD.Randi() % data.Sprites.Count);
+        string spritePath = data.Sprites[variantIndex];
+        string resPath = spritePath.StartsWith("res://") ? spritePath : $"res://{spritePath}";
+
+        if (!ResourceLoader.Exists(resPath))
+        {
+            GD.PushWarning($"[ResourceNode] Sprite not found: {resPath}, using polygon fallback");
+            return false;
+        }
+
+        Texture2D texture = GD.Load<Texture2D>(resPath);
+        if (texture == null)
+            return false;
+
+        _sprite = new Sprite2D
+        {
+            Texture = texture,
+            TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
+            // Ancrer le sprite en bas-centre pour un bon placement au sol
+            Offset = new Vector2(0, -texture.GetHeight() * 0.5f + 2)
+        };
+        AddChild(_sprite);
+
+        return true;
+    }
+
+    private void BuildPolygonFallback(ResourceData data)
+    {
+        if (_visual == null)
+            return;
 
         float s = data.Size;
         Vector2[] shape = BuildShape(data.Shape, s);
         _visual.Polygon = shape;
         _visual.Color = data.Color;
-        _originalColor = data.Color;
-
         CreateOutline(shape, data.OutlineColor);
     }
 
@@ -137,13 +187,23 @@ public partial class ResourceNode : StaticBody2D
 
     private void HarvestFlash()
     {
-        _visual.Color = Colors.White;
-        if (_outline != null)
-            _outline.Color = Colors.White;
+        if (_usesSprite && _sprite != null)
+        {
+            _sprite.Modulate = Colors.White;
+            Tween colorTween = CreateTween();
+            colorTween.TweenProperty(_sprite, "modulate", Colors.White, 0.05f);
+            colorTween.TweenProperty(_sprite, "modulate", new Color(1, 1, 1, 1), 0.2f);
+        }
+        else if (_visual != null)
+        {
+            _visual.Color = Colors.White;
+            if (_outline != null)
+                _outline.Color = Colors.White;
 
-        Tween tween = CreateTween();
-        tween.TweenProperty(_visual, "color", _originalColor, 0.2f)
-            .SetDelay(0.05f);
+            Tween tween = CreateTween();
+            tween.TweenProperty(_visual, "color", _originalColor, 0.2f)
+                .SetDelay(0.05f);
+        }
 
         Tween shake = CreateTween();
         Vector2 basePos = Position;

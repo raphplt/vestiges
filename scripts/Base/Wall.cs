@@ -19,11 +19,16 @@ public partial class Wall : Structure
     {
         base.Initialize(recipeId, structureId, maxHp, gridPos, color);
 
+        // Si un sprite est chargé, pas besoin des polygones procéduraux
+        if (UsesSprite)
+            return;
+
         float s = 14f;
         float h = 7f;
 
         // Face du dessus (losange iso)
-        Visual.Polygon = new Vector2[] { new(-s, 0), new(0, -s * 0.5f), new(s, 0), new(0, s * 0.5f) };
+        if (Visual != null)
+            Visual.Polygon = new Vector2[] { new(-s, 0), new(0, -s * 0.5f), new(s, 0), new(0, s * 0.5f) };
 
         // Face gauche (extrusion vers le bas)
         if (LeftFace != null)

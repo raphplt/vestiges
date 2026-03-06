@@ -44,12 +44,15 @@ public partial class RandomEventManager : Node
 
 	// Caravane : nœud marchand temporaire
 	private Node2D _caravanNode;
+	private Tween _caravanPulseTween;
 
 	// Signal de fumée : nœud visuel + zone de détection
 	private Node2D _smokeSignalNode;
+	private readonly List<Tween> _smokePuffTweens = new();
 
 	// L'Appel : leurre + ennemis traqués
 	private Node2D _lureNode;
+	private Tween _lurePulseTween;
 	private readonly List<Enemy> _lureEnemies = new();
 	private bool _lureRewardGranted;
 
@@ -227,6 +230,7 @@ public partial class RandomEventManager : Node
 
 	private void CleanupCaravan()
 	{
+		_caravanPulseTween?.Kill();
 		if (_caravanNode != null && IsInstanceValid(_caravanNode))
 			_caravanNode.QueueFree();
 		_caravanNode = null;
@@ -234,6 +238,9 @@ public partial class RandomEventManager : Node
 
 	private void CleanupSmokeSignal()
 	{
+		foreach (Tween t in _smokePuffTweens)
+			t?.Kill();
+		_smokePuffTweens.Clear();
 		if (_smokeSignalNode != null && IsInstanceValid(_smokeSignalNode))
 			_smokeSignalNode.QueueFree();
 		_smokeSignalNode = null;
@@ -241,6 +248,7 @@ public partial class RandomEventManager : Node
 
 	private void CleanupLure()
 	{
+		_lurePulseTween?.Kill();
 		if (_lureNode != null && IsInstanceValid(_lureNode))
 			_lureNode.QueueFree();
 		_lureNode = null;
@@ -296,10 +304,10 @@ public partial class RandomEventManager : Node
 		merchant.AddChild(interactArea);
 
 		// Pulsation douce pour attirer l'attention
-		Tween pulseTween = CreateTween().SetLoops();
-		pulseTween.TweenProperty(body, "scale", new Vector2(1.15f, 1.15f), 1.0f)
+		_caravanPulseTween = CreateTween().SetLoops();
+		_caravanPulseTween.TweenProperty(body, "scale", new Vector2(1.15f, 1.15f), 1.0f)
 			.SetTrans(Tween.TransitionType.Sine);
-		pulseTween.TweenProperty(body, "scale", Vector2.One, 1.0f)
+		_caravanPulseTween.TweenProperty(body, "scale", Vector2.One, 1.0f)
 			.SetTrans(Tween.TransitionType.Sine);
 
 		GetNode("..").CallDeferred("add_child", merchant);
@@ -324,6 +332,7 @@ public partial class RandomEventManager : Node
 			GD.Print($"[RandomEventManager] Caravane — joueur reçoit {amount}x {chosenResource}");
 
 			// Feedback visuel : le marchand disparaît progressivement
+			_caravanPulseTween?.Kill();
 			Tween fadeTween = merchant.CreateTween();
 			fadeTween.TweenProperty(merchant, "modulate", new Color(1, 1, 1, 0), 1.5f);
 			fadeTween.TweenCallback(Callable.From(() =>
@@ -485,6 +494,7 @@ public partial class RandomEventManager : Node
 			puffTween.TweenProperty(smokePuff, "position",
 				new Vector2(-drift, yOff + 2f), 1.2f + i * 0.3f)
 				.SetTrans(Tween.TransitionType.Sine);
+			_smokePuffTweens.Add(puffTween);
 		}
 
 		// Zone de détection du joueur
@@ -528,6 +538,9 @@ public partial class RandomEventManager : Node
 			}
 
 			// Dissoudre le nœud après interaction
+			foreach (Tween t in _smokePuffTweens)
+				t?.Kill();
+			_smokePuffTweens.Clear();
 			Tween fadeTween = smokeNode.CreateTween();
 			fadeTween.TweenProperty(smokeNode, "modulate", new Color(1, 1, 1, 0), 1.0f);
 			fadeTween.TweenCallback(Callable.From(() =>
@@ -676,10 +689,10 @@ public partial class RandomEventManager : Node
 		GetNode("..").CallDeferred("add_child", lure);
 
 		// Pulsation lumineuse
-		Tween pulseTween = CreateTween().SetLoops();
-		pulseTween.TweenProperty(glow, "scale", new Vector2(1.4f, 1.4f), 0.8f)
+		_lurePulseTween = CreateTween().SetLoops();
+		_lurePulseTween.TweenProperty(glow, "scale", new Vector2(1.4f, 1.4f), 0.8f)
 			.SetTrans(Tween.TransitionType.Sine);
-		pulseTween.TweenProperty(glow, "scale", Vector2.One, 0.8f)
+		_lurePulseTween.TweenProperty(glow, "scale", Vector2.One, 0.8f)
 			.SetTrans(Tween.TransitionType.Sine);
 
 		// Préparer le tracking des ennemis du leurre
@@ -765,6 +778,7 @@ public partial class RandomEventManager : Node
 				GD.Print($"[RandomEventManager] L'Appel — défi relevé ! +{rewardXp} XP bonus");
 
 				// Dissoudre le leurre
+				_lurePulseTween?.Kill();
 				if (IsInstanceValid(_lureNode))
 				{
 					Tween fadeTween = _lureNode.CreateTween();

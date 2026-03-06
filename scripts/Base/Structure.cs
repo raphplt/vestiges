@@ -6,7 +6,7 @@ namespace Vestiges.Base;
 /// <summary>
 /// Classe de base pour toutes les structures placées par le joueur.
 /// Gère les HP, les dégâts, la destruction et le feedback visuel.
-/// Rendu isométrique : face du dessus (Visual) + faces latérales (LeftFace, RightFace).
+/// Utilise un sprite pixel art quand disponible, sinon rendu isométrique procédural.
 /// </summary>
 public partial class Structure : StaticBody2D
 {
@@ -18,7 +18,9 @@ public partial class Structure : StaticBody2D
 	protected Polygon2D Visual;
 	protected Polygon2D LeftFace;
 	protected Polygon2D RightFace;
+	protected Sprite2D SpriteVisual;
 	protected Color OriginalColor;
+	protected bool UsesSprite;
 
 	public bool IsDestroyed => CurrentHp <= 0;
 	public float HpRatio => MaxHp > 0 ? CurrentHp / MaxHp : 0;
@@ -26,9 +28,10 @@ public partial class Structure : StaticBody2D
 
 	public override void _Ready()
 	{
-		Visual = GetNode<Polygon2D>("Visual");
+		Visual = GetNodeOrNull<Polygon2D>("Visual");
 		LeftFace = GetNodeOrNull<Polygon2D>("LeftFace");
 		RightFace = GetNodeOrNull<Polygon2D>("RightFace");
+		SpriteVisual = GetNodeOrNull<Sprite2D>("SpriteVisual");
 		AddToGroup("structures");
 	}
 
@@ -39,15 +42,53 @@ public partial class Structure : StaticBody2D
 		MaxHp = maxHp;
 		CurrentHp = maxHp;
 		GridPosition = gridPos;
-
-		Visual.Color = color;
 		OriginalColor = color;
 
-		// Side faces : couleurs plus sombres pour l'effet 3D
-		if (LeftFace != null)
-			LeftFace.Color = color.Darkened(0.3f);
-		if (RightFace != null)
-			RightFace.Color = color.Darkened(0.5f);
+		if (UsesSprite && SpriteVisual != null)
+		{
+			// Cacher les polygones quand on utilise un sprite
+			if (Visual != null) Visual.Visible = false;
+			if (LeftFace != null) LeftFace.Visible = false;
+			if (RightFace != null) RightFace.Visible = false;
+		}
+		else
+		{
+			if (Visual != null)
+				Visual.Color = color;
+			if (LeftFace != null)
+				LeftFace.Color = color.Darkened(0.3f);
+			if (RightFace != null)
+				RightFace.Color = color.Darkened(0.5f);
+		}
+	}
+
+	/// <summary>Charge un sprite pour la structure. Appelé par StructurePlacer avant Initialize.</summary>
+	public bool TrySetSprite(string spritePath)
+	{
+		if (string.IsNullOrEmpty(spritePath))
+			return false;
+
+		string resPath = spritePath.StartsWith("res://") ? spritePath : $"res://{spritePath}";
+		if (!ResourceLoader.Exists(resPath))
+		{
+			GD.PushWarning($"[Structure] Sprite not found: {resPath}, using polygon fallback");
+			return false;
+		}
+
+		Texture2D texture = GD.Load<Texture2D>(resPath);
+		if (texture == null)
+			return false;
+
+		SpriteVisual = new Sprite2D
+		{
+			Name = "SpriteVisual",
+			Texture = texture,
+			TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
+			Offset = new Vector2(0, -texture.GetHeight() * 0.5f + 4)
+		};
+		AddChild(SpriteVisual);
+		UsesSprite = true;
+		return true;
 	}
 
 	public virtual void TakeDamage(float damage)
@@ -91,27 +132,38 @@ public partial class Structure : StaticBody2D
 
 	private void HitFlash()
 	{
-		Visual.Color = Colors.White;
-		if (LeftFace != null)
-			LeftFace.Color = Colors.White;
-		if (RightFace != null)
-			RightFace.Color = Colors.White;
-
-		Tween tween = CreateTween();
-		tween.TweenProperty(Visual, "color", OriginalColor, 0.15f)
-			.SetDelay(0.05f);
-
-		if (LeftFace != null)
+		if (UsesSprite && SpriteVisual != null)
 		{
-			Tween leftTween = CreateTween();
-			leftTween.TweenProperty(LeftFace, "color", OriginalColor.Darkened(0.3f), 0.15f)
+			SpriteVisual.Modulate = new Color(10f, 10f, 10f, 1f);
+			Tween spriteTween = CreateTween();
+			spriteTween.TweenProperty(SpriteVisual, "modulate", Colors.White, 0.15f)
 				.SetDelay(0.05f);
 		}
-		if (RightFace != null)
+		else
 		{
-			Tween rightTween = CreateTween();
-			rightTween.TweenProperty(RightFace, "color", OriginalColor.Darkened(0.5f), 0.15f)
-				.SetDelay(0.05f);
+			if (Visual != null) Visual.Color = Colors.White;
+			if (LeftFace != null) LeftFace.Color = Colors.White;
+			if (RightFace != null) RightFace.Color = Colors.White;
+
+			Tween tween = CreateTween();
+			if (Visual != null)
+			{
+				tween.TweenProperty(Visual, "color", OriginalColor, 0.15f)
+					.SetDelay(0.05f);
+			}
+
+			if (LeftFace != null)
+			{
+				Tween leftTween = CreateTween();
+				leftTween.TweenProperty(LeftFace, "color", OriginalColor.Darkened(0.3f), 0.15f)
+					.SetDelay(0.05f);
+			}
+			if (RightFace != null)
+			{
+				Tween rightTween = CreateTween();
+				rightTween.TweenProperty(RightFace, "color", OriginalColor.Darkened(0.5f), 0.15f)
+					.SetDelay(0.05f);
+			}
 		}
 	}
 

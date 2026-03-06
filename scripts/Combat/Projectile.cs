@@ -258,11 +258,11 @@ public partial class Projectile : Area2D
         Color impactColor = _visual?.Color ?? new Color(1f, 0.85f, 0.2f);
         Node2D impact = VfxFactory.CreateProjectileImpact(GlobalPosition, impactColor);
         if (impact != null)
-            GetTree().CurrentScene.AddChild(impact);
+            GetTree().CurrentScene.CallDeferred("add_child", impact);
 
         if (_visual == null)
         {
-            QueueFree();
+            CallDeferred(MethodName.QueueFree);
             return;
         }
 

@@ -1,4 +1,4 @@
-[gd_scene load_steps=31 format=3]
+[gd_scene load_steps=32 format=3]
 
 [ext_resource type="TileSet" path="res://assets/tiles/iso_tileset.tres" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/Player.tscn" id="2"]
@@ -12,6 +12,7 @@
 [ext_resource type="Script" path="res://scripts/World/GameBootstrap.cs" id="10"]
 [ext_resource type="Script" path="res://scripts/Score/ScoreManager.cs" id="11"]
 [ext_resource type="PackedScene" path="res://scenes/ui/GameOverScreen.tscn" id="12"]
+[ext_resource type="PackedScene" path="res://scenes/ui/ChestLootScreen.tscn" id="31"]
 [ext_resource type="Script" path="res://scripts/World/DayNightCycle.cs" id="13"]
 [ext_resource type="Script" path="res://scripts/World/Foyer.cs" id="14"]
 [ext_resource type="Script" path="res://scripts/Base/Inventory.cs" id="15"]
@@ -105,6 +106,8 @@ script = ExtResource("13")
 [node name="HUD" parent="." instance=ExtResource("8")]
 
 [node name="LevelUpScreen" parent="." instance=ExtResource("9")]
+
+[node name="ChestLootScreen" parent="." instance=ExtResource("31")]
 
 [node name="GameOverScreen" parent="." instance=ExtResource("12")]
 

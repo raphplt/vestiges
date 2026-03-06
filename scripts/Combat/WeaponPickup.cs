@@ -27,6 +27,7 @@ public partial class WeaponPickup : Area2D
 	private Vector2 _scatterVelocity;
 	private float _scatterTimer;
 	private bool _collected;
+	private Tween _glowTween;
 
 	public WeaponData Weapon => _weaponData;
 
@@ -97,6 +98,19 @@ public partial class WeaponPickup : Area2D
 		if (body is not Player player)
 			return;
 
+		// Defer to avoid "Can't change state while flushing queries"
+		CallDeferred(MethodName.ProcessPickup, player.GetPath());
+	}
+
+	private void ProcessPickup(NodePath playerPath)
+	{
+		if (_collected)
+			return;
+
+		Player player = GetNodeOrNull<Player>(playerPath);
+		if (player == null)
+			return;
+
 		if (player.AddWeapon(_weaponData))
 		{
 			_collected = true;
@@ -115,6 +129,7 @@ public partial class WeaponPickup : Area2D
 
 	private void PlayPickupEffect(Player player)
 	{
+		_glowTween?.Kill();
 		Tween tween = CreateTween();
 		tween.SetParallel();
 		tween.TweenProperty(this, "scale", Vector2.One * 1.5f, 0.1f);
@@ -173,6 +188,7 @@ public partial class WeaponPickup : Area2D
 
 	private void Despawn()
 	{
+		_glowTween?.Kill();
 		Tween tween = CreateTween();
 		tween.SetParallel();
 		tween.TweenProperty(this, "scale", Vector2.Zero, 0.4f);
@@ -193,11 +209,11 @@ public partial class WeaponPickup : Area2D
 		_glow.ZIndex = -1;
 		AddChild(_glow);
 
-		Tween glowTween = CreateTween();
-		glowTween.SetLoops();
-		glowTween.TweenProperty(_glow, "modulate:a", 0.4f, 0.7f)
+		_glowTween = CreateTween();
+		_glowTween.SetLoops();
+		_glowTween.TweenProperty(_glow, "modulate:a", 0.4f, 0.7f)
 			.SetTrans(Tween.TransitionType.Sine);
-		glowTween.TweenProperty(_glow, "modulate:a", 1f, 0.7f)
+		_glowTween.TweenProperty(_glow, "modulate:a", 1f, 0.7f)
 			.SetTrans(Tween.TransitionType.Sine);
 
 		_visual = new Polygon2D();

@@ -40,6 +40,12 @@ public partial class Turret : Structure
     {
         base.Initialize(recipeId, structureId, maxHp, gridPos, color);
 
+        if (UsesSprite)
+            return;
+
+        if (Visual == null)
+            return;
+
         float s = 10f;
         Visual.Polygon = new Vector2[]
         {
@@ -98,7 +104,10 @@ public partial class Turret : Structure
 
         if (IsEmpty)
         {
-            Visual.Color = new Color(OriginalColor, 0.4f);
+            if (UsesSprite && SpriteVisual != null)
+                SpriteVisual.Modulate = new Color(1f, 1f, 1f, 0.4f);
+            else if (Visual != null)
+                Visual.Color = new Color(OriginalColor, 0.4f);
             _dirIndicator.Visible = false;
         }
     }

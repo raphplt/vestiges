@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Godot;
 using Vestiges.Core;
 using Vestiges.Infrastructure;
@@ -7,30 +8,63 @@ namespace Vestiges.UI;
 
 /// <summary>
 /// Écran de choix au level up — affiche des Fragments de Mémoire (armes + passifs).
-/// Pause le jeu, affiche 3 choix avec icônes type, reprend après sélection.
+/// Pause le jeu, affiche 3 choix sous forme de cartes stylisées, reprend après sélection.
 /// Supporte aussi les choix de perks via Mémorial (source monde).
 /// </summary>
 public partial class LevelUpScreen : CanvasLayer
 {
+    private const string MenusPath = "res://assets/ui/menus/";
+
+    // --- Colors (shared palette from HubScreen) ---
+    private static readonly Color GoldColor = new(0.83f, 0.66f, 0.26f);
+    private static readonly Color GoldBright = new(0.9f, 0.78f, 0.39f);
+    private static readonly Color GoldDim = new(0.63f, 0.47f, 0.16f);
+    private static readonly Color TextColor = new(0.72f, 0.7f, 0.66f);
+    private static readonly Color TextDim = new(0.5f, 0.5f, 0.55f);
+    private static readonly Color BgDark = new(0.04f, 0.05f, 0.09f);
+    private static readonly Color WeaponNewColor = new(1f, 0.85f, 0.3f);
+    private static readonly Color WeaponUpgradeColor = new(1f, 0.65f, 0.2f);
+    private static readonly Color PassiveNewColor = new(0.5f, 0.85f, 1f);
+    private static readonly Color PassiveUpgradeColor = new(0.3f, 0.7f, 0.95f);
+    private static readonly Color OverlayColor = new(0.0f, 0.0f, 0.02f, 0.75f);
+
+    // --- Cached textures ---
+    private Texture2D _panelTex;
+    private Texture2D _cardNormalTex;
+    private Texture2D _cardSelectedTex;
+    private Texture2D _separatorTex;
+
+    // --- Rays config ---
+    private const int RayCount = 14;
+    private const float RaySpeed = 0.15f; // radians per second
+    private static readonly Color RayColorA = new(0.83f, 0.66f, 0.26f, 0.08f);
+    private static readonly Color RayColorB = new(0.9f, 0.78f, 0.39f, 0.04f);
+
+    // --- UI nodes ---
+    private ColorRect _overlay;
+    private LightRaysControl _rays;
     private PanelContainer _panel;
-    private VBoxContainer _container;
+    private VBoxContainer _cardsContainer;
     private Label _title;
     private Label _synergyNotification;
+    private readonly List<PanelContainer> _cards = new();
+    private int _hoveredCardIndex = -1;
+
+    // --- Managers ---
     private PerkManager _perkManager;
     private FragmentManager _fragmentManager;
     private EventBus _eventBus;
 
     public override void _Ready()
     {
-        _panel = GetNode<PanelContainer>("Panel");
-        _container = GetNode<VBoxContainer>("Panel/Padding/VBox");
-        _title = GetNode<Label>("Panel/Padding/VBox/Title");
+        LoadTextures();
+        BuildUI();
 
         _eventBus = GetNode<EventBus>("/root/EventBus");
         _eventBus.FragmentChoicesReady += OnFragmentChoicesReady;
 
         CreateSynergyNotification();
-        Hide();
+        HideScreen();
     }
 
     public override void _ExitTree()
@@ -49,36 +83,269 @@ public partial class LevelUpScreen : CanvasLayer
     public void SetFragmentManager(FragmentManager fragmentManager)
     {
         _fragmentManager = fragmentManager;
-        GD.Print($"[LevelUpScreen] FragmentManager wired, listening on EventBus.FragmentChoicesReady");
+        GD.Print("[LevelUpScreen] FragmentManager wired, listening on EventBus.FragmentChoicesReady");
     }
 
-    private void CreateSynergyNotification()
+    // ==============================
+    // Texture loading
+    // ==============================
+
+    private void LoadTextures()
     {
-        _synergyNotification = new Label();
-        _synergyNotification.HorizontalAlignment = HorizontalAlignment.Center;
-        _synergyNotification.VerticalAlignment = VerticalAlignment.Center;
-        _synergyNotification.AddThemeFontSizeOverride("font_size", 22);
-        _synergyNotification.AddThemeColorOverride("font_color", new Color(1f, 0.85f, 0.2f));
-        _synergyNotification.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.CenterTop);
-        _synergyNotification.OffsetTop = 80;
-        _synergyNotification.Visible = false;
-        _synergyNotification.ProcessMode = ProcessModeEnum.Always;
-        AddChild(_synergyNotification);
+        _panelTex = LoadTex(MenusPath + "ui_panel_frame.png");
+        _cardNormalTex = LoadTex(MenusPath + "ui_card_normal.png");
+        _cardSelectedTex = LoadTex(MenusPath + "ui_card_selected.png");
+        _separatorTex = LoadTex(MenusPath + "ui_separator_simple.png");
     }
 
-    private void OnSynergyActivated(string synergyId, string notification)
+    private static Texture2D LoadTex(string path)
     {
-        _synergyNotification.Text = notification;
-        _synergyNotification.Visible = true;
-        _synergyNotification.Modulate = new Color(1f, 1f, 1f, 1f);
-
-        Tween tween = CreateTween();
-        tween.TweenInterval(2.0f);
-        tween.TweenProperty(_synergyNotification, "modulate:a", 0f, 1.0f);
-        tween.TweenCallback(Callable.From(() => _synergyNotification.Visible = false));
+        if (ResourceLoader.Exists(path))
+            return GD.Load<Texture2D>(path);
+        GD.PushWarning($"[LevelUpScreen] Missing texture: {path}");
+        return null;
     }
 
-    // --- Fragment Mode (level-up: armes + passifs) ---
+    // ==============================
+    // UI construction
+    // ==============================
+
+    private void BuildUI()
+    {
+        // Dark overlay covering the whole screen
+        _overlay = new ColorRect();
+        _overlay.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
+        _overlay.Color = OverlayColor;
+        _overlay.MouseFilter = Control.MouseFilterEnum.Stop;
+        AddChild(_overlay);
+
+        // Rotating light rays behind the panel
+        _rays = new LightRaysControl(RayCount, RaySpeed, RayColorA, RayColorB);
+        _rays.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
+        _rays.MouseFilter = Control.MouseFilterEnum.Ignore;
+        _rays.ProcessMode = ProcessModeEnum.Always;
+        AddChild(_rays);
+
+        // Main panel centered on screen
+        _panel = new PanelContainer();
+        _panel.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.Center);
+        _panel.GrowHorizontal = Control.GrowDirection.Both;
+        _panel.GrowVertical = Control.GrowDirection.Both;
+        _panel.CustomMinimumSize = new Vector2(500, 100);
+
+        if (_panelTex != null)
+        {
+            StyleBoxTexture panelStyle = CreateNinePatch(_panelTex, 6, 6, 6, 6);
+            panelStyle.ContentMarginLeft = 20;
+            panelStyle.ContentMarginRight = 20;
+            panelStyle.ContentMarginTop = 16;
+            panelStyle.ContentMarginBottom = 20;
+            _panel.AddThemeStyleboxOverride("panel", panelStyle);
+        }
+        else
+        {
+            StyleBoxFlat fallback = new();
+            fallback.BgColor = new Color(0.06f, 0.06f, 0.1f, 0.95f);
+            fallback.SetBorderWidthAll(2);
+            fallback.BorderColor = GoldDim;
+            fallback.SetCornerRadiusAll(4);
+            fallback.ContentMarginLeft = 20;
+            fallback.ContentMarginRight = 20;
+            fallback.ContentMarginTop = 16;
+            fallback.ContentMarginBottom = 20;
+            _panel.AddThemeStyleboxOverride("panel", fallback);
+        }
+
+        AddChild(_panel);
+
+        // Inner VBox
+        VBoxContainer innerVBox = new();
+        innerVBox.AddThemeConstantOverride("separation", 12);
+        _panel.AddChild(innerVBox);
+
+        // Title
+        _title = new Label();
+        _title.HorizontalAlignment = HorizontalAlignment.Center;
+        _title.AddThemeFontSizeOverride("font_size", 20);
+        _title.AddThemeColorOverride("font_color", GoldBright);
+        _title.Text = "FRAGMENT DE MÉMOIRE";
+        innerVBox.AddChild(_title);
+
+        // Separator under title
+        if (_separatorTex != null)
+        {
+            TextureRect sep = new();
+            sep.Texture = _separatorTex;
+            sep.ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize;
+            sep.StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered;
+            sep.CustomMinimumSize = new Vector2(0, 6);
+            sep.TextureFilter = CanvasItem.TextureFilterEnum.Nearest;
+            innerVBox.AddChild(sep);
+        }
+
+        // Cards container
+        _cardsContainer = new VBoxContainer();
+        _cardsContainer.AddThemeConstantOverride("separation", 8);
+        innerVBox.AddChild(_cardsContainer);
+    }
+
+    // ==============================
+    // Card creation
+    // ==============================
+
+    private PanelContainer CreateChoiceCard(
+        string iconPath,
+        string typeTag,
+        Color tagColor,
+        string name,
+        string description,
+        string badge,
+        Color badgeColor,
+        System.Action onPressed)
+    {
+        PanelContainer card = new();
+        card.CustomMinimumSize = new Vector2(460, 80);
+
+        // Card NinePatch style
+        ApplyCardStyle(card, false);
+
+        // Make the card clickable
+        card.MouseFilter = Control.MouseFilterEnum.Stop;
+        card.GuiInput += (InputEvent @event) =>
+        {
+            if (@event is InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Left })
+            {
+                onPressed?.Invoke();
+                card.AcceptEvent();
+            }
+        };
+
+        // Hover tracking
+        int cardIndex = _cards.Count;
+        card.MouseEntered += () => OnCardHovered(cardIndex);
+        card.MouseExited += () => OnCardUnhovered(cardIndex);
+
+        // Card inner layout: HBox with icon on left, text on right, badge on far right
+        MarginContainer cardMargin = new();
+        cardMargin.AddThemeConstantOverride("margin_left", 12);
+        cardMargin.AddThemeConstantOverride("margin_right", 12);
+        cardMargin.AddThemeConstantOverride("margin_top", 8);
+        cardMargin.AddThemeConstantOverride("margin_bottom", 8);
+        card.AddChild(cardMargin);
+
+        HBoxContainer cardHBox = new();
+        cardHBox.AddThemeConstantOverride("separation", 14);
+        cardHBox.Alignment = BoxContainer.AlignmentMode.Begin;
+        cardMargin.AddChild(cardHBox);
+
+        // Icon (larger, 48x48)
+        if (!string.IsNullOrEmpty(iconPath))
+        {
+            string resPath = iconPath.StartsWith("res://") ? iconPath : $"res://{iconPath}";
+            if (ResourceLoader.Exists(resPath))
+            {
+                TextureRect icon = new();
+                icon.CustomMinimumSize = new Vector2(48, 48);
+                icon.ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize;
+                icon.StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered;
+                icon.TextureFilter = CanvasItem.TextureFilterEnum.Nearest;
+                icon.Texture = GD.Load<Texture2D>(resPath);
+                icon.SizeFlagsVertical = Control.SizeFlags.ShrinkCenter;
+                cardHBox.AddChild(icon);
+            }
+        }
+
+        // Text section (VBox with type tag, name, description)
+        VBoxContainer textVBox = new();
+        textVBox.AddThemeConstantOverride("separation", 2);
+        textVBox.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+        textVBox.SizeFlagsVertical = Control.SizeFlags.ShrinkCenter;
+        cardHBox.AddChild(textVBox);
+
+        // Type tag (small, colored)
+        if (!string.IsNullOrEmpty(typeTag))
+        {
+            Label tagLabel = new();
+            tagLabel.Text = typeTag;
+            tagLabel.AddThemeFontSizeOverride("font_size", 11);
+            tagLabel.AddThemeColorOverride("font_color", tagColor);
+            textVBox.AddChild(tagLabel);
+        }
+
+        // Name (prominent)
+        Label nameLabel = new();
+        nameLabel.Text = name;
+        nameLabel.AddThemeFontSizeOverride("font_size", 16);
+        nameLabel.AddThemeColorOverride("font_color", new Color(0.92f, 0.9f, 0.85f));
+        textVBox.AddChild(nameLabel);
+
+        // Description / stats (smaller, dimmer)
+        if (!string.IsNullOrEmpty(description))
+        {
+            Label descLabel = new();
+            descLabel.Text = description;
+            descLabel.AddThemeFontSizeOverride("font_size", 12);
+            descLabel.AddThemeColorOverride("font_color", TextDim);
+            textVBox.AddChild(descLabel);
+        }
+
+        // Badge on the right side (NEW / LVL X)
+        if (!string.IsNullOrEmpty(badge))
+        {
+            Label badgeLabel = new();
+            badgeLabel.Text = badge;
+            badgeLabel.AddThemeFontSizeOverride("font_size", 14);
+            badgeLabel.AddThemeColorOverride("font_color", badgeColor);
+            badgeLabel.VerticalAlignment = VerticalAlignment.Center;
+            badgeLabel.SizeFlagsVertical = Control.SizeFlags.ShrinkCenter;
+            cardHBox.AddChild(badgeLabel);
+        }
+
+        _cards.Add(card);
+        return card;
+    }
+
+    private void ApplyCardStyle(PanelContainer card, bool selected)
+    {
+        Texture2D tex = selected ? _cardSelectedTex : _cardNormalTex;
+        if (tex != null)
+        {
+            StyleBoxTexture style = CreateNinePatch(tex, 4, 4, 4, 4);
+            style.ContentMarginLeft = 0;
+            style.ContentMarginRight = 0;
+            style.ContentMarginTop = 0;
+            style.ContentMarginBottom = 0;
+            card.AddThemeStyleboxOverride("panel", style);
+        }
+        else
+        {
+            StyleBoxFlat flat = new();
+            flat.BgColor = selected ? new Color(0.12f, 0.14f, 0.2f) : new Color(0.08f, 0.08f, 0.12f);
+            flat.SetBorderWidthAll(selected ? 2 : 1);
+            flat.BorderColor = selected ? GoldColor : new Color(0.25f, 0.24f, 0.2f, 0.6f);
+            flat.SetCornerRadiusAll(3);
+            card.AddThemeStyleboxOverride("panel", flat);
+        }
+    }
+
+    private void OnCardHovered(int index)
+    {
+        _hoveredCardIndex = index;
+        if (index >= 0 && index < _cards.Count)
+            ApplyCardStyle(_cards[index], true);
+    }
+
+    private void OnCardUnhovered(int index)
+    {
+        if (index == _hoveredCardIndex)
+            _hoveredCardIndex = -1;
+        if (index >= 0 && index < _cards.Count)
+            ApplyCardStyle(_cards[index], false);
+    }
+
+    // ==============================
+    // Fragment Mode (level-up: armes + passifs)
+    // ==============================
 
     private void OnFragmentChoicesReady(int count)
     {
@@ -90,69 +357,101 @@ public partial class LevelUpScreen : CanvasLayer
             return;
         }
 
-        System.Collections.Generic.IReadOnlyList<FragmentOption> choices = _fragmentManager.PendingChoices;
+        IReadOnlyList<FragmentOption> choices = _fragmentManager.PendingChoices;
         GD.Print($"[LevelUpScreen] PendingChoices.Count={choices.Count}");
         if (choices.Count == 0)
             return;
 
-        ClearButtons();
-        BuildFragmentButtons(choices);
-        Show();
-        GetTree().Paused = true;
-        ProcessMode = ProcessModeEnum.Always;
-        GD.Print($"[LevelUpScreen] Fragment screen shown with {choices.Count} choices");
-    }
-
-    private void BuildFragmentButtons(System.Collections.Generic.IReadOnlyList<FragmentOption> choices)
-    {
+        ClearCards();
         _title.Text = "FRAGMENT DE MÉMOIRE";
 
         foreach (FragmentOption choice in choices)
         {
-            string label = BuildFragmentLabel(choice.Id, choice.Type);
-            Color color = GetFragmentColor(choice.Type);
-
-            Button button = new()
-            {
-                CustomMinimumSize = new Vector2(380, 55),
-            };
-
-            HBoxContainer hbox = new();
-            hbox.AddThemeConstantOverride("separation", 8);
-            hbox.Alignment = BoxContainer.AlignmentMode.Center;
-            button.AddChild(hbox);
-
-            // Try to load sprite icon for weapon or passive
-            string spritePath = GetFragmentSpritePath(choice.Id, choice.Type);
-            if (!string.IsNullOrEmpty(spritePath))
-            {
-                string resPath = spritePath.StartsWith("res://") ? spritePath : $"res://{spritePath}";
-                if (ResourceLoader.Exists(resPath))
-                {
-                    TextureRect icon = new();
-                    icon.CustomMinimumSize = new Vector2(28, 28);
-                    icon.ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize;
-                    icon.StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered;
-                    icon.TextureFilter = CanvasItem.TextureFilterEnum.Nearest;
-                    icon.Texture = GD.Load<Texture2D>(resPath);
-                    hbox.AddChild(icon);
-                }
-            }
-
-            Label textLabel = new();
-            textLabel.Text = label;
-            textLabel.AddThemeColorOverride("font_color", color);
-            hbox.AddChild(textLabel);
-
-            button.AddThemeColorOverride("font_color", color);
-            button.AddThemeColorOverride("font_hover_color", color);
-
-            string capturedId = choice.Id;
-            string capturedType = choice.Type;
-            button.Pressed += () => OnFragmentSelected(capturedId, capturedType);
-
-            _container.AddChild(button);
+            BuildFragmentCard(choice);
         }
+
+        ShowScreen();
+        GD.Print($"[LevelUpScreen] Fragment screen shown with {choices.Count} choices");
+    }
+
+    private void BuildFragmentCard(FragmentOption choice)
+    {
+        Player player = GetTree().GetFirstNodeInGroup("player") as Player;
+        string iconPath = GetFragmentSpritePath(choice.Id, choice.Type);
+
+        string typeTag;
+        Color tagColor;
+        string name;
+        string description;
+        string badge;
+        Color badgeColor;
+
+        switch (choice.Type)
+        {
+            case "weapon_new":
+            {
+                WeaponData weapon = WeaponDataLoader.Get(choice.Id);
+                typeTag = "Arme";
+                tagColor = WeaponNewColor;
+                name = weapon?.Name ?? choice.Id;
+                description = weapon != null ? FormatWeaponStats(weapon) : "";
+                badge = "NOUVEAU";
+                badgeColor = WeaponNewColor;
+                break;
+            }
+            case "weapon_upgrade":
+            {
+                WeaponData weapon = WeaponDataLoader.Get(choice.Id);
+                int level = player?.GetWeaponFragmentLevel(choice.Id) ?? 0;
+                typeTag = "Arme";
+                tagColor = WeaponUpgradeColor;
+                name = weapon?.Name ?? choice.Id;
+                description = weapon != null ? FormatWeaponStats(weapon) : "";
+                badge = $"NIV {level} \u2192 {level + 1}";
+                badgeColor = WeaponUpgradeColor;
+                break;
+            }
+            case "passive_new":
+            {
+                PassiveSouvenirData passive = PassiveSouvenirDataLoader.Get(choice.Id);
+                typeTag = "Passif";
+                tagColor = PassiveNewColor;
+                name = passive?.Name ?? choice.Id;
+                description = passive != null ? FormatPassiveStats(passive, 1) : "";
+                badge = "NOUVEAU";
+                badgeColor = PassiveNewColor;
+                break;
+            }
+            case "passive_upgrade":
+            {
+                PassiveSouvenirData passive = PassiveSouvenirDataLoader.Get(choice.Id);
+                int level = player?.GetPassiveLevel(choice.Id) ?? 0;
+                typeTag = "Passif";
+                tagColor = PassiveUpgradeColor;
+                name = passive?.Name ?? choice.Id;
+                description = passive != null ? FormatPassiveStats(passive, level + 1) : "";
+                badge = $"NIV {level} \u2192 {level + 1}";
+                badgeColor = PassiveUpgradeColor;
+                break;
+            }
+            default:
+                typeTag = "";
+                tagColor = TextColor;
+                name = choice.Id;
+                description = "";
+                badge = "";
+                badgeColor = TextColor;
+                break;
+        }
+
+        string capturedId = choice.Id;
+        string capturedType = choice.Type;
+
+        PanelContainer card = CreateChoiceCard(
+            iconPath, typeTag, tagColor, name, description, badge, badgeColor,
+            () => OnFragmentSelected(capturedId, capturedType));
+
+        _cardsContainer.AddChild(card);
     }
 
     private static string GetFragmentSpritePath(string id, string type)
@@ -163,7 +462,6 @@ public partial class LevelUpScreen : CanvasLayer
             return weapon?.Sprite;
         }
 
-        // Passive souvenirs use stat-based perk icons as fallback
         if (type is "passive_new" or "passive_upgrade")
         {
             PassiveSouvenirData passive = PassiveSouvenirDataLoader.Get(id);
@@ -187,47 +485,6 @@ public partial class LevelUpScreen : CanvasLayer
         return null;
     }
 
-    private string BuildFragmentLabel(string id, string type)
-    {
-        Player player = GetTree().GetFirstNodeInGroup("player") as Player;
-
-        switch (type)
-        {
-            case "weapon_new":
-                WeaponData weapon = WeaponDataLoader.Get(id);
-                if (weapon == null)
-                    return $"\u2694 {id} [NOUVEAU]";
-                string wStats = FormatWeaponStats(weapon);
-                return $"\u2694 {weapon.Name} — {wStats} [NOUVEAU]";
-
-            case "weapon_upgrade":
-                WeaponData wUpgrade = WeaponDataLoader.Get(id);
-                int wLevel = player?.GetWeaponFragmentLevel(id) ?? 0;
-                if (wUpgrade == null)
-                    return $"\u2694 {id} — Upgrade";
-                string uStats = FormatWeaponStats(wUpgrade);
-                return $"\u2694 {wUpgrade.Name} Niv.{wLevel}\u2192{wLevel + 1} — {uStats}";
-
-            case "passive_new":
-                PassiveSouvenirData passive = PassiveSouvenirDataLoader.Get(id);
-                if (passive == null)
-                    return $"\u25C8 {id} [NOUVEAU]";
-                string pStat = FormatPassiveStats(passive, 1);
-                return $"\u25C8 {passive.Name} — {pStat} [NOUVEAU]";
-
-            case "passive_upgrade":
-                PassiveSouvenirData pUpgrade = PassiveSouvenirDataLoader.Get(id);
-                int pLevel = player?.GetPassiveLevel(id) ?? 0;
-                if (pUpgrade == null)
-                    return $"\u25C8 {id} — Upgrade";
-                string puStat = FormatPassiveStats(pUpgrade, pLevel + 1);
-                return $"\u25C8 {pUpgrade.Name} Niv.{pLevel}\u2192{pLevel + 1} — {puStat}";
-
-            default:
-                return id;
-        }
-    }
-
     private static string FormatWeaponStats(WeaponData w)
     {
         string patternLabel = w.AttackPattern switch
@@ -247,7 +504,7 @@ public partial class LevelUpScreen : CanvasLayer
         float spd = w.Stats.TryGetValue("attack_speed", out float s) ? s : 0;
         float range = w.Stats.TryGetValue("range", out float r) ? r : 0;
 
-        return $"{patternLabel} | {dmg:0} dég | {spd:0.0}/s | {range:0}m";
+        return $"{patternLabel}  |  {dmg:0} dég  |  {spd:0.0}/s  |  {range:0}m";
     }
 
     private static string FormatPassiveStats(PassiveSouvenirData p, int level)
@@ -287,43 +544,30 @@ public partial class LevelUpScreen : CanvasLayer
         return $"{statLabel} {addSign}{value:0.#}";
     }
 
-    private static Color GetFragmentColor(string type)
-    {
-        return type switch
-        {
-            "weapon_new" => new Color(1f, 0.85f, 0.3f),
-            "weapon_upgrade" => new Color(1f, 0.65f, 0.2f),
-            "passive_new" => new Color(0.5f, 0.85f, 1f),
-            "passive_upgrade" => new Color(0.3f, 0.7f, 0.95f),
-            _ => new Color(0.9f, 0.9f, 0.9f)
-        };
-    }
-
     private void OnFragmentSelected(string fragmentId, string fragmentType)
     {
         _fragmentManager?.SelectFragment(fragmentId, fragmentType);
-        Hide();
+        HideScreen();
         GetTree().Paused = false;
     }
 
-    // --- Perk Mode (mémorial, world perks) ---
+    // ==============================
+    // Perk Mode (mémorial, world perks)
+    // ==============================
 
     private void OnPerkChoicesReady(string[] perkIds)
     {
         if (perkIds == null || perkIds.Length == 0)
             return;
 
-        ClearButtons();
-        BuildPerkButtons(perkIds);
-        Show();
-        GetTree().Paused = true;
-        ProcessMode = ProcessModeEnum.Always;
+        ClearCards();
+        _title.Text = "MÉMORIAL";
+        BuildPerkCards(perkIds);
+        ShowScreen();
     }
 
-    private void BuildPerkButtons(string[] perkIds)
+    private void BuildPerkCards(string[] perkIds)
     {
-        _title.Text = "MÉMORIAL";
-
         foreach (string perkId in perkIds)
         {
             PerkData data = PerkDataLoader.Get(perkId);
@@ -331,45 +575,20 @@ public partial class LevelUpScreen : CanvasLayer
                 continue;
 
             int currentStacks = _perkManager.GetStacks(perkId);
-            string stackText = $"({currentStacks}/{data.MaxStacks})";
-
-            Button button = new()
-            {
-                CustomMinimumSize = new Vector2(340, 55),
-            };
-
-            HBoxContainer hbox = new();
-            hbox.AddThemeConstantOverride("separation", 8);
-            hbox.Alignment = BoxContainer.AlignmentMode.Center;
-            button.AddChild(hbox);
-
-            // Perk icon
-            if (!string.IsNullOrEmpty(data.Icon))
-            {
-                string iconResPath = data.Icon.StartsWith("res://") ? data.Icon : $"res://{data.Icon}";
-                TextureRect icon = new();
-                icon.CustomMinimumSize = new Vector2(24, 24);
-                icon.ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize;
-                icon.StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered;
-                icon.TextureFilter = CanvasItem.TextureFilterEnum.Nearest;
-                if (ResourceLoader.Exists(iconResPath))
-                    icon.Texture = GD.Load<Texture2D>(iconResPath);
-                hbox.AddChild(icon);
-            }
-
-            Label label = new();
-            label.Text = $"{data.Name} — {data.Description} {stackText}";
             Color rarityColor = GetRarityColor(data.Rarity);
-            label.AddThemeColorOverride("font_color", rarityColor);
-            hbox.AddChild(label);
+            string rarityTag = GetRarityLabel(data.Rarity);
 
-            button.AddThemeColorOverride("font_color", rarityColor);
-            button.AddThemeColorOverride("font_hover_color", rarityColor);
+            string iconPath = !string.IsNullOrEmpty(data.Icon) ? data.Icon : null;
+            string badge = $"{currentStacks}/{data.MaxStacks}";
 
             string capturedId = perkId;
-            button.Pressed += () => OnPerkSelected(capturedId);
 
-            _container.AddChild(button);
+            PanelContainer card = CreateChoiceCard(
+                iconPath, rarityTag, rarityColor, data.Name, data.Description,
+                badge, rarityColor,
+                () => OnPerkSelected(capturedId));
+
+            _cardsContainer.AddChild(card);
         }
     }
 
@@ -384,33 +603,180 @@ public partial class LevelUpScreen : CanvasLayer
         };
     }
 
+    private static string GetRarityLabel(string rarity)
+    {
+        return rarity switch
+        {
+            "common" => "Commun",
+            "uncommon" => "Peu commun",
+            "rare" => "Rare",
+            _ => ""
+        };
+    }
+
     private void OnPerkSelected(string perkId)
     {
         _perkManager.SelectPerk(perkId);
-        Hide();
+        HideScreen();
         GetTree().Paused = false;
     }
 
-    // --- Common ---
+    // ==============================
+    // Synergy notification
+    // ==============================
 
-    private void ClearButtons()
+    private void CreateSynergyNotification()
     {
-        foreach (Node child in _container.GetChildren())
-        {
-            if (child is Button)
-                child.QueueFree();
-        }
+        _synergyNotification = new Label();
+        _synergyNotification.HorizontalAlignment = HorizontalAlignment.Center;
+        _synergyNotification.VerticalAlignment = VerticalAlignment.Center;
+        _synergyNotification.AddThemeFontSizeOverride("font_size", 22);
+        _synergyNotification.AddThemeColorOverride("font_color", GoldBright);
+        _synergyNotification.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.CenterTop);
+        _synergyNotification.OffsetTop = 80;
+        _synergyNotification.Visible = false;
+        _synergyNotification.ProcessMode = ProcessModeEnum.Always;
+        AddChild(_synergyNotification);
     }
 
-    private new void Show()
+    private void OnSynergyActivated(string synergyId, string notification)
     {
+        _synergyNotification.Text = notification;
+        _synergyNotification.Visible = true;
+        _synergyNotification.Modulate = new Color(1f, 1f, 1f, 1f);
+
+        Tween tween = CreateTween();
+        tween.TweenInterval(2.0f);
+        tween.TweenProperty(_synergyNotification, "modulate:a", 0f, 1.0f);
+        tween.TweenCallback(Callable.From(() => _synergyNotification.Visible = false));
+    }
+
+    // ==============================
+    // Common helpers
+    // ==============================
+
+    private void ClearCards()
+    {
+        foreach (Node child in _cardsContainer.GetChildren())
+        {
+            child.QueueFree();
+        }
+        _cards.Clear();
+        _hoveredCardIndex = -1;
+    }
+
+    private void ShowScreen()
+    {
+        _overlay.Visible = true;
+        _rays.Visible = true;
+        _rays.ResetAngle();
         _panel.Visible = true;
         Visible = true;
+        GetTree().Paused = true;
+        ProcessMode = ProcessModeEnum.Always;
+
+        // Play intro sound, then start loop when intro finishes
+        Infrastructure.AudioManager.Play("sfx_level_up", 0f);
+        StartLoopAfterIntro();
     }
 
-    private new void Hide()
+    private void StartLoopAfterIntro()
     {
+        // Delay the loop start to let the intro play (~1s estimate)
+        SceneTreeTimer timer = GetTree().CreateTimer(1.0, processAlways: true);
+        timer.Timeout += () =>
+        {
+            if (Visible)
+                Infrastructure.AudioManager.PlayLoop("sfx_level_up_loop", -4f);
+        };
+    }
+
+    private void HideScreen()
+    {
+        _overlay.Visible = false;
+        _rays.Visible = false;
         _panel.Visible = false;
         Visible = false;
+        Infrastructure.AudioManager.StopLoop();
+    }
+
+    private static StyleBoxTexture CreateNinePatch(Texture2D texture, int left, int top, int right, int bottom)
+    {
+        StyleBoxTexture sbt = new()
+        {
+            Texture = texture,
+            RegionRect = new Rect2(0, 0, texture.GetWidth(), texture.GetHeight()),
+            AxisStretchHorizontal = StyleBoxTexture.AxisStretchMode.Tile,
+            AxisStretchVertical = StyleBoxTexture.AxisStretchMode.Tile
+        };
+
+        sbt.TextureMarginLeft = left;
+        sbt.TextureMarginTop = top;
+        sbt.TextureMarginRight = right;
+        sbt.TextureMarginBottom = bottom;
+
+        sbt.ContentMarginLeft = left + 2;
+        sbt.ContentMarginTop = top + 2;
+        sbt.ContentMarginRight = right + 2;
+        sbt.ContentMarginBottom = bottom + 2;
+
+        return sbt;
+    }
+
+    // ==============================
+    // Light rays background effect
+    // ==============================
+
+    internal partial class LightRaysControl : Control
+    {
+        private readonly int _rayCount;
+        private readonly float _speed;
+        private readonly Color _colorA;
+        private readonly Color _colorB;
+        private float _angle;
+
+        public LightRaysControl(int rayCount, float speed, Color colorA, Color colorB)
+        {
+            _rayCount = rayCount;
+            _speed = speed;
+            _colorA = colorA;
+            _colorB = colorB;
+        }
+
+        public void ResetAngle()
+        {
+            _angle = 0f;
+        }
+
+        public override void _Process(double delta)
+        {
+            _angle += _speed * (float)delta;
+            QueueRedraw();
+        }
+
+        public override void _Draw()
+        {
+            Vector2 center = Size / 2f;
+            float radius = center.Length() * 1.5f;
+            float sliceAngle = Mathf.Tau / _rayCount;
+
+            for (int i = 0; i < _rayCount; i++)
+            {
+                float startAngle = _angle + i * sliceAngle;
+                float endAngle = startAngle + sliceAngle * 0.5f;
+
+                Color rayColor = i % 2 == 0 ? _colorA : _colorB;
+
+                Vector2 p1 = center + new Vector2(Mathf.Cos(startAngle), Mathf.Sin(startAngle)) * radius;
+                Vector2 p2 = center + new Vector2(Mathf.Cos(endAngle), Mathf.Sin(endAngle)) * radius;
+
+                // Subdivide the arc for smoother triangles
+                float midAngle = (startAngle + endAngle) * 0.5f;
+                Vector2 pMid = center + new Vector2(Mathf.Cos(midAngle), Mathf.Sin(midAngle)) * radius;
+
+                DrawColoredPolygon(new Vector2[] { center, p1, pMid }, rayColor);
+                DrawColoredPolygon(new Vector2[] { center, pMid, p2 }, rayColor);
+            }
+        }
     }
 }

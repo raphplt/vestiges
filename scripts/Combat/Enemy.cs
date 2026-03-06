@@ -110,6 +110,7 @@ public partial class Enemy : CharacterBody2D
 	private string _waveModifier;
 	private float _regenTimer;
 	private Polygon2D _modifierAura;
+	private Tween _modifierAuraTween;
 
 	// Aberration : version corrompue (nuit 7+)
 	private bool _isAberration;
@@ -855,9 +856,9 @@ public partial class Enemy : CharacterBody2D
 		_modifierAura.ZIndex = -1;
 		AddChild(_modifierAura);
 
-		Tween pulse = _modifierAura.CreateTween().SetLoops();
-		pulse.TweenProperty(_modifierAura, "scale", Vector2.One * 1.2f, 0.6f).SetTrans(Tween.TransitionType.Sine);
-		pulse.TweenProperty(_modifierAura, "scale", Vector2.One, 0.6f).SetTrans(Tween.TransitionType.Sine);
+		_modifierAuraTween = _modifierAura.CreateTween().SetLoops();
+		_modifierAuraTween.TweenProperty(_modifierAura, "scale", Vector2.One * 1.2f, 0.6f).SetTrans(Tween.TransitionType.Sine);
+		_modifierAuraTween.TweenProperty(_modifierAura, "scale", Vector2.One, 0.6f).SetTrans(Tween.TransitionType.Sine);
 	}
 
 	/// <summary>Garde : attaque le joueur s'il est dans le rayon de patrouille, sinon retourne au poste.</summary>
@@ -1321,6 +1322,7 @@ public partial class Enemy : CharacterBody2D
 	private void Die()
 	{
 		_isDying = true;
+		_modifierAuraTween?.Kill();
 		_igniteDps = 0f;
 		_igniteTimer = 0f;
 		Velocity = Vector2.Zero;

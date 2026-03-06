@@ -28,6 +28,12 @@ public partial class Trap : Structure
     {
         base.Initialize(recipeId, structureId, maxHp, gridPos, color);
 
+        if (UsesSprite)
+            return;
+
+        if (Visual == null)
+            return;
+
         float s = 12f;
         Visual.Polygon = new Vector2[]
         {
@@ -86,16 +92,33 @@ public partial class Trap : Structure
 
     private void TriggerFlash()
     {
-        Visual.Color = new Color(1f, 0.5f, 0.1f);
-        Tween tween = CreateTween();
-        tween.TweenProperty(Visual, "color", OriginalColor, 0.2f)
-            .SetDelay(0.05f);
+        if (UsesSprite && SpriteVisual != null)
+        {
+            SpriteVisual.Modulate = new Color(5f, 2f, 0.5f, 1f);
+            Tween tween = CreateTween();
+            tween.TweenProperty(SpriteVisual, "modulate", Colors.White, 0.2f)
+                .SetDelay(0.05f);
+        }
+        else if (Visual != null)
+        {
+            Visual.Color = new Color(1f, 0.5f, 0.1f);
+            Tween tween = CreateTween();
+            tween.TweenProperty(Visual, "color", OriginalColor, 0.2f)
+                .SetDelay(0.05f);
+        }
     }
 
     private void Exhaust()
     {
-        Visual.Color = new Color(0.3f, 0.3f, 0.3f, 0.4f);
-        OriginalColor = Visual.Color;
+        if (UsesSprite && SpriteVisual != null)
+        {
+            SpriteVisual.Modulate = new Color(0.5f, 0.5f, 0.5f, 0.4f);
+        }
+        else if (Visual != null)
+        {
+            Visual.Color = new Color(0.3f, 0.3f, 0.3f, 0.4f);
+        }
+        OriginalColor = new Color(0.3f, 0.3f, 0.3f, 0.4f);
         RemoveFromGroup("structures");
 
         Tween tween = CreateTween();

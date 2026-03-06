@@ -22,6 +22,8 @@ public partial class PointOfInterest : StaticBody2D
     private Polygon2D _guardRing;
     private Color _originalColor;
     private EventBus _eventBus;
+    private Tween _guardPulseTween;
+    private Tween _indicatorPulseTween;
 
     public bool IsExplored => _isExplored;
     public string PoiId => _poiId;
@@ -216,11 +218,11 @@ public partial class PointOfInterest : StaticBody2D
         _guardRing.ZIndex = -1;
         _visual.AddChild(_guardRing);
 
-        Tween tween = CreateTween();
-        tween.SetLoops();
-        tween.TweenProperty(_guardRing, "modulate:a", 0.4f, 1.0f)
+        _guardPulseTween = CreateTween();
+        _guardPulseTween.SetLoops();
+        _guardPulseTween.TweenProperty(_guardRing, "modulate:a", 0.4f, 1.0f)
             .SetTrans(Tween.TransitionType.Sine);
-        tween.TweenProperty(_guardRing, "modulate:a", 1f, 1.0f)
+        _guardPulseTween.TweenProperty(_guardRing, "modulate:a", 1f, 1.0f)
             .SetTrans(Tween.TransitionType.Sine);
     }
 
@@ -355,11 +357,17 @@ public partial class PointOfInterest : StaticBody2D
         if (_indicator == null)
             return;
 
-        Tween tween = CreateTween();
-        tween.SetLoops();
-        tween.TweenProperty(_indicator, "modulate:a", 0.3f, 0.8f)
+        _indicatorPulseTween = CreateTween();
+        _indicatorPulseTween.SetLoops();
+        _indicatorPulseTween.TweenProperty(_indicator, "modulate:a", 0.3f, 0.8f)
             .SetTrans(Tween.TransitionType.Sine);
-        tween.TweenProperty(_indicator, "modulate:a", 1f, 0.8f)
+        _indicatorPulseTween.TweenProperty(_indicator, "modulate:a", 1f, 0.8f)
             .SetTrans(Tween.TransitionType.Sine);
+    }
+
+    public override void _ExitTree()
+    {
+        _guardPulseTween?.Kill();
+        _indicatorPulseTween?.Kill();
     }
 }

@@ -32,6 +32,10 @@ public partial class AudioManager : Node
 	// --- Ambiance player ---
 	private AudioStreamPlayer _ambiancePlayer;
 
+	// --- Looping SFX player (for UI loops like level-up screen) ---
+	private AudioStreamPlayer _loopingSfxPlayer;
+	private string _loopingSfxKey = "";
+
 	// --- Stream cache ---
 	private readonly Dictionary<string, AudioStream> _streams = new();
 
@@ -94,6 +98,9 @@ public partial class AudioManager : Node
 		// Progression
 		["sfx_perk_choix"]      = "res://assets/audio/sfx/gameplay/sfx_perk_choix.wav",
 		["sfx_souvenir_trouve"] = "res://assets/audio/sfx/gameplay/sfx_souvenir_trouve.wav",
+		["sfx_level_up"]        = "res://assets/audio/sfx/gameplay/level_up.wav",
+		["sfx_level_up_loop"]   = "res://assets/audio/sfx/gameplay/level_up_loop.wav",
+		["sfx_chest_opening"]   = "res://assets/audio/sfx/gameplay/chest_opening.wav",
 
 		// Monde
 		["sfx_monde_tuile_apparait"] = "res://assets/audio/sfx/gameplay/sfx_monde_tuile_apparait.wav",
@@ -153,6 +160,9 @@ public partial class AudioManager : Node
 
 		_ambiancePlayer = new AudioStreamPlayer { Bus = BusAmbiance, Name = "Ambiance" };
 		AddChild(_ambiancePlayer);
+
+		_loopingSfxPlayer = new AudioStreamPlayer { Bus = BusSfx, Name = "LoopingSfx" };
+		AddChild(_loopingSfxPlayer);
 
 		for (int i = 0; i < SfxPoolSize; i++)
 		{
@@ -300,6 +310,45 @@ public partial class AudioManager : Node
 		player.PitchScale = 1f + (float)GD.RandRange(-pitchVariance, pitchVariance);
 		player.VolumeDb = volumeDb;
 		player.Play();
+	}
+
+	/// <summary>Joue un SFX en boucle (ex : ambiance UI). Un seul loop SFX à la fois.</summary>
+	public static void PlayLoop(string key, float volumeDb = 0f)
+	{
+		Instance?.PlayLoopingSfx(key, volumeDb);
+	}
+
+	public void PlayLoopingSfx(string key, float volumeDb = 0f)
+	{
+		if (_loopingSfxKey == key && _loopingSfxPlayer.Playing)
+			return;
+
+		if (!_streams.TryGetValue(key, out AudioStream stream))
+			return;
+
+		AudioStreamWav clone = null;
+		if (stream is AudioStreamWav wav)
+		{
+			clone = (AudioStreamWav)wav.Duplicate();
+			clone.LoopMode = AudioStreamWav.LoopModeEnum.Forward;
+		}
+
+		_loopingSfxPlayer.Stream = clone ?? stream;
+		_loopingSfxPlayer.VolumeDb = volumeDb;
+		_loopingSfxPlayer.Play();
+		_loopingSfxKey = key;
+	}
+
+	/// <summary>Arrête le SFX en boucle.</summary>
+	public static void StopLoop()
+	{
+		Instance?.StopLoopingSfx();
+	}
+
+	public void StopLoopingSfx()
+	{
+		_loopingSfxPlayer.Stop();
+		_loopingSfxKey = "";
 	}
 
 	/// <summary>Démarre la musique du Hub.</summary>

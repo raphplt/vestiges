@@ -83,6 +83,7 @@ public partial class GameBootstrap : Node
         HUD hud = GetNode<HUD>("../HUD");
         LevelUpScreen levelUpScreen = GetNode<LevelUpScreen>("../LevelUpScreen");
         GameOverScreen gameOverScreen = GetNode<GameOverScreen>("../GameOverScreen");
+        ChestLootScreen chestLootScreen = GetNodeOrNull<ChestLootScreen>("../ChestLootScreen");
         CraftPanel craftPanel = GetNode<CraftPanel>("../CraftPanel");
 
         hud.SetProgression(progression);
@@ -99,6 +100,9 @@ public partial class GameBootstrap : Node
         // Perk Manager : gère les perks du monde (mémorial, coffres, POI)
         levelUpScreen.SetPerkManager(perkManager);
         gameOverScreen.SetScoreManager(scoreManager);
+
+        if (chestLootScreen != null)
+            player.SetChestLootScreen(chestLootScreen);
 
         craftManager.SetInventory(inventory);
         craftPanel.SetCraftManager(craftManager);
@@ -156,6 +160,7 @@ public partial class GameBootstrap : Node
         // Remove UI-only nodes for performance
         RemoveNodeIfExists("../HUD");
         RemoveNodeIfExists("../LevelUpScreen");
+        RemoveNodeIfExists("../ChestLootScreen");
         RemoveNodeIfExists("../GameOverScreen");
         RemoveNodeIfExists("../CraftPanel");
         RemoveNodeIfExists("../PauseMenu");
