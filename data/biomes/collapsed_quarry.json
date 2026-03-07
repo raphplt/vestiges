@@ -1,0 +1,55 @@
+{
+    "id": "collapsed_quarry",
+    "name": "Carrière Effondrée",
+    "terrain_weights": {
+        "grass": 0.05,
+        "concrete": 0.40,
+        "water": 0.10,
+        "forest": 0.45
+    },
+    "day_enemy_pool": ["rodeur", "rodeur", "void_brute", "rampant"],
+    "night_enemy_pool": ["shade", "shade", "void_brute", "void_brute", "wailing_sentinel", "rampant", "hurleur"],
+    "resource_bias": {
+        "wood": 0.05,
+        "stone": 0.45,
+        "metal": 0.40,
+        "fiber": 0.10
+    },
+    "ambient_color_day": "#B8A080",
+    "ambient_color_dusk": "#5A4A6A",
+    "danger_level": 3,
+    "poi_pool": {
+        "searchable_building": 0.6,
+        "resource_cache": 1.5,
+        "guarded_chest": 1.2,
+        "lore_ruin": 1.0,
+        "merchant_npc": 0.3,
+        "anomaly": 1.2,
+        "sanctuary": 0.15
+    },
+    "poi_count_min": 2,
+    "poi_count_max": 3,
+    "tile_sources": {
+        "grass": [
+            "carriere/tile_carriere_sol_base",
+            "carriere/tile_carriere_sol_v2",
+            "carriere/tile_carriere_sol_v3"
+        ],
+        "concrete": [
+            "carriere/tile_carriere_roche_base",
+            "carriere/tile_carriere_roche_v2",
+            "carriere/tile_carriere_roche_v3",
+            "carriere/tile_carriere_industriel_base",
+            "carriere/tile_carriere_industriel_v2"
+        ],
+        "forest": [
+            "carriere/tile_carriere_tunnel_base",
+            "carriere/tile_carriere_tunnel_v2",
+            "carriere/tile_carriere_cristal_base"
+        ],
+        "water": [
+            "commun/tile_eau_peu_profonde_base",
+            "commun/tile_eau_peu_profonde_v2"
+        ]
+    }
+}

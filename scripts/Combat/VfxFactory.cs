@@ -94,6 +94,13 @@ public static class VfxFactory
 	private static Texture2D _auraEssenceFrame2;
 	private static Texture2D _auraEssenceFrame3;
 	private static Texture2D _orbXpFrame2;
+	private static Texture2D _orbEssenceFrame1;
+	private static Texture2D _orbEssenceFrame2;
+	private static Texture2D _orbEssenceFrame3;
+	private static Texture2D _fouetFrame1;
+	private static Texture2D _fouetFrame2;
+	private static Texture2D _fouetFrame3;
+	private static Texture2D _fouetFrame4;
 
 	private static Texture2D SlashFrame1 => _slashFrame1 ??= GD.Load<Texture2D>("res://assets/vfx/vfx_slash_f1.png");
 	private static Texture2D SlashFrame2 => _slashFrame2 ??= GD.Load<Texture2D>("res://assets/vfx/vfx_slash_f2.png");
@@ -128,6 +135,13 @@ public static class VfxFactory
 	private static Texture2D AuraEssenceFrame2 => _auraEssenceFrame2 ??= GD.Load<Texture2D>("res://assets/vfx/vfx_aura_essence_f2.png");
 	private static Texture2D AuraEssenceFrame3 => _auraEssenceFrame3 ??= GD.Load<Texture2D>("res://assets/vfx/vfx_aura_essence_f3.png");
 	private static Texture2D OrbXpFrame2 => _orbXpFrame2 ??= GD.Load<Texture2D>("res://assets/vfx/vfx_orb_xp_f2.png");
+	private static Texture2D OrbEssenceFrame1 => _orbEssenceFrame1 ??= GD.Load<Texture2D>("res://assets/vfx/vfx_orb_essence_f1.png");
+	private static Texture2D OrbEssenceFrame2 => _orbEssenceFrame2 ??= GD.Load<Texture2D>("res://assets/vfx/vfx_orb_essence_f2.png");
+	private static Texture2D OrbEssenceFrame3 => _orbEssenceFrame3 ??= GD.Load<Texture2D>("res://assets/vfx/vfx_orb_essence_f3.png");
+	private static Texture2D FouetFrame1 => _fouetFrame1 ??= GD.Load<Texture2D>("res://assets/vfx/vfx_fouet_f1.png");
+	private static Texture2D FouetFrame2 => _fouetFrame2 ??= GD.Load<Texture2D>("res://assets/vfx/vfx_fouet_f2.png");
+	private static Texture2D FouetFrame3 => _fouetFrame3 ??= GD.Load<Texture2D>("res://assets/vfx/vfx_fouet_f3.png");
+	private static Texture2D FouetFrame4 => _fouetFrame4 ??= GD.Load<Texture2D>("res://assets/vfx/vfx_fouet_f4.png");
 
 	// =========================================================================
 	// === Orbe XP : GPUParticles2D qui suit l'orbe ===

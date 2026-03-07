@@ -23,6 +23,7 @@ public partial class WorldSetup : Node2D
     private PoiManager _poiManager;
     private FogOfWar _fogOfWar;
     private PropSpawner _propSpawner;
+    private BiomeAtmosphere _biomeAtmosphere;
 
     private WorldGenerator _generator;
     private WorldGenConfig _config;
@@ -119,6 +120,7 @@ public partial class WorldSetup : Node2D
         }
 
         SpawnEnvironmentProps();
+        InitBiomeAtmosphere();
 
         _respawnTimer = new Timer();
         _respawnTimer.WaitTime = _config.RespawnInterval;
@@ -310,6 +312,12 @@ public partial class WorldSetup : Node2D
         _propSpawner = new PropSpawner { Name = "PropSpawner" };
         AddChild(_propSpawner);
         _propSpawner.SpawnProps(_generator, _ground, propContainer, _usedCells, Seed);
+    }
+
+    private void InitBiomeAtmosphere()
+    {
+        _biomeAtmosphere = new BiomeAtmosphere { Name = "BiomeAtmosphere" };
+        AddChild(_biomeAtmosphere);
     }
 
     private void OnRespawnTimer()

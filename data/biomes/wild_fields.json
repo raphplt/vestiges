@@ -1,0 +1,52 @@
+{
+    "id": "wild_fields",
+    "name": "Champs Sauvages",
+    "terrain_weights": {
+        "grass": 0.65,
+        "concrete": 0.05,
+        "water": 0.05,
+        "forest": 0.25
+    },
+    "day_enemy_pool": ["charognard", "charognard", "rodeur"],
+    "night_enemy_pool": ["shade", "shade", "charognard", "void_brute", "hurleur"],
+    "resource_bias": {
+        "wood": 0.15,
+        "stone": 0.20,
+        "metal": 0.15,
+        "fiber": 0.50
+    },
+    "ambient_color_day": "#D8D0A8",
+    "ambient_color_dusk": "#8A7E9A",
+    "danger_level": 1,
+    "poi_pool": {
+        "searchable_building": 0.6,
+        "resource_cache": 1.2,
+        "guarded_chest": 0.8,
+        "lore_ruin": 0.8,
+        "merchant_npc": 1.0,
+        "anomaly": 0.6,
+        "sanctuary": 0.15
+    },
+    "poi_count_min": 2,
+    "poi_count_max": 4,
+    "tile_sources": {
+        "grass": [
+            "champs/tile_champs_sol_base",
+            "champs/tile_champs_sol_v2",
+            "champs/tile_champs_sol_v3",
+            "champs/tile_champs_herbe_base",
+            "champs/tile_champs_herbe_v2",
+            "champs/tile_champs_herbe_v3",
+            "champs/tile_champs_ble_base",
+            "champs/tile_champs_ble_v2"
+        ],
+        "concrete": [
+            "champs/tile_champs_chemin_base",
+            "champs/tile_champs_chemin_v2"
+        ],
+        "forest": [
+            "champs/tile_champs_bosquet_base",
+            "champs/tile_champs_bosquet_v2"
+        ]
+    }
+}

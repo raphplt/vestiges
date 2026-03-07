@@ -41,8 +41,9 @@
             "marecages/tile_marecages_sol_v3"
         ],
         "water": [
-            "commun/tile_eau_peu_profonde_base",
-            "commun/tile_eau_peu_profonde_v2"
+            "marecages/tile_marecages_eau_base",
+            "marecages/tile_marecages_eau_v2",
+            "marecages/tile_marecages_eau_v3"
         ]
     }
 }

@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dh8uav83nfbaj"
-path="res://.godot/imported/PREVIEW_FORET_TILES.png-fec7e82989323910552e3c00f754af05.ctex"
+uid="uid://hsra440yuji0"
+path="res://.godot/imported/tile_carriere_tunnel_base.png-1f275cda3e50f176df6cb3266d5437ef.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/tiles/foret/PREVIEW_FORET_TILES.png"
-dest_files=["res://.godot/imported/PREVIEW_FORET_TILES.png-fec7e82989323910552e3c00f754af05.ctex"]
+source_file="res://assets/tiles/carriere/tile_carriere_tunnel_base.png"
+dest_files=["res://.godot/imported/tile_carriere_tunnel_base.png-1f275cda3e50f176df6cb3266d5437ef.ctex"]
 
 [params]
 
