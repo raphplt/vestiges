@@ -16,8 +16,12 @@ public partial class Torch : Wall
     private float _duration;
     private float _elapsed;
 
+    /// <summary>Rayon d'éclairage gameplay (utilisé pour la visibilité des ennemis).</summary>
+    public float LightRadius { get; private set; } = 80f;
+
     public void SetTorchStats(float radius, float duration)
     {
+        LightRadius = radius;
         _duration = duration;
 
         GradientTexture2D texture = new();

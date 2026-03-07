@@ -30,6 +30,7 @@ public partial class Foyer : Node2D
 
     public override void _Ready()
     {
+        AddToGroup("foyer");
         _light = GetNode<PointLight2D>("Light");
         _eventBus = GetNode<EventBus>("/root/EventBus");
 

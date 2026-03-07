@@ -189,6 +189,10 @@ public partial class Player : CharacterBody2D
     // Harvest hit sound
     private float _harvestHitTimer;
 
+    // Vision / darkness targeting
+    private string _currentDayPhase = "Day";
+    private float _visionRadius = 150f;
+
     // POI interaction
     private PointOfInterest _poiTarget;
     private float _poiProgress;
@@ -250,6 +254,7 @@ public partial class Player : CharacterBody2D
 
         _eventBus = GetNode<EventBus>("/root/EventBus");
         _eventBus.EnemyKilled += OnEnemyKilled;
+        _eventBus.DayPhaseChanged += OnDayPhaseChangedForVisibility;
 
         _gameManager = GetNode<GameManager>("/root/GameManager");
         _groupCache = GetNode<GroupCache>("/root/GroupCache");
@@ -258,7 +263,10 @@ public partial class Player : CharacterBody2D
     public override void _ExitTree()
     {
         if (_eventBus != null)
+        {
             _eventBus.EnemyKilled -= OnEnemyKilled;
+            _eventBus.DayPhaseChanged -= OnDayPhaseChangedForVisibility;
+        }
     }
 
     public void InitializeCharacter(CharacterData data)
@@ -964,6 +972,8 @@ public partial class Player : CharacterBody2D
         {
             if (node is Node2D candidate && candidate != sourceEnemy && !candidate.IsQueuedForDeletion())
             {
+                if (!IsPositionVisible(candidate.GlobalPosition))
+                    continue;
                 float dist = sourceEnemy.GlobalPosition.DistanceTo(candidate.GlobalPosition);
                 if (dist < nearestDist)
                 {
@@ -1254,11 +1264,14 @@ public partial class Player : CharacterBody2D
         // Dégâts croissants au fil du temps
         float damage = _coneBaseDamage * (1f + elapsed * _coneDamageRampPerSec) * delta;
 
-        // Application des dégâts aux ennemis dans le cône
+        // Application des dégâts aux ennemis dans le cône (uniquement visibles)
         Godot.Collections.Array<Node> enemies = _groupCache.GetEnemies();
         foreach (Node node in enemies)
         {
             if (node is not Enemy enemy || enemy.IsDying || !IsInstanceValid(enemy))
+                continue;
+
+            if (!IsPositionVisible(enemy.GlobalPosition))
                 continue;
 
             Vector2 toEnemy = enemy.GlobalPosition - GlobalPosition;
@@ -1373,6 +1386,8 @@ public partial class Player : CharacterBody2D
             if (node is Enemy enemy && IsInstanceValid(enemy) && !enemy.IsDying)
             {
                 if (excludeIds.Contains(enemy.GetInstanceId()))
+                    continue;
+                if (!IsPositionVisible(enemy.GlobalPosition))
                     continue;
 
                 float dist = from.DistanceTo(enemy.GlobalPosition);
@@ -2480,6 +2495,47 @@ public partial class Player : CharacterBody2D
         return projectile;
     }
 
+    private void OnDayPhaseChangedForVisibility(string phase)
+    {
+        _currentDayPhase = phase;
+    }
+
+    /// <summary>
+    /// Vérifie si une position est visible (éclairée) pour le joueur.
+    /// De jour/aube : tout est visible. De nuit/crépuscule : seulement les zones éclairées.
+    /// </summary>
+    private bool IsPositionVisible(Vector2 worldPos)
+    {
+        if (_currentDayPhase == "Day" || _currentDayPhase == "Dawn")
+            return true;
+
+        // Rayon de vision personnel du joueur
+        if (GlobalPosition.DistanceSquaredTo(worldPos) <= _visionRadius * _visionRadius)
+            return true;
+
+        // Foyer
+        Foyer foyer = GetTree().GetFirstNodeInGroup("foyer") as Foyer;
+        if (foyer != null)
+        {
+            float foyerRadius = foyer.EffectiveSafeRadius;
+            if (foyer.GlobalPosition.DistanceSquaredTo(worldPos) <= foyerRadius * foyerRadius)
+                return true;
+        }
+
+        // Torches placées par le joueur
+        foreach (Node node in GetTree().GetNodesInGroup("structures"))
+        {
+            if (node is Torch torch && IsInstanceValid(torch))
+            {
+                float r = torch.LightRadius;
+                if (torch.GlobalPosition.DistanceSquaredTo(worldPos) <= r * r)
+                    return true;
+            }
+        }
+
+        return false;
+    }
+
     private System.Collections.Generic.List<Node2D> FindNearestEnemies(int count, float maxRange)
     {
         Godot.Collections.Array<Node> enemies = _groupCache.GetEnemies();
@@ -2489,6 +2545,8 @@ public partial class Player : CharacterBody2D
         {
             if (node is Node2D enemy)
             {
+                if (!IsPositionVisible(enemy.GlobalPosition))
+                    continue;
                 float dist = GlobalPosition.DistanceTo(enemy.GlobalPosition);
                 if (dist < maxRange)
                     inRange.Add((enemy, dist));
@@ -2513,6 +2571,9 @@ public partial class Player : CharacterBody2D
         foreach (Node node in enemies)
         {
             if (node is not Enemy enemy || enemy.IsDying)
+                continue;
+
+            if (!IsPositionVisible(enemy.GlobalPosition))
                 continue;
 
             Vector2 toEnemy = enemy.GlobalPosition - GlobalPosition;
