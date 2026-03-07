@@ -13,7 +13,7 @@ config_version=5
 config/name="Vestiges"
 run/main_scene="res://scenes/Hub.tscn"
 config/features=PackedStringArray("4.6", "C#", "GL Compatibility")
-config/icon="res://icon.svg"
+config/icon="res://assets/icon_vestiges_64.png"
 config/run/main_scene="res://scenes/Hub.tscn"
 
 [autoload]
