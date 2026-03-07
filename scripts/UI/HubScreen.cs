@@ -33,7 +33,6 @@ public partial class HubScreen : Control
 	private Label _selectedCharLabel;
 	private Label _vestigesLabel;
 	private Label _subScreenVestigesLabel;
-	private Label _subScreenTitle;
 	private Control _contentArea;
 	private Control _mainMenuLayer;
 	private Control _subScreenLayer;
@@ -41,6 +40,9 @@ public partial class HubScreen : Control
 	private readonly Dictionary<string, PanelContainer> _cardsByCharacterId = new();
 	private LineEdit _seedInput;
 	private SettingsScreen _settingsScreen;
+	private VoidTransition _voidTransition;
+	private HBoxContainer _hubTabBar;
+	private readonly Dictionary<string, Button> _hubTabButtons = new();
 
 	// --- Cached textures ---
 	private Texture2D _panelTex;
@@ -193,15 +195,7 @@ public partial class HubScreen : Control
 		}
 	}
 
-	private void NavigateToTab(string tabId)
-	{
-		_activeTab = tabId;
-		_subScreenTitle.Text = TabDisplayNames.GetValueOrDefault(tabId, tabId.ToUpper());
-		SetState(HubState.SubScreen);
-		UpdateSubScreenVestigesDisplay();
-		ShowTab(tabId);
-		UpdateSubScreenVoidButton();
-	}
+	// NavigateToTab remplace par NavigateToHubTabs + SwitchHubTab
 
 	// ================================================================
 	// BUILD UI — Viewport is 1920×1080
@@ -215,6 +209,9 @@ public partial class HubScreen : Control
 
 		_settingsScreen = new SettingsScreen();
 		AddChild(_settingsScreen);
+
+		_voidTransition = new VoidTransition();
+		AddChild(_voidTransition);
 	}
 
 	// ----------------------------------------------------------------
@@ -393,7 +390,7 @@ public partial class HubScreen : Control
 		_enterVoidButton.AddThemeFontSizeOverride("font_size", 24);
 		if (_iconVide != null)
 			_enterVoidButton.Icon = _iconVide;
-		ApplyButtonStyle(_enterVoidButton);
+		ApplyAnimatedButtonStyle(_enterVoidButton);
 		_enterVoidButton.Pressed += OnEnterVoidPressed;
 		voidCenter.AddChild(_enterVoidButton);
 
@@ -414,20 +411,25 @@ public partial class HubScreen : Control
 			sepCenter.AddChild(sep);
 		}
 
-		// --- Spacer + Navigation buttons ---
+		// --- Spacer + Exploration (regroupe Miroirs/Chroniques/Obelisque/Etabli) ---
 		vbox.AddChild(CreateSpacer(20));
 
-		VBoxContainer navBox = new();
-		navBox.AddThemeConstantOverride("separation", 12);
-		vbox.AddChild(navBox);
+		CenterContainer exploCenter = new();
+		vbox.AddChild(exploCenter);
 
-		CreateNavButton(navBox, "miroirs", "Miroirs", _iconMiroirs);
-		CreateNavButton(navBox, "chroniques", "Chroniques", _iconChroniques);
-		CreateNavButton(navBox, "obelisque", "Obélisque", _iconObelisque);
-		CreateNavButton(navBox, "etabli", "Établi", _iconEtabli);
+		Button exploBtn = new()
+		{
+			Text = "Exploration",
+			CustomMinimumSize = new Vector2(360, 56),
+			FocusMode = FocusModeEnum.None
+		};
+		exploBtn.AddThemeFontSizeOverride("font_size", 22);
+		ApplyAnimatedButtonStyle(exploBtn);
+		exploBtn.Pressed += NavigateToHubTabs;
+		exploCenter.AddChild(exploBtn);
 
 		// --- Spacer + Paramètres ---
-		vbox.AddChild(CreateSpacer(20));
+		vbox.AddChild(CreateSpacer(16));
 
 		CenterContainer settingsCenter = new();
 		vbox.AddChild(settingsCenter);
@@ -439,7 +441,7 @@ public partial class HubScreen : Control
 			FocusMode = FocusModeEnum.None
 		};
 		settingsBtn.AddThemeFontSizeOverride("font_size", 20);
-		ApplyButtonStyle(settingsBtn);
+		ApplyAnimatedButtonStyle(settingsBtn);
 		settingsBtn.Pressed += () => _settingsScreen?.Open();
 		settingsCenter.AddChild(settingsBtn);
 
@@ -456,22 +458,42 @@ public partial class HubScreen : Control
 			FocusMode = FocusModeEnum.None
 		};
 		quitBtn.AddThemeFontSizeOverride("font_size", 20);
-		ApplyButtonStyle(quitBtn);
+		ApplyAnimatedButtonStyle(quitBtn);
 		quitBtn.Pressed += () => GetTree().Quit();
 		quitCenter.AddChild(quitBtn);
 
 	}
 
-	private void CreateNavButton(VBoxContainer parent, string tabId, string label, Texture2D icon)
+	private void NavigateToHubTabs()
 	{
-		CenterContainer btnCenter = new();
-		parent.AddChild(btnCenter);
+		SetState(HubState.SubScreen);
+		SwitchHubTab(_activeTab);
+	}
 
+	private void SwitchHubTab(string tabId)
+	{
+		_activeTab = tabId;
+
+		foreach (var (id, btn) in _hubTabButtons)
+		{
+			bool active = id == tabId;
+			btn.ButtonPressed = active;
+			ApplyTabStyle(btn, active);
+		}
+
+		UpdateSubScreenVestigesDisplay();
+		ShowTab(tabId);
+		UpdateSubScreenVoidButton();
+	}
+
+	private void CreateHubTab(string tabId, string label, Texture2D icon)
+	{
 		Button btn = new()
 		{
 			Text = "  " + label,
-			CustomMinimumSize = new Vector2(320, 50),
+			CustomMinimumSize = new Vector2(180, 44),
 			Flat = true,
+			ToggleMode = true,
 			IconAlignment = HorizontalAlignment.Left,
 			FocusMode = FocusModeEnum.None
 		};
@@ -479,13 +501,13 @@ public partial class HubScreen : Control
 		if (icon != null)
 			btn.Icon = icon;
 
-		btn.AddThemeFontSizeOverride("font_size", 20);
-		ApplyButtonStyle(btn);
+		btn.AddThemeFontSizeOverride("font_size", 16);
+		ApplyTabStyle(btn, tabId == _activeTab);
 
-		string capturedId = tabId;
-		btn.Pressed += () => NavigateToTab(capturedId);
-
-		btnCenter.AddChild(btn);
+		string captured = tabId;
+		btn.Pressed += () => SwitchHubTab(captured);
+		_hubTabBar.AddChild(btn);
+		_hubTabButtons[captured] = btn;
 	}
 
 	private void UpdateCharacterSummary()
@@ -549,16 +571,16 @@ public partial class HubScreen : Control
 		Control leftSpacer = new() { SizeFlagsHorizontal = SizeFlags.ExpandFill };
 		topBar.AddChild(leftSpacer);
 
-		// Sub-screen title
-		_subScreenTitle = new Label
-		{
-			Text = "",
-			HorizontalAlignment = HorizontalAlignment.Center,
-			VerticalAlignment = VerticalAlignment.Center
-		};
-		_subScreenTitle.AddThemeFontSizeOverride("font_size", 28);
-		_subScreenTitle.AddThemeColorOverride("font_color", GoldColor);
-		topBar.AddChild(_subScreenTitle);
+		// Tab bar (remplace le titre unique)
+		_hubTabBar = new HBoxContainer();
+		_hubTabBar.AddThemeConstantOverride("separation", 6);
+		_hubTabBar.Alignment = BoxContainer.AlignmentMode.Center;
+		topBar.AddChild(_hubTabBar);
+
+		CreateHubTab("miroirs", "Miroirs", _iconMiroirs);
+		CreateHubTab("chroniques", "Chroniques", _iconChroniques);
+		CreateHubTab("obelisque", "Obélisque", _iconObelisque);
+		CreateHubTab("etabli", "Établi", _iconEtabli);
 
 		// Spacer
 		Control rightSpacer = new() { SizeFlagsHorizontal = SizeFlags.ExpandFill };
@@ -1426,6 +1448,12 @@ public partial class HubScreen : Control
 		if (string.IsNullOrEmpty(_selectedCharacterId))
 			return;
 
+		// Desactiver les boutons pendant la transition
+		_enterVoidButton.Disabled = true;
+		if (_subScreenVoidButton != null)
+			_subScreenVoidButton.Disabled = true;
+
+		// Preparer les donnees de la run avant la transition
 		GameManager gm = GetNode<GameManager>("/root/GameManager");
 		gm.SelectedCharacterId = _selectedCharacterId;
 		gm.ActiveMutators = new List<string>(MetaSaveManager.GetActiveMutators());
@@ -1433,9 +1461,14 @@ public partial class HubScreen : Control
 		string seedText = _seedInput.Text.StripEdges();
 		gm.RunSeed = !string.IsNullOrEmpty(seedText) && ulong.TryParse(seedText, out ulong seed) ? seed : 0;
 
-		gm.ChangeState(GameManager.GameState.Run);
 		GD.Print($"[Hub] Entering Void: {_selectedCharacterId}, mutators={gm.ActiveMutators.Count}, seed={gm.RunSeed}");
-		GetTree().ChangeSceneToFile("res://scenes/Main.tscn");
+
+		// Lancer la transition cinematique
+		_voidTransition.Play(() =>
+		{
+			gm.ChangeState(GameManager.GameState.Run);
+			GetTree().ChangeSceneToFile("res://scenes/Main.tscn");
+		});
 	}
 
 	// ================================================================
@@ -1527,19 +1560,12 @@ public partial class HubScreen : Control
 
 	private void ApplyButtonStyle(Button btn)
 	{
-		if (_btnNormalTex != null)
-			btn.AddThemeStyleboxOverride("normal", CreateNinePatch(_btnNormalTex, 4, 4, 4, 4));
-		if (_btnHoverTex != null)
-			btn.AddThemeStyleboxOverride("hover", CreateNinePatch(_btnHoverTex, 4, 4, 4, 4));
-		if (_btnPressedTex != null)
-			btn.AddThemeStyleboxOverride("pressed", CreateNinePatch(_btnPressedTex, 4, 4, 4, 4));
-		if (_btnDisabledTex != null)
-			btn.AddThemeStyleboxOverride("disabled", CreateNinePatch(_btnDisabledTex, 4, 4, 4, 4));
+		UITheme.ApplyButtonStyle(btn, _btnNormalTex, _btnHoverTex, _btnPressedTex, _btnDisabledTex);
+	}
 
-		btn.AddThemeColorOverride("font_color", GoldColor);
-		btn.AddThemeColorOverride("font_hover_color", GoldBright);
-		btn.AddThemeColorOverride("font_pressed_color", GoldBright);
-		btn.AddThemeColorOverride("font_disabled_color", TextVeryDim);
+	private void ApplyAnimatedButtonStyle(Button btn)
+	{
+		UITheme.ApplyAnimatedButtonStyle(btn, _btnNormalTex, _btnHoverTex, _btnPressedTex, _btnDisabledTex);
 	}
 
 	private void ApplyTabStyle(Button btn, bool active)

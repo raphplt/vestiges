@@ -4,7 +4,8 @@
       "Bash(python3 -c \"from PIL import Image; img=Image.open\\(''assets/enemies/rodeur/enemy_rodeur_NE_idle_00.png''\\); print\\(f''Size: {img.size}, Mode: {img.mode}''\\)\")",
       "Bash(cat data/biomes/*.json)",
       "Bash(python scripts/generate_urban_ruins_props.py)",
-      "Bash(python scripts/generate_icon.py)"
+      "Bash(python scripts/generate_icon.py)",
+      "Bash(python scripts/generate_hub_title.py)"
     ]
   }
 }

@@ -6,6 +6,7 @@ namespace Vestiges.UI;
 
 /// <summary>
 /// Settings screen with tabbed navigation (Audio, Graphismes, Controles).
+/// Pixel art NinePatch styling. Close button + ESC.
 /// Usable both in-game (pause) and from the Hub via gear button.
 /// </summary>
 public partial class SettingsScreen : CanvasLayer
@@ -17,19 +18,21 @@ public partial class SettingsScreen : CanvasLayer
 	private string _activeTab = "audio";
 	private readonly System.Collections.Generic.Dictionary<string, Button> _tabButtons = new();
 
-	// Colors
-	private static readonly Color GoldColor = new(0.83f, 0.66f, 0.26f);
-	private static readonly Color TextColor = new(0.75f, 0.75f, 0.8f);
-	private static readonly Color TextDim = new(0.5f, 0.5f, 0.55f);
-	private static readonly Color BgOverlay = new(0.02f, 0.02f, 0.05f, 0.8f);
-	private static readonly Color PanelBg = new(0.08f, 0.08f, 0.12f, 0.95f);
-	private static readonly Color TabActiveBg = new(0.15f, 0.14f, 0.2f);
-	private static readonly Color TabInactiveBg = new(0.06f, 0.06f, 0.1f);
+	// Textures NinePatch
+	private Texture2D _panelTex;
+	private Texture2D _tabNormalTex;
+	private Texture2D _tabHoverTex;
+	private Texture2D _tabActiveTex;
+	private Texture2D _btnNormalTex;
+	private Texture2D _btnHoverTex;
+	private Texture2D _btnPressedTex;
+	private Texture2D _btnDisabledTex;
 
 	public override void _Ready()
 	{
 		Layer = 60;
 		ProcessMode = ProcessModeEnum.Always;
+		LoadTextures();
 		BuildUI();
 		_root.Visible = false;
 	}
@@ -61,6 +64,18 @@ public partial class SettingsScreen : CanvasLayer
 		VfxFactory.SaveSettings();
 	}
 
+	private void LoadTextures()
+	{
+		_panelTex = UITheme.LoadTex(UITheme.MenusPath + "ui_panel_frame.png");
+		_tabNormalTex = UITheme.LoadTex(UITheme.MenusPath + "ui_tab_normal.png");
+		_tabHoverTex = UITheme.LoadTex(UITheme.MenusPath + "ui_tab_hover.png");
+		_tabActiveTex = UITheme.LoadTex(UITheme.MenusPath + "ui_tab_active.png");
+		_btnNormalTex = UITheme.LoadTex(UITheme.MenusPath + "ui_button_normal.png");
+		_btnHoverTex = UITheme.LoadTex(UITheme.MenusPath + "ui_button_hover.png");
+		_btnPressedTex = UITheme.LoadTex(UITheme.MenusPath + "ui_button_pressed.png");
+		_btnDisabledTex = UITheme.LoadTex(UITheme.MenusPath + "ui_button_disabled.png");
+	}
+
 	private void BuildUI()
 	{
 		_root = new Control();
@@ -68,10 +83,15 @@ public partial class SettingsScreen : CanvasLayer
 		_root.ProcessMode = ProcessModeEnum.Always;
 		AddChild(_root);
 
-		// Dark overlay
+		// Dark overlay (cliquable pour fermer)
 		ColorRect overlay = new();
 		overlay.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
-		overlay.Color = BgOverlay;
+		overlay.Color = new Color(0.02f, 0.02f, 0.05f, 0.8f);
+		overlay.GuiInput += (InputEvent @event) =>
+		{
+			if (@event is InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Left })
+				Close();
+		};
 		_root.AddChild(overlay);
 
 		// Main panel (centered, fixed size)
@@ -79,33 +99,38 @@ public partial class SettingsScreen : CanvasLayer
 		mainPanel.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.Center);
 		mainPanel.GrowHorizontal = Control.GrowDirection.Both;
 		mainPanel.GrowVertical = Control.GrowDirection.Both;
-		mainPanel.OffsetLeft = -340;
-		mainPanel.OffsetRight = 340;
-		mainPanel.OffsetTop = -260;
-		mainPanel.OffsetBottom = 260;
+		mainPanel.OffsetLeft = -360;
+		mainPanel.OffsetRight = 360;
+		mainPanel.OffsetTop = -280;
+		mainPanel.OffsetBottom = 280;
 
-		StyleBoxFlat panelStyle = new();
-		panelStyle.BgColor = PanelBg;
-		panelStyle.SetCornerRadiusAll(4);
-		panelStyle.SetBorderWidthAll(1);
-		panelStyle.BorderColor = new Color(0.3f, 0.28f, 0.22f, 0.6f);
-		mainPanel.AddThemeStyleboxOverride("panel", panelStyle);
+		// NinePatch panel styling
+		if (_panelTex != null)
+		{
+			StyleBoxTexture panelStyle = UITheme.CreateNinePatch(_panelTex, 4, 4, 4, 4);
+			panelStyle.ContentMarginLeft = 8;
+			panelStyle.ContentMarginRight = 8;
+			panelStyle.ContentMarginTop = 8;
+			panelStyle.ContentMarginBottom = 8;
+			mainPanel.AddThemeStyleboxOverride("panel", panelStyle);
+		}
+		else
+		{
+			StyleBoxFlat fallback = new();
+			fallback.BgColor = new Color(0.08f, 0.08f, 0.12f, 0.95f);
+			fallback.SetCornerRadiusAll(0);
+			fallback.SetBorderWidthAll(1);
+			fallback.BorderColor = new Color(0.3f, 0.28f, 0.22f, 0.6f);
+			mainPanel.AddThemeStyleboxOverride("panel", fallback);
+		}
 		_root.AddChild(mainPanel);
-
-		MarginContainer margin = new();
-		margin.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
-		margin.AddThemeConstantOverride("margin_left", 0);
-		margin.AddThemeConstantOverride("margin_top", 0);
-		margin.AddThemeConstantOverride("margin_right", 0);
-		margin.AddThemeConstantOverride("margin_bottom", 0);
-		mainPanel.AddChild(margin);
 
 		VBoxContainer mainVBox = new();
 		mainVBox.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
 		mainVBox.AddThemeConstantOverride("separation", 0);
-		margin.AddChild(mainVBox);
+		mainPanel.AddChild(mainVBox);
 
-		// Title bar
+		// Title bar + close button
 		mainVBox.AddChild(BuildTitleBar());
 
 		// Tab bar
@@ -127,17 +152,41 @@ public partial class SettingsScreen : CanvasLayer
 		MarginContainer margin = new();
 		margin.AddThemeConstantOverride("margin_left", 20);
 		margin.AddThemeConstantOverride("margin_top", 16);
-		margin.AddThemeConstantOverride("margin_right", 20);
+		margin.AddThemeConstantOverride("margin_right", 12);
 		margin.AddThemeConstantOverride("margin_bottom", 8);
+
+		HBoxContainer row = new();
+		row.AddThemeConstantOverride("separation", 0);
+		margin.AddChild(row);
+
+		// Spacer gauche
+		Control leftSpace = new() { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
+		row.AddChild(leftSpace);
 
 		Label title = new()
 		{
-			Text = "PARAMÈTRES",
+			Text = "PARAMETRES",
 			HorizontalAlignment = HorizontalAlignment.Center
 		};
 		title.AddThemeFontSizeOverride("font_size", 22);
-		title.AddThemeColorOverride("font_color", GoldColor);
-		margin.AddChild(title);
+		title.AddThemeColorOverride("font_color", UITheme.GoldColor);
+		row.AddChild(title);
+
+		// Spacer droit
+		Control rightSpace = new() { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
+		row.AddChild(rightSpace);
+
+		// Close button
+		Button closeBtn = new()
+		{
+			Text = "X",
+			CustomMinimumSize = new Vector2(36, 36),
+			FocusMode = Control.FocusModeEnum.None
+		};
+		closeBtn.AddThemeFontSizeOverride("font_size", 18);
+		UITheme.ApplyButtonStyle(closeBtn, _btnNormalTex, _btnHoverTex, _btnPressedTex, _btnDisabledTex);
+		closeBtn.Pressed += Close;
+		row.AddChild(closeBtn);
 
 		return margin;
 	}
@@ -145,13 +194,24 @@ public partial class SettingsScreen : CanvasLayer
 	private HBoxContainer BuildTabBar()
 	{
 		HBoxContainer tabBar = new();
-		tabBar.AddThemeConstantOverride("separation", 0);
-		tabBar.CustomMinimumSize = new Vector2(0, 38);
+		tabBar.AddThemeConstantOverride("separation", 4);
+		tabBar.CustomMinimumSize = new Vector2(0, 42);
 
-		AddTab(tabBar, "audio", "Audio");
-		AddTab(tabBar, "graphismes", "Graphismes");
-		AddTab(tabBar, "controles", "Contrôles");
+		MarginContainer tabMargin = new();
+		tabMargin.AddThemeConstantOverride("margin_left", 16);
+		tabMargin.AddThemeConstantOverride("margin_right", 16);
+		tabMargin.AddThemeConstantOverride("margin_top", 0);
+		tabMargin.AddThemeConstantOverride("margin_bottom", 0);
 
+		HBoxContainer innerBar = new();
+		innerBar.AddThemeConstantOverride("separation", 4);
+		tabMargin.AddChild(innerBar);
+
+		AddTab(innerBar, "audio", "Audio");
+		AddTab(innerBar, "graphismes", "Graphismes");
+		AddTab(innerBar, "controles", "Controles");
+
+		tabBar.AddChild(tabMargin);
 		return tabBar;
 	}
 
@@ -165,7 +225,7 @@ public partial class SettingsScreen : CanvasLayer
 			FocusMode = Control.FocusModeEnum.None,
 			Flat = true
 		};
-		btn.AddThemeFontSizeOverride("font_size", 14);
+		btn.AddThemeFontSizeOverride("font_size", 15);
 
 		btn.Pressed += () => ShowTab(id);
 		tabBar.AddChild(btn);
@@ -176,20 +236,11 @@ public partial class SettingsScreen : CanvasLayer
 	{
 		_activeTab = tabId;
 
-		// Update tab button styles
+		// Update tab styles with NinePatch
 		foreach (var (id, btn) in _tabButtons)
 		{
 			bool active = id == tabId;
-			StyleBoxFlat style = new();
-			style.BgColor = active ? TabActiveBg : TabInactiveBg;
-			style.SetBorderWidthAll(0);
-			style.BorderWidthBottom = active ? 2 : 0;
-			style.BorderColor = GoldColor;
-			btn.AddThemeStyleboxOverride("normal", style);
-			btn.AddThemeStyleboxOverride("hover", style);
-			btn.AddThemeStyleboxOverride("pressed", style);
-			btn.AddThemeColorOverride("font_color", active ? GoldColor : TextDim);
-			btn.AddThemeColorOverride("font_hover_color", active ? GoldColor : TextColor);
+			UITheme.ApplyTabStyle(btn, active, _tabNormalTex, _tabHoverTex, _tabActiveTex);
 		}
 
 		// Clear content
@@ -233,7 +284,7 @@ public partial class SettingsScreen : CanvasLayer
 		return margin;
 	}
 
-	private static VBoxContainer BuildVolumeSlider(string label, string busName)
+	private VBoxContainer BuildVolumeSlider(string label, string busName)
 	{
 		VBoxContainer container = new();
 		container.AddThemeConstantOverride("separation", 4);
@@ -246,8 +297,8 @@ public partial class SettingsScreen : CanvasLayer
 			Text = label,
 			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill
 		};
-		lbl.AddThemeFontSizeOverride("font_size", 14);
-		lbl.AddThemeColorOverride("font_color", TextColor);
+		lbl.AddThemeFontSizeOverride("font_size", 15);
+		lbl.AddThemeColorOverride("font_color", UITheme.TextColor);
 		headerRow.AddChild(lbl);
 
 		Label pct = new()
@@ -255,8 +306,8 @@ public partial class SettingsScreen : CanvasLayer
 			CustomMinimumSize = new Vector2(48, 0),
 			HorizontalAlignment = HorizontalAlignment.Right
 		};
-		pct.AddThemeFontSizeOverride("font_size", 14);
-		pct.AddThemeColorOverride("font_color", TextDim);
+		pct.AddThemeFontSizeOverride("font_size", 15);
+		pct.AddThemeColorOverride("font_color", UITheme.TextDim);
 		headerRow.AddChild(pct);
 
 		container.AddChild(headerRow);
@@ -266,10 +317,13 @@ public partial class SettingsScreen : CanvasLayer
 			MinValue = 0.0,
 			MaxValue = 1.0,
 			Step = 0.01,
-			CustomMinimumSize = new Vector2(0, 20),
+			CustomMinimumSize = new Vector2(0, 24),
 			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill
 		};
 		slider.ProcessMode = ProcessModeEnum.Always;
+
+		// Style pixel art pour le slider
+		StyleSlider(slider);
 
 		if (AudioManager.Instance != null)
 			slider.Value = AudioManager.Instance.GetBusVolumeLinear(busName);
@@ -287,6 +341,57 @@ public partial class SettingsScreen : CanvasLayer
 		container.AddChild(slider);
 
 		return container;
+	}
+
+	private void StyleSlider(HSlider slider)
+	{
+		// Track : StyleBoxFlat pixel art (sombre, pas de radius)
+		StyleBoxFlat track = new()
+		{
+			BgColor = new Color(0.1f, 0.1f, 0.15f),
+			BorderColor = new Color(0.25f, 0.22f, 0.18f),
+		};
+		track.SetBorderWidthAll(1);
+		track.SetCornerRadiusAll(0);
+		track.ContentMarginTop = 4;
+		track.ContentMarginBottom = 4;
+		slider.AddThemeStyleboxOverride("slider", track);
+
+		// Grabber area (rempli en gold discret)
+		StyleBoxFlat grabberArea = new()
+		{
+			BgColor = new Color(UITheme.GoldColor, 0.25f)
+		};
+		grabberArea.SetCornerRadiusAll(0);
+		slider.AddThemeStyleboxOverride("grabber_area", grabberArea);
+		slider.AddThemeStyleboxOverride("grabber_area_highlight", grabberArea);
+
+		// Grabber (carre gold, style pixel art)
+		StyleBoxFlat grabber = new()
+		{
+			BgColor = UITheme.GoldColor,
+			BorderColor = new Color(0.42f, 0.30f, 0.22f),
+		};
+		grabber.SetBorderWidthAll(1);
+		grabber.SetCornerRadiusAll(0);
+		grabber.ContentMarginLeft = 6;
+		grabber.ContentMarginRight = 6;
+		grabber.ContentMarginTop = 8;
+		grabber.ContentMarginBottom = 8;
+		slider.AddThemeStyleboxOverride("grabber", grabber);
+
+		StyleBoxFlat grabberHl = new()
+		{
+			BgColor = UITheme.GoldBright,
+			BorderColor = new Color(0.42f, 0.30f, 0.22f),
+		};
+		grabberHl.SetBorderWidthAll(1);
+		grabberHl.SetCornerRadiusAll(0);
+		grabberHl.ContentMarginLeft = 6;
+		grabberHl.ContentMarginRight = 6;
+		grabberHl.ContentMarginTop = 8;
+		grabberHl.ContentMarginBottom = 8;
+		slider.AddThemeStyleboxOverride("grabber_highlight", grabberHl);
 	}
 
 	// ================================================================
@@ -307,7 +412,7 @@ public partial class SettingsScreen : CanvasLayer
 		margin.AddChild(vbox);
 
 		// Fullscreen toggle
-		vbox.AddChild(BuildToggleRow("Plein écran",
+		vbox.AddChild(BuildToggleRow("Plein ecran",
 			DisplayServer.WindowGetMode() != DisplayServer.WindowMode.Windowed,
 			(toggled) =>
 			{
@@ -325,17 +430,18 @@ public partial class SettingsScreen : CanvasLayer
 			Text = "Particules",
 			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill
 		};
-		particleLbl.AddThemeFontSizeOverride("font_size", 14);
-		particleLbl.AddThemeColorOverride("font_color", TextColor);
+		particleLbl.AddThemeFontSizeOverride("font_size", 15);
+		particleLbl.AddThemeColorOverride("font_color", UITheme.TextColor);
 		particleRow.AddChild(particleLbl);
 
 		Button particleBtn = new()
 		{
 			Text = ParticleLevelLabel(VfxFactory.CurrentParticleLevel),
-			CustomMinimumSize = new Vector2(160, 32),
+			CustomMinimumSize = new Vector2(160, 36),
 			FocusMode = Control.FocusModeEnum.None
 		};
-		particleBtn.AddThemeFontSizeOverride("font_size", 13);
+		particleBtn.AddThemeFontSizeOverride("font_size", 14);
+		UITheme.ApplyButtonStyle(particleBtn, _btnNormalTex, _btnHoverTex, _btnPressedTex, _btnDisabledTex);
 		particleBtn.Pressed += () =>
 		{
 			VfxFactory.CurrentParticleLevel = VfxFactory.CurrentParticleLevel switch
@@ -352,7 +458,7 @@ public partial class SettingsScreen : CanvasLayer
 		return margin;
 	}
 
-	private static HBoxContainer BuildToggleRow(string label, bool initialValue, System.Action<bool> onToggle)
+	private HBoxContainer BuildToggleRow(string label, bool initialValue, System.Action<bool> onToggle)
 	{
 		HBoxContainer row = new();
 		row.AddThemeConstantOverride("separation", 0);
@@ -362,16 +468,29 @@ public partial class SettingsScreen : CanvasLayer
 			Text = label,
 			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill
 		};
-		lbl.AddThemeFontSizeOverride("font_size", 14);
-		lbl.AddThemeColorOverride("font_color", TextColor);
+		lbl.AddThemeFontSizeOverride("font_size", 15);
+		lbl.AddThemeColorOverride("font_color", UITheme.TextColor);
 		row.AddChild(lbl);
 
-		CheckButton toggle = new()
+		// Button toggle pixel art (remplace CheckButton natif)
+		Button toggle = new()
 		{
+			Text = initialValue ? "OUI" : "NON",
+			ToggleMode = true,
 			ButtonPressed = initialValue,
+			CustomMinimumSize = new Vector2(80, 36),
 			FocusMode = Control.FocusModeEnum.None
 		};
-		toggle.Toggled += (bool toggled) => onToggle(toggled);
+		toggle.AddThemeFontSizeOverride("font_size", 14);
+		UITheme.ApplyButtonStyle(toggle, _btnNormalTex, _btnHoverTex, _btnPressedTex, _btnDisabledTex);
+		toggle.AddThemeColorOverride("font_color", initialValue ? UITheme.GoldColor : UITheme.TextDim);
+
+		toggle.Toggled += (bool toggled) =>
+		{
+			toggle.Text = toggled ? "OUI" : "NON";
+			toggle.AddThemeColorOverride("font_color", toggled ? UITheme.GoldColor : UITheme.TextDim);
+			onToggle(toggled);
+		};
 		row.AddChild(toggle);
 
 		return row;
@@ -401,8 +520,8 @@ public partial class SettingsScreen : CanvasLayer
 			VerticalAlignment = VerticalAlignment.Center,
 			SizeFlagsVertical = Control.SizeFlags.ExpandFill
 		};
-		placeholder.AddThemeFontSizeOverride("font_size", 14);
-		placeholder.AddThemeColorOverride("font_color", TextDim);
+		placeholder.AddThemeFontSizeOverride("font_size", 15);
+		placeholder.AddThemeColorOverride("font_color", UITheme.TextDim);
 		vbox.AddChild(placeholder);
 
 		return margin;
@@ -421,10 +540,10 @@ public partial class SettingsScreen : CanvasLayer
 
 		Label hint = new()
 		{
-			Text = "[Echap] Fermer",
+			Text = "[Echap] ou [X] Fermer",
 			HorizontalAlignment = HorizontalAlignment.Center
 		};
-		hint.AddThemeFontSizeOverride("font_size", 11);
+		hint.AddThemeFontSizeOverride("font_size", 12);
 		hint.AddThemeColorOverride("font_color", new Color(0.4f, 0.4f, 0.45f));
 		margin.AddChild(hint);
 
@@ -436,8 +555,8 @@ public partial class SettingsScreen : CanvasLayer
 		return level switch
 		{
 			ParticleLevel.Full => "Toutes",
-			ParticleLevel.Reduced => "Réduites",
-			_ => "Désactivées",
+			ParticleLevel.Reduced => "Reduites",
+			_ => "Desactivees",
 		};
 	}
 }
