@@ -1413,6 +1413,11 @@ public partial class Enemy : CharacterBody2D
 		if (dissolutionVfx != null)
 			GetTree().CurrentScene.AddChild(dissolutionVfx);
 
+		// VFX flaque de sang iridescent sous l'ennemi mort
+		Node2D poolVfx = VfxFactory.CreateIridescentBloodSplatter(GlobalPosition, _tier == "miniboss" ? 2.5f : (_isAberration ? 1.5f : 1.0f));
+		if (poolVfx != null)
+			GetTree().CurrentScene.AddChild(poolVfx);
+
 		if (_hasSprite && _spriteMaterial != null)
 		{
 			// Dissolution via le shader unifié (pas de swap de shader)
@@ -1606,8 +1611,17 @@ public partial class Enemy : CharacterBody2D
 				_sprite.SpriteFrames = frames;
 				_sprite.Visible = true;
 				_sprite.SelfModulate = Colors.White;
+				
+				// Adapt the sprite scale to match the visual size defined in JSON
+				Texture2D firstFrame = frames.GetFrameTexture("SE_idle", 0);
+				float targetWidth = data.Visual.Size * 2f;
+				float scaleFactor = targetWidth / firstFrame.GetWidth();
+				
+				// For the Shadow Crawler and others, make sure they aren't oversized
+				_sprite.Scale = new Vector2(scaleFactor, scaleFactor);
+				
 				// Offset vers le haut : les pieds du sprite doivent toucher le sol isométrique
-				_sprite.Offset = new Vector2(0, -frames.GetFrameTexture("SE_idle", 0).GetHeight() * 0.35f);
+				_sprite.Offset = new Vector2(0, -firstFrame.GetHeight() * 0.35f);
 				_visual.Visible = false;
 				_hasSprite = true;
 				_lastDirection = "SE";

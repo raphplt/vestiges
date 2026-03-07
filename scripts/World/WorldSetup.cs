@@ -103,6 +103,15 @@ public partial class WorldSetup : Node2D
             terrain = _generator.Generate();
         }
 
+        // Post-traitement urbain : generer le layout de rues/batiments
+        // avant d'appliquer les tiles (le layout mute le terrain)
+        UrbanLayout urbanLayout = null;
+        if (_generator.ActiveBiomes.Any(b => b.Id == "urban_ruins"))
+        {
+            UrbanLayoutGenerator urbanGen = new(Seed, _config.MapRadius);
+            urbanLayout = urbanGen.Apply(terrain, _generator, "urban_ruins");
+        }
+
         // Dupliquer le TileSet pour ne pas modifier la ressource partagée
         _ground.TileSet = _ground.TileSet.Duplicate() as TileSet;
 
@@ -119,7 +128,25 @@ public partial class WorldSetup : Node2D
             SpawnChests();
         }
 
+        // Bloquer les cells de murs/routes pour que PropSpawner ne place pas
+        // de props generiques dessus
+        if (urbanLayout != null)
+        {
+            foreach (Vector2I cell in urbanLayout.WallCells)
+                _usedCells.Add(cell);
+            foreach (Vector2I cell in urbanLayout.RoadCells)
+                _usedCells.Add(cell);
+        }
+
         SpawnEnvironmentProps();
+
+        // Placer les props structurels urbains (murs, mobilier de rue, landmarks)
+        if (urbanLayout != null)
+        {
+            Node2D propContainer = GetNode<Node2D>("PropContainer");
+            UrbanPropPlacer.PlaceProps(urbanLayout, _ground, propContainer, _usedCells, Seed);
+        }
+
         InitBiomeAtmosphere();
 
         _respawnTimer = new Timer();

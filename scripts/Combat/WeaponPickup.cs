@@ -17,9 +17,11 @@ public partial class WeaponPickup : Area2D
 	private const float BobSpeed = 2f;
 	private const float SpawnScatterSpeed = 80f;
 	private const float DespawnTime = 120f;
+	private const string ResourcePrefix = "res://";
 
 	private WeaponData _weaponData;
-	private Polygon2D _visual;
+	private Node2D _visualRoot;
+	private Sprite2D _visual;
 	private Polygon2D _glow;
 	private Label _nameLabel;
 	private float _bobTimer;
@@ -86,8 +88,8 @@ public partial class WeaponPickup : Area2D
 
 		_bobTimer += dt * BobSpeed;
 		float bobOffset = Mathf.Sin(_bobTimer) * BobAmplitude;
-		if (_visual != null)
-			_visual.Position = new Vector2(0, bobOffset);
+		if (_visualRoot != null)
+			_visualRoot.Position = new Vector2(0, bobOffset);
 	}
 
 	private void OnBodyEntered(Node2D body)
@@ -180,10 +182,10 @@ public partial class WeaponPickup : Area2D
 		if (_visual == null)
 			return;
 
-		Color original = _visual.Color;
-		_visual.Color = new Color(1f, 0.3f, 0.2f);
+		Color original = _visual.Modulate;
+		_visual.Modulate = new Color(1f, 0.3f, 0.2f);
 		Tween tween = CreateTween();
-		tween.TweenProperty(_visual, "color", original, 0.3f).SetDelay(0.1f);
+		tween.TweenProperty(_visual, "modulate", original, 0.3f).SetDelay(0.1f);
 	}
 
 	private void Despawn()
@@ -198,6 +200,9 @@ public partial class WeaponPickup : Area2D
 
 	private void CreateVisual()
 	{
+		_visualRoot = new Node2D();
+		AddChild(_visualRoot);
+
 		_glow = new Polygon2D();
 		float gr = 14f;
 		_glow.Polygon = new Vector2[]
@@ -207,7 +212,7 @@ public partial class WeaponPickup : Area2D
 		};
 		_glow.Color = new Color(GetTierColor(), 0.35f);
 		_glow.ZIndex = -1;
-		AddChild(_glow);
+		_visualRoot.AddChild(_glow);
 
 		_glowTween = CreateTween();
 		_glowTween.SetLoops();
@@ -216,26 +221,29 @@ public partial class WeaponPickup : Area2D
 		_glowTween.TweenProperty(_glow, "modulate:a", 1f, 0.7f)
 			.SetTrans(Tween.TransitionType.Sine);
 
-		_visual = new Polygon2D();
-		string weaponType = _weaponData?.Type?.ToLower() ?? "ranged";
-
-		if (weaponType == "melee")
+		Texture2D weaponTexture = LoadWeaponTexture();
+		if (weaponTexture != null)
 		{
-			_visual.Polygon = new Vector2[]
-			{
-				new(-2, 8), new(-1, -8), new(1, -10), new(2, -8), new(2, 8)
-			};
+				_visual = new Sprite2D
+				{
+					Texture = weaponTexture,
+					Centered = true,
+					TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
+					Scale = new Vector2(0.5f, 0.5f)
+				};
+			_visualRoot.AddChild(_visual);
 		}
 		else
 		{
-			_visual.Polygon = new Vector2[]
-			{
-				new(-4, 2), new(-4, -2), new(6, -1), new(8, 0), new(6, 1)
-			};
+			// Fallback défensif si un sprite d'arme est manquant.
+				_visual = new Sprite2D
+				{
+					Texture = CreateFallbackTexture(),
+					Centered = true,
+					TextureFilter = CanvasItem.TextureFilterEnum.Nearest
+				};
+			_visualRoot.AddChild(_visual);
 		}
-
-		_visual.Color = GetTierColor();
-		AddChild(_visual);
 	}
 
 	private void CreateNameLabel()
@@ -264,5 +272,30 @@ public partial class WeaponPickup : Area2D
 			5 => new Color(1f, 0.85f, 0.2f),
 			_ => Colors.White
 		};
+	}
+
+	private Texture2D LoadWeaponTexture()
+	{
+		string spritePath = _weaponData?.Sprite;
+		if (string.IsNullOrWhiteSpace(spritePath))
+			return null;
+
+		string resourcePath = spritePath.StartsWith(ResourcePrefix) ? spritePath : ResourcePrefix + spritePath;
+		return GD.Load<Texture2D>(resourcePath);
+	}
+
+	private ImageTexture CreateFallbackTexture()
+	{
+		Color color = GetTierColor();
+		Image image = Image.Create(16, 16, false, Image.Format.Rgba8);
+		image.Fill(Colors.Transparent);
+
+		for (int x = 3; x < 13; x++)
+		{
+			for (int y = 6; y < 10; y++)
+				image.SetPixel(x, y, color);
+		}
+
+		return ImageTexture.CreateFromImage(image);
 	}
 }

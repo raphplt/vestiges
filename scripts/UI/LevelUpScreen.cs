@@ -40,6 +40,13 @@ public partial class LevelUpScreen : CanvasLayer
     private static readonly Color RayColorA = new(0.83f, 0.66f, 0.26f, 0.08f);
     private static readonly Color RayColorB = new(0.9f, 0.78f, 0.39f, 0.04f);
 
+    // --- Fragment rarity colors ---
+    private static readonly Color RarityCommonBorder = new(0.25f, 0.24f, 0.2f, 0.6f);
+    private static readonly Color RarityUncommonBorder = new(0.4f, 0.73f, 0.42f);
+    private static readonly Color RarityRareBorder = new(1f, 0.7f, 0f);
+    private static readonly Color RarityUncommonBg = new(0.05f, 0.1f, 0.05f, 0.95f);
+    private static readonly Color RarityRareBg = new(0.12f, 0.09f, 0.02f, 0.95f);
+
     // --- Banish mode colors ---
     private static readonly Color BanishBorderColor = new(0.85f, 0.2f, 0.2f);
     private static readonly Color BanishBgColor = new(0.15f, 0.05f, 0.05f, 0.95f);
@@ -57,6 +64,7 @@ public partial class LevelUpScreen : CanvasLayer
     private Label _synergyNotification;
     private readonly List<PanelContainer> _cards = new();
     private readonly List<FragmentOption> _cardOptions = new();
+    private readonly List<string> _cardRarities = new();
     private int _hoveredCardIndex = -1;
     private bool _banishMode;
 
@@ -211,13 +219,15 @@ public partial class LevelUpScreen : CanvasLayer
         string description,
         string badge,
         Color badgeColor,
-        System.Action onPressed)
+        System.Action onPressed,
+        string rarity = "common")
     {
         PanelContainer card = new();
         card.CustomMinimumSize = new Vector2(460, 80);
 
-        // Card NinePatch style
-        ApplyCardStyle(card, false);
+        // Card style (rarity-aware)
+        _cardRarities.Add(rarity);
+        ApplyCardStyle(card, false, rarity);
 
         // Make the card clickable
         card.MouseFilter = Control.MouseFilterEnum.Stop;
@@ -315,10 +325,10 @@ public partial class LevelUpScreen : CanvasLayer
         return card;
     }
 
-    private void ApplyCardStyle(PanelContainer card, bool selected)
+    private void ApplyCardStyle(PanelContainer card, bool selected, string rarity = "common")
     {
         Texture2D tex = selected ? _cardSelectedTex : _cardNormalTex;
-        if (tex != null)
+        if (tex != null && rarity == "common")
         {
             StyleBoxTexture style = CreateNinePatch(tex, 4, 4, 4, 4);
             style.ContentMarginLeft = 0;
@@ -329,10 +339,43 @@ public partial class LevelUpScreen : CanvasLayer
         }
         else
         {
+            Color borderColor;
+            Color bgColor;
+            if (selected)
+            {
+                borderColor = rarity switch
+                {
+                    "rare" => RarityRareBorder,
+                    "uncommon" => RarityUncommonBorder,
+                    _ => GoldColor
+                };
+                bgColor = rarity switch
+                {
+                    "rare" => RarityRareBg,
+                    "uncommon" => RarityUncommonBg,
+                    _ => new Color(0.12f, 0.14f, 0.2f)
+                };
+            }
+            else
+            {
+                borderColor = rarity switch
+                {
+                    "rare" => RarityRareBorder with { A = 0.7f },
+                    "uncommon" => RarityUncommonBorder with { A = 0.6f },
+                    _ => RarityCommonBorder
+                };
+                bgColor = rarity switch
+                {
+                    "rare" => new Color(0.1f, 0.08f, 0.02f, 0.9f),
+                    "uncommon" => new Color(0.04f, 0.08f, 0.04f, 0.9f),
+                    _ => new Color(0.08f, 0.08f, 0.12f)
+                };
+            }
+
             StyleBoxFlat flat = new();
-            flat.BgColor = selected ? new Color(0.12f, 0.14f, 0.2f) : new Color(0.08f, 0.08f, 0.12f);
-            flat.SetBorderWidthAll(selected ? 2 : 1);
-            flat.BorderColor = selected ? GoldColor : new Color(0.25f, 0.24f, 0.2f, 0.6f);
+            flat.BgColor = bgColor;
+            flat.SetBorderWidthAll(rarity == "common" ? (selected ? 2 : 1) : 2);
+            flat.BorderColor = borderColor;
             flat.SetCornerRadiusAll(3);
             card.AddThemeStyleboxOverride("panel", flat);
         }
@@ -342,7 +385,10 @@ public partial class LevelUpScreen : CanvasLayer
     {
         _hoveredCardIndex = index;
         if (index >= 0 && index < _cards.Count)
-            ApplyCardStyle(_cards[index], true);
+        {
+            string rarity = index < _cardRarities.Count ? _cardRarities[index] : "common";
+            ApplyCardStyle(_cards[index], true, rarity);
+        }
     }
 
     private void OnCardUnhovered(int index)
@@ -350,7 +396,10 @@ public partial class LevelUpScreen : CanvasLayer
         if (index == _hoveredCardIndex)
             _hoveredCardIndex = -1;
         if (index >= 0 && index < _cards.Count)
-            ApplyCardStyle(_cards[index], false);
+        {
+            string rarity = index < _cardRarities.Count ? _cardRarities[index] : "common";
+            ApplyCardStyle(_cards[index], false, rarity);
+        }
     }
 
     // ==============================
@@ -383,14 +432,29 @@ public partial class LevelUpScreen : CanvasLayer
         }
 
         BuildActionButtons();
+
+        // Vérifier si un choix rare est présent
+        bool hasRare = false;
+        foreach (FragmentOption c in choices)
+        {
+            if (c.Rarity is "rare" or "uncommon")
+            {
+                hasRare = true;
+                break;
+            }
+        }
+
         ShowScreen();
-        GD.Print($"[LevelUpScreen] Fragment screen shown with {choices.Count} choices");
+        if (hasRare)
+            Infrastructure.AudioManager.PlayUI("sfx_rare_fragment");
+        GD.Print($"[LevelUpScreen] Fragment screen shown with {choices.Count} choices (hasRare={hasRare})");
     }
 
     private void BuildFragmentCard(FragmentOption choice)
     {
         Player player = GetTree().GetFirstNodeInGroup("player") as Player;
         string iconPath = GetFragmentSpritePath(choice.Id, choice.Type);
+        string rarity = choice.Rarity ?? "common";
 
         string typeTag;
         Color tagColor;
@@ -399,52 +463,60 @@ public partial class LevelUpScreen : CanvasLayer
         string badge;
         Color badgeColor;
 
+        // Rarity label pour le tag
+        string rarityPrefix = rarity switch
+        {
+            "rare" => "\u2605 ",     // ★
+            "uncommon" => "\u25C6 ", // ◆
+            _ => ""
+        };
+
         switch (choice.Type)
         {
             case "weapon_new":
             {
                 WeaponData weapon = WeaponDataLoader.Get(choice.Id);
-                typeTag = "Arme";
-                tagColor = WeaponNewColor;
+                typeTag = rarityPrefix + "Arme";
+                tagColor = rarity == "rare" ? RarityRareBorder : rarity == "uncommon" ? RarityUncommonBorder : WeaponNewColor;
                 name = weapon?.Name ?? choice.Id;
                 description = weapon != null ? FormatWeaponStats(weapon) : "";
                 badge = "NOUVEAU";
-                badgeColor = WeaponNewColor;
+                badgeColor = tagColor;
                 break;
             }
             case "weapon_upgrade":
             {
                 WeaponData weapon = WeaponDataLoader.Get(choice.Id);
                 int level = player?.GetWeaponFragmentLevel(choice.Id) ?? 0;
-                typeTag = "Arme";
-                tagColor = WeaponUpgradeColor;
+                typeTag = rarityPrefix + "Arme";
+                tagColor = rarity == "rare" ? RarityRareBorder : rarity == "uncommon" ? RarityUncommonBorder : WeaponUpgradeColor;
                 name = weapon?.Name ?? choice.Id;
                 description = weapon != null ? FormatWeaponStats(weapon) : "";
                 badge = $"NIV {level} \u2192 {level + 1}";
-                badgeColor = WeaponUpgradeColor;
+                badgeColor = tagColor;
                 break;
             }
             case "passive_new":
             {
                 PassiveSouvenirData passive = PassiveSouvenirDataLoader.Get(choice.Id);
-                typeTag = "Passif";
-                tagColor = PassiveNewColor;
+                typeTag = rarityPrefix + "Passif";
+                tagColor = rarity == "rare" ? RarityRareBorder : rarity == "uncommon" ? RarityUncommonBorder : PassiveNewColor;
                 name = passive?.Name ?? choice.Id;
                 description = passive != null ? FormatPassiveStats(passive, 1) : "";
                 badge = "NOUVEAU";
-                badgeColor = PassiveNewColor;
+                badgeColor = tagColor;
                 break;
             }
             case "passive_upgrade":
             {
                 PassiveSouvenirData passive = PassiveSouvenirDataLoader.Get(choice.Id);
                 int level = player?.GetPassiveLevel(choice.Id) ?? 0;
-                typeTag = "Passif";
-                tagColor = PassiveUpgradeColor;
+                typeTag = rarityPrefix + "Passif";
+                tagColor = rarity == "rare" ? RarityRareBorder : rarity == "uncommon" ? RarityUncommonBorder : PassiveUpgradeColor;
                 name = passive?.Name ?? choice.Id;
                 description = passive != null ? FormatPassiveStats(passive, level + 1) : "";
                 badge = $"NIV {level} \u2192 {level + 1}";
-                badgeColor = PassiveUpgradeColor;
+                badgeColor = tagColor;
                 break;
             }
             default:
@@ -462,7 +534,8 @@ public partial class LevelUpScreen : CanvasLayer
 
         PanelContainer card = CreateChoiceCard(
             iconPath, typeTag, tagColor, name, description, badge, badgeColor,
-            () => OnFragmentSelected(capturedId, capturedType));
+            () => OnFragmentSelected(capturedId, capturedType),
+            rarity);
 
         _cardsContainer.AddChild(card);
     }
@@ -660,7 +733,8 @@ public partial class LevelUpScreen : CanvasLayer
             }
             else
             {
-                ApplyCardStyle(card, i == _hoveredCardIndex);
+                string rarity = i < _cardRarities.Count ? _cardRarities[i] : "common";
+                ApplyCardStyle(card, i == _hoveredCardIndex, rarity);
             }
         }
 
@@ -681,9 +755,12 @@ public partial class LevelUpScreen : CanvasLayer
             return;
         }
 
-        _fragmentManager?.SelectFragment(fragmentId, fragmentType);
         HideScreen();
-        GetTree().Paused = false;
+        _fragmentManager?.SelectFragment(fragmentId, fragmentType);
+
+        // Unpause seulement si aucun choix actif (la queue a été vidée)
+        if (_fragmentManager == null || !_fragmentManager.IsChoiceActive)
+            GetTree().Paused = false;
     }
 
     // ==============================
@@ -721,7 +798,8 @@ public partial class LevelUpScreen : CanvasLayer
             PanelContainer card = CreateChoiceCard(
                 iconPath, rarityTag, rarityColor, data.Name, data.Description,
                 badge, rarityColor,
-                () => OnPerkSelected(capturedId));
+                () => OnPerkSelected(capturedId),
+                data.Rarity ?? "common");
 
             _cardsContainer.AddChild(card);
         }
@@ -798,6 +876,7 @@ public partial class LevelUpScreen : CanvasLayer
         }
         _cards.Clear();
         _cardOptions.Clear();
+        _cardRarities.Clear();
         _hoveredCardIndex = -1;
         _banishMode = false;
 

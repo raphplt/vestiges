@@ -50,8 +50,9 @@ public partial class AudioManager : Node
 		["sfx_hit_joueur"] = 150,
 		["sfx_hit_ennemi"] = 80,
 		["sfx_hit_critique"] = 80,
-["sfx_monde_dissolution"] = 200,
+		["sfx_monde_dissolution"] = 200,
 		["sfx_recolte_obtenu"] = 100,
+		["xp_gain"] = 60,
 	};
 	private const ulong DefaultMinInterval = 0;
 
@@ -105,6 +106,7 @@ public partial class AudioManager : Node
 		["sfx_level_up_loop"]   = "res://assets/audio/sfx/gameplay/level_up_loop.wav",
 		["sfx_level_up_after"]  = "res://assets/audio/sfx/gameplay/level_up_after.wav",
 		["sfx_chest_opening"]   = "res://assets/audio/sfx/gameplay/chest_opening.wav",
+		["xp_gain"]            = "res://assets/audio/sfx/gameplay/xp_gain.wav",
 
 		// Monde
 		["sfx_monde_tuile_apparait"] = "res://assets/audio/sfx/gameplay/sfx_monde_tuile_apparait.wav",

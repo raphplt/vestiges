@@ -101,6 +101,7 @@ public static class VfxFactory
 	private static Texture2D _fouetFrame2;
 	private static Texture2D _fouetFrame3;
 	private static Texture2D _fouetFrame4;
+	private static Texture2D _bloodSplatterTex;
 
 	private static Texture2D SlashFrame1 => _slashFrame1 ??= GD.Load<Texture2D>("res://assets/vfx/vfx_slash_f1.png");
 	private static Texture2D SlashFrame2 => _slashFrame2 ??= GD.Load<Texture2D>("res://assets/vfx/vfx_slash_f2.png");
@@ -142,6 +143,7 @@ public static class VfxFactory
 	private static Texture2D FouetFrame2 => _fouetFrame2 ??= GD.Load<Texture2D>("res://assets/vfx/vfx_fouet_f2.png");
 	private static Texture2D FouetFrame3 => _fouetFrame3 ??= GD.Load<Texture2D>("res://assets/vfx/vfx_fouet_f3.png");
 	private static Texture2D FouetFrame4 => _fouetFrame4 ??= GD.Load<Texture2D>("res://assets/vfx/vfx_fouet_f4.png");
+	private static Texture2D BloodSplatterTex => _bloodSplatterTex ??= GD.Load<Texture2D>("res://assets/vfx/vfx_blood_splatter.png");
 
 	// =========================================================================
 	// === Orbe XP : GPUParticles2D qui suit l'orbe ===
@@ -1199,5 +1201,65 @@ public static class VfxFactory
 		}
 
 		return ImageTexture.CreateFromImage(img);
+	}
+
+	// =========================================================================
+	// === Iridescent Fluid Splatter (Sang des Aberrations) ===
+	// =========================================================================
+
+	private static ShaderMaterial _iridescentMaterial;
+
+	/// <summary>
+	/// Crée une flaque de sang iridescent (sprite basique + pixel shader iridescent_fluid.gdshader).
+	/// S'étend et se "dissout" après quelques secondes.
+	/// </summary>
+	public static Node2D CreateIridescentBloodSplatter(Vector2 position, float scale = 1.0f)
+	{
+		if (_particleLevel == ParticleLevel.Off)
+			return null;
+
+		var root = new Node2D { GlobalPosition = position };
+
+		if (_iridescentMaterial == null && ResourceLoader.Exists("res://assets/shaders/iridescent_fluid.gdshader"))
+		{
+			Shader shader = GD.Load<Shader>("res://assets/shaders/iridescent_fluid.gdshader");
+			_iridescentMaterial = new ShaderMaterial { Shader = shader };
+		}
+
+		// On utilise le pixel art asset généré au lieu de la texture cercle basique
+		Sprite2D splatterSprite = new()
+		{
+			Texture = BloodSplatterTex,
+			TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
+			Scale = new Vector2(0.5f, 0.5f), // Commence petit
+			Modulate = new Color(1f, 1f, 1f, 0.9f)
+		};
+
+		if (_iridescentMaterial != null)
+		{
+			splatterSprite.Material = _iridescentMaterial;
+		}
+
+		root.AddChild(splatterSprite);
+
+		// Animation de flaque qui s'étend, puis disparaît lentement
+		splatterSprite.TreeEntered += () =>
+		{
+			Tween tween = splatterSprite.CreateTween();
+			tween.SetParallel();
+			
+			// Étirement (spawn) - The final scale will be around 1.0 based on passed `scale` parameter.
+			tween.TweenProperty(splatterSprite, "scale", new Vector2(scale, scale * 0.8f), 0.3f)
+				.SetTrans(Tween.TransitionType.Quad)
+				.SetEase(Tween.EaseType.Out);
+				
+			// Disparition lente (retour au néant)
+			tween.Chain().TweenProperty(splatterSprite, "modulate:a", 0f, 4.0f)
+				  .SetDelay(1.0f);
+			
+			tween.Chain().TweenCallback(Callable.From(root.QueueFree));
+		};
+
+		return root;
 	}
 }

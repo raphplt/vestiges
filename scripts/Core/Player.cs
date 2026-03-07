@@ -127,6 +127,7 @@ public partial class Player : CharacterBody2D
     private int _projectilePierce;
     private float _xpMagnetMultiplier = 1f;
     private float _repairSpeedMultiplier = 1f;
+    private float _luckBonus;
 
     // Complex perk effects
     private float _vampirismPercent;
@@ -216,6 +217,22 @@ public partial class Player : CharacterBody2D
     public WeaponInstance EquippedWeapon => _weaponSlots.Count > 0 ? _weaponSlots[0] : null;
     public IReadOnlyList<WeaponInstance> WeaponSlots => _weaponSlots;
     public IReadOnlyList<ActivePassiveSouvenir> PassiveSlots => _passiveSlots;
+
+    // Stat getters pour le menu pause
+    public float DamageMultiplier => _damageMultiplier;
+    public float SpeedMultiplier => _speedMultiplier;
+    public float AttackSpeedMultiplier => _attackSpeedMultiplier;
+    public float Armor => _armor;
+    public float BonusRegenRate => _bonusRegenRate;
+    public float AoeMultiplier => _aoeMultiplier;
+    public float VampirismPercent => _vampirismPercent;
+    public float DodgeChance => _dodgeChance;
+    public float ThornsPercent => _thornsPercent;
+    public int ExtraProjectiles => _extraProjectiles;
+    public float HarvestSpeedMultiplier => _harvestSpeedMultiplier;
+    public float IgniteChance => _igniteChance;
+    public float RicochetChance => _ricochetChance;
+    public float LuckBonus => _luckBonus;
 
     public override void _Ready()
     {
@@ -794,6 +811,9 @@ public partial class Player : CharacterBody2D
                 break;
             case "repair_speed":
                 if (modifierType == "multiplicative") _repairSpeedMultiplier *= value;
+                break;
+            case "luck":
+                if (modifierType == "additive") _luckBonus += value;
                 break;
         }
     }

@@ -17,6 +17,7 @@ public partial class EnvironmentProp : StaticBody2D
 	private Sprite2D _baseSprite;
 	private Sprite2D _canopySprite;
 	private float _baseHeight;
+	private static ShaderMaterial _swayMaterial;
 
 	/// <summary>
 	/// Initialise le prop avec ses textures et paramètres.
@@ -29,6 +30,16 @@ public partial class EnvironmentProp : StaticBody2D
 		float collisionOffsetY)
 	{
 		_baseHeight = baseTexture.GetHeight();
+
+		// Charger le shader Sway statiquement si non chargé
+		if (_swayMaterial == null && ResourceLoader.Exists("res://assets/shaders/sway.gdshader"))
+		{
+			Shader swayShader = GD.Load<Shader>("res://assets/shaders/sway.gdshader");
+			_swayMaterial = new ShaderMaterial { Shader = swayShader };
+			// Options visuelles modérées pour la végétation
+			_swayMaterial.SetShaderParameter("speed", 1.0f);
+			_swayMaterial.SetShaderParameter("max_strength", 0.05f);
+		}
 
 		// --- Sprite de base (tronc, rocher, structure) ---
 		_baseSprite = new Sprite2D
@@ -75,6 +86,10 @@ public partial class EnvironmentProp : StaticBody2D
 				ZAsRelative = false,
 				SelfModulate = new Color(1f, 1f, 1f, 0.85f),
 			};
+			if (_swayMaterial != null)
+			{
+				_canopySprite.Material = _swayMaterial;
+			}
 			AddChild(_canopySprite);
 		}
 	}

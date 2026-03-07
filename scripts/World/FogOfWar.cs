@@ -120,6 +120,16 @@ public partial class FogOfWar : Node2D
         _fogLayer.TileSet = fogTileSet;
         _fogLayer.ZIndex = 10;
 
+        // Load and assign the Fog of War shader
+        if (ResourceLoader.Exists("res://assets/shaders/fog_of_war.gdshader"))
+        {
+            var shader = GD.Load<Shader>("res://assets/shaders/fog_of_war.gdshader");
+            var material = new ShaderMaterial { Shader = shader };
+            // Generate a dummy mask texture just to assign the parameter (the real logic is handled elsewhere, or could be passed via ViewportTexture)
+            // But we will give it a try with a dummy one first to prevent errors
+            _fogLayer.Material = material;
+        }
+
         _ground.GetParent().AddChild(_fogLayer);
     }
 

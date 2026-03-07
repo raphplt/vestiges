@@ -22,6 +22,10 @@ public partial class FragmentManager : Node
 	private Player _player;
 	private int _currentLevel = 1;
 
+	// Level-up queue (multi-level-up support)
+	private readonly Queue<int> _levelUpQueue = new();
+	private bool _choosingActive;
+
 	// Reroll & Banish
 	private int _rerollsRemaining = DefaultRerolls;
 	private int _banishesRemaining = DefaultBanishes;
@@ -71,6 +75,13 @@ public partial class FragmentManager : Node
 			return;
 		}
 
+		if (_choosingActive)
+		{
+			_levelUpQueue.Enqueue(newLevel);
+			GD.Print($"[FragmentManager] Queued level {newLevel} ({_levelUpQueue.Count} in queue)");
+			return;
+		}
+
 		OfferFragments(newLevel);
 	}
 
@@ -98,32 +109,68 @@ public partial class FragmentManager : Node
 		if (options.Count == 0)
 		{
 			GD.PushWarning($"[FragmentManager] OfferFragments: pool is empty (level {level})");
+			ProcessNextInQueue();
 			return;
 		}
 
 		_pendingChoices.Clear();
 		_pendingChoices.AddRange(PickRandom(options, FragmentsPerChoice));
+		_choosingActive = true;
 
 		GD.Print($"[FragmentManager] Level {level} (maxTier={GetMaxFragmentTier(level)}): offering {_pendingChoices.Count} fragments (pool had {options.Count})");
 
 		_eventBus.EmitSignal(EventBus.SignalName.FragmentChoicesReady, _pendingChoices.Count);
 	}
 
+	/// <summary>Traite le prochain level-up en attente, ou signale la fin des choix.</summary>
+	private void ProcessNextInQueue()
+	{
+		if (_levelUpQueue.Count > 0)
+		{
+			int nextLevel = _levelUpQueue.Dequeue();
+			GD.Print($"[FragmentManager] Processing queued level-up: {nextLevel} ({_levelUpQueue.Count} remaining)");
+			OfferFragments(nextLevel);
+		}
+		else
+		{
+			_choosingActive = false;
+		}
+	}
+
+	/// <summary>Indique si un choix de fragment est actuellement actif (inclut le choix en cours + queue).</summary>
+	public bool IsChoiceActive => _choosingActive;
+
 	/// <summary>
 	/// Tier max autorisé dans le pool de fragments selon le niveau du joueur.
 	/// Progression graduelle : Tier 1 tôt, Tier 3 mid-game, Tier 4-5 très tard.
+	/// Petite chance de voir un tier au-dessus du max normal (3% base + luck × 30%).
 	/// </summary>
-	private static int GetMaxFragmentTier(int playerLevel)
+	private int GetMaxFragmentTier(int playerLevel)
 	{
-		if (playerLevel < 5)
-			return 1;
-		if (playerLevel < 10)
-			return 2;
-		if (playerLevel < 15)
-			return 3;
-		if (playerLevel < 20)
-			return 4;
-		return 5;
+		int baseTier;
+		if (playerLevel < 5) baseTier = 1;
+		else if (playerLevel < 10) baseTier = 2;
+		else if (playerLevel < 15) baseTier = 3;
+		else if (playerLevel < 20) baseTier = 4;
+		else baseTier = 5;
+
+		if (baseTier < 5)
+		{
+			CachePlayer();
+			float luck = _player?.LuckBonus ?? 0f;
+			float tierBumpChance = 0.03f + luck * 0.30f;
+			if (GD.Randf() < tierBumpChance)
+				baseTier++;
+		}
+
+		return baseTier;
+	}
+
+	private static string TierToRarity(int tier)
+	{
+		if (tier >= 4) return "rare";
+		if (tier >= 3) return "uncommon";
+		return "common";
 	}
 
 	private List<FragmentOption> BuildFragmentPool()
@@ -155,7 +202,7 @@ public partial class FragmentManager : Node
 				if (!string.IsNullOrEmpty(weapon.RequiresSouvenir) && !MetaSaveManager.HasSouvenir(weapon.RequiresSouvenir))
 					continue;
 
-				pool.Add(new FragmentOption(weapon.Id, "weapon_new", weapon.Name, weapon.Tier));
+				pool.Add(new FragmentOption(weapon.Id, "weapon_new", weapon.Name, weapon.Tier, TierToRarity(weapon.Tier)));
 			}
 		}
 
@@ -165,7 +212,8 @@ public partial class FragmentManager : Node
 			if (!_player.IsWeaponFragmentMaxed(w.Id))
 			{
 				int level = _player.GetWeaponFragmentLevel(w.Id);
-				pool.Add(new FragmentOption(w.Id, "weapon_upgrade", w.Name, level + 1));
+				string rarity = TierToRarity(w.Tier);
+				pool.Add(new FragmentOption(w.Id, "weapon_upgrade", w.Name, level + 1, rarity));
 			}
 		}
 
@@ -190,7 +238,10 @@ public partial class FragmentManager : Node
 		foreach (ActivePassiveSouvenir p in _player.PassiveSlots)
 		{
 			if (!p.IsMaxLevel)
-				pool.Add(new FragmentOption(p.Id, "passive_upgrade", p.Data.Name, p.Level + 1));
+			{
+				string rarity = p.Level + 1 >= p.Data.MaxLevel ? "uncommon" : "common";
+				pool.Add(new FragmentOption(p.Id, "passive_upgrade", p.Data.Name, p.Level + 1, rarity));
+			}
 		}
 
 		return pool;
@@ -252,6 +303,7 @@ public partial class FragmentManager : Node
 			_eventBus.EmitSignal(EventBus.SignalName.FragmentChosen, fragmentId, fragmentType);
 			GD.Print($"[FragmentManager] Fragment selected: {fragmentId} ({fragmentType})");
 			CheckFusions();
+			ProcessNextInQueue();
 		}
 	}
 
@@ -351,19 +403,77 @@ public partial class FragmentManager : Node
 		return vestige;
 	}
 
-	private static List<FragmentOption> PickRandom(List<FragmentOption> pool, int count)
+	private List<FragmentOption> PickRandom(List<FragmentOption> pool, int count)
 	{
-		List<FragmentOption> result = new();
-		List<FragmentOption> available = new(pool);
+		CachePlayer();
+		float luck = _player?.LuckBonus ?? 0f;
 
-		for (int i = 0; i < count && available.Count > 0; i++)
+		// Séparer new vs upgrade pour garantir un mélange
+		List<FragmentOption> newItems = new();
+		List<FragmentOption> upgrades = new();
+		foreach (FragmentOption o in pool)
 		{
-			int index = (int)(GD.Randi() % available.Count);
-			result.Add(available[index]);
-			available.RemoveAt(index);
+			if (o.Type is "weapon_new" or "passive_new")
+				newItems.Add(o);
+			else
+				upgrades.Add(o);
+		}
+
+		List<FragmentOption> result = new();
+		List<FragmentOption> remaining = new(pool);
+
+		// Garantir au moins 1 de chaque catégorie si possible
+		if (newItems.Count > 0 && upgrades.Count > 0 && count >= 2)
+		{
+			FragmentOption picked = WeightedPick(newItems, luck);
+			result.Add(picked);
+			remaining.Remove(picked);
+
+			picked = WeightedPick(upgrades, luck);
+			result.Add(picked);
+			remaining.Remove(picked);
+		}
+
+		// Remplir le reste avec sélection pondérée
+		while (result.Count < count && remaining.Count > 0)
+		{
+			FragmentOption picked = WeightedPick(remaining, luck);
+			result.Add(picked);
+			remaining.Remove(picked);
 		}
 
 		return result;
+	}
+
+	private static FragmentOption WeightedPick(List<FragmentOption> options, float luck)
+	{
+		if (options.Count == 1)
+			return options[0];
+
+		float totalWeight = 0f;
+		foreach (FragmentOption opt in options)
+			totalWeight += GetFragmentWeight(opt, luck);
+
+		float roll = GD.Randf() * totalWeight;
+		float cumulative = 0f;
+		foreach (FragmentOption opt in options)
+		{
+			cumulative += GetFragmentWeight(opt, luck);
+			if (roll <= cumulative)
+				return opt;
+		}
+		return options[options.Count - 1];
+	}
+
+	private static float GetFragmentWeight(FragmentOption opt, float luck)
+	{
+		float weight = 1f;
+		// Tiers élevés sont plus rares, mais la luck les booste
+		if (opt.SortWeight >= 4) weight = 0.3f + luck * 1.5f;
+		else if (opt.SortWeight >= 3) weight = 0.5f + luck * 1.0f;
+		// Upgrades légèrement favorisées (aide à compléter les builds)
+		if (opt.Type.Contains("upgrade")) weight *= 1.15f;
+		return Mathf.Max(weight, 0.1f);
 	}
 
 	private void CachePlayer()
@@ -383,12 +493,15 @@ public class FragmentOption
 	public string Type { get; }
 	public string DisplayName { get; }
 	public int SortWeight { get; }
+	/// <summary>"common", "uncommon", ou "rare" — déterminé par le tier.</summary>
+	public string Rarity { get; }
 
-	public FragmentOption(string id, string type, string displayName, int sortWeight)
+	public FragmentOption(string id, string type, string displayName, int sortWeight, string rarity = "common")
 	{
 		Id = id;
 		Type = type;
 		DisplayName = displayName;
 		SortWeight = sortWeight;
+		Rarity = rarity;
 	}
 }

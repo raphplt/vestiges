@@ -151,6 +151,22 @@
             "utility"
         ]
     },
+    {
+        "id": "lucky",
+        "name": "Bonne Étoile",
+        "description": "+10% de chance d'obtenir des fragments rares",
+        "icon": "assets/ui/icons/ui_icon_perk_vitesse.png",
+        "category": "stat",
+        "rarity": "uncommon",
+        "stat": "luck",
+        "modifier": 0.10,
+        "modifier_type": "additive",
+        "max_stacks": 5,
+        "weight": 0.5,
+        "tags": [
+            "utility"
+        ]
+    },
     "_comment_combat",
     {
         "id": "vampirism",

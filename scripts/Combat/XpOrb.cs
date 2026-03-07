@@ -1,5 +1,6 @@
 using Godot;
 using Vestiges.Core;
+using Vestiges.Infrastructure;
 
 namespace Vestiges.Combat;
 
@@ -118,6 +119,8 @@ public partial class XpOrb : Area2D
             Node2D burst = VfxFactory.CreateXpCollectBurst(GlobalPosition);
             if (burst != null)
                 GetTree().CurrentScene.AddChild(burst);
+
+            AudioManager.Play("xp_gain", 0.03f, -1.5f);
 
             EventBus eventBus = GetNode<EventBus>("/root/EventBus");
             eventBus.EmitSignal(EventBus.SignalName.XpGained, _xpValue);

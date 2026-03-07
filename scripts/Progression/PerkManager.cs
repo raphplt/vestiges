@@ -271,10 +271,13 @@ public partial class PerkManager : Node
         if (available.Count == 0)
             return System.Array.Empty<string>();
 
+        CachePlayer();
+        float luck = _player?.LuckBonus ?? 0f;
+
         List<string> picked = new();
         for (int i = 0; i < count && available.Count > 0; i++)
         {
-            PerkData selected = WeightedRandom(available);
+            PerkData selected = WeightedRandom(available, luck);
             picked.Add(selected.Id);
             available.Remove(selected);
         }
@@ -282,23 +285,35 @@ public partial class PerkManager : Node
         return picked.ToArray();
     }
 
-    private static PerkData WeightedRandom(List<PerkData> perks)
+    /// <summary>
+    /// Sélection pondérée. La luck booste le poids des perks rares vers 1.0.
+    /// </summary>
+    private static PerkData WeightedRandom(List<PerkData> perks, float luck)
     {
         float totalWeight = 0f;
         foreach (PerkData perk in perks)
-            totalWeight += perk.Weight;
+            totalWeight += GetAdjustedWeight(perk, luck);
 
         float roll = (float)(GD.Randf() * totalWeight);
         float cumulative = 0f;
 
         foreach (PerkData perk in perks)
         {
-            cumulative += perk.Weight;
+            cumulative += GetAdjustedWeight(perk, luck);
             if (roll <= cumulative)
                 return perk;
         }
 
         return perks[perks.Count - 1];
+    }
+
+    private static float GetAdjustedWeight(PerkData perk, float luck)
+    {
+        float w = perk.Weight;
+        // La luck rapproche les poids rares (< 1.0) vers 1.0
+        if (luck > 0f && w < 1f)
+            w = Mathf.Lerp(w, 1f, luck);
+        return w;
     }
 
     /// <summary>Active/desactive l'Appel du Vide et emet les modificateurs de difficulte.</summary>

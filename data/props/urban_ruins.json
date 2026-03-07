@@ -1,0 +1,248 @@
+{
+    "biome_id": "urban_ruins",
+    "density": 0.20,
+    "props": [
+        {
+            "id": "collapsed_building",
+            "name": "Immeuble effondre",
+            "weight": 0.3,
+            "terrain": ["concrete"],
+            "sprite_base": "assets/sprites/props/urban_ruins/prop_collapsed_building.png",
+            "collision_radius": 16,
+            "collision_offset_y": 0,
+            "min_distance": 6,
+            "variants": 1
+        },
+        {
+            "id": "concrete_wall",
+            "name": "Mur beton debout",
+            "weight": 1.8,
+            "terrain": ["concrete", "grass"],
+            "sprite_base": "assets/sprites/props/urban_ruins/prop_concrete_wall.png",
+            "collision_radius": 10,
+            "collision_offset_y": 0,
+            "min_distance": 3,
+            "variants": 1
+        },
+        {
+            "id": "concrete_wall_v2",
+            "name": "Mur beton fissure",
+            "weight": 1.2,
+            "terrain": ["concrete", "grass"],
+            "sprite_base": "assets/sprites/props/urban_ruins/prop_concrete_wall_v2.png",
+            "collision_radius": 10,
+            "collision_offset_y": 0,
+            "min_distance": 3,
+            "variants": 1
+        },
+        {
+            "id": "concrete_wall_v3",
+            "name": "Mur beton effondre",
+            "weight": 0.8,
+            "terrain": ["concrete"],
+            "sprite_base": "assets/sprites/props/urban_ruins/prop_concrete_wall_v3.png",
+            "collision_radius": 10,
+            "collision_offset_y": 0,
+            "min_distance": 3,
+            "variants": 1
+        },
+        {
+            "id": "brick_wall",
+            "name": "Mur brique expose",
+            "weight": 1.0,
+            "terrain": ["concrete"],
+            "sprite_base": "assets/sprites/props/urban_ruins/prop_brick_wall.png",
+            "collision_radius": 8,
+            "collision_offset_y": 0,
+            "min_distance": 3,
+            "variants": 1
+        },
+        {
+            "id": "steel_beam",
+            "name": "Poutrelle acier",
+            "weight": 0.8,
+            "terrain": ["concrete"],
+            "sprite_base": "assets/sprites/props/urban_ruins/prop_steel_beam.png",
+            "collision_radius": 6,
+            "collision_offset_y": 0,
+            "min_distance": 3,
+            "variants": 1
+        },
+        {
+            "id": "steel_beam_diagonal",
+            "name": "Poutrelle acier diagonale",
+            "weight": 0.5,
+            "terrain": ["concrete"],
+            "sprite_base": "assets/sprites/props/urban_ruins/prop_steel_beam_diagonal.png",
+            "collision_radius": 6,
+            "collision_offset_y": 0,
+            "min_distance": 3,
+            "variants": 1
+        },
+        {
+            "id": "concrete_debris",
+            "name": "Debris beton",
+            "weight": 2.5,
+            "terrain": ["concrete", "grass"],
+            "sprite_base": "assets/sprites/props/urban_ruins/prop_concrete_debris.png",
+            "collision_radius": 0,
+            "collision_offset_y": 0,
+            "min_distance": 1,
+            "variants": 1
+        },
+        {
+            "id": "concrete_debris_v2",
+            "name": "Debris beton (var 2)",
+            "weight": 2.0,
+            "terrain": ["concrete", "grass"],
+            "sprite_base": "assets/sprites/props/urban_ruins/prop_concrete_debris_v2.png",
+            "collision_radius": 0,
+            "collision_offset_y": 0,
+            "min_distance": 1,
+            "variants": 1
+        },
+        {
+            "id": "concrete_debris_v3",
+            "name": "Debris beton (var 3)",
+            "weight": 1.5,
+            "terrain": ["concrete"],
+            "sprite_base": "assets/sprites/props/urban_ruins/prop_concrete_debris_v3.png",
+            "collision_radius": 0,
+            "collision_offset_y": 0,
+            "min_distance": 1,
+            "variants": 1
+        },
+        {
+            "id": "overturned_desk",
+            "name": "Bureau renverse",
+            "weight": 0.5,
+            "terrain": ["concrete"],
+            "sprite_base": "assets/sprites/props/urban_ruins/prop_overturned_desk.png",
+            "collision_radius": 0,
+            "collision_offset_y": 0,
+            "min_distance": 3,
+            "variants": 1
+        },
+        {
+            "id": "urban_car",
+            "name": "Voiture abandonnee",
+            "weight": 0.4,
+            "terrain": ["concrete", "grass"],
+            "sprite_base": "assets/sprites/props/urban_ruins/prop_urban_car.png",
+            "collision_radius": 12,
+            "collision_offset_y": 0,
+            "min_distance": 5,
+            "variants": 1
+        },
+        {
+            "id": "traffic_light",
+            "name": "Feu de signalisation",
+            "weight": 0.3,
+            "terrain": ["concrete"],
+            "sprite_base": "assets/sprites/props/urban_ruins/prop_traffic_light.png",
+            "collision_radius": 3,
+            "collision_offset_y": 0,
+            "min_distance": 5,
+            "variants": 1
+        },
+        {
+            "id": "dumpster",
+            "name": "Conteneur",
+            "weight": 0.4,
+            "terrain": ["concrete"],
+            "sprite_base": "assets/sprites/props/urban_ruins/prop_dumpster.png",
+            "collision_radius": 4,
+            "collision_offset_y": 0,
+            "min_distance": 4,
+            "variants": 1
+        },
+        {
+            "id": "dumpster_v2",
+            "name": "Conteneur (var 2)",
+            "weight": 0.3,
+            "terrain": ["concrete"],
+            "sprite_base": "assets/sprites/props/urban_ruins/prop_dumpster_v2.png",
+            "collision_radius": 4,
+            "collision_offset_y": 0,
+            "min_distance": 4,
+            "variants": 1
+        },
+        {
+            "id": "chain_link_fence",
+            "name": "Cloture grillagee",
+            "weight": 0.6,
+            "terrain": ["concrete", "grass"],
+            "sprite_base": "assets/sprites/props/urban_ruins/prop_chain_link_fence.png",
+            "collision_radius": 6,
+            "collision_offset_y": 0,
+            "min_distance": 4,
+            "variants": 1
+        },
+        {
+            "id": "collapsed_stairs",
+            "name": "Escalier effondre",
+            "weight": 0.4,
+            "terrain": ["concrete"],
+            "sprite_base": "assets/sprites/props/urban_ruins/prop_collapsed_stairs.png",
+            "collision_radius": 8,
+            "collision_offset_y": 0,
+            "min_distance": 5,
+            "variants": 1
+        },
+        {
+            "id": "supermarket_shelves",
+            "name": "Etageres vides",
+            "weight": 0.3,
+            "terrain": ["concrete"],
+            "sprite_base": "assets/sprites/props/urban_ruins/prop_supermarket_shelves.png",
+            "collision_radius": 8,
+            "collision_offset_y": 0,
+            "min_distance": 5,
+            "variants": 1
+        },
+        {
+            "id": "phone_booth",
+            "name": "Cabine telephonique",
+            "weight": 0.2,
+            "terrain": ["concrete"],
+            "sprite_base": "assets/sprites/props/urban_ruins/prop_phone_booth.png",
+            "collision_radius": 4,
+            "collision_offset_y": 0,
+            "min_distance": 6,
+            "variants": 1
+        },
+        {
+            "id": "mailbox",
+            "name": "Boite aux lettres",
+            "weight": 0.4,
+            "terrain": ["concrete", "grass"],
+            "sprite_base": "assets/sprites/props/urban_ruins/prop_mailbox.png",
+            "collision_radius": 0,
+            "collision_offset_y": 0,
+            "min_distance": 4,
+            "variants": 1
+        },
+        {
+            "id": "graffiti_wall",
+            "name": "Mur graffiti",
+            "weight": 0.3,
+            "terrain": ["concrete"],
+            "sprite_base": "assets/sprites/props/urban_ruins/prop_graffiti_wall.png",
+            "collision_radius": 6,
+            "collision_offset_y": 0,
+            "min_distance": 6,
+            "variants": 1
+        },
+        {
+            "id": "torn_billboard",
+            "name": "Affiche dechiree",
+            "weight": 0.2,
+            "terrain": ["concrete", "grass"],
+            "sprite_base": "assets/sprites/props/urban_ruins/prop_torn_billboard.png",
+            "collision_radius": 5,
+            "collision_offset_y": 0,
+            "min_distance": 6,
+            "variants": 1
+        }
+    ]
+}

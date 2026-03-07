@@ -316,6 +316,33 @@ public partial class HUD : CanvasLayer
         return icon;
     }
 
+    /// <summary>
+    /// Supprime la couleur de fond d'une texture en remplaçant les pixels proches
+    /// de la couleur du coin (0,0) par du transparent. Utile pour les icônes avec fond opaque.
+    /// </summary>
+    private static Texture2D RemoveIconBackground(Texture2D source, float tolerance = 0.15f)
+    {
+        Image img = source.GetImage();
+        if (img == null) return source;
+        Color bgColor = img.GetPixel(0, 0);
+        int w = img.GetWidth();
+        int h = img.GetHeight();
+        for (int y = 0; y < h; y++)
+        {
+            for (int x = 0; x < w; x++)
+            {
+                Color px = img.GetPixel(x, y);
+                float dist = Mathf.Sqrt(
+                    Mathf.Pow(px.R - bgColor.R, 2) +
+                    Mathf.Pow(px.G - bgColor.G, 2) +
+                    Mathf.Pow(px.B - bgColor.B, 2));
+                if (dist < tolerance)
+                    img.SetPixel(x, y, new Color(0, 0, 0, 0));
+            }
+        }
+        return ImageTexture.CreateFromImage(img);
+    }
+
     private static ColorRect MakeColorBar(Color color, Vector2 size)
     {
         ColorRect rect = new();
@@ -404,8 +431,10 @@ public partial class HUD : CanvasLayer
     {
         float baseY = 22;
 
-        // Heart icon
+        // Heart icon (fond opaque supprimé au runtime)
         _heartIcon = MakeIcon("res://assets/ui/hud/hud_icon_heart.png", 14);
+        if (_heartIcon.Texture != null)
+            _heartIcon.Texture = RemoveIconBackground(_heartIcon.Texture);
         _heartIcon.OffsetLeft = 6;
         _heartIcon.OffsetTop = baseY;
         _heartIcon.OffsetRight = 20;
@@ -427,6 +456,7 @@ public partial class HUD : CanvasLayer
         _hpBarContainer.AddChild(_hpBarBg);
 
         _hpBarFill = MakeColorBar(PalRedBlood, new Vector2(hpBarW - 2, hpBarH - 2));
+        _hpBarFill.CustomMinimumSize = new Vector2(0, hpBarH - 2);
         _hpBarFill.Position = new Vector2(1, 1);
         _hpBarContainer.AddChild(_hpBarFill);
 
@@ -442,8 +472,8 @@ public partial class HUD : CanvasLayer
         hpBorderRight.Position = new Vector2(hpBarW - 1, 0);
         _hpBarContainer.AddChild(hpBorderRight);
 
-        _hpValueLabel = MakeLabel("100/100", 8, PalWhiteOff);
-        _hpValueLabel.Position = new Vector2(2, -1);
+        _hpValueLabel = MakeLabel("100/100", 10, PalWhiteOff);
+        _hpValueLabel.Position = new Vector2(2, -3);
         _hpValueLabel.Size = new Vector2(hpBarW - 4, hpBarH);
         _hpValueLabel.HorizontalAlignment = HorizontalAlignment.Center;
         _hpValueLabel.VerticalAlignment = VerticalAlignment.Center;
@@ -502,6 +532,8 @@ public partial class HUD : CanvasLayer
     private void BuildScoreArea()
     {
         _scoreIcon = MakeIcon("res://assets/ui/hud/hud_icon_score.png", 14);
+        if (_scoreIcon.Texture != null)
+            _scoreIcon.Texture = RemoveIconBackground(_scoreIcon.Texture);
         _scoreIcon.AnchorLeft = 1f;
         _scoreIcon.AnchorRight = 1f;
         _scoreIcon.OffsetLeft = -64;
