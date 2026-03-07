@@ -153,6 +153,9 @@ public partial class GameBootstrap : Node
             }
         };
 
+        DebugActionPanel debugPanel = new DebugActionPanel { Name = "DebugActionPanel" };
+        GetNode("..").CallDeferred("add_child", debugPanel);
+
         GD.Print($"[GameBootstrap] Run started with {player.CharacterId}");
     }
 

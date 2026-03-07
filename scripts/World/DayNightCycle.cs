@@ -78,7 +78,7 @@ public partial class DayNightCycle : Node
         }
     }
 
-    private void AdvancePhase()
+    public void AdvancePhase()
     {
         DayPhase previousPhase = _currentPhase;
 

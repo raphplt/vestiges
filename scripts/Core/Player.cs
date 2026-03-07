@@ -66,6 +66,9 @@ public partial class Player : CharacterBody2D
     // AI Control (set by AIController in simulation mode)
     public bool IsAIControlled;
     public Vector2 AIInputOverride;
+    
+    // Debug
+    public bool IsGodMode { get; set; } = false;
 
     private GameManager _gameManager;
     private GroupCache _groupCache;
@@ -208,6 +211,7 @@ public partial class Player : CharacterBody2D
     public float CritMultiplier => _critMultiplier;
     public bool IsDead => _isDead;
     public bool IsHarvesting => _isHarvesting;
+    public Inventory Inventory => _inventory;
     public string CharacterId => _characterId;
     public WeaponInstance EquippedWeapon => _weaponSlots.Count > 0 ? _weaponSlots[0] : null;
     public IReadOnlyList<WeaponInstance> WeaponSlots => _weaponSlots;
@@ -1389,7 +1393,7 @@ public partial class Player : CharacterBody2D
 
     public void TakeDamage(float damage)
     {
-        if (_currentHp <= 0)
+        if (_currentHp <= 0 || IsGodMode)
             return;
 
         // Dodge check
@@ -2670,18 +2674,34 @@ public partial class Player : CharacterBody2D
             tween.TweenProperty(fxRoot, "rotation", fxRoot.Rotation + sweep, 0.11f);
         tween.Chain().TweenCallback(Callable.From(() => fxRoot.QueueFree()));
 
-        // VFX sprite animé selon le type d'arme
+        // VFX sprite animé selon le type d'arme et le pattern d'attaque
         string weaponId = _equippedWeapon?.Id ?? "";
-        if (weaponId.Contains("lance") || weaponId.Contains("spear"))
+        string attackPattern = _equippedWeapon?.AttackPattern?.ToLower() ?? "arc";
+
+        if (attackPattern == "circular" || weaponId.Contains("fouet") || weaponId.Contains("whip"))
+        {
+            // Fouet / circulaire : frappe circulaire 4 frames
+            Node2D fouetVfx = Combat.VfxFactory.CreateFouetVfx(GlobalPosition, slashColor);
+            if (fouetVfx != null)
+                GetTree().CurrentScene.AddChild(fouetVfx);
+        }
+        else if (weaponId.Contains("lance") || weaponId.Contains("spear") || attackPattern == "linear")
         {
             // Lance : thrust linéaire au lieu du slash en arc
             Node2D thrustVfx = Combat.VfxFactory.CreateThrustVfx(GlobalPosition, direction, slashColor);
             if (thrustVfx != null)
                 GetTree().CurrentScene.AddChild(thrustVfx);
         }
+        else if (weaponId.Contains("masse") || weaponId.Contains("hammer") || weaponId.Contains("marteau"))
+        {
+            // Masse/marteau : impact AoE onde de choc
+            Node2D masseVfx = Combat.VfxFactory.CreateMasseImpactVfx(GlobalPosition + direction * 8f, slashColor);
+            if (masseVfx != null)
+                GetTree().CurrentScene.AddChild(masseVfx);
+        }
         else
         {
-            // Épée/masse : slash en arc classique
+            // Épée et autres : slash en arc classique
             Node2D slashParticles = Combat.VfxFactory.CreateSlashVfx(
                 GlobalPosition, direction, range, arcAngle, slashColor);
             if (slashParticles != null)

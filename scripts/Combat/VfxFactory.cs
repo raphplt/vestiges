@@ -1052,6 +1052,107 @@ public static class VfxFactory
 	}
 
 	// =========================================================================
+	// === Orbe Essence VFX — projectile homing animé 3 frames loop ===
+	// =========================================================================
+
+	/// <summary>
+	/// Crée un VFX d'orbe d'Essence animé (3 frames en boucle).
+	/// Pour les projectiles homing du bâton d'Essence et armes similaires.
+	/// </summary>
+	public static AnimatedSprite2D CreateOrbEssenceSprite()
+	{
+		SpriteFrames frames = new();
+		frames.AddAnimation("pulse");
+		frames.SetAnimationSpeed("pulse", 8);
+		frames.SetAnimationLoop("pulse", true);
+		frames.AddFrame("pulse", OrbEssenceFrame1);
+		frames.AddFrame("pulse", OrbEssenceFrame2);
+		frames.AddFrame("pulse", OrbEssenceFrame3);
+
+		AnimatedSprite2D sprite = new()
+		{
+			SpriteFrames = frames,
+			TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
+		};
+		sprite.Play("pulse");
+
+		return sprite;
+	}
+
+	// =========================================================================
+	// === Fouet VFX — frappe circulaire 4 frames ===
+	// =========================================================================
+
+	/// <summary>
+	/// Crée un VFX de frappe circulaire de fouet (4 frames).
+	/// Animation rapide de la lanière qui claque en cercle.
+	/// </summary>
+	public static Node2D CreateFouetVfx(Vector2 position, Color color)
+	{
+		if (_particleLevel == ParticleLevel.Off)
+			return null;
+
+		var root = new Node2D { GlobalPosition = position };
+
+		SpriteFrames frames = new();
+		frames.AddAnimation("whip");
+		frames.SetAnimationSpeed("whip", 20);
+		frames.SetAnimationLoop("whip", false);
+		frames.AddFrame("whip", FouetFrame1);
+		frames.AddFrame("whip", FouetFrame2);
+		frames.AddFrame("whip", FouetFrame3);
+		frames.AddFrame("whip", FouetFrame4);
+
+		AnimatedSprite2D sprite = new()
+		{
+			SpriteFrames = frames,
+			TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
+			SelfModulate = new Color(color, 0.9f),
+		};
+		sprite.Play("whip");
+		root.AddChild(sprite);
+
+		// Particules complémentaires (étincelles du claquement)
+		if (_particleLevel != ParticleLevel.Off)
+		{
+			var particles = new GpuParticles2D
+			{
+				Amount = ScaleAmount(6),
+				Lifetime = 0.2f,
+				Explosiveness = 0.9f,
+				OneShot = true,
+				Texture = SparkTexture,
+				TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
+			};
+
+			var mat = new ParticleProcessMaterial
+			{
+				EmissionShape = ParticleProcessMaterial.EmissionShapeEnum.Sphere,
+				EmissionSphereRadius = 10f,
+				Direction = new Vector3(0, 0, 0),
+				Spread = 180f,
+				InitialVelocityMin = 30f,
+				InitialVelocityMax = 60f,
+				Gravity = new Vector3(0, 20, 0),
+				ScaleMin = 0.3f,
+				ScaleMax = 0.8f,
+				Color = new Color(color, 0.7f),
+				DampingMin = 40f,
+				DampingMax = 80f,
+			};
+			particles.ProcessMaterial = mat;
+			particles.Emitting = true;
+			root.AddChild(particles);
+		}
+
+		var timer = new Timer { WaitTime = 0.4f, OneShot = true, Autostart = true };
+		timer.Timeout += root.QueueFree;
+		root.AddChild(timer);
+
+		return root;
+	}
+
+	// =========================================================================
 	// === Textures procédurales ===
 	// =========================================================================
 

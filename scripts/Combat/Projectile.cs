@@ -40,11 +40,13 @@ public partial class Projectile : Area2D
     private static Texture2D _boltTexture;
     private static Texture2D _stoneTexture;
     private static Texture2D _impactTexture;
+    private static Texture2D _orbEssenceFrame1;
 
     private static Texture2D ArrowTexture => _arrowTexture ??= GD.Load<Texture2D>("res://assets/vfx/vfx_arrow.png");
     private static Texture2D BoltTexture => _boltTexture ??= GD.Load<Texture2D>("res://assets/vfx/vfx_bolt.png");
     private static Texture2D StoneTexture => _stoneTexture ??= GD.Load<Texture2D>("res://assets/vfx/vfx_stone_projectile.png");
     private static Texture2D ImpactTexture => _impactTexture ??= GD.Load<Texture2D>("res://assets/vfx/vfx_impact_projectile.png");
+    private static Texture2D OrbEssenceTexture => _orbEssenceFrame1 ??= GD.Load<Texture2D>("res://assets/vfx/vfx_orb_essence_f1.png");
 
     public void Initialize(Vector2 direction, float damage, int pierce = 0, bool isCrit = false, Player owner = null, bool isRicochet = false)
     {
@@ -106,6 +108,22 @@ public partial class Projectile : Area2D
     private void AssignProjectileSprite()
     {
         string weaponId = SourceWeapon?.Id ?? "";
+        string attackPattern = SourceWeapon?.AttackPattern?.ToLower() ?? "linear";
+
+        // Orbe d'Essence animé pour projectiles homing/essence
+        if (attackPattern == "homing" || weaponId.Contains("essence") || weaponId.Contains("baton_essence"))
+        {
+            // Remplacer le sprite statique par un AnimatedSprite2D pour l'orbe
+            AnimatedSprite2D orbSprite = VfxFactory.CreateOrbEssenceSprite();
+            if (orbSprite != null && _sprite != null)
+            {
+                orbSprite.Position = _sprite.Position;
+                orbSprite.SelfModulate = new Color(0.45f, 0.85f, 1f);
+                _sprite.GetParent()?.AddChild(orbSprite);
+                _sprite.Visible = false; // Masquer le sprite statique, l'orbe animé prend le relais
+            }
+            return;
+        }
 
         // Sélection du sprite basée sur l'ID de l'arme
         Texture2D texture;

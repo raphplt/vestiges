@@ -666,6 +666,29 @@ public partial class SpawnManager : Node2D
 		return Mathf.Max(0.5f, multiplier);
 	}
 
+	public void ForceSpawnEnemy(string enemyId, Vector2 spawnPos)
+	{
+		EnemyData data = EnemyDataLoader.Get(enemyId);
+		if (data == null)
+			return;
+
+		float elapsedMinutes = _elapsedTime / 60f;
+		float hpScale, dmgScale;
+		ComputeScaling(elapsedMinutes, out hpScale, out dmgScale);
+
+		Enemy enemy = _pool.Get();
+		enemy.GlobalPosition = spawnPos;
+		_enemyContainer.AddChild(enemy);
+		enemy.Initialize(data, hpScale, dmgScale);
+		float speedMultiplier = ComputeEnemySpeedMultiplier(data, elapsedMinutes, spawnPos);
+		float aggressionMultiplier = ComputeEnemyAggressionMultiplier(data, elapsedMinutes);
+		enemy.ApplySpawnTuning(speedMultiplier, aggressionMultiplier);
+		enemy.SetNightTarget(_currentPhase == DayPhase.Night, _foyerPosition);
+
+		_eventBus.EmitSignal(EventBus.SignalName.EnemySpawned, enemyId, hpScale, dmgScale);
+		GD.Print($"[SpawnManager] Debug spawned: {enemyId} at {spawnPos}");
+	}
+
 	private float ComputeEnemyAggressionMultiplier(EnemyData data, float elapsedMinutes)
 	{
 		float multiplier = _enemyAggressionBaseMultiplier + _enemyAggressionGrowthPerMinute * elapsedMinutes;
