@@ -5,7 +5,9 @@
       "Bash(cat data/biomes/*.json)",
       "Bash(python scripts/generate_urban_ruins_props.py)",
       "Bash(python scripts/generate_icon.py)",
-      "Bash(python scripts/generate_hub_title.py)"
+      "Bash(python scripts/generate_hub_title.py)",
+      "Bash(rtk read \"C:\\\\Users\\\\rapha\\\\Documents\\\\Travail\\\\Projets\\\\vestiges\\\\data\\\\weapons\\\\weapons.json\")",
+      "Bash(python3 -c \":*)"
     ]
   }
 }

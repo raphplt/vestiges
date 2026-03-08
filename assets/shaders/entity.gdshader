@@ -83,8 +83,7 @@ void fragment() {
 		if (aberration_amount > 0.0) {
 			result = mix(result, aberration_color.rgb, aberration_amount * 0.3);
 		}
-		result = mix(result, flash_color.rgb, flash_amount);
-		final_color = vec4(result * COLOR.rgb, tex.a * COLOR.a);
+		final_color = vec4(result, tex.a);
 	}
 
 	COLOR = final_color;

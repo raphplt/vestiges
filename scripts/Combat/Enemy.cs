@@ -8,9 +8,9 @@ namespace Vestiges.Combat;
 
 public partial class Enemy : CharacterBody2D
 {
-	private const float MeleeRange = 25f;
-	private const float MeleeAttackCooldown = 1.0f;
-	private const float RangedAttackCooldown = 1.5f;
+	private const float MeleeRange = 38f;
+	private const float MeleeAttackCooldown = 0.75f;
+	private const float RangedAttackCooldown = 1.1f;
 	private const float DeathTweenDuration = 0.3f;
 	private const float DissolveDuration = 0.6f;
 	private const float PlayerProximityRange = 80f;

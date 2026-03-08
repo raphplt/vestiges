@@ -4,9 +4,9 @@
     "type": "ranged",
     "stats": {
         "hp": 15,
-        "speed": 40,
+        "speed": 55,
         "damage": 8,
-        "attack_range": 200,
+        "attack_range": 275,
         "xp_reward": 15
     },
     "visual": {
