@@ -127,7 +127,9 @@ public partial class SpawnManager : Node2D
 	{
 		{ "forest_reclaimed", "colosse_forest" },
 		{ "urban_ruins", "colosse_urban" },
-		{ "swamp", "colosse_swamp" }
+		{ "swamp", "colosse_swamp" },
+		{ "wild_fields", "colosse_forest" },
+		{ "collapsed_quarry", "colosse_urban" }
 	};
 	private const int ColosseMinNight = 3;
 	private const string FallbackColosse = "colosse_forest";

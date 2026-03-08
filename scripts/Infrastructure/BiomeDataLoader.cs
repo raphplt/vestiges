@@ -23,6 +23,12 @@ public class BiomeData
     /// Ex: "grass" → ["foret/tile_foret_sol_base", "foret/tile_foret_sol_v2"]
     /// </summary>
     public Dictionary<string, List<string>> TileSources = new();
+
+    /// <summary>
+    /// Poids relatif pour la taille du secteur angulaire sur la map.
+    /// Plus le poids est élevé, plus le biome occupe d'espace.
+    /// </summary>
+    public float MapWeight = 1.0f;
 }
 
 public static class BiomeDataLoader
@@ -158,6 +164,9 @@ public static class BiomeDataLoader
 
         if (dict.ContainsKey("poi_count_max"))
             biome.PoiCountMax = (int)dict["poi_count_max"].AsDouble();
+
+        if (dict.ContainsKey("map_weight"))
+            biome.MapWeight = (float)dict["map_weight"].AsDouble();
 
         if (dict.ContainsKey("tile_sources"))
         {

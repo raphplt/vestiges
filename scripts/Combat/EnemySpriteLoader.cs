@@ -140,8 +140,6 @@ public static class EnemySpriteLoader
 		if (ResourceLoader.Exists($"{basePath}/enemy_{folder}_SE_idle_00.png"))
 			return folder;
 
-		// Tenter des variantes : retirer les préfixes avant le dernier underscore
-		// ex: "void_brute" → "brute", "treant_corrompu" → "corrompu"
 		int underscoreIdx = folder.IndexOf('_');
 		while (underscoreIdx >= 0 && underscoreIdx < folder.Length - 1)
 		{

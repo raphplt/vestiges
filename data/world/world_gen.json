@@ -3,11 +3,13 @@
     "foyer_clearance": 4,
     "ca_iterations": 4,
     "edge_fade_width": 5,
-    "biome_count": 4,
+    "biome_count": 5,
     "available_biomes": [
         "forest_reclaimed",
         "urban_ruins",
-        "swamp"
+        "swamp",
+        "wild_fields",
+        "collapsed_quarry"
     ],
     "zones": [
         {

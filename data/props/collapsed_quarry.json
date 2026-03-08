@@ -1,0 +1,105 @@
+{
+    "biome_id": "collapsed_quarry",
+    "density": 0.15,
+    "props": [
+        {
+            "id": "concrete_debris",
+            "name": "Debris beton",
+            "weight": 3.0,
+            "terrain": ["concrete", "grass"],
+            "sprite_base": "assets/sprites/props/urban_ruins/prop_concrete_debris.png",
+            "collision_radius": 0,
+            "collision_offset_y": 0,
+            "min_distance": 1,
+            "variants": 1
+        },
+        {
+            "id": "concrete_debris_v2",
+            "name": "Debris beton (var 2)",
+            "weight": 2.5,
+            "terrain": ["concrete", "grass"],
+            "sprite_base": "assets/sprites/props/urban_ruins/prop_concrete_debris_v2.png",
+            "collision_radius": 0,
+            "collision_offset_y": 0,
+            "min_distance": 1,
+            "variants": 1
+        },
+        {
+            "id": "rock_mossy",
+            "name": "Rocher moussu",
+            "weight": 1.5,
+            "terrain": ["forest", "grass", "concrete"],
+            "sprite_base": "assets/sprites/props/forest/prop_rock_mossy.png",
+            "collision_radius": 6,
+            "collision_offset_y": 0,
+            "min_distance": 2,
+            "variants": 1
+        },
+        {
+            "id": "steel_beam",
+            "name": "Poutrelle acier",
+            "weight": 1.2,
+            "terrain": ["concrete"],
+            "sprite_base": "assets/sprites/props/urban_ruins/prop_steel_beam.png",
+            "collision_radius": 6,
+            "collision_offset_y": 0,
+            "min_distance": 3,
+            "variants": 1
+        },
+        {
+            "id": "steel_beam_diagonal",
+            "name": "Poutrelle acier diagonale",
+            "weight": 0.8,
+            "terrain": ["concrete"],
+            "sprite_base": "assets/sprites/props/urban_ruins/prop_steel_beam_diagonal.png",
+            "collision_radius": 6,
+            "collision_offset_y": 0,
+            "min_distance": 3,
+            "variants": 1
+        },
+        {
+            "id": "concrete_wall_v3",
+            "name": "Mur beton effondre",
+            "weight": 0.6,
+            "terrain": ["concrete"],
+            "sprite_base": "assets/sprites/props/urban_ruins/prop_concrete_wall_v3.png",
+            "collision_radius": 10,
+            "collision_offset_y": 0,
+            "min_distance": 4,
+            "variants": 1
+        },
+        {
+            "id": "chain_link_fence",
+            "name": "Cloture grillagee",
+            "weight": 0.5,
+            "terrain": ["concrete", "grass"],
+            "sprite_base": "assets/sprites/props/urban_ruins/prop_chain_link_fence.png",
+            "collision_radius": 6,
+            "collision_offset_y": 0,
+            "min_distance": 4,
+            "variants": 1
+        },
+        {
+            "id": "stump",
+            "name": "Souche",
+            "weight": 0.4,
+            "terrain": ["forest", "grass"],
+            "sprite_base": "assets/sprites/props/forest/prop_stump.png",
+            "collision_radius": 4,
+            "collision_offset_y": 0,
+            "min_distance": 3,
+            "variants": 1
+        },
+        {
+            "id": "bush",
+            "name": "Buisson resistant",
+            "weight": 0.3,
+            "terrain": ["forest"],
+            "sprite_base": "assets/sprites/props/forest/prop_bush.png",
+            "collision_radius": 0,
+            "collision_offset_y": 0,
+            "min_distance": 2,
+            "variants": 1
+        }
+    ]
+}

@@ -35,8 +35,8 @@ public class WorldGenerator
     private List<BiomeData> _activeBiomes = new();
     private float[] _sectorBoundaries;
 
-    private const float BoundaryNoiseAmplitude = 0.25f;
-    private const float BoundaryNoiseFrequency = 3.0f;
+    private const float BoundaryNoiseAmplitude = 0.35f;
+    private FastNoiseLite _boundaryNoise;
 
     public int MapRadius => _mapRadius;
     public int FoyerClearance => _foyerClearance;
@@ -245,7 +245,7 @@ public class WorldGenerator
         if (availableBiomes == null || availableBiomes.Count == 0)
             return;
 
-        biomeCount = Mathf.Clamp(biomeCount, 2, Mathf.Min(availableBiomes.Count, 4));
+        biomeCount = Mathf.Clamp(biomeCount, 2, availableBiomes.Count);
 
         List<BiomeData> pool = new(availableBiomes);
         _activeBiomes.Clear();
@@ -257,13 +257,27 @@ public class WorldGenerator
         }
 
         float startAngle = _rng.Randf() * Mathf.Tau;
-        float sectorSize = Mathf.Tau / biomeCount;
+
+        // Secteurs pondérés par MapWeight : les biomes avec plus de poids occupent plus d'espace
+        float totalWeight = 0f;
+        foreach (BiomeData b in _activeBiomes)
+            totalWeight += b.MapWeight;
 
         _sectorBoundaries = new float[biomeCount];
+        float cumAngle = startAngle;
         for (int i = 0; i < biomeCount; i++)
-            _sectorBoundaries[i] = startAngle + sectorSize * i;
+        {
+            _sectorBoundaries[i] = cumAngle;
+            cumAngle += Mathf.Tau * (_activeBiomes[i].MapWeight / totalWeight);
+        }
 
-        float noisePhase = _rng.Randf() * Mathf.Tau;
+        // Bruit de frontière organique (Simplex FBM au lieu de sin())
+        _boundaryNoise = new FastNoiseLite();
+        _boundaryNoise.NoiseType = FastNoiseLite.NoiseTypeEnum.Simplex;
+        _boundaryNoise.Frequency = 0.04f;
+        _boundaryNoise.FractalType = FastNoiseLite.FractalTypeEnum.Fbm;
+        _boundaryNoise.FractalOctaves = 3;
+        _boundaryNoise.Seed = (int)_rng.Randi();
 
         for (int gx = 0; gx < _size; gx++)
         {
@@ -288,7 +302,7 @@ public class WorldGenerator
                 float angle = Mathf.Atan2(y, x);
                 if (angle < 0) angle += Mathf.Tau;
 
-                float noise = Mathf.Sin(dist * BoundaryNoiseFrequency * 0.1f + noisePhase) * BoundaryNoiseAmplitude;
+                float noise = _boundaryNoise.GetNoise2D(gx, gy) * BoundaryNoiseAmplitude;
                 float perturbedAngle = angle + noise;
                 if (perturbedAngle < 0) perturbedAngle += Mathf.Tau;
                 if (perturbedAngle >= Mathf.Tau) perturbedAngle -= Mathf.Tau;

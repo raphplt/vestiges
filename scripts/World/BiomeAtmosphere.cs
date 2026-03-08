@@ -100,8 +100,9 @@ public partial class BiomeAtmosphere : Node2D
 		{
 			"swamp" => 0.9f,
 			"forest_reclaimed" => 0.2f,
-			"quarry" => 0.3f,
+			"collapsed_quarry" => 0.3f,
 			"urban_ruins" => 0.1f,
+			"wild_fields" => 0.05f,
 			_ => 0f
 		};
 	}
@@ -112,8 +113,9 @@ public partial class BiomeAtmosphere : Node2D
 		{
 			"swamp" => new Color(0.48f, 0.54f, 0.60f, 1f),
 			"forest_reclaimed" => new Color(0.30f, 0.40f, 0.28f, 1f),
-			"quarry" => new Color(0.45f, 0.40f, 0.35f, 1f),
+			"collapsed_quarry" => new Color(0.45f, 0.40f, 0.35f, 1f),
 			"urban_ruins" => new Color(0.35f, 0.35f, 0.40f, 1f),
+			"wild_fields" => new Color(0.55f, 0.50f, 0.35f, 1f),
 			_ => new Color(0.5f, 0.5f, 0.5f, 1f)
 		};
 	}

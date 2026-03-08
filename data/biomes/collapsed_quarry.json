@@ -18,6 +18,7 @@
     "ambient_color_day": "#B8A080",
     "ambient_color_dusk": "#5A4A6A",
     "danger_level": 3,
+    "map_weight": 0.5,
     "poi_pool": {
         "searchable_building": 0.6,
         "resource_cache": 1.5,
