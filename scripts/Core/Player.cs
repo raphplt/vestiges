@@ -1508,6 +1508,12 @@ public partial class Player : CharacterBody2D
         }
     }
 
+    /// <summary>Multiplie le speed multiplier courant (pour buffs événementiels temporaires).</summary>
+    public void ApplySpeedMultiplier(float factor)
+    {
+        _speedMultiplier *= factor;
+    }
+
     // --- Harvest ---
 
     private void TryStartHarvest()

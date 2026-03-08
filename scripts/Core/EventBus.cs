@@ -86,6 +86,14 @@ public partial class EventBus : Node
     [Signal] public delegate void RandomEventTriggeredEventHandler(string eventId, string eventName);
     [Signal] public delegate void RandomEventEndedEventHandler(string eventId);
 
+    // --- Bonus événementiels ---
+    [Signal] public delegate void ResourceBonusChangedEventHandler(float multiplier);
+    [Signal] public delegate void XpMultiplierChangedEventHandler(float multiplier);
+    [Signal] public delegate void DayTimerPausedEventHandler(bool paused);
+    [Signal] public delegate void PlayerBuffAppliedEventHandler(string buffId, float duration);
+    [Signal] public delegate void FoyerRadiusChangedEventHandler(float newRadius);
+    [Signal] public delegate void FogRevealBurstEventHandler(int cellX, int cellY, int radius);
+
     // --- Difficulte dynamique ---
     [Signal] public delegate void DifficultyModifierChangedEventHandler(float enemyCountMult, float enemyHpMult, float enemyDmgMult, float xpMult);
 

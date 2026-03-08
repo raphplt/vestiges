@@ -1,4 +1,5 @@
 using Godot;
+using Vestiges.Core;
 using Vestiges.Infrastructure;
 
 namespace Vestiges.Base;
@@ -22,6 +23,7 @@ public partial class ResourceNode : StaticBody2D
     private Sprite2D _sprite;
     private Color _originalColor;
     private bool _usesSprite;
+    private float _harvestBonusMult = 1f;
 
     public bool IsExhausted => _harvestsRemaining <= 0;
     public string ResourceId => _resourceId;
@@ -32,6 +34,22 @@ public partial class ResourceNode : StaticBody2D
     {
         _visual = GetNodeOrNull<Polygon2D>("Visual");
         AddToGroup("resources");
+
+        EventBus eventBus = GetNodeOrNull<EventBus>("/root/EventBus");
+        if (eventBus != null)
+            eventBus.ResourceBonusChanged += OnResourceBonusChanged;
+    }
+
+    public override void _ExitTree()
+    {
+        EventBus eventBus = GetNodeOrNull<EventBus>("/root/EventBus");
+        if (eventBus != null)
+            eventBus.ResourceBonusChanged -= OnResourceBonusChanged;
+    }
+
+    private void OnResourceBonusChanged(float multiplier)
+    {
+        _harvestBonusMult = multiplier;
     }
 
     public void Initialize(ResourceData data)
@@ -176,7 +194,8 @@ public partial class ResourceNode : StaticBody2D
         while (_harvestsRemaining > 0)
         {
             _harvestsRemaining--;
-            totalAmount += (int)GD.RandRange(_amountMin, _amountMax + 1);
+            int baseAmount = (int)GD.RandRange(_amountMin, _amountMax + 1);
+            totalAmount += (int)(baseAmount * _harvestBonusMult);
         }
 
         HarvestFlash();

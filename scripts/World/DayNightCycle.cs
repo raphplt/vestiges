@@ -66,8 +66,20 @@ public partial class DayNightCycle : Node
         GD.Print($"[DayNightCycle] Started — Day duration: {_dayDuration}s, Night: {_nightDuration}s");
     }
 
+    private bool _phasePaused;
+
+    /// <summary>Gèle/dégèle le timer de la phase courante (utilisé par Marche des Horloges).</summary>
+    public void SetPhasePaused(bool paused)
+    {
+        _phasePaused = paused;
+        GD.Print($"[DayNightCycle] Phase timer {(paused ? "PAUSED" : "RESUMED")}");
+    }
+
     public override void _Process(double delta)
     {
+        if (_phasePaused)
+            return;
+
         float dt = (float)delta;
         _phaseElapsed += dt;
 

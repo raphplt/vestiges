@@ -11,7 +11,8 @@
     "visual": {
         "color": "#5A5A6E",
         "shape": "square",
-        "size": 34
+        "size": 34,
+        "sprite": "colosse_urban"
     },
     "behavior": "colosse",
     "tier": "miniboss"

@@ -112,6 +112,29 @@ public partial class Foyer : Node2D
         GD.Print("[Foyer] Safe zone disabled (mutator)");
     }
 
+    /// <summary>Modifie temporairement le rayon de sécurité (pour événements).</summary>
+    public void SetTemporarySafeRadius(float newRadius)
+    {
+        _effectiveSafeRadius = newRadius;
+        UpdateSafeZoneVisual();
+        GD.Print($"[Foyer] Safe radius changed to {newRadius}");
+    }
+
+    private void UpdateSafeZoneVisual()
+    {
+        if (_safeZone == null)
+            return;
+
+        int segments = 32;
+        Vector2[] points = new Vector2[segments];
+        for (int i = 0; i < segments; i++)
+        {
+            float angle = Mathf.Tau * i / segments;
+            points[i] = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * _effectiveSafeRadius;
+        }
+        _safeZone.Polygon = points;
+    }
+
     private void OnDayPhaseChanged(string phase)
     {
         float targetEnergy;

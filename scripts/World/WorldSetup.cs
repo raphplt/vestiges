@@ -4,6 +4,7 @@ using Godot;
 using Vestiges.Base;
 using Vestiges.Core;
 using Vestiges.Infrastructure;
+using Vestiges.World.Lore;
 
 namespace Vestiges.World;
 
@@ -147,6 +148,7 @@ public partial class WorldSetup : Node2D
             UrbanPropPlacer.PlaceProps(urbanLayout, _ground, propContainer, _usedCells, Seed);
         }
 
+        SpawnLoreElements();
         InitBiomeAtmosphere();
 
         _respawnTimer = new Timer();
@@ -339,6 +341,257 @@ public partial class WorldSetup : Node2D
         _propSpawner = new PropSpawner { Name = "PropSpawner" };
         AddChild(_propSpawner);
         _propSpawner.SpawnProps(_generator, _ground, propContainer, _usedCells, Seed);
+    }
+
+    /// <summary>
+    /// Place les éléments de lore (props interactifs/décoratifs) sur la map.
+    /// Appelé après SpawnEnvironmentProps, utilise le même système de cells occupées.
+    /// </summary>
+    private void SpawnLoreElements()
+    {
+        Node2D loreContainer = new() { Name = "LoreContainer" };
+        AddChild(loreContainer);
+
+        // Placer après PropContainer pour Z-order correct
+        Node propContainer = GetNodeOrNull("PropContainer");
+        if (propContainer != null)
+            MoveChild(loreContainer, propContainer.GetIndex() + 1);
+
+        int loreCount = 0;
+
+        // --- Pas Interrompus : 2-4 par map, tous biomes ---
+        int footstepCount = (int)GD.RandRange(2, 5);
+        for (int i = 0; i < footstepCount; i++)
+        {
+            Vector2I cell = PickLoreCell(10);
+            if (cell.X == int.MinValue) continue;
+
+            InterruptedFootsteps footsteps = new() { GlobalPosition = _ground.MapToLocal(cell) };
+            loreContainer.AddChild(footsteps);
+            _usedCells.Add(cell);
+            loreCount++;
+        }
+
+        // --- Étagères Vides : 2-3, uniquement en zone urbaine ---
+        int shelfCount = (int)GD.RandRange(2, 4);
+        for (int i = 0; i < shelfCount; i++)
+        {
+            Vector2I cell = PickLoreCellInBiome("urban_ruins", 8);
+            if (cell.X == int.MinValue) continue;
+
+            EmptyShelves shelves = new() { GlobalPosition = _ground.MapToLocal(cell) };
+            loreContainer.AddChild(shelves);
+            _usedCells.Add(cell);
+            loreCount++;
+        }
+
+        // --- Balançoire Fantôme : 0-1, rare, en forêt ---
+        if (GD.Randf() < 0.6f)
+        {
+            Vector2I cell = PickLoreCellInBiome("forest_reclaimed", 15);
+            if (cell.X != int.MinValue)
+            {
+                GhostSwing swing = new() { GlobalPosition = _ground.MapToLocal(cell) };
+                loreContainer.AddChild(swing);
+                _usedCells.Add(cell);
+                loreCount++;
+            }
+        }
+
+        // --- Racines-Lettres : 3-5, en forêt ou bordure forêt/urbain ---
+        int rootCount = (int)GD.RandRange(3, 6);
+        for (int i = 0; i < rootCount; i++)
+        {
+            Vector2I cell = PickLoreCellInBiome("forest_reclaimed", 8);
+            if (cell.X == int.MinValue) continue;
+
+            RootLetters roots = new() { GlobalPosition = _ground.MapToLocal(cell) };
+            loreContainer.AddChild(roots);
+            _usedCells.Add(cell);
+            loreCount++;
+        }
+
+        // --- Panneaux Avalés : 2-3, tous biomes sauf marais ---
+        int signCount = (int)GD.RandRange(2, 4);
+        for (int i = 0; i < signCount; i++)
+        {
+            Vector2I cell = PickLoreCell(10);
+            if (cell.X == int.MinValue) continue;
+
+            // Vérifier qu'on n'est pas en marais
+            BiomeData biome = _generator.GetBiome(cell.X, cell.Y);
+            if (biome != null && biome.Id == "swamp")
+                continue;
+
+            SwallowedSign sign = new() { GlobalPosition = _ground.MapToLocal(cell) };
+            loreContainer.AddChild(sign);
+            _usedCells.Add(cell);
+            loreCount++;
+        }
+
+        // --- Carillons Fantômes : 2-3, en cluster (proches les uns des autres) ---
+        int chimeCount = (int)GD.RandRange(2, 4);
+        Vector2I chimeCenter = PickLoreCell(15);
+        if (chimeCenter.X != int.MinValue)
+        {
+            for (int i = 0; i < chimeCount; i++)
+            {
+                // Cluster : chaque carillon à 3-6 tiles du centre
+                int offsetX = (int)GD.RandRange(-5, 6);
+                int offsetY = (int)GD.RandRange(-5, 6);
+                Vector2I cell = new(chimeCenter.X + offsetX, chimeCenter.Y + offsetY);
+
+                if (!IsValidLoreCell(cell))
+                    continue;
+
+                GhostChime chime = new() { GlobalPosition = _ground.MapToLocal(cell) };
+                loreContainer.AddChild(chime);
+                _usedCells.Add(cell);
+                loreCount++;
+            }
+        }
+
+        // --- Champignons Bioluminescents : 3-5, en forêt (sous-bois/ombre) ---
+        int shroomCount = (int)GD.RandRange(3, 6);
+        for (int i = 0; i < shroomCount; i++)
+        {
+            Vector2I cell = PickLoreCellInBiome("forest_reclaimed", 8);
+            if (cell.X == int.MinValue) continue;
+
+            BioluminescentMushrooms shrooms = new() { GlobalPosition = _ground.MapToLocal(cell) };
+            loreContainer.AddChild(shrooms);
+            _usedCells.Add(cell);
+            loreCount++;
+        }
+
+        // --- Graffiti Survivant : 3-5, en zone urbaine ---
+        int graffitiCount = (int)GD.RandRange(3, 6);
+        for (int i = 0; i < graffitiCount; i++)
+        {
+            Vector2I cell = PickLoreCellInBiome("urban_ruins", 8);
+            if (cell.X == int.MinValue) continue;
+
+            SurvivingGraffiti graffiti = new() { GlobalPosition = _ground.MapToLocal(cell) };
+            loreContainer.AddChild(graffiti);
+            _usedCells.Add(cell);
+            loreCount++;
+        }
+
+        // --- Horloge Folle : 1, en zone urbaine (rare et marquante) ---
+        {
+            Vector2I cell = PickLoreCellInBiome("urban_ruins", 12);
+            if (cell.X != int.MinValue)
+            {
+                CrazyClock clock = new() { GlobalPosition = _ground.MapToLocal(cell) };
+                loreContainer.AddChild(clock);
+                _usedCells.Add(cell);
+                loreCount++;
+            }
+        }
+
+        // --- Porte Sans Mur : 1-2, tous biomes sauf eau/marais ---
+        int doorCount = (int)GD.RandRange(1, 3);
+        for (int i = 0; i < doorCount; i++)
+        {
+            Vector2I cell = PickLoreCell(10);
+            if (cell.X == int.MinValue) continue;
+
+            BiomeData doorBiome = _generator.GetBiome(cell.X, cell.Y);
+            if (doorBiome != null && doorBiome.Id == "swamp")
+                continue;
+
+            DoorWithoutWall door = new() { GlobalPosition = _ground.MapToLocal(cell) };
+            loreContainer.AddChild(door);
+            _usedCells.Add(cell);
+            loreCount++;
+        }
+
+        // --- Miroir d'Eau : 1-2, en marais ---
+        int mirrorCount = (int)GD.RandRange(1, 3);
+        for (int i = 0; i < mirrorCount; i++)
+        {
+            Vector2I cell = PickLoreCellInBiome("swamp", 10);
+            if (cell.X == int.MinValue)
+            {
+                // Fallback : essayer près de l'eau dans n'importe quel biome
+                cell = PickLoreCell(10);
+                if (cell.X == int.MinValue) continue;
+            }
+
+            WaterMirror mirror = new() { GlobalPosition = _ground.MapToLocal(cell) };
+            loreContainer.AddChild(mirror);
+            _usedCells.Add(cell);
+            loreCount++;
+        }
+
+        GD.Print($"[WorldSetup] Spawned {loreCount} lore elements");
+    }
+
+    /// <summary>Choisit une cellule valide pour un élément de lore (hors eau, void, foyer, cells occupées).</summary>
+    private Vector2I PickLoreCell(int minDistFromFoyer)
+    {
+        int radius = _config.MapRadius;
+        int safeRadius = radius - _config.EdgeFadeWidth;
+
+        for (int attempt = 0; attempt < 40; attempt++)
+        {
+            int x = (int)GD.RandRange(-safeRadius + 1, safeRadius);
+            int y = (int)GD.RandRange(-safeRadius + 1, safeRadius);
+            Vector2I cell = new(x, y);
+
+            if (!IsValidLoreCell(cell))
+                continue;
+            if (Mathf.Abs(x) <= minDistFromFoyer && Mathf.Abs(y) <= minDistFromFoyer)
+                continue;
+
+            return cell;
+        }
+        return new Vector2I(int.MinValue, int.MinValue);
+    }
+
+    /// <summary>Choisit une cellule valide dans un biome spécifique.</summary>
+    private Vector2I PickLoreCellInBiome(string biomeId, int minDistFromFoyer)
+    {
+        int radius = _config.MapRadius;
+        int safeRadius = radius - _config.EdgeFadeWidth;
+
+        for (int attempt = 0; attempt < 60; attempt++)
+        {
+            int x = (int)GD.RandRange(-safeRadius + 1, safeRadius);
+            int y = (int)GD.RandRange(-safeRadius + 1, safeRadius);
+            Vector2I cell = new(x, y);
+
+            if (!IsValidLoreCell(cell))
+                continue;
+            if (Mathf.Abs(x) <= minDistFromFoyer && Mathf.Abs(y) <= minDistFromFoyer)
+                continue;
+
+            BiomeData biome = _generator.GetBiome(x, y);
+            if (biome == null || biome.Id != biomeId)
+                continue;
+
+            return cell;
+        }
+        return new Vector2I(int.MinValue, int.MinValue);
+    }
+
+    private bool IsValidLoreCell(Vector2I cell)
+    {
+        int radius = _config.MapRadius;
+        int safeRadius = radius - _config.EdgeFadeWidth;
+
+        if (cell.X * cell.X + cell.Y * cell.Y > safeRadius * safeRadius)
+            return false;
+        if (_usedCells.Contains(cell))
+            return false;
+        if (!_generator.IsWithinBounds(cell.X, cell.Y))
+            return false;
+        if (_generator.IsErased(cell.X, cell.Y))
+            return false;
+        if (_generator.GetTerrain(cell.X, cell.Y) == TerrainType.Water)
+            return false;
+
+        return true;
     }
 
     private void InitBiomeAtmosphere()

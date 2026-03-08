@@ -284,18 +284,22 @@ def main():
         "death": 6   
     }
     
+    TARGET_W = int(64 * 2 / 3) # 42
+    TARGET_H = int(64 * 2 / 3) # 42
+
     for d_name, angle in dirs.items():
         for anim, frames in anims.items():
-            sheet = Image.new("RGBA", (64 * frames, 64), (0, 0, 0, 0)) 
+            sheet = Image.new("RGBA", (TARGET_W * frames, TARGET_H), (0, 0, 0, 0)) 
             for f in range(frames):
                 try:
                     t = f / float(frames)
                     img = build_rodeur_frame(angle, t, anim)
+                    img = img.resize((TARGET_W, TARGET_H), Image.NEAREST)
                     
                     filename = f"enemy_rodeur_{d_name}_{anim}_{f:02d}.png"
                     img.save(os.path.join(out_dir, filename))
                     
-                    sheet.paste(img, (f * 64, 0))
+                    sheet.paste(img, (f * TARGET_W, 0))
                 except Exception as e:
                     print(f"Error drawing frame {f} for {d_name} {anim}: {e}")
                 

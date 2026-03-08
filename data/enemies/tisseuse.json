@@ -12,7 +12,8 @@
     "visual": {
         "color": "#556B5A",
         "shape": "triangle",
-        "size": 13
+        "size": 13,
+        "sprite": "tisseuse"
     },
     "behavior": "weaver"
 }

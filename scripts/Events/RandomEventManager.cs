@@ -36,6 +36,30 @@ public partial class RandomEventManager : Node
 	private CanvasModulate _canvasModulate;
 	private Tween _fogTween;
 
+	// Pluie de Cendres : bonus récolte
+	private float _ashRainHarvestMult = 1f;
+
+	// Floraison Spontanée : fleurs temporaires
+	private readonly List<Node2D> _bloomFlowers = new();
+
+	// Faille Temporelle : zone dorée + buff + spawn retardé
+	private Node2D _riftNode;
+	private Tween _riftPulseTween;
+
+	// Écho du Monde : bâtiments fantômes temporaires
+	private readonly List<Node2D> _echoGhosts = new();
+
+	// Vent des Oubliés : mult XP + push timer
+	private float _windXpMult = 1f;
+	private float _windPushTimer;
+	private float _windPushInterval;
+	private float _windPushForce;
+	private bool _windActive;
+	private Node2D _windParticlesNode;
+
+	// Résonance du Foyer : rayon safe original
+	private float _originalFoyerRadius;
+
 	// Résurgence : buffs ennemis appliqués via scaling
 	private bool _resurgenceActive;
 	private float _resurgenceHpMult = 1f;
@@ -107,6 +131,17 @@ public partial class RandomEventManager : Node
 			_eventTimer -= dt;
 			if (_eventTimer <= 0f)
 				EndActiveEvent();
+		}
+
+		// Vent des Oubliés : push périodique
+		if (_windActive)
+		{
+			_windPushTimer -= dt;
+			if (_windPushTimer <= 0f)
+			{
+				_windPushTimer = _windPushInterval;
+				ApplyWindPush();
+			}
 		}
 	}
 
@@ -203,6 +238,27 @@ public partial class RandomEventManager : Node
 			case "lure_spawn":
 				ApplyLureSpawn(ev);
 				break;
+			case "ash_rain":
+				ApplyAshRain(ev);
+				break;
+			case "clock_march":
+				ApplyClockMarch(ev);
+				break;
+			case "spontaneous_bloom":
+				ApplySpontaneousBloom(ev);
+				break;
+			case "temporal_rift":
+				ApplyTemporalRift(ev);
+				break;
+			case "world_echo":
+				ApplyWorldEcho(ev);
+				break;
+			case "forgotten_wind":
+				ApplyForgottenWind(ev);
+				break;
+			case "foyer_resonance":
+				ApplyFoyerResonance(ev);
+				break;
 		}
 	}
 
@@ -224,6 +280,27 @@ public partial class RandomEventManager : Node
 				break;
 			case "lure_spawn":
 				CleanupLure();
+				break;
+			case "ash_rain":
+				RevertAshRain();
+				break;
+			case "clock_march":
+				RevertClockMarch();
+				break;
+			case "spontaneous_bloom":
+				CleanupBloom();
+				break;
+			case "temporal_rift":
+				CleanupRift();
+				break;
+			case "world_echo":
+				CleanupEchoGhosts();
+				break;
+			case "forgotten_wind":
+				RevertForgottenWind();
+				break;
+			case "foyer_resonance":
+				RevertFoyerResonance();
 				break;
 		}
 	}
@@ -796,6 +873,680 @@ public partial class RandomEventManager : Node
 		}
 
 		GD.Print($"[RandomEventManager] L'Appel — {count} ennemis coriaces spawned près du leurre !");
+	}
+
+	// --- Pluie de Cendres ---
+
+	private void ApplyAshRain(EventData ev)
+	{
+		// Visibilité réduite (plus légère que la tempête)
+		float factor = ev.GetFloat("visibility_factor", 0.7f);
+		_originalVisibilityFactor = factor;
+
+		if (_canvasModulate != null)
+		{
+			Color current = _canvasModulate.Color;
+			Color fogColor = new(current.R * factor, current.G * factor, current.B * factor);
+
+			_fogTween?.Kill();
+			_fogTween = CreateTween();
+			_fogTween.TweenProperty(_canvasModulate, "color", fogColor, 2f)
+				.SetTrans(Tween.TransitionType.Sine)
+				.SetEase(Tween.EaseType.InOut);
+		}
+
+		// Bonus de récolte
+		_ashRainHarvestMult = ev.GetFloat("harvest_multiplier", 1.5f);
+		_eventBus.EmitSignal(EventBus.SignalName.ResourceBonusChanged, _ashRainHarvestMult);
+
+		// Particules de cendres visuelles (attachées à la caméra du joueur)
+		Player player = GetTree().GetFirstNodeInGroup("player") as Player;
+		if (player != null)
+		{
+			GpuParticles2D ashParticles = new() { Name = "AshRainParticles" };
+			ParticleProcessMaterial mat = new();
+			mat.Direction = new Vector3(0, 1, 0);
+			mat.Spread = 30f;
+			mat.InitialVelocityMin = 30f;
+			mat.InitialVelocityMax = 60f;
+			mat.Gravity = new Vector3(0, 15f, 0);
+			mat.ScaleMin = 0.5f;
+			mat.ScaleMax = 2f;
+			mat.Color = new Color(0.6f, 0.55f, 0.5f, 0.6f);
+			ashParticles.ProcessMaterial = mat;
+			ashParticles.Amount = 40;
+			ashParticles.Lifetime = 3f;
+			ashParticles.VisibilityRect = new Rect2(-600, -400, 1200, 800);
+			ashParticles.ZIndex = 90;
+			player.AddChild(ashParticles);
+		}
+
+		GD.Print($"[RandomEventManager] Pluie de Cendres — visibilité x{factor}, récolte x{_ashRainHarvestMult}");
+	}
+
+	private void RevertAshRain()
+	{
+		// Retour visibilité
+		RevertVisibilityReduction();
+
+		// Retour bonus récolte
+		_ashRainHarvestMult = 1f;
+		_eventBus.EmitSignal(EventBus.SignalName.ResourceBonusChanged, 1f);
+
+		// Nettoyage des particules
+		Player player = GetTree().GetFirstNodeInGroup("player") as Player;
+		Node ashParticles = player?.GetNodeOrNull("AshRainParticles");
+		if (ashParticles != null && IsInstanceValid(ashParticles))
+			ashParticles.QueueFree();
+	}
+
+	// --- Marche des Horloges ---
+
+	private void ApplyClockMarch(EventData ev)
+	{
+		CacheDayNightCycle();
+		if (_dayNightCycle != null)
+			_dayNightCycle.SetPhasePaused(true);
+
+		_eventBus.EmitSignal(EventBus.SignalName.DayTimerPaused, true);
+
+		GD.Print("[RandomEventManager] Marche des Horloges — timer de jour gelé !");
+	}
+
+	private void RevertClockMarch()
+	{
+		CacheDayNightCycle();
+		if (_dayNightCycle != null)
+			_dayNightCycle.SetPhasePaused(false);
+
+		_eventBus.EmitSignal(EventBus.SignalName.DayTimerPaused, false);
+	}
+
+	// --- Faille Temporelle ---
+
+	private void ApplyTemporalRift(EventData ev)
+	{
+		Player player = GetTree().GetFirstNodeInGroup("player") as Player;
+		if (player == null)
+			return;
+
+		float distMin = ev.GetFloat("rift_distance_min", 200f);
+		float distMax = ev.GetFloat("rift_distance_max", 300f);
+		float speedBuff = ev.GetFloat("speed_buff", 1.3f);
+		float attackBuff = ev.GetFloat("attack_buff", 1.25f);
+		float buffDuration = ev.GetFloat("buff_duration", 15f);
+		int enemyCount = (int)ev.GetFloat("enemy_count", 4f);
+		float enemyDelay = ev.GetFloat("enemy_spawn_delay", 10f);
+
+		// Position de la faille
+		float angle = (float)GD.RandRange(0, Mathf.Tau);
+		float dist = (float)GD.RandRange(distMin, distMax);
+		Vector2 riftPos = player.GlobalPosition + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * dist;
+
+		// Nœud visuel : cercle doré pulsant
+		Node2D rift = new() { Name = "TemporalRift", GlobalPosition = riftPos };
+
+		// Cercle principal doré
+		Polygon2D riftCircle = new()
+		{
+			Color = new Color(1f, 0.85f, 0.3f, 0.25f),
+			Polygon = CreateCirclePolygon(40f, 16)
+		};
+		rift.AddChild(riftCircle);
+
+		// Halo extérieur chaud
+		Polygon2D halo = new()
+		{
+			Color = new Color(1f, 0.7f, 0.2f, 0.1f),
+			Polygon = CreateCirclePolygon(65f, 16)
+		};
+		rift.AddChild(halo);
+
+		// Spirale intérieure (3 lignes convergentes)
+		for (int i = 0; i < 3; i++)
+		{
+			float spiralAngle = Mathf.Tau * i / 3f;
+			Polygon2D spiral = new()
+			{
+				Color = new Color(1f, 0.95f, 0.6f, 0.5f),
+				Polygon = new Vector2[]
+				{
+					new(Mathf.Cos(spiralAngle) * 30f, Mathf.Sin(spiralAngle) * 30f),
+					new(Mathf.Cos(spiralAngle + 0.3f) * 15f, Mathf.Sin(spiralAngle + 0.3f) * 15f),
+					new(0, 0)
+				}
+			};
+			rift.AddChild(spiral);
+		}
+
+		// PointLight2D dorée
+		PointLight2D light = new()
+		{
+			Color = new Color(1f, 0.85f, 0.4f),
+			Energy = 0.8f,
+			TextureScale = 0.6f,
+			Texture = GD.Load<Texture2D>("res://icon.svg")
+		};
+		rift.AddChild(light);
+
+		// Pulsation
+		_riftPulseTween = CreateTween().SetLoops();
+		_riftPulseTween.TweenProperty(riftCircle, "scale", new Vector2(1.2f, 1.2f), 1.0f)
+			.SetTrans(Tween.TransitionType.Sine);
+		_riftPulseTween.TweenProperty(riftCircle, "scale", Vector2.One, 1.0f)
+			.SetTrans(Tween.TransitionType.Sine);
+
+		GetNode("..").CallDeferred("add_child", rift);
+
+		// Zone d'interaction pour le buff
+		Area2D riftArea = new() { Name = "RiftArea" };
+		riftArea.CollisionLayer = 0;
+		riftArea.CollisionMask = 1;
+		CollisionShape2D riftShape = new();
+		CircleShape2D riftCircleShape = new() { Radius = 45f };
+		riftShape.Shape = riftCircleShape;
+		riftArea.AddChild(riftShape);
+		rift.AddChild(riftArea);
+
+		bool buffGranted = false;
+		riftArea.BodyEntered += (Node2D body) =>
+		{
+			if (buffGranted || body is not Player p)
+				return;
+
+			buffGranted = true;
+
+			// Appliquer buff vitesse + attaque
+			p.ApplySpeedMultiplier(speedBuff);
+			_eventBus.EmitSignal(EventBus.SignalName.PlayerBuffApplied, "temporal_speed", buffDuration);
+
+			GD.Print($"[RandomEventManager] Faille Temporelle — buff vitesse x{speedBuff}, attaque x{attackBuff} pendant {buffDuration}s");
+
+			// Retirer le buff après durée
+			GetTree().CreateTimer(buffDuration).Timeout += () =>
+			{
+				if (IsInstanceValid(p))
+					p.ApplySpeedMultiplier(1f / speedBuff);
+			};
+
+			// Flash visuel sur la faille
+			Tween flash = rift.CreateTween();
+			flash.TweenProperty(rift, "modulate", new Color(1, 1, 0.5f, 1.5f), 0.2f);
+			flash.TweenProperty(rift, "modulate", new Color(1, 1, 1, 0.5f), 1f);
+		};
+
+		// Spawn d'ennemis autour après un délai
+		GetTree().CreateTimer(enemyDelay).Timeout += () =>
+		{
+			if (!IsInstanceValid(rift))
+				return;
+
+			SpawnTrapEnemies(riftPos, enemyCount);
+			GD.Print($"[RandomEventManager] Faille Temporelle — {enemyCount} créatures émergent !");
+		};
+
+		_riftNode = rift;
+		GD.Print($"[RandomEventManager] Faille Temporelle à {riftPos}");
+	}
+
+	private void CleanupRift()
+	{
+		_riftPulseTween?.Kill();
+		if (_riftNode != null && IsInstanceValid(_riftNode))
+		{
+			Tween fade = _riftNode.CreateTween();
+			fade.TweenProperty(_riftNode, "modulate", new Color(1, 1, 1, 0), 1f);
+			fade.TweenCallback(Callable.From(() =>
+			{
+				if (IsInstanceValid(_riftNode))
+					_riftNode.QueueFree();
+			}));
+		}
+		_riftNode = null;
+	}
+
+	// --- Écho du Monde ---
+
+	private void ApplyWorldEcho(EventData ev)
+	{
+		Player player = GetTree().GetFirstNodeInGroup("player") as Player;
+		if (player == null)
+			return;
+
+		int ghostCount = (int)ev.GetFloat("ghost_building_count", 5f);
+		float ghostRadius = ev.GetFloat("ghost_building_radius", 250f);
+		int revealRadius = (int)ev.GetFloat("reveal_radius", 8f);
+
+		// Révéler le brouillard autour du joueur (gros burst)
+		FogOfWar fog = GetNodeOrNull<FogOfWar>("../FogOfWar");
+		if (fog != null)
+		{
+			Vector2I playerCell = GetPlayerCell();
+			if (playerCell.X != int.MinValue)
+				_eventBus.EmitSignal(EventBus.SignalName.FogRevealBurst, playerCell.X, playerCell.Y, revealRadius);
+		}
+
+		// Silhouettes fantômes de bâtiments du monde d'avant
+		for (int i = 0; i < ghostCount; i++)
+		{
+			float angle = (float)GD.RandRange(0, Mathf.Tau);
+			float dist = (float)GD.RandRange(80, ghostRadius);
+			Vector2 ghostPos = player.GlobalPosition + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * dist;
+
+			Node2D ghost = CreateGhostBuilding(ghostPos);
+			GetNode("..").CallDeferred("add_child", ghost);
+			_echoGhosts.Add(ghost);
+		}
+
+		// Effet visuel : flash doré bref sur tout l'écran
+		Camera2D camera = player.GetNodeOrNull<Camera2D>("Camera");
+		if (camera != null)
+		{
+			Tween screenFlash = CreateTween();
+			screenFlash.TweenProperty(player, "modulate", new Color(1.2f, 1.1f, 0.8f), 0.3f);
+			screenFlash.TweenProperty(player, "modulate", Colors.White, 1f);
+		}
+
+		GD.Print($"[RandomEventManager] Écho du Monde — {ghostCount} silhouettes, brouillard révélé !");
+	}
+
+	private Node2D CreateGhostBuilding(Vector2 position)
+	{
+		Node2D ghost = new() { Name = "GhostBuilding", GlobalPosition = position };
+		ghost.Modulate = new Color(0.8f, 0.85f, 1f, 0f);
+
+		// Type aléatoire de bâtiment fantôme
+		int type = (int)(GD.Randi() % 4);
+		Vector2[] outline;
+		switch (type)
+		{
+			case 0: // Maison
+				outline = new Vector2[]
+				{
+					new(-18, 10), new(-18, -12), new(0, -24),
+					new(18, -12), new(18, 10)
+				};
+				break;
+			case 1: // Tour
+				outline = new Vector2[]
+				{
+					new(-8, 15), new(-8, -30), new(-4, -35),
+					new(4, -35), new(8, -30), new(8, 15)
+				};
+				break;
+			case 2: // Église
+				outline = new Vector2[]
+				{
+					new(-15, 10), new(-15, -10), new(-5, -10),
+					new(-5, -25), new(0, -32), new(5, -25),
+					new(5, -10), new(15, -10), new(15, 10)
+				};
+				break;
+			default: // Immeuble
+				outline = new Vector2[]
+				{
+					new(-20, 10), new(-20, -18), new(-12, -18),
+					new(-12, -25), new(12, -25), new(12, -18),
+					new(20, -18), new(20, 10)
+				};
+				break;
+		}
+
+		Polygon2D building = new()
+		{
+			Color = new Color(0.7f, 0.75f, 0.9f, 0.3f),
+			Polygon = outline
+		};
+		ghost.AddChild(building);
+
+		// Contour lumineux
+		Polygon2D glow = new()
+		{
+			Color = new Color(0.85f, 0.9f, 1f, 0.1f),
+			Polygon = outline,
+			Scale = new Vector2(1.15f, 1.15f)
+		};
+		ghost.AddChild(glow);
+
+		// Fenêtres qui clignotent (points lumineux)
+		int windowCount = 2 + (int)(GD.Randi() % 3);
+		for (int w = 0; w < windowCount; w++)
+		{
+			Polygon2D window = new()
+			{
+				Color = new Color(1f, 0.9f, 0.6f, 0.4f),
+				Polygon = new Vector2[]
+				{
+					new(-2, -2), new(2, -2), new(2, 2), new(-2, 2)
+				},
+				Position = new Vector2(
+					(float)GD.RandRange(-12, 12),
+					(float)GD.RandRange(-20, 0))
+			};
+			ghost.AddChild(window);
+
+			// Flickering aléatoire par fenêtre
+			Tween flicker = ghost.CreateTween().SetLoops();
+			float flickerTime = (float)GD.RandRange(0.8f, 2f);
+			flicker.TweenProperty(window, "modulate:a", 0.1f, flickerTime)
+				.SetTrans(Tween.TransitionType.Sine);
+			flicker.TweenProperty(window, "modulate:a", 0.6f, flickerTime * 0.7f)
+				.SetTrans(Tween.TransitionType.Sine);
+		}
+
+		// Fade-in spectral
+		Tween fadeIn = ghost.CreateTween();
+		fadeIn.TweenProperty(ghost, "modulate:a", 0.5f, 2f)
+			.SetTrans(Tween.TransitionType.Sine);
+
+		ghost.ZIndex = -2;
+		return ghost;
+	}
+
+	private void CleanupEchoGhosts()
+	{
+		foreach (Node2D ghost in _echoGhosts)
+		{
+			if (ghost == null || !IsInstanceValid(ghost))
+				continue;
+
+			Tween fade = ghost.CreateTween();
+			fade.TweenProperty(ghost, "modulate:a", 0f, 1.5f)
+				.SetTrans(Tween.TransitionType.Sine);
+			fade.TweenCallback(Callable.From(() =>
+			{
+				if (IsInstanceValid(ghost))
+					ghost.QueueFree();
+			}));
+		}
+		_echoGhosts.Clear();
+	}
+
+	private Vector2I GetPlayerCell()
+	{
+		Player player = GetTree().GetFirstNodeInGroup("player") as Player;
+		TileMapLayer ground = GetNodeOrNull<TileMapLayer>("../WorldSetup/Ground");
+		if (player == null || ground == null)
+			return new Vector2I(int.MinValue, int.MinValue);
+		return ground.LocalToMap(ground.ToLocal(player.GlobalPosition));
+	}
+
+	// --- Vent des Oubliés ---
+
+	private void ApplyForgottenWind(EventData ev)
+	{
+		_windXpMult = ev.GetFloat("xp_multiplier", 2f);
+		_windPushForce = ev.GetFloat("push_force", 80f);
+		_windPushInterval = ev.GetFloat("push_interval", 3f);
+		_windPushTimer = _windPushInterval;
+		_windActive = true;
+
+		// Appliquer le multiplicateur XP
+		_eventBus.EmitSignal(EventBus.SignalName.XpMultiplierChanged, _windXpMult);
+
+		// Créer des particules de vent spectral sur le joueur
+		Player player = GetTree().GetFirstNodeInGroup("player") as Player;
+		if (player != null)
+		{
+			GpuParticles2D windParticles = new() { Name = "WindParticles" };
+			ParticleProcessMaterial mat = new();
+			mat.Direction = new Vector3(1, -0.3f, 0);
+			mat.Spread = 20f;
+			mat.InitialVelocityMin = 80f;
+			mat.InitialVelocityMax = 150f;
+			mat.Gravity = Vector3.Zero;
+			mat.ScaleMin = 0.8f;
+			mat.ScaleMax = 2f;
+			mat.Color = new Color(0.7f, 0.8f, 0.95f, 0.35f);
+			windParticles.ProcessMaterial = mat;
+			windParticles.Amount = 25;
+			windParticles.Lifetime = 2.5f;
+			windParticles.VisibilityRect = new Rect2(-600, -400, 1200, 800);
+			windParticles.ZIndex = 85;
+			player.AddChild(windParticles);
+			_windParticlesNode = windParticles;
+		}
+
+		GD.Print($"[RandomEventManager] Vent des Oubliés — XP x{_windXpMult}, push toutes les {_windPushInterval}s");
+	}
+
+	private void ApplyWindPush()
+	{
+		// Pousser tous les ennemis visibles dans une direction cohérente
+		Node enemyContainer = GetNodeOrNull("../EnemyContainer");
+		if (enemyContainer == null)
+			return;
+
+		// Direction du vent (fixe pour la durée de l'event)
+		Vector2 windDir = Vector2.Right.Rotated((float)GD.RandRange(-0.3f, 0.3f));
+
+		foreach (Node child in enemyContainer.GetChildren())
+		{
+			if (child is not Enemy enemy || !enemy.IsActive)
+				continue;
+
+			// Impulsion visuelle sur l'ennemi
+			enemy.GlobalPosition += windDir * _windPushForce * 0.1f;
+		}
+
+		// Pousser le joueur légèrement (moitié de la force)
+		Player player = GetTree().GetFirstNodeInGroup("player") as Player;
+		if (player != null)
+			player.GlobalPosition += windDir * _windPushForce * 0.03f;
+	}
+
+	private void RevertForgottenWind()
+	{
+		_windActive = false;
+		_windXpMult = 1f;
+		_eventBus.EmitSignal(EventBus.SignalName.XpMultiplierChanged, 1f);
+
+		// Nettoyage particules
+		if (_windParticlesNode != null && IsInstanceValid(_windParticlesNode))
+			_windParticlesNode.QueueFree();
+		_windParticlesNode = null;
+	}
+
+	// --- Résonance du Foyer ---
+
+	private void ApplyFoyerResonance(EventData ev)
+	{
+		float radiusMult = ev.GetFloat("radius_multiplier", 2f);
+		float knockbackDmg = ev.GetFloat("knockback_damage", 30f);
+		float knockbackRadius = ev.GetFloat("knockback_radius", 300f);
+
+		// Doubler le rayon de sécurité du Foyer
+		Foyer foyer = GetNodeOrNull<Foyer>("../Foyer");
+		if (foyer != null)
+		{
+			_originalFoyerRadius = foyer.EffectiveSafeRadius;
+			foyer.SetTemporarySafeRadius(_originalFoyerRadius * radiusMult);
+			_eventBus.EmitSignal(EventBus.SignalName.FoyerRadiusChanged, _originalFoyerRadius * radiusMult);
+		}
+
+		// Knockback initial : repousser et endommager les ennemis proches
+		Vector2 foyerPos = foyer?.GlobalPosition ?? Vector2.Zero;
+		Node enemyContainer = GetNodeOrNull("../EnemyContainer");
+		int knockbackCount = 0;
+
+		if (enemyContainer != null)
+		{
+			foreach (Node child in enemyContainer.GetChildren())
+			{
+				if (child is not Enemy enemy || !enemy.IsActive)
+					continue;
+
+				float dist = enemy.GlobalPosition.DistanceTo(foyerPos);
+				if (dist > knockbackRadius)
+					continue;
+
+				// Repousser l'ennemi
+				Vector2 pushDir = (enemy.GlobalPosition - foyerPos).Normalized();
+				enemy.GlobalPosition += pushDir * (knockbackRadius - dist);
+				enemy.TakeDamage(knockbackDmg);
+				knockbackCount++;
+			}
+		}
+
+		// Onde visuelle : cercle doré qui s'étend depuis le Foyer
+		if (foyer != null)
+		{
+			Polygon2D wave = new()
+			{
+				Color = new Color(1f, 0.85f, 0.4f, 0.4f),
+				Polygon = CreateCirclePolygon(10f, 24),
+				GlobalPosition = foyerPos,
+				ZIndex = 50
+			};
+			GetNode("..").CallDeferred("add_child", wave);
+
+			Tween waveTween = CreateTween();
+			waveTween.SetParallel();
+			waveTween.TweenProperty(wave, "scale", new Vector2(knockbackRadius / 10f, knockbackRadius / 10f), 1.5f)
+				.SetTrans(Tween.TransitionType.Expo)
+				.SetEase(Tween.EaseType.Out);
+			waveTween.TweenProperty(wave, "modulate:a", 0f, 1.5f)
+				.SetTrans(Tween.TransitionType.Sine);
+			waveTween.Chain().TweenCallback(Callable.From(() =>
+			{
+				if (IsInstanceValid(wave))
+					wave.QueueFree();
+			}));
+		}
+
+		GD.Print($"[RandomEventManager] Résonance du Foyer — rayon x{radiusMult}, {knockbackCount} ennemis repoussés");
+	}
+
+	private void RevertFoyerResonance()
+	{
+		Foyer foyer = GetNodeOrNull<Foyer>("../Foyer");
+		if (foyer != null)
+		{
+			foyer.SetTemporarySafeRadius(_originalFoyerRadius);
+			_eventBus.EmitSignal(EventBus.SignalName.FoyerRadiusChanged, _originalFoyerRadius);
+		}
+	}
+
+	// --- Floraison Spontanée ---
+
+	private void ApplySpontaneousBloom(EventData ev)
+	{
+		Player player = GetTree().GetFirstNodeInGroup("player") as Player;
+		if (player == null)
+			return;
+
+		int countMin = (int)ev.GetFloat("flower_count_min", 5f);
+		int countMax = (int)ev.GetFloat("flower_count_max", 8f);
+		float radius = ev.GetFloat("flower_radius", 200f);
+		int herbMin = (int)ev.GetFloat("herb_amount_min", 3f);
+		int herbMax = (int)ev.GetFloat("herb_amount_max", 5f);
+		float xpPerFlower = ev.GetFloat("xp_per_flower", 20f);
+
+		int count = (int)GD.RandRange(countMin, countMax + 1);
+
+		for (int i = 0; i < count; i++)
+		{
+			float angle = (float)GD.RandRange(0, Mathf.Tau);
+			float dist = (float)GD.RandRange(50, radius);
+			Vector2 flowerPos = player.GlobalPosition + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * dist;
+
+			Node2D flower = CreateMemoryFlower(flowerPos, herbMin, herbMax, xpPerFlower);
+			GetNode("..").CallDeferred("add_child", flower);
+			_bloomFlowers.Add(flower);
+		}
+
+		GD.Print($"[RandomEventManager] Floraison Spontanée — {count} fleurs de mémoire !");
+	}
+
+	private Node2D CreateMemoryFlower(Vector2 position, int herbMin, int herbMax, float xp)
+	{
+		Node2D flower = new() { Name = "MemoryFlower", GlobalPosition = position };
+
+		// Tige
+		Polygon2D stem = new()
+		{
+			Color = new Color(0.3f, 0.6f, 0.2f, 0.9f),
+			Polygon = new Vector2[] { new(-1, 0), new(1, 0), new(1, -14), new(-1, -14) }
+		};
+		flower.AddChild(stem);
+
+		// Pétales (couleur aléatoire parmi des tons chauds)
+		Color[] petalColors =
+		{
+			new(0.95f, 0.85f, 0.3f, 0.9f),  // jaune doré
+			new(0.85f, 0.5f, 0.7f, 0.9f),   // rose
+			new(0.6f, 0.4f, 0.85f, 0.9f),   // violet
+			new(0.95f, 0.6f, 0.3f, 0.9f)    // orange
+		};
+		Color petalColor = petalColors[GD.Randi() % petalColors.Length];
+
+		Polygon2D petals = new()
+		{
+			Color = petalColor,
+			Polygon = CreateCirclePolygon(6f, 6),
+			Position = new Vector2(0, -16)
+		};
+		flower.AddChild(petals);
+
+		// Lueur dorée subtile
+		Polygon2D glow = new()
+		{
+			Color = new Color(1f, 0.9f, 0.4f, 0.15f),
+			Polygon = CreateCirclePolygon(14f, 8),
+			Position = new Vector2(0, -16)
+		};
+		flower.AddChild(glow);
+
+		// Pulsation douce
+		Tween pulseTween = flower.CreateTween().SetLoops();
+		pulseTween.TweenProperty(glow, "scale", new Vector2(1.3f, 1.3f), 1.5f)
+			.SetTrans(Tween.TransitionType.Sine);
+		pulseTween.TweenProperty(glow, "scale", Vector2.One, 1.5f)
+			.SetTrans(Tween.TransitionType.Sine);
+
+		// Zone de récolte
+		Area2D harvestArea = new() { Name = "HarvestArea" };
+		harvestArea.CollisionLayer = 0;
+		harvestArea.CollisionMask = 1;
+		CollisionShape2D shape = new();
+		CircleShape2D circle = new() { Radius = 30f };
+		shape.Shape = circle;
+		harvestArea.AddChild(shape);
+		flower.AddChild(harvestArea);
+
+		bool harvested = false;
+		harvestArea.BodyEntered += (Node2D body) =>
+		{
+			if (harvested || body is not Player)
+				return;
+
+			harvested = true;
+			int herbs = (int)GD.RandRange(herbMin, herbMax + 1);
+			_eventBus.EmitSignal(EventBus.SignalName.LootReceived, "resource", "herb", herbs);
+			_eventBus.EmitSignal(EventBus.SignalName.XpGained, xp);
+
+			// Feedback : flash et disparition
+			Tween fadeTween = flower.CreateTween();
+			fadeTween.TweenProperty(flower, "modulate", new Color(1, 1, 0.5f, 1.5f), 0.15f);
+			fadeTween.TweenProperty(flower, "modulate", new Color(1, 1, 1, 0), 0.8f);
+			fadeTween.TweenCallback(Callable.From(() =>
+			{
+				if (IsInstanceValid(flower))
+					flower.QueueFree();
+			}));
+		};
+
+		return flower;
+	}
+
+	private void CleanupBloom()
+	{
+		foreach (Node2D flower in _bloomFlowers)
+		{
+			if (flower != null && IsInstanceValid(flower))
+				flower.QueueFree();
+		}
+		_bloomFlowers.Clear();
 	}
 
 	// --- Chargement des données ---
