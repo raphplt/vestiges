@@ -120,7 +120,7 @@ public partial class WorldSetup : Node2D
         _tileMapper.Initialize(_ground.TileSet, _generator.ActiveBiomes);
 
         CreateVoidBackground();
-        ApplyTerrain(terrain);
+        ApplyTerrain(terrain, urbanLayout);
         InitializeFog();
         SpawnResources();
         if (!PoisDisabled)
@@ -129,17 +129,7 @@ public partial class WorldSetup : Node2D
             SpawnChests();
         }
 
-        // Bloquer les cells de murs/routes pour que PropSpawner ne place pas
-        // de props generiques dessus
-        if (urbanLayout != null)
-        {
-            foreach (Vector2I cell in urbanLayout.WallCells)
-                _usedCells.Add(cell);
-            foreach (Vector2I cell in urbanLayout.RoadCells)
-                _usedCells.Add(cell);
-        }
-
-        SpawnEnvironmentProps();
+        SpawnEnvironmentProps(urbanLayout);
 
         // Placer les props structurels urbains (murs, mobilier de rue, landmarks)
         if (urbanLayout != null)
@@ -199,7 +189,7 @@ public partial class WorldSetup : Node2D
         MoveChild(voidBg, 0);
     }
 
-    private void ApplyTerrain(TerrainType[,] terrain)
+    private void ApplyTerrain(TerrainType[,] terrain, UrbanLayout urbanLayout)
     {
         int radius = _config.MapRadius;
         int size = radius * 2 + 1;
@@ -237,7 +227,11 @@ public partial class WorldSetup : Node2D
 
                 TerrainType terrainType = terrain[gx, gy];
                 int biomeIndex = _generator.GetBiomeIndex(x, y);
-                int sourceId = _tileMapper.GetSourceId(biomeIndex, terrainType, x, y);
+                UrbanCellType urbanCellType = UrbanCellType.None;
+                if (urbanLayout != null)
+                    urbanCellType = urbanLayout.CellGrid[gx, gy];
+
+                int sourceId = _tileMapper.GetSourceId(biomeIndex, terrainType, x, y, urbanCellType, urbanLayout);
                 if (sourceId < 0)
                     continue;
                 _ground.SetCell(cell, sourceId, Vector2I.Zero);
@@ -324,7 +318,7 @@ public partial class WorldSetup : Node2D
         return resourceId;
     }
 
-    private void SpawnEnvironmentProps()
+    private void SpawnEnvironmentProps(UrbanLayout urbanLayout)
     {
         // Créer le container pour les props (si pas déjà dans la scène)
         Node2D propContainer = GetNodeOrNull<Node2D>("PropContainer");
@@ -340,7 +334,31 @@ public partial class WorldSetup : Node2D
 
         _propSpawner = new PropSpawner { Name = "PropSpawner" };
         AddChild(_propSpawner);
-        _propSpawner.SpawnProps(_generator, _ground, propContainer, _usedCells, Seed);
+        HashSet<Vector2I> blockedCells = BuildUrbanPropBlockedCells(urbanLayout);
+        _propSpawner.SpawnProps(_generator, _ground, propContainer, _usedCells, Seed, blockedCells);
+    }
+
+    private HashSet<Vector2I> BuildUrbanPropBlockedCells(UrbanLayout urbanLayout)
+    {
+        if (urbanLayout == null)
+            return null;
+
+        HashSet<Vector2I> blocked = new();
+        int radius = urbanLayout.MapRadius;
+        int size = radius * 2 + 1;
+
+        for (int gx = 0; gx < size; gx++)
+        {
+            for (int gy = 0; gy < size; gy++)
+            {
+                if (urbanLayout.CellGrid[gx, gy] == UrbanCellType.None)
+                    continue;
+
+                blocked.Add(new Vector2I(gx - radius, gy - radius));
+            }
+        }
+
+        return blocked;
     }
 
     /// <summary>

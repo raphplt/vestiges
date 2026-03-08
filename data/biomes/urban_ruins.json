@@ -41,6 +41,69 @@
         "grass": [
             "ruines/tile_ruines_trottoir_base",
             "ruines/tile_ruines_trottoir_v2"
+        ],
+        "road_straight_ns": [
+            "ruines/tile_ruines_route_straight_ns"
+        ],
+        "road_straight_ew": [
+            "ruines/tile_ruines_route_straight_ew"
+        ],
+        "road_corner_ne": [
+            "ruines/tile_ruines_route_corner_ne"
+        ],
+        "road_corner_nw": [
+            "ruines/tile_ruines_route_corner_nw"
+        ],
+        "road_corner_se": [
+            "ruines/tile_ruines_route_corner_se"
+        ],
+        "road_corner_sw": [
+            "ruines/tile_ruines_route_corner_sw"
+        ],
+        "road_t_n": [
+            "ruines/tile_ruines_route_t_n"
+        ],
+        "road_t_e": [
+            "ruines/tile_ruines_route_t_e"
+        ],
+        "road_t_s": [
+            "ruines/tile_ruines_route_t_s"
+        ],
+        "road_t_w": [
+            "ruines/tile_ruines_route_t_w"
+        ],
+        "road_cross": [
+            "ruines/tile_ruines_route_cross"
+        ],
+        "road_end_n": [
+            "ruines/tile_ruines_route_end_n"
+        ],
+        "road_end_e": [
+            "ruines/tile_ruines_route_end_e"
+        ],
+        "road_end_s": [
+            "ruines/tile_ruines_route_end_s"
+        ],
+        "road_end_w": [
+            "ruines/tile_ruines_route_end_w"
+        ],
+        "sidewalk": [
+            "ruines/tile_ruines_trottoir_base",
+            "ruines/tile_ruines_trottoir_v2"
+        ],
+        "building_interior": [
+            "ruines/tile_ruines_carrelage_base",
+            "ruines/tile_ruines_carrelage_v2"
+        ],
+        "building_edge": [
+            "ruines/tile_ruines_sol_base",
+            "ruines/tile_ruines_sol_v2",
+            "ruines/tile_ruines_sol_v3"
+        ],
+        "plaza": [
+            "ruines/tile_ruines_sol_base",
+            "ruines/tile_ruines_carrelage_base",
+            "ruines/tile_ruines_sol_v3"
         ]
     }
 }

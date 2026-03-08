@@ -46,18 +46,17 @@ public class UrbanLayoutGenerator
 	private readonly int _size;
 
 	// Parametres de generation
-	private const int RoadSpacingBase = 10;
+	private const int RoadSpacingBase = 14;
 	private const int RoadSpacingVariance = 2;
-	private const int MainRoadWidth = 2;
-	private const int AlleyWidth = 1;
-	private const int WobblePeriod = 5;
-	private const int WobbleAmplitude = 1;
-	private const float RoadCollapseChance = 0.15f;
+	private const int RoadWidth = 1;
+	private const int WobblePeriod = 9999;
+	private const int WobbleAmplitude = 0;
+	private const float RoadCollapseChance = 0.0f;
 	private const int CollapseMinLen = 2;
 	private const int CollapseMaxLen = 4;
 	private const float IntegrityMin = 0.3f;
 	private const float IntegrityMax = 0.9f;
-	private const int MinBuildingSize = 3;
+	private const int MinBuildingSize = 6;
 
 	public UrbanLayoutGenerator(ulong seed, int mapRadius)
 	{
@@ -131,8 +130,7 @@ public class UrbanLayoutGenerator
 		int y = minY + RoadSpacingBase / 2;
 		while (y <= maxY)
 		{
-			int width = _rng.Randf() < 0.4f ? MainRoadWidth : AlleyWidth;
-			bool isMain = width >= MainRoadWidth;
+			int width = RoadWidth;
 			int wobble = 0;
 
 			for (int x = minX; x <= maxX; x++)
@@ -153,7 +151,7 @@ public class UrbanLayoutGenerator
 			}
 
 			// Collapse aleatoire
-			if (_rng.Randf() < RoadCollapseChance && isMain)
+			if (_rng.Randf() < RoadCollapseChance)
 			{
 				int gapStart = _rng.RandiRange(minX + 3, maxX - 3);
 				int gapLen = _rng.RandiRange(CollapseMinLen, CollapseMaxLen);
@@ -175,8 +173,7 @@ public class UrbanLayoutGenerator
 		int x2 = minX + RoadSpacingBase / 2;
 		while (x2 <= maxX)
 		{
-			int width = _rng.Randf() < 0.4f ? MainRoadWidth : AlleyWidth;
-			bool isMain = width >= MainRoadWidth;
+			int width = RoadWidth;
 			int wobble = 0;
 
 			for (int yi = minY; yi <= maxY; yi++)
@@ -195,7 +192,7 @@ public class UrbanLayoutGenerator
 				}
 			}
 
-			if (_rng.Randf() < RoadCollapseChance && isMain)
+			if (_rng.Randf() < RoadCollapseChance)
 			{
 				int gapStart = _rng.RandiRange(minY + 3, maxY - 3);
 				int gapLen = _rng.RandiRange(CollapseMinLen, CollapseMaxLen);

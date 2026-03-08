@@ -45,7 +45,7 @@ Bass rumble climbing, scattered dissonant tones, sense of presence, of wrongness
 | Action | Prompt ElevenLabs | Fichier |
 |--------|-------------------|---------|
 | Menu — clic | `soft subtle touch tone, like a very light select beacon, warm and responsive, 0.15 seconds` | `assets/audio/sfx/ui/sfx_menu_clic.wav` |
-| Menu — survol option | `tiny ascending tone, almost at the edge of perception, 0.1 seconds` | `assets/audio/sfx/ui/sfx_menu_survol.wav` |
+| Menu — survol option | `tiny muted low-mid blip, soft and restrained, no bright highs, 0.1 seconds` | `assets/audio/sfx/ui/sfx_menu_survol.wav` |
 | Menu — confirmer sélection | `two tones in harmony, brief and affirming, 0.3 seconds` | `assets/audio/sfx/ui/sfx_menu_confirmer.wav` |
 | Inventaire — ouverture | `soft swish, like pages opening, brief and smooth, 0.4 seconds` | `assets/audio/sfx/ui/sfx_inventaire_ouvrir.wav` |
 | Inventaire — fermeture | `soft swish reverse, like pages closing, 0.4 seconds` | `assets/audio/sfx/ui/sfx_inventaire_fermer.wav` |
@@ -61,7 +61,7 @@ Bass rumble climbing, scattered dissonant tones, sense of presence, of wrongness
 |--------|-------------------|---------|
 | Perk refusé | `short dry click, slightly disappointed, 0.2 seconds` | `assets/audio/sfx/gameplay/sfx_perk_refuse.wav` |
 | Malédiction acceptée | `dark single low tone with subtle distortion, ominous but inevitable, 0.6 seconds` | `assets/audio/sfx/gameplay/sfx_malediction_acceptee.wav` |
-| Artefact trouvé | `ethereal ascending shimmer, like something transcendent, longer reverb tail, 2 seconds` | `assets/audio/sfx/gameplay/sfx_artefact_trouve.wav` |
+| Artefact trouvé | `warm low-mid harmonic swell, ancient and solemn, soft texture with gentle reverb tail, no bright chimes, no sparkle, 2 seconds` | `assets/audio/sfx/gameplay/sfx_artefact_trouve.wav` |
 | Progression bar — tick | `extremely subtle tiny click, barely conscious, 0.05 seconds, subtle` | `assets/audio/sfx/ui/sfx_progress_tick.wav` |
 
 ---
@@ -87,7 +87,7 @@ Bass rumble climbing, scattered dissonant tones, sense of presence, of wrongness
 | Dégât critique reçu | `hard impact with sharp crack, more visceral than normal hit, 0.4 seconds` | `assets/audio/sfx/combat/sfx_degat_critique_recu.wav` |
 | Santé basse — alerte (loop) | `subtle pulsing low tone, heartbeat-like and anxious, loopable 2 seconds` | `assets/audio/sfx/gameplay/sfx_sante_basse.wav` |
 | Mort du joueur (stinger, court) | `electronic fade-out with brief reverb, less dramatic than "Mort", 1 second` | `assets/audio/sfx/gameplay/sfx_mort_joueur.wav` |
-| Résurrection / second chance | `magical awakening tone, like a blessing, ascending and clear, 1.5 seconds` | `assets/audio/sfx/gameplay/sfx_resurrection.wav` |
+| Résurrection / second chance | `warm awakening swell, grounded and hopeful, low-mid register, no crystalline highs, 1.5 seconds` | `assets/audio/sfx/gameplay/sfx_resurrection.wav` |
 
 ---
 
@@ -111,12 +111,43 @@ Bass rumble climbing, scattered dissonant tones, sense of presence, of wrongness
 | Brouillard / occultation (loop) | `deeply muffled and dampened ambient sounds, like being inside fog, loopable` | `assets/audio/sfx/ambiance/sfx_brouillard.wav` |
 | Créatures nocturnes — ambiance (loop) | `distant inhuman calls and unsettling animal-like sounds from far away, loopable 8 seconds` | `assets/audio/sfx/ambiance/sfx_creatures_nocturnes.wav` |
 | Catastrophe / omen warning | `building dread, low frequencies with subtle discord, something very wrong is coming, 3 seconds` | `assets/audio/sfx/gameplay/sfx_catastrophe_avertissement.wav` |
+| Vent violent pré-tempête (loop) | `strong gusty wind with intermittent pressure surges, branches and metal lightly straining, ominous, loopable 8 seconds` | `assets/audio/sfx/ambiance/sfx_vent_pretempete.wav` |
+| Orage proche (loop) | `closer thunder impacts with short low-end tail, humid air tension, no rain in this layer, loopable 6 seconds` | `assets/audio/sfx/ambiance/sfx_orage_proche.wav` |
+| Ruissellement sur ruines (loop) | `thin water streams running through concrete cracks and metal gutters, lonely urban texture, loopable 8 seconds` | `assets/audio/sfx/ambiance/sfx_ruines_ruissellement.wav` |
+| Rafale dans canopee (loop) | `dense leaf canopy struck by periodic gusts, broad natural whoosh with subtle branch creaks, loopable 7 seconds` | `assets/audio/sfx/ambiance/sfx_foret_rafales.wav` |
+| Silence anormal avant vague | `air suddenly collapses into near-silence with faint low rumble residue, pressure-drop feeling, 2 seconds` | `assets/audio/sfx/gameplay/sfx_avant_vague_silence.wav` |
+| Debut de vague nocturne | `short ritual-like low hit followed by distant swarm rise, immediate danger cue, 1.2 seconds` | `assets/audio/sfx/gameplay/sfx_vague_debut.wav` |
+| Fin de vague nocturne | `tension release with soft descending harmonic breath, relief without joy, 1.5 seconds` | `assets/audio/sfx/gameplay/sfx_vague_fin.wav` |
+| Intensification vague (palier) | `stacked low pulses and abrasive texture ramp, escalating threat marker, 1 second` | `assets/audio/sfx/gameplay/sfx_vague_palier.wav` |
+| Sanctuaire detecte (stinger) | `single warm resonant tone emerging from silence, sacred and grounded, low-mid register, no bright highs, 2 seconds` | `assets/audio/sfx/gameplay/sfx_sanctuaire_detecte.wav` |
+| Entree Sanctuaire | `room tone shift: noise falls away, warm resonant space opens, sacred silence cue, 2 seconds` | `assets/audio/sfx/gameplay/sfx_sanctuaire_entree.wav` |
+| Gardien Sanctuaire eveil | `stone-wood resonance cracking awake with low choir-like texture, 2.5 seconds` | `assets/audio/sfx/gameplay/sfx_sanctuaire_gardien_eveil.wav` |
+| Constellation fragment trouve | `soft clustered low-mid tones, dusty and ancient, memory-like tail, mysterious not triumphant, avoid glassy highs, 1.8 seconds` | `assets/audio/sfx/gameplay/sfx_constellation_fragment.wav` |
+| Distorsion d'ancrage (zone effilochee) | `subtle phase-warped hum with intermittent digital tearing, reality instability, loopable 6 seconds` | `assets/audio/sfx/ambiance/sfx_zone_effilochee.wav` |
+| Bord d'effacement proche | `granular hiss with low void pull and sparse crackle, existential edge warning, loopable 5 seconds` | `assets/audio/sfx/gameplay/sfx_bord_effacement_proche.wav` |
+| Eclipse de memoire (event rare) | `broad low-frequency bloom swallowing highs, then brittle texture fragments, 3 seconds` | `assets/audio/sfx/gameplay/sfx_eclipse_memoire.wav` |
+| Fissure d'effacement s'ouvre | `sharp tearing texture like fabric and stone separating, abrupt and unnatural, 0.9 seconds` | `assets/audio/sfx/gameplay/sfx_fissure_ouvre.wav` |
+| Fissure stabilisee | `short harmonic lock-in tone, uncertain but calmer, 1 second` | `assets/audio/sfx/gameplay/sfx_fissure_stabilisee.wav` |
+| Presence colosse lointaine (loop) | `distant colossal impacts with long terrain resonance, low and oppressive, loopable 8 seconds` | `assets/audio/sfx/ambiance/sfx_colosse_lointain.wav` |
+| Presence indicible imminente | `infrasonic swell with layered almost-voices under static veil, immediate dread marker, 2 seconds` | `assets/audio/sfx/gameplay/sfx_indicible_imminent.wav` |
+
+---
+
+## Regle anti-aigus (ElevenLabs)
+
+Pour eviter les rendus trop brillants/aigus, ajouter ce suffixe aux prompts sensibles (artefacts, sanctuaire, souvenirs) :
+
+`low-mid focused, warm and dark timbre, rolled-off highs, no bright chimes, no sparkle, no glassy transients, no metallic highs`
+
+Si le rendu reste trop aigu, remplacer les mots a risque :
+
+- `shimmer`, `crystalline`, `glass`, `sparkle`, `bright` -> `warm`, `dusty`, `muted`, `low resonant`, `earthy`
 
 ---
 
 ## Résumé
 
-**Total nouveau :** ~35 sons supplémentaires
+**Total nouveau :** ~55 sons supplémentaires
 
 | Catégorie | Count | Notes |
 |-----------|-------|-------|
@@ -126,11 +157,11 @@ Bass rumble climbing, scattered dissonant tones, sense of presence, of wrongness
 | Navigation & Combat | 7 | Spotting, projectiles, coffres |
 | Santé | 4 | Dégâts, mort, résurrection |
 | Construction | 4 | Structures, Foyer |
-| Ambiance | 5 | Météo, créatures, événements |
-| **TOTAL** | **36** | |
+| Ambiance | 24 | Météo, vagues, sanctuaire, anomalies, événements rares |
+| **TOTAL** | **55** | |
 
 **Priorité recommandée :**
 1. **Tier 1 (essentiels)** : Musiques (4), Menu UI (3), Foyer purification, Creature spotted, Coffres
 2. **Tier 2 (gameplay)** : Projection bar, Santé basse, Dégâts critiques, Artefacts
-3. **Tier 3 (ambiance)** : Tonnerre, pluie, brouillard, créatures nocturnes
+3. **Tier 3 (ambiance)** : Tonnerre, pluie, brouillard, créatures nocturnes, événements rares
 

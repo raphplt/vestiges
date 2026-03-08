@@ -56,7 +56,8 @@ public partial class PropSpawner : Node2D
 		TileMapLayer ground,
 		Node2D container,
 		HashSet<Vector2I> usedCells,
-		ulong seed)
+		ulong seed,
+		HashSet<Vector2I> blockedCells = null)
 	{
 		// Charger les configs de props par biome
 		Dictionary<string, BiomePropConfig> configs = LoadPropConfigs();
@@ -113,6 +114,8 @@ public partial class PropSpawner : Node2D
 
 				Vector2I cell = new(x, y);
 				if (usedCells.Contains(cell))
+					continue;
+				if (blockedCells != null && blockedCells.Contains(cell))
 					continue;
 
 				cellsEvaluated++;

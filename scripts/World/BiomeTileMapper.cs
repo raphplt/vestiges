@@ -12,6 +12,7 @@ namespace Vestiges.World;
 public class BiomeTileMapper
 {
 	private readonly Dictionary<int, Dictionary<TerrainType, int[]>> _biomeSourceMap = new();
+	private readonly Dictionary<int, Dictionary<string, int[]>> _biomeSpecialSourceMap = new();
 	private readonly Dictionary<TerrainType, int[]> _fallbackSourceMap = new();
 	private readonly Dictionary<int, string> _biomeIds = new();
 
@@ -32,6 +33,7 @@ public class BiomeTileMapper
 	public void Initialize(TileSet tileSet, List<BiomeData> activeBiomes)
 	{
 		_biomeSourceMap.Clear();
+		_biomeSpecialSourceMap.Clear();
 		_fallbackSourceMap.Clear();
 		_biomeIds.Clear();
 
@@ -61,21 +63,23 @@ public class BiomeTileMapper
 				continue;
 
 			Dictionary<TerrainType, int[]> terrainMap = new();
+			Dictionary<string, int[]> specialMap = new();
 
 			foreach (KeyValuePair<string, List<string>> kv in biome.TileSources)
 			{
-				if (!TerrainNameMap.TryGetValue(kv.Key, out TerrainType terrainType))
-				{
-					GD.PushWarning($"[BiomeTileMapper] Terrain inconnu '{kv.Key}' dans biome '{biome.Id}'");
-					continue;
-				}
-
 				int[] sources = LoadTileGroup(tileSet, kv.Value);
-				if (sources.Length > 0)
+				if (sources.Length == 0)
+					continue;
+
+				if (TerrainNameMap.TryGetValue(kv.Key, out TerrainType terrainType))
 				{
 					terrainMap[terrainType] = sources;
 					if (!_fallbackSourceMap.ContainsKey(terrainType))
 						_fallbackSourceMap[terrainType] = sources;
+				}
+				else
+				{
+					specialMap[kv.Key] = sources;
 				}
 			}
 
@@ -83,6 +87,12 @@ public class BiomeTileMapper
 			{
 				_biomeSourceMap[i] = terrainMap;
 				GD.Print($"[BiomeTileMapper] Biome '{biome.Id}' : {terrainMap.Count} terrain(s) mappé(s)");
+			}
+
+			if (specialMap.Count > 0)
+			{
+				_biomeSpecialSourceMap[i] = specialMap;
+				GD.Print($"[BiomeTileMapper] Biome '{biome.Id}' : {specialMap.Count} groupe(s) spéciaux");
 			}
 		}
 
@@ -93,16 +103,31 @@ public class BiomeTileMapper
 	/// Retourne le sourceId à utiliser pour une cellule donnée.
 	/// Sélection déterministe de variante basée sur la position (même seed visuel).
 	/// </summary>
-	public int GetSourceId(int biomeIndex, TerrainType terrain, int x, int y)
+	public int GetSourceId(
+		int biomeIndex,
+		TerrainType terrain,
+		int x,
+		int y,
+		UrbanCellType urbanCellType = UrbanCellType.None,
+		UrbanLayout urbanLayout = null)
 	{
+		if (biomeIndex >= 0
+			&& _biomeIds.TryGetValue(biomeIndex, out string biomeId)
+			&& biomeId == "urban_ruins"
+			&& urbanCellType != UrbanCellType.None
+			&& TryGetUrbanRuinsSourceId(biomeIndex, urbanCellType, x, y, urbanLayout, out int urbanSourceId))
+		{
+			return urbanSourceId;
+		}
+
 		// Tiles spécifiques au biome
 		if (biomeIndex >= 0 && _biomeSourceMap.TryGetValue(biomeIndex, out Dictionary<TerrainType, int[]> terrainMap))
 		{
 			if (terrainMap.TryGetValue(terrain, out int[] sources))
 			{
-				if (_biomeIds.TryGetValue(biomeIndex, out string biomeId))
+				if (_biomeIds.TryGetValue(biomeIndex, out string biomeKey))
 				{
-					return GetBiomeSpecificSourceId(biomeId, terrain, sources, x, y);
+					return GetBiomeSpecificSourceId(biomeKey, terrain, sources, x, y);
 				}
 
 				int hash = HashCell(x, y);
@@ -195,5 +220,137 @@ public class BiomeTileMapper
 			return sources[3 + (variantRoll % 3)];
 
 		return sources[variantRoll % 3];
+	}
+
+	private bool TryGetUrbanRuinsSourceId(
+		int biomeIndex,
+		UrbanCellType urbanCellType,
+		int x,
+		int y,
+		UrbanLayout urbanLayout,
+		out int sourceId)
+	{
+		sourceId = -1;
+
+		_biomeSpecialSourceMap.TryGetValue(biomeIndex, out Dictionary<string, int[]> specialMap);
+		_biomeSourceMap.TryGetValue(biomeIndex, out Dictionary<TerrainType, int[]> terrainMap);
+
+		switch (urbanCellType)
+		{
+			case UrbanCellType.Road:
+				string roadKey = GetUrbanRoadKey(urbanLayout, x, y);
+				if (TryPickSpecialSource(specialMap, roadKey, x, y, out sourceId))
+					return true;
+				break;
+			case UrbanCellType.Sidewalk:
+				if (TryPickSpecialSource(specialMap, "sidewalk", x, y, out sourceId))
+					return true;
+				if (terrainMap != null && terrainMap.TryGetValue(TerrainType.Grass, out int[] sidewalkFallback))
+				{
+					sourceId = sidewalkFallback[HashCell(x, y) % sidewalkFallback.Length];
+					return true;
+				}
+				break;
+			case UrbanCellType.BuildingInterior:
+				if (TryPickSpecialSource(specialMap, "building_interior", x, y, out sourceId))
+					return true;
+				break;
+			case UrbanCellType.BuildingWall:
+				if (TryPickSpecialSource(specialMap, "building_edge", x, y, out sourceId))
+					return true;
+				break;
+			case UrbanCellType.Plaza:
+				if (TryPickSpecialSource(specialMap, "plaza", x, y, out sourceId))
+					return true;
+				break;
+		}
+
+		return false;
+	}
+
+	private static bool TryPickSpecialSource(Dictionary<string, int[]> specialMap, string key, int x, int y, out int sourceId)
+	{
+		sourceId = -1;
+		if (specialMap == null || !specialMap.TryGetValue(key, out int[] sources) || sources.Length == 0)
+			return false;
+
+		sourceId = PickUrbanSpecialSourceId(key, sources, x, y);
+		return true;
+	}
+
+	private static string GetUrbanRoadKey(UrbanLayout urbanLayout, int x, int y)
+	{
+		if (urbanLayout == null)
+			return "road_straight_ns";
+
+		Vector2I cell = new(x, y);
+		bool north = urbanLayout.RoadCells.Contains(cell + Vector2I.Up);
+		bool east = urbanLayout.RoadCells.Contains(cell + Vector2I.Right);
+		bool south = urbanLayout.RoadCells.Contains(cell + Vector2I.Down);
+		bool west = urbanLayout.RoadCells.Contains(cell + Vector2I.Left);
+
+		int connections = 0;
+		if (north) connections++;
+		if (east) connections++;
+		if (south) connections++;
+		if (west) connections++;
+
+		if (connections >= 4) return "road_cross";
+		if (connections == 3)
+		{
+			if (!north) return "road_t_n";
+			if (!east) return "road_t_e";
+			if (!south) return "road_t_s";
+			return "road_t_w";
+		}
+
+		if (connections == 2)
+		{
+			if (north && south) return "road_straight_ns";
+			if (east && west) return "road_straight_ew";
+			if (north && east) return "road_corner_ne";
+			if (north && west) return "road_corner_nw";
+			if (south && east) return "road_corner_se";
+			return "road_corner_sw";
+		}
+
+		if (connections == 1)
+		{
+			if (north) return "road_end_n";
+			if (east) return "road_end_e";
+			if (south) return "road_end_s";
+			return "road_end_w";
+		}
+
+		return "road_straight_ns";
+	}
+
+	private static int PickUrbanSpecialSourceId(string key, int[] sources, int x, int y)
+	{
+		int patchX = Mathf.FloorToInt(x / 4.0f);
+		int patchY = Mathf.FloorToInt(y / 4.0f);
+		int patchRoll = HashCell(patchX, patchY) % 100;
+		int variantRoll = HashCell(x, y);
+
+		if ((key == "building_edge" || key == "plaza") && sources.Length >= 3)
+		{
+			if (patchRoll < 25)
+				return sources[2];
+			if (patchRoll < 58)
+				return sources[1];
+			return sources[0];
+		}
+
+		if (key == "building_interior" && sources.Length >= 2)
+		{
+			return sources[(patchRoll < 45 ? 0 : 1) % sources.Length];
+		}
+
+		if (key == "sidewalk" && sources.Length >= 2)
+		{
+			return sources[(patchRoll < 50 ? 0 : 1) % sources.Length];
+		}
+
+		return sources[variantRoll % sources.Length];
 	}
 }
