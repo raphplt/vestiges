@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cun06wv04rhe0"
-path="res://.godot/imported/PREVIEW_RESOURCES.png-c4137da6ca0ed63bbb2435e8883f539e.ctex"
+uid="uid://bg012w5g4px15"
+path="res://.godot/imported/ui_icon_perk_traqueur_piercing.png-a655874c0b9ee7c439aab873b158b71f.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/resources/PREVIEW_RESOURCES.png"
-dest_files=["res://.godot/imported/PREVIEW_RESOURCES.png-c4137da6ca0ed63bbb2435e8883f539e.ctex"]
+source_file="res://assets/ui/icons/ui_icon_perk_traqueur_piercing.png"
+dest_files=["res://.godot/imported/ui_icon_perk_traqueur_piercing.png-a655874c0b9ee7c439aab873b158b71f.ctex"]
 
 [params]
 

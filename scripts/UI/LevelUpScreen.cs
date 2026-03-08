@@ -552,20 +552,7 @@ public partial class LevelUpScreen : CanvasLayer
         {
             PassiveSouvenirData passive = PassiveSouvenirDataLoader.Get(id);
             if (passive == null) return null;
-            return passive.Stat switch
-            {
-                "damage" => "assets/ui/icons/ui_icon_perk_degats.png",
-                "attack_speed" => "assets/ui/icons/ui_icon_perk_vitesse.png",
-                "max_hp" => "assets/ui/icons/ui_icon_perk_hp.png",
-                "speed" => "assets/ui/icons/ui_icon_perk_vitesse.png",
-                "armor" => "assets/ui/icons/ui_icon_perk_armure.png",
-                "aoe_radius" => "assets/ui/icons/ui_icon_perk_echo.png",
-                "projectile_count" => "assets/ui/icons/ui_icon_perk_echo.png",
-                "crit_chance" => "assets/ui/icons/ui_icon_perk_degats.png",
-                "regen_rate" => "assets/ui/icons/ui_icon_perk_hp.png",
-                "attack_range" => "assets/ui/icons/ui_icon_perk_vitesse.png",
-                _ => "assets/ui/icons/ui_icon_perk_degats.png"
-            };
+            return PerkIconResolver.GetPassiveStatIconPath(passive.Stat);
         }
 
         return null;

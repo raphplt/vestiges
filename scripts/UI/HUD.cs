@@ -1010,7 +1010,7 @@ public partial class HUD : CanvasLayer
                 _passiveSlotFrames[i].Modulate = Colors.White;
                 _passiveSlotLabels[i].Text = passive.Level > 1 ? $"{passive.Level}" : "";
 
-                string iconPath = GetPassiveIconPath(passive.Data.Stat);
+                string iconPath = PerkIconResolver.GetPassiveStatIconPath(passive.Data.Stat);
                 Texture2D iconTex = GD.Load<Texture2D>($"res://{iconPath}");
                 if (iconTex != null)
                 {
@@ -1032,27 +1032,6 @@ public partial class HUD : CanvasLayer
                 _passiveSlotLabels[i].Text = "";
             }
         }
-    }
-
-    private static string GetPassiveIconPath(string stat)
-    {
-        return stat switch
-        {
-            "damage" => "assets/ui/icons/ui_icon_perk_degats.png",
-            "attack_speed" => "assets/ui/icons/ui_icon_perk_vitesse.png",
-            "max_hp" => "assets/ui/icons/ui_icon_perk_hp.png",
-            "speed" => "assets/ui/icons/ui_icon_perk_vitesse.png",
-            "armor" => "assets/ui/icons/ui_icon_perk_armure.png",
-            "aoe_radius" => "assets/ui/icons/ui_icon_perk_echo.png",
-            "projectile_count" => "assets/ui/icons/ui_icon_perk_echo.png",
-            "crit_chance" => "assets/ui/icons/ui_icon_perk_degats.png",
-            "regen_rate" => "assets/ui/icons/ui_icon_perk_hp.png",
-            "attack_range" => "assets/ui/icons/ui_icon_perk_vitesse.png",
-            "xp_magnet_radius" => "assets/ui/icons/ui_icon_perk_siphon.png",
-            "cooldown_reduction" => "assets/ui/icons/ui_icon_perk_canalisation.png",
-            "projectile_pierce" => "assets/ui/icons/ui_icon_perk_barrage.png",
-            _ => "assets/ui/icons/ui_icon_perk_degats.png"
-        };
     }
 
     private static Color GetTierColor(int tier)

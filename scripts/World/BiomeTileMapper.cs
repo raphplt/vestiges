@@ -13,6 +13,7 @@ public class BiomeTileMapper
 {
 	private readonly Dictionary<int, Dictionary<TerrainType, int[]>> _biomeSourceMap = new();
 	private readonly Dictionary<TerrainType, int[]> _fallbackSourceMap = new();
+	private readonly Dictionary<int, string> _biomeIds = new();
 
 	// Tiles d'eau communes (remplacement global du water générique)
 	private int[] _commonWaterSources;
@@ -32,6 +33,7 @@ public class BiomeTileMapper
 	{
 		_biomeSourceMap.Clear();
 		_fallbackSourceMap.Clear();
+		_biomeIds.Clear();
 
 		// Charger les tiles d'eau communes
 		_commonWaterSources = LoadTileGroup(tileSet, new List<string>
@@ -54,6 +56,7 @@ public class BiomeTileMapper
 		for (int i = 0; i < activeBiomes.Count; i++)
 		{
 			BiomeData biome = activeBiomes[i];
+			_biomeIds[i] = biome.Id;
 			if (biome.TileSources.Count == 0)
 				continue;
 
@@ -97,6 +100,11 @@ public class BiomeTileMapper
 		{
 			if (terrainMap.TryGetValue(terrain, out int[] sources))
 			{
+				if (_biomeIds.TryGetValue(biomeIndex, out string biomeId))
+				{
+					return GetBiomeSpecificSourceId(biomeId, terrain, sources, x, y);
+				}
+
 				int hash = HashCell(x, y);
 				return sources[hash % sources.Length];
 			}
@@ -162,5 +170,30 @@ public class BiomeTileMapper
 	private static int HashCell(int x, int y)
 	{
 		return ((x * 73856093) ^ (y * 19349663)) & 0x7FFFFFFF;
+	}
+
+	private static int GetBiomeSpecificSourceId(string biomeId, TerrainType terrain, int[] sources, int x, int y)
+	{
+		if (biomeId == "wild_fields" && terrain == TerrainType.Grass && sources.Length >= 8)
+			return GetWildFieldsGrassSourceId(sources, x, y);
+
+		int hash = HashCell(x, y);
+		return sources[hash % sources.Length];
+	}
+
+	private static int GetWildFieldsGrassSourceId(int[] sources, int x, int y)
+	{
+		int patchX = Mathf.FloorToInt(x / 5.0f);
+		int patchY = Mathf.FloorToInt(y / 5.0f);
+		int patchRoll = HashCell(patchX, patchY) % 100;
+		int variantRoll = HashCell(x, y);
+
+		if (patchRoll < 18)
+			return sources[6 + (variantRoll % 2)];
+
+		if (patchRoll < 58)
+			return sources[3 + (variantRoll % 3)];
+
+		return sources[variantRoll % 3];
 	}
 }

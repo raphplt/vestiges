@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bst261weth6jg"
-path="res://.godot/imported/PREVIEW_STRUCTURES_VFX.png-27ae8a9e20daf86747f60d8afcd2e391.ctex"
+uid="uid://s5utkmsxtcv5"
+path="res://.godot/imported/ui_icon_perk_glass_cannon.png-54231f966d8e1b173ceb1041f3b17ca5.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/structures/PREVIEW_STRUCTURES_VFX.png"
-dest_files=["res://.godot/imported/PREVIEW_STRUCTURES_VFX.png-27ae8a9e20daf86747f60d8afcd2e391.ctex"]
+source_file="res://assets/ui/icons/ui_icon_perk_glass_cannon.png"
+dest_files=["res://.godot/imported/ui_icon_perk_glass_cannon.png-54231f966d8e1b173ceb1041f3b17ca5.ctex"]
 
 [params]
 
