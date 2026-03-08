@@ -80,7 +80,7 @@ public partial class AudioManager : Node
 		["mus_nuit_chaos"]       = "res://assets/audio/musique/mus_nuit_chaos.ogg",
 		["mus_aube"]             = "res://assets/audio/musique/mus_aube.ogg",
 		["mus_hub"]              = "res://assets/audio/musique/mus_hub.ogg",
-		["mus_mort"]             = "res://assets/audio/musique/mus_mort..ogg",
+		["mus_mort"]             = "res://assets/audio/musique/mus_mort.ogg",
 
 		// Pas du joueur
 		["sfx_pas_herbe"]   = "res://assets/audio/sfx/joueur/pas/sfx_pas_herbe.wav",

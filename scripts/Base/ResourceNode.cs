@@ -1,6 +1,7 @@
 using Godot;
 using Vestiges.Core;
 using Vestiges.Infrastructure;
+using Vestiges.World;
 
 namespace Vestiges.Base;
 
@@ -21,6 +22,7 @@ public partial class ResourceNode : StaticBody2D
     private Polygon2D _visual;
     private Polygon2D _outline;
     private Sprite2D _sprite;
+    private InteractableAura _interactionAura;
     private Color _originalColor;
     private bool _usesSprite;
     private float _harvestBonusMult = 1f;
@@ -73,6 +75,8 @@ public partial class ResourceNode : StaticBody2D
             _usesSprite = false;
             BuildPolygonFallback(data);
         }
+
+        CreateInteractionAura(data);
     }
 
     private bool TryLoadSprite(ResourceData data)
@@ -184,6 +188,71 @@ public partial class ResourceNode : StaticBody2D
         _visual.AddChild(_outline);
     }
 
+    private void CreateInteractionAura(ResourceData data)
+    {
+        _interactionAura?.QueueFree();
+        _interactionAura = new InteractableAura();
+        AddChild(_interactionAura);
+
+        (Color baseColor, Color accentColor, bool withMote, float pulseSpeed) = GetAuraStyle(data);
+        float radius = Mathf.Max(10f, data.Size * 0.9f);
+        float height = data.Shape switch
+        {
+            "tree" => Mathf.Max(14f, data.Size * 1.15f),
+            "crystal" => Mathf.Max(15f, data.Size * 1.2f),
+            _ => Mathf.Max(10f, data.Size * 0.9f)
+        };
+
+        _interactionAura.Configure(
+            baseColor,
+            accentColor,
+            radius,
+            height,
+            withMote,
+            pulseSpeed,
+            baseAlpha: data.Id == "essence" ? 0.16f : 0.09f,
+            pulseAlpha: data.Id == "essence" ? 0.07f : 0.04f,
+            crownAlpha: data.Id == "essence" ? 0.14f : 0.05f,
+            crownPulseAlpha: data.Id == "essence" ? 0.08f : 0.03f);
+    }
+
+    private (Color baseColor, Color accentColor, bool withMote, float pulseSpeed) GetAuraStyle(ResourceData data)
+    {
+        return data.Id switch
+        {
+            "wood" => (
+                Color.FromHtml("#5A4A38"),
+                Color.FromHtml("#8A9A4A"),
+                false,
+                0.85f),
+            "stone" => (
+                Color.FromHtml("#6B6161"),
+                Color.FromHtml("#E8E0D4"),
+                false,
+                0.7f),
+            "metal" => (
+                Color.FromHtml("#5A6A7A"),
+                Color.FromHtml("#8AB8C4"),
+                false,
+                0.9f),
+            "fiber" => (
+                Color.FromHtml("#2D5A27"),
+                Color.FromHtml("#7BC558"),
+                false,
+                0.95f),
+            "essence" => (
+                Color.FromHtml("#56A900"),
+                Color.FromHtml("#CFFF75"),
+                true,
+                1.25f),
+            _ => (
+                new Color(data.Color, 1f),
+                new Color(data.OutlineColor, 1f),
+                false,
+                0.8f)
+        };
+    }
+
     /// <summary>Récolte le noeud entièrement en un seul coup. Retourne la quantité totale.</summary>
     public int Harvest()
     {
@@ -229,6 +298,8 @@ public partial class ResourceNode : StaticBody2D
         shake.TweenProperty(this, "position", basePos + new Vector2(3, 0), 0.05f);
         shake.TweenProperty(this, "position", basePos + new Vector2(-3, 0), 0.05f);
         shake.TweenProperty(this, "position", basePos, 0.05f);
+
+        _interactionAura?.SetActive(false);
     }
 
     private void Exhaust()

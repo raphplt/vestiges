@@ -20,6 +20,7 @@ public partial class PointOfInterest : StaticBody2D
     private Polygon2D _outline;
     private Polygon2D _indicator;
     private Polygon2D _guardRing;
+    private InteractableAura _interactionAura;
     private Color _originalColor;
     private EventBus _eventBus;
     private Tween _guardPulseTween;
@@ -65,6 +66,7 @@ public partial class PointOfInterest : StaticBody2D
         _visual.Color = data.Color;
 
         CreateOutline(shape, data.OutlineColor);
+        CreateInteractionAura(data, s);
         CreateIndicator(s);
 
         // Les POI gardés sans gardes actifs sont directement accessibles
@@ -96,6 +98,7 @@ public partial class PointOfInterest : StaticBody2D
             fadeTween.Parallel().TweenProperty(_outline, "color", new Color(_outline.Color, 0.3f), 0.3f).SetDelay(0.15f);
         if (_indicator != null)
             _indicator.Visible = false;
+        _interactionAura?.SetActive(false);
 
         _eventBus?.EmitSignal(EventBus.SignalName.PoiExplored, _poiId, _data?.Type ?? "");
     }
@@ -331,6 +334,40 @@ public partial class PointOfInterest : StaticBody2D
         _outline.Color = outlineColor;
         _outline.ZIndex = -1;
         _visual.AddChild(_outline);
+    }
+
+    private void CreateInteractionAura(PoiData data, float size)
+    {
+        _interactionAura?.QueueFree();
+        _interactionAura = new InteractableAura();
+        AddChild(_interactionAura);
+
+        (Color baseColor, Color accentColor, bool withMote, float pulseSpeed) = GetPoiAuraStyle(data);
+        _interactionAura.Configure(
+            baseColor,
+            accentColor,
+            radius: size * 0.75f,
+            height: size * 0.65f,
+            withMote,
+            pulseSpeed,
+            baseAlpha: 0.1f,
+            pulseAlpha: 0.05f,
+            crownAlpha: withMote ? 0.1f : 0.06f,
+            crownPulseAlpha: withMote ? 0.05f : 0.03f);
+    }
+
+    private static (Color baseColor, Color accentColor, bool withMote, float pulseSpeed) GetPoiAuraStyle(PoiData data)
+    {
+        return data.Type switch
+        {
+            "cache" => (Color.FromHtml("#7A5C42"), Color.FromHtml("#D4A843"), false, 0.85f),
+            "guarded" => (Color.FromHtml("#D4A843"), Color.FromHtml("#F0E0C0"), true, 1.0f),
+            "lore" => (Color.FromHtml("#6A4AAE"), Color.FromHtml("#F0E0C0"), true, 0.75f),
+            "merchant" => (Color.FromHtml("#4A8A4A"), Color.FromHtml("#C4B490"), false, 0.7f),
+            "anomaly" => (Color.FromHtml("#4A3066"), Color.FromHtml("#7FFF00"), true, 1.15f),
+            "sanctuary" => (Color.FromHtml("#D4A843"), Color.FromHtml("#F0E0C0"), true, 0.65f),
+            _ => (Color.FromHtml("#7A5C42"), Color.FromHtml("#E8E0D4"), false, 0.8f)
+        };
     }
 
     /// <summary>Petit indicateur pulsant au-dessus du POI non exploré.</summary>

@@ -15,14 +15,13 @@ public partial class Chest : StaticBody2D
     private bool _isOpened;
     private Polygon2D _visual;
     private Polygon2D _outline;
-    private Polygon2D _glowEffect;
     private Sprite2D _sprite;
+    private InteractableAura _interactionAura;
     private Texture2D _closedTexture;
     private Texture2D _openTexture;
     private bool _usesSprite;
     private Color _originalColor;
     private EventBus _eventBus;
-    private Tween _glowTween;
 
     public bool IsOpened => _isOpened;
     public float OpenTime => _chestData?.OpenTime ?? 0.5f;
@@ -51,7 +50,6 @@ public partial class Chest : StaticBody2D
             _usesSprite = true;
             if (_visual != null)
                 _visual.Visible = false;
-            CreateRarityGlow(data.Rarity, data.Size);
         }
         else
         {
@@ -61,8 +59,9 @@ public partial class Chest : StaticBody2D
             _visual.Polygon = shape;
             _visual.Color = data.Color;
             CreateOutline(shape, data.OutlineColor);
-            CreateRarityGlow(data.Rarity, s);
         }
+
+        CreateInteractionAura(data);
     }
 
     private bool TryLoadSprites(ChestData data)
@@ -128,8 +127,7 @@ public partial class Chest : StaticBody2D
                 _outline.Color = new Color(_outline.Color, 0.2f);
         }
 
-        if (_glowEffect != null)
-            _glowEffect.Visible = false;
+        _interactionAura?.SetActive(false);
 
         PlayOpenAnimation();
         SpawnOpenParticles();
@@ -176,54 +174,73 @@ public partial class Chest : StaticBody2D
         _visual.AddChild(_outline);
     }
 
-    private void CreateRarityGlow(string rarity, float size)
+    private void CreateInteractionAura(ChestData data)
     {
-        if (rarity == "common")
-            return;
+        _interactionAura?.QueueFree();
+        _interactionAura = new InteractableAura();
+        AddChild(_interactionAura);
 
-        Color glowColor = rarity switch
+        Color baseColor = data.Rarity switch
         {
-            "rare" => new Color(0.5f, 0.4f, 0.8f, 0.4f),
-            "epic" => new Color(0.9f, 0.6f, 0.15f, 0.5f),
-            "lore" => new Color(0.8f, 0.85f, 1f, 0.4f),
-            _ => new Color(1f, 1f, 1f, 0.3f)
+            "rare" => Color.FromHtml("#5A7A9A"),
+            "epic" => Color.FromHtml("#D4A843"),
+            "lore" => Color.FromHtml("#C4D0D4"),
+            _ => Color.FromHtml("#7A5C42")
         };
 
-        _glowEffect = new Polygon2D();
-        float gs = size * 0.8f;
-        _glowEffect.Polygon = new Vector2[]
+        Color accentColor = data.Rarity switch
         {
-            new(-gs, 0), new(0, -gs * 0.5f),
-            new(gs, 0), new(0, gs * 0.5f)
+            "rare" => Color.FromHtml("#8B6BAE"),
+            "epic" => Color.FromHtml("#F0C030"),
+            "lore" => Color.FromHtml("#F0E0C0"),
+            _ => Color.FromHtml("#C49B3E")
         };
-        _glowEffect.Color = glowColor;
-        _glowEffect.ZIndex = -2;
 
-        if (_usesSprite && _sprite != null)
-            _sprite.AddChild(_glowEffect);
-        else if (_visual != null)
-            _visual.AddChild(_glowEffect);
-
-        AnimateGlow();
-    }
-
-    private void AnimateGlow()
-    {
-        if (_glowEffect == null)
-            return;
-
-        _glowTween = CreateTween();
-        _glowTween.SetLoops();
-        _glowTween.TweenProperty(_glowEffect, "modulate:a", 0.4f, 1f)
-            .SetTrans(Tween.TransitionType.Sine);
-        _glowTween.TweenProperty(_glowEffect, "modulate:a", 1f, 1f)
-            .SetTrans(Tween.TransitionType.Sine);
+        _interactionAura.Configure(
+            baseColor,
+            accentColor,
+            radius: Mathf.Max(12f, data.Size * 1.15f),
+            height: Mathf.Max(12f, data.Size * 1.05f),
+            withMote: data.Rarity != "common",
+            pulseSpeed: data.Rarity switch
+            {
+                "epic" => 1.2f,
+                "rare" => 0.95f,
+                "lore" => 0.8f,
+                _ => 0.75f
+            },
+            baseAlpha: data.Rarity switch
+            {
+                "epic" => 0.18f,
+                "rare" => 0.14f,
+                "lore" => 0.15f,
+                _ => 0.1f
+            },
+            pulseAlpha: data.Rarity switch
+            {
+                "epic" => 0.08f,
+                "rare" => 0.06f,
+                "lore" => 0.06f,
+                _ => 0.04f
+            },
+            crownAlpha: data.Rarity switch
+            {
+                "epic" => 0.12f,
+                "rare" => 0.1f,
+                "lore" => 0.12f,
+                _ => 0.06f
+            },
+            crownPulseAlpha: data.Rarity switch
+            {
+                "epic" => 0.07f,
+                "rare" => 0.05f,
+                "lore" => 0.06f,
+                _ => 0.03f
+            });
     }
 
     private void PlayOpenAnimation()
     {
-        _glowTween?.Kill();
-
         if (_usesSprite && _sprite != null)
         {
             _sprite.Modulate = new Color(10f, 10f, 10f, 1f);

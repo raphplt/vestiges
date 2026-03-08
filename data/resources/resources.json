@@ -4,11 +4,11 @@
         "name": "Bois",
         "color": "#8B6914",
         "outline_color": "#6B4E0A",
-        "icon": "assets/sprites/items/item_bois.png",
+        "icon": "assets/items/item_bois.png",
         "sprites": [
-            "assets/sprites/resources/resource_bois_1.png",
-            "assets/sprites/resources/resource_bois_2.png",
-            "assets/sprites/resources/resource_bois_3.png"
+            "assets/resources/resource_bois_1.png",
+            "assets/resources/resource_bois_2.png",
+            "assets/resources/resource_bois_3.png"
         ],
         "harvest_time": 0.4,
         "amount_min": 2,
@@ -22,11 +22,11 @@
         "name": "Pierre",
         "color": "#A89878",
         "outline_color": "#786850",
-        "icon": "assets/sprites/items/item_pierre.png",
+        "icon": "assets/items/item_pierre.png",
         "sprites": [
-            "assets/sprites/resources/resource_pierre_1.png",
-            "assets/sprites/resources/resource_pierre_2.png",
-            "assets/sprites/resources/resource_pierre_3.png"
+            "assets/resources/resource_pierre_1.png",
+            "assets/resources/resource_pierre_2.png",
+            "assets/resources/resource_pierre_3.png"
         ],
         "harvest_time": 0.5,
         "amount_min": 1,
@@ -40,11 +40,11 @@
         "name": "Métal",
         "color": "#7088A0",
         "outline_color": "#506878",
-        "icon": "assets/sprites/items/item_metal.png",
+        "icon": "assets/items/item_metal.png",
         "sprites": [
-            "assets/sprites/resources/resource_metal_1.png",
-            "assets/sprites/resources/resource_metal_2.png",
-            "assets/sprites/resources/resource_metal_3.png"
+            "assets/resources/resource_metal_1.png",
+            "assets/resources/resource_metal_2.png",
+            "assets/resources/resource_metal_3.png"
         ],
         "harvest_time": 0.6,
         "amount_min": 1,
@@ -58,11 +58,11 @@
         "name": "Fibre",
         "color": "#5A8A4A",
         "outline_color": "#3A6A2A",
-        "icon": "assets/sprites/items/item_fibre.png",
+        "icon": "assets/items/item_fibre.png",
         "sprites": [
-            "assets/sprites/resources/resource_fibre_1.png",
-            "assets/sprites/resources/resource_fibre_2.png",
-            "assets/sprites/resources/resource_fibre_3.png"
+            "assets/resources/resource_fibre_1.png",
+            "assets/resources/resource_fibre_2.png",
+            "assets/resources/resource_fibre_3.png"
         ],
         "harvest_time": 0.3,
         "amount_min": 2,
@@ -76,10 +76,10 @@
         "name": "Essence",
         "color": "#5EC4C4",
         "outline_color": "#3A8A8A",
-        "icon": "assets/sprites/items/item_essence.png",
+        "icon": "assets/items/item_essence.png",
         "sprites": [
-            "assets/sprites/resources/resource_essence_1.png",
-            "assets/sprites/resources/resource_essence_2.png"
+            "assets/resources/resource_essence_1.png",
+            "assets/resources/resource_essence_2.png"
         ],
         "harvest_time": 0.7,
         "amount_min": 1,

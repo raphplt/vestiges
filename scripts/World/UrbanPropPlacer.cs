@@ -12,36 +12,36 @@ public static class UrbanPropPlacer
 {
 	// Chemins des sprites (relatifs a res://)
 	private static readonly string[] WallSprites = {
-		"assets/sprites/props/urban_ruins/prop_concrete_wall.png",
-		"assets/sprites/props/urban_ruins/prop_concrete_wall_v2.png",
-		"assets/sprites/props/urban_ruins/prop_concrete_wall_v3.png",
-		"assets/sprites/props/urban_ruins/prop_brick_wall.png",
+		"assets/props/urban_ruins/prop_concrete_wall.png",
+		"assets/props/urban_ruins/prop_concrete_wall_v2.png",
+		"assets/props/urban_ruins/prop_concrete_wall_v3.png",
+		"assets/props/urban_ruins/prop_brick_wall.png",
 	};
 	// Poids relatifs : intact, fissure, effondre, brique
 	private static readonly float[] WallWeights = { 1.8f, 1.2f, 0.8f, 1.0f };
 
 	private static readonly Dictionary<string, float> RoadProps = new()
 	{
-		{ "assets/sprites/props/urban_ruins/prop_urban_car.png", 0.04f },
-		{ "assets/sprites/props/urban_ruins/prop_concrete_debris.png", 0.10f },
-		{ "assets/sprites/props/urban_ruins/prop_concrete_debris_v2.png", 0.08f },
-		{ "assets/sprites/props/urban_ruins/prop_concrete_debris_v3.png", 0.06f },
+		{ "assets/props/urban_ruins/prop_urban_car.png", 0.04f },
+		{ "assets/props/urban_ruins/prop_concrete_debris.png", 0.10f },
+		{ "assets/props/urban_ruins/prop_concrete_debris_v2.png", 0.08f },
+		{ "assets/props/urban_ruins/prop_concrete_debris_v3.png", 0.06f },
 	};
 
 	private static readonly Dictionary<string, float> SidewalkProps = new()
 	{
-		{ "assets/sprites/props/urban_ruins/prop_dumpster.png", 0.015f },
-		{ "assets/sprites/props/urban_ruins/prop_mailbox.png", 0.015f },
-		{ "assets/sprites/props/urban_ruins/prop_traffic_light.png", 0.02f },
-		{ "assets/sprites/props/urban_ruins/prop_phone_booth.png", 0.008f },
-		{ "assets/sprites/props/urban_ruins/prop_torn_billboard.png", 0.008f },
-		{ "assets/sprites/props/urban_ruins/prop_graffiti_wall.png", 0.01f },
+		{ "assets/props/urban_ruins/prop_dumpster.png", 0.015f },
+		{ "assets/props/urban_ruins/prop_mailbox.png", 0.015f },
+		{ "assets/props/urban_ruins/prop_traffic_light.png", 0.02f },
+		{ "assets/props/urban_ruins/prop_phone_booth.png", 0.008f },
+		{ "assets/props/urban_ruins/prop_torn_billboard.png", 0.008f },
+		{ "assets/props/urban_ruins/prop_graffiti_wall.png", 0.01f },
 	};
 
 	private static readonly string[] LandmarkSprites = {
-		"assets/sprites/props/urban_ruins/prop_collapsed_building.png",
-		"assets/sprites/props/urban_ruins/prop_collapsed_stairs.png",
-		"assets/sprites/props/urban_ruins/prop_supermarket_shelves.png",
+		"assets/props/urban_ruins/prop_collapsed_building.png",
+		"assets/props/urban_ruins/prop_collapsed_stairs.png",
+		"assets/props/urban_ruins/prop_supermarket_shelves.png",
 	};
 
 	// Collision radii correspondant aux sprites
