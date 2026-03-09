@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using Godot;
 using Vestiges.Base;
 using Vestiges.Core;
@@ -61,23 +62,57 @@ public partial class GameBootstrap : Node
 
         if (isSimulation)
         {
+            // Simulation : tout synchrone, pas d'overlay
+            WorldSetup worldSetup = GetNode<WorldSetup>("..");
+            worldSetup.InitializeWorldSync();
+
+            EnemyPool enemyPool = GetNode<EnemyPool>("../EnemyPool");
+            enemyPool.PrewarmSync();
+
             SetupSimulation(batchRunner, player, perkManager, scoreManager, runTracker,
                 craftManager, inventory, progression, fragmentManager);
         }
         else
         {
-            SetupNormalGame(player, perkManager, scoreManager, runTracker,
+            // Mode normal : lancer l'initialisation async avec overlay
+            _ = SetupNormalGameAsync(player, perkManager, scoreManager, runTracker,
                 craftManager, structureManager, inventory, progression, foyer,
                 fragmentManager);
         }
     }
 
-    private void SetupNormalGame(Player player, PerkManager perkManager,
+    private async Task SetupNormalGameAsync(Player player, PerkManager perkManager,
         ScoreManager scoreManager, RunTracker runTracker, CraftManager craftManager,
         StructureManager structureManager, Inventory inventory,
         PlayerProgression progression, Node2D foyer,
         FragmentManager fragmentManager)
     {
+        // --- Créer et afficher l'overlay de chargement ---
+        GameLoadingOverlay overlay = new() { Name = "GameLoadingOverlay" };
+        GetNode("..").AddChild(overlay);
+
+        // Pause le gameplay pendant le chargement
+        GetTree().Paused = true;
+        overlay.ProcessMode = ProcessModeEnum.Always;
+
+        // --- Shader warmup (force la compilation GPU pendant l'overlay) ---
+        overlay.SetProgress("Préparation des shaders...");
+        WarmupShaders();
+        await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+        await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+
+        // --- Initialisation du monde (étalée sur plusieurs frames) ---
+        WorldSetup worldSetup = GetNode<WorldSetup>("..");
+        await worldSetup.InitializeWorldAsync(step => overlay.SetProgress(step));
+
+        // --- Prewarm EnemyPool (étalé) ---
+        overlay.SetProgress("Préparation des créatures...");
+        EnemyPool enemyPool = GetNode<EnemyPool>("../EnemyPool");
+        await enemyPool.PrewarmAsync(4);
+
+        // --- Wire des systèmes (rapide, synchrone) ---
+        overlay.SetProgress("Initialisation...");
+
         StructurePlacer structurePlacer = GetNode<StructurePlacer>("../StructurePlacer");
         DayNightCycle dayNightCycle = GetNode<DayNightCycle>("../DayNightCycle");
         HUD hud = GetNode<HUD>("../HUD");
@@ -90,14 +125,10 @@ public partial class GameBootstrap : Node
         hud.SetDayNightCycle(dayNightCycle);
         hud.SetCompassTargets(player, foyer);
 
-        WorldSetup worldSetup = GetNode<WorldSetup>("..");
         FogOfWar fogOfWar = GetNodeOrNull<FogOfWar>("../FogOfWar");
         hud.InitializeMinimap(worldSetup, fogOfWar);
 
-        // FragmentManager déjà créé dans _Ready() — juste wire l'UI
         levelUpScreen.SetFragmentManager(fragmentManager);
-
-        // Perk Manager : gère les perks du monde (mémorial, coffres, POI)
         levelUpScreen.SetPerkManager(perkManager);
         gameOverScreen.SetScoreManager(scoreManager);
 
@@ -114,32 +145,26 @@ public partial class GameBootstrap : Node
         InitializeCharacterAndRun(player, perkManager, scoreManager, runTracker, inventory);
         ApplyMutators(scoreManager, dayNightCycle, worldSetup, foyer as Foyer);
 
-        // Rattraper les level-ups manqués (XP gagnée avant que le setup soit complet)
         if (progression.CurrentLevel > 1 && fragmentManager.PendingChoices.Count == 0)
         {
             GD.Print($"[GameBootstrap] Catching up missed level-ups: player is level {progression.CurrentLevel}");
             fragmentManager.TriggerLevelUp(progression.CurrentLevel);
         }
 
-        // Zone Memory Manager — doit exister avant SpawnManager._Process
         ZoneMemoryManager zoneMemoryManager = new() { Name = "ZoneMemoryManager" };
         GetNode("..").CallDeferred("add_child", zoneMemoryManager);
 
-        // Cursed Item Manager — wire avec PerkManager pour propager les modifiers
         CursedItemManager cursedItemManager = new() { Name = "CursedItemManager" };
         cursedItemManager.SetPerkManager(perkManager);
         GetNode("..").CallDeferred("add_child", cursedItemManager);
 
-        // Screen shake
         Combat.ScreenShake screenShake = new() { Name = "ScreenShake" };
         screenShake.SetCamera(player.GetNode<Camera2D>("Camera"));
         GetNode("..").CallDeferred("add_child", screenShake);
 
-        // Particules ambiantes jour/nuit
         AmbientParticles ambientParticles = new() { Name = "AmbientParticles" };
         GetNode("..").CallDeferred("add_child", ambientParticles);
 
-        // VFX level up : burst doré + screen shake léger
         EventBus eventBus = GetNode<EventBus>("/root/EventBus");
         Player levelUpPlayer = player;
         eventBus.LevelUp += (int _level) =>
@@ -157,6 +182,60 @@ public partial class GameBootstrap : Node
         GetNode("..").CallDeferred("add_child", debugPanel);
 
         GD.Print($"[GameBootstrap] Run started with {player.CharacterId}");
+
+        // --- Dépause et fade-out de l'overlay ---
+        GetTree().Paused = false;
+        overlay.FadeOut();
+    }
+
+    /// <summary>
+    /// Pré-charge et force la compilation de tous les shaders du jeu
+    /// en rendant un sprite invisible avec chaque material pendant 1 frame.
+    /// </summary>
+    private void WarmupShaders()
+    {
+        string[] shaderPaths = new[]
+        {
+            "res://assets/shaders/entity.gdshader",
+            "res://assets/shaders/fog_of_war.gdshader",
+            "res://assets/shaders/sway.gdshader",
+            "res://assets/shaders/swamp_atmosphere.gdshader",
+            "res://assets/shaders/hit_flash.gdshader",
+            "res://assets/shaders/dissolve.gdshader",
+            "res://assets/shaders/outline.gdshader",
+            "res://assets/shaders/aberration_aura.gdshader",
+        };
+
+        Node2D warmupContainer = new() { Name = "_ShaderWarmup" };
+        warmupContainer.Position = new Vector2(-9999, -9999);
+        GetNode("..").AddChild(warmupContainer);
+
+        foreach (string path in shaderPaths)
+        {
+            Shader shader = GD.Load<Shader>(path);
+            if (shader == null) continue;
+
+            Sprite2D sprite = new();
+            sprite.Material = new ShaderMaterial { Shader = shader };
+            sprite.Texture = GD.Load<Texture2D>("res://icon.svg");
+            warmupContainer.AddChild(sprite);
+        }
+
+        // Supprimer après 2 frames (assez pour compiler les shaders)
+        // Utilise un timer car on est en pause
+        Timer cleanup = new()
+        {
+            WaitTime = 0.1f,
+            OneShot = true,
+            Autostart = true,
+            ProcessMode = ProcessModeEnum.Always,
+        };
+        cleanup.Timeout += () =>
+        {
+            warmupContainer.QueueFree();
+            cleanup.QueueFree();
+        };
+        GetNode("..").AddChild(cleanup);
     }
 
     private void SetupSimulation(BatchRunner batchRunner, Player player,

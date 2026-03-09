@@ -399,7 +399,7 @@ public partial class BiomeAtmosphere : Node2D
 
 		particles.Visible = true;
 		particles.Emitting = true;
-		particles.Amount = Mathf.RoundToInt(Mathf.Lerp(minAmount, maxAmount, moisture));
+		particles.Amount = Mathf.Max(1, Mathf.RoundToInt(Mathf.Lerp(minAmount, maxAmount, moisture)));
 
 		if (particles.ProcessMaterial is ParticleProcessMaterial material)
 		{

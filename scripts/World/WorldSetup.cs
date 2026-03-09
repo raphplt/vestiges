@@ -1,5 +1,7 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Godot;
 using Vestiges.Base;
 using Vestiges.Core;
@@ -59,6 +61,14 @@ public partial class WorldSetup : Node2D
         return _generator.GetBiome(cell.X, cell.Y);
     }
 
+    // Données générées en _Ready() (CPU rapide), consommées par InitializeWorldAsync()
+    private TerrainType[,] _terrain;
+    private UrbanLayout _urbanLayout;
+    private SwampPropLayout _swampLayout;
+
+    /// <summary>Indique si l'initialisation async est terminée.</summary>
+    public bool IsWorldReady { get; private set; }
+
     public override void _Ready()
     {
         EnemyDataLoader.Load();
@@ -91,41 +101,99 @@ public partial class WorldSetup : Node2D
             _config.EdgeFadeWidth
         );
 
-        // Charger les biomes disponibles et générer avec secteurs
+        // Générer le terrain (CPU pur, rapide)
         List<BiomeData> availableBiomes = LoadAvailableBiomes();
-        TerrainType[,] terrain;
-
         if (availableBiomes.Count >= 2)
-        {
-            terrain = _generator.Generate(availableBiomes, _config.BiomeCount);
-        }
+            _terrain = _generator.Generate(availableBiomes, _config.BiomeCount);
         else
-        {
-            terrain = _generator.Generate();
-        }
+            _terrain = _generator.Generate();
 
-        // Post-traitement urbain : generer le layout de rues/batiments
-        // avant d'appliquer les tiles (le layout mute le terrain)
-        UrbanLayout urbanLayout = null;
+        // Layouts urbains/marais (CPU pur)
         if (_generator.ActiveBiomes.Any(b => b.Id == "urban_ruins"))
         {
             UrbanLayoutGenerator urbanGen = new(Seed, _config.MapRadius);
-            urbanLayout = urbanGen.Apply(terrain, _generator, "urban_ruins");
+            _urbanLayout = urbanGen.Apply(_terrain, _generator, "urban_ruins");
         }
-
-        SwampPropLayout swampLayout = null;
         if (_generator.ActiveBiomes.Any(b => b.Id == "swamp"))
-            swampLayout = SwampPropPlacer.BuildLayout(_generator, Seed);
+            _swampLayout = SwampPropPlacer.BuildLayout(_generator, Seed);
 
-        // Dupliquer le TileSet pour ne pas modifier la ressource partagée
+        // Préparer le TileSet et mapper (rapide)
         _ground.TileSet = _ground.TileSet.Duplicate() as TileSet;
-
         _tileMapper = new BiomeTileMapper();
         _tileMapper.Initialize(_ground.TileSet, _generator.ActiveBiomes);
+    }
 
+    /// <summary>
+    /// Initialisation lourde étalée sur plusieurs frames.
+    /// Appelé par GameBootstrap après _Ready() de tous les nodes.
+    /// Reporte la progression via onProgress(stepName).
+    /// </summary>
+    public async Task InitializeWorldAsync(Action<string> onProgress = null)
+    {
+        onProgress?.Invoke("Création du monde...");
         CreateVoidBackground();
-        ApplyTerrain(terrain, urbanLayout);
-        CreateUrbanRoadOverlay(urbanLayout);
+
+        // Étaler ApplyTerrain sur plusieurs frames (le plus gros coût)
+        await ApplyTerrainAsync(_terrain, _urbanLayout, onProgress);
+
+        onProgress?.Invoke("Brouillard de guerre...");
+        CreateUrbanRoadOverlay(_urbanLayout);
+        InitializeFog();
+        await YieldFrame();
+
+        onProgress?.Invoke("Ressources...");
+        SpawnResources();
+        await YieldFrame();
+
+        if (!PoisDisabled)
+        {
+            onProgress?.Invoke("Points d'intérêt...");
+            SpawnPois();
+            SpawnChests();
+            await YieldFrame();
+        }
+
+        onProgress?.Invoke("Décors...");
+        SpawnEnvironmentProps(_urbanLayout, _swampLayout);
+
+        if (_urbanLayout != null)
+        {
+            Node2D propContainer = GetNode<Node2D>("PropContainer");
+            UrbanPropPlacer.PlaceProps(_urbanLayout, _ground, propContainer, _usedCells, Seed);
+        }
+        if (_swampLayout != null)
+        {
+            Node2D propContainer = GetNode<Node2D>("PropContainer");
+            SwampPropPlacer.PlaceProps(_swampLayout, _ground, propContainer, _usedCells);
+        }
+        await YieldFrame();
+
+        onProgress?.Invoke("Éléments de lore...");
+        SpawnLoreElements();
+        InitBiomeAtmosphere();
+        await YieldFrame();
+
+        _respawnTimer = new Timer();
+        _respawnTimer.WaitTime = _config.RespawnInterval;
+        _respawnTimer.Autostart = true;
+        _respawnTimer.Timeout += OnRespawnTimer;
+        AddChild(_respawnTimer);
+
+        // Libérer les refs temporaires
+        _terrain = null;
+        _urbanLayout = null;
+        _swampLayout = null;
+
+        IsWorldReady = true;
+        GD.Print($"[WorldSetup] World generated with seed {Seed}");
+    }
+
+    /// <summary>Initialisation synchrone legacy (simulation / fallback).</summary>
+    public void InitializeWorldSync()
+    {
+        CreateVoidBackground();
+        ApplyTerrain(_terrain, _urbanLayout);
+        CreateUrbanRoadOverlay(_urbanLayout);
         InitializeFog();
         SpawnResources();
         if (!PoisDisabled)
@@ -133,22 +201,17 @@ public partial class WorldSetup : Node2D
             SpawnPois();
             SpawnChests();
         }
-
-        SpawnEnvironmentProps(urbanLayout, swampLayout);
-
-        // Placer les props structurels urbains (murs, mobilier de rue, landmarks)
-        if (urbanLayout != null)
+        SpawnEnvironmentProps(_urbanLayout, _swampLayout);
+        if (_urbanLayout != null)
         {
             Node2D propContainer = GetNode<Node2D>("PropContainer");
-            UrbanPropPlacer.PlaceProps(urbanLayout, _ground, propContainer, _usedCells, Seed);
+            UrbanPropPlacer.PlaceProps(_urbanLayout, _ground, propContainer, _usedCells, Seed);
         }
-
-        if (swampLayout != null)
+        if (_swampLayout != null)
         {
             Node2D propContainer = GetNode<Node2D>("PropContainer");
-            SwampPropPlacer.PlaceProps(swampLayout, _ground, propContainer, _usedCells);
+            SwampPropPlacer.PlaceProps(_swampLayout, _ground, propContainer, _usedCells);
         }
-
         SpawnLoreElements();
         InitBiomeAtmosphere();
 
@@ -158,7 +221,16 @@ public partial class WorldSetup : Node2D
         _respawnTimer.Timeout += OnRespawnTimer;
         AddChild(_respawnTimer);
 
-        GD.Print($"[WorldSetup] World generated with seed {Seed}");
+        _terrain = null;
+        _urbanLayout = null;
+        _swampLayout = null;
+        IsWorldReady = true;
+        GD.Print($"[WorldSetup] World generated with seed {Seed} (sync)");
+    }
+
+    private SignalAwaiter YieldFrame()
+    {
+        return ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
     }
 
     private List<BiomeData> LoadAvailableBiomes()
@@ -220,7 +292,6 @@ public partial class WorldSetup : Node2D
                 Vector2I cell = new(x, y);
                 float dist = Mathf.Sqrt(x * x + y * y);
 
-                // Cellule effacée dans la zone de decay : tile de dissolution si dispo
                 if (_generator.IsErased(x, y))
                 {
                     if (hasDissolution && dist <= radius)
@@ -246,6 +317,67 @@ public partial class WorldSetup : Node2D
                 if (sourceId < 0)
                     continue;
                 _ground.SetCell(cell, sourceId, Vector2I.Zero);
+            }
+        }
+    }
+
+    /// <summary>Version async de ApplyTerrain : yield toutes les ~600 tiles.</summary>
+    private async Task ApplyTerrainAsync(TerrainType[,] terrain, UrbanLayout urbanLayout, Action<string> onProgress)
+    {
+        int radius = _config.MapRadius;
+        int size = radius * 2 + 1;
+        int totalCells = size * size;
+        float fadeStart = radius - _config.EdgeFadeWidth;
+        bool hasDissolution = _tileMapper.HasDissolutionTiles;
+
+        const int batchSize = 600;
+        int count = 0;
+
+        for (int gx = 0; gx < size; gx++)
+        {
+            for (int gy = 0; gy < size; gy++)
+            {
+                int x = gx - radius;
+                int y = gy - radius;
+
+                if (!_generator.IsWithinBounds(x, y))
+                    continue;
+
+                Vector2I cell = new(x, y);
+                float dist = Mathf.Sqrt(x * x + y * y);
+
+                if (_generator.IsErased(x, y))
+                {
+                    if (hasDissolution && dist <= radius)
+                    {
+                        float decay = Mathf.Clamp((dist - fadeStart) / _config.EdgeFadeWidth, 0f, 1f);
+                        int dissId = _tileMapper.GetDissolutionSourceId(decay);
+                        if (dissId >= 0)
+                        {
+                            _ground.SetCell(cell, dissId, Vector2I.Zero);
+                        }
+                    }
+                    count++;
+                    continue;
+                }
+
+                TerrainType terrainType = terrain[gx, gy];
+                int biomeIndex = _generator.GetBiomeIndex(x, y);
+                UrbanCellType urbanCellType = UrbanCellType.None;
+                if (urbanLayout != null)
+                    urbanCellType = urbanLayout.CellGrid[gx, gy];
+
+                int sourceId = _tileMapper.GetSourceId(biomeIndex, terrainType, x, y, urbanCellType, _generator);
+                if (sourceId >= 0)
+                    _ground.SetCell(cell, sourceId, Vector2I.Zero);
+
+                count++;
+                if (count % batchSize == 0)
+                {
+                    int pct = (int)(count * 100f / totalCells);
+                    onProgress?.Invoke($"Terrain... {pct}%");
+                    await YieldFrame();
+                }
             }
         }
     }
