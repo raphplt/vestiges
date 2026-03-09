@@ -110,7 +110,7 @@ public partial class BiomeAtmosphere : Node2D
 	{
 		return biomeId switch
 		{
-			"swamp" => 0.9f,
+			"swamp" => 0.72f,
 			"forest_reclaimed" => 0.2f,
 			"collapsed_quarry" => 0.3f,
 			"urban_ruins" => 0.1f,
@@ -372,10 +372,11 @@ public partial class BiomeAtmosphere : Node2D
 
 	private void UpdateSwampAmbientParticles(float moisture, bool active)
 	{
-		UpdateParticleSystem(_swampSporeParticles, active, 6, 14, moisture, 0.08f, 0.25f);
-		UpdateParticleSystem(_swampGnatParticles, active, 4, 10, moisture, 0.12f, 0.34f);
-		UpdateParticleSystem(_swampMistParticles, active, 3, 8, moisture, 0.06f, 0.18f);
-		UpdateParticleSystem(_swampBubbleParticles, active, 0, 5, moisture * 0.8f, 0.04f, 0.24f);
+		float localizedMoisture = active ? Mathf.Clamp((moisture - 0.12f) / 0.88f, 0f, 1f) : 0f;
+		UpdateParticleSystem(_swampSporeParticles, active, 2, 10, localizedMoisture, 0.04f, 0.18f);
+		UpdateParticleSystem(_swampGnatParticles, active, 1, 8, localizedMoisture, 0.08f, 0.24f);
+		UpdateParticleSystem(_swampMistParticles, active, 1, 6, localizedMoisture, 0.04f, 0.14f);
+		UpdateParticleSystem(_swampBubbleParticles, active, 0, 4, localizedMoisture * 0.85f, 0.03f, 0.18f);
 	}
 
 	private static void UpdateParticleSystem(
@@ -397,8 +398,8 @@ public partial class BiomeAtmosphere : Node2D
 			return;
 		}
 
-		particles.Visible = true;
-		particles.Emitting = true;
+		particles.Visible = moisture > 0.02f;
+		particles.Emitting = particles.Visible;
 		particles.Amount = Mathf.Max(1, Mathf.RoundToInt(Mathf.Lerp(minAmount, maxAmount, moisture)));
 
 		if (particles.ProcessMaterial is ParticleProcessMaterial material)

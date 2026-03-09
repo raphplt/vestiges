@@ -3,6 +3,17 @@ using Godot;
 
 namespace Vestiges.World;
 
+public enum SwampZoneType
+{
+	None,
+	DeepWater,
+	ShallowWater,
+	Bank,
+	WetClearing,
+	DeadGrove,
+	FungalPocket
+}
+
 public struct SwampPropPlacement
 {
 	public Vector2I Cell;
@@ -17,93 +28,75 @@ public class SwampPropLayout
 {
 	public HashSet<Vector2I> ReservedCells = new();
 	public List<SwampPropPlacement> Placements = new();
+	public Dictionary<Vector2I, SwampZoneType> Zones = new();
 }
 
 /// <summary>
-/// Compose le biome marais à partir de zones locales : lisières d'eau,
-/// bosquets morts, clairières humides et poches fongiques.
+/// Compose le biome marécageux par zones lisibles :
+/// eaux profondes, lisières, clairières humides, bosquets morts et poches fongiques.
 /// </summary>
 public static class SwampPropPlacer
 {
-	private static readonly Vector2I[] RingOffsets = {
+	private static readonly Vector2I[] NearOffsets = {
 		new(-2, -1), new(-1, -2), new(1, -2), new(2, -1),
-		new(-3, 1), new(3, 1), new(-2, 2), new(2, 2),
-		new(0, 3), new(-1, 4), new(1, 4)
+		new(2, 1), new(1, 2), new(-1, 2), new(-2, 1),
+		new(0, -3), new(3, 0), new(0, 3), new(-3, 0)
+	};
+
+	private static readonly Vector2I[] CloseOffsets = {
+		new(-1, -1), new(0, -1), new(1, -1),
+		new(-1, 0), new(1, 0),
+		new(-1, 1), new(0, 1), new(1, 1)
 	};
 
 	private static readonly Dictionary<string, float> CollisionRadii = new()
 	{
 		{ "prop_dead_tree_large_base.png", 8f },
 		{ "prop_dead_tree_mossy_large.png", 8f },
+		{ "prop_dead_tree_small.png", 3f },
 		{ "prop_aerial_roots.png", 6f },
+		{ "prop_aerial_roots_twisted.png", 6f },
 		{ "prop_root_mass_large.png", 7f },
+		{ "prop_bound_tree.png", 7f },
 		{ "prop_sunken_trunk_large.png", 8f },
 		{ "prop_sunken_boat.png", 7f },
 		{ "prop_drowned_cart.png", 6f },
 		{ "prop_broken_walkway.png", 0f },
 		{ "prop_bone_pile.png", 0f },
+		{ "prop_collapsed_pontoon.png", 6f },
+		{ "prop_sunken_shrine.png", 5f },
 		{ "prop_reeds.png", 0f },
 		{ "prop_lily_pads.png", 0f },
 		{ "prop_fallen_log.png", 6f },
+		{ "prop_rotten_stump.png", 3f },
 		{ "prop_spore_patch.png", 0f },
 		{ "prop_toxic_mushrooms.png", 0f },
 		{ "prop_swamp_lantern.png", 0f },
 		{ "prop_vine_curtain.png", 0f },
 		{ "prop_hanging_moss.png", 0f },
+		{ "prop_old_post.png", 0f },
 	};
 
 	public static SwampPropLayout BuildLayout(WorldGenerator generator, ulong seed)
 	{
 		SwampPropLayout layout = new();
-		List<Vector2I> groveCandidates = new();
-		List<Vector2I> waterEdgeGround = new();
-		List<Vector2I> shallowWater = new();
-		List<Vector2I> fungalCandidates = new();
-		List<Vector2I> wetOpenCandidates = new();
+		Dictionary<Vector2I, int> waterDistances = new();
 		List<Vector2I> swampGround = new();
+		List<Vector2I> bankCells = new();
+		List<Vector2I> shallowWaterCells = new();
+		List<Vector2I> deepWaterCells = new();
+		List<Vector2I> wetClearingCells = new();
 
-		int radius = generator.MapRadius;
-		for (int x = -radius; x <= radius; x++)
-		{
-			for (int y = -radius; y <= radius; y++)
-			{
-				if (!generator.IsWithinBounds(x, y) || generator.IsErased(x, y))
-					continue;
-				if (generator.GetBiomeId(x, y) != "swamp")
-					continue;
+		ClassifyZones(layout, generator, seed, waterDistances, swampGround, bankCells, shallowWaterCells, deepWaterCells, wetClearingCells);
 
-				TerrainType terrain = generator.GetTerrain(x, y);
-				Vector2I cell = new(x, y);
+		List<Vector2I> deadGroveAnchors = CreateDeadGroves(layout, generator, seed, waterDistances);
+		List<Vector2I> fungalAnchors = CreateFungalPockets(layout, generator, seed, waterDistances, deadGroveAnchors);
 
-				if (terrain == TerrainType.Water)
-				{
-					if (IsShallowWater(generator, x, y))
-						shallowWater.Add(cell);
-					continue;
-				}
-
-				swampGround.Add(cell);
-
-				bool edge = IsAdjacentToWater(generator, x, y, 1);
-				if (edge)
-					waterEdgeGround.Add(cell);
-
-				if (terrain == TerrainType.Forest && !edge && PatchRoll(x, y, 6, seed ^ 0xA11DUL) < 58)
-					groveCandidates.Add(cell);
-
-				if (!edge && PatchRoll(x, y, 7, seed ^ 0xF00DUL) < 18)
-					fungalCandidates.Add(cell);
-
-				if (terrain == TerrainType.Grass && !edge && PatchRoll(x, y, 6, seed ^ 0x0BEEFUL) < 45)
-					wetOpenCandidates.Add(cell);
-			}
-		}
-
-		PlaceHeroTrees(layout, generator, seed, swampGround, groveCandidates);
-		PlaceWaterlineLandmarks(layout, generator, seed, waterEdgeGround, shallowWater);
-		PlaceFungalPockets(layout, generator, seed, fungalCandidates, wetOpenCandidates);
-		PlaceWaterEdgeClusters(layout, generator, seed, waterEdgeGround, shallowWater);
-		PlaceRareNarrativeProps(layout, generator, seed, waterEdgeGround, wetOpenCandidates, shallowWater);
+		PlaceDeadGroves(layout, generator, seed, deadGroveAnchors);
+		PlaceBankScenes(layout, generator, seed, bankCells, shallowWaterCells);
+		PlaceWetStructureScenes(layout, generator, seed, wetClearingCells, deadGroveAnchors, fungalAnchors);
+		PlaceFungalScenes(layout, generator, seed, fungalAnchors);
+		PlaceNarrativeProps(layout, generator, seed);
 
 		return layout;
 	}
@@ -137,41 +130,161 @@ public static class SwampPropPlacer
 		}
 	}
 
-	private static void PlaceHeroTrees(
+	private static void ClassifyZones(
 		SwampPropLayout layout,
 		WorldGenerator generator,
 		ulong seed,
+		Dictionary<Vector2I, int> waterDistances,
 		List<Vector2I> swampGround,
-		List<Vector2I> groveCandidates)
+		List<Vector2I> bankCells,
+		List<Vector2I> shallowWaterCells,
+		List<Vector2I> deepWaterCells,
+		List<Vector2I> wetClearingCells)
 	{
-		List<Vector2I> anchors = groveCandidates.Count > 0 ? new(groveCandidates) : new(swampGround);
-		SortCells(anchors, seed ^ 0x710FUL);
+		int radius = generator.MapRadius;
+		for (int x = -radius; x <= radius; x++)
+		{
+			for (int y = -radius; y <= radius; y++)
+			{
+				if (!generator.IsWithinBounds(x, y) || generator.IsErased(x, y))
+					continue;
+				if (generator.GetBiomeId(x, y) != "swamp")
+					continue;
 
-		int heroCount = Mathf.Clamp(swampGround.Count / 550, 2, 4);
-		List<Vector2I> chosen = PickSpacedCells(anchors, heroCount, 18, layout.ReservedCells);
+				Vector2I cell = new(x, y);
+				TerrainType terrain = generator.GetTerrain(x, y);
+				if (terrain == TerrainType.Water)
+				{
+					SwampZoneType zone = IsShallowWater(generator, x, y)
+						? SwampZoneType.ShallowWater
+						: SwampZoneType.DeepWater;
+					layout.Zones[cell] = zone;
+					if (zone == SwampZoneType.ShallowWater)
+						shallowWaterCells.Add(cell);
+					else
+						deepWaterCells.Add(cell);
+					continue;
+				}
 
-		foreach (Vector2I anchor in chosen)
+				int waterDistance = GetNearestWaterDistance(generator, x, y, 4);
+				waterDistances[cell] = waterDistance;
+				swampGround.Add(cell);
+
+				SwampZoneType groundZone = waterDistance == 1
+					? SwampZoneType.Bank
+					: SwampZoneType.WetClearing;
+				layout.Zones[cell] = groundZone;
+
+				if (groundZone == SwampZoneType.Bank)
+					bankCells.Add(cell);
+				else
+					wetClearingCells.Add(cell);
+			}
+		}
+	}
+
+	private static List<Vector2I> CreateDeadGroves(
+		SwampPropLayout layout,
+		WorldGenerator generator,
+		ulong seed,
+		Dictionary<Vector2I, int> waterDistances)
+	{
+		List<Vector2I> candidates = new();
+		foreach (KeyValuePair<Vector2I, SwampZoneType> kv in layout.Zones)
+		{
+			if (kv.Value != SwampZoneType.WetClearing)
+				continue;
+			if (generator.GetTerrain(kv.Key.X, kv.Key.Y) != TerrainType.Forest)
+				continue;
+			if (!waterDistances.TryGetValue(kv.Key, out int waterDistance) || waterDistance < 2)
+				continue;
+			if (PatchRoll(kv.Key.X, kv.Key.Y, 7, seed ^ 0xA11DUL) >= 48)
+				continue;
+
+			candidates.Add(kv.Key);
+		}
+
+		SortCells(candidates, seed ^ 0x710FUL);
+		int targetCount = Mathf.Clamp(candidates.Count / 72, 4, 6);
+		List<Vector2I> anchors = PickSpacedCells(candidates, targetCount, 13, layout.ReservedCells);
+
+		foreach (Vector2I anchor in anchors)
+			MarkZoneRadius(layout.Zones, anchor, 3, SwampZoneType.DeadGrove, SwampZoneType.WetClearing);
+
+		return anchors;
+	}
+
+	private static List<Vector2I> CreateFungalPockets(
+		SwampPropLayout layout,
+		WorldGenerator generator,
+		ulong seed,
+		Dictionary<Vector2I, int> waterDistances,
+		List<Vector2I> deadGroveAnchors)
+	{
+		List<Vector2I> candidates = new();
+		foreach (KeyValuePair<Vector2I, SwampZoneType> kv in layout.Zones)
+		{
+			if (kv.Value != SwampZoneType.WetClearing)
+				continue;
+			if (!waterDistances.TryGetValue(kv.Key, out int waterDistance))
+				continue;
+			if (waterDistance > 3)
+				continue;
+			if (PatchRoll(kv.Key.X, kv.Key.Y, 8, seed ^ 0xF00DUL) >= 22)
+				continue;
+			if (IsNearAny(kv.Key, deadGroveAnchors, 10))
+				continue;
+
+			candidates.Add(kv.Key);
+		}
+
+		SortCells(candidates, seed ^ 0xFACEUL);
+		int targetCount = Mathf.Clamp(candidates.Count / 75, 3, 5);
+		List<Vector2I> anchors = PickSpacedCells(candidates, targetCount, 11, layout.ReservedCells);
+
+		foreach (Vector2I anchor in anchors)
+			MarkZoneRadius(layout.Zones, anchor, 2, SwampZoneType.FungalPocket, SwampZoneType.WetClearing);
+
+		return anchors;
+	}
+
+	private static void PlaceDeadGroves(
+		SwampPropLayout layout,
+		WorldGenerator generator,
+		ulong seed,
+		List<Vector2I> anchors)
+	{
+		if (anchors.Count == 0)
+			return;
+
+		bool boundTreePlaced = false;
+		foreach (Vector2I anchor in anchors)
 		{
 			uint hash = HashCell(anchor, seed ^ 0xBADA55UL);
-			bool mossy = (hash % 100) < 45;
-			AddPlacement(
-				layout,
-				anchor,
-				mossy ? "assets/props/swamp/prop_dead_tree_mossy_large.png" : "assets/props/swamp/prop_dead_tree_large_base.png",
-				mossy ? null : "assets/props/swamp/prop_dead_tree_large_canopy.png",
-				mossy ? 0f : -54f,
-				mossy ? 8f : 8f,
-				0f,
-				4);
+			bool placeBoundTree = !boundTreePlaced && (hash % 100 < 40 || anchors.Count == 1);
+			bool mossy = !placeBoundTree && (hash % 100) < 55;
 
-			int satelliteCount = mossy ? 2 : 1 + (int)(hash % 2);
+			string basePath = placeBoundTree
+				? "assets/props/swamp/prop_bound_tree.png"
+				: (mossy ? "assets/props/swamp/prop_dead_tree_mossy_large.png" : "assets/props/swamp/prop_dead_tree_large_base.png");
+			string canopyPath = (!placeBoundTree && !mossy)
+				? "assets/props/swamp/prop_dead_tree_large_canopy.png"
+				: null;
+			float canopyOffset = canopyPath == null ? 0f : -54f;
+			float collisionRadius = placeBoundTree ? 7f : 8f;
+
+			AddPlacement(layout, anchor, basePath, canopyPath, canopyOffset, collisionRadius, 0f, 4);
+			boundTreePlaced |= placeBoundTree;
+
+			List<string> usedSatellites = new();
+			int satelliteCount = 3 + (int)(hash % 3);
 			for (int i = 0; i < satelliteCount; i++)
 			{
-				Vector2I? candidate = FindSatelliteCell(generator, layout.ReservedCells, anchor, seed ^ hash ^ (ulong)i);
+				Vector2I? candidate = FindNearbyZoneCell(layout, generator, anchor, seed ^ hash ^ (ulong)(i * 17), SwampZoneType.DeadGrove);
 				if (candidate == null)
 					continue;
 
-				string sprite = PickTreeSatelliteSprite(seed ^ hash ^ (ulong)(i * 17), mossy);
+				string sprite = PickDeadGroveSatellite(placeBoundTree, mossy, i, seed ^ hash, usedSatellites);
 				AddPlacement(
 					layout,
 					candidate.Value,
@@ -180,174 +293,432 @@ public static class SwampPropPlacer
 					0f,
 					GetCollisionRadius(sprite),
 					0f,
-					sprite.Contains("vine_curtain") || sprite.Contains("hanging_moss") ? 0 : 1);
+					sprite.Contains("vine_curtain") || sprite.Contains("hanging_moss") || sprite.Contains("bone_pile") ? 1 : 2);
+				usedSatellites.Add(sprite);
+			}
+
+			Vector2I? structureCell = FindNearbyZoneCell(layout, generator, anchor, seed ^ hash ^ 0x7171UL, SwampZoneType.DeadGrove);
+			if (structureCell != null)
+			{
+				string structureSprite = PickDeadGroveStructure(placeBoundTree, mossy, seed ^ hash);
+				float structureOffset = structureSprite.Contains("fallen_log") ? 2f : 0f;
+				AddPlacement(
+					layout,
+					structureCell.Value,
+					structureSprite,
+					null,
+					0f,
+					GetCollisionRadius(structureSprite),
+					structureOffset,
+					2);
 			}
 		}
 	}
 
-	private static void PlaceWaterlineLandmarks(
+	private static void PlaceBankScenes(
 		SwampPropLayout layout,
 		WorldGenerator generator,
 		ulong seed,
-		List<Vector2I> waterEdgeGround,
-		List<Vector2I> shallowWater)
+		List<Vector2I> bankCells,
+		List<Vector2I> shallowWaterCells)
 	{
-		List<Vector2I> shoreline = new(shallowWater);
-		shoreline.AddRange(waterEdgeGround);
-		SortCells(shoreline, seed ^ 0x5511UL);
+		List<Vector2I> sceneAnchors = new(bankCells);
+		SortCells(sceneAnchors, seed ^ 0x5511UL);
+		List<Vector2I> chosen = PickSpacedCells(sceneAnchors, 5, 13, layout.ReservedCells);
 
-		List<Vector2I> trunks = PickSpacedCells(shoreline, 3, 16, layout.ReservedCells);
-		foreach (Vector2I cell in trunks)
+		if (chosen.Count == 0)
+			return;
+
+		AddPlacement(layout, chosen[0], "assets/props/swamp/prop_collapsed_pontoon.png", null, 0f, 6f, 2f, 3);
+		DecorateBankCluster(layout, generator, chosen[0], seed ^ 0xAB12UL, true);
+
+		if (chosen.Count > 1)
 		{
-			AddPlacement(
-				layout,
-				cell,
-				"assets/props/swamp/prop_sunken_trunk_large.png",
-				null,
-				0f,
-				8f,
-				0f,
-				3);
+			Vector2I shrineCell = FindNearbyPreferredCell(layout, generator, chosen[1], seed ^ 0xBC23UL, SwampZoneType.ShallowWater, SwampZoneType.Bank) ?? chosen[1];
+			AddPlacement(layout, shrineCell, "assets/props/swamp/prop_sunken_shrine.png", null, 0f, 5f, 0f, 3);
+			DecorateBankCluster(layout, generator, chosen[1], seed ^ 0xCC34UL, false);
 		}
+
+		if (chosen.Count > 2)
+		{
+			Vector2I trunkCell = FindNearbyPreferredCell(layout, generator, chosen[2], seed ^ 0xCD45UL, SwampZoneType.ShallowWater, SwampZoneType.Bank) ?? chosen[2];
+			AddPlacement(layout, trunkCell, "assets/props/swamp/prop_sunken_trunk_large.png", null, 0f, 8f, 0f, 3);
+			DecorateBankCluster(layout, generator, chosen[2], seed ^ 0xDE56UL, false);
+		}
+
+		if (chosen.Count > 3)
+		{
+			Vector2I logCell = FindNearbyPreferredCell(layout, generator, chosen[3], seed ^ 0xEF67UL, SwampZoneType.Bank, SwampZoneType.ShallowWater) ?? chosen[3];
+			AddPlacement(layout, logCell, "assets/props/swamp/prop_fallen_log.png", null, 0f, 6f, 2f, 2);
+			DecorateBankCluster(layout, generator, chosen[3], seed ^ 0xF078UL, false);
+		}
+
+		if (chosen.Count > 4)
+		{
+			Vector2I rootCell = FindNearbyPreferredCell(layout, generator, chosen[4], seed ^ 0xA099UL, SwampZoneType.Bank, SwampZoneType.ShallowWater) ?? chosen[4];
+			AddPlacement(layout, rootCell, "assets/props/swamp/prop_aerial_roots_twisted.png", null, 0f, 6f, 0f, 2);
+			DecorateBankCluster(layout, generator, chosen[4], seed ^ 0xB0AAUL, false);
+		}
+
+		List<Vector2I> walkwayCandidates = new(bankCells);
+		SortCells(walkwayCandidates, seed ^ 0x8888UL);
+		List<Vector2I?> avoidCells = new();
+		foreach (Vector2I chosenCell in chosen)
+			avoidCells.Add(chosenCell);
+		Vector2I? walkwayCell = PickSingleCell(walkwayCandidates, layout.ReservedCells, 12, avoidCells.ToArray());
+		if (walkwayCell != null)
+			AddPlacement(layout, walkwayCell.Value, "assets/props/swamp/prop_broken_walkway.png", null, 0f, 0f, 0f, 2);
 	}
 
-	private static void PlaceFungalPockets(
+	private static void PlaceFungalScenes(
 		SwampPropLayout layout,
 		WorldGenerator generator,
 		ulong seed,
-		List<Vector2I> fungalCandidates,
-		List<Vector2I> wetOpenCandidates)
+		List<Vector2I> anchors)
 	{
-		List<Vector2I> pockets = fungalCandidates.Count > 0 ? new(fungalCandidates) : new(wetOpenCandidates);
-		SortCells(pockets, seed ^ 0xFACEUL);
-
-		List<Vector2I> centers = PickSpacedCells(pockets, 4, 14, layout.ReservedCells);
-		foreach (Vector2I center in centers)
+		foreach (Vector2I center in anchors)
 		{
-			AddPlacement(layout, center, "assets/props/swamp/prop_spore_patch.png", null, 0f, 0f, 0f, 1);
+			AddPlacement(layout, center, "assets/props/swamp/prop_spore_patch.png", null, 0f, 0f, 0f, 2);
+
+			Vector2I? lanternCell = FindNearbyZoneCell(layout, generator, center, seed ^ 0xCC44UL, SwampZoneType.FungalPocket);
+			if (lanternCell != null && (HashCell(center, seed ^ 0x44CCUL) % 100) < 55)
+				AddPlacement(layout, lanternCell.Value, "assets/props/swamp/prop_swamp_lantern.png", null, 0f, 0f, 0f, 1);
 
 			for (int i = 0; i < 3; i++)
 			{
-				Vector2I? candidate = FindSatelliteCell(generator, layout.ReservedCells, center, seed ^ (ulong)(center.X * 33 + center.Y * 19 + i));
+				Vector2I? candidate = FindNearbyZoneCell(layout, generator, center, seed ^ (ulong)(center.X * 33 + center.Y * 19 + i), SwampZoneType.FungalPocket);
 				if (candidate == null)
 					continue;
-
-				string sprite = i == 2 && PatchRoll(center.X, center.Y, 4, seed ^ 0xCC44UL) < 28
-					? "assets/props/swamp/prop_swamp_lantern.png"
-					: "assets/props/swamp/prop_toxic_mushrooms.png";
-
-				AddPlacement(layout, candidate.Value, sprite, null, 0f, GetCollisionRadius(sprite), 0f, 1);
+				AddPlacement(layout, candidate.Value, "assets/props/swamp/prop_toxic_mushrooms.png", null, 0f, 0f, 0f, 1);
 			}
 		}
 	}
 
-	private static void PlaceWaterEdgeClusters(
+	private static void PlaceWetStructureScenes(
 		SwampPropLayout layout,
 		WorldGenerator generator,
 		ulong seed,
-		List<Vector2I> waterEdgeGround,
-		List<Vector2I> shallowWater)
+		List<Vector2I> wetClearingCells,
+		List<Vector2I> deadGroveAnchors,
+		List<Vector2I> fungalAnchors)
 	{
-		List<Vector2I> centers = new(waterEdgeGround);
-		SortCells(centers, seed ^ 0x1234UL);
-		List<Vector2I> chosen = PickSpacedCells(centers, Mathf.Clamp(waterEdgeGround.Count / 120, 4, 8), 10, new HashSet<Vector2I>());
-
-		foreach (Vector2I center in chosen)
-		{
-			for (int i = 0; i < 4; i++)
-			{
-				Vector2I offset = RingOffsets[(i + (int)(HashCell(center, seed) % (uint)RingOffsets.Length)) % RingOffsets.Length];
-				Vector2I target = center + offset;
-				if (!generator.IsWithinBounds(target.X, target.Y) || generator.IsErased(target.X, target.Y))
-					continue;
-				if (generator.GetBiomeId(target.X, target.Y) != "swamp")
-					continue;
-				if (layout.ReservedCells.Contains(target))
-					continue;
-
-				TerrainType terrain = generator.GetTerrain(target.X, target.Y);
-				string sprite = terrain == TerrainType.Water
-					? "assets/props/swamp/prop_lily_pads.png"
-					: (i % 3 == 0 ? "assets/props/swamp/prop_fallen_log.png" : "assets/props/swamp/prop_reeds.png");
-
-				AddPlacement(layout, target, sprite, null, 0f, GetCollisionRadius(sprite), sprite.Contains("fallen_log") ? 2f : 0f, 1);
-			}
-		}
-	}
-
-	private static void PlaceRareNarrativeProps(
-		SwampPropLayout layout,
-		WorldGenerator generator,
-		ulong seed,
-		List<Vector2I> waterEdgeGround,
-		List<Vector2I> wetOpenCandidates,
-		List<Vector2I> shallowWater)
-	{
-		PlaceRareProp(layout, generator, seed ^ 0x9911UL, shallowWater, "assets/props/swamp/prop_sunken_boat.png", 3);
-		PlaceRareProp(layout, generator, seed ^ 0x8822UL, waterEdgeGround, "assets/props/swamp/prop_broken_walkway.png", 2);
-		PlaceRareProp(layout, generator, seed ^ 0x7733UL, wetOpenCandidates, "assets/props/swamp/prop_drowned_cart.png", 2);
-		PlaceRareProp(layout, generator, seed ^ 0x6644UL, wetOpenCandidates, "assets/props/swamp/prop_bone_pile.png", 1);
-	}
-
-	private static void PlaceRareProp(
-		SwampPropLayout layout,
-		WorldGenerator generator,
-		ulong seed,
-		List<Vector2I> candidates,
-		string sprite,
-		int reserveRadius)
-	{
-		if (candidates.Count == 0)
-			return;
-
-		List<Vector2I> sorted = new(candidates);
-		SortCells(sorted, seed);
-		foreach (Vector2I cell in sorted)
+		List<Vector2I> candidates = new();
+		foreach (Vector2I cell in wetClearingCells)
 		{
 			if (layout.ReservedCells.Contains(cell))
 				continue;
-			AddPlacement(layout, cell, sprite, null, 0f, GetCollisionRadius(sprite), sprite.Contains("fallen_log") ? 2f : 0f, reserveRadius);
-			return;
+			if (IsNearAny(cell, deadGroveAnchors, 9))
+				continue;
+			if (IsNearAny(cell, fungalAnchors, 7))
+				continue;
+			if (PatchRoll(cell.X, cell.Y, 8, seed ^ 0x5EEDUL) >= 34)
+				continue;
+
+			candidates.Add(cell);
+		}
+
+		SortCells(candidates, seed ^ 0xC1EAUL);
+		List<Vector2I> anchors = PickSpacedCells(candidates, 5, 14, layout.ReservedCells);
+		foreach (Vector2I anchor in anchors)
+		{
+			string structureSprite = PickWetStructureSprite(anchor, seed);
+			float collisionOffset = structureSprite.Contains("fallen_log") ? 2f : 0f;
+			AddPlacement(
+				layout,
+				anchor,
+				structureSprite,
+				null,
+				0f,
+				GetCollisionRadius(structureSprite),
+				collisionOffset,
+				2);
+
+			DecorateWetStructureCluster(layout, generator, anchor, seed ^ HashCell(anchor, seed));
 		}
 	}
 
-	private static Vector2I? FindSatelliteCell(WorldGenerator generator, HashSet<Vector2I> reservedCells, Vector2I center, ulong seed)
+	private static void PlaceNarrativeProps(
+		SwampPropLayout layout,
+		WorldGenerator generator,
+		ulong seed)
 	{
-		int start = (int)(HashCell(center, seed) % (uint)RingOffsets.Length);
-		for (int i = 0; i < RingOffsets.Length; i++)
+		List<Vector2I> shallowCandidates = GetCellsForZones(layout, SwampZoneType.ShallowWater, SwampZoneType.Bank);
+		List<Vector2I> wetCandidates = GetCellsForZones(layout, SwampZoneType.WetClearing, SwampZoneType.Bank);
+		List<Vector2I> groveCandidates = GetCellsForZones(layout, SwampZoneType.DeadGrove);
+
+		SortCells(shallowCandidates, seed ^ 0x9911UL);
+		SortCells(wetCandidates, seed ^ 0x7733UL);
+		SortCells(groveCandidates, seed ^ 0x6644UL);
+
+		Vector2I? boatCell = PickSingleCell(shallowCandidates, layout.ReservedCells, 18);
+		if (boatCell != null)
+			AddPlacement(layout, boatCell.Value, "assets/props/swamp/prop_sunken_boat.png", null, 0f, 7f, 0f, 3);
+
+		Vector2I? cartCell = PickSingleCell(wetCandidates, layout.ReservedCells, 16, boatCell);
+		if (cartCell != null)
+			AddPlacement(layout, cartCell.Value, "assets/props/swamp/prop_drowned_cart.png", null, 0f, 6f, 0f, 2);
+
+		Vector2I? boneCell = PickSingleCell(groveCandidates, layout.ReservedCells, 10, cartCell);
+		if (boneCell != null)
+			AddPlacement(layout, boneCell.Value, "assets/props/swamp/prop_bone_pile.png", null, 0f, 0f, 0f, 2);
+	}
+
+	private static void DecorateBankCluster(
+		SwampPropLayout layout,
+		WorldGenerator generator,
+		Vector2I center,
+		ulong seed,
+		bool preferPontoonDressing)
+	{
+		string[] bankSprites = preferPontoonDressing
+			? new[]
+			{
+				"assets/props/swamp/prop_reeds.png",
+				"assets/props/swamp/prop_fallen_log.png",
+				"assets/props/swamp/prop_lily_pads.png"
+			}
+			: new[]
 		{
-			Vector2I candidate = center + RingOffsets[(start + i) % RingOffsets.Length];
-			if (!generator.IsWithinBounds(candidate.X, candidate.Y) || generator.IsErased(candidate.X, candidate.Y))
+				"assets/props/swamp/prop_reeds.png",
+				"assets/props/swamp/prop_lily_pads.png",
+				"assets/props/swamp/prop_reeds.png"
+			};
+
+		string[] accentSprites = preferPontoonDressing
+			? new[]
+			{
+				"assets/props/swamp/prop_old_post.png",
+				"assets/props/swamp/prop_bone_pile.png"
+			}
+			: new[]
+			{
+				"assets/props/swamp/prop_old_post.png",
+				"assets/props/swamp/prop_vine_curtain.png"
+			};
+
+		for (int i = 0; i < 5; i++)
+		{
+			Vector2I? candidate = FindNearbyPreferredCell(layout, generator, center, seed ^ (ulong)(i * 99), SwampZoneType.Bank, SwampZoneType.ShallowWater);
+			if (candidate == null)
 				continue;
-			if (generator.GetBiomeId(candidate.X, candidate.Y) != "swamp")
-				continue;
-			if (reservedCells.Contains(candidate))
-				continue;
-			if (generator.GetTerrain(candidate.X, candidate.Y) == TerrainType.Water)
+			string sprite = i < 3
+				? bankSprites[i % bankSprites.Length]
+				: accentSprites[(i - 3) % accentSprites.Length];
+			float collisionOffset = sprite.Contains("fallen_log") ? 2f : 0f;
+			AddPlacement(layout, candidate.Value, sprite, null, 0f, GetCollisionRadius(sprite), collisionOffset, 1);
+		}
+	}
+
+	private static void DecorateWetStructureCluster(
+		SwampPropLayout layout,
+		WorldGenerator generator,
+		Vector2I center,
+		ulong seed)
+	{
+		string[] decorations =
+		{
+			"assets/props/swamp/prop_reeds.png",
+			"assets/props/swamp/prop_old_post.png",
+			"assets/props/swamp/prop_hanging_moss.png",
+			"assets/props/swamp/prop_rotten_stump.png",
+			"assets/props/swamp/prop_vine_curtain.png"
+		};
+
+		for (int i = 0; i < 3; i++)
+		{
+			Vector2I? candidate = FindNearbyPreferredCell(layout, generator, center, seed ^ (ulong)(i * 71), SwampZoneType.WetClearing, SwampZoneType.Bank);
+			if (candidate == null)
 				continue;
 
+			string sprite = decorations[(int)((HashCell(candidate.Value, seed) + (uint)i) % (uint)decorations.Length)];
+			AddPlacement(layout, candidate.Value, sprite, null, 0f, GetCollisionRadius(sprite), 0f, 1);
+		}
+	}
+
+	private static string PickDeadGroveSatellite(bool boundTree, bool mossy, int index, ulong seed, List<string> usedSatellites)
+	{
+		List<string> pool = new();
+		if (boundTree)
+		{
+			pool.Add("assets/props/swamp/prop_root_mass_large.png");
+			pool.Add("assets/props/swamp/prop_hanging_moss.png");
+			pool.Add("assets/props/swamp/prop_bone_pile.png");
+		}
+		else if (mossy)
+		{
+			pool.Add("assets/props/swamp/prop_root_mass_large.png");
+			pool.Add("assets/props/swamp/prop_hanging_moss.png");
+			pool.Add("assets/props/swamp/prop_vine_curtain.png");
+		}
+		else
+		{
+			pool.Add("assets/props/swamp/prop_aerial_roots.png");
+			pool.Add("assets/props/swamp/prop_aerial_roots_twisted.png");
+			pool.Add("assets/props/swamp/prop_root_mass_large.png");
+			pool.Add("assets/props/swamp/prop_vine_curtain.png");
+		}
+
+		for (int attempt = 0; attempt < pool.Count; attempt++)
+		{
+			string candidate = pool[(int)((seed + (ulong)(index * 7 + attempt)) % (ulong)pool.Count)];
+			if (!usedSatellites.Contains(candidate))
+				return candidate;
+		}
+
+		return pool[0];
+	}
+
+	private static string PickDeadGroveStructure(bool boundTree, bool mossy, ulong seed)
+	{
+		string[] pool = boundTree
+			? new[]
+			{
+				"assets/props/swamp/prop_dead_tree_small.png",
+				"assets/props/swamp/prop_fallen_log.png",
+				"assets/props/swamp/prop_root_mass_large.png"
+			}
+			: (mossy
+				? new[]
+				{
+					"assets/props/swamp/prop_dead_tree_small.png",
+					"assets/props/swamp/prop_fallen_log.png",
+					"assets/props/swamp/prop_vine_curtain.png"
+				}
+				: new[]
+				{
+					"assets/props/swamp/prop_dead_tree_small.png",
+					"assets/props/swamp/prop_aerial_roots_twisted.png",
+					"assets/props/swamp/prop_fallen_log.png"
+				});
+
+		return pool[(int)(seed % (ulong)pool.Length)];
+	}
+
+	private static string PickWetStructureSprite(Vector2I anchor, ulong seed)
+	{
+		string[] pool =
+		{
+			"assets/props/swamp/prop_fallen_log.png",
+			"assets/props/swamp/prop_dead_tree_small.png",
+			"assets/props/swamp/prop_aerial_roots_twisted.png",
+			"assets/props/swamp/prop_root_mass_large.png",
+			"assets/props/swamp/prop_old_post.png"
+		};
+
+		return pool[(int)(HashCell(anchor, seed ^ 0x3131UL) % (uint)pool.Length)];
+	}
+
+	private static void MarkZoneRadius(
+		Dictionary<Vector2I, SwampZoneType> zones,
+		Vector2I center,
+		int radius,
+		SwampZoneType zone,
+		SwampZoneType onlyReplace)
+	{
+		foreach (KeyValuePair<Vector2I, SwampZoneType> kv in new Dictionary<Vector2I, SwampZoneType>(zones))
+		{
+			Vector2I cell = kv.Key;
+			if ((cell - center).LengthSquared() > radius * radius)
+				continue;
+			if (zones[cell] != onlyReplace)
+				continue;
+			zones[cell] = zone;
+		}
+	}
+
+	private static List<Vector2I> GetCellsForZones(SwampPropLayout layout, params SwampZoneType[] zones)
+	{
+		HashSet<SwampZoneType> allowed = new(zones);
+		List<Vector2I> result = new();
+		foreach (KeyValuePair<Vector2I, SwampZoneType> kv in layout.Zones)
+		{
+			if (allowed.Contains(kv.Value))
+				result.Add(kv.Key);
+		}
+
+		return result;
+	}
+
+	private static Vector2I? PickSingleCell(
+		List<Vector2I> candidates,
+		HashSet<Vector2I> reservedCells,
+		int minDistance,
+		params Vector2I?[] avoidCells)
+	{
+		foreach (Vector2I cell in candidates)
+		{
+			if (reservedCells.Contains(cell))
+				continue;
+
+			bool tooClose = false;
+			foreach (Vector2I? avoid in avoidCells)
+			{
+				if (avoid == null)
+					continue;
+				Vector2I other = avoid.Value;
+				int dx = other.X - cell.X;
+				int dy = other.Y - cell.Y;
+				if (dx * dx + dy * dy < minDistance * minDistance)
+				{
+					tooClose = true;
+					break;
+				}
+			}
+
+			if (!tooClose)
+				return cell;
+		}
+
+		return null;
+	}
+
+	private static Vector2I? FindNearbyPreferredCell(
+		SwampPropLayout layout,
+		WorldGenerator generator,
+		Vector2I center,
+		ulong seed,
+		params SwampZoneType[] preferredZones)
+	{
+		HashSet<SwampZoneType> allowed = new(preferredZones);
+		int start = (int)(HashCell(center, seed) % (uint)NearOffsets.Length);
+		for (int i = 0; i < NearOffsets.Length; i++)
+		{
+			Vector2I candidate = center + NearOffsets[(start + i) % NearOffsets.Length];
+			if (!layout.Zones.TryGetValue(candidate, out SwampZoneType zone) || !allowed.Contains(zone))
+				continue;
+			if (!generator.IsWithinBounds(candidate.X, candidate.Y) || generator.IsErased(candidate.X, candidate.Y))
+				continue;
+			if (layout.ReservedCells.Contains(candidate))
+				continue;
 			return candidate;
 		}
 
 		return null;
 	}
 
-	private static string PickTreeSatelliteSprite(ulong seed, bool mossy)
+	private static Vector2I? FindNearbyZoneCell(
+		SwampPropLayout layout,
+		WorldGenerator generator,
+		Vector2I center,
+		ulong seed,
+		SwampZoneType zone)
 	{
-		string[] drySet = {
-			"assets/props/swamp/prop_aerial_roots.png",
-			"assets/props/swamp/prop_root_mass_large.png",
-			"assets/props/swamp/prop_vine_curtain.png"
-		};
+		int start = (int)(HashCell(center, seed) % (uint)NearOffsets.Length);
+		for (int i = 0; i < NearOffsets.Length; i++)
+		{
+			Vector2I candidate = center + NearOffsets[(start + i) % NearOffsets.Length];
+			if (!layout.Zones.TryGetValue(candidate, out SwampZoneType candidateZone) || candidateZone != zone)
+				continue;
+			if (!generator.IsWithinBounds(candidate.X, candidate.Y) || generator.IsErased(candidate.X, candidate.Y))
+				continue;
+			if (layout.ReservedCells.Contains(candidate))
+				continue;
+			if (generator.GetTerrain(candidate.X, candidate.Y) == TerrainType.Water && zone != SwampZoneType.ShallowWater)
+				continue;
+			return candidate;
+		}
 
-		string[] mossySet = {
-			"assets/props/swamp/prop_root_mass_large.png",
-			"assets/props/swamp/prop_hanging_moss.png",
-			"assets/props/swamp/prop_vine_curtain.png"
-		};
-
-		string[] pool = mossy ? mossySet : drySet;
-		return pool[seed % (ulong)pool.Length];
+		return null;
 	}
 
 	private static void AddPlacement(
@@ -399,7 +770,9 @@ public static class SwampPropPlacer
 			bool tooClose = false;
 			foreach (Vector2I existing in chosen)
 			{
-				if (existing.DistanceSquaredTo(cell) < minDistance * minDistance)
+				int dx = existing.X - cell.X;
+				int dy = existing.Y - cell.Y;
+				if (dx * dx + dy * dy < minDistance * minDistance)
 				{
 					tooClose = true;
 					break;
@@ -413,6 +786,19 @@ public static class SwampPropPlacer
 		return chosen;
 	}
 
+	private static bool IsNearAny(Vector2I cell, List<Vector2I> others, int minDistance)
+	{
+		foreach (Vector2I other in others)
+		{
+			int dx = other.X - cell.X;
+			int dy = other.Y - cell.Y;
+			if (dx * dx + dy * dy < minDistance * minDistance)
+				return true;
+		}
+
+		return false;
+	}
+
 	private static void SortCells(List<Vector2I> cells, ulong seed)
 	{
 		cells.Sort((left, right) =>
@@ -421,22 +807,6 @@ public static class SwampPropPlacer
 			uint rightHash = HashCell(right, seed);
 			return leftHash.CompareTo(rightHash);
 		});
-	}
-
-	private static bool IsAdjacentToWater(WorldGenerator generator, int x, int y, int radius)
-	{
-		for (int dx = -radius; dx <= radius; dx++)
-		{
-			for (int dy = -radius; dy <= radius; dy++)
-			{
-				if (dx == 0 && dy == 0)
-					continue;
-				if (generator.GetTerrain(x + dx, y + dy) == TerrainType.Water)
-					return true;
-			}
-		}
-
-		return false;
 	}
 
 	private static bool IsShallowWater(WorldGenerator generator, int x, int y)
@@ -454,6 +824,31 @@ public static class SwampPropPlacer
 		}
 
 		return false;
+	}
+
+	private static int GetNearestWaterDistance(WorldGenerator generator, int x, int y, int maxDistance)
+	{
+		for (int radius = 1; radius <= maxDistance; radius++)
+		{
+			for (int dx = -radius; dx <= radius; dx++)
+			{
+				for (int dy = -radius; dy <= radius; dy++)
+				{
+					if (Mathf.Abs(dx) != radius && Mathf.Abs(dy) != radius)
+						continue;
+					int nx = x + dx;
+					int ny = y + dy;
+					if (!generator.IsWithinBounds(nx, ny) || generator.IsErased(nx, ny))
+						continue;
+					if (generator.GetBiomeId(nx, ny) != "swamp")
+						continue;
+					if (generator.GetTerrain(nx, ny) == TerrainType.Water)
+						return radius;
+				}
+			}
+		}
+
+		return maxDistance + 1;
 	}
 
 	private static int PatchRoll(int x, int y, int size, ulong seed)

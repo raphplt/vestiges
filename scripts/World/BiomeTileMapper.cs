@@ -16,6 +16,9 @@ public class BiomeTileMapper
 	private readonly Dictionary<TerrainType, int[]> _fallbackSourceMap = new();
 	private readonly Dictionary<int, string> _biomeIds = new();
 
+	// Layout urbain pour la sélection directionnelle des tiles de route
+	private UrbanLayout _urbanLayout;
+
 	// Tiles d'eau communes (remplacement global du water générique)
 	private int[] _commonWaterSources;
 
@@ -30,12 +33,62 @@ public class BiomeTileMapper
 		{ "forest", TerrainType.Forest }
 	};
 
+	private TileSet _tileSet;
+
+	/// <summary>
+	/// Enregistre un groupe de textures runtime (générées en mémoire) comme source spéciale
+	/// pour un biome donné. Utilisé par RoadTileGenerator pour les tiles de route.
+	/// </summary>
+	public void RegisterRuntimeTileGroup(int biomeIndex, string specialKey, ImageTexture[] textures)
+	{
+		if (_tileSet == null || textures.Length == 0)
+			return;
+
+		List<int> ids = new();
+		foreach (ImageTexture tex in textures)
+		{
+			TileSetAtlasSource source = new();
+			source.Texture = tex;
+			source.TextureRegionSize = new Vector2I(64, 32);
+			source.CreateTile(Vector2I.Zero);
+			int sourceId = _tileSet.AddSource(source);
+			ids.Add(sourceId);
+		}
+
+		if (!_biomeSpecialSourceMap.ContainsKey(biomeIndex))
+			_biomeSpecialSourceMap[biomeIndex] = new Dictionary<string, int[]>();
+
+		_biomeSpecialSourceMap[biomeIndex][specialKey] = ids.ToArray();
+		GD.Print($"[BiomeTileMapper] Runtime tiles '{specialKey}' : {ids.Count} source(s) enregistrée(s)");
+	}
+
+	/// <summary>Retourne l'index du biome par son ID, ou -1.</summary>
+	public int GetBiomeIndex(string biomeId)
+	{
+		foreach (KeyValuePair<int, string> kv in _biomeIds)
+		{
+			if (kv.Value == biomeId)
+				return kv.Key;
+		}
+		return -1;
+	}
+
+	/// <summary>
+	/// Injecte le layout urbain pour permettre la sélection directionnelle des tiles de route.
+	/// Doit être appelé après Initialize et avant ApplyTerrain.
+	/// </summary>
+	public void SetUrbanLayout(UrbanLayout layout)
+	{
+		_urbanLayout = layout;
+	}
+
 	public void Initialize(TileSet tileSet, List<BiomeData> activeBiomes)
 	{
 		_biomeSourceMap.Clear();
 		_biomeSpecialSourceMap.Clear();
 		_fallbackSourceMap.Clear();
 		_biomeIds.Clear();
+		_tileSet = tileSet;
 
 		// Charger les tiles d'eau communes
 		_commonWaterSources = LoadTileGroup(tileSet, new List<string>
@@ -246,9 +299,10 @@ public class BiomeTileMapper
 		switch (urbanCellType)
 		{
 			case UrbanCellType.Road:
-				if (TryPickSpecialSource(specialMap, "plaza", x, y, out sourceId))
+				if (TryGetDirectionalRoadSource(specialMap, x, y, out sourceId))
 					return true;
-				if (TryPickSpecialSource(specialMap, "building_edge", x, y, out sourceId))
+				// Fallback si pas de tile directionnelle disponible
+				if (TryPickSpecialSource(specialMap, "plaza", x, y, out sourceId))
 					return true;
 				break;
 			case UrbanCellType.Sidewalk:
@@ -287,6 +341,46 @@ public class BiomeTileMapper
 		return true;
 	}
 
+	/// <summary>
+	/// Sélectionne la tile de route directionnelle selon la connectivité aux 4 voisins cardinaux.
+	/// Calcule un bitmask (L=8|R=4|U=2|D=1) et cherche la clé "road_{mask}".
+	/// </summary>
+	private bool TryGetDirectionalRoadSource(
+		Dictionary<string, int[]> specialMap,
+		int x,
+		int y,
+		out int sourceId)
+	{
+		sourceId = -1;
+		if (_urbanLayout == null || specialMap == null)
+			return false;
+
+		int radius = _urbanLayout.MapRadius;
+		int gridSize = radius * 2 + 1;
+		int gx = x + radius;
+		int gy = y + radius;
+
+		bool hasLeft  = IsUrbanRoad(gx - 1, gy, gridSize);
+		bool hasRight = IsUrbanRoad(gx + 1, gy, gridSize);
+		bool hasUp    = IsUrbanRoad(gx, gy - 1, gridSize);
+		bool hasDown  = IsUrbanRoad(gx, gy + 1, gridSize);
+
+		int mask = (hasLeft ? RoadTileGenerator.ConnLeft : 0)
+				 | (hasRight ? RoadTileGenerator.ConnRight : 0)
+				 | (hasUp ? RoadTileGenerator.ConnUp : 0)
+				 | (hasDown ? RoadTileGenerator.ConnDown : 0);
+
+		string key = RoadTileGenerator.GetRoadKey(mask);
+		return TryPickSpecialSource(specialMap, key, x, y, out sourceId);
+	}
+
+	private bool IsUrbanRoad(int gx, int gy, int gridSize)
+	{
+		if (gx < 0 || gx >= gridSize || gy < 0 || gy >= gridSize)
+			return false;
+		return _urbanLayout.CellGrid[gx, gy] == UrbanCellType.Road;
+	}
+
 	private bool TryGetSwampSourceId(
 		int biomeIndex,
 		TerrainType terrain,
@@ -303,35 +397,180 @@ public class BiomeTileMapper
 		{
 			if (terrainMap != null && terrainMap.TryGetValue(TerrainType.Water, out int[] waterSources) && waterSources.Length > 0)
 			{
-				int deepNeighbors = CountNeighborTerrain(generator, x, y, TerrainType.Water, 1);
-				int variant = deepNeighbors >= 5 ? HashCell(x, y) % waterSources.Length : (HashCell(x, y) + 1) % waterSources.Length;
-				sourceId = waterSources[variant];
+				sourceId = GetSwampWaterSourceId(waterSources, x, y, generator);
 				return true;
 			}
 
 			return false;
 		}
 
-		int nearbyWater = CountNeighborTerrain(generator, x, y, TerrainType.Water, 1);
-		int patchRoll = HashCell(Mathf.FloorToInt(x / 4.0f) + 411, Mathf.FloorToInt(y / 4.0f) - 411) % 100;
+		int waterDistance = GetSwampWaterDistance(generator, x, y, 3);
+		int moistureBand = HashCell(Mathf.FloorToInt(x / 8.0f) + 733, Mathf.FloorToInt(y / 8.0f) - 733) % 100;
+		int openGroundNoise = HashCell(Mathf.FloorToInt(x / 9.0f) + 411, Mathf.FloorToInt(y / 9.0f) - 411) % 100;
+		int sludgeRoll = HashCell(Mathf.FloorToInt(x / 11.0f) + 199, Mathf.FloorToInt(y / 11.0f) - 199) % 100;
 
-		if (nearbyWater > 0 && patchRoll < 72 && TryPickSpecialSource(specialMap, "dirty_bank", x, y, out sourceId))
-			return true;
-
-		int dampRoll = HashCell(Mathf.FloorToInt(x / 5.0f) + 733, Mathf.FloorToInt(y / 5.0f) - 733) % 100;
-
-		if (terrain == TerrainType.Forest && dampRoll < 36 && TryPickSpecialSource(specialMap, "wet_dark_ground", x, y, out sourceId))
-			return true;
-
-		if (terrain == TerrainType.Grass)
+		if (waterDistance == 1)
 		{
-			if (dampRoll < 12 && TryPickSpecialSource(specialMap, "mud_light_ground", x, y, out sourceId))
+			if (TryGetDirectionalSwampBankSource(specialMap, generator, x, y, out sourceId))
 				return true;
-			if (dampRoll < 34 && TryPickSpecialSource(specialMap, "wet_dark_ground", x, y, out sourceId))
+			if (openGroundNoise < 18 && TryPickSpecialSource(specialMap, "bank_dirty", x, y, out sourceId))
+				return true;
+			if (openGroundNoise < 72 && TryPickSpecialSource(specialMap, "mud_transition", x, y, out sourceId))
+				return true;
+			if (TryPickSpecialSource(specialMap, "wet_mid_ground", x, y, out sourceId))
 				return true;
 		}
 
+		if (waterDistance == 2)
+		{
+			if (sludgeRoll < 4 && moistureBand < 35 && generator.GetTerrain(x, y) == TerrainType.Forest && TryPickSpecialSource(specialMap, "sludge_dark", x, y, out sourceId))
+				return true;
+			if (openGroundNoise < 22 && TryPickSpecialSource(specialMap, "mud_transition", x, y, out sourceId))
+				return true;
+			if (moistureBand < 58 && TryPickSpecialSource(specialMap, "wet_mid_ground", x, y, out sourceId))
+				return true;
+		}
+
+		if (waterDistance == 3)
+		{
+			if (terrain == TerrainType.Forest && moistureBand < 26 && TryPickSpecialSource(specialMap, "wet_mid_ground", x, y, out sourceId))
+				return true;
+			if (terrain == TerrainType.Grass && openGroundNoise < 12 && TryPickSpecialSource(specialMap, "wet_mid_ground", x, y, out sourceId))
+				return true;
+		}
+
+		if (terrain == TerrainType.Forest && moistureBand < 12 && TryPickSpecialSource(specialMap, "wet_mid_ground", x, y, out sourceId))
+			return true;
+
+		if (terrain == TerrainType.Grass && openGroundNoise < 8 && TryPickSpecialSource(specialMap, "wet_mid_ground", x, y, out sourceId))
+			return true;
+
+		if (terrainMap != null && terrainMap.TryGetValue(terrain, out int[] groundSources) && groundSources.Length > 0)
+		{
+			sourceId = GetSwampGroundSourceId(groundSources, x, y, waterDistance);
+			return true;
+		}
+
 		return false;
+	}
+
+	private static bool TryGetDirectionalSwampBankSource(
+		Dictionary<string, int[]> specialMap,
+		WorldGenerator generator,
+		int x,
+		int y,
+		out int sourceId)
+	{
+		sourceId = -1;
+		if (specialMap == null)
+			return false;
+
+		bool waterUp = IsSwampWater(generator, x, y - 1);
+		bool waterRight = IsSwampWater(generator, x + 1, y);
+		bool waterDown = IsSwampWater(generator, x, y + 1);
+		bool waterLeft = IsSwampWater(generator, x - 1, y);
+		int cardinalCount = (waterUp ? 1 : 0) + (waterRight ? 1 : 0) + (waterDown ? 1 : 0) + (waterLeft ? 1 : 0);
+
+		if (cardinalCount == 2 && waterLeft && waterUp && TryPickSpecialSource(specialMap, "bank_inner_corner_nw", x, y, out sourceId))
+			return true;
+		if (cardinalCount == 2 && waterUp && waterRight && TryPickSpecialSource(specialMap, "bank_inner_corner_ne", x, y, out sourceId))
+			return true;
+		if (cardinalCount == 2 && waterRight && waterDown && TryPickSpecialSource(specialMap, "bank_inner_corner_se", x, y, out sourceId))
+			return true;
+		if (cardinalCount == 2 && waterDown && waterLeft && TryPickSpecialSource(specialMap, "bank_inner_corner_sw", x, y, out sourceId))
+			return true;
+
+		if (cardinalCount == 1 && waterLeft && TryPickSpecialSource(specialMap, "bank_edge_nw", x, y, out sourceId))
+			return true;
+		if (cardinalCount == 1 && waterUp && TryPickSpecialSource(specialMap, "bank_edge_ne", x, y, out sourceId))
+			return true;
+		if (cardinalCount == 1 && waterRight && TryPickSpecialSource(specialMap, "bank_edge_se", x, y, out sourceId))
+			return true;
+		if (cardinalCount == 1 && waterDown && TryPickSpecialSource(specialMap, "bank_edge_sw", x, y, out sourceId))
+			return true;
+
+		bool waterUpLeft = IsSwampWater(generator, x - 1, y - 1);
+		bool waterUpRight = IsSwampWater(generator, x + 1, y - 1);
+		bool waterDownRight = IsSwampWater(generator, x + 1, y + 1);
+		bool waterDownLeft = IsSwampWater(generator, x - 1, y + 1);
+
+		if (cardinalCount == 0 && waterUpLeft && TryPickSpecialSource(specialMap, "bank_outer_corner_nw", x, y, out sourceId))
+			return true;
+		if (cardinalCount == 0 && waterUpRight && TryPickSpecialSource(specialMap, "bank_outer_corner_ne", x, y, out sourceId))
+			return true;
+		if (cardinalCount == 0 && waterDownRight && TryPickSpecialSource(specialMap, "bank_outer_corner_se", x, y, out sourceId))
+			return true;
+		if (cardinalCount == 0 && waterDownLeft && TryPickSpecialSource(specialMap, "bank_outer_corner_sw", x, y, out sourceId))
+			return true;
+
+		return false;
+	}
+
+	private static int GetSwampGroundSourceId(int[] sources, int x, int y, int waterDistance)
+	{
+		if (sources.Length == 1)
+			return sources[0];
+
+		int patchX = Mathf.FloorToInt(x / 8.0f);
+		int patchY = Mathf.FloorToInt(y / 8.0f);
+		int patchRoll = HashCell(patchX + 177, patchY - 177) % 100;
+
+		if (sources.Length >= 3)
+		{
+			if (waterDistance >= 3 && patchRoll < 18)
+				return sources[2];
+			if (patchRoll < 6)
+				return sources[1];
+			return sources[0];
+		}
+
+		return patchRoll < 22 ? sources[1] : sources[0];
+	}
+
+	private static int GetSwampWaterSourceId(int[] sources, int x, int y, WorldGenerator generator)
+	{
+		if (sources.Length == 1)
+			return sources[0];
+
+		int patchX = Mathf.FloorToInt(x / 6.0f);
+		int patchY = Mathf.FloorToInt(y / 6.0f);
+		int patchRoll = HashCell(patchX + 911, patchY - 911) % 100;
+		int deepNeighbors = CountNeighborTerrain(generator, x, y, TerrainType.Water, 1);
+
+		if (sources.Length >= 3)
+		{
+			if (deepNeighbors >= 6)
+				return patchRoll < 24 ? sources[2] : sources[0];
+			return patchRoll < 12 ? sources[1] : sources[0];
+		}
+
+		return patchRoll < 18 ? sources[1] : sources[0];
+	}
+
+	private static int GetSwampWaterDistance(WorldGenerator generator, int x, int y, int maxDistance)
+	{
+		for (int radius = 1; radius <= maxDistance; radius++)
+		{
+			for (int dx = -radius; dx <= radius; dx++)
+			{
+				for (int dy = -radius; dy <= radius; dy++)
+				{
+					if (Mathf.Abs(dx) != radius && Mathf.Abs(dy) != radius)
+						continue;
+					if (IsSwampWater(generator, x + dx, y + dy))
+						return radius;
+				}
+			}
+		}
+
+		return maxDistance + 1;
+	}
+
+	private static bool IsSwampWater(WorldGenerator generator, int x, int y)
+	{
+		if (!generator.IsWithinBounds(x, y) || generator.IsErased(x, y))
+			return false;
+		return generator.GetTerrain(x, y) == TerrainType.Water;
 	}
 
 	private static int CountNeighborTerrain(WorldGenerator generator, int x, int y, TerrainType target, int radius)

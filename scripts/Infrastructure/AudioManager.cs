@@ -62,6 +62,10 @@ public partial class AudioManager : Node
 		["sfx_structure_impossible"] = 180,
 		["sfx_perk_refuse"] = 120,
 		["sfx_degat_critique_recu"] = 180,
+		["sfx_charognard_meute"] = 3000,
+		["sfx_brute_pas"] = 2000,
+		["sfx_rampant_deplacement"] = 2000,
+		["sfx_sentinelle_activation"] = 5000,
 	};
 	private const ulong DefaultMinInterval = 0;
 

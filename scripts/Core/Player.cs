@@ -1403,15 +1403,9 @@ public partial class Player : CharacterBody2D
 
     private void SpawnChainVisual(Vector2 from, Vector2 to)
     {
-        Line2D chain = new();
-        chain.Points = new Vector2[] { from, to };
-        chain.Width = 2f;
-        chain.DefaultColor = new Color(0.8f, 0.7f, 0.3f, 0.8f);
-        GetTree().CurrentScene.AddChild(chain);
-
-        Tween tween = chain.CreateTween();
-        tween.TweenProperty(chain, "modulate:a", 0f, 0.2f);
-        tween.TweenCallback(Callable.From(() => chain.QueueFree()));
+        Node2D chainVfx = Combat.VfxFactory.CreateChainLightningVfx(from, to, new Color(0.7f, 0.85f, 1f));
+        if (chainVfx != null)
+            GetTree().CurrentScene.AddChild(chainVfx);
     }
 
     // --- Health ---
@@ -2765,7 +2759,48 @@ public partial class Player : CharacterBody2D
         string weaponId = _equippedWeapon?.Id ?? "";
         string attackPattern = _equippedWeapon?.AttackPattern?.ToLower() ?? "arc";
 
-        if (attackPattern == "circular" || weaponId.Contains("fouet") || weaponId.Contains("whip"))
+        // --- Armes spécifiques tier 3+ (priorité haute) ---
+        if (weaponId == "teachers_bell")
+        {
+            // Cloche : onde sonore concentrique
+            Node2D bellVfx = Combat.VfxFactory.CreateBellWaveVfx(GlobalPosition, slashColor);
+            if (bellVfx != null)
+                GetTree().CurrentScene.AddChild(bellVfx);
+        }
+        else if (weaponId == "clock_hand")
+        {
+            // Aiguille de l'Horloge : distorsion temporelle
+            Node2D timeVfx = Combat.VfxFactory.CreateTimeDistortionVfx(GlobalPosition);
+            if (timeVfx != null)
+                GetTree().CurrentScene.AddChild(timeVfx);
+        }
+        else if (weaponId == "void_edge")
+        {
+            // Tranchant du Vide : slash noir iridescent
+            Node2D voidVfx = Combat.VfxFactory.CreateVoidSlashVfx(GlobalPosition, direction, slashColor);
+            if (voidVfx != null)
+                GetTree().CurrentScene.AddChild(voidVfx);
+        }
+        else if (weaponId == "echo_gauntlets")
+        {
+            // Gantelets d'Écho : slash normal + écho retardé
+            Node2D slashVfx = Combat.VfxFactory.CreateSlashVfx(
+                GlobalPosition, direction, range, arcAngle, slashColor);
+            if (slashVfx != null)
+                GetTree().CurrentScene.AddChild(slashVfx);
+            // L'écho retardé est spawné après un court délai par le système de combat
+            var echoTimer = new Timer { WaitTime = 0.3f, OneShot = true, Autostart = true };
+            echoTimer.Timeout += () =>
+            {
+                Node2D echoVfx = Combat.VfxFactory.CreateEchoVfx(GlobalPosition, direction, slashColor);
+                if (echoVfx != null && IsInstanceValid(this))
+                    GetTree().CurrentScene.AddChild(echoVfx);
+                echoTimer.QueueFree();
+            };
+            AddChild(echoTimer);
+        }
+        // --- Types d'attaque génériques ---
+        else if (attackPattern == "circular" || weaponId.Contains("fouet") || weaponId.Contains("whip"))
         {
             // Fouet / circulaire : frappe circulaire 4 frames
             Node2D fouetVfx = Combat.VfxFactory.CreateFouetVfx(GlobalPosition, slashColor);

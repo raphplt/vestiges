@@ -13,10 +13,15 @@ namespace Vestiges.UI;
 /// </summary>
 public partial class PauseMenu : CanvasLayer
 {
-	private static readonly Color GoldColor = new(0.9f, 0.82f, 0.5f);
-	private static readonly Color StatLabelColor = new(0.6f, 0.58f, 0.52f);
-	private static readonly Color StatValueColor = new(0.88f, 0.85f, 0.78f);
-	private static readonly Color StatBonusColor = new(0.4f, 0.73f, 0.42f);
+	private static readonly Color GoldColor = UITheme.GoldColor;
+	private static readonly Color GoldBright = UITheme.GoldBright;
+	private static readonly Color TextColor = UITheme.TextColor;
+	private static readonly Color TextDim = UITheme.TextDim;
+	private static readonly Color TextVeryDim = UITheme.TextVeryDim;
+	private static readonly Color StatLabelColor = new(0.62f, 0.60f, 0.54f);
+	private static readonly Color StatValueColor = new(0.9f, 0.86f, 0.78f);
+	private static readonly Color StatBonusColor = new(0.42f, 0.73f, 0.45f);
+	private const string MenusPath = UITheme.MenusPath;
 
 	private Control _root;
 	private bool _isPaused;
@@ -24,6 +29,13 @@ public partial class PauseMenu : CanvasLayer
 	private Button _appelDuVideBtn;
 	private PerkManager _perkManager;
 	private VBoxContainer _statsContainer;
+	private Texture2D _panelTex;
+	private Texture2D _panelSelectedTex;
+	private Texture2D _btnNormalTex;
+	private Texture2D _btnHoverTex;
+	private Texture2D _btnPressedTex;
+	private Texture2D _btnDisabledTex;
+	private Texture2D _separatorTex;
 
 	public bool IsOpen => _isPaused;
 
@@ -31,6 +43,8 @@ public partial class PauseMenu : CanvasLayer
 	{
 		Layer = 50;
 		ProcessMode = ProcessModeEnum.Always;
+
+		LoadTextures();
 
 		_settingsScreen = new SettingsScreen();
 		AddChild(_settingsScreen);
@@ -112,39 +126,61 @@ public partial class PauseMenu : CanvasLayer
 		// Overlay sombre
 		ColorRect overlay = new();
 		overlay.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
-		overlay.Color = new Color(0.02f, 0.02f, 0.05f, 0.75f);
+		overlay.Color = new Color(0.02f, 0.025f, 0.05f, 0.84f);
 		_root.AddChild(overlay);
 
-		// HBox contenant stats (gauche) + menu (centre)
+		ColorRect glow = new();
+		glow.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
+		glow.Color = new Color(0.18f, 0.13f, 0.08f, 0.14f);
+		_root.AddChild(glow);
+
+		MarginContainer shell = new();
+		shell.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
+		shell.AddThemeConstantOverride("margin_left", 150);
+		shell.AddThemeConstantOverride("margin_top", 110);
+		shell.AddThemeConstantOverride("margin_right", 150);
+		shell.AddThemeConstantOverride("margin_bottom", 110);
+		_root.AddChild(shell);
+
 		HBoxContainer hbox = new();
-		hbox.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.Center);
-		hbox.GrowHorizontal = Control.GrowDirection.Both;
-		hbox.GrowVertical = Control.GrowDirection.Both;
-		hbox.AddThemeConstantOverride("separation", 16);
-		_root.AddChild(hbox);
+		hbox.Alignment = BoxContainer.AlignmentMode.Center;
+		hbox.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+		hbox.SizeFlagsVertical = Control.SizeFlags.ExpandFill;
+		hbox.AddThemeConstantOverride("separation", 26);
+		shell.AddChild(hbox);
 
 		// --- Stats panel (gauche) ---
 		BuildStatsPanel(hbox);
 
 		// --- Panel central (boutons) ---
 		PanelContainer panel = new();
-		panel.CustomMinimumSize = new Vector2(280, 280);
+		panel.CustomMinimumSize = new Vector2(430, 510);
+		ApplyPanelStyle(panel, true);
 		hbox.AddChild(panel);
 
 		MarginContainer margin = new();
 		margin.LayoutMode = 1;
 		margin.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
-		margin.AddThemeConstantOverride("margin_left", 24);
-		margin.AddThemeConstantOverride("margin_top", 20);
-		margin.AddThemeConstantOverride("margin_right", 24);
-		margin.AddThemeConstantOverride("margin_bottom", 20);
+		margin.AddThemeConstantOverride("margin_left", 34);
+		margin.AddThemeConstantOverride("margin_top", 28);
+		margin.AddThemeConstantOverride("margin_right", 34);
+		margin.AddThemeConstantOverride("margin_bottom", 28);
 		panel.AddChild(margin);
 
 		VBoxContainer vbox = new();
-		vbox.AddThemeConstantOverride("separation", 12);
+		vbox.AddThemeConstantOverride("separation", 14);
 		vbox.LayoutMode = 1;
 		vbox.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
 		margin.AddChild(vbox);
+
+		Label eyebrow = new()
+		{
+			Text = "HALTE DANS LE VIDE",
+			HorizontalAlignment = HorizontalAlignment.Center
+		};
+		eyebrow.AddThemeFontSizeOverride("font_size", 16);
+		eyebrow.AddThemeColorOverride("font_color", TextDim);
+		vbox.AddChild(eyebrow);
 
 		// Titre
 		Label title = new()
@@ -152,11 +188,21 @@ public partial class PauseMenu : CanvasLayer
 			Text = "PAUSE",
 			HorizontalAlignment = HorizontalAlignment.Center
 		};
-		title.AddThemeFontSizeOverride("font_size", 22);
-		title.AddThemeColorOverride("font_color", GoldColor);
+		title.AddThemeFontSizeOverride("font_size", 34);
+		title.AddThemeColorOverride("font_color", GoldBright);
 		vbox.AddChild(title);
 
-		vbox.AddChild(new HSeparator());
+		Label subtitle = new()
+		{
+			Text = "Le monde se fige, mais ta mémoire reste éveillée.",
+			HorizontalAlignment = HorizontalAlignment.Center,
+			AutowrapMode = TextServer.AutowrapMode.WordSmart
+		};
+		subtitle.AddThemeFontSizeOverride("font_size", 16);
+		subtitle.AddThemeColorOverride("font_color", TextColor);
+		vbox.AddChild(subtitle);
+
+		vbox.AddChild(CreateSeparator());
 
 		Button resumeBtn = CreateButton("Reprendre");
 		resumeBtn.Pressed += Resume;
@@ -179,52 +225,61 @@ public partial class PauseMenu : CanvasLayer
 		quitBtn.Pressed += QuitGame;
 		vbox.AddChild(quitBtn);
 
+		Control spacer = new() { SizeFlagsVertical = Control.SizeFlags.ExpandFill };
+		vbox.AddChild(spacer);
+
 		// Hint
 		Label hint = new()
 		{
-			Text = "[Echap] Fermer",
+			Text = "[Échap] Reprendre la traversée",
 			HorizontalAlignment = HorizontalAlignment.Center
 		};
-		hint.AddThemeFontSizeOverride("font_size", 11);
-		hint.AddThemeColorOverride("font_color", new Color(0.4f, 0.4f, 0.45f));
+		hint.AddThemeFontSizeOverride("font_size", 13);
+		hint.AddThemeColorOverride("font_color", TextVeryDim);
 		vbox.AddChild(hint);
 	}
 
 	private void BuildStatsPanel(HBoxContainer parent)
 	{
 		PanelContainer statsPanel = new();
-		statsPanel.CustomMinimumSize = new Vector2(220, 0);
-
-		StyleBoxFlat statsBg = new();
-		statsBg.BgColor = new Color(0.06f, 0.06f, 0.1f, 0.9f);
-		statsBg.SetBorderWidthAll(1);
-		statsBg.BorderColor = new Color(0.3f, 0.28f, 0.22f, 0.6f);
-		statsBg.SetCornerRadiusAll(4);
-		statsBg.ContentMarginLeft = 14;
-		statsBg.ContentMarginRight = 14;
-		statsBg.ContentMarginTop = 14;
-		statsBg.ContentMarginBottom = 14;
-		statsPanel.AddThemeStyleboxOverride("panel", statsBg);
+		statsPanel.CustomMinimumSize = new Vector2(400, 510);
+		ApplyPanelStyle(statsPanel, false);
 
 		parent.AddChild(statsPanel);
 
+		MarginContainer frame = new();
+		frame.AddThemeConstantOverride("margin_left", 28);
+		frame.AddThemeConstantOverride("margin_top", 26);
+		frame.AddThemeConstantOverride("margin_right", 28);
+		frame.AddThemeConstantOverride("margin_bottom", 26);
+		statsPanel.AddChild(frame);
+
 		VBoxContainer wrapper = new();
-		wrapper.AddThemeConstantOverride("separation", 6);
-		statsPanel.AddChild(wrapper);
+		wrapper.AddThemeConstantOverride("separation", 10);
+		frame.AddChild(wrapper);
 
 		Label statsTitle = new()
 		{
-			Text = "STATISTIQUES",
-			HorizontalAlignment = HorizontalAlignment.Center
+			Text = "ÉTAT DU PASSEUR",
+			HorizontalAlignment = HorizontalAlignment.Left
 		};
-		statsTitle.AddThemeFontSizeOverride("font_size", 14);
-		statsTitle.AddThemeColorOverride("font_color", GoldColor);
+		statsTitle.AddThemeFontSizeOverride("font_size", 20);
+		statsTitle.AddThemeColorOverride("font_color", GoldBright);
 		wrapper.AddChild(statsTitle);
 
-		wrapper.AddChild(new HSeparator());
+		Label statsSubtitle = new()
+		{
+			Text = "Lecture instantanée de la run en cours.",
+			HorizontalAlignment = HorizontalAlignment.Left
+		};
+		statsSubtitle.AddThemeFontSizeOverride("font_size", 14);
+		statsSubtitle.AddThemeColorOverride("font_color", TextDim);
+		wrapper.AddChild(statsSubtitle);
+
+		wrapper.AddChild(CreateSeparator());
 
 		_statsContainer = new VBoxContainer();
-		_statsContainer.AddThemeConstantOverride("separation", 3);
+		_statsContainer.AddThemeConstantOverride("separation", 6);
 		wrapper.AddChild(_statsContainer);
 	}
 
@@ -270,16 +325,16 @@ public partial class PauseMenu : CanvasLayer
 	private void AddStatLine(string label, string value, string bonus = null)
 	{
 		HBoxContainer row = new();
-		row.AddThemeConstantOverride("separation", 4);
+		row.AddThemeConstantOverride("separation", 8);
 
 		Label lbl = new() { Text = label };
-		lbl.AddThemeFontSizeOverride("font_size", 12);
+		lbl.AddThemeFontSizeOverride("font_size", 15);
 		lbl.AddThemeColorOverride("font_color", StatLabelColor);
 		lbl.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
 		row.AddChild(lbl);
 
 		Label val = new() { Text = value };
-		val.AddThemeFontSizeOverride("font_size", 12);
+		val.AddThemeFontSizeOverride("font_size", 15);
 		val.AddThemeColorOverride("font_color", StatValueColor);
 		val.HorizontalAlignment = HorizontalAlignment.Right;
 		row.AddChild(val);
@@ -287,7 +342,7 @@ public partial class PauseMenu : CanvasLayer
 		if (!string.IsNullOrEmpty(bonus))
 		{
 			Label bonusLbl = new() { Text = bonus };
-			bonusLbl.AddThemeFontSizeOverride("font_size", 11);
+			bonusLbl.AddThemeFontSizeOverride("font_size", 13);
 			bonusLbl.AddThemeColorOverride("font_color", StatBonusColor);
 			row.AddChild(bonusLbl);
 		}
@@ -352,15 +407,62 @@ public partial class PauseMenu : CanvasLayer
 		_perkManager = GetNodeOrNull<PerkManager>("/root/Main/PerkManager");
 	}
 
-	private static Button CreateButton(string text)
+	private void LoadTextures()
+	{
+		_panelTex = UITheme.LoadTex(MenusPath + "ui_panel_frame.png");
+		_panelSelectedTex = UITheme.LoadTex(MenusPath + "ui_panel_frame_selected.png");
+		_btnNormalTex = UITheme.LoadTex(MenusPath + "ui_button_normal.png");
+		_btnHoverTex = UITheme.LoadTex(MenusPath + "ui_button_hover.png");
+		_btnPressedTex = UITheme.LoadTex(MenusPath + "ui_button_pressed.png");
+		_btnDisabledTex = UITheme.LoadTex(MenusPath + "ui_button_disabled.png");
+		_separatorTex = UITheme.LoadTex(MenusPath + "ui_separator_wide.png");
+	}
+
+	private void ApplyPanelStyle(PanelContainer panel, bool selected)
+	{
+		Texture2D tex = selected ? (_panelSelectedTex ?? _panelTex) : _panelTex;
+		if (tex != null)
+		{
+			panel.AddThemeStyleboxOverride("panel", UITheme.CreateNinePatch(tex, 10, 10, 10, 10));
+			return;
+		}
+
+		StyleBoxFlat fallback = new();
+		fallback.BgColor = new Color(0.06f, 0.06f, 0.1f, 0.92f);
+		fallback.SetBorderWidthAll(1);
+		fallback.BorderColor = selected ? GoldColor : new Color(0.26f, 0.24f, 0.18f, 0.85f);
+		fallback.SetCornerRadiusAll(4);
+		panel.AddThemeStyleboxOverride("panel", fallback);
+	}
+
+	private Control CreateSeparator()
+	{
+		if (_separatorTex != null)
+		{
+			TextureRect sep = new()
+			{
+				Texture = _separatorTex,
+				StretchMode = TextureRect.StretchModeEnum.Scale,
+				CustomMinimumSize = new Vector2(0, 12)
+			};
+			return sep;
+		}
+
+		HSeparator sepFallback = new();
+		return sepFallback;
+	}
+
+	private Button CreateButton(string text)
 	{
 		Button btn = new()
 		{
 			Text = text,
-			CustomMinimumSize = new Vector2(200, 34)
+			CustomMinimumSize = new Vector2(320, 48),
+			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill
 		};
-		btn.AddThemeFontSizeOverride("font_size", 15);
-		UITheme.WireButtonAudio(btn);
+		btn.AddThemeFontSizeOverride("font_size", 20);
+		btn.AddThemeConstantOverride("h_separation", 6);
+		UITheme.ApplyButtonStyle(btn, _btnNormalTex, _btnHoverTex, _btnPressedTex, _btnDisabledTex);
 		return btn;
 	}
 }

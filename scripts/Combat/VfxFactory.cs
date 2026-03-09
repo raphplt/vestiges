@@ -195,8 +195,8 @@ public static class VfxFactory
 
 		var particles = new GpuParticles2D
 		{
-			Amount = ScaleAmount(6),
-			Lifetime = 0.25f,
+			Amount = ScaleAmount(4),
+			Lifetime = 0.2f,
 			Explosiveness = 1f,
 			OneShot = true,
 			Texture = SparkTexture,
@@ -212,9 +212,9 @@ public static class VfxFactory
 			InitialVelocityMin = 30f,
 			InitialVelocityMax = 60f,
 			Gravity = new Vector3(0, 40, 0),
-			ScaleMin = 0.5f,
-			ScaleMax = 1.2f,
-			Color = new Color(color, 0.9f),
+			ScaleMin = 0.6f,
+			ScaleMax = 1.4f,
+			Color = new Color(color, 0.6f),
 		};
 		particles.ProcessMaterial = mat;
 
@@ -390,10 +390,10 @@ public static class VfxFactory
 			Rotation = direction.Angle(),
 		};
 
-		// --- Sprite animé de slash (3 frames) ---
+		// --- Sprite animé de slash (3 frames) — 16fps pour lisibilité pixel art ---
 		SpriteFrames slashFrames = new();
 		slashFrames.AddAnimation("slash");
-		slashFrames.SetAnimationSpeed("slash", 24);
+		slashFrames.SetAnimationSpeed("slash", 16);
 		slashFrames.SetAnimationLoop("slash", false);
 		slashFrames.AddFrame("slash", SlashFrame1);
 		slashFrames.AddFrame("slash", SlashFrame2);
@@ -403,18 +403,20 @@ public static class VfxFactory
 		{
 			SpriteFrames = slashFrames,
 			TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
-			SelfModulate = new Color(color, 0.9f),
+			Scale = new Vector2(1.5f, 1.5f),
+			Modulate = new Color(1f, 1f, 1f, 0.9f),
 		};
 		slashSprite.Play("slash");
 		root.AddChild(slashSprite);
 
-		// --- Particules complémentaires en arc (si pas Off) ---
+		// --- Particules complémentaires en arc (réduites, discrètes) ---
 		if (_particleLevel != ParticleLevel.Off)
 		{
+			int baseAmount = Mathf.RoundToInt(Mathf.Clamp(arcAngle / 30f, 4, 12));
 			var particles = new GpuParticles2D
 			{
-				Amount = ScaleAmount(Mathf.RoundToInt(Mathf.Clamp(arcAngle / 30f, 4, 12))),
-				Lifetime = 0.15f,
+				Amount = ScaleAmount(Mathf.RoundToInt(baseAmount * 0.6f)),
+				Lifetime = 0.12f,
 				Explosiveness = 1f,
 				OneShot = true,
 				Texture = SparkTexture,
@@ -433,9 +435,9 @@ public static class VfxFactory
 				InitialVelocityMin = radius * 1.5f,
 				InitialVelocityMax = radius * 2.5f,
 				Gravity = Vector3.Zero,
-				ScaleMin = 0.6f,
-				ScaleMax = 1.5f,
-				Color = new Color(color, 0.85f),
+				ScaleMin = 0.8f,
+				ScaleMax = 1.8f,
+				Color = new Color(color, 0.6f),
 				DampingMin = 80f,
 				DampingMax = 120f,
 			};
@@ -445,8 +447,8 @@ public static class VfxFactory
 			root.AddChild(particles);
 		}
 
-		// Auto-nettoyage
-		var timer = new Timer { WaitTime = 0.4f, OneShot = true, Autostart = true };
+		// Auto-nettoyage (0.5s pour laisser le sprite être lisible)
+		var timer = new Timer { WaitTime = 0.5f, OneShot = true, Autostart = true };
 		timer.Timeout += root.QueueFree;
 		root.AddChild(timer);
 
@@ -468,9 +470,10 @@ public static class VfxFactory
 
 		var root = new Node2D { GlobalPosition = position };
 
+		// --- Sprite animé masse (3 frames) — 12fps pour lisibilité pixel art ---
 		SpriteFrames impactFrames = new();
 		impactFrames.AddAnimation("impact");
-		impactFrames.SetAnimationSpeed("impact", 18);
+		impactFrames.SetAnimationSpeed("impact", 12);
 		impactFrames.SetAnimationLoop("impact", false);
 		impactFrames.AddFrame("impact", MasseFrame1);
 		impactFrames.AddFrame("impact", MasseFrame2);
@@ -480,27 +483,28 @@ public static class VfxFactory
 		{
 			SpriteFrames = impactFrames,
 			TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
-			SelfModulate = new Color(color, 0.85f),
+			Scale = new Vector2(1.5f, 1.5f),
+			Modulate = new Color(1f, 1f, 1f, 0.9f),
 		};
 		impactSprite.Play("impact");
 		root.AddChild(impactSprite);
 
-		// Tween de scale up + fade
+		// Tween de scale up + fade (plus lent)
 		impactSprite.TreeEntered += () =>
 		{
 			Tween tween = impactSprite.CreateTween();
 			tween.SetParallel();
-			tween.TweenProperty(impactSprite, "scale", new Vector2(2f, 2f), 0.2f)
+			tween.TweenProperty(impactSprite, "scale", new Vector2(2.5f, 2.5f), 0.3f)
 				.SetTrans(Tween.TransitionType.Quad)
 				.SetEase(Tween.EaseType.Out);
-			tween.TweenProperty(impactSprite, "modulate:a", 0f, 0.25f);
+			tween.TweenProperty(impactSprite, "modulate:a", 0f, 0.35f);
 		};
 
-		// Particules complémentaires (petits débris)
+		// Particules complémentaires (réduites — débris discrets)
 		var particles = new GpuParticles2D
 		{
-			Amount = ScaleAmount(8),
-			Lifetime = 0.3f,
+			Amount = ScaleAmount(5),
+			Lifetime = 0.25f,
 			Explosiveness = 1f,
 			OneShot = true,
 			Texture = SparkTexture,
@@ -516,15 +520,15 @@ public static class VfxFactory
 			InitialVelocityMin = 40f,
 			InitialVelocityMax = 80f,
 			Gravity = new Vector3(0, 60, 0),
-			ScaleMin = 0.4f,
-			ScaleMax = 1.0f,
-			Color = new Color(color, 0.7f),
+			ScaleMin = 0.5f,
+			ScaleMax = 1.2f,
+			Color = new Color(color, 0.5f),
 		};
 		particles.ProcessMaterial = mat;
 		particles.Emitting = true;
 		root.AddChild(particles);
 
-		var timer = new Timer { WaitTime = 0.5f, OneShot = true, Autostart = true };
+		var timer = new Timer { WaitTime = 0.6f, OneShot = true, Autostart = true };
 		timer.Timeout += root.QueueFree;
 		root.AddChild(timer);
 
@@ -777,9 +781,10 @@ public static class VfxFactory
 			Rotation = direction.Angle(),
 		};
 
+		// --- Sprite animé thrust (3 frames) — 14fps pour lisibilité pixel art ---
 		SpriteFrames thrustFrames = new();
 		thrustFrames.AddAnimation("thrust");
-		thrustFrames.SetAnimationSpeed("thrust", 20);
+		thrustFrames.SetAnimationSpeed("thrust", 14);
 		thrustFrames.SetAnimationLoop("thrust", false);
 		thrustFrames.AddFrame("thrust", ThrustFrame1);
 		thrustFrames.AddFrame("thrust", ThrustFrame2);
@@ -789,7 +794,8 @@ public static class VfxFactory
 		{
 			SpriteFrames = thrustFrames,
 			TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
-			SelfModulate = new Color(color, 0.9f),
+			Scale = new Vector2(1.5f, 1.5f),
+			Modulate = new Color(1f, 1f, 1f, 0.9f),
 		};
 		thrustSprite.Play("thrust");
 		root.AddChild(thrustSprite);
@@ -798,8 +804,8 @@ public static class VfxFactory
 		{
 			var particles = new GpuParticles2D
 			{
-				Amount = ScaleAmount(4),
-				Lifetime = 0.12f,
+				Amount = ScaleAmount(3),
+				Lifetime = 0.1f,
 				Explosiveness = 1f,
 				OneShot = true,
 				Texture = SparkTexture,
@@ -815,9 +821,9 @@ public static class VfxFactory
 				InitialVelocityMin = 40f,
 				InitialVelocityMax = 70f,
 				Gravity = Vector3.Zero,
-				ScaleMin = 0.3f,
-				ScaleMax = 0.8f,
-				Color = new Color(color, 0.8f),
+				ScaleMin = 0.4f,
+				ScaleMax = 1.0f,
+				Color = new Color(color, 0.5f),
 				DampingMin = 60f,
 				DampingMax = 100f,
 			};
@@ -826,7 +832,7 @@ public static class VfxFactory
 			root.AddChild(particles);
 		}
 
-		var timer = new Timer { WaitTime = 0.3f, OneShot = true, Autostart = true };
+		var timer = new Timer { WaitTime = 0.5f, OneShot = true, Autostart = true };
 		timer.Timeout += root.QueueFree;
 		root.AddChild(timer);
 
@@ -867,8 +873,8 @@ public static class VfxFactory
 		{
 			var particles = new GpuParticles2D
 			{
-				Amount = ScaleAmount(12),
-				Lifetime = 0.4f,
+				Amount = ScaleAmount(8),
+				Lifetime = 0.3f,
 				Explosiveness = 0.9f,
 				OneShot = true,
 				Texture = SparkTexture,
@@ -884,9 +890,9 @@ public static class VfxFactory
 				InitialVelocityMin = 50f,
 				InitialVelocityMax = 100f,
 				Gravity = new Vector3(0, 40, 0),
-				ScaleMin = 0.5f,
-				ScaleMax = 1.5f,
-				Color = new Color(0.88f, 0.48f, 0.22f, 0.9f),
+				ScaleMin = 0.6f,
+				ScaleMax = 1.8f,
+				Color = new Color(0.88f, 0.48f, 0.22f, 0.6f),
 			};
 			particles.ProcessMaterial = mat;
 			particles.Emitting = true;
@@ -1013,12 +1019,13 @@ public static class VfxFactory
 		{
 			SpriteFrames = frames,
 			TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
-			SelfModulate = new Color(color, 0.9f),
+			Scale = new Vector2(1.5f, 1.5f),
+			Modulate = new Color(1f, 1f, 1f, 0.9f),
 		};
 		sprite.Play("impact");
 		root.AddChild(sprite);
 
-		var timer = new Timer { WaitTime = 0.25f, OneShot = true, Autostart = true };
+		var timer = new Timer { WaitTime = 0.3f, OneShot = true, Autostart = true };
 		timer.Timeout += root.QueueFree;
 		root.AddChild(timer);
 
@@ -1096,9 +1103,10 @@ public static class VfxFactory
 
 		var root = new Node2D { GlobalPosition = position };
 
+		// --- Sprite animé fouet (4 frames) — 14fps pour lisibilité pixel art ---
 		SpriteFrames frames = new();
 		frames.AddAnimation("whip");
-		frames.SetAnimationSpeed("whip", 20);
+		frames.SetAnimationSpeed("whip", 14);
 		frames.SetAnimationLoop("whip", false);
 		frames.AddFrame("whip", FouetFrame1);
 		frames.AddFrame("whip", FouetFrame2);
@@ -1109,18 +1117,19 @@ public static class VfxFactory
 		{
 			SpriteFrames = frames,
 			TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
-			SelfModulate = new Color(color, 0.9f),
+			Scale = new Vector2(1.5f, 1.5f),
+			Modulate = new Color(1f, 1f, 1f, 0.9f),
 		};
 		sprite.Play("whip");
 		root.AddChild(sprite);
 
-		// Particules complémentaires (étincelles du claquement)
+		// Particules complémentaires (réduites — étincelles discrètes)
 		if (_particleLevel != ParticleLevel.Off)
 		{
 			var particles = new GpuParticles2D
 			{
-				Amount = ScaleAmount(6),
-				Lifetime = 0.2f,
+				Amount = ScaleAmount(4),
+				Lifetime = 0.15f,
 				Explosiveness = 0.9f,
 				OneShot = true,
 				Texture = SparkTexture,
@@ -1136,9 +1145,9 @@ public static class VfxFactory
 				InitialVelocityMin = 30f,
 				InitialVelocityMax = 60f,
 				Gravity = new Vector3(0, 20, 0),
-				ScaleMin = 0.3f,
-				ScaleMax = 0.8f,
-				Color = new Color(color, 0.7f),
+				ScaleMin = 0.4f,
+				ScaleMax = 1.0f,
+				Color = new Color(color, 0.5f),
 				DampingMin = 40f,
 				DampingMax = 80f,
 			};
@@ -1147,11 +1156,398 @@ public static class VfxFactory
 			root.AddChild(particles);
 		}
 
-		var timer = new Timer { WaitTime = 0.4f, OneShot = true, Autostart = true };
+		var timer = new Timer { WaitTime = 0.5f, OneShot = true, Autostart = true };
 		timer.Timeout += root.QueueFree;
 		root.AddChild(timer);
 
 		return root;
+	}
+
+	// =========================================================================
+	// === Tier 3+ Weapon VFX — sprites pixel art procéduraux ===
+	// =========================================================================
+
+	// --- Cache static pour les sprites tier 3+ ---
+	private static ImageTexture[] _bellWaveFrames;
+	private static ImageTexture[] _chainLightningFrames;
+	private static ImageTexture[] _timeDistortionFrames;
+	private static ImageTexture _voidSlashTex;
+	private static ImageTexture[] _echoFrames;
+
+	/// <summary>
+	/// Onde sonore concentrique pour La Cloche de l'Institutrice (teachers_bell).
+	/// 3 frames d'anneaux concentriques qui s'expandent, 24x24 px.
+	/// </summary>
+	public static Node2D CreateBellWaveVfx(Vector2 position, Color color)
+	{
+		if (_particleLevel == ParticleLevel.Off)
+			return null;
+
+		_bellWaveFrames ??= GenerateBellWaveFrames();
+
+		var root = new Node2D { GlobalPosition = position };
+
+		SpriteFrames frames = new();
+		frames.AddAnimation("wave");
+		frames.SetAnimationSpeed("wave", 10);
+		frames.SetAnimationLoop("wave", false);
+		for (int i = 0; i < _bellWaveFrames.Length; i++)
+			frames.AddFrame("wave", _bellWaveFrames[i]);
+
+		AnimatedSprite2D sprite = new()
+		{
+			SpriteFrames = frames,
+			TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
+			Scale = new Vector2(2f, 2f),
+		};
+		sprite.Play("wave");
+		root.AddChild(sprite);
+
+		sprite.TreeEntered += () =>
+		{
+			Tween tween = sprite.CreateTween();
+			tween.SetParallel();
+			tween.TweenProperty(sprite, "scale", new Vector2(3.5f, 3.5f), 0.4f)
+				.SetTrans(Tween.TransitionType.Quad)
+				.SetEase(Tween.EaseType.Out);
+			tween.TweenProperty(sprite, "modulate:a", 0f, 0.5f);
+		};
+
+		var timer = new Timer { WaitTime = 0.6f, OneShot = true, Autostart = true };
+		timer.Timeout += root.QueueFree;
+		root.AddChild(timer);
+
+		return root;
+	}
+
+	private static ImageTexture[] GenerateBellWaveFrames()
+	{
+		const int size = 24;
+		const int center = size / 2;
+		var result = new ImageTexture[3];
+		int[][] radii = { new[] { 3, 4 }, new[] { 5, 6, 8 }, new[] { 7, 9, 10, 11 } };
+		Color ring = new(0.85f, 0.75f, 0.45f, 1f); // Or pâle
+		Color ringFade = new(0.85f, 0.75f, 0.45f, 0.5f);
+
+		for (int f = 0; f < 3; f++)
+		{
+			Image img = Image.CreateEmpty(size, size, false, Image.Format.Rgba8);
+			foreach (int r in radii[f])
+			{
+				Color c = r == radii[f][^1] ? ringFade : ring;
+				DrawPixelCircle(img, center, center, r, c);
+			}
+			result[f] = ImageTexture.CreateFromImage(img);
+		}
+		return result;
+	}
+
+	/// <summary>
+	/// Éclair de chaîne entre ennemis pour La Chaîne des Noms (chain_of_names).
+	/// 2 frames de zigzag pixel art électrique, 24x12 px.
+	/// </summary>
+	public static Node2D CreateChainLightningVfx(Vector2 from, Vector2 to, Color color)
+	{
+		_chainLightningFrames ??= GenerateChainLightningFrames();
+
+		var root = new Node2D { GlobalPosition = from };
+		Vector2 delta = to - from;
+		root.Rotation = delta.Angle();
+
+		SpriteFrames frames = new();
+		frames.AddAnimation("chain");
+		frames.SetAnimationSpeed("chain", 12);
+		frames.SetAnimationLoop("chain", false);
+		for (int i = 0; i < _chainLightningFrames.Length; i++)
+			frames.AddFrame("chain", _chainLightningFrames[i]);
+
+		float stretchX = delta.Length() / 24f;
+		AnimatedSprite2D sprite = new()
+		{
+			SpriteFrames = frames,
+			TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
+			Scale = new Vector2(Mathf.Max(stretchX, 1f), 2f),
+			Modulate = new Color(1f, 1f, 1f, 0.9f),
+		};
+		sprite.Play("chain");
+		root.AddChild(sprite);
+
+		var timer = new Timer { WaitTime = 0.3f, OneShot = true, Autostart = true };
+		timer.Timeout += root.QueueFree;
+		root.AddChild(timer);
+
+		return root;
+	}
+
+	private static ImageTexture[] GenerateChainLightningFrames()
+	{
+		const int w = 24, h = 12;
+		var result = new ImageTexture[2];
+		Color bright = new(0.7f, 0.85f, 1f, 1f);
+		Color core = new(1f, 1f, 1f, 1f);
+
+		for (int f = 0; f < 2; f++)
+		{
+			Image img = Image.CreateEmpty(w, h, false, Image.Format.Rgba8);
+			int y = h / 2;
+			int offset = f * 2;
+			for (int x = 0; x < w; x++)
+			{
+				// Zigzag avec décalage par frame
+				int dy = ((x + offset) % 4 < 2) ? -1 : 1;
+				if (x % 3 == 0) dy *= 2;
+				int py = Mathf.Clamp(y + dy, 1, h - 2);
+				SetPixelSafe(img, x, py, core, w, h);
+				SetPixelSafe(img, x, py - 1, bright, w, h);
+				SetPixelSafe(img, x, py + 1, bright, w, h);
+			}
+			result[f] = ImageTexture.CreateFromImage(img);
+		}
+		return result;
+	}
+
+	/// <summary>
+	/// Distorsion temporelle pour L'Aiguille de l'Horloge (clock_hand).
+	/// 3 frames d'anneaux bleu/violet qui se contractent, 32x32 px.
+	/// </summary>
+	public static Node2D CreateTimeDistortionVfx(Vector2 position)
+	{
+		if (_particleLevel == ParticleLevel.Off)
+			return null;
+
+		_timeDistortionFrames ??= GenerateTimeDistortionFrames();
+
+		var root = new Node2D { GlobalPosition = position };
+
+		SpriteFrames frames = new();
+		frames.AddAnimation("distort");
+		frames.SetAnimationSpeed("distort", 8);
+		frames.SetAnimationLoop("distort", false);
+		for (int i = 0; i < _timeDistortionFrames.Length; i++)
+			frames.AddFrame("distort", _timeDistortionFrames[i]);
+
+		AnimatedSprite2D sprite = new()
+		{
+			SpriteFrames = frames,
+			TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
+			Scale = new Vector2(2.5f, 2.5f),
+		};
+		sprite.Play("distort");
+		root.AddChild(sprite);
+
+		sprite.TreeEntered += () =>
+		{
+			Tween tween = sprite.CreateTween();
+			tween.TweenProperty(sprite, "modulate:a", 0f, 0.6f)
+				.SetDelay(0.2f);
+		};
+
+		var timer = new Timer { WaitTime = 0.8f, OneShot = true, Autostart = true };
+		timer.Timeout += root.QueueFree;
+		root.AddChild(timer);
+
+		return root;
+	}
+
+	private static ImageTexture[] GenerateTimeDistortionFrames()
+	{
+		const int size = 32;
+		const int center = size / 2;
+		var result = new ImageTexture[3];
+		Color outer = new(0.4f, 0.3f, 0.7f, 0.7f);    // Violet
+		Color mid = new(0.3f, 0.5f, 0.9f, 0.8f);       // Bleu
+		Color inner = new(0.6f, 0.7f, 1f, 0.9f);        // Bleu clair
+
+		// Frame 0: grand anneau extérieur, Frame 1: moyen, Frame 2: anneau intérieur serré
+		int[][] rings = { new[] { 14, 12 }, new[] { 11, 9, 7 }, new[] { 8, 6, 4 } };
+		Color[][] colors = {
+			new[] { outer, mid },
+			new[] { outer, mid, inner },
+			new[] { mid, inner, inner },
+		};
+
+		for (int f = 0; f < 3; f++)
+		{
+			Image img = Image.CreateEmpty(size, size, false, Image.Format.Rgba8);
+			for (int r = 0; r < rings[f].Length; r++)
+				DrawPixelCircle(img, center, center, rings[f][r], colors[f][r]);
+			// Aiguille d'horloge au centre
+			for (int i = 0; i < 5; i++)
+				SetPixelSafe(img, center, center - i, inner, size, size);
+			result[f] = ImageTexture.CreateFromImage(img);
+		}
+		return result;
+	}
+
+	/// <summary>
+	/// Slash du Vide pour Tranchant du Vide (void_edge).
+	/// Trainée noire iridescente single-frame, 20x8 px.
+	/// </summary>
+	public static Node2D CreateVoidSlashVfx(Vector2 position, Vector2 direction, Color color)
+	{
+		_voidSlashTex ??= GenerateVoidSlashTexture();
+
+		var root = new Node2D
+		{
+			GlobalPosition = position + direction * 8f,
+			Rotation = direction.Angle(),
+		};
+
+		Sprite2D sprite = new()
+		{
+			Texture = _voidSlashTex,
+			TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
+			Scale = new Vector2(2f, 2f),
+		};
+		root.AddChild(sprite);
+
+		sprite.TreeEntered += () =>
+		{
+			Tween tween = sprite.CreateTween();
+			tween.SetParallel();
+			tween.TweenProperty(sprite, "scale", new Vector2(3f, 2.5f), 0.15f)
+				.SetTrans(Tween.TransitionType.Quad)
+				.SetEase(Tween.EaseType.Out);
+			tween.TweenProperty(sprite, "modulate:a", 0f, 0.4f);
+		};
+
+		var timer = new Timer { WaitTime = 0.5f, OneShot = true, Autostart = true };
+		timer.Timeout += root.QueueFree;
+		root.AddChild(timer);
+
+		return root;
+	}
+
+	private static ImageTexture GenerateVoidSlashTexture()
+	{
+		const int w = 20, h = 8;
+		Image img = Image.CreateEmpty(w, h, false, Image.Format.Rgba8);
+		Color voidCore = new(0.1f, 0.05f, 0.15f, 1f);
+		Color voidEdge = new(0.3f, 0.1f, 0.5f, 0.8f);
+		Color voidGlow = new(0.5f, 0.2f, 0.8f, 0.4f);
+
+		int mid = h / 2;
+		for (int x = 1; x < w - 1; x++)
+		{
+			// Forme de lame qui s'affine aux extrémités
+			float t = (float)x / w;
+			int thickness = (int)(3f * Mathf.Sin(t * Mathf.Pi));
+			for (int dy = -thickness; dy <= thickness; dy++)
+			{
+				int py = mid + dy;
+				if (py < 0 || py >= h) continue;
+				Color c = Mathf.Abs(dy) == 0 ? voidCore : (Mathf.Abs(dy) <= 1 ? voidEdge : voidGlow);
+				img.SetPixel(x, py, c);
+			}
+		}
+		return ImageTexture.CreateFromImage(img);
+	}
+
+	/// <summary>
+	/// Écho retardé pour Gantelets d'Écho (echo_gauntlets).
+	/// 2 frames d'onde de choc secondaire, 16x16 px.
+	/// </summary>
+	public static Node2D CreateEchoVfx(Vector2 position, Vector2 direction, Color color)
+	{
+		if (_particleLevel == ParticleLevel.Off)
+			return null;
+
+		_echoFrames ??= GenerateEchoFrames();
+
+		var root = new Node2D
+		{
+			GlobalPosition = position + direction * 12f,
+			Rotation = direction.Angle(),
+		};
+
+		SpriteFrames frames = new();
+		frames.AddAnimation("echo");
+		frames.SetAnimationSpeed("echo", 8);
+		frames.SetAnimationLoop("echo", false);
+		for (int i = 0; i < _echoFrames.Length; i++)
+			frames.AddFrame("echo", _echoFrames[i]);
+
+		AnimatedSprite2D sprite = new()
+		{
+			SpriteFrames = frames,
+			TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
+			Scale = new Vector2(1.5f, 1.5f),
+			Modulate = new Color(1f, 1f, 1f, 0.6f),
+		};
+		sprite.Play("echo");
+		root.AddChild(sprite);
+
+		sprite.TreeEntered += () =>
+		{
+			Tween tween = sprite.CreateTween();
+			tween.SetParallel();
+			tween.TweenProperty(sprite, "scale", new Vector2(2.5f, 2.5f), 0.25f)
+				.SetTrans(Tween.TransitionType.Quad)
+				.SetEase(Tween.EaseType.Out);
+			tween.TweenProperty(sprite, "modulate:a", 0f, 0.35f);
+		};
+
+		var timer = new Timer { WaitTime = 0.45f, OneShot = true, Autostart = true };
+		timer.Timeout += root.QueueFree;
+		root.AddChild(timer);
+
+		return root;
+	}
+
+	private static ImageTexture[] GenerateEchoFrames()
+	{
+		const int size = 16;
+		const int center = size / 2;
+		var result = new ImageTexture[2];
+		Color wave1 = new(0.6f, 0.75f, 0.9f, 0.8f);
+		Color wave2 = new(0.4f, 0.55f, 0.8f, 0.5f);
+
+		for (int f = 0; f < 2; f++)
+		{
+			Image img = Image.CreateEmpty(size, size, false, Image.Format.Rgba8);
+			int r1 = 4 + f * 2;
+			int r2 = 6 + f * 2;
+			DrawPixelCircle(img, center, center, r1, wave1);
+			DrawPixelCircle(img, center, center, r2, wave2);
+			result[f] = ImageTexture.CreateFromImage(img);
+		}
+		return result;
+	}
+
+	// --- Helpers pour la génération pixel art ---
+
+	private static void DrawPixelCircle(Image img, int cx, int cy, int radius, Color color)
+	{
+		int w = img.GetWidth();
+		int h = img.GetHeight();
+		// Bresenham circle (outline only)
+		int x = radius, y = 0;
+		int d = 1 - radius;
+		while (x >= y)
+		{
+			SetPixelSafe(img, cx + x, cy + y, color, w, h);
+			SetPixelSafe(img, cx - x, cy + y, color, w, h);
+			SetPixelSafe(img, cx + x, cy - y, color, w, h);
+			SetPixelSafe(img, cx - x, cy - y, color, w, h);
+			SetPixelSafe(img, cx + y, cy + x, color, w, h);
+			SetPixelSafe(img, cx - y, cy + x, color, w, h);
+			SetPixelSafe(img, cx + y, cy - x, color, w, h);
+			SetPixelSafe(img, cx - y, cy - x, color, w, h);
+			y++;
+			if (d <= 0)
+				d += 2 * y + 1;
+			else
+			{
+				x--;
+				d += 2 * (y - x) + 1;
+			}
+		}
+	}
+
+	private static void SetPixelSafe(Image img, int x, int y, Color color, int w, int h)
+	{
+		if (x >= 0 && x < w && y >= 0 && y < h)
+			img.SetPixel(x, y, color);
 	}
 
 	// =========================================================================

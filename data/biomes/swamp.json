@@ -45,14 +45,53 @@
             "marecages/tile_marecages_eau_v2",
             "marecages/tile_marecages_eau_v3"
         ],
-        "wet_dark_ground": [
-            "marecages/tile_marecages_sol_humide"
+        "wet_mid_ground": [
+            "marecages/tile_marecages_wet_mid_ground"
         ],
-        "mud_light_ground": [
-            "marecages/tile_marecages_bourbier_clair"
+        "mud_transition": [
+            "marecages/tile_marecages_mud_transition"
         ],
-        "dirty_bank": [
-            "marecages/tile_marecages_berge_sale"
+        "bank_dirty": [
+            "marecages/tile_marecages_bank_dirty"
+        ],
+        "sludge_dark": [
+            "marecages/tile_marecages_sludge_dark"
+        ],
+        "bank_edge_nw": [
+            "marecages/tile_marecages_bank_edge_nw"
+        ],
+        "bank_edge_ne": [
+            "marecages/tile_marecages_bank_edge_ne"
+        ],
+        "bank_edge_se": [
+            "marecages/tile_marecages_bank_edge_se"
+        ],
+        "bank_edge_sw": [
+            "marecages/tile_marecages_bank_edge_sw"
+        ],
+        "bank_inner_corner_nw": [
+            "marecages/tile_marecages_bank_inner_corner_nw"
+        ],
+        "bank_inner_corner_ne": [
+            "marecages/tile_marecages_bank_inner_corner_ne"
+        ],
+        "bank_inner_corner_se": [
+            "marecages/tile_marecages_bank_inner_corner_se"
+        ],
+        "bank_inner_corner_sw": [
+            "marecages/tile_marecages_bank_inner_corner_sw"
+        ],
+        "bank_outer_corner_nw": [
+            "marecages/tile_marecages_bank_outer_corner_nw"
+        ],
+        "bank_outer_corner_ne": [
+            "marecages/tile_marecages_bank_outer_corner_ne"
+        ],
+        "bank_outer_corner_se": [
+            "marecages/tile_marecages_bank_outer_corner_se"
+        ],
+        "bank_outer_corner_sw": [
+            "marecages/tile_marecages_bank_outer_corner_sw"
         ]
     }
 }

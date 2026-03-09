@@ -18,6 +18,14 @@ public partial class RandomEventManager : Node
 	private const float EventRollDelay = 10f;
 	private const float EventCheckInterval = 5f;
 
+	// Events désactivés temporairement (pas de sprites pixel art prêts)
+	private static readonly HashSet<string> DisabledEvents = new()
+	{
+		"caravan", "smoke_signal", "the_call", "ash_rain",
+		"spontaneous_bloom", "temporal_rift", "world_echo",
+		"forgotten_wind", "foyer_resonance"
+	};
+
 	private EventBus _eventBus;
 	private SpawnManager _spawnManager;
 	private DayNightCycle _dayNightCycle;
@@ -348,27 +356,14 @@ public partial class RandomEventManager : Node
 		// Créer le nœud marchand
 		Node2D merchant = new() { Name = "CaravanMerchant", GlobalPosition = merchantPos };
 
-		// Visuel : losange doré (icône marchand)
-		Polygon2D body = new()
+		// Sprite pixel art du marchand
+		Sprite2D body = new()
 		{
-			Color = new Color(0.85f, 0.7f, 0.2f, 0.9f),
-			Polygon = new Vector2[]
-			{
-				new(0, -18), new(12, 0), new(0, 18), new(-12, 0)
-			}
+			Texture = EventSpriteFactory.GetMerchantSprite(),
+			TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
+			Offset = new Vector2(0, -16)
 		};
 		merchant.AddChild(body);
-
-		// Petit chapeau (triangle au-dessus)
-		Polygon2D hat = new()
-		{
-			Color = new Color(0.6f, 0.45f, 0.1f),
-			Polygon = new Vector2[]
-			{
-				new(-10, -18), new(10, -18), new(0, -30)
-			}
-		};
-		merchant.AddChild(hat);
 
 		// Zone d'interaction (Area2D + CollisionShape2D)
 		Area2D interactArea = new() { Name = "InteractArea" };
@@ -533,46 +528,26 @@ public partial class RandomEventManager : Node
 		// Signaler le POI sur la minimap via EventBus
 		_eventBus.EmitSignal(EventBus.SignalName.PoiDiscovered, "smoke_signal", poiType, poiPos);
 
-		// Créer la colonne de fumée visuelle
+		// Créer la colonne de fumée visuelle (sprite pixel art animé)
 		Node2D smokeNode = new() { Name = "SmokeSignal", GlobalPosition = poiPos };
 
-		// Base : petit feu (triangle orange)
-		Polygon2D fireBase = new()
+		ImageTexture[] smokeFrames = EventSpriteFactory.GetSmokeFrames();
+		SpriteFrames smokeAnim = new();
+		smokeAnim.AddAnimation("smoke");
+		smokeAnim.SetAnimationSpeed("smoke", 4);
+		smokeAnim.SetAnimationLoop("smoke", true);
+		foreach (ImageTexture frame in smokeFrames)
+			smokeAnim.AddFrame("smoke", frame);
+
+		AnimatedSprite2D smokeSprite = new()
 		{
-			Color = new Color(0.9f, 0.5f, 0.1f, 0.8f),
-			Polygon = new Vector2[]
-			{
-				new(-6, 0), new(6, 0), new(0, -12)
-			}
+			SpriteFrames = smokeAnim,
+			TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
+			Offset = new Vector2(0, -16),
+			Scale = new Vector2(2f, 2f)
 		};
-		smokeNode.AddChild(fireBase);
-
-		// Colonne de fumée : ellipses empilées de plus en plus transparentes
-		for (int i = 0; i < 4; i++)
-		{
-			float yOff = -18f - i * 14f;
-			float alpha = 0.5f - i * 0.1f;
-			float size = 8f + i * 3f;
-
-			Polygon2D smokePuff = new()
-			{
-				Color = new Color(0.6f, 0.6f, 0.6f, alpha),
-				Polygon = CreateCirclePolygon(size, 6),
-				Position = new Vector2(0, yOff)
-			};
-			smokeNode.AddChild(smokePuff);
-
-			// Légère ondulation de chaque bouffée
-			Tween puffTween = CreateTween().SetLoops();
-			float drift = 3f + i * 1.5f;
-			puffTween.TweenProperty(smokePuff, "position",
-				new Vector2(drift, yOff - 4f), 1.2f + i * 0.3f)
-				.SetTrans(Tween.TransitionType.Sine);
-			puffTween.TweenProperty(smokePuff, "position",
-				new Vector2(-drift, yOff + 2f), 1.2f + i * 0.3f)
-				.SetTrans(Tween.TransitionType.Sine);
-			_smokePuffTweens.Add(puffTween);
-		}
+		smokeSprite.Play("smoke");
+		smokeNode.AddChild(smokeSprite);
 
 		// Zone de détection du joueur
 		Area2D detectArea = new() { Name = "DetectArea" };
@@ -745,31 +720,24 @@ public partial class RandomEventManager : Node
 		Vector2 lurePos = (_foyerNode?.GlobalPosition ?? player.GlobalPosition) +
 			new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * lureDistance;
 
-		// Créer un indicateur visuel attirant (lumière pulsante)
+		// Créer un indicateur visuel attirant (sprite pixel art pulsant)
 		Node2D lure = new() { Name = "LureSignal", GlobalPosition = lurePos };
 
-		Polygon2D glow = new()
+		Sprite2D lureSprite = new()
 		{
-			Color = new Color(0.4f, 0.9f, 0.5f, 0.6f),
-			Polygon = CreateCirclePolygon(20f, 8)
+			Texture = EventSpriteFactory.GetLureSprite(),
+			TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
+			Scale = new Vector2(2.5f, 2.5f)
 		};
-		lure.AddChild(glow);
-
-		// Halo extérieur pour renforcer l'attraction visuelle
-		Polygon2D halo = new()
-		{
-			Color = new Color(0.3f, 0.8f, 0.4f, 0.2f),
-			Polygon = CreateCirclePolygon(35f, 12)
-		};
-		lure.AddChild(halo);
+		lure.AddChild(lureSprite);
 
 		GetNode("..").CallDeferred("add_child", lure);
 
 		// Pulsation lumineuse
 		_lurePulseTween = CreateTween().SetLoops();
-		_lurePulseTween.TweenProperty(glow, "scale", new Vector2(1.4f, 1.4f), 0.8f)
+		_lurePulseTween.TweenProperty(lureSprite, "scale", new Vector2(3.2f, 3.2f), 0.8f)
 			.SetTrans(Tween.TransitionType.Sine);
-		_lurePulseTween.TweenProperty(glow, "scale", Vector2.One, 0.8f)
+		_lurePulseTween.TweenProperty(lureSprite, "scale", new Vector2(2.5f, 2.5f), 0.8f)
 			.SetTrans(Tween.TransitionType.Sine);
 
 		// Préparer le tracking des ennemis du leurre
@@ -983,57 +951,31 @@ public partial class RandomEventManager : Node
 		float dist = (float)GD.RandRange(distMin, distMax);
 		Vector2 riftPos = player.GlobalPosition + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * dist;
 
-		// Nœud visuel : cercle doré pulsant
+		// Sprite pixel art animé du portail
 		Node2D rift = new() { Name = "TemporalRift", GlobalPosition = riftPos };
 
-		// Cercle principal doré
-		Polygon2D riftCircle = new()
-		{
-			Color = new Color(1f, 0.85f, 0.3f, 0.25f),
-			Polygon = CreateCirclePolygon(40f, 16)
-		};
-		rift.AddChild(riftCircle);
+		ImageTexture[] riftFrames = EventSpriteFactory.GetRiftFrames();
+		SpriteFrames riftAnim = new();
+		riftAnim.AddAnimation("rift");
+		riftAnim.SetAnimationSpeed("rift", 6);
+		riftAnim.SetAnimationLoop("rift", true);
+		foreach (ImageTexture frame in riftFrames)
+			riftAnim.AddFrame("rift", frame);
 
-		// Halo extérieur chaud
-		Polygon2D halo = new()
+		AnimatedSprite2D riftSprite = new()
 		{
-			Color = new Color(1f, 0.7f, 0.2f, 0.1f),
-			Polygon = CreateCirclePolygon(65f, 16)
+			SpriteFrames = riftAnim,
+			TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
+			Scale = new Vector2(2.5f, 2.5f)
 		};
-		rift.AddChild(halo);
-
-		// Spirale intérieure (3 lignes convergentes)
-		for (int i = 0; i < 3; i++)
-		{
-			float spiralAngle = Mathf.Tau * i / 3f;
-			Polygon2D spiral = new()
-			{
-				Color = new Color(1f, 0.95f, 0.6f, 0.5f),
-				Polygon = new Vector2[]
-				{
-					new(Mathf.Cos(spiralAngle) * 30f, Mathf.Sin(spiralAngle) * 30f),
-					new(Mathf.Cos(spiralAngle + 0.3f) * 15f, Mathf.Sin(spiralAngle + 0.3f) * 15f),
-					new(0, 0)
-				}
-			};
-			rift.AddChild(spiral);
-		}
-
-		// PointLight2D dorée
-		PointLight2D light = new()
-		{
-			Color = new Color(1f, 0.85f, 0.4f),
-			Energy = 0.8f,
-			TextureScale = 0.6f,
-			Texture = GD.Load<Texture2D>("res://icon.svg")
-		};
-		rift.AddChild(light);
+		riftSprite.Play("rift");
+		rift.AddChild(riftSprite);
 
 		// Pulsation
 		_riftPulseTween = CreateTween().SetLoops();
-		_riftPulseTween.TweenProperty(riftCircle, "scale", new Vector2(1.2f, 1.2f), 1.0f)
+		_riftPulseTween.TweenProperty(riftSprite, "scale", new Vector2(3f, 3f), 1.0f)
 			.SetTrans(Tween.TransitionType.Sine);
-		_riftPulseTween.TweenProperty(riftCircle, "scale", Vector2.One, 1.0f)
+		_riftPulseTween.TweenProperty(riftSprite, "scale", new Vector2(2.5f, 2.5f), 1.0f)
 			.SetTrans(Tween.TransitionType.Sine);
 
 		GetNode("..").CallDeferred("add_child", rift);
@@ -1155,84 +1097,26 @@ public partial class RandomEventManager : Node
 		Node2D ghost = new() { Name = "GhostBuilding", GlobalPosition = position };
 		ghost.Modulate = new Color(0.8f, 0.85f, 1f, 0f);
 
-		// Type aléatoire de bâtiment fantôme
-		int type = (int)(GD.Randi() % 4);
-		Vector2[] outline;
-		switch (type)
-		{
-			case 0: // Maison
-				outline = new Vector2[]
-				{
-					new(-18, 10), new(-18, -12), new(0, -24),
-					new(18, -12), new(18, 10)
-				};
-				break;
-			case 1: // Tour
-				outline = new Vector2[]
-				{
-					new(-8, 15), new(-8, -30), new(-4, -35),
-					new(4, -35), new(8, -30), new(8, 15)
-				};
-				break;
-			case 2: // Église
-				outline = new Vector2[]
-				{
-					new(-15, 10), new(-15, -10), new(-5, -10),
-					new(-5, -25), new(0, -32), new(5, -25),
-					new(5, -10), new(15, -10), new(15, 10)
-				};
-				break;
-			default: // Immeuble
-				outline = new Vector2[]
-				{
-					new(-20, 10), new(-20, -18), new(-12, -18),
-					new(-12, -25), new(12, -25), new(12, -18),
-					new(20, -18), new(20, 10)
-				};
-				break;
-		}
+		// Sprite pixel art de bâtiment fantôme (variante aléatoire)
+		ImageTexture[] variants = EventSpriteFactory.GetGhostBuildingSprites();
+		int type = (int)(GD.Randi() % variants.Length);
 
-		Polygon2D building = new()
+		Sprite2D buildingSprite = new()
 		{
-			Color = new Color(0.7f, 0.75f, 0.9f, 0.3f),
-			Polygon = outline
+			Texture = variants[type],
+			TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
+			Offset = new Vector2(0, -24),
+			Scale = new Vector2(1.5f, 1.5f)
 		};
-		ghost.AddChild(building);
+		ghost.AddChild(buildingSprite);
 
-		// Contour lumineux
-		Polygon2D glow = new()
-		{
-			Color = new Color(0.85f, 0.9f, 1f, 0.1f),
-			Polygon = outline,
-			Scale = new Vector2(1.15f, 1.15f)
-		};
-		ghost.AddChild(glow);
-
-		// Fenêtres qui clignotent (points lumineux)
-		int windowCount = 2 + (int)(GD.Randi() % 3);
-		for (int w = 0; w < windowCount; w++)
-		{
-			Polygon2D window = new()
-			{
-				Color = new Color(1f, 0.9f, 0.6f, 0.4f),
-				Polygon = new Vector2[]
-				{
-					new(-2, -2), new(2, -2), new(2, 2), new(-2, 2)
-				},
-				Position = new Vector2(
-					(float)GD.RandRange(-12, 12),
-					(float)GD.RandRange(-20, 0))
-			};
-			ghost.AddChild(window);
-
-			// Flickering aléatoire par fenêtre
-			Tween flicker = ghost.CreateTween().SetLoops();
-			float flickerTime = (float)GD.RandRange(0.8f, 2f);
-			flicker.TweenProperty(window, "modulate:a", 0.1f, flickerTime)
-				.SetTrans(Tween.TransitionType.Sine);
-			flicker.TweenProperty(window, "modulate:a", 0.6f, flickerTime * 0.7f)
-				.SetTrans(Tween.TransitionType.Sine);
-		}
+		// Flickering subtil sur l'ensemble du sprite
+		Tween flicker = ghost.CreateTween().SetLoops();
+		float flickerTime = (float)GD.RandRange(1.5f, 3f);
+		flicker.TweenProperty(buildingSprite, "self_modulate:a", 0.6f, flickerTime)
+			.SetTrans(Tween.TransitionType.Sine);
+		flicker.TweenProperty(buildingSprite, "self_modulate:a", 1f, flickerTime * 0.7f)
+			.SetTrans(Tween.TransitionType.Sine);
 
 		// Fade-in spectral
 		Tween fadeIn = ghost.CreateTween();
@@ -1388,21 +1272,22 @@ public partial class RandomEventManager : Node
 			}
 		}
 
-		// Onde visuelle : cercle doré qui s'étend depuis le Foyer
+		// Onde visuelle pixel art qui s'étend depuis le Foyer
 		if (foyer != null)
 		{
-			Polygon2D wave = new()
+			Sprite2D wave = new()
 			{
-				Color = new Color(1f, 0.85f, 0.4f, 0.4f),
-				Polygon = CreateCirclePolygon(10f, 24),
+				Texture = EventSpriteFactory.GetResonanceWaveSprite(),
+				TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
 				GlobalPosition = foyerPos,
 				ZIndex = 50
 			};
 			GetNode("..").CallDeferred("add_child", wave);
 
+			float targetScale = knockbackRadius / 24f;
 			Tween waveTween = CreateTween();
 			waveTween.SetParallel();
-			waveTween.TweenProperty(wave, "scale", new Vector2(knockbackRadius / 10f, knockbackRadius / 10f), 1.5f)
+			waveTween.TweenProperty(wave, "scale", new Vector2(targetScale, targetScale), 1.5f)
 				.SetTrans(Tween.TransitionType.Expo)
 				.SetEase(Tween.EaseType.Out);
 			waveTween.TweenProperty(wave, "modulate:a", 0f, 1.5f)
@@ -1462,15 +1347,7 @@ public partial class RandomEventManager : Node
 	{
 		Node2D flower = new() { Name = "MemoryFlower", GlobalPosition = position };
 
-		// Tige
-		Polygon2D stem = new()
-		{
-			Color = new Color(0.3f, 0.6f, 0.2f, 0.9f),
-			Polygon = new Vector2[] { new(-1, 0), new(1, 0), new(1, -14), new(-1, -14) }
-		};
-		flower.AddChild(stem);
-
-		// Pétales (couleur aléatoire parmi des tons chauds)
+		// Couleur aléatoire des pétales
 		Color[] petalColors =
 		{
 			new(0.95f, 0.85f, 0.3f, 0.9f),  // jaune doré
@@ -1480,29 +1357,24 @@ public partial class RandomEventManager : Node
 		};
 		Color petalColor = petalColors[GD.Randi() % petalColors.Length];
 
-		Polygon2D petals = new()
-		{
-			Color = petalColor,
-			Polygon = CreateCirclePolygon(6f, 6),
-			Position = new Vector2(0, -16)
-		};
-		flower.AddChild(petals);
+		// Sprite pixel art animé (2 frames pulsation)
+		ImageTexture[] flowerFrames = EventSpriteFactory.GetFlowerFrames(petalColor);
+		SpriteFrames flowerAnim = new();
+		flowerAnim.AddAnimation("bloom");
+		flowerAnim.SetAnimationSpeed("bloom", 2);
+		flowerAnim.SetAnimationLoop("bloom", true);
+		foreach (ImageTexture frame in flowerFrames)
+			flowerAnim.AddFrame("bloom", frame);
 
-		// Lueur dorée subtile
-		Polygon2D glow = new()
+		AnimatedSprite2D flowerSprite = new()
 		{
-			Color = new Color(1f, 0.9f, 0.4f, 0.15f),
-			Polygon = CreateCirclePolygon(14f, 8),
-			Position = new Vector2(0, -16)
+			SpriteFrames = flowerAnim,
+			TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
+			Offset = new Vector2(0, -10),
+			Scale = new Vector2(2f, 2f)
 		};
-		flower.AddChild(glow);
-
-		// Pulsation douce
-		Tween pulseTween = flower.CreateTween().SetLoops();
-		pulseTween.TweenProperty(glow, "scale", new Vector2(1.3f, 1.3f), 1.5f)
-			.SetTrans(Tween.TransitionType.Sine);
-		pulseTween.TweenProperty(glow, "scale", Vector2.One, 1.5f)
-			.SetTrans(Tween.TransitionType.Sine);
+		flowerSprite.Play("bloom");
+		flower.AddChild(flowerSprite);
 
 		// Zone de récolte
 		Area2D harvestArea = new() { Name = "HarvestArea" };
@@ -1575,7 +1447,7 @@ public partial class RandomEventManager : Node
 		{
 			Godot.Collections.Dictionary dict = item.AsGodotDictionary();
 			EventData ev = EventData.FromDict(dict);
-			if (ev == null)
+			if (ev == null || DisabledEvents.Contains(ev.Id))
 				continue;
 
 			if (ev.Phase == "day")

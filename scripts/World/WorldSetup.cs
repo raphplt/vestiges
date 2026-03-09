@@ -121,6 +121,22 @@ public partial class WorldSetup : Node2D
         _ground.TileSet = _ground.TileSet.Duplicate() as TileSet;
         _tileMapper = new BiomeTileMapper();
         _tileMapper.Initialize(_ground.TileSet, _generator.ActiveBiomes);
+
+        // Enregistrer les 16 tiles directionnelles de route (indexées par bitmask de connectivité)
+        if (_urbanLayout != null)
+        {
+            int urbanIndex = _tileMapper.GetBiomeIndex("urban_ruins");
+            if (urbanIndex >= 0)
+            {
+                ImageTexture[] roadTextures = RoadTileGenerator.GetOrGenerate();
+                for (int mask = 0; mask < RoadTileGenerator.VariantCount; mask++)
+                {
+                    string key = RoadTileGenerator.GetRoadKey(mask);
+                    _tileMapper.RegisterRuntimeTileGroup(urbanIndex, key, new[] { roadTextures[mask] });
+                }
+            }
+            _tileMapper.SetUrbanLayout(_urbanLayout);
+        }
     }
 
     /// <summary>
@@ -137,7 +153,6 @@ public partial class WorldSetup : Node2D
         await ApplyTerrainAsync(_terrain, _urbanLayout, onProgress);
 
         onProgress?.Invoke("Brouillard de guerre...");
-        CreateUrbanRoadOverlay(_urbanLayout);
         InitializeFog();
         await YieldFrame();
 
@@ -193,7 +208,6 @@ public partial class WorldSetup : Node2D
     {
         CreateVoidBackground();
         ApplyTerrain(_terrain, _urbanLayout);
-        CreateUrbanRoadOverlay(_urbanLayout);
         InitializeFog();
         SpawnResources();
         if (!PoisDisabled)
@@ -479,23 +493,6 @@ public partial class WorldSetup : Node2D
         AddChild(_propSpawner);
         HashSet<Vector2I> blockedCells = BuildEnvironmentPropBlockedCells(urbanLayout, swampLayout);
         _propSpawner.SpawnProps(_generator, _ground, propContainer, _usedCells, Seed, blockedCells);
-    }
-
-    private void CreateUrbanRoadOverlay(UrbanLayout urbanLayout)
-    {
-        if (urbanLayout == null || urbanLayout.RoadCells.Count == 0)
-            return;
-
-        UrbanRoadOverlay overlay = new()
-        {
-            Name = "UrbanRoadOverlay",
-            ZIndex = 1,
-        };
-
-        AddChild(overlay);
-        Node ground = GetNode("Ground");
-        MoveChild(overlay, ground.GetIndex() + 1);
-        overlay.Initialize(urbanLayout, _ground);
     }
 
     private HashSet<Vector2I> BuildEnvironmentPropBlockedCells(UrbanLayout urbanLayout, SwampPropLayout swampLayout)

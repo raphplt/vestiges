@@ -8,6 +8,20 @@ namespace Vestiges.Combat;
 
 public partial class Enemy : CharacterBody2D
 {
+	// Mapping enemy ID → audio prefix (quand l'ID ne correspond pas au nommage audio)
+	private static readonly System.Collections.Generic.Dictionary<string, string> AudioPrefixMap = new()
+	{
+		["shade"] = "ombre",
+		["shadow_crawler"] = "ombre",
+		["void_brute"] = "brute",
+		["wailing_sentinel"] = "sentinelle",
+		["colosse_forest"] = "brute",
+		["colosse_urban"] = "brute",
+		["colosse_swamp"] = "brute",
+		["treant_corrompu"] = "rodeur",
+		["fading_spitter"] = "tisseuse",
+	};
+
 	private const float MeleeRange = 38f;
 	private const float MeleeAttackCooldown = 0.75f;
 	private const float RangedAttackCooldown = 1.1f;
@@ -83,6 +97,7 @@ public partial class Enemy : CharacterBody2D
 	private float _idleSoundTimer;
 	private float _idleSoundInterval;
 	private string _idleSoundKey;
+	private bool _sentinelActivated;
 
 	// Performance caches
 	private Core.GroupCache _groupCache;
@@ -229,9 +244,17 @@ public partial class Enemy : CharacterBody2D
 			_ => (float)GD.RandRange(5.0, 10.0)
 		};
 		_idleSoundTimer = (float)GD.RandRange(0.0, _idleSoundInterval);
-		_idleSoundKey = _enemyId == "indicible" ? "sfx_indicible_presence" : $"sfx_{_enemyId}_idle";
-		_attackAudioKey = $"sfx_{_enemyId}_attaque";
-		_rangedAudioKey = $"sfx_{_enemyId}_tir";
+		string audioPrefix = AudioPrefixMap.TryGetValue(_enemyId, out string mapped) ? mapped : _enemyId;
+		_idleSoundKey = _enemyId switch
+		{
+			"indicible" => "sfx_indicible_presence",
+			"rampant" => "sfx_rampant_deplacement",
+			"void_brute" or "colosse_forest" or "colosse_urban" or "colosse_swamp" => "sfx_brute_pas",
+			"wailing_sentinel" => "sfx_sentinelle_activation",
+			_ => $"sfx_{audioPrefix}_idle"
+		};
+		_attackAudioKey = $"sfx_{audioPrefix}_attaque";
+		_rangedAudioKey = $"sfx_{audioPrefix}_tir";
 		_meleeRangeSq = MeleeRange * MeleeRange;
 		_attackRangeSq = _attackRange * _attackRange;
 		_packRadiusSq = _packRadius * _packRadius;
@@ -376,6 +399,7 @@ public partial class Enemy : CharacterBody2D
 		_chargerCooldown = 0f;
 		_chargerIsCharging = false;
 		_chargerDurationLeft = 0f;
+		_sentinelActivated = false;
 		_packBonusDamage = 0f;
 		_packBonusSpeed = 0f;
 		_waveModifier = null;
@@ -595,6 +619,7 @@ public partial class Enemy : CharacterBody2D
 			_burrowerPhaseTimer = BurrowerPhaseDuration;
 			CollisionLayer = 0;
 			Modulate = new Color(1f, 1f, 1f, 0.35f);
+			Infrastructure.AudioManager.Play("sfx_rampant_deplacement", 0.06f, -6f);
 		}
 	}
 
@@ -695,6 +720,11 @@ public partial class Enemy : CharacterBody2D
 		_attackTimer -= delta;
 		if (distToPlayer <= _attackRange && _attackTimer <= 0f)
 		{
+			if (!_sentinelActivated)
+			{
+				_sentinelActivated = true;
+				Infrastructure.AudioManager.Play("sfx_sentinelle_activation", 0.04f, -4f);
+			}
 			ShootProjectile();
 			_attackTimer = _rangedAttackCooldown;
 			TriggerAttackAnim();
@@ -749,6 +779,7 @@ public partial class Enemy : CharacterBody2D
 				_chargerIsCharging = true;
 				_chargerDurationLeft = 0.8f;
 				_chargerDirection = (target.GlobalPosition - GlobalPosition).Normalized();
+				Infrastructure.AudioManager.Play("sfx_brute_charge", 0.05f, -4f);
 				_visual.Color = new Color(0.8f, 0.2f, 0.8f);
 				Tween chargeTween = CreateTween();
 				chargeTween.TweenProperty(_visual, "color", _originalColor, 0.3f).SetDelay(0.1f);
@@ -786,6 +817,8 @@ public partial class Enemy : CharacterBody2D
 		{
 			float speedBonus = 1f + (_packBonusSpeed * packCount);
 			_speed = _baseSpeed * _spawnSpeedMultiplier * speedBonus;
+			if (packCount >= 3)
+				Infrastructure.AudioManager.Play("sfx_charognard_meute", 0.06f, -8f);
 		}
 		else
 		{
