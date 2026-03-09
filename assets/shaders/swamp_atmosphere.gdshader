@@ -9,25 +9,26 @@ uniform sampler2D screen_texture : hint_screen_texture, filter_nearest;
 
 // === Contrôle global ===
 uniform float intensity : hint_range(0.0, 1.0) = 1.0;
+uniform float local_moisture : hint_range(0.0, 1.0) = 0.0;
 
 // === Brume laiteuse (l'eau absorbe la lumière) ===
 uniform vec4 fog_color : source_color = vec4(0.48, 0.54, 0.60, 1.0);
-uniform float fog_amount : hint_range(0.0, 0.5) = 0.15;
-uniform float desaturation : hint_range(0.0, 1.0) = 0.3;
+uniform float fog_amount : hint_range(0.0, 0.5) = 0.10;
+uniform float desaturation : hint_range(0.0, 1.0) = 0.22;
 
 // === Distorsion de réalité (le monde tremble) ===
-uniform float distortion_strength : hint_range(0.0, 4.0) = 1.5;
+uniform float distortion_strength : hint_range(0.0, 4.0) = 0.85;
 uniform float distortion_speed : hint_range(0.1, 3.0) = 0.6;
 uniform float distortion_scale : hint_range(2.0, 30.0) = 8.0;
 
 // === Reflets spectraux (choses qui n'existent plus) ===
-uniform float ghost_strength : hint_range(0.0, 0.3) = 0.08;
+uniform float ghost_strength : hint_range(0.0, 0.3) = 0.04;
 uniform float ghost_speed : hint_range(0.1, 2.0) = 0.3;
 uniform vec4 ghost_tint : source_color = vec4(0.75, 0.80, 0.82, 1.0);
 
 // === Vignette (visibilité réduite, brume dense aux bords) ===
-uniform float vignette_strength : hint_range(0.0, 1.5) = 0.7;
-uniform float vignette_softness : hint_range(0.1, 1.0) = 0.45;
+uniform float vignette_strength : hint_range(0.0, 1.5) = 0.45;
+uniform float vignette_softness : hint_range(0.1, 1.0) = 0.52;
 
 // === Pixel grid (respect du pixel art) ===
 uniform vec2 pixel_size = vec2(480.0, 270.0);
@@ -66,6 +67,7 @@ void fragment() {
 	// Snap UV au pixel grid pour garder le style pixel-art
 	vec2 snapped_uv = floor(SCREEN_UV * pixel_size) / pixel_size;
 	float t = TIME;
+	float moisture = clamp(local_moisture, 0.0, 1.0);
 
 	// --- 1. Distorsion de réalité ---
 	// Le monde tremble, la réalité est fragile ici
@@ -73,9 +75,10 @@ void fragment() {
 	float dx = noise(distort_uv + vec2(t * distortion_speed, 0.0)) - 0.5;
 	float dy = noise(distort_uv + vec2(0.0, t * distortion_speed * 0.7)) - 0.5;
 	// Snap la distorsion au pixel grid
-	vec2 offset = vec2(dx, dy) * distortion_strength / pixel_size;
+	float distortion_mix = intensity * (0.45 + moisture * 0.55);
+	vec2 offset = vec2(dx, dy) * distortion_strength * distortion_mix / pixel_size;
 	offset = floor(offset * pixel_size) / pixel_size;
-	vec2 final_uv = snapped_uv + offset * intensity;
+	vec2 final_uv = snapped_uv + offset;
 
 	// Lire la scène
 	vec4 scene = texture(screen_texture, final_uv);
@@ -93,7 +96,7 @@ void fragment() {
 	// Teinter en spectral (bleu-gris délavé, comme les reflets dans l'eau laiteuse)
 	ghost_sample.rgb = mix(ghost_sample.rgb, ghost_tint.rgb, 0.6);
 	// Pulse d'apparition/disparition
-	float ghost_alpha = ghost_strength * intensity * (0.6 + 0.4 * ghost_phase);
+	float ghost_alpha = ghost_strength * intensity * (0.4 + 0.6 * moisture) * (0.6 + 0.4 * ghost_phase);
 	// Plus fort dans la moitié inférieure (au sol / eau)
 	ghost_alpha *= smoothstep(0.3, 0.7, snapped_uv.y);
 	scene.rgb = mix(scene.rgb, ghost_sample.rgb, ghost_alpha);
@@ -106,7 +109,11 @@ void fragment() {
 
 	// Brume non-uniforme via fbm (nappes de brouillard)
 	float fog_pattern = fbm(snapped_uv * 4.0 + vec2(t * 0.08, t * 0.05));
-	float fog_factor = fog_amount * intensity * (0.6 + 0.4 * fog_pattern);
+	float low_fog_band = 1.0 - smoothstep(0.34, 0.86, snapped_uv.y);
+	float low_fog_noise = fbm(snapped_uv * vec2(5.6, 8.0) + vec2(t * 0.03, -t * 0.04));
+	float low_fog = low_fog_band * low_fog_noise * (0.12 + moisture * 0.22);
+	float fog_factor = fog_amount * intensity * (0.58 + 0.42 * fog_pattern);
+	fog_factor += low_fog * intensity;
 	scene.rgb = mix(scene.rgb, fog_color.rgb, fog_factor);
 
 	// --- 4. Vignette (visibilité réduite aux bords) ---
@@ -114,7 +121,7 @@ void fragment() {
 	vec2 vig_uv = snapped_uv - 0.5;
 	float vig_dist = length(vig_uv);
 	float vig = smoothstep(vignette_softness, vignette_softness + 0.3, vig_dist);
-	scene.rgb = mix(scene.rgb, fog_color.rgb, vig * vignette_strength * intensity);
+	scene.rgb = mix(scene.rgb, fog_color.rgb, vig * vignette_strength * intensity * (0.8 + moisture * 0.2));
 
 	COLOR = vec4(scene.rgb, 1.0);
 }

@@ -14,6 +14,10 @@ public partial class BiomeAtmosphere : Node2D
 	private Node2D _player;
 	private WorldSetup _worldSetup;
 	private GpuParticles2D _fogParticles;
+	private GpuParticles2D _swampSporeParticles;
+	private GpuParticles2D _swampGnatParticles;
+	private GpuParticles2D _swampMistParticles;
+	private GpuParticles2D _swampBubbleParticles;
 	private CanvasLayer _swampLayer;
 	private ColorRect _swampOverlay;
 	private ShaderMaterial _swampMaterial;
@@ -21,6 +25,7 @@ public partial class BiomeAtmosphere : Node2D
 	private string _currentBiomeId = "";
 	private float _swampIntensityTarget;
 	private float _swampIntensityCurrent;
+	private float _swampMoistureCurrent;
 	private const float SwampFadeSpeed = 0.8f;
 
 	// Viewport interne = 480×270
@@ -31,6 +36,7 @@ public partial class BiomeAtmosphere : Node2D
 	{
 		_worldSetup = GetParent<WorldSetup>();
 		CreateFogParticles();
+		CreateSwampAmbientParticles();
 		CreateSwampOverlay();
 	}
 
@@ -58,8 +64,10 @@ public partial class BiomeAtmosphere : Node2D
 			UpdateAtmosphere(biome);
 		}
 
-		// Fade progressif du shader marécage
-		UpdateSwampShader((float)delta);
+		float targetMoisture = biomeId == "swamp" ? GetLocalSwampMoisture() : 0f;
+		_swampMoistureCurrent = Mathf.MoveToward(_swampMoistureCurrent, targetMoisture, (float)delta * 0.9f);
+		UpdateSwampAmbientParticles(_swampMoistureCurrent, biomeId == "swamp");
+		UpdateSwampShader((float)delta, _swampMoistureCurrent);
 	}
 
 	private void UpdateAtmosphere(BiomeData biome)
@@ -77,11 +85,15 @@ public partial class BiomeAtmosphere : Node2D
 		if (fogDensity > 0f)
 		{
 			_fogParticles.Emitting = true;
-			_fogParticles.Amount = Mathf.Max(8, (int)(30 * fogDensity));
+			int fogAmount = biome.Id == "swamp"
+				? Mathf.Max(10, (int)(18 * fogDensity))
+				: Mathf.Max(8, (int)(30 * fogDensity));
+			_fogParticles.Amount = fogAmount;
 
 			if (_fogParticles.ProcessMaterial is ParticleProcessMaterial mat)
 			{
-				mat.Color = new Color(fogColor.R, fogColor.G, fogColor.B, fogDensity * 0.5f);
+				float alpha = biome.Id == "swamp" ? fogDensity * 0.32f : fogDensity * 0.5f;
+				mat.Color = new Color(fogColor.R, fogColor.G, fogColor.B, alpha);
 			}
 		}
 		else
@@ -176,6 +188,133 @@ public partial class BiomeAtmosphere : Node2D
 		AddChild(_fogParticles);
 	}
 
+	private void CreateSwampAmbientParticles()
+	{
+		_swampSporeParticles = CreateAmbientParticles(
+			"SwampSpores",
+			12,
+			7f,
+			new Vector2(ViewportWidth * 0.42f, ViewportHeight * 0.26f),
+			new Vector3(0.2f, -1f, 0f),
+			40f,
+			1.5f,
+			4.2f,
+			0.5f,
+			1.4f,
+			new Color(0.72f, 0.80f, 0.70f, 0.22f));
+		AddChild(_swampSporeParticles);
+
+		_swampGnatParticles = CreateAmbientParticles(
+			"SwampGnats",
+			8,
+			3.6f,
+			new Vector2(ViewportWidth * 0.28f, ViewportHeight * 0.18f),
+			new Vector3(0.1f, -0.2f, 0f),
+			140f,
+			5f,
+			13f,
+			0.18f,
+			0.42f,
+			new Color(0.12f, 0.16f, 0.12f, 0.32f));
+		AddChild(_swampGnatParticles);
+
+		_swampMistParticles = CreateAmbientParticles(
+			"SwampMist",
+			6,
+			8f,
+			new Vector2(ViewportWidth * 0.44f, ViewportHeight * 0.12f),
+			new Vector3(0.5f, -0.12f, 0f),
+			20f,
+			1f,
+			3f,
+			2.2f,
+			4.6f,
+			new Color(0.70f, 0.76f, 0.74f, 0.14f));
+		_swampMistParticles.Position = new Vector2(0f, 34f);
+		AddChild(_swampMistParticles);
+
+		_swampBubbleParticles = CreateAmbientParticles(
+			"SwampBubbles",
+			4,
+			2.2f,
+			new Vector2(ViewportWidth * 0.30f, ViewportHeight * 0.08f),
+			new Vector3(0f, -1f, 0f),
+			12f,
+			2.5f,
+			5f,
+			0.25f,
+			0.55f,
+			new Color(0.68f, 0.78f, 0.74f, 0.26f));
+		_swampBubbleParticles.Position = new Vector2(0f, 40f);
+		AddChild(_swampBubbleParticles);
+	}
+
+	private static GpuParticles2D CreateAmbientParticles(
+		string name,
+		int amount,
+		float lifetime,
+		Vector2 boxExtents,
+		Vector3 direction,
+		float spread,
+		float velocityMin,
+		float velocityMax,
+		float scaleMin,
+		float scaleMax,
+		Color color)
+	{
+		GpuParticles2D particles = new()
+		{
+			Name = name,
+			Amount = amount,
+			Lifetime = lifetime,
+			Preprocess = lifetime * 0.35f,
+			Explosiveness = 0f,
+			Randomness = 1f,
+			Emitting = false,
+			Visible = false,
+			ZIndex = 48,
+			ZAsRelative = false,
+		};
+
+		GradientTexture2D texture = new()
+		{
+			Width = 16,
+			Height = 16,
+			Fill = GradientTexture2D.FillEnum.Radial,
+			FillFrom = new Vector2(0.5f, 0.5f),
+			FillTo = new Vector2(0.5f, 0f),
+			Gradient = new Gradient()
+		};
+		texture.Gradient.SetColor(0, new Color(1f, 1f, 1f, 0.6f));
+		texture.Gradient.AddPoint(0.6f, new Color(1f, 1f, 1f, 0.18f));
+		texture.Gradient.SetColor(texture.Gradient.GetPointCount() - 1, new Color(1f, 1f, 1f, 0f));
+		particles.Texture = texture;
+
+		ParticleProcessMaterial material = new()
+		{
+			EmissionShape = ParticleProcessMaterial.EmissionShapeEnum.Box,
+			EmissionBoxExtents = new Vector3(boxExtents.X, boxExtents.Y, 0f),
+			Direction = direction,
+			Spread = spread,
+			InitialVelocityMin = velocityMin,
+			InitialVelocityMax = velocityMax,
+			ScaleMin = scaleMin,
+			ScaleMax = scaleMax,
+			Color = color,
+			Gravity = Vector3.Zero,
+		};
+
+		Curve alphaCurve = new();
+		alphaCurve.AddPoint(new Vector2(0f, 0f));
+		alphaCurve.AddPoint(new Vector2(0.15f, 0.8f));
+		alphaCurve.AddPoint(new Vector2(0.8f, 0.8f));
+		alphaCurve.AddPoint(new Vector2(1f, 0f));
+		material.AlphaCurve = new CurveTexture { Curve = alphaCurve };
+
+		particles.ProcessMaterial = material;
+		return particles;
+	}
+
 	private void CreateSwampOverlay()
 	{
 		Shader swampShader = GD.Load<Shader>("res://assets/shaders/swamp_atmosphere.gdshader");
@@ -203,10 +342,78 @@ public partial class BiomeAtmosphere : Node2D
 		AddChild(_swampLayer);
 	}
 
-	private void UpdateSwampShader(float delta)
+	private float GetLocalSwampMoisture()
+	{
+		if (_player == null || _worldSetup == null)
+			return 0f;
+
+		Vector2[] sampleOffsets =
+		{
+			Vector2.Zero,
+			new Vector2(48f, 0f),
+			new Vector2(-48f, 0f),
+			new Vector2(0f, 32f),
+			new Vector2(0f, -32f),
+			new Vector2(36f, 18f),
+			new Vector2(-36f, 18f),
+			new Vector2(36f, -18f),
+			new Vector2(-36f, -18f)
+		};
+
+		float moisture = 0f;
+		foreach (Vector2 offset in sampleOffsets)
+		{
+			if (_worldSetup.IsWaterAt(_player.GlobalPosition + offset))
+				moisture += 1f;
+		}
+
+		return moisture / sampleOffsets.Length;
+	}
+
+	private void UpdateSwampAmbientParticles(float moisture, bool active)
+	{
+		UpdateParticleSystem(_swampSporeParticles, active, 6, 14, moisture, 0.08f, 0.25f);
+		UpdateParticleSystem(_swampGnatParticles, active, 4, 10, moisture, 0.12f, 0.34f);
+		UpdateParticleSystem(_swampMistParticles, active, 3, 8, moisture, 0.06f, 0.18f);
+		UpdateParticleSystem(_swampBubbleParticles, active, 0, 5, moisture * 0.8f, 0.04f, 0.24f);
+	}
+
+	private static void UpdateParticleSystem(
+		GpuParticles2D particles,
+		bool active,
+		int minAmount,
+		int maxAmount,
+		float moisture,
+		float minAlpha,
+		float maxAlpha)
+	{
+		if (particles == null)
+			return;
+
+		if (!active)
+		{
+			particles.Emitting = false;
+			particles.Visible = false;
+			return;
+		}
+
+		particles.Visible = true;
+		particles.Emitting = true;
+		particles.Amount = Mathf.RoundToInt(Mathf.Lerp(minAmount, maxAmount, moisture));
+
+		if (particles.ProcessMaterial is ParticleProcessMaterial material)
+		{
+			Color color = material.Color;
+			color.A = Mathf.Lerp(minAlpha, maxAlpha, moisture);
+			material.Color = color;
+		}
+	}
+
+	private void UpdateSwampShader(float delta, float localMoisture)
 	{
 		_swampIntensityCurrent = Mathf.MoveToward(_swampIntensityCurrent, _swampIntensityTarget, delta * SwampFadeSpeed);
 		_swampMaterial.SetShaderParameter("intensity", _swampIntensityCurrent);
+		_swampMaterial.SetShaderParameter("local_moisture", localMoisture);
 		_swampLayer.Visible = _swampIntensityCurrent > 0.01f;
 	}
 }

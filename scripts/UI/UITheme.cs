@@ -1,4 +1,5 @@
 using Godot;
+using Vestiges.Infrastructure;
 
 namespace Vestiges.UI;
 
@@ -78,6 +79,7 @@ public static class UITheme
 		btn.AddThemeColorOverride("font_hover_color", GoldBright);
 		btn.AddThemeColorOverride("font_pressed_color", GoldBright);
 		btn.AddThemeColorOverride("font_disabled_color", TextVeryDim);
+		WireButtonAudio(btn);
 	}
 
 	/// <summary>
@@ -148,5 +150,29 @@ public static class UITheme
 		btn.AddThemeColorOverride("font_color", fontColor);
 		btn.AddThemeColorOverride("font_hover_color", GoldColor);
 		btn.AddThemeColorOverride("font_pressed_color", GoldBright);
+		WireButtonAudio(btn);
+	}
+
+	/// <summary>Branche les SFX de survol/clic une seule fois par bouton.</summary>
+	public static void WireButtonAudio(Button btn, bool hoverOnlyIfEnabled = true)
+	{
+		if (btn == null || btn.HasMeta("ui_sfx_wired"))
+			return;
+
+		btn.SetMeta("ui_sfx_wired", true);
+
+		btn.MouseEntered += () =>
+		{
+			if (hoverOnlyIfEnabled && btn.Disabled)
+				return;
+			AudioManager.PlayUI("sfx_menu_survol");
+		};
+
+		btn.ButtonDown += () =>
+		{
+			if (btn.Disabled)
+				return;
+			AudioManager.PlayUI("sfx_menu_clic");
+		};
 	}
 }

@@ -30,6 +30,7 @@ public partial class StructurePlacer : Node2D
     private Vector2I _lastPlacedCell;
     private bool _isValidPlacement;
     private bool _hasLastPlacedCell;
+    private ulong _lastInvalidPlacementFeedbackTime;
 
     private static readonly Color ValidColor = new(0.2f, 0.8f, 0.2f, 0.5f);
     private static readonly Color InvalidColor = new(0.8f, 0.2f, 0.2f, 0.5f);
@@ -126,6 +127,7 @@ public partial class StructurePlacer : Node2D
             if (_structureManager != null && !_structureManager.CanPlaceType(type))
             {
                 GD.Print($"[StructurePlacer] Cap atteint pour {type} ({_structureManager.GetCountForType(type)}/{_structureManager.GetMaxForType(type)})");
+                PlayInvalidPlacementFeedback();
                 if (_isPlacing && _recipeId == recipeId)
                     CancelPlacement();
                 return;
@@ -170,8 +172,14 @@ public partial class StructurePlacer : Node2D
 
     private bool TryPlaceCurrentCell(bool continuous)
     {
-        if (_pendingPlacements <= 0 || !_isValidPlacement)
+        if (_pendingPlacements <= 0)
             return false;
+
+        if (!_isValidPlacement)
+        {
+            PlayInvalidPlacementFeedback();
+            return false;
+        }
 
         if (continuous && _hasLastPlacedCell && _lastPlacedCell == _currentCell)
             return false;
@@ -347,6 +355,16 @@ public partial class StructurePlacer : Node2D
             "furnace" => new Color(0.55f, 0.45f, 0.35f),
             _ => new Color(0.5f, 0.5f, 0.5f)
         };
+    }
+
+    private void PlayInvalidPlacementFeedback()
+    {
+        ulong now = Time.GetTicksMsec();
+        if (now - _lastInvalidPlacementFeedbackTime < 150)
+            return;
+
+        _lastInvalidPlacementFeedbackTime = now;
+        AudioManager.Play("sfx_structure_impossible", 0f);
     }
 
     private void CreateGhost()

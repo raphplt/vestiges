@@ -1,24 +1,35 @@
 {
     "biome_id": "swamp",
-    "density": 0.28,
+    "density": 0.14,
     "props": [
         {
             "id": "dead_tree_large",
             "name": "Arbre mort (grand)",
-            "weight": 1.8,
+            "weight": 0.9,
             "terrain": ["forest", "grass"],
             "sprite_base": "assets/props/swamp/prop_dead_tree_large_base.png",
             "sprite_canopy": "assets/props/swamp/prop_dead_tree_large_canopy.png",
-            "canopy_offset_y": -48,
-            "collision_radius": 6,
+            "canopy_offset_y": -54,
+            "collision_radius": 8,
             "collision_offset_y": 0,
-            "min_distance": 2,
+            "min_distance": 5,
+            "variants": 1
+        },
+        {
+            "id": "dead_tree_mossy_large",
+            "name": "Arbre mort moussu (grand)",
+            "weight": 0.12,
+            "terrain": ["forest", "grass"],
+            "sprite_base": "assets/props/swamp/prop_dead_tree_mossy_large.png",
+            "collision_radius": 8,
+            "collision_offset_y": 0,
+            "min_distance": 7,
             "variants": 1
         },
         {
             "id": "dead_tree_small",
             "name": "Arbre mort (petit)",
-            "weight": 1.5,
+            "weight": 0.55,
             "terrain": ["forest", "grass"],
             "sprite_base": "assets/props/swamp/prop_dead_tree_small.png",
             "collision_radius": 3,
@@ -29,19 +40,30 @@
         {
             "id": "aerial_roots",
             "name": "Racines aériennes",
-            "weight": 1.3,
-            "terrain": ["forest"],
+            "weight": 0.55,
+            "terrain": ["forest", "grass"],
             "sprite_base": "assets/props/swamp/prop_aerial_roots.png",
-            "collision_radius": 5,
+            "collision_radius": 6,
             "collision_offset_y": 0,
-            "min_distance": 2,
+            "min_distance": 4,
+            "variants": 1
+        },
+        {
+            "id": "root_mass_large",
+            "name": "Amas de racines suspendues",
+            "weight": 0.10,
+            "terrain": ["forest", "grass"],
+            "sprite_base": "assets/props/swamp/prop_root_mass_large.png",
+            "collision_radius": 7,
+            "collision_offset_y": 0,
+            "min_distance": 7,
             "variants": 1
         },
         {
             "id": "vine_curtain",
             "name": "Rideau de lianes",
-            "weight": 1.0,
-            "terrain": ["forest"],
+            "weight": 0.35,
+            "terrain": ["forest", "grass"],
             "sprite_base": "assets/props/swamp/prop_vine_curtain.png",
             "collision_radius": 0,
             "collision_offset_y": 0,
@@ -51,7 +73,7 @@
         {
             "id": "reeds",
             "name": "Roseaux",
-            "weight": 2.0,
+            "weight": 0.85,
             "terrain": ["grass", "forest"],
             "sprite_base": "assets/props/swamp/prop_reeds.png",
             "collision_radius": 0,
@@ -62,7 +84,7 @@
         {
             "id": "lily_pads",
             "name": "Nénuphars",
-            "weight": 1.5,
+            "weight": 0.75,
             "terrain": ["grass"],
             "sprite_base": "assets/props/swamp/prop_lily_pads.png",
             "collision_radius": 0,
@@ -73,7 +95,7 @@
         {
             "id": "fallen_log",
             "name": "Tronc tombé",
-            "weight": 0.8,
+            "weight": 0.55,
             "terrain": ["forest", "grass"],
             "sprite_base": "assets/props/swamp/prop_fallen_log.png",
             "collision_radius": 6,
@@ -84,7 +106,7 @@
         {
             "id": "rotten_stump",
             "name": "Souche pourrie",
-            "weight": 1.2,
+            "weight": 0.45,
             "terrain": ["forest", "grass"],
             "sprite_base": "assets/props/swamp/prop_rotten_stump.png",
             "collision_radius": 3,
@@ -95,7 +117,7 @@
         {
             "id": "toxic_mushrooms",
             "name": "Champignons toxiques",
-            "weight": 1.5,
+            "weight": 0.55,
             "terrain": ["forest", "grass"],
             "sprite_base": "assets/props/swamp/prop_toxic_mushrooms.png",
             "collision_radius": 0,
@@ -106,7 +128,7 @@
         {
             "id": "swamp_lantern",
             "name": "Lanterne marécageuse",
-            "weight": 0.8,
+            "weight": 0.35,
             "terrain": ["forest", "grass"],
             "sprite_base": "assets/props/swamp/prop_swamp_lantern.png",
             "collision_radius": 0,
@@ -117,8 +139,8 @@
         {
             "id": "spore_patch",
             "name": "Zone de spores",
-            "weight": 1.0,
-            "terrain": ["forest"],
+            "weight": 0.40,
+            "terrain": ["forest", "grass"],
             "sprite_base": "assets/props/swamp/prop_spore_patch.png",
             "collision_radius": 0,
             "collision_offset_y": 0,
@@ -128,8 +150,8 @@
         {
             "id": "hanging_moss",
             "name": "Mousse pendante",
-            "weight": 1.0,
-            "terrain": ["forest"],
+            "weight": 0.35,
+            "terrain": ["forest", "grass"],
             "sprite_base": "assets/props/swamp/prop_hanging_moss.png",
             "collision_radius": 0,
             "collision_offset_y": 0,
@@ -139,7 +161,7 @@
         {
             "id": "broken_walkway",
             "name": "Passerelle cassée",
-            "weight": 0.3,
+            "weight": 0.45,
             "terrain": ["grass", "forest"],
             "sprite_base": "assets/props/swamp/prop_broken_walkway.png",
             "collision_radius": 0,
@@ -150,8 +172,8 @@
         {
             "id": "sunken_boat",
             "name": "Barque submergée",
-            "weight": 0.2,
-            "terrain": ["grass"],
+            "weight": 0.45,
+            "terrain": ["grass", "forest"],
             "sprite_base": "assets/props/swamp/prop_sunken_boat.png",
             "collision_radius": 7,
             "collision_offset_y": 0,
@@ -159,9 +181,20 @@
             "variants": 1
         },
         {
+            "id": "sunken_trunk_large",
+            "name": "Grand tronc noyé",
+            "weight": 0.12,
+            "terrain": ["grass", "forest"],
+            "sprite_base": "assets/props/swamp/prop_sunken_trunk_large.png",
+            "collision_radius": 8,
+            "collision_offset_y": 0,
+            "min_distance": 7,
+            "variants": 1
+        },
+        {
             "id": "drowned_cart",
             "name": "Chariot submergé",
-            "weight": 0.2,
+            "weight": 0.40,
             "terrain": ["grass", "forest"],
             "sprite_base": "assets/props/swamp/prop_drowned_cart.png",
             "collision_radius": 6,
@@ -172,7 +205,7 @@
         {
             "id": "rusted_barrel",
             "name": "Tonneau rouillé",
-            "weight": 0.5,
+            "weight": 0.20,
             "terrain": ["grass", "concrete", "forest"],
             "sprite_base": "assets/props/swamp/prop_rusted_barrel.png",
             "collision_radius": 3,
@@ -183,7 +216,7 @@
         {
             "id": "old_post",
             "name": "Poteau pourri",
-            "weight": 0.5,
+            "weight": 0.18,
             "terrain": ["grass", "forest", "concrete"],
             "sprite_base": "assets/props/swamp/prop_old_post.png",
             "collision_radius": 0,
@@ -194,7 +227,7 @@
         {
             "id": "bone_pile",
             "name": "Os éparpillés",
-            "weight": 0.3,
+            "weight": 0.42,
             "terrain": ["grass", "forest"],
             "sprite_base": "assets/props/swamp/prop_bone_pile.png",
             "collision_radius": 0,

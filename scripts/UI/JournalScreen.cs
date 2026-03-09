@@ -44,6 +44,7 @@ public partial class JournalScreen : CanvasLayer
         _root.Visible = true;
         RefreshContent();
         GetTree().Paused = true;
+        AudioManager.PlayUI("sfx_inventaire_ouvrir");
     }
 
     public new void Hide()
@@ -51,6 +52,7 @@ public partial class JournalScreen : CanvasLayer
         _isVisible = false;
         _root.Visible = false;
         GetTree().Paused = false;
+        AudioManager.PlayUI("sfx_inventaire_fermer");
     }
 
     public override void _UnhandledInput(InputEvent @event)
@@ -176,6 +178,7 @@ public partial class JournalScreen : CanvasLayer
                 CustomMinimumSize = new Vector2(190, 30)
             };
             btn.AddThemeFontSizeOverride("font_size", 13);
+            UITheme.WireButtonAudio(btn);
 
             string capturedId = c.Id;
             btn.Pressed += () => OnConstellationSelected(capturedId);
@@ -283,6 +286,7 @@ public partial class JournalScreen : CanvasLayer
                 Disabled = !discovered
             };
             fragmentBtn.AddThemeFontSizeOverride("font_size", 13);
+            UITheme.WireButtonAudio(fragmentBtn);
 
             if (discovered)
             {

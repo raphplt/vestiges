@@ -113,6 +113,10 @@ public partial class WorldSetup : Node2D
             urbanLayout = urbanGen.Apply(terrain, _generator, "urban_ruins");
         }
 
+        SwampPropLayout swampLayout = null;
+        if (_generator.ActiveBiomes.Any(b => b.Id == "swamp"))
+            swampLayout = SwampPropPlacer.BuildLayout(_generator, Seed);
+
         // Dupliquer le TileSet pour ne pas modifier la ressource partagée
         _ground.TileSet = _ground.TileSet.Duplicate() as TileSet;
 
@@ -121,6 +125,7 @@ public partial class WorldSetup : Node2D
 
         CreateVoidBackground();
         ApplyTerrain(terrain, urbanLayout);
+        CreateUrbanRoadOverlay(urbanLayout);
         InitializeFog();
         SpawnResources();
         if (!PoisDisabled)
@@ -129,13 +134,19 @@ public partial class WorldSetup : Node2D
             SpawnChests();
         }
 
-        SpawnEnvironmentProps(urbanLayout);
+        SpawnEnvironmentProps(urbanLayout, swampLayout);
 
         // Placer les props structurels urbains (murs, mobilier de rue, landmarks)
         if (urbanLayout != null)
         {
             Node2D propContainer = GetNode<Node2D>("PropContainer");
             UrbanPropPlacer.PlaceProps(urbanLayout, _ground, propContainer, _usedCells, Seed);
+        }
+
+        if (swampLayout != null)
+        {
+            Node2D propContainer = GetNode<Node2D>("PropContainer");
+            SwampPropPlacer.PlaceProps(swampLayout, _ground, propContainer, _usedCells);
         }
 
         SpawnLoreElements();
@@ -231,7 +242,7 @@ public partial class WorldSetup : Node2D
                 if (urbanLayout != null)
                     urbanCellType = urbanLayout.CellGrid[gx, gy];
 
-                int sourceId = _tileMapper.GetSourceId(biomeIndex, terrainType, x, y, urbanCellType, urbanLayout);
+                int sourceId = _tileMapper.GetSourceId(biomeIndex, terrainType, x, y, urbanCellType, _generator);
                 if (sourceId < 0)
                     continue;
                 _ground.SetCell(cell, sourceId, Vector2I.Zero);
@@ -318,7 +329,7 @@ public partial class WorldSetup : Node2D
         return resourceId;
     }
 
-    private void SpawnEnvironmentProps(UrbanLayout urbanLayout)
+    private void SpawnEnvironmentProps(UrbanLayout urbanLayout, SwampPropLayout swampLayout)
     {
         // Créer le container pour les props (si pas déjà dans la scène)
         Node2D propContainer = GetNodeOrNull<Node2D>("PropContainer");
@@ -334,31 +345,55 @@ public partial class WorldSetup : Node2D
 
         _propSpawner = new PropSpawner { Name = "PropSpawner" };
         AddChild(_propSpawner);
-        HashSet<Vector2I> blockedCells = BuildUrbanPropBlockedCells(urbanLayout);
+        HashSet<Vector2I> blockedCells = BuildEnvironmentPropBlockedCells(urbanLayout, swampLayout);
         _propSpawner.SpawnProps(_generator, _ground, propContainer, _usedCells, Seed, blockedCells);
     }
 
-    private HashSet<Vector2I> BuildUrbanPropBlockedCells(UrbanLayout urbanLayout)
+    private void CreateUrbanRoadOverlay(UrbanLayout urbanLayout)
     {
-        if (urbanLayout == null)
-            return null;
+        if (urbanLayout == null || urbanLayout.RoadCells.Count == 0)
+            return;
 
-        HashSet<Vector2I> blocked = new();
-        int radius = urbanLayout.MapRadius;
-        int size = radius * 2 + 1;
-
-        for (int gx = 0; gx < size; gx++)
+        UrbanRoadOverlay overlay = new()
         {
-            for (int gy = 0; gy < size; gy++)
-            {
-                if (urbanLayout.CellGrid[gx, gy] == UrbanCellType.None)
-                    continue;
+            Name = "UrbanRoadOverlay",
+            ZIndex = 1,
+        };
 
-                blocked.Add(new Vector2I(gx - radius, gy - radius));
+        AddChild(overlay);
+        Node ground = GetNode("Ground");
+        MoveChild(overlay, ground.GetIndex() + 1);
+        overlay.Initialize(urbanLayout, _ground);
+    }
+
+    private HashSet<Vector2I> BuildEnvironmentPropBlockedCells(UrbanLayout urbanLayout, SwampPropLayout swampLayout)
+    {
+        HashSet<Vector2I> blocked = new();
+
+        if (urbanLayout != null)
+        {
+            int radius = urbanLayout.MapRadius;
+            int size = radius * 2 + 1;
+
+            for (int gx = 0; gx < size; gx++)
+            {
+                for (int gy = 0; gy < size; gy++)
+                {
+                    if (urbanLayout.CellGrid[gx, gy] == UrbanCellType.None)
+                        continue;
+
+                    blocked.Add(new Vector2I(gx - radius, gy - radius));
+                }
             }
         }
 
-        return blocked;
+        if (swampLayout != null)
+        {
+            foreach (Vector2I cell in swampLayout.ReservedCells)
+                blocked.Add(cell);
+        }
+
+        return blocked.Count > 0 ? blocked : null;
     }
 
     /// <summary>

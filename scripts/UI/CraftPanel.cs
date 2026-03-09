@@ -88,6 +88,8 @@ public partial class CraftPanel : CanvasLayer
         _isOpen = !_isOpen;
         _panel.Visible = _isOpen;
 
+        AudioManager.PlayUI(_isOpen ? "sfx_inventaire_ouvrir" : "sfx_inventaire_fermer");
+
         if (_isOpen)
             RefreshRecipes();
     }
@@ -306,6 +308,7 @@ public partial class CraftPanel : CanvasLayer
             bool isInstant = recipe.Result.Type == "wall";
             craftButton.Text = isInstant ? "Fabriquer (instantané)" : $"Fabriquer ({recipe.BuildTime:0.#}s)";
             craftButton.CustomMinimumSize = new Vector2(0, 28);
+            UITheme.WireButtonAudio(craftButton);
             string recipeId = recipe.Id;
             craftButton.Pressed += () => OnCraftPressed(recipeId);
             vbox.AddChild(craftButton);

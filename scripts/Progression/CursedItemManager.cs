@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Godot;
 using Vestiges.Core;
+using Vestiges.Infrastructure;
 
 namespace Vestiges.Progression;
 
@@ -66,6 +67,7 @@ public partial class CursedItemManager : Node
 
 		_activeCurses.Add(data);
 		Recalculate();
+		AudioManager.Play("sfx_malediction_acceptee", 0f, -2f);
 
 		// Propager via PerkManager pour que SpawnManager recoive les modifiers
 		_perkManager?.ApplyExternalDifficultyModifiers(

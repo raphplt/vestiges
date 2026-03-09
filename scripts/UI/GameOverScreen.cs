@@ -143,12 +143,14 @@ public partial class GameOverScreen : CanvasLayer
         _restartButton = new Button();
         _restartButton.Text = "Relancer";
         _restartButton.CustomMinimumSize = new Vector2(130, 38);
+        UITheme.WireButtonAudio(_restartButton);
         _restartButton.Pressed += OnRestartPressed;
         buttonRow.AddChild(_restartButton);
 
         _hubButton = new Button();
         _hubButton.Text = "Retour au Hub";
         _hubButton.CustomMinimumSize = new Vector2(130, 38);
+        UITheme.WireButtonAudio(_hubButton);
         _hubButton.Pressed += OnHubPressed;
         buttonRow.AddChild(_hubButton);
 
@@ -277,12 +279,14 @@ public partial class GameOverScreen : CanvasLayer
 
     private void OnRestartPressed()
     {
+        AudioManager.PlayUI("sfx_menu_confirmer");
         GetTree().Paused = false;
         GetTree().ReloadCurrentScene();
     }
 
     private void OnHubPressed()
     {
+        AudioManager.PlayUI("sfx_menu_confirmer");
         GetTree().Paused = false;
         GetTree().ChangeSceneToFile("res://scenes/Hub.tscn");
     }

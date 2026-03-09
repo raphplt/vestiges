@@ -44,6 +44,15 @@
             "marecages/tile_marecages_eau_base",
             "marecages/tile_marecages_eau_v2",
             "marecages/tile_marecages_eau_v3"
+        ],
+        "wet_dark_ground": [
+            "marecages/tile_marecages_sol_humide"
+        ],
+        "mud_light_ground": [
+            "marecages/tile_marecages_bourbier_clair"
+        ],
+        "dirty_bank": [
+            "marecages/tile_marecages_berge_sale"
         ]
     }
 }

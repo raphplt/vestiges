@@ -77,15 +77,18 @@ public partial class PauseMenu : CanvasLayer
 		_isPaused = false;
 		_root.Visible = false;
 		GetTree().Paused = false;
+		AudioManager.PlayUI("sfx_menu_confirmer");
 	}
 
 	private void OpenSettings()
 	{
+		AudioManager.PlayUI("sfx_menu_confirmer");
 		_settingsScreen.Open();
 	}
 
 	private void ReturnToHub()
 	{
+		AudioManager.PlayUI("sfx_menu_confirmer");
 		_isPaused = false;
 		_root.Visible = false;
 		GetTree().Paused = false;
@@ -94,6 +97,7 @@ public partial class PauseMenu : CanvasLayer
 
 	private void QuitGame()
 	{
+		AudioManager.PlayUI("sfx_menu_confirmer");
 		AudioManager.Instance?.SaveSettings();
 		GetTree().Quit();
 	}
@@ -356,6 +360,7 @@ public partial class PauseMenu : CanvasLayer
 			CustomMinimumSize = new Vector2(200, 34)
 		};
 		btn.AddThemeFontSizeOverride("font_size", 15);
+		UITheme.WireButtonAudio(btn);
 		return btn;
 	}
 }

@@ -442,7 +442,11 @@ public partial class HubScreen : Control
 		};
 		settingsBtn.AddThemeFontSizeOverride("font_size", 20);
 		ApplyAnimatedButtonStyle(settingsBtn);
-		settingsBtn.Pressed += () => _settingsScreen?.Open();
+		settingsBtn.Pressed += () =>
+		{
+			AudioManager.PlayUI("sfx_menu_confirmer");
+			_settingsScreen?.Open();
+		};
 		settingsCenter.AddChild(settingsBtn);
 
 		// --- Spacer + Quitter ---
@@ -466,6 +470,7 @@ public partial class HubScreen : Control
 
 	private void NavigateToHubTabs()
 	{
+		AudioManager.PlayUI("sfx_menu_confirmer");
 		SetState(HubState.SubScreen);
 		SwitchHubTab(_activeTab);
 	}
@@ -564,7 +569,11 @@ public partial class HubScreen : Control
 		};
 		backBtn.AddThemeFontSizeOverride("font_size", 16);
 		ApplyButtonStyle(backBtn);
-		backBtn.Pressed += () => SetState(HubState.MainMenu);
+		backBtn.Pressed += () =>
+		{
+			AudioManager.PlayUI("sfx_menu_confirmer");
+			SetState(HubState.MainMenu);
+		};
 		topBar.AddChild(backBtn);
 
 		// Spacer
@@ -1447,6 +1456,8 @@ public partial class HubScreen : Control
 	{
 		if (string.IsNullOrEmpty(_selectedCharacterId))
 			return;
+
+		AudioManager.PlayUI("sfx_menu_confirmer");
 
 		// Desactiver les boutons pendant la transition
 		_enterVoidButton.Disabled = true;

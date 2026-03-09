@@ -678,6 +678,7 @@ public partial class LevelUpScreen : CanvasLayer
 
         btn.AddThemeFontSizeOverride("font_size", 13);
         btn.AddThemeColorOverride("font_color", enabled ? TextColor : TextDim);
+        UITheme.WireButtonAudio(btn);
 
         btn.Pressed += () => onPressed?.Invoke();
         btn.ProcessMode = ProcessModeEnum.Always;
@@ -738,6 +739,7 @@ public partial class LevelUpScreen : CanvasLayer
         if (_banishMode)
         {
             _banishMode = false;
+            Infrastructure.AudioManager.PlayUI("sfx_perk_refuse", 0f);
             _fragmentManager?.BanishFragment(fragmentId);
             return;
         }

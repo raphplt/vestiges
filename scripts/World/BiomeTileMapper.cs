@@ -109,15 +109,24 @@ public class BiomeTileMapper
 		int x,
 		int y,
 		UrbanCellType urbanCellType = UrbanCellType.None,
-		UrbanLayout urbanLayout = null)
+		WorldGenerator generator = null)
 	{
 		if (biomeIndex >= 0
 			&& _biomeIds.TryGetValue(biomeIndex, out string biomeId)
 			&& biomeId == "urban_ruins"
 			&& urbanCellType != UrbanCellType.None
-			&& TryGetUrbanRuinsSourceId(biomeIndex, urbanCellType, x, y, urbanLayout, out int urbanSourceId))
+			&& TryGetUrbanRuinsSourceId(biomeIndex, urbanCellType, x, y, out int urbanSourceId))
 		{
 			return urbanSourceId;
+		}
+
+		if (biomeIndex >= 0
+			&& _biomeIds.TryGetValue(biomeIndex, out string swampBiomeId)
+			&& swampBiomeId == "swamp"
+			&& generator != null
+			&& TryGetSwampSourceId(biomeIndex, terrain, x, y, generator, out int swampSourceId))
+		{
+			return swampSourceId;
 		}
 
 		// Tiles spécifiques au biome
@@ -227,7 +236,6 @@ public class BiomeTileMapper
 		UrbanCellType urbanCellType,
 		int x,
 		int y,
-		UrbanLayout urbanLayout,
 		out int sourceId)
 	{
 		sourceId = -1;
@@ -238,8 +246,9 @@ public class BiomeTileMapper
 		switch (urbanCellType)
 		{
 			case UrbanCellType.Road:
-				string roadKey = GetUrbanRoadKey(urbanLayout, x, y);
-				if (TryPickSpecialSource(specialMap, roadKey, x, y, out sourceId))
+				if (TryPickSpecialSource(specialMap, "plaza", x, y, out sourceId))
+					return true;
+				if (TryPickSpecialSource(specialMap, "building_edge", x, y, out sourceId))
 					return true;
 				break;
 			case UrbanCellType.Sidewalk:
@@ -278,51 +287,70 @@ public class BiomeTileMapper
 		return true;
 	}
 
-	private static string GetUrbanRoadKey(UrbanLayout urbanLayout, int x, int y)
+	private bool TryGetSwampSourceId(
+		int biomeIndex,
+		TerrainType terrain,
+		int x,
+		int y,
+		WorldGenerator generator,
+		out int sourceId)
 	{
-		if (urbanLayout == null)
-			return "road_straight_ns";
+		sourceId = -1;
+		_biomeSpecialSourceMap.TryGetValue(biomeIndex, out Dictionary<string, int[]> specialMap);
+		_biomeSourceMap.TryGetValue(biomeIndex, out Dictionary<TerrainType, int[]> terrainMap);
 
-		Vector2I cell = new(x, y);
-		bool north = urbanLayout.RoadCells.Contains(cell + Vector2I.Up);
-		bool east = urbanLayout.RoadCells.Contains(cell + Vector2I.Right);
-		bool south = urbanLayout.RoadCells.Contains(cell + Vector2I.Down);
-		bool west = urbanLayout.RoadCells.Contains(cell + Vector2I.Left);
-
-		int connections = 0;
-		if (north) connections++;
-		if (east) connections++;
-		if (south) connections++;
-		if (west) connections++;
-
-		if (connections >= 4) return "road_cross";
-		if (connections == 3)
+		if (terrain == TerrainType.Water)
 		{
-			if (!north) return "road_t_n";
-			if (!east) return "road_t_e";
-			if (!south) return "road_t_s";
-			return "road_t_w";
+			if (terrainMap != null && terrainMap.TryGetValue(TerrainType.Water, out int[] waterSources) && waterSources.Length > 0)
+			{
+				int deepNeighbors = CountNeighborTerrain(generator, x, y, TerrainType.Water, 1);
+				int variant = deepNeighbors >= 5 ? HashCell(x, y) % waterSources.Length : (HashCell(x, y) + 1) % waterSources.Length;
+				sourceId = waterSources[variant];
+				return true;
+			}
+
+			return false;
 		}
 
-		if (connections == 2)
+		int nearbyWater = CountNeighborTerrain(generator, x, y, TerrainType.Water, 1);
+		int patchRoll = HashCell(Mathf.FloorToInt(x / 4.0f) + 411, Mathf.FloorToInt(y / 4.0f) - 411) % 100;
+
+		if (nearbyWater > 0 && patchRoll < 72 && TryPickSpecialSource(specialMap, "dirty_bank", x, y, out sourceId))
+			return true;
+
+		int dampRoll = HashCell(Mathf.FloorToInt(x / 5.0f) + 733, Mathf.FloorToInt(y / 5.0f) - 733) % 100;
+
+		if (terrain == TerrainType.Forest && dampRoll < 36 && TryPickSpecialSource(specialMap, "wet_dark_ground", x, y, out sourceId))
+			return true;
+
+		if (terrain == TerrainType.Grass)
 		{
-			if (north && south) return "road_straight_ns";
-			if (east && west) return "road_straight_ew";
-			if (north && east) return "road_corner_ne";
-			if (north && west) return "road_corner_nw";
-			if (south && east) return "road_corner_se";
-			return "road_corner_sw";
+			if (dampRoll < 12 && TryPickSpecialSource(specialMap, "mud_light_ground", x, y, out sourceId))
+				return true;
+			if (dampRoll < 34 && TryPickSpecialSource(specialMap, "wet_dark_ground", x, y, out sourceId))
+				return true;
 		}
 
-		if (connections == 1)
+		return false;
+	}
+
+	private static int CountNeighborTerrain(WorldGenerator generator, int x, int y, TerrainType target, int radius)
+	{
+		int count = 0;
+		for (int dx = -radius; dx <= radius; dx++)
 		{
-			if (north) return "road_end_n";
-			if (east) return "road_end_e";
-			if (south) return "road_end_s";
-			return "road_end_w";
+			for (int dy = -radius; dy <= radius; dy++)
+			{
+				if (dx == 0 && dy == 0)
+					continue;
+				if (!generator.IsWithinBounds(x + dx, y + dy) || generator.IsErased(x + dx, y + dy))
+					continue;
+				if (generator.GetTerrain(x + dx, y + dy) == target)
+					count++;
+			}
 		}
 
-		return "road_straight_ns";
+		return count;
 	}
 
 	private static int PickUrbanSpecialSourceId(string key, int[] sources, int x, int y)

@@ -31,10 +31,16 @@ public partial class AudioManager : Node
 
 	// --- Ambiance player ---
 	private AudioStreamPlayer _ambiancePlayer;
+	private AudioStreamPlayer _ambianceOverlayPlayer;
+	private string _ambianceOverlayKey = "";
 
 	// --- Looping SFX player (for UI loops like level-up screen) ---
 	private AudioStreamPlayer _loopingSfxPlayer;
 	private string _loopingSfxKey = "";
+	private AudioStreamPlayer _lowHealthLoopPlayer;
+	private string _lowHealthLoopKey = "";
+	private AudioStreamPlayer _borderWarningPlayer;
+	private string _borderWarningKey = "";
 
 	// --- UI SFX pool (plays even when paused) ---
 	private readonly List<AudioStreamPlayer> _uiSfxPool = new();
@@ -53,6 +59,9 @@ public partial class AudioManager : Node
 		["sfx_monde_dissolution"] = 200,
 		["sfx_recolte_obtenu"] = 100,
 		["xp_gain"] = 60,
+		["sfx_structure_impossible"] = 180,
+		["sfx_perk_refuse"] = 120,
+		["sfx_degat_critique_recu"] = 180,
 	};
 	private const ulong DefaultMinInterval = 0;
 
@@ -65,6 +74,17 @@ public partial class AudioManager : Node
 
 	// --- Ambiance oiseaux ---
 	private float _birdTimer;
+	private string _currentRandomEventId = "";
+	private int _activeColosseCount;
+	private Core.Player _player;
+	private World.ZoneMemoryManager _zoneMemoryManager;
+	private World.WorldSetup _worldSetup;
+	private TileMapLayer _ground;
+	private const float LowHealthStartThreshold = 0.25f;
+	private const float LowHealthStopThreshold = 0.33f;
+	private const float CriticalDamageThresholdRatio = 0.18f;
+	private const float BorderEffacementThreshold = 0.18f;
+	private const float MapBorderWarningCells = 2.5f;
 
 	// --- Persistence ---
 	private const string SettingsPath = "user://audio_settings.cfg";
@@ -107,6 +127,12 @@ public partial class AudioManager : Node
 		["sfx_level_up_after"]  = "res://assets/audio/sfx/gameplay/level_up_after.wav",
 		["sfx_chest_opening"]   = "res://assets/audio/sfx/gameplay/chest_opening.wav",
 		["xp_gain"]            = "res://assets/audio/sfx/gameplay/xp_gain.wav",
+		["sfx_perk_refuse"]     = "res://assets/audio/sfx/gameplay/sfx_perk_refuse.wav",
+		["sfx_malediction_acceptee"] = "res://assets/audio/sfx/gameplay/sfx_malediction_acceptee.wav",
+		["sfx_artefact_trouve"] = "res://assets/audio/sfx/gameplay/sfx_artefact_trouve.wav",
+		["sfx_danger_building"] = "res://assets/audio/sfx/gameplay/sfx_danger_building.wav",
+		["sfx_sante_basse"]     = "res://assets/audio/sfx/gameplay/sfx_sante_basse.wav",
+		["sfx_structure_impossible"] = "res://assets/audio/sfx/gameplay/sfx_structure_impossible.wav",
 
 		// Monde
 		["sfx_monde_tuile_apparait"] = "res://assets/audio/sfx/gameplay/sfx_monde_tuile_apparait.wav",
@@ -119,6 +145,14 @@ public partial class AudioManager : Node
 		["sfx_hit_ennemi"]   = "res://assets/audio/sfx/combat/sfx_hit_ennemi.wav",
 		["sfx_hit_critique"] = "res://assets/audio/sfx/combat/sfx_hit_critique.wav",
 		["sfx_hit_joueur"]   = "res://assets/audio/sfx/combat/sfx_hit_joueur.wav",
+		["sfx_degat_critique_recu"] = "res://assets/audio/sfx/combat/sfx_degat_critique_recu.wav",
+
+		// UI
+		["sfx_menu_clic"]         = "res://assets/audio/sfx/ui/sfx_menu_clic.wav",
+		["sfx_menu_survol"]       = "res://assets/audio/sfx/ui/sfx_menu_survol.wav",
+		["sfx_menu_confirmer"]    = "res://assets/audio/sfx/ui/sfx_menu_confirmer.wav",
+		["sfx_inventaire_ouvrir"] = "res://assets/audio/sfx/ui/sfx_inventaire_ouvrir.wav",
+		["sfx_inventaire_fermer"] = "res://assets/audio/sfx/ui/sfx_inventaire_fermer.wav",
 
 		// Ambiance biomes
 		["sfx_ambiance_foret"]     = "res://assets/audio/sfx/ambiance/sfx_ambiance_foret.wav",
@@ -127,6 +161,13 @@ public partial class AudioManager : Node
 		["sfx_ambiance_oiseaux_1"] = "res://assets/audio/sfx/ambiance/sfx_ambiance_oiseaux_1.wav",
 		["sfx_ambiance_oiseaux_2"] = "res://assets/audio/sfx/ambiance/sfx_ambiance_oiseaux_2.wav",
 		["sfx_ambiance_bulle"]     = "res://assets/audio/sfx/ambiance/sfx_ambiance_bulle.wav",
+		["sfx_tonnerre_lointain"] = "res://assets/audio/sfx/ambiance/sfx_tonnerre_lointain.wav",
+		["sfx_pluie_legere"]      = "res://assets/audio/sfx/ambiance/sfx_pluie_legere.wav",
+		["sfx_orage_proche"]      = "res://assets/audio/sfx/ambiance/sfx_orage_proche.wav",
+		["sfx_foret_rafales"]     = "res://assets/audio/sfx/ambiance/sfx_foret_rafales.wav",
+		["sfx_brouillard"]        = "res://assets/audio/sfx/ambiance/sfx_brouillard.wav",
+		["sfx_bord_effacement_proche"] = "res://assets/audio/sfx/ambiance/sfx_bord_effacement_proche.wav",
+		["sfx_colosse_lointain"]  = "res://assets/audio/sfx/ambiance/sfx_colosse_lointain.wav",
 
 		// Foyer
 		["sfx_foyer_crepitement"] = "res://assets/audio/sfx/foyer/sfx_foyer_crepitement.wav",
@@ -166,9 +207,15 @@ public partial class AudioManager : Node
 
 		_ambiancePlayer = new AudioStreamPlayer { Bus = BusAmbiance, Name = "Ambiance" };
 		AddChild(_ambiancePlayer);
+		_ambianceOverlayPlayer = new AudioStreamPlayer { Bus = BusAmbiance, Name = "AmbianceOverlay", VolumeDb = -10f };
+		AddChild(_ambianceOverlayPlayer);
 
 		_loopingSfxPlayer = new AudioStreamPlayer { Bus = BusSfx, Name = "LoopingSfx", ProcessMode = ProcessModeEnum.Always };
 		AddChild(_loopingSfxPlayer);
+		_lowHealthLoopPlayer = new AudioStreamPlayer { Bus = BusSfx, Name = "LowHealthLoop", ProcessMode = ProcessModeEnum.Always, VolumeDb = -10f };
+		AddChild(_lowHealthLoopPlayer);
+		_borderWarningPlayer = new AudioStreamPlayer { Bus = BusSfx, Name = "BorderWarningLoop", ProcessMode = ProcessModeEnum.Always, VolumeDb = -12f };
+		AddChild(_borderWarningPlayer);
 
 		for (int i = 0; i < UiSfxPoolSize; i++)
 		{
@@ -542,6 +589,9 @@ public partial class AudioManager : Node
 				PlaySfx(birdKey, 0.05f, -4f);
 			}
 		}
+
+		UpdateContextAmbiance();
+		UpdatePlayerWarnings();
 	}
 
 	private void RefreshDayMusic()
@@ -570,6 +620,11 @@ public partial class AudioManager : Node
 		eb.FragmentChosen     += OnFragmentChosen;
 		eb.ResourceCollected  += OnResourceCollected;
 		eb.GameStateChanged   += OnGameStateChanged;
+		eb.ChestOpened        += OnChestOpened;
+		eb.PoiExplored        += OnPoiExplored;
+		eb.NightWaveStarted   += OnNightWaveStarted;
+		eb.RandomEventTriggered += OnRandomEventTriggered;
+		eb.RandomEventEnded   += OnRandomEventEnded;
 	}
 
 	private void DisconnectEventBus(Core.EventBus eb)
@@ -586,6 +641,11 @@ public partial class AudioManager : Node
 		eb.FragmentChosen     -= OnFragmentChosen;
 		eb.ResourceCollected  -= OnResourceCollected;
 		eb.GameStateChanged   -= OnGameStateChanged;
+		eb.ChestOpened        -= OnChestOpened;
+		eb.PoiExplored        -= OnPoiExplored;
+		eb.NightWaveStarted   -= OnNightWaveStarted;
+		eb.RandomEventTriggered -= OnRandomEventTriggered;
+		eb.RandomEventEnded   -= OnRandomEventEnded;
 	}
 
 	private void OnDayPhaseChanged(string phase)
@@ -616,16 +676,24 @@ public partial class AudioManager : Node
 				PlaySfx("sfx_monde_aube", 0f);
 				break;
 		}
+
+		UpdateContextAmbiance();
 	}
 
 	private void OnEnemySpawned(string enemyId, float hpScale, float dmgScale)
 	{
 		_activeEnemyCount++;
+		if (enemyId.StartsWith("colosse_"))
+			_activeColosseCount++;
+		if (enemyId.StartsWith("colosse_") || enemyId == "indicible")
+			PlaySfx("sfx_danger_building", 0f, -4f);
 	}
 
 	private void OnEnemyKilled(string enemyId, Vector2 position)
 	{
 		_activeEnemyCount = Mathf.Max(0, _activeEnemyCount - 1);
+		if (enemyId.StartsWith("colosse_"))
+			_activeColosseCount = Mathf.Max(0, _activeColosseCount - 1);
 		// Son de dissolution discret — pas sur chaque kill pour éviter la saturation
 		if (GD.Randf() < 0.5f)
 			PlaySfx("sfx_monde_dissolution", 0.08f, -6f);
@@ -635,10 +703,15 @@ public partial class AudioManager : Node
 
 	private void OnPlayerDamaged(float currentHp, float maxHp)
 	{
-		bool isDamage = _lastKnownHp >= 0f && currentHp < _lastKnownHp - 0.01f;
+		float damageTaken = _lastKnownHp >= 0f ? _lastKnownHp - currentHp : 0f;
+		bool isDamage = damageTaken > 0.01f;
 		_lastKnownHp = currentHp;
 		if (isDamage)
 			PlaySfx("sfx_hit_joueur");
+		if (damageTaken >= Mathf.Max(12f, maxHp * CriticalDamageThresholdRatio))
+			PlaySfx("sfx_degat_critique_recu", 0f, -1f);
+
+		UpdatePlayerWarnings();
 	}
 
 	private void OnCraftCompleted(string recipeId)
@@ -675,6 +748,38 @@ public partial class AudioManager : Node
 		PlaySfx("sfx_recolte_obtenu", 0.05f, -2f);
 	}
 
+	private void OnChestOpened(string chestId, string rarity, Vector2 position)
+	{
+		if (rarity == "lore")
+			PlaySfx("sfx_artefact_trouve", 0f, -3f);
+	}
+
+	private void OnPoiExplored(string poiId, string poiType)
+	{
+		if (poiType == "lore" || poiType == "sanctuary")
+			PlaySfx("sfx_artefact_trouve", 0f, -3f);
+	}
+
+	private void OnNightWaveStarted(int waveNumber, int totalWaves)
+	{
+		PlaySfx("sfx_danger_building", 0f, -4f);
+	}
+
+	private void OnRandomEventTriggered(string eventId, string eventName)
+	{
+		_currentRandomEventId = eventId;
+		if (eventId is "resurgence" or "the_call")
+			PlaySfx("sfx_danger_building", 0f, -5f);
+		UpdateContextAmbiance();
+	}
+
+	private void OnRandomEventEnded(string eventId)
+	{
+		if (_currentRandomEventId == eventId)
+			_currentRandomEventId = "";
+		UpdateContextAmbiance();
+	}
+
 	private void OnGameStateChanged(string oldState, string newState)
 	{
 		if (newState == "Hub")
@@ -683,6 +788,11 @@ public partial class AudioManager : Node
 			_currentMusicKey = "";
 			_activeEnemyCount = 0;
 			_currentPhase = "";
+			_currentRandomEventId = "";
+			_activeColosseCount = 0;
+			StopLoopOnPlayer(_ambianceOverlayPlayer, ref _ambianceOverlayKey);
+			StopLoopOnPlayer(_lowHealthLoopPlayer, ref _lowHealthLoopKey);
+			StopLoopOnPlayer(_borderWarningPlayer, ref _borderWarningKey);
 			PlayHubMusic();
 		}
 		else if (newState == "Run")
@@ -691,5 +801,153 @@ public partial class AudioManager : Node
 			// Ne pas toucher _currentMusicKey ici pour ne pas interrompre la transition
 			_activeEnemyCount = 0;
 		}
+	}
+
+	private void UpdateContextAmbiance()
+	{
+		string targetKey = ResolveContextAmbianceKey();
+		if (string.IsNullOrEmpty(targetKey))
+		{
+			StopLoopOnPlayer(_ambianceOverlayPlayer, ref _ambianceOverlayKey);
+			return;
+		}
+
+		float volumeDb = targetKey switch
+		{
+			"sfx_colosse_lointain" => -5f,
+			"sfx_orage_proche" => -6f,
+			"sfx_pluie_legere" => -9f,
+			"sfx_foret_rafales" => -8f,
+			"sfx_brouillard" => -12f,
+			"sfx_tonnerre_lointain" => -11f,
+			_ => -10f
+		};
+
+		PlayLoopOnPlayer(_ambianceOverlayPlayer, ref _ambianceOverlayKey, targetKey, volumeDb);
+	}
+
+	private string ResolveContextAmbianceKey()
+	{
+		if (_activeColosseCount > 0)
+			return "sfx_colosse_lointain";
+
+		return _currentRandomEventId switch
+		{
+			"thick_fog" => "sfx_brouillard",
+			"storm" => "sfx_orage_proche",
+			"ash_rain" => "sfx_pluie_legere",
+			"forgotten_wind" => "sfx_foret_rafales",
+			_ when _currentPhase is "Dusk" or "Night" => "sfx_tonnerre_lointain",
+			_ => ""
+		};
+	}
+
+	private void UpdatePlayerWarnings()
+	{
+		CachePlayer();
+		CacheZoneMemoryManager();
+		CacheWorldBounds();
+
+		if (_player == null || !GodotObject.IsInstanceValid(_player) || _player.IsDead)
+		{
+			StopLoopOnPlayer(_lowHealthLoopPlayer, ref _lowHealthLoopKey);
+			StopLoopOnPlayer(_borderWarningPlayer, ref _borderWarningKey);
+			return;
+		}
+
+		float maxHp = Mathf.Max(1f, _player.EffectiveMaxHp);
+		float hpRatio = _player.CurrentHp / maxHp;
+		if (hpRatio <= LowHealthStartThreshold)
+			PlayLoopOnPlayer(_lowHealthLoopPlayer, ref _lowHealthLoopKey, "sfx_sante_basse", -10f);
+		else if (hpRatio >= LowHealthStopThreshold)
+			StopLoopOnPlayer(_lowHealthLoopPlayer, ref _lowHealthLoopKey);
+
+		if (_zoneMemoryManager == null || !GodotObject.IsInstanceValid(_zoneMemoryManager))
+		{
+			StopLoopOnPlayer(_borderWarningPlayer, ref _borderWarningKey);
+			return;
+		}
+
+		float memory = _zoneMemoryManager.GetMemoryAt(_player.GlobalPosition);
+		bool nearErasureBorder = memory <= BorderEffacementThreshold || IsNearMapBorder(_player.GlobalPosition);
+		if (nearErasureBorder)
+			PlayLoopOnPlayer(_borderWarningPlayer, ref _borderWarningKey, "sfx_bord_effacement_proche", -11f);
+		else
+			StopLoopOnPlayer(_borderWarningPlayer, ref _borderWarningKey);
+	}
+
+	private void CachePlayer()
+	{
+		if (_player != null && GodotObject.IsInstanceValid(_player))
+			return;
+		_player = GetTree().GetFirstNodeInGroup("player") as Core.Player;
+	}
+
+	private void CacheZoneMemoryManager()
+	{
+		if (_zoneMemoryManager != null && GodotObject.IsInstanceValid(_zoneMemoryManager))
+			return;
+		_zoneMemoryManager = GetNodeOrNull<World.ZoneMemoryManager>("/root/Main/ZoneMemoryManager");
+	}
+
+	private void CacheWorldBounds()
+	{
+		if (_worldSetup != null && GodotObject.IsInstanceValid(_worldSetup) && _ground != null && GodotObject.IsInstanceValid(_ground))
+			return;
+
+		_worldSetup = GetNodeOrNull<World.WorldSetup>("/root/Main");
+		_ground = _worldSetup?.GetNodeOrNull<TileMapLayer>("Ground");
+	}
+
+	private bool IsNearMapBorder(Vector2 worldPos)
+	{
+		if (_worldSetup?.Generator == null || _ground == null)
+			return false;
+
+		Vector2I cell = _ground.LocalToMap(_ground.ToLocal(worldPos));
+		float dist = Mathf.Sqrt(cell.X * cell.X + cell.Y * cell.Y);
+		float mapRadius = _worldSetup.Generator.MapRadius;
+		return dist >= mapRadius - MapBorderWarningCells;
+	}
+
+	private void PlayLoopOnPlayer(AudioStreamPlayer player, ref string currentKey, string key, float volumeDb)
+	{
+		if (currentKey == key && player.Playing)
+			return;
+
+		if (!_streams.TryGetValue(key, out AudioStream stream))
+			return;
+
+		player.Stream = CreateLoopableStream(stream);
+		player.VolumeDb = volumeDb;
+		player.Play();
+		currentKey = key;
+	}
+
+	private void StopLoopOnPlayer(AudioStreamPlayer player, ref string currentKey)
+	{
+		if (player.Playing)
+			player.Stop();
+		currentKey = "";
+	}
+
+	private static AudioStream CreateLoopableStream(AudioStream stream)
+	{
+		if (stream is not AudioStreamWav wav)
+			return stream;
+
+		AudioStreamWav clone = (AudioStreamWav)wav.Duplicate();
+		clone.LoopMode = AudioStreamWav.LoopModeEnum.Forward;
+		clone.LoopBegin = 0;
+		int bytesPerFrame = clone.Format switch
+		{
+			AudioStreamWav.FormatEnum.Format8Bits => clone.Stereo ? 2 : 1,
+			AudioStreamWav.FormatEnum.Format16Bits => clone.Stereo ? 4 : 2,
+			_ => clone.Stereo ? 4 : 2
+		};
+		if (clone.Data != null && clone.Data.Length > 0)
+			clone.LoopEnd = clone.Data.Length / bytesPerFrame;
+
+		return clone;
 	}
 }

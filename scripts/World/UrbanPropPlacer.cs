@@ -16,12 +16,6 @@ public static class UrbanPropPlacer
 		"assets/props/urban_ruins/prop_building_tower_chunk.png",
 	};
 
-	private static readonly string[] FragmentSprites = {
-		"assets/props/urban_ruins/prop_concrete_wall_v2.png",
-		"assets/props/urban_ruins/prop_concrete_wall_v3.png",
-		"assets/props/urban_ruins/prop_brick_wall.png",
-	};
-
 	private static readonly string[] RoadSprites = {
 		"assets/props/urban_ruins/prop_urban_car.png",
 		"assets/props/urban_ruins/prop_concrete_debris.png",
@@ -56,9 +50,6 @@ public static class UrbanPropPlacer
 		{ "prop_building_facade_wide.png", 24f },
 		{ "prop_building_corner_large.png", 26f },
 		{ "prop_building_tower_chunk.png", 20f },
-		{ "prop_concrete_wall_v2.png", 10f },
-		{ "prop_concrete_wall_v3.png", 10f },
-		{ "prop_brick_wall.png", 8f },
 		{ "prop_urban_car.png", 12f },
 		{ "prop_concrete_debris.png", 0f },
 		{ "prop_concrete_debris_v2.png", 0f },
@@ -112,7 +103,7 @@ public static class UrbanPropPlacer
 		foreach (BuildingFootprint building in buildings)
 		{
 			int area = building.Size.X * building.Size.Y;
-			if (area < 32)
+			if (area < 48)
 				continue;
 
 			uint hash = HashCell(building.Origin, seed ^ (ulong)(area * 17));
@@ -122,7 +113,7 @@ public static class UrbanPropPlacer
 			if (TryPlaceProp(primarySprite, primaryAnchor, ground, container, usedCells, cache))
 				placed++;
 
-			if (area >= 72)
+			if (area >= 128)
 			{
 				Vector2I secondaryAnchor = GetSecondaryAnchor(building, hash);
 				string secondarySprite = PickSecondarySprite(building, area, hash);
@@ -257,9 +248,7 @@ public static class UrbanPropPlacer
 	{
 		if (area >= 120 && building.Size.Y > building.Size.X)
 			return BuildingMassSprites[3];
-		if ((hash % 100) < 55)
-			return FragmentSprites[(int)(hash % (uint)FragmentSprites.Length)];
-		return BuildingMassSprites[0];
+		return (hash % 100) < 50 ? BuildingMassSprites[2] : BuildingMassSprites[0];
 	}
 
 	private static Vector2I GetPrimaryAnchor(BuildingFootprint building)
