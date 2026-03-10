@@ -39,7 +39,13 @@
             "champs/tile_champs_herbe_v2",
             "champs/tile_champs_herbe_v3",
             "champs/tile_champs_ble_base",
-            "champs/tile_champs_ble_v2"
+            "champs/tile_champs_ble_v2",
+            "champs/tile_champs_chaume_base",
+            "champs/tile_champs_chaume_v2",
+            "champs/tile_champs_fleurs_base",
+            "champs/tile_champs_fleurs_v2",
+            "champs/tile_champs_ble_dense_base",
+            "champs/tile_champs_ble_dense_v2"
         ],
         "concrete": [
             "champs/tile_champs_chemin_base",

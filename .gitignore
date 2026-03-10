@@ -29,3 +29,10 @@ Thumbs.db
 # Logs / temp
 *.log
 *.tmp
+
+# Steam SDK native libraries (non versionnées — chaque dev les télécharge)
+steam_api.dll
+steam_api64.dll
+libsteam_api.so
+libsteam_api.dylib
+steam_appid.txt

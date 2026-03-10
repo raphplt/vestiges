@@ -28,6 +28,11 @@ public partial class SettingsScreen : CanvasLayer
 	private Texture2D _btnPressedTex;
 	private Texture2D _btnDisabledTex;
 
+	// Remap state
+	private string _listeningAction;
+	private Button _listeningBtn;
+	private bool _listeningForKey; // true = keyboard, false = gamepad
+
 	public override void _Ready()
 	{
 		Layer = 60;
@@ -41,6 +46,47 @@ public partial class SettingsScreen : CanvasLayer
 	{
 		if (!IsOpen)
 			return;
+
+		// Remap listening mode
+		if (_listeningAction != null)
+		{
+			if (_listeningForKey && @event is InputEventKey keyEvent && keyEvent.Pressed)
+			{
+				Key key = keyEvent.PhysicalKeycode != Key.None ? keyEvent.PhysicalKeycode : keyEvent.Keycode;
+
+				// Escape annule
+				if (key == Key.Escape)
+				{
+					CancelListening();
+					GetViewport().SetInputAsHandled();
+					return;
+				}
+
+				InputRemapManager.Instance?.RemapKey(_listeningAction, key);
+				_listeningBtn.Text = InputRemapManager.GetKeyName(_listeningAction);
+				_listeningBtn.AddThemeColorOverride("font_color", UITheme.TextColor);
+				_listeningAction = null;
+				_listeningBtn = null;
+				GetViewport().SetInputAsHandled();
+				return;
+			}
+
+			if (!_listeningForKey && @event is InputEventJoypadButton joyEvent && joyEvent.Pressed)
+			{
+				InputRemapManager.Instance?.RemapJoyButton(_listeningAction, joyEvent.ButtonIndex);
+				_listeningBtn.Text = InputRemapManager.JoyButtonLabel(joyEvent.ButtonIndex);
+				_listeningBtn.AddThemeColorOverride("font_color", UITheme.TextColor);
+				_listeningAction = null;
+				_listeningBtn = null;
+				GetViewport().SetInputAsHandled();
+				return;
+			}
+
+			// Consommer tout input pendant l'écoute
+			if (@event.IsPressed())
+				GetViewport().SetInputAsHandled();
+			return;
+		}
 
 		if (@event.IsActionPressed("ui_cancel"))
 		{
@@ -58,10 +104,29 @@ public partial class SettingsScreen : CanvasLayer
 
 	public void Close()
 	{
+		CancelListening();
 		IsOpen = false;
 		_root.Visible = false;
 		AudioManager.Instance?.SaveSettings();
 		VfxFactory.SaveSettings();
+	}
+
+	private void CancelListening()
+	{
+		if (_listeningAction == null)
+			return;
+
+		// Restaurer le texte du bouton
+		if (_listeningBtn != null)
+		{
+			_listeningBtn.Text = _listeningForKey
+				? InputRemapManager.GetKeyName(_listeningAction)
+				: InputRemapManager.GetJoyButtonName(_listeningAction);
+			_listeningBtn.AddThemeColorOverride("font_color", UITheme.TextColor);
+		}
+
+		_listeningAction = null;
+		_listeningBtn = null;
 	}
 
 	private void LoadTextures()
@@ -455,7 +520,59 @@ public partial class SettingsScreen : CanvasLayer
 		particleRow.AddChild(particleBtn);
 		vbox.AddChild(particleRow);
 
+		// Colorblind filter
+		vbox.AddChild(BuildCycleRow("Filtre daltonien",
+			ColorBlindFilter.Instance != null
+				? ColorBlindFilter.ModeLabel(ColorBlindFilter.Instance.CurrentMode)
+				: "Off",
+			(btn) =>
+			{
+				if (ColorBlindFilter.Instance == null) return;
+				ColorBlindFilter.Mode newMode = ColorBlindFilter.Instance.CycleMode();
+				btn.Text = ColorBlindFilter.ModeLabel(newMode);
+			}));
+
+		// Language
+		vbox.AddChild(BuildCycleRow("Langue",
+			LocaleManager.Instance != null
+				? LocaleManager.Instance.CurrentLocaleName
+				: "Francais",
+			(btn) =>
+			{
+				if (LocaleManager.Instance == null) return;
+				LocaleManager.Instance.CycleLocale();
+				btn.Text = LocaleManager.Instance.CurrentLocaleName;
+			}));
+
 		return margin;
+	}
+
+	private HBoxContainer BuildCycleRow(string label, string initialText, System.Action<Button> onCycle)
+	{
+		HBoxContainer row = new();
+		row.AddThemeConstantOverride("separation", 0);
+
+		Label lbl = new()
+		{
+			Text = label,
+			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill
+		};
+		lbl.AddThemeFontSizeOverride("font_size", 15);
+		lbl.AddThemeColorOverride("font_color", UITheme.TextColor);
+		row.AddChild(lbl);
+
+		Button btn = new()
+		{
+			Text = initialText,
+			CustomMinimumSize = new Vector2(160, 36),
+			FocusMode = Control.FocusModeEnum.None
+		};
+		btn.AddThemeFontSizeOverride("font_size", 14);
+		UITheme.ApplyButtonStyle(btn, _btnNormalTex, _btnHoverTex, _btnPressedTex, _btnDisabledTex);
+		btn.Pressed += () => onCycle(btn);
+		row.AddChild(btn);
+
+		return row;
 	}
 
 	private HBoxContainer BuildToggleRow(string label, bool initialValue, System.Action<bool> onToggle)
@@ -497,34 +614,150 @@ public partial class SettingsScreen : CanvasLayer
 	}
 
 	// ================================================================
-	// CONTROLS TAB (placeholder)
+	// CONTROLS TAB
 	// ================================================================
 	private MarginContainer BuildControlsTab()
 	{
 		MarginContainer margin = new();
 		margin.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
-		margin.AddThemeConstantOverride("margin_left", 30);
-		margin.AddThemeConstantOverride("margin_top", 24);
-		margin.AddThemeConstantOverride("margin_right", 30);
-		margin.AddThemeConstantOverride("margin_bottom", 16);
+		margin.AddThemeConstantOverride("margin_left", 20);
+		margin.AddThemeConstantOverride("margin_top", 16);
+		margin.AddThemeConstantOverride("margin_right", 20);
+		margin.AddThemeConstantOverride("margin_bottom", 12);
 
 		VBoxContainer vbox = new();
-		vbox.AddThemeConstantOverride("separation", 16);
+		vbox.AddThemeConstantOverride("separation", 6);
 		vbox.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
 		margin.AddChild(vbox);
 
-		Label placeholder = new()
+		// Header row
+		HBoxContainer header = new();
+		header.AddThemeConstantOverride("separation", 8);
+
+		Label actionHeader = new()
 		{
-			Text = "Configuration des controles a venir...",
-			HorizontalAlignment = HorizontalAlignment.Center,
-			VerticalAlignment = VerticalAlignment.Center,
-			SizeFlagsVertical = Control.SizeFlags.ExpandFill
+			Text = "Action",
+			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill
 		};
-		placeholder.AddThemeFontSizeOverride("font_size", 15);
-		placeholder.AddThemeColorOverride("font_color", UITheme.TextDim);
-		vbox.AddChild(placeholder);
+		actionHeader.AddThemeFontSizeOverride("font_size", 13);
+		actionHeader.AddThemeColorOverride("font_color", UITheme.TextDim);
+		header.AddChild(actionHeader);
+
+		Label keyHeader = new()
+		{
+			Text = "Clavier",
+			CustomMinimumSize = new Vector2(120, 0),
+			HorizontalAlignment = HorizontalAlignment.Center
+		};
+		keyHeader.AddThemeFontSizeOverride("font_size", 13);
+		keyHeader.AddThemeColorOverride("font_color", UITheme.TextDim);
+		header.AddChild(keyHeader);
+
+		Label joyHeader = new()
+		{
+			Text = "Manette",
+			CustomMinimumSize = new Vector2(120, 0),
+			HorizontalAlignment = HorizontalAlignment.Center
+		};
+		joyHeader.AddThemeFontSizeOverride("font_size", 13);
+		joyHeader.AddThemeColorOverride("font_color", UITheme.TextDim);
+		header.AddChild(joyHeader);
+
+		vbox.AddChild(header);
+
+		// Separator
+		HSeparator sep = new();
+		sep.AddThemeConstantOverride("separation", 4);
+		vbox.AddChild(sep);
+
+		// Action rows
+		foreach (InputRemapManager.ActionDef def in InputRemapManager.RemappableActions)
+		{
+			vbox.AddChild(BuildRemapRow(def));
+		}
+
+		// Spacer
+		Control spacer = new() { SizeFlagsVertical = Control.SizeFlags.ExpandFill };
+		vbox.AddChild(spacer);
+
+		// Reset button
+		HBoxContainer resetRow = new();
+		resetRow.AddThemeConstantOverride("separation", 0);
+		resetRow.Alignment = BoxContainer.AlignmentMode.Center;
+
+		Button resetBtn = new()
+		{
+			Text = "Reinitialiser",
+			CustomMinimumSize = new Vector2(180, 36),
+			FocusMode = Control.FocusModeEnum.None
+		};
+		resetBtn.AddThemeFontSizeOverride("font_size", 14);
+		UITheme.ApplyButtonStyle(resetBtn, _btnNormalTex, _btnHoverTex, _btnPressedTex, _btnDisabledTex);
+		resetBtn.Pressed += () =>
+		{
+			InputRemapManager.Instance?.ResetToDefaults();
+			// Refresh l'onglet
+			ShowTab("controles");
+		};
+		resetRow.AddChild(resetBtn);
+		vbox.AddChild(resetRow);
 
 		return margin;
+	}
+
+	private HBoxContainer BuildRemapRow(InputRemapManager.ActionDef def)
+	{
+		HBoxContainer row = new();
+		row.AddThemeConstantOverride("separation", 8);
+
+		// Action label (traduit via TranslationServer)
+		string actionLabel = TranslationServer.Translate(def.TranslationKey);
+		Label lbl = new()
+		{
+			Text = actionLabel,
+			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill
+		};
+		lbl.AddThemeFontSizeOverride("font_size", 14);
+		lbl.AddThemeColorOverride("font_color", UITheme.TextColor);
+		row.AddChild(lbl);
+
+		// Keyboard binding button
+		Button keyBtn = new()
+		{
+			Text = InputRemapManager.GetKeyName(def.Action),
+			CustomMinimumSize = new Vector2(120, 32),
+			FocusMode = Control.FocusModeEnum.None
+		};
+		keyBtn.AddThemeFontSizeOverride("font_size", 13);
+		UITheme.ApplyButtonStyle(keyBtn, _btnNormalTex, _btnHoverTex, _btnPressedTex, _btnDisabledTex);
+		keyBtn.Pressed += () => StartListening(def.Action, keyBtn, true);
+		row.AddChild(keyBtn);
+
+		// Gamepad binding button
+		Button joyBtn = new()
+		{
+			Text = InputRemapManager.GetJoyButtonName(def.Action),
+			CustomMinimumSize = new Vector2(120, 32),
+			FocusMode = Control.FocusModeEnum.None
+		};
+		joyBtn.AddThemeFontSizeOverride("font_size", 13);
+		UITheme.ApplyButtonStyle(joyBtn, _btnNormalTex, _btnHoverTex, _btnPressedTex, _btnDisabledTex);
+		joyBtn.Pressed += () => StartListening(def.Action, joyBtn, false);
+		row.AddChild(joyBtn);
+
+		return row;
+	}
+
+	private void StartListening(string action, Button btn, bool forKey)
+	{
+		CancelListening();
+
+		_listeningAction = action;
+		_listeningBtn = btn;
+		_listeningForKey = forKey;
+
+		btn.Text = "...";
+		btn.AddThemeColorOverride("font_color", UITheme.GoldColor);
 	}
 
 	// ================================================================

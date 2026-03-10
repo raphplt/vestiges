@@ -1,20 +1,43 @@
 using System.Collections.Generic;
+using System.Linq;
 using Godot;
 
 namespace Vestiges.World;
 
 /// <summary>
-/// Place les structures urbaines à l'échelle de l'îlot : quelques masses de
-/// bâtiments lisibles, puis un mobilier de rue secondaire.
+/// Place les structures urbaines avec une logique de ville réaliste :
+/// bâtiments alignés sur les rues, coins marqués, landmarks rares,
+/// dégradation progressive, antennes isolées.
 /// </summary>
 public static class UrbanPropPlacer
 {
-	private static readonly string[] BuildingMassSprites = {
-		"assets/props/urban_ruins/prop_collapsed_building.png",
-		"assets/props/urban_ruins/prop_building_facade_wide.png",
-		"assets/props/urban_ruins/prop_building_corner_large.png",
-		"assets/props/urban_ruins/prop_building_tower_chunk.png",
+	// --- Sprite categories ---
+
+	// Large/tall buildings for street-facing facades
+	private static readonly string[] FacadeSprites = {
+		"assets/props/urban_ruins/prop_building_facade_wide.png",     // 0 - wide facade
+		"assets/props/urban_ruins/prop_building_apartment_block.png", // 1 - long apartment
+		"assets/props/urban_ruins/prop_building_shopfront_row.png",   // 2 - shopfront row
 	};
+
+	// Corner buildings (placed at block corners facing intersections)
+	private static readonly string[] CornerSprites = {
+		"assets/props/urban_ruins/prop_building_corner_large.png",    // 0 - corner block
+		"assets/props/urban_ruins/prop_building_tower_chunk.png",     // 1 - tower fragment
+	};
+
+	// Collapsed/damaged fill (interior or low-integrity blocks)
+	private static readonly string[] RubbleSprites = {
+		"assets/props/urban_ruins/prop_collapsed_building.png",
+	};
+
+	// Rare landmarks (max 1 per map)
+	private static readonly string[] LandmarkSprites = {
+		"assets/props/urban_ruins/prop_building_church_ruin.png",
+	};
+
+	// Standalone tall structure (max 1-2 per map, placed on sidewalk near large buildings)
+	private const string AntennaSprite = "assets/props/urban_ruins/prop_radio_antenna_tower.png";
 
 	private static readonly string[] RoadSprites = {
 		"assets/props/urban_ruins/prop_urban_car.png",
@@ -33,7 +56,6 @@ public static class UrbanPropPlacer
 		"assets/props/urban_ruins/prop_dumpster_v2.png",
 		"assets/props/urban_ruins/prop_chain_link_fence.png",
 		"assets/props/urban_ruins/prop_torn_billboard.png",
-		"assets/props/urban_ruins/prop_graffiti_wall.png",
 	};
 
 	private static readonly string[] InteriorDebrisSprites = {
@@ -50,6 +72,10 @@ public static class UrbanPropPlacer
 		{ "prop_building_facade_wide.png", 24f },
 		{ "prop_building_corner_large.png", 26f },
 		{ "prop_building_tower_chunk.png", 20f },
+		{ "prop_building_apartment_block.png", 28f },
+		{ "prop_building_church_ruin.png", 22f },
+		{ "prop_building_shopfront_row.png", 26f },
+		{ "prop_radio_antenna_tower.png", 8f },
 		{ "prop_urban_car.png", 12f },
 		{ "prop_concrete_debris.png", 0f },
 		{ "prop_concrete_debris_v2.png", 0f },
@@ -63,8 +89,13 @@ public static class UrbanPropPlacer
 		{ "prop_dumpster_v2.png", 4f },
 		{ "prop_chain_link_fence.png", 6f },
 		{ "prop_torn_billboard.png", 5f },
-		{ "prop_graffiti_wall.png", 6f },
 	};
+
+	// WallMask bits
+	private const int WallTop = 1;
+	private const int WallRight = 2;
+	private const int WallBottom = 4;
+	private const int WallLeft = 8;
 
 	public static void PlaceProps(
 		UrbanLayout layout,
@@ -76,64 +107,362 @@ public static class UrbanPropPlacer
 		Dictionary<string, Texture2D> cache = new();
 		HashSet<Vector2I> intersections = FindIntersections(layout);
 
-		int buildingCount = PlaceBuildingMasses(layout, ground, container, usedCells, cache, seed);
+		int buildingCount = PlaceBuildingMasses(layout, intersections, ground, container, usedCells, cache, seed);
 		int roadCount = PlaceRoadProps(layout, intersections, ground, container, usedCells, cache, seed);
 		int sidewalkCount = PlaceSidewalkProps(layout, intersections, ground, container, usedCells, cache, seed);
 
 		GD.Print($"[UrbanPropPlacer] Placed {buildingCount} building masses, {roadCount} road props, {sidewalkCount} sidewalk props");
 	}
 
+	// =========================================================================
+	// BUILDING MASSES — street-aligned placement
+	// =========================================================================
+
 	private static int PlaceBuildingMasses(
 		UrbanLayout layout,
+		HashSet<Vector2I> intersections,
 		TileMapLayer ground,
 		Node2D container,
 		HashSet<Vector2I> usedCells,
 		Dictionary<string, Texture2D> cache,
 		ulong seed)
 	{
+		// Sort buildings: largest first so they get priority placement
 		List<BuildingFootprint> buildings = new(layout.Buildings);
-		buildings.Sort((left, right) =>
+		buildings.Sort((a, b) =>
 		{
-			int leftArea = left.Size.X * left.Size.Y;
-			int rightArea = right.Size.X * right.Size.Y;
-			return rightArea.CompareTo(leftArea);
+			int areaA = a.Size.X * a.Size.Y;
+			int areaB = b.Size.X * b.Size.Y;
+			return areaB.CompareTo(areaA);
 		});
 
 		int placed = 0;
+		bool landmarkPlaced = false;
+		int antennaCount = 0;
+		const int maxAntennas = 2;
+
 		foreach (BuildingFootprint building in buildings)
 		{
 			int area = building.Size.X * building.Size.Y;
-			if (area < 48)
+			if (area < 9)
 				continue;
 
 			uint hash = HashCell(building.Origin, seed ^ (ulong)(area * 17));
-			Vector2I primaryAnchor = GetPrimaryAnchor(building);
-			string primarySprite = PickBuildingSprite(building, area, hash);
+			int roll = (int)(hash % 100);
 
-			if (TryPlaceProp(primarySprite, primaryAnchor, ground, container, usedCells, cache))
-				placed++;
-
-			if (area >= 128)
+			// --- Landmark (church): rare, only on large intact buildings ---
+			if (!landmarkPlaced && area >= 80 && building.Integrity >= 0.50f && roll < 20)
 			{
-				Vector2I secondaryAnchor = GetSecondaryAnchor(building, hash);
-				string secondarySprite = PickSecondarySprite(building, area, hash);
-				if (!usedCells.Contains(secondaryAnchor)
-					&& TryPlaceProp(secondarySprite, secondaryAnchor, ground, container, usedCells, cache))
+				Vector2I anchor = GetCenterAnchor(building);
+				if (TryPlaceProp(LandmarkSprites[0], anchor, ground, container, usedCells, cache))
 				{
+					placed++;
+					landmarkPlaced = true;
+					ReserveBuildingFootprint(building, usedCells, inset: 0);
+					continue;
+				}
+			}
+
+			// --- Very damaged buildings: rubble pile + debris ---
+			if (building.Integrity < 0.40f)
+			{
+				Vector2I anchor = GetCenterAnchor(building);
+				if (TryPlaceProp(RubbleSprites[0], anchor, ground, container, usedCells, cache))
+					placed++;
+
+				PlaceInteriorDebris(building, ground, container, usedCells, cache, seed ^ hash, ref placed);
+				ReserveBuildingFootprint(building, usedCells, inset: 0);
+				continue;
+			}
+
+			// --- Normal buildings: place facades along street-facing edges ---
+			List<int> streetSides = GetStreetFacingSides(building, layout);
+
+			if (streetSides.Count == 0)
+			{
+				// Interior block with no street access: always rubble
+				Vector2I anchor = GetCenterAnchor(building);
+				if (TryPlaceProp(RubbleSprites[0], anchor, ground, container, usedCells, cache))
+					placed++;
+				if (building.Integrity < 0.60f)
+					PlaceInteriorDebris(building, ground, container, usedCells, cache, seed ^ hash, ref placed);
+				ReserveBuildingFootprint(building, usedCells, inset: 0);
+				continue;
+			}
+
+			// Check if this building is on a corner (2+ street-facing sides)
+			bool isCorner = streetSides.Count >= 2;
+
+			if (isCorner)
+			{
+				// Corner building at the intersection vertex
+				Vector2I cornerAnchor = GetCornerAnchor(building, streetSides);
+				string cornerSprite = CornerSprites[(int)(hash % (uint)CornerSprites.Length)];
+				if (TryPlaceProp(cornerSprite, cornerAnchor, ground, container, usedCells, cache))
+					placed++;
+
+				// Also add a facade on the longest remaining street side
+				if (area >= 50)
+				{
+					int bestSide = GetLongestStreetSide(building, streetSides);
+					Vector2I facadeAnchor = GetFacadeAnchor(building, bestSide);
+					string facadeSprite = PickFacadeSprite(building, area, hash >> 3);
+					if (!usedCells.Contains(facadeAnchor)
+						&& TryPlaceProp(facadeSprite, facadeAnchor, ground, container, usedCells, cache))
+					{
+						placed++;
+					}
+				}
+			}
+			else
+			{
+				// Single street side: facade along it
+				int bestSide = GetLongestStreetSide(building, streetSides);
+				Vector2I facadeAnchor = GetFacadeAnchor(building, bestSide);
+				string facadeSprite = PickFacadeSprite(building, area, hash);
+				if (TryPlaceProp(facadeSprite, facadeAnchor, ground, container, usedCells, cache))
+					placed++;
+			}
+
+			// Multi-street buildings: facade on EVERY additional street side
+			if (streetSides.Count >= 2 && area >= 50)
+			{
+				int primarySide = GetLongestStreetSide(building, streetSides);
+				foreach (int side in streetSides)
+				{
+					if (side == primarySide)
+						continue;
+					Vector2I extraAnchor = GetFacadeAnchor(building, side);
+					if (usedCells.Contains(extraAnchor))
+						continue;
+					uint sideHash = hash ^ (uint)(side * 7919);
+					string extraSprite = PickFacadeSprite(building, area, sideHash);
+					if (TryPlaceProp(extraSprite, extraAnchor, ground, container, usedCells, cache))
+						placed++;
+				}
+			}
+
+			// Interior debris for all buildings (more for damaged ones)
+			if (area >= 30)
+				PlaceInteriorDebris(building, ground, container, usedCells, cache, seed ^ hash, ref placed);
+
+			// Antenna: rare, only near large buildings
+			if (antennaCount < maxAntennas && area >= 70 && roll < 12)
+			{
+				Vector2I antennaCell = FindAdjacentSidewalkCell(building, layout, usedCells, hash);
+				if (antennaCell != Vector2I.MinValue
+					&& TryPlaceProp(AntennaSprite, antennaCell, ground, container, usedCells, cache))
+				{
+					antennaCount++;
 					placed++;
 				}
 			}
 
-			if (building.Integrity < 0.52f)
-			{
-				PlaceInteriorDebris(building, ground, container, usedCells, cache, seed ^ hash, ref placed);
-			}
-
-			ReserveBuildingFootprint(building, usedCells, inset: 1);
+			ReserveBuildingFootprint(building, usedCells, inset: 0);
 		}
 
 		return placed;
 	}
+
+	/// <summary>
+	/// Determines which sides of a building face a road/sidewalk.
+	/// Returns list of side flags (WallTop, WallRight, WallBottom, WallLeft).
+	/// </summary>
+	private static List<int> GetStreetFacingSides(BuildingFootprint building, UrbanLayout layout)
+	{
+		List<int> sides = new();
+
+		// Check each side: sample 3 points along the edge, 1 cell outside the building
+		// Top edge
+		if (SideHasStreetAccess(building, layout, WallTop))
+			sides.Add(WallTop);
+		// Bottom edge
+		if (SideHasStreetAccess(building, layout, WallBottom))
+			sides.Add(WallBottom);
+		// Left edge
+		if (SideHasStreetAccess(building, layout, WallLeft))
+			sides.Add(WallLeft);
+		// Right edge
+		if (SideHasStreetAccess(building, layout, WallRight))
+			sides.Add(WallRight);
+
+		return sides;
+	}
+
+	private static bool SideHasStreetAccess(BuildingFootprint building, UrbanLayout layout, int side)
+	{
+		int samples = 3;
+		int hits = 0;
+
+		for (int i = 0; i < samples; i++)
+		{
+			Vector2I probe;
+			float t = (samples == 1) ? 0.5f : (float)i / (samples - 1);
+
+			switch (side)
+			{
+				case WallTop:
+				{
+					int x = building.Origin.X + (int)(building.Size.X * t);
+					probe = new Vector2I(x, building.Origin.Y - 1);
+					break;
+				}
+				case WallBottom:
+				{
+					int x = building.Origin.X + (int)(building.Size.X * t);
+					probe = new Vector2I(x, building.Origin.Y + building.Size.Y);
+					break;
+				}
+				case WallLeft:
+				{
+					int y = building.Origin.Y + (int)(building.Size.Y * t);
+					probe = new Vector2I(building.Origin.X - 1, y);
+					break;
+				}
+				case WallRight:
+				{
+					int y = building.Origin.Y + (int)(building.Size.Y * t);
+					probe = new Vector2I(building.Origin.X + building.Size.X, y);
+					break;
+				}
+				default:
+					continue;
+			}
+
+			UrbanCellType type = GetCellType(layout, probe);
+			if (type == UrbanCellType.Road || type == UrbanCellType.Sidewalk || type == UrbanCellType.Plaza)
+				hits++;
+		}
+
+		return hits >= 2; // Majority of samples must face street
+	}
+
+	private static int GetLongestStreetSide(BuildingFootprint building, List<int> streetSides)
+	{
+		int best = streetSides[0];
+		int bestLen = 0;
+
+		foreach (int side in streetSides)
+		{
+			int len = (side == WallTop || side == WallBottom) ? building.Size.X : building.Size.Y;
+			if (len > bestLen)
+			{
+				bestLen = len;
+				best = side;
+			}
+		}
+
+		return best;
+	}
+
+	/// <summary>
+	/// Anchor point along a facade edge (middle of the street-facing side).
+	/// </summary>
+	private static Vector2I GetFacadeAnchor(BuildingFootprint building, int side)
+	{
+		return side switch
+		{
+			WallTop => new Vector2I(
+				building.Origin.X + building.Size.X / 2,
+				building.Origin.Y),
+			WallBottom => new Vector2I(
+				building.Origin.X + building.Size.X / 2,
+				building.Origin.Y + building.Size.Y - 1),
+			WallLeft => new Vector2I(
+				building.Origin.X,
+				building.Origin.Y + building.Size.Y / 2),
+			WallRight => new Vector2I(
+				building.Origin.X + building.Size.X - 1,
+				building.Origin.Y + building.Size.Y / 2),
+			_ => GetCenterAnchor(building),
+		};
+	}
+
+	/// <summary>
+	/// Anchor for a corner building: placed at the corner vertex where two street sides meet.
+	/// </summary>
+	private static Vector2I GetCornerAnchor(BuildingFootprint building, List<int> streetSides)
+	{
+		bool hasTop = streetSides.Contains(WallTop);
+		bool hasBottom = streetSides.Contains(WallBottom);
+		bool hasLeft = streetSides.Contains(WallLeft);
+		bool hasRight = streetSides.Contains(WallRight);
+
+		// Pick the actual corner where two street sides meet
+		if (hasBottom && hasRight)
+			return new Vector2I(building.Origin.X + building.Size.X - 1, building.Origin.Y + building.Size.Y - 1);
+		if (hasBottom && hasLeft)
+			return new Vector2I(building.Origin.X, building.Origin.Y + building.Size.Y - 1);
+		if (hasTop && hasRight)
+			return new Vector2I(building.Origin.X + building.Size.X - 1, building.Origin.Y);
+		if (hasTop && hasLeft)
+			return new Vector2I(building.Origin.X, building.Origin.Y);
+
+		// Fallback: center
+		return GetCenterAnchor(building);
+	}
+
+	private static Vector2I GetCenterAnchor(BuildingFootprint building)
+	{
+		return new Vector2I(
+			building.Origin.X + building.Size.X / 2,
+			building.Origin.Y + building.Size.Y / 2);
+	}
+
+	/// <summary>
+	/// Find a sidewalk cell adjacent to the building for antenna placement.
+	/// </summary>
+	private static Vector2I FindAdjacentSidewalkCell(
+		BuildingFootprint building, UrbanLayout layout, HashSet<Vector2I> usedCells, uint hash)
+	{
+		// Walk around the building perimeter looking for a sidewalk cell
+		List<Vector2I> candidates = new();
+
+		for (int x = building.Origin.X - 1; x <= building.Origin.X + building.Size.X; x++)
+		{
+			Vector2I top = new(x, building.Origin.Y - 1);
+			Vector2I bottom = new(x, building.Origin.Y + building.Size.Y);
+			if (layout.SidewalkCells.Contains(top) && !usedCells.Contains(top))
+				candidates.Add(top);
+			if (layout.SidewalkCells.Contains(bottom) && !usedCells.Contains(bottom))
+				candidates.Add(bottom);
+		}
+		for (int y = building.Origin.Y; y < building.Origin.Y + building.Size.Y; y++)
+		{
+			Vector2I left = new(building.Origin.X - 1, y);
+			Vector2I right = new(building.Origin.X + building.Size.X, y);
+			if (layout.SidewalkCells.Contains(left) && !usedCells.Contains(left))
+				candidates.Add(left);
+			if (layout.SidewalkCells.Contains(right) && !usedCells.Contains(right))
+				candidates.Add(right);
+		}
+
+		if (candidates.Count == 0)
+			return Vector2I.MinValue;
+
+		return candidates[(int)(hash % (uint)candidates.Count)];
+	}
+
+	private static string PickFacadeSprite(BuildingFootprint building, int area, uint hash)
+	{
+		int roll = (int)(hash % 100);
+		bool wide = building.Size.X >= building.Size.Y;
+
+		// Large wide buildings → apartment block or wide facade
+		if (area >= 100 && wide)
+			return roll < 45 ? FacadeSprites[1] : FacadeSprites[0]; // apartment or facade
+
+		// Medium buildings → shopfront or facade
+		if (area >= 60)
+			return roll < 40 ? FacadeSprites[2] : FacadeSprites[0]; // shopfront or facade
+
+		// Smaller buildings → shopfront
+		return FacadeSprites[2];
+	}
+
+	// =========================================================================
+	// ROAD PROPS
+	// =========================================================================
 
 	private static int PlaceRoadProps(
 		UrbanLayout layout,
@@ -156,7 +485,7 @@ public static class UrbanPropPlacer
 
 			uint hash = HashCell(roadCell, seed ^ 0x1A2B3CUL);
 			int roll = (int)(hash % 100);
-			if (roll >= 8)
+			if (roll >= 15)
 				continue;
 
 			string sprite = roll < 3
@@ -169,6 +498,10 @@ public static class UrbanPropPlacer
 
 		return placed;
 	}
+
+	// =========================================================================
+	// SIDEWALK PROPS
+	// =========================================================================
 
 	private static int PlaceSidewalkProps(
 		UrbanLayout layout,
@@ -194,9 +527,9 @@ public static class UrbanPropPlacer
 			int roll = (int)(hash % 100);
 
 			string sprite = null;
-			if (nearIntersection && roll < 14)
+			if (nearIntersection && roll < 25)
 				sprite = SidewalkIntersectionSprites[(int)(hash % (uint)SidewalkIntersectionSprites.Length)];
-			else if (nearBuilding && roll < 10)
+			else if (nearBuilding && roll < 18)
 				sprite = SidewalkEdgeSprites[(int)(hash % (uint)SidewalkEdgeSprites.Length)];
 
 			if (sprite != null && TryPlaceProp(sprite, cell, ground, container, usedCells, cache))
@@ -205,6 +538,10 @@ public static class UrbanPropPlacer
 
 		return placed;
 	}
+
+	// =========================================================================
+	// INTERIOR DEBRIS
+	// =========================================================================
 
 	private static void PlaceInteriorDebris(
 		BuildingFootprint building,
@@ -215,7 +552,14 @@ public static class UrbanPropPlacer
 		ulong seed,
 		ref int placed)
 	{
-		int quota = Mathf.Clamp((building.Size.X * building.Size.Y) / 45, 1, 2);
+		int area = building.Size.X * building.Size.Y;
+		// Scale debris with area and damage
+		int quota = Mathf.Clamp(area / 20, 1, 6);
+		if (building.Integrity < 0.50f)
+			quota += 2;
+		if (building.Integrity < 0.35f)
+			quota += 2;
+
 		for (int i = 0; i < quota; i++)
 		{
 			int x = building.Origin.X + 1 + (int)((seed + (ulong)(i * 37)) % (ulong)Mathf.Max(1, building.Size.X - 2));
@@ -230,48 +574,9 @@ public static class UrbanPropPlacer
 		}
 	}
 
-	private static string PickBuildingSprite(BuildingFootprint building, int area, uint hash)
-	{
-		bool wide = building.Size.X >= building.Size.Y + 2;
-		bool tall = building.Size.Y >= building.Size.X + 2;
-
-		if (area >= 110)
-			return wide ? BuildingMassSprites[1] : BuildingMassSprites[2];
-		if (area >= 72)
-			return tall ? BuildingMassSprites[3] : BuildingMassSprites[1];
-		if (area >= 48)
-			return (hash % 100) < 35 ? BuildingMassSprites[2] : BuildingMassSprites[0];
-		return BuildingMassSprites[0];
-	}
-
-	private static string PickSecondarySprite(BuildingFootprint building, int area, uint hash)
-	{
-		if (area >= 120 && building.Size.Y > building.Size.X)
-			return BuildingMassSprites[3];
-		return (hash % 100) < 50 ? BuildingMassSprites[2] : BuildingMassSprites[0];
-	}
-
-	private static Vector2I GetPrimaryAnchor(BuildingFootprint building)
-	{
-		int x = building.Origin.X + building.Size.X / 2;
-		int y = building.Origin.Y + building.Size.Y - 1;
-		return new Vector2I(x, y);
-	}
-
-	private static Vector2I GetSecondaryAnchor(BuildingFootprint building, uint hash)
-	{
-		bool favorRight = (hash % 100) < 50;
-		if (favorRight)
-		{
-			int x = building.Origin.X + building.Size.X - 2;
-			int y = building.Origin.Y + building.Size.Y / 2;
-			return new Vector2I(x, y);
-		}
-
-		int altX = building.Origin.X + 1;
-		int altY = building.Origin.Y + building.Size.Y / 2;
-		return new Vector2I(altX, altY);
-	}
+	// =========================================================================
+	// HELPERS
+	// =========================================================================
 
 	private static void ReserveBuildingFootprint(BuildingFootprint building, HashSet<Vector2I> usedCells, int inset)
 	{

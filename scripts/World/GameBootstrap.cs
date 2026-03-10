@@ -8,6 +8,7 @@ using Vestiges.Progression;
 using Vestiges.Score;
 using Vestiges.Simulation;
 using Vestiges.Spawn;
+using Vestiges.Infrastructure.Steam;
 using Vestiges.UI;
 
 namespace Vestiges.World;
@@ -181,6 +182,16 @@ public partial class GameBootstrap : Node
         DebugActionPanel debugPanel = new DebugActionPanel { Name = "DebugActionPanel" };
         GetNode("..").CallDeferred("add_child", debugPanel);
 
+        // Steam : achievements et leaderboards (no-op si Steam inactif)
+        if (SteamManager.IsActive)
+        {
+            SteamAchievements steamAchievements = new() { Name = "SteamAchievements" };
+            GetNode("..").CallDeferred("add_child", steamAchievements);
+
+            SteamLeaderboards steamLeaderboards = new() { Name = "SteamLeaderboards" };
+            GetNode("..").CallDeferred("add_child", steamLeaderboards);
+        }
+
         GD.Print($"[GameBootstrap] Run started with {player.CharacterId}");
 
         // --- Dépause et fade-out de l'overlay ---
@@ -204,6 +215,7 @@ public partial class GameBootstrap : Node
             "res://assets/shaders/dissolve.gdshader",
             "res://assets/shaders/outline.gdshader",
             "res://assets/shaders/aberration_aura.gdshader",
+            "res://assets/shaders/colorblind.gdshader",
         };
 
         Node2D warmupContainer = new() { Name = "_ShaderWarmup" };

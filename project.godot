@@ -22,6 +22,15 @@ EventBus="*res://scripts/Core/EventBus.cs"
 GameManager="*res://scripts/Core/GameManager.cs"
 AudioManager="*res://scripts/Infrastructure/AudioManager.cs"
 GroupCache="*res://scripts/Core/GroupCache.cs"
+SteamManager="*res://scripts/Infrastructure/Steam/SteamManager.cs"
+LocaleManager="*res://scripts/Infrastructure/LocaleManager.cs"
+InputRemapManager="*res://scripts/Infrastructure/InputRemapManager.cs"
+ColorBlindFilter="*res://scripts/Infrastructure/ColorBlindFilter.cs"
+AnalyticsManager="*res://scripts/Infrastructure/Analytics/AnalyticsManager.cs"
+
+[internationalization]
+
+locale/translations=PackedStringArray("res://assets/translations/translations.csv")
 
 [display]
 

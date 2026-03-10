@@ -179,6 +179,83 @@
             "collision_offset_y": 0,
             "min_distance": 7,
             "variants": 1
+        },
+        {
+            "id": "abandoned_well",
+            "name": "Puits abandonne",
+            "weight": 0.045,
+            "terrain": ["grass", "forest"],
+            "sprite_base": "assets/props/wild_fields/prop_abandoned_well.png",
+            "collision_radius": 6,
+            "collision_offset_y": 0,
+            "min_distance": 10,
+            "variants": 1
+        },
+        {
+            "id": "standing_stone",
+            "name": "Pierre levee",
+            "weight": 0.055,
+            "terrain": ["grass", "forest"],
+            "sprite_base": "assets/props/wild_fields/prop_standing_stone.png",
+            "collision_radius": 4,
+            "collision_offset_y": 0,
+            "min_distance": 9,
+            "variants": 1
+        },
+        {
+            "id": "rusted_plow",
+            "name": "Charrue rouillee",
+            "weight": 0.065,
+            "terrain": ["grass", "concrete"],
+            "sprite_base": "assets/props/wild_fields/prop_rusted_plow.png",
+            "collision_radius": 6,
+            "collision_offset_y": 1,
+            "min_distance": 8,
+            "variants": 1
+        },
+        {
+            "id": "tractor_remains",
+            "name": "Restes de tracteur",
+            "weight": 0.03,
+            "terrain": ["grass", "concrete"],
+            "sprite_base": "assets/props/wild_fields/prop_tractor_remains.png",
+            "collision_radius": 10,
+            "collision_offset_y": 0,
+            "min_distance": 13,
+            "variants": 1
+        },
+        {
+            "id": "tractor_husk",
+            "name": "Carcasse de tracteur",
+            "weight": 0.028,
+            "terrain": ["grass", "concrete"],
+            "sprite_base": "assets/props/wild_fields/prop_tractor_husk.png",
+            "collision_radius": 9,
+            "collision_offset_y": 0,
+            "min_distance": 12,
+            "variants": 1
+        },
+        {
+            "id": "windmill_ruin",
+            "name": "Eolienne agricole ruinee",
+            "weight": 0.022,
+            "terrain": ["grass", "forest"],
+            "sprite_base": "assets/props/wild_fields/prop_windmill_ruin.png",
+            "collision_radius": 7,
+            "collision_offset_y": -2,
+            "min_distance": 15,
+            "variants": 1
+        },
+        {
+            "id": "silo_ruin",
+            "name": "Silo effondre",
+            "weight": 0.018,
+            "terrain": ["grass", "concrete"],
+            "sprite_base": "assets/props/wild_fields/prop_silo_ruin.png",
+            "collision_radius": 8,
+            "collision_offset_y": 0,
+            "min_distance": 16,
+            "variants": 1
         }
     ]
 }

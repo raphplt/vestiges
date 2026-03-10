@@ -18,6 +18,7 @@ public class BiomeTileMapper
 
 	// Layout urbain pour la sélection directionnelle des tiles de route
 	private UrbanLayout _urbanLayout;
+	private WildFieldsLayout _wildFieldsLayout;
 
 	// Tiles d'eau communes (remplacement global du water générique)
 	private int[] _commonWaterSources;
@@ -80,6 +81,21 @@ public class BiomeTileMapper
 	public void SetUrbanLayout(UrbanLayout layout)
 	{
 		_urbanLayout = layout;
+	}
+
+	public void SetWildFieldsLayout(WildFieldsLayout layout)
+	{
+		_wildFieldsLayout = layout;
+	}
+
+	public bool TryGetUrbanRoadOverlaySourceId(int biomeIndex, int x, int y, out int sourceId)
+	{
+		sourceId = -1;
+		if (!_biomeIds.TryGetValue(biomeIndex, out string biomeId) || biomeId != "urban_ruins")
+			return false;
+		if (!_biomeSpecialSourceMap.TryGetValue(biomeIndex, out Dictionary<string, int[]> specialMap))
+			return false;
+		return TryGetDirectionalRoadSource(specialMap, x, y, out sourceId);
 	}
 
 	public void Initialize(TileSet tileSet, List<BiomeData> activeBiomes)
@@ -182,6 +198,14 @@ public class BiomeTileMapper
 			return swampSourceId;
 		}
 
+		if (biomeIndex >= 0
+			&& _biomeIds.TryGetValue(biomeIndex, out string wildBiomeId)
+			&& wildBiomeId == "wild_fields"
+			&& TryGetWildFieldsSourceId(biomeIndex, terrain, x, y, out int wildFieldsSourceId))
+		{
+			return wildFieldsSourceId;
+		}
+
 		// Tiles spécifiques au biome
 		if (biomeIndex >= 0 && _biomeSourceMap.TryGetValue(biomeIndex, out Dictionary<TerrainType, int[]> terrainMap))
 		{
@@ -275,6 +299,20 @@ public class BiomeTileMapper
 		int patchRoll = HashCell(patchX, patchY) % 100;
 		int variantRoll = HashCell(x, y);
 
+		if (sources.Length >= 14)
+		{
+			if (patchRoll < 18)
+				return sources[12 + (variantRoll % 2)];
+
+			if (patchRoll < 42)
+				return sources[10 + (variantRoll % 2)];
+
+			if (patchRoll < 74)
+				return sources[3 + (variantRoll % 3)];
+
+			return sources[8 + (variantRoll % 2)];
+		}
+
 		if (patchRoll < 18)
 			return sources[6 + (variantRoll % 2)];
 
@@ -282,6 +320,79 @@ public class BiomeTileMapper
 			return sources[3 + (variantRoll % 3)];
 
 		return sources[variantRoll % 3];
+	}
+
+	private bool TryGetWildFieldsSourceId(
+		int biomeIndex,
+		TerrainType terrain,
+		int x,
+		int y,
+		out int sourceId)
+	{
+		sourceId = -1;
+		if (_wildFieldsLayout == null)
+			return false;
+		if (!_biomeSourceMap.TryGetValue(biomeIndex, out Dictionary<TerrainType, int[]> terrainMap))
+			return false;
+
+		int gx = x + _wildFieldsLayout.MapRadius;
+		int gy = y + _wildFieldsLayout.MapRadius;
+		if (gx < 0 || gy < 0 || gx >= _wildFieldsLayout.CellGrid.GetLength(0) || gy >= _wildFieldsLayout.CellGrid.GetLength(1))
+			return false;
+
+		WildFieldCellType cellType = _wildFieldsLayout.CellGrid[gx, gy];
+		int hash = HashCell(x, y);
+
+		if (terrain == TerrainType.Grass && terrainMap.TryGetValue(TerrainType.Grass, out int[] grassSources) && grassSources.Length >= 8)
+		{
+			switch (cellType)
+			{
+				case WildFieldCellType.Wheat:
+					if (grassSources.Length >= 14 && (HashCell(x / 2, y / 2) & 1) == 0)
+					{
+						sourceId = grassSources[12 + (hash % 2)];
+						return true;
+					}
+
+					sourceId = grassSources[6 + (hash % 2)];
+					return true;
+				case WildFieldCellType.Fallow:
+					if (grassSources.Length >= 10)
+					{
+						sourceId = grassSources[8 + (hash % 2)];
+						return true;
+					}
+
+					sourceId = grassSources[hash % 3];
+					return true;
+				case WildFieldCellType.Meadow:
+					if (grassSources.Length >= 12 && (HashCell(x + 9, y - 7) % 3) == 0)
+					{
+						sourceId = grassSources[10 + (hash % 2)];
+						return true;
+					}
+
+					sourceId = grassSources[3 + (hash % 3)];
+					return true;
+				case WildFieldCellType.Path:
+					sourceId = grassSources[3 + (hash % 3)];
+					return true;
+			}
+		}
+
+		if (terrain == TerrainType.Concrete && terrainMap.TryGetValue(TerrainType.Concrete, out int[] pathSources) && pathSources.Length > 0)
+		{
+			sourceId = pathSources[hash % pathSources.Length];
+			return true;
+		}
+
+		if (terrain == TerrainType.Forest && terrainMap.TryGetValue(TerrainType.Forest, out int[] groveSources) && groveSources.Length > 0)
+		{
+			sourceId = groveSources[hash % groveSources.Length];
+			return true;
+		}
+
+		return false;
 	}
 
 	private bool TryGetUrbanRuinsSourceId(
@@ -299,11 +410,11 @@ public class BiomeTileMapper
 		switch (urbanCellType)
 		{
 			case UrbanCellType.Road:
-				if (TryGetDirectionalRoadSource(specialMap, x, y, out sourceId))
+				if (terrainMap != null && terrainMap.TryGetValue(TerrainType.Concrete, out int[] roadFallback))
+				{
+					sourceId = PickUrbanRoadBaseSourceId(roadFallback, x, y);
 					return true;
-				// Fallback si pas de tile directionnelle disponible
-				if (TryPickSpecialSource(specialMap, "plaza", x, y, out sourceId))
-					return true;
+				}
 				break;
 			case UrbanCellType.Sidewalk:
 				if (TryPickSpecialSource(specialMap, "sidewalk", x, y, out sourceId))
@@ -619,5 +730,17 @@ public class BiomeTileMapper
 		}
 
 		return sources[variantRoll % sources.Length];
+	}
+
+	private static int PickUrbanRoadBaseSourceId(int[] sources, int x, int y)
+	{
+		if (sources.Length == 0)
+			return -1;
+
+		// Les trois premières textures du groupe "concrete" sont les sols routiers
+		// sombres. Les variantes carrelées sont réservées aux intérieurs/plazas.
+		int usableCount = Mathf.Min(3, sources.Length);
+		int hash = HashCell(x, y);
+		return sources[hash % usableCount];
 	}
 }

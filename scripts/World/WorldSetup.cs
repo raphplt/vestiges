@@ -18,6 +18,7 @@ namespace Vestiges.World;
 public partial class WorldSetup : Node2D
 {
     private TileMapLayer _ground;
+    private TileMapLayer _roadOverlay;
     private Node2D _resourceContainer;
     private Node2D _poiContainer;
     private PackedScene _resourceScene;
@@ -65,6 +66,7 @@ public partial class WorldSetup : Node2D
     private TerrainType[,] _terrain;
     private UrbanLayout _urbanLayout;
     private SwampPropLayout _swampLayout;
+    private WildFieldsLayout _wildFieldsLayout;
 
     /// <summary>Indique si l'initialisation async est terminée.</summary>
     public bool IsWorldReady { get; private set; }
@@ -116,9 +118,15 @@ public partial class WorldSetup : Node2D
         }
         if (_generator.ActiveBiomes.Any(b => b.Id == "swamp"))
             _swampLayout = SwampPropPlacer.BuildLayout(_generator, Seed);
+        if (_generator.ActiveBiomes.Any(b => b.Id == "wild_fields"))
+        {
+            WildFieldsLayoutGenerator wildFieldsGen = new(Seed, _config.MapRadius);
+            _wildFieldsLayout = wildFieldsGen.Apply(_terrain, _generator, "wild_fields");
+        }
 
         // Préparer le TileSet et mapper (rapide)
         _ground.TileSet = _ground.TileSet.Duplicate() as TileSet;
+        EnsureRoadOverlayLayer();
         _tileMapper = new BiomeTileMapper();
         _tileMapper.Initialize(_ground.TileSet, _generator.ActiveBiomes);
 
@@ -137,6 +145,8 @@ public partial class WorldSetup : Node2D
             }
             _tileMapper.SetUrbanLayout(_urbanLayout);
         }
+        if (_wildFieldsLayout != null)
+            _tileMapper.SetWildFieldsLayout(_wildFieldsLayout);
     }
 
     /// <summary>
@@ -198,6 +208,7 @@ public partial class WorldSetup : Node2D
         _terrain = null;
         _urbanLayout = null;
         _swampLayout = null;
+        _wildFieldsLayout = null;
 
         IsWorldReady = true;
         GD.Print($"[WorldSetup] World generated with seed {Seed}");
@@ -238,6 +249,7 @@ public partial class WorldSetup : Node2D
         _terrain = null;
         _urbanLayout = null;
         _swampLayout = null;
+        _wildFieldsLayout = null;
         IsWorldReady = true;
         GD.Print($"[WorldSetup] World generated with seed {Seed} (sync)");
     }
@@ -288,6 +300,9 @@ public partial class WorldSetup : Node2D
 
     private void ApplyTerrain(TerrainType[,] terrain, UrbanLayout urbanLayout)
     {
+        _ground.Clear();
+        _roadOverlay?.Clear();
+
         int radius = _config.MapRadius;
         int size = radius * 2 + 1;
         float fadeStart = radius - _config.EdgeFadeWidth;
@@ -333,11 +348,16 @@ public partial class WorldSetup : Node2D
                 _ground.SetCell(cell, sourceId, Vector2I.Zero);
             }
         }
+
+        ApplyRoadOverlay(urbanLayout);
     }
 
     /// <summary>Version async de ApplyTerrain : yield toutes les ~600 tiles.</summary>
     private async Task ApplyTerrainAsync(TerrainType[,] terrain, UrbanLayout urbanLayout, Action<string> onProgress)
     {
+        _ground.Clear();
+        _roadOverlay?.Clear();
+
         int radius = _config.MapRadius;
         int size = radius * 2 + 1;
         int totalCells = size * size;
@@ -394,6 +414,8 @@ public partial class WorldSetup : Node2D
                 }
             }
         }
+
+        await ApplyRoadOverlayAsync(urbanLayout, onProgress);
     }
 
     private void InitializeFog()
@@ -483,16 +505,16 @@ public partial class WorldSetup : Node2D
         {
             propContainer = new Node2D { Name = "PropContainer" };
             AddChild(propContainer);
-            // Placer juste après Ground (index 1) pour que les props soient
+            // Placer juste après la couche de routes pour que les props soient
             // dessinés SOUS le joueur, ennemis et structures (pas de y_sort global)
-            Node ground = GetNode("Ground");
-            MoveChild(propContainer, ground.GetIndex() + 1);
+            Node anchor = _roadOverlay ?? GetNode("Ground");
+            MoveChild(propContainer, anchor.GetIndex() + 1);
         }
 
         _propSpawner = new PropSpawner { Name = "PropSpawner" };
         AddChild(_propSpawner);
         HashSet<Vector2I> blockedCells = BuildEnvironmentPropBlockedCells(urbanLayout, swampLayout);
-        _propSpawner.SpawnProps(_generator, _ground, propContainer, _usedCells, Seed, blockedCells);
+        _propSpawner.SpawnProps(_generator, _terrain, _ground, propContainer, _usedCells, Seed, blockedCells, _wildFieldsLayout);
     }
 
     private HashSet<Vector2I> BuildEnvironmentPropBlockedCells(UrbanLayout urbanLayout, SwampPropLayout swampLayout)
@@ -523,6 +545,91 @@ public partial class WorldSetup : Node2D
         }
 
         return blocked.Count > 0 ? blocked : null;
+    }
+
+    private void EnsureRoadOverlayLayer()
+    {
+        _roadOverlay = GetNodeOrNull<TileMapLayer>("RoadOverlay");
+        if (_roadOverlay == null)
+        {
+            _roadOverlay = new TileMapLayer
+            {
+                Name = "RoadOverlay",
+                YSortEnabled = true,
+                TileSet = _ground.TileSet
+            };
+            AddChild(_roadOverlay);
+        }
+        else
+        {
+            _roadOverlay.TileSet = _ground.TileSet;
+        }
+
+        MoveChild(_roadOverlay, _ground.GetIndex() + 1);
+    }
+
+    private void ApplyRoadOverlay(UrbanLayout urbanLayout)
+    {
+        if (_roadOverlay == null)
+            return;
+
+        _roadOverlay.Clear();
+        if (urbanLayout == null)
+            return;
+
+        int radius = urbanLayout.MapRadius;
+        int size = radius * 2 + 1;
+        int urbanIndex = _tileMapper.GetBiomeIndex("urban_ruins");
+        if (urbanIndex < 0)
+            return;
+
+        for (int gx = 0; gx < size; gx++)
+        {
+            for (int gy = 0; gy < size; gy++)
+            {
+                if (urbanLayout.CellGrid[gx, gy] != UrbanCellType.Road)
+                    continue;
+
+                int x = gx - radius;
+                int y = gy - radius;
+                if (_tileMapper.TryGetUrbanRoadOverlaySourceId(urbanIndex, x, y, out int sourceId) && sourceId >= 0)
+                    _roadOverlay.SetCell(new Vector2I(x, y), sourceId, Vector2I.Zero);
+            }
+        }
+    }
+
+    private async Task ApplyRoadOverlayAsync(UrbanLayout urbanLayout, Action<string> onProgress)
+    {
+        if (_roadOverlay == null)
+            return;
+
+        _roadOverlay.Clear();
+        if (urbanLayout == null)
+            return;
+
+        int radius = urbanLayout.MapRadius;
+        int size = radius * 2 + 1;
+        int urbanIndex = _tileMapper.GetBiomeIndex("urban_ruins");
+        if (urbanIndex < 0)
+            return;
+
+        const int batchSize = 400;
+        int count = 0;
+        int total = urbanLayout.RoadCells.Count;
+
+        foreach (Vector2I roadCell in urbanLayout.RoadCells)
+        {
+            if (_tileMapper.TryGetUrbanRoadOverlaySourceId(urbanIndex, roadCell.X, roadCell.Y, out int sourceId) && sourceId >= 0)
+                _roadOverlay.SetCell(roadCell, sourceId, Vector2I.Zero);
+
+            count++;
+            if (count % batchSize == 0)
+            {
+                int pct = total <= 0 ? 100 : (int)(count * 100f / total);
+                onProgress?.Invoke($"Routes... {pct}%");
+                await YieldFrame();
+            }
+        }
     }
 
     /// <summary>

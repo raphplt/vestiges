@@ -1,0 +1,144 @@
+keys,fr,en
+UI_SETTINGS,PARAMETRES,SETTINGS
+UI_CLOSE,"[Echap] ou [X] Fermer","[Esc] or [X] Close"
+UI_AUDIO,Audio,Audio
+UI_GRAPHICS,Graphismes,Graphics
+UI_CONTROLS,Controles,Controls
+UI_MASTER_VOLUME,Volume global,Master Volume
+UI_MUSIC,Musique,Music
+UI_SFX,Effets sonores,Sound Effects
+UI_AMBIANCE,Ambiance,Ambiance
+UI_FULLSCREEN,Plein ecran,Fullscreen
+UI_PARTICLES,Particules,Particles
+UI_PARTICLES_ALL,Toutes,All
+UI_PARTICLES_REDUCED,Reduites,Reduced
+UI_PARTICLES_OFF,Desactivees,Disabled
+UI_YES,OUI,YES
+UI_NO,NON,NO
+UI_LANGUAGE,Langue,Language
+UI_COLORBLIND,Filtre daltonien,Colorblind Filter
+UI_COLORBLIND_OFF,Desactive,Off
+UI_COLORBLIND_PROTANOPIA,Protanopie,Protanopia
+UI_COLORBLIND_DEUTERANOPIA,Deuteranopie,Deuteranopia
+UI_COLORBLIND_TRITANOPIA,Tritanopie,Tritanopia
+UI_REMAP_TITLE,Configuration des touches,Key Bindings
+UI_REMAP_HINT,Cliquer pour modifier,Click to change
+UI_REMAP_WAITING,Appuyer sur une touche...,Press a key...
+UI_REMAP_RESET,Reinitialiser,Reset
+UI_MOVE_UP,Haut,Up
+UI_MOVE_DOWN,Bas,Down
+UI_MOVE_LEFT,Gauche,Left
+UI_MOVE_RIGHT,Droite,Right
+UI_INTERACT,Interagir,Interact
+UI_CRAFT_MENU,Menu Craft,Craft Menu
+UI_JOURNAL,Journal,Journal
+UI_PAUSE,Pause,Pause
+GAME_NIGHT_SURVIVED,"{0} nuit(s) survecue(s)","{0} night(s) survived"
+GAME_DEAD_BEFORE_NIGHT,Mort avant la premiere nuit,Died before the first night
+GAME_COMBAT,Combat,Combat
+GAME_SURVIVAL,Survie,Survival
+GAME_BONUS,Bonus (nuits sans degat),Bonus (no-damage nights)
+GAME_BUILD,Construction,Building
+GAME_EXPLORATION,Exploration,Exploration
+GAME_KILLS,Kills,Kills
+GAME_NEW_RECORD,NOUVEAU RECORD !,NEW RECORD!
+GAME_BEST_SCORE,Meilleur : {0},Best: {0}
+GAME_SEED,Seed : {0},Seed: {0}
+GAME_VESTIGES,+{0} Vestiges,+{0} Vestiges
+GAME_UNLOCKED,debloque !,unlocked!
+GAME_MULTIPLIER,Multiplicateur,Multiplier
+GAME_MUTATORS,mutateurs,mutators
+HUD_REPAIR,[E] Reparer ({0}%),[E] Repair ({0}%)
+HUD_HARVEST,"[E] Recolter {0}","[E] Harvest {0}"
+HUD_WOOD,Bois,Wood
+HUD_STONE,Pierre,Stone
+HUD_METAL,Metal,Metal
+HUD_NIGHT_SUMMARY,"Nuit {0} survecue !\nKills : {1} — Score : +{2}","Night {0} survived!\nKills: {1} — Score: +{2}"
+CRAFT_CRAFTING,Fabrication : {0}...,Crafting: {0}...
+CRAFT_TOO_FAR,Trop loin du Foyer pour fabriquer,Too far from the Hearth to craft
+CRAFT_LIMIT,Limite atteinte,Limit reached
+CRAFT_BUILD,Fabriquer,Craft
+CRAFT_BUILD_INSTANT,Fabriquer (instantane),Craft (instant)
+CRAFT_DONE_CHAIN,"Fabrication terminee : place puis maintiens clic pour construire en chaine","Crafting done: place then hold click to chain-build"
+CRAFT_DONE,Fabrication terminee !,Crafting done!
+CRAFT_HP,PV,HP
+CRAFT_DAMAGE,degats,damage
+CRAFT_RANGE,portee,range
+CRAFT_USES,utilisations,uses
+CRAFT_RADIUS,rayon,radius
+CRAFT_HEAL_HP,+{0} PV,+{0} HP
+CRAFT_DEFENSE,Defense,Defense
+CRAFT_TRAPS,Pieges,Traps
+CRAFT_UTILITY,Utilitaire,Utility
+CRAFT_CONSUMABLES,Consommables,Consumables
+CHEST_COMMON,COFFRE,CHEST
+CHEST_EPIC,COFFRE EPIQUE,EPIC CHEST
+CHEST_RARE,COFFRE RARE,RARE CHEST
+CHEST_LORE,COFFRE ANCESTRAL,ANCESTRAL CHEST
+CHEST_RANDOM_PERK,Perk Aleatoire,Random Perk
+LEVELUP_TITLE,FRAGMENT DE MEMOIRE,MEMORY FRAGMENT
+LEVELUP_WEAPON,Arme,Weapon
+LEVELUP_NEW,NOUVEAU,NEW
+LEVELUP_LEVEL,NIV {0} → {1},LVL {0} → {1}
+LEVELUP_PASSIVE,Passif,Passive
+LEVELUP_REROLL,Relancer ({0}),Reroll ({0})
+LEVELUP_BANISH,Bannir ({0}),Banish ({0})
+LEVELUP_CANCEL,Annuler,Cancel
+LEVELUP_MEMORIAL,MEMORIAL,MEMORIAL
+RARITY_COMMON,Commun,Common
+RARITY_UNCOMMON,Peu commun,Uncommon
+RARITY_RARE,Rare,Rare
+STAT_DAMAGE,Degats,Damage
+STAT_ATTACK_SPEED,Vit. attaque,Attack Speed
+STAT_MAX_HP,PV max,Max HP
+STAT_SPEED,Vitesse,Speed
+STAT_AOE,Zone d'effet,Area of Effect
+STAT_XP_RANGE,Rayon XP,XP Range
+STAT_ARMOR,Armure,Armor
+STAT_CRIT,Chance crit,Crit Chance
+STAT_REGEN,Regen HP/s,Regen HP/s
+STAT_RANGE,Portee,Range
+STAT_PROJECTILES,Projectiles,Projectiles
+STAT_CDR,Reduction CD,CD Reduction
+STAT_PIERCE,Percage,Pierce
+STAT_LIFESTEAL,Vampirisme,Lifesteal
+STAT_DODGE,Esquive,Dodge
+STAT_THORNS,Epines,Thorns
+STAT_IGNITE,Ignition,Ignite
+STAT_RICOCHET,Ricochet,Ricochet
+STAT_LUCK,Chance,Luck
+STAT_BONUS_PROJ,Proj. bonus,Bonus Proj.
+WEAPON_BOW,Arc,Bow
+WEAPON_LINE,Ligne,Line
+WEAPON_CIRCLE,Cercle,Circle
+WEAPON_ORBITAL,Orbital,Orbital
+WEAPON_BURST,Rafale,Burst
+WEAPON_CHAIN,Chaine,Chain
+WEAPON_HOMING,Guide,Homing
+WEAPON_GROUND,Sol,Ground
+PAUSE_TITLE,HALTE DANS LE VIDE,HALT IN THE VOID
+PAUSE_SUBTITLE,"Le monde se fige, mais ta memoire reste eveillee.","The world freezes, but your memory stays awake."
+PAUSE_RESUME,Reprendre,Resume
+PAUSE_SETTINGS,Parametres,Settings
+PAUSE_VOID_CALL,Appel du Vide,Call of the Void
+PAUSE_HUB,Retour au Hub,Return to Hub
+PAUSE_QUIT,Quitter,Quit
+PAUSE_HINT,[Echap] Reprendre la traversee,[Esc] Resume the crossing
+PAUSE_STATUS,ETAT DU PASSEUR,TRAVELER STATUS
+PAUSE_STATUS_DESC,Lecture instantanee de la run en cours.,Instant readout of the current run.
+HUB_SETTINGS,Parametres,Settings
+HUB_QUIT,Quitter,Quit
+HUB_NO_CHARACTER,Aucun personnage selectionne,No character selected
+HUB_SELECTED,SELECTIONNE,SELECTED
+HUB_SEED_HINT,vide = aleatoire,empty = random
+HUB_MUTATORS,Mutateurs de difficulte,Difficulty Mutators
+HUB_KITS,Kits de depart,Starting Kits
+HUB_PURCHASED,Achete,Purchased
+JOURNAL_TITLE,SOUVENIRS,MEMORIES
+JOURNAL_CLOSE,[Echap] Fermer,[Esc] Close
+JOURNAL_CONSTELLATIONS,Constellations,Constellations
+JOURNAL_FRAGMENTS,{0} / {1} fragments,{0} / {1} fragments
+JOURNAL_SELECT,Selectionner un fragment pour le lire.,Select a fragment to read.
+LOADING_SHADERS,Preparation des shaders...,Preparing shaders...
+LOADING_CREATURES,Preparation des creatures...,Preparing creatures...
+LOADING_INIT,Initialisation...,Initializing...

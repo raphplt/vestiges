@@ -53,11 +53,13 @@ public partial class PropSpawner : Node2D
 	/// </summary>
 	public void SpawnProps(
 		WorldGenerator generator,
+		TerrainType[,] terrainGrid,
 		TileMapLayer ground,
 		Node2D container,
 		HashSet<Vector2I> usedCells,
 		ulong seed,
-		HashSet<Vector2I> blockedCells = null)
+		HashSet<Vector2I> blockedCells = null,
+		WildFieldsLayout wildFieldsLayout = null)
 	{
 		// Charger les configs de props par biome
 		Dictionary<string, BiomePropConfig> configs = LoadPropConfigs();
@@ -108,7 +110,7 @@ public partial class PropSpawner : Node2D
 				if (!generator.IsWithinBounds(x, y) || generator.IsErased(x, y))
 					continue;
 
-				TerrainType terrain = generator.GetTerrain(x, y);
+				TerrainType terrain = GetTerrainAtCell(generator, terrainGrid, x, y);
 				if (terrain == TerrainType.Water)
 					continue;
 
@@ -156,32 +158,18 @@ public partial class PropSpawner : Node2D
 					continue;
 				}
 
-				usedCells.Add(cell);
-
-				Texture2D baseTex = LoadTextureCached(prop.SpriteBasePath, textureCache);
-				if (baseTex == null)
+				if (!TrySpawnPropInstance(prop, cell, ground, container, usedCells, textureCache))
 				{
 					skipTexture++;
 					continue;
 				}
 
-				Texture2D canopyTex = null;
-				if (!string.IsNullOrEmpty(prop.SpriteCanopyPath))
-					canopyTex = LoadTextureCached(prop.SpriteCanopyPath, textureCache);
-
-				Vector2 worldPos = ground.MapToLocal(cell);
-				EnvironmentProp envProp = new();
-				envProp.GlobalPosition = worldPos;
-				container.AddChild(envProp);
-				envProp.Initialize(baseTex, canopyTex, prop.CanopyOffsetY, prop.CollisionRadius, prop.CollisionOffsetY);
-
-				// Tracker tous les props assez hauts pour cacher le joueur
-				if (envProp.BaseHeight >= 16 || envProp.HasCanopy)
-					_solidProps.Add(envProp);
-
 				totalSpawned++;
 			}
 		}
+
+		if (wildFieldsLayout != null && configs.TryGetValue("wild_fields", out BiomePropConfig wildFieldsConfig))
+			totalSpawned += PlaceWildFieldsHeroProps(generator, terrainGrid, ground, container, usedCells, blockedCells, textureCache, wildFieldsConfig, wildFieldsLayout, seed);
 
 		GD.Print($"[PropSpawner] === SPAWN REPORT ===");
 		GD.Print($"[PropSpawner] Cells evaluated: {cellsEvaluated}");
@@ -272,6 +260,121 @@ public partial class PropSpawner : Node2D
 		return candidates[candidates.Count - 1];
 	}
 
+	private int PlaceWildFieldsHeroProps(
+		WorldGenerator generator,
+		TerrainType[,] terrainGrid,
+		TileMapLayer ground,
+		Node2D container,
+		HashSet<Vector2I> usedCells,
+		HashSet<Vector2I> blockedCells,
+		Dictionary<string, Texture2D> textureCache,
+		BiomePropConfig config,
+		WildFieldsLayout layout,
+		ulong seed)
+	{
+		if (layout.MapRadius <= 0)
+			return 0;
+
+		Dictionary<string, PropDefinition> propsById = new();
+		foreach (PropDefinition prop in config.Props)
+			propsById[prop.Id] = prop;
+
+		int placed = 0;
+		placed += TryPlaceWildFieldsHeroProp("rusted_plow", BuildWildFieldCandidateCells(layout, layout.FallowCells, layout.PathCells, layout.WheatCells), 0x1A31UL, propsById, generator, terrainGrid, ground, container, usedCells, blockedCells, textureCache, seed) ? 1 : 0;
+		placed += TryPlaceWildFieldsHeroProp("tractor_remains", BuildWildFieldCandidateCells(layout, layout.FallowCells, layout.PathCells, layout.MeadowCells), 0x2B52UL, propsById, generator, terrainGrid, ground, container, usedCells, blockedCells, textureCache, seed) ? 1 : 0;
+		placed += TryPlaceWildFieldsHeroProp("tractor_husk", BuildWildFieldCandidateCells(layout, layout.PathCells, layout.FallowCells, layout.WheatCells), 0x3C73UL, propsById, generator, terrainGrid, ground, container, usedCells, blockedCells, textureCache, seed) ? 1 : 0;
+		placed += TryPlaceWildFieldsHeroProp("windmill_ruin", BuildWildFieldCandidateCells(layout, layout.MeadowCells, layout.WheatCells), 0x4D94UL, propsById, generator, terrainGrid, ground, container, usedCells, blockedCells, textureCache, seed) ? 1 : 0;
+		placed += TryPlaceWildFieldsHeroProp("silo_ruin", BuildWildFieldCandidateCells(layout, layout.PathCells, layout.FallowCells, layout.MeadowCells), 0x5EB5UL, propsById, generator, terrainGrid, ground, container, usedCells, blockedCells, textureCache, seed) ? 1 : 0;
+
+		if (placed > 0)
+			GD.Print($"[PropSpawner] Wild fields hero props placed: {placed}");
+
+		return placed;
+	}
+
+	private bool TryPlaceWildFieldsHeroProp(
+		string propId,
+		List<Vector2I> candidates,
+		ulong salt,
+		Dictionary<string, PropDefinition> propsById,
+		WorldGenerator generator,
+		TerrainType[,] terrainGrid,
+		TileMapLayer ground,
+		Node2D container,
+		HashSet<Vector2I> usedCells,
+		HashSet<Vector2I> blockedCells,
+		Dictionary<string, Texture2D> textureCache,
+		ulong seed)
+	{
+		if (!propsById.TryGetValue(propId, out PropDefinition prop))
+			return false;
+
+		SortCellsDeterministically(candidates, seed ^ salt);
+
+		foreach (Vector2I cell in candidates)
+		{
+			if (!generator.IsWithinBounds(cell.X, cell.Y) || generator.IsErased(cell.X, cell.Y))
+				continue;
+			if (generator.GetBiomeId(cell.X, cell.Y) != "wild_fields")
+				continue;
+			if (Mathf.Abs(cell.X) <= generator.FoyerClearance + 2 && Mathf.Abs(cell.Y) <= generator.FoyerClearance + 2)
+				continue;
+			if (usedCells.Contains(cell))
+				continue;
+			if (blockedCells != null && blockedCells.Contains(cell))
+				continue;
+
+			TerrainType terrain = GetTerrainAtCell(generator, terrainGrid, cell.X, cell.Y);
+			if (terrain == TerrainType.Water)
+				continue;
+
+			string terrainName = terrain.ToString().ToLowerInvariant();
+			if (!prop.Terrain.Contains(terrainName))
+				continue;
+			if (prop.MinDistance > 1 && IsTooCloseToUsed(cell, usedCells, prop.MinDistance))
+				continue;
+
+			if (TrySpawnPropInstance(prop, cell, ground, container, usedCells, textureCache))
+				return true;
+		}
+
+		return false;
+	}
+
+	private static List<Vector2I> BuildWildFieldCandidateCells(WildFieldsLayout layout, params HashSet<Vector2I>[] groups)
+	{
+		List<Vector2I> cells = new();
+		HashSet<Vector2I> unique = new();
+
+		foreach (HashSet<Vector2I> group in groups)
+		{
+			if (group == null)
+				continue;
+
+			foreach (Vector2I cell in group)
+			{
+				if (unique.Add(cell))
+					cells.Add(cell);
+			}
+		}
+
+		return cells;
+	}
+
+	private static void SortCellsDeterministically(List<Vector2I> cells, ulong salt)
+	{
+		cells.Sort((a, b) =>
+		{
+			int hashA = HashCell(a.X, a.Y, salt);
+			int hashB = HashCell(b.X, b.Y, salt);
+			if (hashA != hashB)
+				return hashA.CompareTo(hashB);
+			if (a.X != b.X)
+				return a.X.CompareTo(b.X);
+			return a.Y.CompareTo(b.Y);
+		});
+	}
+
 	private static bool IsTooCloseToUsed(Vector2I cell, HashSet<Vector2I> usedCells, int minDist)
 	{
 		for (int dx = -minDist; dx <= minDist; dx++)
@@ -285,6 +388,35 @@ public partial class PropSpawner : Node2D
 			}
 		}
 		return false;
+	}
+
+	private bool TrySpawnPropInstance(
+		PropDefinition prop,
+		Vector2I cell,
+		TileMapLayer ground,
+		Node2D container,
+		HashSet<Vector2I> usedCells,
+		Dictionary<string, Texture2D> textureCache)
+	{
+		Texture2D baseTex = LoadTextureCached(prop.SpriteBasePath, textureCache);
+		if (baseTex == null)
+			return false;
+
+		Texture2D canopyTex = null;
+		if (!string.IsNullOrEmpty(prop.SpriteCanopyPath))
+			canopyTex = LoadTextureCached(prop.SpriteCanopyPath, textureCache);
+
+		Vector2 worldPos = ground.MapToLocal(cell);
+		EnvironmentProp envProp = new();
+		envProp.GlobalPosition = worldPos;
+		container.AddChild(envProp);
+		envProp.Initialize(baseTex, canopyTex, prop.CanopyOffsetY, prop.CollisionRadius, prop.CollisionOffsetY);
+		usedCells.Add(cell);
+
+		if (envProp.BaseHeight >= 16 || envProp.HasCanopy)
+			_solidProps.Add(envProp);
+
+		return true;
 	}
 
 	private static Texture2D LoadTextureCached(string path, Dictionary<string, Texture2D> cache)
@@ -306,6 +438,25 @@ public partial class PropSpawner : Node2D
 		Texture2D tex = GD.Load<Texture2D>(resPath);
 		cache[path] = tex;
 		return tex;
+	}
+
+	private static TerrainType GetTerrainAtCell(WorldGenerator generator, TerrainType[,] terrainGrid, int x, int y)
+	{
+		if (terrainGrid != null)
+		{
+			int radius = terrainGrid.GetLength(0) / 2;
+			int gx = x + radius;
+			int gy = y + radius;
+			if (gx >= 0 && gy >= 0 && gx < terrainGrid.GetLength(0) && gy < terrainGrid.GetLength(1))
+				return terrainGrid[gx, gy];
+		}
+
+		return generator.GetTerrain(x, y);
+	}
+
+	private static int HashCell(int x, int y, ulong salt)
+	{
+		return (int)(((ulong)(uint)((x * 73856093) ^ (y * 19349663)) ^ salt) & 0x7FFFFFFF);
 	}
 
 	// =========================================================================

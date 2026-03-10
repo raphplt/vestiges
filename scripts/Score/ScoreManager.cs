@@ -1,6 +1,8 @@
 using Godot;
 using Vestiges.Core;
 using Vestiges.Infrastructure;
+using Vestiges.Infrastructure.Analytics;
+using Vestiges.Infrastructure.Steam;
 
 namespace Vestiges.Score;
 
@@ -127,6 +129,19 @@ public partial class ScoreManager : Node
         gm.LastRunData = record;
         gm.LastVestigesEarned = VestigesEarned;
         gm.LastUnlocks = newUnlocks;
+
+        // Analytics : enregistrer les métriques de la run
+        AnalyticsManager.Instance?.RecordRunEnd(record);
+
+        // Steam : upload score + achievements
+        if (SteamManager.IsActive)
+        {
+            SteamAchievements achievements = GetNodeOrNull<SteamAchievements>("../SteamAchievements");
+            achievements?.OnRunEnd(CurrentScore, _nightsSurvived, gm.SelectedCharacterId);
+
+            SteamLeaderboards leaderboards = GetNodeOrNull<SteamLeaderboards>("../SteamLeaderboards");
+            leaderboards?.UploadScore(CurrentScore, _nightsSurvived, gm.SelectedCharacterId);
+        }
     }
 
     /// <summary>Construit un RunRecord enrichi depuis l'état courant + RunTracker.</summary>
