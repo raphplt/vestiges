@@ -215,7 +215,8 @@ public partial class PerkManager : Node
                 break;
 
             case "bonus_resource":
-                _player.AddHarvestBonus((int)fx.Value);
+                // V2: Harvest system removed — bonus_resource perk effect disabled
+                GD.Print($"[PerkManager] bonus_resource effect skipped (V2: harvest system removed)");
                 break;
 
             case "dodge":

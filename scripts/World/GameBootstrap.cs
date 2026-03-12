@@ -1,6 +1,5 @@
 using System.Threading.Tasks;
 using Godot;
-using Vestiges.Base;
 using Vestiges.Core;
 using Vestiges.Infrastructure;
 using Vestiges.Meta;
@@ -52,14 +51,10 @@ public partial class GameBootstrap : Node
         bool isSimulation = batchRunner != null;
 
         PlayerProgression progression = GetNode<PlayerProgression>("../Player/PlayerProgression");
-        Inventory inventory = GetNode<Inventory>("../Player/Inventory");
         PerkManager perkManager = GetNode<PerkManager>("../PerkManager");
         ScoreManager scoreManager = GetNode<ScoreManager>("../ScoreManager");
         RunTracker runTracker = GetNode<RunTracker>("../RunTracker");
-        CraftManager craftManager = GetNode<CraftManager>("../CraftManager");
-        StructureManager structureManager = GetNode<StructureManager>("../StructureManager");
         Player player = GetNode<Player>("../Player");
-        Node2D foyer = GetNodeOrNull<Node2D>("../Foyer");
 
         if (isSimulation)
         {
@@ -71,22 +66,19 @@ public partial class GameBootstrap : Node
             enemyPool.PrewarmSync();
 
             SetupSimulation(batchRunner, player, perkManager, scoreManager, runTracker,
-                craftManager, inventory, progression, fragmentManager);
+                progression, fragmentManager);
         }
         else
         {
             // Mode normal : lancer l'initialisation async avec overlay
             _ = SetupNormalGameAsync(player, perkManager, scoreManager, runTracker,
-                craftManager, structureManager, inventory, progression, foyer,
-                fragmentManager);
+                progression, fragmentManager);
         }
     }
 
     private async Task SetupNormalGameAsync(Player player, PerkManager perkManager,
-        ScoreManager scoreManager, RunTracker runTracker, CraftManager craftManager,
-        StructureManager structureManager, Inventory inventory,
-        PlayerProgression progression, Node2D foyer,
-        FragmentManager fragmentManager)
+        ScoreManager scoreManager, RunTracker runTracker,
+        PlayerProgression progression, FragmentManager fragmentManager)
     {
         // --- Créer et afficher l'overlay de chargement ---
         GameLoadingOverlay overlay = new() { Name = "GameLoadingOverlay" };
@@ -114,17 +106,16 @@ public partial class GameBootstrap : Node
         // --- Wire des systèmes (rapide, synchrone) ---
         overlay.SetProgress("Initialisation...");
 
-        StructurePlacer structurePlacer = GetNode<StructurePlacer>("../StructurePlacer");
-        DayNightCycle dayNightCycle = GetNode<DayNightCycle>("../DayNightCycle");
+        DayNightCycle dayNightCycle = GetNodeOrNull<DayNightCycle>("../DayNightCycle");
         HUD hud = GetNode<HUD>("../HUD");
         LevelUpScreen levelUpScreen = GetNode<LevelUpScreen>("../LevelUpScreen");
         GameOverScreen gameOverScreen = GetNode<GameOverScreen>("../GameOverScreen");
         ChestLootScreen chestLootScreen = GetNodeOrNull<ChestLootScreen>("../ChestLootScreen");
-        CraftPanel craftPanel = GetNode<CraftPanel>("../CraftPanel");
 
         hud.SetProgression(progression);
-        hud.SetDayNightCycle(dayNightCycle);
-        hud.SetCompassTargets(player, foyer);
+        if (dayNightCycle != null)
+            hud.SetDayNightCycle(dayNightCycle);
+        hud.SetCompassTargets(player, null);
 
         FogOfWar fogOfWar = GetNodeOrNull<FogOfWar>("../FogOfWar");
         hud.InitializeMinimap(worldSetup, fogOfWar);
@@ -136,15 +127,8 @@ public partial class GameBootstrap : Node
         if (chestLootScreen != null)
             player.SetChestLootScreen(chestLootScreen);
 
-        craftManager.SetInventory(inventory);
-        craftPanel.SetCraftManager(craftManager);
-        craftPanel.SetInventory(inventory);
-        craftPanel.SetStructureManager(structureManager);
-        structurePlacer.SetStructureManager(structureManager);
-        structurePlacer.SetCraftManager(craftManager);
-
-        InitializeCharacterAndRun(player, perkManager, scoreManager, runTracker, inventory);
-        ApplyMutators(scoreManager, dayNightCycle, worldSetup, foyer as Foyer);
+        InitializeCharacterAndRun(player, perkManager, scoreManager, runTracker);
+        ApplyMutators(scoreManager, dayNightCycle, worldSetup);
 
         if (progression.CurrentLevel > 1 && fragmentManager.PendingChoices.Count == 0)
         {
@@ -252,8 +236,7 @@ public partial class GameBootstrap : Node
 
     private void SetupSimulation(BatchRunner batchRunner, Player player,
         PerkManager perkManager, ScoreManager scoreManager, RunTracker runTracker,
-        CraftManager craftManager, Inventory inventory, PlayerProgression progression,
-        FragmentManager fragmentManager)
+        PlayerProgression progression, FragmentManager fragmentManager)
     {
         SimulationRunConfig runConfig = batchRunner.CurrentRunConfig;
 
@@ -265,16 +248,11 @@ public partial class GameBootstrap : Node
         RemoveNodeIfExists("../LevelUpScreen");
         RemoveNodeIfExists("../ChestLootScreen");
         RemoveNodeIfExists("../GameOverScreen");
-        RemoveNodeIfExists("../CraftPanel");
         RemoveNodeIfExists("../PauseMenu");
-        RemoveNodeIfExists("../StructurePlacer");
         RemoveNodeIfExists("../SouvenirPopup");
         RemoveNodeIfExists("../JournalScreen");
         RemoveNodeIfExists("../DebugOverlay");
         RemoveNodeIfExists("../FogOfWar");
-
-        // Wire minimal gameplay systems
-        craftManager.SetInventory(inventory);
 
         // Character setup — use config or fallback
         string characterId = runConfig.CharacterId ?? FallbackCharacterId;
@@ -351,7 +329,7 @@ public partial class GameBootstrap : Node
     }
 
     private void InitializeCharacterAndRun(Player player, PerkManager perkManager,
-        ScoreManager scoreManager, RunTracker runTracker, Inventory inventory)
+        ScoreManager scoreManager, RunTracker runTracker)
     {
         GameManager gm = GetNode<GameManager>("/root/GameManager");
         string characterId = gm.SelectedCharacterId;
@@ -370,24 +348,11 @@ public partial class GameBootstrap : Node
         scoreManager.SetCharacterMultiplier(data.ScoreMultiplier);
         scoreManager.SetRunTracker(runTracker);
 
-        // Apply starting kit to inventory
-        string selectedKit = MetaSaveManager.GetSelectedKit();
-        if (!string.IsNullOrEmpty(selectedKit))
-        {
-            StartingKitData kit = StartingKitDataLoader.Get(selectedKit);
-            if (kit != null)
-            {
-                foreach (System.Collections.Generic.KeyValuePair<string, int> item in kit.Contents)
-                    inventory.Add(item.Key, item.Value);
-                GD.Print($"[GameBootstrap] Applied starting kit: {kit.Name}");
-            }
-        }
-
         gm.ChangeState(GameManager.GameState.Run);
     }
 
     private void ApplyMutators(ScoreManager scoreManager, DayNightCycle dayNightCycle,
-        WorldSetup worldSetup, Foyer foyer)
+        WorldSetup worldSetup)
     {
         GameManager gm = GetNode<GameManager>("/root/GameManager");
         System.Collections.Generic.List<string> activeMutators = gm.ActiveMutators;
@@ -408,7 +373,7 @@ public partial class GameBootstrap : Node
             switch (mutator.EffectType)
             {
                 case "night_duration":
-                    dayNightCycle.ApplyNightDurationMultiplier(mutator.EffectValue);
+                    // V2: cycle jour/nuit supprime, ignorer ce mutateur
                     break;
                 case "enemy_hp":
                     scalingOverrides["flat_hp_multiplier"] = mutator.EffectValue;
@@ -417,7 +382,7 @@ public partial class GameBootstrap : Node
                     scalingOverrides["flat_dmg_multiplier"] = mutator.EffectValue;
                     break;
                 case "no_safe_zone":
-                    foyer?.DisableSafeZone();
+                    // V2: plus de Foyer, ignorer ce mutateur
                     break;
                 case "spawn_rate":
                     scalingOverrides["base_spawn_interval"] = 1.80f * mutator.EffectValue;

@@ -65,7 +65,7 @@ public partial class RandomEventManager : Node
 	private bool _windActive;
 	private Node2D _windParticlesNode;
 
-	// Résonance du Foyer : rayon safe original
+	// V2: Foyer resonance removed — field kept as placeholder
 	private float _originalFoyerRadius;
 
 	// Résurgence : buffs ennemis appliqués via scaling
@@ -504,8 +504,7 @@ public partial class RandomEventManager : Node
 		}
 		else
 		{
-			// Dégâts aux structures
-			_eventBus.EmitSignal(EventBus.SignalName.StructureDestroyed, "tremor", _foyerNode?.GlobalPosition ?? Vector2.Zero);
+			// Dégâts aux structures (signal retiré)
 			GD.Print($"[RandomEventManager] Tremblement — structures endommagées ({structureDamage} dégâts)");
 		}
 	}
@@ -865,7 +864,6 @@ public partial class RandomEventManager : Node
 
 		// Bonus de récolte
 		_ashRainHarvestMult = ev.GetFloat("harvest_multiplier", 1.5f);
-		_eventBus.EmitSignal(EventBus.SignalName.ResourceBonusChanged, _ashRainHarvestMult);
 
 		// Particules de cendres visuelles (attachées à la caméra du joueur)
 		Player player = GetTree().GetFirstNodeInGroup("player") as Player;
@@ -899,7 +897,6 @@ public partial class RandomEventManager : Node
 
 		// Retour bonus récolte
 		_ashRainHarvestMult = 1f;
-		_eventBus.EmitSignal(EventBus.SignalName.ResourceBonusChanged, 1f);
 
 		// Nettoyage des particules
 		Player player = GetTree().GetFirstNodeInGroup("player") as Player;
@@ -916,8 +913,6 @@ public partial class RandomEventManager : Node
 		if (_dayNightCycle != null)
 			_dayNightCycle.SetPhasePaused(true);
 
-		_eventBus.EmitSignal(EventBus.SignalName.DayTimerPaused, true);
-
 		GD.Print("[RandomEventManager] Marche des Horloges — timer de jour gelé !");
 	}
 
@@ -926,8 +921,6 @@ public partial class RandomEventManager : Node
 		CacheDayNightCycle();
 		if (_dayNightCycle != null)
 			_dayNightCycle.SetPhasePaused(false);
-
-		_eventBus.EmitSignal(EventBus.SignalName.DayTimerPaused, false);
 	}
 
 	// --- Faille Temporelle ---
@@ -1233,83 +1226,15 @@ public partial class RandomEventManager : Node
 
 	// --- Résonance du Foyer ---
 
+	// V2: Foyer system removed — resonance event neutralized
 	private void ApplyFoyerResonance(EventData ev)
 	{
-		float radiusMult = ev.GetFloat("radius_multiplier", 2f);
-		float knockbackDmg = ev.GetFloat("knockback_damage", 30f);
-		float knockbackRadius = ev.GetFloat("knockback_radius", 300f);
-
-		// Doubler le rayon de sécurité du Foyer
-		Foyer foyer = GetNodeOrNull<Foyer>("../Foyer");
-		if (foyer != null)
-		{
-			_originalFoyerRadius = foyer.EffectiveSafeRadius;
-			foyer.SetTemporarySafeRadius(_originalFoyerRadius * radiusMult);
-			_eventBus.EmitSignal(EventBus.SignalName.FoyerRadiusChanged, _originalFoyerRadius * radiusMult);
-		}
-
-		// Knockback initial : repousser et endommager les ennemis proches
-		Vector2 foyerPos = foyer?.GlobalPosition ?? Vector2.Zero;
-		Node enemyContainer = GetNodeOrNull("../EnemyContainer");
-		int knockbackCount = 0;
-
-		if (enemyContainer != null)
-		{
-			foreach (Node child in enemyContainer.GetChildren())
-			{
-				if (child is not Enemy enemy || !enemy.IsActive)
-					continue;
-
-				float dist = enemy.GlobalPosition.DistanceTo(foyerPos);
-				if (dist > knockbackRadius)
-					continue;
-
-				// Repousser l'ennemi
-				Vector2 pushDir = (enemy.GlobalPosition - foyerPos).Normalized();
-				enemy.GlobalPosition += pushDir * (knockbackRadius - dist);
-				enemy.TakeDamage(knockbackDmg);
-				knockbackCount++;
-			}
-		}
-
-		// Onde visuelle pixel art qui s'étend depuis le Foyer
-		if (foyer != null)
-		{
-			Sprite2D wave = new()
-			{
-				Texture = EventSpriteFactory.GetResonanceWaveSprite(),
-				TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
-				GlobalPosition = foyerPos,
-				ZIndex = 50
-			};
-			GetNode("..").CallDeferred("add_child", wave);
-
-			float targetScale = knockbackRadius / 24f;
-			Tween waveTween = CreateTween();
-			waveTween.SetParallel();
-			waveTween.TweenProperty(wave, "scale", new Vector2(targetScale, targetScale), 1.5f)
-				.SetTrans(Tween.TransitionType.Expo)
-				.SetEase(Tween.EaseType.Out);
-			waveTween.TweenProperty(wave, "modulate:a", 0f, 1.5f)
-				.SetTrans(Tween.TransitionType.Sine);
-			waveTween.Chain().TweenCallback(Callable.From(() =>
-			{
-				if (IsInstanceValid(wave))
-					wave.QueueFree();
-			}));
-		}
-
-		GD.Print($"[RandomEventManager] Résonance du Foyer — rayon x{radiusMult}, {knockbackCount} ennemis repoussés");
+		GD.Print("[RandomEventManager] Foyer resonance event skipped (V2: Foyer system removed)");
 	}
 
 	private void RevertFoyerResonance()
 	{
-		Foyer foyer = GetNodeOrNull<Foyer>("../Foyer");
-		if (foyer != null)
-		{
-			foyer.SetTemporarySafeRadius(_originalFoyerRadius);
-			_eventBus.EmitSignal(EventBus.SignalName.FoyerRadiusChanged, _originalFoyerRadius);
-		}
+		// V2: no-op, Foyer system removed
 	}
 
 	// --- Floraison Spontanée ---

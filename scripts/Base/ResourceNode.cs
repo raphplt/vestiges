@@ -37,21 +37,6 @@ public partial class ResourceNode : StaticBody2D
         _visual = GetNodeOrNull<Polygon2D>("Visual");
         AddToGroup("resources");
 
-        EventBus eventBus = GetNodeOrNull<EventBus>("/root/EventBus");
-        if (eventBus != null)
-            eventBus.ResourceBonusChanged += OnResourceBonusChanged;
-    }
-
-    public override void _ExitTree()
-    {
-        EventBus eventBus = GetNodeOrNull<EventBus>("/root/EventBus");
-        if (eventBus != null)
-            eventBus.ResourceBonusChanged -= OnResourceBonusChanged;
-    }
-
-    private void OnResourceBonusChanged(float multiplier)
-    {
-        _harvestBonusMult = multiplier;
     }
 
     public void Initialize(ResourceData data)

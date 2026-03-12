@@ -343,17 +343,7 @@ public partial class Indicible : Node2D
 				}
 			}
 
-			// Dégâts aux structures dans la zone
-			Godot.Collections.Array<Node> structures = GetTree().GetNodesInGroup("structures");
-			foreach (Node node in structures)
-			{
-				if (node is Vestiges.Base.Structure structure && !structure.IsDestroyed)
-				{
-					float dist = DistancePointToSegment(structure.GlobalPosition, startPos, endPos);
-					if (dist < TentacleWidth)
-						structure.TakeDamage(damage * 0.5f);
-				}
-			}
+			// V2: degats aux structures retires (plus de structures)
 
 			// Fade out de la tentacule
 			Tween fadeTween = tentacle.CreateTween();

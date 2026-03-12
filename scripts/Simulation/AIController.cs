@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using Godot;
-using Vestiges.Base;
 using Vestiges.Core;
 using Vestiges.Infrastructure;
 using Vestiges.Progression;
@@ -252,8 +251,7 @@ public partial class AIController : Node
         if (dist < _player.InteractRange * 0.9f)
         {
             _player.AIInputOverride = Vector2.Zero;
-            if (!_player.IsHarvesting)
-                _player.AITriggerInteract();
+            _player.AITriggerInteract();
         }
         else
         {
@@ -350,19 +348,7 @@ public partial class AIController : Node
             }
         }
 
-        // Resources
-        foreach (Node node in GetTree().GetNodesInGroup("resources"))
-        {
-            if (node is ResourceNode res && !res.IsExhausted)
-            {
-                float d = _player.GlobalPosition.DistanceTo(res.GlobalPosition);
-                if (d < bestDist)
-                {
-                    best = res;
-                    bestDist = d;
-                }
-            }
-        }
+        // V2: ResourceNode/harvest system removed — AI no longer interacts with resources
 
         return best;
     }

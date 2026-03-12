@@ -1,5 +1,5 @@
 using Godot;
-using Vestiges.Base;
+// V2: Vestiges.Base retire
 using Vestiges.Core;
 using Vestiges.Infrastructure;
 using Vestiges.World;
@@ -28,7 +28,7 @@ public partial class Enemy : CharacterBody2D
 	private const float DeathTweenDuration = 0.3f;
 	private const float DissolveDuration = 0.6f;
 	private const float PlayerProximityRange = 80f;
-	private const float StructureDetectRange = 40f;
+	// V2: StructureDetectRange retire
 	private const float GuardPatrolRadius = 150f;
 	private const float ScreamerCryCooldown = 8f;
 	private const float ScreamerCryRange = 250f;
@@ -116,10 +116,7 @@ public partial class Enemy : CharacterBody2D
 	private float _packBonusTimer;
 	private const float PackBonusInterval = 0.5f;
 
-	// FindNearestStructure cache
-	private Structure _cachedNearestStructure;
-	private float _structureCacheTimer;
-	private const float StructureCacheInterval = 1f;
+	// V2: structures retirees — FindNearestStructure retourne toujours null
 
 	// Wave modifiers (nuit 7+ : enragé, régénérant, explosif)
 	private string _waveModifier;
@@ -232,8 +229,6 @@ public partial class Enemy : CharacterBody2D
 		_waveModifier = null;
 		_regenTimer = 0f;
 		_packBonusTimer = (float)GD.RandRange(0.0, PackBonusInterval);
-		_cachedNearestStructure = null;
-		_structureCacheTimer = 0f;
 		IsActive = true;
 
 		// Son idle : intervalle aléatoire selon le type d'ennemi
@@ -405,8 +400,6 @@ public partial class Enemy : CharacterBody2D
 		_waveModifier = null;
 		_regenTimer = 0f;
 		_packBonusTimer = 0f;
-		_cachedNearestStructure = null;
-		_structureCacheTimer = 0f;
 		// Nettoyage aura aberration (GPU particles ou Polygon2D legacy)
 		Node auraNode = GetNodeOrNull("AberrationAura");
 		if (auraNode != null)
@@ -683,19 +676,6 @@ public partial class Enemy : CharacterBody2D
 		Vector2 knockbackDir = (_player.GlobalPosition - GlobalPosition).Normalized();
 		_player.Velocity += knockbackDir * 300f;
 
-		// Dégâts AoE aux structures proches
-		float slamAoeRadiusSq = ColosseSlamAoeRadius * ColosseSlamAoeRadius;
-		Godot.Collections.Array<Node> structures = _groupCache.GetStructures();
-		foreach (Node node in structures)
-		{
-			if (node is Base.Structure structure && !structure.IsDestroyed)
-			{
-				float distSq = GlobalPosition.DistanceSquaredTo(structure.GlobalPosition);
-				if (distSq < slamAoeRadiusSq)
-					structure.TakeDamage(_damage * 1.5f);
-			}
-		}
-
 		PlayColosseSlamVfx();
 	}
 
@@ -745,40 +725,18 @@ public partial class Enemy : CharacterBody2D
 				_chargerCooldown = 8f;
 			}
 
-			// Impact structure pendant la charge
-			float chargeImpactRangeSq = (MeleeRange * 2f) * (MeleeRange * 2f);
-			Godot.Collections.Array<Node> structures = _groupCache.GetStructures();
-			foreach (Node node in structures)
-			{
-				if (node is Structure structure && !structure.IsDestroyed)
-				{
-					float distSq = GlobalPosition.DistanceSquaredTo(structure.GlobalPosition);
-					if (distSq < chargeImpactRangeSq)
-					{
-						structure.TakeDamage(_damage * 2f);
-						_chargerIsCharging = false;
-						_chargerCooldown = 8f;
-						// Flash impact
-						_visual.Color = new Color(0.5f, 0.2f, 0.5f);
-						Tween flash = CreateTween();
-						flash.TweenProperty(_visual, "color", _originalColor, 0.2f);
-						break;
-					}
-				}
-			}
 			return;
 		}
 
 		_chargerCooldown -= delta;
 		if (_chargerCooldown <= 0f)
 		{
-			// Cherche une structure à charger
-			Structure target = FindNearestStructure();
-			if (target != null)
+			// V2: charge vers le joueur au lieu de structures
+			if (_player != null && IsInstanceValid(_player))
 			{
 				_chargerIsCharging = true;
 				_chargerDurationLeft = 0.8f;
-				_chargerDirection = (target.GlobalPosition - GlobalPosition).Normalized();
+				_chargerDirection = (_player.GlobalPosition - GlobalPosition).Normalized();
 				Infrastructure.AudioManager.Play("sfx_brute_charge", 0.05f, -4f);
 				_visual.Color = new Color(0.8f, 0.2f, 0.8f);
 				Tween chargeTween = CreateTween();
@@ -953,21 +911,7 @@ public partial class Enemy : CharacterBody2D
 	{
 		_attackTimer -= delta;
 
-		Structure blockingWall = FindNearestStructure();
-		if (blockingWall != null && _enemyType == "melee")
-		{
-			float distToWallSq = GlobalPosition.DistanceSquaredTo(blockingWall.GlobalPosition);
-			Vector2 dirToWall = (blockingWall.GlobalPosition - GlobalPosition).Normalized();
-			Velocity = dirToWall * _speed;
-
-			if (distToWallSq < _meleeRangeSq && _attackTimer <= 0f)
-			{
-				blockingWall.TakeDamage(_damage);
-				_attackTimer = _meleeAttackCooldown;
-				TriggerAttackAnim();
-			}
-			return;
-		}
+		// V2: plus de structures a cibler
 
 		Vector2 directionToFoyer = (_foyerPosition - GlobalPosition).Normalized();
 		Velocity = directionToFoyer * _speed;
@@ -1043,45 +987,7 @@ public partial class Enemy : CharacterBody2D
 		}
 	}
 
-	private static readonly float StructureDetectRangeSq = StructureDetectRange * StructureDetectRange;
-
-	private Structure FindNearestStructure()
-	{
-		_structureCacheTimer -= 0.016f; // Approximation d'un frame à 60 FPS
-		if (_structureCacheTimer > 0f && _cachedNearestStructure != null)
-		{
-			if (IsInstanceValid(_cachedNearestStructure) && !_cachedNearestStructure.IsDestroyed)
-				return _cachedNearestStructure;
-		}
-		_structureCacheTimer = StructureCacheInterval;
-
-		Godot.Collections.Array<Node> structures = _groupCache.GetStructures();
-		Structure nearest = null;
-		float nearestDistSq = StructureDetectRangeSq;
-
-		Vector2 dirToFoyer = (_foyerPosition - GlobalPosition).Normalized();
-
-		foreach (Node node in structures)
-		{
-			if (node is Structure structure && !structure.IsDestroyed)
-			{
-				float distSq = GlobalPosition.DistanceSquaredTo(structure.GlobalPosition);
-				if (distSq >= nearestDistSq)
-					continue;
-
-				Vector2 dirToStructure = (structure.GlobalPosition - GlobalPosition).Normalized();
-				float dot = dirToFoyer.Dot(dirToStructure);
-				if (dot > 0.3f)
-				{
-					nearest = structure;
-					nearestDistSq = distSq;
-				}
-			}
-		}
-
-		_cachedNearestStructure = nearest;
-		return nearest;
-	}
+	// V2: FindNearestStructure retire — plus de structures
 
 	private void ShootProjectile()
 	{

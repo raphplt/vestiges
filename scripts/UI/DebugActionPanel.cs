@@ -122,15 +122,9 @@ public partial class DebugActionPanel : CanvasLayer
         healBtn.Pressed += () => _player?.Heal(99999f);
         _vbox.AddChild(healBtn);
         
-        Button resourceBtn = new Button { Text = "+100 Wood & Stone" };
-        resourceBtn.Pressed += () => {
-            if (_player?.Inventory != null)
-            {
-                _player.Inventory.Add("wood", 100);
-                _player.Inventory.Add("stone", 100);
-                GD.Print("[Debug] Added 100 wood and stone");
-            }
-        };
+        // V2: Inventory system removed — resource debug button disabled
+        Button resourceBtn = new Button { Text = "+100 Wood & Stone (disabled)" };
+        resourceBtn.Disabled = true;
         _vbox.AddChild(resourceBtn);
         
         Button spawnEnemyBtn = new Button { Text = "Spawn Test Enemy (Mouse)" };

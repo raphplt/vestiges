@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using Godot;
-using Vestiges.Base;
 using Vestiges.Combat;
 using Vestiges.Infrastructure;
 using Vestiges.Progression;
@@ -116,9 +115,7 @@ public partial class Player : CharacterBody2D
     private float _bonusMaxHp;
     private int _extraProjectiles;
     private float _aoeMultiplier = 1f;
-    private float _harvestSpeedMultiplier = 1f;
-    private float _structureHpMultiplier = 1f;
-    private float _craftSpeedMultiplier = 1f;
+    private float _interactionSpeedMultiplier = 1f;
     private float _attackRangeMultiplier = 1f;
     private float _bonusRegenRate;
     private float _armor;
@@ -126,7 +123,6 @@ public partial class Player : CharacterBody2D
     private float _critMultiplier = 2f;
     private int _projectilePierce;
     private float _xpMagnetMultiplier = 1f;
-    private float _repairSpeedMultiplier = 1f;
     private float _luckBonus;
 
     // Complex perk effects
@@ -138,7 +134,6 @@ public partial class Player : CharacterBody2D
     private float _dodgeChance;
     private bool _secondWindAvailable;
     private float _secondWindHealPercent;
-    private int _harvestBonus;
     private float _igniteChance;
     private float _igniteDamage;
     private float _igniteDuration;
@@ -175,19 +170,12 @@ public partial class Player : CharacterBody2D
     // Coût en essence pour armes Tier 4+
     private float _essenceDamagePenalty = 1f;
 
-    // Harvest system
-    private ResourceNode _harvestTarget;
-    private float _harvestProgress;
-    private bool _isHarvesting;
+    // Interaction bar (coffres, POIs)
     private ProgressBar _harvestBar;
-    private Inventory _inventory;
 
     // Footsteps
     private float _footstepTimer;
     private const float FootstepInterval = 0.55f;
-
-    // Harvest hit sound
-    private float _harvestHitTimer;
 
     // Vision / darkness targeting
     private string _currentDayPhase = "Day";
@@ -207,16 +195,12 @@ public partial class Player : CharacterBody2D
     public float CurrentHp => _currentHp;
     public float EffectiveMaxHp => MaxHp + _bonusMaxHp;
     public float EffectiveAttackRange => AttackRange * _attackRangeMultiplier;
-    public float StructureHpMultiplier => _structureHpMultiplier;
-    public float CraftSpeedMultiplier => _craftSpeedMultiplier;
-    public float RepairSpeedMultiplier => _repairSpeedMultiplier;
+    // V2: StructureHpMultiplier, CraftSpeedMultiplier, RepairSpeedMultiplier retires
     public int ProjectilePierce => _projectilePierce;
     public float XpMagnetMultiplier => _xpMagnetMultiplier;
     public float CritChance => _critChance;
     public float CritMultiplier => _critMultiplier;
     public bool IsDead => _isDead;
-    public bool IsHarvesting => _isHarvesting;
-    public Inventory Inventory => _inventory;
     public string CharacterId => _characterId;
     public WeaponInstance EquippedWeapon => _weaponSlots.Count > 0 ? _weaponSlots[0] : null;
     public IReadOnlyList<WeaponInstance> WeaponSlots => _weaponSlots;
@@ -233,7 +217,7 @@ public partial class Player : CharacterBody2D
     public float DodgeChance => _dodgeChance;
     public float ThornsPercent => _thornsPercent;
     public int ExtraProjectiles => _extraProjectiles;
-    public float HarvestSpeedMultiplier => _harvestSpeedMultiplier;
+    public float HarvestSpeedMultiplier => _interactionSpeedMultiplier;
     public float IgniteChance => _igniteChance;
     public float RicochetChance => _ricochetChance;
     public float LuckBonus => _luckBonus;
@@ -622,7 +606,6 @@ public partial class Player : CharacterBody2D
 
         if (inputDir != Vector2.Zero)
         {
-            CancelHarvest();
             CancelPoiExplore();
             CancelChestOpen();
             Vector2 isoDir = CartesianToIsometric(inputDir);
@@ -640,7 +623,6 @@ public partial class Player : CharacterBody2D
         ProcessFootsteps(dt, inputDir != Vector2.Zero);
         ApplyRegen(dt);
         ProcessSlowDecay(dt);
-        ProcessHarvest(dt);
         ProcessPoiExplore(dt);
         ProcessChestOpen(dt);
         ProcessKillSpeedDecay(dt);
@@ -661,9 +643,8 @@ public partial class Player : CharacterBody2D
 
         if (@event.IsActionPressed("interact"))
         {
-            if (_isHarvesting || _isExploringPoi || _isOpeningChest)
+            if (_isExploringPoi || _isOpeningChest)
             {
-                CancelHarvest();
                 CancelPoiExplore();
                 CancelChestOpen();
             }
@@ -675,14 +656,6 @@ public partial class Player : CharacterBody2D
             {
                 // Chest interaction
             }
-            else if (TryRepairNearbyStructure())
-            {
-                // Repair took priority
-            }
-            else
-            {
-                TryStartHarvest();
-            }
         }
     }
 
@@ -692,16 +665,13 @@ public partial class Player : CharacterBody2D
     public void AITriggerInteract()
     {
         if (_isDead || !IsAIControlled) return;
-        if (_isHarvesting || _isExploringPoi || _isOpeningChest)
+        if (_isExploringPoi || _isOpeningChest)
         {
-            CancelHarvest();
             CancelPoiExplore();
             CancelChestOpen();
         }
         else if (TryStartPoiExplore()) { }
         else if (TryStartChestOpen()) { }
-        else if (TryRepairNearbyStructure()) { }
-        else { TryStartHarvest(); }
     }
 
     // --- Journal ---
@@ -788,14 +758,9 @@ public partial class Player : CharacterBody2D
                 if (modifierType == "multiplicative") _aoeMultiplier *= value;
                 break;
             case "harvest_speed":
-                if (modifierType == "multiplicative") _harvestSpeedMultiplier *= value;
+                if (modifierType == "multiplicative") _interactionSpeedMultiplier *= value;
                 break;
-            case "structure_hp":
-                if (modifierType == "multiplicative") _structureHpMultiplier *= value;
-                break;
-            case "craft_speed":
-                if (modifierType == "multiplicative") _craftSpeedMultiplier *= value;
-                break;
+            // V2: structure_hp et craft_speed retires
             case "attack_range":
                 if (modifierType == "multiplicative") _attackRangeMultiplier *= value;
                 break;
@@ -817,9 +782,7 @@ public partial class Player : CharacterBody2D
             case "xp_magnet_radius":
                 if (modifierType == "multiplicative") _xpMagnetMultiplier *= value;
                 break;
-            case "repair_speed":
-                if (modifierType == "multiplicative") _repairSpeedMultiplier *= value;
-                break;
+            // V2: repair_speed retire
             case "luck":
                 if (modifierType == "additive") _luckBonus += value;
                 break;
@@ -858,11 +821,6 @@ public partial class Player : CharacterBody2D
     {
         _secondWindAvailable = true;
         _secondWindHealPercent = healPercent;
-    }
-
-    public void AddHarvestBonus(int bonus)
-    {
-        _harvestBonus += bonus;
     }
 
     public void AddIgnite(float chance, float damage, float duration)
@@ -1434,7 +1392,6 @@ public partial class Player : CharacterBody2D
 
         float reduced = Mathf.Max(1f, damage - _armor);
         _currentHp -= reduced;
-        CancelHarvest();
         HitFlash();
         if (_hasSprite)
             _hurtAnimTimer = 0.2f;
@@ -1508,23 +1465,6 @@ public partial class Player : CharacterBody2D
         _speedMultiplier *= factor;
     }
 
-    // --- Harvest ---
-
-    private void TryStartHarvest()
-    {
-        ResourceNode nearest = FindNearestResource();
-        if (nearest == null || nearest.IsExhausted)
-            return;
-
-        _harvestTarget = nearest;
-        _harvestProgress = 0f;
-        _harvestHitTimer = 0f;
-        _isHarvesting = true;
-        _harvestBar.Visible = true;
-        _harvestBar.MaxValue = nearest.HarvestTime;
-        _harvestBar.Value = 0;
-    }
-
     private void ProcessFootsteps(float delta, bool isMoving)
     {
         if (!isMoving)
@@ -1548,96 +1488,7 @@ public partial class Player : CharacterBody2D
         Infrastructure.AudioManager.Play(key, 0.05f, -4f);
     }
 
-    private void ProcessHarvest(float delta)
-    {
-        if (!_isHarvesting || _harvestTarget == null)
-            return;
-
-        if (!IsInstanceValid(_harvestTarget) || _harvestTarget.IsExhausted)
-        {
-            CancelHarvest();
-            return;
-        }
-
-        float dist = GlobalPosition.DistanceTo(_harvestTarget.GlobalPosition);
-        if (dist > InteractRange * 1.5f)
-        {
-            CancelHarvest();
-            return;
-        }
-
-        _harvestProgress += delta * _harvestSpeedMultiplier;
-        _harvestBar.Value = _harvestProgress;
-
-        // Son de coup périodique pendant la récolte
-        _harvestHitTimer -= delta;
-        if (_harvestHitTimer <= 0f)
-        {
-            float hitInterval = _harvestTarget.HarvestTime * 0.4f;
-            _harvestHitTimer = hitInterval > 0f ? hitInterval : 0.4f;
-            Infrastructure.AudioManager.Play(_harvestTarget.HarvestSoundKey, 0.08f);
-        }
-
-        if (_harvestProgress >= _harvestTarget.HarvestTime)
-            CompleteHarvest();
-    }
-
-    private void CompleteHarvest()
-    {
-        if (_harvestTarget == null || !IsInstanceValid(_harvestTarget))
-        {
-            CancelHarvest();
-            return;
-        }
-
-        int amount = _harvestTarget.Harvest();
-        string resourceId = _harvestTarget.ResourceId;
-
-        if (amount > 0)
-        {
-            int totalAmount = amount + _harvestBonus;
-            CacheInventory();
-            _inventory?.Add(resourceId, totalAmount);
-        }
-
-        _isHarvesting = false;
-        _harvestBar.Visible = false;
-        _harvestTarget = null;
-        _harvestProgress = 0f;
-    }
-
-    private void CancelHarvest()
-    {
-        if (!_isHarvesting)
-            return;
-
-        _isHarvesting = false;
-        _harvestBar.Visible = false;
-        _harvestTarget = null;
-        _harvestProgress = 0f;
-    }
-
-    private ResourceNode FindNearestResource()
-    {
-        Godot.Collections.Array<Node> resources = GetTree().GetNodesInGroup("resources");
-        ResourceNode nearest = null;
-        float nearestDist = InteractRange;
-
-        foreach (Node node in resources)
-        {
-            if (node is ResourceNode res && !res.IsExhausted)
-            {
-                float dist = GlobalPosition.DistanceTo(res.GlobalPosition);
-                if (dist < nearestDist)
-                {
-                    nearest = res;
-                    nearestDist = dist;
-                }
-            }
-        }
-
-        return nearest;
-    }
+    // V2: harvest system retire — remplace par EssenceTracker
 
     private void CreateHarvestBar()
     {
@@ -1711,7 +1562,7 @@ public partial class Player : CharacterBody2D
             return;
         }
 
-        _poiProgress += delta * _harvestSpeedMultiplier;
+        _poiProgress += delta * _interactionSpeedMultiplier;
         _harvestBar.Value = _poiProgress;
 
         if (_poiProgress >= _poiTarget.SearchTime)
@@ -1755,7 +1606,7 @@ public partial class Player : CharacterBody2D
 
         System.Collections.Generic.List<LootResolver.LootResult> loots =
             LootResolver.Roll(poi.LootTableId, poi.LootRolls);
-        CacheInventory();
+        // V2: inventory retire
 
         int lootIndex = 0;
         foreach (LootResolver.LootResult loot in loots)
@@ -1766,7 +1617,7 @@ public partial class Player : CharacterBody2D
             switch (loot.Type)
             {
                 case "resource":
-                    _inventory?.Add(loot.ItemId, loot.Amount);
+                    // V2: ressource loot -> sera EssenceTracker
                     _eventBus?.EmitSignal(EventBus.SignalName.LootReceived,
                         loot.Type, loot.ItemId, loot.Amount);
                     displayName = $"{loot.ItemId} x{loot.Amount}";
@@ -1917,7 +1768,7 @@ public partial class Player : CharacterBody2D
 
     private void ApplyChestLootResults(System.Collections.Generic.List<LootResolver.LootResult> loots, Chest chest)
     {
-        CacheInventory();
+        // V2: inventory retire
 
         int lootIndex = 0;
         foreach (LootResolver.LootResult loot in loots)
@@ -1928,7 +1779,7 @@ public partial class Player : CharacterBody2D
             switch (loot.Type)
             {
                 case "resource":
-                    _inventory?.Add(loot.ItemId, loot.Amount);
+                    // V2: ressource loot -> sera EssenceTracker
                     _eventBus?.EmitSignal(EventBus.SignalName.LootReceived,
                         loot.Type, loot.ItemId, loot.Amount);
                     displayName = $"{loot.ItemId} x{loot.Amount}";
@@ -2074,13 +1925,7 @@ public partial class Player : CharacterBody2D
         return nearest;
     }
 
-    private void CacheInventory()
-    {
-        if (_inventory != null)
-            return;
-
-        _inventory = GetNodeOrNull<Inventory>("Inventory");
-    }
+    // V2: CacheInventory retire — EssenceTracker remplacera
 
     // --- Combat ---
 
@@ -2101,7 +1946,6 @@ public partial class Player : CharacterBody2D
         Velocity = Vector2.Zero;
         foreach (Timer timer in _weaponTimers)
             timer.Stop();
-        CancelHarvest();
         DeactivateSustainedCone();
         RemoveFromGroup("player");
 
@@ -2219,27 +2063,8 @@ public partial class Player : CharacterBody2D
 
         _equippedWeapon = _weaponSlots[slotIndex];
 
-        // Coût en essence : consomme si disponible, sinon pénalité de dégâts
-        float essenceCost = GetWeaponStat("essence_cost_per_attack", 0f);
-        if (essenceCost > 0f)
-        {
-            CacheInventory();
-            int requiredEssence = Mathf.Max(1, Mathf.RoundToInt(essenceCost));
-            if (_inventory != null && _inventory.Has("essence", requiredEssence))
-            {
-                _inventory.Remove("essence", requiredEssence);
-                _essenceDamagePenalty = 1f;
-            }
-            else
-            {
-                // Pas assez d'essence : dégâts réduits de moitié
-                _essenceDamagePenalty = 0.5f;
-            }
-        }
-        else
-        {
-            _essenceDamagePenalty = 1f;
-        }
+        // V2: cout en essence via EssenceTracker (a implementer)
+        _essenceDamagePenalty = 1f;
 
         string type = _equippedWeapon.Type?.ToLower() ?? "ranged";
         string pattern = _equippedWeapon.AttackPattern?.ToLower() ?? "linear";
@@ -2501,39 +2326,12 @@ public partial class Player : CharacterBody2D
     }
 
     /// <summary>
-    /// Vérifie si une position est visible (éclairée) pour le joueur.
-    /// De jour/aube : tout est visible. De nuit/crépuscule : seulement les zones éclairées.
+    /// V2: pas de cycle jour/nuit, tout est toujours visible.
+    /// La visibilite sera geree par l'Effacement plus tard.
     /// </summary>
     private bool IsPositionVisible(Vector2 worldPos)
     {
-        if (_currentDayPhase == "Day" || _currentDayPhase == "Dawn")
-            return true;
-
-        // Rayon de vision personnel du joueur
-        if (GlobalPosition.DistanceSquaredTo(worldPos) <= _visionRadius * _visionRadius)
-            return true;
-
-        // Foyer
-        Foyer foyer = GetTree().GetFirstNodeInGroup("foyer") as Foyer;
-        if (foyer != null)
-        {
-            float foyerRadius = foyer.EffectiveSafeRadius;
-            if (foyer.GlobalPosition.DistanceSquaredTo(worldPos) <= foyerRadius * foyerRadius)
-                return true;
-        }
-
-        // Torches placées par le joueur
-        foreach (Node node in GetTree().GetNodesInGroup("structures"))
-        {
-            if (node is Torch torch && IsInstanceValid(torch))
-            {
-                float r = torch.LightRadius;
-                if (torch.GlobalPosition.DistanceSquaredTo(worldPos) <= r * r)
-                    return true;
-            }
-        }
-
-        return false;
+        return true;
     }
 
     private System.Collections.Generic.List<Node2D> FindNearestEnemies(int count, float maxRange)
@@ -2872,56 +2670,7 @@ public partial class Player : CharacterBody2D
         }
     }
 
-    // --- Repair ---
-
-    private bool TryRepairNearbyStructure()
-    {
-        Structure target = FindDamagedStructure();
-        if (target == null)
-            return false;
-
-        float repairAmount = target.HpRatio < 1f ? (1f - target.HpRatio) * 100f : 0f;
-        if (repairAmount <= 0f)
-            return false;
-
-        CacheInventory();
-        if (_inventory == null)
-            return false;
-
-        RecipeData recipe = RecipeDataLoader.Get(target.Recipe);
-        if (recipe == null || recipe.Ingredients.Count == 0)
-            return false;
-
-        RecipeIngredient primaryIngredient = recipe.Ingredients[0];
-        if (!_inventory.Has(primaryIngredient.Resource, 1))
-            return false;
-
-        _inventory.Remove(primaryIngredient.Resource, 1);
-        target.Repair(repairAmount);
-        return true;
-    }
-
-    private Structure FindDamagedStructure()
-    {
-        Godot.Collections.Array<Node> structures = _groupCache.GetStructures();
-        Structure nearest = null;
-        float nearestDist = InteractRange;
-
-        foreach (Node node in structures)
-        {
-            if (node is Structure structure && !structure.IsDestroyed && structure.HpRatio < 1f)
-            {
-                float dist = GlobalPosition.DistanceTo(structure.GlobalPosition);
-                if (dist < nearestDist)
-                {
-                    nearest = structure;
-                    nearestDist = dist;
-                }
-            }
-        }
-
-        return nearest;
-    }
+    // V2: repair system retire (plus de structures)
 
     private static Vector2 CartesianToIsometric(Vector2 cartesian)
     {

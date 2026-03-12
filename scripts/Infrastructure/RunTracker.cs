@@ -150,9 +150,7 @@ public partial class RunTracker : Node
         _eventBus.PlayerDamaged += OnPlayerDamaged;
         _eventBus.PlayerHitBy += OnPlayerHitBy;
         _eventBus.DayPhaseChanged += OnDayPhaseChanged;
-        _eventBus.ResourceCollected += OnResourceCollected;
-        _eventBus.StructurePlaced += OnStructurePlaced;
-        _eventBus.StructureDestroyed += OnStructureDestroyed;
+
         _eventBus.PoiExplored += OnPoiExplored;
         _eventBus.ChestOpened += OnChestOpened;
         _eventBus.LevelUp += OnLevelUp;
@@ -170,9 +168,7 @@ public partial class RunTracker : Node
         _eventBus.PlayerDamaged -= OnPlayerDamaged;
         _eventBus.PlayerHitBy -= OnPlayerHitBy;
         _eventBus.DayPhaseChanged -= OnDayPhaseChanged;
-        _eventBus.ResourceCollected -= OnResourceCollected;
-        _eventBus.StructurePlaced -= OnStructurePlaced;
-        _eventBus.StructureDestroyed -= OnStructureDestroyed;
+
         _eventBus.PoiExplored -= OnPoiExplored;
         _eventBus.ChestOpened -= OnChestOpened;
         _eventBus.LevelUp -= OnLevelUp;
@@ -255,23 +251,6 @@ public partial class RunTracker : Node
             _currentNight++;
     }
 
-    private void OnResourceCollected(string resourceId, int amount)
-    {
-        if (_resourcesCollected.ContainsKey(resourceId))
-            _resourcesCollected[resourceId] += amount;
-        else
-            _resourcesCollected[resourceId] = amount;
-    }
-
-    private void OnStructurePlaced(string structureId, Vector2 position)
-    {
-        _structuresPlaced++;
-    }
-
-    private void OnStructureDestroyed(string structureId, Vector2 position)
-    {
-        _structuresLost++;
-    }
 
     private void OnPoiExplored(string poiId, string poiType)
     {

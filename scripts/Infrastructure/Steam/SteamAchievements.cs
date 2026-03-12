@@ -82,15 +82,11 @@ public partial class SteamAchievements : Node
 
 		// Cycle
 		_eventBus.DayPhaseChanged += OnDayPhaseChanged;
-		_eventBus.NightSummary += OnNightSummary;
 
 		// Exploration
 		_eventBus.PoiExplored += OnPoiExplored;
 		_eventBus.ChestOpened += OnChestOpened;
 		_eventBus.ZoneDiscovered += OnZoneDiscovered;
-
-		// Construction
-		_eventBus.StructurePlaced += OnStructurePlaced;
 
 		// Lore
 		_eventBus.SouvenirDiscovered += OnSouvenirDiscovered;
@@ -110,11 +106,9 @@ public partial class SteamAchievements : Node
 		_eventBus.EnemyKilled -= OnEnemyKilled;
 		_eventBus.PlayerDamaged -= OnPlayerDamaged;
 		_eventBus.DayPhaseChanged -= OnDayPhaseChanged;
-		_eventBus.NightSummary -= OnNightSummary;
 		_eventBus.PoiExplored -= OnPoiExplored;
 		_eventBus.ChestOpened -= OnChestOpened;
 		_eventBus.ZoneDiscovered -= OnZoneDiscovered;
-		_eventBus.StructurePlaced -= OnStructurePlaced;
 		_eventBus.SouvenirDiscovered -= OnSouvenirDiscovered;
 		_eventBus.ScoreChanged -= OnScoreChanged;
 	}
@@ -198,14 +192,6 @@ public partial class SteamAchievements : Node
 			_tookDamageThisNight = false;
 	}
 
-	private void OnNightSummary(int nightNumber, int kills, int score)
-	{
-		_sessionNightsSurvived = nightNumber;
-
-		if (!_tookDamageThisNight && nightNumber > 0)
-			TryUnlock(NoDamageNight);
-	}
-
 	private void OnPoiExplored(string poiId, string poiType)
 	{
 		_sessionPois++;
@@ -219,11 +205,6 @@ public partial class SteamAchievements : Node
 	private void OnZoneDiscovered(int cellX, int cellY, int cellCount)
 	{
 		// Utilisé pour tracker la découverte de biomes (via cellCount ou zone mapping)
-	}
-
-	private void OnStructurePlaced(string structureId, Vector2 position)
-	{
-		_sessionStructures++;
 	}
 
 	private void OnSouvenirDiscovered(string souvenirId, string souvenirName, string constellationId)

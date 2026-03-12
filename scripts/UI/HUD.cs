@@ -165,8 +165,6 @@ public partial class HUD : CanvasLayer
         _eventBus.LevelUp += OnLevelUp;
         _eventBus.ScoreChanged += OnScoreChanged;
         _eventBus.DayPhaseChanged += OnDayPhaseChanged;
-        _eventBus.NightSummary += OnNightSummary;
-        _eventBus.InventoryChanged += OnInventoryChanged;
         _eventBus.WeaponInventoryChanged += OnWeaponInventoryChanged;
         _eventBus.WeaponUpgraded += OnWeaponUpgraded;
         _eventBus.PassiveSouvenirSlotsChanged += OnPassiveSlotsChanged;
@@ -186,7 +184,7 @@ public partial class HUD : CanvasLayer
         BuildScoreArea();
         BuildWeaponBar();
         BuildPassiveBar();
-        BuildInventoryPanel();
+        // V2: BuildInventoryPanel retire (plus d'inventaire de ressources)
         CreateDawnSummaryPanel();
         CreateMinimap();
         CreateInteractHint();
@@ -268,8 +266,6 @@ public partial class HUD : CanvasLayer
             _eventBus.LevelUp -= OnLevelUp;
             _eventBus.ScoreChanged -= OnScoreChanged;
             _eventBus.DayPhaseChanged -= OnDayPhaseChanged;
-            _eventBus.NightSummary -= OnNightSummary;
-            _eventBus.InventoryChanged -= OnInventoryChanged;
             _eventBus.WeaponInventoryChanged -= OnWeaponInventoryChanged;
             _eventBus.WeaponUpgraded -= OnWeaponUpgraded;
             _eventBus.PassiveSouvenirSlotsChanged -= OnPassiveSlotsChanged;
@@ -860,7 +856,7 @@ public partial class HUD : CanvasLayer
             _nightLabel.Text = $"N{_dayNightCycle.CurrentNight}";
 
         if (phase == "Day")
-            HideDawnSummary();
+            _dawnSummary.Visible = false;
 
         // Animate bar color
         Color barColor = phase switch
@@ -875,50 +871,7 @@ public partial class HUD : CanvasLayer
         tween.TweenProperty(_dayNightFill, "color", barColor, 1f);
     }
 
-    private void OnInventoryChanged(string resourceId, int newAmount)
-    {
-        switch (resourceId)
-        {
-            case "wood":
-                _woodLabel.Text = newAmount.ToString();
-                break;
-            case "stone":
-                _stoneLabel.Text = newAmount.ToString();
-                break;
-            case "metal":
-                _metalLabel.Text = newAmount.ToString();
-                break;
-        }
-        UpdateCapacityDisplay();
-    }
-
-    private void UpdateCapacityDisplay()
-    {
-        Node playerNode = GetTree().GetFirstNodeInGroup("player");
-        if (playerNode == null) return;
-
-        Base.Inventory inventory = playerNode.GetNodeOrNull<Base.Inventory>("Inventory");
-        if (inventory == null) return;
-
-        int total = inventory.TotalCount;
-        int max = Base.Inventory.MaxCapacity;
-        float ratio = max > 0 ? (float)total / max : 0f;
-
-        // Vertical fill from bottom
-        float barH = _capacityBarContainer.Size.Y - 2;
-        float fillH = barH * Mathf.Clamp(ratio, 0f, 1f);
-        _capacityBarFill.Position = new Vector2(1, _capacityBarContainer.Size.Y - 1 - fillH);
-        _capacityBarFill.Size = new Vector2(_capacityBarFill.Size.X, fillH);
-
-        Color barColor = ratio >= 1f
-            ? PalRedBlood with { A = 0.7f }
-            : ratio >= 0.8f
-                ? PalOrangeFlame with { A = 0.6f }
-                : PalGrayWarm with { A = 0.5f };
-        _capacityBarFill.Color = barColor;
-
-        _capacityLabel.Text = $"{total}/{max}";
-    }
+    // V2: OnInventoryChanged et UpdateCapacityDisplay retires (plus d'inventaire ressources)
 
     // --- Weapon slots ---
     private void OnWeaponInventoryChanged()
@@ -1083,44 +1036,10 @@ public partial class HUD : CanvasLayer
             return;
         }
 
-        if (player.IsHarvesting)
-        {
-            _interactHint.Visible = false;
-            return;
-        }
-
         float interactRange = player.InteractRange;
         Vector2 playerPos = player.GlobalPosition;
 
-        foreach (Node node in _groupCache?.GetStructures() ?? GetTree().GetNodesInGroup("structures"))
-        {
-            if (node is Base.Structure structure && !structure.IsDestroyed && structure.HpRatio < 1f)
-            {
-                float dist = playerPos.DistanceTo(structure.GlobalPosition);
-                if (dist < interactRange)
-                {
-                    int hpPercent = (int)(structure.HpRatio * 100);
-                    _interactHint.Text = $"[E] Réparer ({hpPercent}%)";
-                    _interactHint.Visible = true;
-                    return;
-                }
-            }
-        }
-
-        foreach (Node node in _groupCache?.GetResources() ?? GetTree().GetNodesInGroup("resources"))
-        {
-            if (node is Base.ResourceNode res && !res.IsExhausted)
-            {
-                float dist = playerPos.DistanceTo(res.GlobalPosition);
-                if (dist < interactRange)
-                {
-                    _interactHint.Text = $"[E] Récolter {GetResourceDisplayName(res.ResourceId)}";
-                    _interactHint.Visible = true;
-                    return;
-                }
-            }
-        }
-
+        // V2: POI and chest interact hints only (craft/harvest/repair removed)
         _interactHint.Visible = false;
     }
 
@@ -1293,20 +1212,6 @@ public partial class HUD : CanvasLayer
 
         _hudRoot.AddChild(_dawnSummary);
     }
-
-    private void OnNightSummary(int nightNumber, int kills, int score)
-    {
-        _dawnSummaryLabel.Text = $"Nuit {nightNumber} survécue !\nKills : {kills}  —  Score : +{score}";
-        _dawnSummary.Visible = true;
-        _dawnSummary.Modulate = Colors.White;
-
-        Tween tween = CreateTween();
-        tween.TweenInterval(4f);
-        tween.TweenProperty(_dawnSummary, "modulate:a", 0f, 1.5f);
-        tween.TweenCallback(Callable.From(HideDawnSummary));
-    }
-
-    private void HideDawnSummary() => _dawnSummary.Visible = false;
 
     private static string GetResourceDisplayName(string id)
     {

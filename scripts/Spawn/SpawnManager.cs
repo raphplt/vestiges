@@ -12,7 +12,7 @@ public partial class SpawnManager : Node2D
 {
 	[Export] public float SpawnRadiusMin = 400f;
 	[Export] public float SpawnRadiusMax = 600f;
-	[Export] public float FoyerSafeRadius = 150f;
+	// V2: FoyerSafeRadius retire (plus de Foyer)
 	[Export] public float NightSpawnRadius = 700f;
 
 	private float _baseSpawnInterval;
@@ -103,7 +103,7 @@ public partial class SpawnManager : Node2D
 	private const float LocalDensityCheckInterval = 0.25f;
 
 	private DayPhase _currentPhase = DayPhase.Day;
-	private Vector2 _foyerPosition = Vector2.Zero;
+	// V2: Vector2.Zero retire
 	private DayNightCycle _dayNightCycle;
 	private string _clusterEnemyId;
 	private int _clusterRemaining;
@@ -159,9 +159,7 @@ public partial class SpawnManager : Node2D
 		_dayNightCycle = GetNodeOrNull<DayNightCycle>("../DayNightCycle");
 		LoadDayNightConfig();
 
-		Node2D foyer = GetNodeOrNull<Node2D>("../Foyer");
-		if (foyer != null)
-			_foyerPosition = foyer.GlobalPosition;
+		// V2: plus de Foyer
 	}
 
 	public override void _ExitTree()
@@ -310,13 +308,11 @@ public partial class SpawnManager : Node2D
 		// Choisir 2-4 types pour cette vague
 		_nightWaveEnemyTypes = PickNightWaveEnemyTypes();
 
-		_eventBus.EmitSignal(EventBus.SignalName.NightWaveStarted, _nightWaveCurrent, _nightWaveCount);
 		GD.Print($"[SpawnManager] Night #{_currentNight} Wave {_nightWaveCurrent}/{_nightWaveCount}: {_nightWaveEnemiesTarget} enemies ({string.Join(", ", _nightWaveEnemyTypes)})");
 	}
 
 	private void CompleteCurrentNightWave()
 	{
-		_eventBus.EmitSignal(EventBus.SignalName.NightWaveCompleted, _nightWaveCurrent, _nightWaveCount);
 		GD.Print($"[SpawnManager] Wave {_nightWaveCurrent}/{_nightWaveCount} complete");
 
 		if (_nightWaveCurrent >= _nightWaveCount)
@@ -339,13 +335,12 @@ public partial class SpawnManager : Node2D
 
 		_nightWaveInPause = true;
 		_nightWaveTimer = 0f;
-		_eventBus.EmitSignal(EventBus.SignalName.NightWavePause, _nightWavePauseSec);
 	}
 
 	private List<string> PickNightWaveEnemyTypes()
 	{
 		CacheWorldSetup();
-		BiomeData biome = _worldSetup?.GetBiomeAt(_foyerPosition);
+		BiomeData biome = _worldSetup?.GetBiomeAt(Vector2.Zero);
 		List<string> pool = biome?.NightEnemyPool;
 		if (pool == null || pool.Count == 0)
 			pool = FallbackNightPool;
@@ -407,7 +402,7 @@ public partial class SpawnManager : Node2D
 		float speedMultiplier = ComputeEnemySpeedMultiplier(data, elapsedMinutes, spawnPos);
 		float aggressionMultiplier = ComputeEnemyAggressionMultiplier(data, elapsedMinutes);
 		enemy.ApplySpawnTuning(speedMultiplier, aggressionMultiplier);
-		enemy.SetNightTarget(true, _foyerPosition);
+		enemy.SetNightTarget(true, Vector2.Zero);
 
 		ApplyNightModifiers(enemy, data);
 
@@ -642,7 +637,7 @@ public partial class SpawnManager : Node2D
 		float speedMultiplier = ComputeEnemySpeedMultiplier(data, elapsedMinutes, spawnPos);
 		float aggressionMultiplier = ComputeEnemyAggressionMultiplier(data, elapsedMinutes);
 		enemy.ApplySpawnTuning(speedMultiplier, aggressionMultiplier);
-		enemy.SetNightTarget(_currentPhase == DayPhase.Night, _foyerPosition);
+		// V2: SetNightTarget retire (plus de phase Night)
 
 		ApplyNightModifiers(enemy, data);
 
@@ -685,7 +680,7 @@ public partial class SpawnManager : Node2D
 		float speedMultiplier = ComputeEnemySpeedMultiplier(data, elapsedMinutes, spawnPos);
 		float aggressionMultiplier = ComputeEnemyAggressionMultiplier(data, elapsedMinutes);
 		enemy.ApplySpawnTuning(speedMultiplier, aggressionMultiplier);
-		enemy.SetNightTarget(_currentPhase == DayPhase.Night, _foyerPosition);
+		// V2: SetNightTarget retire (plus de phase Night)
 
 		_eventBus.EmitSignal(EventBus.SignalName.EnemySpawned, enemyId, hpScale, dmgScale);
 		GD.Print($"[SpawnManager] Debug spawned: {enemyId} at {spawnPos}");
@@ -778,9 +773,6 @@ public partial class SpawnManager : Node2D
 
 	private bool IsValidDaySpawnPosition(Vector2 position)
 	{
-		if (position.DistanceTo(_foyerPosition) <= FoyerSafeRadius)
-			return false;
-
 		return !IsWaterAt(position);
 	}
 
@@ -792,7 +784,7 @@ public partial class SpawnManager : Node2D
 		return GetDaySpawnPosition();
 	}
 
-	/// <summary>Jour : spawn autour du joueur, en dehors du rayon de securite du Foyer et not on water.</summary>
+	/// <summary>Spawn autour du joueur, pas sur l'eau.</summary>
 	private Vector2 GetDaySpawnPosition()
 	{
 		for (int attempt = 0; attempt < 15; attempt++)
@@ -800,9 +792,6 @@ public partial class SpawnManager : Node2D
 			float angle = (float)GD.RandRange(0, Mathf.Tau);
 			float radius = (float)GD.RandRange(SpawnRadiusMin, SpawnRadiusMax);
 			Vector2 position = _player.GlobalPosition + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * radius;
-
-			if (position.DistanceTo(_foyerPosition) <= FoyerSafeRadius)
-				continue;
 
 			if (IsWaterAt(position))
 				continue;
@@ -822,14 +811,14 @@ public partial class SpawnManager : Node2D
 		{
 			float angle = (float)GD.RandRange(0, Mathf.Tau);
 			float radius = NightSpawnRadius;
-			Vector2 position = _foyerPosition + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * radius;
+			Vector2 position = Vector2.Zero + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * radius;
 
 			if (!IsWaterAt(position))
 				return position;
 		}
 
 		float fallbackAngle = (float)GD.RandRange(0, Mathf.Tau);
-		return _foyerPosition + new Vector2(Mathf.Cos(fallbackAngle), Mathf.Sin(fallbackAngle)) * NightSpawnRadius;
+		return Vector2.Zero + new Vector2(Mathf.Cos(fallbackAngle), Mathf.Sin(fallbackAngle)) * NightSpawnRadius;
 	}
 
 	private bool IsWaterAt(Vector2 worldPos)
@@ -876,7 +865,7 @@ public partial class SpawnManager : Node2D
 			return;
 
 		CacheWorldSetup();
-		BiomeData biome = _worldSetup?.GetBiomeAt(_foyerPosition);
+		BiomeData biome = _worldSetup?.GetBiomeAt(Vector2.Zero);
 		string colosseId = FallbackColosse;
 		if (biome != null && BiomeColosseMap.TryGetValue(biome.Id, out string mapped))
 			colosseId = mapped;
@@ -891,10 +880,10 @@ public partial class SpawnManager : Node2D
 		ComputeScaling(elapsedMinutes, out hpScale, out dmgScale);
 
 		// Position de spawn : bord oppose au joueur par rapport au foyer
-		Vector2 dirFromPlayer = (_foyerPosition - _player.GlobalPosition).Normalized();
+		Vector2 dirFromPlayer = (Vector2.Zero - _player.GlobalPosition).Normalized();
 		if (dirFromPlayer == Vector2.Zero)
 			dirFromPlayer = Vector2.Right;
-		Vector2 spawnPos = _foyerPosition + dirFromPlayer * NightSpawnRadius;
+		Vector2 spawnPos = Vector2.Zero + dirFromPlayer * NightSpawnRadius;
 
 		Enemy enemy = _pool.Get();
 		enemy.GlobalPosition = spawnPos;
@@ -903,7 +892,7 @@ public partial class SpawnManager : Node2D
 		float speedMultiplier = ComputeEnemySpeedMultiplier(data, elapsedMinutes, spawnPos);
 		float aggressionMultiplier = ComputeEnemyAggressionMultiplier(data, elapsedMinutes);
 		enemy.ApplySpawnTuning(speedMultiplier, aggressionMultiplier);
-		enemy.SetNightTarget(true, _foyerPosition);
+		enemy.SetNightTarget(true, Vector2.Zero);
 
 		_eventBus.EmitSignal(EventBus.SignalName.EnemySpawned, colosseId, hpScale, dmgScale);
 		GD.Print($"[SpawnManager] Colosse spawned: {colosseId} (Night #{_currentNight}, HP scale: {hpScale:F1}x)");
@@ -922,7 +911,7 @@ public partial class SpawnManager : Node2D
 		Indicible boss = new();
 		boss.Name = "Indicible";
 		_enemyContainer.AddChild(boss);
-		boss.Initialize(hpScale, dmgScale, _foyerPosition);
+		boss.Initialize(hpScale, dmgScale, Vector2.Zero);
 
 		GD.Print($"[SpawnManager] L'Indicible emerge... (Night #{_currentNight})");
 	}

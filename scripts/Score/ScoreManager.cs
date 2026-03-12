@@ -24,20 +24,15 @@ public partial class ScoreManager : Node
     private const int PointsPerColosseKill = 200;
     private const int PointsPerIndicibleKill = 5000;
     private const int NoDamageNightBonus = 500;
-    private const int PointsPerStructurePlaced = 20;
-    private const int PointsPerStructureSurvived = 50;
     private const int PointsPerPoiExplored = 50;
     private const string HighScorePath = "user://highscore.save";
 
     private int _combatScore;
     private int _survivalScore;
     private int _bonusScore;
-    private int _buildScore;
     private int _explorationScore;
     private int _totalKills;
-    private int _nightKills;
     private int _nightScore;
-    private int _nightsSurvived;
     private bool _tookDamageThisNight;
     private int _noDamageNights;
     private int _bestScore;
@@ -45,14 +40,12 @@ public partial class ScoreManager : Node
     private float _mutatorMultiplier = 1f;
     private EventBus _eventBus;
 
-    public int CurrentScore => (int)((_combatScore + _survivalScore + _bonusScore + _buildScore + _explorationScore) * _scoreMultiplier * _mutatorMultiplier);
+    public int CurrentScore => (int)((_combatScore + _survivalScore + _bonusScore + _explorationScore) * _scoreMultiplier * _mutatorMultiplier);
     public int CombatScore => _combatScore;
     public int SurvivalScore => _survivalScore;
     public int BonusScore => _bonusScore;
-    public int BuildScore => _buildScore;
     public int ExplorationScore => _explorationScore;
     public int TotalKills => _totalKills;
-    public int NightsSurvived => _nightsSurvived;
     public int NoDamageNights => _noDamageNights;
     public int BestScore => _bestScore;
     public bool IsNewRecord => CurrentScore > _bestScore;
@@ -66,9 +59,7 @@ public partial class ScoreManager : Node
     {
         _eventBus = GetNode<EventBus>("/root/EventBus");
         _eventBus.EnemyKilled += OnEnemyKilled;
-        _eventBus.DayPhaseChanged += OnDayPhaseChanged;
         _eventBus.PlayerDamaged += OnPlayerDamaged;
-        _eventBus.StructurePlaced += OnStructurePlaced;
         _eventBus.PoiExplored += OnPoiExplored;
         _eventBus.ChestOpened += OnChestOpened;
 
@@ -80,9 +71,7 @@ public partial class ScoreManager : Node
         if (_eventBus != null)
         {
             _eventBus.EnemyKilled -= OnEnemyKilled;
-            _eventBus.DayPhaseChanged -= OnDayPhaseChanged;
             _eventBus.PlayerDamaged -= OnPlayerDamaged;
-            _eventBus.StructurePlaced -= OnStructurePlaced;
             _eventBus.PoiExplored -= OnPoiExplored;
             _eventBus.ChestOpened -= OnChestOpened;
         }
@@ -137,10 +126,11 @@ public partial class ScoreManager : Node
         if (SteamManager.IsActive)
         {
             SteamAchievements achievements = GetNodeOrNull<SteamAchievements>("../SteamAchievements");
-            achievements?.OnRunEnd(CurrentScore, _nightsSurvived, gm.SelectedCharacterId);
+            int nightsSurvived = _runTracker?.CurrentNight ?? 0;
+            achievements?.OnRunEnd(CurrentScore, nightsSurvived, gm.SelectedCharacterId);
 
             SteamLeaderboards leaderboards = GetNodeOrNull<SteamLeaderboards>("../SteamLeaderboards");
-            leaderboards?.UploadScore(CurrentScore, _nightsSurvived, gm.SelectedCharacterId);
+            leaderboards?.UploadScore(CurrentScore, nightsSurvived, gm.SelectedCharacterId);
         }
     }
 
@@ -159,14 +149,14 @@ public partial class ScoreManager : Node
             CharacterId = characterId,
             CharacterName = charData?.Name ?? characterId,
             Score = CurrentScore,
-            NightsSurvived = _nightsSurvived,
+            NightsSurvived = _runTracker?.CurrentNight ?? 0,
             TotalKills = _totalKills,
             Date = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm"),
             WeaponId = weaponId,
             CombatScoreDetail = _combatScore,
             SurvivalScoreDetail = _survivalScore,
             BonusScoreDetail = _bonusScore,
-            BuildScoreDetail = _buildScore,
+            BuildScoreDetail = 0,
             ExplorationScoreDetail = _explorationScore,
             Seed = gm.RunSeed,
             ActiveMutators = new System.Collections.Generic.List<string>(gm.ActiveMutators),
@@ -201,7 +191,6 @@ public partial class ScoreManager : Node
     private void OnEnemyKilled(string enemyId, Vector2 position)
     {
         _totalKills++;
-        _nightKills++;
 
         int points = GetPointsForEnemy(enemyId);
         _combatScore += points;
@@ -234,12 +223,6 @@ public partial class ScoreManager : Node
         };
     }
 
-    private void OnStructurePlaced(string structureId, Vector2 position)
-    {
-        _buildScore += PointsPerStructurePlaced;
-        _eventBus.EmitSignal(EventBus.SignalName.ScoreChanged, CurrentScore);
-    }
-
     private void OnPoiExplored(string poiId, string poiType)
     {
         _explorationScore += PointsPerPoiExplored;
@@ -260,44 +243,6 @@ public partial class ScoreManager : Node
         _explorationScore += points;
         _eventBus.EmitSignal(EventBus.SignalName.ScoreChanged, CurrentScore);
         GD.Print($"[ScoreManager] Chest opened: {chestId} ({rarity}) +{points}pts");
-    }
-
-    private void OnDayPhaseChanged(string phase)
-    {
-        if (phase == "Dawn")
-        {
-            _nightsSurvived++;
-
-            int survivalPoints = GetSurvivalPoints(_nightsSurvived);
-            _survivalScore += survivalPoints;
-
-            int structureBonus = CountSurvivingStructures() * PointsPerStructureSurvived;
-            _buildScore += structureBonus;
-
-            if (!_tookDamageThisNight && _nightsSurvived > 0)
-            {
-                _bonusScore += NoDamageNightBonus;
-                _noDamageNights++;
-            }
-
-            _eventBus.EmitSignal(EventBus.SignalName.ScoreChanged, CurrentScore);
-            _eventBus.EmitSignal(EventBus.SignalName.NightSummary, _nightsSurvived, _nightKills, _nightScore);
-            GD.Print($"[ScoreManager] Night {_nightsSurvived} — Kills: {_nightKills}, Score: +{_nightScore}, Survival: +{survivalPoints}, Structures: +{structureBonus}, NoDmg: {!_tookDamageThisNight}");
-
-            _nightKills = 0;
-            _nightScore = 0;
-            _tookDamageThisNight = false;
-        }
-        else if (phase == "Night")
-        {
-            _tookDamageThisNight = false;
-        }
-    }
-
-    private int CountSurvivingStructures()
-    {
-        Godot.Collections.Array<Node> structures = GetTree().GetNodesInGroup("structures");
-        return structures.Count;
     }
 
     /// <summary>Score de survie exponentiel par nuit (GDD : nuit1=100, nuit2=250, nuit5=1500, nuit10=8000).</summary>

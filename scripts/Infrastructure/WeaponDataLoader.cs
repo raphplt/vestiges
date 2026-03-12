@@ -20,12 +20,6 @@ public class WeaponSpecialEffect
 	public List<string> Shapes { get; set; }
 }
 
-/// <summary>Recette de craft d'une arme (ingrédients nécessaires).</summary>
-public class WeaponCraftRecipe
-{
-	public List<RecipeIngredient> Ingredients { get; set; } = new();
-}
-
 public class WeaponData
 {
 	public string Id { get; set; }
@@ -39,7 +33,6 @@ public class WeaponData
 	public string Sprite { get; set; }
 	public string Source { get; set; }
 	public string RequiresSouvenir { get; set; }
-	public WeaponCraftRecipe CraftRecipe { get; set; }
 	public Dictionary<string, float> Stats { get; set; } = new();
 	public WeaponOnHitEffect OnHitEffect { get; set; }
 	public WeaponSpecialEffect SpecialEffect { get; set; }
@@ -129,20 +122,6 @@ public static class WeaponDataLoader
         return _allWeapons;
     }
 
-    public static List<WeaponData> GetCraftableWeapons()
-    {
-        if (!_loaded)
-            Load();
-
-        List<WeaponData> result = new();
-        foreach (WeaponData w in _allWeapons)
-        {
-            if (w.CraftRecipe != null && w.CraftRecipe.Ingredients.Count > 0)
-                result.Add(w);
-        }
-        return result;
-    }
-
     private static WeaponData ParseWeapon(Godot.Collections.Dictionary dict)
     {
         WeaponData weapon = new()
@@ -159,27 +138,6 @@ public static class WeaponDataLoader
             Source = dict.ContainsKey("source") ? dict["source"].AsString() : null,
             RequiresSouvenir = dict.ContainsKey("requires_souvenir") ? dict["requires_souvenir"].AsString() : null
         };
-
-        if (dict.ContainsKey("craft_recipe") && dict["craft_recipe"].VariantType == Variant.Type.Dictionary)
-        {
-            Godot.Collections.Dictionary recipeDict = dict["craft_recipe"].AsGodotDictionary();
-            if (recipeDict.ContainsKey("ingredients"))
-            {
-                WeaponCraftRecipe recipe = new();
-                Godot.Collections.Array ingredients = recipeDict["ingredients"].AsGodotArray();
-                foreach (Variant ingEntry in ingredients)
-                {
-                    Godot.Collections.Dictionary ingDict = ingEntry.AsGodotDictionary();
-                    recipe.Ingredients.Add(new RecipeIngredient
-                    {
-                        Resource = ingDict["resource"].AsString(),
-                        Amount = (int)ingDict["amount"].AsDouble()
-                    });
-                }
-                if (recipe.Ingredients.Count > 0)
-                    weapon.CraftRecipe = recipe;
-            }
-        }
 
         if (dict.ContainsKey("stats"))
         {

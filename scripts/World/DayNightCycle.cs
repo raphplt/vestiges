@@ -77,17 +77,8 @@ public partial class DayNightCycle : Node
 
     public override void _Process(double delta)
     {
-        if (_phasePaused)
-            return;
-
-        float dt = (float)delta;
-        _phaseElapsed += dt;
-
-        float duration = GetCurrentPhaseDuration();
-        if (_phaseElapsed >= duration)
-        {
-            AdvancePhase();
-        }
+        // V2: cycle jour/nuit desactive — le jeu reste en mode "Day" permanent.
+        // L'ErasureManager remplacera ce systeme.
     }
 
     public void AdvancePhase()

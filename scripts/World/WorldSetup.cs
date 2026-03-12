@@ -81,7 +81,7 @@ public partial class WorldSetup : Node2D
         ChestDataLoader.Load();
 
         _ground = GetNode<TileMapLayer>("Ground");
-        _resourceContainer = GetNode<Node2D>("ResourceContainer");
+        _resourceContainer = GetNodeOrNull<Node2D>("ResourceContainer");
         _poiContainer = GetNode<Node2D>("PoiContainer");
         _resourceScene = GD.Load<PackedScene>("res://scenes/base/ResourceNode.tscn");
 
@@ -492,7 +492,7 @@ public partial class WorldSetup : Node2D
         Vector2 worldPos = _ground.MapToLocal(cell);
         ResourceNode node = _resourceScene.Instantiate<ResourceNode>();
         node.GlobalPosition = worldPos;
-        _resourceContainer.AddChild(node);
+        _resourceContainer?.AddChild(node);
         node.Initialize(data);
         return resourceId;
     }
@@ -893,7 +893,7 @@ public partial class WorldSetup : Node2D
     {
         RefreshUsedCells();
 
-        int activeCount = _resourceContainer.GetChildCount();
+        int activeCount = _resourceContainer?.GetChildCount() ?? 0;
         if (activeCount >= _config.RespawnThreshold)
             return;
 
@@ -910,6 +910,7 @@ public partial class WorldSetup : Node2D
     private void RefreshUsedCells()
     {
         _usedCells.Clear();
+        if (_resourceContainer == null) return;
         foreach (Node child in _resourceContainer.GetChildren())
         {
             if (child is ResourceNode res && !res.IsExhausted)

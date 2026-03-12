@@ -46,7 +46,6 @@ public partial class AnalyticsManager : Node
 
 		_eventBus = GetNode<EventBus>("/root/EventBus");
 		_eventBus.PerkChosen += OnPerkChosen;
-		_eventBus.StructurePlaced += OnStructurePlaced;
 		_eventBus.EnemyKilled += OnEnemyKilled;
 		_eventBus.SouvenirDiscovered += OnSouvenirDiscovered;
 	}
@@ -56,7 +55,6 @@ public partial class AnalyticsManager : Node
 		if (_eventBus != null)
 		{
 			_eventBus.PerkChosen -= OnPerkChosen;
-			_eventBus.StructurePlaced -= OnStructurePlaced;
 			_eventBus.EnemyKilled -= OnEnemyKilled;
 			_eventBus.SouvenirDiscovered -= OnSouvenirDiscovered;
 		}
@@ -132,11 +130,6 @@ public partial class AnalyticsManager : Node
 	private void OnPerkChosen(string perkId)
 	{
 		Increment(_perkPicks, perkId);
-	}
-
-	private void OnStructurePlaced(string structureId, Vector2 position)
-	{
-		Increment(_structuresBuilt, structureId);
 	}
 
 	private void OnEnemyKilled(string enemyId, Vector2 position)

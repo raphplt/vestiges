@@ -616,17 +616,13 @@ public partial class AudioManager : Node
 		eb.EnemySpawned       += OnEnemySpawned;
 		eb.EnemyKilled        += OnEnemyKilled;
 		eb.PlayerDamaged      += OnPlayerDamaged;
-		eb.CraftCompleted     += OnCraftCompleted;
-		eb.StructurePlaced    += OnStructurePlaced;
 		eb.SouvenirDiscovered += OnSouvenirDiscovered;
 		eb.ZoneDiscovered     += OnZoneDiscovered;
 		eb.PerkChosen         += OnPerkChosen;
 		eb.FragmentChosen     += OnFragmentChosen;
-		eb.ResourceCollected  += OnResourceCollected;
 		eb.GameStateChanged   += OnGameStateChanged;
 		eb.ChestOpened        += OnChestOpened;
 		eb.PoiExplored        += OnPoiExplored;
-		eb.NightWaveStarted   += OnNightWaveStarted;
 		eb.RandomEventTriggered += OnRandomEventTriggered;
 		eb.RandomEventEnded   += OnRandomEventEnded;
 	}
@@ -637,17 +633,13 @@ public partial class AudioManager : Node
 		eb.EnemySpawned       -= OnEnemySpawned;
 		eb.EnemyKilled        -= OnEnemyKilled;
 		eb.PlayerDamaged      -= OnPlayerDamaged;
-		eb.CraftCompleted     -= OnCraftCompleted;
-		eb.StructurePlaced    -= OnStructurePlaced;
 		eb.SouvenirDiscovered -= OnSouvenirDiscovered;
 		eb.ZoneDiscovered     -= OnZoneDiscovered;
 		eb.PerkChosen         -= OnPerkChosen;
 		eb.FragmentChosen     -= OnFragmentChosen;
-		eb.ResourceCollected  -= OnResourceCollected;
 		eb.GameStateChanged   -= OnGameStateChanged;
 		eb.ChestOpened        -= OnChestOpened;
 		eb.PoiExplored        -= OnPoiExplored;
-		eb.NightWaveStarted   -= OnNightWaveStarted;
 		eb.RandomEventTriggered -= OnRandomEventTriggered;
 		eb.RandomEventEnded   -= OnRandomEventEnded;
 	}
@@ -718,16 +710,6 @@ public partial class AudioManager : Node
 		UpdatePlayerWarnings();
 	}
 
-	private void OnCraftCompleted(string recipeId)
-	{
-		PlaySfx("sfx_craft_termine");
-	}
-
-	private void OnStructurePlaced(string structureId, Vector2 position)
-	{
-		PlaySfx("sfx_structure_pose");
-	}
-
 	private void OnSouvenirDiscovered(string souvenirId, string souvenirName, string constellationId)
 	{
 		PlaySfx("sfx_souvenir_trouve", 0f);
@@ -747,11 +729,6 @@ public partial class AudioManager : Node
 		PlaySfx("sfx_perk_choix", 0f);
 	}
 
-	private void OnResourceCollected(string resourceId, int amount)
-	{
-		PlaySfx("sfx_recolte_obtenu", 0.05f, -2f);
-	}
-
 	private void OnChestOpened(string chestId, string rarity, Vector2 position)
 	{
 		if (rarity == "lore")
@@ -762,11 +739,6 @@ public partial class AudioManager : Node
 	{
 		if (poiType == "lore" || poiType == "sanctuary")
 			PlaySfx("sfx_artefact_trouve", 0f, -3f);
-	}
-
-	private void OnNightWaveStarted(int waveNumber, int totalWaves)
-	{
-		PlaySfx("sfx_danger_building", 0f, -4f);
 	}
 
 	private void OnRandomEventTriggered(string eventId, string eventName)

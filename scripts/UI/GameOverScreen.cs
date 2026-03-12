@@ -204,10 +204,10 @@ public partial class GameOverScreen : CanvasLayer
         int combat = _scoreManager?.CombatScore ?? 0;
         int survival = _scoreManager?.SurvivalScore ?? 0;
         int bonus = _scoreManager?.BonusScore ?? 0;
-        int build = _scoreManager?.BuildScore ?? 0;
         int exploration = _scoreManager?.ExplorationScore ?? 0;
         int kills = _scoreManager?.TotalKills ?? 0;
-        int nights = _scoreManager?.NightsSurvived ?? 0;
+        GameManager gm = GetNode<GameManager>("/root/GameManager");
+        int nights = gm.LastRunData?.NightsSurvived ?? 0;
         int best = _scoreManager?.BestScore ?? 0;
         bool isRecord = _scoreManager?.IsNewRecord ?? false;
         float charMult = _scoreManager?.CharacterMultiplier ?? 1f;
@@ -220,7 +220,7 @@ public partial class GameOverScreen : CanvasLayer
         _combatLabel.Text = $"Combat : {combat}";
         _survivalLabel.Text = $"Survie : {survival}";
         _bonusLabel.Text = $"Bonus (nuits sans dégât) : {bonus}";
-        _buildLabel.Text = build > 0 ? $"Construction : {build}" : "";
+        _buildLabel.Text = "";
         _explorationLabel.Text = exploration > 0 ? $"Exploration : {exploration}" : "";
         _killsLabel.Text = $"Kills : {kills}";
 

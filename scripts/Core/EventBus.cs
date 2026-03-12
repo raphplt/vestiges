@@ -25,26 +25,11 @@ public partial class EventBus : Node
     [Signal] public delegate void PerkChosenEventHandler(string perkId);
     [Signal] public delegate void SynergyActivatedEventHandler(string synergyId, string notification);
 
-    // --- Cycle Jour/Nuit ---
+    // --- Cycle Jour/Nuit (V2: conservé pour compatibilité, émis "Day" au démarrage) ---
     [Signal] public delegate void DayPhaseChangedEventHandler(string phase);
 
     // --- Score ---
     [Signal] public delegate void ScoreChangedEventHandler(int newScore);
-
-    // --- Résumé de nuit ---
-    [Signal] public delegate void NightSummaryEventHandler(int nightNumber, int kills, int score);
-
-    // --- Ressources & Inventaire ---
-    [Signal] public delegate void ResourceCollectedEventHandler(string resourceId, int amount);
-    [Signal] public delegate void InventoryChangedEventHandler(string resourceId, int newAmount);
-
-    // --- Craft ---
-    [Signal] public delegate void CraftStartedEventHandler(string recipeId);
-    [Signal] public delegate void CraftCompletedEventHandler(string recipeId);
-
-    // --- Structures ---
-    [Signal] public delegate void StructurePlacedEventHandler(string structureId, Vector2 position);
-    [Signal] public delegate void StructureDestroyedEventHandler(string structureId, Vector2 position);
 
     // --- Mémorial ---
     [Signal] public delegate void MemorialActivatedEventHandler();
@@ -87,18 +72,22 @@ public partial class EventBus : Node
     [Signal] public delegate void RandomEventEndedEventHandler(string eventId);
 
     // --- Bonus événementiels ---
-    [Signal] public delegate void ResourceBonusChangedEventHandler(float multiplier);
     [Signal] public delegate void XpMultiplierChangedEventHandler(float multiplier);
-    [Signal] public delegate void DayTimerPausedEventHandler(bool paused);
     [Signal] public delegate void PlayerBuffAppliedEventHandler(string buffId, float duration);
-    [Signal] public delegate void FoyerRadiusChangedEventHandler(float newRadius);
     [Signal] public delegate void FogRevealBurstEventHandler(int cellX, int cellY, int radius);
 
     // --- Difficulte dynamique ---
     [Signal] public delegate void DifficultyModifierChangedEventHandler(float enemyCountMult, float enemyHpMult, float enemyDmgMult, float xpMult);
 
-    // --- Vagues de nuit ---
-    [Signal] public delegate void NightWaveStartedEventHandler(int waveNumber, int totalWaves);
-    [Signal] public delegate void NightWaveCompletedEventHandler(int waveNumber, int totalWaves);
-    [Signal] public delegate void NightWavePauseEventHandler(float pauseDuration);
+    // --- Effacement (V2) ---
+    [Signal] public delegate void ErasureUpdatedEventHandler(float globalErasurePercent);
+    [Signal] public delegate void ZonePhaseChangedEventHandler(int cellX, int cellY, int phase);
+
+    // --- Résurgences (V2) ---
+    [Signal] public delegate void CrisisWarningEventHandler(int crisisNumber, float countdown);
+    [Signal] public delegate void CrisisStartedEventHandler(int crisisNumber, int intensity);
+    [Signal] public delegate void CrisisEndedEventHandler(int crisisNumber);
+
+    // --- Essence (V2) ---
+    [Signal] public delegate void EssenceChangedEventHandler(int newAmount);
 }
