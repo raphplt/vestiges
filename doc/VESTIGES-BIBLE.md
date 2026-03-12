@@ -1,10 +1,27 @@
 # VESTIGES — Bible Artistique & Narrative
 
-> **Version :** 1.1
+> **Version :** 1.2
 > **Auteur :** Raphaël Plassart
-> **Dernière mise à jour :** 2 mars 2026
+> **Dernière mise à jour :** 12 mars 2026
 > **Statut :** Document de référence créative
 > **Audience :** Développeur, Graphic Designer, toute personne contribuant à l'identité du jeu
+
+---
+
+## ⚠️ AMENDEMENT V2 — PIVOT MARS 2026
+
+> **Référence complète :** [VESTIGES-STRATEGIE-V2.md](VESTIGES-STRATEGIE-V2.md)
+>
+> Le gameplay a pivoté d'un hybride roguelite/survie/craft vers un **roguelite d'exploration-combat nomade**. Les changements impactant cette Bible :
+>
+> **Ce qui NE CHANGE PAS :** Le lore (Partie I), la cosmologie, les 6 Constellations, la direction artistique globale, les biomes, le bestiaire, les principes visuels. Tout ça reste la référence absolue.
+>
+> **Ce qui change :**
+> - **Le cycle jour/nuit est remplacé par l'Effacement progressif continu.** Les palettes "Jour" et "Nuit" deviennent les palettes "Ancré" (mémoire haute) et "Effacé" (mémoire basse). La transition n'est plus temporelle mais spatiale — les zones proches du joueur sont ancrées, les zones éloignées/anciennes s'effacent.
+> - **Le Foyer n'existe plus in-run.** Le joueur est nomade. Le Hub entre les runs reprend le rôle narratif du Foyer (espace de conscience). Les mentions du Foyer comme "zone safe" ou "station de craft" sont obsolètes.
+> - **Le craft et la construction sont retirés.** Plus de murs, pièges, tourelles, recettes. La montée en puissance passe par les perks, le loot d'armes (avec raretés), et les Autels d'Essence (points de mémoire concentrée dans le monde).
+> - **L'audio s'adapte au nouveau flow.** Plus de phases distinctes jour/nuit. La musique suit l'intensité de l'Effacement et du combat de manière continue. Les principes (silence comme outil, musique intime et étrange, sound design adaptatif) restent intacts.
+> - **Nouveaux éléments visuels :** palette "Néant" (vide blanc-bleuté pur pour les zones à 0% mémoire), Autels d'Essence (piliers de cristal dorés), Résurgents (ennemis semi-transparents de crise), phases visuelles d'Effacement par zone.
 
 ---
 
