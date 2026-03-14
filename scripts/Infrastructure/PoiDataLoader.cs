@@ -9,8 +9,8 @@ public class PoiData
     public string Name;
     public string Type;
     public int Size;
-    public int MinDistanceFromFoyer;
-    public int MaxDistanceFromFoyer;
+    public int MinDistanceFromSpawn;
+    public int MaxDistanceFromSpawn;
     public List<string> BiomeWhitelist = new();
     public List<string> BiomeBlacklist = new();
     public float SpawnWeight;
@@ -97,8 +97,12 @@ public static class PoiDataLoader
             Name = dict.ContainsKey("name") ? dict["name"].AsString() : id,
             Type = dict.ContainsKey("type") ? dict["type"].AsString() : "searchable",
             Size = dict.ContainsKey("size") ? (int)dict["size"].AsDouble() : 2,
-            MinDistanceFromFoyer = dict.ContainsKey("min_distance_from_foyer") ? (int)dict["min_distance_from_foyer"].AsDouble() : 10,
-            MaxDistanceFromFoyer = dict.ContainsKey("max_distance_from_foyer") ? (int)dict["max_distance_from_foyer"].AsDouble() : 55,
+            MinDistanceFromSpawn = dict.ContainsKey("min_distance_from_spawn")
+                ? (int)dict["min_distance_from_spawn"].AsDouble()
+                : 10,
+            MaxDistanceFromSpawn = dict.ContainsKey("max_distance_from_spawn")
+                ? (int)dict["max_distance_from_spawn"].AsDouble()
+                : 55,
             SpawnWeight = dict.ContainsKey("spawn_weight") ? (float)dict["spawn_weight"].AsDouble() : 10f,
             Color = Color.FromHtml(colorHex),
             OutlineColor = Color.FromHtml(outlineHex),

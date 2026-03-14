@@ -1,0 +1,15 @@
+{
+    "first_crisis_delay_sec": 240,
+    "interval_sec": 240,
+    "interval_variance_sec": 45,
+    "warning_duration_sec": 20,
+    "crisis_duration_sec": 70,
+    "late_game_erasure_threshold": 0.68,
+    "late_game_crisis_threshold": 4,
+    "boss_crisis_threshold": 5,
+    "boss_time_threshold_sec": 1320,
+    "boss_hp_scale": 3.2,
+    "boss_dmg_scale": 1.65,
+    "endgame_interval_multiplier": 0.70,
+    "endgame_duration_multiplier": 1.15
+}

@@ -1,11 +1,10 @@
 {
     "id": "chest_rare",
     "entries": [
-        { "type": "resource", "item": "metal", "weight": 25, "min_amount": 3, "max_amount": 6 },
-        { "type": "resource", "item": "stone", "weight": 20, "min_amount": 3, "max_amount": 5 },
-        { "type": "resource", "item": "wood", "weight": 10, "min_amount": 4, "max_amount": 8 },
-        { "type": "xp", "item": "xp", "weight": 15, "min_amount": 30, "max_amount": 60 },
-        { "type": "perk", "item": "random_perk", "weight": 22, "min_amount": 1, "max_amount": 1 },
+        { "type": "essence", "item": "essence", "weight": 34, "min_amount": 8, "max_amount": 16 },
+        { "type": "xp", "item": "xp", "weight": 18, "min_amount": 28, "max_amount": 60 },
+        { "type": "perk", "item": "random_perk", "weight": 18, "min_amount": 1, "max_amount": 1 },
+        { "type": "weapon", "item": "random_weapon", "weight": 22, "min_amount": 1, "max_amount": 1 },
         { "type": "cursed_item", "item": "random_curse", "weight": 8, "min_amount": 1, "max_amount": 1 }
     ]
 }

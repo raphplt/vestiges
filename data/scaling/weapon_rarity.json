@@ -1,0 +1,59 @@
+{
+    "rarities": [
+        {
+            "id": "common",
+            "display_name": "Commun",
+            "color": "#C8C2B6",
+            "weight": 52,
+            "global_multiplier": 1.00,
+            "damage_multiplier": 1.00,
+            "attack_speed_multiplier": 1.00,
+            "range_multiplier": 1.00,
+            "heal_multiplier": 1.00
+        },
+        {
+            "id": "uncommon",
+            "display_name": "Inhabituel",
+            "color": "#7FCB89",
+            "weight": 24,
+            "global_multiplier": 1.05,
+            "damage_multiplier": 1.06,
+            "attack_speed_multiplier": 1.03,
+            "range_multiplier": 1.02,
+            "heal_multiplier": 1.06
+        },
+        {
+            "id": "rare",
+            "display_name": "Rare",
+            "color": "#67A6E8",
+            "weight": 14,
+            "global_multiplier": 1.11,
+            "damage_multiplier": 1.14,
+            "attack_speed_multiplier": 1.07,
+            "range_multiplier": 1.05,
+            "heal_multiplier": 1.10
+        },
+        {
+            "id": "epic",
+            "display_name": "Epique",
+            "color": "#C97AE8",
+            "weight": 7,
+            "global_multiplier": 1.20,
+            "damage_multiplier": 1.24,
+            "attack_speed_multiplier": 1.10,
+            "range_multiplier": 1.08,
+            "heal_multiplier": 1.16
+        },
+        {
+            "id": "legendary",
+            "display_name": "Legendaire",
+            "color": "#F0C85C",
+            "weight": 3,
+            "global_multiplier": 1.32,
+            "damage_multiplier": 1.36,
+            "attack_speed_multiplier": 1.14,
+            "range_multiplier": 1.12,
+            "heal_multiplier": 1.24
+        }
+    ]
+}

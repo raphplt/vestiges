@@ -6,9 +6,7 @@ namespace Vestiges.Combat;
 
 /// <summary>
 /// Arme lâchée au sol par un ennemi ou un événement.
-/// Le joueur s'approche pour la ramasser automatiquement (pas d'interaction requise).
-/// Affiche le nom de l'arme et une lueur pulsante.
-/// Si les slots sont pleins, flash rouge (pas de swap — les armes viennent du level-up).
+/// Ramassage auto si un slot est libre, sinon comparaison au sol et échange sur interaction.
 /// </summary>
 public partial class WeaponPickup : Area2D
 {
@@ -19,23 +17,31 @@ public partial class WeaponPickup : Area2D
 	private const float DespawnTime = 120f;
 	private const string ResourcePrefix = "res://";
 
-	private WeaponData _weaponData;
+	private WeaponInstance _weaponInstance;
 	private Node2D _visualRoot;
 	private Sprite2D _visual;
 	private Polygon2D _glow;
 	private Label _nameLabel;
+	private Label _compareLabel;
 	private float _bobTimer;
 	private Vector2 _basePosition;
 	private Vector2 _scatterVelocity;
 	private float _scatterTimer;
 	private bool _collected;
 	private Tween _glowTween;
+	private Player _nearbyPlayer;
 
-	public WeaponData Weapon => _weaponData;
+	public WeaponData Weapon => _weaponInstance?.Base;
+	public WeaponInstance WeaponInstance => _weaponInstance;
 
 	public void Initialize(WeaponData weapon, Vector2 position)
 	{
-		_weaponData = weapon;
+		Initialize(new WeaponInstance(weapon), position);
+	}
+
+	public void Initialize(WeaponInstance weapon, Vector2 position)
+	{
+		_weaponInstance = weapon;
 		GlobalPosition = position;
 		_basePosition = position;
 
@@ -56,8 +62,10 @@ public partial class WeaponPickup : Area2D
 
 		CreateVisual();
 		CreateNameLabel();
+		CreateCompareLabel();
 
 		BodyEntered += OnBodyEntered;
+		BodyExited += OnBodyExited;
 
 		GetTree().CreateTimer(DespawnTime).Timeout += () =>
 		{
@@ -90,6 +98,8 @@ public partial class WeaponPickup : Area2D
 		float bobOffset = Mathf.Sin(_bobTimer) * BobAmplitude;
 		if (_visualRoot != null)
 			_visualRoot.Position = new Vector2(0, bobOffset);
+
+		UpdateCompareState();
 	}
 
 	private void OnBodyEntered(Node2D body)
@@ -100,8 +110,18 @@ public partial class WeaponPickup : Area2D
 		if (body is not Player player)
 			return;
 
-		// Defer to avoid "Can't change state while flushing queries"
+		_nearbyPlayer = player;
 		CallDeferred(MethodName.ProcessPickup, player.GetPath());
+	}
+
+	private void OnBodyExited(Node2D body)
+	{
+		if (body == _nearbyPlayer)
+		{
+			_nearbyPlayer = null;
+			if (_compareLabel != null)
+				_compareLabel.Visible = false;
+		}
 	}
 
 	private void ProcessPickup(NodePath playerPath)
@@ -113,19 +133,26 @@ public partial class WeaponPickup : Area2D
 		if (player == null)
 			return;
 
-		if (player.AddWeapon(_weaponData))
+		if (HasWeapon(player, _weaponInstance.Id))
+		{
+			SetCompareMessage("Deja equipee", new Color(0.95f, 0.45f, 0.35f));
+			FlashFull();
+			return;
+		}
+
+		if (player.WeaponSlots.Count < Player.MaxWeaponSlots && player.AddWeapon(_weaponInstance))
 		{
 			_collected = true;
 			PlayPickupEffect(player);
 
 			EventBus eventBus = GetNodeOrNull<EventBus>("/root/EventBus");
-			eventBus?.EmitSignal(EventBus.SignalName.LootReceived, "weapon", _weaponData.Id, 1);
+			eventBus?.EmitSignal(EventBus.SignalName.LootReceived, "weapon", _weaponInstance.Id, 1);
 
-			GD.Print($"[WeaponPickup] {_weaponData.Name} ramassée !");
+			GD.Print($"[WeaponPickup] {_weaponInstance.Name} ({_weaponInstance.Rarity}) ramassee");
 		}
 		else
 		{
-			FlashFull();
+			UpdateCompareMessage(player);
 		}
 	}
 
@@ -148,12 +175,12 @@ public partial class WeaponPickup : Area2D
 	{
 		Label floatLabel = new()
 		{
-			Text = $"+ {_weaponData.Name}",
+			Text = $"+ {_weaponInstance.Name} [{_weaponInstance.RarityDisplayName}]",
 			HorizontalAlignment = HorizontalAlignment.Center,
 			GlobalPosition = GlobalPosition + new Vector2(0, -20)
 		};
-		floatLabel.AddThemeColorOverride("font_color", GetTierColor());
-		floatLabel.AddThemeFontSizeOverride("font_size", 11);
+		floatLabel.AddThemeColorOverride("font_color", GetPickupColor());
+		floatLabel.AddThemeFontSizeOverride("font_size", 14);
 
 		GetTree().Root.CallDeferred("add_child", floatLabel);
 
@@ -210,7 +237,7 @@ public partial class WeaponPickup : Area2D
 			new(-gr, 0), new(0, -gr * 0.5f),
 			new(gr, 0), new(0, gr * 0.5f)
 		};
-		_glow.Color = new Color(GetTierColor(), 0.35f);
+		_glow.Color = new Color(GetPickupColor(), 0.35f);
 		_glow.ZIndex = -1;
 		_visualRoot.AddChild(_glow);
 
@@ -250,19 +277,37 @@ public partial class WeaponPickup : Area2D
 	{
 		_nameLabel = new Label
 		{
-			Text = _weaponData?.Name ?? "???",
+			Text = $"{_weaponInstance?.Name ?? "???"}\n{_weaponInstance?.RarityDisplayName ?? "Commun"}",
 			HorizontalAlignment = HorizontalAlignment.Center,
-			Position = new Vector2(-40, -24)
+			Position = new Vector2(-52, -36)
 		};
-		_nameLabel.AddThemeColorOverride("font_color", GetTierColor());
-		_nameLabel.AddThemeFontSizeOverride("font_size", 8);
-		_nameLabel.Size = new Vector2(80, 16);
+		_nameLabel.AddThemeColorOverride("font_color", GetPickupColor());
+		_nameLabel.AddThemeFontSizeOverride("font_size", 12);
+		_nameLabel.Size = new Vector2(104, 28);
 		AddChild(_nameLabel);
 	}
 
-	private Color GetTierColor()
+	private void CreateCompareLabel()
 	{
-		int tier = _weaponData?.Tier ?? 1;
+		_compareLabel = new Label
+		{
+			HorizontalAlignment = HorizontalAlignment.Center,
+			AutowrapMode = TextServer.AutowrapMode.WordSmart,
+			Position = new Vector2(-68, 16),
+			Size = new Vector2(136, 48),
+			Visible = false
+		};
+		_compareLabel.AddThemeFontSizeOverride("font_size", 10);
+		_compareLabel.AddThemeColorOverride("font_color", Colors.White);
+		AddChild(_compareLabel);
+	}
+
+	private Color GetPickupColor()
+	{
+		if (_weaponInstance != null)
+			return _weaponInstance.RarityColor;
+
+		int tier = Weapon?.Tier ?? 1;
 		return tier switch
 		{
 			1 => new Color(0.7f, 0.7f, 0.7f),
@@ -276,7 +321,7 @@ public partial class WeaponPickup : Area2D
 
 	private Texture2D LoadWeaponTexture()
 	{
-		string spritePath = _weaponData?.Sprite;
+		string spritePath = _weaponInstance?.Sprite;
 		if (string.IsNullOrWhiteSpace(spritePath))
 			return null;
 
@@ -286,8 +331,8 @@ public partial class WeaponPickup : Area2D
 
 	private ImageTexture CreateFallbackTexture()
 	{
-		Color color = GetTierColor();
-		Image image = Image.Create(16, 16, false, Image.Format.Rgba8);
+		Color color = GetPickupColor();
+		Image image = Image.CreateEmpty(16, 16, false, Image.Format.Rgba8);
 		image.Fill(Colors.Transparent);
 
 		for (int x = 3; x < 13; x++)
@@ -297,5 +342,105 @@ public partial class WeaponPickup : Area2D
 		}
 
 		return ImageTexture.CreateFromImage(image);
+	}
+
+	private void UpdateCompareState()
+	{
+		if (_collected || _nearbyPlayer == null || !IsInstanceValid(_nearbyPlayer))
+			return;
+
+		if (_nearbyPlayer.WeaponSlots.Count < Player.MaxWeaponSlots)
+		{
+			SetCompareMessage("Ramassage auto", new Color(0.75f, 0.92f, 0.75f));
+			return;
+		}
+
+		UpdateCompareMessage(_nearbyPlayer);
+		if (Input.IsActionJustPressed("interact"))
+			SwapWithEquippedWeapon(_nearbyPlayer);
+	}
+
+	private void UpdateCompareMessage(Player player)
+	{
+		WeaponInstance equipped = player.EquippedWeapon;
+		if (equipped == null)
+		{
+			SetCompareMessage("Interagir: equiper", new Color(0.75f, 0.92f, 0.75f));
+			return;
+		}
+
+		float deltaDamage = _weaponInstance.GetDamageValue() - equipped.GetDamageValue();
+		float deltaSpeed = _weaponInstance.GetAttackSpeedValue() - equipped.GetAttackSpeedValue();
+		float deltaRange = _weaponInstance.GetRangeValue() - equipped.GetRangeValue();
+		float deltaScore = _weaponInstance.GetComparisonScore() - equipped.GetComparisonScore();
+
+		Color compareColor = deltaScore >= 0f
+			? new Color(0.72f, 0.92f, 0.72f)
+			: new Color(0.95f, 0.55f, 0.45f);
+		string compareText = $"{equipped.Name} -> {GetDeltaTag(deltaScore)}\n";
+		compareText += $"Dgt {Signed(deltaDamage)}  Cad. {Signed(deltaSpeed)}  Portee {Signed(deltaRange)}\n";
+		compareText += "[E] Echanger  [Ignorer]";
+		SetCompareMessage(compareText, compareColor);
+	}
+
+	private void SetCompareMessage(string text, Color color)
+	{
+		if (_compareLabel == null)
+			return;
+
+		_compareLabel.Text = text;
+		_compareLabel.AddThemeColorOverride("font_color", color);
+		_compareLabel.Visible = true;
+	}
+
+	private void SwapWithEquippedWeapon(Player player)
+	{
+		if (_collected || player == null)
+			return;
+
+		WeaponInstance removed = player.RemoveWeapon(0);
+		if (removed == null)
+			return;
+
+		if (!player.AddWeapon(_weaponInstance))
+		{
+			player.AddWeapon(removed);
+			FlashFull();
+			return;
+		}
+
+		WeaponPickup dropped = new();
+		dropped.Initialize(removed, GlobalPosition + new Vector2((float)GD.RandRange(-18, 18), (float)GD.RandRange(-10, 10)));
+		GetTree().CurrentScene.CallDeferred(Node.MethodName.AddChild, dropped);
+
+		_collected = true;
+		PlayPickupEffect(player);
+	}
+
+	private static bool HasWeapon(Player player, string weaponId)
+	{
+		foreach (WeaponInstance weapon in player.WeaponSlots)
+		{
+			if (weapon.Id == weaponId)
+				return true;
+		}
+
+		return false;
+	}
+
+	private static string Signed(float value)
+	{
+		if (Mathf.Abs(value) < 0.01f)
+			return "0";
+		return value > 0f ? $"+{value:F1}" : $"{value:F1}";
+	}
+
+	private static string GetDeltaTag(float deltaScore)
+	{
+		if (deltaScore > 0.25f)
+			return "mieux";
+		if (deltaScore < -0.25f)
+			return "moins bien";
+		return "equivalent";
 	}
 }

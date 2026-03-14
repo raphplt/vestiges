@@ -12,8 +12,6 @@ public partial class SpawnManager : Node2D
 {
 	[Export] public float SpawnRadiusMin = 400f;
 	[Export] public float SpawnRadiusMax = 600f;
-	// V2: FoyerSafeRadius retire (plus de Foyer)
-	[Export] public float NightSpawnRadius = 700f;
 
 	private float _baseSpawnInterval;
 	private float _minSpawnInterval;
@@ -22,12 +20,6 @@ public partial class SpawnManager : Node2D
 	private float _dmgScalingPerMinute;
 	private int _maxEnemies;
 	private float _maxEnemiesGrowthPerMinute;
-	private float _nightHpMultiplier;
-	private float _nightDmgMultiplier;
-	private float _nightSpawnRateMultiplier;
-	private float _daySpawnRateMultiplier;
-	private float _duskSpawnRateMultiplier;
-	private float _nightBaseSpawnRateMultiplier;
 	private float _enemySpeedBaseMultiplier;
 	private float _enemySpeedGrowthPerMinute;
 	private float _enemySpeedMeleeBonus;
@@ -54,6 +46,11 @@ public partial class SpawnManager : Node2D
 	private int _sameTypeClusterMax;
 	private float _sameTypeClusterSpacingMin;
 	private float _sameTypeClusterSpacingMax;
+	private float _crisisSpawnMultiplier = 1.65f;
+	private int _crisisBurstBase = 8;
+	private int _crisisBurstPerIntensity = 4;
+	private float _lateGameSpawnMultiplier = 1.4f;
+	private float _endgameSpawnMultiplier = 1.85f;
 	private float _flatHpMultiplier = 1f;
 	private float _flatDmgMultiplier = 1f;
 
@@ -62,49 +59,14 @@ public partial class SpawnManager : Node2D
 	private float _diffEnemyHpMult = 1f;
 	private float _diffEnemyDmgMult = 1f;
 
-	// Scaling par palier (Lot 3)
-	private string _scalingModel = "per_minute";
-	private float[] _nightHpScaleTable;
-	private float[] _nightDmgScaleTable;
-	private float _dayHpScalingPerMinute;
-	private float _dayDmgScalingPerMinute;
-	private float _dayPhaseStartTime;
-
-	// Vagues de nuit (Lot 2)
-	private int _nightWaveCountBase;
-	private float _nightWaveCountGrowthPerNight;
-	private int _nightWaveCountMax;
-	private float _nightWavePauseSec;
-	private int _nightWaveEnemyCountBase;
-	private int _nightWaveEnemyCountGrowthPerNight;
-	private int _nightWaveEnemyCountGrowthPerWave;
-	private float _nightWaveSpawnInterval;
-	private bool _nightWaveFinalNoPause;
-	private float _nightWaveInitialDelay;
-	private float _nightWavePostTrickleInterval;
-
-	private int _nightWaveCount;
-	private int _nightWaveCurrent;
-	private int _nightWaveEnemiesTarget;
-	private int _nightWaveEnemiesSpawned;
-	private float _nightWaveTimer;
-	private bool _nightWaveInPause;
-	private bool _nightWavesComplete;
-	private float _nightWaveSpawnTimer;
-	private List<string> _nightWaveEnemyTypes;
-
 	private float _elapsedTime;
 	private float _spawnTimer;
 	private float _cullTimer;
 	private float _localDensityTimer;
-	private int _currentNight;
-	private float _dayDurationSec = 540f;
 
 	private const float LocalDensityCheckInterval = 0.25f;
 
-	private DayPhase _currentPhase = DayPhase.Day;
-	// V2: Vector2.Zero retire
-	private DayNightCycle _dayNightCycle;
+	private GameManager.RunPhase _currentRunPhase = GameManager.RunPhase.Exploration;
 	private string _clusterEnemyId;
 	private int _clusterRemaining;
 	private Vector2 _clusterAnchor;
@@ -116,29 +78,12 @@ public partial class SpawnManager : Node2D
 	private Node _enemyContainer;
 	private EventBus _eventBus;
 	private GroupCache _groupCache;
-	private ZoneMemoryManager _zoneMemoryManager;
+	private ErasureManager _erasureManager;
+	private CrisisManager _crisisManager;
 
 	// Fallback quand aucun biome n'est disponible
 	private static readonly List<string> FallbackDayPool = new() { "shadow_crawler", "fading_spitter" };
 	private static readonly List<string> FallbackNightPool = new() { "shadow_crawler", "shade", "shade", "fading_spitter", "void_brute", "wailing_sentinel" };
-
-	// Mapping biome → colosse (mini-boss biome-specifique, nuit 3+)
-	private static readonly Dictionary<string, string> BiomeColosseMap = new()
-	{
-		{ "forest_reclaimed", "colosse_forest" },
-		{ "urban_ruins", "colosse_urban" },
-		{ "swamp", "colosse_swamp" },
-		{ "wild_fields", "colosse_forest" },
-		{ "collapsed_quarry", "colosse_urban" }
-	};
-	private const int ColosseMinNight = 3;
-	private const string FallbackColosse = "colosse_forest";
-	private const int AberrationMinNight = 7;
-	private const float AberrationBaseChance = 0.15f;
-	private const float AberrationChancePerNight = 0.05f;
-	private const int IndicibleMinNight = 10;
-	private bool _indicibleSpawned;
-	private RandomEventManager _randomEventManager;
 
 	public override void _Ready()
 	{
@@ -152,21 +97,18 @@ public partial class SpawnManager : Node2D
 		_enemyContainer = GetNode("../EnemyContainer");
 
 		_eventBus = GetNode<EventBus>("/root/EventBus");
-		_eventBus.DayPhaseChanged += OnDayPhaseChanged;
+		_eventBus.RunPhaseChanged += OnRunPhaseChanged;
+		_eventBus.CrisisStarted += OnCrisisStarted;
 		_eventBus.DifficultyModifierChanged += OnDifficultyModifierChanged;
 		_groupCache = GetNode<GroupCache>("/root/GroupCache");
-
-		_dayNightCycle = GetNodeOrNull<DayNightCycle>("../DayNightCycle");
-		LoadDayNightConfig();
-
-		// V2: plus de Foyer
 	}
 
 	public override void _ExitTree()
 	{
 		if (_eventBus != null)
 		{
-			_eventBus.DayPhaseChanged -= OnDayPhaseChanged;
+			_eventBus.RunPhaseChanged -= OnRunPhaseChanged;
+			_eventBus.CrisisStarted -= OnCrisisStarted;
 			_eventBus.DifficultyModifierChanged -= OnDifficultyModifierChanged;
 		}
 	}
@@ -182,11 +124,9 @@ public partial class SpawnManager : Node2D
 	public override void _Process(double delta)
 	{
 		CachePlayer();
-		CacheZoneMemoryManager();
+		CacheErasureManager();
+		CacheCrisisManager();
 		if (_player == null || !IsInstanceValid(_player))
-			return;
-
-		if (_currentPhase == DayPhase.Dawn)
 			return;
 
 		float dt = (float)delta;
@@ -200,26 +140,17 @@ public partial class SpawnManager : Node2D
 		}
 
 		float elapsedMinutes = _elapsedTime / 60f;
-
-		if (_currentPhase == DayPhase.Night)
+		_spawnTimer += dt;
+		int safety = 0;
+		while (safety < 8)
 		{
-			ProcessNightWaves(dt, elapsedMinutes);
-		}
-		else
-		{
-			// Jour / Crepuscule : spawn continu classique
-			_spawnTimer += dt;
-			int safety = 0;
-			while (safety < 8)
-			{
-				float interval = GetCurrentInterval(elapsedMinutes);
-				if (_spawnTimer < interval)
-					break;
+			float interval = GetCurrentInterval(elapsedMinutes);
+			if (_spawnTimer < interval)
+				break;
 
-				_spawnTimer -= interval;
-				TrySpawnEnemy(elapsedMinutes);
-				safety++;
-			}
+			_spawnTimer -= interval;
+			TrySpawnEnemy(elapsedMinutes);
+			safety++;
 		}
 
 		_localDensityTimer += dt;
@@ -231,217 +162,28 @@ public partial class SpawnManager : Node2D
 	}
 
 	// =========================================================
-	// Vagues de nuit
-	// =========================================================
-
-	private void ProcessNightWaves(float dt, float elapsedMinutes)
-	{
-		if (_nightWavesComplete)
-		{
-			// Trickle residuel apres les vagues
-			_nightWaveSpawnTimer += dt;
-			if (_nightWaveSpawnTimer >= _nightWavePostTrickleInterval)
-			{
-				_nightWaveSpawnTimer -= _nightWavePostTrickleInterval;
-				TrySpawnEnemy(elapsedMinutes);
-			}
-			return;
-		}
-
-		_nightWaveTimer += dt;
-
-		if (_nightWaveInPause)
-		{
-			if (_nightWaveTimer >= (_nightWaveCurrent == 0 ? _nightWaveInitialDelay : _nightWavePauseSec))
-			{
-				StartNextNightWave(elapsedMinutes);
-			}
-			return;
-		}
-
-		// Vague active : spawner selon l'intervalle
-		_nightWaveSpawnTimer += dt;
-		while (_nightWaveSpawnTimer >= _nightWaveSpawnInterval && _nightWaveEnemiesSpawned < _nightWaveEnemiesTarget)
-		{
-			_nightWaveSpawnTimer -= _nightWaveSpawnInterval;
-			TrySpawnNightWaveEnemy(elapsedMinutes);
-		}
-
-		if (_nightWaveEnemiesSpawned >= _nightWaveEnemiesTarget)
-		{
-			CompleteCurrentNightWave();
-		}
-	}
-
-	private void InitNightWaves()
-	{
-		_nightWaveCount = Mathf.Min(
-			Mathf.RoundToInt(_nightWaveCountBase + _nightWaveCountGrowthPerNight * (_currentNight - 1)),
-			_nightWaveCountMax);
-		_nightWaveCount = Mathf.Max(1, _nightWaveCount);
-
-		_nightWaveCurrent = 0;
-		_nightWaveEnemiesSpawned = 0;
-		_nightWaveEnemiesTarget = 0;
-		_nightWaveInPause = true;
-		_nightWavesComplete = false;
-		_nightWaveTimer = 0f;
-		_nightWaveSpawnTimer = 0f;
-		_nightWaveEnemyTypes = null;
-
-		GD.Print($"[SpawnManager] Night #{_currentNight}: {_nightWaveCount} waves planned");
-	}
-
-	private void StartNextNightWave(float elapsedMinutes)
-	{
-		_nightWaveCurrent++;
-		_nightWaveInPause = false;
-		_nightWaveTimer = 0f;
-		_nightWaveSpawnTimer = 0f;
-		_nightWaveEnemiesSpawned = 0;
-
-		int baseCount = _nightWaveEnemyCountBase
-			+ _nightWaveEnemyCountGrowthPerNight * (_currentNight - 1)
-			+ _nightWaveEnemyCountGrowthPerWave * (_nightWaveCurrent - 1);
-		_nightWaveEnemiesTarget = Mathf.RoundToInt(baseCount * _diffEnemyCountMult);
-
-		// Choisir 2-4 types pour cette vague
-		_nightWaveEnemyTypes = PickNightWaveEnemyTypes();
-
-		GD.Print($"[SpawnManager] Night #{_currentNight} Wave {_nightWaveCurrent}/{_nightWaveCount}: {_nightWaveEnemiesTarget} enemies ({string.Join(", ", _nightWaveEnemyTypes)})");
-	}
-
-	private void CompleteCurrentNightWave()
-	{
-		GD.Print($"[SpawnManager] Wave {_nightWaveCurrent}/{_nightWaveCount} complete");
-
-		if (_nightWaveCurrent >= _nightWaveCount)
-		{
-			_nightWavesComplete = true;
-			_nightWaveSpawnTimer = 0f;
-			GD.Print($"[SpawnManager] All waves complete, entering trickle mode");
-			return;
-		}
-
-		// Derniere vague sans pause si configure
-		bool isSecondToLast = _nightWaveCurrent == _nightWaveCount - 1;
-		if (_nightWaveFinalNoPause && isSecondToLast)
-		{
-			// Enchainer directement la derniere vague
-			float elapsedMinutes = _elapsedTime / 60f;
-			StartNextNightWave(elapsedMinutes);
-			return;
-		}
-
-		_nightWaveInPause = true;
-		_nightWaveTimer = 0f;
-	}
-
-	private List<string> PickNightWaveEnemyTypes()
-	{
-		CacheWorldSetup();
-		BiomeData biome = _worldSetup?.GetBiomeAt(Vector2.Zero);
-		List<string> pool = biome?.NightEnemyPool;
-		if (pool == null || pool.Count == 0)
-			pool = FallbackNightPool;
-
-		// Dedup le pool pour avoir les types uniques
-		HashSet<string> uniqueTypes = new(pool);
-		List<string> typeList = new(uniqueTypes);
-
-		// Choisir 2-4 types pour cette vague
-		int variety = Mathf.Min((int)GD.RandRange(2, 5), typeList.Count);
-		List<string> waveTypes = new();
-		List<string> available = new(typeList);
-		for (int i = 0; i < variety && available.Count > 0; i++)
-		{
-			int idx = (int)(GD.Randi() % available.Count);
-			waveTypes.Add(available[idx]);
-			available.RemoveAt(idx);
-		}
-
-		return waveTypes;
-	}
-
-	private void TrySpawnNightWaveEnemy(float elapsedMinutes)
-	{
-		int currentMaxEnemies = GetCurrentMaxEnemies(elapsedMinutes);
-		if (_pool.ActiveCount >= currentMaxEnemies)
-			return;
-
-		Vector2 spawnPos = GetNightSpawnPosition();
-
-		// Choisir depuis les types de la vague
-		string enemyId;
-		if (_nightWaveEnemyTypes != null && _nightWaveEnemyTypes.Count > 0)
-			enemyId = _nightWaveEnemyTypes[(int)(GD.Randi() % _nightWaveEnemyTypes.Count)];
-		else
-			enemyId = PickEnemyForPosition(spawnPos);
-
-		spawnPos = ApplyClusterSpawnOffset(spawnPos, enemyId);
-		EnemyData data = EnemyDataLoader.Get(enemyId);
-		if (data == null)
-			return;
-
-		float hpScale;
-		float dmgScale;
-		ComputeScaling(elapsedMinutes, out hpScale, out dmgScale);
-
-		// Resurgence : buff ennemis pendant l'evenement
-		CacheRandomEventManager();
-		if (_randomEventManager != null && _randomEventManager.ResurgenceActive)
-		{
-			hpScale *= _randomEventManager.ResurgenceHpMultiplier;
-			dmgScale *= _randomEventManager.ResurgenceDmgMultiplier;
-		}
-
-		Enemy enemy = _pool.Get();
-		enemy.GlobalPosition = spawnPos;
-		_enemyContainer.AddChild(enemy);
-		enemy.Initialize(data, hpScale, dmgScale);
-		float speedMultiplier = ComputeEnemySpeedMultiplier(data, elapsedMinutes, spawnPos);
-		float aggressionMultiplier = ComputeEnemyAggressionMultiplier(data, elapsedMinutes);
-		enemy.ApplySpawnTuning(speedMultiplier, aggressionMultiplier);
-		enemy.SetNightTarget(true, Vector2.Zero);
-
-		ApplyNightModifiers(enemy, data);
-
-		_nightWaveEnemiesSpawned++;
-		_eventBus.EmitSignal(EventBus.SignalName.EnemySpawned, enemyId, hpScale, dmgScale);
-	}
-
-	// =========================================================
 	// Scaling
 	// =========================================================
 
 	private void ComputeScaling(float elapsedMinutes, out float hpScale, out float dmgScale)
 	{
-		if (_scalingModel == "per_night" && _nightHpScaleTable != null && _nightDmgScaleTable != null)
-		{
-			if (_currentPhase == DayPhase.Night && _currentNight > 0)
-			{
-				int idx = Mathf.Min(_currentNight - 1, _nightHpScaleTable.Length - 1);
-				hpScale = _nightHpScaleTable[idx] * _flatHpMultiplier;
-				dmgScale = _nightDmgScaleTable[idx] * _flatDmgMultiplier;
-			}
-			else
-			{
-				float dayMinutes = (_elapsedTime - _dayPhaseStartTime) / 60f;
-				dayMinutes = Mathf.Max(0f, dayMinutes);
-				hpScale = Mathf.Pow(_dayHpScalingPerMinute, dayMinutes) * _flatHpMultiplier;
-				dmgScale = Mathf.Pow(_dayDmgScalingPerMinute, dayMinutes) * _flatDmgMultiplier;
-			}
-		}
-		else
-		{
-			hpScale = Mathf.Pow(_hpScalingPerMinute, elapsedMinutes) * _flatHpMultiplier;
-			dmgScale = Mathf.Pow(_dmgScalingPerMinute, elapsedMinutes) * _flatDmgMultiplier;
+		hpScale = Mathf.Pow(_hpScalingPerMinute, elapsedMinutes) * _flatHpMultiplier;
+		dmgScale = Mathf.Pow(_dmgScalingPerMinute, elapsedMinutes) * _flatDmgMultiplier;
 
-			if (_currentPhase == DayPhase.Night && _currentNight > 1)
-			{
-				hpScale *= Mathf.Pow(_nightHpMultiplier, _currentNight - 1);
-				dmgScale *= Mathf.Pow(_nightDmgMultiplier, _currentNight - 1);
-			}
+		if (_currentRunPhase == GameManager.RunPhase.Crisis)
+		{
+			hpScale *= 1.18f;
+			dmgScale *= 1.12f;
+		}
+		else if (_currentRunPhase == GameManager.RunPhase.LateGame)
+		{
+			hpScale *= 1.35f;
+			dmgScale *= 1.22f;
+		}
+		else if (_currentRunPhase == GameManager.RunPhase.Endgame)
+		{
+			hpScale *= 1.55f;
+			dmgScale *= 1.32f;
 		}
 
 		// Difficulty modifiers (Appel du Vide + Cursed Items)
@@ -449,23 +191,26 @@ public partial class SpawnManager : Node2D
 		dmgScale *= _diffEnemyDmgMult;
 	}
 
-	private void ApplyNightModifiers(Enemy enemy, EnemyData data)
+	private void ApplyRunPhaseModifiers(Enemy enemy, EnemyData data)
 	{
-		if (_currentPhase != DayPhase.Night)
+		if (_currentRunPhase == GameManager.RunPhase.Exploration)
 			return;
 
-		// Aberration : nuit 7+, chance croissante de corrompre l'ennemi
-		if (_currentNight >= AberrationMinNight && data.Tier == "normal")
+		if (_currentRunPhase == GameManager.RunPhase.Crisis && data.Tier == "normal")
 		{
-			float chance = AberrationBaseChance + AberrationChancePerNight * (_currentNight - AberrationMinNight);
+			float chance = 0.18f + 0.06f * Mathf.Max(0, _crisisManager?.CurrentIntensity - 1 ?? 0);
 			if (GD.Randf() < chance)
 				enemy.Aberrate();
 		}
 
-		// Wave modifiers : nuit 7+, chance d'appliquer enrage/regenerant/explosif
-		if (_currentNight >= AberrationMinNight && data.Tier == "normal")
+		if (_currentRunPhase is GameManager.RunPhase.Crisis or GameManager.RunPhase.LateGame or GameManager.RunPhase.Endgame && data.Tier == "normal")
 		{
-			float modChance = 0.1f + 0.03f * (_currentNight - AberrationMinNight);
+			float modChance = _currentRunPhase switch
+			{
+				GameManager.RunPhase.Endgame => 0.34f,
+				GameManager.RunPhase.LateGame => 0.25f,
+				_ => 0.14f
+			};
 			if (GD.Randf() < modChance)
 			{
 				string[] modifiers = { "enraged", "regenerant", "explosive" };
@@ -481,13 +226,16 @@ public partial class SpawnManager : Node2D
 
 	private void EnsureDayLocalDensity(float elapsedMinutes)
 	{
-		if (_currentPhase != DayPhase.Day)
-			return;
-
-		float zoneMemoryMult = _zoneMemoryManager?.GetSpawnDensityMultiplier(_player.GlobalPosition) ?? 1f;
+		float zoneMemoryMult = _erasureManager?.GetSpawnDensityMultiplier(_player.GlobalPosition) ?? 1f;
+		float phaseMult = _currentRunPhase switch
+		{
+			GameManager.RunPhase.Crisis => _crisisSpawnMultiplier,
+			GameManager.RunPhase.LateGame => _lateGameSpawnMultiplier,
+			GameManager.RunPhase.Endgame => _endgameSpawnMultiplier,
+			_ => 1f
+		};
 		int target = Mathf.RoundToInt((_dayLocalEnemyTargetBase + _dayLocalEnemyTargetGrowthPerMinute * elapsedMinutes) * _diffEnemyCountMult * zoneMemoryMult);
-		if (IsInDayInvasionWindow())
-			target += _dayInvasionLocalBonus;
+		target = Mathf.RoundToInt(target * phaseMult);
 
 		int nearCount = CountActiveEnemiesNear(_player.GlobalPosition, _dayLocalEnemyRadius);
 		int missing = target - nearCount;
@@ -525,58 +273,25 @@ public partial class SpawnManager : Node2D
 			_baseSpawnInterval - (_spawnIntervalDecay * elapsedMinutes),
 			_minSpawnInterval
 		);
-
-		float nightFactor = _currentPhase switch
+		float phaseFactor = _currentRunPhase switch
 		{
-			DayPhase.Day => _daySpawnRateMultiplier,
-			DayPhase.Dusk => _duskSpawnRateMultiplier,
-			DayPhase.Night => _nightBaseSpawnRateMultiplier * Mathf.Pow(_nightSpawnRateMultiplier, _currentNight - 1),
+			GameManager.RunPhase.Crisis => 1f / _crisisSpawnMultiplier,
+			GameManager.RunPhase.LateGame => 1f / _lateGameSpawnMultiplier,
+			GameManager.RunPhase.Endgame => 1f / _endgameSpawnMultiplier,
 			_ => 1f
 		};
 
-		if (_currentPhase == DayPhase.Day && IsInDayInvasionWindow())
-			nightFactor *= _dayInvasionSpawnRateMultiplier;
-
-		return Mathf.Max(baseInterval * nightFactor, _minSpawnInterval);
+		return Mathf.Max(baseInterval * phaseFactor, _minSpawnInterval);
 	}
 
 	private bool IsInDayInvasionWindow()
 	{
-		if (_dayInvasionCount <= 0 || _dayInvasionDurationSec <= 0f)
-			return false;
-
-		if (_dayNightCycle == null || !IsInstanceValid(_dayNightCycle))
-			_dayNightCycle = GetNodeOrNull<DayNightCycle>("../DayNightCycle");
-		if (_dayNightCycle == null)
-			return false;
-
-		float phaseProgress = _dayNightCycle.PhaseProgress;
-		float durationRatio = Mathf.Clamp(_dayInvasionDurationSec / Mathf.Max(_dayDurationSec, 1f), 0.01f, 0.4f);
-		int waveCount = Mathf.Max(1, _dayInvasionCount);
-
-		if (waveCount == 1)
-		{
-			float start = Mathf.Clamp(_dayInvasionFirstStartRatio, 0f, 1f - durationRatio);
-			return phaseProgress >= start && phaseProgress <= start + durationRatio;
-		}
-
-		float first = Mathf.Clamp(_dayInvasionFirstStartRatio, 0f, 1f - durationRatio);
-		float last = Mathf.Clamp(_dayInvasionLastStartRatio, first, 1f - durationRatio);
-
-		for (int i = 0; i < waveCount; i++)
-		{
-			float t = waveCount == 1 ? 0f : i / (float)(waveCount - 1);
-			float start = Mathf.Lerp(first, last, t);
-			if (phaseProgress >= start && phaseProgress <= start + durationRatio)
-				return true;
-		}
-
 		return false;
 	}
 
 	private void CullFarDayEnemies()
 	{
-		if (_currentPhase != DayPhase.Day || _dayEnemyDespawnDistance <= 0f)
+		if (_dayEnemyDespawnDistance <= 0f)
 			return;
 
 		if (_player == null || !IsInstanceValid(_player))
@@ -622,14 +337,6 @@ public partial class SpawnManager : Node2D
 		float dmgScale;
 		ComputeScaling(elapsedMinutes, out hpScale, out dmgScale);
 
-		// Resurgence : buff ennemis pendant l'evenement
-		CacheRandomEventManager();
-		if (_randomEventManager != null && _randomEventManager.ResurgenceActive)
-		{
-			hpScale *= _randomEventManager.ResurgenceHpMultiplier;
-			dmgScale *= _randomEventManager.ResurgenceDmgMultiplier;
-		}
-
 		Enemy enemy = _pool.Get();
 		enemy.GlobalPosition = spawnPos;
 		_enemyContainer.AddChild(enemy);
@@ -637,9 +344,7 @@ public partial class SpawnManager : Node2D
 		float speedMultiplier = ComputeEnemySpeedMultiplier(data, elapsedMinutes, spawnPos);
 		float aggressionMultiplier = ComputeEnemyAggressionMultiplier(data, elapsedMinutes);
 		enemy.ApplySpawnTuning(speedMultiplier, aggressionMultiplier);
-		// V2: SetNightTarget retire (plus de phase Night)
-
-		ApplyNightModifiers(enemy, data);
+		ApplyRunPhaseModifiers(enemy, data);
 
 		_eventBus.EmitSignal(EventBus.SignalName.EnemySpawned, enemyId, hpScale, dmgScale);
 	}
@@ -657,8 +362,8 @@ public partial class SpawnManager : Node2D
 			multiplier *= _enemySpeedEliteBonus;
 
 		// Enemies in faded zones are faster
-		if (spawnPos != default && _zoneMemoryManager != null)
-			multiplier += _zoneMemoryManager.GetEnemySpeedBonus(spawnPos);
+		if (spawnPos != default && _erasureManager != null)
+			multiplier += _erasureManager.GetEnemySpeedBonus(spawnPos);
 
 		return Mathf.Max(0.5f, multiplier);
 	}
@@ -680,8 +385,6 @@ public partial class SpawnManager : Node2D
 		float speedMultiplier = ComputeEnemySpeedMultiplier(data, elapsedMinutes, spawnPos);
 		float aggressionMultiplier = ComputeEnemyAggressionMultiplier(data, elapsedMinutes);
 		enemy.ApplySpawnTuning(speedMultiplier, aggressionMultiplier);
-		// V2: SetNightTarget retire (plus de phase Night)
-
 		_eventBus.EmitSignal(EventBus.SignalName.EnemySpawned, enemyId, hpScale, dmgScale);
 		GD.Print($"[SpawnManager] Debug spawned: {enemyId} at {spawnPos}");
 	}
@@ -709,11 +412,11 @@ public partial class SpawnManager : Node2D
 
 	/// <summary>
 	/// Selectionne un ennemi en fonction du biome a la position donnee.
-	/// Jour : pool diurne du biome. Nuit/Crepuscule : pool nocturne.
+	/// Exploration : pool ambiant du biome. Crise/Late game : pool hostile.
 	/// </summary>
 	private string PickEnemyForPosition(Vector2 worldPos)
 	{
-		bool isNight = _currentPhase == DayPhase.Night || _currentPhase == DayPhase.Dusk;
+		bool isNight = _currentRunPhase is GameManager.RunPhase.Crisis or GameManager.RunPhase.LateGame or GameManager.RunPhase.Endgame;
 
 		CacheWorldSetup();
 		BiomeData biome = _worldSetup?.GetBiomeAt(worldPos);
@@ -764,7 +467,7 @@ public partial class SpawnManager : Node2D
 		float radius = (float)GD.RandRange(_sameTypeClusterSpacingMin, _sameTypeClusterSpacingMax);
 		Vector2 candidate = _clusterAnchor + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * radius;
 
-		if (_currentPhase == DayPhase.Day && !IsValidDaySpawnPosition(candidate))
+		if (!IsValidDaySpawnPosition(candidate))
 			return spawnPos;
 
 		_clusterAnchor = candidate;
@@ -778,19 +481,33 @@ public partial class SpawnManager : Node2D
 
 	private Vector2 GetSpawnPosition()
 	{
-		if (_currentPhase == DayPhase.Night || _currentPhase == DayPhase.Dusk)
-			return GetNightSpawnPosition();
-
 		return GetDaySpawnPosition();
 	}
 
 	/// <summary>Spawn autour du joueur, pas sur l'eau.</summary>
 	private Vector2 GetDaySpawnPosition()
 	{
+		float minRadius = SpawnRadiusMin;
+		float maxRadius = SpawnRadiusMax;
+		if (_currentRunPhase == GameManager.RunPhase.Crisis)
+		{
+			minRadius *= 0.75f;
+			maxRadius *= 0.85f;
+		}
+		else if (_currentRunPhase == GameManager.RunPhase.LateGame)
+		{
+			maxRadius *= 0.9f;
+		}
+		else if (_currentRunPhase == GameManager.RunPhase.Endgame)
+		{
+			minRadius *= 0.65f;
+			maxRadius *= 0.8f;
+		}
+
 		for (int attempt = 0; attempt < 15; attempt++)
 		{
 			float angle = (float)GD.RandRange(0, Mathf.Tau);
-			float radius = (float)GD.RandRange(SpawnRadiusMin, SpawnRadiusMax);
+			float radius = (float)GD.RandRange(minRadius, maxRadius);
 			Vector2 position = _player.GlobalPosition + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * radius;
 
 			if (IsWaterAt(position))
@@ -800,25 +517,8 @@ public partial class SpawnManager : Node2D
 		}
 
 		float fallbackAngle = (float)GD.RandRange(0, Mathf.Tau);
-		float fallbackRadius = (float)GD.RandRange(SpawnRadiusMin, SpawnRadiusMax);
+		float fallbackRadius = (float)GD.RandRange(minRadius, maxRadius);
 		return _player.GlobalPosition + new Vector2(Mathf.Cos(fallbackAngle), Mathf.Sin(fallbackAngle)) * fallbackRadius;
-	}
-
-	/// <summary>Nuit : spawn depuis les bords, loin du Foyer, convergent ensuite vers lui.</summary>
-	private Vector2 GetNightSpawnPosition()
-	{
-		for (int attempt = 0; attempt < 10; attempt++)
-		{
-			float angle = (float)GD.RandRange(0, Mathf.Tau);
-			float radius = NightSpawnRadius;
-			Vector2 position = Vector2.Zero + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * radius;
-
-			if (!IsWaterAt(position))
-				return position;
-		}
-
-		float fallbackAngle = (float)GD.RandRange(0, Mathf.Tau);
-		return Vector2.Zero + new Vector2(Mathf.Cos(fallbackAngle), Mathf.Sin(fallbackAngle)) * NightSpawnRadius;
 	}
 
 	private bool IsWaterAt(Vector2 worldPos)
@@ -828,92 +528,24 @@ public partial class SpawnManager : Node2D
 		return _worldSetup != null && _worldSetup.IsWaterAt(worldPos);
 	}
 
-	private void OnDayPhaseChanged(string phase)
+	private void OnRunPhaseChanged(string oldPhase, string newPhase)
 	{
-		_currentPhase = phase switch
+		_currentRunPhase = newPhase switch
 		{
-			"Day" => DayPhase.Day,
-			"Dusk" => DayPhase.Dusk,
-			"Night" => DayPhase.Night,
-			"Dawn" => DayPhase.Dawn,
-			_ => DayPhase.Day
+			"Crisis" => GameManager.RunPhase.Crisis,
+			"LateGame" => GameManager.RunPhase.LateGame,
+			"Endgame" => GameManager.RunPhase.Endgame,
+			"Death" => GameManager.RunPhase.Death,
+			_ => GameManager.RunPhase.Exploration
 		};
-
-		_dayPhaseStartTime = _elapsedTime;
-
-		if (_currentPhase == DayPhase.Night)
-		{
-			_currentNight++;
-			InitNightWaves();
-			if (_currentNight >= ColosseMinNight)
-				SpawnColosse();
-			if (_currentNight >= IndicibleMinNight && !_indicibleSpawned)
-				SpawnIndicible();
-		}
-
-		if (_currentPhase == DayPhase.Dawn)
-			_spawnTimer = 0f;
-
-		GD.Print($"[SpawnManager] Phase -> {_currentPhase} (Night #{_currentNight})");
 	}
 
-	/// <summary>Spawn un Colosse biome-specifique au debut de la nuit.</summary>
-	private void SpawnColosse()
+	private void OnCrisisStarted(int crisisNumber, int intensity)
 	{
-		CachePlayer();
-		if (_player == null || !IsInstanceValid(_player))
-			return;
-
-		CacheWorldSetup();
-		BiomeData biome = _worldSetup?.GetBiomeAt(Vector2.Zero);
-		string colosseId = FallbackColosse;
-		if (biome != null && BiomeColosseMap.TryGetValue(biome.Id, out string mapped))
-			colosseId = mapped;
-
-		EnemyData data = EnemyDataLoader.Get(colosseId);
-		if (data == null)
-			return;
-
 		float elapsedMinutes = _elapsedTime / 60f;
-		float hpScale;
-		float dmgScale;
-		ComputeScaling(elapsedMinutes, out hpScale, out dmgScale);
-
-		// Position de spawn : bord oppose au joueur par rapport au foyer
-		Vector2 dirFromPlayer = (Vector2.Zero - _player.GlobalPosition).Normalized();
-		if (dirFromPlayer == Vector2.Zero)
-			dirFromPlayer = Vector2.Right;
-		Vector2 spawnPos = Vector2.Zero + dirFromPlayer * NightSpawnRadius;
-
-		Enemy enemy = _pool.Get();
-		enemy.GlobalPosition = spawnPos;
-		_enemyContainer.AddChild(enemy);
-		enemy.Initialize(data, hpScale, dmgScale);
-		float speedMultiplier = ComputeEnemySpeedMultiplier(data, elapsedMinutes, spawnPos);
-		float aggressionMultiplier = ComputeEnemyAggressionMultiplier(data, elapsedMinutes);
-		enemy.ApplySpawnTuning(speedMultiplier, aggressionMultiplier);
-		enemy.SetNightTarget(true, Vector2.Zero);
-
-		_eventBus.EmitSignal(EventBus.SignalName.EnemySpawned, colosseId, hpScale, dmgScale);
-		GD.Print($"[SpawnManager] Colosse spawned: {colosseId} (Night #{_currentNight}, HP scale: {hpScale:F1}x)");
-	}
-
-	/// <summary>Fait emerger L'Indicible au debut de la nuit 10.</summary>
-	private void SpawnIndicible()
-	{
-		_indicibleSpawned = true;
-
-		float elapsedMinutes = _elapsedTime / 60f;
-		float hpScale;
-		float dmgScale;
-		ComputeScaling(elapsedMinutes, out hpScale, out dmgScale);
-
-		Indicible boss = new();
-		boss.Name = "Indicible";
-		_enemyContainer.AddChild(boss);
-		boss.Initialize(hpScale, dmgScale, Vector2.Zero);
-
-		GD.Print($"[SpawnManager] L'Indicible emerge... (Night #{_currentNight})");
+		int burstCount = _crisisBurstBase + _crisisBurstPerIntensity * Mathf.Max(0, intensity - 1);
+		for (int i = 0; i < burstCount; i++)
+			TrySpawnEnemy(elapsedMinutes);
 	}
 
 	// =========================================================
@@ -922,10 +554,10 @@ public partial class SpawnManager : Node2D
 
 	private void LoadScalingConfig()
 	{
-		FileAccess file = FileAccess.Open("res://data/scaling/wave_scaling.json", FileAccess.ModeFlags.Read);
+		FileAccess file = FileAccess.Open("res://data/scaling/spawn_flow.json", FileAccess.ModeFlags.Read);
 		if (file == null)
 		{
-			GD.PushError("[SpawnManager] Cannot open wave_scaling.json, using defaults");
+			GD.PushError("[SpawnManager] Cannot open spawn_flow.json, using defaults");
 			SetDefaults();
 			return;
 		}
@@ -949,12 +581,6 @@ public partial class SpawnManager : Node2D
 		_dmgScalingPerMinute = (float)dict["damage_scaling_per_minute"].AsDouble();
 		_maxEnemies = (int)dict["max_enemies_on_screen"].AsDouble();
 		_maxEnemiesGrowthPerMinute = dict.ContainsKey("max_enemies_growth_per_minute") ? (float)dict["max_enemies_growth_per_minute"].AsDouble() : 0f;
-		_nightHpMultiplier = dict.ContainsKey("night_hp_multiplier") ? (float)dict["night_hp_multiplier"].AsDouble() : 1.25f;
-		_nightDmgMultiplier = dict.ContainsKey("night_damage_multiplier") ? (float)dict["night_damage_multiplier"].AsDouble() : 1.15f;
-		_nightSpawnRateMultiplier = dict.ContainsKey("night_spawn_rate_multiplier") ? (float)dict["night_spawn_rate_multiplier"].AsDouble() : 0.85f;
-		_daySpawnRateMultiplier = dict.ContainsKey("day_spawn_rate_multiplier") ? (float)dict["day_spawn_rate_multiplier"].AsDouble() : 0.8f;
-		_duskSpawnRateMultiplier = dict.ContainsKey("dusk_spawn_rate_multiplier") ? (float)dict["dusk_spawn_rate_multiplier"].AsDouble() : 0.65f;
-		_nightBaseSpawnRateMultiplier = dict.ContainsKey("night_base_spawn_rate_multiplier") ? (float)dict["night_base_spawn_rate_multiplier"].AsDouble() : 0.3f;
 		_enemySpeedBaseMultiplier = dict.ContainsKey("enemy_speed_base_multiplier") ? (float)dict["enemy_speed_base_multiplier"].AsDouble() : 1f;
 		_enemySpeedGrowthPerMinute = dict.ContainsKey("enemy_speed_growth_per_minute") ? (float)dict["enemy_speed_growth_per_minute"].AsDouble() : 0f;
 		_enemySpeedMeleeBonus = dict.ContainsKey("enemy_speed_melee_bonus") ? (float)dict["enemy_speed_melee_bonus"].AsDouble() : 1f;
@@ -966,80 +592,22 @@ public partial class SpawnManager : Node2D
 		_enemyAggressionRangedBonus = dict.ContainsKey("enemy_aggression_ranged_bonus") ? (float)dict["enemy_aggression_ranged_bonus"].AsDouble() : 1f;
 		_enemyAggressionEliteBonus = dict.ContainsKey("enemy_aggression_elite_bonus") ? (float)dict["enemy_aggression_elite_bonus"].AsDouble() : 1f;
 		_dayEnemyDespawnDistance = dict.ContainsKey("day_enemy_despawn_distance") ? (float)dict["day_enemy_despawn_distance"].AsDouble() : 1400f;
-		_dayLocalEnemyRadius = dict.ContainsKey("day_local_enemy_radius") ? (float)dict["day_local_enemy_radius"].AsDouble() : 900f;
-		_dayLocalEnemyTargetBase = dict.ContainsKey("day_local_enemy_target_base") ? (float)dict["day_local_enemy_target_base"].AsDouble() : 24f;
-		_dayLocalEnemyTargetGrowthPerMinute = dict.ContainsKey("day_local_enemy_target_growth_per_minute") ? (float)dict["day_local_enemy_target_growth_per_minute"].AsDouble() : 6f;
-		_dayLocalSpawnBurstMax = dict.ContainsKey("day_local_spawn_burst_max") ? (int)dict["day_local_spawn_burst_max"].AsDouble() : 4;
-		_dayInvasionLocalBonus = dict.ContainsKey("day_invasion_local_bonus") ? (int)dict["day_invasion_local_bonus"].AsDouble() : 8;
-		_dayInvasionCount = dict.ContainsKey("day_invasion_count") ? (int)dict["day_invasion_count"].AsDouble() : 2;
-		_dayInvasionDurationSec = dict.ContainsKey("day_invasion_duration_sec") ? (float)dict["day_invasion_duration_sec"].AsDouble() : 30f;
-		_dayInvasionSpawnRateMultiplier = dict.ContainsKey("day_invasion_spawn_rate_multiplier") ? (float)dict["day_invasion_spawn_rate_multiplier"].AsDouble() : 0.42f;
-		_dayInvasionFirstStartRatio = dict.ContainsKey("day_invasion_first_start_ratio") ? (float)dict["day_invasion_first_start_ratio"].AsDouble() : 0.40f;
-		_dayInvasionLastStartRatio = dict.ContainsKey("day_invasion_last_start_ratio") ? (float)dict["day_invasion_last_start_ratio"].AsDouble() : 0.75f;
+		_dayLocalEnemyRadius = dict.ContainsKey("local_enemy_radius") ? (float)dict["local_enemy_radius"].AsDouble() : 900f;
+		_dayLocalEnemyTargetBase = dict.ContainsKey("local_enemy_target_base") ? (float)dict["local_enemy_target_base"].AsDouble() : 24f;
+		_dayLocalEnemyTargetGrowthPerMinute = dict.ContainsKey("local_enemy_target_growth_per_minute") ? (float)dict["local_enemy_target_growth_per_minute"].AsDouble() : 6f;
+		_dayLocalSpawnBurstMax = dict.ContainsKey("local_spawn_burst_max") ? (int)dict["local_spawn_burst_max"].AsDouble() : 4;
 		_sameTypeClusterChance = dict.ContainsKey("same_type_cluster_chance") ? (float)dict["same_type_cluster_chance"].AsDouble() : 0.4f;
 		_sameTypeClusterMin = dict.ContainsKey("same_type_cluster_min") ? (int)dict["same_type_cluster_min"].AsDouble() : 2;
 		_sameTypeClusterMax = dict.ContainsKey("same_type_cluster_max") ? (int)dict["same_type_cluster_max"].AsDouble() : 4;
 		_sameTypeClusterSpacingMin = dict.ContainsKey("same_type_cluster_spacing_min") ? (float)dict["same_type_cluster_spacing_min"].AsDouble() : 18f;
 		_sameTypeClusterSpacingMax = dict.ContainsKey("same_type_cluster_spacing_max") ? (float)dict["same_type_cluster_spacing_max"].AsDouble() : 46f;
+		_crisisSpawnMultiplier = dict.ContainsKey("crisis_spawn_multiplier") ? (float)dict["crisis_spawn_multiplier"].AsDouble() : _crisisSpawnMultiplier;
+		_crisisBurstBase = dict.ContainsKey("crisis_burst_base") ? (int)dict["crisis_burst_base"].AsDouble() : _crisisBurstBase;
+		_crisisBurstPerIntensity = dict.ContainsKey("crisis_burst_per_intensity") ? (int)dict["crisis_burst_per_intensity"].AsDouble() : _crisisBurstPerIntensity;
+		_lateGameSpawnMultiplier = dict.ContainsKey("late_game_spawn_multiplier") ? (float)dict["late_game_spawn_multiplier"].AsDouble() : _lateGameSpawnMultiplier;
+		_endgameSpawnMultiplier = dict.ContainsKey("endgame_spawn_multiplier") ? (float)dict["endgame_spawn_multiplier"].AsDouble() : _endgameSpawnMultiplier;
 
-		// Scaling par palier (Lot 3)
-		_scalingModel = dict.ContainsKey("scaling_model") ? dict["scaling_model"].AsString() : "per_minute";
-		_dayHpScalingPerMinute = dict.ContainsKey("day_hp_scaling_per_minute") ? (float)dict["day_hp_scaling_per_minute"].AsDouble() : 1.02f;
-		_dayDmgScalingPerMinute = dict.ContainsKey("day_dmg_scaling_per_minute") ? (float)dict["day_dmg_scaling_per_minute"].AsDouble() : 1.01f;
-
-		if (dict.ContainsKey("night_hp_scale"))
-		{
-			Godot.Collections.Array hpArr = dict["night_hp_scale"].AsGodotArray();
-			_nightHpScaleTable = new float[hpArr.Count];
-			for (int i = 0; i < hpArr.Count; i++)
-				_nightHpScaleTable[i] = (float)hpArr[i].AsDouble();
-		}
-
-		if (dict.ContainsKey("night_dmg_scale"))
-		{
-			Godot.Collections.Array dmgArr = dict["night_dmg_scale"].AsGodotArray();
-			_nightDmgScaleTable = new float[dmgArr.Count];
-			for (int i = 0; i < dmgArr.Count; i++)
-				_nightDmgScaleTable[i] = (float)dmgArr[i].AsDouble();
-		}
-
-		// Vagues de nuit (Lot 2)
-		if (dict.ContainsKey("night_waves"))
-		{
-			Godot.Collections.Dictionary nw = dict["night_waves"].AsGodotDictionary();
-			_nightWaveCountBase = nw.ContainsKey("wave_count_base") ? (int)nw["wave_count_base"].AsDouble() : 3;
-			_nightWaveCountGrowthPerNight = nw.ContainsKey("wave_count_growth_per_night") ? (float)nw["wave_count_growth_per_night"].AsDouble() : 0.5f;
-			_nightWaveCountMax = nw.ContainsKey("wave_count_max") ? (int)nw["wave_count_max"].AsDouble() : 7;
-			_nightWavePauseSec = nw.ContainsKey("pause_between_waves_sec") ? (float)nw["pause_between_waves_sec"].AsDouble() : 12f;
-			_nightWaveEnemyCountBase = nw.ContainsKey("wave_enemy_count_base") ? (int)nw["wave_enemy_count_base"].AsDouble() : 15;
-			_nightWaveEnemyCountGrowthPerNight = nw.ContainsKey("wave_enemy_count_growth_per_night") ? (int)nw["wave_enemy_count_growth_per_night"].AsDouble() : 5;
-			_nightWaveEnemyCountGrowthPerWave = nw.ContainsKey("wave_enemy_count_growth_per_wave") ? (int)nw["wave_enemy_count_growth_per_wave"].AsDouble() : 3;
-			_nightWaveSpawnInterval = nw.ContainsKey("wave_spawn_interval") ? (float)nw["wave_spawn_interval"].AsDouble() : 0.6f;
-			_nightWaveFinalNoPause = nw.ContainsKey("final_wave_no_pause") && nw["final_wave_no_pause"].AsBool();
-			_nightWaveInitialDelay = nw.ContainsKey("initial_delay_sec") ? (float)nw["initial_delay_sec"].AsDouble() : 5f;
-			_nightWavePostTrickleInterval = nw.ContainsKey("post_waves_trickle_interval") ? (float)nw["post_waves_trickle_interval"].AsDouble() : 3f;
-		}
-		else
-		{
-			SetNightWaveDefaults();
-		}
-
-		GD.Print($"[SpawnManager] Config loaded — interval: {_baseSpawnInterval}s, max: {_maxEnemies}, scaling: {_scalingModel}, nightWaves: {_nightWaveCountBase}+");
-	}
-
-	private void SetNightWaveDefaults()
-	{
-		_nightWaveCountBase = 3;
-		_nightWaveCountGrowthPerNight = 0.5f;
-		_nightWaveCountMax = 7;
-		_nightWavePauseSec = 12f;
-		_nightWaveEnemyCountBase = 15;
-		_nightWaveEnemyCountGrowthPerNight = 5;
-		_nightWaveEnemyCountGrowthPerWave = 3;
-		_nightWaveSpawnInterval = 0.6f;
-		_nightWaveFinalNoPause = true;
-		_nightWaveInitialDelay = 5f;
-		_nightWavePostTrickleInterval = 3f;
+		GD.Print($"[SpawnManager] Config loaded — interval: {_baseSpawnInterval}s, max: {_maxEnemies}, crisis x{_crisisSpawnMultiplier:F2}");
 	}
 
 	private void SetDefaults()
@@ -1051,12 +619,6 @@ public partial class SpawnManager : Node2D
 		_dmgScalingPerMinute = 1.04f;
 		_maxEnemies = 120;
 		_maxEnemiesGrowthPerMinute = 4f;
-		_nightHpMultiplier = 1.25f;
-		_nightDmgMultiplier = 1.15f;
-		_nightSpawnRateMultiplier = 0.85f;
-		_daySpawnRateMultiplier = 0.75f;
-		_duskSpawnRateMultiplier = 0.65f;
-		_nightBaseSpawnRateMultiplier = 0.3f;
 		_enemySpeedBaseMultiplier = 1.10f;
 		_enemySpeedGrowthPerMinute = 0.025f;
 		_enemySpeedMeleeBonus = 1f;
@@ -1072,25 +634,16 @@ public partial class SpawnManager : Node2D
 		_dayLocalEnemyTargetBase = 6f;
 		_dayLocalEnemyTargetGrowthPerMinute = 2.5f;
 		_dayLocalSpawnBurstMax = 3;
-		_dayInvasionLocalBonus = 10;
-		_dayInvasionCount = 3;
-		_dayInvasionDurationSec = 25f;
-		_dayInvasionSpawnRateMultiplier = 0.42f;
-		_dayInvasionFirstStartRatio = 0.25f;
-		_dayInvasionLastStartRatio = 0.85f;
 		_sameTypeClusterChance = 0.6f;
 		_sameTypeClusterMin = 2;
 		_sameTypeClusterMax = 5;
 		_sameTypeClusterSpacingMin = 16f;
 		_sameTypeClusterSpacingMax = 42f;
-
-		_scalingModel = "per_night";
-		_dayHpScalingPerMinute = 1.02f;
-		_dayDmgScalingPerMinute = 1.01f;
-		_nightHpScaleTable = new float[] { 1f, 1.3f, 1.7f, 2.2f, 3f, 4f, 5.5f, 7.5f, 10f, 14f };
-		_nightDmgScaleTable = new float[] { 1f, 1.15f, 1.3f, 1.5f, 1.7f, 2f, 2.3f, 2.7f, 3.2f, 3.8f };
-
-		SetNightWaveDefaults();
+		_crisisSpawnMultiplier = 1.65f;
+		_crisisBurstBase = 8;
+		_crisisBurstPerIntensity = 4;
+		_lateGameSpawnMultiplier = 1.4f;
+		_endgameSpawnMultiplier = 1.85f;
 	}
 
 	/// <summary>
@@ -1110,12 +663,6 @@ public partial class SpawnManager : Node2D
 				case "damage_scaling_per_minute": _dmgScalingPerMinute = kv.Value; break;
 				case "max_enemies_on_screen": _maxEnemies = (int)kv.Value; break;
 				case "max_enemies_growth_per_minute": _maxEnemiesGrowthPerMinute = kv.Value; break;
-				case "night_hp_multiplier": _nightHpMultiplier = kv.Value; break;
-				case "night_damage_multiplier": _nightDmgMultiplier = kv.Value; break;
-				case "night_spawn_rate_multiplier": _nightSpawnRateMultiplier = kv.Value; break;
-				case "day_spawn_rate_multiplier": _daySpawnRateMultiplier = kv.Value; break;
-				case "dusk_spawn_rate_multiplier": _duskSpawnRateMultiplier = kv.Value; break;
-				case "night_base_spawn_rate_multiplier": _nightBaseSpawnRateMultiplier = kv.Value; break;
 				case "enemy_speed_base_multiplier": _enemySpeedBaseMultiplier = kv.Value; break;
 				case "enemy_speed_growth_per_minute": _enemySpeedGrowthPerMinute = kv.Value; break;
 				case "enemy_speed_melee_bonus": _enemySpeedMeleeBonus = kv.Value; break;
@@ -1131,12 +678,6 @@ public partial class SpawnManager : Node2D
 				case "day_local_enemy_target_base": _dayLocalEnemyTargetBase = kv.Value; break;
 				case "day_local_enemy_target_growth_per_minute": _dayLocalEnemyTargetGrowthPerMinute = kv.Value; break;
 				case "day_local_spawn_burst_max": _dayLocalSpawnBurstMax = (int)kv.Value; break;
-				case "day_invasion_local_bonus": _dayInvasionLocalBonus = (int)kv.Value; break;
-				case "day_invasion_count": _dayInvasionCount = (int)kv.Value; break;
-				case "day_invasion_duration_sec": _dayInvasionDurationSec = kv.Value; break;
-				case "day_invasion_spawn_rate_multiplier": _dayInvasionSpawnRateMultiplier = kv.Value; break;
-				case "day_invasion_first_start_ratio": _dayInvasionFirstStartRatio = kv.Value; break;
-				case "day_invasion_last_start_ratio": _dayInvasionLastStartRatio = kv.Value; break;
 				case "same_type_cluster_chance": _sameTypeClusterChance = kv.Value; break;
 				case "same_type_cluster_min": _sameTypeClusterMin = (int)kv.Value; break;
 				case "same_type_cluster_max": _sameTypeClusterMax = (int)kv.Value; break;
@@ -1144,8 +685,6 @@ public partial class SpawnManager : Node2D
 				case "same_type_cluster_spacing_max": _sameTypeClusterSpacingMax = kv.Value; break;
 				case "flat_hp_multiplier": _flatHpMultiplier = kv.Value; break;
 				case "flat_dmg_multiplier": _flatDmgMultiplier = kv.Value; break;
-				case "day_hp_scaling_per_minute": _dayHpScalingPerMinute = kv.Value; break;
-				case "day_dmg_scaling_per_minute": _dayDmgScalingPerMinute = kv.Value; break;
 			}
 		}
 		GD.Print($"[SpawnManager] Applied {overrides.Count} scaling override(s)");
@@ -1161,12 +700,20 @@ public partial class SpawnManager : Node2D
 			_player = p;
 	}
 
-	private void CacheZoneMemoryManager()
+	private void CacheErasureManager()
 	{
-		if (_zoneMemoryManager != null && IsInstanceValid(_zoneMemoryManager))
+		if (_erasureManager != null && IsInstanceValid(_erasureManager))
 			return;
 
-		_zoneMemoryManager = GetNodeOrNull<ZoneMemoryManager>("../ZoneMemoryManager");
+		_erasureManager = GetNodeOrNull<ErasureManager>("../ErasureManager");
+	}
+
+	private void CacheCrisisManager()
+	{
+		if (_crisisManager != null && IsInstanceValid(_crisisManager))
+			return;
+
+		_crisisManager = GetNodeOrNull<CrisisManager>("../CrisisManager");
 	}
 
 	private void CacheWorldSetup()
@@ -1177,29 +724,4 @@ public partial class SpawnManager : Node2D
 		_worldSetup = GetNodeOrNull<WorldSetup>("/root/Main");
 	}
 
-	private void CacheRandomEventManager()
-	{
-		if (_randomEventManager != null && IsInstanceValid(_randomEventManager))
-			return;
-
-		_randomEventManager = GetNodeOrNull<RandomEventManager>("../RandomEventManager");
-	}
-
-	private void LoadDayNightConfig()
-	{
-		FileAccess file = FileAccess.Open("res://data/scaling/day_night_cycle.json", FileAccess.ModeFlags.Read);
-		if (file == null)
-			return;
-
-		string jsonText = file.GetAsText();
-		file.Close();
-
-		Json json = new();
-		if (json.Parse(jsonText) != Error.Ok)
-			return;
-
-		Godot.Collections.Dictionary dict = json.Data.AsGodotDictionary();
-		if (dict.ContainsKey("day_duration"))
-			_dayDurationSec = (float)dict["day_duration"].AsDouble();
-	}
 }

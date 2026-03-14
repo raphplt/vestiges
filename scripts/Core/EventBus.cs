@@ -10,6 +10,7 @@ public partial class EventBus : Node
 {
     // --- Game State ---
     [Signal] public delegate void GameStateChangedEventHandler(string oldState, string newState);
+    [Signal] public delegate void RunPhaseChangedEventHandler(string oldPhase, string newPhase);
 
     // --- Combat ---
     [Signal] public delegate void EntityDamagedEventHandler(Node entity, float amount);
@@ -24,9 +25,6 @@ public partial class EventBus : Node
     [Signal] public delegate void LevelUpEventHandler(int newLevel);
     [Signal] public delegate void PerkChosenEventHandler(string perkId);
     [Signal] public delegate void SynergyActivatedEventHandler(string synergyId, string notification);
-
-    // --- Cycle Jour/Nuit (V2: conservé pour compatibilité, émis "Day" au démarrage) ---
-    [Signal] public delegate void DayPhaseChangedEventHandler(string phase);
 
     // --- Score ---
     [Signal] public delegate void ScoreChangedEventHandler(int newScore);

@@ -5,9 +5,9 @@ using Vestiges.Core;
 namespace Vestiges.World;
 
 /// <summary>
-/// Particules ambiantes qui suivent le joueur et changent avec le cycle jour/nuit.
-/// Jour : poussière dorée flottante (mémoire qui persiste).
-/// Nuit : brume violette (effacement qui avance).
+/// Particules ambiantes qui suivent le joueur et changent avec les phases de run V2.
+/// Exploration : poussière dorée flottante (mémoire qui persiste).
+/// Crise / late game : brume violette (effacement qui avance).
 /// </summary>
 public partial class AmbientParticles : Node2D
 {
@@ -20,7 +20,7 @@ public partial class AmbientParticles : Node2D
 	public override void _Ready()
 	{
 		_eventBus = GetNode<EventBus>("/root/EventBus");
-		_eventBus.DayPhaseChanged += OnDayPhaseChanged;
+		_eventBus.RunPhaseChanged += OnRunPhaseChanged;
 
 		_disabled = VfxFactory.CurrentParticleLevel == ParticleLevel.Off;
 		if (_disabled)
@@ -40,7 +40,7 @@ public partial class AmbientParticles : Node2D
 	public override void _ExitTree()
 	{
 		if (_eventBus != null)
-			_eventBus.DayPhaseChanged -= OnDayPhaseChanged;
+			_eventBus.RunPhaseChanged -= OnRunPhaseChanged;
 	}
 
 	public override void _Process(double delta)
@@ -55,27 +55,20 @@ public partial class AmbientParticles : Node2D
 		GlobalPosition = _followTarget.GlobalPosition;
 	}
 
-	private void OnDayPhaseChanged(string phase)
+	private void OnRunPhaseChanged(string oldPhase, string newPhase)
 	{
 		if (_disabled)
 			return;
 
-		switch (phase)
+		switch (newPhase)
 		{
-			case "Day":
+			case "Exploration":
 				TransitionTo(day: true, duration: 3f);
 				break;
-			case "Dusk":
-				// Mélange : jour diminue, nuit monte
-				FadeParticles(_dayParticles, 0.3f, 2f);
-				_nightParticles.Emitting = true;
-				FadeParticles(_nightParticles, 0.5f, 2f);
-				break;
-			case "Night":
+			case "Crisis":
+			case "LateGame":
+			case "Death":
 				TransitionTo(day: false, duration: 2f);
-				break;
-			case "Dawn":
-				TransitionTo(day: true, duration: 4f);
 				break;
 		}
 	}
@@ -119,7 +112,7 @@ public partial class AmbientParticles : Node2D
 			Gravity = new Vector3(0, -2, 0),
 			ScaleMin = 0.2f,
 			ScaleMax = 0.5f,
-			Color = new Color(0.83f, 0.66f, 0.26f, 0.4f), // Or Foyer atténué
+			Color = new Color(0.83f, 0.66f, 0.26f, 0.4f),
 		};
 		particles.ProcessMaterial = mat;
 

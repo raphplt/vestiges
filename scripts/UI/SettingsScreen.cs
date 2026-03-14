@@ -639,7 +639,7 @@ public partial class SettingsScreen : CanvasLayer
 			Text = "Action",
 			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill
 		};
-		actionHeader.AddThemeFontSizeOverride("font_size", 13);
+		actionHeader.AddThemeFontSizeOverride("font_size", 14);
 		actionHeader.AddThemeColorOverride("font_color", UITheme.TextDim);
 		header.AddChild(actionHeader);
 
@@ -649,7 +649,7 @@ public partial class SettingsScreen : CanvasLayer
 			CustomMinimumSize = new Vector2(120, 0),
 			HorizontalAlignment = HorizontalAlignment.Center
 		};
-		keyHeader.AddThemeFontSizeOverride("font_size", 13);
+		keyHeader.AddThemeFontSizeOverride("font_size", 14);
 		keyHeader.AddThemeColorOverride("font_color", UITheme.TextDim);
 		header.AddChild(keyHeader);
 
@@ -659,7 +659,7 @@ public partial class SettingsScreen : CanvasLayer
 			CustomMinimumSize = new Vector2(120, 0),
 			HorizontalAlignment = HorizontalAlignment.Center
 		};
-		joyHeader.AddThemeFontSizeOverride("font_size", 13);
+		joyHeader.AddThemeFontSizeOverride("font_size", 14);
 		joyHeader.AddThemeColorOverride("font_color", UITheme.TextDim);
 		header.AddChild(joyHeader);
 
@@ -728,7 +728,7 @@ public partial class SettingsScreen : CanvasLayer
 			CustomMinimumSize = new Vector2(120, 32),
 			FocusMode = Control.FocusModeEnum.None
 		};
-		keyBtn.AddThemeFontSizeOverride("font_size", 13);
+		keyBtn.AddThemeFontSizeOverride("font_size", 14);
 		UITheme.ApplyButtonStyle(keyBtn, _btnNormalTex, _btnHoverTex, _btnPressedTex, _btnDisabledTex);
 		keyBtn.Pressed += () => StartListening(def.Action, keyBtn, true);
 		row.AddChild(keyBtn);
@@ -740,7 +740,7 @@ public partial class SettingsScreen : CanvasLayer
 			CustomMinimumSize = new Vector2(120, 32),
 			FocusMode = Control.FocusModeEnum.None
 		};
-		joyBtn.AddThemeFontSizeOverride("font_size", 13);
+		joyBtn.AddThemeFontSizeOverride("font_size", 14);
 		UITheme.ApplyButtonStyle(joyBtn, _btnNormalTex, _btnHoverTex, _btnPressedTex, _btnDisabledTex);
 		joyBtn.Pressed += () => StartListening(def.Action, joyBtn, false);
 		row.AddChild(joyBtn);
@@ -776,7 +776,7 @@ public partial class SettingsScreen : CanvasLayer
 			Text = "[Echap] ou [X] Fermer",
 			HorizontalAlignment = HorizontalAlignment.Center
 		};
-		hint.AddThemeFontSizeOverride("font_size", 12);
+		hint.AddThemeFontSizeOverride("font_size", 13);
 		hint.AddThemeColorOverride("font_color", new Color(0.4f, 0.4f, 0.45f));
 		margin.AddChild(hint);
 

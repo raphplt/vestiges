@@ -22,11 +22,11 @@ public partial class RunTracker : Node
     private int _structuresLost;
     private int _poisExplored;
     private int _chestsOpened;
+    private int _crisesSurvived;
     private int _maxLevel;
     private readonly List<string> _perkIds = new();
     private string _lastHitByEnemyId = "unknown";
-    private string _currentPhase = "Day";
-    private int _currentNight;
+    private string _currentPhase = "Exploration";
 
     // DPS tracking (rolling window)
     private readonly List<(float time, float damage)> _damageEvents = new();
@@ -52,11 +52,12 @@ public partial class RunTracker : Node
     public int StructuresLost => _structuresLost;
     public int PoisExplored => _poisExplored;
     public int ChestsOpened => _chestsOpened;
+    public int CrisesSurvived => _crisesSurvived;
     public int MaxLevel => _maxLevel;
     public List<string> PerkIds => _perkIds;
     public string LastHitByEnemyId => _lastHitByEnemyId;
     public string CurrentPhase => _currentPhase;
-    public int CurrentNight => _currentNight;
+    public int CurrentNight => _crisesSurvived;
     public float RunDurationSeconds => (Time.GetTicksMsec() - _runStartTimeMsec) / 1000f;
 
     // --- Difficulty metrics ---
@@ -149,7 +150,8 @@ public partial class RunTracker : Node
         _eventBus.EnemyKilled += OnEnemyKilled;
         _eventBus.PlayerDamaged += OnPlayerDamaged;
         _eventBus.PlayerHitBy += OnPlayerHitBy;
-        _eventBus.DayPhaseChanged += OnDayPhaseChanged;
+        _eventBus.RunPhaseChanged += OnRunPhaseChanged;
+        _eventBus.CrisisEnded += OnCrisisEnded;
 
         _eventBus.PoiExplored += OnPoiExplored;
         _eventBus.ChestOpened += OnChestOpened;
@@ -167,7 +169,8 @@ public partial class RunTracker : Node
         _eventBus.EnemyKilled -= OnEnemyKilled;
         _eventBus.PlayerDamaged -= OnPlayerDamaged;
         _eventBus.PlayerHitBy -= OnPlayerHitBy;
-        _eventBus.DayPhaseChanged -= OnDayPhaseChanged;
+        _eventBus.RunPhaseChanged -= OnRunPhaseChanged;
+        _eventBus.CrisisEnded -= OnCrisisEnded;
 
         _eventBus.PoiExplored -= OnPoiExplored;
         _eventBus.ChestOpened -= OnChestOpened;
@@ -244,11 +247,14 @@ public partial class RunTracker : Node
         _lastHitByEnemyId = enemyId;
     }
 
-    private void OnDayPhaseChanged(string phase)
+    private void OnRunPhaseChanged(string oldPhase, string newPhase)
     {
-        _currentPhase = phase;
-        if (phase == "Night")
-            _currentNight++;
+        _currentPhase = newPhase;
+    }
+
+    private void OnCrisisEnded(int crisisNumber)
+    {
+        _crisesSurvived = Mathf.Max(_crisesSurvived, crisisNumber);
     }
 
 

@@ -1,11 +1,11 @@
 using System.Threading.Tasks;
 using Godot;
 using Vestiges.Core;
+using Vestiges.Events;
 using Vestiges.Infrastructure;
 using Vestiges.Meta;
 using Vestiges.Progression;
 using Vestiges.Score;
-using Vestiges.Simulation;
 using Vestiges.Spawn;
 using Vestiges.Infrastructure.Steam;
 using Vestiges.UI;
@@ -16,7 +16,6 @@ namespace Vestiges.World;
 /// Wire les systèmes entre eux au démarrage de la scène.
 /// Exécuté après tous les _Ready (grâce à l'ordre des enfants dans Main).
 /// Lit le personnage sélectionné depuis GameManager (choisi dans le Hub).
-/// Détecte le mode simulation si un BatchRunner existe dans /root/.
 /// </summary>
 public partial class GameBootstrap : Node
 {
@@ -28,13 +27,12 @@ public partial class GameBootstrap : Node
         CharacterDataLoader.Load();
         WeaponDataLoader.Load();
         WeaponUpgradeDataLoader.Load();
+        WeaponRarityDataLoader.Load();
         PerkDataLoader.Load();
         PassiveSouvenirDataLoader.Load();
         FusionDataLoader.Load();
         MetaSaveManager.Load();
-        StartingKitDataLoader.Load();
         SouvenirDataLoader.Load();
-        MutatorDataLoader.Load();
 
         // FragmentManager DOIT exister avant tout LevelUp —
         // certains nodes émettent XpGained/LevelUp pendant leur _Ready(),
@@ -46,34 +44,14 @@ public partial class GameBootstrap : Node
             GetNode("..").CallDeferred("add_child", fragmentManager);
         }
 
-        // Detect simulation mode
-        BatchRunner batchRunner = GetNodeOrNull<BatchRunner>("/root/BatchRunner");
-        bool isSimulation = batchRunner != null;
-
         PlayerProgression progression = GetNode<PlayerProgression>("../Player/PlayerProgression");
         PerkManager perkManager = GetNode<PerkManager>("../PerkManager");
         ScoreManager scoreManager = GetNode<ScoreManager>("../ScoreManager");
         RunTracker runTracker = GetNode<RunTracker>("../RunTracker");
         Player player = GetNode<Player>("../Player");
 
-        if (isSimulation)
-        {
-            // Simulation : tout synchrone, pas d'overlay
-            WorldSetup worldSetup = GetNode<WorldSetup>("..");
-            worldSetup.InitializeWorldSync();
-
-            EnemyPool enemyPool = GetNode<EnemyPool>("../EnemyPool");
-            enemyPool.PrewarmSync();
-
-            SetupSimulation(batchRunner, player, perkManager, scoreManager, runTracker,
-                progression, fragmentManager);
-        }
-        else
-        {
-            // Mode normal : lancer l'initialisation async avec overlay
-            _ = SetupNormalGameAsync(player, perkManager, scoreManager, runTracker,
-                progression, fragmentManager);
-        }
+        _ = SetupNormalGameAsync(player, perkManager, scoreManager, runTracker,
+            progression, fragmentManager);
     }
 
     private async Task SetupNormalGameAsync(Player player, PerkManager perkManager,
@@ -106,15 +84,12 @@ public partial class GameBootstrap : Node
         // --- Wire des systèmes (rapide, synchrone) ---
         overlay.SetProgress("Initialisation...");
 
-        DayNightCycle dayNightCycle = GetNodeOrNull<DayNightCycle>("../DayNightCycle");
         HUD hud = GetNode<HUD>("../HUD");
         LevelUpScreen levelUpScreen = GetNode<LevelUpScreen>("../LevelUpScreen");
         GameOverScreen gameOverScreen = GetNode<GameOverScreen>("../GameOverScreen");
         ChestLootScreen chestLootScreen = GetNodeOrNull<ChestLootScreen>("../ChestLootScreen");
 
         hud.SetProgression(progression);
-        if (dayNightCycle != null)
-            hud.SetDayNightCycle(dayNightCycle);
         hud.SetCompassTargets(player, null);
 
         FogOfWar fogOfWar = GetNodeOrNull<FogOfWar>("../FogOfWar");
@@ -127,17 +102,36 @@ public partial class GameBootstrap : Node
         if (chestLootScreen != null)
             player.SetChestLootScreen(chestLootScreen);
 
+        Node sceneRoot = GetNode("..");
+        ErasureManager erasureManager = new() { Name = "ErasureManager" };
+        sceneRoot.AddChild(erasureManager);
+
+        EssenceTracker essenceTracker = new() { Name = "EssenceTracker" };
+        sceneRoot.AddChild(essenceTracker);
+
+        CrisisManager crisisManager = new() { Name = "CrisisManager" };
+        sceneRoot.AddChild(crisisManager);
+
+        EndgameManager endgameManager = new() { Name = "EndgameManager" };
+        sceneRoot.AddChild(endgameManager);
+
+        AltarManager altarManager = new() { Name = "AltarManager" };
+        sceneRoot.AddChild(altarManager);
+
+        QuestManager questManager = new() { Name = "QuestManager" };
+        sceneRoot.AddChild(questManager);
+
+        hud.SetErasureManager(erasureManager);
+        hud.SetCrisisManager(crisisManager);
+        hud.SetEssenceTracker(essenceTracker);
+
         InitializeCharacterAndRun(player, perkManager, scoreManager, runTracker);
-        ApplyMutators(scoreManager, dayNightCycle, worldSetup);
 
         if (progression.CurrentLevel > 1 && fragmentManager.PendingChoices.Count == 0)
         {
             GD.Print($"[GameBootstrap] Catching up missed level-ups: player is level {progression.CurrentLevel}");
             fragmentManager.TriggerLevelUp(progression.CurrentLevel);
         }
-
-        ZoneMemoryManager zoneMemoryManager = new() { Name = "ZoneMemoryManager" };
-        GetNode("..").CallDeferred("add_child", zoneMemoryManager);
 
         CursedItemManager cursedItemManager = new() { Name = "CursedItemManager" };
         cursedItemManager.SetPerkManager(perkManager);
@@ -233,101 +227,6 @@ public partial class GameBootstrap : Node
         };
         GetNode("..").AddChild(cleanup);
     }
-
-    private void SetupSimulation(BatchRunner batchRunner, Player player,
-        PerkManager perkManager, ScoreManager scoreManager, RunTracker runTracker,
-        PlayerProgression progression, FragmentManager fragmentManager)
-    {
-        SimulationRunConfig runConfig = batchRunner.CurrentRunConfig;
-
-        // Skip UI wiring — LevelUpScreen.SetPerkManager() never called = no pause on level up
-        // GameOverScreen.SetScoreManager() never called = null-safe SaveEndOfRun() is a no-op
-
-        // Remove UI-only nodes for performance
-        RemoveNodeIfExists("../HUD");
-        RemoveNodeIfExists("../LevelUpScreen");
-        RemoveNodeIfExists("../ChestLootScreen");
-        RemoveNodeIfExists("../GameOverScreen");
-        RemoveNodeIfExists("../PauseMenu");
-        RemoveNodeIfExists("../SouvenirPopup");
-        RemoveNodeIfExists("../JournalScreen");
-        RemoveNodeIfExists("../DebugOverlay");
-        RemoveNodeIfExists("../FogOfWar");
-
-        // Character setup — use config or fallback
-        string characterId = runConfig.CharacterId ?? FallbackCharacterId;
-        GameManager gm = GetNode<GameManager>("/root/GameManager");
-        gm.SelectedCharacterId = characterId;
-
-        CharacterData data = CharacterDataLoader.Get(characterId)
-            ?? CharacterDataLoader.Get(FallbackCharacterId);
-
-        player.InitializeCharacter(data);
-        perkManager.ApplyPassivePerks(data.Id);
-        scoreManager.SetCharacterMultiplier(data.ScoreMultiplier);
-        scoreManager.SetRunTracker(runTracker);
-
-        // Apply seed if specified
-        if (runConfig.Seed > 0)
-            gm.RunSeed = runConfig.Seed;
-
-        // Apply scaling overrides (runtime, no file modification)
-        if (runConfig.ScalingOverrides != null && runConfig.ScalingOverrides.Count > 0)
-        {
-            SpawnManager spawnManager = GetNode<SpawnManager>("../SpawnManager");
-            spawnManager.ApplyScalingOverrides(runConfig.ScalingOverrides);
-        }
-
-        // Create and wire AIController (avec FragmentManager pour les level-ups)
-        AIProfile profile = AIProfile.FromName(runConfig.ProfileName);
-        PerkStrategy perkStrategy = PerkStrategy.FromName(runConfig.PerkStrategyName);
-
-        AIController aiController = new() { Name = "AIController" };
-        // Initialize before adding to tree — _Ready() needs the fields set by Initialize
-        aiController.Initialize(player, perkManager, scoreManager, profile, perkStrategy, fragmentManager);
-        player.IsAIControlled = true;
-
-        // Deferred add — parent is still setting up children during _Ready()
-        GetNode("..").CallDeferred("add_child", aiController);
-
-        // Disable camera for performance
-        Camera2D camera = player.GetNodeOrNull<Camera2D>("Camera");
-        if (camera != null)
-            camera.Enabled = false;
-
-        // Set time scale
-        Engine.TimeScale = runConfig.TimeScale;
-
-        // Safety cap: force death after max duration (real-time seconds)
-        float realTimeMaxSec = runConfig.MaxDurationSec / Mathf.Max(1f, runConfig.TimeScale);
-        Timer maxDurationTimer = new()
-        {
-            WaitTime = realTimeMaxSec,
-            OneShot = true,
-            Autostart = true,
-            ProcessMode = ProcessModeEnum.Always
-        };
-        maxDurationTimer.Timeout += () =>
-        {
-            if (!player.IsDead)
-                player.TakeDamage(99999f);
-        };
-        GetNode("..").CallDeferred("add_child", maxDurationTimer);
-
-        gm.ChangeState(GameManager.GameState.Run);
-
-        // Rattraper les level-ups manqués en simulation
-        if (progression.CurrentLevel > 1 && fragmentManager.PendingChoices.Count == 0)
-        {
-            GD.Print($"[GameBootstrap] SIM: Catching up missed level-ups: player is level {progression.CurrentLevel}");
-            fragmentManager.TriggerLevelUp(progression.CurrentLevel);
-        }
-
-        GD.Print($"[GameBootstrap] SIMULATION run started — {data.Name}, " +
-                 $"profile={profile.Name}, perks={runConfig.PerkStrategyName}, " +
-                 $"timeScale={runConfig.TimeScale}x");
-    }
-
     private void InitializeCharacterAndRun(Player player, PerkManager perkManager,
         ScoreManager scoreManager, RunTracker runTracker)
     {
@@ -347,67 +246,8 @@ public partial class GameBootstrap : Node
         perkManager.ApplyPassivePerks(data.Id);
         scoreManager.SetCharacterMultiplier(data.ScoreMultiplier);
         scoreManager.SetRunTracker(runTracker);
+        gm.ActiveMutators = new System.Collections.Generic.List<string>();
 
         gm.ChangeState(GameManager.GameState.Run);
-    }
-
-    private void ApplyMutators(ScoreManager scoreManager, DayNightCycle dayNightCycle,
-        WorldSetup worldSetup)
-    {
-        GameManager gm = GetNode<GameManager>("/root/GameManager");
-        System.Collections.Generic.List<string> activeMutators = gm.ActiveMutators;
-        if (activeMutators == null || activeMutators.Count == 0)
-            return;
-
-        float totalMultiplier = 1f;
-        System.Collections.Generic.Dictionary<string, float> scalingOverrides = new();
-
-        foreach (string mutatorId in activeMutators)
-        {
-            MutatorData mutator = MutatorDataLoader.Get(mutatorId);
-            if (mutator == null)
-                continue;
-
-            totalMultiplier *= mutator.ScoreMultiplier;
-
-            switch (mutator.EffectType)
-            {
-                case "night_duration":
-                    // V2: cycle jour/nuit supprime, ignorer ce mutateur
-                    break;
-                case "enemy_hp":
-                    scalingOverrides["flat_hp_multiplier"] = mutator.EffectValue;
-                    break;
-                case "enemy_damage":
-                    scalingOverrides["flat_dmg_multiplier"] = mutator.EffectValue;
-                    break;
-                case "no_safe_zone":
-                    // V2: plus de Foyer, ignorer ce mutateur
-                    break;
-                case "spawn_rate":
-                    scalingOverrides["base_spawn_interval"] = 1.80f * mutator.EffectValue;
-                    break;
-                case "no_pois":
-                    worldSetup.PoisDisabled = true;
-                    break;
-            }
-
-            GD.Print($"[GameBootstrap] Mutator applied: {mutator.Name}");
-        }
-
-        if (scalingOverrides.Count > 0)
-        {
-            SpawnManager spawnManager = GetNode<SpawnManager>("../SpawnManager");
-            spawnManager.ApplyScalingOverrides(scalingOverrides);
-        }
-
-        scoreManager.SetMutatorMultiplier(totalMultiplier);
-        GD.Print($"[GameBootstrap] {activeMutators.Count} mutator(s) active — score multiplier: x{totalMultiplier:F2}");
-    }
-
-    private void RemoveNodeIfExists(string path)
-    {
-        Node node = GetNodeOrNull(path);
-        node?.QueueFree();
     }
 }

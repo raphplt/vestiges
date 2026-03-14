@@ -11,7 +11,7 @@ namespace Vestiges.Infrastructure.Steam;
 ///   - Par personnage (vagabond, forgeuse, traqueur)
 ///   - Friends-only
 ///   - Weekly (seed fixé, reset hebdo)
-///   - Nuits survivées (endurance pure)
+///   - Survie / crises traversées (endurance pure)
 ///
 /// L'API Steamworks est callback-based. On utilise CallResult pour les opérations async.
 /// </summary>
@@ -57,7 +57,7 @@ public partial class SteamLeaderboards : Node
 	/// Upload le score de fin de run sur les leaderboards appropriés.
 	/// Appelé par ScoreManager.SaveEndOfRun().
 	/// </summary>
-	public void UploadScore(int score, int nightsSurvived, string characterId)
+	public void UploadScore(int score, int crisesSurvived, string characterId)
 	{
 		if (!SteamManager.IsActive)
 			return;
@@ -69,8 +69,8 @@ public partial class SteamLeaderboards : Node
 		string charBoard = BoardCharacterPrefix + characterId;
 		UploadToBoard(charBoard, score);
 
-		// Nuits survivées (leaderboard séparé, trié par nuits)
-		UploadToBoard(BoardNightsSurvived, nightsSurvived);
+		// Endurance V2 : on réutilise le board legacy pour les crises survivées.
+		UploadToBoard(BoardNightsSurvived, crisesSurvived);
 
 		// Weekly (même board name, le reset est géré côté Steamworks App Admin)
 		UploadToBoard(BoardWeekly, score);

@@ -23,7 +23,7 @@
     {
         "id": "vagabond",
         "name": "Le Vagabond",
-        "description": "Équilibré, polyvalent. Bonus de récolte.",
+        "description": "Équilibré, mobile, endurant.",
         "starting_weapon": "chipped_blade",
         "base_stats": {
             "speed": 200,
@@ -43,7 +43,7 @@
     {
         "id": "forgeuse",
         "name": "La Forgeuse",
-        "description": "Craft rapide, structures solides, dégâts réduits.",
+        "description": "Brutale, tenace, spécialiste des armes lourdes.",
         "starting_weapon": "heavy_hammer",
         "base_stats": {
             "speed": 180,

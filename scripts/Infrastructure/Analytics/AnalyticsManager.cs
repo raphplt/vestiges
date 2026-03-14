@@ -11,11 +11,10 @@ namespace Vestiges.Infrastructure.Analytics;
 ///
 /// Métriques collectées :
 /// - Taux de pick des perks (quels perks les joueurs choisissent)
-/// - Causes de mort (quel ennemi, quelle nuit, quelle phase)
+/// - Causes de mort et phase de fin
 /// - Distribution des scores
 /// - Temps de run moyen
-/// - Nuit moyenne atteinte
-/// - Structures les plus construites
+/// - Crises moyennes survécues
 /// - Événements custom (boss kill, souvenir discovered, etc.)
 /// </summary>
 public partial class AnalyticsManager : Node
@@ -29,9 +28,8 @@ public partial class AnalyticsManager : Node
 	// Session courante
 	private readonly Dictionary<string, int> _perkPicks = new();
 	private readonly Dictionary<string, int> _deathCauses = new();
-	private readonly Dictionary<string, int> _structuresBuilt = new();
 	private readonly List<int> _scores = new();
-	private readonly List<int> _nightsReached = new();
+	private readonly List<int> _crisesSurvived = new();
 	private readonly List<float> _runDurations = new();
 	private readonly List<CustomEvent> _events = new();
 	private int _totalRuns;
@@ -70,7 +68,7 @@ public partial class AnalyticsManager : Node
 
 		_totalRuns++;
 		_scores.Add(record.Score);
-		_nightsReached.Add(record.NightsSurvived);
+		_crisesSurvived.Add(record.CrisesSurvived);
 		_runDurations.Add(record.RunDurationSec);
 
 		if (!string.IsNullOrEmpty(record.DeathCause))
@@ -80,9 +78,9 @@ public partial class AnalyticsManager : Node
 		{
 			["character"] = record.CharacterId,
 			["score"] = record.Score.ToString(),
-			["nights"] = record.NightsSurvived.ToString(),
+			["crises"] = record.CrisesSurvived.ToString(),
+			["run_phase"] = record.RunPhase ?? "Exploration",
 			["death_cause"] = record.DeathCause ?? "unknown",
-			["death_night"] = record.DeathNight.ToString(),
 			["duration_sec"] = record.RunDurationSec.ToString("F0"),
 			["perks"] = string.Join(",", record.PerkIds ?? new List<string>()),
 		});
@@ -109,18 +107,17 @@ public partial class AnalyticsManager : Node
 	public AnalyticsReport GetReport()
 	{
 		float avgScore = _scores.Count > 0 ? Average(_scores) : 0;
-		float avgNights = _nightsReached.Count > 0 ? Average(_nightsReached) : 0;
+		float avgCrises = _crisesSurvived.Count > 0 ? Average(_crisesSurvived) : 0;
 		float avgDuration = _runDurations.Count > 0 ? AverageF(_runDurations) : 0;
 
 		return new AnalyticsReport
 		{
 			TotalRuns = _totalRuns,
 			AverageScore = avgScore,
-			AverageNightsReached = avgNights,
+			AverageCrisesSurvived = avgCrises,
 			AverageRunDurationSec = avgDuration,
 			TopPerks = GetTopN(_perkPicks, 10),
 			TopDeathCauses = GetTopN(_deathCauses, 5),
-			TopStructures = GetTopN(_structuresBuilt, 5),
 			TotalEvents = _events.Count,
 		};
 	}
@@ -163,9 +160,8 @@ public partial class AnalyticsManager : Node
 			["total_runs"] = _totalRuns,
 			["perk_picks"] = ToGodotDict(_perkPicks),
 			["death_causes"] = ToGodotDict(_deathCauses),
-			["structures_built"] = ToGodotDict(_structuresBuilt),
 			["scores"] = ToGodotArray(_scores),
-			["nights_reached"] = ToGodotArray(_nightsReached),
+			["crises_survived"] = ToGodotArray(_crisesSurvived),
 			["run_durations"] = ToGodotArrayF(_runDurations),
 		};
 
@@ -201,9 +197,8 @@ public partial class AnalyticsManager : Node
 		_totalRuns = data.TryGetValue("total_runs", out Variant tr) ? tr.AsInt32() : 0;
 		LoadDict(_perkPicks, data, "perk_picks");
 		LoadDict(_deathCauses, data, "death_causes");
-		LoadDict(_structuresBuilt, data, "structures_built");
 		LoadList(_scores, data, "scores");
-		LoadList(_nightsReached, data, "nights_reached");
+		LoadList(_crisesSurvived, data, "crises_survived");
 		LoadListF(_runDurations, data, "run_durations");
 
 		GD.Print($"[Analytics] Loaded aggregate: {_totalRuns} runs");
@@ -296,11 +291,10 @@ public partial class AnalyticsManager : Node
 	{
 		public int TotalRuns { get; init; }
 		public float AverageScore { get; init; }
-		public float AverageNightsReached { get; init; }
+		public float AverageCrisesSurvived { get; init; }
 		public float AverageRunDurationSec { get; init; }
 		public List<KeyValuePair<string, int>> TopPerks { get; init; }
 		public List<KeyValuePair<string, int>> TopDeathCauses { get; init; }
-		public List<KeyValuePair<string, int>> TopStructures { get; init; }
 		public int TotalEvents { get; init; }
 	}
 }

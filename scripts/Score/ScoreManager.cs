@@ -7,7 +7,7 @@ using Vestiges.Infrastructure.Steam;
 namespace Vestiges.Score;
 
 /// <summary>
-/// Score complet : combat + survie + bonus nuit sans dégât.
+/// Score V2 : combat + temps de survie + crises + exploration.
 /// Sauvegarde du meilleur score en local.
 /// </summary>
 public partial class ScoreManager : Node
@@ -23,8 +23,11 @@ public partial class ScoreManager : Node
     private const int PointsPerRodeurKill = 15;
     private const int PointsPerColosseKill = 200;
     private const int PointsPerIndicibleKill = 5000;
-    private const int NoDamageNightBonus = 500;
+    private const int PointsPerSecondSurvived = 3;
+    private const int PointsPerCrisisSurvived = 175;
     private const int PointsPerPoiExplored = 50;
+    private const int PointsBossDefeated = 2500;
+    private const int PointsEndgameReached = 1000;
     private const string HighScorePath = "user://highscore.save";
 
     private int _combatScore;
@@ -32,21 +35,36 @@ public partial class ScoreManager : Node
     private int _bonusScore;
     private int _explorationScore;
     private int _totalKills;
-    private int _nightScore;
-    private bool _tookDamageThisNight;
-    private int _noDamageNights;
     private int _bestScore;
     private float _scoreMultiplier = 1f;
     private float _mutatorMultiplier = 1f;
     private EventBus _eventBus;
+    private bool _bossDefeated;
+    private bool _endgameReached;
 
-    public int CurrentScore => (int)((_combatScore + _survivalScore + _bonusScore + _explorationScore) * _scoreMultiplier * _mutatorMultiplier);
+    public int CurrentScore => (int)((_combatScore + SurvivalScore + BonusScore + _explorationScore) * _scoreMultiplier * _mutatorMultiplier);
     public int CombatScore => _combatScore;
-    public int SurvivalScore => _survivalScore;
-    public int BonusScore => _bonusScore;
+    public int SurvivalScore
+    {
+        get
+        {
+            if (_runTracker == null)
+                return _survivalScore;
+            return Mathf.RoundToInt(_runTracker.RunDurationSeconds * PointsPerSecondSurvived);
+        }
+    }
+    public int BonusScore
+    {
+        get
+        {
+            if (_runTracker == null)
+                return _bonusScore;
+            return _runTracker.CrisesSurvived * PointsPerCrisisSurvived;
+        }
+    }
     public int ExplorationScore => _explorationScore;
     public int TotalKills => _totalKills;
-    public int NoDamageNights => _noDamageNights;
+    public int NoDamageNights => 0;
     public int BestScore => _bestScore;
     public bool IsNewRecord => CurrentScore > _bestScore;
     public int VestigesEarned { get; private set; }
@@ -62,6 +80,7 @@ public partial class ScoreManager : Node
         _eventBus.PlayerDamaged += OnPlayerDamaged;
         _eventBus.PoiExplored += OnPoiExplored;
         _eventBus.ChestOpened += OnChestOpened;
+        _eventBus.RunPhaseChanged += OnRunPhaseChanged;
 
         LoadBestScore();
     }
@@ -74,6 +93,7 @@ public partial class ScoreManager : Node
             _eventBus.PlayerDamaged -= OnPlayerDamaged;
             _eventBus.PoiExplored -= OnPoiExplored;
             _eventBus.ChestOpened -= OnChestOpened;
+            _eventBus.RunPhaseChanged -= OnRunPhaseChanged;
         }
     }
 
@@ -126,11 +146,11 @@ public partial class ScoreManager : Node
         if (SteamManager.IsActive)
         {
             SteamAchievements achievements = GetNodeOrNull<SteamAchievements>("../SteamAchievements");
-            int nightsSurvived = _runTracker?.CurrentNight ?? 0;
-            achievements?.OnRunEnd(CurrentScore, nightsSurvived, gm.SelectedCharacterId);
+            int crisesSurvived = _runTracker?.CrisesSurvived ?? 0;
+            achievements?.OnRunEnd(CurrentScore, crisesSurvived, gm.SelectedCharacterId);
 
             SteamLeaderboards leaderboards = GetNodeOrNull<SteamLeaderboards>("../SteamLeaderboards");
-            leaderboards?.UploadScore(CurrentScore, nightsSurvived, gm.SelectedCharacterId);
+            leaderboards?.UploadScore(CurrentScore, crisesSurvived, gm.SelectedCharacterId);
         }
     }
 
@@ -149,31 +169,40 @@ public partial class ScoreManager : Node
             CharacterId = characterId,
             CharacterName = charData?.Name ?? characterId,
             Score = CurrentScore,
-            NightsSurvived = _runTracker?.CurrentNight ?? 0,
+            NightsSurvived = 0,
+            CrisesSurvived = _runTracker?.CrisesSurvived ?? 0,
             TotalKills = _totalKills,
             Date = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm"),
-            WeaponId = weaponId,
+            WeaponId = weaponId == "unknown" ? null : weaponId,
             CombatScoreDetail = _combatScore,
-            SurvivalScoreDetail = _survivalScore,
-            BonusScoreDetail = _bonusScore,
+            SurvivalScoreDetail = SurvivalScore,
+            BonusScoreDetail = BonusScore,
             BuildScoreDetail = 0,
             ExplorationScoreDetail = _explorationScore,
             Seed = gm.RunSeed,
-            ActiveMutators = new System.Collections.Generic.List<string>(gm.ActiveMutators),
-            MutatorMultiplier = _mutatorMultiplier
+            ActiveMutators = gm.ActiveMutators != null && gm.ActiveMutators.Count > 0
+                ? new System.Collections.Generic.List<string>(gm.ActiveMutators)
+                : null,
+            MutatorMultiplier = _mutatorMultiplier,
+            RunPhase = _runTracker?.CurrentPhase ?? GameManager.RunPhase.Exploration.ToString(),
+            RunDurationSec = _runTracker?.RunDurationSeconds ?? 0f,
+            BossDefeated = _bossDefeated,
+            EndgameReached = _endgameReached
         };
 
         if (_runTracker != null)
         {
             record.DeathCause = _runTracker.LastHitByEnemyId;
-            record.DeathNight = _runTracker.CurrentNight;
+            record.DeathNight = 0;
             record.DeathPhase = _runTracker.CurrentPhase;
-            record.PerkIds = new System.Collections.Generic.List<string>(_runTracker.PerkIds);
+            record.PerkIds = _runTracker.PerkIds.Count > 0
+                ? new System.Collections.Generic.List<string>(_runTracker.PerkIds)
+                : null;
             record.TotalDamageDealt = _runTracker.TotalDamageDealt;
             record.TotalDamageTaken = _runTracker.TotalDamageTaken;
-            record.ResourcesCollected = new System.Collections.Generic.Dictionary<string, int>(_runTracker.ResourcesCollected);
-            record.StructuresPlaced = _runTracker.StructuresPlaced;
-            record.StructuresLost = _runTracker.StructuresLost;
+            record.ResourcesCollected = null;
+            record.StructuresPlaced = 0;
+            record.StructuresLost = 0;
             record.PoisExplored = _runTracker.PoisExplored;
             record.ChestsOpened = _runTracker.ChestsOpened;
             record.MaxLevel = _runTracker.MaxLevel;
@@ -194,14 +223,18 @@ public partial class ScoreManager : Node
 
         int points = GetPointsForEnemy(enemyId);
         _combatScore += points;
-        _nightScore += points;
+
+        if (enemyId == "indicible" && !_bossDefeated)
+        {
+            _bossDefeated = true;
+            _bonusScore += PointsBossDefeated;
+        }
 
         _eventBus.EmitSignal(EventBus.SignalName.ScoreChanged, CurrentScore);
     }
 
     private void OnPlayerDamaged(float currentHp, float maxHp)
     {
-        _tookDamageThisNight = true;
     }
 
     private int GetPointsForEnemy(string enemyId)
@@ -245,10 +278,20 @@ public partial class ScoreManager : Node
         GD.Print($"[ScoreManager] Chest opened: {chestId} ({rarity}) +{points}pts");
     }
 
-    /// <summary>Score de survie exponentiel par nuit (GDD : nuit1=100, nuit2=250, nuit5=1500, nuit10=8000).</summary>
+    private void OnRunPhaseChanged(string oldPhase, string newPhase)
+    {
+        if (newPhase == "Endgame" && !_endgameReached)
+        {
+            _endgameReached = true;
+            _bonusScore += PointsEndgameReached;
+            _eventBus.EmitSignal(EventBus.SignalName.ScoreChanged, CurrentScore);
+        }
+    }
+
+    /// <summary>Legacy helper conserve pour les outils qui l'appellent encore.</summary>
     private int GetSurvivalPoints(int nightNumber)
     {
-        return (int)(100 * Mathf.Pow(1.6f, nightNumber - 1));
+        return Mathf.RoundToInt(Mathf.Max(0, nightNumber) * 100);
     }
 
     private void LoadBestScore()

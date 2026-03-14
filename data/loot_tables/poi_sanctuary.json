@@ -1,9 +1,10 @@
 {
     "id": "poi_sanctuary",
     "entries": [
-        { "type": "souvenir", "item": "random_souvenir", "weight": 100, "min_amount": 1, "max_amount": 1 },
-        { "type": "perk", "item": "random_perk", "weight": 50, "min_amount": 1, "max_amount": 1 },
-        { "type": "resource", "item": "metal", "weight": 20, "min_amount": 8, "max_amount": 15 },
-        { "type": "xp", "item": "xp", "weight": 30, "min_amount": 80, "max_amount": 150 }
+        { "type": "souvenir", "item": "random_souvenir", "weight": 35, "min_amount": 1, "max_amount": 1 },
+        { "type": "perk", "item": "random_perk", "weight": 20, "min_amount": 1, "max_amount": 1 },
+        { "type": "weapon", "item": "random_weapon", "weight": 15, "min_amount": 1, "max_amount": 1 },
+        { "type": "essence", "item": "essence", "weight": 15, "min_amount": 12, "max_amount": 24 },
+        { "type": "xp", "item": "xp", "weight": 15, "min_amount": 30, "max_amount": 60 }
     ]
 }

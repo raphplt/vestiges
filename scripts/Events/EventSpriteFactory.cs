@@ -11,13 +11,11 @@ public static class EventSpriteFactory
 {
 	// Cache des textures
 	private static ImageTexture _merchantTex;
-	private static ImageTexture _smokeBaseTex;
 	private static ImageTexture[] _smokeFrames;
 	private static ImageTexture _lureTex;
 	private static ImageTexture[] _riftFrames;
 	private static ImageTexture[] _ghostBuildingTex;
 	private static ImageTexture _resonanceWaveTex;
-	private static ImageTexture[] _flowerFrames;
 
 	// =====================================================================
 	//  Marchand ambulant (caravan) — 24×32
@@ -372,7 +370,7 @@ public static class EventSpriteFactory
 	}
 
 	// =====================================================================
-	//  Onde de résonance (foyer_resonance) — 48×48
+	//  Onde de résonance legacy — 48×48
 	// =====================================================================
 
 	public static ImageTexture GetResonanceWaveSprite()

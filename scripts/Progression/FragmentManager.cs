@@ -195,8 +195,6 @@ public partial class FragmentManager : Node
 					continue;
 				if (_banishedIds.Contains(weapon.Id))
 					continue;
-				if (weapon.Source == "craft")
-					continue;
 				if (weapon.Tier > maxTier)
 					continue;
 				if (!string.IsNullOrEmpty(weapon.RequiresSouvenir) && !MetaSaveManager.HasSouvenir(weapon.RequiresSouvenir))

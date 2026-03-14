@@ -59,17 +59,14 @@ public partial class ChestLootScreen : CanvasLayer
     // --- Fake items for roulette cycling ---
     private static readonly LootDisplayInfo[] FakeItems = new[]
     {
-        new LootDisplayInfo("Bois x5", new Color(0.55f, 0.41f, 0.08f)),
-        new LootDisplayInfo("Pierre x3", new Color(0.66f, 0.6f, 0.47f)),
-        new LootDisplayInfo("Metal x2", new Color(0.44f, 0.53f, 0.63f)),
-        new LootDisplayInfo("Fibre x4", new Color(0.35f, 0.55f, 0.3f)),
-        new LootDisplayInfo("Essence x1", new Color(0.55f, 0.35f, 0.65f)),
+        new LootDisplayInfo("Essence x6", new Color(0.35f, 0.78f, 0.78f)),
+        new LootDisplayInfo("Essence x12", new Color(0.35f, 0.78f, 0.78f)),
         new LootDisplayInfo("+25 XP", new Color(0.4f, 0.8f, 1f)),
         new LootDisplayInfo("+40 XP", new Color(0.4f, 0.8f, 1f)),
         new LootDisplayInfo("Perk", new Color(0.5f, 1f, 0.5f)),
-        new LootDisplayInfo("Bois x8", new Color(0.55f, 0.41f, 0.08f)),
-        new LootDisplayInfo("Pierre x6", new Color(0.66f, 0.6f, 0.47f)),
-        new LootDisplayInfo("Metal x4", new Color(0.44f, 0.53f, 0.63f)),
+        new LootDisplayInfo("Arme", new Color(1f, 0.82f, 0.38f)),
+        new LootDisplayInfo("Souvenir", LoreColor),
+        new LootDisplayInfo("Malediction", new Color(0.7f, 0.3f, 0.35f)),
     };
 
     private struct LootDisplayInfo
@@ -306,17 +303,18 @@ public partial class ChestLootScreen : CanvasLayer
     {
         switch (loot.Type)
         {
-            case "resource":
-                ResourceData res = ResourceDataLoader.Get(loot.ItemId);
-                string resName = res?.Name ?? loot.ItemId;
-                Color resColor = res?.Color ?? CommonColor;
-                return new LootDisplayInfo($"{resName} x{loot.Amount}", resColor);
+            case "essence":
+                return new LootDisplayInfo($"Essence x{loot.Amount}", new Color(0.35f, 0.78f, 0.78f));
             case "xp":
                 return new LootDisplayInfo($"+{loot.Amount} XP", new Color(0.4f, 0.8f, 1f));
             case "perk":
                 return new LootDisplayInfo("Perk Aleatoire", new Color(0.5f, 1f, 0.5f));
+            case "weapon":
+                return new LootDisplayInfo("Arme inconnue", GoldColor);
             case "souvenir":
                 return new LootDisplayInfo($"Souvenir: {loot.ItemId}", LoreColor);
+            case "cursed_item":
+                return new LootDisplayInfo("Malediction", new Color(0.7f, 0.3f, 0.35f));
             default:
                 return new LootDisplayInfo(loot.ItemId, CommonColor);
         }

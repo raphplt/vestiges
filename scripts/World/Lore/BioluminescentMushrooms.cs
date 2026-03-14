@@ -10,23 +10,14 @@ namespace Vestiges.World.Lore;
 /// </summary>
 public partial class BioluminescentMushrooms : Node2D
 {
-	private EventBus _eventBus;
 	private bool _sporesApplied;
 	private readonly Polygon2D[] _caps = new Polygon2D[5];
 	private PointLight2D _nightLight;
 
 	public override void _Ready()
 	{
-		_eventBus = GetNode<EventBus>("/root/EventBus");
-		_eventBus.DayPhaseChanged += OnDayPhaseChanged;
 		BuildVisual();
 		CreateDetectArea();
-	}
-
-	public override void _ExitTree()
-	{
-		if (_eventBus != null)
-			_eventBus.DayPhaseChanged -= OnDayPhaseChanged;
 	}
 
 	private void BuildVisual()
@@ -90,22 +81,20 @@ public partial class BioluminescentMushrooms : Node2D
 		pulse.TweenProperty(ambientGlow, "modulate:a", 0.08f, 2.5f)
 			.SetTrans(Tween.TransitionType.Sine);
 
-		// PointLight2D pour la nuit (désactivé de jour)
+		// V2: lueur constante, plus organique qu'un simple toggle jour/nuit.
 		_nightLight = new PointLight2D
 		{
 			Color = new Color(0.2f, 0.85f, 0.65f),
-			Energy = 0f,
+			Energy = 0.28f,
 			TextureScale = 0.3f,
 			Texture = GD.Load<Texture2D>("res://icon.svg")
 		};
 		AddChild(_nightLight);
-	}
 
-	private void OnDayPhaseChanged(string phase)
-	{
-		float targetEnergy = phase == "Night" ? 0.6f : 0f;
-		Tween tween = CreateTween();
-		tween.TweenProperty(_nightLight, "energy", targetEnergy, 2f)
+		Tween lightPulse = CreateTween().SetLoops();
+		lightPulse.TweenProperty(_nightLight, "energy", 0.42f, 2.2f)
+			.SetTrans(Tween.TransitionType.Sine);
+		lightPulse.TweenProperty(_nightLight, "energy", 0.28f, 2.2f)
 			.SetTrans(Tween.TransitionType.Sine);
 	}
 

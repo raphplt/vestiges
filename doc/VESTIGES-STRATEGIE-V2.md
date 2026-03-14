@@ -679,11 +679,11 @@ Le script de post-processing doit inclure une vérification/correction de l'angl
 **Objectif :** la nouvelle boucle est jouable. Pas de polish, juste le flow.
 
 - [ ] Retirer/désactiver les systèmes obsolètes (craft, base, Foyer in-run, cycle jour/nuit).
-- [ ] Implémenter ErasureManager (mémoire par zone, rythme global, phases visuelles en placeholder — même juste un changement de teinte sur les tiles).
-- [ ] Implémenter CrisisManager (Résurgences toutes les 3-5 min, spawns en burst).
-- [ ] Adapter SpawnManager (spawns liés à l'Effacement, plus proches, plus denses).
+- [x] Implémenter ErasureManager (mémoire par zone, rythme global, phases visuelles en placeholder — même juste un changement de teinte sur les tiles).
+- [x] Implémenter CrisisManager (Résurgences toutes les 3-5 min, spawns en burst).
+- [x] Adapter SpawnManager (spawns liés à l'Effacement, plus proches, plus denses).
 - [ ] Agrandir la map (doubler la taille pour tester, objectif final 4-5x).
-- [ ] Revoir la génération : biomes contigus, pas concentriques.
+- [x] Revoir la génération : biomes contigus, pas concentriques.
 - [ ] Ajuster le tempo : runs de 15-25 min en gameplay normal.
 - [ ] **PLAYTEST : est-ce que c'est fun ? Est-ce que l'Effacement crée de la tension ? Est-ce que le mouvement permanent fonctionne ?**
 
@@ -718,12 +718,12 @@ Le script de post-processing doit inclure une vérification/correction de l'angl
 
 ### Phase E — Quêtes et personnages (2-3 semaines)
 
-- [ ] Implémenter QuestManager + QuestDataLoader.
+- [x] Implémenter QuestManager + QuestDataLoader.
 - [ ] Quêtes de run (3-5 par run, générées dynamiquement).
 - [ ] Quêtes de progression (déblocages de personnages et d'armes).
 - [ ] Rendre le système de déblocage fonctionnel.
 - [ ] S'assurer que 4 personnages sont jouables et équilibrés.
-- [ ] Menu quêtes dans le Hub ("Chroniques").
+- [x] Menu quêtes dans le Hub ("Chroniques").
 - [ ] Notifications in-game de complétion de quête.
 
 ### Phase F — Art et polish (4+ semaines)

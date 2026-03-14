@@ -30,13 +30,11 @@ public partial class PerkManager : Node
         "time_master",
         // Foyer aura / structure-count mechanics not implemented
         "memory_anchor", "last_stand",
+        // Structure and harvest perks still tied to removed base systems
+        "architect", "quick_fix", "harvest_bounty",
         // Salvage system not implemented
         "salvager",
-        // Turret stat not implemented
-        "forgeuse_overcharge",
-        // Complex character perks requiring unbuilt systems
-        "vagabond_jack_of_all", "vagabond_nomad", "vagabond_scrounger",
-        "forgeuse_recycler", "forgeuse_last_wall",
+        // Complex perks still tied to removed systems
         "traqueur_ambush", "traqueur_marked",
     };
 

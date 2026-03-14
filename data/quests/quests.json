@@ -1,0 +1,134 @@
+[
+    {
+        "id": "remember_the_flame",
+        "category": "progression",
+        "name": "La flamme se souvient",
+        "description": "Atteindre une meilleure run de 12 minutes.",
+        "objective_type": "best_run_duration_sec",
+        "target": 720,
+        "reward_type": "souvenir",
+        "reward_id": "memory_flame",
+        "reward_label": "Souvenir : Flamme mémorielle"
+    },
+    {
+        "id": "cut_through_the_void",
+        "category": "progression",
+        "name": "Fendre le vide",
+        "description": "Atteindre 200 kills sur une seule run.",
+        "objective_type": "max_kills_in_run",
+        "target": 200,
+        "reward_type": "vestiges",
+        "reward_amount": 150,
+        "reward_label": "+150 Vestiges"
+    },
+    {
+        "id": "count_the_crises",
+        "category": "progression",
+        "name": "Compter les Résurgences",
+        "description": "Survivre à 25 crises cumulées.",
+        "objective_type": "total_crises_survived",
+        "target": 25,
+        "reward_type": "souvenir",
+        "reward_id": "lantern_memory",
+        "reward_label": "Souvenir : Lanterne de mémoire"
+    },
+    {
+        "id": "name_the_unspeakable",
+        "category": "progression",
+        "name": "Nommer l'Indicible",
+        "description": "Vaincre l'Indicible une première fois.",
+        "objective_type": "defeat_boss",
+        "target": 1,
+        "reward_type": "souvenir",
+        "reward_id": "void_knowledge",
+        "reward_label": "Souvenir : Savoir du vide"
+    },
+    {
+        "id": "after_the_climax",
+        "category": "progression",
+        "name": "Au-dela du climax",
+        "description": "Atteindre l'Endgame.",
+        "objective_type": "reach_endgame",
+        "target": 1,
+        "reward_type": "souvenir",
+        "reward_id": "echo_fragment",
+        "reward_label": "Souvenir : Fragment d'echo"
+    },
+    {
+        "id": "run_kill_swarm",
+        "category": "run",
+        "name": "Casser l'elan",
+        "description": "Tuer 35 creatures.",
+        "objective_type": "kill_total",
+        "target": 35,
+        "reward_type": "essence",
+        "reward_amount": 12,
+        "reward_label": "+12 Essence"
+    },
+    {
+        "id": "run_survive_crises",
+        "category": "run",
+        "name": "Garder le cap",
+        "description": "Traverser 2 crises.",
+        "objective_type": "survive_crises",
+        "target": 2,
+        "reward_type": "essence",
+        "reward_amount": 18,
+        "reward_label": "+18 Essence"
+    },
+    {
+        "id": "run_search_the_map",
+        "category": "run",
+        "name": "Lire les traces",
+        "description": "Explorer 3 points d'interet.",
+        "objective_type": "explore_poi",
+        "target": 3,
+        "reward_type": "xp",
+        "reward_amount": 30,
+        "reward_label": "+30 XP"
+    },
+    {
+        "id": "run_open_cache",
+        "category": "run",
+        "name": "Forcer les cachettes",
+        "description": "Ouvrir 2 coffres.",
+        "objective_type": "open_chests",
+        "target": 2,
+        "reward_type": "essence",
+        "reward_amount": 15,
+        "reward_label": "+15 Essence"
+    },
+    {
+        "id": "run_reach_level",
+        "category": "run",
+        "name": "Se souvenir plus vite",
+        "description": "Atteindre le niveau 6.",
+        "objective_type": "reach_level",
+        "target": 6,
+        "reward_type": "xp",
+        "reward_amount": 40,
+        "reward_label": "+40 XP"
+    },
+    {
+        "id": "run_collect_essence",
+        "category": "run",
+        "name": "Boire l'oubli",
+        "description": "Accumuler 40 d'Essence pendant la run.",
+        "objective_type": "collect_essence",
+        "target": 40,
+        "reward_type": "essence",
+        "reward_amount": 20,
+        "reward_label": "+20 Essence"
+    },
+    {
+        "id": "run_survive_time",
+        "category": "run",
+        "name": "Tenir la cadence",
+        "description": "Survivre 8 minutes.",
+        "objective_type": "survive_duration_sec",
+        "target": 480,
+        "reward_type": "xp",
+        "reward_amount": 50,
+        "reward_label": "+50 XP"
+    }
+]

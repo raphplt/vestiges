@@ -1,8 +1,9 @@
 {
     "id": "poi_anomaly",
     "entries": [
-        { "type": "perk", "item": "random_perk", "weight": 50, "min_amount": 1, "max_amount": 1 },
-        { "type": "xp", "item": "xp", "weight": 30, "min_amount": 40, "max_amount": 80 },
-        { "type": "resource", "item": "metal", "weight": 20, "min_amount": 3, "max_amount": 6 }
+        { "type": "perk", "item": "random_perk", "weight": 40, "min_amount": 1, "max_amount": 1 },
+        { "type": "xp", "item": "xp", "weight": 25, "min_amount": 40, "max_amount": 80 },
+        { "type": "essence", "item": "essence", "weight": 20, "min_amount": 10, "max_amount": 18 },
+        { "type": "weapon", "item": "random_weapon", "weight": 15, "min_amount": 1, "max_amount": 1 }
     ]
 }

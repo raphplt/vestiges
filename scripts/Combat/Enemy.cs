@@ -8,20 +8,6 @@ namespace Vestiges.Combat;
 
 public partial class Enemy : CharacterBody2D
 {
-	// Mapping enemy ID → audio prefix (quand l'ID ne correspond pas au nommage audio)
-	private static readonly System.Collections.Generic.Dictionary<string, string> AudioPrefixMap = new()
-	{
-		["shade"] = "ombre",
-		["shadow_crawler"] = "ombre",
-		["void_brute"] = "brute",
-		["wailing_sentinel"] = "sentinelle",
-		["colosse_forest"] = "brute",
-		["colosse_urban"] = "brute",
-		["colosse_swamp"] = "brute",
-		["treant_corrompu"] = "rodeur",
-		["fading_spitter"] = "tisseuse",
-	};
-
 	private const float MeleeRange = 38f;
 	private const float MeleeAttackCooldown = 0.75f;
 	private const float RangedAttackCooldown = 1.1f;
@@ -60,9 +46,6 @@ public partial class Enemy : CharacterBody2D
 	private float _spawnSpeedMultiplier = 1f;
 	private float _spawnAggressionMultiplier = 1f;
 
-	private bool _nightMode;
-	private Vector2 _foyerPosition;
-
 	// Mode garde : l'ennemi patrouille autour d'un POI
 	private PointOfInterest _guardTarget;
 	private Vector2 _guardPosition;
@@ -93,17 +76,9 @@ public partial class Enemy : CharacterBody2D
 	private float _packBonusSpeed;
 	private float _packRadius = 120f;
 
-	// Audio
-	private float _idleSoundTimer;
-	private float _idleSoundInterval;
-	private string _idleSoundKey;
-	private bool _sentinelActivated;
-
 	// Performance caches
 	private Core.GroupCache _groupCache;
 	private EventBus _eventBus;
-	private string _attackAudioKey;
-	private string _rangedAudioKey;
 	private float _meleeRangeSq;
 	private float _attackRangeSq;
 	private float _packRadiusSq;
@@ -205,7 +180,6 @@ public partial class Enemy : CharacterBody2D
 		_playerProximityRange = PlayerProximityRange;
 		_spawnSpeedMultiplier = 1f;
 		_spawnAggressionMultiplier = 1f;
-		_nightMode = false;
 		_igniteDps = 0f;
 		_igniteTimer = 0f;
 		_bleedDps = 0f;
@@ -231,25 +205,6 @@ public partial class Enemy : CharacterBody2D
 		_packBonusTimer = (float)GD.RandRange(0.0, PackBonusInterval);
 		IsActive = true;
 
-		// Son idle : intervalle aléatoire selon le type d'ennemi
-		_idleSoundInterval = _behavior switch
-		{
-			"screamer" => 8f,   // Le hurleur crie via ProcessScreamerCry
-			"burrower" => 10f,
-			_ => (float)GD.RandRange(5.0, 10.0)
-		};
-		_idleSoundTimer = (float)GD.RandRange(0.0, _idleSoundInterval);
-		string audioPrefix = AudioPrefixMap.TryGetValue(_enemyId, out string mapped) ? mapped : _enemyId;
-		_idleSoundKey = _enemyId switch
-		{
-			"indicible" => "sfx_indicible_presence",
-			"rampant" => "sfx_rampant_deplacement",
-			"void_brute" or "colosse_forest" or "colosse_urban" or "colosse_swamp" => "sfx_brute_pas",
-			"wailing_sentinel" => "sfx_sentinelle_activation",
-			_ => $"sfx_{audioPrefix}_idle"
-		};
-		_attackAudioKey = $"sfx_{audioPrefix}_attaque";
-		_rangedAudioKey = $"sfx_{audioPrefix}_tir";
 		_meleeRangeSq = MeleeRange * MeleeRange;
 		_attackRangeSq = _attackRange * _attackRange;
 		_packRadiusSq = _packRadius * _packRadius;
@@ -268,12 +223,6 @@ public partial class Enemy : CharacterBody2D
 
 		if (!IsInGroup("enemies"))
 			AddToGroup("enemies");
-	}
-
-	public void SetNightTarget(bool nightMode, Vector2 foyerPosition)
-	{
-		_nightMode = nightMode;
-		_foyerPosition = foyerPosition;
 	}
 
 	public void ApplySpawnTuning(float speedMultiplier, float aggressionMultiplier)
@@ -373,7 +322,6 @@ public partial class Enemy : CharacterBody2D
 
 		IsActive = false;
 		_isDying = false;
-		_nightMode = false;
 		_guardTarget = null;
 		_isBurrowed = false;
 		_isCharging = false;
@@ -394,7 +342,6 @@ public partial class Enemy : CharacterBody2D
 		_chargerCooldown = 0f;
 		_chargerIsCharging = false;
 		_chargerDurationLeft = 0f;
-		_sentinelActivated = false;
 		_packBonusDamage = 0f;
 		_packBonusSpeed = 0f;
 		_waveModifier = null;
@@ -465,16 +412,8 @@ public partial class Enemy : CharacterBody2D
 			ProcessBleed(dt);
 
 			// Mouvement simplifié vers la cible sans MoveAndSlide complet
-			if (_nightMode)
-			{
-				Vector2 directionToFoyer = (_foyerPosition - GlobalPosition).Normalized();
-				GlobalPosition += directionToFoyer * _speed * dt;
-			}
-			else
-			{
-				Vector2 direction = (_player.GlobalPosition - GlobalPosition).Normalized();
-				GlobalPosition += direction * _speed * _slowFactor * dt;
-			}
+			Vector2 direction = (_player.GlobalPosition - GlobalPosition).Normalized();
+			GlobalPosition += direction * _speed * _slowFactor * dt;
 			return;
 		}
 
@@ -484,7 +423,6 @@ public partial class Enemy : CharacterBody2D
 		ProcessBleed(dt);
 		ProcessSlowDecay(dt);
 		ProcessDisorient(dt);
-		ProcessIdleSound(dt);
 		ProcessBehaviorAbilities(distToPlayer, dt);
 
 		// Colosse en charge : skip le mouvement normal
@@ -497,10 +435,6 @@ public partial class Enemy : CharacterBody2D
 		if (_guardTarget != null)
 		{
 			ProcessGuardBehavior(distToPlayer, dt);
-		}
-		else if (_nightMode && distToPlayer > _playerProximityRange)
-		{
-			ProcessNightMovement(distToPlayer, dt);
 		}
 		else if (_behavior == "sentinel")
 		{
@@ -557,8 +491,6 @@ public partial class Enemy : CharacterBody2D
 			return;
 
 		_screamerTimer = ScreamerCryCooldown;
-		Infrastructure.AudioManager.Play("sfx_hurleur_cri", 0.05f);
-
 		// Flash vert + pulse visuel pour indiquer le cri
 		_visual.Color = new Color(0.2f, 1f, 0.3f);
 		Tween flashTween = CreateTween();
@@ -584,8 +516,6 @@ public partial class Enemy : CharacterBody2D
 			reinforcement.GlobalPosition = GlobalPosition + offset;
 			enemyContainer.AddChild(reinforcement);
 			reinforcement.Initialize(shadeData, 1f, 1f);
-			if (_nightMode)
-				reinforcement.SetNightTarget(true, _foyerPosition);
 		}
 	}
 
@@ -603,7 +533,6 @@ public partial class Enemy : CharacterBody2D
 			_burrowerPhaseTimer = BurrowerPhaseInterval;
 			CollisionLayer = 2;
 			Modulate = new Color(1f, 1f, 1f, 1f);
-			Infrastructure.AudioManager.Play("sfx_rampant_surgissement", 0.05f);
 		}
 		else
 		{
@@ -612,7 +541,6 @@ public partial class Enemy : CharacterBody2D
 			_burrowerPhaseTimer = BurrowerPhaseDuration;
 			CollisionLayer = 0;
 			Modulate = new Color(1f, 1f, 1f, 0.35f);
-			Infrastructure.AudioManager.Play("sfx_rampant_deplacement", 0.06f, -6f);
 		}
 	}
 
@@ -650,8 +578,6 @@ public partial class Enemy : CharacterBody2D
 			_isCharging = true;
 			_chargeDurationLeft = ColosseChargeDuration;
 			_chargeDirection = (_player.GlobalPosition - GlobalPosition).Normalized();
-			Infrastructure.AudioManager.Play("sfx_brute_charge", 0.05f);
-
 			// VFX : flash rouge + tremblement
 			_visual.Color = new Color(1f, 0.2f, 0.2f);
 			Tween chargeTween = CreateTween();
@@ -700,11 +626,6 @@ public partial class Enemy : CharacterBody2D
 		_attackTimer -= delta;
 		if (distToPlayer <= _attackRange && _attackTimer <= 0f)
 		{
-			if (!_sentinelActivated)
-			{
-				_sentinelActivated = true;
-				Infrastructure.AudioManager.Play("sfx_sentinelle_activation", 0.04f, -4f);
-			}
 			ShootProjectile();
 			_attackTimer = _rangedAttackCooldown;
 			TriggerAttackAnim();
@@ -737,7 +658,6 @@ public partial class Enemy : CharacterBody2D
 				_chargerIsCharging = true;
 				_chargerDurationLeft = 0.8f;
 				_chargerDirection = (_player.GlobalPosition - GlobalPosition).Normalized();
-				Infrastructure.AudioManager.Play("sfx_brute_charge", 0.05f, -4f);
 				_visual.Color = new Color(0.8f, 0.2f, 0.8f);
 				Tween chargeTween = CreateTween();
 				chargeTween.TweenProperty(_visual, "color", _originalColor, 0.3f).SetDelay(0.1f);
@@ -775,8 +695,6 @@ public partial class Enemy : CharacterBody2D
 		{
 			float speedBonus = 1f + (_packBonusSpeed * packCount);
 			_speed = _baseSpeed * _spawnSpeedMultiplier * speedBonus;
-			if (packCount >= 3)
-				Infrastructure.AudioManager.Play("sfx_charognard_meute", 0.06f, -8f);
 		}
 		else
 		{
@@ -816,17 +734,6 @@ public partial class Enemy : CharacterBody2D
 			float regenAmount = _maxHp * 0.03f;
 			_currentHp = Mathf.Min(_currentHp + regenAmount, _maxHp);
 		}
-	}
-
-	private void ProcessIdleSound(float delta)
-	{
-		_idleSoundTimer -= delta;
-		if (_idleSoundTimer > 0f)
-			return;
-
-		_idleSoundTimer = _idleSoundInterval;
-
-		Infrastructure.AudioManager.Play(_idleSoundKey, 0.06f, -10f);
 	}
 
 	private void SpawnModifierAura(Color color)
@@ -907,38 +814,6 @@ public partial class Enemy : CharacterBody2D
 		}
 	}
 
-	private void ProcessNightMovement(float distToPlayer, float delta)
-	{
-		_attackTimer -= delta;
-
-		// V2: plus de structures a cibler
-
-		Vector2 directionToFoyer = (_foyerPosition - GlobalPosition).Normalized();
-		Velocity = directionToFoyer * _speed;
-
-		if (_enemyType == "melee")
-		{
-			float distToFoyerSq = GlobalPosition.DistanceSquaredTo(_foyerPosition);
-			if (distToFoyerSq < _meleeRangeSq && distToPlayer < _playerProximityRange * 2f && _attackTimer <= 0f)
-			{
-				_eventBus.EmitSignal(EventBus.SignalName.PlayerHitBy, _enemyId, _damage);
-				_player.TakeDamage(_damage);
-				_attackTimer = _meleeAttackCooldown;
-				TriggerAttackAnim();
-			}
-		}
-		else if (_enemyType == "ranged" && _attackTimer <= 0f)
-		{
-			float distToFoyerSq = GlobalPosition.DistanceSquaredTo(_foyerPosition);
-			if (distToFoyerSq <= _attackRangeSq)
-			{
-				ShootProjectile();
-				_attackTimer = _rangedAttackCooldown;
-				TriggerAttackAnim();
-			}
-		}
-	}
-
 	private void ProcessMelee(float distToPlayer, float delta)
 	{
 		if (_disorientTimer > 0f)
@@ -956,7 +831,6 @@ public partial class Enemy : CharacterBody2D
 			_player.TakeDamage(_damage);
 			_attackTimer = _meleeAttackCooldown;
 			TriggerAttackAnim();
-			Infrastructure.AudioManager.Play(_attackAudioKey, 0.08f, -6f);
 		}
 	}
 
@@ -996,8 +870,6 @@ public partial class Enemy : CharacterBody2D
 
 		Vector2 direction = (_player.GlobalPosition - GlobalPosition).Normalized();
 		PlayRangedAttackVfx(direction);
-		// Son de tir spécifique selon le type d'ennemi
-		Infrastructure.AudioManager.Play(_rangedAudioKey, 0.06f);
 		EnemyProjectile projectile = _enemyProjectileScene.Instantiate<EnemyProjectile>();
 		projectile.GlobalPosition = GlobalPosition;
 		projectile.Initialize(direction, _damage, _enemyId);

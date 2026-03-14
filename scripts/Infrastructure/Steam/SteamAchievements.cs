@@ -55,7 +55,7 @@ public partial class SteamAchievements : Node
 	public const string StatTotalPois = "STAT_TOTAL_POIS";
 	public const string StatTotalChests = "STAT_TOTAL_CHESTS";
 	public const string StatTotalStructures = "STAT_TOTAL_STRUCTURES";
-	public const string StatMaxNightsSurvived = "STAT_MAX_NIGHTS";
+	public const string StatMaxCrisesSurvived = "STAT_MAX_NIGHTS";
 	public const string StatBestScore = "STAT_BEST_SCORE";
 
 	// --- Compteurs de session ---
@@ -63,8 +63,6 @@ public partial class SteamAchievements : Node
 	private int _sessionPois;
 	private int _sessionChests;
 	private int _sessionStructures;
-	private int _sessionNightsSurvived;
-	private bool _tookDamageThisNight;
 	private int _sessionScore;
 
 	private EventBus _eventBus;
@@ -78,10 +76,6 @@ public partial class SteamAchievements : Node
 
 		// Combat
 		_eventBus.EnemyKilled += OnEnemyKilled;
-		_eventBus.PlayerDamaged += OnPlayerDamaged;
-
-		// Cycle
-		_eventBus.DayPhaseChanged += OnDayPhaseChanged;
 
 		// Exploration
 		_eventBus.PoiExplored += OnPoiExplored;
@@ -104,8 +98,6 @@ public partial class SteamAchievements : Node
 			return;
 
 		_eventBus.EnemyKilled -= OnEnemyKilled;
-		_eventBus.PlayerDamaged -= OnPlayerDamaged;
-		_eventBus.DayPhaseChanged -= OnDayPhaseChanged;
 		_eventBus.PoiExplored -= OnPoiExplored;
 		_eventBus.ChestOpened -= OnChestOpened;
 		_eventBus.ZoneDiscovered -= OnZoneDiscovered;
@@ -117,7 +109,7 @@ public partial class SteamAchievements : Node
 	/// Appelé en fin de run par ScoreManager.SaveEndOfRun() pour flush les stats et
 	/// vérifier les achievements basés sur les cumuls cross-run.
 	/// </summary>
-	public void OnRunEnd(int finalScore, int nightsSurvived, string characterId)
+	public void OnRunEnd(int finalScore, int crisesSurvived, string characterId)
 	{
 		if (!SteamManager.IsActive)
 			return;
@@ -128,14 +120,14 @@ public partial class SteamAchievements : Node
 		IncrementStat(StatTotalPois, _sessionPois);
 		IncrementStat(StatTotalChests, _sessionChests);
 		IncrementStat(StatTotalStructures, _sessionStructures);
-		SetStatIfHigher(StatMaxNightsSurvived, nightsSurvived);
+		SetStatIfHigher(StatMaxCrisesSurvived, crisesSurvived);
 		SetStatIfHigher(StatBestScore, finalScore);
 
-		// Achievements de survie
-		if (nightsSurvived >= 1) TryUnlock(SurviveNight1);
-		if (nightsSurvived >= 3) TryUnlock(SurviveNight3);
-		if (nightsSurvived >= 5) TryUnlock(SurviveNight5);
-		if (nightsSurvived >= 10) TryUnlock(SurviveNight10);
+		// Achievements de survie/endurance - remappés sur les crises V2.
+		if (crisesSurvived >= 1) TryUnlock(SurviveNight1);
+		if (crisesSurvived >= 3) TryUnlock(SurviveNight3);
+		if (crisesSurvived >= 5) TryUnlock(SurviveNight5);
+		if (crisesSurvived >= 10) TryUnlock(SurviveNight10);
 
 		// Achievements de score
 		if (finalScore >= 10_000) TryUnlock(Score10000);
@@ -152,7 +144,6 @@ public partial class SteamAchievements : Node
 		_sessionPois = 0;
 		_sessionChests = 0;
 		_sessionStructures = 0;
-		_sessionNightsSurvived = 0;
 		_sessionScore = 0;
 	}
 
@@ -179,17 +170,6 @@ public partial class SteamAchievements : Node
 
 		if (enemyId.StartsWith("colosse")) TryUnlock(KillColosse);
 		if (enemyId == "indicible") TryUnlock(KillIndicible);
-	}
-
-	private void OnPlayerDamaged(float currentHp, float maxHp)
-	{
-		_tookDamageThisNight = true;
-	}
-
-	private void OnDayPhaseChanged(string phase)
-	{
-		if (phase == "Night")
-			_tookDamageThisNight = false;
 	}
 
 	private void OnPoiExplored(string poiId, string poiType)

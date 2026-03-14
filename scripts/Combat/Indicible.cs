@@ -6,9 +6,9 @@ using Vestiges.Infrastructure;
 namespace Vestiges.Combat;
 
 /// <summary>
-/// L'Indicible — boss rare nuit 10+. Trop grand pour l'écran.
+/// L'Indicible — boss de late game. Trop grand pour l'écran.
 /// Reste aux bords, projette des tentacules et des yeux mouvants.
-/// Ne rentre pas dans le rayon du Foyer : il l'engloutit.
+/// Encercle la zone de confrontation au lieu de charger un point fixe du monde.
 /// </summary>
 public partial class Indicible : Node2D
 {
@@ -35,7 +35,7 @@ public partial class Indicible : Node2D
 	private Player _player;
 	private Camera2D _camera;
 	private EventBus _eventBus;
-	private Vector2 _foyerPosition;
+	private Vector2 _arenaAnchor;
 
 	private readonly List<Node2D> _edgeSegments = new();
 	private readonly List<Polygon2D> _eyes = new();
@@ -50,11 +50,11 @@ public partial class Indicible : Node2D
 		AddToGroup("indicible");
 	}
 
-	public void Initialize(float hpScale, float dmgScale, Vector2 foyerPosition)
+	public void Initialize(float hpScale, float dmgScale, Vector2 arenaAnchor)
 	{
 		_hpScale = hpScale;
 		_dmgScale = dmgScale;
-		_foyerPosition = foyerPosition;
+		_arenaAnchor = arenaAnchor;
 
 		EnemyData data = EnemyDataLoader.Get("indicible");
 		_maxHp = (data?.Stats.Hp ?? 2000f) * hpScale;
@@ -65,7 +65,7 @@ public partial class Indicible : Node2D
 		_tentacleTimer = TentacleInterval * 0.3f;
 		_eyeShiftTimer = 1f;
 
-		GlobalPosition = foyerPosition;
+		GlobalPosition = arenaAnchor;
 
 		BuildEdgePresence();
 		SpawnEyes();
@@ -195,7 +195,7 @@ public partial class Indicible : Node2D
 		if (_edgeSegments.Count < 4)
 			return;
 
-		// Position relative au foyer (sera ajusté par la caméra)
+		// Position relative au centre de l'arène (sera ajusté par la caméra)
 		float spread = 350f;
 		_edgeSegments[0].Position = new Vector2(0, -spread); // haut
 		_edgeSegments[1].Position = new Vector2(0, spread);  // bas

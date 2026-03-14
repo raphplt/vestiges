@@ -287,7 +287,7 @@ public partial class LevelUpScreen : CanvasLayer
         {
             Label tagLabel = new();
             tagLabel.Text = typeTag;
-            tagLabel.AddThemeFontSizeOverride("font_size", 11);
+            tagLabel.AddThemeFontSizeOverride("font_size", 12);
             tagLabel.AddThemeColorOverride("font_color", tagColor);
             textVBox.AddChild(tagLabel);
         }
@@ -304,7 +304,7 @@ public partial class LevelUpScreen : CanvasLayer
         {
             Label descLabel = new();
             descLabel.Text = description;
-            descLabel.AddThemeFontSizeOverride("font_size", 12);
+            descLabel.AddThemeFontSizeOverride("font_size", 14);
             descLabel.AddThemeColorOverride("font_color", TextDim);
             textVBox.AddChild(descLabel);
         }
@@ -676,7 +676,7 @@ public partial class LevelUpScreen : CanvasLayer
         hoverStyle.ContentMarginBottom = 6;
         btn.AddThemeStyleboxOverride("hover", hoverStyle);
 
-        btn.AddThemeFontSizeOverride("font_size", 13);
+        btn.AddThemeFontSizeOverride("font_size", 14);
         btn.AddThemeColorOverride("font_color", enabled ? TextColor : TextDim);
         UITheme.WireButtonAudio(btn);
 

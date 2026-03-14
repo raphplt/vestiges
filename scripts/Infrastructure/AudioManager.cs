@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Godot;
+using Vestiges.Core;
 
 namespace Vestiges.Infrastructure;
 
@@ -62,10 +63,6 @@ public partial class AudioManager : Node
 		["sfx_structure_impossible"] = 180,
 		["sfx_perk_refuse"] = 120,
 		["sfx_degat_critique_recu"] = 180,
-		["sfx_charognard_meute"] = 3000,
-		["sfx_brute_pas"] = 2000,
-		["sfx_rampant_deplacement"] = 2000,
-		["sfx_sentinelle_activation"] = 5000,
 	};
 	private const ulong DefaultMinInterval = 0;
 
@@ -73,15 +70,13 @@ public partial class AudioManager : Node
 	private int _activeEnemyCount;
 	private const int CombatThreshold = 3;
 	private string _currentPhase = "";
-	private float _nightTimer;
-	private const float NightChaosDelay = 130f;
 
 	// --- Ambiance oiseaux ---
 	private float _birdTimer;
 	private string _currentRandomEventId = "";
 	private int _activeColosseCount;
 	private Core.Player _player;
-	private World.ZoneMemoryManager _zoneMemoryManager;
+	private World.ErasureManager _erasureManager;
 	private World.WorldSetup _worldSetup;
 	private TileMapLayer _ground;
 	private const float LowHealthStartThreshold = 0.25f;
@@ -178,22 +173,6 @@ public partial class AudioManager : Node
 		["sfx_foyer_aura"]        = "res://assets/audio/sfx/foyer/sfx_foyer_aura.wav",
 		["sfx_foyer_upgrade"]     = "res://assets/audio/sfx/foyer/sfx_foyer_upgrade.wav",
 
-		// Créatures
-		["sfx_rodeur_idle"]           = "res://assets/audio/sfx/creatures/sfx_rodeur_idle.wav",
-		["sfx_rodeur_attaque"]        = "res://assets/audio/sfx/creatures/sfx_rodeur_attaque.wav",
-		["sfx_charognard_idle"]       = "res://assets/audio/sfx/creatures/sfx_charognard_idle.wav",
-		["sfx_charognard_meute"]      = "res://assets/audio/sfx/creatures/sfx_charognard_meute.wav",
-		["sfx_sentinelle_activation"] = "res://assets/audio/sfx/creatures/sfx_sentinelle_activation.wav",
-		["sfx_sentinelle_tir"]        = "res://assets/audio/sfx/creatures/sfx_sentinelle_tir.wav",
-		["sfx_ombre_idle"]            = "res://assets/audio/sfx/creatures/sfx_ombre_idle.wav",
-		["sfx_ombre_attaque"]         = "res://assets/audio/sfx/creatures/sfx_ombre_attaque.wav",
-		["sfx_brute_pas"]             = "res://assets/audio/sfx/creatures/sfx_brute_pas.wav",
-		["sfx_brute_charge"]          = "res://assets/audio/sfx/creatures/sfx_brute_charge.wav",
-		["sfx_tisseuse_idle"]         = "res://assets/audio/sfx/creatures/sfx_tisseuse_idle.wav",
-		["sfx_hurleur_cri"]           = "res://assets/audio/sfx/creatures/sfx_hurleur_cri.wav",
-		["sfx_rampant_deplacement"]   = "res://assets/audio/sfx/creatures/sfx_rampant_deplacement.wav",
-		["sfx_rampant_surgissement"]  = "res://assets/audio/sfx/creatures/sfx_rampant_surgissement.wav",
-		["sfx_indicible_presence"]    = "res://assets/audio/sfx/creatures/sfx_indicible_presence.wav",
 	};
 
 	public override void _Ready()
@@ -570,20 +549,10 @@ public partial class AudioManager : Node
 	{
 		float dt = (float)delta;
 
-		// Bascule nuit vagues → chaos
-		if (_currentPhase == "Night")
-		{
-			_nightTimer += dt;
-			if (_nightTimer >= NightChaosDelay && _currentMusicKey == "mus_nuit_vagues")
-				PlayMusic("mus_nuit_chaos", fadeDuration: 5f);
-		}
+		if (_currentPhase == "Exploration" && Engine.GetProcessFrames() % 120 == 0)
+			RefreshExplorationMusic();
 
-		// Musique adaptative jour (check toutes les 2s ~)
-		if (_currentPhase == "Day" && Engine.GetProcessFrames() % 120 == 0)
-			RefreshDayMusic();
-
-		// Oiseaux ambiants aléatoires le jour
-		if (_currentPhase == "Day")
+		if (_currentPhase == "Exploration")
 		{
 			_birdTimer -= dt;
 			if (_birdTimer <= 0f)
@@ -598,7 +567,7 @@ public partial class AudioManager : Node
 		UpdatePlayerWarnings();
 	}
 
-	private void RefreshDayMusic()
+	private void RefreshExplorationMusic()
 	{
 		string target = _activeEnemyCount >= CombatThreshold
 			? "mus_jour_combat"
@@ -612,7 +581,10 @@ public partial class AudioManager : Node
 
 	private void ConnectEventBus(Core.EventBus eb)
 	{
-		eb.DayPhaseChanged    += OnDayPhaseChanged;
+		eb.RunPhaseChanged    += OnRunPhaseChanged;
+		eb.CrisisWarning      += OnCrisisWarning;
+		eb.CrisisStarted      += OnCrisisStarted;
+		eb.CrisisEnded        += OnCrisisEnded;
 		eb.EnemySpawned       += OnEnemySpawned;
 		eb.EnemyKilled        += OnEnemyKilled;
 		eb.PlayerDamaged      += OnPlayerDamaged;
@@ -629,7 +601,10 @@ public partial class AudioManager : Node
 
 	private void DisconnectEventBus(Core.EventBus eb)
 	{
-		eb.DayPhaseChanged    -= OnDayPhaseChanged;
+		eb.RunPhaseChanged    -= OnRunPhaseChanged;
+		eb.CrisisWarning      -= OnCrisisWarning;
+		eb.CrisisStarted      -= OnCrisisStarted;
+		eb.CrisisEnded        -= OnCrisisEnded;
 		eb.EnemySpawned       -= OnEnemySpawned;
 		eb.EnemyKilled        -= OnEnemyKilled;
 		eb.PlayerDamaged      -= OnPlayerDamaged;
@@ -644,36 +619,54 @@ public partial class AudioManager : Node
 		eb.RandomEventEnded   -= OnRandomEventEnded;
 	}
 
-	private void OnDayPhaseChanged(string phase)
+	private void OnRunPhaseChanged(string oldPhase, string newPhase)
 	{
-		_currentPhase = phase;
-		_nightTimer = 0f;
+		_currentPhase = newPhase;
 
-		switch (phase)
+		switch (newPhase)
 		{
-			case "Day":
-				// Démarre la musique de jour — DayPhaseChanged est la source de vérité
-				// pour la transition Hub → Run (pas OnGameStateChanged).
-				RefreshDayMusic();
+			case "Exploration":
+				RefreshExplorationMusic();
 				PlayAmbiance("sfx_ambiance_foret");
 				_birdTimer = (float)GD.RandRange(5.0, 15.0);
 				break;
-			case "Dusk":
-				PlayMusic("mus_crepuscule", fadeDuration: 4f);
-				PlaySfx("sfx_monde_crepuscule", 0f);
-				FadeOutAmbiance(3f);
-				break;
-			case "Night":
+			case "Crisis":
 				PlayMusic("mus_nuit_vagues", fadeDuration: 3f);
 				FadeOutAmbiance(2f);
 				break;
-			case "Dawn":
-				PlayMusic("mus_aube", fadeDuration: 3f, loop: false);
-				PlaySfx("sfx_monde_aube", 0f);
+			case "LateGame":
+				PlayMusic("mus_nuit_chaos", fadeDuration: 3f);
+				FadeOutAmbiance(2f);
+				break;
+			case "Death":
+				PlayMusic("mus_mort", fadeDuration: 2f, loop: false);
 				break;
 		}
 
 		UpdateContextAmbiance();
+	}
+
+	private void OnCrisisWarning(int crisisNumber, float countdown)
+	{
+		if (_currentPhase != "Exploration")
+			return;
+
+		PlayMusic("mus_crepuscule", fadeDuration: 2f);
+		PlaySfx("sfx_danger_building", 0f, -5f);
+	}
+
+	private void OnCrisisStarted(int crisisNumber, int intensity)
+	{
+		_currentPhase = "Crisis";
+		PlayMusic("mus_nuit_vagues", fadeDuration: 2f);
+		FadeOutAmbiance(2f);
+	}
+
+	private void OnCrisisEnded(int crisisNumber)
+	{
+		GameManager gameManager = GetNodeOrNull<GameManager>("/root/GameManager");
+		string resolvedPhase = gameManager?.CurrentRunPhase.ToString() ?? "Exploration";
+		OnRunPhaseChanged("Crisis", resolvedPhase);
 	}
 
 	private void OnEnemySpawned(string enemyId, float hpScale, float dmgScale)
@@ -773,9 +766,9 @@ public partial class AudioManager : Node
 		}
 		else if (newState == "Run")
 		{
-			// La musique démarre via OnDayPhaseChanged (DayNightCycle._Ready émet "Day")
-			// Ne pas toucher _currentMusicKey ici pour ne pas interrompre la transition
 			_activeEnemyCount = 0;
+			_activeColosseCount = 0;
+			_currentRandomEventId = "";
 		}
 	}
 
@@ -813,7 +806,7 @@ public partial class AudioManager : Node
 			"storm" => "sfx_orage_proche",
 			"ash_rain" => "sfx_pluie_legere",
 			"forgotten_wind" => "sfx_foret_rafales",
-			_ when _currentPhase is "Dusk" or "Night" => "sfx_tonnerre_lointain",
+			_ when _currentPhase is "Crisis" or "LateGame" => "sfx_tonnerre_lointain",
 			_ => ""
 		};
 	}
@@ -821,7 +814,7 @@ public partial class AudioManager : Node
 	private void UpdatePlayerWarnings()
 	{
 		CachePlayer();
-		CacheZoneMemoryManager();
+		CacheErasureManager();
 		CacheWorldBounds();
 
 		if (_player == null || !GodotObject.IsInstanceValid(_player) || _player.IsDead)
@@ -838,13 +831,13 @@ public partial class AudioManager : Node
 		else if (hpRatio >= LowHealthStopThreshold)
 			StopLoopOnPlayer(_lowHealthLoopPlayer, ref _lowHealthLoopKey);
 
-		if (_zoneMemoryManager == null || !GodotObject.IsInstanceValid(_zoneMemoryManager))
+		if (_erasureManager == null || !GodotObject.IsInstanceValid(_erasureManager))
 		{
 			StopLoopOnPlayer(_borderWarningPlayer, ref _borderWarningKey);
 			return;
 		}
 
-		float memory = _zoneMemoryManager.GetMemoryAt(_player.GlobalPosition);
+		float memory = _erasureManager.GetMemoryAt(_player.GlobalPosition);
 		bool nearErasureBorder = memory <= BorderEffacementThreshold || IsNearMapBorder(_player.GlobalPosition);
 		if (nearErasureBorder)
 			PlayLoopOnPlayer(_borderWarningPlayer, ref _borderWarningKey, "sfx_bord_effacement_proche", -11f);
@@ -859,11 +852,11 @@ public partial class AudioManager : Node
 		_player = GetTree().GetFirstNodeInGroup("player") as Core.Player;
 	}
 
-	private void CacheZoneMemoryManager()
+	private void CacheErasureManager()
 	{
-		if (_zoneMemoryManager != null && GodotObject.IsInstanceValid(_zoneMemoryManager))
+		if (_erasureManager != null && GodotObject.IsInstanceValid(_erasureManager))
 			return;
-		_zoneMemoryManager = GetNodeOrNull<World.ZoneMemoryManager>("/root/Main/ZoneMemoryManager");
+		_erasureManager = GetNodeOrNull<World.ErasureManager>("/root/Main/ErasureManager");
 	}
 
 	private void CacheWorldBounds()

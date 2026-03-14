@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Godot;
-using Vestiges.Base;
 using Vestiges.Core;
 using Vestiges.Infrastructure;
 using Vestiges.World.Lore;
@@ -12,18 +11,14 @@ namespace Vestiges.World;
 
 /// <summary>
 /// Génère le monde procédural au lancement : terrain via WorldGenerator,
-/// puis place les nœuds de ressource en fonction du terrain.
-/// Gère le respawn périodique des ressources épuisées.
+/// puis place POI, coffres, décor et éléments de lore.
 /// </summary>
 public partial class WorldSetup : Node2D
 {
     private TileMapLayer _ground;
     private TileMapLayer _roadOverlay;
-    private Node2D _resourceContainer;
     private Node2D _poiContainer;
-    private PackedScene _resourceScene;
     private HashSet<Vector2I> _usedCells = new();
-    private Timer _respawnTimer;
     private PoiManager _poiManager;
     private FogOfWar _fogOfWar;
     private PropSpawner _propSpawner;
@@ -74,16 +69,13 @@ public partial class WorldSetup : Node2D
     public override void _Ready()
     {
         EnemyDataLoader.Load();
-        ResourceDataLoader.Load();
         BiomeDataLoader.Load();
         PoiDataLoader.Load();
         LootTableLoader.Load();
         ChestDataLoader.Load();
 
         _ground = GetNode<TileMapLayer>("Ground");
-        _resourceContainer = GetNodeOrNull<Node2D>("ResourceContainer");
         _poiContainer = GetNode<Node2D>("PoiContainer");
-        _resourceScene = GD.Load<PackedScene>("res://scenes/base/ResourceNode.tscn");
 
         _config = WorldGenConfig.Load();
 
@@ -96,7 +88,7 @@ public partial class WorldSetup : Node2D
 
         _generator = new WorldGenerator(
             _config.MapRadius,
-            _config.FoyerClearance,
+            _config.SpawnClearance,
             _config.CaIterations,
             _config.Zones,
             Seed,
@@ -166,10 +158,6 @@ public partial class WorldSetup : Node2D
         InitializeFog();
         await YieldFrame();
 
-        onProgress?.Invoke("Ressources...");
-        SpawnResources();
-        await YieldFrame();
-
         if (!PoisDisabled)
         {
             onProgress?.Invoke("Points d'intérêt...");
@@ -198,12 +186,6 @@ public partial class WorldSetup : Node2D
         InitBiomeAtmosphere();
         await YieldFrame();
 
-        _respawnTimer = new Timer();
-        _respawnTimer.WaitTime = _config.RespawnInterval;
-        _respawnTimer.Autostart = true;
-        _respawnTimer.Timeout += OnRespawnTimer;
-        AddChild(_respawnTimer);
-
         // Libérer les refs temporaires
         _terrain = null;
         _urbanLayout = null;
@@ -220,7 +202,6 @@ public partial class WorldSetup : Node2D
         CreateVoidBackground();
         ApplyTerrain(_terrain, _urbanLayout);
         InitializeFog();
-        SpawnResources();
         if (!PoisDisabled)
         {
             SpawnPois();
@@ -239,12 +220,6 @@ public partial class WorldSetup : Node2D
         }
         SpawnLoreElements();
         InitBiomeAtmosphere();
-
-        _respawnTimer = new Timer();
-        _respawnTimer.WaitTime = _config.RespawnInterval;
-        _respawnTimer.Autostart = true;
-        _respawnTimer.Timeout += OnRespawnTimer;
-        AddChild(_respawnTimer);
 
         _terrain = null;
         _urbanLayout = null;
@@ -432,7 +407,6 @@ public partial class WorldSetup : Node2D
             _ground,
             _generator,
             _config.FogRevealRadius,
-            _config.DawnFogExpansion,
             _config.FogInitialClearRadius
         );
     }
@@ -453,48 +427,6 @@ public partial class WorldSetup : Node2D
     private void SpawnChests()
     {
         ChestSpawner.SpawnChests(_generator, _ground, _poiContainer, _usedCells);
-    }
-
-    private void SpawnResources()
-    {
-        Dictionary<string, int> spawnCounts = new();
-        for (int i = 0; i < _config.ResourceCount; i++)
-        {
-            string spawned = SpawnSingleResource();
-            if (spawned != null)
-            {
-                spawnCounts.TryGetValue(spawned, out int count);
-                spawnCounts[spawned] = count + 1;
-            }
-        }
-
-        string breakdown = string.Join(", ", spawnCounts.Select(kv => $"{kv.Key}={kv.Value}"));
-        GD.Print($"[WorldSetup] Spawned {_usedCells.Count} resource nodes ({breakdown})");
-    }
-
-    private string SpawnSingleResource(float minDistFromPlayer = 0f)
-    {
-        Vector2I cell = PickResourceCell(_usedCells, minDistFromPlayer);
-        if (cell == new Vector2I(int.MinValue, int.MinValue))
-            return null;
-
-        string resourceId = PickResourceForCell(cell);
-
-        ResourceData data = ResourceDataLoader.Get(resourceId);
-        if (data == null)
-        {
-            GD.PushWarning($"[WorldSetup] ResourceData null for '{resourceId}'");
-            return null;
-        }
-
-        _usedCells.Add(cell);
-
-        Vector2 worldPos = _ground.MapToLocal(cell);
-        ResourceNode node = _resourceScene.Instantiate<ResourceNode>();
-        node.GlobalPosition = worldPos;
-        _resourceContainer?.AddChild(node);
-        node.Initialize(data);
-        return resourceId;
     }
 
     private void SpawnEnvironmentProps(UrbanLayout urbanLayout, SwampPropLayout swampLayout)
@@ -816,8 +748,8 @@ public partial class WorldSetup : Node2D
         GD.Print($"[WorldSetup] Spawned {loreCount} lore elements");
     }
 
-    /// <summary>Choisit une cellule valide pour un élément de lore (hors eau, void, foyer, cells occupées).</summary>
-    private Vector2I PickLoreCell(int minDistFromFoyer)
+    /// <summary>Choisit une cellule valide pour un élément de lore (hors eau, void, spawn, cells occupées).</summary>
+    private Vector2I PickLoreCell(int minDistFromSpawn)
     {
         int radius = _config.MapRadius;
         int safeRadius = radius - _config.EdgeFadeWidth;
@@ -830,7 +762,7 @@ public partial class WorldSetup : Node2D
 
             if (!IsValidLoreCell(cell))
                 continue;
-            if (Mathf.Abs(x) <= minDistFromFoyer && Mathf.Abs(y) <= minDistFromFoyer)
+            if (Mathf.Abs(x) <= minDistFromSpawn && Mathf.Abs(y) <= minDistFromSpawn)
                 continue;
 
             return cell;
@@ -839,7 +771,7 @@ public partial class WorldSetup : Node2D
     }
 
     /// <summary>Choisit une cellule valide dans un biome spécifique.</summary>
-    private Vector2I PickLoreCellInBiome(string biomeId, int minDistFromFoyer)
+    private Vector2I PickLoreCellInBiome(string biomeId, int minDistFromSpawn)
     {
         int radius = _config.MapRadius;
         int safeRadius = radius - _config.EdgeFadeWidth;
@@ -852,7 +784,7 @@ public partial class WorldSetup : Node2D
 
             if (!IsValidLoreCell(cell))
                 continue;
-            if (Mathf.Abs(x) <= minDistFromFoyer && Mathf.Abs(y) <= minDistFromFoyer)
+            if (Mathf.Abs(x) <= minDistFromSpawn && Mathf.Abs(y) <= minDistFromSpawn)
                 continue;
 
             BiomeData biome = _generator.GetBiome(x, y);
@@ -889,107 +821,6 @@ public partial class WorldSetup : Node2D
         AddChild(_biomeAtmosphere);
     }
 
-    private void OnRespawnTimer()
-    {
-        RefreshUsedCells();
-
-        int activeCount = _resourceContainer?.GetChildCount() ?? 0;
-        if (activeCount >= _config.RespawnThreshold)
-            return;
-
-        int toSpawn = Mathf.Min(_config.ResourceCount - activeCount, 5);
-        for (int i = 0; i < toSpawn; i++)
-        {
-            SpawnSingleResource(300f);
-        }
-
-        if (toSpawn > 0)
-            GD.Print($"[WorldSetup] Respawned {toSpawn} resources (active: {activeCount + toSpawn})");
-    }
-
-    private void RefreshUsedCells()
-    {
-        _usedCells.Clear();
-        if (_resourceContainer == null) return;
-        foreach (Node child in _resourceContainer.GetChildren())
-        {
-            if (child is ResourceNode res && !res.IsExhausted)
-            {
-                Vector2I cell = _ground.LocalToMap(_ground.ToLocal(res.GlobalPosition));
-                _usedCells.Add(cell);
-            }
-        }
-    }
-
-    private string PickResourceForCell(Vector2I cell)
-    {
-        // Priorité au biome s'il existe, sinon fallback terrain
-        BiomeData biome = _generator.GetBiome(cell.X, cell.Y);
-
-        Dictionary<string, float> bias;
-        if (biome != null && biome.ResourceBias.Count > 0)
-        {
-            bias = biome.ResourceBias;
-        }
-        else
-        {
-            TerrainType terrain = _generator.GetTerrain(cell.X, cell.Y);
-            bias = _config.GetTerrainBias(terrain);
-        }
-
-        float roll = (float)GD.Randf();
-        float cumulative = 0f;
-
-        foreach (KeyValuePair<string, float> kv in bias)
-        {
-            cumulative += kv.Value;
-            if (roll < cumulative)
-                return kv.Key;
-        }
-
-        return "wood";
-    }
-
-    private Vector2I PickResourceCell(HashSet<Vector2I> used, float minDistFromPlayer = 0f)
-    {
-        int radius = _config.MapRadius;
-        int foyerExclusion = _config.FoyerClearance + 1;
-        int safeRadius = radius - _config.EdgeFadeWidth;
-
-        Node playerNode = GetTree().GetFirstNodeInGroup("player");
-        Vector2 playerPos = playerNode is Node2D player ? player.GlobalPosition : Vector2.Zero;
-
-        for (int attempt = 0; attempt < 30; attempt++)
-        {
-            int x = (int)GD.RandRange(-safeRadius + 1, safeRadius);
-            int y = (int)GD.RandRange(-safeRadius + 1, safeRadius);
-            Vector2I cell = new(x, y);
-
-            // Rester dans le cercle (hors zone de décomposition)
-            if (x * x + y * y > safeRadius * safeRadius)
-                continue;
-
-            if (used.Contains(cell))
-                continue;
-
-            if (Mathf.Abs(x) <= foyerExclusion && Mathf.Abs(y) <= foyerExclusion)
-                continue;
-
-            if (_generator.GetTerrain(x, y) == TerrainType.Water)
-                continue;
-
-            if (minDistFromPlayer > 0f)
-            {
-                Vector2 worldPos = _ground.MapToLocal(cell);
-                if (worldPos.DistanceTo(playerPos) < minDistFromPlayer)
-                    continue;
-            }
-
-            return cell;
-        }
-
-        return new Vector2I(int.MinValue, int.MinValue);
-    }
 }
 
 /// <summary>
@@ -998,32 +829,15 @@ public partial class WorldSetup : Node2D
 public class WorldGenConfig
 {
     public int MapRadius;
-    public int FoyerClearance;
+    public int SpawnClearance;
     public int CaIterations;
     public List<WorldGenerator.ZoneConfig> Zones = new();
-    public int ResourceCount;
-    public float RespawnInterval;
-    public int RespawnThreshold;
     public int BiomeCount = 3;
     public int EdgeFadeWidth = 5;
     public int PoiMinDistanceBetween = 8;
     public int FogRevealRadius = 6;
-    public int DawnFogExpansion = 5;
     public int FogInitialClearRadius = 8;
     public List<string> AvailableBiomes = new();
-
-    private readonly Dictionary<string, Dictionary<string, float>> _terrainBias = new();
-
-    private static readonly Dictionary<string, float> DefaultBias = new()
-    {
-        { "wood", 0.50f }, { "stone", 0.35f }, { "metal", 0.15f }
-    };
-
-    public Dictionary<string, float> GetTerrainBias(TerrainType terrain)
-    {
-        string key = terrain.ToString().ToLowerInvariant();
-        return _terrainBias.TryGetValue(key, out Dictionary<string, float> bias) ? bias : DefaultBias;
-    }
 
     public static WorldGenConfig Load()
     {
@@ -1051,11 +865,10 @@ public class WorldGenConfig
         Godot.Collections.Dictionary dict = json.Data.AsGodotDictionary();
 
         config.MapRadius = (int)dict["map_radius"].AsDouble();
-        config.FoyerClearance = (int)dict["foyer_clearance"].AsDouble();
+        config.SpawnClearance = dict.ContainsKey("spawn_clearance")
+            ? (int)dict["spawn_clearance"].AsDouble()
+            : 4;
         config.CaIterations = (int)dict["ca_iterations"].AsDouble();
-        config.ResourceCount = (int)dict["resource_count"].AsDouble();
-        config.RespawnInterval = (float)dict["respawn_interval"].AsDouble();
-        config.RespawnThreshold = (int)dict["respawn_threshold"].AsDouble();
 
         if (dict.ContainsKey("biome_count"))
             config.BiomeCount = (int)dict["biome_count"].AsDouble();
@@ -1068,9 +881,6 @@ public class WorldGenConfig
 
         if (dict.ContainsKey("fog_reveal_radius"))
             config.FogRevealRadius = (int)dict["fog_reveal_radius"].AsDouble();
-
-        if (dict.ContainsKey("dawn_fog_expansion"))
-            config.DawnFogExpansion = (int)dict["dawn_fog_expansion"].AsDouble();
 
         if (dict.ContainsKey("fog_initial_clear_radius"))
             config.FogInitialClearRadius = (int)dict["fog_initial_clear_radius"].AsDouble();
@@ -1099,32 +909,15 @@ public class WorldGenConfig
             config.Zones.Add(zone);
         }
 
-        if (dict.ContainsKey("resource_terrain_bias"))
-        {
-            Godot.Collections.Dictionary biasDict = dict["resource_terrain_bias"].AsGodotDictionary();
-            foreach (Variant terrainKey in biasDict.Keys)
-            {
-                string terrainName = terrainKey.AsString();
-                Godot.Collections.Dictionary resWeights = biasDict[terrainKey].AsGodotDictionary();
-                Dictionary<string, float> bias = new();
-                foreach (Variant resKey in resWeights.Keys)
-                    bias[resKey.AsString()] = (float)resWeights[resKey].AsDouble();
-                config._terrainBias[terrainName] = bias;
-            }
-        }
-
-        GD.Print($"[WorldGenConfig] Loaded — radius={config.MapRadius}, zones={config.Zones.Count}, resources={config.ResourceCount}");
+        GD.Print($"[WorldGenConfig] Loaded — radius={config.MapRadius}, zones={config.Zones.Count}, biomes={config.BiomeCount}");
         return config;
     }
 
     private void SetDefaults()
     {
         MapRadius = 30;
-        FoyerClearance = 4;
+        SpawnClearance = 4;
         CaIterations = 4;
-        ResourceCount = 50;
-        RespawnInterval = 30f;
-        RespawnThreshold = 35;
 
         Zones.Add(new WorldGenerator.ZoneConfig
         {

@@ -7,7 +7,6 @@ namespace Vestiges.World;
 /// <summary>
 /// Fog of War : cache le monde non exploré.
 /// Le joueur révèle les cellules en se déplaçant.
-/// L'aube repousse la brume autour du territoire révélé.
 /// Lore : la réalité n'existe que là où quelqu'un s'en souvient.
 /// </summary>
 public partial class FogOfWar : Node2D
@@ -22,7 +21,6 @@ public partial class FogOfWar : Node2D
     private Vector2I _lastPlayerCell = new(int.MinValue, int.MinValue);
 
     private int _fogRevealRadius;
-    private int _dawnFogExpansion;
     private int _fogInitialClearRadius;
     private int _mapRadius;
     private int _revealRevision;
@@ -45,26 +43,17 @@ public partial class FogOfWar : Node2D
         return _revealedCells.Contains(cell);
     }
 
-    public void Initialize(TileMapLayer ground, WorldGenerator generator, int fogRevealRadius, int dawnFogExpansion, int fogInitialClearRadius)
+    public void Initialize(TileMapLayer ground, WorldGenerator generator, int fogRevealRadius, int fogInitialClearRadius)
     {
         _ground = ground;
         _generator = generator;
         _fogRevealRadius = fogRevealRadius;
-        _dawnFogExpansion = dawnFogExpansion;
         _fogInitialClearRadius = fogInitialClearRadius;
         _mapRadius = generator.MapRadius;
+        _eventBus = GetNodeOrNull<EventBus>("/root/EventBus");
 
         CreateFogLayer();
         StartDeferredInit();
-
-        _eventBus = GetNode<EventBus>("/root/EventBus");
-        _eventBus.DayPhaseChanged += OnDayPhaseChanged;
-    }
-
-    public override void _ExitTree()
-    {
-        if (_eventBus != null)
-            _eventBus.DayPhaseChanged -= OnDayPhaseChanged;
     }
 
     public override void _Process(double delta)
@@ -261,64 +250,5 @@ public partial class FogOfWar : Node2D
 
         _fogLayer.EraseCell(cell);
         _revealRevision++;
-    }
-
-    private void OnDayPhaseChanged(string phase)
-    {
-        if (phase != "Dawn")
-            return;
-
-        ExpandFogBoundary();
-    }
-
-    /// <summary>
-    /// À l'aube, repousse la brume de N cellules depuis la frontière du territoire révélé.
-    /// La réalité se souvient un peu plus à chaque aube.
-    /// </summary>
-    private void ExpandFogBoundary()
-    {
-        Vector2I[] directions =
-        {
-            new(0, 1), new(0, -1), new(1, 0), new(-1, 0),
-            new(1, 1), new(1, -1), new(-1, 1), new(-1, -1)
-        };
-
-        List<Vector2I> boundary = new();
-        foreach (Vector2I cell in _revealedCells)
-        {
-            foreach (Vector2I dir in directions)
-            {
-                Vector2I neighbor = cell + dir;
-                if (!_revealedCells.Contains(neighbor))
-                {
-                    boundary.Add(cell);
-                    break;
-                }
-            }
-        }
-
-        HashSet<Vector2I> toReveal = new();
-        int expansionSq = _dawnFogExpansion * _dawnFogExpansion;
-
-        foreach (Vector2I bCell in boundary)
-        {
-            for (int bx = -_dawnFogExpansion; bx <= _dawnFogExpansion; bx++)
-            {
-                for (int by = -_dawnFogExpansion; by <= _dawnFogExpansion; by++)
-                {
-                    if (bx * bx + by * by > expansionSq)
-                        continue;
-
-                    Vector2I candidate = new(bCell.X + bx, bCell.Y + by);
-                    if (!_revealedCells.Contains(candidate))
-                        toReveal.Add(candidate);
-                }
-            }
-        }
-
-        foreach (Vector2I cell in toReveal)
-            MaterializeCell(cell);
-
-        GD.Print($"[FogOfWar] Dawn expansion: +{toReveal.Count} cells (from {boundary.Count} boundary cells)");
     }
 }

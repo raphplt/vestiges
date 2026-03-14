@@ -177,8 +177,7 @@ public partial class Player : CharacterBody2D
     private float _footstepTimer;
     private const float FootstepInterval = 0.55f;
 
-    // Vision / darkness targeting
-    private string _currentDayPhase = "Day";
+    // Vision targeting
     private float _visionRadius = 150f;
 
     // POI interaction
@@ -238,8 +237,6 @@ public partial class Player : CharacterBody2D
 
         _eventBus = GetNode<EventBus>("/root/EventBus");
         _eventBus.EnemyKilled += OnEnemyKilled;
-        _eventBus.DayPhaseChanged += OnDayPhaseChangedForVisibility;
-
         _gameManager = GetNode<GameManager>("/root/GameManager");
         _groupCache = GetNode<GroupCache>("/root/GroupCache");
     }
@@ -249,7 +246,6 @@ public partial class Player : CharacterBody2D
         if (_eventBus != null)
         {
             _eventBus.EnemyKilled -= OnEnemyKilled;
-            _eventBus.DayPhaseChanged -= OnDayPhaseChangedForVisibility;
         }
     }
 
@@ -322,18 +318,26 @@ public partial class Player : CharacterBody2D
         AddWeapon(weapon);
     }
 
-    public bool AddWeapon(WeaponData weapon)
+    public bool AddWeapon(WeaponData weapon, string rarity = "common")
     {
-        if (weapon == null || _weaponSlots.Count >= MaxWeaponSlots)
+        if (weapon == null)
+            return false;
+
+        WeaponInstance instance = new(weapon, rarity);
+        return AddWeapon(instance);
+    }
+
+    public bool AddWeapon(WeaponInstance instance)
+    {
+        if (instance == null || _weaponSlots.Count >= MaxWeaponSlots)
             return false;
 
         foreach (WeaponInstance existing in _weaponSlots)
         {
-            if (existing.Id == weapon.Id)
+            if (existing.Id == instance.Id)
                 return false;
         }
 
-        WeaponInstance instance = new(weapon);
         _weaponSlots.Add(instance);
         _equippedWeapon = instance;
 
@@ -346,18 +350,18 @@ public partial class Player : CharacterBody2D
         AddChild(timer);
         _weaponTimers.Add(timer);
 
-        _eventBus?.EmitSignal(EventBus.SignalName.WeaponEquipped, weapon.Id, capturedIndex);
+        _eventBus?.EmitSignal(EventBus.SignalName.WeaponEquipped, instance.Id, capturedIndex);
         _eventBus?.EmitSignal(EventBus.SignalName.WeaponInventoryChanged);
 
-        InitWeaponFragmentLevel(weapon.Id);
-        GD.Print($"[Player] Weapon added [{capturedIndex}]: {weapon.Name} ({weapon.Id})");
+        InitWeaponFragmentLevel(instance.Id);
+        GD.Print($"[Player] Weapon added [{capturedIndex}]: {instance.Name} ({instance.Rarity})");
         return true;
     }
 
     /// <summary>
     /// Retire une arme du slot et retourne la WeaponData de base pour spawn un pickup.
     /// </summary>
-    public WeaponData RemoveWeapon(int slotIndex)
+    public WeaponInstance RemoveWeapon(int slotIndex)
     {
         if (slotIndex < 0 || slotIndex >= _weaponSlots.Count)
             return null;
@@ -379,9 +383,13 @@ public partial class Player : CharacterBody2D
         _eventBus?.EmitSignal(EventBus.SignalName.WeaponInventoryChanged);
 
         UpdateAttackSpeed();
+        if (_weaponSlots.Count > 0)
+            _equippedWeapon = _weaponSlots[0];
+        else
+            _equippedWeapon = null;
 
-        GD.Print($"[Player] Weapon removed [{slotIndex}]: {removed.Name} ({removed.Id})");
-        return removed.Base;
+        GD.Print($"[Player] Weapon removed [{slotIndex}]: {removed.Name} ({removed.Rarity})");
+        return removed;
     }
 
     /// <summary>Réattache les callbacks des timers après suppression d'un slot.</summary>
@@ -404,6 +412,35 @@ public partial class Player : CharacterBody2D
         if (slotIndex < 0 || slotIndex >= _weaponSlots.Count)
             return null;
         return _weaponSlots[slotIndex];
+    }
+
+    public bool UpgradeEquippedWeaponAtAltar()
+    {
+        WeaponInstance equipped = EquippedWeapon;
+        if (equipped == null || !equipped.CanLevelUp)
+            return false;
+
+        if (!equipped.LevelUp())
+            return false;
+
+        RefreshAttackSpeed();
+        _eventBus?.EmitSignal(EventBus.SignalName.WeaponUpgraded, equipped.Id, 0, "altar", equipped.Level);
+        _eventBus?.EmitSignal(EventBus.SignalName.WeaponInventoryChanged);
+        return true;
+    }
+
+    public bool ReforgeEquippedWeapon(string newRarity)
+    {
+        WeaponInstance equipped = EquippedWeapon;
+        if (equipped == null)
+            return false;
+
+        WeaponInstance reforged = equipped.CloneWithRarity(newRarity);
+        _weaponSlots[0] = reforged;
+        _equippedWeapon = reforged;
+        RefreshAttackSpeed();
+        _eventBus?.EmitSignal(EventBus.SignalName.WeaponInventoryChanged);
+        return true;
     }
 
     /// <summary>Recalcule les timers d'attaque (appelé après upgrade d'attack_speed).</summary>
@@ -1616,12 +1653,15 @@ public partial class Player : CharacterBody2D
 
             switch (loot.Type)
             {
-                case "resource":
-                    // V2: ressource loot -> sera EssenceTracker
+                case "essence":
                     _eventBus?.EmitSignal(EventBus.SignalName.LootReceived,
                         loot.Type, loot.ItemId, loot.Amount);
-                    displayName = $"{loot.ItemId} x{loot.Amount}";
+                    displayName = $"Essence x{loot.Amount}";
+                    displayColor = new Color(0.35f, 0.78f, 0.78f);
                     break;
+                case "resource":
+                    GD.PushWarning($"[Player] Legacy resource loot ignored at POI: {loot.ItemId}");
+                    continue;
                 case "xp":
                     _eventBus?.EmitSignal(EventBus.SignalName.XpGained, (float)loot.Amount);
                     displayName = $"+{loot.Amount} XP";
@@ -1631,6 +1671,10 @@ public partial class Player : CharacterBody2D
                     string poiPerkName = ResolvePerkLoot(loot.ItemId);
                     displayName = poiPerkName;
                     displayColor = new Color(0.5f, 1f, 0.5f);
+                    break;
+                case "weapon":
+                    displayName = ResolveWeaponLoot(loot.ItemId, poi.GlobalPosition);
+                    displayColor = new Color(1f, 0.82f, 0.38f);
                     break;
                 case "souvenir":
                     _eventBus?.EmitSignal(EventBus.SignalName.LootReceived,
@@ -1778,12 +1822,15 @@ public partial class Player : CharacterBody2D
 
             switch (loot.Type)
             {
-                case "resource":
-                    // V2: ressource loot -> sera EssenceTracker
+                case "essence":
                     _eventBus?.EmitSignal(EventBus.SignalName.LootReceived,
                         loot.Type, loot.ItemId, loot.Amount);
-                    displayName = $"{loot.ItemId} x{loot.Amount}";
+                    displayName = $"Essence x{loot.Amount}";
+                    displayColor = new Color(0.35f, 0.78f, 0.78f);
                     break;
+                case "resource":
+                    GD.PushWarning($"[Player] Legacy resource loot ignored in chest: {loot.ItemId}");
+                    continue;
                 case "xp":
                     _eventBus?.EmitSignal(EventBus.SignalName.XpGained, (float)loot.Amount);
                     displayName = $"+{loot.Amount} XP";
@@ -1793,6 +1840,10 @@ public partial class Player : CharacterBody2D
                     string chestPerkName = ResolvePerkLoot(loot.ItemId);
                     displayName = chestPerkName;
                     displayColor = new Color(0.5f, 1f, 0.5f);
+                    break;
+                case "weapon":
+                    displayName = ResolveWeaponLoot(loot.ItemId, chest.GlobalPosition);
+                    displayColor = new Color(1f, 0.82f, 0.38f);
                     break;
                 case "souvenir":
                     _eventBus?.EmitSignal(EventBus.SignalName.LootReceived,
@@ -1834,6 +1885,42 @@ public partial class Player : CharacterBody2D
         return data != null ? data.Name : resolvedId;
     }
 
+    private string ResolveWeaponLoot(string weaponItemId, Vector2 worldPos)
+    {
+        string resolvedId = weaponItemId;
+        if (resolvedId == "random_weapon")
+        {
+            List<WeaponData> candidates = new();
+            foreach (WeaponData weapon in WeaponDataLoader.GetAll())
+            {
+                if (!string.IsNullOrEmpty(weapon.RequiresSouvenir) && !MetaSaveManager.HasSouvenir(weapon.RequiresSouvenir))
+                    continue;
+                candidates.Add(weapon);
+            }
+
+            if (candidates.Count == 0)
+                return "Arme perdue";
+
+            resolvedId = candidates[(int)(GD.Randi() % candidates.Count)].Id;
+        }
+
+        WeaponData data = WeaponDataLoader.Get(resolvedId);
+        if (data == null)
+            return resolvedId;
+
+        string rarity = WeaponRarityDataLoader.RollDropRarity(data.Tier);
+        _eventBus?.EmitSignal(EventBus.SignalName.LootReceived, "weapon", resolvedId, 1);
+
+        if (AddWeapon(data, rarity))
+            return data.Name;
+
+        WeaponPickup pickup = new();
+        WeaponInstance droppedInstance = new(data, rarity);
+        pickup.Initialize(droppedInstance, worldPos + new Vector2((float)GD.RandRange(-18, 18), (float)GD.RandRange(-12, 12)));
+        GetTree().CurrentScene.CallDeferred(Node.MethodName.AddChild, pickup);
+        return $"{data.Name} [{droppedInstance.RarityDisplayName}]";
+    }
+
     /// <summary>
     /// Resout un cursed_item loot (random_curse → curse concrete), l'applique via CursedItemManager.
     /// </summary>
@@ -1864,7 +1951,7 @@ public partial class Player : CharacterBody2D
             GlobalPosition = worldPos + new Vector2(-40, -25 - stackIndex * 16)
         };
         label.AddThemeColorOverride("font_color", color);
-        label.AddThemeFontSizeOverride("font_size", 10);
+        label.AddThemeFontSizeOverride("font_size", 12);
         label.Size = new Vector2(80, 16);
 
         GetTree().CurrentScene.CallDeferred(Node.MethodName.AddChild, label);
@@ -2318,11 +2405,6 @@ public partial class Player : CharacterBody2D
 
         GetTree().CurrentScene.AddChild(projectile);
         return projectile;
-    }
-
-    private void OnDayPhaseChangedForVisibility(string phase)
-    {
-        _currentDayPhase = phase;
     }
 
     /// <summary>

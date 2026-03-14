@@ -2,12 +2,13 @@ using System.Collections.Generic;
 using Godot;
 using Vestiges.Core;
 using Vestiges.Infrastructure;
+using Vestiges.Progression;
 using Vestiges.Score;
 
 namespace Vestiges.UI;
 
 /// <summary>
-/// Écran de game over : score détaillé, record, nuits survécues, bouton relancer.
+/// Écran de game over V2 : score détaillé, durée, crises survécues, bouton relancer.
 /// Effet de mort : fade to white avant affichage.
 /// </summary>
 public partial class GameOverScreen : CanvasLayer
@@ -26,6 +27,7 @@ public partial class GameOverScreen : CanvasLayer
     private Label _killsLabel;
     private Label _seedLabel;
     private Label _vestigesLabel;
+    private Label _questsLabel;
     private Label _unlocksLabel;
     private Button _restartButton;
     private Button _hubButton;
@@ -131,6 +133,10 @@ public partial class GameOverScreen : CanvasLayer
         _vestigesLabel.AddThemeColorOverride("font_color", new Color(0.85f, 0.75f, 0.4f));
         vbox.AddChild(_vestigesLabel);
 
+        _questsLabel = CreateLabel("", 13, HorizontalAlignment.Center);
+        _questsLabel.AddThemeColorOverride("font_color", new Color(0.56f, 0.84f, 0.92f));
+        vbox.AddChild(_questsLabel);
+
         _unlocksLabel = CreateLabel("", 14, HorizontalAlignment.Center);
         _unlocksLabel.AddThemeColorOverride("font_color", new Color(0.4f, 0.9f, 0.5f));
         vbox.AddChild(_unlocksLabel);
@@ -176,7 +182,10 @@ public partial class GameOverScreen : CanvasLayer
         if (entity is not Player)
             return;
 
+        GameManager gameManager = GetNode<GameManager>("/root/GameManager");
+        gameManager.ChangeState(GameManager.GameState.Death);
         _scoreManager?.SaveEndOfRun();
+        gameManager.LastQuestCompletions = QuestManager.ResolvePendingProgressionQuests(gameManager.LastRunData);
         StartDeathSequence();
     }
 
@@ -207,19 +216,18 @@ public partial class GameOverScreen : CanvasLayer
         int exploration = _scoreManager?.ExplorationScore ?? 0;
         int kills = _scoreManager?.TotalKills ?? 0;
         GameManager gm = GetNode<GameManager>("/root/GameManager");
-        int nights = gm.LastRunData?.NightsSurvived ?? 0;
+        float duration = gm.LastRunData?.RunDurationSec ?? 0f;
+        int crises = gm.LastRunData?.CrisesSurvived ?? 0;
         int best = _scoreManager?.BestScore ?? 0;
         bool isRecord = _scoreManager?.IsNewRecord ?? false;
         float charMult = _scoreManager?.CharacterMultiplier ?? 1f;
         float mutMult = _scoreManager?.MutatorMultiplier ?? 1f;
 
-        _nightsLabel.Text = nights > 0
-            ? $"{nights} nuit{(nights > 1 ? "s" : "")} survécue{(nights > 1 ? "s" : "")}"
-            : "Mort avant la première nuit";
+        _nightsLabel.Text = $"Durée : {FormatDuration(duration)}  |  Crises : {crises}";
 
         _combatLabel.Text = $"Combat : {combat}";
         _survivalLabel.Text = $"Survie : {survival}";
-        _bonusLabel.Text = $"Bonus (nuits sans dégât) : {bonus}";
+        _bonusLabel.Text = $"Bonus (crises) : {bonus}";
         _buildLabel.Text = "";
         _explorationLabel.Text = exploration > 0 ? $"Exploration : {exploration}" : "";
         _killsLabel.Text = $"Kills : {kills}";
@@ -246,7 +254,6 @@ public partial class GameOverScreen : CanvasLayer
             _recordLabel.Text = $"Meilleur : {best}";
 
         // Seed display
-        GameManager gm = GetNode<GameManager>("/root/GameManager");
         ulong seed = gm.RunSeed;
         _seedLabel.Text = seed > 0 ? $"Seed : {seed}" : "";
 
@@ -254,6 +261,11 @@ public partial class GameOverScreen : CanvasLayer
         int vestigesEarned = _scoreManager?.VestigesEarned ?? 0;
         _vestigesLabel.Text = vestigesEarned > 0
             ? $"+{vestigesEarned} Vestiges"
+            : "";
+
+        List<string> questCompletions = gm.LastQuestCompletions;
+        _questsLabel.Text = questCompletions != null && questCompletions.Count > 0
+            ? string.Join("  |  ", questCompletions)
             : "";
 
         // Character unlocks
@@ -275,6 +287,14 @@ public partial class GameOverScreen : CanvasLayer
 
         _panel.Visible = true;
         Visible = true;
+    }
+
+    private static string FormatDuration(float durationSec)
+    {
+        int total = Mathf.Max(0, Mathf.RoundToInt(durationSec));
+        int minutes = total / 60;
+        int seconds = total % 60;
+        return $"{minutes:00}:{seconds:00}";
     }
 
     private void OnRestartPressed()

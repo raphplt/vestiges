@@ -77,7 +77,7 @@ public partial class SouvenirPopup : CanvasLayer
         {
             HorizontalAlignment = HorizontalAlignment.Center
         };
-        _constellationLabel.AddThemeFontSizeOverride("font_size", 11);
+        _constellationLabel.AddThemeFontSizeOverride("font_size", 13);
         vbox.AddChild(_constellationLabel);
 
         _titleLabel = new Label
@@ -94,7 +94,7 @@ public partial class SouvenirPopup : CanvasLayer
             AutowrapMode = TextServer.AutowrapMode.WordSmart,
             CustomMinimumSize = new Vector2(360, 0)
         };
-        _textLabel.AddThemeFontSizeOverride("font_size", 12);
+        _textLabel.AddThemeFontSizeOverride("font_size", 14);
         _textLabel.AddThemeColorOverride("font_color", new Color(0.7f, 0.68f, 0.6f));
         vbox.AddChild(_textLabel);
     }

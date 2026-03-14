@@ -14,14 +14,14 @@ public enum TerrainType
 
 /// <summary>
 /// Génère une carte procédurale circulaire à base de Cellular Automata.
-/// La carte est divisée en secteurs angulaires, chaque secteur assigné à un biome.
+/// Les biomes sont répartis en régions contiguës à partir de seeds aléatoires.
 /// Les bords se décomposent progressivement : la réalité s'effiloche puis cesse.
 /// Seed déterministe : même seed = même monde, mêmes biomes.
 /// </summary>
 public class WorldGenerator
 {
     private readonly int _mapRadius;
-    private readonly int _foyerClearance;
+    private readonly int _spawnClearance;
     private readonly int _caIterations;
     private readonly int _edgeFadeWidth;
     private readonly List<ZoneConfig> _zones;
@@ -33,13 +33,16 @@ public class WorldGenerator
     private int _size;
 
     private List<BiomeData> _activeBiomes = new();
-    private float[] _sectorBoundaries;
+    private Vector2[] _biomeSeeds = new Vector2[0];
+    private FastNoiseLite _biomeWarpNoiseX;
+    private FastNoiseLite _biomeWarpNoiseY;
 
-    private const float BoundaryNoiseAmplitude = 0.35f;
-    private FastNoiseLite _boundaryNoise;
+    private const float BiomeWarpStrength = 12f;
+    private const float MinBiomeSeedDistanceFactor = 0.3f;
+    private const int MaxBiomeSeedPlacementAttempts = 64;
 
     public int MapRadius => _mapRadius;
-    public int FoyerClearance => _foyerClearance;
+    public int SpawnClearance => _spawnClearance;
     public List<BiomeData> ActiveBiomes => _activeBiomes;
 
     public struct ZoneConfig
@@ -51,10 +54,10 @@ public class WorldGenerator
         public float ForestWeight;
     }
 
-    public WorldGenerator(int mapRadius, int foyerClearance, int caIterations, List<ZoneConfig> zones, ulong seed, int edgeFadeWidth = 5)
+    public WorldGenerator(int mapRadius, int spawnClearance, int caIterations, List<ZoneConfig> zones, ulong seed, int edgeFadeWidth = 5)
     {
         _mapRadius = mapRadius;
-        _foyerClearance = foyerClearance;
+        _spawnClearance = spawnClearance;
         _caIterations = caIterations;
         _edgeFadeWidth = edgeFadeWidth;
         _zones = zones;
@@ -78,7 +81,7 @@ public class WorldGenerator
         for (int i = 0; i < _caIterations; i++)
             SmoothPass();
 
-        ClearFoyerArea();
+        ClearSpawnArea();
         ApplyEdgeDecay();
         EnsureWaterConnectivity();
 
@@ -95,7 +98,7 @@ public class WorldGenerator
         for (int i = 0; i < _caIterations; i++)
             SmoothPass();
 
-        ClearFoyerArea();
+        ClearSpawnArea();
         ApplyEdgeDecay();
         EnsureWaterConnectivity();
 
@@ -245,7 +248,7 @@ public class WorldGenerator
         if (availableBiomes == null || availableBiomes.Count == 0)
             return;
 
-        biomeCount = Mathf.Clamp(biomeCount, 2, availableBiomes.Count);
+        biomeCount = Mathf.Clamp(biomeCount, 1, availableBiomes.Count);
 
         List<BiomeData> pool = new(availableBiomes);
         _activeBiomes.Clear();
@@ -256,28 +259,9 @@ public class WorldGenerator
             pool.RemoveAt(index);
         }
 
-        float startAngle = _rng.Randf() * Mathf.Tau;
-
-        // Secteurs pondérés par MapWeight : les biomes avec plus de poids occupent plus d'espace
-        float totalWeight = 0f;
-        foreach (BiomeData b in _activeBiomes)
-            totalWeight += b.MapWeight;
-
-        _sectorBoundaries = new float[biomeCount];
-        float cumAngle = startAngle;
-        for (int i = 0; i < biomeCount; i++)
-        {
-            _sectorBoundaries[i] = cumAngle;
-            cumAngle += Mathf.Tau * (_activeBiomes[i].MapWeight / totalWeight);
-        }
-
-        // Bruit de frontière organique (Simplex FBM au lieu de sin())
-        _boundaryNoise = new FastNoiseLite();
-        _boundaryNoise.NoiseType = FastNoiseLite.NoiseTypeEnum.Simplex;
-        _boundaryNoise.Frequency = 0.04f;
-        _boundaryNoise.FractalType = FastNoiseLite.FractalTypeEnum.Fbm;
-        _boundaryNoise.FractalOctaves = 3;
-        _boundaryNoise.Seed = (int)_rng.Randi();
+        _biomeSeeds = CreateBiomeSeeds();
+        _biomeWarpNoiseX = CreateBiomeWarpNoise((int)_rng.Randi());
+        _biomeWarpNoiseY = CreateBiomeWarpNoise((int)_rng.Randi());
 
         for (int gx = 0; gx < _size; gx++)
         {
@@ -291,47 +275,124 @@ public class WorldGenerator
 
                 int x = gx - _mapRadius;
                 int y = gy - _mapRadius;
-                float dist = Mathf.Sqrt(x * x + y * y);
-
-                if (dist < 0.5f)
-                {
-                    _biomeGrid[gx, gy] = 0;
-                    continue;
-                }
-
-                float angle = Mathf.Atan2(y, x);
-                if (angle < 0) angle += Mathf.Tau;
-
-                float noise = _boundaryNoise.GetNoise2D(gx, gy) * BoundaryNoiseAmplitude;
-                float perturbedAngle = angle + noise;
-                if (perturbedAngle < 0) perturbedAngle += Mathf.Tau;
-                if (perturbedAngle >= Mathf.Tau) perturbedAngle -= Mathf.Tau;
-
-                _biomeGrid[gx, gy] = GetSectorIndex(perturbedAngle);
+                Vector2 samplePoint = GetWarpedBiomeSample(new Vector2(x, y));
+                _biomeGrid[gx, gy] = FindClosestBiomeIndex(samplePoint);
             }
         }
     }
 
-    private int GetSectorIndex(float angle)
+    private Vector2[] CreateBiomeSeeds()
     {
-        int count = _activeBiomes.Count;
-        for (int i = count - 1; i >= 0; i--)
-        {
-            float boundary = _sectorBoundaries[i] % Mathf.Tau;
-            float nextBoundary = _sectorBoundaries[(i + 1) % count] % Mathf.Tau;
+        int biomeCount = _activeBiomes.Count;
+        Vector2[] seeds = new Vector2[biomeCount];
+        bool[] placed = new bool[biomeCount];
 
-            if (nextBoundary < boundary)
+        float outerRadius = Mathf.Max(_spawnClearance * 2f, _mapRadius * 0.82f);
+        outerRadius = Mathf.Min(outerRadius, _mapRadius - 6f);
+        float ringStart = Mathf.Clamp(_spawnClearance * 1.8f, 8f, outerRadius);
+        float minSeedDistance = Mathf.Max(18f, _mapRadius * MinBiomeSeedDistanceFactor);
+
+        int centralBiomeIndex = (int)(_rng.Randi() % (uint)biomeCount);
+        float centerSeedRadius = Mathf.Min(_spawnClearance * 0.75f, ringStart * 0.45f);
+        seeds[centralBiomeIndex] = SampleBiomeSeed(0f, Mathf.Max(6f, centerSeedRadius));
+        placed[centralBiomeIndex] = true;
+
+        for (int i = 0; i < biomeCount; i++)
+        {
+            if (placed[i])
+                continue;
+
+            seeds[i] = FindBiomeSeedCandidate(seeds, placed, ringStart, outerRadius, minSeedDistance);
+            placed[i] = true;
+        }
+
+        return seeds;
+    }
+
+    private FastNoiseLite CreateBiomeWarpNoise(int seed)
+    {
+        FastNoiseLite noise = new();
+        noise.NoiseType = FastNoiseLite.NoiseTypeEnum.Simplex;
+        noise.Frequency = 0.018f;
+        noise.FractalType = FastNoiseLite.FractalTypeEnum.Fbm;
+        noise.FractalOctaves = 3;
+        noise.Seed = seed;
+        return noise;
+    }
+
+    private Vector2 SampleBiomeSeed(float minRadius, float maxRadius)
+    {
+        float angle = _rng.RandfRange(0f, Mathf.Tau);
+        float radius = Mathf.Lerp(minRadius, maxRadius, Mathf.Sqrt(_rng.Randf()));
+        return new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * radius;
+    }
+
+    private Vector2 FindBiomeSeedCandidate(Vector2[] seeds, bool[] placed, float minRadius, float maxRadius, float minSeedDistance)
+    {
+        Vector2 fallback = SampleBiomeSeed(minRadius, maxRadius);
+        float bestSpacingSq = -1f;
+        float minSeedDistanceSq = minSeedDistance * minSeedDistance;
+
+        for (int attempt = 0; attempt < MaxBiomeSeedPlacementAttempts; attempt++)
+        {
+            Vector2 candidate = SampleBiomeSeed(minRadius, maxRadius);
+            bool isValid = true;
+            float nearestSeedSq = float.MaxValue;
+
+            for (int i = 0; i < seeds.Length; i++)
             {
-                if (angle >= boundary || angle < nextBoundary)
-                    return i;
+                if (!placed[i])
+                    continue;
+
+                float distSq = candidate.DistanceSquaredTo(seeds[i]);
+                nearestSeedSq = Mathf.Min(nearestSeedSq, distSq);
+                if (distSq < minSeedDistanceSq)
+                {
+                    isValid = false;
+                    break;
+                }
             }
-            else
+
+            if (isValid)
+                return candidate;
+
+            if (nearestSeedSq > bestSpacingSq)
             {
-                if (angle >= boundary && angle < nextBoundary)
-                    return i;
+                bestSpacingSq = nearestSeedSq;
+                fallback = candidate;
             }
         }
-        return 0;
+
+        return fallback;
+    }
+
+    private Vector2 GetWarpedBiomeSample(Vector2 cellPosition)
+    {
+        float warpX = _biomeWarpNoiseX.GetNoise2D(cellPosition.X, cellPosition.Y) * BiomeWarpStrength;
+        float warpY = _biomeWarpNoiseY.GetNoise2D(cellPosition.X + 137f, cellPosition.Y - 211f) * BiomeWarpStrength;
+        return new Vector2(cellPosition.X + warpX, cellPosition.Y + warpY);
+    }
+
+    private int FindClosestBiomeIndex(Vector2 samplePoint)
+    {
+        if (_biomeSeeds.Length == 0)
+            return 0;
+
+        int bestIndex = 0;
+        float bestScore = float.MaxValue;
+
+        for (int i = 0; i < _biomeSeeds.Length; i++)
+        {
+            float weight = Mathf.Max(0.35f, _activeBiomes[i].MapWeight);
+            float score = samplePoint.DistanceSquaredTo(_biomeSeeds[i]) / weight;
+            if (score < bestScore)
+            {
+                bestScore = score;
+                bestIndex = i;
+            }
+        }
+
+        return bestIndex;
     }
 
     private void SeedInitial()
@@ -368,7 +429,7 @@ public class WorldGenerator
 
     private TerrainType PickTerrainFromBiome(BiomeData biome, float dist)
     {
-        float proximityFade = Mathf.Clamp(1.0f - (dist / (_foyerClearance * 2.5f)), 0f, 1f);
+        float proximityFade = Mathf.Clamp(1.0f - (dist / (_spawnClearance * 2.5f)), 0f, 1f);
 
         float grassW = biome.TerrainWeights.GetValueOrDefault("grass", 0.25f);
         float concreteW = biome.TerrainWeights.GetValueOrDefault("concrete", 0.25f);
@@ -454,7 +515,7 @@ public class WorldGenerator
         _grid = next;
     }
 
-    private void ClearFoyerArea()
+    private void ClearSpawnArea()
     {
         for (int gx = 0; gx < _size; gx++)
         {
@@ -463,7 +524,7 @@ public class WorldGenerator
                 int x = gx - _mapRadius;
                 int y = gy - _mapRadius;
 
-                if (Mathf.Abs(x) <= _foyerClearance && Mathf.Abs(y) <= _foyerClearance)
+                if (Mathf.Abs(x) <= _spawnClearance && Mathf.Abs(y) <= _spawnClearance)
                     _grid[gx, gy] = TerrainType.Grass;
             }
         }

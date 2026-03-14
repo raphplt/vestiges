@@ -234,7 +234,7 @@ public partial class PauseMenu : CanvasLayer
 			Text = "[Échap] Reprendre la traversée",
 			HorizontalAlignment = HorizontalAlignment.Center
 		};
-		hint.AddThemeFontSizeOverride("font_size", 13);
+		hint.AddThemeFontSizeOverride("font_size", 14);
 		hint.AddThemeColorOverride("font_color", TextVeryDim);
 		vbox.AddChild(hint);
 	}
@@ -293,6 +293,15 @@ public partial class PauseMenu : CanvasLayer
 		Node playerNode = GetTree().GetFirstNodeInGroup("player");
 		if (playerNode is not Player player) return;
 
+		EssenceTracker essenceTracker = GetNodeOrNull<EssenceTracker>("/root/Main/EssenceTracker");
+		if (player.EquippedWeapon != null)
+		{
+			AddStatLine("Arme", player.EquippedWeapon.Name);
+			AddStatLine("Rarete", player.EquippedWeapon.RarityDisplayName);
+		}
+		if (essenceTracker != null)
+			AddStatLine("Essence", essenceTracker.CurrentEssence.ToString());
+
 		AddStatLine("PV", $"{player.CurrentHp:F0} / {player.EffectiveMaxHp:F0}");
 		AddStatLine("Dégâts", $"{player.AttackDamage:F0}", FormatMult(player.DamageMultiplier));
 		AddStatLine("Vit. Attaque", $"{player.AttackSpeed:F1}", FormatMult(player.AttackSpeedMultiplier));
@@ -342,7 +351,7 @@ public partial class PauseMenu : CanvasLayer
 		if (!string.IsNullOrEmpty(bonus))
 		{
 			Label bonusLbl = new() { Text = bonus };
-			bonusLbl.AddThemeFontSizeOverride("font_size", 13);
+			bonusLbl.AddThemeFontSizeOverride("font_size", 14);
 			bonusLbl.AddThemeColorOverride("font_color", StatBonusColor);
 			row.AddChild(bonusLbl);
 		}

@@ -2,13 +2,14 @@ using System.Collections.Generic;
 using Godot;
 using Vestiges.Core;
 using Vestiges.Infrastructure;
+using Vestiges.Progression;
 
 namespace Vestiges.UI;
 
 /// <summary>
 /// Hub screen between runs — two-state menu system.
 /// MainMenu: centered title, nav buttons, "Entrer dans le Vide".
-/// SubScreen: back button + full-screen tab content (Miroirs, Chroniques, Obélisque, Établi).
+/// SubScreen: back button + full-screen tab content (Miroirs, Chroniques).
 ///
 /// All UI frames use NinePatchRect with pixel art assets from assets/ui/.
 /// Viewport: 1920×1080 (Hub runs at full display resolution, NOT 480×270).
@@ -62,8 +63,6 @@ public partial class HubScreen : Control
 	private Texture2D _titleTex;
 	private Texture2D _iconChroniques;
 	private Texture2D _iconMiroirs;
-	private Texture2D _iconObelisque;
-	private Texture2D _iconEtabli;
 	private Texture2D _iconVide;
 	private Texture2D _iconVestiges;
 	private Texture2D _cornerTL;
@@ -86,9 +85,7 @@ public partial class HubScreen : Control
 	private static readonly Dictionary<string, string> TabDisplayNames = new()
 	{
 		{ "miroirs", "MIROIRS" },
-		{ "chroniques", "CHRONIQUES" },
-		{ "obelisque", "OBÉLISQUE" },
-		{ "etabli", "ÉTABLI" }
+		{ "chroniques", "CHRONIQUES" }
 	};
 
 	public override void _Ready()
@@ -96,10 +93,11 @@ public partial class HubScreen : Control
 		CharacterDataLoader.Load();
 		WeaponDataLoader.Load();
 		PerkDataLoader.Load();
+		QuestDataLoader.Load();
+		SouvenirDataLoader.Load();
 		RunHistoryManager.Load();
 		MetaSaveManager.Load();
-		StartingKitDataLoader.Load();
-		MutatorDataLoader.Load();
+		QuestManager.ResolvePendingProgressionQuests();
 
 		GameManager gm = GetNode<GameManager>("/root/GameManager");
 		_selectedCharacterId = gm.SelectedCharacterId;
@@ -122,6 +120,8 @@ public partial class HubScreen : Control
 
 		if (gm.LastRunData != null)
 			gm.LastRunData = null;
+		if (gm.LastQuestCompletions != null)
+			gm.LastQuestCompletions = null;
 	}
 
 	public override void _UnhandledInput(InputEvent @event)
@@ -158,8 +158,6 @@ public partial class HubScreen : Control
 		_titleTex = LoadTex(MenusPath + "ui_hub_title.png");
 		_iconChroniques = LoadTex(IconsPath + "ui_icon_chroniques.png");
 		_iconMiroirs = LoadTex(IconsPath + "ui_icon_miroirs.png");
-		_iconObelisque = LoadTex(IconsPath + "ui_icon_obelisque.png");
-		_iconEtabli = LoadTex(IconsPath + "ui_icon_etabli.png");
 		_iconVide = LoadTex(IconsPath + "ui_icon_vide.png");
 		_iconVestiges = LoadTex(IconsPath + "ui_icon_vestiges.png");
 		_cornerTL = LoadTex(MenusPath + "ui_corner_tl.png");
@@ -411,7 +409,7 @@ public partial class HubScreen : Control
 			sepCenter.AddChild(sep);
 		}
 
-		// --- Spacer + Exploration (regroupe Miroirs/Chroniques/Obelisque/Etabli) ---
+		// --- Spacer + Exploration ---
 		vbox.AddChild(CreateSpacer(20));
 
 		CenterContainer exploCenter = new();
@@ -477,6 +475,9 @@ public partial class HubScreen : Control
 
 	private void SwitchHubTab(string tabId)
 	{
+		if (!_hubTabButtons.ContainsKey(tabId))
+			tabId = "miroirs";
+
 		_activeTab = tabId;
 
 		foreach (var (id, btn) in _hubTabButtons)
@@ -588,8 +589,6 @@ public partial class HubScreen : Control
 
 		CreateHubTab("miroirs", "Miroirs", _iconMiroirs);
 		CreateHubTab("chroniques", "Chroniques", _iconChroniques);
-		CreateHubTab("obelisque", "Obélisque", _iconObelisque);
-		CreateHubTab("etabli", "Établi", _iconEtabli);
 
 		// Spacer
 		Control rightSpacer = new() { SizeFlagsHorizontal = SizeFlags.ExpandFill };
@@ -725,9 +724,7 @@ public partial class HubScreen : Control
 		{
 			"miroirs" => BuildMiroirsContent(),
 			"chroniques" => BuildChroniquesContent(),
-			"obelisque" => BuildObelisqueContent(),
-			"etabli" => BuildEtabliContent(),
-			_ => new Control()
+			_ => BuildMiroirsContent()
 		};
 
 		content.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
@@ -823,7 +820,7 @@ public partial class HubScreen : Control
 				AutowrapMode = TextServer.AutowrapMode.WordSmart,
 				HorizontalAlignment = HorizontalAlignment.Center
 			};
-			descLabel.AddThemeFontSizeOverride("font_size", 13);
+			descLabel.AddThemeFontSizeOverride("font_size", 14);
 			descLabel.AddThemeColorOverride("font_color", TextDim);
 			content.AddChild(descLabel);
 
@@ -833,7 +830,7 @@ public partial class HubScreen : Control
 				Text = $"PV:{stats.MaxHp}  ATK:{stats.AttackDamage}  VIT:{stats.Speed}  PORT:{stats.AttackRange}",
 				HorizontalAlignment = HorizontalAlignment.Center
 			};
-			statsLabel.AddThemeFontSizeOverride("font_size", 12);
+			statsLabel.AddThemeFontSizeOverride("font_size", 14);
 			statsLabel.AddThemeColorOverride("font_color", new Color(0.45f, 0.45f, 0.5f));
 			content.AddChild(statsLabel);
 
@@ -845,7 +842,7 @@ public partial class HubScreen : Control
 					Text = $"Passif : {passive.Name}",
 					HorizontalAlignment = HorizontalAlignment.Center
 				};
-				passiveLabel.AddThemeFontSizeOverride("font_size", 12);
+				passiveLabel.AddThemeFontSizeOverride("font_size", 14);
 				passiveLabel.AddThemeColorOverride("font_color", GoldDim);
 				content.AddChild(passiveLabel);
 			}
@@ -859,7 +856,7 @@ public partial class HubScreen : Control
 					Text = $"Arme : {weapon.Name}",
 					HorizontalAlignment = HorizontalAlignment.Center
 				};
-				weaponLabel.AddThemeFontSizeOverride("font_size", 12);
+				weaponLabel.AddThemeFontSizeOverride("font_size", 14);
 				weaponLabel.AddThemeColorOverride("font_color", CyanEssence);
 				content.AddChild(weaponLabel);
 			}
@@ -871,7 +868,7 @@ public partial class HubScreen : Control
 					Text = "SÉLECTIONNÉ",
 					HorizontalAlignment = HorizontalAlignment.Center
 				};
-				selLabel.AddThemeFontSizeOverride("font_size", 13);
+				selLabel.AddThemeFontSizeOverride("font_size", 14);
 				selLabel.AddThemeColorOverride("font_color", GoldBright);
 				content.AddChild(selLabel);
 			}
@@ -891,7 +888,7 @@ public partial class HubScreen : Control
 				HorizontalAlignment = HorizontalAlignment.Center,
 				AutowrapMode = TextServer.AutowrapMode.WordSmart
 			};
-			lockLabel.AddThemeFontSizeOverride("font_size", 13);
+			lockLabel.AddThemeFontSizeOverride("font_size", 14);
 			lockLabel.AddThemeColorOverride("font_color", TextVeryDim);
 			content.AddChild(lockLabel);
 		}
@@ -926,7 +923,8 @@ public partial class HubScreen : Control
 
 		CreateChroniquesSubTab(subTabRow, "global", "Global");
 		CreateChroniquesSubTab(subTabRow, "personnage", "Par Perso.");
-		CreateChroniquesSubTab(subTabRow, "nuits", "Par Nuits");
+		CreateChroniquesSubTab(subTabRow, "endurance", "Endurance");
+		CreateChroniquesSubTab(subTabRow, "quetes", "Quetes");
 
 		if (_separatorTex != null)
 		{
@@ -960,8 +958,11 @@ public partial class HubScreen : Control
 			case "personnage":
 				BuildChroniquesPerso(scrollContent);
 				break;
-			case "nuits":
+			case "endurance":
 				BuildChroniquesNuits(scrollContent);
+				break;
+			case "quetes":
+				BuildChroniquesQuetes(scrollContent);
 				break;
 		}
 
@@ -997,11 +998,12 @@ public partial class HubScreen : Control
 	private void BuildChroniquesGlobal(VBoxContainer container)
 	{
 		int bestScore = RunHistoryManager.GetBestScore();
-		if (bestScore > 0)
+		float longestRun = RunHistoryManager.GetLongestRunDurationSec();
+		if (bestScore > 0 || longestRun > 0f)
 		{
 			Label record = new()
 			{
-				Text = $"Record : {bestScore:N0}",
+				Text = $"Record : {bestScore:N0}  |  Plus longue run : {FormatDuration(longestRun)}",
 				HorizontalAlignment = HorizontalAlignment.Center
 			};
 			record.AddThemeFontSizeOverride("font_size", 22);
@@ -1019,12 +1021,11 @@ public partial class HubScreen : Control
 		for (int i = 0; i < topRuns.Count; i++)
 		{
 			RunRecord run = topRuns[i];
-			string nights = run.NightsSurvived > 0 ? $"{run.NightsSurvived}N" : "0N";
 			string charName = TruncName(run.CharacterName ?? run.CharacterId);
 
 			Label runLabel = new()
 			{
-				Text = $"#{i + 1}  {charName} — {run.Score:N0} — {nights}"
+				Text = $"#{i + 1}  {charName} — {run.Score:N0} — {FormatDuration(run.RunDurationSec)} — {run.CrisesSurvived} crises"
 			};
 			runLabel.AddThemeFontSizeOverride("font_size", 16);
 
@@ -1058,7 +1059,7 @@ public partial class HubScreen : Control
 
 			Label statsLabel = new()
 			{
-				Text = $"  Record: {pair.Value.BestScore:N0} — Moy: {pair.Value.AvgScore:N0} — {pair.Value.RunCount} runs"
+				Text = $"  Record: {pair.Value.BestScore:N0} — Moy: {pair.Value.AvgScore:N0} — Durée moy: {FormatDuration(pair.Value.AvgDurationSec)} — Crises moy: {pair.Value.AvgCrises:F1}"
 			};
 			statsLabel.AddThemeFontSizeOverride("font_size", 14);
 			statsLabel.AddThemeColorOverride("font_color", TextDim);
@@ -1068,12 +1069,13 @@ public partial class HubScreen : Control
 
 	private void BuildChroniquesNuits(VBoxContainer container)
 	{
-		int maxNights = RunHistoryManager.GetMaxNights();
-		if (maxNights > 0)
+		float longestRun = RunHistoryManager.GetLongestRunDurationSec();
+		int maxCrises = RunHistoryManager.GetMaxCrises();
+		if (longestRun > 0f)
 		{
 			Label record = new()
 			{
-				Text = $"Record : {maxNights} nuits",
+				Text = $"Endurance : {FormatDuration(longestRun)}  |  Crises max : {maxCrises}",
 				HorizontalAlignment = HorizontalAlignment.Center
 			};
 			record.AddThemeFontSizeOverride("font_size", 22);
@@ -1081,7 +1083,7 @@ public partial class HubScreen : Control
 			container.AddChild(record);
 		}
 
-		List<RunRecord> topRuns = RunHistoryManager.GetTopByNights(10);
+		List<RunRecord> topRuns = RunHistoryManager.GetTopByDuration(10);
 		if (topRuns.Count == 0)
 		{
 			AddEmptyLabel(container);
@@ -1091,12 +1093,11 @@ public partial class HubScreen : Control
 		for (int i = 0; i < topRuns.Count; i++)
 		{
 			RunRecord run = topRuns[i];
-			string nights = run.NightsSurvived > 0 ? $"{run.NightsSurvived}N" : "0N";
 			string charName = TruncName(run.CharacterName ?? run.CharacterId);
 
 			Label runLabel = new()
 			{
-				Text = $"#{i + 1}  {charName} — {nights} — {run.Score:N0}"
+				Text = $"#{i + 1}  {charName} — {FormatDuration(run.RunDurationSec)} — {run.CrisesSurvived} crises — {run.Score:N0}"
 			};
 			runLabel.AddThemeFontSizeOverride("font_size", 16);
 
@@ -1106,309 +1107,79 @@ public partial class HubScreen : Control
 		}
 	}
 
-	// ================================================================
-	// TAB CONTENT: OBÉLISQUE (Mutators)
-	// ================================================================
-
-	private MarginContainer BuildObelisqueContent()
+	private void BuildChroniquesQuetes(VBoxContainer container)
 	{
-		MarginContainer margin = new();
-		margin.AddThemeConstantOverride("margin_left", 250);
-		margin.AddThemeConstantOverride("margin_right", 250);
-		margin.AddThemeConstantOverride("margin_top", 10);
-		margin.AddThemeConstantOverride("margin_bottom", 10);
-
-		VBoxContainer vbox = new();
-		vbox.AddThemeConstantOverride("separation", 10);
-		vbox.SizeFlagsHorizontal = SizeFlags.ExpandFill;
-		margin.AddChild(vbox);
-
-		Label desc = new()
+		List<QuestProgressSnapshot> progressionQuests = QuestManager.GetProgressionSnapshots();
+		int completedCount = 0;
+		foreach (QuestProgressSnapshot snapshot in progressionQuests)
 		{
-			Text = "Mutateurs de difficulté",
+			if (snapshot.IsClaimed)
+				completedCount++;
+		}
+
+		Label summary = new()
+		{
+			Text = $"Progression : {completedCount}/{progressionQuests.Count} objectifs graves dans la pierre",
 			HorizontalAlignment = HorizontalAlignment.Center
 		};
-		desc.AddThemeFontSizeOverride("font_size", 16);
-		desc.AddThemeColorOverride("font_color", TextDim);
-		vbox.AddChild(desc);
+		summary.AddThemeFontSizeOverride("font_size", 22);
+		summary.AddThemeColorOverride("font_color", GoldBright);
+		container.AddChild(summary);
 
-		List<string> activeMutators = MetaSaveManager.GetActiveMutators();
-		float totalMult = 1f;
-		foreach (string id in activeMutators)
+		container.AddChild(CreateQuestSectionTitle("Progression permanente"));
+		foreach (QuestProgressSnapshot snapshot in progressionQuests)
 		{
-			MutatorData mut = MutatorDataLoader.Get(id);
-			if (mut != null) totalMult *= mut.ScoreMultiplier;
-		}
-
-		Label multLabel = new()
-		{
-			Text = $"Multiplicateur : x{totalMult:F2}",
-			HorizontalAlignment = HorizontalAlignment.Center
-		};
-		multLabel.AddThemeFontSizeOverride("font_size", 20);
-		multLabel.AddThemeColorOverride("font_color", GoldColor);
-		vbox.AddChild(multLabel);
-
-		AddSeparator(vbox);
-
-		ScrollContainer scroll = new()
-		{
-			SizeFlagsVertical = SizeFlags.ExpandFill,
-			HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled
-		};
-		vbox.AddChild(scroll);
-
-		VBoxContainer cardsBox = new();
-		cardsBox.AddThemeConstantOverride("separation", 10);
-		cardsBox.SizeFlagsHorizontal = SizeFlags.ExpandFill;
-		scroll.AddChild(cardsBox);
-
-		List<MutatorData> mutators = MutatorDataLoader.GetAll();
-		List<string> unlocked = MetaSaveManager.GetUnlockedMutators();
-
-		foreach (MutatorData mutator in mutators)
-		{
-			bool isUnlocked = unlocked.Contains(mutator.Id);
-			bool isActive = activeMutators.Contains(mutator.Id);
-			CreateMutatorCard(cardsBox, mutator, isUnlocked, isActive);
-		}
-
-		return margin;
-	}
-
-	private void CreateMutatorCard(VBoxContainer parent, MutatorData mutator, bool isUnlocked, bool isActive)
-	{
-		PanelContainer card = new()
-		{
-			CustomMinimumSize = new Vector2(0, 0),
-			SizeFlagsHorizontal = SizeFlags.ExpandFill
-		};
-
-		Texture2D tex = isActive ? _cardSelectedTex : (isUnlocked ? _cardNormalTex : _cardLockedTex);
-		if (tex != null)
-		{
-			StyleBoxTexture style = CreateNinePatch(tex, 3, 3, 3, 3);
-			style.ContentMarginLeft = 16;
-			style.ContentMarginRight = 16;
-			style.ContentMarginTop = 10;
-			style.ContentMarginBottom = 10;
-			card.AddThemeStyleboxOverride("panel", style);
-		}
-
-		VBoxContainer content = new();
-		content.AddThemeConstantOverride("separation", 4);
-		card.AddChild(content);
-
-		HBoxContainer header = new();
-		header.AddThemeConstantOverride("separation", 10);
-		content.AddChild(header);
-
-		Label nameLabel = new()
-		{
-			Text = mutator.Name,
-			SizeFlagsHorizontal = SizeFlags.ExpandFill
-		};
-		nameLabel.AddThemeFontSizeOverride("font_size", 16);
-		nameLabel.AddThemeColorOverride("font_color", isUnlocked ? TextColor : TextVeryDim);
-		header.AddChild(nameLabel);
-
-		if (isUnlocked)
-		{
-			Label mutMultLabel = new()
+			Label title = new()
 			{
-				Text = $"x{mutator.ScoreMultiplier:F2}"
+				Text = $"{(snapshot.IsClaimed ? "[Terminee]" : "[En cours]")} {snapshot.Definition.Name}"
 			};
-			mutMultLabel.AddThemeFontSizeOverride("font_size", 14);
-			mutMultLabel.AddThemeColorOverride("font_color", isActive ? GoldBright : TextDim);
-			header.AddChild(mutMultLabel);
-		}
+			title.AddThemeFontSizeOverride("font_size", 17);
+			title.AddThemeColorOverride("font_color", snapshot.IsClaimed ? GoldBright : TextColor);
+			container.AddChild(title);
 
-		if (isUnlocked)
-		{
-			Label descLabel = new()
+			Label details = new()
 			{
-				Text = mutator.Description,
+				Text = $"{snapshot.Definition.Description}\nAvancement : {snapshot.ProgressLabel}  |  {snapshot.RewardLabel}",
 				AutowrapMode = TextServer.AutowrapMode.WordSmart
 			};
-			descLabel.AddThemeFontSizeOverride("font_size", 13);
-			descLabel.AddThemeColorOverride("font_color", TextDim);
-			content.AddChild(descLabel);
-
-			string capturedId = mutator.Id;
-			card.GuiInput += (InputEvent @event) =>
-			{
-				if (@event is InputEventMouseButton mouse && mouse.Pressed && mouse.ButtonIndex == MouseButton.Left)
-					OnMutatorToggled(capturedId);
-			};
-		}
-		else
-		{
-			Label lockLabel = new()
-			{
-				Text = $"Survivre {mutator.UnlockNights} nuits"
-			};
-			lockLabel.AddThemeFontSizeOverride("font_size", 13);
-			lockLabel.AddThemeColorOverride("font_color", TextVeryDim);
-			content.AddChild(lockLabel);
+			details.AddThemeFontSizeOverride("font_size", 14);
+			details.AddThemeColorOverride("font_color", snapshot.IsClaimed ? GoldDim : TextDim);
+			container.AddChild(details);
 		}
 
-		parent.AddChild(card);
-	}
+		container.AddChild(CreateQuestSectionTitle("Pool des quetes de run"));
 
-	// ================================================================
-	// TAB CONTENT: ÉTABLI (Starting Kits)
-	// ================================================================
-
-	private MarginContainer BuildEtabliContent()
-	{
-		MarginContainer margin = new();
-		margin.AddThemeConstantOverride("margin_left", 250);
-		margin.AddThemeConstantOverride("margin_right", 250);
-		margin.AddThemeConstantOverride("margin_top", 10);
-		margin.AddThemeConstantOverride("margin_bottom", 10);
-
-		VBoxContainer vbox = new();
-		vbox.AddThemeConstantOverride("separation", 10);
-		vbox.SizeFlagsHorizontal = SizeFlags.ExpandFill;
-		margin.AddChild(vbox);
-
-		Label desc = new()
+		Label intro = new()
 		{
-			Text = "Kits de départ",
-			HorizontalAlignment = HorizontalAlignment.Center
-		};
-		desc.AddThemeFontSizeOverride("font_size", 16);
-		desc.AddThemeColorOverride("font_color", TextDim);
-		vbox.AddChild(desc);
-
-		AddSeparator(vbox);
-
-		ScrollContainer scroll = new()
-		{
-			SizeFlagsVertical = SizeFlags.ExpandFill,
-			HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled
-		};
-		vbox.AddChild(scroll);
-
-		VBoxContainer cardsBox = new();
-		cardsBox.AddThemeConstantOverride("separation", 10);
-		cardsBox.SizeFlagsHorizontal = SizeFlags.ExpandFill;
-		scroll.AddChild(cardsBox);
-
-		HashSet<string> purchased = MetaSaveManager.GetPurchasedKits();
-		string selectedKit = MetaSaveManager.GetSelectedKit();
-		int vestiges = MetaSaveManager.GetVestiges();
-
-		PanelContainer noneCard = CreateKitCard("Aucun", "Pas de kit de départ", 0, true, string.IsNullOrEmpty(selectedKit));
-		noneCard.GuiInput += (InputEvent @event) =>
-		{
-			if (@event is InputEventMouseButton mouse && mouse.Pressed && mouse.ButtonIndex == MouseButton.Left)
-				OnKitSelected("");
-		};
-		cardsBox.AddChild(noneCard);
-
-		List<StartingKitData> kits = StartingKitDataLoader.GetAll();
-		foreach (StartingKitData kit in kits)
-		{
-			bool owned = purchased.Contains(kit.Id);
-			bool selected = kit.Id == selectedKit;
-
-			PanelContainer kitCard = CreateKitCard(kit.Name, kit.Description, kit.Cost, owned, selected);
-
-			if (owned)
-			{
-				string capturedId = kit.Id;
-				kitCard.GuiInput += (InputEvent @event) =>
-				{
-					if (@event is InputEventMouseButton mouse && mouse.Pressed && mouse.ButtonIndex == MouseButton.Left)
-						OnKitSelected(capturedId);
-				};
-			}
-			else
-			{
-				VBoxContainer cardContent = kitCard.GetChild<VBoxContainer>(0);
-
-				Button buyButton = new()
-				{
-					Text = $"Acheter ({kit.Cost} V)",
-					CustomMinimumSize = new Vector2(0, 36),
-					Disabled = vestiges < kit.Cost
-				};
-				buyButton.AddThemeFontSizeOverride("font_size", 14);
-				ApplyButtonStyle(buyButton);
-
-				string capturedKitId = kit.Id;
-				int capturedCost = kit.Cost;
-				buyButton.Pressed += () => OnKitPurchased(capturedKitId, capturedCost);
-				cardContent.AddChild(buyButton);
-			}
-
-			cardsBox.AddChild(kitCard);
-		}
-
-		return margin;
-	}
-
-	private PanelContainer CreateKitCard(string name, string description, int cost, bool owned, bool selected)
-	{
-		PanelContainer card = new()
-		{
-			SizeFlagsHorizontal = SizeFlags.ExpandFill
-		};
-
-		Texture2D tex = selected ? _cardSelectedTex : (owned ? _cardNormalTex : _cardLockedTex);
-		if (tex != null)
-		{
-			StyleBoxTexture style = CreateNinePatch(tex, 3, 3, 3, 3);
-			style.ContentMarginLeft = 16;
-			style.ContentMarginRight = 16;
-			style.ContentMarginTop = 10;
-			style.ContentMarginBottom = 10;
-			card.AddThemeStyleboxOverride("panel", style);
-		}
-
-		VBoxContainer content = new();
-		content.AddThemeConstantOverride("separation", 4);
-		card.AddChild(content);
-
-		HBoxContainer header = new();
-		header.AddThemeConstantOverride("separation", 12);
-		content.AddChild(header);
-
-		Label nameLabel = new()
-		{
-			Text = name,
-			SizeFlagsHorizontal = SizeFlags.ExpandFill
-		};
-		nameLabel.AddThemeFontSizeOverride("font_size", 18);
-		nameLabel.AddThemeColorOverride("font_color", owned ? TextColor : TextVeryDim);
-		header.AddChild(nameLabel);
-
-		if (selected)
-		{
-			Label checkLabel = new() { Text = "ACTIF" };
-			checkLabel.AddThemeFontSizeOverride("font_size", 14);
-			checkLabel.AddThemeColorOverride("font_color", GoldBright);
-			header.AddChild(checkLabel);
-		}
-		else if (owned)
-		{
-			Label ownedLabel = new() { Text = "Acheté" };
-			ownedLabel.AddThemeFontSizeOverride("font_size", 14);
-			ownedLabel.AddThemeColorOverride("font_color", GreenKit);
-			header.AddChild(ownedLabel);
-		}
-
-		Label descLabel = new()
-		{
-			Text = description,
+			Text = "Trois quetes sont tirees au hasard au debut de chaque run. Elles offrent un coup de pouce immediat en Essence ou en XP.",
 			AutowrapMode = TextServer.AutowrapMode.WordSmart
 		};
-		descLabel.AddThemeFontSizeOverride("font_size", 13);
-		descLabel.AddThemeColorOverride("font_color", TextDim);
-		content.AddChild(descLabel);
+		intro.AddThemeFontSizeOverride("font_size", 14);
+		intro.AddThemeColorOverride("font_color", TextDim);
+		container.AddChild(intro);
 
-		return card;
+		foreach (QuestDefinition definition in QuestDataLoader.GetByCategory("run"))
+		{
+			Label entry = new()
+			{
+				Text = $"{definition.Name} — {definition.Description}  |  {QuestManager.GetRewardSummary(definition)}",
+				AutowrapMode = TextServer.AutowrapMode.WordSmart
+			};
+			entry.AddThemeFontSizeOverride("font_size", 15);
+			entry.AddThemeColorOverride("font_color", TextColor);
+			container.AddChild(entry);
+		}
+	}
+
+	private Label CreateQuestSectionTitle(string text)
+	{
+		Label label = new()
+		{
+			Text = text
+		};
+		label.AddThemeFontSizeOverride("font_size", 18);
+		label.AddThemeColorOverride("font_color", GoldDim);
+		return label;
 	}
 
 	// ================================================================
@@ -1421,35 +1192,6 @@ public partial class HubScreen : Control
 		GetNode<GameManager>("/root/GameManager").SelectedCharacterId = characterId;
 		UpdateSubScreenVoidButton();
 		ShowTab("miroirs");
-	}
-
-	private void OnMutatorToggled(string mutatorId)
-	{
-		MetaSaveManager.ToggleMutator(mutatorId);
-		ShowTab("obelisque");
-		GD.Print($"[Hub] Mutator toggled: {mutatorId}");
-	}
-
-	private void OnKitSelected(string kitId)
-	{
-		MetaSaveManager.SelectKit(kitId);
-		ShowTab("etabli");
-		GD.Print($"[Hub] Kit selected: {(string.IsNullOrEmpty(kitId) ? "none" : kitId)}");
-	}
-
-	private void OnKitPurchased(string kitId, int cost)
-	{
-		if (!MetaSaveManager.PurchaseKit(kitId, cost))
-		{
-			GD.Print($"[Hub] Cannot purchase kit {kitId}");
-			return;
-		}
-
-		MetaSaveManager.SelectKit(kitId);
-		UpdateVestigesDisplay();
-		UpdateSubScreenVestigesDisplay();
-		ShowTab("etabli");
-		GD.Print($"[Hub] Kit purchased: {kitId}");
 	}
 
 	private void OnEnterVoidPressed()
@@ -1467,12 +1209,12 @@ public partial class HubScreen : Control
 		// Preparer les donnees de la run avant la transition
 		GameManager gm = GetNode<GameManager>("/root/GameManager");
 		gm.SelectedCharacterId = _selectedCharacterId;
-		gm.ActiveMutators = new List<string>(MetaSaveManager.GetActiveMutators());
+		gm.ActiveMutators = new List<string>();
 
 		string seedText = _seedInput.Text.StripEdges();
 		gm.RunSeed = !string.IsNullOrEmpty(seedText) && ulong.TryParse(seedText, out ulong seed) ? seed : 0;
 
-		GD.Print($"[Hub] Entering Void: {_selectedCharacterId}, mutators={gm.ActiveMutators.Count}, seed={gm.RunSeed}");
+		GD.Print($"[Hub] Entering Void: {_selectedCharacterId}, seed={gm.RunSeed}");
 
 		// Lancer la transition cinematique
 		_voidTransition.Play(() =>
@@ -1526,10 +1268,18 @@ public partial class HubScreen : Control
 	{
 		return condition switch
 		{
-			"survive_3_nights" => "Survivre 3 nuits",
+			"survive_3_nights" => "Tenir 12 minutes",
 			"kill_200_in_run" => "200 kills en une run",
 			_ => "???"
 		};
+	}
+
+	private static string FormatDuration(float seconds)
+	{
+		int totalSeconds = Mathf.Max(0, Mathf.RoundToInt(seconds));
+		int minutes = totalSeconds / 60;
+		int remainingSeconds = totalSeconds % 60;
+		return $"{minutes}:{remainingSeconds:D2}";
 	}
 
 	private static string TruncName(string name)

@@ -9,7 +9,7 @@ namespace Vestiges.World;
 /// <summary>
 /// Gère le spawn procédural des Points d'Intérêt sur la map.
 /// Chaque biome a son propre pool de POI et un nombre min/max.
-/// Les POI sont placés en respectant des distances minimales entre eux et par rapport au Foyer.
+/// Les POI sont placés en respectant des distances minimales entre eux et par rapport à la zone de spawn.
 /// Spawn aussi les ennemis gardes autour des POI gardés.
 /// </summary>
 public partial class PoiManager : Node
@@ -31,7 +31,7 @@ public partial class PoiManager : Node
 
     /// <summary>
     /// Spawn les POI pour tous les biomes actifs de la run.
-    /// Appelé par WorldSetup après la génération du terrain et des ressources.
+    /// Appelé par WorldSetup après la génération du terrain.
     /// </summary>
     public void SpawnPois(
         WorldGenerator generator,
@@ -160,10 +160,10 @@ public partial class PoiManager : Node
             if (distFromCenter > safeRadius)
                 continue;
 
-            // Respecter la distance min/max par rapport au Foyer
-            if (distFromCenter < data.MinDistanceFromFoyer)
+            // Respecter la distance min/max par rapport à la zone de spawn
+            if (distFromCenter < data.MinDistanceFromSpawn)
                 continue;
-            if (distFromCenter > data.MaxDistanceFromFoyer)
+            if (distFromCenter > data.MaxDistanceFromSpawn)
                 continue;
 
             // Doit être dans le bon biome

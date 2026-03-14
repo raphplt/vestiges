@@ -30,7 +30,6 @@ UI_MOVE_DOWN,Bas,Down
 UI_MOVE_LEFT,Gauche,Left
 UI_MOVE_RIGHT,Droite,Right
 UI_INTERACT,Interagir,Interact
-UI_CRAFT_MENU,Menu Craft,Craft Menu
 UI_JOURNAL,Journal,Journal
 UI_PAUSE,Pause,Pause
 GAME_NIGHT_SURVIVED,"{0} nuit(s) survecue(s)","{0} night(s) survived"
@@ -55,7 +54,6 @@ HUD_STONE,Pierre,Stone
 HUD_METAL,Metal,Metal
 HUD_NIGHT_SUMMARY,"Nuit {0} survecue !\nKills : {1} — Score : +{2}","Night {0} survived!\nKills: {1} — Score: +{2}"
 CRAFT_CRAFTING,Fabrication : {0}...,Crafting: {0}...
-CRAFT_TOO_FAR,Trop loin du Foyer pour fabriquer,Too far from the Hearth to craft
 CRAFT_LIMIT,Limite atteinte,Limit reached
 CRAFT_BUILD,Fabriquer,Craft
 CRAFT_BUILD_INSTANT,Fabriquer (instantane),Craft (instant)

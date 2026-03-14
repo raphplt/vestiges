@@ -1,6 +1,7 @@
 using Godot;
 using Vestiges.Combat;
 using Vestiges.Core;
+using Vestiges.Events;
 using Vestiges.Infrastructure;
 using Vestiges.Progression;
 using Vestiges.World;
@@ -54,7 +55,7 @@ public partial class HUD : CanvasLayer
     private ColorRect _xpBarFill;
     private ColorRect _xpBarBg;
 
-    // --- Top-center day/night ---
+    // --- Top-center run pressure ---
     private Control _dayNightContainer;
     private ColorRect _dayNightBg;
     private ColorRect _dayNightFill;
@@ -65,6 +66,7 @@ public partial class HUD : CanvasLayer
     // --- Top-right score ---
     private TextureRect _scoreIcon;
     private Label _scoreLabel;
+    private Label _essenceLabel;
     private Label _fpsLabel;
 
     // --- Bottom-center: weapon quick bar ---
@@ -119,12 +121,15 @@ public partial class HUD : CanvasLayer
     private EventBus _eventBus;
     private GroupCache _groupCache;
     private PlayerProgression _progression;
-    private DayNightCycle _dayNightCycle;
+    private ErasureManager _erasureManager;
+    private CrisisManager _crisisManager;
+    private EssenceTracker _essenceTracker;
     private Player _compassPlayer;
     private Node2D _mapCenterAnchor;
     private float _fpsUpdateTimer;
     private float _interactHintUpdateTimer;
     private float _currentHpRatio = 1f;
+    private string _currentRunPhaseText = "Exploration";
 
     private const float FpsUpdateInterval = 0.25f;
     private const float InteractHintUpdateInterval = 0.25f;
@@ -164,7 +169,12 @@ public partial class HUD : CanvasLayer
         _eventBus.XpGained += OnXpChanged;
         _eventBus.LevelUp += OnLevelUp;
         _eventBus.ScoreChanged += OnScoreChanged;
-        _eventBus.DayPhaseChanged += OnDayPhaseChanged;
+        _eventBus.RunPhaseChanged += OnRunPhaseChanged;
+        _eventBus.ErasureUpdated += OnErasureUpdated;
+        _eventBus.CrisisWarning += OnCrisisWarning;
+        _eventBus.CrisisStarted += OnCrisisStarted;
+        _eventBus.CrisisEnded += OnCrisisEnded;
+        _eventBus.EssenceChanged += OnEssenceChanged;
         _eventBus.WeaponInventoryChanged += OnWeaponInventoryChanged;
         _eventBus.WeaponUpgraded += OnWeaponUpgraded;
         _eventBus.PassiveSouvenirSlotsChanged += OnPassiveSlotsChanged;
@@ -236,8 +246,8 @@ public partial class HUD : CanvasLayer
             _fpsLabel.Text = $"{Engine.GetFramesPerSecond()}";
         }
 
-        if (_dayNightCycle != null)
-            UpdateDayNightBar(_dayNightCycle.PhaseProgress);
+        if (_erasureManager != null)
+            UpdateDayNightBar(_erasureManager.GlobalErasurePercent);
 
         if (Engine.GetProcessFrames() % 2 == 0)
             UpdateCompass();
@@ -265,7 +275,12 @@ public partial class HUD : CanvasLayer
             _eventBus.XpGained -= OnXpChanged;
             _eventBus.LevelUp -= OnLevelUp;
             _eventBus.ScoreChanged -= OnScoreChanged;
-            _eventBus.DayPhaseChanged -= OnDayPhaseChanged;
+            _eventBus.RunPhaseChanged -= OnRunPhaseChanged;
+            _eventBus.ErasureUpdated -= OnErasureUpdated;
+            _eventBus.CrisisWarning -= OnCrisisWarning;
+            _eventBus.CrisisStarted -= OnCrisisStarted;
+            _eventBus.CrisisEnded -= OnCrisisEnded;
+            _eventBus.EssenceChanged -= OnEssenceChanged;
             _eventBus.WeaponInventoryChanged -= OnWeaponInventoryChanged;
             _eventBus.WeaponUpgraded -= OnWeaponUpgraded;
             _eventBus.PassiveSouvenirSlotsChanged -= OnPassiveSlotsChanged;
@@ -276,7 +291,13 @@ public partial class HUD : CanvasLayer
     }
 
     public void SetProgression(PlayerProgression progression) => _progression = progression;
-    public void SetDayNightCycle(DayNightCycle cycle) => _dayNightCycle = cycle;
+    public void SetErasureManager(ErasureManager manager) => _erasureManager = manager;
+    public void SetCrisisManager(CrisisManager manager) => _crisisManager = manager;
+    public void SetEssenceTracker(EssenceTracker tracker)
+    {
+        _essenceTracker = tracker;
+        OnEssenceChanged(_essenceTracker?.CurrentEssence ?? 0);
+    }
     public void SetCompassTargets(Player player, Node2D mapCenterAnchor)
     {
         _compassPlayer = player;
@@ -375,7 +396,7 @@ public partial class HUD : CanvasLayer
         _dayNightContainer.AddChild(_dayNightFill);
 
         // Phase icon (left of bar)
-        _phaseIcon = MakeIcon("res://assets/ui/hud/hud_icon_sun.png", 14);
+        _phaseIcon = MakeIcon("res://assets/ui/hud/hud_icon_void.png", 14);
         _phaseIcon.AnchorLeft = 0.15f;
         _phaseIcon.AnchorTop = 0f;
         _phaseIcon.OffsetLeft = -20;
@@ -385,7 +406,7 @@ public partial class HUD : CanvasLayer
         _hudRoot.AddChild(_phaseIcon);
 
         // Phase label centered below bar
-        _phaseLabel = MakeLabel("Jour", 10, PalGoldFoyer);
+        _phaseLabel = MakeLabel("Exploration", 10, PalWhiteOff);
         _phaseLabel.AnchorLeft = 0.5f;
         _phaseLabel.AnchorRight = 0.5f;
         _phaseLabel.OffsetLeft = -30;
@@ -395,7 +416,7 @@ public partial class HUD : CanvasLayer
         _phaseLabel.HorizontalAlignment = HorizontalAlignment.Center;
         _hudRoot.AddChild(_phaseLabel);
 
-        // Night label (right of bar)
+        // Secondary label (warning / late game)
         _nightLabel = MakeLabel("", 10, PalGrayLight);
         _nightLabel.AnchorLeft = 0.85f;
         _nightLabel.OffsetLeft = 4;
@@ -547,6 +568,16 @@ public partial class HUD : CanvasLayer
         _scoreLabel.OffsetBottom = 37;
         _scoreLabel.HorizontalAlignment = HorizontalAlignment.Right;
         _hudRoot.AddChild(_scoreLabel);
+
+        _essenceLabel = MakeLabel("0E", 11, PalCyanEssence);
+        _essenceLabel.AnchorLeft = 1f;
+        _essenceLabel.AnchorRight = 1f;
+        _essenceLabel.OffsetLeft = -90;
+        _essenceLabel.OffsetTop = 37;
+        _essenceLabel.OffsetRight = -6;
+        _essenceLabel.OffsetBottom = 52;
+        _essenceLabel.HorizontalAlignment = HorizontalAlignment.Right;
+        _hudRoot.AddChild(_essenceLabel);
     }
 
     // --- Bottom-center: weapon quick bar ---
@@ -822,53 +853,75 @@ public partial class HUD : CanvasLayer
         _scoreLabel.Text = newScore.ToString();
     }
 
-    private void OnDayPhaseChanged(string phase)
+    private void OnRunPhaseChanged(string oldPhase, string newPhase)
     {
-        string phaseText = phase switch
+        _currentRunPhaseText = newPhase switch
         {
-            "Day" => "Jour",
-            "Dusk" => "Crépuscule",
-            "Night" => "Nuit",
-            "Dawn" => "Aube",
-            _ => phase
+            "Exploration" => "Exploration",
+            "Crisis" => "Resurgence",
+            "LateGame" => "Late Game",
+            "Endgame" => "Endgame",
+            "Death" => "Mort",
+            _ => newPhase
         };
-        _phaseLabel.Text = phaseText;
+        _phaseLabel.Text = _currentRunPhaseText;
 
-        // Update phase icon
-        string iconPath = phase is "Night" or "Dusk"
+        string iconPath = newPhase is "Crisis" or "LateGame" or "Endgame" or "Death"
             ? "res://assets/ui/hud/hud_icon_void.png"
             : "res://assets/ui/hud/hud_icon_sun.png";
         if (ResourceLoader.Exists(iconPath))
             _phaseIcon.Texture = GD.Load<Texture2D>(iconPath);
 
-        // Phase label color
-        Color phaseColor = phase switch
+        Color phaseColor = newPhase switch
         {
-            "Day" => PalGoldFoyer,
-            "Dusk" => PalVioletMist,
-            "Night" => PalRedBlood,
-            "Dawn" => PalWhiteOff,
-            _ => PalGoldFoyer
+            "Crisis" => PalOrangeFlame,
+            "LateGame" => PalRedBlood,
+            "Endgame" => PalGoldFoyer,
+            "Death" => PalWhiteOff,
+            _ => PalWhiteOff
         };
         _phaseLabel.AddThemeColorOverride("font_color", phaseColor);
 
-        if (_dayNightCycle != null && _dayNightCycle.CurrentNight > 0)
-            _nightLabel.Text = $"N{_dayNightCycle.CurrentNight}";
-
-        if (phase == "Day")
-            _dawnSummary.Visible = false;
-
-        // Animate bar color
-        Color barColor = phase switch
+        Color barColor = newPhase switch
         {
-            "Day" => DayBarColor,
-            "Dusk" => DuskBarColor,
-            "Night" => NightBarColor,
-            "Dawn" => DawnBarColor,
-            _ => DayBarColor
+            "Crisis" => PalOrangeFlame,
+            "LateGame" => PalRedBlood,
+            "Endgame" => PalGoldFoyer,
+            "Death" => PalWhiteOff,
+            _ => PalCyanEssence
         };
         Tween tween = CreateTween();
         tween.TweenProperty(_dayNightFill, "color", barColor, 1f);
+    }
+
+    private void OnErasureUpdated(float globalErasurePercent)
+    {
+        UpdateDayNightBar(globalErasurePercent);
+        _phaseLabel.Text = $"{_currentRunPhaseText} {Mathf.RoundToInt(globalErasurePercent * 100f)}%";
+    }
+
+    private void OnCrisisWarning(int crisisNumber, float countdown)
+    {
+        _nightLabel.Text = $"Crise {crisisNumber} dans {Mathf.CeilToInt(countdown)}s";
+        _nightLabel.AddThemeColorOverride("font_color", PalOrangeFlame);
+    }
+
+    private void OnCrisisStarted(int crisisNumber, int intensity)
+    {
+        _nightLabel.Text = $"Crise {crisisNumber} x{intensity}";
+        _nightLabel.AddThemeColorOverride("font_color", PalOrangeFlame);
+    }
+
+    private void OnCrisisEnded(int crisisNumber)
+    {
+        _nightLabel.Text = "";
+        _nightLabel.AddThemeColorOverride("font_color", PalGrayLight);
+    }
+
+    private void OnEssenceChanged(int amount)
+    {
+        if (_essenceLabel != null)
+            _essenceLabel.Text = $"{amount}E";
     }
 
     // V2: OnInventoryChanged et UpdateCapacityDisplay retires (plus d'inventaire ressources)
@@ -891,8 +944,7 @@ public partial class HUD : CanvasLayer
                 _weaponSlotFrames[i].Texture = slotFilledTex;
 
                 // Tint frame border by tier
-                Color tierColor = GetTierColor(weapon.Tier);
-                _weaponSlotFrames[i].Modulate = tierColor;
+                _weaponSlotFrames[i].Modulate = weapon.RarityColor;
 
                 // Load weapon sprite
                 LoadWeaponIcon(i, weapon.Sprite);

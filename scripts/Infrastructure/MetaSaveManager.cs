@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Godot;
@@ -7,17 +8,14 @@ namespace Vestiges.Infrastructure;
 
 public class MetaSaveData
 {
+    [JsonPropertyName("version")]
+    public int Version { get; set; } = 2;
+
     [JsonPropertyName("vestiges")]
     public int Vestiges { get; set; }
 
     [JsonPropertyName("unlocked_characters")]
     public List<string> UnlockedCharacters { get; set; } = new() { "traqueur" };
-
-    [JsonPropertyName("purchased_kits")]
-    public List<string> PurchasedKits { get; set; } = new();
-
-    [JsonPropertyName("selected_kit")]
-    public string SelectedKit { get; set; } = "";
 
     [JsonPropertyName("stats")]
     public MetaStats Stats { get; set; } = new();
@@ -25,33 +23,38 @@ public class MetaSaveData
     [JsonPropertyName("discovered_souvenirs")]
     public List<string> DiscoveredSouvenirs { get; set; } = new();
 
-    [JsonPropertyName("unlocked_mutators")]
-    public List<string> UnlockedMutators { get; set; } = new();
-
-    [JsonPropertyName("active_mutators")]
-    public List<string> ActiveMutators { get; set; } = new();
+    [JsonPropertyName("completed_quests")]
+    public List<string> CompletedQuests { get; set; } = new();
 }
 
 public class MetaStats
 {
-    [JsonPropertyName("max_nights_survived")]
-    public int MaxNightsSurvived { get; set; }
+    [JsonPropertyName("best_run_duration_sec")]
+    public float BestRunDurationSec { get; set; }
 
     [JsonPropertyName("max_kills_in_run")]
     public int MaxKillsInRun { get; set; }
 
     [JsonPropertyName("total_runs")]
     public int TotalRuns { get; set; }
+
+    [JsonPropertyName("total_crises_survived")]
+    public int TotalCrisesSurvived { get; set; }
+
+    [JsonPropertyName("best_score")]
+    public int BestScore { get; set; }
 }
 
 /// <summary>
-/// Gestionnaire statique de la sauvegarde méta (progression persistante entre runs).
-/// Centralise : Vestiges (monnaie), personnages débloqués, kits de départ, stats globales.
-/// Sauvegarde dans user://meta_save.json.
+/// Gestionnaire statique de la sauvegarde méta V2.
+/// Conserve uniquement les données encore valides après le pivot.
 /// </summary>
 public static class MetaSaveManager
 {
+    private const int CurrentVersion = 2;
     private const string SavePath = "user://meta_save.json";
+    private const string LegacyArchivePath = "user://meta_save_legacy_v1.json";
+    private const float VagabondUnlockDurationSec = 12f * 60f;
 
     private static MetaSaveData _data = new();
     private static bool _loaded;
@@ -66,8 +69,9 @@ public static class MetaSaveManager
         if (!FileAccess.FileExists(SavePath))
         {
             _data = new MetaSaveData();
+            NormalizeData();
             Save();
-            GD.Print("[MetaSaveManager] Created new meta save");
+            GD.Print("[MetaSaveManager] Created new V2 meta save");
             return;
         }
 
@@ -75,15 +79,27 @@ public static class MetaSaveManager
         if (file == null)
         {
             _data = new MetaSaveData();
+            NormalizeData();
             return;
         }
 
         string json = file.GetAsText();
         file.Close();
 
+        bool migrated = false;
         try
         {
-            _data = JsonSerializer.Deserialize<MetaSaveData>(json) ?? new MetaSaveData();
+            using JsonDocument doc = JsonDocument.Parse(json);
+            JsonElement root = doc.RootElement;
+            int version = root.TryGetProperty("version", out JsonElement versionElement)
+                && versionElement.ValueKind == JsonValueKind.Number
+                ? versionElement.GetInt32()
+                : 0;
+
+            _data = version >= CurrentVersion
+                ? JsonSerializer.Deserialize<MetaSaveData>(json) ?? new MetaSaveData()
+                : MigrateLegacySave(root, json);
+            migrated = version < CurrentVersion;
         }
         catch (JsonException ex)
         {
@@ -91,15 +107,16 @@ public static class MetaSaveManager
             _data = new MetaSaveData();
         }
 
-        // Traqueur is always unlocked (default ranged character)
-        if (!_data.UnlockedCharacters.Contains("traqueur"))
-            _data.UnlockedCharacters.Add("traqueur");
-
+        NormalizeData();
+        if (migrated)
+            Save();
         GD.Print($"[MetaSaveManager] Loaded — {_data.Vestiges} Vestiges, {_data.UnlockedCharacters.Count} characters unlocked");
     }
 
     public static void Save()
     {
+        NormalizeData();
+
         FileAccess file = FileAccess.Open(SavePath, FileAccess.ModeFlags.Write);
         if (file == null)
         {
@@ -107,13 +124,15 @@ public static class MetaSaveManager
             return;
         }
 
-        var options = new JsonSerializerOptions { WriteIndented = true };
+        JsonSerializerOptions options = new()
+        {
+            WriteIndented = true,
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault
+        };
         string json = JsonSerializer.Serialize(_data, options);
         file.StoreString(json);
         file.Close();
     }
-
-    // --- Vestiges ---
 
     public static int GetVestiges()
     {
@@ -140,8 +159,6 @@ public static class MetaSaveManager
         return true;
     }
 
-    // --- Character Unlocks ---
-
     public static bool IsCharacterUnlocked(string characterId)
     {
         Load();
@@ -151,12 +168,12 @@ public static class MetaSaveManager
     public static void UnlockCharacter(string characterId)
     {
         Load();
-        if (!_data.UnlockedCharacters.Contains(characterId))
-        {
-            _data.UnlockedCharacters.Add(characterId);
-            Save();
-            GD.Print($"[MetaSaveManager] Character unlocked: {characterId}");
-        }
+        if (_data.UnlockedCharacters.Contains(characterId))
+            return;
+
+        _data.UnlockedCharacters.Add(characterId);
+        Save();
+        GD.Print($"[MetaSaveManager] Character unlocked: {characterId}");
     }
 
     public static List<string> GetUnlockedCharacters()
@@ -165,17 +182,13 @@ public static class MetaSaveManager
         return new List<string>(_data.UnlockedCharacters);
     }
 
-    /// <summary>
-    /// Vérifie les conditions de déblocage de tous les personnages.
-    /// Retourne la liste des personnages nouvellement débloqués.
-    /// </summary>
     public static List<string> CheckUnlocks()
     {
         Load();
-        List<string> newUnlocks = new();
+        CharacterDataLoader.Load();
 
-        List<CharacterData> allCharacters = CharacterDataLoader.GetAll();
-        foreach (CharacterData character in allCharacters)
+        List<string> newUnlocks = new();
+        foreach (CharacterData character in CharacterDataLoader.GetAll())
         {
             if (_data.UnlockedCharacters.Contains(character.Id))
                 continue;
@@ -183,41 +196,33 @@ public static class MetaSaveManager
             bool shouldUnlock = character.UnlockCondition switch
             {
                 "default" => true,
-                "survive_3_nights" => _data.Stats.MaxNightsSurvived >= 3,
+                "survive_3_nights" => _data.Stats.BestRunDurationSec >= VagabondUnlockDurationSec,
                 "kill_200_in_run" => _data.Stats.MaxKillsInRun >= 200,
                 _ => false
             };
 
-            if (shouldUnlock)
-            {
-                _data.UnlockedCharacters.Add(character.Id);
-                newUnlocks.Add(character.Id);
-                GD.Print($"[MetaSaveManager] New unlock: {character.Name} ({character.UnlockCondition})");
-            }
+            if (!shouldUnlock)
+                continue;
+
+            _data.UnlockedCharacters.Add(character.Id);
+            newUnlocks.Add(character.Id);
+            GD.Print($"[MetaSaveManager] New unlock: {character.Name} ({character.UnlockCondition})");
         }
 
         if (newUnlocks.Count > 0)
             Save();
 
-        // Also check mutator unlocks
-        CheckMutatorUnlocks();
-
         return newUnlocks;
     }
-
-    // --- Stats ---
 
     public static void UpdateStats(RunRecord record)
     {
         Load();
         _data.Stats.TotalRuns++;
-
-        if (record.NightsSurvived > _data.Stats.MaxNightsSurvived)
-            _data.Stats.MaxNightsSurvived = record.NightsSurvived;
-
-        if (record.TotalKills > _data.Stats.MaxKillsInRun)
-            _data.Stats.MaxKillsInRun = record.TotalKills;
-
+        _data.Stats.MaxKillsInRun = Mathf.Max(_data.Stats.MaxKillsInRun, record.TotalKills);
+        _data.Stats.BestRunDurationSec = Mathf.Max(_data.Stats.BestRunDurationSec, record.RunDurationSec);
+        _data.Stats.TotalCrisesSurvived += record.CrisesSurvived;
+        _data.Stats.BestScore = Mathf.Max(_data.Stats.BestScore, record.Score);
         Save();
     }
 
@@ -227,15 +232,12 @@ public static class MetaSaveManager
         return _data.Stats;
     }
 
-    // --- Souvenirs ---
-
     public static bool IsSouvenirDiscovered(string souvenirId)
     {
         Load();
         return _data.DiscoveredSouvenirs.Contains(souvenirId);
     }
 
-    /// <summary>Alias pour la vérification de souvenir requis (utilisé par CraftManager).</summary>
     public static bool HasSouvenir(string souvenirId)
     {
         return IsSouvenirDiscovered(souvenirId);
@@ -244,12 +246,12 @@ public static class MetaSaveManager
     public static void DiscoverSouvenir(string souvenirId)
     {
         Load();
-        if (!_data.DiscoveredSouvenirs.Contains(souvenirId))
-        {
-            _data.DiscoveredSouvenirs.Add(souvenirId);
-            Save();
-            GD.Print($"[MetaSaveManager] Souvenir discovered: {souvenirId} (total: {_data.DiscoveredSouvenirs.Count})");
-        }
+        if (_data.DiscoveredSouvenirs.Contains(souvenirId))
+            return;
+
+        _data.DiscoveredSouvenirs.Add(souvenirId);
+        Save();
+        GD.Print($"[MetaSaveManager] Souvenir discovered: {souvenirId} (total: {_data.DiscoveredSouvenirs.Count})");
     }
 
     public static List<string> GetDiscoveredSouvenirs()
@@ -258,111 +260,163 @@ public static class MetaSaveManager
         return new List<string>(_data.DiscoveredSouvenirs);
     }
 
+    public static bool HasCompletedQuest(string questId)
+    {
+        Load();
+        return _data.CompletedQuests.Contains(questId);
+    }
+
+    public static bool CompleteQuest(string questId)
+    {
+        Load();
+        if (string.IsNullOrWhiteSpace(questId) || _data.CompletedQuests.Contains(questId))
+            return false;
+
+        _data.CompletedQuests.Add(questId);
+        Save();
+        GD.Print($"[MetaSaveManager] Quest completed: {questId}");
+        return true;
+    }
+
+    public static List<string> GetCompletedQuests()
+    {
+        Load();
+        return new List<string>(_data.CompletedQuests);
+    }
+
     public static int GetDiscoveredSouvenirCount()
     {
         Load();
         return _data.DiscoveredSouvenirs.Count;
     }
 
-    // --- Starting Kits ---
+    // Compatibilite legacy : les kits et mutateurs sont desactives en V2.
+    public static HashSet<string> GetPurchasedKits() => new();
+    public static bool PurchaseKit(string kitId, int cost) => false;
+    public static string GetSelectedKit() => "";
+    public static void SelectKit(string kitId) { }
+    public static bool IsMutatorUnlocked(string mutatorId) => false;
+    public static List<string> GetUnlockedMutators() => new();
+    public static List<string> GetActiveMutators() => new();
+    public static void SetActiveMutators(List<string> mutatorIds) { }
+    public static void ToggleMutator(string mutatorId) { }
+    public static List<string> CheckMutatorUnlocks() => new();
 
-    public static HashSet<string> GetPurchasedKits()
+    private static void NormalizeData()
     {
-        Load();
-        return new HashSet<string>(_data.PurchasedKits);
+        _data ??= new MetaSaveData();
+        _data.Version = CurrentVersion;
+        _data.Stats ??= new MetaStats();
+        _data.UnlockedCharacters ??= new List<string>();
+        _data.DiscoveredSouvenirs ??= new List<string>();
+        _data.CompletedQuests ??= new List<string>();
+
+        CharacterDataLoader.Load();
+        HashSet<string> supportedCharacters = CharacterDataLoader.GetAll()
+            .Select(character => character.Id)
+            .ToHashSet();
+
+        _data.UnlockedCharacters = _data.UnlockedCharacters
+            .Where(id => supportedCharacters.Contains(id))
+            .Distinct()
+            .ToList();
+
+        if (!_data.UnlockedCharacters.Contains("traqueur"))
+            _data.UnlockedCharacters.Insert(0, "traqueur");
+
+        _data.DiscoveredSouvenirs = _data.DiscoveredSouvenirs
+            .Where(id => !string.IsNullOrWhiteSpace(id))
+            .Distinct()
+            .ToList();
+
+        _data.CompletedQuests = _data.CompletedQuests
+            .Where(id => !string.IsNullOrWhiteSpace(id))
+            .Distinct()
+            .ToList();
     }
 
-    public static bool PurchaseKit(string kitId, int cost)
+    private static MetaSaveData MigrateLegacySave(JsonElement root, string rawJson)
     {
-        Load();
-        if (_data.PurchasedKits.Contains(kitId))
-            return false;
-
-        if (!SpendVestiges(cost))
-            return false;
-
-        _data.PurchasedKits.Add(kitId);
-        Save();
-        GD.Print($"[MetaSaveManager] Kit purchased: {kitId}");
-        return true;
-    }
-
-    public static string GetSelectedKit()
-    {
-        Load();
-        return _data.SelectedKit;
-    }
-
-    public static void SelectKit(string kitId)
-    {
-        Load();
-        _data.SelectedKit = kitId;
-        Save();
-    }
-
-    // --- Mutators ---
-
-    public static bool IsMutatorUnlocked(string mutatorId)
-    {
-        Load();
-        return _data.UnlockedMutators.Contains(mutatorId);
-    }
-
-    public static List<string> GetUnlockedMutators()
-    {
-        Load();
-        return new List<string>(_data.UnlockedMutators);
-    }
-
-    public static List<string> GetActiveMutators()
-    {
-        Load();
-        return new List<string>(_data.ActiveMutators);
-    }
-
-    public static void SetActiveMutators(List<string> mutatorIds)
-    {
-        Load();
-        _data.ActiveMutators = new List<string>(mutatorIds);
-        Save();
-    }
-
-    public static void ToggleMutator(string mutatorId)
-    {
-        Load();
-        if (_data.ActiveMutators.Contains(mutatorId))
-            _data.ActiveMutators.Remove(mutatorId);
-        else
-            _data.ActiveMutators.Add(mutatorId);
-        Save();
-    }
-
-    /// <summary>
-    /// Vérifie les déblocages de mutateurs selon les nuits survivées.
-    /// Retourne la liste des mutateurs nouvellement débloqués.
-    /// </summary>
-    public static List<string> CheckMutatorUnlocks()
-    {
-        Load();
-        MutatorDataLoader.Load();
-        List<string> newUnlocks = new();
-
-        foreach (MutatorData mutator in MutatorDataLoader.GetAll())
+        MetaSaveData migrated = new()
         {
-            if (_data.UnlockedMutators.Contains(mutator.Id))
-                continue;
+            Vestiges = TryGetInt(root, "vestiges"),
+            UnlockedCharacters = ReadStringList(root, "unlocked_characters"),
+            DiscoveredSouvenirs = ReadStringList(root, "discovered_souvenirs"),
+            Stats = new MetaStats()
+        };
 
-            if (_data.Stats.MaxNightsSurvived >= mutator.UnlockNights)
-            {
-                _data.UnlockedMutators.Add(mutator.Id);
-                newUnlocks.Add(mutator.Id);
-                GD.Print($"[MetaSaveManager] Mutator unlocked: {mutator.Name} ({mutator.UnlockNights} nights)");
-            }
+        if (root.TryGetProperty("stats", out JsonElement stats) && stats.ValueKind == JsonValueKind.Object)
+        {
+            int legacyMaxNights = TryGetInt(stats, "max_nights_survived");
+            migrated.Stats.MaxKillsInRun = TryGetInt(stats, "max_kills_in_run");
+            migrated.Stats.TotalRuns = TryGetInt(stats, "total_runs");
+            migrated.Stats.TotalCrisesSurvived = TryGetInt(stats, "total_crises_survived");
+            migrated.Stats.BestScore = TryGetInt(stats, "best_score");
+            migrated.Stats.BestRunDurationSec = Mathf.Max(
+                TryGetFloat(stats, "best_run_duration_sec"),
+                legacyMaxNights * 240f);
         }
 
-        if (newUnlocks.Count > 0)
-            Save();
+        ArchiveLegacyJson(rawJson);
+        GD.Print("[MetaSaveManager] Legacy V1 meta save archived and migrated to V2");
+        return migrated;
+    }
 
-        return newUnlocks;
+    private static void ArchiveLegacyJson(string rawJson)
+    {
+        FileAccess archive = FileAccess.Open(LegacyArchivePath, FileAccess.ModeFlags.Write);
+        if (archive == null)
+        {
+            GD.PushWarning($"[MetaSaveManager] Failed to archive legacy save to {LegacyArchivePath}");
+            return;
+        }
+
+        archive.StoreString(rawJson);
+        archive.Close();
+    }
+
+    private static List<string> ReadStringList(JsonElement root, string propertyName)
+    {
+        List<string> result = new();
+        if (!root.TryGetProperty(propertyName, out JsonElement arrayElement) || arrayElement.ValueKind != JsonValueKind.Array)
+            return result;
+
+        foreach (JsonElement item in arrayElement.EnumerateArray())
+        {
+            if (item.ValueKind != JsonValueKind.String)
+                continue;
+
+            string value = item.GetString();
+            if (!string.IsNullOrWhiteSpace(value))
+                result.Add(value);
+        }
+
+        return result;
+    }
+
+    private static int TryGetInt(JsonElement root, string propertyName)
+    {
+        if (!root.TryGetProperty(propertyName, out JsonElement element))
+            return 0;
+
+        return element.ValueKind switch
+        {
+            JsonValueKind.Number => element.GetInt32(),
+            JsonValueKind.String when int.TryParse(element.GetString(), out int value) => value,
+            _ => 0
+        };
+    }
+
+    private static float TryGetFloat(JsonElement root, string propertyName)
+    {
+        if (!root.TryGetProperty(propertyName, out JsonElement element))
+            return 0f;
+
+        return element.ValueKind switch
+        {
+            JsonValueKind.Number => element.GetSingle(),
+            JsonValueKind.String when float.TryParse(element.GetString(), out float value) => value,
+            _ => 0f
+        };
     }
 }

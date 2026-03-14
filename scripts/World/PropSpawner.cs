@@ -49,7 +49,7 @@ public partial class PropSpawner : Node2D
 
 	/// <summary>
 	/// Spawn tous les props pour la carte générée.
-	/// Appelé par WorldSetup après la génération du terrain et le spawn des ressources.
+	/// Appelé par WorldSetup après la génération du terrain.
 	/// </summary>
 	public void SpawnProps(
 		WorldGenerator generator,
@@ -83,7 +83,7 @@ public partial class PropSpawner : Node2D
 
 		int radius = generator.MapRadius;
 		int safeRadius = radius - 5;
-		int foyerExclusion = generator.FoyerClearance + 2;
+		int spawnExclusion = generator.SpawnClearance + 2;
 		int totalSpawned = 0;
 
 		// Debug counters
@@ -94,7 +94,7 @@ public partial class PropSpawner : Node2D
 		int skipDistance = 0;
 		int skipTexture = 0;
 
-		GD.Print($"[PropSpawner] Starting spawn: radius={radius} safe={safeRadius} foyer={foyerExclusion} seed={seed}");
+		GD.Print($"[PropSpawner] Starting spawn: radius={radius} safe={safeRadius} spawn={spawnExclusion} seed={seed}");
 		GD.Print($"[PropSpawner] Configs loaded for biomes: [{string.Join(", ", configs.Keys)}]");
 
 		for (int x = -safeRadius; x <= safeRadius; x++)
@@ -104,7 +104,7 @@ public partial class PropSpawner : Node2D
 				if (x * x + y * y > safeRadius * safeRadius)
 					continue;
 
-				if (Mathf.Abs(x) <= foyerExclusion && Mathf.Abs(y) <= foyerExclusion)
+				if (Mathf.Abs(x) <= spawnExclusion && Mathf.Abs(y) <= spawnExclusion)
 					continue;
 
 				if (!generator.IsWithinBounds(x, y) || generator.IsErased(x, y))
@@ -317,7 +317,7 @@ public partial class PropSpawner : Node2D
 				continue;
 			if (generator.GetBiomeId(cell.X, cell.Y) != "wild_fields")
 				continue;
-			if (Mathf.Abs(cell.X) <= generator.FoyerClearance + 2 && Mathf.Abs(cell.Y) <= generator.FoyerClearance + 2)
+			if (Mathf.Abs(cell.X) <= generator.SpawnClearance + 2 && Mathf.Abs(cell.Y) <= generator.SpawnClearance + 2)
 				continue;
 			if (usedCells.Contains(cell))
 				continue;

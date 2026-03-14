@@ -147,7 +147,7 @@ public partial class JournalScreen : CanvasLayer
             Text = "[Echap] Fermer",
             HorizontalAlignment = HorizontalAlignment.Center
         };
-        closeHint.AddThemeFontSizeOverride("font_size", 12);
+        closeHint.AddThemeFontSizeOverride("font_size", 13);
         closeHint.AddThemeColorOverride("font_color", new Color(0.4f, 0.4f, 0.45f));
         mainVBox.AddChild(closeHint);
     }
@@ -177,7 +177,7 @@ public partial class JournalScreen : CanvasLayer
                 ToggleMode = true,
                 CustomMinimumSize = new Vector2(190, 30)
             };
-            btn.AddThemeFontSizeOverride("font_size", 13);
+            btn.AddThemeFontSizeOverride("font_size", 14);
             UITheme.WireButtonAudio(btn);
 
             string capturedId = c.Id;
@@ -285,7 +285,7 @@ public partial class JournalScreen : CanvasLayer
                 CustomMinimumSize = new Vector2(260, 28),
                 Disabled = !discovered
             };
-            fragmentBtn.AddThemeFontSizeOverride("font_size", 13);
+            fragmentBtn.AddThemeFontSizeOverride("font_size", 14);
             UITheme.WireButtonAudio(fragmentBtn);
 
             if (discovered)
