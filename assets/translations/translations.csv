@@ -32,11 +32,11 @@ UI_MOVE_RIGHT,Droite,Right
 UI_INTERACT,Interagir,Interact
 UI_JOURNAL,Journal,Journal
 UI_PAUSE,Pause,Pause
-GAME_NIGHT_SURVIVED,"{0} nuit(s) survecue(s)","{0} night(s) survived"
-GAME_DEAD_BEFORE_NIGHT,Mort avant la premiere nuit,Died before the first night
+GAME_NIGHT_SURVIVED,"{0} crise(s) survecue(s)","{0} crisis/crises survived"
+GAME_DEAD_BEFORE_NIGHT,Mort avant la premiere crise,Died before the first crisis
 GAME_COMBAT,Combat,Combat
 GAME_SURVIVAL,Survie,Survival
-GAME_BONUS,Bonus (nuits sans degat),Bonus (no-damage nights)
+GAME_BONUS,Bonus (crises et exploits),Bonus (crises and milestones)
 GAME_BUILD,Construction,Building
 GAME_EXPLORATION,Exploration,Exploration
 GAME_KILLS,Kills,Kills
@@ -46,13 +46,13 @@ GAME_SEED,Seed : {0},Seed: {0}
 GAME_VESTIGES,+{0} Vestiges,+{0} Vestiges
 GAME_UNLOCKED,debloque !,unlocked!
 GAME_MULTIPLIER,Multiplicateur,Multiplier
-GAME_MUTATORS,mutateurs,mutators
+GAME_MUTATORS,modificateurs,modifiers
 HUD_REPAIR,[E] Reparer ({0}%),[E] Repair ({0}%)
 HUD_HARVEST,"[E] Recolter {0}","[E] Harvest {0}"
 HUD_WOOD,Bois,Wood
 HUD_STONE,Pierre,Stone
 HUD_METAL,Metal,Metal
-HUD_NIGHT_SUMMARY,"Nuit {0} survecue !\nKills : {1} — Score : +{2}","Night {0} survived!\nKills: {1} — Score: +{2}"
+HUD_NIGHT_SUMMARY,"Crise {0} survecue !\nKills : {1} — Score : +{2}","Crisis {0} survived!\nKills: {1} — Score: +{2}"
 CRAFT_CRAFTING,Fabrication : {0}...,Crafting: {0}...
 CRAFT_LIMIT,Limite atteinte,Limit reached
 CRAFT_BUILD,Fabriquer,Craft

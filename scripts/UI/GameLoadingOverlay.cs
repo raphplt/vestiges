@@ -20,7 +20,7 @@ public partial class GameLoadingOverlay : CanvasLayer
 	{
 		"Le monde oublie ce qu'il était...",
 		"Les Constellations veillent encore...",
-		"Le Foyer résiste à l'Effacement...",
+		"Une braise resiste encore a l'Effacement...",
 		"Des vestiges murmurent dans l'ombre...",
 		"La mémoire est la dernière forteresse...",
 		"Le Vide grignote les bords du réel...",

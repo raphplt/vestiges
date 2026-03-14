@@ -512,29 +512,56 @@ public partial class HUD : CanvasLayer
         _levelLabel.OffsetBottom = levelY + 14;
         _hudRoot.AddChild(_levelLabel);
 
-        // XP bar
-        float xpBarW = 80;
-        float xpBarH = 6;
+        // XP bar (full-width, bottom of screen)
+        float xpBarH = 8;
         _xpBarContainer = new Control();
-        _xpBarContainer.OffsetLeft = 42;
-        _xpBarContainer.OffsetTop = levelY + 4;
-        _xpBarContainer.OffsetRight = 42 + xpBarW;
-        _xpBarContainer.OffsetBottom = levelY + 4 + xpBarH;
+        _xpBarContainer.AnchorLeft = 0f;
+        _xpBarContainer.AnchorRight = 1f;
+        _xpBarContainer.AnchorTop = 1f;
+        _xpBarContainer.AnchorBottom = 1f;
+        _xpBarContainer.OffsetLeft = 8;
+        _xpBarContainer.OffsetTop = -12;
+        _xpBarContainer.OffsetRight = -8;
+        _xpBarContainer.OffsetBottom = -4;
         _hudRoot.AddChild(_xpBarContainer);
 
-        _xpBarBg = MakeColorBar(PalBlackDeep with { A = 0.8f }, new Vector2(xpBarW, xpBarH));
+        _xpBarBg = MakeColorBar(PalBlackDeep with { A = 0.82f }, Vector2.Zero);
+        _xpBarBg.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
         _xpBarContainer.AddChild(_xpBarBg);
 
         _xpBarFill = MakeColorBar(PalCyanEssence, new Vector2(0, xpBarH - 2));
-        _xpBarFill.Position = new Vector2(1, 1);
+        _xpBarFill.AnchorTop = 0f;
+        _xpBarFill.AnchorBottom = 1f;
+        _xpBarFill.OffsetLeft = 1;
+        _xpBarFill.OffsetTop = 1;
+        _xpBarFill.OffsetBottom = -1;
         _xpBarContainer.AddChild(_xpBarFill);
 
         // XP border
-        ColorRect xpBorder = MakeColorBar(PalGrayDark with { A = 0.6f }, new Vector2(xpBarW, 1));
+        ColorRect xpBorder = MakeColorBar(PalGrayDark with { A = 0.7f }, Vector2.Zero);
+        xpBorder.AnchorRight = 1f;
+        xpBorder.OffsetBottom = 1;
         _xpBarContainer.AddChild(xpBorder);
-        ColorRect xpBorderBot = MakeColorBar(PalGrayDark with { A = 0.6f }, new Vector2(xpBarW, 1));
-        xpBorderBot.Position = new Vector2(0, xpBarH - 1);
+
+        ColorRect xpBorderBot = MakeColorBar(PalGrayDark with { A = 0.7f }, Vector2.Zero);
+        xpBorderBot.AnchorLeft = 0f;
+        xpBorderBot.AnchorRight = 1f;
+        xpBorderBot.AnchorTop = 1f;
+        xpBorderBot.AnchorBottom = 1f;
+        xpBorderBot.OffsetTop = -1;
         _xpBarContainer.AddChild(xpBorderBot);
+
+        ColorRect xpBorderLeft = MakeColorBar(PalGrayDark with { A = 0.7f }, Vector2.Zero);
+        xpBorderLeft.AnchorBottom = 1f;
+        xpBorderLeft.OffsetRight = 1;
+        _xpBarContainer.AddChild(xpBorderLeft);
+
+        ColorRect xpBorderRight = MakeColorBar(PalGrayDark with { A = 0.7f }, Vector2.Zero);
+        xpBorderRight.AnchorLeft = 1f;
+        xpBorderRight.AnchorRight = 1f;
+        xpBorderRight.AnchorBottom = 1f;
+        xpBorderRight.OffsetLeft = -1;
+        _xpBarContainer.AddChild(xpBorderRight);
 
         // FPS (debug, small, bottom-left)
         _fpsLabel = MakeLabel("0", 8, PalGrayWarm with { A = 0.5f });
@@ -1190,7 +1217,7 @@ public partial class HUD : CanvasLayer
         if (_mapCenterAnchor == null || !IsInstanceValid(_mapCenterAnchor))
         {
             Node sceneRoot = GetTree().CurrentScene;
-            _mapCenterAnchor = sceneRoot?.GetNodeOrNull<Node2D>("Foyer");
+            _mapCenterAnchor = sceneRoot as Node2D;
         }
     }
 
