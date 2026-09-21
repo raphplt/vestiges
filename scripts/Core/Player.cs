@@ -62,7 +62,7 @@ public partial class Player : CharacterBody2D
     [Export] public float BaseRegenRate = 0.5f;
     [Export] public float InteractRange = 60f;
 
-    // AI Control (set by AIController in simulation mode)
+    // Entrée de simulation dans les axes écran, amplitude analogique bornée à 1.
     public bool IsAIControlled;
     public Vector2 AIInputOverride;
     
@@ -100,8 +100,20 @@ public partial class Player : CharacterBody2D
     // Sprite animé (remplace Polygon2D quand sprite_folder est défini)
     private AnimatedSprite2D _sprite;
     private bool _hasSprite;
-    private string _lastDirection = "SE";
-    private string _currentAnimName;
+    private enum SpriteFacing { SouthEast, SouthWest, NorthEast, NorthWest }
+    private enum SpriteAction { Idle, Walk, Hurt, Death }
+    private SpriteFacing _lastDirection = SpriteFacing.SouthEast;
+    private StringName _currentAnimName;
+    private static readonly StringName[,] SpriteAnimations =
+    {
+        { "SE_idle", "SE_walk", "SE_hurt", "SE_death" },
+        { "SW_idle", "SW_walk", "SW_hurt", "SW_death" },
+        { "NE_idle", "NE_walk", "NE_hurt", "NE_death" },
+        { "NW_idle", "NW_walk", "NW_hurt", "NW_death" }
+    };
+    private const float MovementSpeedEpsilon = 0.1f;
+    // Bande de stabilité autour des axes : les quatre poses ne doivent pas osciller au stick.
+    private const float FacingAxisHysteresis = 0.1f;
     private float _hurtAnimTimer;
 
     // Shader VFX unifié (outline + hit flash + dissolve)
@@ -281,8 +293,8 @@ public partial class Player : CharacterBody2D
                 _sprite.SelfModulate = Colors.White;
                 _visual.Visible = false;
                 _hasSprite = true;
-                _lastDirection = "SE";
-                _currentAnimName = null;
+                _lastDirection = SpriteFacing.SouthEast;
+                _currentAnimName = default;
                 _hurtAnimTimer = 0f;
 
                 _spriteMaterial = new ShaderMaterial { Shader = _entityShader };
@@ -637,27 +649,29 @@ public partial class Player : CharacterBody2D
 
         float dt = (float)delta;
         bool inputAllowed = _gameManager.CurrentState == GameManager.GameState.Run;
-        Vector2 inputDir = IsAIControlled
-            ? AIInputOverride
-            : inputAllowed ? Input.GetVector("move_left", "move_right", "move_up", "move_down") : Vector2.Zero;
+        Vector2 inputDir = inputAllowed
+            ? (IsAIControlled ? AIInputOverride.LimitLength() : Input.GetVector("move_left", "move_right", "move_up", "move_down"))
+            : Vector2.Zero;
 
         if (inputDir != Vector2.Zero)
         {
             CancelPoiExplore();
             CancelChestOpen();
-            Vector2 isoDir = CartesianToIsometric(inputDir);
             float terrainSpeedFactor = IsOnWater() ? 0.5f : 1f;
-            Velocity = isoDir * (Speed * _speedMultiplier * _slowFactor * terrainSpeedFactor);
-            _facingDirection = isoDir.Normalized();
+            Velocity = inputDir * (Speed * _speedMultiplier * _slowFactor * terrainSpeedFactor);
+            _facingDirection = inputDir.Normalized();
         }
         else
         {
             Velocity = Vector2.Zero;
         }
 
-        UpdateSpriteAnimation(dt);
         MoveAndSlide();
-        ProcessFootsteps(dt, inputDir != Vector2.Zero);
+        Vector2 movementVelocity = GetRealVelocity();
+        float movementSpeed = movementVelocity.Length();
+        float movementRate = movementSpeed > MovementSpeedEpsilon && Speed > 0f ? movementSpeed / Speed : 0f;
+        UpdateSpriteAnimation(dt, movementVelocity, movementRate);
+        ProcessFootsteps(dt, movementRate);
         ApplyRegen(dt);
         ProcessSlowDecay(dt);
         ProcessPoiExplore(dt);
@@ -1502,19 +1516,19 @@ public partial class Player : CharacterBody2D
         _speedMultiplier *= factor;
     }
 
-    private void ProcessFootsteps(float delta, bool isMoving)
+    private void ProcessFootsteps(float delta, float movementRate)
     {
-        if (!isMoving)
+        if (movementRate <= 0f)
         {
             _footstepTimer = 0f;
             return;
         }
 
-        _footstepTimer -= delta;
+        _footstepTimer -= delta * movementRate;
         if (_footstepTimer > 0f)
             return;
 
-        _footstepTimer = FootstepInterval / (_speedMultiplier > 0f ? _speedMultiplier : 1f);
+        _footstepTimer = FootstepInterval;
 
         string key = GetCurrentTerrain() switch
         {
@@ -2037,7 +2051,10 @@ public partial class Player : CharacterBody2D
         RemoveFromGroup("player");
 
         if (_hasSprite)
-            PlaySpriteAnim($"{_lastDirection}_death");
+        {
+            _sprite.SpeedScale = 1f;
+            PlaySpriteAnim(SpriteAnimations[(int)_lastDirection, (int)SpriteAction.Death]);
+        }
 
         _eventBus.EmitSignal(EventBus.SignalName.EntityDied, this);
 
@@ -2096,42 +2113,48 @@ public partial class Player : CharacterBody2D
 
     // --- Sprite Animation ---
 
-    private void UpdateSpriteAnimation(float delta)
+    private void UpdateSpriteAnimation(float delta, Vector2 movementVelocity, float movementRate)
     {
         if (!_hasSprite)
             return;
 
         _hurtAnimTimer = Mathf.Max(_hurtAnimTimer - delta, 0f);
 
-        // Direction depuis la vélocité (conserve la dernière si immobile)
-        if (Velocity.LengthSquared() > 1f)
+        // Le mouvement réellement parcouru pilote la pose, indépendamment de la visée des armes.
+        if (movementRate > 0f)
         {
-            float angle = Velocity.Angle();
-            if (angle >= -Mathf.Pi * 0.5f && angle < 0f)
-                _lastDirection = "NE";
-            else if (angle >= 0f && angle < Mathf.Pi * 0.5f)
-                _lastDirection = "SE";
-            else if (angle >= Mathf.Pi * 0.5f && angle <= Mathf.Pi)
-                _lastDirection = "SW";
-            else
-                _lastDirection = "NW";
+            Vector2 direction = movementVelocity.Normalized();
+            bool facesWest = _lastDirection is SpriteFacing.SouthWest or SpriteFacing.NorthWest;
+            bool facesNorth = _lastDirection is SpriteFacing.NorthEast or SpriteFacing.NorthWest;
+            if (direction.X > FacingAxisHysteresis) facesWest = false;
+            else if (direction.X < -FacingAxisHysteresis) facesWest = true;
+            if (direction.Y > FacingAxisHysteresis) facesNorth = false;
+            else if (direction.Y < -FacingAxisHysteresis) facesNorth = true;
+            _lastDirection = (facesWest, facesNorth) switch
+            {
+                (false, false) => SpriteFacing.SouthEast,
+                (true, false) => SpriteFacing.SouthWest,
+                (false, true) => SpriteFacing.NorthEast,
+                (true, true) => SpriteFacing.NorthWest
+            };
         }
 
         // Action : death > hurt > walk > idle
-        string action;
+        SpriteAction action;
         if (_isDead)
-            action = "death";
+            action = SpriteAction.Death;
         else if (_hurtAnimTimer > 0f)
-            action = "hurt";
-        else if (Velocity.LengthSquared() > 1f)
-            action = "walk";
+            action = SpriteAction.Hurt;
+        else if (movementRate > 0f)
+            action = SpriteAction.Walk;
         else
-            action = "idle";
+            action = SpriteAction.Idle;
 
-        PlaySpriteAnim($"{_lastDirection}_{action}");
+        _sprite.SpeedScale = action == SpriteAction.Walk ? movementRate : 1f;
+        PlaySpriteAnim(SpriteAnimations[(int)_lastDirection, (int)action]);
     }
 
-    private void PlaySpriteAnim(string animName)
+    private void PlaySpriteAnim(StringName animName)
     {
         if (animName == _currentAnimName)
             return;
@@ -2752,14 +2775,4 @@ public partial class Player : CharacterBody2D
         }
     }
 
-    // V2: repair system retire (plus de structures)
-
-    private static Vector2 CartesianToIsometric(Vector2 cartesian)
-    {
-        Vector2 iso = new Vector2(
-            cartesian.X - cartesian.Y,
-            (cartesian.X + cartesian.Y) * 0.5f
-        );
-        return iso.Normalized();
-    }
 }

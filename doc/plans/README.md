@@ -1,8 +1,8 @@
 # VESTIGES — Dossier de plans à valider
 
-Date : 21 septembre 2026 · Version : 0.2 · Statut : **directions partiellement validées, extensions proposées**.
+Date : 21 septembre 2026 · Version : 0.3 · Statut : **premier socle de déplacement implémenté, recette humaine ouverte ; autres extensions proposées**.
 
-Ce dossier transforme les retours de Raphaël en lots réalisables. Il couvre le contrôle, les sensations, la boucle, les interfaces, les builds, la progression, les ennemis, l'identité et la compétition. Les décisions acquises et les propositions restantes sont consignées dans le [registre de décisions](DECISIONS.md). Cette révision prépare la suite sans démarrer le développement.
+Ce dossier transforme les retours de Raphaël en lots réalisables. Il couvre le contrôle, les sensations, la boucle, les interfaces, les builds, la progression, les ennemis, l'identité et la compétition. Les décisions acquises et les propositions restantes sont consignées dans le [registre de décisions](DECISIONS.md). À sa demande de commencer le premier plan, le socle technique de 01 est implémenté et testé ; son [compte rendu](01-deplacements.md#7-première-implémentation--21-septembre-2026) distingue mesures automatisées et recette humaine restante. Les nouveaux choix de mobilité D/E restent proposés.
 
 ## 1. Direction commune
 
@@ -20,7 +20,7 @@ La [Stratégie V2](../VESTIGES-STRATEGIE-V2.md) reste l'autorité gameplay/roadm
 | Plan | Priorité | Décision principale à valider | Dépendances |
 |---|---|---|---|
 | [00 — État des lieux et sources](00-etat-des-lieux.md) | Référence | Constats et limites de l'audit | Aucune |
-| [01 — Déplacements](01-deplacements.md) | P0 | Socle validé ; fluidité, dash/saut et variantes à préciser | Aucune pour le socle ; 03 pour calibrer la mobilité active |
+| [01 — Déplacements](01-deplacements.md) | P0 | Socle B/C implémenté et testé techniquement ; recette humaine ouverte ; dash/saut à préciser | 03 pour calibrer la mobilité active |
 | [02 — Juiciness, score et récompenses](02-juiciness-score.md) | P0 | Direction validée ; score en run, record au bilan seulement ; refonte mort | 01 pour le ressenti ; cadrage 08 |
 | [03 — Boucle et rythme](03-boucle-et-rythme.md) | P0 | Direction validée ; début plus menaçant et XP moins rapide | Première passe 01/02 |
 | [04 — Interfaces et Hub](04-interfaces-et-hub.md) | P1 | Navigation, sélection, typographie et affichage adaptatif | Cadrage 08 ; contrats 05/06 |

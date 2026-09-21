@@ -10,7 +10,7 @@
 
 ## Amendement de direction — retours validés du 21 septembre 2026
 
-Les [décisions de Raphaël](plans/DECISIONS.md) et le [dossier de plans v0.2](plans/README.md) précisent les sections historiques ci-dessous. Statut : décisions de design et plans, pas fonctionnalités implémentées.
+Les [décisions de Raphaël](plans/DECISIONS.md) et le [dossier de plans v0.3](plans/README.md) précisent les sections historiques ci-dessous. Statut : décisions de design et plans ; seul le premier socle de déplacement est désormais implémenté et vérifié techniquement, avec recette humaine ouverte ([compte rendu](plans/01-deplacements.md#7-première-implémentation--21-septembre-2026)).
 
 - Déplacements dans les axes de l’écran et amplitude analogique préservée ; viser une mobilité très fluide clavier/manette. Dash, saut et mobilités spécifiques font l’objet de propositions détaillées à choisir.
 - Score visible et animé pendant la run ; **aucun record à battre, progression vers un record ou annonce de dépassement en jeu ou en pause**. Record et célébration uniquement au bilan final, qui doit être largement refondu.
@@ -702,6 +702,8 @@ Le script de post-processing doit inclure une vérification/correction de l'angl
 - [x] Adapter SpawnManager (spawns liés à l'Effacement, plus proches, plus denses).
 - [x] Agrandir la map (doubler la taille pour tester, objectif final 4-5x).
 - [x] Revoir la génération : biomes contigus, pas concentriques.
+- [x] Socle de déplacement écran : amplitude analogique, vitesse diagonale bornée, animation/pas sur mouvement réel et protections hors run ; vérification Godot headless du [plan 01](plans/01-deplacements.md#7-première-implémentation--21-septembre-2026).
+- [ ] Recette humaine du socle de déplacement : clavier/manette, terrain et interactions en run, ressenti et caméra (plan 01 A–C).
 - [ ] Ajuster le tempo : runs de 15-25 min en gameplay normal.
 - [ ] **PLAYTEST : est-ce que c'est fun ? Est-ce que l'Effacement crée de la tension ? Est-ce que le mouvement permanent fonctionne ?**
 
