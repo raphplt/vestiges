@@ -1,9 +1,27 @@
 # VESTIGES — Stratégie V2 : Plan Complet
 
-> **Version :** 1.0
-> **Date :** 12 mars 2026
+> **Version :** 1.1
+> **Date initiale :** 12 mars 2026
+> **Amendement :** 21 septembre 2026
 > **Statut :** Document stratégique — remplace la roadmap V1 et les sections obsolètes du GDD/Bible
 > **Auteur :** Raphaël + Claude (design partner)
+
+---
+
+## Amendement de direction — retours validés du 21 septembre 2026
+
+Les [décisions de Raphaël](plans/DECISIONS.md) et le [dossier de plans v0.2](plans/README.md) précisent les sections historiques ci-dessous. Statut : décisions de design et plans, pas fonctionnalités implémentées.
+
+- Déplacements dans les axes de l’écran et amplitude analogique préservée ; viser une mobilité très fluide clavier/manette. Dash, saut et mobilités spécifiques font l’objet de propositions détaillées à choisir.
+- Score visible et animé pendant la run ; **aucun record à battre, progression vers un record ou annonce de dépassement en jeu ou en pause**. Record et célébration uniquement au bilan final, qui doit être largement refondu.
+- Début actuellement jugé trop facile : menace à renforcer et niveaux à espacer. La prescription historique de level-up rapide ne bloque pas cette révision ; calibrer par playtests.
+- Quatre armes et quatre passifs conservés ; ajouter un système distinct d’objets avec raretés, sans limite de slots ou d’exemplaires fixée par le design, avec cumul explicite et déblocage partiel initial.
+- Quêtes variées et accès aux armes/objets/personnages **indépendants des Souvenirs**. Migrer les anciens droits sans les retirer. Le lore conserve sa progression narrative, ses constellations et les transformations du Hub ; les anciennes descriptions « Souvenir → accès gameplay » sont à remplacer.
+- Hub très clair et peu textuel ; **Collection armes/objets accessible directement depuis le menu principal**.
+- Casting plus diversifié et potentiellement décalé dans un univers cohérent ; nouvelles créatures demandées. Boss de familles, terrain amélioré et mécaniques originales sont détaillés dans les plans, avec variantes encore proposées.
+- Pixel art conservé, suffisamment détaillé et uniforme. Le contrat numérique et la méthode de production recommandés en plan 08 restent à valider sur un ensemble de référence avant modification de la Charte.
+
+Les propositions nouvelles (kits exacts, seuils, chiffres, règle d’invulnérabilité, boss généralisés, innovations) ne sont pas validées implicitement. Les cases §25 ne seront cochées qu’après implémentation et vérification. Les systèmes retirés par le pivot restent retirés.
 
 ---
 
@@ -445,7 +463,7 @@ Le monde entre dans un état de "mémoire résiduelle". Les biomes n'existent pl
 ### Le menu pause
 
 - **Compact.** Ne prend pas toute la hauteur de l'écran.
-- **Affiche :** armes équipées + stats, perks actifs, quêtes de run en cours, score actuel, record à battre.
+- **Affiche :** armes équipées + stats, perks actifs, quêtes de run en cours, score actuel. Le record est réservé au bilan final.
 - **Pas de :** inventaire de matériaux (il n'y en a plus), menu de craft (il n'y en a plus).
 
 ### La barre d'XP
