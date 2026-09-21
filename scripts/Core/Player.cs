@@ -672,7 +672,7 @@ public partial class Player : CharacterBody2D
         if (_isDead || _gameManager.CurrentState != GameManager.GameState.Run)
             return;
 
-        if (@event is InputEventKey key && key.Pressed && key.Keycode == Key.J)
+        if (@event.IsActionPressed("journal"))
         {
             ToggleJournal();
             return;

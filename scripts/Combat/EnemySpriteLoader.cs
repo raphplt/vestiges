@@ -98,7 +98,7 @@ public static class EnemySpriteLoader
 				string animName = $"{dir}_{action}";
 				frames.AddAnimation(animName);
 				frames.SetAnimationSpeed(animName, AnimSpeeds[action]);
-				frames.SetAnimationLoop(animName, LoopingAnims.Contains(action));
+				frames.SetAnimationLoopMode(animName, LoopingAnims.Contains(action) ? SpriteFrames.LoopMode.Linear : SpriteFrames.LoopMode.None);
 
 				if (mirrored)
 				{

@@ -295,7 +295,7 @@ public static class VfxFactory
 		SpriteFrames frames = new();
 		frames.AddAnimation("burn");
 		frames.SetAnimationSpeed("burn", 6);
-		frames.SetAnimationLoop("burn", true);
+		frames.SetAnimationLoopMode("burn", SpriteFrames.LoopMode.Linear);
 		frames.AddFrame("burn", FlammeFrame1);
 		frames.AddFrame("burn", FlammeFrame2);
 		frames.AddFrame("burn", FlammeFrame3);
@@ -394,7 +394,7 @@ public static class VfxFactory
 		SpriteFrames slashFrames = new();
 		slashFrames.AddAnimation("slash");
 		slashFrames.SetAnimationSpeed("slash", 16);
-		slashFrames.SetAnimationLoop("slash", false);
+		slashFrames.SetAnimationLoopMode("slash", SpriteFrames.LoopMode.None);
 		slashFrames.AddFrame("slash", SlashFrame1);
 		slashFrames.AddFrame("slash", SlashFrame2);
 		slashFrames.AddFrame("slash", SlashFrame3);
@@ -474,7 +474,7 @@ public static class VfxFactory
 		SpriteFrames impactFrames = new();
 		impactFrames.AddAnimation("impact");
 		impactFrames.SetAnimationSpeed("impact", 12);
-		impactFrames.SetAnimationLoop("impact", false);
+		impactFrames.SetAnimationLoopMode("impact", SpriteFrames.LoopMode.None);
 		impactFrames.AddFrame("impact", MasseFrame1);
 		impactFrames.AddFrame("impact", MasseFrame2);
 		impactFrames.AddFrame("impact", MasseFrame3);
@@ -785,7 +785,7 @@ public static class VfxFactory
 		SpriteFrames thrustFrames = new();
 		thrustFrames.AddAnimation("thrust");
 		thrustFrames.SetAnimationSpeed("thrust", 14);
-		thrustFrames.SetAnimationLoop("thrust", false);
+		thrustFrames.SetAnimationLoopMode("thrust", SpriteFrames.LoopMode.None);
 		thrustFrames.AddFrame("thrust", ThrustFrame1);
 		thrustFrames.AddFrame("thrust", ThrustFrame2);
 		thrustFrames.AddFrame("thrust", ThrustFrame3);
@@ -854,7 +854,7 @@ public static class VfxFactory
 		SpriteFrames frames = new();
 		frames.AddAnimation("explode");
 		frames.SetAnimationSpeed("explode", 15);
-		frames.SetAnimationLoop("explode", false);
+		frames.SetAnimationLoopMode("explode", SpriteFrames.LoopMode.None);
 		frames.AddFrame("explode", ExplosionFrame1);
 		frames.AddFrame("explode", ExplosionFrame2);
 		frames.AddFrame("explode", ExplosionFrame3);
@@ -928,7 +928,7 @@ public static class VfxFactory
 		SpriteFrames frames = new();
 		frames.AddAnimation("fade");
 		frames.SetAnimationSpeed("fade", 10);
-		frames.SetAnimationLoop("fade", false);
+		frames.SetAnimationLoopMode("fade", SpriteFrames.LoopMode.None);
 		frames.AddFrame("fade", DashTrailFrame1);
 		frames.AddFrame("fade", DashTrailFrame2);
 		frames.AddFrame("fade", DashTrailFrame3);
@@ -966,7 +966,7 @@ public static class VfxFactory
 		SpriteFrames frames = new();
 		frames.AddAnimation("dissolve");
 		frames.SetAnimationSpeed("dissolve", 8);
-		frames.SetAnimationLoop("dissolve", false);
+		frames.SetAnimationLoopMode("dissolve", SpriteFrames.LoopMode.None);
 		frames.AddFrame("dissolve", DissolutionFrame1);
 		frames.AddFrame("dissolve", DissolutionFrame2);
 		frames.AddFrame("dissolve", DissolutionFrame3);
@@ -1010,7 +1010,7 @@ public static class VfxFactory
 		SpriteFrames frames = new();
 		frames.AddAnimation("impact");
 		frames.SetAnimationSpeed("impact", 20);
-		frames.SetAnimationLoop("impact", false);
+		frames.SetAnimationLoopMode("impact", SpriteFrames.LoopMode.None);
 		frames.AddFrame("impact", ImpactFrame1);
 		frames.AddFrame("impact", ImpactFrame2);
 		frames.AddFrame("impact", ImpactFrame3);
@@ -1045,7 +1045,7 @@ public static class VfxFactory
 		SpriteFrames frames = new();
 		frames.AddAnimation("pulse");
 		frames.SetAnimationSpeed("pulse", 6);
-		frames.SetAnimationLoop("pulse", true);
+		frames.SetAnimationLoopMode("pulse", SpriteFrames.LoopMode.Linear);
 		frames.AddFrame("pulse", AuraEssenceFrame1);
 		frames.AddFrame("pulse", AuraEssenceFrame2);
 		frames.AddFrame("pulse", AuraEssenceFrame3);
@@ -1073,7 +1073,7 @@ public static class VfxFactory
 		SpriteFrames frames = new();
 		frames.AddAnimation("pulse");
 		frames.SetAnimationSpeed("pulse", 8);
-		frames.SetAnimationLoop("pulse", true);
+		frames.SetAnimationLoopMode("pulse", SpriteFrames.LoopMode.Linear);
 		frames.AddFrame("pulse", OrbEssenceFrame1);
 		frames.AddFrame("pulse", OrbEssenceFrame2);
 		frames.AddFrame("pulse", OrbEssenceFrame3);
@@ -1107,7 +1107,7 @@ public static class VfxFactory
 		SpriteFrames frames = new();
 		frames.AddAnimation("whip");
 		frames.SetAnimationSpeed("whip", 14);
-		frames.SetAnimationLoop("whip", false);
+		frames.SetAnimationLoopMode("whip", SpriteFrames.LoopMode.None);
 		frames.AddFrame("whip", FouetFrame1);
 		frames.AddFrame("whip", FouetFrame2);
 		frames.AddFrame("whip", FouetFrame3);
@@ -1190,7 +1190,7 @@ public static class VfxFactory
 		SpriteFrames frames = new();
 		frames.AddAnimation("wave");
 		frames.SetAnimationSpeed("wave", 10);
-		frames.SetAnimationLoop("wave", false);
+		frames.SetAnimationLoopMode("wave", SpriteFrames.LoopMode.None);
 		for (int i = 0; i < _bellWaveFrames.Length; i++)
 			frames.AddFrame("wave", _bellWaveFrames[i]);
 
@@ -1257,7 +1257,7 @@ public static class VfxFactory
 		SpriteFrames frames = new();
 		frames.AddAnimation("chain");
 		frames.SetAnimationSpeed("chain", 12);
-		frames.SetAnimationLoop("chain", false);
+		frames.SetAnimationLoopMode("chain", SpriteFrames.LoopMode.None);
 		for (int i = 0; i < _chainLightningFrames.Length; i++)
 			frames.AddFrame("chain", _chainLightningFrames[i]);
 
@@ -1322,7 +1322,7 @@ public static class VfxFactory
 		SpriteFrames frames = new();
 		frames.AddAnimation("distort");
 		frames.SetAnimationSpeed("distort", 8);
-		frames.SetAnimationLoop("distort", false);
+		frames.SetAnimationLoopMode("distort", SpriteFrames.LoopMode.None);
 		for (int i = 0; i < _timeDistortionFrames.Length; i++)
 			frames.AddFrame("distort", _timeDistortionFrames[i]);
 
@@ -1463,7 +1463,7 @@ public static class VfxFactory
 		SpriteFrames frames = new();
 		frames.AddAnimation("echo");
 		frames.SetAnimationSpeed("echo", 8);
-		frames.SetAnimationLoop("echo", false);
+		frames.SetAnimationLoopMode("echo", SpriteFrames.LoopMode.None);
 		for (int i = 0; i < _echoFrames.Length; i++)
 			frames.AddFrame("echo", _echoFrames[i]);
 

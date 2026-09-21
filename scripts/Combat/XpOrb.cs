@@ -50,7 +50,7 @@ public partial class XpOrb : Area2D
         SpriteFrames frames = new();
         frames.AddAnimation("pulse");
         frames.SetAnimationSpeed("pulse", 4);
-        frames.SetAnimationLoop("pulse", true);
+        frames.SetAnimationLoopMode("pulse", SpriteFrames.LoopMode.Linear);
         frames.AddFrame("pulse", OrbFrame1);
         frames.AddFrame("pulse", OrbFrame2);
 

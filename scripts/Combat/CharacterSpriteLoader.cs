@@ -51,7 +51,7 @@ public static class CharacterSpriteLoader
 				string animName = $"{dir}_{action}";
 				frames.AddAnimation(animName);
 				frames.SetAnimationSpeed(animName, AnimSpeeds[action]);
-				frames.SetAnimationLoop(animName, LoopingAnims.Contains(action));
+				frames.SetAnimationLoopMode(animName, LoopingAnims.Contains(action) ? SpriteFrames.LoopMode.Linear : SpriteFrames.LoopMode.None);
 
 				foreach (Texture2D tex in textures)
 					frames.AddFrame(animName, tex);
