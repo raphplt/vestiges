@@ -36,3 +36,7 @@ steam_api64.dll
 libsteam_api.so
 libsteam_api.dylib
 steam_appid.txt
+
+# Claude Code : réglages personnels (non partagés)
+.claude/settings.local.json
+CLAUDE.local.md

@@ -1,103 +1,118 @@
 # VESTIGES
 
-Roguelike de survie et construction en vue isométrique 2D, dans un monde en train d'être oublié.
-Moteur Godot 4.6, langage C#, renderer GL Compatibility.
+Roguelite d'exploration-combat nomade en vue isométrique 2D, dans un monde post-apocalyptique en train d'être oublié.
+Le joueur avance toujours ; derrière lui, l'**Effacement** dévore la réalité. La question n'est pas « combien de nuits » mais « jusqu'où ».
 
-## Documentation
+Moteur Godot 4.7, C# (.NET 10), renderer GL Compatibility.
 
-Toute la vision, les mécaniques et l'architecture sont documentées dans `doc/` :
+> Pivot V2 (mars 2026) : jour/nuit, Foyer in-run, craft, construction et ressources matérielles ont été **supprimés**.
+> Ne pas les réintroduire, ne pas s'appuyer sur les sections du GDD/Architecture/Roadmap V1 qui les décrivent.
 
-- [VESTIGES-GDD.md](doc/VESTIGES-GDD.md) — Game Design Document (vision, core loop, systèmes de gameplay, score, personnages, bestiaire, UI/UX)
-- [VESTIGES-BIBLE.md](doc/VESTIGES-BIBLE.md) — Bible Artistique & Narrative (lore, cosmologie, direction artistique, audio, 6 constellations)
-- [VESTIGES-ARCHITECTURE.md](doc/VESTIGES-ARCHITECTURE.md) — Architecture Technique (couches, systèmes, data flow, principes)
-- [VESTIGES-ROADMAP.md](doc/VESTIGES-ROADMAP.md) — Roadmap & Milestones (phases 0-5+, lots, critères de validation)
-- [CHARTE-GRAPHIQUE.md](doc/CHARTE-GRAPHIQUE.md) — Charte Graphique Pixel Art (palettes master/biomes, conventions sprites, contours, animation, nommage)
-- [ASSET-LIST.md](doc/ASSET-LIST.md) — Asset List Exhaustive (tous les sprites/tiles/UI à produire, tailles, priorités, statuts)
-- [STRATEGIE-BIOMES-ET-WORKFLOW.md](doc/STRATEGIE-BIOMES-ET-WORKFLOW.md) — Stratégie Biomes Isométriques & Workflow (layered iso, fausse 3D, pipeline AI→Aseprite→Godot)
-- [GUIDE-PIXEL-ART.md](doc/GUIDE-PIXEL-ART.md) — Guide de Démarrage Pixel Art (Aseprite, fondamentaux, techniques, ressources)
+## Documentation (`doc/`)
 
-Toujours consulter ces docs avant de proposer une feature ou un changement architectural. Le GDD fait autorité sur le gameplay, l'Architecture sur le code. La Charte Graphique fait autorité sur les palettes et conventions visuelles.
+Ordre d'autorité en cas de conflit :
+
+1. [VESTIGES-STRATEGIE-V2.md](doc/VESTIGES-STRATEGIE-V2.md) : direction actuelle, systèmes V2 (Effacement, Résurgences, Autels, Essence, raretés, endgame), roadmap V2 (§25). **Fait autorité sur le gameplay et la roadmap.**
+2. [VESTIGES-GDD.md](doc/VESTIGES-GDD.md) : vision, personnages, bestiaire, score, UI/UX. Valable hors sections obsolètes listées en §3 de la Stratégie V2.
+3. [VESTIGES-ARCHITECTURE.md](doc/VESTIGES-ARCHITECTURE.md) : principes d'architecture (couches, data flow). Les sections Base/Craft/Foyer sont obsolètes.
+4. [VESTIGES-BIBLE.md](doc/VESTIGES-BIBLE.md) : lore, cosmologie, direction artistique, audio, constellations.
+5. [CHARTE-GRAPHIQUE.md](doc/CHARTE-GRAPHIQUE.md) : palettes, conventions sprites, contours, animation, nommage. **Fait autorité sur le visuel.**
+6. Références : [ASSET-LIST.md](doc/ASSET-LIST.md), [AUDIO-GUIDE.md](doc/AUDIO-GUIDE.md), [PROGRESSION-SYSTEM.md](doc/PROGRESSION-SYSTEM.md), [PROMPT-PIXEL-ART-BIOMES.md](doc/PROMPT-PIXEL-ART-BIOMES.md).
+7. [VESTIGES-ROADMAP.md](doc/VESTIGES-ROADMAP.md) : roadmap V1 (phases 0-6 historiques). Ne plus y ajouter de cases.
+
+Consulter la Stratégie V2 avant de proposer une feature ou un changement architectural.
+
+## Commandes
+
+| Action | Commande |
+|--------|----------|
+| Build C# | `dotnet build` |
+| Smoke test (build + import + boot headless ~10 s) | `tools/smoke_test.sh [frames]` |
+| Lancer le jeu | `godot-mono --path .` (la version doit correspondre à `Vestiges.csproj`) |
+| Générer des sprites | `python3 tools/<script>.py` ou `python3 scripts/generate_*.py` (Pillow) |
+
+`GODOT_BIN` surcharge le binaire Godot utilisé par `tools/smoke_test.sh`.
+En headless, ces avertissements sont normaux : DLL Steam absente, « MixRate mismatch » (driver audio factice), fuites ObjectDB à la fermeture.
+
+Avant de déclarer une tâche terminée : `dotnet build` sans warning, et `tools/smoke_test.sh` vert si la tâche touche scènes, shaders, `project.godot` ou l'initialisation.
 
 ## Stack technique
 
 | Composant | Choix |
 |-----------|-------|
-| Moteur | Godot 4.6 |
-| Langage | C# (.NET) |
+| Moteur | Godot 4.7.2 (.NET), SDK `Godot.NET.Sdk/4.7.2` |
+| Langage | C# 14 / .NET 10 (LTS) |
 | Physique | Jolt Physics |
 | Renderer | GL Compatibility (OpenGL) |
 | Vue | Isométrique 2D |
-| Données | JSON (data-driven : ennemis, perks, recettes, loot tables, biomes, scaling) |
+| Données | JSON dans `data/`, parsé via `Godot.Json` et mappé à la main par les loaders de `scripts/Infrastructure/` ; sauvegardes méta/historique en `System.Text.Json` |
+| Plateforme | Steamworks.NET (DLL native non versionnée, Steam désactivé si absente) |
 
-## Exigences de qualité
-
-Ce projet vise un niveau professionnel. Le code doit être propre, optimisé et performant, sans compromis.
-
-### Principes fondamentaux
-
-- **Performance first** : cible 60 FPS constant sur hardware mid-range. Profiler avant d'optimiser, mais ne jamais ignorer la perf.
-- **Data-driven** : tout le contenu de gameplay (stats, recettes, courbes de scaling, loot tables) vit dans des fichiers JSON, jamais hardcodé.
-- **Modularité** : chaque système (combat, craft, construction, spawn, progression, scoring) est un module indépendant avec des responsabilités claires.
-- **Découplage** : communication entre systèmes via signaux/events, pas de références directes croisées. Préparer l'architecture pour le coop v2.
-- **État explicite** : pas de state implicite ou d'effets de bord cachés. Le state de la run et le state méta sont séparés.
-
-### Conventions C#
-
-- Suivre les [conventions de nommage C# de Godot](https://docs.godotengine.org/en/stable/tutorials/scripting/c_sharp/c_sharp_style_guide.html) : PascalCase pour les méthodes, propriétés et classes ; camelCase pour les variables locales et paramètres ; _camelCase pour les champs privés.
-- Préférer la composition à l'héritage.
-- Pas de singleton monolithique. Utiliser les Autoloads Godot uniquement pour les services globaux légitimes (GameManager, EventBus).
-- Typage explicite : pas de `var` quand le type n'est pas évident à la lecture.
-- Pas de code mort, pas de commentaires de code commenté. Si c'est supprimé, c'est supprimé.
-- Les commentaires expliquent le pourquoi, pas le quoi. Le code doit être lisible sans commentaires.
-
-### Conventions Godot
-
-- Organiser les scenes et scripts par feature/système, pas par type de fichier.
-- Nommer les nodes clairement : le nom reflète la responsabilité.
-- Utiliser les signaux Godot pour la communication parent-enfant et l'EventBus (Autoload) pour la communication inter-systèmes.
-- Les ressources importées (sprites, audio) dans des dossiers dédiés par feature.
-
-### Patterns attendus
-
-- **Object Pooling** pour les entités fréquentes (projectiles, créatures, particules).
-- **State Machine** pour les états de jeu (jour/crépuscule/nuit/aube) et les comportements d'entités.
-- **Observer/Event Bus** pour le découplage inter-systèmes.
-- **Factory** pour la création d'entités depuis les données JSON.
-- **Command** pour les actions joueur réversibles (placement de structures).
+Monter la version de Godot = changer **ensemble** le SDK dans `Vestiges.csproj`, `config/features` dans `project.godot` et le binaire éditeur local.
 
 ## Structure du projet
 
 ```
 vestiges/
-├── doc/                    # Documentation de design et technique
-├── scenes/                 # Scenes Godot organisées par feature
-├── scripts/                # Code C# organisé par système
-│   ├── Core/               # GameManager, EventBus, state global
-│   ├── Combat/             # Auto-attaque, dégâts, statuts
-│   ├── Progression/        # XP, level-up, perks
-│   ├── World/              # Jour/nuit, génération procédurale, biomes
-│   ├── Spawn/              # Spawn de créatures, object pooling
-│   ├── Base/               # Construction, craft, inventaire
-│   ├── Meta/               # Vestiges, Souvenirs, persistence cross-run
-│   ├── Score/              # Calcul et agrégation du score
-│   ├── Events/             # Événements aléatoires
-│   ├── UI/                 # HUD, menus, feedback
-│   └── Infrastructure/     # Chargement JSON, sauvegarde, audio, debug
-├── data/                   # Fichiers JSON de gameplay
-│   ├── enemies/
-│   ├── perks/
-│   ├── recipes/
-│   ├── loot_tables/
-│   ├── biomes/
-│   └── scaling/
-├── assets/                 # Sprites, audio, fonts
+├── doc/                     # Design et technique (voir ordre d'autorité)
+├── scenes/                  # Scenes par feature (Hub.tscn = main scene, Main.tscn = run)
+├── scripts/                 # C# par système (namespace Vestiges.<Dossier>)
+│   ├── Core/                # Player, GameManager, EventBus, GroupCache
+│   ├── Combat/              # Ennemis, armes, projectiles, VFX, sprite loaders
+│   ├── Progression/         # Perks, quêtes, Essence, fragments, objets maudits
+│   ├── World/               # Génération procédurale, biomes, props, Effacement, Autels, POI, coffres, lore
+│   ├── Spawn/               # SpawnManager, EnemyPool
+│   ├── Events/              # Résurgences (CrisisManager), endgame
+│   ├── Meta/                # Souvenirs, persistance cross-run
+│   ├── Score/               # Calcul du score
+│   ├── UI/                  # HUD, Hub, level-up, paramètres, debug
+│   ├── Infrastructure/      # Loaders JSON, sauvegarde, audio, Steam, analytics, locale, input
+│   └── generate_*.py        # Générateurs de sprites historiques (à migrer vers tools/)
+├── data/                    # JSON de gameplay (enemies, weapons, perks, biomes, scaling, quests, ...)
+├── assets/                  # Sprites, audio, fonts, shaders, traductions (par feature)
+├── tools/                   # Scripts outillage (smoke test, générateurs/pipeline sprites)
 └── project.godot
 ```
 
+Autoloads (`project.godot`) : EventBus, GameManager, AudioManager, GroupCache, SteamManager, LocaleManager, InputRemapManager, ColorBlindFilter, AnalyticsManager.
+
+## Exigences de qualité
+
+Niveau professionnel visé : code propre, optimisé, performant.
+
+- **Performance first** : 60 FPS constants sur hardware mid-range. Pas d'allocation ni de `GetNode`/`GetTree().GetNodesInGroup` par frame dans `_Process`/`_PhysicsProcess` (utiliser `GroupCache`, caches, pools).
+- **Data-driven** : stats, recettes de loot, courbes de scaling, tables vivent en JSON, jamais en dur.
+- **Modularité** : un système = un module aux responsabilités claires.
+- **Découplage** : signaux Godot parent→enfant, `EventBus` pour l'inter-systèmes. Pas de références croisées directes. Garder le coop v2 possible.
+- **État explicite** : state de run et state méta séparés, pas d'effets de bord cachés.
+
+### Conventions C#
+
+- [Style guide C# Godot](https://docs.godotengine.org/en/stable/tutorials/scripting/c_sharp/c_sharp_style_guide.html) : PascalCase (types, méthodes, propriétés), camelCase (locales, paramètres), `_camelCase` (champs privés).
+- Composition plutôt qu'héritage.
+- Pas de singleton monolithique ; Autoloads réservés aux services globaux légitimes.
+- Typage explicite : pas de `var` quand le type n'est pas évident.
+- Pas de code mort ni de code commenté. Commentaires = le pourquoi, pas le quoi.
+- Pas d'API Godot dépréciée (le build doit rester à 0 warning).
+
+### Conventions Godot
+
+- Scenes et scripts organisés par feature/système.
+- Nodes nommés selon leur responsabilité.
+- Chaque `.cs` a son `.cs.uid` versionné : le committer avec le `.cs`, le supprimer avec lui.
+- Ne jamais éditer `.godot/` ni les `.import` à la main.
+- Shaders `canvas_item` : pas de `return` dans `fragment()`.
+- Toute action d'input utilisée dans le code est déclarée dans `[input]` de `project.godot`.
+
+### Patterns attendus
+
+Object Pooling (projectiles, créatures, particules) · State Machine (phases de run, comportements) · Observer/EventBus · Factory (entités depuis JSON) · Command (actions réversibles).
+
 ## Règles de travail
 
-- **Ne jamais casser le core loop.** Chaque changement doit servir la boucle gameplay ou préparer un système futur documenté dans la roadmap.
-- **Itérer vite, ne pas chercher la perfection.** Placeholders OK, code sale non. Un prototype propre vaut mieux qu'une architecture parfaite qui ne tourne pas.
-- **Un système à la fois.** Finir et valider un lot avant de passer au suivant.
-- **Tester le fun tôt.** Si ce n'est pas fun en placeholder, ça ne le sera pas en production.
-- **Checklist roadmap obligatoire.** Dans `doc/VESTIGES-ROADMAP.md`, cocher chaque case (`- [x]`) dès qu'un lot, un critère ou un rappel est validé.
+- **Ne jamais casser le core loop** : explorer → combattre → monter en puissance → fuir l'Effacement.
+- **Itérer vite** : placeholders OK, code sale non.
+- **Un système à la fois** : finir et valider un lot avant le suivant.
+- **Tester le fun tôt** : si ce n'est pas fun en placeholder, ça ne le sera pas en production.
+- **Checklist roadmap obligatoire** : cocher (`- [x]`) dans la roadmap V2 (`doc/VESTIGES-STRATEGIE-V2.md` §25) chaque item validé.
+- Docs et commentaires en français, identifiants de code en anglais.
