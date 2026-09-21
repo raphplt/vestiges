@@ -59,7 +59,7 @@ public partial class ScoreManager : Node
         {
             if (_runTracker == null)
                 return _bonusScore;
-            return _runTracker.CrisesSurvived * PointsPerCrisisSurvived;
+            return _bonusScore + _runTracker.CrisesSurvived * PointsPerCrisisSurvived;
         }
     }
     public int ExplorationScore => _explorationScore;

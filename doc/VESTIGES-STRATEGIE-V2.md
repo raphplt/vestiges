@@ -678,28 +678,28 @@ Le script de post-processing doit inclure une vérification/correction de l'angl
 
 **Objectif :** la nouvelle boucle est jouable. Pas de polish, juste le flow.
 
-- [ ] Retirer/désactiver les systèmes obsolètes (craft, base, Foyer in-run, cycle jour/nuit).
+- [x] Retirer/désactiver les systèmes obsolètes (craft, base, Foyer in-run, cycle jour/nuit).
 - [x] Implémenter ErasureManager (mémoire par zone, rythme global, phases visuelles en placeholder — même juste un changement de teinte sur les tiles).
 - [x] Implémenter CrisisManager (Résurgences toutes les 3-5 min, spawns en burst).
 - [x] Adapter SpawnManager (spawns liés à l'Effacement, plus proches, plus denses).
-- [ ] Agrandir la map (doubler la taille pour tester, objectif final 4-5x).
+- [x] Agrandir la map (doubler la taille pour tester, objectif final 4-5x).
 - [x] Revoir la génération : biomes contigus, pas concentriques.
 - [ ] Ajuster le tempo : runs de 15-25 min en gameplay normal.
 - [ ] **PLAYTEST : est-ce que c'est fun ? Est-ce que l'Effacement crée de la tension ? Est-ce que le mouvement permanent fonctionne ?**
 
 ### Phase B — Autels et montée en puissance (2-3 semaines)
 
-- [ ] Implémenter AltarSystem (spawn, interaction, upgrades d'armes).
+- [x] Implémenter AltarSystem (spawn, interaction, upgrades d'armes).
 - [ ] Implémenter WeaponRaritySystem (Commun → Légendaire, effets, génération).
-- [ ] Rendre les armes lootables dans les coffres dès le début de run.
-- [ ] Implémenter EssenceTracker (remplace l'inventaire).
+- [x] Rendre les armes lootables dans les coffres dès le début de run.
+- [x] Implémenter EssenceTracker (remplace l'inventaire).
 - [ ] Ajuster l'économie d'Essence (drop rates, coûts d'upgrade aux Autels).
 - [ ] Comparaison d'armes au loot.
 - [ ] **PLAYTEST : est-ce que la montée en puissance est satisfaisante ? L'économie d'Essence est-elle équilibrée ?**
 
 ### Phase C — Late game et endgame (2 semaines)
 
-- [ ] Implémenter EndgameManager (détection du late game, transition endgame).
+- [x] Implémenter EndgameManager (détection du late game, transition endgame).
 - [ ] Implémenter le boss / événement majeur de late game (tester les 3 options, en choisir une).
 - [ ] Implémenter le scaling infini d'endgame.
 - [ ] Ajuster le score pour refléter le nouveau flow.
@@ -707,7 +707,7 @@ Le script de post-processing doit inclure une vérification/correction de l'angl
 
 ### Phase D — Lisibilité et UX (2-3 semaines)
 
-- [ ] Barre d'XP fullwidth en bas de l'écran.
+- [x] Barre d'XP fullwidth en bas de l'écran.
 - [ ] Armes dans le menu pause avec stats et rareté.
 - [ ] Menu pause compact.
 - [ ] Onboarding implicite (les 5 premières minutes doivent être auto-explicatives).
@@ -724,13 +724,13 @@ Le script de post-processing doit inclure une vérification/correction de l'angl
 - [ ] Rendre le système de déblocage fonctionnel.
 - [ ] S'assurer que 4 personnages sont jouables et équilibrés.
 - [x] Menu quêtes dans le Hub ("Chroniques").
-- [ ] Notifications in-game de complétion de quête.
+- [x] Notifications in-game de complétion de quête.
 
 ### Phase F — Art et polish (4+ semaines)
 
 - [ ] Mettre en place le pipeline d'assets (IA + post-processing + Aseprite).
 - [ ] Remplacer les Polygon2D priorité 1 (Player, ennemis principaux, projectiles).
-- [ ] Remplacer les Polygon2D priorité 2 (coffres, armes, orbes).
+- [x] Remplacer les Polygon2D priorité 2 (coffres, armes, orbes).
 - [ ] Tiles d'Effacement (phases visuelles des zones : Ancrée → Effacée).
 - [ ] Sprites des Autels.
 - [ ] Sprites des Résurgents (ennemis de Résurgence).
