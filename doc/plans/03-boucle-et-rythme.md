@@ -59,6 +59,16 @@ Choisir l'Indicible comme cible finale ferme les alternatives Convergence/Choix 
 
 SpawnManager possède une maintenance de densité toutes les 0,25 s en plus de l’intervalle de spawn. Ne pas déduire le débit réel des seuls 1,9 s initiaux. Le Traqueur a une vitesse 240 contre 60 pour un Rampant d’Ombre avant multiplicateurs : hypothèse de poursuite trop facile à tester, pas diagnostic unique.
 
+**Retour de Raphaël du 23 septembre (après le correctif de la flèche) :** du niveau 1 au niveau 5 en moins de 30 secondes, sans aucune difficulté. Son hypothèse : un bestiaire trop passif, trop de corps à corps, pas assez d'attaques à distance, et pas seulement des projectiles simples. Constats et propositions dans le [plan 07](07-bestiaire-et-rencontres.md#retour-de-raphaël-du-23-septembre-et-constats).
+
+Éléments chiffrés :
+- Il faut **407 XP** cumulés pour atteindre le niveau 5 (33 + 78 + 126 + 171).
+- Tous les ennemis sont plus lents que le joueur.
+- La session du 23 septembre (Carrière Effondrée, Traqueur) a atteint le niveau 7 d'une traite, face à des ennemis tous au corps à corps.
+- Le log ne contenait pas d'horodatage. `RunTracker` journalise désormais `[RunTracker] Niveau N à X s (K éliminations)`. Cette durée est murale et inclut les écrans de choix ; elle sert de repère, pas de mesure du temps actif.
+
+**Ordre des essais révisé :** l'essai menace (étape 4) passe avant l'essai XP (étape 3), conformément à l'hypothèse de Raphaël. On garde un seul groupe de paramètres à la fois. Si la menace revue ne suffit pas à espacer les premiers niveaux, on applique ensuite +25 % sur les seuils XP.
+
 1. Mesurer sur les cinq premières minutes : temps par niveau, XP/ennemi et sources annexes, fréquence des écrans de choix, dégâts reçus, temps d’élimination, distance des menaces et durée passée simplement à reculer.
 2. Externaliser la courbe XP et les réglages initiaux dans les données selon les loaders du projet. Garder un preset référence pour comparer.
 3. Essai isolé XP : augmenter les seuils initiaux (premier essai +25 %, puis +50 % si justifié), sans encore changer les ennemis. Mesurer si chaque niveau redevient gratifiant et si le build se construit assez tôt ; ajuster aussi récompenses de quête/XP pour éviter de contourner la courbe.

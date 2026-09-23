@@ -1,6 +1,6 @@
 # VESTIGES — Décisions de Raphaël et arbitrages restants
 
-Version 0.6 · 22 septembre 2026 · Référence de validation du dossier.
+Version 0.7 · 23 septembre 2026 · Référence de validation du dossier.
 
 Ce registre intègre les retours structurants après la première lecture des plans et la validation des déplacements de base du 22 septembre. Les validations ci-dessous sont acquises. Le socle de 01 est implémenté et validé ; le dash du prototype D demandé est livré et validé par Raphaël ([compte rendu](01-deplacements.md#8-prototype-de-mobilité--22-septembre-2026)). Les variantes alternatives F1 restent des essais ; les mobilités spécifiques attendent le casting et les sprites refaits.
 
@@ -14,7 +14,9 @@ Ce registre intègre les retours structurants après la première lecture des pl
 | Score | Visible et vivant pendant la run ; aucune progression vers le record ni annonce de dépassement pendant la partie | 02/04, record uniquement au bilan final |
 | Juiciness | Trois intensités validées ; ambition très élevée sur mouvement, combat, collecte et récompenses | 02, intensité et qualité à tester |
 | Mort | Refonte majeure du bilan ; inspiration Megabonk adaptée à Vestiges | 02/04 |
-| Début de run | Actuellement trop facile, niveaux trop rapides, menace insuffisante | 03, ressenti utilisateur à traiter et mesurer |
+| Début de run | Actuellement trop facile, niveaux trop rapides, menace insuffisante ; le 23 septembre, toujours niveau 1→5 en moins de 30 s après correctif | 03, essai menace avant essai XP ; mesure horodatée ajoutée |
+| Bestiaire à distance | Plus d'ennemis à distance, attaques diversifiées et originales, pas seulement des projectiles simples (23 septembre) | 07, menaces à distance proposées ; priorité P1 pour le début de run |
+| Performance | Ressenti « beaucoup plus fluide » après le correctif de la flèche du 23 septembre | 01 §10, cible 1080p encore ouverte |
 | Mécaniques existantes | Peuvent être revues lorsqu'une amélioration est démontrée | Tous les plans, essais avant/après |
 | Hub | Clarté maximale, peu de texte, détails à la demande | 04 |
 | Collection | Page armes/objets accessible directement depuis le menu principal | 04/05 |
@@ -39,7 +41,7 @@ Ce registre intègre les retours structurants après la première lecture des pl
 | Mobilité active | Une action de mobilité commune, dash de base ; sauts/glissades spécifiques à certains personnages | Dash livré validé ; variantes F1 restent des essais, E après casting et sprites |
 | Invulnérabilité du dash | Comparer dash sans invulnérabilité et fenêtre courte, puis choisir avec le danger de début de run | Deux variantes disponibles dans F1 : 0 ms par défaut / 60 ms d’essai ; choix ouvert |
 | Objets | Rareté fixe par définition, compteur par ID, chaque exemplaire renforce un effet sans plafond d'exemplaires | Proposition technique 05 compatible avec la demande |
-| Casting cible | Au moins cinq à six personnages entièrement revus, tous leurs sprites refaits avant 01 E | Périmètre demandé ; identités individuelles encore à valider |
+| Casting cible | Au moins cinq à six personnages entièrement revus, tous leurs sprites refaits avant 01 E | Six [fiches](06-fiches-casting.md) proposées le 23 septembre, à valider |
 | Boss | Une variante à comportement enrichi par famille retenue ; deux prototypes avant généralisation | Proposition 07 |
 | Pixel art | Densité commune, tuiles 64×32 et joueur cible 48×64, conversion d'échelle commune à tester | Proposition 08 |
 | Fabrication des sprites | Références dessinées/retouchées et animation maîtrisée ; automatisation pour conformité/export | Recommandation 08 |

@@ -272,6 +272,9 @@ public partial class RunTracker : Node
     {
         if (newLevel > _maxLevel)
             _maxLevel = newLevel;
+
+        // Repère de calibrage du rythme XP (plan 03) : durée murale, écrans de choix inclus.
+        GD.Print($"[RunTracker] Niveau {newLevel} à {RunDurationSeconds:F1} s ({_totalKilled} éliminations)");
     }
 
     private void OnPerkChosen(string perkId)

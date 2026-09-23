@@ -26,7 +26,7 @@ La [Stratégie V2](../VESTIGES-STRATEGIE-V2.md) reste l'autorité gameplay/roadm
 | [04 — Interfaces et Hub](04-interfaces-et-hub.md) | P1 | Navigation, sélection, typographie et affichage adaptatif | Cadrage 08 ; contrats 05/06 |
 | [05 — Armes, objets et builds](05-armes-objets-builds.md) | P1 | 4 armes + 4 passifs validés ; objets distincts cumulables sans limite | Hypothèses de tempo 03 |
 | [06 — Personnages, quêtes et défis](06-personnages-quetes-defis.md) | P0 casting ; P2 progression | Casting initial, récompenses, progression et défis | 05 ; présentation 04 |
-| [07 — Bestiaire et rencontres](07-bestiaire-et-rencontres.md) | P2 | Rôles, compositions et nouveaux comportements utiles | 01/03 ; cadrage 08 |
+| [07 — Bestiaire et rencontres](07-bestiaire-et-rencontres.md) | P1 début de run ; P2 reste | Menaces à distance originales, rôles, compositions | 01/03 ; cadrage 08 |
 | [08 — Direction artistique, sprites et lore](08-direction-artistique.md) | Transversal | Référence visuelle, personnages mémorables, pipeline | Cadrage immédiat, production après validation gameplay |
 | [09 — Classement hebdomadaire](09-classement-hebdomadaire.md) | Plus tard | Périodes, règles comparables et intégrité des scores | Score 02 ; équilibre 03/05/06 |
 | [10 — Terrain et tiles](10-terrain-et-tiles.md) | P1 transversal | Cohérence, transitions, circulation et coût du terrain | Cadrage 08 ; déplacements 01 |
@@ -45,7 +45,12 @@ Les numéros servent à identifier les plans, pas à imposer leur exécution int
 
 Un seul lot d'implémentation ouvert à la fois. Un échec de lisibilité, de performance ou de fun ramène au lot concerné avant expansion.
 
-**Suite immédiate du plan 01 :** la [mesure en combat dense](01-deplacements.md#9-mesure-de-mobilité-en-combat-dense--22-septembre-2026) est réalisée avec 120 ennemis en 720p/1080p ; elle révèle que les 60 FPS constants ne sont pas tenus. Le diagnostic de ces saccades reste un travail technique à mener avant de conclure la recette. Les variantes clavier/manette et le tempo de début de run restent à évaluer ; aucun nouveau mouvement spécifique ne précède le casting. Le prochain lot de conception prioritaire reste 06 A / 08 A : six fiches et une planche commune à présenter, puis une référence visuelle jouable. Les identités et les choix de dimensions/orientations restent à valider ; le numéro 02 n’impose pas de passer avant cette priorité.
+**Mise à jour du 23 septembre :**
+- Les saccades périodiques en combat dense sont corrigées (01 §10). Raphaël trouve le jeu « beaucoup plus fluide » ; la cible 1080p reste ouverte.
+- Le début de run reste trop facile. Son hypothèse porte sur le bestiaire : trop passif, trop de corps à corps, pas assez d'attaques à distance originales. Elle est intégrée en 03 A2 et 07, où des menaces à distance originales sont proposées.
+- Six [fiches de casting](06-fiches-casting.md) et l'audit des sprites (08 §2) attendent sa validation.
+
+**Suite immédiate du plan 01 (historique du 22 septembre) :** la [mesure en combat dense](01-deplacements.md#9-mesure-de-mobilité-en-combat-dense--22-septembre-2026) est réalisée avec 120 ennemis en 720p/1080p ; elle révèle que les 60 FPS constants ne sont pas tenus. Le diagnostic de ces saccades reste un travail technique à mener avant de conclure la recette. Les variantes clavier/manette et le tempo de début de run restent à évaluer ; aucun nouveau mouvement spécifique ne précède le casting. Le prochain lot de conception prioritaire reste 06 A / 08 A : six fiches et une planche commune à présenter, puis une référence visuelle jouable. Les identités et les choix de dimensions/orientations restent à valider ; le numéro 02 n’impose pas de passer avant cette priorité.
 
 ## 4. Expérience de référence proposée
 

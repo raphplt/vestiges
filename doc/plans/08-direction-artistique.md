@@ -21,6 +21,28 @@ Chaque contenu important doit relier **silhouette, comportement, son et fragment
 - [process_generated_sprite.py](../../tools/process_generated_sprite.py) vise un Traqueur 48×64 et utilise Lanczos puis palette : ce n'est pas encore un pipeline universel conforme à la charte.
 - Les 19 Souvenirs narratifs et six constellations fournissent une base ; quatre récompenses « recipe » héritées doivent être réconciliées avec V2.
 
+### Audit des sprites existants — 23 septembre 2026
+
+Mesuré sur les PNG de frames `_01` :
+
+| Famille | Dimensions constatées | Écart à la cible proposée |
+|---|---|---|
+| Traqueur | 22×22 ; NE/NW/SE/SW ; idle 4, walk 4, dash 3, hurt 2, death 4 | Environ trois fois moins haut que 48×64 ; format carré |
+| Vagabond | 16×24 ; même couverture que le Traqueur | Même écart ; densité différente du Traqueur |
+| Forgeuse | **Aucun sprite** (pas de dossier `assets/characters/forgeuse`) | Tout à produire |
+| Ennemis courants | Ombre 12×12, Sentinelle 12×24, Hurleur 12×20, Brute 24×24, Rôdeur 42×42, Rampant 32×16/32×32, Tréant 32×32/64×64, Cracheur 32×32/64×64, Tisseuse 64×64 | Densités incohérentes : un facteur 5 entre l'Ombre et la Tisseuse, sans lien avec leur rôle |
+| Colosses | 128×128 | Cohérent avec un mini-boss, densité à vérifier |
+
+Conséquences :
+- Aucun sprite actuel ne partage la densité de pixel cible. La refonte demandée par Raphaël concerne donc aussi la conversion d'échelle et le zoom de la caméra, pas seulement le dessin.
+- `CharacterSpriteLoader` ne connaît que quatre directions (NE/NW/SE/SW). Le passage à huit orientations est un changement de code à planifier au lot B, après validation.
+- Les perks exclusifs de la Forgeuse décrivent encore la construction V1 ; voir les [fiches du casting](06-fiches-casting.md).
+
+**Préalables bloquants pour le lot A :**
+1. Identités du casting validées (06 A).
+2. Taille joueur 48×64 et nombre d'orientations (4 ou 8) confirmés.
+3. Méthode de production choisie : dessin et retouche par qui, avec quels outils, place éventuelle de l'IA comme base retouchée (§4).
+
 ## 3. Décisions à valider avant production
 
 | Décision | Proposition |

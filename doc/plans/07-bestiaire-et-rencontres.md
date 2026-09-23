@@ -1,6 +1,6 @@
 # Plan 07 — Bestiaire distinctif et rencontres variées
 
-Statut : **ajout de créatures demandé ; familles et boss proposés** · Priorité : P2 · Dépendances : contrôle 01, tempo 03, référence 08.
+Statut : **ajout de créatures demandé ; familles et boss proposés ; menaces à distance originales demandées le 23 septembre** · Priorité : **P1 pour les rôles du début de run** (menace, 03 A2), P2 pour le reste · Dépendances : contrôle 01, tempo 03, référence 08.
 Références : V2 §8/10/14 ; GDD §4.9 hors V1 ; Bible §6.2 ; [dossier](README.md).
 
 ## 1. Objectif
@@ -32,6 +32,45 @@ Sources : [données ennemis](../../data/enemies), [Enemy.cs](../../scripts/Comba
 15 définitions, dont trois Colosses et un boss. Aucun fichier dédié Résurgent identifié : les ennemis exclusifs de Résurgence restent un contenu à définir.
 
 APIs/patterns : `Enemy.Initialize(EnemyData data, float hpScale, float dmgScale)`, routage par comportement dans Enemy vers 439–457/878, activation/réinitialisation via EnemyPool, composition des pools dans SpawnManager vers 417. Les noms DayEnemyPool/NightEnemyPool sont legacy ; ils ne signifient pas qu'il faut restaurer le jour/nuit.
+
+### Retour de Raphaël du 23 septembre et constats
+
+> « Le début est encore trop simple : on passe du niveau 1 à 5 en moins de 30 secondes sans aucun souci. Peut-être que c'est le bestiaire le problème (des monstres trop passifs, trop de monstres au CAC). Il faudrait sûrement diversifier les attaques des monstres et en avoir plus à distance, en essayant de faire en sorte qu'elles soient originales, pas que des projectiles simples. »
+
+Constats vérifiés dans les données le 23 septembre :
+
+- **Aucun ennemi n'est plus rapide que le joueur.** Les ennemis vont de 25 à 100 px/s (Ombre 100, Charognard 85, Rôdeur 30), contre 180 à 240 px/s pour les personnages. Reculer en ligne droite neutralise donc toute la mêlée.
+- **Un seul tireur mobile, le Cracheur Pâli**, avec un projectile simple. Il n'apparaît que dans les pools des Ruines urbaines et du Marais. La Sentinelle est immobile.
+- **Les pools de début, hérités du nom `day_enemy_pool`, sont presque entièrement au corps à corps.** Par exemple, la Carrière Effondrée, biome joué par Raphaël le 23 septembre, n'aligne que Rôdeur, Brute et Rampant.
+- **Le correctif de la flèche du 23 septembre réduit les dégâts de zone involontaires de l'arc**, mais ne change pas ce déséquilibre de rôles.
+
+Conséquence : le lot C de ce plan (compositions) et les nouvelles menaces à distance passent **avant** la liste de familles du lot D, pour servir l'essai « menace » du plan 03 A2.
+
+### Menaces à distance originales proposées
+
+Critère : chaque attaque impose une **décision de trajectoire** différente d'« esquiver une balle ». Aucune n'est un projectile en ligne droite. Toutes s'annoncent au sol ou par la silhouette avant de frapper. Noms et valeurs sont à valider ; les paramètres iront en JSON.
+
+| Proposition | Attaque | Ce qu'elle casse | Réponse attendue | Pistes de paramètres |
+|---|---|---|---|---|
+| **Le Présage** | Trace au sol un cercle à l'endroit où le joueur **sera** dans 1 s, extrapolé depuis sa vitesse, puis y fait tomber un effondrement | La fuite en ligne droite | Changer de direction ou ralentir au bon moment | Délai 0,9–1,2 s, rayon 40 px, extrapolation plafonnée |
+| **L'Arpenteur** | Plante trois ou quatre jalons autour du joueur, puis tend un cordeau entre eux : un périmètre qui se referme | Le kiting en cercle | Sortir de l'enclos avant la fermeture, ou détruire un jalon | Délai de fermeture 1,5 s, jalons à 4 PV |
+| **Le Carillon** | Émet des ondes circulaires lentes avec une brèche orientée | L'attente à distance | Passer par la brèche en se rapprochant | Vitesse d'onde, largeur de brèche, 3 ondes par cycle |
+| **L'Effaceur** | Projette une tache de Néant rampante qui gomme temporairement le sol (zone infranchissable 3 s) | Les couloirs de fuite | Anticiper son trajet, contourner | Vitesse de la tache, durée, plafond de taches simultanées |
+| **Le Miroitier** | Lance des éclats de verre qui ricochent sur les murs et les props | La couverture derrière les obstacles | Lire les angles, se placer hors des lignes de rebond | Deux rebonds maximum, trajectoire prévisualisée |
+| **L'Avaleur de mots** | Absorbe les projectiles du joueur dans un cône frontal puis en recrache une partie | Les builds 100 % distance | Le contourner ou le frapper de dos | Cône de 60°, taux de restitution |
+
+**Rôles de mêlée anti-fuite** (sans rendre toute la mêlée plus rapide que le joueur) :
+- **Bond annoncé du Charognard :** accroupissement visible 0,4 s, puis bond de 120 px plus rapide que le joueur. Il punit la fuite trop proche et s'évite par un pas de côté.
+- **Interception :** certains Rôdeurs visent la position anticipée du joueur au lieu de sa position actuelle. Ils coupent la route au lieu de suivre la file.
+
+**Priorité de prototypage recommandée :**
+1. Présage et bond du Charognard : les moins coûteux, et ils attaquent directement la fuite en ligne droite.
+2. Arpenteur.
+3. Effaceur, qui dépend des règles de terrain du plan 10.
+
+Carillon, Miroitier et Avaleur viennent ensuite, selon les essais. Chaque prototype suit la fiche obligatoire ci-dessous et passe le test « je comprends, je peux réagir, j'apprends » avant d'entrer dans les pools.
+
+**Pools du début :** introduire au moins un rôle à distance original dans **chaque** biome dès la première minute. Utiliser la table temps actif/phase → rôles admissibles, proposée plus bas pour l'introduction progressive. Elle remplace la dépendance aux noms legacy `day_enemy_pool` et `night_enemy_pool`.
 
 ## 3. Fiche obligatoire par rôle
 
