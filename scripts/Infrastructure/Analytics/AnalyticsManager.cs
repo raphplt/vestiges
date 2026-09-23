@@ -21,9 +21,9 @@ public partial class AnalyticsManager : Node
 {
 	public static AnalyticsManager Instance { get; private set; }
 
-	private const string AnalyticsDir = "user://analytics/";
-	private const string SessionFile = "user://analytics/current_session.json";
-	private const string AggregateFile = "user://analytics/aggregate.json";
+	private static string AnalyticsDir => DevelopmentMode.GetSavePath("analytics/");
+	private static string SessionFile => DevelopmentMode.GetSavePath("analytics/current_session.json");
+	private static string AggregateFile => DevelopmentMode.GetSavePath("analytics/aggregate.json");
 
 	// Session courante
 	private readonly Dictionary<string, int> _perkPicks = new();
@@ -35,6 +35,21 @@ public partial class AnalyticsManager : Node
 	private int _totalRuns;
 
 	private EventBus _eventBus;
+
+	internal void FlushProfile() => SaveAggregate();
+
+	internal void ReloadProfile()
+	{
+		_perkPicks.Clear();
+		_deathCauses.Clear();
+		_scores.Clear();
+		_crisesSurvived.Clear();
+		_runDurations.Clear();
+		_events.Clear();
+		_totalRuns = 0;
+		EnsureDirectory();
+		LoadAggregate();
+	}
 
 	public override void _Ready()
 	{
@@ -148,9 +163,7 @@ public partial class AnalyticsManager : Node
 
 	private void EnsureDirectory()
 	{
-		DirAccess dir = DirAccess.Open("user://");
-		if (dir != null && !dir.DirExists("analytics"))
-			dir.MakeDir("analytics");
+		DirAccess.MakeDirRecursiveAbsolute(AnalyticsDir);
 	}
 
 	private void SaveAggregate()

@@ -15,6 +15,14 @@ public partial class SteamManager : Node
 	/// <summary>true si le SDK Steam est initialisé et fonctionnel.</summary>
 	public static bool IsActive { get; private set; }
 
+	/// <summary>Une session ayant servi aux essais ne soumet plus de résultats avant relancement.</summary>
+	internal void DisableForDevelopmentSession()
+	{
+		if (IsActive)
+			SteamAPI.Shutdown();
+		IsActive = false;
+	}
+
 	/// <summary>App ID Steam. 480 = Spacewar (test). Remplacer par le vrai App ID en production.</summary>
 	private const uint AppId = 480;
 
@@ -43,6 +51,12 @@ public partial class SteamManager : Node
 
 	private void InitializeSteam()
 	{
+		if (DevelopmentMode.IsEnabled)
+		{
+			GD.Print("[SteamManager] Profil dev : succès et classements Steam désactivés.");
+			return;
+		}
+
 		if (IsActive)
 			return;
 

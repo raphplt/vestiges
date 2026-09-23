@@ -163,6 +163,7 @@ public partial class HUD : CanvasLayer
 
     public override void _Ready()
     {
+        DevelopmentBadge.AttachTo(this);
         _eventBus = GetNode<EventBus>("/root/EventBus");
         _groupCache = GetNodeOrNull<GroupCache>("/root/GroupCache");
         _eventBus.PlayerDamaged += OnPlayerDamaged;

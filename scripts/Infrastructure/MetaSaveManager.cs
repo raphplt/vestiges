@@ -52,12 +52,18 @@ public class MetaStats
 public static class MetaSaveManager
 {
     private const int CurrentVersion = 2;
-    private const string SavePath = "user://meta_save.json";
-    private const string LegacyArchivePath = "user://meta_save_legacy_v1.json";
+    private static string SavePath => DevelopmentMode.GetSavePath("meta_save.json");
+    private static string LegacyArchivePath => DevelopmentMode.GetSavePath("meta_save_legacy_v1.json");
     private const float VagabondUnlockDurationSec = 12f * 60f;
 
     private static MetaSaveData _data = new();
     private static bool _loaded;
+
+    internal static void ReloadProfile()
+    {
+        _data = new MetaSaveData();
+        _loaded = false;
+    }
 
     public static void Load()
     {
@@ -323,6 +329,13 @@ public static class MetaSaveManager
 
         if (!_data.UnlockedCharacters.Contains("traqueur"))
             _data.UnlockedCharacters.Insert(0, "traqueur");
+
+        // Les nouveaux contenus JSON deviennent disponibles sans remplir de fausses quêtes.
+        if (DevelopmentMode.IsEnabled)
+        {
+            _data.UnlockedCharacters = CharacterDataLoader.GetAll().Select(character => character.Id).ToList();
+            _data.DiscoveredSouvenirs = SouvenirDataLoader.GetAll().Select(souvenir => souvenir.Id).ToList();
+        }
 
         _data.DiscoveredSouvenirs = _data.DiscoveredSouvenirs
             .Where(id => !string.IsNullOrWhiteSpace(id))

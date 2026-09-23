@@ -139,8 +139,8 @@ public class RunRecord
 public static class RunHistoryManager
 {
     private const int CurrentVersion = 2;
-    private const string HistoryPath = "user://run_history.json";
-    private const string LegacyHistoryPath = "user://run_history_legacy_v1.json";
+    private static string HistoryPath => DevelopmentMode.GetSavePath("run_history.json");
+    private static string LegacyHistoryPath => DevelopmentMode.GetSavePath("run_history_legacy_v1.json");
     private const int MaxEntries = 50;
 
     private static List<RunRecord> _history = new();

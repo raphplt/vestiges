@@ -28,7 +28,7 @@ public partial class ScoreManager : Node
     private const int PointsPerPoiExplored = 50;
     private const int PointsBossDefeated = 2500;
     private const int PointsEndgameReached = 1000;
-    private const string HighScorePath = "user://highscore.save";
+    private static string HighScorePath => DevelopmentMode.GetSavePath("highscore.save");
 
     private int _combatScore;
     private int _survivalScore;

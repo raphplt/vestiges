@@ -111,6 +111,7 @@ public partial class HubScreen : Control
 
 		SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
 		BuildUI();
+		DevelopmentBadge.AttachTo(this);
 
 		EnsureDefaultCharacterSelection(gm);
 
@@ -464,7 +465,44 @@ public partial class HubScreen : Control
 		quitBtn.Pressed += () => GetTree().Quit();
 		quitCenter.AddChild(quitBtn);
 
+#if TOOLS
+		if (DevelopmentMode.IsAvailable)
+		{
+			vbox.AddChild(CreateSpacer(16));
+			CheckButton developmentToggle = new()
+			{
+				Name = "DevelopmentToggle",
+				Text = Tr("UI_DEV_TOGGLE"),
+				TooltipText = Tr("UI_DEV_TOGGLE_HINT"),
+				ButtonPressed = DevelopmentMode.IsEnabled,
+				FocusMode = FocusModeEnum.All
+			};
+			developmentToggle.AddThemeFontSizeOverride("font_size", 20);
+			developmentToggle.Toggled += OnDevelopmentModeToggled;
+			vbox.AddChild(developmentToggle);
+		}
+#endif
 	}
+
+#if TOOLS
+	private void OnDevelopmentModeToggled(bool enabled)
+	{
+		if (!DevelopmentMode.SetEnabled(enabled))
+		{
+			(FindChild("DevelopmentToggle", true, false) as CheckButton)?.SetPressedNoSignal(DevelopmentMode.IsEnabled);
+			return;
+		}
+		GameManager manager = GetNode<GameManager>("/root/GameManager");
+		manager.SelectedCharacterId = null;
+		manager.LastRunData = null;
+		manager.LastUnlocks = null;
+		manager.LastQuestCompletions = null;
+		manager.LastVestigesEarned = 0;
+		manager.ActiveMutators.Clear();
+		manager.ChangeState(GameManager.GameState.Hub);
+		GetTree().ReloadCurrentScene();
+	}
+#endif
 
 	private void NavigateToHubTabs()
 	{
