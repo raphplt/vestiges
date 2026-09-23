@@ -11,11 +11,15 @@ Chaque arme doit avoir une raison d'être choisie. Chaque récompense doit amél
 
 Le circuit armes/passifs au level-up reste la recommandation, à articuler avec l’XP plus lente de 03. La validation des huit slots ne tranche pas à elle seule toutes les sources de récompenses ; documenter le choix retenu dans V2 §13.
 
+**Retours supplémentaires du 22 septembre 2026 :** portée du corps à corps actuellement trop faible ; augmenter la proportion d’armes à distance ; prévoir des objets/bonus qui augmentent la portée et le diamètre d’impact. Ces directions sont acquises ; les valeurs, la proportion cible et les objets précis restent à calibrer. La portée de base doit être satisfaisante sans objet correctif obligatoire.
+
 ## 2. Phase 0 — Existant vérifié
 
 Sources : [weapons.json](../../data/weapons/weapons.json), [perks.json](../../data/perks/perks.json), [passifs](../../data/progression/passive_souvenirs.json), [fusions](../../data/progression/fusions.json), [FragmentManager.cs](../../scripts/Progression/FragmentManager.cs), [Player.cs](../../scripts/Core/Player.cs), [PerkManager.cs](../../scripts/Progression/PerkManager.cs), [CursedItemManager.cs](../../scripts/Progression/CursedItemManager.cs).
 
 - 24 armes ; 64 perks réels, dont huit synergies et trois passifs personnages ; 13 passifs de run ; cinq fusions ; trois malédictions.
+- Répartition déclarée au 22 septembre : 12 `melee`, 10 `ranged`, 2 `special`. Vérifier aussi le comportement réel des armes atypiques avant de définir la proportion cible. Exemples de portée de base : lame 60, marteau 55, tuyau 45 ; la portée effective dépend aussi du personnage et des modificateurs.
+- Des bonus existent déjà : perks `range_up` / `aoe_up`, passifs `portee_etendue` / `resonance`. `Player.GetEffectiveWeaponRange()` multiplie ensemble portée d’arme, facteur personnage, `_attackRangeMultiplier` et `_aoeMultiplier`. Auditer ce couplage avant de migrer ou d’ajouter les objets : deux libellés distincts ne prouvent pas deux effets distincts.
 - Quatre armes sont déjà conditionnées par `RequiresSouvenir`. Des quêtes récompensent ces Souvenirs : les déblocages indirects existent.
 - `Player.ResolveWeaponLoot` filtre les Souvenirs requis mais pas source/tier/drop_condition ; `FragmentManager` filtre tier/Souvenir mais pas source. Les restrictions déclarées ne sont donc pas homogènes.
 - `ResolvePerkLoot` tire dans tous les perks, tandis que `PerkManager.PickRandomPerks` applique des filtres. À unifier.
@@ -86,7 +90,24 @@ Sources et effets ci-dessous : déclarations actuelles, pas verdict d'équilibra
 
 Fiche à produire pour chacune : rôle, faiblesse, portée/couverture, cadence, cibles, effet, coût, synergies, accès méta, sources en run, signal visuel/son, comportement contre boss. Verdict autorisé : conserver, différencier, corriger ou réserver ; fusion/suppression seulement après décision.
 
-## 5. Six objets proposés, trois pour le premier prototype
+### Portée du corps à corps et place du combat à distance
+
+1. Mesurer, pour lame/marteau/tuyau puis chaque arme de mêlée, la distance de déclenchement, la zone réellement touchée et la taille du visuel. Tester sans bonus avec les personnages concernés, ennemi immobile puis en approche, en fuite et après dash. Identifier les écarts entre portée affichée, ciblage et collision.
+2. Augmenter les portées de base trop courtes dans les données et comparer avant/après à cadence et dégâts constants. Le joueur doit pouvoir toucher clairement avant le contact ennemi sans superposition des sprites ; conserver les différences entre estoc, arc et frappe circulaire. Régler ensuite les contreparties si nécessaire, avec le tempo de 03.
+3. Augmenter la part des armes à distance dans le catalogue jouable et dans les options réellement accessibles en début de progression. Présenter une cible chiffrée après classement des 24 armes ; le retour ne fixe ni ratio final ni obligation de supprimer des armes de mêlée.
+4. Prioriser des rôles à distance distincts : précision/perforation, dispersion, projectile de retour, impact de zone ou tir guidé. Auditer d’abord les rôles déjà présents ; les nouvelles identités restent à proposer avec 06/08. Vérifier disponibilités, déblocages et pondérations pour que la diversité soit rencontrée en run.
+
+**Recette :** le corps à corps de départ est utilisable sans bonus de portée ; coups visibles et cibles touchées concordent ; la proportion d’options à distance augmente dans le catalogue et les offres accessibles, sur un échantillon de seeds et des profils neuf/avancé.
+
+### Contrat des bonus de portée et de zone
+
+- Distinguer **portée** (allonge de mêlée ou distance utile d’un tir) et **taille de zone d’impact** (rayon/diamètre d’une explosion, onde ou frappe admissible). Documenter par pattern ce qui augmente : allonge, rayon, largeur ou angle. Un bonus de zone ne rallonge pas implicitement tous les tirs.
+- Pour chaque famille compatible, appliquer le même résultat au ciblage nécessaire, à la zone de dégâts et au visuel ; vérifier la durée de vie/distance parcourue des projectiles. Définir explicitement les cas cônes, chaînes et orbites au lieu d’appliquer un multiplicateur global aveugle.
+- Choisir une convention d’affichage cohérente : pour un cercle, +20 % de diamètre signifie +20 % de rayon et +44 % de surface, pas +20 % de surface. Les valeurs des objets restent à proposer ; cette relation sert à contrôler descriptions et équilibrage.
+- Cumul proposé : dimension de base × `(1 + coefficient × nombre d’exemplaires)` ; coefficient dans les données, pas de plafond d’exemplaires. Définir l’ordre avec les passifs existants et éviter la double application d’un effet migré. Tester séparément portée seule, zone seule et combinaison.
+- Les offres doivent annoncer les armes affectées. Tester les grandes piles : lisibilité, coût des recherches de cibles et résultat réel ; les limites de VFX ne doivent pas tronquer silencieusement la zone de dégâts.
+
+## 5. Huit objets proposés, trois pour le premier prototype
 
 Noms, raretés et valeurs sont des propositions. n est le nombre d’exemplaires ; aucune ligne ne comporte de plafond de pile. Tester n = 1, 2, 10, 100 et 1 000 sans supposer ces quantités fréquentes en jeu normal.
 
@@ -98,6 +119,10 @@ Noms, raretés et valeurs sont des propositions. n est le nombre d’exemplaires
 | Photographie Fendue | Rare | Élimination en zone effilochée : +n Essence | Quête de risque, directement |
 | Fil des Noms | Épique | Mort d’une cible marquée : onde de puissance 20 % × n du dégât de référence ; pas de chaîne récursive | Quête de maîtrise ; marquage à valider |
 | Sceau de l’Oubli | Légendaire maudit | Reprendre un objet maudit existant avec gain et contrepartie monotones par pile ; coefficients à mesurer | Quête de défi ; pas avant raccordement réel des effets |
+| Ruban d’Arpenteur | Commun | Augmente la portée des attaques compatibles selon le contrat ci-dessus ; coefficient par exemplaire à calibrer | Initial proposé |
+| Anneau de Résonance | Inhabituel | Augmente le rayon/diamètre des zones d’impact compatibles ; coefficient par exemplaire à calibrer | Initial proposé |
+
+**Premier trio désormais proposé :** Ruban d’Arpenteur, Anneau de Résonance et Éclat de Rémanence, pour éprouver portée, zone et déclenchement. Semelle et Graine restent au catalogue proposé pour un lot suivant. Réutiliser ou migrer les effets existants après audit ; les deux nouveaux noms ne justifient pas de dupliquer un même effet dans plusieurs pools.
 
 Le bouclier temporaire ne s’empile pas sur lui-même à chaque déclenchement, mais sa valeur augmente avec tous les exemplaires. Les Gantelets d’Écho et l’Éclat doivent rester distincts (arme autonome contre modulation d’impacts). Les objets de mobilité spécifiques ne supposent pas un dash déjà implémenté : dépendance 01.
 
@@ -112,17 +137,19 @@ Définir attribution, ordre des effets, cible morte, dégâts secondaires, pause
 3. Définir une politique commune d'éligibilité : type de source, statut méta, contexte de run, slots, doublons, bans et rang.
 4. Remplir la fiche des 24 armes et auditer les 64 perks : effet vivant, legacy, personnage, cumul, synergie.
 5. Migrer les quatre anciens accès par Souvenir vers des déblocages explicites selon 06. Préserver tous les droits acquis et tester un profil neuf sans fragment de lore.
+6. Produire le tableau mêlée/distance/spécial et la cible de répartition ; contractualiser séparément portée et taille d’impact avec les règles de cumul et de migration des bonus existants.
 
 **Vérification :** même contenu bloqué dans tous les chemins génériques ; source garantie respectée ; aucun perk interdit proposé.
 **Garde-fou :** ne pas déduire les règles de loot d'un simple nom « épique » ; pas de perte d'accès sur anciennes sauvegardes.
 
 ### Lot B — Trois armes et trois objets de référence
 
-1. Reprendre `WeaponInstance` et les patterns existants pour lame, arc, marteau.
+1. Reprendre `WeaponInstance` et les patterns existants pour lame, arc, marteau ; corriger d’abord les portées de base de mêlée, avec mesures sans objets et correspondance ciblage/dégâts/visuels.
 2. Créer définitions, inventaire agrégé et effets prototypes distincts des armes/passifs, avec compteurs sans limite de design, raretés et attribution explicite. Reprendre les loaders et modificateurs disponibles ; les nouveaux contrats d’objet restent à créer.
 3. Relier chaque effet à un feedback 02 et à une description 04.
 4. Tester deux builds contrastés et une combinaison atypique ; comparer à absence d'objet.
 5. Mesurer fréquence réelle des déclenchements et coût sous forte densité ; comparer piles 1/10/100/1 000 et nombreux types distincts. Vérifier que chaque doublon améliore l’effet et que le budget visuel ne réduit pas le calcul de récompense.
+6. Vérifier le trio proposé portée/zone/écho : bonus seuls puis combinés, frappe en limite de portée, impact en limite de zone et projectile au bout de sa trajectoire. Ce trio de test ne représente pas la répartition cible du catalogue d’armes.
 
 **Vérification :** effet observé = description ; contribution perceptible ; pas de boucle de procs ni d'effet persistant après run.
 **Garde-fou :** ne pas ajouter tout le catalogue d'objets avant validation de ces trois-là.
@@ -146,6 +173,7 @@ Définir attribution, ordre des effets, cible morte, dégâts secondaires, pause
 2. Raccorder son objectif d'accès de 06, sa fiche Collection de 04 et ses assets de 08.
 3. Régler pondérations et coûts à partir de plusieurs runs et seeds.
 4. Réviser les candidats trop similaires ; proposer regroupement/retrait seulement avec justification observable.
+5. Donner la priorité aux rôles à distance manquants pour atteindre la proportion retenue ; mesurer également leur présence effective dans les offres et les déblocages.
 
 **Vérification :** nouvelles options utiles sans rendre le départ médiocre ; offre compréhensible même slots pleins.
 **Garde-fou :** le nombre de définitions n'est pas le critère de réussite.

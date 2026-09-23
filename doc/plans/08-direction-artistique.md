@@ -5,6 +5,8 @@ Références : [Charte](../CHARTE-GRAPHIQUE.md), Bible §3/4/6–11, V2 §5/19�
 
 ## 1. Intention
 
+**Priorité précisée le 22 septembre :** tous les sprites de personnages sont à refaire. Produire avec 06 une référence commune pour un casting d’au moins cinq à six personnages, valider leurs identités et leurs sprites adaptés en jeu, puis reprendre les mobilités spécifiques de 01 E. Les assets actuels restent des placeholders pendant cette refonte ; aucun n’est considéré comme définitif.
+
 Un monde reconquis par une nature lumineuse, dont les traces humaines se défont. Les objets portent une histoire ; les créatures manifestent une réalité fausse ; les personnages incarnent différentes façons de se souvenir. La puissance du combat et la mélancolie du monde doivent coexister.
 
 Chaque contenu important doit relier **silhouette, comportement, son et fragment d'histoire**. Exemple déjà disponible : La Cloche de l'Institutrice possède un nom, une fonction et un passé implicite ; construire sa mise en scène autour de cette unité.

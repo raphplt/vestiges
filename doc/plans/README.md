@@ -1,8 +1,8 @@
 # VESTIGES — Dossier de plans à valider
 
-Date : 21 septembre 2026 · Version : 0.3 · Statut : **premier socle de déplacement implémenté, recette humaine ouverte ; autres extensions proposées**.
+Date : 22 septembre 2026 · Version : 0.6 · Statut : **socle de déplacement validé par Raphaël ; dash commun validé ; priorité au casting et à la refonte des sprites avant les mobilités spécifiques**.
 
-Ce dossier transforme les retours de Raphaël en lots réalisables. Il couvre le contrôle, les sensations, la boucle, les interfaces, les builds, la progression, les ennemis, l'identité et la compétition. Les décisions acquises et les propositions restantes sont consignées dans le [registre de décisions](DECISIONS.md). À sa demande de commencer le premier plan, le socle technique de 01 est implémenté et testé ; son [compte rendu](01-deplacements.md#7-première-implémentation--21-septembre-2026) distingue mesures automatisées et recette humaine restante. Les nouveaux choix de mobilité D/E restent proposés.
+Ce dossier transforme les retours de Raphaël en lots réalisables. Il couvre le contrôle, les sensations, la boucle, les interfaces, les builds, la progression, les ennemis, l'identité et la compétition. Les décisions acquises et les propositions restantes sont consignées dans le [registre de décisions](DECISIONS.md). Le 22 septembre, Raphaël valide explicitement les déplacements de base refaits et demande de poursuivre le plan 01. Son [compte rendu](01-deplacements.md#7-première-implémentation--21-septembre-2026) distingue mesures automatisées, validation du socle et recette complète restante. Le [compte rendu du lot D](01-deplacements.md#8-prototype-de-mobilité--22-septembre-2026) décrit le dash livré, ses vérifications et les variantes à comparer ; Raphaël valide ensuite le dash livré. Il demande de redessiner les personnages, de valider un catalogue d’au moins cinq à six identités avec de nouveaux sprites, puis seulement de reprendre le lot E. Le [mode dev](../DEV-MODE.md) permet de tester le contenu disponible sans progression préalable.
 
 ## 1. Direction commune
 
@@ -20,12 +20,12 @@ La [Stratégie V2](../VESTIGES-STRATEGIE-V2.md) reste l'autorité gameplay/roadm
 | Plan | Priorité | Décision principale à valider | Dépendances |
 |---|---|---|---|
 | [00 — État des lieux et sources](00-etat-des-lieux.md) | Référence | Constats et limites de l'audit | Aucune |
-| [01 — Déplacements](01-deplacements.md) | P0 | Socle B/C implémenté et testé techniquement ; recette humaine ouverte ; dash/saut à préciser | 03 pour calibrer la mobilité active |
+| [01 — Déplacements](01-deplacements.md) | P0 | Socle B/C et dash D validés ; E après nouveau casting et sprites (06/08) | 03 pour calibrer la mobilité active |
 | [02 — Juiciness, score et récompenses](02-juiciness-score.md) | P0 | Direction validée ; score en run, record au bilan seulement ; refonte mort | 01 pour le ressenti ; cadrage 08 |
 | [03 — Boucle et rythme](03-boucle-et-rythme.md) | P0 | Direction validée ; début plus menaçant et XP moins rapide | Première passe 01/02 |
 | [04 — Interfaces et Hub](04-interfaces-et-hub.md) | P1 | Navigation, sélection, typographie et affichage adaptatif | Cadrage 08 ; contrats 05/06 |
 | [05 — Armes, objets et builds](05-armes-objets-builds.md) | P1 | 4 armes + 4 passifs validés ; objets distincts cumulables sans limite | Hypothèses de tempo 03 |
-| [06 — Personnages, quêtes et défis](06-personnages-quetes-defis.md) | P2 | Casting initial, récompenses, progression et défis | 05 ; présentation 04 |
+| [06 — Personnages, quêtes et défis](06-personnages-quetes-defis.md) | P0 casting ; P2 progression | Casting initial, récompenses, progression et défis | 05 ; présentation 04 |
 | [07 — Bestiaire et rencontres](07-bestiaire-et-rencontres.md) | P2 | Rôles, compositions et nouveaux comportements utiles | 01/03 ; cadrage 08 |
 | [08 — Direction artistique, sprites et lore](08-direction-artistique.md) | Transversal | Référence visuelle, personnages mémorables, pipeline | Cadrage immédiat, production après validation gameplay |
 | [09 — Classement hebdomadaire](09-classement-hebdomadaire.md) | Plus tard | Périodes, règles comparables et intégrité des scores | Score 02 ; équilibre 03/05/06 |
@@ -36,7 +36,7 @@ Les numéros servent à identifier les plans, pas à imposer leur exécution int
 
 ## 3. Séquence recommandée
 
-1. Partir du socle de contrôle validé de 01 et des décisions de 02. Choisir le cadrage de 08 ; définir ensuite la variante de mobilité à prototyper. Obtenir un joueur lisible et des impacts/score/récompenses expressifs.
+1. Utiliser le mode dev pour les essais. Prioriser ensemble 06 (refonte et validation d’au moins cinq à six personnages) et 08 (tous leurs sprites à refaire, échelle et style communs). Valider les identités et les nouveaux sprites en jeu avant les mobilités spécifiques du lot 01 E ; le dash commun reste la référence validée.
 2. Construire une première référence avec le contenu existant et les lots A–C de 03 : contrôle, menace dès le départ, cadence XP, exploration et Résurgence. Réévaluer la difficulté après introduction de mobilité active.
 3. Définir les contrats de contenu de 05 et 06, sélectionner les rôles de 07 et produire les prototypes nécessaires. Réaliser la lisibilité prioritaire de 04, puis assembler l'expérience complète décrite ci-dessous. Les écrans finaux dépendent de ces catégories.
 4. Approfondir les objets cumulables, livrer les déblocages directs, la Collection et le Hub épuré. Ajouter les créatures de 07, les assets de 08 et les améliorations terrain retenues de 10. Un prototype de 11 à la fois, selon ses dépendances.
@@ -44,6 +44,8 @@ Les numéros servent à identifier les plans, pas à imposer leur exécution int
 6. Traiter 09 seulement après stabilisation des règles de score.
 
 Un seul lot d'implémentation ouvert à la fois. Un échec de lisibilité, de performance ou de fun ramène au lot concerné avant expansion.
+
+**Suite immédiate du plan 01 :** la [mesure en combat dense](01-deplacements.md#9-mesure-de-mobilité-en-combat-dense--22-septembre-2026) est réalisée avec 120 ennemis en 720p/1080p ; elle révèle que les 60 FPS constants ne sont pas tenus. Le diagnostic de ces saccades reste un travail technique à mener avant de conclure la recette. Les variantes clavier/manette et le tempo de début de run restent à évaluer ; aucun nouveau mouvement spécifique ne précède le casting. Le prochain lot de conception prioritaire reste 06 A / 08 A : six fiches et une planche commune à présenter, puis une référence visuelle jouable. Les identités et les choix de dimensions/orientations restent à valider ; le numéro 02 n’impose pas de passer avant cette priorité.
 
 ## 4. Expérience de référence proposée
 
@@ -100,4 +102,4 @@ Les réglages numériques proposés sont des points de départ expérimentaux, j
 
 ## 8. Nouveaux retours intégrés
 
-Mobilité expressive clavier/manette : 01/06 ; record uniquement au bilan et bilan majeur : 02/04 ; XP et menace initiale : 03 ; Hub peu textuel et Collection directe : 04 ; objets illimités et quêtes indépendantes du lore : 05/06 ; casting décalé cohérent : 06/08 ; nouveaux mobs et boss de famille : 07 ; terrain : 10 ; innovations : 11 ; fabrication du pixel art homogène : 08.
+Dash commun validé ; casting d’au moins cinq à six personnages et refonte de tous les sprites avant 01 E : 06/08 ; mode dev tout débloqué : [guide](../DEV-MODE.md) ; mobilité expressive clavier/manette : 01/06 ; record uniquement au bilan et bilan majeur : 02/04 ; XP et menace initiale : 03 ; Hub peu textuel et Collection directe : 04 ; objets illimités et quêtes indépendantes du lore : 05/06 ; casting décalé cohérent : 06/08 ; nouveaux mobs et boss de famille : 07 ; terrain : 10 ; innovations : 11 ; fabrication du pixel art homogène : 08.

@@ -2,20 +2,21 @@
 
 > **Version :** 1.1
 > **Date initiale :** 12 mars 2026
-> **Amendement :** 21 septembre 2026
+> **Amendement :** 22 septembre 2026
 > **Statut :** Document stratégique — remplace la roadmap V1 et les sections obsolètes du GDD/Bible
 > **Auteur :** Raphaël + Claude (design partner)
 
 ---
 
-## Amendement de direction — retours validés du 21 septembre 2026
+## Amendement de direction — retours validés des 21 et 22 septembre 2026
 
-Les [décisions de Raphaël](plans/DECISIONS.md) et le [dossier de plans v0.3](plans/README.md) précisent les sections historiques ci-dessous. Statut : décisions de design et plans ; seul le premier socle de déplacement est désormais implémenté et vérifié techniquement, avec recette humaine ouverte ([compte rendu](plans/01-deplacements.md#7-première-implémentation--21-septembre-2026)).
+Les [décisions de Raphaël](plans/DECISIONS.md) et le [dossier de plans v0.6](plans/README.md) précisent les sections historiques ci-dessous. Le socle de déplacement est implémenté, vérifié techniquement et explicitement validé par Raphaël le 22 septembre ([compte rendu](plans/01-deplacements.md#7-première-implémentation--21-septembre-2026)). Le [prototype D est livré](plans/01-deplacements.md#8-prototype-de-mobilité--22-septembre-2026) ; Raphaël valide le dash par défaut ; les variantes alternatives et la recette exhaustive restent ouvertes. La priorité suivante est la refonte du casting et de tous ses sprites avant 01 E.
 
-- Déplacements dans les axes de l’écran et amplitude analogique préservée ; viser une mobilité très fluide clavier/manette. Dash, saut et mobilités spécifiques font l’objet de propositions détaillées à choisir.
+- Déplacements de base dans les axes de l’écran et amplitude analogique préservée validés ; viser une mobilité très fluide clavier/manette. Le dash commun du prototype D est jouable ; ses variantes restent à comparer. Le dash livré est validé par Raphaël. Saut, glissade et mobilités spécifiques attendent la refonte et la validation d’au moins cinq à six personnages avec tous leurs sprites refaits (06/08).
 - Score visible et animé pendant la run ; **aucun record à battre, progression vers un record ou annonce de dépassement en jeu ou en pause**. Record et célébration uniquement au bilan final, qui doit être largement refondu.
 - Début actuellement jugé trop facile : menace à renforcer et niveaux à espacer. La prescription historique de level-up rapide ne bloque pas cette révision ; calibrer par playtests.
 - Quatre armes et quatre passifs conservés ; ajouter un système distinct d’objets avec raretés, sans limite de slots ou d’exemplaires fixée par le design, avec cumul explicite et déblocage partiel initial.
+- Retour du 22 septembre : portée de mêlée trop faible, à augmenter dès les armes de base ; accroître la proportion d’armes à distance ; prévoir des objets/bonus de portée et de diamètre d’impact. Le [plan 05](plans/05-armes-objets-builds.md) distingue allonge et taille de zone et prévoit leur cohérence avec les dégâts et les visuels. Valeurs et ratio final restent à calibrer.
 - Quêtes variées et accès aux armes/objets/personnages **indépendants des Souvenirs**. Migrer les anciens droits sans les retirer. Le lore conserve sa progression narrative, ses constellations et les transformations du Hub ; les anciennes descriptions « Souvenir → accès gameplay » sont à remplacer.
 - Hub très clair et peu textuel ; **Collection armes/objets accessible directement depuis le menu principal**.
 - Casting plus diversifié et potentiellement décalé dans un univers cohérent ; nouvelles créatures demandées. Boss de familles, terrain amélioré et mécaniques originales sont détaillés dans les plans, avec variantes encore proposées.
@@ -703,7 +704,16 @@ Le script de post-processing doit inclure une vérification/correction de l'angl
 - [x] Agrandir la map (doubler la taille pour tester, objectif final 4-5x).
 - [x] Revoir la génération : biomes contigus, pas concentriques.
 - [x] Socle de déplacement écran : amplitude analogique, vitesse diagonale bornée, animation/pas sur mouvement réel et protections hors run ; vérification Godot headless du [plan 01](plans/01-deplacements.md#7-première-implémentation--21-septembre-2026).
+- [x] Validation par Raphaël des déplacements de base refaits (22 septembre 2026, plan 01 B/C).
 - [ ] Recette humaine du socle de déplacement : clavier/manette, terrain et interactions en run, ressenti et caméra (plan 01 A–C).
+- [x] Prototype technique de mobilité commune (plan 01 D) : dash remappable Espace/X, module composé et paramètres JSON, distance stable au stick, recharge/buffer, variantes directe/brève et protection nulle/courte ; régressions automatisées.
+- [x] Protections de mobilité vérifiées : murs/coins, hurt/mort, pause sans buffer résiduel, interruptions coffre/POI et ralentissements ; intégration vraie Main pour liaison automatique Effacement, Néant et eau générée (plan 01 D).
+- [x] Feedback du prototype de mobilité : animation, traînées recyclées selon intensité, jauge de recharge et sons existants ; parcours GL 1280×720 jusqu’au retour Hub et smoke 600 frames ([preuves du plan 01](plans/01-deplacements.md#8-prototype-de-mobilité--22-septembre-2026)).
+- [x] Mesure de mobilité en combat dense : code courant sans/avec dash, 120 ennemis actifs proches, dix cas GL à 720p/1080p ; moyennes, percentiles, pics et mémoire conservés. La cible 60 FPS constants n’est pas atteinte ; cette mesure ne clôt pas la recette D ni le travail de performance ([résultats du plan 01](plans/01-deplacements.md#9-mesure-de-mobilité-en-combat-dense--22-septembre-2026)).
+- [ ] Recette du lot D : comparer les variantes clavier/manette en combat, retenir timings et protection, vérifier le coût en combat dense et recalibrer le début de run (plan 03).
+- [x] Validation par Raphaël du dash commun livré (22 septembre 2026).
+- [ ] Refonte et validation d’au moins cinq à six personnages et de tous leurs sprites avant les mobilités spécifiques (06/08).
+- [ ] Mobilités de personnages : prototypes et profils après casting et nouveaux sprites validés (plan 01 E).
 - [ ] Ajuster le tempo : runs de 15-25 min en gameplay normal.
 - [ ] **PLAYTEST : est-ce que c'est fun ? Est-ce que l'Effacement crée de la tension ? Est-ce que le mouvement permanent fonctionne ?**
 
@@ -759,6 +769,8 @@ Le script de post-processing doit inclure une vérification/correction de l'angl
 - [ ] Sound design complet.
 
 ### Phase G — Early Access prep
+
+- [x] Mode dev explicite : toggle mémorisé dans le Hub au lancement F5, contenu existant débloqué, profil/progression/records/analytics séparés, Steam désactivé ; bascules normal ↔ dev testées et activation exclue des exports Debug/Release ([guide](DEV-MODE.md)).
 
 - [ ] Scope final : 3-4 biomes, 4+ personnages, 8+ types d'ennemis, 30+ perks, 10+ armes, 15+ Souvenirs, quêtes.
 - [ ] Bug fix et performance (60 FPS, 100+ ennemis en endgame).

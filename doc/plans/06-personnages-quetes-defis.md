@@ -1,7 +1,7 @@
 # Plan 06 — Personnages singuliers, quêtes variées et déblocages directs
 
-Version 0.2 · Statut : **quêtes indépendantes du lore et casting diversifié décidés ; contenu proposé**.
-Priorité : P2 · Dépendances : 01 mobilité, 05 disponibilité/objets, 04 Collection, 03 difficulté.
+Version 0.3 · Statut : **quêtes indépendantes du lore et casting diversifié décidés ; contenu proposé**.
+Priorité : P0 pour le casting · Dépendances : 08 pour la refonte de tous les sprites ; 05/04/03 pour progression et intégration. Le casting validé précède désormais 01 E.
 Références : V2 §17/18/25 sous amendement ; [décisions](DECISIONS.md).
 
 ## 1. Direction acquise
@@ -22,6 +22,8 @@ APIs existantes : QuestManager.GetProgressionSnapshots/ResolvePendingProgression
 
 ## 3. Casting proposé
 
+**Correction de priorité du 22 septembre :** Raphaël demande une refonte des personnages et une liste d’au moins cinq à six personnages validés avec les bons sprites, tous à refaire, avant les mobilités spécifiques. Les six concepts ci-dessous constituent une matière à retravailler, pas un casting approuvé. Aucun personnage existant ni son sprite ne constitue une identité définitive à préserver par défaut.
+
 La règle de personnage initial n'a pas encore été arbitrée explicitement : V2 prévoit Vagabond, code actuel Traqueur. Recommandation maintenue : Vagabond pour les nouveaux profils, sans retirer les personnages déjà obtenus. Les conditions ci-dessous sont des propositions de quêtes, sans Souvenir requis.
 
 | Personnage | Singularité cohérente | Mobilité candidate | Accès proposé |
@@ -33,7 +35,7 @@ La règle de personnage initial n'a pas encore été arbitrée explicitement : V
 | Le Facteur sans destination | Sac débordant de lettres à des adresses disparues ; obstination tendre | Glissade sur patins bricolés, virage moins vif | Ouvrir plusieurs caches de deux biomes sur une run |
 | La Scaphandrière sans mer | Casque et bottes de plongée dans un monde où sa mer manque | Saut flottant court, contrôle aérien limité | Vaincre un boss de famille et terminer un défi de terrain |
 
-Objectif proposé : six identités pour le catalogue complet, production en deux lots (trois existantes + Éveillée, puis les deux nouveaux concepts). Les noms/concepts/nombres ne sont pas validés par la demande de diversité seule. Colosse et Ombre de V2 restent des alternatives à arbitrer, pas des ajouts automatiques au-dessus des six.
+Cible de travail : six identités entièrement revues, pour satisfaire la demande d’au moins cinq à six personnages. Valider le catalogue ensemble (rôles, silhouettes et complémentarité), puis refaire les sprites de chaque identité. Les noms/concepts du tableau restent à valider ; les trois personnages existants ne sont pas considérés comme déjà aboutis. Colosse et Ombre de V2 restent des alternatives à arbitrer, pas des ajouts automatiques au-dessus des six.
 
 Fiche obligatoire par personnage : silhouette à taille de jeu, motif sonore, phrase de personnalité, arme initiale, passif chiffré, mobilité, contrepartie, deux synergies et une faiblesse. Au moins une différence mécanique observable au-delà des statistiques. Les mouvements spéciaux se branchent sur le module de 01 avec contrôles communs.
 
@@ -80,7 +82,7 @@ Les chiffres sont des hypothèses. Mesurer le nombre de runs avant récompense, 
 
 1. Cartographier accès actuels et futurs depuis un profil vierge ; conserver les IDs stables.
 2. Séparer quêtes/défis de Journal/Souvenirs dans données et présentation.
-3. Choisir le personnage initial et valider les fiches des quatre premières identités, puis celles des deux candidates.
+3. Présenter six fiches complètes et une planche commune de silhouettes ; choisir le personnage initial et valider le casting d’au moins cinq à six personnages avec Raphaël. Puis refaire et valider tous leurs sprites avec 08 avant 01 E.
 4. Définir chaque condition/récompense et les compteurs réellement manquants ; reprendre EventBus et RunRecord.
 5. Vérifier sources de loot et absence de boucles de déblocage avec 05.
 
@@ -112,8 +114,8 @@ Les chiffres sont des hypothèses. Mesurer le nombre de runs avant récompense, 
 
 ### Lot D — Casting élargi et défis
 
-1. Comparer les mobilités de 01 avec les passifs des personnages ; les prototypes restent remplaçables.
-2. Livrer l'Éveillée puis les deux concepts supplémentaires, un personnage complet à la fois : mécanique, accès, animation, arme, son et menu.
+1. Une fois le casting et ses nouveaux sprites validés, comparer les mobilités de 01 avec les passifs retenus. Les mobilités suivent les personnages ; elles ne déterminent pas leur casting à l’avance.
+2. Intégrer les personnages du catalogue approuvé, un personnage complet à la fois : mécanique, accès, animation, arme, son et menu. L’Éveillée, le Facteur et la Scaphandrière restent des candidats tant que non validés.
 3. Vérifier début plus menaçant pour chaque personnage ; les nouveaux déplacements ne dispensent pas de jouer.
 4. Implémenter un défi pilote puis les suivants, avec offres, score et sauvegarde cohérents.
 5. Ajouter boss de famille et quêtes associées lorsque 07 les rend effectivement disponibles.
