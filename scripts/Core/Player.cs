@@ -69,6 +69,11 @@ public partial class Player : CharacterBody2D
     // Debug
     public bool IsGodMode { get; set; } = false;
 
+    public PlayerMobility Mobility { get; private set; }
+    private MobilityFeedback _mobilityFeedback;
+    private bool _mobilityRequiresRelease;
+    private ErasureManager _erasureManager;
+
     private GameManager _gameManager;
     private GroupCache _groupCache;
 
@@ -101,15 +106,15 @@ public partial class Player : CharacterBody2D
     private AnimatedSprite2D _sprite;
     private bool _hasSprite;
     private enum SpriteFacing { SouthEast, SouthWest, NorthEast, NorthWest }
-    private enum SpriteAction { Idle, Walk, Hurt, Death }
+    private enum SpriteAction { Idle, Walk, Hurt, Death, Dash }
     private SpriteFacing _lastDirection = SpriteFacing.SouthEast;
     private StringName _currentAnimName;
     private static readonly StringName[,] SpriteAnimations =
     {
-        { "SE_idle", "SE_walk", "SE_hurt", "SE_death" },
-        { "SW_idle", "SW_walk", "SW_hurt", "SW_death" },
-        { "NE_idle", "NE_walk", "NE_hurt", "NE_death" },
-        { "NW_idle", "NW_walk", "NW_hurt", "NW_death" }
+        { "SE_idle", "SE_walk", "SE_hurt", "SE_death", "SE_dash" },
+        { "SW_idle", "SW_walk", "SW_hurt", "SW_death", "SW_dash" },
+        { "NE_idle", "NE_walk", "NE_hurt", "NE_death", "NE_dash" },
+        { "NW_idle", "NW_walk", "NW_hurt", "NW_death", "NW_dash" }
     };
     private const float MovementSpeedEpsilon = 0.1f;
     // Bande de stabilité autour des axes : les quatre poses ne doivent pas osciller au stick.
@@ -246,9 +251,14 @@ public partial class Player : CharacterBody2D
         _entityShader ??= GD.Load<Shader>("res://assets/shaders/entity.gdshader");
 
         CreateHarvestBar();
+        Mobility = new PlayerMobility(MobilityConfig.Load());
+        _mobilityFeedback = new MobilityFeedback { Name = "MobilityFeedback" };
+        AddChild(_mobilityFeedback);
+        CacheWorldSetup();
 
         _eventBus = GetNode<EventBus>("/root/EventBus");
         _eventBus.EnemyKilled += OnEnemyKilled;
+        _eventBus.GameStateChanged += OnMovementGameStateChanged;
         _gameManager = GetNode<GameManager>("/root/GameManager");
         _groupCache = GetNode<GroupCache>("/root/GroupCache");
     }
@@ -258,11 +268,15 @@ public partial class Player : CharacterBody2D
         if (_eventBus != null)
         {
             _eventBus.EnemyKilled -= OnEnemyKilled;
+            _eventBus.GameStateChanged -= OnMovementGameStateChanged;
         }
     }
 
     public void InitializeCharacter(CharacterData data)
     {
+        // Le bootstrap crée les services du monde après _Ready, avant cette initialisation.
+        // Refaire la liaison ici couvre aussi une nouvelle scène lorsque l'état est déjà Run.
+        CacheWorldSetup();
         WeaponDataLoader.Load();
 
         _characterId = data.Id;
@@ -653,25 +667,50 @@ public partial class Player : CharacterBody2D
             ? (IsAIControlled ? AIInputOverride.LimitLength() : Input.GetVector("move_left", "move_right", "move_up", "move_down"))
             : Vector2.Zero;
 
-        if (inputDir != Vector2.Zero)
+        if (_mobilityRequiresRelease && !Input.IsActionPressed("mobility"))
+            _mobilityRequiresRelease = false;
+        float terrainFactor = (IsOnWater() ? Mobility.Config.WaterSpeedFactor : 1f) * _slowFactor;
+        Velocity = Mobility.Step(dt, inputDir, Speed * _speedMultiplier, terrainFactor, inputAllowed);
+        if (inputDir != Vector2.Zero || Mobility.IsDashStep)
         {
             CancelPoiExplore();
             CancelChestOpen();
-            float terrainSpeedFactor = IsOnWater() ? 0.5f : 1f;
-            Velocity = inputDir * (Speed * _speedMultiplier * _slowFactor * terrainSpeedFactor);
-            _facingDirection = inputDir.Normalized();
-        }
-        else
-        {
-            Velocity = Vector2.Zero;
+            if (inputDir != Vector2.Zero)
+                _facingDirection = inputDir.Normalized();
         }
 
+        Vector2 previousPosition = GlobalPosition;
+        bool dashMovement = Mobility.IsDashStep;
+        if (dashMovement)
+        {
+            Vector2 requested = Velocity * dt;
+            Vector2 permitted = ClampMobilityTravel(previousPosition, requested);
+            if (!permitted.IsEqualApprox(requested))
+                Mobility.StopDash();
+            Velocity = permitted / dt;
+        }
         MoveAndSlide();
         Vector2 movementVelocity = GetRealVelocity();
+        if (dashMovement)
+        {
+            Vector2 traveled = GlobalPosition - previousPosition;
+            // MoveAndSlide peut dévier le trajet : le point final reste soumis au Néant.
+            if (!ClampMobilityTravel(previousPosition, traveled).IsEqualApprox(traveled))
+            {
+                GlobalPosition = previousPosition;
+                Velocity = Vector2.Zero;
+                movementVelocity = Vector2.Zero;
+                Mobility.StopDash();
+            }
+            if (GetSlideCollisionCount() > 0)
+                Mobility.StopDash();
+        }
+        Mobility.FinishMovement(movementVelocity);
+        _mobilityFeedback.UpdateFeedback(dt, Mobility, GlobalPosition, movementVelocity.LengthSquared() > 0.01f);
         float movementSpeed = movementVelocity.Length();
         float movementRate = movementSpeed > MovementSpeedEpsilon && Speed > 0f ? movementSpeed / Speed : 0f;
         UpdateSpriteAnimation(dt, movementVelocity, movementRate);
-        ProcessFootsteps(dt, movementRate);
+        ProcessFootsteps(dt, dashMovement ? 0f : movementRate);
         ApplyRegen(dt);
         ProcessSlowDecay(dt);
         ProcessPoiExplore(dt);
@@ -683,8 +722,18 @@ public partial class Player : CharacterBody2D
 
     public override void _UnhandledInput(InputEvent @event)
     {
-        if (_isDead || _gameManager.CurrentState != GameManager.GameState.Run)
+        if (_isDead || _gameManager.CurrentState != GameManager.GameState.Run || GetTree().Paused)
             return;
+
+        if (@event.IsActionPressed("mobility") && !@event.IsEcho())
+        {
+            if (!_mobilityRequiresRelease && !IsAIControlled)
+                Mobility.Request();
+            GetViewport().SetInputAsHandled();
+            return;
+        }
+        if (@event.IsActionReleased("mobility"))
+            _mobilityRequiresRelease = false;
 
         if (@event.IsActionPressed("journal"))
         {
@@ -694,6 +743,8 @@ public partial class Player : CharacterBody2D
 
         if (@event.IsActionPressed("interact"))
         {
+            if (Mobility.IsDashing)
+                return;
             if (_isExploringPoi || _isOpeningChest)
             {
                 CancelPoiExplore();
@@ -710,12 +761,59 @@ public partial class Player : CharacterBody2D
         }
     }
 
+    public override void _Notification(int what)
+    {
+        if (what == NotificationPaused || what == NotificationUnpaused || what == NotificationApplicationFocusOut)
+            SuspendMovement();
+    }
+
+    private void OnMovementGameStateChanged(string oldState, string newState)
+    {
+        if (newState == nameof(GameManager.GameState.Run))
+            CacheWorldSetup();
+        SuspendMovement();
+    }
+
+    private void SuspendMovement()
+    {
+        Mobility?.Suspend();
+        _mobilityFeedback?.Suspend();
+        _mobilityRequiresRelease = true;
+        Velocity = Vector2.Zero;
+        CancelPoiExplore();
+        CancelChestOpen();
+    }
+
+    private Vector2 ClampMobilityTravel(Vector2 origin, Vector2 displacement)
+    {
+        // Le dash n'accorde aucun franchissement du vide, même sans collision physique.
+        // Échantillonnage borné à 512 px/tick pour conserver un coût maximal prévisible.
+        Vector2 bounded = displacement.LimitLength(512f);
+        int steps = Mathf.Max(1, Mathf.CeilToInt(bounded.Length() / 2f));
+        Vector2 lastValid = Vector2.Zero;
+        for (int i = 0; i <= steps; i++)
+        {
+            Vector2 offset = bounded * ((float)i / steps);
+            Vector2 position = origin + offset;
+            if (_erasureManager?.GetZonePhaseAt(position) == ErasureManager.ErasureZonePhase.Void)
+                break;
+            if (_worldSetup?.Generator != null && _groundLayer != null)
+            {
+                Vector2I cell = _groundLayer.LocalToMap(_groundLayer.ToLocal(position));
+                if (!_worldSetup.Generator.IsWithinBounds(cell.X, cell.Y) || _worldSetup.Generator.IsErased(cell.X, cell.Y))
+                    break;
+            }
+            lastValid = offset;
+        }
+        return lastValid;
+    }
+
     // --- AI Interaction ---
 
     /// <summary>Programmatic interact trigger for AI simulation. Same logic as the interact input handler.</summary>
     public void AITriggerInteract()
     {
-        if (_isDead || !IsAIControlled) return;
+        if (_isDead || !IsAIControlled || Mobility.IsDashing || _gameManager.CurrentState != GameManager.GameState.Run || GetTree().Paused) return;
         if (_isExploringPoi || _isOpeningChest)
         {
             CancelPoiExplore();
@@ -737,34 +835,21 @@ public partial class Player : CharacterBody2D
 
     private WorldSetup _worldSetup;
     private TileMapLayer _groundLayer;
-    private TerrainType _cachedTerrain;
-    private ulong _cachedTerrainFrame;
 
     private void CacheWorldSetup()
     {
         _worldSetup = GetNodeOrNull<WorldSetup>("/root/Main");
+        _erasureManager = GetNodeOrNull<ErasureManager>("/root/Main/ErasureManager");
         if (_worldSetup != null)
             _groundLayer = _worldSetup.GetNodeOrNull<TileMapLayer>("Ground");
     }
 
     private TerrainType GetCurrentTerrain()
     {
-        ulong frame = Engine.GetProcessFrames();
-        if (frame == _cachedTerrainFrame)
-            return _cachedTerrain;
-        _cachedTerrainFrame = frame;
-
-        if (_worldSetup == null)
-            CacheWorldSetup();
-        if (_worldSetup == null || _groundLayer == null)
-        {
-            _cachedTerrain = TerrainType.Grass;
-            return _cachedTerrain;
-        }
-
+        if (_worldSetup?.Generator == null || _groundLayer == null)
+            return TerrainType.Grass;
         Vector2I cell = _groundLayer.LocalToMap(_groundLayer.ToLocal(GlobalPosition));
-        _cachedTerrain = _worldSetup.Generator.GetTerrain(cell.X, cell.Y);
-        return _cachedTerrain;
+        return _worldSetup.Generator.GetTerrain(cell.X, cell.Y);
     }
 
     private bool IsOnWater() => GetCurrentTerrain() == TerrainType.Water;
@@ -1431,7 +1516,7 @@ public partial class Player : CharacterBody2D
 
     public void TakeDamage(float damage)
     {
-        if (_currentHp <= 0 || IsGodMode)
+        if (_currentHp <= 0 || IsGodMode || Mobility.IsInvulnerable)
             return;
 
         // Dodge check
@@ -1443,9 +1528,10 @@ public partial class Player : CharacterBody2D
 
         float reduced = Mathf.Max(1f, damage - _armor);
         _currentHp -= reduced;
+        Mobility.Hurt(Mobility.Config.HurtRecoverySeconds);
         HitFlash();
         if (_hasSprite)
-            _hurtAnimTimer = 0.2f;
+            _hurtAnimTimer = Mobility.Config.HurtRecoverySeconds;
 
         _eventBus.EmitSignal(EventBus.SignalName.PlayerDamaged, _currentHp, EffectiveMaxHp);
 
@@ -2044,6 +2130,11 @@ public partial class Player : CharacterBody2D
         }
 
         _isDead = true;
+        Mobility.Die();
+        _mobilityFeedback.Suspend();
+        _mobilityFeedback.Visible = false;
+        CancelPoiExplore();
+        CancelChestOpen();
         Velocity = Vector2.Zero;
         foreach (Timer timer in _weaponTimers)
             timer.Stop();
@@ -2139,19 +2230,33 @@ public partial class Player : CharacterBody2D
             };
         }
 
-        // Action : death > hurt > walk > idle
+        // Action : death > hurt > dash > walk > idle
         SpriteAction action;
         if (_isDead)
             action = SpriteAction.Death;
         else if (_hurtAnimTimer > 0f)
             action = SpriteAction.Hurt;
+        else if (Mobility.IsDashStep && movementRate > 0f)
+            action = SpriteAction.Dash;
         else if (movementRate > 0f)
             action = SpriteAction.Walk;
         else
             action = SpriteAction.Idle;
 
+        StringName animation = SpriteAnimations[(int)_lastDirection, (int)action];
+        if (action == SpriteAction.Dash && !_sprite.SpriteFrames.HasAnimation(animation))
+        {
+            action = SpriteAction.Walk;
+            animation = SpriteAnimations[(int)_lastDirection, (int)action];
+        }
         _sprite.SpeedScale = action == SpriteAction.Walk ? movementRate : 1f;
-        PlaySpriteAnim(SpriteAnimations[(int)_lastDirection, (int)action]);
+        if (action == SpriteAction.Dash)
+        {
+            float frames = _sprite.SpriteFrames.GetFrameCount(animation);
+            float fps = (float)_sprite.SpriteFrames.GetAnimationSpeed(animation);
+            _sprite.SpeedScale = frames / (fps * Mobility.Config.DurationSeconds);
+        }
+        PlaySpriteAnim(animation);
     }
 
     private void PlaySpriteAnim(StringName animName)

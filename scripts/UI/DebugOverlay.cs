@@ -22,6 +22,9 @@ public partial class DebugOverlay : CanvasLayer
     private Label _rightColumn;
     private float _updateTimer;
     private bool _visible;
+    private OptionButton _movementResponse;
+    private CheckButton _mobilityInvulnerability;
+    private GroupCache _groupCache;
 
     private RunTracker _runTracker;
     private ScoreManager _scoreManager;
@@ -44,6 +47,12 @@ public partial class DebugOverlay : CanvasLayer
         if (@event is InputEventKey keyEvent && keyEvent.Pressed && !keyEvent.Echo && keyEvent.Keycode == Key.F1)
         {
             _visible = !_visible;
+            if (!_visible)
+            {
+                _movementResponse.GetPopup().Hide();
+                _movementResponse.ReleaseFocus();
+                _mobilityInvulnerability.ReleaseFocus();
+            }
             _panel.Visible = _visible;
 
             if (_visible)
@@ -83,9 +92,11 @@ public partial class DebugOverlay : CanvasLayer
         style.ContentMarginBottom = 8;
         _panel.AddThemeStyleboxOverride("panel", style);
 
+        VBoxContainer content = new();
+        _panel.AddChild(content);
         HBoxContainer hbox = new();
         hbox.AddThemeConstantOverride("separation", 40);
-        _panel.AddChild(hbox);
+        content.AddChild(hbox);
 
         _leftColumn = CreateLabel();
         hbox.AddChild(_leftColumn);
@@ -95,6 +106,32 @@ public partial class DebugOverlay : CanvasLayer
 
         _rightColumn = CreateLabel();
         hbox.AddChild(_rightColumn);
+
+        HBoxContainer trials = new();
+        trials.AddChild(new Label { Text = "Essai mobilité" });
+        _movementResponse = new OptionButton();
+        _movementResponse.AddItem("Réponse directe");
+        _movementResponse.AddItem("Réponse brève (JSON)");
+        _movementResponse.ItemSelected += index =>
+        {
+            if (_groupCache?.GetPlayer() is Player player)
+            {
+                player.Mobility.Suspend();
+                player.Mobility.Response = index == 0 ? MovementResponse.Direct : MovementResponse.Brief;
+            }
+        };
+        trials.AddChild(_movementResponse);
+        _mobilityInvulnerability = new CheckButton { Text = "Fenêtre d'invulnérabilité d'essai" };
+        _mobilityInvulnerability.Toggled += enabled =>
+        {
+            if (_groupCache?.GetPlayer() is Player player)
+            {
+                player.Mobility.Suspend();
+                player.Mobility.UseInvulnerabilityTrial = enabled;
+            }
+        };
+        trials.AddChild(_mobilityInvulnerability);
+        content.AddChild(trials);
 
         AddChild(_panel);
     }
@@ -119,11 +156,17 @@ public partial class DebugOverlay : CanvasLayer
         _erasureManager ??= currentScene.GetNodeOrNull<ErasureManager>("ErasureManager");
         _crisisManager ??= currentScene.GetNodeOrNull<Events.CrisisManager>("CrisisManager");
         _gameManager ??= GetNodeOrNull<GameManager>("/root/GameManager");
+        _groupCache ??= GetNodeOrNull<GroupCache>("/root/GroupCache");
     }
 
     private void RefreshDisplay()
     {
         EnsureReferences();
+        if (_groupCache?.GetPlayer() is Player player)
+        {
+            _movementResponse.Select(player.Mobility.Response == MovementResponse.Direct ? 0 : 1);
+            _mobilityInvulnerability.SetPressedNoSignal(player.Mobility.UseInvulnerabilityTrial);
+        }
         UpdateLeftColumn();
         UpdateCenterColumn();
         UpdateRightColumn();

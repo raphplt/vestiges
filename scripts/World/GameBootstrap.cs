@@ -58,12 +58,15 @@ public partial class GameBootstrap : Node
         ScoreManager scoreManager, RunTracker runTracker,
         PlayerProgression progression, FragmentManager fragmentManager)
     {
+        // Le parent termine ses _Ready avant de recevoir l'overlay et les nœuds de warmup.
+        GetTree().Paused = true;
+        await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+
         // --- Créer et afficher l'overlay de chargement ---
         GameLoadingOverlay overlay = new() { Name = "GameLoadingOverlay" };
         GetNode("..").AddChild(overlay);
 
-        // Pause le gameplay pendant le chargement
-        GetTree().Paused = true;
+        // L'overlay doit continuer à s'animer pendant la pause de chargement.
         overlay.ProcessMode = ProcessModeEnum.Always;
 
         // --- Shader warmup (force la compilation GPU pendant l'overlay) ---

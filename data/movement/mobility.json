@@ -1,0 +1,15 @@
+{
+  "duration_seconds": 0.15,
+  "speed_multiplier": 2.4,
+  "cooldown_seconds": 2.5,
+  "input_buffer_seconds": 0.08,
+  "response": "direct",
+  "acceleration_seconds": 0.06,
+  "braking_seconds": 0.04,
+  "hurt_recovery_seconds": 0.2,
+  "invulnerability_seconds": 0.0,
+  "trial_invulnerability_seconds": 0.06,
+  "water_speed_factor": 0.5,
+  "start_audio": "sfx_pas_gravier",
+  "end_audio": "sfx_pas_beton"
+}

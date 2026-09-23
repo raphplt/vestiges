@@ -83,6 +83,11 @@ public static class VfxFactory
 	private static Texture2D _dashTrailFrame1;
 	private static Texture2D _dashTrailFrame2;
 	private static Texture2D _dashTrailFrame3;
+	private static Texture2D[] _dashTrailTextures;
+
+	/// <summary>Partage les textures existantes avec les traînées préallouées du joueur.</summary>
+	public static Texture2D[] GetDashTrailTextures() => _dashTrailTextures ??=
+		new[] { DashTrailFrame1, DashTrailFrame2, DashTrailFrame3 };
 	private static Texture2D _dissolutionFrame1;
 	private static Texture2D _dissolutionFrame2;
 	private static Texture2D _dissolutionFrame3;

@@ -24,14 +24,19 @@ public partial class MovementRegression : Node2D
             Input.UseAccumulatedInput = false;
             IsolateInputs();
             _manager = GetNode<GameManager>("/root/GameManager");
-            _manager.ChangeState(GameManager.GameState.Run);
-            _player = GD.Load<PackedScene>("res://scenes/Player.tscn").Instantiate<Player>();
-            AddChild(_player);
-            _player.InitializeCharacter(CharacterDataLoader.Get("traqueur"));
-            // Un seul appel du vrai contrôleur par tick physique, piloté par le banc.
-            _player.SetPhysicsProcess(false);
-            _sprite = _player.GetNode<AnimatedSprite2D>("Sprite");
-            await RunChecks();
+            if (Array.IndexOf(OS.GetCmdlineUserArgs(), "--run-integration") >= 0)
+                await RunWorldIntegration();
+            else
+            {
+                _manager.ChangeState(GameManager.GameState.Run);
+                _player = GD.Load<PackedScene>("res://scenes/Player.tscn").Instantiate<Player>();
+                AddChild(_player);
+                _player.InitializeCharacter(CharacterDataLoader.Get("traqueur"));
+                // Un seul appel du vrai contrôleur par tick physique, piloté par le banc.
+                _player.SetPhysicsProcess(false);
+                _sprite = _player.GetNode<AnimatedSprite2D>("Sprite");
+                await RunChecks();
+            }
             GD.Print($"[MovementRegression] RESULT failures={_failures}");
             GetTree().Quit(_failures == 0 ? 0 : 1);
         }
@@ -149,7 +154,11 @@ public partial class MovementRegression : Node2D
         Check(_player.Position.Y > slideStart.Y + 20f && _player.Position.X < 39f, "glissement contre mur préservé");
         wall.QueueFree();
 
+        await Step(1);
+        await RunMobilityChecks();
         _player.TakeDamage(10000f);
+        Check(_player.Mobility.State == MobilityState.Death && _player.Mobility.BufferRemaining == 0f,
+            "mort en dash : état Death et buffer vide");
         Check((await Measure(2)).Length() < 0.01f && _player.Velocity == Vector2.Zero, "mort : mouvement arrêté");
         Check(_sprite.Animation.ToString().EndsWith("_death") && _sprite.SpeedScale == 1f, "mort : animation à cadence normale");
     }
@@ -167,7 +176,7 @@ public partial class MovementRegression : Node2D
     private static void IsolateInputs()
     {
         // Ignorer les périphériques branchés sur la machine qui exécute ce banc.
-        foreach (string action in new[] { "move_left", "move_right", "move_up", "move_down" })
+        foreach (string action in new[] { "move_left", "move_right", "move_up", "move_down", "mobility" })
         {
             Godot.Collections.Array<InputEvent> bindings = InputMap.ActionGetEvents(action);
             InputMap.ActionEraseEvents(action);

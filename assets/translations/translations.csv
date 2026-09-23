@@ -1,4 +1,5 @@
 keys,fr,en
+UI_MOBILITY,Mobilité,Mobility
 UI_SETTINGS,PARAMETRES,SETTINGS
 UI_CLOSE,"[Echap] ou [X] Fermer","[Esc] or [X] Close"
 UI_AUDIO,Audio,Audio
@@ -140,3 +141,6 @@ JOURNAL_SELECT,Selectionner un fragment pour le lire.,Select a fragment to read.
 LOADING_SHADERS,Preparation des shaders...,Preparing shaders...
 LOADING_CREATURES,Preparation des creatures...,Preparing creatures...
 LOADING_INIT,Initialisation...,Initializing...
+UI_DEV_MODE,MODE DEV · Tout débloqué,DEV MODE · All unlocked
+UI_DEV_TOGGLE,Dev : tout débloqué,Dev: unlock everything
+UI_DEV_TOGGLE_HINT,Profil séparé. Recharge le Hub et mémorise le choix pour F5.,Separate profile. Reloads the Hub and remembers the choice for F5.

@@ -21,6 +21,7 @@ public partial class InputRemapManager : Node
 		new ActionDef("move_left", "UI_MOVE_LEFT", Key.A, JoyButton.DpadLeft),
 		new ActionDef("move_right", "UI_MOVE_RIGHT", Key.D, JoyButton.DpadRight),
 		new ActionDef("interact", "UI_INTERACT", Key.E, JoyButton.A),
+		new ActionDef("mobility", "UI_MOBILITY", Key.Space, JoyButton.X),
 		new ActionDef("journal", "UI_JOURNAL", Key.J, JoyButton.Back),
 	};
 
