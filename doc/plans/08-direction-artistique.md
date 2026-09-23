@@ -88,7 +88,7 @@ La recommandation initiale ci-dessous reste utile pour ses contraintes (densité
 - Les huit directions et toutes les animations découlent du même modèle. Environ 0,5 s par frame, 136 frames par personnage.
 
 **Livrables :**
-- Six modèles : Vagabond, Traqueur, Forgeuse, Éveillée, Facteur, Scaphandrière.
+- Six modèles : Vagabond, Traqueur, Forgeuse, Éveillée, Facteur, Scaphandrière (cadre 32×48 après le retour d'échelle).
 - Bibliothèque d'animations commune, modulée par l'allure : idle 4, walk 4, dash 3, hurt 2, death 4.
 - Planche de casting (`tools/character_lineup.py`) : silhouettes noires, sol ancré et sol effacé, taille réelle.
 - Intégration en jeu du Vagabond (qui n'avait jusque-là aucun `sprite_folder` et s'affichait en polygone), du Traqueur et de la Forgeuse (qui n'avait aucun sprite).
@@ -98,6 +98,13 @@ La recommandation initiale ci-dessous reste utile pour ses contraintes (densité
 - `CharacterSpriteLoader` charge E/SE/S/SW/W/NW/N/NE et vérifie l'existence des frames avec `ResourceLoader.Exists`. `FileAccess.FileExists` aurait échoué sur les textures remappées d'un export.
 - `sprite_feet_offset` ancre les pieds sur la position au sol.
 - Les planches et aperçus hérités du Traqueur, ainsi que la documentation 16×24 du Vagabond, sont retirés.
+
+**Retour de Raphaël (23 septembre, capture en jeu) :** « le perso apparaît comme un géant, c'est un peu abusé ».
+- Le modèle rendu à 1 px par unité mesurait environ 60 px de monde, contre 20 à 35 px pour les ennemis et les décors.
+- Le pipeline a maintenant une échelle de rendu (`MODEL_SCALE` = 0,62) et un cadre de 32×48, avec les pieds en (16, 45). Les personnages font environ 35 px de haut, sac ou arc compris.
+- Le suréchantillonnage passe à 4×4 pour conserver les détails fins à cette taille.
+- La décision « 48×64 » est donc remplacée par une taille calée sur le monde. Les huit orientations restent.
+- La planche réduite reste lisible : silhouettes distinctes, attributs reconnaissables.
 
 **Points ouverts pour Raphaël :**
 - **Lisibilité du Traqueur** : vert forêt de la charte sur la forêt, il se fond dans le décor en jeu. Pistes : cape plus sombre ou plus désaturée, accent beige plus présent, contour plus contrasté.

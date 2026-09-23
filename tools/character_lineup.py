@@ -15,7 +15,7 @@ from PIL import Image, ImageDraw
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from tools.sprites.render import render, screen_direction_to_yaw  # noqa: E402
+from tools.sprites.render import FRAME_SIZE, render, screen_direction_to_yaw  # noqa: E402
 from tools.sprites.rig import build_skeleton  # noqa: E402
 
 CAST = ["vagabond", "traqueur", "forgeuse", "eveillee", "facteur", "scaphandriere"]
@@ -32,7 +32,7 @@ def main() -> None:
     args = parser.parse_args()
 
     scale = args.scale
-    cell_w, cell_h = 48 * scale, 64 * scale
+    cell_w, cell_h = FRAME_SIZE[0] * scale, FRAME_SIZE[1] * scale
     rows = [("silhouette", GROUND_ANCHORED), ("ancré", GROUND_ANCHORED), ("effacé", GROUND_ERASED)]
     width = len(args.ids) * len(VIEWS) * cell_w
     sheet = Image.new("RGBA", (width, 30 + len(rows) * cell_h + 80), (40, 44, 36, 255))
@@ -58,7 +58,7 @@ def main() -> None:
                 else:
                     sheet.alpha_composite(big, (x, y))
             # Taille réelle sous la planche, pour juger la lecture au zoom de jeu.
-            sheet.alpha_composite(sprite, (x0 + view * cell_w + cell_w // 2 - 24, 30 + len(rows) * cell_h + 8))
+            sheet.alpha_composite(sprite, (x0 + view * cell_w + (cell_w - FRAME_SIZE[0]) // 2, 30 + len(rows) * cell_h + 8))
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
     sheet.save(args.output)

@@ -103,6 +103,15 @@ Deux seeds (221092026 et 777), médianes par minute :
 - L'IA n'esquive pas et ne choisit pas ses améliorations : les éliminations et les niveaux mesurés ne représentent pas un joueur humain.
 - Avec B, le niveau 5 du bot arrive toujours vers 106–135 s, mais la suite accélère (niveau 10 vers 165 s). À vérifier en jeu : si la montée redevient trop rapide, appliquer l'essai XP (+25 %).
 
+**Retour de Raphaël sur B (23 septembre, soir) :** « le jeu est peut-être devenu trop dur (trop d'ennemis dès le début, ou bien attaques à distance trop fortes) ».
+
+**Configuration C appliquée, non mesurée :**
+- cible locale de 14 ennemis + 6 par minute, rafales de 4 ;
+- Présage : recharge de 3,6 s, 2 marques simultanées au plus ;
+- bond du Charognard : recharge de 4,5 s.
+
+Le banc relève désormais un indice de pression : les dégâts reçus par minute sans esquive. La comparaison B/C a été interrompue ; elle est à relancer avec `tools/measure_density.sh`.
+
 **Ordre des essais révisé :** l'essai menace (étape 4) passe avant l'essai XP (étape 3), conformément à l'hypothèse de Raphaël. On garde un seul groupe de paramètres à la fois. Si la menace revue ne suffit pas à espacer les premiers niveaux, on applique ensuite +25 % sur les seuils XP.
 
 1. Mesurer sur les cinq premières minutes : temps par niveau, XP/ennemi et sources annexes, fréquence des écrans de choix, dégâts reçus, temps d’élimination, distance des menaces et durée passée simplement à reculer.

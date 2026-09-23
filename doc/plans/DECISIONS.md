@@ -32,7 +32,7 @@ Ce registre intègre les retours structurants après la première lecture des pl
 | Innovation | Proposer des mécaniques originales précises | Nouveau plan 11, propositions non approuvées |
 | Art | Pixel art accepté, suffisamment détaillé et uniforme entre les sprites ; choisir une méthode de production | 08, recommandation explicite |
 | Personnage initial | Vagabond pour les nouveaux profils (23 septembre) ; les profils existants conservent leurs personnages | 06 B, migration à écrire |
-| Format des sprites joueur | 48×64, huit orientations (23 septembre) | 08 A/B ; `CharacterSpriteLoader` à étendre de 4 à 8 directions |
+| Format des sprites joueur | Huit orientations ; 48×64 abandonné le même jour car « géant » en jeu : cadre 32×48, ~35 px de haut (23 septembre) | 08 : `MODEL_SCALE`, chargeur 8 directions livré |
 | Production des sprites | Procédurale par scripts, « qualité maximale », retouches éventuelles de Raphaël ; le procédural doit suffire (23 septembre) | 08 : pipeline de génération à la place de la recommandation « dessin puis retouche » |
 | Casting | Six personnages validés le 23 septembre ; personnages « atypiques » encouragés | 06 ; sprites pilotes 08 |
 | Densité d'ennemis | Manque ressenti ; mesures objectives et comparaisons demandées (23 septembre) | 03 : banc de densité, anneau d'apparition calé sur l'écran, densité croissante |

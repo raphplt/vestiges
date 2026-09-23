@@ -2,7 +2,7 @@
 Rendu d'un modèle SDF en sprite pixel art isométrique.
 
 Caméra orthographique inclinée de 30° (projection 2:1 des tuiles), lumière fixe à l'écran venant du haut-gauche
-(charte §5). Suréchantillonnage 3×3 pour décider couverture/matériau/ton d'un pixel, puis passes pixel art :
+(charte §5). Suréchantillonnage 4×4 pour décider couverture/matériau/ton d'un pixel, puis passes pixel art :
 bandes de ton par rampe, lignes internes sur rupture de profondeur, contour sel-out extérieur, nettoyage des orphelins.
 """
 from __future__ import annotations
@@ -20,6 +20,12 @@ VIEW = np.array([0.0, -np.sin(PITCH), -np.cos(PITCH)])
 SCREEN_RIGHT = np.array([1.0, 0.0, 0.0])
 SCREEN_UP = np.array([0.0, np.cos(PITCH), -np.sin(PITCH)])
 LIGHT = np.array([-0.55, 0.85, 0.5]) / np.linalg.norm([-0.55, 0.85, 0.5])
+
+# Format des personnages : cadre, point des pieds et pixels par unité de modèle.
+# Le modèle mesure ~60 unités ; à 0,62 px/unité il fait ~35 px, à l'échelle des ennemis et décors du monde.
+FRAME_SIZE = (32, 48)
+FRAME_PIVOT = (16.0, 45.0)
+MODEL_SCALE = 0.62
 
 SHADE_THRESHOLDS = (0.34, 0.56, 0.8)
 DEPTH_JUMP = 2.6
@@ -63,8 +69,8 @@ def _normals(parts: Sequence[Part], points: np.ndarray) -> np.ndarray:
 
 
 def render(parts: Sequence[Part], materials: Sequence[Material], yaw: float,
-           size: tuple[int, int] = (48, 64), pivot: tuple[float, float] = (24.0, 60.0),
-           supersample: int = 3) -> Image.Image:
+           size: tuple[int, int] = FRAME_SIZE, pivot: tuple[float, float] = FRAME_PIVOT,
+           scale: float = MODEL_SCALE, supersample: int = 4) -> Image.Image:
     width, height = size
     ss = supersample
     # Rayons exprimés dans l'espace du modèle : la lumière reste fixe à l'écran quelle que soit l'orientation.
@@ -75,8 +81,8 @@ def render(parts: Sequence[Part], materials: Sequence[Material], yaw: float,
     light = to_model @ LIGHT
 
     sub = (np.arange(ss) + 0.5) / ss
-    xs = (np.arange(width)[:, None] + sub[None, :]).reshape(-1) - pivot[0]
-    ys = pivot[1] - (np.arange(height)[:, None] + sub[None, :]).reshape(-1)
+    xs = ((np.arange(width)[:, None] + sub[None, :]).reshape(-1) - pivot[0]) / scale
+    ys = (pivot[1] - (np.arange(height)[:, None] + sub[None, :]).reshape(-1)) / scale
     grid_y, grid_x = np.meshgrid(ys, xs, indexing="ij")
     plane = grid_x.reshape(-1, 1) * right + grid_y.reshape(-1, 1) * up
     origins = plane - view * RAY_RANGE * 0.5
@@ -91,7 +97,7 @@ def render(parts: Sequence[Part], materials: Sequence[Material], yaw: float,
             break
         d, _ = _evaluate(parts, origins[index] + view * t[index, None])
         t[index] += d * 0.85
-        landed = d < 0.02
+        landed = d < 0.03
         hit[index[landed]] = True
         active[index[landed | (t[index] > RAY_RANGE)]] = False
 

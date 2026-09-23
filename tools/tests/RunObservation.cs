@@ -134,7 +134,12 @@ public partial class RunObservation : Node
     private async Task MeasureDensity(double seconds, ulong seed)
     {
         RunTracker tracker = _world.GetNode<RunTracker>("RunTracker");
-        List<string> rows = new() { "t,visible,near600,alive,spawned,killed,level" };
+        List<string> rows = new() { "t,visible,near600,alive,spawned,killed,level,hit_damage" };
+        // Indice de pression : dégâts que les ennemis infligent à un joueur qui n'esquive jamais (invincible ici).
+        double hitDamage = 0;
+        EventBus eventBus = GetNode<EventBus>("/root/EventBus");
+        EventBus.PlayerHitByEventHandler onHit = (_, damage) => hitDamage += damage;
+        eventBus.PlayerHitBy += onHit;
         List<int> visibleSamples = new();
         Dictionary<int, double> levelTimes = new();
         int lastLevel = 1;
@@ -209,9 +214,10 @@ public partial class RunObservation : Node
                 firstVisible = t;
             visibleSamples.Add(visible);
             rows.Add(string.Create(CultureInfo.InvariantCulture,
-                $"{t:F0},{visible},{near},{alive},{tracker.TotalSpawned},{tracker.TotalKilled},{level}"));
+                $"{t:F0},{visible},{near},{alive},{tracker.TotalSpawned},{tracker.TotalKilled},{level},{hitDamage:F0}"));
         }
 
+        eventBus.PlayerHitBy -= onHit;
         using (FileAccess csv = FileAccess.Open($"{_output}/density-{seed}.csv", FileAccess.ModeFlags.Write))
             csv.StoreString(string.Join("\n", rows) + "\n");
 

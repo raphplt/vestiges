@@ -20,7 +20,7 @@
             "distance": 120,
             "leap_seconds": 0.18,
             "recovery_seconds": 0.35,
-            "cooldown_seconds": 3.5,
+            "cooldown_seconds": 4.5,
             "hit_range": 30,
             "damage_multiplier": 1.2,
             "marker_width": 10,
