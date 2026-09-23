@@ -58,7 +58,22 @@ Conséquences :
 
 Le choix d'une nouvelle résolution ou de dimensions hors charte exige une modification explicite de celle-ci après validation. Aucun fournisseur, outil payant ou budget externe n'est engagé par ce plan.
 
-## 4. Recommandation ferme de méthode, à valider visuellement
+## 4. Méthode de production
+
+**Décision de Raphaël du 23 septembre :**
+- Production **procédurale par scripts**, en visant la qualité maximale. Raphaël retouchera éventuellement ; le procédural doit suffire.
+- Joueur en **48×64**, **huit orientations**.
+- Personnage initial : le Vagabond.
+
+Conséquences pour le pipeline :
+- Les générateurs Python existants (`scripts/generate_*.py`, `tools/`) sont repris et unifiés en une bibliothèque commune : palette master, contours sel-out, lumière orientée, gabarits de proportions, poses clés, puis dérivation des frames.
+- On n'écrit plus un script isolé par personnage avec ses propres conventions.
+- Chaque sortie passe un contrôle automatique : dimensions, palette, pieds et pivot, frames manquantes. Elle est aussi rendue en contact sheet à taille réelle, pour relecture.
+- Le pilote (§5 lot A) sert de juge. Si la qualité procédurale plafonne, les poses maîtresses peuvent être retouchées à la main et le script en dérive les frames.
+
+La recommandation initiale ci-dessous reste utile pour ses contraintes (densité commune, scène étalon, contrôle), mais la méthode de fabrication est tranchée.
+
+### Recommandation initiale (22 septembre), remplacée pour la méthode
 
 **Choix recommandé : pixel art dessiné et animé à une densité commune, produit à partir d’une scène étalon, avec retouche contrôlée et pipeline automatisé.** L’IA peut aider aux recherches de silhouettes/matières ou à une base de sprite, mais chaque résultat doit être redessiné/normalisé selon les mêmes références. Des générations indépendantes « pixel art détaillé » ne constituent pas une méthode de cohérence ; générer chaque frame indépendamment n’est pas le pipeline recommandé pour les personnages.
 

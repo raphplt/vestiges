@@ -1,5 +1,7 @@
+using System.Collections.Generic;
 using Godot;
 // V2: Vestiges.Base retire
+using Vestiges.Combat.Abilities;
 using Vestiges.Core;
 using Vestiges.Infrastructure;
 using Vestiges.World;
@@ -139,9 +141,17 @@ public partial class Enemy : CharacterBody2D
 	private ShaderMaterial _spriteMaterial;
 	private Tween _hitFlashTween;
 
+	// Capacités composées décrites par le bloc "abilities" du JSON, réutilisées d'un spawn à l'autre
+	private readonly List<IEnemyAbility> _abilities = new();
+	private readonly Dictionary<string, IEnemyAbility> _abilityCache = new();
+	private bool _abilityReplacesAttack;
+
 	public bool IsActive { get; private set; }
 	public bool IsDying => _isDying;
 	public float HpRatio => _maxHp > 0 ? _currentHp / _maxHp : 0f;
+	internal float Damage => _damage;
+	internal float SlowFactor => _slowFactor;
+	internal bool IsDisoriented => _disorientTimer > 0f;
 
 	public override void _Ready()
 	{
@@ -212,6 +222,7 @@ public partial class Enemy : CharacterBody2D
 		_groupCache ??= GetNode<Core.GroupCache>("/root/GroupCache");
 
 		ConfigureVisual(data);
+		ConfigureAbilities(data);
 
 		Visible = true;
 		SetPhysicsProcess(true);
@@ -319,6 +330,7 @@ public partial class Enemy : CharacterBody2D
 		_hitFlashTween = null;
 		_modifierAuraTween?.Kill();
 		_modifierAuraTween = null;
+		CancelAbilities();
 
 		IsActive = false;
 		_isDying = false;
@@ -410,6 +422,8 @@ public partial class Enemy : CharacterBody2D
 		{
 			ProcessIgnite(dt);
 			ProcessBleed(dt);
+			// Une annonce en cours ne doit pas rester figée à l'écran hors du traitement complet.
+			CancelAbilities();
 
 			// Mouvement simplifié vers la cible sans MoveAndSlide complet
 			Vector2 direction = (_player.GlobalPosition - GlobalPosition).Normalized();
@@ -428,6 +442,13 @@ public partial class Enemy : CharacterBody2D
 		// Colosse en charge : skip le mouvement normal
 		if (_isCharging)
 		{
+			MoveAndSlide();
+			return;
+		}
+
+		if (ProcessAbilities(distToPlayer, dt))
+		{
+			UpdateSpriteAnimation(dt);
 			MoveAndSlide();
 			return;
 		}
@@ -624,7 +645,7 @@ public partial class Enemy : CharacterBody2D
 	{
 		Velocity = Vector2.Zero;
 		_attackTimer -= delta;
-		if (distToPlayer <= _attackRange && _attackTimer <= 0f)
+		if (!_abilityReplacesAttack && distToPlayer <= _attackRange && _attackTimer <= 0f)
 		{
 			ShootProjectile();
 			_attackTimer = _rangedAttackCooldown;
@@ -774,12 +795,10 @@ public partial class Enemy : CharacterBody2D
 				Vector2 direction = (_player.GlobalPosition - GlobalPosition).Normalized();
 				Velocity = direction * _speed;
 
-				if (distToPlayer < MeleeRange && _attackTimer <= 0f)
+				if (!_abilityReplacesAttack && distToPlayer < MeleeRange && _attackTimer <= 0f)
 				{
-					_eventBus.EmitSignal(EventBus.SignalName.PlayerHitBy, _enemyId, _damage);
-					_player.TakeDamage(_damage);
+					HitPlayer(_player, _damage);
 					_attackTimer = _meleeAttackCooldown;
-					TriggerAttackAnim();
 				}
 			}
 			else if (_enemyType == "ranged")
@@ -794,7 +813,7 @@ public partial class Enemy : CharacterBody2D
 					Velocity = Vector2.Zero;
 				}
 
-				if (distToPlayer <= _attackRange && _attackTimer <= 0f)
+				if (!_abilityReplacesAttack && distToPlayer <= _attackRange && _attackTimer <= 0f)
 				{
 					ShootProjectile();
 					_attackTimer = _rangedAttackCooldown;
@@ -825,12 +844,10 @@ public partial class Enemy : CharacterBody2D
 		Velocity = direction * _speed * _slowFactor;
 
 		_attackTimer -= delta;
-		if (distToPlayer < MeleeRange && _attackTimer <= 0f)
+		if (!_abilityReplacesAttack && distToPlayer < MeleeRange && _attackTimer <= 0f)
 		{
-			_eventBus.EmitSignal(EventBus.SignalName.PlayerHitBy, _enemyId, _damage);
-			_player.TakeDamage(_damage);
+			HitPlayer(_player, _damage);
 			_attackTimer = _meleeAttackCooldown;
-			TriggerAttackAnim();
 		}
 	}
 
@@ -853,7 +870,7 @@ public partial class Enemy : CharacterBody2D
 		}
 
 		_attackTimer -= delta;
-		if (distToPlayer <= _attackRange && _attackTimer <= 0f)
+		if (!_abilityReplacesAttack && distToPlayer <= _attackRange && _attackTimer <= 0f)
 		{
 			ShootProjectile();
 			_attackTimer = _rangedAttackCooldown;
@@ -1146,6 +1163,7 @@ public partial class Enemy : CharacterBody2D
 	private void Die()
 	{
 		_isDying = true;
+		CancelAbilities();
 		_modifierAuraTween?.Kill();
 		_igniteDps = 0f;
 		_igniteTimer = 0f;
@@ -1497,6 +1515,68 @@ public partial class Enemy : CharacterBody2D
 			_sprite.Play(animName);
 			_currentAnimName = animName;
 		}
+	}
+
+	private void ConfigureAbilities(EnemyData data)
+	{
+		_abilities.Clear();
+		_abilityReplacesAttack = false;
+
+		foreach (KeyValuePair<string, EnemyAbilityData> entry in data.Abilities)
+		{
+			if (!_abilityCache.TryGetValue(entry.Key, out IEnemyAbility ability))
+			{
+				ability = EnemyAbilityFactory.Create(entry.Key, this);
+				if (ability == null)
+				{
+					GD.PushWarning($"[Enemy] Capacité inconnue '{entry.Key}' pour {data.Id}");
+					continue;
+				}
+				_abilityCache[entry.Key] = ability;
+			}
+
+			ability.Configure(entry.Value);
+			_abilities.Add(ability);
+			_abilityReplacesAttack |= ability.ReplacesBaseAttack;
+		}
+	}
+
+	/// <summary>Retourne true si une capacité pilote le mouvement de ce tick.</summary>
+	private bool ProcessAbilities(float distToPlayer, float delta)
+	{
+		bool controlsMovement = false;
+		foreach (IEnemyAbility ability in _abilities)
+			controlsMovement |= ability.Process(this, _player, distToPlayer, delta);
+		return controlsMovement;
+	}
+
+	private void CancelAbilities()
+	{
+		foreach (IEnemyAbility ability in _abilities)
+			ability.Cancel();
+	}
+
+	public override void _ExitTree()
+	{
+		CancelAbilities();
+	}
+
+	internal void HitPlayer(Player player, float damage)
+	{
+		_eventBus.EmitSignal(EventBus.SignalName.PlayerHitBy, _enemyId, damage);
+		player.TakeDamage(damage);
+		TriggerAttackAnim();
+	}
+
+	internal void PlayAttackAnim() => TriggerAttackAnim();
+
+	/// <summary>Posture accroupie d'annonce, sur le visuel seul pour ne pas toucher l'échelle d'Aberration.</summary>
+	internal void SetWindupPose(bool active)
+	{
+		Vector2 pose = active ? new Vector2(1.18f, 0.78f) : Vector2.One;
+		_visual.Scale = pose;
+		if (_sprite != null)
+			_sprite.Scale = pose;
 	}
 
 	private void TriggerAttackAnim()

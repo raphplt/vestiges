@@ -1,0 +1,34 @@
+{
+    "id": "presage",
+    "name": "Présage",
+    "type": "ranged",
+    "stats": {
+        "hp": 22,
+        "speed": 45,
+        "damage": 9,
+        "attack_range": 300,
+        "xp_reward": 12
+    },
+    "abilities": {
+        "omen_strike": {
+            "lead_seconds": 1.0,
+            "max_lead_distance": 240,
+            "delay_seconds": 1.0,
+            "radius": 42,
+            "player_hit_margin": 8,
+            "cooldown_seconds": 2.8,
+            "cast_range": 320,
+            "max_simultaneous": 3,
+            "damage_multiplier": 1.0,
+            "impact_flash_seconds": 0.15,
+            "color": "#B8FF5A",
+            "cast_audio": "sfx_sentinelle_activation",
+            "impact_audio": "sfx_rampant_surgissement"
+        }
+    },
+    "visual": {
+        "color": "#8FD14F",
+        "shape": "diamond",
+        "size": 11
+    }
+}

@@ -20,6 +20,16 @@ public class EnemyVisual
     public string SpriteFolder { get; set; }
 }
 
+/// <summary>Paramètres d'une capacité composée (bloc "abilities" du JSON ennemi).</summary>
+public class EnemyAbilityData
+{
+    public Dictionary<string, float> Numbers { get; } = new();
+    public Dictionary<string, string> Texts { get; } = new();
+
+    public float GetNumber(string key, float fallback) => Numbers.TryGetValue(key, out float value) ? value : fallback;
+    public string GetText(string key, string fallback) => Texts.TryGetValue(key, out string value) ? value : fallback;
+}
+
 public class EnemyData
 {
     public string Id { get; set; }
@@ -30,6 +40,7 @@ public class EnemyData
     public EnemyStats Stats { get; set; }
     public EnemyVisual Visual { get; set; }
     public Dictionary<string, float> ExtraStats { get; set; } = new();
+    public Dictionary<string, EnemyAbilityData> Abilities { get; set; } = new();
 }
 
 public static class EnemyDataLoader
@@ -158,6 +169,27 @@ public static class EnemyDataLoader
             }
         }
 
+        if (dict.ContainsKey("abilities"))
+            ParseAbilities(dict["abilities"].AsGodotDictionary(), data);
+
         return data;
+    }
+
+    private static void ParseAbilities(Godot.Collections.Dictionary abilities, EnemyData data)
+    {
+        foreach (Variant abilityKey in abilities.Keys)
+        {
+            EnemyAbilityData ability = new();
+            Godot.Collections.Dictionary parameters = abilities[abilityKey].AsGodotDictionary();
+            foreach (Variant paramKey in parameters.Keys)
+            {
+                Variant value = parameters[paramKey];
+                if (value.VariantType is Variant.Type.Int or Variant.Type.Float)
+                    ability.Numbers[paramKey.AsString()] = (float)value.AsDouble();
+                else if (value.VariantType == Variant.Type.String)
+                    ability.Texts[paramKey.AsString()] = value.AsString();
+            }
+            data.Abilities[abilityKey.AsString()] = ability;
+        }
     }
 }

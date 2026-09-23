@@ -7,8 +7,8 @@
         "water": 0.10,
         "forest": 0.45
     },
-    "day_enemy_pool": ["rodeur", "rodeur", "void_brute", "rampant"],
-    "night_enemy_pool": ["shade", "shade", "void_brute", "void_brute", "wailing_sentinel", "rampant", "hurleur"],
+    "day_enemy_pool": ["presage", "rodeur", "rodeur", "void_brute", "rampant"],
+    "night_enemy_pool": ["presage", "shade", "shade", "void_brute", "void_brute", "wailing_sentinel", "rampant", "hurleur"],
     "resource_bias": {
         "wood": 0.05,
         "stone": 0.45,

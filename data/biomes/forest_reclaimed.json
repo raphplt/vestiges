@@ -7,8 +7,8 @@
         "water": 0.05,
         "forest": 0.60
     },
-    "day_enemy_pool": ["charognard", "charognard", "treant_corrompu", "rodeur"],
-    "night_enemy_pool": ["shade", "shade", "charognard", "void_brute", "hurleur"],
+    "day_enemy_pool": ["presage", "charognard", "charognard", "treant_corrompu", "rodeur"],
+    "night_enemy_pool": ["presage", "shade", "shade", "charognard", "void_brute", "hurleur"],
     "resource_bias": {
         "wood": 0.55,
         "stone": 0.20,

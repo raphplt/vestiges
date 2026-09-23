@@ -67,6 +67,8 @@ SpawnManager possède une maintenance de densité toutes les 0,25 s en plus de l
 - La session du 23 septembre (Carrière Effondrée, Traqueur) a atteint le niveau 7 d'une traite, face à des ennemis tous au corps à corps.
 - Le log ne contenait pas d'horodatage. `RunTracker` journalise désormais `[RunTracker] Niveau N à X s (K éliminations)`. Cette durée est murale et inclut les écrans de choix ; elle sert de repère, pas de mesure du temps actif.
 
+**Essai menace lancé le 23 septembre :** Présage et bond du Charognard, dans les pools de début de tous les biomes ([compte rendu](07-bestiaire-et-rencontres.md#premier-essai-menace--23-septembre-2026)). À jouer avant tout changement XP.
+
 **Ordre des essais révisé :** l'essai menace (étape 4) passe avant l'essai XP (étape 3), conformément à l'hypothèse de Raphaël. On garde un seul groupe de paramètres à la fois. Si la menace revue ne suffit pas à espacer les premiers niveaux, on applique ensuite +25 % sur les seuils XP.
 
 1. Mesurer sur les cinq premières minutes : temps par niveau, XP/ennemi et sources annexes, fréquence des écrans de choix, dégâts reçus, temps d’élimination, distance des menaces et durée passée simplement à reculer.

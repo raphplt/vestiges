@@ -242,7 +242,7 @@ public partial class ScoreManager : Node
         return enemyId switch
         {
             "shadow_crawler" => PointsPerMeleeKill,
-            "fading_spitter" => PointsPerRangedKill,
+            "fading_spitter" or "presage" => PointsPerRangedKill,
             "void_brute" => PointsPerBruteKill,
             "shade" => PointsPerShadeKill,
             "wailing_sentinel" => PointsPerSentinelKill,

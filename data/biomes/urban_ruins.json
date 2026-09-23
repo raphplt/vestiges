@@ -7,8 +7,8 @@
         "water": 0.05,
         "forest": 0.25
     },
-    "day_enemy_pool": ["shadow_crawler", "shadow_crawler", "fading_spitter", "rodeur"],
-    "night_enemy_pool": ["shadow_crawler", "shade", "fading_spitter", "void_brute", "wailing_sentinel", "rampant", "hurleur"],
+    "day_enemy_pool": ["presage", "shadow_crawler", "shadow_crawler", "fading_spitter", "rodeur"],
+    "night_enemy_pool": ["presage", "shadow_crawler", "shade", "fading_spitter", "void_brute", "wailing_sentinel", "rampant", "hurleur"],
     "resource_bias": {
         "wood": 0.10,
         "stone": 0.40,

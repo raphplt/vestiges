@@ -72,6 +72,54 @@ Carillon, Miroitier et Avaleur viennent ensuite, selon les essais. Chaque protot
 
 **Pools du début :** introduire au moins un rôle à distance original dans **chaque** biome dès la première minute. Utiliser la table temps actif/phase → rôles admissibles, proposée plus bas pour l'introduction progressive. Elle remplace la dépendance aux noms legacy `day_enemy_pool` et `night_enemy_pool`.
 
+### Premier essai menace — 23 septembre 2026
+
+Raphaël choisit de commencer par le Présage et le bond du Charognard.
+
+**Architecture :** capacités composées, décrites par un bloc `abilities` du JSON ennemi et lues par `EnemyDataLoader`. Chacune implémente `IEnemyAbility` (`scripts/Combat/Abilities/`). Une instance est créée une fois par ennemi, puis reconfigurée à chaque sortie du pool. `Enemy` n'a reçu que des points d'accroche :
+- configuration à l'initialisation ;
+- traitement avant le mouvement ;
+- annulation à la mort, au retour au pool, à la sortie de l'arbre et au passage en traitement simplifié au-delà de 600 px.
+
+Les annonces au sol (`GroundTelegraph`) sont réutilisées et dessinées sans allocation. Le remplissage progressif indique le délai sans dépendre de la seule couleur.
+
+**Présage** ([presage.json](../../data/enemies/presage.json)) : nouvel ennemi à distance, visuel provisoire (losange vert).
+- Il s'arrête à 300 px et, toutes les 2,8 s, marque un cercle de 42 px là où le joueur **sera** dans 1 s (extrapolation plafonnée à 240 px). L'effondrement tombe 1 s plus tard.
+- Il reste immobile pendant l'incantation, ce qui donne une fenêtre pour le frapper.
+- Trois marques au plus en même temps, tous Présages confondus. Sa mort annule sa marque.
+- Il est ajouté une fois à chaque pool de début et de crise des cinq biomes.
+
+**Bond du Charognard** ([charognard.json](../../data/enemies/charognard.json)) :
+- Entre 50 et 150 px, il s'accroupit 0,4 s en montrant sa trajectoire au sol (direction verrouillée au début de l'annonce).
+- Il bondit ensuite de 120 px en 0,18 s (667 px/s, soit bien plus vite que le joueur), avec des dégâts ×1,2.
+- Il récupère 0,35 s, immobile ; recharge 3,5 s.
+
+**Sons :** provisoires, réutilisés depuis les créatures existantes et déclarés en JSON.
+
+**Vérifications :**
+- [`tools/test_enemy_abilities.sh`](../../tools/test_enemy_abilities.sh) : **15 assertions réussies**, sur vrais Player/Enemy. Elles couvrent :
+  - la marque à la position anticipée ;
+  - la fuite en ligne droite touchée ;
+  - l'évitement par changement de direction ;
+  - le joueur immobile touché ;
+  - le plafond de trois marques ;
+  - l'annulation à la mort et la place libérée ;
+  - l'absence de projectile classique pendant la recharge du Présage (bug trouvé en relecture et corrigé) ;
+  - l'annonce du bond, sa vitesse et sa distance (122 px) ;
+  - la récupération immobile ;
+  - l'évitement du bond par un pas de côté.
+- Bancs de déplacement et d'intégration verts ; smoke 600 frames vert ; build zéro warning.
+
+**Point ouvert découvert par le banc :**
+- Quand l'arc automatique du joueur reste actif et que l'ennemi survit aux flèches, le bond est raccourci de 122 à 56 px, avec un recul de position. Le banc coupe désormais l'arme pour isoler les capacités.
+- Piste : les flèches du joueur (`Projectile.tscn`) occupent la couche physique 4, celle des obstacles, que les ennemis prennent en collision.
+- La cause n'est pas établie. À vérifier en jeu, car cela pourrait aussi gêner les trajectoires ennemies en combat dense.
+
+**Limites et suite :**
+- Aucun essai en jeu n'a encore eu lieu. La recette avec Raphaël doit juger le ressenti, la lisibilité, la fréquence et la difficulté des premières minutes.
+- Le Présage n'a ni sprite ni animation dédiée (plan 08).
+- Les valeurs sont des points de départ. Si la menace reste insuffisante, l'étape suivante du plan 03 A2 est l'essai XP (+25 %).
+
 ## 3. Fiche obligatoire par rôle
 
 Silhouette et motif ; habitat/phase ; anticipation ; attaque ; fenêtre de réponse ; récupération ; vulnérabilité ; interaction avec ralentissement/recul ; récompense ; associations autorisées ; plafond simultané ; paramètres JSON ; animations/sons nécessaires.

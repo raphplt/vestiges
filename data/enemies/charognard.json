@@ -9,8 +9,25 @@
         "damage": 4,
         "xp_reward": 8,
         "pack_bonus_damage": 0.15,
-        "pack_bonus_speed": 0.10,
+        "pack_bonus_speed": 0.1,
         "pack_radius": 120
+    },
+    "abilities": {
+        "pounce": {
+            "trigger_range": 150,
+            "min_range": 50,
+            "windup_seconds": 0.4,
+            "distance": 120,
+            "leap_seconds": 0.18,
+            "recovery_seconds": 0.35,
+            "cooldown_seconds": 3.5,
+            "hit_range": 30,
+            "damage_multiplier": 1.2,
+            "marker_width": 10,
+            "color": "#B8FF5A",
+            "windup_audio": "sfx_charognard_meute",
+            "leap_audio": "sfx_ombre_attaque"
+        }
     },
     "visual": {
         "color": "#558844",

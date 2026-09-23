@@ -31,6 +31,10 @@ Ce registre intègre les retours structurants après la première lecture des pl
 | Terrain | Examiner et planifier les améliorations utiles des tiles et des systèmes voisins | Nouveau plan 10 |
 | Innovation | Proposer des mécaniques originales précises | Nouveau plan 11, propositions non approuvées |
 | Art | Pixel art accepté, suffisamment détaillé et uniforme entre les sprites ; choisir une méthode de production | 08, recommandation explicite |
+| Personnage initial | Vagabond pour les nouveaux profils (23 septembre) ; les profils existants conservent leurs personnages | 06 B, migration à écrire |
+| Format des sprites joueur | 48×64, huit orientations (23 septembre) | 08 A/B ; `CharacterSpriteLoader` à étendre de 4 à 8 directions |
+| Production des sprites | Procédurale par scripts, « qualité maximale », retouches éventuelles de Raphaël ; le procédural doit suffire (23 septembre) | 08 : pipeline de génération à la place de la recommandation « dessin puis retouche » |
+| Premier essai de menace | Présage et bond annoncé du Charognard (23 septembre) | 07/03 A2 : [implémentation](07-bestiaire-et-rencontres.md#premier-essai-menace--23-septembre-2026), recette en jeu à faire |
 
 « Les mobs avancent successivement » reste ambigu au moment de cette révision. Une clarification a été demandée : arrivée en file jugée problématique, introduction progressive des types, ou les deux. Le plan 07 sépare ces deux sujets ; aucun comportement n'est présenté comme une préférence confirmée.
 
@@ -43,8 +47,8 @@ Ce registre intègre les retours structurants après la première lecture des pl
 | Objets | Rareté fixe par définition, compteur par ID, chaque exemplaire renforce un effet sans plafond d'exemplaires | Proposition technique 05 compatible avec la demande |
 | Casting cible | Au moins cinq à six personnages entièrement revus, tous leurs sprites refaits avant 01 E | Six [fiches](06-fiches-casting.md) proposées le 23 septembre, à valider |
 | Boss | Une variante à comportement enrichi par famille retenue ; deux prototypes avant généralisation | Proposition 07 |
-| Pixel art | Densité commune, tuiles 64×32 et joueur cible 48×64, conversion d'échelle commune à tester | Proposition 08 |
-| Fabrication des sprites | Références dessinées/retouchées et animation maîtrisée ; automatisation pour conformité/export | Recommandation 08 |
+| Pixel art | Densité commune, tuiles 64×32 et joueur 48×64 validé en huit orientations | Joueur validé ; densité ennemis à fixer en 08 A |
+| Fabrication des sprites | Tranchée le 23 septembre : procédural en qualité maximale (voir §1) | Remplace la recommandation initiale de 08 |
 | Innovation prioritaire | Rémanence offensive du déplacement, puis butin à sauver de l'Effacement | Prototypes proposés 11 |
 
 Ni les seuils d'XP, ni les timings de mobilité, ni les chiffres des objets ne sont approuvés en tant qu'équilibrage final. Les choix antérieurs non explicitement arbitrés (personnage initial, kit de l'Éveillée, règles du classement) ne deviennent pas validés par défaut.
