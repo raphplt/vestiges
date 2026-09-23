@@ -286,3 +286,31 @@ La comparaison porte sur une fixture dense à population constante, pas sur une 
 Le banc fixe `ContentScaleSize` aux dimensions demandées : le cadrage est identique entre les deux variantes d’une résolution, mais diffère entre 720p et 1080p. L’écart entre résolutions ne représente donc pas un coût GPU par pixel à champ de vue constant.
 
 Une moyenne supérieure à 60 FPS ne démontre ni l’absence de hitch, ni une cible tenue sur matériel intermédiaire. Garder pics et percentiles visibles. Cette mesure ne clôt pas la recette humaine clavier/manette, le choix des variantes, le recalage du début de run en 03, ni la case générale de performance en endgame. Le lot E attend toujours le casting et les nouveaux sprites validés en 06/08.
+
+## 10. Diagnostic des saccades en combat dense — 23 septembre 2026
+
+**Constat sur les données brutes du §9 (sans relancer le jeu) :** les intervalles CSV montrent un pic de 44 à 60 ms toutes les **~630 ms**, très régulier, sur une base de 12 à 20 ms. Cette période correspond exactement à la cadence de tir du Traqueur : 1,2 (personnage) × 1,2 (Arc de Fortune) × 1,1 (Œil d'Aigle) = 1,584 tir/s, soit 0,631 s. Les saccades viennent du tir de l'arme de départ, pas du dash ni d'un coût réparti par frame.
+
+**Cause principale identifiée à la lecture du code :** `Projectile.OnBodyEntered` ne vérifiait pas `_isDespawning`, et `StartDespawn()` ne coupe `monitoring` qu'en différé. La flèche naît sur la position du joueur, où les `shade` de mêlée s'empilent. Tous les corps superposés recevaient donc l'impact dans le même flush physique, perforation ou non. Chaque impact déclenche `TakeDamage` : tween et paramètre de shader de flash, `Sprite2D` de flash, `DamageNumber` instancié, signal et hook du joueur. Il s'agit aussi d'un **bug de gameplay** : l'arc sans perforation frappait toute la mêlée collée au joueur.
+
+**Correctif appliqué :** garde `_isDespawning` en tête de `OnBodyEntered`. Build zéro warning.
+
+**Mesure après correctif** (même machine, même banc et mêmes réglages qu'au §9, Planet Crafter fermé ; une première série faite pendant que ce jeu tournait a été écartée) : douze cas valides, trois paires par résolution, 120 ennemis dans le rayon complet pendant toute la mesure.
+
+| Résolution | Variante | Moyenne ms (avant → après) | FPS | p95 ms | p99 ms | Pic ms | Images >16,67 ms |
+|---|---|---|---:|---|---|---|---|
+| 1280×720 | Sans dash | 16,58 → **13,23** | 75,6 | 23,20 → 15,97 | 48,99 → **18,38** | 107,25 → 56,23 | 24,25 % → **3,24 %** |
+| 1280×720 | Dash | 15,97 → **13,70** | 73,0 | 21,29 → 17,06 | 46,90 → **19,56** | 93,54 → 44,24 | 18,75 % → **6,16 %** |
+| 1920×1080 | Sans dash | 20,09 → **16,53** | 60,5 | 28,29 → 19,97 | 53,72 → **24,25** | 101,65 → 45,72 | 83,87 % → **34,35 %** |
+| 1920×1080 | Dash | 19,46 → **15,68** | 63,8 | 26,93 → 17,93 | 51,52 → **20,41** | 103,73 → 42,62 | 77,92 % → **16,97 %** |
+
+Le motif périodique de ~630 ms a disparu des intervalles bruts : il ne reste qu'environ deux pics isolés de 35 à 56 ms par fenêtre de 20 s, sans période. À 720p, la cible de 60 FPS est tenue en moyenne et au p99. À 1080p, la moyenne atteint environ 60 FPS, mais 17 à 34 % des images dépassent encore 16,67 ms : **la cible « 60 FPS constants » n'est pas encore atteinte à 1080p**. Les pics isolés restants (GC ou autre) ne sont pas attribués. Résultats bruts conservés localement dans `plan01/dense-benchmark-after-guard/`, à côté de la série du §9.
+
+**Autres coûts relevés, non corrigés** (à traiter seulement si la mesure après correctif l'exige) :
+- Chaque tir et chaque impact créent des nœuds et ressources VFX sans pool : `GpuParticles2D` et `ParticleProcessMaterial` et `GradientTexture1D` pour la traînée, `SpriteFrames` et `GpuParticles2D` et `Timer` pour l'impact, flash de bouche. Pistes : ressources statiques partagées et pool.
+- `fading_spitter` : environ 18 `EnemyProjectile` instanciés par seconde dans la fixture, avec leurs tweens et flashes.
+- `Enemy.cs` construit par interpolation, à chaque tick, le nom d'animation des 120 ennemis, puis le convertit en `StringName` à chaque changement. Les `TweenProperty` créent des chemins `NodePath` implicites. Piste : table statique comme dans `Player`.
+- Un `ShaderMaterial` par ennemi casse le batching 2D.
+- Les frames lentes peuvent enchaîner plusieurs ticks physiques des 120 `MoveAndSlide`.
+
+**Suite :** les coûts listés ci-dessus sont les pistes pour la marge restante à 1080p ; un profil CPU/GPU est nécessaire avant de les traiter. L'équilibrage du début de run (plan 03) doit tenir compte de la baisse de dégâts effectifs de l'arc en mêlée dense.

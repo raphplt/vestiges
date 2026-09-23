@@ -194,6 +194,11 @@ public partial class Projectile : Area2D
 
     private void OnBodyEntered(Node2D body)
     {
+        // monitoring n'est coupé qu'en différé : sans cette garde, tous les corps déjà superposés
+        // au point de tir recevraient l'impact dans le même flush, perforation ou non.
+        if (_isDespawning)
+            return;
+
         if (body is Enemy enemy && !enemy.IsQueuedForDeletion())
         {
             ulong id = enemy.GetInstanceId();
