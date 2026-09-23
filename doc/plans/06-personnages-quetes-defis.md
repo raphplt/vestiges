@@ -37,7 +37,7 @@ La règle de personnage initial n'a pas encore été arbitrée explicitement : V
 
 Cible de travail : six identités entièrement revues, pour satisfaire la demande d’au moins cinq à six personnages. Valider le catalogue ensemble (rôles, silhouettes et complémentarité), puis refaire les sprites de chaque identité. Les noms/concepts du tableau restent à valider ; les trois personnages existants ne sont pas considérés comme déjà aboutis. Colosse et Ombre de V2 restent des alternatives à arbitrer, pas des ajouts automatiques au-dessus des six.
 
-**Fiches complètes proposées le 23 septembre :** [06-fiches-casting.md](06-fiches-casting.md). Elles attendent la validation de Raphaël avant la planche de silhouettes et les sprites de 08.
+**Casting validé par Raphaël le 23 septembre :** « les 6 personnages sont validés !! très bien ». Il ajoute qu'avoir des personnages un peu atypiques est une bonne idée ([fiches](06-fiches-casting.md)). Le Vagabond est le personnage initial. Planche de silhouettes et sprites 48×64 en huit directions produits par le pipeline de 08 ; l'intégration jouable des trois nouveaux (kits, armes, accès) relève du lot D.
 
 Fiche obligatoire par personnage : silhouette à taille de jeu, motif sonore, phrase de personnalité, arme initiale, passif chiffré, mobilité, contrepartie, deux synergies et une faiblesse. Au moins une différence mécanique observable au-delà des statistiques. Les mouvements spéciaux se branchent sur le module de 01 avec contrôles communs.
 

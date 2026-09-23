@@ -69,6 +69,40 @@ SpawnManager possède une maintenance de densité toutes les 0,25 s en plus de l
 
 **Essai menace lancé le 23 septembre :** Présage et bond du Charognard, dans les pools de début de tous les biomes ([compte rendu](07-bestiaire-et-rencontres.md#premier-essai-menace--23-septembre-2026)). À jouer avant tout changement XP.
 
+**Retour de Raphaël après l'essai menace (23 septembre) :** « l'équilibrage des niveaux est mieux maintenant ». Il trouve en revanche qu'il manque peut-être des ennemis sur la carte, et demande des mesures objectives et des comparaisons.
+
+**Mesure de densité — 23 septembre.** [`tools/measure_density.sh`](../../tools/measure_density.sh) lance la vraie `Main` rendue, avec le spawn naturel, pendant 3 minutes par seed. Le joueur est piloté par une IA nomade (points de passage de 500 à 900 px), en mode invincible, avec son arme réelle. Chaque seconde, le banc relève :
+- les ennemis dans le cadre visible de la caméra (960×540 px de monde) ;
+- les ennemis à moins de 600 px ;
+- les ennemis vivants, apparus, éliminés, et le niveau atteint.
+
+Deux seeds (221092026 et 777), médianes par minute :
+
+| Minute | Visibles : référence → anneau (A) → A + densité (B) | < 5 visibles : réf. → B | À 600 px : réf. → B |
+|---|---|---|---|
+| 0–1 | 9 → 13 → **19,5** | 24 % → **4 %** | 17 → 31,5 |
+| 1–2 | 7 → 11 → **36** | 32 % → **8 %** | 20 → 48 |
+| 2–3 | 13 → 16,5 → **33** | 17 % → **6 %** | 31 → 57 |
+
+**Diagnostic :**
+- Les ennemis apparaissaient sur un cercle de 400 à 600 px, sans lien avec le cadre de 960×540 px : au-dessus et en dessous, ils naissaient 130 à 330 px hors champ, et ils sont lents.
+- Quand le joueur avance, la moitié arrière est abandonnée, puis retirée à 1 400 px.
+- La cible locale ne croissait que de 3,2 ennemis par minute : la densité visible stagnait, avec des trous fréquents.
+
+**Correctifs (A puis B, mesurés séparément) :**
+- **A :** `SpawnPositionPicker` fait apparaître les ennemis juste au-delà du cadre (40 à 140 px), la moitié d'entre eux dans l'arc de 140° devant la direction de déplacement.
+- **B :** cible locale de 20 ennemis + 10 par minute dans un rayon de 700 px, rafales de 6 au plus.
+- Tout est dans `spawn_flow.json` (`spawn_screen_margin_*`, `spawn_forward_*`, `local_enemy_*`).
+
+**Références :**
+- Vampire Survivors (Mad Forest) : minimum de 15, 30 puis 50 ennemis vivants à 0, 1 puis 2 min, comblé par des apparitions toutes les 1 s, 0,5 s puis 0,25 s ([wiki](https://vampire.survivors.wiki/w/Mad_Forest)).
+- Brotato : première vague de 20 s, puis +5 s par vague ([wiki](https://brotato.wiki.spellsandguns.com/Waves)). Le plafond de 100 ennemis à l'écran est relevé dans un [guide communautaire](https://gameplay.tips/guides/brotato-ultimate-guide-to-enemies-and-waves.html) non vérifié.
+- La configuration B se situe dans l'ordre de grandeur de Vampire Survivors à 1–2 minutes.
+
+**Limites :**
+- L'IA n'esquive pas et ne choisit pas ses améliorations : les éliminations et les niveaux mesurés ne représentent pas un joueur humain.
+- Avec B, le niveau 5 du bot arrive toujours vers 106–135 s, mais la suite accélère (niveau 10 vers 165 s). À vérifier en jeu : si la montée redevient trop rapide, appliquer l'essai XP (+25 %).
+
 **Ordre des essais révisé :** l'essai menace (étape 4) passe avant l'essai XP (étape 3), conformément à l'hypothèse de Raphaël. On garde un seul groupe de paramètres à la fois. Si la menace revue ne suffit pas à espacer les premiers niveaux, on applique ensuite +25 % sur les seuils XP.
 
 1. Mesurer sur les cinq premières minutes : temps par niveau, XP/ennemi et sources annexes, fréquence des écrans de choix, dégâts reçus, temps d’élimination, distance des menaces et durée passée simplement à reculer.

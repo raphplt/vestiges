@@ -73,6 +73,38 @@ Conséquences pour le pipeline :
 
 La recommandation initiale ci-dessous reste utile pour ses contraintes (densité commune, scène étalon, contrôle), mais la méthode de fabrication est tranchée.
 
+### Pilote livré — 23 septembre 2026
+
+**Pipeline** (`tools/sprites/`) :
+- Chaque personnage est un modèle 3D simplifié : capsules, ellipsoïdes et boîtes arrondies, avec soustractions (ouverture de capuche). Il est posé sur un squelette humanoïde en cinématique directe.
+- Rendu par lancer de rayons en projection orthographique inclinée à 30°, soit la compression 2:1 des tuiles, à la résolution exacte de 48×64.
+- Le suréchantillonnage 3×3 décide de la couverture, du matériau et du ton de chaque pixel.
+- Passes pixel art :
+  - quatre tons par matériau (ombres vers le froid, lumières vers l'or) ;
+  - lumière fixe venant du haut-gauche ;
+  - lignes internes sur rupture de profondeur ;
+  - contour sel-out teinté, plus clair côté lumière ;
+  - nettoyage des pixels orphelins.
+- Les huit directions et toutes les animations découlent du même modèle. Environ 0,5 s par frame, 136 frames par personnage.
+
+**Livrables :**
+- Six modèles : Vagabond, Traqueur, Forgeuse, Éveillée, Facteur, Scaphandrière.
+- Bibliothèque d'animations commune, modulée par l'allure : idle 4, walk 4, dash 3, hurt 2, death 4.
+- Planche de casting (`tools/character_lineup.py`) : silhouettes noires, sol ancré et sol effacé, taille réelle.
+- Intégration en jeu du Vagabond (qui n'avait jusque-là aucun `sprite_folder` et s'affichait en polygone), du Traqueur et de la Forgeuse (qui n'avait aucun sprite).
+
+**Code :**
+- `CharacterFacing` choisit parmi huit directions avec hystérésis, et revient aux quatre diagonales si un jeu de sprites ne les fournit pas.
+- `CharacterSpriteLoader` charge E/SE/S/SW/W/NW/N/NE et vérifie l'existence des frames avec `ResourceLoader.Exists`. `FileAccess.FileExists` aurait échoué sur les textures remappées d'un export.
+- `sprite_feet_offset` ancre les pieds sur la position au sol.
+- Les planches et aperçus hérités du Traqueur, ainsi que la documentation 16×24 du Vagabond, sont retirés.
+
+**Points ouverts pour Raphaël :**
+- **Lisibilité du Traqueur** : vert forêt de la charte sur la forêt, il se fond dans le décor en jeu. Pistes : cape plus sombre ou plus désaturée, accent beige plus présent, contour plus contrasté.
+- **Ennemis** : ils restent à l'ancienne échelle, minuscules à côté des personnages. Prochaine étape : modèles ennemis dans le même pipeline, avec créatures asymétriques et yeux vert-acide (Bible §6.2).
+- **Charte** : à amender après validation (joueur 48×64, huit directions, abandon de la résolution interne 480×270).
+- **Double contour** : le shader d'entité ajoute un contour au sel-out déjà peint. À comparer en jeu avec et sans.
+
 ### Recommandation initiale (22 septembre), remplacée pour la méthode
 
 **Choix recommandé : pixel art dessiné et animé à une densité commune, produit à partir d’une scène étalon, avec retouche contrôlée et pipeline automatisé.** L’IA peut aider aux recherches de silhouettes/matières ou à une base de sprite, mais chaque résultat doit être redessiné/normalisé selon les mêmes références. Des générations indépendantes « pixel art détaillé » ne constituent pas une méthode de cohérence ; générer chaque frame indépendamment n’est pas le pipeline recommandé pour les personnages.

@@ -110,6 +110,11 @@ Les annonces au sol (`GroundTelegraph`) sont réutilisées et dessinées sans al
   - l'évitement du bond par un pas de côté.
 - Bancs de déplacement et d'intégration verts ; smoke 600 frames vert ; build zéro warning.
 
+**Retour de Raphaël (23 septembre) :** Présage « bonne idée » mais attaque jamais vue ; bond du Charognard « bonne idée ».
+- Cause de l'attaque invisible : la marque était dessinée à z −2, sous la `TileMapLayer` du sol (z 0). Elle est désormais en z absolu 1. Une capture rendue de la vraie `Main` confirme la marque visible (banc `RunObservation --capture-abilities`).
+- Le corps provisoire du Présage devient un losange lilas plus grand, hors palette végétale.
+- Les autres décors « au sol » en z négatif (anneaux de garde des POI, contours de coffres, lueurs d'`InteractableAura`) sont probablement masqués de la même façon. C'est à vérifier.
+
 **Point ouvert découvert par le banc :**
 - Quand l'arc automatique du joueur reste actif et que l'ennemi survit aux flèches, le bond est raccourci de 122 à 56 px, avec un recul de position. Le banc coupe désormais l'arme pour isoler les capacités.
 - Piste : les flèches du joueur (`Projectile.tscn`) occupent la couche physique 4, celle des obstacles, que les ennemis prennent en collision.

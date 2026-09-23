@@ -1,6 +1,6 @@
 # Plan 06 A — Fiches du casting proposé
 
-Version 0.1 · 23 septembre 2026 · Statut : **proposition à valider par Raphaël** (identités, rôles, personnage initial). Aucun chiffre ci-dessous n'est un équilibrage validé : ce sont des valeurs d'essai.
+Version 0.2 · 23 septembre 2026 · Statut : **validé par Raphaël** (six identités ; Vagabond initial). Aucun chiffre ci-dessous n'est un équilibrage validé : ce sont des valeurs d'essai.
 Références : [plan 06 §3](06-personnages-quetes-defis.md#3-casting-proposé), [plan 08](08-direction-artistique.md), [Bible §6.1](../VESTIGES-BIBLE.md), [plan 01 lot E](01-deplacements.md#lot-e--mobilités-de-personnages-saut-et-glissade), [plan 11](11-mecaniques-originales.md).
 
 ## 1. Principes communs
