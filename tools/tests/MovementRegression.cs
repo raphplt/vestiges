@@ -127,9 +127,11 @@ public partial class MovementRegression : Node2D
         Check(_sprite.Animation == facing, "attaque à droite pendant fuite à gauche : pose conservée");
 
         _player.IsAIControlled = true;
-        _player.AIInputOverride = new Vector2(1f, -1f);
+        // Sprites en huit directions : une légère dérive du stick autour de l'axe ne fait pas osciller la pose E.
+        _player.AIInputOverride = new Vector2(1f, 0f);
         await Measure(2);
         facing = _sprite.Animation;
+        Check(facing.ToString().StartsWith("E_"), $"axe horizontal : pose E ({facing})");
         foreach (float drift in new[] { 0.01f, -0.01f, 0f, 0.015f, -0.015f })
         {
             _player.AIInputOverride = new Vector2(1f, drift);
@@ -155,6 +157,7 @@ public partial class MovementRegression : Node2D
         wall.QueueFree();
 
         await Step(1);
+        RunFacingChecks();
         await RunMobilityChecks();
         _player.TakeDamage(10000f);
         Check(_player.Mobility.State == MobilityState.Death && _player.Mobility.BufferRemaining == 0f,

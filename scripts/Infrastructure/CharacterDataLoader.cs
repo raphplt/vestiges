@@ -26,6 +26,8 @@ public class CharacterData
     public float ScoreMultiplier { get; set; } = 1f;
     public Color VisualColor { get; set; }
     public string SpriteFolder { get; set; }
+    /// <summary>Distance en pixels du centre de la frame aux pieds : ancre le sprite sur la position au sol.</summary>
+    public float SpriteFeetOffset { get; set; }
     public string UnlockCondition { get; set; }
 }
 
@@ -97,6 +99,7 @@ public static class CharacterDataLoader
                     (float)colorArr[3].AsDouble()
                 ),
                 SpriteFolder = dict.ContainsKey("sprite_folder") ? dict["sprite_folder"].AsString() : null,
+                SpriteFeetOffset = dict.ContainsKey("sprite_feet_offset") ? (float)dict["sprite_feet_offset"].AsDouble() : 0f,
                 UnlockCondition = dict["unlock_condition"].AsString()
             };
 

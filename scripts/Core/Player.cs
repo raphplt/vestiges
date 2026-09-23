@@ -105,20 +105,14 @@ public partial class Player : CharacterBody2D
     // Sprite animé (remplace Polygon2D quand sprite_folder est défini)
     private AnimatedSprite2D _sprite;
     private bool _hasSprite;
-    private enum SpriteFacing { SouthEast, SouthWest, NorthEast, NorthWest }
     private enum SpriteAction { Idle, Walk, Hurt, Death, Dash }
-    private SpriteFacing _lastDirection = SpriteFacing.SouthEast;
+    private static readonly string[] SpriteActionNames = { "idle", "walk", "hurt", "death", "dash" };
+    private readonly CharacterFacing _facing = new();
     private StringName _currentAnimName;
-    private static readonly StringName[,] SpriteAnimations =
-    {
-        { "SE_idle", "SE_walk", "SE_hurt", "SE_death", "SE_dash" },
-        { "SW_idle", "SW_walk", "SW_hurt", "SW_death", "SW_dash" },
-        { "NE_idle", "NE_walk", "NE_hurt", "NE_death", "NE_dash" },
-        { "NW_idle", "NW_walk", "NW_hurt", "NW_death", "NW_dash" }
-    };
+    // Noms précalculés [direction, action] : aucune chaîne construite par tick.
+    private static readonly StringName[,] SpriteAnimations = BuildSpriteAnimations();
     private const float MovementSpeedEpsilon = 0.1f;
-    // Bande de stabilité autour des axes : les quatre poses ne doivent pas osciller au stick.
-    private const float FacingAxisHysteresis = 0.1f;
+    private const float SpriteFeetBelowOrigin = 10f;
     private float _hurtAnimTimer;
 
     // Shader VFX unifié (outline + hit flash + dissolve)
@@ -303,11 +297,13 @@ public partial class Player : CharacterBody2D
             if (frames != null)
             {
                 _sprite.SpriteFrames = frames;
+                // Pieds légèrement sous le centre de collision, comme les anciens sprites centrés.
+                _sprite.Offset = new Vector2(0f, SpriteFeetBelowOrigin - data.SpriteFeetOffset);
                 _sprite.Visible = true;
                 _sprite.SelfModulate = Colors.White;
                 _visual.Visible = false;
                 _hasSprite = true;
-                _lastDirection = SpriteFacing.SouthEast;
+                _facing.Reset(CharacterSpriteLoader.HasEightDirections(frames));
                 _currentAnimName = default;
                 _hurtAnimTimer = 0f;
 
@@ -2144,7 +2140,7 @@ public partial class Player : CharacterBody2D
         if (_hasSprite)
         {
             _sprite.SpeedScale = 1f;
-            PlaySpriteAnim(SpriteAnimations[(int)_lastDirection, (int)SpriteAction.Death]);
+            PlaySpriteAnim(SpriteAnimations[(int)_facing.Current, (int)SpriteAction.Death]);
         }
 
         _eventBus.EmitSignal(EventBus.SignalName.EntityDied, this);
@@ -2204,6 +2200,16 @@ public partial class Player : CharacterBody2D
 
     // --- Sprite Animation ---
 
+    private static StringName[,] BuildSpriteAnimations()
+    {
+        string[] directions = CharacterFacing.DirectionNames;
+        StringName[,] animations = new StringName[directions.Length, SpriteActionNames.Length];
+        for (int direction = 0; direction < directions.Length; direction++)
+            for (int action = 0; action < SpriteActionNames.Length; action++)
+                animations[direction, action] = $"{directions[direction]}_{SpriteActionNames[action]}";
+        return animations;
+    }
+
     private void UpdateSpriteAnimation(float delta, Vector2 movementVelocity, float movementRate)
     {
         if (!_hasSprite)
@@ -2213,22 +2219,7 @@ public partial class Player : CharacterBody2D
 
         // Le mouvement réellement parcouru pilote la pose, indépendamment de la visée des armes.
         if (movementRate > 0f)
-        {
-            Vector2 direction = movementVelocity.Normalized();
-            bool facesWest = _lastDirection is SpriteFacing.SouthWest or SpriteFacing.NorthWest;
-            bool facesNorth = _lastDirection is SpriteFacing.NorthEast or SpriteFacing.NorthWest;
-            if (direction.X > FacingAxisHysteresis) facesWest = false;
-            else if (direction.X < -FacingAxisHysteresis) facesWest = true;
-            if (direction.Y > FacingAxisHysteresis) facesNorth = false;
-            else if (direction.Y < -FacingAxisHysteresis) facesNorth = true;
-            _lastDirection = (facesWest, facesNorth) switch
-            {
-                (false, false) => SpriteFacing.SouthEast,
-                (true, false) => SpriteFacing.SouthWest,
-                (false, true) => SpriteFacing.NorthEast,
-                (true, true) => SpriteFacing.NorthWest
-            };
-        }
+            _facing.Update(movementVelocity.Normalized());
 
         // Action : death > hurt > dash > walk > idle
         SpriteAction action;
@@ -2243,11 +2234,11 @@ public partial class Player : CharacterBody2D
         else
             action = SpriteAction.Idle;
 
-        StringName animation = SpriteAnimations[(int)_lastDirection, (int)action];
+        StringName animation = SpriteAnimations[(int)_facing.Current, (int)action];
         if (action == SpriteAction.Dash && !_sprite.SpriteFrames.HasAnimation(animation))
         {
             action = SpriteAction.Walk;
-            animation = SpriteAnimations[(int)_lastDirection, (int)action];
+            animation = SpriteAnimations[(int)_facing.Current, (int)action];
         }
         _sprite.SpeedScale = action == SpriteAction.Walk ? movementRate : 1f;
         if (action == SpriteAction.Dash)
