@@ -27,8 +27,8 @@
         }
     },
     "visual": {
-        "color": "#8FD14F",
+        "color": "#C9B8FF",
         "shape": "diamond",
-        "size": 11
+        "size": 15
     }
 }

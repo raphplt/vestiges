@@ -10,8 +10,10 @@ namespace Vestiges.Spawn;
 
 public partial class SpawnManager : Node2D
 {
-	[Export] public float SpawnRadiusMin = 400f;
-	[Export] public float SpawnRadiusMax = 600f;
+	// Demi-cadre visible par défaut (1920×1080 logiques au zoom ×2) si la caméra n'est pas encore disponible.
+	private static readonly Vector2 FallbackViewHalfExtents = new(480f, 270f);
+	private readonly SpawnPositionPicker _positionPicker = new();
+	private Camera2D _camera;
 
 	private float _baseSpawnInterval;
 	private float _minSpawnInterval;
@@ -484,41 +486,36 @@ public partial class SpawnManager : Node2D
 		return GetDaySpawnPosition();
 	}
 
-	/// <summary>Spawn autour du joueur, pas sur l'eau.</summary>
+	/// <summary>Spawn juste hors du cadre visible, biaisé vers l'avant du joueur, jamais sur l'eau.</summary>
 	private Vector2 GetDaySpawnPosition()
 	{
-		float minRadius = SpawnRadiusMin;
-		float maxRadius = SpawnRadiusMax;
-		if (_currentRunPhase == GameManager.RunPhase.Crisis)
+		float marginScale = _currentRunPhase switch
 		{
-			minRadius *= 0.75f;
-			maxRadius *= 0.85f;
-		}
-		else if (_currentRunPhase == GameManager.RunPhase.LateGame)
-		{
-			maxRadius *= 0.9f;
-		}
-		else if (_currentRunPhase == GameManager.RunPhase.Endgame)
-		{
-			minRadius *= 0.65f;
-			maxRadius *= 0.8f;
-		}
+			GameManager.RunPhase.Crisis => 0.6f,
+			GameManager.RunPhase.LateGame => 0.85f,
+			GameManager.RunPhase.Endgame => 0.5f,
+			_ => 1f
+		};
+		Vector2 halfExtents = GetViewHalfExtents();
+		Vector2 moveDirection = _player.Velocity.Normalized();
 
+		Vector2 position = _player.GlobalPosition;
 		for (int attempt = 0; attempt < 15; attempt++)
 		{
-			float angle = (float)GD.RandRange(0, Mathf.Tau);
-			float radius = (float)GD.RandRange(minRadius, maxRadius);
-			Vector2 position = _player.GlobalPosition + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * radius;
-
-			if (IsWaterAt(position))
-				continue;
-
-			return position;
+			position = _positionPicker.Pick(_player.GlobalPosition, halfExtents, moveDirection, marginScale);
+			if (!IsWaterAt(position))
+				return position;
 		}
+		return position;
+	}
 
-		float fallbackAngle = (float)GD.RandRange(0, Mathf.Tau);
-		float fallbackRadius = (float)GD.RandRange(minRadius, maxRadius);
-		return _player.GlobalPosition + new Vector2(Mathf.Cos(fallbackAngle), Mathf.Sin(fallbackAngle)) * fallbackRadius;
+	private Vector2 GetViewHalfExtents()
+	{
+		if (_camera == null || !IsInstanceValid(_camera))
+			_camera = _player.GetViewport()?.GetCamera2D();
+		if (_camera == null)
+			return FallbackViewHalfExtents;
+		return GetViewport().GetVisibleRect().Size / (2f * _camera.Zoom);
 	}
 
 	private bool IsWaterAt(Vector2 worldPos)
@@ -606,6 +603,10 @@ public partial class SpawnManager : Node2D
 		_crisisBurstPerIntensity = dict.ContainsKey("crisis_burst_per_intensity") ? (int)dict["crisis_burst_per_intensity"].AsDouble() : _crisisBurstPerIntensity;
 		_lateGameSpawnMultiplier = dict.ContainsKey("late_game_spawn_multiplier") ? (float)dict["late_game_spawn_multiplier"].AsDouble() : _lateGameSpawnMultiplier;
 		_endgameSpawnMultiplier = dict.ContainsKey("endgame_spawn_multiplier") ? (float)dict["endgame_spawn_multiplier"].AsDouble() : _endgameSpawnMultiplier;
+		_positionPicker.MarginMin = dict.ContainsKey("spawn_screen_margin_min") ? (float)dict["spawn_screen_margin_min"].AsDouble() : _positionPicker.MarginMin;
+		_positionPicker.MarginMax = dict.ContainsKey("spawn_screen_margin_max") ? (float)dict["spawn_screen_margin_max"].AsDouble() : _positionPicker.MarginMax;
+		_positionPicker.ForwardBias = dict.ContainsKey("spawn_forward_bias") ? (float)dict["spawn_forward_bias"].AsDouble() : _positionPicker.ForwardBias;
+		_positionPicker.ForwardArcDegrees = dict.ContainsKey("spawn_forward_arc_degrees") ? (float)dict["spawn_forward_arc_degrees"].AsDouble() : _positionPicker.ForwardArcDegrees;
 
 		GD.Print($"[SpawnManager] Config loaded — interval: {_baseSpawnInterval}s, max: {_maxEnemies}, crisis x{_crisisSpawnMultiplier:F2}");
 	}

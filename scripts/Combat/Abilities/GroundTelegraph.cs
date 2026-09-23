@@ -24,7 +24,9 @@ public partial class GroundTelegraph : Node2D
     public GroundTelegraph()
     {
         TopLevel = true;
-        ZIndex = -2;
+        // Au-dessus du sol (TileMapLayer à z 0) : un z négatif la cacherait sous les tuiles opaques.
+        ZAsRelative = false;
+        ZIndex = 1;
         Visible = false;
     }
 

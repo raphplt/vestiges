@@ -16,10 +16,10 @@
     "enemy_aggression_melee_bonus": 1.08,
     "enemy_aggression_ranged_bonus": 1.0,
     "enemy_aggression_elite_bonus": 1.08,
-    "local_enemy_radius": 900,
-    "local_enemy_target_base": 18,
-    "local_enemy_target_growth_per_minute": 3.2,
-    "local_spawn_burst_max": 4,
+    "local_enemy_radius": 700,
+    "local_enemy_target_base": 20,
+    "local_enemy_target_growth_per_minute": 10.0,
+    "local_spawn_burst_max": 6,
     "same_type_cluster_chance": 0.35,
     "same_type_cluster_min": 2,
     "same_type_cluster_max": 4,
@@ -29,5 +29,9 @@
     "crisis_burst_base": 8,
     "crisis_burst_per_intensity": 4,
     "late_game_spawn_multiplier": 1.4,
-    "endgame_spawn_multiplier": 1.85
+    "endgame_spawn_multiplier": 1.85,
+    "spawn_screen_margin_min": 40,
+    "spawn_screen_margin_max": 140,
+    "spawn_forward_bias": 0.5,
+    "spawn_forward_arc_degrees": 140
 }
