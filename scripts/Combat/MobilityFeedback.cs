@@ -95,8 +95,8 @@ public partial class MobilityFeedback : Node2D
 
     public override void _Draw()
     {
-        DrawRect(new Rect2(-12f, 16f, 24f, 3f), new Color(0.04f, 0.06f, 0.09f, 0.8f));
-        DrawRect(new Rect2(-12f, 16f, 24f * Mathf.Clamp(_charge, 0f, 1f), 3f), ReadyColor);
+        DrawRect(new Rect2(-12f, 20f, 24f, 2f), new Color(0.04f, 0.06f, 0.09f, 0.8f));
+        DrawRect(new Rect2(-12f, 20f, 24f * Mathf.Clamp(_charge, 0f, 1f), 2f), ReadyColor);
         if (_dashVisible)
             DrawArc(Vector2.Zero, 16f, 0f, Mathf.Tau, 16, ReadyColor, 1f);
     }

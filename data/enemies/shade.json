@@ -1,6 +1,7 @@
 {
     "id": "shade",
     "name": "Ombre",
+    "grammatical_gender": "f",
     "type": "melee",
     "stats": {
         "hp": 10,

@@ -144,3 +144,38 @@ LOADING_INIT,Initialisation...,Initializing...
 UI_DEV_MODE,MODE DEV · Tout débloqué,DEV MODE · All unlocked
 UI_DEV_TOGGLE,Dev : tout débloqué,Dev: unlock everything
 UI_DEV_TOGGLE_HINT,Profil séparé. Recharge le Hub et mémorise le choix pour F5.,Separate profile. Reloads the Hub and remembers the choice for F5.
+UI_HUD_LEVEL,NIV.,LVL
+UI_HUD_SCORE,SCORE,SCORE
+UI_HUD_ESSENCE,{0} Essence,{0} Essence
+UI_HUD_PHASE_EXPLORATION,EXPLORATION,EXPLORATION
+UI_HUD_PHASE_CRISIS,RÉSURGENCE,RESURGENCE
+UI_HUD_PHASE_LATE,EFFACEMENT AVANCÉ,DEEP ERASURE
+UI_HUD_PHASE_ENDGAME,AU-DELÀ,BEYOND
+UI_HUD_PHASE_DEATH,FIN,END
+UI_HUD_CRISIS_IN,Résurgence dans {0} s,Resurgence in {0} s
+UI_HUD_CRISIS,Résurgence {0},Resurgence {0}
+UI_HUD_CRISIS_INTENSITY,Résurgence {0} — intensité {1},Resurgence {0} — intensity {1}
+EVENT_HUNT_TITLE,Un Souverain approche,A Sovereign approaches
+EVENT_HUNT_OBJECTIVE,Abattez le {0} avant son effacement,Slay the {0} before it fades
+EVENT_HUNT_OBJECTIVE_F,Abattez la {0} avant son effacement,Slay the {0} before it fades
+EVENT_STAMPEDE_TITLE,La Harde,The Stampede
+EVENT_STAMPEDE_OBJECTIVE,Fauchez la harde avant qu'elle ne passe — {0} / {1},Cut down the stampede before it passes — {0} / {1}
+EVENT_RELIC_TITLE,Un vestige tombe,A relic falls
+EVENT_RELIC_OBJECTIVE_FALL,Impact imminent — sortez du cercle,Impact incoming — leave the circle
+EVENT_RELIC_OBJECTIVE,Récupérez le vestige,Recover the relic
+EVENT_VIGIL_TITLE,La Veille,The Vigil
+EVENT_VIGIL_OBJECTIVE,Tenez le cercle de mémoire,Hold the circle of memory
+EVENT_SHARDS_TITLE,Averse d'éclats,Shard Rain
+EVENT_SHARDS_OBJECTIVE,Attirez les créatures sous les éclats — {0} fauchées,Lure creatures under the shards — {0} felled
+EVENT_SHARDS_SUMMARY,{0} créatures fauchées,{0} creatures felled
+EVENT_RESULT_SUCCESS,Réussi,Success
+EVENT_RESULT_FAIL,Échoué,Failed
+EVENT_REWARD_XP,Savoir,Knowledge
+EVENT_REWARD_ESSENCE,+{0} Essence,+{0} Essence
+EVENT_REWARD_CHEST,Coffre,Chest
+EVENT_REWARD_HEAL,Soins,Healing
+EVENT_FAIL_FADED,Effacé avant d'être abattu,Faded before it fell
+EVENT_FAIL_ESCAPED,La harde est passée,The stampede got away
+EVENT_FAIL_RELIC,Le vestige s'est dissous,The relic dissolved
+EVENT_FAIL_VIGIL,La veille a été rompue,The vigil was broken
+EVENT_VARIANT_SLAIN,Vaincu : {0},Defeated: {0}

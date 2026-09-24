@@ -714,6 +714,9 @@ Le script de post-processing doit inclure une vérification/correction de l'angl
 - [x] Validation par Raphaël du dash commun livré (22 septembre 2026).
 - [ ] Refonte et validation d’au moins cinq à six personnages et de tous leurs sprites avant les mobilités spécifiques (06/08).
 - [ ] Mobilités de personnages : prototypes et profils après casting et nouveaux sprites validés (plan 01 E).
+- [x] Micro-événements v1 (plan 12) : directeur calé autour des Résurgences, cinq événements (Souverain, Harde, Vestige tombé, Veille, Averse d'éclats), repères au sol, bandeau et flèche de bord, données JSON ; captures en vraie run (24 septembre 2026).
+- [x] Variantes renforcées data-driven (plan 12) : élites naturelles à affixe, Souverains, Aberrations et affixes de phase dans `_variants.json`.
+- [ ] Recette humaine des micro-événements et des élites : cadence, lisibilité, intérêt, récompenses (plan 12 §6).
 - [ ] Ajuster le tempo : runs de 15-25 min en gameplay normal.
 - [ ] **PLAYTEST : est-ce que c'est fun ? Est-ce que l'Effacement crée de la tension ? Est-ce que le mouvement permanent fonctionne ?**
 
@@ -737,7 +740,9 @@ Le script de post-processing doit inclure une vérification/correction de l'angl
 
 ### Phase D — Lisibilité et UX (2-3 semaines)
 
-- [x] Barre d'XP fullwidth en bas de l'écran.
+- [x] Barre d'XP fullwidth en bas de l'écran (déplacée le 24 septembre 2026 dans la plaque de vie du HUD refait, [plan 04](plans/04-interfaces-et-hub.md#retour-de-raphaël-et-hud-de-run--24-septembre-2026)).
+- [x] HUD de run lisible : plaques contrastées, jauge de PV sous le héros, police Saira Semi Condensed, boussole retirée ; captures 1080p/4K vérifiées (plan 04, 24 septembre 2026).
+- [ ] Recette humaine du HUD refait et de la police (720p/1080p, combat dense).
 - [ ] Armes dans le menu pause avec stats et rareté.
 - [ ] Menu pause compact.
 - [ ] Onboarding implicite (les 5 premières minutes doivent être auto-explicatives).

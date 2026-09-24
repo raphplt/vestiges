@@ -68,6 +68,12 @@ public partial class SpawnManager : Node2D
 
 	private const float LocalDensityCheckInterval = 0.25f;
 
+	// Élites naturelles : une variante renforcée d'une créature locale, à intervalle réglé.
+	private readonly List<Enemy> _naturalElites = new();
+	private readonly List<string> _affixScratch = new();
+	private readonly List<EnemyAffixData> _affixPick = new();
+	private float _nextEliteAtSec;
+
 	private GameManager.RunPhase _currentRunPhase = GameManager.RunPhase.Exploration;
 	private string _clusterEnemyId;
 	private int _clusterRemaining;
@@ -91,7 +97,9 @@ public partial class SpawnManager : Node2D
 	{
 		EnemyDataLoader.Load();
 		BiomeDataLoader.Load();
+		EnemyVariantDataLoader.Load();
 		LoadScalingConfig();
+		_nextEliteAtSec = EnemyVariantDataLoader.NaturalElites.StartSec;
 
 		_enemyIds = EnemyDataLoader.GetAllIds();
 
@@ -161,6 +169,9 @@ public partial class SpawnManager : Node2D
 			_localDensityTimer = 0f;
 			EnsureDayLocalDensity(elapsedMinutes);
 		}
+
+		if (_elapsedTime >= _nextEliteAtSec)
+			TrySpawnNaturalElite(elapsedMinutes);
 	}
 
 	// =========================================================
@@ -195,31 +206,125 @@ public partial class SpawnManager : Node2D
 
 	private void ApplyRunPhaseModifiers(Enemy enemy, EnemyData data)
 	{
-		if (_currentRunPhase == GameManager.RunPhase.Exploration)
+		if (_currentRunPhase == GameManager.RunPhase.Exploration || data.Tier != "normal")
 			return;
 
-		if (_currentRunPhase == GameManager.RunPhase.Crisis && data.Tier == "normal")
+		PhaseModifierConfig config = EnemyVariantDataLoader.PhaseModifiers;
+		if (_currentRunPhase == GameManager.RunPhase.Crisis)
 		{
-			float chance = 0.18f + 0.06f * Mathf.Max(0, _crisisManager?.CurrentIntensity - 1 ?? 0);
+			float chance = config.CrisisAberrationChance
+				+ config.CrisisAberrationChancePerIntensity * Mathf.Max(0, (_crisisManager?.CurrentIntensity ?? 1) - 1);
 			if (GD.Randf() < chance)
-				enemy.Aberrate();
+				enemy.ApplyVariant(EnemyVariantDataLoader.GetVariant("aberration"), System.Array.Empty<EnemyAffixData>());
 		}
 
-		if (_currentRunPhase is GameManager.RunPhase.Crisis or GameManager.RunPhase.LateGame or GameManager.RunPhase.Endgame && data.Tier == "normal")
+		float affixChance = _currentRunPhase switch
 		{
-			float modChance = _currentRunPhase switch
+			GameManager.RunPhase.Endgame => config.AffixChanceEndgame,
+			GameManager.RunPhase.LateGame => config.AffixChanceLateGame,
+			GameManager.RunPhase.Crisis => config.AffixChanceCrisis,
+			_ => 0f
+		};
+		if (config.AffixPool.Count > 0 && GD.Randf() < affixChance)
+		{
+			EnemyAffixData affix = EnemyVariantDataLoader.GetAffix(config.AffixPool[(int)(GD.Randi() % config.AffixPool.Count)]);
+			if (affix != null)
+				enemy.ApplyAffix(affix);
+		}
+	}
+
+	// =========================================================
+	// Variantes et API des micro-événements
+	// =========================================================
+
+	/// <summary>Transforme une créature en variante avec des affixes tirés sans doublon.</summary>
+	public void MakeVariant(Enemy enemy, string variantId)
+	{
+		EnemyVariantData variant = EnemyVariantDataLoader.GetVariant(variantId);
+		if (variant == null)
+			return;
+
+		_affixScratch.Clear();
+		_affixScratch.AddRange(EnemyVariantDataLoader.NaturalElites.AffixPool);
+		_affixPick.Clear();
+		for (int i = 0; i < variant.AffixCount && _affixScratch.Count > 0; i++)
+		{
+			int index = (int)(GD.Randi() % _affixScratch.Count);
+			EnemyAffixData affix = EnemyVariantDataLoader.GetAffix(_affixScratch[index]);
+			_affixScratch.RemoveAt(index);
+			if (affix != null)
+				_affixPick.Add(affix);
+		}
+		enemy.ApplyVariant(variant, _affixPick);
+	}
+
+	/// <summary>Créature du biome local, de rang normal, en préférant la liste fournie si elle y figure.</summary>
+	public string PickLocalEnemyId(Vector2 worldPos, IReadOnlyList<string> preferred = null)
+	{
+		CacheWorldSetup();
+		List<string> pool = _worldSetup?.GetBiomeAt(worldPos)?.DayEnemyPool;
+		if (pool == null || pool.Count == 0)
+			pool = FallbackDayPool;
+
+		if (preferred != null)
+		{
+			foreach (string id in preferred)
 			{
-				GameManager.RunPhase.Endgame => 0.34f,
-				GameManager.RunPhase.LateGame => 0.25f,
-				_ => 0.14f
-			};
-			if (GD.Randf() < modChance)
-			{
-				string[] modifiers = { "enraged", "regenerant", "explosive" };
-				string modifier = modifiers[(int)(GD.Randi() % modifiers.Length)];
-				enemy.ApplyWaveModifier(modifier);
+				if (pool.Contains(id))
+					return id;
 			}
 		}
+
+		for (int attempt = 0; attempt < 8; attempt++)
+		{
+			string id = pool[(int)(GD.Randi() % pool.Count)];
+			if (EnemyDataLoader.Get(id)?.Tier == "normal")
+				return id;
+		}
+		return pool[0];
+	}
+
+	/// <summary>Apparition hors du flux naturel (événements, débogage), sans plafond de population.</summary>
+	public Enemy SpawnEventEnemy(string enemyId, Vector2 spawnPos, string variantId = null)
+	{
+		EnemyData data = EnemyDataLoader.Get(enemyId);
+		if (data == null)
+			return null;
+		Enemy enemy = SpawnAt(data, spawnPos, _elapsedTime / 60f);
+		if (!string.IsNullOrEmpty(variantId))
+			MakeVariant(enemy, variantId);
+		return enemy;
+	}
+
+	public bool IsSpawnablePosition(Vector2 position) => !IsWaterAt(position);
+
+	public Vector2 ViewHalfExtents => _player != null ? GetViewHalfExtents() : FallbackViewHalfExtents;
+
+	public float ElapsedSeconds => _elapsedTime;
+
+	private void TrySpawnNaturalElite(float elapsedMinutes)
+	{
+		NaturalEliteConfig config = EnemyVariantDataLoader.NaturalElites;
+		_nextEliteAtSec = _elapsedTime + (float)GD.RandRange(config.IntervalMinSec, config.IntervalMaxSec);
+
+		for (int i = _naturalElites.Count - 1; i >= 0; i--)
+		{
+			Enemy tracked = _naturalElites[i];
+			if (!IsInstanceValid(tracked) || !tracked.IsActive || tracked.IsDying || tracked.Modifiers.Variant?.Id != "elite")
+				_naturalElites.RemoveAt(i);
+		}
+		if (_naturalElites.Count >= config.MaxAlive || _currentRunPhase == GameManager.RunPhase.Death)
+			return;
+
+		Vector2 spawnPos = GetSpawnPosition();
+		string enemyId = PickLocalEnemyId(spawnPos);
+		EnemyData data = EnemyDataLoader.Get(enemyId);
+		if (data == null)
+			return;
+		Enemy enemy = SpawnAt(data, spawnPos, elapsedMinutes);
+		MakeVariant(enemy, "elite");
+		_naturalElites.Add(enemy);
+		GD.Print($"[SpawnManager] Élite : {enemy.DisplayName} à {_elapsedTime:F0} s");
 	}
 
 	// =========================================================
@@ -310,7 +415,7 @@ public partial class SpawnManager : Node2D
 		{
 			if (node is not Enemy enemy)
 				continue;
-			if (!enemy.IsActive || enemy.IsDying)
+			if (!enemy.IsActive || enemy.IsDying || enemy.Modifiers.IsEventBound)
 				continue;
 
 			if (enemy.GlobalPosition.DistanceTo(_player.GlobalPosition) > maxDist)
@@ -335,9 +440,13 @@ public partial class SpawnManager : Node2D
 		if (data == null)
 			return;
 
-		float hpScale;
-		float dmgScale;
-		ComputeScaling(elapsedMinutes, out hpScale, out dmgScale);
+		Enemy enemy = SpawnAt(data, spawnPos, elapsedMinutes);
+		ApplyRunPhaseModifiers(enemy, data);
+	}
+
+	private Enemy SpawnAt(EnemyData data, Vector2 spawnPos, float elapsedMinutes)
+	{
+		ComputeScaling(elapsedMinutes, out float hpScale, out float dmgScale);
 
 		Enemy enemy = _pool.Get();
 		enemy.GlobalPosition = spawnPos;
@@ -346,9 +455,8 @@ public partial class SpawnManager : Node2D
 		float speedMultiplier = ComputeEnemySpeedMultiplier(data, elapsedMinutes, spawnPos);
 		float aggressionMultiplier = ComputeEnemyAggressionMultiplier(data, elapsedMinutes);
 		enemy.ApplySpawnTuning(speedMultiplier, aggressionMultiplier);
-		ApplyRunPhaseModifiers(enemy, data);
-
-		_eventBus.EmitSignal(EventBus.SignalName.EnemySpawned, enemyId, hpScale, dmgScale);
+		_eventBus.EmitSignal(EventBus.SignalName.EnemySpawned, data.Id, hpScale, dmgScale);
+		return enemy;
 	}
 
 	private float ComputeEnemySpeedMultiplier(EnemyData data, float elapsedMinutes, Vector2 spawnPos = default)
@@ -372,22 +480,8 @@ public partial class SpawnManager : Node2D
 
 	public void ForceSpawnEnemy(string enemyId, Vector2 spawnPos)
 	{
-		EnemyData data = EnemyDataLoader.Get(enemyId);
-		if (data == null)
+		if (SpawnEventEnemy(enemyId, spawnPos) == null)
 			return;
-
-		float elapsedMinutes = _elapsedTime / 60f;
-		float hpScale, dmgScale;
-		ComputeScaling(elapsedMinutes, out hpScale, out dmgScale);
-
-		Enemy enemy = _pool.Get();
-		enemy.GlobalPosition = spawnPos;
-		_enemyContainer.AddChild(enemy);
-		enemy.Initialize(data, hpScale, dmgScale);
-		float speedMultiplier = ComputeEnemySpeedMultiplier(data, elapsedMinutes, spawnPos);
-		float aggressionMultiplier = ComputeEnemyAggressionMultiplier(data, elapsedMinutes);
-		enemy.ApplySpawnTuning(speedMultiplier, aggressionMultiplier);
-		_eventBus.EmitSignal(EventBus.SignalName.EnemySpawned, enemyId, hpScale, dmgScale);
 		GD.Print($"[SpawnManager] Debug spawned: {enemyId} at {spawnPos}");
 	}
 

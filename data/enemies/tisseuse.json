@@ -1,6 +1,7 @@
 {
     "id": "tisseuse",
     "name": "Tisseuse",
+    "grammatical_gender": "f",
     "type": "ranged",
     "stats": {
         "hp": 20,

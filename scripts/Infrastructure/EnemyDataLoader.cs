@@ -39,6 +39,8 @@ public class EnemyData
     public string Type { get; set; }
     public string Behavior { get; set; } = "default";
     public string Tier { get; set; } = "normal";
+    /// <summary>Accord des titres de variante (« Tisseuse Enragée »).</summary>
+    public bool IsFeminine { get; set; }
     public EnemyStats Stats { get; set; }
     public EnemyVisual Visual { get; set; }
     public Dictionary<string, float> ExtraStats { get; set; } = new();
@@ -140,6 +142,7 @@ public static class EnemyDataLoader
             Type = dict["type"].AsString(),
             Behavior = dict.ContainsKey("behavior") ? dict["behavior"].AsString() : "default",
             Tier = dict.ContainsKey("tier") ? dict["tier"].AsString() : "normal",
+            IsFeminine = dict.ContainsKey("grammatical_gender") && dict["grammatical_gender"].AsString() == "f",
             Stats = new EnemyStats
             {
                 Hp = (float)stats["hp"].AsDouble(),

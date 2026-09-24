@@ -1,6 +1,7 @@
 {
     "id": "void_brute",
     "name": "Brute du Vide",
+    "grammatical_gender": "f",
     "type": "melee",
     "behavior": "charger",
     "stats": {

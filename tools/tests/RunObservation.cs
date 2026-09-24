@@ -19,6 +19,8 @@ namespace Vestiges.Tests;
 /// --capture-abilities : captures des annonces du Présage et du bond du Charognard.
 /// --capture-bestiary : gros plans des créatures du pilote de sprites procéduraux, autour du joueur immobile.
 /// --density : mesure de densité en spawn naturel (ennemis visibles, temps sans ennemi, débits, niveaux).
+/// --capture-every N : pendant la mesure, capture plein écran toutes les N secondes (HUD, événements).
+/// --event ID : force le micro-événement ID à 3 s de run (bancs de capture).
 /// </summary>
 public partial class RunObservation : Node
 {
@@ -28,6 +30,8 @@ public partial class RunObservation : Node
     private Player _player;
     private Camera2D _camera;
     private string _output;
+    private double _captureEvery;
+    private string _forcedEvent;
 
     public override async void _Ready()
     {
@@ -48,7 +52,11 @@ public partial class RunObservation : Node
             else if (Array.IndexOf(args, "--capture-character") >= 0)
                 await CaptureCharacter(Argument(args, "--character", "traqueur"));
             else
+            {
+                _forcedEvent = Argument(args, "--event", null);
+                _captureEvery = double.Parse(Argument(args, "--capture-every", "0"), CultureInfo.InvariantCulture);
                 await MeasureDensity(double.Parse(Argument(args, "--seconds", "180"), CultureInfo.InvariantCulture), seed);
+            }
 
             GetTree().Quit(0);
         }
@@ -191,6 +199,8 @@ public partial class RunObservation : Node
         Vector2 waypoint = _player.GlobalPosition;
         double start = Time.GetTicksMsec() / 1000.0;
         double nextSample = 1.0;
+        double nextCapture = _captureEvery;
+        Vestiges.Events.RunEventDirector director = _world.GetNode<Vestiges.Events.RunEventDirector>("RunEventDirector");
         PlayerProgressionAccessor progression = new(_player);
         ProcessMode = ProcessModeEnum.Always;
         double pausedSeconds = 0;
@@ -225,9 +235,14 @@ public partial class RunObservation : Node
                 lastProgressPosition = _player.GlobalPosition;
                 lastProgressTime = t;
             }
-            if (_player.GlobalPosition.DistanceTo(waypoint) < 40f)
+            if (_player.GlobalPosition.DistanceTo(waypoint) < 40f && !director.IsEventActive)
                 waypoint = _player.GlobalPosition + Vector2.FromAngle(rng.RandfRange(0f, Mathf.Tau)) * rng.RandfRange(500f, 900f);
-            _player.AIInputOverride = (waypoint - _player.GlobalPosition).Normalized();
+            // Comme un joueur, le bot suit la cible d'un micro-événement en cours (vestige, veille, Souverain).
+            if (director.TryGetActiveTarget(out Vector2 eventTarget))
+                waypoint = eventTarget;
+            _player.AIInputOverride = _player.GlobalPosition.DistanceTo(waypoint) > 12f
+                ? (waypoint - _player.GlobalPosition).Normalized()
+                : Vector2.Zero;
 
             int level = progression.Level;
             if (level > lastLevel)
@@ -235,6 +250,19 @@ public partial class RunObservation : Node
                 for (int l = lastLevel + 1; l <= level; l++)
                     levelTimes[l] = t;
                 lastLevel = level;
+            }
+
+            if (_forcedEvent != null && t >= 3.0)
+            {
+                _world.GetNode<Vestiges.Events.RunEventDirector>("RunEventDirector").ForceStart(_forcedEvent);
+                _forcedEvent = null;
+            }
+
+            if (_captureEvery > 0 && t >= nextCapture)
+            {
+                nextCapture += _captureEvery;
+                using Image frame = GetViewport().GetTexture().GetImage();
+                frame.SavePng(string.Create(CultureInfo.InvariantCulture, $"{_output}/screen-{t:000}s.png"));
             }
 
             if (t < nextSample)

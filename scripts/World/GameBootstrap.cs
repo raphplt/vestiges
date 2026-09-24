@@ -93,10 +93,7 @@ public partial class GameBootstrap : Node
         ChestLootScreen chestLootScreen = GetNodeOrNull<ChestLootScreen>("../ChestLootScreen");
 
         hud.SetProgression(progression);
-        hud.SetCompassTargets(player, null);
-
-        FogOfWar fogOfWar = GetNodeOrNull<FogOfWar>("../FogOfWar");
-        hud.InitializeMinimap(worldSetup, fogOfWar);
+        hud.SetPlayer(player);
 
         levelUpScreen.SetFragmentManager(fragmentManager);
         levelUpScreen.SetPerkManager(perkManager);
@@ -115,6 +112,9 @@ public partial class GameBootstrap : Node
         CrisisManager crisisManager = new() { Name = "CrisisManager" };
         sceneRoot.AddChild(crisisManager);
 
+        RunEventDirector runEventDirector = new() { Name = "RunEventDirector" };
+        sceneRoot.AddChild(runEventDirector);
+
         EndgameManager endgameManager = new() { Name = "EndgameManager" };
         sceneRoot.AddChild(endgameManager);
 
@@ -125,7 +125,6 @@ public partial class GameBootstrap : Node
         sceneRoot.AddChild(questManager);
 
         hud.SetErasureManager(erasureManager);
-        hud.SetCrisisManager(crisisManager);
         hud.SetEssenceTracker(essenceTracker);
 
         InitializeCharacterAndRun(player, perkManager, scoreManager, runTracker);

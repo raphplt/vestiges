@@ -116,3 +116,30 @@ Parcours : nouveau profil → Exploration → run → loot/niveau → pause → 
 Tester focus clavier/manette, souris, paramètres persistants, texte agrandi, filtres daltoniens et effets réduits. Captures avant/après, build et smoke si applicable.
 
 Roadmap D/E/F/G. La création d'un écran agréable ne suffit pas à cocher onboarding avant un essai sans explication.
+
+## Retour de Raphaël et HUD de run — 24 septembre 2026
+
+**Retour :**
+- La flèche qui pointe vers le centre de la carte n'a plus d'intérêt.
+- Les PV et les autres informations en haut à gauche sont très peu visibles.
+- La police est trop pixelisée et dure à lire. Il semble y avoir plusieurs polices, aucune ne convient. Il en faut une qui soit dans la DA et vraiment lisible.
+
+**Diagnostic de la police :** une seule fonte était en place, PixelOperator (grille de 16 px), affectée par le thème global. Le HUD l'affichait à 7–12 px, sur une racine mise à l'échelle ×2 : les glyphes, ré-échantillonnés hors de leur grille, changeaient d'aspect selon la taille. D'où l'impression de plusieurs polices.
+
+**Police retenue : Saira Semi Condensed** (OFL, `assets/fonts/saira/`), en Medium pour le thème et SemiBold pour les plaques d'élites. Critères :
+- Bible §9.1 : sans-serif condensée, industrielle et utilitaire (lettrage de caisses, pochoir), ni serif fantaisie ni gothique.
+- Lisibilité : chasse ouverte, 1/I/l et 0/O distincts.
+- Accents français complets.
+
+Comparées sur les mêmes textes : Barlow Semi Condensed, Chakra Petch, Big Shoulders et Pixelify Sans. Barlow est le second choix ; Big Shoulders ne tient pas aux petites tailles ; Pixelify reste un pixel font. Godot 4.7 rastérise le texte à la taille finale malgré l'échelle ×2 du HUD : le rendu est net en 1080p comme en 4K (capture 3840×2160 vérifiée). La police secondaire « livresque » du lore (Bible §9.1) reste à choisir.
+
+**HUD refait (`scripts/UI/HUD.cs`) :**
+- Trois plaques sombres à 82 % d'opacité, liseré or : lisibles sur tous les sols.
+- Haut-gauche : pastille de niveau, barre de PV de 156×17 avec valeur, trace claire des PV perdus, bord qui bat sous 30 % de vie, XP juste dessous.
+- Haut-centre : phase, biome, temps de run, Effacement en barre et en %, annonce de Résurgence avec décompte.
+- Haut-droite : score défilant et Essence.
+- **Jauge de PV sous le héros** (`PlayerHealthGauge`) : discrète à pleine vie, opaque après un coup, battante quand la vie est basse. La recharge du dash passe juste dessous.
+- Boussole vers le centre supprimée, avec le code mort hérité de la V1 (inventaire, résumé d'aube, noms de ressources). La barre d'XP pleine largeur du bas rejoint la plaque de vie, à côté du niveau.
+- Libellés en clés de traduction `UI_HUD_*`. Accents rétablis dans les quêtes de run.
+
+**À valider en jeu :** taille des plaques en 720p, présence de la jauge sous le héros en combat dense, et intérêt de garder ou non une barre d'XP pleine largeur.

@@ -39,6 +39,7 @@ public partial class CrisisManager : Node
     public int CrisisNumber => _crisisNumber;
     public int CurrentIntensity => _currentIntensity;
     public bool IsEndgameMode => _endgameMode;
+    public float WarningDurationSec => _warningDurationSec;
 
     public override void _Ready()
     {

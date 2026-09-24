@@ -69,6 +69,15 @@ public partial class EventBus : Node
     [Signal] public delegate void RandomEventTriggeredEventHandler(string eventId, string eventName);
     [Signal] public delegate void RandomEventEndedEventHandler(string eventId);
 
+    // --- Micro-événements de run ---
+    [Signal] public delegate void RunEventStartedEventHandler(string eventId, string title, string objective, float duration);
+    [Signal] public delegate void RunEventProgressEventHandler(string objective, float progress, float timeRemaining, Vector2 target, bool hasTarget);
+    [Signal] public delegate void RunEventEndedEventHandler(string eventId, bool success, string summary);
+    [Signal] public delegate void EventEnemyKilledEventHandler(int eventToken, Vector2 position);
+
+    // --- Variantes d'ennemis ---
+    [Signal] public delegate void VariantEnemyKilledEventHandler(string displayName, string variantId, Vector2 position);
+
     // --- Bonus événementiels ---
     [Signal] public delegate void XpMultiplierChangedEventHandler(float multiplier);
     [Signal] public delegate void PlayerBuffAppliedEventHandler(string buffId, float duration);

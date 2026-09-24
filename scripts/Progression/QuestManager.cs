@@ -140,7 +140,7 @@ public partial class QuestManager : CanvasLayer
             "xp" => $"+{definition.RewardAmount} XP",
             "souvenir" => $"Souvenir: {SouvenirDataLoader.Get(definition.RewardId)?.Name ?? definition.RewardId}",
             "character_unlock" => $"Personnage: {CharacterDataLoader.Get(definition.RewardId)?.Name ?? definition.RewardId}",
-            _ => "Recompense inconnue"
+            _ => "Récompense inconnue"
         };
     }
 
@@ -185,7 +185,7 @@ public partial class QuestManager : CanvasLayer
 
         Label title = new()
         {
-            Text = "QUETES DE RUN"
+            Text = "QUÊTES DE RUN"
         };
         title.AddThemeFontSizeOverride("font_size", 16);
         title.AddThemeColorOverride("font_color", new Color(0.82f, 0.94f, 0.98f));
@@ -370,7 +370,7 @@ public partial class QuestManager : CanvasLayer
                 break;
         }
 
-        _toastLabel.Text = $"Quete accomplie: {quest.Definition.Name}\n{GetRewardSummary(quest.Definition)}";
+        _toastLabel.Text = $"Quête accomplie : {quest.Definition.Name}\n{GetRewardSummary(quest.Definition)}";
         _toastLabel.Visible = true;
         _toastTimer = 4f;
     }

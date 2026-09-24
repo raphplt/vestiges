@@ -31,6 +31,7 @@ public partial class Enemy : CharacterBody2D
 	private const float ColosseSlamCooldown = 4f;
 
 	private float _maxHp;
+	private float _baseHp;
 	private float _currentHp;
 	private float _baseSpeed;
 	private float _speed;
@@ -95,15 +96,13 @@ public partial class Enemy : CharacterBody2D
 
 	// V2: structures retirees — FindNearestStructure retourne toujours null
 
-	// Wave modifiers (nuit 7+ : enragé, régénérant, explosif)
-	private string _waveModifier;
-	private float _regenTimer;
+	// Variante (élite, Souverain, Aberration), affixes, harde et micro-événements
+	private readonly EnemyModifiers _mods = new();
 	private Polygon2D _modifierAura;
 	private Tween _modifierAuraTween;
-
-	// Aberration : version corrompue (nuit 7+)
-	private bool _isAberration;
-	private Polygon2D _aberrationAura;
+	private EnemyNameplate _nameplate;
+	private string _displayName;
+	private bool _isFeminine;
 
 	// Ignite DOT
 	private float _igniteDps;
@@ -154,6 +153,10 @@ public partial class Enemy : CharacterBody2D
 	public bool IsActive { get; private set; }
 	public bool IsDying => _isDying;
 	public float HpRatio => _maxHp > 0 ? _currentHp / _maxHp : 0f;
+	public EnemyModifiers Modifiers => _mods;
+	public string EnemyId => _enemyId;
+	public string DisplayName => _displayName;
+	public bool IsFeminine => _isFeminine;
 	internal float Damage => _damage;
 	internal float SlowFactor => _slowFactor;
 	internal bool IsDisoriented => _disorientTimer > 0f;
@@ -181,6 +184,7 @@ public partial class Enemy : CharacterBody2D
 		_enemyType = data.Type;
 		_behavior = data.Behavior ?? "default";
 		_tier = data.Tier ?? "normal";
+		_baseHp = data.Stats.Hp;
 		_maxHp = data.Stats.Hp * hpScale;
 		_currentHp = _maxHp;
 		_baseSpeed = data.Stats.Speed;
@@ -215,8 +219,8 @@ public partial class Enemy : CharacterBody2D
 		_packBonusDamage = data.ExtraStats.TryGetValue("pack_bonus_damage", out float pbd) ? pbd : 0.15f;
 		_packBonusSpeed = data.ExtraStats.TryGetValue("pack_bonus_speed", out float pbs) ? pbs : 0.10f;
 		_packRadius = data.ExtraStats.TryGetValue("pack_radius", out float pr) ? pr : 120f;
-		_waveModifier = null;
-		_regenTimer = 0f;
+		_displayName = data.Name;
+		_isFeminine = data.IsFeminine;
 		_packBonusTimer = (float)GD.RandRange(0.0, PackBonusInterval);
 		IsActive = true;
 
@@ -259,34 +263,108 @@ public partial class Enemy : CharacterBody2D
 		_guardPosition = GlobalPosition;
 	}
 
-	/// <summary>Transforme cet ennemi en Aberration : stats boostées, taille accrue, aura sombre.</summary>
-	public void Aberrate()
+	/// <summary>
+	/// Transforme la créature en variante renforcée (élite, Souverain, Aberration) avec ses affixes.
+	/// Appelé après Initialize et ApplySpawnTuning : les multiplicateurs s'appliquent aux valeurs déjà mises à l'échelle.
+	/// </summary>
+	public void ApplyVariant(EnemyVariantData variant, IReadOnlyList<EnemyAffixData> affixes)
 	{
-		_isAberration = true;
-
-		// Boost de stats : +60% HP, +40% dégâts, +20% vitesse, +100% XP
-		_maxHp *= 1.6f;
-		_currentHp = _maxHp;
-		_damage *= 1.4f;
-		_speed *= 1.2f;
-		_xpReward *= 2f;
-
-		// Taille accrue
-		Scale = Vector2.One * 1.4f;
-
-		// Teinte sombre violacée via le shader unifié
-		Color aberrationTint = new(0.4f, 0.15f, 0.5f);
-		_visual.Color = _visual.Color.Lerp(aberrationTint, 0.5f);
-		_originalColor = _visual.Color;
+		_mods.SetVariant(variant);
+		float hpMult = variant.HpMultiplierFor(_baseHp);
+		float damageMult = variant.DamageMult;
+		float speedMult = variant.SpeedMult;
+		foreach (EnemyAffixData affix in affixes)
+		{
+			_mods.AddAffix(affix);
+			hpMult *= affix.HpMult;
+			damageMult *= affix.DamageMult;
+			speedMult *= affix.SpeedMult;
+		}
+		ScaleStats(hpMult, damageMult, speedMult);
+		_xpReward *= variant.XpMult;
+		Scale = Vector2.One * variant.Scale;
+		_displayName = _mods.BuildDisplayName(_displayName, _isFeminine);
 
 		if (_hasSprite && _spriteMaterial != null)
 		{
-			_spriteMaterial.SetShaderParameter("aberration_amount", 1.0f);
-			_spriteMaterial.SetShaderParameter("outline_color", new Color(0.25f, 0.08f, 0.35f, 1f));
+			_spriteMaterial.SetShaderParameter("outline_color", variant.OutlineColor);
+			if (variant.AberrationShader)
+				_spriteMaterial.SetShaderParameter("aberration_amount", 1.0f);
+		}
+		if (variant.AberrationShader)
+		{
+			_visual.Color = _visual.Color.Lerp(variant.OutlineColor, 0.5f);
+			_originalColor = _visual.Color;
+			SpawnAberrationAura();
+		}
+		else if (affixes.Count > 0)
+		{
+			SpawnModifierAura(affixes[0].Color with { A = 0.22f });
 		}
 
-		// Aura GPU particules pulsantes (remplace l'ancien Polygon2D)
-		_aberrationAura = null;
+		if (variant.Nameplate)
+		{
+			_nameplate = new EnemyNameplate { Name = "Nameplate" };
+			AddChild(_nameplate);
+			_nameplate.Setup(this, _displayName, _mods.BuildAffixLine(_isFeminine), variant.OutlineColor, variant.Scale, VisualTop());
+		}
+	}
+
+	/// <summary>Haut du visuel en coordonnées locales, avant mise à l'échelle.</summary>
+	private float VisualTop()
+	{
+		if (!_hasSprite)
+			return -_visual.Polygon[0].Length() - 4f;
+		Texture2D frame = _sprite.SpriteFrames.GetFrameTexture(_sprite.Animation, 0);
+		return _sprite.Offset.Y - (frame?.GetHeight() ?? 32) * 0.5f;
+	}
+
+	/// <summary>Affixe seul, sans variante (pression des Résurgences et du late game).</summary>
+	public void ApplyAffix(EnemyAffixData affix)
+	{
+		_mods.AddAffix(affix);
+		ScaleStats(affix.HpMult, affix.DamageMult, affix.SpeedMult);
+		SpawnModifierAura(affix.Color with { A = 0.2f });
+	}
+
+	/// <summary>Harde : la créature traverse la zone en ligne droite, en frappant ce qu'elle percute.</summary>
+	public void StartTravel(Vector2 direction, float speedMultiplier, float duration)
+	{
+		_mods.StartTravel(direction, speedMultiplier, duration);
+	}
+
+	/// <summary>Multiplie l'XP donnée à la mort (créatures d'événement).</summary>
+	public void MultiplyXpReward(float multiplier) => _xpReward *= multiplier;
+
+	/// <summary>Dissolution sans récompense : la créature d'un événement expiré retourne au Néant.</summary>
+	public void Vanish()
+	{
+		if (_isDying || !IsActive)
+			return;
+		_isDying = true;
+		CancelAbilities();
+		Velocity = Vector2.Zero;
+		if (IsInGroup("enemies"))
+			RemoveFromGroup("enemies");
+		Node2D dissolutionVfx = VfxFactory.CreateDissolutionVfx(GlobalPosition);
+		if (dissolutionVfx != null)
+			GetTree().CurrentScene.AddChild(dissolutionVfx);
+		Tween tween = CreateTween();
+		tween.TweenProperty(this, "modulate:a", 0f, DissolveDuration);
+		tween.TweenCallback(Callable.From(OnDeathComplete));
+	}
+
+	private void ScaleStats(float hpMult, float damageMult, float speedMult)
+	{
+		_maxHp *= hpMult;
+		_currentHp = _maxHp;
+		_damage *= damageMult;
+		_baseSpeed *= speedMult;
+		_speed *= speedMult;
+	}
+
+	private void SpawnAberrationAura()
+	{
 		if (VfxFactory.CurrentParticleLevel == ParticleLevel.Off)
 			return;
 
@@ -355,23 +433,20 @@ public partial class Enemy : CharacterBody2D
 		_disorientTimer = 0f;
 		_screamerTimer = 0f;
 		_burrowerPhaseTimer = 0f;
-		_isAberration = false;
+		_mods.Reset();
 		_chargerCooldown = 0f;
 		_chargerIsCharging = false;
 		_chargerDurationLeft = 0f;
 		_packBonusDamage = 0f;
 		_packBonusSpeed = 0f;
-		_waveModifier = null;
-		_regenTimer = 0f;
 		_packBonusTimer = 0f;
-		// Nettoyage aura aberration (GPU particles ou Polygon2D legacy)
 		Node auraNode = GetNodeOrNull("AberrationAura");
 		if (auraNode != null)
 			auraNode.QueueFree();
-		if (_aberrationAura != null)
+		if (_nameplate != null)
 		{
-			_aberrationAura.QueueFree();
-			_aberrationAura = null;
+			_nameplate.QueueFree();
+			_nameplate = null;
 		}
 		if (_modifierAura != null)
 		{
@@ -430,7 +505,13 @@ public partial class Enemy : CharacterBody2D
 			// Une annonce en cours ne doit pas rester figée à l'écran hors du traitement complet.
 			CancelAbilities();
 
-			// Mouvement simplifié vers la cible sans MoveAndSlide complet
+			// Mouvement simplifié sans MoveAndSlide complet : traversée de harde ou approche du joueur.
+			if (_mods.IsTraveling)
+			{
+				_mods.TickTravel(dt);
+				GlobalPosition += _mods.TravelDirection * _speed * _mods.TravelSpeedMultiplier * _slowFactor * dt;
+				return;
+			}
 			Vector2 direction = (_player.GlobalPosition - GlobalPosition).Normalized();
 			GlobalPosition += direction * _speed * _slowFactor * dt;
 			return;
@@ -447,6 +528,14 @@ public partial class Enemy : CharacterBody2D
 		// Colosse en charge : skip le mouvement normal
 		if (_isCharging)
 		{
+			MoveAndSlide();
+			return;
+		}
+
+		if (_mods.IsTraveling)
+		{
+			ProcessTravel(distToPlayer, dt);
+			UpdateSpriteAnimation(dt);
 			MoveAndSlide();
 			return;
 		}
@@ -501,9 +590,9 @@ public partial class Enemy : CharacterBody2D
 				break;
 		}
 
-		// Wave modifiers (indépendant du behavior)
-		if (_waveModifier == "regenerant")
-			ProcessRegenModifier(delta);
+		float regen = _mods.TickRegen(delta, _maxHp);
+		if (regen > 0f)
+			_currentHp = Mathf.Min(_currentHp + regen, _maxHp);
 	}
 
 	/// <summary>Hurleur : crie périodiquement pour appeler des renforts (shade).</summary>
@@ -728,37 +817,15 @@ public partial class Enemy : CharacterBody2D
 		}
 	}
 
-	/// <summary>Applique un modificateur de vague (enragé, régénérant, explosif).</summary>
-	public void ApplyWaveModifier(string modifier)
+	private void ProcessTravel(float distToPlayer, float delta)
 	{
-		_waveModifier = modifier;
-
-		switch (modifier)
+		_mods.TickTravel(delta);
+		Velocity = _mods.TravelDirection * _speed * _mods.TravelSpeedMultiplier * _slowFactor;
+		_attackTimer -= delta;
+		if (distToPlayer < MeleeRange && _attackTimer <= 0f)
 		{
-			case "enraged":
-				_damage *= 1.4f;
-				_speed *= 1.3f;
-				_visual.Color = _visual.Color.Lerp(new Color(1f, 0.2f, 0.1f), 0.5f);
-				_originalColor = _visual.Color;
-				SpawnModifierAura(new Color(1f, 0.3f, 0.1f, 0.2f));
-				break;
-			case "regenerant":
-				SpawnModifierAura(new Color(0.2f, 1f, 0.3f, 0.2f));
-				break;
-			case "explosive":
-				SpawnModifierAura(new Color(1f, 0.7f, 0.1f, 0.2f));
-				break;
-		}
-	}
-
-	private void ProcessRegenModifier(float delta)
-	{
-		_regenTimer += delta;
-		if (_regenTimer >= 1f)
-		{
-			_regenTimer = 0f;
-			float regenAmount = _maxHp * 0.03f;
-			_currentHp = Mathf.Min(_currentHp + regenAmount, _maxHp);
+			HitPlayer(_player, _damage);
+			_attackTimer = _meleeAttackCooldown;
 		}
 	}
 
@@ -944,6 +1011,8 @@ public partial class Enemy : CharacterBody2D
 		if (_currentHp <= 0 || _isDying || _isBurrowed)
 			return;
 
+		damage *= _mods.DamageTakenMultiplier;
+		_mods.NotifyDamaged();
 		_currentHp -= damage;
 		_eventBus.EmitSignal(EventBus.SignalName.EntityDamaged, this, damage);
 		HitFlash();
@@ -1180,9 +1249,17 @@ public partial class Enemy : CharacterBody2D
 			ScreenShake.Instance?.ShakeHeavy();
 			ScreenShake.Instance?.Hitstop(0.07f);
 		}
-		else if (_isAberration)
+		else if (_mods.IsVariant)
 		{
-			ScreenShake.Instance?.ShakeMedium();
+			if (_mods.Variant.DeathShake == "heavy")
+			{
+				ScreenShake.Instance?.ShakeHeavy();
+				ScreenShake.Instance?.Hitstop(0.06f);
+			}
+			else
+			{
+				ScreenShake.Instance?.ShakeMedium();
+			}
 		}
 
 		// Lancer l'animation de mort sur le sprite
@@ -1190,10 +1267,10 @@ public partial class Enemy : CharacterBody2D
 			PlaySpriteAnim(SpriteAnimations[(int)_facing.Current, (int)SpriteAction.Death]);
 
 		// Explosive : AoE de dégâts à la mort
-		if (_waveModifier == "explosive")
+		if (_mods.DeathExplosionRadius > 0f)
 		{
-			float explosionRadius = 60f;
-			float explosionDamage = _damage * 1.5f;
+			float explosionRadius = _mods.DeathExplosionRadius;
+			float explosionDamage = _damage * _mods.DeathExplosionDamageMult;
 
 			// Dégâts au joueur
 			float explosionRadiusSq = explosionRadius * explosionRadius;
@@ -1232,13 +1309,17 @@ public partial class Enemy : CharacterBody2D
 			_guardTarget.OnGuardKilled();
 
 		_eventBus.EmitSignal(EventBus.SignalName.EnemyKilled, _enemyId, GlobalPosition);
+		if (_mods.EventToken != 0)
+			_eventBus.EmitSignal(EventBus.SignalName.EventEnemyKilled, _mods.EventToken, GlobalPosition);
 
 		SpawnXpOrbs();
 		TryDropWeapon();
 
 		// Mini-boss : drop un coffre épique garanti
 		if (_tier == "miniboss")
-			SpawnMinibossChest();
+			SpawnRewardChest("chest_epic");
+		if (_mods.IsVariant)
+			GrantVariantRewards();
 
 		SpawnDisintegrationParticles();
 
@@ -1248,7 +1329,7 @@ public partial class Enemy : CharacterBody2D
 			GetTree().CurrentScene.AddChild(dissolutionVfx);
 
 		// VFX flaque de sang iridescent sous l'ennemi mort
-		Node2D poolVfx = VfxFactory.CreateIridescentBloodSplatter(GlobalPosition, _tier == "miniboss" ? 2.5f : (_isAberration ? 1.5f : 1.0f));
+		Node2D poolVfx = VfxFactory.CreateIridescentBloodSplatter(GlobalPosition, _tier == "miniboss" ? 2.5f : (_mods.IsVariant ? 1.5f : 1.0f));
 		if (poolVfx != null)
 			GetTree().CurrentScene.AddChild(poolVfx);
 
@@ -1281,10 +1362,10 @@ public partial class Enemy : CharacterBody2D
 		if (VfxFactory.CurrentParticleLevel == ParticleLevel.Off)
 			return;
 
-		int count = _tier == "miniboss" ? 20 : (_isAberration ? 14 : 8);
+		int count = _tier == "miniboss" ? 20 : (_mods.IsVariant ? 14 : 8);
 		if (VfxFactory.CurrentParticleLevel == ParticleLevel.Reduced)
 			count = Mathf.Max(count / 2, 1);
-		float emissionRadius = _tier == "miniboss" ? 20f : (_isAberration ? 12f : 6f);
+		float emissionRadius = _tier == "miniboss" ? 20f : (_mods.IsVariant ? 12f : 6f);
 
 		var particles = new GpuParticles2D
 		{
@@ -1331,13 +1412,27 @@ public partial class Enemy : CharacterBody2D
 		particles.AddChild(timer);
 	}
 
-	private void SpawnMinibossChest()
+	/// <summary>Essence, coffre et annonce propres à la variante abattue.</summary>
+	private void GrantVariantRewards()
+	{
+		EnemyVariantData variant = _mods.Variant;
+		if (variant.BonusEssence > 0)
+			_eventBus.EmitSignal(EventBus.SignalName.LootReceived, "essence", _enemyId, variant.BonusEssence);
+
+		if (!string.IsNullOrEmpty(variant.RewardChest) && GD.Randf() < variant.RewardChestChance)
+			SpawnRewardChest(variant.RewardChest);
+
+		if (variant.Nameplate)
+			_eventBus.EmitSignal(EventBus.SignalName.VariantEnemyKilled, _displayName, variant.Id, GlobalPosition);
+	}
+
+	private void SpawnRewardChest(string chestId)
 	{
 		if (_chestScene == null)
 			return;
 
 		ChestDataLoader.Load();
-		ChestData chestData = ChestDataLoader.Get("chest_epic");
+		ChestData chestData = ChestDataLoader.Get(chestId);
 		if (chestData == null)
 			return;
 
@@ -1358,7 +1453,7 @@ public partial class Enemy : CharacterBody2D
 		float dropChance = _tier switch
 		{
 			"miniboss" => 0.15f,
-			_ when _isAberration => 0.04f,
+			_ when _mods.IsVariant => _mods.Variant.WeaponDropChance,
 			_ => 0.01f
 		};
 
@@ -1366,7 +1461,7 @@ public partial class Enemy : CharacterBody2D
 			return;
 
 		// Sélectionner une arme aléatoire (tier proportionnel au tier de l'ennemi)
-		int maxWeaponTier = _tier == "miniboss" ? 4 : (_isAberration ? 3 : 2);
+		int maxWeaponTier = _tier == "miniboss" ? 4 : (_mods.IsVariant ? 3 : 2);
 		System.Collections.Generic.List<WeaponData> candidates = new();
 		foreach (WeaponData weapon in WeaponDataLoader.GetAll())
 		{

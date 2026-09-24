@@ -1,6 +1,7 @@
 {
     "id": "wailing_sentinel",
     "name": "Sentinelle Hurlante",
+    "grammatical_gender": "f",
     "type": "ranged",
     "behavior": "sentinel",
     "stats": {

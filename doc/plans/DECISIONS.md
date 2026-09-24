@@ -37,6 +37,7 @@ Ce registre intègre les retours structurants après la première lecture des pl
 | Casting | Six personnages validés le 23 septembre ; personnages « atypiques » encouragés | 06 ; sprites pilotes 08 |
 | Densité d'ennemis | Manque ressenti ; mesures objectives et comparaisons demandées (23 septembre) | 03 : banc de densité, anneau d'apparition calé sur l'écran, densité croissante |
 | Premier essai de menace | Présage et bond annoncé du Charognard (23 septembre) | 07/03 A2 : [implémentation](07-bestiaire-et-rencontres.md#premier-essai-menace--23-septembre-2026), recette en jeu à faire |
+| Retours du 24 septembre | Nouveaux ennemis validés ; joueur encore trop grand, idle à animer (refonte du dessin reportée) ; flèche vers le centre inutile ; PV et infos peu visibles ; police trop pixelisée ; micro-événements toutes les 2–3 min « vraiment réfléchis » ; variantes fortes des mobs de base | 08 (−15 %, idle 6 frames) ; 04 (HUD, Saira Semi Condensed) ; [12](12-micro-evenements.md) (5 événements, élites, Souverains) ; recette à faire |
 
 « Les mobs avancent successivement » reste ambigu au moment de cette révision. Une clarification a été demandée : arrivée en file jugée problématique, introduction progressive des types, ou les deux. Le plan 07 sépare ces deux sujets ; aucun comportement n'est présenté comme une préférence confirmée.
 

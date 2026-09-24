@@ -46,7 +46,7 @@
     {
         "id": "after_the_climax",
         "category": "progression",
-        "name": "Au-dela du climax",
+        "name": "Au-delà du climax",
         "description": "Atteindre l'Endgame.",
         "objective_type": "reach_endgame",
         "target": 1,
@@ -57,8 +57,8 @@
     {
         "id": "run_kill_swarm",
         "category": "run",
-        "name": "Casser l'elan",
-        "description": "Tuer 35 creatures.",
+        "name": "Casser l'élan",
+        "description": "Tuer 35 créatures.",
         "objective_type": "kill_total",
         "target": 35,
         "reward_type": "essence",
@@ -80,7 +80,7 @@
         "id": "run_search_the_map",
         "category": "run",
         "name": "Lire les traces",
-        "description": "Explorer 3 points d'interet.",
+        "description": "Explorer 3 points d'intérêt.",
         "objective_type": "explore_poi",
         "target": 3,
         "reward_type": "xp",

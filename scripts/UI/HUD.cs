@@ -1,7 +1,6 @@
 using Godot;
 using Vestiges.Combat;
 using Vestiges.Core;
-using Vestiges.Events;
 using Vestiges.Infrastructure;
 using Vestiges.Progression;
 using Vestiges.World;
@@ -9,22 +8,16 @@ using Vestiges.World;
 namespace Vestiges.UI;
 
 /// <summary>
-/// HUD pixel art : barres dessinées manuellement, icônes 16×16, slots d'armes visuels,
-/// style semi-diégétique (parchemin usé, métal oxydé) comme décrit dans le GDD §9.
-/// Layout: top=jour/nuit + HP/XP + score, bottom-center=weapon slots, bottom-left=inventaire.
+/// HUD de run : trois plaques sombres à fort contraste lisibles sur tous les sols.
+/// Haut-gauche : niveau, PV, XP. Haut-centre : phase, biome, temps, Effacement et alertes.
+/// Haut-droite : score et Essence. Bas-centre : armes et passifs. Les PV sont doublés
+/// par une jauge sous le héros (<see cref="PlayerHealthGauge"/>) pour rester visibles en combat.
 ///
-/// Scaling : tous les éléments sont enfants d'un Control racine dont le Scale est ajusté.
-/// HudScale = 0 (défaut) → auto-scale basé sur viewport/640×360. Ex: 1920×1080 → scale 3.0.
-/// Modifier HudScale dans l'inspecteur ou via SetHudScale(float) au runtime.
+/// Tous les éléments sont enfants d'un Control racine mis à l'échelle (référence 960×540) :
+/// le texte reste net car Godot rastérise les polices à la taille finale.
 /// </summary>
 public partial class HUD : CanvasLayer
 {
-    // --- Scale system ---
-    /// <summary>
-    /// Facteur de zoom du HUD entier. 0 = auto (recommandé : cible 640×360 logique).
-    /// Valeur manuelle : 1.0 = natif (minuscule), 3.0 = typique Full HD, 4+ = très grand.
-    /// Modifiable depuis l'inspecteur Godot ou via SetHudScale() au runtime.
-    /// </summary>
     [Export(PropertyHint.Range, "0,6.0,0.25")]
     public float HudScale
     {
@@ -36,109 +29,80 @@ public partial class HUD : CanvasLayer
                 ApplyScale();
         }
     }
-    private float _hudScale = 0f; // 0 = auto
+    private float _hudScale;
     private Control _hudRoot;
 
-    /// <summary>Résolution logique de référence. Le scale auto est calculé pour que le HUD
-    /// soit rendu comme s'il était sur un écran de cette taille.</summary>
     private static readonly Vector2 ReferenceResolution = new(960, 540);
 
-    // --- Top-left vitals ---
-    private TextureRect _heartIcon;
-    private Control _hpBarContainer;
-    private ColorRect _hpBarFill;
-    private ColorRect _hpBarBg;
-    private Label _hpValueLabel;
-    private TextureRect _levelIcon;
+    private const float PlateMargin = 8f;
+    private const float VitalsWidth = 204f;
+    private const float VitalsBarWidth = 156f;
+    private const float RunPlateWidth = 320f;
+    private const float ScorePlateWidth = 150f;
+    private const float FpsUpdateInterval = 0.25f;
+    private const float BiomeUpdateInterval = 0.5f;
+    private const float ScoreTickInterval = 0.05f;
+    private const float LowHpRatio = 0.3f;
+
+    // --- Vitals ---
     private Label _levelLabel;
-    private Control _xpBarContainer;
-    private ColorRect _xpBarFill;
-    private ColorRect _xpBarBg;
+    private ColorRect _hpFill;
+    private ColorRect _hpChip;
+    private Label _hpValueLabel;
+    private ColorRect _xpFill;
+    private PanelContainer _vitalsPlate;
 
-    // --- Top-center run pressure ---
-    private Control _dayNightContainer;
-    private ColorRect _dayNightBg;
-    private ColorRect _dayNightFill;
-    private TextureRect _phaseIcon;
+    // --- Run progress ---
     private Label _phaseLabel;
-    private Label _nightLabel;
+    private Label _biomeLabel;
+    private Label _timeLabel;
+    private ColorRect _erasureFill;
+    private Label _erasureLabel;
+    private Label _alertLabel;
 
-    // --- Top-right score ---
-    private TextureRect _scoreIcon;
+    // --- Score ---
     private Label _scoreLabel;
     private Label _essenceLabel;
     private Label _fpsLabel;
 
-    // --- Bottom-center: weapon quick bar ---
-    private HBoxContainer _weaponBar;
+    // --- Bottom-center bars ---
     private readonly NinePatchRect[] _weaponSlotFrames = new NinePatchRect[Player.MaxWeaponSlots];
     private readonly TextureRect[] _weaponSlotIcons = new TextureRect[Player.MaxWeaponSlots];
-    private readonly Label[] _weaponSlotLabels = new Label[Player.MaxWeaponSlots];
     private readonly Label[] _weaponSlotLevels = new Label[Player.MaxWeaponSlots];
-
-    // --- Bottom-center: passive souvenir bar ---
-    private HBoxContainer _passiveBar;
     private readonly NinePatchRect[] _passiveSlotFrames = new NinePatchRect[Player.MaxPassiveSlots];
     private readonly TextureRect[] _passiveSlotIcons = new TextureRect[Player.MaxPassiveSlots];
     private readonly Label[] _passiveSlotLabels = new Label[Player.MaxPassiveSlots];
-
-    // --- Bottom-left: inventory ---
-    private TextureRect _woodIcon;
-    private Label _woodLabel;
-    private TextureRect _stoneIcon;
-    private Label _stoneLabel;
-    private TextureRect _metalIcon;
-    private Label _metalLabel;
-    private Control _capacityBarContainer;
-    private ColorRect _capacityBarFill;
-    private ColorRect _capacityBarBg;
-    private Label _capacityLabel;
-
-    // --- Dawn summary ---
-    private PanelContainer _dawnSummary;
-    private Label _dawnSummaryLabel;
-
-    // --- Minimap ---
-    private Minimap _minimap;
-
-    // --- Interact hint ---
-    private Label _interactHint;
-
-    // --- Compass ---
-    private PanelContainer _compassPanel;
-    private Node2D _compassArrowRoot;
-    private Polygon2D _compassArrowHead;
-    private Polygon2D _compassArrowTail;
-    private Label _compassDistanceLabel;
-
-    // --- Biome ---
-    private Label _biomeLabel;
-    private WorldSetup _worldSetupRef;
-    private string _lastBiomeName;
-    private float _biomeUpdateTimer;
+    private Texture2D _slotEmptyTex;
+    private Texture2D _slotFilledTex;
+    private Texture2D _passiveEmptyTex;
+    private Texture2D _passiveFilledTex;
 
     // --- State ---
     private EventBus _eventBus;
     private GroupCache _groupCache;
+    private GameManager _gameManager;
     private PlayerProgression _progression;
     private ErasureManager _erasureManager;
-    private CrisisManager _crisisManager;
     private EssenceTracker _essenceTracker;
-    private Player _compassPlayer;
-    private Node2D _mapCenterAnchor;
-    private float _fpsUpdateTimer;
-    private float _interactHintUpdateTimer;
-    private float _currentHpRatio = 1f;
-    private string _currentRunPhaseText = "Exploration";
+    private Player _player;
+    private WorldSetup _worldSetup;
+    private string _lastBiomeName;
+    private string _phaseText = "";
+    private float _fpsTimer;
+    private float _biomeTimer;
+    private float _scoreTimer;
+    private float _runSeconds;
+    private int _shownSeconds = -1;
+    private int _targetScore;
+    private float _shownScore;
+    private float _hpRatio = 1f;
+    private float _chipRatio = 1f;
+    private float _lowHpPulse;
+    private float _warningCountdown;
 
-    private const float FpsUpdateInterval = 0.25f;
-    private const float InteractHintUpdateInterval = 0.25f;
-    private const float BiomeUpdateInterval = 0.5f;
-
-    // Palette from charte graphique
+    // Palette de la charte graphique
     private static readonly Color PalBlackDeep = new(0x1A / 255f, 0x1A / 255f, 0x2E / 255f);
     private static readonly Color PalBlackBlue = new(0x16 / 255f, 0x21 / 255f, 0x3E / 255f);
-    private static readonly Color PalGrayDark = new(0x3A / 255f, 0x35 / 255f, 0x35 / 255f);
     private static readonly Color PalGrayWarm = new(0x6B / 255f, 0x61 / 255f, 0x61 / 255f);
     private static readonly Color PalGrayLight = new(0x9E / 255f, 0x94 / 255f, 0x94 / 255f);
     private static readonly Color PalWhiteOff = new(0xE8 / 255f, 0xE0 / 255f, 0xD4 / 255f);
@@ -147,25 +111,17 @@ public partial class HUD : CanvasLayer
     private static readonly Color PalRedBlood = new(0xC4 / 255f, 0x43 / 255f, 0x2B / 255f);
     private static readonly Color PalCyanEssence = new(0x5E / 255f, 0xC4 / 255f, 0xC4 / 255f);
     private static readonly Color PalVioletMist = new(0x4A / 255f, 0x30 / 255f, 0x66 / 255f);
-
-    // Day/night bar colors
-    private static readonly Color DayBarColor = PalGoldFoyer;
-    private static readonly Color DuskBarColor = PalVioletMist;
-    private static readonly Color NightBarColor = PalRedBlood;
-    private static readonly Color DawnBarColor = PalWhiteOff;
-
-    // Tier colors
-    private static readonly Color TierT1 = PalGrayLight;
-    private static readonly Color TierT2 = new(0.4f, 0.7f, 1f);
-    private static readonly Color TierT3 = PalOrangeFlame;
-    private static readonly Color TierT4 = new(0.6f, 0.4f, 1f);
-    private static readonly Color TierT5 = PalGoldFoyer;
+    private static readonly Color HealthyColor = new(0.42f, 0.74f, 0.36f);
+    private static readonly Color PlateColor = new(0.04f, 0.045f, 0.08f, 0.82f);
+    private static readonly Color PlateBorder = new(0.83f, 0.66f, 0.26f, 0.35f);
+    private static readonly Color BarTrack = new(0.02f, 0.02f, 0.04f, 0.9f);
 
     public override void _Ready()
     {
         DevelopmentBadge.AttachTo(this);
         _eventBus = GetNode<EventBus>("/root/EventBus");
         _groupCache = GetNodeOrNull<GroupCache>("/root/GroupCache");
+        _gameManager = GetNodeOrNull<GameManager>("/root/GameManager");
         _eventBus.PlayerDamaged += OnPlayerDamaged;
         _eventBus.XpGained += OnXpChanged;
         _eventBus.LevelUp += OnLevelUp;
@@ -180,34 +136,27 @@ public partial class HUD : CanvasLayer
         _eventBus.WeaponUpgraded += OnWeaponUpgraded;
         _eventBus.PassiveSouvenirSlotsChanged += OnPassiveSlotsChanged;
 
-        // Root container : tous les éléments du HUD sont enfants de ce Control.
-        // On le dimensionne à viewport/scale et on applique Scale dessus,
-        // ce qui fait que les anchors (0-1) correspondent aux bords réels de l'écran.
-        _hudRoot = new Control();
-        _hudRoot.Name = "HudRoot";
-        _hudRoot.MouseFilter = Control.MouseFilterEnum.Ignore;
+        _slotEmptyTex = GD.Load<Texture2D>("res://assets/ui/hud/hud_slot_empty.png");
+        _slotFilledTex = GD.Load<Texture2D>("res://assets/ui/hud/hud_slot_filled.png");
+        _passiveEmptyTex = GD.Load<Texture2D>("res://assets/ui/hud/hud_slot_passive.png");
+        _passiveFilledTex = GD.Load<Texture2D>("res://assets/ui/hud/hud_slot_passive_filled.png");
+
+        _hudRoot = new Control { Name = "HudRoot", MouseFilter = Control.MouseFilterEnum.Ignore };
         AddChild(_hudRoot);
         ApplyScale();
         GetViewport().SizeChanged += OnViewportResized;
 
-        BuildTopBar();
         BuildVitals();
+        BuildRunProgress();
         BuildScoreArea();
         BuildWeaponBar();
         BuildPassiveBar();
-        // V2: BuildInventoryPanel retire (plus d'inventaire de ressources)
-        CreateDawnSummaryPanel();
-        CreateMinimap();
-        CreateInteractHint();
-        CreateCompassWidget();
-        ResolveCompassTargets();
+
+        RunEventHud eventHud = new() { Name = "RunEventHud" };
+        _hudRoot.AddChild(eventHud);
     }
 
-    /// <summary>Change la taille du HUD au runtime. Valeur recommandée : 1.0–2.5.</summary>
-    public void SetHudScale(float scale)
-    {
-        HudScale = scale;
-    }
+    public void SetHudScale(float scale) => HudScale = scale;
 
     private void ApplyScale()
     {
@@ -215,21 +164,13 @@ public partial class HUD : CanvasLayer
         if (viewport.X < 1 || viewport.Y < 1)
             viewport = new Vector2(1920, 1080);
 
-        // Auto-scale : on cible ReferenceResolution logique (640×360).
-        // Ex. viewport 1920×1080 → scale = 3.0, viewport 1280×720 → scale = 2.0
         float effectiveScale = _hudScale;
-        if (effectiveScale < 0.5f) // 0 = auto
-        {
-            float scaleX = viewport.X / ReferenceResolution.X;
-            float scaleY = viewport.Y / ReferenceResolution.Y;
-            effectiveScale = Mathf.Min(scaleX, scaleY);
-            effectiveScale = Mathf.Max(effectiveScale, 1f);
-        }
+        if (effectiveScale < 0.5f)
+            effectiveScale = Mathf.Max(1f, Mathf.Min(viewport.X / ReferenceResolution.X, viewport.Y / ReferenceResolution.Y));
 
         _hudRoot.Position = Vector2.Zero;
         _hudRoot.Size = viewport / effectiveScale;
         _hudRoot.Scale = new Vector2(effectiveScale, effectiveScale);
-        _hudRoot.PivotOffset = Vector2.Zero;
     }
 
     private void OnViewportResized()
@@ -240,30 +181,38 @@ public partial class HUD : CanvasLayer
 
     public override void _Process(double delta)
     {
-        _fpsUpdateTimer += (float)delta;
-        if (_fpsUpdateTimer >= FpsUpdateInterval)
+        float dt = (float)delta;
+
+        _fpsTimer += dt;
+        if (_fpsTimer >= FpsUpdateInterval)
         {
-            _fpsUpdateTimer = 0f;
-            _fpsLabel.Text = $"{Engine.GetFramesPerSecond()}";
+            _fpsTimer = 0f;
+            _fpsLabel.Text = $"{Engine.GetFramesPerSecond()} FPS";
         }
+
+        if (_gameManager == null || _gameManager.CurrentState == GameManager.GameState.Run)
+            _runSeconds += dt;
+        int seconds = (int)_runSeconds;
+        if (seconds != _shownSeconds)
+        {
+            _shownSeconds = seconds;
+            _timeLabel.Text = $"{seconds / 60:00}:{seconds % 60:00}";
+            if (_warningCountdown > 0f)
+                UpdateWarningText();
+        }
+        if (_warningCountdown > 0f)
+            _warningCountdown -= dt;
 
         if (_erasureManager != null)
-            UpdateDayNightBar(_erasureManager.GlobalErasurePercent);
+            SetBarRatio(_erasureFill, _erasureManager.GlobalErasurePercent);
 
-        if (Engine.GetProcessFrames() % 2 == 0)
-            UpdateCompass();
+        UpdateHpChip(dt);
+        UpdateScoreCounter(dt);
 
-        _interactHintUpdateTimer += (float)delta;
-        if (_interactHintUpdateTimer >= InteractHintUpdateInterval)
+        _biomeTimer += dt;
+        if (_biomeTimer >= BiomeUpdateInterval)
         {
-            _interactHintUpdateTimer = 0f;
-            UpdateInteractHint();
-        }
-
-        _biomeUpdateTimer += (float)delta;
-        if (_biomeUpdateTimer >= BiomeUpdateInterval)
-        {
-            _biomeUpdateTimer = 0f;
+            _biomeTimer = 0f;
             UpdateBiomeLabel();
         }
     }
@@ -293,619 +242,414 @@ public partial class HUD : CanvasLayer
 
     public void SetProgression(PlayerProgression progression) => _progression = progression;
     public void SetErasureManager(ErasureManager manager) => _erasureManager = manager;
-    public void SetCrisisManager(CrisisManager manager) => _crisisManager = manager;
+
     public void SetEssenceTracker(EssenceTracker tracker)
     {
         _essenceTracker = tracker;
         OnEssenceChanged(_essenceTracker?.CurrentEssence ?? 0);
     }
-    public void SetCompassTargets(Player player, Node2D mapCenterAnchor)
+
+    /// <summary>Relie le HUD au héros : PV initiaux et jauge sous ses pieds.</summary>
+    public void SetPlayer(Player player)
     {
-        _compassPlayer = player;
-        _mapCenterAnchor = mapCenterAnchor;
+        _player = player;
+        if (player == null)
+            return;
+        player.AddChild(new PlayerHealthGauge { Name = "HealthGauge" });
+        UpdateHpDisplay(player.CurrentHp, player.EffectiveMaxHp);
     }
 
-    // ==================== BUILD UI ====================
+    // ==================== CONSTRUCTION ====================
 
-    private static Label MakeLabel(string text, int size, Color color, bool shadow = true)
+    private static Label MakeLabel(string text, int size, Color color, int outline = 3)
     {
-        Label label = new();
-        label.Text = text;
+        Label label = new() { Text = text, MouseFilter = Control.MouseFilterEnum.Ignore };
         label.AddThemeFontSizeOverride("font_size", size);
         label.AddThemeColorOverride("font_color", color);
-        if (shadow)
+        if (outline > 0)
         {
-            label.AddThemeColorOverride("font_shadow_color", new Color(0f, 0f, 0f, 0.85f));
-            label.AddThemeConstantOverride("shadow_offset_x", 1);
-            label.AddThemeConstantOverride("shadow_offset_y", 1);
+            label.AddThemeColorOverride("font_outline_color", new Color(0f, 0f, 0f, 0.9f));
+            label.AddThemeConstantOverride("outline_size", outline);
         }
         return label;
     }
 
-    private static TextureRect MakeIcon(string path, int size = 16)
+    private static PanelContainer MakePlate(float left, float top, float width, float height)
     {
-        TextureRect icon = new();
-        icon.CustomMinimumSize = new Vector2(size, size);
-        icon.ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize;
-        icon.StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered;
-        icon.TextureFilter = CanvasItem.TextureFilterEnum.Nearest;
-        if (ResourceLoader.Exists(path))
-            icon.Texture = GD.Load<Texture2D>(path);
-        return icon;
-    }
-
-    /// <summary>
-    /// Supprime la couleur de fond d'une texture en remplaçant les pixels proches
-    /// de la couleur du coin (0,0) par du transparent. Utile pour les icônes avec fond opaque.
-    /// </summary>
-    private static Texture2D RemoveIconBackground(Texture2D source, float tolerance = 0.15f)
-    {
-        Image img = source.GetImage();
-        if (img == null) return source;
-        Color bgColor = img.GetPixel(0, 0);
-        int w = img.GetWidth();
-        int h = img.GetHeight();
-        for (int y = 0; y < h; y++)
+        PanelContainer plate = new() { MouseFilter = Control.MouseFilterEnum.Ignore };
+        StyleBoxFlat style = new()
         {
-            for (int x = 0; x < w; x++)
-            {
-                Color px = img.GetPixel(x, y);
-                float dist = Mathf.Sqrt(
-                    Mathf.Pow(px.R - bgColor.R, 2) +
-                    Mathf.Pow(px.G - bgColor.G, 2) +
-                    Mathf.Pow(px.B - bgColor.B, 2));
-                if (dist < tolerance)
-                    img.SetPixel(x, y, new Color(0, 0, 0, 0));
-            }
-        }
-        return ImageTexture.CreateFromImage(img);
+            BgColor = PlateColor,
+            BorderColor = PlateBorder,
+            BorderWidthBottom = 1,
+            BorderWidthTop = 1,
+            BorderWidthLeft = 1,
+            BorderWidthRight = 1,
+            ContentMarginLeft = 0,
+            ContentMarginRight = 0,
+            ContentMarginTop = 0,
+            ContentMarginBottom = 0
+        };
+        plate.AddThemeStyleboxOverride("panel", style);
+        plate.Position = new Vector2(left, top);
+        plate.Size = new Vector2(width, height);
+        return plate;
     }
 
-    private static ColorRect MakeColorBar(Color color, Vector2 size)
+    /// <summary>Barre à fond sombre ; le remplissage est redimensionné par ancre droite.</summary>
+    private static ColorRect MakeBar(Control parent, Rect2 rect, Color fillColor, out ColorRect track)
     {
-        ColorRect rect = new();
-        rect.Color = color;
-        rect.CustomMinimumSize = size;
-        rect.Size = size;
-        return rect;
+        track = new ColorRect { Color = BarTrack, Position = rect.Position, Size = rect.Size, MouseFilter = Control.MouseFilterEnum.Ignore };
+        parent.AddChild(track);
+        ColorRect fill = new() { Color = fillColor, MouseFilter = Control.MouseFilterEnum.Ignore };
+        fill.AnchorBottom = 1f;
+        fill.AnchorRight = 1f;
+        fill.OffsetLeft = 1f;
+        fill.OffsetTop = 1f;
+        fill.OffsetRight = -1f;
+        fill.OffsetBottom = -1f;
+        track.AddChild(fill);
+        return fill;
     }
 
-    // --- Top bar: day/night progress ---
-    private void BuildTopBar()
+    private static void SetBarRatio(ColorRect fill, float ratio)
     {
-        _dayNightContainer = new Control();
-        _dayNightContainer.AnchorLeft = 0.15f;
-        _dayNightContainer.AnchorRight = 0.85f;
-        _dayNightContainer.AnchorTop = 0f;
-        _dayNightContainer.OffsetTop = 4;
-        _dayNightContainer.OffsetBottom = 14;
-        _hudRoot.AddChild(_dayNightContainer);
-
-        _dayNightBg = MakeColorBar(PalBlackDeep with { A = 0.7f }, new Vector2(0, 10));
-        _dayNightBg.AnchorRight = 1f;
-        _dayNightBg.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
-        _dayNightContainer.AddChild(_dayNightBg);
-
-        _dayNightFill = MakeColorBar(DayBarColor, new Vector2(0, 10));
-        _dayNightFill.AnchorTop = 0f;
-        _dayNightFill.AnchorBottom = 1f;
-        _dayNightFill.AnchorLeft = 0f;
-        _dayNightFill.AnchorRight = 0f;
-        _dayNightFill.OffsetLeft = 1;
-        _dayNightFill.OffsetTop = 1;
-        _dayNightFill.OffsetBottom = -1;
-        _dayNightContainer.AddChild(_dayNightFill);
-
-        // Phase icon (left of bar)
-        _phaseIcon = MakeIcon("res://assets/ui/hud/hud_icon_void.png", 14);
-        _phaseIcon.AnchorLeft = 0.15f;
-        _phaseIcon.AnchorTop = 0f;
-        _phaseIcon.OffsetLeft = -20;
-        _phaseIcon.OffsetTop = 2;
-        _phaseIcon.OffsetRight = _phaseIcon.OffsetLeft + 14;
-        _phaseIcon.OffsetBottom = _phaseIcon.OffsetTop + 14;
-        _hudRoot.AddChild(_phaseIcon);
-
-        // Phase label centered below bar
-        _phaseLabel = MakeLabel("Exploration", 10, PalWhiteOff);
-        _phaseLabel.AnchorLeft = 0.5f;
-        _phaseLabel.AnchorRight = 0.5f;
-        _phaseLabel.OffsetLeft = -30;
-        _phaseLabel.OffsetRight = 30;
-        _phaseLabel.OffsetTop = 16;
-        _phaseLabel.OffsetBottom = 28;
-        _phaseLabel.HorizontalAlignment = HorizontalAlignment.Center;
-        _hudRoot.AddChild(_phaseLabel);
-
-        // Secondary label (warning / late game)
-        _nightLabel = MakeLabel("", 10, PalGrayLight);
-        _nightLabel.AnchorLeft = 0.85f;
-        _nightLabel.OffsetLeft = 4;
-        _nightLabel.OffsetRight = 50;
-        _nightLabel.OffsetTop = 2;
-        _nightLabel.OffsetBottom = 14;
-        _hudRoot.AddChild(_nightLabel);
-
-        // Biome label (below phase label)
-        _biomeLabel = MakeLabel("", 8, PalGrayWarm);
-        _biomeLabel.AnchorLeft = 0.5f;
-        _biomeLabel.AnchorRight = 0.5f;
-        _biomeLabel.OffsetLeft = -50;
-        _biomeLabel.OffsetRight = 50;
-        _biomeLabel.OffsetTop = 27;
-        _biomeLabel.OffsetBottom = 37;
-        _biomeLabel.HorizontalAlignment = HorizontalAlignment.Center;
-        _hudRoot.AddChild(_biomeLabel);
+        fill.AnchorRight = Mathf.Clamp(ratio, 0f, 1f);
+        fill.OffsetRight = ratio >= 1f ? -1f : 0f;
     }
 
-    private void UpdateDayNightBar(float progress)
-    {
-        float barWidth = _dayNightContainer.Size.X - 2;
-        _dayNightFill.OffsetRight = _dayNightFill.OffsetLeft + barWidth * Mathf.Clamp(progress, 0f, 1f);
-    }
-
-    // --- Top-left vitals: heart + HP bar + level star + XP ---
     private void BuildVitals()
     {
-        float baseY = 22;
+        _vitalsPlate = MakePlate(PlateMargin, PlateMargin, VitalsWidth, 40f);
+        _hudRoot.AddChild(_vitalsPlate);
+        Control content = new() { MouseFilter = Control.MouseFilterEnum.Ignore };
+        _vitalsPlate.AddChild(content);
 
-        // Heart icon (fond opaque supprimé au runtime)
-        _heartIcon = MakeIcon("res://assets/ui/hud/hud_icon_heart.png", 14);
-        if (_heartIcon.Texture != null)
-            _heartIcon.Texture = RemoveIconBackground(_heartIcon.Texture);
-        _heartIcon.OffsetLeft = 6;
-        _heartIcon.OffsetTop = baseY;
-        _heartIcon.OffsetRight = 20;
-        _heartIcon.OffsetBottom = baseY + 14;
-        _hudRoot.AddChild(_heartIcon);
+        // Pastille de niveau : le chiffre prime, la légende reste discrète.
+        ColorRect badge = new() { Color = PalBlackBlue, Position = new Vector2(4, 4), Size = new Vector2(32, 32) };
+        content.AddChild(badge);
+        ColorRect badgeEdge = new() { Color = PalCyanEssence with { A = 0.7f }, Position = new Vector2(4, 35), Size = new Vector2(32, 1) };
+        content.AddChild(badgeEdge);
+        Label caption = MakeLabel(Tr("UI_HUD_LEVEL"), 7, PalGrayLight, 0);
+        caption.Position = new Vector2(4, 3);
+        caption.Size = new Vector2(32, 9);
+        caption.HorizontalAlignment = HorizontalAlignment.Center;
+        content.AddChild(caption);
+        _levelLabel = MakeLabel("1", 17, PalCyanEssence);
+        _levelLabel.Position = new Vector2(4, 9);
+        _levelLabel.Size = new Vector2(32, 26);
+        _levelLabel.HorizontalAlignment = HorizontalAlignment.Center;
+        _levelLabel.VerticalAlignment = VerticalAlignment.Center;
+        content.AddChild(_levelLabel);
 
-        // HP bar (custom drawn)
-        float hpBarX = 22;
-        float hpBarW = 100;
-        float hpBarH = 10;
-        _hpBarContainer = new Control();
-        _hpBarContainer.OffsetLeft = hpBarX;
-        _hpBarContainer.OffsetTop = baseY + 2;
-        _hpBarContainer.OffsetRight = hpBarX + hpBarW;
-        _hpBarContainer.OffsetBottom = baseY + 2 + hpBarH;
-        _hudRoot.AddChild(_hpBarContainer);
-
-        _hpBarBg = MakeColorBar(PalBlackDeep with { A = 0.8f }, new Vector2(hpBarW, hpBarH));
-        _hpBarContainer.AddChild(_hpBarBg);
-
-        _hpBarFill = MakeColorBar(PalRedBlood, new Vector2(hpBarW - 2, hpBarH - 2));
-        _hpBarFill.CustomMinimumSize = new Vector2(0, hpBarH - 2);
-        _hpBarFill.Position = new Vector2(1, 1);
-        _hpBarContainer.AddChild(_hpBarFill);
-
-        // HP border (1px outline)
-        ColorRect hpBorderTop = MakeColorBar(PalGrayWarm with { A = 0.6f }, new Vector2(hpBarW, 1));
-        _hpBarContainer.AddChild(hpBorderTop);
-        ColorRect hpBorderBot = MakeColorBar(PalGrayWarm with { A = 0.6f }, new Vector2(hpBarW, 1));
-        hpBorderBot.Position = new Vector2(0, hpBarH - 1);
-        _hpBarContainer.AddChild(hpBorderBot);
-        ColorRect hpBorderLeft = MakeColorBar(PalGrayWarm with { A = 0.6f }, new Vector2(1, hpBarH));
-        _hpBarContainer.AddChild(hpBorderLeft);
-        ColorRect hpBorderRight = MakeColorBar(PalGrayWarm with { A = 0.6f }, new Vector2(1, hpBarH));
-        hpBorderRight.Position = new Vector2(hpBarW - 1, 0);
-        _hpBarContainer.AddChild(hpBorderRight);
-
-        _hpValueLabel = MakeLabel("100/100", 10, PalWhiteOff);
-        _hpValueLabel.Position = new Vector2(2, -3);
-        _hpValueLabel.Size = new Vector2(hpBarW - 4, hpBarH);
+        Rect2 hpRect = new(42, 5, VitalsBarWidth, 17);
+        _hpFill = MakeBar(content, hpRect, HealthyColor, out ColorRect hpTrack);
+        // Trace claire des PV perdus, rattrapée en douceur : le coup reçu se lit d'un coup d'œil.
+        _hpChip = new ColorRect { Color = PalWhiteOff with { A = 0.75f } };
+        _hpChip.AnchorBottom = 1f;
+        _hpChip.OffsetTop = 1f;
+        _hpChip.OffsetBottom = -1f;
+        hpTrack.AddChild(_hpChip);
+        hpTrack.MoveChild(_hpChip, 0);
+        _hpValueLabel = MakeLabel("100 / 100", 11, PalWhiteOff);
+        _hpValueLabel.Position = Vector2.Zero;
+        _hpValueLabel.Size = hpRect.Size;
         _hpValueLabel.HorizontalAlignment = HorizontalAlignment.Center;
         _hpValueLabel.VerticalAlignment = VerticalAlignment.Center;
-        _hpBarContainer.AddChild(_hpValueLabel);
+        hpTrack.AddChild(_hpValueLabel);
 
-        // Level row
-        float levelY = baseY + 16;
-        _levelIcon = MakeIcon("res://assets/ui/hud/hud_icon_level.png", 14);
-        _levelIcon.OffsetLeft = 6;
-        _levelIcon.OffsetTop = levelY;
-        _levelIcon.OffsetRight = 20;
-        _levelIcon.OffsetBottom = levelY + 14;
-        _hudRoot.AddChild(_levelIcon);
+        _xpFill = MakeBar(content, new Rect2(42, 26, VitalsBarWidth, 8), PalCyanEssence, out _);
+        SetBarRatio(_xpFill, 0f);
 
-        _levelLabel = MakeLabel("1", 10, PalCyanEssence);
-        _levelLabel.OffsetLeft = 22;
-        _levelLabel.OffsetTop = levelY;
-        _levelLabel.OffsetRight = 40;
-        _levelLabel.OffsetBottom = levelY + 14;
-        _hudRoot.AddChild(_levelLabel);
-
-        // XP bar (full-width, bottom of screen)
-        float xpBarH = 8;
-        _xpBarContainer = new Control();
-        _xpBarContainer.AnchorLeft = 0f;
-        _xpBarContainer.AnchorRight = 1f;
-        _xpBarContainer.AnchorTop = 1f;
-        _xpBarContainer.AnchorBottom = 1f;
-        _xpBarContainer.OffsetLeft = 8;
-        _xpBarContainer.OffsetTop = -12;
-        _xpBarContainer.OffsetRight = -8;
-        _xpBarContainer.OffsetBottom = -4;
-        _hudRoot.AddChild(_xpBarContainer);
-
-        _xpBarBg = MakeColorBar(PalBlackDeep with { A = 0.82f }, Vector2.Zero);
-        _xpBarBg.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
-        _xpBarContainer.AddChild(_xpBarBg);
-
-        _xpBarFill = MakeColorBar(PalCyanEssence, new Vector2(0, xpBarH - 2));
-        _xpBarFill.AnchorTop = 0f;
-        _xpBarFill.AnchorBottom = 1f;
-        _xpBarFill.OffsetLeft = 1;
-        _xpBarFill.OffsetTop = 1;
-        _xpBarFill.OffsetBottom = -1;
-        _xpBarContainer.AddChild(_xpBarFill);
-
-        // XP border
-        ColorRect xpBorder = MakeColorBar(PalGrayDark with { A = 0.7f }, Vector2.Zero);
-        xpBorder.AnchorRight = 1f;
-        xpBorder.OffsetBottom = 1;
-        _xpBarContainer.AddChild(xpBorder);
-
-        ColorRect xpBorderBot = MakeColorBar(PalGrayDark with { A = 0.7f }, Vector2.Zero);
-        xpBorderBot.AnchorLeft = 0f;
-        xpBorderBot.AnchorRight = 1f;
-        xpBorderBot.AnchorTop = 1f;
-        xpBorderBot.AnchorBottom = 1f;
-        xpBorderBot.OffsetTop = -1;
-        _xpBarContainer.AddChild(xpBorderBot);
-
-        ColorRect xpBorderLeft = MakeColorBar(PalGrayDark with { A = 0.7f }, Vector2.Zero);
-        xpBorderLeft.AnchorBottom = 1f;
-        xpBorderLeft.OffsetRight = 1;
-        _xpBarContainer.AddChild(xpBorderLeft);
-
-        ColorRect xpBorderRight = MakeColorBar(PalGrayDark with { A = 0.7f }, Vector2.Zero);
-        xpBorderRight.AnchorLeft = 1f;
-        xpBorderRight.AnchorRight = 1f;
-        xpBorderRight.AnchorBottom = 1f;
-        xpBorderRight.OffsetLeft = -1;
-        _xpBarContainer.AddChild(xpBorderRight);
-
-        // FPS (debug, small, bottom-left)
-        _fpsLabel = MakeLabel("0", 8, PalGrayWarm with { A = 0.5f });
+        _fpsLabel = MakeLabel("", 8, PalGrayWarm, 2);
+        _fpsLabel.AnchorTop = 1f;
+        _fpsLabel.AnchorBottom = 1f;
         _fpsLabel.OffsetLeft = 6;
-        _fpsLabel.OffsetTop = levelY + 18;
-        _fpsLabel.OffsetRight = 40;
-        _fpsLabel.OffsetBottom = levelY + 30;
+        _fpsLabel.OffsetTop = -14;
+        _fpsLabel.OffsetRight = 60;
+        _fpsLabel.OffsetBottom = -3;
         _hudRoot.AddChild(_fpsLabel);
     }
 
-    // --- Top-right: score ---
-    private void BuildScoreArea()
+    private void BuildRunProgress()
     {
-        _scoreIcon = MakeIcon("res://assets/ui/hud/hud_icon_score.png", 14);
-        if (_scoreIcon.Texture != null)
-            _scoreIcon.Texture = RemoveIconBackground(_scoreIcon.Texture);
-        _scoreIcon.AnchorLeft = 1f;
-        _scoreIcon.AnchorRight = 1f;
-        _scoreIcon.OffsetLeft = -64;
-        _scoreIcon.OffsetTop = 22;
-        _scoreIcon.OffsetRight = -50;
-        _scoreIcon.OffsetBottom = 36;
-        _hudRoot.AddChild(_scoreIcon);
+        Control anchor = new() { MouseFilter = Control.MouseFilterEnum.Ignore };
+        anchor.AnchorLeft = 0.5f;
+        anchor.AnchorRight = 0.5f;
+        _hudRoot.AddChild(anchor);
 
-        _scoreLabel = MakeLabel("0", 12, PalGoldFoyer);
-        _scoreLabel.AnchorLeft = 1f;
-        _scoreLabel.AnchorRight = 1f;
-        _scoreLabel.OffsetLeft = -48;
-        _scoreLabel.OffsetTop = 21;
-        _scoreLabel.OffsetRight = -6;
-        _scoreLabel.OffsetBottom = 37;
-        _scoreLabel.HorizontalAlignment = HorizontalAlignment.Right;
-        _hudRoot.AddChild(_scoreLabel);
+        PanelContainer plate = MakePlate(-RunPlateWidth / 2f, PlateMargin, RunPlateWidth, 30f);
+        anchor.AddChild(plate);
+        Control content = new() { MouseFilter = Control.MouseFilterEnum.Ignore };
+        plate.AddChild(content);
 
-        _essenceLabel = MakeLabel("0E", 11, PalCyanEssence);
-        _essenceLabel.AnchorLeft = 1f;
-        _essenceLabel.AnchorRight = 1f;
-        _essenceLabel.OffsetLeft = -90;
-        _essenceLabel.OffsetTop = 37;
-        _essenceLabel.OffsetRight = -6;
-        _essenceLabel.OffsetBottom = 52;
-        _essenceLabel.HorizontalAlignment = HorizontalAlignment.Right;
-        _hudRoot.AddChild(_essenceLabel);
+        _phaseText = Tr("UI_HUD_PHASE_EXPLORATION");
+        _phaseLabel = MakeLabel(_phaseText, 11, PalWhiteOff);
+        _phaseLabel.Position = new Vector2(8, 1);
+        _phaseLabel.Size = new Vector2(110, 16);
+        content.AddChild(_phaseLabel);
+
+        _biomeLabel = MakeLabel("", 9, PalGrayLight, 2);
+        _biomeLabel.Position = new Vector2(100, 3);
+        _biomeLabel.Size = new Vector2(120, 14);
+        _biomeLabel.HorizontalAlignment = HorizontalAlignment.Center;
+        content.AddChild(_biomeLabel);
+
+        _timeLabel = MakeLabel("00:00", 11, PalWhiteOff);
+        _timeLabel.Position = new Vector2(RunPlateWidth - 68, 1);
+        _timeLabel.Size = new Vector2(60, 16);
+        _timeLabel.HorizontalAlignment = HorizontalAlignment.Right;
+        content.AddChild(_timeLabel);
+
+        _erasureFill = MakeBar(content, new Rect2(8, 19, RunPlateWidth - 52, 6), PalCyanEssence, out _);
+        SetBarRatio(_erasureFill, 0f);
+        _erasureLabel = MakeLabel("0 %", 8, PalGrayLight, 2);
+        _erasureLabel.Position = new Vector2(RunPlateWidth - 42, 14);
+        _erasureLabel.Size = new Vector2(34, 14);
+        _erasureLabel.HorizontalAlignment = HorizontalAlignment.Right;
+        content.AddChild(_erasureLabel);
+
+        _alertLabel = MakeLabel("", 13, PalOrangeFlame, 4);
+        _alertLabel.Position = new Vector2(-RunPlateWidth / 2f, PlateMargin + 32f);
+        _alertLabel.Size = new Vector2(RunPlateWidth, 20);
+        _alertLabel.HorizontalAlignment = HorizontalAlignment.Center;
+        anchor.AddChild(_alertLabel);
     }
 
-    // --- Bottom-center: weapon quick bar ---
+    private void BuildScoreArea()
+    {
+        Control anchor = new() { MouseFilter = Control.MouseFilterEnum.Ignore };
+        anchor.AnchorLeft = 1f;
+        anchor.AnchorRight = 1f;
+        _hudRoot.AddChild(anchor);
+
+        PanelContainer plate = MakePlate(-ScorePlateWidth - PlateMargin, PlateMargin, ScorePlateWidth, 40f);
+        anchor.AddChild(plate);
+        Control content = new() { MouseFilter = Control.MouseFilterEnum.Ignore };
+        plate.AddChild(content);
+
+        Label caption = MakeLabel(Tr("UI_HUD_SCORE"), 8, PalGrayLight, 0);
+        caption.Position = new Vector2(8, 3);
+        caption.Size = new Vector2(50, 10);
+        content.AddChild(caption);
+
+        _scoreLabel = MakeLabel("0", 18, PalGoldFoyer, 4);
+        _scoreLabel.Position = new Vector2(8, 0);
+        _scoreLabel.Size = new Vector2(ScorePlateWidth - 16, 24);
+        _scoreLabel.HorizontalAlignment = HorizontalAlignment.Right;
+        content.AddChild(_scoreLabel);
+
+        _essenceLabel = MakeLabel("", 10, PalCyanEssence);
+        _essenceLabel.Position = new Vector2(8, 22);
+        _essenceLabel.Size = new Vector2(ScorePlateWidth - 16, 15);
+        _essenceLabel.HorizontalAlignment = HorizontalAlignment.Right;
+        content.AddChild(_essenceLabel);
+    }
+
     private void BuildWeaponBar()
     {
-        _weaponBar = new HBoxContainer();
-        _weaponBar.AnchorLeft = 0.5f;
-        _weaponBar.AnchorRight = 0.5f;
-        _weaponBar.AnchorTop = 1f;
-        _weaponBar.AnchorBottom = 1f;
-
-        float slotSize = 26;
+        const float slotSize = 28f;
+        HBoxContainer bar = new() { MouseFilter = Control.MouseFilterEnum.Ignore };
+        bar.AnchorLeft = 0.5f;
+        bar.AnchorRight = 0.5f;
+        bar.AnchorTop = 1f;
+        bar.AnchorBottom = 1f;
         float totalWidth = Player.MaxWeaponSlots * (slotSize + 3);
-        _weaponBar.OffsetLeft = -totalWidth / 2;
-        _weaponBar.OffsetRight = totalWidth / 2;
-        _weaponBar.OffsetTop = -58;
-        _weaponBar.OffsetBottom = -32;
-        _weaponBar.AddThemeConstantOverride("separation", 3);
-        _weaponBar.Alignment = BoxContainer.AlignmentMode.Center;
-        _hudRoot.AddChild(_weaponBar);
-
-        Texture2D slotEmptyTex = GD.Load<Texture2D>("res://assets/ui/hud/hud_slot_empty.png");
-        Texture2D slotFilledTex = GD.Load<Texture2D>("res://assets/ui/hud/hud_slot_filled.png");
+        bar.OffsetLeft = -totalWidth / 2;
+        bar.OffsetRight = totalWidth / 2;
+        bar.OffsetTop = -54;
+        bar.OffsetBottom = -26;
+        bar.AddThemeConstantOverride("separation", 3);
+        bar.Alignment = BoxContainer.AlignmentMode.Center;
+        _hudRoot.AddChild(bar);
 
         for (int i = 0; i < Player.MaxWeaponSlots; i++)
         {
-            Control slotRoot = new();
-            slotRoot.CustomMinimumSize = new Vector2(slotSize, slotSize);
-
-            // Slot frame (NinePatch)
-            NinePatchRect frame = new();
-            frame.Texture = slotEmptyTex;
-            frame.PatchMarginLeft = 4;
-            frame.PatchMarginRight = 4;
-            frame.PatchMarginTop = 4;
-            frame.PatchMarginBottom = 4;
-            frame.TextureFilter = CanvasItem.TextureFilterEnum.Nearest;
-            frame.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
+            Control slotRoot = new() { CustomMinimumSize = new Vector2(slotSize, slotSize) };
+            NinePatchRect frame = MakeSlotFrame(_slotEmptyTex, 4);
             slotRoot.AddChild(frame);
 
-            // Weapon icon (centered in slot)
-            TextureRect weaponIcon = new();
-            float iconSize = 20;
-            weaponIcon.CustomMinimumSize = new Vector2(iconSize, iconSize);
-            weaponIcon.ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize;
-            weaponIcon.StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered;
-            weaponIcon.TextureFilter = CanvasItem.TextureFilterEnum.Nearest;
-            weaponIcon.Position = new Vector2((slotSize - iconSize) / 2, (slotSize - iconSize) / 2 - 1);
-            weaponIcon.Size = new Vector2(iconSize, iconSize);
-            weaponIcon.Visible = false;
-            slotRoot.AddChild(weaponIcon);
+            const float iconSize = 22f;
+            TextureRect icon = new()
+            {
+                ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
+                StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
+                TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
+                Position = new Vector2((slotSize - iconSize) / 2, (slotSize - iconSize) / 2 - 1),
+                Size = new Vector2(iconSize, iconSize),
+                Visible = false
+            };
+            slotRoot.AddChild(icon);
 
-            // Level indicator (small, bottom-right corner)
-            Label lvlLabel = MakeLabel("", 7, PalGoldFoyer);
-            lvlLabel.Position = new Vector2(slotSize - 12, slotSize - 11);
-            lvlLabel.Size = new Vector2(12, 11);
-            lvlLabel.HorizontalAlignment = HorizontalAlignment.Right;
-            slotRoot.AddChild(lvlLabel);
+            Label level = MakeLabel("", 9, PalGoldFoyer, 3);
+            level.Position = new Vector2(slotSize - 14, slotSize - 13);
+            level.Size = new Vector2(13, 12);
+            level.HorizontalAlignment = HorizontalAlignment.Right;
+            slotRoot.AddChild(level);
 
             _weaponSlotFrames[i] = frame;
-            _weaponSlotIcons[i] = weaponIcon;
-            _weaponSlotLevels[i] = lvlLabel;
-            _weaponBar.AddChild(slotRoot);
+            _weaponSlotIcons[i] = icon;
+            _weaponSlotLevels[i] = level;
+            bar.AddChild(slotRoot);
         }
     }
 
-    // --- Bottom-center: passive souvenir bar (below weapons) ---
     private void BuildPassiveBar()
     {
-        _passiveBar = new HBoxContainer();
-        _passiveBar.AnchorLeft = 0.5f;
-        _passiveBar.AnchorRight = 0.5f;
-        _passiveBar.AnchorTop = 1f;
-        _passiveBar.AnchorBottom = 1f;
-
-        float passiveSize = 18;
+        const float passiveSize = 18f;
+        HBoxContainer bar = new() { MouseFilter = Control.MouseFilterEnum.Ignore };
+        bar.AnchorLeft = 0.5f;
+        bar.AnchorRight = 0.5f;
+        bar.AnchorTop = 1f;
+        bar.AnchorBottom = 1f;
         float totalWidth = Player.MaxPassiveSlots * (passiveSize + 3);
-        _passiveBar.OffsetLeft = -totalWidth / 2;
-        _passiveBar.OffsetRight = totalWidth / 2;
-        _passiveBar.OffsetTop = -30;
-        _passiveBar.OffsetBottom = -16;
-        _passiveBar.AddThemeConstantOverride("separation", 3);
-        _passiveBar.Alignment = BoxContainer.AlignmentMode.Center;
-        _hudRoot.AddChild(_passiveBar);
-
-        Texture2D passiveEmptyTex = GD.Load<Texture2D>("res://assets/ui/hud/hud_slot_passive.png");
+        bar.OffsetLeft = -totalWidth / 2;
+        bar.OffsetRight = totalWidth / 2;
+        bar.OffsetTop = -23;
+        bar.OffsetBottom = -5;
+        bar.AddThemeConstantOverride("separation", 3);
+        bar.Alignment = BoxContainer.AlignmentMode.Center;
+        _hudRoot.AddChild(bar);
 
         for (int i = 0; i < Player.MaxPassiveSlots; i++)
         {
-            Control slotRoot = new();
-            slotRoot.CustomMinimumSize = new Vector2(passiveSize, passiveSize);
-
-            NinePatchRect frame = new();
-            frame.Texture = passiveEmptyTex;
-            frame.PatchMarginLeft = 3;
-            frame.PatchMarginRight = 3;
-            frame.PatchMarginTop = 3;
-            frame.PatchMarginBottom = 3;
-            frame.TextureFilter = CanvasItem.TextureFilterEnum.Nearest;
-            frame.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
+            Control slotRoot = new() { CustomMinimumSize = new Vector2(passiveSize, passiveSize) };
+            NinePatchRect frame = MakeSlotFrame(_passiveEmptyTex, 3);
             slotRoot.AddChild(frame);
 
-            TextureRect icon = new();
-            icon.ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize;
-            icon.StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered;
-            icon.TextureFilter = CanvasItem.TextureFilterEnum.Nearest;
+            TextureRect icon = new()
+            {
+                ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
+                StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
+                TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
+                Visible = false
+            };
             icon.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
             icon.OffsetLeft = 2;
             icon.OffsetTop = 2;
             icon.OffsetRight = -2;
             icon.OffsetBottom = -2;
-            icon.Visible = false;
             slotRoot.AddChild(icon);
 
-            Label nameLabel = MakeLabel("", 6, PalGrayWarm);
-            nameLabel.Position = new Vector2(0, passiveSize - 1);
-            nameLabel.Size = new Vector2(passiveSize, 10);
-            nameLabel.HorizontalAlignment = HorizontalAlignment.Center;
-            nameLabel.ClipText = true;
-            slotRoot.AddChild(nameLabel);
+            Label level = MakeLabel("", 8, PalWhiteOff, 3);
+            level.Position = new Vector2(passiveSize - 10, passiveSize - 11);
+            level.Size = new Vector2(10, 10);
+            level.HorizontalAlignment = HorizontalAlignment.Right;
+            slotRoot.AddChild(level);
 
             _passiveSlotFrames[i] = frame;
             _passiveSlotIcons[i] = icon;
-            _passiveSlotLabels[i] = nameLabel;
-            _passiveBar.AddChild(slotRoot);
+            _passiveSlotLabels[i] = level;
+            bar.AddChild(slotRoot);
         }
     }
 
-    // --- Bottom-left: inventory ---
-    private void BuildInventoryPanel()
+    private static NinePatchRect MakeSlotFrame(Texture2D texture, int margin)
     {
-        float panelW = 100;
-        float panelH = 66;
-        Control panel = new();
-        panel.AnchorTop = 1f;
-        panel.AnchorBottom = 1f;
-        panel.OffsetLeft = 8;
-        panel.OffsetRight = 8 + panelW;
-        panel.OffsetTop = -panelH - 6;
-        panel.OffsetBottom = -6;
-        _hudRoot.AddChild(panel);
-
-        // Semi-transparent background
-        ColorRect bg = MakeColorBar(PalBlackDeep with { A = 0.55f }, new Vector2(panelW, panelH));
-        panel.AddChild(bg);
-
-        // Border
-        ColorRect borderTop = MakeColorBar(PalGrayDark with { A = 0.5f }, new Vector2(panelW, 1));
-        panel.AddChild(borderTop);
-        ColorRect borderLeft = MakeColorBar(PalGrayDark with { A = 0.5f }, new Vector2(1, panelH));
-        panel.AddChild(borderLeft);
-        ColorRect borderRight = MakeColorBar(PalGrayDark with { A = 0.5f }, new Vector2(1, panelH));
-        borderRight.Position = new Vector2(panelW - 1, 0);
-        panel.AddChild(borderRight);
-        ColorRect borderBot = MakeColorBar(PalGrayDark with { A = 0.5f }, new Vector2(panelW, 1));
-        borderBot.Position = new Vector2(0, panelH - 1);
-        panel.AddChild(borderBot);
-
-        float rowH = 18;
-        float iconSize = 14;
-
-        // Wood row
-        _woodIcon = MakeIcon("res://assets/items/item_bois.png", (int)iconSize);
-        _woodIcon.Position = new Vector2(5, 5);
-        _woodIcon.Size = new Vector2(iconSize, iconSize);
-        panel.AddChild(_woodIcon);
-
-        _woodLabel = MakeLabel("0", 10, new Color(0.75f, 0.58f, 0.2f));
-        _woodLabel.Position = new Vector2(22, 5);
-        _woodLabel.Size = new Vector2(34, 14);
-        panel.AddChild(_woodLabel);
-
-        // Stone row
-        _stoneIcon = MakeIcon("res://assets/items/item_pierre.png", (int)iconSize);
-        _stoneIcon.Position = new Vector2(5, 5 + rowH);
-        _stoneIcon.Size = new Vector2(iconSize, iconSize);
-        panel.AddChild(_stoneIcon);
-
-        _stoneLabel = MakeLabel("0", 10, new Color(0.72f, 0.66f, 0.52f));
-        _stoneLabel.Position = new Vector2(22, 5 + rowH);
-        _stoneLabel.Size = new Vector2(34, 14);
-        panel.AddChild(_stoneLabel);
-
-        // Metal row
-        _metalIcon = MakeIcon("res://assets/items/item_metal.png", (int)iconSize);
-        _metalIcon.Position = new Vector2(5, 5 + rowH * 2);
-        _metalIcon.Size = new Vector2(iconSize, iconSize);
-        panel.AddChild(_metalIcon);
-
-        _metalLabel = MakeLabel("0", 10, new Color(0.56f, 0.67f, 0.75f));
-        _metalLabel.Position = new Vector2(22, 5 + rowH * 2);
-        _metalLabel.Size = new Vector2(34, 14);
-        panel.AddChild(_metalLabel);
-
-        // Capacity bar (right side of inventory)
-        float capX = 60;
-        float capW = 32;
-        float capH = 48;
-
-        _capacityBarContainer = new Control();
-        _capacityBarContainer.Position = new Vector2(capX, 6);
-        _capacityBarContainer.Size = new Vector2(capW, capH);
-        panel.AddChild(_capacityBarContainer);
-
-        // Vertical capacity bar (fills from bottom)
-        _capacityBarBg = MakeColorBar(PalBlackDeep with { A = 0.6f }, new Vector2(capW, capH));
-        _capacityBarContainer.AddChild(_capacityBarBg);
-
-        _capacityBarFill = MakeColorBar(PalGrayWarm with { A = 0.5f }, new Vector2(capW - 2, 0));
-        _capacityBarFill.Position = new Vector2(1, capH - 1);
-        _capacityBarContainer.AddChild(_capacityBarFill);
-
-        // Capacity border
-        ColorRect capBorder = MakeColorBar(PalGrayDark with { A = 0.4f }, new Vector2(capW, 1));
-        _capacityBarContainer.AddChild(capBorder);
-        ColorRect capBorderB = MakeColorBar(PalGrayDark with { A = 0.4f }, new Vector2(capW, 1));
-        capBorderB.Position = new Vector2(0, capH - 1);
-        _capacityBarContainer.AddChild(capBorderB);
-
-        _capacityLabel = MakeLabel("0", 9, PalGrayLight);
-        _capacityLabel.Position = new Vector2(capX, capH + 10);
-        _capacityLabel.Size = new Vector2(capW, 14);
-        _capacityLabel.HorizontalAlignment = HorizontalAlignment.Center;
-        panel.AddChild(_capacityLabel);
+        NinePatchRect frame = new()
+        {
+            Texture = texture,
+            PatchMarginLeft = margin,
+            PatchMarginRight = margin,
+            PatchMarginTop = margin,
+            PatchMarginBottom = margin,
+            TextureFilter = CanvasItem.TextureFilterEnum.Nearest
+        };
+        frame.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
+        return frame;
     }
 
-    // ==================== CALLBACKS ====================
+    // ==================== MISES À JOUR ====================
 
-    private void OnPlayerDamaged(float currentHp, float maxHp)
-    {
-        UpdateHpDisplay(currentHp, maxHp);
-    }
+    private void OnPlayerDamaged(float currentHp, float maxHp) => UpdateHpDisplay(currentHp, maxHp);
 
     private void UpdateHpDisplay(float currentHp, float maxHp)
     {
-        float clampedMaxHp = Mathf.Max(1f, maxHp);
-        float clampedHp = Mathf.Clamp(currentHp, 0f, clampedMaxHp);
-        _currentHpRatio = clampedHp / clampedMaxHp;
+        float clampedMax = Mathf.Max(1f, maxHp);
+        float clampedHp = Mathf.Clamp(currentHp, 0f, clampedMax);
+        float previous = _hpRatio;
+        _hpRatio = clampedHp / clampedMax;
+        if (_hpRatio > previous)
+            _chipRatio = _hpRatio;
 
-        // Update fill width
-        float barInnerW = _hpBarContainer.Size.X - 2;
-        _hpBarFill.Size = new Vector2(barInnerW * _currentHpRatio, _hpBarFill.Size.Y);
+        SetBarRatio(_hpFill, _hpRatio);
+        _hpFill.Color = _hpRatio < LowHpRatio ? PalRedBlood : (_hpRatio < 0.55f ? PalOrangeFlame : HealthyColor);
+        _hpValueLabel.Text = $"{Mathf.RoundToInt(clampedHp)} / {Mathf.RoundToInt(clampedMax)}";
+    }
 
-        // Update fill color based on HP
-        Color hpColor;
-        if (_currentHpRatio < 0.25f)
-            hpColor = PalRedBlood;
-        else if (_currentHpRatio < 0.5f)
-            hpColor = PalOrangeFlame;
-        else
-            hpColor = new Color(0.3f, 0.75f, 0.3f); // healthy green
-        _hpBarFill.Color = hpColor;
+    private void UpdateHpChip(float dt)
+    {
+        if (_chipRatio > _hpRatio)
+            _chipRatio = Mathf.Max(_hpRatio, _chipRatio - dt * 0.6f);
+        _hpChip.AnchorRight = _chipRatio;
 
-        _hpValueLabel.Text = $"{Mathf.RoundToInt(clampedHp)}/{Mathf.RoundToInt(clampedMaxHp)}";
+        // Bord de la plaque qui bat quand la vie est basse.
+        if (_hpRatio < LowHpRatio && _hpRatio > 0f)
+        {
+            _lowHpPulse += dt * 5f;
+            float pulse = 0.5f + 0.5f * Mathf.Sin(_lowHpPulse);
+            _vitalsPlate.SelfModulate = Colors.White.Lerp(new Color(1.6f, 0.7f, 0.6f), pulse);
+        }
+        else if (_lowHpPulse != 0f)
+        {
+            _lowHpPulse = 0f;
+            _vitalsPlate.SelfModulate = Colors.White;
+        }
     }
 
     private void OnXpChanged(float _amount)
     {
-        if (_progression == null) return;
+        if (_progression == null)
+            return;
         float ratio = _progression.XpToNextLevel > 0 ? _progression.CurrentXp / _progression.XpToNextLevel : 0f;
-        float barInnerW = _xpBarContainer.Size.X - 2;
-        _xpBarFill.Size = new Vector2(barInnerW * Mathf.Clamp(ratio, 0f, 1f), _xpBarFill.Size.Y);
+        SetBarRatio(_xpFill, ratio);
     }
 
     private void OnLevelUp(int newLevel)
     {
         _levelLabel.Text = $"{newLevel}";
         OnXpChanged(0);
+        _levelLabel.PivotOffset = _levelLabel.Size / 2f;
+        Tween tween = CreateTween();
+        tween.TweenProperty(_levelLabel, "scale", new Vector2(1.5f, 1.5f), 0.08f);
+        tween.TweenProperty(_levelLabel, "scale", Vector2.One, 0.25f).SetTrans(Tween.TransitionType.Back).SetEase(Tween.EaseType.Out);
     }
 
-    private void OnScoreChanged(int newScore)
+    private void OnScoreChanged(int newScore) => _targetScore = newScore;
+
+    /// <summary>Le score défile vers sa cible : chaque gain se voit, sans reconstruire la chaîne à chaque frame.</summary>
+    private void UpdateScoreCounter(float dt)
     {
-        _scoreLabel.Text = newScore.ToString();
+        if ((int)_shownScore == _targetScore)
+            return;
+        _scoreTimer += dt;
+        if (_scoreTimer < ScoreTickInterval)
+            return;
+        float step = Mathf.Max(1f, Mathf.Abs(_targetScore - _shownScore) * 0.25f);
+        _shownScore = _shownScore < _targetScore
+            ? Mathf.Min(_targetScore, _shownScore + step)
+            : Mathf.Max(_targetScore, _shownScore - step);
+        _scoreTimer = 0f;
+        _scoreLabel.Text = ((int)_shownScore).ToString("N0");
     }
 
     private void OnRunPhaseChanged(string oldPhase, string newPhase)
     {
-        _currentRunPhaseText = newPhase switch
+        _phaseText = newPhase switch
         {
-            "Exploration" => "Exploration",
-            "Crisis" => "Resurgence",
-            "LateGame" => "Late Game",
-            "Endgame" => "Endgame",
-            "Death" => "Mort",
-            _ => newPhase
+            "Crisis" => Tr("UI_HUD_PHASE_CRISIS"),
+            "LateGame" => Tr("UI_HUD_PHASE_LATE"),
+            "Endgame" => Tr("UI_HUD_PHASE_ENDGAME"),
+            "Death" => Tr("UI_HUD_PHASE_DEATH"),
+            _ => Tr("UI_HUD_PHASE_EXPLORATION")
         };
-        _phaseLabel.Text = _currentRunPhaseText;
-
-        string iconPath = newPhase is "Crisis" or "LateGame" or "Endgame" or "Death"
-            ? "res://assets/ui/hud/hud_icon_void.png"
-            : "res://assets/ui/hud/hud_icon_sun.png";
-        if (ResourceLoader.Exists(iconPath))
-            _phaseIcon.Texture = GD.Load<Texture2D>(iconPath);
+        _phaseLabel.Text = _phaseText;
 
         Color phaseColor = newPhase switch
         {
             "Crisis" => PalOrangeFlame,
             "LateGame" => PalRedBlood,
             "Endgame" => PalGoldFoyer,
-            "Death" => PalWhiteOff,
             _ => PalWhiteOff
         };
         _phaseLabel.AddThemeColorOverride("font_color", phaseColor);
@@ -915,75 +659,70 @@ public partial class HUD : CanvasLayer
             "Crisis" => PalOrangeFlame,
             "LateGame" => PalRedBlood,
             "Endgame" => PalGoldFoyer,
-            "Death" => PalWhiteOff,
             _ => PalCyanEssence
         };
-        Tween tween = CreateTween();
-        tween.TweenProperty(_dayNightFill, "color", barColor, 1f);
+        CreateTween().TweenProperty(_erasureFill, "color", barColor, 1f);
     }
 
     private void OnErasureUpdated(float globalErasurePercent)
     {
-        UpdateDayNightBar(globalErasurePercent);
-        _phaseLabel.Text = $"{_currentRunPhaseText} {Mathf.RoundToInt(globalErasurePercent * 100f)}%";
+        SetBarRatio(_erasureFill, globalErasurePercent);
+        _erasureLabel.Text = $"{Mathf.RoundToInt(globalErasurePercent * 100f)} %";
     }
 
     private void OnCrisisWarning(int crisisNumber, float countdown)
     {
-        _nightLabel.Text = $"Crise {crisisNumber} dans {Mathf.CeilToInt(countdown)}s";
-        _nightLabel.AddThemeColorOverride("font_color", PalOrangeFlame);
+        _warningCountdown = countdown;
+        _alertLabel.AddThemeColorOverride("font_color", PalOrangeFlame);
+        UpdateWarningText();
+    }
+
+    private void UpdateWarningText()
+    {
+        _alertLabel.Text = string.Format(Tr("UI_HUD_CRISIS_IN"), Mathf.CeilToInt(Mathf.Max(0f, _warningCountdown)));
     }
 
     private void OnCrisisStarted(int crisisNumber, int intensity)
     {
-        _nightLabel.Text = $"Crise {crisisNumber} x{intensity}";
-        _nightLabel.AddThemeColorOverride("font_color", PalOrangeFlame);
+        _warningCountdown = 0f;
+        _alertLabel.Text = intensity > 1
+            ? string.Format(Tr("UI_HUD_CRISIS_INTENSITY"), crisisNumber, intensity)
+            : string.Format(Tr("UI_HUD_CRISIS"), crisisNumber);
+        _alertLabel.AddThemeColorOverride("font_color", PalRedBlood.Lightened(0.2f));
     }
 
     private void OnCrisisEnded(int crisisNumber)
     {
-        _nightLabel.Text = "";
-        _nightLabel.AddThemeColorOverride("font_color", PalGrayLight);
+        _alertLabel.Text = "";
     }
 
     private void OnEssenceChanged(int amount)
     {
         if (_essenceLabel != null)
-            _essenceLabel.Text = $"{amount}E";
+            _essenceLabel.Text = string.Format(Tr("UI_HUD_ESSENCE"), amount);
     }
 
-    // V2: OnInventoryChanged et UpdateCapacityDisplay retires (plus d'inventaire ressources)
-
-    // --- Weapon slots ---
     private void OnWeaponInventoryChanged()
     {
-        Node playerNode = GetTree().GetFirstNodeInGroup("player");
-        if (playerNode is not Player player) return;
+        Player player = ResolvePlayer();
+        if (player == null)
+            return;
 
         System.Collections.Generic.IReadOnlyList<WeaponInstance> weapons = player.WeaponSlots;
-        Texture2D slotEmptyTex = GD.Load<Texture2D>("res://assets/ui/hud/hud_slot_empty.png");
-        Texture2D slotFilledTex = GD.Load<Texture2D>("res://assets/ui/hud/hud_slot_filled.png");
-
         for (int i = 0; i < Player.MaxWeaponSlots; i++)
         {
             if (i < weapons.Count)
             {
                 WeaponInstance weapon = weapons[i];
-                _weaponSlotFrames[i].Texture = slotFilledTex;
-
-                // Tint frame border by tier
+                _weaponSlotFrames[i].Texture = _slotFilledTex;
                 _weaponSlotFrames[i].Modulate = weapon.RarityColor;
-
-                // Load weapon sprite
                 LoadWeaponIcon(i, weapon.Sprite);
-
-                // Level
                 int fragLevel = player.GetWeaponFragmentLevel(weapon.Id);
                 _weaponSlotLevels[i].Text = fragLevel > 1 ? $"{fragLevel}" : "";
             }
             else
             {
-                _weaponSlotFrames[i].Texture = slotEmptyTex;
+                _weaponSlotFrames[i].Texture = _slotEmptyTex;
                 _weaponSlotFrames[i].Modulate = Colors.White;
                 _weaponSlotIcons[i].Visible = false;
                 _weaponSlotLevels[i].Text = "";
@@ -994,72 +733,41 @@ public partial class HUD : CanvasLayer
     private void LoadWeaponIcon(int slotIndex, string spritePath)
     {
         TextureRect icon = _weaponSlotIcons[slotIndex];
-        if (string.IsNullOrEmpty(spritePath))
-        {
-            icon.Visible = false;
-            return;
-        }
-
-        string resPath = spritePath.StartsWith("res://") ? spritePath : $"res://{spritePath}";
-        if (!ResourceLoader.Exists(resPath))
-        {
-            icon.Visible = false;
-            return;
-        }
-
-        Texture2D texture = GD.Load<Texture2D>(resPath);
-        if (texture != null)
-        {
-            icon.Texture = texture;
-            icon.Visible = true;
-        }
-        else
-        {
-            icon.Visible = false;
-        }
+        string resPath = string.IsNullOrEmpty(spritePath) ? null : (spritePath.StartsWith("res://") ? spritePath : $"res://{spritePath}");
+        Texture2D texture = resPath != null && ResourceLoader.Exists(resPath) ? GD.Load<Texture2D>(resPath) : null;
+        icon.Texture = texture;
+        icon.Visible = texture != null;
     }
 
-    private void OnWeaponUpgraded(string _weaponId, int _slotIndex, string _stat, int _newLevel)
-    {
-        OnWeaponInventoryChanged();
-    }
+    private void OnWeaponUpgraded(string _weaponId, int _slotIndex, string _stat, int _newLevel) => OnWeaponInventoryChanged();
 
-    // --- Passive slots ---
     private void OnPassiveSlotsChanged()
     {
-        Node playerNode = GetTree().GetFirstNodeInGroup("player");
-        if (playerNode is not Player player) return;
+        Player player = ResolvePlayer();
+        if (player == null)
+            return;
 
         System.Collections.Generic.IReadOnlyList<ActivePassiveSouvenir> passives = player.PassiveSlots;
-        Texture2D passiveEmptyTex = GD.Load<Texture2D>("res://assets/ui/hud/hud_slot_passive.png");
-        Texture2D passiveFilledTex = GD.Load<Texture2D>("res://assets/ui/hud/hud_slot_passive_filled.png");
-
         for (int i = 0; i < Player.MaxPassiveSlots; i++)
         {
             if (i < passives.Count)
             {
                 ActivePassiveSouvenir passive = passives[i];
-                _passiveSlotFrames[i].Texture = passiveFilledTex;
+                _passiveSlotFrames[i].Texture = _passiveFilledTex;
                 _passiveSlotFrames[i].Modulate = Colors.White;
                 _passiveSlotLabels[i].Text = passive.Level > 1 ? $"{passive.Level}" : "";
 
                 string iconPath = PerkIconResolver.GetPassiveStatIconPath(passive.Data.Stat);
                 Texture2D iconTex = GD.Load<Texture2D>($"res://{iconPath}");
-                if (iconTex != null)
-                {
-                    _passiveSlotIcons[i].Texture = iconTex;
-                    _passiveSlotIcons[i].Modulate = passive.Data.IconColor;
-                    _passiveSlotIcons[i].Visible = true;
-                }
-                else
-                {
-                    _passiveSlotIcons[i].Visible = false;
+                _passiveSlotIcons[i].Texture = iconTex;
+                _passiveSlotIcons[i].Modulate = passive.Data.IconColor;
+                _passiveSlotIcons[i].Visible = iconTex != null;
+                if (iconTex == null)
                     _passiveSlotFrames[i].Modulate = passive.Data.IconColor;
-                }
             }
             else
             {
-                _passiveSlotFrames[i].Texture = passiveEmptyTex;
+                _passiveSlotFrames[i].Texture = _passiveEmptyTex;
                 _passiveSlotFrames[i].Modulate = Colors.White;
                 _passiveSlotIcons[i].Visible = false;
                 _passiveSlotLabels[i].Text = "";
@@ -1067,240 +775,26 @@ public partial class HUD : CanvasLayer
         }
     }
 
-    private static Color GetTierColor(int tier)
+    private Player ResolvePlayer()
     {
-        return tier switch
-        {
-            1 => TierT1,
-            2 => TierT2,
-            3 => TierT3,
-            4 => TierT4,
-            5 => TierT5,
-            _ => TierT1
-        };
-    }
-
-    // ==================== MINIMAP ====================
-
-    private void CreateMinimap()
-    {
-        // Minimap désactivée temporairement pour les performances
-    }
-
-    public void InitializeMinimap(WorldSetup worldSetup, FogOfWar fogOfWar)
-    {
-        // Minimap désactivée temporairement pour les performances
-    }
-
-    // ==================== INTERACT HINT ====================
-
-    private void CreateInteractHint()
-    {
-        _interactHint = MakeLabel("", 13, PalWhiteOff);
-        _interactHint.AnchorLeft = 0.5f;
-        _interactHint.AnchorRight = 0.5f;
-        _interactHint.AnchorTop = 0.72f;
-        _interactHint.OffsetLeft = -100;
-        _interactHint.OffsetRight = 100;
-        _interactHint.HorizontalAlignment = HorizontalAlignment.Center;
-        _interactHint.Visible = false;
-        _hudRoot.AddChild(_interactHint);
-    }
-
-    private void UpdateInteractHint()
-    {
-        Node playerNode = _groupCache?.GetPlayer() ?? GetTree().GetFirstNodeInGroup("player");
-        if (playerNode is not Player player || player.IsDead)
-        {
-            _interactHint.Visible = false;
-            return;
-        }
-
-        float interactRange = player.InteractRange;
-        Vector2 playerPos = player.GlobalPosition;
-
-        // V2: POI and chest interact hints only (craft/harvest/repair removed)
-        _interactHint.Visible = false;
+        if (_player == null || !IsInstanceValid(_player))
+            _player = (_groupCache?.GetPlayer() ?? GetTree().GetFirstNodeInGroup("player")) as Player;
+        return _player;
     }
 
     private void UpdateBiomeLabel()
     {
-        if (_worldSetupRef == null || !IsInstanceValid(_worldSetupRef))
-            _worldSetupRef = GetNodeOrNull<WorldSetup>("/root/Main");
-
-        if (_worldSetupRef == null)
+        if (_worldSetup == null || !IsInstanceValid(_worldSetup))
+            _worldSetup = GetNodeOrNull<WorldSetup>("/root/Main");
+        Player player = ResolvePlayer();
+        if (_worldSetup == null || player == null)
             return;
 
-        Node playerNode = _groupCache?.GetPlayer() ?? GetTree().GetFirstNodeInGroup("player");
-        if (playerNode is not Player player)
-            return;
-
-        BiomeData biome = _worldSetupRef.GetBiomeAt(player.GlobalPosition);
-        string biomeName = biome?.Name ?? "";
-
+        string biomeName = _worldSetup.GetBiomeAt(player.GlobalPosition)?.Name ?? "";
         if (biomeName != _lastBiomeName)
         {
             _lastBiomeName = biomeName;
             _biomeLabel.Text = biomeName;
         }
-    }
-
-    // ==================== COMPASS ====================
-
-    private void CreateCompassWidget()
-    {
-        _compassPanel = new PanelContainer();
-        _compassPanel.AnchorLeft = 0.5f;
-        _compassPanel.AnchorRight = 0.5f;
-        _compassPanel.OffsetLeft = -32;
-        _compassPanel.OffsetRight = 32;
-        _compassPanel.OffsetTop = 38;
-        _compassPanel.OffsetBottom = 80;
-
-        StyleBoxFlat style = new();
-        style.BgColor = PalBlackDeep with { A = 0.55f };
-        style.ContentMarginLeft = 4;
-        style.ContentMarginRight = 4;
-        style.ContentMarginTop = 4;
-        style.ContentMarginBottom = 2;
-        // No rounded corners — pixel art!
-        _compassPanel.AddThemeStyleboxOverride("panel", style);
-
-        VBoxContainer vbox = new();
-        vbox.Alignment = BoxContainer.AlignmentMode.Center;
-        vbox.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
-        vbox.AddThemeConstantOverride("separation", 2);
-        _compassPanel.AddChild(vbox);
-
-        Control arrowHost = new();
-        arrowHost.CustomMinimumSize = new Vector2(24f, 24f);
-        arrowHost.SizeFlagsHorizontal = Control.SizeFlags.ShrinkCenter;
-        arrowHost.SizeFlagsVertical = Control.SizeFlags.ShrinkCenter;
-        vbox.AddChild(arrowHost);
-
-        _compassArrowRoot = new Node2D();
-        _compassArrowRoot.Position = new Vector2(12f, 12f);
-        arrowHost.AddChild(_compassArrowRoot);
-
-        _compassArrowHead = new Polygon2D();
-        _compassArrowHead.Color = PalGoldFoyer with { A = 0.95f };
-        _compassArrowHead.Polygon = new Vector2[]
-        {
-            new(0f, -9f),
-            new(6f, 3f),
-            new(-6f, 3f)
-        };
-        _compassArrowRoot.AddChild(_compassArrowHead);
-
-        _compassArrowTail = new Polygon2D();
-        _compassArrowTail.Color = PalGoldFoyer with { A = 0.85f };
-        _compassArrowTail.Polygon = new Vector2[]
-        {
-            new(-1.5f, 3f),
-            new(1.5f, 3f),
-            new(1.5f, 9f),
-            new(-1.5f, 9f)
-        };
-        _compassArrowRoot.AddChild(_compassArrowTail);
-
-        _compassDistanceLabel = MakeLabel("", 7, PalGrayLight, shadow: false);
-        _compassDistanceLabel.HorizontalAlignment = HorizontalAlignment.Center;
-        vbox.AddChild(_compassDistanceLabel);
-
-        _hudRoot.AddChild(_compassPanel);
-    }
-
-    private void ResolveCompassTargets()
-    {
-        if (_compassPlayer == null || !IsInstanceValid(_compassPlayer))
-            _compassPlayer = GetTree().GetFirstNodeInGroup("player") as Player;
-
-        if (_mapCenterAnchor == null || !IsInstanceValid(_mapCenterAnchor))
-        {
-            Node sceneRoot = GetTree().CurrentScene;
-            _mapCenterAnchor = sceneRoot as Node2D;
-        }
-    }
-
-    private void UpdateCompass()
-    {
-        if (_compassPanel == null || _compassArrowRoot == null) return;
-
-        if (_compassPlayer == null || _mapCenterAnchor == null || !IsInstanceValid(_compassPlayer) || !IsInstanceValid(_mapCenterAnchor))
-        {
-            ResolveCompassTargets();
-            if (_compassPlayer == null || _mapCenterAnchor == null || !IsInstanceValid(_compassPlayer) || !IsInstanceValid(_mapCenterAnchor))
-            {
-                _compassPanel.Visible = false;
-                return;
-            }
-        }
-
-        _compassPanel.Visible = true;
-        Vector2 toCenter = _mapCenterAnchor.GlobalPosition - _compassPlayer.GlobalPosition;
-        float distance = toCenter.Length();
-
-        if (distance < 12f)
-        {
-            _compassArrowRoot.Rotation = 0f;
-            _compassArrowHead.Visible = false;
-            _compassArrowTail.Visible = false;
-            _compassDistanceLabel.Text = "";
-            return;
-        }
-
-        Vector2 direction = toCenter / distance;
-        float angle = Mathf.Atan2(direction.Y, direction.X);
-        _compassArrowHead.Visible = true;
-        _compassArrowTail.Visible = true;
-        _compassArrowRoot.Rotation = angle + (Mathf.Pi * 0.5f);
-        _compassDistanceLabel.Text = $"{Mathf.RoundToInt(distance)}";
-    }
-
-    // ==================== DAWN SUMMARY ====================
-
-    private void CreateDawnSummaryPanel()
-    {
-        _dawnSummary = new PanelContainer();
-        _dawnSummary.AnchorLeft = 0.5f;
-        _dawnSummary.AnchorRight = 0.5f;
-        _dawnSummary.AnchorTop = 0.3f;
-        _dawnSummary.AnchorBottom = 0.3f;
-        _dawnSummary.OffsetLeft = -120;
-        _dawnSummary.OffsetRight = 120;
-        _dawnSummary.OffsetTop = 0;
-        _dawnSummary.OffsetBottom = 70;
-        _dawnSummary.Visible = false;
-
-        StyleBoxFlat style = new();
-        style.BgColor = PalBlackDeep with { A = 0.85f };
-        style.BorderColor = PalGoldFoyer with { A = 0.6f };
-        style.BorderWidthBottom = 1;
-        style.BorderWidthTop = 1;
-        style.BorderWidthLeft = 1;
-        style.BorderWidthRight = 1;
-        style.ContentMarginLeft = 12;
-        style.ContentMarginRight = 12;
-        style.ContentMarginTop = 8;
-        style.ContentMarginBottom = 8;
-        _dawnSummary.AddThemeStyleboxOverride("panel", style);
-
-        _dawnSummaryLabel = MakeLabel("", 13, PalGoldFoyer);
-        _dawnSummaryLabel.HorizontalAlignment = HorizontalAlignment.Center;
-        _dawnSummaryLabel.VerticalAlignment = VerticalAlignment.Center;
-        _dawnSummary.AddChild(_dawnSummaryLabel);
-
-        _hudRoot.AddChild(_dawnSummary);
-    }
-
-    private static string GetResourceDisplayName(string id)
-    {
-        return id switch
-        {
-            "wood" => "Bois",
-            "stone" => "Pierre",
-            "metal" => "Métal",
-            _ => id
-        };
     }
 }

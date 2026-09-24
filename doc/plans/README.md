@@ -31,6 +31,7 @@ La [Stratégie V2](../VESTIGES-STRATEGIE-V2.md) reste l'autorité gameplay/roadm
 | [09 — Classement hebdomadaire](09-classement-hebdomadaire.md) | Plus tard | Périodes, règles comparables et intégrité des scores | Score 02 ; équilibre 03/05/06 |
 | [10 — Terrain et tiles](10-terrain-et-tiles.md) | P1 transversal | Cohérence, transitions, circulation et coût du terrain | Cadrage 08 ; déplacements 01 |
 | [11 — Mécaniques originales](11-mecaniques-originales.md) | Prototypes | Sélection et critères d'abandon des innovations | 01/03/05/10 selon proposition |
+| [12 — Micro-événements et variantes](12-micro-evenements.md) | P0 | Cadence, cinq événements, élites et Souverains (v1 livrée) | 03/07 |
 
 Les numéros servent à identifier les plans, pas à imposer leur exécution intégrale dans cet ordre. Le [registre](DECISIONS.md) fait foi pour leur statut de validation.
 
@@ -44,6 +45,11 @@ Les numéros servent à identifier les plans, pas à imposer leur exécution int
 6. Traiter 09 seulement après stabilisation des règles de score.
 
 Un seul lot d'implémentation ouvert à la fois. Un échec de lisibilité, de performance ou de fun ramène au lot concerné avant expansion.
+
+**Mise à jour du 24 septembre :**
+- Raphaël valide le design des nouveaux ennemis. Le personnage joué passe à environ 30 px avec un idle animé (08). Son redessin reste reporté.
+- HUD refait : plaques contrastées, jauge de PV sous le héros, boussole retirée. Nouvelle police Saira Semi Condensed (04).
+- Nouveau [plan 12 — micro-événements et variantes renforcées](12-micro-evenements.md) : cinq événements toutes les 2 à 3 minutes autour des Résurgences, élites naturelles et Souverains. v1 implémentée, recette humaine attendue.
 
 **Mise à jour du 23 septembre :**
 - Les saccades périodiques en combat dense sont corrigées (01 §10). Raphaël trouve le jeu « beaucoup plus fluide » ; la cible 1080p reste ouverte.
