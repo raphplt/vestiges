@@ -28,6 +28,7 @@ FRAME_PIVOT = (16.0, 45.0)
 MODEL_SCALE = 0.62
 
 SHADE_THRESHOLDS = (0.34, 0.56, 0.8)
+EMISSIVE_SHARE = 0.25
 DEPTH_JUMP = 2.6
 RAY_RANGE = 90.0
 
@@ -127,13 +128,17 @@ def render(parts: Sequence[Part], materials: Sequence[Material], yaw: float,
     pixel_material = np.full((height, width), -1, dtype=np.int32)
     pixel_value = np.zeros((height, width))
     pixel_depth = np.full((height, width), np.inf)
+    emissive = np.array([m.emissive for m in materials], dtype=bool)
     for y, x in zip(*np.nonzero(covered)):
         sample_mats = mats[y, x][hits[y, x]]
-        counts = np.bincount(sample_mats)
-        chosen = int(np.argmax(counts))
+        counts = np.bincount(sample_mats, minlength=len(materials))
+        # Un œil d'un pixel à peine doit rester visible : l'émissif l'emporte dès un quart d'échantillons.
+        glowing = np.where(emissive & (counts >= EMISSIVE_SHARE * ss * ss), counts, 0)
+        chosen = int(np.argmax(glowing)) if glowing.any() else int(np.argmax(counts))
         mask = hits[y, x] & (mats[y, x] == chosen)
         pixel_material[y, x] = chosen
-        pixel_value[y, x] = values[y, x][mask].mean()
+        # Pour l'émissif, la « valeur » est sa couverture : cœur clair seulement sur un pixel plein.
+        pixel_value[y, x] = counts[chosen] / (ss * ss) if emissive[chosen] else values[y, x][mask].mean()
         pixel_depth[y, x] = depths[y, x][mask].min()
 
     shade_index = np.digitize(pixel_value, SHADE_THRESHOLDS)
@@ -164,6 +169,8 @@ def _compose(materials: Sequence[Material], covered: np.ndarray, material: np.nd
         mat = materials[material[y, x]]
         rgba[y, x, :3] = mat.ramp[shade[y, x]]
         rgba[y, x, 3] = 255
+        if mat.emissive:
+            continue
         # Ligne interne : ce pixel est nettement derrière un voisin (bras devant le torse, sac derrière).
         for ny, nx in ((y - 1, x), (y + 1, x), (y, x - 1), (y, x + 1)):
             if 0 <= ny < height and 0 <= nx < width and covered[ny, nx] and depth[y, x] - depth[ny, nx] > DEPTH_JUMP:
@@ -179,7 +186,7 @@ def _compose(materials: Sequence[Material], covered: np.ndarray, material: np.nd
             for ny, nx, lit_side in ((y + 1, x, True), (y, x + 1, True), (y - 1, x, False), (y, x - 1, False)):
                 if 0 <= ny < height and 0 <= nx < width and covered[ny, nx]:
                     mat = materials[material[ny, nx]]
-                    outline[y, x, :3] = mat.ramp[0] if lit_side and shade[ny, nx] >= 2 else mat.outline
+                    outline[y, x, :3] = mat.ramp[0] if lit_side and shade[ny, nx] >= 2 and not mat.emissive else mat.outline
                     outline[y, x, 3] = 255
                     break
     rgba = np.where(outline[..., 3:4] > 0, outline, rgba)

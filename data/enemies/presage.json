@@ -29,6 +29,8 @@
     "visual": {
         "color": "#C9B8FF",
         "shape": "diamond",
-        "size": 15
+        "size": 15,
+        "sprite_folder": "presage",
+        "sprite_feet_offset": 21
     }
 }

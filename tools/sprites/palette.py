@@ -34,6 +34,8 @@ class Material:
     ramp: tuple[RampColor, RampColor, RampColor, RampColor]
     outline: RampColor
     inner_line: RampColor
+    # Lumière propre (yeux de créature) : prioritaire sur les pixels partagés, jamais ombrée ni cernée.
+    emissive: bool = False
 
 
 def make_material(name: str, base_hex: str, contrast: float = 1.0) -> Material:
@@ -51,3 +53,11 @@ def make_material(name: str, base_hex: str, contrast: float = 1.0) -> Material:
     outline = _shift(base, 0.32, 0.85, cool * 1.3)
     inner = _shift(base, 0.5, 0.9, cool)
     return Material(name, ramp, outline, inner)
+
+
+def make_emissive(name: str, base_hex: str) -> Material:
+    """Organe lumineux : ton plein, cœur plus clair ; le vert-acide des créatures (Bible §6.2)."""
+    base = hex_to_rgb(base_hex)
+    core = _shift(base, 1.25, 1.0, 0.0)
+    outline = _shift(base, 0.35, 0.9, 0.0)
+    return Material(name, (base, base, base, core), outline, base, emissive=True)

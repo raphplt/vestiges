@@ -33,6 +33,7 @@
         "color": "#558844",
         "shape": "square",
         "size": 20,
-        "sprite_folder": "charognard"
+        "sprite_folder": "charognard",
+        "sprite_feet_offset": 8
     }
 }

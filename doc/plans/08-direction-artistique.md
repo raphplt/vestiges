@@ -108,9 +108,43 @@ La recommandation initiale ci-dessous reste utile pour ses contraintes (densité
 
 **Points ouverts pour Raphaël :**
 - **Lisibilité du Traqueur** : vert forêt de la charte sur la forêt, il se fond dans le décor en jeu. Pistes : cape plus sombre ou plus désaturée, accent beige plus présent, contour plus contrasté.
-- **Ennemis** : ils restent à l'ancienne échelle, minuscules à côté des personnages. Prochaine étape : modèles ennemis dans le même pipeline, avec créatures asymétriques et yeux vert-acide (Bible §6.2).
+- **Ennemis** : ils restent à l'ancienne échelle, minuscules à côté des personnages. Prochaine étape : modèles ennemis dans le même pipeline, avec créatures asymétriques et yeux vert-acide (Bible §6.2). Pilote de trois créatures livré le 24 septembre (ci-dessous).
 - **Charte** : à amender après validation (joueur 48×64, huit directions, abandon de la résolution interne 480×270).
 - **Double contour** : le shader d'entité ajoute un contour au sel-out déjà peint. À comparer en jeu avec et sans.
+
+### Pilote ennemis — 24 septembre 2026
+
+Trois créatures du début de run passent dans le pipeline, à la même densité de pixels que les personnages (`MODEL_SCALE` commun). Choix : elles figurent dans les pools de début de tous les biomes (Présage, Rôdeur) ou de deux d'entre eux (Charognard), et couvrent trois gabarits (lanceur flottant, bipède, quadrupède).
+
+**Pipeline :**
+- `tools/sprites/creatures/` : un module par créature, avec un gabarit libre (état d'animation → volumes). Le Rôdeur réutilise le squelette humanoïde ; le Charognard et le Présage ont leur propre gabarit.
+- Matériaux émissifs (`make_emissive`) pour les yeux vert-acide : ils l'emportent sur un pixel dès un quart des échantillons, ne sont ni ombrés ni cernés. Un œil d'un pixel reste visible.
+- `tools/sprites/models.py` unifie personnages et créatures ; `tools/generate_enemy.py <id> [--sheet]` écrit 8 directions × idle/walk/attack/death (16 frames par direction) et remplace les anciens PNG du dossier.
+- Les anciens générateurs `scripts/generate_rodeur*.py` et `generate_charognard.py` sont retirés : ils auraient écrasé les nouveaux sprites.
+
+**Créatures :**
+| Créature | Cadre, pieds | Lecture recherchée |
+|---|---|---|
+| Rôdeur | 40×48, (20, 45) | Bipède voûté, bosse moussue, bras gauche trop long à griffes d'os, poing de pierre à droite, yeux décalés dans un visage creux. Taille proche du joueur. |
+| Charognard | 32×32, (16, 24) | Corps bas, six pattes inégales aux genoux relevés, moignon de tête fendu d'une gueule, deux yeux à hauteurs différentes. Bond : corps étiré, gueule ouverte. |
+| Présage | 32×48, (16, 45) | Voile lilas qui lévite, colonne de trois yeux dans une capuche vide, éclats de pierre en couronne. Un fil à plomb pend dessous ; à l'incantation, le poids se lève vers la cible et luit du vert de la marque au sol. |
+
+**Code :**
+- `EnemySpriteLoader` charge les huit directions, les anciens jeux à quatre diagonales restant acceptés. `Enemy` utilise `CharacterFacing` (hystérésis, repli sur les diagonales) et une table de `StringName` précalculée : plus de chaîne allouée à chaque frame par ennemi.
+- À l'arrêt pendant une attaque (incantation, bond annoncé), l'ennemi se tourne vers le joueur.
+- `visual.sprite_feet_offset` (JSON) ancre les pieds et garde l'échelle 1. Les anciens sprites gardent leur décalage centré.
+- Constat : la mise à l'échelle « taille JSON » des anciens sprites ennemis n'a jamais eu d'effet, car l'échelle était remise à 1 juste après dans `Initialize`. Ce code mort est retiré ; le rendu des anciens sprites ne change pas.
+
+**Vérifications :**
+- Build sans warning ; `EnemyAbilityRegression` 15/15 ; `MovementRegression` sans échec.
+- Nouveau mode `RunObservation --capture-bestiary` : gros plans des trois créatures autour du joueur dans la vraie scène de run. Les trois chargent leurs 32 animations. Rôdeur et joueur ont une taille comparable, le Charognard reste petit mais lisible, les yeux vert-acide ressortent sur la forêt.
+- Le test de capacités attendait encore trois marques de Présage simultanées alors que le JSON en autorise deux depuis le 23 septembre : il lit désormais le plafond dans les données.
+
+**Points ouverts pour Raphaël :**
+- Validation en jeu des trois silhouettes, de leurs couleurs et de leurs animations (surtout l'incantation du Présage et le bond du Charognard).
+- Le Présage vu de dos est plus sombre ; à surveiller sur sol effacé.
+- Le « chef » de meute du Charognard (un œil de plus, Bible §6.2) n'existe pas en jeu ; non modélisé.
+- Après validation : même traitement pour les autres ennemis du début (Rampant d'Ombre, Brute, Rampant, Cracheur).
 
 ### Recommandation initiale (22 septembre), remplacée pour la méthode
 

@@ -47,35 +47,36 @@ def generate(character_id: str, output: Path | None, sheet: Path | None, scale: 
         print(f"[generate_character] {character_id} {direction} : ok", flush=True)
 
     if sheet is not None:
-        _write_sheet(frames, sheet, scale)
+        write_sheet(frames, sheet, scale, ACTIONS, SIZE, PIVOT)
 
 
-def _write_sheet(frames: dict[tuple[str, str], list[Image.Image]], path: Path, scale: int) -> None:
-    columns = sum(len(frames[("E", action)]) for action in ACTIONS)
-    cell_w, cell_h = SIZE[0] * scale, SIZE[1] * scale
+def write_sheet(frames: dict[tuple[str, str], list[Image.Image]], path: Path, scale: int, actions: tuple[str, ...],
+                size: tuple[int, int], pivot: tuple[float, float]) -> None:
+    columns = sum(len(frames[("E", action)]) for action in actions)
+    cell_w, cell_h = size[0] * scale, size[1] * scale
     label = 28
     sheet = Image.new("RGBA", (label + columns * cell_w, label + len(DIRECTIONS) * cell_h), (58, 66, 48, 255))
     draw = ImageDraw.Draw(sheet)
     column = 0
-    for action in ACTIONS:
+    for action in actions:
         draw.text((label + column * cell_w + 4, 6), action, fill=(232, 224, 212, 255))
         column += len(frames[("E", action)])
     for row, direction in enumerate(DIRECTIONS):
         draw.text((4, label + row * cell_h + cell_h // 2), direction, fill=(232, 224, 212, 255))
         column = 0
-        for action in ACTIONS:
+        for action in actions:
             for image in frames[(direction, action)]:
                 x, y = label + column * cell_w, label + row * cell_h
                 # Losange de sol sous le pivot : vérifie l'ancrage des pieds sur toutes les frames.
-                cx, cy = x + int(PIVOT[0] * scale), y + int(PIVOT[1] * scale)
+                cx, cy = x + int(pivot[0] * scale), y + int(pivot[1] * scale)
                 draw.polygon([(cx - 8 * scale, cy), (cx, cy - 4 * scale), (cx + 8 * scale, cy), (cx, cy + 4 * scale)],
                              fill=(70, 82, 56, 255))
-                big = image.resize(SIZE if scale == 1 else (cell_w, cell_h), Image.NEAREST)
+                big = image.resize((cell_w, cell_h), Image.NEAREST)
                 sheet.alpha_composite(big, (x, y))
                 column += 1
     path.parent.mkdir(parents=True, exist_ok=True)
     sheet.save(path)
-    print(f"[generate_character] planche : {path}")
+    print(f"[sprites] planche : {path}")
 
 
 def main() -> None:

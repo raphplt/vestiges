@@ -7,14 +7,17 @@ namespace Vestiges.Combat;
 /// Charge et met en cache les SpriteFrames d'ennemis depuis les fichiers PNG individuels.
 /// Convention directionnelle : enemy_{folder}_{DIR}_{ACTION}_{FRAME:D2}.png
 /// Convention non-directionnelle : enemy_{folder}_{ACTION}_{FRAME:D2}.png (dupliqué sur 4 dirs)
-/// Directions : NE, NW, SE, SW. Actions : idle, walk, attack, death.
+/// Directions : E, SE, S, SW, W, NW, N, NE (les quatre diagonales seules restent acceptées). Actions : idle, walk, attack, death.
 /// </summary>
 public static class EnemySpriteLoader
 {
 	private static readonly Dictionary<string, SpriteFrames> _cache = new();
 
-	private static readonly string[] Directions = { "NE", "NW", "SE", "SW" };
-	private static readonly string[] Actions = { "idle", "walk", "attack", "death" };
+	private static readonly string[] Directions = CharacterFacing.DirectionNames;
+	private static readonly StringName[] CardinalIdle = { "E_idle", "S_idle", "W_idle", "N_idle" };
+
+	/// <summary>Ordre des actions, partagé avec la table d'animations d'Enemy.</summary>
+	public static readonly string[] Actions = { "idle", "walk", "attack", "death" };
 
 	// Certains sprites utilisent "move" au lieu de "walk"
 	private static readonly Dictionary<string, string> ActionAliases = new()
@@ -128,6 +131,17 @@ public static class EnemySpriteLoader
 
 		GD.PushWarning($"[EnemySpriteLoader] Aucun sprite trouvé pour '{enemyId}' dans {basePath}");
 		return null;
+	}
+
+	/// <summary>true si le jeu de sprites fournit aussi les quatre directions cardinales.</summary>
+	public static bool HasEightDirections(SpriteFrames frames)
+	{
+		foreach (StringName animation in CardinalIdle)
+		{
+			if (!frames.HasAnimation(animation))
+				return false;
+		}
+		return true;
 	}
 
 	/// <summary>

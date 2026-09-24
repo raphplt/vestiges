@@ -12,6 +12,7 @@
         "color": "#7A6855",
         "shape": "square",
         "size": 20,
-        "sprite_folder": "rodeur"
+        "sprite_folder": "rodeur",
+        "sprite_feet_offset": 21
     }
 }

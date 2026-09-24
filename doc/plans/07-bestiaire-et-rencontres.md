@@ -122,7 +122,7 @@ Les annonces au sol (`GroundTelegraph`) sont réutilisées et dessinées sans al
 
 **Limites et suite :**
 - Aucun essai en jeu n'a encore eu lieu. La recette avec Raphaël doit juger le ressenti, la lisibilité, la fréquence et la difficulté des premières minutes.
-- Le Présage n'a ni sprite ni animation dédiée (plan 08).
+- Le Présage n'avait ni sprite ni animation dédiée : pilote procédural livré le 24 septembre ([plan 08](08-direction-artistique.md#pilote-ennemis--24-septembre-2026)), recette en jeu à faire.
 - Les valeurs sont des points de départ. Si la menace reste insuffisante, l'étape suivante du plan 03 A2 est l'essai XP (+25 %).
 
 ## 3. Fiche obligatoire par rôle

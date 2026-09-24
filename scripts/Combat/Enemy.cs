@@ -132,8 +132,13 @@ public partial class Enemy : CharacterBody2D
 	// Sprite animé (remplace Polygon2D quand sprite_folder est défini)
 	private AnimatedSprite2D _sprite;
 	private bool _hasSprite;
-	private string _lastDirection = "SE";
-	private string _currentAnimName;
+	private readonly CharacterFacing _facing = new();
+	private StringName _currentAnimName;
+	private enum SpriteAction { Idle, Walk, Attack, Death }
+	// Noms d'animation précalculés [direction, action] : aucune chaîne allouée par frame.
+	private static readonly StringName[,] SpriteAnimations = BuildSpriteAnimations();
+	// Pieds légèrement sous le centre de collision, comme les anciens sprites centrés.
+	private const float SpriteFeetBelowOrigin = 6f;
 	private float _attackAnimTimer;
 
 	// Shader VFX unifié (outline + hit flash + dissolve + aberration)
@@ -392,7 +397,7 @@ public partial class Enemy : CharacterBody2D
 			_spriteMaterial = null;
 			_visual.Visible = true;
 			_hasSprite = false;
-			_lastDirection = "SE";
+			_facing.Reset(false);
 			_currentAnimName = null;
 			_attackAnimTimer = 0f;
 		}
@@ -1182,7 +1187,7 @@ public partial class Enemy : CharacterBody2D
 
 		// Lancer l'animation de mort sur le sprite
 		if (_hasSprite)
-			PlaySpriteAnim($"{_lastDirection}_death");
+			PlaySpriteAnim(SpriteAnimations[(int)_facing.Current, (int)SpriteAction.Death]);
 
 		// Explosive : AoE de dégâts à la mort
 		if (_waveModifier == "explosive")
@@ -1441,19 +1446,14 @@ public partial class Enemy : CharacterBody2D
 				_sprite.Visible = true;
 				_sprite.SelfModulate = Colors.White;
 				
-				// Adapt the sprite scale to match the visual size defined in JSON
-				Texture2D firstFrame = frames.GetFrameTexture("SE_idle", 0);
-				float targetWidth = data.Visual.Size * 2f;
-				float scaleFactor = targetWidth / firstFrame.GetWidth();
-				
-				// For the Shadow Crawler and others, make sure they aren't oversized
-				_sprite.Scale = new Vector2(scaleFactor, scaleFactor);
-				
-				// Offset vers le haut : les pieds du sprite doivent toucher le sol isométrique
-				_sprite.Offset = new Vector2(0, -firstFrame.GetHeight() * 0.35f);
+				// Sprites du pipeline procédural : pieds ancrés par le JSON. Anciens sprites : centrés, remontés.
+				if (data.Visual.SpriteFeetOffset > 0f)
+					_sprite.Offset = new Vector2(0f, SpriteFeetBelowOrigin - data.Visual.SpriteFeetOffset);
+				else
+					_sprite.Offset = new Vector2(0f, -frames.GetFrameTexture("SE_idle", 0).GetHeight() * 0.35f);
 				_visual.Visible = false;
 				_hasSprite = true;
-				_lastDirection = "SE";
+				_facing.Reset(EnemySpriteLoader.HasEightDirections(frames));
 				_currentAnimName = null;
 				_attackAnimTimer = 0f;
 
@@ -1463,7 +1463,7 @@ public partial class Enemy : CharacterBody2D
 				_spriteMaterial.SetShaderParameter("outline_color", GetOutlineColor(data));
 				_sprite.Material = _spriteMaterial;
 
-				PlaySpriteAnim("SE_idle");
+				PlaySpriteAnim(SpriteAnimations[(int)_facing.Current, (int)SpriteAction.Idle]);
 			}
 		}
 	}
@@ -1477,35 +1477,42 @@ public partial class Enemy : CharacterBody2D
 
 		_attackAnimTimer = Mathf.Max(_attackAnimTimer - delta, 0f);
 
-		// Direction depuis la vélocité (conserve la dernière si immobile)
-		if (Velocity.LengthSquared() > 1f)
+		// Direction depuis la vélocité ; à l'arrêt pendant une attaque (incantation, bond annoncé), face au joueur.
+		bool moving = Velocity.LengthSquared() > 1f;
+		if (moving)
+			_facing.Update(Velocity);
+		else if (_attackAnimTimer > 0f && _player != null && IsInstanceValid(_player))
 		{
-			float angle = Velocity.Angle();
-			if (angle >= -Mathf.Pi * 0.5f && angle < 0f)
-				_lastDirection = "NE";
-			else if (angle >= 0f && angle < Mathf.Pi * 0.5f)
-				_lastDirection = "SE";
-			else if (angle >= Mathf.Pi * 0.5f && angle <= Mathf.Pi)
-				_lastDirection = "SW";
-			else
-				_lastDirection = "NW";
+			Vector2 toPlayer = _player.GlobalPosition - GlobalPosition;
+			if (toPlayer.LengthSquared() > 1f)
+				_facing.Update(toPlayer);
 		}
 
-		// Action : death > attack > walk > idle
-		string action;
+		SpriteAction action;
 		if (_isDying)
-			action = "death";
+			action = SpriteAction.Death;
 		else if (_attackAnimTimer > 0f)
-			action = "attack";
-		else if (Velocity.LengthSquared() > 1f)
-			action = "walk";
+			action = SpriteAction.Attack;
+		else if (moving)
+			action = SpriteAction.Walk;
 		else
-			action = "idle";
+			action = SpriteAction.Idle;
 
-		PlaySpriteAnim($"{_lastDirection}_{action}");
+		PlaySpriteAnim(SpriteAnimations[(int)_facing.Current, (int)action]);
 	}
 
-	private void PlaySpriteAnim(string animName)
+	private static StringName[,] BuildSpriteAnimations()
+	{
+		string[] directions = CharacterFacing.DirectionNames;
+		string[] actions = EnemySpriteLoader.Actions;
+		StringName[,] animations = new StringName[directions.Length, actions.Length];
+		for (int direction = 0; direction < directions.Length; direction++)
+			for (int action = 0; action < actions.Length; action++)
+				animations[direction, action] = $"{directions[direction]}_{actions[action]}";
+		return animations;
+	}
+
+	private void PlaySpriteAnim(StringName animName)
 	{
 		if (animName == _currentAnimName)
 			return;

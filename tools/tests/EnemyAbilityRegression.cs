@@ -102,8 +102,9 @@ public partial class EnemyAbilityRegression : Node2D
         Check(projectiles == 0, $"Présage : aucune attaque de base hors incantation ({projectiles} projectiles)");
         Despawn(omen);
 
-        // Plafond partagé : quatre Présages prêts, trois marques au plus.
-        Enemy[] casters = new Enemy[4];
+        // Plafond partagé, lu dans les données : deux Présages prêts de plus que le plafond.
+        int cap = Mathf.RoundToInt(EnemyDataLoader.Get("presage").Abilities["omen_strike"].GetNumber("max_simultaneous", 3f));
+        Enemy[] casters = new Enemy[cap + 2];
         for (int i = 0; i < casters.Length; i++)
             casters[i] = await SpawnReady("presage", new Vector2(-150f, -60f + 40f * i));
         foreach (Enemy caster in casters)
@@ -112,7 +113,7 @@ public partial class EnemyAbilityRegression : Node2D
         int visible = 0;
         foreach (Enemy caster in casters)
             visible += caster.GetNode<GroundTelegraph>("OmenMarker").Visible ? 1 : 0;
-        Check(visible == 3, $"Présage : plafond de marques simultanées ({visible}/3)");
+        Check(visible == cap, $"Présage : plafond de marques simultanées ({visible}/{cap})");
 
         // La mort d'un lanceur retire sa marque et libère une place.
         Enemy dying = Array.Find(casters, c => c.GetNode<GroundTelegraph>("OmenMarker").Visible);
@@ -122,7 +123,7 @@ public partial class EnemyAbilityRegression : Node2D
         visible = 0;
         foreach (Enemy caster in casters)
             visible += caster != dying && caster.GetNode<GroundTelegraph>("OmenMarker").Visible ? 1 : 0;
-        Check(visible == 3, $"Présage : place libérée après la mort ({visible}/3)");
+        Check(visible == cap, $"Présage : place libérée après la mort ({visible}/{cap})");
         foreach (Enemy caster in casters)
             Despawn(caster);
         await Step(1);

@@ -17,6 +17,7 @@ namespace Vestiges.Tests;
 /// <summary>
 /// Observation de la vraie scène de run, rendue.
 /// --capture-abilities : captures des annonces du Présage et du bond du Charognard.
+/// --capture-bestiary : gros plans des créatures du pilote de sprites procéduraux, autour du joueur immobile.
 /// --density : mesure de densité en spawn naturel (ennemis visibles, temps sans ennemi, débits, niveaux).
 /// </summary>
 public partial class RunObservation : Node
@@ -42,6 +43,8 @@ public partial class RunObservation : Node
 
             if (Array.IndexOf(args, "--capture-abilities") >= 0)
                 await CaptureAbilities();
+            else if (Array.IndexOf(args, "--capture-bestiary") >= 0)
+                await CaptureBestiary();
             else if (Array.IndexOf(args, "--capture-character") >= 0)
                 await CaptureCharacter(Argument(args, "--character", "traqueur"));
             else
@@ -111,6 +114,46 @@ public partial class RunObservation : Node
             image.SavePng(path);
         }
         GD.Print($"[RunObservation] Captures écrites dans {_output}");
+    }
+
+    private async Task CaptureBestiary()
+    {
+        _world.GetNode("SpawnManager").ProcessMode = ProcessModeEnum.Disabled;
+        foreach (Node node in GetTree().GetNodesInGroup("enemies"))
+            if (node is Enemy existing && existing.IsActive)
+                _world.GetNode<EnemyPool>("EnemyPool").Return(existing);
+        // L'écran de chargement s'efface après l'initialisation du monde.
+        await Frames(90);
+
+        SpawnManager spawner = _world.GetNode<SpawnManager>("SpawnManager");
+        Vector2 origin = _player.GlobalPosition;
+        spawner.ForceSpawnEnemy("presage", origin + new Vector2(-110f, -30f));
+        spawner.ForceSpawnEnemy("rodeur", origin + new Vector2(100f, -40f));
+        spawner.ForceSpawnEnemy("charognard", origin + new Vector2(60f, 80f));
+        await Frames(2);
+        foreach (Node node in GetTree().GetNodesInGroup("enemies"))
+        {
+            if (node is Enemy enemy && enemy.IsActive)
+                typeof(Enemy).GetField("_currentHp", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(enemy, 100000f);
+        }
+
+        _player.AIInputOverride = Vector2.Zero;
+        Vector2 half = new(200f, 120f);
+        for (int shot = 0; shot < 16; shot++)
+        {
+            await Frames(12);
+            using Image image = GetViewport().GetTexture().GetImage();
+            // Gros plan sur le joueur, en pixels physiques de la capture (écrans à haute densité compris).
+            float pixelRatio = image.GetWidth() / GetViewport().GetVisibleRect().Size.X;
+            Vector2 center = GetViewport().GetCanvasTransform() * _player.GlobalPosition;
+            Vector2 zoom = _camera.Zoom;
+            Vector2 size = half * 2f * zoom * pixelRatio;
+            Vector2 corner = (center - half * zoom) * pixelRatio;
+            Rect2I region = new Rect2I((Vector2I)corner, (Vector2I)size).Intersection(new Rect2I(0, 0, image.GetWidth(), image.GetHeight()));
+            using Image crop = image.GetRegion(region);
+            crop.SavePng($"{_output}/bestiary-{shot:00}.png");
+        }
+        GD.Print($"[RunObservation] Captures du bestiaire écrites dans {_output}");
     }
 
     private async Task CaptureCharacter(string characterId)

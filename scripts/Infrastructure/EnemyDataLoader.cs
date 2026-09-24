@@ -18,6 +18,8 @@ public class EnemyVisual
     public string Shape { get; set; }
     public float Size { get; set; }
     public string SpriteFolder { get; set; }
+    /// <summary>Distance du centre du cadre aux pieds, en pixels. Non nul : sprite à la densité du monde, sans mise à l'échelle.</summary>
+    public float SpriteFeetOffset { get; set; }
 }
 
 /// <summary>Paramètres d'une capacité composée (bloc "abilities" du JSON ennemi).</summary>
@@ -151,7 +153,8 @@ public static class EnemyDataLoader
                 Color = Color.FromHtml(visual["color"].AsString()),
                 Shape = visual["shape"].AsString(),
                 Size = (float)visual["size"].AsDouble(),
-                SpriteFolder = visual.ContainsKey("sprite_folder") ? visual["sprite_folder"].AsString() : null
+                SpriteFolder = visual.ContainsKey("sprite_folder") ? visual["sprite_folder"].AsString() : null,
+                SpriteFeetOffset = visual.ContainsKey("sprite_feet_offset") ? (float)visual["sprite_feet_offset"].AsDouble() : 0f
             }
         };
 
