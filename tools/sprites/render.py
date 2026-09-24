@@ -21,11 +21,15 @@ SCREEN_RIGHT = np.array([1.0, 0.0, 0.0])
 SCREEN_UP = np.array([0.0, np.cos(PITCH), -np.sin(PITCH)])
 LIGHT = np.array([-0.55, 0.85, 0.5]) / np.linalg.norm([-0.55, 0.85, 0.5])
 
-# Format des personnages : cadre, point des pieds et pixels par unité de modèle.
-# Le modèle mesure ~60 unités ; à 0,62 px/unité il fait ~35 px, à l'échelle des ennemis et décors du monde.
-FRAME_SIZE = (32, 48)
-FRAME_PIVOT = (16.0, 45.0)
+# Pixels par unité de modèle des créatures : densité commune du bestiaire (le Rôdeur fait ~29 px).
 MODEL_SCALE = 0.62
+
+# Format des personnages jouables : cadre, point des pieds et échelle propre.
+# Un humanoïde mesure ~60 unités ; à 0,53 px/unité il fait ~30 px (retour « encore un peu trop grand » du
+# 24 septembre, -15 % par rapport à l'échelle des créatures), sac ou arc compris ~33 px.
+CHARACTER_FRAME_SIZE = (32, 40)
+CHARACTER_FRAME_PIVOT = (16.0, 36.0)
+CHARACTER_MODEL_SCALE = 0.53
 
 SHADE_THRESHOLDS = (0.34, 0.56, 0.8)
 EMISSIVE_SHARE = 0.25
@@ -70,7 +74,7 @@ def _normals(parts: Sequence[Part], points: np.ndarray) -> np.ndarray:
 
 
 def render(parts: Sequence[Part], materials: Sequence[Material], yaw: float,
-           size: tuple[int, int] = FRAME_SIZE, pivot: tuple[float, float] = FRAME_PIVOT,
+           size: tuple[int, int], pivot: tuple[float, float],
            scale: float = MODEL_SCALE, supersample: int = 4) -> Image.Image:
     width, height = size
     ss = supersample

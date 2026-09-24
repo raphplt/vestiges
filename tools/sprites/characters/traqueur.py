@@ -9,7 +9,7 @@ import numpy as np
 
 from ._body import LimbStyle, limbs
 from ..palette import make_material
-from ..poses import Gait, humanoid_animations
+from ..poses import Gait, character_animations
 from ..render import Part
 from ..rig import Proportions, Skeleton
 from ..sdf import capsule, ellipsoid, sphere
@@ -36,6 +36,8 @@ MATERIALS = [
 
 def build(skeleton: Skeleton) -> list[Part]:
     s = skeleton
+    # Éléments souples : pointe de capuche et empennages oscillent en retard sur le corps.
+    d = s.drape
     torso_center = (s.point("pelvis") + s.point("chest")) * 0.5
     parts = [
         Part(lambda p, c=torso_center: ellipsoid(p, c, (4.9, 8.6, 3.5), s.torso), TUNIC),
@@ -48,18 +50,18 @@ def build(skeleton: Skeleton) -> list[Part]:
         # Capuche pointue creusée à l'avant, pointe rejetée vers l'arrière.
         Part(lambda p: np.maximum(ellipsoid(p, s.on_head((0, 0.6, -0.9)), (4.5, 5.0, 4.8), s.head),
                                   -ellipsoid(p, s.on_head((0, -0.9, 4.0)), (3.0, 3.4, 2.6), s.head)), CLOAK),
-        Part(lambda p: capsule(p, s.on_head((0, 3.0, -2.5)), s.on_head((0, 7.5, -6.5)), 2.6, 0.5), CLOAK),
+        Part(lambda p: capsule(p, s.on_head((0, 3.0, -2.5)), s.on_head((2.2 * d, 7.5 - 0.6 * d, -6.5)), 2.6, 0.5), CLOAK),
         # Arc en diagonale : les deux branches dépassent nettement de la silhouette (tête et hanche).
         Part(lambda p: capsule(p, s.on_torso("chest", (-10.5, -13.0, -5.0)), s.on_torso("chest", (-2.0, 1.5, -6.4)), 1.0, 1.3), BOW),
         Part(lambda p: capsule(p, s.on_torso("chest", (-2.0, 1.5, -6.4)), s.on_torso("chest", (6.5, 17.5, -5.0)), 1.3, 0.9), BOW),
         Part(lambda p: capsule(p, s.on_torso("chest", (-10.0, -12.6, -4.4)), s.on_torso("chest", (6.2, 17.0, -4.4)), 0.4), STRING),
         # Carquois et empennages.
         Part(lambda p: capsule(p, s.on_torso("chest", (3.0, -6.0, -5.0)), s.on_torso("chest", (4.8, 3.5, -5.6)), 1.8, 2.0), QUIVER),
-        Part(lambda p: ellipsoid(p, s.on_torso("chest", (5.0, 5.2, -5.8)), (1.9, 1.6, 1.6), s.torso), FLETCH),
+        Part(lambda p: ellipsoid(p, s.on_torso("chest", (5.0 + 0.9 * d, 5.2, -5.8)), (1.9, 1.6, 1.6), s.torso), FLETCH),
     ]
     parts += limbs(s, LimbStyle(sleeve=TUNIC, hand=GLOVES, leg=LEGS, boot=BOOTS, arm_radius=1.7,
                                 leg_radius=2.1, boot_radius=2.1, boot_height=6.0, foot_radius=1.8))
     return parts
 
 
-ANIMATIONS = humanoid_animations(Gait(lean=0.14, arm_out=0.2, stride=1.15, arm_swing=1.1))
+ANIMATIONS = character_animations(Gait(lean=0.14, arm_out=0.2, stride=1.15, arm_swing=1.1))

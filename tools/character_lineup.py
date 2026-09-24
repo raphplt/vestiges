@@ -7,7 +7,6 @@ Usage : python3 tools/character_lineup.py sortie.png [--scale 4] [ids...]
 from __future__ import annotations
 
 import argparse
-import importlib
 import sys
 from pathlib import Path
 
@@ -15,8 +14,8 @@ from PIL import Image, ImageDraw
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from tools.sprites.render import FRAME_SIZE, render, screen_direction_to_yaw  # noqa: E402
-from tools.sprites.rig import build_skeleton  # noqa: E402
+from tools.sprites.models import character  # noqa: E402
+from tools.sprites.render import CHARACTER_FRAME_SIZE as FRAME_SIZE, screen_direction_to_yaw  # noqa: E402
 
 CAST = ["vagabond", "traqueur", "forgeuse", "eveillee", "facteur", "scaphandriere"]
 VIEWS = [("S", (0, 1)), ("SE", (1, 1)), ("E", (1, 0))]
@@ -39,13 +38,12 @@ def main() -> None:
     draw = ImageDraw.Draw(sheet)
 
     for index, character_id in enumerate(args.ids):
-        module = importlib.import_module(f"tools.sprites.characters.{character_id}")
-        pose = module.ANIMATIONS["idle"][0]
-        parts = module.build(build_skeleton(pose, module.DIMENSIONS))
+        model = character(character_id)
+        pose = model.animations["idle"][0]
         x0 = index * len(VIEWS) * cell_w
         draw.text((x0 + 8, 8), character_id, fill=(232, 224, 212, 255))
         for view, (label, (dx, dy)) in enumerate(VIEWS):
-            sprite = render(parts, module.MATERIALS, screen_direction_to_yaw(dx, dy))
+            sprite = model.render(pose, screen_direction_to_yaw(dx, dy))
             big = sprite.resize((cell_w, cell_h), Image.NEAREST)
             for row, (kind, ground) in enumerate(rows):
                 x, y = x0 + view * cell_w, 30 + row * cell_h

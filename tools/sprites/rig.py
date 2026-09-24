@@ -43,6 +43,8 @@ class Pose:
     arm_out: float = 0.12
     root_pitch: float = 0.0
     root_roll: float = 0.0
+    # Éléments souples (écharpe, pointe de capuche, sac, braise) : -1..1, en retard sur le corps.
+    drape: float = 0.0
 
     def mirrored(self) -> "Pose":
         return replace(self, hip_l=self.hip_r, hip_r=self.hip_l, knee_l=self.knee_r, knee_r=self.knee_l,
@@ -64,6 +66,7 @@ class Skeleton:
     joints: dict[str, np.ndarray]
     torso: np.ndarray
     head: np.ndarray
+    drape: float = 0.0
 
     def point(self, name: str) -> np.ndarray:
         return self.joints[name]
@@ -109,4 +112,4 @@ def build_skeleton(pose: Pose, dims: Proportions = Proportions()) -> Skeleton:
         joints = {name: root @ point for name, point in joints.items()}
         torso = root @ torso
         head_rotation = root @ head_rotation
-    return Skeleton(joints, torso, head_rotation)
+    return Skeleton(joints, torso, head_rotation, pose.drape)

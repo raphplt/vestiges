@@ -9,7 +9,7 @@ import numpy as np
 
 from ._body import LimbStyle, limbs
 from ..palette import make_material
-from ..poses import Gait, humanoid_animations
+from ..poses import Gait, character_animations
 from ..render import Part
 from ..rig import Proportions, Skeleton
 from ..sdf import capsule, ellipsoid, sphere
@@ -55,4 +55,4 @@ def build(skeleton: Skeleton) -> list[Part]:
     return parts
 
 
-ANIMATIONS = humanoid_animations(Gait(lean=-0.02, arm_out=0.38, stride=0.7, arm_swing=0.5, bounce=0.3))
+ANIMATIONS = character_animations(Gait(lean=-0.02, arm_out=0.38, stride=0.7, arm_swing=0.5, bounce=0.3))

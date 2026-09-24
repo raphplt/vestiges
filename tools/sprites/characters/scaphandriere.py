@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from ._body import LimbStyle, limbs
 from ..palette import make_material
-from ..poses import Gait, humanoid_animations
+from ..poses import Gait, character_animations
 from ..render import Part
 from ..rig import Proportions, Skeleton
 from ..sdf import capsule, ellipsoid, sphere
@@ -50,4 +50,4 @@ def build(skeleton: Skeleton) -> list[Part]:
     return parts
 
 
-ANIMATIONS = humanoid_animations(Gait(lean=0.04, arm_out=0.3, stride=0.8, arm_swing=0.7, bounce=0.5, heavy=0.7))
+ANIMATIONS = character_animations(Gait(lean=0.04, arm_out=0.3, stride=0.8, arm_swing=0.7, bounce=0.5, heavy=0.7))

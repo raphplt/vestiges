@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass, replace
 
+import numpy as np
+
 from .rig import Pose
 
 
@@ -17,9 +19,13 @@ class Gait:
     heavy: float = 0.0
 
 
+def stance_pose(gait: Gait = Gait()) -> Pose:
+    return Pose(lean=gait.lean, arm_out=gait.arm_out, crouch=0.6 * gait.heavy, knee_l=0.1 + 0.1 * gait.heavy,
+                knee_r=0.1 + 0.1 * gait.heavy)
+
+
 def humanoid_animations(gait: Gait = Gait()) -> dict[str, list[Pose]]:
-    stance = Pose(lean=gait.lean, arm_out=gait.arm_out, crouch=0.6 * gait.heavy, knee_l=0.1 + 0.1 * gait.heavy,
-                  knee_r=0.1 + 0.1 * gait.heavy)
+    stance = stance_pose(gait)
     contact = replace(stance, lean=gait.lean + 0.05, bob=-0.5 * gait.bounce,
                       hip_l=0.38 * gait.stride, knee_l=0.12, hip_r=-0.32 * gait.stride, knee_r=0.45,
                       shoulder_l=-0.45 * gait.arm_swing, shoulder_r=0.45 * gait.arm_swing, elbow_l=0.2, elbow_r=0.45)
@@ -56,3 +62,30 @@ def humanoid_animations(gait: Gait = Gait()) -> dict[str, list[Pose]]:
                     shoulder_l=0.9, shoulder_r=0.8, elbow_l=0.1, elbow_r=0.1, head_pitch=0.6, arm_out=gait.arm_out + 0.06),
         ],
     }
+
+
+IDLE_FRAMES = 6
+
+
+def living_idle(gait: Gait = Gait(), frames: int = IDLE_FRAMES) -> list[Pose]:
+    """
+    Idle des personnages jouables : un cycle de souffle lisible à leur taille (au moins un pixel).
+    Inspiration : épaules et tête qui montent, bras qui s'ouvrent un peu ; balancement latéral du poids ;
+    éléments souples (`drape`) en retard d'un quart de cycle sur le balancement. Sinusoïdes : boucle sans à-coup.
+    """
+    stance = stance_pose(gait)
+    # Un personnage lourd respire aussi fort mais se balance moins.
+    sway = 0.05 * (1.0 - 0.4 * gait.heavy)
+    poses = []
+    for index in range(frames):
+        phase = 2.0 * np.pi * index / frames
+        inhale = (1.0 - np.cos(phase)) * 0.5
+        poses.append(replace(stance, breath=2.6 * inhale, head_pitch=-0.05 * inhale, lean_side=sway * np.sin(phase),
+                             arm_out=gait.arm_out + 0.07 * inhale, elbow_l=0.25 + 0.12 * inhale,
+                             elbow_r=0.25 + 0.12 * inhale, drape=float(-np.cos(phase))))
+    return poses
+
+
+def character_animations(gait: Gait = Gait()) -> dict[str, list[Pose]]:
+    """Animations humanoïdes avec l'idle vivant des personnages ; les créatures gardent l'idle commun."""
+    return {**humanoid_animations(gait), "idle": living_idle(gait)}

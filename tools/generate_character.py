@@ -2,14 +2,16 @@
 Génère les sprites d'un personnage (8 directions × actions) avec le pipeline procédural commun tools/sprites.
 
 Usage :
-    python3 tools/generate_character.py vagabond                  # écrit assets/characters/<id>/
+    python3 tools/generate_character.py vagabond                  # remplace assets/characters/<id>/
     python3 tools/generate_character.py vagabond --sheet out.png  # planche de contrôle ×4 en plus
     python3 tools/generate_character.py vagabond --dry-run --sheet out.png
+
+Les PNG du dossier qui ne sont pas réécrits (ancien nombre de frames) sont retirés avec leur .import :
+CharacterSpriteLoader les chargerait à la suite des nouvelles frames.
 """
 from __future__ import annotations
 
 import argparse
-import importlib
 import sys
 from pathlib import Path
 
@@ -17,37 +19,47 @@ from PIL import Image, ImageDraw
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from tools.sprites.render import FRAME_PIVOT, FRAME_SIZE, render, screen_direction_to_yaw  # noqa: E402
-from tools.sprites.rig import build_skeleton  # noqa: E402
+from tools.sprites.models import character  # noqa: E402
+from tools.sprites.render import screen_direction_to_yaw  # noqa: E402
 
 DIRECTIONS = {
     "E": (1, 0), "SE": (1, 1), "S": (0, 1), "SW": (-1, 1),
     "W": (-1, 0), "NW": (-1, -1), "N": (0, -1), "NE": (1, -1),
 }
 ACTIONS = ("idle", "walk", "dash", "hurt", "death")
-SIZE = FRAME_SIZE
-PIVOT = FRAME_PIVOT
 
 
 def generate(character_id: str, output: Path | None, sheet: Path | None, scale: int) -> None:
-    module = importlib.import_module(f"tools.sprites.characters.{character_id}")
+    model = character(character_id)
+    written: set[Path] = set()
     frames: dict[tuple[str, str], list[Image.Image]] = {}
     for direction, (dx, dy) in DIRECTIONS.items():
         yaw = screen_direction_to_yaw(dx, dy)
         for action in ACTIONS:
-            images = []
-            for pose in module.ANIMATIONS[action]:
-                skeleton = build_skeleton(pose, module.DIMENSIONS)
-                images.append(render(module.build(skeleton), module.MATERIALS, yaw))
+            images = [model.render(pose, yaw) for pose in model.animations[action]]
             frames[(direction, action)] = images
             if output is not None:
                 output.mkdir(parents=True, exist_ok=True)
                 for index, image in enumerate(images, start=1):
-                    image.save(output / f"char_{character_id}_{direction}_{action}_{index:02d}.png")
+                    path = output / f"char_{character_id}_{direction}_{action}_{index:02d}.png"
+                    image.save(path)
+                    written.add(path)
         print(f"[generate_character] {character_id} {direction} : ok", flush=True)
 
+    if output is not None:
+        _remove_orphans(output, written)
     if sheet is not None:
-        write_sheet(frames, sheet, scale, ACTIONS, SIZE, PIVOT)
+        write_sheet(frames, sheet, scale, ACTIONS, model.frame_size, model.pivot)
+
+
+def _remove_orphans(folder: Path, written: set[Path]) -> None:
+    """Retire les PNG d'un ancien nombre de frames : le chargeur les jouerait à la suite des nouvelles.
+    Les fichiers réécrits gardent leur .import, donc leur uid."""
+    for path in folder.glob("*.png"):
+        if path not in written:
+            path.unlink()
+            path.with_name(path.name + ".import").unlink(missing_ok=True)
+            print(f"[generate_character] orphelin retiré : {path.name}")
 
 
 def write_sheet(frames: dict[tuple[str, str], list[Image.Image]], path: Path, scale: int, actions: tuple[str, ...],

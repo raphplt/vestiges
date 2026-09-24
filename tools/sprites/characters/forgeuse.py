@@ -9,7 +9,7 @@ import numpy as np
 
 from ._body import LimbStyle, limbs
 from ..palette import make_material
-from ..poses import Gait, humanoid_animations
+from ..poses import Gait, character_animations
 from ..render import Part
 from ..rig import Proportions, Skeleton
 from ..sdf import capsule, ellipsoid, rounded_box, sphere
@@ -37,6 +37,8 @@ MATERIALS = [
 
 def build(skeleton: Skeleton) -> list[Part]:
     s = skeleton
+    # Braise qui palpite dans la masse et marteau qui se cale sur l'épaule à chaque souffle.
+    d = s.drape
     torso_center = (s.point("pelvis") + s.point("chest")) * 0.5
     parts = [
         Part(lambda p, c=torso_center: ellipsoid(p, c, (7.4, 8.4, 4.8), s.torso), SHIRT),
@@ -51,13 +53,13 @@ def build(skeleton: Skeleton) -> list[Part]:
         Part(lambda p: sphere(p, s.on_head((1.7, 2.1, 3.7)), 1.35), LENS),
         Part(lambda p: sphere(p, s.on_head((-1.7, 2.1, 3.7)), 1.35), LENS),
         # Marteau trop gros porté sur l'épaule droite : manche et tête, avec une braise dans la masse.
-        Part(lambda p: capsule(p, s.on_torso("chest", (-5.0, -8.0, 2.0)), s.on_torso("chest", (-6.5, 6.5, -5.5)), 1.1), HANDLE),
-        Part(lambda p: rounded_box(p, s.on_torso("chest", (-6.7, 7.5, -6.0)), (3.6, 2.8, 2.8), 0.6, s.torso), HAMMER),
-        Part(lambda p: sphere(p, s.on_torso("chest", (-3.0, 7.5, -6.0)), 0.9), EMBER),
+        Part(lambda p: capsule(p, s.on_torso("chest", (-5.0, -8.0, 2.0)), s.on_torso("chest", (-6.5, 6.5 - 0.9 * d, -5.5)), 1.1), HANDLE),
+        Part(lambda p: rounded_box(p, s.on_torso("chest", (-6.7, 7.5 - 0.9 * d, -6.0)), (3.6, 2.8, 2.8), 0.6, s.torso), HAMMER),
+        Part(lambda p: sphere(p, s.on_torso("chest", (-3.0, 7.5 - 0.9 * d, -6.0)), 0.9 + 0.5 * max(d, 0.0)), EMBER),
     ]
     parts += limbs(s, LimbStyle(sleeve=SHIRT, hand=GLOVES, leg=LEGS, boot=BOOTS, arm_radius=2.5, hand_radius=2.2,
                                 leg_radius=2.9, boot_radius=2.8, boot_height=4.0, foot_radius=2.5))
     return parts
 
 
-ANIMATIONS = humanoid_animations(Gait(lean=0.02, arm_out=0.32, stride=0.85, arm_swing=0.8, bounce=0.6, heavy=1.0))
+ANIMATIONS = character_animations(Gait(lean=0.02, arm_out=0.32, stride=0.85, arm_swing=0.8, bounce=0.6, heavy=1.0))

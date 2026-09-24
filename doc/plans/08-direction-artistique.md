@@ -106,6 +106,11 @@ La recommandation initiale ci-dessous reste utile pour ses contraintes (densité
 - La décision « 48×64 » est donc remplacée par une taille calée sur le monde. Les huit orientations restent.
 - La planche réduite reste lisible : silhouettes distinctes, attributs reconnaissables.
 
+**Retour de Raphaël (24 septembre, après une partie) :** design des nouveaux ennemis validé ; le personnage joué est « encore un peu trop grand » et « la version idle devrait être animée » (le souffle faisait moins d'un pixel, l'idle paraissait figé). Le redessin des personnages reste reporté.
+- Échelle propre aux personnages : `CHARACTER_MODEL_SCALE` = 0,53, 15 % sous `MODEL_SCALE` = 0,62 que gardent les créatures. Cadre 32×40, pieds en (16, 36), `sprite_feet_offset` = 16 ; le cadre garde 3 px sous le pivot et 2 au-dessus du sac, sans rognage (l’ancien cadre coupait une ligne de contour sous les pieds). Hauteurs mesurées (vue SE, contour compris) : Vagabond 40 → 34 px avec le sac, Traqueur 38 → 33 px avec l'arc, Forgeuse 32 → 28 px ; corps seul autour de 30 px. Le Rôdeur (29 px) est désormais à la hauteur d'épaule du joueur.
+- Idle des personnages (`living_idle`) : 6 frames à 5 fps (cycle de 1,2 s), sinusoïdes qui bouclent sans à-coup. Le souffle lève épaules et tête d'un à deux pixels, les bras s'ouvrent, le poids se balance latéralement, les jambes restent immobiles. Un paramètre `drape` anime en retard d'un quart de cycle un élément souple par modèle : écharpe, pointe de capuche et manche d'outil du Vagabond ; pointe de capuche et empennages du Traqueur ; marteau qui se cale sur l'épaule et braise qui palpite chez la Forgeuse. Les créatures gardent l'idle commun.
+- Régénérés : Vagabond, Traqueur, Forgeuse (les seuls intégrés en jeu). Les frames idle 05-06 s'ajoutent ; le générateur retire désormais les PNG orphelins d'un ancien nombre de frames.
+
 **Points ouverts pour Raphaël :**
 - **Lisibilité du Traqueur** : vert forêt de la charte sur la forêt, il se fond dans le décor en jeu. Pistes : cape plus sombre ou plus désaturée, accent beige plus présent, contour plus contrasté.
 - **Ennemis** : ils restent à l'ancienne échelle, minuscules à côté des personnages. Prochaine étape : modèles ennemis dans le même pipeline, avec créatures asymétriques et yeux vert-acide (Bible §6.2). Pilote de trois créatures livré le 24 septembre (ci-dessous).
