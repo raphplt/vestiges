@@ -88,6 +88,8 @@ public partial class EnvironmentProp : StaticBody2D
 
 		if (!blocks && canopyTexture == null && _footprint.VisibleHeight <= rules.GroundDecalMaxHeight)
 			ZIndex = -1;
+		else if (_footprint.OpaquePixels > 0)
+			AddChild(PropShadow.Create(_footprint, visibleBottomY - sortShift));
 
 		if (canopyTexture != null)
 		{

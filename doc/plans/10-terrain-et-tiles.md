@@ -198,3 +198,7 @@ La refonte visuelle des décors eux-mêmes (dessin, échelle, contraste) relève
 
   Le gain vient très probablement de la suppression de l'ancienne boucle d'occlusion, qui réécrivait la transparence de milliers de décors à chaque tick. Réserve : la carte de la seed du banc diffère entre les deux versions (mosaïque de biomes).
 
+### D3 livré — 25 septembre 2026
+
+Chaque décor qui a une hauteur reçoit une ombre de contact : ellipse iso 2:1 à bord net, 115 % de la base visible, deux paliers d'opacité, sous les entités (z −1). La texture est générée une fois par largeur (arrondie à 4 px) pour garder des pixels de taille unique. Les décalques au sol n'en ont pas.
+
