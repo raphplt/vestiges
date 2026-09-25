@@ -24,7 +24,7 @@
             "hit_range": 30,
             "damage_multiplier": 1.2,
             "marker_width": 10,
-            "color": "#B8FF5A",
+            "fx_family": "hostile",
             "windup_audio": "sfx_charognard_meute",
             "leap_audio": "sfx_ombre_attaque"
         }

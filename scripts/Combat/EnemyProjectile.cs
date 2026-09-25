@@ -6,6 +6,7 @@ namespace Vestiges.Combat;
 
 /// <summary>
 /// Projectile ennemi recyclé par CombatPools : lancé par Launch, rendu au pool à l'impact ou en fin de course.
+/// Crachat vert-acide (ou pelote de la Tisseuse) animé, à hauteur de buste, jamais masqué : c'est un danger.
 /// </summary>
 public partial class EnemyProjectile : Area2D
 {
@@ -18,9 +19,12 @@ public partial class EnemyProjectile : Area2D
 	private float _slowDuration;
 	private float _slowFactor = 1f;
 	private float _age;
-	private Polygon2D _visual;
-	private Polygon2D _trail;
-	private Tween _tween;
+	private const float FlightHeight = 10f;
+
+	private Sprite2D _visual;
+	private ProjectileSprites.SpriteSet _spriteSet;
+	private int _spriteFrame = -1;
+	private ulong _trailFrame;
 	private bool _isDespawning;
 	private Action<EnemyProjectile> _release;
 	private EventBus _eventBus;
@@ -32,8 +36,8 @@ public partial class EnemyProjectile : Area2D
 
 	public override void _Ready()
 	{
-		_visual = GetNodeOrNull<Polygon2D>("Visual");
-		_trail = GetNodeOrNull<Polygon2D>("Trail");
+		_visual = GetNode<Sprite2D>("Visual");
+		_visual.Position = new Vector2(0f, -FlightHeight);
 		_eventBus = GetNode<EventBus>("/root/EventBus");
 		BodyEntered += OnBodyEntered;
 	}
@@ -42,36 +46,52 @@ public partial class EnemyProjectile : Area2D
 	{
 		GlobalPosition = position;
 		_direction = direction.Normalized();
-		Rotation = _direction.Angle();
 		_damage = damage;
 		_sourceEnemyId = sourceEnemyId;
 		_slowFactor = slowFactor;
 		_slowDuration = slowDuration;
 		_age = 0f;
 		_isDespawning = false;
+		_spriteSet = ProjectileSprites.Get(slowDuration > 0f ? "web" : "spit");
+		_spriteFrame = -1;
+		_visual.Modulate = new Color(1f, 1f, 1f, CombatFxSettings.EnemyOpacity);
+		UpdateSprite();
 		Visible = true;
 		ProcessMode = ProcessModeEnum.Inherit;
 		SetDeferred(Area2D.PropertyName.Monitoring, true);
+	}
 
-		_tween?.Kill();
-		_tween = CreateTween();
-		_tween.SetParallel();
-		if (_visual != null)
+	private void UpdateSprite()
+	{
+		if (_spriteSet == null)
+			return;
+		int frame = (int)(_age * _spriteSet.Fps) % _spriteSet.Frames;
+		if (frame == _spriteFrame)
+			return;
+		_spriteFrame = frame;
+		_visual.Texture = _spriteSet.Get(0, frame);
+	}
+
+	/// <summary>Gouttes de fluide qui tombent derrière le crachat, une toutes les trois frames.</summary>
+	private void EmitTrail()
+	{
+		ulong frame = Engine.GetPhysicsFrames();
+		if (frame - _trailFrame < 3 || CombatPools.Instance == null)
+			return;
+		_trailFrame = frame;
+		CombatPools.Instance.EmitSparks(GlobalPosition + new Vector2(0f, -FlightHeight), new SparkBurst
 		{
-			_visual.Scale = new Vector2(0.3f, 0.3f);
-			_visual.Modulate = Colors.White;
-			_tween.TweenProperty(_visual, "scale", Vector2.One, 0.1f)
-				.SetTrans(Tween.TransitionType.Back)
-				.SetEase(Tween.EaseType.Out);
-		}
-		if (_trail != null)
-		{
-			_trail.Scale = new Vector2(0f, 0.3f);
-			_trail.Modulate = Colors.White;
-			_tween.TweenProperty(_trail, "scale", Vector2.One, 0.15f)
-				.SetTrans(Tween.TransitionType.Quad)
-				.SetEase(Tween.EaseType.Out);
-		}
+			Family = FxFamily.Hostile,
+			Owner = FxOwner.Enemy,
+			Count = 1,
+			Direction = -_direction,
+			Spread = 0.8f,
+			SpeedMin = 8f,
+			SpeedMax = 24f,
+			LifeMin = 0.15f,
+			LifeMax = 0.25f,
+			Size = 1,
+		});
 	}
 
 	public override void _PhysicsProcess(double delta)
@@ -82,10 +102,14 @@ public partial class EnemyProjectile : Area2D
 		_age += (float)delta;
 		if (_age >= MaxLifetime)
 		{
-			Release();
+			// Différé comme à l'impact : le retour au pool et la désactivation doivent passer ensemble.
+			_isDespawning = true;
+			CallDeferred(MethodName.Release);
 			return;
 		}
 		Position += _direction * Speed * (float)delta;
+		UpdateSprite();
+		EmitTrail();
 	}
 
 	private void OnBodyEntered(Node2D body)
@@ -104,28 +128,12 @@ public partial class EnemyProjectile : Area2D
 	{
 		_isDespawning = true;
 		SetDeferred(Area2D.PropertyName.Monitoring, false);
-		if (_visual == null)
-		{
-			CallDeferred(MethodName.Release);
-			return;
-		}
-
-		_tween?.Kill();
-		_tween = CreateTween();
-		_tween.SetParallel();
-		_tween.TweenProperty(_visual, "scale", new Vector2(1.5f, 1.5f), 0.06f);
-		_tween.TweenProperty(_visual, "modulate:a", 0f, 0.06f);
-		if (_trail != null)
-		{
-			_tween.TweenProperty(_trail, "scale", new Vector2(0.2f, 0.2f), 0.06f);
-			_tween.TweenProperty(_trail, "modulate:a", 0f, 0.06f);
-		}
-		_tween.Chain().TweenCallback(Callable.From(Release));
+		CombatPools.Instance?.ShowEnemyImpact(GlobalPosition + new Vector2(0f, -FlightHeight), _direction);
+		CallDeferred(MethodName.Release);
 	}
 
 	private void Release()
 	{
-		_tween?.Kill();
 		_isDespawning = true;
 		Visible = false;
 		SetDeferred(Area2D.PropertyName.Monitoring, false);

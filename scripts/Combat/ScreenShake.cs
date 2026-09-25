@@ -41,7 +41,7 @@ public partial class ScreenShake : Node
 	/// <summary>Ajoute du trauma (0-1). Le shake est proportionnel au carré du trauma.</summary>
 	public void AddTrauma(float amount)
 	{
-		_trauma = Mathf.Min(_trauma + amount, 1f);
+		_trauma = Mathf.Min(_trauma + amount * CombatFxSettings.ScreenShake, 1f);
 	}
 
 	/// <summary>Shake léger (petit hit).</summary>

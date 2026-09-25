@@ -12,7 +12,6 @@ namespace Vestiges.Events.RunEvents;
 public sealed class ShardRainEvent : RunEvent
 {
     private const int StrikePoolSize = 12;
-    private static readonly Color ShardColor = new(0.78f, 0.66f, 0.95f);
 
     private readonly GroundTelegraph[] _strikes = new GroundTelegraph[StrikePoolSize];
     private readonly float[] _strikeTimers = new float[StrikePoolSize];
@@ -84,7 +83,7 @@ public sealed class ShardRainEvent : RunEvent
         if (slot < 0)
             return;
 
-        _strikes[slot].ShowCircle(PickStrikePoint(), _radius, ShardColor);
+        _strikes[slot].ShowCircle(PickStrikePoint(), _radius, FxFamily.Hybrid);
         _strikeTimers[slot] = _strikeDelay;
     }
 

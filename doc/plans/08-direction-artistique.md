@@ -196,6 +196,118 @@ Les tiles restent en l'état (jugées acceptables) ; un ajustement de contraste 
 - Vérifié : build sans avertissement, smoke test, `MovementRegression`, captures en vraie run (seed 1002). Combat dense : ≈ 110 FPS, p99 ≈ 13,5 ms, en 720p comme en 1080p (≈ 120 FPS avant les immeubles ; la zone du banc n'est pas forcément urbaine).
 - Points ouverts : église et antenne à refaire dans le pipeline comme repères rares ; brèches des ruines encore anguleuses ; façades nord et rues verticales moins soignées que les façades sud.
 
+### Effets d'attaque — chantier du 25 septembre 2026
+
+**Demande de Raphaël :**
+- La plupart des sprites d'attaque, du joueur comme des ennemis, sont hors DA : ni pixellisés, ni dans les couleurs du jeu.
+- Les attaques du joueur doivent être « juicy », sans dégrader la fluidité.
+- Un paramètre doit permettre d'activer ou de désactiver les animations et les projectiles, et d'en régler l'opacité.
+
+**Audit (galerie `RunObservation --capture-weapons` des 24 armes, et code) :**
+- **Slashs de mêlée.** Chaque coup superpose deux choses :
+  - un losange `Polygon2D` beige translucide, rasterisé en 1080p, donc deux fois plus fin que la grille des texels (caméra ×2) ;
+  - un PNG de 24×24 mis à l'échelle ×1,5 et tourné librement (pixels de biais), avec jusqu'à 31 niveaux d'alpha.
+- **Effets spéciaux.** L'Aiguille de l'Horloge, la Cloche, le Tranchant du Vide et l'Écho grossissent par tween jusqu'à ×2,5 ou ×8. L'Horloge produit un disque bleu lisse qui couvre la moitié de l'écran.
+- **Particules.** Textures douces (disque et losange à bord dégradé) à échelle aléatoire de 0,2 à 1,8.
+- **Couleurs.** En dur et hors palette : beige `(1, .9, .7)`, jaune `(1, .85, .2)`, `#B8FF5A` pour les annonces ennemies, vert `(.4, .95, .35)` pour les projectiles ennemis. Le paramètre `color` est ignoré par huit fabriques sur dix.
+- **Coût.** Rien n'est recyclé : chaque coup crée un `Node2D`, un `AnimatedSprite2D`, des `SpriteFrames`, un `GpuParticles2D` et son matériau. Chaque projectile du joueur crée en plus sa traînée GPU et deux effets d'impact.
+- **Anomalies :**
+  - l'Arbalète affiche la flèche ;
+  - la Masse Cloutée affiche le slash au lieu de l'impact ;
+  - les orbes de la Boîte à Musique sont invisibles ;
+  - la Chaîne des Noms n'a rien sur la première cible ;
+  - le « squash » d'attaque du joueur et les flashs de charge des ennemis agissent sur un polygone caché dès qu'un sprite existe ;
+  - le réglage « Particules » n'est chargé qu'au lancement d'une run : fermer les paramètres depuis le Hub l'écrase.
+
+**Principes retenus :**
+- **Grille des texels.** Tout effet d'attaque est dessiné sur la grille des texels du monde : pas d'échelle non entière, pas de rotation libre d'un sprite pixel art, pas de forme vectorielle en résolution écran.
+- **Formes paramétrées : un shader.** Arcs, poussées, anneaux, cônes et zones au sol passent par un seul shader `pixel_fx.gdshader`. Il calcule la forme dans le repère des texels (`floor`), ce qui permet toute direction sans rotation du quad. Il colore en trois tons de palette, plus un contour teinté d'un texel. L'animation avance par poses (6 à 8 pas, pas de tween continu), et le fondu se fait par tramage ordonné (le tramage est l'effacement, Charte §5).
+- **Objets : des sprites procéduraux.** Flèche, carreau, pierre, hache, aiguille et orbe passent par le pipeline `tools/sprites` (même rendu que les créatures). Chacun est prérendu en 16 directions : aucun sprite n'est tourné en jeu.
+- **Étincelles et éclats : un seul nœud par scène de run.** `PixelSparks` tient un tableau fixe de particules d'un ou deux texels, positions arrondies, couleurs de palette, dessinées en une passe. Zéro nœud créé par coup.
+- **Couleurs** tirées de la palette master (`PixelPalette`) :
+  - physique : Blanc cassé → Or Foyer ;
+  - Essence : Cyan Essence ;
+  - hybride : Violet brume → Cyan ;
+  - feu : Orange flamme ;
+  - hostile : Vert-acide et Noir iridescent.
+- **Recyclage.** Tout effet d'attaque vient d'un pool (`CombatPools`). Les projectiles du joueur aussi, ce qui solde le reste de J0.
+- **Réglages** (Paramètres › Graphismes) :
+  - effets d'attaque du joueur, activés ou non ;
+  - projectiles du joueur, affichés ou non (les dégâts restent) ;
+  - opacité des effets du joueur, de 10 à 100 % ;
+  - opacité des attaques ennemies, de 40 à 100 %, jamais masquées : ce sont des informations de danger ;
+  - secousses d'écran, de 0 à 100 %.
+
+**Lots :**
+
+| Lot | Contenu | Validation |
+|---|---|---|
+| **V0 — Socle et réglages** | `PixelPalette`, `pixel_fx.gdshader` et nœud recyclé `PixelFx`, `PixelSparks`, réglages `CombatFxSettings` chargés au démarrage et section du menu, correction de l'écrasement du réglage Particules | Build, smoke test, réglages relus après redémarrage |
+| **V1 — Mêlée du joueur, juicy** | Arcs à trame de mouvement (smear) par famille d'arme, poussée, anneau circulaire, onde de choc au sol du marteau et de la masse, effets propres à la Cloche, à l'Horloge, au Vide, à l'Écho et à la Chaîne. Étincelles orientées dans le sens du coup, gerbe dorée au critique, léger écrasement du sprite du joueur (1 à 2 px), secousse légère réservée aux armes lourdes. Polygones et PNG hérités retirés. | Galerie avant/après des 24 armes, banc de combat dense avant/après (nœuds créés/s, FPS machine calme) |
+| **V2 — Projectiles du joueur** | Sprites 16 directions (flèche, carreau, pierre, hache, aiguille, orbe, éclat), pool des projectiles, traînée et impact en `PixelSparks`, flash de tir pixel, orbes visibles de la Boîte à Musique, cône de la Dernière Émission et feu au sol en `PixelFx` | Idem |
+| **V3 — Attaques ennemies** | Projectiles ennemis en sprites (vert-acide cerné d'iridescent), annonces au sol du Présage, du Charognard et de l'Averse en `PixelFx` tramé, frappe de mêlée visible, slam et charge des Colosses, flashs de charge et de cri réellement visibles | Captures `--capture-abilities` et `event shard_rain`, `EnemyAbilityRegression` |
+
+Hors périmètre : morts, dissolution et butin (plan 02 J2/J3), police des chiffres de dégâts (plan 04).
+
+**V0 à V3 livrés — 25 septembre 2026 :**
+
+*Socle :*
+- `assets/shaders/pixel_fx.gdshader` dessine huit formes : arc, poussée, anneau, zone, cône, rayon brisé, étoile d'impact et couloir. Elles sont calculées sur la grille des texels, en trois tons de la palette avec un contour teinté. L'animation avance par poses et l'effacement se fait par tramage de Bayer.
+- `PixelFx` est le nœud recyclé qui porte ce shader. `PixelSparks` trace toutes les étincelles et tous les éclats de la run en un seul nœud : tableau fixe de 1 024 particules, éclats balistiques qui rebondissent au sol en vue iso, couleur qui descend la rampe au lieu de s'estomper.
+- Couleurs : `PixelPalette`, 10 familles de rampes tirées de la palette master et des palettes de biome.
+- Le style et la couleur de chaque arme viennent du JSON : bloc `fx` de `weapons.json` (`style`, `family`, `projectile`). Les tests sur l'identifiant sont supprimés ; ils faisaient afficher le slash à la Masse Cloutée et la flèche à l'Arbalète.
+- Les capacités lisent `fx_family` dans `data/enemies/*.json` au lieu d'une couleur libre (`#B8FF5A` hors palette).
+
+*Joueur (`PlayerAttackFx`) :*
+- Traînées d'arc épaisses dont la queue se défait en trame.
+- Onde au sol et gravats pour le marteau et la masse, poussée pour le tuyau et le scalpel, tour complet pour le fouet.
+- Anneaux de laiton pour la Cloche, anneau de temps pour l'Horloge, lame violette pour le Vide, rayon brisé pour la Chaîne.
+- Étincelles dans le sens du coup ; au critique, étoile et gerbe dorée plus fournie. Plafond de 10 gerbes par frame.
+- Écrasement du sprite d'un à deux pixels à chaque attaque (l'ancien agissait sur un polygone caché) et secousse légère réservée aux armes lourdes.
+
+*Projectiles :*
+- `tools/generate_projectiles.py` produit 11 modèles SDF rendus comme les créatures : flèche, carreau, aiguille et éclat en 16 directions ; hache en 16 directions × 4 frames de tournoiement ; pierre, orbes, note, crachat et pelote animés.
+- Ils ne sont jamais tournés en jeu et volent à hauteur de buste.
+- Les projectiles du joueur sont maintenant recyclés : ils n'ont plus de traînée GPU ni d'impact instanciés.
+- Les orbes de la Boîte à Musique sont visibles (notes de laiton).
+- Le cône de la Dernière Émission n'alloue plus de tableau de points à chaque frame.
+- Le feu au sol devient une zone tramée ; sa lumière qui utilisait `icon.svg` comme texture est supprimée.
+
+*Ennemis (`EnemyAttackFx`) :*
+- Crachat vert-acide perlé d'iridescent, pelote de soie pour la Tisseuse, traînée de gouttes, étoile et éclaboussure à l'impact.
+- Griffe visible sur chaque coup de mêlée (bond du Charognard compris), avec éclats de sang sur le joueur.
+- Slam des Colosses : onde acide et gravats de pierre.
+- Charge et cri visibles sur le sprite ; l'ancien flash colorait un polygone caché.
+- Annonces au sol (Présage, bond, Averse, Relique) : bord plein, intérieur tramé, damier qui se remplit par paliers.
+- Tentacules de l'Indicible : couloir annoncé puis frappe.
+
+*Réglages :*
+- Nouvel onglet Paramètres › Effets : particules ; effets d'attaque ; projectiles visibles ; opacité des attaques, de 10 à 100 % ; opacité des attaques ennemies, de 40 à 100 % ; secousses d'écran, de 0 à 100 %.
+- `CombatFxSettings` les charge au premier accès. Fermer les paramètres depuis le Hub n'écrase plus le niveau de particules.
+
+*Retraits :*
+- `FlashSprite`, les polygones de slash et de flash de tir, et 18 fabriques de `VfxFactory` devenues mortes. Le fichier passe de 1 632 à 487 lignes.
+- Les PNG hérités de `assets/vfx` (slash, thrust, fouet, masse_impact, impact, arrow, bolt, stone, hit_flash, orb_essence, flamme, aura, etincelle) ne sont plus référencés. Leur suppression reste à décider.
+
+*Vérifications :*
+- Build sans avertissement, smoke test, `EnemyAbilityRegression` 15/15, `MovementRegression` sans échec.
+- Galerie avant/après des 24 armes (`RunObservation --capture-weapons`, planches par `tools/weapon_gallery_sheet.py`), captures `--capture-abilities` et `--event shard_rain`.
+- Banc A/B contre `1ee4691`, deux passes, machine de 16 cœurs, charge d'environ 3 :
+
+  | Version | FPS 720p | FPS 1080p | p99 1080p | Nœuds créés/s | Allocations sur 15 s |
+  |---|---:|---:|---:|---:|---:|
+  | Avant | 106,5 | 101,8 | 15,2 ms | 19 à 43 | 3,4 Mo |
+  | Après | 106,2 | 98,2 | 14,2 ms | 12 | 1,75 Mo |
+
+  Les écarts de FPS restent sous 4 %, donc dans le bruit.
+- Limite du banc : il ne mesure que l'arme de départ, sans build puissant ni morts en rafale.
+
+*Points ouverts pour Raphaël :*
+- Intensité des arcs (épaisseur, durée d'environ 0,2 s) et des étincelles.
+- Choix des couleurs par famille.
+- Lisibilité des annonces ennemies sur chaque biome.
+- Suppression des PNG hérités.
+
 ### Recommandation initiale (22 septembre), remplacée pour la méthode
 
 **Choix recommandé : pixel art dessiné et animé à une densité commune, produit à partir d’une scène étalon, avec retouche contrôlée et pipeline automatisé.** L’IA peut aider aux recherches de silhouettes/matières ou à une base de sprite, mais chaque résultat doit être redessiné/normalisé selon les mêmes références. Des générations indépendantes « pixel art détaillé » ne constituent pas une méthode de cohérence ; générer chaque frame indépendamment n’est pas le pipeline recommandé pour les personnages.

@@ -8,6 +8,9 @@
     "type": "melee",
     "damage_type": "physical",
     "attack_pattern": "arc",
+    "fx": {
+      "style": "slash"
+    },
     "stats": {
       "damage": 10,
       "attack_speed": 1.0,
@@ -28,6 +31,10 @@
     "type": "melee",
     "damage_type": "physical",
     "attack_pattern": "arc",
+    "fx": {
+      "style": "smash",
+      "family": "heavy"
+    },
     "stats": {
       "damage": 16,
       "attack_speed": 0.65,
@@ -48,6 +55,9 @@
     "type": "ranged",
     "damage_type": "physical",
     "attack_pattern": "linear",
+    "fx": {
+      "projectile": "arrow"
+    },
     "stats": {
       "damage": 8,
       "attack_speed": 1.2,
@@ -68,6 +78,9 @@
     "type": "ranged",
     "damage_type": "physical",
     "attack_pattern": "burst",
+    "fx": {
+      "projectile": "stone"
+    },
     "stats": {
       "damage": 4,
       "attack_speed": 1.8,
@@ -88,6 +101,9 @@
     "type": "melee",
     "damage_type": "physical",
     "attack_pattern": "linear",
+    "fx": {
+      "style": "thrust"
+    },
     "stats": {
       "damage": 7,
       "attack_speed": 1.5,
@@ -106,6 +122,9 @@
     "type": "ranged",
     "damage_type": "physical",
     "attack_pattern": "linear",
+    "fx": {
+      "projectile": "bolt"
+    },
     "stats": {
       "damage": 22,
       "attack_speed": 0.6,
@@ -126,6 +145,10 @@
     "type": "melee",
     "damage_type": "physical",
     "attack_pattern": "arc",
+    "fx": {
+      "style": "cleave",
+      "family": "heavy"
+    },
     "stats": {
       "damage": 18,
       "attack_speed": 0.8,
@@ -145,6 +168,9 @@
     "type": "melee",
     "damage_type": "physical",
     "attack_pattern": "circular",
+    "fx": {
+      "style": "whirl"
+    },
     "stats": {
       "damage": 9,
       "attack_speed": 0.9,
@@ -164,6 +190,9 @@
     "type": "ranged",
     "damage_type": "physical",
     "attack_pattern": "burst",
+    "fx": {
+      "projectile": "axe"
+    },
     "stats": {
       "damage": 11,
       "attack_speed": 1.1,
@@ -184,6 +213,10 @@
     "type": "melee",
     "damage_type": "physical",
     "attack_pattern": "arc",
+    "fx": {
+      "style": "smash",
+      "family": "heavy"
+    },
     "stats": {
       "damage": 25,
       "attack_speed": 0.5,
@@ -208,6 +241,10 @@
     "type": "melee",
     "damage_type": "hybrid",
     "attack_pattern": "circular",
+    "fx": {
+      "style": "bell",
+      "family": "heavy"
+    },
     "stats": {
       "damage": 12,
       "attack_speed": 0.7,
@@ -232,6 +269,9 @@
     "type": "melee",
     "damage_type": "physical",
     "attack_pattern": "linear",
+    "fx": {
+      "style": "thrust"
+    },
     "stats": {
       "damage": 6,
       "attack_speed": 2.5,
@@ -255,6 +295,9 @@
     "type": "ranged",
     "damage_type": "essence",
     "attack_pattern": "linear",
+    "fx": {
+      "projectile": "shard"
+    },
     "stats": {
       "damage": 30,
       "attack_speed": 0.4,
@@ -275,6 +318,9 @@
     "type": "special",
     "damage_type": "essence",
     "attack_pattern": "orbital",
+    "fx": {
+      "projectile": "note"
+    },
     "stats": {
       "damage": 7,
       "attack_speed": 0.0,
@@ -294,6 +340,9 @@
     "type": "melee",
     "damage_type": "hybrid",
     "attack_pattern": "chain",
+    "fx": {
+      "style": "chain"
+    },
     "stats": {
       "damage": 14,
       "attack_speed": 0.8,
@@ -314,6 +363,9 @@
     "type": "ranged",
     "damage_type": "physical",
     "attack_pattern": "homing",
+    "fx": {
+      "projectile": "needle"
+    },
     "stats": {
       "damage": 13,
       "attack_speed": 1.0,
@@ -334,6 +386,9 @@
     "type": "ranged",
     "damage_type": "essence",
     "attack_pattern": "burst",
+    "fx": {
+      "projectile": "shard"
+    },
     "stats": {
       "damage": 18,
       "attack_speed": 0.5,
@@ -358,6 +413,9 @@
     "type": "ranged",
     "damage_type": "essence",
     "attack_pattern": "homing",
+    "fx": {
+      "projectile": "orb"
+    },
     "stats": {
       "damage": 20,
       "attack_speed": 0.8,
@@ -380,6 +438,10 @@
     "type": "melee",
     "damage_type": "essence",
     "attack_pattern": "arc",
+    "fx": {
+      "style": "void",
+      "family": "void"
+    },
     "stats": {
       "damage": 15,
       "attack_speed": 1.8,
@@ -404,6 +466,10 @@
     "type": "ranged",
     "damage_type": "essence",
     "attack_pattern": "linear",
+    "fx": {
+      "projectile": "orb",
+      "family": "fire"
+    },
     "stats": {
       "damage": 10,
       "attack_speed": 0.6,
@@ -433,6 +499,9 @@
     "type": "melee",
     "damage_type": "essence",
     "attack_pattern": "arc",
+    "fx": {
+      "style": "slash"
+    },
     "stats": {
       "damage": 11,
       "attack_speed": 1.4,
@@ -459,6 +528,9 @@
     "type": "special",
     "damage_type": "essence",
     "attack_pattern": "homing",
+    "fx": {
+      "projectile": "orb"
+    },
     "stats": {
       "damage": 25,
       "attack_speed": 0.6,
@@ -491,6 +563,9 @@
     "type": "ranged",
     "damage_type": "essence",
     "attack_pattern": "linear",
+    "fx": {
+      "style": "cone"
+    },
     "stats": {
       "damage": 8,
       "attack_speed": 0.3,
@@ -518,6 +593,9 @@
     "type": "melee",
     "damage_type": "hybrid",
     "attack_pattern": "arc",
+    "fx": {
+      "style": "clock"
+    },
     "stats": {
       "damage": 35,
       "attack_speed": 0.35,

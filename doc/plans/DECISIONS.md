@@ -28,6 +28,7 @@ Ce registre intègre les retours structurants après la première lecture des pl
 | Quêtes | Variées et indépendantes des Souvenirs ; déblocages directs | 06 et migration 05 |
 | Casting | Refonte d’au moins cinq à six personnages et de tous leurs sprites, validation avant mobilités spécifiques | 06/08 prioritaires avant 01 E |
 | Bestiaire | Ajouter quelques nouvelles créatures ; étudier des boss de familles | 07 |
+| Effets d'attaque | Tous les sprites d'attaque, du joueur comme des ennemis, dans la DA (pixellisés, couleurs du jeu) ; attaques du joueur « juicy » sans perte de fluidité ; réglage pour activer ou désactiver animations et projectiles et en régler l'opacité (25 septembre) | 08, lots V0–V3 livrés, recette attendue |
 | Terrain | Examiner et planifier les améliorations utiles des tiles et des systèmes voisins | Nouveau plan 10 |
 | Innovation | Proposer des mécaniques originales précises | Nouveau plan 11, propositions non approuvées |
 | Art | Pixel art accepté, suffisamment détaillé et uniforme entre les sprites ; choisir une méthode de production | 08, recommandation explicite |

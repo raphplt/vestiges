@@ -108,7 +108,7 @@ public partial class SettingsScreen : CanvasLayer
 		IsOpen = false;
 		_root.Visible = false;
 		AudioManager.Instance?.SaveSettings();
-		VfxFactory.SaveSettings();
+		CombatFxSettings.Save();
 	}
 
 	private void CancelListening()
@@ -274,6 +274,7 @@ public partial class SettingsScreen : CanvasLayer
 
 		AddTab(innerBar, "audio", "Audio");
 		AddTab(innerBar, "graphismes", "Graphismes");
+		AddTab(innerBar, "effets", "Effets");
 		AddTab(innerBar, "controles", "Controles");
 
 		tabBar.AddChild(tabMargin);
@@ -317,6 +318,7 @@ public partial class SettingsScreen : CanvasLayer
 		{
 			"audio" => BuildAudioTab(),
 			"graphismes" => BuildGraphicsTab(),
+			"effets" => BuildEffectsTab(),
 			"controles" => BuildControlsTab(),
 			_ => new Control()
 		};
@@ -351,6 +353,12 @@ public partial class SettingsScreen : CanvasLayer
 
 	private VBoxContainer BuildVolumeSlider(string label, string busName)
 	{
+		float initial = AudioManager.Instance?.GetBusVolumeLinear(busName) ?? 1f;
+		return BuildPercentSlider(label, 0f, initial, value => AudioManager.Instance?.SetBusVolumeLinear(busName, value));
+	}
+
+	private VBoxContainer BuildPercentSlider(string label, float minValue, float initialValue, System.Action<float> onChanged)
+	{
 		VBoxContainer container = new();
 		container.AddThemeConstantOverride("separation", 4);
 
@@ -379,28 +387,21 @@ public partial class SettingsScreen : CanvasLayer
 
 		HSlider slider = new()
 		{
-			MinValue = 0.0,
+			MinValue = minValue,
 			MaxValue = 1.0,
 			Step = 0.01,
 			CustomMinimumSize = new Vector2(0, 24),
 			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill
 		};
 		slider.ProcessMode = ProcessModeEnum.Always;
-
-		// Style pixel art pour le slider
 		StyleSlider(slider);
-
-		if (AudioManager.Instance != null)
-			slider.Value = AudioManager.Instance.GetBusVolumeLinear(busName);
-		else
-			slider.Value = 1.0;
-
-		pct.Text = $"{(int)(slider.Value * 100)}%";
+		slider.Value = initialValue;
+		pct.Text = $"{Mathf.RoundToInt(initialValue * 100)}%";
 
 		slider.ValueChanged += (double v) =>
 		{
-			AudioManager.Instance?.SetBusVolumeLinear(busName, (float)v);
-			pct.Text = $"{(int)(v * 100)}%";
+			onChanged((float)v);
+			pct.Text = $"{Mathf.RoundToInt((float)v * 100)}%";
 		};
 
 		container.AddChild(slider);
@@ -486,7 +487,51 @@ public partial class SettingsScreen : CanvasLayer
 					: DisplayServer.WindowMode.Windowed);
 			}));
 
-		// Particle level
+		// Colorblind filter
+		vbox.AddChild(BuildCycleRow("Filtre daltonien",
+			ColorBlindFilter.Instance != null
+				? ColorBlindFilter.ModeLabel(ColorBlindFilter.Instance.CurrentMode)
+				: "Off",
+			(btn) =>
+			{
+				if (ColorBlindFilter.Instance == null) return;
+				ColorBlindFilter.Mode newMode = ColorBlindFilter.Instance.CycleMode();
+				btn.Text = ColorBlindFilter.ModeLabel(newMode);
+			}));
+
+		// Language
+		vbox.AddChild(BuildCycleRow("Langue",
+			LocaleManager.Instance != null
+				? LocaleManager.Instance.CurrentLocaleName
+				: "Francais",
+			(btn) =>
+			{
+				if (LocaleManager.Instance == null) return;
+				LocaleManager.Instance.CycleLocale();
+				btn.Text = LocaleManager.Instance.CurrentLocaleName;
+			}));
+
+		return margin;
+	}
+
+	// ================================================================
+	// EFFECTS TAB
+	// ================================================================
+	private MarginContainer BuildEffectsTab()
+	{
+		MarginContainer margin = new();
+		margin.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
+		margin.AddThemeConstantOverride("margin_left", 30);
+		margin.AddThemeConstantOverride("margin_top", 20);
+		margin.AddThemeConstantOverride("margin_right", 30);
+		margin.AddThemeConstantOverride("margin_bottom", 12);
+
+		VBoxContainer vbox = new();
+		vbox.AddThemeConstantOverride("separation", 12);
+		vbox.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
+		margin.AddChild(vbox);
+
+		// Niveau de particules
 		HBoxContainer particleRow = new();
 		particleRow.AddThemeConstantOverride("separation", 0);
 
@@ -520,29 +565,16 @@ public partial class SettingsScreen : CanvasLayer
 		particleRow.AddChild(particleBtn);
 		vbox.AddChild(particleRow);
 
-		// Colorblind filter
-		vbox.AddChild(BuildCycleRow("Filtre daltonien",
-			ColorBlindFilter.Instance != null
-				? ColorBlindFilter.ModeLabel(ColorBlindFilter.Instance.CurrentMode)
-				: "Off",
-			(btn) =>
-			{
-				if (ColorBlindFilter.Instance == null) return;
-				ColorBlindFilter.Mode newMode = ColorBlindFilter.Instance.CycleMode();
-				btn.Text = ColorBlindFilter.ModeLabel(newMode);
-			}));
-
-		// Language
-		vbox.AddChild(BuildCycleRow("Langue",
-			LocaleManager.Instance != null
-				? LocaleManager.Instance.CurrentLocaleName
-				: "Francais",
-			(btn) =>
-			{
-				if (LocaleManager.Instance == null) return;
-				LocaleManager.Instance.CycleLocale();
-				btn.Text = LocaleManager.Instance.CurrentLocaleName;
-			}));
+		vbox.AddChild(BuildToggleRow("Effets d'attaque",
+			CombatFxSettings.PlayerAttackFx, toggled => CombatFxSettings.PlayerAttackFx = toggled));
+		vbox.AddChild(BuildToggleRow("Projectiles visibles",
+			CombatFxSettings.PlayerProjectiles, toggled => CombatFxSettings.PlayerProjectiles = toggled));
+		vbox.AddChild(BuildPercentSlider("Opacite des attaques",
+			CombatFxSettings.MinPlayerOpacity, CombatFxSettings.PlayerOpacity, value => CombatFxSettings.PlayerOpacity = value));
+		vbox.AddChild(BuildPercentSlider("Opacite des attaques ennemies",
+			CombatFxSettings.MinEnemyOpacity, CombatFxSettings.EnemyOpacity, value => CombatFxSettings.EnemyOpacity = value));
+		vbox.AddChild(BuildPercentSlider("Secousses d'ecran",
+			0f, CombatFxSettings.ScreenShake, value => CombatFxSettings.ScreenShake = value));
 
 		return margin;
 	}

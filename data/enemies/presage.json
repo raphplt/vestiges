@@ -21,7 +21,7 @@
             "max_simultaneous": 2,
             "damage_multiplier": 1.0,
             "impact_flash_seconds": 0.15,
-            "color": "#B8FF5A",
+            "fx_family": "hostile",
             "cast_audio": "sfx_sentinelle_activation",
             "impact_audio": "sfx_rampant_surgissement"
         }

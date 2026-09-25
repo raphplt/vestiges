@@ -1,0 +1,101 @@
+{
+  "arrow": {
+    "frame": [
+      24,
+      24
+    ],
+    "directions": 16,
+    "frames": 1,
+    "fps": 0
+  },
+  "axe": {
+    "frame": [
+      24,
+      24
+    ],
+    "directions": 16,
+    "frames": 4,
+    "fps": 16
+  },
+  "bolt": {
+    "frame": [
+      24,
+      24
+    ],
+    "directions": 16,
+    "frames": 1,
+    "fps": 0
+  },
+  "needle": {
+    "frame": [
+      24,
+      24
+    ],
+    "directions": 16,
+    "frames": 1,
+    "fps": 0
+  },
+  "note": {
+    "frame": [
+      16,
+      16
+    ],
+    "directions": 1,
+    "frames": 2,
+    "fps": 4
+  },
+  "orb_essence": {
+    "frame": [
+      16,
+      16
+    ],
+    "directions": 1,
+    "frames": 4,
+    "fps": 10
+  },
+  "orb_fire": {
+    "frame": [
+      16,
+      16
+    ],
+    "directions": 1,
+    "frames": 4,
+    "fps": 10
+  },
+  "shard": {
+    "frame": [
+      24,
+      24
+    ],
+    "directions": 16,
+    "frames": 1,
+    "fps": 0
+  },
+  "spit": {
+    "frame": [
+      16,
+      16
+    ],
+    "directions": 1,
+    "frames": 4,
+    "fps": 10
+  },
+  "stone": {
+    "frame": [
+      16,
+      16
+    ],
+    "directions": 1,
+    "frames": 4,
+    "fps": 14
+  },
+  "web": {
+    "frame": [
+      16,
+      16
+    ],
+    "directions": 1,
+    "frames": 2,
+    "fps": 6
+  }
+}

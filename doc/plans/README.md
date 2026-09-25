@@ -55,6 +55,7 @@ Un seul lot d'implémentation ouvert à la fois. Un échec de lisibilité, de pe
   - Audit des décors ([10 §7](10-terrain-et-tiles.md#7-audit-des-décors--25-septembre-2026)) : pas de sprite manquant, mais des petits décors camouflés qui bloquent, des collisions décalées devant les décors, des immeubles traversables et aucun tri en profondeur. Lots D1–D3.
   - Refonte procédurale des décors, urbain d'abord : lots P0–P6 du [plan 08](08-direction-artistique.md#décors-procéduraux--chantier-du-25-septembre-2026).
   - Juiciness : liste priorisée J0–J6 du [plan 02 §7](02-juiciness-score.md#7-chantier-prioritaire-du-25-septembre--juiciness-de-tout-le-jeu).
+  - Effets d'attaque du joueur et des ennemis refaits en pixel art dans les couleurs de la charte, avec un onglet de réglages (activation, opacité, secousses) : lots V0–V3 du [plan 08](08-direction-artistique.md#effets-dattaque--chantier-du-25-septembre-2026), recette attendue.
 - Les plans 13 et 14 restent non arbitrés.
 
 **Mise à jour du 24 septembre :**

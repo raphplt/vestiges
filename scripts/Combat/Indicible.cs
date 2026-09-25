@@ -291,44 +291,19 @@ public partial class Indicible : Node2D
 		Vector2 startPos = targetPos + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * tentacleLength * 0.5f;
 		Vector2 endPos = targetPos - new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * tentacleLength * 0.5f;
 
-		// Phase 1 : Indicateur de warning (zone rouge semi-transparente)
-		Polygon2D warning = new();
-		float hw = TentacleWidth * 0.5f;
+		// Phase 1 : couloir annoncé, qui se remplit jusqu'à la frappe
 		Vector2 dir = (endPos - startPos).Normalized();
-		Vector2 perp = new(-dir.Y, dir.X);
-
-		warning.Polygon = new Vector2[]
-		{
-			startPos + perp * hw,
-			endPos + perp * hw,
-			endPos - perp * hw,
-			startPos - perp * hw
-		};
-		warning.Color = new Color(0.8f, 0.1f, 0.1f, 0.2f);
-		GetTree().CurrentScene.AddChild(warning);
-
-		// Flash du warning
-		Tween warnTween = warning.CreateTween();
-		warnTween.TweenProperty(warning, "modulate:a", 0.6f, TentacleWarningDuration * 0.5f)
-			.SetTrans(Tween.TransitionType.Sine);
-		warnTween.TweenProperty(warning, "modulate:a", 0.2f, TentacleWarningDuration * 0.5f);
+		PlayTentacleLane(startPos, dir, tentacleLength, FxFamily.Blood, TentacleWarningDuration, 0.2f, 0f);
 
 		// Phase 2 : Après le warning, la tentacule frappe
 		float damage = TentacleDamage * _dmgScale;
-		Vector2[] tentacleShape = warning.Polygon;
 		GetTree().CreateTimer(TentacleWarningDuration).Timeout += () =>
 		{
-			if (IsInstanceValid(warning))
-				warning.QueueFree();
-
 			if (_isDying || !_isActive)
 				return;
 
-			// Tentacule visuelle
-			Polygon2D tentacle = new();
-			tentacle.Polygon = tentacleShape;
-			tentacle.Color = new Color(0.12f, 0.04f, 0.2f, 0.9f);
-			GetTree().CurrentScene.AddChild(tentacle);
+			// Tentacule : couloir plein d'iridescent qui se défait en trame
+			PlayTentacleLane(startPos, dir, tentacleLength, FxFamily.Void, 0.4f, 1f, 0.5f);
 
 			// Dégâts au joueur s'il est dans la zone
 			if (IsInstanceValid(_player))
@@ -341,13 +316,21 @@ public partial class Indicible : Node2D
 				}
 			}
 
-			// V2: degats aux structures retires (plus de structures)
-
-			// Fade out de la tentacule
-			Tween fadeTween = tentacle.CreateTween();
-			fadeTween.TweenProperty(tentacle, "modulate:a", 0f, 0.4f);
-			fadeTween.TweenCallback(Callable.From(() => tentacle.QueueFree()));
 		};
+	}
+
+	private static void PlayTentacleLane(Vector2 start, Vector2 direction, float length, FxFamily family,
+										 float duration, float fillDensity, float fadeTail)
+	{
+		if (CombatPools.Instance == null)
+			return;
+		PixelFxSpec spec = PixelFxSpec.Of(PixelFxShape.Lane, family, length, TentacleWidth, duration);
+		spec.Angle = direction.Angle();
+		spec.FillDensity = fillDensity;
+		spec.Steps = 8;
+		spec.FadeTail = fadeTail;
+		spec.ZIndex = 1;
+		CombatPools.Instance.PlayFx(start, spec, FxOwner.Enemy);
 	}
 
 	private static float DistancePointToSegment(Vector2 point, Vector2 a, Vector2 b)

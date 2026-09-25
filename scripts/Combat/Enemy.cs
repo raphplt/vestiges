@@ -602,6 +602,8 @@ public partial class Enemy : CharacterBody2D
 			return;
 
 		_screamerTimer = ScreamerCryCooldown;
+		if (_hasSprite)
+			EnemyAttackFx.FlashWarning(_sprite, PixelPalette.CreatureAcid, 0.4f);
 		// Flash vert + pulse visuel pour indiquer le cri
 		_visual.Color = new Color(0.2f, 1f, 0.3f);
 		Tween flashTween = CreateTween();
@@ -690,6 +692,8 @@ public partial class Enemy : CharacterBody2D
 			_chargeDurationLeft = ColosseChargeDuration;
 			_chargeDirection = (_player.GlobalPosition - GlobalPosition).Normalized();
 			// VFX : flash rouge + tremblement
+			if (_hasSprite)
+				EnemyAttackFx.FlashWarning(_sprite, PixelPalette.PlayerBlood, 0.3f);
 			_visual.Color = new Color(1f, 0.2f, 0.2f);
 			Tween chargeTween = CreateTween();
 			chargeTween.TweenProperty(_visual, "color", _originalColor, 0.3f).SetDelay(0.1f);
@@ -718,10 +722,7 @@ public partial class Enemy : CharacterBody2D
 
 	private void PlayColosseSlamVfx()
 	{
-		// VFX d'impact avec sprite pixel art animé + particules
-		Node2D masseVfx = VfxFactory.CreateMasseImpactVfx(GlobalPosition, _originalColor);
-		if (masseVfx != null)
-			GetTree().CurrentScene.AddChild(masseVfx);
+		EnemyAttackFx.PlaySlam(GlobalPosition, ColosseSlamRange);
 
 		// Shake visuel du colosse
 		_visual.Scale = new Vector2(1.3f, 0.7f);
@@ -769,6 +770,8 @@ public partial class Enemy : CharacterBody2D
 				_chargerIsCharging = true;
 				_chargerDurationLeft = 0.8f;
 				_chargerDirection = (_player.GlobalPosition - GlobalPosition).Normalized();
+				if (_hasSprite)
+					EnemyAttackFx.FlashWarning(_sprite, PixelPalette.FlowerViolet, 0.3f);
 				_visual.Color = new Color(0.8f, 0.2f, 0.8f);
 				Tween chargeTween = CreateTween();
 				chargeTween.TweenProperty(_visual, "color", _originalColor, 0.3f).SetDelay(0.1f);
@@ -820,7 +823,7 @@ public partial class Enemy : CharacterBody2D
 		_attackTimer -= delta;
 		if (distToPlayer < MeleeRange && _attackTimer <= 0f)
 		{
-			HitPlayer(_player, _damage);
+			MeleeHitPlayer(_player, _damage);
 			_attackTimer = _meleeAttackCooldown;
 		}
 	}
@@ -865,7 +868,7 @@ public partial class Enemy : CharacterBody2D
 
 				if (!_abilityReplacesAttack && distToPlayer < MeleeRange && _attackTimer <= 0f)
 				{
-					HitPlayer(_player, _damage);
+					MeleeHitPlayer(_player, _damage);
 					_attackTimer = _meleeAttackCooldown;
 				}
 			}
@@ -914,7 +917,7 @@ public partial class Enemy : CharacterBody2D
 		_attackTimer -= delta;
 		if (!_abilityReplacesAttack && distToPlayer < MeleeRange && _attackTimer <= 0f)
 		{
-			HitPlayer(_player, _damage);
+			MeleeHitPlayer(_player, _damage);
 			_attackTimer = _meleeAttackCooldown;
 		}
 	}
@@ -1634,6 +1637,13 @@ public partial class Enemy : CharacterBody2D
 		_eventBus.EmitSignal(EventBus.SignalName.PlayerHitBy, _enemyId, damage);
 		player.TakeDamage(damage);
 		TriggerAttackAnim();
+	}
+
+	/// <summary>Coup au contact : dégâts et griffe visible vers le joueur.</summary>
+	internal void MeleeHitPlayer(Player player, float damage)
+	{
+		HitPlayer(player, damage);
+		EnemyAttackFx.PlayMeleeHit(GlobalPosition, player.GlobalPosition);
 	}
 
 	internal void PlayAttackAnim() => TriggerAttackAnim();

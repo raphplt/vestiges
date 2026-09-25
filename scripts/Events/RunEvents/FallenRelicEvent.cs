@@ -27,7 +27,7 @@ public sealed class FallenRelicEvent : RunEvent
 
         _telegraph = new GroundTelegraph();
         Context.WorldRoot.AddChild(_telegraph);
-        _telegraph.ShowCircle(_position, Data.Number("impact_radius", 72f), RelicColor);
+        _telegraph.ShowCircle(_position, Data.Number("impact_radius", 72f), FxFamily.Essence);
 
         _marker = new RunEventMarker();
         Context.WorldRoot.AddChild(_marker);

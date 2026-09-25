@@ -26,7 +26,7 @@ public class PounceAbility : IEnemyAbility
     private float _hitRange;
     private float _damageMultiplier;
     private float _markerWidth;
-    private Color _color;
+    private FxFamily _family;
     private string _windupAudio;
     private string _leapAudio;
 
@@ -57,7 +57,7 @@ public class PounceAbility : IEnemyAbility
         _hitRange = data.GetNumber("hit_range", 30f);
         _damageMultiplier = data.GetNumber("damage_multiplier", 1.2f);
         _markerWidth = data.GetNumber("marker_width", 10f);
-        _color = Color.FromHtml(data.GetText("color", "#B8FF5A"));
+        _family = PixelPalette.ParseFamily(data.GetText("fx_family", "hostile"), FxFamily.Hostile);
         _windupAudio = data.GetText("windup_audio", "");
         _leapAudio = data.GetText("leap_audio", "");
 
@@ -84,7 +84,7 @@ public class PounceAbility : IEnemyAbility
                 if (!_hasHit && owner.GlobalPosition.DistanceSquaredTo(player.GlobalPosition) <= _hitRange * _hitRange)
                 {
                     _hasHit = true;
-                    owner.HitPlayer(player, owner.Damage * _damageMultiplier);
+                    owner.MeleeHitPlayer(player, owner.Damage * _damageMultiplier);
                 }
                 if (_timer <= 0f)
                 {
@@ -129,7 +129,7 @@ public class PounceAbility : IEnemyAbility
         _timer = _windupSeconds;
         owner.Velocity = Vector2.Zero;
         owner.SetWindupPose(true);
-        _marker.ShowLine(owner.GlobalPosition, owner.GlobalPosition + _direction * _distance, _markerWidth, _color);
+        _marker.ShowLine(owner.GlobalPosition, owner.GlobalPosition + _direction * _distance, _markerWidth, _family);
         if (_windupAudio.Length > 0)
             AudioManager.Play(_windupAudio, 0.1f, -6f);
     }

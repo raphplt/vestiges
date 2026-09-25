@@ -149,3 +149,4 @@ Chaque lot : captures avant/après dans une vraie run (`tools/capture_run.sh`), 
 - **FPS non concluants :** la machine était chargée par d'autres compilations pendant l'A/B, et les deux versions tombaient par moments à 5 FPS. Mesure à refaire au calme ; le nombre de nœuds créés, lui, ne dépend pas de la charge.
 - Vérifié : build sans avertissement, smoke test, `MovementRegression`, `EnemyAbilityRegression`.
 - Reste de J0 : projectiles du joueur, effets de mort (dissolution, flaque) et burst d'XP, puis budget d'effets par frame selon `ParticleLevel`.
+- Mise à jour du 25 septembre (plan 08, effets d'attaque) : projectiles du joueur recyclés, flashs et étincelles d'attaque passés sur `PixelFx` et `PixelSparks`. Nœuds créés par seconde : 19 à 43 → 12 ; allocations : 3,4 → 1,75 Mo sur 15 s. Restent les effets de mort et le burst d'XP.

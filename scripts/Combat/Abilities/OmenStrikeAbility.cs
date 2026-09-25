@@ -27,7 +27,7 @@ public class OmenStrikeAbility : IEnemyAbility
     private int _maxSimultaneous;
     private float _damageMultiplier;
     private float _flashSeconds;
-    private Color _color;
+    private FxFamily _family;
     private string _castAudio;
     private string _impactAudio;
 
@@ -57,7 +57,7 @@ public class OmenStrikeAbility : IEnemyAbility
         _maxSimultaneous = Mathf.Max(1, Mathf.RoundToInt(data.GetNumber("max_simultaneous", 3f)));
         _damageMultiplier = data.GetNumber("damage_multiplier", 1f);
         _flashSeconds = data.GetNumber("impact_flash_seconds", 0.15f);
-        _color = Color.FromHtml(data.GetText("color", "#B8FF5A"));
+        _family = PixelPalette.ParseFamily(data.GetText("fx_family", "hostile"), FxFamily.Hostile);
         _castAudio = data.GetText("cast_audio", "");
         _impactAudio = data.GetText("impact_audio", "");
 
@@ -112,7 +112,7 @@ public class OmenStrikeAbility : IEnemyAbility
         _castTimer = _delaySeconds;
         _activeMarks++;
 
-        _marker.ShowCircle(_impactCenter, _radius, _color);
+        _marker.ShowCircle(_impactCenter, _radius, _family);
         owner.PlayAttackAnim();
         if (_castAudio.Length > 0)
             AudioManager.Play(_castAudio, 0.08f, -6f);

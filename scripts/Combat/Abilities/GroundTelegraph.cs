@@ -3,23 +3,18 @@ using Godot;
 namespace Vestiges.Combat.Abilities;
 
 /// <summary>
-/// Annonce au sol d'une attaque ennemie : zone circulaire ou trajectoire, remplie selon l'avancement.
-/// Détachée du transform de son propriétaire pour rester fixe pendant que l'ennemi bouge.
+/// Annonce au sol d'une attaque ennemie ou d'un événement : zone circulaire ou trajectoire, en pixel art
+/// (bord plein, intérieur tramé, remplissage selon l'avancement). Détachée du transform de son
+/// propriétaire pour rester fixe pendant que l'ennemi bouge. Toujours affichée : seule son opacité se règle.
 /// </summary>
 public partial class GroundTelegraph : Node2D
 {
-    private enum MarkerShape { Circle, Line }
+    /// <summary>Paliers de remplissage : l'annonce avance par poses lisibles, pas en glissement continu.</summary>
+    private const int ProgressSteps = 12;
+    private const float AreaDensity = 0.25f;
 
-    private const int ArcSegments = 32;
-    private const float OutlineWidth = 1.5f;
-
-    private MarkerShape _shape;
-    private float _radius;
-    private Vector2 _lineEnd;
-    private float _lineWidth;
-    private Color _color;
-    private float _progress;
-    private float _flash;
+    private readonly PixelFx _fx;
+    private int _progressStep = -1;
 
     public GroundTelegraph()
     {
@@ -27,73 +22,59 @@ public partial class GroundTelegraph : Node2D
         // Au-dessus du sol (TileMapLayer à z 0) : un z négatif la cacherait sous les tuiles opaques.
         ZAsRelative = false;
         ZIndex = 1;
-        Visible = false;
+        _fx = PixelFx.Create(_ => { });
+        AddChild(_fx);
     }
 
-    public void ShowCircle(Vector2 center, float radius, Color color)
+    public void ShowCircle(Vector2 center, float radius, FxFamily family)
     {
-        _shape = MarkerShape.Circle;
-        _radius = radius;
-        Begin(center, color);
+        PixelFxSpec spec = PixelFxSpec.Of(PixelFxShape.Zone, family, radius, 1f, 1f);
+        Begin(center, spec);
     }
 
-    public void ShowLine(Vector2 from, Vector2 to, float width, Color color)
+    public void ShowLine(Vector2 from, Vector2 to, float width, FxFamily family)
     {
-        _shape = MarkerShape.Line;
-        _lineEnd = to - from;
-        _lineWidth = width;
-        Begin(from, color);
+        Vector2 delta = to - from;
+        PixelFxSpec spec = PixelFxSpec.Of(PixelFxShape.Lane, family, delta.Length(), width, 1f);
+        spec.Angle = delta.Angle();
+        Begin(from, spec);
     }
 
     public void SetProgress(float progress)
     {
-        _progress = Mathf.Clamp(progress, 0f, 1f);
-        QueueRedraw();
+        int step = Mathf.RoundToInt(Mathf.Clamp(progress, 0f, 1f) * ProgressSteps);
+        if (step == _progressStep)
+            return;
+        _progressStep = step;
+        _fx.SetProgress((float)step / ProgressSteps);
     }
 
-    /// <summary>Intensité 1 → 0 de l'éclat d'impact, pilotée par la capacité après résolution.</summary>
+    /// <summary>Intensité 1 → 0 de l'éclat d'impact : zone pleine qui se défait en trame.</summary>
     public void SetFlash(float intensity)
     {
-        _flash = Mathf.Clamp(intensity, 0f, 1f);
-        QueueRedraw();
+        float clamped = Mathf.Clamp(intensity, 0f, 1f);
+        _fx.SetProgress(1f);
+        _fx.SetFillDensity(1f);
+        _fx.SetFade(1f - clamped);
+        _progressStep = -1;
     }
 
     public void HideMarker()
     {
+        _fx.Stop();
         Visible = false;
-        _flash = 0f;
-        _progress = 0f;
     }
 
-    private void Begin(Vector2 origin, Color color)
+    private void Begin(Vector2 origin, in PixelFxSpec baseSpec)
     {
+        PixelFxSpec spec = baseSpec;
+        spec.FillDensity = AreaDensity;
+        spec.ProgressFill = true;
+        spec.ZIndex = 0;
         GlobalPosition = origin;
-        _color = color;
-        _progress = 0f;
-        _flash = 0f;
         Visible = true;
-        QueueRedraw();
-    }
-
-    public override void _Draw()
-    {
-        Color outline = new(_color, 0.55f + 0.45f * _progress);
-        Color area = new(_color, 0.08f + 0.14f * _progress);
-        Color fill = new(_color, 0.3f);
-
-        if (_shape == MarkerShape.Circle)
-        {
-            DrawCircle(Vector2.Zero, _radius, area);
-            // Le disque intérieur qui grandit donne le délai sans dépendre de la seule couleur.
-            DrawCircle(Vector2.Zero, _radius * _progress, fill);
-            DrawArc(Vector2.Zero, _radius, 0f, Mathf.Tau, ArcSegments, outline, OutlineWidth);
-            if (_flash > 0f)
-                DrawCircle(Vector2.Zero, _radius * (1f + 0.25f * (1f - _flash)), new Color(1f, 1f, 0.85f, 0.6f * _flash));
-            return;
-        }
-
-        DrawLine(Vector2.Zero, _lineEnd, area, _lineWidth);
-        DrawLine(Vector2.Zero, _lineEnd * _progress, fill, _lineWidth * 0.6f);
-        DrawCircle(_lineEnd, _lineWidth * 0.5f, outline);
+        _progressStep = -1;
+        _fx.Hold(origin, spec, CombatFxSettings.EnemyOpacity);
+        SetProgress(0f);
     }
 }

@@ -20,6 +20,17 @@ public class WeaponSpecialEffect
 	public List<string> Shapes { get; set; }
 }
 
+/// <summary>
+/// Présentation d'une arme en combat (plan 08, effets d'attaque) : style du coup de mêlée,
+/// famille de couleurs (sinon déduite du type de dégâts) et forme du projectile.
+/// </summary>
+public class WeaponFxData
+{
+	public string Style { get; set; }
+	public string Family { get; set; }
+	public string Projectile { get; set; }
+}
+
 public class WeaponData
 {
 	public string Id { get; set; }
@@ -36,6 +47,7 @@ public class WeaponData
 	public Dictionary<string, float> Stats { get; set; } = new();
 	public WeaponOnHitEffect OnHitEffect { get; set; }
 	public WeaponSpecialEffect SpecialEffect { get; set; }
+	public WeaponFxData Fx { get; set; } = new();
 }
 
 public static class WeaponDataLoader
@@ -149,6 +161,17 @@ public static class WeaponDataLoader
                 if (value.VariantType is Variant.Type.Int or Variant.Type.Float)
                     weapon.Stats[statKey] = (float)value.AsDouble();
             }
+        }
+
+        if (dict.ContainsKey("fx"))
+        {
+            Godot.Collections.Dictionary fx = dict["fx"].AsGodotDictionary();
+            weapon.Fx = new WeaponFxData
+            {
+                Style = fx.ContainsKey("style") ? fx["style"].AsString() : null,
+                Family = fx.ContainsKey("family") ? fx["family"].AsString() : null,
+                Projectile = fx.ContainsKey("projectile") ? fx["projectile"].AsString() : null
+            };
         }
 
         if (dict.ContainsKey("on_hit_effect"))

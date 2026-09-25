@@ -81,7 +81,6 @@ public partial class Player : CharacterBody2D
     private float _currentHp;
     private bool _isDead;
     private WeaponInstance _equippedWeapon; // Active weapon context for attack helpers
-    private PackedScene _projectileScene;
     private Polygon2D _visual;
     private Color _originalColor;
     private EventBus _eventBus;
@@ -104,6 +103,7 @@ public partial class Player : CharacterBody2D
 
     // Sprite animé (remplace Polygon2D quand sprite_folder est défini)
     private AnimatedSprite2D _sprite;
+    private PlayerAttackFx _attackFx;
     private bool _hasSprite;
     private enum SpriteAction { Idle, Walk, Hurt, Death, Dash }
     private static readonly string[] SpriteActionNames = { "idle", "walk", "hurt", "death", "dash" };
@@ -175,8 +175,6 @@ public partial class Player : CharacterBody2D
     private float _coneRange;
     private float _coneBaseDamage;
     private bool _isConeActive;
-    private Node2D _coneVisual;
-    private Polygon2D _conePolygon;
 
     // Coût en essence pour armes Tier 4+
     private float _essenceDamagePenalty = 1f;
@@ -237,11 +235,11 @@ public partial class Player : CharacterBody2D
         _currentHp = MaxHp;
         _visual = GetNode<Polygon2D>("Visual");
         _sprite = GetNode<AnimatedSprite2D>("Sprite");
+        _attackFx = new PlayerAttackFx(this, _sprite);
         _originalColor = _visual.Color;
 
         AddToGroup("player");
 
-        _projectileScene = GD.Load<PackedScene>("res://scenes/combat/Projectile.tscn");
         _entityShader ??= GD.Load<Shader>("res://assets/shaders/entity.gdshader");
 
         CreateHarvestBar();
@@ -390,6 +388,8 @@ public partial class Player : CharacterBody2D
 
         WeaponInstance removed = _weaponSlots[slotIndex];
         _weaponSlots.RemoveAt(slotIndex);
+        if (_isConeActive && removed.Base.SpecialEffect?.Type == "sustained_cone")
+            DeactivateSustainedCone();
 
         if (slotIndex < _weaponTimers.Count)
         {
@@ -991,6 +991,7 @@ public partial class Player : CharacterBody2D
         if (!IsInstanceValid(enemy) || enemy.IsQueuedForDeletion())
             return;
 
+        _attackFx.PlayHit(_equippedWeapon?.Base, enemy.GlobalPosition, isCrit);
         int procRollCount = Mathf.Max(1, triggerCount);
 
         // Vampirism: heal % of damage dealt
@@ -1077,14 +1078,9 @@ public partial class Player : CharacterBody2D
             return;
 
         Vector2 direction = (bounceTarget.GlobalPosition - sourceEnemy.GlobalPosition).Normalized();
-        Projectile projectile = _projectileScene.Instantiate<Projectile>();
-        projectile.GlobalPosition = sourceEnemy.GlobalPosition;
-        projectile.Speed = GetWeaponStat("projectile_speed", 400f);
-        projectile.MaxLifetime = Mathf.Clamp(_ricochetRange / Mathf.Max(projectile.Speed, 1f), 0.2f, 2f);
-        projectile.Initialize(direction, damage * 0.75f, 0, isCrit, this, isRicochet: true);
-
-        projectile.SourceWeapon = _equippedWeapon?.Base;
-        GetTree().CurrentScene.AddChild(projectile);
+        float speed = GetWeaponStat("projectile_speed", 400f);
+        CombatPools.Instance?.TakePlayerProjectile().Launch(sourceEnemy.GlobalPosition, direction, damage * 0.75f, speed,
+            Mathf.Clamp(_ricochetRange / Mathf.Max(speed, 1f), 0.2f, 2f), 0, isCrit, this, _equippedWeapon?.Base, isRicochet: true);
     }
 
     // --- Weapon Special Effects ---
@@ -1184,45 +1180,12 @@ public partial class Player : CharacterBody2D
 
     private void SpawnEchoVisual(Vector2 position)
     {
-        Polygon2D echo = new();
-        int segments = 8;
-        Vector2[] points = new Vector2[segments];
-        for (int i = 0; i < segments; i++)
-        {
-            float angle = Mathf.Tau * i / segments;
-            points[i] = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * 5f;
-        }
-        echo.Polygon = points;
-        echo.Color = new Color(0.6f, 0.4f, 1f, 0.6f);
-        echo.GlobalPosition = position;
-        GetTree().CurrentScene.AddChild(echo);
-
-        Tween tween = echo.CreateTween();
-        tween.SetParallel();
-        tween.TweenProperty(echo, "scale", new Vector2(8f, 8f), 0.25f)
-            .SetTrans(Tween.TransitionType.Quad).SetEase(Tween.EaseType.Out);
-        tween.TweenProperty(echo, "modulate:a", 0f, 0.25f);
-        tween.Chain().TweenCallback(Callable.From(() => echo.QueueFree()));
+        _attackFx.PlayEcho(position);
     }
 
     private void SpawnTimeSlowVisual(Vector2 position, float radius, float duration)
     {
-        Polygon2D zone = new();
-        int segments = 16;
-        Vector2[] points = new Vector2[segments];
-        for (int i = 0; i < segments; i++)
-        {
-            float angle = Mathf.Tau * i / segments;
-            points[i] = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * radius;
-        }
-        zone.Polygon = points;
-        zone.Color = new Color(0.3f, 0.5f, 0.9f, 0.2f);
-        zone.GlobalPosition = position;
-        GetTree().CurrentScene.AddChild(zone);
-
-        Tween tween = zone.CreateTween();
-        tween.TweenProperty(zone, "modulate:a", 0f, duration);
-        tween.TweenCallback(Callable.From(() => zone.QueueFree()));
+        _attackFx.PlayTimeField(position, radius, duration);
     }
 
     // --- Orbital Weapons ---
@@ -1255,6 +1218,7 @@ public partial class Player : CharacterBody2D
             CircleShape2D circle = new() { Radius = 8f };
             shape.Shape = circle;
             orb.AddChild(shape);
+            orb.AddChild(PlayerAttackFx.CreateOrbitalVisual());
 
             float capturedDamage = damage;
             orb.BodyEntered += (Node2D body) =>
@@ -1290,6 +1254,7 @@ public partial class Player : CharacterBody2D
 
             float angle = _orbitalAngle + (Mathf.Tau * i / _orbitalProjectiles.Count);
             orb.Position = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * orbitalRadius;
+            PlayerAttackFx.AnimateOrbitalVisual(orb.GetChild<Sprite2D>(1), _orbitalAngle, i);
         }
     }
 
@@ -1312,16 +1277,6 @@ public partial class Player : CharacterBody2D
         _coneAngleEnd = GetWeaponStat("cone_angle_end", 60f);
         _coneRange = GetEffectiveWeaponRange();
         _coneBaseDamage = ComputeBaseAttackDamage();
-
-        // Création du visuel en cône (polygon triangulaire)
-        if (_coneVisual != null && IsInstanceValid(_coneVisual))
-            _coneVisual.QueueFree();
-
-        _coneVisual = new Node2D { Name = "SustainedConeVisual" };
-        _conePolygon = new Polygon2D();
-        _conePolygon.Color = new Color(0.45f, 0.85f, 1f, 0.25f);
-        _coneVisual.AddChild(_conePolygon);
-        AddChild(_coneVisual);
 
         UpdateConeVisual(0f);
 
@@ -1380,31 +1335,9 @@ public partial class Player : CharacterBody2D
 
     private void UpdateConeVisual(float elapsed)
     {
-        if (_conePolygon == null || !IsInstanceValid(_conePolygon))
-            return;
-
         float progress = Mathf.Clamp(elapsed / _coneDuration, 0f, 1f);
         float currentAngleDeg = Mathf.Lerp(_coneAngleStart, _coneAngleEnd, progress);
-        float halfAngleRad = Mathf.DegToRad(currentAngleDeg * 0.5f);
-
-        // Polygone en forme de cône : pointe au joueur, s'élargit vers la portée
-        int segments = 12;
-        Vector2[] points = new Vector2[segments + 2];
-        points[0] = Vector2.Zero; // Pointe du cône (position du joueur)
-
-        float baseAngle = _facingDirection.Angle();
-        for (int i = 0; i <= segments; i++)
-        {
-            float t = (float)i / segments;
-            float angle = baseAngle - halfAngleRad + t * halfAngleRad * 2f;
-            points[i + 1] = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * _coneRange;
-        }
-
-        _conePolygon.Polygon = points;
-
-        // Opacité pulsante pour feedback visuel
-        float alpha = 0.2f + 0.1f * Mathf.Sin(elapsed * 8f);
-        _conePolygon.Color = new Color(0.45f, 0.85f, 1f, alpha);
+        _attackFx.UpdateCone(_equippedWeapon?.Base, _facingDirection, _coneRange, Mathf.DegToRad(currentAngleDeg * 0.5f));
     }
 
     private void DeactivateSustainedCone()
@@ -1412,12 +1345,7 @@ public partial class Player : CharacterBody2D
         _isConeActive = false;
         _coneAttackTimer = 0f;
 
-        if (_coneVisual != null && IsInstanceValid(_coneVisual))
-        {
-            _coneVisual.QueueFree();
-            _coneVisual = null;
-            _conePolygon = null;
-        }
+        _attackFx.StopCone();
 
         GD.Print("[Player] Sustained cone désactivé");
     }
@@ -1493,9 +1421,7 @@ public partial class Player : CharacterBody2D
 
     private void SpawnChainVisual(Vector2 from, Vector2 to)
     {
-        Node2D chainVfx = Combat.VfxFactory.CreateChainLightningVfx(from, to, new Color(0.7f, 0.85f, 1f));
-        if (chainVfx != null)
-            GetTree().CurrentScene.AddChild(chainVfx);
+        _attackFx.PlayChain(from, to, _equippedWeapon?.Base);
     }
 
     // --- Health ---
@@ -2515,14 +2441,9 @@ public partial class Player : CharacterBody2D
 
     private Projectile SpawnProjectile(Vector2 direction, float damage, float speed, float range, int pierce, bool isCrit)
     {
-        Projectile projectile = _projectileScene.Instantiate<Projectile>();
-        projectile.GlobalPosition = GlobalPosition;
-        projectile.Speed = speed;
-        projectile.MaxLifetime = Mathf.Clamp(range / Mathf.Max(speed, 1f), 0.2f, 4f);
-        projectile.Initialize(direction, damage, pierce, isCrit, this);
-        projectile.SourceWeapon = _equippedWeapon?.Base;
-
-        GetTree().CurrentScene.AddChild(projectile);
+        Projectile projectile = CombatPools.Instance?.TakePlayerProjectile();
+        projectile?.Launch(GlobalPosition, direction, damage, speed, Mathf.Clamp(range / Mathf.Max(speed, 1f), 0.2f, 4f),
+            pierce, isCrit, this, _equippedWeapon?.Base);
         return projectile;
     }
 
@@ -2640,25 +2561,18 @@ public partial class Player : CharacterBody2D
         return _equippedWeapon.GetStat(key, fallback);
     }
 
-    private Color GetWeaponProjectileColor()
-    {
-        if (_equippedWeapon == null)
-            return new Color(1f, 0.85f, 0.2f);
-
-        return _equippedWeapon.DamageType switch
-        {
-            "essence" => new Color(0.45f, 0.85f, 1f),
-            "hybrid" => new Color(0.85f, 0.65f, 1f),
-            _ => new Color(1f, 0.85f, 0.2f)
-        };
-    }
-
     private void PlayAttackFeedback(bool isMelee, Vector2 direction)
     {
         if (_visual == null)
             return;
 
         _facingDirection = direction.Normalized();
+        _attackFx.PlayRecoil(isMelee);
+        if (!isMelee)
+            SpawnMuzzleFlash(direction);
+        // Personnage sans sprite : le polygone de repli garde sa réaction propre.
+        if (_hasSprite)
+            return;
         if (_attackFeedbackTween != null && _attackFeedbackTween.IsValid())
             _attackFeedbackTween.Kill();
 
@@ -2671,163 +2585,16 @@ public partial class Player : CharacterBody2D
             .SetTrans(Tween.TransitionType.Quad)
             .SetEase(Tween.EaseType.Out);
         _attackFeedbackTween.TweenProperty(_visual, "color", _originalColor, isMelee ? 0.12f : 0.1f);
-
-        if (!isMelee)
-            SpawnMuzzleFlash(direction);
     }
 
     private void SpawnMuzzleFlash(Vector2 direction)
     {
-        Node2D flashRoot = new();
-        flashRoot.GlobalPosition = GlobalPosition + direction * 14f;
-        flashRoot.Rotation = direction.Angle();
-
-        Polygon2D flash = new();
-        flash.Color = new Color(GetWeaponProjectileColor(), 0.85f);
-        flash.Polygon = new Vector2[]
-        {
-            new(-3f, 0f),
-            new(8f, -3.5f),
-            new(14f, 0f),
-            new(8f, 3.5f)
-        };
-        flashRoot.AddChild(flash);
-        GetTree().CurrentScene.AddChild(flashRoot);
-
-        Tween tween = flashRoot.CreateTween();
-        tween.SetParallel();
-        tween.TweenProperty(flash, "scale", new Vector2(1.5f, 1.2f), 0.08f);
-        tween.TweenProperty(flash, "modulate:a", 0f, 0.08f);
-        tween.TweenProperty(flashRoot, "rotation", flashRoot.Rotation + 0.2f, 0.08f);
-        tween.Chain().TweenCallback(Callable.From(() => flashRoot.QueueFree()));
+        _attackFx.PlayMuzzle(_equippedWeapon?.Base, direction);
     }
 
     private void SpawnSlashEffect(Vector2 direction, float range, float arcAngle)
     {
-        Color slashColor = new(1f, 0.9f, 0.7f, 0.75f);
-
-        // Polygon2D classique (conservé pour la forme visible du slash)
-        Node2D fxRoot = new();
-        fxRoot.GlobalPosition = GlobalPosition + direction * 8f;
-        fxRoot.Rotation = direction.Angle();
-
-        Polygon2D slash = new();
-        slash.Color = slashColor;
-
-        if (arcAngle >= 359f)
-        {
-            int segments = 18;
-            float radius = Mathf.Clamp(range * 0.45f, 18f, 80f);
-            Vector2[] circle = new Vector2[segments];
-            for (int i = 0; i < segments; i++)
-            {
-                float a = Mathf.Tau * i / segments;
-                circle[i] = new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * radius;
-            }
-            slash.Polygon = circle;
-        }
-        else
-        {
-            float length = Mathf.Clamp(range * 0.7f, 18f, 90f);
-            float width = Mathf.Clamp(length * 0.35f, 8f, 30f);
-            slash.Polygon = new Vector2[]
-            {
-                new(-6f, 0f),
-                new(length * 0.3f, -width * 0.5f),
-                new(length, 0f),
-                new(length * 0.3f, width * 0.5f)
-            };
-        }
-
-        slash.Scale = new Vector2(0.45f, 0.9f);
-        fxRoot.AddChild(slash);
-        GetTree().CurrentScene.AddChild(fxRoot);
-
-        float sweep = arcAngle >= 359f ? 0f : Mathf.DegToRad(Mathf.Clamp(arcAngle * 0.35f, 18f, 70f));
-        Tween tween = fxRoot.CreateTween();
-        tween.SetParallel();
-        tween.TweenProperty(slash, "scale", new Vector2(1.2f, 1f), 0.11f)
-            .SetTrans(Tween.TransitionType.Quad)
-            .SetEase(Tween.EaseType.Out);
-        tween.TweenProperty(slash, "modulate:a", 0f, 0.14f);
-        if (sweep > 0f)
-            tween.TweenProperty(fxRoot, "rotation", fxRoot.Rotation + sweep, 0.11f);
-        tween.Chain().TweenCallback(Callable.From(() => fxRoot.QueueFree()));
-
-        // VFX sprite animé selon le type d'arme et le pattern d'attaque
-        string weaponId = _equippedWeapon?.Id ?? "";
-        string attackPattern = _equippedWeapon?.AttackPattern?.ToLower() ?? "arc";
-
-        // --- Armes spécifiques tier 3+ (priorité haute) ---
-        if (weaponId == "teachers_bell")
-        {
-            // Cloche : onde sonore concentrique
-            Node2D bellVfx = Combat.VfxFactory.CreateBellWaveVfx(GlobalPosition, slashColor);
-            if (bellVfx != null)
-                GetTree().CurrentScene.AddChild(bellVfx);
-        }
-        else if (weaponId == "clock_hand")
-        {
-            // Aiguille de l'Horloge : distorsion temporelle
-            Node2D timeVfx = Combat.VfxFactory.CreateTimeDistortionVfx(GlobalPosition);
-            if (timeVfx != null)
-                GetTree().CurrentScene.AddChild(timeVfx);
-        }
-        else if (weaponId == "void_edge")
-        {
-            // Tranchant du Vide : slash noir iridescent
-            Node2D voidVfx = Combat.VfxFactory.CreateVoidSlashVfx(GlobalPosition, direction, slashColor);
-            if (voidVfx != null)
-                GetTree().CurrentScene.AddChild(voidVfx);
-        }
-        else if (weaponId == "echo_gauntlets")
-        {
-            // Gantelets d'Écho : slash normal + écho retardé
-            Node2D slashVfx = Combat.VfxFactory.CreateSlashVfx(
-                GlobalPosition, direction, range, arcAngle, slashColor);
-            if (slashVfx != null)
-                GetTree().CurrentScene.AddChild(slashVfx);
-            // L'écho retardé est spawné après un court délai par le système de combat
-            var echoTimer = new Timer { WaitTime = 0.3f, OneShot = true, Autostart = true };
-            echoTimer.Timeout += () =>
-            {
-                Node2D echoVfx = Combat.VfxFactory.CreateEchoVfx(GlobalPosition, direction, slashColor);
-                if (echoVfx != null && IsInstanceValid(this))
-                    GetTree().CurrentScene.AddChild(echoVfx);
-                echoTimer.QueueFree();
-            };
-            AddChild(echoTimer);
-        }
-        // --- Types d'attaque génériques ---
-        else if (attackPattern == "circular" || weaponId.Contains("fouet") || weaponId.Contains("whip"))
-        {
-            // Fouet / circulaire : frappe circulaire 4 frames
-            Node2D fouetVfx = Combat.VfxFactory.CreateFouetVfx(GlobalPosition, slashColor);
-            if (fouetVfx != null)
-                GetTree().CurrentScene.AddChild(fouetVfx);
-        }
-        else if (weaponId.Contains("lance") || weaponId.Contains("spear") || attackPattern == "linear")
-        {
-            // Lance : thrust linéaire au lieu du slash en arc
-            Node2D thrustVfx = Combat.VfxFactory.CreateThrustVfx(GlobalPosition, direction, slashColor);
-            if (thrustVfx != null)
-                GetTree().CurrentScene.AddChild(thrustVfx);
-        }
-        else if (weaponId.Contains("masse") || weaponId.Contains("hammer") || weaponId.Contains("marteau"))
-        {
-            // Masse/marteau : impact AoE onde de choc
-            Node2D masseVfx = Combat.VfxFactory.CreateMasseImpactVfx(GlobalPosition + direction * 8f, slashColor);
-            if (masseVfx != null)
-                GetTree().CurrentScene.AddChild(masseVfx);
-        }
-        else
-        {
-            // Épée et autres : slash en arc classique
-            Node2D slashParticles = Combat.VfxFactory.CreateSlashVfx(
-                GlobalPosition, direction, range, arcAngle, slashColor);
-            if (slashParticles != null)
-                GetTree().CurrentScene.AddChild(slashParticles);
-        }
+        _attackFx.PlayMelee(_equippedWeapon?.Base, direction, range, arcAngle);
     }
 
     // --- Kill Speed Buff ---
