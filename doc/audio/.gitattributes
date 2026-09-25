@@ -1,0 +1,2 @@
+# Conserver les licences tierces telles que distribuées (espaces et fins de ligne compris).
+lot-*/sources/*-License.txt -text -whitespace

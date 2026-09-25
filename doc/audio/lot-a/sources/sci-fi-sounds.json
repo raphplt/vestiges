@@ -1,0 +1,22 @@
+{
+  "name": "Sci-fi Sounds · Kenney",
+  "url": "https://kenney.nl/assets/sci-fi-sounds",
+  "download_url": "https://kenney.nl/media/pages/assets/sci-fi-sounds/6b296f9ecf-1677589334/kenney_sci-fi-sounds.zip",
+  "verified_at": "2026-09-25",
+  "license": "CC0-1.0",
+  "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "evidence": "Creative Commons CC0",
+  "author": "Kenney",
+  "license_links_observed": [
+    {
+      "label": "Creative Commons CC0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+    }
+  ],
+  "page_sha256": "53f60b5587acf1ee1a3f9533c18e79280ad3348c3ae8348b97da284ed68f90ba",
+  "evidence_note": "Champ de licence et liens relevés sur la page officielle à la date indiquée. Le SHA256 porte sur la réponse HTML reçue ; page complète non redistribuée.",
+  "bundled_license": "sources/sci-fi-sounds-License.txt",
+  "selected_files": [
+    "Audio/lowFrequency_explosion_000.ogg"
+  ]
+}

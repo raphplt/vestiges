@@ -1,0 +1,22 @@
+{
+  "name": "100 CC0 SFX",
+  "author": "rubberduck",
+  "url": "https://opengameart.org/content/100-cc0-sfx",
+  "download_urls": [
+    "https://opengameart.org/sites/default/files/100-CC0-SFX_0.zip"
+  ],
+  "verified_at": "2026-09-25",
+  "license": "CC0-1.0",
+  "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "license_links_observed": [
+    {
+      "label": "CC0",
+      "url": "http://creativecommons.org/publicdomain/zero/1.0/"
+    }
+  ],
+  "page_sha256": "6d9d3871eff892b0ec52be6684fa0f3dd97ea034d929b07194ca5335e2228109",
+  "evidence": "Page officielle : champ License(s) CC0 ; liens ci-dessus relevés à la date indiquée.",
+  "selected_files": [
+    "gong_01.ogg"
+  ]
+}

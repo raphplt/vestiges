@@ -1,0 +1,22 @@
+{
+  "name": "Heartbeat (single sound)",
+  "author": "Independent.nu (soumis par qubodup)",
+  "url": "https://opengameart.org/content/heartbeat-single-sound",
+  "download_urls": [
+    "https://opengameart.org/sites/default/files/heartbeat.mp3_.flac"
+  ],
+  "verified_at": "2026-09-25",
+  "license": "CC0-1.0",
+  "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "license_links_observed": [
+    {
+      "label": "CC0",
+      "url": "http://creativecommons.org/publicdomain/zero/1.0/"
+    }
+  ],
+  "page_sha256": "12f3f77d090f03d118c75de8e86bf88d138c6d4df841f8bb9ad17aacdafbc05b",
+  "evidence": "Page officielle : champ License(s) CC0 ; liens ci-dessus relevés à la date indiquée.",
+  "selected_files": [
+    "heartbeat.mp3_.flac"
+  ]
+}

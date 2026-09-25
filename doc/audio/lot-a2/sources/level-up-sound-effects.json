@@ -1,0 +1,25 @@
+{
+  "name": "Level up sound effects",
+  "author": "Bart Kelsey",
+  "url": "https://opengameart.org/content/level-up-sound-effects",
+  "download_urls": [
+    "https://opengameart.org/sites/default/files/Level%20Up%21.zip"
+  ],
+  "verified_at": "2026-09-25",
+  "license": "CC-BY-3.0",
+  "license_url": "https://creativecommons.org/licenses/by/3.0/",
+  "license_links_observed": [
+    {
+      "label": "CC-BY 3.0",
+      "url": "http://creativecommons.org/licenses/by/3.0/"
+    }
+  ],
+  "page_sha256": "f9c3cd70d34bcc86f0705032c27d73dd435c61c27d301ca7b792080f8a37c0c8",
+  "evidence": "Page officielle : champ License(s) ; liens ci-dessus relevés à la date indiquée.",
+  "selected_files": [
+    "Level Up!/piano.wav",
+    "Level Up!/glassbell.wav"
+  ],
+  "attribution_notice": "\"Level up sound effects\" by Bart Kelsey. Commissioned by Will Corwin for OpenGameArt.org (http://opengameart.org)",
+  "attribution_required": true
+}

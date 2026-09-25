@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "project": "vestiges",
+  "batch": "lot-a",
+  "catalog_generated_at": "2026-09-25",
+  "exported_at": "2026-09-25T21:05:44.924Z",
+  "choices": [
+    {
+      "effect_id": "enemy_hit",
+      "decision": "none",
+      "candidate_id": null,
+      "notes": "Le B est le mieux des trois mais est trop long. Apres le truc c'est que je sais pas quand ce son pop réellement. normalement les sons d'attaques se font par armes."
+    },
+    {
+      "effect_id": "critical_hit",
+      "decision": "candidate",
+      "candidate_id": "critical_hit_a",
+      "notes": ""
+    },
+    {
+      "effect_id": "player_hit",
+      "decision": "pending",
+      "candidate_id": null,
+      "notes": "Aucun ne le fait. rechercher autre cose. le signal absrait pouvait etre une bonne idée mais pas fan de celui là. mais chercher aussi des plus classiques"
+    },
+    {
+      "effect_id": "dissolution",
+      "decision": "pending",
+      "candidate_id": null,
+      "notes": "La C est la mieux mais je suis pas convaincu."
+    },
+    {
+      "effect_id": "xp_pickup",
+      "decision": "pending",
+      "candidate_id": null,
+      "notes": "L'actuelle est plutot bien"
+    },
+    {
+      "effect_id": "level_up",
+      "decision": "pending",
+      "candidate_id": null,
+      "notes": "L'actuelle est mieux que les trois mais j'aimerai quand meme trouver autre chose"
+    },
+    {
+      "effect_id": "perk_select",
+      "decision": "pending",
+      "candidate_id": null,
+      "notes": "essayer de trouver une seule note avec un echo ptet. "
+    },
+    {
+      "effect_id": "chest_open",
+      "decision": "candidate",
+      "candidate_id": "chest_open_a",
+      "notes": "Le A est parfait pour le moment où on ouvre le coffre mais apres il faut une sorte de mélodie sur quelques secondes. (l'actuelle fait a peu pres le job)"
+    },
+    {
+      "effect_id": "dash_start",
+      "decision": "candidate",
+      "candidate_id": "dash_start_a",
+      "notes": ""
+    },
+    {
+      "effect_id": "danger_warning",
+      "decision": "none",
+      "candidate_id": null,
+      "notes": ""
+    }
+  ]
+}

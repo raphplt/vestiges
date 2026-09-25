@@ -34,6 +34,7 @@ La [Stratégie V2](../VESTIGES-STRATEGIE-V2.md) reste l'autorité gameplay/roadm
 | [12 — Micro-événements et variantes](12-micro-evenements.md) | P0 | Cadence, cinq événements, élites et Souverains (v1 livrée) | 03/07 |
 | [13 — Butin](13-butin.md) | P0 après recette 12 | Trois formes de butin (Vestige figé, Triptyque, Pacte d'oubli), raretés, sources lisibles | Objets 05, idée B 11 |
 | [14 — Anomalies du monde](14-anomalies-du-monde.md) | P1 | Anomalies rares liées au joueur et à l'oubli, jamais mortelles | 12, 13 |
+| [15 — Audio](15-audio.md) | Recherche et écoute | Trois sons retenus au lot A ; lot A2 : 21 nouvelles propositions pour 7 effets. Catalogue : 113 besoins, 102 encore à rechercher | [Page d’écoute A2](../audio/lot-a2/index.html) ; recette en jeu après choix |
 
 Les numéros servent à identifier les plans, pas à imposer leur exécution intégrale dans cet ordre. Le [registre](DECISIONS.md) fait foi pour leur statut de validation.
 
@@ -49,6 +50,7 @@ Les numéros servent à identifier les plans, pas à imposer leur exécution int
 Un seul lot d'implémentation ouvert à la fois. Un échec de lisibilité, de performance ou de fun ramène au lot concerné avant expansion.
 
 **Mise à jour du 25 septembre :**
+- Audio : [premier panier](../audio/lot-a/index.html) de 30 candidats écouté ; critique A, ouverture physique du coffre A et dash A retenus. Les [retours](../audio/lot-a/RETOURS.md) guident le [lot A2](../audio/lot-a2/index.html) : 21 nouvelles propositions pour sept effets, dont une mélodie distincte pour la révélation du coffre. Le [catalogue](../audio/COUVERTURE.md) suit 113 besoins, 51 propositions sur 11 besoins et 102 besoins encore à rechercher ou arbitrer ; trois sons choisis, aucun intégré. Sources CC0 ou CC-BY documentées. Contrôles : `python3 tools/audio/build_catalogue.py --check` ; pages reconstruites avec `python3 tools/audio/build_review.py` et `python3 tools/audio/build_review.py --batch lot-a2`.
 - Recette de Raphaël : cadence des micro-événements validée en l'état, élites bien dosées, micro-événements appréciés, HUD « bien mieux ». Le soin, peut-être trop rare, est noté pour les plans 13 et 03.
 - Nouveau chantier prioritaire : **visuel et juiciness de tout le jeu**.
   - Régression des biomes : cause trouvée dans l'historique (14 mars), mesurée, corrigée ([10 §6](10-terrain-et-tiles.md#6-régression-un-seul-biome-autour-du-départ--25-septembre-2026)).

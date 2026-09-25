@@ -1,0 +1,25 @@
+{
+  "name": "Impact Sounds · Kenney",
+  "url": "https://kenney.nl/assets/impact-sounds",
+  "download_url": "https://kenney.nl/media/pages/assets/impact-sounds/87b4ddecda-1677589768/kenney_impact-sounds.zip",
+  "verified_at": "2026-09-25",
+  "license": "CC0-1.0",
+  "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "evidence": "Creative Commons CC0",
+  "author": "Kenney",
+  "license_links_observed": [
+    {
+      "label": "Creative Commons CC0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+    }
+  ],
+  "page_sha256": "51ee47e9b4b2a9c57ebd3ba068c6c7fb1117d499d2aded44435a456f078d3f40",
+  "evidence_note": "Champ de licence et liens relevés sur la page officielle à la date indiquée. Le SHA256 porte sur la réponse HTML reçue ; page complète non redistribuée.",
+  "bundled_license": "sources/impact-sounds-License.txt",
+  "selected_files": [
+    "Audio/impactPunch_medium_000.ogg",
+    "Audio/impactMetal_heavy_000.ogg",
+    "Audio/impactSoft_heavy_000.ogg",
+    "Audio/impactBell_heavy_000.ogg"
+  ]
+}

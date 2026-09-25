@@ -8,6 +8,9 @@ Ce registre intègre les retours structurants après la première lecture des pl
 
 | Sujet | Décision de Raphaël | Application |
 |---|---|---|
+| Direction audio (25 septembre) | Musiques de jeu vidéo avec rythme et mélodie ; distorsion et Effacement possibles. Les essais de drones abstraits n'ont pas convaincu et leurs consignes sont abandonnées | [Guide audio V2](../AUDIO-GUIDE.md), Bible §8, Stratégie V2 §21 et [plan 15](15-audio.md) |
+| Production audio (25 septembre) | Aucun budget de prestation ni d'achat ; abonnement Google et crédits ElevenLabs déjà disponibles. Privilégier une approche mixte avec sons existants et collaboration bénévole éventuelle | Plan 15 ; aucune dépense supplémentaire prévue |
+| Sélection audio (25 septembre) | Les agents cherchent plusieurs candidats par effet ; Raphaël fait les comparaisons et choisit. Couverture exhaustive des sons et effets du jeu demandée | Inventaire croisant fichiers, appels, données et besoins V2 ; choix suivis par identifiant, lots d'écoute limités |
 | Contrôle | Axes écran, diagonales normalisées, amplitude du stick préservée, contrôle clavier/manette ; déplacements de base refaits explicitement validés le 22 septembre | 01, socle livré validé ; recette exhaustive distincte |
 | Mobilité | Dash commun livré validé (« Ok top je valide ») ; mobilités spécifiques après nouveau casting et sprites | 01 D validé ; 01 E dépend de 06/08 |
 | Mode dev | Tout le contenu existant débloqué pour les essais | Profil dev séparé ; [utilisation](../DEV-MODE.md) |
@@ -75,3 +78,89 @@ Ni les seuils d'XP, ni les timings de mobilité, ni les chiffres des objets ne s
 Les plans 01 (socle), 02 (avec correction record et extension bilan) et 03 (avec priorité à la difficulté initiale) disposent d'une direction validée. Le 22 septembre, Raphaël demande : « continue le travail sur le plan 1 déplacements » et précise : « les déplacements de base ont été refaits pour aller dans le sens du plan, je valide ces changements ». Le socle livré est donc validé, et le prototype D poursuit le plan sans redemander cet accord. Cette validation ne choisit pas l'inertie, l'invulnérabilité ou l'équilibrage du dash, et ne vaut pas recette exhaustive manette/captures/autres joueurs. Les autres extensions détaillées restent proposées ; les décisions déjà acquises ne seront pas redemandées.
 
 Les cases de la roadmap signifient « implémenté et vérifié ». Une validation de design n'en coche aucune.
+
+## 5. Retours audio du 25 septembre — lot A
+
+Trois sélections explicites : `critical_hit_a`, `chest_open_a` (mécanisme d’ouverture seulement), `dash_start_a`. Aucune intégration effectuée. Les sept autres décisions restent `none`/`pending` telles qu’exportées. XP actuelle appréciée sans sélection définitive. Ajout d’un besoin `chest_reveal` : mélodie de quelques secondes après l’ouverture. Lot A2 de sept besoins détaillé dans [le plan 15](15-audio.md#3-bis-lot-a2--rechercher-après-le-retour-du-25-septembre).
+
+Source probante : [export original](../audio/lot-a/choix-raphael-2026-09-25.json), identique octet pour octet au fichier transmis ; [synthèse et explication impact/arme](../audio/lot-a/RETOURS.md). Verbatim des notes (chaînes JSON pour conserver aussi les espaces finaux) :
+
+### enemy_hit — none
+
+Candidat : `None`.
+
+```json
+"Le B est le mieux des trois mais est trop long. Apres le truc c'est que je sais pas quand ce son pop réellement. normalement les sons d'attaques se font par armes."
+```
+
+### critical_hit — candidate
+
+Candidat : `critical_hit_a`.
+
+```json
+""
+```
+
+### player_hit — pending
+
+Candidat : `None`.
+
+```json
+"Aucun ne le fait. rechercher autre cose. le signal absrait pouvait etre une bonne idée mais pas fan de celui là. mais chercher aussi des plus classiques"
+```
+
+### dissolution — pending
+
+Candidat : `None`.
+
+```json
+"La C est la mieux mais je suis pas convaincu."
+```
+
+### xp_pickup — pending
+
+Candidat : `None`.
+
+```json
+"L'actuelle est plutot bien"
+```
+
+### level_up — pending
+
+Candidat : `None`.
+
+```json
+"L'actuelle est mieux que les trois mais j'aimerai quand meme trouver autre chose"
+```
+
+### perk_select — pending
+
+Candidat : `None`.
+
+```json
+"essayer de trouver une seule note avec un echo ptet. "
+```
+
+### chest_open — candidate
+
+Candidat : `chest_open_a`.
+
+```json
+"Le A est parfait pour le moment où on ouvre le coffre mais apres il faut une sorte de mélodie sur quelques secondes. (l'actuelle fait a peu pres le job)"
+```
+
+### dash_start — candidate
+
+Candidat : `dash_start_a`.
+
+```json
+""
+```
+
+### danger_warning — none
+
+Candidat : `None`.
+
+```json
+""
+```

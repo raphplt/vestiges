@@ -1,0 +1,23 @@
+{
+  "name": "7 Assorted Sound Effects (Menu, Level Up) | OpenGameArt.org",
+  "url": "https://opengameart.org/content/7-assorted-sound-effects-menu-level-up",
+  "download_url": "https://opengameart.org/sites/default/files/UISoundEffects.zip",
+  "verified_at": "2026-09-25",
+  "license": "CC0-1.0",
+  "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "evidence": "License(s): CC0",
+  "author": "Joth",
+  "license_links_observed": [
+    {
+      "label": "CC0",
+      "url": "http://creativecommons.org/publicdomain/zero/1.0/"
+    }
+  ],
+  "page_sha256": "7b37f1a6648dcb67257dd3c22593664f1fa0a72c3fd4efdc2125b2f744abb6a4",
+  "evidence_note": "Champ de licence et liens relevés sur la page officielle à la date indiquée. Le SHA256 porte sur la réponse HTML reçue ; page complète non redistribuée.",
+  "selected_files": [
+    "Item Pickup.mp3",
+    "Level Up.mp3",
+    "Ability Learn.mp3"
+  ]
+}

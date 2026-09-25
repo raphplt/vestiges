@@ -1,0 +1,25 @@
+{
+  "name": "80 CC0 RPG SFX | OpenGameArt.org",
+  "author": "rubberduck",
+  "url": "https://opengameart.org/content/80-cc0-rpg-sfx",
+  "download_url": "https://opengameart.org/sites/default/files/80-CC0-RPG-SFX_0.zip",
+  "verified_at": "2026-09-25",
+  "license": "CC0-1.0",
+  "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "evidence": "License(s): CC0",
+  "license_links_observed": [
+    {
+      "label": "CC0",
+      "url": "http://creativecommons.org/publicdomain/zero/1.0/"
+    }
+  ],
+  "page_sha256": "229d58af7707379a96ab8c3bec2d049ba4469d0efb0bdeb498abaf3b3cc13a90",
+  "evidence_note": "Champ de licence et liens relevés sur la page officielle à la date indiquée. Le SHA256 porte sur la réponse HTML reçue ; page complète non redistribuée.",
+  "selected_files": [
+    "blade_01.ogg",
+    "stones_01.ogg",
+    "spell_02.ogg",
+    "item_gem_02.ogg",
+    "lock_01.ogg"
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "name": "Magic Spell SFX",
+  "author": "JaggedStone",
+  "url": "https://opengameart.org/content/magic-spell-sfx",
+  "download_urls": [
+    "https://opengameart.org/sites/default/files/magical_1_0.ogg",
+    "https://opengameart.org/sites/default/files/magical_2.ogg",
+    "https://opengameart.org/sites/default/files/magical_3.ogg",
+    "https://opengameart.org/sites/default/files/magical_4.ogg",
+    "https://opengameart.org/sites/default/files/magical_5.ogg",
+    "https://opengameart.org/sites/default/files/magical_6_0.ogg",
+    "https://opengameart.org/sites/default/files/magical_7_0.ogg"
+  ],
+  "verified_at": "2026-09-25",
+  "license": "CC0-1.0",
+  "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "license_links_observed": [
+    {
+      "label": "CC0",
+      "url": "http://creativecommons.org/publicdomain/zero/1.0/"
+    }
+  ],
+  "page_sha256": "e9022597af487466a4a1534dac065be9e4e30591c3198d15f66d9b9feb644711",
+  "evidence": "Page officielle : champ License(s) CC0 ; liens ci-dessus relevés à la date indiquée.",
+  "selected_files": [
+    "magical_7_0.ogg",
+    "magical_4.ogg"
+  ]
+}

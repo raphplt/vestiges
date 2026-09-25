@@ -1,0 +1,23 @@
+{
+  "name": "37 hits/punches",
+  "author": "Independent.nu (soumis par qubodup)",
+  "url": "https://opengameart.org/content/37-hitspunches",
+  "download_url": "https://opengameart.org/sites/default/files/independent_nu_ljudbank-hits_and_punches.7z",
+  "verified_at": "2026-09-25",
+  "license": "CC0-1.0",
+  "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "evidence": "License(s): CC0",
+  "license_links_observed": [
+    {
+      "label": "CC0",
+      "url": "http://creativecommons.org/publicdomain/zero/1.0/"
+    }
+  ],
+  "page_sha256": "00a20acaf9ea52383c3c72169c84b0d3b86e58a5e3870f63a00c89846985d894",
+  "evidence_note": "Champ de licence et liens relevés sur la page officielle à la date indiquée. Le SHA256 porte sur la réponse HTML reçue ; page complète non redistribuée.",
+  "selected_files": [
+    "hits/hit01.mp3.flac",
+    "hits/hit17.mp3.flac",
+    "hits/hit09.mp3.flac"
+  ]
+}
