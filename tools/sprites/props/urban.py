@@ -12,7 +12,7 @@ import numpy as np
 from ..palette import make_material
 from ..render import Part
 from ..sdf import capsule, cylinder, ellipsoid, rounded_box, rotation_x, rotation_y, rotation_z, sphere
-from ._kit import AXIS_X_YAW, AXIS_Y_YAW, M, PropModel, Weathering
+from ._kit import AXIS_X_YAW, AXIS_Y_YAW, M, PropModel, Weathering, box_footprint
 
 ROT_WHEEL = rotation_z(np.pi / 2)
 # Convention des primitives orientées : local = (p − centre) @ rotation, donc un point local va en monde par rotation @ local.
@@ -81,7 +81,7 @@ def car(stem: str, paint: str, yaw: float, seed: int) -> PropModel:
         result.append(Part(lambda p: _union(*(ellipsoid(p, c, (0.24 * M, 0.06 * M, 0.22 * M)) for c in moss)), MOSS))
         return result
 
-    return PropModel(stem, parts, materials, yaw, canvas=(110, 96))
+    return PropModel(stem, parts, materials, yaw, canvas=(110, 96), footprint=box_footprint(0.9 * M, 2.12 * M))
 
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -116,7 +116,7 @@ def dumpster(stem: str, paint_hex: str, open_lid: bool, seed: int) -> PropModel:
             result.append(Part(lambda p: _union(*(ellipsoid(p, c, (0.32 * M, 0.26 * M, 0.3 * M)) for c in bags)), BAG))
         return result
 
-    return PropModel(stem, parts, materials, AXIS_Y_YAW, canvas=(80, 80))
+    return PropModel(stem, parts, materials, AXIS_Y_YAW, canvas=(80, 80), footprint=box_footprint(0.66 * M, 0.98 * M))
 
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -151,7 +151,7 @@ def traffic_light(stem: str, seed: int) -> PropModel:
                                     for x, z in ((0.15, 0.1), (-0.12, -0.08)))), MOSS),
         ]
 
-    return PropModel(stem, parts, materials, AXIS_X_YAW, canvas=(56, 100))
+    return PropModel(stem, parts, materials, AXIS_X_YAW, canvas=(56, 100), footprint=box_footprint(0.22 * M, 0.22 * M))
 
 
 def phone_booth(stem: str, seed: int) -> PropModel:
@@ -176,7 +176,7 @@ def phone_booth(stem: str, seed: int) -> PropModel:
             Part(lambda p: ellipsoid(p, (w.uniform(-0.2, 0.2) * M, 2.47 * M, 0.1 * M), (0.35 * M, 0.08 * M, 0.3 * M)), MOSS),
         ]
 
-    return PropModel(stem, parts, materials, AXIS_X_YAW, canvas=(56, 96))
+    return PropModel(stem, parts, materials, AXIS_X_YAW, canvas=(56, 96), footprint=box_footprint(0.55 * M, 0.55 * M))
 
 
 def mailbox(stem: str, seed: int) -> PropModel:
@@ -226,7 +226,7 @@ def chain_link_fence(stem: str, seed: int) -> PropModel:
             Part(_spots([(0, w.uniform(0.3, 1.2) * M, z * length) for z in (-1, 1)], 0.07 * M, 0.1 * M, w), RUST),
         ]
 
-    return PropModel(stem, parts, materials, AXIS_X_YAW, canvas=(80, 80))
+    return PropModel(stem, parts, materials, AXIS_X_YAW, canvas=(80, 80), footprint=box_footprint(0.1 * M, 1.45 * M))
 
 
 def torn_billboard(stem: str, seed: int) -> PropModel:
@@ -262,7 +262,7 @@ def torn_billboard(stem: str, seed: int) -> PropModel:
         ]
 
     # Affiches côté +X : vues de trois-quarts face à la caméra à −62°.
-    return PropModel(stem, parts, materials, -AXIS_X_YAW, canvas=(96, 100))
+    return PropModel(stem, parts, materials, -AXIS_X_YAW, canvas=(96, 100), footprint=box_footprint(0.12 * M, 1.0 * M))
 
 
 # ---------------------------------------------------------------------------------------------------------------------

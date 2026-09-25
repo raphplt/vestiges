@@ -14,7 +14,7 @@ import numpy as np
 from PIL import Image
 
 from ..palette import Material
-from ..render import MODEL_SCALE, Part, render
+from ..render import MODEL_SCALE, PITCH, Part, render
 
 # Un humain (~30 px à l'écran, ~48 unités à MODEL_SCALE) mesure 1,75 m : 1 m ≈ 27,5 unités.
 M = 27.5
@@ -38,16 +38,43 @@ class PropModel:
     ray_range: float = 220.0
     # Cadre de rendu avant rognage : le plus petit possible, le coût croît avec sa surface.
     canvas: tuple[int, int] = DEFAULT_CANVAS
+    # Emprise au sol (x, z) en unités du modèle, avant orientation ; None pour un décor sans emprise pleine.
+    footprint: Sequence[tuple[float, float]] | None = None
 
 
-def render_prop(model: PropModel) -> Image.Image:
+@dataclass(frozen=True)
+class RenderedProp:
+    image: Image.Image
+    # Point au sol du modèle dans le sprite rogné (pixels depuis le coin haut-gauche).
+    pivot: tuple[float, float]
+    # Emprise projetée à l'écran, en pixels relatifs au pivot (y vers le bas).
+    footprint: list[tuple[float, float]] | None
+
+
+def render_prop(model: PropModel) -> RenderedProp:
     width, height = model.canvas
     pivot = (width / 2.0, height * 0.72)
     image = render(model.parts(), model.materials, model.yaw, model.canvas, pivot, MODEL_SCALE, ray_range=model.ray_range)
-    return fit_frame(image, pivot)
+    cropped, origin = fit_frame(image, pivot)
+    footprint = None
+    if model.footprint is not None:
+        footprint = [project_ground(x, z, model.yaw) for x, z in model.footprint]
+    return RenderedProp(cropped, (pivot[0] - origin[0], pivot[1] - origin[1]), footprint)
 
 
-def fit_frame(image: Image.Image, pivot: tuple[float, float]) -> Image.Image:
+def box_footprint(half_x: float, half_z: float) -> list[tuple[float, float]]:
+    return [(-half_x, -half_z), (half_x, -half_z), (half_x, half_z), (-half_x, half_z)]
+
+
+def project_ground(x: float, z: float, yaw: float) -> tuple[float, float]:
+    """Point au sol du modèle → pixels écran relatifs au pivot, avec la rotation et la caméra de render()."""
+    to_model = np.array([[np.cos(-yaw), 0, np.sin(-yaw)], [0, 1, 0], [-np.sin(-yaw), 0, np.cos(-yaw)]])
+    world = to_model.T @ np.array([x, 0.0, z])
+    # Caméra : x écran = x monde ; profondeur z vers la caméra, compressée par l'inclinaison (2:1).
+    return (round(float(world[0] * MODEL_SCALE), 2), round(float(world[2] * np.sin(PITCH) * MODEL_SCALE), 2))
+
+
+def fit_frame(image: Image.Image, pivot: tuple[float, float]) -> tuple[Image.Image, tuple[int, int]]:
     alpha = np.asarray(image)[..., 3]
     ys, xs = np.nonzero(alpha)
     if len(xs) == 0:
@@ -56,7 +83,8 @@ def fit_frame(image: Image.Image, pivot: tuple[float, float]) -> Image.Image:
         raise ValueError("décor rogné par le cadre de rendu : agrandir le canvas du modèle")
     px = int(round(pivot[0]))
     half = max(px - int(xs.min()), int(xs.max()) + 1 - px)
-    return image.crop((px - half, int(ys.min()), px + half, int(ys.max()) + 1))
+    origin = (px - half, int(ys.min()))
+    return image.crop((origin[0], origin[1], px + half, int(ys.max()) + 1)), origin
 
 
 class Weathering:

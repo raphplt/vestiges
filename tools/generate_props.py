@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import argparse
 import importlib
+import json
 import random
 import sys
 import time
@@ -29,6 +30,7 @@ BIOMES = {
               ["assets/tiles/ruines/tile_ruines_sol_base.png", "assets/tiles/ruines/tile_ruines_sol_v2.png",
                "assets/tiles/ruines/tile_ruines_carrelage_base.png"]),
 }
+MANIFEST_NAME = "props_manifest.json"
 SCALE_REFERENCE = "assets/characters/vagabond/char_vagabond_SE_idle_01.png"
 
 
@@ -36,17 +38,33 @@ def generate(biome: str, only: set[str], output: Path | None, sheet: Path | None
     module_name, folder, tiles = BIOMES[biome]
     models = [m for m in importlib.import_module(module_name).catalog() if not only or m.stem in only]
     images: list[tuple[str, Image.Image]] = []
+    manifest_entries: dict[str, dict] = {}
     for model in models:
         started = time.time()
-        image = render_prop(model)
-        images.append((model.stem, image))
+        rendered = render_prop(model)
+        images.append((model.stem, rendered.image))
+        entry = {"pivot": [round(rendered.pivot[0], 2), round(rendered.pivot[1], 2)]}
+        if rendered.footprint is not None:
+            entry["footprint"] = [list(point) for point in rendered.footprint]
+        manifest_entries[model.stem] = entry
         if output is not None:
             output.mkdir(parents=True, exist_ok=True)
-            target = output / f"{model.stem}.png"
-            image.save(target)
-        print(f"[generate_props] {model.stem} {image.width}×{image.height} ({time.time() - started:.1f} s)", flush=True)
+            rendered.image.save(output / f"{model.stem}.png")
+        print(f"[generate_props] {model.stem} {rendered.image.width}×{rendered.image.height} ({time.time() - started:.1f} s)",
+              flush=True)
+    if output is not None:
+        write_manifest(output / MANIFEST_NAME, manifest_entries)
     if sheet is not None:
         write_sheet(images, tiles, sheet, scale)
+
+
+def write_manifest(path: Path, entries: dict[str, dict]) -> None:
+    """Pivot au sol et emprise projetée de chaque décor, lus par le jeu (PropManifest) pour collision et tri."""
+    existing = json.loads(path.read_text()) if path.exists() else {}
+    existing.update(entries)
+    lines = [f'  "{stem}": {json.dumps(entry, separators=(", ", ": "))}' for stem, entry in sorted(existing.items())]
+    path.write_text("{\n" + ",\n".join(lines) + "\n}\n")
+    print(f"[generate_props] manifeste : {path} ({len(existing)} décors)")
 
 
 def write_sheet(images: list[tuple[str, Image.Image]], tiles: list[str], path: Path, scale: int) -> None:

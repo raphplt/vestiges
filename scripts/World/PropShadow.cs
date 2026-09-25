@@ -14,16 +14,26 @@ public static class PropShadow
     private static readonly Color Rim = new(0.05f, 0.04f, 0.08f, 0.18f);
     private static readonly Dictionary<int, ImageTexture> Cache = new();
 
-    public static Sprite2D Create(PropFootprint footprint, float bottomY)
+    /// <summary>Ombre sous une emprise au sol (pixels relatifs au nœud), un peu plus large qu'elle.</summary>
+    public static Sprite2D Create(Vector2[] ground)
     {
-        int width = Mathf.Max(WidthStep * 2, Mathf.RoundToInt(footprint.BaseWidth * 1.15f / WidthStep) * WidthStep);
+        float minX = float.MaxValue, maxX = float.MinValue, maxY = float.MinValue, sumY = 0f;
+        foreach (Vector2 point in ground)
+        {
+            minX = Mathf.Min(minX, point.X);
+            maxX = Mathf.Max(maxX, point.X);
+            maxY = Mathf.Max(maxY, point.Y);
+            sumY += point.Y;
+        }
+        int width = Mathf.Max(WidthStep * 2, Mathf.RoundToInt((maxX - minX) * 1.15f / WidthStep) * WidthStep);
         ImageTexture texture = TextureFor(width);
+        // Centrée sur l'emprise, sans dépasser nettement devant le décor.
+        float centerY = Mathf.Min(sumY / ground.Length, maxY - texture.GetHeight() * 0.35f);
         return new Sprite2D
         {
             Texture = texture,
             TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
-            // Ellipse centrée sur la base, légèrement remontée sous le décor.
-            Position = new Vector2(Mathf.Round(footprint.BaseCenterX), Mathf.Round(bottomY - texture.GetHeight() * 0.35f)),
+            Position = new Vector2(Mathf.Round((minX + maxX) * 0.5f), Mathf.Round(centerY)),
             ZIndex = -1,
         };
     }

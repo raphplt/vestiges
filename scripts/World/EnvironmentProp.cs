@@ -20,8 +20,8 @@ public partial class EnvironmentProp : StaticBody2D
 	private static ShaderMaterial _swayMaterial;
 
 	/// <summary>
-	/// Initialise le prop. La position courante est le centre de la cellule ; le nœud
-	/// remonte au centre de l'emprise et le sprite redescend d'autant.
+	/// Initialise le prop. La position courante est le centre de la cellule. Avec un manifeste, le pivot au sol
+	/// du sprite s'y pose ; sinon le nœud remonte au centre de l'emprise estimée et le sprite redescend d'autant.
 	/// </summary>
 	public void Initialize(
 		Texture2D baseTexture,
@@ -33,12 +33,34 @@ public partial class EnvironmentProp : StaticBody2D
 		PropRules rules = PropRules.Current;
 		_footprint = PropFootprint.Of(baseTexture);
 		float scale = rules.FootprintScale * footprintScale;
-		float baseHeight = baseTexture.GetHeight();
+		Vector2 textureSize = baseTexture.GetSize();
 
-		// Pieds du sprite : bas de la texture 4 px sous le centre de la cellule (convention des sprites de décor).
-		float visibleBottomY = 4f + _footprint.VisibleBottom;
-		float halfHeight = _footprint.DiamondHalfHeight(scale);
-		float sortShift = visibleBottomY - halfHeight;
+		// Décor procédural : le pivot au sol du manifeste tombe sur le centre de la cellule et l'emprise est exacte.
+		// Décor dessiné : pieds du sprite 4 px sous le centre de la cellule, emprise déduite des pixels.
+		bool hasManifest = PropManifest.TryGet(baseTexture, out PropManifest.Entry manifest) && manifest.Footprint.Length >= 3;
+		float sortShift = 0f;
+		Vector2[] ground;
+		if (hasManifest)
+		{
+			ground = new Vector2[manifest.Footprint.Length];
+			for (int i = 0; i < ground.Length; i++)
+				ground[i] = manifest.Footprint[i] * scale;
+		}
+		else
+		{
+			float visibleBottomY = 4f + _footprint.VisibleBottom;
+			float halfHeight = _footprint.DiamondHalfHeight(scale);
+			sortShift = visibleBottomY - halfHeight;
+			float halfWidth = Mathf.Max(4f, _footprint.BaseWidth * scale * 0.5f);
+			float cx = _footprint.BaseCenterX;
+			ground = new[]
+			{
+				new Vector2(cx, -halfHeight),
+				new Vector2(cx + halfWidth, 0f),
+				new Vector2(cx, halfHeight),
+				new Vector2(cx - halfWidth, 0f),
+			};
+		}
 		Position += new Vector2(0f, sortShift);
 
 		if (_swayMaterial == null && ResourceLoader.Exists("res://assets/shaders/sway.gdshader"))
@@ -53,7 +75,9 @@ public partial class EnvironmentProp : StaticBody2D
 		{
 			Texture = baseTexture,
 			TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
-			Offset = new Vector2(0, -baseHeight * 0.5f + 4f - sortShift),
+			Offset = hasManifest
+				? textureSize * 0.5f - manifest.Pivot
+				: new Vector2(0, -textureSize.Y * 0.5f + 4f - sortShift),
 		};
 		AddChild(_baseSprite);
 
@@ -62,22 +86,7 @@ public partial class EnvironmentProp : StaticBody2D
 			&& _footprint.OpaquePixels >= rules.MinBlockingPixels;
 		if (blocks)
 		{
-			float halfWidth = Mathf.Max(4f, _footprint.BaseWidth * scale * 0.5f);
-			float cx = _footprint.BaseCenterX;
-			CollisionShape2D collider = new()
-			{
-				Shape = new ConvexPolygonShape2D
-				{
-					Points = new[]
-					{
-						new Vector2(cx, -halfHeight),
-						new Vector2(cx + halfWidth, 0f),
-						new Vector2(cx, halfHeight),
-						new Vector2(cx - halfWidth, 0f),
-					},
-				},
-			};
-			AddChild(collider);
+			AddChild(new CollisionShape2D { Shape = new ConvexPolygonShape2D { Points = ground } });
 			CollisionLayer = 4;
 		}
 		else
@@ -89,7 +98,7 @@ public partial class EnvironmentProp : StaticBody2D
 		if (!blocks && canopyTexture == null && _footprint.VisibleHeight <= rules.GroundDecalMaxHeight)
 			ZIndex = -1;
 		else if (_footprint.OpaquePixels > 0)
-			AddChild(PropShadow.Create(_footprint, visibleBottomY - sortShift));
+			AddChild(PropShadow.Create(ground));
 
 		if (canopyTexture != null)
 		{
