@@ -26,15 +26,19 @@ Consulter la Stratégie V2 avant de proposer une feature ou un changement archit
 
 | Action | Commande |
 |--------|----------|
-| Build C# | `dotnet build` |
+| Build C# | `dotnet build` (0 warning exigé) |
 | Smoke test (build + import + boot headless ~10 s) | `tools/smoke_test.sh [frames]` |
-| Lancer le jeu | `godot-mono --path .` (la version doit correspondre à `Vestiges.csproj`) |
-| Générer des sprites | `python3 tools/<script>.py` ou `python3 scripts/generate_*.py` (Pillow) |
+| Lancer le jeu | `godot-mono --path .` (la version doit correspondre à `Vestiges.csproj`) ; profil dev tout débloqué : `tools/run_dev.sh` |
+| Régressions | `tools/test_movement.sh`, `tools/test_enemy_abilities.sh`, `tools/test_dev_mode.sh` |
+| Captures en vraie run (1080p, bot invincible) | `tools/capture_run.sh <dossier> [secondes] [intervalle] [résolution] [seed]` ; modes via `CAPTURE_EXTRA_ARGS` : `--event <id>`, `--capture-map`, `--capture-props [--hide-collisions]`, `--capture-bestiary` |
+| Banc de combat dense (120 ennemis, FPS, nœuds créés/s) | `BENCH_REPEATS=1 BENCH_SECONDS=15 tools/benchmark_movement.sh <dossier neuf>` ; synthèse : `python3 tools/summarize_movement_benchmark.py <dossier>` |
+| Comparaison A/B de performance | `tools/bench_ab.sh <ref de base> <dossier neuf> [passes]` (refuse de mesurer si la machine est chargée) |
+| Sprites procéduraux | `python3 tools/generate_character.py <id>`, `tools/generate_enemy.py <id>`, `tools/generate_props.py <urban\|urban_buildings> [--sheet planche.png]` |
 
-`GODOT_BIN` surcharge le binaire Godot utilisé par `tools/smoke_test.sh`.
+`GODOT_BIN` surcharge le binaire Godot utilisé par les scripts.
 En headless, ces avertissements sont normaux : DLL Steam absente, « MixRate mismatch » (driver audio factice), fuites ObjectDB à la fermeture.
 
-Avant de déclarer une tâche terminée : `dotnet build` sans warning, et `tools/smoke_test.sh` vert si la tâche touche scènes, shaders, `project.godot` ou l'initialisation.
+Avant de déclarer une tâche terminée : `dotnet build` sans warning, et `tools/smoke_test.sh` vert si la tâche touche scènes, shaders, `project.godot` ou l'initialisation. Le smoke test ne boote que le Hub : un changement visible en run se vérifie par capture (`tools/capture_run.sh`), un changement de coût par le banc.
 
 ## Stack technique
 
@@ -54,23 +58,26 @@ Monter la version de Godot = changer **ensemble** le SDK dans `Vestiges.csproj`,
 
 ```
 vestiges/
-├── doc/                     # Design et technique (voir ordre d'autorité)
+├── doc/                     # Design et technique (voir ordre d'autorité) ; doc/plans/ = lots en cours et DECISIONS.md
 ├── scenes/                  # Scenes par feature (Hub.tscn = main scene, Main.tscn = run)
 ├── scripts/                 # C# par système (namespace Vestiges.<Dossier>)
 │   ├── Core/                # Player, GameManager, EventBus, GroupCache
-│   ├── Combat/              # Ennemis, armes, projectiles, VFX, sprite loaders
+│   ├── Combat/              # Ennemis, armes, projectiles, VFX, CombatPools, sprite loaders
 │   ├── Progression/         # Perks, quêtes, Essence, fragments, objets maudits
-│   ├── World/               # Génération procédurale, biomes, props, Effacement, Autels, POI, coffres, lore
+│   ├── World/               # Génération (biomes en mosaïque), décors (EnvironmentProp, placeurs, manifeste), Effacement, Autels, POI, coffres, lore
+│   ├── Events/              # Résurgences (CrisisManager), micro-événements (RunEventDirector), endgame
 │   ├── Spawn/               # SpawnManager, EnemyPool
-│   ├── Events/              # Résurgences (CrisisManager), endgame
 │   ├── Meta/                # Souvenirs, persistance cross-run
 │   ├── Score/               # Calcul du score
 │   ├── UI/                  # HUD, Hub, level-up, paramètres, debug
 │   ├── Infrastructure/      # Loaders JSON, sauvegarde, audio, Steam, analytics, locale, input
 │   └── generate_*.py        # Générateurs de sprites historiques (à migrer vers tools/)
-├── data/                    # JSON de gameplay (enemies, weapons, perks, biomes, scaling, quests, ...)
-├── assets/                  # Sprites, audio, fonts, shaders, traductions (par feature)
-├── tools/                   # Scripts outillage (smoke test, générateurs/pipeline sprites)
+├── data/                    # JSON de gameplay (enemies, weapons, perks, biomes, props, scaling, events, world, ...)
+├── assets/                  # Sprites, audio, fonts, shaders, traductions (par feature) ; props_manifest.json par dossier de décors
+├── tools/
+│   ├── sprites/             # Pipeline procédural commun (SDF → pixel art) : characters/, creatures/, props/
+│   ├── tests/               # Scènes de banc et de régression (RunObservation, MovementDenseBenchmark, ...)
+│   └── *.sh, *.py           # Smoke test, captures, bancs, générateurs
 └── project.godot
 ```
 
@@ -108,11 +115,22 @@ Niveau professionnel visé : code propre, optimisé, performant.
 
 Object Pooling (projectiles, créatures, particules) · State Machine (phases de run, comportements) · Observer/EventBus · Factory (entités depuis JSON) · Command (actions réversibles).
 
+Pools existants : `Spawn/EnemyPool` (créatures), `Combat/CombatPools` (projectiles ennemis, chiffres de dégâts, flashs ; `NodePool<T>` générique). Un effet fréquent passe par un pool, jamais `Instantiate` + `QueueFree` à chaque coup.
+
+### Rendu de la scène de run
+
+- `Main` est triée en Y ; les conteneurs d'entités (`PropContainer`, `EnemyContainer`, `PoiContainer`, `CombatPools`) aussi, pour que leurs enfants se trient avec le joueur.
+- Couches par `z_index` : fond du vide −100, sol −10, routes −9, overlay d'Effacement −5, décalques au sol et ombres −1, entités 0, brouillard 10, plaques d'ennemis 20, chiffres de dégâts 30, canopées 100.
+- Décors : collision et point de tri viennent de l'emprise au sol (manifeste `props_manifest.json` des décors procéduraux, sinon mesure des pixels) ; les petits décors ne bloquent pas (seuils dans `data/world/world_gen.json`).
+
 ## Règles de travail
 
 - **Ne jamais casser le core loop** : explorer → combattre → monter en puissance → fuir l'Effacement.
 - **Itérer vite** : placeholders OK, code sale non.
 - **Un système à la fois** : finir et valider un lot avant le suivant.
 - **Tester le fun tôt** : si ce n'est pas fun en placeholder, ça ne le sera pas en production.
-- **Checklist roadmap obligatoire** : cocher (`- [x]`) dans la roadmap V2 (`doc/VESTIGES-STRATEGIE-V2.md` §25) chaque item validé.
+- **Checklist roadmap obligatoire** : cocher (`- [x]`) dans la roadmap V2 (`doc/VESTIGES-STRATEGIE-V2.md` §25) chaque item implémenté et vérifié. Une validation de design ne coche rien.
+- **Lots** : proposer le découpage dans le plan concerné (`doc/plans/`) avant de coder, un lot à la fois ; consigner les retours de Raphaël dans `doc/plans/DECISIONS.md`.
+- **Mesurer avant d'affirmer** : avant/après chiffré (même seed, même banc) pour toute régression ou optimisation ; les mesures de FPS n'ont de sens que machine calme.
 - Docs et commentaires en français, identifiants de code en anglais.
+- Commits en français, style `type: sujet` (`feat`, `fix`, `perf`, `docs`, `chore`), sans trailer `Co-Authored-By`.

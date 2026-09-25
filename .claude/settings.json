@@ -10,13 +10,25 @@
       "Bash(godot-mono --headless *)",
       "Bash(python3 tools/*)",
       "Bash(python3 scripts/generate_*)",
-      "Bash(jq *)"
+      "Bash(jq *)",
+      "Bash(tools/capture_run.sh *)",
+      "Bash(tools/benchmark_movement.sh *)",
+      "Bash(tools/bench_ab.sh *)",
+      "Bash(tools/test_movement.sh)",
+      "Bash(tools/test_enemy_abilities.sh)",
+      "Bash(tools/test_dev_mode.sh)",
+      "Bash(uptime)",
+      "Bash(git status *)",
+      "Bash(git diff *)",
+      "Bash(git log *)",
+      "Bash(git show *)"
     ],
     "deny": [
       "Edit(.godot/**)",
       "Write(.godot/**)",
       "Edit(**/*.import)",
-      "Write(**/*.import)"
+      "Write(**/*.import)",
+      "Edit(**/__pycache__/**)"
     ]
   },
   "hooks": {
