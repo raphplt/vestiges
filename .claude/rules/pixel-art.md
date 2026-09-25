@@ -13,5 +13,6 @@ paths:
 - Points d'entrée : `tools/generate_character.py <id>` et `tools/generate_enemy.py <id>` (8 directions, nommage `char_<id>_<DIR>_<action>_<NN>.png`, `enemy_<id>_<DIR>_<action>_<NN>.png`, directions E/SE/S/SW/W/NW/N/NE) ; `tools/generate_props.py <biome> [--sheet]` (un fichier par décor + `props_manifest.json`).
 - Tout tirage aléatoire passe par une graine (`Weathering`) : régénérer doit donner des PNG identiques octet pour octet ; vérifier avec `git status` qu'un rendu non modifié ne change rien.
 - Toujours produire une planche (`--sheet`) sur le sol réel du biome avec un personnage de référence, la regarder, puis capturer en jeu (`/capture`) avant de valider.
+- Retouches Aseprite : `art/retouches/**/*.aseprite` + `.json` (cibles). Leurs PNG ne sont plus réécrits par les générateurs (`tools/sprites/retouch.py`) ; `--editable` crée une retouche, `tools/export_retouches.py` l'exporte. Ne jamais supprimer une retouche sans accord de Raphaël.
 - Ne jamais supprimer un `.import` existant (uid référencé). Les nouveaux PNG reçoivent leur `.import` via `tools/smoke_test.sh` : les committer ensemble.
 - Aperçus et planches : dans le scratchpad ou un dossier ignoré, jamais chargés par le jeu.

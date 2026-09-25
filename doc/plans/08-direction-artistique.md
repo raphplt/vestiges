@@ -71,6 +71,36 @@ Conséquences pour le pipeline :
 - Chaque sortie passe un contrôle automatique : dimensions, palette, pieds et pivot, frames manquantes. Elle est aussi rendue en contact sheet à taille réelle, pour relecture.
 - Le pilote (§5 lot A) sert de juge. Si la qualité procédurale plafonne, les poses maîtresses peuvent être retouchées à la main et le script en dérive les frames.
 
+### Retouches dans Aseprite — 25 septembre 2026
+
+**Demande de Raphaël :** pouvoir retoucher les sprites générés dans un logiciel de pixel art. **Choix :** Aseprite, avec un fichier à calques créé à la demande.
+
+**Parcours :**
+1. **Créer la retouche.** Ajouter `--editable` à la commande du générateur :
+   - décor : `python3 tools/generate_props.py forest --only prop_stump --editable` ;
+   - projectile : `python3 tools/generate_projectiles.py arrow --editable` ;
+   - personnage : `python3 tools/generate_character.py vagabond --editable` ;
+   - créature : `python3 tools/generate_enemy.py rodeur --editable`.
+
+   Le générateur écrit `art/retouches/<chemin du PNG>.aseprite` :
+   - trois calques : couleurs, lignes internes, contour ;
+   - la palette du sprite, suivie de la palette master de la charte ;
+   - pour les personnages et les créatures, un fichier par direction et par action, avec une frame par image du jeu.
+
+   Un compagnon `.json` liste les PNG produits.
+2. **Retoucher dans Aseprite**, puis enregistrer. Garder la taille du sprite : le point au sol, l'emprise des décors et l'ancrage des pieds en dépendent.
+3. **Exporter** : `python3 tools/export_retouches.py [filtre]`. Les calques visibles sont aplatis vers les PNG du jeu. L'export est écrit en Python et ne demande pas l'exécutable Aseprite.
+4. **Régénérer sans crainte.** Tant que la retouche existe, les générateurs ne réécrivent plus ses PNG et le signalent (« retouche conservée »). Supprimer le `.aseprite` et son `.json` rend le sprite au générateur.
+
+**Vérifications :**
+- Le rendu découpé en calques est identique octet pour octet à l'ancien rendu (forêt, ville, projectiles, Vagabond, Présage).
+- Aller-retour écriture puis lecture exact, et parcours complet testé sur un décor et un projectile.
+- Pas encore vérifié : l'ouverture d'un fichier dans Aseprite lui-même, qui n'est pas installé sur cette machine.
+
+**Au passage :**
+- `generate_enemy.py` supprimait tous les `.import` du dossier avant d'écrire, ce qui changeait les uid. Il réécrit maintenant en place, comme `generate_character.py`, et ne retire que les orphelins.
+- Les PNG commités du Présage ne correspondent plus à son modèle actuel : l'ancien pipeline les modifie lui aussi. Ils sont laissés en l'état ; les régénérer changera son apparence.
+
 La recommandation initiale ci-dessous reste utile pour ses contraintes (densité commune, scène étalon, contrôle), mais la méthode de fabrication est tranchée.
 
 ### Pilote livré — 23 septembre 2026

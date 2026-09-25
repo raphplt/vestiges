@@ -14,7 +14,7 @@ import numpy as np
 from PIL import Image
 
 from ..palette import Material
-from ..render import MODEL_SCALE, PITCH, Part, render
+from ..render import MODEL_SCALE, PITCH, Part, flatten, render_layers
 
 # Un humain (~30 px à l'écran, ~48 unités à MODEL_SCALE) mesure 1,75 m : 1 m ≈ 27,5 unités.
 M = 27.5
@@ -48,6 +48,8 @@ class PropModel:
 @dataclass(frozen=True)
 class RenderedProp:
     image: Image.Image
+    # Calques (couleurs, lignes internes, contour) au même cadrage que l'image, pour une retouche Aseprite.
+    layers: list[Image.Image]
     # Point au sol du modèle dans le sprite rogné (pixels depuis le coin haut-gauche).
     pivot: tuple[float, float]
     # Emprise projetée à l'écran, en pixels relatifs au pivot (y vers le bas).
@@ -57,13 +59,14 @@ class RenderedProp:
 def render_prop(model: PropModel) -> RenderedProp:
     width, height = model.canvas
     pivot = (width / 2.0, height * 0.72)
-    image = render(model.parts(), model.materials, model.yaw, model.canvas, pivot, MODEL_SCALE,
-                   supersample=model.supersample, ray_range=model.ray_range, bounds=model.bounds)
-    cropped, origin = fit_frame(image, pivot)
+    layers = render_layers(model.parts(), model.materials, model.yaw, model.canvas, pivot, MODEL_SCALE,
+                           supersample=model.supersample, ray_range=model.ray_range, bounds=model.bounds)
+    cropped, origin = fit_frame(flatten(layers), pivot)
+    box = (origin[0], origin[1], origin[0] + cropped.width, origin[1] + cropped.height)
     footprint = None
     if model.footprint is not None:
         footprint = [project_ground(x, z, model.yaw) for x, z in model.footprint]
-    return RenderedProp(cropped, (pivot[0] - origin[0], pivot[1] - origin[1]), footprint)
+    return RenderedProp(cropped, [layer.crop(box) for layer in layers], (pivot[0] - origin[0], pivot[1] - origin[1]), footprint)
 
 
 def box_footprint(half_x: float, half_z: float) -> list[tuple[float, float]]:

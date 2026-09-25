@@ -6,6 +6,7 @@ Usage :
     python3 tools/generate_props.py urban                        # écrit assets/props/urban_ruins/
     python3 tools/generate_props.py urban --sheet out.png        # planche de contrôle ×3 sur le sol du biome
     python3 tools/generate_props.py urban --only prop_dumpster --dry-run --sheet out.png
+    python3 tools/generate_props.py forest --only prop_stump --editable   # retouche Aseprite (voir tools/sprites/retouch.py)
 
 Seuls les fichiers du catalogue sont réécrits ; les autres décors du dossier (immeubles, lot P2) restent en place.
 Godot réimporte de lui-même un PNG modifié : les .import existants (et leurs uid) sont conservés.
@@ -25,6 +26,7 @@ from PIL import Image, ImageDraw
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from tools.sprites.props._kit import render_prop  # noqa: E402
+from tools.sprites.retouch import create_source, save_unless_locked  # noqa: E402
 
 URBAN_TILES = ["assets/tiles/ruines/tile_ruines_sol_base.png", "assets/tiles/ruines/tile_ruines_sol_v2.png",
                "assets/tiles/ruines/tile_ruines_carrelage_base.png"]
@@ -41,7 +43,7 @@ MANIFEST_NAME = "props_manifest.json"
 SCALE_REFERENCE = "assets/characters/vagabond/char_vagabond_SE_idle_01.png"
 
 
-def generate(biome: str, only: set[str], output: Path | None, sheet: Path | None, scale: int) -> None:
+def generate(biome: str, only: set[str], output: Path | None, sheet: Path | None, scale: int, editable: bool) -> None:
     module_name, folder, tiles = BIOMES[biome]
     models = [m for m in importlib.import_module(module_name).catalog() if not only or m.stem in only]
     images: list[tuple[str, Image.Image]] = []
@@ -53,10 +55,13 @@ def generate(biome: str, only: set[str], output: Path | None, sheet: Path | None
         entry = {"pivot": [round(rendered.pivot[0], 2), round(rendered.pivot[1], 2)]}
         if rendered.footprint is not None:
             entry["footprint"] = [list(point) for point in rendered.footprint]
-        manifest_entries[model.stem] = entry
         if output is not None:
-            output.mkdir(parents=True, exist_ok=True)
-            rendered.image.save(output / f"{model.stem}.png")
+            target = output / f"{model.stem}.png"
+            # Une retouche garde son cadrage : son entrée de manifeste reste celle du rendu d'origine.
+            if save_unless_locked(rendered.image, target, "generate_props"):
+                manifest_entries[model.stem] = entry
+            if editable:
+                create_source(target.with_suffix("").as_posix(), [rendered.layers], [target], "generate_props")
         print(f"[generate_props] {model.stem} {rendered.image.width}×{rendered.image.height} ({time.time() - started:.1f} s)",
               flush=True)
     if output is not None:
@@ -110,9 +115,11 @@ def main() -> None:
     parser.add_argument("--sheet", type=Path)
     parser.add_argument("--scale", type=int, default=3)
     parser.add_argument("--dry-run", action="store_true", help="n'écrit pas dans assets/")
+    parser.add_argument("--editable", action="store_true",
+                        help="crée la retouche Aseprite (art/retouches/) des décors générés ; à combiner avec --only")
     args = parser.parse_args()
     output = None if args.dry_run else Path(BIOMES[args.biome][1])
-    generate(args.biome, set(args.only), output, args.sheet, args.scale)
+    generate(args.biome, set(args.only), output, args.sheet, args.scale, args.editable)
 
 
 if __name__ == "__main__":

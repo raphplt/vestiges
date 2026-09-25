@@ -11,7 +11,8 @@ from typing import Any, Callable, Sequence
 from PIL import Image
 
 from .palette import Material
-from .render import CHARACTER_FRAME_PIVOT, CHARACTER_FRAME_SIZE, CHARACTER_MODEL_SCALE, MODEL_SCALE, Part, render
+from .render import (CHARACTER_FRAME_PIVOT, CHARACTER_FRAME_SIZE, CHARACTER_MODEL_SCALE, MODEL_SCALE, Part, render,
+                     render_layers)
 from .rig import build_skeleton
 
 
@@ -27,6 +28,9 @@ class SpriteModel:
 
     def render(self, state: Any, yaw: float) -> Image.Image:
         return render(self.parts(state), self.materials, yaw, self.frame_size, self.pivot, self.scale)
+
+    def render_layers(self, state: Any, yaw: float) -> list[Image.Image]:
+        return render_layers(self.parts(state), self.materials, yaw, self.frame_size, self.pivot, self.scale)
 
 
 def character(character_id: str) -> SpriteModel:

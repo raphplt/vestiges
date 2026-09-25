@@ -23,22 +23,25 @@ from PIL import Image, ImageDraw
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from tools.sprites.projectiles import MODELS, ProjectileModel  # noqa: E402
-from tools.sprites.render import render, screen_direction_to_yaw  # noqa: E402
+from tools.sprites.render import LAYER_NAMES, flatten, render_layers, screen_direction_to_yaw  # noqa: E402
+from tools.sprites.retouch import create_source, save_unless_locked  # noqa: E402
 
 OUTPUT = Path("assets/vfx/projectiles")
 
 
-def render_model(model: ProjectileModel) -> Image.Image:
+def render_model(model: ProjectileModel) -> list[Image.Image]:
+    """Planche du projectile, un calque par entrée de LAYER_NAMES."""
     width, height = model.frame_size
     pivot = (width / 2, height / 2)
-    sheet = Image.new("RGBA", (width * model.directions, height * model.frames), (0, 0, 0, 0))
+    sheets = [Image.new("RGBA", (width * model.directions, height * model.frames), (0, 0, 0, 0)) for _ in LAYER_NAMES]
     for direction in range(model.directions):
         angle = direction * math.tau / model.directions
         yaw = screen_direction_to_yaw(math.cos(angle), math.sin(angle)) if model.directions > 1 else 0.6
         for frame in range(model.frames):
-            image = render(model.parts(frame), model.materials, yaw, model.frame_size, pivot, ray_range=40.0)
-            sheet.alpha_composite(image, (direction * width, frame * height))
-    return sheet
+            layers = render_layers(model.parts(frame), model.materials, yaw, model.frame_size, pivot, ray_range=40.0)
+            for sheet, layer in zip(sheets, layers):
+                sheet.alpha_composite(layer, (direction * width, frame * height))
+    return sheets
 
 
 def write_contact_sheet(sheets: dict[str, Image.Image], path: Path, scale: int) -> None:
@@ -63,6 +66,7 @@ def main() -> None:
     parser.add_argument("--sheet", type=Path)
     parser.add_argument("--scale", type=int, default=4)
     parser.add_argument("--dry-run", action="store_true", help="n'écrit pas dans assets/")
+    parser.add_argument("--editable", action="store_true", help="crée la retouche Aseprite de la planche (art/retouches/)")
     args = parser.parse_args()
 
     ids = args.ids or list(MODELS)
@@ -71,7 +75,8 @@ def main() -> None:
     sheets = {}
     for projectile_id in ids:
         model = MODELS[projectile_id]()
-        sheet = render_model(model)
+        layers = render_model(model)
+        sheet = flatten(layers)
         sheets[projectile_id] = sheet
         manifest[projectile_id] = {
             "frame": list(model.frame_size),
@@ -80,8 +85,10 @@ def main() -> None:
             "fps": model.fps,
         }
         if not args.dry_run:
-            OUTPUT.mkdir(parents=True, exist_ok=True)
-            sheet.save(OUTPUT / f"proj_{projectile_id}.png")
+            target = OUTPUT / f"proj_{projectile_id}.png"
+            save_unless_locked(sheet, target, "generate_projectiles")
+            if args.editable:
+                create_source(target.with_suffix("").as_posix(), [layers], [target], "generate_projectiles")
         print(f"[generate_projectiles] {projectile_id} : {model.directions} directions × {model.frames} frames", flush=True)
 
     if not args.dry_run:

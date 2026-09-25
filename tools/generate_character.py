@@ -20,7 +20,8 @@ from PIL import Image, ImageDraw
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from tools.sprites.models import character  # noqa: E402
-from tools.sprites.render import screen_direction_to_yaw  # noqa: E402
+from tools.sprites.render import flatten, screen_direction_to_yaw  # noqa: E402
+from tools.sprites.retouch import create_source, is_locked, save_unless_locked  # noqa: E402
 
 DIRECTIONS = {
     "E": (1, 0), "SE": (1, 1), "S": (0, 1), "SW": (-1, 1),
@@ -29,21 +30,25 @@ DIRECTIONS = {
 ACTIONS = ("idle", "walk", "dash", "hurt", "death")
 
 
-def generate(character_id: str, output: Path | None, sheet: Path | None, scale: int) -> None:
+def generate(character_id: str, output: Path | None, sheet: Path | None, scale: int, editable: bool = False) -> None:
     model = character(character_id)
     written: set[Path] = set()
     frames: dict[tuple[str, str], list[Image.Image]] = {}
     for direction, (dx, dy) in DIRECTIONS.items():
         yaw = screen_direction_to_yaw(dx, dy)
         for action in ACTIONS:
-            images = [model.render(pose, yaw) for pose in model.animations[action]]
+            layered = [model.render_layers(pose, yaw) for pose in model.animations[action]]
+            images = [flatten(layers) for layers in layered]
             frames[(direction, action)] = images
             if output is not None:
-                output.mkdir(parents=True, exist_ok=True)
-                for index, image in enumerate(images, start=1):
-                    path = output / f"char_{character_id}_{direction}_{action}_{index:02d}.png"
-                    image.save(path)
+                paths = [output / f"char_{character_id}_{direction}_{action}_{index:02d}.png"
+                         for index in range(1, len(images) + 1)]
+                for image, path in zip(images, paths):
+                    save_unless_locked(image, path, "generate_character")
                     written.add(path)
+                if editable:
+                    create_source(f"{output.as_posix()}/char_{character_id}_{direction}_{action}", layered, paths,
+                                  "generate_character")
         print(f"[generate_character] {character_id} {direction} : ok", flush=True)
 
     if output is not None:
@@ -56,7 +61,7 @@ def _remove_orphans(folder: Path, written: set[Path]) -> None:
     """Retire les PNG d'un ancien nombre de frames : le chargeur les jouerait à la suite des nouvelles.
     Les fichiers réécrits gardent leur .import, donc leur uid."""
     for path in folder.glob("*.png"):
-        if path not in written:
+        if path not in written and not is_locked(path):
             path.unlink()
             path.with_name(path.name + ".import").unlink(missing_ok=True)
             print(f"[generate_character] orphelin retiré : {path.name}")
@@ -97,9 +102,11 @@ def main() -> None:
     parser.add_argument("--sheet", type=Path)
     parser.add_argument("--scale", type=int, default=4)
     parser.add_argument("--dry-run", action="store_true", help="n'écrit pas dans assets/")
+    parser.add_argument("--editable", action="store_true",
+                        help="crée les retouches Aseprite (une par direction et action) dans art/retouches/")
     args = parser.parse_args()
     output = None if args.dry_run else Path("assets/characters") / args.character
-    generate(args.character, output, args.sheet, args.scale)
+    generate(args.character, output, args.sheet, args.scale, args.editable)
 
 
 if __name__ == "__main__":

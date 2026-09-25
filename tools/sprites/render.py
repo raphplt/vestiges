@@ -73,10 +73,29 @@ def _normals(parts: Sequence[Part], points: np.ndarray) -> np.ndarray:
     return normal / np.maximum(np.linalg.norm(normal, axis=1, keepdims=True), 1e-9)
 
 
+LAYER_NAMES = ("couleurs", "lignes internes", "contour")
+
+
 def render(parts: Sequence[Part], materials: Sequence[Material], yaw: float,
            size: tuple[int, int], pivot: tuple[float, float],
            scale: float = MODEL_SCALE, supersample: int = 4, ray_range: float = RAY_RANGE,
            bounds: tuple[Sequence[float], Sequence[float]] | None = None) -> Image.Image:
+    return flatten(render_layers(parts, materials, yaw, size, pivot, scale, supersample, ray_range, bounds))
+
+
+def flatten(layers: Sequence[Image.Image]) -> Image.Image:
+    """Superpose les calques de LAYER_NAMES : chaque pixel opaque d'un calque recouvre ceux du dessous."""
+    result = layers[0].copy()
+    for layer in layers[1:]:
+        result.alpha_composite(layer)
+    return result
+
+
+def render_layers(parts: Sequence[Part], materials: Sequence[Material], yaw: float,
+                  size: tuple[int, int], pivot: tuple[float, float],
+                  scale: float = MODEL_SCALE, supersample: int = 4, ray_range: float = RAY_RANGE,
+                  bounds: tuple[Sequence[float], Sequence[float]] | None = None) -> list[Image.Image]:
+    """Rendu en calques séparés (LAYER_NAMES), pour une retouche dans Aseprite sans perdre la structure."""
     width, height = size
     ss = supersample
     # Rayons exprimés dans l'espace du modèle : la lumière reste fixe à l'écran quelle que soit l'orientation.
@@ -179,23 +198,25 @@ def _clean_orphans(shade: np.ndarray, material: np.ndarray, covered: np.ndarray)
 
 
 def _compose(materials: Sequence[Material], covered: np.ndarray, material: np.ndarray,
-             shade: np.ndarray, depth: np.ndarray) -> Image.Image:
+             shade: np.ndarray, depth: np.ndarray) -> list[Image.Image]:
     height, width = covered.shape
-    rgba = np.zeros((height, width, 4), dtype=np.uint8)
+    fill = np.zeros((height, width, 4), dtype=np.uint8)
+    inner = np.zeros_like(fill)
     for y, x in zip(*np.nonzero(covered)):
         mat = materials[material[y, x]]
-        rgba[y, x, :3] = mat.ramp[shade[y, x]]
-        rgba[y, x, 3] = 255
+        fill[y, x, :3] = mat.ramp[shade[y, x]]
+        fill[y, x, 3] = 255
         if mat.emissive:
             continue
         # Ligne interne : ce pixel est nettement derrière un voisin (bras devant le torse, sac derrière).
         for ny, nx in ((y - 1, x), (y + 1, x), (y, x - 1), (y, x + 1)):
             if 0 <= ny < height and 0 <= nx < width and covered[ny, nx] and depth[y, x] - depth[ny, nx] > DEPTH_JUMP:
-                rgba[y, x, :3] = mat.inner_line
+                inner[y, x, :3] = mat.inner_line
+                inner[y, x, 3] = 255
                 break
 
     # Contour sel-out extérieur : teinté du matériau adjacent, plus clair côté lumière (haut-gauche).
-    outline = np.zeros_like(rgba)
+    outline = np.zeros_like(fill)
     for y in range(height):
         for x in range(width):
             if covered[y, x]:
@@ -206,5 +227,4 @@ def _compose(materials: Sequence[Material], covered: np.ndarray, material: np.nd
                     outline[y, x, :3] = mat.ramp[0] if lit_side and shade[ny, nx] >= 2 and not mat.emissive else mat.outline
                     outline[y, x, 3] = 255
                     break
-    rgba = np.where(outline[..., 3:4] > 0, outline, rgba)
-    return Image.fromarray(rgba, "RGBA")
+    return [Image.fromarray(layer, "RGBA") for layer in (fill, inner, outline)]
