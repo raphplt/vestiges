@@ -188,17 +188,9 @@ public partial class RunObservation
     /// --capture-props : pour chaque biome, place le joueur au cœur de la zone la plus chargée en décors
     /// et capture l'écran, formes de collision visibles (le drapeau de debug est posé avant le chargement).
     /// </summary>
-    private async Task CapturePropHotspots()
+    /// <summary>Par biome : le point le plus chargé en décors (le décor qui a le plus de voisins à moins de 240 px).</summary>
+    private List<(string Biome, Vector2 Point, int Neighbours, int Total)> FindPropHotspots()
     {
-        _world.GetNode("SpawnManager").ProcessMode = ProcessModeEnum.Disabled;
-        foreach (Node node in GetTree().GetNodesInGroup("enemies"))
-            if (node is Vestiges.Combat.Enemy existing && existing.IsActive)
-                _world.GetNode<Vestiges.Spawn.EnemyPool>("EnemyPool").Return(existing);
-        Node2D fog = _world.GetNodeOrNull<Node2D>("FogOfWar");
-        if (fog != null)
-            fog.Visible = false;
-        await Frames(90);
-
         Dictionary<string, List<Vector2>> propsByBiome = new();
         foreach (Node child in _world.GetNode("PropContainer").GetChildren())
         {
@@ -210,12 +202,12 @@ public partial class RunObservation
             list.Add(prop.GlobalPosition);
         }
 
-        _player.AIInputOverride = Vector2.Zero;
+        List<(string, Vector2, int, int)> result = new();
         foreach ((string biome, List<Vector2> positions) in propsByBiome)
         {
-            // Point le plus dense : le décor qui a le plus de voisins à moins de 240 px (échantillon borné).
             Vector2 best = positions[0];
             int bestCount = -1;
+            // Échantillon borné : le décompte des voisins est quadratique.
             int step = Mathf.Max(1, positions.Count / 400);
             for (int i = 0; i < positions.Count; i += step)
             {
@@ -229,12 +221,31 @@ public partial class RunObservation
                     best = positions[i];
                 }
             }
+            result.Add((biome, best, bestCount, positions.Count));
+        }
+        return result;
+    }
+
+    private async Task CapturePropHotspots()
+    {
+        _world.GetNode("SpawnManager").ProcessMode = ProcessModeEnum.Disabled;
+        foreach (Node node in GetTree().GetNodesInGroup("enemies"))
+            if (node is Vestiges.Combat.Enemy existing && existing.IsActive)
+                _world.GetNode<Vestiges.Spawn.EnemyPool>("EnemyPool").Return(existing);
+        Node2D fog = _world.GetNodeOrNull<Node2D>("FogOfWar");
+        if (fog != null)
+            fog.Visible = false;
+        await Frames(90);
+
+        _player.AIInputOverride = Vector2.Zero;
+        foreach ((string biome, Vector2 best, int bestCount, int total) in FindPropHotspots())
+        {
             _player.GlobalPosition = best + new Vector2(0f, 24f);
             _camera.ResetSmoothing();
             await Frames(20);
             using Image image = GetViewport().GetTexture().GetImage();
             image.SavePng($"{_output}/props-{biome}.png");
-            GD.Print($"[RunObservation] props {biome}: {positions.Count} décors, {bestCount} autour du point capturé {best}");
+            GD.Print($"[RunObservation] props {biome}: {total} décors, {bestCount} autour du point capturé {best}");
 
             // Joueur juste derrière le décor le plus haut de la zone : tri en profondeur et transparence.
             EnvironmentProp tallest = null;

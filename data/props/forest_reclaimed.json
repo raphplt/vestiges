@@ -1,37 +1,109 @@
 {
     "biome_id": "forest_reclaimed",
-    "density": 0.22,
+    "density": 0.2,
     "props": [
         {
             "id": "tree_large",
-            "name": "Grand arbre",
-            "weight": 2.5,
-            "terrain": ["forest", "grass"],
+            "name": "Grand chêne",
+            "weight": 2.2,
+            "terrain": [
+                "forest",
+                "grass"
+            ],
             "sprite_base": "assets/props/forest/prop_tree_large_base.png",
             "sprite_canopy": "assets/props/forest/prop_tree_large_canopy.png",
-            "canopy_offset_y": -48,
+            "blocking": true,
+            "min_distance": 2,
+            "variants": 1
+        },
+        {
+            "id": "tree_large_v2",
+            "name": "Grand chêne sombre",
+            "weight": 2.0,
+            "terrain": [
+                "forest",
+                "grass"
+            ],
+            "sprite_base": "assets/props/forest/prop_tree_large_v2_base.png",
+            "sprite_canopy": "assets/props/forest/prop_tree_large_v2_canopy.png",
             "blocking": true,
             "min_distance": 2,
             "variants": 1
         },
         {
             "id": "tree_medium",
-            "name": "Arbre moyen",
-            "weight": 2.0,
-            "terrain": ["forest", "grass"],
+            "name": "Jeune arbre",
+            "weight": 1.8,
+            "terrain": [
+                "forest",
+                "grass"
+            ],
             "sprite_base": "assets/props/forest/prop_tree_medium_base.png",
             "sprite_canopy": "assets/props/forest/prop_tree_medium_canopy.png",
-            "canopy_offset_y": -36,
             "blocking": true,
             "min_distance": 2,
             "variants": 1
         },
         {
+            "id": "tree_birch",
+            "name": "Bouleau",
+            "weight": 1.2,
+            "terrain": [
+                "forest",
+                "grass"
+            ],
+            "sprite_base": "assets/props/forest/prop_tree_birch_base.png",
+            "sprite_canopy": "assets/props/forest/prop_tree_birch_canopy.png",
+            "blocking": true,
+            "min_distance": 2,
+            "variants": 1
+        },
+        {
+            "id": "tree_strangled",
+            "name": "Arbre étranglé par le lierre",
+            "weight": 0.3,
+            "terrain": [
+                "forest"
+            ],
+            "sprite_base": "assets/props/forest/prop_tree_strangled.png",
+            "blocking": true,
+            "min_distance": 3,
+            "variants": 1
+        },
+        {
             "id": "bush",
             "name": "Buisson",
-            "weight": 1.5,
-            "terrain": ["forest", "grass"],
+            "weight": 0.9,
+            "terrain": [
+                "forest",
+                "grass"
+            ],
             "sprite_base": "assets/props/forest/prop_bush.png",
+            "blocking": false,
+            "min_distance": 1,
+            "variants": 1
+        },
+        {
+            "id": "bush_v2",
+            "name": "Buisson fleuri",
+            "weight": 0.4,
+            "terrain": [
+                "forest",
+                "grass"
+            ],
+            "sprite_base": "assets/props/forest/prop_bush_v2.png",
+            "blocking": false,
+            "min_distance": 1,
+            "variants": 1
+        },
+        {
+            "id": "fern",
+            "name": "Fougère",
+            "weight": 0.9,
+            "terrain": [
+                "forest"
+            ],
+            "sprite_base": "assets/props/forest/prop_fern.png",
             "blocking": false,
             "min_distance": 1,
             "variants": 1
@@ -39,8 +111,11 @@
         {
             "id": "stump",
             "name": "Souche",
-            "weight": 0.6,
-            "terrain": ["forest", "grass"],
+            "weight": 0.5,
+            "terrain": [
+                "forest",
+                "grass"
+            ],
             "sprite_base": "assets/props/forest/prop_stump.png",
             "blocking": true,
             "min_distance": 2,
@@ -49,18 +124,36 @@
         {
             "id": "rock_mossy",
             "name": "Rocher moussu",
-            "weight": 0.8,
-            "terrain": ["forest", "grass"],
+            "weight": 0.6,
+            "terrain": [
+                "forest",
+                "grass"
+            ],
             "sprite_base": "assets/props/forest/prop_rock_mossy.png",
             "blocking": true,
             "min_distance": 2,
             "variants": 1
         },
         {
+            "id": "rock_mossy_v2",
+            "name": "Gros rocher moussu",
+            "weight": 0.35,
+            "terrain": [
+                "forest",
+                "grass"
+            ],
+            "sprite_base": "assets/props/forest/prop_rock_mossy_v2.png",
+            "blocking": true,
+            "min_distance": 3,
+            "variants": 1
+        },
+        {
             "id": "fallen_log",
             "name": "Tronc tombé",
-            "weight": 0.4,
-            "terrain": ["forest"],
+            "weight": 0.35,
+            "terrain": [
+                "forest"
+            ],
             "sprite_base": "assets/props/forest/prop_fallen_log.png",
             "blocking": true,
             "min_distance": 3,
@@ -69,8 +162,11 @@
         {
             "id": "car_overgrown",
             "name": "Voiture envahie",
-            "weight": 0.3,
-            "terrain": ["concrete", "grass"],
+            "weight": 0.25,
+            "terrain": [
+                "concrete",
+                "grass"
+            ],
             "sprite_base": "assets/props/forest/prop_car_overgrown.png",
             "blocking": true,
             "min_distance": 5,
@@ -78,9 +174,11 @@
         },
         {
             "id": "lamppost_broken",
-            "name": "Lampadaire cassé",
-            "weight": 0.25,
-            "terrain": ["concrete"],
+            "name": "Lampadaire sous le lierre",
+            "weight": 0.2,
+            "terrain": [
+                "concrete"
+            ],
             "sprite_base": "assets/props/forest/prop_lamppost.png",
             "blocking": true,
             "min_distance": 4,
@@ -89,8 +187,11 @@
         {
             "id": "sign_rusty",
             "name": "Panneau rouillé",
-            "weight": 0.3,
-            "terrain": ["concrete", "grass"],
+            "weight": 0.25,
+            "terrain": [
+                "concrete",
+                "grass"
+            ],
             "sprite_base": "assets/props/forest/prop_sign_rusty.png",
             "blocking": false,
             "min_distance": 4,
@@ -98,9 +199,11 @@
         },
         {
             "id": "ruin_wall",
-            "name": "Mur ruiné",
+            "name": "Mur de briques envahi",
             "weight": 0.2,
-            "terrain": ["concrete"],
+            "terrain": [
+                "concrete"
+            ],
             "sprite_base": "assets/props/forest/prop_ruin_wall.png",
             "blocking": true,
             "min_distance": 5,
@@ -109,8 +212,10 @@
         {
             "id": "mushroom_cluster",
             "name": "Champignons",
-            "weight": 0.6,
-            "terrain": ["forest"],
+            "weight": 0.5,
+            "terrain": [
+                "forest"
+            ],
             "sprite_base": "assets/props/forest/prop_mushrooms.png",
             "blocking": false,
             "min_distance": 2,
@@ -120,8 +225,23 @@
             "id": "flowers",
             "name": "Fleurs sauvages",
             "weight": 0.5,
-            "terrain": ["grass"],
+            "terrain": [
+                "grass"
+            ],
             "sprite_base": "assets/props/forest/prop_flowers.png",
+            "blocking": false,
+            "min_distance": 2,
+            "variants": 1
+        },
+        {
+            "id": "flowers_v2",
+            "name": "Fleurs violettes",
+            "weight": 0.4,
+            "terrain": [
+                "grass",
+                "forest"
+            ],
+            "sprite_base": "assets/props/forest/prop_flowers_v2.png",
             "blocking": false,
             "min_distance": 2,
             "variants": 1

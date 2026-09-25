@@ -19,6 +19,7 @@ namespace Vestiges.Tests;
 /// --capture-abilities [--enemies a,b] : captures des attaques d'ennemis choisis (Présage et Charognard par défaut).
 /// --capture-map : répartition des biomes autour du spawn (plusieurs seeds) et vues dézoomées.
 /// --capture-props : zone la plus chargée en décors de chaque biome, collisions affichées (sauf --hide-collisions).
+/// --measure-props [--measure-seconds 8] : coût de rendu des décors par biome (RunObservation.PropCost.cs).
 /// --capture-weapons [--weapons a,b] : galerie des attaques du joueur (RunObservation.Weapons.cs).
 /// --capture-bestiary : gros plans des créatures du pilote de sprites procéduraux, autour du joueur immobile.
 /// --density : mesure de densité en spawn naturel (ennemis visibles, temps sans ennemi, débits, niveaux).
@@ -60,6 +61,8 @@ public partial class RunObservation : Node
                 await CapturePropHotspots();
             else if (Array.IndexOf(args, "--capture-abilities") >= 0)
                 await CaptureAbilities();
+            else if (Array.IndexOf(args, "--measure-props") >= 0)
+                await MeasurePropCost(double.Parse(Argument(args, "--measure-seconds", "8"), CultureInfo.InvariantCulture));
             else if (Array.IndexOf(args, "--capture-weapons") >= 0)
                 await CaptureWeapons(Argument(args, "--weapons", null));
             else if (Array.IndexOf(args, "--capture-bestiary") >= 0)

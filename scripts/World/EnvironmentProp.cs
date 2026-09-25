@@ -102,11 +102,14 @@ public partial class EnvironmentProp : StaticBody2D
 
 		if (canopyTexture != null)
 		{
+			// Canopée procédurale : rendue avec le même point au sol que le tronc, elle s'aligne par son pivot.
+			bool canopyHasManifest = PropManifest.TryGet(canopyTexture, out PropManifest.Entry canopyManifest);
 			_canopySprite = new Sprite2D
 			{
 				Texture = canopyTexture,
 				TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
-				Position = new Vector2(0, canopyOffsetY - sortShift),
+				Offset = canopyHasManifest ? canopyTexture.GetSize() * 0.5f - canopyManifest.Pivot : Vector2.Zero,
+				Position = canopyHasManifest ? Vector2.Zero : new Vector2(0, canopyOffsetY - sortShift),
 				ZIndex = 100,
 				ZAsRelative = false,
 				SelfModulate = new Color(1f, 1f, 1f, 0.85f),

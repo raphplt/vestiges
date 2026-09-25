@@ -171,7 +171,7 @@ Trois créatures du début de run passent dans le pipeline, à la même densité
 | **P0 — Gabarit décors** | Module `tools/sprites/props/`, manifeste (dimensions, pieds, emprise, variantes), planche de contact à taille réelle sur les sols des cinq biomes | Planche et une capture en jeu |
 | **P1 — Mobilier urbain** | Voitures (2 ou 3 carrosseries), bennes, feux, cabine, lampadaire, barrières, boîte aux lettres, panneaux, débris et poutrelles | Captures en vraie run, ville dense ; ton retour |
 | **P2 — Immeubles urbains** | Modules d'immeubles (façade, angle, tour, effondré, église) à l'échelle du personnage, intérieurs visibles par les brèches | Idem, collisions et profondeur (plan 10 D1/D2) |
-| **P3 à P6** | Forêt, champs, marais, carrière, dans cet ordre sauf avis contraire | Un biome validé avant le suivant |
+| **P3 à P6** | Forêt (livrée), champs, marais, carrière, dans cet ordre sauf avis contraire | Un biome validé avant le suivant |
 
 Les tiles restent en l'état (jugées acceptables) ; un ajustement de contraste reste possible si les nouveaux décors l'exigent.
 
@@ -195,6 +195,34 @@ Les tiles restent en l'état (jugées acceptables) ; un ajustement de contraste 
 - **Placement** (`UrbanBuildingPlacer`, extrait d'`UrbanPropPlacer`) : une seule rangée de modules, le long de la rue sud de chaque îlot. Elle s'élève au-dessus de la cour, jamais d'une rue ; une seconde rangée au nord recouvrait la première. Ruelles d'une cellule (22 %). Le style suit l'intégrité de l'îlot : ruines, immeubles abîmés, commerces 30 %, immeubles 55 %, maisons 15 %. Les modules disponibles sont lus dans le manifeste. L'ancienne logique de façades et d'angles et les huit sprites d'immeubles hérités (dont l'église et l'antenne) sont retirés.
 - Vérifié : build sans avertissement, smoke test, `MovementRegression`, captures en vraie run (seed 1002). Combat dense : ≈ 110 FPS, p99 ≈ 13,5 ms, en 720p comme en 1080p (≈ 120 FPS avant les immeubles ; la zone du banc n'est pas forcément urbaine).
 - Points ouverts : église et antenne à refaire dans le pipeline comme repères rares ; brèches des ruines encore anguleuses ; façades nord et rues verticales moins soignées que les façades sud.
+
+**P3 Forêt livré — 25 septembre 2026 :**
+
+*Catalogue :* `tools/sprites/props/forest.py` (`tools/generate_props.py forest`), 23 fichiers aux couleurs de la palette forêt (charte §3) :
+- Arbres rendus en deux fichiers alignés sur le même point au sol : le tronc, trié avec les entités, et la canopée, sur la couche des canopées et transparente quand le joueur passe derrière. Il y a deux chênes, un jeune arbre et un bouleau.
+  - Couronnes de 14 à 24 touffes sur trois étages de vert (dessous à l'ombre, cœur, dessus éclairé), avec une surface bosselée qui casse l'effet boule.
+  - Canopée d'un grand chêne : environ 96×76 px ; tronc : environ 100 px.
+- Arbre mort étranglé par le lierre, sans canopée.
+- Sous-bois à l'échelle du personnage : buissons (dont un fleuri), fougère basse, fleurs jaunes et violettes, champignons, souche, deux rochers moussus, tronc couché.
+- Vestiges envahis : mur de briques sous le lierre, lampadaire, panneau rouillé, voiture de la ville percée par un jeune arbre.
+
+*Jeu :*
+- `EnvironmentProp` aligne une canopée procédurale par son pivot du manifeste ; `canopy_offset_y` ne sert plus qu'aux anciens décors.
+- `data/props/forest_reclaimed.json` : 19 entrées, arbres majoritaires, densité 0,20. Seed 1002 : 1 923 décors en forêt, contre 763 avant.
+- La Carrière réutilise le rocher, la souche et le buisson : elle passe à la nouvelle échelle sans autre changement.
+
+*Mesure :*
+- Nouveau mode `RunObservation --measure-props` : FPS et p99 autour du point le plus chargé de chaque biome, sans ennemis.
+- Le banc de combat dense se déroule dans les champs et la carrière, donc ne dit rien de la forêt.
+- Résultats (1080p, vsync coupée, deux passes par version) :
+  - En forêt, les trois versions tiennent dans la même bande : sans le lot 131–147 FPS, avec le lot à densité 0,28 124–139 FPS, à 0,12 126–141 FPS.
+  - Un premier A/B semblait montrer 10 % de perte dans tous les biomes. La même perte apparaissait sans le lot : c'était une dérive de la charge machine (1,7 → 4,4, autre processus actif).
+- Aucune régression n'est donc démontrée. Reste à confirmer machine calme.
+
+*Points ouverts pour Raphaël :*
+- Densité de la forêt (0,20) et part des arbres.
+- Lisibilité du Traqueur, vert sur vert, déjà notée.
+- Les P4–P6 (champs, marais, carrière) suivront le même gabarit.
 
 ### Effets d'attaque — chantier du 25 septembre 2026
 
