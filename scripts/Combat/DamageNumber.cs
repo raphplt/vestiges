@@ -17,6 +17,8 @@ public partial class DamageNumber : Node2D
 
 	public override void _Ready()
 	{
+		// Toujours lisible au-dessus des entités triées en Y et du brouillard.
+		ZIndex = 30;
 		Label label = GetNode<Label>("Label");
 		label.Text = ((int)_damage).ToString();
 

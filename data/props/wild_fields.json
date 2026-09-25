@@ -10,8 +10,7 @@
             "sprite_base": "assets/props/wild_fields/prop_solitary_tree_base.png",
             "sprite_canopy": "assets/props/wild_fields/prop_solitary_tree_canopy.png",
             "canopy_offset_y": -22,
-            "collision_radius": 5,
-            "collision_offset_y": 0,
+            "blocking": true,
             "min_distance": 7,
             "variants": 1
         },
@@ -21,8 +20,7 @@
             "weight": 3.2,
             "terrain": ["grass"],
             "sprite_base": "assets/props/wild_fields/prop_tall_grass.png",
-            "collision_radius": 0,
-            "collision_offset_y": 0,
+            "blocking": false,
             "min_distance": 1,
             "variants": 1
         },
@@ -32,8 +30,7 @@
             "weight": 2.8,
             "terrain": ["grass"],
             "sprite_base": "assets/props/wild_fields/prop_tall_grass_v2.png",
-            "collision_radius": 0,
-            "collision_offset_y": 0,
+            "blocking": false,
             "min_distance": 1,
             "variants": 1
         },
@@ -43,8 +40,7 @@
             "weight": 2.4,
             "terrain": ["grass"],
             "sprite_base": "assets/props/wild_fields/prop_tall_grass_v3.png",
-            "collision_radius": 0,
-            "collision_offset_y": 0,
+            "blocking": false,
             "min_distance": 1,
             "variants": 1
         },
@@ -54,8 +50,7 @@
             "weight": 1.5,
             "terrain": ["grass"],
             "sprite_base": "assets/props/wild_fields/prop_poppies_red.png",
-            "collision_radius": 0,
-            "collision_offset_y": 0,
+            "blocking": false,
             "min_distance": 1,
             "variants": 1
         },
@@ -65,8 +60,7 @@
             "weight": 1.1,
             "terrain": ["grass"],
             "sprite_base": "assets/props/wild_fields/prop_poppies_blue.png",
-            "collision_radius": 0,
-            "collision_offset_y": 0,
+            "blocking": false,
             "min_distance": 1,
             "variants": 1
         },
@@ -76,8 +70,7 @@
             "weight": 0.9,
             "terrain": ["grass"],
             "sprite_base": "assets/props/wild_fields/prop_poppies_mixed.png",
-            "collision_radius": 0,
-            "collision_offset_y": 0,
+            "blocking": false,
             "min_distance": 1,
             "variants": 1
         },
@@ -87,8 +80,7 @@
             "weight": 0.9,
             "terrain": ["grass", "forest"],
             "sprite_base": "assets/props/wild_fields/prop_low_stone_wall.png",
-            "collision_radius": 6,
-            "collision_offset_y": 0,
+            "blocking": true,
             "min_distance": 4,
             "variants": 1
         },
@@ -98,8 +90,7 @@
             "weight": 0.7,
             "terrain": ["grass", "forest"],
             "sprite_base": "assets/props/wild_fields/prop_low_stone_wall_broken.png",
-            "collision_radius": 5,
-            "collision_offset_y": 0,
+            "blocking": true,
             "min_distance": 4,
             "variants": 1
         },
@@ -109,8 +100,7 @@
             "weight": 0.75,
             "terrain": ["grass", "concrete"],
             "sprite_base": "assets/props/wild_fields/prop_wooden_fence.png",
-            "collision_radius": 4,
-            "collision_offset_y": 0,
+            "blocking": true,
             "min_distance": 4,
             "variants": 1
         },
@@ -120,8 +110,7 @@
             "weight": 0.6,
             "terrain": ["grass", "concrete"],
             "sprite_base": "assets/props/wild_fields/prop_wooden_fence_broken.png",
-            "collision_radius": 3,
-            "collision_offset_y": 0,
+            "blocking": true,
             "min_distance": 4,
             "variants": 1
         },
@@ -131,8 +120,7 @@
             "weight": 0.65,
             "terrain": ["grass", "concrete"],
             "sprite_base": "assets/props/wild_fields/prop_hay_bale.png",
-            "collision_radius": 4,
-            "collision_offset_y": 0,
+            "blocking": true,
             "min_distance": 3,
             "variants": 1
         },
@@ -142,8 +130,7 @@
             "weight": 0.4,
             "terrain": ["grass", "forest"],
             "sprite_base": "assets/props/wild_fields/prop_hay_bale_rotten.png",
-            "collision_radius": 4,
-            "collision_offset_y": 0,
+            "blocking": true,
             "min_distance": 3,
             "variants": 1
         },
@@ -153,8 +140,7 @@
             "weight": 0.5,
             "terrain": ["grass", "concrete"],
             "sprite_base": "assets/props/wild_fields/prop_puddle.png",
-            "collision_radius": 0,
-            "collision_offset_y": 0,
+            "blocking": false,
             "min_distance": 2,
             "variants": 1
         },
@@ -164,8 +150,7 @@
             "weight": 0.35,
             "terrain": ["grass", "concrete"],
             "sprite_base": "assets/props/wild_fields/prop_puddle_v2.png",
-            "collision_radius": 0,
-            "collision_offset_y": 0,
+            "blocking": false,
             "min_distance": 2,
             "variants": 1
         },
@@ -175,8 +160,7 @@
             "weight": 0.18,
             "terrain": ["grass", "concrete"],
             "sprite_base": "assets/props/wild_fields/prop_scarecrow_broken.png",
-            "collision_radius": 3,
-            "collision_offset_y": 0,
+            "blocking": true,
             "min_distance": 7,
             "variants": 1
         },
@@ -186,8 +170,7 @@
             "weight": 0.045,
             "terrain": ["grass", "forest"],
             "sprite_base": "assets/props/wild_fields/prop_abandoned_well.png",
-            "collision_radius": 6,
-            "collision_offset_y": 0,
+            "blocking": true,
             "min_distance": 10,
             "variants": 1
         },
@@ -197,8 +180,7 @@
             "weight": 0.055,
             "terrain": ["grass", "forest"],
             "sprite_base": "assets/props/wild_fields/prop_standing_stone.png",
-            "collision_radius": 4,
-            "collision_offset_y": 0,
+            "blocking": true,
             "min_distance": 9,
             "variants": 1
         },
@@ -208,8 +190,7 @@
             "weight": 0.065,
             "terrain": ["grass", "concrete"],
             "sprite_base": "assets/props/wild_fields/prop_rusted_plow.png",
-            "collision_radius": 6,
-            "collision_offset_y": 1,
+            "blocking": true,
             "min_distance": 8,
             "variants": 1
         },
@@ -219,8 +200,7 @@
             "weight": 0.03,
             "terrain": ["grass", "concrete"],
             "sprite_base": "assets/props/wild_fields/prop_tractor_remains.png",
-            "collision_radius": 10,
-            "collision_offset_y": 0,
+            "blocking": true,
             "min_distance": 13,
             "variants": 1
         },
@@ -230,8 +210,7 @@
             "weight": 0.028,
             "terrain": ["grass", "concrete"],
             "sprite_base": "assets/props/wild_fields/prop_tractor_husk.png",
-            "collision_radius": 9,
-            "collision_offset_y": 0,
+            "blocking": true,
             "min_distance": 12,
             "variants": 1
         },
@@ -241,8 +220,7 @@
             "weight": 0.022,
             "terrain": ["grass", "forest"],
             "sprite_base": "assets/props/wild_fields/prop_windmill_ruin.png",
-            "collision_radius": 7,
-            "collision_offset_y": -2,
+            "blocking": true,
             "min_distance": 15,
             "variants": 1
         },
@@ -252,8 +230,7 @@
             "weight": 0.018,
             "terrain": ["grass", "concrete"],
             "sprite_base": "assets/props/wild_fields/prop_silo_ruin.png",
-            "collision_radius": 8,
-            "collision_offset_y": 0,
+            "blocking": true,
             "min_distance": 16,
             "variants": 1
         }

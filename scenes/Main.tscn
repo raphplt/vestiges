@@ -22,13 +22,14 @@
 [ext_resource type="Script" path="res://scripts/UI/PauseMenu.cs" id="27"]
 
 [node name="Main" type="Node2D"]
+y_sort_enabled = true
 script = ExtResource("3")
 
 [node name="CanvasModulate" type="CanvasModulate" parent="."]
 color = Color(1, 0.95, 0.85, 1)
 
 [node name="Ground" type="TileMapLayer" parent="."]
-y_sort_enabled = true
+z_index = -10
 tile_set = ExtResource("1")
 
 [node name="Player" parent="." instance=ExtResource("2")]
@@ -45,8 +46,10 @@ script = ExtResource("6")
 script = ExtResource("4")
 
 [node name="PoiContainer" type="Node2D" parent="."]
+y_sort_enabled = true
 
 [node name="EnemyContainer" type="Node2D" parent="."]
+y_sort_enabled = true
 
 [node name="SpawnManager" type="Node2D" parent="."]
 script = ExtResource("5")

@@ -78,6 +78,7 @@ public partial class WorldSetup : Node2D
         _poiContainer = GetNode<Node2D>("PoiContainer");
 
         _config = WorldGenConfig.Load();
+        PropRules.Current = _config.PropRules;
 
         // Read seed from GameManager (set in Hub or 0 = random)
         GameManager gm = GetNodeOrNull<GameManager>("/root/GameManager");
@@ -182,6 +183,7 @@ public partial class WorldSetup : Node2D
             Node2D propContainer = GetNode<Node2D>("PropContainer");
             SwampPropPlacer.PlaceProps(_swampLayout, _ground, propContainer, _usedCells);
         }
+        BuildPropOcclusion();
         await YieldFrame();
 
         onProgress?.Invoke("Éléments de lore...");
@@ -221,6 +223,7 @@ public partial class WorldSetup : Node2D
             Node2D propContainer = GetNode<Node2D>("PropContainer");
             SwampPropPlacer.PlaceProps(_swampLayout, _ground, propContainer, _usedCells);
         }
+        BuildPropOcclusion();
         SpawnLoreElements();
         InitBiomeAtmosphere();
 
@@ -432,18 +435,22 @@ public partial class WorldSetup : Node2D
         ChestSpawner.SpawnChests(_generator, _ground, _poiContainer, _usedCells);
     }
 
+    private void BuildPropOcclusion()
+    {
+        PropOcclusion occlusion = new() { Name = "PropOcclusion" };
+        AddChild(occlusion);
+        occlusion.Build(GetNode("PropContainer"), GetNodeOrNull<Node2D>("Player"));
+    }
+
     private void SpawnEnvironmentProps(UrbanLayout urbanLayout, SwampPropLayout swampLayout)
     {
         // Créer le container pour les props (si pas déjà dans la scène)
         Node2D propContainer = GetNodeOrNull<Node2D>("PropContainer");
         if (propContainer == null)
         {
-            propContainer = new Node2D { Name = "PropContainer" };
+            // Trié en Y avec le joueur, les ennemis et les POI : un décor masque ce qui passe derrière lui.
+            propContainer = new Node2D { Name = "PropContainer", YSortEnabled = true };
             AddChild(propContainer);
-            // Placer juste après la couche de routes pour que les props soient
-            // dessinés SOUS le joueur, ennemis et structures (pas de y_sort global)
-            Node anchor = _roadOverlay ?? GetNode("Ground");
-            MoveChild(propContainer, anchor.GetIndex() + 1);
         }
 
         _propSpawner = new PropSpawner { Name = "PropSpawner" };
@@ -490,7 +497,7 @@ public partial class WorldSetup : Node2D
             _roadOverlay = new TileMapLayer
             {
                 Name = "RoadOverlay",
-                YSortEnabled = true,
+                ZIndex = -9,
                 TileSet = _ground.TileSet
             };
             AddChild(_roadOverlay);
@@ -842,6 +849,7 @@ public class WorldGenConfig
     public int FogInitialClearRadius = 8;
     public List<string> AvailableBiomes = new();
     public WorldGenerator.BiomeLayoutConfig BiomeLayout = WorldGenerator.BiomeLayoutConfig.Default;
+    public PropRules PropRules = PropRules.Default;
 
     public static WorldGenConfig Load()
     {
@@ -904,6 +912,20 @@ public class WorldGenConfig
                 RegionSpacing = (float)layout.GetValueOrDefault("region_spacing", config.BiomeLayout.RegionSpacing).AsDouble(),
                 WarpStrength = (float)layout.GetValueOrDefault("warp_strength", config.BiomeLayout.WarpStrength).AsDouble(),
                 SpawnOffsetFactor = (float)layout.GetValueOrDefault("spawn_offset_factor", config.BiomeLayout.SpawnOffsetFactor).AsDouble(),
+            };
+        }
+
+        if (dict.ContainsKey("props"))
+        {
+            Godot.Collections.Dictionary props = dict["props"].AsGodotDictionary();
+            PropRules defaults = PropRules.Default;
+            config.PropRules = new PropRules
+            {
+                MinBlockingHeight = (float)props.GetValueOrDefault("min_blocking_height", defaults.MinBlockingHeight).AsDouble(),
+                MinBlockingPixels = (int)props.GetValueOrDefault("min_blocking_pixels", defaults.MinBlockingPixels).AsDouble(),
+                FootprintScale = (float)props.GetValueOrDefault("footprint_scale", defaults.FootprintScale).AsDouble(),
+                GroundDecalMaxHeight = (float)props.GetValueOrDefault("ground_decal_max_height", defaults.GroundDecalMaxHeight).AsDouble(),
+                OccluderMinHeight = (float)props.GetValueOrDefault("occluder_min_height", defaults.OccluderMinHeight).AsDouble(),
             };
         }
 

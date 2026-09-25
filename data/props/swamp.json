@@ -10,8 +10,7 @@
             "sprite_base": "assets/props/swamp/prop_dead_tree_large_base.png",
             "sprite_canopy": "assets/props/swamp/prop_dead_tree_large_canopy.png",
             "canopy_offset_y": -54,
-            "collision_radius": 8,
-            "collision_offset_y": 0,
+            "blocking": true,
             "min_distance": 5,
             "variants": 1
         },
@@ -21,8 +20,7 @@
             "weight": 0.18,
             "terrain": ["forest", "grass"],
             "sprite_base": "assets/props/swamp/prop_dead_tree_mossy_large.png",
-            "collision_radius": 8,
-            "collision_offset_y": 0,
+            "blocking": true,
             "min_distance": 7,
             "variants": 1
         },
@@ -32,8 +30,7 @@
             "weight": 0.55,
             "terrain": ["forest", "grass"],
             "sprite_base": "assets/props/swamp/prop_dead_tree_small.png",
-            "collision_radius": 3,
-            "collision_offset_y": 0,
+            "blocking": true,
             "min_distance": 2,
             "variants": 1
         },
@@ -43,8 +40,7 @@
             "weight": 0.42,
             "terrain": ["forest", "grass"],
             "sprite_base": "assets/props/swamp/prop_aerial_roots.png",
-            "collision_radius": 6,
-            "collision_offset_y": 0,
+            "blocking": true,
             "min_distance": 4,
             "variants": 1
         },
@@ -54,8 +50,7 @@
             "weight": 0.22,
             "terrain": ["forest", "grass"],
             "sprite_base": "assets/props/swamp/prop_aerial_roots_twisted.png",
-            "collision_radius": 6,
-            "collision_offset_y": 0,
+            "blocking": true,
             "min_distance": 5,
             "variants": 1
         },
@@ -65,8 +60,7 @@
             "weight": 0.18,
             "terrain": ["forest", "grass"],
             "sprite_base": "assets/props/swamp/prop_root_mass_large.png",
-            "collision_radius": 7,
-            "collision_offset_y": 0,
+            "blocking": true,
             "min_distance": 7,
             "variants": 1
         },
@@ -76,8 +70,7 @@
             "weight": 0.46,
             "terrain": ["forest", "grass"],
             "sprite_base": "assets/props/swamp/prop_vine_curtain.png",
-            "collision_radius": 0,
-            "collision_offset_y": 0,
+            "blocking": false,
             "min_distance": 2,
             "variants": 1
         },
@@ -87,8 +80,7 @@
             "weight": 0.56,
             "terrain": ["grass", "forest"],
             "sprite_base": "assets/props/swamp/prop_reeds.png",
-            "collision_radius": 0,
-            "collision_offset_y": 0,
+            "blocking": false,
             "min_distance": 1,
             "variants": 1
         },
@@ -98,8 +90,7 @@
             "weight": 0.30,
             "terrain": ["grass"],
             "sprite_base": "assets/props/swamp/prop_lily_pads.png",
-            "collision_radius": 0,
-            "collision_offset_y": 0,
+            "blocking": false,
             "min_distance": 2,
             "variants": 1
         },
@@ -109,8 +100,7 @@
             "weight": 0.42,
             "terrain": ["forest", "grass"],
             "sprite_base": "assets/props/swamp/prop_fallen_log.png",
-            "collision_radius": 6,
-            "collision_offset_y": 2,
+            "blocking": true,
             "min_distance": 3,
             "variants": 1
         },
@@ -120,8 +110,7 @@
             "weight": 0.22,
             "terrain": ["forest", "grass"],
             "sprite_base": "assets/props/swamp/prop_rotten_stump.png",
-            "collision_radius": 3,
-            "collision_offset_y": 0,
+            "blocking": true,
             "min_distance": 2,
             "variants": 1
         },
@@ -131,8 +120,7 @@
             "weight": 0.28,
             "terrain": ["forest", "grass"],
             "sprite_base": "assets/props/swamp/prop_toxic_mushrooms.png",
-            "collision_radius": 0,
-            "collision_offset_y": 0,
+            "blocking": false,
             "min_distance": 2,
             "variants": 1
         },
@@ -142,8 +130,7 @@
             "weight": 0.14,
             "terrain": ["forest", "grass"],
             "sprite_base": "assets/props/swamp/prop_swamp_lantern.png",
-            "collision_radius": 0,
-            "collision_offset_y": 0,
+            "blocking": false,
             "min_distance": 2,
             "variants": 1
         },
@@ -153,8 +140,7 @@
             "weight": 0.20,
             "terrain": ["forest", "grass"],
             "sprite_base": "assets/props/swamp/prop_spore_patch.png",
-            "collision_radius": 0,
-            "collision_offset_y": 0,
+            "blocking": false,
             "min_distance": 2,
             "variants": 1
         },
@@ -164,8 +150,7 @@
             "weight": 0.28,
             "terrain": ["forest", "grass"],
             "sprite_base": "assets/props/swamp/prop_hanging_moss.png",
-            "collision_radius": 0,
-            "collision_offset_y": 0,
+            "blocking": false,
             "min_distance": 2,
             "variants": 1
         },
@@ -175,8 +160,7 @@
             "weight": 0.20,
             "terrain": ["grass", "forest"],
             "sprite_base": "assets/props/swamp/prop_broken_walkway.png",
-            "collision_radius": 0,
-            "collision_offset_y": 0,
+            "blocking": false,
             "min_distance": 5,
             "variants": 1
         },
@@ -186,8 +170,7 @@
             "weight": 0.24,
             "terrain": ["grass", "forest"],
             "sprite_base": "assets/props/swamp/prop_sunken_boat.png",
-            "collision_radius": 7,
-            "collision_offset_y": 0,
+            "blocking": true,
             "min_distance": 6,
             "variants": 1
         },
@@ -197,8 +180,7 @@
             "weight": 0.10,
             "terrain": ["grass", "forest"],
             "sprite_base": "assets/props/swamp/prop_sunken_trunk_large.png",
-            "collision_radius": 8,
-            "collision_offset_y": 0,
+            "blocking": true,
             "min_distance": 7,
             "variants": 1
         },
@@ -208,8 +190,7 @@
             "weight": 0.16,
             "terrain": ["grass", "forest"],
             "sprite_base": "assets/props/swamp/prop_drowned_cart.png",
-            "collision_radius": 6,
-            "collision_offset_y": 0,
+            "blocking": true,
             "min_distance": 6,
             "variants": 1
         },
@@ -219,8 +200,7 @@
             "weight": 0.26,
             "terrain": ["grass", "concrete", "forest"],
             "sprite_base": "assets/props/swamp/prop_rusted_barrel.png",
-            "collision_radius": 3,
-            "collision_offset_y": 0,
+            "blocking": true,
             "min_distance": 3,
             "variants": 1
         },
@@ -230,8 +210,7 @@
             "weight": 0.24,
             "terrain": ["grass", "forest", "concrete"],
             "sprite_base": "assets/props/swamp/prop_old_post.png",
-            "collision_radius": 0,
-            "collision_offset_y": 0,
+            "blocking": false,
             "min_distance": 3,
             "variants": 1
         },
@@ -241,8 +220,7 @@
             "weight": 0.18,
             "terrain": ["grass", "forest"],
             "sprite_base": "assets/props/swamp/prop_bone_pile.png",
-            "collision_radius": 0,
-            "collision_offset_y": 0,
+            "blocking": false,
             "min_distance": 4,
             "variants": 1
         },
@@ -252,8 +230,7 @@
             "weight": 0.05,
             "terrain": ["grass", "forest"],
             "sprite_base": "assets/props/swamp/prop_sunken_shrine.png",
-            "collision_radius": 5,
-            "collision_offset_y": 0,
+            "blocking": true,
             "min_distance": 9,
             "variants": 1
         },
@@ -263,8 +240,7 @@
             "weight": 0.05,
             "terrain": ["grass", "forest"],
             "sprite_base": "assets/props/swamp/prop_collapsed_pontoon.png",
-            "collision_radius": 6,
-            "collision_offset_y": 2,
+            "blocking": true,
             "min_distance": 9,
             "variants": 1
         },
@@ -274,8 +250,7 @@
             "weight": 0.04,
             "terrain": ["forest", "grass"],
             "sprite_base": "assets/props/swamp/prop_bound_tree.png",
-            "collision_radius": 7,
-            "collision_offset_y": 0,
+            "blocking": true,
             "min_distance": 10,
             "variants": 1
         }

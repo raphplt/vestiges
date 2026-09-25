@@ -20,8 +20,7 @@ public struct SwampPropPlacement
 	public string BasePath;
 	public string CanopyPath;
 	public float CanopyOffsetY;
-	public float CollisionRadius;
-	public float CollisionOffsetY;
+	public bool Blocking;
 }
 
 public class SwampPropLayout
@@ -49,32 +48,23 @@ public static class SwampPropPlacer
 		new(-1, 1), new(0, 1), new(1, 1)
 	};
 
-	private static readonly Dictionary<string, float> CollisionRadii = new()
+	// Décors qui bloquent le passage ; la forme vient de leur base visible (PropFootprint).
+	private static readonly HashSet<string> BlockingSprites = new()
 	{
-		{ "prop_dead_tree_large_base.png", 8f },
-		{ "prop_dead_tree_mossy_large.png", 8f },
-		{ "prop_dead_tree_small.png", 3f },
-		{ "prop_aerial_roots.png", 6f },
-		{ "prop_aerial_roots_twisted.png", 6f },
-		{ "prop_root_mass_large.png", 7f },
-		{ "prop_bound_tree.png", 7f },
-		{ "prop_sunken_trunk_large.png", 8f },
-		{ "prop_sunken_boat.png", 7f },
-		{ "prop_drowned_cart.png", 6f },
-		{ "prop_broken_walkway.png", 0f },
-		{ "prop_bone_pile.png", 0f },
-		{ "prop_collapsed_pontoon.png", 6f },
-		{ "prop_sunken_shrine.png", 5f },
-		{ "prop_reeds.png", 0f },
-		{ "prop_lily_pads.png", 0f },
-		{ "prop_fallen_log.png", 6f },
-		{ "prop_rotten_stump.png", 3f },
-		{ "prop_spore_patch.png", 0f },
-		{ "prop_toxic_mushrooms.png", 0f },
-		{ "prop_swamp_lantern.png", 0f },
-		{ "prop_vine_curtain.png", 0f },
-		{ "prop_hanging_moss.png", 0f },
-		{ "prop_old_post.png", 0f },
+		"prop_dead_tree_large_base.png",
+		"prop_dead_tree_mossy_large.png",
+		"prop_dead_tree_small.png",
+		"prop_aerial_roots.png",
+		"prop_aerial_roots_twisted.png",
+		"prop_root_mass_large.png",
+		"prop_bound_tree.png",
+		"prop_sunken_trunk_large.png",
+		"prop_sunken_boat.png",
+		"prop_drowned_cart.png",
+		"prop_collapsed_pontoon.png",
+		"prop_sunken_shrine.png",
+		"prop_fallen_log.png",
+		"prop_rotten_stump.png",
 	};
 
 	public static SwampPropLayout BuildLayout(WorldGenerator generator, ulong seed)
@@ -125,7 +115,7 @@ public static class SwampPropPlacer
 			EnvironmentProp prop = new();
 			prop.GlobalPosition = ground.MapToLocal(placement.Cell);
 			container.AddChild(prop);
-			prop.Initialize(baseTexture, canopyTexture, placement.CanopyOffsetY, placement.CollisionRadius, placement.CollisionOffsetY);
+			prop.Initialize(baseTexture, canopyTexture, placement.CanopyOffsetY, placement.Blocking);
 			usedCells.Add(placement.Cell);
 		}
 	}
@@ -271,9 +261,8 @@ public static class SwampPropPlacer
 				? "assets/props/swamp/prop_dead_tree_large_canopy.png"
 				: null;
 			float canopyOffset = canopyPath == null ? 0f : -54f;
-			float collisionRadius = placeBoundTree ? 7f : 8f;
 
-			AddPlacement(layout, anchor, basePath, canopyPath, canopyOffset, collisionRadius, 0f, 4);
+			AddPlacement(layout, anchor, basePath, canopyPath, canopyOffset, true, 4);
 			boundTreePlaced |= placeBoundTree;
 
 			List<string> usedSatellites = new();
@@ -291,8 +280,7 @@ public static class SwampPropPlacer
 					sprite,
 					null,
 					0f,
-					GetCollisionRadius(sprite),
-					0f,
+					IsBlocking(sprite),
 					sprite.Contains("vine_curtain") || sprite.Contains("hanging_moss") || sprite.Contains("bone_pile") ? 1 : 2);
 				usedSatellites.Add(sprite);
 			}
@@ -301,15 +289,13 @@ public static class SwampPropPlacer
 			if (structureCell != null)
 			{
 				string structureSprite = PickDeadGroveStructure(placeBoundTree, mossy, seed ^ hash);
-				float structureOffset = structureSprite.Contains("fallen_log") ? 2f : 0f;
 				AddPlacement(
 					layout,
 					structureCell.Value,
 					structureSprite,
 					null,
 					0f,
-					GetCollisionRadius(structureSprite),
-					structureOffset,
+					IsBlocking(structureSprite),
 					2);
 			}
 		}
@@ -329,34 +315,34 @@ public static class SwampPropPlacer
 		if (chosen.Count == 0)
 			return;
 
-		AddPlacement(layout, chosen[0], "assets/props/swamp/prop_collapsed_pontoon.png", null, 0f, 6f, 2f, 3);
+		AddPlacement(layout, chosen[0], "assets/props/swamp/prop_collapsed_pontoon.png", null, 0f, true, 3);
 		DecorateBankCluster(layout, generator, chosen[0], seed ^ 0xAB12UL, true);
 
 		if (chosen.Count > 1)
 		{
 			Vector2I shrineCell = FindNearbyPreferredCell(layout, generator, chosen[1], seed ^ 0xBC23UL, SwampZoneType.ShallowWater, SwampZoneType.Bank) ?? chosen[1];
-			AddPlacement(layout, shrineCell, "assets/props/swamp/prop_sunken_shrine.png", null, 0f, 5f, 0f, 3);
+			AddPlacement(layout, shrineCell, "assets/props/swamp/prop_sunken_shrine.png", null, 0f, true, 3);
 			DecorateBankCluster(layout, generator, chosen[1], seed ^ 0xCC34UL, false);
 		}
 
 		if (chosen.Count > 2)
 		{
 			Vector2I trunkCell = FindNearbyPreferredCell(layout, generator, chosen[2], seed ^ 0xCD45UL, SwampZoneType.ShallowWater, SwampZoneType.Bank) ?? chosen[2];
-			AddPlacement(layout, trunkCell, "assets/props/swamp/prop_sunken_trunk_large.png", null, 0f, 8f, 0f, 3);
+			AddPlacement(layout, trunkCell, "assets/props/swamp/prop_sunken_trunk_large.png", null, 0f, true, 3);
 			DecorateBankCluster(layout, generator, chosen[2], seed ^ 0xDE56UL, false);
 		}
 
 		if (chosen.Count > 3)
 		{
 			Vector2I logCell = FindNearbyPreferredCell(layout, generator, chosen[3], seed ^ 0xEF67UL, SwampZoneType.Bank, SwampZoneType.ShallowWater) ?? chosen[3];
-			AddPlacement(layout, logCell, "assets/props/swamp/prop_fallen_log.png", null, 0f, 6f, 2f, 2);
+			AddPlacement(layout, logCell, "assets/props/swamp/prop_fallen_log.png", null, 0f, true, 2);
 			DecorateBankCluster(layout, generator, chosen[3], seed ^ 0xF078UL, false);
 		}
 
 		if (chosen.Count > 4)
 		{
 			Vector2I rootCell = FindNearbyPreferredCell(layout, generator, chosen[4], seed ^ 0xA099UL, SwampZoneType.Bank, SwampZoneType.ShallowWater) ?? chosen[4];
-			AddPlacement(layout, rootCell, "assets/props/swamp/prop_aerial_roots_twisted.png", null, 0f, 6f, 0f, 2);
+			AddPlacement(layout, rootCell, "assets/props/swamp/prop_aerial_roots_twisted.png", null, 0f, true, 2);
 			DecorateBankCluster(layout, generator, chosen[4], seed ^ 0xB0AAUL, false);
 		}
 
@@ -367,7 +353,7 @@ public static class SwampPropPlacer
 			avoidCells.Add(chosenCell);
 		Vector2I? walkwayCell = PickSingleCell(walkwayCandidates, layout.ReservedCells, 12, avoidCells.ToArray());
 		if (walkwayCell != null)
-			AddPlacement(layout, walkwayCell.Value, "assets/props/swamp/prop_broken_walkway.png", null, 0f, 0f, 0f, 2);
+			AddPlacement(layout, walkwayCell.Value, "assets/props/swamp/prop_broken_walkway.png", null, 0f, false, 2);
 	}
 
 	private static void PlaceFungalScenes(
@@ -378,18 +364,18 @@ public static class SwampPropPlacer
 	{
 		foreach (Vector2I center in anchors)
 		{
-			AddPlacement(layout, center, "assets/props/swamp/prop_spore_patch.png", null, 0f, 0f, 0f, 2);
+			AddPlacement(layout, center, "assets/props/swamp/prop_spore_patch.png", null, 0f, false, 2);
 
 			Vector2I? lanternCell = FindNearbyZoneCell(layout, generator, center, seed ^ 0xCC44UL, SwampZoneType.FungalPocket);
 			if (lanternCell != null && (HashCell(center, seed ^ 0x44CCUL) % 100) < 55)
-				AddPlacement(layout, lanternCell.Value, "assets/props/swamp/prop_swamp_lantern.png", null, 0f, 0f, 0f, 1);
+				AddPlacement(layout, lanternCell.Value, "assets/props/swamp/prop_swamp_lantern.png", null, 0f, false, 1);
 
 			for (int i = 0; i < 3; i++)
 			{
 				Vector2I? candidate = FindNearbyZoneCell(layout, generator, center, seed ^ (ulong)(center.X * 33 + center.Y * 19 + i), SwampZoneType.FungalPocket);
 				if (candidate == null)
 					continue;
-				AddPlacement(layout, candidate.Value, "assets/props/swamp/prop_toxic_mushrooms.png", null, 0f, 0f, 0f, 1);
+				AddPlacement(layout, candidate.Value, "assets/props/swamp/prop_toxic_mushrooms.png", null, 0f, false, 1);
 			}
 		}
 	}
@@ -422,15 +408,13 @@ public static class SwampPropPlacer
 		foreach (Vector2I anchor in anchors)
 		{
 			string structureSprite = PickWetStructureSprite(anchor, seed);
-			float collisionOffset = structureSprite.Contains("fallen_log") ? 2f : 0f;
 			AddPlacement(
 				layout,
 				anchor,
 				structureSprite,
 				null,
 				0f,
-				GetCollisionRadius(structureSprite),
-				collisionOffset,
+				IsBlocking(structureSprite),
 				2);
 
 			DecorateWetStructureCluster(layout, generator, anchor, seed ^ HashCell(anchor, seed));
@@ -452,15 +436,15 @@ public static class SwampPropPlacer
 
 		Vector2I? boatCell = PickSingleCell(shallowCandidates, layout.ReservedCells, 18);
 		if (boatCell != null)
-			AddPlacement(layout, boatCell.Value, "assets/props/swamp/prop_sunken_boat.png", null, 0f, 7f, 0f, 3);
+			AddPlacement(layout, boatCell.Value, "assets/props/swamp/prop_sunken_boat.png", null, 0f, true, 3);
 
 		Vector2I? cartCell = PickSingleCell(wetCandidates, layout.ReservedCells, 16, boatCell);
 		if (cartCell != null)
-			AddPlacement(layout, cartCell.Value, "assets/props/swamp/prop_drowned_cart.png", null, 0f, 6f, 0f, 2);
+			AddPlacement(layout, cartCell.Value, "assets/props/swamp/prop_drowned_cart.png", null, 0f, true, 2);
 
 		Vector2I? boneCell = PickSingleCell(groveCandidates, layout.ReservedCells, 10, cartCell);
 		if (boneCell != null)
-			AddPlacement(layout, boneCell.Value, "assets/props/swamp/prop_bone_pile.png", null, 0f, 0f, 0f, 2);
+			AddPlacement(layout, boneCell.Value, "assets/props/swamp/prop_bone_pile.png", null, 0f, false, 2);
 	}
 
 	private static void DecorateBankCluster(
@@ -504,8 +488,7 @@ public static class SwampPropPlacer
 			string sprite = i < 3
 				? bankSprites[i % bankSprites.Length]
 				: accentSprites[(i - 3) % accentSprites.Length];
-			float collisionOffset = sprite.Contains("fallen_log") ? 2f : 0f;
-			AddPlacement(layout, candidate.Value, sprite, null, 0f, GetCollisionRadius(sprite), collisionOffset, 1);
+			AddPlacement(layout, candidate.Value, sprite, null, 0f, IsBlocking(sprite), 1);
 		}
 	}
 
@@ -531,7 +514,7 @@ public static class SwampPropPlacer
 				continue;
 
 			string sprite = decorations[(int)((HashCell(candidate.Value, seed) + (uint)i) % (uint)decorations.Length)];
-			AddPlacement(layout, candidate.Value, sprite, null, 0f, GetCollisionRadius(sprite), 0f, 1);
+			AddPlacement(layout, candidate.Value, sprite, null, 0f, IsBlocking(sprite), 1);
 		}
 	}
 
@@ -727,8 +710,7 @@ public static class SwampPropPlacer
 		string basePath,
 		string canopyPath,
 		float canopyOffsetY,
-		float collisionRadius,
-		float collisionOffsetY,
+		bool blocking,
 		int reserveRadius)
 	{
 		layout.Placements.Add(new SwampPropPlacement
@@ -737,8 +719,7 @@ public static class SwampPropPlacer
 			BasePath = basePath,
 			CanopyPath = canopyPath,
 			CanopyOffsetY = canopyOffsetY,
-			CollisionRadius = collisionRadius,
-			CollisionOffsetY = collisionOffsetY,
+			Blocking = blocking,
 		});
 
 		Reserve(layout.ReservedCells, cell, reserveRadius);
@@ -858,11 +839,10 @@ public static class SwampPropPlacer
 		return (int)(HashCell(new Vector2I(patchX, patchY), seed) % 100);
 	}
 
-	private static float GetCollisionRadius(string path)
+	private static bool IsBlocking(string path)
 	{
 		int slash = path.LastIndexOf('/');
-		string filename = slash >= 0 ? path[(slash + 1)..] : path;
-		return CollisionRadii.TryGetValue(filename, out float radius) ? radius : 0f;
+		return BlockingSprites.Contains(slash >= 0 ? path[(slash + 1)..] : path);
 	}
 
 	private static Texture2D LoadCached(string path, Dictionary<string, Texture2D> cache)

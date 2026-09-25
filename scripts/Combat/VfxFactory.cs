@@ -1619,7 +1619,8 @@ public static class VfxFactory
 		if (_particleLevel == ParticleLevel.Off)
 			return null;
 
-		var root = new Node2D { GlobalPosition = position };
+		// Flaque au sol : sous les entités, que le tri en Y de la scène ne doit pas faire passer devant des pieds.
+		Node2D root = new() { GlobalPosition = position, ZIndex = -1 };
 
 		if (_iridescentMaterial == null && ResourceLoader.Exists("res://assets/shaders/iridescent_fluid.gdshader"))
 		{

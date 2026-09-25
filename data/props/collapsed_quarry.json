@@ -8,8 +8,7 @@
             "weight": 3.0,
             "terrain": ["concrete", "grass"],
             "sprite_base": "assets/props/urban_ruins/prop_concrete_debris.png",
-            "collision_radius": 0,
-            "collision_offset_y": 0,
+            "blocking": false,
             "min_distance": 1,
             "variants": 1
         },
@@ -19,8 +18,7 @@
             "weight": 2.5,
             "terrain": ["concrete", "grass"],
             "sprite_base": "assets/props/urban_ruins/prop_concrete_debris_v2.png",
-            "collision_radius": 0,
-            "collision_offset_y": 0,
+            "blocking": false,
             "min_distance": 1,
             "variants": 1
         },
@@ -30,8 +28,7 @@
             "weight": 1.5,
             "terrain": ["forest", "grass", "concrete"],
             "sprite_base": "assets/props/forest/prop_rock_mossy.png",
-            "collision_radius": 6,
-            "collision_offset_y": 0,
+            "blocking": true,
             "min_distance": 2,
             "variants": 1
         },
@@ -41,8 +38,7 @@
             "weight": 1.2,
             "terrain": ["concrete"],
             "sprite_base": "assets/props/urban_ruins/prop_steel_beam.png",
-            "collision_radius": 6,
-            "collision_offset_y": 0,
+            "blocking": true,
             "min_distance": 3,
             "variants": 1
         },
@@ -52,8 +48,7 @@
             "weight": 0.8,
             "terrain": ["concrete"],
             "sprite_base": "assets/props/urban_ruins/prop_steel_beam_diagonal.png",
-            "collision_radius": 6,
-            "collision_offset_y": 0,
+            "blocking": true,
             "min_distance": 3,
             "variants": 1
         },
@@ -63,8 +58,7 @@
             "weight": 0.6,
             "terrain": ["concrete"],
             "sprite_base": "assets/props/urban_ruins/prop_concrete_wall_v3.png",
-            "collision_radius": 10,
-            "collision_offset_y": 0,
+            "blocking": true,
             "min_distance": 4,
             "variants": 1
         },
@@ -74,8 +68,7 @@
             "weight": 0.5,
             "terrain": ["concrete", "grass"],
             "sprite_base": "assets/props/urban_ruins/prop_chain_link_fence.png",
-            "collision_radius": 6,
-            "collision_offset_y": 0,
+            "blocking": true,
             "min_distance": 4,
             "variants": 1
         },
@@ -85,8 +78,7 @@
             "weight": 0.4,
             "terrain": ["forest", "grass"],
             "sprite_base": "assets/props/forest/prop_stump.png",
-            "collision_radius": 4,
-            "collision_offset_y": 0,
+            "blocking": true,
             "min_distance": 3,
             "variants": 1
         },
@@ -96,8 +88,7 @@
             "weight": 0.3,
             "terrain": ["forest"],
             "sprite_base": "assets/props/forest/prop_bush.png",
-            "collision_radius": 0,
-            "collision_offset_y": 0,
+            "blocking": false,
             "min_distance": 2,
             "variants": 1
         }

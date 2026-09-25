@@ -56,7 +56,8 @@ public partial class ErasureManager : Node
         _overlay = new ErasureOverlay(this, _cellSize)
         {
             Name = "ErasureOverlay",
-            ZIndex = -1,
+            // Au-dessus du sol (-10) et des routes (-9), sous les décalques au sol (-1) et les entités.
+            ZIndex = -5,
         };
         CallDeferred(Node.MethodName.AddChild, _overlay);
     }

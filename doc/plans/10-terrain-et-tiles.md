@@ -179,3 +179,14 @@ Reproduire : `CAPTURE_EXTRA_ARGS="--capture-map" tools/capture_run.sh <dossier> 
 | **D3 — Lisibilité provisoire** | Ombre de contact sous chaque décor, pour l'ancrer au sol en attendant la refonte 08 | Captures carrière et ville |
 
 La refonte visuelle des décors eux-mêmes (dessin, échelle, contraste) relève du plan 08, lot « décors procéduraux ».
+
+### D1 et D2 livrés — 25 septembre 2026
+
+- `PropFootprint` mesure une fois par texture la base visible (largeur, centre, bas de silhouette). La collision est un losange iso 2:1 couvrant 85 % de cette base, posé dessous. Plus de cercle décalé.
+- Un décor ne bloque que s'il est marqué `blocking` **et** assez grand : 18 px de haut et 150 pixels opaques au moins. Les JSON de `data/props/` et les tables des placeurs urbain et marais passent de `collision_radius`/`collision_offset_y` à `blocking` (+ `footprint_scale` facultatif). Seuils dans `world_gen.json`, bloc `props`.
+- Tri en Y sur la racine de `Main` et sur les conteneurs de décors, d'ennemis et de POI. Le point de tri d'un décor est le centre de son emprise, pas le pied du sprite. Le sol (z −10), les routes (−9) et l'overlay d'Effacement (−5) passent dessous. Les décors plats non bloquants (≤ 12 px) et les flaques sont des décalques au sol (−1). Les chiffres de dégâts restent au-dessus (30).
+- `PropOcclusion` indexe une fois les décors hauts (≥ 24 px ou canopée) de tous les placeurs, soit 1 586 sur la seed 1002, dans une grille de cases de 256 px. À chaque tick, seuls ceux de la case du joueur sont testés.
+- Effet de bord : l'overlay d'Effacement, dessiné jusqu'ici sous le sol (z −1 contre 0), redevient visible.
+- Vérifié : build sans avertissement, smoke test, `MovementRegression`, captures `--capture-props` avant/après dans les cinq biomes, dont le passage derrière un immeuble.
+- **Non mesuré :** le coût en FPS du tri en Y. La machine était chargée par d'autres compilations et les bancs ont échoué avant comme après. Mesure à refaire en priorité.
+

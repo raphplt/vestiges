@@ -16,8 +16,8 @@ public class PropDefinition
 	public string SpriteBasePath;
 	public string SpriteCanopyPath;
 	public float CanopyOffsetY;
-	public float CollisionRadius;
-	public float CollisionOffsetY;
+	public bool Blocking;
+	public float FootprintScale = 1f;
 	public int MinDistance;
 	public int Variants;
 }
@@ -35,17 +35,10 @@ public class BiomePropConfig
 /// <summary>
 /// Spawn procédural de décors d'environnement par biome.
 /// Utilise un bruit de Perlin pour la densité + weighted random pour le type de prop.
-/// Gère le fondu de canopée quand le joueur passe dessous.
+/// La transparence d'occlusion est gérée par PropOcclusion pour tous les placeurs.
 /// </summary>
 public partial class PropSpawner : Node2D
 {
-	// Tous les props assez grands pour cacher le joueur (arbres, rochers, ruines, voitures)
-	private readonly List<EnvironmentProp> _solidProps = new();
-	private Node2D _player;
-	// Distance horizontale max pour détecter si le joueur est "derrière" un prop
-	private const float OcclusionDistanceX = 20f;
-	// Transparence minimum quand le joueur est complètement derrière
-	private const float OccludedAlpha = 0.35f;
 
 	/// <summary>
 	/// Spawn tous les props pour la carte générée.
@@ -178,55 +171,7 @@ public partial class PropSpawner : Node2D
 		GD.Print($"[PropSpawner] Skip terrain mismatch: {skipTerrain}");
 		GD.Print($"[PropSpawner] Skip too close: {skipDistance}");
 		GD.Print($"[PropSpawner] Skip texture missing: {skipTexture}");
-		GD.Print($"[PropSpawner] TOTAL SPAWNED: {totalSpawned} ({_solidProps.Count} with occlusion tracking)");
-	}
-
-	public override void _PhysicsProcess(double delta)
-	{
-		if (_solidProps.Count == 0)
-			return;
-
-		if (_player == null || !IsInstanceValid(_player))
-		{
-			Node playerNode = GetTree().GetFirstNodeInGroup("player");
-			if (playerNode is Node2D p)
-				_player = p;
-			else
-				return;
-		}
-
-		Vector2 playerPos = _player.GlobalPosition;
-
-		// Technique iso classique : le prop devient transparent quand le joueur
-		// est "derrière" lui (= position Y du joueur > position Y du prop,
-		// et assez proche horizontalement pour être caché visuellement).
-		for (int i = _solidProps.Count - 1; i >= 0; i--)
-		{
-			EnvironmentProp prop = _solidProps[i];
-			if (!IsInstanceValid(prop))
-			{
-				_solidProps.RemoveAt(i);
-				continue;
-			}
-
-			Vector2 propPos = prop.GlobalPosition;
-			float dx = Mathf.Abs(playerPos.X - propPos.X);
-			// dy négatif = joueur plus haut sur l'écran = "derrière" en iso
-			float dy = playerPos.Y - propPos.Y;
-
-			bool playerBehind = dy < 8f && dy > -prop.BaseHeight && dx < OcclusionDistanceX;
-
-			if (playerBehind)
-			{
-				float tX = 1f - (dx / OcclusionDistanceX);
-				float alpha = Mathf.Lerp(1f, OccludedAlpha, tX);
-				prop.SetOverallTransparency(alpha);
-			}
-			else
-			{
-				prop.SetOverallTransparency(1f);
-			}
-		}
+		GD.Print($"[PropSpawner] TOTAL SPAWNED: {totalSpawned}");
 	}
 
 	private PropDefinition PickProp(BiomePropConfig config, string terrainName, int x, int y)
@@ -410,11 +355,8 @@ public partial class PropSpawner : Node2D
 		EnvironmentProp envProp = new();
 		envProp.GlobalPosition = worldPos;
 		container.AddChild(envProp);
-		envProp.Initialize(baseTex, canopyTex, prop.CanopyOffsetY, prop.CollisionRadius, prop.CollisionOffsetY);
+		envProp.Initialize(baseTex, canopyTex, prop.CanopyOffsetY, prop.Blocking, prop.FootprintScale);
 		usedCells.Add(cell);
-
-		if (envProp.BaseHeight >= 16 || envProp.HasCanopy)
-			_solidProps.Add(envProp);
 
 		return true;
 	}
@@ -538,8 +480,8 @@ public partial class PropSpawner : Node2D
 				Name = propDict.ContainsKey("name") ? propDict["name"].AsString() : "",
 				Weight = (float)propDict["weight"].AsDouble(),
 				SpriteBasePath = propDict["sprite_base"].AsString(),
-				CollisionRadius = (float)propDict["collision_radius"].AsDouble(),
-				CollisionOffsetY = propDict.ContainsKey("collision_offset_y") ? (float)propDict["collision_offset_y"].AsDouble() : 0f,
+				Blocking = propDict.ContainsKey("blocking") && propDict["blocking"].AsBool(),
+				FootprintScale = propDict.ContainsKey("footprint_scale") ? (float)propDict["footprint_scale"].AsDouble() : 1f,
 				CanopyOffsetY = propDict.ContainsKey("canopy_offset_y") ? (float)propDict["canopy_offset_y"].AsDouble() : 0f,
 				MinDistance = propDict.ContainsKey("min_distance") ? (int)propDict["min_distance"].AsDouble() : 1,
 				Variants = propDict.ContainsKey("variants") ? (int)propDict["variants"].AsDouble() : 1,

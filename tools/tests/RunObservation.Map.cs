@@ -235,6 +235,22 @@ public partial class RunObservation
             using Image image = GetViewport().GetTexture().GetImage();
             image.SavePng($"{_output}/props-{biome}.png");
             GD.Print($"[RunObservation] props {biome}: {positions.Count} décors, {bestCount} autour du point capturé {best}");
+
+            // Joueur juste derrière le décor le plus haut de la zone : tri en profondeur et transparence.
+            EnvironmentProp tallest = null;
+            foreach (Node child in _world.GetNode("PropContainer").GetChildren())
+            {
+                if (child is EnvironmentProp prop && prop.GlobalPosition.DistanceSquaredTo(best) < 240f * 240f
+                    && (tallest == null || prop.Footprint.VisibleHeight > tallest.Footprint.VisibleHeight))
+                    tallest = prop;
+            }
+            if (tallest == null)
+                continue;
+            _player.GlobalPosition = tallest.GlobalPosition + new Vector2(0f, -Mathf.Min(24f, tallest.Footprint.VisibleHeight * 0.4f));
+            _camera.ResetSmoothing();
+            await Frames(20);
+            using Image behind = GetViewport().GetTexture().GetImage();
+            behind.SavePng($"{_output}/props-{biome}-behind.png");
         }
     }
 }

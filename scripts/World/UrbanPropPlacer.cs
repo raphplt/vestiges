@@ -66,29 +66,24 @@ public static class UrbanPropPlacer
 		"assets/props/urban_ruins/prop_steel_beam_diagonal.png",
 	};
 
-	private static readonly Dictionary<string, float> CollisionRadii = new()
+	// Décors qui bloquent le passage ; la forme vient de leur base visible (PropFootprint).
+	private static readonly HashSet<string> BlockingSprites = new()
 	{
-		{ "prop_collapsed_building.png", 18f },
-		{ "prop_building_facade_wide.png", 24f },
-		{ "prop_building_corner_large.png", 26f },
-		{ "prop_building_tower_chunk.png", 20f },
-		{ "prop_building_apartment_block.png", 28f },
-		{ "prop_building_church_ruin.png", 22f },
-		{ "prop_building_shopfront_row.png", 26f },
-		{ "prop_radio_antenna_tower.png", 8f },
-		{ "prop_urban_car.png", 12f },
-		{ "prop_concrete_debris.png", 0f },
-		{ "prop_concrete_debris_v2.png", 0f },
-		{ "prop_concrete_debris_v3.png", 0f },
-		{ "prop_steel_beam.png", 0f },
-		{ "prop_steel_beam_diagonal.png", 0f },
-		{ "prop_traffic_light.png", 3f },
-		{ "prop_phone_booth.png", 4f },
-		{ "prop_mailbox.png", 0f },
-		{ "prop_dumpster.png", 4f },
-		{ "prop_dumpster_v2.png", 4f },
-		{ "prop_chain_link_fence.png", 6f },
-		{ "prop_torn_billboard.png", 5f },
+		"prop_collapsed_building.png",
+		"prop_building_facade_wide.png",
+		"prop_building_corner_large.png",
+		"prop_building_tower_chunk.png",
+		"prop_building_apartment_block.png",
+		"prop_building_church_ruin.png",
+		"prop_building_shopfront_row.png",
+		"prop_radio_antenna_tower.png",
+		"prop_urban_car.png",
+		"prop_traffic_light.png",
+		"prop_phone_booth.png",
+		"prop_dumpster.png",
+		"prop_dumpster_v2.png",
+		"prop_chain_link_fence.png",
+		"prop_torn_billboard.png",
 	};
 
 	// WallMask bits
@@ -610,7 +605,7 @@ public static class UrbanPropPlacer
 		EnvironmentProp prop = new();
 		prop.GlobalPosition = ground.MapToLocal(cell);
 		container.AddChild(prop);
-		prop.Initialize(texture, null, 0f, GetCollisionRadius(spritePath), 0f);
+		prop.Initialize(texture, null, 0f, IsBlocking(spritePath));
 
 		usedCells.Add(cell);
 		return true;
@@ -703,11 +698,10 @@ public static class UrbanPropPlacer
 		return intersections;
 	}
 
-	private static float GetCollisionRadius(string path)
+	private static bool IsBlocking(string path)
 	{
-		int lastSlash = path.LastIndexOf('/');
-		string filename = lastSlash >= 0 ? path[(lastSlash + 1)..] : path;
-		return CollisionRadii.TryGetValue(filename, out float radius) ? radius : 0f;
+		int slash = path.LastIndexOf('/');
+		return BlockingSprites.Contains(slash >= 0 ? path[(slash + 1)..] : path);
 	}
 
 	private static Texture2D LoadCached(string path, Dictionary<string, Texture2D> cache)

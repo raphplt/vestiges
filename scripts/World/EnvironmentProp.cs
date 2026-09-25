@@ -4,101 +4,109 @@ namespace Vestiges.World;
 
 /// <summary>
 /// Décor d'environnement non-interactif. Peut être multi-couches :
-/// - Base (tronc, rocher, etc.) : avec collision optionnelle
+/// - Base (tronc, rocher, immeuble) : collision optionnelle calée sur sa base visible
 /// - Canopée (feuillage, toit) : overlay au-dessus du joueur, pas de collision
-/// Les petits props (fleurs, champignons) n'ont ni canopée ni collision.
 ///
-/// Quand le joueur se retrouve derrière le prop (position Y plus haute),
-/// le prop entier devient semi-transparent pour garder le joueur visible.
-/// C'est la technique standard en jeu isométrique 2D.
+/// Le nœud est placé au centre de son emprise au sol : le tri en Y de la scène
+/// le dessine devant ou derrière le joueur comme en isométrie. Les décors plats
+/// (débris, flaques, fleurs) sont des décalques dessinés sous les entités.
+/// Quand le joueur passe derrière un décor haut, PropOcclusion le rend semi-transparent.
 /// </summary>
 public partial class EnvironmentProp : StaticBody2D
 {
 	private Sprite2D _baseSprite;
 	private Sprite2D _canopySprite;
-	private float _baseHeight;
+	private PropFootprint _footprint;
 	private static ShaderMaterial _swayMaterial;
 
 	/// <summary>
-	/// Initialise le prop avec ses textures et paramètres.
+	/// Initialise le prop. La position courante est le centre de la cellule ; le nœud
+	/// remonte au centre de l'emprise et le sprite redescend d'autant.
 	/// </summary>
 	public void Initialize(
 		Texture2D baseTexture,
 		Texture2D canopyTexture,
 		float canopyOffsetY,
-		float collisionRadius,
-		float collisionOffsetY)
+		bool blocking,
+		float footprintScale = 1f)
 	{
-		_baseHeight = baseTexture.GetHeight();
+		PropRules rules = PropRules.Current;
+		_footprint = PropFootprint.Of(baseTexture);
+		float scale = rules.FootprintScale * footprintScale;
+		float baseHeight = baseTexture.GetHeight();
 
-		// Charger le shader Sway statiquement si non chargé
+		// Pieds du sprite : bas de la texture 4 px sous le centre de la cellule (convention des sprites de décor).
+		float visibleBottomY = 4f + _footprint.VisibleBottom;
+		float halfHeight = _footprint.DiamondHalfHeight(scale);
+		float sortShift = visibleBottomY - halfHeight;
+		Position += new Vector2(0f, sortShift);
+
 		if (_swayMaterial == null && ResourceLoader.Exists("res://assets/shaders/sway.gdshader"))
 		{
 			Shader swayShader = GD.Load<Shader>("res://assets/shaders/sway.gdshader");
 			_swayMaterial = new ShaderMaterial { Shader = swayShader };
-			// Options visuelles modérées pour la végétation
 			_swayMaterial.SetShaderParameter("speed", 1.0f);
 			_swayMaterial.SetShaderParameter("max_strength", 0.05f);
 		}
 
-		// --- Sprite de base (tronc, rocher, structure) ---
 		_baseSprite = new Sprite2D
 		{
 			Texture = baseTexture,
 			TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
-			// Ancrer le sprite en bas pour que le pied soit au GlobalPosition
-			Offset = new Vector2(0, -_baseHeight * 0.5f + 4),
+			Offset = new Vector2(0, -baseHeight * 0.5f + 4f - sortShift),
 		};
 		AddChild(_baseSprite);
 
-		// --- Collision (optionnelle, radius > 0) ---
-		if (collisionRadius > 0)
+		bool blocks = blocking
+			&& _footprint.VisibleHeight >= rules.MinBlockingHeight
+			&& _footprint.OpaquePixels >= rules.MinBlockingPixels;
+		if (blocks)
 		{
-			CircleShape2D shape = new()
-			{
-				Radius = collisionRadius,
-			};
+			float halfWidth = Mathf.Max(4f, _footprint.BaseWidth * scale * 0.5f);
+			float cx = _footprint.BaseCenterX;
 			CollisionShape2D collider = new()
 			{
-				Shape = shape,
-				Position = new Vector2(0, collisionOffsetY),
+				Shape = new ConvexPolygonShape2D
+				{
+					Points = new[]
+					{
+						new Vector2(cx, -halfHeight),
+						new Vector2(cx + halfWidth, 0f),
+						new Vector2(cx, halfHeight),
+						new Vector2(cx - halfWidth, 0f),
+					},
+				},
 			};
 			AddChild(collider);
-
 			CollisionLayer = 4;
-			CollisionMask = 0;
 		}
 		else
 		{
 			CollisionLayer = 0;
-			CollisionMask = 0;
 		}
+		CollisionMask = 0;
 
-		// --- Canopée (overlay au-dessus du joueur) ---
+		if (!blocks && canopyTexture == null && _footprint.VisibleHeight <= rules.GroundDecalMaxHeight)
+			ZIndex = -1;
+
 		if (canopyTexture != null)
 		{
 			_canopySprite = new Sprite2D
 			{
 				Texture = canopyTexture,
 				TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
-				Position = new Vector2(0, canopyOffsetY),
+				Position = new Vector2(0, canopyOffsetY - sortShift),
 				ZIndex = 100,
 				ZAsRelative = false,
 				SelfModulate = new Color(1f, 1f, 1f, 0.85f),
 			};
 			if (_swayMaterial != null)
-			{
 				_canopySprite.Material = _swayMaterial;
-			}
 			AddChild(_canopySprite);
 		}
 	}
 
-	/// <summary>
-	/// Rend le prop entier (base + canopée) semi-transparent.
-	/// Appelé par PropSpawner quand le joueur est derrière le prop.
-	/// alpha=1 → opaque, alpha~0.35 → très transparent.
-	/// </summary>
+	/// <summary>Rend le prop entier (base + canopée) semi-transparent : 1 opaque, ~0,35 très transparent.</summary>
 	public void SetOverallTransparency(float alpha)
 	{
 		if (_baseSprite != null)
@@ -109,10 +117,19 @@ public partial class EnvironmentProp : StaticBody2D
 
 	public bool HasCanopy => _canopySprite != null;
 
-	/// <summary>Hauteur du sprite de base en pixels (pour la détection "derrière").</summary>
-	public float BaseHeight => _baseHeight;
+	/// <summary>Silhouette visible en coordonnées monde (pour l'occlusion), canopée comprise.</summary>
+	public Rect2 VisibleWorldRect()
+	{
+		Rect2 rect = _baseSprite.GetRect();
+		rect.Position += _baseSprite.GlobalPosition;
+		if (_canopySprite != null)
+		{
+			Rect2 canopy = _canopySprite.GetRect();
+			canopy.Position += _canopySprite.GlobalPosition;
+			rect = rect.Merge(canopy);
+		}
+		return rect;
+	}
 
-	public Vector2 CanopyWorldPosition => _canopySprite != null
-		? GlobalPosition + _canopySprite.Position
-		: GlobalPosition;
+	public PropFootprint Footprint => _footprint;
 }
