@@ -235,9 +235,7 @@ public class WildFieldsLayoutGenerator
 
 	private static uint HashCell(int x, int y, ulong salt)
 	{
-		ulong value = (ulong)((x * 73856093) ^ (y * 19349663));
-		value ^= salt;
-		return (uint)(value & 0x7FFFFFFF);
+		return CellHash.Of(x, y, salt);
 	}
 
 }

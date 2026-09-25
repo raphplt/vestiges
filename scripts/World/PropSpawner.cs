@@ -129,8 +129,7 @@ public partial class PropSpawner : Node2D
 				// spawnChance = density modulée par le bruit (zones de clustering naturel)
 				float noiseVal = (noise.GetNoise2D(x, y) + 1f) * 0.5f; // 0..1
 				float spawnChance = config.Density * (0.5f + noiseVal); // 0..density*1.5
-				uint cellHash = (uint)((x * 48611) ^ (y * 96293)) & 0x7FFFFFFF;
-				float roll = (cellHash % 10000) / 10000f; // 0..1
+				float roll = CellHash.Unit(x, y, 0x5EED);
 				if (roll > spawnChance)
 				{
 					skipDensity++;
@@ -191,8 +190,7 @@ public partial class PropSpawner : Node2D
 		if (candidates.Count == 0 || totalWeight <= 0f)
 			return null;
 
-		uint hash = (uint)((x * 73856093) ^ (y * 19349663)) & 0x7FFFFFFF;
-		float roll = (hash % 10000) / 10000f * totalWeight;
+		float roll = CellHash.Unit(x, y, 0x9C0F) * totalWeight;
 
 		float cumulative = 0f;
 		foreach (PropDefinition prop in candidates)
@@ -352,6 +350,10 @@ public partial class PropSpawner : Node2D
 			canopyTex = LoadTextureCached(prop.SpriteCanopyPath, textureCache);
 
 		Vector2 worldPos = ground.MapToLocal(cell);
+		// Petits décors non bloquants : léger décalage dans le losange de la case, sinon ils dessinent la trame
+		// de la grille. Les décors bloquants restent centrés (collision et occupation des cases).
+		if (!prop.Blocking)
+			worldPos += new Vector2((CellHash.Unit(cell.X, cell.Y, 0xA11) - 0.5f) * 32f, (CellHash.Unit(cell.X, cell.Y, 0xB22) - 0.5f) * 12f);
 		EnvironmentProp envProp = new();
 		envProp.GlobalPosition = worldPos;
 		container.AddChild(envProp);
@@ -398,7 +400,7 @@ public partial class PropSpawner : Node2D
 
 	private static int HashCell(int x, int y, ulong salt)
 	{
-		return (int)(((ulong)(uint)((x * 73856093) ^ (y * 19349663)) ^ salt) & 0x7FFFFFFF);
+		return (int)CellHash.Of(x, y, salt);
 	}
 
 	// =========================================================================

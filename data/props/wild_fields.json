@@ -5,11 +5,10 @@
         {
             "id": "solitary_tree",
             "name": "Arbre solitaire",
-            "weight": 0.35,
+            "weight": 0.5,
             "terrain": ["grass", "forest"],
             "sprite_base": "assets/props/wild_fields/prop_solitary_tree_base.png",
             "sprite_canopy": "assets/props/wild_fields/prop_solitary_tree_canopy.png",
-            "canopy_offset_y": -22,
             "blocking": true,
             "min_distance": 7,
             "variants": 1
@@ -17,7 +16,7 @@
         {
             "id": "tall_grass",
             "name": "Herbes hautes",
-            "weight": 3.2,
+            "weight": 1.6,
             "terrain": ["grass"],
             "sprite_base": "assets/props/wild_fields/prop_tall_grass.png",
             "blocking": false,
@@ -27,7 +26,7 @@
         {
             "id": "tall_grass_v2",
             "name": "Herbes hautes v2",
-            "weight": 2.8,
+            "weight": 1.4,
             "terrain": ["grass"],
             "sprite_base": "assets/props/wild_fields/prop_tall_grass_v2.png",
             "blocking": false,
@@ -37,7 +36,7 @@
         {
             "id": "tall_grass_v3",
             "name": "Herbes hautes v3",
-            "weight": 2.4,
+            "weight": 1.2,
             "terrain": ["grass"],
             "sprite_base": "assets/props/wild_fields/prop_tall_grass_v3.png",
             "blocking": false,
@@ -47,7 +46,7 @@
         {
             "id": "poppies_red",
             "name": "Coquelicots rouges",
-            "weight": 1.5,
+            "weight": 0.8,
             "terrain": ["grass"],
             "sprite_base": "assets/props/wild_fields/prop_poppies_red.png",
             "blocking": false,
@@ -57,7 +56,7 @@
         {
             "id": "poppies_blue",
             "name": "Fleurs bleues",
-            "weight": 1.1,
+            "weight": 0.6,
             "terrain": ["grass"],
             "sprite_base": "assets/props/wild_fields/prop_poppies_blue.png",
             "blocking": false,
@@ -67,7 +66,7 @@
         {
             "id": "poppies_mixed",
             "name": "Fleurs sauvages mixtes",
-            "weight": 0.9,
+            "weight": 0.5,
             "terrain": ["grass"],
             "sprite_base": "assets/props/wild_fields/prop_poppies_mixed.png",
             "blocking": false,
@@ -167,7 +166,7 @@
         {
             "id": "abandoned_well",
             "name": "Puits abandonne",
-            "weight": 0.045,
+            "weight": 0.06,
             "terrain": ["grass", "forest"],
             "sprite_base": "assets/props/wild_fields/prop_abandoned_well.png",
             "blocking": true,
@@ -177,7 +176,7 @@
         {
             "id": "standing_stone",
             "name": "Pierre levee",
-            "weight": 0.055,
+            "weight": 0.07,
             "terrain": ["grass", "forest"],
             "sprite_base": "assets/props/wild_fields/prop_standing_stone.png",
             "blocking": true,
@@ -187,7 +186,7 @@
         {
             "id": "rusted_plow",
             "name": "Charrue rouillee",
-            "weight": 0.065,
+            "weight": 0.08,
             "terrain": ["grass", "concrete"],
             "sprite_base": "assets/props/wild_fields/prop_rusted_plow.png",
             "blocking": true,
@@ -197,7 +196,7 @@
         {
             "id": "tractor_remains",
             "name": "Restes de tracteur",
-            "weight": 0.03,
+            "weight": 0.05,
             "terrain": ["grass", "concrete"],
             "sprite_base": "assets/props/wild_fields/prop_tractor_remains.png",
             "blocking": true,
@@ -207,7 +206,7 @@
         {
             "id": "tractor_husk",
             "name": "Carcasse de tracteur",
-            "weight": 0.028,
+            "weight": 0.045,
             "terrain": ["grass", "concrete"],
             "sprite_base": "assets/props/wild_fields/prop_tractor_husk.png",
             "blocking": true,
@@ -217,7 +216,7 @@
         {
             "id": "windmill_ruin",
             "name": "Eolienne agricole ruinee",
-            "weight": 0.022,
+            "weight": 0.04,
             "terrain": ["grass", "forest"],
             "sprite_base": "assets/props/wild_fields/prop_windmill_ruin.png",
             "blocking": true,
@@ -227,7 +226,7 @@
         {
             "id": "silo_ruin",
             "name": "Silo effondre",
-            "weight": 0.018,
+            "weight": 0.035,
             "terrain": ["grass", "concrete"],
             "sprite_base": "assets/props/wild_fields/prop_silo_ruin.png",
             "blocking": true,

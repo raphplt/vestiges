@@ -201,7 +201,7 @@ Trois créatures du début de run passent dans le pipeline, à la même densité
 | **P0 — Gabarit décors** | Module `tools/sprites/props/`, manifeste (dimensions, pieds, emprise, variantes), planche de contact à taille réelle sur les sols des cinq biomes | Planche et une capture en jeu |
 | **P1 — Mobilier urbain** | Voitures (2 ou 3 carrosseries), bennes, feux, cabine, lampadaire, barrières, boîte aux lettres, panneaux, débris et poutrelles | Captures en vraie run, ville dense ; ton retour |
 | **P2 — Immeubles urbains** | Modules d'immeubles (façade, angle, tour, effondré, église) à l'échelle du personnage, intérieurs visibles par les brèches | Idem, collisions et profondeur (plan 10 D1/D2) |
-| **P3 à P6** | Forêt (livrée), champs, marais, carrière, dans cet ordre sauf avis contraire | Un biome validé avant le suivant |
+| **P3 à P6** | Forêt et champs (livrés), marais, carrière, dans cet ordre sauf avis contraire | Un biome validé avant le suivant |
 
 Les tiles restent en l'état (jugées acceptables) ; un ajustement de contraste reste possible si les nouveaux décors l'exigent.
 
@@ -253,6 +253,32 @@ Les tiles restent en l'état (jugées acceptables) ; un ajustement de contraste 
 - Densité de la forêt (0,20) et part des arbres.
 - Lisibilité du Traqueur, vert sur vert, déjà notée.
 - Les P4–P6 (champs, marais, carrière) suivront le même gabarit.
+
+**P4 Champs livré — 25 septembre 2026 :**
+
+*Catalogue :* `tools/sprites/props/fields.py` (`tools/generate_props.py fields`), palette « Champs Sauvages » de la charte. Les 23 fichiers existants sont refaits sous les mêmes noms, donc avec les mêmes uid :
+- Végétation basse : herbes hautes penchées par le vent et blé sauvage à épis, sous la hauteur du genou ; fleurs rouges, bleues et mêlées.
+- Arbre isolé : chêne large, en tronc et canopée comme en forêt.
+- Clôtures et murets : pierres sèches intacts ou écroulés, avec lichen ; clôtures de bois intactes ou effondrées.
+- Petits vestiges : balles de foin (dont une pourrie et moussue), flaques où se reflète le ciel, épouvantail, puits, menhir, charrue rouillée.
+- Grands vestiges, repères visibles de loin : deux tracteurs (rouillé, carcasse brûlée), éolienne de pompage aux pales arrachées (environ 120 px), silo crevé (environ 85 px).
+
+*Placement :*
+- Poids rééquilibrés : moins de fleurs et de touffes, repères un peu plus fréquents.
+- **Trame régulière corrigée.** Le tirage de densité et le choix du décor utilisaient des hashes aux bits de poids faible périodiques, comme le sol de la forêt (plan 10 §8) : les décors retenus s'alignaient en quinconce.
+  - `CellHash` (SplitMix64) remplace les six copies de ce hash : tuiles, placement générique, ville, marais et parcelles des champs.
+  - Les petits décors non bloquants sont décalés dans leur case (±16 px, ±6 px), sans toucher aux décors bloquants.
+- Les parcelles des champs, la ville et le marais sont redessinés par le nouveau hash, sans changement de répartition. `RESULT terrain` sur 40 seeds est identique, les biomes aussi.
+
+*Vérifications :*
+- Build sans avertissement, smoke test, `MovementRegression`.
+- Captures en vraie run (seed 1002) des champs, de la ville et du marais.
+- `--measure-props` en 1080p, machine calme : champs 159 FPS (3 197 décors), forêt 160, ville 158, carrière 152, marais 146, p99 entre 8 et 10 ms. C'est la plage d'avant les lots P3–P4 : pas de régression.
+
+*Points ouverts pour Raphaël :*
+- Densité des fleurs et des herbes.
+- Rareté des grands repères.
+- Sol des champs : les parcelles restent en marches de tuiles, et les tuiles de blé et de jachère sont rayées par dessin.
 
 ### Effets d'attaque — chantier du 25 septembre 2026
 

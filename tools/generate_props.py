@@ -1,6 +1,6 @@
 """
 Génère les décors d'un biome avec le pipeline procédural commun (plan 08, lots P0–P6).
-Biomes disponibles : urban, urban_buildings, forest.
+Biomes disponibles : urban, urban_buildings, forest, fields.
 
 Usage :
     python3 tools/generate_props.py urban                        # écrit assets/props/urban_ruins/
@@ -32,7 +32,10 @@ URBAN_TILES = ["assets/tiles/ruines/tile_ruines_sol_base.png", "assets/tiles/rui
                "assets/tiles/ruines/tile_ruines_carrelage_base.png"]
 FOREST_TILES = ["assets/tiles/foret/tile_foret_sol_base.png", "assets/tiles/foret/tile_foret_sol_v2.png",
                 "assets/tiles/foret/tile_foret_sousbois_base.png"]
+FIELDS_TILES = ["assets/tiles/champs/tile_champs_herbe_base.png", "assets/tiles/champs/tile_champs_herbe_v2.png",
+                "assets/tiles/champs/tile_champs_ble_base.png"]
 BIOMES = {
+    "fields": ("tools.sprites.props.fields", "assets/props/wild_fields", FIELDS_TILES),
     "forest": ("tools.sprites.props.forest", "assets/props/forest", FOREST_TILES),
     "urban_buildings": ("tools.sprites.props.buildings", "assets/props/urban_ruins", URBAN_TILES),
     "urban": ("tools.sprites.props.urban", "assets/props/urban_ruins",

@@ -274,21 +274,7 @@ public class BiomeTileMapper
 		return ids.ToArray();
 	}
 
-	/// <summary>
-	/// Hash déterministe d'une cellule pour choisir une variante. Les bits sont mélangés (finaliseur à avalanche) :
-	/// l'ancien produit XOR gardait des bits de poids faible périodiques en x et y, et `hash % 4` dessinait des
-	/// diagonales régulières sur le sol.
-	/// </summary>
-	private static int HashCell(int x, int y)
-	{
-		uint h = unchecked((uint)x * 0x8DA6B343u ^ (uint)y * 0xD8163841u);
-		h ^= h >> 16;
-		h = unchecked(h * 0x7FEB352Du);
-		h ^= h >> 15;
-		h = unchecked(h * 0x846CA68Bu);
-		h ^= h >> 16;
-		return (int)(h & 0x7FFFFFFF);
-	}
+	private static int HashCell(int x, int y) => (int)CellHash.Of(x, y);
 
 	/// <summary>Plaques de terre et de sous-bois de la forêt : bruit continu, en coordonnées au sol.</summary>
 	private static readonly FastNoiseLite ForestFloorNoise = new()

@@ -865,8 +865,6 @@ public static class SwampPropPlacer
 
 	private static uint HashCell(Vector2I cell, ulong salt)
 	{
-		ulong value = (ulong)((cell.X * 73856093) ^ (cell.Y * 19349663));
-		value ^= salt;
-		return (uint)(value & 0x7FFFFFFF);
+		return CellHash.Of(cell.X, cell.Y, salt);
 	}
 }
