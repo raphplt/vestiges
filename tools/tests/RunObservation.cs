@@ -17,6 +17,8 @@ namespace Vestiges.Tests;
 /// <summary>
 /// Observation de la vraie scène de run, rendue.
 /// --capture-abilities : captures des annonces du Présage et du bond du Charognard.
+/// --capture-map : répartition des biomes autour du spawn (plusieurs seeds) et vues dézoomées.
+/// --capture-props : zone la plus chargée en décors de chaque biome, collisions affichées.
 /// --capture-bestiary : gros plans des créatures du pilote de sprites procéduraux, autour du joueur immobile.
 /// --density : mesure de densité en spawn naturel (ennemis visibles, temps sans ennemi, débits, niveaux).
 /// --capture-every N : pendant la mesure, capture plein écran toutes les N secondes (HUD, événements).
@@ -43,9 +45,19 @@ public partial class RunObservation : Node
             _output = Argument(args, "--output", "/tmp/vestiges-observation");
             DirAccess.MakeDirRecursiveAbsolute(_output);
             ulong seed = ulong.Parse(Argument(args, "--seed", Seed.ToString(CultureInfo.InvariantCulture)), CultureInfo.InvariantCulture);
+            bool captureMap = Array.IndexOf(args, "--capture-map") >= 0;
+            bool captureProps = Array.IndexOf(args, "--capture-props") >= 0;
+            if (captureProps)
+                GetTree().DebugCollisionsHint = true;
+            if (captureMap)
+                MeasureBiomeLayout(seed, int.Parse(Argument(args, "--map-seeds", "40"), CultureInfo.InvariantCulture), 4);
             await LoadRun(seed, Argument(args, "--character", "traqueur"));
 
-            if (Array.IndexOf(args, "--capture-abilities") >= 0)
+            if (captureMap)
+                await CaptureWorldOverview();
+            else if (captureProps)
+                await CapturePropHotspots();
+            else if (Array.IndexOf(args, "--capture-abilities") >= 0)
                 await CaptureAbilities();
             else if (Array.IndexOf(args, "--capture-bestiary") >= 0)
                 await CaptureBestiary();

@@ -93,7 +93,10 @@ public partial class WorldSetup : Node2D
             _config.Zones,
             Seed,
             _config.EdgeFadeWidth
-        );
+        )
+        {
+            BiomeLayout = _config.BiomeLayout
+        };
 
         // Générer le terrain (CPU pur, rapide)
         List<BiomeData> availableBiomes = LoadAvailableBiomes();
@@ -838,6 +841,7 @@ public class WorldGenConfig
     public int FogRevealRadius = 6;
     public int FogInitialClearRadius = 8;
     public List<string> AvailableBiomes = new();
+    public WorldGenerator.BiomeLayoutConfig BiomeLayout = WorldGenerator.BiomeLayoutConfig.Default;
 
     public static WorldGenConfig Load()
     {
@@ -890,6 +894,17 @@ public class WorldGenConfig
             Godot.Collections.Array biomesArray = dict["available_biomes"].AsGodotArray();
             foreach (Variant biomeItem in biomesArray)
                 config.AvailableBiomes.Add(biomeItem.AsString());
+        }
+
+        if (dict.ContainsKey("biome_layout"))
+        {
+            Godot.Collections.Dictionary layout = dict["biome_layout"].AsGodotDictionary();
+            config.BiomeLayout = new WorldGenerator.BiomeLayoutConfig
+            {
+                RegionSpacing = (float)layout.GetValueOrDefault("region_spacing", config.BiomeLayout.RegionSpacing).AsDouble(),
+                WarpStrength = (float)layout.GetValueOrDefault("warp_strength", config.BiomeLayout.WarpStrength).AsDouble(),
+                SpawnOffsetFactor = (float)layout.GetValueOrDefault("spawn_offset_factor", config.BiomeLayout.SpawnOffsetFactor).AsDouble(),
+            };
         }
 
         Godot.Collections.Array zonesArray = dict["zones"].AsGodotArray();

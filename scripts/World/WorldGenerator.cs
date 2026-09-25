@@ -33,17 +33,39 @@ public class WorldGenerator
     private int _size;
 
     private List<BiomeData> _activeBiomes = new();
-    private Vector2[] _biomeSeeds = new Vector2[0];
+    private readonly List<Vector2> _regionCenters = new();
+    private readonly List<int> _regionBiomes = new();
+    private List<int>[,] _regionBuckets;
+    private float _regionBucketSize;
+    private int _regionBucketCount;
     private FastNoiseLite _biomeWarpNoiseX;
     private FastNoiseLite _biomeWarpNoiseY;
+    private BiomeLayoutConfig _biomeLayout = BiomeLayoutConfig.Default;
 
-    private const float BiomeWarpStrength = 12f;
-    private const float MinBiomeSeedDistanceFactor = 0.3f;
-    private const int MaxBiomeSeedPlacementAttempts = 64;
+    private const int RegionPlacementMaxFailures = 80;
+    private const float RegionNeighbourFactor = 1.9f;
+    private const float RegionSameNeighbourPenalty = 100f;
 
     public int MapRadius => _mapRadius;
     public int SpawnClearance => _spawnClearance;
     public List<BiomeData> ActiveBiomes => _activeBiomes;
+    public int BiomeRegionCount => _regionCenters.Count;
+
+    /// <summary>Taille et forme de la mosaïque de biomes (world_gen.json, bloc biome_layout).</summary>
+    public struct BiomeLayoutConfig
+    {
+        public float RegionSpacing;
+        public float WarpStrength;
+        public float SpawnOffsetFactor;
+
+        public static BiomeLayoutConfig Default => new() { RegionSpacing = 28f, WarpStrength = 9f, SpawnOffsetFactor = 0.4f };
+    }
+
+    public BiomeLayoutConfig BiomeLayout
+    {
+        get => _biomeLayout;
+        set => _biomeLayout = value;
+    }
 
     public struct ZoneConfig
     {
@@ -259,7 +281,7 @@ public class WorldGenerator
             pool.RemoveAt(index);
         }
 
-        _biomeSeeds = CreateBiomeSeeds();
+        CreateBiomeRegions();
         _biomeWarpNoiseX = CreateBiomeWarpNoise((int)_rng.Randi());
         _biomeWarpNoiseY = CreateBiomeWarpNoise((int)_rng.Randi());
 
@@ -276,37 +298,121 @@ public class WorldGenerator
                 int x = gx - _mapRadius;
                 int y = gy - _mapRadius;
                 Vector2 samplePoint = GetWarpedBiomeSample(new Vector2(x, y));
-                _biomeGrid[gx, gy] = FindClosestBiomeIndex(samplePoint);
+                _biomeGrid[gx, gy] = FindClosestRegionBiome(samplePoint);
             }
         }
     }
 
-    private Vector2[] CreateBiomeSeeds()
+    /// <summary>
+    /// Mosaïque de régions : centres espacés d'au moins RegionSpacing (tirage de Poisson),
+    /// chaque biome revient plusieurs fois sans jamais toucher une région du même biome.
+    /// Le spawn tombe près d'une frontière pour qu'on voie plusieurs biomes dès le départ.
+    /// </summary>
+    private void CreateBiomeRegions()
     {
-        int biomeCount = _activeBiomes.Count;
-        Vector2[] seeds = new Vector2[biomeCount];
-        bool[] placed = new bool[biomeCount];
+        float spacing = Mathf.Max(8f, _biomeLayout.RegionSpacing);
+        _regionBucketSize = spacing;
+        _regionBucketCount = Mathf.CeilToInt(_size / spacing) + 1;
+        _regionBuckets = new List<int>[_regionBucketCount, _regionBucketCount];
+        _regionCenters.Clear();
+        _regionBiomes.Clear();
 
-        float outerRadius = Mathf.Max(_spawnClearance * 2f, _mapRadius * 0.82f);
-        outerRadius = Mathf.Min(outerRadius, _mapRadius - 6f);
-        float ringStart = Mathf.Clamp(_spawnClearance * 1.8f, 8f, outerRadius);
-        float minSeedDistance = Mathf.Max(18f, _mapRadius * MinBiomeSeedDistanceFactor);
+        float spawnOffset = spacing * Mathf.Clamp(_biomeLayout.SpawnOffsetFactor, 0f, 0.5f);
+        AddRegion(SampleBiomeSeed(spawnOffset * 0.8f, spawnOffset));
 
-        int centralBiomeIndex = (int)(_rng.Randi() % (uint)biomeCount);
-        float centerSeedRadius = Mathf.Min(_spawnClearance * 0.75f, ringStart * 0.45f);
-        seeds[centralBiomeIndex] = SampleBiomeSeed(0f, Mathf.Max(6f, centerSeedRadius));
-        placed[centralBiomeIndex] = true;
-
-        for (int i = 0; i < biomeCount; i++)
+        float spacingSq = spacing * spacing;
+        int failures = 0;
+        while (failures < RegionPlacementMaxFailures)
         {
-            if (placed[i])
+            Vector2 candidate = SampleBiomeSeed(0f, _mapRadius + spacing * 0.5f);
+            if (NearestRegionDistanceSquared(candidate, 1) < spacingSq)
+            {
+                failures++;
                 continue;
-
-            seeds[i] = FindBiomeSeedCandidate(seeds, placed, ringStart, outerRadius, minSeedDistance);
-            placed[i] = true;
+            }
+            AddRegion(candidate);
+            failures = 0;
         }
 
-        return seeds;
+        int[] regionCounts = new int[_activeBiomes.Count];
+        float neighbourRadiusSq = spacingSq * RegionNeighbourFactor * RegionNeighbourFactor;
+        List<int> neighbourBiomes = new();
+        for (int region = 0; region < _regionCenters.Count; region++)
+        {
+            neighbourBiomes.Clear();
+            for (int other = 0; other < region; other++)
+            {
+                if (_regionCenters[region].DistanceSquaredTo(_regionCenters[other]) <= neighbourRadiusSq)
+                    neighbourBiomes.Add(_regionBiomes[other]);
+            }
+
+            int bestBiome = 0;
+            float bestScore = float.MaxValue;
+            for (int biome = 0; biome < _activeBiomes.Count; biome++)
+            {
+                float weight = Mathf.Max(0.35f, _activeBiomes[biome].MapWeight);
+                // Un voisin du même biome est fortement pénalisé ; à égalité, le biome le moins présent l'emporte.
+                float score = (regionCounts[biome] + 1) / weight
+                    + (neighbourBiomes.Contains(biome) ? RegionSameNeighbourPenalty : 0f)
+                    + _rng.Randf() * 0.5f;
+                if (score < bestScore)
+                {
+                    bestScore = score;
+                    bestBiome = biome;
+                }
+            }
+            _regionBiomes[region] = bestBiome;
+            regionCounts[bestBiome]++;
+        }
+    }
+
+    private void AddRegion(Vector2 center)
+    {
+        Vector2I bucket = RegionBucket(center);
+        _regionBuckets[bucket.X, bucket.Y] ??= new List<int>();
+        _regionBuckets[bucket.X, bucket.Y].Add(_regionCenters.Count);
+        _regionCenters.Add(center);
+        _regionBiomes.Add(0);
+    }
+
+    private Vector2I RegionBucket(Vector2 point)
+    {
+        int bx = Mathf.Clamp(Mathf.FloorToInt((point.X + _mapRadius) / _regionBucketSize), 0, _regionBucketCount - 1);
+        int by = Mathf.Clamp(Mathf.FloorToInt((point.Y + _mapRadius) / _regionBucketSize), 0, _regionBucketCount - 1);
+        return new Vector2I(bx, by);
+    }
+
+    private float NearestRegionDistanceSquared(Vector2 point, int bucketRange)
+    {
+        return NearestRegion(point, bucketRange, out float distanceSq) < 0 ? float.MaxValue : distanceSq;
+    }
+
+    private int NearestRegion(Vector2 point, int bucketRange, out float bestDistanceSq)
+    {
+        Vector2I bucket = RegionBucket(point);
+        int bestRegion = -1;
+        bestDistanceSq = float.MaxValue;
+        for (int bx = bucket.X - bucketRange; bx <= bucket.X + bucketRange; bx++)
+        {
+            for (int by = bucket.Y - bucketRange; by <= bucket.Y + bucketRange; by++)
+            {
+                if (bx < 0 || by < 0 || bx >= _regionBucketCount || by >= _regionBucketCount)
+                    continue;
+                List<int> regions = _regionBuckets[bx, by];
+                if (regions == null)
+                    continue;
+                foreach (int region in regions)
+                {
+                    float distanceSq = point.DistanceSquaredTo(_regionCenters[region]);
+                    if (distanceSq < bestDistanceSq)
+                    {
+                        bestDistanceSq = distanceSq;
+                        bestRegion = region;
+                    }
+                }
+            }
+        }
+        return bestRegion;
     }
 
     private FastNoiseLite CreateBiomeWarpNoise(int seed)
@@ -327,72 +433,24 @@ public class WorldGenerator
         return new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * radius;
     }
 
-    private Vector2 FindBiomeSeedCandidate(Vector2[] seeds, bool[] placed, float minRadius, float maxRadius, float minSeedDistance)
-    {
-        Vector2 fallback = SampleBiomeSeed(minRadius, maxRadius);
-        float bestSpacingSq = -1f;
-        float minSeedDistanceSq = minSeedDistance * minSeedDistance;
-
-        for (int attempt = 0; attempt < MaxBiomeSeedPlacementAttempts; attempt++)
-        {
-            Vector2 candidate = SampleBiomeSeed(minRadius, maxRadius);
-            bool isValid = true;
-            float nearestSeedSq = float.MaxValue;
-
-            for (int i = 0; i < seeds.Length; i++)
-            {
-                if (!placed[i])
-                    continue;
-
-                float distSq = candidate.DistanceSquaredTo(seeds[i]);
-                nearestSeedSq = Mathf.Min(nearestSeedSq, distSq);
-                if (distSq < minSeedDistanceSq)
-                {
-                    isValid = false;
-                    break;
-                }
-            }
-
-            if (isValid)
-                return candidate;
-
-            if (nearestSeedSq > bestSpacingSq)
-            {
-                bestSpacingSq = nearestSeedSq;
-                fallback = candidate;
-            }
-        }
-
-        return fallback;
-    }
-
     private Vector2 GetWarpedBiomeSample(Vector2 cellPosition)
     {
-        float warpX = _biomeWarpNoiseX.GetNoise2D(cellPosition.X, cellPosition.Y) * BiomeWarpStrength;
-        float warpY = _biomeWarpNoiseY.GetNoise2D(cellPosition.X + 137f, cellPosition.Y - 211f) * BiomeWarpStrength;
+        float strength = _biomeLayout.WarpStrength;
+        float warpX = _biomeWarpNoiseX.GetNoise2D(cellPosition.X, cellPosition.Y) * strength;
+        float warpY = _biomeWarpNoiseY.GetNoise2D(cellPosition.X + 137f, cellPosition.Y - 211f) * strength;
         return new Vector2(cellPosition.X + warpX, cellPosition.Y + warpY);
     }
 
-    private int FindClosestBiomeIndex(Vector2 samplePoint)
+    private int FindClosestRegionBiome(Vector2 samplePoint)
     {
-        if (_biomeSeeds.Length == 0)
+        if (_regionCenters.Count == 0)
             return 0;
 
-        int bestIndex = 0;
-        float bestScore = float.MaxValue;
-
-        for (int i = 0; i < _biomeSeeds.Length; i++)
-        {
-            float weight = Mathf.Max(0.35f, _activeBiomes[i].MapWeight);
-            float score = samplePoint.DistanceSquaredTo(_biomeSeeds[i]) / weight;
-            if (score < bestScore)
-            {
-                bestScore = score;
-                bestIndex = i;
-            }
-        }
-
-        return bestIndex;
+        // Le tirage de Poisson laisse des trous inférieurs à deux espacements : deux cases de voisinage suffisent.
+        int region = NearestRegion(samplePoint, 2, out _);
+        if (region < 0)
+            region = NearestRegion(samplePoint, _regionBucketCount, out _);
+        return _regionBiomes[region];
     }
 
     private void SeedInitial()

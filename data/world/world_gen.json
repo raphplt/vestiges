@@ -4,6 +4,11 @@
     "ca_iterations": 4,
     "edge_fade_width": 5,
     "biome_count": 5,
+    "biome_layout": {
+        "region_spacing": 28,
+        "warp_strength": 9,
+        "spawn_offset_factor": 0.4
+    },
     "available_biomes": [
         "forest_reclaimed",
         "urban_ruins",
