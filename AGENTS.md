@@ -33,7 +33,8 @@ Consulter la Stratégie V2 avant de proposer une feature ou un changement archit
 | Captures en vraie run (1080p, bot invincible) | `tools/capture_run.sh <dossier> [secondes] [intervalle] [résolution] [seed]` ; modes via `CAPTURE_EXTRA_ARGS` : `--event <id>`, `--capture-map`, `--capture-props [--hide-collisions]`, `--capture-bestiary` |
 | Banc de combat dense (120 ennemis, FPS, nœuds créés/s) | `BENCH_REPEATS=1 BENCH_SECONDS=15 tools/benchmark_movement.sh <dossier neuf>` ; synthèse : `python3 tools/summarize_movement_benchmark.py <dossier>` |
 | Comparaison A/B de performance | `tools/bench_ab.sh <ref de base> <dossier neuf> [passes]` (refuse de mesurer si la machine est chargée) |
-| Sprites procéduraux | `python3 tools/generate_character.py <id>`, `tools/generate_enemy.py <id>`, `tools/generate_props.py <urban\|urban_buildings> [--sheet planche.png]` |
+| Sprites procéduraux | `python3 tools/generate_character.py <id>`, `tools/generate_enemy.py <id>`, `tools/generate_projectiles.py`, `tools/generate_props.py <urban\|urban_buildings\|forest> [--sheet planche.png]` |
+| Retouches Aseprite | `--editable` sur un générateur, puis `python3 tools/export_retouches.py` ([guide](doc/RETOUCHES-ASEPRITE.md)) |
 
 `GODOT_BIN` surcharge le binaire Godot utilisé par les scripts.
 En headless, ces avertissements sont normaux : DLL Steam absente, « MixRate mismatch » (driver audio factice), fuites ObjectDB à la fermeture.
