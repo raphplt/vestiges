@@ -40,3 +40,4 @@ steam_appid.txt
 # Claude Code : réglages personnels (non partagés)
 .claude/settings.local.json
 CLAUDE.local.md
+__pycache__/

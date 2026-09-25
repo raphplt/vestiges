@@ -75,7 +75,7 @@ def _normals(parts: Sequence[Part], points: np.ndarray) -> np.ndarray:
 
 def render(parts: Sequence[Part], materials: Sequence[Material], yaw: float,
            size: tuple[int, int], pivot: tuple[float, float],
-           scale: float = MODEL_SCALE, supersample: int = 4) -> Image.Image:
+           scale: float = MODEL_SCALE, supersample: int = 4, ray_range: float = RAY_RANGE) -> Image.Image:
     width, height = size
     ss = supersample
     # Rayons exprimés dans l'espace du modèle : la lumière reste fixe à l'écran quelle que soit l'orientation.
@@ -90,13 +90,13 @@ def render(parts: Sequence[Part], materials: Sequence[Material], yaw: float,
     ys = (pivot[1] - (np.arange(height)[:, None] + sub[None, :]).reshape(-1)) / scale
     grid_y, grid_x = np.meshgrid(ys, xs, indexing="ij")
     plane = grid_x.reshape(-1, 1) * right + grid_y.reshape(-1, 1) * up
-    origins = plane - view * RAY_RANGE * 0.5
+    origins = plane - view * ray_range * 0.5
 
     count = len(origins)
     t = np.zeros(count)
     hit = np.zeros(count, dtype=bool)
     active = np.ones(count, dtype=bool)
-    for _ in range(110):
+    for _ in range(int(110 * max(1.0, ray_range / RAY_RANGE))):
         index = np.nonzero(active)[0]
         if len(index) == 0:
             break
@@ -104,7 +104,7 @@ def render(parts: Sequence[Part], materials: Sequence[Material], yaw: float,
         t[index] += d * 0.85
         landed = d < 0.03
         hit[index[landed]] = True
-        active[index[landed | (t[index] > RAY_RANGE)]] = False
+        active[index[landed | (t[index] > ray_range)]] = False
 
     material = np.full(count, -1, dtype=np.int32)
     value = np.zeros(count)

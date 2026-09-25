@@ -54,3 +54,16 @@ def rounded_box(p: np.ndarray, center, half_extents, rounding: float, rotation: 
     outside = np.linalg.norm(np.maximum(q, 0.0), axis=1)
     inside = np.minimum(np.max(q, axis=1), 0.0)
     return outside + inside - rounding
+
+
+def cylinder(p: np.ndarray, center, radius: float, half_height: float, rounding: float = 0.0,
+             rotation: np.ndarray | None = None) -> np.ndarray:
+    """Cylindre d'axe Y local (roues, poteaux, fûts), bords éventuellement arrondis."""
+    local = p - np.asarray(center)
+    if rotation is not None:
+        local = local @ rotation
+    radial = np.linalg.norm(local[:, [0, 2]], axis=1) - (radius - rounding)
+    axial = np.abs(local[:, 1]) - (half_height - rounding)
+    outside = np.linalg.norm(np.stack([np.maximum(radial, 0.0), np.maximum(axial, 0.0)], axis=1), axis=1)
+    inside = np.minimum(np.maximum(radial, axial), 0.0)
+    return outside + inside - rounding

@@ -175,6 +175,15 @@ Trois créatures du début de run passent dans le pipeline, à la même densité
 
 Les tiles restent en l'état (jugées acceptables) ; un ajustement de contraste reste possible si les nouveaux décors l'exigent.
 
+**P0 et P1 livrés — 25 septembre 2026 :**
+- `tools/sprites/props/` : kit commun (`_kit.py`) et mobilier urbain (`urban.py`). `tools/generate_props.py urban [--sheet]` réécrit uniquement les fichiers du catalogue ; les `.import` (et leurs uid) sont conservés.
+- Même rendu que les créatures (`MODEL_SCALE`), à l'échelle réelle : 1 m ≈ 27,5 unités, un humain ≈ 30 px. Cadre ajusté automatiquement, centré sur le point au sol. Portée de rayon paramétrable dans `render()` pour les grands volumes, nouvelle primitive `cylinder`.
+- Orientation : le TileSet iso est en disposition « stacked », donc les rues sont horizontales ou verticales à l'écran. Vus exactement de profil, les décors perdaient leur volume (un grillage devenait un trait). Chaque axe prend donc un trois-quarts proche : 62° pour une rue horizontale, 22° pour une rue verticale.
+- Usure reproductible par graine : taches de rouille affleurantes, mousse, carrosserie affaissée, feu penché.
+- 19 fichiers : voiture en trois teintes et deux axes (le placeur choisit l'axe de la route et la teinte par hash de cellule), deux bennes (fermée ; ouverte avec sacs), feu tricolore, cabine, boîte aux lettres, grillage, panneau d'affichage, trois gravats, deux poutrelles. Tailles typiques : voiture 76×37 px, benne 40×37, feu 26×54. Gravats et poutrelles sont partagés avec la carrière.
+- Placement : au moins une cellule libre entre deux décors de rue ; fréquence au bord des immeubles 18 % → 9 %, aux carrefours 25 % → 20 %.
+- Captures `--capture-props --hide-collisions` (seed 1002) : chaque objet se lit à l'échelle du personnage. Défaut restant : les immeubles actuels s'empilent et débordent sur la chaussée, c'est l'objet de P2.
+
 ### Recommandation initiale (22 septembre), remplacée pour la méthode
 
 **Choix recommandé : pixel art dessiné et animé à une densité commune, produit à partir d’une scène étalon, avec retouche contrôlée et pipeline automatisé.** L’IA peut aider aux recherches de silhouettes/matières ou à une base de sprite, mais chaque résultat doit être redessiné/normalisé selon les mêmes références. Des générations indépendantes « pixel art détaillé » ne constituent pas une méthode de cohérence ; générer chaque frame indépendamment n’est pas le pipeline recommandé pour les personnages.

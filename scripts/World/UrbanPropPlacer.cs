@@ -39,10 +39,22 @@ public static class UrbanPropPlacer
 	// Standalone tall structure (max 1-2 per map, placed on sidewalk near large buildings)
 	private const string AntennaSprite = "assets/props/urban_ruins/prop_radio_antenna_tower.png";
 
-	private static readonly string[] RoadSprites = {
-		"assets/props/urban_ruins/prop_urban_car.png",
+	private static readonly string[] RoadDebrisSprites = {
 		"assets/props/urban_ruins/prop_concrete_debris.png",
 		"assets/props/urban_ruins/prop_concrete_debris_v2.png",
+	};
+
+	// Voitures alignées sur l'axe de leur route : x pour une rue est-ouest (cellules), y pour une rue nord-sud.
+	private static readonly string[] CarSpritesAxisX = {
+		"assets/props/urban_ruins/prop_urban_car_red_x.png",
+		"assets/props/urban_ruins/prop_urban_car_teal_x.png",
+		"assets/props/urban_ruins/prop_urban_car_cream_x.png",
+	};
+
+	private static readonly string[] CarSpritesAxisY = {
+		"assets/props/urban_ruins/prop_urban_car_red_y.png",
+		"assets/props/urban_ruins/prop_urban_car_teal_y.png",
+		"assets/props/urban_ruins/prop_urban_car_cream_y.png",
 	};
 
 	private static readonly string[] SidewalkIntersectionSprites = {
@@ -78,6 +90,12 @@ public static class UrbanPropPlacer
 		"prop_building_shopfront_row.png",
 		"prop_radio_antenna_tower.png",
 		"prop_urban_car.png",
+		"prop_urban_car_red_x.png",
+		"prop_urban_car_teal_x.png",
+		"prop_urban_car_cream_x.png",
+		"prop_urban_car_red_y.png",
+		"prop_urban_car_teal_y.png",
+		"prop_urban_car_cream_y.png",
 		"prop_traffic_light.png",
 		"prop_phone_booth.png",
 		"prop_dumpster.png",
@@ -103,8 +121,10 @@ public static class UrbanPropPlacer
 		HashSet<Vector2I> intersections = FindIntersections(layout);
 
 		int buildingCount = PlaceBuildingMasses(layout, intersections, ground, container, usedCells, cache, seed);
-		int roadCount = PlaceRoadProps(layout, intersections, ground, container, usedCells, cache, seed);
-		int sidewalkCount = PlaceSidewalkProps(layout, intersections, ground, container, usedCells, cache, seed);
+		// Décors de rue à l'échelle du personnage : au moins une cellule libre entre deux d'entre eux.
+		HashSet<Vector2I> streetProps = new();
+		int roadCount = PlaceRoadProps(layout, intersections, ground, container, usedCells, streetProps, cache, seed);
+		int sidewalkCount = PlaceSidewalkProps(layout, intersections, ground, container, usedCells, streetProps, cache, seed);
 
 		GD.Print($"[UrbanPropPlacer] Placed {buildingCount} building masses, {roadCount} road props, {sidewalkCount} sidewalk props");
 	}
@@ -465,6 +485,7 @@ public static class UrbanPropPlacer
 		TileMapLayer ground,
 		Node2D container,
 		HashSet<Vector2I> usedCells,
+		HashSet<Vector2I> streetProps,
 		Dictionary<string, Texture2D> cache,
 		ulong seed)
 	{
@@ -483,12 +504,24 @@ public static class UrbanPropPlacer
 			if (roll >= 15)
 				continue;
 
-			string sprite = roll < 3
-				? RoadSprites[0]
-				: RoadSprites[1 + (int)(hash % 2)];
+			string sprite;
+			if (roll < 3)
+			{
+				string[] cars = layout.RoadCells.Contains(roadCell + Vector2I.Right) ? CarSpritesAxisX : CarSpritesAxisY;
+				sprite = cars[(int)((hash >> 8) % (uint)cars.Length)];
+			}
+			else
+			{
+				sprite = RoadDebrisSprites[(int)(hash % 2)];
+			}
 
+			if (IsCrowded(streetProps, roadCell))
+				continue;
 			if (TryPlaceProp(sprite, roadCell, ground, container, usedCells, cache))
+			{
+				streetProps.Add(roadCell);
 				placed++;
+			}
 		}
 
 		return placed;
@@ -504,6 +537,7 @@ public static class UrbanPropPlacer
 		TileMapLayer ground,
 		Node2D container,
 		HashSet<Vector2I> usedCells,
+		HashSet<Vector2I> streetProps,
 		Dictionary<string, Texture2D> cache,
 		ulong seed)
 	{
@@ -522,13 +556,18 @@ public static class UrbanPropPlacer
 			int roll = (int)(hash % 100);
 
 			string sprite = null;
-			if (nearIntersection && roll < 25)
+			if (nearIntersection && roll < 20)
 				sprite = SidewalkIntersectionSprites[(int)(hash % (uint)SidewalkIntersectionSprites.Length)];
-			else if (nearBuilding && roll < 18)
+			else if (nearBuilding && roll < 9)
 				sprite = SidewalkEdgeSprites[(int)(hash % (uint)SidewalkEdgeSprites.Length)];
 
-			if (sprite != null && TryPlaceProp(sprite, cell, ground, container, usedCells, cache))
+			if (sprite == null || IsCrowded(streetProps, cell))
+				continue;
+			if (TryPlaceProp(sprite, cell, ground, container, usedCells, cache))
+			{
+				streetProps.Add(cell);
 				placed++;
+			}
 		}
 
 		return placed;
@@ -609,6 +648,19 @@ public static class UrbanPropPlacer
 
 		usedCells.Add(cell);
 		return true;
+	}
+
+	private static bool IsCrowded(HashSet<Vector2I> streetProps, Vector2I cell)
+	{
+		for (int dx = -1; dx <= 1; dx++)
+		{
+			for (int dy = -1; dy <= 1; dy++)
+			{
+				if (streetProps.Contains(new Vector2I(cell.X + dx, cell.Y + dy)))
+					return true;
+			}
+		}
+		return false;
 	}
 
 	private static bool IsNearBuilding(UrbanLayout layout, Vector2I cell)
