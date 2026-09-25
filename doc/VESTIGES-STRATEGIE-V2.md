@@ -703,6 +703,7 @@ Le script de post-processing doit inclure une vérification/correction de l'angl
 - [x] Adapter SpawnManager (spawns liés à l'Effacement, plus proches, plus denses).
 - [x] Agrandir la map (doubler la taille pour tester, objectif final 4-5x).
 - [x] Revoir la génération : biomes contigus, pas concentriques.
+- [x] Biomes mélangés dès le départ : mosaïque de régions (chaque biome revient plusieurs fois), frontière visible dès le premier écran ; régression du 14 mars mesurée sur 40 seeds et corrigée ([plan 10 §6](plans/10-terrain-et-tiles.md#6-régression-un-seul-biome-autour-du-départ--25-septembre-2026)).
 - [x] Socle de déplacement écran : amplitude analogique, vitesse diagonale bornée, animation/pas sur mouvement réel et protections hors run ; vérification Godot headless du [plan 01](plans/01-deplacements.md#7-première-implémentation--21-septembre-2026).
 - [x] Validation par Raphaël des déplacements de base refaits (22 septembre 2026, plan 01 B/C).
 - [ ] Recette humaine du socle de déplacement : clavier/manette, terrain et interactions en run, ressenti et caméra (plan 01 A–C).
@@ -716,7 +717,7 @@ Le script de post-processing doit inclure une vérification/correction de l'angl
 - [ ] Mobilités de personnages : prototypes et profils après casting et nouveaux sprites validés (plan 01 E).
 - [x] Micro-événements v1 (plan 12) : directeur calé autour des Résurgences, cinq événements (Souverain, Harde, Vestige tombé, Veille, Averse d'éclats), repères au sol, bandeau et flèche de bord, données JSON ; captures en vraie run (24 septembre 2026).
 - [x] Variantes renforcées data-driven (plan 12) : élites naturelles à affixe, Souverains, Aberrations et affixes de phase dans `_variants.json`.
-- [ ] Recette humaine des micro-événements et des élites : cadence, lisibilité, intérêt, récompenses (plan 12 §6).
+- [x] Recette humaine des micro-événements et des élites : cadence validée en l'état, élites bien dosées, événements appréciés (Raphaël, 25 septembre 2026). Détails à revoir plus tard ; le soin, peut-être trop rare, est reporté aux plans 13/03 (plan 12 §7).
 - [ ] Ajuster le tempo : runs de 15-25 min en gameplay normal.
 - [ ] **PLAYTEST : est-ce que c'est fun ? Est-ce que l'Effacement crée de la tension ? Est-ce que le mouvement permanent fonctionne ?**
 
@@ -742,7 +743,7 @@ Le script de post-processing doit inclure une vérification/correction de l'angl
 
 - [x] Barre d'XP fullwidth en bas de l'écran (déplacée le 24 septembre 2026 dans la plaque de vie du HUD refait, [plan 04](plans/04-interfaces-et-hub.md#retour-de-raphaël-et-hud-de-run--24-septembre-2026)).
 - [x] HUD de run lisible : plaques contrastées, jauge de PV sous le héros, police Saira Semi Condensed, boussole retirée ; captures 1080p/4K vérifiées (plan 04, 24 septembre 2026).
-- [ ] Recette humaine du HUD refait et de la police (720p/1080p, combat dense).
+- [x] Recette humaine du HUD refait et de la police : « HUD bien mieux » (Raphaël, 25 septembre 2026).
 - [ ] Armes dans le menu pause avec stats et rareté.
 - [ ] Menu pause compact.
 - [ ] Onboarding implicite (les 5 premières minutes doivent être auto-explicatives).

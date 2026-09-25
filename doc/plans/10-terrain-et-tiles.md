@@ -100,3 +100,82 @@ Même scènes/seeds/trajectoires avant/après, clavier/manette, biomes/effacemen
 
 Valider les gains en lisibilité, cohérence et déplacement. Le streaming complet ou une nouvelle architecture de terrain n'entre dans le plan que si le profilage établit son besoin et qu'un sous-plan est ensuite approuvé. Roadmap A/F/G.
 
+
+## 6. Régression « un seul biome autour du départ » — 25 septembre 2026
+
+**Retour de Raphaël :** « j'ai l'impression d'apparaître sur un seul terrain qui couvre toute la carte, alors qu'avant les biomes étaient mélangés, et c'était mieux ».
+
+**Cause, dans l'historique git :** la génération n'a pas changé en septembre. Le changement date du commit `8340950` (14 mars 2026, « Refactor World Generation ») :
+- Avant : cinq secteurs angulaires bruités qui partaient tous du point d'apparition. Tous les biomes se touchaient au départ.
+- Après : régions de Voronoï, avec un biome central posé sur le spawn et les quatre autres sur un anneau, à au moins 60 cellules les uns des autres. Le rayon de la carte passe en même temps de 100 à 200 cellules.
+- Conséquence : le joueur démarre au milieu d'une seule région d'environ 60 cellules de large. Un écran à 1080p couvre une douzaine de cellules autour du joueur.
+
+**Mesure** (`--capture-map` du banc `RunObservation`, 40 seeds consécutives à partir de 1000, grille de biomes réelle) :
+
+| Indicateur | Avant correction | Après correction |
+|---|---|---|
+| Part du biome majoritaire, rayon 10 cellules | 100 % | 94 % |
+| Part du biome majoritaire, rayon 20 cellules (≈ 1,5 écran) | 100 % | 73 % |
+| Biomes présents dans un rayon de 20 cellules | 1,0 | 2,9 |
+| Biomes présents dans un rayon de 40 cellules | 1,6 | 4,2 |
+| Distance du spawn à la première frontière (moyenne / max) | 31 / 60 cellules | 7,6 / 12 cellules |
+| Temps de génération d'un monde (20 seeds, même machine) | 868 ms | 253 ms |
+
+**Correction :** une mosaïque de régions (`WorldGenerator.CreateBiomeRegions`).
+- Des centres de région sont tirés sur tout le disque avec un espacement minimal (tirage de Poisson), soit une centaine de régions.
+- Chaque région reçoit un biome : jamais le même que ses voisines, le biome le moins représenté en priorité, `map_weight` respecté.
+- La première région est décalée de 40 % d'un espacement par rapport au spawn, pour que le départ soit proche d'une frontière.
+- Le bruit de déformation des frontières est conservé.
+- Recherche par grille de cases : pas de coût supplémentaire au chargement.
+- Réglages dans `data/world/world_gen.json`, bloc `biome_layout` : `region_spacing` (28 cellules), `warp_strength` (9), `spawn_offset_factor` (0,4).
+
+Tous les consommateurs (tiles, layouts urbain, marais et champs, props, POI, spawns, nom du biome dans le HUD) interrogent le biome par cellule : ils fonctionnent tels quels avec plusieurs régions par biome.
+
+**Vérifications :** build sans avertissement, smoke test vert, `MovementRegression` et `EnemyAbilityRegression` sans échec. Vues d'ensemble dézoomées avant/après sur les seeds 1000 et 1002 : au premier écran de la seed 1002, champs et ruines urbaines sont côte à côte.
+
+Reproduire : `CAPTURE_EXTRA_ARGS="--capture-map" tools/capture_run.sh <dossier> 10 0 1920x1080 1000`. Le banc écrit `biomes-<seed>.png` (un pixel par cellule, anneaux de 20 et 40 cellules) et `overview-zoom*.png`.
+
+**Points ouverts pour Raphaël :**
+- Taille des régions : 28 cellules, soit environ deux écrans par région. Plus grand donne plus d'identité à chaque biome ; plus petit, plus de mélange. Réglage en une ligne.
+- Les frontières restent franches (changement de tile net) : c'est le lot C (transition pilote) de ce plan.
+- La V2 prévoit un début en Forêt ou en Champs ; ce n'est pas appliqué, le biome de départ reste aléatoire.
+
+## 7. Audit des décors — 25 septembre 2026
+
+**Retour de Raphaël :** sur toutes les cartes, et surtout en zone urbaine, « beaucoup de sprites invisibles et de hitbox de décor très frustrantes ». Les tiles elles-mêmes sont acceptables.
+
+**Méthode :**
+- Audit statique de 127 entrées de décor : les 5 JSON de `data/props/` (placés par `PropSpawner`) et les tables codées en dur d'`UrbanPropPlacer` et de `SwampPropPlacer`. Pour chaque sprite : existence, `.import`, pixels opaques, luminance, largeur de la base visible (cinquième inférieur de la silhouette), puis comparaison avec la collision.
+- Captures en jeu (`--capture-props`, seed 1002, 1080p) de la zone la plus chargée de chaque biome, formes de collision affichées.
+
+**Constats :**
+
+1. **Aucun sprite manquant ni transparent.** Les 127 fichiers existent et ont leur `.import`. Les décors « invisibles » sont des sprites minuscules à l'échelle actuelle, et camouflés : même valeur et même palette que des sols très bruités.
+
+   | Biome | Décors bloquants quasi invisibles en jeu |
+   |---|---|
+   | Carrière | rocher moussu 14×10, souche 10×8, poutrelles 32×8 (collision de 6 px sur une barre plate) |
+   | Urbain | bennes 12×12, feu tricolore 8×16, cabine 10×20, voiture 32×16 posée sur l'asphalte de même teinte |
+   | Champs | balles de foin 12×10, muret 32×10, clôtures 32×12, charrue 20×10, épouvantail, puits, menhir |
+   | Forêt | souche, rocher moussu, tronc couché 24×8, lampadaire 8×28 |
+   | Marais | tonneau 12×14, souche pourrie, tronc couché |
+
+   Au total, 30 décors de moins de 16 px de haut ou de moins de 120 pixels opaques bloquent le joueur.
+
+2. **Toutes les collisions sont des cercles centrés sur le bas du sprite.** Le point d'ancrage est le pied du sprite, donc la moitié basse du cercle déborde devant le décor visible : de 4 à 14 px pour les arbres, voitures, épaves et murets (27 décors), de 14 à 25 px pour les sept immeubles urbains.
+
+3. **Les immeubles sont traversables sur la moitié de leur emprise.** Un immeuble de 118 à 140 px de large a un cercle de 40 à 56 px posé devant sa façade. On bute sur du vide devant, puis on traverse les murs. L'antenne radio (64 px de base) n'a qu'un cercle de 16 px.
+
+4. **Pas de tri en profondeur.** `PropContainer` est dessiné sous le joueur et les ennemis, et `EnemyContainer` au-dessus du joueur (ordre des nœuds, seul le sol a `y_sort_enabled`). Passer derrière un immeuble dessine le joueur sur son toit. La transparence d'occlusion de `PropSpawner` ne concerne que ses propres décors : ni les immeubles ni les décors du marais n'y sont inscrits.
+
+5. **Coût par frame.** L'occlusion parcourt à chaque tick physique tous les décors hauts de `PropSpawner` (plusieurs milliers sur une carte de rayon 200 ; 10 576 décors au total sur la seed 1002) et réécrit leur `SelfModulate`, même loin de l'écran.
+
+**Lots proposés :**
+
+| Lot | Contenu | Vérification |
+|---|---|---|
+| **D1 — Collisions calées sur le visible** (maintenant) | L'emprise est calculée une fois par texture à partir de ses pixels (largeur et bas de la base visible) : losange iso aplati sous la base, pas de cercle décalé. Pas de collision pour les petits décors (seuil de taille). Les JSON et tables passent de `collision_radius`/`collision_offset_y` à `blocking` (+ `footprint_scale` facultatif). | Re-audit : aucun débordement > 2 px, aucun petit décor bloquant ; captures collisions avant/après par biome ; `MovementRegression` |
+| **D2 — Profondeur iso** (maintenant, avec D1) | Tri en Y commun pour décors, joueur, ennemis, coffres et POI ; sol, brouillard et overlays hors tri par `z_index`. Occlusion limitée aux décors proches (index spatial construit une fois), étendue à tous les placeurs. | Captures derrière et devant un immeuble, un arbre, un coffre ; FPS combat dense avant/après |
+| **D3 — Lisibilité provisoire** | Ombre de contact sous chaque décor, pour l'ancrer au sol en attendant la refonte 08 | Captures carrière et ville |
+
+La refonte visuelle des décors eux-mêmes (dessin, échelle, contraste) relève du plan 08, lot « décors procéduraux ».

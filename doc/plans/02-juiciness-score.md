@@ -1,6 +1,6 @@
 # Plan 02 — Juiciness, score vivant et récompenses
 
-Statut : **direction validée avec corrections ; bilan détaillé proposé** · Priorité : P0 · Dépendances : premier lot 01, cadrage visuel 08.
+Statut : **direction validée avec corrections ; bilan détaillé proposé ; chantier juiciness prioritaire du 25 septembre (§7)** · Priorité : P0 · Dépendances : premier lot 01, cadrage visuel 08.
 Références : V2 §10/15/16/21 ; Bible §7/8/9 ; [dossier](README.md).
 
 ## 1. Diagnostic vérifié
@@ -114,3 +114,28 @@ Même monde et même build, séquence courte avant/après ; puis run dense réel
 Acceptation par Raphaël : score suivi sans effort, armes expressives, récompenses distinctes, danger toujours lisible, fatigue visuelle acceptable et cible 60 FPS conservée.
 
 Roadmap : C (score), D (lisibilité/son/bilan), F (effets/audio), G (performance/accessibilité). Les extensions de score doivent aussi préciser leur incidence sur 09.
+
+## 7. Chantier prioritaire du 25 septembre : juiciness de tout le jeu
+
+**Demande de Raphaël :** le jeu « a le potentiel d'être dix fois plus joli et plus juicy ». Impacts, morts, ramassage d'XP et de loot, montées de niveau, sensation de « rouler sur la game » quand le build monte en puissance, micro-interactions. D'abord une liste priorisée, puis des petits lots mesurés : 60 FPS en combat dense, pools, niveaux de particules existants.
+
+### État vérifié dans le code (25 septembre)
+
+- `VfxFactory` fournit une trentaine d'effets : impacts, slashs par arme, explosion, dissolution, flaque irisée, burst d'XP, level-up, traînées. Les trois niveaux `ParticleLevel` (Full, Reduced, Off) sont respectés.
+- **Aucun effet n'est recyclé.** Chaque coup instancie une scène `DamageNumber` et un flash ; chaque mort, une dissolution et une flaque ; chaque projectile, un `GpuParticles2D` de traînée et un impact. Tout est libéré ensuite. En combat dense, c'est des centaines de créations de nœuds par seconde : le premier verrou avant d'ajouter des effets.
+- `ScreenShake` : secousses légère, moyenne et forte, et un `Hitstop` que les morts de boss et les coups critiques appellent (voir §1 : pas de gel systématique).
+- Level-up : burst et secousse moyenne dans `GameBootstrap`. Ramassage d'XP : burst par orbe, sans progression sonore ni lien visuel avec la barre.
+
+### Liste priorisée
+
+| Ordre | Lot | Ce que le joueur ressent | Contenu | Mesure |
+|---|---|---|---|---|
+| 1 | **J0 — Socle recyclé** | Rien de visible, mais tout le reste devient possible | Pool générique d'effets (chiffres de dégâts, flash, impact, dissolution, flaque, burst XP) ; budget d'effets par frame qui dégrade proprement selon `ParticleLevel` ; banc « combat dense » avant/après | FPS moyen et 1 % bas avec 120 ennemis, nœuds créés par seconde, mémoire |
+| 2 | **J1 — Impact** | Chaque coup « claque » | Flash blanc du sprite touché (shader, pas de nœud), écrasement bref et recul visuel de la cible, étincelles orientées dans le sens du coup, chiffres de dégâts lisibles (Saira, regroupés par cible, critique distinct par la forme), son de matière | Trois armes reconnaissables sans lire leur nom ; coût par coup |
+| 3 | **J2 — Morts** | Éliminer est gratifiant, et une rafale de morts est spectaculaire | Dissolution orientée selon le dernier coup, éclats projetés, pop et saut du butin, signature propre aux élites et Souverains (anneau d'onde, flash, secousse) | Lisibilité à 100+ ennemis ; aucune mort sans retour visuel |
+| 4 | **J3 — Collecte** | Ramasser est un plaisir continu | Orbes aspirées avec accélération et traînée, hauteur du son qui monte sur une chaîne de ramassages, barre d'XP qui pulse à chaque arrivée, Essence et butin avec trajectoire vers le HUD | Chaîne de 50 orbes sans saturation sonore |
+| 5 | **J4 — Montée de niveau** | Le passage de niveau est un temps fort | Onde au sol et colonne de lumière, repoussée visuelle des créatures proches (sans effet de jeu), barre d'XP qui flashe, écran de choix qui entre avec punch | Délai jusqu'au choix inchangé |
+| 6 | **J5 — Rouler sur la game** | Quand le build scale, on le voit et on le sent | Effets qui grandissent avec les dégâts par seconde et la taille des vagues fauchées, compteur de morts en rafale (« ×24 »), cascade de dissolutions, sons superposés plafonnés, léger recul de caméra quand l'écran se remplit | Séquence début modeste → build puissant, même vocabulaire visuel |
+| 7 | **J6 — Micro-interactions** | Le monde répond | Poussière de pas selon le sol, herbes qui plient, éclaboussures, coffres qui frémissent à l'approche, reflets sur les POI, retours d'interface | Coût borné à la zone visible |
+
+Chaque lot : captures avant/après dans une vraie run (`tools/capture_run.sh`), mesure en combat dense, `ParticleLevel` Reduced et Off vérifiés, puis ton retour avant le lot suivant. J0 précède tout le reste. L'ordre de J1 à J6 suit le ressenti « à la seconde » du §1 du dossier.

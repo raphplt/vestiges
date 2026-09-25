@@ -151,7 +151,7 @@ Le banc relève désormais un indice de pression : les dégâts reçus par minut
 
 1. Reprendre trois armes et quelques objets de 05 ; établir deux builds aux comportements visiblement différents.
 2. Mesurer les occasions de choix et les écarts de puissance, pas seulement les valeurs de DPS.
-3. Contrôler l'économie des Autels : achat utile, alternative réelle, pas de soin obligatoire à chaque passage.
+3. Contrôler l'économie des Autels : achat utile, alternative réelle, pas de soin obligatoire à chaque passage. Retour du 25 septembre : le soin paraît trop difficile à obtenir ; sources actuelles et pistes dans le [plan 13 §8](13-butin.md#8-retour-du-25-septembre--le-soin).
 4. Introduire les rôles ennemis de 07 de façon à mettre les builds à l'épreuve.
 5. Ajuster après plusieurs essais, en conservant une version des paramètres comparés.
 

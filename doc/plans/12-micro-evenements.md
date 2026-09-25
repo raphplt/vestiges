@@ -1,6 +1,6 @@
 # Plan 12 — Micro-événements et variantes renforcées
 
-Statut : **v1 implémentée le 24 septembre 2026, recette humaine à faire** · Priorité : P0 (retour de Raphaël) · Dépendances : 03 (rythme), 07 (bestiaire).
+Statut : **v1 implémentée le 24 septembre 2026, recettée et validée le 25 septembre** · Priorité : P0 (retour de Raphaël) · Dépendances : 03 (rythme), 07 (bestiaire).
 Références : V2 §8–§10 (Résurgences, accalmie), [plan 03](03-boucle-et-rythme.md), [plan 07](07-bestiaire-et-rencontres.md).
 
 ## 1. Le retour
@@ -89,3 +89,12 @@ Les modificateurs aléatoires des Résurgences et du late game, jusque-là codé
 - Récompenses : trop généreuses ou trop maigres par rapport aux coffres du monde ?
 
 **Pistes suivantes, non engagées :** marchand ambulant (Essence contre arme), Écho d'un survivant à escorter, fragment de lore lié à l'événement, événements propres à un biome, Souverains de famille à comportement enrichi (plan 07).
+
+## 7. Recette de Raphaël — 25 septembre 2026
+
+- Cadence validée en l'état. Quelques détails resteront à revoir plus tard ; priorité aux autres aspects du jeu.
+- Élites bien dosées.
+- Micro-événements : « bien ».
+- Le soin est peut-être trop difficile à obtenir : reporté au [plan 13 §8](13-butin.md#8-retour-du-25-septembre--le-soin) et au plan 03.
+
+Les pistes du §6 restent non engagées.

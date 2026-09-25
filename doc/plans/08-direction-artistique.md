@@ -151,6 +151,30 @@ Trois créatures du début de run passent dans le pipeline, à la même densité
 - Le « chef » de meute du Charognard (un œil de plus, Bible §6.2) n'existe pas en jeu ; non modélisé.
 - Après validation : même traitement pour les autres ennemis du début (Rampant d'Ombre, Brute, Rampant, Cracheur).
 
+### Décors procéduraux — chantier du 25 septembre 2026
+
+**Demande de Raphaël :** refonte visuelle des décors dans le pipeline procédural (`tools/sprites`), à la même densité de pixels que les personnages et les ennemis, biome par biome, en commençant par l'urbain.
+
+**Constat (audit du [plan 10 §7](10-terrain-et-tiles.md#7-audit-des-décors--25-septembre-2026)) :** les décors actuels sont dessinés à une densité bien plus faible. Une benne fait 12×12 px, une voiture 32×16, alors que le joueur mesure environ 30 px de haut. Ils se fondent dans des sols très bruités, sans ombre de contact. Les immeubles (≈ 120×90) sont les seuls à une échelle crédible.
+
+**Contrat proposé :**
+- Même rendu que les créatures : modèle 3D simplifié, lancer de rayons orthographique à 30°, `MODEL_SCALE` = 0,62, quatre tons par matériau, lumière haut-gauche, contour sel-out teinté. Un décor devient un modèle, pas un dessin.
+- Échelle réelle : une voiture ≈ 2,5 personnages de long, une benne à hauteur d'épaule, un immeuble de deux étages ≈ 4 personnages.
+- Lisibilité sur le sol : valeur plus claire ou plus sombre que le sol du biome, ombre de contact intégrée, accents de couleur rares pour les objets repères.
+- Le générateur écrit aussi l'**emprise au sol** de chaque décor (losange iso). Le jeu s'en sert pour la collision ; le calcul par pixels du lot 10 D1 reste le repli.
+- Variantes par seed (usure, rouille, végétation) plutôt que des fichiers copiés.
+
+**Lots :**
+
+| Lot | Contenu | Validation |
+|---|---|---|
+| **P0 — Gabarit décors** | Module `tools/sprites/props/`, manifeste (dimensions, pieds, emprise, variantes), planche de contact à taille réelle sur les sols des cinq biomes | Planche et une capture en jeu |
+| **P1 — Mobilier urbain** | Voitures (2 ou 3 carrosseries), bennes, feux, cabine, lampadaire, barrières, boîte aux lettres, panneaux, débris et poutrelles | Captures en vraie run, ville dense ; ton retour |
+| **P2 — Immeubles urbains** | Modules d'immeubles (façade, angle, tour, effondré, église) à l'échelle du personnage, intérieurs visibles par les brèches | Idem, collisions et profondeur (plan 10 D1/D2) |
+| **P3 à P6** | Forêt, champs, marais, carrière, dans cet ordre sauf avis contraire | Un biome validé avant le suivant |
+
+Les tiles restent en l'état (jugées acceptables) ; un ajustement de contraste reste possible si les nouveaux décors l'exigent.
+
 ### Recommandation initiale (22 septembre), remplacée pour la méthode
 
 **Choix recommandé : pixel art dessiné et animé à une densité commune, produit à partir d’une scène étalon, avec retouche contrôlée et pipeline automatisé.** L’IA peut aider aux recherches de silhouettes/matières ou à une base de sprite, mais chaque résultat doit être redessiné/normalisé selon les mêmes références. Des générations indépendantes « pixel art détaillé » ne constituent pas une méthode de cohérence ; générer chaque frame indépendamment n’est pas le pipeline recommandé pour les personnages.

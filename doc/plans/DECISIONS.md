@@ -1,6 +1,6 @@
 # VESTIGES — Décisions de Raphaël et arbitrages restants
 
-Version 0.7 · 23 septembre 2026 · Référence de validation du dossier.
+Version 0.8 · 25 septembre 2026 · Référence de validation du dossier.
 
 Ce registre intègre les retours structurants après la première lecture des plans et la validation des déplacements de base du 22 septembre. Les validations ci-dessous sont acquises. Le socle de 01 est implémenté et validé ; le dash du prototype D demandé est livré et validé par Raphaël ([compte rendu](01-deplacements.md#8-prototype-de-mobilité--22-septembre-2026)). Les variantes alternatives F1 restent des essais ; les mobilités spécifiques attendent le casting et les sprites refaits.
 
@@ -37,8 +37,11 @@ Ce registre intègre les retours structurants après la première lecture des pl
 | Casting | Six personnages validés le 23 septembre ; personnages « atypiques » encouragés | 06 ; sprites pilotes 08 |
 | Densité d'ennemis | Manque ressenti ; mesures objectives et comparaisons demandées (23 septembre) | 03 : banc de densité, anneau d'apparition calé sur l'écran, densité croissante |
 | Premier essai de menace | Présage et bond annoncé du Charognard (23 septembre) | 07/03 A2 : [implémentation](07-bestiaire-et-rencontres.md#premier-essai-menace--23-septembre-2026), recette en jeu à faire |
-| Retours du 24 septembre | Nouveaux ennemis validés ; joueur encore trop grand, idle à animer (refonte du dessin reportée) ; flèche vers le centre inutile ; PV et infos peu visibles ; police trop pixelisée ; micro-événements toutes les 2–3 min « vraiment réfléchis » ; variantes fortes des mobs de base | 08 (−15 %, idle 6 frames) ; 04 (HUD, Saira Semi Condensed) ; [12](12-micro-evenements.md) (5 événements, élites, Souverains) ; recette à faire |
+| Retours du 24 septembre | Nouveaux ennemis validés ; joueur encore trop grand, idle à animer (refonte du dessin reportée) ; flèche vers le centre inutile ; PV et infos peu visibles ; police trop pixelisée ; micro-événements toutes les 2–3 min « vraiment réfléchis » ; variantes fortes des mobs de base | 08 (−15 %, idle 6 frames) ; 04 (HUD, Saira Semi Condensed) ; [12](12-micro-evenements.md) (5 événements, élites, Souverains) ; recettés le 25 septembre |
 | Butin et anomalies (24 septembre, soir) | Loot aléatoire à raretés, composante du jeu, présentation différente de Megabonk, sources identifiables sur la carte ; événements aléatoires rares, liés au lore et si possible au joueur et à l'oubli, pénalisants sans tuer la run ; « pas obligé de tout traiter maintenant » | Propositions : [13](13-butin.md), [14](14-anomalies-du-monde.md) ; décisions §8 et §7 à trancher |
+| Recette du 25 septembre | Cadence des micro-événements validée en l'état (détails à revoir plus tard) ; élites bien dosées ; micro-événements « bien » ; HUD « bien mieux » ; le soin est peut-être trop difficile à obtenir | 12 et 04 recettés ; soin noté en [13](13-butin.md) et [03](03-boucle-et-rythme.md), pas traité maintenant sauf correctif trivial |
+| Priorité du 25 septembre | Nouveau gros chantier prioritaire : visuel et juiciness de tout le jeu (« dix fois plus joli et plus juicy »), dans l'ordre : régression des biomes, audit des décors (sprites invisibles, hitbox frustrantes), refonte procédurale des décors biome par biome en commençant par l'urbain, juiciness et particules ; découpage en lots dans les plans avant de coder, un lot à la fois | [10 §6–7](10-terrain-et-tiles.md), [08](08-direction-artistique.md), [02 §7](02-juiciness-score.md) ; 13 et 14 restent non arbitrés et non implémentés |
+| Biomes | « Avant les biomes étaient mélangés, et c'était mieux » : apparaître sur un seul terrain est une régression | Mesurée puis corrigée : mosaïque de régions, [10 §6](10-terrain-et-tiles.md#6-régression-un-seul-biome-autour-du-départ--25-septembre-2026) ; recette en jeu à faire |
 
 « Les mobs avancent successivement » reste ambigu au moment de cette révision. Une clarification a été demandée : arrivée en file jugée problématique, introduction progressive des types, ou les deux. Le plan 07 sépare ces deux sujets ; aucun comportement n'est présenté comme une préférence confirmée.
 

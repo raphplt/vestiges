@@ -85,7 +85,18 @@ Idée B du plan 11, appliquée aux trois formes. Plus une source est proche du f
 
 Ordre recommandé : A → B → C, puis une recette (le butin se ressent-il ?), puis D/E/F. Un lot à la fois.
 
-## 8. Décisions demandées à Raphaël
+## 8. Retour du 25 septembre : le soin
+
+Raphaël : « le soin est peut-être trop difficile à obtenir aujourd'hui ». À traiter avec ce plan ou le plan 03, pas maintenant.
+
+Sources de soin vérifiées dans le code le 25 septembre :
+- perks de vampirisme et de régénération (`Player`) ;
+- soin payant en Essence aux Autels (`AltarManager.TryHeal`, `data/scaling/altars.json`) ;
+- Veille (30 %) et Vestige tombé, seuls micro-événements qui soignent (`data/events/run_events.json`).
+
+Aucune créature ni aucun coffre ne lâche de soin. Il n'existe donc pas de correctif trivial : ajouter une source est un choix d'économie. Pistes à arbitrer avec le butin : un objet de soin dans les tables de coffres, une rare « braise de mémoire » lâchée par les élites, un soin partiel à la fin d'une Résurgence.
+
+## 9. Décisions demandées à Raphaël
 
 1. Valider les trois formes (Vestige figé, Triptyque, Pacte d'oubli) ou en écarter une.
 2. Rareté fixe par objet (recommandé, plan 05) ou raretés multiples d'un même objet.
