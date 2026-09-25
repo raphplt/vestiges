@@ -27,6 +27,29 @@ public partial class RunObservation
     };
 
     /// <summary>Statistiques pures (sans scène) : un générateur par seed.</summary>
+    private static void AccumulateTerrain(WorldGenerator generator, int radius, Dictionary<string, int[]> byBiome,
+                                          long[] diagonalSame, ref long diagonalPairs)
+    {
+        int terrainCount = Enum.GetValues<TerrainType>().Length;
+        for (int y = -radius; y < radius; y++)
+        {
+            for (int x = -radius; x <= radius; x++)
+            {
+                if (x * x + y * y > radius * radius * 0.8f)
+                    continue;
+                TerrainType here = generator.GetTerrain(x, y);
+                string biome = generator.GetBiome(x, y)?.Id ?? "?";
+                if (!byBiome.TryGetValue(biome, out int[] counts))
+                    byBiome[biome] = counts = new int[terrainCount];
+                counts[(int)here]++;
+                bool odd = (y & 1) != 0;
+                diagonalSame[0] += generator.GetTerrain(x + (odd ? 1 : 0), y + 1) == here ? 1 : 0;
+                diagonalSame[1] += generator.GetTerrain(x + (odd ? 0 : -1), y + 1) == here ? 1 : 0;
+                diagonalPairs++;
+            }
+        }
+    }
+
     private void MeasureBiomeLayout(ulong firstSeed, int seedCount, int imageCount)
     {
         BiomeDataLoader.Load();
@@ -42,6 +65,10 @@ public partial class RunObservation
         StringBuilder perSeed = new();
         ulong generationUsec = 0;
         int regionSum = 0;
+        Dictionary<string, int[]> terrainByBiome = new();
+        // Stries : même terrain que le voisin ↘ contre le voisin ↙ (grille stacked). Isotrope → deux valeurs proches.
+        long[] diagonalSame = new long[2];
+        long diagonalPairs = 0;
 
         for (int index = 0; index < seedCount; index++)
         {
@@ -66,6 +93,7 @@ public partial class RunObservation
             firstBorderMax = Mathf.Max(firstBorderMax, border);
             perSeed.Append(CultureInfo.InvariantCulture, $" {seed}:{border}");
 
+            AccumulateTerrain(generator, config.MapRadius, terrainByBiome, diagonalSame, ref diagonalPairs);
             if (index < imageCount)
                 SaveBiomeImage(generator, $"{_output}/biomes-{seed}.png");
         }
@@ -80,6 +108,19 @@ public partial class RunObservation
         result.Append(CultureInfo.InvariantCulture, $" regions={(double)regionSum / seedCount:0} generate_ms={generationUsec / 1000.0 / seedCount:0}");
         result.Append(CultureInfo.InvariantCulture, $" first_border_mean={firstBorderSum / seedCount:0.0} max={firstBorderMax}");
         GD.Print(result.ToString());
+        StringBuilder terrain = new("[RunObservation] RESULT terrain");
+        terrain.Append(CultureInfo.InvariantCulture,
+            $" diag_same_se={(double)diagonalSame[0] / diagonalPairs:P1} diag_same_sw={(double)diagonalSame[1] / diagonalPairs:P1}");
+        foreach ((string biome, int[] counts) in terrainByBiome)
+        {
+            int total = 0;
+            foreach (int count in counts)
+                total += count;
+            terrain.Append(CultureInfo.InvariantCulture, $" {biome}:");
+            for (int t = 0; t < counts.Length; t++)
+                terrain.Append(CultureInfo.InvariantCulture, $"{(TerrainType)t}={(double)counts[t] / total:P0},");
+        }
+        GD.Print(terrain.ToString());
         GD.Print($"[RunObservation] first_border per seed:{perSeed}");
     }
 

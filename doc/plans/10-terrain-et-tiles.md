@@ -202,3 +202,18 @@ La refonte visuelle des décors eux-mêmes (dessin, échelle, contraste) relève
 
 Chaque décor qui a une hauteur reçoit une ombre de contact : ellipse iso 2:1 à bord net, 115 % de la base visible, deux paliers d'opacité, sous les entités (z −1). La texture est générée une fois par largeur (arrondie à 4 px) pour garder des pixels de taille unique. Les décalques au sol n'en ont pas.
 
+
+## 8. Stries diagonales du sol de la forêt — 25 septembre 2026
+
+**Retour de Raphaël (capture en jeu) :** le sol de la forêt « ne fait pas naturel », il forme des stries.
+
+**Mesure :** `RunObservation --capture-map` sort maintenant une ligne `RESULT terrain`. Elle donne la part de chaque terrain par biome, et la proportion de voisins diagonaux ↘ et ↙ de même terrain.
+- Avant le correctif, sur 40 seeds : 87,3 % dans les deux diagonales. Le terrain de base est donc isotrope : les plaques de terrain ne sont pas en cause.
+- Forêt : 79 % de terrain `forest`, 20 % d'herbe.
+
+**Cause :** `BiomeTileMapper.HashCell` calculait `(x·73856093) ^ (y·19349663)`. Ses bits de poids faible ne dépendent que de x et y modulo 4 : `hash % 4` choisissait donc les quatre tuiles de terrain `forest` (deux de terre brune, deux de sous-bois vert) selon un motif périodique, qui dessine des diagonales régulières.
+
+**Correction :**
+- `HashCell` mélange les bits (finaliseur à avalanche). Le choix des variantes n'est plus périodique, dans tous les biomes.
+- Forêt : terre et sous-bois ne sont plus tirés case par case. Un bruit continu (`ForestFloorNoise`), échantillonné au point au sol de la cellule (grille « stacked » dépliée en 2:1, donc isotrope), dessine des clairières et des sentiers de terre dans le sous-bois ; la variante vient ensuite du hash. L'ordre de `tile_sources.forest` fait foi : la première moitié est la terre, la seconde le sous-bois.
+- Vérifié par capture en vraie run (seed 1002) : plus de stries. Les bords des plaques restent en marches de tuiles, faute de tuiles de transition (piste déjà ouverte dans ce plan).

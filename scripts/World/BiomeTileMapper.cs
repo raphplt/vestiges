@@ -275,18 +275,54 @@ public class BiomeTileMapper
 	}
 
 	/// <summary>
-	/// Hash déterministe d'une cellule pour choisir une variante.
-	/// Donne un pattern visuellement aléatoire mais reproductible.
+	/// Hash déterministe d'une cellule pour choisir une variante. Les bits sont mélangés (finaliseur à avalanche) :
+	/// l'ancien produit XOR gardait des bits de poids faible périodiques en x et y, et `hash % 4` dessinait des
+	/// diagonales régulières sur le sol.
 	/// </summary>
 	private static int HashCell(int x, int y)
 	{
-		return ((x * 73856093) ^ (y * 19349663)) & 0x7FFFFFFF;
+		uint h = unchecked((uint)x * 0x8DA6B343u ^ (uint)y * 0xD8163841u);
+		h ^= h >> 16;
+		h = unchecked(h * 0x7FEB352Du);
+		h ^= h >> 15;
+		h = unchecked(h * 0x846CA68Bu);
+		h ^= h >> 16;
+		return (int)(h & 0x7FFFFFFF);
+	}
+
+	/// <summary>Plaques de terre et de sous-bois de la forêt : bruit continu, en coordonnées au sol.</summary>
+	private static readonly FastNoiseLite ForestFloorNoise = new()
+	{
+		NoiseType = FastNoiseLite.NoiseTypeEnum.Simplex,
+		Frequency = 0.0035f,
+		FractalType = FastNoiseLite.FractalTypeEnum.Fbm,
+		FractalOctaves = 2,
+		Seed = 4127,
+	};
+
+	/// <summary>
+	/// Point au sol d'une cellule de la grille « stacked » : un rang sur deux est décalé d'une demi-case, et la
+	/// profondeur d'écran (16 px par rang) vaut le double au sol en vue 2:1. Un bruit échantillonné ici est isotrope.
+	/// </summary>
+	private static Vector2 GroundPoint(int x, int y)
+	{
+		return new Vector2(x * 64f + ((y & 1) != 0 ? 32f : 0f), y * 32f);
 	}
 
 	private static int GetBiomeSpecificSourceId(string biomeId, TerrainType terrain, int[] sources, int x, int y)
 	{
 		if (biomeId == "wild_fields" && terrain == TerrainType.Grass && sources.Length >= 8)
 			return GetWildFieldsGrassSourceId(sources, x, y);
+
+		// Forêt : la première moitié des tuiles (terre) forme des plaques et des sentiers,
+		// la seconde (sous-bois) le reste ; l'ordre vient de tile_sources.forest du biome.
+		if (biomeId == "forest_reclaimed" && terrain == TerrainType.Forest && sources.Length >= 4)
+		{
+			int half = sources.Length / 2;
+			bool dirt = ForestFloorNoise.GetNoise2Dv(GroundPoint(x, y)) > 0.12f;
+			int variant = HashCell(x, y) % half;
+			return sources[dirt ? variant : half + variant];
+		}
 
 		int hash = HashCell(x, y);
 		return sources[hash % sources.Length];
