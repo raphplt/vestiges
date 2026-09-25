@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VESTIGES · Écoute du __BATCH_LABEL__</title>
+<style>
+:root{color-scheme:dark;--bg:#14181b;--surface:#20272c;--text:#e6ecee;--muted:#b0bec5;--accent:#d3bc84;--line:#3b4952}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:16px/1.6 system-ui,sans-serif}main{max-width:1280px;margin:auto;padding:36px 24px 90px}h1{font-size:clamp(28px,4vw,44px);line-height:1.15;margin:10px 0 20px}h2{margin:0;font-size:23px}h3{font-size:17px;line-height:1.4;margin:0 0 12px}.eyebrow{letter-spacing:.16em;font-size:12px;color:var(--accent);font-weight:700}.intro{max-width:880px;color:var(--muted)}a{color:#bcdcec}a:hover{color:white}button,.file-button,select{background:#29353c;color:var(--text);border:1px solid #576b75;border-radius:7px;padding:9px 13px;font:inherit;cursor:pointer}button:hover,.file-button:hover{background:#3d4e58}button:focus-visible,a:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--accent);outline-offset:3px}.toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:22px 0}.status{color:var(--accent);min-height:1.6em}.progress{display:flex;gap:16px;flex-wrap:wrap;color:var(--muted);margin:20px 0}.effect{border-top:1px solid var(--line);padding:28px 0;scroll-margin-top:20px}.effect-head{display:flex;gap:15px;justify-content:space-between;align-items:start}.badge{color:var(--accent);white-space:nowrap;font-size:13px}.brief{color:var(--muted);margin:8px 0 15px;max-width:950px}.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.candidate{background:var(--surface);border:1px solid var(--line);padding:18px;border-radius:10px;min-width:0}.candidate.selected{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}.candidate p{font-size:14px;margin:10px 0}.candidate audio{width:100%;height:40px;margin:8px 0}.letter{display:inline-grid;place-items:center;color:var(--bg);background:var(--accent);height:28px;width:28px;border-radius:5px;margin-right:9px}.select-label{display:flex;align-items:center;gap:7px;margin-top:16px;font-weight:600;cursor:pointer}input[type=radio]{accent-color:var(--accent);width:18px;height:18px}details{color:var(--muted);font-size:13px;overflow-wrap:anywhere;margin:10px 0}summary{cursor:pointer}dl{margin:8px 0}dt{font-weight:700;margin-top:8px}dd{margin:0}.current{display:flex;gap:15px;align-items:center;flex-wrap:wrap;margin:12px 0 18px;color:var(--muted);font-size:14px}.current audio{height:34px;max-width:300px}.choices{display:flex;gap:24px;flex-wrap:wrap;margin:14px 0}.choices .select-label{margin:0;font-size:14px}.notes-label{display:block;color:var(--muted);font-size:14px}textarea{display:block;width:100%;min-height:75px;margin-top:5px;background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:7px;padding:10px;font:inherit;resize:vertical}.small{font-size:13px;color:var(--muted)}.empty{padding:15px;border:1px dashed var(--line)}nav{display:flex;flex-wrap:wrap;gap:8px 16px;font-size:14px;margin-bottom:25px}footer{border-top:1px solid var(--line);padding-top:20px;color:var(--muted);font-size:14px}[hidden]{display:none!important}@media(max-width:850px){.cards{grid-template-columns:1fr}.effect-head{display:block}.badge{display:block;margin-top:5px}main{padding:24px 16px 70px}}
+</style>
+</head>
+<body>
+<main>
+<header>
+<div class="eyebrow">VESTIGES / DIRECTION SONORE / __BATCH_LABEL__</div>
+<h1>__EFFECT_COUNT__ effets. À toi de choisir.</h1>
+<p class="intro">Écoute les propositions du __BATCH_LABEL__, compare avec le son actuel lorsqu'il existe, puis garde un candidat ou refuse les trois. Aucun choix n'est présélectionné. Il s'agit d'une recherche de matières sonores : le choix reste à préparer et à valider en jeu.</p>
+<p class="intro">Commence à volume modéré. Un seul lecteur joue à la fois. Compare l'attaque, la durée, la fatigue à répétition et la lisibilité en combat ; note aussi si un effet doit rester silencieux. Les indications d'adéquation sont des hypothèses à vérifier à l'écoute.</p>
+<p class="small"><a href="../lot-a/RETOURS.md">Synthèse des retours</a> · <a href="../lot-a/index.html">Premier panier — lot A</a> · <a href="../lot-a2/index.html">Nouvelles propositions — lot A2</a></p>
+</header>
+<div class="toolbar">
+<button id="stop" type="button">Arrêter l'écoute</button>
+<button id="export" type="button">Exporter mes choix</button>
+<button id="import-button" type="button">Importer des choix</button><input id="import" type="file" accept="application/json,.json" hidden>
+<label for="filter">Afficher</label><select id="filter"><option value="all">Tous les effets</option><option value="pending">À écouter</option><option value="reviewed">Choix renseignés</option></select>
+</div>
+<p class="small">Les choix sont conservés dans ce navigateur si le stockage local est disponible. Exporte le JSON pour le transmettre ou le sauvegarder. L'import remplace seulement les fiches présentes dans le fichier.</p>
+<p id="status" class="status" role="status" aria-live="polite"></p>
+<div id="progress" class="progress"></div><nav id="navigation" aria-label="Effets du __BATCH_LABEL__"></nav>
+<div id="effects"></div>
+<footer><p>Sources et licences figurent sur chaque candidat. Le lecteur utilise les fichiers locaux ; les liens de source nécessitent Internet. Une écoute seule ne valide ni le mixage ni le déclenchement en jeu.</p><a href="README.md">Mode d'emploi et limites</a> · <a href="../../plans/15-audio.md">Plan audio et suite des lots</a></footer>
+</main>
+<script id="catalog" type="application/json">__CATALOG_JSON__</script>
+<script>
+'use strict';
+const catalog = JSON.parse(document.getElementById('catalog').textContent);
+const batchId = '__BATCH_ID__';
+const storageKey = `vestiges.audio.${batchId}.choices.v1`;
+const state = Object.create(null);
+const sections = new Map();
+const effectMap = new Map(catalog.effects.map(effect => [effect.id, effect]));
+const status = document.getElementById('status');
+const setStatus = message => { status.textContent = message; };
+const create = (tag, className, text) => { const node = document.createElement(tag); if (className) node.className = className; if (text !== undefined) node.textContent = text; return node; };
+const textValue = value => value == null ? 'Non renseigné' : typeof value === 'object' ? JSON.stringify(value) : String(value);
+function externalLink(label, url) {
+    const node = create('a', '', label);
+    try { const parsed = new URL(url); if (!['https:', 'http:'].includes(parsed.protocol)) throw Error(); node.href = parsed.href; node.target = '_blank'; node.rel = 'noopener noreferrer'; }
+    catch { return create('span', '', `${label} : lien absent`); }
+    return node;
+}
+function localPath(value) {
+    if (typeof value !== 'string' || !value || /^(?:[a-z][a-z\d+.-]*:|\/\/|\/)/i.test(value)) return null;
+    return value.startsWith('assets/') ? '../../../' + value : value;
+}
+function player(path, label) {
+    const src = localPath(path);
+    if (!src) return create('p', 'small', 'Aperçu local indisponible : utiliser la page source.');
+    const audio = create('audio'); audio.controls = true; audio.preload = 'none'; audio.volume = 0.5; audio.src = src; audio.setAttribute('aria-label', label);
+    audio.addEventListener('play', () => { for (const other of document.querySelectorAll('audio')) if (other !== audio) other.pause(); });
+    audio.addEventListener('error', () => setStatus(`Lecture indisponible : ${label}. Vérifie la présence du fichier local.`));
+    return audio;
+}
+function validateChoices(payload) {
+    if (!payload || payload.schema_version !== 1 || payload.project !== 'vestiges' || payload.batch !== batchId || !Array.isArray(payload.choices)) throw Error(`Format incompatible : fichier de choix VESTIGES, ${batchId}, version 1 attendu.`);
+    const incoming = Object.create(null);
+    for (const entry of payload.choices) {
+        if (!entry || typeof entry.effect_id !== 'string' || !effectMap.has(entry.effect_id)) throw Error('Un effet est inconnu dans ce lot.');
+        if (Object.hasOwn(incoming, entry.effect_id)) throw Error('Un effet est présent deux fois dans le fichier.');
+        const effect = effectMap.get(entry.effect_id);
+        if (!['pending', 'candidate', 'none', 'silence'].includes(entry.decision)) throw Error('Une décision est invalide.');
+        if (entry.decision === 'candidate' && !effect.candidates.some(candidate => candidate.id === entry.candidate_id)) throw Error(`Candidat inconnu pour ${effect.label}.`);
+        if (entry.decision !== 'candidate' && entry.candidate_id != null) throw Error('Un candidat est associé à une décision incompatible.');
+        if (typeof entry.notes !== 'string' || entry.notes.length > 20000) throw Error('Notes invalides ou trop longues.');
+        incoming[entry.effect_id] = {decision: entry.decision, candidate_id: entry.decision === 'candidate' ? entry.candidate_id : null, notes: entry.notes};
+    }
+    return incoming;
+}
+function exportData() {
+    return {schema_version: 1, project: 'vestiges', batch: batchId, catalog_generated_at: catalog.generated_at, exported_at: new Date().toISOString(), choices: catalog.effects.map(effect => ({effect_id: effect.id, ...state[effect.id]}))};
+}
+function save() {
+    let persisted = false;
+    try { localStorage.setItem(storageKey, JSON.stringify(exportData())); persisted = true; setStatus('Choix enregistrés dans ce navigateur.'); }
+    catch { setStatus('Stockage local indisponible : exporte tes choix avant de fermer la page.'); }
+    updateSummary();
+    return persisted;
+}
+function updateSummary() {
+    const completed = catalog.effects.filter(effect => state[effect.id].decision !== 'pending').length;
+    const candidates = catalog.effects.reduce((count, effect) => count + effect.candidates.length, 0);
+    document.getElementById('progress').textContent = `${completed} / ${catalog.effects.length} effets renseignés · ${candidates} candidats · catalogue du ${catalog.generated_at || 'jour non renseigné'}`;
+    const filter = document.getElementById('filter').value;
+    for (const effect of catalog.effects) {
+        const reviewed = state[effect.id].decision !== 'pending';
+        const section = sections.get(effect.id);
+        section.hidden = filter === 'pending' ? reviewed : filter === 'reviewed' ? !reviewed : false;
+        section.querySelector('.badge').textContent = reviewed ? 'Choix renseigné' : 'À écouter';
+        for (const card of section.querySelectorAll('.candidate')) card.classList.toggle('selected', state[effect.id].decision === 'candidate' && state[effect.id].candidate_id === card.dataset.candidateId);
+    }
+}
+function choice(effect, label, decision, candidateId = null) {
+    const wrapper = create('label', 'select-label'); const radio = create('input'); radio.type = 'radio'; radio.name = effect.id; radio.value = candidateId || decision;
+    radio.checked = state[effect.id].decision === decision && state[effect.id].candidate_id === candidateId;
+    radio.addEventListener('change', () => { state[effect.id].decision = decision; state[effect.id].candidate_id = candidateId; save(); });
+    wrapper.append(radio, document.createTextNode(label)); return wrapper;
+}
+function render() {
+    const container = document.getElementById('effects'); container.replaceChildren(); sections.clear();
+    const nav = document.getElementById('navigation'); nav.replaceChildren();
+    for (const [index, effect] of catalog.effects.entries()) {
+        const section = create('section', 'effect'); section.id = effect.id; sections.set(effect.id, section);
+        const link = create('a', '', effect.label); link.href = '#' + effect.id; nav.append(link);
+        const head = create('div', 'effect-head'); head.append(create('h2', '', `${String(index + 1).padStart(2, '0')} · ${effect.label}`), create('span', 'badge'));
+        section.append(head, create('p', 'brief', effect.brief));
+        if (effect.trigger_context) section.append(create('p', 'brief', `Quand : ${textValue(effect.trigger_context)}`));
+        if (effect.feedback) section.append(create('p', 'small', `Retour pris en compte : ${textValue(effect.feedback)}`));
+        if (effect.current_path) { const current = create('div', 'current'); current.append(create('span', '', 'Son actuel · référence'), player(effect.current_path, `Actuel : ${effect.label}`)); section.append(current); }
+        const cards = create('div', 'cards');
+        for (const [candidateIndex, candidate] of effect.candidates.entries()) {
+            const letter = String.fromCharCode(65 + candidateIndex);
+            const card = create('article', 'candidate'); card.dataset.candidateId = candidate.id;
+            const title = create('h3'); title.append(create('span', 'letter', letter), document.createTextNode(candidate.label));
+            card.append(title, player(candidate.preview_path, `${effect.label} : candidat ${letter}`), create('p', '', candidate.description || 'À évaluer à l’écoute.'));
+            if (typeof candidate.duration_seconds === 'number') card.append(create('p', 'small', `Durée : ${candidate.duration_seconds.toLocaleString('fr-FR', {maximumFractionDigits: 2})} s`));
+            const provenance = create('p', 'small'); provenance.append(document.createTextNode(`${textValue(candidate.author)} · ${textValue(candidate.license)} · `), externalLink('Source', candidate.source_url), document.createTextNode(' · '), externalLink('Licence', candidate.license_url)); card.append(provenance);
+            const details = create('details'); details.append(create('summary', '', 'Provenance et préparation'));
+            const info = create('dl');
+            for (const [label, value] of [['Licence relevée le', candidate.license_verified_at], ['Crédit', candidate.attribution], ['Préparation de l’aperçu', candidate.processing], ['Identifiant', candidate.id]]) info.append(create('dt', '', label), create('dd', '', textValue(value)));
+            const proof = create('dd'); const proofPath = localPath(candidate.license_evidence);
+            if (proofPath) { const proofLink = create('a', '', 'Consulter la preuve de licence locale'); proofLink.href = proofPath; proof.append(proofLink); } else proof.textContent = textValue(candidate.license_evidence);
+            info.append(create('dt', '', 'Preuve de licence'), proof);
+            details.append(info);
+            const original = localPath(candidate.original_path); if (original) { const originalLink = create('a', '', 'Écouter / télécharger l’original'); originalLink.href = original; details.append(originalLink); }
+            card.append(details, choice(effect, `Choisir ${letter}`, 'candidate', candidate.id)); cards.append(card);
+        }
+        if (!effect.candidates.length) cards.append(create('p', 'empty', 'Recherche encore ouverte : aucun candidat disponible.'));
+        section.append(cards);
+        const alternatives = create('div', 'choices'); alternatives.append(choice(effect, 'Aucun : chercher autre chose', 'none'), choice(effect, 'Silence souhaité', 'silence'), choice(effect, 'À réécouter / sans choix', 'pending')); section.append(alternatives);
+        const notesLabel = create('label', 'notes-label', 'Notes — matière, durée, répétition, contexte de jeu, raison du refus…');
+        const notes = create('textarea'); notes.maxLength = 20000; notes.value = state[effect.id].notes; notes.setAttribute('aria-label', `Notes : ${effect.label}`); notes.addEventListener('input', () => { state[effect.id].notes = notes.value; save(); }); notesLabel.append(notes); section.append(notesLabel); container.append(section);
+    }
+    updateSummary();
+}
+for (const effect of catalog.effects) state[effect.id] = {decision: 'pending', candidate_id: null, notes: ''};
+try { const stored = localStorage.getItem(storageKey); if (stored) { Object.assign(state, validateChoices(JSON.parse(stored))); setStatus('Choix précédents restaurés depuis ce navigateur.'); } }
+catch { setStatus('Choix locaux indisponibles ou incompatibles. Tu peux importer une sauvegarde.'); }
+render();
+document.getElementById('filter').addEventListener('change', updateSummary);
+document.getElementById('import-button').addEventListener('click', () => document.getElementById('import').click());
+document.getElementById('stop').addEventListener('click', () => { for (const audio of document.querySelectorAll('audio')) { audio.pause(); audio.currentTime = 0; } });
+document.getElementById('export').addEventListener('click', () => {
+    const url = URL.createObjectURL(new Blob([JSON.stringify(exportData(), null, 2)], {type: 'application/json'}));
+    const link = create('a'); link.href = url; link.download = `vestiges-audio-${batchId}-choix.json`; document.body.append(link); link.click(); link.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000); setStatus('Export créé. Transmets le fichier JSON pour consigner tes choix.');
+});
+document.getElementById('import').addEventListener('change', async event => {
+    const file = event.target.files[0]; if (!file) return;
+    try { if (file.size > 1000000) throw Error('Fichier trop volumineux.'); const incoming = validateChoices(JSON.parse(await file.text())); Object.assign(state, incoming); render(); const persisted = save(); setStatus(`${Object.keys(incoming).length} fiches importées. Les autres choix sont conservés.${persisted ? '' : ' Stockage local indisponible : exporte tes choix avant de fermer la page.'}`); }
+    catch (error) { setStatus(`Import refusé, choix conservés : ${error.message}`); }
+    finally { event.target.value = ''; }
+});
+</script>
+</body>
+</html>

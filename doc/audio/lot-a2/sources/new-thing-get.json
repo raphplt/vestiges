@@ -1,0 +1,22 @@
+{
+  "name": "New thing get!",
+  "author": "congusbongus",
+  "url": "https://opengameart.org/content/new-thing-get",
+  "download_urls": [
+    "https://opengameart.org/sites/default/files/newthingget_0.ogg"
+  ],
+  "verified_at": "2026-09-25",
+  "license": "CC0-1.0",
+  "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "license_links_observed": [
+    {
+      "label": "CC0",
+      "url": "http://creativecommons.org/publicdomain/zero/1.0/"
+    }
+  ],
+  "page_sha256": "fad17d07878c845bcd5b187a5dec3de1cff4b767afdd48b4d7cb1335aae03cb6",
+  "evidence": "Page officielle : champ License(s) ; liens ci-dessus relevés à la date indiquée.",
+  "selected_files": [
+    "newthingget_0.ogg"
+  ]
+}

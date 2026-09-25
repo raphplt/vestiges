@@ -1,0 +1,22 @@
+{
+  "name": "Music Jingles · Kenney",
+  "url": "https://kenney.nl/assets/music-jingles",
+  "download_url": "https://kenney.nl/media/pages/assets/music-jingles/f37e530b9e-1677590399/kenney_music-jingles.zip",
+  "verified_at": "2026-09-25",
+  "license": "CC0-1.0",
+  "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "evidence": "Creative Commons CC0",
+  "author": "Kenney",
+  "license_links_observed": [
+    {
+      "label": "Creative Commons CC0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+    }
+  ],
+  "page_sha256": "7e3980666955cf617c266a01a92d052613e811ff4db239fd2a45ad7aee15f80d",
+  "evidence_note": "Champ de licence et liens relevés sur la page officielle à la date indiquée. Le SHA256 porte sur la réponse HTML reçue ; page complète non redistribuée.",
+  "bundled_license": "sources/music-jingles-License.txt",
+  "selected_files": [
+    "Audio/Pizzicato jingles/jingles_PIZZI00.ogg"
+  ]
+}

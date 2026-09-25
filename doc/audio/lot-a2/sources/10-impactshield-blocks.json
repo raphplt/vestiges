@@ -1,0 +1,22 @@
+{
+  "name": "10 Impact/Shield Blocks",
+  "author": "StarNinjas",
+  "url": "https://opengameart.org/content/10-impactshield-blocks",
+  "download_urls": [
+    "https://opengameart.org/sites/default/files/impact_-_starninjas.zip"
+  ],
+  "verified_at": "2026-09-25",
+  "license": "CC0-1.0",
+  "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "license_links_observed": [
+    {
+      "label": "CC0",
+      "url": "http://creativecommons.org/publicdomain/zero/1.0/"
+    }
+  ],
+  "page_sha256": "d778a569fb88cf319400356b2f985306f082346b44f13f14bfedc56705d5e91f",
+  "evidence": "Page officielle : champ License(s) ; liens ci-dessus relevés à la date indiquée.",
+  "selected_files": [
+    "impact.2.ogg"
+  ]
+}

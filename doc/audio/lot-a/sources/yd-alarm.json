@@ -1,0 +1,21 @@
+{
+  "name": "Short alarm | OpenGameArt.org",
+  "author": "yd",
+  "url": "https://opengameart.org/content/short-alarm",
+  "download_url": "https://opengameart.org/sites/default/files/alarm_0.ogg",
+  "verified_at": "2026-09-25",
+  "license": "CC0-1.0",
+  "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "evidence": "License(s): CC0",
+  "license_links_observed": [
+    {
+      "label": "CC0",
+      "url": "http://creativecommons.org/publicdomain/zero/1.0/"
+    }
+  ],
+  "page_sha256": "9ada894912c3e1b8ac3858451ea9645266c132d8a48596e40302e7b6938a643c",
+  "evidence_note": "Champ de licence et liens relevés sur la page officielle à la date indiquée. Le SHA256 porte sur la réponse HTML reçue ; page complète non redistribuée.",
+  "selected_files": [
+    "alarm.ogg"
+  ]
+}

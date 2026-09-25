@@ -1,0 +1,23 @@
+{
+  "name": "Dark Ambiences",
+  "author": "Ogrebane",
+  "url": "https://opengameart.org/content/dark-ambiences",
+  "download_urls": [
+    "https://opengameart.org/sites/default/files/dark_ambiences.zip"
+  ],
+  "verified_at": "2026-09-25",
+  "license": "CC0-1.0",
+  "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "license_links_observed": [
+    {
+      "label": "CC0",
+      "url": "http://creativecommons.org/publicdomain/zero/1.0/"
+    }
+  ],
+  "page_sha256": "8dc736b8e4cc7f8c7958a7636b485d6476c7a509dc52323168d04f2709279c13",
+  "evidence": "Page officielle : champ License(s) CC0 ; liens ci-dessus relevés à la date indiquée.",
+  "selected_files": [
+    "dark_ambiences/ambience-4.wav",
+    "dark_ambiences/ambience-1.wav"
+  ]
+}

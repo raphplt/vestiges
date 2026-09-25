@@ -412,60 +412,46 @@ Le concept d'effacement doit être visible partout, subtilement. **En pixel art,
 
 ## 8. DIRECTION AUDIO
 
+> Direction révisée avec Raphaël le 25 septembre 2026. La Stratégie V2 §21 fait autorité sur le flow ; le [guide audio](AUDIO-GUIDE.md) porte les briefs et prompts actuels. Production et recherche : [plan 15](plans/15-audio.md).
+
 ### 8.1 Philosophie sonore
 
-**Le silence est le son le plus important de VESTIGES.**
+**La musique accompagne le plaisir de jouer : mélodie identifiable, rythme, émotion et mouvement.** VESTIGES possède une véritable bande originale de jeu vidéo. La mélancolie du monde cohabite avec l'envie d'avancer et la satisfaction de devenir puissant.
 
-Le jeu n'a pas de fond sonore constant. Le silence existe, et il est précieux. Quand la musique s'arrête, quand il n'y a que le vent et les pas du joueur — c'est un moment. Les sons sont des événements, pas du bruit de fond.
+Les respirations entre les morceaux et les arrangements moins denses laissent entendre le monde. Le silence est un outil de contraste, pas une obligation qui empêche la composition.
 
 ### 8.2 Musique
 
-**Pas d'orchestre. Pas d'épique. Pas de synthwave.**
+Une palette intime et physique : piano, cordes pincées, basses, percussions de bois et de métal, timbres électroniques expressifs. Les instruments et tempos précis restent des pistes d'essai. La mélodie et le groove doivent fonctionner avant d'ajouter la patine sonore.
 
-La musique de VESTIGES est **intime et étrange**. Un piano désaccordé. Une guitare acoustique avec un delay long. Des nappes synthétiques qui ressemblent à des voix humaines mais qui n'en sont pas. Des percussions organiques — pas des tambours, mais des objets du quotidien : métal qui résonne, bois qui craque, eau qui goutte en rythme.
+L'Effacement peut se traduire par des notes manquantes, des échos incomplets, une instabilité de hauteur ou une distorsion progressive. Ces traitements gardent le motif reconnaissable et la pulsation lisible. L'intensité soutient le combat sans masquer ses avertissements.
 
-**Références musicales :**
-- **Ólafur Arnalds** — Piano minimaliste + électronique subtile
-- **Ben Frost** — Drones intenses, textures abrasives pour la nuit
-- **Disasterpeace (Hyper Light Drifter OST)** — Atmosphère mélancolique de jeu
-- **Gustavo Santaolalla (The Last of Us)** — Guitare acoustique, intimité, fragilité
-- **Hildur Guðnadóttir (Joker, Chernobyl)** — Violoncelle, drones, tension insoutenable
-
-**Par phase :**
-
-| Phase | Style | Instruments | Émotion |
-|-------|-------|------------|---------|
-| **Jour — exploration** | Ambient minimaliste | Piano (notes espacées), guitare acoustique, field recordings (vent, oiseaux lointains) | Mélancolie, émerveillement calme, solitude |
-| **Jour — combat** | Le track d'exploration se densifie | Ajout de percussions subtiles, le piano accélère légèrement, basse sourde | Tension montante, urgence contenue |
-| **Crépuscule** | Transition | Les mélodies se distordent, les notes deviennent dissonantes, un drone basse-fréquence s'installe | Appréhension, anxiété |
-| **Nuit — premières vagues** | Percussif, tendu | Percussions sèches (métal, bois), basses profondes, cordes staccato | Adrénaline, peur contrôlée |
-| **Nuit — chaos** | Intense, physique | Tout s'empile : percussions lourdes, drones saturés, cordes agressives, cris synthétiques | Panique, power fantasy, "je vais mourir mais je vais en emmener avec moi" |
-| **Aube** | Release | Tout s'éteint progressivement. Un silence. Puis une note de piano. Simple. Claire. | Soulagement, fierté, repos |
-| **Hub** | Onirique | Nappes synthétiques réverbérées, piano avec delay long, sons inversés | Flottement, introspection, entre deux mondes |
-| **Mort** | Déconstruction | La musique de la phase en cours se "casse" — ralentit, se distord, des notes tombent. Silence. | Fin. Pas de tristesse — du vide. |
+| Situation V2 | Composition | Émotion |
+|---|---|---|
+| Exploration | Thème mémorisable, pulsation régulière, arrangement aéré | Curiosité, solitude, envie d'avancer |
+| Combat dense | Rythme accentué, basse active, développement du thème | Énergie, maîtrise, urgence |
+| Résurgence | Motif transformé, percussion plus incisive, distorsion contenue | Danger et détermination |
+| Après Résurgence | Arrangement allégé, phrase mélodique qui respire | Soulagement et reprise de l'exploration |
+| Late game / endgame | Thème développé, rythme soutenu et harmonie plus tendue | Puissance et mélancolie |
+| Hub | Mélodie accueillante, mouvement doux, timbres apparentés à la run | Repos et mémoire |
+| Mort | Courte déconstruction d'un motif reconnaissable | Rupture puis absence |
 
 ### 8.3 Design sonore
 
-**Le son raconte l'histoire :**
+- **Déplacements :** pas adaptés aux surfaces, variantes pour les sons fréquents, mobilité lisible.
+- **Combat :** attaques, impacts et dissolutions distincts ; avertissements prioritaires. Couvrir les familles d'armes et les capacités ennemies réellement présentes.
+- **Créatures :** signatures associées aux actions utiles au joueur ; éviter les vocalisations automatiques répétitives (Stratégie V2 §21).
+- **Progression :** collecte d'XP discrète en rafale, level-up et choix satisfaisants ; sons cohérents pour Essence, coffres, Autels, malédictions et découvertes.
+- **Monde :** ambiances par biome, événements ponctuels, signaux de Résurgence et d'Effacement.
+- **Interface et méta :** navigation, confirmations, refus, transitions, déblocages et bilan de run selon les écrans existants.
 
-- **Pas du joueur :** Changent selon la surface (béton, herbe, eau, bois, gravier). Toujours présents, jamais trop forts. C'est le pouls du jeu.
-- **Récolte :** Son de hache dans le bois = thock satisfaisant. Pioche dans la pierre = clink métallique. Chaque outil a un son distinct.
-- **Craft terminé :** Un son "complet" — comme un puzzle qui s'emboîte. Court, satisfaisant, Pavlovien. Le joueur doit sourire quand il l'entend.
-- **Level up :** Un son ascendant, cristallin, qui coupe tout le reste pendant une demi-seconde. Le joueur sait immédiatement qu'il a level up même sans regarder l'écran.
-- **Foyer :** Un crépitement constant mais subtil. Pas un vrai feu — quelque chose de plus doux, plus "tonal". Comme un ronronnement. Le son de la sécurité.
-- **Créatures — jour :** Sons étouffés, lointains. On les entend avant de les voir. Un grognement dans les buissons. Un raclement derrière un mur. Ça maintient la tension.
-- **Créatures — nuit :** Sons directs, proches, agressifs. Chaque type a un son signature que le joueur apprend à reconnaître (le gémissement de l'Ombre, le BOOM sourd de la Brute qui charge, le cri aigu du Hurleur).
-- **L'Indicible :** Un son que le joueur n'a jamais entendu avant. Pas un rugissement. Un son bas, presque infrasonore, qui fait vibrer les enceintes. Mélangé à quelque chose qui ressemble à une voix humaine qui dit des mots qu'on ne comprend pas. Le joueur le sent dans son corps avant de le comprendre avec ses oreilles.
+Le budget de production n'inclut aucune prestation payante ni achat supplémentaire. Sons enregistrés gratuits, transformations et synthèse, outils IA déjà disponibles et contributions bénévoles éventuelles peuvent coexister. Les agents fournissent des candidats et leurs sources ; Raphaël décide à l'écoute.
 
 ### 8.4 Son adaptatif
 
-La musique et les sons réagissent au gameplay en temps réel :
+La cible est une musique qui suit l'exploration, le combat, les Résurgences et l'endgame. Les transitions doivent éviter les bascules incessantes. La santé basse et le danger d'Effacement ont leurs avertissements ; leur mixage préserve la lisibilité des attaques.
 
-- **Nombre d'ennemis proches** → intensité musicale.
-- **HP du joueur** → quand le joueur est bas en HP, un battement de cœur subtil s'ajoute au mix.
-- **Timer de jour** → les 2 dernières minutes du jour, la musique d'exploration devient légèrement dissonante.
-- **Entrer dans la zone du Foyer** → les sons hostiles s'amortissent, le crépitement du Foyer enveloppe.
-- **Score combo (multi-kills)** → un "stinger" musical court et satisfaisant, de plus en plus spectaculaire.
+Fondus entre morceaux et couches musicales séparées sont deux options de production. Des pistes générées séparément ne sont pas présumées synchronisées. L'intégration actuelle doit être auditée et testée avant de déclarer la cible réalisée.
 
 ---
 

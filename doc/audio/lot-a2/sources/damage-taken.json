@@ -1,0 +1,22 @@
+{
+  "name": "Damage taken",
+  "author": "zander games",
+  "url": "https://opengameart.org/content/damage-taken",
+  "download_urls": [
+    "https://opengameart.org/sites/default/files/damage_taken_0.mp3"
+  ],
+  "verified_at": "2026-09-25",
+  "license": "CC0-1.0",
+  "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "license_links_observed": [
+    {
+      "label": "CC0",
+      "url": "http://creativecommons.org/publicdomain/zero/1.0/"
+    }
+  ],
+  "page_sha256": "5021e5daec642ecd027ba635f15f01aebf4e5da7178bbee2d018e4ec528e9913",
+  "evidence": "Page officielle : champ License(s) ; liens ci-dessus relevés à la date indiquée.",
+  "selected_files": [
+    "damage_taken_0.mp3"
+  ]
+}

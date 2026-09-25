@@ -1,0 +1,22 @@
+{
+  "name": "Ghost breath",
+  "author": "qubodup",
+  "url": "https://opengameart.org/content/ghost-breath",
+  "download_urls": [
+    "https://opengameart.org/sites/default/files/ghostbreath.flac"
+  ],
+  "verified_at": "2026-09-25",
+  "license": "CC0-1.0",
+  "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "license_links_observed": [
+    {
+      "label": "CC0",
+      "url": "http://creativecommons.org/publicdomain/zero/1.0/"
+    }
+  ],
+  "page_sha256": "fe27f5d31e37e6c51a8ab7f01c4332308b4b4c954d558202f1f349ebbb6a2dde",
+  "evidence": "Page officielle : champ License(s) CC0 ; liens ci-dessus relevés à la date indiquée.",
+  "selected_files": [
+    "ghostbreath.flac"
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "name": "RPG Audio · Kenney",
+  "url": "https://kenney.nl/assets/rpg-audio",
+  "download_url": "https://kenney.nl/media/pages/assets/rpg-audio/8e99002d76-1677590336/kenney_rpg-audio.zip",
+  "verified_at": "2026-09-25",
+  "license": "CC0-1.0",
+  "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "evidence": "Creative Commons CC0",
+  "author": "Kenney",
+  "license_links_observed": [
+    {
+      "label": "Creative Commons CC0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+    }
+  ],
+  "page_sha256": "21f120da69980383562e3780017666af4355a1c31e808a81979c350256c56046",
+  "evidence_note": "Champ de licence et liens relevés sur la page officielle à la date indiquée. Le SHA256 porte sur la réponse HTML reçue ; page complète non redistribuée.",
+  "bundled_license": "sources/rpg-audio-License.txt",
+  "selected_files": [
+    "Audio/doorOpen_1.ogg",
+    "Audio/handleCoins2.ogg",
+    "Audio/cloth1.ogg"
+  ]
+}

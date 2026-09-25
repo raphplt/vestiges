@@ -1,0 +1,25 @@
+{
+  "name": "Bell dings/chimes",
+  "author": "PWL",
+  "url": "https://opengameart.org/content/bell-dingschimes",
+  "download_urls": [
+    "https://opengameart.org/sites/default/files/bell_ding1.wav",
+    "https://opengameart.org/sites/default/files/bell_ding2.wav",
+    "https://opengameart.org/sites/default/files/bell_ding3.wav",
+    "https://opengameart.org/sites/default/files/bell_ding4.wav"
+  ],
+  "verified_at": "2026-09-25",
+  "license": "CC0-1.0",
+  "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "license_links_observed": [
+    {
+      "label": "CC0",
+      "url": "http://creativecommons.org/publicdomain/zero/1.0/"
+    }
+  ],
+  "page_sha256": "934f52b4e6e6b4943c4e6370f2bc97595bd65d99f1893f8af317c64f8fdc45d4",
+  "evidence": "Page officielle : champ License(s) CC0 ; liens ci-dessus relevés à la date indiquée.",
+  "selected_files": [
+    "bell_ding2.wav"
+  ]
+}

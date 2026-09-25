@@ -631,7 +631,8 @@ Le script de post-processing doit inclure une vérification/correction de l'angl
 - **Les sons d'impact restent.** Hit ennemi, hit joueur, mort d'ennemi (désintégration en particules).
 - **Le son d'XP doit se fondre.** Quand les orbes arrivent en rafale, le son doit se superposer sans devenir désagréable. Technique : même son mais pitch randomisé légèrement, volume qui diminue quand beaucoup d'orbes arrivent simultanément.
 - **Les musiques** s'adaptent au nouveau flow (pas de phase jour/nuit distincte mais une montée progressive) :
-  - Début de run : ambient minimal (la "mélancolie merveilleuse" de la Bible).
+  - **Direction validée par Raphaël le 25 septembre 2026 :** musique de jeu vidéo avec mélodie identifiable, rythme et progression. La distorsion et l'Effacement peuvent transformer cette matière musicale. Les anciennes consignes de drones abstraits sont remplacées par le [guide audio V2](AUDIO-GUIDE.md). Raphaël choisit les candidats à l'écoute ; les agents assurent la recherche et la préparation.
+  - Début de run : thème mélodique mélancolique, pulsation qui accompagne l'exploration, arrangement aéré.
   - Combat dense : la musique s'intensifie (percussion, basse).
   - Résurgence : distorsion, urgence, percussion agressive.
   - Post-Résurgence : retour au calme, piano.

@@ -1,0 +1,25 @@
+{
+  "name": "Digital Audio · Kenney",
+  "url": "https://kenney.nl/assets/digital-audio",
+  "download_url": "https://kenney.nl/media/pages/assets/digital-audio/216eac4753-1677590265/kenney_digital-audio.zip",
+  "verified_at": "2026-09-25",
+  "license": "CC0-1.0",
+  "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "evidence": "Creative Commons CC0",
+  "author": "Kenney",
+  "license_links_observed": [
+    {
+      "label": "Creative Commons CC0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+    }
+  ],
+  "page_sha256": "3ab76c36d8d2b876599eb24933b28d74cf107db30f0d05bd9ceaa6d857ceb95b",
+  "evidence_note": "Champ de licence et liens relevés sur la page officielle à la date indiquée. Le SHA256 porte sur la réponse HTML reçue ; page complète non redistribuée.",
+  "bundled_license": "sources/digital-audio-License.txt",
+  "selected_files": [
+    "Audio/phaserDown2.ogg",
+    "Audio/powerUp5.ogg",
+    "Audio/threeTone1.ogg",
+    "Audio/phaseJump1.ogg"
+  ]
+}

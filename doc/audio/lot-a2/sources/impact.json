@@ -1,0 +1,23 @@
+{
+  "name": "Impact",
+  "author": "qubodup",
+  "url": "https://opengameart.org/content/impact",
+  "download_urls": [
+    "https://opengameart.org/sites/default/files/qubodupImpact.7z"
+  ],
+  "verified_at": "2026-09-25",
+  "license": "CC0-1.0",
+  "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "license_links_observed": [
+    {
+      "label": "CC0",
+      "url": "http://creativecommons.org/publicdomain/zero/1.0/"
+    }
+  ],
+  "page_sha256": "123212027960dc44e707b81ba9d577680ce81d463243c87588c4c3cb7592cea6",
+  "evidence": "Page officielle : champ License(s) ; liens ci-dessus relevés à la date indiquée.",
+  "selected_files": [
+    "qubodupImpact/qubodupImpactMeat01.flac",
+    "qubodupImpact/qubodupImpactMeat02.flac"
+  ]
+}

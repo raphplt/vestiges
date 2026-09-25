@@ -1,0 +1,24 @@
+{
+  "name": "Level up, power up, Coin get (13 Sounds)",
+  "author": "wobbleboxx",
+  "url": "https://opengameart.org/content/level-up-power-up-coin-get-13-sounds",
+  "download_urls": [
+    "https://opengameart.org/sites/default/files/SoundPack01.zip"
+  ],
+  "verified_at": "2026-09-25",
+  "license": "CC0-1.0",
+  "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "license_links_observed": [
+    {
+      "label": "CC0",
+      "url": "http://creativecommons.org/publicdomain/zero/1.0/"
+    }
+  ],
+  "page_sha256": "808b56b4c3312993792ad7944ca07df39f6ad45b533b5002fb844cbed2122624",
+  "evidence": "Page officielle : champ License(s) CC0 ; liens ci-dessus relevés à la date indiquée.",
+  "selected_files": [
+    "Downer01.aif",
+    "Rise04.aif",
+    "Upper01.aif"
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "name": "Interface Sounds · Kenney",
+  "url": "https://kenney.nl/assets/interface-sounds",
+  "download_url": "https://kenney.nl/media/pages/assets/interface-sounds/fa43c1dd4d-1677589452/kenney_interface-sounds.zip",
+  "verified_at": "2026-09-25",
+  "license": "CC0-1.0",
+  "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "evidence": "Creative Commons CC0",
+  "author": "Kenney",
+  "license_links_observed": [
+    {
+      "label": "Creative Commons CC0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+    }
+  ],
+  "page_sha256": "0a82a88c616f1c452e2849ac885c5142a46eda2e893a3a91cce333f303ef3f67",
+  "evidence_note": "Champ de licence et liens relevés sur la page officielle à la date indiquée. Le SHA256 porte sur la réponse HTML reçue ; page complète non redistribuée.",
+  "bundled_license": "sources/interface-sounds-License.txt",
+  "selected_files": [
+    "Audio/error_005.ogg",
+    "Audio/minimize_005.ogg",
+    "Audio/glass_001.ogg",
+    "Audio/confirmation_003.ogg"
+  ]
+}

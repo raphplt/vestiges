@@ -1,0 +1,21 @@
+{
+  "name": "Swishes Sound Pack | OpenGameArt.org",
+  "author": "artisticdude",
+  "url": "https://opengameart.org/content/swishes-sound-pack",
+  "download_url": "https://opengameart.org/sites/default/files/swishes.zip",
+  "verified_at": "2026-09-25",
+  "license": "CC0-1.0",
+  "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "evidence": "License(s): CC0",
+  "license_links_observed": [
+    {
+      "label": "CC0",
+      "url": "http://creativecommons.org/publicdomain/zero/1.0/"
+    }
+  ],
+  "page_sha256": "f8cbe6ef3d40266572c632fcaa28fd4ef5caa7800f78364f4f8aa07d2c1f84f4",
+  "evidence_note": "Champ de licence et liens relevés sur la page officielle à la date indiquée. Le SHA256 porte sur la réponse HTML reçue ; page complète non redistribuée.",
+  "selected_files": [
+    "swishes/swish-9.wav"
+  ]
+}
