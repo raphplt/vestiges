@@ -437,9 +437,31 @@ public partial class WorldSetup : Node2D
 
     private void BuildPropOcclusion()
     {
+        Node propContainer = GetNode("PropContainer");
+        SeparateGroundDecals(propContainer);
         PropOcclusion occlusion = new() { Name = "PropOcclusion" };
         AddChild(occlusion);
-        occlusion.Build(GetNode("PropContainer"), GetNodeOrNull<Node2D>("Player"));
+        occlusion.Build(propContainer, GetNodeOrNull<Node2D>("Player"));
+    }
+
+    /// <summary>
+    /// Les décalques au sol (débris, fleurs, flaques) passent dans un conteneur non trié :
+    /// le tri en Y de la scène ne porte plus que sur les décors qui ont une hauteur.
+    /// </summary>
+    private void SeparateGroundDecals(Node propContainer)
+    {
+        Node2D decals = new() { Name = "GroundDecals", ZIndex = -1 };
+        AddChild(decals);
+        int moved = 0;
+        foreach (Node child in propContainer.GetChildren())
+        {
+            if (child is not EnvironmentProp { ZIndex: -1 } prop)
+                continue;
+            prop.ZIndex = 0;
+            prop.Reparent(decals);
+            moved++;
+        }
+        GD.Print($"[WorldSetup] Décalques au sol hors tri : {moved} / {moved + propContainer.GetChildCount()}");
     }
 
     private void SpawnEnvironmentProps(UrbanLayout urbanLayout, SwampPropLayout swampLayout)

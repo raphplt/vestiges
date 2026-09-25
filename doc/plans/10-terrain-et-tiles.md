@@ -188,5 +188,13 @@ La refonte visuelle des décors eux-mêmes (dessin, échelle, contraste) relève
 - `PropOcclusion` indexe une fois les décors hauts (≥ 24 px ou canopée) de tous les placeurs, soit 1 586 sur la seed 1002, dans une grille de cases de 256 px. À chaque tick, seuls ceux de la case du joueur sont testés.
 - Effet de bord : l'overlay d'Effacement, dessiné jusqu'ici sous le sol (z −1 contre 0), redevient visible.
 - Vérifié : build sans avertissement, smoke test, `MovementRegression`, captures `--capture-props` avant/après dans les cinq biomes, dont le passage derrière un immeuble.
-- **Non mesuré :** le coût en FPS du tri en Y. La machine était chargée par d'autres compilations et les bancs ont échoué avant comme après. Mesure à refaire en priorité.
+- Décalques au sol sortis du tri : 5 720 des 10 576 décors de la seed 1002 passent dans un conteneur `GroundDecals` non trié (z −1). Le tri en Y ne porte plus que sur les décors qui ont une hauteur.
+- **Performance** (`tools/benchmark_movement.sh`, 120 ennemis, 15 s, Ryzen 7 5700X + RX 6950 XT, machine redevenue calme ; les premiers essais sous charge étaient invalides) :
+
+  | Version | 720p FPS moyen / p99 | 1080p FPS moyen / p99 |
+  |---|---|---|
+  | `ecbe5f4` (avant la session), second passage | 74 / 19 ms | 60 / 21 ms |
+  | D1 + D2 + décalques hors tri | 123 / 13 ms | 118 / 13 ms |
+
+  Le gain vient très probablement de la suppression de l'ancienne boucle d'occlusion, qui réécrivait la transparence de milliers de décors à chaque tick. Réserve : la carte de la seed du banc diffère entre les deux versions (mosaïque de biomes).
 
