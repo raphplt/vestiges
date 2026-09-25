@@ -302,6 +302,15 @@ Hors périmètre : morts, dissolution et butin (plan 02 J2/J3), police des chiff
   Les écarts de FPS restent sous 4 %, donc dans le bruit.
 - Limite du banc : il ne mesure que l'arme de départ, sans build puissant ni morts en rafale.
 
+*Retour de Raphaël (25 septembre) :* « mieux » dans l'ensemble, mais les projectiles ennemis sont presque tous vert fluo. Correction :
+- Chaque tireur a son projectile et sa couleur, déclarés dans le JSON de la créature (`visual.projectile.sprite`, `visual.projectile.family`) :
+  - Cracheur Pâli : caillot de bile rouille à écume pâle ;
+  - Sentinelle Hurlante : anneaux d'onde gris pâle, prérendus en 16 directions ;
+  - Tisseuse : pelote de soie, avec traînée blanche.
+- La traînée, le flash de tir et l'impact suivent la famille du projectile. Trois familles s'ajoutent : rouille, pâle et soie.
+- Les annonces du Présage passent au violet du Vide, le bond du Charognard au rouge sang. La griffe de mêlée prend le fluide iridescent, l'onde de slam la poussière de pierre.
+- Le vert-acide reste réservé aux yeux et au crachat par défaut.
+
 *Points ouverts pour Raphaël :*
 - Intensité des arcs (épaisseur, durée d'environ 0,2 s) et des étincelles.
 - Choix des couleurs par famille.

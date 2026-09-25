@@ -160,6 +160,44 @@ def _spit() -> ProjectileModel:
     return ProjectileModel(materials, parts, (16, 16), 1, len(wobble), 10)
 
 
+def _bile() -> ProjectileModel:
+    """Caillot du Cracheur Pâli : bile rouille qui tremble, écume pâle de sa chair effacée."""
+    materials = (make_material("bile", "#A85C30", contrast=1.2), make_material("foam", "#E8E0D4", contrast=0.7))
+    wobble = ((3.3, 2.7), (2.9, 3.1), (3.5, 2.5), (3.0, 2.9))
+
+    def parts(frame: int) -> Sequence[Part]:
+        rx, ry = wobble[frame]
+        return (
+            Part(lambda p: ellipsoid(p, (0, 0, 0), (rx, ry, rx)), 0),
+            Part(lambda p: sphere(p, (-rx * 0.45, ry * 0.55, 0.8), 1.3), 1),
+            Part(lambda p: sphere(p, (rx * 0.85, -ry * 0.7, -0.3), 0.9), 0),
+        )
+
+    return ProjectileModel(materials, parts, (16, 16), 1, len(wobble), 10)
+
+
+def _torus(p: np.ndarray, center, major: float, minor: float) -> np.ndarray:
+    """Anneau dans le plan XY (perpendiculaire à l'avant +Z du projectile)."""
+    local = p - np.asarray(center)
+    ring = np.linalg.norm(local[:, :2], axis=1) - major
+    return np.sqrt(ring * ring + local[:, 2] ** 2) - minor
+
+
+def _howl() -> ProjectileModel:
+    """Cri de la Sentinelle Hurlante : deux anneaux d'onde pâles, perpendiculaires à la course, qui vibrent."""
+    materials = (make_material("wave", "#E8E0D4", contrast=0.9), make_material("wave_echo", "#9E9494"))
+    radii = ((4.2, 2.6), (4.8, 3.2))
+
+    def parts(frame: int) -> Sequence[Part]:
+        front, back = radii[frame]
+        return (
+            Part(lambda p: _torus(p, (0, 0, 1.5), front, 1.0), 0),
+            Part(lambda p: _torus(p, (0, 0, -2.5), back, 0.8), 1),
+        )
+
+    return ProjectileModel(materials, parts, (24, 24), 16, len(radii), 8)
+
+
 def _web() -> ProjectileModel:
     """Pelote de la Tisseuse : fils pâles serrés autour d'un œil de sève acide."""
     materials = (make_material("silk", "#E8E0D4", contrast=0.8), make_emissive("sap", "#7FFF00"))
@@ -187,5 +225,7 @@ MODELS: dict[str, Callable[[], ProjectileModel]] = {
     "orb_fire": lambda: _orb("#E07B39"),
     "note": _note,
     "spit": _spit,
+    "bile": _bile,
+    "howl": _howl,
     "web": _web,
 }

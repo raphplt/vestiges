@@ -15,6 +15,10 @@
         "color": "#44CC44",
         "shape": "triangle",
         "size": 16,
-        "sprite_folder": "sentinelle"
+        "sprite_folder": "sentinelle",
+        "projectile": {
+            "sprite": "howl",
+            "family": "pale"
+        }
     }
 }

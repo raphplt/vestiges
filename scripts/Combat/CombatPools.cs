@@ -75,27 +75,27 @@ public partial class CombatPools : Node2D
         PlayFx(position, spec, FxOwner.Player);
     }
 
-    /// <summary>Éclat vert-acide au départ d'un tir ennemi.</summary>
-    public void ShowMuzzleFlash(Vector2 position, float angle)
+    /// <summary>Éclat au départ d'un tir ennemi, aux couleurs de son projectile.</summary>
+    public void ShowMuzzleFlash(Vector2 position, FxFamily family)
     {
-        PixelFxSpec spec = PixelFxSpec.Of(PixelFxShape.Star, FxFamily.Hostile, 5f, 1f, 0.1f);
+        PixelFxSpec spec = PixelFxSpec.Of(PixelFxShape.Star, family, 5f, 1f, 0.1f);
         spec.Steps = 3;
         spec.FadeTail = 0.34f;
         spec.ZIndex = 2;
         PlayFx(position, spec, FxOwner.Enemy);
     }
 
-    /// <summary>Éclaboussure d'un projectile ennemi qui touche : étoile et gouttes acides.</summary>
-    public void ShowEnemyImpact(Vector2 position, Vector2 direction)
+    /// <summary>Éclaboussure d'un projectile ennemi qui touche : étoile et gouttes de sa couleur.</summary>
+    public void ShowEnemyImpact(Vector2 position, Vector2 direction, FxFamily family)
     {
-        PixelFxSpec spec = PixelFxSpec.Of(PixelFxShape.Star, FxFamily.Hostile, 6f, 1f, 0.12f);
+        PixelFxSpec spec = PixelFxSpec.Of(PixelFxShape.Star, family, 6f, 1f, 0.12f);
         spec.Steps = 3;
         spec.FadeTail = 0.34f;
         spec.ZIndex = 2;
         PlayFx(position, spec, FxOwner.Enemy);
         Sparks.Emit(position, new SparkBurst
         {
-            Family = FxFamily.Hostile,
+            Family = family,
             Owner = FxOwner.Enemy,
             Count = 5,
             Direction = -direction,

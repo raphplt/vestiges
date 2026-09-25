@@ -13,4 +13,7 @@ public enum FxFamily
     Crit,
     Blood,
     Stone,
+    Rust,
+    Pale,
+    Silk,
 }

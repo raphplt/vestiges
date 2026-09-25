@@ -20,6 +20,9 @@ public class EnemyVisual
     public string SpriteFolder { get; set; }
     /// <summary>Distance du centre du cadre aux pieds, en pixels. Non nul : sprite à la densité du monde, sans mise à l'échelle.</summary>
     public float SpriteFeetOffset { get; set; }
+    /// <summary>Projectile tiré (planche de assets/vfx/projectiles) et famille de couleurs de sa traînée et de son impact.</summary>
+    public string ProjectileSprite { get; set; } = "spit";
+    public string ProjectileFamily { get; set; } = "hostile";
 }
 
 /// <summary>Paramètres d'une capacité composée (bloc "abilities" du JSON ennemi).</summary>
@@ -160,6 +163,14 @@ public static class EnemyDataLoader
                 SpriteFeetOffset = visual.ContainsKey("sprite_feet_offset") ? (float)visual["sprite_feet_offset"].AsDouble() : 0f
             }
         };
+        if (visual.ContainsKey("projectile"))
+        {
+            Godot.Collections.Dictionary projectile = visual["projectile"].AsGodotDictionary();
+            if (projectile.ContainsKey("sprite"))
+                data.Visual.ProjectileSprite = projectile["sprite"].AsString();
+            if (projectile.ContainsKey("family"))
+                data.Visual.ProjectileFamily = projectile["family"].AsString();
+        }
 
         // Extra stats non-standard (pack_bonus, charge_speed, etc.)
         string[] coreStats = { "hp", "speed", "damage", "attack_range", "xp_reward" };

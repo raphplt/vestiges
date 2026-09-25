@@ -24,6 +24,7 @@ public static class PixelPalette
     public static readonly Color IridescentHighlight = new("5A3A7A");
     public static readonly Color MistViolet = new("4A3066");
     public static readonly Color RustDark = new("6B3A24");
+    public static readonly Color RustOrange = new("A85C30");
     public static readonly Color OxidizedCopper = new("5A9A8A");
     public static readonly Color GlassBlue = new("8AB8C4");
     public static readonly Color FlowerViolet = new("8B6BAE");
@@ -43,6 +44,9 @@ public static class PixelPalette
         new(ErasureWhite, FlowerYellow, HearthGold, RustDark),          // Crit
         new(FlameOrange, PlayerBlood, RustDark, DeepBlack),             // Blood
         new(LightGray, WarmGray, WarmGrayDark, DeepBlack),              // Stone
+        new(FlameOrange, RustOrange, RustDark, Iridescent),             // Rust
+        new(ErasureWhite, LightGray, MistViolet, DeepBlack),            // Pale
+        new(ErasureWhite, OffWhite, LightGray, WarmGrayDark),           // Silk
     };
 
     public static FxRamp Ramp(FxFamily family) => Ramps[(int)family];
@@ -60,6 +64,9 @@ public static class PixelPalette
         "crit" => FxFamily.Crit,
         "blood" => FxFamily.Blood,
         "stone" => FxFamily.Stone,
+        "rust" => FxFamily.Rust,
+        "pale" => FxFamily.Pale,
+        "silk" => FxFamily.Silk,
         _ => fallback,
     };
 

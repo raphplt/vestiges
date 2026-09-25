@@ -14,7 +14,11 @@
         "color": "#556B5A",
         "shape": "triangle",
         "size": 13,
-        "sprite": "tisseuse"
+        "sprite": "tisseuse",
+        "projectile": {
+            "sprite": "web",
+            "family": "silk"
+        }
     },
     "behavior": "weaver"
 }

@@ -16,7 +16,7 @@ namespace Vestiges.Tests;
 
 /// <summary>
 /// Observation de la vraie scène de run, rendue.
-/// --capture-abilities : captures des annonces du Présage et du bond du Charognard.
+/// --capture-abilities [--enemies a,b] : captures des attaques d'ennemis choisis (Présage et Charognard par défaut).
 /// --capture-map : répartition des biomes autour du spawn (plusieurs seeds) et vues dézoomées.
 /// --capture-props : zone la plus chargée en décors de chaque biome, collisions affichées (sauf --hide-collisions).
 /// --capture-weapons [--weapons a,b] : galerie des attaques du joueur (RunObservation.Weapons.cs).
@@ -115,8 +115,9 @@ public partial class RunObservation : Node
 
         SpawnManager spawner = _world.GetNode<SpawnManager>("SpawnManager");
         Vector2 origin = _player.GlobalPosition;
-        spawner.ForceSpawnEnemy("presage", origin + new Vector2(-220f, -40f));
-        spawner.ForceSpawnEnemy("charognard", origin + new Vector2(110f, 70f));
+        string[] casters = Argument(OS.GetCmdlineUserArgs(), "--enemies", "presage,charognard").Split(',');
+        for (int index = 0; index < casters.Length; index++)
+            spawner.ForceSpawnEnemy(casters[index], origin + Vector2.FromAngle(Mathf.Pi * (0.9f + 0.45f * index)) * (130f + 40f * (index % 2)));
         await Frames(2);
 
         foreach (Node node in GetTree().GetNodesInGroup("enemies"))

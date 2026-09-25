@@ -6,7 +6,8 @@ namespace Vestiges.Combat;
 
 /// <summary>
 /// Projectile ennemi recyclé par CombatPools : lancé par Launch, rendu au pool à l'impact ou en fin de course.
-/// Crachat vert-acide (ou pelote de la Tisseuse) animé, à hauteur de buste, jamais masqué : c'est un danger.
+/// Sprite et couleurs propres à chaque créature (bloc visual.projectile du JSON), à hauteur de buste,
+/// jamais masqué : c'est un danger.
 /// </summary>
 public partial class EnemyProjectile : Area2D
 {
@@ -25,6 +26,7 @@ public partial class EnemyProjectile : Area2D
 	private ProjectileSprites.SpriteSet _spriteSet;
 	private int _spriteFrame = -1;
 	private ulong _trailFrame;
+	private FxFamily _family = FxFamily.Hostile;
 	private bool _isDespawning;
 	private Action<EnemyProjectile> _release;
 	private EventBus _eventBus;
@@ -42,7 +44,8 @@ public partial class EnemyProjectile : Area2D
 		BodyEntered += OnBodyEntered;
 	}
 
-	public void Launch(Vector2 position, Vector2 direction, float damage, string sourceEnemyId, float slowFactor = 1f, float slowDuration = 0f)
+	public void Launch(Vector2 position, Vector2 direction, float damage, string sourceEnemyId, string spriteId, FxFamily family,
+		float slowFactor = 1f, float slowDuration = 0f)
 	{
 		GlobalPosition = position;
 		_direction = direction.Normalized();
@@ -52,7 +55,8 @@ public partial class EnemyProjectile : Area2D
 		_slowDuration = slowDuration;
 		_age = 0f;
 		_isDespawning = false;
-		_spriteSet = ProjectileSprites.Get(slowDuration > 0f ? "web" : "spit");
+		_family = family;
+		_spriteSet = ProjectileSprites.Get(spriteId) ?? ProjectileSprites.Get("spit");
 		_spriteFrame = -1;
 		_visual.Modulate = new Color(1f, 1f, 1f, CombatFxSettings.EnemyOpacity);
 		UpdateSprite();
@@ -72,7 +76,7 @@ public partial class EnemyProjectile : Area2D
 		_visual.Texture = _spriteSet.Get(0, frame);
 	}
 
-	/// <summary>Gouttes de fluide qui tombent derrière le crachat, une toutes les trois frames.</summary>
+	/// <summary>Gouttes ou éclats qui retombent derrière le projectile, un toutes les trois frames.</summary>
 	private void EmitTrail()
 	{
 		ulong frame = Engine.GetPhysicsFrames();
@@ -81,7 +85,7 @@ public partial class EnemyProjectile : Area2D
 		_trailFrame = frame;
 		CombatPools.Instance.EmitSparks(GlobalPosition + new Vector2(0f, -FlightHeight), new SparkBurst
 		{
-			Family = FxFamily.Hostile,
+			Family = _family,
 			Owner = FxOwner.Enemy,
 			Count = 1,
 			Direction = -_direction,
@@ -128,7 +132,7 @@ public partial class EnemyProjectile : Area2D
 	{
 		_isDespawning = true;
 		SetDeferred(Area2D.PropertyName.Monitoring, false);
-		CombatPools.Instance?.ShowEnemyImpact(GlobalPosition + new Vector2(0f, -FlightHeight), _direction);
+		CombatPools.Instance?.ShowEnemyImpact(GlobalPosition + new Vector2(0f, -FlightHeight), _direction, _family);
 		CallDeferred(MethodName.Release);
 	}
 

@@ -170,6 +170,9 @@ public partial class Enemy : CharacterBody2D
 		_eventBus ??= GetNode<EventBus>("/root/EventBus");
 	}
 
+	private string _projectileSprite = "spit";
+	private FxFamily _projectileFamily = FxFamily.Hostile;
+
 	public void Initialize(EnemyData data, float hpScale, float dmgScale)
 	{
 		//TODO : nécessaire ?
@@ -178,6 +181,8 @@ public partial class Enemy : CharacterBody2D
 
 		_enemyId = data.Id;
 		_enemyType = data.Type;
+		_projectileSprite = data.Visual.ProjectileSprite;
+		_projectileFamily = PixelPalette.ParseFamily(data.Visual.ProjectileFamily, FxFamily.Hostile);
 		_behavior = data.Behavior ?? "default";
 		_tier = data.Tier ?? "normal";
 		_baseHp = data.Stats.Hp;
@@ -961,7 +966,8 @@ public partial class Enemy : CharacterBody2D
 		// Tisseuse : les projectiles ralentissent le joueur
 		bool slows = _behavior == "weaver";
 		CombatPools.Instance?.TakeEnemyProjectile()
-			.Launch(GlobalPosition, direction, _damage, _enemyId, slows ? 0.4f : 1f, slows ? 2f : 0f);
+			.Launch(GlobalPosition, direction, _damage, _enemyId, _projectileSprite, _projectileFamily,
+				slows ? 0.4f : 1f, slows ? 2f : 0f);
 	}
 
 	private void PlayRangedAttackVfx(Vector2 direction)
@@ -975,7 +981,7 @@ public partial class Enemy : CharacterBody2D
 			.SetTrans(Tween.TransitionType.Quad)
 			.SetEase(Tween.EaseType.Out);
 
-		CombatPools.Instance?.ShowMuzzleFlash(GlobalPosition + direction * 14f, direction.Angle());
+		CombatPools.Instance?.ShowMuzzleFlash(GlobalPosition + direction * 14f, _projectileFamily);
 	}
 
 	// --- Damage & Death ---

@@ -17,6 +17,15 @@
     "frames": 4,
     "fps": 16
   },
+  "bile": {
+    "frame": [
+      16,
+      16
+    ],
+    "directions": 1,
+    "frames": 4,
+    "fps": 10
+  },
   "bolt": {
     "frame": [
       24,
@@ -25,6 +34,15 @@
     "directions": 16,
     "frames": 1,
     "fps": 0
+  },
+  "howl": {
+    "frame": [
+      24,
+      24
+    ],
+    "directions": 16,
+    "frames": 2,
+    "fps": 8
   },
   "needle": {
     "frame": [

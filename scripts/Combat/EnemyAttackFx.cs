@@ -12,14 +12,14 @@ public static class EnemyAttackFx
 
     private static CombatPools Pools => CombatPools.Instance;
 
-    /// <summary>Coup de mêlée qui porte : griffe vert-acide vers le joueur, éclats de sang sur lui.</summary>
+    /// <summary>Coup de mêlée qui porte : griffe de fluide iridescent vers le joueur, éclats de sang sur lui.</summary>
     public static void PlayMeleeHit(Vector2 attacker, Vector2 target)
     {
         if (Pools == null)
             return;
         Vector2 direction = (target - attacker).Normalized();
         Vector2 torso = attacker + new Vector2(0f, -TorsoHeight);
-        PixelFxSpec spec = PixelFxSpec.Of(PixelFxShape.Arc, FxFamily.Hostile, 16f, 7f, 0.16f);
+        PixelFxSpec spec = PixelFxSpec.Of(PixelFxShape.Arc, FxFamily.Void, 16f, 7f, 0.16f);
         spec.Angle = new Vector2(direction.X, direction.Y * 1.35f).Angle();
         spec.ArcHalf = 0.9f;
         spec.Squash = 1.35f;
@@ -43,12 +43,12 @@ public static class EnemyAttackFx
         });
     }
 
-    /// <summary>Slam d'un Colosse : onde au sol et gravats projetés.</summary>
+    /// <summary>Slam d'un Colosse : onde de poussière au sol et gravats projetés.</summary>
     public static void PlaySlam(Vector2 ground, float radius)
     {
         if (Pools == null)
             return;
-        PixelFxSpec ring = PixelFxSpec.Of(PixelFxShape.Ring, FxFamily.Hostile, radius, 5f, 0.35f);
+        PixelFxSpec ring = PixelFxSpec.Of(PixelFxShape.Ring, FxFamily.Stone, radius, 5f, 0.35f);
         ring.Squash = 2f;
         ring.Steps = 6;
         ring.FadeTail = 0.35f;
