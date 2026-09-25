@@ -114,7 +114,7 @@ public static class VfxFactory
 	private static Texture2D MasseFrame1 => _masseFrame1 ??= GD.Load<Texture2D>("res://assets/vfx/vfx_masse_impact_f1.png");
 	private static Texture2D MasseFrame2 => _masseFrame2 ??= GD.Load<Texture2D>("res://assets/vfx/vfx_masse_impact_f2.png");
 	private static Texture2D MasseFrame3 => _masseFrame3 ??= GD.Load<Texture2D>("res://assets/vfx/vfx_masse_impact_f3.png");
-	private static Texture2D HitFlashTex => _hitFlashTex ??= GD.Load<Texture2D>("res://assets/vfx/vfx_hit_flash.png");
+	public static Texture2D HitFlashTex => _hitFlashTex ??= GD.Load<Texture2D>("res://assets/vfx/vfx_hit_flash.png");
 	private static Texture2D FlammeFrame1 => _flammeFrame1 ??= GD.Load<Texture2D>("res://assets/vfx/vfx_flamme_torche_f1.png");
 	private static Texture2D FlammeFrame2 => _flammeFrame2 ??= GD.Load<Texture2D>("res://assets/vfx/vfx_flamme_torche_f2.png");
 	private static Texture2D FlammeFrame3 => _flammeFrame3 ??= GD.Load<Texture2D>("res://assets/vfx/vfx_flamme_torche_f3.png");
@@ -342,41 +342,6 @@ public static class VfxFactory
 		};
 
 		return light;
-	}
-
-	// =========================================================================
-	// === Hit Flash — sprite pixel art qui apparaît sur l'ennemi touché ===
-	// =========================================================================
-
-	/// <summary>
-	/// Crée un sprite de hit flash (étoile/burst pixel art) qui scale up et fade.
-	/// À ajouter à la scène principale à la position de l'impact.
-	/// </summary>
-	public static Node2D CreateHitFlashSprite(Vector2 position)
-	{
-		if (_particleLevel == ParticleLevel.Off)
-			return null;
-
-		Sprite2D sprite = new()
-		{
-			GlobalPosition = position,
-			Texture = HitFlashTex,
-			TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
-			Scale = new Vector2(0.5f, 0.5f),
-		};
-
-		sprite.TreeEntered += () =>
-		{
-			Tween tween = sprite.CreateTween();
-			tween.SetParallel();
-			tween.TweenProperty(sprite, "scale", new Vector2(1.5f, 1.5f), 0.08f)
-				.SetTrans(Tween.TransitionType.Quad)
-				.SetEase(Tween.EaseType.Out);
-			tween.TweenProperty(sprite, "modulate:a", 0f, 0.12f);
-			tween.Chain().TweenCallback(Callable.From(sprite.QueueFree));
-		};
-
-		return sprite;
 	}
 
 	// =========================================================================

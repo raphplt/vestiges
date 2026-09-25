@@ -123,8 +123,6 @@ public partial class Enemy : CharacterBody2D
 	private Polygon2D _visual;
 	private Color _originalColor;
 	private Player _player;
-	private static PackedScene _damageNumberScene;
-	private static PackedScene _enemyProjectileScene;
 	private static PackedScene _xpOrbScene;
 	private static PackedScene _chestScene;
 
@@ -166,8 +164,6 @@ public partial class Enemy : CharacterBody2D
 		_visual = GetNode<Polygon2D>("Visual");
 		_sprite = GetNode<AnimatedSprite2D>("Sprite");
 		_originalColor = _visual.Color;
-		_damageNumberScene ??= GD.Load<PackedScene>("res://scenes/combat/DamageNumber.tscn");
-		_enemyProjectileScene ??= GD.Load<PackedScene>("res://scenes/combat/EnemyProjectile.tscn");
 		_xpOrbScene ??= GD.Load<PackedScene>("res://scenes/combat/XpOrb.tscn");
 		_chestScene ??= GD.Load<PackedScene>("res://scenes/world/Chest.tscn");
 		_entityShader ??= GD.Load<Shader>("res://assets/shaders/entity.gdshader");
@@ -959,15 +955,10 @@ public partial class Enemy : CharacterBody2D
 
 		Vector2 direction = (_player.GlobalPosition - GlobalPosition).Normalized();
 		PlayRangedAttackVfx(direction);
-		EnemyProjectile projectile = _enemyProjectileScene.Instantiate<EnemyProjectile>();
-		projectile.GlobalPosition = GlobalPosition;
-		projectile.Initialize(direction, _damage, _enemyId);
-
 		// Tisseuse : les projectiles ralentissent le joueur
-		if (_behavior == "weaver")
-			projectile.SetSlow(0.4f, 2f);
-
-		GetTree().CurrentScene.AddChild(projectile);
+		bool slows = _behavior == "weaver";
+		CombatPools.Instance?.TakeEnemyProjectile()
+			.Launch(GlobalPosition, direction, _damage, _enemyId, slows ? 0.4f : 1f, slows ? 2f : 0f);
 	}
 
 	private void PlayRangedAttackVfx(Vector2 direction)
@@ -981,27 +972,7 @@ public partial class Enemy : CharacterBody2D
 			.SetTrans(Tween.TransitionType.Quad)
 			.SetEase(Tween.EaseType.Out);
 
-		Node2D flashRoot = new();
-		flashRoot.GlobalPosition = GlobalPosition + direction * 14f;
-		flashRoot.Rotation = direction.Angle();
-
-		Polygon2D flash = new();
-		flash.Color = new Color(0.7f, 1f, 0.35f, 0.8f);
-		flash.Polygon = new Vector2[]
-		{
-			new(-2.5f, 0f),
-			new(6f, -3f),
-			new(11f, 0f),
-			new(6f, 3f)
-		};
-		flashRoot.AddChild(flash);
-		GetTree().CurrentScene.AddChild(flashRoot);
-
-		Tween flashTween = flashRoot.CreateTween();
-		flashTween.SetParallel();
-		flashTween.TweenProperty(flash, "scale", new Vector2(1.4f, 1.15f), 0.08f);
-		flashTween.TweenProperty(flash, "modulate:a", 0f, 0.08f);
-		flashTween.Chain().TweenCallback(Callable.From(() => flashRoot.QueueFree()));
+		CombatPools.Instance?.ShowMuzzleFlash(GlobalPosition + direction * 14f, direction.Angle());
 	}
 
 	// --- Damage & Death ---
@@ -1221,17 +1192,12 @@ public partial class Enemy : CharacterBody2D
 	/// </summary>
 	private void SpawnHitFlashSprite()
 	{
-		Node2D flashSprite = VfxFactory.CreateHitFlashSprite(GlobalPosition + new Vector2(0, -8));
-		if (flashSprite != null)
-			GetTree().CurrentScene.AddChild(flashSprite);
+		CombatPools.Instance?.ShowHitFlash(GlobalPosition + new Vector2(0, -8));
 	}
 
 	private void SpawnDamageNumber(float damage, bool isCrit = false)
 	{
-		DamageNumber dmgNum = _damageNumberScene.Instantiate<DamageNumber>();
-		dmgNum.GlobalPosition = GlobalPosition + new Vector2(0, -20);
-		dmgNum.SetDamage(damage, isCrit);
-		GetTree().CurrentScene.AddChild(dmgNum);
+		CombatPools.Instance?.ShowDamageNumber(GlobalPosition + new Vector2(0, -20), damage, isCrit);
 	}
 
 	private void Die()

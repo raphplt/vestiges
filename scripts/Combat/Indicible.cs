@@ -40,11 +40,9 @@ public partial class Indicible : Node2D
 	private readonly List<Node2D> _edgeSegments = new();
 	private readonly List<Polygon2D> _eyes = new();
 
-	private static PackedScene _damageNumberScene;
 
 	public override void _Ready()
 	{
-		_damageNumberScene ??= GD.Load<PackedScene>("res://scenes/combat/DamageNumber.tscn");
 		_eventBus = GetNode<EventBus>("/root/EventBus");
 		AddToGroup("enemies");
 		AddToGroup("indicible");
@@ -455,18 +453,12 @@ public partial class Indicible : Node2D
 
 	private void SpawnDamageNumber(float damage)
 	{
-		if (_damageNumberScene == null)
-			return;
-
 		// Afficher les dégâts sur un bord aléatoire
-		DamageNumber dmgNum = _damageNumberScene.Instantiate<DamageNumber>();
 		int edge = (int)(GD.Randi() % _edgeSegments.Count);
 		Vector2 pos = _edgeSegments.Count > edge && IsInstanceValid(_edgeSegments[edge])
 			? _edgeSegments[edge].GlobalPosition
 			: GlobalPosition;
-		dmgNum.GlobalPosition = pos + new Vector2(0, -20);
-		dmgNum.SetDamage(damage, false);
-		GetTree().CurrentScene.AddChild(dmgNum);
+		CombatPools.Instance?.ShowDamageNumber(pos + new Vector2(0, -20), damage, false);
 	}
 
 	private void CachePlayer()

@@ -1,67 +1,73 @@
+using System;
 using Godot;
 
 namespace Vestiges.Combat;
 
+/// <summary>Chiffre de dégâts recyclé par CombatPools : monte, s'efface, retourne au pool.</summary>
 public partial class DamageNumber : Node2D
 {
 	private static readonly RandomNumberGenerator Rng = new();
 
-	private float _damage;
-	private bool _isCrit;
+	private Label _label;
+	private Tween _tween;
+	private Action<DamageNumber> _release;
 
-	public void SetDamage(float damage, bool isCrit = false)
+	public void SetRelease(Action<DamageNumber> release)
 	{
-		_damage = damage;
-		_isCrit = isCrit;
+		_release = release;
 	}
 
 	public override void _Ready()
 	{
 		// Toujours lisible au-dessus des entités triées en Y et du brouillard.
 		ZIndex = 30;
-		Label label = GetNode<Label>("Label");
-		label.Text = ((int)_damage).ToString();
+		_label = GetNode<Label>("Label");
+	}
 
-		// Offset latéral aléatoire pour éviter les empilements
-		float lateralOffset = Rng.RandfRange(-12f, 12f);
-		Position += new Vector2(lateralOffset, 0);
+	public void Play(Vector2 position, float damage, bool isCrit)
+	{
+		// Décalage latéral aléatoire pour éviter les empilements.
+		GlobalPosition = position + new Vector2(Rng.RandfRange(-12f, 12f), 0f);
+		Visible = true;
+		Modulate = Colors.White;
+		_label.Text = ((int)damage).ToString();
 
-		if (_isCrit)
+		if (isCrit)
 		{
-			label.AddThemeColorOverride("font_color", new Color(1f, 0.75f, 0.1f)); // Or vif
-			label.AddThemeFontSizeOverride("font_size", 22);
-			label.Text += "!";
-
-			// Scale punch pour les crits
+			_label.AddThemeColorOverride("font_color", new Color(1f, 0.75f, 0.1f));
+			_label.AddThemeFontSizeOverride("font_size", 22);
+			_label.Text += "!";
 			Scale = new Vector2(1.6f, 0.6f);
 		}
 		else
 		{
-			// Taille proportionnelle aux dégâts (petits coups = plus discrets)
-			int fontSize = _damage > 30 ? 18 : (_damage > 15 ? 16 : 14);
-			label.AddThemeFontSizeOverride("font_size", fontSize);
+			// Taille proportionnelle aux dégâts (petits coups = plus discrets).
+			_label.AddThemeColorOverride("font_color", new Color(1f, 1f, 0.3f));
+			_label.AddThemeFontSizeOverride("font_size", damage > 30 ? 18 : (damage > 15 ? 16 : 14));
+			Scale = Vector2.One;
 		}
 
-		Tween tween = CreateTween();
-		tween.SetParallel(true);
-
-		float rise = _isCrit ? -55f : -35f;
-		tween.TweenProperty(this, "position", Position + new Vector2(0, rise), 0.7f)
+		_tween?.Kill();
+		_tween = CreateTween();
+		_tween.SetParallel(true);
+		float rise = isCrit ? -55f : -35f;
+		_tween.TweenProperty(this, "position", Position + new Vector2(0, rise), 0.7f)
 			.SetEase(Tween.EaseType.Out)
 			.SetTrans(Tween.TransitionType.Quad);
-
-		// Scale punch → retour normal
-		if (_isCrit)
+		if (isCrit)
 		{
-			tween.TweenProperty(this, "scale", Vector2.One * 1.1f, 0.1f)
+			_tween.TweenProperty(this, "scale", Vector2.One * 1.1f, 0.1f)
 				.SetTrans(Tween.TransitionType.Back)
 				.SetEase(Tween.EaseType.Out);
 		}
+		_tween.TweenProperty(this, "modulate:a", 0.0f, 0.5f).SetDelay(0.35f);
+		_tween.SetParallel(false);
+		_tween.TweenCallback(Callable.From(Finish));
+	}
 
-		tween.TweenProperty(this, "modulate:a", 0.0f, 0.5f)
-			.SetDelay(0.35f);
-
-		tween.SetParallel(false);
-		tween.TweenCallback(Callable.From(QueueFree));
+	private void Finish()
+	{
+		Visible = false;
+		_release(this);
 	}
 }

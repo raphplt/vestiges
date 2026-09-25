@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -46,6 +47,9 @@ public partial class MovementDenseBenchmark : Node
     private double _physicsSum;
     private long _managedStart;
     private long _allocatedStart;
+    // Nœuds ajoutés à l'arbre pendant la mesure : coût des effets créés puis libérés (plan 02 J0).
+    private long _nodesAdded;
+    private readonly Dictionary<string, int> _nodesAddedByName = new();
     private long _rssStart;
     private double _nativeStart;
     private Label _label;
@@ -195,6 +199,13 @@ public partial class MovementDenseBenchmark : Node
         {
             _managedStart = GC.GetTotalMemory(false);
             _allocatedStart = GC.GetTotalAllocatedBytes();
+            GetTree().NodeAdded += node =>
+            {
+                _nodesAdded++;
+                // Nom de la racine d'effet (script C# ou classe native) : repère les sources à recycler.
+                string name = node.GetScript().Obj is Script script ? script.ResourcePath.GetFile() : node.GetClass();
+                _nodesAddedByName[name] = _nodesAddedByName.GetValueOrDefault(name) + 1;
+            };
             _rssStart = System.Diagnostics.Process.GetCurrentProcess().WorkingSet64;
             _nativeStart = Performance.GetMonitor(Performance.Monitor.MemoryStatic);
         }
@@ -263,6 +274,8 @@ public partial class MovementDenseBenchmark : Node
                 // Noms historiques du premier banc : moniteurs Godot, pas un profil CPU isolé.
                 process_cpu_mean_ms = _processSum / _samples, physics_cpu_mean_ms = _physicsSum / _samples,
                 managed_start_bytes = _managedStart, managed_end_bytes = managedEnd, allocated_bytes = allocated,
+                nodes_added = _nodesAdded,
+                nodes_added_by_type = _nodesAddedByName.OrderByDescending(pair => pair.Value).Take(12).ToDictionary(pair => pair.Key, pair => pair.Value), nodes_added_per_second = _nodesAdded / (_frames.Take(_samples).Sum() / 1000),
                 native_start_bytes = _nativeStart, native_end_bytes = nativeEnd,
                 rss_start_bytes = _rssStart, rss_end_bytes = rssEnd, rss_process_peak_bytes = rssPeak,
                 fixture = "Main réelle ; profil dev temporaire sans souvenir équipé, Steam désactivé ; 100 shade + 20 fading_spitter HP x10000 ; traqueur invincible, arme initiale active ; spawn naturel, Effacement et crises figés ; cible orbitale commune, trajectoires réelles différentes avec dash ; code courant dans les deux cas."

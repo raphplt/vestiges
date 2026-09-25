@@ -139,6 +139,9 @@ public partial class GameBootstrap : Node
         cursedItemManager.SetPerkManager(perkManager);
         GetNode("..").CallDeferred("add_child", cursedItemManager);
 
+        Combat.CombatPools combatPools = new() { Name = "CombatPools" };
+        GetNode("..").CallDeferred("add_child", combatPools);
+
         Combat.ScreenShake screenShake = new() { Name = "ScreenShake" };
         screenShake.SetCamera(player.GetNode<Camera2D>("Camera"));
         GetNode("..").CallDeferred("add_child", screenShake);

@@ -139,3 +139,13 @@ Roadmap : C (score), D (lisibilité/son/bilan), F (effets/audio), G (performance
 | 7 | **J6 — Micro-interactions** | Le monde répond | Poussière de pas selon le sol, herbes qui plient, éclaboussures, coffres qui frémissent à l'approche, reflets sur les POI, retours d'interface | Coût borné à la zone visible |
 
 Chaque lot : captures avant/après dans une vraie run (`tools/capture_run.sh`), mesure en combat dense, `ParticleLevel` Reduced et Off vérifiés, puis ton retour avant le lot suivant. J0 précède tout le reste. L'ordre de J1 à J6 suit le ressenti « à la seconde » du §1 du dossier.
+
+### J0 livré (première passe) — 25 septembre 2026
+
+- Nouveau `CombatPools` (nœud de la scène de run, trié en Y avec les entités, créé par `GameBootstrap`) et `NodePool<T>` générique. Ils recyclent les projectiles ennemis, les chiffres de dégâts, les flashs d'impact et les flashs de tir. `EnemyProjectile` et `DamageNumber` passent d'une mise en place dans `_Ready` à `Launch`/`Play`. En fin de vie, ils sont rendus au pool au lieu d'être libérés. `FlashSprite` remplace `VfxFactory.CreateHitFlashSprite`, retiré.
+- Le banc de combat dense compte désormais les nœuds ajoutés à l'arbre par seconde, avec leur répartition par type (`nodes_added_per_second`, `nodes_added_by_type`).
+- Avant : ≈ 150 à 160 nœuds créés par seconde avec la seule arme de départ. Ils venaient surtout des projectiles des 20 Cracheurs (180 instances en 10 s, avec leurs polygones et formes de collision), puis des chiffres et des flashs. Après : ≈ 18 à 20 par seconde, soit −88 %. Le reste vient des projectiles du joueur (traînée GPU, minuterie, impact), prochain candidat.
+- Allocations managées sur 15 s : 4,2 → 3,3 Mo.
+- **FPS non concluants :** la machine était chargée par d'autres compilations pendant l'A/B, et les deux versions tombaient par moments à 5 FPS. Mesure à refaire au calme ; le nombre de nœuds créés, lui, ne dépend pas de la charge.
+- Vérifié : build sans avertissement, smoke test, `MovementRegression`, `EnemyAbilityRegression`.
+- Reste de J0 : projectiles du joueur, effets de mort (dissolution, flaque) et burst d'XP, puis budget d'effets par frame selon `ParticleLevel`.
