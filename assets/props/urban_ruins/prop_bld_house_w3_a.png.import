@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://ctj4di87j8gla"
-path="res://.godot/imported/prop_building_shopfront_row.png-bf66a8239584c334832872c91e0d7dda.ctex"
+uid="uid://s735305d08pu"
+path="res://.godot/imported/prop_bld_house_w3_a.png-8215d725221227ebe4b8769ad48334e2.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/props/urban_ruins/prop_building_shopfront_row.png"
-dest_files=["res://.godot/imported/prop_building_shopfront_row.png-bf66a8239584c334832872c91e0d7dda.ctex"]
+source_file="res://assets/props/urban_ruins/prop_bld_house_w3_a.png"
+dest_files=["res://.godot/imported/prop_bld_house_w3_a.png-8215d725221227ebe4b8769ad48334e2.ctex"]
 
 [params]
 

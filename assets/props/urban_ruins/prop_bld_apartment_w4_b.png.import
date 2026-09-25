@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://duwjncvbm2vax"
-path="res://.godot/imported/prop_building_tower_chunk.png-8198d3096a169f28b0479e9544c89116.ctex"
+uid="uid://74e4tg5la4gb"
+path="res://.godot/imported/prop_bld_apartment_w4_b.png-6ebab751432156a286e186075b9231fb.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/props/urban_ruins/prop_building_tower_chunk.png"
-dest_files=["res://.godot/imported/prop_building_tower_chunk.png-8198d3096a169f28b0479e9544c89116.ctex"]
+source_file="res://assets/props/urban_ruins/prop_bld_apartment_w4_b.png"
+dest_files=["res://.godot/imported/prop_bld_apartment_w4_b.png-6ebab751432156a286e186075b9231fb.ctex"]
 
 [params]
 

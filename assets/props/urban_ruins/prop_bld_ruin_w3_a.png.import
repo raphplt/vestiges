@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://diydcmck6wgc7"
-path="res://.godot/imported/prop_building_church_ruin.png-d0dbfa5d7d4607f496dd95e0dfc477fd.ctex"
+uid="uid://bjklc1nxan8w4"
+path="res://.godot/imported/prop_bld_ruin_w3_a.png-cc15c0f0deeb102901041db839b19e0e.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/props/urban_ruins/prop_building_church_ruin.png"
-dest_files=["res://.godot/imported/prop_building_church_ruin.png-d0dbfa5d7d4607f496dd95e0dfc477fd.ctex"]
+source_file="res://assets/props/urban_ruins/prop_bld_ruin_w3_a.png"
+dest_files=["res://.godot/imported/prop_bld_ruin_w3_a.png-cc15c0f0deeb102901041db839b19e0e.ctex"]
 
 [params]
 

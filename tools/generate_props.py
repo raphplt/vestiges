@@ -25,7 +25,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from tools.sprites.props._kit import render_prop  # noqa: E402
 
+URBAN_TILES = ["assets/tiles/ruines/tile_ruines_sol_base.png", "assets/tiles/ruines/tile_ruines_sol_v2.png",
+               "assets/tiles/ruines/tile_ruines_carrelage_base.png"]
 BIOMES = {
+    "urban_buildings": ("tools.sprites.props.buildings", "assets/props/urban_ruins", URBAN_TILES),
     "urban": ("tools.sprites.props.urban", "assets/props/urban_ruins",
               ["assets/tiles/ruines/tile_ruines_sol_base.png", "assets/tiles/ruines/tile_ruines_sol_v2.png",
                "assets/tiles/ruines/tile_ruines_carrelage_base.png"]),
@@ -69,8 +72,8 @@ def write_manifest(path: Path, entries: dict[str, dict]) -> None:
 
 def write_sheet(images: list[tuple[str, Image.Image]], tiles: list[str], path: Path, scale: int) -> None:
     """Décors posés sur le sol réel du biome, à côté du personnage, puis agrandis sans lissage."""
-    columns = 5
-    cell = (128, 112)
+    columns = 5 if max(image.width for _, image in images) <= 120 else 3
+    cell = (max(128, max(image.width for _, image in images) + 40), max(112, max(image.height for _, image in images) + 30))
     rows = (len(images) + columns - 1) // columns
     width, height = columns * cell[0], rows * cell[1]
     ground = Image.new("RGBA", (width, height), (0, 0, 0, 255))

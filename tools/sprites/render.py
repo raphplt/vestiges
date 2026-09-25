@@ -75,7 +75,8 @@ def _normals(parts: Sequence[Part], points: np.ndarray) -> np.ndarray:
 
 def render(parts: Sequence[Part], materials: Sequence[Material], yaw: float,
            size: tuple[int, int], pivot: tuple[float, float],
-           scale: float = MODEL_SCALE, supersample: int = 4, ray_range: float = RAY_RANGE) -> Image.Image:
+           scale: float = MODEL_SCALE, supersample: int = 4, ray_range: float = RAY_RANGE,
+           bounds: tuple[Sequence[float], Sequence[float]] | None = None) -> Image.Image:
     width, height = size
     ss = supersample
     # Rayons exprimés dans l'espace du modèle : la lumière reste fixe à l'écran quelle que soit l'orientation.
@@ -96,6 +97,18 @@ def render(parts: Sequence[Part], materials: Sequence[Material], yaw: float,
     t = np.zeros(count)
     hit = np.zeros(count, dtype=bool)
     active = np.ones(count, dtype=bool)
+    if bounds is not None:
+        # Boîte englobante (espace du modèle) : les rayons démarrent à son entrée, ceux qui la ratent sont écartés.
+        low = np.asarray(bounds[0], dtype=np.float64)
+        high = np.asarray(bounds[1], dtype=np.float64)
+        with np.errstate(divide="ignore", invalid="ignore"):
+            inverse = 1.0 / view
+            t1 = (low - origins) * inverse
+            t2 = (high - origins) * inverse
+        near = np.nanmax(np.minimum(t1, t2), axis=1)
+        far = np.nanmin(np.maximum(t1, t2), axis=1)
+        active = far >= np.maximum(near, 0.0)
+        t = np.where(active, np.maximum(near, 0.0), 0.0)
     for _ in range(int(110 * max(1.0, ray_range / RAY_RANGE))):
         index = np.nonzero(active)[0]
         if len(index) == 0:

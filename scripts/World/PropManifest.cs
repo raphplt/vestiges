@@ -28,6 +28,14 @@ public static class PropManifest
 
     private static readonly Dictionary<string, Dictionary<string, Entry>> Folders = new();
 
+    /// <summary>Noms (sans extension) des décors d'un dossier, par exemple res://assets/props/urban_ruins.</summary>
+    public static IEnumerable<string> Stems(string folder)
+    {
+        if (!Folders.TryGetValue(folder, out Dictionary<string, Entry> entries))
+            Folders[folder] = entries = Load(folder.PathJoin(FileName));
+        return entries.Keys;
+    }
+
     public static bool TryGet(Texture2D texture, out Entry entry)
     {
         entry = default;

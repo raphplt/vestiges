@@ -40,6 +40,9 @@ class PropModel:
     canvas: tuple[int, int] = DEFAULT_CANVAS
     # Emprise au sol (x, z) en unités du modèle, avant orientation ; None pour un décor sans emprise pleine.
     footprint: Sequence[tuple[float, float]] | None = None
+    # Boîte englobante du modèle ((min), (max)) : accélère le rendu des grands volumes.
+    bounds: tuple[Sequence[float], Sequence[float]] | None = None
+    supersample: int = 4
 
 
 @dataclass(frozen=True)
@@ -54,7 +57,8 @@ class RenderedProp:
 def render_prop(model: PropModel) -> RenderedProp:
     width, height = model.canvas
     pivot = (width / 2.0, height * 0.72)
-    image = render(model.parts(), model.materials, model.yaw, model.canvas, pivot, MODEL_SCALE, ray_range=model.ray_range)
+    image = render(model.parts(), model.materials, model.yaw, model.canvas, pivot, MODEL_SCALE,
+                   supersample=model.supersample, ray_range=model.ray_range, bounds=model.bounds)
     cropped, origin = fit_frame(image, pivot)
     footprint = None
     if model.footprint is not None:

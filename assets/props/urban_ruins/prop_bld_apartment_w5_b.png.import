@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://facdx5y1tbr1"
-path="res://.godot/imported/prop_collapsed_building.png-817932aa7be0991ece12d9c3eabb8526.ctex"
+uid="uid://btpbkprjj3vjq"
+path="res://.godot/imported/prop_bld_apartment_w5_b.png-92239255ae4df9aa00361af113a304a8.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/props/urban_ruins/prop_collapsed_building.png"
-dest_files=["res://.godot/imported/prop_collapsed_building.png-817932aa7be0991ece12d9c3eabb8526.ctex"]
+source_file="res://assets/props/urban_ruins/prop_bld_apartment_w5_b.png"
+dest_files=["res://.godot/imported/prop_bld_apartment_w5_b.png-92239255ae4df9aa00361af113a304a8.ctex"]
 
 [params]
 

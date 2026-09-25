@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://gosjyynuuomi"
-path="res://.godot/imported/prop_radio_antenna_tower.png-ed40435e21eb8dc4ddd9a1a92265b318.ctex"
+uid="uid://dr1nd30vcbmdx"
+path="res://.godot/imported/prop_bld_house_w3_b.png-8c52c799b347e2057ebe1e17e6f5233e.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/props/urban_ruins/prop_radio_antenna_tower.png"
-dest_files=["res://.godot/imported/prop_radio_antenna_tower.png-ed40435e21eb8dc4ddd9a1a92265b318.ctex"]
+source_file="res://assets/props/urban_ruins/prop_bld_house_w3_b.png"
+dest_files=["res://.godot/imported/prop_bld_house_w3_b.png-8c52c799b347e2057ebe1e17e6f5233e.ctex"]
 
 [params]
 

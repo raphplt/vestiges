@@ -184,6 +184,18 @@ Les tiles restent en l'état (jugées acceptables) ; un ajustement de contraste 
 - Placement : au moins une cellule libre entre deux décors de rue ; fréquence au bord des immeubles 18 % → 9 %, aux carrefours 25 % → 20 %.
 - Captures `--capture-props --hide-collisions` (seed 1002) : chaque objet se lit à l'échelle du personnage. Défaut restant : les immeubles actuels s'empilent et débordent sur la chaussée, c'est l'objet de P2.
 
+**P2 livré — 25 septembre 2026 :**
+- **P2a, emprise exacte.** Le générateur écrit `props_manifest.json` dans le dossier du biome : pour chaque décor, le point au sol dans le sprite et l'emprise projetée (polygone en pixels). `PropManifest` le lit ; `EnvironmentProp` pose alors le pivot sur le centre de la cellule et reprend ce polygone pour la collision, le tri et l'ombre. Les anciens décors dessinés gardent l'emprise déduite des pixels.
+- **P2b, immeubles.** Module `tools/sprites/props/buildings.py`, dimensionné en cellules (une cellule ≈ 3,7 m, un rang ≈ 1,9 m) :
+  - Styles : immeuble de rapport (largeur 4 ou 5 cellules, intact ou abîmé), commerce (3 ou 4 cellules, vitrine et store rayé), maison (toit à deux pans) et ruine (angle effondré). Tous ont 2 étages et 4 rangs de profondeur, et chacun existe en deux lacets (±12°) : 16 fichiers `prop_bld_<style>_w<largeur>_<a|b>`.
+  - Hauteur bornée par la profondeur d'un îlot à l'écran (≈ 190 px). Un premier essai à 3 étages (≈ 240 px) masquait la rue au nord et les ennemis qui s'y trouvaient.
+  - Vus presque de face : la façade suit la rue, un liseré de côté donne le volume, le toit reste lisible. Un lacet de 62° comme les voitures aurait donné des rues en dents de scie.
+  - Fenêtres par répétition de domaine (coût constant) : une part condamnée par des planches selon l'état, appuis, bandeaux d'étage, corniche. Toit : dalle, garde-corps, mousse, flaques, édicules, arbuste sur les immeubles abîmés. Murs : crasse au pied, coulures, lierre. Ruines : effondrement déchiqueté, intérieur sombre, gravats au pied.
+  - Rendu accéléré par boîte englobante (les rayons démarrent à son entrée) et suréchantillonnage 3×3 : 20 à 50 s par immeuble.
+- **Placement** (`UrbanBuildingPlacer`, extrait d'`UrbanPropPlacer`) : une seule rangée de modules, le long de la rue sud de chaque îlot. Elle s'élève au-dessus de la cour, jamais d'une rue ; une seconde rangée au nord recouvrait la première. Ruelles d'une cellule (22 %). Le style suit l'intégrité de l'îlot : ruines, immeubles abîmés, commerces 30 %, immeubles 55 %, maisons 15 %. Les modules disponibles sont lus dans le manifeste. L'ancienne logique de façades et d'angles et les huit sprites d'immeubles hérités (dont l'église et l'antenne) sont retirés.
+- Vérifié : build sans avertissement, smoke test, `MovementRegression`, captures en vraie run (seed 1002). Combat dense : ≈ 110 FPS, p99 ≈ 13,5 ms, en 720p comme en 1080p (≈ 120 FPS avant les immeubles ; la zone du banc n'est pas forcément urbaine).
+- Points ouverts : église et antenne à refaire dans le pipeline comme repères rares ; brèches des ruines encore anguleuses ; façades nord et rues verticales moins soignées que les façades sud.
+
 ### Recommandation initiale (22 septembre), remplacée pour la méthode
 
 **Choix recommandé : pixel art dessiné et animé à une densité commune, produit à partir d’une scène étalon, avec retouche contrôlée et pipeline automatisé.** L’IA peut aider aux recherches de silhouettes/matières ou à une base de sprite, mais chaque résultat doit être redessiné/normalisé selon les mêmes références. Des générations indépendantes « pixel art détaillé » ne constituent pas une méthode de cohérence ; générer chaque frame indépendamment n’est pas le pipeline recommandé pour les personnages.

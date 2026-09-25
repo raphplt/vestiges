@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cvc8rc86lkb62"
-path="res://.godot/imported/prop_building_facade_wide.png-a9aa5a475729b587a94d248bf4f72cfb.ctex"
+uid="uid://c4xyxj2pky48n"
+path="res://.godot/imported/prop_bld_ruin_w4_b.png-13c19837875a13569d66d794ecff0932.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/props/urban_ruins/prop_building_facade_wide.png"
-dest_files=["res://.godot/imported/prop_building_facade_wide.png-a9aa5a475729b587a94d248bf4f72cfb.ctex"]
+source_file="res://assets/props/urban_ruins/prop_bld_ruin_w4_b.png"
+dest_files=["res://.godot/imported/prop_bld_ruin_w4_b.png-13c19837875a13569d66d794ecff0932.ctex"]
 
 [params]
 
