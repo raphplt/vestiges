@@ -475,3 +475,12 @@ Tous les chiffres de ce plan sont des points de départ, pas des réglages mesur
 | 5 | Mémoriaux et Failles : « oui, ça me va » | Direction validée pour la vague 3, Autel refondu en Mémorial compris |
 | 6 | Plafond de niveau d'arme « à déterminer (niveau 50, 100 ?) » | Plafond en données ; valeur à proposer au lot 1B à partir de la courbe d'XP et de la durée de run, mesurée |
 | 7 | Voir le [plan 18 §5](18-inventaire-restes-v1.md#5-décisions-demandées-à-raphaël) | — |
+
+### Réponses de Raphaël — 26 septembre (soir)
+
+| Sujet | Réponse | Application |
+|---|---|---|
+| Rareté (question 2, §4.3) | « Seulement la rareté sur les améliorations » | Recommandation 4.3 retenue : une arme n'a qu'un niveau ; la rareté vit sur les améliorations, puis sur les objets. Débloque la vague 1 (1A socle, 1B, 1C) |
+| Nom d'un perk reçu | « Le mot don me va » | « Don : … » gardé à l'écran de butin |
+| Décors urbains jamais placés | « Tu peux les virer » | Quatre décors supprimés, et leurs générateurs |
+| Style des icônes, fréquence des coffres | Questions de méthode | Jugés en recette : planche des icônes, et nombre de coffres croisés en jeu (réglage dans `chest_placement.json`) |
