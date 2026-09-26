@@ -9,3 +9,9 @@ Fichier temporaire. Il liste ce qu'une session cloud a livré sans pouvoir le v�
 - [ ] **Recette visuelle en jeu** : largeur des chemins (champs 46 px au sol, forêt et marais 26 px, carrière 36 px), contraste des ornières, fréquence des chemins (un arbre couvrant plus 30 % de boucles). Les captures sont dézoomées ou au zoom ×2 ; le rendu à la taille réelle de l'écran de Raphaël peut différer.
 - [ ] **Rues verticales** : une seule chaussée désormais (une tile par parité de rang). Vérifier les carrefours en T et en croix, et la position des voitures garées sur les rues verticales (recentrées de ±16 px).
 - [ ] **Bordures de trottoir** : lisibles ou trop discrètes ?
+
+## Plan 16 O6 — échos
+
+- [ ] **Fréquence et lisibilité en vraie partie** : premier écho à 60 s, puis toutes les 45 à 90 s. Il n'apparaît qu'en zone Fragile ou Effilochée, donc pas avant que l'Effacement ait progressé. Trop rare, trop discret ?
+- [ ] **Taille du murmure** : police par défaut, 9 px en monde (18 px à l'écran au zoom 2). Vérifier la lisibilité et la netteté à 1080p et en grand texte.
+- [ ] **Langue** : les captures du conteneur affichent l'anglais (locale par défaut). Vérifier le français.

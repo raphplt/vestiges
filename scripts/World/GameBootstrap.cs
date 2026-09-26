@@ -149,6 +149,8 @@ public partial class GameBootstrap : Node
         AmbientParticles ambientParticles = new() { Name = "AmbientParticles" };
         GetNode("..").CallDeferred("add_child", ambientParticles);
 
+        GetNode("..").CallDeferred("add_child", new ErasureEchoes { Name = "ErasureEchoes" });
+
         EventBus eventBus = GetNode<EventBus>("/root/EventBus");
         Player levelUpPlayer = player;
         eventBus.LevelUp += (int _level) =>

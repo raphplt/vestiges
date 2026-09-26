@@ -179,3 +179,15 @@ EVENT_FAIL_ESCAPED,La harde est passée,The stampede got away
 EVENT_FAIL_RELIC,Le vestige s'est dissous,The relic dissolved
 EVENT_FAIL_VIGIL,La veille a été rompue,The vigil was broken
 EVENT_VARIANT_SLAIN,Vaincu : {0},Defeated: {0}
+ECHO_WHISPER_01,« Encore cinq minutes… »,“Just five more minutes…”
+ECHO_WHISPER_02,« Tu as fermé la porte ? »,“Did you lock the door?”
+ECHO_WHISPER_03,« Attends-moi au coin de la rue. »,“Wait for me at the corner.”
+ECHO_WHISPER_04,"« Il pleuvait, ce jour-là. »",“It was raining that day.”
+ECHO_WHISPER_05,« Qui a pris mon parapluie ? »,“Who took my umbrella?”
+ECHO_WHISPER_06,« On se retrouve demain. »,“See you tomorrow.”
+ECHO_WHISPER_07,« Je connaissais ton nom… »,“I knew your name…”
+ECHO_WHISPER_08,« Le bus est encore en retard. »,“The bus is late again.”
+ECHO_WHISPER_09,« Rentre avant la nuit. »,“Be home before dark.”
+ECHO_WHISPER_10,"« C'était ici, la boulangerie ? »",“Wasn't the bakery right here?”
+ECHO_WHISPER_11,« Ne m'oublie pas. »,“Don't forget me.”
+ECHO_WHISPER_12,"« Quelqu'un chantait, là-bas. »","“Someone was singing, over there.”"

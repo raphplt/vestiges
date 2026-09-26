@@ -52,6 +52,7 @@ Un seul lot d'implémentation ouvert à la fois. Un échec de lisibilité, de pe
 
 **Mise à jour du 26 septembre (nuit, session cloud sans Raphaël) :**
 - [10 T3](10-terrain-et-tiles.md#lot-t3-livré--chemins-et-routes-26-septembre-2026) : chemins de terre entre les régions, raccordés aux rues, avec un style par biome. Les rues verticales ne sont plus coupées en deux bandes, et les trottoirs ont des bordures usées.
+- [16 O6](16-oubli-sensible.md) : échos de l'oubli. Dans les zones Fragiles, la silhouette pâle d'un habitant apparaît parfois, puis se dissout à l'approche en laissant un murmure.
 - Travail fait dans un conteneur sans GPU : les points à revérifier sur la machine de Raphaël sont listés dans [A-VERIFIER.md](A-VERIFIER.md).
 
 **Mise à jour du 26 septembre (soir) :**

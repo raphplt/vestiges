@@ -92,3 +92,19 @@ Ordre O1 → O3 → O4/O5 → O2/O6 validé par Raphaël. Arbitrages délégués
 - **Coût** (banc de combat dense, même moment, machine chargée) : 1 303 appels de dessin contre 1 305, FPS équivalents (58 contre 61 en 720p, 46 contre 46 en 1080p). Le rendu par lots est préservé.
 - **Non fait** : les particules qui s'élèvent des décors proches en zone Effacée (prévues au plan initial). Elles demandent un pool et un plafond à mesurer.
 
+**O6 livré — échos (26 septembre) :**
+- `World/ErasureEchoes` fait apparaître, de loin en loin, la silhouette d'un habitant dans une zone Fragile ou Effilochée (mémoire entre 25 et 75 %), à 130–300 px du joueur :
+  - premier écho après 60 s, puis un toutes les 45 à 90 s, un seul à la fois ;
+  - la silhouette est immobile ou de passage (marche lente) ;
+  - elle apparaît et s'efface en 1,6 s, et reste 10 s.
+- **Visuel** (`echo.gdshader`) :
+  - sprite d'un personnage réduit à deux tons, blanc effacement et bleu pâle ;
+  - tramage Bayer jamais plein, pieds estompés, lignes qui vacillent.
+
+  Les personnages jouables servent d'habitants (vagabond, forgeuse, traqueur), faute de sprites dédiés.
+- **Approche** : à moins de 70 px au sol, l'écho se dissout (ses pixels montent) et laisse un murmure d'une ligne, qui monte et s'efface en 3 s. Douze murmures, en français et en anglais (`ECHO_WHISPER_01`–`12`), comme « Encore cinq minutes… » ou « Ne m'oublie pas. ».
+- Pas de collision, pas d'effet de jeu. Un seul sprite et un seul texte réutilisés, aucun nœud créé pendant la run.
+- **Réglages** : `echoes` dans `data/scaling/erasure.json`.
+- **Vérification** : `CAPTURE_EXTRA_ARGS="--capture-echoes" tools/capture_run.sh <dossier>` impose une mémoire Fragile autour du joueur et force trois échos. Captures de l'apparition, de la dissolution et du murmure, regardées.
+- **Non fait** : un son de murmure (plan 15, autre fil) ; des habitants dessinés exprès (enfant, vieillard, chien), qui rendraient les échos plus lisibles que des héros décolorés ; le lien avec les anomalies du plan 14, non arbitré.
+

@@ -14,6 +14,26 @@
     "stabilize_radius_cells": 2.5,
     "stabilize_memory_floor": 0.72,
     "void_damage_ratio_per_second": 0.06,
+    "echoes": {
+        "enabled": true,
+        "first_delay_sec": 60,
+        "interval_min_sec": 45,
+        "interval_max_sec": 90,
+        "min_memory": 0.25,
+        "max_memory": 0.75,
+        "min_distance_px": 130,
+        "max_distance_px": 300,
+        "lifetime_sec": 10,
+        "fade_sec": 1.6,
+        "dissolve_sec": 0.7,
+        "dissolve_distance_px": 70,
+        "walk_speed_px": 14,
+        "walk_chance": 0.5,
+        "whisper_count": 12,
+        "whisper_sec": 3.2,
+        "whisper_rise_px": 18,
+        "characters": ["vagabond", "forgeuse", "traqueur"]
+    },
     "zone_effects": {
         "fragile": {
             "speed": 1.0,
