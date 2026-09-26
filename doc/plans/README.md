@@ -50,6 +50,14 @@ Les numéros servent à identifier les plans, pas à imposer leur exécution int
 
 Un seul lot d'implémentation ouvert à la fois. Un échec de lisibilité, de performance ou de fun ramène au lot concerné avant expansion.
 
+**Mise à jour du 26 septembre (soir) :**
+- Raphaël valide les tuiles de la forêt (« mille fois mieux »).
+- Le lot T1 couvre quatre biomes sur cinq (forêt, carrière, champs, marais) en tuiles de Wang ; la ville reste à faire ([10](10-terrain-et-tiles.md)).
+- Vue isométrique respectée pour les sorts et effets, lots I1–I4 : projectiles orientés, annonces au sol, ombres de contact, finitions ([08](08-direction-artistique.md#respect-de-la-vue-isométrique--chantier-du-26-septembre-2026)).
+- Bord du monde infranchissable.
+- Créatures distancées qui perdent la trace ([07 §7](07-bestiaire-et-rencontres.md)).
+- Suite : la ville en T1, O3 (frontière de l'oubli), T3 (chemins).
+
 **Mise à jour du 26 septembre (après-midi) :** Raphaël valide l'accueil et les effets d'attaque, trouve l'ouverture « un tout petit trop peu adoucie », valide l'ordre des chantiers et délègue les autres arbitrages ([DECISIONS §7](DECISIONS.md#7-arbitrages-délégués-du-26-septembre), provisoires).
 - Nouvelle machine, un Mac Apple Silicon. Steam y levait une exception à chaque frame ; les outils de test écrivaient dans le vrai profil. Les deux sont corrigés.
 - Ouverture adoucie d'un cran ([03 §7](03-boucle-et-rythme.md#7-ouverture-de-run--26-septembre-2026)).

@@ -1,4 +1,5 @@
 using Godot;
+using Vestiges.Core;
 using Vestiges.Infrastructure;
 
 namespace Vestiges.Combat;
@@ -103,7 +104,9 @@ public sealed class PlayerAttackFx
         if (_cone == null || !_cone.Visible)
         {
             PixelFxSpec spec = PixelFxSpec.Of(PixelFxShape.Cone, FamilyOf(weapon), range, 1f, 0.5f);
-            spec.Angle = direction.Angle();
+            // Éventail posé au sol : angle au sol, forme aplatie par le shader.
+            spec.Angle = Iso.ToGround(direction).Angle();
+            spec.Squash = Iso.GroundSquash;
             spec.ArcHalf = halfAngle;
             spec.FillDensity = 0.25f;
             spec.Steps = 8;
@@ -113,7 +116,7 @@ public sealed class PlayerAttackFx
             _cone = Pools.PlayFx(_owner.GlobalPosition, spec, FxOwner.Player, _owner);
             return;
         }
-        _cone.Aim(direction.Angle(), halfAngle);
+        _cone.Aim(Iso.ToGround(direction).Angle(), halfAngle);
     }
 
     public void StopCone()

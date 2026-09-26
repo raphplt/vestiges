@@ -447,7 +447,15 @@ Hors périmètre : morts, dissolution et butin (plan 02 J2/J3), police des chiff
 - **Projectiles** : l'ombre reste au sol pendant que le visuel vole à 10–11 px ; cet écart dit que le projectile est en l'air.
 - **Coût** (banc de combat dense, 120 ennemis, 720p) : +24 appels de dessin (+2,3 %) et +141 objets rendus, FPS inchangés (80 contre 80, machine chargée), aucun nœud créé pendant le combat.
 - **Vérification** : captures du bestiaire et d'une run, recadrées ; les créatures tiennent au sol.
-- **Reste à faire** : I4 (explosions, flaques, cône, orbitales, anneau de dash) ; une constante de hauteur de vol unique pour le joueur et les créatures (11 et 10 px aujourd'hui).
+- **Reste à faire** : une constante de hauteur de vol unique pour le joueur et les créatures (11 et 10 px aujourd'hui).
+
+**I4 livré (26 septembre) :**
+- **Cône de la « Dernière Émission »** : dessiné et mesuré au sol (angle, portée et ouverture au sol).
+- **Orbitales de la Boîte à Musique** : elles tournent sur une ellipse 2:1.
+- **Anneau « dash prêt »** : ellipse autour des pieds.
+- **Flaques de sang** : aplaties en 2:1.
+- **Laissé tel quel, et pourquoi** : les explosions de mort sont volumétriques, en l'air, donc rondes à bon droit ; les chiffres de dégâts et les flashs d'arme sont en l'air.
+- **Vérification** : capture `--capture-weapons` (cône et orbitales) ; régressions vertes.
 
 
 ### Recommandation initiale (22 septembre), remplacée pour la méthode

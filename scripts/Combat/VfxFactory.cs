@@ -453,7 +453,7 @@ public static class VfxFactory
 		{
 			Texture = BloodSplatterTex,
 			TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
-			Scale = new Vector2(0.5f, 0.5f), // Commence petit
+			Scale = new Vector2(0.5f, 0.25f), // Commence petit
 			Modulate = new Color(1f, 1f, 1f, 0.9f)
 		};
 
@@ -471,7 +471,8 @@ public static class VfxFactory
 			tween.SetParallel();
 			
 			// Étirement (spawn) - The final scale will be around 1.0 based on passed `scale` parameter.
-			tween.TweenProperty(splatterSprite, "scale", new Vector2(scale, scale * 0.8f), 0.3f)
+			// Flaque couchée au sol : deux fois plus large que haute.
+			tween.TweenProperty(splatterSprite, "scale", new Vector2(scale, scale * 0.5f), 0.3f)
 				.SetTrans(Tween.TransitionType.Quad)
 				.SetEase(Tween.EaseType.Out);
 				

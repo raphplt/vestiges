@@ -1286,7 +1286,8 @@ public partial class Player : CharacterBody2D
                 continue;
 
             float angle = _orbitalAngle + (Mathf.Tau * i / _orbitalProjectiles.Count);
-            orb.Position = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * orbitalRadius;
+            // Orbite couchée au sol : une ellipse deux fois plus large que haute à l'écran.
+            orb.Position = Iso.ToScreen(new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * orbitalRadius);
             PlayerAttackFx.AnimateOrbitalVisual(orb.GetChild<Sprite2D>(1), _orbitalAngle, i);
         }
     }
@@ -1343,6 +1344,7 @@ public partial class Player : CharacterBody2D
         float damage = _coneBaseDamage * (1f + elapsed * _coneDamageRampPerSec) * delta;
 
         // Application des dégâts aux ennemis dans le cône (uniquement visibles)
+        Vector2 groundFacing = Iso.ToGround(_facingDirection).Normalized();
         Godot.Collections.Array<Node> enemies = _groupCache.GetEnemies();
         foreach (Node node in enemies)
         {
@@ -1352,13 +1354,14 @@ public partial class Player : CharacterBody2D
             if (!IsPositionVisible(enemy.GlobalPosition))
                 continue;
 
-            Vector2 toEnemy = enemy.GlobalPosition - GlobalPosition;
+            // Cône posé au sol : portée et ouverture mesurées au sol, comme l'éventail dessiné.
+            Vector2 toEnemy = Iso.ToGround(enemy.GlobalPosition - GlobalPosition);
             float dist = toEnemy.Length();
             if (dist > _coneRange || dist <= 0.001f)
                 continue;
 
             Vector2 dirToEnemy = toEnemy / dist;
-            if (_facingDirection.Dot(dirToEnemy) < dotThreshold)
+            if (groundFacing.Dot(dirToEnemy) < dotThreshold)
                 continue;
 
             enemy.TakeDamage(damage);
