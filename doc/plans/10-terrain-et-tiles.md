@@ -280,6 +280,10 @@ Les palettes sont resserrées par rapport à un premier essai trop bleu et trop 
 
 Huit matières de Wang : herbe, prairie fleurie, sol sec, blé, blé dense, chaume, chemin et bosquet. Le blé et le chaume utilisent un bruit étiré (`stretch`) qui dessine des rangs. Le plan de parcelles (`WildFieldsLayout`) garde la main : chaque type de parcelle choisit sa matière, et le blé dense comme la prairie fleurie forment des plaques de bruit lent au lieu d'alterner cellule par cellule. Capture `--capture-props` regardée : rangs de blé, chaume et prairies se fondent sans losanges. Les matières déjà livrées (forêt, carrière) sont inchangées.
 
+### Lot T1, quatrième biome : les Marécages — 26 septembre 2026
+
+Trois matières de Wang : sol moussu, vase et eau (motif étiré en rides). Les berges directionnelles dessinées à la main ne servent plus : dans les biomes qui fondent leurs matières (`blend_terrains`), l'eau participe désormais au mélange tramé, avec son propre identifiant, ce qui dessine des rives organiques. Le ralentissement dans l'eau reste calculé par cellule ; seul le rendu de la rive est tramé, sur une demi-cellule de part et d'autre. La vase borde l'eau par endroits et forme de rares plaques ; un premier essai, trop étendu et trop contrasté, a été resserré. Il reste la ville, dont les dallages et trottoirs demandent un motif régulier, pas un bruit.
+
 ## 10. Investigation performance — 26 septembre 2026
 
 **Demande de Raphaël :** « j'ai beaucoup aimé les initiatives pour améliorer les performances […] peut-être que ça vaut le coup de faire une investigation plus poussée ».

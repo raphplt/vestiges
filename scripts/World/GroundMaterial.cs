@@ -67,7 +67,7 @@ public static class GroundMaterial
 
                 int x = gx - radius;
                 int y = gy - radius;
-                if (!generator.IsWithinBounds(x, y) || generator.IsErased(x, y) || terrain[gx, gy] == TerrainType.Water)
+                if (!generator.IsWithinBounds(x, y) || generator.IsErased(x, y))
                     continue;
 
                 int sourceId = ground.GetCellSourceId(new Vector2I(x, y));
@@ -75,8 +75,15 @@ public static class GroundMaterial
                 if (sourceId < 0 || biome < 0 || biome >= NoBlend / BiomeTileMapper.MaxMaterialsPerBiome)
                     continue;
                 // Identifiant de mélange : le biome, ou la matière de la tuile quand le biome fond ses matières entre elles.
+                // L'eau ne se fond que dans ces biomes-là (rives tramées), et toujours comme une matière à part.
+                bool blendTerrains = generator.GetBiome(x, y)?.BlendTerrains == true;
+                bool water = terrain[gx, gy] == TerrainType.Water;
+                if (water && !blendTerrains)
+                    continue;
                 int blendId = biome * BiomeTileMapper.MaxMaterialsPerBiome;
-                if (generator.GetBiome(x, y)?.BlendTerrains == true)
+                if (water)
+                    blendId += BiomeTileMapper.MaxMaterialsPerBiome - 1;
+                else if (blendTerrains)
                     blendId += tileMapper.GetMaterialOfSource(sourceId);
 
                 if (!atlasIndexBySource.TryGetValue(sourceId, out int atlasIndex))

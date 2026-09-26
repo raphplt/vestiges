@@ -611,6 +611,23 @@ public class BiomeTileMapper
 		_biomeSpecialSourceMap.TryGetValue(biomeIndex, out Dictionary<string, int[]> specialMap);
 		_biomeSourceMap.TryGetValue(biomeIndex, out Dictionary<TerrainType, int[]> terrainMap);
 
+		// Marais en tuiles de Wang : eau, vase près des rives et en plaques humides, sol moussu ailleurs.
+		// Les rives n'ont plus besoin de tuiles directionnelles : le mélange tramé du sol les dessine.
+		if (_wangTerrains.TryGetValue(biomeIndex, out HashSet<TerrainType> wangTerrains) && wangTerrains.Contains(terrain)
+			&& terrainMap != null && terrainMap.TryGetValue(terrain, out int[] wangSources))
+		{
+			int material = 0;
+			if (terrain != TerrainType.Water && wangSources.Length >= 2 * WangTiles.TileCount)
+			{
+				int shoreDistance = GetSwampWaterDistance(generator, x, y, 3);
+				float wet = ForestFloorNoise.GetNoise2Dv(GroundPoint(x, y) + new Vector2(-5000f, 3000f));
+				bool mud = (shoreDistance == 1 && wet > -0.35f) || wet > 0.62f;
+				material = mud ? 1 : 0;
+			}
+			sourceId = wangSources[material * WangTiles.TileCount + WangTiles.Index(x, y)];
+			return true;
+		}
+
 		if (terrain == TerrainType.Water)
 		{
 			if (terrainMap != null && terrainMap.TryGetValue(TerrainType.Water, out int[] waterSources) && waterSources.Length > 0)

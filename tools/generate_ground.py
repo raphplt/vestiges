@@ -48,6 +48,14 @@ STRAW = Detail(("00",), ("#b8a080",), weight=1.0)
 WHEAT_TIP = Detail(("0",), ("#e8e0d4",), weight=0.8)
 FIELD_PEBBLE = Detail(("0",), ("#b8a080",), weight=0.7)
 
+REED = Detail(("0.0", "0.0", "1.1"), ("#3a6a38", "#2a4430"), weight=1.0)
+MUD_SPOT = Detail(("01",), ("#3a2e22", "#2a1e16"), weight=0.8)
+PALE_MOSS = Detail(("0",), ("#b8c8be",), weight=0.6)
+GLOWING_SPORE = Detail(("0",), ("#6aca5a",), weight=0.3)
+PUDDLE_GLINT = Detail(("01",), ("#7a8a9a", "#5a6a72"), weight=1.0)
+LILY_PAD = Detail((".0.", "010", ".0."), ("#3a6a38", "#6aca5a"), weight=0.8)
+WATER_GLINT = Detail(("00",), ("#8a9ea8",), weight=1.0)
+
 MATERIALS: dict[str, tuple[str, GroundMaterial]] = {
     "foret_sol": ("foret", GroundMaterial(
         name="foret_sol",
@@ -186,6 +194,34 @@ MATERIALS: dict[str, tuple[str, GroundMaterial]] = {
         details=(FERN, LEAF_LITTER, CLOVER),
         details_per_tile=1.2,
         seed=8191,
+    )),
+    "marecages_sol": ("marecages", GroundMaterial(
+        name="marecages_sol",
+        tones=("#3a574d", "#446458", "#527266", "#6c8a7c"),
+        shares=(0.18, 0.40, 0.30, 0.12),
+        feature_px=17.0,
+        details=(REED, MUD_SPOT, PALE_MOSS, GLOWING_SPORE),
+        details_per_tile=1.0,
+        seed=9011,
+    )),
+    "marecages_vase": ("marecages", GroundMaterial(
+        name="marecages_vase",
+        tones=("#2c2d24", "#36372b", "#424233", "#525240"),
+        shares=(0.20, 0.40, 0.30, 0.10),
+        feature_px=15.0,
+        details=(PUDDLE_GLINT, REED, GLOWING_SPORE),
+        details_per_tile=1.0,
+        seed=9029,
+    )),
+    "marecages_eau": ("marecages", GroundMaterial(
+        name="marecages_eau",
+        tones=("#203840", "#28444c", "#325058", "#40606a"),
+        shares=(0.20, 0.42, 0.30, 0.08),
+        feature_px=24.0,
+        stretch=(2.0, 1.0),
+        details=(WATER_GLINT, LILY_PAD),
+        details_per_tile=0.7,
+        seed=9043,
     )),
 }
 
