@@ -14,10 +14,10 @@ import numpy as np
 
 from ..palette import make_material
 from ..render import Part
-from ..sdf import capsule, cylinder, ellipsoid, rotation_x, rotation_z, rounded_box, sphere
+from ..sdf import capsule, cylinder, ellipsoid, rotation_x, rotation_y, rotation_z, rounded_box, sphere
 from ._kit import AXIS_X_YAW, AXIS_Y_YAW, M, PropModel, Weathering, box_footprint
 from .buildings import BUILDING_YAW, CELL_WIDTH, DEPTH_ROWS, ROW_DEPTH, BuildingSpec, building
-from .fields import FENCE, GRASS, GRASS_DARK, RUST, STRAW, stone_wall, wooden_fence
+from .fields import FENCE, GRASS, GRASS_DARK, RUST, STRAW, stone_wall, tractor, wooden_fence
 from .forest import _clumps, _union, tree
 
 BARN_RED = "#7E4032"
@@ -491,6 +491,53 @@ def crow_scarecrow(stem: str, seed: int) -> PropModel:
 # Catalogue
 # ---------------------------------------------------------------------------------------------------------------------
 
+def mired_tractor(stem: str, seed: int) -> PropModel:
+    """Tracteur embourbé : le tracteur des champs piqué du nez dans une mare de boue, deux ornières derrière lui,
+    les roues arrière à demi englouties. On devine qu'il a tenté de fuir à travers champs."""
+    base = tractor(stem, seed, False)
+    MUD, MUD_WET, GRASS_M = range(len(base.materials), len(base.materials) + 3)
+    materials = list(base.materials) + [make_material("mud", "#4E3E2E"), make_material("mud_wet", "#35302E", contrast=0.6),
+                                        make_material("grass", GRASS)]
+    # Nez vers l'avant (+Z) enfoncé, léger roulis : local = (p − pivot) @ rotation, comme les primitives.
+    tilt = rotation_x(-0.22) @ rotation_z(0.08)
+    pivot = np.array([0.0, 0.0, 0.0])
+    sink = 0.32 * M
+    w = Weathering(seed + 3)
+    splashes = [(w.uniform(-0.6, 0.6) * M, w.uniform(0.25, 0.8) * M, w.uniform(-1.0, 1.2) * M) for _ in range(7)]
+    tufts = [(w.uniform(-1.6, 1.6) * M, 0.08 * M, w.uniform(-2.6, 2.0) * M) for _ in range(5)]
+
+    def sunk(distance):
+        def evaluate(p: np.ndarray) -> np.ndarray:
+            local = (p - pivot) @ tilt + pivot + np.array([0.0, sink, 0.0])
+            # Rien sous la surface de la boue : le sol n'est pas rendu, il ne cacherait pas les roues.
+            return np.maximum(distance(local), -p[:, 1])
+        return evaluate
+
+    def pool(p: np.ndarray) -> np.ndarray:
+        return np.minimum(ellipsoid(p, (0, 0.0, 0.2 * M), (1.5 * M, 0.08 * M, 1.9 * M)),
+                          ellipsoid(p, (0.5 * M, 0.0, 1.6 * M), (0.9 * M, 0.07 * M, 0.8 * M)))
+
+    def puddles(p: np.ndarray) -> np.ndarray:
+        return _union(ellipsoid(p, (-0.7 * M, 0.03 * M, 1.2 * M), (0.45 * M, 0.07 * M, 0.35 * M)),
+                      ellipsoid(p, (0.8 * M, 0.03 * M, -0.4 * M), (0.35 * M, 0.07 * M, 0.5 * M)))
+
+    def ruts(p: np.ndarray) -> np.ndarray:
+        # Deux bandes plates de boue humide qui s'amincissent en s'éloignant.
+        return _union(*(rounded_box(p, (x * 0.74 * M, 0.02 * M, -2.2 * M), (0.2 * M, 0.03 * M, 1.0 * M), 0.02 * M, rotation_y(x * 0.04))
+                        for x in (-1, 1)))
+
+    def parts() -> list[Part]:
+        result = [Part(sunk(part.distance), part.material) for part in base.parts()]
+        result += [
+            Part(pool, MUD), Part(puddles, MUD_WET), Part(ruts, MUD_WET),
+            Part(sunk(lambda q: _union(*(sphere(q, c, 0.14 * M) for c in splashes))), MUD),
+            Part(_clumps(tufts, [(0.22 * M, 0.16 * M, 0.22 * M)] * 5, 0.03 * M, 0.2 * M), GRASS_M),
+        ]
+        return result
+
+    return PropModel(stem, parts, materials, AXIS_Y_YAW, canvas=(160, 130), footprint=box_footprint(0.9 * M, 1.4 * M))
+
+
 def catalog() -> list[PropModel]:
     """Nom : prop_farm_<élément>[_damaged]_<a|b> pour les bâtiments (b = lacet opposé) ; _h / _v pour les limites qui filent
     à l'horizontale de l'écran ou vers la profondeur (un modèle long en x prend AXIS_Y_YAW pour rester horizontal)."""
@@ -522,6 +569,7 @@ def catalog() -> list[PropModel]:
         picnic("prop_scene_picnic", 801),
         clothesline("prop_scene_clothesline", 802),
         crow_scarecrow("prop_scene_crow_scarecrow", 803),
+        mired_tractor("prop_scene_mired_tractor", 804),
     ]
     # Arbres de verger, plantés en rangs : bas et ronds, l'un en feuilles, l'autre encore en fleurs.
     models += tree("prop_orchard_tree", 791, 3.4 * M, 1.25 * M, 0.13 * M, 12, "#5E4A38", GRASS, "#8AC060", False, (80, 110))

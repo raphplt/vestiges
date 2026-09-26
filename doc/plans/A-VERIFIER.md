@@ -54,3 +54,9 @@ Fichier temporaire. Il liste ce qu'une session cloud a livré sans pouvoir le v�
 ## Plan 02 J0 — budget d'effets par frame
 
 - [ ] **Plafonds** (`data/scaling/fx_budget.json`) fixés sans mesure à 60 FPS : dans une grosse vague fauchée (J5), vérifier qu'on ne voit pas de « trous » (morts sans nuage) et que les FPS tiennent mieux. Le banc écrit `fx_dropped`.
+
+## Plan 08 P4b-4 — tracteur embourbé
+
+- [ ] **Collision** : la scène bloque selon l'emprise du tracteur non incliné. Vérifier avec `--capture-props` qu'elle couvre la carrosserie sans déborder sur la mare.
+- [ ] **Ornières** : elles se lisent comme une traînée sombre derrière le tracteur. Garder, allonger, ou retirer ?
+

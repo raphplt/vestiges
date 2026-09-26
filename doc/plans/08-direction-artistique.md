@@ -326,7 +326,8 @@ Critère de réussite : sur une capture des champs, on reconnaît une ferme, des
 - Deux corrections pendant la mise au point :
   - l'épouvantail, tourné vers la profondeur, cachait ses corbeaux : il prend l'axe horizontal ;
   - le tirage du linge ne donnait que des draps : draps et chemises alternent désormais.
-- *Non fait* : le tracteur embourbé ; le lien avec le lore (un fragment à lire près de la scène) reste à décider avec le plan 14.
+- *Non fait* : le lien avec le lore (un fragment à lire près de la scène) reste à décider avec le plan 14.
+- **Tracteur embourbé** (ajouté ensuite, même session) : le tracteur des champs, piqué du nez et roulant de biais, enfoncé dans une mare de boue avec flaques et ornières derrière lui. `mired_tractor` réutilise le modèle `tractor` de `fields.py`, transformé et coupé à la surface de la boue. Seule scène qui bloque (`blocking_scenes` dans `farms.json`, emprise du manifeste). `--capture-farms` capture désormais les six scènes les plus proches ; le tracteur y est lisible, à l'échelle du personnage. Les ornières se lisent plutôt comme une traînée sombre que comme deux sillons.
 - `--measure-props` en 1080p, machine calme : champs 159 FPS (3 197 décors), forêt 160, ville 158, carrière 152, marais 146, p99 entre 8 et 10 ms. C'est la plage d'avant les lots P3–P4 : pas de régression.
 
 *Points ouverts pour Raphaël :*

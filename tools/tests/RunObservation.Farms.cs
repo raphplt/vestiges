@@ -41,11 +41,11 @@ public partial class RunObservation
             GD.Print($"[RunObservation] ferme {i + 1} en {farms[i]}");
         }
 
-        // Scènes-récits (P4b-4) : les trois plus proches du départ, au zoom ×2.
+        // Scènes-récits (P4b-4) : les six plus proches du départ, au zoom ×2.
         List<Vector2> scenes = new(_world.StoryScenes);
         scenes.Sort((a, b) => a.LengthSquared().CompareTo(b.LengthSquared()));
         GD.Print($"[RunObservation] RESULT scenes count={scenes.Count}");
-        for (int i = 0; i < scenes.Count && i < 3; i++)
+        for (int i = 0; i < scenes.Count && i < 6; i++)
         {
             _player.GlobalPosition = scenes[i] + new Vector2(-40f, 20f);
             _camera.Zoom = initialZoom * 2f;

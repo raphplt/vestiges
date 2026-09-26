@@ -185,13 +185,14 @@ public static class WildFieldsComposer
                 continue;
             if (!TryFindFreeCell(generator, origin, usedCells, blockedCells, seed, out Vector2I cell))
                 continue;
-            Texture2D texture = Load(config.Scenes[(int)(CellHash.Of(origin.X, origin.Y, seed ^ 0x5CE7FUL) % (uint)config.Scenes.Length)], cache);
+            string sprite = config.Scenes[(int)(CellHash.Of(origin.X, origin.Y, seed ^ 0x5CE7FUL) % (uint)config.Scenes.Length)];
+            Texture2D texture = Load(sprite, cache);
             if (texture == null)
                 continue;
             EnvironmentProp prop = new();
             prop.GlobalPosition = ground.MapToLocal(cell);
             container.AddChild(prop);
-            prop.Initialize(texture, null, 0f, false);
+            prop.Initialize(texture, null, 0f, System.Array.IndexOf(config.BlockingScenes, sprite) >= 0);
             usedCells.Add(cell);
             spots.Add(prop.GlobalPosition);
         }
