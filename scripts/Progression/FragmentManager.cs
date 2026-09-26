@@ -295,14 +295,20 @@ public partial class FragmentManager : Node
 				break;
 		}
 
-		if (success)
+		if (!success)
 		{
-			_pendingChoices.Clear();
-			_eventBus.EmitSignal(EventBus.SignalName.FragmentChosen, fragmentId, fragmentType);
-			GD.Print($"[FragmentManager] Fragment selected: {fragmentId} ({fragmentType})");
-			CheckFusions();
-			ProcessNextInQueue();
+			// L'offre a vieilli pendant l'écran (arme ramassée, emplacements pleins) : sans nouvelle offre,
+			// l'écran fermé laissait le jeu en pause pour de bon.
+			GD.PushWarning($"[FragmentManager] Choix devenu impossible ({fragmentId}, {fragmentType}) : nouvelle offre");
+			OfferFragments(_currentLevel);
+			return;
 		}
+
+		_pendingChoices.Clear();
+		_eventBus.EmitSignal(EventBus.SignalName.FragmentChosen, fragmentId, fragmentType);
+		GD.Print($"[FragmentManager] Fragment selected: {fragmentId} ({fragmentType})");
+		CheckFusions();
+		ProcessNextInQueue();
 	}
 
 	private void CheckFusions()
