@@ -67,12 +67,18 @@ Ordre O1 → O3 → O4/O5 → O2/O6 validé par Raphaël. Arbitrages délégués
 - **Non fait** : le son d'approche du front (plan 15, traité par un autre agent) ; les débuffs d'Effilochée et d'Effacée (O4).
 
 **O4 livré — ce que l'oubli coûte (26 septembre) :**
-- **Pénalités adoucies** par rapport à la V2 (arbitrage délégué), dans `player_penalties` de `data/scaling/erasure.json` :
+- **Pénalités adoucies** par rapport à la V2 (arbitrage délégué), dans `zone_effects` de `data/scaling/erasure.json` :
   - Effilochée : vitesse ×0,95 et dégâts ×0,95 (V2 : ×0,90) ;
   - Effacée et Néant : ×0,88 (V2 : ×0,75).
 
-  Elles s'appliquent à part des bonus (`ErasurePenalties`), donc elles se lèvent exactement en sortant de la zone.
+  Elles s'appliquent à part des bonus (`ErasureEffects`), donc elles se lèvent exactement en sortant de la zone.
 - **Signal** : `ErasureManager` émet `PlayerErasurePhaseChanged` quand la zone du joueur change de phase. Le joueur ajuste ses facteurs, et un voile d'écran (`UI/ErasureVeil`, shader `erasure_veil`) couvre les bords d'une trame blanc-bleuté (intensité 0,35, 0,7 puis 1). Le voile passe sous le HUD et sous le panneau des quêtes, remonté à la couche du HUD.
 - **Vérification** : test d'intégration (pénalités appliquées dans le Néant, levées au retour) ; captures des phases.
-- **Reste O5** : ce que l'oubli offre (Essence et score majorés en zone fragile).
+
+**O5 livré en partie — ce que l'oubli offre (26 septembre) :**
+- Chaque créature abattue rapporte plus de score selon la phase de la zone où elle tombe : +25 % en Fragile, +50 % en Effilochée, +100 % en Effacée et au Néant.
+- Elle a aussi une chance de donner 1 Essence de plus : 15 %, 35 %, puis 60 %.
+- Réglages : `score_bonus` et `essence_chance` dans `zone_effects`. Le détour vers la frontière devient un vrai choix de risque et de récompense.
+- **Test d'intégration** : le même kill vaut 33 points au Néant, contre 16 en zone ancrée.
+- **Non fait** : le butin qui disparaît avec la zone (dépend du plan 13, non implémenté) et le « rappel » d'une zone par les Autels (V2 §11).
 

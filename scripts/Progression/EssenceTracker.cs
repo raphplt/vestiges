@@ -1,4 +1,5 @@
 using Godot;
+using Vestiges.World;
 using Vestiges.Core;
 using Vestiges.Infrastructure;
 
@@ -63,7 +64,19 @@ public partial class EssenceTracker : Node
             "elite" => 4,
             _ => 1
         };
+        if (GD.Randf() < ErasureEffectAt(position).EssenceChance)
+            amount++;
         AddEssence(amount);
+    }
+
+    private ErasureManager _erasureManager;
+
+    /// <summary>Ce que l'oubli offre là où la créature est tombée (plan 16 O5).</summary>
+    private ErasureEffects.Effect ErasureEffectAt(Vector2 position)
+    {
+        if (_erasureManager == null || !IsInstanceValid(_erasureManager))
+            _erasureManager = GetTree().CurrentScene?.GetNodeOrNull<ErasureManager>("ErasureManager");
+        return _erasureManager == null ? ErasureEffects.Effect.None : ErasureEffects.For(_erasureManager.GetZonePhaseAt(position));
     }
 
     private void OnLootReceived(string itemType, string itemId, int amount)

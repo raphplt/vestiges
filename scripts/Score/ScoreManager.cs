@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using Godot;
+using Vestiges.World;
 using Vestiges.Core;
 using Vestiges.Infrastructure;
 using Vestiges.Infrastructure.Analytics;
@@ -224,6 +225,8 @@ public partial class ScoreManager : Node
         _totalKills++;
 
         int points = GetPointsForEnemy(enemyId);
+        // Combattre là où le monde s'oublie rapporte davantage.
+        points = Mathf.RoundToInt(points * (1f + ErasureEffectAt(position).ScoreBonus));
         _combatScore += points;
 
         if (enemyId == "indicible" && !_bossDefeated)
@@ -237,6 +240,16 @@ public partial class ScoreManager : Node
 
     private void OnPlayerDamaged(float currentHp, float maxHp)
     {
+    }
+
+    private ErasureManager _erasureManager;
+
+    /// <summary>Ce que l'oubli offre là où la créature est tombée (plan 16 O5).</summary>
+    private ErasureEffects.Effect ErasureEffectAt(Vector2 position)
+    {
+        if (_erasureManager == null || !IsInstanceValid(_erasureManager))
+            _erasureManager = GetTree().CurrentScene?.GetNodeOrNull<ErasureManager>("ErasureManager");
+        return _erasureManager == null ? ErasureEffects.Effect.None : ErasureEffects.For(_erasureManager.GetZonePhaseAt(position));
     }
 
     private int GetPointsForEnemy(string enemyId)

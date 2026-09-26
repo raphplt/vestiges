@@ -14,21 +14,34 @@
     "stabilize_radius_cells": 2.5,
     "stabilize_memory_floor": 0.72,
     "void_damage_ratio_per_second": 0.06,
-    "player_penalties": {
+    "zone_effects": {
+        "fragile": {
+            "speed": 1.0,
+            "damage": 1.0,
+            "veil": 0.0,
+            "score_bonus": 0.25,
+            "essence_chance": 0.15
+        },
         "frayed": {
             "speed": 0.95,
             "damage": 0.95,
-            "veil": 0.35
+            "veil": 0.35,
+            "score_bonus": 0.5,
+            "essence_chance": 0.35
         },
         "erased": {
             "speed": 0.88,
             "damage": 0.88,
-            "veil": 0.7
+            "veil": 0.7,
+            "score_bonus": 1.0,
+            "essence_chance": 0.6
         },
         "void": {
             "speed": 0.88,
             "damage": 0.88,
-            "veil": 1.0
+            "veil": 1.0,
+            "score_bonus": 1.0,
+            "essence_chance": 0.6
         }
     }
 }

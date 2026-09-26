@@ -25,17 +25,27 @@ public partial class MovementRegression
         await Step(80);
         erasure.SetProcess(false);
         float after = _player.CurrentHp;
-        ErasurePenalties.Penalty inVoid = ReadPlayerField<ErasurePenalties.Penalty>("_erasurePenalty");
+        ErasureEffects.Effect inVoid = ReadPlayerField<ErasureEffects.Effect>("_erasurePenalty");
+        // Ce que l'oubli offre : la même créature rapporte plus au Néant qu'en zone ancrée, loin de là.
+        Vestiges.Score.ScoreManager score = world.GetNode<Vestiges.Score.ScoreManager>("ScoreManager");
+        EventBus bus = GetNode<EventBus>("/root/EventBus");
+        int start = score.CurrentScore;
+        bus.EmitSignal(EventBus.SignalName.EnemyKilled, "rodeur", Vector2.Zero);
+        int inVoidPoints = score.CurrentScore - start;
+        start = score.CurrentScore;
+        bus.EmitSignal(EventBus.SignalName.EnemyKilled, "rodeur", new Vector2(0f, -3000f));
+        int anchoredPoints = score.CurrentScore - start;
         _player.IsGodMode = true;
         for (int y = -2; y <= 2; y++)
             for (int x = -2; x <= 2; x++)
                 erasure.OverrideMemory(center + new Vector2I(x, y), 1f);
         Check(after < before && after > 0f, $"Néant : dégâts continus, PV {before} → {after} en 80 ticks");
+        Check(inVoidPoints > anchoredPoints && anchoredPoints > 0, $"Néant : kill à {inVoidPoints} points contre {anchoredPoints} en zone ancrée");
         Check(inVoid.Speed < 1f && inVoid.Damage < 1f, $"Néant : vitesse ×{inVoid.Speed} et dégâts ×{inVoid.Damage} appliqués au joueur");
         erasure.SetProcess(true);
         await Step(40);
         erasure.SetProcess(false);
-        ErasurePenalties.Penalty restored = ReadPlayerField<ErasurePenalties.Penalty>("_erasurePenalty");
+        ErasureEffects.Effect restored = ReadPlayerField<ErasureEffects.Effect>("_erasurePenalty");
         Check(restored.Speed == 1f && restored.Damage == 1f, "retour en zone ancrée : pénalités levées");
     }
 

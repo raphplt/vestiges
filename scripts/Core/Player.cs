@@ -123,7 +123,7 @@ public partial class Player : CharacterBody2D
     private float _damageMultiplier = 1f;
     private float _speedMultiplier = 1f;
     // Ce que l'oubli coûte là où se tient le joueur (plan 16 O4), à part des bonus pour rester réversible.
-    private ErasurePenalties.Penalty _erasurePenalty = new(1f, 1f, 0f);
+    private ErasureEffects.Effect _erasurePenalty = ErasureEffects.Effect.None;
     private float _attackSpeedMultiplier = 1f;
     private float _bonusMaxHp;
     private int _extraProjectiles;
@@ -1560,7 +1560,7 @@ public partial class Player : CharacterBody2D
 
     private void OnErasurePhaseChanged(int phase)
     {
-        _erasurePenalty = ErasurePenalties.For((ErasureManager.ErasureZonePhase)phase);
+        _erasurePenalty = ErasureEffects.For((ErasureManager.ErasureZonePhase)phase);
     }
 
     /// <summary>Multiplie le speed multiplier courant (pour buffs événementiels temporaires).</summary>

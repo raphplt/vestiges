@@ -38,7 +38,7 @@ public partial class ErasureVeil : CanvasLayer
 
     private void OnPhaseChanged(int phase)
     {
-        float target = ErasurePenalties.For((ErasureManager.ErasureZonePhase)phase).Veil;
+        float target = ErasureEffects.For((ErasureManager.ErasureZonePhase)phase).Veil;
         _tween?.Kill();
         _tween = CreateTween();
         _tween.TweenMethod(Callable.From<float>(SetIntensity), _intensity, target, TransitionSeconds);
