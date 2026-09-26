@@ -36,6 +36,8 @@ La [Stratégie V2](../VESTIGES-STRATEGIE-V2.md) reste l'autorité gameplay/roadm
 | [14 — Anomalies du monde](14-anomalies-du-monde.md) | P1 | Anomalies rares liées au joueur et à l'oubli, jamais mortelles | 12, 13 |
 | [15 — Audio](15-audio.md) | Choix A2 consignés | Six candidats retenus, révélation du coffre actuelle conservée ; 3 refus à retravailler et 102 autres besoins à rechercher | [Retours A2](../audio/lot-a2/RETOURS.md) ; dissolution complète préparée, intégration à faire |
 | [16 — L'oubli rendu sensible](16-oubli-sensible.md) | P1 | Lots O1–O6 : sol qui oublie, choses qui se défont, frontière visible, coût et récompense de l'oubli | 10 (shader du sol), 02, 13, 15 |
+| [17 — Armes, coffres et modificateurs](17-armes-coffres-modificateurs.md) | P0 | Vagues 0–5 ; rareté sur les améliorations ; noms d'armes ; Mémoriaux et Failles | 05, 08, 13, 16, 18 |
+| [18 — Inventaire des restes V1](18-inventaire-restes-v1.md) | P0 | Éléments de lore et POI vectoriels, Colosses, identifiants Steam « nuits » | 17 (lots 0B/0C) |
 
 Les numéros servent à identifier les plans, pas à imposer leur exécution intégrale dans cet ordre. Le [registre](DECISIONS.md) fait foi pour leur statut de validation.
 
@@ -49,6 +51,12 @@ Les numéros servent à identifier les plans, pas à imposer leur exécution int
 6. Traiter 09 seulement après stabilisation des règles de score.
 
 Un seul lot d'implémentation ouvert à la fois. Un échec de lisibilité, de performance ou de fun ramène au lot concerné avant expansion.
+
+**Mise à jour du 26 septembre (armes, coffres, modificateurs) :** nouvelle priorité de Raphaël, auditée puis planifiée, rien d'implémenté.
+- [Plan 17](17-armes-coffres-modificateurs.md) : armes (sprites, noms, présentation, level-up à raretés, pause), coffres, modificateurs de run (Chance, Péril, Mémoriaux et Failles), objets ensuite, north star.
+- Coffres : ils apparaissent toujours (13 et 14 dans les logs du jour) mais ne sont jamais ouverts. Sprites restés à 16×12 face aux décors agrandis, placement confiné à 7,6 % de la carte depuis le passage au rayon 200, aucun signal.
+- [Plan 18](18-inventaire-restes-v1.md) : inventaire des restes V1. Les visuels « lisses » viennent du rendu procédural (polygones, dégradés, lumières texturées par le logo Godot), pas des PNG.
+- Décisions attendues : plan 17 §6 et plan 18 §5.
 
 **Mise à jour du 26 septembre (soir) :**
 - Raphaël valide les tuiles de la forêt (« mille fois mieux »).
