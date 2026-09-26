@@ -104,6 +104,7 @@ public sealed class RunEventContext
     }
 
     /// <summary>Dégâts de zone aux créatures ; renvoie le nombre de créatures abattues.</summary>
+    /// <summary>Zone posée au sol : le rayon est mesuré au sol, comme l'ellipse annoncée.</summary>
     public int DamageEnemiesInRadius(Vector2 center, float radius, float damage)
     {
         float radiusSq = radius * radius;
@@ -112,7 +113,7 @@ public sealed class RunEventContext
         {
             if (node is not Enemy enemy || !enemy.IsActive || enemy.IsDying)
                 continue;
-            if (enemy.GlobalPosition.DistanceSquaredTo(center) > radiusSq)
+            if (Iso.GroundDistanceSquared(enemy.GlobalPosition, center) > radiusSq)
                 continue;
             enemy.TakeDamage(damage);
             if (enemy.IsDying)
@@ -121,9 +122,10 @@ public sealed class RunEventContext
         return kills;
     }
 
+    /// <summary>Zone posée au sol : le rayon est mesuré au sol, comme l'ellipse annoncée.</summary>
     public void DamagePlayerIfInside(Vector2 center, float radius, float maxHpRatio)
     {
-        if (Player.GlobalPosition.DistanceSquaredTo(center) <= radius * radius)
+        if (Iso.GroundDistanceSquared(Player.GlobalPosition, center) <= radius * radius)
             Player.TakeDamage(Player.EffectiveMaxHp * maxHpRatio);
     }
 

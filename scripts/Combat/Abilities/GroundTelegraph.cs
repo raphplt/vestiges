@@ -1,4 +1,5 @@
 using Godot;
+using Vestiges.Core;
 
 namespace Vestiges.Combat.Abilities;
 
@@ -19,24 +20,28 @@ public partial class GroundTelegraph : Node2D
     public GroundTelegraph()
     {
         TopLevel = true;
-        // Au-dessus du sol (TileMapLayer à z 0) : un z négatif la cacherait sous les tuiles opaques.
+        // Posée au sol : au-dessus du sol (−10) et des routes (−9), sous les corps (0), comme les décalques.
         ZAsRelative = false;
-        ZIndex = 1;
+        ZIndex = -1;
         _fx = PixelFx.Create(_ => { });
         AddChild(_fx);
     }
 
+    /// <summary>Disque au sol de rayon <paramref name="radius"/> : une ellipse deux fois plus large que haute à l'écran.</summary>
     public void ShowCircle(Vector2 center, float radius, FxFamily family)
     {
         PixelFxSpec spec = PixelFxSpec.Of(PixelFxShape.Zone, family, radius, 1f, 1f);
+        spec.Squash = Iso.GroundSquash;
         Begin(center, spec);
     }
 
+    /// <summary>Couloir au sol entre deux points écran : sa largeur est une largeur au sol, projetée selon sa direction.</summary>
     public void ShowLine(Vector2 from, Vector2 to, float width, FxFamily family)
     {
-        Vector2 delta = to - from;
-        PixelFxSpec spec = PixelFxSpec.Of(PixelFxShape.Lane, family, delta.Length(), width, 1f);
-        spec.Angle = delta.Angle();
+        Vector2 ground = Iso.ToGround(to - from);
+        PixelFxSpec spec = PixelFxSpec.Of(PixelFxShape.Lane, family, ground.Length(), width, 1f);
+        spec.Angle = ground.Angle();
+        spec.Squash = Iso.GroundSquash;
         Begin(from, spec);
     }
 

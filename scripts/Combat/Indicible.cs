@@ -279,20 +279,21 @@ public partial class Indicible : Node2D
 		if (_player == null || !IsInstanceValid(_player))
 			return;
 
-		// Cible : position du joueur + léger offset aléatoire
-		Vector2 targetPos = _player.GlobalPosition + new Vector2(
+		// Cible : position du joueur + léger décalage, tiré au sol puis projeté
+		Vector2 targetPos = _player.GlobalPosition + Iso.ToScreen(new Vector2(
 			(float)GD.RandRange(-60f, 60f),
 			(float)GD.RandRange(-60f, 60f)
-		);
+		));
 
-		// Direction depuis un bord aléatoire
+		// Direction au sol depuis un bord aléatoire : le tentacule est couché, sa longueur est une longueur au sol
 		float angle = (float)GD.RandRange(0, Mathf.Tau);
 		float tentacleLength = 120f;
-		Vector2 startPos = targetPos + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * tentacleLength * 0.5f;
-		Vector2 endPos = targetPos - new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * tentacleLength * 0.5f;
+		Vector2 groundDir = new(Mathf.Cos(angle), Mathf.Sin(angle));
+		Vector2 startPos = targetPos + Iso.ToScreen(groundDir * tentacleLength * 0.5f);
+		Vector2 endPos = targetPos - Iso.ToScreen(groundDir * tentacleLength * 0.5f);
 
 		// Phase 1 : couloir annoncé, qui se remplit jusqu'à la frappe
-		Vector2 dir = (endPos - startPos).Normalized();
+		Vector2 dir = -groundDir;
 		PlayTentacleLane(startPos, dir, tentacleLength, FxFamily.Blood, TentacleWarningDuration, 0.2f, 0f);
 
 		// Phase 2 : Après le warning, la tentacule frappe
@@ -308,7 +309,7 @@ public partial class Indicible : Node2D
 			// Dégâts au joueur s'il est dans la zone
 			if (IsInstanceValid(_player))
 			{
-				float distToLine = DistancePointToSegment(_player.GlobalPosition, startPos, endPos);
+				float distToLine = Iso.GroundDistanceToSegment(_player.GlobalPosition, startPos, endPos);
 				if (distToLine < TentacleWidth)
 				{
 					_eventBus.EmitSignal(EventBus.SignalName.PlayerHitBy, "indicible", damage);
@@ -319,26 +320,20 @@ public partial class Indicible : Node2D
 		};
 	}
 
-	private static void PlayTentacleLane(Vector2 start, Vector2 direction, float length, FxFamily family,
+	/// <summary>Couloir couché au sol : <paramref name="groundDirection"/> et <paramref name="length"/> sont mesurés au sol.</summary>
+	private static void PlayTentacleLane(Vector2 start, Vector2 groundDirection, float length, FxFamily family,
 										 float duration, float fillDensity, float fadeTail)
 	{
 		if (CombatPools.Instance == null)
 			return;
 		PixelFxSpec spec = PixelFxSpec.Of(PixelFxShape.Lane, family, length, TentacleWidth, duration);
-		spec.Angle = direction.Angle();
+		spec.Angle = groundDirection.Angle();
+		spec.Squash = Iso.GroundSquash;
 		spec.FillDensity = fillDensity;
 		spec.Steps = 8;
 		spec.FadeTail = fadeTail;
-		spec.ZIndex = 1;
+		spec.ZIndex = -1;
 		CombatPools.Instance.PlayFx(start, spec, FxOwner.Enemy);
-	}
-
-	private static float DistancePointToSegment(Vector2 point, Vector2 a, Vector2 b)
-	{
-		Vector2 ab = b - a;
-		float t = Mathf.Clamp((point - a).Dot(ab) / ab.LengthSquared(), 0f, 1f);
-		Vector2 closest = a + ab * t;
-		return point.DistanceTo(closest);
 	}
 
 	private void PulseEdgePresence(float delta)

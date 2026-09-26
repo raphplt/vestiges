@@ -414,6 +414,34 @@ Hors périmètre : morts, dissolution et butin (plan 02 J2/J3), police des chiff
 - Lisibilité des annonces ennemies sur chaque biome.
 - Suppression des PNG hérités.
 
+### Respect de la vue isométrique — chantier du 26 septembre 2026
+
+**Retour de Raphaël :** « les sorts des ennemis (les sprites de ceux-ci) apparaissent en vertical, alors que la map est censée être en 2.5D […] il y a peut-être plus à étudier sur cette question et le respect de la vue isométrique, pas totalement de dessus ».
+
+**Audit (lecture du code, 26 septembre) :**
+- **Cause directe :** `EnemyProjectile` affiche toujours la direction 0 (est) de sa planche, alors que les projectiles sont prérendus en 16 directions à 30°, comme les personnages. L'anneau d'onde de la Sentinelle (`howl`) apparaît donc toujours par la tranche, debout. La pelote de la Tisseuse (`web`) est modélisée comme un disque face caméra.
+- **Annonces au sol ennemies rondes :** le cercle du Présage, les couloirs du bond du Charognard et du tentacule de l'Indicible ne sont pas aplatis (`squash` 1), leurs zones de dégâts sont rondes à l'écran, et ils se dessinent en z 1, par-dessus les corps. Seul le slam du Colosse est correct (ellipse 2:1, z −1). Côté joueur, les anneaux, zones et feux sont déjà conformes.
+- **Aucune ombre** sous le joueur, les créatures, les projectiles et les orbes. Un projectile qui vole à 10 px du sol ne se lit pas comme étant en l'air.
+- **Écarts secondaires :** explosions et flaques de sang rondes ; cône de la « Dernière Émission » rond ; orbitales de la Boîte à Musique sur un cercle écran ; anneau « dash prêt » rond ; particules sans notion de sol ; flash de tir ennemi posé aux pieds au lieu de la hauteur de tir.
+
+**Lots proposés, dans l'ordre :**
+
+| Lot | Contenu | Vérification |
+|---|---|---|
+| **I1 — Projectiles ennemis orientés** | Direction réelle du tir dans la planche (comme `Projectile`) ; flash de départ à hauteur de tir ; `howl` incliné vers le sol et `web` en 16 directions | Captures `--capture-abilities` |
+| **I2 — Annonces posées au sol** | Primitive commune `Iso` (projection, ellipse 2:1, distance au sol) ; Présage, bond et tentacule en ellipse et en couloir projeté, sous les corps (z −1) ; zones de dégâts alignées sur ce qui est dessiné (ellipse, pas cercle) | Captures ; `tools/test_enemy_abilities.sh` adapté |
+| **I3 — Ombres portées** | Ombre en ellipse 2:1 sous joueur, créatures (taille selon l'emprise), projectiles (au sol, sous le visuel en vol), orbes ; une seule constante de hauteur de tir | Captures ; banc (une ombre par entité : coût à mesurer) |
+| **I4 — Finitions** | Explosions, flaques, cône, orbitales, anneau de dash, particules avec sol | Captures |
+
+**I1 et I2 livrés (26 septembre) :**
+- **Projectiles ennemis** : ils prennent la colonne de la planche qui correspond à leur direction de tir. Le flash de départ est placé à hauteur de vol (`EnemyProjectile.FlightHeight`).
+- **Modèles recouchés** : l'onde de la Sentinelle devient deux croissants à plat au ras du sol, bombés vers l'avant ; la pelote de la Tisseuse, un filet étalé à plat. Seuls ces deux fichiers changent à la régénération, les autres projectiles restent identiques octet pour octet.
+- **Primitive `Core/Iso`** : projection sol ↔ écran, distance au sol, distance au sol à un segment.
+- **Annonces au sol** : Présage, bond du Charognard, tentacule de l'Indicible, et les zones des événements « Pluie d'éclats » et « Relique tombée ». Toutes sont aplaties en 2:1 et dessinées en z −1, sous les corps. Les couloirs ont leur angle et leur longueur au sol. Les zones de dégâts sont mesurées au sol, donc elles touchent exactement ce qui est dessiné : plus large à l'horizontale, moitié moins haute à l'écran.
+- **Vérification** : régression des capacités verte ; capture `--capture-abilities` où le Présage apparaît en ellipse sous le joueur. Les projectiles sont trop petits pour se juger sur une capture dézoomée : à regarder en partie.
+- **Effet de jeu** : une annonce ronde de rayon R couvrait 2R en hauteur à l'écran ; elle ne couvre plus que R. Esquiver vers le haut ou le bas devient plus facile, les zones sont donc un peu moins punitives.
+
+
 ### Recommandation initiale (22 septembre), remplacée pour la méthode
 
 **Choix recommandé : pixel art dessiné et animé à une densité commune, produit à partir d’une scène étalon, avec retouche contrôlée et pipeline automatisé.** L’IA peut aider aux recherches de silhouettes/matières ou à une base de sprite, mais chaque résultat doit être redessiné/normalisé selon les mêmes références. Des générations indépendantes « pixel art détaillé » ne constituent pas une méthode de cohérence ; générer chaque frame indépendamment n’est pas le pipeline recommandé pour les personnages.

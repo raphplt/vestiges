@@ -1010,7 +1010,7 @@ public partial class Enemy : CharacterBody2D
 			.SetTrans(Tween.TransitionType.Quad)
 			.SetEase(Tween.EaseType.Out);
 
-		CombatPools.Instance?.ShowMuzzleFlash(GlobalPosition + direction * 14f, _projectileFamily);
+		CombatPools.Instance?.ShowMuzzleFlash(GlobalPosition + direction * 14f + new Vector2(0f, -EnemyProjectile.FlightHeight), _projectileFamily);
 	}
 
 	// --- Damage & Death ---

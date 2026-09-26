@@ -176,39 +176,42 @@ def _bile() -> ProjectileModel:
     return ProjectileModel(materials, parts, (16, 16), 1, len(wobble), 10)
 
 
-def _torus(p: np.ndarray, center, major: float, minor: float) -> np.ndarray:
-    """Anneau dans le plan XY (perpendiculaire à l'avant +Z du projectile)."""
+def _flat_arc(p: np.ndarray, center, major: float, minor: float, spread: float) -> np.ndarray:
+    """Croissant couché dans le plan du sol (XZ), bombé vers l'avant +Z : une onde qui court au ras du sol."""
     local = p - np.asarray(center)
-    ring = np.linalg.norm(local[:, :2], axis=1) - major
-    return np.sqrt(ring * ring + local[:, 2] ** 2) - minor
+    ring = np.linalg.norm(local[:, [0, 2]], axis=1) - major
+    torus = np.sqrt(ring * ring + local[:, 1] ** 2) - minor
+    # Seul l'arc avant est gardé : demi-espace z > major·cos(spread).
+    front = major * np.cos(spread) - local[:, 2]
+    return np.maximum(torus, front)
 
 
 def _howl() -> ProjectileModel:
-    """Cri de la Sentinelle Hurlante : deux anneaux d'onde pâles, perpendiculaires à la course, qui vibrent."""
+    """Cri de la Sentinelle Hurlante : deux croissants d'onde pâles, couchés au ras du sol, qui vibrent vers l'avant."""
     materials = (make_material("wave", "#E8E0D4", contrast=0.9), make_material("wave_echo", "#9E9494"))
-    radii = ((4.2, 2.6), (4.8, 3.2))
+    radii = ((4.6, 0.95), (5.2, 1.05))
 
     def parts(frame: int) -> Sequence[Part]:
-        front, back = radii[frame]
+        major, minor = radii[frame]
         return (
-            Part(lambda p: _torus(p, (0, 0, 1.5), front, 1.0), 0),
-            Part(lambda p: _torus(p, (0, 0, -2.5), back, 0.8), 1),
+            Part(lambda p: _flat_arc(p, (0, 0, -2.0), major, minor, 1.05), 0),
+            Part(lambda p: _flat_arc(p, (0, 0, -4.8), major * 0.8, minor * 0.8, 1.0), 1),
         )
 
     return ProjectileModel(materials, parts, (24, 24), 16, len(radii), 8)
 
 
 def _web() -> ProjectileModel:
-    """Pelote de la Tisseuse : fils pâles serrés autour d'un œil de sève acide."""
+    """Pelote de la Tisseuse : fils pâles étalés à plat autour d'un œil de sève acide, qui tournent sur eux-mêmes."""
     materials = (make_material("silk", "#E8E0D4", contrast=0.8), make_emissive("sap", "#7FFF00"))
 
     def parts(frame: int) -> Sequence[Part]:
-        turn = rotation_z(frame * np.pi / 4)
+        turn = rotation_y(frame * np.pi / 4)
         return (
-            Part(_rotated(lambda p: capsule(p, (-3.2, -1.0, 0), (3.2, 1.0, 0), 1.0), turn), 0),
-            Part(_rotated(lambda p: capsule(p, (-1.0, -3.2, 0), (1.0, 3.2, 0), 1.0), turn), 0),
-            Part(lambda p: sphere(p, (0, 0, 0), 2.3), 0),
-            Part(lambda p: sphere(p, (0, 0.3, 1.8), 0.9), 1),
+            Part(_rotated(lambda p: capsule(p, (-3.6, 0, -1.0), (3.6, 0, 1.0), 0.9), turn), 0),
+            Part(_rotated(lambda p: capsule(p, (-1.0, 0, -3.6), (1.0, 0, 3.6), 0.9), turn), 0),
+            Part(lambda p: ellipsoid(p, (0, 0, 0), (2.4, 1.4, 2.4)), 0),
+            Part(lambda p: sphere(p, (0, 1.1, 0.4), 0.9), 1),
         )
 
     return ProjectileModel(materials, parts, (16, 16), 1, 2, 6)

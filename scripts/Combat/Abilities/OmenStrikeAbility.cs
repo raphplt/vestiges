@@ -131,7 +131,8 @@ public class OmenStrikeAbility : IEnemyAbility
             AudioManager.Play(_impactAudio, 0.08f, -4f);
 
         float reach = _radius + _hitMargin;
-        if (GodotObject.IsInstanceValid(player) && player.GlobalPosition.DistanceSquaredTo(_impactCenter) <= reach * reach)
+        // Rayon au sol : la frappe touche exactement l'ellipse annoncée.
+        if (GodotObject.IsInstanceValid(player) && Iso.GroundDistanceSquared(player.GlobalPosition, _impactCenter) <= reach * reach)
             owner.HitPlayer(player, owner.Damage * _damageMultiplier);
     }
 

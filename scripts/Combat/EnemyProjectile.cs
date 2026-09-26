@@ -20,11 +20,13 @@ public partial class EnemyProjectile : Area2D
 	private float _slowDuration;
 	private float _slowFactor = 1f;
 	private float _age;
-	private const float FlightHeight = 10f;
+	/// <summary>Hauteur de vol au-dessus du sol : le départ, la traînée et l'impact se dessinent à cette hauteur.</summary>
+	public const float FlightHeight = 10f;
 
 	private Sprite2D _visual;
 	private ProjectileSprites.SpriteSet _spriteSet;
 	private int _spriteFrame = -1;
+	private int _spriteDirection;
 	private ulong _trailFrame;
 	private FxFamily _family = FxFamily.Hostile;
 	private bool _isDespawning;
@@ -58,6 +60,8 @@ public partial class EnemyProjectile : Area2D
 		_family = family;
 		_spriteSet = ProjectileSprites.Get(spriteId) ?? ProjectileSprites.Get("spit");
 		_spriteFrame = -1;
+		// Planche prérendue en vue 30° : la colonne suit la direction du tir, jamais une rotation 2D.
+		_spriteDirection = _spriteSet?.DirectionIndex(_direction) ?? 0;
 		_visual.Modulate = new Color(1f, 1f, 1f, CombatFxSettings.EnemyOpacity);
 		UpdateSprite();
 		Visible = true;
@@ -73,7 +77,7 @@ public partial class EnemyProjectile : Area2D
 		if (frame == _spriteFrame)
 			return;
 		_spriteFrame = frame;
-		_visual.Texture = _spriteSet.Get(0, frame);
+		_visual.Texture = _spriteSet.Get(_spriteDirection, frame);
 	}
 
 	/// <summary>Gouttes ou éclats qui retombent derrière le projectile, un toutes les trois frames.</summary>
