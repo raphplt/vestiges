@@ -505,11 +505,29 @@ Extraits en route : `FragmentOption.ApplyTo` (appliquer une amélioration), `Upg
 Vérifié : build sans avertissement, smoke test, `tools/test_weapons.sh`, `tools/test_movement.sh`, capture `--capture-rift` regardée (Faille ouverte et refermée, offre, fiche de pause avec Péril 1 et l'Oubli, levée au Mémorial : Oublis 0 → 1 → 0). Mesure headless `--nomad`, 2 graines × 15 min : 1 et 3 Failles ouvertes dans les zones Effacées, aucune erreur. Relecture `godot-reviewer` : deux défauts corrigés. Un Oubli de PV max pris à 1 PV rendait plus de PV qu'il n'en avait pris une fois levé (lever un Oubli rend la stat, jamais de PV ; contrôle ajouté à `tools/test_weapons.sh`). Une Faille pouvait s'ouvrir sur une autre (écart minimal appliqué aussi aux ouvertures).
 
 **Écarts et questions pour la recette :**
-- **Pause** : Mémorial et Faille ouvrent un écran de trois cartes qui fige la run, comme le level-up. La V2 (§11) voulait un Autel sans pause ; un écran à lire (gains, Oublis) sous les coups semblait injouable. À trancher.
+- **Pause** : Mémorial et Faille ouvrent un écran de trois cartes qui fige la run, comme le level-up. **Validé par Raphaël** (« garder la pause, pas de soucis »).
 - **Faille** : activée par la touche d'interaction (maintien 0,8 s), pas au simple contact, pour éviter de l'ouvrir en courant.
 - **Lever un Oubli** est un service payant du Mémorial, pas une bénédiction ; « relancer la bénédiction » (4.5) n'est pas fait.
-- Oublis limités aux stats du joueur : « +1 élite en vie » et « tes zones s'effacent plus vite » (exemples de 4.5) demandent des crochets dans l'apparition et l'Effacement, à ajouter si la direction plaît.
+- Oublis limités aux stats du joueur. **Retour de Raphaël** : il préfère des malus sur la carte ; liste de propositions à valider une par une ci-dessous (« Oublis de carte »).
 - Toutes les valeurs (coûts, prix des services, taux d'ouverture, poids du Péril) sont des points de départ.
+
+#### Oublis de carte — propositions à valider (26 septembre, nuit)
+
+Retour de Raphaël : des malus sur la carte plutôt que sur les stats. Les huit Oublis livrés sont des malus de stats (vitesse −8 %, PV max −12 %, dégâts −8 %, cadence −8 %, armure −3, zone −10 %, Chance −5 points, rayon d'aimant −20 %). Remplaçants proposés, chacun branché sur un système qui existe déjà :
+
+| Oubli | Effet sur la carte | Système touché |
+|---|---|---|
+| Oubli de la peur | Une élite de plus en vie en permanence | Apparition (`spawn_flow.json`) |
+| Oubli du chemin | Les zones que tu quittes s'effacent 20 % plus vite | Effacement (`erasure.json`) |
+| Oubli du répit | Les Résurgences reviennent 20 % plus tôt | Résurgences (`crises.json`) |
+| Oubli des repères | Plus de flèches de bord d'écran vers les coffres ; colonnes de lumière réduites de moitié | Coffres |
+| Oubli du regard | Le brouillard se lève sur un rayon 25 % plus court autour de toi | Brouillard (`FogOfWar`) |
+| Oubli des lieux | Le Mémorial endormi le plus proche s'effondre dans le Néant | Mémoriaux |
+| Oubli des visages | Créatures variantes (plus dangereuses) deux fois plus fréquentes | Variantes (`_variants.json`) |
+| Oubli du trésor | Les coffres encore fermés perdent un rang de rareté | Coffres |
+| Oubli des traces | Les créatures te repèrent de plus loin | Perception (`enemy_tracking.json`) |
+
+Chaque Oubli reste levable au Mémorial ; « Oubli des lieux » et « Oubli du trésor » sont définitifs (on ne rend pas un Mémorial effondré), à signaler sur la carte de la Faille.
 
 #### Vague 3 détaillée — 26 septembre (soir)
 

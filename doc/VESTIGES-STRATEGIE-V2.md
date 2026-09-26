@@ -338,7 +338,7 @@ Le prototype V1 avait des ennemis trop passifs et trop loin. En V2 :
 
 ## 11. Les Autels d'Essence
 
-> **Amendement du 26 septembre 2026 (plan 17, vague 3, direction validée par Raphaël)** : l'Autel devient le **Mémorial**. On le ravive en rassemblant ses trois éclats (20 s) ; il stabilise sa zone et offre une bénédiction à rareté, puis des services contre de l'Essence (raviver une arme au choix, Rare au moins ; soin ; lever un Oubli). Son miroir est la **Faille** : une amélioration Épique ou Légendaire contre un **Oubli** (malus durable) et un point de **Péril** (créatures plus fortes, score, XP et raretés majorés), toujours refusable. L'Appel du Vide et les malédictions disparaissent. Écart provisoire avec le paragraphe « Interaction » ci-dessous : le choix se fait sur un écran de trois cartes qui fige la run, comme le level-up (à confirmer par Raphaël).
+> **Amendement du 26 septembre 2026 (plan 17, vague 3, direction validée par Raphaël)** : l'Autel devient le **Mémorial**. On le ravive en rassemblant ses trois éclats (20 s) ; il stabilise sa zone et offre une bénédiction à rareté, puis des services contre de l'Essence (raviver une arme au choix, Rare au moins ; soin ; lever un Oubli). Son miroir est la **Faille** : une amélioration Épique ou Légendaire contre un **Oubli** (malus durable) et un point de **Péril** (créatures plus fortes, score, XP et raretés majorés), toujours refusable. L'Appel du Vide et les malédictions disparaissent. Écart avec le paragraphe « Interaction » ci-dessous, validé par Raphaël : le choix se fait sur un écran de trois cartes qui fige la run, comme le level-up.
 
 ### Concept
 
