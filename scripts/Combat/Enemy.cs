@@ -102,6 +102,7 @@ public partial class Enemy : CharacterBody2D
 	// Variante (élite, Souverain, Aberration), affixes, harde et micro-événements
 	private readonly EnemyModifiers _mods = new();
 	private readonly EnemyTracking _tracking = new();
+	private Sprite2D _shadow;
 	private Polygon2D _modifierAura;
 	private Tween _modifierAuraTween;
 	private EnemyNameplate _nameplate;
@@ -172,6 +173,8 @@ public partial class Enemy : CharacterBody2D
 		_chestScene ??= GD.Load<PackedScene>("res://scenes/world/Chest.tscn");
 		_entityShader ??= GD.Load<Shader>("res://assets/shaders/entity.gdshader");
 		_eventBus ??= GetNode<EventBus>("/root/EventBus");
+		_shadow = GroundShadow.Create(24f);
+		AddChild(_shadow);
 	}
 
 	private string _projectileSprite = "spit";
@@ -348,6 +351,7 @@ public partial class Enemy : CharacterBody2D
 		if (_isDying || !IsActive)
 			return;
 		_isDying = true;
+		_shadow.Visible = false;
 		CancelAbilities();
 		Velocity = Vector2.Zero;
 		if (IsInGroup("enemies"))
@@ -1241,6 +1245,8 @@ public partial class Enemy : CharacterBody2D
 	private void Die()
 	{
 		_isDying = true;
+		// Le corps se dissout : son contact avec le sol disparaît avec lui.
+		_shadow.Visible = false;
 		CancelAbilities();
 		_modifierAuraTween?.Kill();
 		_igniteDps = 0f;
@@ -1519,8 +1525,36 @@ public partial class Enemy : CharacterBody2D
 			QueueFree();
 	}
 
+	private static readonly Dictionary<string, float> FeetYById = new();
+
+	/// <summary>
+	/// Bas visible du sprite (dernière ligne opaque de la pose de repos), relatif au nœud : l'ombre s'y pose,
+	/// sinon une créature dont les pieds ne sont pas à l'origine a l'air de flotter. Calculé une fois par créature.
+	/// </summary>
+	private float SpriteFeetY(string enemyId, SpriteFrames frames)
+	{
+		if (FeetYById.TryGetValue(enemyId, out float cached))
+			return cached;
+		float feet = 0f;
+		string animation = frames.HasAnimation("SE_idle") ? "SE_idle" : _sprite.Animation;
+		Texture2D texture = frames.GetFrameCount(animation) > 0 ? frames.GetFrameTexture(animation, 0) : null;
+		using Image image = texture?.GetImage();
+		if (image != null)
+		{
+			int bottom = image.GetUsedRect().End.Y;
+			// Centré par défaut : le bas de l'image est à +hauteur/2 du centre, décalé de l'offset du sprite.
+			feet = _sprite.Offset.Y + bottom - image.GetHeight() * 0.5f - 2f;
+		}
+		FeetYById[enemyId] = feet;
+		return feet;
+	}
+
 	private void ConfigureVisual(EnemyData data)
 	{
+		// Ombre proportionnelle à la créature : la variante (élite, Souverain) l'agrandit avec le reste du corps.
+		_shadow.Texture = GroundShadow.TextureFor(GroundShadow.SnapWidth(Mathf.Clamp(data.Visual.Size * 2f, 12f, 72f)));
+		_shadow.Position = Vector2.Zero;
+		_shadow.Visible = true;
 		_visual.Color = data.Visual.Color;
 		_originalColor = data.Visual.Color;
 
@@ -1552,6 +1586,7 @@ public partial class Enemy : CharacterBody2D
 					_sprite.Offset = new Vector2(0f, -frames.GetFrameTexture("SE_idle", 0).GetHeight() * 0.35f);
 				_visual.Visible = false;
 				_hasSprite = true;
+				_shadow.Position = new Vector2(0f, SpriteFeetY(data.Id, frames));
 				_facing.Reset(EnemySpriteLoader.HasEightDirections(frames));
 				_currentAnimName = null;
 				_attackAnimTimer = 0f;

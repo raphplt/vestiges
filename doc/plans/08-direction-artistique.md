@@ -441,6 +441,14 @@ Hors périmètre : morts, dissolution et butin (plan 02 J2/J3), police des chiff
 - **Vérification** : régression des capacités verte ; capture `--capture-abilities` où le Présage apparaît en ellipse sous le joueur. Les projectiles sont trop petits pour se juger sur une capture dézoomée : à regarder en partie.
 - **Effet de jeu** : une annonce ronde de rayon R couvrait 2R en hauteur à l'écran ; elle ne couvre plus que R. Esquiver vers le haut ou le bas devient plus facile, les zones sont donc un peu moins punitives.
 
+**I3 livré (26 septembre) :**
+- **Ombres de contact** : ellipse 2:1 en deux paliers (`Core/GroundShadow`, texture commune avec les décors), sous le joueur, chaque créature et chaque projectile.
+- **Créatures** : la largeur suit `visual.size`, et une variante agrandie élargit l'ombre avec le corps. L'ombre se pose au bas visible du sprite (dernière ligne opaque, calculée une fois par créature), faute de quoi certaines créatures avaient l'air de flotter. Elle disparaît avec le corps à la mort.
+- **Projectiles** : l'ombre reste au sol pendant que le visuel vole à 10–11 px ; cet écart dit que le projectile est en l'air.
+- **Coût** (banc de combat dense, 120 ennemis, 720p) : +24 appels de dessin (+2,3 %) et +141 objets rendus, FPS inchangés (80 contre 80, machine chargée), aucun nœud créé pendant le combat.
+- **Vérification** : captures du bestiaire et d'une run, recadrées ; les créatures tiennent au sol.
+- **Reste à faire** : I4 (explosions, flaques, cône, orbitales, anneau de dash) ; une constante de hauteur de vol unique pour le joueur et les créatures (11 et 10 px aujourd'hui).
+
 
 ### Recommandation initiale (22 septembre), remplacée pour la méthode
 

@@ -230,12 +230,15 @@ public partial class Player : CharacterBody2D
     public float RicochetChance => _ricochetChance;
     public float LuckBonus => _luckBonus;
 
+    private const float ShadowWidth = 22f;
+
     public override void _Ready()
     {
         _currentHp = MaxHp;
         _visual = GetNode<Polygon2D>("Visual");
         _sprite = GetNode<AnimatedSprite2D>("Sprite");
         _attackFx = new PlayerAttackFx(this, _sprite);
+        AddChild(GroundShadow.Create(ShadowWidth));
         _originalColor = _visual.Color;
 
         AddToGroup("player");

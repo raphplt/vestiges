@@ -42,6 +42,8 @@ public partial class EnemyProjectile : Area2D
 	{
 		_visual = GetNode<Sprite2D>("Visual");
 		_visual.Position = new Vector2(0f, -FlightHeight);
+		// Au sol sous le projectile : c'est l'écart entre l'ombre et le visuel qui dit qu'il vole.
+		AddChild(GroundShadow.Create(8f));
 		_eventBus = GetNode<EventBus>("/root/EventBus");
 		BodyEntered += OnBodyEntered;
 	}
