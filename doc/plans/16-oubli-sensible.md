@@ -82,3 +82,13 @@ Ordre O1 → O3 → O4/O5 → O2/O6 validé par Raphaël. Arbitrages délégués
 - **Test d'intégration** : le même kill vaut 33 points au Néant, contre 16 en zone ancrée.
 - **Non fait** : le butin qui disparaît avec la zone (dépend du plan 13, non implémenté) et le « rappel » d'une zone par les Autels (V2 §11).
 
+**O2 livré — les choses se défont (26 septembre) :**
+- **Décors** (`prop_forget.gdshader`, un seul matériau partagé) **et canopées** (`sway.gdshader`) lisent la mémoire à leur point au sol :
+  - Fragile : ils se délavent comme le sol ;
+  - Effilochée : leurs bords s'effritent en pixels perdus, et une partie blanchit ;
+  - Effacée : ils se réduisent à des silhouettes grises qui s'émiettent ;
+  - Néant : il n'en reste que des fragments.
+- La lecture de la mémoire est commune au sol, aux décors et aux canopées (`erasure_memory.gdshaderinc`).
+- **Coût** (banc de combat dense, même moment, machine chargée) : 1 303 appels de dessin contre 1 305, FPS équivalents (58 contre 61 en 720p, 46 contre 46 en 1080p). Le rendu par lots est préservé.
+- **Non fait** : les particules qui s'élèvent des décors proches en zone Effacée (prévues au plan initial). Elles demandent un pool et un plafond à mesurer.
+

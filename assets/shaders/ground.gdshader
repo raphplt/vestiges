@@ -20,17 +20,10 @@ uniform float band_px = 34.0;
 uniform float edge_noise = 0.35;
 uniform float noise_scale = 0.045;
 
-// Mémoire des zones autour du joueur (R = 0..1, une texel par zone), écrite par ErasureManager.
-global uniform sampler2D erasure_memory;
-// xy : coin monde de la fenêtre ; zw : taille monde de la fenêtre.
-global uniform vec4 erasure_window;
-// Mémoire hors de la fenêtre suivie.
-global uniform float erasure_far_memory;
+#include "res://assets/shaders/erasure_memory.gdshaderinc"
 
 const vec2 TILE = vec2(64.0, 32.0);
 const int NONE = 255;
-const vec3 ERASURE_WHITE = vec3(0.961, 0.941, 0.922);   // Blanc effacement #F5F0EB
-const vec3 ERASURE_PALE = vec3(0.847, 0.878, 0.918);    // blanc-bleuté
 const vec3 CRACK_LIGHT = vec3(0.749, 0.910, 1.0);       // lueur des fissures
 
 varying vec2 world_pos;
@@ -132,25 +125,6 @@ float crack_distance(vec2 p) {
 	return f2 - f1;
 }
 
-// Filtrage bilinéaire à la main : une zone fait 128 px, la transition entre zones reste douce.
-float memory_at(vec2 p) {
-	vec2 size = vec2(textureSize(erasure_memory, 0));
-	if (size.x < 2.0 || erasure_window.z <= 0.0)
-		return erasure_far_memory;
-	vec2 uv = (p - erasure_window.xy) / erasure_window.zw;
-	if (uv.x < 0.0 || uv.y < 0.0 || uv.x > 1.0 || uv.y > 1.0)
-		return erasure_far_memory;
-	vec2 t = uv * size - 0.5;
-	ivec2 i = ivec2(floor(t));
-	vec2 f = fract(t);
-	ivec2 hi = ivec2(size) - 1;
-	float a = texelFetch(erasure_memory, clamp(i, ivec2(0), hi), 0).r;
-	float b = texelFetch(erasure_memory, clamp(i + ivec2(1, 0), ivec2(0), hi), 0).r;
-	float c = texelFetch(erasure_memory, clamp(i + ivec2(0, 1), ivec2(0), hi), 0).r;
-	float d = texelFetch(erasure_memory, clamp(i + ivec2(1, 1), ivec2(0), hi), 0).r;
-	return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
-}
-
 void vertex() {
 	world_pos = (MODEL_MATRIX * vec4(VERTEX, 0.0, 1.0)).xy;
 	vertex_color = COLOR;
@@ -165,10 +139,7 @@ vec3 forget(vec3 color, vec2 p, float memory) {
 	float wander = value_noise(ground * 0.02);
 
 	// Fragile → Effacée : les couleurs se délavent vers un gris froid et pâle.
-	float fade = smoothstep(0.8, 0.2, memory);
-	float luminance = dot(color, vec3(0.299, 0.587, 0.114));
-	vec3 washed = mix(vec3(luminance), ERASURE_PALE, 0.35);
-	color = mix(color, washed, fade * 0.85);
+	color = erasure_wash(color, memory);
 
 	// Effilochée → Effacée : des pixels passent au blanc, en plaques qui ondulent.
 	float bleach = smoothstep(0.55, 0.05, memory) * (0.55 + 0.45 * wander);

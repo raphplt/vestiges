@@ -18,6 +18,8 @@ public partial class EnvironmentProp : StaticBody2D
 	private Sprite2D _canopySprite;
 	private PropFootprint _footprint;
 	private static ShaderMaterial _swayMaterial;
+	// Partagé par tous les décors : un seul matériau garde le rendu par lots (≈ 10 000 décors par carte).
+	private static ShaderMaterial _forgetMaterial;
 
 	/// <summary>
 	/// Initialise le prop. La position courante est le centre de la cellule. Avec un manifeste, le pivot au sol
@@ -71,9 +73,11 @@ public partial class EnvironmentProp : StaticBody2D
 			_swayMaterial.SetShaderParameter("max_strength", 0.05f);
 		}
 
+		_forgetMaterial ??= new ShaderMaterial { Shader = GD.Load<Shader>("res://assets/shaders/prop_forget.gdshader") };
 		_baseSprite = new Sprite2D
 		{
 			Texture = baseTexture,
+			Material = _forgetMaterial,
 			TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
 			Offset = hasManifest
 				? textureSize * 0.5f - manifest.Pivot
