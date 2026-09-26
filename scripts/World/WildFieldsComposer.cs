@@ -166,6 +166,57 @@ public static class WildFieldsComposer
         return placed;
     }
 
+    /// <summary>
+    /// Scènes-récits (plan 08 P4b-4) : une région de champs sur deux reçoit, près de son centre, une petite scène
+    /// lisible d'un coup d'œil (pique-nique abandonné, linge encore étendu, épouvantail couronné de corbeaux).
+    /// </summary>
+    public static List<Vector2> PlaceScenes(WorldGenerator generator, FarmConfig config, HashSet<Vector2I> usedCells,
+                                            HashSet<Vector2I> blockedCells, TileMapLayer ground, Node2D container, ulong seed)
+    {
+        List<Vector2> spots = new();
+        if (!config.Enabled || config.Scenes.Length == 0)
+            return spots;
+        Dictionary<string, Texture2D> cache = new();
+        uint threshold = (uint)(Mathf.Clamp(config.SceneChancePerRegion, 0f, 1f) * 1000f);
+        foreach (Vector2 center in generator.BiomeRegionCenters)
+        {
+            Vector2I origin = new(Mathf.RoundToInt(center.X), Mathf.RoundToInt(center.Y));
+            if (generator.GetBiomeId(origin.X, origin.Y) != BiomeId || CellHash.Of(origin.X, origin.Y, seed ^ 0x5CE7EUL) % 1000 >= threshold)
+                continue;
+            if (!TryFindFreeCell(generator, origin, usedCells, blockedCells, seed, out Vector2I cell))
+                continue;
+            Texture2D texture = Load(config.Scenes[(int)(CellHash.Of(origin.X, origin.Y, seed ^ 0x5CE7FUL) % (uint)config.Scenes.Length)], cache);
+            if (texture == null)
+                continue;
+            EnvironmentProp prop = new();
+            prop.GlobalPosition = ground.MapToLocal(cell);
+            container.AddChild(prop);
+            prop.Initialize(texture, null, 0f, false);
+            usedCells.Add(cell);
+            spots.Add(prop.GlobalPosition);
+        }
+        GD.Print($"[WildFieldsComposer] {spots.Count} scènes-récits");
+        return spots;
+    }
+
+    /// <summary>Une cellule de champs libre à quelques cases du centre de la région, tirée par graine.</summary>
+    private static bool TryFindFreeCell(WorldGenerator generator, Vector2I origin, HashSet<Vector2I> usedCells,
+                                        HashSet<Vector2I> blockedCells, ulong seed, out Vector2I cell)
+    {
+        for (int attempt = 0; attempt < 40; attempt++)
+        {
+            uint roll = CellHash.Of(origin.X * 31 + attempt, origin.Y, seed ^ 0x5CE80UL);
+            cell = new Vector2I(origin.X + (int)(roll % 13) - 6, origin.Y + (int)((roll >> 8) % 25) - 12);
+            if (!generator.IsWithinBounds(cell.X, cell.Y) || generator.IsErased(cell.X, cell.Y) || generator.GetBiomeId(cell.X, cell.Y) != BiomeId
+                || generator.GetTerrain(cell.X, cell.Y) == TerrainType.Water || usedCells.Contains(cell)
+                || (blockedCells != null && blockedCells.Contains(cell)))
+                continue;
+            return true;
+        }
+        cell = default;
+        return false;
+    }
+
     private static Vector2 Mirror(Vector2 offset, bool mirrored) => mirrored ? new Vector2(-offset.X, offset.Y) : offset;
 
     private static bool Fits(WorldGenerator generator, int biomeIndex, PathNetwork paths, HashSet<Vector2I> usedCells,

@@ -306,7 +306,7 @@ Critère de réussite : sur une capture des champs, on reconnaît une ferme, des
   - toutes les fermes suivent le même plan, seulement retourné : à varier (deux ou trois plans) si la répétition se remarque ;
   - quand le seul chemin proche passe à côté de la ferme, l'embranchement longe l'enclos ;
   - le placement (273 ms) peut être accéléré si le chargement s'en ressent : tri des candidats et test d'emprise par région ;
-  - P4b-4 (scènes-récits) reste à faire.
+  - P4b-4 : livré plus bas.
 
 **P4b-3 livré — bords de parcelles et vergers, 26 septembre (session cloud) :**
 - **Bords de parcelles.** `WildFieldsLayoutGenerator` marque les cellules de bord le long des allées : à l'est des allées principales (qui montent vers la droite à l'écran), au sud des secondaires (presque horizontales). Il en garde une sur deux ou sur quatre selon l'axe, pour ne pas empiler les rangs de la grille « stacked », et 70 % d'entre elles. `WildFieldsComposer.PlaceParcelProps` y pose une haie, un muret ou une clôture horizontale (`parcel_edges` dans `farms.json`), jamais bloquants.
@@ -315,6 +315,18 @@ Critère de réussite : sur une capture des champs, on reconnaît une ferme, des
 - Seed de capture : 683 bords marqués et 295 arbres de verger, soit 763 décors posés.
 - Captures `--capture-farms` et `--capture-map` regardées : les parcelles gagnent des limites, et un verger en fleurs en rangs se lit près d'une ferme.
 - *Limite* : les allées restent de larges bandes de terre en biais ; les haies les bordent sans les redessiner.
+
+**P4b-4 livré — scènes-récits, 26 septembre (session cloud) :**
+- **Trois scènes lisibles d'un coup d'œil**, modélisées dans `farm.py` :
+  - pique-nique abandonné : nappe à carreaux au coin relevé, panier ouvert, bouteille couchée, assiettes ;
+  - linge encore étendu : deux poteaux, corde qui ploie, draps et chemises bleues qui battent ;
+  - épouvantail couronné de corbeaux : trois corbeaux perchés sur les bras et le chapeau.
+- **Placement** (`WildFieldsComposer.PlaceScenes`, liste `scenes` dans `farms.json`) : une région de champs sur deux en reçoit une, près de son centre, hors fermes, chemins et points d'intérêt. Seed de capture : 6 scènes.
+- `--capture-farms` capture aussi les trois scènes les plus proches, au zoom ×2 ; images regardées.
+- Deux corrections pendant la mise au point :
+  - l'épouvantail, tourné vers la profondeur, cachait ses corbeaux : il prend l'axe horizontal ;
+  - le tirage du linge ne donnait que des draps : draps et chemises alternent désormais.
+- *Non fait* : le tracteur embourbé ; le lien avec le lore (un fragment à lire près de la scène) reste à décider avec le plan 14.
 - `--measure-props` en 1080p, machine calme : champs 159 FPS (3 197 décors), forêt 160, ville 158, carrière 152, marais 146, p99 entre 8 et 10 ms. C'est la plage d'avant les lots P3–P4 : pas de régression.
 
 *Points ouverts pour Raphaël :*

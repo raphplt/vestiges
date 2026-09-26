@@ -65,6 +65,10 @@ public partial class WorldSetup : Node2D
     private PathNetwork _pathNetwork;
     private FarmConfig _farmConfig;
     private List<FarmSite> _farms = new();
+    private List<Vector2> _storyScenes = new();
+
+    /// <summary>Positions des scènes-récits des champs (plan 08 P4b-4).</summary>
+    public IReadOnlyList<Vector2> StoryScenes => _storyScenes;
 
     /// <summary>Centres des cours de ferme des Champs Sauvages (plan 08 P4b).</summary>
     public IEnumerable<Vector2> FarmAnchors
@@ -524,6 +528,7 @@ public partial class WorldSetup : Node2D
         WildFieldsComposer.PlaceFarms(_farms, _farmConfig, propContainer, Seed);
         HashSet<Vector2I> blockedCells = BuildEnvironmentPropBlockedCells(urbanLayout, swampLayout);
         WildFieldsComposer.PlaceParcelProps(_wildFieldsLayout, _farmConfig, _usedCells, blockedCells, _ground, propContainer, Seed);
+        _storyScenes = WildFieldsComposer.PlaceScenes(_generator, _farmConfig, _usedCells, blockedCells, _ground, propContainer, Seed);
         JunctionPropPlacer.Place(_generator, _config.JunctionProps, _usedCells, blockedCells, _ground, propContainer, Seed);
         _propSpawner.SpawnProps(_generator, _terrain, _ground, propContainer, _usedCells, Seed, blockedCells, _wildFieldsLayout);
     }

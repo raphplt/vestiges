@@ -30,6 +30,9 @@ public sealed class FarmConfig
     public string[] ParcelEdges = System.Array.Empty<string>();
     /// <summary>Arbres de verger : paires tronc / canopée.</summary>
     public readonly List<(string Base, string Canopy)> OrchardTrees = new();
+    /// <summary>Scènes-récits (pique-nique abandonné, linge étendu…), une par région de champs au plus (plan 08 P4b-4).</summary>
+    public string[] Scenes = System.Array.Empty<string>();
+    public float SceneChancePerRegion = 0.5f;
 
     public static FarmConfig Load()
     {
@@ -51,6 +54,9 @@ public sealed class FarmConfig
         config.PathReachPx = (float)d.GetValueOrDefault("path_reach_px", config.PathReachPx).AsDouble();
         config.SpurStart = ReadVector(d, "spur_start", config.SpurStart);
         config.SpurWidthFactor = (float)d.GetValueOrDefault("spur_width_factor", config.SpurWidthFactor).AsDouble();
+        if (d.ContainsKey("scenes"))
+            config.Scenes = d["scenes"].AsStringArray();
+        config.SceneChancePerRegion = (float)d.GetValueOrDefault("scene_chance_per_region", config.SceneChancePerRegion).AsDouble();
         if (d.ContainsKey("parcel_edges"))
             config.ParcelEdges = d["parcel_edges"].AsStringArray();
         if (d.ContainsKey("orchard_trees"))

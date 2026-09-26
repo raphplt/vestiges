@@ -6,7 +6,8 @@ namespace Vestiges.Tests;
 
 /// <summary>
 /// --capture-farms : fermes des Champs Sauvages (plan 08 P4b). Les quatre plus proches du départ, au zoom normal
-/// puis dézoomées (×0,6) pour juger la composition avec les champs et le chemin qui les rejoint.
+/// puis dézoomées (×0,6) pour juger la composition avec les champs et le chemin qui les rejoint ; puis les trois
+/// scènes-récits les plus proches, au zoom ×2.
 /// </summary>
 public partial class RunObservation
 {
@@ -38,6 +39,19 @@ public partial class RunObservation
             await Frames(10);
             Save($"farm-{i + 1}-large.png");
             GD.Print($"[RunObservation] ferme {i + 1} en {farms[i]}");
+        }
+
+        // Scènes-récits (P4b-4) : les trois plus proches du départ, au zoom ×2.
+        List<Vector2> scenes = new(_world.StoryScenes);
+        scenes.Sort((a, b) => a.LengthSquared().CompareTo(b.LengthSquared()));
+        GD.Print($"[RunObservation] RESULT scenes count={scenes.Count}");
+        for (int i = 0; i < scenes.Count && i < 3; i++)
+        {
+            _player.GlobalPosition = scenes[i] + new Vector2(-40f, 20f);
+            _camera.Zoom = initialZoom * 2f;
+            _camera.ResetSmoothing();
+            await Frames(20);
+            Save($"scene-{i + 1}.png");
         }
         _camera.Zoom = initialZoom;
     }

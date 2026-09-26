@@ -372,6 +372,122 @@ def hedge(stem: str, seed: int, yaw: float, flowering: bool) -> PropModel:
 
 
 # ---------------------------------------------------------------------------------------------------------------------
+# Scènes-récits (P4b-4) : des gens étaient là, puis plus personne
+# ---------------------------------------------------------------------------------------------------------------------
+
+def picnic(stem: str, seed: int) -> PropModel:
+    """Pique-nique abandonné : nappe à carreaux froissée, panier ouvert, bouteille couchée, deux assiettes."""
+    CLOTH_A, CLOTH_B, WICKER, BOTTLE, PLATE, GRASS_M = range(6)
+    materials = [make_material("cloth_a", "#B84A3E", contrast=0.8), make_material("cloth_b", "#D8CFC0", contrast=0.6),
+                 make_material("wicker", "#9A7A4A"), make_material("bottle", "#3E6A4E", contrast=0.6),
+                 make_material("plate", "#C8C4BA", contrast=0.6), make_material("grass", GRASS)]
+    w = Weathering(seed)
+    tufts = [(w.uniform(-1.2, 1.2) * M, 0.08 * M, w.uniform(-0.9, 0.9) * M) for _ in range(4)]
+
+    def cloth(p: np.ndarray, check: int) -> np.ndarray:
+        # Nappe posée au sol, un coin relevé par le vent ; carreaux en damier.
+        sheet = rounded_box(p, (0, 0.04 * M, 0), (1.0 * M, 0.03 * M, 0.8 * M), 0.02 * M, rotation_z(0.03))
+        corner = rounded_box(p, (0.85 * M, 0.18 * M, 0.65 * M), (0.25 * M, 0.02 * M, 0.2 * M), 0.02 * M, rotation_x(0.6))
+        d = np.minimum(sheet, corner)
+        squares = (np.floor(p[:, 0] / (0.25 * M)) + np.floor(p[:, 2] / (0.25 * M))).astype(np.int64) % 2
+        return np.where(squares == check, d, np.inf)
+
+    def basket(p: np.ndarray) -> np.ndarray:
+        body = np.maximum(rounded_box(p, (-0.45 * M, 0.25 * M, -0.2 * M), (0.3 * M, 0.2 * M, 0.22 * M), 0.05 * M),
+                          -rounded_box(p, (-0.45 * M, 0.35 * M, -0.2 * M), (0.25 * M, 0.2 * M, 0.17 * M), 0.03 * M))
+        handle = capsule(p, (-0.7 * M, 0.42 * M, -0.2 * M), (-0.45 * M, 0.7 * M, -0.2 * M), 0.03 * M)
+        return np.minimum(body, np.minimum(handle, capsule(p, (-0.45 * M, 0.7 * M, -0.2 * M), (-0.2 * M, 0.42 * M, -0.2 * M), 0.03 * M)))
+
+    def parts() -> list[Part]:
+        return [
+            Part(lambda p: cloth(p, 0), CLOTH_A), Part(lambda p: cloth(p, 1), CLOTH_B),
+            Part(basket, WICKER),
+            Part(lambda p: capsule(p, (0.2 * M, 0.12 * M, 0.3 * M), (0.65 * M, 0.1 * M, 0.1 * M), 0.08 * M, 0.04 * M), BOTTLE),
+            Part(lambda p: _union(cylinder(p, (0.35 * M, 0.08 * M, -0.35 * M), 0.2 * M, 0.02 * M),
+                                  cylinder(p, (-0.1 * M, 0.08 * M, 0.45 * M), 0.2 * M, 0.02 * M)), PLATE),
+            Part(_clumps(tufts, [(0.2 * M, 0.14 * M, 0.2 * M)] * 4, 0.03 * M, 0.2 * M), GRASS_M),
+        ]
+
+    return PropModel(stem, parts, materials, AXIS_Y_YAW, canvas=(90, 60))
+
+
+def clothesline(stem: str, seed: int) -> PropModel:
+    """Linge encore étendu : deux poteaux, une corde qui ploie, draps et chemises décolorés qui battent au vent."""
+    POST, ROPE, SHEET, SHIRT, PIN = range(5)
+    materials = [make_material("post", FENCE), make_material("rope", "#8A8478", contrast=0.5),
+                 make_material("sheet", "#D8D4C8", contrast=0.7), make_material("shirt", "#6A88A8", contrast=0.8),
+                 make_material("pin", "#9A7A4A", contrast=0.5)]
+    w = Weathering(seed)
+    span = 1.7 * M
+    top = 1.9 * M
+
+    def rope_y(x: float) -> float:
+        return top - 0.25 * M * (1.0 - (x / span) ** 2)
+
+    laundry = []
+    x = -1.35
+    while x < 1.3:
+        width = w.uniform(0.25, 0.45)
+        laundry.append((x * M + width * M, width * M, w.uniform(0.45, 0.8) * M, w.uniform(0.15, 0.4), SHIRT if len(laundry) % 2 else SHEET))
+        x += width * 2 + w.uniform(0.05, 0.15)
+
+    def cloths(p: np.ndarray, material: int) -> np.ndarray:
+        pieces = [rounded_box(p, (cx, rope_y(cx) - h, 0.05 * M), (hw, h, 0.02 * M), 0.02 * M, rotation_x(-sway))
+                  for cx, hw, h, sway, m in laundry if m == material]
+        return _union(*pieces) if pieces else np.full(len(p), np.inf)
+
+    def rope(p: np.ndarray) -> np.ndarray:
+        points = [(t * span, rope_y(t * span), 0.0) for t in np.linspace(-1, 1, 7)]
+        return _union(*(capsule(p, a, b, 0.02 * M) for a, b in zip(points, points[1:])))
+
+    def parts() -> list[Part]:
+        return [
+            Part(lambda p: _union(*(capsule(p, (x, 0, 0), (x, top + 0.1 * M, 0), 0.07 * M) for x in (-span, span)),
+                                  *(capsule(p, (x - 0.25 * M, top, 0), (x + 0.25 * M, top, 0), 0.05 * M) for x in (-span, span))), POST),
+            Part(rope, ROPE), Part(lambda p: cloths(p, SHEET), SHEET), Part(lambda p: cloths(p, SHIRT), SHIRT),
+            Part(lambda p: _union(*(sphere(p, (cx, rope_y(cx), 0.05 * M), 0.05 * M) for cx, _, _, _, _ in laundry)), PIN),
+        ]
+
+    return PropModel(stem, parts, materials, AXIS_Y_YAW, canvas=(110, 90), footprint=box_footprint(0.1 * M, 0.1 * M))
+
+
+def crow_scarecrow(stem: str, seed: int) -> PropModel:
+    """Épouvantail couronné de corbeaux : ils ont gagné, ils se posent sur lui."""
+    POLE, SACK, COAT, HAT, CROW, BEAK = range(6)
+    materials = [make_material("pole", FENCE), make_material("sack", "#B8A080"), make_material("coat", "#4E5A6A"),
+                 make_material("hat", "#3E342A"), make_material("crow", "#1E1C24", contrast=0.5),
+                 make_material("beak", "#C8A040", contrast=0.5)]
+    w = Weathering(seed)
+    lean = rotation_z(-0.12)
+    perches = [(-0.65 * M, 1.48 * M), (0.5 * M, 1.5 * M), (0.0, 2.35 * M)]
+    crows = [(x + w.uniform(-0.08, 0.08) * M, y) for x, y in perches]
+
+    def crow_body(p: np.ndarray) -> np.ndarray:
+        birds = []
+        for x, y in crows:
+            birds.append(ellipsoid(p @ lean, (x, y + 0.14 * M, 0), (0.16 * M, 0.12 * M, 0.1 * M)))
+            birds.append(sphere(p @ lean, (x + 0.13 * M, y + 0.25 * M, 0), 0.07 * M))
+            birds.append(capsule(p @ lean, (x - 0.12 * M, y + 0.12 * M, 0), (x - 0.3 * M, y + 0.05 * M, 0), 0.04 * M))
+        return _union(*birds)
+
+    def parts() -> list[Part]:
+        return [
+            Part(lambda p: _union(capsule(p @ lean, (0, 0, 0), (0, 1.9 * M, 0), 0.06 * M),
+                                  capsule(p @ lean, (-0.75 * M, 1.4 * M, 0), (0.6 * M, 1.42 * M, 0), 0.05 * M)), POLE),
+            Part(lambda p: sphere(p @ lean, (0, 1.95 * M, 0.02 * M), 0.2 * M), SACK),
+            Part(lambda p: rounded_box(p @ lean, (0, 1.15 * M, 0.02 * M), (0.34 * M, 0.38 * M, 0.15 * M), 0.08 * M), COAT),
+            Part(lambda p: _union(cylinder(p @ lean, (0, 2.12 * M, 0), 0.3 * M, 0.02 * M, 0.01 * M),
+                                  cylinder(p @ lean, (0, 2.2 * M, 0), 0.15 * M, 0.08 * M, 0.03 * M)), HAT),
+            Part(crow_body, CROW),
+            Part(lambda p: _union(*(capsule(p @ lean, (x + 0.18 * M, y + 0.25 * M, 0), (x + 0.27 * M, y + 0.23 * M, 0), 0.02 * M)
+                                    for x, y in crows)), BEAK),
+        ]
+
+    # Bras à l'horizontale de l'écran : les corbeaux perchés restent visibles.
+    return PropModel(stem, parts, materials, AXIS_Y_YAW, canvas=(80, 120), footprint=box_footprint(0.12 * M, 0.12 * M))
+
+
+# ---------------------------------------------------------------------------------------------------------------------
 # Catalogue
 # ---------------------------------------------------------------------------------------------------------------------
 
@@ -401,6 +517,11 @@ def catalog() -> list[PropModel]:
         replace(wooden_fence("prop_wooden_fence_h", 541, False), yaw=AXIS_Y_YAW),
         replace(wooden_fence("prop_wooden_fence_broken_h", 542, True), yaw=AXIS_Y_YAW),
         replace(stone_wall("prop_low_stone_wall_h", 531, False), yaw=AXIS_Y_YAW),
+    ]
+    models += [
+        picnic("prop_scene_picnic", 801),
+        clothesline("prop_scene_clothesline", 802),
+        crow_scarecrow("prop_scene_crow_scarecrow", 803),
     ]
     # Arbres de verger, plantés en rangs : bas et ronds, l'un en feuilles, l'autre encore en fleurs.
     models += tree("prop_orchard_tree", 791, 3.4 * M, 1.25 * M, 0.13 * M, 12, "#5E4A38", GRASS, "#8AC060", False, (80, 110))
