@@ -13,7 +13,6 @@ namespace Vestiges.Combat;
 /// </summary>
 public partial class Projectile : Area2D
 {
-    private const float FlightHeight = 11f;
 
     public float Speed { get; private set; } = 400f;
 
@@ -59,7 +58,7 @@ public partial class Projectile : Area2D
     public override void _Ready()
     {
         _sprite = GetNode<Sprite2D>("Visual");
-        _sprite.Position = new Vector2(0f, -FlightHeight);
+        _sprite.Position = new Vector2(0f, -Iso.FlightHeight);
         // Au sol sous le projectile : c'est l'écart entre l'ombre et le visuel qui dit qu'il vole.
         AddChild(GroundShadow.Create(8f));
         _groupCache = GetNode<GroupCache>("/root/GroupCache");
@@ -170,7 +169,7 @@ public partial class Projectile : Area2D
         if (frame - _trailFrame < 2)
             return;
         _trailFrame = frame;
-        CombatPools.Instance.EmitSparks(GlobalPosition + new Vector2(0f, -FlightHeight), new SparkBurst
+        CombatPools.Instance.EmitSparks(GlobalPosition + new Vector2(0f, -Iso.FlightHeight), new SparkBurst
         {
             Family = _family,
             Owner = FxOwner.Player,
