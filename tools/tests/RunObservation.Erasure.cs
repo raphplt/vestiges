@@ -44,12 +44,12 @@ public partial class RunObservation
             image.SavePng($"{_output}/erasure-{name}.png");
         }
 
-        // Dégradé : de la mémoire pleine à l'ouest au Néant à l'est, sur la largeur de l'écran.
+        // Dégradé à l'écran : Fragile à l'ouest, lisière des 25 % près du joueur, Néant à l'est.
         for (int y = -radius; y <= radius; y++)
         {
             for (int x = -radius; x <= radius; x++)
             {
-                float memory = Mathf.Clamp(0.5f - x / 14f, 0f, 1f);
+                float memory = Mathf.Clamp(0.3f - x / 12f, 0f, 1f);
                 erasure.OverrideMemory(center + new Vector2I(x, y), memory);
             }
         }

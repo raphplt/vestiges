@@ -188,6 +188,14 @@ vec3 forget(vec3 color, vec2 p, float memory) {
 		}
 	}
 
+	// Frontière de l'Effacé (mémoire 25 %) : une lisière blanche qui scintille, lisible sans regarder le HUD.
+	float front = 1.0 - abs(memory - 0.25) / 0.035;
+	if (front > 0.0) {
+		float shimmer = hash(vec2(pixel) + floor(TIME * 8.0));
+		if (shimmer < front * 0.75)
+			color = mix(ERASURE_WHITE, CRACK_LIGHT, step(0.5, hash(vec2(pixel) * 1.7 + floor(TIME * 3.0))));
+	}
+
 	// Néant : le sol disparaît dans un blanc qui grésille.
 	float nothing = smoothstep(0.06, 0.0, memory);
 	if (nothing > 0.0) {

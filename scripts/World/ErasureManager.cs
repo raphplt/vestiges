@@ -29,6 +29,8 @@ public partial class ErasureManager : Node
     private int _trackedRadiusCells = 14;
     private float _stabilizeRadiusCells = 2.5f;
     private float _stabilizeMemoryFloor = 0.72f;
+    // Néant (mémoire nulle) : part des PV max perdue par seconde tant que le joueur y reste (Stratégie V2 §8).
+    private float _voidDamageRatioPerSecond = 0.06f;
     private float _globalErasurePercent;
     private float _updateTimer;
     private float _totalElapsed;
@@ -126,6 +128,17 @@ public partial class ErasureManager : Node
             _eventBus?.EmitSignal(EventBus.SignalName.ErasureUpdated, _globalErasurePercent);
 
         PublishGroundMemory();
+        HurtPlayerInVoid();
+    }
+
+    /// <summary>Le Néant se traverse mais consume : dégâts continus, proportionnels aux PV max, à chaque mise à jour.</summary>
+    private void HurtPlayerInVoid()
+    {
+        if (_voidDamageRatioPerSecond <= 0f || GetZonePhaseAt(_player.GlobalPosition) != ErasureZonePhase.Void)
+            return;
+        float damage = _player.EffectiveMaxHp * _voidDamageRatioPerSecond * _updateIntervalSec;
+        _eventBus?.EmitSignal(EventBus.SignalName.PlayerHitBy, "void", damage);
+        _player.TakeDamage(damage);
     }
 
     /// <summary>Recopie la mémoire des zones autour du joueur dans la texture lue par le shader du sol.</summary>
@@ -329,5 +342,6 @@ public partial class ErasureManager : Node
         _trackedRadiusCells = dict.ContainsKey("tracked_radius_cells") ? (int)dict["tracked_radius_cells"].AsDouble() : _trackedRadiusCells;
         _stabilizeRadiusCells = dict.ContainsKey("stabilize_radius_cells") ? (float)dict["stabilize_radius_cells"].AsDouble() : _stabilizeRadiusCells;
         _stabilizeMemoryFloor = dict.ContainsKey("stabilize_memory_floor") ? (float)dict["stabilize_memory_floor"].AsDouble() : _stabilizeMemoryFloor;
+        _voidDamageRatioPerSecond = dict.ContainsKey("void_damage_ratio_per_second") ? (float)dict["void_damage_ratio_per_second"].AsDouble() : _voidDamageRatioPerSecond;
     }
 }

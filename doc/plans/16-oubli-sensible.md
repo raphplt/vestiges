@@ -60,3 +60,9 @@ Ordre O1 → O3 → O4/O5 → O2/O6 validé par Raphaël. Arbitrages délégués
 - **Vérification :** `CAPTURE_EXTRA_ARGS="--capture-erasure" tools/capture_run.sh <dossier>` impose la mémoire autour du joueur et capture chaque phase, puis un dégradé d'ouest en est. Captures regardées. Un premier passage n'avait rien montré, sans cause identifiée ; les quatre suivants sont conformes. À surveiller.
 - **Coût :** la mémoire est lue aux sommets (4 lectures par sommet, pas par pixel). Les fissures, calculées par un réseau de Voronoï, ne sont évaluées que sous 50 % de mémoire. Aucun banc n'a été fait en zone effacée ; à mesurer lors de la recette.
 - **Limites :** les décors et les créatures gardent leurs couleurs dans les zones effacées (lot O2). La frontière de l'oubli n'est pas encore animée (O3).
+
+**O3 livré — la frontière qui avance (26 septembre) :**
+- **Lisière** : là où la mémoire passe sous 25 %, le shader du sol dessine une frange blanche et bleutée qui scintille. On voit la limite de l'Effacé sans regarder le HUD. Capture `--capture-erasure` (dégradé recentré sur la lisière) regardée.
+- **Néant réel** : à mémoire nulle, le joueur perd 6 % de ses PV max par seconde (`void_damage_ratio_per_second` dans `data/scaling/erasure.json`), par tranches à chaque mise à jour de l'Effacement (0,5 s). Il reste traversable (arbitrage délégué). Test d'intégration : 70 → 66 PV en 80 ticks.
+- **Non fait** : le son d'approche du front (plan 15, traité par un autre agent) ; les débuffs d'Effilochée et d'Effacée (O4).
+

@@ -10,6 +10,28 @@ namespace Vestiges.Tests;
 
 public partial class MovementRegression
 {
+    /// <summary>Néant (mémoire nulle) : le joueur, sans invincibilité, y perd des PV en continu.</summary>
+    private async Task CheckVoidDamage(WorldSetup world)
+    {
+        ErasureManager erasure = world.GetNode<ErasureManager>("ErasureManager");
+        _player.Position = Vector2.Zero;
+        Vector2I center = new(0, 0);
+        for (int y = -2; y <= 2; y++)
+            for (int x = -2; x <= 2; x++)
+                erasure.OverrideMemory(center + new Vector2I(x, y), 0f);
+        _player.IsGodMode = false;
+        float before = _player.CurrentHp;
+        erasure.SetProcess(true);
+        await Step(80);
+        erasure.SetProcess(false);
+        float after = _player.CurrentHp;
+        _player.IsGodMode = true;
+        for (int y = -2; y <= 2; y++)
+            for (int x = -2; x <= 2; x++)
+                erasure.OverrideMemory(center + new Vector2I(x, y), 1f);
+        Check(after < before && after > 0f, $"Néant : dégâts continus, PV {before} → {after} en 80 ticks");
+    }
+
     /// <summary>Marche vers l'est jusqu'au bord de la carte générée : le joueur ne quitte jamais le sol.</summary>
     private async Task CheckWorldEdge(WorldSetup world)
     {
@@ -99,6 +121,7 @@ public partial class MovementRegression
             phases.Remove(region);
         await CheckGeneratedWater(world);
         await CheckWorldEdge(world);
+        await CheckVoidDamage(world);
         // Le pool historique garde ses instances préchauffées hors de l'arbre :
         // le banc les libère explicitement pour vérifier une fermeture sans erreurs RID.
         Vestiges.Spawn.EnemyPool pool = world.GetNode<Vestiges.Spawn.EnemyPool>("EnemyPool");
