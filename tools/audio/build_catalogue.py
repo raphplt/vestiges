@@ -230,6 +230,10 @@ for d in data('data/events/run_events.json')['events']:
 # Couverture des écrans et widgets présents, y compris ceux qui ne nécessitent pas de son propre.
 screens={
  'HubScreen':['music_hub','ui_hover','ui_click','ui_confirm','meta_unlock','memorial_activate','run_departure'],
+ 'HubBackdrop':['music_hub'],
+ 'HubCamp':['ui_hover','ui_click'],
+ 'HubChroniquesPanel':['ui_hover','ui_click'],
+ 'HubMenuButton':['ui_hover','ui_click'],
  'LevelUpScreen':['level_up','level_up_wait','level_up_exit','perk_select','perk_refuse','rare_fragment','ui_hover','ui_click'],
  'ChestLootScreen':['chest_open','chest_reveal','perk_select','ui_hover','ui_click'],
  'GameOverScreen':['music_death','ui_confirm','ui_hover','ui_click'],
@@ -243,7 +247,7 @@ screens={
 mappings['screens']=[]
 for p in sorted((ROOT/'scripts/UI').glob('*.cs')):
     name=p.stem
-    scope='outil / composant technique' if name in ['DebugActionPanel','DebugOverlay','DevelopmentBadge','UITheme','PerkIconResolver'] else 'actuel'
+    scope='outil / composant technique' if name in ['DebugActionPanel','DebugOverlay','DevelopmentBadge','UITheme','PerkIconResolver','HubBackdrop'] else 'actuel'
     mappings['screens'].append({'id':name,'references':[str(p.relative_to(ROOT))],'effect_ids':screens[name],'scope':scope,'note':'Correspondance de contexte ou signal partagé, pas preuve d’appel depuis ce widget. Minimap désactivée selon plan 13 ; composants techniques hors recherche de sons propres.'})
 
 for group,path,ids in [
@@ -353,9 +357,19 @@ current=[e for e in effects if e['scope']=='actuel']
 counts={'current_needs':len(current),'first_batch_needs':len(FIRST),'candidate_proposals':sum(len(e['candidates']) for e in current),'needs_with_candidates':sum(bool(e['candidates']) for e in current),'chosen':sum(selected[e['effect_id']] for e in current),'integrated':sum(e['integration']['status']=='intégré' for e in current),'validated':sum(e['validation']['status']=='recetté' for e in current),'coverage_status':dict(sorted(collections.Counter(e['coverage_status'] for e in current).items())),'excluded_needs':len(effects)-len(current),'entities_by_group':{k:len(v) for k,v in mappings.items()}}
 result={'schema_version':1,'generated_from':'Dépôt courant ; python3 tools/audio/build_catalogue.py ; références recalculées à chaque génération.','first_batch_effect_ids':FIRST,'second_batch_effect_ids':SECOND,'raphael_choice_schema':{'unset':None,'object':{'decision':'pending | candidate | none | silence','candidate_id':'ID présent dans candidates si decision=candidate ; null sinon','notes':'Texte facultatif'},'chosen_count':'Uniquement decision=candidate avec ID valide ; refus, silence et attente exclus.','orphan_policy':'La génération échoue avant toute écriture si un candidat choisi a disparu.'},'limitations':['Audit statique : présence dans les données/code ne prouve ni accessibilité en run, ni qualité sonore.','Besoins proposés = effets utiles à rechercher ou arbitrer ; aucun silence décidé pour un manque.','Durées et variantes sont des briefs proposés, pas des propriétés mesurées.','La Stratégie V2 §21 exclut explicitement les idle/alertes répétitifs ennemis ; leurs fichiers ne créent pas de nouveaux besoins.','Candidats, choix et intégration sont trois étapes distinctes. Les anciens fichiers ne sont pas des candidats validés.','Plans 13/14 et héritage V1 exclus du dénominateur actuel.','L’inventaire 15-audio-inventaire.md conserve les 79 fichiers historiques et tous les sites d’appels ; ce catalogue compte les besoins, pas les assets.'],'counts':counts,'effects':effects,'mappings':mappings}
 text=json.dumps(result,ensure_ascii=False,indent=2)+'\n'
-lines=['# Couverture audio — VESTIGES','', 'Catalogue exhaustif **des correspondances des données et systèmes repérés**, pas validation artistique ou recette en jeu. Les besoins supplémentaires restent à arbitrer. Aucun son n’est retenu automatiquement.','', '[Écouter le lot A](lot-a/index.html) · [Écouter le lot A2](lot-a2/index.html) · [Retours de Raphaël](lot-a/RETOURS.md) · [Catalogue JSON](catalogue.json) · [Plan audio](../plans/15-audio.md) · [Inventaire des fichiers et appels](../plans/15-audio-inventaire.md)','',f"**{counts['current_needs']} besoins actuels**, {counts['needs_with_candidates']} avec candidats ({counts['candidate_proposals']} propositions), {counts['chosen']} choisis, {counts['integrated']} intégrés, {counts['validated']} recettés. {counts['excluded_needs']} entrées hors dénominateur (plans futurs, héritage V1, anciens mappings météo).",'', '## Statuts','', '| Statut | Besoins actuels |','|---|---:|']
+lines=['# Couverture audio — VESTIGES','', 'Catalogue exhaustif **des correspondances des données et systèmes repérés**, pas validation artistique ou recette en jeu. Les besoins supplémentaires restent à arbitrer. Aucun son n’est retenu automatiquement.','', '[Écouter le lot A](lot-a/index.html) · [Écouter le lot A2](lot-a2/index.html) · [Retours A](lot-a/RETOURS.md) · [Retours A2](lot-a2/RETOURS.md) · [Catalogue JSON](catalogue.json) · [Plan audio](../plans/15-audio.md) · [Inventaire des fichiers et appels](../plans/15-audio-inventaire.md)','',f"**{counts['current_needs']} besoins actuels**, {counts['needs_with_candidates']} avec candidats ({counts['candidate_proposals']} propositions), {counts['chosen']} choisis, {counts['integrated']} intégrés, {counts['validated']} recettés. {counts['excluded_needs']} entrées hors dénominateur (plans futurs, héritage V1, anciens mappings météo).",'', '## Statuts','', '| Statut | Besoins actuels |','|---|---:|']
 for k,v in counts['coverage_status'].items(): lines.append(f'| {k} | {v} |')
-lines+=['','## Retours et nouvelle recherche','', 'Trois candidats retenus : `critical_hit_a`, `chest_open_a` (ouverture physique), `dash_start_a`. Aucun n’est intégré. Les dix décisions et notes originales restent consignées dans `raphael_choice` et `review_history`, et dans l’export archivé. XP actuelle appréciée provisoirement : décision `pending` conservée. Six besoins existants restent à retravailler ; `chest_reveal` ajoute la mélodie après ouverture. Les nouveaux candidats A2 ne remplacent pas les identifiants du lot A.','', 'Lot A2 : '+', '.join('`'+x+'`' for x in SECOND)+'.']
+chosen_ids = [e['raphael_choice']['candidate_id'] for e in current if selected[e['effect_id']]]
+rework_ids = [e['effect_id'] for e in current if e['coverage_status'] == 'à retravailler']
+kept_ids = [e['effect_id'] for e in current if e['coverage_status'] == 'actuel conservé']
+lines += ['', '## Retours et nouvelle recherche', '',
+          'Candidats retenus : ' + ', '.join('`'+x+'`' for x in chosen_ids) + '.', '',
+          'Besoins à retravailler : ' + ', '.join('`'+x+'`' for x in rework_ids) + '.', '',
+          'Sons actuels explicitement conservés : ' + (', '.join('`'+x+'`' for x in kept_ids) or 'aucun') + '.', '',
+          'Les décisions et notes exportées restent intactes dans `raphael_choice` et `review_history`. '
+          'Le statut « actuel conservé » consigne une instruction explicite dans les notes sans fabriquer un candidat choisi. '
+          'Les préparations spécifiques figurent dans `integration.preparation` ; elles ne valent pas intégration ni recette en jeu.', '',
+          'Lot A2 : ' + ', '.join('`'+x+'`' for x in SECOND) + '.']
 lines+=['','## Premier panier','',', '.join('`'+x+'`' for x in FIRST)+'.','', '## Registre par besoin','', '| ID | Famille | Déclencheur | État actuel | Suivi |','|---|---|---|---|---|']
 for e in effects:
     lines.append(f"| `{e['effect_id']}` | {e['family']} | {e['trigger']} | {e['current_state']} | {e['coverage_status']} |")

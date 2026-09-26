@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "project": "vestiges",
+  "batch": "lot-a2",
+  "catalog_generated_at": "2026-09-25",
+  "exported_at": "2026-09-26T08:42:17.958Z",
+  "choices": [
+    {
+      "effect_id": "enemy_hit",
+      "decision": "none",
+      "candidate_id": null,
+      "notes": ""
+    },
+    {
+      "effect_id": "player_hit",
+      "decision": "none",
+      "candidate_id": null,
+      "notes": ""
+    },
+    {
+      "effect_id": "dissolution",
+      "decision": "candidate",
+      "candidate_id": "dissolution_a2_b",
+      "notes": "le B mais ne pas le cropper à un seconde"
+    },
+    {
+      "effect_id": "level_up",
+      "decision": "none",
+      "candidate_id": null,
+      "notes": ""
+    },
+    {
+      "effect_id": "perk_select",
+      "decision": "candidate",
+      "candidate_id": "perk_select_a2_a",
+      "notes": ""
+    },
+    {
+      "effect_id": "danger_warning",
+      "decision": "candidate",
+      "candidate_id": "danger_warning_a2_a",
+      "notes": ""
+    },
+    {
+      "effect_id": "chest_reveal",
+      "decision": "pending",
+      "candidate_id": null,
+      "notes": "garder l'actuel"
+    }
+  ]
+}

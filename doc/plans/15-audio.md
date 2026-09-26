@@ -1,6 +1,6 @@
 # 15 — Refonte audio : musique, bruitages et sélection
 
-25 septembre 2026 · **Direction validée ; inventaire statique réalisé ; recherche de candidats et recette à faire.**
+Mis à jour le 26 septembre 2026 · **Choix A/A2 consignés : six candidats retenus, un son actuel conservé ; recherche restante et intégration à faire.**
 
 ## 1. Décisions acquises
 
@@ -43,7 +43,7 @@ Familles : déplacements et joueur ; armes et impacts ; annonces et actions enne
 
 Colonnes du registre à créer : `effect_id`, famille, action/déclencheur, références code/données, son actuel, statut de couverture, intention, durée cible, boucle ou ponctuel, variantes souhaitées, priorité, candidats, choix de Raphaël, état d'intégration et recette.
 
-Statuts de couverture : `à rechercher`, `candidats prêts`, `retenu`, `à retravailler`, `sans résultat`, `silence décidé`, `héritage V1`, `hors périmètre actuel`. Ne jamais transformer un manque de résultat en effet terminé.
+Statuts de couverture : `à rechercher`, `candidats prêts`, `retenu`, `à retravailler`, `sans résultat`, `silence décidé`, `actuel conservé` (consigne explicite, comptée séparément des candidats choisis), `héritage V1`, `hors périmètre actuel`. Ne jamais transformer un manque de résultat en effet terminé.
 
 ### Recherche agentique
 
@@ -140,3 +140,14 @@ Les six besoins existants redemandés sont marqués **à retravailler**, même �
 
 
 **Panier A2 livré :** [page d’écoute](../audio/lot-a2/index.html), [candidats et provenance](../audio/lot-a2/candidates.json). **21 propositions supplémentaires pour sept besoins**, avec les anciens sons en référence et les retours pris en compte. Le catalogue agrège désormais **51 propositions sur 11 besoins**, conserve **3 choix retenus**, **6 besoins à retravailler**, **102 à rechercher**, et deux besoins avec candidats sans choix (`xp_pickup` en attente et `chest_reveal`). Aucun choix artistique n’a été ajouté par l’agent, aucun son n’a été intégré.
+
+
+### 26 septembre 2026 — Traitement des choix A2
+
+Sous-lot documentaire et préparation, consigné avant modification : archiver l’export original, reporter les sept décisions et leurs notes sans altération, conserver l’historique du lot A, puis préparer la dissolution B sur toute sa durée. Mettre à jour le catalogue et vérifier sa régénération. Aucun remplacement runtime dans ce sous-lot.
+
+Trois nouveaux candidats retenus : `dissolution_a2_b` **sans coupe à une seconde**, `perk_select_a2_a`, `danger_warning_a2_a`. `enemy_hit`, `player_hit` et `level_up` sont refusés et restent à rechercher. Pour `chest_reveal`, « garder l'actuel » fait autorité : conserver le fichier existant ; le champ exporté `pending` reste intact et le suivi distingue **actuel conservé** d’un candidat sélectionné. XP inchangée, toujours en attente avec préférence provisoire pour l’actuel.
+
+Suite : rechercher de nouveaux candidats pour les trois refus, puis poursuivre les familles non couvertes. Les six candidats retenus depuis A restent à intégrer et à écouter en jeu ; aucune case de roadmap cochée.
+
+[Export A2 archivé](../audio/lot-a2/choix-raphael-2026-09-26.json), [synthèse et verbatim](../audio/lot-a2/RETOURS.md), [préparation complète de la dissolution](../audio/lot-a2/preparations/dissolution_a2_b_complete.wav). Les aperçus et sources du panier A2 restent inchangés pour la traçabilité.

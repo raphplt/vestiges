@@ -165,3 +165,8 @@ Candidat : `None`.
 ```json
 ""
 ```
+
+
+## 6. Retours audio du 26 septembre — lot A2
+
+[Export original archivé](../audio/lot-a2/choix-raphael-2026-09-26.json) et [verbatim, décisions et préparation](../audio/lot-a2/RETOURS.md). Trois nouveaux choix : `dissolution_a2_b`, `perk_select_a2_a`, `danger_warning_a2_a`. Dissolution : « le B mais ne pas le cropper à un seconde » ; conserver les 1,395828 s de l’original. Impacts ennemi et joueur, montée de niveau : `none`, recherche à reprendre. Révélation du coffre : « garder l'actuel » ; suivi **actuel conservé**, sans transformer le `pending` exporté en sélection de candidat. XP inchangée. Six candidats retenus au total, aucun intégré ni recetté.

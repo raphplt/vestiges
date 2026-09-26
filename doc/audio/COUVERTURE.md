@@ -2,22 +2,29 @@
 
 Catalogue exhaustif **des correspondances des données et systèmes repérés**, pas validation artistique ou recette en jeu. Les besoins supplémentaires restent à arbitrer. Aucun son n’est retenu automatiquement.
 
-[Écouter le lot A](lot-a/index.html) · [Écouter le lot A2](lot-a2/index.html) · [Retours de Raphaël](lot-a/RETOURS.md) · [Catalogue JSON](catalogue.json) · [Plan audio](../plans/15-audio.md) · [Inventaire des fichiers et appels](../plans/15-audio-inventaire.md)
+[Écouter le lot A](lot-a/index.html) · [Écouter le lot A2](lot-a2/index.html) · [Retours A](lot-a/RETOURS.md) · [Retours A2](lot-a2/RETOURS.md) · [Catalogue JSON](catalogue.json) · [Plan audio](../plans/15-audio.md) · [Inventaire des fichiers et appels](../plans/15-audio-inventaire.md)
 
-**113 besoins actuels**, 11 avec candidats (51 propositions), 3 choisis, 0 intégrés, 0 recettés. 16 entrées hors dénominateur (plans futurs, héritage V1, anciens mappings météo).
+**113 besoins actuels**, 11 avec candidats (51 propositions), 6 choisis, 0 intégrés, 0 recettés. 16 entrées hors dénominateur (plans futurs, héritage V1, anciens mappings météo).
 
 ## Statuts
 
 | Statut | Besoins actuels |
 |---|---:|
-| candidats prêts | 2 |
-| retenu | 3 |
+| actuel conservé | 1 |
+| candidats prêts | 1 |
+| retenu | 6 |
 | à rechercher | 102 |
-| à retravailler | 6 |
+| à retravailler | 3 |
 
 ## Retours et nouvelle recherche
 
-Trois candidats retenus : `critical_hit_a`, `chest_open_a` (ouverture physique), `dash_start_a`. Aucun n’est intégré. Les dix décisions et notes originales restent consignées dans `raphael_choice` et `review_history`, et dans l’export archivé. XP actuelle appréciée provisoirement : décision `pending` conservée. Six besoins existants restent à retravailler ; `chest_reveal` ajoute la mélodie après ouverture. Les nouveaux candidats A2 ne remplacent pas les identifiants du lot A.
+Candidats retenus : `critical_hit_a`, `dissolution_a2_b`, `perk_select_a2_a`, `chest_open_a`, `dash_start_a`, `danger_warning_a2_a`.
+
+Besoins à retravailler : `enemy_hit`, `player_hit`, `level_up`.
+
+Sons actuels explicitement conservés : `chest_reveal`.
+
+Les décisions et notes exportées restent intactes dans `raphael_choice` et `review_history`. Le statut « actuel conservé » consigne une instruction explicite dans les notes sans fabriquer un candidat choisi. Les préparations spécifiques figurent dans `integration.preparation` ; elles ne valent pas intégration ni recette en jeu.
 
 Lot A2 : `enemy_hit`, `player_hit`, `dissolution`, `level_up`, `perk_select`, `danger_warning`, `chest_reveal`.
 
@@ -32,14 +39,14 @@ Lot A2 : `enemy_hit`, `player_hit`, `dissolution`, `level_up`, `perk_select`, `d
 | `enemy_hit` | combat | Impact sur ennemi | appel existant, audibilité non recettée | à retravailler |
 | `critical_hit` | combat | Impact critique | appel existant, audibilité non recettée | retenu |
 | `player_hit` | joueur | Dégât reçu | appel existant, audibilité non recettée | à retravailler |
-| `dissolution` | combat | Mort ennemi / dissolution ; proxy chute de relique | appel existant, audibilité non recettée | à retravailler |
+| `dissolution` | combat | Mort ennemi / dissolution ; proxy chute de relique | appel existant, audibilité non recettée | retenu |
 | `xp_pickup` | progression | Collecte orbe XP | appel existant, audibilité non recettée | candidats prêts |
 | `level_up` | progression | Entrée montée de niveau | appel existant, audibilité non recettée | à retravailler |
-| `perk_select` | progression | Choix perk, fragment ou butin | appel existant, audibilité non recettée | à retravailler |
+| `perk_select` | progression | Choix perk, fragment ou butin | appel existant, audibilité non recettée | retenu |
 | `chest_open` | monde | Ouverture physique du coffre | appel existant, audibilité non recettée | retenu |
 | `dash_start` | joueur | Départ esquive | appel existant, audibilité non recettée | retenu |
-| `danger_warning` | événements | Annonce Résurgence, boss/colosse et micro-événement | appel existant, audibilité non recettée | à retravailler |
-| `chest_reveal` | progression | Mélodie après ouverture du coffre | Actuellement un seul fichier accompagne ouverture et présentation ; aucune couche de révélation distincte. | candidats prêts |
+| `danger_warning` | événements | Annonce Résurgence, boss/colosse et micro-événement | appel existant, audibilité non recettée | retenu |
+| `chest_reveal` | progression | Mélodie après ouverture du coffre | Actuellement un seul fichier accompagne ouverture et présentation ; aucune couche de révélation distincte. | actuel conservé |
 | `dash_end` | joueur | Fin esquive | appel existant, audibilité non recettée | à rechercher |
 | `player_heavy_hit` | joueur | Coup majeur reçu | appel existant, audibilité non recettée | à rechercher |
 | `player_heal` | joueur | Soin effectif | branchement audio dédié non relevé | à rechercher |
@@ -251,7 +258,7 @@ Chaque ligne référence un effet partagé ou propre proposé. La liste ne deman
 | `vigil` | `danger_warning`, `event_success`, `event_fail`, `vigil_hold`, `souvenir_found`, `player_heal` |
 | `shard_rain` | `danger_warning`, `event_success`, `event_fail`, `shard_strike`, `xp_pickup`, `player_hit` |
 
-### screens — 19
+### screens — 23
 
 | Entrée | Effets associés |
 |---|---|
@@ -262,6 +269,10 @@ Chaque ligne référence un effet partagé ou propre proposé. La liste ne deman
 | `GameLoadingOverlay` | `run_departure` |
 | `GameOverScreen` | `music_death`, `ui_confirm`, `ui_hover`, `ui_click` |
 | `HUD` | `xp_pickup`, `level_up`, `low_health`, `erasure_near` |
+| `HubBackdrop` | `music_hub` |
+| `HubCamp` | `ui_hover`, `ui_click` |
+| `HubChroniquesPanel` | `ui_hover`, `ui_click` |
+| `HubMenuButton` | `ui_hover`, `ui_click` |
 | `HubScreen` | `music_hub`, `ui_hover`, `ui_click`, `ui_confirm`, `meta_unlock`, `memorial_activate`, `run_departure` |
 | `JournalScreen` | `journal_open`, `journal_close`, `ui_hover`, `ui_click` |
 | `LevelUpScreen` | `level_up`, `level_up_wait`, `level_up_exit`, `perk_select`, `perk_refuse`, `rare_fragment`, `ui_hover`, `ui_click` |

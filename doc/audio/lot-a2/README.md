@@ -23,3 +23,8 @@ python3 tools/audio/build_review.py --batch lot-a2
 ```
 
 Sans argument, le générateur conserve le comportement historique et reconstruit le lot A. `candidates.json` est la source du catalogue ; le modèle partagé est `tools/audio/review_template.html`. Garder les identifiants stables pour préserver la compatibilité des choix exportés.
+
+
+## Retours reçus le 26 septembre
+
+[Décisions et export archivé](RETOURS.md) : dissolution B (version complète), perk A et danger A retenus ; impacts et level-up à rechercher ; révélation du coffre actuelle conservée. [Dissolution complète, sans coupe](preparations/dissolution_a2_b_complete.wav). Le panier ci-dessus reste l’historique exact de l’écoute ; aucun remplacement dans le jeu effectué.

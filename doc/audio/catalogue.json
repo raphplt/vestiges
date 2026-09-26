@@ -46,14 +46,15 @@
     "first_batch_needs": 10,
     "candidate_proposals": 51,
     "needs_with_candidates": 11,
-    "chosen": 3,
+    "chosen": 6,
     "integrated": 0,
     "validated": 0,
     "coverage_status": {
-      "candidats prêts": 2,
-      "retenu": 3,
+      "actuel conservé": 1,
+      "candidats prêts": 1,
+      "retenu": 6,
       "à rechercher": 102,
-      "à retravailler": 6
+      "à retravailler": 3
     },
     "excluded_needs": 16,
     "entities_by_group": {
@@ -63,7 +64,7 @@
       "enemy_affixes": 5,
       "biomes": 5,
       "events": 5,
-      "screens": 19,
+      "screens": 23,
       "characters": 3,
       "chests": 4,
       "pois": 7,
@@ -148,7 +149,7 @@
       "raphael_choice": {
         "decision": "none",
         "candidate_id": null,
-        "notes": "Le B est le mieux des trois mais est trop long. Apres le truc c'est que je sais pas quand ce son pop réellement. normalement les sons d'attaques se font par armes."
+        "notes": ""
       },
       "review_history": [
         {
@@ -158,6 +159,15 @@
             "decision": "none",
             "candidate_id": null,
             "notes": "Le B est le mieux des trois mais est trop long. Apres le truc c'est que je sais pas quand ce son pop réellement. normalement les sons d'attaques se font par armes."
+          }
+        },
+        {
+          "source": "doc/audio/lot-a2/choix-raphael-2026-09-26.json",
+          "exported_at": "2026-09-26T08:42:17.958Z",
+          "choice": {
+            "decision": "none",
+            "candidate_id": null,
+            "notes": ""
           }
         }
       ],
@@ -310,9 +320,9 @@
         }
       ],
       "raphael_choice": {
-        "decision": "pending",
+        "decision": "none",
         "candidate_id": null,
-        "notes": "Aucun ne le fait. rechercher autre cose. le signal absrait pouvait etre une bonne idée mais pas fan de celui là. mais chercher aussi des plus classiques"
+        "notes": ""
       },
       "review_history": [
         {
@@ -322,6 +332,15 @@
             "decision": "pending",
             "candidate_id": null,
             "notes": "Aucun ne le fait. rechercher autre cose. le signal absrait pouvait etre une bonne idée mais pas fan de celui là. mais chercher aussi des plus classiques"
+          }
+        },
+        {
+          "source": "doc/audio/lot-a2/choix-raphael-2026-09-26.json",
+          "exported_at": "2026-09-26T08:42:17.958Z",
+          "choice": {
+            "decision": "none",
+            "candidate_id": null,
+            "notes": ""
           }
         }
       ],
@@ -352,7 +371,7 @@
         }
       ],
       "current_state": "appel existant, audibilité non recettée",
-      "coverage_status": "à retravailler",
+      "coverage_status": "retenu",
       "intent": "Matière qui se défait, bref et compatible avec les morts multiples.",
       "target_duration_seconds": [
         0.1,
@@ -402,9 +421,9 @@
         }
       ],
       "raphael_choice": {
-        "decision": "pending",
-        "candidate_id": null,
-        "notes": "La C est la mieux mais je suis pas convaincu."
+        "decision": "candidate",
+        "candidate_id": "dissolution_a2_b",
+        "notes": "le B mais ne pas le cropper à un seconde"
       },
       "review_history": [
         {
@@ -415,11 +434,29 @@
             "candidate_id": null,
             "notes": "La C est la mieux mais je suis pas convaincu."
           }
+        },
+        {
+          "source": "doc/audio/lot-a2/choix-raphael-2026-09-26.json",
+          "exported_at": "2026-09-26T08:42:17.958Z",
+          "choice": {
+            "decision": "candidate",
+            "candidate_id": "dissolution_a2_b",
+            "notes": "le B mais ne pas le cropper à un seconde"
+          }
         }
       ],
       "integration": {
         "status": "non intégré dans la refonte",
-        "notes": "Le branchement éventuel décrit ci-dessus est celui des anciens fichiers."
+        "notes": "Retenu sans coupe à une seconde : utiliser la préparation complète de 1,395828 s, pas l’aperçu historique de 0,85 s. Ce retour remplace le brief générique de durée courte ; aucun remplacement dans le jeu effectué.",
+        "preparation": {
+          "candidate_id": "dissolution_a2_b",
+          "file": "doc/audio/lot-a2/preparations/dissolution_a2_b_complete.wav",
+          "duration_seconds": 1.395828,
+          "sha256": "ce2322b7222aa0666c7a7db62e232129f2437cf851fbbc13c22b778b4a5d2ec2",
+          "source_file": "doc/audio/lot-a2/media/dissolution_a2_b_original.wav",
+          "processing": "Original complet, sans coupe ni fondu ajouté ; gain constant -11 dB ; PCM16, 44,1 kHz.",
+          "instruction_source": "doc/audio/lot-a2/choix-raphael-2026-09-26.json"
+        }
       },
       "validation": {
         "status": "non recetté",
@@ -566,9 +603,9 @@
         }
       ],
       "raphael_choice": {
-        "decision": "pending",
+        "decision": "none",
         "candidate_id": null,
-        "notes": "L'actuelle est mieux que les trois mais j'aimerai quand meme trouver autre chose"
+        "notes": ""
       },
       "review_history": [
         {
@@ -578,6 +615,15 @@
             "decision": "pending",
             "candidate_id": null,
             "notes": "L'actuelle est mieux que les trois mais j'aimerai quand meme trouver autre chose"
+          }
+        },
+        {
+          "source": "doc/audio/lot-a2/choix-raphael-2026-09-26.json",
+          "exported_at": "2026-09-26T08:42:17.958Z",
+          "choice": {
+            "decision": "none",
+            "candidate_id": null,
+            "notes": ""
           }
         }
       ],
@@ -607,7 +653,7 @@
         }
       ],
       "current_state": "appel existant, audibilité non recettée",
-      "coverage_status": "à retravailler",
+      "coverage_status": "retenu",
       "intent": "Confirmation satisfaisante, brève.",
       "target_duration_seconds": [
         0.1,
@@ -657,9 +703,9 @@
         }
       ],
       "raphael_choice": {
-        "decision": "pending",
-        "candidate_id": null,
-        "notes": "essayer de trouver une seule note avec un echo ptet. "
+        "decision": "candidate",
+        "candidate_id": "perk_select_a2_a",
+        "notes": ""
       },
       "review_history": [
         {
@@ -669,6 +715,15 @@
             "decision": "pending",
             "candidate_id": null,
             "notes": "essayer de trouver une seule note avec un echo ptet. "
+          }
+        },
+        {
+          "source": "doc/audio/lot-a2/choix-raphael-2026-09-26.json",
+          "exported_at": "2026-09-26T08:42:17.958Z",
+          "choice": {
+            "decision": "candidate",
+            "candidate_id": "perk_select_a2_a",
+            "notes": ""
           }
         }
       ],
@@ -845,7 +900,7 @@
         }
       ],
       "current_state": "appel existant, audibilité non recettée",
-      "coverage_status": "à retravailler",
+      "coverage_status": "retenu",
       "intent": "Danger identifiable, bref, sans confusion avec une récompense.",
       "target_duration_seconds": [
         0.1,
@@ -895,8 +950,8 @@
         }
       ],
       "raphael_choice": {
-        "decision": "none",
-        "candidate_id": null,
+        "decision": "candidate",
+        "candidate_id": "danger_warning_a2_a",
         "notes": ""
       },
       "review_history": [
@@ -906,6 +961,15 @@
           "choice": {
             "decision": "none",
             "candidate_id": null,
+            "notes": ""
+          }
+        },
+        {
+          "source": "doc/audio/lot-a2/choix-raphael-2026-09-26.json",
+          "exported_at": "2026-09-26T08:42:17.958Z",
+          "choice": {
+            "decision": "candidate",
+            "candidate_id": "danger_warning_a2_a",
             "notes": ""
           }
         }
@@ -937,7 +1001,7 @@
         }
       ],
       "current_state": "Actuellement un seul fichier accompagne ouverture et présentation ; aucune couche de révélation distincte.",
-      "coverage_status": "candidats prêts",
+      "coverage_status": "actuel conservé",
       "intent": "Quelques secondes de mélodie gratifiante après le mécanisme physique ; référence actuelle appréciée.",
       "target_duration_seconds": [
         2,
@@ -968,11 +1032,25 @@
           "preview_file": "doc/audio/lot-a2/media/chest_reveal_a2_c_preview.wav"
         }
       ],
-      "raphael_choice": null,
-      "review_history": [],
+      "raphael_choice": {
+        "decision": "pending",
+        "candidate_id": null,
+        "notes": "garder l'actuel"
+      },
+      "review_history": [
+        {
+          "source": "doc/audio/lot-a2/choix-raphael-2026-09-26.json",
+          "exported_at": "2026-09-26T08:42:17.958Z",
+          "choice": {
+            "decision": "pending",
+            "candidate_id": null,
+            "notes": "garder l'actuel"
+          }
+        }
+      ],
       "integration": {
         "status": "non intégré dans la refonte",
-        "notes": "Le branchement éventuel décrit ci-dessus est celui des anciens fichiers."
+        "notes": "Consigne du 26 septembre : garder l’actuel pour la révélation. Aucun remplacement à rechercher pour ce besoin ; décision exportée pending conservée à l’identique. L’ouverture physique choisie au lot A reste à intégrer séparément."
       },
       "validation": {
         "status": "non recetté",
@@ -1918,7 +1996,7 @@
       "family": "interface",
       "trigger": "Survol",
       "references": [
-        "scripts/UI/UITheme.cs:168"
+        "scripts/UI/UITheme.cs:118"
       ],
       "current_sound": [
         {
@@ -1958,7 +2036,7 @@
       "family": "interface",
       "trigger": "Clic",
       "references": [
-        "scripts/UI/UITheme.cs:175"
+        "scripts/UI/UITheme.cs:125"
       ],
       "current_sound": [
         {
@@ -1998,7 +2076,7 @@
       "family": "interface",
       "trigger": "Confirmer",
       "references": [
-        "scripts/UI/HubScreen.cs:446"
+        "scripts/UI/HubScreen.cs:108"
       ],
       "current_sound": [
         {
@@ -6409,6 +6487,53 @@
           "level_up",
           "low_health",
           "erasure_near"
+        ],
+        "scope": "actuel",
+        "note": "Correspondance de contexte ou signal partagé, pas preuve d’appel depuis ce widget. Minimap désactivée selon plan 13 ; composants techniques hors recherche de sons propres."
+      },
+      {
+        "id": "HubBackdrop",
+        "references": [
+          "scripts/UI/HubBackdrop.cs"
+        ],
+        "effect_ids": [
+          "music_hub"
+        ],
+        "scope": "outil / composant technique",
+        "note": "Correspondance de contexte ou signal partagé, pas preuve d’appel depuis ce widget. Minimap désactivée selon plan 13 ; composants techniques hors recherche de sons propres."
+      },
+      {
+        "id": "HubCamp",
+        "references": [
+          "scripts/UI/HubCamp.cs"
+        ],
+        "effect_ids": [
+          "ui_hover",
+          "ui_click"
+        ],
+        "scope": "actuel",
+        "note": "Correspondance de contexte ou signal partagé, pas preuve d’appel depuis ce widget. Minimap désactivée selon plan 13 ; composants techniques hors recherche de sons propres."
+      },
+      {
+        "id": "HubChroniquesPanel",
+        "references": [
+          "scripts/UI/HubChroniquesPanel.cs"
+        ],
+        "effect_ids": [
+          "ui_hover",
+          "ui_click"
+        ],
+        "scope": "actuel",
+        "note": "Correspondance de contexte ou signal partagé, pas preuve d’appel depuis ce widget. Minimap désactivée selon plan 13 ; composants techniques hors recherche de sons propres."
+      },
+      {
+        "id": "HubMenuButton",
+        "references": [
+          "scripts/UI/HubMenuButton.cs"
+        ],
+        "effect_ids": [
+          "ui_hover",
+          "ui_click"
         ],
         "scope": "actuel",
         "note": "Correspondance de contexte ou signal partagé, pas preuve d’appel depuis ce widget. Minimap désactivée selon plan 13 ; composants techniques hors recherche de sons propres."
