@@ -247,6 +247,12 @@ Ordre T2 → T1 → T3 validé par Raphaël.
 - **Vérification :** `CAPTURE_EXTRA_ARGS="--capture-junctions" tools/capture_run.sh <dossier>` capture, pour chacune des dix paires de biomes voisins, la frontière la plus proche du départ, avec les décors puis sol seul au zoom ×2. Pour l'avant, passer `enabled` à `false`. Captures regardées : les dix paires présentent une lisière organique à la place de l'escalier de losanges.
 - **Non fait :** les décors de transition (herbes entre forêt et champs, gravats entre ville et carrière) ; le sol lui-même (T1) reste granuleux, et la carrière montre toujours des losanges de cristal cyan réguliers.
 
+**Décors de transition, suite de T2 (26 septembre, session cloud) :** `World/JunctionPropPlacer`.
+- Sur les cellules à moins de deux cases d'un autre biome, 7 % reçoivent un décor tiré dans la liste de la paire de biomes (`junction_props.pairs` dans `world_gen.json`, les dix paires) : buissons, fougères et herbes hautes entre forêt et champs ; gravats et poutrelles entre ville et carrière ; roseaux entre marais et champs ; pierres moussues autour de la carrière…
+- Ils sont posés avant les décors génériques, jamais bloquants, et décalés dans leur case pour ne pas s'aligner le long de la frontière.
+- Seed de capture : 2 292 décors ajoutés. Un premier réglage à 14 % en posait 4 653, et les flaques entre marais et champs formaient des rangées : elles sont retirées de la liste.
+- Vérification : captures `--capture-junctions` des dix paires, regardées. Build sans avertissement, smoke test.
+
 ### Lot T1, premier biome : la Forêt Reconquise — 26 septembre 2026
 
 **Constat** (`python3 tools/tile_preview.py <biome> [groupe]` pave une zone comme en jeu) : les cinq sols ont trois défauts communs. Le bruit est tiré pixel par pixel ; un motif revient au même endroit de chaque tuile et dessine une trame diagonale ; des variantes de tons différents font réapparaître les losanges.

@@ -31,3 +31,7 @@ Fichier temporaire. Il liste ce qu'une session cloud a livré sans pouvoir le v�
 
 - [ ] **Mesure de densité avant/après** (`tools/measure_density.sh`, deux seeds) sur le Mac : celle du conteneur n'est pas concluante, le bot y est irrégulier à 5 FPS. Commit de référence : le parent de « perception et laisse par créature ».
 - [ ] **Ressenti** : les Ombres et Charognards doivent coller davantage, les créatures lentes décrocher plus vite.
+
+## Plan 10 T2 — décors de transition
+
+- [ ] **Densité** : 2 292 décors de plus par carte (7 % des cellules proches d'une frontière). Coût à vérifier avec `--measure-props`, et lecture : les frontières paraissent-elles plus naturelles ou plus encombrées ?

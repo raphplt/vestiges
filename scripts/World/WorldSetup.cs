@@ -523,6 +523,7 @@ public partial class WorldSetup : Node2D
         AddChild(_propSpawner);
         WildFieldsComposer.PlaceFarms(_farms, _farmConfig, propContainer, Seed);
         HashSet<Vector2I> blockedCells = BuildEnvironmentPropBlockedCells(urbanLayout, swampLayout);
+        JunctionPropPlacer.Place(_generator, _config.JunctionProps, _usedCells, blockedCells, _ground, propContainer, Seed);
         _propSpawner.SpawnProps(_generator, _terrain, _ground, propContainer, _usedCells, Seed, blockedCells, _wildFieldsLayout);
     }
 
@@ -922,6 +923,7 @@ public class WorldGenConfig
     public PropRules PropRules = PropRules.Default;
     public GroundBlendConfig GroundBlend = GroundBlendConfig.Default;
     public PathNetworkConfig Paths = PathNetworkConfig.Default;
+    public JunctionPropPlacer.Config JunctionProps;
 
     public static WorldGenConfig Load()
     {
@@ -1002,6 +1004,9 @@ public class WorldGenConfig
 
         if (dict.ContainsKey("paths"))
             config.Paths = PathNetworkConfig.Parse(dict["paths"].AsGodotDictionary());
+
+        if (dict.ContainsKey("junction_props"))
+            config.JunctionProps = JunctionPropPlacer.Config.Parse(dict["junction_props"].AsGodotDictionary());
 
         if (dict.ContainsKey("props"))
         {
