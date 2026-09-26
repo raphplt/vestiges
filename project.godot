@@ -94,6 +94,14 @@ locale/translations=PackedStringArray("res://assets/translations/translations.fr
 
 3d/physics_engine="Jolt Physics"
 
+[rendering]
+
+textures/canvas_textures/default_texture_filter=0
+rendering_device/driver.windows="d3d12"
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+environment/defaults/default_clear_color=Color(0, 0, 0, 1)
+
 [shader_globals]
 
 erasure_memory={
@@ -108,11 +116,3 @@ erasure_far_memory={
 "type": "float",
 "value": 1.0
 }
-
-[rendering]
-
-textures/canvas_textures/default_texture_filter=0
-rendering_device/driver.windows="d3d12"
-renderer/rendering_method="gl_compatibility"
-renderer/rendering_method.mobile="gl_compatibility"
-environment/defaults/default_clear_color=Color(0, 0, 0, 1)

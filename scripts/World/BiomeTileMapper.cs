@@ -341,7 +341,11 @@ public class BiomeTileMapper
 			if (biomeId == "forest_reclaimed" && terrain == TerrainType.Forest && materials >= 2)
 				material = ForestFloorNoise.GetNoise2Dv(GroundPoint(x, y)) > 0.12f ? 0 : 1;
 			else if (materials > 1)
-				material = HashCell(x, y) % materials;
+			{
+				// Plaques de matière cohérentes plutôt qu'un damier : bruit lent, décalé par terrain.
+				float noise = ForestFloorNoise.GetNoise2Dv(GroundPoint(x, y) + new Vector2(9000f * (int)terrain, 0f));
+				material = Mathf.Clamp((int)((noise * 0.5f + 0.5f) * materials), 0, materials - 1);
+			}
 			return sources[material * WangTiles.TileCount + WangTiles.Index(x, y)];
 		}
 

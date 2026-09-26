@@ -31,6 +31,14 @@ ROOT_LINE = Detail(("00.", ".00"), ("#2a1e16",), weight=0.8)
 PEBBLE = Detail(("01",), ("#7a7a70", "#4a4a44"), weight=0.6)
 VIOLET_FLOWER = Detail((".0.", "010", ".0."), ("#6a4a8a", "#c49b3e"), weight=0.25)
 
+GRAVEL = Detail(("01", "10"), ("#8a7a6a", "#5a5050"))
+PALE_STONE = Detail(("0",), ("#b4a080",), weight=0.7)
+RUST_FLAKE = Detail(("01",), ("#6a3a28", "#5a2a18"), weight=0.6)
+CRYSTAL_CHIP = Detail((".0", "01"), ("#7ae0f0", "#4abae0"), weight=0.25)
+CRYSTAL_CLUSTER = Detail((".0.", "010", "11."), ("#7ae0f0", "#4abae0"), weight=1.0)
+BOLT = Detail(("0",), ("#8a7a6a",), weight=0.5)
+CRACK = Detail(("0..", ".00", "..0"), ("#1a1218",), weight=0.7)
+
 MATERIALS: dict[str, tuple[str, GroundMaterial]] = {
     "foret_sol": ("foret", GroundMaterial(
         name="foret_sol",
@@ -58,6 +66,42 @@ MATERIALS: dict[str, tuple[str, GroundMaterial]] = {
         details=(FERN, GOLD_LEAF, LEAF_LITTER, VIOLET_FLOWER, MOSS_SPOT),
         details_per_tile=1.4,
         seed=6311,
+    )),
+    "carriere_sol": ("carriere", GroundMaterial(
+        name="carriere_sol",
+        tones=("#2a2222", "#342b2b", "#3e3434", "#4f4545"),
+        shares=(0.22, 0.42, 0.28, 0.08),
+        feature_px=16.0,
+        details=(GRAVEL, PALE_STONE, RUST_FLAKE, CRYSTAL_CHIP),
+        details_per_tile=1.2,
+        seed=7411,
+    )),
+    "carriere_roche": ("carriere", GroundMaterial(
+        name="carriere_roche",
+        tones=("#302a2c", "#3b3537", "#474042", "#554e4f"),
+        shares=(0.18, 0.42, 0.32, 0.08),
+        feature_px=26.0,
+        details=(CRACK, GRAVEL, PALE_STONE),
+        details_per_tile=1.0,
+        seed=7523,
+    )),
+    "carriere_industriel": ("carriere", GroundMaterial(
+        name="carriere_industriel",
+        tones=("#302220", "#3b2922", "#473126", "#553a2c"),
+        shares=(0.20, 0.42, 0.30, 0.08),
+        feature_px=20.0,
+        details=(BOLT, RUST_FLAKE, CRACK),
+        details_per_tile=1.0,
+        seed=7639,
+    )),
+    "carriere_cristal": ("carriere", GroundMaterial(
+        name="carriere_cristal",
+        tones=("#140e14", "#1e181e", "#2a2222", "#383030"),
+        shares=(0.26, 0.38, 0.26, 0.10),
+        feature_px=14.0,
+        details=(CRYSTAL_CLUSTER, CRYSTAL_CHIP, CRACK),
+        details_per_tile=1.1,
+        seed=7757,
     )),
 }
 

@@ -266,6 +266,16 @@ Ordre T2 → T1 → T3 validé par Raphaël.
 
 **Suite :** le même traitement pour les champs, la ville, le marais et la carrière. La forêt sert de référence de style : il vaut mieux que Raphaël la valide en jeu avant de généraliser (densité des détails, contraste, taille des plaques).
 
+### Lot T1, deuxième biome : la Carrière Effondrée — 26 septembre 2026
+
+Raphaël valide la forêt « à 100 %, mille fois mieux » : elle sert de référence. La carrière passe en quatre matières de Wang :
+- `carriere_sol` : gravats, éclats clairs, rouille, rares éclats de cristal ;
+- `carriere_roche` : dalles grises ;
+- `carriere_industriel` : plaques rouillées ;
+- `carriere_cristal` : fosses sombres semées de cristaux.
+
+Les palettes sont resserrées par rapport à un premier essai trop bleu et trop saturé. Quand un groupe contient plusieurs matières, le jeu choisit la matière par un bruit lent : des plaques cohérentes plutôt qu'un damier de cellules. Capture `--capture-props` regardée : la trame de losanges de cristal cyan a disparu. Le marais, avec ses berges directionnelles, les champs, avec leurs parcelles, et la ville, avec ses dallages et trottoirs, demandent chacun un traitement propre.
+
 ## 10. Investigation performance — 26 septembre 2026
 
 **Demande de Raphaël :** « j'ai beaucoup aimé les initiatives pour améliorer les performances […] peut-être que ça vaut le coup de faire une investigation plus poussée ».
