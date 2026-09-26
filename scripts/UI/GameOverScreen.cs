@@ -222,6 +222,7 @@ public partial class GameOverScreen : CanvasLayer
         bool isRecord = _scoreManager?.IsNewRecord ?? false;
         float charMult = _scoreManager?.CharacterMultiplier ?? 1f;
         float mutMult = _scoreManager?.MutatorMultiplier ?? 1f;
+        float perilMult = _scoreManager?.PerilMultiplier ?? 1f;
 
         _durationLabel.Text = $"Durée : {FormatDuration(duration)}  |  Crises : {crises}";
 
@@ -233,12 +234,14 @@ public partial class GameOverScreen : CanvasLayer
         _killsLabel.Text = $"Kills : {kills}";
 
         // Multiplier line (only if relevant)
-        float totalMult = charMult * mutMult;
+        float totalMult = charMult * mutMult * perilMult;
         if (totalMult > 1f + 0.001f)
         {
             string multParts = $"x{charMult:F2}";
             if (mutMult > 1f + 0.001f)
                 multParts += $" x {mutMult:F2} (mutateurs)";
+            if (perilMult > 1f + 0.001f)
+                multParts += $" x {perilMult:F2} (Péril)";
             _multiplierLabel.Text = $"Multiplicateur : {multParts} = x{totalMult:F2}";
         }
         else

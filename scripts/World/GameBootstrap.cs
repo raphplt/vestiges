@@ -107,6 +107,9 @@ public partial class GameBootstrap : Node
         EssenceTracker essenceTracker = new() { Name = "EssenceTracker" };
         sceneRoot.AddChild(essenceTracker);
 
+        PerilManager perilManager = new() { Name = "PerilManager" };
+        sceneRoot.AddChild(perilManager);
+
         CrisisManager crisisManager = new() { Name = "CrisisManager" };
         sceneRoot.AddChild(crisisManager);
 
@@ -132,10 +135,6 @@ public partial class GameBootstrap : Node
             GD.Print($"[GameBootstrap] Catching up missed level-ups: player is level {progression.CurrentLevel}");
             fragmentManager.TriggerLevelUp(progression.CurrentLevel);
         }
-
-        CursedItemManager cursedItemManager = new() { Name = "CursedItemManager" };
-        cursedItemManager.SetPerkManager(perkManager);
-        GetNode("..").CallDeferred("add_child", cursedItemManager);
 
         Combat.CombatPools combatPools = new() { Name = "CombatPools" };
         GetNode("..").CallDeferred("add_child", combatPools);

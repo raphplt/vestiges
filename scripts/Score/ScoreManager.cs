@@ -39,11 +39,12 @@ public partial class ScoreManager : Node
     private int _bestScore;
     private float _scoreMultiplier = 1f;
     private float _mutatorMultiplier = 1f;
+    private float _perilMultiplier = 1f;
     private EventBus _eventBus;
     private bool _bossDefeated;
     private bool _endgameReached;
 
-    public int CurrentScore => (int)((_combatScore + SurvivalScore + BonusScore + _explorationScore) * _scoreMultiplier * _mutatorMultiplier);
+    public int CurrentScore => (int)((_combatScore + SurvivalScore + BonusScore + _explorationScore) * _scoreMultiplier * _mutatorMultiplier * _perilMultiplier);
     public int CombatScore => _combatScore;
     public int SurvivalScore
     {
@@ -70,6 +71,7 @@ public partial class ScoreManager : Node
     public int VestigesEarned { get; private set; }
     public float CharacterMultiplier => _scoreMultiplier;
     public float MutatorMultiplier => _mutatorMultiplier;
+    public float PerilMultiplier => _perilMultiplier;
 
     private RunTracker _runTracker;
 
@@ -81,6 +83,7 @@ public partial class ScoreManager : Node
         _eventBus.PoiExplored += OnPoiExplored;
         _eventBus.ChestOpened += OnChestOpened;
         _eventBus.RunPhaseChanged += OnRunPhaseChanged;
+        _eventBus.PerilChanged += OnPerilChanged;
 
         LoadBestScore();
     }
@@ -94,7 +97,13 @@ public partial class ScoreManager : Node
             _eventBus.PoiExplored -= OnPoiExplored;
             _eventBus.ChestOpened -= OnChestOpened;
             _eventBus.RunPhaseChanged -= OnRunPhaseChanged;
+            _eventBus.PerilChanged -= OnPerilChanged;
         }
+    }
+
+    private void OnPerilChanged(int peril)
+    {
+        _perilMultiplier = PerilDataLoader.ScoreMultiplier(peril);
     }
 
     public void SetRunTracker(RunTracker runTracker)

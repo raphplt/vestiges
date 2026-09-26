@@ -15,6 +15,7 @@ public partial class PlayerProgression : Node
     private float _currentXp;
     private int _currentLevel = 1;
     private float _xpToNextLevel;
+    private float _xpMultiplier = 1f;
     private EventBus _eventBus;
 
     public int CurrentLevel => _currentLevel;
@@ -26,18 +27,27 @@ public partial class PlayerProgression : Node
     {
         _eventBus = GetNode<EventBus>("/root/EventBus");
         _eventBus.XpGained += OnXpGained;
+        _eventBus.DifficultyModifierChanged += OnDifficultyModifierChanged;
         _xpToNextLevel = CalculateXpForLevel(_currentLevel);
     }
 
     public override void _ExitTree()
     {
         if (_eventBus != null)
+        {
             _eventBus.XpGained -= OnXpGained;
+            _eventBus.DifficultyModifierChanged -= OnDifficultyModifierChanged;
+        }
+    }
+
+    private void OnDifficultyModifierChanged(float enemyCountMult, float enemyHpMult, float enemyDmgMult, float xpMult)
+    {
+        _xpMultiplier = xpMult;
     }
 
     private void OnXpGained(float amount)
     {
-        _currentXp += amount;
+        _currentXp += amount * _xpMultiplier;
 
         while (_currentXp >= _xpToNextLevel)
         {

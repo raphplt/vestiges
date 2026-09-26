@@ -31,6 +31,7 @@ namespace Vestiges.Tests;
 /// coffres entrés dans le cadre, et parmi eux ceux qu'aucun décor ne masquait).
 /// --nomad : pendant la mesure, le bot garde un cap (tiré de la seed) au lieu d'errer autour du départ,
 /// et en change quand il bute sur le bord du monde.
+/// --peril N : pendant la mesure, la run commence avec N points de Péril (plan 17 lot 3A).
 /// --capture-every N : pendant la mesure, capture plein écran toutes les N secondes (HUD, événements).
 /// --event ID : force le micro-événement ID à 3 s de run (bancs de capture).
 /// </summary>
@@ -224,6 +225,9 @@ public partial class RunObservation : Node
     private async Task MeasureDensity(double seconds, ulong seed)
     {
         RunTracker tracker = _world.GetNode<RunTracker>("RunTracker");
+        int peril = int.Parse(Argument(OS.GetCmdlineUserArgs(), "--peril", "0"), CultureInfo.InvariantCulture);
+        if (peril > 0)
+            _world.GetNode<Vestiges.Progression.PerilManager>("PerilManager").AddPeril(peril);
         List<string> rows = new() { "t,visible,near600,alive,spawned,killed,level,hit_damage" };
         // Indice de pression : dégâts que les ennemis infligent à un joueur qui n'esquive jamais (invincible ici).
         double hitDamage = 0;
@@ -388,7 +392,7 @@ public partial class RunObservation : Node
         summary.Append(CultureInfo.InvariantCulture, $"seed={seed} seconds={seconds:F0} first_visible_s={firstVisible:F0}");
         summary.Append(CultureInfo.InvariantCulture, $" view={VisibleWorldRect().Size.X:F0}x{VisibleWorldRect().Size.Y:F0}");
         summary.Append(CultureInfo.InvariantCulture, $" first_hit_s={firstHit:F1} damage_10s={damage10:F0} damage_30s={damage30:F0}");
-        summary.Append(CultureInfo.InvariantCulture, $" kills={tracker.TotalKilled} spawned={tracker.TotalSpawned}");
+        summary.Append(CultureInfo.InvariantCulture, $" peril={peril} kills={tracker.TotalKilled} spawned={tracker.TotalSpawned}");
         summary.Append(CultureInfo.InvariantCulture,
             $" chests_total={GetTree().GetNodesInGroup("chests").Count} chests_seen={seenChests.Count} chests_clear={clearChests.Count} chests_signaled={signaledChests.Count} first_chest_s={firstChestSeen:F0}");
         foreach ((int from, int to) in new[] { (0, 60), (60, 120), (120, 180), (180, 300) })

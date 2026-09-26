@@ -21,6 +21,7 @@ public partial class FragmentManager : Node
 	private EventBus _eventBus;
 	private Player _player;
 	private int _currentLevel = 1;
+	private int _peril;
 
 	// Level-up queue (multi-level-up support)
 	private readonly Queue<int> _levelUpQueue = new();
@@ -51,6 +52,7 @@ public partial class FragmentManager : Node
 
 		_eventBus = GetNode<EventBus>("/root/EventBus");
 		_eventBus.LevelUp += OnLevelUp;
+		_eventBus.PerilChanged += OnPerilChanged;
 	}
 
 	public override void _ExitTree()
@@ -58,7 +60,13 @@ public partial class FragmentManager : Node
 		if (_eventBus != null)
 		{
 			_eventBus.LevelUp -= OnLevelUp;
+			_eventBus.PerilChanged -= OnPerilChanged;
 		}
+	}
+
+	private void OnPerilChanged(int peril)
+	{
+		_peril = peril;
 	}
 
 	private void OnLevelUp(int newLevel)
@@ -321,8 +329,8 @@ public partial class FragmentManager : Node
 	}
 
 	/// <summary>
-	/// Rareté et gains d'une amélioration, tirés à l'offre : la Chance du joueur et l'oubli de la zone où il se
-	/// tient font monter la rareté (plan 17 §4.4). Les nouveautés n'ont pas de rareté.
+	/// Rareté et gains d'une amélioration, tirés à l'offre : la Chance du joueur, l'oubli de la zone où il se
+	/// tient et le Péril font monter la rareté (plan 17 §4.4). Les nouveautés n'ont pas de rareté.
 	/// </summary>
 	private FragmentOption RollUpgrade(FragmentOption option)
 	{
@@ -331,7 +339,7 @@ public partial class FragmentManager : Node
 
 		ErasureManager.ErasureZonePhase phase = GetTree().CurrentScene?.GetNodeOrNull<ErasureManager>("ErasureManager")
 			?.GetZonePhaseAt(_player.GlobalPosition) ?? ErasureManager.ErasureZonePhase.Anchored;
-		UpgradeRarity rarity = UpgradeRoller.RollRarity(UpgradeRoller.BumpSteps(_player.LuckBonus, phase), _rng);
+		UpgradeRarity rarity = UpgradeRoller.RollRarity(UpgradeRoller.BumpSteps(_player.LuckBonus, phase, _peril), _rng);
 
 		if (option.Type == "weapon_upgrade")
 		{

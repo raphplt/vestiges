@@ -76,8 +76,9 @@ public partial class EventBus : Node
     // --- Variantes d'ennemis ---
     [Signal] public delegate void VariantEnemyKilledEventHandler(string displayName, string variantId, Vector2 position);
 
-    // --- Difficulte dynamique ---
+    // --- Péril (plan 17 lot 3A) ---
     [Signal] public delegate void DifficultyModifierChangedEventHandler(float enemyCountMult, float enemyHpMult, float enemyDmgMult, float xpMult);
+    [Signal] public delegate void PerilChangedEventHandler(int peril);
 
     // --- Effacement (V2) ---
     [Signal] public delegate void ErasureUpdatedEventHandler(float globalErasurePercent);

@@ -89,6 +89,9 @@ STAT_THORNS,Épines,Thorns
 STAT_IGNITE,Embrasement,Ignite
 STAT_RICOCHET,Ricochet,Ricochet
 STAT_LUCK,Chance,Luck
+STAT_PERIL,Péril,Peril
+PERIL_CREATURES,Créatures,Creatures
+PERIL_REWARDS,Gains,Rewards
 STAT_BONUS_PROJ,Projectiles en plus,Extra projectiles
 WEAPON_BOW,Arc,Bow
 WEAPON_LINE,Ligne,Line
@@ -102,7 +105,6 @@ PAUSE_TITLE,HALTE DANS LE VIDE,HALT IN THE VOID
 PAUSE_SUBTITLE,"Le monde se fige, mais ta memoire reste eveillee.","The world freezes, but your memory stays awake."
 PAUSE_RESUME,Reprendre,Resume
 PAUSE_SETTINGS,Parametres,Settings
-PAUSE_VOID_CALL,Appel du Vide,Call of the Void
 PAUSE_HUB,Retour au Hub,Return to Hub
 PAUSE_QUIT,Quitter,Quit
 PAUSE_HINT,[Echap] Reprendre la traversee,[Esc] Resume the crossing

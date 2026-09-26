@@ -23,13 +23,12 @@ public partial class PauseMenu : CanvasLayer
 	private static readonly Color StatLabelColor = new(0.62f, 0.60f, 0.54f);
 	private static readonly Color StatValueColor = new(0.9f, 0.86f, 0.78f);
 	private static readonly Color StatBonusColor = new(0.42f, 0.73f, 0.45f);
+	private static readonly Color PerilColor = new(0.85f, 0.38f, 0.42f);
 	private const string MenusPath = UITheme.MenusPath;
 
 	private Control _root;
 	private bool _isPaused;
 	private SettingsScreen _settingsScreen;
-	private Button _appelDuVideBtn;
-	private PerkManager _perkManager;
 	private VBoxContainer _loadoutContainer;
 	private VBoxContainer _sheetContainer;
 	private Texture2D _panelTex;
@@ -85,7 +84,6 @@ public partial class PauseMenu : CanvasLayer
 		_isPaused = true;
 		_root.Visible = true;
 		GetTree().Paused = true;
-		UpdateAppelDuVideButton();
 		UpdateStats();
 	}
 
@@ -213,11 +211,6 @@ public partial class PauseMenu : CanvasLayer
 		Button settingsBtn = CreateButton("Paramètres");
 		settingsBtn.Pressed += OpenSettings;
 		vbox.AddChild(settingsBtn);
-
-		_appelDuVideBtn = CreateButton("Appel du Vide: OFF");
-		_appelDuVideBtn.Pressed += ToggleAppelDuVide;
-		_appelDuVideBtn.Visible = false;
-		vbox.AddChild(_appelDuVideBtn);
 
 		Button hubBtn = CreateButton("Retour au Hub");
 		hubBtn.Pressed += ReturnToHub;
@@ -376,6 +369,20 @@ public partial class PauseMenu : CanvasLayer
 			AddLine(_sheetContainer, Tr("STAT_RICOCHET"), Percent(player.RicochetChance));
 		if (essenceTracker != null)
 			AddLine(_sheetContainer, "Essence", essenceTracker.CurrentEssence.ToString());
+		if (GetNodeOrNull<PerilManager>("/root/Main/PerilManager") is { } peril)
+			AddPerilLines(peril.Peril);
+	}
+
+	/// <summary>Péril : le niveau, puis ce qu'il coûte et ce qu'il rapporte.</summary>
+	private void AddPerilLines(int peril)
+	{
+		AddLine(_sheetContainer, Tr("STAT_PERIL"), peril.ToString(), peril > 0 ? PerilColor : null);
+		if (peril == 0)
+			return;
+		AddLine(_sheetContainer, "  " + Tr("PERIL_CREATURES"),
+			$"{Bonus(PerilDataLoader.EnemyCountMultiplier(peril))} · PV {Bonus(PerilDataLoader.EnemyHpMultiplier(peril))}", TextDim);
+		AddLine(_sheetContainer, "  " + Tr("PERIL_REWARDS"),
+			$"XP {Bonus(PerilDataLoader.XpMultiplier(peril))} · score {Bonus(PerilDataLoader.ScoreMultiplier(peril))}", TextDim);
 	}
 
 	private static readonly System.Globalization.CultureInfo French = System.Globalization.CultureInfo.GetCultureInfo("fr-FR");
@@ -429,56 +436,6 @@ public partial class PauseMenu : CanvasLayer
 				icon.Texture = GD.Load<Texture2D>(resPath);
 		}
 		return icon;
-	}
-
-	private void ToggleAppelDuVide()
-	{
-		CachePerkManager();
-		_perkManager?.ToggleAppelDuVide();
-		UpdateAppelDuVideButton();
-	}
-
-	private void UpdateAppelDuVideButton()
-	{
-		CachePerkManager();
-		if (_perkManager == null || _perkManager.AppelDuVideLevel <= 0)
-		{
-			_appelDuVideBtn.Visible = false;
-			return;
-		}
-
-		_appelDuVideBtn.Visible = true;
-		bool active = _perkManager.IsAppelDuVideActive;
-		int level = _perkManager.AppelDuVideLevel;
-		_appelDuVideBtn.Text = $"Appel du Vide Lv{level}: {(active ? "ON" : "OFF")}";
-
-		StyleBoxFlat style = new();
-		if (active)
-		{
-			style.BgColor = new Color(0.4f, 0.1f, 0.15f, 0.8f);
-			style.BorderColor = new Color(0.8f, 0.2f, 0.3f);
-		}
-		else
-		{
-			style.BgColor = new Color(0.15f, 0.1f, 0.2f, 0.6f);
-			style.BorderColor = new Color(0.4f, 0.3f, 0.5f);
-		}
-		style.BorderWidthBottom = 1;
-		style.BorderWidthTop = 1;
-		style.BorderWidthLeft = 1;
-		style.BorderWidthRight = 1;
-		style.CornerRadiusTopLeft = 4;
-		style.CornerRadiusTopRight = 4;
-		style.CornerRadiusBottomLeft = 4;
-		style.CornerRadiusBottomRight = 4;
-		_appelDuVideBtn.AddThemeStyleboxOverride("normal", style);
-	}
-
-	private void CachePerkManager()
-	{
-		if (_perkManager != null && IsInstanceValid(_perkManager))
-			return;
-		_perkManager = GetNodeOrNull<PerkManager>("/root/Main/PerkManager");
 	}
 
 	private void LoadTextures()

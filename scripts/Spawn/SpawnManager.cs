@@ -61,7 +61,7 @@ public partial class SpawnManager : Node2D
 	private float _flatHpMultiplier = 1f;
 	private float _flatDmgMultiplier = 1f;
 
-	// Difficulty modifiers from Appel du Vide / Cursed Items
+	// Péril (PerilManager)
 	private float _diffEnemyCountMult = 1f;
 	private float _diffEnemyHpMult = 1f;
 	private float _diffEnemyDmgMult = 1f;
@@ -133,7 +133,7 @@ public partial class SpawnManager : Node2D
 		_diffEnemyCountMult = enemyCountMult;
 		_diffEnemyHpMult = enemyHpMult;
 		_diffEnemyDmgMult = enemyDmgMult;
-		GD.Print($"[SpawnManager] Difficulty modifiers updated — count: x{enemyCountMult:F1}, HP: x{enemyHpMult:F1}, DMG: x{enemyDmgMult:F1}");
+		GD.Print($"[SpawnManager] Péril : nombre x{enemyCountMult:F2}, PV x{enemyHpMult:F2}, dégâts x{enemyDmgMult:F2}");
 	}
 
 	public override void _Process(double delta)
@@ -208,7 +208,7 @@ public partial class SpawnManager : Node2D
 			dmgScale *= 1.32f;
 		}
 
-		// Difficulty modifiers (Appel du Vide + Cursed Items)
+		// Péril
 		hpScale *= _diffEnemyHpMult;
 		dmgScale *= _diffEnemyDmgMult;
 	}

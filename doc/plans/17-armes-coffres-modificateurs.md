@@ -481,6 +481,28 @@ Décision 4.3 prise : la rareté vit sur les améliorations, plus sur l'arme. Ch
 | **3B — Mémorial** | Autel refondu : éclats, bénédictions à rareté, zone ravivée, Essence (raviver l'arme choisie, soin, relance), sprite | Captures ; recette : attendre ou activer ? |
 | **3C — Faille** | Oublis, récompense forte, Péril, lever un Oubli au Mémorial, sprite | Recette : tentant ou punitif ? |
 
+**3A livré (26 septembre, nuit).** `PerilManager` (nœud de run) tient le Péril et reste le seul émetteur de `DifficultyModifierChanged` ; `PerilChanged` prévient score, level-up et fiche. Chaque point, d'après `data/scaling/peril.json` : créatures +6 % en nombre, +10 % PV, +6 % dégâts ; XP +8 %, score +12 %, un demi-cran de montée de rareté. Plafond 10. Retirés : perk Appel du Vide (données, bouton de pause, icône, tableaux `per_stack`), `CursedItemManager` et `cursed_items.json` (jamais branchés). La fiche de pause montre le Péril et ses effets ; l'écran de fin le compte dans le multiplicateur. Le Péril n'a pas encore de source : les Failles (3C) la donnent.
+
+Vérifié : build sans avertissement, smoke test, `tools/test_weapons.sh` (12 contrôles, dont « 4 points de Péril = 2 crans »). Mesure headless (`MEASURE_EXTRA_ARGS="--peril 5"`, 3 graines × 180 s, temps de jeu) :
+
+| | Créatures apparues | Dégâts reçus à 30 s | Niveau à 180 s |
+|---|---|---|---|
+| Péril 0 | 330 / 451 / 278 | 15 / 0 / 57 | 4 / 6 / 5 |
+| Péril 5 | 399 / 454 / 460 | 115 / 84 / 77 | 3 / 11 / 15 |
+
+La pression monte comme prévu. Le niveau atteint varie trop avec les armes que le bot prend (première carte) pour juger le gain d'XP : à regarder en jeu, les valeurs sont un point de départ.
+
+#### Vague 3 détaillée — 26 septembre (soir)
+
+La vague 2 attend deux validations de Raphaël (noms, un par un ; style des icônes v2) ; la vague 4 dépend du plan 13, non arbitré. La vague 3 a sa direction validée : elle passe devant. Choix provisoires :
+
+| Lot | Contenu | Choix |
+|---|---|---|
+| **3A — Chance et Péril** | Péril, stat de run : chaque point renforce les créatures (nombre, vigueur) et majore score, XP et rareté des tirages. L'Appel du Vide (perk et bouton de pause) et les malédictions (`CursedItemManager`) sont retirés ; la Chance pèse sur tous les tirages de rareté (level-up, Mémorial, Faille) | Valeurs en `data/scaling/peril.json` ; Péril et Oublis dans la fiche de la pause |
+| **Écran de choix commun** | Un écran de trois cartes réutilisable (titre, rareté, lignes, prix), au clavier, à la manette et à la souris : bénédictions, services du Mémorial, offres de la Faille | Même grammaire visuelle que le level-up |
+| **3B — Mémorial** | Remplace l'Autel. Interagir libère trois éclats à moins d'un écran ; les ramasser en 20 s l'active (sinon ils reviennent). Récompense : trois bénédictions à rareté (monte avec l'oubli de la zone et la Chance) ; la zone est ravivée. Ensuite, contre de l'Essence : raviver l'arme choisie (amélioration Rare au moins) ou se soigner. Un Mémorial englouti par le Néant est perdu | Bénédictions en `data/progression/blessings.json` ; sprite procédural |
+| **3C — Faille** | Trace de l'Effacement : quelques-unes au départ, d'autres s'ouvrent dans les zones oubliées. Toucher une Faille propose trois améliorations Épiques ou Légendaires, chacune avec son **Oubli** (malus durable) ; en prendre une ajoute l'Oubli et +1 Péril. Refus toujours possible. Un Mémorial peut lever un Oubli | Oublis en `data/progression/oublis.json` ; sprite procédural |
+
 ### Vague 4 — Objets
 
 Socle d'objets du plan 05, premier lot du plan 13 (lot A), coffres en conteneurs si retenu. Les objets reprennent le bloc de stats de 1A et les raretés de 1B. Ce sont eux aussi des objets du monde d'avant, avec un propriétaire. La crainte de copier se traite par le fond : effets liés au mouvement, à l'oubli et aux lieux, présentation propre au plan 13.

@@ -49,11 +49,11 @@ public static class UpgradeRoller
 		return _rarities.Count > 0 ? _rarities[0] : null;
 	}
 
-	/// <summary>Crans de montée : la Chance du joueur, plus l'oubli de la zone où il se tient.</summary>
-	public static float BumpSteps(float luck, ErasureManager.ErasureZonePhase phase)
+	/// <summary>Crans de montée : la Chance du joueur, l'oubli de la zone où il se tient et le Péril de la run.</summary>
+	public static float BumpSteps(float luck, ErasureManager.ErasureZonePhase phase, int peril)
 	{
 		Load();
-		return luck * _luckStepsPerPoint + _zoneSteps.GetValueOrDefault(phase);
+		return luck * _luckStepsPerPoint + _zoneSteps.GetValueOrDefault(phase) + PerilDataLoader.RaritySteps(peril);
 	}
 
 	/// <summary>
