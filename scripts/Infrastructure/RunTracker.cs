@@ -11,7 +11,8 @@ namespace Vestiges.Infrastructure;
 public partial class RunTracker : Node
 {
     private EventBus _eventBus;
-    private float _runStartTimeMsec;
+    // Temps de jeu écoulé, pauses exclues (écran de niveau, butin, menu) : durée, score de survie, cadences.
+    private float _runTime;
 
     private float _totalDamageDealt;
     private float _totalDamageTaken;
@@ -58,7 +59,7 @@ public partial class RunTracker : Node
     public string LastHitByEnemyId => _lastHitByEnemyId;
     public string CurrentPhase => _currentPhase;
     public int CurrentNight => _crisesSurvived;
-    public float RunDurationSeconds => (Time.GetTicksMsec() - _runStartTimeMsec) / 1000f;
+    public float RunDurationSeconds => _runTime;
 
     // --- Difficulty metrics ---
     public int TotalSpawned => _totalSpawned;
@@ -72,7 +73,7 @@ public partial class RunTracker : Node
     {
         get
         {
-            float now = Time.GetTicksMsec() / 1000f;
+            float now = _runTime;
             float windowStart = now - RateWindowSeconds;
             int count = 0;
             foreach (float t in _spawnTimestamps)
@@ -88,7 +89,7 @@ public partial class RunTracker : Node
     {
         get
         {
-            float now = Time.GetTicksMsec() / 1000f;
+            float now = _runTime;
             float windowStart = now - RateWindowSeconds;
             int count = 0;
             foreach (float t in _killTimestamps)
@@ -118,7 +119,7 @@ public partial class RunTracker : Node
     {
         get
         {
-            float now = Time.GetTicksMsec() / 1000f;
+            float now = _runTime;
             float windowStart = now - DpsWindowSeconds;
             float total = 0f;
             foreach ((float time, float damage) entry in _damageEvents)
@@ -143,8 +144,6 @@ public partial class RunTracker : Node
 
     public override void _Ready()
     {
-        _runStartTimeMsec = Time.GetTicksMsec();
-
         _eventBus = GetNode<EventBus>("/root/EventBus");
         _eventBus.EnemySpawned += OnEnemySpawned;
         _eventBus.EnemyKilled += OnEnemyKilled;
@@ -181,12 +180,13 @@ public partial class RunTracker : Node
 
     public override void _Process(double delta)
     {
+        _runTime += (float)delta;
         _maintenanceTimer += (float)delta;
         if (_maintenanceTimer < MaintenanceInterval)
             return;
         _maintenanceTimer = 0f;
 
-        float now = Time.GetTicksMsec() / 1000f;
+        float now = _runTime;
 
         // Purge old DPS entries
         float dpsWindowStart = now - DpsWindowSeconds;
@@ -208,14 +208,14 @@ public partial class RunTracker : Node
         _totalSpawned++;
         _lastHpScale = hpScale;
         _lastDmgScale = dmgScale;
-        float now = Time.GetTicksMsec() / 1000f;
+        float now = _runTime;
         _spawnTimestamps.Add(now);
     }
 
     private void OnEnemyKilled(string enemyId, Vector2 position)
     {
         _totalKilled++;
-        float now = Time.GetTicksMsec() / 1000f;
+        float now = _runTime;
         _killTimestamps.Add(now);
     }
 
@@ -225,7 +225,7 @@ public partial class RunTracker : Node
         if (entity is not Player)
         {
             _totalDamageDealt += amount;
-            float now = Time.GetTicksMsec() / 1000f;
+            float now = _runTime;
             _damageEvents.Add((now, amount));
         }
     }
