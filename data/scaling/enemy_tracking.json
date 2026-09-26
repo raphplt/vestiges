@@ -1,0 +1,7 @@
+{
+    "engage_distance": 450,
+    "lose_track_distance": 800,
+    "lose_track_seconds": 4.0,
+    "wander_speed_factor": 0.35,
+    "wander_turn_seconds": 2.5
+}

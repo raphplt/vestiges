@@ -252,3 +252,23 @@ Build, smoke si applicable, séquences annotées et validation de Raphaël. Road
 Effets attendus : des rencontres qu'on voit venir et qu'on peut contourner, moins de files d'ennemis derrière le joueur. Le flux maintient la pression, et l'errance au loin coûte moins cher. Réglages en données par créature (`perception`, `leash`).
 
 Risque : une pression ressentie plus faible si trop de créatures errent ; à mesurer avec `tools/measure_density.sh` (ennemis visibles, temps sans ennemi) avant et après.
+
+### Implémentation — 26 septembre 2026
+
+Proposition retenue par arbitrage délégué ([DECISIONS §7](DECISIONS.md#7-arbitrages-délégués-du-26-septembre)).
+- **Perte de piste** (`Combat/EnemyTracking`, réglages dans `data/scaling/enemy_tracking.json`). Une créature qui a approché le joueur à moins de 450 px, puis est restée à plus de 800 px pendant 4 s, perd sa trace. Elle erre au ralenti (×0,35, changement de cap toutes les 2,5 s) jusqu'à ce que le joueur revienne à portée ou qu'elle soit retirée à 1 400 px. Les créatures qui arrivent du flux, les hardes en traversée et les créatures d'événement ne sont pas concernées.
+- **Gardiens de POI :** ils ne quittent plus leur poste quand le joueur est hors du traitement complet (600 px). Avant, le déplacement simplifié les faisait converger vers lui.
+- **Non fait :** perception propre à chaque créature (champs `perception` et `leash` par fiche) ; le réglage reste global.
+
+**Mesure** (`SECONDS_PER_RUN=180 tools/measure_density.sh`, seeds 221092026 et 777, bot nomade sans esquive, avant → après) :
+
+| Indicateur | Avant | Après |
+|---|---|---|
+| Créatures visibles, médiane minutes 1–2 / 2–3 | 22,5 / 23,5 | 18 / 20 |
+| Quartile haut des visibles, minutes 1–3 | 43–48 | 26–33 |
+| Moins de 5 créatures visibles, minutes 1–3 | 10 % / 5 % | 7 % / 3 % |
+| Créatures tuées (deux seeds) | 154 / 32 | 242 / 169 |
+| Dégâts reçus par minute, minute 1–2 | 2 854 | 750 |
+
+Les amas qui suivaient le joueur disparaissent : sur la seed 777, le bot finissait enseveli sous 46 à 49 créatures. La pression ne s'effondre pas, les moments creux n'augmentent pas, et le flux apparaît davantage puisque les places se libèrent. La médiane baisse d'environ 15 % : à juger en jeu.
+

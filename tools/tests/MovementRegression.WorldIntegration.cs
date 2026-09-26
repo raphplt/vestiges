@@ -10,6 +10,31 @@ namespace Vestiges.Tests;
 
 public partial class MovementRegression
 {
+    /// <summary>Marche vers l'est jusqu'au bord de la carte générée : le joueur ne quitte jamais le sol.</summary>
+    private async Task CheckWorldEdge(WorldSetup world)
+    {
+        TileMapLayer ground = world.GetNode<TileMapLayer>("Ground");
+        int edgeX = 0;
+        while (edgeX < world.Generator.MapRadius + 2 && world.Generator.IsWithinBounds(edgeX, 0) && !world.Generator.IsErased(edgeX, 0))
+            edgeX++;
+        Vector2 start = ground.MapToLocal(new Vector2I(edgeX - 3, 0));
+        _player.Position = start;
+        SetActions(Vector2.Right);
+        bool leftGround = false;
+        for (int i = 0; i < 150; i++)
+        {
+            await Step(1);
+            Vector2I cell = ground.LocalToMap(ground.ToLocal(_player.GlobalPosition));
+            leftGround |= !world.Generator.IsWithinBounds(cell.X, cell.Y) || world.Generator.IsErased(cell.X, cell.Y);
+        }
+        SetActions(Vector2.Zero);
+        Check(!leftGround && _player.Position.X > start.X,
+            $"bord du monde : la marche s'arrête au sol, bord x={edgeX}, position={_player.Position}");
+        Vector2 origin = Vector2.Zero;
+        _player.Position = origin;
+        await Step(10);
+    }
+
     /// <summary>Vraie initialisation Main ; seul l'état local du Néant est rendu déterministe.</summary>
     private async Task RunWorldIntegration()
     {
@@ -73,6 +98,7 @@ public partial class MovementRegression
         else
             phases.Remove(region);
         await CheckGeneratedWater(world);
+        await CheckWorldEdge(world);
         // Le pool historique garde ses instances préchauffées hors de l'arbre :
         // le banc les libère explicitement pour vérifier une fermeture sans erreurs RID.
         Vestiges.Spawn.EnemyPool pool = world.GetNode<Vestiges.Spawn.EnemyPool>("EnemyPool");

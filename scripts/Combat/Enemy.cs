@@ -101,6 +101,7 @@ public partial class Enemy : CharacterBody2D
 
 	// Variante (élite, Souverain, Aberration), affixes, harde et micro-événements
 	private readonly EnemyModifiers _mods = new();
+	private readonly EnemyTracking _tracking = new();
 	private Polygon2D _modifierAura;
 	private Tween _modifierAuraTween;
 	private EnemyNameplate _nameplate;
@@ -423,6 +424,7 @@ public partial class Enemy : CharacterBody2D
 		IsActive = false;
 		_isDying = false;
 		_guardTarget = null;
+		_tracking.Reset();
 		_isBurrowed = false;
 		_isCharging = false;
 		_chargeDurationLeft = 0f;
@@ -501,6 +503,9 @@ public partial class Enemy : CharacterBody2D
 
 		float distToPlayerSq = GlobalPosition.DistanceSquaredTo(_player.GlobalPosition);
 		float dt = (float)delta;
+		// Gardiens, hardes et créatures d'événement ont leur propre logique de déplacement.
+		bool lostTrack = _guardTarget == null && !_mods.IsEventBound && !_mods.IsTraveling
+			&& _tracking.Tick(distToPlayerSq, dt);
 
 		// Off-screen culling : ennemis loin du joueur → traitement minimal
 		if (distToPlayerSq > ActiveProcessingRangeSq)
@@ -509,6 +514,15 @@ public partial class Enemy : CharacterBody2D
 			ProcessBleed(dt);
 			// Une annonce en cours ne doit pas rester figée à l'écran hors du traitement complet.
 			CancelAbilities();
+
+			// Un gardien ne quitte pas son poste pour un joueur hors de vue.
+			if (_guardTarget != null)
+				return;
+			if (lostTrack)
+			{
+				GlobalPosition += _tracking.WanderDirection * _speed * _tracking.WanderSpeedFactor * _slowFactor * dt;
+				return;
+			}
 
 			// Mouvement simplifié sans MoveAndSlide complet : traversée de harde ou approche du joueur.
 			if (_mods.IsTraveling)
@@ -528,6 +542,15 @@ public partial class Enemy : CharacterBody2D
 		ProcessBleed(dt);
 		ProcessSlowDecay(dt);
 		ProcessDisorient(dt);
+
+		if (lostTrack)
+		{
+			Velocity = _tracking.WanderDirection * _speed * _tracking.WanderSpeedFactor * _slowFactor;
+			UpdateSpriteAnimation(dt);
+			MoveAndSlide();
+			return;
+		}
+
 		ProcessBehaviorAbilities(distToPlayer, dt);
 
 		// Colosse en charge : skip le mouvement normal

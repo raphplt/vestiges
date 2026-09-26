@@ -10,7 +10,9 @@ trap 'rm -rf "$TEST_DIR"' EXIT
 isolate_godot_profile "$TEST_DIR"
 dotnet build --nologo
 "$GODOT" --headless --editor --import --path . >"$TEST_DIR/import.log" 2>&1
-"$GODOT" --headless --path . --fixed-fps 60 --quit-after 14000 res://tools/tests/MovementRegression.tscn -- "$@" >"$TEST_DIR/run.log" 2>&1 || {
+status=0
+"$GODOT" --headless --path . --fixed-fps 60 --quit-after 14000 res://tools/tests/MovementRegression.tscn -- "$@" >"$TEST_DIR/run.log" 2>&1 || status=$?
+godot_exit_ok "$status" "$TEST_DIR/run.log" '\[MovementRegression\] RESULT failures=0' || {
     cat "$TEST_DIR/run.log"
     exit 1
 }

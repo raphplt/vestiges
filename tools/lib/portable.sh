@@ -69,3 +69,12 @@ godot_screen_args() {
         echo "--screen 1"
     fi
 }
+
+# Godot 4.7 sous macOS abandonne parfois en quittant (« mutex lock failed » dans -[NSApplication terminate:]),
+# après la fin du test. Seul ce cas est toléré, et seulement si le log contient le résultat attendu.
+godot_exit_ok() {
+    local status=$1 log=$2 result_pattern=$3
+    [[ $status -eq 0 ]] && return 0
+    [[ $(uname) == Darwin ]] || return 1
+    tail -3 "$log" | grep -q "mutex lock failed" && grep -q "$result_pattern" "$log"
+}

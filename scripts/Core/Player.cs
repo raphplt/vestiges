@@ -701,6 +701,10 @@ public partial class Player : CharacterBody2D
             if (GetSlideCollisionCount() > 0)
                 Mobility.StopDash();
         }
+        else if (!IsOnWorldGround(GlobalPosition))
+        {
+            movementVelocity = KeepOnWorldGround(previousPosition, dt);
+        }
         Mobility.FinishMovement(movementVelocity);
         _mobilityFeedback.UpdateFeedback(dt, Mobility, GlobalPosition, movementVelocity.LengthSquared() > 0.01f);
         float movementSpeed = movementVelocity.Length();
@@ -778,6 +782,32 @@ public partial class Player : CharacterBody2D
         Velocity = Vector2.Zero;
         CancelPoiExplore();
         CancelChestOpen();
+    }
+
+    /// <summary>Le bord du monde (cellules hors carte ou dissoutes) ne se traverse pas, même en marchant.</summary>
+    private bool IsOnWorldGround(Vector2 position)
+    {
+        if (_worldSetup?.Generator == null || _groundLayer == null)
+            return true;
+        Vector2I cell = _groundLayer.LocalToMap(_groundLayer.ToLocal(position));
+        return _worldSetup.Generator.IsWithinBounds(cell.X, cell.Y) && !_worldSetup.Generator.IsErased(cell.X, cell.Y);
+    }
+
+    /// <summary>Ramène le joueur sur le sol en gardant l'axe encore valide : il glisse le long du bord au lieu de s'y coller.</summary>
+    private Vector2 KeepOnWorldGround(Vector2 previousPosition, float delta)
+    {
+        Vector2 attempted = GlobalPosition;
+        Vector2 alongX = new(attempted.X, previousPosition.Y);
+        Vector2 alongY = new(previousPosition.X, attempted.Y);
+        if (IsOnWorldGround(alongX))
+            GlobalPosition = alongX;
+        else if (IsOnWorldGround(alongY))
+            GlobalPosition = alongY;
+        else
+            GlobalPosition = previousPosition;
+        Vector2 kept = GlobalPosition - previousPosition;
+        Velocity = Vector2.Zero;
+        return delta > 0f ? kept / delta : Vector2.Zero;
     }
 
     private Vector2 ClampMobilityTravel(Vector2 origin, Vector2 displacement)
