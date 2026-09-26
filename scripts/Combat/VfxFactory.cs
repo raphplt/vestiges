@@ -70,22 +70,12 @@ public static class VfxFactory
 	// === Orbe XP : GPUParticles2D qui suit l'orbe ===
 	// =========================================================================
 
+	private static ParticleProcessMaterial _xpOrbGlowMaterial;
+
+	/// <summary>Lueur d'une orbe d'XP, créée une fois par orbe recyclée ; allumée ou non à chaque lancement.</summary>
 	public static GpuParticles2D CreateXpOrbGlow()
 	{
-		if (CurrentParticleLevel == ParticleLevel.Off)
-			return null;
-
-		var particles = new GpuParticles2D
-		{
-			Amount = ScaleAmount(3),
-			Lifetime = 0.5f,
-			SpeedScale = 1f,
-			Explosiveness = 0f,
-			Texture = CircleTexture,
-			TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
-		};
-
-		var mat = new ParticleProcessMaterial
+		_xpOrbGlowMaterial ??= new ParticleProcessMaterial
 		{
 			EmissionShape = ParticleProcessMaterial.EmissionShapeEnum.Sphere,
 			EmissionSphereRadius = 2f,
@@ -98,9 +88,17 @@ public static class VfxFactory
 			ScaleMax = 0.5f,
 			Color = new Color(0.55f, 0.82f, 1f, 0.8f),
 		};
-		particles.ProcessMaterial = mat;
 
-		return particles;
+		return new GpuParticles2D
+		{
+			Amount = 3,
+			Lifetime = 0.5f,
+			SpeedScale = 1f,
+			Explosiveness = 0f,
+			Texture = CircleTexture,
+			TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
+			ProcessMaterial = _xpOrbGlowMaterial,
+		};
 	}
 
 	// =========================================================================

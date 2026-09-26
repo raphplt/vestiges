@@ -175,4 +175,8 @@ Chaque lot : captures avant/après dans une vraie run (`tools/capture_run.sh`), 
 
   Les créatures du banc ne meurent pas : le gain des effets de mort n'y apparaît pas. Il se déduit du code, soit sept nœuds de moins par mort et trois par orbe ramassée. FPS non mesurés (rendu logiciel).
 - **Vérification :** build sans avertissement, `EnemyAbilityRegression` vert, capture en vraie run avec combats (panneau des quêtes à jour, 9 créatures tuées).
-- **Reste :** les orbes d'XP elles-mêmes sont encore créées puis libérées, chacune avec sa lueur en particules GPU. C'est le prochain candidat au recyclage, avec le budget d'effets par frame selon `ParticleLevel`.
+- **Orbes d'XP recyclées.** Chaque orbe instanciait sa scène, remplaçait son sprite, créait ses propres `SpriteFrames`, ses particules et leur matériau, puis se libérait à la collecte. Soit une à trois orbes par mort, et autant pour les gerbes des micro-événements.
+  - Elles viennent désormais d'un pool de `CombatPools` (`SpawnXpOrb`, appel différé, car une mort survient souvent pendant un rappel de la physique).
+  - Sprite animé et matériau de lueur sont partagés, et la lueur s'allume ou non à chaque lancement selon `ParticleLevel`.
+  - Vérifié en vraie run : XP ramassée, niveau 2 atteint à 42 s contre 43 s avant, aucune erreur de physique. `MovementRegression`, `EnemyAbilityRegression` et `DevelopmentModeRegression` verts.
+- **Reste :** le budget d'effets par frame selon `ParticleLevel`.

@@ -1,3 +1,4 @@
+using System;
 using Godot;
 using Vestiges.Core;
 using Vestiges.Infrastructure;
@@ -25,14 +26,17 @@ public partial class XpOrb : Area2D
     private static Texture2D OrbFrame1 => _orbFrame1 ??= GD.Load<Texture2D>("res://assets/vfx/vfx_orb_xp.png");
     private static Texture2D OrbFrame2 => _orbFrame2 ??= GD.Load<Texture2D>("res://assets/vfx/vfx_orb_xp_f2.png");
 
-    public void Initialize(float xpValue)
-    {
-        _xpValue = xpValue;
-        _currentSpeed = 0f;
-        _collected = false;
-    }
+    private static SpriteFrames _frames;
+    private static readonly StringName PulseAnimation = "pulse";
 
     private GpuParticles2D _glow;
+    private AnimatedSprite2D _sprite;
+    private Action<XpOrb> _release;
+
+    public void SetRelease(Action<XpOrb> release)
+    {
+        _release = release;
+    }
 
     public override void _Ready()
     {
@@ -47,29 +51,45 @@ public partial class XpOrb : Area2D
             oldSprite.QueueFree();
         }
 
-        SpriteFrames frames = new();
-        frames.AddAnimation("pulse");
-        frames.SetAnimationSpeed("pulse", 4);
-        frames.SetAnimationLoopMode("pulse", SpriteFrames.LoopMode.Linear);
-        frames.AddFrame("pulse", OrbFrame1);
-        frames.AddFrame("pulse", OrbFrame2);
+        if (_frames == null)
+        {
+            _frames = new SpriteFrames();
+            _frames.AddAnimation(PulseAnimation);
+            _frames.SetAnimationSpeed(PulseAnimation, 4);
+            _frames.SetAnimationLoopMode(PulseAnimation, SpriteFrames.LoopMode.Linear);
+            _frames.AddFrame(PulseAnimation, OrbFrame1);
+            _frames.AddFrame(PulseAnimation, OrbFrame2);
+        }
 
-        AnimatedSprite2D animSprite = new()
+        _sprite = new AnimatedSprite2D
         {
             Name = "Visual",
-            SpriteFrames = frames,
+            SpriteFrames = _frames,
             TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
         };
-        animSprite.Play("pulse");
-        AddChild(animSprite);
-        _visualRoot = animSprite;
+        AddChild(_sprite);
+        _visualRoot = _sprite;
 
         _glow = VfxFactory.CreateXpOrbGlow();
-        if (_glow != null)
-            AddChild(_glow);
+        AddChild(_glow);
+    }
 
-        // Léger offset aléatoire pour désynchroniser les orbes entre elles
+    /// <summary>Pose une orbe recyclée par CombatPools : tout l'état se réinitialise ici.</summary>
+    public void Launch(Vector2 position, float xpValue)
+    {
+        GlobalPosition = position;
+        _xpValue = xpValue;
+        _currentSpeed = 0f;
+        _collected = false;
+        // Léger décalage pour désynchroniser le flottement des orbes entre elles
         _floatTime = (float)GD.RandRange(0, Mathf.Tau);
+        _sprite.Play(PulseAnimation);
+        bool glow = VfxFactory.CurrentParticleLevel != ParticleLevel.Off;
+        _glow.Visible = glow;
+        _glow.Emitting = glow;
+        Visible = true;
+        SetPhysicsProcess(true);
+        SetDeferred(Area2D.PropertyName.Monitoring, true);
     }
 
     public override void _PhysicsProcess(double delta)
@@ -121,7 +141,14 @@ public partial class XpOrb : Area2D
 
             EventBus eventBus = GetNode<EventBus>("/root/EventBus");
             eventBus.EmitSignal(EventBus.SignalName.XpGained, _xpValue);
-            CallDeferred(MethodName.QueueFree);
+
+            // Retour au pool : invisible, inerte, prête pour la prochaine mort.
+            Visible = false;
+            _sprite.Stop();
+            _glow.Emitting = false;
+            SetPhysicsProcess(false);
+            SetDeferred(Area2D.PropertyName.Monitoring, false);
+            _release(this);
         }
     }
 

@@ -15,6 +15,7 @@ public partial class CombatPools : Node2D
     private NodePool<DamageNumber> _damageNumbers;
     private NodePool<PixelFx> _pixelFx;
     private NodePool<DeathFx> _deathFx;
+    private NodePool<XpOrb> _xpOrbs;
 
     /// <summary>Étincelles et éclats de combat, tracés par un seul nœud.</summary>
     public PixelSparks Sparks { get; private set; }
@@ -46,6 +47,13 @@ public partial class CombatPools : Node2D
         });
         _pixelFx = new NodePool<PixelFx>(this, () => PixelFx.Create(_pixelFx.Return));
         _deathFx = new NodePool<DeathFx>(this, () => DeathFx.Create(_deathFx.Return));
+        PackedScene xpOrbScene = GD.Load<PackedScene>("res://scenes/combat/XpOrb.tscn");
+        _xpOrbs = new NodePool<XpOrb>(this, () =>
+        {
+            XpOrb orb = xpOrbScene.Instantiate<XpOrb>();
+            orb.SetRelease(_xpOrbs.Return);
+            return orb;
+        });
         Sparks = new PixelSparks { Name = "PixelSparks" };
         AddChild(Sparks);
     }
@@ -154,6 +162,15 @@ public partial class CombatPools : Node2D
         _deathFx.Take().Play(position, poolScale);
     }
 
+    /// <summary>
+    /// Pose une orbe d'XP recyclée. Différé : une mort survient souvent pendant un rappel de la physique,
+    /// où une zone ne peut pas entrer dans l'arbre ni changer de surveillance.
+    /// </summary>
+    public void SpawnXpOrb(Vector2 position, float xpValue)
+    {
+        Callable.From(() => _xpOrbs.Take().Launch(position, xpValue)).CallDeferred();
+    }
+
     /// <summary>Petite gerbe à la collecte d'une orbe d'XP.</summary>
     public void ShowXpCollect(Vector2 position)
     {
@@ -174,5 +191,5 @@ public partial class CombatPools : Node2D
 
     /// <summary>Objets créés depuis le début de la run, tous pools confondus (bancs de mesure).</summary>
     public int CreatedCount => _enemyProjectiles.Created + _playerProjectiles.Created + _damageNumbers.Created + _pixelFx.Created
-        + _deathFx.Created;
+        + _deathFx.Created + _xpOrbs.Created;
 }

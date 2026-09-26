@@ -128,7 +128,6 @@ public partial class Enemy : CharacterBody2D
 	private Polygon2D _visual;
 	private Color _originalColor;
 	private Player _player;
-	private static PackedScene _xpOrbScene;
 	private static PackedScene _chestScene;
 
 	// Sprite animé (remplace Polygon2D quand sprite_folder est défini)
@@ -169,7 +168,6 @@ public partial class Enemy : CharacterBody2D
 		_visual = GetNode<Polygon2D>("Visual");
 		_sprite = GetNode<AnimatedSprite2D>("Sprite");
 		_originalColor = _visual.Color;
-		_xpOrbScene ??= GD.Load<PackedScene>("res://scenes/combat/XpOrb.tscn");
 		_chestScene ??= GD.Load<PackedScene>("res://scenes/world/Chest.tscn");
 		_entityShader ??= GD.Load<Shader>("res://assets/shaders/entity.gdshader");
 		_eventBus ??= GetNode<EventBus>("/root/EventBus");
@@ -1441,14 +1439,11 @@ public partial class Enemy : CharacterBody2D
 
 		for (int i = 0; i < orbCount; i++)
 		{
-			XpOrb orb = _xpOrbScene.Instantiate<XpOrb>();
 			Vector2 offset = new Vector2(
 				(float)GD.RandRange(-15, 15),
 				(float)GD.RandRange(-15, 15)
 			);
-			orb.GlobalPosition = GlobalPosition + offset;
-			orb.Initialize(xpPerOrb);
-			GetTree().CurrentScene.CallDeferred(Node.MethodName.AddChild, orb);
+			CombatPools.Instance?.SpawnXpOrb(GlobalPosition + offset, xpPerOrb);
 		}
 	}
 
