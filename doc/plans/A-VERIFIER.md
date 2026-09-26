@@ -35,3 +35,7 @@ Fichier temporaire. Il liste ce qu'une session cloud a livré sans pouvoir le v�
 ## Plan 10 T2 — décors de transition
 
 - [ ] **Densité** : 2 292 décors de plus par carte (7 % des cellules proches d'une frontière). Coût à vérifier avec `--measure-props`, et lecture : les frontières paraissent-elles plus naturelles ou plus encombrées ?
+
+## Plan 16 O2 — éclats des décors en zone Effacée
+
+- [ ] **Densité et lisibilité** : deux décors par tick de 0,15 s, trois éclats violets chacun. Dans le conteneur à 5 FPS, la capture n'en montre que quelques-uns. À juger à 60 FPS : trop discret, ou assez pour dire « ici, tout s'en va » ?

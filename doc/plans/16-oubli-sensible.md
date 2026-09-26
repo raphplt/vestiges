@@ -90,7 +90,12 @@ Ordre O1 → O3 → O4/O5 → O2/O6 validé par Raphaël. Arbitrages délégués
   - Néant : il n'en reste que des fragments.
 - La lecture de la mémoire est commune au sol, aux décors et aux canopées (`erasure_memory.gdshaderinc`).
 - **Coût** (banc de combat dense, même moment, machine chargée) : 1 303 appels de dessin contre 1 305, FPS équivalents (58 contre 61 en 720p, 46 contre 46 en 1080p). Le rendu par lots est préservé.
-- **Non fait** : les particules qui s'élèvent des décors proches en zone Effacée (prévues au plan initial). Elles demandent un pool et un plafond à mesurer.
+- **Éclats qui s'élèvent des décors, en complément (26 septembre, session cloud)** : `World/ErasureMotes`.
+  - Toutes les 0,15 s, deux décors hauts proches du joueur sont tirés dans l'index spatial de `PropOcclusion`, sur les neuf cases autour de lui (`CollectNear`, sans allocation).
+  - Si leur pied est en zone Effacée (mémoire ≤ 25 %), trois éclats violets du Néant partent du haut de leur silhouette.
+  - Ils passent par `PixelSparks` : aucun nœud créé, et ils suivent le niveau de particules. Réglages : `motes` dans `erasure.json`.
+  - Un premier essai en gris et à 8–20 px/s restait invisible : la traînée des éclats (5/s) les arrêtait après 2 à 4 px, perdus dans le sol tramé. Désormais 40–90 px/s.
+  - La capture `--capture-erasure` se place là où les décors hauts sont les plus nombreux, et ajoute `erasure-eclats.png`, en zone Effacée au zoom ×2 : décors émiettés et quelques éclats visibles.
 
 **O6 livré — échos (26 septembre) :**
 - `World/ErasureEchoes` fait apparaître, de loin en loin, la silhouette d'un habitant dans une zone Fragile ou Effilochée (mémoire entre 25 et 75 %), à 130–300 px du joueur :

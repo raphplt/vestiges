@@ -29,6 +29,8 @@ public partial class RunObservation
         erasure.ProcessMode = ProcessModeEnum.Disabled;
         await Frames(90);
         _player.AIInputOverride = Vector2.Zero;
+        MoveToDensestProps();
+        await Frames(20);
 
         Vector2I center = new(Mathf.FloorToInt(_player.GlobalPosition.X / erasure.CellSize),
                               Mathf.FloorToInt(_player.GlobalPosition.Y / erasure.CellSize));
@@ -58,6 +60,47 @@ public partial class RunObservation
         await Frames(10);
         using (Image gradient = GetViewport().GetTexture().GetImage())
             gradient.SavePng($"{_output}/erasure-degrade.png");
+        // Éclats qui s'élèvent des décors en zone Effacée (O2), au zoom ×2.
+        for (int y = -radius; y <= radius; y++)
+            for (int x = -radius; x <= radius; x++)
+                erasure.OverrideMemory(center + new Vector2I(x, y), 0.14f);
+        erasure.RefreshGroundMemory();
+        Vector2 zoom = _camera.Zoom;
+        _camera.Zoom = zoom * 2f;
+        await Frames(40);
+        using (Image motes = GetViewport().GetTexture().GetImage())
+            motes.SavePng($"{_output}/erasure-eclats.png");
+        _camera.Zoom = zoom;
+
         GD.Print($"[RunObservation] oubli capturé autour de la zone {center.ToString()} ({ErasurePhases.Length.ToString(CultureInfo.InvariantCulture)} phases + dégradé)");
+    }
+
+    /// <summary>Place le joueur là où les décors hauts sont les plus nombreux près du départ (forêt de préférence).</summary>
+    private void MoveToDensestProps()
+    {
+        PropOcclusion occlusion = _world.GetNodeOrNull<PropOcclusion>("PropOcclusion");
+        if (occlusion == null)
+            return;
+        System.Collections.Generic.List<Rect2> nearby = new();
+        Vector2 best = _player.GlobalPosition;
+        int bestCount = -1;
+        for (int y = -2000; y <= 2000; y += 256)
+        {
+            for (int x = -3000; x <= 3000; x += 256)
+            {
+                Vector2 point = new(x, y);
+                if (_world.IsWaterAt(point))
+                    continue;
+                occlusion.CollectNear(point, nearby);
+                if (nearby.Count > bestCount)
+                {
+                    bestCount = nearby.Count;
+                    best = point;
+                }
+            }
+        }
+        _player.GlobalPosition = best;
+        _camera.ResetSmoothing();
+        GD.Print($"[RunObservation] oubli : {bestCount} décors hauts autour de {best}");
     }
 }

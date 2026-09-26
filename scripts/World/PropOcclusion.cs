@@ -91,6 +91,23 @@ public partial class PropOcclusion : Node
         _faded.AddRange(_nextFaded);
     }
 
+    /// <summary>Silhouettes des décors hauts dans les neuf cases autour d'un point (liste fournie, vidée d'abord).</summary>
+    public void CollectNear(Vector2 point, List<Rect2> into)
+    {
+        into.Clear();
+        Vector2I center = BucketOf(point);
+        for (int bx = center.X - 1; bx <= center.X + 1; bx++)
+        {
+            for (int by = center.Y - 1; by <= center.Y + 1; by++)
+            {
+                if (!_buckets.TryGetValue(new Vector2I(bx, by), out List<int> bucket))
+                    continue;
+                foreach (int index in bucket)
+                    into.Add(_rects[index]);
+            }
+        }
+    }
+
     private static Vector2I BucketOf(Vector2 point)
     {
         return new Vector2I(Mathf.FloorToInt(point.X / BucketSize), Mathf.FloorToInt(point.Y / BucketSize));

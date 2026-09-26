@@ -14,6 +14,18 @@
     "stabilize_radius_cells": 2.5,
     "stabilize_memory_floor": 0.72,
     "void_damage_ratio_per_second": 0.06,
+    "motes": {
+        "_doc": "Plan 16 O2 : en zone Effacée, des éclats du Néant s'élèvent des décors hauts proches du joueur.",
+        "enabled": true,
+        "interval_sec": 0.15,
+        "max_memory": 0.25,
+        "props_per_tick": 2,
+        "count": 3,
+        "speed_min": 40,
+        "speed_max": 90,
+        "life_min": 0.8,
+        "life_max": 1.4
+    },
     "echoes": {
         "enabled": true,
         "first_delay_sec": 60,
