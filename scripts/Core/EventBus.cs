@@ -89,6 +89,8 @@ public partial class EventBus : Node
     // --- Effacement (V2) ---
     [Signal] public delegate void ErasureUpdatedEventHandler(float globalErasurePercent);
     [Signal] public delegate void ZonePhaseChangedEventHandler(int cellX, int cellY, int phase);
+    /// <summary>Phase de la zone où se tient le joueur (ErasureManager.ErasureZonePhase), émise quand elle change.</summary>
+    [Signal] public delegate void PlayerErasurePhaseChangedEventHandler(int phase);
 
     // --- Résurgences (V2) ---
     [Signal] public delegate void CrisisWarningEventHandler(int crisisNumber, float countdown);

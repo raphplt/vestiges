@@ -13,5 +13,22 @@
     "tracked_radius_cells": 14,
     "stabilize_radius_cells": 2.5,
     "stabilize_memory_floor": 0.72,
-    "void_damage_ratio_per_second": 0.06
+    "void_damage_ratio_per_second": 0.06,
+    "player_penalties": {
+        "frayed": {
+            "speed": 0.95,
+            "damage": 0.95,
+            "veil": 0.35
+        },
+        "erased": {
+            "speed": 0.88,
+            "damage": 0.88,
+            "veil": 0.7
+        },
+        "void": {
+            "speed": 0.88,
+            "damage": 0.88,
+            "veil": 1.0
+        }
+    }
 }

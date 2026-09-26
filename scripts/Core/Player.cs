@@ -122,6 +122,8 @@ public partial class Player : CharacterBody2D
     // Perk stat modifiers
     private float _damageMultiplier = 1f;
     private float _speedMultiplier = 1f;
+    // Ce que l'oubli coûte là où se tient le joueur (plan 16 O4), à part des bonus pour rester réversible.
+    private ErasurePenalties.Penalty _erasurePenalty = new(1f, 1f, 0f);
     private float _attackSpeedMultiplier = 1f;
     private float _bonusMaxHp;
     private int _extraProjectiles;
@@ -254,6 +256,7 @@ public partial class Player : CharacterBody2D
         _eventBus = GetNode<EventBus>("/root/EventBus");
         _eventBus.EnemyKilled += OnEnemyKilled;
         _eventBus.GameStateChanged += OnMovementGameStateChanged;
+        _eventBus.PlayerErasurePhaseChanged += OnErasurePhaseChanged;
         _gameManager = GetNode<GameManager>("/root/GameManager");
         _groupCache = GetNode<GroupCache>("/root/GroupCache");
     }
@@ -263,6 +266,7 @@ public partial class Player : CharacterBody2D
         if (_eventBus != null)
         {
             _eventBus.EnemyKilled -= OnEnemyKilled;
+            _eventBus.PlayerErasurePhaseChanged -= OnErasurePhaseChanged;
             _eventBus.GameStateChanged -= OnMovementGameStateChanged;
         }
     }
@@ -669,7 +673,7 @@ public partial class Player : CharacterBody2D
         if (_mobilityRequiresRelease && !Input.IsActionPressed("mobility"))
             _mobilityRequiresRelease = false;
         float terrainFactor = (IsOnWater() ? Mobility.Config.WaterSpeedFactor : 1f) * _slowFactor;
-        Velocity = Mobility.Step(dt, inputDir, Speed * _speedMultiplier, terrainFactor, inputAllowed);
+        Velocity = Mobility.Step(dt, inputDir, Speed * _speedMultiplier * _erasurePenalty.Speed, terrainFactor, inputAllowed);
         if (inputDir != Vector2.Zero || Mobility.IsDashStep)
         {
             CancelPoiExplore();
@@ -1552,6 +1556,11 @@ public partial class Player : CharacterBody2D
             _slowFactor = 1f;
             _slowTimer = 0f;
         }
+    }
+
+    private void OnErasurePhaseChanged(int phase)
+    {
+        _erasurePenalty = ErasurePenalties.For((ErasureManager.ErasureZonePhase)phase);
     }
 
     /// <summary>Multiplie le speed multiplier courant (pour buffs événementiels temporaires).</summary>
@@ -2571,7 +2580,7 @@ public partial class Player : CharacterBody2D
     {
         float weaponDamage = GetWeaponStat("damage", AttackDamage);
         float characterDamageFactor = AttackDamage / 10f;
-        float damage = weaponDamage * characterDamageFactor * _damageMultiplier;
+        float damage = weaponDamage * characterDamageFactor * _damageMultiplier * _erasurePenalty.Damage;
 
         if (_berserkerThreshold > 0f && _currentHp / EffectiveMaxHp < _berserkerThreshold)
             damage *= _berserkerDamageMult;

@@ -47,6 +47,7 @@ public partial class ErasureManager : Node
 
     private EventBus _eventBus;
     private Player _player;
+    private ErasureZonePhase _playerPhase = ErasureZonePhase.Anchored;
 
     public int CellSize => _cellSize;
     public float InitialMemory => _seededMemory;
@@ -128,7 +129,17 @@ public partial class ErasureManager : Node
             _eventBus?.EmitSignal(EventBus.SignalName.ErasureUpdated, _globalErasurePercent);
 
         PublishGroundMemory();
+        PublishPlayerPhase();
         HurtPlayerInVoid();
+    }
+
+    private void PublishPlayerPhase()
+    {
+        ErasureZonePhase phase = GetZonePhaseAt(_player.GlobalPosition);
+        if (phase == _playerPhase)
+            return;
+        _playerPhase = phase;
+        _eventBus?.EmitSignal(EventBus.SignalName.PlayerErasurePhaseChanged, (int)phase);
     }
 
     /// <summary>Le Néant se traverse mais consume : dégâts continus, proportionnels aux PV max, à chaque mise à jour.</summary>
@@ -172,11 +183,13 @@ public partial class ErasureManager : Node
         UpdateZonePhase(cell, _zoneMemory[cell], true);
     }
 
-    /// <summary>Republie la fenêtre de mémoire sans faire avancer l'Effacement (captures).</summary>
+    /// <summary>Republie la mémoire et la phase du joueur sans faire avancer l'Effacement (captures).</summary>
     internal void RefreshGroundMemory()
     {
         CachePlayer();
         PublishGroundMemory();
+        if (_player != null && IsInstanceValid(_player))
+            PublishPlayerPhase();
     }
 
     public float GetMemoryAt(Vector2 worldPos)

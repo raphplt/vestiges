@@ -39,7 +39,8 @@ public partial class RunObservation
                 for (int x = -radius; x <= radius; x++)
                     erasure.OverrideMemory(center + new Vector2I(x, y), memory);
             erasure.RefreshGroundMemory();
-            await Frames(10);
+            // Le voile d'écran suit la phase en 0,8 s.
+            await Frames(60);
             using Image image = GetViewport().GetTexture().GetImage();
             image.SavePng($"{_output}/erasure-{name}.png");
         }

@@ -40,6 +40,8 @@ public partial class QuestManager : CanvasLayer
 
     public override void _Ready()
     {
+        // Même couche que le HUD : les voiles d'écran (oubli) passent dessous.
+        Layer = 10;
         QuestDataLoader.Load();
         EnemyDataLoader.Load();
         SouvenirDataLoader.Load();
