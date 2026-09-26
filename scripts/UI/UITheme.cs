@@ -82,56 +82,6 @@ public static class UITheme
 		WireButtonAudio(btn);
 	}
 
-	/// <summary>
-	/// Applique le style NinePatch + hover anime (scale + tint).
-	/// A utiliser sur les boutons du menu principal (dans CenterContainer).
-	/// </summary>
-	public static void ApplyAnimatedButtonStyle(
-		Button btn,
-		Texture2D normalTex,
-		Texture2D hoverTex,
-		Texture2D pressedTex,
-		Texture2D disabledTex)
-	{
-		ApplyButtonStyle(btn, normalTex, hoverTex, pressedTex, disabledTex);
-
-		btn.PivotOffset = btn.Size / 2;
-		btn.Resized += () => btn.PivotOffset = btn.Size / 2;
-
-		btn.MouseEntered += () =>
-		{
-			Tween tween = btn.CreateTween();
-			tween.SetParallel(true);
-			tween.TweenProperty(btn, "scale", new Vector2(1.05f, 1.05f), 0.12f)
-				.SetTrans(Tween.TransitionType.Back)
-				.SetEase(Tween.EaseType.Out);
-			tween.TweenProperty(btn, "modulate", new Color(1.15f, 1.1f, 1.0f), 0.12f)
-				.SetTrans(Tween.TransitionType.Sine);
-		};
-
-		btn.MouseExited += () =>
-		{
-			Tween tween = btn.CreateTween();
-			tween.SetParallel(true);
-			tween.TweenProperty(btn, "scale", Vector2.One, 0.10f)
-				.SetTrans(Tween.TransitionType.Sine)
-				.SetEase(Tween.EaseType.In);
-			tween.TweenProperty(btn, "modulate", Colors.White, 0.10f)
-				.SetTrans(Tween.TransitionType.Sine);
-		};
-
-		btn.ButtonDown += () =>
-		{
-			Tween tween = btn.CreateTween();
-			tween.TweenProperty(btn, "scale", new Vector2(0.95f, 0.95f), 0.05f)
-				.SetTrans(Tween.TransitionType.Quad)
-				.SetEase(Tween.EaseType.Out);
-			tween.TweenProperty(btn, "scale", Vector2.One, 0.08f)
-				.SetTrans(Tween.TransitionType.Back)
-				.SetEase(Tween.EaseType.Out);
-		};
-	}
-
 	/// <summary>Applique le style NinePatch pour un onglet.</summary>
 	public static void ApplyTabStyle(
 		Button btn, bool active,

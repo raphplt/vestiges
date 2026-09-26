@@ -143,3 +143,25 @@ Comparées sur les mêmes textes : Barlow Semi Condensed, Chakra Petch, Big Shou
 - Libellés en clés de traduction `UI_HUD_*`. Accents rétablis dans les quêtes de run.
 
 **À valider en jeu :** taille des plaques en 720p, présence de la jauge sous le héros en combat dense, et intérêt de garder ou non une barre d'XP pleine largeur.
+
+## Accueil refait — 26 septembre 2026
+
+**Demande de Raphaël :** l'accueil est « trop classique ». Ne plus afficher les statistiques du personnage choisi (PV, ATK, VIT) mais montrer son sprite. Rendre l'ensemble « jeu fini » et fidèle à la DA. « Surprends-moi. »
+
+**Parti pris : le Hub est le Foyer (V2 §18), un camp vivant autour du feu.** Plus de panneau central ni de cadres de boutons. La peinture du menu (480×270 natifs affichés ×4) devient la scène, et tout ce qui s'y ajoute respecte ce grain de 4 px.
+- **Camp (`HubCamp`)** : les personnages veillent autour du feu, à l'échelle ×4 de la peinture, avec leur idle animé. Le personnage choisi se tourne vers le joueur (face S), avec un liseré doré (`outline.gdshader`) et un halo au sol. Les autres regardent le feu, assombris. Les personnages verrouillés sont des silhouettes blanchies dont les pixels disparaissent et reviennent (`hub_forgotten.gdshader`) : ils « reviennent » au camp quand on les débloque, première forme du Hub qui se remplit (V2 §18). Changement : ◀ ▶ (clavier, manette), clic sur un personnage ou flèches de la plaque.
+- **Plaque** : nom et phrase de description, rien d'autre. Personnage verrouillé : « ??? » et sa condition, et « Partir » est désactivé.
+- **Décor vivant (`HubBackdrop`)** : lumière du feu qui vacille, en anneaux francs et fondu additif ; braises qui montent ; Effacement qui arrache des pixels au bord droit ; paires d'yeux de créatures qui s'ouvrent, clignent et se referment dans les recoins sombres ; dégradés d'ombre à gauche et en bas pour la lecture.
+- **Titre** : nouveau « VESTIGES » en glyphes dessinés (`tools/generate_hub_title.py`, 115×30 natifs, ×4), biseau doré. Les trois dernières lettres s'effacent et continuent de s'effriter en jeu (particules).
+- **Menu (`HubMenuButton`)** : Partir, Chroniques, Paramètres, Quitter, en texte seul. Au focus, une braise en losange s'allume et décale le texte ; survol et focus ne font qu'un, et le menu se joue entièrement au clavier et à la manette. La graine et la bascule dev sont discrètes en bas à gauche, les Vestiges en haut à droite.
+- **Départ** : le personnage quitte le feu en marchant vers le nord-est, le menu s'éteint, puis `VoidTransition` prend le relais.
+- **Chroniques** : extraites dans `HubChroniquesPanel`, affichées sur un voile sombre au-dessus du camp, avec des onglets textuels soulignés. L'écran intermédiaire « Exploration/Miroirs » disparaît : le choix du personnage se fait sur l'accueil.
+- **Texte** : Saira Semi Condensed (retour du 24 septembre sur la police pixel) ; seul le titre est en pixels.
+
+**Vérifications :** `dotnet build` sans warning ; `tools/smoke_test.sh` vert ; `tools/test_dev_mode.sh` et `tools/test_dev_release.sh` verts. Captures 1080p avec le nouvel outil `tools/capture_hub.sh <dossier> [actions]`, qui rejoue des actions d'input et capture après chacune : accueil en dev et en profil neuf (personnages verrouillés), changement de personnage, aller-retour dans les Chroniques et navigation des onglets à la manette, départ vers la run.
+
+**Limites et suites :**
+- Le Traqueur, capuche baissée, se lit presque de dos même de face (sprite, plan 08).
+- La Collection demandée (lot C2) n'existe pas encore. Elle prendra une entrée du menu.
+- Le Hub qui évolue avec les Souvenirs se limite pour l'instant au retour des personnages débloqués autour du feu.
+- Six places sont prévues autour du feu ; au-delà, il faudra un second cercle.

@@ -49,6 +49,8 @@ Les numéros servent à identifier les plans, pas à imposer leur exécution int
 
 Un seul lot d'implémentation ouvert à la fois. Un échec de lisibilité, de performance ou de fun ramène au lot concerné avant expansion.
 
+**Mise à jour du 26 septembre :** l'écran d'accueil est refait sur demande de Raphaël (« trop classique », pas de stats mais le sprite, « surprends-moi »). Le Hub devient le camp du Foyer, vivant ; les personnages veillent autour du feu ; le menu est textuel. Compte rendu et limites : [plan 04](04-interfaces-et-hub.md#accueil-refait--26-septembre-2026). Recette attendue.
+
 **Mise à jour du 25 septembre :**
 - Audio : [premier panier](../audio/lot-a/index.html) de 30 candidats écouté ; critique A, ouverture physique du coffre A et dash A retenus. Les [retours](../audio/lot-a/RETOURS.md) guident le [lot A2](../audio/lot-a2/index.html) : 21 nouvelles propositions pour sept effets, dont une mélodie distincte pour la révélation du coffre. Le [catalogue](../audio/COUVERTURE.md) suit 113 besoins, 51 propositions sur 11 besoins et 102 besoins encore à rechercher ou arbitrer ; trois sons choisis, aucun intégré. Sources CC0 ou CC-BY documentées. Contrôles : `python3 tools/audio/build_catalogue.py --check` ; pages reconstruites avec `python3 tools/audio/build_review.py` et `python3 tools/audio/build_review.py --batch lot-a2`.
 - Recette de Raphaël : cadence des micro-événements validée en l'état, élites bien dosées, micro-événements appréciés, HUD « bien mieux ». Le soin, peut-être trop rare, est noté pour les plans 13 et 03.
