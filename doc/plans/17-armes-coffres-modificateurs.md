@@ -396,6 +396,14 @@ Nettoyage de ce que le joueur ne voit pas (plan 18 §4). Aucun comportement de j
 
 **Vérifié :** build sans avertissement, smoke, `test_movement`, `test_enemy_abilities`, `test_dev_mode` ; trois runs headless de 5 min sans erreur de ressource manquante ; capture en fenêtre (ville, HUD complet).
 
+#### Lot 0D livré — 26 septembre
+
+- **Stratégie V2** : section unique « Références et garde-fous » (§2) : conventions du genre assumées, citations de Raphaël, garde-fous du principe 5, références d'atmosphère. Les deux passages qui comparaient la V2 à d'autres jeux sont reformulés.
+- **GDD** : le tableau des références renvoie à cette section et ne garde que l'atmosphère ; six « comme … » / « inspiré de … » retirés.
+- **Plans 02, 05, 06** : les liens vers les wikis et la page Steam du jeu de référence sont remplacés par un renvoi aux garde-fous.
+- **`PROGRESSION-SYSTEM.md`** réécrit (v2.0) : sans modèle externe, et aligné sur la V2 (plus de Foyer, de nuits ni de POI ; coffres, blocage de niveau corrigé, évolutions du plan 17).
+- **Restent, à dessein** : citations de Raphaël (registre, plan 13, README), ordres de grandeur de densité du plan 03, roadmap V1 historique, fichiers audio d'une autre session.
+
 ### Vague 1 — Armes : présentation et montée en puissance
 
 | Lot | Contenu | Vérification |

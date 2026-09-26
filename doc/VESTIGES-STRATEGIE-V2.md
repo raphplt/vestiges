@@ -36,7 +36,7 @@ Le prototype V1 (Phases 0-6 complétées) a mis en lumière trois frictions fond
 
 **Le craft n'a pas prouvé sa valeur.** L'UI n'était pas assez fluide, les assets pas au niveau (Polygon2D), le rapport effort/récompense illisible. Le joueur pouvait survivre sans crafter. Un système que le joueur ignore est un système mort.
 
-**Les runs étaient trop longues.** 15 min/cycle × 3-4 cycles = 45min-1h. Pour un roguelite où la mort est permanente, un investissement de 45 min avant de mourir est frustrant, pas motivant. Les références (Megabonk, Vampire Survivors) visent 15-30 min par run.
+**Les runs étaient trop longues.** 15 min/cycle × 3-4 cycles = 45min-1h. Pour un roguelite où la mort est permanente, un investissement de 45 min avant de mourir est frustrant, pas motivant. Les jeux du genre visent 15 à 30 min par run.
 
 ## 2. La nouvelle identité
 
@@ -53,6 +53,23 @@ VESTIGES passe d'un **hybride roguelite/survie/craft** à un **roguelite d'explo
 3. **Montée en puissance addictive.** Perks, loot d'armes avec raretés, upgrades aux Autels. Le joueur doit se sentir plus fort chaque minute.
 4. **Endgame ouvert.** Pas de mort forcée à 30 min. Les bons joueurs peuvent aller très loin. Un boss/événement majeur marque la fin du "late game" classique, puis c'est l'endgame infini.
 5. **Lore intégré au gameplay.** L'Effacement, les Souvenirs, les Autels — chaque mécanique a un sens dans l'univers.
+
+### Références et garde-fous
+
+Section unique pour les jeux cités (plan 17, lot 0D). Ailleurs dans la doc, on renvoie ici.
+
+**Conventions du genre, communes à tous et assumées :** auto-attaque, level-up à trois choix, raretés colorées, montée en puissance continue, runs de 15 à 30 min, score, « encore une partie ».
+
+**Citations de Raphaël** (registre des décisions) :
+- *Megabonk* : inspiration pour le bilan de mort, et pour la variété du butin, avec une présentation « différente de Megabonk » (24 septembre).
+- *Outer Wilds*, *Celeste*, *Megabonk* : inspirations pour la bande-son (26 septembre, plan 15).
+
+**Garde-fous :**
+- Aucune mécanique signature d'un jeu précis n'est reprise telle quelle. Chaque système propre part de l'Effacement ou de la mémoire (plan 17, principe 5).
+- Aucun nombre de contenus ni réglage d'un autre jeu n'est une cible. Les chiffres cités (densités, durées) sont des ordres de grandeur, jamais des objectifs.
+- Un écran inspiré d'un autre jeu s'adapte à Vestiges ; il ne se copie pas.
+
+**Atmosphère et lecture** (GDD §1) : *Hades* (lisibilité), *Hollow Knight*, *Stalker*, *The Last of Us*, *Gris* (monde mort rendu vivant, mélancolie, couleur au service de l'émotion).
 
 ## 3. Ce qui disparaît
 
@@ -135,7 +152,7 @@ ENDGAME (infini, pour les meilleurs)
 │  Vagues continues d'ennemis. Scaling infini.
 │  Le joueur survit aussi longtemps que son build le permet.
 │  Chaque seconde supplémentaire = score massif.
-│  → C'est le "Vampire Survivors after boss" / "Megabonk endgame".
+│  → Après le boss, la seule question : jusqu'où tient le build.
 │  ↓
 │
 MORT

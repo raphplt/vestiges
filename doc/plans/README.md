@@ -52,12 +52,14 @@ Les numéros servent à identifier les plans, pas à imposer leur exécution int
 
 Un seul lot d'implémentation ouvert à la fois. Un échec de lisibilité, de performance ou de fun ramène au lot concerné avant expansion.
 
-**Mise à jour du 26 septembre (plan 17, lot 0A livré) :** coffres réintégrés et visibles ([17](17-armes-coffres-modificateurs.md#lot-0a-livré--26-septembre)).
+**Mise à jour du 26 septembre (plan 17, vague 0 livrée) :** coffres réintégrés et visibles ([17](17-armes-coffres-modificateurs.md#lot-0a-livré--26-septembre)).
 - 23 coffres sur toute la carte au lieu de 10 à 15 autour du départ, dégagés des décors.
 - Sprites à l'échelle des personnages, colonne de lumière à la couleur de la rareté, invite « Ouvrir », flèches de bord d'écran.
 - Palette de rareté unique ; butin montré tel qu'obtenu, sans perks V1 ni malédictions.
 - Mesure de densité désormais headless en temps accéléré (`tools/measure_run.sh`) : 5 seeds × 3 min en ≈ 1 min.
-- Recette attendue ; lot suivant : 0B (restes V1 visibles).
+- Enchaînés le même jour, à la demande de Raphaël : 0B (restes V1 visibles retirés, POI et éléments de lore désactivés), 0C (code, données et 306 PNG morts, Colosses), 0D (références au jeu du genre ramenées à une section de garde-fous).
+- Deux correctifs trouvés en route : blocage de partie au level-up, durée de run comptée en temps réel.
+- Recette groupée attendue ; la vague 1 attend la décision 4.3 (rareté sur l'arme ou sur les améliorations).
 
 **Mise à jour du 26 septembre (armes, coffres, modificateurs) :** nouvelle priorité de Raphaël, auditée puis planifiée, rien d'implémenté.
 - [Plan 17](17-armes-coffres-modificateurs.md) : armes (sprites, noms, présentation, level-up à raretés, pause), coffres, modificateurs de run (Chance, Péril, Mémoriaux et Failles), objets ensuite, north star.

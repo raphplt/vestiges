@@ -2,6 +2,8 @@
 
 Statut : **inventaire du 26 septembre 2026, décisions à prendre** · Priorité : P0 (lots 0B et 0C du [plan 17](17-armes-coffres-modificateurs.md)) · Dépendances : [08](08-direction-artistique.md), [13](13-butin.md), [05](05-armes-objets-builds.md).
 
+**26 septembre, soir :** lots 0A à 0C livrés ([plan 17](17-armes-coffres-modificateurs.md#lot-0a-livré--26-septembre)). Restent de cet inventaire : les lignes 2, 14 à 17, 19, 22 à 26 du §3 (plans 08, 15, vague 2 ou 3), les quatre décors urbains à confirmer, les sons jamais joués (plan 15).
+
 ## 1. Le retour
 
 Raphaël, le 26 septembre : « il y a plusieurs mécaniques anciennes qui sont encore présentes dans le jeu (souvent visibles sous la forme de sprites dans le jeu, sprites qui sont d'ailleurs totalement en dissonance avec le reste du jeu car pas du tout pixelisés) fais-en moi l'inventaire complet ».

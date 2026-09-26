@@ -35,16 +35,16 @@ Le joueur relance parce que :
 
 ### Références clés
 
+Les références du genre et leurs garde-fous sont regroupées dans la [Stratégie V2, « Références et garde-fous »](VESTIGES-STRATEGIE-V2.md#références-et-garde-fous). Ci-dessous, les références d'atmosphère et de lecture.
+
 | Jeu | Ce qu'on prend |
 |-----|---------------|
-| **Megabonk** | Boucle addictive, montée en puissance in-run, personnages multiples, système de niveaux/perks, coffres, "just one more run", score compétitif |
 | **Hades** | Lisibilité, fluidité du combat, méta-progression entre les runs |
 | **Project Zomboid** | Survie sans fin possible — la mort est inévitable. Construction de base, gestion des ressources |
 | **Hollow Knight** | Un monde "mort" rendu visuellement vivant et poétique. Narration environnementale. |
 | **Stalker / Metro** | Atmosphère, sentiment d'isolement, beauté mélancolique des lieux abandonnés |
 | **The Last of Us** | Nature vs ruines, mélancolie, narration environnementale |
 | **Don't Starve** | Cycle jour/nuit comme mécanique centrale, survie stylisée, scaling organique de la difficulté |
-| **Vampire Survivors** | Montée en puissance dopaminergique, auto-attaque, simplicité de la boucle, rejouabilité infinie |
 | **Gris** | Usage de la couleur comme mécanique narrative. La beauté au service de l'émotion. |
 
 ---
@@ -76,7 +76,7 @@ Il n'y a pas de "fin" au jeu. Pas de boss final qui conclut la run. Le monde sca
 
 **La montée en puissance est la drogue.**
 
-Inspiré de Megabonk : le joueur commence faible et en quelques minutes devient puissant. Level-ups in-run, choix de perks, drops de coffres, combos qui se construisent. Le joueur ne grind pas — il MONTE EN PUISSANCE en temps réel. Chaque décision le rend plus fort, et cette sensation de puissance croissante est ce qui rend la boucle addictive.
+Le joueur commence faible et en quelques minutes devient puissant. Level-ups in-run, choix de perks, drops de coffres, combos qui se construisent. Le joueur ne grind pas — il MONTE EN PUISSANCE en temps réel. Chaque décision le rend plus fort, et cette sensation de puissance croissante est ce qui rend la boucle addictive.
 
 **L'univers justifie la mécanique.**
 
@@ -110,7 +110,7 @@ Ce n'est pas un monde détruit par une bombe ou un virus — c'est un monde en t
 
 **Ce qui se passe :**
 - Le joueur explore un monde procédural composé de biomes et de ruines.
-- **Des créatures sont présentes en PERMANENCE hors de la base.** Le jour n'est jamais safe. Dès que le joueur quitte le rayon de sécurité du Foyer, il est en combat. C'est un Vampire Survivors à ciel ouvert.
+- **Des créatures sont présentes en PERMANENCE hors de la base.** Le jour n'est jamais safe. Dès que le joueur quitte le rayon de sécurité du Foyer, il est en combat.
 - L'auto-attaque génère un flux constant d'XP et de loot → le joueur monte en puissance en temps réel.
 - Il récolte des ressources (bois, pierre, métal) en interagissant avec l'environnement entre les combats.
 - Il ouvre des coffres contenant des objets, perks, et ressources rares.
@@ -263,7 +263,7 @@ Le score est la colonne vertébrale de la rejouabilité. C'est ce qui transforme
 ### Affichage in-game
 
 - Le score courant est visible en permanence (petit compteur en haut à droite, discret mais accessible).
-- À chaque kill, +points affiché en popup (comme Megabonk).
+- À chaque kill, +points affiché en popup.
 - À chaque aube, résumé du score de la nuit avec détail des bonus.
 - Le record personnel est affiché comme objectif à battre.
 
@@ -273,7 +273,7 @@ Le score est la colonne vertébrale de la rejouabilité. C'est ce qui transforme
 
 ### 4.1 Personnages
 
-**Philosophie :** Comme Megabonk, chaque personnage offre une expérience de jeu radicalement différente. Changer de perso = changer de stratégie = rejouabilité massive.
+**Philosophie :** Chaque personnage offre une expérience de jeu radicalement différente. Changer de perso = changer de stratégie = rejouabilité massive.
 
 **Personnage de départ :** Le Vagabond — équilibré, polyvalent, parfait pour apprendre.
 
@@ -299,7 +299,7 @@ Le score est la colonne vertébrale de la rejouabilité. C'est ce qui transforme
 
 ### 4.2 Progression In-Run (Level Up)
 
-**Philosophie :** C'est le cœur du système Megabonk adapté à VESTIGES. Le joueur doit sentir qu'il monte en puissance CONSTAMMENT. Chaque minute il est plus fort qu'avant.
+**Philosophie :** C'est le cœur de la boucle. Le joueur doit sentir qu'il monte en puissance CONSTAMMENT. Chaque minute il est plus fort qu'avant.
 
 **Gain d'XP :**
 - Tuer des créatures (source principale).
@@ -477,8 +477,6 @@ Le score est la colonne vertébrale de la rejouabilité. C'est ce qui transforme
 
 **Philosophie :** Le combat est en AUTO-ATTAQUE. Le joueur ne spamme pas de bouton — son personnage attaque automatiquement les ennemis à portée. Le skill du joueur réside dans le positionnement, le timing des capacités actives, et les choix de build (perks + gear).
 
-**Inspirations directes :** Vampire Survivors (auto-attaque, montée en puissance), Megabonk (rythme, power fantasy).
-
 **Auto-attaque :**
 - Le personnage attaque automatiquement l'ennemi le plus proche à intervalle régulier.
 - Le type d'attaque dépend de l'arme équipée (mêlée = frappe en arc, distance = projectile, magie = orbe).
@@ -502,7 +500,7 @@ Le score est la colonne vertébrale de la rejouabilité. C'est ce qui transforme
 - Statuts : Saignement, Poison, Brûlure, Gel, Terreur (réduit les stats).
 
 **Feedback de combat :**
-- Nombres de dégâts qui pop (comme Megabonk/VS).
+- Nombres de dégâts qui pop.
 - Flash de hit, particules d'impact.
 - Score +points à chaque kill.
 - Screen shake léger (toggle dans les settings).

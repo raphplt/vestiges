@@ -129,6 +129,6 @@ Les chiffres sont des hypothèses. Mesurer le nombre de runs avant récompense, 
 
 Tester seuil avant/au/après, simultanéité, cause des kills, pause, mort, reprise, migration et disponibilité de tous les pools. Comparer début/fin d'une série de runs pour juger variété et satisfaction, pas seulement nombre d'objectifs cochés.
 
-Référence générale : [quêtes Megabonk, wiki communautaire](https://megabonk.wiki/wiki/Quests). L'inspiration est le défi qui ouvre un nouveau jeu possible ; le catalogue et les conditions ci-dessus sont des propositions Vestiges.
+L'idée directrice : un défi ouvre un nouveau jeu possible. Le catalogue et les conditions ci-dessus sont propres à Vestiges.
 
 Build, smoke si applicable ; roadmap E et D/G après implémentation vérifiée. Le lore reste mémorable par son contenu et sa mise en scène, pas par son obligation d'accès au combat.

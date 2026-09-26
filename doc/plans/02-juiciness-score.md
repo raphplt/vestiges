@@ -98,7 +98,7 @@ Un événement de gain avec cause, un profil de feedback JSON et un pool supplé
 4. À collecte de données constante, ne montrer que les statistiques fiables. Les dégâts par arme/objet nécessitent une attribution à ajouter ; anciennes runs = « non mesuré », jamais zéro inventé.
 5. Préserver historique et progression : une hausse de version ne doit pas envoyer les saves V2 dans la migration V1 ni vider leur historique. Écrire une migration V2→nouveau format et une attribution idempotente.
 6. Relier une carte déblocage à la Collection du menu ; quêtes et Souvenirs ont des sections distinctes. Montrer le lore découvert sans en faire la monnaie d’accès aux armes.
-7. Comparer clarté, satisfaction et envie de relance sur des séquences filmées ; la référence Megabonk guide la valorisation du build et du gain, pas un écran copié sans adaptation. Une capture précise de son écran final reste à documenter avant maquette comparative ; aucune disposition spécifique n’est prétendue vérifiée ici.
+7. Comparer clarté, satisfaction et envie de relance sur des séquences filmées ; l'inspiration citée par Raphaël guide la valorisation du build et du gain, pas un écran copié ([garde-fous](../VESTIGES-STRATEGIE-V2.md#références-et-garde-fous)).
 
 **Vérification :** zéro record en jeu/pause ; record correct au bilan même après sauvegarde ; total exact ; quatre armes/passifs et grandes piles d’objets lisibles ; récompenses identiques après passage des animations ou réouverture ; ancienne sauvegarde et historique conservés.
 **Garde-fou :** aucune récompense dans un callback d’animation ; aucune longue liste de statistiques forcée avant relance.
