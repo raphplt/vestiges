@@ -39,6 +39,15 @@ CRYSTAL_CLUSTER = Detail((".0.", "010", "11."), ("#7ae0f0", "#4abae0"), weight=1
 BOLT = Detail(("0",), ("#8a7a6a",), weight=0.5)
 CRACK = Detail(("0..", ".00", "..0"), ("#1a1218",), weight=0.7)
 
+RED_FLOWER = Detail((".0.", "010", ".0."), ("#c44a3a", "#c8d480"))
+BLUE_FLOWER = Detail((".0.", "010", ".0."), ("#5a7aca", "#d0d8d0"))
+WHITE_FLOWER = Detail(("0",), ("#d0d8d0",), weight=1.2)
+YELLOW_FLOWER = Detail(("0",), ("#e0d070",), weight=1.2)
+CLOVER = Detail(("01",), ("#7cba5a", "#3a6a30"), weight=0.8)
+STRAW = Detail(("00",), ("#b8a080",), weight=1.0)
+WHEAT_TIP = Detail(("0",), ("#e8e0d4",), weight=0.8)
+FIELD_PEBBLE = Detail(("0",), ("#b8a080",), weight=0.7)
+
 MATERIALS: dict[str, tuple[str, GroundMaterial]] = {
     "foret_sol": ("foret", GroundMaterial(
         name="foret_sol",
@@ -102,6 +111,81 @@ MATERIALS: dict[str, tuple[str, GroundMaterial]] = {
         details=(CRYSTAL_CLUSTER, CRYSTAL_CHIP, CRACK),
         details_per_tile=1.1,
         seed=7757,
+    )),
+    "champs_herbe": ("champs", GroundMaterial(
+        name="champs_herbe",
+        tones=("#3f7334", "#4a8a3c", "#56a045", "#6fb453"),
+        shares=(0.16, 0.36, 0.36, 0.12),
+        feature_px=18.0,
+        details=(CLOVER, WHITE_FLOWER, YELLOW_FLOWER),
+        details_per_tile=0.8,
+        seed=8101,
+    )),
+    "champs_fleurs": ("champs", GroundMaterial(
+        name="champs_fleurs",
+        tones=("#3f7334", "#4a8a3c", "#56a045", "#6fb453"),
+        shares=(0.16, 0.36, 0.36, 0.12),
+        feature_px=18.0,
+        details=(RED_FLOWER, BLUE_FLOWER, WHITE_FLOWER, YELLOW_FLOWER),
+        details_per_tile=3.0,
+        seed=8117,
+    )),
+    "champs_sol": ("champs", GroundMaterial(
+        name="champs_sol",
+        tones=("#557f3c", "#63953f", "#7aa447", "#98b252"),
+        shares=(0.18, 0.38, 0.32, 0.12),
+        feature_px=20.0,
+        details=(CLOVER, FIELD_PEBBLE, YELLOW_FLOWER),
+        details_per_tile=0.6,
+        seed=8123,
+    )),
+    "champs_ble": ("champs", GroundMaterial(
+        name="champs_ble",
+        tones=("#8a9a48", "#a2ae55", "#b6be64", "#cbd283"),
+        shares=(0.18, 0.36, 0.32, 0.14),
+        feature_px=7.0,
+        stretch=(5.0, 1.0),
+        details=(WHEAT_TIP, STRAW),
+        details_per_tile=0.8,
+        seed=8147,
+    )),
+    "champs_ble_dense": ("champs", GroundMaterial(
+        name="champs_ble_dense",
+        tones=("#7e8c40", "#96a14c", "#aeb65b", "#c9cf82"),
+        shares=(0.22, 0.34, 0.30, 0.14),
+        feature_px=6.0,
+        stretch=(6.0, 1.0),
+        details=(WHEAT_TIP, WHEAT_TIP, STRAW),
+        details_per_tile=1.4,
+        seed=8161,
+    )),
+    "champs_chaume": ("champs", GroundMaterial(
+        name="champs_chaume",
+        tones=("#6a5a42", "#78664c", "#8a7058", "#a08a6a"),
+        shares=(0.18, 0.38, 0.32, 0.12),
+        feature_px=6.0,
+        stretch=(5.0, 1.0),
+        details=(STRAW, FIELD_PEBBLE),
+        details_per_tile=1.0,
+        seed=8171,
+    )),
+    "champs_chemin": ("champs", GroundMaterial(
+        name="champs_chemin",
+        tones=("#6a5a42", "#7a6650", "#8a7058", "#a88f6c"),
+        shares=(0.16, 0.38, 0.34, 0.12),
+        feature_px=14.0,
+        details=(FIELD_PEBBLE, STRAW),
+        details_per_tile=0.9,
+        seed=8179,
+    )),
+    "champs_bosquet": ("champs", GroundMaterial(
+        name="champs_bosquet",
+        tones=("#2e5a28", "#386a30", "#44803a", "#56a045"),
+        shares=(0.22, 0.38, 0.28, 0.12),
+        feature_px=12.0,
+        details=(FERN, LEAF_LITTER, CLOVER),
+        details_per_tile=1.2,
+        seed=8191,
     )),
 }
 

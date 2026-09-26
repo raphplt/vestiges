@@ -49,6 +49,8 @@ class GroundMaterial:
     details: tuple[Detail, ...] = ()
     details_per_tile: float = 0.8
     seed: int = 1
+    # Étirement du motif au sol (x, y) : (4, 1) allonge les formes en rangs parallèles (blé, chaume).
+    stretch: tuple[float, float] = (1.0, 1.0)
     ramp: tuple[RampColor, ...] = field(init=False, repr=False)
 
     def __post_init__(self) -> None:
@@ -104,7 +106,7 @@ def _diamond_pixels() -> tuple[np.ndarray, np.ndarray]:
 
 
 def _field(material: GroundMaterial, points: np.ndarray, key: int) -> np.ndarray:
-    return _value_noise(points, material.seed * 9973 + key * 131, material.feature_px)
+    return _value_noise(points / np.asarray(material.stretch), material.seed * 9973 + key * 131, material.feature_px)
 
 
 def _tile_values(material: GroundMaterial, index: int, ground: np.ndarray) -> np.ndarray:

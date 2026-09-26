@@ -276,6 +276,10 @@ Raphaël valide la forêt « à 100 %, mille fois mieux » : elle sert de réfé
 
 Les palettes sont resserrées par rapport à un premier essai trop bleu et trop saturé. Quand un groupe contient plusieurs matières, le jeu choisit la matière par un bruit lent : des plaques cohérentes plutôt qu'un damier de cellules. Capture `--capture-props` regardée : la trame de losanges de cristal cyan a disparu. Le marais, avec ses berges directionnelles, les champs, avec leurs parcelles, et la ville, avec ses dallages et trottoirs, demandent chacun un traitement propre.
 
+### Lot T1, troisième biome : les Champs Sauvages — 26 septembre 2026
+
+Huit matières de Wang : herbe, prairie fleurie, sol sec, blé, blé dense, chaume, chemin et bosquet. Le blé et le chaume utilisent un bruit étiré (`stretch`) qui dessine des rangs. Le plan de parcelles (`WildFieldsLayout`) garde la main : chaque type de parcelle choisit sa matière, et le blé dense comme la prairie fleurie forment des plaques de bruit lent au lieu d'alterner cellule par cellule. Capture `--capture-props` regardée : rangs de blé, chaume et prairies se fondent sans losanges. Les matières déjà livrées (forêt, carrière) sont inchangées.
+
 ## 10. Investigation performance — 26 septembre 2026
 
 **Demande de Raphaël :** « j'ai beaucoup aimé les initiatives pour améliorer les performances […] peut-être que ça vaut le coup de faire une investigation plus poussée ».

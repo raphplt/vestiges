@@ -396,6 +396,28 @@ public class BiomeTileMapper
 		return sources[variantRoll % 3];
 	}
 
+	// Matières du groupe grass des champs en tuiles de Wang, dans l'ordre de wild_fields.json.
+	private const int FieldSoil = 0;
+	private const int FieldGrass = 1;
+	private const int FieldWheat = 2;
+	private const int FieldStubble = 3;
+	private const int FieldFlowers = 4;
+	private const int FieldDenseWheat = 5;
+
+	/// <summary>Matière d'une parcelle : blé dense et prairie fleurie en plaques de bruit lent, pas cellule par cellule.</summary>
+	private static int WildFieldMaterial(WildFieldCellType cellType, int x, int y)
+	{
+		float patches = ForestFloorNoise.GetNoise2Dv(GroundPoint(x, y) + new Vector2(0f, 7000f));
+		return cellType switch
+		{
+			WildFieldCellType.Wheat => patches > 0.1f ? FieldDenseWheat : FieldWheat,
+			WildFieldCellType.Fallow => FieldStubble,
+			WildFieldCellType.Meadow => patches > 0.2f ? FieldFlowers : FieldGrass,
+			WildFieldCellType.Path => FieldSoil,
+			_ => FieldGrass,
+		};
+	}
+
 	private bool TryGetWildFieldsSourceId(
 		int biomeIndex,
 		TerrainType terrain,
@@ -416,6 +438,17 @@ public class BiomeTileMapper
 
 		WildFieldCellType cellType = _wildFieldsLayout.CellGrid[gx, gy];
 		int hash = HashCell(x, y);
+
+		if (_wangTerrains.TryGetValue(biomeIndex, out HashSet<TerrainType> wangTerrains) && wangTerrains.Contains(terrain)
+			&& terrainMap.TryGetValue(terrain, out int[] wangSources))
+		{
+			int material = terrain == TerrainType.Grass ? WildFieldMaterial(cellType, x, y) : 0;
+			if ((material + 1) * WangTiles.TileCount <= wangSources.Length)
+			{
+				sourceId = wangSources[material * WangTiles.TileCount + WangTiles.Index(x, y)];
+				return true;
+			}
+		}
 
 		if (terrain == TerrainType.Grass && terrainMap.TryGetValue(TerrainType.Grass, out int[] grassSources) && grassSources.Length >= 8)
 		{
