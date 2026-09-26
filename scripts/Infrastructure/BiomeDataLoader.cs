@@ -24,6 +24,12 @@ public class BiomeData
     /// </summary>
     public Dictionary<string, List<string>> TileSources = new();
 
+    /// <summary>Groupes de tile_sources en tuiles de Wang (16 tuiles choisies par les arêtes de la cellule).</summary>
+    public HashSet<string> WangTileGroups = new();
+
+    /// <summary>Les matières du biome (herbe, terre, sous-bois…) se fondent entre elles comme deux biomes voisins.</summary>
+    public bool BlendTerrains;
+
     /// <summary>
     /// Poids relatif pour la taille du secteur angulaire sur la map.
     /// Plus le poids est élevé, plus le biome occupe d'espace.
@@ -180,6 +186,15 @@ public static class BiomeDataLoader
                     pathList.Add(p.AsString());
                 biome.TileSources[terrainName] = pathList;
             }
+        }
+
+        if (dict.ContainsKey("blend_terrains"))
+            biome.BlendTerrains = dict["blend_terrains"].AsBool();
+
+        if (dict.ContainsKey("wang_tile_groups"))
+        {
+            foreach (Variant group in dict["wang_tile_groups"].AsGodotArray())
+                biome.WangTileGroups.Add(group.AsString());
         }
 
         return biome;

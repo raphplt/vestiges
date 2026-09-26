@@ -157,7 +157,7 @@ public partial class WorldSetup : Node2D
 
         // Étaler ApplyTerrain sur plusieurs frames (le plus gros coût)
         await ApplyTerrainAsync(_terrain, _urbanLayout, onProgress);
-        GroundMaterial.Apply(_ground, _roadOverlay, _generator, _terrain, _config.MapRadius, _config.GroundBlend);
+        GroundMaterial.Apply(_ground, _roadOverlay, _generator, _tileMapper, _terrain, _config.MapRadius, _config.GroundBlend);
 
         onProgress?.Invoke("Brouillard de guerre...");
         InitializeFog();
@@ -207,7 +207,7 @@ public partial class WorldSetup : Node2D
     {
         CreateVoidBackground();
         ApplyTerrain(_terrain, _urbanLayout);
-        GroundMaterial.Apply(_ground, _roadOverlay, _generator, _terrain, _config.MapRadius, _config.GroundBlend);
+        GroundMaterial.Apply(_ground, _roadOverlay, _generator, _tileMapper, _terrain, _config.MapRadius, _config.GroundBlend);
         InitializeFog();
         if (!PoisDisabled)
         {

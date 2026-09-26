@@ -1,0 +1,108 @@
+"""
+Génère les sols en tuiles de Wang (plan 10 T1) : 16 tuiles par matière, nommées <dossier>/tile_<matière>_w<NN>.png.
+
+Usage : python3 tools/generate_ground.py <matière|all> [--sheet planche.png]
+La planche pave une zone avec les tuiles choisies comme en jeu (arêtes hachées), pour juger raccords et répétitions.
+"""
+from __future__ import annotations
+
+import argparse
+import sys
+from pathlib import Path
+
+from PIL import Image
+
+ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT / "tools"))
+
+from sprites.ground import TILE_H, TILE_W, Detail, GroundMaterial, render_tiles  # noqa: E402
+from tile_preview import cell_hash  # noqa: E402
+
+# Sels des arêtes : identiques à WangTiles.cs.
+SALT_NE = 0x51ED
+SALT_NW = 0xA7E3
+
+LEAF_LITTER = Detail(("01", "10"), ("#4a3728", "#7a5c42"))
+GOLD_LEAF = Detail((".0", "01"), ("#c49b3e", "#7a5c42"), weight=0.6)
+FERN = Detail(("0.0", ".1.", "..."), ("#4a8c3f", "#2d5a27"), weight=0.8)
+MOSS_SPOT = Detail(("00",), ("#7bc558",), weight=0.5)
+
+ROOT_LINE = Detail(("00.", ".00"), ("#2a1e16",), weight=0.8)
+PEBBLE = Detail(("01",), ("#7a7a70", "#4a4a44"), weight=0.6)
+VIOLET_FLOWER = Detail((".0.", "010", ".0."), ("#6a4a8a", "#c49b3e"), weight=0.25)
+
+MATERIALS: dict[str, tuple[str, GroundMaterial]] = {
+    "foret_sol": ("foret", GroundMaterial(
+        name="foret_sol",
+        tones=("#1c3719", "#21421d", "#28502a", "#365f2f"),
+        shares=(0.28, 0.44, 0.23, 0.05),
+        feature_px=22.0,
+        details=(LEAF_LITTER, GOLD_LEAF, FERN, MOSS_SPOT),
+        details_per_tile=0.7,
+        seed=4127,
+    )),
+    "foret_terre": ("foret", GroundMaterial(
+        name="foret_terre",
+        tones=("#2a1e16", "#382719", "#4a3728", "#5c4431"),
+        shares=(0.18, 0.42, 0.30, 0.10),
+        feature_px=18.0,
+        details=(ROOT_LINE, PEBBLE, LEAF_LITTER, GOLD_LEAF, MOSS_SPOT),
+        details_per_tile=1.1,
+        seed=5231,
+    )),
+    "foret_sousbois": ("foret", GroundMaterial(
+        name="foret_sousbois",
+        tones=("#1c3719", "#27491f", "#2f5a26", "#3f7432"),
+        shares=(0.30, 0.38, 0.24, 0.08),
+        feature_px=12.0,
+        details=(FERN, GOLD_LEAF, LEAF_LITTER, VIOLET_FLOWER, MOSS_SPOT),
+        details_per_tile=1.4,
+        seed=6311,
+    )),
+}
+
+
+def wang_index(x: int, y: int) -> int:
+    """Même calcul que WangTiles.Index : couleur de chaque arête par hachage de l'arête (cellule de référence + sel)."""
+    odd = y & 1
+    ne = cell_hash(x, y, SALT_NE) & 1
+    nw = cell_hash(x, y, SALT_NW) & 1
+    se = cell_hash(x + odd, y + 1, SALT_NW) & 1
+    sw = cell_hash(x - 1 + odd, y + 1, SALT_NE) & 1
+    return ne | nw << 1 | se << 2 | sw << 3
+
+
+def sheet(tiles: list[Image.Image], size: int = 16, scale: int = 3) -> Image.Image:
+    width = size * TILE_W + TILE_W // 2
+    height = size * TILE_H // 2 + TILE_H
+    image = Image.new("RGBA", (width, height), (20, 20, 30, 255))
+    for y in range(size * 2):
+        for x in range(size):
+            left = x * TILE_W + (TILE_W // 2 if y & 1 else 0)
+            image.alpha_composite(tiles[wang_index(x, y)], (left, y * TILE_H // 2))
+    image = image.crop((TILE_W // 2, TILE_H // 2, width - TILE_W // 2, height - TILE_H))
+    return image.resize((image.width * scale, image.height * scale), Image.NEAREST)
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("material", choices=[*MATERIALS, "all"])
+    parser.add_argument("--sheet", type=Path)
+    args = parser.parse_args()
+
+    names = list(MATERIALS) if args.material == "all" else [args.material]
+    for name in names:
+        folder, material = MATERIALS[name]
+        tiles = render_tiles(material)
+        out_dir = ROOT / "assets" / "tiles" / folder
+        for index, tile in enumerate(tiles):
+            tile.save(out_dir / f"tile_{name}_w{index:02d}.png")
+        print(f"{name} : 16 tuiles dans assets/tiles/{folder}/")
+        if args.sheet:
+            path = args.sheet if len(names) == 1 else args.sheet.with_stem(f"{args.sheet.stem}-{name}")
+            sheet(tiles).save(path)
+            print(f"Planche : {path}")
+
+
+if __name__ == "__main__":
+    main()

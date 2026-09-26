@@ -15,6 +15,12 @@ public class BiomeTileMapper
 	private readonly Dictionary<int, Dictionary<string, int[]>> _biomeSpecialSourceMap = new();
 	private readonly Dictionary<TerrainType, int[]> _fallbackSourceMap = new();
 	private readonly Dictionary<int, string> _biomeIds = new();
+	private readonly Dictionary<int, HashSet<TerrainType>> _wangTerrains = new();
+	// Matière de chaque source dans son biome : un groupe de tile_sources, ou 16 tuiles d'un groupe de Wang.
+	private readonly Dictionary<int, int> _materialOfSource = new();
+
+	/// <summary>Nombre maximal de matières distinguées par biome pour les jonctions du sol.</summary>
+	public const int MaxMaterialsPerBiome = 8;
 
 	// Layout urbain pour la sélection directionnelle des tiles de route
 	private UrbanLayout _urbanLayout;
@@ -104,6 +110,8 @@ public class BiomeTileMapper
 		_biomeSpecialSourceMap.Clear();
 		_fallbackSourceMap.Clear();
 		_biomeIds.Clear();
+		_wangTerrains.Clear();
+		_materialOfSource.Clear();
 		_tileSet = tileSet;
 
 		// Charger les tiles d'eau communes
@@ -133,16 +141,37 @@ public class BiomeTileMapper
 
 			Dictionary<TerrainType, int[]> terrainMap = new();
 			Dictionary<string, int[]> specialMap = new();
+			int nextMaterial = 0;
 
 			foreach (KeyValuePair<string, List<string>> kv in biome.TileSources)
 			{
 				int[] sources = LoadTileGroup(tileSet, kv.Value);
 				if (sources.Length == 0)
 					continue;
+				bool wangGroup = biome.WangTileGroups.Contains(kv.Key) && sources.Length % WangTiles.TileCount == 0;
+				for (int index = 0; index < sources.Length; index++)
+				{
+					int material = nextMaterial + (wangGroup ? index / WangTiles.TileCount : 0);
+					_materialOfSource.TryAdd(sources[index], Mathf.Min(material, MaxMaterialsPerBiome - 1));
+				}
+				nextMaterial += wangGroup ? sources.Length / WangTiles.TileCount : 1;
 
 				if (TerrainNameMap.TryGetValue(kv.Key, out TerrainType terrainType))
 				{
 					terrainMap[terrainType] = sources;
+					if (biome.WangTileGroups.Contains(kv.Key))
+					{
+						if (sources.Length % WangTiles.TileCount == 0)
+						{
+							if (!_wangTerrains.TryGetValue(i, out HashSet<TerrainType> wang))
+								_wangTerrains[i] = wang = new HashSet<TerrainType>();
+							wang.Add(terrainType);
+						}
+						else
+						{
+							GD.PushWarning($"[BiomeTileMapper] Groupe de Wang '{kv.Key}' de '{biome.Id}' : {sources.Length} tuiles, pas un multiple de {WangTiles.TileCount} ; choix par hachage");
+						}
+					}
 					if (!_fallbackSourceMap.ContainsKey(terrainType))
 						_fallbackSourceMap[terrainType] = sources;
 				}
@@ -211,10 +240,11 @@ public class BiomeTileMapper
 		{
 			if (terrainMap.TryGetValue(terrain, out int[] sources))
 			{
+				bool wang = _wangTerrains.TryGetValue(biomeIndex, out HashSet<TerrainType> wangTerrains) && wangTerrains.Contains(terrain);
 				if (_biomeIds.TryGetValue(biomeIndex, out string biomeKey))
-				{
-					return GetBiomeSpecificSourceId(biomeKey, terrain, sources, x, y);
-				}
+					return GetBiomeSpecificSourceId(biomeKey, terrain, sources, x, y, wang);
+				if (wang)
+					return sources[WangTiles.Index(x, y)];
 
 				int hash = HashCell(x, y);
 				return sources[hash % sources.Length];
@@ -247,6 +277,9 @@ public class BiomeTileMapper
 	}
 
 	public bool HasDissolutionTiles => _dissolutionSources.Length > 0;
+
+	/// <summary>Matière d'une source dans son biome (0 si inconnue, ex. tuiles de route générées).</summary>
+	public int GetMaterialOfSource(int sourceId) => _materialOfSource.TryGetValue(sourceId, out int material) ? material : 0;
 
 	private static int[] LoadTileGroup(TileSet tileSet, List<string> relativePaths)
 	{
@@ -295,8 +328,23 @@ public class BiomeTileMapper
 		return new Vector2(x * 64f + ((y & 1) != 0 ? 32f : 0f), y * 32f);
 	}
 
-	private static int GetBiomeSpecificSourceId(string biomeId, TerrainType terrain, int[] sources, int x, int y)
+	/// <summary>
+	/// Groupe de Wang : 16 tuiles par matière, rangées matière après matière ; la cellule choisit sa matière,
+	/// ses arêtes choisissent la tuile.
+	/// </summary>
+	private static int GetBiomeSpecificSourceId(string biomeId, TerrainType terrain, int[] sources, int x, int y, bool wang)
 	{
+		if (wang)
+		{
+			int materials = sources.Length / WangTiles.TileCount;
+			int material = 0;
+			if (biomeId == "forest_reclaimed" && terrain == TerrainType.Forest && materials >= 2)
+				material = ForestFloorNoise.GetNoise2Dv(GroundPoint(x, y)) > 0.12f ? 0 : 1;
+			else if (materials > 1)
+				material = HashCell(x, y) % materials;
+			return sources[material * WangTiles.TileCount + WangTiles.Index(x, y)];
+		}
+
 		if (biomeId == "wild_fields" && terrain == TerrainType.Grass && sources.Length >= 8)
 			return GetWildFieldsGrassSourceId(sources, x, y);
 

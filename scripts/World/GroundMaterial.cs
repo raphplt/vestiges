@@ -34,7 +34,8 @@ public static class GroundMaterial
     private const int TileHeight = 32;
     private const byte NoBlend = 255;
 
-    public static void Apply(TileMapLayer ground, TileMapLayer roads, WorldGenerator generator, TerrainType[,] terrain, int radius, GroundBlendConfig config)
+    public static void Apply(TileMapLayer ground, TileMapLayer roads, WorldGenerator generator, BiomeTileMapper tileMapper,
+                             TerrainType[,] terrain, int radius, GroundBlendConfig config)
     {
         Shader shader = GD.Load<Shader>(ShaderPath);
         // Les routes s'effacent comme le sol mais ne participent pas aux jonctions.
@@ -71,8 +72,12 @@ public static class GroundMaterial
 
                 int sourceId = ground.GetCellSourceId(new Vector2I(x, y));
                 int biome = generator.GetBiomeIndex(x, y);
-                if (sourceId < 0 || biome < 0 || biome >= NoBlend)
+                if (sourceId < 0 || biome < 0 || biome >= NoBlend / BiomeTileMapper.MaxMaterialsPerBiome)
                     continue;
+                // Identifiant de mélange : le biome, ou la matière de la tuile quand le biome fond ses matières entre elles.
+                int blendId = biome * BiomeTileMapper.MaxMaterialsPerBiome;
+                if (generator.GetBiome(x, y)?.BlendTerrains == true)
+                    blendId += tileMapper.GetMaterialOfSource(sourceId);
 
                 if (!atlasIndexBySource.TryGetValue(sourceId, out int atlasIndex))
                 {
@@ -80,7 +85,7 @@ public static class GroundMaterial
                     atlasIndexBySource[sourceId] = atlasIndex;
                     sources.Add(sourceId);
                 }
-                cells[offset] = (byte)biome;
+                cells[offset] = (byte)blendId;
                 cells[offset + 1] = (byte)(atlasIndex & 0xFF);
                 cells[offset + 2] = (byte)(atlasIndex >> 8);
             }

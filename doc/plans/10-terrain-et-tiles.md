@@ -247,6 +247,25 @@ Ordre T2 → T1 → T3 validé par Raphaël.
 - **Vérification :** `CAPTURE_EXTRA_ARGS="--capture-junctions" tools/capture_run.sh <dossier>` capture, pour chacune des dix paires de biomes voisins, la frontière la plus proche du départ, avec les décors puis sol seul au zoom ×2. Pour l'avant, passer `enabled` à `false`. Captures regardées : les dix paires présentent une lisière organique à la place de l'escalier de losanges.
 - **Non fait :** les décors de transition (herbes entre forêt et champs, gravats entre ville et carrière) ; le sol lui-même (T1) reste granuleux, et la carrière montre toujours des losanges de cristal cyan réguliers.
 
+### Lot T1, premier biome : la Forêt Reconquise — 26 septembre 2026
+
+**Constat** (`python3 tools/tile_preview.py <biome> [groupe]` pave une zone comme en jeu) : les cinq sols ont trois défauts communs. Le bruit est tiré pixel par pixel ; un motif revient au même endroit de chaque tuile et dessine une trame diagonale ; des variantes de tons différents font réapparaître les losanges.
+
+**Méthode, les tuiles de Wang :**
+- Chaque arête de la grille porte une couleur (0 ou 1), tirée par hachage de l'arête elle-même (`World/WangTiles.cs`). Une matière existe donc en 16 tuiles, une par combinaison d'arêtes.
+- Près d'une arête, le motif ne dépend que de la couleur de cette arête : les voisines se raccordent sans couture et aucun motif ne se répète à l'échelle de la grille.
+- Le motif est un bruit lent ramené à 4 tons, en grandes plaques, avec de rares détails au centre : feuilles, racines, fougères, fleurs.
+- Générateur : `python3 tools/generate_ground.py <matière|all> [--sheet planche.png]` (module `tools/sprites/ground.py`). Il est déterministe : régénérer donne des fichiers identiques octet pour octet.
+
+**Intégration :**
+- Un biome déclare ses groupes concernés (`wang_tile_groups`). Un groupe peut contenir plusieurs matières de 16 tuiles, rangées l'une après l'autre ; la forêt tire la terre ou le sous-bois par son bruit de plaques habituel.
+- `blend_terrains: true` étend les jonctions tramées de T2 aux frontières entre matières du même biome.
+- La forêt utilise trois matières : `foret_sol`, `foret_terre` et `foret_sousbois`, 48 tuiles au total. Les anciennes tuiles restent sur le disque, inutilisées.
+
+**Vérification :** captures `--capture-props --hide-collisions` avant et après, regardées. Le sol forestier devient un sous-bois continu, parcouru de sentiers de terre aux bords organiques, sans losange visible. Régression de déplacement et smoke test verts.
+
+**Suite :** le même traitement pour les champs, la ville, le marais et la carrière. La forêt sert de référence de style : il vaut mieux que Raphaël la valide en jeu avant de généraliser (densité des détails, contraste, taille des plaques).
+
 ## 10. Investigation performance — 26 septembre 2026
 
 **Demande de Raphaël :** « j'ai beaucoup aimé les initiatives pour améliorer les performances […] peut-être que ça vaut le coup de faire une investigation plus poussée ».

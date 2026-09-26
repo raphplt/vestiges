@@ -6,7 +6,8 @@ shader_type canvas_item;
 // 2. Oubli : la mémoire des zones (ErasureManager) délave le sol, le blanchit par tramage, le fissure
 //    de lumière, jusqu'au Néant blanc animé. Phases de la Stratégie V2 §8.
 
-// R : biome de la cellule (255 = ne participe pas : eau, bord dissous) ; G + 256 × B : tuile dans l'atlas ;
+// R : identifiant de mélange (biome × 8, plus la matière si le biome fond ses matières ; 255 = eau, bord dissous) ;
+// G + 256 × B : tuile dans l'atlas ;
 // A : 1 si un autre biome est à moins de deux cases (seules ces cellules cherchent la frontière).
 uniform sampler2D cell_map : filter_nearest, repeat_disable;
 uniform sampler2D tile_atlas : filter_nearest, repeat_disable;
