@@ -56,6 +56,12 @@ PUDDLE_GLINT = Detail(("01",), ("#7a8a9a", "#5a6a72"), weight=1.0)
 LILY_PAD = Detail((".0.", "010", ".0."), ("#3a6a38", "#6aca5a"), weight=0.8)
 WATER_GLINT = Detail(("00",), ("#8a9ea8",), weight=1.0)
 
+CONCRETE_CRACK = Detail(("0..", ".0.", ".00"), ("#2e2e2e",), weight=1.0)
+WEED = Detail(("0.0", ".1."), ("#4a7a3a", "#3a5a2e"), weight=0.8)
+RUST_STAIN = Detail(("01", "1."), ("#a85c30", "#8a5a42"), weight=0.5)
+DIRT_HOLE = Detail(("00", "01"), ("#5a4a38", "#3e3226"), weight=0.8)
+GLASS = Detail(("0",), ("#5a7a9a",), weight=0.4)
+
 MATERIALS: dict[str, tuple[str, GroundMaterial]] = {
     "foret_sol": ("foret", GroundMaterial(
         name="foret_sol",
@@ -222,6 +228,52 @@ MATERIALS: dict[str, tuple[str, GroundMaterial]] = {
         details=(WATER_GLINT, LILY_PAD),
         details_per_tile=0.7,
         seed=9043,
+    )),
+    "ruines_sol": ("ruines", GroundMaterial(
+        name="ruines_sol",
+        tones=("#3a3a3a", "#444444", "#505050", "#626262"),
+        shares=(0.20, 0.40, 0.30, 0.10),
+        feature_px=18.0,
+        details=(CONCRETE_CRACK, WEED, RUST_STAIN, GLASS),
+        details_per_tile=1.1,
+        seed=9511,
+    )),
+    "ruines_trottoir": ("ruines", GroundMaterial(
+        name="ruines_trottoir",
+        tones=("#5e5e5a", "#686864", "#73736d", "#838379"),
+        shares=(0.18, 0.40, 0.32, 0.10),
+        feature_px=20.0,
+        slab_px=16,
+        joint="#5a5a56",
+        joint_wear=0.35,
+        details=(CONCRETE_CRACK, WEED, RUST_STAIN),
+        details_per_tile=0.8,
+        seed=9533,
+    )),
+    "ruines_carrelage": ("ruines", GroundMaterial(
+        name="ruines_carrelage",
+        tones=("#5a5652", "#666058", "#726b62", "#857c70"),
+        shares=(0.18, 0.40, 0.32, 0.10),
+        feature_px=16.0,
+        slab_px=8,
+        joint="#56514b",
+        joint_wear=0.3,
+        details=(DIRT_HOLE, CONCRETE_CRACK, RUST_STAIN),
+        details_per_tile=1.2,
+        seed=9551,
+    )),
+    "ruines_place": ("ruines", GroundMaterial(
+        name="ruines_place",
+        tones=("#5c5a56", "#67645f", "#736f68", "#86817a"),
+        shares=(0.18, 0.40, 0.32, 0.10),
+        feature_px=24.0,
+        slab_px=32,
+        joint="#58554f",
+        joint_wear=0.3,
+        running_bond=True,
+        details=(CONCRETE_CRACK, WEED, DIRT_HOLE),
+        details_per_tile=0.9,
+        seed=9573,
     )),
 }
 

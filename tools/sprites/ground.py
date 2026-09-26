@@ -51,6 +51,13 @@ class GroundMaterial:
     seed: int = 1
     # Étirement du motif au sol (x, y) : (4, 1) allonge les formes en rangs parallèles (blé, chaume).
     stretch: tuple[float, float] = (1.0, 1.0)
+    # Dallage : côté d'une dalle au sol (diviseur de 32, pour que les joints se raccordent d'une tuile à l'autre),
+    # couleur des joints, et décalage d'une demi-dalle un rang sur deux (appareil en quinconce).
+    slab_px: int = 0
+    joint: str = "#000000"
+    running_bond: bool = False
+    # Part des joints effacés par l'usure (0 = joints intacts).
+    joint_wear: float = 0.0
     ramp: tuple[RampColor, ...] = field(init=False, repr=False)
 
     def __post_init__(self) -> None:
@@ -140,6 +147,24 @@ def _thresholds(material: GroundMaterial, ground: np.ndarray) -> np.ndarray:
     return np.quantile(sample, cumulative)
 
 
+def _joint_mask(material: GroundMaterial, ground: np.ndarray) -> np.ndarray:
+    """Joints du dallage, en coordonnées au sol de la tuile : les origines des tuiles tombent sur des multiples de 32
+    au sol, donc un côté qui divise 32 donne des joints continus d'une tuile à l'autre."""
+    if material.slab_px <= 0:
+        return np.zeros(len(ground), dtype=bool)
+    size = float(material.slab_px)
+    gx = ground[:, 0] - 0.5
+    gy = ground[:, 1] - 1.0
+    row = np.floor(gy / size)
+    if material.running_bond:
+        gx = gx + (row % 2) * size * 0.5
+    # Un pixel de joint à l'écran dans chaque sens (deux unités au sol en y).
+    joints = (np.mod(gx, size) < 1.0) | (np.mod(gy, size) < 2.0)
+    # Joints usés : un bruit lent (continu d'une tuile à l'autre) en efface des tronçons.
+    wear = _value_noise(ground, material.seed * 31 + 5, size * 0.75)
+    return joints & (wear > material.joint_wear)
+
+
 def _interior_distance(ground: np.ndarray) -> np.ndarray:
     return np.min(np.stack([_segment_distance(ground, a, b) for a, b, _, _ in EDGES.values()]), axis=0)
 
@@ -152,10 +177,12 @@ def render_tiles(material: GroundMaterial) -> list[Image.Image]:
     for index in range(16):
         values = _tile_values(material, index, ground)
         tones = np.searchsorted(thresholds, values)
+        joints = _joint_mask(material, ground)
+        joint_color = hex_to_rgb(material.joint)
         image = Image.new("RGBA", (TILE_W, TILE_H), (0, 0, 0, 0))
         data = image.load()
-        for (x, y), tone in zip(pixels, tones):
-            data[int(x), int(y)] = (*material.ramp[int(tone)], 255)
+        for (x, y), tone, joint in zip(pixels, tones, joints):
+            data[int(x), int(y)] = (*(joint_color if joint else material.ramp[int(tone)]), 255)
         _place_details(material, index, image, pixels, interior)
         tiles.append(image)
     return tiles

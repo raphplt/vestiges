@@ -16,6 +16,7 @@ public class BiomeTileMapper
 	private readonly Dictionary<TerrainType, int[]> _fallbackSourceMap = new();
 	private readonly Dictionary<int, string> _biomeIds = new();
 	private readonly Dictionary<int, HashSet<TerrainType>> _wangTerrains = new();
+	private readonly Dictionary<int, HashSet<string>> _wangSpecialGroups = new();
 	// Matière de chaque source dans son biome : un groupe de tile_sources, ou 16 tuiles d'un groupe de Wang.
 	private readonly Dictionary<int, int> _materialOfSource = new();
 
@@ -111,6 +112,7 @@ public class BiomeTileMapper
 		_fallbackSourceMap.Clear();
 		_biomeIds.Clear();
 		_wangTerrains.Clear();
+		_wangSpecialGroups.Clear();
 		_materialOfSource.Clear();
 		_tileSet = tileSet;
 
@@ -178,6 +180,12 @@ public class BiomeTileMapper
 				else
 				{
 					specialMap[kv.Key] = sources;
+					if (wangGroup)
+					{
+						if (!_wangSpecialGroups.TryGetValue(i, out HashSet<string> wangGroups))
+							_wangSpecialGroups[i] = wangGroups = new HashSet<string>();
+						wangGroups.Add(kv.Key);
+					}
 				}
 			}
 
@@ -514,6 +522,9 @@ public class BiomeTileMapper
 		_biomeSpecialSourceMap.TryGetValue(biomeIndex, out Dictionary<string, int[]> specialMap);
 		_biomeSourceMap.TryGetValue(biomeIndex, out Dictionary<TerrainType, int[]> terrainMap);
 
+		if (TryGetUrbanWangSourceId(biomeIndex, urbanCellType, specialMap, terrainMap, x, y, out sourceId))
+			return true;
+
 		switch (urbanCellType)
 		{
 			case UrbanCellType.Road:
@@ -547,6 +558,47 @@ public class BiomeTileMapper
 		}
 
 		return false;
+	}
+
+	/// <summary>
+	/// Ville en tuiles de Wang : chaque type de cellule garde son groupe (trottoir, place, intérieur…) ; la place
+	/// alterne grandes dalles et carrelage par plaques de bruit lent. Bords nets entre groupes : la ville est construite.
+	/// </summary>
+	private bool TryGetUrbanWangSourceId(int biomeIndex, UrbanCellType cellType, Dictionary<string, int[]> specialMap,
+		Dictionary<TerrainType, int[]> terrainMap, int x, int y, out int sourceId)
+	{
+		sourceId = -1;
+		int[] sources = null;
+		if (cellType == UrbanCellType.Road)
+		{
+			if (_wangTerrains.TryGetValue(biomeIndex, out HashSet<TerrainType> wangTerrains) && wangTerrains.Contains(TerrainType.Concrete))
+				terrainMap?.TryGetValue(TerrainType.Concrete, out sources);
+		}
+		else
+		{
+			string key = cellType switch
+			{
+				UrbanCellType.Sidewalk => "sidewalk",
+				UrbanCellType.BuildingInterior => "building_interior",
+				UrbanCellType.BuildingWall => "building_edge",
+				UrbanCellType.Plaza => "plaza",
+				_ => null,
+			};
+			if (key != null && _wangSpecialGroups.TryGetValue(biomeIndex, out HashSet<string> groups) && groups.Contains(key))
+				specialMap?.TryGetValue(key, out sources);
+		}
+		if (sources == null || sources.Length < WangTiles.TileCount)
+			return false;
+
+		int materials = sources.Length / WangTiles.TileCount;
+		int material = 0;
+		if (materials > 1)
+		{
+			float patches = ForestFloorNoise.GetNoise2Dv(GroundPoint(x, y) + new Vector2(4000f, -4000f));
+			material = Mathf.Clamp((int)((patches * 0.5f + 0.5f) * materials), 0, materials - 1);
+		}
+		sourceId = sources[material * WangTiles.TileCount + WangTiles.Index(x, y)];
+		return true;
 	}
 
 	private static bool TryPickSpecialSource(Dictionary<string, int[]> specialMap, string key, int x, int y, out int sourceId)

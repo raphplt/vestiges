@@ -284,6 +284,20 @@ Huit matières de Wang : herbe, prairie fleurie, sol sec, blé, blé dense, chau
 
 Trois matières de Wang : sol moussu, vase et eau (motif étiré en rides). Les berges directionnelles dessinées à la main ne servent plus : dans les biomes qui fondent leurs matières (`blend_terrains`), l'eau participe désormais au mélange tramé, avec son propre identifiant, ce qui dessine des rives organiques. Le ralentissement dans l'eau reste calculé par cellule ; seul le rendu de la rive est tramé, sur une demi-cellule de part et d'autre. La vase borde l'eau par endroits et forme de rares plaques ; un premier essai, trop étendu et trop contrasté, a été resserré. Il reste la ville, dont les dallages et trottoirs demandent un motif régulier, pas un bruit.
 
+### Lot T1, cinquième biome : les Ruines Urbaines — 26 septembre 2026
+
+Quatre matières :
+- `ruines_sol` : béton fissuré, sous les routes et aux abords des immeubles ;
+- `ruines_trottoir` : dalles de 16 px ;
+- `ruines_carrelage` : carrelage de 8 px, pour les intérieurs et une partie des places ;
+- `ruines_place` : grandes dalles de 32 px en quinconce.
+
+Le générateur sait désormais dessiner un dallage (`slab_px`). Les origines des tuiles tombent sur des multiples de 32 au sol, donc les joints se raccordent d'une tuile à l'autre. Un bruit lent efface une partie des joints (`joint_wear`) : sans cette usure, la ville entière ressemblait à du papier millimétré. Les groupes spéciaux de la ville (trottoir, place, intérieur, bord d'immeuble) passent aussi en Wang.
+
+`blend_terrains` est activé : les losanges de béton isolés disparaissent dans le dallage. Les routes, sur leur propre couche, restent nettes. Capture `--capture-props` regardée.
+
+**T1 couvre les cinq biomes.** Les anciennes tuiles restent sur le disque, inutilisées, car leurs `.import` sont référencés.
+
 ## 10. Investigation performance — 26 septembre 2026
 
 **Demande de Raphaël :** « j'ai beaucoup aimé les initiatives pour améliorer les performances […] peut-être que ça vaut le coup de faire une investigation plus poussée ».
