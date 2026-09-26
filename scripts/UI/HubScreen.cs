@@ -592,7 +592,7 @@ public partial class HubScreen : Control
 	{
 		return condition switch
 		{
-			"survive_3_nights" => "Tenir 12 minutes pour s'en souvenir",
+			"survive_12_minutes" => "Tenir 12 minutes pour s'en souvenir",
 			"kill_200_in_run" => "Abattre 200 créatures en une run pour s'en souvenir",
 			_ => "Un souvenir encore effacé"
 		};

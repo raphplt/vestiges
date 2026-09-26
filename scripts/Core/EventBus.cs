@@ -78,10 +78,6 @@ public partial class EventBus : Node
     // --- Variantes d'ennemis ---
     [Signal] public delegate void VariantEnemyKilledEventHandler(string displayName, string variantId, Vector2 position);
 
-    // --- Bonus événementiels ---
-    [Signal] public delegate void XpMultiplierChangedEventHandler(float multiplier);
-    [Signal] public delegate void FogRevealBurstEventHandler(int cellX, int cellY, int radius);
-
     // --- Difficulte dynamique ---
     [Signal] public delegate void DifficultyModifierChangedEventHandler(float enemyCountMult, float enemyHpMult, float enemyDmgMult, float xpMult);
 

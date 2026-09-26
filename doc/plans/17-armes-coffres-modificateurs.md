@@ -365,6 +365,37 @@ Périmètre : lignes 0B du plan 18 (1, 3 à 8, 20) et ses réponses §5. Raphaë
 
 **Point ouvert :** les Souvenirs ne viennent plus que des coffres anciens (3 par carte) ; les sanctuaires et bâtiments à fouiller en donnaient aussi. La progression méta ralentit jusqu'au retour des Mémoriaux (vague 3).
 
+Mesure après 0B (headless, nomade, 8 min, 5 seeds) : les cinq parties vont au bout, dont la seed qui restait bloquée ; 11,4 coffres vus et 15,2 signalés en moyenne.
+
+#### Lot 0C livré — 26 septembre
+
+Nettoyage de ce que le joueur ne voit pas (plan 18 §4). Aucun comportement de jeu ne change, sauf la disparition des Colosses, qui n'apparaissaient plus.
+
+**Retiré :**
+- Chargeurs et données sans lecteur : `ResourceDataLoader` et `resources.json`, gabarit de recettes, lot de simulation, champs de biome `resource_bias` et `ambient_color_day/dusk` ; gabarits de biome et de butin réécrits au format V2.
+- Classes mortes : `Minimap`, `EventSpriteFactory` ; 12 `.cs.uid` orphelins (Base, craft, Foyer, recettes).
+- Mémorial de perks : écouteur de `PerkManager` et mode « MÉMORIAL » de `LevelUpScreen` ; effet `bonus_resource`.
+- 13 perks V1 de `perks.json` (structures, jour et nuit, Foyer, récolte, lumière) et les deux synergies qui en dépendaient ; stat `harvest_speed`.
+- Visibilité factice (`IsPositionVisible`, toujours vraie, appelée dans cinq boucles de ciblage) et pénalité d'Essence inerte des armes.
+- Signaux jamais émis : `XpMultiplierChanged`, `FogRevealBurst`.
+- Colosses : données, 257 sprites, générateurs, comportement de charge et de slam, barème de score, succès Steam.
+- Nuits : champs du score et de l'historique (`nights_survived`, `death_night`, structures, ressources), `CurrentNight`, alias `GetMaxNights`, `GetTopByNights`, moyennes de nuits.
+- 306 PNG jamais affichés, avec leur `.import` : ressources, structures, outils, objets V1, Foyer, icônes de HUD V1, fonds et aperçus, brouillard, sanctuaire, `ombre`, aperçus d'ennemis, 13 variantes d'armes, icônes d'état, planches ; générateurs `generate_resources.py` et `generate_structures.py`. Vérification préalable : ni chemin, ni nom, ni uid cités, chargeurs par convention compris.
+- Traductions `CRAFT_*`.
+
+**Renommé :** pools d'ennemis `exploration_enemy_pool` et `resurgence_enemy_pool` ; condition `survive_12_minutes` (Vagabond) ; succès `ACH_SURVIVE_CRISIS_*`, stat `STAT_MAX_CRISES`, classement `Vestiges_Crises` (jeu absent de Steam, renommage libre) ; succès impossibles retirés ; déblocage de Souvenir `weapon` au lieu de `recipe` ; textes « nuit » de deux armes.
+
+**Gardé, à dessein :**
+- Signaux émis mais pas encore écoutés (`WeaponDropped`, fusions, `RandomEventEnded`) et `MemorialActivated` : le catalogue audio d'une autre session (plan 15) s'en sert comme points d'accroche des sons.
+- Ambiance sonore des Colosses dans `AudioManager` et sons jamais joués : fichiers du plan 15, en cours dans une autre session.
+- Fusions (dépendent de la décision 4.3), synergies restantes, squelette des mutateurs (V2 §18), migration de `max_nights_survived`.
+- Quatre décors urbains jamais placés (`prop_supermarket_shelves`, `prop_collapsed_stairs`, `prop_graffiti_wall`, `prop_concrete_wall_v2`) : à Raphaël de dire s'ils servent à de futurs intérieurs.
+- `scripts/generate_weapons.py` : il sera retiré avec les nouvelles icônes (2B) ; relancé, il recréerait les variantes supprimées.
+
+**Aussi :** les flèches de bord d'écran évitent désormais la bande haute du HUD (score, progression).
+
+**Vérifié :** build sans avertissement, smoke, `test_movement`, `test_enemy_abilities`, `test_dev_mode` ; trois runs headless de 5 min sans erreur de ressource manquante ; capture en fenêtre (ville, HUD complet).
+
 ### Vague 1 — Armes : présentation et montée en puissance
 
 | Lot | Contenu | Vérification |

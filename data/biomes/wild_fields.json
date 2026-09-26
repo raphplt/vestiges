@@ -7,16 +7,8 @@
         "water": 0.05,
         "forest": 0.25
     },
-    "day_enemy_pool": ["presage", "charognard", "charognard", "rodeur"],
-    "night_enemy_pool": ["presage", "shade", "shade", "charognard", "void_brute", "hurleur"],
-    "resource_bias": {
-        "wood": 0.15,
-        "stone": 0.20,
-        "metal": 0.15,
-        "fiber": 0.50
-    },
-    "ambient_color_day": "#D8D0A8",
-    "ambient_color_dusk": "#8A7E9A",
+    "exploration_enemy_pool": ["presage", "charognard", "charognard", "rodeur"],
+    "resurgence_enemy_pool": ["presage", "shade", "shade", "charognard", "void_brute", "hurleur"],
     "danger_level": 1,
     "map_weight": 1.4,
     "poi_pool": {

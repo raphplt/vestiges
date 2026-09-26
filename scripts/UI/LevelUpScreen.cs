@@ -94,7 +94,6 @@ public partial class LevelUpScreen : CanvasLayer
     public void SetPerkManager(PerkManager perkManager)
     {
         _perkManager = perkManager;
-        _perkManager.PerkChoicesReady += OnPerkChoicesReady;
         _perkManager.SynergyActivated += OnSynergyActivated;
     }
 
@@ -750,59 +749,6 @@ public partial class LevelUpScreen : CanvasLayer
         // Unpause seulement si aucun choix actif (la queue a été vidée)
         if (_fragmentManager == null || !_fragmentManager.IsChoiceActive)
             GetTree().Paused = false;
-    }
-
-    // ==============================
-    // Perk Mode (mémorial, world perks)
-    // ==============================
-
-    private void OnPerkChoicesReady(string[] perkIds)
-    {
-        if (perkIds == null || perkIds.Length == 0)
-            return;
-
-        ClearCards();
-        _title.Text = "MÉMORIAL";
-        BuildPerkCards(perkIds);
-        ShowScreen();
-    }
-
-    private void BuildPerkCards(string[] perkIds)
-    {
-        foreach (string perkId in perkIds)
-        {
-            PerkData data = PerkDataLoader.Get(perkId);
-            if (data == null)
-                continue;
-
-            int currentStacks = _perkManager.GetStacks(perkId);
-            Color rarityColor = GetRarityColor(data.Rarity);
-            string rarityTag = GetRarityLabel(data.Rarity);
-
-            string iconPath = !string.IsNullOrEmpty(data.Icon) ? data.Icon : null;
-            string badge = $"{currentStacks}/{data.MaxStacks}";
-
-            string capturedId = perkId;
-
-            PanelContainer card = CreateChoiceCard(
-                iconPath, rarityTag, rarityColor, data.Name, data.Description,
-                badge, rarityColor,
-                () => OnPerkSelected(capturedId),
-                data.Rarity ?? "common");
-
-            _cardsContainer.AddChild(card);
-        }
-    }
-
-    private static Color GetRarityColor(string rarity) => RarityPalette.Main(rarity);
-
-    private static string GetRarityLabel(string rarity) => RarityPalette.DisplayName(rarity);
-
-    private void OnPerkSelected(string perkId)
-    {
-        _perkManager.SelectPerk(perkId);
-        HideScreen();
-        GetTree().Paused = false;
     }
 
     // ==============================

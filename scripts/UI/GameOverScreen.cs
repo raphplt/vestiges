@@ -15,7 +15,7 @@ public partial class GameOverScreen : CanvasLayer
 {
     private PanelContainer _panel;
     private Label _titleLabel;
-    private Label _nightsLabel;
+    private Label _durationLabel;
     private Label _combatLabel;
     private Label _survivalLabel;
     private Label _bonusLabel;
@@ -90,8 +90,8 @@ public partial class GameOverScreen : CanvasLayer
 
         vbox.AddChild(CreateSeparator());
 
-        _nightsLabel = CreateLabel("", 18, HorizontalAlignment.Center);
-        vbox.AddChild(_nightsLabel);
+        _durationLabel = CreateLabel("", 18, HorizontalAlignment.Center);
+        vbox.AddChild(_durationLabel);
 
         vbox.AddChild(CreateSeparator());
 
@@ -223,7 +223,7 @@ public partial class GameOverScreen : CanvasLayer
         float charMult = _scoreManager?.CharacterMultiplier ?? 1f;
         float mutMult = _scoreManager?.MutatorMultiplier ?? 1f;
 
-        _nightsLabel.Text = $"Durée : {FormatDuration(duration)}  |  Crises : {crises}";
+        _durationLabel.Text = $"Durée : {FormatDuration(duration)}  |  Crises : {crises}";
 
         _combatLabel.Text = $"Combat : {combat}";
         _survivalLabel.Text = $"Survie : {survival}";

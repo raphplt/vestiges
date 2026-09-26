@@ -202,7 +202,7 @@ public static class MetaSaveManager
             bool shouldUnlock = character.UnlockCondition switch
             {
                 "default" => true,
-                "survive_3_nights" => _data.Stats.BestRunDurationSec >= VagabondUnlockDurationSec,
+                "survive_12_minutes" => _data.Stats.BestRunDurationSec >= VagabondUnlockDurationSec,
                 "kill_200_in_run" => _data.Stats.MaxKillsInRun >= 200,
                 _ => false
             };

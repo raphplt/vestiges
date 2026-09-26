@@ -7,16 +7,8 @@
         "water": 0.10,
         "forest": 0.45
     },
-    "day_enemy_pool": ["presage", "rodeur", "rodeur", "void_brute", "rampant"],
-    "night_enemy_pool": ["presage", "shade", "shade", "void_brute", "void_brute", "wailing_sentinel", "rampant", "hurleur"],
-    "resource_bias": {
-        "wood": 0.05,
-        "stone": 0.45,
-        "metal": 0.40,
-        "fiber": 0.10
-    },
-    "ambient_color_day": "#B8A080",
-    "ambient_color_dusk": "#5A4A6A",
+    "exploration_enemy_pool": ["presage", "rodeur", "rodeur", "void_brute", "rampant"],
+    "resurgence_enemy_pool": ["presage", "shade", "shade", "void_brute", "void_brute", "wailing_sentinel", "rampant", "hurleur"],
     "danger_level": 3,
     "map_weight": 0.5,
     "poi_pool": {

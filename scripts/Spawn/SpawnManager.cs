@@ -95,8 +95,8 @@ public partial class SpawnManager : Node2D
 	private CrisisManager _crisisManager;
 
 	// Fallback quand aucun biome n'est disponible
-	private static readonly List<string> FallbackDayPool = new() { "shadow_crawler", "fading_spitter" };
-	private static readonly List<string> FallbackNightPool = new() { "shadow_crawler", "shade", "shade", "fading_spitter", "void_brute", "wailing_sentinel" };
+	private static readonly List<string> FallbackExplorationPool = new() { "shadow_crawler", "fading_spitter" };
+	private static readonly List<string> FallbackResurgencePool = new() { "shadow_crawler", "shade", "shade", "fading_spitter", "void_brute", "wailing_sentinel" };
 
 	public override void _Ready()
 	{
@@ -271,9 +271,9 @@ public partial class SpawnManager : Node2D
 	public string PickLocalEnemyId(Vector2 worldPos, IReadOnlyList<string> preferred = null)
 	{
 		CacheWorldSetup();
-		List<string> pool = _worldSetup?.GetBiomeAt(worldPos)?.DayEnemyPool;
+		List<string> pool = _worldSetup?.GetBiomeAt(worldPos)?.ExplorationEnemyPool;
 		if (pool == null || pool.Count == 0)
-			pool = FallbackDayPool;
+			pool = FallbackExplorationPool;
 
 		if (preferred != null)
 		{
@@ -529,7 +529,7 @@ public partial class SpawnManager : Node2D
 	/// </summary>
 	private string PickEnemyForPosition(Vector2 worldPos)
 	{
-		bool isNight = _currentRunPhase is GameManager.RunPhase.Crisis or GameManager.RunPhase.LateGame or GameManager.RunPhase.Endgame;
+		bool isResurgence = _currentRunPhase is GameManager.RunPhase.Crisis or GameManager.RunPhase.LateGame or GameManager.RunPhase.Endgame;
 
 		CacheWorldSetup();
 		BiomeData biome = _worldSetup?.GetBiomeAt(worldPos);
@@ -537,13 +537,13 @@ public partial class SpawnManager : Node2D
 		List<string> pool;
 		if (biome != null)
 		{
-			pool = isNight ? biome.NightEnemyPool : biome.DayEnemyPool;
+			pool = isResurgence ? biome.ResurgenceEnemyPool : biome.ExplorationEnemyPool;
 			if (pool == null || pool.Count == 0)
-				pool = isNight ? FallbackNightPool : FallbackDayPool;
+				pool = isResurgence ? FallbackResurgencePool : FallbackExplorationPool;
 		}
 		else
 		{
-			pool = isNight ? FallbackNightPool : FallbackDayPool;
+			pool = isResurgence ? FallbackResurgencePool : FallbackExplorationPool;
 		}
 
 		if (_clusterRemaining > 0 && !string.IsNullOrEmpty(_clusterEnemyId))

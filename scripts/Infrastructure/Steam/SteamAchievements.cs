@@ -13,18 +13,16 @@ public partial class SteamAchievements : Node
 {
 	// --- Achievement IDs (à configurer dans Steamworks App Admin) ---
 	// Survie
-	public const string SurviveNight1 = "ACH_SURVIVE_NIGHT_1";
-	public const string SurviveNight3 = "ACH_SURVIVE_NIGHT_3";
-	public const string SurviveNight5 = "ACH_SURVIVE_NIGHT_5";
-	public const string SurviveNight10 = "ACH_SURVIVE_NIGHT_10";
+	public const string SurviveCrisis1 = "ACH_SURVIVE_CRISIS_1";
+	public const string SurviveCrisis3 = "ACH_SURVIVE_CRISIS_3";
+	public const string SurviveCrisis5 = "ACH_SURVIVE_CRISIS_5";
+	public const string SurviveCrisis10 = "ACH_SURVIVE_CRISIS_10";
 
 	// Combat
 	public const string Kill100 = "ACH_KILL_100";
 	public const string Kill500 = "ACH_KILL_500";
 	public const string Kill1000 = "ACH_KILL_1000";
-	public const string KillColosse = "ACH_KILL_COLOSSE";
 	public const string KillIndicible = "ACH_KILL_INDICIBLE";
-	public const string NoDamageNight = "ACH_NO_DAMAGE_NIGHT";
 
 	// Exploration
 	public const string Explore10Pois = "ACH_EXPLORE_10_POIS";
@@ -33,7 +31,6 @@ public partial class SteamAchievements : Node
 
 	// Construction
 	public const string Place50Structures = "ACH_PLACE_50_STRUCTURES";
-	public const string SurviveNightAllStructures = "ACH_ALL_STRUCTURES_SURVIVE";
 
 	// Personnages
 	public const string UnlockForgeuse = "ACH_UNLOCK_FORGEUSE";
@@ -55,7 +52,7 @@ public partial class SteamAchievements : Node
 	public const string StatTotalPois = "STAT_TOTAL_POIS";
 	public const string StatTotalChests = "STAT_TOTAL_CHESTS";
 	public const string StatTotalStructures = "STAT_TOTAL_STRUCTURES";
-	public const string StatMaxCrisesSurvived = "STAT_MAX_NIGHTS";
+	public const string StatMaxCrisesSurvived = "STAT_MAX_CRISES";
 	public const string StatBestScore = "STAT_BEST_SCORE";
 
 	// --- Compteurs de session ---
@@ -124,10 +121,10 @@ public partial class SteamAchievements : Node
 		SetStatIfHigher(StatBestScore, finalScore);
 
 		// Achievements de survie/endurance - remappés sur les crises V2.
-		if (crisesSurvived >= 1) TryUnlock(SurviveNight1);
-		if (crisesSurvived >= 3) TryUnlock(SurviveNight3);
-		if (crisesSurvived >= 5) TryUnlock(SurviveNight5);
-		if (crisesSurvived >= 10) TryUnlock(SurviveNight10);
+		if (crisesSurvived >= 1) TryUnlock(SurviveCrisis1);
+		if (crisesSurvived >= 3) TryUnlock(SurviveCrisis3);
+		if (crisesSurvived >= 5) TryUnlock(SurviveCrisis5);
+		if (crisesSurvived >= 10) TryUnlock(SurviveCrisis10);
 
 		// Achievements de score
 		if (finalScore >= 10_000) TryUnlock(Score10000);
@@ -168,7 +165,6 @@ public partial class SteamAchievements : Node
 	{
 		_sessionKills++;
 
-		if (enemyId.StartsWith("colosse")) TryUnlock(KillColosse);
 		if (enemyId == "indicible") TryUnlock(KillIndicible);
 	}
 

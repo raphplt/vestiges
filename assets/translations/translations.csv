@@ -54,22 +54,6 @@ HUD_WOOD,Bois,Wood
 HUD_STONE,Pierre,Stone
 HUD_METAL,Metal,Metal
 HUD_NIGHT_SUMMARY,"Crise {0} survecue !\nKills : {1} — Score : +{2}","Crisis {0} survived!\nKills: {1} — Score: +{2}"
-CRAFT_CRAFTING,Fabrication : {0}...,Crafting: {0}...
-CRAFT_LIMIT,Limite atteinte,Limit reached
-CRAFT_BUILD,Fabriquer,Craft
-CRAFT_BUILD_INSTANT,Fabriquer (instantane),Craft (instant)
-CRAFT_DONE_CHAIN,"Fabrication terminee : place puis maintiens clic pour construire en chaine","Crafting done: place then hold click to chain-build"
-CRAFT_DONE,Fabrication terminee !,Crafting done!
-CRAFT_HP,PV,HP
-CRAFT_DAMAGE,degats,damage
-CRAFT_RANGE,portee,range
-CRAFT_USES,utilisations,uses
-CRAFT_RADIUS,rayon,radius
-CRAFT_HEAL_HP,+{0} PV,+{0} HP
-CRAFT_DEFENSE,Defense,Defense
-CRAFT_TRAPS,Pieges,Traps
-CRAFT_UTILITY,Utilitaire,Utility
-CRAFT_CONSUMABLES,Consommables,Consumables
 CHEST_COMMON,COFFRE,CHEST
 CHEST_EPIC,COFFRE ÉPIQUE,EPIC CHEST
 CHEST_RARE,COFFRE RARE,RARE CHEST

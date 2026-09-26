@@ -13,7 +13,6 @@ namespace Vestiges.Progression;
 /// </summary>
 public partial class PerkManager : Node
 {
-    private const int PerksPerChoice = 3;
 
     /// <summary>
     /// Perks whose mechanics depend on systems not yet implemented.
@@ -22,19 +21,9 @@ public partial class PerkManager : Node
     /// </summary>
     private static readonly HashSet<string> _disabledPerks = new()
     {
-        // Essence system : perks spécifiques essence pas encore câblés
-        "channeling", "siphon", "instability", "essence_regen",
-        // Light / vision / fog system not implemented
-        "torch_bearer", "night_vision", "awakened_sight",
-        // Day cycle modifier not implemented
-        "time_master",
-        // Foyer aura / structure-count mechanics not implemented
-        "memory_anchor", "last_stand",
-        // Structure and harvest perks still tied to removed base systems
-        "architect", "quick_fix", "harvest_bounty",
-        // Salvage system not implemented
-        "salvager",
-        // Complex perks still tied to removed systems
+        // Perks d'Essence pas encore câblés
+        "channeling", "siphon", "instability",
+        // Perks de personnage encore liés à des systèmes retirés
         "traqueur_ambush", "traqueur_marked",
     };
 
@@ -55,7 +44,6 @@ public partial class PerkManager : Node
     private float _diffEnemyDmgMult = 1f;
     private float _diffXpMult = 1f;
 
-    [Signal] public delegate void PerkChoicesReadyEventHandler(string[] perkIds);
     [Signal] public delegate void PerkAppliedEventHandler(string perkId, int stacks);
     [Signal] public delegate void SynergyActivatedEventHandler(string synergyId, string notification);
 
@@ -63,9 +51,8 @@ public partial class PerkManager : Node
     {
         PerkDataLoader.Load();
         _eventBus = GetNode<EventBus>("/root/EventBus");
-        // Level-up choices are now handled by FragmentManager (weapons + passives).
-        // PerkManager only handles Memorial perks and world perks (chests, POIs, events).
-        _eventBus.MemorialActivated += OnMemorialActivated;
+        // Les choix de niveau passent par FragmentManager (armes, passifs) ; PerkManager applique
+        // les perks reçus du monde (coffres, événements).
         _eventBus.LootReceived += OnLootReceived;
     }
 
@@ -73,7 +60,6 @@ public partial class PerkManager : Node
     {
         if (_eventBus != null)
         {
-            _eventBus.MemorialActivated -= OnMemorialActivated;
             _eventBus.LootReceived -= OnLootReceived;
         }
     }
@@ -92,13 +78,6 @@ public partial class PerkManager : Node
             ApplyPerkToPlayer(passive);
             GD.Print($"[PerkManager] Applied passive: {passive.Name}");
         }
-    }
-
-    private void OnMemorialActivated()
-    {
-        string[] choices = PickRandomPerks(PerksPerChoice);
-        if (choices.Length > 0)
-            EmitSignal(SignalName.PerkChoicesReady, choices);
     }
 
     /// <summary>
@@ -212,17 +191,12 @@ public partial class PerkManager : Node
                 _player.AddKillSpeed(fx.Modifier, fx.Duration, fx.MaxBuffStacks);
                 break;
 
-            case "bonus_resource":
-                // V2: Harvest system removed — bonus_resource perk effect disabled
-                GD.Print($"[PerkManager] bonus_resource effect skipped (V2: harvest system removed)");
-                break;
-
             case "dodge":
                 _player.AddDodge(fx.Chance);
                 break;
 
             default:
-                // Effects not yet implemented (torch_bearer, night_vision, essence perks, etc.)
+                // Effets pas encore câblés (perks d'Essence)
                 GD.Print($"[PerkManager] Complex effect '{fx.Action}' for {data.Id} not yet implemented");
                 break;
         }

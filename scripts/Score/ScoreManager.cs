@@ -23,7 +23,6 @@ public partial class ScoreManager : Node
     private const int PointsPerTisseuseKill = 20;
     private const int PointsPerRampantKill = 15;
     private const int PointsPerRodeurKill = 15;
-    private const int PointsPerColosseKill = 200;
     private const int PointsPerIndicibleKill = 5000;
     private const int PointsPerSecondSurvived = 3;
     private const int PointsPerCrisisSurvived = 175;
@@ -66,7 +65,6 @@ public partial class ScoreManager : Node
     }
     public int ExplorationScore => _explorationScore;
     public int TotalKills => _totalKills;
-    public int NoDamageNights => 0;
     public int BestScore => _bestScore;
     public bool IsNewRecord => CurrentScore > _bestScore;
     public int VestigesEarned { get; private set; }
@@ -172,7 +170,6 @@ public partial class ScoreManager : Node
             CharacterId = characterId,
             CharacterName = charData?.Name ?? characterId,
             Score = CurrentScore,
-            NightsSurvived = 0,
             CrisesSurvived = _runTracker?.CrisesSurvived ?? 0,
             TotalKills = _totalKills,
             Date = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm"),
@@ -180,7 +177,6 @@ public partial class ScoreManager : Node
             CombatScoreDetail = _combatScore,
             SurvivalScoreDetail = SurvivalScore,
             BonusScoreDetail = BonusScore,
-            BuildScoreDetail = 0,
             ExplorationScoreDetail = _explorationScore,
             Seed = gm.RunSeed,
             ActiveMutators = gm.ActiveMutators != null && gm.ActiveMutators.Count > 0
@@ -196,16 +192,12 @@ public partial class ScoreManager : Node
         if (_runTracker != null)
         {
             record.DeathCause = _runTracker.LastHitByEnemyId;
-            record.DeathNight = 0;
             record.DeathPhase = _runTracker.CurrentPhase;
             record.PerkIds = _runTracker.PerkIds.Count > 0
                 ? new System.Collections.Generic.List<string>(_runTracker.PerkIds)
                 : null;
             record.TotalDamageDealt = _runTracker.TotalDamageDealt;
             record.TotalDamageTaken = _runTracker.TotalDamageTaken;
-            record.ResourcesCollected = null;
-            record.StructuresPlaced = 0;
-            record.StructuresLost = 0;
             record.PoisExplored = _runTracker.PoisExplored;
             record.ChestsOpened = _runTracker.ChestsOpened;
             record.MaxLevel = _runTracker.MaxLevel;
@@ -265,7 +257,6 @@ public partial class ScoreManager : Node
             "tisseuse" => PointsPerTisseuseKill,
             "rampant" => PointsPerRampantKill,
             "rodeur" => PointsPerRodeurKill,
-            "colosse_forest" or "colosse_urban" or "colosse_swamp" => PointsPerColosseKill,
             "indicible" => PointsPerIndicibleKill,
             _ => PointsPerMeleeKill
         };
@@ -301,12 +292,6 @@ public partial class ScoreManager : Node
             _bonusScore += PointsEndgameReached;
             _eventBus.EmitSignal(EventBus.SignalName.ScoreChanged, CurrentScore);
         }
-    }
-
-    /// <summary>Legacy helper conserve pour les outils qui l'appellent encore.</summary>
-    private int GetSurvivalPoints(int nightNumber)
-    {
-        return Mathf.RoundToInt(Mathf.Max(0, nightNumber) * 100);
     }
 
     private void LoadBestScore()

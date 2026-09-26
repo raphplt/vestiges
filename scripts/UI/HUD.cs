@@ -106,7 +106,7 @@ public partial class HUD : CanvasLayer
     private static readonly Color PalGrayWarm = new(0x6B / 255f, 0x61 / 255f, 0x61 / 255f);
     private static readonly Color PalGrayLight = new(0x9E / 255f, 0x94 / 255f, 0x94 / 255f);
     private static readonly Color PalWhiteOff = new(0xE8 / 255f, 0xE0 / 255f, 0xD4 / 255f);
-    private static readonly Color PalGoldFoyer = new(0xD4 / 255f, 0xA8 / 255f, 0x43 / 255f);
+    private static readonly Color PalGold = new(0xD4 / 255f, 0xA8 / 255f, 0x43 / 255f);
     private static readonly Color PalOrangeFlame = new(0xE0 / 255f, 0x7B / 255f, 0x39 / 255f);
     private static readonly Color PalRedBlood = new(0xC4 / 255f, 0x43 / 255f, 0x2B / 255f);
     private static readonly Color PalCyanEssence = new(0x5E / 255f, 0xC4 / 255f, 0xC4 / 255f);
@@ -434,7 +434,7 @@ public partial class HUD : CanvasLayer
         caption.Size = new Vector2(50, 10);
         content.AddChild(caption);
 
-        _scoreLabel = MakeLabel("0", 18, PalGoldFoyer, 4);
+        _scoreLabel = MakeLabel("0", 18, PalGold, 4);
         _scoreLabel.Position = new Vector2(8, 0);
         _scoreLabel.Size = new Vector2(ScorePlateWidth - 16, 24);
         _scoreLabel.HorizontalAlignment = HorizontalAlignment.Right;
@@ -482,7 +482,7 @@ public partial class HUD : CanvasLayer
             };
             slotRoot.AddChild(icon);
 
-            Label level = MakeLabel("", 9, PalGoldFoyer, 3);
+            Label level = MakeLabel("", 9, PalGold, 3);
             level.Position = new Vector2(slotSize - 14, slotSize - 13);
             level.Size = new Vector2(13, 12);
             level.HorizontalAlignment = HorizontalAlignment.Right;
@@ -650,7 +650,7 @@ public partial class HUD : CanvasLayer
         {
             "Crisis" => PalOrangeFlame,
             "LateGame" => PalRedBlood,
-            "Endgame" => PalGoldFoyer,
+            "Endgame" => PalGold,
             _ => PalWhiteOff
         };
         _phaseLabel.AddThemeColorOverride("font_color", phaseColor);
@@ -659,7 +659,7 @@ public partial class HUD : CanvasLayer
         {
             "Crisis" => PalOrangeFlame,
             "LateGame" => PalRedBlood,
-            "Endgame" => PalGoldFoyer,
+            "Endgame" => PalGold,
             _ => PalCyanEssence
         };
         CreateTween().TweenProperty(_erasureFill, "color", barColor, 1f);

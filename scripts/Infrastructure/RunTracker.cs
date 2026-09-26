@@ -18,9 +18,6 @@ public partial class RunTracker : Node
     private float _totalDamageTaken;
     private float _previousHp;
     private float _previousMaxHp;
-    private readonly Dictionary<string, int> _resourcesCollected = new();
-    private int _structuresPlaced;
-    private int _structuresLost;
     private int _poisExplored;
     private int _chestsOpened;
     private int _crisesSurvived;
@@ -48,9 +45,6 @@ public partial class RunTracker : Node
 
     public float TotalDamageDealt => _totalDamageDealt;
     public float TotalDamageTaken => _totalDamageTaken;
-    public Dictionary<string, int> ResourcesCollected => _resourcesCollected;
-    public int StructuresPlaced => _structuresPlaced;
-    public int StructuresLost => _structuresLost;
     public int PoisExplored => _poisExplored;
     public int ChestsOpened => _chestsOpened;
     public int CrisesSurvived => _crisesSurvived;
@@ -58,7 +52,6 @@ public partial class RunTracker : Node
     public List<string> PerkIds => _perkIds;
     public string LastHitByEnemyId => _lastHitByEnemyId;
     public string CurrentPhase => _currentPhase;
-    public int CurrentNight => _crisesSurvived;
     public float RunDurationSeconds => _runTime;
 
     // --- Difficulty metrics ---

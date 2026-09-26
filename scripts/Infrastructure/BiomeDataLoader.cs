@@ -8,11 +8,8 @@ public class BiomeData
     public string Id;
     public string Name;
     public Dictionary<string, float> TerrainWeights = new();
-    public List<string> DayEnemyPool = new();
-    public List<string> NightEnemyPool = new();
-    public Dictionary<string, float> ResourceBias = new();
-    public string AmbientColorDay;
-    public string AmbientColorDusk;
+    public List<string> ExplorationEnemyPool = new();
+    public List<string> ResurgenceEnemyPool = new();
     public int DangerLevel;
     public Dictionary<string, float> PoiPool = new();
     public int PoiCountMin = 3;
@@ -125,9 +122,7 @@ public static class BiomeDataLoader
         {
             Id = dict["id"].AsString(),
             Name = dict.ContainsKey("name") ? dict["name"].AsString() : "",
-            DangerLevel = dict.ContainsKey("danger_level") ? (int)dict["danger_level"].AsDouble() : 1,
-            AmbientColorDay = dict.ContainsKey("ambient_color_day") ? dict["ambient_color_day"].AsString() : "#FFFFFF",
-            AmbientColorDusk = dict.ContainsKey("ambient_color_dusk") ? dict["ambient_color_dusk"].AsString() : "#8888AA"
+            DangerLevel = dict.ContainsKey("danger_level") ? (int)dict["danger_level"].AsDouble() : 1
         };
 
         if (dict.ContainsKey("terrain_weights"))
@@ -137,25 +132,18 @@ public static class BiomeDataLoader
                 biome.TerrainWeights[key.AsString()] = (float)weights[key].AsDouble();
         }
 
-        if (dict.ContainsKey("day_enemy_pool"))
+        if (dict.ContainsKey("exploration_enemy_pool"))
         {
-            Godot.Collections.Array pool = dict["day_enemy_pool"].AsGodotArray();
+            Godot.Collections.Array pool = dict["exploration_enemy_pool"].AsGodotArray();
             foreach (Variant item in pool)
-                biome.DayEnemyPool.Add(item.AsString());
+                biome.ExplorationEnemyPool.Add(item.AsString());
         }
 
-        if (dict.ContainsKey("night_enemy_pool"))
+        if (dict.ContainsKey("resurgence_enemy_pool"))
         {
-            Godot.Collections.Array pool = dict["night_enemy_pool"].AsGodotArray();
+            Godot.Collections.Array pool = dict["resurgence_enemy_pool"].AsGodotArray();
             foreach (Variant item in pool)
-                biome.NightEnemyPool.Add(item.AsString());
-        }
-
-        if (dict.ContainsKey("resource_bias"))
-        {
-            Godot.Collections.Dictionary bias = dict["resource_bias"].AsGodotDictionary();
-            foreach (Variant key in bias.Keys)
-                biome.ResourceBias[key.AsString()] = (float)bias[key].AsDouble();
+                biome.ResurgenceEnemyPool.Add(item.AsString());
         }
 
         if (dict.ContainsKey("poi_pool"))

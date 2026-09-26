@@ -12,7 +12,8 @@ namespace Vestiges.UI;
 public partial class ChestPointers : Control
 {
     private const float Margin = 18f;
-    // La barre d'armes et de passifs occupe le bas du HUD : les flèches restent au-dessus.
+    // Vitalité, progression et score occupent le haut du HUD, armes et passifs le bas : les flèches restent entre.
+    private const float TopMargin = 58f;
     private const float BottomMargin = 70f;
 
     private readonly Vector2[] _arrow = new Vector2[3];
@@ -89,7 +90,7 @@ public partial class ChestPointers : Control
         Transform2D canvas = GetViewport().GetCanvasTransform();
         Vector2 hudScale = GetParent<Control>().Scale;
         Vector2 size = Size;
-        Rect2 inner = new(Vector2.One * Margin, size - new Vector2(Margin * 2f, Margin + BottomMargin));
+        Rect2 inner = new(new Vector2(Margin, TopMargin), size - new Vector2(Margin * 2f, TopMargin + BottomMargin));
         Vector2 middle = inner.GetCenter();
         float pulse = 0.9f + 0.1f * Mathf.Sin(Time.GetTicksMsec() / 160f);
         for (int i = 0; i < _count; i++)

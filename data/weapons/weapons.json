@@ -460,7 +460,7 @@
   {
     "id": "memory_lantern",
     "name": "Lanterne Mémorielle",
-    "description": "Projette des flammes lentes qui persistent au sol (2s), créant des zones de dégâts. Aussi : éclaire la nuit.",
+    "description": "Projette des flammes lentes qui persistent au sol (2s), créant des zones de dégâts.",
     "sprite": "assets/weapons/item_memory_lantern.png",
     "tier": 4,
     "type": "ranged",
@@ -482,9 +482,7 @@
       "type": "ground_fire",
       "ground_damage": 5,
       "ground_duration": 2.0,
-      "ground_radius": 30,
-      "emits_light": true,
-      "light_radius": 50
+      "ground_radius": 30
     },
     "source": "world",
     "requires_souvenir": "lantern_memory",
@@ -581,7 +579,7 @@
       "visual": "radio_static_wave"
     },
     "source": "loot_legendary",
-    "drop_condition": "L'Indicible (boss nuit 10+)",
+    "drop_condition": "L'Indicible",
     "lore_flavor": "La dernière voix humaine diffusée sur les ondes. Personne ne l'a éteinte. Elle émet encore. Le message est incompréhensible — mais les créatures le comprennent, et ça les terrife."
   },
   {

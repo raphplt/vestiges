@@ -19,7 +19,7 @@ public partial class SteamLeaderboards : Node
 {
 	// --- Noms des leaderboards (à créer dans Steamworks App Admin) ---
 	public const string BoardGlobal = "Vestiges_Global";
-	public const string BoardNightsSurvived = "Vestiges_Nights";
+	public const string BoardCrisesSurvived = "Vestiges_Crises";
 	public const string BoardWeekly = "Vestiges_Weekly";
 	private const string BoardCharacterPrefix = "Vestiges_Char_";
 
@@ -70,7 +70,7 @@ public partial class SteamLeaderboards : Node
 		UploadToBoard(charBoard, score);
 
 		// Endurance V2 : on réutilise le board legacy pour les crises survivées.
-		UploadToBoard(BoardNightsSurvived, crisesSurvived);
+		UploadToBoard(BoardCrisesSurvived, crisesSurvived);
 
 		// Weekly (même board name, le reset est géré côté Steamworks App Admin)
 		UploadToBoard(BoardWeekly, score);

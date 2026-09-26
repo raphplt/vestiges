@@ -128,7 +128,6 @@ public partial class Player : CharacterBody2D
     private float _bonusMaxHp;
     private int _extraProjectiles;
     private float _aoeMultiplier = 1f;
-    private float _interactionSpeedMultiplier = 1f;
     private float _attackRangeMultiplier = 1f;
     private float _bonusRegenRate;
     private float _armor;
@@ -178,18 +177,12 @@ public partial class Player : CharacterBody2D
     private float _coneBaseDamage;
     private bool _isConeActive;
 
-    // Coût en essence pour armes Tier 4+
-    private float _essenceDamagePenalty = 1f;
-
     // Jauge de fouille des POI (les coffres ont la leur, dans ChestInteraction)
     private InteractionGauge _interactionGauge;
 
     // Footsteps
     private float _footstepTimer;
     private const float FootstepInterval = 0.55f;
-
-    // Vision targeting
-    private float _visionRadius = 150f;
 
     // POI interaction
     private PointOfInterest _poiTarget;
@@ -224,7 +217,6 @@ public partial class Player : CharacterBody2D
     public float DodgeChance => _dodgeChance;
     public float ThornsPercent => _thornsPercent;
     public int ExtraProjectiles => _extraProjectiles;
-    public float HarvestSpeedMultiplier => _interactionSpeedMultiplier;
     public float IgniteChance => _igniteChance;
     public float RicochetChance => _ricochetChance;
     public float LuckBonus => _luckBonus;
@@ -927,10 +919,6 @@ public partial class Player : CharacterBody2D
             case "aoe_radius":
                 if (modifierType == "multiplicative") _aoeMultiplier *= value;
                 break;
-            case "harvest_speed":
-                if (modifierType == "multiplicative") _interactionSpeedMultiplier *= value;
-                break;
-            // V2: structure_hp et craft_speed retires
             case "attack_range":
                 if (modifierType == "multiplicative") _attackRangeMultiplier *= value;
                 break;
@@ -1101,8 +1089,6 @@ public partial class Player : CharacterBody2D
         {
             if (node is Node2D candidate && candidate != sourceEnemy && !candidate.IsQueuedForDeletion())
             {
-                if (!IsPositionVisible(candidate.GlobalPosition))
-                    continue;
                 float dist = sourceEnemy.GlobalPosition.DistanceTo(candidate.GlobalPosition);
                 if (dist < nearestDist)
                 {
@@ -1356,9 +1342,6 @@ public partial class Player : CharacterBody2D
             if (node is not Enemy enemy || enemy.IsDying || !IsInstanceValid(enemy))
                 continue;
 
-            if (!IsPositionVisible(enemy.GlobalPosition))
-                continue;
-
             // Cône posé au sol : portée et ouverture mesurées au sol, comme l'éventail dessiné.
             Vector2 toEnemy = Iso.ToGround(enemy.GlobalPosition - GlobalPosition);
             float dist = toEnemy.Length();
@@ -1445,8 +1428,6 @@ public partial class Player : CharacterBody2D
             if (node is Enemy enemy && IsInstanceValid(enemy) && !enemy.IsDying)
             {
                 if (excludeIds.Contains(enemy.GetInstanceId()))
-                    continue;
-                if (!IsPositionVisible(enemy.GlobalPosition))
                     continue;
 
                 float dist = from.DistanceTo(enemy.GlobalPosition);
@@ -1636,7 +1617,7 @@ public partial class Player : CharacterBody2D
             return;
         }
 
-        _poiProgress += delta * _interactionSpeedMultiplier;
+        _poiProgress += delta;
         _interactionGauge.SetRatio(_poiProgress / _poiTarget.SearchTime);
 
         if (_poiProgress >= _poiTarget.SearchTime)
@@ -1916,9 +1897,6 @@ public partial class Player : CharacterBody2D
 
         _equippedWeapon = _weaponSlots[slotIndex];
 
-        // V2: cout en essence via EssenceTracker (a implementer)
-        _essenceDamagePenalty = 1f;
-
         string type = _equippedWeapon.Type?.ToLower() ?? "ranged";
         string pattern = _equippedWeapon.AttackPattern?.ToLower() ?? "linear";
 
@@ -2168,15 +2146,6 @@ public partial class Player : CharacterBody2D
         return projectile;
     }
 
-    /// <summary>
-    /// V2: pas de cycle jour/nuit, tout est toujours visible.
-    /// La visibilite sera geree par l'Effacement plus tard.
-    /// </summary>
-    private bool IsPositionVisible(Vector2 worldPos)
-    {
-        return true;
-    }
-
     private System.Collections.Generic.List<Node2D> FindNearestEnemies(int count, float maxRange)
     {
         Godot.Collections.Array<Node> enemies = _groupCache.GetEnemies();
@@ -2186,8 +2155,6 @@ public partial class Player : CharacterBody2D
         {
             if (node is Node2D enemy)
             {
-                if (!IsPositionVisible(enemy.GlobalPosition))
-                    continue;
                 float dist = GlobalPosition.DistanceTo(enemy.GlobalPosition);
                 if (dist < maxRange)
                     inRange.Add((enemy, dist));
@@ -2212,9 +2179,6 @@ public partial class Player : CharacterBody2D
         foreach (Node node in enemies)
         {
             if (node is not Enemy enemy || enemy.IsDying)
-                continue;
-
-            if (!IsPositionVisible(enemy.GlobalPosition))
                 continue;
 
             Vector2 toEnemy = enemy.GlobalPosition - GlobalPosition;
@@ -2260,9 +2224,6 @@ public partial class Player : CharacterBody2D
 
         if (_berserkerThreshold > 0f && _currentHp / EffectiveMaxHp < _berserkerThreshold)
             damage *= _berserkerDamageMult;
-
-        // Pénalité si manque d'essence (armes Tier 4+)
-        damage *= _essenceDamagePenalty;
 
         return damage;
     }
