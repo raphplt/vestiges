@@ -181,8 +181,8 @@ public partial class Player : CharacterBody2D
     // Coût en essence pour armes Tier 4+
     private float _essenceDamagePenalty = 1f;
 
-    // Interaction bar (coffres, POIs)
-    private ProgressBar _harvestBar;
+    // Jauge de fouille des POI (les coffres ont la leur, dans ChestInteraction)
+    private InteractionGauge _interactionGauge;
 
     // Footsteps
     private float _footstepTimer;
@@ -196,11 +196,8 @@ public partial class Player : CharacterBody2D
     private float _poiProgress;
     private bool _isExploringPoi;
 
-    // Chest interaction
-    private Chest _chestTarget;
-    private float _chestProgress;
-    private bool _isOpeningChest;
-    private UI.ChestLootScreen _chestLootScreen;
+    private ChestInteraction _chests;
+    private PerkManager _perkManager;
 
     public float CurrentHp => _currentHp;
     public float EffectiveMaxHp => MaxHp + _bonusMaxHp;
@@ -247,7 +244,11 @@ public partial class Player : CharacterBody2D
 
         _entityShader ??= GD.Load<Shader>("res://assets/shaders/entity.gdshader");
 
-        CreateHarvestBar();
+        _interactionGauge = new InteractionGauge { Name = "InteractionGauge", Position = new Vector2(0f, -44f) };
+        AddChild(_interactionGauge);
+        _chests = new ChestInteraction { Name = "ChestInteraction" };
+        AddChild(_chests);
+        _chests.Setup(this);
         Mobility = new PlayerMobility(MobilityConfig.Load());
         _mobilityFeedback = new MobilityFeedback { Name = "MobilityFeedback" };
         AddChild(_mobilityFeedback);
@@ -677,7 +678,7 @@ public partial class Player : CharacterBody2D
         if (inputDir != Vector2.Zero || Mobility.IsDashStep)
         {
             CancelPoiExplore();
-            CancelChestOpen();
+            _chests.Cancel();
             if (inputDir != Vector2.Zero)
                 _facingDirection = inputDir.Normalized();
         }
@@ -721,7 +722,7 @@ public partial class Player : CharacterBody2D
         ApplyRegen(dt);
         ProcessSlowDecay(dt);
         ProcessPoiExplore(dt);
-        ProcessChestOpen(dt);
+        _chests.Step(dt, !_isExploringPoi && !Mobility.IsDashing);
         ProcessKillSpeedDecay(dt);
         ProcessOrbitalWeapons(dt);
         ProcessSustainedCone(dt);
@@ -752,16 +753,16 @@ public partial class Player : CharacterBody2D
         {
             if (Mobility.IsDashing)
                 return;
-            if (_isExploringPoi || _isOpeningChest)
+            if (_isExploringPoi || _chests.IsOpening)
             {
                 CancelPoiExplore();
-                CancelChestOpen();
+                _chests.Cancel();
             }
             else if (TryStartPoiExplore())
             {
                 // POI interaction takes priority
             }
-            else if (TryStartChestOpen())
+            else if (_chests.TryStart())
             {
                 // Chest interaction
             }
@@ -788,7 +789,7 @@ public partial class Player : CharacterBody2D
         _mobilityRequiresRelease = true;
         Velocity = Vector2.Zero;
         CancelPoiExplore();
-        CancelChestOpen();
+        _chests.Cancel();
     }
 
     /// <summary>Le bord du monde (cellules hors carte ou dissoutes) ne se traverse pas, même en marchant.</summary>
@@ -847,13 +848,13 @@ public partial class Player : CharacterBody2D
     public void AITriggerInteract()
     {
         if (_isDead || !IsAIControlled || Mobility.IsDashing || _gameManager.CurrentState != GameManager.GameState.Run || GetTree().Paused) return;
-        if (_isExploringPoi || _isOpeningChest)
+        if (_isExploringPoi || _chests.IsOpening)
         {
             CancelPoiExplore();
-            CancelChestOpen();
+            _chests.Cancel();
         }
         else if (TryStartPoiExplore()) { }
-        else if (TryStartChestOpen()) { }
+        else if (_chests.TryStart()) { }
     }
 
     // --- Journal ---
@@ -1592,35 +1593,6 @@ public partial class Player : CharacterBody2D
         Infrastructure.AudioManager.Play(key, 0.05f, -4f);
     }
 
-    // V2: harvest system retire — remplace par EssenceTracker
-
-    private void CreateHarvestBar()
-    {
-        _harvestBar = new ProgressBar();
-        _harvestBar.CustomMinimumSize = new Vector2(40, 5);
-        _harvestBar.Position = new Vector2(-20, -25);
-        _harvestBar.ShowPercentage = false;
-        _harvestBar.Visible = false;
-
-        StyleBoxFlat fillStyle = new();
-        fillStyle.BgColor = new Color(0.9f, 0.75f, 0.2f);
-        fillStyle.CornerRadiusBottomLeft = 2;
-        fillStyle.CornerRadiusBottomRight = 2;
-        fillStyle.CornerRadiusTopLeft = 2;
-        fillStyle.CornerRadiusTopRight = 2;
-        _harvestBar.AddThemeStyleboxOverride("fill", fillStyle);
-
-        StyleBoxFlat bgStyle = new();
-        bgStyle.BgColor = new Color(0.1f, 0.1f, 0.1f, 0.7f);
-        bgStyle.CornerRadiusBottomLeft = 2;
-        bgStyle.CornerRadiusBottomRight = 2;
-        bgStyle.CornerRadiusTopLeft = 2;
-        bgStyle.CornerRadiusTopRight = 2;
-        _harvestBar.AddThemeStyleboxOverride("background", bgStyle);
-
-        AddChild(_harvestBar);
-    }
-
     // --- POI Exploration ---
 
     private bool TryStartPoiExplore()
@@ -1642,9 +1614,7 @@ public partial class Player : CharacterBody2D
         _poiTarget = nearest;
         _poiProgress = 0f;
         _isExploringPoi = true;
-        _harvestBar.Visible = true;
-        _harvestBar.MaxValue = nearest.SearchTime;
-        _harvestBar.Value = 0;
+        _interactionGauge.Begin(new Color("D4A843"));
         return true;
     }
 
@@ -1667,7 +1637,7 @@ public partial class Player : CharacterBody2D
         }
 
         _poiProgress += delta * _interactionSpeedMultiplier;
-        _harvestBar.Value = _poiProgress;
+        _interactionGauge.SetRatio(_poiProgress / _poiTarget.SearchTime);
 
         if (_poiProgress >= _poiTarget.SearchTime)
             CompletePoiExplore();
@@ -1687,7 +1657,7 @@ public partial class Player : CharacterBody2D
             _poiTarget.PoiId, _poiTarget.PoiType, _poiTarget.GlobalPosition);
 
         _isExploringPoi = false;
-        _harvestBar.Visible = false;
+        _interactionGauge.End();
         _poiTarget = null;
         _poiProgress = 0f;
     }
@@ -1698,7 +1668,7 @@ public partial class Player : CharacterBody2D
             return;
 
         _isExploringPoi = false;
-        _harvestBar.Visible = false;
+        _interactionGauge.End();
         _poiTarget = null;
         _poiProgress = 0f;
     }
@@ -1708,58 +1678,11 @@ public partial class Player : CharacterBody2D
         if (string.IsNullOrEmpty(poi.LootTableId))
             return;
 
-        System.Collections.Generic.List<LootResolver.LootResult> loots =
-            LootResolver.Roll(poi.LootTableId, poi.LootRolls);
-        // V2: inventory retire
-
-        int lootIndex = 0;
-        foreach (LootResolver.LootResult loot in loots)
+        List<ResolvedLoot> loots = LootRewards.Resolve(LootResolver.Roll(poi.LootTableId, poi.LootRolls), _perkManager);
+        for (int i = 0; i < loots.Count; i++)
         {
-            string displayName = loot.ItemId;
-            Color displayColor = new(0.9f, 0.85f, 0.6f);
-
-            switch (loot.Type)
-            {
-                case "essence":
-                    _eventBus?.EmitSignal(EventBus.SignalName.LootReceived,
-                        loot.Type, loot.ItemId, loot.Amount);
-                    displayName = $"Essence x{loot.Amount}";
-                    displayColor = new Color(0.35f, 0.78f, 0.78f);
-                    break;
-                case "resource":
-                    GD.PushWarning($"[Player] Legacy resource loot ignored at POI: {loot.ItemId}");
-                    continue;
-                case "xp":
-                    _eventBus?.EmitSignal(EventBus.SignalName.XpGained, (float)loot.Amount);
-                    displayName = $"+{loot.Amount} XP";
-                    displayColor = new Color(0.4f, 0.8f, 1f);
-                    break;
-                case "perk":
-                    string poiPerkName = ResolvePerkLoot(loot.ItemId);
-                    displayName = poiPerkName;
-                    displayColor = new Color(0.5f, 1f, 0.5f);
-                    break;
-                case "weapon":
-                    displayName = ResolveWeaponLoot(loot.ItemId, poi.GlobalPosition);
-                    displayColor = new Color(1f, 0.82f, 0.38f);
-                    break;
-                case "souvenir":
-                    _eventBus?.EmitSignal(EventBus.SignalName.LootReceived,
-                        loot.Type, loot.ItemId, loot.Amount);
-                    displayName = $"Souvenir: {loot.ItemId}";
-                    displayColor = new Color(0.8f, 0.85f, 1f);
-                    break;
-                case "cursed_item":
-                    string poiCurseName = ResolveCursedItemLoot(loot.ItemId);
-                    displayName = poiCurseName;
-                    displayColor = new Color(0.6f, 0.15f, 0.3f);
-                    break;
-                default:
-                    continue;
-            }
-
-            SpawnLootPopup(displayName, displayColor, poi.GlobalPosition, lootIndex);
-            lootIndex++;
+            LootRewards.Apply(loots[i], this, _eventBus, poi.GlobalPosition);
+            SpawnLootPopup(loots[i].Label, loots[i].Color, poi.GlobalPosition, i);
         }
     }
 
@@ -1787,225 +1710,11 @@ public partial class Player : CharacterBody2D
 
     // --- Chest Opening ---
 
-    public void SetChestLootScreen(UI.ChestLootScreen screen) => _chestLootScreen = screen;
-
-    private bool TryStartChestOpen()
+    /// <summary>Services du butin : écran de roulette des coffres et tirage des perks.</summary>
+    public void ConfigureLoot(UI.ChestLootScreen lootScreen, PerkManager perkManager)
     {
-        Chest nearest = FindNearestChest();
-        if (nearest == null || !nearest.CanOpen)
-            return false;
-
-        if (nearest.OpenTime <= 0f)
-        {
-            System.Collections.Generic.List<LootResolver.LootResult> loots = nearest.Open();
-            if (_chestLootScreen != null && loots.Count > 0)
-            {
-                Chest instantChest = nearest;
-                _chestLootScreen.ShowLoot(loots, instantChest.Rarity, () =>
-                {
-                    ApplyChestLootResults(loots, instantChest);
-                });
-            }
-            else
-            {
-                ApplyChestLootResults(loots, nearest);
-            }
-            return true;
-        }
-
-        _chestTarget = nearest;
-        _chestProgress = 0f;
-        _isOpeningChest = true;
-        _harvestBar.Visible = true;
-        _harvestBar.MaxValue = nearest.OpenTime;
-        _harvestBar.Value = 0;
-        return true;
-    }
-
-    private void ProcessChestOpen(float delta)
-    {
-        if (!_isOpeningChest || _chestTarget == null)
-            return;
-
-        if (!IsInstanceValid(_chestTarget) || _chestTarget.IsOpened)
-        {
-            CancelChestOpen();
-            return;
-        }
-
-        float dist = GlobalPosition.DistanceTo(_chestTarget.GlobalPosition);
-        if (dist > InteractRange * 1.5f)
-        {
-            CancelChestOpen();
-            return;
-        }
-
-        _chestProgress += delta;
-        _harvestBar.Value = _chestProgress;
-
-        if (_chestProgress >= _chestTarget.OpenTime)
-            CompleteChestOpen();
-    }
-
-    private void CompleteChestOpen()
-    {
-        if (_chestTarget == null || !IsInstanceValid(_chestTarget))
-        {
-            CancelChestOpen();
-            return;
-        }
-
-        System.Collections.Generic.List<LootResolver.LootResult> loots = _chestTarget.Open();
-        Chest openedChest = _chestTarget;
-
-        _isOpeningChest = false;
-        _harvestBar.Visible = false;
-        _chestTarget = null;
-        _chestProgress = 0f;
-
-        if (_chestLootScreen != null && loots.Count > 0)
-        {
-            // Show roulette screen — loot is applied after animation
-            _chestLootScreen.ShowLoot(loots, openedChest.Rarity, () =>
-            {
-                ApplyChestLootResults(loots, openedChest);
-            });
-        }
-        else
-        {
-            ApplyChestLootResults(loots, openedChest);
-        }
-    }
-
-    private void ApplyChestLootResults(System.Collections.Generic.List<LootResolver.LootResult> loots, Chest chest)
-    {
-        // V2: inventory retire
-
-        int lootIndex = 0;
-        foreach (LootResolver.LootResult loot in loots)
-        {
-            string displayName = loot.ItemId;
-            Color displayColor = new(0.9f, 0.85f, 0.6f);
-
-            switch (loot.Type)
-            {
-                case "essence":
-                    _eventBus?.EmitSignal(EventBus.SignalName.LootReceived,
-                        loot.Type, loot.ItemId, loot.Amount);
-                    displayName = $"Essence x{loot.Amount}";
-                    displayColor = new Color(0.35f, 0.78f, 0.78f);
-                    break;
-                case "resource":
-                    GD.PushWarning($"[Player] Legacy resource loot ignored in chest: {loot.ItemId}");
-                    continue;
-                case "xp":
-                    _eventBus?.EmitSignal(EventBus.SignalName.XpGained, (float)loot.Amount);
-                    displayName = $"+{loot.Amount} XP";
-                    displayColor = new Color(0.4f, 0.8f, 1f);
-                    break;
-                case "perk":
-                    string chestPerkName = ResolvePerkLoot(loot.ItemId);
-                    displayName = chestPerkName;
-                    displayColor = new Color(0.5f, 1f, 0.5f);
-                    break;
-                case "weapon":
-                    displayName = ResolveWeaponLoot(loot.ItemId, chest.GlobalPosition);
-                    displayColor = new Color(1f, 0.82f, 0.38f);
-                    break;
-                case "souvenir":
-                    _eventBus?.EmitSignal(EventBus.SignalName.LootReceived,
-                        loot.Type, loot.ItemId, loot.Amount);
-                    displayName = $"Souvenir: {loot.ItemId}";
-                    displayColor = new Color(0.8f, 0.85f, 1f);
-                    break;
-                case "cursed_item":
-                    string curseDisplayName = ResolveCursedItemLoot(loot.ItemId);
-                    displayName = curseDisplayName;
-                    displayColor = new Color(0.6f, 0.15f, 0.3f);
-                    break;
-                default:
-                    continue;
-            }
-
-            SpawnLootPopup(displayName, displayColor, chest.GlobalPosition, lootIndex);
-            lootIndex++;
-        }
-    }
-
-
-    /// <summary>
-    /// Résout un perk loot (random_perk → perk concret), l'applique via LootReceived, et retourne le nom.
-    /// </summary>
-    private string ResolvePerkLoot(string perkItemId)
-    {
-        string resolvedId = perkItemId;
-        if (resolvedId == "random_perk")
-        {
-            System.Collections.Generic.List<PerkData> allPerks = PerkDataLoader.GetAll();
-            if (allPerks != null && allPerks.Count > 0)
-                resolvedId = allPerks[(int)(GD.Randi() % allPerks.Count)].Id;
-        }
-
-        _eventBus?.EmitSignal(EventBus.SignalName.LootReceived, "perk", resolvedId, 1);
-
-        PerkData data = PerkDataLoader.Get(resolvedId);
-        return data != null ? data.Name : resolvedId;
-    }
-
-    private string ResolveWeaponLoot(string weaponItemId, Vector2 worldPos)
-    {
-        string resolvedId = weaponItemId;
-        if (resolvedId == "random_weapon")
-        {
-            List<WeaponData> candidates = new();
-            foreach (WeaponData weapon in WeaponDataLoader.GetAll())
-            {
-                if (!string.IsNullOrEmpty(weapon.RequiresSouvenir) && !MetaSaveManager.HasSouvenir(weapon.RequiresSouvenir))
-                    continue;
-                candidates.Add(weapon);
-            }
-
-            if (candidates.Count == 0)
-                return "Arme perdue";
-
-            resolvedId = candidates[(int)(GD.Randi() % candidates.Count)].Id;
-        }
-
-        WeaponData data = WeaponDataLoader.Get(resolvedId);
-        if (data == null)
-            return resolvedId;
-
-        string rarity = WeaponRarityDataLoader.RollDropRarity(data.Tier);
-        _eventBus?.EmitSignal(EventBus.SignalName.LootReceived, "weapon", resolvedId, 1);
-
-        if (AddWeapon(data, rarity))
-            return data.Name;
-
-        WeaponPickup pickup = new();
-        WeaponInstance droppedInstance = new(data, rarity);
-        pickup.Initialize(droppedInstance, worldPos + new Vector2((float)GD.RandRange(-18, 18), (float)GD.RandRange(-12, 12)));
-        GetTree().CurrentScene.CallDeferred(Node.MethodName.AddChild, pickup);
-        return $"{data.Name} [{droppedInstance.RarityDisplayName}]";
-    }
-
-    /// <summary>
-    /// Resout un cursed_item loot (random_curse → curse concrete), l'applique via CursedItemManager.
-    /// </summary>
-    private string ResolveCursedItemLoot(string curseItemId)
-    {
-        List<CursedItemData> allCurses = CursedItemManager.GetAllCurseData();
-        if (allCurses == null || allCurses.Count == 0)
-            return "???";
-
-        string resolvedId = curseItemId;
-        if (resolvedId == "random_curse")
-            resolvedId = allCurses[(int)(GD.Randi() % allCurses.Count)].Id;
-
-        CursedItemManager cursedMgr = GetNodeOrNull<CursedItemManager>("/root/Main/CursedItemManager");
-        cursedMgr?.AddCurse(resolvedId);
-
-        CursedItemData data = CursedItemManager.GetCurseData(resolvedId);
-        return data != null ? $"Malediction: {data.Name}" : resolvedId;
+        _perkManager = perkManager;
+        _chests.Configure(lootScreen, perkManager);
     }
 
     /// <summary>Texte flottant montrant le loot obtenu, empilé verticalement.</summary>
@@ -2046,39 +1755,6 @@ public partial class Player : CharacterBody2D
         };
     }
 
-    private void CancelChestOpen()
-    {
-        if (!_isOpeningChest)
-            return;
-
-        _isOpeningChest = false;
-        _harvestBar.Visible = false;
-        _chestTarget = null;
-        _chestProgress = 0f;
-    }
-
-    private Chest FindNearestChest()
-    {
-        Godot.Collections.Array<Node> chests = GetTree().GetNodesInGroup("chests");
-        Chest nearest = null;
-        float nearestDist = InteractRange;
-
-        foreach (Node node in chests)
-        {
-            if (node is Chest chest && chest.CanOpen)
-            {
-                float dist = GlobalPosition.DistanceTo(chest.GlobalPosition);
-                if (dist < nearestDist)
-                {
-                    nearest = chest;
-                    nearestDist = dist;
-                }
-            }
-        }
-
-        return nearest;
-    }
-
     // V2: CacheInventory retire — EssenceTracker remplacera
 
     // --- Combat ---
@@ -2101,7 +1777,7 @@ public partial class Player : CharacterBody2D
         _mobilityFeedback.Suspend();
         _mobilityFeedback.Visible = false;
         CancelPoiExplore();
-        CancelChestOpen();
+        _chests.Cancel();
         Velocity = Vector2.Zero;
         foreach (Timer timer in _weaponTimers)
             timer.Stop();

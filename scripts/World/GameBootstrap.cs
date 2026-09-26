@@ -100,7 +100,7 @@ public partial class GameBootstrap : Node
         gameOverScreen.SetScoreManager(scoreManager);
 
         if (chestLootScreen != null)
-            player.SetChestLootScreen(chestLootScreen);
+            player.ConfigureLoot(chestLootScreen, perkManager);
 
         Node sceneRoot = GetNode("..");
         ErasureManager erasureManager = new() { Name = "ErasureManager" };

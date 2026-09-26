@@ -7,9 +7,9 @@ using Vestiges.World;
 namespace Vestiges.UI;
 
 /// <summary>
-/// Ecran roulette de loot de coffre — affiche un slot machine qui cycle
-/// à travers des items aléatoires puis s'arrête sur le vrai loot.
-/// Pause le jeu, joue le son chest_opening, effets dopamine à fond.
+/// Écran roulette du butin d'un coffre : chaque case fait défiler des leurres puis s'arrête sur le butin
+/// déjà résolu (l'arme, le perk ou le Souvenir obtenus). Met le jeu en pause, joue le son d'ouverture.
+/// Couleurs de rareté : palette unique (RarityPalette).
 /// </summary>
 public partial class ChestLootScreen : CanvasLayer
 {
@@ -22,12 +22,6 @@ public partial class ChestLootScreen : CanvasLayer
     private static readonly Color TextLight = new(0.92f, 0.9f, 0.85f);
     private static readonly Color TextDim = new(0.5f, 0.5f, 0.55f);
     private static readonly Color OverlayColor = new(0.0f, 0.0f, 0.02f, 0.8f);
-
-    // Rarity colors
-    private static readonly Color CommonColor = new(0.9f, 0.85f, 0.6f);
-    private static readonly Color RareColor = new(0.5f, 0.4f, 0.8f);
-    private static readonly Color EpicColor = new(0.9f, 0.6f, 0.15f);
-    private static readonly Color LoreColor = new(0.8f, 0.85f, 1f);
 
     // --- Roulette config ---
     private const float RouletteMinInterval = 0.04f;
@@ -49,24 +43,23 @@ public partial class ChestLootScreen : CanvasLayer
     private Texture2D _separatorTex;
 
     // --- State ---
-    private List<LootResolver.LootResult> _pendingLoots;
+    private List<ResolvedLoot> _pendingLoots;
     private string _rarity;
     private Action _onComplete;
     private readonly List<SlotState> _slots = new();
     private bool _isRevealing;
     private int _slotsRevealed;
 
-    // --- Fake items for roulette cycling ---
+    // Leurres de la roulette : ce que le coffre aurait pu donner.
     private static readonly LootDisplayInfo[] FakeItems = new[]
     {
-        new LootDisplayInfo("Essence x6", new Color(0.35f, 0.78f, 0.78f)),
-        new LootDisplayInfo("Essence x12", new Color(0.35f, 0.78f, 0.78f)),
-        new LootDisplayInfo("+25 XP", new Color(0.4f, 0.8f, 1f)),
-        new LootDisplayInfo("+40 XP", new Color(0.4f, 0.8f, 1f)),
-        new LootDisplayInfo("Perk", new Color(0.5f, 1f, 0.5f)),
-        new LootDisplayInfo("Arme", new Color(1f, 0.82f, 0.38f)),
-        new LootDisplayInfo("Souvenir", LoreColor),
-        new LootDisplayInfo("Malediction", new Color(0.7f, 0.3f, 0.35f)),
+        new LootDisplayInfo("Essence ×6", new Color("5EC4C4")),
+        new LootDisplayInfo("Essence ×12", new Color("5EC4C4")),
+        new LootDisplayInfo("+25 XP", new Color("8AB8C4")),
+        new LootDisplayInfo("+40 XP", new Color("8AB8C4")),
+        new LootDisplayInfo("?", new Color("6ACA5A")),
+        new LootDisplayInfo("?", new Color("F0C85C")),
+        new LootDisplayInfo("?", new Color("E8A868")),
     };
 
     private struct LootDisplayInfo
@@ -200,7 +193,7 @@ public partial class ChestLootScreen : CanvasLayer
     /// <summary>
     /// Montre le chest roulette. Callback onComplete appelé quand l'animation est terminée.
     /// </summary>
-    public void ShowLoot(List<LootResolver.LootResult> loots, string rarity, Action onComplete)
+    public void ShowLoot(List<ResolvedLoot> loots, string rarity, Action onComplete)
     {
         _pendingLoots = loots;
         _rarity = rarity;
@@ -210,23 +203,14 @@ public partial class ChestLootScreen : CanvasLayer
 
         ClearSlots();
 
-        // Set title based on rarity
-        _title.Text = rarity switch
+        _title.Text = Tr(rarity switch
         {
-            "epic" => "COFFRE EPIQUE",
-            "rare" => "COFFRE RARE",
-            "lore" => "COFFRE ANCESTRAL",
-            _ => "COFFRE"
-        };
-
-        Color rarityColor = rarity switch
-        {
-            "epic" => EpicColor,
-            "rare" => RareColor,
-            "lore" => LoreColor,
-            _ => GoldBright
-        };
-        _title.AddThemeColorOverride("font_color", rarityColor);
+            "epic" => "CHEST_EPIC",
+            "rare" => "CHEST_RARE",
+            "lore" => "CHEST_LORE",
+            _ => "CHEST_COMMON"
+        });
+        _title.AddThemeColorOverride("font_color", RarityPalette.Main(rarity));
 
         // Create a slot for each loot
         for (int i = 0; i < loots.Count; i++)
@@ -245,7 +229,7 @@ public partial class ChestLootScreen : CanvasLayer
     // Slot creation
     // ==============================
 
-    private SlotState CreateSlot(LootResolver.LootResult loot, int index)
+    private SlotState CreateSlot(ResolvedLoot loot, int index)
     {
         PanelContainer card = new();
         card.CustomMinimumSize = new Vector2(370, 60);
@@ -282,7 +266,7 @@ public partial class ChestLootScreen : CanvasLayer
         card.AddChild(flash);
         _slotsContainer.AddChild(card);
 
-        LootDisplayInfo finalItem = LootToDisplayInfo(loot);
+        LootDisplayInfo finalItem = new(loot.Label, loot.Color);
 
         return new SlotState
         {
@@ -297,27 +281,6 @@ public partial class ChestLootScreen : CanvasLayer
             Stopped = false,
             FakeIndex = GD.RandRange(0, FakeItems.Length - 1)
         };
-    }
-
-    private static LootDisplayInfo LootToDisplayInfo(LootResolver.LootResult loot)
-    {
-        switch (loot.Type)
-        {
-            case "essence":
-                return new LootDisplayInfo($"Essence x{loot.Amount}", new Color(0.35f, 0.78f, 0.78f));
-            case "xp":
-                return new LootDisplayInfo($"+{loot.Amount} XP", new Color(0.4f, 0.8f, 1f));
-            case "perk":
-                return new LootDisplayInfo("Perk Aleatoire", new Color(0.5f, 1f, 0.5f));
-            case "weapon":
-                return new LootDisplayInfo("Arme inconnue", GoldColor);
-            case "souvenir":
-                return new LootDisplayInfo($"Souvenir: {loot.ItemId}", LoreColor);
-            case "cursed_item":
-                return new LootDisplayInfo("Malediction", new Color(0.7f, 0.3f, 0.35f));
-            default:
-                return new LootDisplayInfo(loot.ItemId, CommonColor);
-        }
     }
 
     // ==============================
@@ -385,7 +348,7 @@ public partial class ChestLootScreen : CanvasLayer
         StyleBoxFlat revealStyle = new();
         revealStyle.BgColor = new Color(0.1f, 0.1f, 0.16f);
         revealStyle.SetBorderWidthAll(2);
-        revealStyle.BorderColor = GoldColor;
+        revealStyle.BorderColor = RarityPalette.Main(_rarity);
         revealStyle.SetCornerRadiusAll(3);
         slot.Card.AddThemeStyleboxOverride("panel", revealStyle);
 

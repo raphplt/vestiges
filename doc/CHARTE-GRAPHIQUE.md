@@ -36,7 +36,7 @@
 | **Décor moyen** (arbres, ruines) | 16×24 à 32×48 | |
 | **Structures joueur** (murs, pièges) | 32×16 à 32×32 | S'alignent sur la grille |
 | **Icônes UI** (items, perks) | 16×16 | |
-| **Coffres** | 16×12 | 4 variants de rareté |
+| **Coffres** | ≈ 28×28 à 32×35 | 4 silhouettes (bois, métal, cristal, ancien), fermé et ouvert, pipeline procédural ; la rareté se lit par la colonne de lumière (palette `data/ui/rarities.json`) — plan 17, lot 0A |
 
 ---
 

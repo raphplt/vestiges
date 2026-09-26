@@ -42,10 +42,10 @@ public partial class LevelUpScreen : CanvasLayer
 
     // --- Fragment rarity colors ---
     private static readonly Color RarityCommonBorder = new(0.25f, 0.24f, 0.2f, 0.6f);
-    private static readonly Color RarityUncommonBorder = new(0.4f, 0.73f, 0.42f);
-    private static readonly Color RarityRareBorder = new(1f, 0.7f, 0f);
-    private static readonly Color RarityUncommonBg = new(0.05f, 0.1f, 0.05f, 0.95f);
-    private static readonly Color RarityRareBg = new(0.12f, 0.09f, 0.02f, 0.95f);
+    private static readonly Color RarityUncommonBorder = RarityPalette.Main("uncommon");
+    private static readonly Color RarityRareBorder = RarityPalette.Main("rare");
+    private static readonly Color RarityUncommonBg = RarityPalette.Main("uncommon").Darkened(0.88f) with { A = 0.95f };
+    private static readonly Color RarityRareBg = RarityPalette.Main("rare").Darkened(0.88f) with { A = 0.95f };
 
     // --- Banish mode colors ---
     private static readonly Color BanishBorderColor = new(0.85f, 0.2f, 0.2f);
@@ -366,8 +366,8 @@ public partial class LevelUpScreen : CanvasLayer
                 };
                 bgColor = rarity switch
                 {
-                    "rare" => new Color(0.1f, 0.08f, 0.02f, 0.9f),
-                    "uncommon" => new Color(0.04f, 0.08f, 0.04f, 0.9f),
+                    "rare" => RarityRareBg with { A = 0.9f },
+                    "uncommon" => RarityUncommonBg with { A = 0.9f },
                     _ => new Color(0.08f, 0.08f, 0.12f)
                 };
             }
@@ -794,27 +794,9 @@ public partial class LevelUpScreen : CanvasLayer
         }
     }
 
-    private static Color GetRarityColor(string rarity)
-    {
-        return rarity switch
-        {
-            "common" => new Color(0.9f, 0.9f, 0.9f),
-            "uncommon" => new Color(0.4f, 0.73f, 0.42f),
-            "rare" => new Color(1f, 0.7f, 0f),
-            _ => new Color(0.9f, 0.9f, 0.9f)
-        };
-    }
+    private static Color GetRarityColor(string rarity) => RarityPalette.Main(rarity);
 
-    private static string GetRarityLabel(string rarity)
-    {
-        return rarity switch
-        {
-            "common" => "Commun",
-            "uncommon" => "Peu commun",
-            "rare" => "Rare",
-            _ => ""
-        };
-    }
+    private static string GetRarityLabel(string rarity) => RarityPalette.DisplayName(rarity);
 
     private void OnPerkSelected(string perkId)
     {

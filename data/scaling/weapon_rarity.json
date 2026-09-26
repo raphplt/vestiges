@@ -1,20 +1,17 @@
 {
+    "_comment": "Poids et multiplicateurs des raretés d'arme. Couleurs et noms : data/ui/rarities.json (palette unique).",
     "rarities": [
         {
             "id": "common",
-            "display_name": "Commun",
-            "color": "#C8C2B6",
             "weight": 52,
-            "global_multiplier": 1.00,
-            "damage_multiplier": 1.00,
-            "attack_speed_multiplier": 1.00,
-            "range_multiplier": 1.00,
-            "heal_multiplier": 1.00
+            "global_multiplier": 1.0,
+            "damage_multiplier": 1.0,
+            "attack_speed_multiplier": 1.0,
+            "range_multiplier": 1.0,
+            "heal_multiplier": 1.0
         },
         {
             "id": "uncommon",
-            "display_name": "Inhabituel",
-            "color": "#7FCB89",
             "weight": 24,
             "global_multiplier": 1.05,
             "damage_multiplier": 1.06,
@@ -24,30 +21,24 @@
         },
         {
             "id": "rare",
-            "display_name": "Rare",
-            "color": "#67A6E8",
             "weight": 14,
             "global_multiplier": 1.11,
             "damage_multiplier": 1.14,
             "attack_speed_multiplier": 1.07,
             "range_multiplier": 1.05,
-            "heal_multiplier": 1.10
+            "heal_multiplier": 1.1
         },
         {
             "id": "epic",
-            "display_name": "Epique",
-            "color": "#C97AE8",
             "weight": 7,
-            "global_multiplier": 1.20,
+            "global_multiplier": 1.2,
             "damage_multiplier": 1.24,
-            "attack_speed_multiplier": 1.10,
+            "attack_speed_multiplier": 1.1,
             "range_multiplier": 1.08,
             "heal_multiplier": 1.16
         },
         {
             "id": "legendary",
-            "display_name": "Legendaire",
-            "color": "#F0C85C",
             "weight": 3,
             "global_multiplier": 1.32,
             "damage_multiplier": 1.36,

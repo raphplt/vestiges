@@ -1,0 +1,17 @@
+{
+    "_comment": "Placement des coffres du monde (plan 17 lot 0A). band = distance au départ en fraction du rayon de carte (tirage uniforme en surface). Les groupes sont placés dans l'ordre : les plus rares d'abord. Distances et dégagements en pixels monde (une cellule = 64 px de large, un rang = 16 px de haut).",
+    "min_spacing_px": 720,
+    "candidates_per_chest": 10,
+    "attempts_per_chest": 80,
+    "path_bonus": 0.6,
+    "clearance_px": { "side": 72, "north": 32, "south": 124 },
+    "building_clearance_px": { "side": 176, "north": 48, "south": 176 },
+    "edge_pointer": { "range_px": 1200, "max": 3 },
+    "groups": [
+        { "chest": "chest_common", "count": 1, "band": [0.05, 0.09] },
+        { "chest": "chest_epic", "count": 2, "band": [0.45, 0.95] },
+        { "chest": "chest_lore", "count": 3, "band": [0.25, 0.9] },
+        { "chest": "chest_rare", "count": 6, "band": [0.2, 0.9] },
+        { "chest": "chest_common", "count": 11, "band": [0.12, 0.9] }
+    ]
+}

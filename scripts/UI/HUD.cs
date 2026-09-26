@@ -152,6 +152,7 @@ public partial class HUD : CanvasLayer
         BuildWeaponBar();
         BuildPassiveBar();
 
+        _hudRoot.AddChild(new ChestPointers { Name = "ChestPointers" });
         RunEventHud eventHud = new() { Name = "RunEventHud" };
         _hudRoot.AddChild(eventHud);
     }

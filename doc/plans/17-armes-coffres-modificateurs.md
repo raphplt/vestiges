@@ -272,6 +272,62 @@ Un lot à la fois, chacun vérifié et recetté avant le suivant. Les vagues 0 e
 | **0C — Nettoyage invisible** | Code et données morts du plan 18 (ressources, craft, Mémorial de perks, minicarte, fusions si 4.3 retenu, noms « nuit »), PNG orphelins | Build sans warning, smoke, régressions |
 | **0D — Doc** | Mentions du jeu de référence ramenées aux citations de Raphaël et aux garde-fous ; une section « Références et garde-fous » unique dans la Stratégie V2 ; `PROGRESSION-SYSTEM.md` réécrit sans modèle externe | Relecture |
 
+#### Lot 0A détaillé — 26 septembre
+
+Périmètre : §4.9 et les lignes 0A du plan 18 (9 à 13, 18, 21). Hors lot : le son d'entrée dans le cadre (candidats à choisir par Raphaël, plan 15), le tirage de butin sur 1 000 coffres et la purge de `perks.json` (0B), la refonte en conteneurs de vestiges (plan 13).
+
+| # | Étape | Détail |
+|---|---|---|
+| 1 | Mesure avant | Banc `--density` : coffres entrés dans le cadre en 3 min (`chests_seen`, `first_chest_s`), 5 seeds, sur le code d'avant le lot |
+| 2 | Placement en données | `data/chests/chest_placement.json` : groupes (coffre, nombre, bande de distance en fraction du rayon de carte), un coffre commun garanti près du départ, écart minimal entre coffres en pixels. Tirage uniforme en surface dans la bande, graine du monde. Refus : eau, oubli, îlots d'immeubles (et leur voisinage au sud, qui masquerait le coffre). Préférence pour les rues, places et allées des champs |
+| 3 | Dégagement | Cellules réservées autour du coffre, en pixels écran (côtés, nord, et surtout sud : un arbre de 118 px posé devant le couvrirait). Les placeurs de décors les évitent déjà (`usedCells`) |
+| 4 | Sprites | `tools/sprites/props/chests.py`, rendus par `generate_props.py chests` : bois, métal, cristal, ancien, fermé et ouvert, ≈ 30 px de large, pivot au manifeste, ombre de contact commune aux décors |
+| 5 | Palette de rareté unique | `data/ui/rarities.json` (clé de nom traduite, couleur, tons clair et sombre) lue par `RarityPalette` ; les coffres, le level-up, l'écran de butin, le HUD et les armes au sol s'y alimentent. `weapon_rarity.json` ne garde que les poids et multiplicateurs |
+| 6 | Colonne de lumière | `LightColumn` : shader sur la grille des texels (trois tons de la rareté, tramage, poussières qui montent), commune aux coffres et au repère des micro-événements (`RunEventMarker`). Remplace l'aura en losange des coffres |
+| 7 | Invite et jauge | Invite « [touche] Ouvrir » au-dessus du coffre le plus proche à portée (clavier ou manette selon la dernière entrée) ; jauge d'ouverture en pixels à la place de la barre arrondie « harvest » |
+| 8 | Repère de bord | Flèches au bord de l'écran vers les coffres fermés proches hors du cadre, couleur de rareté, trois au plus |
+| 9 | Contenu | Perks tirés avec le filtre du level-up (plus de perks V1) ; malédictions retirées des tables ; butin résolu **avant** la roulette, qui montre l'arme, le perk ou le Souvenir obtenus ; libellés traduits et accentués ; popups de butin posées dans le monde supprimées (la roulette les remplace) |
+| 10 | Vérification | Build, smoke ; `--capture-chests` (chaque coffre cadré, avec et sans décors) en 720p et 1080p, regardé ; mesure après sur les 5 mêmes seeds |
+
+#### Lot 0A livré — 26 septembre
+
+**Fait :**
+- **Placement** (`ChestSpawner`, `data/chests/chest_placement.json`) : 23 coffres par carte (12 communs, 6 rares, 3 anciens, 2 épiques), bandes de 0,06 à 0,95 du rayon, un commun garanti entre 0,05 et 0,09 (toujours à portée des flèches au départ), 720 px au moins entre deux coffres. Tirage par la graine du monde. Refus dans l'eau, l'oubli, les îlots d'immeubles et leur abord sud ; bonus aux rues, places et allées des champs. Avant : 10 à 15 coffres selon la seed, tous à moins de 55 cellules du départ.
+- **Dégagement** : 72 px de côté, 32 au nord, 124 au sud, réservés avant les décors.
+- **Sprites** (`tools/sprites/props/chests.py`, `generate_props.py chests`) : malle de bois, cantine de métal, caisse de fer envahie de cristaux, châsse de pierre à voûte dorée ; fermés 28×29 à 32×35 px (avant 16×12), ouverts avec couvercle levé et intérieur sombre ; pivot et emprise au manifeste, ombre de contact des décors.
+- **Palette de rareté unique** (`data/ui/rarities.json`, `RarityPalette`) : couleurs et noms traduits ; lue par les coffres, le level-up, l'écran de butin, le HUD et les armes au sol. `weapon_rarity.json` ne garde que poids et multiplicateurs. Le « rare » du level-up passe de l'orange au bleu, « Peu commun » devient « Inhabituel ».
+- **Colonne de lumière** (`LightColumn`, `light_column.gdshader`) : grille des texels, trois tons de la rareté, pleine sur les deux tiers puis tramée, poussières qui montent, tache au sol. Hauteur et largeur par coffre (commun 110 px, épique 160 px). Le repère des micro-événements l'utilise aussi. L'aura en losange ne sert plus aux coffres.
+- **Invite et jauge** : « [E] Ouvrir » en police pixel au-dessus du coffre le plus proche, touche clavier ou manette selon la dernière entrée ; jauge pixel 24×3 à la couleur de la rareté, qui remplace la barre arrondie « harvest » (POI compris).
+- **Repères de bord** (`ChestPointers`) : trois flèches au plus vers les coffres fermés à moins de 1 200 px, hors du cadre, au-dessus de la barre d'armes.
+- **Contenu** : perks tirés par le filtre du level-up (`PerkManager.PickLootPerk`, perks V1 exclus) ; malédictions retirées des tables ; butin résolu avant la roulette (`LootRewards`), qui affiche « Arme : … », « Don : … », « Souvenir : … » ; un Souvenir quand tous sont retrouvés devient 8 d'Essence ; plus de popups de butin posées dans le monde pour les coffres.
+- **Code** : l'ouverture quitte `Player.cs` pour `ChestInteraction` (`Player.cs` passe de 2 686 à 2 362 lignes) ; registre `Chest.Closed` au lieu des recherches par groupe.
+- **Banc** : `--capture-chests` ; la mesure de densité compte les coffres entrés dans le cadre, non masqués par un décor, et signalés (coffre, haut de colonne ou flèche visibles) ; `--nomad` fait garder un cap au bot.
+- **Mesure headless** (`tools/measure_run.sh`, demande de Raphaël en cours de lot) : la mesure de densité suit le temps de jeu, sans rendu, en `--fixed-fps 60` ; compilation et import une seule fois, seeds en parallèle (`MEASURE_JOBS`). 5 seeds × 180 s de jeu en 67 s au lieu d'environ 17 min en fenêtre. Les deux côtés d'un avant/après se mesurent avec le même mode : sur une même seed, fenêtre et headless ne donnent pas les mêmes éliminations (run chaotique, machine chargée).
+
+**Mesures** (headless, bot nomade invincible, seeds 221092026, 1002, 7, 42, 20260926 ; moyennes) :
+
+| | Coffres générés | Vus en 3 min | Signalés en 3 min | Vus en 8 min | Non masqués en 8 min | Signalés en 8 min |
+|---|---|---|---|---|---|---|
+| Avant | 10 à 15 | 4,6 | 4,6 | 8,8 | 7,8 | 8,8 |
+| Après | 23 (+ coffres d'événement) | 5,0 | 9,6 | 10,6 | 10,6 | 17,2 |
+
+- La série de 8 min « après » précède le dernier réglage du premier coffre (bande 0,06 à 0,12 au lieu de 0,05 à 0,09) ; celle de 3 min le suit.
+- « Vu » : le coffre entre dans le cadre. Avant le lot, un coffre vu faisait 16×12 px sans signal ; il n'était pas pour autant remarqué (aucun ouvert dans l'historique). La mesure ne dit pas si le joueur le remarque : c'est la recette qui le dira.
+- Après : un coffre vu toutes les 45 s environ pour ce bot, plus que la cible V2 (60 à 90 s). Le bot nomade couvre peut-être plus de terrain qu'un joueur ; le nombre de coffres se règle dans `chest_placement.json`.
+- Mesure en fenêtre avant le passage au headless (avant, nomade, 3 min) : 1, 4, 8, 9 et 11 coffres vus selon la seed, du même ordre.
+- Captures regardées : chaque coffre de deux seeds (221092026 champs et carrière, 1002 ville), avec et sans décors ; aucun masqué. Départ de trois seeds : le premier coffre est à l'écran ou montré par une flèche. Coffre hors cadre : haut de colonne au bord bas et flèche. Ouverture : jauge bleue, puis roulette « COFFRE RARE » avec « Don : Embrasement » et « Essence ×14 », appliqués ensuite (score, Essence).
+- 720p : sur ce Mac, `capture_run.sh` ignore `--resolution` (fenêtre plein écran, image en 3840×2160). Le 720p est jugé sur l'image réduite : colonnes, invite et flèches restent lisibles ; les flèches y sont petites.
+- Vérifié aussi : build sans avertissement, smoke, `test_movement` (dont les deux cas coffre, adaptés au composant), `test_enemy_abilities`, `test_dev_mode`. Relecture `godot-reviewer` : deux plantages possibles (sprites de coffre absents du JSON ou du disque) et deux points mineurs, corrigés.
+- Coût : non mesuré au banc de combat (machine chargée, charge 9). Une colonne est un quad de 30×120 px environ, écarté du rendu hors écran ; les flèches parcourent 23 coffres par frame, sans allocation.
+- Constat hors lot : `RunTracker.RunDurationSeconds` suit l'horloge murale, pauses comprises. Le score de survie et la quête de durée comptent donc le temps passé en pause.
+
+**Écarts au plan :**
+- Pas de son d'entrée dans le cadre : il attend un choix de Raphaël parmi des candidats (plan 15).
+- Les POI et Autels gardent leur aura en losange jusqu'à leur refonte (0B, vague 3).
+- L'écran de roulette garde sa mise en page ; seuls couleurs, titres et contenu changent.
+
+**Recette attendue** : les coffres se voient-ils sans les chercher ? Les colonnes gênent-elles ? Fréquence (un coffre vu toutes les 45 s pour le bot) ; sprites des quatre coffres ; invite et flèches ; « Don » pour nommer un perk reçu.
+
 ### Vague 1 — Armes : présentation et montée en puissance
 
 | Lot | Contenu | Vérification |

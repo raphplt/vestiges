@@ -248,11 +248,12 @@ public partial class MovementRegression
         _player.Position = Vector2.Zero;
         await Step(1);
         _player._UnhandledInput(new InputEventAction { Action = "interact", Pressed = true });
-        Check(ReadPlayerField<bool>("_isOpeningChest"), "vrai coffre : ouverture commencée");
+        ChestInteraction chests = _player.GetNode<ChestInteraction>("ChestInteraction");
+        Check(chests.IsOpening, "vrai coffre : ouverture commencée");
         PressMobility();
         await Step(1);
         ReleaseMobility();
-        Check(!ReadPlayerField<bool>("_isOpeningChest") && !chest.IsOpened,
+        Check(!chests.IsOpening && !chest.IsOpened,
             "dash au neutre : ouverture coffre annulée sans loot");
         chest.QueueFree();
 

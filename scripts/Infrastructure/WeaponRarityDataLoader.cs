@@ -6,8 +6,8 @@ namespace Vestiges.Infrastructure;
 public class WeaponRarityData
 {
 	public string Id { get; set; }
-	public string DisplayName { get; set; }
-	public Color Color { get; set; } = Colors.White;
+	public string DisplayName => RarityPalette.DisplayName(Id);
+	public Color Color => RarityPalette.Main(Id);
 	public float Weight { get; set; } = 1f;
 	public float GlobalMultiplier { get; set; } = 1f;
 	public float DamageMultiplier { get; set; } = 1f;
@@ -55,8 +55,6 @@ public static class WeaponRarityDataLoader
 			WeaponRarityData rarity = new()
 			{
 				Id = dict.ContainsKey("id") ? dict["id"].AsString() : "common",
-				DisplayName = dict.ContainsKey("display_name") ? dict["display_name"].AsString() : "Commun",
-				Color = Color.FromHtml(dict.ContainsKey("color") ? dict["color"].AsString() : "#FFFFFF"),
 				Weight = dict.ContainsKey("weight") ? (float)dict["weight"].AsDouble() : 1f,
 				GlobalMultiplier = dict.ContainsKey("global_multiplier") ? (float)dict["global_multiplier"].AsDouble() : 1f,
 				DamageMultiplier = dict.ContainsKey("damage_multiplier") ? (float)dict["damage_multiplier"].AsDouble() : 1f,

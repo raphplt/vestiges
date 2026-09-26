@@ -31,7 +31,7 @@ public partial class WorldSetup : Node2D
     /// <summary>Seed de la run, injectée par GameBootstrap.</summary>
     public ulong Seed { get; set; }
 
-    /// <summary>Si true, aucun POI ni coffre n'est généré (mutateur "Isolement").</summary>
+    /// <summary>Si true, aucun POI n'est généré (mutateur "Isolement"). Les coffres restent.</summary>
     public bool PoisDisabled { get; set; }
 
     /// <summary>Référence publique au générateur pour les autres systèmes.</summary>
@@ -167,9 +167,10 @@ public partial class WorldSetup : Node2D
         {
             onProgress?.Invoke("Points d'intérêt...");
             SpawnPois();
-            SpawnChests();
             await YieldFrame();
         }
+        // Avant les décors : chaque coffre réserve son dégagement.
+        SpawnChests();
 
         onProgress?.Invoke("Décors...");
         SpawnEnvironmentProps(_urbanLayout, _swampLayout);
@@ -210,10 +211,8 @@ public partial class WorldSetup : Node2D
         GroundMaterial.Apply(_ground, _roadOverlay, _generator, _tileMapper, _terrain, _config.MapRadius, _config.GroundBlend);
         InitializeFog();
         if (!PoisDisabled)
-        {
             SpawnPois();
-            SpawnChests();
-        }
+        SpawnChests();
         SpawnEnvironmentProps(_urbanLayout, _swampLayout);
         if (_urbanLayout != null)
         {
@@ -434,7 +433,7 @@ public partial class WorldSetup : Node2D
 
     private void SpawnChests()
     {
-        ChestSpawner.SpawnChests(_generator, _ground, _poiContainer, _usedCells);
+        ChestSpawner.SpawnChests(_generator, _ground, _poiContainer, _usedCells, Seed, _urbanLayout, _wildFieldsLayout);
     }
 
     private void BuildPropOcclusion()

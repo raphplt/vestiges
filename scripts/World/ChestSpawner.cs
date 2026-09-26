@@ -5,104 +5,183 @@ using Vestiges.Infrastructure;
 namespace Vestiges.World;
 
 /// <summary>
-/// Place des coffres standalone sur la map, en dehors des POI.
-/// La rareté dépend de la distance au Foyer et du danger du biome.
+/// Place les coffres du monde sur toute la carte (data/chests/chest_placement.json), avant les décors :
+/// chaque coffre réserve autour de lui un dégagement que les placeurs de décors respectent, pour qu'aucun
+/// arbre ni immeuble posé devant ne le masque. Tirage reproductible par la graine du monde.
 /// </summary>
 public static class ChestSpawner
 {
-    private const int CommonChestCount = 8;
-    private const int RareChestCount = 4;
-    private const int EpicChestCount = 1;
-    private const int LoreChestCount = 2;
+    private const float CellWidth = 64f;
+    private const float RowHeight = 16f;
 
     public static void SpawnChests(
         WorldGenerator generator,
         TileMapLayer ground,
         Node2D container,
-        HashSet<Vector2I> usedCells)
+        HashSet<Vector2I> usedCells,
+        ulong seed,
+        UrbanLayout urbanLayout,
+        WildFieldsLayout wildFieldsLayout)
     {
         PackedScene chestScene = GD.Load<PackedScene>("res://scenes/world/Chest.tscn");
-        if (chestScene == null)
+        ChestPlacementData placement = ChestDataLoader.LoadPlacement();
+        RandomNumberGenerator rng = new() { Seed = seed ^ 0xC4E57UL };
+        PlacementContext context = new(generator, ground, usedCells, urbanLayout, wildFieldsLayout, placement);
+        List<Vector2> placed = new();
+
+        foreach (ChestPlacementGroup group in placement.Groups)
         {
-            GD.PushError("[ChestSpawner] Cannot load Chest.tscn");
-            return;
+            ChestData data = ChestDataLoader.Get(group.ChestId);
+            if (data == null)
+                continue;
+
+            for (int i = 0; i < group.Count; i++)
+            {
+                if (!TryPickCell(context, group, placed, rng, out Vector2I cell))
+                {
+                    GD.PushWarning($"[ChestSpawner] No room for {group.ChestId} in band {group.BandMin}-{group.BandMax}");
+                    continue;
+                }
+
+                Vector2 worldPos = ground.MapToLocal(cell);
+                ReserveClearance(context, cell);
+                placed.Add(worldPos);
+
+                Chest chest = chestScene.Instantiate<Chest>();
+                chest.GlobalPosition = worldPos;
+                container.AddChild(chest);
+                chest.Initialize(data);
+            }
         }
 
-        int total = 0;
-        total += SpawnChestsOfType("chest_common", CommonChestCount, 6, 50, generator, ground, container, usedCells, chestScene);
-        total += SpawnChestsOfType("chest_rare", RareChestCount, 15, 55, generator, ground, container, usedCells, chestScene);
-        total += SpawnChestsOfType("chest_epic", EpicChestCount, 30, 55, generator, ground, container, usedCells, chestScene);
-        total += SpawnChestsOfType("chest_lore", LoreChestCount, 18, 55, generator, ground, container, usedCells, chestScene);
-
-        GD.Print($"[ChestSpawner] Spawned {total} chests");
+        GD.Print($"[ChestSpawner] Spawned {placed.Count} chests");
     }
 
-    private static int SpawnChestsOfType(
-        string chestId,
-        int count,
-        int minDist,
-        int maxDist,
-        WorldGenerator generator,
-        TileMapLayer ground,
-        Node2D container,
-        HashSet<Vector2I> usedCells,
-        PackedScene chestScene)
+    private readonly record struct PlacementContext(
+        WorldGenerator Generator,
+        TileMapLayer Ground,
+        HashSet<Vector2I> UsedCells,
+        UrbanLayout Urban,
+        WildFieldsLayout Fields,
+        ChestPlacementData Placement);
+
+    /// <summary>Plusieurs candidats valides par coffre ; garde celui qui est sur un chemin et loin des autres coffres.</summary>
+    private static bool TryPickCell(PlacementContext context, ChestPlacementGroup group, List<Vector2> placed,
+        RandomNumberGenerator rng, out Vector2I best)
     {
-        ChestData data = ChestDataLoader.Get(chestId);
-        if (data == null)
-            return 0;
+        best = default;
+        float bestScore = float.MinValue;
+        int radius = context.Generator.MapRadius;
+        float innerSq = group.BandMin * group.BandMin;
+        float outerSq = group.BandMax * group.BandMax;
+        int valid = 0;
 
-        int spawned = 0;
-        int safeRadius = generator.MapRadius - 5;
-
-        for (int i = 0; i < count; i++)
+        for (int attempt = 0; attempt < context.Placement.AttemptsPerChest && valid < context.Placement.CandidatesPerChest; attempt++)
         {
-            Vector2I cell = PickChestCell(generator, usedCells, safeRadius, minDist, maxDist);
-            if (cell == new Vector2I(int.MinValue, int.MinValue))
+            // Uniforme en surface dans la couronne : sans la racine, les coffres s'entasseraient au bord intérieur.
+            float distance = radius * Mathf.Sqrt(rng.RandfRange(innerSq, outerSq));
+            float angle = rng.RandfRange(0f, Mathf.Tau);
+            Vector2I cell = new(Mathf.RoundToInt(Mathf.Cos(angle) * distance), Mathf.RoundToInt(Mathf.Sin(angle) * distance));
+            if (!IsCellAllowed(context, cell))
                 continue;
 
-            usedCells.Add(cell);
+            Vector2 worldPos = context.Ground.MapToLocal(cell);
+            float nearest = NearestDistance(worldPos, placed);
+            if (nearest < context.Placement.MinSpacingPx)
+                continue;
 
-            Vector2 worldPos = ground.MapToLocal(cell);
-            Chest chest = chestScene.Instantiate<Chest>();
-            chest.GlobalPosition = worldPos;
-            container.AddChild(chest);
-            chest.Initialize(data);
-            spawned++;
+            valid++;
+            float score = Mathf.Min(nearest / context.Placement.MinSpacingPx, 2f);
+            if (IsOnPath(context, cell))
+                score += context.Placement.PathBonus;
+            if (score > bestScore)
+            {
+                bestScore = score;
+                best = cell;
+            }
         }
 
-        return spawned;
+        return valid > 0;
     }
 
-    private static Vector2I PickChestCell(
-        WorldGenerator generator,
-        HashSet<Vector2I> usedCells,
-        int safeRadius,
-        int minDist,
-        int maxDist)
+    private static bool IsCellAllowed(PlacementContext context, Vector2I cell)
     {
-        for (int attempt = 0; attempt < 30; attempt++)
+        WorldGenerator generator = context.Generator;
+        if (!generator.IsWithinBounds(cell.X, cell.Y) || generator.IsErased(cell.X, cell.Y))
+            return false;
+        if (generator.GetTerrain(cell.X, cell.Y) == TerrainType.Water)
+            return false;
+
+        bool free = true;
+        ForEachCellInClearance(context.Ground, cell, context.Placement.Clearance, c =>
         {
-            int x = (int)GD.RandRange(-safeRadius + 1, safeRadius);
-            int y = (int)GD.RandRange(-safeRadius + 1, safeRadius);
+            if (context.UsedCells.Contains(c))
+                free = false;
+        });
+        if (!free || context.Urban == null)
+            return free;
 
-            float distFromCenter = Mathf.Sqrt(x * x + y * y);
-            if (distFromCenter > safeRadius || distFromCenter < minDist || distFromCenter > maxDist)
-                continue;
+        // Un immeuble posé devant le coffre, ou le coffre dans un îlot, le rendrait invisible.
+        ForEachCellInClearance(context.Ground, cell, context.Placement.BuildingClearance, c =>
+        {
+            UrbanCellType type = UrbanCell(context.Urban, c);
+            if (type == UrbanCellType.BuildingInterior || type == UrbanCellType.BuildingWall)
+                free = false;
+        });
+        return free;
+    }
 
-            if (generator.GetTerrain(x, y) == TerrainType.Water)
-                continue;
+    private static bool IsOnPath(PlacementContext context, Vector2I cell)
+    {
+        if (context.Fields != null && context.Fields.PathCells.Contains(cell))
+            return true;
+        if (context.Urban == null)
+            return false;
+        UrbanCellType type = UrbanCell(context.Urban, cell);
+        return type == UrbanCellType.Road || type == UrbanCellType.Sidewalk || type == UrbanCellType.Plaza;
+    }
 
-            if (generator.IsErased(x, y))
-                continue;
+    private static UrbanCellType UrbanCell(UrbanLayout layout, Vector2I cell)
+    {
+        int gx = cell.X + layout.MapRadius;
+        int gy = cell.Y + layout.MapRadius;
+        if (gx < 0 || gy < 0 || gx >= layout.CellGrid.GetLength(0) || gy >= layout.CellGrid.GetLength(1))
+            return UrbanCellType.None;
+        return layout.CellGrid[gx, gy];
+    }
 
-            Vector2I cell = new(x, y);
-            if (usedCells.Contains(cell))
-                continue;
+    private static void ReserveClearance(PlacementContext context, Vector2I cell)
+    {
+        HashSet<Vector2I> used = context.UsedCells;
+        ForEachCellInClearance(context.Ground, cell, context.Placement.Clearance, c => used.Add(c));
+    }
 
-            return cell;
+    /// <summary>
+    /// Cellules dont le centre tombe dans la zone en pixels autour de <paramref name="cell"/>. Grille « stacked » :
+    /// une colonne décale de 64 px, un rang de 16 px en quinconce, d'où la zone en pixels et non en cellules.
+    /// </summary>
+    private static void ForEachCellInClearance(TileMapLayer ground, Vector2I cell, PixelClearance clearance, System.Action<Vector2I> visit)
+    {
+        Vector2 origin = ground.MapToLocal(cell);
+        int rowMin = cell.Y - Mathf.CeilToInt(clearance.North / RowHeight);
+        int rowMax = cell.Y + Mathf.CeilToInt(clearance.South / RowHeight);
+        int columnSpan = Mathf.CeilToInt(clearance.Side / CellWidth) + 1;
+        for (int y = rowMin; y <= rowMax; y++)
+        {
+            for (int x = cell.X - columnSpan; x <= cell.X + columnSpan; x++)
+            {
+                Vector2I candidate = new(x, y);
+                if (Mathf.Abs(ground.MapToLocal(candidate).X - origin.X) <= clearance.Side)
+                    visit(candidate);
+            }
         }
+    }
 
-        return new Vector2I(int.MinValue, int.MinValue);
+    private static float NearestDistance(Vector2 position, List<Vector2> placed)
+    {
+        float nearest = float.MaxValue;
+        foreach (Vector2 other in placed)
+            nearest = Mathf.Min(nearest, position.DistanceTo(other));
+        return nearest;
     }
 }

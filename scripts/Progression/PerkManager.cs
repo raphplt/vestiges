@@ -103,7 +103,7 @@ public partial class PerkManager : Node
 
     /// <summary>
     /// Auto-applique un perk reçu depuis le monde (coffre, POI, événement).
-    /// Le perkId est déjà résolu par Player.ResolvePerkLoot().
+    /// Le perkId est déjà résolu par LootRewards (PickLootPerk).
     /// </summary>
     private void OnLootReceived(string itemType, string itemId, int amount)
     {
@@ -252,6 +252,13 @@ public partial class PerkManager : Node
 
             GD.Print($"[PerkManager] Synergy activated: {synergy.Name}");
         }
+    }
+
+    /// <summary>Perk tiré pour un butin (coffre, POI) : mêmes règles que les offres, perks V1 exclus. Null si aucun.</summary>
+    public string PickLootPerk()
+    {
+        string[] picked = PickRandomPerks(1);
+        return picked.Length > 0 ? picked[0] : null;
     }
 
     /// <summary>

@@ -1,10 +1,12 @@
 using Godot;
+using Vestiges.Infrastructure;
+using Vestiges.World;
 
 namespace Vestiges.Events.RunEvents;
 
 /// <summary>
-/// Repère au sol d'un micro-événement : colonne de lumière visible de loin, anneau de zone
-/// avec sa progression, vestige en chute puis posé. Détaché du porteur, au-dessus du sol.
+/// Repère au sol d'un micro-événement : colonne de lumière visible de loin (la même que les coffres),
+/// anneau de zone avec sa progression, vestige en chute puis posé. Détaché du porteur, au-dessus du sol.
 /// </summary>
 public partial class RunEventMarker : Node2D
 {
@@ -24,6 +26,7 @@ public partial class RunEventMarker : Node2D
     private readonly Vector2[] _fillPoints = new Vector2[ArcSegments];
     private readonly Vector2[] _crystalPoints = new Vector2[4];
     private readonly Vector2[] _crystalOutline = new Vector2[5];
+    private LightColumn _column;
 
     public RunEventMarker()
     {
@@ -38,13 +41,23 @@ public partial class RunEventMarker : Node2D
         GlobalPosition = position;
         _radius = radius;
         _color = color;
+        _column ??= new LightColumn { Name = "LightColumn" };
+        if (_column.GetParent() == null)
+            AddChild(_column);
+        _column.Configure(new RarityColors(color, color.Lightened(0.45f), color.Darkened(0.5f)), BeaconHeight, 1.5f, 5f);
+        _column.Visible = style != MarkerStyle.Relic;
         QueueRedraw();
     }
 
     public void SetProgress(float progress) => _progress = Mathf.Clamp(progress, 0f, 1f);
 
     /// <summary>Avancement de la chute du vestige (0 = dans le ciel, 1 = posé).</summary>
-    public void SetFall(float fall) => _fall = Mathf.Clamp(fall, 0f, 1f);
+    public void SetFall(float fall)
+    {
+        _fall = Mathf.Clamp(fall, 0f, 1f);
+        if (_column != null)
+            _column.Visible = _fall >= 1f;
+    }
 
     /// <summary>Zone franchie par le joueur : l'anneau s'intensifie.</summary>
     public void SetActive(bool active) => _active = active;
@@ -74,14 +87,6 @@ public partial class RunEventMarker : Node2D
 
     private void DrawBeacon(float pulse)
     {
-        // Colonne de lumière : se lit au bord de l'écran avant que la cible n'y entre.
-        for (int i = 0; i < 6; i++)
-        {
-            float t = i / 6f;
-            float width = Mathf.Lerp(7f, 2f, t);
-            DrawRect(new Rect2(-width / 2f, -BeaconHeight * (t + 1f / 6f), width, BeaconHeight / 6f + 1f),
-                _color with { A = (0.45f - t * 0.35f) * (0.7f + 0.3f * pulse) });
-        }
         DrawEllipseRing(_radius * (0.9f + 0.1f * pulse), _color with { A = 0.7f }, 1.5f);
     }
 

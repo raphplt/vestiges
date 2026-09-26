@@ -23,8 +23,12 @@ namespace Vestiges.Tests;
 /// --capture-erasure : une capture par phase de l'oubli, puis un dégradé de toutes les phases.
 /// --measure-props [--measure-seconds 8] : coût de rendu des décors par biome (RunObservation.PropCost.cs).
 /// --capture-weapons [--weapons a,b] : galerie des attaques du joueur (RunObservation.Weapons.cs).
+/// --capture-chests : chaque coffre cadré, avec et sans décors (RunObservation.Chests.cs).
 /// --capture-bestiary : gros plans des créatures du pilote de sprites procéduraux, autour du joueur immobile.
-/// --density : mesure de densité en spawn naturel (ennemis visibles, temps sans ennemi, débits, niveaux).
+/// --density : mesure de densité en spawn naturel (ennemis visibles, temps sans ennemi, débits, niveaux,
+/// coffres entrés dans le cadre, et parmi eux ceux qu'aucun décor ne masquait).
+/// --nomad : pendant la mesure, le bot garde un cap (tiré de la seed) au lieu d'errer autour du départ,
+/// et en change quand il bute sur le bord du monde.
 /// --capture-every N : pendant la mesure, capture plein écran toutes les N secondes (HUD, événements).
 /// --event ID : force le micro-événement ID à 3 s de run (bancs de capture).
 /// </summary>
@@ -71,6 +75,8 @@ public partial class RunObservation : Node
                 await MeasurePropCost(double.Parse(Argument(args, "--measure-seconds", "8"), CultureInfo.InvariantCulture));
             else if (Array.IndexOf(args, "--capture-weapons") >= 0)
                 await CaptureWeapons(Argument(args, "--weapons", null));
+            else if (Array.IndexOf(args, "--capture-chests") >= 0)
+                await CaptureChests();
             else if (Array.IndexOf(args, "--capture-bestiary") >= 0)
                 await CaptureBestiary();
             else if (Array.IndexOf(args, "--capture-character") >= 0)
@@ -216,11 +222,14 @@ public partial class RunObservation : Node
         EventBus eventBus = GetNode<EventBus>("/root/EventBus");
         // Souffle du tout début de run (retour du 26 septembre) : premier coup reçu et dégâts cumulés à 10 et 30 s.
         double firstHit = -1, damage10 = 0, damage30 = 0;
-        double startedAt = Time.GetTicksMsec() / 1000.0;
+        // Temps de jeu, pauses exclues : la mesure vaut la même chose en temps réel et en headless
+        // accéléré (--fixed-fps), où une seconde de jeu dure bien moins qu'une seconde d'horloge.
+        double gameTime = 0;
+        int pausedFrames = 0;
         EventBus.PlayerHitByEventHandler onHit = (_, damage) =>
         {
             hitDamage += damage;
-            double at = Time.GetTicksMsec() / 1000.0 - startedAt;
+            double at = gameTime;
             if (firstHit < 0)
                 firstHit = at;
             if (at <= 10)
@@ -235,13 +244,23 @@ public partial class RunObservation : Node
         double firstVisible = -1;
         RandomNumberGenerator rng = new() { Seed = seed };
         Vector2 waypoint = _player.GlobalPosition;
-        double start = Time.GetTicksMsec() / 1000.0;
         double nextSample = 1.0;
         double nextCapture = _captureEvery;
+        // Coffres entrés dans le cadre (plan 17 lot 0A) : échantillonnés quatre fois par seconde,
+        // un coffre traverse l'écran en plus de deux secondes à la vitesse du joueur.
+        HashSet<ulong> seenChests = new();
+        HashSet<ulong> clearChests = new();
+        // Signalé : le coffre, le haut de sa colonne ou sa flèche de bord d'écran est visible.
+        HashSet<ulong> signaledChests = new();
+        float pointerRange = ChestDataLoader.LoadPlacement().PointerRangePx;
+        double firstChestSeen = -1;
+        double nextChestSample = 0.0;
+        List<(Rect2 Rect, float SortY, bool Canopy)> propRects = CollectPropRects();
+        bool nomad = Array.IndexOf(OS.GetCmdlineUserArgs(), "--nomad") >= 0;
+        float heading = rng.RandfRange(0f, Mathf.Tau);
         Vestiges.Events.RunEventDirector director = _world.GetNode<Vestiges.Events.RunEventDirector>("RunEventDirector");
         PlayerProgressionAccessor progression = new(_player);
         ProcessMode = ProcessModeEnum.Always;
-        double pausedSeconds = 0;
         Vector2 lastProgressPosition = _player.GlobalPosition;
         double lastProgressTime = 0;
 
@@ -250,14 +269,15 @@ public partial class RunObservation : Node
             await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
             if (GetTree().Paused)
             {
-                // L'écran de niveau fige la run : choisir la première offre et exclure ce temps de la mesure.
-                double pauseStart = Time.GetTicksMsec() / 1000.0;
+                // L'écran de niveau fige la run : choisir la première offre ; ce temps ne compte pas.
                 AutoPickLevelUp();
-                await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
-                pausedSeconds += Time.GetTicksMsec() / 1000.0 - pauseStart;
+                if (++pausedFrames > 3000)
+                    throw new InvalidOperationException("Run en pause depuis 3 000 frames : écran bloquant non géré par le banc.");
                 continue;
             }
-            double t = Time.GetTicksMsec() / 1000.0 - start - pausedSeconds;
+            pausedFrames = 0;
+            gameTime += GetProcessDeltaTime();
+            double t = gameTime;
             if (t >= seconds)
                 break;
 
@@ -267,6 +287,8 @@ public partial class RunObservation : Node
             {
                 waypoint = _player.GlobalPosition;
                 lastProgressTime = t;
+                if (nomad)
+                    heading += rng.RandfRange(Mathf.Pi * 0.5f, Mathf.Pi);
             }
             if (_player.GlobalPosition.DistanceTo(lastProgressPosition) > 60f)
             {
@@ -274,7 +296,10 @@ public partial class RunObservation : Node
                 lastProgressTime = t;
             }
             if (_player.GlobalPosition.DistanceTo(waypoint) < 40f && !director.IsEventActive)
-                waypoint = _player.GlobalPosition + Vector2.FromAngle(rng.RandfRange(0f, Mathf.Tau)) * rng.RandfRange(500f, 900f);
+            {
+                float angle = nomad ? heading + rng.RandfRange(-0.6f, 0.6f) : rng.RandfRange(0f, Mathf.Tau);
+                waypoint = _player.GlobalPosition + Vector2.FromAngle(angle) * rng.RandfRange(500f, 900f);
+            }
             // Comme un joueur, le bot suit la cible d'un micro-événement en cours (vestige, veille, Souverain).
             if (director.TryGetActiveTarget(out Vector2 eventTarget))
                 waypoint = eventTarget;
@@ -301,6 +326,27 @@ public partial class RunObservation : Node
                 nextCapture += _captureEvery;
                 using Image frame = GetViewport().GetTexture().GetImage();
                 frame.SavePng(string.Create(CultureInfo.InvariantCulture, $"{_output}/screen-{t:000}s.png"));
+            }
+
+            if (t >= nextChestSample)
+            {
+                nextChestSample += 0.25;
+                Rect2 chestView = VisibleWorldRect();
+                foreach (Node node in GetTree().GetNodesInGroup("chests"))
+                {
+                    if (node is not Chest chest)
+                        continue;
+                    bool columnVisible = chestView.HasPoint(chest.GlobalPosition + new Vector2(0f, -chest.ColumnHeight * 0.6f));
+                    if (columnVisible || chest.GlobalPosition.DistanceTo(_camera.GetScreenCenterPosition()) <= pointerRange)
+                        signaledChests.Add(chest.GetInstanceId());
+                    if (!chestView.HasPoint(chest.GlobalPosition))
+                        continue;
+                    signaledChests.Add(chest.GetInstanceId());
+                    if (seenChests.Add(chest.GetInstanceId()) && firstChestSeen < 0)
+                        firstChestSeen = t;
+                    if (!IsChestMasked(chest.GlobalPosition, propRects))
+                        clearChests.Add(chest.GetInstanceId());
+                }
             }
 
             if (t < nextSample)
@@ -332,8 +378,11 @@ public partial class RunObservation : Node
 
         StringBuilder summary = new();
         summary.Append(CultureInfo.InvariantCulture, $"seed={seed} seconds={seconds:F0} first_visible_s={firstVisible:F0}");
+        summary.Append(CultureInfo.InvariantCulture, $" view={VisibleWorldRect().Size.X:F0}x{VisibleWorldRect().Size.Y:F0}");
         summary.Append(CultureInfo.InvariantCulture, $" first_hit_s={firstHit:F1} damage_10s={damage10:F0} damage_30s={damage30:F0}");
         summary.Append(CultureInfo.InvariantCulture, $" kills={tracker.TotalKilled} spawned={tracker.TotalSpawned}");
+        summary.Append(CultureInfo.InvariantCulture,
+            $" chests_total={GetTree().GetNodesInGroup("chests").Count} chests_seen={seenChests.Count} chests_clear={clearChests.Count} chests_signaled={signaledChests.Count} first_chest_s={firstChestSeen:F0}");
         foreach ((int from, int to) in new[] { (0, 60), (60, 120), (120, 180), (180, 300) })
         {
             if (from >= visibleSamples.Count)
@@ -353,6 +402,37 @@ public partial class RunObservation : Node
         foreach (KeyValuePair<int, double> entry in levelTimes)
             summary.Append(CultureInfo.InvariantCulture, $" L{entry.Key}={entry.Value:F0}s");
         GD.Print($"[RunObservation] RESULT {summary}");
+    }
+
+    /// <summary>Silhouettes des décors (fixes) : un décor masque un coffre s'il est dessiné devant lui.</summary>
+    private List<(Rect2 Rect, float SortY, bool Canopy)> CollectPropRects()
+    {
+        List<(Rect2, float, bool)> rects = new();
+        Stack<Node> pending = new();
+        pending.Push(_world.GetNode("PropContainer"));
+        while (pending.Count > 0)
+        {
+            foreach (Node child in pending.Pop().GetChildren())
+            {
+                if (child is EnvironmentProp prop)
+                    rects.Add((prop.VisibleWorldRect(), prop.GlobalPosition.Y, prop.HasCanopy));
+                else
+                    pending.Push(child);
+            }
+        }
+        return rects;
+    }
+
+    /// <summary>Le haut du coffre est couvert par un décor trié devant lui, ou par une canopée.</summary>
+    private static bool IsChestMasked(Vector2 chest, List<(Rect2 Rect, float SortY, bool Canopy)> props)
+    {
+        Vector2 top = chest + new Vector2(0f, -12f);
+        foreach ((Rect2 rect, float sortY, bool canopy) in props)
+        {
+            if (rect.HasPoint(top) && (sortY > chest.Y || canopy))
+                return true;
+        }
+        return false;
     }
 
     private void AutoPickLevelUp()

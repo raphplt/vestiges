@@ -72,7 +72,7 @@ public partial class SouvenirManager : Node
     /// Utilisé par le loot system quand type = "souvenir".
     /// Retourne null si tout est découvert.
     /// </summary>
-    public string PickRandomUndiscovered()
+    public static string PickRandomUndiscovered()
     {
         List<SouvenirData> all = SouvenirDataLoader.GetAll();
         List<string> candidates = new();
