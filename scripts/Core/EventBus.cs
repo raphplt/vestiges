@@ -56,8 +56,6 @@ public partial class EventBus : Node
     [Signal] public delegate void FragmentChosenEventHandler(string fragmentId, string fragmentType);
 
     // --- Fusions (Vestiges) ---
-    [Signal] public delegate void FusionAvailableEventHandler(string fusionId, string weaponId, string passiveId);
-    [Signal] public delegate void FusionCompletedEventHandler(string fusionId);
 
     // --- Fog of War ---
     [Signal] public delegate void ZoneDiscoveredEventHandler(int cellX, int cellY, int cellCount);

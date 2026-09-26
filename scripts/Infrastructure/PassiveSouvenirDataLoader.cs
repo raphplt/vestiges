@@ -13,8 +13,6 @@ public class PassiveSouvenirData
 	public string Stat;
 	public string ModifierType;
 	public float[] PerLevel;
-	public string FusionWith;
-	public string FusionResult;
 }
 
 public static class PassiveSouvenirDataLoader
@@ -76,9 +74,7 @@ public static class PassiveSouvenirDataLoader
 			Description = dict.ContainsKey("description") ? dict["description"].AsString() : "",
 			MaxLevel = dict.ContainsKey("max_level") ? (int)dict["max_level"].AsDouble() : 5,
 			Stat = dict.ContainsKey("stat") ? dict["stat"].AsString() : "",
-			ModifierType = dict.ContainsKey("modifier_type") ? dict["modifier_type"].AsString() : "multiplicative",
-			FusionWith = dict.ContainsKey("fusion_with") ? dict["fusion_with"].AsString() : "",
-			FusionResult = dict.ContainsKey("fusion_result") ? dict["fusion_result"].AsString() : ""
+			ModifierType = dict.ContainsKey("modifier_type") ? dict["modifier_type"].AsString() : "multiplicative"
 		};
 
 		if (dict.ContainsKey("icon_color"))

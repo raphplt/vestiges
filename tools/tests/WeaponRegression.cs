@@ -36,9 +36,13 @@ public partial class WeaponRegression : Node2D
             await ToSignal(GetTree(), SceneTree.SignalName.PhysicsFrame);
 
             CheckOrbitalOnEquip();
+            await CheckOrbitalHits();
             await CheckHitEffectsFollowSource();
             CheckSingleLevel();
             CheckBanishUpgrade();
+            CheckRarityDistribution();
+            CheckUpgradeGains();
+            CheckRangeAndZone();
 
             GD.Print($"[WeaponRegression] RESULT failures={_failures}");
             GetTree().Quit(_failures == 0 ? 0 : 1);
@@ -55,6 +59,24 @@ public partial class WeaponRegression : Node2D
         _player.AddWeapon(WeaponDataLoader.Get("music_box"));
         List<Node2D> orbs = (List<Node2D>)typeof(Player).GetField("_orbitalProjectiles", Private).GetValue(_player);
         Check(orbs.Count > 0, $"Boîte à musique : {orbs.Count} notes dès l'équipement, sans attendre le minuteur");
+    }
+
+    /// <summary>Un ennemi posé sur l'orbite est touché par les notes : leurs dégâts comptent pour la Boîte à musique.</summary>
+    private async Task CheckOrbitalHits()
+    {
+        Enemy enemy = EnemyScene.Instantiate<Enemy>();
+        AddChild(enemy);
+        enemy.Initialize(EnemyDataLoader.Get("rodeur"), 1000f, 1f);
+        enemy.SetPhysicsProcess(false);
+        float orbit = _player.GetWeaponStatForDisplay(FindSlot("music_box"), "range");
+        enemy.Position = _player.Position + Iso.ToScreen(new Vector2(orbit, 0f));
+        for (int frame = 0; frame < 180 && _player.GetDamageDealt("music_box") <= 0f; frame++)
+        {
+            await ToSignal(GetTree(), SceneTree.SignalName.PhysicsFrame);
+            _player._PhysicsProcess(1f / 60f);
+        }
+        Check(_player.GetDamageDealt("music_box") > 0f, $"Boîte à musique : les notes touchent ({_player.GetDamageDealt("music_box"):0} dégâts)");
+        enemy.QueueFree();
     }
 
     private async Task CheckHitEffectsFollowSource()
@@ -106,6 +128,72 @@ public partial class WeaponRegression : Node2D
         bool offered = pool.Exists(option => option.Id == banished);
         Check(!offered && fragments.BanishesRemaining == banishesBefore - 1,
             $"bannir l'amélioration de {banished} : absente de l'offre, bannissement consommé");
+    }
+
+    /// <summary>10 000 tirages : les poids de base sont respectés, et l'oubli de la zone fait monter les raretés.</summary>
+    private void CheckRarityDistribution()
+    {
+        RandomNumberGenerator rng = new() { Seed = 17 };
+        const int draws = 10000;
+        Dictionary<string, int> anchored = new();
+        Dictionary<string, int> erased = new();
+        float erasedSteps = UpgradeRoller.BumpSteps(0f, Vestiges.World.ErasureManager.ErasureZonePhase.Erased);
+        for (int i = 0; i < draws; i++)
+        {
+            string a = UpgradeRoller.RollRarity(0f, rng).Id;
+            anchored[a] = anchored.GetValueOrDefault(a) + 1;
+            string e = UpgradeRoller.RollRarity(erasedSteps, rng).Id;
+            erased[e] = erased.GetValueOrDefault(e) + 1;
+        }
+
+        float totalWeight = 0f;
+        foreach (UpgradeRarity rarity in UpgradeRoller.Rarities)
+            totalWeight += rarity.Weight;
+        bool matches = true;
+        List<string> shares = new();
+        foreach (UpgradeRarity rarity in UpgradeRoller.Rarities)
+        {
+            float expected = rarity.Weight / totalWeight;
+            float measured = anchored.GetValueOrDefault(rarity.Id) / (float)draws;
+            matches &= Mathf.Abs(measured - expected) < 0.015f;
+            shares.Add($"{rarity.Id} {measured * 100f:0.0} % (attendu {expected * 100f:0.0}) / oubli {erased.GetValueOrDefault(rarity.Id) * 100f / draws:0.0} %");
+        }
+        int highAnchored = anchored.GetValueOrDefault("epic") + anchored.GetValueOrDefault("legendary");
+        int highErased = erased.GetValueOrDefault("epic") + erased.GetValueOrDefault("legendary");
+        GD.Print($"[WeaponRegression] raretés sur {draws} tirages : {string.Join(" ; ", shares)}");
+        Check(matches, "raretés : poids de base respectés à 1,5 point près");
+        Check(highErased > highAnchored * 2, $"raretés : zone Effacée, Épique et Légendaire plus fréquents ({highAnchored} → {highErased})");
+    }
+
+    /// <summary>Une amélioration Légendaire de l'arbalète : trois stats à ×2, et un palier de perçage.</summary>
+    private void CheckUpgradeGains()
+    {
+        WeaponInstance crossbow = new(WeaponDataLoader.Get("crossbow"));
+        RandomNumberGenerator rng = new() { Seed = 5 };
+        List<StatGain> gains = UpgradeRoller.RollWeaponGains(crossbow, UpgradeRoller.Get("legendary"), rng);
+        int stats = gains.FindAll(g => !g.Milestone).Count;
+        bool milestone = gains.Exists(g => g.Milestone && g.Stat == "projectile_pierce");
+        float pierceBefore = crossbow.GetStat("projectile_pierce", 0f);
+        float damageBefore = crossbow.GetStat("damage", 0f);
+        crossbow.ApplyUpgrade(gains);
+        StatGain damageGain = gains.Find(g => g.Stat == "damage");
+        float expectedDamage = damageGain.Stat == null ? damageBefore : damageBefore * (1f + damageGain.Amount);
+        Check(stats == 3 && milestone && Mathf.IsEqualApprox(crossbow.GetStat("projectile_pierce", 0f), pierceBefore + 1f)
+              && Mathf.IsEqualApprox(crossbow.GetStat("damage", 0f), expectedDamage) && crossbow.Level == 2,
+            $"Légendaire sur l'arbalète : {stats} stats, palier de perçage {pierceBefore} → {crossbow.GetStat("projectile_pierce", 0f)}, niveau {crossbow.Level}");
+    }
+
+    /// <summary>Un bonus de zone ouvre l'arc sans allonger la portée (plan 05 §4).</summary>
+    private void CheckRangeAndZone()
+    {
+        WeaponInstance mace = FindSlot("nail_mace");
+        float range = _player.GetWeaponStatForDisplay(mace, "range");
+        float arc = _player.GetWeaponStatForDisplay(mace, "arc_angle");
+        _player.ApplyPerkModifier("aoe_radius", 1.2f, "multiplicative");
+        float rangeAfter = _player.GetWeaponStatForDisplay(mace, "range");
+        float arcAfter = _player.GetWeaponStatForDisplay(mace, "arc_angle");
+        Check(Mathf.IsEqualApprox(range, rangeAfter) && arcAfter > arc * 1.19f,
+            $"zone +20 % : portée inchangée ({range:0} → {rangeAfter:0}), arc {arc:0}° → {arcAfter:0}°");
     }
 
     private WeaponInstance FindSlot(string id)

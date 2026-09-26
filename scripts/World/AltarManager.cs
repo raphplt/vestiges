@@ -17,7 +17,6 @@ public partial class AltarManager : Node2D
 	private float _interactionRange = 78f;
 	private float _cooldownSec = 18f;
 	private int _upgradeCost = 18;
-	private int _reforgeCost = 28;
 	private int _healCost = 20;
 	private float _healPercent = 0.30f;
 
@@ -60,7 +59,6 @@ public partial class AltarManager : Node2D
 				_interactionRange,
 				_cooldownSec,
 				_upgradeCost,
-				_reforgeCost,
 				_healCost,
 				_healPercent);
 			altar.GlobalPosition = ground.MapToLocal(cell);
@@ -127,7 +125,6 @@ public partial class AltarManager : Node2D
 		_interactionRange = dict.ContainsKey("interaction_range") ? (float)dict["interaction_range"].AsDouble() : _interactionRange;
 		_cooldownSec = dict.ContainsKey("cooldown_sec") ? (float)dict["cooldown_sec"].AsDouble() : _cooldownSec;
 		_upgradeCost = dict.ContainsKey("upgrade_cost") ? (int)dict["upgrade_cost"].AsDouble() : _upgradeCost;
-		_reforgeCost = dict.ContainsKey("reforge_cost") ? (int)dict["reforge_cost"].AsDouble() : _reforgeCost;
 		_healCost = dict.ContainsKey("heal_cost") ? (int)dict["heal_cost"].AsDouble() : _healCost;
 		_healPercent = dict.ContainsKey("heal_percent") ? (float)dict["heal_percent"].AsDouble() : _healPercent;
 	}
@@ -135,13 +132,12 @@ public partial class AltarManager : Node2D
 
 public partial class Altar : Node2D
 {
-	private const string IdleText = "[E] Ameliorer  [Shift+E] Reforge  [Ctrl+E] Soin";
+	private const string IdleText = "[E] Améliorer  [Ctrl+E] Soin";
 
 	private EssenceTracker _essenceTracker;
 	private float _interactionRange;
 	private float _cooldownSec;
 	private int _upgradeCost;
-	private int _reforgeCost;
 	private int _healCost;
 	private float _healPercent;
 	private float _cooldownRemaining;
@@ -155,7 +151,6 @@ public partial class Altar : Node2D
 		float interactionRange,
 		float cooldownSec,
 		int upgradeCost,
-		int reforgeCost,
 		int healCost,
 		float healPercent)
 	{
@@ -163,7 +158,6 @@ public partial class Altar : Node2D
 		_interactionRange = interactionRange;
 		_cooldownSec = cooldownSec;
 		_upgradeCost = upgradeCost;
-		_reforgeCost = reforgeCost;
 		_healCost = healCost;
 		_healPercent = healPercent;
 	}
@@ -244,12 +238,8 @@ public partial class Altar : Node2D
 		if (!Input.IsActionJustPressed("interact") || _cooldownRemaining > 0f)
 			return;
 
-		bool shift = Input.IsKeyPressed(Key.Shift);
-		bool ctrl = Input.IsKeyPressed(Key.Ctrl);
-		if (ctrl)
+		if (Input.IsKeyPressed(Key.Ctrl))
 			TryHeal();
-		else if (shift)
-			TryReforge();
 		else
 			TryUpgrade();
 	}
@@ -265,33 +255,12 @@ public partial class Altar : Node2D
 		if (!_player.UpgradeEquippedWeaponAtAltar())
 		{
 			_essenceTracker.AddEssence(_upgradeCost);
-			SetFeedback("Arme deja au maximum");
+			SetFeedback("Arme déjà au maximum");
 			return;
 		}
 
 		StartCooldown();
-		SetFeedback("Arme amelioree");
-	}
-
-	private void TryReforge()
-	{
-		WeaponInstance equipped = _player.EquippedWeapon;
-		if (equipped == null)
-		{
-			SetFeedback("Aucune arme equipee");
-			return;
-		}
-
-		if (!_essenceTracker.TrySpend(_reforgeCost))
-		{
-			SetFeedback("Essence insuffisante");
-			return;
-		}
-
-		string rarity = WeaponRarityDataLoader.RollReforgeRarity(equipped.Rarity, equipped.Tier);
-		_player.ReforgeEquippedWeapon(rarity);
-		StartCooldown();
-		SetFeedback($"Reforge: {WeaponRarityDataLoader.Get(rarity)?.DisplayName ?? rarity}");
+		SetFeedback("Arme améliorée");
 	}
 
 	private void TryHeal()
@@ -330,7 +299,7 @@ public partial class Altar : Node2D
 			return;
 		}
 
-		_label.Text = $"{IdleText}\n{_upgradeCost}E / {_reforgeCost}E / {_healCost}E";
+		_label.Text = $"{IdleText}\n{_upgradeCost}E / {_healCost}E";
 		_label.AddThemeColorOverride("font_color", new Color(0.82f, 0.92f, 0.98f));
 	}
 

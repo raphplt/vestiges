@@ -425,6 +425,46 @@ La décision 4.3 (rareté sur l'arme ou seulement sur les améliorations) n'est 
 - **Banc** `tools/test_weapons.sh` (`WeaponRegression`) : 5 vérifications, toutes vertes.
 - **Mesure** (headless, nomade, 5 min, 3 seeds) : éliminations 575 et 547 contre 527 et 498 avant ; 139 contre 528 sur la seed 1002, où les offres ont divergé (le bot, qui prend la première offre, n'a eu que des passifs jusqu'au niveau 5). Les projectiles n'empruntent plus le recul ni les effets des armes de mêlée : l'équilibrage de 2A en tiendra compte.
 
+#### Vague 1 détaillée — 26 septembre (soir)
+
+Décision 4.3 prise : la rareté vit sur les améliorations, plus sur l'arme. Choix de mise en œuvre tranchés ici, provisoires jusqu'à la recette :
+
+| Lot | Contenu | Choix |
+|---|---|---|
+| **1A — Socle** | Rareté d'arme retirée (instances, butin, armes au sol, HUD, Autel : reforge supprimé, amélioration conservée). Chaque arme déclare ses **stats montables** dans `weapons.json` (stat, poids, pas, mode) et ses **paliers** (stats entières). Bonus accumulés sur l'arme, plus de table commune par niveau. Portée et zone séparées selon le contrat du plan 05 §4. Catalogue des stats (libellé, format, unité) commun au joueur et aux armes | Pas de base : dégâts +12 %, cadence +8 %, portée +6 %, zone +8 %, recul +15 %, vitesse de projectile +10 % ; paliers +1. Portée : allonge des coups, distance des tirs, rayon d'orbite. Zone : arcs et cônes (angle), ondes, feux au sol, explosions |
+| **1B — Level-up à raretés** | Tirage de la rareté (poids, Chance, oubli), carte « avant → après » calculée sur les valeurs effectives, carte « Nouvelle » avec description courte (colonne du §4.6), clavier et manette, relance, bannissement, passer. Plafond de niveau en données | Poids 60 / 25 / 11 / 3,5 / 0,5. Chaque cran d'oubli (Fragile 1, Effilochée 2, Effacée 3) et la Chance donnent une chance de monter d'une rareté. Plafond proposé après mesure du nombre de level-ups sur une run de 20 min |
+| **1C — Pause** | Armes (icône, nom, niveau, stats effectives utiles au motif, dégâts infligés dans la run), passifs (niveau, effet total), fiche du personnage | Dégâts par arme comptés à l'impact, l'arme source étant désormais connue |
+
+#### Vague 1 livrée — 26 septembre (soir)
+
+**1A — Socle**
+- Rareté d'arme retirée : `WeaponInstance` n'a qu'un niveau et les gains accumulés de ses améliorations ; `WeaponRarityDataLoader`, `weapon_rarity.json` et le reforgeage de l'Autel disparaissent. L'Autel donne une amélioration Rare au moins.
+- Croissance en données : chaque arme de `weapons.json` déclare `growth` (stat → poids) et `milestones` (stats entières) ; les pas vivent une fois dans `weapon_upgrades.json`. Plafond de niveau d'arme : 50, en données. Mesure : en 20 min de jeu, le bot atteint le niveau 45 ; les passifs plafonnent à 5, chaque arme reçoit donc 8 à 10 améliorations par run. Le plafond ne mord pas : c'est un garde-fou, le rendement vient des poids (proposition du §4.1).
+- Fusions retirées (jamais appliquées, rendues inatteignables par le plafond ; l'Éveil de la vague 5 les remplace).
+- Portée et zone séparées (plan 05 §4). Portée : allonge des coups, distance des tirs, rayon d'orbite. Zone : ouverture des arcs et des cônes, rayon des ondes circulaires (Fouet, Cloche), des échos, des ralentissements, des formes, des feux au sol et des notes. Les passifs et perks de zone n'allongent plus les tirs.
+- Catalogue des stats affichées (`data/ui/stats.json`, `StatCatalog`) : libellé traduit, forme (valeur, entier, pourcentage), nombres à la française.
+
+**1B — Level-up à raretés**
+- Tirage (`UpgradeRoller`, `data/progression/upgrade_rarities.json`) : poids 60 / 25 / 11 / 3,5 / 0,5, puis une chance de 30 % de monter d'un rang par cran (Chance, oubli : Fragile 1, Effilochée 2, Effacée 3).
+- Mesure sur 10 000 tirages : zone intacte 60,7 / 24,3 / 10,9 / 3,5 / 0,7 % ; zone Effacée 20,6 / 35,3 / 25,5 / 12,8 / 5,9 %.
+- Arme : 1 à 3 stats selon la rareté, au gain de la rareté ; palier (+1 projectile, perçage, rebond ou note) aux raretés Épique et Légendaire si l'arme en a. Passif : écart entre deux niveaux de la table × 1 à 3 ; les passifs entiers sautent un niveau de plus aux grandes raretés.
+- Cartes : rareté en couleur et en symbole (rien, ◆, ◆◆, ★, ★★), cadre plus épais aux grandes raretés ; « Dégâts 29,0 → 36,0 +24 % » sur les valeurs effectives ; portée, zone et vitesses en pourcentage seul ; carte « Nouvelle arme » avec la phrase du §4.6 et la famille (mêlée ou distance).
+- Commandes : haut et bas entre les cartes et les actions, validation pour choisir ; relance, bannissement et « Passer ».
+
+**1C — Pause**
+- Trois panneaux : équipement (armes : niveau, dégâts, cadence, compteurs, dégâts infligés dans la run ; passifs : niveau et effet total), boutons, fiche du personnage (PV, régénération, armure, esquive, vitesse, dégâts, cadence, critique, portée, zone, aimant, Chance, et les bonus présents).
+- Péril et Oublis viendront avec la vague 3.
+
+**Vérifié :**
+- Build sans avertissement, smoke, `test_movement`, `test_enemy_abilities`, `test_dev_mode`.
+- `test_weapons` (11 vérifications) : distribution des raretés, gains d'un Légendaire (3 stats et un palier), zone +20 % sans allonger la portée, notes qui touchent.
+- Captures du level-up aux cinq raretés et de la pause, regardées.
+- Headless 8 min (3 seeds) : aucune erreur. Éliminations 842, 1 104 et 215. La seed 42 est basse parce que le bot prend toujours la première carte et n'a reçu que des passifs jusqu'au niveau 5 (une seule arme jusqu'à 394 s). Ce n'est pas un défaut de combat.
+
+**Points ouverts :**
+- Les passifs gagnent peu par niveau dans leurs tables actuelles (Flamme intérieure : +10 % puis +2 % par niveau) : à revoir avec l'équilibrage de 2A.
+- Les icônes restent celles de mars jusqu'au lot 2B.
+
 ### Vague 2 — Armes : identité
 
 | Lot | Contenu | Vérification |

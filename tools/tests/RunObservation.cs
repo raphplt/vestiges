@@ -24,6 +24,7 @@ namespace Vestiges.Tests;
 /// --measure-props [--measure-seconds 8] : coût de rendu des décors par biome (RunObservation.PropCost.cs).
 /// --capture-weapons [--weapons a,b] : galerie des attaques du joueur (RunObservation.Weapons.cs).
 /// --capture-chests : chaque coffre cadré, avec et sans décors (RunObservation.Chests.cs).
+/// --capture-levelup : l'écran de level-up, une capture par rareté (RunObservation.LevelUp.cs).
 /// --loot-draws N : tirages de butin de chaque coffre, sans les appliquer (RunObservation.Chests.cs).
 /// --capture-bestiary : gros plans des créatures du pilote de sprites procéduraux, autour du joueur immobile.
 /// --density : mesure de densité en spawn naturel (ennemis visibles, temps sans ennemi, débits, niveaux,
@@ -78,6 +79,10 @@ public partial class RunObservation : Node
                 await CaptureWeapons(Argument(args, "--weapons", null));
             else if (Array.IndexOf(args, "--capture-chests") >= 0)
                 await CaptureChests();
+            else if (Array.IndexOf(args, "--capture-levelup") >= 0)
+                await CaptureLevelUp();
+            else if (Array.IndexOf(args, "--capture-pause") >= 0)
+                await CapturePause();
             else if (Array.IndexOf(args, "--loot-draws") >= 0)
                 MeasureLootDraws(int.Parse(Argument(args, "--loot-draws", "1000"), CultureInfo.InvariantCulture));
             else if (Array.IndexOf(args, "--capture-bestiary") >= 0)
@@ -445,8 +450,8 @@ public partial class RunObservation : Node
         if (manager is not Vestiges.Progression.FragmentManager fragments || !fragments.IsChoiceActive || fragments.PendingChoices.Count == 0)
             return;
         Vestiges.Progression.FragmentOption choice = fragments.PendingChoices[0];
-        screen.GetType().GetMethod("OnFragmentSelected", BindingFlags.NonPublic | BindingFlags.Instance)
-            .Invoke(screen, new object[] { choice.Id, choice.Type });
+        screen.GetType().GetMethod("OnCardChosen", BindingFlags.NonPublic | BindingFlags.Instance)
+            .Invoke(screen, new object[] { choice });
     }
 
     private Rect2 VisibleWorldRect()

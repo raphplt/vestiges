@@ -716,7 +716,7 @@ public partial class HUD : CanvasLayer
             {
                 WeaponInstance weapon = weapons[i];
                 _weaponSlotFrames[i].Texture = _slotFilledTex;
-                _weaponSlotFrames[i].Modulate = weapon.RarityColor;
+                _weaponSlotFrames[i].Modulate = Colors.White;
                 LoadWeaponIcon(i, weapon.Sprite);
                 int fragLevel = player.GetWeaponFragmentLevel(weapon.Id);
                 _weaponSlotLevels[i].Text = fragLevel > 1 ? $"{fragLevel}" : "";

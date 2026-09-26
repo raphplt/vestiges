@@ -3,21 +3,21 @@ using Godot;
 
 namespace Vestiges.Infrastructure;
 
+/// <summary>Pas d'amélioration d'une stat d'arme (data/weapons/weapon_upgrades.json).</summary>
 public class WeaponUpgradeStatConfig
 {
 	public string Key { get; set; }
-	public int MaxLevel { get; set; }
-	public float PerLevel { get; set; }
-	public string Mode { get; set; }
-	public string DisplayName { get; set; }
-	public List<string> Types { get; set; }
+	/// <summary>Gain d'une amélioration Commune : fraction de la base (multiplicative) ou valeur ajoutée (additive).</summary>
+	public float Step { get; set; }
+	public bool Additive { get; set; }
+	/// <summary>Plafond de la valeur effective (angles), 0 si aucun.</summary>
+	public float Max { get; set; }
 }
 
 public static class WeaponUpgradeDataLoader
 {
 	private static readonly Dictionary<string, WeaponUpgradeStatConfig> _statConfigs = new();
-	private static readonly List<string> _statOrder = new();
-	private static int _weaponMaxLevel = 5;
+	private static int _weaponMaxLevel = 50;
 	private static bool _loaded;
 
 	public static void Load()
@@ -25,88 +25,51 @@ public static class WeaponUpgradeDataLoader
 		if (_loaded)
 			return;
 
-		FileAccess file = FileAccess.Open("res://data/weapons/weapon_upgrades.json", FileAccess.ModeFlags.Read);
+		using FileAccess file = FileAccess.Open("res://data/weapons/weapon_upgrades.json", FileAccess.ModeFlags.Read);
 		if (file == null)
 		{
 			GD.PushError("[WeaponUpgradeDataLoader] Cannot open weapon_upgrades.json");
 			return;
 		}
 
-		string jsonText = file.GetAsText();
-		file.Close();
-
 		Json json = new();
-		if (json.Parse(jsonText) != Error.Ok)
+		if (json.Parse(file.GetAsText()) != Error.Ok)
 		{
 			GD.PushError($"[WeaponUpgradeDataLoader] Parse error: {json.GetErrorMessage()}");
 			return;
 		}
 
 		Godot.Collections.Dictionary root = json.Data.AsGodotDictionary();
-
 		if (root.ContainsKey("weapon_max_level"))
 			_weaponMaxLevel = (int)root["weapon_max_level"].AsDouble();
 
-		ParseStats(root);
+		foreach ((Variant key, Variant value) in root["stats"].AsGodotDictionary())
+		{
+			Godot.Collections.Dictionary stat = value.AsGodotDictionary();
+			_statConfigs[key.AsString()] = new WeaponUpgradeStatConfig
+			{
+				Key = key.AsString(),
+				Step = (float)stat["step"].AsDouble(),
+				Additive = stat.ContainsKey("mode") && stat["mode"].AsString() == "additive",
+				Max = stat.ContainsKey("max") ? (float)stat["max"].AsDouble() : 0f,
+			};
+		}
 
 		_loaded = true;
 		GD.Print($"[WeaponUpgradeDataLoader] Loaded {_statConfigs.Count} upgradeable stats, weapon max level = {_weaponMaxLevel}");
 	}
 
-	private static void ParseStats(Godot.Collections.Dictionary root)
-	{
-		if (!root.ContainsKey("stats"))
-			return;
-
-		Godot.Collections.Dictionary statsDict = root["stats"].AsGodotDictionary();
-		foreach (Variant key in statsDict.Keys)
-		{
-			string statKey = key.AsString();
-			Godot.Collections.Dictionary statData = statsDict[key].AsGodotDictionary();
-
-			WeaponUpgradeStatConfig config = new()
-			{
-				Key = statKey,
-				MaxLevel = statData.ContainsKey("max_level") ? (int)statData["max_level"].AsDouble() : 3,
-				PerLevel = statData.ContainsKey("per_level") ? (float)statData["per_level"].AsDouble() : 0.1f,
-				Mode = statData.ContainsKey("mode") ? statData["mode"].AsString() : "multiplicative",
-				DisplayName = statData.ContainsKey("display_name") ? statData["display_name"].AsString() : statKey
-			};
-
-			if (statData.ContainsKey("types"))
-			{
-				config.Types = new List<string>();
-				Godot.Collections.Array typesArray = statData["types"].AsGodotArray();
-				foreach (Variant t in typesArray)
-					config.Types.Add(t.AsString());
-			}
-
-			_statConfigs[statKey] = config;
-			_statOrder.Add(statKey);
-		}
-	}
-
-	public static WeaponUpgradeStatConfig GetStatConfig(string stat)
+	public static WeaponUpgradeStatConfig GetStatConfig(string key)
 	{
 		if (!_loaded)
 			Load();
-
-		return _statConfigs.GetValueOrDefault(stat);
-	}
-
-	public static List<string> GetAllUpgradeableStats()
-	{
-		if (!_loaded)
-			Load();
-
-		return _statOrder;
+		return _statConfigs.GetValueOrDefault(key);
 	}
 
 	public static int GetWeaponMaxLevel()
 	{
 		if (!_loaded)
 			Load();
-
 		return _weaponMaxLevel;
 	}
 }

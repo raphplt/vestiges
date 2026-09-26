@@ -1,16 +1,19 @@
-using Godot;
+using System.Collections.Generic;
 using Vestiges.Infrastructure;
 
 namespace Vestiges.Combat;
 
+/// <summary>Gain d'une amélioration sur une stat d'arme : fraction de la base (multiplicative) ou valeur (additive, paliers).</summary>
+public readonly record struct StatGain(string Stat, float Amount, bool Milestone);
+
 /// <summary>
-/// Instance d'arme en run : wrapper mutable autour de WeaponData immutable.
-/// Niveau global (1 à MaxLevel), toutes les stats scalent automatiquement via GetStat().
+/// Arme portée en run (plan 17, décision 4.3 : pas de rareté d'arme). Un niveau, et les gains accumulés de chaque
+/// amélioration : une arme grandit par les stats qu'elle déclare (growth), chacune à son rythme.
 /// </summary>
 public class WeaponInstance
 {
 	public WeaponData Base { get; }
-	private WeaponRarityData _rarityData;
+	private readonly Dictionary<string, float> _bonuses = new();
 	private int _level = 1;
 
 	public string Id => Base.Id;
@@ -22,103 +25,58 @@ public class WeaponInstance
 	public string AttackPattern => Base.AttackPattern;
 	public string Sprite => Base.Sprite;
 	public string DefaultFor => Base.DefaultFor;
-	public string Rarity => _rarityData?.Id ?? "common";
-	public string RarityDisplayName => _rarityData?.DisplayName ?? "Commun";
-	public Godot.Color RarityColor => _rarityData?.Color ?? Godot.Colors.White;
 
 	public int Level => _level;
 	public int MaxLevel => WeaponUpgradeDataLoader.GetWeaponMaxLevel();
 	public bool CanLevelUp => _level < MaxLevel;
 
-	public WeaponInstance(WeaponData baseData, string rarity = "common")
+	public WeaponInstance(WeaponData baseData)
 	{
 		Base = baseData;
-		_rarityData = WeaponRarityDataLoader.Get(rarity);
 	}
 
-	public void SetRarity(string rarity)
-	{
-		_rarityData = WeaponRarityDataLoader.Get(rarity);
-	}
-
-	public WeaponInstance CloneWithRarity(string rarity)
-	{
-		WeaponInstance clone = new(Base, rarity);
-		clone._level = _level;
-		return clone;
-	}
-
-	/// <summary>
-	/// Monte le niveau global de l'arme. Toutes les stats augmentent via GetStat().
-	/// </summary>
-	public bool LevelUp()
+	/// <summary>Applique une amélioration : ses gains s'ajoutent, l'arme monte d'un niveau.</summary>
+	public bool ApplyUpgrade(IReadOnlyList<StatGain> gains)
 	{
 		if (!CanLevelUp)
 			return false;
+		foreach (StatGain gain in gains)
+			_bonuses[gain.Stat] = _bonuses.GetValueOrDefault(gain.Stat) + gain.Amount;
 		_level++;
 		return true;
 	}
 
-	/// <summary>
-	/// Retourne la stat effective après application du scaling de niveau.
-	/// Le scaling par stat est défini dans weapon_upgrades.json.
-	/// Le niveau effectif pour chaque stat est min(_level - 1, config.MaxLevel).
-	/// Mode multiplicatif : base × (1 + perLevel × effectiveLevel)
-	/// Mode additif : base + perLevel × effectiveLevel
-	/// </summary>
+	/// <summary>Copie de l'arme avec une amélioration appliquée : sert à montrer « avant → après ».</summary>
+	public WeaponInstance PreviewWith(IReadOnlyList<StatGain> gains)
+	{
+		WeaponInstance preview = new(Base) { _level = _level };
+		foreach ((string stat, float bonus) in _bonuses)
+			preview._bonuses[stat] = bonus;
+		preview.ApplyUpgrade(gains);
+		return preview;
+	}
+
+	/// <summary>Stat de l'arme : base des données, plus les gains accumulés (en pourcentage de la base, ou ajoutés).</summary>
 	public float GetStat(string key, float fallback)
 	{
 		float baseValue = Base.Stats.TryGetValue(key, out float v) ? v : fallback;
-
-		int effectiveLevel = _level - 1; // Niveau 1 = pas de bonus
-		if (effectiveLevel <= 0)
+		if (!_bonuses.TryGetValue(key, out float bonus))
 			return baseValue;
 
 		WeaponUpgradeStatConfig config = WeaponUpgradeDataLoader.GetStatConfig(key);
-		if (config == null)
-			return ApplyRarityMultiplier(key, baseValue);
-
-		// Vérifier si ce stat est applicable à ce type d'arme
-		if (config.Types != null && config.Types.Count > 0
-			&& !config.Types.Contains(Base.Type?.ToLower() ?? ""))
-			return ApplyRarityMultiplier(key, baseValue);
-
-		// Clamp au max level de ce stat spécifique
-		int clampedLevel = effectiveLevel < config.MaxLevel ? effectiveLevel : config.MaxLevel;
-
-		if (config.Mode == "additive")
-			return ApplyRarityMultiplier(key, baseValue + config.PerLevel * clampedLevel);
-
-		return ApplyRarityMultiplier(key, baseValue * (1f + config.PerLevel * clampedLevel));
+		float value = config != null && config.Additive ? baseValue + bonus : baseValue * (1f + bonus);
+		return config != null && config.Max > 0f && value > config.Max ? config.Max : value;
 	}
 
 	public float GetComparisonScore()
 	{
 		float damage = GetStat("damage", 1f);
 		float attackSpeed = GetStat("attack_speed", 1f);
-		float range = Mathf.Max(24f, GetStat("range", 60f));
-		float coverage = Mathf.Sqrt(range / 60f);
-		return damage * attackSpeed * coverage;
+		float range = Godot.Mathf.Max(24f, GetStat("range", 60f));
+		return damage * attackSpeed * Godot.Mathf.Sqrt(range / 60f);
 	}
 
 	public float GetDamageValue() => GetStat("damage", 1f);
 	public float GetAttackSpeedValue() => GetStat("attack_speed", 1f);
 	public float GetRangeValue() => GetStat("range", 60f);
-
-	private float ApplyRarityMultiplier(string key, float value)
-	{
-		if (_rarityData == null)
-			return value;
-
-		float multiplier = key switch
-		{
-			"damage" => _rarityData.DamageMultiplier,
-			"attack_speed" => _rarityData.AttackSpeedMultiplier,
-			"range" => _rarityData.RangeMultiplier,
-			"heal_on_hit" => _rarityData.HealMultiplier,
-			_ => _rarityData.GlobalMultiplier
-		};
-
-		return value * multiplier;
-	}
 }

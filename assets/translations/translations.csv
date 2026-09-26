@@ -58,15 +58,6 @@ CHEST_COMMON,COFFRE,CHEST
 CHEST_EPIC,COFFRE ÉPIQUE,EPIC CHEST
 CHEST_RARE,COFFRE RARE,RARE CHEST
 CHEST_LORE,COFFRE ANCESTRAL,ANCESTRAL CHEST
-LEVELUP_TITLE,FRAGMENT DE MEMOIRE,MEMORY FRAGMENT
-LEVELUP_WEAPON,Arme,Weapon
-LEVELUP_NEW,NOUVEAU,NEW
-LEVELUP_LEVEL,NIV {0} → {1},LVL {0} → {1}
-LEVELUP_PASSIVE,Passif,Passive
-LEVELUP_REROLL,Relancer ({0}),Reroll ({0})
-LEVELUP_BANISH,Bannir ({0}),Banish ({0})
-LEVELUP_CANCEL,Annuler,Cancel
-LEVELUP_MEMORIAL,MEMORIAL,MEMORIAL
 RARITY_COMMON,Commun,Common
 RARITY_UNCOMMON,Inhabituel,Uncommon
 RARITY_RARE,Rare,Rare
@@ -79,26 +70,26 @@ CHEST_LOOT_XP,+{0} XP,+{0} XP
 CHEST_LOOT_SOUVENIR,Souvenir : {0},Memory: {0}
 CHEST_LOOT_WEAPON,Arme : {0},Weapon: {0}
 CHEST_LOOT_PERK,Don : {0},Boon: {0}
-STAT_DAMAGE,Degats,Damage
-STAT_ATTACK_SPEED,Vit. attaque,Attack Speed
+STAT_DAMAGE,Dégâts,Damage
+STAT_ATTACK_SPEED,Cadence,Attack rate
 STAT_MAX_HP,PV max,Max HP
 STAT_SPEED,Vitesse,Speed
-STAT_AOE,Zone d'effet,Area of Effect
-STAT_XP_RANGE,Rayon XP,XP Range
+STAT_AOE,Zone,Area
+STAT_XP_RANGE,Aimant,Magnet
 STAT_ARMOR,Armure,Armor
-STAT_CRIT,Chance crit,Crit Chance
-STAT_REGEN,Regen HP/s,Regen HP/s
-STAT_RANGE,Portee,Range
+STAT_CRIT,Critique,Crit chance
+STAT_REGEN,Régénération,Regeneration
+STAT_RANGE,Portée,Range
 STAT_PROJECTILES,Projectiles,Projectiles
-STAT_CDR,Reduction CD,CD Reduction
-STAT_PIERCE,Percage,Pierce
+STAT_CDR,Réduction de recharge,Cooldown reduction
+STAT_PIERCE,Perçage,Pierce
 STAT_LIFESTEAL,Vampirisme,Lifesteal
 STAT_DODGE,Esquive,Dodge
-STAT_THORNS,Epines,Thorns
-STAT_IGNITE,Ignition,Ignite
+STAT_THORNS,Épines,Thorns
+STAT_IGNITE,Embrasement,Ignite
 STAT_RICOCHET,Ricochet,Ricochet
 STAT_LUCK,Chance,Luck
-STAT_BONUS_PROJ,Proj. bonus,Bonus Proj.
+STAT_BONUS_PROJ,Projectiles en plus,Extra projectiles
 WEAPON_BOW,Arc,Bow
 WEAPON_LINE,Ligne,Line
 WEAPON_CIRCLE,Cercle,Circle
@@ -171,3 +162,21 @@ EVENT_FAIL_ESCAPED,La harde est passée,The stampede got away
 EVENT_FAIL_RELIC,Le vestige s'est dissous,The relic dissolved
 EVENT_FAIL_VIGIL,La veille a été rompue,The vigil was broken
 EVENT_VARIANT_SLAIN,Vaincu : {0},Defeated: {0}
+STAT_KNOCKBACK,Recul,Knockback
+STAT_PROJECTILE_SPEED,Vitesse des tirs,Projectile speed
+STAT_ORBIT_SPEED,Rotation,Orbit speed
+STAT_CHAIN_RANGE,Portée des rebonds,Bounce range
+STAT_HOMING,Guidage,Homing
+STAT_CHAIN_TARGETS,Rebonds,Bounces
+STAT_ORBITALS,Notes,Notes
+LEVELUP_TITLE,FRAGMENT DE MÉMOIRE,MEMORY FRAGMENT
+LEVELUP_NEW_WEAPON,NOUVELLE ARME,NEW WEAPON
+LEVELUP_NEW_PASSIVE,NOUVEAU PASSIF,NEW PASSIVE
+LEVELUP_LEVEL,Niv {0} → {1},Lv {0} → {1}
+LEVELUP_MELEE,Mêlée,Melee
+LEVELUP_RANGED,Distance,Ranged
+LEVELUP_REROLL,Relancer ({0}),Reroll ({0})
+LEVELUP_BANISH,Bannir ({0}),Banish ({0})
+LEVELUP_BANISH_CANCEL,Annuler,Cancel
+LEVELUP_SKIP,Passer,Skip
+LEVELUP_BANISH_HINT,Choisis la carte à bannir pour toute la partie,Pick the card to banish for the whole run

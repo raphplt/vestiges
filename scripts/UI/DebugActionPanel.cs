@@ -132,7 +132,7 @@ public partial class DebugActionPanel : CanvasLayer
         {
             if (_player != null && _player.EquippedWeapon != null)
             {
-                _player.UpgradeWeaponFragmentLevel(_player.EquippedWeapon.Id);
+                _player.UpgradeEquippedWeaponAtAltar();
                 GD.Print($"[Debug] Upgraded weapon {_player.EquippedWeapon.Id}");
             }
         };

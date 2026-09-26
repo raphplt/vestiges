@@ -316,6 +316,8 @@ Le prototype V1 avait des ennemis trop passifs et trop loin. En V2 :
 
 ### Armes avec raretés
 
+> **Amendement du 26 septembre 2026 (décision de Raphaël, plan 17 §4.3)** : la rareté n'est plus portée par l'arme. Une arme n'a qu'un niveau et les gains accumulés de ses améliorations ; chaque amélioration du level-up tire une rareté (Commun à Légendaire) qui fixe l'ampleur du gain et le nombre de stats touchées. L'Autel donne une amélioration Rare au moins ; le reforgeage disparaît. Le tableau ci-dessous décrit l'ancienne intention.
+
 **Chaque personnage démarre avec une arme de base (tier 1, commune).** Les autres armes sont trouvées en jeu.
 
 | Rareté | Couleur bordure | Fréquence | Caractéristiques |
@@ -742,7 +744,7 @@ Le script de post-processing doit inclure une vérification/correction de l'angl
 ### Phase B — Autels et montée en puissance (2-3 semaines)
 
 - [x] Implémenter AltarSystem (spawn, interaction, upgrades d'armes).
-- [ ] Implémenter WeaponRaritySystem (Commun → Légendaire, effets, génération).
+- [x] Raretés Commun → Légendaire, portées par les améliorations d'arme et de passif plutôt que par l'arme (décision 4.3 du [plan 17](plans/17-armes-coffres-modificateurs.md), vague 1, 26 septembre 2026).
 - [x] Rendre les armes lootables dans les coffres dès le début de run.
 - [x] Implémenter EssenceTracker (remplace l'inventaire).
 - [ ] Ajuster l'économie d'Essence (drop rates, coûts d'upgrade aux Autels).
@@ -762,7 +764,7 @@ Le script de post-processing doit inclure une vérification/correction de l'angl
 - [x] Barre d'XP fullwidth en bas de l'écran (déplacée le 24 septembre 2026 dans la plaque de vie du HUD refait, [plan 04](plans/04-interfaces-et-hub.md#retour-de-raphaël-et-hud-de-run--24-septembre-2026)).
 - [x] HUD de run lisible : plaques contrastées, jauge de PV sous le héros, police Saira Semi Condensed, boussole retirée ; captures 1080p/4K vérifiées (plan 04, 24 septembre 2026).
 - [x] Recette humaine du HUD refait et de la police : « HUD bien mieux » (Raphaël, 25 septembre 2026).
-- [ ] Armes dans le menu pause avec stats et rareté.
+- [x] Armes dans le menu pause avec stats effectives et dégâts infligés, passifs et fiche du personnage (plan 17 lot 1C ; la rareté n'est plus portée par l'arme).
 - [ ] Menu pause compact.
 - [ ] Onboarding implicite (les 5 premières minutes doivent être auto-explicatives).
 - [x] Indicateurs visuels de l'Effacement (phases, transitions de couleur) : sol qui oublie et lisière de l'Effacé, plan 16 O1/O3 (26 septembre 2026) ; les décors suivront en O2.

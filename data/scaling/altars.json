@@ -7,7 +7,6 @@
     "interaction_range": 78,
     "cooldown_sec": 18,
     "upgrade_cost": 18,
-    "reforge_cost": 28,
     "heal_cost": 20,
     "heal_percent": 0.30
 }

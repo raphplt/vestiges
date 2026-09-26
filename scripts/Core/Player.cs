@@ -9,13 +9,16 @@ using Vestiges.World;
 namespace Vestiges.Core;
 
 /// <summary>
-/// Instance runtime d'un Souvenir Passif équipé. Niveau 1 à MaxLevel.
+/// Souvenir passif porté : son niveau et l'effet cumulé de ses améliorations. Une amélioration ajoute l'écart
+/// entre deux niveaux de la table, multiplié par le gain de sa rareté (plan 17 lot 1B).
 /// </summary>
 public class ActivePassiveSouvenir
 {
 	public string Id { get; }
 	public PassiveSouvenirData Data { get; }
 	public int Level { get; private set; }
+	/// <summary>Effet total appliqué au joueur (multiplicateur ou valeur ajoutée, selon le passif).</summary>
+	public float Modifier { get; private set; }
 	public bool IsMaxLevel => Level >= Data.MaxLevel;
 
 	public ActivePassiveSouvenir(PassiveSouvenirData data)
@@ -23,32 +26,30 @@ public class ActivePassiveSouvenir
 		Data = data;
 		Id = data.Id;
 		Level = 1;
+		Modifier = TableValue(1);
 	}
 
-	/// <summary>Retourne le modifier pour le niveau actuel.</summary>
-	public float GetCurrentModifier()
+	/// <summary>Effet après une amélioration de <paramref name="levels"/> niveaux au gain <paramref name="gain"/>.</summary>
+	public float PreviewModifier(float gain, int levels)
 	{
-		if (Data.PerLevel == null || Data.PerLevel.Length == 0)
-			return 0f;
-		int idx = Mathf.Clamp(Level - 1, 0, Data.PerLevel.Length - 1);
-		return Data.PerLevel[idx];
+		int target = Mathf.Min(Data.MaxLevel, Level + levels);
+		return Modifier + (TableValue(target) - TableValue(Level)) * gain;
 	}
 
-	/// <summary>Retourne le modifier du niveau précédent (pour calculer le delta).</summary>
-	public float GetPreviousModifier()
-	{
-		if (Level <= 1 || Data.PerLevel == null || Data.PerLevel.Length == 0)
-			return 0f;
-		int idx = Mathf.Clamp(Level - 2, 0, Data.PerLevel.Length - 1);
-		return Data.PerLevel[idx];
-	}
-
-	public bool Upgrade()
+	public bool Upgrade(float gain, int levels)
 	{
 		if (IsMaxLevel)
 			return false;
-		Level++;
+		Modifier = PreviewModifier(gain, levels);
+		Level = Mathf.Min(Data.MaxLevel, Level + levels);
 		return true;
+	}
+
+	private float TableValue(int level)
+	{
+		if (Data.PerLevel == null || Data.PerLevel.Length == 0)
+			return 0f;
+		return Data.PerLevel[Mathf.Clamp(level - 1, 0, Data.PerLevel.Length - 1)];
 	}
 }
 
@@ -94,6 +95,9 @@ public partial class Player : CharacterBody2D
     // Passive Souvenir inventory (max 4, from level-up)
     public const int MaxPassiveSlots = 4;
     private readonly List<ActivePassiveSouvenir> _passiveSlots = new();
+    private readonly RandomNumberGenerator _upgradeRng = new();
+    // Dégâts infligés par arme depuis le début de la run (pause, plan 17 lot 1C).
+    private readonly Dictionary<string, float> _damageDealtByWeapon = new();
 
     private Vector2 _facingDirection = new(1f, 0f);
 
@@ -192,6 +196,7 @@ public partial class Player : CharacterBody2D
     public float CurrentHp => _currentHp;
     public float EffectiveMaxHp => MaxHp + _bonusMaxHp;
     public float EffectiveAttackRange => AttackRange * _attackRangeMultiplier;
+    public float AttackRangeMultiplier => _attackRangeMultiplier;
     // V2: StructureHpMultiplier, CraftSpeedMultiplier, RepairSpeedMultiplier retires
     public int ProjectilePierce => _projectilePierce;
     public float XpMagnetMultiplier => _xpMagnetMultiplier;
@@ -335,13 +340,12 @@ public partial class Player : CharacterBody2D
         AddWeapon(weapon);
     }
 
-    public bool AddWeapon(WeaponData weapon, string rarity = "common")
+    public bool AddWeapon(WeaponData weapon)
     {
         if (weapon == null)
             return false;
 
-        WeaponInstance instance = new(weapon, rarity);
-        return AddWeapon(instance);
+        return AddWeapon(new WeaponInstance(weapon));
     }
 
     public bool AddWeapon(WeaponInstance instance)
@@ -375,7 +379,7 @@ public partial class Player : CharacterBody2D
         _eventBus?.EmitSignal(EventBus.SignalName.WeaponEquipped, instance.Id, capturedIndex);
         _eventBus?.EmitSignal(EventBus.SignalName.WeaponInventoryChanged);
 
-        GD.Print($"[Player] Weapon added [{capturedIndex}]: {instance.Name} ({instance.Rarity})");
+        GD.Print($"[Player] Weapon added [{capturedIndex}]: {instance.Name}");
         return true;
     }
 
@@ -413,7 +417,7 @@ public partial class Player : CharacterBody2D
         else
             _equippedWeapon = null;
 
-        GD.Print($"[Player] Weapon removed [{slotIndex}]: {removed.Name} ({removed.Rarity})");
+        GD.Print($"[Player] Weapon removed [{slotIndex}]: {removed.Name}");
         return removed;
     }
 
@@ -439,37 +443,17 @@ public partial class Player : CharacterBody2D
         return _weaponSlots[slotIndex];
     }
 
+    /// <summary>L'Autel améliore l'arme du premier emplacement : une amélioration Rare au moins (plan 17 §4.3).</summary>
     public bool UpgradeEquippedWeaponAtAltar()
-    {
-        WeaponInstance equipped = EquippedWeapon;
-        if (equipped == null || !equipped.CanLevelUp)
-            return false;
-
-        if (!equipped.LevelUp())
-            return false;
-
-        RefreshAttackSpeed();
-        if (equipped == _orbitalWeapon)
-            SetupOrbitalWeapon(equipped);
-        _eventBus?.EmitSignal(EventBus.SignalName.WeaponUpgraded, equipped.Id, 0, "altar", equipped.Level);
-        _eventBus?.EmitSignal(EventBus.SignalName.WeaponInventoryChanged);
-        return true;
-    }
-
-    public bool ReforgeEquippedWeapon(string newRarity)
     {
         WeaponInstance equipped = EquippedWeapon;
         if (equipped == null)
             return false;
 
-        WeaponInstance reforged = equipped.CloneWithRarity(newRarity);
-        _weaponSlots[0] = reforged;
-        _equippedWeapon = reforged;
-        if (equipped == _orbitalWeapon)
-            SetupOrbitalWeapon(reforged);
-        RefreshAttackSpeed();
-        _eventBus?.EmitSignal(EventBus.SignalName.WeaponInventoryChanged);
-        return true;
+        UpgradeRarity rarity = UpgradeRoller.RollRarity(0f, _upgradeRng);
+        if (rarity.Rank < UpgradeRoller.Get("rare").Rank)
+            rarity = UpgradeRoller.Get("rare");
+        return UpgradeWeapon(equipped.Id, UpgradeRoller.RollWeaponGains(equipped, rarity, _upgradeRng));
     }
 
     /// <summary>Recalcule les timers d'attaque (appelé après upgrade d'attack_speed).</summary>
@@ -480,29 +464,22 @@ public partial class Player : CharacterBody2D
 
     // --- Passive Souvenirs ---
 
-    /// <summary>
-    /// Ajoute un Souvenir Passif ou upgrade un existant.
-    /// Retourne true si ajouté/upgradé, false si slots pleins ou déjà max.
-    /// </summary>
-    public bool AddOrUpgradePassive(string passiveId)
+    /// <summary>Ajoute un passif, ou l'améliore : écart de la table × <paramref name="gain"/>, sur <paramref name="levels"/> niveaux.</summary>
+    public bool AddOrUpgradePassive(string passiveId, float gain, int levels)
     {
         PassiveSouvenirData data = PassiveSouvenirDataLoader.Get(passiveId);
         if (data == null)
             return false;
 
-        // Upgrade existant ?
         foreach (ActivePassiveSouvenir existing in _passiveSlots)
         {
             if (existing.Id == passiveId)
             {
-                if (existing.IsMaxLevel)
+                float prevMod = existing.Modifier;
+                if (!existing.Upgrade(gain, levels))
                     return false;
 
-                float prevMod = existing.GetCurrentModifier();
-                existing.Upgrade();
-                float newMod = existing.GetCurrentModifier();
-
-                ApplyPassiveModifierDelta(data, prevMod, newMod);
+                ApplyPassiveModifierDelta(data, prevMod, existing.Modifier);
 
                 _eventBus?.EmitSignal(EventBus.SignalName.PassiveSouvenirUpgraded, passiveId, existing.Level);
                 _eventBus?.EmitSignal(EventBus.SignalName.PassiveSouvenirSlotsChanged);
@@ -519,7 +496,7 @@ public partial class Player : CharacterBody2D
         ActivePassiveSouvenir passive = new(data);
         _passiveSlots.Add(passive);
 
-        ApplyPassiveModifier(data, passive.GetCurrentModifier());
+        ApplyPassiveModifier(data, passive.Modifier);
 
         int slotIndex = _passiveSlots.Count - 1;
         _eventBus?.EmitSignal(EventBus.SignalName.PassiveSouvenirAdded, passiveId, slotIndex);
@@ -551,36 +528,6 @@ public partial class Player : CharacterBody2D
         return 0;
     }
 
-    /// <summary>Retourne les IDs des passifs au niveau max.</summary>
-    public List<string> GetMaxedPassiveIds()
-    {
-        List<string> result = new();
-        foreach (ActivePassiveSouvenir p in _passiveSlots)
-        {
-            if (p.IsMaxLevel)
-                result.Add(p.Id);
-        }
-        return result;
-    }
-
-    /// <summary>
-    /// Retire un passif (utilisé par la fusion : le passif est absorbé par le Vestige).
-    /// </summary>
-    public bool RemovePassive(string passiveId)
-    {
-        for (int i = 0; i < _passiveSlots.Count; i++)
-        {
-            if (_passiveSlots[i].Id == passiveId)
-            {
-                _passiveSlots.RemoveAt(i);
-                _eventBus?.EmitSignal(EventBus.SignalName.PassiveSouvenirSlotsChanged);
-                GD.Print($"[Player] Passive removed: {passiveId}");
-                return true;
-            }
-        }
-        return false;
-    }
-
     private void ApplyPassiveModifier(PassiveSouvenirData data, float value)
     {
         ApplyPerkModifier(data.Stat, value, data.ModifierType);
@@ -603,24 +550,25 @@ public partial class Player : CharacterBody2D
 
     // --- Weapon Fragment Levels (level-up re-selection) ---
 
-    /// <summary>
-    /// Upgrade le niveau fragment d'une arme (quand le joueur re-sélectionne l'arme au level-up).
-    /// Monte le niveau global de l'arme — toutes les stats scalent automatiquement via GetStat().
-    /// </summary>
-    public bool UpgradeWeaponFragmentLevel(string weaponId)
+    /// <summary>Applique une amélioration tirée au level-up ou à l'Autel : ses gains, et un niveau de plus.</summary>
+    public bool UpgradeWeapon(string weaponId, IReadOnlyList<StatGain> gains)
     {
-        // Le niveau n'existe qu'à un endroit, l'instance d'arme : level-up, Autel, badge et fusions le lisent tous.
+        // Le niveau n'existe qu'à un endroit, l'instance d'arme : level-up, Autel et badge le lisent tous.
         WeaponInstance weapon = FindWeaponSlot(weaponId, out int slot);
-        if (weapon == null || !weapon.LevelUp())
+        if (weapon == null || !weapon.ApplyUpgrade(gains))
             return false;
 
         RefreshAttackSpeed();
         if (weapon == _orbitalWeapon)
             SetupOrbitalWeapon(weapon);
         _eventBus?.EmitSignal(EventBus.SignalName.WeaponUpgraded, weaponId, slot, "all", weapon.Level);
+        _eventBus?.EmitSignal(EventBus.SignalName.WeaponInventoryChanged);
         GD.Print($"[Player] Weapon level: {weaponId} → {weapon.Level}/{weapon.MaxLevel}");
         return true;
     }
+
+    /// <summary>Dégâts portés par une arme depuis le début de la run.</summary>
+    public float GetDamageDealt(string weaponId) => _damageDealtByWeapon.GetValueOrDefault(weaponId);
 
     public int GetWeaponFragmentLevel(string weaponId) => FindWeaponSlot(weaponId, out _)?.Level ?? 0;
 
@@ -628,18 +576,6 @@ public partial class Player : CharacterBody2D
     {
         WeaponInstance weapon = FindWeaponSlot(weaponId, out _);
         return weapon != null && !weapon.CanLevelUp;
-    }
-
-    /// <summary>Identifiants des armes portées qui ont atteint leur niveau maximal.</summary>
-    public List<string> GetMaxedWeaponIds()
-    {
-        List<string> result = new();
-        foreach (WeaponInstance weapon in _weaponSlots)
-        {
-            if (!weapon.CanLevelUp)
-                result.Add(weapon.Id);
-        }
-        return result;
     }
 
     private WeaponInstance FindWeaponSlot(string weaponId, out int slot)
@@ -1023,6 +959,8 @@ public partial class Player : CharacterBody2D
             return;
 
         _attackFx.PlayHit(source?.Base, enemy.GlobalPosition, isCrit);
+        if (source != null)
+            _damageDealtByWeapon[source.Id] = _damageDealtByWeapon.GetValueOrDefault(source.Id) + damage;
         int procRollCount = Mathf.Max(1, triggerCount);
 
         // Vampirism: heal % of damage dealt
@@ -1149,6 +1087,7 @@ public partial class Player : CharacterBody2D
                 float echoPct = se.Params.TryGetValue("echo_damage_percent", out float p) ? p : 0.6f;
                 float echoDamage = damage * echoPct;
                 Vector2 echoPos = enemy.GlobalPosition;
+                float echoRadius = ZoneScale(se.Params.TryGetValue("echo_radius", out float er) ? er : 40f);
                 ulong enemyId = enemy.GetInstanceId();
                 GetTree().CreateTimer(delay).Timeout += () =>
                 {
@@ -1158,7 +1097,7 @@ public partial class Player : CharacterBody2D
                     {
                         if (node is Enemy e && IsInstanceValid(e) && !e.IsDying)
                         {
-                            if (e.GlobalPosition.DistanceTo(echoPos) < 40f)
+                            if (e.GlobalPosition.DistanceTo(echoPos) < echoRadius)
                                 e.TakeDamage(echoDamage);
                         }
                     }
@@ -1173,7 +1112,7 @@ public partial class Player : CharacterBody2D
             }
             case "local_time_slow":
             {
-                float radius = se.Params.TryGetValue("slow_radius", out float r) ? r : 80f;
+                float radius = ZoneScale(se.Params.TryGetValue("slow_radius", out float r) ? r : 80f);
                 float factor = se.Params.TryGetValue("slow_factor", out float f) ? f : 0.3f;
                 float duration = se.Params.TryGetValue("slow_duration", out float dur) ? dur : 0.5f;
                 Vector2 impactPos = enemy.GlobalPosition;
@@ -1191,7 +1130,7 @@ public partial class Player : CharacterBody2D
             }
             case "random_shape":
             {
-                float aoeRadius = se.Params.TryGetValue("shape_aoe_on_impact", out float aoe) ? aoe : 50f;
+                float aoeRadius = ZoneScale(se.Params.TryGetValue("shape_aoe_on_impact", out float aoe) ? aoe : 50f);
                 Vector2 impactPos = enemy.GlobalPosition;
                 Godot.Collections.Array<Node> enemies = _groupCache.GetEnemies();
                 foreach (Node node in enemies)
@@ -1238,7 +1177,7 @@ public partial class Player : CharacterBody2D
             orb.CollisionMask = 2;
 
             CollisionShape2D shape = new();
-            CircleShape2D circle = new() { Radius = 8f };
+            CircleShape2D circle = new() { Radius = ZoneScale(8f) };
             shape.Shape = circle;
             orb.AddChild(shape);
             orb.AddChild(PlayerAttackFx.CreateOrbitalVisual());
@@ -1275,7 +1214,8 @@ public partial class Player : CharacterBody2D
             return;
 
         float orbitalSpeed = _orbitalWeapon.GetStat("orbital_speed", 180f);
-        float orbitalRadius = _orbitalWeapon.GetStat("range", 90f);
+        // Le rayon d'orbite est une portée : il suit les bonus de portée, comme l'allonge des coups.
+        float orbitalRadius = GetEffectiveWeaponRange(_orbitalWeapon);
         _orbitalAngle += Mathf.DegToRad(orbitalSpeed) * delta;
         if (_orbitalAngle > Mathf.Tau)
             _orbitalAngle -= Mathf.Tau;
@@ -1301,8 +1241,8 @@ public partial class Player : CharacterBody2D
         _coneDuration = effect.Params.TryGetValue("duration", out float dur) ? dur : 2f;
         _coneAttackTimer = _coneDuration;
         _coneDamageRampPerSec = effect.Params.TryGetValue("damage_ramp_per_sec", out float ramp) ? ramp : 1.5f;
-        _coneAngleStart = GetWeaponStat("cone_angle_start", 15f);
-        _coneAngleEnd = GetWeaponStat("cone_angle_end", 60f);
+        _coneAngleStart = Mathf.Min(180f, ZoneScale(GetWeaponStat("cone_angle_start", 15f)));
+        _coneAngleEnd = Mathf.Min(180f, ZoneScale(GetWeaponStat("cone_angle_end", 60f)));
         _coneRange = GetEffectiveWeaponRange();
         _coneBaseDamage = ComputeBaseAttackDamage();
         _coneWeapon = _equippedWeapon;
@@ -1976,7 +1916,7 @@ public partial class Player : CharacterBody2D
                 WeaponSpecialEffect se = _equippedWeapon.Base.SpecialEffect;
                 float gDmg = se.Params.TryGetValue("ground_damage", out float gd) ? gd : 5f;
                 float gDur = se.Params.TryGetValue("ground_duration", out float gdur) ? gdur : 2f;
-                float gRad = se.Params.TryGetValue("ground_radius", out float grad) ? grad : 30f;
+                float gRad = ZoneScale(se.Params.TryGetValue("ground_radius", out float grad) ? grad : 30f);
                 proj.SetGroundFire(gDmg, gDur, gRad);
             }
         }
@@ -1984,12 +1924,13 @@ public partial class Player : CharacterBody2D
 
     private void PerformMeleeAttack(string pattern)
     {
-        float range = GetEffectiveWeaponRange();
+        // Onde circulaire : son rayon est une zone. Arc : la portée donne l'allonge, la zone l'ouverture.
+        float range = pattern == "circular" ? ZoneScale(GetEffectiveWeaponRange()) : GetEffectiveWeaponRange();
         float arcAngle = pattern switch
         {
             "circular" => 360f,
             "linear" => 60f,
-            _ => GetWeaponStat("arc_angle", 120f)
+            _ => Mathf.Min(360f, ZoneScale(GetWeaponStat("arc_angle", 120f)))
         };
 
         System.Collections.Generic.List<Enemy> enemies = FindEnemiesInArc(range, arcAngle);
@@ -2235,12 +2176,36 @@ public partial class Player : CharacterBody2D
         return damage;
     }
 
-    private float GetEffectiveWeaponRange()
+    private float GetEffectiveWeaponRange() => GetEffectiveWeaponRange(_equippedWeapon);
+
+    /// <summary>
+    /// Portée : allonge d'un coup, distance d'un tir (plan 05 §4). La zone ne l'allonge pas ; elle agrandit les
+    /// arcs, ondes, cônes, feux et explosions (<see cref="ZoneScale"/>).
+    /// </summary>
+    private float GetEffectiveWeaponRange(WeaponInstance weapon)
     {
-        float weaponRange = GetWeaponStat("range", AttackRange);
-        float characterRangeFactor = AttackRange / 300f;
-        return weaponRange * characterRangeFactor * _attackRangeMultiplier * _aoeMultiplier;
+        float weaponRange = weapon?.GetStat("range", AttackRange) ?? AttackRange;
+        return weaponRange * (AttackRange / 300f) * _attackRangeMultiplier;
     }
+
+    /// <summary>Taille d'une zone d'effet (rayon, angle) après les bonus de zone du joueur.</summary>
+    private float ZoneScale(float value) => value * _aoeMultiplier;
+
+    /// <summary>
+    /// Valeur effective d'une stat d'arme, telle que le combat l'applique (arme × niveau × personnage × bonus) :
+    /// c'est elle que montrent le level-up et la pause, jamais la base des données.
+    /// </summary>
+    public float GetWeaponStatForDisplay(WeaponInstance weapon, string key) => key switch
+    {
+        "damage" => ComputeBaseAttackDamage(weapon),
+        "attack_speed" => AttackSpeed * weapon.GetStat("attack_speed", 1f) * _attackSpeedMultiplier,
+        "range" => weapon.AttackPattern == "circular" ? ZoneScale(GetEffectiveWeaponRange(weapon)) : GetEffectiveWeaponRange(weapon),
+        "arc_angle" => Mathf.Min(360f, ZoneScale(weapon.GetStat("arc_angle", 120f))),
+        "cone_angle_end" => Mathf.Min(180f, ZoneScale(weapon.GetStat("cone_angle_end", 60f))),
+        "projectile_count" => weapon.GetStat("projectile_count", 1f) + _extraProjectiles,
+        "projectile_pierce" => weapon.GetStat("projectile_pierce", 0f) + _projectilePierce,
+        _ => weapon.GetStat(key, 0f),
+    };
 
     private float GetWeaponStat(string key, float fallback)
     {

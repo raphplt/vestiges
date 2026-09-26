@@ -60,7 +60,7 @@ Un seul lot d'implémentation ouvert à la fois. Un échec de lisibilité, de pe
 - Enchaînés le même jour, à la demande de Raphaël : 0B (restes V1 visibles retirés, POI et éléments de lore désactivés), 0C (code, données et 306 PNG morts, Colosses), 0D (références au jeu du genre ramenées à une section de garde-fous).
 - Deux correctifs trouvés en route : blocage de partie au level-up, durée de run comptée en temps réel.
 - Vague 1, sans attendre la décision 4.3 : les quatre bugs de build corrigés (effets de l'arme qui frappe, notes de la Boîte à musique, niveau unique, bannissement), banc `tools/test_weapons.sh` ; pilote de trois icônes d'armes 32×32 à juger.
-- Recette groupée attendue ; le socle 1A, le level-up à raretés (1B) et la pause (1C) attendent la décision 4.3 (rareté sur l'arme ou seulement sur les améliorations).
+- Soir : décision 4.3 prise (rareté seulement sur les améliorations) ; coffres et icônes v2 ; vague 1 livrée : croissance des armes en données, level-up à raretés (Chance et oubli), cartes « avant → après », pause avec équipement et fiche. Recette groupée attendue.
 
 **Mise à jour du 26 septembre (armes, coffres, modificateurs) :** nouvelle priorité de Raphaël, auditée puis planifiée, rien d'implémenté.
 - [Plan 17](17-armes-coffres-modificateurs.md) : armes (sprites, noms, présentation, level-up à raretés, pause), coffres, modificateurs de run (Chance, Péril, Mémoriaux et Failles), objets ensuite, north star.

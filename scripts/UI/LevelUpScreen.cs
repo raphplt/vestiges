@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Godot;
+using Vestiges.Combat;
 using Vestiges.Core;
 using Vestiges.Infrastructure;
 using Vestiges.Progression;
@@ -7,75 +8,58 @@ using Vestiges.Progression;
 namespace Vestiges.UI;
 
 /// <summary>
-/// Écran de choix au level up — affiche des Fragments de Mémoire (armes + passifs).
-/// Pause le jeu, affiche 3 choix sous forme de cartes stylisées, reprend après sélection.
-/// Supporte aussi les choix de perks via Mémorial (source monde).
+/// Écran du level-up (plan 17, lot 1B) : trois Fragments de mémoire. Une amélioration montre sa rareté (couleur
+/// et symbole) et ce qui change, « avant → après » sur les valeurs effectives ; une nouveauté montre ce qu'elle fait,
+/// en une phrase. Souris, clavier et manette : haut/bas entre les cartes et les actions, validation pour choisir.
 /// </summary>
 public partial class LevelUpScreen : CanvasLayer
 {
     private const string MenusPath = "res://assets/ui/menus/";
+    private const float CardWidth = 540f;
 
-    // --- Colors (shared palette from HubScreen) ---
-    private static readonly Color GoldColor = new(0.83f, 0.66f, 0.26f);
     private static readonly Color GoldBright = new(0.9f, 0.78f, 0.39f);
     private static readonly Color GoldDim = new(0.63f, 0.47f, 0.16f);
+    private static readonly Color TextLight = new(0.92f, 0.9f, 0.85f);
     private static readonly Color TextColor = new(0.72f, 0.7f, 0.66f);
     private static readonly Color TextDim = new(0.5f, 0.5f, 0.55f);
-    private static readonly Color BgDark = new(0.04f, 0.05f, 0.09f);
-    private static readonly Color WeaponNewColor = new(1f, 0.85f, 0.3f);
-    private static readonly Color WeaponUpgradeColor = new(1f, 0.65f, 0.2f);
-    private static readonly Color PassiveNewColor = new(0.5f, 0.85f, 1f);
-    private static readonly Color PassiveUpgradeColor = new(0.3f, 0.7f, 0.95f);
+    private static readonly Color GainColor = new(0.55f, 0.85f, 0.45f);
+    private static readonly Color NeutralBorder = new(0.55f, 0.52f, 0.46f);
+    private static readonly Color CardBg = new(0.07f, 0.07f, 0.11f, 0.96f);
     private static readonly Color OverlayColor = new(0.0f, 0.0f, 0.02f, 0.75f);
+    private static readonly Color BanishColor = new(0.85f, 0.25f, 0.2f);
 
-    // --- Cached textures ---
-    private Texture2D _panelTex;
-    private Texture2D _cardNormalTex;
-    private Texture2D _cardSelectedTex;
-    private Texture2D _separatorTex;
-
-    // --- Rays config ---
     private const int RayCount = 14;
-    private const float RaySpeed = 0.15f; // radians per second
+    private const float RaySpeed = 0.15f;
     private static readonly Color RayColorA = new(0.83f, 0.66f, 0.26f, 0.08f);
     private static readonly Color RayColorB = new(0.9f, 0.78f, 0.39f, 0.04f);
 
-    // --- Fragment rarity colors ---
-    private static readonly Color RarityCommonBorder = new(0.25f, 0.24f, 0.2f, 0.6f);
-    private static readonly Color RarityUncommonBorder = RarityPalette.Main("uncommon");
-    private static readonly Color RarityRareBorder = RarityPalette.Main("rare");
-    private static readonly Color RarityUncommonBg = RarityPalette.Main("uncommon").Darkened(0.88f) with { A = 0.95f };
-    private static readonly Color RarityRareBg = RarityPalette.Main("rare").Darkened(0.88f) with { A = 0.95f };
+    private Texture2D _panelTex;
+    private Texture2D _separatorTex;
 
-    // --- Banish mode colors ---
-    private static readonly Color BanishBorderColor = new(0.85f, 0.2f, 0.2f);
-    private static readonly Color BanishBgColor = new(0.15f, 0.05f, 0.05f, 0.95f);
-    private static readonly Color BanishLabelColor = new(1f, 0.3f, 0.3f);
-
-    // --- UI nodes ---
     private ColorRect _overlay;
     private LightRaysControl _rays;
     private PanelContainer _panel;
     private VBoxContainer _cardsContainer;
     private HBoxContainer _actionButtons;
-    private Button _rerollButton;
-    private Button _banishButton;
     private Label _title;
+    private Label _hint;
     private Label _synergyNotification;
     private readonly List<PanelContainer> _cards = new();
     private readonly List<FragmentOption> _cardOptions = new();
-    private readonly List<string> _cardRarities = new();
-    private int _hoveredCardIndex = -1;
+    private readonly List<Color> _cardColors = new();
+    private readonly List<Button> _buttons = new();
+    private Button _banishButton;
+    private int _focusIndex;
     private bool _banishMode;
 
-    // --- Managers ---
     private PerkManager _perkManager;
     private FragmentManager _fragmentManager;
     private EventBus _eventBus;
 
     public override void _Ready()
     {
-        LoadTextures();
+        _panelTex = LoadTex(MenusPath + "ui_panel_frame.png");
+        _separatorTex = LoadTex(MenusPath + "ui_separator_simple.png");
         BuildUI();
 
         _eventBus = GetNode<EventBus>("/root/EventBus");
@@ -97,675 +81,440 @@ public partial class LevelUpScreen : CanvasLayer
         _perkManager.SynergyActivated += OnSynergyActivated;
     }
 
-    public void SetFragmentManager(FragmentManager fragmentManager)
-    {
-        _fragmentManager = fragmentManager;
-        GD.Print("[LevelUpScreen] FragmentManager wired, listening on EventBus.FragmentChoicesReady");
-    }
+    public void SetFragmentManager(FragmentManager fragmentManager) => _fragmentManager = fragmentManager;
+
+    private static Texture2D LoadTex(string path) => ResourceLoader.Exists(path) ? GD.Load<Texture2D>(path) : null;
 
     // ==============================
-    // Texture loading
-    // ==============================
-
-    private void LoadTextures()
-    {
-        _panelTex = LoadTex(MenusPath + "ui_panel_frame.png");
-        _cardNormalTex = LoadTex(MenusPath + "ui_card_normal.png");
-        _cardSelectedTex = LoadTex(MenusPath + "ui_card_selected.png");
-        _separatorTex = LoadTex(MenusPath + "ui_separator_simple.png");
-    }
-
-    private static Texture2D LoadTex(string path)
-    {
-        if (ResourceLoader.Exists(path))
-            return GD.Load<Texture2D>(path);
-        GD.PushWarning($"[LevelUpScreen] Missing texture: {path}");
-        return null;
-    }
-
-    // ==============================
-    // UI construction
+    // Construction
     // ==============================
 
     private void BuildUI()
     {
-        // Dark overlay covering the whole screen
-        _overlay = new ColorRect();
+        _overlay = new ColorRect { Color = OverlayColor, MouseFilter = Control.MouseFilterEnum.Stop };
         _overlay.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
-        _overlay.Color = OverlayColor;
-        _overlay.MouseFilter = Control.MouseFilterEnum.Stop;
         AddChild(_overlay);
 
-        // Rotating light rays behind the panel
-        _rays = new LightRaysControl(RayCount, RaySpeed, RayColorA, RayColorB);
+        _rays = new LightRaysControl(RayCount, RaySpeed, RayColorA, RayColorB)
+        {
+            MouseFilter = Control.MouseFilterEnum.Ignore,
+            ProcessMode = ProcessModeEnum.Always,
+        };
         _rays.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
-        _rays.MouseFilter = Control.MouseFilterEnum.Ignore;
-        _rays.ProcessMode = ProcessModeEnum.Always;
         AddChild(_rays);
 
-        // Main panel centered on screen
-        _panel = new PanelContainer();
+        _panel = new PanelContainer { CustomMinimumSize = new Vector2(CardWidth + 40f, 100) };
         _panel.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.Center);
         _panel.GrowHorizontal = Control.GrowDirection.Both;
         _panel.GrowVertical = Control.GrowDirection.Both;
-        _panel.CustomMinimumSize = new Vector2(500, 100);
-
         if (_panelTex != null)
         {
-            StyleBoxTexture panelStyle = CreateNinePatch(_panelTex, 6, 6, 6, 6);
+            StyleBoxTexture panelStyle = UITheme.CreateNinePatch(_panelTex, 6, 6, 6, 6);
             panelStyle.ContentMarginLeft = 20;
             panelStyle.ContentMarginRight = 20;
             panelStyle.ContentMarginTop = 16;
-            panelStyle.ContentMarginBottom = 20;
+            panelStyle.ContentMarginBottom = 18;
             _panel.AddThemeStyleboxOverride("panel", panelStyle);
         }
-        else
-        {
-            StyleBoxFlat fallback = new();
-            fallback.BgColor = new Color(0.06f, 0.06f, 0.1f, 0.95f);
-            fallback.SetBorderWidthAll(2);
-            fallback.BorderColor = GoldDim;
-            fallback.SetCornerRadiusAll(4);
-            fallback.ContentMarginLeft = 20;
-            fallback.ContentMarginRight = 20;
-            fallback.ContentMarginTop = 16;
-            fallback.ContentMarginBottom = 20;
-            _panel.AddThemeStyleboxOverride("panel", fallback);
-        }
-
         AddChild(_panel);
 
-        // Inner VBox
-        VBoxContainer innerVBox = new();
-        innerVBox.AddThemeConstantOverride("separation", 12);
-        _panel.AddChild(innerVBox);
+        VBoxContainer inner = new();
+        inner.AddThemeConstantOverride("separation", 10);
+        _panel.AddChild(inner);
 
-        // Title
-        _title = new Label();
-        _title.HorizontalAlignment = HorizontalAlignment.Center;
+        _title = new Label { HorizontalAlignment = HorizontalAlignment.Center, Text = Tr("LEVELUP_TITLE") };
         _title.AddThemeFontSizeOverride("font_size", 20);
         _title.AddThemeColorOverride("font_color", GoldBright);
-        _title.Text = "FRAGMENT DE MÉMOIRE";
-        innerVBox.AddChild(_title);
+        inner.AddChild(_title);
 
-        // Separator under title
         if (_separatorTex != null)
         {
-            TextureRect sep = new();
-            sep.Texture = _separatorTex;
-            sep.ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize;
-            sep.StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered;
-            sep.CustomMinimumSize = new Vector2(0, 6);
-            sep.TextureFilter = CanvasItem.TextureFilterEnum.Nearest;
-            innerVBox.AddChild(sep);
+            inner.AddChild(new TextureRect
+            {
+                Texture = _separatorTex,
+                ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
+                StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
+                CustomMinimumSize = new Vector2(0, 6),
+                TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
+            });
         }
 
-        // Cards container
         _cardsContainer = new VBoxContainer();
         _cardsContainer.AddThemeConstantOverride("separation", 8);
-        innerVBox.AddChild(_cardsContainer);
+        inner.AddChild(_cardsContainer);
+
+        _hint = new Label { HorizontalAlignment = HorizontalAlignment.Center, Visible = false, Text = Tr("LEVELUP_BANISH_HINT") };
+        _hint.AddThemeFontSizeOverride("font_size", 13);
+        _hint.AddThemeColorOverride("font_color", BanishColor);
+        inner.AddChild(_hint);
+
+        _actionButtons = new HBoxContainer { Alignment = BoxContainer.AlignmentMode.Center };
+        _actionButtons.AddThemeConstantOverride("separation", 14);
+        inner.AddChild(_actionButtons);
     }
 
     // ==============================
-    // Card creation
-    // ==============================
-
-    private PanelContainer CreateChoiceCard(
-        string iconPath,
-        string typeTag,
-        Color tagColor,
-        string name,
-        string description,
-        string badge,
-        Color badgeColor,
-        System.Action onPressed,
-        string rarity = "common")
-    {
-        PanelContainer card = new();
-        card.CustomMinimumSize = new Vector2(460, 80);
-
-        // Card style (rarity-aware)
-        _cardRarities.Add(rarity);
-        ApplyCardStyle(card, false, rarity);
-
-        // Make the card clickable
-        card.MouseFilter = Control.MouseFilterEnum.Stop;
-        card.GuiInput += (InputEvent @event) =>
-        {
-            if (@event is InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Left })
-            {
-                onPressed?.Invoke();
-                card.AcceptEvent();
-            }
-        };
-
-        // Hover tracking
-        int cardIndex = _cards.Count;
-        card.MouseEntered += () => OnCardHovered(cardIndex);
-        card.MouseExited += () => OnCardUnhovered(cardIndex);
-
-        // Card inner layout: HBox with icon on left, text on right, badge on far right
-        MarginContainer cardMargin = new();
-        cardMargin.AddThemeConstantOverride("margin_left", 12);
-        cardMargin.AddThemeConstantOverride("margin_right", 12);
-        cardMargin.AddThemeConstantOverride("margin_top", 8);
-        cardMargin.AddThemeConstantOverride("margin_bottom", 8);
-        card.AddChild(cardMargin);
-
-        HBoxContainer cardHBox = new();
-        cardHBox.AddThemeConstantOverride("separation", 14);
-        cardHBox.Alignment = BoxContainer.AlignmentMode.Begin;
-        cardMargin.AddChild(cardHBox);
-
-        // Icon (larger, 48x48)
-        if (!string.IsNullOrEmpty(iconPath))
-        {
-            string resPath = iconPath.StartsWith("res://") ? iconPath : $"res://{iconPath}";
-            if (ResourceLoader.Exists(resPath))
-            {
-                TextureRect icon = new();
-                icon.CustomMinimumSize = new Vector2(48, 48);
-                icon.ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize;
-                icon.StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered;
-                icon.TextureFilter = CanvasItem.TextureFilterEnum.Nearest;
-                icon.Texture = GD.Load<Texture2D>(resPath);
-                icon.SizeFlagsVertical = Control.SizeFlags.ShrinkCenter;
-                cardHBox.AddChild(icon);
-            }
-        }
-
-        // Text section (VBox with type tag, name, description)
-        VBoxContainer textVBox = new();
-        textVBox.AddThemeConstantOverride("separation", 2);
-        textVBox.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
-        textVBox.SizeFlagsVertical = Control.SizeFlags.ShrinkCenter;
-        cardHBox.AddChild(textVBox);
-
-        // Type tag (small, colored)
-        if (!string.IsNullOrEmpty(typeTag))
-        {
-            Label tagLabel = new();
-            tagLabel.Text = typeTag;
-            tagLabel.AddThemeFontSizeOverride("font_size", 12);
-            tagLabel.AddThemeColorOverride("font_color", tagColor);
-            textVBox.AddChild(tagLabel);
-        }
-
-        // Name (prominent)
-        Label nameLabel = new();
-        nameLabel.Text = name;
-        nameLabel.AddThemeFontSizeOverride("font_size", 16);
-        nameLabel.AddThemeColorOverride("font_color", new Color(0.92f, 0.9f, 0.85f));
-        textVBox.AddChild(nameLabel);
-
-        // Description / stats (smaller, dimmer)
-        if (!string.IsNullOrEmpty(description))
-        {
-            Label descLabel = new();
-            descLabel.Text = description;
-            descLabel.AddThemeFontSizeOverride("font_size", 14);
-            descLabel.AddThemeColorOverride("font_color", TextDim);
-            textVBox.AddChild(descLabel);
-        }
-
-        // Badge on the right side (NEW / LVL X)
-        if (!string.IsNullOrEmpty(badge))
-        {
-            Label badgeLabel = new();
-            badgeLabel.Text = badge;
-            badgeLabel.AddThemeFontSizeOverride("font_size", 14);
-            badgeLabel.AddThemeColorOverride("font_color", badgeColor);
-            badgeLabel.VerticalAlignment = VerticalAlignment.Center;
-            badgeLabel.SizeFlagsVertical = Control.SizeFlags.ShrinkCenter;
-            cardHBox.AddChild(badgeLabel);
-        }
-
-        _cards.Add(card);
-        return card;
-    }
-
-    private void ApplyCardStyle(PanelContainer card, bool selected, string rarity = "common")
-    {
-        Texture2D tex = selected ? _cardSelectedTex : _cardNormalTex;
-        if (tex != null && rarity == "common")
-        {
-            StyleBoxTexture style = CreateNinePatch(tex, 4, 4, 4, 4);
-            style.ContentMarginLeft = 0;
-            style.ContentMarginRight = 0;
-            style.ContentMarginTop = 0;
-            style.ContentMarginBottom = 0;
-            card.AddThemeStyleboxOverride("panel", style);
-        }
-        else
-        {
-            Color borderColor;
-            Color bgColor;
-            if (selected)
-            {
-                borderColor = rarity switch
-                {
-                    "rare" => RarityRareBorder,
-                    "uncommon" => RarityUncommonBorder,
-                    _ => GoldColor
-                };
-                bgColor = rarity switch
-                {
-                    "rare" => RarityRareBg,
-                    "uncommon" => RarityUncommonBg,
-                    _ => new Color(0.12f, 0.14f, 0.2f)
-                };
-            }
-            else
-            {
-                borderColor = rarity switch
-                {
-                    "rare" => RarityRareBorder with { A = 0.7f },
-                    "uncommon" => RarityUncommonBorder with { A = 0.6f },
-                    _ => RarityCommonBorder
-                };
-                bgColor = rarity switch
-                {
-                    "rare" => RarityRareBg with { A = 0.9f },
-                    "uncommon" => RarityUncommonBg with { A = 0.9f },
-                    _ => new Color(0.08f, 0.08f, 0.12f)
-                };
-            }
-
-            StyleBoxFlat flat = new();
-            flat.BgColor = bgColor;
-            flat.SetBorderWidthAll(rarity == "common" ? (selected ? 2 : 1) : 2);
-            flat.BorderColor = borderColor;
-            flat.SetCornerRadiusAll(3);
-            card.AddThemeStyleboxOverride("panel", flat);
-        }
-    }
-
-    private void OnCardHovered(int index)
-    {
-        _hoveredCardIndex = index;
-        if (index >= 0 && index < _cards.Count)
-        {
-            string rarity = index < _cardRarities.Count ? _cardRarities[index] : "common";
-            ApplyCardStyle(_cards[index], true, rarity);
-        }
-    }
-
-    private void OnCardUnhovered(int index)
-    {
-        if (index == _hoveredCardIndex)
-            _hoveredCardIndex = -1;
-        if (index >= 0 && index < _cards.Count)
-        {
-            string rarity = index < _cardRarities.Count ? _cardRarities[index] : "common";
-            ApplyCardStyle(_cards[index], false, rarity);
-        }
-    }
-
-    // ==============================
-    // Fragment Mode (level-up: armes + passifs)
+    // Cartes
     // ==============================
 
     private void OnFragmentChoicesReady(int count)
     {
-        GD.Print($"[LevelUpScreen] OnFragmentChoicesReady received: count={count}");
-
-        if (count <= 0 || _fragmentManager == null)
-        {
-            GD.PushWarning($"[LevelUpScreen] Aborting: count={count}, fragmentManager={(_fragmentManager != null ? "OK" : "NULL")}");
-            return;
-        }
-
-        IReadOnlyList<FragmentOption> choices = _fragmentManager.PendingChoices;
-        GD.Print($"[LevelUpScreen] PendingChoices.Count={choices.Count}");
-        if (choices.Count == 0)
+        if (count <= 0 || _fragmentManager == null || _fragmentManager.PendingChoices.Count == 0)
             return;
 
         ClearCards();
-        _banishMode = false;
-        _title.Text = "FRAGMENT DE MÉMOIRE";
-
-        foreach (FragmentOption choice in choices)
+        Player player = GetTree().GetFirstNodeInGroup("player") as Player;
+        int bestRank = -1;
+        foreach (FragmentOption choice in _fragmentManager.PendingChoices)
         {
             _cardOptions.Add(choice);
-            BuildFragmentCard(choice);
+            BuildCard(choice, player);
+            bestRank = Mathf.Max(bestRank, choice.Rarity?.Rank ?? -1);
         }
-
         BuildActionButtons();
-
-        // Vérifier si un choix rare est présent
-        bool hasRare = false;
-        foreach (FragmentOption c in choices)
-        {
-            if (c.Rarity is "rare" or "uncommon")
-            {
-                hasRare = true;
-                break;
-            }
-        }
+        SetFocus(0);
 
         ShowScreen();
-        if (hasRare)
-            Infrastructure.AudioManager.PlayUI("sfx_rare_fragment");
-        GD.Print($"[LevelUpScreen] Fragment screen shown with {choices.Count} choices (hasRare={hasRare})");
+        if (bestRank >= UpgradeRoller.Get("rare").Rank)
+            AudioManager.PlayUI("sfx_rare_fragment");
     }
 
-    private void BuildFragmentCard(FragmentOption choice)
+    private void BuildCard(FragmentOption choice, Player player)
     {
-        Player player = GetTree().GetFirstNodeInGroup("player") as Player;
-        string iconPath = GetFragmentSpritePath(choice.Id, choice.Type);
-        string rarity = choice.Rarity ?? "common";
+        bool isWeapon = choice.Type is "weapon_new" or "weapon_upgrade";
+        bool isNew = choice.Type is "weapon_new" or "passive_new";
+        Color frame = choice.Rarity != null ? RarityPalette.Main(choice.Rarity.Id) : NeutralBorder;
 
-        string typeTag;
-        Color tagColor;
-        string name;
-        string description;
-        string badge;
-        Color badgeColor;
-
-        // Rarity label pour le tag
-        string rarityPrefix = rarity switch
+        PanelContainer card = new() { CustomMinimumSize = new Vector2(CardWidth, 76), MouseFilter = Control.MouseFilterEnum.Stop };
+        int index = _cards.Count;
+        card.GuiInput += @event =>
         {
-            "rare" => "\u2605 ",     // ★
-            "uncommon" => "\u25C6 ", // ◆
-            _ => ""
+            if (@event is InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Left })
+            {
+                Activate(index);
+                card.AcceptEvent();
+            }
         };
+        card.MouseEntered += () => SetFocus(index);
 
+        MarginContainer margin = new();
+        foreach (string side in new[] { "left", "right", "top", "bottom" })
+            margin.AddThemeConstantOverride($"margin_{side}", side is "left" or "right" ? 12 : 8);
+        card.AddChild(margin);
+        HBoxContainer row = new();
+        row.AddThemeConstantOverride("separation", 14);
+        margin.AddChild(row);
+
+        Texture2D icon = LoadIcon(choice, isWeapon);
+        if (icon != null)
+        {
+            row.AddChild(new TextureRect
+            {
+                Texture = icon,
+                CustomMinimumSize = new Vector2(48, 48),
+                ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
+                StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
+                TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
+                SizeFlagsVertical = Control.SizeFlags.ShrinkCenter,
+            });
+        }
+
+        VBoxContainer text = new() { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
+        text.AddThemeConstantOverride("separation", 2);
+        row.AddChild(text);
+
+        // Bandeau : rareté (symbole et nom) ou « nouvelle arme / nouveau passif », puis le niveau à droite.
+        HBoxContainer header = new();
+        text.AddChild(header);
+        string tag = choice.Rarity != null
+            ? $"{RarityGlyph(choice.Rarity.Rank)} {RarityPalette.DisplayName(choice.Rarity.Id).ToUpper()}".Trim()
+            : Tr(isWeapon ? "LEVELUP_NEW_WEAPON" : "LEVELUP_NEW_PASSIVE");
+        header.AddChild(MakeLabel(tag, 12, frame, true));
+        if (!isNew)
+        {
+            int level = isWeapon ? player?.GetWeaponFragmentLevel(choice.Id) ?? 0 : player?.GetPassiveLevel(choice.Id) ?? 0;
+            int next = isWeapon ? level + 1 : Mathf.Min(level + choice.PassiveLevels, PassiveSouvenirDataLoader.Get(choice.Id)?.MaxLevel ?? level + 1);
+            header.AddChild(MakeLabel(string.Format(Tr("LEVELUP_LEVEL"), level, next), 12, TextColor, false, HorizontalAlignment.Right));
+        }
+
+        text.AddChild(MakeLabel(choice.DisplayName, 16, TextLight, false));
+        foreach ((string line, Color color) in DescribeChoice(choice, player))
+            text.AddChild(MakeLabel(line, 14, color, false));
+
+        _cards.Add(card);
+        _cardColors.Add(frame);
+        _cardsContainer.AddChild(card);
+        StyleCard(index, false);
+    }
+
+    /// <summary>Lignes de la carte : ce qui change (amélioration) ou ce que fait la nouveauté.</summary>
+    private static List<(string, Color)> DescribeChoice(FragmentOption choice, Player player)
+    {
+        List<(string, Color)> lines = new();
         switch (choice.Type)
         {
             case "weapon_new":
             {
                 WeaponData weapon = WeaponDataLoader.Get(choice.Id);
-                typeTag = rarityPrefix + "Arme";
-                tagColor = rarity == "rare" ? RarityRareBorder : rarity == "uncommon" ? RarityUncommonBorder : WeaponNewColor;
-                name = weapon?.Name ?? choice.Id;
-                description = weapon != null ? FormatWeaponStats(weapon) : "";
-                badge = "NOUVEAU";
-                badgeColor = tagColor;
+                string family = TranslationServer.Translate(weapon?.Type == "melee" ? "LEVELUP_MELEE" : "LEVELUP_RANGED");
+                lines.Add(($"{weapon?.Summary}   ▸ {family}", TextColor));
                 break;
             }
             case "weapon_upgrade":
             {
-                WeaponData weapon = WeaponDataLoader.Get(choice.Id);
-                int level = player?.GetWeaponFragmentLevel(choice.Id) ?? 0;
-                typeTag = rarityPrefix + "Arme";
-                tagColor = rarity == "rare" ? RarityRareBorder : rarity == "uncommon" ? RarityUncommonBorder : WeaponUpgradeColor;
-                name = weapon?.Name ?? choice.Id;
-                description = weapon != null ? FormatWeaponStats(weapon) : "";
-                badge = $"NIV {level} \u2192 {level + 1}";
-                badgeColor = tagColor;
+                WeaponInstance weapon = FindWeapon(player, choice.Id);
+                if (weapon == null)
+                    break;
+                WeaponInstance after = weapon.PreviewWith(choice.WeaponGains);
+                foreach (StatGain gain in choice.WeaponGains)
+                    lines.Add((DescribeStat(gain.Stat, player.GetWeaponStatForDisplay(weapon, gain.Stat),
+                        player.GetWeaponStatForDisplay(after, gain.Stat)), GainColor));
                 break;
             }
             case "passive_new":
             {
                 PassiveSouvenirData passive = PassiveSouvenirDataLoader.Get(choice.Id);
-                typeTag = rarityPrefix + "Passif";
-                tagColor = rarity == "rare" ? RarityRareBorder : rarity == "uncommon" ? RarityUncommonBorder : PassiveNewColor;
-                name = passive?.Name ?? choice.Id;
-                description = passive != null ? FormatPassiveStats(passive, 1) : "";
-                badge = "NOUVEAU";
-                badgeColor = tagColor;
+                if (passive?.PerLevel is { Length: > 0 })
+                    lines.Add(($"{StatCatalog.Name(passive.Stat)}  {StatCatalog.FormatBonus(passive.Stat, passive.PerLevel[0], passive.ModifierType == "multiplicative")}", GainColor));
                 break;
             }
             case "passive_upgrade":
             {
-                PassiveSouvenirData passive = PassiveSouvenirDataLoader.Get(choice.Id);
-                int level = player?.GetPassiveLevel(choice.Id) ?? 0;
-                typeTag = rarityPrefix + "Passif";
-                tagColor = rarity == "rare" ? RarityRareBorder : rarity == "uncommon" ? RarityUncommonBorder : PassiveUpgradeColor;
-                name = passive?.Name ?? choice.Id;
-                description = passive != null ? FormatPassiveStats(passive, level + 1) : "";
-                badge = $"NIV {level} \u2192 {level + 1}";
-                badgeColor = tagColor;
+                ActivePassiveSouvenir passive = FindPassive(player, choice.Id);
+                if (passive == null)
+                    break;
+                bool multiplicative = passive.Data.ModifierType == "multiplicative";
+                float next = passive.PreviewModifier(choice.PassiveGain, choice.PassiveLevels);
+                lines.Add(($"{StatCatalog.Name(passive.Data.Stat)}  {StatCatalog.FormatBonus(passive.Data.Stat, passive.Modifier, multiplicative)}"
+                    + $"  →  {StatCatalog.FormatBonus(passive.Data.Stat, next, multiplicative)}", GainColor));
                 break;
             }
-            default:
-                typeTag = "";
-                tagColor = TextColor;
-                name = choice.Id;
-                description = "";
-                badge = "";
-                badgeColor = TextColor;
-                break;
         }
-
-        string capturedId = choice.Id;
-        string capturedType = choice.Type;
-
-        PanelContainer card = CreateChoiceCard(
-            iconPath, typeTag, tagColor, name, description, badge, badgeColor,
-            () => OnFragmentSelected(capturedId, capturedType),
-            rarity);
-
-        _cardsContainer.AddChild(card);
+        return lines;
     }
 
-    private static string GetFragmentSpritePath(string id, string type)
+    /// <summary>« Dégâts  14,2 → 16,8  +18 % » ; « Portée  +6 % » pour une stat qui ne se lit qu'en pourcentage.</summary>
+    private static string DescribeStat(string stat, float before, float after)
     {
-        if (type is "weapon_new" or "weapon_upgrade")
+        string name = StatCatalog.Name(stat);
+        return StatCatalog.Display(stat) switch
         {
-            WeaponData weapon = WeaponDataLoader.Get(id);
-            return weapon?.Sprite;
-        }
+            StatDisplay.Percent => $"{name}  {StatCatalog.FormatGain(before, after)}",
+            StatDisplay.Count => $"{name}  {StatCatalog.Format(stat, before)} → {StatCatalog.Format(stat, after)}",
+            _ => $"{name}  {StatCatalog.Format(stat, before)} → {StatCatalog.Format(stat, after)}   {StatCatalog.FormatGain(before, after)}",
+        };
+    }
 
-        if (type is "passive_new" or "passive_upgrade")
-        {
-            PassiveSouvenirData passive = PassiveSouvenirDataLoader.Get(id);
-            if (passive == null) return null;
-            return PerkIconResolver.GetPassiveStatIconPath(passive.Stat);
-        }
+    /// <summary>La rareté se lit aussi à la forme : rien, ◆, ◆◆, ★, ★★ du Commun au Légendaire.</summary>
+    private static string RarityGlyph(int rank) => rank switch
+    {
+        1 => "◆",
+        2 => "◆◆",
+        3 => "★",
+        4 => "★★",
+        _ => "",
+    };
 
+    private static Texture2D LoadIcon(FragmentOption choice, bool isWeapon)
+    {
+        string path = isWeapon
+            ? WeaponDataLoader.Get(choice.Id)?.Sprite
+            : PerkIconResolver.GetPassiveStatIconPath(PassiveSouvenirDataLoader.Get(choice.Id)?.Stat);
+        if (string.IsNullOrEmpty(path))
+            return null;
+        string resPath = path.StartsWith("res://") ? path : $"res://{path}";
+        return ResourceLoader.Exists(resPath) ? GD.Load<Texture2D>(resPath) : null;
+    }
+
+    private static WeaponInstance FindWeapon(Player player, string id)
+    {
+        if (player == null)
+            return null;
+        foreach (WeaponInstance weapon in player.WeaponSlots)
+            if (weapon.Id == id)
+                return weapon;
         return null;
     }
 
-    private static string FormatWeaponStats(WeaponData w)
+    private static ActivePassiveSouvenir FindPassive(Player player, string id)
     {
-        string patternLabel = w.AttackPattern switch
-        {
-            "arc" => "Arc",
-            "linear" => "Ligne",
-            "circular" => "Cercle",
-            "orbital" => "Orbital",
-            "burst" => "Rafale",
-            "chain" => "Chaîne",
-            "homing" => "Guidé",
-            "ground" => "Sol",
-            _ => w.AttackPattern
-        };
-
-        float dmg = w.Stats.TryGetValue("damage", out float d) ? d : 0;
-        float spd = w.Stats.TryGetValue("attack_speed", out float s) ? s : 0;
-        float range = w.Stats.TryGetValue("range", out float r) ? r : 0;
-
-        return $"{patternLabel}  |  {dmg:0} dég  |  {spd:0.0}/s  |  {range:0}m";
+        if (player == null)
+            return null;
+        foreach (ActivePassiveSouvenir passive in player.PassiveSlots)
+            if (passive.Id == id)
+                return passive;
+        return null;
     }
 
-    private static string FormatPassiveStats(PassiveSouvenirData p, int level)
+    private static Label MakeLabel(string text, int size, Color color, bool expand, HorizontalAlignment align = HorizontalAlignment.Left)
     {
-        if (p.PerLevel == null || p.PerLevel.Length == 0)
-            return p.Description;
-
-        int idx = System.Math.Clamp(level - 1, 0, p.PerLevel.Length - 1);
-        float value = p.PerLevel[idx];
-
-        string statLabel = p.Stat switch
-        {
-            "damage" => "Dégâts",
-            "attack_speed" => "Vit. attaque",
-            "max_hp" => "PV max",
-            "speed" => "Vitesse",
-            "aoe_radius" => "Zone d'effet",
-            "xp_magnet_radius" => "Rayon XP",
-            "armor" => "Armure",
-            "crit_chance" => "Chance crit",
-            "regen_rate" => "Régén HP/s",
-            "attack_range" => "Portée",
-            "projectile_count" => "Projectiles",
-            "cooldown_reduction" => "Réduction CD",
-            "projectile_pierce" => "Perçage",
-            _ => p.Stat
-        };
-
-        if (p.ModifierType == "multiplicative")
-        {
-            float percent = (value - 1f) * 100f;
-            string sign = percent >= 0 ? "+" : "";
-            return $"{statLabel} {sign}{percent:0}%";
-        }
-
-        string addSign = value >= 0 ? "+" : "";
-        return $"{statLabel} {addSign}{value:0.#}";
+        Label label = new() { Text = text, HorizontalAlignment = align };
+        if (expand || align == HorizontalAlignment.Right)
+            label.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+        label.AddThemeFontSizeOverride("font_size", size);
+        label.AddThemeColorOverride("font_color", color);
+        return label;
     }
+
+    private void StyleCard(int index, bool focused)
+    {
+        Color border = _banishMode ? BanishColor : _cardColors[index];
+        int rank = _cardOptions[index].Rarity?.Rank ?? 0;
+        StyleBoxFlat style = new()
+        {
+            BgColor = focused ? CardBg.Lightened(0.08f) : CardBg,
+            BorderColor = focused ? border.Lightened(0.25f) : border with { A = 0.85f },
+        };
+        // Les grandes raretés ont un cadre plus épais : la rareté se voit aussi sans la couleur.
+        style.SetBorderWidthAll((focused ? 3 : 2) + (rank >= 3 ? 1 : 0));
+        style.SetCornerRadiusAll(3);
+        _cards[index].AddThemeStyleboxOverride("panel", style);
+    }
+
+    // ==============================
+    // Actions et navigation
+    // ==============================
 
     private void BuildActionButtons()
     {
-        // Remove old action buttons if any
-        if (_actionButtons != null && IsInstanceValid(_actionButtons))
-        {
-            _actionButtons.QueueFree();
-            _actionButtons = null;
-        }
-
-        _actionButtons = new HBoxContainer();
-        _actionButtons.AddThemeConstantOverride("separation", 16);
-        _actionButtons.Alignment = BoxContainer.AlignmentMode.Center;
-
-        _rerollButton = CreateActionButton(
-            $"Relancer ({_fragmentManager.RerollsRemaining})",
-            _fragmentManager.RerollsRemaining > 0,
-            OnRerollPressed);
-
-        _banishButton = CreateActionButton(
-            $"Bannir ({_fragmentManager.BanishesRemaining})",
-            _fragmentManager.BanishesRemaining > 0,
-            OnBanishPressed);
-
-        _actionButtons.AddChild(_rerollButton);
-        _actionButtons.AddChild(_banishButton);
-
-        // Add to the inner VBox (parent of _cardsContainer)
-        _cardsContainer.GetParent().AddChild(_actionButtons);
+        _buttons.Add(CreateActionButton(string.Format(Tr("LEVELUP_REROLL"), _fragmentManager.RerollsRemaining),
+            _fragmentManager.RerollsRemaining > 0, () => _fragmentManager.Reroll()));
+        _banishButton = CreateActionButton(string.Format(Tr("LEVELUP_BANISH"), _fragmentManager.BanishesRemaining),
+            _fragmentManager.BanishesRemaining > 0, ToggleBanish);
+        _buttons.Add(_banishButton);
+        _buttons.Add(CreateActionButton(Tr("LEVELUP_SKIP"), true, Skip));
+        foreach (Button button in _buttons)
+            _actionButtons.AddChild(button);
     }
 
     private Button CreateActionButton(string text, bool enabled, System.Action onPressed)
     {
-        Button btn = new();
-        btn.Text = text;
-        btn.CustomMinimumSize = new Vector2(140, 36);
-        btn.Disabled = !enabled;
-
-        StyleBoxFlat normalStyle = new();
-        normalStyle.BgColor = enabled ? new Color(0.1f, 0.1f, 0.15f, 0.9f) : new Color(0.08f, 0.08f, 0.1f, 0.5f);
-        normalStyle.SetBorderWidthAll(1);
-        normalStyle.BorderColor = enabled ? GoldDim : new Color(0.3f, 0.3f, 0.3f, 0.3f);
-        normalStyle.SetCornerRadiusAll(3);
-        normalStyle.ContentMarginLeft = 12;
-        normalStyle.ContentMarginRight = 12;
-        normalStyle.ContentMarginTop = 6;
-        normalStyle.ContentMarginBottom = 6;
-        btn.AddThemeStyleboxOverride("normal", normalStyle);
-
-        StyleBoxFlat hoverStyle = new();
-        hoverStyle.BgColor = new Color(0.15f, 0.15f, 0.22f, 0.95f);
-        hoverStyle.SetBorderWidthAll(1);
-        hoverStyle.BorderColor = GoldColor;
-        hoverStyle.SetCornerRadiusAll(3);
-        hoverStyle.ContentMarginLeft = 12;
-        hoverStyle.ContentMarginRight = 12;
-        hoverStyle.ContentMarginTop = 6;
-        hoverStyle.ContentMarginBottom = 6;
-        btn.AddThemeStyleboxOverride("hover", hoverStyle);
-
-        btn.AddThemeFontSizeOverride("font_size", 14);
-        btn.AddThemeColorOverride("font_color", enabled ? TextColor : TextDim);
-        UITheme.WireButtonAudio(btn);
-
-        btn.Pressed += () => onPressed?.Invoke();
-        btn.ProcessMode = ProcessModeEnum.Always;
-
-        return btn;
-    }
-
-    private void OnRerollPressed()
-    {
-        if (_banishMode)
+        Button button = new()
         {
-            _banishMode = false;
-            UpdateBanishVisuals();
-        }
-        _fragmentManager?.Reroll();
+            Text = text,
+            Disabled = !enabled,
+            CustomMinimumSize = new Vector2(150, 34),
+            FocusMode = Control.FocusModeEnum.None,
+            ProcessMode = ProcessModeEnum.Always,
+        };
+        button.AddThemeFontSizeOverride("font_size", 14);
+        button.AddThemeColorOverride("font_color", enabled ? TextColor : TextDim);
+        StyleButton(button, false);
+        UITheme.WireButtonAudio(button);
+        button.Pressed += () => onPressed();
+        int index = _cards.Count + _buttons.Count;
+        button.MouseEntered += () => SetFocus(index);
+        return button;
     }
 
-    private void OnBanishPressed()
+    private static void StyleButton(Button button, bool focused)
     {
-        if (_fragmentManager.BanishesRemaining <= 0)
+        StyleBoxFlat style = new()
+        {
+            BgColor = focused ? new Color(0.16f, 0.15f, 0.22f, 0.95f) : new Color(0.1f, 0.1f, 0.15f, 0.9f),
+            BorderColor = focused ? GoldBright : GoldDim with { A = button.Disabled ? 0.3f : 1f },
+        };
+        style.SetBorderWidthAll(focused ? 2 : 1);
+        style.SetCornerRadiusAll(3);
+        style.ContentMarginLeft = 12;
+        style.ContentMarginRight = 12;
+        foreach (string state in new[] { "normal", "hover", "pressed", "disabled" })
+            button.AddThemeStyleboxOverride(state, style);
+    }
+
+    public override void _Input(InputEvent @event)
+    {
+        if (!Visible || _cards.Count == 0)
             return;
 
-        _banishMode = !_banishMode;
-        UpdateBanishVisuals();
+        int total = _cards.Count + _buttons.Count;
+        if (@event.IsActionPressed("ui_down") || @event.IsActionPressed("ui_right") && _focusIndex >= _cards.Count)
+            SetFocus((_focusIndex + 1) % total);
+        else if (@event.IsActionPressed("ui_up") || @event.IsActionPressed("ui_left") && _focusIndex >= _cards.Count)
+            SetFocus((_focusIndex - 1 + total) % total);
+        else if (@event.IsActionPressed("ui_accept"))
+            Activate(_focusIndex);
+        else
+            return;
+        GetViewport().SetInputAsHandled();
     }
 
-    private void UpdateBanishVisuals()
+    private void SetFocus(int index)
     {
+        _focusIndex = index;
         for (int i = 0; i < _cards.Count; i++)
-        {
-            PanelContainer card = _cards[i];
-            if (_banishMode)
-            {
-                StyleBoxFlat banishStyle = new();
-                banishStyle.BgColor = BanishBgColor;
-                banishStyle.SetBorderWidthAll(2);
-                banishStyle.BorderColor = BanishBorderColor;
-                banishStyle.SetCornerRadiusAll(3);
-                card.AddThemeStyleboxOverride("panel", banishStyle);
-            }
-            else
-            {
-                string rarity = i < _cardRarities.Count ? _cardRarities[i] : "common";
-                ApplyCardStyle(card, i == _hoveredCardIndex, rarity);
-            }
-        }
-
-        if (_banishButton != null)
-        {
-            _banishButton.Text = _banishMode
-                ? "Annuler"
-                : $"Bannir ({_fragmentManager.BanishesRemaining})";
-        }
+            StyleCard(i, i == index);
+        for (int i = 0; i < _buttons.Count; i++)
+            StyleButton(_buttons[i], _cards.Count + i == index);
     }
 
-    private void OnFragmentSelected(string fragmentId, string fragmentType)
+    private void Activate(int index)
+    {
+        if (index < _cards.Count)
+        {
+            OnCardChosen(_cardOptions[index]);
+            return;
+        }
+        Button button = _buttons[index - _cards.Count];
+        if (!button.Disabled)
+            button.EmitSignal(BaseButton.SignalName.Pressed);
+    }
+
+    private void ToggleBanish()
+    {
+        _banishMode = !_banishMode;
+        _hint.Visible = _banishMode;
+        _banishButton.Text = _banishMode
+            ? Tr("LEVELUP_BANISH_CANCEL")
+            : string.Format(Tr("LEVELUP_BANISH"), _fragmentManager.BanishesRemaining);
+        SetFocus(_banishMode ? 0 : _focusIndex);
+    }
+
+    private void OnCardChosen(FragmentOption option)
     {
         if (_banishMode)
         {
-            _banishMode = false;
-            Infrastructure.AudioManager.PlayUI("sfx_perk_refuse", 0f);
-            _fragmentManager?.BanishFragment(fragmentId);
+            AudioManager.PlayUI("sfx_perk_refuse", 0f);
+            _fragmentManager?.BanishFragment(option.Id);
             return;
         }
 
         HideScreen();
-        _fragmentManager?.SelectFragment(fragmentId, fragmentType);
+        _fragmentManager?.SelectFragment(option);
+        ResumeIfDone();
+    }
 
-        // Unpause seulement si aucun choix actif (la queue a été vidée)
+    private void Skip()
+    {
+        HideScreen();
+        _fragmentManager?.SkipChoice();
+        ResumeIfDone();
+    }
+
+    /// <summary>Le jeu ne reprend que lorsque la file des niveaux est vide.</summary>
+    private void ResumeIfDone()
+    {
         if (_fragmentManager == null || !_fragmentManager.IsChoiceActive)
             GetTree().Paused = false;
     }
 
     // ==============================
-    // Synergy notification
+    // Synergies
     // ==============================
 
     private void CreateSynergyNotification()
     {
-        _synergyNotification = new Label();
-        _synergyNotification.HorizontalAlignment = HorizontalAlignment.Center;
-        _synergyNotification.VerticalAlignment = VerticalAlignment.Center;
+        _synergyNotification = new Label
+        {
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
+            Visible = false,
+            ProcessMode = ProcessModeEnum.Always,
+            OffsetTop = 80,
+        };
         _synergyNotification.AddThemeFontSizeOverride("font_size", 22);
         _synergyNotification.AddThemeColorOverride("font_color", GoldBright);
         _synergyNotification.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.CenterTop);
-        _synergyNotification.OffsetTop = 80;
-        _synergyNotification.Visible = false;
-        _synergyNotification.ProcessMode = ProcessModeEnum.Always;
         AddChild(_synergyNotification);
     }
 
@@ -773,7 +522,7 @@ public partial class LevelUpScreen : CanvasLayer
     {
         _synergyNotification.Text = notification;
         _synergyNotification.Visible = true;
-        _synergyNotification.Modulate = new Color(1f, 1f, 1f, 1f);
+        _synergyNotification.Modulate = Colors.White;
 
         Tween tween = CreateTween();
         tween.TweenInterval(2.0f);
@@ -782,26 +531,21 @@ public partial class LevelUpScreen : CanvasLayer
     }
 
     // ==============================
-    // Common helpers
+    // Affichage
     // ==============================
 
     private void ClearCards()
     {
         foreach (Node child in _cardsContainer.GetChildren())
-        {
             child.QueueFree();
-        }
+        foreach (Node child in _actionButtons.GetChildren())
+            child.QueueFree();
         _cards.Clear();
         _cardOptions.Clear();
-        _cardRarities.Clear();
-        _hoveredCardIndex = -1;
+        _cardColors.Clear();
+        _buttons.Clear();
         _banishMode = false;
-
-        if (_actionButtons != null && IsInstanceValid(_actionButtons))
-        {
-            _actionButtons.QueueFree();
-            _actionButtons = null;
-        }
+        _hint.Visible = false;
     }
 
     private void ShowScreen()
@@ -814,19 +558,12 @@ public partial class LevelUpScreen : CanvasLayer
         GetTree().Paused = true;
         ProcessMode = ProcessModeEnum.Always;
 
-        // Play intro sound (uses UI pool that works during pause)
-        Infrastructure.AudioManager.PlayUI("sfx_level_up");
-        StartLoopAfterIntro();
-    }
-
-    private void StartLoopAfterIntro()
-    {
-        // Delay the loop start to let the intro play
+        AudioManager.PlayUI("sfx_level_up");
         SceneTreeTimer timer = GetTree().CreateTimer(1.0, processAlways: true);
         timer.Timeout += () =>
         {
             if (Visible)
-                Infrastructure.AudioManager.PlayLoop("sfx_level_up_loop", -4f);
+                AudioManager.PlayLoop("sfx_level_up_loop", -4f);
         };
     }
 
@@ -836,35 +573,12 @@ public partial class LevelUpScreen : CanvasLayer
         _rays.Visible = false;
         _panel.Visible = false;
         Visible = false;
-        Infrastructure.AudioManager.StopLoop();
-        Infrastructure.AudioManager.PlayUI("sfx_level_up_after");
-    }
-
-    private static StyleBoxTexture CreateNinePatch(Texture2D texture, int left, int top, int right, int bottom)
-    {
-        StyleBoxTexture sbt = new()
-        {
-            Texture = texture,
-            RegionRect = new Rect2(0, 0, texture.GetWidth(), texture.GetHeight()),
-            AxisStretchHorizontal = StyleBoxTexture.AxisStretchMode.Tile,
-            AxisStretchVertical = StyleBoxTexture.AxisStretchMode.Tile
-        };
-
-        sbt.TextureMarginLeft = left;
-        sbt.TextureMarginTop = top;
-        sbt.TextureMarginRight = right;
-        sbt.TextureMarginBottom = bottom;
-
-        sbt.ContentMarginLeft = left + 2;
-        sbt.ContentMarginTop = top + 2;
-        sbt.ContentMarginRight = right + 2;
-        sbt.ContentMarginBottom = bottom + 2;
-
-        return sbt;
+        AudioManager.StopLoop();
+        AudioManager.PlayUI("sfx_level_up_after");
     }
 
     // ==============================
-    // Light rays background effect
+    // Rayons de lumière (aussi utilisés par l'écran de butin)
     // ==============================
 
     internal partial class LightRaysControl : Control
@@ -883,10 +597,7 @@ public partial class LevelUpScreen : CanvasLayer
             _colorB = colorB;
         }
 
-        public void ResetAngle()
-        {
-            _angle = 0f;
-        }
+        public void ResetAngle() => _angle = 0f;
 
         public override void _Process(double delta)
         {
@@ -904,18 +615,14 @@ public partial class LevelUpScreen : CanvasLayer
             {
                 float startAngle = _angle + i * sliceAngle;
                 float endAngle = startAngle + sliceAngle * 0.5f;
-
+                float midAngle = (startAngle + endAngle) * 0.5f;
                 Color rayColor = i % 2 == 0 ? _colorA : _colorB;
 
                 Vector2 p1 = center + new Vector2(Mathf.Cos(startAngle), Mathf.Sin(startAngle)) * radius;
                 Vector2 p2 = center + new Vector2(Mathf.Cos(endAngle), Mathf.Sin(endAngle)) * radius;
-
-                // Subdivide the arc for smoother triangles
-                float midAngle = (startAngle + endAngle) * 0.5f;
                 Vector2 pMid = center + new Vector2(Mathf.Cos(midAngle), Mathf.Sin(midAngle)) * radius;
-
-                DrawColoredPolygon(new Vector2[] { center, p1, pMid }, rayColor);
-                DrawColoredPolygon(new Vector2[] { center, pMid, p2 }, rayColor);
+                DrawColoredPolygon(new[] { center, p1, pMid }, rayColor);
+                DrawColoredPolygon(new[] { center, pMid, p2 }, rayColor);
             }
         }
     }

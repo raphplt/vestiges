@@ -27,10 +27,8 @@ public partial class GameBootstrap : Node
         CharacterDataLoader.Load();
         WeaponDataLoader.Load();
         WeaponUpgradeDataLoader.Load();
-        WeaponRarityDataLoader.Load();
         PerkDataLoader.Load();
         PassiveSouvenirDataLoader.Load();
-        FusionDataLoader.Load();
         MetaSaveManager.Load();
         SouvenirDataLoader.Load();
 
