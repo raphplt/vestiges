@@ -338,6 +338,8 @@ Le prototype V1 avait des ennemis trop passifs et trop loin. En V2 :
 
 ## 11. Les Autels d'Essence
 
+> **Amendement du 26 septembre 2026 (plan 17, vague 3, direction validée par Raphaël)** : l'Autel devient le **Mémorial**. On le ravive en rassemblant ses trois éclats (20 s) ; il stabilise sa zone et offre une bénédiction à rareté, puis des services contre de l'Essence (raviver une arme au choix, Rare au moins ; soin ; lever un Oubli). Son miroir est la **Faille** : une amélioration Épique ou Légendaire contre un **Oubli** (malus durable) et un point de **Péril** (créatures plus fortes, score, XP et raretés majorés), toujours refusable. L'Appel du Vide et les malédictions disparaissent. Écart provisoire avec le paragraphe « Interaction » ci-dessous : le choix se fait sur un écran de trois cartes qui fige la run, comme le level-up (à confirmer par Raphaël).
+
 ### Concept
 
 Les Autels sont des points de mémoire concentrée — des lieux qui résistent plus longtemps à l'Effacement. Ce sont les dernières "stations" du monde oublié. Visuellement : piliers de cristal avec une aura dorée, sol plus net autour, particules d'Essence flottantes.
@@ -743,8 +745,9 @@ Le script de post-processing doit inclure une vérification/correction de l'angl
 
 ### Phase B — Autels et montée en puissance (2-3 semaines)
 
-- [x] Implémenter AltarSystem (spawn, interaction, upgrades d'armes).
+- [x] Implémenter AltarSystem (spawn, interaction, upgrades d'armes) ; refondu en Mémoriaux (plan 17 lot 3B, 26 septembre 2026).
 - [x] Raretés Commun → Légendaire, portées par les améliorations d'arme et de passif plutôt que par l'arme (décision 4.3 du [plan 17](plans/17-armes-coffres-modificateurs.md), vague 1, 26 septembre 2026).
+- [x] Risque choisi : Péril, Failles et Oublis, à la place de l'Appel du Vide et des malédictions ([plan 17](plans/17-armes-coffres-modificateurs.md) lots 3A et 3C, 26 septembre 2026).
 - [x] Rendre les armes lootables dans les coffres dès le début de run.
 - [x] Implémenter EssenceTracker (remplace l'inventaire).
 - [ ] Ajuster l'économie d'Essence (drop rates, coûts d'upgrade aux Autels).
@@ -788,7 +791,7 @@ Le script de post-processing doit inclure une vérification/correction de l'angl
 - [ ] Remplacer les Polygon2D priorité 1 (Player, ennemis principaux, projectiles).
 - [x] Remplacer les Polygon2D priorité 2 (coffres, armes, orbes).
 - [x] Tiles d'Effacement (phases visuelles des zones : Ancrée → Effacée) : shader du sol, plan 16 O1 (26 septembre 2026).
-- [ ] Sprites des Autels.
+- [x] Sprites des Autels : Mémorial (endormi, ravivé), éclat et Faille, procéduraux (plan 17 lot 3B, 26 septembre 2026).
 - [ ] Sprites des Résurgents (ennemis de Résurgence).
 - [x] Hub visuel (camp du Foyer vivant, validé par Raphaël le 26 septembre 2026, plan 04).
 - [ ] Musiques adaptatives (5-6 tracks).

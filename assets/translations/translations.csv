@@ -81,6 +81,16 @@ MEMORIAL_HEAL_LINE,+{0} % des PV,+{0}% HP
 MEMORIAL_ESSENCE,Essence : {0},Essence: {0}
 MEMORIAL_LEAVE,Partir,Leave
 MEMORIAL_HEALED,Le corps se souvient,The body remembers
+LANDMARK_RIFT,Faille,Rift
+RIFT_PROMPT,Sonder,Reach in
+RIFT_TITLE,FAILLE,RIFT
+RIFT_SUBTITLE,L'Effacement rend ce qu'il a pris. Pas pour rien.,The Erasure gives back what it took. At a price.
+RIFT_REFUSE,Refuser,Refuse
+RIFT_OUBLI_LINE,Oubli : {0} · {1},Forgetting: {0} · {1}
+RIFT_PERIL_LINE,Péril +{0},Peril +{0}
+MEMORIAL_LIFT_TAG,Lever un Oubli,Lift a Forgetting
+MEMORIAL_LIFT_TITLE,Se rappeler : {0},Remember: {0}
+MEMORIAL_LIFTED,{0} : levé,{0}: lifted
 BLESSING_BREATH,Souffle retrouvé,Breath Regained
 BLESSING_SURE_HAND,Geste sûr,Sure Hand
 BLESSING_LIGHT_STEP,Pas léger,Light Step

@@ -123,8 +123,12 @@ public partial class GameBootstrap : Node
         sceneRoot.AddChild(choiceScreen);
 
         MemorialDirector memorialDirector = new() { Name = "MemorialDirector" };
-        memorialDirector.Setup(choiceScreen, essenceTracker, erasureManager);
+        memorialDirector.Setup(choiceScreen, essenceTracker, erasureManager, perilManager);
         sceneRoot.AddChild(memorialDirector);
+
+        RiftDirector riftDirector = new() { Name = "RiftDirector" };
+        riftDirector.Setup(choiceScreen, perilManager, erasureManager);
+        sceneRoot.AddChild(riftDirector);
 
         QuestManager questManager = new() { Name = "QuestManager" };
         sceneRoot.AddChild(questManager);

@@ -41,6 +41,7 @@ public partial class WeaponRegression : Node2D
             CheckSingleLevel();
             CheckBanishUpgrade();
             CheckRarityDistribution();
+            CheckOubliRoundTrip();
             CheckUpgradeGains();
             CheckRangeAndZone();
 
@@ -136,6 +137,26 @@ public partial class WeaponRegression : Node2D
     }
 
     /// <summary>10 000 tirages : les poids de base sont respectés, et l'oubli de la zone fait monter les raretés.</summary>
+    /// <summary>Oubli de PV max pris à bas PV puis levé : la stat revient exactement, sans PV gagnés au passage.</summary>
+    private void CheckOubliRoundTrip()
+    {
+        PerilManager peril = new();
+        StatEffectData thinBlood = OubliDataLoader.All[0];
+        foreach (StatEffectData oubli in OubliDataLoader.All)
+            if (oubli.Stat == "max_hp")
+                thinBlood = oubli;
+        float maxBefore = _player.EffectiveMaxHp;
+        _player.TakeDamage(maxBefore - 3f);
+        float hpBefore = _player.CurrentHp;
+        peril.AddOubli(thinBlood, _player);
+        float maxDuring = _player.EffectiveMaxHp;
+        peril.LiftOubli(peril.Oublis[0], _player);
+        Check(maxDuring < maxBefore && Mathf.IsEqualApprox(_player.EffectiveMaxHp, maxBefore) && _player.CurrentHp <= hpBefore + 0.01f,
+            $"Oubli {thinBlood.Id} pris à {hpBefore:0} PV puis levé : PV max {maxBefore:0} → {maxDuring:0} → {_player.EffectiveMaxHp:0}, PV {hpBefore:0} → {_player.CurrentHp:0}");
+        _player.Heal(maxBefore);
+        peril.Free();
+    }
+
     private void CheckRarityDistribution()
     {
         RandomNumberGenerator rng = new() { Seed = 17 };

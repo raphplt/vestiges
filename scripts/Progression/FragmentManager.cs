@@ -286,27 +286,7 @@ public partial class FragmentManager : Node
 
 		string fragmentId = option.Id;
 		string fragmentType = option.Type;
-		bool success = false;
-
-		switch (fragmentType)
-		{
-			case "weapon_new":
-				WeaponData weaponData = WeaponDataLoader.Get(fragmentId);
-				if (weaponData != null)
-					success = _player.AddWeapon(weaponData);
-				break;
-			case "weapon_upgrade":
-				success = _player.UpgradeWeapon(fragmentId, option.WeaponGains);
-				break;
-			case "passive_new":
-				success = _player.AddOrUpgradePassive(fragmentId, 1f, 1);
-				break;
-			case "passive_upgrade":
-				success = _player.AddOrUpgradePassive(fragmentId, option.PassiveGain, option.PassiveLevels);
-				break;
-		}
-
-		if (!success)
+		if (!option.ApplyTo(_player))
 		{
 			// L'offre a vieilli pendant l'écran (arme ramassée, emplacements pleins) : sans nouvelle offre,
 			// l'écran fermé laissait le jeu en pause pour de bon.
@@ -341,24 +321,7 @@ public partial class FragmentManager : Node
 			?.GetZonePhaseAt(_player.GlobalPosition) ?? ErasureManager.ErasureZonePhase.Anchored;
 		UpgradeRarity rarity = UpgradeRoller.RollRarity(UpgradeRoller.BumpSteps(_player.LuckBonus, phase, _peril), _rng);
 
-		if (option.Type == "weapon_upgrade")
-		{
-			foreach (WeaponInstance weapon in _player.WeaponSlots)
-				if (weapon.Id == option.Id)
-					return option.WithWeaponUpgrade(rarity, UpgradeRoller.RollWeaponGains(weapon, rarity, _rng));
-			return option;
-		}
-
-		foreach (ActivePassiveSouvenir passive in _player.PassiveSlots)
-		{
-			if (passive.Id != option.Id)
-				continue;
-			// Les stats entières (projectiles, perçage) ne se multiplient pas : les grandes raretés y sautent un niveau de plus.
-			bool integer = passive.Data.ModifierType == "additive" && passive.Data.Stat is "projectile_count" or "projectile_pierce";
-			int levels = integer && rarity.Milestones > 0 ? 2 : 1;
-			return option.WithPassiveUpgrade(rarity, integer ? 1f : rarity.PassiveGain, levels);
-		}
-		return option;
+		return UpgradeRoller.RollGains(option, _player, rarity, _rng);
 	}
 
 	private List<FragmentOption> PickRandom(List<FragmentOption> pool, int count)
@@ -473,4 +436,23 @@ public class FragmentOption
 
 	public FragmentOption WithPassiveUpgrade(UpgradeRarity rarity, float gain, int levels) =>
 		new(Id, Type, DisplayName, SortWeight) { Rarity = rarity, PassiveGain = gain, PassiveLevels = levels };
+
+	/// <summary>Donne le fragment au joueur ; faux si l'offre a vieilli (arme déjà là, emplacements pleins, maximum).</summary>
+	public bool ApplyTo(Player player)
+	{
+		switch (Type)
+		{
+			case "weapon_new":
+				WeaponData weaponData = WeaponDataLoader.Get(Id);
+				return weaponData != null && player.AddWeapon(weaponData);
+			case "weapon_upgrade":
+				return player.UpgradeWeapon(Id, WeaponGains);
+			case "passive_new":
+				return player.AddOrUpgradePassive(Id, 1f, 1);
+			case "passive_upgrade":
+				return player.AddOrUpgradePassive(Id, PassiveGain, PassiveLevels);
+			default:
+				return false;
+		}
+	}
 }

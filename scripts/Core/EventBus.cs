@@ -96,6 +96,9 @@ public partial class EventBus : Node
     /// <summary>Un Mémorial vient d'être ravivé : la zone autour se souvient.</summary>
     [Signal] public delegate void MemorialAwakenedEventHandler(Vector2 position);
 
+    // --- Failles (plan 17 lot 3C) ---
+    [Signal] public delegate void RiftInteractedEventHandler(Node2D rift);
+
     // --- Essence (V2) ---
     [Signal] public delegate void EssenceChangedEventHandler(int newAmount);
 }

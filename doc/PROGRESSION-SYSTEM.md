@@ -32,7 +32,8 @@ Les perks de stats (« +15 % dégâts », « +20 PV »…) ne passent pas par le
 
 - **Coffres** : 23 par carte, sur toute la carte, signalés par une colonne de lumière à la couleur de leur rareté. Ils donnent Essence, XP, armes (avec rareté), perks et Souvenirs.
 - **Micro-événements et élites** : coffres de récompense.
-- **Autels** : l'Essence y améliore une arme (refondus en Mémoriaux, vague 3 du plan 17).
+- **Mémoriaux** (cinq par carte) : trois éclats à rassembler les raniment ; bénédiction à rareté, puis services contre de l'Essence (raviver une arme au choix, Rare au moins ; soin ; lever un Oubli).
+- **Failles** : une amélioration Épique ou Légendaire contre un **Oubli** (malus durable) et un point de **Péril**. Toujours refusable. D'autres s'ouvrent là où le monde s'efface.
 
 Les perks s'empilent sans emplacement. Explorer et ouvrir des coffres rend objectivement plus fort, sans alourdir l'écran de niveau. Le tirage exclut les perks liés à des systèmes absents et les passifs d'autres personnages.
 
@@ -57,6 +58,8 @@ Les **fusions** (arme et passif au maximum → arme évoluée) sont détectées 
 | Armes | 4 | Level-up, coffres, élites | Oui, en reprenant la même arme |
 | Souvenirs passifs | 4 | Level-up | Oui, en reprenant le même passif |
 | Perks | Sans limite | Coffres, événements | Non ; plusieurs exemplaires se cumulent |
+| Bénédictions | Sans limite | Mémoriaux | Non |
+| Oublis | Sans limite | Failles | Levés au Mémorial |
 
 ---
 
@@ -64,9 +67,9 @@ Les **fusions** (arme et passif au maximum → arme évoluée) sont détectées 
 
 - **Level-up à raretés** : chaque amélioration tire une rareté (Commun à Légendaire) qui fixe l'ampleur du gain et le nombre de stats touchées ; la carte montre « avant → après ».
 - **Stats montables par arme** en données, au lieu d'une table commune ; plafond de niveau en données.
-- **Chance et Péril** : la Chance pèse sur tous les tirages ; le Péril échange difficulté contre récompense.
-- **L'oubli comme monnaie du risque** : plus la zone est oubliée, plus les raretés montent.
-- La rareté des armes elles-mêmes (Stratégie V2 §10) est une décision en attente (plan 17 §4.3).
+- **Chance et Péril** (livrés, vague 3) : la Chance, l'oubli de la zone et le Péril font monter la rareté de tous les tirages (level-up, Mémorial, Faille). Le Péril renforce aussi les créatures et majore XP et score (`data/scaling/peril.json`).
+- **L'oubli comme monnaie du risque** (livré) : plus la zone est oubliée, plus les raretés montent.
+- La rareté ne vit que sur les améliorations, pas sur l'arme (décision du 26 septembre, plan 17 §4.3).
 
 ---
 

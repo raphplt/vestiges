@@ -251,7 +251,7 @@ public partial class ErasureManager : Node
         return new Vector2(cell.X * _cellSize, cell.Y * _cellSize);
     }
 
-    private Vector2 CellCenterToWorld(Vector2I cell)
+    public Vector2 CellCenterToWorld(Vector2I cell)
     {
         return CellToWorld(cell) + new Vector2(_cellSize * 0.5f, _cellSize * 0.5f);
     }

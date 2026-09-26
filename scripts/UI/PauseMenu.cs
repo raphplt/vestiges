@@ -370,7 +370,11 @@ public partial class PauseMenu : CanvasLayer
 		if (essenceTracker != null)
 			AddLine(_sheetContainer, "Essence", essenceTracker.CurrentEssence.ToString());
 		if (GetNodeOrNull<PerilManager>("/root/Main/PerilManager") is { } peril)
+		{
 			AddPerilLines(peril.Peril);
+			foreach (ActiveOubli oubli in peril.Oublis)
+				AddLine(_sheetContainer, "  " + Tr(oubli.Data.NameKey), oubli.Modifier.Describe(), PerilColor);
+		}
 	}
 
 	/// <summary>Péril : le niveau, puis ce qu'il coûte et ce qu'il rapporte.</summary>

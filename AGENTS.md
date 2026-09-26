@@ -30,8 +30,8 @@ Consulter la Stratégie V2 avant de proposer une feature ou un changement archit
 | Smoke test (build + import + boot headless ~10 s) | `tools/smoke_test.sh [frames]` |
 | Lancer le jeu | `godot-mono --path .` (la version doit correspondre à `Vestiges.csproj`) ; profil dev tout débloqué : `tools/run_dev.sh` |
 | Régressions | `tools/test_movement.sh`, `tools/test_enemy_abilities.sh`, `tools/test_weapons.sh`, `tools/test_dev_mode.sh` |
-| Captures en vraie run (1080p, bot invincible) | `tools/capture_run.sh <dossier> [secondes] [intervalle] [résolution] [seed]` ; modes via `CAPTURE_EXTRA_ARGS` : `--event <id>`, `--capture-map`, `--capture-props [--hide-collisions]`, `--capture-bestiary`, `--capture-chests` ; `--nomad` fait garder un cap au bot |
-| Mesure de densité sans rendu (ennemis, niveaux, coffres vus), temps de jeu accéléré | `tools/measure_run.sh <dossier> [secondes] ["seeds"]` ; `MEASURE_EXTRA_ARGS="--nomad"`, `MEASURE_JOBS=2` ; un avant/après se mesure des deux côtés avec ce même outil |
+| Captures en vraie run (1080p, bot invincible) | `tools/capture_run.sh <dossier> [secondes] [intervalle] [résolution] [seed]` ; modes via `CAPTURE_EXTRA_ARGS` : `--event <id>`, `--capture-map`, `--capture-props [--hide-collisions]`, `--capture-bestiary`, `--capture-chests`, `--capture-memorial`, `--capture-rift` ; `--nomad` fait garder un cap au bot |
+| Mesure de densité sans rendu (ennemis, niveaux, coffres vus), temps de jeu accéléré | `tools/measure_run.sh <dossier> [secondes] ["seeds"]` ; `MEASURE_EXTRA_ARGS="--nomad"` (ou `"--peril 5"`), `MEASURE_JOBS=2` ; un avant/après se mesure des deux côtés avec ce même outil |
 | Captures de l'accueil (Hub) | `tools/capture_hub.sh <dossier> [actions]` : capture après chaque action d'input rejouée (ex. `ui_right,ui_down,ui_accept`) ; profil dev par défaut, `HUB_DEV=" "` pour un profil neuf ; fenêtre réelle, ne pas cliquer ni taper dedans pendant la capture |
 | Banc de combat dense (120 ennemis, FPS, nœuds créés/s) | `BENCH_REPEATS=1 BENCH_SECONDS=15 tools/benchmark_movement.sh <dossier neuf>` ; synthèse : `python3 tools/summarize_movement_benchmark.py <dossier>` |
 | Comparaison A/B de performance | `tools/bench_ab.sh <ref de base> <dossier neuf> [passes]` (refuse de mesurer si la machine est chargée) |
@@ -66,8 +66,8 @@ vestiges/
 ├── scripts/                 # C# par système (namespace Vestiges.<Dossier>)
 │   ├── Core/                # Player, GameManager, EventBus, GroupCache
 │   ├── Combat/              # Ennemis, armes, projectiles, VFX, CombatPools, sprite loaders
-│   ├── Progression/         # Perks, quêtes, Essence, fragments, objets maudits
-│   ├── World/               # Génération (biomes en mosaïque), décors (EnvironmentProp, placeurs, manifeste), Effacement, Autels, POI, coffres, lore
+│   ├── Progression/         # Perks, quêtes, Essence, fragments, raretés d'amélioration, Péril et Oublis
+│   ├── World/               # Génération (biomes en mosaïque), décors (EnvironmentProp, placeurs, manifeste), Effacement, coffres, Mémoriaux, Failles, POI, lore
 │   ├── Events/              # Résurgences (CrisisManager), micro-événements (RunEventDirector), endgame
 │   ├── Spawn/               # SpawnManager, EnemyPool
 │   ├── Meta/                # Souvenirs, persistance cross-run

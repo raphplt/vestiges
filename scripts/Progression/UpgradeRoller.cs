@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Godot;
 using Vestiges.Combat;
+using Vestiges.Core;
 using Vestiges.Infrastructure;
 using Vestiges.World;
 
@@ -118,6 +119,31 @@ public static class UpgradeRoller
 		for (int i = 0; i < milestoneCount; i++)
 			gains.Add(new StatGain(milestones[rng.RandiRange(0, milestones.Count - 1)], 1f, true));
 		return gains;
+	}
+
+	/// <summary>
+	/// Gains d'une amélioration (arme ou passif possédés) à la rareté donnée. Les stats entières d'un passif
+	/// (projectiles, perçage) ne se multiplient pas : les grandes raretés y sautent un niveau de plus.
+	/// </summary>
+	public static FragmentOption RollGains(FragmentOption option, Player player, UpgradeRarity rarity, RandomNumberGenerator rng)
+	{
+		if (option.Type == "weapon_upgrade")
+		{
+			foreach (WeaponInstance weapon in player.WeaponSlots)
+				if (weapon.Id == option.Id)
+					return option.WithWeaponUpgrade(rarity, RollWeaponGains(weapon, rarity, rng));
+			return option;
+		}
+
+		foreach (ActivePassiveSouvenir passive in player.PassiveSlots)
+		{
+			if (passive.Id != option.Id)
+				continue;
+			bool integer = passive.Data.ModifierType == "additive" && passive.Data.Stat is "projectile_count" or "projectile_pierce";
+			int levels = integer && rarity.Milestones > 0 ? 2 : 1;
+			return option.WithPassiveUpgrade(rarity, integer ? 1f : rarity.PassiveGain, levels);
+		}
+		return option;
 	}
 
 	private static string WeightedPick(Dictionary<string, float> weights, RandomNumberGenerator rng)

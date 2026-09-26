@@ -1379,6 +1379,9 @@ public partial class Player : CharacterBody2D
 
     // --- Health ---
 
+    /// <summary>Ramène les PV courants à <paramref name="max"/> au plus, sans dégât ni événement (levée d'un Oubli).</summary>
+    public void CapCurrentHp(float max) => _currentHp = Mathf.Min(_currentHp, max);
+
     public void Heal(float amount)
     {
         if (_isDead || amount <= 0)

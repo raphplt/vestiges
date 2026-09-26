@@ -27,12 +27,32 @@ public class MemorialConfig
     public int HealCost = 20;
     public float HealPercent = 0.4f;
     public float CostGrowth = 0.5f;
+    public int LiftOubliCost = 40;
 }
 
-/// <summary>Lieux du monde à trouver hors coffres (data/world/landmarks.json).</summary>
+/// <summary>Réglages des Failles (section <c>rift</c> de data/world/landmarks.json).</summary>
+public class RiftConfig
+{
+    public string SpriteOpen;
+    public string SpriteClosed;
+    public List<LandmarkBand> Placement = new();
+    public float MinSpacingPx = 700f;
+    public float HoldTime = 0.8f;
+    public int Offers = 3;
+    public string OfferMinRarity = "epic";
+    public int PerilPerOffer = 1;
+    public int MaxOpen = 6;
+    public float SpawnChance = 0.08f;
+    public float SpawnCooldown = 45f;
+    public float SpawnDistanceMin = 500f;
+    public float SpawnDistanceMax = 1400f;
+}
+
+/// <summary>Lieux du monde à trouver hors coffres : Mémoriaux et Failles (data/world/landmarks.json).</summary>
 public static class LandmarkDataLoader
 {
     private static MemorialConfig _memorial;
+    private static RiftConfig _rift;
 
     public static MemorialConfig Memorial
     {
@@ -44,9 +64,20 @@ public static class LandmarkDataLoader
         }
     }
 
+    public static RiftConfig Rift
+    {
+        get
+        {
+            if (_rift == null)
+                Load();
+            return _rift;
+        }
+    }
+
     private static void Load()
     {
         _memorial = new MemorialConfig();
+        _rift = new RiftConfig();
         using FileAccess file = FileAccess.Open("res://data/world/landmarks.json", FileAccess.ModeFlags.Read);
         Json json = new();
         if (file == null || json.Parse(file.GetAsText()) != Error.Ok)
@@ -55,7 +86,8 @@ public static class LandmarkDataLoader
             return;
         }
 
-        Godot.Collections.Dictionary memorial = json.Data.AsGodotDictionary()["memorial"].AsGodotDictionary();
+        Godot.Collections.Dictionary root = json.Data.AsGodotDictionary();
+        Godot.Collections.Dictionary memorial = root["memorial"].AsGodotDictionary();
         MemorialConfig c = _memorial;
         c.SpriteDormant = memorial["sprite_dormant"].AsString();
         c.SpriteAwake = memorial["sprite_awake"].AsString();
@@ -80,6 +112,28 @@ public static class LandmarkDataLoader
         c.HealCost = (int)Float(services, "heal_cost", c.HealCost);
         c.HealPercent = Float(services, "heal_percent", c.HealPercent);
         c.CostGrowth = Float(services, "cost_growth", c.CostGrowth);
+        c.LiftOubliCost = (int)Float(services, "lift_oubli_cost", c.LiftOubliCost);
+
+        Godot.Collections.Dictionary rift = root["rift"].AsGodotDictionary();
+        RiftConfig r = _rift;
+        r.SpriteOpen = rift["sprite_open"].AsString();
+        r.SpriteClosed = rift["sprite_closed"].AsString();
+        r.Placement = ReadBands(rift["placement"].AsGodotArray());
+        r.MinSpacingPx = Float(rift, "min_spacing_px", r.MinSpacingPx);
+        r.HoldTime = Float(rift, "hold_time", r.HoldTime);
+        r.Offers = (int)Float(rift, "offers", r.Offers);
+        r.OfferMinRarity = rift.ContainsKey("offer_min_rarity") ? rift["offer_min_rarity"].AsString() : r.OfferMinRarity;
+        r.PerilPerOffer = (int)Float(rift, "peril_per_offer", r.PerilPerOffer);
+        Godot.Collections.Dictionary spawn = rift.ContainsKey("erased_spawn") ? rift["erased_spawn"].AsGodotDictionary() : new();
+        r.MaxOpen = (int)Float(spawn, "max_open", r.MaxOpen);
+        r.SpawnChance = Float(spawn, "chance", r.SpawnChance);
+        r.SpawnCooldown = Float(spawn, "cooldown_s", r.SpawnCooldown);
+        if (spawn.ContainsKey("distance_px"))
+        {
+            Godot.Collections.Array distance = spawn["distance_px"].AsGodotArray();
+            r.SpawnDistanceMin = (float)distance[0].AsDouble();
+            r.SpawnDistanceMax = (float)distance[1].AsDouble();
+        }
     }
 
     /// <summary>Réglage optionnel : la valeur par défaut du modèle quand la clé manque.</summary>

@@ -25,6 +25,7 @@ namespace Vestiges.Tests;
 /// --capture-weapons [--weapons a,b] : galerie des attaques du joueur (RunObservation.Weapons.cs).
 /// --capture-chests : chaque coffre cadré, avec et sans décors (RunObservation.Chests.cs).
 /// --capture-levelup : l'écran de level-up, une capture par rareté (RunObservation.LevelUp.cs).
+/// --capture-rift : offre d'une Faille, Péril et Oubli dans la pause, Oubli levé au Mémorial (RunObservation.Landmarks.cs).
 /// --capture-memorial : parcours complet d'un Mémorial, du réveil aux services (RunObservation.Landmarks.cs).
 /// --loot-draws N : tirages de butin de chaque coffre, sans les appliquer (RunObservation.Chests.cs).
 /// --capture-bestiary : gros plans des créatures du pilote de sprites procéduraux, autour du joueur immobile.
@@ -87,6 +88,8 @@ public partial class RunObservation : Node
                 await CapturePause();
             else if (Array.IndexOf(args, "--capture-memorial") >= 0)
                 await CaptureMemorial();
+            else if (Array.IndexOf(args, "--capture-rift") >= 0)
+                await CaptureRift();
             else if (Array.IndexOf(args, "--loot-draws") >= 0)
                 MeasureLootDraws(int.Parse(Argument(args, "--loot-draws", "1000"), CultureInfo.InvariantCulture));
             else if (Array.IndexOf(args, "--capture-bestiary") >= 0)
@@ -395,6 +398,11 @@ public partial class RunObservation : Node
         summary.Append(CultureInfo.InvariantCulture, $"seed={seed} seconds={seconds:F0} first_visible_s={firstVisible:F0}");
         summary.Append(CultureInfo.InvariantCulture, $" view={VisibleWorldRect().Size.X:F0}x{VisibleWorldRect().Size.Y:F0}");
         summary.Append(CultureInfo.InvariantCulture, $" first_hit_s={firstHit:F1} damage_10s={damage10:F0} damage_30s={damage30:F0}");
+        int openRifts = 0;
+        foreach (Rift rift in Rift.All)
+            if (rift.IsOpen)
+                openRifts++;
+        summary.Append(CultureInfo.InvariantCulture, $" rifts={Rift.All.Count} rifts_open={openRifts}");
         summary.Append(CultureInfo.InvariantCulture, $" peril={peril} kills={tracker.TotalKilled} spawned={tracker.TotalSpawned}");
         summary.Append(CultureInfo.InvariantCulture,
             $" chests_total={GetTree().GetNodesInGroup("chests").Count} chests_seen={seenChests.Count} chests_clear={clearChests.Count} chests_signaled={signaledChests.Count} first_chest_s={firstChestSeen:F0}");

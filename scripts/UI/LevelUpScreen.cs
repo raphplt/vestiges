@@ -21,7 +21,6 @@ public partial class LevelUpScreen : CanvasLayer
     private static readonly Color TextLight = ChoiceStyle.TextLight;
     private static readonly Color TextColor = ChoiceStyle.TextColor;
     private static readonly Color TextDim = ChoiceStyle.TextDim;
-    private static readonly Color GainColor = ChoiceStyle.GainColor;
     private static readonly Color NeutralBorder = ChoiceStyle.NeutralBorder;
     private static readonly Color OverlayColor = ChoiceStyle.OverlayColor;
     private static readonly Color BanishColor = new(0.85f, 0.25f, 0.2f);
@@ -236,71 +235,13 @@ public partial class LevelUpScreen : CanvasLayer
         }
 
         text.AddChild(MakeLabel(choice.DisplayName, 16, TextLight, false));
-        foreach ((string line, Color color) in DescribeChoice(choice, player))
+        foreach ((string line, Color color) in UpgradeText.Describe(choice, player))
             text.AddChild(MakeLabel(line, 14, color, false));
 
         _cards.Add(card);
         _cardColors.Add(frame);
         _cardsContainer.AddChild(card);
         StyleCard(index, false);
-    }
-
-    /// <summary>Lignes de la carte : ce qui change (amélioration) ou ce que fait la nouveauté.</summary>
-    private static List<(string, Color)> DescribeChoice(FragmentOption choice, Player player)
-    {
-        List<(string, Color)> lines = new();
-        switch (choice.Type)
-        {
-            case "weapon_new":
-            {
-                WeaponData weapon = WeaponDataLoader.Get(choice.Id);
-                string family = TranslationServer.Translate(weapon?.Type == "melee" ? "LEVELUP_MELEE" : "LEVELUP_RANGED");
-                lines.Add(($"{weapon?.Summary}   ▸ {family}", TextColor));
-                break;
-            }
-            case "weapon_upgrade":
-            {
-                WeaponInstance weapon = FindWeapon(player, choice.Id);
-                if (weapon == null)
-                    break;
-                WeaponInstance after = weapon.PreviewWith(choice.WeaponGains);
-                foreach (StatGain gain in choice.WeaponGains)
-                    lines.Add((DescribeStat(gain.Stat, player.GetWeaponStatForDisplay(weapon, gain.Stat),
-                        player.GetWeaponStatForDisplay(after, gain.Stat)), GainColor));
-                break;
-            }
-            case "passive_new":
-            {
-                PassiveSouvenirData passive = PassiveSouvenirDataLoader.Get(choice.Id);
-                if (passive?.PerLevel is { Length: > 0 })
-                    lines.Add(($"{StatCatalog.Name(passive.Stat)}  {StatCatalog.FormatBonus(passive.Stat, passive.PerLevel[0], passive.ModifierType == "multiplicative")}", GainColor));
-                break;
-            }
-            case "passive_upgrade":
-            {
-                ActivePassiveSouvenir passive = FindPassive(player, choice.Id);
-                if (passive == null)
-                    break;
-                bool multiplicative = passive.Data.ModifierType == "multiplicative";
-                float next = passive.PreviewModifier(choice.PassiveGain, choice.PassiveLevels);
-                lines.Add(($"{StatCatalog.Name(passive.Data.Stat)}  {StatCatalog.FormatBonus(passive.Data.Stat, passive.Modifier, multiplicative)}"
-                    + $"  →  {StatCatalog.FormatBonus(passive.Data.Stat, next, multiplicative)}", GainColor));
-                break;
-            }
-        }
-        return lines;
-    }
-
-    /// <summary>« Dégâts  14,2 → 16,8  +18 % » ; « Portée  +6 % » pour une stat qui ne se lit qu'en pourcentage.</summary>
-    private static string DescribeStat(string stat, float before, float after)
-    {
-        string name = StatCatalog.Name(stat);
-        return StatCatalog.Display(stat) switch
-        {
-            StatDisplay.Percent => $"{name}  {StatCatalog.FormatGain(before, after)}",
-            StatDisplay.Count => $"{name}  {StatCatalog.Format(stat, before)} → {StatCatalog.Format(stat, after)}",
-            _ => $"{name}  {StatCatalog.Format(stat, before)} → {StatCatalog.Format(stat, after)}   {StatCatalog.FormatGain(before, after)}",
-        };
     }
 
     private static Texture2D LoadIcon(FragmentOption choice, bool isWeapon)
@@ -312,26 +253,6 @@ public partial class LevelUpScreen : CanvasLayer
             return null;
         string resPath = path.StartsWith("res://") ? path : $"res://{path}";
         return ResourceLoader.Exists(resPath) ? GD.Load<Texture2D>(resPath) : null;
-    }
-
-    private static WeaponInstance FindWeapon(Player player, string id)
-    {
-        if (player == null)
-            return null;
-        foreach (WeaponInstance weapon in player.WeaponSlots)
-            if (weapon.Id == id)
-                return weapon;
-        return null;
-    }
-
-    private static ActivePassiveSouvenir FindPassive(Player player, string id)
-    {
-        if (player == null)
-            return null;
-        foreach (ActivePassiveSouvenir passive in player.PassiveSlots)
-            if (passive.Id == id)
-                return passive;
-        return null;
     }
 
     private static Label MakeLabel(string text, int size, Color color, bool expand, HorizontalAlignment align = HorizontalAlignment.Left) =>

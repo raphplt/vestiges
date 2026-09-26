@@ -19,6 +19,7 @@ public partial class MemorialDirector : Node
     private const uint PropCollisionLayer = 4;
     private const string ServiceWeapon = "weapon";
     private const string ServiceHeal = "heal";
+    private const string ServiceLift = "lift";
 
     private readonly MemorialConfig _config = LandmarkDataLoader.Memorial;
     private readonly RandomNumberGenerator _rng = new();
@@ -26,20 +27,21 @@ public partial class MemorialDirector : Node
     private ChoiceScreen _choices;
     private EssenceTracker _essence;
     private ErasureManager _erasure;
+    private PerilManager _peril;
     private WorldSetup _world;
     private EventBus _eventBus;
     private Player _player;
-    private int _peril;
     private Memorial _gathering;
     private float _gatherRemaining;
     private int _collected;
     private float _lossTimer = LossCheckInterval;
 
-    public void Setup(ChoiceScreen choices, EssenceTracker essence, ErasureManager erasure)
+    public void Setup(ChoiceScreen choices, EssenceTracker essence, ErasureManager erasure, PerilManager peril)
     {
         _choices = choices;
         _essence = essence;
         _erasure = erasure;
+        _peril = peril;
     }
 
     public override void _Ready()
@@ -48,7 +50,6 @@ public partial class MemorialDirector : Node
         _world = GetParent<WorldSetup>();
         _eventBus = GetNode<EventBus>("/root/EventBus");
         _eventBus.MemorialInteracted += OnMemorialInteracted;
-        _eventBus.PerilChanged += OnPerilChanged;
     }
 
     public override void _ExitTree()
@@ -56,10 +57,7 @@ public partial class MemorialDirector : Node
         if (_eventBus == null)
             return;
         _eventBus.MemorialInteracted -= OnMemorialInteracted;
-        _eventBus.PerilChanged -= OnPerilChanged;
     }
-
-    private void OnPerilChanged(int peril) => _peril = peril;
 
     public override void _Process(double delta)
     {
@@ -264,6 +262,24 @@ public partial class MemorialDirector : Node
         cards.Add(heal);
         actions.Add(() => Heal(memorial, healCost));
 
+        // Lever un Oubli (lot 3C) : le malus s'efface, le Péril gagné à la Faille reste.
+        int liftCost = Price(_config.LiftOubliCost, memorial.ServiceUses(ServiceLift));
+        foreach (ActiveOubli oubli in _peril.Oublis)
+        {
+            ChoiceCard card = new()
+            {
+                Tag = Tr("MEMORIAL_LIFT_TAG").ToUpper(),
+                Frame = RarityPalette.Main("rift"),
+                Title = string.Format(Tr("MEMORIAL_LIFT_TITLE"), Tr(oubli.Data.NameKey)),
+                Price = string.Format(Tr("MEMORIAL_PRICE"), liftCost),
+                Enabled = essence >= liftCost,
+            };
+            card.Lines.Add((oubli.Modifier.Describe(), ChoiceStyle.LossColor));
+            cards.Add(card);
+            ActiveOubli target = oubli;
+            actions.Add(() => LiftOubli(memorial, target, liftCost));
+        }
+
         string subtitle = string.Format(Tr("MEMORIAL_ESSENCE"), essence);
         if (!string.IsNullOrEmpty(lastResult))
             subtitle = $"{lastResult}   ·   {subtitle}";
@@ -298,6 +314,15 @@ public partial class MemorialDirector : Node
         OpenServices(memorial, Tr("MEMORIAL_HEALED"));
     }
 
+    private void LiftOubli(Memorial memorial, ActiveOubli oubli, int cost)
+    {
+        if (!_essence.TrySpend(cost))
+            return;
+        _peril.LiftOubli(oubli, _player);
+        memorial.RecordServiceUse(ServiceLift);
+        OpenServices(memorial, string.Format(Tr("MEMORIAL_LIFTED"), Tr(oubli.Data.NameKey)));
+    }
+
     private int Price(int baseCost, int uses) => Mathf.RoundToInt(baseCost * (1f + _config.CostGrowth * uses));
 
     // ==============================
@@ -329,7 +354,7 @@ public partial class MemorialDirector : Node
     private float BumpSteps(Vector2 position)
     {
         ErasureManager.ErasureZonePhase phase = _erasure?.GetZonePhaseAt(position) ?? ErasureManager.ErasureZonePhase.Anchored;
-        return UpgradeRoller.BumpSteps(_player.LuckBonus, phase, _peril);
+        return UpgradeRoller.BumpSteps(_player.LuckBonus, phase, _peril.Peril);
     }
 
     private static ChoiceCard RarityCard(UpgradeRarity rarity, string title) => new()

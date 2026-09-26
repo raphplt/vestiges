@@ -498,6 +498,19 @@ Socle commun posé pour la suite : `IInteractable` et son registre (coffres, Mé
 
 Vérifié : build sans avertissement, smoke test, `tools/test_weapons.sh` (« arme ravivée Rare au moins »), `tools/test_movement.sh`, capture `CAPTURE_EXTRA_ARGS="--capture-memorial"` regardée (invite, éclats, bénédictions, services avant et après achat, stèle ravivée). Deux défauts vus et corrigés : la colonne du Mémorial traversait le compteur d'éclats, et l'invite des services portait le même nom que le soin.
 
+**3C livré (26 septembre, nuit).** Trois Failles au départ (couronne 0,25–0,9), violettes, au ras du sol. « Sonder » ouvre trois offres : une amélioration Épique ou Légendaire d'une arme ou d'un passif possédés, chacune avec son **Oubli** (malus durable, huit dans `data/progression/oublis.json`) et +1 Péril ; « Refuser » laisse la Faille ouverte. Une offre acceptée referme la Faille. Avec peu de cibles (une arme en début de run), la même arme revient avec d'autres gains et un autre Oubli, pour garder un choix. Quand une zone devient Effacée entre 500 et 1 400 px du joueur, une Faille s'y ouvre avec 8 % de chance, au plus une toutes les 45 s et six ouvertes à la fois. Au Mémorial, « Se rappeler » lève un Oubli (40 Essence, +50 % par usage) ; le Péril reste. La fiche de pause liste les Oublis sous le Péril.
+
+Extraits en route : `FragmentOption.ApplyTo` (appliquer une amélioration), `UpgradeRoller.RollGains` (gains à une rareté donnée), `UpgradeText` (lignes « avant → après »), partagés par le level-up et la Faille.
+
+Vérifié : build sans avertissement, smoke test, `tools/test_weapons.sh`, `tools/test_movement.sh`, capture `--capture-rift` regardée (Faille ouverte et refermée, offre, fiche de pause avec Péril 1 et l'Oubli, levée au Mémorial : Oublis 0 → 1 → 0). Mesure headless `--nomad`, 2 graines × 15 min : 1 et 3 Failles ouvertes dans les zones Effacées, aucune erreur. Relecture `godot-reviewer` : deux défauts corrigés. Un Oubli de PV max pris à 1 PV rendait plus de PV qu'il n'en avait pris une fois levé (lever un Oubli rend la stat, jamais de PV ; contrôle ajouté à `tools/test_weapons.sh`). Une Faille pouvait s'ouvrir sur une autre (écart minimal appliqué aussi aux ouvertures).
+
+**Écarts et questions pour la recette :**
+- **Pause** : Mémorial et Faille ouvrent un écran de trois cartes qui fige la run, comme le level-up. La V2 (§11) voulait un Autel sans pause ; un écran à lire (gains, Oublis) sous les coups semblait injouable. À trancher.
+- **Faille** : activée par la touche d'interaction (maintien 0,8 s), pas au simple contact, pour éviter de l'ouvrir en courant.
+- **Lever un Oubli** est un service payant du Mémorial, pas une bénédiction ; « relancer la bénédiction » (4.5) n'est pas fait.
+- Oublis limités aux stats du joueur : « +1 élite en vie » et « tes zones s'effacent plus vite » (exemples de 4.5) demandent des crochets dans l'apparition et l'Effacement, à ajouter si la direction plaît.
+- Toutes les valeurs (coûts, prix des services, taux d'ouverture, poids du Péril) sont des points de départ.
+
 #### Vague 3 détaillée — 26 septembre (soir)
 
 La vague 2 attend deux validations de Raphaël (noms, un par un ; style des icônes v2) ; la vague 4 dépend du plan 13, non arbitré. La vague 3 a sa direction validée : elle passe devant. Choix provisoires :
