@@ -26,6 +26,10 @@ public sealed class FarmConfig
     public Vector2 SpurStart = new(0f, 70f);
     public float SpurWidthFactor = 0.75f;
     public readonly List<Element> Elements = new();
+    /// <summary>Décors des bords de parcelles, le long des allées des champs (plan 08 P4b-3).</summary>
+    public string[] ParcelEdges = System.Array.Empty<string>();
+    /// <summary>Arbres de verger : paires tronc / canopée.</summary>
+    public readonly List<(string Base, string Canopy)> OrchardTrees = new();
 
     public static FarmConfig Load()
     {
@@ -47,6 +51,17 @@ public sealed class FarmConfig
         config.PathReachPx = (float)d.GetValueOrDefault("path_reach_px", config.PathReachPx).AsDouble();
         config.SpurStart = ReadVector(d, "spur_start", config.SpurStart);
         config.SpurWidthFactor = (float)d.GetValueOrDefault("spur_width_factor", config.SpurWidthFactor).AsDouble();
+        if (d.ContainsKey("parcel_edges"))
+            config.ParcelEdges = d["parcel_edges"].AsStringArray();
+        if (d.ContainsKey("orchard_trees"))
+        {
+            foreach (Variant pair in d["orchard_trees"].AsGodotArray())
+            {
+                string[] stems = pair.AsStringArray();
+                if (stems.Length >= 2)
+                    config.OrchardTrees.Add((stems[0], stems[1]));
+            }
+        }
         if (d.ContainsKey("elements"))
         {
             foreach (Variant item in d["elements"].AsGodotArray())

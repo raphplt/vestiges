@@ -19,6 +19,10 @@ public class WildFieldsLayout
 	public HashSet<Vector2I> WheatCells = new();
 	public HashSet<Vector2I> FallowCells = new();
 	public HashSet<Vector2I> MeadowCells = new();
+	/// <summary>Cellules de bord de parcelle, le long des allées : haies, murets et clôtures (plan 08 P4b-3).</summary>
+	public HashSet<Vector2I> HedgeCells = new();
+	/// <summary>Arbres de verger, en rangs, dans une partie des prairies (plan 08 P4b-3).</summary>
+	public HashSet<Vector2I> OrchardCells = new();
 	public int MapRadius;
 }
 
@@ -37,6 +41,12 @@ public class WildFieldsLayoutGenerator
 	private const int ParcelHeight = 10;
 	private const int PrimaryLaneModulo = 13;
 	private const int SecondaryLaneModulo = 21;
+	private const int HedgeChance = 70;
+	private const int OrchardChance = 30;
+	// Tirage de parcelle : blé sous 50, jachère sous 72, prairie au-delà.
+	private const int WheatRoll = 50;
+	private const int FallowRoll = 72;
+	private const int MeadowRoll = FallowRoll;
 
 	public WildFieldsLayoutGenerator(ulong seed, int mapRadius)
 	{
@@ -126,8 +136,47 @@ public class WildFieldsLayoutGenerator
 			}
 		}
 
-		GD.Print($"[WildFieldsLayout] Layout complete: wheat={layout.WheatCells.Count}, fallow={layout.FallowCells.Count}, meadow={layout.MeadowCells.Count}, paths={layout.PathCells.Count}");
+		MarkHedgesAndOrchards(layout);
+		GD.Print($"[WildFieldsLayout] Layout complete: wheat={layout.WheatCells.Count}, fallow={layout.FallowCells.Count}, meadow={layout.MeadowCells.Count}, paths={layout.PathCells.Count}, hedges={layout.HedgeCells.Count}, orchard={layout.OrchardCells.Count}");
 		return layout;
+	}
+
+	/// <summary>
+	/// Haies le long des allées, côté parcelle : à l'est des allées principales (qui montent vers la droite à l'écran),
+	/// au sud des secondaires (presque horizontales). Une cellule sur deux ou quatre selon l'axe, pour ne pas empiler
+	/// les rangs de la grille « stacked », avec des trouées. Vergers : une prairie sur trois, un arbre toutes les deux
+	/// colonnes et quatre rangs.
+	/// </summary>
+	private void MarkHedgesAndOrchards(WildFieldsLayout layout)
+	{
+		foreach (Vector2I lane in layout.PathCells)
+		{
+			ComputePathAxes(lane.X, lane.Y, out bool primaryLane, out bool _);
+			Vector2I side = primaryLane ? new Vector2I(lane.X + 1, lane.Y) : new Vector2I(lane.X, lane.Y + 2);
+			bool sampled = primaryLane ? PositiveMod(lane.Y, 4) == 0 : PositiveMod(lane.X, 2) == 0;
+			if (!sampled || HashCell(side.X, side.Y, _seed ^ 0x4ED6EUL) % 100 >= HedgeChance)
+				continue;
+			if (layout.WheatCells.Contains(side) || layout.FallowCells.Contains(side) || layout.MeadowCells.Contains(side))
+				layout.HedgeCells.Add(side);
+		}
+
+		foreach (Vector2I cell in layout.MeadowCells)
+		{
+			if (PositiveMod(cell.X, 2) != 0 || PositiveMod(cell.Y, 4) != 0 || layout.HedgeCells.Contains(cell))
+				continue;
+			// Seulement dans les parcelles tirées en prairie (voir PickFieldType), pas sur les bords d'allées enherbés.
+			(int parcelU, int parcelV) = ParcelOf(cell.X, cell.Y);
+			if (HashCell(parcelU, parcelV, _seed) % 100 >= MeadowRoll
+				&& HashCell(parcelU, parcelV, _seed ^ 0x0C4A2UL) % 100 < OrchardChance)
+				layout.OrchardCells.Add(cell);
+		}
+	}
+
+	private static (int U, int V) ParcelOf(int x, int y)
+	{
+		float u = x + y * 0.55f;
+		float v = y - x * 0.35f;
+		return (Mathf.FloorToInt(u / ParcelWidth), Mathf.FloorToInt(v / ParcelHeight));
 	}
 
 	private bool IsPathCell(int x, int y, WorldGenerator generator, TerrainType[,] terrain)
@@ -158,16 +207,13 @@ public class WildFieldsLayoutGenerator
 		if (roughness >= 3)
 			return WildFieldCellType.Meadow;
 
-		float u = x + y * 0.55f;
-		float v = y - x * 0.35f;
-		int parcelU = Mathf.FloorToInt(u / ParcelWidth);
-		int parcelV = Mathf.FloorToInt(v / ParcelHeight);
+		(int parcelU, int parcelV) = ParcelOf(x, y);
 		uint parcelHash = HashCell(parcelU, parcelV, _seed);
 		int roll = (int)(parcelHash % 100);
 
-		if (roll < 50)
+		if (roll < WheatRoll)
 			return WildFieldCellType.Wheat;
-		if (roll < 72)
+		if (roll < FallowRoll)
 			return WildFieldCellType.Fallow;
 		return WildFieldCellType.Meadow;
 	}

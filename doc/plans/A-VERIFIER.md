@@ -39,3 +39,8 @@ Fichier temporaire. Il liste ce qu'une session cloud a livré sans pouvoir le v�
 ## Plan 16 O2 — éclats des décors en zone Effacée
 
 - [ ] **Densité et lisibilité** : deux décors par tick de 0,15 s, trois éclats violets chacun. Dans le conteneur à 5 FPS, la capture n'en montre que quelques-uns. À juger à 60 FPS : trop discret, ou assez pour dire « ici, tout s'en va » ?
+
+## Plan 08 P4b-3 — bords de parcelles et vergers
+
+- [ ] **Lecture des parcelles** : les haies (70 % des bords échantillonnés) forment-elles des limites lisibles, ou des morceaux épars ? Réglage dans `WildFieldsLayoutGenerator` (`HedgeChance`, échantillonnage par axe).
+- [ ] **Vergers** : les arbres bloquent (tronc), avec deux colonnes d'écart. Vérifier qu'on circule sans accrocher en combat.

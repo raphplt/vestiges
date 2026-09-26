@@ -306,7 +306,15 @@ Critère de réussite : sur une capture des champs, on reconnaît une ferme, des
   - toutes les fermes suivent le même plan, seulement retourné : à varier (deux ou trois plans) si la répétition se remarque ;
   - quand le seul chemin proche passe à côté de la ferme, l'embranchement longe l'enclos ;
   - le placement (273 ms) peut être accéléré si le chargement s'en ressent : tri des candidats et test d'emprise par région ;
-  - P4b-3 (haies et murets aux limites des parcelles, vergers, alignements d'arbres) et P4b-4 (scènes-récits) restent à faire.
+  - P4b-4 (scènes-récits) reste à faire.
+
+**P4b-3 livré — bords de parcelles et vergers, 26 septembre (session cloud) :**
+- **Bords de parcelles.** `WildFieldsLayoutGenerator` marque les cellules de bord le long des allées : à l'est des allées principales (qui montent vers la droite à l'écran), au sud des secondaires (presque horizontales). Il en garde une sur deux ou sur quatre selon l'axe, pour ne pas empiler les rangs de la grille « stacked », et 70 % d'entre elles. `WildFieldsComposer.PlaceParcelProps` y pose une haie, un muret ou une clôture horizontale (`parcel_edges` dans `farms.json`), jamais bloquants.
+- **Vergers.** Une parcelle tirée en prairie sur trois devient un verger : un arbre toutes les deux colonnes et quatre rangs. Deux nouveaux arbres bas (`prop_orchard_tree`, en feuilles ou en fleurs), en tronc et canopée comme en forêt ; le tronc bloque.
+- Fermes, chemins et points d'intérêt gardent la priorité sur ces cellules.
+- Seed de capture : 683 bords marqués et 295 arbres de verger, soit 763 décors posés.
+- Captures `--capture-farms` et `--capture-map` regardées : les parcelles gagnent des limites, et un verger en fleurs en rangs se lit près d'une ferme.
+- *Limite* : les allées restent de larges bandes de terre en biais ; les haies les bordent sans les redessiner.
 - `--measure-props` en 1080p, machine calme : champs 159 FPS (3 197 décors), forêt 160, ville 158, carrière 152, marais 146, p99 entre 8 et 10 ms. C'est la plage d'avant les lots P3–P4 : pas de régression.
 
 *Points ouverts pour Raphaël :*

@@ -1,11 +1,13 @@
 {
-    "_doc": "Fermes des Champs Sauvages (plan 08 P4b). Positions en pixels écran depuis le centre de la cour (y vers le bas, le nord en haut). Une ferme par région de champs au plus ; la moitié sont retournées d'est en ouest. 'line' pose un élément tous les 'step' pixels de 'at' à 'to'. 'chance' : probabilité de l'élément.",
+    "_doc": "Fermes des Champs Sauvages (plan 08 P4b). Positions en pixels écran depuis le centre de la cour (y vers le bas, le nord en haut). Une ferme par région de champs au plus ; la moitié sont retournées d'est en ouest. 'line' pose un élément tous les 'step' pixels de 'at' à 'to'. 'chance' : probabilité de l'élément. parcel_edges : décors posés aux bords des parcelles le long des allées ; orchard_trees : paires tronc/canopée des vergers (plan 08 P4b-3).",
     "enabled": true,
     "search_radius_cells": 16,
     "half_extent_px": [470, 150],
     "path_reach_px": 800,
     "spur_start": [0, 70],
     "spur_width_factor": 0.75,
+    "parcel_edges": ["prop_hedge_h", "prop_hedge_h_v2", "prop_hedge_h", "prop_low_stone_wall_h", "prop_wooden_fence_h", "prop_wooden_fence_broken_h"],
+    "orchard_trees": [["prop_orchard_tree_base", "prop_orchard_tree_canopy"], ["prop_orchard_tree_blossom_base", "prop_orchard_tree_blossom_canopy"]],
     "elements": [
         { "sprites": ["prop_farm_house_a", "prop_farm_house_b", "prop_farm_house_damaged_a"], "at": [-160, -80], "blocking": true },
         { "sprites": ["prop_farm_barn_a", "prop_farm_barn_b", "prop_farm_barn_damaged_a"], "at": [110, -80], "blocking": true },

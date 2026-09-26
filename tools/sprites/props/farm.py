@@ -18,7 +18,7 @@ from ..sdf import capsule, cylinder, ellipsoid, rotation_x, rotation_z, rounded_
 from ._kit import AXIS_X_YAW, AXIS_Y_YAW, M, PropModel, Weathering, box_footprint
 from .buildings import BUILDING_YAW, CELL_WIDTH, DEPTH_ROWS, ROW_DEPTH, BuildingSpec, building
 from .fields import FENCE, GRASS, GRASS_DARK, RUST, STRAW, stone_wall, wooden_fence
-from .forest import _clumps, _union
+from .forest import _clumps, _union, tree
 
 BARN_RED = "#7E4032"
 BARN_GREY = "#7A6E62"
@@ -402,4 +402,7 @@ def catalog() -> list[PropModel]:
         replace(wooden_fence("prop_wooden_fence_broken_h", 542, True), yaw=AXIS_Y_YAW),
         replace(stone_wall("prop_low_stone_wall_h", 531, False), yaw=AXIS_Y_YAW),
     ]
+    # Arbres de verger, plantés en rangs : bas et ronds, l'un en feuilles, l'autre encore en fleurs.
+    models += tree("prop_orchard_tree", 791, 3.4 * M, 1.25 * M, 0.13 * M, 12, "#5E4A38", GRASS, "#8AC060", False, (80, 110))
+    models += tree("prop_orchard_tree_blossom", 792, 3.3 * M, 1.2 * M, 0.13 * M, 12, "#5E4A38", GRASS, "#EAD8D2", False, (80, 110))
     return models

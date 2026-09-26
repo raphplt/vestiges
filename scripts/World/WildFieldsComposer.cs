@@ -112,6 +112,60 @@ public static class WildFieldsComposer
         return placed;
     }
 
+    /// <summary>
+    /// Paysage des champs (plan 08 P4b-3) : haies, murets et clôtures aux bords des parcelles, le long des allées ;
+    /// vergers en rangs dans une partie des prairies. Cellules marquées par WildFieldsLayoutGenerator ; les fermes,
+    /// les chemins et les points d'intérêt gardent la priorité. Haies non bloquantes, troncs des vergers bloquants.
+    /// </summary>
+    public static int PlaceParcelProps(WildFieldsLayout layout, FarmConfig config, HashSet<Vector2I> usedCells,
+                                       HashSet<Vector2I> blockedCells, TileMapLayer ground, Node2D container, ulong seed)
+    {
+        if (layout == null || !config.Enabled)
+            return 0;
+        Dictionary<string, Texture2D> cache = new();
+        int placed = 0;
+        if (config.ParcelEdges.Length > 0)
+        {
+            foreach (Vector2I cell in layout.HedgeCells)
+            {
+                if (usedCells.Contains(cell) || (blockedCells != null && blockedCells.Contains(cell)))
+                    continue;
+                uint pick = CellHash.Of(cell.X, cell.Y, seed ^ 0x4ED6FUL);
+                Texture2D texture = Load(config.ParcelEdges[(int)(pick % (uint)config.ParcelEdges.Length)], cache);
+                if (texture == null)
+                    continue;
+                EnvironmentProp prop = new();
+                prop.GlobalPosition = ground.MapToLocal(cell);
+                container.AddChild(prop);
+                prop.Initialize(texture, null, 0f, false);
+                usedCells.Add(cell);
+                placed++;
+            }
+        }
+        if (config.OrchardTrees.Count > 0)
+        {
+            foreach (Vector2I cell in layout.OrchardCells)
+            {
+                if (usedCells.Contains(cell) || (blockedCells != null && blockedCells.Contains(cell)))
+                    continue;
+                uint pick = CellHash.Of(cell.X, cell.Y, seed ^ 0x0C4A3UL);
+                (string baseStem, string canopyStem) = config.OrchardTrees[(int)(pick % (uint)config.OrchardTrees.Count)];
+                Texture2D trunk = Load(baseStem, cache);
+                Texture2D canopy = Load(canopyStem, cache);
+                if (trunk == null || canopy == null)
+                    continue;
+                EnvironmentProp prop = new();
+                prop.GlobalPosition = ground.MapToLocal(cell);
+                container.AddChild(prop);
+                prop.Initialize(trunk, canopy, 0f, true);
+                usedCells.Add(cell);
+                placed++;
+            }
+        }
+        GD.Print($"[WildFieldsComposer] {placed} haies, murets et arbres de verger");
+        return placed;
+    }
+
     private static Vector2 Mirror(Vector2 offset, bool mirrored) => mirrored ? new Vector2(-offset.X, offset.Y) : offset;
 
     private static bool Fits(WorldGenerator generator, int biomeIndex, PathNetwork paths, HashSet<Vector2I> usedCells,
