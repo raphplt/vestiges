@@ -203,3 +203,15 @@ Toute mécanique existante peut être remise à l’épreuve : loot, densité, c
 | 1002 | 1 → 7 s | 2,5 → 11,7 s | 51 → 0 | 295 → 63 | 17 |
 
 La première minute compte 15 à 22 % de secondes sans ennemi à l'écran, pour l'essentiel le répit lui-même. Après une minute, la densité revient au niveau d'avant. Sur la seed 221092026, les dégâts à 30 s restent élevés alors qu'ils ont baissé sur les deux autres ; l'écart n'est pas expliqué. Recette en jeu attendue : le répit est-il assez long, la reprise assez franche ?
+
+**Retour du 26 septembre (après-midi) :** « ok, peut-être un tout petit trop peu adoucie ». Un cran de plus, dans les données : `opening_grace_seconds` 6 → 8, `opening_ramp_seconds` 60 → 75 ; cible et intervalle de départ inchangés, pour ne pas tomber dans l'extrême inverse.
+
+Mesure sur le Mac (M1 Pro, machine chargée : ces indicateurs ne dépendent pas des FPS), `SECONDS_PER_RUN=60 tools/measure_density.sh`, bot sans esquive :
+
+| Seed | 1er ennemi visible | 1er coup reçu | Dégâts à 30 s | Créatures apparues en 60 s |
+|---|---|---|---|---|
+| 221092026 | 8 → 9 s | 10,1 → 11,9 s | 266 → 204 | 66 → 49 |
+| 777 | 7 → 9 s | 13,3 → 16,1 s | 43 → 23 | 104 → 57 |
+| 1002 | 7 → 7 s | 11,8 → 19,2 s | 54 → 27 | 61 → 46 |
+
+Les trente premières secondes sont nettement plus calmes. Les dégâts reçus sur toute la première minute ne baissent pas (275 → 316 par minute, médiane des trois seeds) : le bot n'esquive jamais et une meute qui tombe au mauvais moment suffit à faire varier ce total. Recette en jeu attendue.

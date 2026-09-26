@@ -1,6 +1,6 @@
 # VESTIGES — Décisions de Raphaël et arbitrages restants
 
-Version 0.8 · 25 septembre 2026 · Référence de validation du dossier.
+Version 0.9 · 26 septembre 2026 · Référence de validation du dossier.
 
 Ce registre intègre les retours structurants après la première lecture des plans et la validation des déplacements de base du 22 septembre. Les validations ci-dessous sont acquises. Le socle de 01 est implémenté et validé ; le dash du prototype D demandé est livré et validé par Raphaël ([compte rendu](01-deplacements.md#8-prototype-de-mobilité--22-septembre-2026)). Les variantes alternatives F1 restent des essais ; les mobilités spécifiques attendent le casting et les sprites refaits.
 
@@ -48,6 +48,8 @@ Ce registre intègre les retours structurants après la première lecture des pl
 | Biomes | « Avant les biomes étaient mélangés, et c'était mieux » : apparaître sur un seul terrain est une régression | Mesurée puis corrigée : mosaïque de régions, [10 §6](10-terrain-et-tiles.md#6-régression-un-seul-biome-autour-du-départ--25-septembre-2026) ; recette en jeu à faire |
 | Retours du 26 septembre (jeu) | Champs « un peu vides », petits sprites éparpillés qui « ne racontent pas grand-chose » ; les attaques ennemies devraient avoir des sons ; tiles améliorables ; jonctions entre environnements trop brutes ; l'oubli « se voit assez peu », à exploiter visuellement ou autrement ; question : tous les mobs doivent-ils converger ? ; initiatives perf appréciées, investigation plus poussée souhaitée ; début de run trop agressif (« se faire sauter dessus à la seconde 1 », « il faut avoir le temps de respirer »), sans tomber dans l'extrême inverse | Livré : répit et montée d'ouverture ([03 §7](03-boucle-et-rythme.md#7-ouverture-de-run--26-septembre-2026)), sons d'attaque provisoires branchés ([15](15-audio.md)), décors en tronçons, ×2 FPS ([10 §10](10-terrain-et-tiles.md#10-investigation-performance--26-septembre-2026)). Proposé : composition des champs ([08 P4b](08-direction-artistique.md)), tiles et jonctions ([10 §9](10-terrain-et-tiles.md#9-retours-du-26-septembre--tiles-et-jonctions)), oubli ([16](16-oubli-sensible.md)), perception des créatures ([07 §7](07-bestiaire-et-rencontres.md#7-question-du-26-septembre--toutes-les-créatures-doivent-elles-converger-)) |
 | Écran d'accueil (26 septembre) | Trop classique ; ne plus afficher les statistiques du personnage (PV, attaque…) mais **montrer son sprite** ; affichage de jeu fini, dans la DA ; « surprends-moi » | 04 : [accueil refait](04-interfaces-et-hub.md#accueil-refait--26-septembre-2026), recette attendue |
+| Recette du 26 septembre (après-midi) | Accueil refait **validé** ; effets d'attaque en pixel art (V0–V3) **validés** ; fluidité « ok » ; ouverture de run « ok, peut-être un tout petit trop peu adoucie » ; sons : traités par un autre agent. Nouvelle machine : Mac Apple Silicon (M1 Pro) | 04 et 08 V0–V3 recettés ; ouverture adoucie un cran de plus ([03 §7](03-boucle-et-rythme.md#7-ouverture-de-run--26-septembre-2026)) ; plan 15 hors de ce fil ; Steam et outils rendus compatibles Mac |
+| Ordre des chantiers (26 septembre) | « Oui je valide l'ordre » : relecture en suspens, puis sol (T2 jonctions → T1 → T3) et oubli (O1 → O3 → O4/O5 → O2/O6). Raphaël, absent, délègue les autres arbitrages : « prends les décisions les plus rationnelles […] implémente-les » | Arbitrages délégués en §7, **provisoires jusqu'à sa relecture** |
 
 « Les mobs avancent successivement » reste ambigu au moment de cette révision. Une clarification a été demandée : arrivée en file jugée problématique, introduction progressive des types, ou les deux. Le plan 07 sépare ces deux sujets ; aucun comportement n'est présenté comme une préférence confirmée.
 
@@ -171,3 +173,19 @@ Candidat : `None`.
 ## 6. Retours audio du 26 septembre — lot A2
 
 [Export original archivé](../audio/lot-a2/choix-raphael-2026-09-26.json) et [verbatim, décisions et préparation](../audio/lot-a2/RETOURS.md). Trois nouveaux choix : `dissolution_a2_b`, `perk_select_a2_a`, `danger_warning_a2_a`. Dissolution : « le B mais ne pas le cropper à un seconde » ; conserver les 1,395828 s de l’original. Impacts ennemi et joueur, montée de niveau : `none`, recherche à reprendre. Révélation du coffre : « garder l'actuel » ; suivi **actuel conservé**, sans transformer le `pending` exporté en sélection de candidat. XP inchangée. Six candidats retenus au total, aucun intégré ni recetté.
+
+## 7. Arbitrages délégués du 26 septembre
+
+Raphaël, absent, demande de trancher au mieux et d'implémenter. Chaque choix ci-dessous est **provisoire** : il suffit qu'il le conteste pour le revoir. Raison donnée en une ligne.
+
+| Question | Choix | Raison |
+|---|---|---|
+| Plan 10 §9, ordre | T2 jonctions, puis T1 sol, puis T3 chemins (validé par Raphaël) | Les jonctions sont le défaut le plus visible de la carte en mosaïque |
+| Plan 16, ordre | O1 → O3 → O4/O5 → O2/O6 (validé par Raphaël) | Voir l'oubli avant d'en payer le prix |
+| Plan 16, coût de l'oubli | Débuffs de la V2 **adoucis** et en JSON, avec un signal clair ; calibrage au lot O4 | La V2 fait autorité ; le retour du jour demande de respirer, pas de punir |
+| Plan 16, Néant (0 %) | Traversable avec dégâts continus (V2) | Un mur pourrait enfermer le joueur ; la V2 fait autorité |
+| 08 P4b, composition des champs | Oui, après T2/T1 : la ferme se lit mieux sur un sol refait | Retour « champs un peu vides » ; dépend du sol |
+| 07 §7, convergence | Proposition retenue : chasseurs inchangés, habitants avec perception et laisse, créatures distancées qui perdent la trace ; mesure de densité avant/après | Rencontres contournables sans baisser la pression du flux |
+| Dash, invulnérabilité | 0 ms conservé (réglage validé avec le dash) | Pas de retour contraire ; le début de run vient d'être adouci |
+| Plans 13 et 14 | Recommandations des plans retenues (trois formes de butin, rareté fixe, coffres en conteneurs ; anomalies Écho, Oubli de soi, Effondrement, plafond 25 %, une ligne de texte) mais **pas d'implémentation avant les lots ci-dessus** | Gros chantiers ; le socle d'objets du plan 05 reste leur prérequis |
+| Boss de famille | Deux prototypes, plus tard (07) | Hors de l'ordre validé |
