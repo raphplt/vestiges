@@ -444,7 +444,7 @@ public partial class WorldSetup : Node2D
         AddChild(occlusion);
         occlusion.Build(propContainer, player);
 
-        // Après l'index d'occlusion, qui lit les décors comme enfants directs du conteneur.
+        // En dernier : ensuite, les décors ne sont plus enfants directs du conteneur (voir PropChunks).
         PropChunks chunks = new() { Name = "PropChunks" };
         AddChild(chunks);
         chunks.Build(player?.GetNodeOrNull<Camera2D>("Camera"), (Node2D)propContainer, GetNode<Node2D>("GroundDecals"));

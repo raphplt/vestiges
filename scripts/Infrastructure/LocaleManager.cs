@@ -84,14 +84,11 @@ public partial class LocaleManager : Node
 		}
 
 		// Priorité 2 : langue Steam
-		if (SteamManager.IsActive)
+		string steamLang = SteamManager.GetGameLanguage();
+		if (!string.IsNullOrEmpty(steamLang) && SteamToGodot.TryGetValue(steamLang, out string mapped))
 		{
-			string steamLang = Steamworks.SteamApps.GetCurrentGameLanguage();
-			if (!string.IsNullOrEmpty(steamLang) && SteamToGodot.TryGetValue(steamLang, out string mapped))
-			{
-				SetLocale(mapped);
-				return;
-			}
+			SetLocale(mapped);
+			return;
 		}
 
 		// Priorité 3 : langue système

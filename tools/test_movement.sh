@@ -3,12 +3,11 @@
 # --run-integration vérifie aussi le bootstrap de Main et le terrain généré.
 set -euo pipefail
 cd "$(dirname "$0")/.."
+source tools/lib/portable.sh
 GODOT="${GODOT_BIN:-godot-mono}"
 TEST_DIR=$(mktemp -d "${TMPDIR:-/tmp}/vestiges-movement.XXXXXX")
 trap 'rm -rf "$TEST_DIR"' EXIT
-export XDG_DATA_HOME="$TEST_DIR/data"
-export XDG_CONFIG_HOME="$TEST_DIR/config"
-export XDG_CACHE_HOME="$TEST_DIR/cache"
+isolate_godot_profile "$TEST_DIR"
 dotnet build --nologo
 "$GODOT" --headless --editor --import --path . >"$TEST_DIR/import.log" 2>&1
 "$GODOT" --headless --path . --fixed-fps 60 --quit-after 14000 res://tools/tests/MovementRegression.tscn -- "$@" >"$TEST_DIR/run.log" 2>&1 || {

@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using Godot;
 using Vestiges.Core;
 using Vestiges.Infrastructure;
@@ -142,16 +143,17 @@ public partial class ScoreManager : Node
         // Analytics : enregistrer les métriques de la run
         AnalyticsManager.Instance?.RecordRunEnd(record);
 
-        // Steam : upload score + achievements
         if (SteamManager.IsActive)
-        {
-            SteamAchievements achievements = GetNodeOrNull<SteamAchievements>("../SteamAchievements");
-            int crisesSurvived = _runTracker?.CrisesSurvived ?? 0;
-            achievements?.OnRunEnd(CurrentScore, crisesSurvived, gm.SelectedCharacterId);
+            SubmitToSteam(gm.SelectedCharacterId);
+    }
 
-            SteamLeaderboards leaderboards = GetNodeOrNull<SteamLeaderboards>("../SteamLeaderboards");
-            leaderboards?.UploadScore(CurrentScore, crisesSurvived, gm.SelectedCharacterId);
-        }
+    // Hors SaveEndOfRun : ces types nomment Steamworks, dont l'assemblage ne se charge pas hors x86/x64.
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private void SubmitToSteam(string characterId)
+    {
+        int crisesSurvived = _runTracker?.CrisesSurvived ?? 0;
+        GetNodeOrNull<SteamAchievements>("../SteamAchievements")?.OnRunEnd(CurrentScore, crisesSurvived, characterId);
+        GetNodeOrNull<SteamLeaderboards>("../SteamLeaderboards")?.UploadScore(CurrentScore, crisesSurvived, characterId);
     }
 
     /// <summary>Construit un RunRecord enrichi depuis l'état courant + RunTracker.</summary>

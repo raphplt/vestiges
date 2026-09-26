@@ -7,6 +7,8 @@ namespace Vestiges.World;
 /// Découpe les décors en tronçons spatiaux et masque ceux qui sont loin de la caméra.
 /// Le tri en Y de la scène rassemble et trie à chaque frame tous les enfants visibles d'un conteneur trié,
 /// même hors écran : un tronçon masqué n'est plus parcouru du tout (≈ 4 ms de rendu CPU sur une carte de 10 000 décors).
+/// Après <see cref="Build"/>, les enfants directs de <c>PropContainer</c> et <c>GroundDecals</c> sont des tronçons :
+/// tout code qui cherche les décors doit les énumérer récursivement, ou s'exécuter avant le découpage.
 /// </summary>
 public partial class PropChunks : Node
 {

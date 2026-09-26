@@ -4,8 +4,9 @@
 # BENCH_SECONDS (15 par défaut) et GODOT_BIN sont transmis au banc.
 set -euo pipefail
 cd "$(dirname "$0")/.."
+source tools/lib/portable.sh
 BASE=${1:?ref de base requise (ex. HEAD, HEAD~1, un hash)}
-OUTPUT=$(realpath -m "${2:?dossier de sortie requis}")
+OUTPUT=$(abs_path "${2:?dossier de sortie requis}")
 PASSES=${3:-2}
 if [[ -e "$OUTPUT" ]]; then
     echo "Le dossier existe déjà : $OUTPUT" >&2
@@ -14,7 +15,7 @@ fi
 mkdir -p "$OUTPUT"
 
 # Les FPS n'ont de sens que machine calme : on refuse de mesurer au-dessus d'une charge d'un quart des cœurs.
-load=$(cut -d' ' -f1 /proc/loadavg)
+load=$(load_average)
 # getconf plutôt que nproc : nproc peut refléter une restriction cgroup du shell, pas la machine.
 limit=$(( $(getconf _NPROCESSORS_ONLN) / 4 ))
 if awk -v l="$load" -v m="$limit" 'BEGIN { exit !(l > m) }'; then
@@ -27,6 +28,8 @@ trap 'git worktree remove --force "$WORKTREE" >/dev/null 2>&1 || true; git workt
 git worktree add -q --detach "$WORKTREE" "$BASE"
 # Même instrument de mesure des deux côtés : la scène de banc courante remplace celle de la base.
 cp tools/tests/MovementDenseBenchmark.cs "$WORKTREE/tools/tests/"
+cp tools/benchmark_movement.sh "$WORKTREE/tools/"
+mkdir -p "$WORKTREE/tools/lib" && cp tools/lib/portable.sh "$WORKTREE/tools/lib/"
 
 export BENCH_REPEATS=1 BENCH_SECONDS="${BENCH_SECONDS:-15}"
 for ((pass = 1; pass <= PASSES; pass++)); do
@@ -55,4 +58,4 @@ for side in ("base", "current"):
         node_text = f"{statistics.median(nodes):.0f}" if nodes else "n/m"
         print(f"| {side} | {resolution} | {fps:.1f} | {p99:.1f} | {node_text} | {len(rows)} |")
 PY
-echo "Charge en fin de mesure : $(cut -d' ' -f1-3 /proc/loadavg)"
+echo "Charge en fin de mesure : $(load_average)"

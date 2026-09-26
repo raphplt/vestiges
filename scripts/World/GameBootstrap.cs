@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Godot;
 using Vestiges.Core;
@@ -164,21 +165,25 @@ public partial class GameBootstrap : Node
         DebugActionPanel debugPanel = new DebugActionPanel { Name = "DebugActionPanel" };
         GetNode("..").CallDeferred("add_child", debugPanel);
 
-        // Steam : achievements et leaderboards (no-op si Steam inactif)
         if (SteamManager.IsActive)
-        {
-            SteamAchievements steamAchievements = new() { Name = "SteamAchievements" };
-            GetNode("..").CallDeferred("add_child", steamAchievements);
-
-            SteamLeaderboards steamLeaderboards = new() { Name = "SteamLeaderboards" };
-            GetNode("..").CallDeferred("add_child", steamLeaderboards);
-        }
+            AddSteamServices();
 
         GD.Print($"[GameBootstrap] Run started with {player.CharacterId}");
 
         // --- Dépause et fade-out de l'overlay ---
         GetTree().Paused = false;
         overlay.FadeOut();
+    }
+
+    // Hors méthode principale : ces types nomment Steamworks, dont l'assemblage ne se charge pas hors x86/x64.
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private void AddSteamServices()
+    {
+        SteamAchievements steamAchievements = new() { Name = "SteamAchievements" };
+        GetNode("..").CallDeferred("add_child", steamAchievements);
+
+        SteamLeaderboards steamLeaderboards = new() { Name = "SteamLeaderboards" };
+        GetNode("..").CallDeferred("add_child", steamLeaderboards);
     }
 
     /// <summary>

@@ -1,3 +1,5 @@
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using Godot;
 using Steamworks;
 
@@ -7,6 +9,9 @@ namespace Vestiges.Infrastructure.Steam;
 /// Gestionnaire global Steam. Autoload.
 /// Initialise le SDK, pompe les callbacks, et expose l'état de connexion.
 /// En mode développement (pas de Steam), tout est désactivé silencieusement.
+/// L'assemblage Steamworks.NET n'existe qu'en x86/x64 : sur un autre processus (Mac Apple Silicon),
+/// le simple JIT d'une méthode qui nomme un type Steam lève une exception. Tout appel au SDK passe donc
+/// par une méthode <c>NoInlining</c> atteinte seulement quand Steam est actif.
 /// </summary>
 public partial class SteamManager : Node
 {
@@ -19,9 +24,13 @@ public partial class SteamManager : Node
 	internal void DisableForDevelopmentSession()
 	{
 		if (IsActive)
-			SteamAPI.Shutdown();
+			ShutdownSdk();
 		IsActive = false;
+		SetProcess(false);
 	}
+
+	private static bool IsSupportedProcess =>
+		RuntimeInformation.ProcessArchitecture is Architecture.X64 or Architecture.X86;
 
 	/// <summary>App ID Steam. 480 = Spacewar (test). Remplacer par le vrai App ID en production.</summary>
 	private const uint AppId = 480;
@@ -32,17 +41,22 @@ public partial class SteamManager : Node
 		InitializeSteam();
 	}
 
+	public override void _Ready()
+	{
+		SetProcess(IsActive);
+	}
+
 	public override void _Process(double delta)
 	{
 		if (IsActive)
-			SteamAPI.RunCallbacks();
+			RunCallbacks();
 	}
 
 	public override void _ExitTree()
 	{
 		if (IsActive)
 		{
-			SteamAPI.Shutdown();
+			ShutdownSdk();
 			IsActive = false;
 			GD.Print("[SteamManager] Steam API shut down.");
 		}
@@ -60,6 +74,18 @@ public partial class SteamManager : Node
 		if (IsActive)
 			return;
 
+		if (!IsSupportedProcess)
+		{
+			GD.Print($"[SteamManager] Steamworks.NET indisponible en {RuntimeInformation.ProcessArchitecture} : Steam désactivé.");
+			return;
+		}
+
+		IsActive = TryInitializeSdk();
+	}
+
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	private bool TryInitializeSdk()
+	{
 		// SteamAPI.RestartAppIfNecessary relance le jeu via Steam si besoin.
 		// En dev, le fichier steam_appid.txt override ce comportement.
 		try
@@ -68,32 +94,50 @@ public partial class SteamManager : Node
 			{
 				GD.Print("[SteamManager] Restarting via Steam client...");
 				GetTree().Quit();
-				return;
+				return false;
 			}
 		}
 		catch (System.DllNotFoundException)
 		{
 			GD.PushWarning("[SteamManager] steam_api64.dll not found — Steam disabled. Place the DLL from the Steamworks SDK in the project root.");
-			return;
+			return false;
 		}
 
 		if (!SteamAPI.Init())
 		{
 			GD.PushWarning("[SteamManager] SteamAPI.Init() failed — is Steam running? Steam features disabled.");
-			return;
+			return false;
 		}
 
-		IsActive = true;
 		string playerName = SteamFriends.GetPersonaName();
 		CSteamID steamId = SteamUser.GetSteamID();
 		GD.Print($"[SteamManager] Steam initialized. Player: {playerName} (ID: {steamId})");
+		return true;
 	}
+
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	private static void RunCallbacks() => SteamAPI.RunCallbacks();
+
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	private static void ShutdownSdk() => SteamAPI.Shutdown();
+
+	/// <summary>Langue du jeu choisie dans Steam, ou null si Steam inactif.</summary>
+	public static string GetGameLanguage()
+	{
+		return IsActive ? ReadGameLanguage() : null;
+	}
+
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	private static string ReadGameLanguage() => SteamApps.GetCurrentGameLanguage();
 
 	/// <summary>Retourne le nom Steam du joueur, ou "Player" si Steam inactif.</summary>
 	public static string GetPlayerName()
 	{
-		return IsActive ? SteamFriends.GetPersonaName() : "Player";
+		return IsActive ? ReadPersonaName() : "Player";
 	}
+
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	private static string ReadPersonaName() => SteamFriends.GetPersonaName();
 
 	/// <summary>Retourne le Steam ID, ou CSteamID.Nil si inactif.</summary>
 	public static CSteamID GetSteamId()

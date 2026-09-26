@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
-# Main réelle en GL, sans cap FPS ; toutes les sauvegardes vont dans un XDG temporaire.
+# Main réelle en GL, sans cap FPS ; toutes les sauvegardes vont dans un profil temporaire.
 # Usage : tools/benchmark_movement.sh [répertoire résultats]
 # BENCH_SECONDS=20 BENCH_WARMUP=5 BENCH_REPEATS=3 BENCH_ENEMIES=120 GODOT_BIN=godot-mono
 set -euo pipefail
 cd "$(dirname "$0")/.."
+source tools/lib/portable.sh
 GODOT="${GODOT_BIN:-godot-mono}"
-OUTPUT=$(realpath -m "${1:-/tmp/vestiges-dense-$(date +%Y%m%d-%H%M%S)}")
+OUTPUT=$(abs_path "${1:-/tmp/vestiges-dense-$(date +%Y%m%d-%H%M%S)}")
 mkdir -p "$OUTPUT"
 if compgen -G "$OUTPUT/*-baseline.json" >/dev/null || compgen -G "$OUTPUT/*-dash.json" >/dev/null; then
     echo "Le dossier contient déjà des mesures ; choisir un nouveau dossier : $OUTPUT" >&2
@@ -13,9 +14,7 @@ if compgen -G "$OUTPUT/*-baseline.json" >/dev/null || compgen -G "$OUTPUT/*-dash
 fi
 TEST_DIR=$(mktemp -d "${TMPDIR:-/tmp}/vestiges-dense-profile.XXXXXX")
 trap 'rm -rf "$TEST_DIR"' EXIT
-export XDG_DATA_HOME="$TEST_DIR/data"
-export XDG_CONFIG_HOME="$TEST_DIR/config"
-export XDG_CACHE_HOME="$TEST_DIR/cache"
+isolate_godot_profile "$TEST_DIR"
 dotnet build --nologo
 "$GODOT" --headless --editor --import --path . >"$OUTPUT/import.log" 2>&1
 for resolution in 1280x720 1920x1080; do
@@ -28,12 +27,12 @@ for resolution in 1280x720 1920x1080; do
             if [[ "$mode" == dash ]]; then extra+=(--dash); fi
             prefix="$OUTPUT/${resolution}-${repeat}-${mode}"
             echo "Benchmark $resolution répétition $repeat : $mode"
-            timeout 180 "$GODOT" --path . --windowed --resolution "$resolution" --position 0,0 \
+            run_timeout 180 "$GODOT" --path . --windowed --resolution "$resolution" --position 0,0 \
                 --rendering-method gl_compatibility --disable-vsync --max-fps 0 --audio-driver Dummy \
                 res://tools/tests/MovementDenseBenchmark.tscn -- --dev \
                 --width "${resolution%x*}" --height "${resolution#*x}" --enemies "${BENCH_ENEMIES:-120}" ${BENCH_EXTRA_ARGS:-} \
                 --seconds "${BENCH_SECONDS:-20}" --warmup "${BENCH_WARMUP:-5}" \
-                --output "$prefix" "${extra[@]}" >"$prefix.log" 2>&1 || { cat "$prefix.log"; exit 1; }
+                --output "$prefix" ${extra[@]+"${extra[@]}"} >"$prefix.log" 2>&1 || { cat "$prefix.log"; exit 1; }
             rg -q '\[MovementDenseBenchmark\] RESULT valid=True' "$prefix.log"
             errors=$(rg '^(ERROR|SCRIPT ERROR)|Unhandled exception|System\.[A-Za-z]+Exception' "$prefix.log" | rg -v 'steam_api|MixRate mismatch|ObjectDB instances were leaked|resources still in use at exit' || true)
             if [[ -n "$errors" ]]; then echo "$errors"; exit 1; fi
