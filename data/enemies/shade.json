@@ -8,7 +8,9 @@
         "hp": 10,
         "speed": 100,
         "damage": 3,
-        "xp_reward": 5
+        "xp_reward": 5,
+        "perception": 560,
+        "leash": 1000
     },
     "visual": {
         "color": "#222233",

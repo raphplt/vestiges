@@ -55,6 +55,7 @@ Un seul lot d'implémentation ouvert à la fois. Un échec de lisibilité, de pe
 - [16 O6](16-oubli-sensible.md) : échos de l'oubli. Dans les zones Fragiles, la silhouette pâle d'un habitant apparaît parfois, puis se dissout à l'approche en laissant un murmure.
 - [08 P4b-1/2](08-direction-artistique.md) : une ferme par région des champs, reliée au réseau de chemins par un embranchement (maison, grange, silo, hangar, enclos, haies).
 - [02 J0](02-juiciness-score.md) terminé : les effets de mort et la collecte d'XP sont recyclés, et le panneau des quêtes ne recrée plus ses lignes quatre fois par seconde. Banc de combat dense : 284 → 8 nœuds créés en 15 s.
+- [07 §7](07-bestiaire-et-rencontres.md) : perception et laisse propres à cinq créatures (valeurs provisoires, mesure à refaire).
 - Travail fait dans un conteneur sans GPU : les points à revérifier sur la machine de Raphaël sont listés dans [A-VERIFIER.md](A-VERIFIER.md).
 
 **Mise à jour du 26 septembre (soir) :**

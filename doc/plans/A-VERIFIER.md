@@ -26,3 +26,8 @@ Fichier temporaire. Il liste ce qu'une session cloud a livré sans pouvoir le v�
 
 - [ ] **Rendu des morts en jeu** : les éclats de désintégration passent de particules GPU (dérive lente vers le haut) aux `PixelSparks` (famille `Void`, trajets droits). À comparer en vraie partie : la mort reste-t-elle aussi lisible ? Nuage et flaque doivent être identiques à avant.
 - [ ] **Gerbe de collecte d'XP** : 4 éclats `Essence` au lieu de la gerbe bleu clair. Couleur à vérifier.
+
+## Plan 07 §7 — perception par créature
+
+- [ ] **Mesure de densité avant/après** (`tools/measure_density.sh`, deux seeds) sur le Mac : celle du conteneur n'est pas concluante, le bot y est irrégulier à 5 FPS. Commit de référence : le parent de « perception et laisse par créature ».
+- [ ] **Ressenti** : les Ombres et Charognards doivent coller davantage, les créatures lentes décrocher plus vite.

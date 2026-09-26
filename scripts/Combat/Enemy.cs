@@ -201,6 +201,7 @@ public partial class Enemy : CharacterBody2D
 		_damage = data.Stats.Damage * dmgScale;
 		_attackRange = data.Stats.AttackRange;
 		_xpReward = data.Stats.XpReward;
+		_tracking.Configure(data.ExtraStats.GetValueOrDefault("perception"), data.ExtraStats.GetValueOrDefault("leash"));
 		_isDying = false;
 		_attackTimer = 0f;
 		_meleeAttackCooldown = MeleeAttackCooldown;

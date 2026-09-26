@@ -260,6 +260,26 @@ Proposition retenue par arbitrage délégué ([DECISIONS §7](DECISIONS.md#7-arb
 - **Gardiens de POI :** ils ne quittent plus leur poste quand le joueur est hors du traitement complet (600 px). Avant, le déplacement simplifié les faisait converger vers lui.
 - **Non fait :** perception propre à chaque créature (champs `perception` et `leash` par fiche) ; le réglage reste global.
 
+**Perception par créature — 26 septembre 2026 (session cloud) :**
+- Une fiche peut fixer `perception` (distance d'engagement) et `leash` (distance de perte de trace) dans ses `stats`. Sans ces champs, le réglage commun de `enemy_tracking.json` s'applique (450 et 800 px).
+- **Valeurs provisoires, à juger en jeu :**
+
+  | Créature | Perception | Laisse | Profil |
+  |---|---|---|---|
+  | Ombre | 560 px | 1 000 px | Rapide et tenace |
+  | Charognard | 520 px | 950 px | Meute qui flaire de loin |
+  | Rôdeur | 400 px | 720 px | Lent |
+  | Brute du Vide | 380 px | 700 px | Lente |
+  | Tréant corrompu | 360 px | 680 px | Lent, décroche vite |
+- **Mesure non concluante** (`SECONDS_PER_RUN=150 tools/measure_density.sh`, seeds 221092026 et 777, conteneur cloud à environ 5 FPS). Le bot n'y est pas reproductible : sur des runs presque identiques, les morts varient de 35 à 21 et de 18 à 67.
+
+  | Indicateur | Avant | Après |
+  |---|---|---|
+  | Médiane des visibles, minutes 1–2 | 12 | 9 |
+  | Médiane des visibles, minutes 2–3 | 14 | 19 |
+
+  Mesure à refaire sur une machine qui tient 60 FPS.
+
 **Mesure** (`SECONDS_PER_RUN=180 tools/measure_density.sh`, seeds 221092026 et 777, bot nomade sans esquive, avant → après) :
 
 | Indicateur | Avant | Après |
