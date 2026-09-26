@@ -208,7 +208,8 @@ public partial class LevelUpScreen : CanvasLayer
             row.AddChild(new TextureRect
             {
                 Texture = icon,
-                CustomMinimumSize = new Vector2(48, 48),
+                // Icônes 32×32 à échelle entière (×2).
+                CustomMinimumSize = new Vector2(64, 64),
                 ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
                 StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
                 TextureFilter = CanvasItem.TextureFilterEnum.Nearest,

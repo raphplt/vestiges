@@ -449,7 +449,8 @@ public partial class HUD : CanvasLayer
 
     private void BuildWeaponBar()
     {
-        const float slotSize = 28f;
+        // Icônes 32×32 à ×2 (HUD dessiné à ×2, icône de 32 unités) : 2 unités de cadre autour.
+        const float slotSize = 36f;
         HBoxContainer bar = new() { MouseFilter = Control.MouseFilterEnum.Ignore };
         bar.AnchorLeft = 0.5f;
         bar.AnchorRight = 0.5f;
@@ -458,7 +459,7 @@ public partial class HUD : CanvasLayer
         float totalWidth = Player.MaxWeaponSlots * (slotSize + 3);
         bar.OffsetLeft = -totalWidth / 2;
         bar.OffsetRight = totalWidth / 2;
-        bar.OffsetTop = -54;
+        bar.OffsetTop = -26 - slotSize;
         bar.OffsetBottom = -26;
         bar.AddThemeConstantOverride("separation", 3);
         bar.Alignment = BoxContainer.AlignmentMode.Center;
@@ -470,16 +471,18 @@ public partial class HUD : CanvasLayer
             NinePatchRect frame = MakeSlotFrame(_slotEmptyTex, 4);
             slotRoot.AddChild(frame);
 
-            const float iconSize = 22f;
             TextureRect icon = new()
             {
                 ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
                 StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
                 TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
-                Position = new Vector2((slotSize - iconSize) / 2, (slotSize - iconSize) / 2 - 1),
-                Size = new Vector2(iconSize, iconSize),
                 Visible = false
             };
+            icon.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
+            icon.OffsetLeft = 2;
+            icon.OffsetTop = 2;
+            icon.OffsetRight = -2;
+            icon.OffsetBottom = -2;
             slotRoot.AddChild(icon);
 
             Label level = MakeLabel("", 9, PalGold, 3);

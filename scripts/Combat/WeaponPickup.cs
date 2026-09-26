@@ -256,7 +256,7 @@ public partial class WeaponPickup : Area2D
 					Texture = weaponTexture,
 					Centered = true,
 					TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
-					Scale = new Vector2(0.5f, 0.5f)
+					Scale = Vector2.One
 				};
 			_visualRoot.AddChild(_visual);
 		}

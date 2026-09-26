@@ -473,6 +473,10 @@ Décision 4.3 prise : la rareté vit sur les améliorations, plus sur l'arme. Ch
 | **2B — Sprites** | 24 icônes dans le pipeline, arme au sol à échelle entière, couleur signature dans les effets | Planche à taille réelle ; captures en jeu |
 | **2C — Arme en main** | Seulement si décidé (4.7) | Captures 8 directions |
 
+**2A livré (26 septembre, nuit).** Les 24 armes portent leur nom d'objet (catalogue 4.6), une description d'objet et une ligne sur l'ancien propriétaire (`lore_flavor`), réécrite quand l'objet a changé (le Parcmètre ne garde pas « la tête du marteau »). Cette ligne s'affiche sous chaque arme dans la pause. Craies et Chronomètre sont provisoires. Non fait dans ce lot : fiches de rôle et de faiblesse, part d'armes à distance, allonge de la mêlée (équilibrage, à reprendre avec la recette).
+
+**2B livré (26 septembre, nuit).** 24 icônes 32×32 du pipeline SDF (`tools/generate_weapon_icons.py`, modèles dans `tools/sprites/weapons/icons.py`), écrites dans `assets/weapons/icons/` et branchées dans `weapons.json`. Les 24 anciennes icônes 64×64 et `scripts/generate_weapons.py` sont retirés. Affichage à échelle entière partout : cartes ×2 (64), pause ×1 (32), arme au sol ×1, HUD ×2 (emplacements agrandis de 28 à 36 unités après le retour de Raphaël : « les armes sont un peu décalées vers le haut/gauche et pourraient être un peu plus grandes »). Charte amendée (icônes d'armes 32×32). Quatre icônes reprises après la première planche : Parcmètre (tête trop petite), pelle à neige (lue comme un drapeau), râteau (lu comme une brosse), cloche (lue comme une poire, puis étagée en cylindres), gants de boxe (pendus par le lacet). Planche : `recette-plan17/icones-armes-v2.png`. Non fait : couleur signature reprise dans les effets d'attaque.
+
 ### Vague 3 — Modificateurs de run
 
 | Lot | Contenu | Vérification |

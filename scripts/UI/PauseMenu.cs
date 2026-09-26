@@ -434,7 +434,7 @@ public partial class PauseMenu : CanvasLayer
 	{
 		TextureRect icon = new()
 		{
-			CustomMinimumSize = new Vector2(36, 36),
+			CustomMinimumSize = new Vector2(32, 32),
 			ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
 			StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
 			TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
