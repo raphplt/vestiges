@@ -46,6 +46,8 @@ public class WeaponData
 	public string RequiresSouvenir { get; set; }
 	/// <summary>Ce que fait l'arme, en une phrase, sans chiffre (carte « Nouvelle » du level-up).</summary>
 	public string Summary { get; set; }
+	/// <summary>Une ligne sur l'ancien propriétaire de l'objet (pause, Collection).</summary>
+	public string LoreFlavor { get; set; }
 	public Dictionary<string, float> Stats { get; set; } = new();
 	/// <summary>Stats qui peuvent monter à chaque amélioration, avec leur poids dans le tirage.</summary>
 	public Dictionary<string, float> Growth { get; set; } = new();
@@ -155,7 +157,8 @@ public static class WeaponDataLoader
             Sprite = dict.ContainsKey("sprite") ? dict["sprite"].AsString() : null,
             Source = dict.ContainsKey("source") ? dict["source"].AsString() : null,
             RequiresSouvenir = dict.ContainsKey("requires_souvenir") ? dict["requires_souvenir"].AsString() : null,
-            Summary = dict.ContainsKey("summary") ? dict["summary"].AsString() : ""
+            Summary = dict.ContainsKey("summary") ? dict["summary"].AsString() : "",
+            LoreFlavor = dict.ContainsKey("lore_flavor") ? dict["lore_flavor"].AsString() : ""
         };
 
         if (dict.ContainsKey("growth"))

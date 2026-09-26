@@ -187,7 +187,7 @@ Deux lieux du monde, symétriques. Ils remplacent cinq concepts qui se recouvren
 - une description de 3 à 8 mots, verbe d'action, sans chiffre ;
 - une ligne sur l'ancien propriétaire (le champ `lore_flavor`, qui existe et n'est jamais affiché), montrée en pause et dans la Collection.
 
-**Proposition de catalogue, à valider ou amender.** Rôles et équilibrage seront revus en vague 2.
+**Catalogue validé par Raphaël le 26 septembre (nuit), sauf deux noms remplacés à titre provisoire.** Rôles et équilibrage seront revus en vague 2.
 
 | id | Nom actuel | Proposé | Description courte |
 |---|---|---|---|
@@ -212,9 +212,9 @@ Deux lieux du monde, symétriques. Ils remplacent cinq concepts qui se recouvren
 | void_edge | Tranchant du Vide | Gomme | Efface ce qu'elle touche. |
 | memory_lantern | Lanterne Mémorielle | Lampe à pétrole | Laisse le sol en feu. |
 | echo_gauntlets | Gantelets d'Écho | Gants de boxe | Chaque coup frappe deux fois. |
-| childs_drawing | Le Dessin d'Enfant | Dessin d'enfant | Des formes imprévisibles. |
+| childs_drawing | Le Dessin d'Enfant | Craies (provisoire, « Dessin d'enfant » refusé) | Des formes imprévisibles. |
 | last_broadcast | La Dernière Émission | Transistor | Un cône d'ondes qui s'élargit. |
-| clock_hand | L'Aiguille de l'Horloge | Aiguille d'horloge | Frappe et fige le temps autour. |
+| clock_hand | L'Aiguille de l'Horloge | Chronomètre (provisoire, « Aiguille d'horloge » refusé) | Frappe et fige le temps autour. |
 
 ### 4.7 Sprites des armes
 
@@ -584,3 +584,12 @@ Tous les chiffres de ce plan sont des points de départ, pas des réglages mesur
 | Décors urbains jamais placés | « Tu peux les virer » | Quatre décors supprimés, et leurs générateurs |
 | Style des icônes, fréquence des coffres | Questions de méthode | Jugés en recette : planche des icônes, et nombre de coffres croisés en jeu (réglage dans `chest_placement.json`) |
 | Recette des planches | « Je pense que tu peux faire mieux pour les armes, et les coffres pourraient être un peu plus détaillés / avoir des motifs ; sinon pour le reste c'est parfait. Go » | Coffres v2 : face avant tournée vers la caméra, planches et cerclages cloutés, nervures, fermoirs et étiquette, veines lumineuses et cristaux des deux côtés, frise, colonnettes et médaillon. Icônes v2 : trois-quarts, ligatures et virole de la faucille, cloueuse en pistolet (carter, chargeur de clous, poignée), boîte à coins de laiton, pieds et danseuse. Vague 1 lancée |
+
+### Réponses de Raphaël — 26 septembre (nuit)
+
+| Sujet | Réponse | Application |
+|---|---|---|
+| Pause des écrans Mémorial et Faille | « Garder la pause, pas de soucis » | Stratégie V2 §11 amendée |
+| Oublis | « Je préfère des malus sur la map que des malus de stats » ; les neuf Oublis de carte : « je valide tout », noms « un détail » | Lot 3D : Oublis de carte à la place des malus de stats |
+| Noms des armes (4.6) | Tous validés sauf Dessin d'enfant et Aiguille d'horloge (le nom seulement) | Lot 2A ; noms provisoires **Craies** et **Chronomètre**, à confirmer |
+| Icônes v2 (Faucille, Cloueuse, Boîte à musique) | Validées ; « tu n'as pas fait les nouveaux assets de la majorité des armes ? » | Lot 2B : les 21 autres icônes dans ce style |

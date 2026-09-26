@@ -318,6 +318,13 @@ public partial class PauseMenu : CanvasLayer
 			}
 		}
 		text.AddChild(MakeLabel(string.Join("  ·  ", parts), 13, StatLabelColor));
+		if (!string.IsNullOrEmpty(weapon.Base.LoreFlavor))
+		{
+			Label lore = MakeLabel(weapon.Base.LoreFlavor, 12, TextVeryDim);
+			lore.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+			lore.CustomMinimumSize = new Vector2(320, 0);
+			text.AddChild(lore);
+		}
 
 		VBoxContainer dealt = new() { SizeFlagsVertical = Control.SizeFlags.ShrinkCenter };
 		dealt.AddChild(MakeLabel(Mathf.RoundToInt(player.GetDamageDealt(weapon.Id)).ToString("N0", French), 15, StatBonusColor, HorizontalAlignment.Right));

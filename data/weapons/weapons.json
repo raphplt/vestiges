@@ -1,8 +1,8 @@
 [
   {
     "id": "chipped_blade",
-    "name": "Lame Ébréchée",
-    "description": "Un morceau de métal qui se souvient d'avoir été un couteau.",
+    "name": "Faucille",
+    "description": "Une faucille de jardin au manche poli par les mains.",
     "sprite": "assets/weapons/item_epee_bois.png",
     "tier": 1,
     "type": "melee",
@@ -23,12 +23,12 @@
     },
     "default_for": "vagabond",
     "source": "default",
-    "lore_flavor": "La lame est fissurée sur toute sa longueur. Elle devrait se briser au premier impact. Elle ne se brise pas."
+    "lore_flavor": "Le manche est usé à l'endroit exact où une main s'est posée chaque été. Le jardin a disparu. Le geste, non."
   },
   {
     "id": "heavy_hammer",
-    "name": "Marteau Lourd",
-    "description": "Un outil d'un ouvrier oublié. Chaque coup fait trembler le sol.",
+    "name": "Parcmètre",
+    "description": "Un parcmètre arraché au trottoir, pied de béton compris.",
     "sprite": "assets/weapons/item_masse_bois.png",
     "tier": 1,
     "type": "melee",
@@ -50,12 +50,12 @@
     },
     "default_for": "forgeuse",
     "source": "default",
-    "lore_flavor": "La tête du marteau porte des initiales gravées. Quelqu'un y tenait assez pour qu'il survive à l'Effacement."
+    "lore_flavor": "Il affiche encore le temps restant. Le compteur ne descend plus."
   },
   {
     "id": "makeshift_bow",
-    "name": "Arc de Fortune",
-    "description": "Du bois courbé et une corde qui n'existe plus vraiment. Tire quand même.",
+    "name": "Arc du gymnase",
+    "description": "Un arc d'initiation au numéro d'inventaire d'un collège.",
     "sprite": "assets/weapons/item_arc_bois.png",
     "tier": 1,
     "type": "ranged",
@@ -76,12 +76,12 @@
     },
     "default_for": "traqueur",
     "source": "default",
-    "lore_flavor": "La corde vibre avec un son qui ressemble presque à une voix. Presque."
+    "lore_flavor": "Un numéro au feutre sur la poignée. La corde vibre avec un son qui ressemble presque à une voix."
   },
   {
     "id": "sling",
-    "name": "Fronde Rouillée",
-    "description": "Lance des éclats de pierre en rafale. Peu précis, mais ça couvre large.",
+    "name": "Lance-billes",
+    "description": "Un lance-pierre d'enfant et une poche de billes.",
     "sprite": "assets/weapons/item_fronde_bois.png",
     "tier": 1,
     "type": "ranged",
@@ -102,12 +102,12 @@
       "spread_angle": 30
     },
     "source": "world",
-    "lore_flavor": "Chaque pierre qu'elle lance existait avant. C'est déjà beaucoup."
+    "lore_flavor": "Les billes sont toutes différentes. Quelqu'un les avait gagnées une à une dans une cour d'école."
   },
   {
     "id": "sharpened_pipe",
-    "name": "Tuyau Affûté",
-    "description": "Court, rapide, vicieux. Frappe en estoc devant le joueur.",
+    "name": "Parapluie",
+    "description": "Un grand parapluie noir à la pointe ferrée.",
     "sprite": "assets/weapons/item_lance_bois.png",
     "tier": 1,
     "type": "melee",
@@ -126,12 +126,12 @@
       "knockback": 5
     },
     "source": "world",
-    "lore_flavor": "Il faisait partie d'une machine. On ne sait plus laquelle. Lui non plus."
+    "lore_flavor": "Il s'ouvre encore, parfois, comme s'il allait pleuvoir. Il ne pleut plus depuis longtemps."
   },
   {
     "id": "crossbow",
-    "name": "Arbalète Artisanale",
-    "description": "Lente mais chaque carreau transperce les ennemis en ligne.",
+    "name": "Cloueuse",
+    "description": "Une cloueuse de chantier, chargée pour de bon.",
     "sprite": "assets/weapons/item_arbalete_bois.png",
     "tier": 2,
     "type": "ranged",
@@ -140,7 +140,7 @@
     "fx": {
       "projectile": "bolt"
     },
-    "summary": "Des traits qui traversent les rangs.",
+    "summary": "Des clous qui traversent les rangs.",
     "growth": { "damage": 3, "attack_speed": 2, "projectile_speed": 1, "range": 1 },
     "milestones": ["projectile_pierce"],
     "stats": {
@@ -152,12 +152,12 @@
       "projectile_pierce": 3
     },
     "source": "world",
-    "lore_flavor": "Le mécanisme est trop précis pour avoir été fabriqué ici. Comme s'il avait été assemblé par le souvenir de quelqu'un qui savait."
+    "lore_flavor": "Le nom de l'entreprise est à moitié effacé sur le carter. Le chantier n'a jamais été fini."
   },
   {
     "id": "cleaver",
-    "name": "Couperet du Boucher",
-    "description": "Arc de frappe large et brutal. Touche tout devant.",
+    "name": "Pelle à neige",
+    "description": "Une large pelle à neige à la lame cabossée.",
     "sprite": "assets/weapons/item_epee_metal.png",
     "tier": 2,
     "type": "melee",
@@ -178,12 +178,12 @@
       "knockback": 25
     },
     "source": "world",
-    "lore_flavor": "L'enseigne de la boucherie a disparu. Le couperet, non. Certaines choses survivent par la peur qu'elles inspirent."
+    "lore_flavor": "Quelqu'un dégageait chaque matin l'allée d'une voisine. La neige ne tombe plus ; l'habitude reste."
   },
   {
     "id": "whip",
-    "name": "Fouet de Câbles",
-    "description": "Frappe en cercle complet autour du joueur. Portée moyenne, dégâts faibles, mais touche tout.",
+    "name": "Rallonge",
+    "description": "Une rallonge électrique de vingt mètres.",
     "sprite": "assets/weapons/item_fouet.png",
     "tier": 2,
     "type": "melee",
@@ -203,12 +203,12 @@
       "knockback": 15
     },
     "source": "world",
-    "lore_flavor": "Des câbles électriques torsadés ensemble. Ils ne conduisent plus de courant. Ils conduisent autre chose."
+    "lore_flavor": "Elle ne conduit plus rien. Elle se souvient d'avoir éclairé une fête de quartier."
   },
   {
     "id": "throwing_axes",
-    "name": "Haches de Jet",
-    "description": "Lance 2 haches en éventail. Rapide, bon coverage.",
+    "name": "Assiettes",
+    "description": "Une pile d'assiettes du service du dimanche.",
     "sprite": "assets/weapons/item_throwing_axes.png",
     "tier": 2,
     "type": "ranged",
@@ -217,7 +217,7 @@
     "fx": {
       "projectile": "axe"
     },
-    "summary": "Lance deux lames en éventail.",
+    "summary": "Lance deux assiettes en éventail.",
     "growth": { "damage": 3, "attack_speed": 2, "projectile_speed": 1, "range": 1 },
     "milestones": ["projectile_count"],
     "stats": {
@@ -229,12 +229,12 @@
       "spread_angle": 25
     },
     "source": "world",
-    "lore_flavor": "Elles reviennent presque toujours. Comme si elles savaient où est la main qui les a lancées."
+    "lore_flavor": "Il en manque une au service. Elle revient presque toujours, comme si elle savait où est la table."
   },
   {
     "id": "nail_mace",
-    "name": "Masse Cloutée",
-    "description": "Frappe lente et dévastatrice. Les ennemis touchés saignent.",
+    "name": "Râteau",
+    "description": "Un râteau de jardin aux dents rouillées.",
     "sprite": "assets/weapons/item_masse_metal.png",
     "tier": 2,
     "type": "melee",
@@ -260,12 +260,12 @@
       "duration": 4.0
     },
     "source": "world",
-    "lore_flavor": "Chaque clou est un souvenir planté dans le métal. On ne sait pas de quoi. De douleur, probablement."
+    "lore_flavor": "Chaque dent a griffé la même pelouse pendant quarante ans."
   },
   {
     "id": "teachers_bell",
-    "name": "La Cloche de l'Institutrice",
-    "description": "Émet une onde sonore circulaire qui étourdit et repousse. Les créatures touchées ralentissent 50% pendant 2s.",
+    "name": "Cloche d'école",
+    "description": "La cloche de la récréation, au manche de bois.",
     "sprite": "assets/weapons/item_teachers_bell.png",
     "tier": 3,
     "type": "melee",
@@ -295,8 +295,8 @@
   },
   {
     "id": "surgeons_scalpel",
-    "name": "Le Scalpel du Chirurgien",
-    "description": "Attaque extrêmement rapide, courte portée. Chaque 5ème hit soigne le joueur.",
+    "name": "Scalpel",
+    "description": "Un scalpel d'hôpital, toujours stérile.",
     "sprite": "assets/weapons/item_surgeons_scalpel.png",
     "tier": 3,
     "type": "melee",
@@ -324,8 +324,8 @@
   },
   {
     "id": "lighthouse_shard",
-    "name": "Éclat de Phare",
-    "description": "Projette un rayon de lumière concentrée. Traverse tous les ennemis en ligne. Portée immense.",
+    "name": "Lentille de phare",
+    "description": "Un fragment de la lentille d'un phare.",
     "sprite": "assets/weapons/item_lighthouse_shard.png",
     "tier": 3,
     "type": "ranged",
@@ -350,8 +350,8 @@
   },
   {
     "id": "music_box",
-    "name": "La Boîte à Musique",
-    "description": "Émet des notes qui orbitent autour du joueur et touchent les ennemis proches. 3 notes en rotation permanente.",
+    "name": "Boîte à musique",
+    "description": "Une boîte à musique et sa danseuse.",
     "sprite": "assets/weapons/item_music_box.png",
     "tier": 3,
     "type": "special",
@@ -375,8 +375,8 @@
   },
   {
     "id": "chain_of_names",
-    "name": "La Chaîne des Noms",
-    "description": "Frappe le plus proche puis SAUTE à 2 ennemis adjacents. Plus il y a de cibles, plus ça fait mal.",
+    "name": "Trousseau",
+    "description": "Les clés de toutes les portes d'un immeuble.",
     "sprite": "assets/weapons/item_chain_of_names.png",
     "tier": 3,
     "type": "melee",
@@ -385,7 +385,7 @@
     "fx": {
       "style": "chain"
     },
-    "summary": "Saute de cible en cible.",
+    "summary": "Des clés qui sautent de cible en cible.",
     "growth": { "damage": 3, "attack_speed": 2, "chain_range": 1.5 },
     "milestones": ["chain_targets"],
     "stats": {
@@ -397,12 +397,12 @@
       "chain_damage_falloff": 0.8
     },
     "source": "loot_epic",
-    "lore_flavor": "Chaque maillon porte un nom gravé. Des centaines de noms. Aucun n'est lisible — mais la chaîne se souvient de chacun."
+    "lore_flavor": "Chaque clé porte une étiquette avec un nom. Il ne reste plus une porte à ouvrir."
   },
   {
     "id": "compass_needle",
-    "name": "L'Aiguille de Boussole",
-    "description": "Lance des aiguilles à tête chercheuse. Lentes mais ne ratent jamais leur cible.",
+    "name": "Boussole",
+    "description": "Une boussole de randonnée au verre fêlé.",
     "sprite": "assets/weapons/item_compass_needle.png",
     "tier": 3,
     "type": "ranged",
@@ -427,8 +427,8 @@
   },
   {
     "id": "photographers_flash",
-    "name": "Le Flash du Photographe",
-    "description": "Burst court. Explose un flash de lumière en cône devant le joueur. Aveugle les créatures (désorientation 1.5s).",
+    "name": "Polaroïd",
+    "description": "Un appareil instantané et son flash.",
     "sprite": "assets/weapons/item_photographers_flash.png",
     "tier": 3,
     "type": "ranged",
@@ -457,8 +457,8 @@
   },
   {
     "id": "essence_staff",
-    "name": "Bâton d'Essence",
-    "description": "Tire des orbes d'Essence à tête chercheuse. Consomme de l'Essence à chaque tir.",
+    "name": "Baguette de sourcier",
+    "description": "Une baguette de noisetier fourchue.",
     "sprite": "assets/weapons/item_baton_essence.png",
     "tier": 4,
     "type": "ranged",
@@ -481,12 +481,12 @@
     },
     "source": "world",
     "requires_souvenir": "memory_flame",
-    "lore_flavor": "Le bâton ne lance pas de l'Essence. Il lance des SOUVENIRS compressés. Chaque impact est un moment de vie projeté dans le néant."
+    "lore_flavor": "Elle cherchait l'eau sous les champs. Elle trouve maintenant ce qui vit encore."
   },
   {
     "id": "void_edge",
-    "name": "Tranchant du Vide",
-    "description": "Lame invisible. Extrêmement rapide. Les ennemis tués se désintègrent instantanément (pas de particules — ils cessent d'exister).",
+    "name": "Gomme",
+    "description": "Une gomme d'écolier, à moitié usée.",
     "sprite": "assets/weapons/item_epee_essence.png",
     "tier": 4,
     "type": "melee",
@@ -512,12 +512,12 @@
     },
     "source": "world",
     "requires_souvenir": "void_knowledge",
-    "lore_flavor": "Ce n'est pas une arme. C'est un concept. L'idée de trancher appliquée directement à la réalité. Il n'y a pas de lame — juste l'absence de ce qui était là."
+    "lore_flavor": "Elle a effacé des fautes d'orthographe. Maintenant, elle efface le reste."
   },
   {
     "id": "memory_lantern",
-    "name": "Lanterne Mémorielle",
-    "description": "Projette des flammes lentes qui persistent au sol (2s), créant des zones de dégâts.",
+    "name": "Lampe à pétrole",
+    "description": "Une lampe à pétrole de cabane.",
     "sprite": "assets/weapons/item_memory_lantern.png",
     "tier": 4,
     "type": "ranged",
@@ -550,8 +550,8 @@
   },
   {
     "id": "echo_gauntlets",
-    "name": "Gantelets d'Écho",
-    "description": "Frappe mêlée rapide. Chaque coup crée un écho retardé qui refrappe 0.3s plus tard au même endroit.",
+    "name": "Gants de boxe",
+    "description": "Une paire de gants de boxe au cuir fendu.",
     "sprite": "assets/weapons/item_echo_gauntlets.png",
     "tier": 4,
     "type": "melee",
@@ -578,12 +578,12 @@
     },
     "source": "world",
     "requires_souvenir": "echo_fragment",
-    "lore_flavor": "Le monde se souvient de chaque coup. Avec un léger retard — comme le souvenir d'un son après l'avoir entendu."
+    "lore_flavor": "Le club a fermé. Chaque coup résonne encore dans la salle vide, avec un léger retard."
   },
   {
     "id": "childs_drawing",
-    "name": "Le Dessin d'Enfant",
-    "description": "Un crayon de couleur. Dessine des formes en l'air qui prennent vie et attaquent les ennemis. Les formes sont aléatoires et imprévisibles.",
+    "name": "Craies",
+    "description": "Une boîte de craies de couleur.",
     "sprite": "assets/weapons/item_childs_drawing.png",
     "tier": 5,
     "type": "special",
@@ -616,12 +616,12 @@
     },
     "source": "loot_legendary",
     "drop_condition": "Coffre légendaire du Sanctuaire",
-    "lore_flavor": "Un dessin de maison avec un soleil et deux bonhommes bâtons. L'encre n'a pas séché depuis des mois. Ou des années. Les dessins d'enfants sont les dernières choses que le monde oublie."
+    "lore_flavor": "La pluie a lavé les dessins du trottoir. Les craies se souviennent de chaque forme."
   },
   {
     "id": "last_broadcast",
-    "name": "La Dernière Émission",
-    "description": "Un micro de radio cassé. Émet une fréquence qui fait vibrer la réalité. Onde en cône qui grossit avec la distance. Les créatures touchées subissent des dégâts croissants tant qu'elles restent dans le cône.",
+    "name": "Transistor",
+    "description": "Un poste de radio à piles.",
     "sprite": "assets/weapons/item_last_broadcast.png",
     "tier": 5,
     "type": "ranged",
@@ -653,8 +653,8 @@
   },
   {
     "id": "clock_hand",
-    "name": "L'Aiguille de l'Horloge",
-    "description": "Frappe lente et massive. Chaque coup RALENTIT LE TEMPS localement pendant 0.5s dans un rayon autour de l'impact.",
+    "name": "Chronomètre",
+    "description": "Un chronomètre d'entraîneur au bout de son cordon.",
     "sprite": "assets/weapons/item_clock_hand.png",
     "tier": 5,
     "type": "melee",
@@ -681,6 +681,6 @@
     },
     "source": "loot_legendary",
     "drop_condition": "Coffre légendaire — Ruines urbaines uniquement",
-    "lore_flavor": "L'aiguille des heures d'une horloge de gare. Des milliers de regards l'ont consultée chaque jour. Elle ne peut pas oublier le temps. Elle l'impose encore."
+    "lore_flavor": "Il a mesuré des milliers de tours de piste. On l'a arrêté une dernière fois ; le temps a obéi."
   }
 ]
