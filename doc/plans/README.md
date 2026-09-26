@@ -50,6 +50,10 @@ Les numéros servent à identifier les plans, pas à imposer leur exécution int
 
 Un seul lot d'implémentation ouvert à la fois. Un échec de lisibilité, de performance ou de fun ramène au lot concerné avant expansion.
 
+**Mise à jour du 26 septembre (nuit, session cloud sans Raphaël) :**
+- [10 T3](10-terrain-et-tiles.md#lot-t3-livré--chemins-et-routes-26-septembre-2026) : chemins de terre entre les régions, raccordés aux rues, avec un style par biome. Les rues verticales ne sont plus coupées en deux bandes, et les trottoirs ont des bordures usées.
+- Travail fait dans un conteneur sans GPU : les points à revérifier sur la machine de Raphaël sont listés dans [A-VERIFIER.md](A-VERIFIER.md).
+
 **Mise à jour du 26 septembre (soir) :**
 - Raphaël valide les tuiles de la forêt (« mille fois mieux »).
 - Le lot T1 couvre quatre biomes sur cinq (forêt, carrière, champs, marais) en tuiles de Wang ; la ville reste à faire ([10](10-terrain-et-tiles.md)).

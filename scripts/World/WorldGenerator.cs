@@ -51,6 +51,9 @@ public class WorldGenerator
     public List<BiomeData> ActiveBiomes => _activeBiomes;
     public int BiomeRegionCount => _regionCenters.Count;
 
+    /// <summary>Centres des régions de la mosaïque de biomes, en cellules (relie les chemins de terre, plan 10 T3).</summary>
+    public IReadOnlyList<Vector2> BiomeRegionCenters => _regionCenters;
+
     /// <summary>Taille et forme de la mosaïque de biomes (world_gen.json, bloc biome_layout).</summary>
     public struct BiomeLayoutConfig
     {

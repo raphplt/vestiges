@@ -62,6 +62,7 @@ public partial class WorldSetup : Node2D
     private UrbanLayout _urbanLayout;
     private SwampPropLayout _swampLayout;
     private WildFieldsLayout _wildFieldsLayout;
+    private PathNetwork _pathNetwork;
 
     /// <summary>Indique si l'initialisation async est terminée.</summary>
     public bool IsWorldReady { get; private set; }
@@ -120,23 +121,28 @@ public partial class WorldSetup : Node2D
             _wildFieldsLayout = wildFieldsGen.Apply(_terrain, _generator, "wild_fields");
         }
 
+        // Chemins de terre entre les régions, raccordés aux rues (plan 10 T3) : rien ne pousse dessus.
+        _pathNetwork = PathNetworkGenerator.Build(_generator, _terrain, _urbanLayout, _wildFieldsLayout, _config.Paths,
+                                                  _config.BiomeLayout.RegionSpacing, Seed);
+        _swampLayout?.Placements.RemoveAll(placement => _pathNetwork.Cells.Contains(placement.Cell));
+
         // Préparer le TileSet et mapper (rapide)
         _ground.TileSet = _ground.TileSet.Duplicate() as TileSet;
         EnsureRoadOverlayLayer();
         _tileMapper = new BiomeTileMapper();
         _tileMapper.Initialize(_ground.TileSet, _generator.ActiveBiomes);
 
-        // Enregistrer les 16 tiles directionnelles de route (indexées par bitmask de connectivité)
+        // Enregistrer les tiles directionnelles de route (bitmask de connectivité × parité du rang)
         if (_urbanLayout != null)
         {
             int urbanIndex = _tileMapper.GetBiomeIndex("urban_ruins");
             if (urbanIndex >= 0)
             {
                 ImageTexture[] roadTextures = RoadTileGenerator.GetOrGenerate();
-                for (int mask = 0; mask < RoadTileGenerator.VariantCount; mask++)
+                for (int variant = 0; variant < RoadTileGenerator.VariantCount; variant++)
                 {
-                    string key = RoadTileGenerator.GetRoadKey(mask);
-                    _tileMapper.RegisterRuntimeTileGroup(urbanIndex, key, new[] { roadTextures[mask] });
+                    string key = RoadTileGenerator.GetRoadKey(variant);
+                    _tileMapper.RegisterRuntimeTileGroup(urbanIndex, key, new[] { roadTextures[variant] });
                 }
             }
             _tileMapper.SetUrbanLayout(_urbanLayout);
@@ -158,6 +164,7 @@ public partial class WorldSetup : Node2D
         // Étaler ApplyTerrain sur plusieurs frames (le plus gros coût)
         await ApplyTerrainAsync(_terrain, _urbanLayout, onProgress);
         GroundMaterial.Apply(_ground, _roadOverlay, _generator, _tileMapper, _terrain, _config.MapRadius, _config.GroundBlend);
+        AddPaths();
 
         onProgress?.Invoke("Brouillard de guerre...");
         InitializeFog();
@@ -197,6 +204,7 @@ public partial class WorldSetup : Node2D
         _urbanLayout = null;
         _swampLayout = null;
         _wildFieldsLayout = null;
+        _pathNetwork = null;
 
         IsWorldReady = true;
         GD.Print($"[WorldSetup] World generated with seed {Seed}");
@@ -208,6 +216,7 @@ public partial class WorldSetup : Node2D
         CreateVoidBackground();
         ApplyTerrain(_terrain, _urbanLayout);
         GroundMaterial.Apply(_ground, _roadOverlay, _generator, _tileMapper, _terrain, _config.MapRadius, _config.GroundBlend);
+        AddPaths();
         InitializeFog();
         if (!PoisDisabled)
         {
@@ -233,6 +242,7 @@ public partial class WorldSetup : Node2D
         _urbanLayout = null;
         _swampLayout = null;
         _wildFieldsLayout = null;
+        _pathNetwork = null;
         IsWorldReady = true;
         GD.Print($"[WorldSetup] World generated with seed {Seed} (sync)");
     }
@@ -401,6 +411,16 @@ public partial class WorldSetup : Node2D
         await ApplyRoadOverlayAsync(urbanLayout, onProgress);
     }
 
+    /// <summary>Chemins dessinés sur la couche des routes, juste avant elle : une rue recouvre le chemin qui la rejoint.</summary>
+    private void AddPaths()
+    {
+        if (_pathNetwork == null || _pathNetwork.Strokes.Count == 0)
+            return;
+        Node2D paths = PathMeshes.Build(_pathNetwork);
+        AddChild(paths);
+        MoveChild(paths, _roadOverlay != null ? _roadOverlay.GetIndex() : _ground.GetIndex() + 1);
+    }
+
     private void InitializeFog()
     {
         _fogOfWar = GetNodeOrNull<FogOfWar>("FogOfWar");
@@ -515,6 +535,9 @@ public partial class WorldSetup : Node2D
             foreach (Vector2I cell in swampLayout.ReservedCells)
                 blocked.Add(cell);
         }
+
+        if (_pathNetwork != null)
+            blocked.UnionWith(_pathNetwork.Cells);
 
         return blocked.Count > 0 ? blocked : null;
     }
@@ -881,6 +904,7 @@ public class WorldGenConfig
     public WorldGenerator.BiomeLayoutConfig BiomeLayout = WorldGenerator.BiomeLayoutConfig.Default;
     public PropRules PropRules = PropRules.Default;
     public GroundBlendConfig GroundBlend = GroundBlendConfig.Default;
+    public PathNetworkConfig Paths = PathNetworkConfig.Default;
 
     public static WorldGenConfig Load()
     {
@@ -958,6 +982,9 @@ public class WorldGenConfig
                 NoiseScale = (float)blend.GetValueOrDefault("noise_scale", defaults.NoiseScale).AsDouble(),
             };
         }
+
+        if (dict.ContainsKey("paths"))
+            config.Paths = PathNetworkConfig.Parse(dict["paths"].AsGodotDictionary());
 
         if (dict.ContainsKey("props"))
         {

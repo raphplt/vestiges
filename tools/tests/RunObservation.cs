@@ -20,6 +20,7 @@ namespace Vestiges.Tests;
 /// --capture-map : répartition des biomes autour du spawn (plusieurs seeds) et vues dézoomées.
 /// --capture-props : zone la plus chargée en décors de chaque biome, collisions affichées (sauf --hide-collisions).
 /// --capture-junctions : frontières entre biomes les plus proches du départ, avec et sans décors.
+/// --capture-paths : chemins de terre par biome, raccord à une rue, vue dézoomée du départ (RunObservation.Paths.cs).
 /// --capture-erasure : une capture par phase de l'oubli, puis un dégradé de toutes les phases.
 /// --measure-props [--measure-seconds 8] : coût de rendu des décors par biome (RunObservation.PropCost.cs).
 /// --capture-weapons [--weapons a,b] : galerie des attaques du joueur (RunObservation.Weapons.cs).
@@ -63,6 +64,8 @@ public partial class RunObservation : Node
                 await CapturePropHotspots();
             else if (Array.IndexOf(args, "--capture-junctions") >= 0)
                 await CaptureJunctions();
+            else if (Array.IndexOf(args, "--capture-paths") >= 0)
+                await CapturePaths();
             else if (Array.IndexOf(args, "--capture-erasure") >= 0)
                 await CaptureErasure();
             else if (Array.IndexOf(args, "--capture-abilities") >= 0)

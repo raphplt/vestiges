@@ -32,6 +32,7 @@
     "poi_count_max": 4,
     "wang_tile_groups": ["grass", "concrete", "forest"],
     "blend_terrains": true,
+    "path_style": { "tone": "#7a6650", "ruts": 1.0, "width_px": 46 },
     "tile_sources": {
         "grass": [
             "champs/tile_champs_sol_w00",

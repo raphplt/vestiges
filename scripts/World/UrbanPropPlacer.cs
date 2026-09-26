@@ -131,7 +131,10 @@ public static class UrbanPropPlacer
 
 			if (IsCrowded(streetProps, roadCell))
 				continue;
-			if (TryPlaceProp(sprite, roadCell, ground, container, usedCells, cache))
+			// Une rue verticale passe au milieu de sa colonne, à ±16 px du centre de la cellule (RoadTileGenerator).
+			bool vertical = layout.RoadCells.Contains(roadCell + Vector2I.Up);
+			Vector2 offset = vertical ? new Vector2((roadCell.Y & 1) != 0 ? -16f : 16f, 0f) : Vector2.Zero;
+			if (TryPlaceProp(sprite, roadCell, ground, container, usedCells, cache, offset))
 			{
 				streetProps.Add(roadCell);
 				placed++;
@@ -246,7 +249,8 @@ public static class UrbanPropPlacer
 		TileMapLayer ground,
 		Node2D container,
 		HashSet<Vector2I> usedCells,
-		Dictionary<string, Texture2D> cache)
+		Dictionary<string, Texture2D> cache,
+		Vector2 offset = default)
 	{
 		if (usedCells.Contains(cell))
 			return false;
@@ -256,7 +260,7 @@ public static class UrbanPropPlacer
 			return false;
 
 		EnvironmentProp prop = new();
-		prop.GlobalPosition = ground.MapToLocal(cell);
+		prop.GlobalPosition = ground.MapToLocal(cell) + offset;
 		container.AddChild(prop);
 		prop.Initialize(texture, null, 0f, IsBlocking(spritePath));
 
