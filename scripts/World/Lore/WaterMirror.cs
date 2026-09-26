@@ -199,7 +199,6 @@ public partial class WaterMirror : Node2D
 
 		// Récompense
 		_eventBus.EmitSignal(EventBus.SignalName.XpGained, 20f);
-		_eventBus.EmitSignal(EventBus.SignalName.SouvenirDiscovered, "souvenir_eau", "Mémoire des Eaux", "l_effacement");
 
 		GD.Print("[WaterMirror] Reflet découvert — +20 XP, lore débloqué");
 	}

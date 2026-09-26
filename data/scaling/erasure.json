@@ -13,6 +13,7 @@
     "tracked_radius_cells": 14,
     "stabilize_radius_cells": 2.5,
     "stabilize_memory_floor": 0.72,
+    "stabilize_on_chest_open": true,
     "void_damage_ratio_per_second": 0.06,
     "zone_effects": {
         "fragile": {

@@ -114,35 +114,6 @@ public static class VfxFactory
 	}
 
 	// =========================================================================
-	// === Flash de lumière ponctuelle (hit, collecte) ===
-	// =========================================================================
-
-	public static PointLight2D CreateFlashLight(Vector2 position, Color color, float energy = 0.8f, float duration = 0.15f)
-	{
-		var light = new PointLight2D
-		{
-			GlobalPosition = position,
-			Color = color,
-			Energy = energy,
-			TextureScale = 0.3f,
-			Texture = GD.Load<Texture2D>("res://icon.svg"),
-		};
-
-		light.TreeEntered += () =>
-		{
-			Tween tween = light.CreateTween();
-			tween.TweenProperty(light, "energy", 0f, duration);
-			tween.TweenCallback(Callable.From(() =>
-			{
-				if (GodotObject.IsInstanceValid(light))
-					light.QueueFree();
-			}));
-		};
-
-		return light;
-	}
-
-	// =========================================================================
 	// === XP collect burst (one-shot flash à la collecte) ===
 	// =========================================================================
 
@@ -244,11 +215,6 @@ public static class VfxFactory
 
 		root.AddChild(particles);
 
-		// Flash de lumière dorée
-		PointLight2D light = CreateFlashLight(position, new Color(1f, 0.92f, 0.5f), 1.2f, 0.4f);
-		root.AddChild(light);
-		light.Position = Vector2.Zero;
-
 		var timer = new Timer { WaitTime = 1f, OneShot = true, Autostart = true };
 		timer.Timeout += root.QueueFree;
 		root.AddChild(timer);
@@ -315,10 +281,6 @@ public static class VfxFactory
 			particles.Emitting = true;
 			root.AddChild(particles);
 		}
-
-		PointLight2D light = CreateFlashLight(position, new Color(1f, 0.7f, 0.3f), 1.5f, 0.3f);
-		root.AddChild(light);
-		light.Position = Vector2.Zero;
 
 		var timer = new Timer { WaitTime = 0.6f, OneShot = true, Autostart = true };
 		timer.Timeout += root.QueueFree;

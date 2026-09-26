@@ -52,6 +52,9 @@ public static class QuestDataLoader
                 continue;
 
             Godot.Collections.Dictionary dict = item.AsGodotDictionary();
+            // Quête mise de côté tant que le système qu'elle suit est désactivé (ex. POI, plan 17 lot 0B).
+            if (dict.ContainsKey("enabled") && !dict["enabled"].AsBool())
+                continue;
             QuestDefinition definition = new()
             {
                 Id = dict.ContainsKey("id") ? dict["id"].AsString() : "",

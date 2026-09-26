@@ -133,6 +133,7 @@
     },
     {
         "id": "fragment_deternite",
+        "enabled": false,
         "name": "Fragment d'Éternité",
         "description": "-% cooldown par niveau",
         "icon_color": [0.9, 0.8, 0.2],

@@ -23,7 +23,6 @@
         "resource_cache": 1.2,
         "guarded_chest": 0.8,
         "lore_ruin": 1.0,
-        "merchant_npc": 1.0,
         "anomaly": 0.5,
         "sanctuary": 0.15
     },

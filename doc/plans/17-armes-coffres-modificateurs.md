@@ -328,6 +328,43 @@ Périmètre : §4.9 et les lignes 0A du plan 18 (9 à 13, 18, 21). Hors lot : le
 
 **Recette attendue** : les coffres se voient-ils sans les chercher ? Les colonnes gênent-elles ? Fréquence (un coffre vu toutes les 45 s pour le bot) ; sprites des quatre coffres ; invite et flèches ; « Don » pour nommer un perk reçu.
 
+#### Lot 0B détaillé — 26 septembre
+
+Périmètre : lignes 0B du plan 18 (1, 3 à 8, 20) et ses réponses §5. Raphaël enchaîne les lots et fera la recette à la fin (DECISIONS, 26 septembre).
+
+| # | Étape | Détail |
+|---|---|---|
+| 1 | Flash au logo Godot | Supprimer la `PointLight2D` texturée par `icon.svg` du level-up et des explosions d'élites (`VfxFactory.CreateFlashLight`) ; particules et sprite d'explosion restent |
+| 2 | POI et éléments de lore | Désactivés par données (`pois_enabled`, `lore_elements_enabled` dans `world_gen.json`), code gardé jusqu'à la refonte (vague 3, plan 08). Les coffres restent : ils ne dépendent plus des POI |
+| 3 | Quête « Explorer 3 points d'intérêt » | Champ `enabled` lu par `QuestDataLoader` ; la quête passe à `false` jusqu'au retour des POI (reste 6 quêtes de run pour 3 tirées) |
+| 4 | Effacement sans POI | Les POI et les éléments de lore stabilisaient la mémoire autour d'eux. L'ouverture d'un coffre prend le relais (`ChestOpened` → `StabilizeZone`), réglable dans `erasure.json` ; vérifié par capture de l'oubli |
+| 5 | Faux Souvenirs, buff `warmth` | Émissions retirées des trois éléments de lore et de la porte (aucun effet réel, un succès débloqué à tort) |
+| 6 | Marchand | Retiré de `pois.json` et des cinq tirages de POI |
+| 7 | Tisseuse | `sprite_folder` au lieu de `sprite`, pieds calés par capture du bestiaire |
+| 8 | Perks V1 dans le butin | Filtre livré en 0A ; test de tirage sur 1 000 coffres par type (`--loot-draws`), aucun perk exclu ni malédiction |
+| 9 | Passif `fragment_deternite` | Proposé au level-up sans aucun effet : `enabled: false`, retiré des tirages, gardé pour les sauvegardes |
+
+#### Lot 0B livré — 26 septembre
+
+**Fait :**
+- Flash de level-up et d'explosion d'élite : la `PointLight2D` au logo Godot est supprimée (`VfxFactory.CreateFlashLight` retirée) ; particules et sprite d'explosion restent.
+- POI et éléments de lore désactivés par `world_gen.json` (`pois_enabled`, `lore_elements_enabled`) ; leur code reste pour la refonte. Le mutateur `PoisDisabled` ne retire plus les coffres.
+- Quête « Lire les traces » (explorer 3 POI) : `enabled: false`, lu par `QuestDataLoader` ; il reste 6 quêtes de run.
+- Effacement : ouvrir un coffre ravive la mémoire alentour comme l'exploration d'un POI (`stabilize_on_chest_open` dans `erasure.json`). Sans cela, seuls les vrais Souvenirs stabilisaient encore.
+- Faux Souvenirs des éléments de lore et buff `warmth` retirés ; signal `PlayerBuffApplied` supprimé (plus aucun émetteur).
+- Marchand retiré de `pois.json` et des cinq tirages de biome.
+- Tisseuse : `sprite_folder` et `sprite_feet_offset: 19` ; ses 112 images servent enfin.
+- Passif `fragment_deternite` retiré des tirages.
+- Test `--loot-draws 1000` : 4 000 coffres tirés sans perk exclu ni malédiction, 27 perks distincts ; les coffres anciens ne donnent que de l'Essence en profil dev (tous les Souvenirs y sont déjà retrouvés), repli prévu.
+
+**Trouvé en vérifiant (commits à part) :**
+- Blocage de partie : une arme ramassée pendant l'écran de niveau rendait le choix « nouvelle arme » impossible ; l'écran se fermait et le jeu restait en pause. Le banc headless s'y est bloqué (seed 20260926). Un choix devenu impossible relance maintenant une offre à jour (`a90c36e`).
+- Durée de run à l'horloge murale, pauses comprises (score de survie, quête de durée, historique) : elle suit le temps de jeu (`6613cb4`).
+
+**Vérifié :** build sans avertissement, smoke, `test_movement`, `test_enemy_abilities`, `test_dev_mode` ; captures de la Tisseuse (sprite d'araignée, ombre sous les pattes) et des phases de l'oubli (inchangées) ; journal : aucun POI ni élément de lore généré, 23 coffres.
+
+**Point ouvert :** les Souvenirs ne viennent plus que des coffres anciens (3 par carte) ; les sanctuaires et bâtiments à fouiller en donnaient aussi. La progression méta ralentit jusqu'au retour des Mémoriaux (vague 3).
+
 ### Vague 1 — Armes : présentation et montée en puissance
 
 | Lot | Contenu | Vérification |

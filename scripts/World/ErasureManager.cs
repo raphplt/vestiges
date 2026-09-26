@@ -29,6 +29,8 @@ public partial class ErasureManager : Node
     private int _trackedRadiusCells = 14;
     private float _stabilizeRadiusCells = 2.5f;
     private float _stabilizeMemoryFloor = 0.72f;
+    // Sans POI (plan 17 lot 0B), ouvrir un coffre est le geste d'exploration qui ravive la mémoire alentour.
+    private bool _stabilizeOnChestOpen = true;
     // Néant (mémoire nulle) : part des PV max perdue par seconde tant que le joueur y reste (Stratégie V2 §8).
     private float _voidDamageRatioPerSecond = 0.06f;
     private float _globalErasurePercent;
@@ -61,6 +63,7 @@ public partial class ErasureManager : Node
         _eventBus = GetNode<EventBus>("/root/EventBus");
         _eventBus.SouvenirDiscovered += OnSouvenirDiscovered;
         _eventBus.PoiDiscovered += OnPoiDiscovered;
+        _eventBus.ChestOpened += OnChestOpened;
 
         _memoryImage = Image.CreateFromData(MemoryWindowCells, MemoryWindowCells, false, Image.Format.R8, _memoryBytes);
         _memoryTexture = ImageTexture.CreateFromImage(_memoryImage);
@@ -78,6 +81,7 @@ public partial class ErasureManager : Node
         {
             _eventBus.SouvenirDiscovered -= OnSouvenirDiscovered;
             _eventBus.PoiDiscovered -= OnPoiDiscovered;
+            _eventBus.ChestOpened -= OnChestOpened;
         }
     }
 
@@ -327,6 +331,12 @@ public partial class ErasureManager : Node
         StabilizeZone(position);
     }
 
+    private void OnChestOpened(string chestId, string rarity, Vector2 position)
+    {
+        if (_stabilizeOnChestOpen)
+            StabilizeZone(position);
+    }
+
     private void LoadConfig()
     {
         FileAccess file = FileAccess.Open("res://data/scaling/erasure.json", FileAccess.ModeFlags.Read);
@@ -355,6 +365,7 @@ public partial class ErasureManager : Node
         _trackedRadiusCells = dict.ContainsKey("tracked_radius_cells") ? (int)dict["tracked_radius_cells"].AsDouble() : _trackedRadiusCells;
         _stabilizeRadiusCells = dict.ContainsKey("stabilize_radius_cells") ? (float)dict["stabilize_radius_cells"].AsDouble() : _stabilizeRadiusCells;
         _stabilizeMemoryFloor = dict.ContainsKey("stabilize_memory_floor") ? (float)dict["stabilize_memory_floor"].AsDouble() : _stabilizeMemoryFloor;
+        _stabilizeOnChestOpen = !dict.ContainsKey("stabilize_on_chest_open") || dict["stabilize_on_chest_open"].AsBool();
         _voidDamageRatioPerSecond = dict.ContainsKey("void_damage_ratio_per_second") ? (float)dict["void_damage_ratio_per_second"].AsDouble() : _voidDamageRatioPerSecond;
     }
 }

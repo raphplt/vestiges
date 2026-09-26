@@ -10,6 +10,8 @@ namespace Vestiges.Tests;
 /// --capture-chests : chaque coffre du monde cadré (joueur à portée, invite visible), avec puis sans décors,
 /// un plein écran au départ (premier coffre, repères de bord) et un plein écran à distance d'un coffre.
 /// Une ligne RESULT donne le nombre de coffres par type et leur distance au départ en fraction du rayon.
+/// --loot-draws N : N coffres de chaque type tirés sans être appliqués ; échec si un perk exclu du level-up
+/// (V1, passif, autre personnage) ou une malédiction sort.
 /// </summary>
 public partial class RunObservation
 {
@@ -85,6 +87,44 @@ public partial class RunObservation
         foreach (KeyValuePair<string, int> entry in counts)
             summary.Add($"{entry.Key}={entry.Value}");
         GD.Print($"[RunObservation] RESULT chests total={chests.Count} {string.Join(" ", summary)} bands={string.Join(",", bands)}");
+    }
+
+    private void MeasureLootDraws(int draws)
+    {
+        Vestiges.Progression.PerkManager perks = _world.GetNode<Vestiges.Progression.PerkManager>("PerkManager");
+        HashSet<string> disabled = (HashSet<string>)typeof(Vestiges.Progression.PerkManager)
+            .GetField("_disabledPerks", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)
+            .GetValue(null);
+        int failures = 0;
+        foreach (Vestiges.Infrastructure.ChestData chest in Vestiges.Infrastructure.ChestDataLoader.GetAll())
+        {
+            Dictionary<string, int> types = new();
+            HashSet<string> perkIds = new();
+            for (int i = 0; i < draws; i++)
+            {
+                foreach (ResolvedLoot loot in LootRewards.Resolve(LootResolver.Roll(chest.LootTableId, chest.LootRolls), perks))
+                {
+                    types[loot.Type] = types.GetValueOrDefault(loot.Type) + 1;
+                    if (loot.Type != "perk")
+                        continue;
+                    perkIds.Add(loot.ItemId);
+                    Vestiges.Infrastructure.PerkData data = Vestiges.Infrastructure.PerkDataLoader.Get(loot.ItemId);
+                    if (data == null || data.IsPassive || disabled.Contains(loot.ItemId)
+                        || (data.CharacterId != null && data.CharacterId != _player.CharacterId))
+                    {
+                        failures++;
+                        GD.PushError($"[RunObservation] perk exclu tiré : {loot.ItemId} ({chest.Id})");
+                    }
+                }
+            }
+            if (types.ContainsKey("cursed_item"))
+                failures++;
+            List<string> parts = new();
+            foreach (KeyValuePair<string, int> entry in types)
+                parts.Add($"{entry.Key}={entry.Value}");
+            GD.Print($"[RunObservation] RESULT loot {chest.Id} draws={draws} {string.Join(" ", parts)} distinct_perks={perkIds.Count}");
+        }
+        GD.Print($"[RunObservation] RESULT loot failures={failures}");
     }
 
     private void SaveFrame(string name)

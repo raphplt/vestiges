@@ -163,7 +163,7 @@ public partial class WorldSetup : Node2D
         InitializeFog();
         await YieldFrame();
 
-        if (!PoisDisabled)
+        if (_config.PoisEnabled && !PoisDisabled)
         {
             onProgress?.Invoke("Points d'intérêt...");
             SpawnPois();
@@ -188,8 +188,9 @@ public partial class WorldSetup : Node2D
         BuildPropOcclusion();
         await YieldFrame();
 
-        onProgress?.Invoke("Éléments de lore...");
-        SpawnLoreElements();
+        onProgress?.Invoke("Atmosphère...");
+        if (_config.LoreElementsEnabled)
+            SpawnLoreElements();
         InitBiomeAtmosphere();
         await YieldFrame();
 
@@ -210,7 +211,7 @@ public partial class WorldSetup : Node2D
         ApplyTerrain(_terrain, _urbanLayout);
         GroundMaterial.Apply(_ground, _roadOverlay, _generator, _tileMapper, _terrain, _config.MapRadius, _config.GroundBlend);
         InitializeFog();
-        if (!PoisDisabled)
+        if (_config.PoisEnabled && !PoisDisabled)
             SpawnPois();
         SpawnChests();
         SpawnEnvironmentProps(_urbanLayout, _swampLayout);
@@ -225,7 +226,8 @@ public partial class WorldSetup : Node2D
             SwampPropPlacer.PlaceProps(_swampLayout, _ground, propContainer, _usedCells);
         }
         BuildPropOcclusion();
-        SpawnLoreElements();
+        if (_config.LoreElementsEnabled)
+            SpawnLoreElements();
         InitBiomeAtmosphere();
 
         _terrain = null;
@@ -874,6 +876,9 @@ public class WorldGenConfig
     public int BiomeCount = 3;
     public int EdgeFadeWidth = 5;
     public int PoiMinDistanceBetween = 8;
+    /// <summary>POI et éléments de lore V1, désactivés jusqu'à leur refonte (plan 18 §5, plan 17 lot 0B).</summary>
+    public bool PoisEnabled = true;
+    public bool LoreElementsEnabled = true;
     public int FogRevealRadius = 6;
     public int FogInitialClearRadius = 8;
     public List<string> AvailableBiomes = new();
@@ -920,6 +925,12 @@ public class WorldGenConfig
 
         if (dict.ContainsKey("poi_min_distance_between"))
             config.PoiMinDistanceBetween = (int)dict["poi_min_distance_between"].AsDouble();
+
+        if (dict.ContainsKey("pois_enabled"))
+            config.PoisEnabled = dict["pois_enabled"].AsBool();
+
+        if (dict.ContainsKey("lore_elements_enabled"))
+            config.LoreElementsEnabled = dict["lore_elements_enabled"].AsBool();
 
         if (dict.ContainsKey("fog_reveal_radius"))
             config.FogRevealRadius = (int)dict["fog_reveal_radius"].AsDouble();

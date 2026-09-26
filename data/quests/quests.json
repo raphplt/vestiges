@@ -78,6 +78,7 @@
     },
     {
         "id": "run_search_the_map",
+        "enabled": false,
         "category": "run",
         "name": "Lire les traces",
         "description": "Explorer 3 points d'intérêt.",

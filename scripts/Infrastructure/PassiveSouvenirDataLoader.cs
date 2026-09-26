@@ -52,11 +52,12 @@ public static class PassiveSouvenirDataLoader
 		{
 			Godot.Collections.Dictionary dict = item.AsGodotDictionary();
 			PassiveSouvenirData data = ParseEntry(dict);
-			if (data != null)
-			{
-				_cache[data.Id] = data;
+			if (data == null)
+				continue;
+			_cache[data.Id] = data;
+			// Passif sans effet branché : gardé pour les sauvegardes, retiré des tirages (plan 18).
+			if (!dict.ContainsKey("enabled") || dict["enabled"].AsBool())
 				_all.Add(data);
-			}
 		}
 
 		_loaded = true;

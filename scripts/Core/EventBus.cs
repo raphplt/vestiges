@@ -80,7 +80,6 @@ public partial class EventBus : Node
 
     // --- Bonus événementiels ---
     [Signal] public delegate void XpMultiplierChangedEventHandler(float multiplier);
-    [Signal] public delegate void PlayerBuffAppliedEventHandler(string buffId, float duration);
     [Signal] public delegate void FogRevealBurstEventHandler(int cellX, int cellY, int radius);
 
     // --- Difficulte dynamique ---
