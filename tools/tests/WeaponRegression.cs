@@ -108,10 +108,15 @@ public partial class WeaponRegression : Node2D
     {
         WeaponInstance equipped = _player.EquippedWeapon;
         int before = _player.GetWeaponFragmentLevel(equipped.Id);
-        bool upgraded = _player.UpgradeEquippedWeaponAtAltar();
+        RandomNumberGenerator rng = new() { Seed = 3 };
+        bool rareOrBetter = true;
+        for (int i = 0; i < 200; i++)
+            rareOrBetter &= UpgradeRoller.RollRarityAtLeast(0f, "rare", rng).Rank >= UpgradeRoller.Get("rare").Rank;
+        UpgradeRarity rarity = UpgradeRoller.RollRarityAtLeast(0f, "rare", rng);
+        bool upgraded = _player.UpgradeWeapon(equipped.Id, UpgradeRoller.RollWeaponGains(equipped, rarity, rng));
         int after = _player.GetWeaponFragmentLevel(equipped.Id);
-        Check(upgraded && after == before + 1 && after == _player.EquippedWeapon.Level,
-            $"Autel : badge et arme montent ensemble ({before} → {after}, arme {_player.EquippedWeapon.Level})");
+        Check(rareOrBetter && upgraded && after == before + 1 && after == _player.EquippedWeapon.Level,
+            $"Mémorial : arme ravivée Rare au moins, badge et arme montent ensemble ({before} → {after}, arme {_player.EquippedWeapon.Level})");
     }
 
     private void CheckBanishUpgrade()

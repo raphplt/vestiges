@@ -1,0 +1,27 @@
+{
+	"_comment": "Mémoriaux (plan 17 lot 3B). placement : groupes par couronne de distance au départ (fraction du rayon de carte), placés après les coffres et à min_spacing_px de tout autre lieu. Activation : trois éclats apparaissent entre shard_distance_px, à ramasser en shard_time secondes, sinon ils s'éteignent et on peut réessayer. Récompense : blessing_choices bénédictions, rareté au moins blessing_min_rarity, montée par la Chance, l'oubli de la zone et le Péril. Services ensuite, contre de l'Essence ; chaque usage d'un service au même Mémorial augmente son prix de cost_growth (fraction du prix de base). Un Mémorial englouti par le Néant est perdu.",
+	"memorial": {
+		"sprite_dormant": "assets/landmarks/memorial_dormant.png",
+		"sprite_awake": "assets/landmarks/memorial_awake.png",
+		"sprite_shard": "assets/landmarks/memory_shard.png",
+		"placement": [
+			{ "count": 1, "band": [0.08, 0.14] },
+			{ "count": 4, "band": [0.2, 0.9] }
+		],
+		"min_spacing_px": 900,
+		"hold_time": 0.6,
+		"shards": 3,
+		"shard_distance_px": [200, 380],
+		"shard_time": 20,
+		"shard_pickup_px": 30,
+		"blessing_choices": 3,
+		"blessing_min_rarity": "uncommon",
+		"services": {
+			"weapon_cost": 30,
+			"weapon_min_rarity": "rare",
+			"heal_cost": 20,
+			"heal_percent": 0.4,
+			"cost_growth": 0.5
+		}
+	}
+}

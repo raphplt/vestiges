@@ -119,8 +119,12 @@ public partial class GameBootstrap : Node
         EndgameManager endgameManager = new() { Name = "EndgameManager" };
         sceneRoot.AddChild(endgameManager);
 
-        AltarManager altarManager = new() { Name = "AltarManager" };
-        sceneRoot.AddChild(altarManager);
+        ChoiceScreen choiceScreen = new() { Name = "ChoiceScreen" };
+        sceneRoot.AddChild(choiceScreen);
+
+        MemorialDirector memorialDirector = new() { Name = "MemorialDirector" };
+        memorialDirector.Setup(choiceScreen, essenceTracker, erasureManager);
+        sceneRoot.AddChild(memorialDirector);
 
         QuestManager questManager = new() { Name = "QuestManager" };
         sceneRoot.AddChild(questManager);

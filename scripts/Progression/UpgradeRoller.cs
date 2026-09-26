@@ -86,6 +86,14 @@ public static class UpgradeRoller
 		return _rarities[rank];
 	}
 
+	/// <summary>Rareté tirée comme <see cref="RollRarity"/>, relevée à <paramref name="minId"/> au moins.</summary>
+	public static UpgradeRarity RollRarityAtLeast(float bumpSteps, string minId, RandomNumberGenerator rng)
+	{
+		UpgradeRarity rarity = RollRarity(bumpSteps, rng);
+		UpgradeRarity min = Get(minId);
+		return rarity.Rank < min.Rank ? min : rarity;
+	}
+
 	/// <summary>
 	/// Gains d'une amélioration d'arme : stats montables tirées selon leur poids (sans répétition), au gain de la
 	/// rareté ; paliers (+1 à une stat entière) aux raretés qui en donnent, si l'arme en a.

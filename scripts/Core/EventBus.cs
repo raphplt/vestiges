@@ -91,6 +91,11 @@ public partial class EventBus : Node
     [Signal] public delegate void CrisisStartedEventHandler(int crisisNumber, int intensity);
     [Signal] public delegate void CrisisEndedEventHandler(int crisisNumber);
 
+    // --- Mémoriaux (plan 17 lot 3B) ---
+    [Signal] public delegate void MemorialInteractedEventHandler(Node2D memorial);
+    /// <summary>Un Mémorial vient d'être ravivé : la zone autour se souvient.</summary>
+    [Signal] public delegate void MemorialAwakenedEventHandler(Vector2 position);
+
     // --- Essence (V2) ---
     [Signal] public delegate void EssenceChangedEventHandler(int newAmount);
 }

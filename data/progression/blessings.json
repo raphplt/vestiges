@@ -1,0 +1,15 @@
+{
+	"_comment": "Bénédictions des Mémoriaux (plan 17 lot 3B) : un gain permanent de stat ; name_key dans translations.csv. amount est multiplié par le gain de la rareté tirée (passive_gain de upgrade_rarities.json, 1 à 3). multiplicative : ×(1 + amount × gain) ; additive : + amount × gain.",
+	"blessings": [
+		{ "id": "blessing_breath", "name_key": "BLESSING_BREATH", "stat": "max_hp", "modifier_type": "additive", "amount": 10 },
+		{ "id": "blessing_sure_hand", "name_key": "BLESSING_SURE_HAND", "stat": "damage", "modifier_type": "multiplicative", "amount": 0.05 },
+		{ "id": "blessing_light_step", "name_key": "BLESSING_LIGHT_STEP", "stat": "speed", "modifier_type": "multiplicative", "amount": 0.04 },
+		{ "id": "blessing_old_rhythm", "name_key": "BLESSING_OLD_RHYTHM", "stat": "attack_speed", "modifier_type": "multiplicative", "amount": 0.05 },
+		{ "id": "blessing_mending", "name_key": "BLESSING_MENDING", "stat": "regen_rate", "modifier_type": "additive", "amount": 0.2 },
+		{ "id": "blessing_bulwark", "name_key": "BLESSING_BULWARK", "stat": "armor", "modifier_type": "additive", "amount": 2 },
+		{ "id": "blessing_true_eye", "name_key": "BLESSING_TRUE_EYE", "stat": "crit_chance", "modifier_type": "additive", "amount": 0.025 },
+		{ "id": "blessing_wide_gesture", "name_key": "BLESSING_WIDE_GESTURE", "stat": "aoe_radius", "modifier_type": "multiplicative", "amount": 0.05 },
+		{ "id": "blessing_good_star", "name_key": "BLESSING_GOOD_STAR", "stat": "luck", "modifier_type": "additive", "amount": 0.03 },
+		{ "id": "blessing_call_of_shards", "name_key": "BLESSING_CALL_OF_SHARDS", "stat": "xp_magnet_radius", "modifier_type": "multiplicative", "amount": 0.1 }
+	]
+}

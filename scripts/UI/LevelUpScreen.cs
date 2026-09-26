@@ -15,17 +15,15 @@ namespace Vestiges.UI;
 public partial class LevelUpScreen : CanvasLayer
 {
     private const string MenusPath = "res://assets/ui/menus/";
-    private const float CardWidth = 540f;
+    private const float CardWidth = ChoiceStyle.CardWidth;
 
-    private static readonly Color GoldBright = new(0.9f, 0.78f, 0.39f);
-    private static readonly Color GoldDim = new(0.63f, 0.47f, 0.16f);
-    private static readonly Color TextLight = new(0.92f, 0.9f, 0.85f);
-    private static readonly Color TextColor = new(0.72f, 0.7f, 0.66f);
-    private static readonly Color TextDim = new(0.5f, 0.5f, 0.55f);
-    private static readonly Color GainColor = new(0.55f, 0.85f, 0.45f);
-    private static readonly Color NeutralBorder = new(0.55f, 0.52f, 0.46f);
-    private static readonly Color CardBg = new(0.07f, 0.07f, 0.11f, 0.96f);
-    private static readonly Color OverlayColor = new(0.0f, 0.0f, 0.02f, 0.75f);
+    private static readonly Color GoldBright = ChoiceStyle.GoldBright;
+    private static readonly Color TextLight = ChoiceStyle.TextLight;
+    private static readonly Color TextColor = ChoiceStyle.TextColor;
+    private static readonly Color TextDim = ChoiceStyle.TextDim;
+    private static readonly Color GainColor = ChoiceStyle.GainColor;
+    private static readonly Color NeutralBorder = ChoiceStyle.NeutralBorder;
+    private static readonly Color OverlayColor = ChoiceStyle.OverlayColor;
     private static readonly Color BanishColor = new(0.85f, 0.25f, 0.2f);
 
     private const int RayCount = 14;
@@ -227,7 +225,7 @@ public partial class LevelUpScreen : CanvasLayer
         HBoxContainer header = new();
         text.AddChild(header);
         string tag = choice.Rarity != null
-            ? $"{RarityGlyph(choice.Rarity.Rank)} {RarityPalette.DisplayName(choice.Rarity.Id).ToUpper()}".Trim()
+            ? $"{ChoiceStyle.RarityGlyph(choice.Rarity.Rank)} {RarityPalette.DisplayName(choice.Rarity.Id).ToUpper()}".Trim()
             : Tr(isWeapon ? "LEVELUP_NEW_WEAPON" : "LEVELUP_NEW_PASSIVE");
         header.AddChild(MakeLabel(tag, 12, frame, true));
         if (!isNew)
@@ -305,16 +303,6 @@ public partial class LevelUpScreen : CanvasLayer
         };
     }
 
-    /// <summary>La rareté se lit aussi à la forme : rien, ◆, ◆◆, ★, ★★ du Commun au Légendaire.</summary>
-    private static string RarityGlyph(int rank) => rank switch
-    {
-        1 => "◆",
-        2 => "◆◆",
-        3 => "★",
-        4 => "★★",
-        _ => "",
-    };
-
     private static Texture2D LoadIcon(FragmentOption choice, bool isWeapon)
     {
         string path = isWeapon
@@ -346,30 +334,11 @@ public partial class LevelUpScreen : CanvasLayer
         return null;
     }
 
-    private static Label MakeLabel(string text, int size, Color color, bool expand, HorizontalAlignment align = HorizontalAlignment.Left)
-    {
-        Label label = new() { Text = text, HorizontalAlignment = align };
-        if (expand || align == HorizontalAlignment.Right)
-            label.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
-        label.AddThemeFontSizeOverride("font_size", size);
-        label.AddThemeColorOverride("font_color", color);
-        return label;
-    }
+    private static Label MakeLabel(string text, int size, Color color, bool expand, HorizontalAlignment align = HorizontalAlignment.Left) =>
+        ChoiceStyle.MakeLabel(text, size, color, expand, align);
 
-    private void StyleCard(int index, bool focused)
-    {
-        Color border = _banishMode ? BanishColor : _cardColors[index];
-        int rank = _cardOptions[index].Rarity?.Rank ?? 0;
-        StyleBoxFlat style = new()
-        {
-            BgColor = focused ? CardBg.Lightened(0.08f) : CardBg,
-            BorderColor = focused ? border.Lightened(0.25f) : border with { A = 0.85f },
-        };
-        // Les grandes raretés ont un cadre plus épais : la rareté se voit aussi sans la couleur.
-        style.SetBorderWidthAll((focused ? 3 : 2) + (rank >= 3 ? 1 : 0));
-        style.SetCornerRadiusAll(3);
-        _cards[index].AddThemeStyleboxOverride("panel", style);
-    }
+    private void StyleCard(int index, bool focused) =>
+        ChoiceStyle.StyleCard(_cards[index], _banishMode ? BanishColor : _cardColors[index], _cardOptions[index].Rarity?.Rank ?? 0, focused);
 
     // ==============================
     // Actions et navigation
@@ -407,20 +376,7 @@ public partial class LevelUpScreen : CanvasLayer
         return button;
     }
 
-    private static void StyleButton(Button button, bool focused)
-    {
-        StyleBoxFlat style = new()
-        {
-            BgColor = focused ? new Color(0.16f, 0.15f, 0.22f, 0.95f) : new Color(0.1f, 0.1f, 0.15f, 0.9f),
-            BorderColor = focused ? GoldBright : GoldDim with { A = button.Disabled ? 0.3f : 1f },
-        };
-        style.SetBorderWidthAll(focused ? 2 : 1);
-        style.SetCornerRadiusAll(3);
-        style.ContentMarginLeft = 12;
-        style.ContentMarginRight = 12;
-        foreach (string state in new[] { "normal", "hover", "pressed", "disabled" })
-            button.AddThemeStyleboxOverride(state, style);
-    }
+    private static void StyleButton(Button button, bool focused) => ChoiceStyle.StyleButton(button, focused);
 
     public override void _Input(InputEvent @event)
     {

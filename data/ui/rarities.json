@@ -1,11 +1,12 @@
 {
-    "_comment": "Palette de rareté unique (plan 17 lot 0A) : coffres, level-up, écran de butin, HUD et armes au sol. color = teinte principale, light et dark = tons clair et sombre des effets (colonne de lumière, contours). lore n'est pas un palier : c'est la teinte des coffres anciens.",
+    "_comment": "Palette de rareté unique (plan 17 lot 0A) : coffres, level-up, écran de butin, HUD et armes au sol. color = teinte principale, light et dark = tons clair et sombre des effets (colonne de lumière, contours). lore n'est pas un palier : c'est la teinte des coffres anciens ; memorial, celle des Mémoriaux et de leurs éclats.",
     "rarities": [
         { "id": "common", "name_key": "RARITY_COMMON", "color": "#C8C2B6", "light": "#F5F0EB", "dark": "#6B6161" },
         { "id": "uncommon", "name_key": "RARITY_UNCOMMON", "color": "#7FCB89", "light": "#D8F0C8", "dark": "#2D5A27" },
         { "id": "rare", "name_key": "RARITY_RARE", "color": "#67A6E8", "light": "#C8E4F8", "dark": "#2A4A78" },
         { "id": "epic", "name_key": "RARITY_EPIC", "color": "#C97AE8", "light": "#EED4FA", "dark": "#4A3066" },
         { "id": "legendary", "name_key": "RARITY_LEGENDARY", "color": "#F0C85C", "light": "#FFF0B8", "dark": "#8A5A1C" },
-        { "id": "lore", "name_key": "RARITY_LORE", "color": "#E8A868", "light": "#F8E0B8", "dark": "#6B3A24" }
+        { "id": "lore", "name_key": "RARITY_LORE", "color": "#E8A868", "light": "#F8E0B8", "dark": "#6B3A24" },
+        { "id": "memorial", "name_key": "LANDMARK_MEMORIAL", "color": "#7FD6CF", "light": "#D8F8F2", "dark": "#2A5A5E" }
     ]
 }

@@ -8,10 +8,10 @@ namespace Vestiges.World;
 
 /// <summary>
 /// Coffre du monde : sprite du pipeline procédural posé à son pivot, ombre de contact, colonne de lumière
-/// à la couleur de sa rareté. Les coffres fermés sont tenus dans un registre, pour que l'invite, les repères
-/// de bord d'écran et l'interaction les trouvent sans recherche par groupe.
+/// à la couleur de sa rareté. Les coffres fermés sont tenus dans un registre, pour que les repères de bord d'écran
+/// les trouvent sans recherche par groupe ; l'interaction passe par <see cref="Interactables"/>.
 /// </summary>
-public partial class Chest : StaticBody2D
+public partial class Chest : StaticBody2D, IInteractable
 {
     private static readonly List<Chest> _closed = new();
 
@@ -39,15 +39,28 @@ public partial class Chest : StaticBody2D
     /// <summary>Point au-dessus du sprite, pour l'invite et la jauge d'ouverture.</summary>
     public Vector2 TopPosition => GlobalPosition + new Vector2(0f, _sprite != null ? _sprite.Offset.Y - 3f : -24f);
 
+    public bool CanInteract => CanOpen;
+    public Vector2 InteractPosition => GlobalPosition;
+    public Vector2 PromptPosition => TopPosition;
+    public string PromptVerbKey => "CHEST_OPEN_PROMPT";
+    public float HoldTime => OpenTime;
+    public Color GaugeColor => RarityPalette.Main(Rarity);
+
+    /// <summary>Le butin passe par l'écran de butin : <see cref="WorldInteraction"/> ouvre le coffre lui-même.</summary>
+    public void Interact(Player player) { }
+
     public override void _EnterTree()
     {
-        if (!_isOpened)
-            _closed.Add(this);
+        if (_isOpened)
+            return;
+        _closed.Add(this);
+        Interactables.Register(this);
     }
 
     public override void _ExitTree()
     {
         _closed.Remove(this);
+        Interactables.Unregister(this);
     }
 
     public override void _Ready()
@@ -85,6 +98,7 @@ public partial class Chest : StaticBody2D
 
         _isOpened = true;
         _closed.Remove(this);
+        Interactables.Unregister(this);
         if (_openTexture != null)
             ShowTexture(_openTexture);
         _column.Visible = false;

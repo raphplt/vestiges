@@ -492,6 +492,12 @@ Vérifié : build sans avertissement, smoke test, `tools/test_weapons.sh` (12 co
 
 La pression monte comme prévu. Le niveau atteint varie trop avec les armes que le bot prend (première carte) pour juger le gain d'XP : à regarder en jeu, les valeurs sont un point de départ.
 
+**3B livré (26 septembre, nuit).** Cinq Mémoriaux par carte (un près du départ, quatre au loin), placés comme les coffres et après eux par un placeur commun (`SitePlacer`) : ils s'écartent des coffres et réservent leur dégagement avant les décors. Endormi, un Mémorial porte une colonne de lumière turquoise (teinte `memorial` de la palette). « Raviver » libère trois éclats à 200–380 px, à ramasser en 20 s ; sinon ils s'éteignent et on peut réessayer. Ravivé : la zone est stabilisée (`MemorialAwakened` → Effacement), puis trois bénédictions à rareté (Inhabituel au moins ; Chance, oubli de la zone et Péril la font monter). Ensuite « Honorer » ouvre les services : raviver une arme au choix (amélioration Rare au moins, 30 Essence) ou se soigner (40 % des PV, 20 Essence) ; chaque usage au même Mémorial augmente le prix de moitié. Un Mémorial englouti par le Néant est perdu. Réglages : `data/world/landmarks.json`, `data/progression/blessings.json` (dix bénédictions).
+
+Socle commun posé pour la suite : `IInteractable` et son registre (coffres, Mémoriaux, puis Failles passent par la même touche, la même invite et la même jauge ; `ChestInteraction` devient `WorldInteraction`) ; `ChoiceScreen`, l'écran de choix commun, avec la grammaire du level-up extraite dans `ChoiceStyle` ; `StatModifier`, modificateur de stat réversible (bénédictions, Oublis). L'Autel (`AltarManager`, `altars.json`) est retiré.
+
+Vérifié : build sans avertissement, smoke test, `tools/test_weapons.sh` (« arme ravivée Rare au moins »), `tools/test_movement.sh`, capture `CAPTURE_EXTRA_ARGS="--capture-memorial"` regardée (invite, éclats, bénédictions, services avant et après achat, stèle ravivée). Deux défauts vus et corrigés : la colonne du Mémorial traversait le compteur d'éclats, et l'invite des services portait le même nom que le soin.
+
 #### Vague 3 détaillée — 26 septembre (soir)
 
 La vague 2 attend deux validations de Raphaël (noms, un par un ; style des icônes v2) ; la vague 4 dépend du plan 13, non arbitré. La vague 3 a sa direction validée : elle passe devant. Choix provisoires :

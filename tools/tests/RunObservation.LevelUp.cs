@@ -65,7 +65,9 @@ public partial class RunObservation
             _player.AddWeapon(WeaponDataLoader.Get(weapon));
         foreach (string passive in new[] { "flamme_interieure", "memoire_vive", "resonance" })
             _player.AddOrUpgradePassive(passive, 1f, 1);
-        _player.UpgradeEquippedWeaponAtAltar();
+        WeaponInstance equipped = _player.EquippedWeapon;
+        _player.UpgradeWeapon(equipped.Id, UpgradeRoller.RollWeaponGains(equipped,
+            UpgradeRoller.Get("rare"), new RandomNumberGenerator()));
         _player.AIInputOverride = new Vector2(0.6f, 0.2f);
         double until = Time.GetTicksMsec() / 1000.0 + 20.0;
         while (Time.GetTicksMsec() / 1000.0 < until)

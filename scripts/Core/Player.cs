@@ -95,7 +95,6 @@ public partial class Player : CharacterBody2D
     // Passive Souvenir inventory (max 4, from level-up)
     public const int MaxPassiveSlots = 4;
     private readonly List<ActivePassiveSouvenir> _passiveSlots = new();
-    private readonly RandomNumberGenerator _upgradeRng = new();
     // Dégâts infligés par arme depuis le début de la run (pause, plan 17 lot 1C).
     private readonly Dictionary<string, float> _damageDealtByWeapon = new();
 
@@ -178,7 +177,7 @@ public partial class Player : CharacterBody2D
     private WeaponInstance _coneWeapon;
     private bool _isConeActive;
 
-    // Jauge de fouille des POI (les coffres ont la leur, dans ChestInteraction)
+    // Jauge de fouille des POI (les lieux du monde ont la leur, dans WorldInteraction)
     private InteractionGauge _interactionGauge;
 
     // Footsteps
@@ -190,7 +189,7 @@ public partial class Player : CharacterBody2D
     private float _poiProgress;
     private bool _isExploringPoi;
 
-    private ChestInteraction _chests;
+    private WorldInteraction _interaction;
     private PerkManager _perkManager;
 
     public float CurrentHp => _currentHp;
@@ -240,9 +239,9 @@ public partial class Player : CharacterBody2D
 
         _interactionGauge = new InteractionGauge { Name = "InteractionGauge", Position = new Vector2(0f, -44f) };
         AddChild(_interactionGauge);
-        _chests = new ChestInteraction { Name = "ChestInteraction" };
-        AddChild(_chests);
-        _chests.Setup(this);
+        _interaction = new WorldInteraction { Name = "WorldInteraction" };
+        AddChild(_interaction);
+        _interaction.Setup(this);
         Mobility = new PlayerMobility(MobilityConfig.Load());
         _mobilityFeedback = new MobilityFeedback { Name = "MobilityFeedback" };
         AddChild(_mobilityFeedback);
@@ -443,19 +442,6 @@ public partial class Player : CharacterBody2D
         return _weaponSlots[slotIndex];
     }
 
-    /// <summary>L'Autel améliore l'arme du premier emplacement : une amélioration Rare au moins (plan 17 §4.3).</summary>
-    public bool UpgradeEquippedWeaponAtAltar()
-    {
-        WeaponInstance equipped = EquippedWeapon;
-        if (equipped == null)
-            return false;
-
-        UpgradeRarity rarity = UpgradeRoller.RollRarity(0f, _upgradeRng);
-        if (rarity.Rank < UpgradeRoller.Get("rare").Rank)
-            rarity = UpgradeRoller.Get("rare");
-        return UpgradeWeapon(equipped.Id, UpgradeRoller.RollWeaponGains(equipped, rarity, _upgradeRng));
-    }
-
     /// <summary>Recalcule les timers d'attaque (appelé après upgrade d'attack_speed).</summary>
     public void RefreshAttackSpeed()
     {
@@ -550,10 +536,10 @@ public partial class Player : CharacterBody2D
 
     // --- Weapon Fragment Levels (level-up re-selection) ---
 
-    /// <summary>Applique une amélioration tirée au level-up ou à l'Autel : ses gains, et un niveau de plus.</summary>
+    /// <summary>Applique une amélioration tirée au level-up, au Mémorial ou à la Faille : ses gains, et un niveau de plus.</summary>
     public bool UpgradeWeapon(string weaponId, IReadOnlyList<StatGain> gains)
     {
-        // Le niveau n'existe qu'à un endroit, l'instance d'arme : level-up, Autel et badge le lisent tous.
+        // Le niveau n'existe qu'à un endroit, l'instance d'arme : level-up, Mémorial et badge le lisent tous.
         WeaponInstance weapon = FindWeaponSlot(weaponId, out int slot);
         if (weapon == null || !weapon.ApplyUpgrade(gains))
             return false;
@@ -607,7 +593,7 @@ public partial class Player : CharacterBody2D
         if (inputDir != Vector2.Zero || Mobility.IsDashStep)
         {
             CancelPoiExplore();
-            _chests.Cancel();
+            _interaction.Cancel();
             if (inputDir != Vector2.Zero)
                 _facingDirection = inputDir.Normalized();
         }
@@ -651,7 +637,7 @@ public partial class Player : CharacterBody2D
         ApplyRegen(dt);
         ProcessSlowDecay(dt);
         ProcessPoiExplore(dt);
-        _chests.Step(dt, !_isExploringPoi && !Mobility.IsDashing);
+        _interaction.Step(dt, !_isExploringPoi && !Mobility.IsDashing);
         ProcessKillSpeedDecay(dt);
         ProcessOrbitalWeapons(dt);
         ProcessSustainedCone(dt);
@@ -682,16 +668,16 @@ public partial class Player : CharacterBody2D
         {
             if (Mobility.IsDashing)
                 return;
-            if (_isExploringPoi || _chests.IsOpening)
+            if (_isExploringPoi || _interaction.IsActive)
             {
                 CancelPoiExplore();
-                _chests.Cancel();
+                _interaction.Cancel();
             }
             else if (TryStartPoiExplore())
             {
                 // POI interaction takes priority
             }
-            else if (_chests.TryStart())
+            else if (_interaction.TryStart())
             {
                 // Chest interaction
             }
@@ -718,7 +704,7 @@ public partial class Player : CharacterBody2D
         _mobilityRequiresRelease = true;
         Velocity = Vector2.Zero;
         CancelPoiExplore();
-        _chests.Cancel();
+        _interaction.Cancel();
     }
 
     /// <summary>Le bord du monde (cellules hors carte ou dissoutes) ne se traverse pas, même en marchant.</summary>
@@ -777,13 +763,13 @@ public partial class Player : CharacterBody2D
     public void AITriggerInteract()
     {
         if (_isDead || !IsAIControlled || Mobility.IsDashing || _gameManager.CurrentState != GameManager.GameState.Run || GetTree().Paused) return;
-        if (_isExploringPoi || _chests.IsOpening)
+        if (_isExploringPoi || _interaction.IsActive)
         {
             CancelPoiExplore();
-            _chests.Cancel();
+            _interaction.Cancel();
         }
         else if (TryStartPoiExplore()) { }
-        else if (_chests.TryStart()) { }
+        else if (_interaction.TryStart()) { }
     }
 
     // --- Journal ---
@@ -1640,7 +1626,7 @@ public partial class Player : CharacterBody2D
     public void ConfigureLoot(UI.ChestLootScreen lootScreen, PerkManager perkManager)
     {
         _perkManager = perkManager;
-        _chests.Configure(lootScreen, perkManager);
+        _interaction.Configure(lootScreen, perkManager);
     }
 
     /// <summary>Texte flottant montrant le loot obtenu, empilé verticalement.</summary>
@@ -1703,7 +1689,7 @@ public partial class Player : CharacterBody2D
         _mobilityFeedback.Suspend();
         _mobilityFeedback.Visible = false;
         CancelPoiExplore();
-        _chests.Cancel();
+        _interaction.Cancel();
         Velocity = Vector2.Zero;
         foreach (Timer timer in _weaponTimers)
             timer.Stop();

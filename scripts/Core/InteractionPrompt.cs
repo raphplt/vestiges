@@ -15,7 +15,7 @@ public partial class InteractionPrompt : Node2D
     private static readonly Color TextColor = new("E8E0D4");
 
     private Label _label;
-    private const string VerbKey = "CHEST_OPEN_PROMPT";
+    private string _verbKey = "CHEST_OPEN_PROMPT";
     private bool _gamepad;
 
     public override void _Ready()
@@ -49,10 +49,14 @@ public partial class InteractionPrompt : Node2D
     }
 
     /// <summary>Affiche l'invite, son bas centré sur <paramref name="anchor"/> (coordonnées monde).</summary>
-    public void ShowAt(Vector2 anchor)
+    public void ShowAt(Vector2 anchor, string verbKey)
     {
         GlobalPosition = anchor.Round();
         Visible = true;
+        if (verbKey == _verbKey)
+            return;
+        _verbKey = verbKey;
+        Refresh();
     }
 
     public void HidePrompt() => Visible = false;
@@ -67,7 +71,7 @@ public partial class InteractionPrompt : Node2D
     private void Refresh()
     {
         string key = _gamepad ? InputRemapManager.GetJoyButtonName(Action) : InputRemapManager.GetKeyName(Action);
-        _label.Text = $"[{key}] {Tr(VerbKey)}";
+        _label.Text = $"[{key}] {Tr(_verbKey)}";
         _label.ResetSize();
         _label.Size = _label.GetMinimumSize();
         _label.Position = new Vector2(-Mathf.Round(_label.Size.X / 2f), -_label.Size.Y);

@@ -64,6 +64,7 @@ public partial class ErasureManager : Node
         _eventBus.SouvenirDiscovered += OnSouvenirDiscovered;
         _eventBus.PoiDiscovered += OnPoiDiscovered;
         _eventBus.ChestOpened += OnChestOpened;
+        _eventBus.MemorialAwakened += OnMemorialAwakened;
 
         _memoryImage = Image.CreateFromData(MemoryWindowCells, MemoryWindowCells, false, Image.Format.R8, _memoryBytes);
         _memoryTexture = ImageTexture.CreateFromImage(_memoryImage);
@@ -82,6 +83,7 @@ public partial class ErasureManager : Node
             _eventBus.SouvenirDiscovered -= OnSouvenirDiscovered;
             _eventBus.PoiDiscovered -= OnPoiDiscovered;
             _eventBus.ChestOpened -= OnChestOpened;
+            _eventBus.MemorialAwakened -= OnMemorialAwakened;
         }
     }
 
@@ -327,6 +329,11 @@ public partial class ErasureManager : Node
     }
 
     private void OnPoiDiscovered(string poiId, string poiType, Vector2 position)
+    {
+        StabilizeZone(position);
+    }
+
+    private void OnMemorialAwakened(Vector2 position)
     {
         StabilizeZone(position);
     }

@@ -169,8 +169,8 @@ public partial class WorldSetup : Node2D
             SpawnPois();
             await YieldFrame();
         }
-        // Avant les décors : chaque coffre réserve son dégagement.
-        SpawnChests();
+        // Avant les décors : chaque coffre et chaque lieu réserve son dégagement.
+        SpawnSites();
 
         onProgress?.Invoke("Décors...");
         SpawnEnvironmentProps(_urbanLayout, _swampLayout);
@@ -213,7 +213,7 @@ public partial class WorldSetup : Node2D
         InitializeFog();
         if (_config.PoisEnabled && !PoisDisabled)
             SpawnPois();
-        SpawnChests();
+        SpawnSites();
         SpawnEnvironmentProps(_urbanLayout, _swampLayout);
         if (_urbanLayout != null)
         {
@@ -433,9 +433,11 @@ public partial class WorldSetup : Node2D
             enemyPool, enemyContainer);
     }
 
-    private void SpawnChests()
+    private void SpawnSites()
     {
-        ChestSpawner.SpawnChests(_generator, _ground, _poiContainer, _usedCells, Seed, _urbanLayout, _wildFieldsLayout);
+        SitePlacer placer = new(_generator, _ground, _usedCells, Seed, _urbanLayout, _wildFieldsLayout, ChestDataLoader.LoadPlacement());
+        ChestSpawner.SpawnChests(placer, _poiContainer);
+        LandmarkSpawner.SpawnLandmarks(placer, _poiContainer);
     }
 
     private void BuildPropOcclusion()

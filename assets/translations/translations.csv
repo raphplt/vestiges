@@ -65,6 +65,40 @@ RARITY_EPIC,Épique,Epic
 RARITY_LEGENDARY,Légendaire,Legendary
 RARITY_LORE,Ancien,Ancient
 CHEST_OPEN_PROMPT,Ouvrir,Open
+MEMORIAL_WAKE_PROMPT,Raviver,Rekindle
+MEMORIAL_SERVICES_PROMPT,Honorer,Honor
+LANDMARK_MEMORIAL,Mémorial,Memorial
+MEMORIAL_GATHER_STATUS,Éclats {0}/{1} · {2} s,Shards {0}/{1} · {2} s
+MEMORIAL_AWAKE_TITLE,MÉMORIAL RAVIVÉ,MEMORIAL REKINDLED
+MEMORIAL_AWAKE_SUBTITLE,La zone se souvient. Choisis une bénédiction.,The area remembers. Choose a blessing.
+MEMORIAL_SERVICES_TITLE,MÉMORIAL,MEMORIAL
+MEMORIAL_WEAPON_TAG,Amélioration {0} au moins,{0} upgrade or better
+MEMORIAL_WEAPON_TITLE,Raviver : {0},Rekindle: {0}
+MEMORIAL_PRICE,{0} Essence,{0} Essence
+MEMORIAL_HEAL_TAG,Soin,Healing
+MEMORIAL_HEAL_TITLE,Se recueillir,Rest a while
+MEMORIAL_HEAL_LINE,+{0} % des PV,+{0}% HP
+MEMORIAL_ESSENCE,Essence : {0},Essence: {0}
+MEMORIAL_LEAVE,Partir,Leave
+MEMORIAL_HEALED,Le corps se souvient,The body remembers
+BLESSING_BREATH,Souffle retrouvé,Breath Regained
+BLESSING_SURE_HAND,Geste sûr,Sure Hand
+BLESSING_LIGHT_STEP,Pas léger,Light Step
+BLESSING_OLD_RHYTHM,Rythme ancien,Old Rhythm
+BLESSING_MENDING,Chair qui se souvient,Flesh Remembers
+BLESSING_BULWARK,Rempart,Bulwark
+BLESSING_TRUE_EYE,Œil juste,True Eye
+BLESSING_WIDE_GESTURE,Geste ample,Wide Gesture
+BLESSING_GOOD_STAR,Bonne étoile,Lucky Star
+BLESSING_CALL_OF_SHARDS,Appel des éclats,Call of Shards
+OUBLI_HEAVY_LIMBS,Membres lourds,Heavy Limbs
+OUBLI_THIN_BLOOD,Sang léger,Thin Blood
+OUBLI_BLUNT_EDGE,Fil émoussé,Blunt Edge
+OUBLI_LOST_RHYTHM,Rythme perdu,Lost Rhythm
+OUBLI_OPEN_WOUNDS,Plaies ouvertes,Open Wounds
+OUBLI_NARROW_GESTURE,Geste étroit,Narrow Gesture
+OUBLI_BAD_STAR,Mauvaise étoile,Ill Star
+OUBLI_DULL_SENSES,Sens émoussés,Dull Senses
 CHEST_LOOT_ESSENCE,Essence ×{0},Essence ×{0}
 CHEST_LOOT_XP,+{0} XP,+{0} XP
 CHEST_LOOT_SOUVENIR,Souvenir : {0},Memory: {0}

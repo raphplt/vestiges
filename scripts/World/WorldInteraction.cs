@@ -1,17 +1,17 @@
 using System.Collections.Generic;
 using Godot;
 using Vestiges.Core;
-using Vestiges.Infrastructure;
 using Vestiges.Progression;
 using Vestiges.UI;
 
 namespace Vestiges.World;
 
 /// <summary>
-/// Ouverture des coffres par le joueur : invite au-dessus du coffre fermé le plus proche à portée, jauge
-/// pendant l'ouverture (immobile), puis butin résolu, montré par l'écran de butin et appliqué à sa fermeture.
+/// Interaction du joueur avec les lieux du monde (<see cref="IInteractable"/>) : invite au-dessus du plus proche à
+/// portée, jauge pendant l'activation (immobile), puis activation. Un coffre donne son butin, résolu, montré par
+/// l'écran de butin et appliqué à sa fermeture ; les autres lieux gèrent eux-mêmes leur activation.
 /// </summary>
-public partial class ChestInteraction : Node
+public partial class WorldInteraction : Node
 {
     private Player _player;
     private EventBus _eventBus;
@@ -19,18 +19,18 @@ public partial class ChestInteraction : Node
     private PerkManager _perks;
     private InteractionPrompt _prompt;
     private InteractionGauge _gauge;
-    private Chest _target;
+    private IInteractable _target;
     private float _progress;
 
-    public bool IsOpening => _target != null;
+    public bool IsActive => _target != null;
 
     public void Setup(Player player)
     {
         _player = player;
         _eventBus = player.GetNode<EventBus>("/root/EventBus");
-        _prompt = new InteractionPrompt { Name = "ChestPrompt" };
+        _prompt = new InteractionPrompt { Name = "InteractionPrompt" };
         AddChild(_prompt);
-        _gauge = new InteractionGauge { Name = "ChestGauge", TopLevel = true };
+        _gauge = new InteractionGauge { Name = "InteractionGauge", TopLevel = true };
         AddChild(_gauge);
     }
 
@@ -45,42 +45,42 @@ public partial class ChestInteraction : Node
     {
         if (_target != null)
         {
-            if (!IsInstanceValid(_target) || !_target.CanOpen
-                || _player.GlobalPosition.DistanceTo(_target.GlobalPosition) > _player.InteractRange * 1.5f)
+            if (!IsValid(_target) || !_target.CanInteract
+                || _player.GlobalPosition.DistanceTo(_target.InteractPosition) > _player.InteractRange * 1.5f)
             {
                 Cancel();
             }
             else
             {
                 _progress += delta;
-                _gauge.SetRatio(_progress / _target.OpenTime);
-                if (_progress >= _target.OpenTime)
+                _gauge.SetRatio(_progress / _target.HoldTime);
+                if (_progress >= _target.HoldTime)
                     Complete();
             }
         }
 
-        Chest nearest = _target == null && canInteract ? FindNearest() : null;
+        IInteractable nearest = _target == null && canInteract ? FindNearest() : null;
         if (nearest != null)
-            _prompt.ShowAt(nearest.TopPosition);
+            _prompt.ShowAt(nearest.PromptPosition, nearest.PromptVerbKey);
         else
             _prompt.HidePrompt();
     }
 
     public bool TryStart()
     {
-        Chest nearest = FindNearest();
+        IInteractable nearest = FindNearest();
         if (nearest == null)
             return false;
 
         _target = nearest;
         _progress = 0f;
-        if (nearest.OpenTime <= 0f)
+        if (nearest.HoldTime <= 0f)
         {
             Complete();
             return true;
         }
-        _gauge.GlobalPosition = nearest.TopPosition.Round() - new Vector2(0f, 6f);
-        _gauge.Begin(RarityPalette.Main(nearest.Rarity));
+        _gauge.GlobalPosition = nearest.PromptPosition.Round() - new Vector2(0f, 6f);
+        _gauge.Begin(nearest.GaugeColor);
         _prompt.HidePrompt();
         return true;
     }
@@ -94,8 +94,16 @@ public partial class ChestInteraction : Node
 
     private void Complete()
     {
-        Chest chest = _target;
+        IInteractable target = _target;
         Cancel();
+        if (target is Chest chest)
+            OpenChest(chest);
+        else
+            target.Interact(_player);
+    }
+
+    private void OpenChest(Chest chest)
+    {
         List<ResolvedLoot> loots = LootRewards.Resolve(chest.Open(), _perks);
         Vector2 position = chest.GlobalPosition;
         if (_lootScreen != null && loots.Count > 0)
@@ -110,20 +118,23 @@ public partial class ChestInteraction : Node
             LootRewards.Apply(loot, _player, _eventBus, position);
     }
 
-    private Chest FindNearest()
+    private static bool IsValid(IInteractable interactable) =>
+        interactable is not GodotObject node || GodotObject.IsInstanceValid(node);
+
+    private IInteractable FindNearest()
     {
-        Chest nearest = null;
+        IInteractable nearest = null;
         float nearestDistance = _player.InteractRange;
-        IReadOnlyList<Chest> chests = Chest.Closed;
-        for (int i = 0; i < chests.Count; i++)
+        IReadOnlyList<IInteractable> all = Interactables.All;
+        for (int i = 0; i < all.Count; i++)
         {
-            Chest chest = chests[i];
-            if (!chest.CanOpen)
+            IInteractable candidate = all[i];
+            if (!candidate.CanInteract)
                 continue;
-            float distance = _player.GlobalPosition.DistanceTo(chest.GlobalPosition);
+            float distance = _player.GlobalPosition.DistanceTo(candidate.InteractPosition);
             if (distance < nearestDistance)
             {
-                nearest = chest;
+                nearest = candidate;
                 nearestDistance = distance;
             }
         }
