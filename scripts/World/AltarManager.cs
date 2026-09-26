@@ -316,6 +316,7 @@ public partial class Altar : Node2D
 	private void StartCooldown()
 	{
 		_cooldownRemaining = _cooldownSec;
+		GetNode<EventBus>("/root/EventBus").EmitSignal(EventBus.SignalName.AltarUsed, GlobalPosition);
 		_core.Color = new Color(0.4f, 0.9f, 1f);
 		Tween tween = CreateTween();
 		tween.TweenProperty(_core, "color", new Color(0.24f, 0.32f, 0.48f), 0.45f);

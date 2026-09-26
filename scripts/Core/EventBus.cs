@@ -91,6 +91,8 @@ public partial class EventBus : Node
     [Signal] public delegate void ZonePhaseChangedEventHandler(int cellX, int cellY, int phase);
     /// <summary>Phase de la zone où se tient le joueur (ErasureManager.ErasureZonePhase), émise quand elle change.</summary>
     [Signal] public delegate void PlayerErasurePhaseChangedEventHandler(int phase);
+    /// <summary>Un Autel vient de servir : il « rappelle » sa zone à l'existence (Stratégie V2 §11, plan 16 O5).</summary>
+    [Signal] public delegate void AltarUsedEventHandler(Vector2 position);
 
     // --- Résurgences (V2) ---
     [Signal] public delegate void CrisisWarningEventHandler(int crisisNumber, float countdown);

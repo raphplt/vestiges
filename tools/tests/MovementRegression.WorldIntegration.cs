@@ -47,6 +47,13 @@ public partial class MovementRegression
         erasure.SetProcess(false);
         ErasureEffects.Effect restored = ReadPlayerField<ErasureEffects.Effect>("_erasurePenalty");
         Check(restored.Speed == 1f && restored.Damage == 1f, "retour en zone ancrée : pénalités levées");
+
+        // Un Autel qui sert rappelle sa zone : une zone effacée remonte au moins en Fragile (plan 16 O5).
+        Vector2 altar = new(0f, -2 * erasure.CellSize * 4f);
+        Vector2I altarCell = new(Mathf.FloorToInt(altar.X / erasure.CellSize), Mathf.FloorToInt(altar.Y / erasure.CellSize));
+        erasure.OverrideMemory(altarCell, 0.1f);
+        bus.EmitSignal(EventBus.SignalName.AltarUsed, altar);
+        Check(erasure.GetMemoryAt(altar) >= 0.7f, $"Autel utilisé : la mémoire de sa zone remonte de 0,1 à {erasure.GetMemoryAt(altar):0.00}");
     }
 
     /// <summary>Marche vers l'est jusqu'au bord de la carte générée : le joueur ne quitte jamais le sol.</summary>

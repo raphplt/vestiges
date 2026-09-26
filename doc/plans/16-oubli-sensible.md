@@ -80,7 +80,8 @@ Ordre O1 → O3 → O4/O5 → O2/O6 validé par Raphaël. Arbitrages délégués
 - Elle a aussi une chance de donner 1 Essence de plus : 15 %, 35 %, puis 60 %.
 - Réglages : `score_bonus` et `essence_chance` dans `zone_effects`. Le détour vers la frontière devient un vrai choix de risque et de récompense.
 - **Test d'intégration** : le même kill vaut 33 points au Néant, contre 16 en zone ancrée.
-- **Non fait** : le butin qui disparaît avec la zone (dépend du plan 13, non implémenté) et le « rappel » d'une zone par les Autels (V2 §11).
+- **Non fait** : le butin qui disparaît avec la zone (dépend du plan 13, non implémenté).
+- **Rappel par les Autels (26 septembre, session cloud)** : un Autel qui sert (amélioration, reforge ou soin) émet `AltarUsed` sur l'EventBus. `ErasureManager` stabilise alors sa zone, comme pour un point d'intérêt découvert : dans un rayon de 2,5 zones, la mémoire remonte au moins à 72 % (réglages `stabilize_*` de `erasure.json`), et le sol est republié aussitôt. Test d'intégration : une zone à 0,1 remonte à 0,72.
 
 **O2 livré — les choses se défont (26 septembre) :**
 - **Décors** (`prop_forget.gdshader`, un seul matériau partagé) **et canopées** (`sway.gdshader`) lisent la mémoire à leur point au sol :
