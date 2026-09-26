@@ -40,6 +40,7 @@ public class WeaponData
 	public string Type { get; set; }
 	public string DamageType { get; set; }
 	public string AttackPattern { get; set; }
+	public string AttackAudio { get; set; }
 	public string DefaultFor { get; set; }
 	public string Sprite { get; set; }
 	public string Source { get; set; }
@@ -152,6 +153,7 @@ public static class WeaponDataLoader
             Tier = dict.ContainsKey("tier") ? (int)dict["tier"].AsDouble() : 1,
             Type = dict.ContainsKey("type") ? dict["type"].AsString() : "ranged",
             DamageType = dict.ContainsKey("damage_type") ? dict["damage_type"].AsString() : "physical",
+            AttackAudio = dict.ContainsKey("attack_audio") ? dict["attack_audio"].AsString() : null,
             AttackPattern = dict.ContainsKey("attack_pattern") ? dict["attack_pattern"].AsString() : "linear",
             DefaultFor = dict.ContainsKey("default_for") ? dict["default_for"].AsString() : null,
             Sprite = dict.ContainsKey("sprite") ? dict["sprite"].AsString() : null,

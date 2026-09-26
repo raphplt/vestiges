@@ -1499,12 +1499,17 @@ public partial class Player : CharacterBody2D
 
         _footstepTimer = FootstepInterval;
 
-        string key = GetCurrentTerrain() switch
+        TerrainType terrain = GetCurrentTerrain();
+        string biomeFootstep = terrain != TerrainType.Water
+            ? _worldSetup?.GetBiomeAt(GlobalPosition)?.FootstepAudio
+            : null;
+        string key = biomeFootstep ?? (terrain switch
         {
             TerrainType.Water    => "sfx_pas_eau",
             TerrainType.Concrete => "sfx_pas_beton",
+            TerrainType.Forest   => "sfx_pas_bois",
             _                    => "sfx_pas_herbe",
-        };
+        });
         Infrastructure.AudioManager.Play(key, 0.05f, -4f);
     }
 
@@ -1513,8 +1518,13 @@ public partial class Player : CharacterBody2D
     private bool TryStartPoiExplore()
     {
         PointOfInterest nearest = FindNearestPoi();
-        if (nearest == null || !nearest.CanInteract)
+        if (nearest == null)
             return false;
+        if (!nearest.CanInteract)
+        {
+            Infrastructure.AudioManager.Play("sfx_interaction_unavailable", 0f);
+            return false;
+        }
 
         // Les POI sans temps de recherche sont explorés instantanément
         if (nearest.SearchTime <= 0f)
@@ -1529,6 +1539,7 @@ public partial class Player : CharacterBody2D
         _poiTarget = nearest;
         _poiProgress = 0f;
         _isExploringPoi = true;
+        Infrastructure.AudioManager.Play("sfx_poi_search", 0.03f);
         _interactionGauge.Begin(new Color("D4A843"));
         return true;
     }
@@ -2206,6 +2217,9 @@ public partial class Player : CharacterBody2D
 
     private void PlayAttackFeedback(bool isMelee, Vector2 direction)
     {
+        string attackAudio = _equippedWeapon?.Base.AttackAudio;
+        if (!string.IsNullOrEmpty(attackAudio))
+            Infrastructure.AudioManager.Play(attackAudio, 0.04f);
         if (_visual == null)
             return;
 

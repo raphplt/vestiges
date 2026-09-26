@@ -7,6 +7,7 @@ public class BiomeData
 {
     public string Id;
     public string Name;
+    public string FootstepAudio;
     public Dictionary<string, float> TerrainWeights = new();
     public List<string> ExplorationEnemyPool = new();
     public List<string> ResurgenceEnemyPool = new();
@@ -121,6 +122,7 @@ public static class BiomeDataLoader
         BiomeData biome = new()
         {
             Id = dict["id"].AsString(),
+            FootstepAudio = dict.ContainsKey("footstep_audio") ? dict["footstep_audio"].AsString() : null,
             Name = dict.ContainsKey("name") ? dict["name"].AsString() : "",
             DangerLevel = dict.ContainsKey("danger_level") ? (int)dict["danger_level"].AsDouble() : 1
         };

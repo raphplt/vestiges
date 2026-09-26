@@ -1,5 +1,6 @@
 {
     "id": "collapsed_quarry",
+    "footstep_audio": "sfx_pas_gravier",
     "name": "Carrière Effondrée",
     "terrain_weights": {
         "grass": 0.05,

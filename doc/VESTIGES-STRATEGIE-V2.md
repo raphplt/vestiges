@@ -773,6 +773,7 @@ Le script de post-processing doit inclure une vérification/correction de l'angl
 - [x] Indicateurs visuels de l'Effacement (phases, transitions de couleur) : sol qui oublie et lisière de l'Effacé, plan 16 O1/O3 (26 septembre 2026) ; les décors suivront en O2.
 - [ ] Signaux précurseurs des Résurgences.
 - [ ] Sound design cleanup (retirer sons répétitifs, ajuster XP, musique adaptative).
+- [x] Intégration des 50 choix audio A–B6 applicables et nettoyage des fichiers inutilisés ; banque JSON, crédits et archives d’écoute hors dépôt (plan 15).
 - [ ] Écran de mort reworké (transition visuelle + score détaillé + stats).
 
 ### Phase E — Quêtes et personnages (2-3 semaines)

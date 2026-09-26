@@ -640,6 +640,12 @@ public partial class Enemy : CharacterBody2D
 		}
 	}
 
+	private void PlayActionAudio(string key)
+	{
+		if (_player != null && IsInstanceValid(_player) && GlobalPosition.DistanceSquaredTo(_player.GlobalPosition) < RangedAttackAudioRadius * RangedAttackAudioRadius)
+			Infrastructure.AudioManager.Play(key, 0.06f, -7f);
+	}
+
 	/// <summary>Rampant : alterne entre phase souterraine (invulnérable, ignore murs) et surface.</summary>
 	private void ProcessBurrowerPhase(float delta)
 	{
@@ -652,6 +658,7 @@ public partial class Enemy : CharacterBody2D
 			// Émerge : redevient vulnérable et visible
 			_isBurrowed = false;
 			_burrowerPhaseTimer = BurrowerPhaseInterval;
+			PlayActionAudio("sfx_burrow_transition");
 			CollisionLayer = 2;
 			Modulate = new Color(1f, 1f, 1f, 1f);
 		}
@@ -702,6 +709,7 @@ public partial class Enemy : CharacterBody2D
 			if (_player != null && IsInstanceValid(_player))
 			{
 				_chargerIsCharging = true;
+				PlayActionAudio("sfx_enemy_charge");
 				_chargerDurationLeft = 0.8f;
 				_chargerDirection = (_player.GlobalPosition - GlobalPosition).Normalized();
 				if (_hasSprite)
@@ -892,8 +900,7 @@ public partial class Enemy : CharacterBody2D
 
 		Vector2 direction = (_player.GlobalPosition - GlobalPosition).Normalized();
 		PlayRangedAttackVfx(direction);
-		if (_attackAudio != null && GlobalPosition.DistanceSquaredTo(_player.GlobalPosition) < RangedAttackAudioRadius * RangedAttackAudioRadius)
-			Infrastructure.AudioManager.Play(_attackAudio, 0.08f, -9f);
+		PlayActionAudio("sfx_enemy_ranged_shot");
 		// Tisseuse : les projectiles ralentissent le joueur
 		bool slows = _behavior == "weaver";
 		CombatPools.Instance?.TakeEnemyProjectile()

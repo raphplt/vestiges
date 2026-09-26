@@ -90,7 +90,7 @@ Un seul lot d'implémentation ouvert à la fois. Un échec de lisibilité, de pe
 **Mise à jour du 26 septembre :** l'écran d'accueil est refait sur demande de Raphaël (« trop classique », pas de stats mais le sprite, « surprends-moi »). Le Hub devient le camp du Foyer, vivant ; les personnages veillent autour du feu ; le menu est textuel. Compte rendu et limites : [plan 04](04-interfaces-et-hub.md#accueil-refait--26-septembre-2026). Recette attendue.
 
 **Mise à jour du 25 septembre :**
-- Audio : [retours A2](../audio/lot-a2/RETOURS.md) reçus le 26 septembre. Six candidats retenus depuis A : critique, ouverture physique du coffre, dash, dissolution B complète (1,40 s), perk A et danger A. Révélation du coffre actuelle conservée ; impacts ennemi/joueur et level-up à retravailler ; XP en attente. Le [catalogue](../audio/COUVERTURE.md) suit 113 besoins, 51 propositions sur 11 besoins et 102 autres besoins à rechercher ou arbitrer ; aucun nouveau son intégré. Sources CC0 ou CC-BY documentées. Contrôle : `python3 tools/audio/build_catalogue.py --check` ; pages historiques [A](../audio/lot-a/index.html) et [A2](../audio/lot-a2/index.html) préservées.
+- Audio : [50 choix branchés, nettoyage et suite](15-audio.md) ; [archives hors dépôt](../audio/README.md).
 - Recette de Raphaël : cadence des micro-événements validée en l'état, élites bien dosées, micro-événements appréciés, HUD « bien mieux ». Le soin, peut-être trop rare, est noté pour les plans 13 et 03.
 - Nouveau chantier prioritaire : **visuel et juiciness de tout le jeu**.
   - Régression des biomes : cause trouvée dans l'historique (14 mars), mesurée, corrigée ([10 §6](10-terrain-et-tiles.md#6-régression-un-seul-biome-autour-du-départ--25-septembre-2026)).

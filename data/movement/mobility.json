@@ -10,6 +10,6 @@
   "invulnerability_seconds": 0.0,
   "trial_invulnerability_seconds": 0.06,
   "water_speed_factor": 0.5,
-  "start_audio": "sfx_pas_gravier",
-  "end_audio": "sfx_pas_beton"
+  "start_audio": "sfx_dash_start",
+  "end_audio": "sfx_dash_end"
 }

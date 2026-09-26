@@ -26,8 +26,8 @@
             "damage_multiplier": 1.2,
             "marker_width": 10,
             "fx_family": "blood",
-            "windup_audio": "sfx_charognard_meute",
-            "leap_audio": "sfx_ombre_attaque"
+            "windup_audio": "sfx_pounce_windup",
+            "leap_audio": "sfx_pounce_leap"
         }
     },
     "visual": {

@@ -338,6 +338,8 @@ public partial class ChestLootScreen : CanvasLayer
     {
         slot.Stopped = true;
         _slotsRevealed++;
+        if (_slotsRevealed == 1)
+            AudioManager.PlayUI("sfx_chest_reveal", 0f);
 
         // Set final item
         slot.Label.Text = slot.FinalItem.Text;

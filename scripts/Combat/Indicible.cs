@@ -305,6 +305,7 @@ public partial class Indicible : Node2D
 
 			// Tentacule : couloir plein d'iridescent qui se défait en trame
 			PlayTentacleLane(startPos, dir, tentacleLength, FxFamily.Void, 0.4f, 1f, 0.5f);
+			Infrastructure.AudioManager.Play("sfx_boss_tentacle", 0.04f, -5f);
 
 			// Dégâts au joueur s'il est dans la zone
 			if (IsInstanceValid(_player))
@@ -349,6 +350,7 @@ public partial class Indicible : Node2D
 
 	private void EnterEnragedPhase()
 	{
+		Infrastructure.AudioManager.Play("sfx_boss_enrage", 0f, -3f);
 		GD.Print("[Indicible] Phase enragée !");
 
 		// Tous les yeux deviennent rouges
@@ -378,6 +380,7 @@ public partial class Indicible : Node2D
 
 	private void Die()
 	{
+		Infrastructure.AudioManager.Play("sfx_boss_death", 0f, -3f);
 		_isDying = true;
 		_isActive = false;
 

@@ -95,7 +95,7 @@ Les cases de la roadmap signifient « implémenté et vérifié ». Une validati
 
 Trois sélections explicites : `critical_hit_a`, `chest_open_a` (mécanisme d’ouverture seulement), `dash_start_a`. Aucune intégration effectuée. Les sept autres décisions restent `none`/`pending` telles qu’exportées. XP actuelle appréciée sans sélection définitive. Ajout d’un besoin `chest_reveal` : mélodie de quelques secondes après l’ouverture. Lot A2 de sept besoins détaillé dans [le plan 15](15-audio.md#3-bis-lot-a2--rechercher-après-le-retour-du-25-septembre).
 
-Source probante : [export original](../audio/lot-a/choix-raphael-2026-09-25.json), identique octet pour octet au fichier transmis ; [synthèse et explication impact/arme](../audio/lot-a/RETOURS.md). Verbatim des notes (chaînes JSON pour conserver aussi les espaces finaux) :
+Source probante : [export original](../audio/README.md), identique octet pour octet au fichier transmis ; [synthèse et explication impact/arme](../audio/README.md). Verbatim des notes (chaînes JSON pour conserver aussi les espaces finaux) :
 
 ### enemy_hit — none
 
@@ -180,7 +180,7 @@ Candidat : `None`.
 
 ## 6. Retours audio du 26 septembre — lot A2
 
-[Export original archivé](../audio/lot-a2/choix-raphael-2026-09-26.json) et [verbatim, décisions et préparation](../audio/lot-a2/RETOURS.md). Trois nouveaux choix : `dissolution_a2_b`, `perk_select_a2_a`, `danger_warning_a2_a`. Dissolution : « le B mais ne pas le cropper à un seconde » ; conserver les 1,395828 s de l’original. Impacts ennemi et joueur, montée de niveau : `none`, recherche à reprendre. Révélation du coffre : « garder l'actuel » ; suivi **actuel conservé**, sans transformer le `pending` exporté en sélection de candidat. XP inchangée. Six candidats retenus au total, aucun intégré ni recetté.
+[Export original archivé](../audio/README.md) et [verbatim, décisions et préparation](../audio/README.md). Trois nouveaux choix : `dissolution_a2_b`, `perk_select_a2_a`, `danger_warning_a2_a`. Dissolution : « le B mais ne pas le cropper à un seconde » ; conserver les 1,395828 s de l’original. Impacts ennemi et joueur, montée de niveau : `none`, recherche à reprendre. Révélation du coffre : « garder l'actuel » ; suivi **actuel conservé**, sans transformer le `pending` exporté en sélection de candidat. XP inchangée. Six candidats retenus au total, aucun intégré ni recetté.
 
 ## 7. Arbitrages délégués du 26 septembre
 
@@ -197,3 +197,49 @@ Raphaël, absent, demande de trancher au mieux et d'implémenter. Chaque choix c
 | Dash, invulnérabilité | 0 ms conservé (réglage validé avec le dash) | Pas de retour contraire ; le début de run vient d'être adouci |
 | Plans 13 et 14 | Recommandations des plans retenues (trois formes de butin, rareté fixe, coffres en conteneurs ; anomalies Écho, Oubli de soi, Effondrement, plafond 25 %, une ligne de texte) mais **pas d'implémentation avant les lots ci-dessus** | Gros chantiers ; le socle d'objets du plan 05 reste leur prérequis |
 | Boss de famille | Deux prototypes, plus tard (07) | Hors de l'ordre validé |
+
+## 8. Retour audio A3 — 26 septembre 2026
+
+[Export et notes exactes](../audio/README.md) : impact ennemi B (`enemy_hit_a3_b`) retenu ; aucun dégât joueur satisfaisant ; level-up jugé hors thème (champ `pending` conservé). Sept candidats retenus au total, sans intégration. Ne pas déduire un nouveau style musical du refus. Le son de level-up actuel reste la référence précédemment préférée ; la correction de méthode proposée par l’agent est détaillée au plan 15.
+
+## 9. Étude de BO et planche A4 — 26 septembre 2026
+
+Raphaël demande la prochaine planche et une étude des moyens de créer une BO cohérente, soignée, avec Outer Wilds, Celeste et Megabonk comme inspirations. Budget à comparer : 0–100 €, davantage si nécessaire ; aucun achat demandé. Niveau grand débutant, quelques essais FL Studio et Ableton, apprentissage de plusieurs mois non souhaité. Les titres précis et l’équilibre entre ces inspirations restent à préciser ; ils ne remplacent pas automatiquement la direction V2.
+
+## 10. Choix A4 et outils de composition — 26 septembre 2026
+
+Choix exprimés directement dans le chat : montée de niveau **B, Plus doux** (`level_up_a4_b`) et dégât joueur **A, Coup plus grave** (`player_hit_a4_a`). Neuf candidats retenus au total, sans nouvelle intégration ni recette. [Transcription du retour](../audio/README.md).
+
+Raphaël attend des planches couvrant dix effets plutôt que seulement deux. A4 avait été limité par l’agent aux deux refus restants ; viser dix besoins dans les prochains lots lorsque possible. Pour la BO, priorité aux outils permettant de composer et s’amuser soi-même (mélodie, timbres et variantes), locaux/open source de préférence ; l’assistance est possible mais la génération de morceaux complets n’est pas le seul objectif.
+
+## 11. Retour B1 — 26 septembre 2026
+
+[Export et décisions](../audio/README.md) : neuf choix retenus, 18 au total. `step_wood` reste en attente et à retravailler : « non ca va pas il faut un bruit plus genre marcher sur des feuilles ». Prochaine planche de dix effets demandée ; correction feuilles en priorité. Aucun remplacement runtime implicitement validé par la préparation de cette planche.
+
+## 12. Retour B2 — 26 septembre 2026
+
+[Export original et notes exactes](../audio/README.md). Huit candidats retenus : feuilles B, gravier C, survol B, clic A, confirmation A, refus de perk B, interaction indisponible B et fouille A. Total : 26 candidats retenus, sans nouvelle intégration.
+
+Sortie du level-up : « garder l'actuel imo mais baisser un peu le gain ». Champ exporté `pending` préservé, suivi **actuel conservé** ; essai local −3 dB préparé comme proposition de réglage. Échec d’événement : « aucun des trois là c'est juste des sons ultra aigus » ; `pending` préservé, suivi **à retravailler**. Éviter ces trois sons pour la prochaine recherche, explorer une matière moins aiguë sans déduire une nouvelle DA globale.
+
+## 13. Retour B3 — 26 septembre 2026
+
+[Export et notes exactes](../audio/README.md) : cloche A, chaîne A, lanterne B, horloge C, relique A et éclat B retenus ; **32 candidats retenus au total**. Cloche : « 1 mais aigus trop attenués » ; essai séparé avec passe-bas moins restrictif proposé, sans modifier le candidat ni le runtime. Échec d’événement et flash refusés. Lumière : « aucun ne va ils sont trop electroniques » ; aiguille : « aucun ne va pas ils sont trop electroniques ». Conserver les deux `pending` exportés et suivre ces besoins comme à retravailler. Recherche moins électronique pour ces deux effets, sans généraliser ce refus à toute la direction audio.
+
+## 14. Retour B4 — 26 septembre 2026
+
+[Choix et verbatim](../audio/README.md) : cloche B sans filtre, lumière B, aiguille B, arc B, arbalète B et Vide A retenus. 37 besoins avec candidat choisi. Flash en attente, sans décision de silence. Échec : « aucun n'est dans la da du jeu ». Fin d’esquive : « aucun chercher pus discret ». Coup majeur : « chercher un son qui fasse plus impact sur un corps mou / semi rigide ». Aucun choix de son ne vaut validation de sa cadence en combat ; l’arbitrage des armes silencieuses reste à faire en run.
+
+## 15. Audio — retours B5, 26 septembre 2026
+
+Raphaël retient la fin d’esquive B, la préparation et le départ du bond C, la charge C, le surgissement C, l’impact du Présage C et l’activation de POI A. Pour le coup majeur : « aucune ne va cherche autre chose ». Pour les pas dans l’eau : « garder l’actuel ». Ces deux entrées gardent leur champ `pending` original ; le suivi applique les notes explicites. Explosion : aucun candidat. Export complet : [retours B5](../audio/README.md). Aucun choix de silence supplémentaire ni intégration demandée.
+
+## 16. Audio — retour B6 et textes des planches
+
+Raphaël demande de retirer les slogans, introductions et consignes génériques des prochaines planches. Afficher les informations utiles à l’écoute et aux choix, avec la provenance accessible.
+
+Sept choix B6 retenus : Présage B, tir ennemi A, Colosse C, tentacule B, rage C, mort du boss C, fouet A. Coup majeur : abandonner les anciennes contraintes et proposer trois nouveaux sons. Explosion : courte mais identifiable, B6 trop sec. Hurleur : plus impactant. Notes exactes et décisions exportées conservées dans [les retours B6](../audio/README.md).
+
+## 17. Audio — intégration avant fin des sélections et nettoyage
+
+Raphaël demande de brancher les choix déjà faits avant de finir les recherches, de retirer les sons inutilisés et de sortir les documents intermédiaires du repo. Les futurs lots restent dans l’archive externe indiquée au [plan audio](15-audio.md). Cinquante choix ont un usage actuel ; le coup du Colosse reste en archive sans réintroduire son ancien système. Les anciens sons et toutes les décisions sont sauvegardés avant retrait.
