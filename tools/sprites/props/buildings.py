@@ -38,6 +38,8 @@ class BuildingSpec:
     damage: float       # 0 intact → 1 effondré
     seed: int
     mirrored: bool = False
+    # Entraxe des fenêtres : une maison de campagne en a moins qu'un immeuble de ville.
+    window_spacing: float = 1.6 * M
 
 
 def _union(*distances: np.ndarray) -> np.ndarray:
@@ -129,7 +131,8 @@ def building(spec: BuildingSpec) -> PropModel:
     half_d = spec.depth_rows * ROW_DEPTH * 0.46
     height = spec.storeys * STOREY
     shop = spec.style == "shop"
-    facades = Facades(half_w, half_d, (STOREY if shop else 0.0) + 1.55 * M, spec.storeys - (1 if shop else 0), spec.seed)
+    facades = Facades(half_w, half_d, (STOREY if shop else 0.0) + 1.55 * M, spec.storeys - (1 if shop else 0), spec.seed,
+                      spacing=spec.window_spacing)
     boarded_share = 0.08 + spec.damage * 0.25
 
     # Tirages figés une fois : le modèle doit rester identique entre ses évaluations.

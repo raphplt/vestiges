@@ -63,6 +63,18 @@ public partial class WorldSetup : Node2D
     private SwampPropLayout _swampLayout;
     private WildFieldsLayout _wildFieldsLayout;
     private PathNetwork _pathNetwork;
+    private FarmConfig _farmConfig;
+    private List<FarmSite> _farms = new();
+
+    /// <summary>Centres des cours de ferme des Champs Sauvages (plan 08 P4b).</summary>
+    public IEnumerable<Vector2> FarmAnchors
+    {
+        get
+        {
+            foreach (FarmSite farm in _farms)
+                yield return farm.Anchor;
+        }
+    }
 
     /// <summary>Indique si l'initialisation async est terminée.</summary>
     public bool IsWorldReady { get; private set; }
@@ -125,6 +137,10 @@ public partial class WorldSetup : Node2D
         _pathNetwork = PathNetworkGenerator.Build(_generator, _terrain, _urbanLayout, _wildFieldsLayout, _config.Paths,
                                                   _config.BiomeLayout.RegionSpacing, Seed);
         _swampLayout?.Placements.RemoveAll(placement => _pathNetwork.Cells.Contains(placement.Cell));
+
+        // Fermes des champs (plan 08 P4b) : cellules réservées avant les points d'intérêt, embranchement vers un chemin.
+        _farmConfig = FarmConfig.Load();
+        _farms = WildFieldsComposer.PlanFarms(_generator, _pathNetwork, _usedCells, _farmConfig, Seed);
 
         // Préparer le TileSet et mapper (rapide)
         _ground.TileSet = _ground.TileSet.Duplicate() as TileSet;
@@ -505,6 +521,7 @@ public partial class WorldSetup : Node2D
 
         _propSpawner = new PropSpawner { Name = "PropSpawner" };
         AddChild(_propSpawner);
+        WildFieldsComposer.PlaceFarms(_farms, _farmConfig, propContainer, Seed);
         HashSet<Vector2I> blockedCells = BuildEnvironmentPropBlockedCells(urbanLayout, swampLayout);
         _propSpawner.SpawnProps(_generator, _terrain, _ground, propContainer, _usedCells, Seed, blockedCells, _wildFieldsLayout);
     }

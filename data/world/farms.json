@@ -1,0 +1,29 @@
+{
+    "_doc": "Fermes des Champs Sauvages (plan 08 P4b). Positions en pixels écran depuis le centre de la cour (y vers le bas, le nord en haut). Une ferme par région de champs au plus ; la moitié sont retournées d'est en ouest. 'line' pose un élément tous les 'step' pixels de 'at' à 'to'. 'chance' : probabilité de l'élément.",
+    "enabled": true,
+    "search_radius_cells": 16,
+    "half_extent_px": [470, 150],
+    "path_reach_px": 800,
+    "spur_start": [0, 70],
+    "spur_width_factor": 0.75,
+    "elements": [
+        { "sprites": ["prop_farm_house_a", "prop_farm_house_b", "prop_farm_house_damaged_a"], "at": [-160, -80], "blocking": true },
+        { "sprites": ["prop_farm_barn_a", "prop_farm_barn_b", "prop_farm_barn_damaged_a"], "at": [110, -80], "blocking": true },
+        { "sprites": ["prop_farm_silo"], "at": [250, -105], "blocking": true, "chance": 0.7 },
+        { "sprites": ["prop_farm_hangar_a", "prop_farm_hangar_b"], "at": [300, 40], "blocking": true },
+        { "sprites": ["prop_abandoned_well"], "at": [-40, -10], "blocking": true, "chance": 0.6 },
+        { "sprites": ["prop_farm_trough"], "at": [-230, 30], "blocking": false },
+        { "sprites": ["prop_tractor_remains", "prop_tractor_husk"], "at": [80, 45], "blocking": true, "chance": 0.8 },
+        { "sprites": ["prop_farm_trailer"], "at": [180, 90], "blocking": true, "chance": 0.6 },
+        { "sprites": ["prop_hay_bale", "prop_hay_bale_rotten"], "at": [390, 100], "blocking": false },
+        { "sprites": ["prop_hay_bale"], "at": [415, 115], "blocking": false, "chance": 0.7 },
+        { "sprites": ["prop_farm_power_pole"], "at": [-330, -110], "blocking": false },
+        { "sprites": ["prop_farm_power_pole"], "at": [-150, 150], "blocking": false, "chance": 0.7 },
+        { "sprites": ["prop_wooden_fence_h", "prop_wooden_fence_h", "prop_wooden_fence_broken_h"], "at": [-440, 0], "to": [-270, 0], "step": 44, "blocking": false },
+        { "sprites": ["prop_wooden_fence_h", "prop_wooden_fence_broken_h"], "at": [-440, 130], "to": [-270, 130], "step": 44, "blocking": false },
+        { "sprites": ["prop_hedge_v", "prop_hedge_v_v2"], "at": [-465, 10], "to": [-465, 120], "step": 36, "blocking": false },
+        { "sprites": ["prop_farm_gate_v"], "at": [-262, 65], "blocking": false },
+        { "sprites": ["prop_hedge_h", "prop_hedge_h_v2"], "at": [-420, -150], "to": [-230, -150], "step": 64, "blocking": false },
+        { "sprites": ["prop_hedge_v", "prop_hedge_v_v2"], "at": [440, -130], "to": [440, 0], "step": 30, "blocking": false }
+    ]
+}

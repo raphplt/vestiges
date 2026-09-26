@@ -286,6 +286,27 @@ Les tiles restent en l'état (jugées acceptables) ; un ajustement de contraste 
 | P4b-4 Récits | Scènes courtes lisibles d'un coup d'œil : pique-nique abandonné, tracteur embourbé, épouvantail couronné de corbeaux, linge encore étendu. Rares, en lien avec le lore (plan 08 lot D) |
 
 Critère de réussite : sur une capture des champs, on reconnaît une ferme, des parcelles et des chemins, pas un semis d'objets. Un lot à la fois, avec captures `--capture-props --hide-collisions`.
+
+**P4b-1 et P4b-2 livrés — fermes, 26 septembre (session cloud) :**
+- *Modèles* (`tools/sprites/props/farm.py`, `python3 tools/generate_props.py fields_farm`), 21 fichiers dans `assets/props/wild_fields/` :
+  - bâtiments : maison de ferme en pierre au toit de tuiles, avec moins de fenêtres qu'un immeuble (`window_spacing` ajouté à `BuildingSpec`, les immeubles urbains restent identiques octet pour octet) ; grange à pignon face à la caméra, bardage de planches rouge ou gris, grande porte à croix, fenil, toit de tôle ondulée ; hangar ouvert en appentis, bottes de paille à l'abri ; silo intact à toit conique et échelle ;
+  - cour : abreuvoir en pierre, remorque chargée de bottes, poteau électrique penché au câble rompu, portail entrouvert ;
+  - limites : haies bocagères, clôtures et muret dans les deux axes.
+
+  Le suffixe `_h` ou `_v` dit si l'élément file à l'horizontale de l'écran ou vers la profondeur. Un modèle long en x prend `AXIS_Y_YAW` pour rester horizontal : les clôtures déjà en place filaient vers la profondeur.
+- *Composition* (`World/WildFieldsComposer`, plan dans `data/world/farms.json`) :
+  - une ferme par région des Champs Sauvages, choisie au chargement au plus près du centre de la région, là où toute son emprise (940 × 300 px) tient dans les champs, hors de l'eau et des chemins ;
+  - au nord de la cour, la maison et la grange ; à l'est, le silo, le hangar et le foin ; à l'ouest, un enclos clôturé et bordé de haies, avec portail, abreuvoir et puits ; au sud, tracteur, remorque et poteaux ;
+  - retournée d'est en ouest une fois sur deux ; variantes et éléments facultatifs tirés par graine ;
+  - un **embranchement** part de la cour vers le sud et rejoint le chemin le plus proche (`PathNetworkGenerator.AddSpur`), de préférence au sud de la ferme ;
+  - les cellules de la ferme sont réservées avant les points d'intérêt, les coffres et les décors génériques.
+- *Mesure* (seed 221092026) : 16 fermes pour 20 régions de champs. Les autres n'ont pas de chemin à portée au sud ni sur les côtés ; un raccord au nord traverserait les bâtiments. Placement : 273 ms de calcul au chargement dans le conteneur cloud, rien par frame.
+- *Vérification* : `CAPTURE_EXTRA_ARGS="--capture-farms" tools/capture_run.sh <dossier>` capture les quatre fermes les plus proches du départ, au zoom normal et dézoomées. Captures regardées : maison, grange, silo, hangar et enclos se lisent comme une ferme, et le chemin y mène. Planches `--sheet` regardées. Build sans avertissement, smoke test, `MovementRegression` vert.
+- *Points ouverts* :
+  - toutes les fermes suivent le même plan, seulement retourné : à varier (deux ou trois plans) si la répétition se remarque ;
+  - quand le seul chemin proche passe à côté de la ferme, l'embranchement longe l'enclos ;
+  - le placement (273 ms) peut être accéléré si le chargement s'en ressent : tri des candidats et test d'emprise par région ;
+  - P4b-3 (haies et murets aux limites des parcelles, vergers, alignements d'arbres) et P4b-4 (scènes-récits) restent à faire.
 - `--measure-props` en 1080p, machine calme : champs 159 FPS (3 197 décors), forêt 160, ville 158, carrière 152, marais 146, p99 entre 8 et 10 ms. C'est la plage d'avant les lots P3–P4 : pas de régression.
 
 *Points ouverts pour Raphaël :*

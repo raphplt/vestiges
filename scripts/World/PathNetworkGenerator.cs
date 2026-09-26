@@ -239,6 +239,56 @@ public static class PathNetworkGenerator
         return new PathStroke { Points = placed, Widths = widths, Styles = colors };
     }
 
+    /// <summary>
+    /// Embranchement d'un point (cour de ferme) vers un chemin : courbe de Bézier qui passe près de <paramref name="via"/>
+    /// (la sortie de la cour), plus étroite que le chemin, qui s'élargit en le rejoignant. Ajouté avant les maillages.
+    /// </summary>
+    public static void AddSpur(PathNetwork network, Vector2 from, Vector2 via, Vector2 to, PathStyle style, float widthFactor)
+    {
+        float length = Iso.ToGround(to - from).Length();
+        if (length < 24f)
+            return;
+        Vector2 control = via;
+        int count = Math.Max(3, Mathf.CeilToInt(length / 10f));
+        Vector2[] points = new Vector2[count];
+        float[] widths = new float[count];
+        Color[] styles = new Color[count];
+        for (int i = 0; i < count; i++)
+        {
+            float t = i / (float)(count - 1);
+            points[i] = from.Lerp(control, t).Lerp(control.Lerp(to, t), t);
+            widths[i] = style.WidthPx * Mathf.Lerp(widthFactor * 0.8f, 1f, t * t);
+            styles[i] = new Color(style.Tone, style.Ruts);
+        }
+        PathStroke stroke = new() { Points = points, Widths = widths, Styles = styles };
+        network.Strokes.Add(stroke);
+        MarkCells(stroke, network.Cells);
+    }
+
+    /// <summary>Point de chemin le plus proche (distance au sol) plus bas que <paramref name="minY"/> à l'écran, ou false si aucun n'est à portée.</summary>
+    public static bool TryNearestPoint(PathNetwork network, Vector2 from, float reach, float minY, out Vector2 nearest)
+    {
+        nearest = Vector2.Zero;
+        float best = reach * reach;
+        bool found = false;
+        foreach (PathStroke stroke in network.Strokes)
+        {
+            foreach (Vector2 point in stroke.Points)
+            {
+                if (point.Y < minY)
+                    continue;
+                float distance = Iso.GroundDistanceSquared(from, point);
+                if (distance < best)
+                {
+                    best = distance;
+                    nearest = point;
+                    found = true;
+                }
+            }
+        }
+        return found;
+    }
+
     private static void MarkCells(PathStroke stroke, HashSet<Vector2I> cells)
     {
         for (int i = 0; i < stroke.Points.Length; i++)
