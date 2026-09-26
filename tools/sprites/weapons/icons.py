@@ -24,8 +24,8 @@ ICON_FILL = 30
 ICON_SCALES = tuple(round(0.9 - 0.02 * i, 2) for i in range(25))
 # L'objet est modelé debout (axe +Y) puis incliné vers le haut-droit.
 DIAGONAL = rotation_z(-np.pi / 4)
-# Vu presque de face : l'icône montre la silhouette, pas le dessus de l'objet.
-ICON_YAW = float(np.radians(8.0))
+# Trois-quarts léger : la silhouette reste franche et l'objet garde son épaisseur.
+ICON_YAW = float(np.radians(28.0))
 
 
 @dataclass(frozen=True)
@@ -33,6 +33,8 @@ class IconModel:
     stem: str
     parts: Callable[[], list[Part]]
     materials: Sequence[Material]
+    # Angle de vue propre : un objet plat (outil à poignée) se lit mieux de profil que de trois-quarts.
+    yaw: float = ICON_YAW
 
 
 def _tilted(distance):
@@ -52,7 +54,7 @@ def render_icon(model: IconModel) -> Image.Image:
     pivot = (36.0, 36.0)
     parts = [Part(_tilted(part.distance), part.material) for part in model.parts()]
     for scale in ICON_SCALES:
-        image = flatten(render_layers(parts, model.materials, ICON_YAW, canvas, pivot, scale))
+        image = flatten(render_layers(parts, model.materials, model.yaw, canvas, pivot, scale))
         alpha = np.asarray(image)[..., 3]
         ys, xs = np.nonzero(alpha)
         width, height = xs.max() - xs.min() + 1, ys.max() - ys.min() + 1
@@ -65,82 +67,109 @@ def render_icon(model: IconModel) -> Image.Image:
 
 
 def sickle() -> IconModel:
-    """Faucille : manche de bois ligaturé, lame en croissant ; signature or du blé."""
-    WOOD, BIND, BLADE, EDGE = range(4)
+    """Faucille : manche effilé ligaturé de ficelle, virole de laiton, lame à dos marqué et fil clair ; signature or du blé."""
+    WOOD, TWINE, STEEL, EDGE, BRASS, RUST = range(6)
     materials = [
         make_material("wood", "#7A4E2E"),
-        make_material("bind", "#D4A843", contrast=0.8),
-        make_material("blade", "#8C8F94"),
-        make_material("edge", "#DCD8CC", contrast=0.5),
+        make_material("twine", "#CDB27A", contrast=0.7),
+        make_material("steel", "#7F848C"),
+        make_material("edge", "#E4E0D4", contrast=0.4),
+        make_material("brass", "#D4A843", contrast=0.8),
+        make_material("rust", "#8A4E2A"),
     ]
 
     def parts() -> list[Part]:
-        # Croissant : suite de capsules le long d'un arc, de plus en plus fines vers la pointe.
-        center = np.array([6.0, 14.0, 0.0])
-        arc = [center + 13.0 * np.array([np.cos(a), np.sin(a), 0.0]) for a in np.linspace(np.pi * 1.05, -np.pi * 0.35, 9)]
-        blade = [(arc[i], arc[i + 1], 3.2 * (1 - i / 10) + 0.6) for i in range(len(arc) - 1)]
-        edge = [(a - (a - center) / np.linalg.norm(a - center) * r * 0.7, b - (b - center) / np.linalg.norm(b - center) * r * 0.7, 0.8)
-                for a, b, r in blade]
+        center = np.array([6.5, 15.0, 0.0])
+        angles = np.linspace(np.pi * 1.02, -np.pi * 0.38, 12)
+        arc = [center + 13.5 * np.array([np.cos(a), np.sin(a), 0.0]) for a in angles]
+        # Lame épaisse au talon, effilée à la pointe ; le fil court le long de l'intérieur du croissant.
+        blade = [(arc[i], arc[i + 1], 3.6 * (1 - i / 13) + 0.5) for i in range(len(arc) - 1)]
+        inner = [(a - (a - center) / np.linalg.norm(a - center) * r * 0.75, b - (b - center) / np.linalg.norm(b - center) * r * 0.75,
+                  0.7) for a, b, r in blade]
+        spine = [(a + (a - center) / np.linalg.norm(a - center) * r * 0.55, b + (b - center) / np.linalg.norm(b - center) * r * 0.55,
+                  0.8) for a, b, r in blade[:8]]
         return [
-            Part(lambda p: capsule(p, (-5.5, -24.0, 0.0), (-6.5, 11.0, 0.0), 2.4), WOOD),
-            Part(lambda p: _union(*(cylinder(p, (-5.5, y, 0.0), 2.9, 0.9, 0.3) for y in (-6.0, -2.5))), BIND),
-            Part(lambda p: _union(*(capsule(p, a, b, r, r * 0.8) for a, b, r in blade)), BLADE),
-            Part(lambda p: _union(*(capsule(p, a, b, r) for a, b, r in edge)), EDGE),
+            Part(lambda p: capsule(p, (-6.0, -25.0, 0.0), (-6.8, 11.0, 0.0), 2.1, 2.7), WOOD),
+            Part(lambda p: sphere(p, (-6.0, -25.5, 0.0), 2.8), WOOD),
+            Part(lambda p: _union(*(cylinder(p, (-6.2 - 0.02 * y, y, 0.0), 2.9, 0.7, 0.3) for y in (-12.0, -9.5, -7.0, -4.5))), TWINE),
+            Part(lambda p: cylinder(p, (-6.8, 10.0, 0.0), 3.0, 1.6, 0.4), BRASS),
+            Part(lambda p: _union(*(capsule(p, a, b, r, r * 0.85) for a, b, r in blade)), STEEL),
+            Part(lambda p: _union(*(capsule(p, a, b, r) for a, b, r in inner)), EDGE),
+            Part(lambda p: _union(*(capsule(p, a, b, r) for a, b, r in spine)), RUST),
         ]
 
     return IconModel("weapon_icon_sickle", parts, materials)
 
 
 def nail_gun() -> IconModel:
-    """Cloueuse : outil de chantier jaune, poignée, bande de clous ; signature jaune chantier."""
-    BODY, GRIP, METAL, NAIL = range(4)
+    """Cloueuse de chantier en pistolet : carter jaune, poignée caoutchoutée, gâchette, bande de clous, raccord d'air."""
+    BODY, GRIP, METAL, NAIL, BRASS = range(5)
     materials = [
-        make_material("body", "#D8A12A"),
-        make_material("grip", "#2E2A2C", contrast=0.6),
-        make_material("metal", "#7E8288"),
-        make_material("nail", "#C8C4BA", contrast=0.5),
+        make_material("body", "#E0A82E"),
+        make_material("grip", "#4A444C", contrast=0.7),
+        make_material("metal", "#80858C"),
+        make_material("nail", "#E2DDD0", contrast=0.4),
+        make_material("brass", "#C9953A", contrast=0.8),
     ]
 
     def parts() -> list[Part]:
-        # Silhouette d'outil : corps le long de la diagonale (nez en haut), poignée perpendiculaire à l'arrière,
-        # chargeur tendu du nez au bout de la poignée.
-        magazine_start = np.array([4.5, 13.0, 0.0])
-        magazine_end = np.array([15.0, -7.0, 0.0])
-        nails = [magazine_start + (magazine_end - magazine_start) * t for t in np.linspace(0.05, 0.9, 7)]
+        # Canon le long de l'axe (nez en haut à droite) ; la poignée part franchement à angle droit vers le bas,
+        # le chargeur de clous relie le nez au bout de la poignée : c'est ce triangle qui fait lire « pistolet ».
+        nails = [np.array([4.6 + 0.62 * i, 9.5 - 2.3 * i, 1.6]) for i in range(7)]
         return [
-            Part(lambda p: rounded_box(p, (0.0, 3.0, 0.0), (3.4, 14.0, 3.6), 1.6), BODY),
-            Part(lambda p: cylinder(p, (0.0, 18.5, 0.0), 1.9, 2.2, 0.4), METAL),
-            Part(lambda p: rounded_box(p, (8.0, -8.0, 0.0), (7.5, 2.6, 2.8), 1.2, rotation_z(0.12)), GRIP),
-            Part(lambda p: capsule(p, magazine_start, magazine_end, 1.5), METAL),
-            Part(lambda p: _union(*(sphere(p, n + np.array([0.0, 0.0, 1.6]), 0.9) for n in nails)), NAIL),
+            Part(lambda p: rounded_box(p, (0.0, 4.0, 0.0), (3.0, 10.5, 3.2), 1.6), BODY),
+            Part(lambda p: cylinder(p, (0.0, -6.0, 0.0), 3.6, 1.6, 0.8), BODY),
+            Part(lambda p: _union(*(rounded_box(p, (0.0, y, 2.9), (1.6, 0.35, 0.5), 0.1) for y in (0.0, 2.0, 4.0))), GRIP),
+            Part(lambda p: cylinder(p, (0.0, 15.8, 0.0), 1.6, 1.6, 0.4), METAL),
+            Part(lambda p: capsule(p, (0.0, 17.5, 0.0), (0.0, 20.0, 0.0), 1.0), METAL),
+            Part(lambda p: rounded_box(p, (10.0, -5.0, 0.0), (7.5, 2.2, 2.4), 1.0, rotation_z(0.08)), GRIP),
+            Part(lambda p: capsule(p, (3.6, -0.5, 0.0), (5.2, -2.8, 0.0), 0.8), GRIP),
+            Part(lambda p: capsule(p, (3.4, 12.0, 0.0), (16.0, -3.5, 0.0), 1.2), METAL),
+            Part(lambda p: _union(*(rounded_box(p, n, (1.0, 0.45, 0.45), 0.2) for n in nails)), NAIL),
+            Part(lambda p: cylinder(p, (18.2, -5.4, 0.0), 1.3, 1.2, 0.3, rotation_z(np.pi / 2)), BRASS),
         ]
 
-    return IconModel("weapon_icon_nail_gun", parts, materials)
+    return IconModel("weapon_icon_nail_gun", parts, materials, yaw=float(np.radians(-10.0)))
 
 
 def music_box() -> IconModel:
-    """Boîte à musique : coffret de bois ouvert, peigne de laiton, manivelle ; signature rose passé."""
-    WOOD, INSIDE, BRASS, VELVET = range(4)
+    """Boîte à musique ouverte : coffret à coins de laiton et petits pieds, velours rose, cylindre à picots, danseuse, manivelle."""
+    WOOD, INSIDE, BRASS, VELVET, DANCER = range(5)
     materials = [
         make_material("wood", "#8E5A3C"),
         make_material("inside", "#3A2226", contrast=0.5),
         make_material("brass", "#D4A843", contrast=0.8),
         make_material("velvet", "#B86E8A"),
+        make_material("dancer", "#F0D6DA", contrast=0.5),
     ]
     lid = rotation_x(-1.25)
+    hinge = np.array([0.0, 3.0, -9.0])
 
     def parts() -> list[Part]:
-        # La boîte n'est pas une arme longue : elle reste droite, un peu tournée, sans l'inclinaison des autres.
+        # Objet posé, pas une arme longue : il reste droit, sans l'inclinaison des autres icônes.
         tilt = rotation_z(np.pi / 4)
+        corners = [(x * 12.5, y, 8.5) for x in (-1, 1) for y in (-9.5, 1.5)]
+        feet = [(x * 11.0, -11.5, z * 7.0) for x in (-1, 1) for z in (-1, 1)]
+
+        def up(p):
+            return p @ tilt
+
+        def lid_local(p):
+            return (up(p) - hinge) @ lid
+
         return [
-            Part(lambda p: rounded_box(p @ tilt, (0.0, -4.0, 0.0), (13.0, 7.0, 9.0), 1.2), WOOD),
-            Part(lambda p: rounded_box(p @ tilt, (0.0, -1.0, 0.0), (11.0, 5.0, 7.0), 0.8), INSIDE),
-            Part(lambda p: rounded_box(p @ tilt, (0.0, 4.4, -1.0), (8.0, 0.6, 3.0), 0.3), BRASS),
-            Part(lambda p: rounded_box((p @ tilt - np.array([0.0, 3.0, -9.0])) @ lid, (0.0, 0.0, 9.0), (13.0, 1.4, 9.0), 1.0), WOOD),
-            Part(lambda p: rounded_box((p @ tilt - np.array([0.0, 3.0, -9.0])) @ lid, (0.0, -1.4, 9.0), (11.0, 0.5, 7.0), 0.4), VELVET),
-            Part(lambda p: _union(capsule(p @ tilt, (13.5, -4.0, 0.0), (17.0, -4.0, 0.0), 0.9),
-                                  capsule(p @ tilt, (17.0, -4.0, 0.0), (17.0, -0.5, 0.0), 0.9),
-                                  sphere(p @ tilt, (17.0, -0.5, 0.0), 1.5)), BRASS),
+            Part(lambda p: rounded_box(up(p), (0.0, -4.0, 0.0), (13.0, 7.0, 9.0), 1.2), WOOD),
+            Part(lambda p: rounded_box(up(p), (0.0, -1.0, 0.0), (11.0, 5.0, 7.0), 0.8), INSIDE),
+            Part(lambda p: _union(*(rounded_box(up(p), c, (1.4, 1.4, 1.2), 0.4) for c in corners)), BRASS),
+            Part(lambda p: _union(*(sphere(up(p), c, 1.6) for c in feet)), BRASS),
+            Part(lambda p: cylinder(up(p), (0.0, 4.2, -2.5), 1.4, 7.0, 0.3, rotation_z(np.pi / 2)), BRASS),
+            Part(lambda p: _union(capsule(up(p), (2.5, 4.5, 2.0), (2.5, 7.5, 2.0), 0.9, 0.6),
+                                  sphere(up(p), (2.5, 8.8, 2.0), 1.0)), DANCER),
+            Part(lambda p: rounded_box(lid_local(p), (0.0, 0.0, 9.0), (13.0, 1.4, 9.0), 1.0), WOOD),
+            Part(lambda p: rounded_box(lid_local(p), (0.0, -1.4, 9.0), (11.0, 0.5, 7.0), 0.4), VELVET),
+            Part(lambda p: _union(capsule(up(p), (13.5, -4.0, 0.0), (17.0, -4.0, 0.0), 0.9),
+                                  capsule(up(p), (17.0, -4.0, 0.0), (17.0, -0.5, 0.0), 0.9),
+                                  sphere(up(p), (17.0, -0.5, 0.0), 1.5)), BRASS),
         ]
 
     return IconModel("weapon_icon_music_box", parts, materials)
