@@ -81,8 +81,8 @@ public partial class RiftDirector : Node
 
         ErasureManager.ErasureZonePhase phase = _erasure?.GetZonePhaseAt(rift.GlobalPosition) ?? ErasureManager.ErasureZonePhase.Anchored;
         float bump = UpgradeRoller.BumpSteps(_player.LuckBonus, phase, _peril.Peril);
-        List<StatEffectData> oubliPool = new(OubliDataLoader.All);
-        List<(FragmentOption Option, StatEffectData Oubli)> offers = new();
+        List<OubliData> oubliPool = new(OubliDataLoader.All);
+        List<(FragmentOption Option, OubliData Oubli)> offers = new();
         List<ChoiceCard> cards = new();
         // Peu de cibles (début de run : une arme) : la même revient, avec d'autres gains et un autre Oubli, pour
         // qu'il reste un vrai choix.
@@ -93,7 +93,7 @@ public partial class RiftDirector : Node
                 remaining.AddRange(candidates);
             FragmentOption candidate = remaining[_rng.RandiRange(0, remaining.Count - 1)];
             remaining.Remove(candidate);
-            StatEffectData oubli = oubliPool[_rng.RandiRange(0, oubliPool.Count - 1)];
+            OubliData oubli = oubliPool[_rng.RandiRange(0, oubliPool.Count - 1)];
             oubliPool.Remove(oubli);
             UpgradeRarity rarity = UpgradeRoller.RollRarityAtLeast(bump, _config.OfferMinRarity, _rng);
             FragmentOption option = UpgradeRoller.RollGains(candidate, _player, rarity, _rng);
@@ -105,14 +105,14 @@ public partial class RiftDirector : Node
         {
             if (choice < 0 || !CachePlayer() || !offers[choice].Option.ApplyTo(_player))
                 return;
-            _peril.AddOubli(offers[choice].Oubli, _player);
+            _peril.AddOubli(offers[choice].Oubli);
             _peril.AddPeril(_config.PerilPerOffer);
             rift.Close();
             EmitSparks(rift.GlobalPosition);
         });
     }
 
-    private ChoiceCard BuildCard(FragmentOption option, StatEffectData oubli)
+    private ChoiceCard BuildCard(FragmentOption option, OubliData oubli)
     {
         ChoiceCard card = new()
         {
@@ -123,8 +123,8 @@ public partial class RiftDirector : Node
             Icon = option.Type == "weapon_upgrade" ? LoadIcon(WeaponDataLoader.Get(option.Id)?.Sprite) : null,
         };
         card.Lines.AddRange(UpgradeText.Describe(option, _player));
-        StatModifier malus = StatModifier.Scaled(oubli.Stat, oubli.ModifierType, oubli.Amount, 1f);
-        card.Lines.Add((string.Format(Tr("RIFT_OUBLI_LINE"), Tr(oubli.NameKey), malus.Describe()), ChoiceStyle.LossColor));
+        string permanent = oubli.Permanent ? $"  ({Tr("OUBLI_PERMANENT")})" : "";
+        card.Lines.Add((string.Format(Tr("RIFT_OUBLI_LINE"), Tr(oubli.NameKey), oubli.Describe()) + permanent, ChoiceStyle.LossColor));
         card.Lines.Add((string.Format(Tr("RIFT_PERIL_LINE"), _config.PerilPerOffer), ChoiceStyle.LossColor));
         return card;
     }

@@ -3,15 +3,10 @@ using Vestiges.Infrastructure;
 
 namespace Vestiges.Progression;
 
-/// <summary>
-/// Modification durable d'une stat du joueur (bénédiction, Oubli), appliquée comme un perk. Réversible :
-/// <see cref="Inverse"/> la retire exactement.
-/// </summary>
+/// <summary>Modification durable d'une stat du joueur (bénédiction du Mémorial), appliquée comme un perk.</summary>
 public readonly record struct StatModifier(string Stat, string ModifierType, float Value)
 {
     public bool IsMultiplicative => ModifierType == "multiplicative";
-
-    public StatModifier Inverse() => this with { Value = IsMultiplicative ? 1f / Value : -Value };
 
     public void ApplyTo(Player player) => player.ApplyPerkModifier(Stat, Value, ModifierType);
 

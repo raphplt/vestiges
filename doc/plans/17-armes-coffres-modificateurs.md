@@ -533,6 +533,20 @@ Retour de Raphaël : des malus sur la carte plutôt que sur les stats. Les huit 
 
 Chaque Oubli reste levable au Mémorial ; « Oubli des lieux » et « Oubli du trésor » sont définitifs (on ne rend pas un Mémorial effondré), à signaler sur la carte de la Faille.
 
+**3D livré (26 septembre, nuit) : Oublis de carte, validés par Raphaël.** Les huit malus de stats sont remplacés par les neuf Oublis de carte (`data/progression/oublis.json` : effet, force, définitif ou non). `PerilManager` publie le total de chaque effet (`OubliEffectChanged`) ; chaque système applique le sien : `SpawnManager` (élite en plus, apparue tout de suite ; affixes aussi hors Résurgence), `EnemyTracking` (repérage), `ErasureManager` (vitesse de l'oubli), `CrisisManager` (intervalle, compte à rebours en cours compris, borné à 40 %), `FogOfWar` (rayon), `Chest` et `ChestPointers` (colonnes raccourcies, flèches masquées ; perte d'un rang via `downgrade_to` de `chests.json`), `MemorialDirector` (effondrement du Mémorial endormi le plus proche). Oubli des lieux et Oubli du trésor sont définitifs : la Faille l'annonce, le Mémorial ne les propose pas à la levée. Les cartes de choix passent à la ligne au lieu de déborder.
+
+Vérifié : build sans avertissement, smoke test, `tools/test_weapons.sh` (effets additionnés et publiés, définitif non levable), capture `--capture-oublis` (les neuf pris d'un coup) :
+
+| Effet | Avant → après |
+|---|---|
+| Élites en plus / affixes hors Résurgence / repérage | 0 → 1 / 0 → 12 % / ×1 → ×1,3 |
+| Vitesse de l'oubli / prochaine Résurgence | ×1 → ×1,2 / 236 s → 187 s |
+| Brouillard levé autour du joueur | 25 → 19 cellules |
+| Flèches de coffres / coffres communs, rares, épiques | visibles → masquées / 12, 6, 2 → 18, 2, 0 |
+| Mémoriaux endormis | 5 → 4 |
+
+Limite : un coffre de récompense apparu après un Oubli des repères garde sa colonne entière.
+
 #### Vague 3 détaillée — 26 septembre (soir)
 
 La vague 2 attend deux validations de Raphaël (noms, un par un ; style des icônes v2) ; la vague 4 dépend du plan 13, non arbitré. La vague 3 a sa direction validée : elle passe devant. Choix provisoires :

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Godot;
+using Vestiges.Core;
 using Vestiges.Infrastructure;
 using Vestiges.World;
 
@@ -22,6 +23,7 @@ public partial class ChestPointers : Control
     private readonly float _rangeSq;
     private int _count;
     private bool _drawn;
+    private EventBus _eventBus;
 
     public ChestPointers()
     {
@@ -35,6 +37,23 @@ public partial class ChestPointers : Control
     public override void _Ready()
     {
         SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
+        _eventBus = GetNode<EventBus>("/root/EventBus");
+        _eventBus.OubliEffectChanged += OnOubliEffectChanged;
+    }
+
+    public override void _ExitTree()
+    {
+        if (_eventBus != null)
+            _eventBus.OubliEffectChanged -= OnOubliEffectChanged;
+    }
+
+    /// <summary>Oubli des repères (plan 17 lot 3D) : plus de flèches tant qu'il est porté.</summary>
+    private void OnOubliEffectChanged(string effect, float total)
+    {
+        if (effect != "chest_signals")
+            return;
+        Visible = total <= 0f;
+        SetProcess(Visible);
     }
 
     public override void _Process(double delta)

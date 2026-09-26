@@ -86,11 +86,30 @@ RIFT_PROMPT,Sonder,Reach in
 RIFT_TITLE,FAILLE,RIFT
 RIFT_SUBTITLE,L'Effacement rend ce qu'il a pris. Pas pour rien.,The Erasure gives back what it took. At a price.
 RIFT_REFUSE,Refuser,Refuse
-RIFT_OUBLI_LINE,Oubli : {0} · {1},Forgetting: {0} · {1}
+RIFT_OUBLI_LINE,{0} : {1},{0}: {1}
 RIFT_PERIL_LINE,Péril +{0},Peril +{0}
 MEMORIAL_LIFT_TAG,Lever un Oubli,Lift a Forgetting
 MEMORIAL_LIFT_TITLE,Se rappeler : {0},Remember: {0}
 MEMORIAL_LIFTED,{0} : levé,{0}: lifted
+OUBLI_PERMANENT,définitif,permanent
+OUBLI_FEAR,Oubli de la peur,Forgotten Fear
+OUBLI_FEAR_DESC,Une élite de plus rôde en permanence,One more elite always prowls
+OUBLI_PATH,Oubli du chemin,Forgotten Path
+OUBLI_PATH_DESC,Le monde s'efface {0} % plus vite,The world fades {0}% faster
+OUBLI_RESPITE,Oubli du répit,Forgotten Respite
+OUBLI_RESPITE_DESC,Les Résurgences reviennent {0} % plus tôt,Resurgences return {0}% sooner
+OUBLI_LANDMARKS,Oubli des repères,Forgotten Landmarks
+OUBLI_LANDMARKS_DESC,Plus de flèches vers les coffres ; colonnes {0} % plus courtes,No more arrows to chests; columns {0}% shorter
+OUBLI_GAZE,Oubli du regard,Forgotten Gaze
+OUBLI_GAZE_DESC,Le brouillard se lève {0} % moins loin autour de toi,The fog lifts {0}% less around you
+OUBLI_PLACES,Oubli des lieux,Forgotten Places
+OUBLI_PLACES_DESC,Le Mémorial endormi le plus proche s'effondre dans le Néant,The nearest dormant Memorial collapses into the Void
+OUBLI_FACES,Oubli des visages,Forgotten Faces
+OUBLI_FACES_DESC,{0} % des créatures portent une variante,{0}% of creatures carry a variant
+OUBLI_TREASURE,Oubli du trésor,Forgotten Treasure
+OUBLI_TREASURE_DESC,Les coffres encore fermés perdent un rang de rareté,Unopened chests lose one rarity rank
+OUBLI_TRACES,Oubli des traces,Forgotten Tracks
+OUBLI_TRACES_DESC,Les créatures te repèrent {0} % plus loin,Creatures spot you {0}% farther away
 BLESSING_BREATH,Souffle retrouvé,Breath Regained
 BLESSING_SURE_HAND,Geste sûr,Sure Hand
 BLESSING_LIGHT_STEP,Pas léger,Light Step
@@ -101,14 +120,6 @@ BLESSING_TRUE_EYE,Œil juste,True Eye
 BLESSING_WIDE_GESTURE,Geste ample,Wide Gesture
 BLESSING_GOOD_STAR,Bonne étoile,Lucky Star
 BLESSING_CALL_OF_SHARDS,Appel des éclats,Call of Shards
-OUBLI_HEAVY_LIMBS,Membres lourds,Heavy Limbs
-OUBLI_THIN_BLOOD,Sang léger,Thin Blood
-OUBLI_BLUNT_EDGE,Fil émoussé,Blunt Edge
-OUBLI_LOST_RHYTHM,Rythme perdu,Lost Rhythm
-OUBLI_OPEN_WOUNDS,Plaies ouvertes,Open Wounds
-OUBLI_NARROW_GESTURE,Geste étroit,Narrow Gesture
-OUBLI_BAD_STAR,Mauvaise étoile,Ill Star
-OUBLI_DULL_SENSES,Sens émoussés,Dull Senses
 CHEST_LOOT_ESSENCE,Essence ×{0},Essence ×{0}
 CHEST_LOOT_XP,+{0} XP,+{0} XP
 CHEST_LOOT_SOUVENIR,Souvenir : {0},Memory: {0}

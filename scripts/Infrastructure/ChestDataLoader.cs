@@ -17,6 +17,8 @@ public class ChestData
     public string LootTableId;
     public int LootRolls;
     public int ScorePoints;
+    /// <summary>Coffre d'un rang de rareté en dessous (Oubli du trésor), ou rien.</summary>
+    public string DowngradeTo;
 }
 
 /// <summary>Un groupe de coffres placés dans une bande de distance au départ (fraction du rayon de carte).</summary>
@@ -85,6 +87,7 @@ public static class ChestDataLoader
                 ColumnHeight = dict.ContainsKey("column_height") ? (float)dict["column_height"].AsDouble() : 96f,
                 ColumnCore = dict.ContainsKey("column_core") ? (float)dict["column_core"].AsDouble() : 1f,
                 FxFamily = dict.ContainsKey("fx_family") ? dict["fx_family"].AsString() : "silk",
+                DowngradeTo = dict.ContainsKey("downgrade_to") ? dict["downgrade_to"].AsString() : null,
                 OpenTime = dict.ContainsKey("open_time") ? (float)dict["open_time"].AsDouble() : 0.5f,
                 LootTableId = dict.ContainsKey("loot_table_id") ? dict["loot_table_id"].AsString() : "",
                 LootRolls = dict.ContainsKey("loot_rolls") ? (int)dict["loot_rolls"].AsDouble() : 1,

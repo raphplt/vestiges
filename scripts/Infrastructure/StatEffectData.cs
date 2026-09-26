@@ -3,7 +3,7 @@ using Godot;
 
 namespace Vestiges.Infrastructure;
 
-/// <summary>Effet de stat décrit en données : bénédiction d'un Mémorial ou Oubli d'une Faille.</summary>
+/// <summary>Effet de stat décrit en données : bénédiction d'un Mémorial.</summary>
 public class StatEffectData
 {
     public string Id;
@@ -13,7 +13,7 @@ public class StatEffectData
     public float Amount;
 }
 
-/// <summary>Lecture commune des listes d'effets de stat (bénédictions, Oublis).</summary>
+/// <summary>Lecture d'une liste d'effets de stat (bénédictions).</summary>
 internal static class StatEffectReader
 {
     public static void Read(string path, string key, List<StatEffectData> into)

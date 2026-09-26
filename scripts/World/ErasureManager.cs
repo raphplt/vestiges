@@ -18,6 +18,8 @@ public partial class ErasureManager : Node
     private int _cellSize = 128;
     private float _seededMemory = 1f;
     private float _baseDecayPerMinute = 0.018f;
+    // Oubli du chemin (plan 17 lot 3D) : l'oubli avance plus vite.
+    private float _decayMultiplier = 1f;
     private float _globalAccelerationPerMinute = 0.010f;
     private float _distanceDecayMultiplier = 0.11f;
     private float _playerPresenceFalloffCells = 2.5f;
@@ -65,6 +67,7 @@ public partial class ErasureManager : Node
         _eventBus.PoiDiscovered += OnPoiDiscovered;
         _eventBus.ChestOpened += OnChestOpened;
         _eventBus.MemorialAwakened += OnMemorialAwakened;
+        _eventBus.OubliEffectChanged += OnOubliEffectChanged;
 
         _memoryImage = Image.CreateFromData(MemoryWindowCells, MemoryWindowCells, false, Image.Format.R8, _memoryBytes);
         _memoryTexture = ImageTexture.CreateFromImage(_memoryImage);
@@ -84,6 +87,7 @@ public partial class ErasureManager : Node
             _eventBus.PoiDiscovered -= OnPoiDiscovered;
             _eventBus.ChestOpened -= OnChestOpened;
             _eventBus.MemorialAwakened -= OnMemorialAwakened;
+            _eventBus.OubliEffectChanged -= OnOubliEffectChanged;
         }
     }
 
@@ -104,7 +108,7 @@ public partial class ErasureManager : Node
         SeedAroundPlayer();
 
         float elapsedMinutes = _totalElapsed / 60f;
-        float decayPerMinute = _baseDecayPerMinute + _globalAccelerationPerMinute * elapsedMinutes;
+        float decayPerMinute = (_baseDecayPerMinute + _globalAccelerationPerMinute * elapsedMinutes) * _decayMultiplier;
         float decayAmount = decayPerMinute * (_updateIntervalSec / 60f);
         float previousGlobal = _globalErasurePercent;
 
@@ -331,6 +335,12 @@ public partial class ErasureManager : Node
     private void OnPoiDiscovered(string poiId, string poiType, Vector2 position)
     {
         StabilizeZone(position);
+    }
+
+    private void OnOubliEffectChanged(string effect, float total)
+    {
+        if (effect == "erasure_speed")
+            _decayMultiplier = 1f + total;
     }
 
     private void OnMemorialAwakened(Vector2 position)

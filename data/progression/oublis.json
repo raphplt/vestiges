@@ -1,13 +1,14 @@
 {
-	"_comment": "Oublis des Failles (plan 17 lot 3C) : le prix d'une amélioration arrachée à l'Effacement. Malus durable de stat, jusqu'à ce qu'un Mémorial le lève. multiplicative : ×(1 + amount), amount négatif ; additive : + amount. Le gain de rareté ne s'applique pas : un Oubli pèse toujours le même poids.",
+	"_comment": "Oublis des Failles (plan 17 lot 3D, validés par Raphaël le 26 septembre) : des malus sur la carte, pas sur les stats. effect nomme le système touché, amount sa force (les Oublis du même effet s'additionnent). permanent : effet immédiat et définitif, qu'un Mémorial ne peut pas lever. description_key reçoit amount en pourcentage entier ({0}).",
 	"oublis": [
-		{ "id": "oubli_heavy_limbs", "name_key": "OUBLI_HEAVY_LIMBS", "stat": "speed", "modifier_type": "multiplicative", "amount": -0.08 },
-		{ "id": "oubli_thin_blood", "name_key": "OUBLI_THIN_BLOOD", "stat": "max_hp", "modifier_type": "multiplicative", "amount": -0.12 },
-		{ "id": "oubli_blunt_edge", "name_key": "OUBLI_BLUNT_EDGE", "stat": "damage", "modifier_type": "multiplicative", "amount": -0.08 },
-		{ "id": "oubli_lost_rhythm", "name_key": "OUBLI_LOST_RHYTHM", "stat": "attack_speed", "modifier_type": "multiplicative", "amount": -0.08 },
-		{ "id": "oubli_open_wounds", "name_key": "OUBLI_OPEN_WOUNDS", "stat": "armor", "modifier_type": "additive", "amount": -3 },
-		{ "id": "oubli_narrow_gesture", "name_key": "OUBLI_NARROW_GESTURE", "stat": "aoe_radius", "modifier_type": "multiplicative", "amount": -0.1 },
-		{ "id": "oubli_bad_star", "name_key": "OUBLI_BAD_STAR", "stat": "luck", "modifier_type": "additive", "amount": -0.05 },
-		{ "id": "oubli_dull_senses", "name_key": "OUBLI_DULL_SENSES", "stat": "xp_magnet_radius", "modifier_type": "multiplicative", "amount": -0.2 }
+		{ "id": "oubli_fear", "name_key": "OUBLI_FEAR", "description_key": "OUBLI_FEAR_DESC", "effect": "extra_elite", "amount": 1 },
+		{ "id": "oubli_path", "name_key": "OUBLI_PATH", "description_key": "OUBLI_PATH_DESC", "effect": "erasure_speed", "amount": 0.2 },
+		{ "id": "oubli_respite", "name_key": "OUBLI_RESPITE", "description_key": "OUBLI_RESPITE_DESC", "effect": "resurgence_interval", "amount": 0.2 },
+		{ "id": "oubli_landmarks", "name_key": "OUBLI_LANDMARKS", "description_key": "OUBLI_LANDMARKS_DESC", "effect": "chest_signals", "amount": 0.5 },
+		{ "id": "oubli_gaze", "name_key": "OUBLI_GAZE", "description_key": "OUBLI_GAZE_DESC", "effect": "fog_reveal", "amount": 0.25 },
+		{ "id": "oubli_places", "name_key": "OUBLI_PLACES", "description_key": "OUBLI_PLACES_DESC", "effect": "collapse_memorial", "amount": 1, "permanent": true },
+		{ "id": "oubli_faces", "name_key": "OUBLI_FACES", "description_key": "OUBLI_FACES_DESC", "effect": "affix_chance", "amount": 0.12 },
+		{ "id": "oubli_treasure", "name_key": "OUBLI_TREASURE", "description_key": "OUBLI_TREASURE_DESC", "effect": "chest_rarity_down", "amount": 1, "permanent": true },
+		{ "id": "oubli_traces", "name_key": "OUBLI_TRACES", "description_key": "OUBLI_TRACES_DESC", "effect": "enemy_detection", "amount": 0.3 }
 	]
 }

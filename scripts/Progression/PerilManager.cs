@@ -8,7 +8,8 @@ namespace Vestiges.Progression;
 /// <summary>
 /// Péril de la run (plan 17 lot 3A) : chaque point renforce les créatures et majore XP, score et rareté des tirages
 /// (valeurs dans data/scaling/peril.json). Seul émetteur de <c>DifficultyModifierChanged</c>. Tient aussi les Oublis
-/// (lot 3C), malus pris aux Failles jusqu'à ce qu'un Mémorial les lève.
+/// (lots 3C et 3D), malus de carte pris aux Failles : <c>OubliEffectChanged</c> publie le total de chaque effet, que le
+/// système concerné applique (apparition, Effacement, Résurgences, brouillard, coffres, Mémoriaux).
 /// </summary>
 public partial class PerilManager : Node
 {
@@ -37,23 +38,36 @@ public partial class PerilManager : Node
         GD.Print($"[PerilManager] Péril {peril}");
     }
 
-    public void AddOubli(StatEffectData data, Player player)
+    /// <summary>Prend un Oubli : son effet s'ajoute à ceux du même nom, et chaque système concerné l'applique.</summary>
+    public void AddOubli(OubliData data)
     {
-        StatModifier modifier = StatModifier.Scaled(data.Stat, data.ModifierType, data.Amount, 1f);
-        modifier.ApplyTo(player);
-        _oublis.Add(new ActiveOubli(data, modifier));
+        _oublis.Add(new ActiveOubli(data));
+        EmitEffect(data.Effect);
         GD.Print($"[PerilManager] Oubli : {data.Id}");
     }
 
-    public void LiftOubli(ActiveOubli oubli, Player player)
+    /// <summary>Lève un Oubli au Mémorial ; un Oubli définitif ne se lève pas.</summary>
+    public bool LiftOubli(ActiveOubli oubli)
     {
-        if (!_oublis.Remove(oubli))
-            return;
-        // Lever un Oubli rend la stat, jamais des PV : un Oubli de PV max pris à 1 PV (perte bornée) rendrait
-        // sinon plus qu'il n'a pris.
-        float hp = player.CurrentHp;
-        oubli.Modifier.Inverse().ApplyTo(player);
-        player.CapCurrentHp(hp);
+        if (oubli.Data.Permanent || !_oublis.Remove(oubli))
+            return false;
+        EmitEffect(oubli.Data.Effect);
         GD.Print($"[PerilManager] Oubli levé : {oubli.Data.Id}");
+        return true;
+    }
+
+    /// <summary>Somme des Oublis portés pour un effet (0 sans Oubli).</summary>
+    public float EffectTotal(string effect)
+    {
+        float total = 0f;
+        foreach (ActiveOubli oubli in _oublis)
+            if (oubli.Data.Effect == effect)
+                total += oubli.Data.Amount;
+        return total;
+    }
+
+    private void EmitEffect(string effect)
+    {
+        _eventBus?.EmitSignal(EventBus.SignalName.OubliEffectChanged, effect, EffectTotal(effect));
     }
 }

@@ -21,6 +21,7 @@ public partial class FogOfWar : Node2D
     private Vector2I _lastPlayerCell = new(int.MinValue, int.MinValue);
 
     private int _fogRevealRadius;
+    private int _baseRevealRadius;
     private int _fogInitialClearRadius;
     private int _mapRadius;
     private int _revealRevision;
@@ -48,12 +49,28 @@ public partial class FogOfWar : Node2D
         _ground = ground;
         _generator = generator;
         _fogRevealRadius = fogRevealRadius;
+        _baseRevealRadius = fogRevealRadius;
         _fogInitialClearRadius = fogInitialClearRadius;
         _mapRadius = generator.MapRadius;
         _eventBus = GetNodeOrNull<EventBus>("/root/EventBus");
+        if (_eventBus != null)
+            _eventBus.OubliEffectChanged += OnOubliEffectChanged;
 
         CreateFogLayer();
         StartDeferredInit();
+    }
+
+    public override void _ExitTree()
+    {
+        if (_eventBus != null)
+            _eventBus.OubliEffectChanged -= OnOubliEffectChanged;
+    }
+
+    /// <summary>Oubli du regard (plan 17 lot 3D) : le brouillard se lève sur un rayon plus court.</summary>
+    private void OnOubliEffectChanged(string effect, float total)
+    {
+        if (effect == "fog_reveal")
+            _fogRevealRadius = Mathf.Max(1, Mathf.RoundToInt(_baseRevealRadius * (1f - total)));
     }
 
     public override void _Process(double delta)

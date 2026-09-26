@@ -35,6 +35,7 @@ public partial class MemorialDirector : Node
     private float _gatherRemaining;
     private int _collected;
     private float _lossTimer = LossCheckInterval;
+    private int _collapsed;
 
     public void Setup(ChoiceScreen choices, EssenceTracker essence, ErasureManager erasure, PerilManager peril)
     {
@@ -50,6 +51,7 @@ public partial class MemorialDirector : Node
         _world = GetParent<WorldSetup>();
         _eventBus = GetNode<EventBus>("/root/EventBus");
         _eventBus.MemorialInteracted += OnMemorialInteracted;
+        _eventBus.OubliEffectChanged += OnOubliEffectChanged;
     }
 
     public override void _ExitTree()
@@ -57,6 +59,7 @@ public partial class MemorialDirector : Node
         if (_eventBus == null)
             return;
         _eventBus.MemorialInteracted -= OnMemorialInteracted;
+        _eventBus.OubliEffectChanged -= OnOubliEffectChanged;
     }
 
     public override void _Process(double delta)
@@ -266,6 +269,8 @@ public partial class MemorialDirector : Node
         int liftCost = Price(_config.LiftOubliCost, memorial.ServiceUses(ServiceLift));
         foreach (ActiveOubli oubli in _peril.Oublis)
         {
+            if (oubli.Data.Permanent)
+                continue;
             ChoiceCard card = new()
             {
                 Tag = Tr("MEMORIAL_LIFT_TAG").ToUpper(),
@@ -274,7 +279,7 @@ public partial class MemorialDirector : Node
                 Price = string.Format(Tr("MEMORIAL_PRICE"), liftCost),
                 Enabled = essence >= liftCost,
             };
-            card.Lines.Add((oubli.Modifier.Describe(), ChoiceStyle.LossColor));
+            card.Lines.Add((oubli.Data.Describe(), ChoiceStyle.LossColor));
             cards.Add(card);
             ActiveOubli target = oubli;
             actions.Add(() => LiftOubli(memorial, target, liftCost));
@@ -318,7 +323,12 @@ public partial class MemorialDirector : Node
     {
         if (!_essence.TrySpend(cost))
             return;
-        _peril.LiftOubli(oubli, _player);
+        if (!_peril.LiftOubli(oubli))
+        {
+            _essence.AddEssence(cost);
+            OpenServices(memorial, null);
+            return;
+        }
         memorial.RecordServiceUse(ServiceLift);
         OpenServices(memorial, string.Format(Tr("MEMORIAL_LIFTED"), Tr(oubli.Data.NameKey)));
     }
@@ -328,6 +338,34 @@ public partial class MemorialDirector : Node
     // ==============================
     // Néant
     // ==============================
+
+    /// <summary>
+    /// Oubli des lieux (plan 17 lot 3D) : à chaque Oubli pris, le Mémorial endormi le plus proche du joueur
+    /// s'effondre, comme englouti par le Néant.
+    /// </summary>
+    private void OnOubliEffectChanged(string effect, float total)
+    {
+        if (effect != "collapse_memorial" || !CachePlayer())
+            return;
+        for (int target = Mathf.RoundToInt(total); _collapsed < target; _collapsed++)
+        {
+            Memorial nearest = null;
+            float nearestDistance = float.MaxValue;
+            foreach (Memorial memorial in Memorial.All)
+            {
+                float distance = memorial.GlobalPosition.DistanceTo(_player.GlobalPosition);
+                if (memorial.State == Memorial.MemorialState.Dormant && distance < nearestDistance)
+                {
+                    nearest = memorial;
+                    nearestDistance = distance;
+                }
+            }
+            if (nearest == null)
+                return;
+            nearest.SetState(Memorial.MemorialState.Lost);
+            EmitSparks(nearest.GlobalPosition + new Vector2(0f, -20f), 16);
+        }
+    }
 
     private void CheckLost()
     {

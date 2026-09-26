@@ -15,6 +15,7 @@
     {
         "id": "chest_rare",
         "rarity": "rare",
+        "downgrade_to": "chest_common",
         "sprite_closed": "assets/chests/chest_rare_closed.png",
         "sprite_open": "assets/chests/chest_rare_open.png",
         "column_height": 124,
@@ -28,6 +29,7 @@
     {
         "id": "chest_epic",
         "rarity": "epic",
+        "downgrade_to": "chest_rare",
         "sprite_closed": "assets/chests/chest_epic_closed.png",
         "sprite_open": "assets/chests/chest_epic_open.png",
         "column_height": 160,

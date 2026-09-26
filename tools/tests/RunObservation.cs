@@ -25,6 +25,7 @@ namespace Vestiges.Tests;
 /// --capture-weapons [--weapons a,b] : galerie des attaques du joueur (RunObservation.Weapons.cs).
 /// --capture-chests : chaque coffre cadré, avec et sans décors (RunObservation.Chests.cs).
 /// --capture-levelup : l'écran de level-up, une capture par rareté (RunObservation.LevelUp.cs).
+/// --capture-oublis : les neuf Oublis de carte pris d'un coup, effets mesurés (RunObservation.Oublis.cs).
 /// --capture-rift : offre d'une Faille, Péril et Oubli dans la pause, Oubli levé au Mémorial (RunObservation.Landmarks.cs).
 /// --capture-memorial : parcours complet d'un Mémorial, du réveil aux services (RunObservation.Landmarks.cs).
 /// --loot-draws N : tirages de butin de chaque coffre, sans les appliquer (RunObservation.Chests.cs).
@@ -90,6 +91,8 @@ public partial class RunObservation : Node
                 await CaptureMemorial();
             else if (Array.IndexOf(args, "--capture-rift") >= 0)
                 await CaptureRift();
+            else if (Array.IndexOf(args, "--capture-oublis") >= 0)
+                await CaptureOublis();
             else if (Array.IndexOf(args, "--loot-draws") >= 0)
                 MeasureLootDraws(int.Parse(Argument(args, "--loot-draws", "1000"), CultureInfo.InvariantCulture));
             else if (Array.IndexOf(args, "--capture-bestiary") >= 0)

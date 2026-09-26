@@ -79,6 +79,8 @@ public partial class EventBus : Node
     // --- Péril (plan 17 lot 3A) ---
     [Signal] public delegate void DifficultyModifierChangedEventHandler(float enemyCountMult, float enemyHpMult, float enemyDmgMult, float xpMult);
     [Signal] public delegate void PerilChangedEventHandler(int peril);
+    /// <summary>Total des Oublis portés pour un effet de carte (data/progression/oublis.json), après prise ou levée.</summary>
+    [Signal] public delegate void OubliEffectChangedEventHandler(string effect, float total);
 
     // --- Effacement (V2) ---
     [Signal] public delegate void ErasureUpdatedEventHandler(float globalErasurePercent);

@@ -41,6 +41,10 @@ public partial class CrisisManager : Node
     public bool IsEndgameMode => _endgameMode;
     public float WarningDurationSec => _warningDurationSec;
 
+    // Plusieurs Oublis du répit ne rapprochent pas les Résurgences au-delà de ce facteur.
+    private const float MinIntervalFactor = 0.4f;
+    private float _intervalFactor = 1f;
+
     public override void _Ready()
     {
         LoadConfig();
@@ -51,6 +55,24 @@ public partial class CrisisManager : Node
 
         _rng.Randomize();
         ScheduleNextCrisis(_firstCrisisDelaySec);
+        _eventBus.OubliEffectChanged += OnOubliEffectChanged;
+    }
+
+    public override void _ExitTree()
+    {
+        if (_eventBus != null)
+            _eventBus.OubliEffectChanged -= OnOubliEffectChanged;
+    }
+
+    /// <summary>Oubli du répit (plan 17 lot 3D) : les Résurgences reviennent plus tôt, compte à rebours en cours compris.</summary>
+    private void OnOubliEffectChanged(string effect, float total)
+    {
+        if (effect != "resurgence_interval")
+            return;
+        float previous = _intervalFactor;
+        _intervalFactor = Mathf.Max(MinIntervalFactor, 1f - total);
+        if (!_isCrisisActive && previous > 0f)
+            _nextCrisisAtSec = _elapsed + TimeUntilNextCrisis * (_intervalFactor / previous);
     }
 
     public override void _Process(double delta)
@@ -117,7 +139,7 @@ public partial class CrisisManager : Node
         else
             _gameManager?.SetRunPhase(GameManager.RunPhase.Exploration);
 
-        float baseDelay = _intervalSec + _rng.RandfRange(-_intervalVarianceSec, _intervalVarianceSec);
+        float baseDelay = (_intervalSec + _rng.RandfRange(-_intervalVarianceSec, _intervalVarianceSec)) * _intervalFactor;
         if (_endgameMode)
             baseDelay *= _endgameIntervalMultiplier;
         ScheduleNextCrisis(baseDelay);

@@ -21,6 +21,9 @@ public partial class Chest : StaticBody2D, IInteractable
     private LightColumn _column;
     private Texture2D _openTexture;
     private EventBus _eventBus;
+    // Oublis (plan 17 lot 3D) : colonne raccourcie (repères), rangs de rareté perdus (trésor).
+    private float _signalFactor = 1f;
+    private int _downgrades;
 
     /// <summary>Coffres fermés présents dans la scène.</summary>
     public static IReadOnlyList<Chest> Closed => _closed;
@@ -59,6 +62,8 @@ public partial class Chest : StaticBody2D, IInteractable
 
     public override void _ExitTree()
     {
+        if (_eventBus != null)
+            _eventBus.OubliEffectChanged -= OnOubliEffectChanged;
         _closed.Remove(this);
         Interactables.Unregister(this);
     }
@@ -66,7 +71,43 @@ public partial class Chest : StaticBody2D, IInteractable
     public override void _Ready()
     {
         _eventBus = GetNode<EventBus>("/root/EventBus");
+        _eventBus.OubliEffectChanged += OnOubliEffectChanged;
         AddToGroup("chests");
+    }
+
+    private void OnOubliEffectChanged(string effect, float total)
+    {
+        if (_chestData == null || _isOpened)
+            return;
+        if (effect == "chest_signals")
+        {
+            _signalFactor = Mathf.Max(0f, 1f - total);
+            ConfigureColumn();
+        }
+        else if (effect == "chest_rarity_down")
+        {
+            for (int target = Mathf.RoundToInt(total); _downgrades < target; _downgrades++)
+                Downgrade();
+        }
+    }
+
+    /// <summary>Le coffre perd un rang de rareté : données, sprites et colonne du rang en dessous.</summary>
+    private void Downgrade()
+    {
+        ChestData lower = string.IsNullOrEmpty(_chestData.DowngradeTo) ? null : ChestDataLoader.Get(_chestData.DowngradeTo);
+        if (lower == null)
+            return;
+        _chestData = lower;
+        _openTexture = LoadTexture(lower.SpriteOpen);
+        ShowTexture(LoadTexture(lower.SpriteClosed));
+        ConfigureColumn();
+    }
+
+    private void ConfigureColumn()
+    {
+        _column.Visible = _signalFactor > 0f;
+        if (_column.Visible)
+            _column.Configure(RarityPalette.Colors(_chestData.Rarity), _chestData.ColumnHeight * _signalFactor, _chestData.ColumnCore);
     }
 
     public void Initialize(ChestData data)
@@ -75,7 +116,7 @@ public partial class Chest : StaticBody2D, IInteractable
 
         _column = new LightColumn { Name = "LightColumn" };
         AddChild(_column);
-        _column.Configure(RarityPalette.Colors(data.Rarity), data.ColumnHeight, data.ColumnCore);
+        ConfigureColumn();
 
         Texture2D closed = LoadTexture(data.SpriteClosed);
         _openTexture = LoadTexture(data.SpriteOpen);

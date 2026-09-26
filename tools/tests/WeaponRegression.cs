@@ -41,7 +41,7 @@ public partial class WeaponRegression : Node2D
             CheckSingleLevel();
             CheckBanishUpgrade();
             CheckRarityDistribution();
-            CheckOubliRoundTrip();
+            CheckOubliEffects();
             CheckUpgradeGains();
             CheckRangeAndZone();
 
@@ -136,27 +136,40 @@ public partial class WeaponRegression : Node2D
             $"bannir l'amélioration de {banished} : absente de l'offre, bannissement consommé");
     }
 
-    /// <summary>10 000 tirages : les poids de base sont respectés, et l'oubli de la zone fait monter les raretés.</summary>
-    /// <summary>Oubli de PV max pris à bas PV puis levé : la stat revient exactement, sans PV gagnés au passage.</summary>
-    private void CheckOubliRoundTrip()
+    /// <summary>Oublis de carte : les effets du même nom s'additionnent et se publient ; un Oubli définitif ne se lève pas.</summary>
+    private void CheckOubliEffects()
     {
         PerilManager peril = new();
-        StatEffectData thinBlood = OubliDataLoader.All[0];
-        foreach (StatEffectData oubli in OubliDataLoader.All)
-            if (oubli.Stat == "max_hp")
-                thinBlood = oubli;
-        float maxBefore = _player.EffectiveMaxHp;
-        _player.TakeDamage(maxBefore - 3f);
-        float hpBefore = _player.CurrentHp;
-        peril.AddOubli(thinBlood, _player);
-        float maxDuring = _player.EffectiveMaxHp;
-        peril.LiftOubli(peril.Oublis[0], _player);
-        Check(maxDuring < maxBefore && Mathf.IsEqualApprox(_player.EffectiveMaxHp, maxBefore) && _player.CurrentHp <= hpBefore + 0.01f,
-            $"Oubli {thinBlood.Id} pris à {hpBefore:0} PV puis levé : PV max {maxBefore:0} → {maxDuring:0} → {_player.EffectiveMaxHp:0}, PV {hpBefore:0} → {_player.CurrentHp:0}");
-        _player.Heal(maxBefore);
-        peril.Free();
+        AddChild(peril);
+        Dictionary<string, float> published = new();
+        EventBus bus = GetNode<EventBus>("/root/EventBus");
+        EventBus.OubliEffectChangedEventHandler handler = (effect, total) => published[effect] = total;
+        bus.OubliEffectChanged += handler;
+        OubliData path = OubliDataLoader.All[0];
+        OubliData permanent = OubliDataLoader.All[0];
+        foreach (OubliData oubli in OubliDataLoader.All)
+        {
+            if (oubli.Effect == "erasure_speed")
+                path = oubli;
+            if (oubli.Permanent)
+                permanent = oubli;
+        }
+
+        peril.AddOubli(path);
+        peril.AddOubli(path);
+        float twice = published.GetValueOrDefault(path.Effect);
+        bool lifted = peril.LiftOubli(peril.Oublis[0]);
+        float once = published.GetValueOrDefault(path.Effect);
+        peril.AddOubli(permanent);
+        bool permanentLifted = peril.LiftOubli(peril.Oublis[^1]);
+        bus.OubliEffectChanged -= handler;
+        Check(Mathf.IsEqualApprox(twice, 2f * path.Amount) && lifted && Mathf.IsEqualApprox(once, path.Amount)
+              && !permanentLifted && peril.Oublis.Count == 2,
+            $"Oublis : {path.Id} ×2 = {twice:0.##}, levé → {once:0.##} ; {permanent.Id} définitif, levée refusée");
+        peril.QueueFree();
     }
 
+    /// <summary>10 000 tirages : les poids de base sont respectés, et l'oubli de la zone fait monter les raretés.</summary>
     private void CheckRarityDistribution()
     {
         RandomNumberGenerator rng = new() { Seed = 17 };

@@ -380,7 +380,12 @@ public partial class PauseMenu : CanvasLayer
 		{
 			AddPerilLines(peril.Peril);
 			foreach (ActiveOubli oubli in peril.Oublis)
-				AddLine(_sheetContainer, "  " + Tr(oubli.Data.NameKey), oubli.Modifier.Describe(), PerilColor);
+			{
+				AddLine(_sheetContainer, "  " + Tr(oubli.Data.NameKey), oubli.Data.Permanent ? Tr("OUBLI_PERMANENT") : "", PerilColor);
+				Label effect = MakeLabel("    " + oubli.Data.Describe(), 12, TextVeryDim);
+				effect.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+				_sheetContainer.AddChild(effect);
+			}
 		}
 	}
 

@@ -12,6 +12,9 @@ namespace Vestiges.UI;
 /// </summary>
 public partial class ChoiceScreen : CanvasLayer
 {
+    // Largeur du texte d'une carte : carte moins marges, icône et écart.
+    private const float TextWidth = ChoiceStyle.CardWidth - 110f;
+
     private ColorRect _overlay;
     private PanelContainer _panel;
     private Label _title;
@@ -158,7 +161,14 @@ public partial class ChoiceScreen : CanvasLayer
             header.AddChild(ChoiceStyle.MakeLabel(card.Price, 12, card.Enabled ? ChoiceStyle.GoldBright : ChoiceStyle.TextDim, false, HorizontalAlignment.Right));
         text.AddChild(ChoiceStyle.MakeLabel(card.Title, 16, ChoiceStyle.TextLight, false));
         foreach ((string line, Color color) in card.Lines)
-            text.AddChild(ChoiceStyle.MakeLabel(line, 14, color, false));
+        {
+            // Les lignes longues (Oublis) passent à la ligne au lieu de déborder de la carte.
+            Label label = ChoiceStyle.MakeLabel(line, 14, color, false);
+            label.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+            // Largeur fixée : sans elle, une étiquette qui passe à la ligne se mesure à zéro et fausse la taille du panneau.
+            label.CustomMinimumSize = new Vector2(TextWidth, 0f);
+            text.AddChild(label);
+        }
 
         _cards.Add(card);
         _cardPanels.Add(panel);

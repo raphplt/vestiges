@@ -78,6 +78,9 @@ public partial class SpawnManager : Node2D
 	private readonly List<string> _affixScratch = new();
 	private readonly List<EnemyAffixData> _affixPick = new();
 	private float _nextEliteAtSec;
+	// Oublis (plan 17 lot 3D) : élites en plus, affixes aussi hors Résurgence.
+	private int _extraElites;
+	private float _affixChanceBonus;
 
 	private GameManager.RunPhase _currentRunPhase = GameManager.RunPhase.Exploration;
 	private string _clusterEnemyId;
@@ -115,6 +118,8 @@ public partial class SpawnManager : Node2D
 		_eventBus.RunPhaseChanged += OnRunPhaseChanged;
 		_eventBus.CrisisStarted += OnCrisisStarted;
 		_eventBus.DifficultyModifierChanged += OnDifficultyModifierChanged;
+		_eventBus.OubliEffectChanged += OnOubliEffectChanged;
+		EnemyTracking.SetDetectionScale(1f);
 		_groupCache = GetNode<GroupCache>("/root/GroupCache");
 	}
 
@@ -125,6 +130,27 @@ public partial class SpawnManager : Node2D
 			_eventBus.RunPhaseChanged -= OnRunPhaseChanged;
 			_eventBus.CrisisStarted -= OnCrisisStarted;
 			_eventBus.DifficultyModifierChanged -= OnDifficultyModifierChanged;
+			_eventBus.OubliEffectChanged -= OnOubliEffectChanged;
+		}
+	}
+
+	private void OnOubliEffectChanged(string effect, float total)
+	{
+		switch (effect)
+		{
+			case "extra_elite":
+				int previous = _extraElites;
+				_extraElites = Mathf.RoundToInt(total);
+				// Une élite de plus : elle arrive tout de suite, pas au prochain tirage d'intervalle.
+				if (_extraElites > previous)
+					_nextEliteAtSec = _elapsedTime;
+				break;
+			case "affix_chance":
+				_affixChanceBonus = total;
+				break;
+			case "enemy_detection":
+				EnemyTracking.SetDetectionScale(1f + total);
+				break;
 		}
 	}
 
@@ -215,7 +241,7 @@ public partial class SpawnManager : Node2D
 
 	private void ApplyRunPhaseModifiers(Enemy enemy, EnemyData data)
 	{
-		if (_currentRunPhase == GameManager.RunPhase.Exploration || data.Tier != "normal")
+		if (data.Tier != "normal" || (_currentRunPhase == GameManager.RunPhase.Exploration && _affixChanceBonus <= 0f))
 			return;
 
 		PhaseModifierConfig config = EnemyVariantDataLoader.PhaseModifiers;
@@ -233,7 +259,7 @@ public partial class SpawnManager : Node2D
 			GameManager.RunPhase.LateGame => config.AffixChanceLateGame,
 			GameManager.RunPhase.Crisis => config.AffixChanceCrisis,
 			_ => 0f
-		};
+		} + _affixChanceBonus;
 		if (config.AffixPool.Count > 0 && GD.Randf() < affixChance)
 		{
 			EnemyAffixData affix = EnemyVariantDataLoader.GetAffix(config.AffixPool[(int)(GD.Randi() % config.AffixPool.Count)]);
@@ -322,7 +348,7 @@ public partial class SpawnManager : Node2D
 			if (!IsInstanceValid(tracked) || !tracked.IsActive || tracked.IsDying || tracked.Modifiers.Variant?.Id != "elite")
 				_naturalElites.RemoveAt(i);
 		}
-		if (_naturalElites.Count >= config.MaxAlive || _currentRunPhase == GameManager.RunPhase.Death)
+		if (_naturalElites.Count >= config.MaxAlive + _extraElites || _currentRunPhase == GameManager.RunPhase.Death)
 			return;
 
 		Vector2 spawnPos = GetSpawnPosition();

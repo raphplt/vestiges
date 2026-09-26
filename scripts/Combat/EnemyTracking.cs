@@ -26,6 +26,12 @@ public sealed class EnemyTracking
     public float WanderSpeedFactor => _wanderSpeedFactor;
     public Vector2 WanderDirection => _wanderDirection;
 
+    // Oubli des traces (plan 17 lot 3D) : les créatures repèrent le joueur de plus loin.
+    private static float _detectionScaleSq = 1f;
+
+    /// <summary>Distance de repérage multipliée par <paramref name="scale"/> pour toutes les créatures.</summary>
+    public static void SetDetectionScale(float scale) => _detectionScaleSq = scale * scale;
+
     public EnemyTracking()
     {
         LoadConfig();
@@ -42,7 +48,7 @@ public sealed class EnemyTracking
     /// <summary>Met à jour le pistage ; renvoie vrai si la créature a perdu la trace du joueur.</summary>
     public bool Tick(float distanceToPlayerSq, float delta)
     {
-        if (distanceToPlayerSq < _engageDistanceSq)
+        if (distanceToPlayerSq < _engageDistanceSq * _detectionScaleSq)
         {
             _engaged = true;
             _outOfRangeTime = 0f;
