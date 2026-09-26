@@ -180,3 +180,27 @@ Chaque lot : captures avant/après dans une vraie run (`tools/capture_run.sh`), 
   - Sprite animé et matériau de lueur sont partagés, et la lueur s'allume ou non à chaque lancement selon `ParticleLevel`.
   - Vérifié en vraie run : XP ramassée, niveau 2 atteint à 42 s contre 43 s avant, aucune erreur de physique. `MovementRegression`, `EnemyAbilityRegression` et `DevelopmentModeRegression` verts.
 - **Reste :** le budget d'effets par frame selon `ParticleLevel`.
+- **Budget d'effets par frame (26 septembre, session cloud)** : `Combat/FxBudget`, plafonds dans `data/scaling/fx_budget.json`.
+  - Quatre catégories comptées par frame : étincelles, étoiles d'impact, nuages et flaques de mort, chiffres de dégâts.
+  - Plafonds (Toutes / Réduites) : 320 / 120 étincelles, 32 / 12 étoiles, 12 / 5 morts, 24 / 12 chiffres. Au-delà, l'effet est écarté au lieu de s'empiler ; une gerbe partiellement servie est tronquée.
+  - Jamais écartés : les attaques ennemies (information de danger), les critiques, et la mort des élites et mini-boss (elle garde nuage et flaque). Une mort ordinaire hors budget garde ses éclats et la dissolution de son sprite.
+  - Particules coupées : les chiffres de dégâts restent, au plafond réduit.
+  - Mesure : le banc écrit `fx_dropped` par catégorie ; `EnemyAbilityRegression` vérifie qu'une rafale de 100 étoiles dans une frame en joue 32.
+  - Banc de combat dense (120 ennemis, arme de départ, 15 s) : aucun effet écarté dans les quatre passes ; le budget n'agit qu'au-delà d'un combat dense ordinaire. Nœuds créés : 6 à 21 selon la passe, tous des `PixelFx` à la montée en charge du pool.
+
+### J1 livré (première passe) — 26 septembre 2026 (session cloud)
+
+- **Retour du coup sur la créature** (`Combat/HitFeedback`) : le flash blanc (shader et `SelfModulate`), l'écrasement élastique et le recul existaient, joués par un tween créé à chaque coup. Le recul déplaçait le corps physique de 3 px, puis le ramenait, en luttant avec le déplacement de la créature. Désormais :
+  - mêmes courbes et durées (flash 0,06 + 0,15 s, écrasement 0,15 s, recul 0,1 s), animées dans le tick physique de l'ennemi, sans tween ni allocation par coup ;
+  - le recul porte sur le visuel (sprite, ou polygone de repli), jamais sur le corps ;
+  - un coup fatal finit son flash pendant l'animation de mort ; recyclage et réinitialisation remettent le visuel au repos.
+- **Étincelles orientées** : déjà livrées avec les effets d'attaque (`PlayerAttackFx.PlayHit`, dans le sens du coup, dorées et plus fournies au critique).
+- **Chiffres de dégâts** (`Combat/DamageNumber`) :
+  - Saira SemiCondensed cernée de sombre (`LabelSettings` partagés), lisible sur herbe comme sur terre ; trois tailles selon le total ;
+  - regroupés par cible : les coups normaux d'une même créature à moins de 0,25 s s'additionnent dans un seul chiffre, qui reste en place et pulse à chaque ajout, puis s'envole (au plus 1 s de cumul) ;
+  - critique distinct par la forme, pas seulement la couleur : jamais fusionné, plus gros, en gras, suffixé « ! », il jaillit écrasé puis se redresse et monte plus haut ;
+  - animés dans `_Process` : plus de tween par chiffre.
+- **Relecture** (`godot-reviewer`) : un coup encaissé pendant une posture d'annonce l'effaçait (déjà vrai avec l'ancien tween). L'écrasement multiplie désormais l'échelle de repos (`HitFeedback.RestScale`, posée par `SetWindupPose`).
+- **Vérifié** : build sans avertissement, `EnemyAbilityRegression` avec sept nouveaux contrôles (dont posture d'annonce conservée après un coup) (recul du visuel sans déplacer le corps, écrasement, retour au repos, flash éteint, chiffre additionné « 12 » pour 5 + 7, critique « 20! » à part), galerie des armes (`--capture-weapons`, lame, marteau, fouet, haches).
+- **Reste de J1** : le son de matière (aucun son d'impact par matière dans `assets/audio`, à produire avec le [plan 15](15-audio.md)) ; le critère « trois armes reconnaissables sans lire leur nom », à juger en jeu.
+

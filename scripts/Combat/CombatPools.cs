@@ -68,15 +68,23 @@ public partial class CombatPools : Node2D
 
     public Projectile TakePlayerProjectile() => _playerProjectiles.Take();
 
-    public void ShowDamageNumber(Vector2 position, float damage, bool isCrit)
+    /// <summary>
+    /// Lance un chiffre de dégâts ; le rendu permet à la cible d'y additionner ses coups suivants.
+    /// Nul quand le budget de la frame est épuisé ; un critique passe toujours.
+    /// </summary>
+    public DamageNumber ShowDamageNumber(Vector2 position, float damage, bool isCrit)
     {
-        _damageNumbers.Take().Play(position, damage, isCrit);
+        if (!isCrit && !FxBudget.TryTake(FxBudgetKind.Numbers))
+            return null;
+        DamageNumber number = _damageNumbers.Take();
+        number.Play(position, damage, isCrit);
+        return number;
     }
 
     /// <summary>Étoile d'impact au point touché, en trois poses.</summary>
     public void ShowHitFlash(Vector2 position)
     {
-        if (CombatFxSettings.ParticleLevel == ParticleLevel.Off)
+        if (!FxBudget.TryTake(FxBudgetKind.Shapes))
             return;
         PixelFxSpec spec = PixelFxSpec.Of(PixelFxShape.Star, FxFamily.Physical, 5f, 1f, 0.1f);
         spec.Steps = 3;
@@ -137,9 +145,11 @@ public partial class CombatPools : Node2D
 
     /// <summary>
     /// Mort d'une créature : éclats sombres qui s'élèvent, nuage de dissolution, flaque irisée
-    /// (<paramref name="poolScale"/> ≤ 0 : pas de flaque). Rien quand les particules sont coupées.
+    /// (<paramref name="poolScale"/> ≤ 0 : pas de flaque). Rien quand les particules sont coupées. Au-delà du budget
+    /// de la frame, une mort ordinaire perd nuage et flaque (le sprite se dissout toujours) ; une mort
+    /// <paramref name="signature"/> (élite, mini-boss) garde tout.
     /// </summary>
-    public void ShowDeath(Vector2 position, int shards, float spread, float poolScale)
+    public void ShowDeath(Vector2 position, int shards, float spread, float poolScale, bool signature = false)
     {
         if (CombatFxSettings.ParticleLevel == ParticleLevel.Off)
             return;
@@ -157,9 +167,11 @@ public partial class CombatPools : Node2D
                 LifeMin = 0.4f,
                 LifeMax = 0.7f,
                 Size = 1,
+                Decorative = !signature,
             });
         }
-        _deathFx.Take().Play(position, poolScale);
+        if (signature || FxBudget.TryTake(FxBudgetKind.Deaths))
+            _deathFx.Take().Play(position, poolScale);
     }
 
     /// <summary>
@@ -186,6 +198,7 @@ public partial class CombatPools : Node2D
             LifeMin = 0.2f,
             LifeMax = 0.35f,
             Size = 1,
+            Decorative = true,
         });
     }
 

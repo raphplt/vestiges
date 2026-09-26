@@ -44,3 +44,13 @@ Fichier temporaire. Il liste ce qu'une session cloud a livré sans pouvoir le v�
 
 - [ ] **Lecture des parcelles** : les haies (70 % des bords échantillonnés) forment-elles des limites lisibles, ou des morceaux épars ? Réglage dans `WildFieldsLayoutGenerator` (`HedgeChance`, échantillonnage par axe).
 - [ ] **Vergers** : les arbres bloquent (tronc), avec deux colonnes d'écart. Vérifier qu'on circule sans accrocher en combat.
+
+## Plan 02 J1 — impact
+
+- [ ] **Chiffres de dégâts** : Saira cernée, cumul par cible sur 0,25 s. À 60 FPS, avec une arme rapide (fouet, haches), le cumul se lit-il comme « ça monte » ou masque-t-il le rythme des coups ? Réglages en tête de `DamageNumber` (`MergeWindowSec`, `MaxHoldSec`, tailles).
+- [ ] **Recul** : désormais sur le sprite seul (3 px). Le corps ne bouge plus au coup ; vérifier que l'impact reste aussi senti qu'avant.
+
+
+## Plan 02 J0 — budget d'effets par frame
+
+- [ ] **Plafonds** (`data/scaling/fx_budget.json`) fixés sans mesure à 60 FPS : dans une grosse vague fauchée (J5), vérifier qu'on ne voit pas de « trous » (morts sans nuage) et que les FPS tiennent mieux. Le banc écrit `fx_dropped`.

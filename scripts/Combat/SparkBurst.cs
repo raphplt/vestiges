@@ -19,4 +19,9 @@ public struct SparkBurst
     public bool Ballistic;
     /// <summary>Côté en texels : 1, ou 2 pour les éclats marquants.</summary>
     public int Size;
+    /// <summary>
+    /// Gerbe décorative soumise au budget par frame (FxBudget) même côté ennemi : morts, collectes.
+    /// Celles du joueur y sont toujours soumises ; les attaques ennemies jamais.
+    /// </summary>
+    public bool Decorative;
 }

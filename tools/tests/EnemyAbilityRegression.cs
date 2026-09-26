@@ -11,7 +11,7 @@ using Vestiges.Infrastructure;
 namespace Vestiges.Tests;
 
 /// <summary>
-/// Banc isolé des capacités ennemies (Présage, bond du Charognard) : vrais Player et Enemy,
+/// Banc isolé des capacités ennemies (Présage, bond du Charognard) et du retour de coup : vrais Player et Enemy,
 /// ticks pilotés par le banc, recharges forcées pour des scénarios déterministes.
 /// </summary>
 public partial class EnemyAbilityRegression : Node2D
@@ -41,6 +41,7 @@ public partial class EnemyAbilityRegression : Node2D
 
             await RunOmenChecks();
             await RunPounceChecks();
+            await RunHitFeedbackChecks();
 
             GD.Print($"[EnemyAbilityRegression] RESULT failures={_failures}");
             GetTree().Quit(_failures == 0 ? 0 : 1);
@@ -168,6 +169,70 @@ public partial class EnemyAbilityRegression : Node2D
         await Step(36);
         Check(_player.CurrentHp >= hp - 0.001f, "Bond : pas de côté pendant l'annonce évite l'impact");
         Despawn(pouncer);
+    }
+
+    /// <summary>Plan 02 J1 : recul sur le visuel seul, retour au repos, chiffres additionnés par cible, critique à part.</summary>
+    private async Task RunHitFeedbackChecks()
+    {
+        CombatPools pools = new() { Name = "CombatPools" };
+        AddChild(pools);
+        Enemy enemy = await SpawnReady("rodeur", new Vector2(80f, 0f));
+        AnimatedSprite2D sprite = enemy.GetNode<AnimatedSprite2D>("Sprite");
+        Polygon2D visual = enemy.GetNode<Polygon2D>("Visual");
+        Node2D shown = sprite.Visible ? sprite : visual;
+        // Un tick : l'ennemi repère le joueur, d'où vient le coup.
+        await Step(1);
+        Vector2 body = enemy.Position;
+
+        enemy.TakeDamage(5f);
+        Check(enemy.Position == body && shown.Position.X > 1f,
+            $"Coup : recul du visuel ({shown.Position.X:F1} px) sans déplacer le corps");
+        Check(shown.Scale.X > 1.1f && shown.Scale.Y < 0.9f, $"Coup : écrasement ({shown.Scale})");
+        await Step(2);
+        enemy.TakeDamage(7f);
+        Check(VisibleNumbers(pools, out string texts) == 1 && texts == "12",
+            $"Coups rapprochés : un seul chiffre additionné ({texts})");
+        enemy.TakeDamage(20f, true);
+        Check(VisibleNumbers(pools, out texts) == 2 && texts.Contains("20!"), $"Critique : chiffre distinct ({texts})");
+
+        await Step(30);
+        Check(shown.Position == Vector2.Zero && shown.Scale == Vector2.One, "Coup : visuel revenu au repos");
+        if (sprite.Visible && sprite.Material is ShaderMaterial material)
+            Check(material.GetShaderParameter("flash_amount").AsSingle() == 0f && sprite.SelfModulate == Colors.White,
+                "Coup : flash éteint");
+        enemy.SetWindupPose(true);
+        enemy.TakeDamage(1f);
+        await Step(30);
+        Check(shown.Scale.IsEqualApprox(new Vector2(1.18f, 0.78f)), $"Coup pendant une annonce : posture conservée ({shown.Scale})");
+        enemy.SetWindupPose(false);
+        Despawn(enemy);
+
+        // Budget par frame : au-delà du plafond, les étoiles d'impact de la frame sont écartées.
+        await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+        long droppedBefore = FxBudget.DroppedCount(FxBudgetKind.Shapes);
+        for (int i = 0; i < 100; i++)
+            pools.ShowHitFlash(_player.Position + new Vector2(i, 0f));
+        int stars = 0;
+        foreach (Node child in pools.GetChildren())
+            if (child is PixelFx { Visible: true })
+                stars++;
+        long dropped = FxBudget.DroppedCount(FxBudgetKind.Shapes) - droppedBefore;
+        Check(stars > 0 && stars < 100 && stars + dropped == 100, $"Budget d'effets : {stars} étoiles jouées, {dropped} écartées sur 100");
+        pools.QueueFree();
+    }
+
+    private static int VisibleNumbers(Node pools, out string texts)
+    {
+        int count = 0;
+        texts = "";
+        foreach (Node child in pools.GetChildren())
+        {
+            if (child is not DamageNumber { Visible: true } number)
+                continue;
+            count++;
+            texts += (texts.Length > 0 ? "," : "") + number.GetNode<Label>("Label").Text;
+        }
+        return count;
     }
 
     // PV élevés par défaut : l'arme automatique du joueur ne doit pas éliminer les ennemis observés.

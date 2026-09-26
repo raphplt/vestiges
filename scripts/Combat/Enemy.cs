@@ -145,7 +145,9 @@ public partial class Enemy : CharacterBody2D
 	// Shader VFX unifié (outline + hit flash + dissolve + aberration)
 	private static Shader _entityShader;
 	private ShaderMaterial _spriteMaterial;
-	private Tween _hitFlashTween;
+	private readonly HitFeedback _hitFeedback = new();
+	private DamageNumber _damageNumber;
+	private int _damageNumberSerial;
 
 	// Capacités composées décrites par le bloc "abilities" du JSON, réutilisées d'un spawn à l'autre
 	private readonly List<IEnemyAbility> _abilities = new();
@@ -180,9 +182,8 @@ public partial class Enemy : CharacterBody2D
 
 	public void Initialize(EnemyData data, float hpScale, float dmgScale)
 	{
-		//TODO : nécessaire ?
-		_hitFlashTween?.Kill();
-		_hitFlashTween = null;
+		_hitFeedback.RestScale = Vector2.One;
+		_hitFeedback.Stop();
 
 		_enemyId = data.Id;
 		_enemyType = data.Type;
@@ -416,8 +417,9 @@ public partial class Enemy : CharacterBody2D
 	{
 		// Tuer tous les tweens actifs pour eviter qu'ils reprennent apres re-pooling
 		// (les tweens Godot sont pauses quand le node quitte l'arbre et reprennent quand il y revient)
-		_hitFlashTween?.Kill();
-		_hitFlashTween = null;
+		_hitFeedback.RestScale = Vector2.One;
+		_hitFeedback.Stop();
+		_damageNumber = null;
 		_modifierAuraTween?.Kill();
 		_modifierAuraTween = null;
 		CancelAbilities();
@@ -495,6 +497,9 @@ public partial class Enemy : CharacterBody2D
 
 	public override void _PhysicsProcess(double delta)
 	{
+		// Avant le retour anticipé : un coup fatal finit son flash pendant l'animation de mort.
+		if (_hitFeedback.IsActive)
+			_hitFeedback.Tick((float)delta);
 		if (_isDying || !IsActive)
 			return;
 
@@ -1025,7 +1030,7 @@ public partial class Enemy : CharacterBody2D
 		_mods.NotifyDamaged();
 		_currentHp -= damage;
 		_eventBus.EmitSignal(EventBus.SignalName.EntityDamaged, this, damage);
-		HitFlash();
+		TriggerHitFeedback();
 		SpawnHitFlashSprite();
 		SpawnDamageNumber(damage, isCrit);
 		Infrastructure.AudioManager.Play(isCrit ? "sfx_hit_critique" : "sfx_hit_ennemi", 0.07f);
@@ -1171,58 +1176,13 @@ public partial class Enemy : CharacterBody2D
 		}
 	}
 
-	private void HitFlash()
+	private void TriggerHitFeedback()
 	{
-		_hitFlashTween?.Kill();
-		Tween tween = CreateTween();
-		_hitFlashTween = tween;
-
-		if (_hasSprite && _spriteMaterial != null)
-		{
-			// Flash shader sur le sprite
-			_spriteMaterial.SetShaderParameter("flash_amount", 1.0f);
-			ShaderMaterial mat = _spriteMaterial;
-			tween.TweenMethod(
-				Callable.From((float v) =>
-				{
-					if (mat != null)
-						mat.SetShaderParameter("flash_amount", v);
-				}),
-				1.0f, 0.0f, 0.15f
-			).SetDelay(0.06f);
-
-			// SelfModulate flash redondant 
-			// TODO : à refactor
-			_sprite.SelfModulate = new Color(3f, 3f, 3f, 1f);
-			tween.Parallel().TweenProperty(_sprite, "self_modulate", Colors.White, 0.15f)
-				.SetDelay(0.06f);
-		}
-		else
-		{
-			// Flash blanc sur le Polygon2D
-			_visual.Color = Colors.White;
-			tween.TweenProperty(_visual, "color", _originalColor, 0.15f)
-				.SetDelay(0.06f);
-		}
-
-		// Squash-stretch : compression rapide puis rebond élastique
-		// Toujours utiliser Vector2.One comme base pour eviter les distorsions cumulatives
-		Node2D target = _hasSprite ? (Node2D)_sprite : _visual;
-		target.Scale = new Vector2(1.25f, 0.75f);
-		tween.Parallel().TweenProperty(target, "scale", Vector2.One, 0.15f)
-			.SetTrans(Tween.TransitionType.Elastic)
-			.SetEase(Tween.EaseType.Out);
-
-		// Micro-recul dans la direction opposée au joueur
-		if (_player != null && IsInstanceValid(_player))
-		{
-			Vector2 knockDir = (GlobalPosition - _player.GlobalPosition).Normalized();
-			Vector2 basePos = Position;
-			Position += knockDir * 3f;
-			tween.Parallel().TweenProperty(this, "position", basePos, 0.1f)
-				.SetTrans(Tween.TransitionType.Quad)
-				.SetEase(Tween.EaseType.Out);
-		}
+		// Recul dans le sens du coup, depuis le joueur : sur le visuel seul, le corps physique ne bouge pas.
+		Vector2 direction = _player != null && IsInstanceValid(_player)
+			? (GlobalPosition - _player.GlobalPosition).Normalized()
+			: Vector2.Zero;
+		_hitFeedback.Trigger(_hasSprite ? _sprite : null, _spriteMaterial, _visual, _originalColor, direction);
 	}
 
 	/// <summary>
@@ -1236,7 +1196,16 @@ public partial class Enemy : CharacterBody2D
 
 	private void SpawnDamageNumber(float damage, bool isCrit = false)
 	{
-		CombatPools.Instance?.ShowDamageNumber(GlobalPosition + new Vector2(0, -20), damage, isCrit);
+		if (CombatPools.Instance == null)
+			return;
+		// Les coups rapprochés s'additionnent dans le même chiffre ; un critique a toujours le sien.
+		if (!isCrit && IsInstanceValid(_damageNumber) && _damageNumber.TryMerge(_damageNumberSerial, damage))
+			return;
+		DamageNumber number = CombatPools.Instance.ShowDamageNumber(GlobalPosition + new Vector2(0, -20), damage, isCrit);
+		if (isCrit || number == null)
+			return;
+		_damageNumber = number;
+		_damageNumberSerial = number.Serial;
 	}
 
 	private void Die()
@@ -1331,7 +1300,7 @@ public partial class Enemy : CharacterBody2D
 		// Retour au néant : éclats sombres, nuage de dissolution et flaque irisée, recyclés (plan 02 J0).
 		bool miniboss = _tier == "miniboss";
 		CombatPools.Instance?.ShowDeath(GlobalPosition, miniboss ? 20 : (_mods.IsVariant ? 14 : 8), Mathf.Tau,
-			miniboss ? 2.5f : (_mods.IsVariant ? 1.5f : 1.0f));
+			miniboss ? 2.5f : (_mods.IsVariant ? 1.5f : 1.0f), miniboss || _mods.IsVariant);
 
 		if (_hasSprite && _spriteMaterial != null)
 		{
@@ -1655,6 +1624,7 @@ public partial class Enemy : CharacterBody2D
 	internal void SetWindupPose(bool active)
 	{
 		Vector2 pose = active ? new Vector2(1.18f, 0.78f) : Vector2.One;
+		_hitFeedback.RestScale = pose;
 		_visual.Scale = pose;
 		if (_sprite != null)
 			_sprite.Scale = pose;

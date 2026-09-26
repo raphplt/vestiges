@@ -42,6 +42,10 @@ public partial class PixelSparks : Node2D
         if (level == ParticleLevel.Off || (burst.Owner == FxOwner.Player && !CombatFxSettings.PlayerAttackFx))
             return;
         int count = level == ParticleLevel.Reduced ? Mathf.Max(1, burst.Count / 2) : burst.Count;
+        if (burst.Owner == FxOwner.Player || burst.Decorative)
+            count = FxBudget.Take(FxBudgetKind.Sparks, count);
+        if (count == 0)
+            return;
         float baseAngle = burst.Direction == Vector2.Zero ? 0f : burst.Direction.Angle();
         float spread = burst.Direction == Vector2.Zero ? Mathf.Tau : burst.Spread;
 
