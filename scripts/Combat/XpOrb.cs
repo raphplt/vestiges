@@ -115,10 +115,7 @@ public partial class XpOrb : Area2D
         {
             _collected = true;
 
-            // Burst doré à la collecte
-            Node2D burst = VfxFactory.CreateXpCollectBurst(GlobalPosition);
-            if (burst != null)
-                GetTree().CurrentScene.AddChild(burst);
+            CombatPools.Instance?.ShowXpCollect(GlobalPosition);
 
             AudioManager.Play("xp_gain", 0.03f, -1.5f);
 

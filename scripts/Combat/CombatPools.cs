@@ -14,6 +14,7 @@ public partial class CombatPools : Node2D
     private NodePool<Projectile> _playerProjectiles;
     private NodePool<DamageNumber> _damageNumbers;
     private NodePool<PixelFx> _pixelFx;
+    private NodePool<DeathFx> _deathFx;
 
     /// <summary>Étincelles et éclats de combat, tracés par un seul nœud.</summary>
     public PixelSparks Sparks { get; private set; }
@@ -44,6 +45,7 @@ public partial class CombatPools : Node2D
             return number;
         });
         _pixelFx = new NodePool<PixelFx>(this, () => PixelFx.Create(_pixelFx.Return));
+        _deathFx = new NodePool<DeathFx>(this, () => DeathFx.Create(_deathFx.Return));
         Sparks = new PixelSparks { Name = "PixelSparks" };
         AddChild(Sparks);
     }
@@ -125,6 +127,52 @@ public partial class CombatPools : Node2D
 
     public void EmitSparks(Vector2 position, in SparkBurst burst) => Sparks.Emit(position, burst);
 
+    /// <summary>
+    /// Mort d'une créature : éclats sombres qui s'élèvent, nuage de dissolution, flaque irisée
+    /// (<paramref name="poolScale"/> ≤ 0 : pas de flaque). Rien quand les particules sont coupées.
+    /// </summary>
+    public void ShowDeath(Vector2 position, int shards, float spread, float poolScale)
+    {
+        if (CombatFxSettings.ParticleLevel == ParticleLevel.Off)
+            return;
+        if (shards > 0)
+        {
+            Sparks.Emit(position + new Vector2(0f, -6f), new SparkBurst
+            {
+                Family = FxFamily.Void,
+                Owner = FxOwner.Enemy,
+                Count = shards,
+                Direction = Vector2.Up,
+                Spread = spread,
+                SpeedMin = 20f,
+                SpeedMax = 60f,
+                LifeMin = 0.4f,
+                LifeMax = 0.7f,
+                Size = 1,
+            });
+        }
+        _deathFx.Take().Play(position, poolScale);
+    }
+
+    /// <summary>Petite gerbe à la collecte d'une orbe d'XP.</summary>
+    public void ShowXpCollect(Vector2 position)
+    {
+        Sparks.Emit(position, new SparkBurst
+        {
+            Family = FxFamily.Essence,
+            Owner = FxOwner.Enemy,
+            Count = 4,
+            Direction = Vector2.Up,
+            Spread = Mathf.Tau,
+            SpeedMin = 25f,
+            SpeedMax = 50f,
+            LifeMin = 0.2f,
+            LifeMax = 0.35f,
+            Size = 1,
+        });
+    }
+
     /// <summary>Objets créés depuis le début de la run, tous pools confondus (bancs de mesure).</summary>
-    public int CreatedCount => _enemyProjectiles.Created + _playerProjectiles.Created + _damageNumbers.Created + _pixelFx.Created;
+    public int CreatedCount => _enemyProjectiles.Created + _playerProjectiles.Created + _damageNumbers.Created + _pixelFx.Created
+        + _deathFx.Created;
 }

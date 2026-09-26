@@ -150,3 +150,29 @@ Chaque lot : captures avant/après dans une vraie run (`tools/capture_run.sh`), 
 - Vérifié : build sans avertissement, smoke test, `MovementRegression`, `EnemyAbilityRegression`.
 - Reste de J0 : projectiles du joueur, effets de mort (dissolution, flaque) et burst d'XP, puis budget d'effets par frame selon `ParticleLevel`.
 - Mise à jour du 25 septembre (plan 08, effets d'attaque) : projectiles du joueur recyclés, flashs et étincelles d'attaque passés sur `PixelFx` et `PixelSparks`. Nœuds créés par seconde : 19 à 43 → 12 ; allocations : 3,4 → 1,75 Mo sur 15 s. Restent les effets de mort et le burst d'XP.
+
+### J0 terminé — 26 septembre 2026 (session cloud)
+
+- **Effets de mort recyclés.** Chaque mort créait environ sept nœuds :
+  - des particules GPU de désintégration et leur minuterie ;
+  - le nuage de dissolution, avec son sprite animé et sa minuterie ;
+  - la flaque irisée et son sprite.
+
+  Désormais :
+  - les éclats passent par `PixelSparks` (famille `Void`, qui s'élèvent) ;
+  - nuage et flaque sont joués par `DeathFx`, un nœud recyclé par `CombatPools`, animé dans `_Process` (ni tween ni minuterie).
+
+  Les durées sont inchangées : nuage 0,6 s, flaque qui s'étend en 0,3 s puis s'efface de 1,3 à 5,3 s. La flaque reste sous les entités.
+- **Collecte d'XP :** la gerbe de chaque orbe (nœud, particules GPU, minuterie) devient 4 éclats `PixelSparks` de la famille `Essence`. `VfxFactory.CreateDissolutionVfx`, `CreateIridescentBloodSplatter` et `CreateXpCollectBurst` sont retirés.
+- **Trouvaille du banc : le panneau des quêtes de run.** Il recréait toutes ses lignes quatre fois par seconde dès qu'une quête de durée était active (« Tenir la cadence »), et à chaque créature tuée. Ses lignes sont désormais créées une fois et réécrites sur place.
+- **Mesure** (`tools/benchmark_movement.sh`, 120 ennemis, 15 s, conteneur cloud sans GPU, même seed) :
+
+  | Mesure | Avant | Après |
+  |---|---|---|
+  | Nœuds créés en 15 s, 720p | 284 (270 `Label`) | 8 |
+  | Nœuds créés en 15 s, 720p avec dash | 300 | 16 |
+  | Allocations managées sur 15 s, 720p | 1,58 Mo | 1,48 Mo |
+
+  Les créatures du banc ne meurent pas : le gain des effets de mort n'y apparaît pas. Il se déduit du code, soit sept nœuds de moins par mort et trois par orbe ramassée. FPS non mesurés (rendu logiciel).
+- **Vérification :** build sans avertissement, `EnemyAbilityRegression` vert, capture en vraie run avec combats (panneau des quêtes à jour, 9 créatures tuées).
+- **Reste :** les orbes d'XP elles-mêmes sont encore créées puis libérées, chacune avec sa lueur en particules GPU. C'est le prochain candidat au recyclage, avec le budget d'effets par frame selon `ParticleLevel`.

@@ -21,3 +21,8 @@ Fichier temporaire. Il liste ce qu'une session cloud a livré sans pouvoir le v�
 - [ ] **Recette visuelle** : 16 fermes sur la seed de capture, toutes sur le même plan retourné. La répétition se voit-elle en jeu ? Faut-il des plans variés ou moins de fermes ?
 - [ ] **Collisions** : maison, grange, silo, hangar, puits, tracteur et remorque bloquent (emprise du manifeste) ; clôtures, haies et portail ne bloquent pas. Vérifier avec `--capture-props` et en jeu qu'on ne reste pas coincé dans la cour ou derrière le hangar.
 - [ ] **Coût** : environ 30 décors de plus par ferme, dont 3 à 4 grands sprites. Mesure `--measure-props` dans les champs à refaire machine calme. Placement : 273 ms au chargement dans le conteneur, à vérifier sur le Mac.
+
+## Plan 02 J0 — effets de mort recyclés
+
+- [ ] **Rendu des morts en jeu** : les éclats de désintégration passent de particules GPU (dérive lente vers le haut) aux `PixelSparks` (famille `Void`, trajets droits). À comparer en vraie partie : la mort reste-t-elle aussi lisible ? Nuage et flaque doivent être identiques à avant.
+- [ ] **Gerbe de collecte d'XP** : 4 éclats `Essence` au lieu de la gerbe bleu clair. Couleur à vérifier.

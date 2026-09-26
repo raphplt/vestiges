@@ -356,9 +356,7 @@ public partial class Enemy : CharacterBody2D
 		Velocity = Vector2.Zero;
 		if (IsInGroup("enemies"))
 			RemoveFromGroup("enemies");
-		Node2D dissolutionVfx = VfxFactory.CreateDissolutionVfx(GlobalPosition);
-		if (dissolutionVfx != null)
-			GetTree().CurrentScene.AddChild(dissolutionVfx);
+		CombatPools.Instance?.ShowDeath(GlobalPosition, 0, 0f, 0f);
 		Tween tween = CreateTween();
 		tween.TweenProperty(this, "modulate:a", 0f, DissolveDuration);
 		tween.TweenCallback(Callable.From(OnDeathComplete));
@@ -1331,17 +1329,10 @@ public partial class Enemy : CharacterBody2D
 		if (_mods.IsVariant)
 			GrantVariantRewards();
 
-		SpawnDisintegrationParticles();
-
-		// VFX dissolution sprite animé (particules noires iridescentes montantes)
-		Node2D dissolutionVfx = VfxFactory.CreateDissolutionVfx(GlobalPosition);
-		if (dissolutionVfx != null)
-			GetTree().CurrentScene.AddChild(dissolutionVfx);
-
-		// VFX flaque de sang iridescent sous l'ennemi mort
-		Node2D poolVfx = VfxFactory.CreateIridescentBloodSplatter(GlobalPosition, _tier == "miniboss" ? 2.5f : (_mods.IsVariant ? 1.5f : 1.0f));
-		if (poolVfx != null)
-			GetTree().CurrentScene.AddChild(poolVfx);
+		// Retour au néant : éclats sombres, nuage de dissolution et flaque irisée, recyclés (plan 02 J0).
+		bool miniboss = _tier == "miniboss";
+		CombatPools.Instance?.ShowDeath(GlobalPosition, miniboss ? 20 : (_mods.IsVariant ? 14 : 8), Mathf.Tau,
+			miniboss ? 2.5f : (_mods.IsVariant ? 1.5f : 1.0f));
 
 		if (_hasSprite && _spriteMaterial != null)
 		{
@@ -1364,62 +1355,6 @@ public partial class Enemy : CharacterBody2D
 			tween.TweenProperty(this, "modulate:a", 0f, DeathTweenDuration);
 			tween.Chain().TweenCallback(Callable.From(OnDeathComplete));
 		}
-	}
-
-	/// <summary>Désintégration en particules sombres iridescentes — retour au néant.</summary>
-	private void SpawnDisintegrationParticles()
-	{
-		if (VfxFactory.CurrentParticleLevel == ParticleLevel.Off)
-			return;
-
-		int count = _tier == "miniboss" ? 20 : (_mods.IsVariant ? 14 : 8);
-		if (VfxFactory.CurrentParticleLevel == ParticleLevel.Reduced)
-			count = Mathf.Max(count / 2, 1);
-		float emissionRadius = _tier == "miniboss" ? 20f : (_mods.IsVariant ? 12f : 6f);
-
-		var particles = new GpuParticles2D
-		{
-			Amount = count,
-			Lifetime = 0.6f,
-			Explosiveness = 0.9f,
-			OneShot = true,
-			GlobalPosition = GlobalPosition,
-			Texture = VfxFactory.SparkTexture,
-			TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
-		};
-
-		// Gradient : noir iridescent → violet → transparent
-		var gradient = new GradientTexture1D();
-		var g = new Gradient();
-		g.SetColor(0, new Color(0.176f, 0.106f, 0.239f, 0.9f)); // #2D1B3D
-		g.AddPoint(0.5f, new Color(0.353f, 0.227f, 0.478f, 0.6f)); // #5A3A7A
-		g.SetColor(g.GetPointCount() - 1, new Color(0.08f, 0.05f, 0.12f, 0f));
-		gradient.Gradient = g;
-
-		var mat = new ParticleProcessMaterial
-		{
-			EmissionShape = ParticleProcessMaterial.EmissionShapeEnum.Sphere,
-			EmissionSphereRadius = emissionRadius,
-			Direction = new Vector3(0, -0.5f, 0),
-			Spread = 180f,
-			InitialVelocityMin = 20f,
-			InitialVelocityMax = 60f,
-			Gravity = new Vector3(0, -15, 0),
-			ScaleMin = 0.5f,
-			ScaleMax = 1.5f,
-			ColorRamp = gradient,
-			DampingMin = 30f,
-			DampingMax = 60f,
-		};
-		particles.ProcessMaterial = mat;
-		particles.Emitting = true;
-
-		GetTree().CurrentScene.AddChild(particles);
-
-		// Auto-nettoyage
-		var timer = new Timer { WaitTime = 1f, OneShot = true, Autostart = true };
-		timer.Timeout += particles.QueueFree;
-		particles.AddChild(timer);
 	}
 
 	/// <summary>Essence, coffre et annonce propres à la variante abattue.</summary>
