@@ -18,7 +18,8 @@ Les plans 13 (butin) et 14 (anomalies) ne sont pas arbitrés : ne pas les implé
 - **Vérifier par le bon moyen :**
   - compile : hook de build automatique en fin de tour (0 warning exigé) ;
   - démarrage : `/smoke-test` ;
-  - comportement : `tools/test_movement.sh`, `tools/test_enemy_abilities.sh` ;
+  - comportement : `tools/test_movement.sh`, `tools/test_enemy_abilities.sh`, `tools/test_weapons.sh` ;
+  - mesure sans image (densité, coffres vus) : `tools/measure_run.sh`, headless en temps accéléré ;
   - rendu en jeu : `/capture`, puis **ouvrir les PNG avec Read et les regarder** avant de conclure ;
   - coût : `/bench`, avant/après au même commit de base.
 - **Mesurer avant de corriger** une régression : trouver le commit en cause (`git log -p -- <fichiers>`), chiffrer, montrer avant/après.

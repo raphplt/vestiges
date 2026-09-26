@@ -207,6 +207,9 @@ public partial class FragmentManager : Node
 		// Upgrades d'armes existantes
 		foreach (WeaponInstance w in _player.WeaponSlots)
 		{
+			// Bannir une arme ou un passif l'écarte de la run entière, améliorations comprises.
+			if (_banishedIds.Contains(w.Id))
+				continue;
 			if (!_player.IsWeaponFragmentMaxed(w.Id))
 			{
 				int level = _player.GetWeaponFragmentLevel(w.Id);
@@ -235,6 +238,8 @@ public partial class FragmentManager : Node
 		// Upgrades de passifs existants
 		foreach (ActivePassiveSouvenir p in _player.PassiveSlots)
 		{
+			if (_banishedIds.Contains(p.Id))
+				continue;
 			if (!p.IsMaxLevel)
 			{
 				string rarity = p.Level + 1 >= p.Data.MaxLevel ? "uncommon" : "common";
@@ -263,6 +268,13 @@ public partial class FragmentManager : Node
 			return;
 
 		_banishedIds.Add(id);
+		// Un bannissement qui viderait l'offre laisserait l'écran ouvert sans carte : il est refusé et non consommé.
+		if (BuildFragmentPool().Count == 0)
+		{
+			_banishedIds.Remove(id);
+			GD.Print($"[FragmentManager] Banish of '{id}' refused: nothing left to offer");
+			return;
+		}
 		_banishesRemaining--;
 		GD.Print($"[FragmentManager] Banished '{id}' ({_banishesRemaining} remaining, total banished: {_banishedIds.Count})");
 		OfferFragments(_currentLevel);

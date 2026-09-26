@@ -414,6 +414,17 @@ Nettoyage de ce que le joueur ne voit pas (plan 18 §4). Aucun comportement de j
 
 Pilote de style pendant la vague 1 : trois icônes (4.7), pour que les cartes et la pause se construisent au bon format.
 
+#### Lot 1A, corrections livrées — 26 septembre
+
+La décision 4.3 (rareté sur l'arme ou seulement sur les améliorations) n'est pas prise : le socle de 1A (bloc de stats commun, stats montables par arme, portée et zone séparées) l'attend. Les quatre bugs de build, eux, n'en dépendent pas.
+
+- **Effets de l'arme qui frappe** : les projectiles portent leur arme (`Projectile.SourceInstance`), les orbitales et le cône la leur ; effet au contact, recul et effet spécial viennent de cette arme, plus de la dernière qui a tiré. Les perks (vampirisme, embrasement…) restent globaux.
+- **Boîte à musique** : ses notes apparaissent dès qu'elle est portée (avant : 20 s, son minuteur à `attack_speed` 0) ; leurs dégâts suivent le niveau de l'arme à chaque impact, leur nombre est recalculé à chaque montée (level-up, Autel, reforge) ; retirer l'arme retire ses notes.
+- **Niveau unique** : il n'existe plus que sur l'instance d'arme ; badge du HUD, carte de level-up, Autel et fusions lisent la même valeur. Plafond lu dans `weapon_upgrades.json` (8, inchangé).
+- **Bannissement** : bannir écarte l'arme ou le passif de la run, améliorations comprises ; un bannissement qui viderait l'offre est refusé et non consommé (l'écran restait ouvert sans carte).
+- **Banc** `tools/test_weapons.sh` (`WeaponRegression`) : 5 vérifications, toutes vertes.
+- **Mesure** (headless, nomade, 5 min, 3 seeds) : éliminations 575 et 547 contre 527 et 498 avant ; 139 contre 528 sur la seed 1002, où les offres ont divergé (le bot, qui prend la première offre, n'a eu que des passifs jusqu'au niveau 5). Les projectiles n'empruntent plus le recul ni les effets des armes de mêlée : l'équilibrage de 2A en tiendra compte.
+
 ### Vague 2 — Armes : identité
 
 | Lot | Contenu | Vérification |

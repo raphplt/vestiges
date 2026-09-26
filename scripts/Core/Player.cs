@@ -95,10 +95,6 @@ public partial class Player : CharacterBody2D
     public const int MaxPassiveSlots = 4;
     private readonly List<ActivePassiveSouvenir> _passiveSlots = new();
 
-    // Weapon "Fragment level" — how many times re-selected at level-up (distinct from per-stat upgrades)
-    public const int MaxWeaponFragmentLevel = 8;
-    private readonly Dictionary<string, int> _weaponFragmentLevels = new();
-
     private Vector2 _facingDirection = new(1f, 0f);
 
     // Sprite animé (remplace Polygon2D quand sprite_folder est défini)
@@ -164,7 +160,7 @@ public partial class Player : CharacterBody2D
 
     // Orbital weapon system
     private readonly System.Collections.Generic.List<Node2D> _orbitalProjectiles = new();
-    private WeaponData _orbitalWeapon;
+    private WeaponInstance _orbitalWeapon;
     private float _orbitalAngle;
 
     // Sustained cone attack
@@ -175,6 +171,7 @@ public partial class Player : CharacterBody2D
     private float _coneAngleEnd;
     private float _coneRange;
     private float _coneBaseDamage;
+    private WeaponInstance _coneWeapon;
     private bool _isConeActive;
 
     // Jauge de fouille des POI (les coffres ont la leur, dans ChestInteraction)
@@ -370,10 +367,14 @@ public partial class Player : CharacterBody2D
         AddChild(timer);
         _weaponTimers.Add(timer);
 
+        // Une orbitale n'attend pas le premier tic de son minuteur (20 s pour la Boîte à musique) : ses orbes
+        // apparaissent dès qu'elle est portée.
+        if (instance.AttackPattern?.ToLower() == "orbital")
+            SetupOrbitalWeapon(instance);
+
         _eventBus?.EmitSignal(EventBus.SignalName.WeaponEquipped, instance.Id, capturedIndex);
         _eventBus?.EmitSignal(EventBus.SignalName.WeaponInventoryChanged);
 
-        InitWeaponFragmentLevel(instance.Id);
         GD.Print($"[Player] Weapon added [{capturedIndex}]: {instance.Name} ({instance.Rarity})");
         return true;
     }
@@ -390,6 +391,8 @@ public partial class Player : CharacterBody2D
         _weaponSlots.RemoveAt(slotIndex);
         if (_isConeActive && removed.Base.SpecialEffect?.Type == "sustained_cone")
             DeactivateSustainedCone();
+        if (removed == _orbitalWeapon)
+            ClearOrbitals();
 
         if (slotIndex < _weaponTimers.Count)
         {
@@ -446,6 +449,8 @@ public partial class Player : CharacterBody2D
             return false;
 
         RefreshAttackSpeed();
+        if (equipped == _orbitalWeapon)
+            SetupOrbitalWeapon(equipped);
         _eventBus?.EmitSignal(EventBus.SignalName.WeaponUpgraded, equipped.Id, 0, "altar", equipped.Level);
         _eventBus?.EmitSignal(EventBus.SignalName.WeaponInventoryChanged);
         return true;
@@ -460,6 +465,8 @@ public partial class Player : CharacterBody2D
         WeaponInstance reforged = equipped.CloneWithRarity(newRarity);
         _weaponSlots[0] = reforged;
         _equippedWeapon = reforged;
+        if (equipped == _orbitalWeapon)
+            SetupOrbitalWeapon(reforged);
         RefreshAttackSpeed();
         _eventBus?.EmitSignal(EventBus.SignalName.WeaponInventoryChanged);
         return true;
@@ -602,54 +609,48 @@ public partial class Player : CharacterBody2D
     /// </summary>
     public bool UpgradeWeaponFragmentLevel(string weaponId)
     {
-        int current = _weaponFragmentLevels.GetValueOrDefault(weaponId, 0);
-        if (current >= MaxWeaponFragmentLevel)
+        // Le niveau n'existe qu'à un endroit, l'instance d'arme : level-up, Autel, badge et fusions le lisent tous.
+        WeaponInstance weapon = FindWeaponSlot(weaponId, out int slot);
+        if (weapon == null || !weapon.LevelUp())
             return false;
 
-        _weaponFragmentLevels[weaponId] = current + 1;
-
-        for (int i = 0; i < _weaponSlots.Count; i++)
-        {
-            if (_weaponSlots[i].Id == weaponId)
-            {
-                _weaponSlots[i].LevelUp();
-                RefreshAttackSpeed();
-                _eventBus?.EmitSignal(EventBus.SignalName.WeaponUpgraded, weaponId, i, "all", current + 1);
-                break;
-            }
-        }
-
-        GD.Print($"[Player] Weapon fragment level: {weaponId} → {current + 1}/{MaxWeaponFragmentLevel}");
+        RefreshAttackSpeed();
+        if (weapon == _orbitalWeapon)
+            SetupOrbitalWeapon(weapon);
+        _eventBus?.EmitSignal(EventBus.SignalName.WeaponUpgraded, weaponId, slot, "all", weapon.Level);
+        GD.Print($"[Player] Weapon level: {weaponId} → {weapon.Level}/{weapon.MaxLevel}");
         return true;
     }
 
-    public int GetWeaponFragmentLevel(string weaponId)
-    {
-        return _weaponFragmentLevels.GetValueOrDefault(weaponId, 0);
-    }
+    public int GetWeaponFragmentLevel(string weaponId) => FindWeaponSlot(weaponId, out _)?.Level ?? 0;
 
     public bool IsWeaponFragmentMaxed(string weaponId)
     {
-        return _weaponFragmentLevels.GetValueOrDefault(weaponId, 0) >= MaxWeaponFragmentLevel;
+        WeaponInstance weapon = FindWeaponSlot(weaponId, out _);
+        return weapon != null && !weapon.CanLevelUp;
     }
 
-    /// <summary>Retourne les IDs des armes au niveau fragment max.</summary>
+    /// <summary>Identifiants des armes portées qui ont atteint leur niveau maximal.</summary>
     public List<string> GetMaxedWeaponIds()
     {
         List<string> result = new();
-        foreach (KeyValuePair<string, int> kv in _weaponFragmentLevels)
+        foreach (WeaponInstance weapon in _weaponSlots)
         {
-            if (kv.Value >= MaxWeaponFragmentLevel)
-                result.Add(kv.Key);
+            if (!weapon.CanLevelUp)
+                result.Add(weapon.Id);
         }
         return result;
     }
 
-    /// <summary>Initialise le fragment level à 1 quand une arme est équipée pour la première fois.</summary>
-    private void InitWeaponFragmentLevel(string weaponId)
+    private WeaponInstance FindWeaponSlot(string weaponId, out int slot)
     {
-        if (!_weaponFragmentLevels.ContainsKey(weaponId))
-            _weaponFragmentLevels[weaponId] = 1;
+        for (slot = 0; slot < _weaponSlots.Count; slot++)
+        {
+            if (_weaponSlots[slot].Id == weaponId)
+                return _weaponSlots[slot];
+        }
+        slot = -1;
+        return null;
     }
 
     public override void _PhysicsProcess(double delta)
@@ -1004,12 +1005,16 @@ public partial class Player : CharacterBody2D
     /// <summary>
     /// Called by projectiles and melee hits. Handles vampirism, ignite, execution, ricochet.
     /// </summary>
-    public void OnProjectileHit(Enemy enemy, float damage, bool isCrit, bool isRicochet)
+    public void OnProjectileHit(Enemy enemy, float damage, bool isCrit, bool isRicochet, WeaponInstance source)
     {
-        OnAttackHit(enemy, damage, isCrit, isRicochet);
+        OnAttackHit(enemy, damage, isCrit, isRicochet, source);
     }
 
-    private void OnAttackHit(Enemy enemy, float damage, bool isCrit, bool isRicochet, int triggerCount = 1)
+    /// <summary>
+    /// Effets d'un coup porté par <paramref name="source"/>. Les effets de perks (vampirisme, embrasement…) sont
+    /// globaux ; ceux de l'arme (effet au contact, recul, effet spécial) restent ceux de l'arme qui a frappé.
+    /// </summary>
+    private void OnAttackHit(Enemy enemy, float damage, bool isCrit, bool isRicochet, WeaponInstance source, int triggerCount = 1)
     {
         if (_isDead)
             return;
@@ -1017,7 +1022,7 @@ public partial class Player : CharacterBody2D
         if (!IsInstanceValid(enemy) || enemy.IsQueuedForDeletion())
             return;
 
-        _attackFx.PlayHit(_equippedWeapon?.Base, enemy.GlobalPosition, isCrit);
+        _attackFx.PlayHit(source?.Base, enemy.GlobalPosition, isCrit);
         int procRollCount = Mathf.Max(1, triggerCount);
 
         // Vampirism: heal % of damage dealt
@@ -1034,10 +1039,10 @@ public partial class Player : CharacterBody2D
 
         // Ricochet: bounce to nearby enemy (only from original projectiles)
         if (!isRicochet && _ricochetChance > 0f && GD.Randf() < GetCombinedProcChance(_ricochetChance, procRollCount))
-            SpawnRicochet(enemy, damage, isCrit);
+            SpawnRicochet(enemy, damage, isCrit, source);
 
         // --- Weapon on-hit effects ---
-        WeaponOnHitEffect ohe = _equippedWeapon?.Base.OnHitEffect;
+        WeaponOnHitEffect ohe = source?.Base.OnHitEffect;
         if (ohe != null)
         {
             switch (ohe.Type)
@@ -1055,7 +1060,7 @@ public partial class Player : CharacterBody2D
         }
 
         // --- Weapon knockback ---
-        float knockback = GetWeaponStat("knockback", 0f);
+        float knockback = source?.GetStat("knockback", 0f) ?? 0f;
         if (knockback > 0f)
         {
             Vector2 knockDir = (enemy.GlobalPosition - GlobalPosition).Normalized();
@@ -1063,9 +1068,9 @@ public partial class Player : CharacterBody2D
         }
 
         // --- Weapon special effects ---
-        WeaponSpecialEffect se = _equippedWeapon?.Base.SpecialEffect;
+        WeaponSpecialEffect se = source?.Base.SpecialEffect;
         if (se != null)
-            ProcessWeaponSpecialOnHit(se, enemy, damage);
+            ProcessWeaponSpecialOnHit(se, enemy, damage, source);
     }
 
     private float GetCombinedProcChance(float perHitChance, int triggerCount)
@@ -1079,7 +1084,7 @@ public partial class Player : CharacterBody2D
         return 1f - Mathf.Pow(1f - clampedChance, triggerCount);
     }
 
-    private void SpawnRicochet(Enemy sourceEnemy, float damage, bool isCrit)
+    private void SpawnRicochet(Enemy sourceEnemy, float damage, bool isCrit, WeaponInstance source)
     {
         Godot.Collections.Array<Node> enemies = _groupCache.GetEnemies();
         Node2D bounceTarget = null;
@@ -1102,20 +1107,20 @@ public partial class Player : CharacterBody2D
             return;
 
         Vector2 direction = (bounceTarget.GlobalPosition - sourceEnemy.GlobalPosition).Normalized();
-        float speed = GetWeaponStat("projectile_speed", 400f);
+        float speed = source?.GetStat("projectile_speed", 400f) ?? 400f;
         CombatPools.Instance?.TakePlayerProjectile().Launch(sourceEnemy.GlobalPosition, direction, damage * 0.75f, speed,
-            Mathf.Clamp(_ricochetRange / Mathf.Max(speed, 1f), 0.2f, 2f), 0, isCrit, this, _equippedWeapon?.Base, isRicochet: true);
+            Mathf.Clamp(_ricochetRange / Mathf.Max(speed, 1f), 0.2f, 2f), 0, isCrit, this, source?.Base, source, isRicochet: true);
     }
 
     // --- Weapon Special Effects ---
 
-    private void ProcessWeaponSpecialOnHit(WeaponSpecialEffect se, Enemy enemy, float damage)
+    private void ProcessWeaponSpecialOnHit(WeaponSpecialEffect se, Enemy enemy, float damage, WeaponInstance source)
     {
         switch (se.Type)
         {
             case "heal_every_n_hits":
             {
-                string weaponId = _equippedWeapon.Id;
+                string weaponId = source.Id;
                 _weaponHitCounters.TryGetValue(weaponId, out int count);
                 count++;
                 int n = se.Params.TryGetValue("n", out float nVal) ? Mathf.Max(1, (int)nVal) : 5;
@@ -1214,24 +1219,18 @@ public partial class Player : CharacterBody2D
 
     // --- Orbital Weapons ---
 
-    private void SetupOrbitalWeapon(WeaponData weapon)
+    /// <summary>
+    /// Crée les orbes d'une arme orbitale dès qu'elle est portée, et les recrée quand leur nombre change
+    /// (montée de niveau). Les dégâts se calculent à l'impact, avec le niveau courant de l'arme.
+    /// </summary>
+    private void SetupOrbitalWeapon(WeaponInstance weapon)
     {
-        if (_orbitalWeapon?.Id == weapon.Id && _orbitalProjectiles.Count > 0)
+        int orbitalCount = Mathf.Max(1, (int)weapon.GetStat("orbital_count", 3f));
+        if (_orbitalWeapon == weapon && _orbitalProjectiles.Count == orbitalCount)
             return;
 
+        ClearOrbitals();
         _orbitalWeapon = weapon;
-        int orbitalCount = Mathf.Max(1, (int)GetWeaponStat("orbital_count", 3f));
-        float orbitalRadius = GetWeaponStat("range", 90f);
-        float damage = ComputeBaseAttackDamage();
-
-        // Nettoyage des anciens orbitaux
-        foreach (Node2D old in _orbitalProjectiles)
-        {
-            if (IsInstanceValid(old))
-                old.QueueFree();
-        }
-        _orbitalProjectiles.Clear();
-
         for (int i = 0; i < orbitalCount; i++)
         {
             Area2D orb = new() { Name = $"OrbitalOrb_{i}" };
@@ -1244,13 +1243,13 @@ public partial class Player : CharacterBody2D
             orb.AddChild(shape);
             orb.AddChild(PlayerAttackFx.CreateOrbitalVisual());
 
-            float capturedDamage = damage;
             orb.BodyEntered += (Node2D body) =>
             {
-                if (body is Enemy enemy && !enemy.IsDying && IsInstanceValid(enemy))
+                if (body is Enemy enemy && !enemy.IsDying && IsInstanceValid(enemy) && _orbitalWeapon != null)
                 {
-                    enemy.TakeDamage(capturedDamage);
-                    OnAttackHit(enemy, capturedDamage, false, false);
+                    float damage = ComputeBaseAttackDamage(_orbitalWeapon);
+                    enemy.TakeDamage(damage);
+                    OnAttackHit(enemy, damage, false, false, _orbitalWeapon);
                 }
             };
 
@@ -1259,13 +1258,24 @@ public partial class Player : CharacterBody2D
         }
     }
 
+    private void ClearOrbitals()
+    {
+        foreach (Node2D old in _orbitalProjectiles)
+        {
+            if (IsInstanceValid(old))
+                old.QueueFree();
+        }
+        _orbitalProjectiles.Clear();
+        _orbitalWeapon = null;
+    }
+
     private void ProcessOrbitalWeapons(float delta)
     {
         if (_orbitalProjectiles.Count == 0 || _orbitalWeapon == null)
             return;
 
-        float orbitalSpeed = GetStatFromWeapon(_orbitalWeapon, "orbital_speed", 180f);
-        float orbitalRadius = GetStatFromWeapon(_orbitalWeapon, "range", 90f);
+        float orbitalSpeed = _orbitalWeapon.GetStat("orbital_speed", 180f);
+        float orbitalRadius = _orbitalWeapon.GetStat("range", 90f);
         _orbitalAngle += Mathf.DegToRad(orbitalSpeed) * delta;
         if (_orbitalAngle > Mathf.Tau)
             _orbitalAngle -= Mathf.Tau;
@@ -1283,13 +1293,6 @@ public partial class Player : CharacterBody2D
         }
     }
 
-    private float GetStatFromWeapon(WeaponData weapon, string key, float defaultVal)
-    {
-        if (weapon?.Stats != null && weapon.Stats.TryGetValue(key, out float val))
-            return val;
-        return defaultVal;
-    }
-
     // --- Sustained Cone Attack ---
 
     private void ActivateSustainedCone(WeaponSpecialEffect effect)
@@ -1302,6 +1305,7 @@ public partial class Player : CharacterBody2D
         _coneAngleEnd = GetWeaponStat("cone_angle_end", 60f);
         _coneRange = GetEffectiveWeaponRange();
         _coneBaseDamage = ComputeBaseAttackDamage();
+        _coneWeapon = _equippedWeapon;
 
         UpdateConeVisual(0f);
 
@@ -1353,7 +1357,7 @@ public partial class Player : CharacterBody2D
                 continue;
 
             enemy.TakeDamage(damage);
-            OnAttackHit(enemy, damage, false, false);
+            OnAttackHit(enemy, damage, false, false, _coneWeapon);
         }
     }
 
@@ -1361,13 +1365,14 @@ public partial class Player : CharacterBody2D
     {
         float progress = Mathf.Clamp(elapsed / _coneDuration, 0f, 1f);
         float currentAngleDeg = Mathf.Lerp(_coneAngleStart, _coneAngleEnd, progress);
-        _attackFx.UpdateCone(_equippedWeapon?.Base, _facingDirection, _coneRange, Mathf.DegToRad(currentAngleDeg * 0.5f));
+        _attackFx.UpdateCone(_coneWeapon?.Base, _facingDirection, _coneRange, Mathf.DegToRad(currentAngleDeg * 0.5f));
     }
 
     private void DeactivateSustainedCone()
     {
         _isConeActive = false;
         _coneAttackTimer = 0f;
+        _coneWeapon = null;
 
         _attackFx.StopCone();
 
@@ -1396,7 +1401,7 @@ public partial class Player : CharacterBody2D
         bool isCrit = _critChance > 0f && GD.Randf() < _critChance;
         float currentDamage = isCrit ? baseDamage * _critMultiplier : baseDamage;
         firstTarget.TakeDamage(currentDamage, isCrit);
-        OnAttackHit(firstTarget, currentDamage, isCrit, false);
+        OnAttackHit(firstTarget, currentDamage, isCrit, false, _equippedWeapon);
 
         // Chain vers les ennemis adjacents
         HashSet<ulong> hitIds = new() { firstTarget.GetInstanceId() };
@@ -1412,7 +1417,7 @@ public partial class Player : CharacterBody2D
             hitIds.Add(nextTarget.GetInstanceId());
             SpawnChainVisual(current.GlobalPosition, nextTarget.GlobalPosition);
             nextTarget.TakeDamage(currentDamage);
-            OnAttackHit(nextTarget, currentDamage, false, false);
+            OnAttackHit(nextTarget, currentDamage, false, false, _equippedWeapon);
             current = nextTarget;
         }
     }
@@ -1912,7 +1917,7 @@ public partial class Player : CharacterBody2D
         // Orbital : pas d'attaque par timer, géré dans _PhysicsProcess
         if (pattern == "orbital")
         {
-            SetupOrbitalWeapon(_equippedWeapon.Base);
+            SetupOrbitalWeapon(_equippedWeapon);
             return;
         }
 
@@ -2064,7 +2069,7 @@ public partial class Player : CharacterBody2D
             float totalDamage = baseDamage * hitMultiplierSum * critDamageFactor;
             bool hasCrit = clampedCritChance > 0f && GD.Randf() < GetCombinedProcChance(clampedCritChance, hitCount);
             enemy.TakeDamage(totalDamage, hasCrit);
-            OnAttackHit(enemy, totalDamage, hasCrit, isRicochet: false, triggerCount: hitCount);
+            OnAttackHit(enemy, totalDamage, hasCrit, isRicochet: false, _equippedWeapon, triggerCount: hitCount);
         }
     }
 
@@ -2142,7 +2147,7 @@ public partial class Player : CharacterBody2D
     {
         Projectile projectile = CombatPools.Instance?.TakePlayerProjectile();
         projectile?.Launch(GlobalPosition, direction, damage, speed, Mathf.Clamp(range / Mathf.Max(speed, 1f), 0.2f, 4f),
-            pierce, isCrit, this, _equippedWeapon?.Base);
+            pierce, isCrit, this, _equippedWeapon?.Base, _equippedWeapon);
         return projectile;
     }
 
@@ -2216,9 +2221,11 @@ public partial class Player : CharacterBody2D
         return result;
     }
 
-    private float ComputeBaseAttackDamage()
+    private float ComputeBaseAttackDamage() => ComputeBaseAttackDamage(_equippedWeapon);
+
+    private float ComputeBaseAttackDamage(WeaponInstance weapon)
     {
-        float weaponDamage = GetWeaponStat("damage", AttackDamage);
+        float weaponDamage = weapon?.GetStat("damage", AttackDamage) ?? AttackDamage;
         float characterDamageFactor = AttackDamage / 10f;
         float damage = weaponDamage * characterDamageFactor * _damageMultiplier * _erasurePenalty.Damage;
 
