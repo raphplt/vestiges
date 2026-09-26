@@ -56,6 +56,14 @@ public partial class AudioManager : Node
 	{
 		["sfx_hit_joueur"] = 150,
 		["sfx_hit_ennemi"] = 80,
+		// Attaques ennemies : en combat dense, une voix toutes les 90 ms par son suffit à lire la menace.
+		["sfx_ombre_attaque"] = 90,
+		["sfx_rodeur_attaque"] = 90,
+		["sfx_brute_charge"] = 90,
+		["sfx_hurleur_cri"] = 90,
+		["sfx_sentinelle_tir"] = 90,
+		["sfx_rampant_surgissement"] = 90,
+		["sfx_projectile_vol"] = 90,
 		["sfx_hit_critique"] = 80,
 		["sfx_monde_dissolution"] = 200,
 		["sfx_recolte_obtenu"] = 100,
@@ -145,6 +153,20 @@ public partial class AudioManager : Node
 		["sfx_hit_critique"] = "res://assets/audio/sfx/combat/sfx_hit_critique.wav",
 		["sfx_hit_joueur"]   = "res://assets/audio/sfx/combat/sfx_hit_joueur.wav",
 		["sfx_degat_critique_recu"] = "res://assets/audio/sfx/combat/sfx_degat_critique_recu.wav",
+		["sfx_projectile_vol"]    = "res://assets/audio/sfx/combat/sfx_projectile_vol.wav",
+		["sfx_projectile_impact"] = "res://assets/audio/sfx/combat/sfx_projectile_impact.wav",
+
+		// Créatures (sons provisoires : la sélection définitive suit le plan 15)
+		["sfx_ombre_attaque"] = "res://assets/audio/sfx/creatures/sfx_ombre_attaque.wav",
+		["sfx_rodeur_attaque"] = "res://assets/audio/sfx/creatures/sfx_rodeur_attaque.wav",
+		["sfx_brute_charge"] = "res://assets/audio/sfx/creatures/sfx_brute_charge.wav",
+		["sfx_brute_pas"] = "res://assets/audio/sfx/creatures/sfx_brute_pas.wav",
+		["sfx_hurleur_cri"] = "res://assets/audio/sfx/creatures/sfx_hurleur_cri.wav",
+		["sfx_sentinelle_tir"] = "res://assets/audio/sfx/creatures/sfx_sentinelle_tir.wav",
+		["sfx_sentinelle_activation"] = "res://assets/audio/sfx/creatures/sfx_sentinelle_activation.wav",
+		["sfx_rampant_surgissement"] = "res://assets/audio/sfx/creatures/sfx_rampant_surgissement.wav",
+		["sfx_charognard_meute"] = "res://assets/audio/sfx/creatures/sfx_charognard_meute.wav",
+		["sfx_charognard_idle"] = "res://assets/audio/sfx/creatures/sfx_charognard_idle.wav",
 
 		// UI
 		["sfx_menu_clic"]         = "res://assets/audio/sfx/ui/sfx_menu_clic.wav",

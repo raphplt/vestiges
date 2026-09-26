@@ -2,6 +2,7 @@
     "id": "shadow_crawler",
     "name": "Rampant d'Ombre",
     "type": "melee",
+    "attack_audio": "sfx_ombre_attaque",
     "stats": {
         "hp": 30,
         "speed": 60,

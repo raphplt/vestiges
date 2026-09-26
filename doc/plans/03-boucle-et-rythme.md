@@ -182,3 +182,24 @@ Vérifications techniques du dossier ; roadmap A/B/C/D. Reporter les validations
 ## 6. Améliorations structurelles autorisées
 
 Toute mécanique existante peut être remise à l’épreuve : loot, densité, chronologie des crises, interaction Autel, progression, génération. Pour chaque refonte : problème observé, solution candidate, coût, comparaison contrôlée, critères garder/abandonner et migration si nécessaire. Terrain et navigation sont traités en 10 ; les innovations de 11 doivent prouver leur intérêt dans cette boucle. La V2 reste nomade et sans craft/base/jour-nuit.
+
+## 7. Ouverture de run — 26 septembre 2026
+
+**Retour de Raphaël :** « le jeu devrait être légèrement moins agressif, surtout au tout début : on peut se faire sauter dessus à la seconde 1. Il faut avoir le temps de respirer […] attention à ne pas tomber dans l'extrême inverse. »
+
+**Cause :** la densité locale visait 14 créatures dans 700 px **dès la seconde 0**, par rafales de 4 au bord de l'écran. L'intervalle d'apparition était plein dès le départ.
+
+**Correctif (données, `data/scaling/spawn_flow.json`) :**
+- `opening_grace_seconds` = 6 : rien n'apparaît, et le minuteur n'accumule pas de rafale à rattraper.
+- `opening_ramp_seconds` = 60 : la cible locale monte de `opening_local_target_start` = 4 jusqu'à la cible normale, et l'intervalle part de `opening_interval_multiplier_start` = ×2 pour revenir à ×1.
+- Au-delà d'une minute, rien ne change.
+
+**Mesure** (`tools/measure_density.sh`, bot qui n'esquive jamais, trois seeds ; champs `first_hit_s`, `damage_10s` et `damage_30s` ajoutés au banc) :
+
+| Seed | 1er ennemi visible | 1er coup reçu | Dégâts à 10 s | Dégâts à 30 s | Visibles après 60 s |
+|---|---|---|---|---|---|
+| 221092026 | 1 → 8 s | 5,8 → 10,1 s | 9 → 0 | 188 → 250 | 20 |
+| 777 | 1 → 7 s | 4,1 → 13,2 s | 27 → 0 | 273 → 45 | 24 |
+| 1002 | 1 → 7 s | 2,5 → 11,7 s | 51 → 0 | 295 → 63 | 17 |
+
+La première minute compte 15 à 22 % de secondes sans ennemi à l'écran, pour l'essentiel le répit lui-même. Après une minute, la densité revient au niveau d'avant. Sur la seed 221092026, les dégâts à 30 s restent élevés alors qu'ils ont baissé sur les deux autres ; l'écart n'est pas expliqué. Recette en jeu attendue : le répit est-il assez long, la reprise assez franche ?

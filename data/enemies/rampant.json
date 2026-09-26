@@ -2,6 +2,7 @@
     "id": "rampant",
     "name": "Rampant",
     "type": "melee",
+    "attack_audio": "sfx_rampant_surgissement",
     "stats": {
         "hp": 25,
         "speed": 45,

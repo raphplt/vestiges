@@ -3,6 +3,7 @@
     "name": "Tisseuse",
     "grammatical_gender": "f",
     "type": "ranged",
+    "attack_audio": "sfx_projectile_vol",
     "stats": {
         "hp": 20,
         "speed": 55,

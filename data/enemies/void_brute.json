@@ -3,6 +3,7 @@
     "name": "Brute du Vide",
     "grammatical_gender": "f",
     "type": "melee",
+    "attack_audio": "sfx_brute_charge",
     "behavior": "charger",
     "stats": {
         "hp": 80,

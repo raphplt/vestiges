@@ -3,6 +3,7 @@
     "name": "Ombre",
     "grammatical_gender": "f",
     "type": "melee",
+    "attack_audio": "sfx_ombre_attaque",
     "stats": {
         "hp": 10,
         "speed": 100,

@@ -233,7 +233,7 @@ public partial class RunObservation
     private List<(string Biome, Vector2 Point, int Neighbours, int Total)> FindPropHotspots()
     {
         Dictionary<string, List<Vector2>> propsByBiome = new();
-        foreach (Node child in _world.GetNode("PropContainer").GetChildren())
+        foreach (Node child in _world.GetNode("PropContainer").FindChildren("*", "", true, false))
         {
             if (child is not EnvironmentProp prop)
                 continue;
@@ -290,7 +290,7 @@ public partial class RunObservation
 
             // Joueur juste derrière le décor le plus haut de la zone : tri en profondeur et transparence.
             EnvironmentProp tallest = null;
-            foreach (Node child in _world.GetNode("PropContainer").GetChildren())
+            foreach (Node child in _world.GetNode("PropContainer").FindChildren("*", "", true, false))
             {
                 if (child is EnvironmentProp prop && prop.GlobalPosition.DistanceSquaredTo(best) < 240f * 240f
                     && (tallest == null || prop.Footprint.VisibleHeight > tallest.Footprint.VisibleHeight))

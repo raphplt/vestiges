@@ -439,9 +439,15 @@ public partial class WorldSetup : Node2D
     {
         Node propContainer = GetNode("PropContainer");
         SeparateGroundDecals(propContainer);
+        Node2D player = GetNodeOrNull<Node2D>("Player");
         PropOcclusion occlusion = new() { Name = "PropOcclusion" };
         AddChild(occlusion);
-        occlusion.Build(propContainer, GetNodeOrNull<Node2D>("Player"));
+        occlusion.Build(propContainer, player);
+
+        // Après l'index d'occlusion, qui lit les décors comme enfants directs du conteneur.
+        PropChunks chunks = new() { Name = "PropChunks" };
+        AddChild(chunks);
+        chunks.Build(player?.GetNodeOrNull<Camera2D>("Camera"), (Node2D)propContainer, GetNode<Node2D>("GroundDecals"));
     }
 
     /// <summary>

@@ -208,7 +208,20 @@ public partial class RunObservation : Node
         // Indice de pression : dégâts que les ennemis infligent à un joueur qui n'esquive jamais (invincible ici).
         double hitDamage = 0;
         EventBus eventBus = GetNode<EventBus>("/root/EventBus");
-        EventBus.PlayerHitByEventHandler onHit = (_, damage) => hitDamage += damage;
+        // Souffle du tout début de run (retour du 26 septembre) : premier coup reçu et dégâts cumulés à 10 et 30 s.
+        double firstHit = -1, damage10 = 0, damage30 = 0;
+        double startedAt = Time.GetTicksMsec() / 1000.0;
+        EventBus.PlayerHitByEventHandler onHit = (_, damage) =>
+        {
+            hitDamage += damage;
+            double at = Time.GetTicksMsec() / 1000.0 - startedAt;
+            if (firstHit < 0)
+                firstHit = at;
+            if (at <= 10)
+                damage10 += damage;
+            if (at <= 30)
+                damage30 += damage;
+        };
         eventBus.PlayerHitBy += onHit;
         List<int> visibleSamples = new();
         Dictionary<int, double> levelTimes = new();
@@ -313,6 +326,7 @@ public partial class RunObservation : Node
 
         StringBuilder summary = new();
         summary.Append(CultureInfo.InvariantCulture, $"seed={seed} seconds={seconds:F0} first_visible_s={firstVisible:F0}");
+        summary.Append(CultureInfo.InvariantCulture, $" first_hit_s={firstHit:F1} damage_10s={damage10:F0} damage_30s={damage30:F0}");
         summary.Append(CultureInfo.InvariantCulture, $" kills={tracker.TotalKilled} spawned={tracker.TotalSpawned}");
         foreach ((int from, int to) in new[] { (0, 60), (60, 120), (120, 180), (180, 300) })
         {

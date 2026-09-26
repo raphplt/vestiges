@@ -217,3 +217,58 @@ Chaque décor qui a une hauteur reçoit une ombre de contact : ellipse iso 2:1 �
 - `HashCell` mélange les bits (finaliseur à avalanche). Le choix des variantes n'est plus périodique, dans tous les biomes.
 - Forêt : terre et sous-bois ne sont plus tirés case par case. Un bruit continu (`ForestFloorNoise`), échantillonné au point au sol de la cellule (grille « stacked » dépliée en 2:1, donc isotrope), dessine des clairières et des sentiers de terre dans le sous-bois ; la variante vient ensuite du hash. L'ordre de `tile_sources.forest` fait foi : la première moitié est la terre, la seconde le sous-bois.
 - Vérifié par capture en vraie run (seed 1002) : plus de stries. Les bords des plaques restent en marches de tuiles, faute de tuiles de transition (piste déjà ouverte dans ce plan).
+
+## 9. Retours du 26 septembre : tiles et jonctions
+
+**Raphaël :** « tu n'as pas touché aux tiles, en vrai je pense que là aussi tu aurais de la marge pour les améliorer » ; « ce serait bien d'avoir un effet de jonction entre les environnements, que ça ne fasse pas brut ».
+
+**Constat :**
+- Les tiles (`tools/generate_tiles.py`) sont des losanges de 64×32 remplis de bruit par pixel. De près, c'est granuleux ; de loin, cela forme un damier de valeurs. Les décors refaits sont désormais plus lisibles que le sol qui les porte.
+- La frontière entre deux biomes est une arête de losanges nette. Avec la mosaïque de régions (§6), il y en a bien plus qu'avant.
+
+**Lots proposés, qui remplacent l'ordre de priorité des lots B et C du §4 :**
+
+| Lot | Contenu | Vérification |
+|---|---|---|
+| **T1 — Sol procédural** | Réécrire les tiles dans le pipeline commun (`tools/sprites/`) : grandes formes calmes (plaques d'herbe, dalles, vase), 3 à 4 tons par matière, détails rares, palette accordée aux décors du biome. Variantes raccordables entre elles, sans motif de pixel qui se répète | Planche des tiles côte à côte, captures des cinq biomes à zoom normal et dézoomé |
+| **T2 — Jonctions** | Mélange au sol le long des frontières : un shader du sol lit une petite texture « biome par cellule » générée au chargement, et mêle les deux matières sur une bande de 1 à 2 cellules, par tramage (pixels nets, pas de fondu flou). Quelques décors de transition (herbes entre forêt et champs, gravats entre ville et carrière). Le biome de gameplay reste celui de la cellule | Captures aux frontières des cinq paires fréquentes, avant/après ; banc de performance (le coût du shader doit rester négligeable) |
+| **T3 — Routes et chemins** | Chemins de terre des champs et pistes de la forêt raccordés aux rues, bordures de trottoir usées | Captures |
+
+Ordre recommandé : T2 d'abord, qui a l'effet le plus visible sur la carte en mosaïque, puis T1, en validant biome par biome comme pour les décors.
+
+## 10. Investigation performance — 26 septembre 2026
+
+**Demande de Raphaël :** « j'ai beaucoup aimé les initiatives pour améliorer les performances […] peut-être que ça vaut le coup de faire une investigation plus poussée ».
+
+**Instrumentation ajoutée au banc de combat dense** (`tools/benchmark_movement.sh`) :
+- nombre d'ennemis réglable (`BENCH_ENEMIES`) ;
+- temps de rendu CPU et GPU du viewport, draw calls, objets rendus, paires de collision, corps actifs, nœuds dans l'arbre ;
+- expériences d'attribution par `BENCH_EXTRA_ARGS` (`--hide-props`).
+
+**Constats** (Ryzen 7 5700X + RX 6950 XT, machine calme, charge ≈ 2) :
+
+| Mesure | 120 ennemis, 720p | 300 ennemis, 720p |
+|---|---|---|
+| FPS / p99 | 118 / 13,0 ms | 56 / 28,1 ms |
+| Rendu CPU / GPU | 5,1 / 0,8 ms | 6,2 / 1,1 ms |
+| Physique (moniteur Godot) | 4,2 ms | 10,0 ms |
+| Draw calls / nœuds | 1 043 / 29 800 | 1 271 / 30 850 |
+
+1. **Rendu :** avec les décors masqués (`--hide-props`), on passe de 118 à 252 FPS et de 5,1 à 1,4 ms de rendu CPU, sans que les draw calls changent. Le coût venait du tri en Y : Godot rassemble et trie à chaque frame tous les enfants visibles d'un conteneur trié, hors écran compris (~4 900 décors).
+   **Correctif `PropChunks` :** les décors et les décalques sont répartis en tronçons de 768 px (244 sur la seed du banc), et ceux qui sont loin de la caméra sont masqués (marge de 360 px pour les grands décors). Les tronçons héritent du tri de leur conteneur. `PropOcclusion` est construit avant le découpage.
+
+   | Ennemis | Résolution | FPS avant → après | p99 avant → après | Rendu CPU avant → après |
+   |---|---|---|---|---|
+   | 120 | 720p | 118 → 247 | 13,0 → 7,5 ms | 5,1 → 1,5 ms |
+   | 120 | 1080p | 110 → 223 | 13,7 → 7,8 ms | 5,5 → 1,9 ms |
+   | 300 | 720p | 56 → 104 | 28,1 → 15,8 ms | 6,2 → 2,0 ms |
+   | 300 | 1080p | 56 → 94 | 27,1 → 16,1 ms | 6,4 → 2,4 ms |
+
+   Le nombre d'objets rendus est inchangé : on voit la même chose. Les captures `--capture-props` des cinq biomes montrent des décors jusqu'aux bords de l'écran.
+2. **Physique, désormais le goulot à forte densité** (≈ 30 µs par ennemi et par tick d'après le moniteur). Des sondes temporaires, non committées, en attribuent peu au code du jeu :
+   - `Enemy._PhysicsProcess` : 4,4 µs par ennemi, dont 2,0 µs dans `MoveAndSlide`, soit ≈ 0,5 ms pour 120 ennemis.
+   - `Player._PhysicsProcess` : 29 µs par tick.
+   - Avec les décors supprimés, la physique ne baisse pas (5,8 ms à 120 ennemis) : les `StaticBody2D` des décors ne sont pas en cause.
+
+   Le reste est interne au moteur (synchronisation des `CharacterBody2D`, zones de détection, pas du serveur physique 2D).
+   **Suite proposée :** profiler une session avec le profileur de Godot (moniteurs de serveur) ; si la synchronisation des corps domine, essayer pour les créatures simples un déplacement allégé (séparation par grille et requêtes de collision statiques par lots) à la place d'un `CharacterBody2D` chacune. Critère : 300 ennemis à 60 FPS p99 inclus.

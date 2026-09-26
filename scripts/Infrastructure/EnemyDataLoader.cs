@@ -48,6 +48,8 @@ public class EnemyData
     public EnemyVisual Visual { get; set; }
     public Dictionary<string, float> ExtraStats { get; set; } = new();
     public Dictionary<string, EnemyAbilityData> Abilities { get; set; } = new();
+    /// <summary>Clé AudioManager jouée quand un coup porte ou qu'un projectile part (null : muet).</summary>
+    public string AttackAudio { get; set; }
 }
 
 public static class EnemyDataLoader
@@ -146,6 +148,7 @@ public static class EnemyDataLoader
             Behavior = dict.ContainsKey("behavior") ? dict["behavior"].AsString() : "default",
             Tier = dict.ContainsKey("tier") ? dict["tier"].AsString() : "normal",
             IsFeminine = dict.ContainsKey("grammatical_gender") && dict["grammatical_gender"].AsString() == "f",
+            AttackAudio = dict.ContainsKey("attack_audio") ? dict["attack_audio"].AsString() : null,
             Stats = new EnemyStats
             {
                 Hp = (float)stats["hp"].AsDouble(),

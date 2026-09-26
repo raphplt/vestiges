@@ -2,6 +2,7 @@
     "id": "hurleur",
     "name": "Hurleur",
     "type": "ranged",
+    "attack_audio": "sfx_hurleur_cri",
     "stats": {
         "hp": 35,
         "speed": 25,

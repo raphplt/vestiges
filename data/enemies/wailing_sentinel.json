@@ -3,6 +3,7 @@
     "name": "Sentinelle Hurlante",
     "grammatical_gender": "f",
     "type": "ranged",
+    "attack_audio": "sfx_sentinelle_tir",
     "behavior": "sentinel",
     "stats": {
         "hp": 25,

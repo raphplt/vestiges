@@ -2,6 +2,7 @@
     "id": "fading_spitter",
     "name": "Cracheur Pâli",
     "type": "ranged",
+    "attack_audio": "sfx_projectile_vol",
     "stats": {
         "hp": 15,
         "speed": 55,

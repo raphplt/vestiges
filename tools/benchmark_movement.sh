@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Main réelle en GL, sans cap FPS ; toutes les sauvegardes vont dans un XDG temporaire.
 # Usage : tools/benchmark_movement.sh [répertoire résultats]
-# BENCH_SECONDS=20 BENCH_WARMUP=5 BENCH_REPEATS=3 GODOT_BIN=godot-mono
+# BENCH_SECONDS=20 BENCH_WARMUP=5 BENCH_REPEATS=3 BENCH_ENEMIES=120 GODOT_BIN=godot-mono
 set -euo pipefail
 cd "$(dirname "$0")/.."
 GODOT="${GODOT_BIN:-godot-mono}"
@@ -31,7 +31,7 @@ for resolution in 1280x720 1920x1080; do
             timeout 180 "$GODOT" --path . --windowed --resolution "$resolution" --position 0,0 \
                 --rendering-method gl_compatibility --disable-vsync --max-fps 0 --audio-driver Dummy \
                 res://tools/tests/MovementDenseBenchmark.tscn -- --dev \
-                --width "${resolution%x*}" --height "${resolution#*x}" \
+                --width "${resolution%x*}" --height "${resolution#*x}" --enemies "${BENCH_ENEMIES:-120}" ${BENCH_EXTRA_ARGS:-} \
                 --seconds "${BENCH_SECONDS:-20}" --warmup "${BENCH_WARMUP:-5}" \
                 --output "$prefix" "${extra[@]}" >"$prefix.log" 2>&1 || { cat "$prefix.log"; exit 1; }
             rg -q '\[MovementDenseBenchmark\] RESULT valid=True' "$prefix.log"

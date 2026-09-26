@@ -2,6 +2,7 @@
     "id": "treant_corrompu",
     "name": "Tréant Corrompu",
     "type": "melee",
+    "attack_audio": "sfx_brute_charge",
     "stats": {
         "hp": 120,
         "speed": 25,

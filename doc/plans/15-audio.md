@@ -151,3 +151,18 @@ Trois nouveaux candidats retenus : `dissolution_a2_b` **sans coupe à une second
 Suite : rechercher de nouveaux candidats pour les trois refus, puis poursuivre les familles non couvertes. Les six candidats retenus depuis A restent à intégrer et à écouter en jeu ; aucune case de roadmap cochée.
 
 [Export A2 archivé](../audio/lot-a2/choix-raphael-2026-09-26.json), [synthèse et verbatim](../audio/lot-a2/RETOURS.md), [préparation complète de la dissolution](../audio/lot-a2/preparations/dissolution_a2_b_complete.wav). Les aperçus et sources du panier A2 restent inchangés pour la traçabilité.
+
+## 10. Sons d'attaque des ennemis — 26 septembre 2026
+
+**Retour de Raphaël :** « les attaques des ennemis devraient avoir des sons je crois ».
+
+**Constat :**
+- Aucune attaque de base ennemie ne jouait de son.
+- Les sons de créatures existants (`assets/audio/sfx/creatures/`), ainsi que `sfx_projectile_vol` et `sfx_projectile_impact`, n'étaient pas enregistrés dans `AudioManager.Paths`. Les sons prévus pour le Présage et le Charognard (`presage.json`, `charognard.json`) échouaient donc en silence : `PlaySfx` ignore toute clé inconnue.
+
+**Branchement livré (plomberie, pas sélection) :**
+- Les 12 fichiers sont enregistrés.
+- Champ `attack_audio` par créature (`EnemyDataLoader`) : joué quand un coup porte (−7 dB) ou qu'un projectile part à moins de 650 px du joueur (−9 dB). Débit limité à une voix toutes les 90 ms par son.
+- Sons **provisoires** attribués à 11 créatures : Ombre, Rampant d'ombre et Charognard → `sfx_ombre_attaque` ; Rôdeur → `sfx_rodeur_attaque` ; Brute et Tréant → `sfx_brute_charge` ; Hurleur → `sfx_hurleur_cri` ; Sentinelle → `sfx_sentinelle_tir` ; Rampant → `sfx_rampant_surgissement` ; Cracheur et Tisseuse → `sfx_projectile_vol`.
+
+Ces choix n'engagent pas la sélection : les besoins d'attaque par famille (`enemy_ranged_shot` et les attaques au contact) restent à rechercher au lot B, et l'écoute en jeu reste à faire. Aucun son de tir n'est non plus joué pour les armes du joueur (§3 bis).

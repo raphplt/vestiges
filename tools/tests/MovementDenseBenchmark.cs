@@ -18,9 +18,9 @@ namespace Vestiges.Tests;
 /// <summary>Banc rendu de Main : aucune modification des données ou du gameplay de production.</summary>
 public partial class MovementDenseBenchmark : Node
 {
-    private const int EnemyCount = 120;
+    private int _enemyCount = 120;
     private const ulong Seed = 221092026;
-    private readonly Enemy[] _enemies = new Enemy[EnemyCount];
+    private Enemy[] _enemies;
     private readonly double[] _frames = new double[200000];
     private readonly double[] _activationFrames = new double[200000];
     private Player _player;
@@ -40,11 +40,19 @@ public partial class MovementDenseBenchmark : Node
     private bool _activationPending;
     private bool _previousDash;
     private double _lastDashRequest = -10;
-    private int _minLiving = EnemyCount;
+    private int _minLiving = int.MaxValue;
     private int _maxLiving;
-    private int _minFullAi = EnemyCount;
+    private int _minFullAi = int.MaxValue;
     private double _processSum;
     private double _physicsSum;
+    private double _renderCpuSum;
+    private double _renderGpuSum;
+    private double _drawCallsSum;
+    private double _objectsSum;
+    private double _primitivesSum;
+    private double _collisionPairsSum;
+    private double _activeBodiesSum;
+    private double _nodeCountSum;
     private long _managedStart;
     private long _allocatedStart;
     // Nœuds ajoutés à l'arbre pendant la mesure : coût des effets créés puis libérés (plan 02 J0).
@@ -73,6 +81,10 @@ public partial class MovementDenseBenchmark : Node
             _warmup = double.Parse(Argument(args, "--warmup", "5"), CultureInfo.InvariantCulture);
             Vector2I size = new(int.Parse(Argument(args, "--width", "1280")), int.Parse(Argument(args, "--height", "720")));
             _requestedSize = size;
+            _enemyCount = int.Parse(Argument(args, "--enemies", "120"), CultureInfo.InvariantCulture);
+            _enemies = new Enemy[_enemyCount];
+            // Temps de rendu CPU/GPU du viewport : décompose la frame au-delà du temps mural (investigation perf).
+            RenderingServer.ViewportSetMeasureRenderTime(GetViewport().GetViewportRid(), true);
             GetWindow().Mode = Window.ModeEnum.Windowed;
             GetWindow().ContentScaleSize = size;
             GetWindow().ContentScaleFactor = 1;
@@ -116,18 +128,25 @@ public partial class MovementDenseBenchmark : Node
             _player.IsGodMode = true;
             _player.IsAIControlled = true;
             _player.GlobalPosition = Vector2.Zero;
+            // Expérience d'attribution : décors masqués (rendu seul, la physique des décors reste en place).
+            if (Array.IndexOf(OS.GetCmdlineUserArgs(), "--hide-props") >= 0)
+            {
+                _world.GetNode<CanvasItem>("PropContainer").Visible = false;
+                _world.GetNodeOrNull<CanvasItem>("GroundDecals")?.Set(CanvasItem.PropertyName.Visible, false);
+            }
             EnemyPool pool = _world.GetNode<EnemyPool>("EnemyPool");
             Node container = _world.GetNode("EnemyContainer");
             GD.Seed(Seed);
-            for (int i = 0; i < EnemyCount; i++)
+            for (int i = 0; i < _enemyCount; i++)
             {
                 Enemy enemy = pool.Get();
                 float angle = i * 2.3999632f;
-                float radius = 40f + 100f * Mathf.Sqrt((i + 1f) / EnemyCount);
+                float radius = 40f + 100f * Mathf.Sqrt((i + 1f) / _enemyCount);
                 enemy.Position = Vector2.FromAngle(angle) * radius;
                 container.AddChild(enemy);
                 // Les HP renforcés conservent les 120 IA, attaques, collisions et impacts pendant l'essai.
-                enemy.Initialize(EnemyDataLoader.Get(i < 100 ? "shade" : "fading_spitter"), 10000f, 1f);
+                // Même proportion qu'à 120 : cinq Ombres pour un Cracheur.
+                enemy.Initialize(EnemyDataLoader.Get(i % 6 == 5 ? "fading_spitter" : "shade"), 10000f, 1f);
                 _enemies[i] = enemy;
             }
             CanvasLayer layer = new() { Layer = 100 };
@@ -222,6 +241,15 @@ public partial class MovementDenseBenchmark : Node
         _previousDash = _player.Mobility.IsDashing;
         _processSum += Performance.GetMonitor(Performance.Monitor.TimeProcess) * 1000;
         _physicsSum += Performance.GetMonitor(Performance.Monitor.TimePhysicsProcess) * 1000;
+        Rid viewport = GetViewport().GetViewportRid();
+        _renderCpuSum += RenderingServer.ViewportGetMeasuredRenderTimeCpu(viewport) + RenderingServer.GetFrameSetupTimeCpu();
+        _renderGpuSum += RenderingServer.ViewportGetMeasuredRenderTimeGpu(viewport);
+        _drawCallsSum += Performance.GetMonitor(Performance.Monitor.RenderTotalDrawCallsInFrame);
+        _objectsSum += Performance.GetMonitor(Performance.Monitor.RenderTotalObjectsInFrame);
+        _primitivesSum += Performance.GetMonitor(Performance.Monitor.RenderTotalPrimitivesInFrame);
+        _collisionPairsSum += Performance.GetMonitor(Performance.Monitor.Physics2DCollisionPairs);
+        _activeBodiesSum += Performance.GetMonitor(Performance.Monitor.Physics2DActiveObjects);
+        _nodeCountSum += Performance.GetMonitor(Performance.Monitor.ObjectNodeCount);
         int living = 0;
         int fullAi = 0;
         foreach (Enemy enemy in _enemies)
@@ -253,7 +281,7 @@ public partial class MovementDenseBenchmark : Node
             long rssEnd = process.WorkingSet64;
             long rssPeak = process.PeakWorkingSet64;
             double nativeEnd = Performance.GetMonitor(Performance.Monitor.MemoryStatic);
-            bool valid = _minLiving >= 100 && _minFullAi >= 100 && (!_dash || _activations >= 5)
+            bool valid = _minLiving >= _enemyCount * 5 / 6 && _minFullAi >= _enemyCount * 5 / 6 && (!_dash || _activations >= 5)
                 && !GetTree().Paused && DisplayServer.GetName() != "headless"
                 && GetWindow().Size == _requestedSize && _renderSize == _requestedSize
                 && _distance > 100 && (!_dash || _dashDistance > 50);
@@ -273,12 +301,17 @@ public partial class MovementDenseBenchmark : Node
                 traveled_pixels = _distance, dash_traveled_pixels = _dashDistance,
                 // Noms historiques du premier banc : moniteurs Godot, pas un profil CPU isolé.
                 process_cpu_mean_ms = _processSum / _samples, physics_cpu_mean_ms = _physicsSum / _samples,
+                enemies = _enemyCount,
+                render_cpu_mean_ms = _renderCpuSum / _samples, render_gpu_mean_ms = _renderGpuSum / _samples,
+                draw_calls_mean = _drawCallsSum / _samples, rendered_objects_mean = _objectsSum / _samples,
+                primitives_mean = _primitivesSum / _samples, collision_pairs_mean = _collisionPairsSum / _samples,
+                active_bodies_mean = _activeBodiesSum / _samples, node_count_mean = _nodeCountSum / _samples,
                 managed_start_bytes = _managedStart, managed_end_bytes = managedEnd, allocated_bytes = allocated,
                 nodes_added = _nodesAdded,
                 nodes_added_by_type = _nodesAddedByName.OrderByDescending(pair => pair.Value).Take(12).ToDictionary(pair => pair.Key, pair => pair.Value), nodes_added_per_second = _nodesAdded / (_frames.Take(_samples).Sum() / 1000),
                 native_start_bytes = _nativeStart, native_end_bytes = nativeEnd,
                 rss_start_bytes = _rssStart, rss_end_bytes = rssEnd, rss_process_peak_bytes = rssPeak,
-                fixture = "Main réelle ; profil dev temporaire sans souvenir équipé, Steam désactivé ; 100 shade + 20 fading_spitter HP x10000 ; traqueur invincible, arme initiale active ; spawn naturel, Effacement et crises figés ; cible orbitale commune, trajectoires réelles différentes avec dash ; code courant dans les deux cas."
+                fixture = "Main réelle ; profil dev temporaire sans souvenir équipé, Steam désactivé ; Ombres et Cracheurs à 5 pour 1 (120 par défaut, --enemies), HP x10000 ; traqueur invincible, arme initiale active ; spawn naturel, Effacement et crises figés ; cible orbitale commune, trajectoires réelles différentes avec dash ; code courant dans les deux cas."
             };
             Directory.CreateDirectory(Path.GetDirectoryName(_output)!);
             File.WriteAllText(_output + ".json", JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented = true }));

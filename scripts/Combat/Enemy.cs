@@ -12,6 +12,8 @@ public partial class Enemy : CharacterBody2D
 {
 	private const float MeleeRange = 38f;
 	private const float MeleeAttackCooldown = 0.75f;
+	// Un tir lointain reste muet : l'AudioManager n'est pas spatialisé, seul ce qui menace le joueur s'entend.
+	private const float RangedAttackAudioRadius = 650f;
 	private const float RangedAttackCooldown = 1.1f;
 	private const float DeathTweenDuration = 0.3f;
 	private const float DissolveDuration = 0.6f;
@@ -40,6 +42,7 @@ public partial class Enemy : CharacterBody2D
 	private float _xpReward;
 	private string _enemyType;
 	private string _enemyId;
+	private string _attackAudio;
 	private string _behavior = "default";
 	private bool _isDying;
 	private float _attackTimer;
@@ -181,6 +184,7 @@ public partial class Enemy : CharacterBody2D
 
 		_enemyId = data.Id;
 		_enemyType = data.Type;
+		_attackAudio = data.AttackAudio;
 		_projectileSprite = data.Visual.ProjectileSprite;
 		_projectileFamily = PixelPalette.ParseFamily(data.Visual.ProjectileFamily, FxFamily.Hostile);
 		_behavior = data.Behavior ?? "default";
@@ -963,6 +967,8 @@ public partial class Enemy : CharacterBody2D
 
 		Vector2 direction = (_player.GlobalPosition - GlobalPosition).Normalized();
 		PlayRangedAttackVfx(direction);
+		if (_attackAudio != null && GlobalPosition.DistanceSquaredTo(_player.GlobalPosition) < RangedAttackAudioRadius * RangedAttackAudioRadius)
+			Infrastructure.AudioManager.Play(_attackAudio, 0.08f, -9f);
 		// Tisseuse : les projectiles ralentissent le joueur
 		bool slows = _behavior == "weaver";
 		CombatPools.Instance?.TakeEnemyProjectile()
@@ -1649,6 +1655,8 @@ public partial class Enemy : CharacterBody2D
 	internal void MeleeHitPlayer(Player player, float damage)
 	{
 		HitPlayer(player, damage);
+		if (_attackAudio != null)
+			Infrastructure.AudioManager.Play(_attackAudio, 0.08f, -7f);
 		EnemyAttackFx.PlayMeleeHit(GlobalPosition, player.GlobalPosition);
 	}
 

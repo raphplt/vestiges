@@ -273,6 +273,19 @@ Les tiles restent en l'état (jugées acceptables) ; un ajustement de contraste 
 *Vérifications :*
 - Build sans avertissement, smoke test, `MovementRegression`.
 - Captures en vraie run (seed 1002) des champs, de la ville et du marais.
+
+**Retour du 26 septembre sur les champs :** « la zone ferme/campagne fait un peu vide. Il n'y a que des petits sprites éparpillés et qui ne racontent pas grand-chose. » Le dessin des objets n'est pas en cause : c'est la **composition**. Le placement générique pose des décors isolés au hasard, alors que la ville raconte ses îlots.
+
+**P4b proposé — composer la campagne :**
+
+| Lot | Contenu |
+|---|---|
+| P4b-1 Modèles | Corps de ferme (maison, grange, hangar ouvert), silo intact et silo crevé, meules alignées, abreuvoir, remorque, poteaux électriques et fils, portail, haies bocagères |
+| P4b-2 Fermes | `WildFieldsComposer`, sur le modèle d'`UrbanBuildingPlacer` : quelques fermes par région de champs. Cour, bâtiments en L autour, enclos clôturés, puits, tracteur garé, chemin de terre vers le réseau de chemins existant |
+| P4b-3 Paysage | Cultures en rangs (blé, champ labouré, friche) dessinées par parcelles, haies et murets aux limites de parcelles, alignements d'arbres le long des chemins, vergers en rangs, poteaux le long des routes |
+| P4b-4 Récits | Scènes courtes lisibles d'un coup d'œil : pique-nique abandonné, tracteur embourbé, épouvantail couronné de corbeaux, linge encore étendu. Rares, en lien avec le lore (plan 08 lot D) |
+
+Critère de réussite : sur une capture des champs, on reconnaît une ferme, des parcelles et des chemins, pas un semis d'objets. Un lot à la fois, avec captures `--capture-props --hide-collisions`.
 - `--measure-props` en 1080p, machine calme : champs 159 FPS (3 197 décors), forêt 160, ville 158, carrière 152, marais 146, p99 entre 8 et 10 ms. C'est la plage d'avant les lots P3–P4 : pas de régression.
 
 *Points ouverts pour Raphaël :*

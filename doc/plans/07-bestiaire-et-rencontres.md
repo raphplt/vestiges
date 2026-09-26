@@ -230,3 +230,25 @@ Comparer builds mêlée/distance/contrôle, début/late/endgame, effets normaux/
 
 Build, smoke si applicable, séquences annotées et validation de Raphaël. Roadmap A/C/F/G. Acceptation : rôles reconnaissables, attaques évitables avec leurs indices, compositions variées et performances conservées.
 
+## 7. Question du 26 septembre : toutes les créatures doivent-elles converger ?
+
+**Question de Raphaël :** « je me demande si tous les mobs doivent converger vers le joueur ou seulement ceux à une certaine distance ? »
+
+**Aujourd'hui** (`Enemy._PhysicsProcess`, `SpawnManager.CullFarDayEnemies`) :
+- Toute créature active converge vers le joueur.
+- Dans 600 px : IA complète.
+- Au-delà : déplacement simplifié en ligne droite, à travers les obstacles.
+- Au-delà de 1 400 px (environ deux écrans) : retirée.
+- Aucune notion de perception. Les gardiens de POI eux-mêmes chassent dès qu'ils sont actifs, et une créature distancée suit le joueur en file jusqu'à son retrait.
+
+**Proposition (non implémentée, à arbitrer) :**
+
+| Rôle | Comportement proposé |
+|---|---|
+| Chasseurs (flux d'apparition, Résurgences, événements) | Inchangé : ils viennent pour le joueur |
+| Habitants (gardiens de POI, créatures placées dans le monde) | Errance ou garde autour de leur point ; poursuite si le joueur entre dans leur perception (≈ 450 px), abandon au-delà d'un rayon de laisse (≈ 1,6 × la perception) |
+| Créature distancée | Perd la trace après quelques secondes hors perception : elle erre, puis disparaît au retrait habituel |
+
+Effets attendus : des rencontres qu'on voit venir et qu'on peut contourner, moins de files d'ennemis derrière le joueur. Le flux maintient la pression, et l'errance au loin coûte moins cher. Réglages en données par créature (`perception`, `leash`).
+
+Risque : une pression ressentie plus faible si trop de créatures errent ; à mesurer avec `tools/measure_density.sh` (ennemis visibles, temps sans ennemi) avant et après.

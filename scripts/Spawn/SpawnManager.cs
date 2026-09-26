@@ -35,6 +35,11 @@ public partial class SpawnManager : Node2D
 	private float _dayEnemyDespawnDistance;
 	private float _dayLocalEnemyRadius;
 	private float _dayLocalEnemyTargetBase;
+	// Ouverture de run : quelques secondes de répit puis montée progressive de la pression (spawn_flow.json).
+	private float _openingGraceSec;
+	private float _openingRampSec;
+	private float _openingLocalTargetStart;
+	private float _openingIntervalMultiplierStart = 1f;
 	private float _dayLocalEnemyTargetGrowthPerMinute;
 	private int _dayLocalSpawnBurstMax;
 	private int _dayInvasionLocalBonus;
@@ -148,6 +153,10 @@ public partial class SpawnManager : Node2D
 			_cullTimer = 0f;
 			CullFarDayEnemies();
 		}
+
+		// Répit d'ouverture : rien n'apparaît, et le minuteur n'accumule pas de rafale à rattraper.
+		if (_elapsedTime < _openingGraceSec)
+			return;
 
 		float elapsedMinutes = _elapsedTime / 60f;
 		_spawnTimer += dt;
@@ -341,7 +350,9 @@ public partial class SpawnManager : Node2D
 			GameManager.RunPhase.Endgame => _endgameSpawnMultiplier,
 			_ => 1f
 		};
-		int target = Mathf.RoundToInt((_dayLocalEnemyTargetBase + _dayLocalEnemyTargetGrowthPerMinute * elapsedMinutes) * _diffEnemyCountMult * zoneMemoryMult);
+		float fullTarget = _dayLocalEnemyTargetBase + _dayLocalEnemyTargetGrowthPerMinute * elapsedMinutes;
+		float openingTarget = Mathf.Lerp(Mathf.Min(_openingLocalTargetStart, fullTarget), fullTarget, OpeningProgress);
+		int target = Mathf.RoundToInt(openingTarget * _diffEnemyCountMult * zoneMemoryMult);
 		target = Mathf.RoundToInt(target * phaseMult);
 
 		int nearCount = CountActiveEnemiesNear(_player.GlobalPosition, _dayLocalEnemyRadius);
@@ -388,8 +399,14 @@ public partial class SpawnManager : Node2D
 			_ => 1f
 		};
 
-		return Mathf.Max(baseInterval * phaseFactor, _minSpawnInterval);
+		float openingFactor = Mathf.Lerp(_openingIntervalMultiplierStart, 1f, OpeningProgress);
+		return Mathf.Max(baseInterval * phaseFactor * openingFactor, _minSpawnInterval);
 	}
+
+	/// <summary>0 à la fin du répit, 1 une fois la montée d'ouverture terminée.</summary>
+	private float OpeningProgress => _openingRampSec <= 0f
+		? 1f
+		: Mathf.Clamp((_elapsedTime - _openingGraceSec) / _openingRampSec, 0f, 1f);
 
 	private bool IsInDayInvasionWindow()
 	{
@@ -685,6 +702,10 @@ public partial class SpawnManager : Node2D
 		_dayEnemyDespawnDistance = dict.ContainsKey("day_enemy_despawn_distance") ? (float)dict["day_enemy_despawn_distance"].AsDouble() : 1400f;
 		_dayLocalEnemyRadius = dict.ContainsKey("local_enemy_radius") ? (float)dict["local_enemy_radius"].AsDouble() : 900f;
 		_dayLocalEnemyTargetBase = dict.ContainsKey("local_enemy_target_base") ? (float)dict["local_enemy_target_base"].AsDouble() : 24f;
+		_openingGraceSec = dict.ContainsKey("opening_grace_seconds") ? (float)dict["opening_grace_seconds"].AsDouble() : 0f;
+		_openingRampSec = dict.ContainsKey("opening_ramp_seconds") ? (float)dict["opening_ramp_seconds"].AsDouble() : 0f;
+		_openingLocalTargetStart = dict.ContainsKey("opening_local_target_start") ? (float)dict["opening_local_target_start"].AsDouble() : _dayLocalEnemyTargetBase;
+		_openingIntervalMultiplierStart = dict.ContainsKey("opening_interval_multiplier_start") ? (float)dict["opening_interval_multiplier_start"].AsDouble() : 1f;
 		_dayLocalEnemyTargetGrowthPerMinute = dict.ContainsKey("local_enemy_target_growth_per_minute") ? (float)dict["local_enemy_target_growth_per_minute"].AsDouble() : 6f;
 		_dayLocalSpawnBurstMax = dict.ContainsKey("local_spawn_burst_max") ? (int)dict["local_spawn_burst_max"].AsDouble() : 4;
 		_sameTypeClusterChance = dict.ContainsKey("same_type_cluster_chance") ? (float)dict["same_type_cluster_chance"].AsDouble() : 0.4f;
