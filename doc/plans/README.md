@@ -50,6 +50,12 @@ Les numéros servent à identifier les plans, pas à imposer leur exécution int
 
 Un seul lot d'implémentation ouvert à la fois. Un échec de lisibilité, de performance ou de fun ramène au lot concerné avant expansion.
 
+**Mise à jour du 26 septembre (après-midi) :** Raphaël valide l'accueil et les effets d'attaque, trouve l'ouverture « un tout petit trop peu adoucie », valide l'ordre des chantiers et délègue les autres arbitrages ([DECISIONS §7](DECISIONS.md#7-arbitrages-délégués-du-26-septembre), provisoires).
+- Nouvelle machine, un Mac Apple Silicon. Steam y levait une exception à chaque frame ; les outils de test écrivaient dans le vrai profil. Les deux sont corrigés.
+- Ouverture adoucie d'un cran ([03 §7](03-boucle-et-rythme.md#7-ouverture-de-run--26-septembre-2026)).
+- Jonctions tramées entre biomes ([10 T2](10-terrain-et-tiles.md#lot-t2-livré--26-septembre-2026)) et sol qui oublie ([16 O1](16-oubli-sensible.md#6-arbitrages-et-lot-o1--26-septembre-2026)), par un même shader du sol.
+- Suite prévue : T1 (sol refait), O3 (frontière de l'oubli), 07 §7 (perception des créatures).
+
 **Mise à jour du 26 septembre (retours de jeu) :** début de run adouci (6 s de répit, montée sur une minute, [03 §7](03-boucle-et-rythme.md#7-ouverture-de-run--26-septembre-2026)) ; sons d'attaque ennemis branchés, provisoires ([15](15-audio.md)) ; décors découpés en tronçons, ≈ ×2 FPS en combat dense ([10 §10](10-terrain-et-tiles.md#10-investigation-performance--26-septembre-2026)). Propositions à arbitrer : composition des champs (08 P4b), tiles et jonctions (10 §9), [plan 16](16-oubli-sensible.md) sur l'oubli, perception des créatures (07 §7).
 
 **Point d'arrêt du 26 septembre (retours de jeu) :** livrés et vérifiés (build, smoke, régressions, bancs, captures) : ouverture de run, sons d'attaque provisoires, tronçons de décors. Non fait : relecture `godot-reviewer` du diff lancée mais pas intégrée ; recette en jeu de ces trois points ; lot suivant de l'investigation perf (physique interne du moteur, 10 §10) ; aucun des lots proposés (08 P4b, 10 §9, 16, 07 §7) n'est commencé, en attente d'arbitrage.

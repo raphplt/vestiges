@@ -44,3 +44,19 @@ Hors pourcentage dans le HUD, le joueur ne voit presque pas où en est le monde,
 1. L'ordre des lots, ou ceux à écarter.
 2. Les débuffs de la V2 (−10 %/−25 %) : à appliquer tels quels, adoucis, ou remplacés par un seul coût lisible (par exemple une régénération bloquée) ?
 3. Le Néant à 0 % : traversable avec dégâts (V2), ou mur infranchissable ?
+
+## 6. Arbitrages et lot O1 — 26 septembre 2026
+
+Ordre O1 → O3 → O4/O5 → O2/O6 validé par Raphaël. Arbitrages délégués ([DECISIONS §7](DECISIONS.md#7-arbitrages-délégués-du-26-septembre)) : débuffs de la V2 adoucis et en JSON au lot O4 ; Néant traversable avec dégâts continus.
+
+**O1 livré — le sol oublie :**
+- `ErasureManager` publie deux fois par seconde la mémoire des zones autour du joueur : une fenêtre de 32×32 zones de 128 px, publiée en *global shader uniforms* déclarés dans `project.godot` (`erasure_memory`, `erasure_window`, `erasure_far_memory`). Aucune référence du gestionnaire vers le sol.
+- Le shader du sol (le même que les jonctions du [plan 10 T2](10-terrain-et-tiles.md#lot-t2-livré--26-septembre-2026)) lit cette mémoire aux sommets de chaque tuile :
+  - Fragile : les couleurs se délavent vers un gris pâle et froid ;
+  - Effilochée : des plaques de pixels passent au blanc effacement par tramage, et les premières veines de fissure apparaissent ;
+  - Effacée : sol quasi blanc, réseau de fissures lumineuses qui respirent ;
+  - Néant : blanc qui grésille.
+- La teinte plate de `ErasureOverlay` (rectangles alignés sur les axes) est supprimée.
+- **Vérification :** `CAPTURE_EXTRA_ARGS="--capture-erasure" tools/capture_run.sh <dossier>` impose la mémoire autour du joueur et capture chaque phase, puis un dégradé d'ouest en est. Captures regardées. Un premier passage n'avait rien montré, sans cause identifiée ; les quatre suivants sont conformes. À surveiller.
+- **Coût :** la mémoire est lue aux sommets (4 lectures par sommet, pas par pixel). Les fissures, calculées par un réseau de Voronoï, ne sont évaluées que sous 50 % de mémoire. Aucun banc n'a été fait en zone effacée ; à mesurer lors de la recette.
+- **Limites :** les décors et les créatures gardent leurs couleurs dans les zones effacées (lot O2). La frontière de l'oubli n'est pas encore animée (O3).

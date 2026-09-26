@@ -94,6 +94,21 @@ locale/translations=PackedStringArray("res://assets/translations/translations.fr
 
 3d/physics_engine="Jolt Physics"
 
+[shader_globals]
+
+erasure_memory={
+"type": "sampler2D",
+"value": ""
+}
+erasure_window={
+"type": "vec4",
+"value": Vector4(0, 0, 0, 0)
+}
+erasure_far_memory={
+"type": "float",
+"value": 1.0
+}
+
 [rendering]
 
 textures/canvas_textures/default_texture_filter=0

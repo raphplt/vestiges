@@ -46,7 +46,8 @@ isolate_godot_profile() {
         export NUGET_PACKAGES="${NUGET_PACKAGES:-$HOME/.nuget/packages}"
         export DOTNET_CLI_HOME="${DOTNET_CLI_HOME:-$HOME}"
         export HOME="$dir/home"
-        mkdir -p "$HOME"
+        # Godot y crée son cache de shaders avant d'avoir créé le dossier user:// lui-même.
+        mkdir -p "$HOME/Library/Application Support/Godot/app_userdata/Vestiges"
     fi
 }
 
@@ -56,5 +57,15 @@ vestiges_user_dir() {
         echo "$HOME/Library/Application Support/Godot/app_userdata/Vestiges"
     else
         echo "${XDG_DATA_HOME:-$HOME/.local/share}/godot/app_userdata/Vestiges"
+    fi
+}
+
+# Écran des fenêtres de test : jamais l'écran intégré du Mac quand un écran externe est branché
+# (Godot numérote d'abord l'écran principal). VESTIGES_SCREEN=<n> impose un écran.
+godot_screen_args() {
+    if [[ -n "${VESTIGES_SCREEN:-}" ]]; then
+        echo "--screen $VESTIGES_SCREEN"
+    elif [[ $(uname) == Darwin ]] && (( $(system_profiler SPDisplaysDataType 2>/dev/null | grep -c "Online: Yes") > 1 )); then
+        echo "--screen 1"
     fi
 }

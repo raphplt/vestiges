@@ -236,6 +236,17 @@ Chaque décor qui a une hauteur reçoit une ombre de contact : ellipse iso 2:1 �
 
 Ordre recommandé : T2 d'abord, qui a l'effet le plus visible sur la carte en mosaïque, puis T1, en validant biome par biome comme pour les décors.
 
+### Lot T2 livré — 26 septembre 2026
+
+Ordre T2 → T1 → T3 validé par Raphaël.
+
+- **Shader du sol** `assets/shaders/ground.gdshader`, posé par `World/GroundMaterial` sur `Ground` après la pose du terrain. Une texture de 401×401 décrit chaque cellule (biome, tuile posée, drapeau « frontière à moins de deux cases ») ; un atlas rassemble les 73 tuiles utilisées. Près d'une frontière, une partie des pixels prend la matière du biome voisin, par amas de 2×2 pixels, avec une lisière qui ondule selon un bruit lent. Pas de fondu flou, et les marches de losanges ont disparu.
+- Le biome de gameplay reste celui de la cellule. L'eau et le bord dissous ne participent pas. Les routes (`RoadOverlay`) reçoivent le même shader sans mélange.
+- **Réglages** dans `ground_blend` de `data/world/world_gen.json` : `enabled`, `band_px` (34), `edge_noise` (0,35), `noise_scale` (0,045).
+- **Coût :** aucun par frame côté CPU ; construction au chargement. Seules les cellules marquées frontière cherchent le voisin (8 à 24 lectures), les autres sortent après une seule. Banc de combat dense à 720p sur le Mac chargé (charge ≈ 8) : 91 FPS sans mélange, 85 avec. L'écart est dans le bruit de la machine, et le temps GPU n'est pas mesurable en GL Compatibility sous macOS. À remesurer machine calme avec `tools/bench_ab.sh`.
+- **Vérification :** `CAPTURE_EXTRA_ARGS="--capture-junctions" tools/capture_run.sh <dossier>` capture, pour chacune des dix paires de biomes voisins, la frontière la plus proche du départ, avec les décors puis sol seul au zoom ×2. Pour l'avant, passer `enabled` à `false`. Captures regardées : les dix paires présentent une lisière organique à la place de l'escalier de losanges.
+- **Non fait :** les décors de transition (herbes entre forêt et champs, gravats entre ville et carrière) ; le sol lui-même (T1) reste granuleux, et la carrière montre toujours des losanges de cristal cyan réguliers.
+
 ## 10. Investigation performance — 26 septembre 2026
 
 **Demande de Raphaël :** « j'ai beaucoup aimé les initiatives pour améliorer les performances […] peut-être que ça vaut le coup de faire une investigation plus poussée ».

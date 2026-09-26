@@ -4,6 +4,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 source tools/lib/portable.sh
+SCREEN_ARGS=$(godot_screen_args)
 GODOT="${GODOT_BIN:-godot-mono}"
 OUTPUT=$(abs_path "${1:?répertoire de résultats requis}")
 shift
@@ -16,7 +17,7 @@ isolate_godot_profile "$TEST_DIR"
 dotnet build --nologo >/dev/null
 "$GODOT" --headless --editor --import --path . >"$OUTPUT/import.log" 2>&1
 for seed in "${SEEDS[@]}"; do
-    run_timeout 600 "$GODOT" --path . --windowed --resolution 1280x720 --rendering-method gl_compatibility --audio-driver Dummy \
+    run_timeout 600 "$GODOT" --path . --windowed $SCREEN_ARGS --resolution 1280x720 --rendering-method gl_compatibility --audio-driver Dummy \
         res://tools/tests/RunObservation.tscn -- --dev --density --seconds "${SECONDS_PER_RUN:-180}" --seed "$seed" --output "$OUTPUT" \
         >"$OUTPUT/run-$seed.log" 2>&1 || { tail -20 "$OUTPUT/run-$seed.log"; exit 1; }
     rg '\[RunObservation\] RESULT' "$OUTPUT/run-$seed.log"

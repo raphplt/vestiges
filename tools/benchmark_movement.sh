@@ -5,6 +5,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 source tools/lib/portable.sh
+SCREEN_ARGS=$(godot_screen_args)
 GODOT="${GODOT_BIN:-godot-mono}"
 OUTPUT=$(abs_path "${1:-/tmp/vestiges-dense-$(date +%Y%m%d-%H%M%S)}")
 mkdir -p "$OUTPUT"
@@ -27,14 +28,15 @@ for resolution in 1280x720 1920x1080; do
             if [[ "$mode" == dash ]]; then extra+=(--dash); fi
             prefix="$OUTPUT/${resolution}-${repeat}-${mode}"
             echo "Benchmark $resolution répétition $repeat : $mode"
-            run_timeout 180 "$GODOT" --path . --windowed --resolution "$resolution" --position 0,0 \
+            run_timeout 180 "$GODOT" --path . --windowed $SCREEN_ARGS --resolution "$resolution" \
                 --rendering-method gl_compatibility --disable-vsync --max-fps 0 --audio-driver Dummy \
                 res://tools/tests/MovementDenseBenchmark.tscn -- --dev \
                 --width "${resolution%x*}" --height "${resolution#*x}" --enemies "${BENCH_ENEMIES:-120}" ${BENCH_EXTRA_ARGS:-} \
                 --seconds "${BENCH_SECONDS:-20}" --warmup "${BENCH_WARMUP:-5}" \
                 --output "$prefix" ${extra[@]+"${extra[@]}"} >"$prefix.log" 2>&1 || { cat "$prefix.log"; exit 1; }
             rg -q '\[MovementDenseBenchmark\] RESULT valid=True' "$prefix.log"
-            errors=$(rg '^(ERROR|SCRIPT ERROR)|Unhandled exception|System\.[A-Za-z]+Exception' "$prefix.log" | rg -v 'steam_api|MixRate mismatch|ObjectDB instances were leaked|resources still in use at exit' || true)
+            # Profil isolé sous macOS : Godot n'y crée pas son cache de shaders (sans effet sur la mesure).
+            errors=$(rg '^(ERROR|SCRIPT ERROR)|Unhandled exception|System\.[A-Za-z]+Exception' "$prefix.log" | rg -v "steam_api|MixRate mismatch|ObjectDB instances were leaked|resources still in use at exit|Can't create shader cache folder" || true)
             if [[ -n "$errors" ]]; then echo "$errors"; exit 1; fi
         done
     done

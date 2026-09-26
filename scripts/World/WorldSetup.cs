@@ -157,6 +157,7 @@ public partial class WorldSetup : Node2D
 
         // Étaler ApplyTerrain sur plusieurs frames (le plus gros coût)
         await ApplyTerrainAsync(_terrain, _urbanLayout, onProgress);
+        GroundMaterial.Apply(_ground, _roadOverlay, _generator, _terrain, _config.MapRadius, _config.GroundBlend);
 
         onProgress?.Invoke("Brouillard de guerre...");
         InitializeFog();
@@ -206,6 +207,7 @@ public partial class WorldSetup : Node2D
     {
         CreateVoidBackground();
         ApplyTerrain(_terrain, _urbanLayout);
+        GroundMaterial.Apply(_ground, _roadOverlay, _generator, _terrain, _config.MapRadius, _config.GroundBlend);
         InitializeFog();
         if (!PoisDisabled)
         {
@@ -878,6 +880,7 @@ public class WorldGenConfig
     public List<string> AvailableBiomes = new();
     public WorldGenerator.BiomeLayoutConfig BiomeLayout = WorldGenerator.BiomeLayoutConfig.Default;
     public PropRules PropRules = PropRules.Default;
+    public GroundBlendConfig GroundBlend = GroundBlendConfig.Default;
 
     public static WorldGenConfig Load()
     {
@@ -940,6 +943,19 @@ public class WorldGenConfig
                 RegionSpacing = (float)layout.GetValueOrDefault("region_spacing", config.BiomeLayout.RegionSpacing).AsDouble(),
                 WarpStrength = (float)layout.GetValueOrDefault("warp_strength", config.BiomeLayout.WarpStrength).AsDouble(),
                 SpawnOffsetFactor = (float)layout.GetValueOrDefault("spawn_offset_factor", config.BiomeLayout.SpawnOffsetFactor).AsDouble(),
+            };
+        }
+
+        if (dict.ContainsKey("ground_blend"))
+        {
+            Godot.Collections.Dictionary blend = dict["ground_blend"].AsGodotDictionary();
+            GroundBlendConfig defaults = GroundBlendConfig.Default;
+            config.GroundBlend = new GroundBlendConfig
+            {
+                Enabled = blend.GetValueOrDefault("enabled", defaults.Enabled).AsBool(),
+                BandPx = (float)blend.GetValueOrDefault("band_px", defaults.BandPx).AsDouble(),
+                EdgeNoise = (float)blend.GetValueOrDefault("edge_noise", defaults.EdgeNoise).AsDouble(),
+                NoiseScale = (float)blend.GetValueOrDefault("noise_scale", defaults.NoiseScale).AsDouble(),
             };
         }
 

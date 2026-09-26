@@ -35,10 +35,16 @@ public partial class ErasureManager : Node
 
     private readonly Dictionary<Vector2I, float> _zoneMemory = new();
     private readonly Dictionary<Vector2I, ErasureZonePhase> _zonePhases = new();
+    private readonly List<Vector2I> _cellsToUpdate = new();
+
+    // Fenêtre de mémoire autour du joueur, lue par le shader du sol (assets/shaders/ground.gdshader).
+    private const int MemoryWindowCells = 32;
+    private readonly byte[] _memoryBytes = new byte[MemoryWindowCells * MemoryWindowCells];
+    private Image _memoryImage;
+    private ImageTexture _memoryTexture;
 
     private EventBus _eventBus;
     private Player _player;
-    private ErasureOverlay _overlay;
 
     public int CellSize => _cellSize;
     public float InitialMemory => _seededMemory;
@@ -53,17 +59,18 @@ public partial class ErasureManager : Node
         _eventBus.SouvenirDiscovered += OnSouvenirDiscovered;
         _eventBus.PoiDiscovered += OnPoiDiscovered;
 
-        _overlay = new ErasureOverlay(this, _cellSize)
-        {
-            Name = "ErasureOverlay",
-            // Au-dessus du sol (-10) et des routes (-9), sous les décalques au sol (-1) et les entités.
-            ZIndex = -5,
-        };
-        CallDeferred(Node.MethodName.AddChild, _overlay);
+        _memoryImage = Image.CreateFromData(MemoryWindowCells, MemoryWindowCells, false, Image.Format.R8, _memoryBytes);
+        _memoryTexture = ImageTexture.CreateFromImage(_memoryImage);
+        RenderingServer.GlobalShaderParameterSet("erasure_memory", _memoryTexture);
+        RenderingServer.GlobalShaderParameterSet("erasure_window", Vector4.Zero);
+        RenderingServer.GlobalShaderParameterSet("erasure_far_memory", 1f);
     }
 
     public override void _ExitTree()
     {
+        // Le Hub et les runs suivantes repartent d'un monde intact.
+        RenderingServer.GlobalShaderParameterSet("erasure_window", Vector4.Zero);
+        RenderingServer.GlobalShaderParameterSet("erasure_far_memory", 1f);
         if (_eventBus != null)
         {
             _eventBus.SouvenirDiscovered -= OnSouvenirDiscovered;
@@ -92,8 +99,9 @@ public partial class ErasureManager : Node
         float decayAmount = decayPerMinute * (_updateIntervalSec / 60f);
         float previousGlobal = _globalErasurePercent;
 
-        List<Vector2I> cells = new(_zoneMemory.Keys);
-        foreach (Vector2I cell in cells)
+        _cellsToUpdate.Clear();
+        _cellsToUpdate.AddRange(_zoneMemory.Keys);
+        foreach (Vector2I cell in _cellsToUpdate)
         {
             Vector2 worldPos = CellCenterToWorld(cell);
             float playerDistCells = worldPos.DistanceTo(_player.GlobalPosition) / Mathf.Max(_cellSize, 1);
@@ -117,7 +125,45 @@ public partial class ErasureManager : Node
         if (!Mathf.IsEqualApprox(previousGlobal, _globalErasurePercent))
             _eventBus?.EmitSignal(EventBus.SignalName.ErasureUpdated, _globalErasurePercent);
 
-        _overlay?.QueueRedraw();
+        PublishGroundMemory();
+    }
+
+    /// <summary>Recopie la mémoire des zones autour du joueur dans la texture lue par le shader du sol.</summary>
+    private void PublishGroundMemory()
+    {
+        if (_memoryImage == null || _player == null || !IsInstanceValid(_player))
+            return;
+
+        Vector2I origin = WorldToCell(_player.GlobalPosition) - new Vector2I(MemoryWindowCells / 2, MemoryWindowCells / 2);
+        for (int y = 0; y < MemoryWindowCells; y++)
+        {
+            for (int x = 0; x < MemoryWindowCells; x++)
+            {
+                float memory = GetMemoryAtCell(new Vector2I(origin.X + x, origin.Y + y));
+                _memoryBytes[y * MemoryWindowCells + x] = (byte)Mathf.RoundToInt(memory * 255f);
+            }
+        }
+        _memoryImage.SetData(MemoryWindowCells, MemoryWindowCells, false, Image.Format.R8, _memoryBytes);
+        _memoryTexture.Update(_memoryImage);
+
+        float windowSize = MemoryWindowCells * _cellSize;
+        RenderingServer.GlobalShaderParameterSet("erasure_window",
+            new Vector4(origin.X * _cellSize, origin.Y * _cellSize, windowSize, windowSize));
+        RenderingServer.GlobalShaderParameterSet("erasure_far_memory", GetMemoryAtCell(origin - Vector2I.One));
+    }
+
+    /// <summary>Impose la mémoire d'une zone (captures et tests de rendu de l'oubli).</summary>
+    internal void OverrideMemory(Vector2I cell, float memory)
+    {
+        _zoneMemory[cell] = Mathf.Clamp(memory, 0f, 1f);
+        UpdateZonePhase(cell, _zoneMemory[cell], true);
+    }
+
+    /// <summary>Republie la fenêtre de mémoire sans faire avancer l'Effacement (captures).</summary>
+    internal void RefreshGroundMemory()
+    {
+        CachePlayer();
+        PublishGroundMemory();
     }
 
     public float GetMemoryAt(Vector2 worldPos)
@@ -165,26 +211,10 @@ public partial class ErasureManager : Node
             }
         }
 
-        _overlay?.QueueRedraw();
+        PublishGroundMemory();
     }
 
-    public void GetCellsInRect(Rect2 worldRect, List<(Vector2I cell, float memory)> output)
-    {
-        output.Clear();
-        Vector2I min = WorldToCell(worldRect.Position);
-        Vector2I max = WorldToCell(worldRect.Position + worldRect.Size);
-
-        for (int x = min.X - 1; x <= max.X + 1; x++)
-        {
-            for (int y = min.Y - 1; y <= max.Y + 1; y++)
-            {
-                Vector2I cell = new(x, y);
-                output.Add((cell, GetMemoryAtCell(cell)));
-            }
-        }
-    }
-
-    public Vector2 CellToWorld(Vector2I cell)
+    private Vector2 CellToWorld(Vector2I cell)
     {
         return new Vector2(cell.X * _cellSize, cell.Y * _cellSize);
     }
