@@ -250,6 +250,12 @@ Propositions :
 - **Effet de jeu à surveiller en recette :** la Brute devient nettement plus menaçante (Carrière en exploration, toutes les crises). Réglages dans `data/enemies/void_brute.json`.
 - Vérifié : deux tests dans `test_enemy_abilities` (pas de charge hors de portée ; charge à 200 px/s à portée), `test_movement` vert.
 
+**Lot B, étape 4 (recul) — 27 septembre 2026 :** **le recul des armes n'avait aucun effet.** `ApplyKnockback` ajoutait une fois 10 à 60 px/s à la vitesse de la créature, que sa poursuite réécrivait au tick suivant : mesurée, une créature frappée pour un recul de 40 avançait encore de 7,8 px vers le joueur. Le Parcmètre (« repousse tout »), la Cloche, le Râteau ou le Chronomètre ne repoussaient rien.
+- Le recul devient une impulsion qui décroît en 0,2 s environ et s'ajoute au déplacement choisi par le comportement. La stat `knockback` d'une arme vaut désormais la distance de recul en pixels (Faucille 10, Parcmètre 40, Cloche 60…).
+- Garde-fous : les coups rapprochés se cumulent jusqu'à 80 px au plus ; une variante agrandie recule d'autant moins qu'elle est grande ; boss et miniboss ne reculent pas.
+- Vérifié : deux tests dans `test_enemy_abilities` (recul de 40 → 34 px, poursuite déduite ; six coups de 60 plafonnés à 74 px) ; `test_movement` et `test_weapons` verts.
+- **À recetter :** les armes lourdes deviennent défensives, ce qui peut adoucir un début de run déjà jugé facile. Valeurs par arme dans `weapons.json`, plafond et décroissance en tête d'`Enemy`.
+
 ### Lot C — Compositions et progression
 
 1. Reprendre SpawnManager et les pools de biome.

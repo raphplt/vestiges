@@ -90,6 +90,11 @@ public partial class Enemy : CharacterBody2D
 	// Pack bonus throttle (évite O(n²) chaque frame)
 	private float _packBonusTimer;
 	private const float PackBonusInterval = 0.5f;
+	// Décroissance du recul (par seconde) : l'essentiel du recul se joue en 0,2 s.
+	private const float KnockbackDecay = 12f;
+	// Plusieurs coups rapprochés se cumulent sans dépasser ce recul total (px) : la créature recule, elle ne s'envole pas.
+	private const float MaxKnockbackDistance = 80f;
+	private Vector2 _knockVelocity;
 
 	// V2: structures retirees — FindNearestStructure retourne toujours null
 
@@ -212,6 +217,7 @@ public partial class Enemy : CharacterBody2D
 		_slowFactor = 1f;
 		_slowTimer = 0f;
 		_disorientTimer = 0f;
+		_knockVelocity = Vector2.Zero;
 		_cryCooldown = data.GetStat("cry_cooldown", 8f);
 		_cryRange = data.GetStat("cry_range", 250f);
 		_cryReinforcements = (int)data.GetStat("cry_reinforcements", 2f);
@@ -468,6 +474,7 @@ public partial class Enemy : CharacterBody2D
 		CollisionLayer = 2;
 		CollisionMask = 4;
 		Velocity = Vector2.Zero;
+		_knockVelocity = Vector2.Zero;
 		Visible = false;
 		Scale = Vector2.One;
 		SetPhysicsProcess(false);
@@ -555,7 +562,7 @@ public partial class Enemy : CharacterBody2D
 		{
 			Velocity = _tracking.WanderDirection * _speed * _tracking.WanderSpeedFactor * _slowFactor;
 			UpdateSpriteAnimation(dt);
-			MoveAndSlide();
+			MoveWithKnockback(dt);
 			return;
 		}
 
@@ -565,7 +572,7 @@ public partial class Enemy : CharacterBody2D
 		if (_chargerIsCharging)
 		{
 			UpdateSpriteAnimation(dt);
-			MoveAndSlide();
+			MoveWithKnockback(dt);
 			return;
 		}
 
@@ -573,14 +580,14 @@ public partial class Enemy : CharacterBody2D
 		{
 			ProcessTravel(distToPlayer, dt);
 			UpdateSpriteAnimation(dt);
-			MoveAndSlide();
+			MoveWithKnockback(dt);
 			return;
 		}
 
 		if (ProcessAbilities(distToPlayer, dt))
 		{
 			UpdateSpriteAnimation(dt);
-			MoveAndSlide();
+			MoveWithKnockback(dt);
 			return;
 		}
 
@@ -602,6 +609,22 @@ public partial class Enemy : CharacterBody2D
 		}
 
 		UpdateSpriteAnimation(dt);
+		MoveWithKnockback(dt);
+	}
+
+	/// <summary>
+	/// Déplacement du tick, recul compris. Le recul s'ajoute à la vitesse choisie par le comportement au lieu d'être
+	/// écrasé par elle ; il décroît de façon exponentielle et parcourt au total la distance demandée.
+	/// </summary>
+	private void MoveWithKnockback(float delta)
+	{
+		if (_knockVelocity != Vector2.Zero)
+		{
+			Velocity += _knockVelocity;
+			_knockVelocity *= Mathf.Exp(-KnockbackDecay * delta);
+			if (_knockVelocity.LengthSquared() < 1f)
+				_knockVelocity = Vector2.Zero;
+		}
 		MoveAndSlide();
 	}
 
@@ -1028,12 +1051,17 @@ public partial class Enemy : CharacterBody2D
 		_visual.Color = new Color(1f, 1f, 0.4f);
 	}
 
-	/// <summary>Applique un knockback (vélocité instantanée) depuis une direction.</summary>
-	public void ApplyKnockback(Vector2 direction, float force)
+	/// <summary>
+	/// Recul d'arme : <paramref name="distance"/> est la distance parcourue en pixels (stat `knockback` des armes).
+	/// Les variantes agrandies (élites, Souverains) reculent d'autant moins qu'elles sont grandes ; boss et
+	/// miniboss n'en subissent pas.
+	/// </summary>
+	public void ApplyKnockback(Vector2 direction, float distance)
 	{
-		if (_isDying || _tier == "miniboss")
+		if (_isDying || _tier is "miniboss" or "boss" || direction == Vector2.Zero)
 			return;
-		Velocity += direction.Normalized() * force;
+		_knockVelocity += direction.Normalized() * (distance * KnockbackDecay / Mathf.Max(1f, Scale.X));
+		_knockVelocity = _knockVelocity.LimitLength(MaxKnockbackDistance * KnockbackDecay);
 	}
 
 	private void ProcessIgnite(float delta)

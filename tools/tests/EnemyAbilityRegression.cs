@@ -45,6 +45,7 @@ public partial class EnemyAbilityRegression : Node2D
             await RunHitFeedbackChecks();
             await RunPoolReuseChecks();
             await RunChargeChecks();
+            await RunKnockbackChecks();
 
             GD.Print($"[EnemyAbilityRegression] RESULT failures={_failures}");
             GetTree().Quit(_failures == 0 ? 0 : 1);
@@ -313,6 +314,25 @@ public partial class EnemyAbilityRegression : Node2D
         Check((bool)charging.GetValue(brute) && Mathf.IsEqualApprox(speed, data.GetStat("charge_speed", 0f), 1f),
             $"Charge : à portée, charge à la vitesse de la fiche ({speed:F0} px/s)");
         Despawn(brute);
+    }
+
+    /// <summary>Recul des armes (stat `knockback`) : la créature est vraiment repoussée, pas seulement son visuel.</summary>
+    private async Task RunKnockbackChecks()
+    {
+        Enemy target = await SpawnReady("rodeur", new Vector2(60f, 0f));
+        await Step(1);
+        Vector2 before = target.Position;
+        target.ApplyKnockback(Vector2.Right, 40f);
+        await Step(20);
+        float pushed = target.Position.X - before.X;
+        Check(pushed > 25f, $"Recul : knockback 40 repousse la créature ({pushed:F1} px)");
+        before = target.Position;
+        for (int hit = 0; hit < 6; hit++)
+            target.ApplyKnockback(Vector2.Right, 60f);
+        await Step(40);
+        pushed = target.Position.X - before.X;
+        Check(pushed > 40f && pushed <= 80f, $"Recul : six coups de 60 plafonnés ({pushed:F1} px, plafond 80)");
+        Despawn(target);
     }
 
     private static int VisibleFx(Node pools)
