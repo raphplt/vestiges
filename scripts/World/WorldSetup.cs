@@ -210,6 +210,7 @@ public partial class WorldSetup : Node2D
         }
         if (_wildFieldsLayout != null)
             _tileMapper.SetWildFieldsLayout(_wildFieldsLayout);
+        _tileMapper.BuildAtlas();
     }
 
     /// <summary>
@@ -410,7 +411,7 @@ public partial class WorldSetup : Node2D
                         int dissId = _tileMapper.GetDissolutionSourceId(decay);
                         if (dissId >= 0)
                         {
-                            _ground.SetCell(cell, dissId, Vector2I.Zero);
+                            _tileMapper.SetCell(_ground, cell, dissId);
                             continue;
                         }
                     }
@@ -426,7 +427,7 @@ public partial class WorldSetup : Node2D
                 int sourceId = _tileMapper.GetSourceId(biomeIndex, terrainType, x, y, urbanCellType, _generator);
                 if (sourceId < 0)
                     continue;
-                _ground.SetCell(cell, sourceId, Vector2I.Zero);
+                _tileMapper.SetCell(_ground, cell, sourceId);
             }
         }
 
@@ -469,7 +470,7 @@ public partial class WorldSetup : Node2D
                         int dissId = _tileMapper.GetDissolutionSourceId(decay);
                         if (dissId >= 0)
                         {
-                            _ground.SetCell(cell, dissId, Vector2I.Zero);
+                            _tileMapper.SetCell(_ground, cell, dissId);
                         }
                     }
                     count++;
@@ -484,7 +485,7 @@ public partial class WorldSetup : Node2D
 
                 int sourceId = _tileMapper.GetSourceId(biomeIndex, terrainType, x, y, urbanCellType, _generator);
                 if (sourceId >= 0)
-                    _ground.SetCell(cell, sourceId, Vector2I.Zero);
+                    _tileMapper.SetCell(_ground, cell, sourceId);
 
                 count++;
                 if ((count & 255) == 0 && LoadSliceSpent())
@@ -689,7 +690,7 @@ public partial class WorldSetup : Node2D
                 int x = gx - radius;
                 int y = gy - radius;
                 if (_tileMapper.TryGetUrbanRoadOverlaySourceId(urbanIndex, x, y, out int sourceId) && sourceId >= 0)
-                    _roadOverlay.SetCell(new Vector2I(x, y), sourceId, Vector2I.Zero);
+                    _tileMapper.SetCell(_roadOverlay, new Vector2I(x, y), sourceId);
             }
         }
     }
@@ -716,7 +717,7 @@ public partial class WorldSetup : Node2D
         foreach (Vector2I roadCell in urbanLayout.RoadCells)
         {
             if (_tileMapper.TryGetUrbanRoadOverlaySourceId(urbanIndex, roadCell.X, roadCell.Y, out int sourceId) && sourceId >= 0)
-                _roadOverlay.SetCell(roadCell, sourceId, Vector2I.Zero);
+                _tileMapper.SetCell(_roadOverlay, roadCell, sourceId);
 
             count++;
             if ((count & 255) == 0 && LoadSliceSpent())

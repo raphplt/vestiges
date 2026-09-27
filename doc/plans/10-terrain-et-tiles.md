@@ -458,3 +458,20 @@ L'[audit](../AUDIT-PERFORMANCES-2026-09-27.md) propose six lots (§13). Les deux
 - **Non fait :** les 20 allers-retours Hub → run → Hub proposés par l'audit (RSS, instances natives) ; le diagnostic isolé du pool suffit à établir la fuite et sa correction.
 
 **Banc reporté de T3, fait machine calme** (`bench_ab.sh 2e50f59^`, worktree à `2e50f59`, 2 passes) : 1 080p 155,9 → 154,9 FPS, 720p 162,0 → 176,9 FPS. Les chemins n'ont pas de coût mesurable. Les p99 (22,5 → 17,1 ms) sont trop bruités pour conclure, et la carte diffère entre les deux versions.
+
+### Lot 2 livré — atlas du sol et des routes, 27 septembre 2026
+
+Chaque variante de tuile était une source du `TileSet` avec sa propre texture : 493 textures entremêlées. Le rendu changeait de texture presque à chaque tuile, donc un appel de dessin par tuile ou presque.
+
+- `BiomeTileMapper` rassemble désormais toutes les tuiles, routes générées comprises, dans un seul atlas de 2 048 × 512 px, une seule source du `TileSet`. La logique de choix des tuiles (Wang, routes directionnelles, eau, rives, dissolution, graines) est intacte : elle manipule toujours des identifiants de tuile, que `SetCell` traduit en coordonnées d'atlas.
+- Les jonctions (`GroundMaterial`) lisent la matière voisine dans ce même atlas. Elles ne construisent plus le leur, et le shader du sol est inchangé.
+- **Image identique** : 20 captures de jonctions et 7 phases de l'oubli (même seed) comparées au pixel près. Les écarts avant/après sont du même ordre que ceux de deux runs identiques (HUD, particules) ; le sol ne diffère nulle part.
+- **Banc A/B contre `HEAD`** (2 passes, charge 2,6 à 3,4) :
+
+  | Résolution | FPS | p99 | Draw calls | Rendu CPU | GPU | Temps moyen par image |
+  |---|---|---|---|---|---|---|
+  | 720p | 183,7 → **281,1** | 9,8 → 7,1 ms | 1 332 → 279 | 2,35 → 0,96 ms | 1,43 → 0,38 ms | 5,44 → 3,56 ms |
+  | 1 080p | 155,9 → **254,9** | 11,1 → 7,9 ms | 1 894 → 331 | 3,11 → 1,19 ms | 2,07 → 0,68 ms | 6,42 → 3,93 ms |
+
+- Chargement : tuiles et matériau du sol 458 → 350 à 370 ms (deux runs).
+- **Vérifié :** build 0 warning, smoke test, `test_movement`, `test_dev_mode`.

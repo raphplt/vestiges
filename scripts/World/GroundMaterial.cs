@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using Godot;
 
 namespace Vestiges.World;
@@ -22,16 +21,13 @@ public struct GroundBlendConfig
 
 /// <summary>
 /// Matériau du sol de la run (assets/shaders/ground.gdshader) : jonctions entre biomes et oubli du sol.
-/// Pour les jonctions, décrit chaque cellule (biome, tuile posée) dans une petite texture et rassemble les tuiles
-/// utilisées dans un atlas ; le shader mélange les matières par tramage le long des frontières. Construit une fois,
+/// Pour les jonctions, décrit chaque cellule (biome, tuile posée) dans une petite texture ; le shader lit la matière
+/// voisine dans l'atlas des tuiles du sol et la mélange par tramage le long des frontières. Construit une fois,
 /// après la pose du terrain : aucun coût par frame côté CPU. L'oubli lit la mémoire publiée par ErasureManager.
 /// </summary>
 public static class GroundMaterial
 {
     private const string ShaderPath = "res://assets/shaders/ground.gdshader";
-    private const int AtlasColumns = 16;
-    private const int TileWidth = 64;
-    private const int TileHeight = 32;
     private const byte NoBlend = 255;
 
     public static void Apply(TileMapLayer ground, TileMapLayer roads, WorldGenerator generator, BiomeTileMapper tileMapper,
@@ -55,8 +51,6 @@ public static class GroundMaterial
         ulong started = Time.GetTicksMsec();
         int size = radius * 2 + 1;
         byte[] cells = new byte[size * size * 4];
-        Dictionary<int, int> atlasIndexBySource = new();
-        List<int> sources = new();
 
         for (int gy = 0; gy < size; gy++)
         {
@@ -70,9 +64,9 @@ public static class GroundMaterial
                 if (!generator.IsWithinBounds(x, y) || generator.IsErased(x, y))
                     continue;
 
-                int sourceId = ground.GetCellSourceId(new Vector2I(x, y));
+                int tileId = tileMapper.TileIdAt(ground, new Vector2I(x, y));
                 int biome = generator.GetBiomeIndex(x, y);
-                if (sourceId < 0 || biome < 0 || biome >= NoBlend / BiomeTileMapper.MaxMaterialsPerBiome)
+                if (tileId < 0 || biome < 0 || biome >= NoBlend / BiomeTileMapper.MaxMaterialsPerBiome)
                     continue;
                 // Identifiant de mélange : le biome, ou la matière de la tuile quand le biome fond ses matières entre elles.
                 // L'eau ne se fond que dans ces biomes-là (rives tramées), et toujours comme une matière à part.
@@ -84,22 +78,15 @@ public static class GroundMaterial
                 if (water)
                     blendId += BiomeTileMapper.MaxMaterialsPerBiome - 1;
                 else if (blendTerrains)
-                    blendId += tileMapper.GetMaterialOfSource(sourceId);
-
-                if (!atlasIndexBySource.TryGetValue(sourceId, out int atlasIndex))
-                {
-                    atlasIndex = sources.Count;
-                    atlasIndexBySource[sourceId] = atlasIndex;
-                    sources.Add(sourceId);
-                }
+                    blendId += tileMapper.GetMaterialOfSource(tileId);
                 cells[offset] = (byte)blendId;
-                cells[offset + 1] = (byte)(atlasIndex & 0xFF);
-                cells[offset + 2] = (byte)(atlasIndex >> 8);
+                cells[offset + 1] = (byte)(tileId & 0xFF);
+                cells[offset + 2] = (byte)(tileId >> 8);
             }
         }
 
         MarkBorderCells(cells, size);
-        Image atlas = BuildAtlas(ground.TileSet, sources);
+        Image atlas = tileMapper.AtlasImage;
         if (atlas == null)
             return;
 
@@ -107,11 +94,11 @@ public static class GroundMaterial
         material.SetShaderParameter("cell_map", ImageTexture.CreateFromImage(Image.CreateFromData(size, size, false, Image.Format.Rgba8, cells)));
         material.SetShaderParameter("tile_atlas", ImageTexture.CreateFromImage(atlas));
         material.SetShaderParameter("map_radius", radius);
-        material.SetShaderParameter("atlas_columns", AtlasColumns);
+        material.SetShaderParameter("atlas_columns", BiomeTileMapper.AtlasColumns);
         material.SetShaderParameter("band_px", config.BandPx);
         material.SetShaderParameter("edge_noise", config.EdgeNoise);
         material.SetShaderParameter("noise_scale", config.NoiseScale);
-        GD.Print($"[GroundMaterial] {sources.Count} tuiles dans l'atlas, {size}×{size} cellules, construit en {Time.GetTicksMsec() - started} ms");
+        GD.Print($"[GroundMaterial] {size}×{size} cellules décrites en {Time.GetTicksMsec() - started} ms");
     }
 
     /// <summary>
@@ -151,28 +138,5 @@ public static class GroundMaterial
                 cells[offset + 3] = border ? (byte)255 : (byte)0;
             }
         }
-    }
-
-    private static Image BuildAtlas(TileSet tileSet, List<int> sources)
-    {
-        if (sources.Count == 0)
-            return null;
-
-        int rows = (sources.Count + AtlasColumns - 1) / AtlasColumns;
-        Image atlas = Image.CreateEmpty(AtlasColumns * TileWidth, rows * TileHeight, false, Image.Format.Rgba8);
-        Rect2I tileRect = new(0, 0, TileWidth, TileHeight);
-        for (int i = 0; i < sources.Count; i++)
-        {
-            if (tileSet.GetSource(sources[i]) is not TileSetAtlasSource source || source.Texture == null)
-                continue;
-            Image image = source.Texture.GetImage();
-            if (image == null)
-                continue;
-            if (image.IsCompressed())
-                image.Decompress();
-            image.Convert(Image.Format.Rgba8);
-            atlas.BlitRect(image, tileRect, new Vector2I(i % AtlasColumns * TileWidth, i / AtlasColumns * TileHeight));
-        }
-        return atlas;
     }
 }

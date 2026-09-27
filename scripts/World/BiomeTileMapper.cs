@@ -5,9 +5,11 @@ using Vestiges.Infrastructure;
 namespace Vestiges.World;
 
 /// <summary>
-/// Charge les textures de tiles par biome et les enregistre dynamiquement
-/// dans le TileSet. Fournit un sourceId par (biomeIndex, terrainType, cellule)
-/// avec sélection déterministe de variante basée sur la position.
+/// Charge les textures de tiles par biome et fournit un identifiant de tuile par (biomeIndex, terrainType, cellule),
+/// avec sélection déterministe de variante basée sur la position. Toutes les tuiles sont rassemblées dans un seul
+/// atlas, une seule source du TileSet : le sol se dessine alors par lots au lieu d'un appel par changement de texture
+/// (audit de performances du 27 septembre, §2). Les identifiants de tuile restent ceux de la logique de choix ;
+/// <see cref="SetCell"/> les traduit en coordonnées d'atlas.
 /// </summary>
 public class BiomeTileMapper
 {
@@ -42,6 +44,16 @@ public class BiomeTileMapper
 	};
 
 	private TileSet _tileSet;
+	private readonly List<Texture2D> _tileTextures = new();
+	private int _atlasSourceId = -1;
+
+	/// <summary>Colonnes de l'atlas des tuiles (64 px chacune) : 2 048 px de large.</summary>
+	public const int AtlasColumns = 32;
+	private const int TileWidth = 64;
+	private const int TileHeight = 32;
+
+	/// <summary>Atlas de toutes les tuiles, dans l'ordre de leurs identifiants ; nul avant <see cref="BuildAtlas"/>.</summary>
+	public Image AtlasImage { get; private set; }
 
 	/// <summary>
 	/// Enregistre un groupe de textures runtime (générées en mémoire) comme source spéciale
@@ -54,14 +66,7 @@ public class BiomeTileMapper
 
 		List<int> ids = new();
 		foreach (ImageTexture tex in textures)
-		{
-			TileSetAtlasSource source = new();
-			source.Texture = tex;
-			source.TextureRegionSize = new Vector2I(64, 32);
-			source.CreateTile(Vector2I.Zero);
-			int sourceId = _tileSet.AddSource(source);
-			ids.Add(sourceId);
-		}
+			ids.Add(AddTile(tex));
 
 		if (!_biomeSpecialSourceMap.ContainsKey(biomeIndex))
 			_biomeSpecialSourceMap[biomeIndex] = new Dictionary<string, int[]>();
@@ -114,10 +119,13 @@ public class BiomeTileMapper
 		_wangTerrains.Clear();
 		_wangSpecialGroups.Clear();
 		_materialOfSource.Clear();
+		_tileTextures.Clear();
+		_atlasSourceId = -1;
+		AtlasImage = null;
 		_tileSet = tileSet;
 
 		// Charger les tiles d'eau communes
-		_commonWaterSources = LoadTileGroup(tileSet, new List<string>
+		_commonWaterSources = LoadTileGroup(new List<string>
 		{
 			"commun/tile_eau_profonde_base",
 			"commun/tile_eau_profonde_v2"
@@ -127,7 +135,7 @@ public class BiomeTileMapper
 			_fallbackSourceMap[TerrainType.Water] = _commonWaterSources;
 
 		// Charger les tiles de dissolution
-		_dissolutionSources = LoadTileGroup(tileSet, new List<string>
+		_dissolutionSources = LoadTileGroup(new List<string>
 		{
 			"commun/tile_dissolution_n1",
 			"commun/tile_dissolution_n2",
@@ -147,7 +155,7 @@ public class BiomeTileMapper
 
 			foreach (KeyValuePair<string, List<string>> kv in biome.TileSources)
 			{
-				int[] sources = LoadTileGroup(tileSet, kv.Value);
+				int[] sources = LoadTileGroup(kv.Value);
 				if (sources.Length == 0)
 					continue;
 				bool wangGroup = biome.WangTileGroups.Contains(kv.Key) && sources.Length % WangTiles.TileCount == 0;
@@ -289,7 +297,63 @@ public class BiomeTileMapper
 	/// <summary>Matière d'une source dans son biome (0 si inconnue, ex. tuiles de route générées).</summary>
 	public int GetMaterialOfSource(int sourceId) => _materialOfSource.TryGetValue(sourceId, out int material) ? material : 0;
 
-	private static int[] LoadTileGroup(TileSet tileSet, List<string> relativePaths)
+	/// <summary>
+	/// Rassemble toutes les tuiles enregistrées dans un atlas, ajouté au TileSet comme source unique. À appeler une fois,
+	/// après les tuiles générées (routes) et avant la pose du terrain.
+	/// </summary>
+	public void BuildAtlas()
+	{
+		int rows = Mathf.Max(1, (_tileTextures.Count + AtlasColumns - 1) / AtlasColumns);
+		Image atlas = Image.CreateEmpty(AtlasColumns * TileWidth, rows * TileHeight, false, Image.Format.Rgba8);
+		Rect2I tileRect = new(0, 0, TileWidth, TileHeight);
+		for (int id = 0; id < _tileTextures.Count; id++)
+		{
+			Image image = _tileTextures[id].GetImage();
+			if (image == null)
+				continue;
+			if (image.IsCompressed())
+				image.Decompress();
+			if (image.GetFormat() != Image.Format.Rgba8)
+				image.Convert(Image.Format.Rgba8);
+			atlas.BlitRect(image, tileRect, AtlasCoords(id) * new Vector2I(TileWidth, TileHeight));
+		}
+
+		TileSetAtlasSource source = new()
+		{
+			Texture = ImageTexture.CreateFromImage(atlas),
+			TextureRegionSize = new Vector2I(TileWidth, TileHeight),
+		};
+		for (int id = 0; id < _tileTextures.Count; id++)
+			source.CreateTile(AtlasCoords(id));
+		_atlasSourceId = _tileSet.AddSource(source);
+		AtlasImage = atlas;
+		GD.Print($"[BiomeTileMapper] Atlas du sol : {_tileTextures.Count} tuiles, {atlas.GetWidth()}×{atlas.GetHeight()} px");
+	}
+
+	/// <summary>Pose la tuile <paramref name="tileId"/> dans une couche qui partage le TileSet du sol.</summary>
+	public void SetCell(TileMapLayer layer, Vector2I cell, int tileId)
+	{
+		layer.SetCell(cell, _atlasSourceId, AtlasCoords(tileId));
+	}
+
+	/// <summary>Identifiant de la tuile posée dans une cellule, ou -1.</summary>
+	public int TileIdAt(TileMapLayer layer, Vector2I cell)
+	{
+		if (layer.GetCellSourceId(cell) != _atlasSourceId)
+			return -1;
+		Vector2I coords = layer.GetCellAtlasCoords(cell);
+		return coords.Y * AtlasColumns + coords.X;
+	}
+
+	private static Vector2I AtlasCoords(int tileId) => new(tileId % AtlasColumns, tileId / AtlasColumns);
+
+	private int AddTile(Texture2D texture)
+	{
+		_tileTextures.Add(texture);
+		return _tileTextures.Count - 1;
+	}
+
+	private int[] LoadTileGroup(List<string> relativePaths)
 	{
 		List<int> ids = new();
 
@@ -302,14 +366,7 @@ public class BiomeTileMapper
 				GD.PushWarning($"[BiomeTileMapper] Texture introuvable : {fullPath}");
 				continue;
 			}
-
-			TileSetAtlasSource source = new();
-			source.Texture = texture;
-			source.TextureRegionSize = new Vector2I(64, 32);
-			source.CreateTile(Vector2I.Zero);
-
-			int sourceId = tileSet.AddSource(source);
-			ids.Add(sourceId);
+			ids.Add(AddTile(texture));
 		}
 
 		return ids.ToArray();
