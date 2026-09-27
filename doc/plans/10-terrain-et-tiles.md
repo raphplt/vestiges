@@ -83,6 +83,16 @@ La transition visuelle ne doit pas rendre ambigu le biome de gameplay : définir
 **Vérification :** parcours sur panel de seeds avec validation automatique de connectivité, puis essais manuels sur segments étroits.
 **Garde-fou :** pas d'élargissement uniforme qui supprime toute variété ni de récompense garantie dans un endroit inaccessible.
 
+**Lot D, étape 2 — connectivité vérifiée, 27 septembre 2026 (session locale) :**
+- Nouveau contrôle `--check-connectivity` de la scène d'observation. Commande : `MEASURE_EXTRA_ARGS="--check-connectivity" tools/measure_run.sh <dossier> 5 "<seeds>"`.
+  - Il pose une grille de 12 px sur toute la carte, une fois les décors posés.
+  - Une case est bloquée hors des limites, sur le bord effacé, ou si un corps de la couche des obstacles (décors bloquants, Mémoriaux) passe à moins d'un rayon de joueur (12 px). L'eau reste praticable, comme en jeu.
+  - Parcours en largeur depuis le joueur, sans passer en diagonale entre deux obstacles qui se touchent. Un lieu (coffre, Mémorial, Faille) compte comme atteint si une case atteinte est à sa portée d'interaction.
+  - Sortie : une ligne `RESULT connectivity` et `connectivity.png` (gris bloqué, vert atteint, rouge lieu inaccessible).
+- **Résultat sur 13 seeds** (221092026, 1002, 7, 42, 20260926, 1 à 6) : 31 lieux par carte, **aucun inaccessible**. 0,3 s de calcul par carte.
+- L'étape 3 (déplacer un lieu inaccessible) n'a donc rien à corriger aujourd'hui. Le contrôle reste disponible après chaque changement de placement.
+- **Observé en passant :** une exécution headless sur treize s'est terminée par un plantage du moteur à la fermeture (`mutex lock failed`), après avoir écrit son résultat. Il ne s'est pas reproduit sur huit relances de la même seed. Cause non établie. Seul changement récent qui touche aux threads : la génération du monde sur un thread (`ad2e8d6`). À surveiller.
+
 ### Lot E — Réactivité du décor
 
 1. Définir matériau sous le joueur et réutiliser audio/VFX de 02 pour pas, éclaboussures et poussière.

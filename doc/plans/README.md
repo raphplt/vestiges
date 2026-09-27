@@ -60,6 +60,7 @@ Un seul lot d'implémentation ouvert à la fois. Un échec de lisibilité, de pe
 - [03 lot C](03-boucle-et-rythme.md) : présage des Résurgences, les bords de l'écran se ternissent pendant l'avertissement et les créatures s'agitent.
 - [02 lot D](02-juiciness-score.md) : le bilan montre les dégâts de chaque arme, la principale en or.
 - [17 lot 3B](17-armes-coffres-modificateurs.md) : au Mémorial ravivé, relancer les bénédictions contre de l'Essence.
+- [10 lot D](10-terrain-et-tiles.md) : contrôle automatique de connectivité ; sur 13 seeds, les 31 coffres, Mémoriaux et Failles de chaque carte sont accessibles à pied depuis le départ.
 
 **Mise à jour du 27 septembre, suite (session locale, sans Raphaël) :**
 - Bancs de A-VERIFIER toujours pas faits : charge entre 4 et 7,7 toute la session (seuil fixé à 2).
