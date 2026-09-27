@@ -50,7 +50,7 @@ Les numéros servent à identifier les plans, pas à imposer leur exécution int
 
 Un seul lot d'implémentation ouvert à la fois. Un échec de lisibilité, de performance ou de fun ramène au lot concerné avant expansion.
 
-**Mise à jour du 26 septembre (nuit, session cloud sans Raphaël) :**
+**Mise à jour des 26 et 27 septembre (nuit, session cloud sans Raphaël) :**
 - [10 T3](10-terrain-et-tiles.md#lot-t3-livré--chemins-et-routes-26-septembre-2026) : chemins de terre entre les régions, raccordés aux rues, avec un style par biome. Les rues verticales ne sont plus coupées en deux bandes, et les trottoirs ont des bordures usées.
 - [16 O6](16-oubli-sensible.md) : échos de l'oubli. Dans les zones Fragiles, la silhouette pâle d'un habitant apparaît parfois, puis se dissout à l'approche en laissant un murmure.
 - [08 P4b-1/2](08-direction-artistique.md) : une ferme par région des champs, reliée au réseau de chemins par un embranchement (maison, grange, silo, hangar, enclos, haies).
@@ -74,6 +74,7 @@ Un seul lot d'implémentation ouvert à la fois. Un échec de lisibilité, de pe
 - [07 lot A](07-bestiaire-et-rencontres.md) : audit des données du bestiaire (`tools/audit_bestiary.py`). Les trois Colosses sont inatteignables en jeu, la Tisseuse ne sort qu'en crise dans les Marécages ; propositions à arbitrer.
 - [07 lot C](07-bestiaire-et-rencontres.md) : les Colosses reviennent en jeu, un par crise à partir de la deuxième (choix provisoire, consigné dans DECISIONS §7).
 - [03 lot C](03-boucle-et-rythme.md) : pendant une Résurgence l'oubli s'accélère ; à l'accalmie, Essence doublée 30 s et coffre rare posé à portée devant le joueur (V2 §8).
+- **À arbitrer en priorité** : le Colosse à chaque crise (choix provisoire, désactivable en JSON) ; la Tisseuse hors des Marécages ; le barème des points d'intérêt (valeurs de `pois.json` inutilisées) ; la recette du bilan de fin de run et de la Collection (premières passes sans maquette validée).
 - Travail fait dans un conteneur sans GPU : les points à revérifier sur la machine de Raphaël sont listés dans [A-VERIFIER.md](A-VERIFIER.md).
 
 **Mise à jour du 26 septembre (soir) :**
