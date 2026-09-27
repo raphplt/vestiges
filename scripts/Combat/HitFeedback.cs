@@ -17,11 +17,9 @@ public sealed class HitFeedback
     private const float ShoveSec = 0.3f;
     private static readonly Vector2 SquashScale = new(1.25f, 0.75f);
     private static readonly Color FlashModulate = new(3f, 3f, 3f, 1f);
-    private static readonly StringName FlashParam = "flash_amount";
 
     private Node2D _target;
     private AnimatedSprite2D _sprite;
-    private ShaderMaterial _material;
     private Polygon2D _polygon;
     private Color _polygonColor;
     private Vector2 _recoil;
@@ -45,7 +43,6 @@ public sealed class HitFeedback
     {
         bool hasSprite = sprite != null && material != null;
         _sprite = hasSprite ? sprite : null;
-        _material = hasSprite ? material : null;
         _polygon = hasSprite ? null : polygon;
         _polygonColor = polygonColor;
         _target = hasSprite ? sprite : polygon;
@@ -65,7 +62,6 @@ public sealed class HitFeedback
         if (IsActive)
             return;
         _sprite = null;
-        _material = null;
         _polygon = null;
         _target = sprite != null && sprite.Visible ? sprite : polygon;
         _recoil = direction * distance;
@@ -98,7 +94,6 @@ public sealed class HitFeedback
         _target.Position = Vector2.Zero;
         if (_sprite != null)
         {
-            _material.SetShaderParameter(FlashParam, 0f);
             _sprite.SelfModulate = Colors.White;
         }
         else if (_polygon != null)
@@ -116,7 +111,6 @@ public sealed class HitFeedback
         float flash = _flash ? 1f - Mathf.Clamp((_elapsed - FlashDelay) / FlashSec, 0f, 1f) : 0f;
         if (_sprite != null)
         {
-            _material.SetShaderParameter(FlashParam, flash);
             _sprite.SelfModulate = Colors.White.Lerp(FlashModulate, flash);
         }
         else if (_polygon != null)

@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd /home/raphael/dev/perso/vestiges
+source tools/lib/portable.sh
+profile=$(mktemp -d /tmp/vestiges-audit-layers.XXXXXX)
+trap 'rm -rf "$profile"' EXIT
+isolate_godot_profile "$profile"
+output=/tmp/vestiges-audit-20260927/layers
+mkdir -p "$output"
+run_timeout 30 godot-mono --headless --audio-driver Dummy --path . --script /tmp/vestiges-audit-20260927/pool_lifecycle.gd -- --dev > "$output/pool-lifecycle.log" 2>&1
+rg 'PoolLifecycle' "$output/pool-lifecycle.log"
+for scenario in reference-1 ground-hidden-1 ground-hidden-2 reference-2 no-blend; do
+  extras=()
+  case "$scenario" in ground-hidden-*) extras+=(--audit-hide-ground);; no-blend) extras+=(--audit-no-blend);; esac
+  uptime >> "$output/machine.log"
+  run_timeout 180 godot-mono --path . --windowed --resolution 1920x1080 --rendering-method gl_compatibility --disable-vsync --max-fps 0 --audio-driver Dummy --script /tmp/vestiges-audit-20260927/layer_probe.gd -- --dev --width 1920 --height 1080 --enemies 120 --seconds 15 --warmup 5 --output "$output/$scenario" "${extras[@]}" > "$output/$scenario.log" 2>&1
+  rg 'RESULT' "$output/$scenario.log"
+done

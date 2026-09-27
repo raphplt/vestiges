@@ -4,7 +4,6 @@ Fichier temporaire. Il liste ce qu'une session cloud a livré sans pouvoir le v�
 
 ## Plan 10 T3 — chemins et routes
 
-- [ ] **Coût GPU des chemins.** Environ 80 rubans maillés avec un shader par pixel (bruit, tramage, oubli). Lancer `tools/bench_ab.sh <commit d'avant T3> <dossier>` machine calme ; le banc se déroule dans les champs et la carrière, donc sur des chemins.
 - [ ] **Temps de génération** : 257 ms de calcul CPU au chargement dans le conteneur (`[PathNetwork]` dans le log). Vérifier sur le Mac que l'écran de chargement ne s'allonge pas de façon sensible.
 - [ ] **Recette visuelle en jeu** : largeur des chemins (champs 46 px au sol, forêt et marais 26 px, carrière 36 px), contraste des ornières, fréquence des chemins (un arbre couvrant plus 30 % de boucles). Les captures sont dézoomées ou au zoom ×2 ; le rendu à la taille réelle de l'écran de Raphaël peut différer.
 - [ ] **Rues verticales** : une seule chaussée désormais (une tile par parité de rang). Vérifier les carrefours en T et en croix, et la position des voitures garées sur les rues verticales (recentrées de ±16 px).
@@ -123,7 +122,7 @@ Captures en vraie run regardées : bilan, level-up (cartes et effet), coffre, pa
 
 ## Session locale du 27 septembre — à juger en jeu par Raphaël
 
-- [ ] **Mesures de coût, machine calme** (charge restée entre 3 et 16 toute la session) : `tools/bench_ab.sh 2e50f59^ <dossier>` lancé depuis un worktree au commit `2e50f59` pour les chemins T3 ; `--measure-props` pour les décors du marais (1 062 → 1 754 sur la seed de capture) et de la carrière (1 145 → 1 232).
+- [ ] **Mesures de coût, machine calme** (charge restée entre 3 et 16 toute la session) : chemins T3 faits le 27 au soir, sans coût mesurable ([10 §11](10-terrain-et-tiles.md)) ; reste `--measure-props` pour les décors du marais (1 062 → 1 754 sur la seed de capture) et de la carrière (1 145 → 1 232).
 - [ ] **Brute du Vide** : sa charge avance enfin (200 px/s pendant 0,8 s, à moins de 200 px), désormais annoncée 0,6 s par un couloir violet et suivie de 0,9 s de récupération (07 lot B étape 1). Trop punitive, ou trop facile à éviter ? Réglages dans le bloc `abilities.charge` de `data/enemies/void_brute.json`.
 - [ ] **Rampant et Hurleur** (07 lot B étape 1) : surgissement annoncé par un cercle rouille (0,6 s), plus de dégâts enfoui ; cri du Hurleur annoncé 0,8 s, interrompu si on le tue. Lisible en pleine mêlée ?
 - [ ] **Recul des armes** : Parcmètre, Cloche, Râteau, Chronomètre repoussent vraiment (valeur `knockback` = pixels). Plaisant, ou le début de run devient-il trop facile ?

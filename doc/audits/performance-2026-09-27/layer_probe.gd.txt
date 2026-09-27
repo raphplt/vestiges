@@ -1,0 +1,22 @@
+extends SceneTree
+
+func _initialize():
+    call_deferred("probe")
+
+func probe():
+    var benchmark = load("res://tools/tests/MovementDenseBenchmark.tscn").instantiate()
+    root.add_child(benchmark)
+    var world: Node = null
+    while world == null:
+        await process_frame
+        world = root.get_node_or_null("Main")
+    while not world.get("IsWorldReady"):
+        await process_frame
+    var args = OS.get_cmdline_user_args()
+    if "--audit-hide-ground" in args:
+        world.get_node("Ground").visible = false
+        var roads = world.get_node_or_null("RoadOverlay")
+        if roads:
+            roads.visible = false
+    if "--audit-no-blend" in args:
+        world.get_node("Ground").material.set_shader_parameter("blend_enabled", false)

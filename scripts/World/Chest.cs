@@ -154,6 +154,9 @@ public partial class Chest : StaticBody2D, IInteractable
     public void Initialize(ChestData data)
     {
         _chestData = data;
+        // Un coffre posé après un Oubli des repères (butin d'événement, d'élite) naît avec sa colonne déjà raccourcie.
+        float signalsForgotten = Progression.PerilManager.Current?.EffectTotal("chest_signals") ?? 0f;
+        _signalFactor = Mathf.Max(0f, 1f - signalsForgotten);
 
         _column = new LightColumn { Name = "LightColumn" };
         AddChild(_column);

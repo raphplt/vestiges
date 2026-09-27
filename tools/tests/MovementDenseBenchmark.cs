@@ -113,12 +113,11 @@ public partial class MovementDenseBenchmark : Node
                 crowdZoom.ProcessMode = ProcessModeEnum.Disabled;
             _world.GetNode("ErasureManager").ProcessMode = ProcessModeEnum.Disabled;
             _world.GetNode("CrisisManager").ProcessMode = ProcessModeEnum.Disabled;
-            // Main signale prêt avant la fin des 200 lots de brouillard différés.
-            // Attendre leur fin exclut ce chargement du coût du combat mesuré.
+            // Main signale prêt avant la fin des 200 lots de brouillard différés (versions antérieures au retrait
+            // de la couche de brouillard). Attendre leur fin exclut ce chargement du coût du combat mesuré.
             FogOfWar fog = _world.GetNode<FogOfWar>("FogOfWar");
-            FieldInfo fogInitializing = typeof(FogOfWar).GetField("_initPhase", BindingFlags.Instance | BindingFlags.NonPublic)
-                ?? throw new InvalidOperationException("Contrat de préparation FogOfWar introuvable.");
-            while ((bool)fogInitializing.GetValue(fog)!)
+            FieldInfo fogInitializing = typeof(FogOfWar).GetField("_initPhase", BindingFlags.Instance | BindingFlags.NonPublic);
+            while (fogInitializing != null && (bool)fogInitializing.GetValue(fog)!)
             {
                 if (Time.GetTicksMsec() > timeout)
                     throw new InvalidOperationException("Préparation FogOfWar supérieure à 120 s.");

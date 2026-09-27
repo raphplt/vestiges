@@ -5,16 +5,14 @@ using Vestiges.Core;
 namespace Vestiges.World;
 
 /// <summary>
-/// Fog of War : cache le monde non exploré.
-/// Le joueur révèle les cellules en se déplaçant.
-/// Lore : la réalité n'existe que là où quelqu'un s'en souvient.
+/// Cellules découvertes par le joueur : la découverte alimente les sons et les succès (ZoneDiscovered).
+/// Aucun rendu : la couche de brouillard d'origine était transparente depuis mars (masque jamais fourni au shader),
+/// elle dessinait 160 000 tuiles pour rien. Le voile de la Stratégie V2 reste à concevoir s'il est voulu.
 /// </summary>
 public partial class FogOfWar : Node2D
 {
-    private TileMapLayer _fogLayer;
     private TileMapLayer _ground;
-    private WorldGenerator _generator;
-    private HashSet<Vector2I> _revealedCells = new();
+    private readonly HashSet<Vector2I> _revealedCells = new();
     private Node2D _player;
     private EventBus _eventBus;
 
@@ -22,17 +20,7 @@ public partial class FogOfWar : Node2D
 
     private int _fogRevealRadius;
     private int _baseRevealRadius;
-    private int _fogInitialClearRadius;
-    private int _mapRadius;
     private int _revealRevision;
-
-    // Deferred initialization
-    private bool _initPhase;
-    private int _initX;
-    private int _initY;
-    private const int InitBatchSize = 800;
-
-    private static readonly Color FogColor = new(0.04f, 0.02f, 0.08f, 0.85f);
 
     public int RevealRevision => _revealRevision;
 
@@ -44,20 +32,16 @@ public partial class FogOfWar : Node2D
         return _revealedCells.Contains(cell);
     }
 
-    public void Initialize(TileMapLayer ground, WorldGenerator generator, int fogRevealRadius, int fogInitialClearRadius)
+    public void Initialize(TileMapLayer ground, int fogRevealRadius, int fogInitialClearRadius)
     {
         _ground = ground;
-        _generator = generator;
         _fogRevealRadius = fogRevealRadius;
         _baseRevealRadius = fogRevealRadius;
-        _fogInitialClearRadius = fogInitialClearRadius;
-        _mapRadius = generator.MapRadius;
         _eventBus = GetNodeOrNull<EventBus>("/root/EventBus");
         if (_eventBus != null)
             _eventBus.OubliEffectChanged += OnOubliEffectChanged;
 
-        CreateFogLayer();
-        StartDeferredInit();
+        RevealInitialArea(fogInitialClearRadius);
     }
 
     public override void _ExitTree()
@@ -78,12 +62,6 @@ public partial class FogOfWar : Node2D
         if (_ground == null)
             return;
 
-        if (_initPhase)
-        {
-            ProcessDeferredInit();
-            return;
-        }
-
         if (_player == null || !IsInstanceValid(_player))
         {
             _player = GetTree().GetFirstNodeInGroup("player") as Node2D;
@@ -100,103 +78,16 @@ public partial class FogOfWar : Node2D
         RevealAroundPlayer(playerCell, prevCell);
     }
 
-    private void CreateFogLayer()
+    private void RevealInitialArea(int clearRadius)
     {
-        _fogLayer = new TileMapLayer();
-        _fogLayer.Name = "FogLayer";
-
-        TileSet groundTileSet = _ground.TileSet;
-        TileSet fogTileSet = new();
-        fogTileSet.TileSize = groundTileSet.TileSize;
-        fogTileSet.TileShape = groundTileSet.TileShape;
-        fogTileSet.TileLayout = groundTileSet.TileLayout;
-        fogTileSet.TileOffsetAxis = groundTileSet.TileOffsetAxis;
-
-        Vector2I tileSize = fogTileSet.TileSize;
-        Image fogImage = Image.CreateEmpty(tileSize.X, tileSize.Y, false, Image.Format.Rgba8);
-        fogImage.Fill(FogColor);
-        ImageTexture fogTexture = ImageTexture.CreateFromImage(fogImage);
-
-        TileSetAtlasSource source = new();
-        source.Texture = fogTexture;
-        source.TextureRegionSize = tileSize;
-        fogTileSet.AddSource(source);
-        source.CreateTile(Vector2I.Zero);
-
-        _fogLayer.TileSet = fogTileSet;
-        _fogLayer.ZIndex = 10;
-
-        // Load and assign the Fog of War shader
-        if (ResourceLoader.Exists("res://assets/shaders/fog_of_war.gdshader"))
+        int clearSq = clearRadius * clearRadius;
+        for (int x = -clearRadius; x <= clearRadius; x++)
         {
-            var shader = GD.Load<Shader>("res://assets/shaders/fog_of_war.gdshader");
-            var material = new ShaderMaterial { Shader = shader };
-            // Generate a dummy mask texture just to assign the parameter (the real logic is handled elsewhere, or could be passed via ViewportTexture)
-            // But we will give it a try with a dummy one first to prevent errors
-            _fogLayer.Material = material;
-        }
-
-        _ground.GetParent().AddChild(_fogLayer);
-    }
-
-    // --- Deferred initialization (spread across frames to avoid lag) ---
-
-    private void StartDeferredInit()
-    {
-        // Pre-populate initial clear area
-        int clearR = _fogInitialClearRadius;
-        int clearSq = clearR * clearR;
-        for (int x = -clearR; x <= clearR; x++)
-        {
-            for (int y = -clearR; y <= clearR; y++)
+            for (int y = -clearRadius; y <= clearRadius; y++)
             {
                 if (x * x + y * y <= clearSq)
                     _revealedCells.Add(new Vector2I(x, y));
             }
-        }
-
-        _initX = -_mapRadius;
-        _initY = -_mapRadius;
-        _initPhase = true;
-    }
-
-    private void ProcessDeferredInit()
-    {
-        int processed = 0;
-
-        while (_initX <= _mapRadius && processed < InitBatchSize)
-        {
-            while (_initY <= _mapRadius && processed < InitBatchSize)
-            {
-                int x = _initX;
-                int y = _initY;
-                _initY++;
-                processed++;
-
-                if (!_generator.IsWithinBounds(x, y))
-                    continue;
-                if (_generator.IsErased(x, y))
-                    continue;
-
-                Vector2I cell = new(x, y);
-
-                if (_revealedCells.Contains(cell))
-                    continue;
-
-                _fogLayer.SetCell(cell, 0, Vector2I.Zero);
-            }
-
-            if (_initY > _mapRadius)
-            {
-                _initX++;
-                _initY = -_mapRadius;
-            }
-        }
-
-        if (_initX > _mapRadius)
-        {
-            _initPhase = false;
-            GD.Print($"[FogOfWar] Initialization complete — {_revealedCells.Count} cells clear");
         }
     }
 
@@ -262,10 +153,7 @@ public partial class FogOfWar : Node2D
 
     private void MaterializeCell(Vector2I cell)
     {
-        if (!_revealedCells.Add(cell))
-            return;
-
-        _fogLayer.EraseCell(cell);
-        _revealRevision++;
+        if (_revealedCells.Add(cell))
+            _revealRevision++;
     }
 }

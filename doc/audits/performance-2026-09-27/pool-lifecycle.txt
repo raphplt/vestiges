@@ -1,0 +1,3 @@
+[PoolLifecycle] cycle=1 detached_enemies_alive=20 orphan_nodes=80.0
+[PoolLifecycle] cycle=2 detached_enemies_alive=40 orphan_nodes=160.0
+[PoolLifecycle] cycle=3 detached_enemies_alive=60 orphan_nodes=240.0

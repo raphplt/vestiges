@@ -22,6 +22,10 @@ public partial class GameBootstrap : Node
 {
     private const string FallbackCharacterId = "traqueur";
 
+    private EventBus _eventBus;
+    private Player _levelUpPlayer;
+    private GroupCache _groupCache;
+
     public override void _Ready()
     {
         CharacterDataLoader.Load();
@@ -55,6 +59,21 @@ public partial class GameBootstrap : Node
 
         _ = SetupNormalGameAsync(player, perkManager, scoreManager, runTracker,
             progression, fragmentManager, overlay);
+    }
+
+    public override void _ExitTree()
+    {
+        // L'EventBus survit à la run : sans désabonnement, chaque run laisserait un rappel de plus.
+        if (_eventBus != null)
+            _eventBus.LevelUp -= OnLevelUp;
+    }
+
+    private void OnLevelUp(int newLevel)
+    {
+        if (!IsInstanceValid(_levelUpPlayer))
+            return;
+        Combat.LevelUpFx.Play(_levelUpPlayer, _groupCache);
+        Combat.ScreenShake.Instance?.ShakeMedium();
     }
 
     private async Task SetupNormalGameAsync(Player player, PerkManager perkManager,
@@ -163,17 +182,10 @@ public partial class GameBootstrap : Node
         GetNode("..").CallDeferred("add_child", new PoiGlints { Name = "PoiGlints" });
         GetNode("..").CallDeferred("add_child", new Events.CrisisAftermath { Name = "CrisisAftermath" });
 
-        EventBus eventBus = GetNode<EventBus>("/root/EventBus");
-        Player levelUpPlayer = player;
-        GroupCache groupCache = GetNode<GroupCache>("/root/GroupCache");
-        eventBus.LevelUp += (int _level) =>
-        {
-            if (IsInstanceValid(levelUpPlayer))
-            {
-                Combat.LevelUpFx.Play(levelUpPlayer, groupCache);
-                Combat.ScreenShake.Instance?.ShakeMedium();
-            }
-        };
+        _eventBus = GetNode<EventBus>("/root/EventBus");
+        _levelUpPlayer = player;
+        _groupCache = GetNode<GroupCache>("/root/GroupCache");
+        _eventBus.LevelUp += OnLevelUp;
 
         GetNode("..").CallDeferred("add_child", new ErasureVeil { Name = "ErasureVeil" });
         GetNode("..").CallDeferred("add_child", new CrisisOmen { Name = "CrisisOmen" });
@@ -213,7 +225,6 @@ public partial class GameBootstrap : Node
         string[] shaderPaths = new[]
         {
             "res://assets/shaders/entity.gdshader",
-            "res://assets/shaders/fog_of_war.gdshader",
             "res://assets/shaders/sway.gdshader",
             "res://assets/shaders/swamp_atmosphere.gdshader",
             "res://assets/shaders/hit_flash.gdshader",

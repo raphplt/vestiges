@@ -52,6 +52,11 @@ Les numéros servent à identifier les plans, pas à imposer leur exécution int
 
 Un seul lot d'implémentation ouvert à la fois. Un échec de lisibilité, de performance ou de fun ramène au lot concerné avant expansion.
 
+**Mise à jour du 27 septembre, nuit (session locale, sans Raphaël) :** machine enfin calme, [audit de performances](../AUDIT-PERFORMANCES-2026-09-27.md) repris en lots ([10 §11](10-terrain-et-tiles.md)).
+- Lot 1 : le pool d'ennemis ne laisse plus d'ennemis orphelins en fin de run (20 par run avant), abonnement de la montée de niveau désabonné. Le brouillard, invisible depuis mars, est retiré ; **à arbitrer** : l'Oubli du regard n'avait donc aucun effet visible.
+- [17 3D](17-armes-coffres-modificateurs.md) : un coffre posé après un Oubli des repères naît avec sa colonne raccourcie.
+- Banc des chemins T3 fait : pas de coût mesurable.
+
 **Mise à jour du 27 septembre, soir (session locale) :** deux bugs signalés par Raphaël.
 - [Son des coffres](15-audio.md) : la mélodie de révélation ne part plus pendant le défilement et s'éteint avec l'écran.
 - [Chargement](10-terrain-et-tiles.md) : plus de frame de carte vide au départ, et chargement ramené de 6,0 à 3,5 s (génération sur un thread, décors construits hors de l'arbre).

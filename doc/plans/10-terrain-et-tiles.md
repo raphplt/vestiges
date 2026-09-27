@@ -440,3 +440,21 @@ Les tuiles coûtaient cher par l'attente, pas par le calcul. La boucle rendait l
 - **Vérifié :** `test_movement` (intégration dans une vraie `Main`) et smoke test verts. Captures `--capture-props` de la ville et de la forêt regardées : décors, collisions et transparence derrière les immeubles et les canopées intacts.
 - **Constat en passant :** la séparation des « décalques au sol » (décors plats hors du tri en Y, `SeparateGroundDecals`) ne trouve plus aucun décor : 0 sur 10 694, déjà avant ces changements. Depuis la refonte des décors à l'échelle du personnage, aucun ne passe sous la hauteur de `ground_decal_max_height`. À revoir si le tri en Y redevient coûteux.
 - **Reste :** l'entrée des décors dans la scène (0,3 s d'un bloc) pourrait s'étaler sur plusieurs frames, et le calcul des chemins (0,4 s) explore 186 000 cellules.
+
+## 11. Audit de performances du 27 septembre — lots
+
+L'[audit](../AUDIT-PERFORMANCES-2026-09-27.md) propose six lots (§13). Les deux premiers répondent à des constats directs.
+
+### Lot 1 livré — durée de vie des pools et abonnements, 27 septembre 2026
+
+- **Réserve du pool d'ennemis** : `EnemyPool` libère à sa sortie de l'arbre les ennemis rendus, détachés de la scène, que la destruction de la run n'atteignait pas. Diagnostic de l'audit rejoué (trois pools créés puis détruits) : 20, 40 puis 60 ennemis survivants avant, **0** après, 0 nœud orphelin.
+- **Abonnement de la montée de niveau** : `GameBootstrap` s'abonnait à `EventBus.LevelUp` par une lambda qui capturait des variables locales, jamais désabonnée : un rappel de plus par run. Il passe par une méthode désabonnée en sortie de run.
+- **Brouillard** : son shader le rendait transparent depuis mars (le masque n'était jamais fourni). La couche de 160 000 tuiles ne dessinait donc rien. Elle est retirée avec son shader et ses 200 frames d'initialisation. Le suivi des cellules découvertes (`ZoneDiscovered`, sons et succès) reste, et il marche désormais dès la première frame : pendant l'initialisation, rien n'était découvert.
+  - Banc A/B contre `HEAD` (2 passes, charge 2,7 à 3,8) : draw calls inchangés (1 895 à 1 080p), FPS dans le bruit (149 → 154). Aucun gain de rendu : la couche ne dessinait déjà rien.
+  - **À arbitrer** : l'Oubli du regard (« le brouillard se lève 25 % moins loin ») n'avait donc aucun effet visible. Soit on dessine enfin le voile de la Stratégie V2 (§13, « voile blanc-bleuté animé »), soit on remplace cet Oubli.
+- **Flash de coup** : `HitFeedback` n'écrit plus `flash_amount`, que le shader d'entité ne lit plus ; le flash visible passe par `SelfModulate`.
+- **Correctif du plan 17 (3D, « Limite »)** : un coffre posé après un Oubli des repères (butin d'événement, d'élite) naît avec sa colonne raccourcie. Vérifié par `--capture-oublis` (`late_chest_signal=0.50`).
+- **Vérifié :** build 0 warning, smoke test, `test_movement`, `test_enemy_abilities`, `test_weapons` verts ; capture en vraie run regardée ; relecture `godot-reviewer` sans bug.
+- **Non fait :** les 20 allers-retours Hub → run → Hub proposés par l'audit (RSS, instances natives) ; le diagnostic isolé du pool suffit à établir la fuite et sa correction.
+
+**Banc reporté de T3, fait machine calme** (`bench_ab.sh 2e50f59^`, worktree à `2e50f59`, 2 passes) : 1 080p 155,9 → 154,9 FPS, 720p 162,0 → 176,9 FPS. Les chemins n'ont pas de coût mesurable. Les p99 (22,5 → 17,1 ms) sont trop bruités pour conclure, et la carte diffère entre les deux versions.

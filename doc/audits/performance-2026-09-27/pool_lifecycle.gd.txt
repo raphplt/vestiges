@@ -1,0 +1,32 @@
+extends SceneTree
+
+func _initialize():
+    call_deferred("probe")
+
+func probe():
+    var held_ids: Array[int] = []
+    for cycle in range(3):
+        var pool = load("res://scripts/Spawn/EnemyPool.cs").new()
+        pool.name = "ProbePool"
+        root.add_child(pool)
+        pool.call("PrewarmSync")
+        for i in range(20):
+            var enemy = pool.call("Get")
+            held_ids.append(enemy.get_instance_id())
+        # Chaque créature est rendue à la réserve avant la destruction du propriétaire.
+        for i in range(cycle * 20, (cycle + 1) * 20):
+            pool.call("Return", instance_from_id(held_ids[i]))
+        pool.queue_free()
+        await process_frame
+        await process_frame
+        var survivors = 0
+        for id in held_ids:
+            if is_instance_id_valid(id):
+                survivors += 1
+        print("[PoolLifecycle] cycle=", cycle + 1, " detached_enemies_alive=", survivors,
+              " orphan_nodes=", Performance.get_monitor(Performance.OBJECT_ORPHAN_NODE_COUNT))
+    # Nettoyage explicite du diagnostic.
+    for id in held_ids:
+        if is_instance_id_valid(id):
+            instance_from_id(id).free()
+    quit()

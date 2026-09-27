@@ -51,6 +51,14 @@ public partial class RunObservation
 
         GD.Print(string.Create(CultureInfo.InvariantCulture,
             $"[RunObservation] RESULT oublis count={peril.Oublis.Count} extra_elites={extraElites} affix_bonus={affix:F2} detection_scale={Mathf.Sqrt(detection):F2} decay_mult={decay:F2} crisis_s={crisisBefore:F0}->{crisis.TimeUntilNextCrisis:F0} fog_radius={fogBefore}->{fogAfter} columns={columnsBefore}->{CountVisibleColumns()} pointers_visible={pointersVisible} chests={chestsBefore}->{ChestRarities()} dormant_memorials={dormantBefore}->{CountMemorials(Memorial.MemorialState.Dormant)}"));
+
+        // Coffre posé après les Oublis (butin d'événement) : sa colonne doit naître raccourcie.
+        Chest lateChest = GD.Load<PackedScene>("res://scenes/world/Chest.tscn").Instantiate<Chest>();
+        _world.AddChild(lateChest);
+        lateChest.Initialize(ChestDataLoader.Get("chest_common"));
+        float lateSignal = (float)typeof(Chest).GetField("_signalFactor", PrivateField).GetValue(lateChest);
+        lateChest.QueueFree();
+        GD.Print(string.Create(CultureInfo.InvariantCulture, $"[RunObservation] RESULT oublis late_chest_signal={lateSignal:F2}"));
     }
 
     private static string ChestRarities()

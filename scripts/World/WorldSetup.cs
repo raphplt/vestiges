@@ -521,7 +521,6 @@ public partial class WorldSetup : Node2D
 
         _fogOfWar.Initialize(
             _ground,
-            _generator,
             _config.FogRevealRadius,
             _config.FogInitialClearRadius
         );

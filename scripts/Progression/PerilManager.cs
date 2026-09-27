@@ -16,8 +16,22 @@ public partial class PerilManager : Node
     private EventBus _eventBus;
     private readonly List<ActiveOubli> _oublis = new();
 
+    /// <summary>Péril de la run en cours : un objet apparu après un Oubli lit l'effet déjà en vigueur.</summary>
+    public static PerilManager Current { get; private set; }
+
     public int Peril { get; private set; }
     public IReadOnlyList<ActiveOubli> Oublis => _oublis;
+
+    public override void _EnterTree()
+    {
+        Current = this;
+    }
+
+    public override void _ExitTree()
+    {
+        if (Current == this)
+            Current = null;
+    }
 
     public override void _Ready()
     {

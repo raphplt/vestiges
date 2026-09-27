@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd /home/raphael/dev/perso/vestiges
+source tools/lib/portable.sh
+profile=$(mktemp -d /tmp/vestiges-audit-profile.XXXXXX)
+trap 'rm -rf "$profile"' EXIT
+isolate_godot_profile "$profile"
+output=/tmp/vestiges-audit-20260927/attribution
+mkdir -p "$output"
+for scenario in reference-1 hidden-1 hidden-2 reference-2 sixty twoforty; do
+  extras=()
+  enemies=120
+  case "$scenario" in hidden-*) extras+=(--hide-props);; sixty) enemies=60;; twoforty) enemies=240;; esac
+  uptime >> "$output/machine.log"
+  run_timeout 180 godot-mono --path . --windowed --resolution 1920x1080 --rendering-method gl_compatibility --disable-vsync --max-fps 0 --audio-driver Dummy res://tools/tests/MovementDenseBenchmark.tscn -- --dev --width 1920 --height 1080 --enemies "$enemies" --seconds 15 --warmup 5 --output "$output/$scenario" "${extras[@]}" > "$output/$scenario.log" 2>&1
+  rg 'RESULT' "$output/$scenario.log"
+done
+run_timeout 180 godot-mono --path . --windowed --resolution 1920x1080 --rendering-method gl_compatibility --disable-vsync --max-fps 0 --audio-driver Dummy res://tools/tests/RunObservation.tscn -- --dev --seed 221092026 --output "$output/biomes" --measure-props --measure-seconds 8 > "$output/biomes.log" 2>&1
+rg 'RESULT' "$output/biomes.log"

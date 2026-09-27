@@ -556,7 +556,7 @@ Vérifié : build sans avertissement, smoke test, `tools/test_weapons.sh` (effet
 | Flèches de coffres / coffres communs, rares, épiques | visibles → masquées / 12, 6, 2 → 18, 2, 0 |
 | Mémoriaux endormis | 5 → 4 |
 
-Limite : un coffre de récompense apparu après un Oubli des repères garde sa colonne entière.
+Limite corrigée le 27 septembre au soir : un coffre de récompense apparu après un Oubli des repères naît avec sa colonne raccourcie ([10 §11](10-terrain-et-tiles.md)).
 
 #### Vague 3 détaillée — 26 septembre (soir)
 
