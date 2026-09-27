@@ -15,7 +15,7 @@ public class MetaSaveData
     public int Vestiges { get; set; }
 
     [JsonPropertyName("unlocked_characters")]
-    public List<string> UnlockedCharacters { get; set; } = new() { "traqueur" };
+    public List<string> UnlockedCharacters { get; set; } = new();
 
     [JsonPropertyName("stats")]
     public MetaStats Stats { get; set; } = new();
@@ -54,7 +54,7 @@ public static class MetaSaveManager
     private const int CurrentVersion = 2;
     private static string SavePath => DevelopmentMode.GetSavePath("meta_save.json");
     private static string LegacyArchivePath => DevelopmentMode.GetSavePath("meta_save_legacy_v1.json");
-    private const float VagabondUnlockDurationSec = 12f * 60f;
+    private const float SurviveUnlockDurationSec = 12f * 60f;
 
     private static MetaSaveData _data = new();
     private static bool _loaded;
@@ -202,7 +202,7 @@ public static class MetaSaveManager
             bool shouldUnlock = character.UnlockCondition switch
             {
                 "default" => true,
-                "survive_12_minutes" => _data.Stats.BestRunDurationSec >= VagabondUnlockDurationSec,
+                "survive_12_minutes" => _data.Stats.BestRunDurationSec >= SurviveUnlockDurationSec,
                 "kill_200_in_run" => _data.Stats.MaxKillsInRun >= 200,
                 _ => false
             };
@@ -336,8 +336,12 @@ public static class MetaSaveManager
             .Distinct()
             .ToList();
 
-        if (!_data.UnlockedCharacters.Contains("traqueur"))
-            _data.UnlockedCharacters.Insert(0, "traqueur");
+        // Un profil neuf reçoit les personnages initiaux (unlock_condition « default » : le Vagabond, décision du
+        // 23 septembre). Un profil existant garde ses personnages, Traqueur compris.
+        if (_data.UnlockedCharacters.Count == 0)
+            _data.UnlockedCharacters.AddRange(CharacterDataLoader.GetAll()
+                .Where(character => character.UnlockCondition == "default")
+                .Select(character => character.Id));
 
         // Les nouveaux contenus JSON deviennent disponibles sans remplir de fausses quêtes.
         if (DevelopmentMode.IsEnabled)

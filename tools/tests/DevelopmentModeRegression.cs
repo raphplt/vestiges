@@ -27,10 +27,10 @@ public partial class DevelopmentModeRegression : Node
             if (Array.IndexOf(OS.GetCmdlineUserArgs(), "--verify-toggle-enabled") >= 0)
             {
                 Check(DevelopmentMode.IsEnabled, "préférence dev retrouvée au lancement sans argument --dev");
-                Check(MetaSaveManager.IsCharacterUnlocked("vagabond"), "profil débloqué retrouvé après relancement");
+                Check(MetaSaveManager.IsCharacterUnlocked("traqueur"), "profil débloqué retrouvé après relancement");
                 await LoadHub();
                 await ToggleHub(false);
-                Check(!MetaSaveManager.IsCharacterUnlocked("vagabond"), "retour normal depuis préférence mémorisée");
+                Check(!MetaSaveManager.IsCharacterUnlocked("traqueur"), "retour normal depuis préférence mémorisée");
                 GD.Print("[DevelopmentModeRegression] PASS");
                 GetTree().Quit();
                 return;
@@ -64,7 +64,7 @@ public partial class DevelopmentModeRegression : Node
             else
             {
                 Check(MetaSaveManager.IsCharacterUnlocked("forgeuse"), "acquis normal conservé");
-                Check(!MetaSaveManager.IsCharacterUnlocked("vagabond"), "verrou normal conservé");
+                Check(!MetaSaveManager.IsCharacterUnlocked("traqueur"), "verrou normal conservé");
                 Check(MetaSaveManager.GetDiscoveredSouvenirs().Count == 1, "lore normal conservé");
                 Check(MetaSaveManager.HasCompletedQuest("profile_fixture"), "quête normale conservée");
                 Check(MetaSaveManager.GetVestiges() == (seed ? 37 : 47), "monnaie normale conservée");
@@ -129,17 +129,17 @@ public partial class DevelopmentModeRegression : Node
         for (int iteration = 0; iteration < 2; iteration++)
         {
             await ToggleHub(true);
-            Check(MetaSaveManager.IsCharacterUnlocked("vagabond"), "accès dev actualisés sans relancer Godot");
+            Check(MetaSaveManager.IsCharacterUnlocked("traqueur"), "accès dev actualisés sans relancer Godot");
             Check(RunHistoryManager.GetBestScore() == 200, "historique dev rechargé");
             Check(!SteamManager.IsActive, "Steam désactivé par la bascule");
             MetaSaveManager.AddVestiges(1);
             AnalyticsManager.Instance.RecordRunEnd(new RunRecord { CharacterId = "traqueur", Score = 300 });
-            GetNode<GameManager>("/root/GameManager").SelectedCharacterId = "vagabond";
+            GetNode<GameManager>("/root/GameManager").SelectedCharacterId = "traqueur";
             await ToggleHub(false);
-            Check(!MetaSaveManager.IsCharacterUnlocked("vagabond") && MetaSaveManager.GetVestiges() == 47, "acquis et monnaie normaux conservés");
+            Check(!MetaSaveManager.IsCharacterUnlocked("traqueur") && MetaSaveManager.GetVestiges() == 47, "acquis et monnaie normaux conservés");
             Check(RunHistoryManager.GetBestScore() == 100, "historique normal rechargé");
             Check(AnalyticsManager.Instance.GetReport().TotalRuns == 1, "analytics normales sans runs dev");
-            Check(GetNode<GameManager>("/root/GameManager").SelectedCharacterId != "vagabond", "sélection dev invalidée au retour normal");
+            Check(GetNode<GameManager>("/root/GameManager").SelectedCharacterId != "traqueur", "sélection dev invalidée au retour normal");
             ScoreManager score = new();
             GetTree().CurrentScene.AddChild(score);
             Check(score.BestScore == 100, "record normal chargé après la bascule");

@@ -20,7 +20,7 @@ namespace Vestiges.World;
 /// </summary>
 public partial class GameBootstrap : Node
 {
-    private const string FallbackCharacterId = "traqueur";
+    private const string FallbackCharacterId = "vagabond";
 
     private EventBus _eventBus;
     private Player _levelUpPlayer;

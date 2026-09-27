@@ -132,3 +132,12 @@ Tester seuil avant/au/après, simultanéité, cause des kills, pause, mort, repr
 L'idée directrice : un défi ouvre un nouveau jeu possible. Le catalogue et les conditions ci-dessus sont propres à Vestiges.
 
 Build, smoke si applicable ; roadmap E et D/G après implémentation vérifiée. Le lore reste mémorable par son contenu et sa mise en scène, pas par son obligation d'accès au combat.
+
+## 8. Personnage initial : le Vagabond — 27 septembre 2026
+
+Décision du 23 septembre (registre, « Personnage initial »), restée sans code jusqu'ici.
+- Dans `characters.json`, le Vagabond prend la condition `default` et le Traqueur reprend la sienne (tenir 12 minutes). Un profil neuf ne reçoit donc que le Vagabond, et l'accueil s'ouvre sur lui.
+- `MetaSaveManager` n'impose plus le Traqueur à chaque chargement. Un profil sans aucun personnage reçoit ceux de condition `default` ; un profil existant garde tous les siens, Traqueur compris, et reçoit aussi le Vagabond au prochain contrôle des déblocages.
+- Le personnage de secours de la run (aucun choix transmis) devient le Vagabond.
+- **Vérifié :** accueil en profil neuf capturé (« Le Vagabond », seul personnage) ; `test_dev_mode` vert après adaptation (le Traqueur y sert désormais de personnage verrouillé en profil normal) ; smoke test.
+- **Reste ouvert :** le choix de la condition du Traqueur est provisoire, les conditions du §5 n'étant pas validées.

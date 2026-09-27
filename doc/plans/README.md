@@ -57,6 +57,7 @@ Un seul lot d'implémentation ouvert à la fois. Un échec de lisibilité, de pe
 - [17 3D](17-armes-coffres-modificateurs.md) : un coffre posé après un Oubli des repères naît avec sa colonne raccourcie.
 - Lot 2 : le sol et les routes se dessinent depuis un seul atlas, à l'image identique. À 1 080p, 156 → 255 FPS et 1 894 → 331 appels de dessin par image sur le banc de combat dense.
 - Banc des chemins T3 fait : pas de coût mesurable.
+- [06](06-personnages-quetes-defis.md) : un profil neuf commence avec le Vagabond (décision du 23 septembre) ; les profils existants gardent leurs personnages.
 
 **Mise à jour du 27 septembre, soir (session locale) :** deux bugs signalés par Raphaël.
 - [Son des coffres](15-audio.md) : la mélodie de révélation ne part plus pendant le défilement et s'éteint avec l'écran.
