@@ -135,7 +135,7 @@ public partial class WeaponPickup : Area2D
 
 		if (HasWeapon(player, _weaponInstance.Id))
 		{
-			SetCompareMessage("Deja equipee", new Color(0.95f, 0.45f, 0.35f));
+			SetCompareMessage("Déjà équipée", new Color(0.95f, 0.45f, 0.35f));
 			FlashFull();
 			return;
 		}
@@ -375,8 +375,8 @@ public partial class WeaponPickup : Area2D
 			? new Color(0.72f, 0.92f, 0.72f)
 			: new Color(0.95f, 0.55f, 0.45f);
 		string compareText = $"{equipped.Name} -> {GetDeltaTag(deltaScore)}\n";
-		compareText += $"Dgt {Signed(deltaDamage)}  Cad. {Signed(deltaSpeed)}  Portee {Signed(deltaRange)}\n";
-		compareText += "[E] Echanger  [Ignorer]";
+		compareText += $"Dgt {Signed(deltaDamage)}  Cad. {Signed(deltaSpeed)}  Portée {Signed(deltaRange)}\n";
+		compareText += "[E] Échanger  [Ignorer]";
 		SetCompareMessage(compareText, compareColor);
 	}
 

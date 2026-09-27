@@ -302,7 +302,7 @@ public partial class HubChroniquesPanel : MarginContainer
 
 		Label intro = new()
 		{
-			Text = "Trois quêtes sont tirées au hasard au début de chaque run. Elles offrent un coup de pouce immediat en Essence ou en XP.",
+			Text = "Trois quêtes sont tirées au hasard au début de chaque run. Elles offrent un coup de pouce immédiat en Essence ou en XP.",
 			AutowrapMode = TextServer.AutowrapMode.WordSmart
 		};
 		intro.AddThemeFontSizeOverride("font_size", 14);

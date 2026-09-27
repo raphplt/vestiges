@@ -76,6 +76,8 @@ Santé/danger immédiat ; score vivant ; XP/niveau ; Essence ; armes/objets ; Ef
 **Vérification :** 1280×720, 1920×1080, 2560×1440 et écran large ; aucun texte tronqué critique.
 **Garde-fou :** la police du logo n'impose pas celle des descriptions ; ne pas changer globalement le filtrage pixel art pour lisser du texte.
 
+**Lot B, étape 5 (accents) — 27 septembre 2026 :** une quarantaine de textes français sans accents corrigés (la police Saira les gère) : traduction (`PARAMÈTRES`, Contrôles, Plein écran, Réduites, Désactivé, Réinitialiser, pause, accueil, Journal, chargement, « [Échap] »), écran des paramètres, comparaison d'arme au sol (« Déjà équipée », « Portée », « [E] Échanger »), Chroniques. Recherche outillée : mots des textes du code et de la traduction comparés aux formes accentuées de la doc. Quatre clés V1 inutilisées retirées de la traduction (réparer, récolter, métal, « mort avant la première crise »). Les étapes 1 à 4 restent à faire.
+
 ### Lot C — Exploration et sélection
 
 1. Reprendre les données de cartes existantes et le cache d'animations.

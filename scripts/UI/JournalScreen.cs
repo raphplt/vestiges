@@ -144,7 +144,7 @@ public partial class JournalScreen : CanvasLayer
         // Footer
         Label closeHint = new()
         {
-            Text = "[Echap] Fermer",
+            Text = "[Échap] Fermer",
             HorizontalAlignment = HorizontalAlignment.Center
         };
         closeHint.AddThemeFontSizeOverride("font_size", 13);
