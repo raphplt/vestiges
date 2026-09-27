@@ -201,7 +201,7 @@ Trois créatures du début de run passent dans le pipeline, à la même densité
 | **P0 — Gabarit décors** | Module `tools/sprites/props/`, manifeste (dimensions, pieds, emprise, variantes), planche de contact à taille réelle sur les sols des cinq biomes | Planche et une capture en jeu |
 | **P1 — Mobilier urbain** | Voitures (2 ou 3 carrosseries), bennes, feux, cabine, lampadaire, barrières, boîte aux lettres, panneaux, débris et poutrelles | Captures en vraie run, ville dense ; ton retour |
 | **P2 — Immeubles urbains** | Modules d'immeubles (façade, angle, tour, effondré, église) à l'échelle du personnage, intérieurs visibles par les brèches | Idem, collisions et profondeur (plan 10 D1/D2) |
-| **P3 à P6** | Forêt, champs, marais et carrière livrés (27 septembre pour les deux derniers) | Un biome validé avant le suivant |
+| **P3 à P6** | Forêt, champs, marais et carrière livrés (27 septembre pour les deux derniers), chantiers de la carrière composés (P6b) | Un biome validé avant le suivant |
 
 Les tiles restent en l'état (jugées acceptables) ; un ajustement de contraste reste possible si les nouveaux décors l'exigent.
 
@@ -321,6 +321,26 @@ Les tiles restent en l'état (jugées acceptables) ; un ajustement de contraste 
 *Vérifications :* planches à taille réelle sur le sol de la carrière avec le personnage, captures `--capture-props --hide-collisions` regardées à chaque réglage, deux générations identiques à l'octet, smoke test.
 
 *Points ouverts pour Raphaël :* première passe par placement générique. Comme pour les champs (P4b), une composition raconterait mieux la mine : entrées de galerie étayées, wagonnets le long des voies, machines groupées autour d'un chantier. À proposer si le biome paraît encore « semé au hasard ».
+
+**P6b livré — chantiers de la carrière, 27 septembre 2026 (session locale, sans Raphaël) :** la composition proposée ci-dessus, sur le modèle des fermes (P4b-1/2).
+- **Modèles** (`quarry.py`, `python3 tools/generate_props.py quarry`), huit fichiers :
+  - entrée de galerie en deux tirages, dont un miroir : front de taille en gradins de blocs, bouche noire étayée d'un cadre de bois, planches, lampe de sécurité orange, voie qui sort de la bouche. Un premier jet en blocs réguliers faisait « empilement de cubes » (planche regardée) : blocs plus petits, tournés et en retrait par assise ;
+  - voie étroite droite en deux tirages, vue exactement de profil pour que les tronçons se raccordent tous les 64 px ;
+  - wagonnet debout, chargé de minerai rouge ou de cristaux d'Essence ;
+  - baraque de chantier en tôle ondulée sur parpaings, porte, vitre, gyrophare, en deux sens.
+- **Composition** :
+  - `World/SiteComposer`, extrait de `WildFieldsComposer` : il pose les fermes comme les chantiers (un lieu par région du biome, emprise libre, embranchement vers un chemin) à partir d'un `SitePlan` lu en JSON. Fermes inchangées : 16 sur la seed de capture, même temps de placement.
+  - Plan du chantier dans `data/world/quarry_sites.json` : la galerie au nord ; devant elle, la voie où restent un ou deux wagonnets et un wagonnet renversé en bout de ligne ; la baraque et le vestiaire à l'ouest ; le godet, le convoyeur et le tas de minerai à l'est ; au sud, le touret, la caisse d'explosifs, le panneau « danger » et la pioche ; des affleurements et des blocs aux angles. Retourné d'est en ouest une fois sur deux.
+- **Mesure** (seed 221092026) : 6 chantiers, 131 ms de placement au chargement, rien par frame.
+- **Vérifié :**
+  - planches à taille réelle sur le sol de la carrière ;
+  - captures `--capture-quarries` (nouveau mode, normal et dézoomé) regardées : galerie, voie, wagonnets et baraque se lisent comme un chantier, et le chemin y mène ;
+  - collisions vues avec `--show-collisions` (nouvelle option, valable pour tous les modes) : bande au pied du front de taille, wagonnets, convoyeur, touret ;
+  - deux générations identiques à l'octet, smoke test, `test_movement` vert.
+- *Points ouverts pour Raphaël :*
+  - le sud du chantier reste aéré, pour laisser de la place au combat ;
+  - un seul plan de chantier, comme pour les fermes ;
+  - pas de voies qui relient deux chantiers entre eux.
 
 **Retour du 26 septembre sur les champs :** « la zone ferme/campagne fait un peu vide. Il n'y a que des petits sprites éparpillés et qui ne racontent pas grand-chose. » Le dessin des objets n'est pas en cause : c'est la **composition**. Le placement générique pose des décors isolés au hasard, alors que la ville raconte ses îlots.
 

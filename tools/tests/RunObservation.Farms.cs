@@ -55,4 +55,37 @@ public partial class RunObservation
         }
         _camera.Zoom = initialZoom;
     }
+
+    /// <summary>--capture-quarries : les quatre chantiers de la carrière les plus proches du départ, normal et dézoomé.</summary>
+    private async Task CaptureQuarrySites()
+    {
+        _world.GetNode("SpawnManager").ProcessMode = ProcessModeEnum.Disabled;
+        foreach (Node node in GetTree().GetNodesInGroup("enemies"))
+            if (node is Vestiges.Combat.Enemy existing && existing.IsActive)
+                _world.GetNode<Vestiges.Spawn.EnemyPool>("EnemyPool").Return(existing);
+        Node2D fog = _world.GetNodeOrNull<Node2D>("FogOfWar");
+        if (fog != null)
+            fog.Visible = false;
+        await Frames(90);
+        _player.AIInputOverride = Vector2.Zero;
+
+        List<Vector2> sites = new(_world.QuarrySiteAnchors);
+        sites.Sort((a, b) => a.LengthSquared().CompareTo(b.LengthSquared()));
+        GD.Print($"[RunObservation] RESULT quarry_sites count={sites.Count}");
+        Vector2 initialZoom = _camera.Zoom;
+        for (int i = 0; i < sites.Count && i < 4; i++)
+        {
+            // Le joueur se tient devant la voie, au sud de la galerie.
+            _player.GlobalPosition = sites[i] + new Vector2(0f, 20f);
+            _camera.Zoom = initialZoom;
+            _camera.ResetSmoothing();
+            await Frames(20);
+            Save($"quarry-{i + 1}.png");
+            _camera.Zoom = initialZoom * 0.6f;
+            await Frames(10);
+            Save($"quarry-{i + 1}-large.png");
+            GD.Print($"[RunObservation] chantier {i + 1} en {sites[i]}");
+        }
+        _camera.Zoom = initialZoom;
+    }
 }

@@ -64,7 +64,9 @@ public partial class WorldSetup : Node2D
     private WildFieldsLayout _wildFieldsLayout;
     private PathNetwork _pathNetwork;
     private FarmConfig _farmConfig;
-    private List<FarmSite> _farms = new();
+    private List<CompositionSite> _farms = new();
+    private SitePlan _quarryPlan;
+    private List<CompositionSite> _quarrySites = new();
     private List<Vector2> _storyScenes = new();
 
     /// <summary>Positions des scènes-récits des champs (plan 08 P4b-4).</summary>
@@ -75,8 +77,18 @@ public partial class WorldSetup : Node2D
     {
         get
         {
-            foreach (FarmSite farm in _farms)
+            foreach (CompositionSite farm in _farms)
                 yield return farm.Anchor;
+        }
+    }
+
+    /// <summary>Centres des chantiers de la Carrière Effondrée (entrée de galerie, voie, baraque).</summary>
+    public IEnumerable<Vector2> QuarrySiteAnchors
+    {
+        get
+        {
+            foreach (CompositionSite site in _quarrySites)
+                yield return site.Anchor;
         }
     }
 
@@ -144,7 +156,11 @@ public partial class WorldSetup : Node2D
 
         // Fermes des champs (plan 08 P4b) : cellules réservées avant les points d'intérêt, embranchement vers un chemin.
         _farmConfig = FarmConfig.Load();
-        _farms = WildFieldsComposer.PlanFarms(_generator, _pathNetwork, _usedCells, _farmConfig, Seed);
+        _farms = SiteComposer.Plan(_generator, _pathNetwork, _usedCells, _farmConfig.Site, Seed);
+        // Chantiers de la carrière : galerie étayée, voie et wagonnets, baraque et machines groupées.
+        _quarryPlan = SitePlan.Load("res://data/world/quarry_sites.json", "collapsed_quarry",
+                                    "res://assets/props/collapsed_quarry/", "chantiers");
+        _quarrySites = SiteComposer.Plan(_generator, _pathNetwork, _usedCells, _quarryPlan, Seed);
 
         // Préparer le TileSet et mapper (rapide)
         _ground.TileSet = _ground.TileSet.Duplicate() as TileSet;
@@ -528,7 +544,8 @@ public partial class WorldSetup : Node2D
 
         _propSpawner = new PropSpawner { Name = "PropSpawner" };
         AddChild(_propSpawner);
-        WildFieldsComposer.PlaceFarms(_farms, _farmConfig, propContainer, Seed);
+        SiteComposer.Place(_farms, _farmConfig.Site, propContainer, Seed);
+        SiteComposer.Place(_quarrySites, _quarryPlan, propContainer, Seed);
         HashSet<Vector2I> blockedCells = BuildEnvironmentPropBlockedCells(urbanLayout, swampLayout);
         WildFieldsComposer.PlaceParcelProps(_wildFieldsLayout, _farmConfig, _usedCells, blockedCells, _ground, propContainer, Seed);
         _storyScenes = WildFieldsComposer.PlaceScenes(_generator, _farmConfig, _usedCells, blockedCells, _ground, propContainer, Seed);

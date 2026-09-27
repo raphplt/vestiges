@@ -23,6 +23,8 @@ namespace Vestiges.Tests;
 /// --capture-junctions : frontières entre biomes les plus proches du départ, avec et sans décors.
 /// --capture-paths : chemins de terre par biome, raccord à une rue, vue dézoomée du départ (RunObservation.Paths.cs).
 /// --capture-farms : fermes des Champs Sauvages les plus proches du départ, normal et dézoomé (RunObservation.Farms.cs).
+/// --capture-quarries : chantiers de la Carrière Effondrée les plus proches du départ, normal et dézoomé (idem).
+/// --show-collisions : formes de collision affichées dans n'importe quel mode de capture.
 /// --capture-landmarks : églises et pylônes des Ruines Urbaines, normal et dézoomé (RunObservation.UrbanLandmarks.cs).
 /// --capture-levelup-fx : effet de montée de niveau au ralenti, puis entrée de l'écran de choix (RunObservation.LevelUpFx.cs).
 /// --capture-crowd : foule de 60 créatures, recul de caméra puis compteur de morts en rafale (RunObservation.Crowd.cs).
@@ -73,7 +75,7 @@ public partial class RunObservation : Node
             ulong seed = ulong.Parse(Argument(args, "--seed", Seed.ToString(CultureInfo.InvariantCulture)), CultureInfo.InvariantCulture);
             bool captureMap = Array.IndexOf(args, "--capture-map") >= 0;
             bool captureProps = Array.IndexOf(args, "--capture-props") >= 0;
-            if (captureProps && Array.IndexOf(args, "--hide-collisions") < 0)
+            if ((captureProps && Array.IndexOf(args, "--hide-collisions") < 0) || Array.IndexOf(args, "--show-collisions") >= 0)
                 GetTree().DebugCollisionsHint = true;
             if (captureMap)
                 MeasureBiomeLayout(seed, int.Parse(Argument(args, "--map-seeds", "40"), CultureInfo.InvariantCulture), 4);
@@ -85,6 +87,8 @@ public partial class RunObservation : Node
                 await CapturePropHotspots();
             else if (Array.IndexOf(args, "--capture-junctions") >= 0)
                 await CaptureJunctions();
+            else if (Array.IndexOf(args, "--capture-quarries") >= 0)
+                await CaptureQuarrySites();
             else if (Array.IndexOf(args, "--capture-farms") >= 0)
                 await CaptureFarms();
             else if (Array.IndexOf(args, "--capture-landmarks") >= 0)

@@ -14,6 +14,7 @@ from ..palette import make_emissive, make_material
 from ..render import Part
 from ..sdf import capsule, cylinder, ellipsoid, rotation_x, rotation_y, rotation_z, rounded_box, sphere
 from ._kit import AXIS_X_YAW, AXIS_Y_YAW, M, PropModel, Weathering, box_footprint
+from .buildings import BUILDING_YAW
 from .forest import _union
 
 # Palette Carrière (charte §3).
@@ -32,6 +33,8 @@ OCHRE_DUST = "#B4A080"
 SAFETY_ORANGE = "#E07B39"
 MACHINE_YELLOW = "#C49B3E"
 CLOTH = "#9E9494"
+HUT_WALL = "#6E7A74"
+PLANK_LIGHT = "#8A6A48"
 
 
 def _rocks(w: Weathering, count: int, spread: tuple[float, float], size: tuple[float, float], height: float):
@@ -455,6 +458,158 @@ def pickaxe_rock(stem: str, seed: int) -> PropModel:
 
 
 # ---------------------------------------------------------------------------------------------------------------------
+# Chantier composé (plan 08, composition de la carrière) : galerie, voie droite, wagonnets, baraque
+# ---------------------------------------------------------------------------------------------------------------------
+
+def _site_model(stem: str, parts, materials, half_w: float, half_d: float, extent_x: float, extent_z: float, top: float,
+                mirrored: bool) -> PropModel:
+    """Cadrage des grands éléments du chantier, vus presque de face comme les bâtiments de ferme (lacet ±12°)."""
+    width_px = int((extent_x * 2) * 0.62 * 1.05) + 24
+    height_px = int(top * 0.62 * 0.87 + extent_z * 2 * 0.31) + 30
+    return PropModel(stem, parts, materials, -BUILDING_YAW if mirrored else BUILDING_YAW,
+                     ray_range=float(2.5 * max(extent_x, extent_z, top)), canvas=(width_px, height_px),
+                     footprint=box_footprint(half_w, half_d),
+                     bounds=((-extent_x, 0.0, -extent_z), (extent_x, top, extent_z)), supersample=3)
+
+
+def gallery_entrance(stem: str, seed: int, mirrored: bool) -> PropModel:
+    """Entrée de galerie : front de taille, bouche noire étayée de bois, lampe de sécurité, voie qui en sort."""
+    DARK, GREY, LIGHT, VOID, TIMBER, PLANK, RAIL, SLEEPER, LAMP, EARTH = range(10)
+    materials = [make_material("rock_dark", ROCK_DARK), make_material("rock_grey", ROCK_GREY), make_material("rock_light", ROCK_LIGHT),
+                 make_material("void", COAL, contrast=0.4), make_material("timber", MINE_WOOD), make_material("plank", PLANK_LIGHT),
+                 make_material("rail", METAL, contrast=0.7), make_material("sleeper", MINE_WOOD), make_emissive("safety", SAFETY_ORANGE),
+                 make_material("red_earth", RED_EARTH)]
+
+    def parts() -> list[Part]:
+        w = Weathering(seed)
+        # Front de taille en gradins : une assise de gros blocs, des blocs plus petits posés dessus, en retrait.
+        blocks = []
+        for tier, (count, base, size, depth) in enumerate(((11, 0.0, (0.55, 0.9), (-0.7, 0.1)), (10, 1.5, (0.4, 0.75), (-1.0, -0.3)),
+                                                           (7, 2.6, (0.35, 0.6), (-1.3, -0.6)))):
+            reach = 3.5 - tier * 0.8
+            for index in range(count):
+                x = w.uniform(-reach, reach)
+                half = np.array([w.uniform(*size), w.uniform(*size) * (1.1 if tier == 0 else 0.85), w.uniform(0.5, 0.8)]) * M
+                center = np.array([x * M, base * M + half[1] * (0.9 - 0.25 * abs(x) / 3.5), w.uniform(*depth) * M])
+                rotation = rotation_y(w.uniform(-0.5, 0.5)) @ rotation_z(w.uniform(-0.2, 0.2)) @ rotation_x(w.uniform(-0.15, 0.15))
+                blocks.append((center, half, rotation))
+        tone = [w.uniform(0, 1) for _ in blocks]
+        groups = [[i for i in range(len(blocks)) if tone[i] < 0.4], [i for i in range(len(blocks)) if 0.4 <= tone[i] < 0.8],
+                  [i for i in range(len(blocks)) if tone[i] >= 0.8]]
+        mouth = lambda p: rounded_box(p, (0, 1.15 * M, 0.2 * M), (0.95 * M, 1.15 * M, 1.6 * M), 0.1 * M)
+        rock = lambda members: (lambda p: np.maximum(_block_union([blocks[i] for i in members], 0.14 * M)(p), -mouth(p)))
+        seam = [(blocks[i][0] + np.array([0.0, blocks[i][1][1] * 0.2, blocks[i][1][2] * 0.9]), blocks[i][1]) for i in groups[1][:3]]
+        posts = [np.array([x * M, 0.0, 0.8 * M]) for x in (-1.05, 1.05)]
+        planks = [np.array([x * M, 2.75 * M, 0.72 * M]) for x in (-0.7, 0.0, 0.65)]
+        sleepers = [np.array([w.uniform(-0.04, 0.04) * M, 0.02 * M, z * M]) for z in np.arange(-0.6, 2.4, 0.55)]
+        rubble = [((w.uniform(-3.2, 3.2) * M, 0.1 * M, w.uniform(0.3, 1.3) * M), w.uniform(0.1, 0.22) * M) for _ in range(10)]
+        rubble = [(c, r) for c, r in rubble if abs(c[0]) > 1.3 * M]
+        return [
+            Part(rock(groups[0]), DARK),
+            Part(rock(groups[1]), GREY),
+            Part(rock(groups[2]), LIGHT),
+            Part(lambda p: np.maximum(_union(*(ellipsoid(p, c, (h[0] * 0.85, h[1] * 0.12, 0.08 * M)) for c, h in seam)), -mouth(p)), EARTH),
+            Part(lambda p: rounded_box(p, (0, 1.15 * M, -0.9 * M), (1.0 * M, 1.2 * M, 0.25 * M), 0.02 * M), VOID),
+            Part(lambda p: _union(*(cylinder(p, post + np.array([0.0, 1.2 * M, 0.0]), 0.13 * M, 1.2 * M, 0.03 * M) for post in posts),
+                                  rounded_box(p, (0, 2.45 * M, 0.8 * M), (1.3 * M, 0.15 * M, 0.17 * M), 0.03 * M),
+                                  *(cylinder(p, post + np.array([0.0, 1.2 * M, -0.9 * M]), 0.11 * M, 1.2 * M, 0.03 * M) for post in posts)), TIMBER),
+            Part(lambda p: _union(*(rounded_box(p, c, (0.32 * M, 0.2 * M, 0.03 * M), 0.01 * M, rotation_z(tilt))
+                                    for c, tilt in zip(planks, (0.06, -0.04, 0.1)))), PLANK),
+            Part(lambda p: _union(*(rounded_box(p, (x * M, 0.05 * M, 0.9 * M), (0.035 * M, 0.035 * M, 1.6 * M), 0.01 * M) for x in (-0.35, 0.35))), RAIL),
+            Part(lambda p: _union(*(rounded_box(p, c, (0.55 * M, 0.025 * M, 0.1 * M), 0.01 * M) for c in sleepers)), SLEEPER),
+            Part(lambda p: ellipsoid(p, (1.25 * M, 1.95 * M, 1.0 * M), (0.12 * M, 0.16 * M, 0.12 * M)), LAMP),
+            Part(lambda p: _union(*(sphere(p, c, r) for c, r in rubble)), GREY),
+        ]
+
+    return _site_model(stem, parts, materials, 3.3 * M, 0.9 * M, 4.2 * M, 2.6 * M, 4.4 * M, mirrored)
+
+
+def track(stem: str, seed: int) -> PropModel:
+    """Voie étroite droite de 3,9 m, vue de profil : posée tous les 64 px, les tronçons se raccordent. Décalque au sol."""
+    RAIL, SLEEPER, RUST_M = range(3)
+    materials = [make_material("rail", METAL, contrast=0.7), make_material("sleeper", MINE_WOOD), make_material("rust", RUST_DEEP)]
+
+    def parts() -> list[Part]:
+        w = Weathering(seed)
+        sleepers = [(np.array([x * M, 0.02 * M, w.uniform(-0.05, 0.05) * M]), rotation_y(w.uniform(-0.1, 0.1))) for x in np.arange(-1.65, 1.8, 0.55)]
+        rust = [np.array([w.uniform(-1.8, 1.8) * M, 0.06 * M, z * M]) for z in (-0.35, 0.35) for _ in range(2)]
+        return [
+            Part(lambda p: _union(*(rounded_box(p, (0, 0.06 * M, z * M), (1.95 * M, 0.035 * M, 0.035 * M), 0.01 * M) for z in (-0.35, 0.35))), RAIL),
+            Part(lambda p: _union(*(rounded_box(p, c, (0.1 * M, 0.025 * M, 0.55 * M), 0.01 * M, r) for c, r in sleepers)), SLEEPER),
+            Part(lambda p: _union(*(sphere(p, c, 0.07 * M) for c in rust)), RUST_M),
+        ]
+
+    return PropModel(stem, parts, materials, 0.0, canvas=(90, 40))
+
+
+def ore_wagon(stem: str, seed: int, crystals: bool) -> PropModel:
+    """Wagonnet resté debout sur la voie, chargé de minerai rouge ou de cristaux d'Essence qui luisent encore."""
+    RUST_M, METAL_M, WHEEL, LOAD, GLOW = range(5)
+    materials = [make_material("rust", RUST_DEEP), make_material("metal", METAL), make_material("wheel", COAL, contrast=0.7),
+                 make_material("ore", RED_EARTH), make_emissive("crystal", CRYSTAL)]
+
+    def parts() -> list[Part]:
+        w = Weathering(seed)
+
+        def tub(p: np.ndarray) -> np.ndarray:
+            outer = rounded_box(p, (0, 0.72 * M, 0), (0.8 * M, 0.38 * M, 0.5 * M), 0.06 * M)
+            inner = rounded_box(p, (0, 0.85 * M, 0), (0.72 * M, 0.38 * M, 0.42 * M), 0.04 * M)
+            return np.maximum(outer, -inner)
+
+        load = [((w.uniform(-0.6, 0.6) * M, w.uniform(1.0, 1.2) * M, w.uniform(-0.3, 0.3) * M), w.uniform(0.14, 0.24) * M) for _ in range(9)]
+        anchors = [np.array([w.uniform(-0.4, 0.4) * M, 1.0 * M, w.uniform(-0.2, 0.2) * M]) for _ in range(2)]
+        shards = _crystals(w, anchors, 6, (0.4, 0.75), 0.11 * M) if crystals else []
+        patches = [np.array([w.uniform(-0.7, 0.7) * M, w.uniform(0.45, 1.0) * M, 0.5 * M]) for _ in range(3)]
+        parts_list = [
+            Part(tub, METAL_M),
+            Part(lambda p: np.maximum(_union(*(sphere(p, c, 0.22 * M) for c in patches)), tub(p) - 0.03 * M), RUST_M),
+            Part(lambda p: _union(*(cylinder(p, (x * M, 0.22 * M, z * M), 0.2 * M, 0.05 * M, 0.02 * M, rotation_x(np.pi / 2))
+                                    for x in (-0.48, 0.48) for z in (-0.42, 0.42)),
+                                  rounded_box(p, (0, 0.28 * M, 0), (0.75 * M, 0.05 * M, 0.3 * M), 0.02 * M)), WHEEL),
+            Part(lambda p: _union(*(sphere(p, c, r) for c, r in load)), LOAD),
+        ]
+        if crystals:
+            parts_list.append(Part(lambda p: _union(*(capsule(p, a, b, r, r * 0.2) for a, b, r in shards)), GLOW))
+        return parts_list
+
+    return PropModel(stem, parts, materials, 0.0, canvas=(70, 64), footprint=box_footprint(0.8 * M, 0.5 * M))
+
+
+def site_hut(stem: str, seed: int, mirrored: bool) -> PropModel:
+    """Baraque de chantier en tôle ondulée sur parpaings : porte entrouverte, vitre sale, gyrophare sur le toit."""
+    WALL, ROOF, DARK, BLOCK, TRIM, LAMP, RUST_M = range(7)
+    materials = [make_material("hut", HUT_WALL), make_material("roof", METAL), make_material("dark", COAL, contrast=0.5),
+                 make_material("block", ROCK_GREY), make_material("trim", MACHINE_YELLOW), make_emissive("safety", SAFETY_ORANGE),
+                 make_material("rust", RUST_DEEP)]
+    k = 2 * np.pi / (0.16 * M)
+
+    def parts() -> list[Part]:
+        w = Weathering(seed)
+
+        def walls(p: np.ndarray) -> np.ndarray:
+            corrugation = 0.012 * M * np.sin(p[:, 0] * k)
+            return rounded_box(p, (0, 1.45 * M, 0), (1.8 * M, 1.2 * M, 1.15 * M), 0.03 * M) + corrugation
+
+        roof = lambda p: rounded_box(p, (0, 2.72 * M, 0), (1.98 * M, 0.07 * M, 1.32 * M), 0.02 * M, rotation_x(-0.07))
+        streaks = [np.array([w.uniform(-1.6, 1.6) * M, w.uniform(0.6, 2.3) * M, 1.15 * M]) for _ in range(4)]
+        return [
+            Part(walls, WALL),
+            Part(roof, ROOF),
+            Part(lambda p: _union(rounded_box(p, (-0.95 * M, 1.2 * M, 1.14 * M), (0.42 * M, 0.95 * M, 0.04 * M), 0.01 * M),
+                                  rounded_box(p, (0.75 * M, 1.6 * M, 1.14 * M), (0.5 * M, 0.32 * M, 0.04 * M), 0.01 * M)), DARK),
+            Part(lambda p: _union(*(rounded_box(p, (x * M, 0.12 * M, z * M), (0.2 * M, 0.12 * M, 0.2 * M), 0.02 * M)
+                                    for x in (-1.6, 1.6) for z in (-0.95, 0.95))), BLOCK),
+            Part(lambda p: _union(rounded_box(p, (0, 2.5 * M, 1.17 * M), (1.8 * M, 0.06 * M, 0.02 * M), 0.01 * M),
+                                  rounded_box(p, (0.75 * M, 1.6 * M, 1.18 * M), (0.03 * M, 0.32 * M, 0.02 * M), 0.005 * M)), TRIM),
+            Part(lambda p: ellipsoid(p, (1.6 * M, 2.95 * M, 0.9 * M), (0.12 * M, 0.15 * M, 0.12 * M)), LAMP),
+            Part(lambda p: np.maximum(_union(*(capsule(p, c, c - np.array([0.0, 0.6 * M, 0.0]), 0.1 * M) for c in streaks)),
+                                      walls(p) - 0.02 * M), RUST_M),
+        ]
+
+    return _site_model(stem, parts, materials, 1.8 * M, 1.15 * M, 2.4 * M, 1.8 * M, 3.3 * M, mirrored)
+
+
+# ---------------------------------------------------------------------------------------------------------------------
 # Catalogue
 # ---------------------------------------------------------------------------------------------------------------------
 
@@ -478,4 +633,12 @@ def catalog() -> list[PropModel]:
         explosives_crate("prop_explosives_crate", 633),
         danger_sign("prop_danger_sign", 634),
         pickaxe_rock("prop_pickaxe_rock", 635),
+        gallery_entrance("prop_quarry_gallery_a", 641, False),
+        gallery_entrance("prop_quarry_gallery_b", 642, True),
+        track("prop_quarry_track", 643),
+        track("prop_quarry_track_v2", 644),
+        ore_wagon("prop_quarry_wagon_ore", 645, False),
+        ore_wagon("prop_quarry_wagon_crystal", 646, True),
+        site_hut("prop_quarry_hut_a", 647, False),
+        site_hut("prop_quarry_hut_b", 648, True),
     ]
