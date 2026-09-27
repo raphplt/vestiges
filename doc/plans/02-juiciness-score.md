@@ -125,7 +125,12 @@ Raphaël valide une juiciness très poussée : mobilité, impacts, collectes, ra
 - **Relevé figé** : le build est lu sur le joueur à sa mort, et le score après la sauvegarde qui fige le record (lot A).
 - Textes en clés de traduction (`UI_END_*`), formulés sans accord de genre.
 - **Vérifié** : build sans avertissement, smoke test, régressions, capture `--capture-death` (mort réelle après 8 s de jeu, build riche fourni par la capture). Images regardées à chaque temps de la révélation.
-- **Non fait** : les objets du plan 05 (pas encore de système), la carte de déblocage reliée à la Collection (04 C2), le passage accéléré par animation des gains.
+- **Non fait** : les objets du plan 05 (pas encore de système), la carte de déblocage reliée à la Collection (04 C2, faite le soir même, ci-dessous), le passage accéléré par animation des gains.
+- **Carte de déblocage reliée à la Collection, 27 septembre 2026 au soir** : le bilan compare les armes disponibles au départ de la run et à l'arrivée (Souvenir retrouvé en run ou par une quête du bilan).
+  - Chaque arme gagnée a sa carte, icône comprise : « Arme retrouvée : Trousseau ».
+  - Un troisième bouton, « Voir dans la Collection », n'apparaît qu'alors. Il ramène au camp, Collection ouverte sur l'onglet des armes, la case de cette arme sélectionnée et sa fiche affichée.
+  - Vérifié par `--capture-death` (Trousseau retiré des armes de départ par la capture, le profil dev ayant tout) et par `HUB_EXTRA_ARGS="--collection-focus chain_of_names" tools/capture_hub.sh`. Images regardées.
+  - Reste : le passage accéléré par animation des gains.
 - **Dégâts par arme, 27 septembre 2026 (session locale)** : l'attribution existe depuis le plan 17 (lot 1C, pause). Le bilan montre sous chaque arme les dégâts de la run ; celle qui a porté le build ressort en or. Capture `--capture-death` regardée.
 
 ## 6. Recette finale et sortie

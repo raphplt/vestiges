@@ -238,5 +238,6 @@ Lot C2, décision de Raphaël : Collection directement accessible depuis le menu
 - **Même règle que le loot** : `MetaSaveManager.IsWeaponUnlocked` est désormais la seule règle de disponibilité d'une arme, partagée par le tirage d'armes du joueur, les fragments de niveau et la Collection.
 - **Manette** : du premier rang, « haut » remonte aux onglets et « bas » redescend ; les deux onglets sont liés explicitement, car la recherche géométrique de Godot plongeait dans la grille.
 - **Vérifié** : `tools/capture_hub.sh` en profil dev (24/24) et en profil neuf (20/24, quatre silhouettes, condition affichée), avec navigation à la manette dans la grille, vers les onglets et retour au menu. Images regardées.
-- **Non fait** : lien vers la quête qui débloque (les armes se débloquent encore par Souvenir, en attente du plan 05 lot A et du plan 06), entrée depuis le bilan, filtre disponibles et non disponibles (inutile à 24 armes).
+- **Non fait** : lien vers la quête qui débloque (les armes se débloquent encore par Souvenir, en attente du plan 05 lot A et du plan 06), filtre disponibles et non disponibles (inutile à 24 armes).
+- **Entrée depuis le bilan, 27 septembre au soir** : voir le [plan 02, lot D](02-juiciness-score.md).
 

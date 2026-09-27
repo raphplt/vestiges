@@ -49,6 +49,9 @@ public partial class GameManager : Node
     /// <summary>Quêtes de progression validées lors de la dernière run.</summary>
     public List<string> LastQuestCompletions { get; set; }
 
+    /// <summary>Arme à montrer dans la Collection à l'arrivée au camp (bilan : « Voir dans la Collection »), ou nul.</summary>
+    public string CollectionFocusWeaponId { get; set; }
+
     /// <summary>Mutateurs actifs pour la prochaine run (sélectionnés dans le Hub).</summary>
     public List<string> ActiveMutators { get; set; } = new();
 

@@ -36,6 +36,7 @@ public partial class HubCollectionPanel : MarginContainer
 
     private readonly struct Entry
     {
+        public readonly string Id;
         public readonly string Name;
         public readonly string Icon;
         public readonly string Description;
@@ -43,8 +44,9 @@ public partial class HubCollectionPanel : MarginContainer
         public readonly bool Unlocked;
         public readonly string Condition;
 
-        public Entry(string name, string icon, string description, string stats, bool unlocked, string condition)
+        public Entry(string id, string name, string icon, string description, string stats, bool unlocked, string condition)
         {
+            Id = id;
             Name = name;
             Icon = icon;
             Description = description;
@@ -116,9 +118,14 @@ public partial class HubCollectionPanel : MarginContainer
         return label;
     }
 
-    /// <summary>Reconstruit onglets et grille à l'ouverture ; renvoie la première case, qui prend le focus.</summary>
-    public Control Refresh()
+    /// <summary>
+    /// Reconstruit onglets et grille à l'ouverture ; renvoie la case qui prend le focus : l'arme
+    /// <paramref name="focusWeaponId"/> si elle est donnée (arrivée depuis le bilan), sinon la première.
+    /// </summary>
+    public Control Refresh(string focusWeaponId = null)
     {
+        if (!string.IsNullOrEmpty(focusWeaponId))
+            _tab = "weapons";
         foreach (Node child in _tabs.GetChildren())
             child.QueueFree();
         Button weapons = AddTab("weapons", "Armes");
@@ -126,7 +133,7 @@ public partial class HubCollectionPanel : MarginContainer
         // Liens explicites : la recherche géométrique de Godot plongeait dans la grille au lieu de l'onglet voisin.
         weapons.FocusNeighborRight = passives.GetPath();
         passives.FocusNeighborLeft = weapons.GetPath();
-        return RebuildGrid();
+        return RebuildGrid(focusWeaponId);
     }
 
     private Button AddTab(string id, string text)
@@ -164,7 +171,7 @@ public partial class HubCollectionPanel : MarginContainer
         return tab;
     }
 
-    private Control RebuildGrid()
+    private Control RebuildGrid(string focusId = null)
     {
         foreach (Node child in _grid.GetChildren())
             child.QueueFree();
@@ -172,6 +179,8 @@ public partial class HubCollectionPanel : MarginContainer
         int unlocked = 0;
         int index = 0;
         Control first = null;
+        Control focused = null;
+        Entry focusedEntry = default;
         foreach (Entry entry in entries)
         {
             if (entry.Unlocked)
@@ -182,6 +191,11 @@ public partial class HubCollectionPanel : MarginContainer
             if (index++ < Columns && _activeTab != null)
                 tile.FocusNeighborTop = _activeTab.GetPath();
             first ??= tile;
+            if (focused == null && entry.Id == focusId)
+            {
+                focused = tile;
+                focusedEntry = entry;
+            }
         }
         if (first != null)
         {
@@ -192,6 +206,11 @@ public partial class HubCollectionPanel : MarginContainer
             }
         }
         _count.Text = $"{unlocked} / {entries.Count} disponibles";
+        if (focused != null)
+        {
+            ShowDetail(focusedEntry);
+            return focused;
+        }
         if (entries.Count > 0)
             ShowDetail(entries[0]);
         return first;
@@ -254,7 +273,7 @@ public partial class HubCollectionPanel : MarginContainer
                 string souvenir = SouvenirDataLoader.Get(weapon.RequiresSouvenir)?.Name ?? weapon.RequiresSouvenir;
                 condition = $"Se débloque en retrouvant le Souvenir « {souvenir} ».";
             }
-            entries.Add(new Entry(weapon.Name, weapon.Sprite, weapon.Description, WeaponStats(weapon), unlocked, condition));
+            entries.Add(new Entry(weapon.Id, weapon.Name, weapon.Sprite, weapon.Description, WeaponStats(weapon), unlocked, condition));
         }
         // Disponibles d'abord : la grille se lit comme « ce que j'ai », puis « ce qui reste à trouver ».
         entries.Sort((a, b) => b.Unlocked.CompareTo(a.Unlocked));
@@ -286,7 +305,7 @@ public partial class HubCollectionPanel : MarginContainer
         foreach (PassiveSouvenirData passive in PassiveSouvenirDataLoader.GetAll())
         {
             string stats = passive.MaxLevel > 1 ? $"Jusqu'au niveau {passive.MaxLevel}, cumulable en run" : "";
-            entries.Add(new Entry(passive.Name, PerkIconResolver.GetPassiveStatIconPath(passive.Stat), passive.Description, stats, true, ""));
+            entries.Add(new Entry(passive.Id, passive.Name, PerkIconResolver.GetPassiveStatIconPath(passive.Stat), passive.Description, stats, true, ""));
         }
         return entries;
     }

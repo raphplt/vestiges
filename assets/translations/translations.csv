@@ -203,6 +203,8 @@ UI_END_UNLOCK,Revient au camp : {0},Returns to camp: {0}
 UI_END_SEED,Graine {0},Seed {0}
 UI_END_REPLAY,Rejouer,Play again
 UI_END_HUB,Retour au camp,Back to camp
+UI_END_NEW_WEAPON,Arme retrouvée : {0},Weapon found: {0}
+UI_END_COLLECTION,Voir dans la Collection,See in the Collection
 UI_HUD_ESSENCE,{0} Essence,{0} Essence
 UI_HUD_PHASE_EXPLORATION,EXPLORATION,EXPLORATION
 UI_HUD_PHASE_CRISIS,RÉSURGENCE,RESURGENCE

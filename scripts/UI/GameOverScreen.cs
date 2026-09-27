@@ -51,7 +51,11 @@ public partial class GameOverScreen : CanvasLayer
     private Control _gains;
     private HubMenuButton _restartButton;
     private HubMenuButton _hubButton;
+    private HubMenuButton _collectionButton;
     private Label _seed;
+    // Armes disponibles au départ de la run : celles qui s'y ajoutent au bilan (Souvenir retrouvé) mènent à la Collection.
+    private readonly HashSet<string> _weaponsAtStart = new();
+    private readonly List<WeaponData> _newWeapons = new();
 
     private bool _showing;
     private float _elapsed;
@@ -75,6 +79,7 @@ public partial class GameOverScreen : CanvasLayer
         Layer = 50;
         _eventBus = GetNode<EventBus>("/root/EventBus");
         _eventBus.EntityDied += OnEntityDied;
+        _weaponsAtStart.UnionWith(AvailableWeaponIds());
         _bodyFont = UITheme.BodyFont;
         _strongFont = UITheme.StrongFont;
         _boldFont = UITheme.BoldFont;
@@ -145,8 +150,14 @@ public partial class GameOverScreen : CanvasLayer
         _hubButton.Setup(Tr("UI_END_HUB"), TextRole.Banner, _strongFont);
         _hubButton.Pressed += OnHubPressed;
         buttons.AddChild(_hubButton);
+        _collectionButton = new HubMenuButton { Visible = false };
+        _collectionButton.Setup(Tr("UI_END_COLLECTION"), TextRole.Banner, _strongFont);
+        _collectionButton.Pressed += OnCollectionPressed;
+        buttons.AddChild(_collectionButton);
         _restartButton.FocusNeighborRight = _hubButton.GetPath();
         _hubButton.FocusNeighborLeft = _restartButton.GetPath();
+        _hubButton.FocusNeighborRight = _collectionButton.GetPath();
+        _collectionButton.FocusNeighborLeft = _hubButton.GetPath();
 
         _seed = MakeLabel("", _bodyFont, TextRole.Lead, UITheme.TextVeryDim, HorizontalAlignment.Left);
         Place(_seed, 40f, 1030f, 600f, 30f);
@@ -195,6 +206,12 @@ public partial class GameOverScreen : CanvasLayer
         gameManager.ChangeState(GameManager.GameState.Death);
         _scoreManager?.SaveEndOfRun();
         gameManager.LastQuestCompletions = QuestManager.ResolvePendingProgressionQuests(gameManager.LastRunData);
+        _newWeapons.Clear();
+        foreach (WeaponData weapon in WeaponDataLoader.GetAll())
+        {
+            if (!_weaponsAtStart.Contains(weapon.Id) && MetaSaveManager.IsWeaponUnlocked(weapon))
+                _newWeapons.Add(weapon);
+        }
         ShowGameOver();
     }
 
@@ -399,9 +416,23 @@ public partial class GameOverScreen : CanvasLayer
             foreach (string id in gm.LastUnlocks)
                 _gains.AddChild(MakeGainCard(string.Format(Tr("UI_END_UNLOCK"), CharacterDataLoader.Get(id)?.Name ?? id), UITheme.GreenKit));
         }
+        foreach (WeaponData weapon in _newWeapons)
+            _gains.AddChild(MakeGainCard(string.Format(Tr("UI_END_NEW_WEAPON"), weapon.Name), UITheme.GoldBright, weapon.Sprite));
+        _collectionButton.Visible = _newWeapons.Count > 0;
     }
 
-    private PanelContainer MakeGainCard(string text, Color accent)
+    private static IEnumerable<string> AvailableWeaponIds()
+    {
+        WeaponDataLoader.Load();
+        MetaSaveManager.Load();
+        foreach (WeaponData weapon in WeaponDataLoader.GetAll())
+        {
+            if (MetaSaveManager.IsWeaponUnlocked(weapon))
+                yield return weapon.Id;
+        }
+    }
+
+    private PanelContainer MakeGainCard(string text, Color accent, string icon = null)
     {
         PanelContainer card = new();
         StyleBoxFlat style = new()
@@ -415,7 +446,25 @@ public partial class GameOverScreen : CanvasLayer
             ContentMarginBottom = 14,
         };
         card.AddThemeStyleboxOverride("panel", style);
-        card.AddChild(MakeLabel(text, _strongFont, TextRole.Heading, accent, HorizontalAlignment.Center, 4));
+        Label label = MakeLabel(text, _strongFont, TextRole.Heading, accent, HorizontalAlignment.Center, 4);
+        if (string.IsNullOrEmpty(icon) || !ResourceLoader.Exists(icon))
+        {
+            card.AddChild(label);
+            return card;
+        }
+        HBoxContainer row = new() { MouseFilter = Control.MouseFilterEnum.Ignore };
+        row.AddThemeConstantOverride("separation", 14);
+        row.AddChild(new TextureRect
+        {
+            Texture = GD.Load<Texture2D>(icon),
+            CustomMinimumSize = new Vector2(48f, 48f),
+            ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
+            StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
+            TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
+            MouseFilter = Control.MouseFilterEnum.Ignore,
+        });
+        row.AddChild(label);
+        card.AddChild(row);
         return card;
     }
 
@@ -482,6 +531,7 @@ public partial class GameOverScreen : CanvasLayer
     {
         _restartButton.Disabled = !enabled;
         _hubButton.Disabled = !enabled;
+        _collectionButton.Disabled = !enabled;
     }
 
     private static string FormatDuration(float durationSec)
@@ -495,6 +545,12 @@ public partial class GameOverScreen : CanvasLayer
         AudioManager.PlayUI("sfx_menu_confirmer");
         GetTree().Paused = false;
         GetTree().ReloadCurrentScene();
+    }
+
+    private void OnCollectionPressed()
+    {
+        GetNode<GameManager>("/root/GameManager").CollectionFocusWeaponId = _newWeapons.Count > 0 ? _newWeapons[0].Id : null;
+        OnHubPressed();
     }
 
     private void OnHubPressed()

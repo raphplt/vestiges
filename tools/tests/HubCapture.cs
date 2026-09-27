@@ -10,6 +10,7 @@ namespace Vestiges.Tests;
 /// --output DIR, --actions ui_right,ui_accept (actions d'input envoyées une à une, capture après chacune).
 /// --record N : après la dernière action, enregistre N frames d'affilée en vignettes (départ en run, chargement),
 /// avec le temps écoulé et la scène courante de chaque frame.
+/// --collection-focus ID : arrivée depuis le bilan, « Voir dans la Collection » sur l'arme ID.
 /// </summary>
 public partial class HubCapture : Node
 {
@@ -25,6 +26,9 @@ public partial class HubCapture : Node
             // Taille du texte des paramètres (0 normal, 1 grand, 2 très grand), pour vérifier les débordements.
             Vestiges.UI.TextSettings.Step = int.Parse(Argument(args, "--text-step", "0"), CultureInfo.InvariantCulture);
             DirAccess.MakeDirRecursiveAbsolute(_output);
+            string focus = Argument(args, "--collection-focus", "");
+            if (focus.Length > 0)
+                GetNode<Vestiges.Core.GameManager>("/root/GameManager").CollectionFocusWeaponId = focus;
 
             GetTree().CurrentScene = null;
             Node hub = GD.Load<PackedScene>("res://scenes/Hub.tscn").Instantiate();

@@ -37,6 +37,7 @@ public partial class HubScreen : Control
 	private HubMenuButton _chroniquesBackButton;
 	private Control _collectionLayer;
 	private HubCollectionPanel _collectionPanel;
+	private string _collectionFocus;
 	private HubMenuButton _collectionButton;
 	private HubMenuButton _collectionBackButton;
 	private readonly List<HubMenuButton> _menuButtons = new();
@@ -84,6 +85,13 @@ public partial class HubScreen : Control
 			gm.LastRunData = null;
 		if (gm.LastQuestCompletions != null)
 			gm.LastQuestCompletions = null;
+		// Depuis le bilan, « Voir dans la Collection » arrive directement sur l'arme débloquée.
+		if (!string.IsNullOrEmpty(gm.CollectionFocusWeaponId))
+		{
+			_collectionFocus = gm.CollectionFocusWeaponId;
+			gm.CollectionFocusWeaponId = null;
+			SetState(HubState.Collection);
+		}
 	}
 
 	public override void _Input(InputEvent @event)
@@ -481,7 +489,8 @@ public partial class HubScreen : Control
 
 		if (state == HubState.Collection)
 		{
-			Control first = _collectionPanel.Refresh();
+			Control first = _collectionPanel.Refresh(_collectionFocus);
+			_collectionFocus = null;
 			if (first != null)
 				first.GrabFocus();
 			else
