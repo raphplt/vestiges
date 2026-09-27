@@ -8,6 +8,8 @@ namespace Vestiges.Tests;
 /// <summary>
 /// Captures de l'écran d'accueil rendu : état initial, puis une capture par action rejouée.
 /// --output DIR, --actions ui_right,ui_accept (actions d'input envoyées une à une, capture après chacune).
+/// --record N : après la dernière action, enregistre N frames d'affilée en vignettes (départ en run, chargement),
+/// avec le temps écoulé et la scène courante de chaque frame.
 /// </summary>
 public partial class HubCapture : Node
 {
@@ -39,12 +41,30 @@ public partial class HubCapture : Node
                 await Frames(45);
                 Capture($"hub-{index + 1:00}-{steps[index]}");
             }
+            int record = int.Parse(Argument(args, "--record", "0"), CultureInfo.InvariantCulture);
+            if (record > 0)
+                await Record(record);
             GetTree().Quit(0);
         }
         catch (Exception exception)
         {
             GD.PushError($"[HubCapture] {exception}");
             GetTree().Quit(1);
+        }
+    }
+
+    /// <summary>Une vignette par frame : ce que le joueur voit pendant la transition et le chargement.</summary>
+    private async Task Record(int frames)
+    {
+        ulong start = Time.GetTicksMsec();
+        for (int frame = 0; frame < frames; frame++)
+        {
+            await ToSignal(RenderingServer.Singleton, RenderingServer.SignalName.FramePostDraw);
+            using Image image = GetViewport().GetTexture().GetImage();
+            image.Resize(480, 270, Image.Interpolation.Bilinear);
+            image.SavePng($"{_output}/rec-{frame:0000}.png");
+            string scene = GetTree().CurrentScene?.Name ?? "-";
+            GD.Print($"[HubCapture] frame {frame} t={Time.GetTicksMsec() - start} ms scene={scene}");
         }
     }
 

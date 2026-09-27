@@ -48,30 +48,29 @@ public partial class GameBootstrap : Node
         RunTracker runTracker = GetNode<RunTracker>("../RunTracker");
         Player player = GetNode<Player>("../Player");
 
+        // L'écran de chargement entre dans l'arbre avant le premier rendu de la scène : sans lui, la toute première
+        // frame montrait le HUD et un monde vide.
+        GameLoadingOverlay overlay = new() { Name = "GameLoadingOverlay", ProcessMode = ProcessModeEnum.Always };
+        GetParent().CallDeferred(Node.MethodName.AddChild, overlay);
+
         _ = SetupNormalGameAsync(player, perkManager, scoreManager, runTracker,
-            progression, fragmentManager);
+            progression, fragmentManager, overlay);
     }
 
     private async Task SetupNormalGameAsync(Player player, PerkManager perkManager,
         ScoreManager scoreManager, RunTracker runTracker,
-        PlayerProgression progression, FragmentManager fragmentManager)
+        PlayerProgression progression, FragmentManager fragmentManager, GameLoadingOverlay overlay)
     {
-        // Le parent termine ses _Ready avant de recevoir l'overlay et les nœuds de warmup.
+        // Le parent termine ses _Ready avant de recevoir les nœuds de warmup ; l'overlay s'anime pendant la pause.
         GetTree().Paused = true;
         await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
-
-        // --- Créer et afficher l'overlay de chargement ---
-        GameLoadingOverlay overlay = new() { Name = "GameLoadingOverlay" };
-        GetNode("..").AddChild(overlay);
-
-        // L'overlay doit continuer à s'animer pendant la pause de chargement.
-        overlay.ProcessMode = ProcessModeEnum.Always;
 
         // --- Shader warmup (force la compilation GPU pendant l'overlay) ---
         overlay.SetProgress("Préparation des shaders...");
         WarmupShaders();
         await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
         await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+        LoadProfiler.Mark("shaders");
 
         // --- Initialisation du monde (étalée sur plusieurs frames) ---
         WorldSetup worldSetup = GetNode<WorldSetup>("..");
@@ -81,6 +80,7 @@ public partial class GameBootstrap : Node
         overlay.SetProgress("Préparation des créatures...");
         EnemyPool enemyPool = GetNode<EnemyPool>("../EnemyPool");
         await enemyPool.PrewarmAsync(4);
+        LoadProfiler.Mark("créatures du pool");
 
         // --- Wire des systèmes (rapide, synchrone) ---
         overlay.SetProgress("Initialisation...");
@@ -187,6 +187,7 @@ public partial class GameBootstrap : Node
 
         // --- Dépause et fade-out de l'overlay ---
         GetTree().Paused = false;
+        LoadProfiler.Mark("systèmes de la run");
         overlay.FadeOut();
     }
 

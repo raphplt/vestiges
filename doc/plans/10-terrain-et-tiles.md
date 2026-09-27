@@ -378,3 +378,30 @@ Le générateur sait désormais dessiner un dallage (`slab_px`). Les origines de
 
    Le reste est interne au moteur (synchronisation des `CharacterBody2D`, zones de détection, pas du serveur physique 2D).
    **Suite proposée :** profiler une session avec le profileur de Godot (moniteurs de serveur) ; si la synchronisation des corps domine, essayer pour les créatures simples un déplacement allégé (séparation par grille et requêtes de collision statiques par lots) à la place d'un `CharacterBody2D` chacune. Critère : 300 ennemis à 60 FPS p99 inclus.
+
+### Chargement d'une run — 27 septembre 2026
+
+**Retour de Raphaël :** « quand la map se charge au début, il y a des frames où on voit la map pas chargée », et le chargement peut-il être optimisé ?
+
+**Constat**, enregistré image par image (`tools/capture_hub.sh <dossier> ui_accept` avec `HUB_DEV="--dev --record 520"`, nouvelle option `--record` de `HubCapture`) : la toute première frame de la run montrait le HUD et un monde noir. L'écran de chargement n'entrait dans l'arbre qu'après une frame d'attente.
+
+**Mesure** : nouveau chronomètre `LoadProfiler`, une ligne `[Chargement]` par étape dans le journal. Même seed, avant → après :
+
+| Étape | Avant | Après |
+|---|---|---|
+| Génération (terrain, plans, chemins, fermes et chantiers, dans `_Ready`) | 1 060 ms | 1 120 ms |
+| Tuiles du sol et des routes | **3 008 ms** | **420 ms** |
+| Décors | 746 ms | 819 ms |
+| Index d'occlusion et tronçons | 400 ms | 395 ms |
+| **Total jusqu'à la run** | **6,0 s** | **3,6 s** |
+
+Les tuiles coûtaient cher par l'attente, pas par le calcul. La boucle rendait la main au moteur toutes les 600 cellules, soit plus de 200 frames d'attente pour 126 000 cellules. Elle la rend désormais quand sa tranche de 12 ms est épuisée, et l'écran de chargement reste animé.
+
+**Correctifs :**
+- l'écran de chargement est ajouté (en différé) dès le `_Ready` du bootstrap : la première frame de la run est déjà noire, avec l'écran de chargement (enregistrement regardé) ;
+- les tuiles et les routes sont posées par tranches de temps ;
+- une frame de respiration sépare les placeurs de décors.
+
+**Pistes suivantes, non faites :**
+- la génération synchrone (1,1 s) fige l'écran noir de la transition : elle pourrait passer après l'écran de chargement, ou sur un thread (calcul pur) ;
+- le déplacement des décors dans leurs conteneurs finaux (décalques, tronçons) coûte 0,4 s : les poser directement au bon endroit l'éviterait.

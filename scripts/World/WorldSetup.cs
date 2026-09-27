@@ -97,6 +97,7 @@ public partial class WorldSetup : Node2D
 
     public override void _Ready()
     {
+        LoadProfiler.Begin();
         EnemyDataLoader.Load();
         BiomeDataLoader.Load();
         PoiDataLoader.Load();
@@ -134,6 +135,7 @@ public partial class WorldSetup : Node2D
             _terrain = _generator.Generate(availableBiomes, _config.BiomeCount);
         else
             _terrain = _generator.Generate();
+        LoadProfiler.Mark("terrain et biomes");
 
         // Layouts urbains/marais (CPU pur)
         if (_generator.ActiveBiomes.Any(b => b.Id == "urban_ruins"))
@@ -149,10 +151,12 @@ public partial class WorldSetup : Node2D
             _wildFieldsLayout = wildFieldsGen.Apply(_terrain, _generator, "wild_fields");
         }
 
+        LoadProfiler.Mark("plans de la ville, du marais et des champs");
         // Chemins de terre entre les régions, raccordés aux rues (plan 10 T3) : rien ne pousse dessus.
         _pathNetwork = PathNetworkGenerator.Build(_generator, _terrain, _urbanLayout, _wildFieldsLayout, _config.Paths,
                                                   _config.BiomeLayout.RegionSpacing, Seed);
         _swampLayout?.Placements.RemoveAll(placement => _pathNetwork.Cells.Contains(placement.Cell));
+        LoadProfiler.Mark("chemins");
 
         // Fermes des champs (plan 08 P4b) : cellules réservées avant les points d'intérêt, embranchement vers un chemin.
         _farmConfig = FarmConfig.Load();
@@ -161,6 +165,7 @@ public partial class WorldSetup : Node2D
         _quarryPlan = SitePlan.Load("res://data/world/quarry_sites.json", "collapsed_quarry",
                                     "res://assets/props/collapsed_quarry/", "chantiers");
         _quarrySites = SiteComposer.Plan(_generator, _pathNetwork, _usedCells, _quarryPlan, Seed);
+        LoadProfiler.Mark("fermes et chantiers");
 
         // Préparer le TileSet et mapper (rapide)
         _ground.TileSet = _ground.TileSet.Duplicate() as TileSet;
@@ -198,13 +203,17 @@ public partial class WorldSetup : Node2D
         CreateVoidBackground();
 
         // Étaler ApplyTerrain sur plusieurs frames (le plus gros coût)
+        LoadProfiler.Mark("scène prête");
         await ApplyTerrainAsync(_terrain, _urbanLayout, onProgress);
+        LoadProfiler.Mark("tuiles");
         GroundMaterial.Apply(_ground, _roadOverlay, _generator, _tileMapper, _terrain, _config.MapRadius, _config.GroundBlend);
         AddPaths();
+        LoadProfiler.Mark("matériau du sol et chemins");
 
         onProgress?.Invoke("Brouillard de guerre...");
         InitializeFog();
         await YieldFrame();
+        LoadProfiler.Mark("brouillard");
 
         if (_config.PoisEnabled && !PoisDisabled)
         {
@@ -214,22 +223,27 @@ public partial class WorldSetup : Node2D
         }
         // Avant les décors : chaque coffre et chaque lieu réserve son dégagement.
         SpawnSites();
+        LoadProfiler.Mark("points d'intérêt, coffres et lieux");
 
         onProgress?.Invoke("Décors...");
         SpawnEnvironmentProps(_urbanLayout, _swampLayout);
+        await YieldFrame();
 
         if (_urbanLayout != null)
         {
             Node2D propContainer = GetNode<Node2D>("PropContainer");
             UrbanPropPlacer.PlaceProps(_urbanLayout, _ground, propContainer, _usedCells, Seed);
+            await YieldFrame();
         }
         if (_swampLayout != null)
         {
             Node2D propContainer = GetNode<Node2D>("PropContainer");
             SwampPropPlacer.PlaceProps(_swampLayout, _ground, propContainer, _usedCells);
         }
+        LoadProfiler.Mark("décors");
         BuildPropOcclusion();
         await YieldFrame();
+        LoadProfiler.Mark("index d'occlusion");
 
         onProgress?.Invoke("Atmosphère...");
         if (_config.LoreElementsEnabled)
@@ -245,6 +259,7 @@ public partial class WorldSetup : Node2D
         _pathNetwork = null;
 
         IsWorldReady = true;
+        LoadProfiler.Mark("atmosphère");
         GD.Print($"[WorldSetup] World generated with seed {Seed}");
     }
 
@@ -287,6 +302,21 @@ public partial class WorldSetup : Node2D
     private SignalAwaiter YieldFrame()
     {
         return ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+    }
+
+    // Les boucles longues du chargement rendent la main au moteur quand leur tranche de temps est épuisée, et non
+    // toutes les N cellules : l'écran de chargement reste animé sans payer une frame d'attente par petit lot.
+    private const ulong LoadSliceUsec = 12_000;
+    private ulong _loadSliceStart;
+
+    private void BeginLoadSlice() => _loadSliceStart = Time.GetTicksUsec();
+
+    private bool LoadSliceSpent() => Time.GetTicksUsec() - _loadSliceStart >= LoadSliceUsec;
+
+    private async Task YieldLoadSlice()
+    {
+        await YieldFrame();
+        BeginLoadSlice();
     }
 
     private List<BiomeData> LoadAvailableBiomes()
@@ -394,8 +424,8 @@ public partial class WorldSetup : Node2D
         float fadeStart = radius - _config.EdgeFadeWidth;
         bool hasDissolution = _tileMapper.HasDissolutionTiles;
 
-        const int batchSize = 600;
         int count = 0;
+        BeginLoadSlice();
 
         for (int gx = 0; gx < size; gx++)
         {
@@ -436,11 +466,11 @@ public partial class WorldSetup : Node2D
                     _ground.SetCell(cell, sourceId, Vector2I.Zero);
 
                 count++;
-                if (count % batchSize == 0)
+                if ((count & 255) == 0 && LoadSliceSpent())
                 {
                     int pct = (int)(count * 100f / totalCells);
                     onProgress?.Invoke($"Terrain... {pct}%");
-                    await YieldFrame();
+                    await YieldLoadSlice();
                 }
             }
         }
@@ -652,9 +682,9 @@ public partial class WorldSetup : Node2D
         if (urbanIndex < 0)
             return;
 
-        const int batchSize = 400;
         int count = 0;
         int total = urbanLayout.RoadCells.Count;
+        BeginLoadSlice();
 
         foreach (Vector2I roadCell in urbanLayout.RoadCells)
         {
@@ -662,11 +692,11 @@ public partial class WorldSetup : Node2D
                 _roadOverlay.SetCell(roadCell, sourceId, Vector2I.Zero);
 
             count++;
-            if (count % batchSize == 0)
+            if ((count & 255) == 0 && LoadSliceSpent())
             {
                 int pct = total <= 0 ? 100 : (int)(count * 100f / total);
                 onProgress?.Invoke($"Routes... {pct}%");
-                await YieldFrame();
+                await YieldLoadSlice();
             }
         }
     }
