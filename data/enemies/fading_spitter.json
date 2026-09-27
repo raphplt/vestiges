@@ -9,6 +9,14 @@
         "attack_range": 275,
         "xp_reward": 15
     },
+    "abilities": {
+        "aimed_shot": {
+            "windup_seconds": 0.3,
+            "lane_length": 80,
+            "lane_width": 6,
+            "fx_family": "rust"
+        }
+    },
     "visual": {
         "color": "#CC5533",
         "shape": "triangle",

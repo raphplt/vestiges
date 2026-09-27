@@ -12,6 +12,16 @@
         "attack_range": 250,
         "xp_reward": 20
     },
+    "abilities": {
+        "aimed_shot": {
+            "windup_seconds": 0.45,
+            "lane_length": 120,
+            "lane_width": 8,
+            "fx_family": "pale",
+            "show_range": 1,
+            "range_reveal_margin": 90
+        }
+    },
     "visual": {
         "color": "#44CC44",
         "shape": "triangle",

@@ -133,3 +133,4 @@ Captures en vraie run regardées : bilan, level-up (cartes et effet), coffre, pa
 - [ ] **Synergies de perks** annoncées sans effet (plan 05, fin) : les retirer ou les implémenter ?
 - [ ] **Typographie de l'interface** (04 lot B) : tailles légèrement relevées (lore de la pause 12 → 14 px, corps 15 → 16…). Plus lisible en 720p ; trop gros en 1080p ? Réglage « Taille du texte » à 115 et 130 % : utile, ou à retirer ?
 - [ ] **Chantiers de la carrière** (08 P6b) : un par région (6 sur la seed de capture). Se lisent-ils comme une mine abandonnée ? Trop vides au sud, trop répétitifs ? Captures : `CAPTURE_EXTRA_ARGS="--capture-quarries" tools/capture_run.sh <dossier>`.
+- [ ] **Tirs annoncés** (07 lot B) : couloir de visée avant chaque tir du Cracheur, de la Sentinelle et de la Tisseuse ; contour de portée de la Sentinelle. Trop d'indications à l'écran en pleine vague ? Tireurs devenus trop faciles ?

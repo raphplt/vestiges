@@ -10,6 +10,7 @@ public static class EnemyAbilityFactory
         "charge" => new PounceAbility(owner, "ChargeMarker"),
         "burrow" => new BurrowAbility(owner),
         "cry" => new CryAbility(owner),
+        "aimed_shot" => new AimedShotAbility(owner),
         _ => null
     };
 }

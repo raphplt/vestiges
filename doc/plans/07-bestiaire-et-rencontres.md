@@ -280,8 +280,20 @@ Propositions :
     - Hurleur : annonce, mort qui l'efface et coupe l'appel, renforts sinon ;
   - `test_movement` vert ;
   - captures `--capture-abilities --enemies void_brute,rampant,hurleur` (nouvelle option `--still`) regardées : couloir violet de la charge, cercle vert du cri puis deux Ombres, cercle rouille du surgissement.
-- **Non fait :** tirs du Cracheur et de la Sentinelle sans annonce, leur projectile restant lisible ; portée de la Sentinelle toujours invisible (« fenêtre sûre » de la fiche).
+- **Non fait (repris plus bas) :** tirs du Cracheur et de la Sentinelle sans annonce ; portée de la Sentinelle invisible.
 - **À recetter :** la Brute devient évitable, donc plus juste mais peut-être moins dangereuse ; le Rampant ne blesse plus pendant l'enfouissement ; le Hurleur, immobile 0,8 s, est plus facile à tuer.
+
+**Lot B, fin de l'étape 1 — tirs annoncés, 27 septembre 2026 (session locale) :**
+- Capacité `aimed_shot` (`AimedShotAbility`) sur le Cracheur Pâli, la Sentinelle Hurlante et la Tisseuse : le tir instantané devient une visée.
+  - Le tireur s'arrête et se teinte ; un couloir court, à la couleur de son projectile, montre la direction verrouillée : 0,3 s pour le Cracheur, 0,35 s pour la Tisseuse, 0,45 s pour la Sentinelle.
+  - Le projectile part dans cette direction, même si le joueur a bougé : un pas de côté pendant la visée l'évite.
+- **Portée de la Sentinelle** : quand le joueur s'en approche à moins de 90 px, le contour de sa portée se dessine au sol, en pointillé discret, sans remplissage. Dedans on est visé, dehors non. La portée se mesure désormais au sol, comme le cercle : la Sentinelle vise un peu moins loin vers le nord et le sud qu'avant.
+- `GroundTelegraph.ShowRing` : contour seul, pour une limite à connaître plutôt qu'un coup qui arrive. Un premier essai avec l'intérieur tramé couvrait la moitié de l'écran (capture).
+- Réglages dans le bloc `abilities.aimed_shot` des trois fiches. Le Hurleur garde son tir instantané, secondaire à son cri.
+- **Vérifié :**
+  - quatre assertions ajoutées à `test_enemy_abilities`, 64 au total, toutes vertes : visée immobile sans tir, projectile dans la direction verrouillée, Sentinelle muette hors de portée au sol, cercle et visée à portée ;
+  - captures `--capture-abilities --enemies wailing_sentinel,fading_spitter,tisseuse --still` regardées.
+- **À recetter :** la cadence des tireurs baisse un peu (la visée s'ajoute à la recharge).
 
 ### Lot C — Compositions et progression
 

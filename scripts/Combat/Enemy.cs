@@ -147,6 +147,8 @@ public partial class Enemy : CharacterBody2D
 	internal float HpScale { get; private set; } = 1f;
 	internal float DamageScale { get; private set; } = 1f;
 	internal float SlowFactor => _slowFactor;
+	internal float AttackRange => _attackRange;
+	internal float RangedCooldown => _rangedAttackCooldown;
 	internal bool IsDisoriented => _disorientTimer > 0f;
 
 	public override void _Ready()
@@ -787,8 +789,12 @@ public partial class Enemy : CharacterBody2D
 	{
 		if (_player == null || !IsInstanceValid(_player))
 			return;
+		ShootProjectile((_player.GlobalPosition - GlobalPosition).Normalized());
+	}
 
-		Vector2 direction = (_player.GlobalPosition - GlobalPosition).Normalized();
+	/// <summary>Tir dans une direction donnée : celle qu'un tir annoncé a verrouillée au début de sa visée.</summary>
+	internal void ShootProjectile(Vector2 direction)
+	{
 		PlayRangedAttackVfx(direction);
 		PlayNearbyAudio(_attackAudio ?? "sfx_enemy_ranged_shot");
 		// Tisseuse : les projectiles ralentissent le joueur

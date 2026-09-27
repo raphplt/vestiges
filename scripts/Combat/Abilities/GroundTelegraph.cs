@@ -13,6 +13,7 @@ public partial class GroundTelegraph : Node2D
     /// <summary>Paliers de remplissage : l'annonce avance par poses lisibles, pas en glissement continu.</summary>
     private const int ProgressSteps = 12;
     private const float AreaDensity = 0.25f;
+    private const float RingOpacity = 0.6f;
 
     private readonly PixelFx _fx;
     private int _progressStep = -1;
@@ -33,6 +34,19 @@ public partial class GroundTelegraph : Node2D
         PixelFxSpec spec = PixelFxSpec.Of(PixelFxShape.Zone, family, radius, 1f, 1f);
         spec.Squash = Iso.GroundSquash;
         Begin(center, spec);
+    }
+
+    /// <summary>Contour seul d'un disque au sol : une limite à connaître (portée), pas un coup qui arrive.</summary>
+    public void ShowRing(Vector2 center, float radius, FxFamily family)
+    {
+        PixelFxSpec spec = PixelFxSpec.Of(PixelFxShape.Zone, family, radius, 1f, 1f);
+        spec.Squash = Iso.GroundSquash;
+        spec.FillDensity = 0f;
+        spec.ZIndex = 0;
+        GlobalPosition = center;
+        Visible = true;
+        _progressStep = -1;
+        _fx.Hold(center, spec, CombatFxSettings.EnemyOpacity * RingOpacity);
     }
 
     /// <summary>Couloir au sol entre deux points écran : sa largeur est une largeur au sol, projetée selon sa direction.</summary>

@@ -47,6 +47,7 @@ public partial class EnemyAbilityRegression : Node2D
             await RunChargeChecks();
             await RunBurrowChecks();
             await RunCryChecks();
+            await RunAimedShotChecks();
             await RunKnockbackChecks();
 
             GD.Print($"[EnemyAbilityRegression] RESULT failures={_failures}");
@@ -426,6 +427,61 @@ public partial class EnemyAbilityRegression : Node2D
                 enemy.QueueFree();
         Despawn(hurleur);
         pool.QueueFree();
+    }
+
+    /// <summary>
+    /// Tir annoncé (plan 07 lot B) : le Cracheur s'arrête et vise avant de tirer, dans la direction verrouillée au début
+    /// de l'annonce ; la Sentinelle montre sa portée au sol et ne vise qu'à l'intérieur, distance mesurée au sol.
+    /// </summary>
+    private async Task RunAimedShotChecks()
+    {
+        CombatPools pools = new() { Name = "CombatPools" };
+        AddChild(pools);
+        _player.AIInputOverride = Vector2.Zero;
+        _player.Position = Vector2.Zero;
+        await WaitHurtRecovery();
+        int windupTicks = Mathf.CeilToInt(EnemyDataLoader.Get("fading_spitter").Abilities["aimed_shot"].GetNumber("windup_seconds", 0f) / Dt);
+
+        Enemy spitter = await SpawnReady("fading_spitter", new Vector2(-150f, 0f));
+        GroundTelegraph lane = spitter.GetNode<GroundTelegraph>("AimMarker");
+        ForceCooldown(spitter, "aimed_shot");
+        await Step(1);
+        Check(lane.Visible && spitter.Velocity == Vector2.Zero && ActiveProjectiles(pools).Count == 0,
+            "Tir annoncé : couloir de visée, tireur immobile, rien de tiré pendant l'annonce");
+        _player.AIInputOverride = Vector2.Down;
+        await Step(windupTicks + 1);
+        _player.AIInputOverride = Vector2.Zero;
+        var shots = ActiveProjectiles(pools);
+        Vector2 heading = shots.Count > 0
+            ? (Vector2)typeof(EnemyProjectile).GetField("_direction", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(shots[0])
+            : Vector2.Zero;
+        Check(shots.Count == 1 && heading.IsEqualApprox(Vector2.Right) && !lane.Visible,
+            $"Tir annoncé : un projectile dans la direction verrouillée ({heading}), pas vers le joueur qui s'est écarté");
+        Despawn(spitter);
+
+        float range = EnemyDataLoader.Get("wailing_sentinel").Stats.AttackRange;
+        Enemy sentinel = await SpawnReady("wailing_sentinel", new Vector2(0f, -range * 0.8f));
+        GroundTelegraph ring = sentinel.GetNode<GroundTelegraph>("RangeMarker");
+        ForceCooldown(sentinel, "aimed_shot");
+        await Step(2);
+        Check(!sentinel.GetNode<GroundTelegraph>("AimMarker").Visible && !ring.Visible,
+            $"Sentinelle : à {range * 0.8f:F0} px au nord (soit {range * 1.6f:F0} px au sol), ni visée ni cercle");
+        sentinel.Position = _player.Position + new Vector2(0f, -range * 0.4f);
+        await Step(2);
+        Check(ring.Visible && sentinel.GetNode<GroundTelegraph>("AimMarker").Visible,
+            "Sentinelle : portée montrée au sol et visée quand le joueur y entre");
+        Despawn(sentinel);
+        pools.QueueFree();
+        await Step(1);
+    }
+
+    private static List<EnemyProjectile> ActiveProjectiles(Node root)
+    {
+        List<EnemyProjectile> found = new();
+        foreach (Node node in root.FindChildren("*", "", true, false))
+            if (node is EnemyProjectile { Visible: true } projectile)
+                found.Add(projectile);
+        return found;
     }
 
     private int CountEnemies()
