@@ -172,6 +172,7 @@ UI_HUD_PHASE_ENDGAME,AU-DELÀ,BEYOND
 UI_HUD_PHASE_DEATH,FIN,END
 UI_HUD_CRISIS_IN,Résurgence dans {0} s,Resurgence in {0} s
 UI_HUD_CRISIS,Résurgence {0},Resurgence {0}
+UI_HUD_CALM,ACCALMIE — ESSENCE ×{0},RESPITE — ESSENCE ×{0}
 UI_HUD_CRISIS_INTENSITY,Résurgence {0} — intensité {1},Resurgence {0} — intensity {1}
 EVENT_HUNT_TITLE,Un Souverain approche,A Sovereign approaches
 EVENT_HUNT_OBJECTIVE,Abattez le {0} avant son effacement,Slay the {0} before it fades

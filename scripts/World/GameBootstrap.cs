@@ -156,6 +156,7 @@ public partial class GameBootstrap : Node
         GetNode("..").CallDeferred("add_child", new ErasureEchoes { Name = "ErasureEchoes" });
         GetNode("..").CallDeferred("add_child", new ErasureMotes { Name = "ErasureMotes" });
         GetNode("..").CallDeferred("add_child", new PoiGlints { Name = "PoiGlints" });
+        GetNode("..").CallDeferred("add_child", new Events.CrisisAftermath { Name = "CrisisAftermath" });
 
         EventBus eventBus = GetNode<EventBus>("/root/EventBus");
         Player levelUpPlayer = player;

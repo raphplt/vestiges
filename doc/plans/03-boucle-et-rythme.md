@@ -147,6 +147,15 @@ Le banc relève désormais un indice de pression : les dégâts reçus par minut
 **Vérification :** chronologie mesurée, une récompense par crise, emplacement accessible, expiration correcte des bonus, sortie mort/pause sans état bloqué.
 **Garde-fou :** pas de cadeau dans le Néant inaccessible, pas de cumul permanent de multiplicateurs.
 
+**Lot C, première passe — 27 septembre 2026 (session cloud) :** les deux promesses chiffrables de la V2 (§8) sur la Résurgence et l'accalmie.
+- **Oubli accéléré pendant la crise** (étape 3) : `ErasureManager` multiplie sa décroissance par `crisis_decay_multiplier` (2,5, `erasure.json`) entre `CrisisStarted` et `CrisisEnded`, puis revient au rythme normal. Une run qui s'arrête pendant une crise n'emporte rien : le multiplicateur vit dans le nœud de la run.
+- **Accalmie** (étape 4), `Events/CrisisAftermath`, clés `calm_*` de `crises.json` :
+  - l'Essence des morts est doublée pendant 30 s ; le HUD affiche « ACCALMIE — ESSENCE ×2 » pendant toute la fenêtre, qu'une nouvelle crise referme ;
+  - un coffre rare est posé à portée, entre 220 et 340 px devant le joueur (sa direction de marche, sinon au hasard), jamais dans l'eau ni dans le Néant. Si le sol devant ne convient pas, on essaie de plus en plus sur les côtés.
+  - Le bonus passe par `EventBus.EssenceMultiplierChanged` (multiplicateur, durée), que `EssenceTracker` et le HUD écoutent : aucun cumul permanent.
+- **Vérifié** : `MovementRegression --run-integration` dans une vraie `Main`. Oubli accéléré pendant la crise puis rétabli, coffre rare posé à 307 px hors de l'eau, Essence d'une mort 2 pendant l'accalmie puis 1 dès la crise suivante.
+- **Non fait** : étapes 1 (sémantique écrite du calendrier), 2 (signal sonore d'avertissement, plan 15) et 5 (sortie toujours possible, à juger en jeu). Le coffre n'a pas encore de repère au sol ni de flèche de bord.
+
 ### Lot D — Montée en puissance et diversité
 
 1. Reprendre trois armes et quelques objets de 05 ; établir deux builds aux comportements visiblement différents.

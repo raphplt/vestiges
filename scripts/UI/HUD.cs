@@ -145,6 +145,7 @@ public partial class HUD : CanvasLayer
         _eventBus.CrisisWarning += OnCrisisWarning;
         _eventBus.CrisisStarted += OnCrisisStarted;
         _eventBus.CrisisEnded += OnCrisisEnded;
+        _eventBus.EssenceMultiplierChanged += OnEssenceMultiplierChanged;
         _eventBus.EssenceChanged += OnEssenceChanged;
         _eventBus.WeaponInventoryChanged += OnWeaponInventoryChanged;
         _eventBus.WeaponUpgraded += OnWeaponUpgraded;
@@ -263,6 +264,7 @@ public partial class HUD : CanvasLayer
             _eventBus.CrisisWarning -= OnCrisisWarning;
             _eventBus.CrisisStarted -= OnCrisisStarted;
             _eventBus.CrisisEnded -= OnCrisisEnded;
+            _eventBus.EssenceMultiplierChanged -= OnEssenceMultiplierChanged;
             _eventBus.EssenceChanged -= OnEssenceChanged;
             _eventBus.WeaponInventoryChanged -= OnWeaponInventoryChanged;
             _eventBus.WeaponUpgraded -= OnWeaponUpgraded;
@@ -760,6 +762,20 @@ public partial class HUD : CanvasLayer
     private void OnCrisisEnded(int crisisNumber)
     {
         _alertLabel.Text = "";
+    }
+
+    /// <summary>Accalmie après une crise (plan 03 lot C) : l'annonce dure autant que le bonus d'Essence.</summary>
+    private void OnEssenceMultiplierChanged(float multiplier, float seconds)
+    {
+        if (multiplier > 1f)
+        {
+            _alertLabel.Text = string.Format(Tr("UI_HUD_CALM"), multiplier.ToString("0.#"));
+            _alertLabel.AddThemeColorOverride("font_color", PalCyanEssence);
+        }
+        else if (_warningCountdown <= 0f)
+        {
+            _alertLabel.Text = "";
+        }
     }
 
     /// <summary>Arrivée des grains d'Essence : fin du compteur, dans le repère des vols.</summary>

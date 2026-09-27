@@ -75,6 +75,45 @@ public partial class MovementRegression
                 world.GetNode<Vestiges.Spawn.EnemyPool>("EnemyPool").Return(enemy);
     }
 
+    /// <summary>Plan 03 lot C : oubli accéléré pendant la crise ; accalmie avec coffre rare à portée et Essence doublée.</summary>
+    private async Task CheckCrisisAftermath(WorldSetup world)
+    {
+        EventBus bus = GetNode<EventBus>("/root/EventBus");
+        ErasureManager erasure = world.GetNode<ErasureManager>("ErasureManager");
+        Vestiges.Progression.EssenceTracker essence = world.GetNode<Vestiges.Progression.EssenceTracker>("EssenceTracker");
+        FieldInfo crisisActive = typeof(ErasureManager).GetField("_crisisActive", BindingFlags.Instance | BindingFlags.NonPublic);
+
+        bus.EmitSignal(EventBus.SignalName.CrisisStarted, 3, 2);
+        bool accelerated = (bool)crisisActive.GetValue(erasure);
+        int chestsBefore = GetTree().GetNodesInGroup("chests").Count;
+        bus.EmitSignal(EventBus.SignalName.CrisisEnded, 3);
+        await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+
+        Vestiges.World.Chest calmChest = null;
+        foreach (Node node in GetTree().GetNodesInGroup("chests"))
+            if (node is Vestiges.World.Chest chest && chest.ChestId == "chest_rare" && !chest.IsOpened)
+                calmChest = chest;
+        float distance = calmChest != null ? calmChest.GlobalPosition.DistanceTo(_player.GlobalPosition) : -1f;
+        Check(accelerated && !(bool)crisisActive.GetValue(erasure), "Crise : l'oubli s'accélère pendant la crise, reprend son rythme après");
+        Check(GetTree().GetNodesInGroup("chests").Count == chestsBefore + 1 && distance >= 200f && distance <= 360f
+                && !world.IsWaterAt(calmChest.GlobalPosition),
+            $"Accalmie : coffre rare posé à {distance:0} px du joueur, hors de l'eau");
+
+        int before = essence.CurrentEssence;
+        bus.EmitSignal(EventBus.SignalName.EnemyKilled, "rodeur", _player.GlobalPosition);
+        int boosted = essence.CurrentEssence - before;
+        bus.EmitSignal(EventBus.SignalName.CrisisStarted, 4, 2);
+        before = essence.CurrentEssence;
+        bus.EmitSignal(EventBus.SignalName.EnemyKilled, "rodeur", _player.GlobalPosition);
+        int normal = essence.CurrentEssence - before;
+        bus.EmitSignal(EventBus.SignalName.CrisisEnded, 4);
+        Check(boosted >= 2 && normal >= 1 && boosted >= normal * 2 - 1,
+            $"Accalmie : Essence d'une mort {boosted} pendant l'accalmie, {normal} dès la crise suivante");
+        foreach (Node node in GetTree().GetNodesInGroup("enemies"))
+            if (node is Vestiges.Combat.Enemy enemy && enemy.IsActive)
+                world.GetNode<Vestiges.Spawn.EnemyPool>("EnemyPool").Return(enemy);
+    }
+
     private int CountEnemies(string enemyId)
     {
         int count = 0;
@@ -219,6 +258,7 @@ public partial class MovementRegression
         await CheckWorldEdge(world);
         await CheckVoidDamage(world);
         await CheckCrisisMiniboss(world);
+        await CheckCrisisAftermath(world);
         await CheckScoreClock(world);
         // Le pool historique garde ses instances préchauffées hors de l'arbre :
         // le banc les libère explicitement pour vérifier une fermeture sans erreurs RID.

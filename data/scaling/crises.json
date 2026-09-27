@@ -11,5 +11,10 @@
     "boss_hp_scale": 3.2,
     "boss_dmg_scale": 1.65,
     "endgame_interval_multiplier": 0.70,
-    "endgame_duration_multiplier": 1.15
+    "endgame_duration_multiplier": 1.15,
+    "_doc_calm": "Accalmie après une crise (V2 §8, plan 03 lot C) : Essence multipliée pendant calm_essence_seconds, coffre calm_chest posé à portée devant le joueur, à calm_chest_distance pixels.",
+    "calm_essence_multiplier": 2.0,
+    "calm_essence_seconds": 30,
+    "calm_chest": "chest_rare",
+    "calm_chest_distance": [220, 340]
 }

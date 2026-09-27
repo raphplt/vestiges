@@ -108,3 +108,8 @@ Fichier temporaire. Il liste ce qu'une session cloud a livré sans pouvoir le v�
 
 - [ ] **À arbitrer par Raphaël** : un Colosse à chaque crise dès la deuxième. Trop fréquent ? Difficulté d'un Colosse en pleine vague, coffre épique à chaque fois. Désactivation : `crisis_miniboss_from: 0` dans `data/scaling/spawn_flow.json`.
 
+## Plan 03 lot C — Résurgence et accalmie
+
+- [ ] **Rythme** : oubli ×2,5 pendant une crise de 70 s. La fin de run arrive-t-elle trop vite ? Le late game se déclenche à 68 % d'oubli global.
+- [ ] **Coffre d'accalmie** : trouvé naturellement devant soi, ou manqué faute de repère ?
+

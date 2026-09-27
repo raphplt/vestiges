@@ -73,6 +73,7 @@ Un seul lot d'implémentation ouvert à la fois. Un échec de lisibilité, de pe
 - [04 C2](04-interfaces-et-hub.md) : Collection dans le menu de l'accueil. Armes et souvenirs de run en grille, détail et condition de déblocage à la demande, même règle de disponibilité que le loot.
 - [07 lot A](07-bestiaire-et-rencontres.md) : audit des données du bestiaire (`tools/audit_bestiary.py`). Les trois Colosses sont inatteignables en jeu, la Tisseuse ne sort qu'en crise dans les Marécages ; propositions à arbitrer.
 - [07 lot C](07-bestiaire-et-rencontres.md) : les Colosses reviennent en jeu, un par crise à partir de la deuxième (choix provisoire, consigné dans DECISIONS §7).
+- [03 lot C](03-boucle-et-rythme.md) : pendant une Résurgence l'oubli s'accélère ; à l'accalmie, Essence doublée 30 s et coffre rare posé à portée devant le joueur (V2 §8).
 - Travail fait dans un conteneur sans GPU : les points à revérifier sur la machine de Raphaël sont listés dans [A-VERIFIER.md](A-VERIFIER.md).
 
 **Mise à jour du 26 septembre (soir) :**

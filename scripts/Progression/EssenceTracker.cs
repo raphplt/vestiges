@@ -13,6 +13,7 @@ public partial class EssenceTracker : Node
 {
     private EventBus _eventBus;
     private int _currentEssence;
+    private float _multiplier = 1f;
 
     public int CurrentEssence => _currentEssence;
 
@@ -22,6 +23,7 @@ public partial class EssenceTracker : Node
         _eventBus = GetNode<EventBus>("/root/EventBus");
         _eventBus.EnemyKilled += OnEnemyKilled;
         _eventBus.LootReceived += OnLootReceived;
+        _eventBus.EssenceMultiplierChanged += OnMultiplierChanged;
         EmitChanged();
     }
 
@@ -31,6 +33,7 @@ public partial class EssenceTracker : Node
         {
             _eventBus.EnemyKilled -= OnEnemyKilled;
             _eventBus.LootReceived -= OnLootReceived;
+            _eventBus.EssenceMultiplierChanged -= OnMultiplierChanged;
         }
     }
 
@@ -66,9 +69,13 @@ public partial class EssenceTracker : Node
         };
         if (GD.Randf() < ErasureEffectAt(position).EssenceChance)
             amount++;
+        // Accalmie après une crise : l'Essence des morts rapporte davantage (arrondi au supérieur).
+        amount = Mathf.CeilToInt(amount * _multiplier);
         AddEssence(amount);
         _eventBus.EmitSignal(EventBus.SignalName.EssenceGained, amount, position);
     }
+
+    private void OnMultiplierChanged(float multiplier, float seconds) => _multiplier = Mathf.Max(1f, multiplier);
 
     private ErasureManager _erasureManager;
 
