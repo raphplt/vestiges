@@ -20,11 +20,6 @@ public partial class Enemy : CharacterBody2D
 	private const float PlayerProximityRange = 80f;
 	// V2: StructureDetectRange retire
 	private const float GuardPatrolRadius = 150f;
-	private const float ScreamerCryCooldown = 8f;
-	private const float ScreamerCryRange = 250f;
-	private const int ScreamerSpawnCount = 2;
-	private const float BurrowerPhaseDuration = 2f;
-	private const float BurrowerPhaseInterval = 5f;
 
 	private float _maxHp;
 	private float _baseHp;
@@ -61,6 +56,17 @@ public partial class Enemy : CharacterBody2D
 
 	// Void Brute (charger) : charge vers les murs/structures
 	private float _chargerCooldown;
+	// Réglages de comportement lus dans la fiche (plan 07 lot B) : cri du Hurleur, phases du Rampant, charge de la Brute.
+	private float _cryCooldown;
+	private float _cryRange;
+	private int _cryReinforcements;
+	private float _burrowDuration;
+	private float _surfaceDuration;
+	private float _chargeSpeed;
+	private float _chargeCooldown;
+	private float _chargeDuration;
+	private float _chargeRetry;
+	private float _chargeRangeSq;
 	private bool _chargerIsCharging;
 	private float _chargerDurationLeft;
 	private Vector2 _chargerDirection;
@@ -206,10 +212,21 @@ public partial class Enemy : CharacterBody2D
 		_slowFactor = 1f;
 		_slowTimer = 0f;
 		_disorientTimer = 0f;
-		_screamerTimer = ScreamerCryCooldown * 0.5f;
-		_burrowerPhaseTimer = BurrowerPhaseInterval;
+		_cryCooldown = data.GetStat("cry_cooldown", 8f);
+		_cryRange = data.GetStat("cry_range", 250f);
+		_cryReinforcements = (int)data.GetStat("cry_reinforcements", 2f);
+		_burrowDuration = data.GetStat("burrow_duration", 2f);
+		_surfaceDuration = data.GetStat("surface_duration", 5f);
+		_chargeSpeed = data.GetStat("charge_speed", 200f);
+		_chargeCooldown = data.GetStat("charge_cooldown", 8f);
+		_chargeDuration = data.GetStat("charge_duration", 0.8f);
+		_chargeRetry = data.GetStat("charge_retry", 0.5f);
+		float chargeRange = data.GetStat("charge_range", 200f);
+		_chargeRangeSq = chargeRange * chargeRange;
+		_screamerTimer = _cryCooldown * 0.5f;
+		_burrowerPhaseTimer = _surfaceDuration;
 		_isBurrowed = false;
-		_chargerCooldown = 4f;
+		_chargerCooldown = data.GetStat("charge_first_delay", 4f);
 		_chargerIsCharging = false;
 		_chargerDurationLeft = 0f;
 		_packBonusDamage = data.ExtraStats.TryGetValue("pack_bonus_damage", out float pbd) ? pbd : 0.15f;
@@ -544,6 +561,14 @@ public partial class Enemy : CharacterBody2D
 
 		ProcessBehaviorAbilities(distToPlayer, dt);
 
+		// La charge garde sa vitesse jusqu'au bout : la poursuite ordinaire l'écrasait dans la même frame.
+		if (_chargerIsCharging)
+		{
+			UpdateSpriteAnimation(dt);
+			MoveAndSlide();
+			return;
+		}
+
 		if (_mods.IsTraveling)
 		{
 			ProcessTravel(distToPlayer, dt);
@@ -607,14 +632,14 @@ public partial class Enemy : CharacterBody2D
 	/// <summary>Hurleur : crie périodiquement pour appeler des renforts (shade).</summary>
 	private void ProcessScreamerCry(float distToPlayer, float delta)
 	{
-		if (distToPlayer > ScreamerCryRange)
+		if (distToPlayer > _cryRange)
 			return;
 
 		_screamerTimer -= delta;
 		if (_screamerTimer > 0f)
 			return;
 
-		_screamerTimer = ScreamerCryCooldown;
+		_screamerTimer = _cryCooldown;
 		if (_hasSprite)
 			EnemyAttackFx.FlashWarning(_sprite, PixelPalette.CreatureAcid, 0.4f);
 		// Flash vert + pulse visuel pour indiquer le cri
@@ -634,9 +659,9 @@ public partial class Enemy : CharacterBody2D
 		if (shadeData == null)
 			return;
 
-		for (int i = 0; i < ScreamerSpawnCount; i++)
+		for (int i = 0; i < _cryReinforcements; i++)
 		{
-			float angle = Mathf.Tau * i / ScreamerSpawnCount + (float)GD.RandRange(0, Mathf.Pi);
+			float angle = Mathf.Tau * i / _cryReinforcements + (float)GD.RandRange(0, Mathf.Pi);
 			Vector2 offset = new(Mathf.Cos(angle) * 40f, Mathf.Sin(angle) * 40f);
 			Enemy reinforcement = pool.Get();
 			reinforcement.GlobalPosition = GlobalPosition + offset;
@@ -662,7 +687,7 @@ public partial class Enemy : CharacterBody2D
 		{
 			// Émerge : redevient vulnérable et visible
 			_isBurrowed = false;
-			_burrowerPhaseTimer = BurrowerPhaseInterval;
+			_burrowerPhaseTimer = _surfaceDuration;
 			PlayActionAudio("sfx_burrow_transition");
 			CollisionLayer = 2;
 			Modulate = new Color(1f, 1f, 1f, 1f);
@@ -671,7 +696,7 @@ public partial class Enemy : CharacterBody2D
 		{
 			// S'enfouit : semi-transparent, ignore les collisions structures
 			_isBurrowed = true;
-			_burrowerPhaseTimer = BurrowerPhaseDuration;
+			_burrowerPhaseTimer = _burrowDuration;
 			CollisionLayer = 0;
 			Modulate = new Color(1f, 1f, 1f, 0.35f);
 		}
@@ -696,12 +721,12 @@ public partial class Enemy : CharacterBody2D
 		if (_chargerIsCharging)
 		{
 			_chargerDurationLeft -= delta;
-			Velocity = _chargerDirection * 200f;
+			Velocity = _chargerDirection * _chargeSpeed;
 
 			if (_chargerDurationLeft <= 0f)
 			{
 				_chargerIsCharging = false;
-				_chargerCooldown = 8f;
+				_chargerCooldown = _chargeCooldown;
 			}
 
 			return;
@@ -710,12 +735,13 @@ public partial class Enemy : CharacterBody2D
 		_chargerCooldown -= delta;
 		if (_chargerCooldown <= 0f)
 		{
-			// V2: charge vers le joueur au lieu de structures
-			if (_player != null && IsInstanceValid(_player))
+			// Charge vers le joueur, seulement à portée (`charge_range`) : de plus loin, elle retente peu après.
+			if (_player != null && IsInstanceValid(_player)
+				&& GlobalPosition.DistanceSquaredTo(_player.GlobalPosition) <= _chargeRangeSq)
 			{
 				_chargerIsCharging = true;
 				PlayActionAudio("sfx_enemy_charge");
-				_chargerDurationLeft = 0.8f;
+				_chargerDurationLeft = _chargeDuration;
 				_chargerDirection = (_player.GlobalPosition - GlobalPosition).Normalized();
 				if (_hasSprite)
 					EnemyAttackFx.FlashWarning(_sprite, PixelPalette.FlowerViolet, 0.3f);
@@ -725,7 +751,7 @@ public partial class Enemy : CharacterBody2D
 			}
 			else
 			{
-				_chargerCooldown = 3f;
+				_chargerCooldown = _chargeRetry;
 			}
 		}
 	}

@@ -14,7 +14,10 @@
         "leash": 700,
         "charge_speed": 200,
         "charge_cooldown": 8,
-        "charge_range": 200
+        "charge_range": 200,
+        "charge_duration": 0.8,
+        "charge_first_delay": 4,
+        "charge_retry": 0.5
     },
     "visual": {
         "color": "#663366",

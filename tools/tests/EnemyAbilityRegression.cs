@@ -44,6 +44,7 @@ public partial class EnemyAbilityRegression : Node2D
             await RunPounceChecks();
             await RunHitFeedbackChecks();
             await RunPoolReuseChecks();
+            await RunChargeChecks();
 
             GD.Print($"[EnemyAbilityRegression] RESULT failures={_failures}");
             GetTree().Quit(_failures == 0 ? 0 : 1);
@@ -289,6 +290,29 @@ public partial class EnemyAbilityRegression : Node2D
 
         reused.QueueFree();
         pool.QueueFree();
+    }
+
+    /// <summary>Brute du Vide : charge lue dans sa fiche (plan 07 lot B), seulement à portée de `charge_range`.</summary>
+    private async Task RunChargeChecks()
+    {
+        BindingFlags flags = BindingFlags.NonPublic | BindingFlags.Instance;
+        FieldInfo cooldown = typeof(Enemy).GetField("_chargerCooldown", flags);
+        FieldInfo charging = typeof(Enemy).GetField("_chargerIsCharging", flags);
+        EnemyData data = EnemyDataLoader.Get("void_brute");
+        float range = data.GetStat("charge_range", 0f);
+
+        Enemy brute = await SpawnReady("void_brute", new Vector2(range + 150f, 0f));
+        cooldown.SetValue(brute, 0f);
+        await Step(2);
+        Check(!(bool)charging.GetValue(brute), $"Charge : hors de portée ({range + 150f:F0} px > {range:F0}), pas de charge");
+
+        brute.Position = _player.Position + new Vector2(range * 0.6f, 0f);
+        cooldown.SetValue(brute, 0f);
+        await Step(2);
+        float speed = brute.Velocity.Length();
+        Check((bool)charging.GetValue(brute) && Mathf.IsEqualApprox(speed, data.GetStat("charge_speed", 0f), 1f),
+            $"Charge : à portée, charge à la vitesse de la fiche ({speed:F0} px/s)");
+        Despawn(brute);
     }
 
     private static int VisibleFx(Node pools)

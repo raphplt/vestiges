@@ -47,6 +47,8 @@ public class EnemyData
     public EnemyStats Stats { get; set; }
     public EnemyVisual Visual { get; set; }
     public Dictionary<string, float> ExtraStats { get; set; } = new();
+    /// <summary>Réglage propre à un comportement (`stats` de la fiche), sinon <paramref name="fallback"/>.</summary>
+    public float GetStat(string key, float fallback) => ExtraStats.TryGetValue(key, out float value) ? value : fallback;
     public Dictionary<string, EnemyAbilityData> Abilities { get; set; } = new();
     /// <summary>Clé AudioManager jouée quand un coup porte ou qu'un projectile part (null : muet).</summary>
     public string AttackAudio { get; set; }

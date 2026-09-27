@@ -244,6 +244,12 @@ Propositions :
 
 **Lot B, étape 5 vérifiée — 27 septembre 2026 :** une créature rendue au pool en plein état temporaire repart neuve. Test ajouté à `tools/test_enemy_abilities.sh` (`RunPoolReuseChecks`) : une Brute du Vide Aberration avec affixe, brûlée, saignante, ralentie, désorientée, en traversée, enfouie et frappée, rendue au pool puis réutilisée en Rôdeur. Huit vérifications vertes : ni variante ni affixe, effets effacés, vitesse et PV de la nouvelle fiche, taille, opacité et collisions d'origine, aura et plaque de nom retirées, shader propre. Aucun défaut trouvé dans `Enemy.Reset` ; le test garde ce contrat pour la suite. Étapes 1 à 4 non commencées.
 
+**Lot B, étape 2 livrée — 27 septembre 2026 :** les réglages des comportements quittent `Enemy.cs` pour les fiches (`stats`) : cri du Hurleur (`cry_cooldown`, `cry_range`, `cry_reinforcements`), phases du Rampant (`burrow_duration`, `surface_duration`), charge de la Brute du Vide (`charge_speed`, `charge_cooldown`, `charge_range`, déjà déclarés mais ignorés, plus `charge_duration`, `charge_first_delay`, `charge_retry`). Valeurs reprises à l'identique.
+- **Bogue trouvé en route : la charge de la Brute n'a jamais eu d'effet.** Depuis son introduction (1er mars), la poursuite ordinaire écrasait la vitesse de charge dans la même frame : seuls l'éclair violet et le son se jouaient, la Brute avançait à 35 px/s. Elle fonce maintenant à 200 px/s pendant 0,8 s.
+- Elle ne charge plus que si le joueur est à moins de 200 px (`charge_range`), sinon elle retente 0,5 s plus tard ; avant, la charge partait de n'importe quelle distance.
+- **Effet de jeu à surveiller en recette :** la Brute devient nettement plus menaçante (Carrière en exploration, toutes les crises). Réglages dans `data/enemies/void_brute.json`.
+- Vérifié : deux tests dans `test_enemy_abilities` (pas de charge hors de portée ; charge à 200 px/s à portée), `test_movement` vert.
+
 ### Lot C — Compositions et progression
 
 1. Reprendre SpawnManager et les pools de biome.

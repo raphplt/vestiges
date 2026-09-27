@@ -8,7 +8,10 @@
         "speed": 25,
         "damage": 4,
         "attack_range": 300,
-        "xp_reward": 30
+        "xp_reward": 30,
+        "cry_cooldown": 8,
+        "cry_range": 250,
+        "cry_reinforcements": 2
     },
     "visual": {
         "color": "#44AA55",
