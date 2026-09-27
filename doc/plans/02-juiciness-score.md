@@ -70,7 +70,8 @@ Un événement de gain avec cause, un profil de feedback JSON et un pool supplé
 - **Record** : `SaveEndOfRun` écrivait le nouveau record avant que le bilan ne lise `IsNewRecord`, si bien que « NOUVEAU RECORD ! » ne s'affichait jamais et que « Meilleur » montrait le score de la run. L'ancien record et le verdict sont désormais figés avant la sauvegarde.
 - **Barème en données** : `data/scaling/score.json` (lu par `ScoreConfig`) reprend exactement les anciennes constantes : points par créature, par seconde, par crise, par point d'intérêt, par coffre selon la rareté, boss et endgame. Les `score_points` de `pois.json` diffèrent de la valeur unique de 50 appliquée jusqu'ici ; ils restent inutilisés dans cette passe pour ne pas changer l'économie.
 - **Vérifié** : `MovementRegression --run-integration`, dans une vraie `Main`, avec quatre contrôles de plus : score notifié sans kill (4 notifications en 1,2 s), pause qui n'avance pas l'horloge, record encore lu après la sauvegarde, horloge arrêtée à la mort.
-- **Reste du lot A** : regrouper visuellement les gains rapprochés (« +120 »), détail du score au bilan (lot D).
+- **Gains regroupés** (ajoutés ensuite) : un « +N » à gauche de la plaque de score cumule les gains à moins de 0,6 s d'intervalle, reste 0,9 s puis s'efface. Les points de survie, qui arrivent un à un, ne s'y affichent pas (seuil de 5). Capture `--capture-crowd` : « +166 », puis « +548 » pendant la rafale, pendant que le compteur rattrape.
+- **Reste du lot A** : rien dans cette passe ; le détail du score figure au bilan (lot D).
 
 ### Lot B — Combat perceptible
 

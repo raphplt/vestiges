@@ -97,6 +97,13 @@ public partial class HUD : CanvasLayer
     private RunTracker _runTracker;
     private int _shownSeconds = -1;
     private int _targetScore;
+    private Label _gainLabel;
+    private int _pendingGain;
+    private float _gainAge = float.MaxValue;
+    private const int MinShownGain = 5;
+    private const float GainGroupSec = 0.6f;
+    private const float GainShowSec = 0.9f;
+    private const float GainFadeSec = 0.4f;
     private float _shownScore;
     private float _hpRatio = 1f;
     private float _chipRatio = 1f;
@@ -216,6 +223,7 @@ public partial class HUD : CanvasLayer
 
         UpdateHpChip(dt);
         UpdateScoreCounter(dt);
+        UpdateGainLabel(dt);
         if (_xpPulse > 0f)
         {
             _xpPulse = Mathf.Max(0f, _xpPulse - dt * 5f);
@@ -452,6 +460,14 @@ public partial class HUD : CanvasLayer
         _scoreLabel.HorizontalAlignment = HorizontalAlignment.Right;
         content.AddChild(_scoreLabel);
 
+        // Gains rapprochés regroupés (plan 02 lot A) : « +120 » à gauche de la plaque, puis s'efface.
+        _gainLabel = MakeLabel("", 13, PalGoldFoyer, 4);
+        _gainLabel.Position = new Vector2(-ScorePlateWidth - PlateMargin - 88f, PlateMargin + 10f);
+        _gainLabel.Size = new Vector2(80f, 20f);
+        _gainLabel.HorizontalAlignment = HorizontalAlignment.Right;
+        _gainLabel.Modulate = new Color(1f, 1f, 1f, 0f);
+        anchor.AddChild(_gainLabel);
+
         _essenceLabel = MakeLabel("", 10, PalCyanEssence);
         _essenceLabel.Position = new Vector2(8, 22);
         _essenceLabel.Size = new Vector2(ScorePlateWidth - 16, 15);
@@ -633,7 +649,27 @@ public partial class HUD : CanvasLayer
         tween.TweenProperty(_levelLabel, "scale", Vector2.One, 0.25f).SetTrans(Tween.TransitionType.Back).SetEase(Tween.EaseType.Out);
     }
 
-    private void OnScoreChanged(int newScore) => _targetScore = newScore;
+    private void OnScoreChanged(int newScore)
+    {
+        int gain = newScore - _targetScore;
+        _targetScore = newScore;
+        // Les points de survie arrivent un à un : seuls les vrais gains (kill, coffre, lieu) s'affichent.
+        if (gain < MinShownGain)
+            return;
+        _pendingGain = _gainAge < GainGroupSec ? _pendingGain + gain : gain;
+        _gainAge = 0f;
+        _gainLabel.Text = $"+{_pendingGain:N0}";
+        _gainLabel.Modulate = Colors.White;
+    }
+
+    private void UpdateGainLabel(float dt)
+    {
+        if (_gainAge > GainShowSec + GainFadeSec)
+            return;
+        _gainAge += dt;
+        float fade = Mathf.Clamp((_gainAge - GainShowSec) / GainFadeSec, 0f, 1f);
+        _gainLabel.Modulate = new Color(1f, 1f, 1f, 1f - fade);
+    }
 
     /// <summary>Le score défile vers sa cible : chaque gain se voit, sans reconstruire la chaîne à chaque frame.</summary>
     private void UpdateScoreCounter(float dt)

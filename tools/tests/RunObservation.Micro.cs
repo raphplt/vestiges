@@ -6,7 +6,8 @@ namespace Vestiges.Tests;
 
 /// <summary>
 /// --capture-micro : micro-interactions (plan 02 J6). Le joueur s'arrête près du coffre le plus proche (frémissement,
-/// trois instants), puis marche en ligne droite (poussière de pas), capturé en gros plan.
+/// trois instants), puis marche en ligne droite (poussière de pas), enfin se tient près d'un point d'intérêt (reflets),
+/// capturé en gros plan.
 /// </summary>
 public partial class RunObservation
 {
@@ -56,5 +57,29 @@ public partial class RunObservation
             SavePlayerCloseUp($"{_output}/micro-steps-{shot}.png", new Vector2(110f, 70f));
         }
         _player.AIInputOverride = Vector2.Zero;
+
+        // Reflets : le point d'intérêt inexploré le plus proche, observé quelques secondes.
+        PointOfInterest poi = null;
+        best = float.MaxValue;
+        foreach (Node node in GetTree().GetNodesInGroup("pois"))
+        {
+            if (node is not PointOfInterest candidate || candidate.IsExplored)
+                continue;
+            float distance = candidate.GlobalPosition.DistanceSquaredTo(_player.GlobalPosition);
+            if (distance < best)
+            {
+                best = distance;
+                poi = candidate;
+            }
+        }
+        if (poi == null)
+            return;
+        _player.GlobalPosition = poi.GlobalPosition + new Vector2(70f, 25f);
+        _camera.ResetSmoothing();
+        for (int shot = 0; shot < 4; shot++)
+        {
+            await Seconds(0.45);
+            SavePlayerCloseUp($"{_output}/micro-poi-{shot}.png", new Vector2(130f, 90f));
+        }
     }
 }
