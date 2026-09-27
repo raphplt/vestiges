@@ -22,6 +22,7 @@ namespace Vestiges.Tests;
 /// --capture-junctions : frontières entre biomes les plus proches du départ, avec et sans décors.
 /// --capture-paths : chemins de terre par biome, raccord à une rue, vue dézoomée du départ (RunObservation.Paths.cs).
 /// --capture-farms : fermes des Champs Sauvages les plus proches du départ, normal et dézoomé (RunObservation.Farms.cs).
+/// --capture-landmarks : églises et pylônes des Ruines Urbaines, normal et dézoomé (RunObservation.Landmarks.cs).
 /// --capture-echoes : échos de l'oubli forcés en zone Fragile, apparition, dissolution, murmure (RunObservation.Echoes.cs).
 /// --capture-erasure : une capture par phase de l'oubli, puis un dégradé de toutes les phases.
 /// --measure-props [--measure-seconds 8] : coût de rendu des décors par biome (RunObservation.PropCost.cs).
@@ -68,6 +69,8 @@ public partial class RunObservation : Node
                 await CaptureJunctions();
             else if (Array.IndexOf(args, "--capture-farms") >= 0)
                 await CaptureFarms();
+            else if (Array.IndexOf(args, "--capture-landmarks") >= 0)
+                await CaptureLandmarks();
             else if (Array.IndexOf(args, "--capture-echoes") >= 0)
                 await CaptureEchoes();
             else if (Array.IndexOf(args, "--capture-paths") >= 0)

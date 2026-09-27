@@ -226,6 +226,20 @@ Les tiles restent en l'état (jugées acceptables) ; un ajustement de contraste 
 - Vérifié : build sans avertissement, smoke test, `MovementRegression`, captures en vraie run (seed 1002). Combat dense : ≈ 110 FPS, p99 ≈ 13,5 ms, en 720p comme en 1080p (≈ 120 FPS avant les immeubles ; la zone du banc n'est pas forcément urbaine).
 - Points ouverts : église et antenne à refaire dans le pipeline comme repères rares ; brèches des ruines encore anguleuses ; façades nord et rues verticales moins soignées que les façades sud.
 
+**P2, repères rares — 27 septembre 2026 (session cloud) :** l'église et l'antenne reviennent, refaites dans le pipeline.
+- **Église** (`church` dans `buildings.py`, `prop_bld_church_w4_a|b`) :
+  - Module de rangée de 4 cellules : nef longée de contreforts et de hautes baies en ogive (vitraux violets, une baie crevée), toit d'ardoise percé d'une brèche qui laisse voir l'intérieur sombre, lierre, gravats devant.
+  - Clocher à abat-sons, cloche, flèche basse et croix de fer penchée.
+  - Hauteur 189 à 190 px, dans la borne des immeubles. Le premier essai (214 px) a été abaissé. La variante b est un miroir, pour que le clocher reste du côté proche de la caméra (en simple lacet opposé, il reculait et montait à 203 px).
+- **Pylône de télécommunication** (`radio_mast`, `prop_radio_mast`) :
+  - Treillis à trois pieds qui s'affine, bandes rouges et blanches (l'accent de couleur des repères), deux paraboles, feu de balisage éteint, local technique au pied, une traverse manquante.
+  - 219 px de haut mais 82 de large : il dépasse des toits sans masquer une rue.
+- **Placement** (`UrbanBuildingPlacer`) :
+  - L'église ouvre la rangée sud d'un îlot préservé (intégrité ≥ 0,55, 8 % des îlots). Le pylône se plante au milieu de la cour, derrière la rangée (10 %), et bloque.
+  - Au plus deux de chaque par carte, à au moins 1 600 px l'un de l'autre. Réglages en constantes, comme les ruelles voisines.
+  - Seed de capture : 2 églises, 2 pylônes.
+- **Capture** `--capture-landmarks` : chaque repère au zoom normal et dézoomé. Images regardées : l'église se lit d'un coup d'œil dans sa rangée, et le pylône dépasse des immeubles de la cour.
+
 **P3 Forêt livré — 25 septembre 2026 :**
 
 *Catalogue :* `tools/sprites/props/forest.py` (`tools/generate_props.py forest`), 23 fichiers aux couleurs de la palette forêt (charte §3) :

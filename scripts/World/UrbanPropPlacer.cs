@@ -68,6 +68,7 @@ public static class UrbanPropPlacer
 		"prop_dumpster_v2.png",
 		"prop_chain_link_fence.png",
 		"prop_torn_billboard.png",
+		"prop_radio_mast.png",
 	};
 
 	public static void PlaceProps(

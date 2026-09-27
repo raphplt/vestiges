@@ -6,7 +6,7 @@ namespace Vestiges.Tests;
 
 /// <summary>
 /// --capture-farms : fermes des Champs Sauvages (plan 08 P4b). Les quatre plus proches du départ, au zoom normal
-/// puis dézoomées (×0,6) pour juger la composition avec les champs et le chemin qui les rejoint ; puis les trois
+/// puis dézoomées (×0,6) pour juger la composition avec les champs et le chemin qui les rejoint ; puis les six
 /// scènes-récits les plus proches, au zoom ×2.
 /// </summary>
 public partial class RunObservation
