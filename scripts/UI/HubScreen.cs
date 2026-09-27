@@ -8,7 +8,7 @@ namespace Vestiges.UI;
 
 /// <summary>
 /// Accueil entre les runs : le camp du Foyer, vivant, où veillent les personnages.
-/// Menu textuel à gauche, personnage choisi au feu (◀ ▶ ou clic pour changer), Chroniques en surimpression.
+/// Menu textuel à gauche, personnage choisi au feu (◀ ▶ ou clic pour changer), Collection et Chroniques en surimpression.
 /// Espace de conception 1920×1080, au grain ×4 de la peinture du camp ; texte en Saira (lisibilité, retour du 24 septembre).
 /// </summary>
 public partial class HubScreen : Control
@@ -17,7 +17,7 @@ public partial class HubScreen : Control
 	private const string StrongFontPath = "res://assets/fonts/saira/SairaSemiCondensed-SemiBold.ttf";
 	private const float MenuLeft = 96f;
 
-	private enum HubState { MainMenu, Chroniques }
+	private enum HubState { MainMenu, Chroniques, Collection }
 	private HubState _currentState = HubState.MainMenu;
 
 	private static readonly Color NameColor = new(0.91f, 0.88f, 0.83f);
@@ -37,6 +37,10 @@ public partial class HubScreen : Control
 	private HubMenuButton _enterVoidButton;
 	private HubMenuButton _chroniquesButton;
 	private HubMenuButton _chroniquesBackButton;
+	private Control _collectionLayer;
+	private HubCollectionPanel _collectionPanel;
+	private HubMenuButton _collectionButton;
+	private HubMenuButton _collectionBackButton;
 	private readonly List<HubMenuButton> _menuButtons = new();
 	private Label _nameLabel;
 	private Label _taglineLabel;
@@ -103,7 +107,7 @@ public partial class HubScreen : Control
 		if (IsSettingsOpen() || _departing)
 			return;
 
-		if (@event.IsActionPressed("ui_cancel") && _currentState == HubState.Chroniques)
+		if (@event.IsActionPressed("ui_cancel") && _currentState != HubState.MainMenu)
 		{
 			AudioManager.PlayUI("sfx_menu_confirmer");
 			SetState(HubState.MainMenu);
@@ -145,6 +149,7 @@ public partial class HubScreen : Control
 		_camp.Populate(characters, MetaSaveManager.IsCharacterUnlocked, _selectedCharacterId);
 
 		BuildChroniques();
+		BuildCollection();
 
 		_settingsScreen = new SettingsScreen();
 		AddChild(_settingsScreen);
@@ -213,6 +218,7 @@ public partial class HubScreen : Control
 
 		_enterVoidButton = AddMenuButton(menu, "Partir", 46, _strongFont, OnEnterVoidPressed);
 		menu.AddChild(new Control { CustomMinimumSize = new Vector2(0f, 20f), MouseFilter = MouseFilterEnum.Ignore });
+		_collectionButton = AddMenuButton(menu, "Collection", 30, _bodyFont, OpenCollection);
 		_chroniquesButton = AddMenuButton(menu, "Chroniques", 30, _bodyFont, OpenChroniques);
 		AddMenuButton(menu, "Paramètres", 30, _bodyFont, () =>
 		{
@@ -410,6 +416,47 @@ public partial class HubScreen : Control
 		_chroniquesLayer.AddChild(_chroniquesPanel);
 	}
 
+	/// <summary>Collection (plan 04 C2) : même voile, même en-tête et même retour que les Chroniques.</summary>
+	private void BuildCollection()
+	{
+		_collectionLayer = new Control { Visible = false };
+		_collectionLayer.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
+		AddChild(_collectionLayer);
+
+		ColorRect veil = new() { Color = new Color(Night, 0.82f) };
+		veil.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
+		_collectionLayer.AddChild(veil);
+
+		Label header = CreateLabel("Collection", 46, UITheme.GoldColor, true);
+		header.Position = new Vector2(MenuLeft, 72f);
+		_collectionLayer.AddChild(header);
+
+		VBoxContainer back = new() { Position = new Vector2(MenuLeft - 40f, 980f) };
+		_collectionLayer.AddChild(back);
+		_collectionBackButton = new HubMenuButton();
+		_collectionBackButton.Setup("Retour", 30, _bodyFont);
+		_collectionBackButton.Pressed += () =>
+		{
+			AudioManager.PlayUI("sfx_menu_confirmer");
+			SetState(HubState.MainMenu);
+		};
+		back.AddChild(_collectionBackButton);
+
+		_collectionPanel = new HubCollectionPanel();
+		_collectionPanel.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
+		_collectionPanel.OffsetLeft = 320f;
+		_collectionPanel.OffsetRight = -240f;
+		_collectionPanel.OffsetTop = 160f;
+		_collectionPanel.OffsetBottom = -140f;
+		_collectionLayer.AddChild(_collectionPanel);
+	}
+
+	private void OpenCollection()
+	{
+		AudioManager.PlayUI("sfx_menu_confirmer");
+		SetState(HubState.Collection);
+	}
+
 	private Label CreateLabel(string text, int size, Color color, bool bold)
 	{
 		Label label = new() { Text = text, MouseFilter = MouseFilterEnum.Ignore };
@@ -428,9 +475,21 @@ public partial class HubScreen : Control
 	private void SetState(HubState state)
 	{
 		bool fromChroniques = _currentState == HubState.Chroniques;
+		bool fromCollection = _currentState == HubState.Collection;
 		_currentState = state;
 		_mainMenuLayer.Visible = state == HubState.MainMenu;
 		_chroniquesLayer.Visible = state == HubState.Chroniques;
+		_collectionLayer.Visible = state == HubState.Collection;
+
+		if (state == HubState.Collection)
+		{
+			Control first = _collectionPanel.Refresh();
+			if (first != null)
+				first.GrabFocus();
+			else
+				_collectionBackButton.GrabFocusSilently();
+			return;
+		}
 
 		if (state == HubState.Chroniques)
 		{
@@ -442,6 +501,8 @@ public partial class HubScreen : Control
 		UpdateVestigesDisplay();
 		if (fromChroniques)
 			_chroniquesButton.GrabFocusSilently();
+		else if (fromCollection)
+			_collectionButton.GrabFocusSilently();
 	}
 
 	/// <summary>Le camp sort du noir, puis le titre et le menu arrivent l'un après l'autre.</summary>

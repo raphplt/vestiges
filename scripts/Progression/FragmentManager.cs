@@ -195,7 +195,7 @@ public partial class FragmentManager : Node
 					continue;
 				if (weapon.Tier > maxTier)
 					continue;
-				if (!string.IsNullOrEmpty(weapon.RequiresSouvenir) && !MetaSaveManager.HasSouvenir(weapon.RequiresSouvenir))
+				if (!MetaSaveManager.IsWeaponUnlocked(weapon))
 					continue;
 
 				pool.Add(new FragmentOption(weapon.Id, "weapon_new", weapon.Name, weapon.Tier));

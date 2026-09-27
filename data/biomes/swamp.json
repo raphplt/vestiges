@@ -22,6 +22,7 @@
     "poi_count_max": 3,
     "wang_tile_groups": ["grass", "forest", "water"],
     "blend_terrains": true,
+    "path_style": { "tone": "#3e3f30", "ruts": 0.0, "width_px": 26 },
     "tile_sources": {
         "grass": [
             "marecages/tile_marecages_sol_w00",

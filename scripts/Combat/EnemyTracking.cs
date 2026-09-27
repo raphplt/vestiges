@@ -6,7 +6,8 @@ namespace Vestiges.Combat;
 /// <summary>
 /// Pistage d'une créature (plan 07 §7) : une créature qui a déjà approché le joueur puis a été distancée assez
 /// longtemps perd sa trace et erre, au lieu de le suivre en file jusqu'à son retrait. Les créatures qui arrivent
-/// du flux ne sont pas concernées tant qu'elles ne l'ont pas atteint. Réglages : data/scaling/enemy_tracking.json.
+/// du flux ne sont pas concernées tant qu'elles ne l'ont pas atteint. Réglages : data/scaling/enemy_tracking.json,
+/// et par créature <c>perception</c> et <c>leash</c> dans les stats de sa fiche.
 /// </summary>
 public sealed class EnemyTracking
 {
@@ -17,6 +18,8 @@ public sealed class EnemyTracking
     private static float _wanderSpeedFactor = 0.35f;
     private static float _wanderTurnSeconds = 2.5f;
 
+    private float _engageSq = _engageDistanceSq;
+    private float _loseSq = _loseTrackDistanceSq;
     private bool _engaged;
     private float _outOfRangeTime;
     private float _wanderTimer;
@@ -37,6 +40,16 @@ public sealed class EnemyTracking
         LoadConfig();
     }
 
+    /// <summary>
+    /// Perception (distance d'engagement) et laisse (distance de perte de trace) propres à la créature,
+    /// champs <c>perception</c> et <c>leash</c> de ses stats ; zéro ou absent : réglage commun.
+    /// </summary>
+    public void Configure(float perception, float leash)
+    {
+        _engageSq = perception > 0f ? perception * perception : _engageDistanceSq;
+        _loseSq = leash > 0f ? leash * leash : _loseTrackDistanceSq;
+    }
+
     public void Reset()
     {
         _engaged = false;
@@ -48,7 +61,7 @@ public sealed class EnemyTracking
     /// <summary>Met à jour le pistage ; renvoie vrai si la créature a perdu la trace du joueur.</summary>
     public bool Tick(float distanceToPlayerSq, float delta)
     {
-        if (distanceToPlayerSq < _engageDistanceSq * _detectionScaleSq)
+        if (distanceToPlayerSq < _engageSq * _detectionScaleSq)
         {
             _engaged = true;
             _outOfRangeTime = 0f;
@@ -59,7 +72,7 @@ public sealed class EnemyTracking
         if (!_engaged)
             return false;
 
-        if (distanceToPlayerSq > _loseTrackDistanceSq)
+        if (distanceToPlayerSq > _loseSq)
             _outOfRangeTime += delta;
         else if (!IsLost)
             _outOfRangeTime = 0f;

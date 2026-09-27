@@ -47,6 +47,97 @@ public partial class MovementRegression
         erasure.SetProcess(false);
         ErasureEffects.Effect restored = ReadPlayerField<ErasureEffects.Effect>("_erasurePenalty");
         Check(restored.Speed == 1f && restored.Damage == 1f, "retour en zone ancrée : pénalités levées");
+
+        // Un Mémorial ravivé rappelle sa zone : une zone effacée remonte au moins en Fragile (plan 16 O5).
+        Vector2 memorial = new(0f, -2 * erasure.CellSize * 4f);
+        Vector2I memorialCell = new(Mathf.FloorToInt(memorial.X / erasure.CellSize), Mathf.FloorToInt(memorial.Y / erasure.CellSize));
+        erasure.OverrideMemory(memorialCell, 0.1f);
+        bus.EmitSignal(EventBus.SignalName.MemorialAwakened, memorial);
+        Check(erasure.GetMemoryAt(memorial) >= 0.7f, $"Mémorial ravivé : la mémoire de sa zone remonte de 0,1 à {erasure.GetMemoryAt(memorial):0.00}");
+    }
+
+    /// <summary>Plan 03 lot C : oubli accéléré pendant la crise ; accalmie avec coffre rare à portée et Essence doublée.</summary>
+    private async Task CheckCrisisAftermath(WorldSetup world)
+    {
+        EventBus bus = GetNode<EventBus>("/root/EventBus");
+        ErasureManager erasure = world.GetNode<ErasureManager>("ErasureManager");
+        Vestiges.Progression.EssenceTracker essence = world.GetNode<Vestiges.Progression.EssenceTracker>("EssenceTracker");
+        FieldInfo crisisActive = typeof(ErasureManager).GetField("_crisisActive", BindingFlags.Instance | BindingFlags.NonPublic);
+
+        bus.EmitSignal(EventBus.SignalName.CrisisStarted, 3, 2);
+        bool accelerated = (bool)crisisActive.GetValue(erasure);
+        int chestsBefore = GetTree().GetNodesInGroup("chests").Count;
+        bus.EmitSignal(EventBus.SignalName.CrisisEnded, 3);
+        await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+
+        Vestiges.World.Chest calmChest = null;
+        foreach (Node node in GetTree().GetNodesInGroup("chests"))
+            if (node is Vestiges.World.Chest chest && chest.ChestId == "chest_rare" && !chest.IsOpened)
+                calmChest = chest;
+        float distance = calmChest != null ? calmChest.GlobalPosition.DistanceTo(_player.GlobalPosition) : -1f;
+        Check(accelerated && !(bool)crisisActive.GetValue(erasure), "Crise : l'oubli s'accélère pendant la crise, reprend son rythme après");
+        Check(GetTree().GetNodesInGroup("chests").Count == chestsBefore + 1 && distance >= 200f && distance <= 360f
+                && !world.IsWaterAt(calmChest.GlobalPosition),
+            $"Accalmie : coffre rare posé à {distance:0} px du joueur, hors de l'eau");
+
+        int before = essence.CurrentEssence;
+        bus.EmitSignal(EventBus.SignalName.EnemyKilled, "rodeur", _player.GlobalPosition);
+        int boosted = essence.CurrentEssence - before;
+        bus.EmitSignal(EventBus.SignalName.CrisisStarted, 4, 2);
+        before = essence.CurrentEssence;
+        bus.EmitSignal(EventBus.SignalName.EnemyKilled, "rodeur", _player.GlobalPosition);
+        int normal = essence.CurrentEssence - before;
+        bus.EmitSignal(EventBus.SignalName.CrisisEnded, 4);
+        Check(boosted >= 2 && normal >= 1 && boosted >= normal * 2 - 1,
+            $"Accalmie : Essence d'une mort {boosted} pendant l'accalmie, {normal} dès la crise suivante");
+        foreach (Node node in GetTree().GetNodesInGroup("enemies"))
+            if (node is Vestiges.Combat.Enemy enemy && enemy.IsActive)
+                world.GetNode<Vestiges.Spawn.EnemyPool>("EnemyPool").Return(enemy);
+    }
+
+    /// <summary>Plan 02 lot A : horloge de jeu actif, score notifié sans kill, verdict du record figé avant sauvegarde.</summary>
+    private async Task CheckScoreClock(WorldSetup world)
+    {
+        Vestiges.Infrastructure.RunTracker tracker = world.GetNode<Vestiges.Infrastructure.RunTracker>("RunTracker");
+        Vestiges.Score.ScoreManager score = world.GetNode<Vestiges.Score.ScoreManager>("ScoreManager");
+        EventBus bus = GetNode<EventBus>("/root/EventBus");
+        int notified = 0;
+        int lastNotified = -1;
+        void OnScore(int value)
+        {
+            notified++;
+            lastNotified = value;
+        }
+        bus.ScoreChanged += OnScore;
+        float start = tracker.RunDurationSeconds;
+        int frames = 0;
+        while (tracker.RunDurationSeconds - start < 1.2f && frames < 2000)
+        {
+            await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+            frames++;
+        }
+        bus.ScoreChanged -= OnScore;
+        Check(notified > 0 && lastNotified <= score.CurrentScore && score.SurvivalScore > 0,
+            $"Score : {notified} notification(s) sans kill en {tracker.RunDurationSeconds - start:0.0} s de jeu, survie {score.SurvivalScore}");
+
+        float beforePause = tracker.RunDurationSeconds;
+        GetTree().Paused = true;
+        for (int i = 0; i < 20; i++)
+            await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+        GetTree().Paused = false;
+        Check(Mathf.IsEqualApprox(tracker.RunDurationSeconds, beforePause), "Score : la pause n'avance pas l'horloge de la run");
+
+        FieldInfo best = typeof(Vestiges.Score.ScoreManager).GetField("_bestScore", BindingFlags.Instance | BindingFlags.NonPublic);
+        int previous = Math.Max(0, score.CurrentScore - 1);
+        best.SetValue(score, previous);
+        _manager.ChangeState(GameManager.GameState.Death);
+        score.SaveEndOfRun();
+        float atDeath = tracker.RunDurationSeconds;
+        for (int i = 0; i < 20; i++)
+            await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+        Check(score.IsNewRecord && score.BestScore == previous,
+            $"Record : nouveau record encore lu après la sauvegarde (ancien {score.BestScore}, score {score.CurrentScore})");
+        Check(Mathf.IsEqualApprox(tracker.RunDurationSeconds, atDeath), "Score : l'horloge s'arrête à la mort");
     }
 
     /// <summary>Marche vers l'est jusqu'au bord de la carte générée : le joueur ne quitte jamais le sol.</summary>
@@ -139,6 +230,8 @@ public partial class MovementRegression
         await CheckGeneratedWater(world);
         await CheckWorldEdge(world);
         await CheckVoidDamage(world);
+        await CheckCrisisAftermath(world);
+        await CheckScoreClock(world);
         // Le pool historique garde ses instances préchauffées hors de l'arbre :
         // le banc les libère explicitement pour vérifier une fermeture sans erreurs RID.
         Vestiges.Spawn.EnemyPool pool = world.GetNode<Vestiges.Spawn.EnemyPool>("EnemyPool");

@@ -1,0 +1,15 @@
+{
+  "_doc": "Plafonds d'effets décoratifs par frame (plan 02 J0), selon le réglage Particules. Attaques ennemies et critiques jamais écartés. Lu par Combat/FxBudget.",
+  "full": {
+    "sparks_per_frame": 320,
+    "shapes_per_frame": 32,
+    "deaths_per_frame": 12,
+    "numbers_per_frame": 24
+  },
+  "reduced": {
+    "sparks_per_frame": 120,
+    "shapes_per_frame": 12,
+    "deaths_per_frame": 5,
+    "numbers_per_frame": 12
+  }
+}

@@ -151,18 +151,26 @@ public partial class GameBootstrap : Node
         screenShake.SetCamera(player.GetNode<Camera2D>("Camera"));
         GetNode("..").CallDeferred("add_child", screenShake);
 
+        Combat.CrowdZoom crowdZoom = new() { Name = "CrowdZoom" };
+        crowdZoom.SetCamera(player.GetNode<Camera2D>("Camera"));
+        GetNode("..").CallDeferred("add_child", crowdZoom);
+
         AmbientParticles ambientParticles = new() { Name = "AmbientParticles" };
         GetNode("..").CallDeferred("add_child", ambientParticles);
 
+        GetNode("..").CallDeferred("add_child", new ErasureEchoes { Name = "ErasureEchoes" });
+        GetNode("..").CallDeferred("add_child", new ErasureMotes { Name = "ErasureMotes" });
+        GetNode("..").CallDeferred("add_child", new PoiGlints { Name = "PoiGlints" });
+        GetNode("..").CallDeferred("add_child", new Events.CrisisAftermath { Name = "CrisisAftermath" });
+
         EventBus eventBus = GetNode<EventBus>("/root/EventBus");
         Player levelUpPlayer = player;
+        GroupCache groupCache = GetNode<GroupCache>("/root/GroupCache");
         eventBus.LevelUp += (int _level) =>
         {
             if (IsInstanceValid(levelUpPlayer))
             {
-                Node2D burst = Combat.VfxFactory.CreateLevelUpBurst(levelUpPlayer.GlobalPosition);
-                if (burst != null)
-                    GetTree().CurrentScene.AddChild(burst);
+                Combat.LevelUpFx.Play(levelUpPlayer, groupCache);
                 Combat.ScreenShake.Instance?.ShakeMedium();
             }
         };

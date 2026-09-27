@@ -14,6 +14,8 @@ public partial class CombatPools : Node2D
     private NodePool<Projectile> _playerProjectiles;
     private NodePool<DamageNumber> _damageNumbers;
     private NodePool<PixelFx> _pixelFx;
+    private NodePool<DeathFx> _deathFx;
+    private NodePool<XpOrb> _xpOrbs;
 
     /// <summary>Étincelles et éclats de combat, tracés par un seul nœud.</summary>
     public PixelSparks Sparks { get; private set; }
@@ -44,6 +46,14 @@ public partial class CombatPools : Node2D
             return number;
         });
         _pixelFx = new NodePool<PixelFx>(this, () => PixelFx.Create(_pixelFx.Return));
+        _deathFx = new NodePool<DeathFx>(this, () => DeathFx.Create(_deathFx.Return));
+        PackedScene xpOrbScene = GD.Load<PackedScene>("res://scenes/combat/XpOrb.tscn");
+        _xpOrbs = new NodePool<XpOrb>(this, () =>
+        {
+            XpOrb orb = xpOrbScene.Instantiate<XpOrb>();
+            orb.SetRelease(_xpOrbs.Return);
+            return orb;
+        });
         Sparks = new PixelSparks { Name = "PixelSparks" };
         AddChild(Sparks);
     }
@@ -58,15 +68,23 @@ public partial class CombatPools : Node2D
 
     public Projectile TakePlayerProjectile() => _playerProjectiles.Take();
 
-    public void ShowDamageNumber(Vector2 position, float damage, bool isCrit)
+    /// <summary>
+    /// Lance un chiffre de dégâts ; le rendu permet à la cible d'y additionner ses coups suivants.
+    /// Nul quand le budget de la frame est épuisé ; un critique passe toujours.
+    /// </summary>
+    public DamageNumber ShowDamageNumber(Vector2 position, float damage, bool isCrit)
     {
-        _damageNumbers.Take().Play(position, damage, isCrit);
+        if (!isCrit && !FxBudget.TryTake(FxBudgetKind.Numbers))
+            return null;
+        DamageNumber number = _damageNumbers.Take();
+        number.Play(position, damage, isCrit);
+        return number;
     }
 
     /// <summary>Étoile d'impact au point touché, en trois poses.</summary>
     public void ShowHitFlash(Vector2 position)
     {
-        if (CombatFxSettings.ParticleLevel == ParticleLevel.Off)
+        if (!FxBudget.TryTake(FxBudgetKind.Shapes))
             return;
         PixelFxSpec spec = PixelFxSpec.Of(PixelFxShape.Star, FxFamily.Physical, 5f, 1f, 0.1f);
         spec.Steps = 3;
@@ -117,7 +135,12 @@ public partial class CombatPools : Node2D
     {
         if (owner == FxOwner.Player && !CombatFxSettings.PlayerAttackFx)
             return null;
-        float opacity = owner == FxOwner.Player ? CombatFxSettings.PlayerOpacity : CombatFxSettings.EnemyOpacity;
+        float opacity = owner switch
+        {
+            FxOwner.Player => CombatFxSettings.PlayerOpacity,
+            FxOwner.Enemy => CombatFxSettings.EnemyOpacity,
+            _ => 1f,
+        };
         PixelFx fx = _pixelFx.Take();
         fx.Play(position, spec, opacity, follow);
         return fx;
@@ -125,6 +148,105 @@ public partial class CombatPools : Node2D
 
     public void EmitSparks(Vector2 position, in SparkBurst burst) => Sparks.Emit(position, burst);
 
+    /// <summary>
+    /// Mort d'une créature : éclats sombres qui s'élèvent, nuage de dissolution, flaque irisée
+    /// (<paramref name="poolScale"/> ≤ 0 : pas de flaque). Rien quand les particules sont coupées. Au-delà du budget
+    /// de la frame, une mort ordinaire perd nuage et flaque (le sprite se dissout toujours) ; une mort
+    /// <paramref name="signature"/> (élite, mini-boss) garde tout.
+    /// </summary>
+    public void ShowDeath(Vector2 position, int shards, float spread, float poolScale, bool signature = false,
+                          Vector2 direction = default)
+    {
+        if (CombatFxSettings.ParticleLevel == ParticleLevel.Off)
+            return;
+        // Moitié des éclats qui s'élèvent vers le Néant, moitié projetés dans le sens du dernier coup (plan 02 J2).
+        int thrown = direction == Vector2.Zero ? 0 : shards / 2;
+        if (shards - thrown > 0)
+        {
+            Sparks.Emit(position + new Vector2(0f, -6f), new SparkBurst
+            {
+                Family = FxFamily.Void,
+                Owner = FxOwner.Enemy,
+                Count = shards - thrown,
+                Direction = Vector2.Up,
+                Spread = spread,
+                SpeedMin = 20f,
+                SpeedMax = 60f,
+                LifeMin = 0.4f,
+                LifeMax = 0.7f,
+                Size = 1,
+                Decorative = !signature,
+            });
+        }
+        if (thrown > 0)
+        {
+            Sparks.Emit(position + new Vector2(0f, -8f), new SparkBurst
+            {
+                Family = FxFamily.Void,
+                Owner = FxOwner.Enemy,
+                Count = thrown,
+                Direction = direction,
+                Spread = 1.1f,
+                SpeedMin = 60f,
+                SpeedMax = 140f,
+                LifeMin = 0.35f,
+                LifeMax = 0.6f,
+                Ballistic = true,
+                Size = signature ? 2 : 1,
+                Decorative = !signature,
+            });
+        }
+        if (signature)
+            ShowDeathSignature(position);
+        if (signature || FxBudget.TryTake(FxBudgetKind.Deaths))
+            _deathFx.Take().Play(position, poolScale, direction);
+    }
+
+    /// <summary>Mort d'élite ou de Souverain : onde au sol qui s'élargit et éclair bref sur le corps.</summary>
+    private void ShowDeathSignature(Vector2 position)
+    {
+        PixelFxSpec ring = PixelFxSpec.Of(PixelFxShape.Ring, FxFamily.Void, 46f, 3f, 0.45f);
+        ring.Squash = 2f;
+        ring.Steps = 7;
+        ring.FadeTail = 0.4f;
+        ring.ZIndex = -1;
+        PlayFx(position, ring, FxOwner.Enemy);
+        PixelFxSpec flash = PixelFxSpec.Of(PixelFxShape.Star, FxFamily.Pale, 14f, 1f, 0.16f);
+        flash.Steps = 3;
+        flash.FadeTail = 0.4f;
+        flash.ZIndex = 2;
+        PlayFx(position + new Vector2(0f, -12f), flash, FxOwner.Enemy);
+    }
+
+    /// <summary>
+    /// Pose une orbe d'XP recyclée. Différé : une mort survient souvent pendant un rappel de la physique,
+    /// où une zone ne peut pas entrer dans l'arbre ni changer de surveillance.
+    /// </summary>
+    public void SpawnXpOrb(Vector2 position, float xpValue, Vector2? hopFrom = null)
+    {
+        Callable.From(() => _xpOrbs.Take().Launch(position, xpValue, hopFrom)).CallDeferred();
+    }
+
+    /// <summary>Petite gerbe à la collecte d'une orbe d'XP.</summary>
+    public void ShowXpCollect(Vector2 position)
+    {
+        Sparks.Emit(position, new SparkBurst
+        {
+            Family = FxFamily.Essence,
+            Owner = FxOwner.World,
+            Count = 4,
+            Direction = Vector2.Up,
+            Spread = Mathf.Tau,
+            SpeedMin = 25f,
+            SpeedMax = 50f,
+            LifeMin = 0.2f,
+            LifeMax = 0.35f,
+            Size = 1,
+            Decorative = true,
+        });
+    }
+
     /// <summary>Objets créés depuis le début de la run, tous pools confondus (bancs de mesure).</summary>
-    public int CreatedCount => _enemyProjectiles.Created + _playerProjectiles.Created + _damageNumbers.Created + _pixelFx.Created;
+    public int CreatedCount => _enemyProjectiles.Created + _playerProjectiles.Created + _damageNumbers.Created + _pixelFx.Created
+        + _deathFx.Created + _xpOrbs.Created;
 }

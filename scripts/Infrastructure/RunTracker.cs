@@ -13,6 +13,8 @@ public partial class RunTracker : Node
     private EventBus _eventBus;
     // Temps de jeu écoulé, pauses exclues (écran de niveau, butin, menu) : durée, score de survie, cadences.
     private float _runTime;
+    // L'horloge s'arrête à la mort (plan 02 lot A) : le bilan et le score de survie lisent la durée de la run jouée.
+    private bool _frozen;
 
     private float _totalDamageDealt;
     private float _totalDamageTaken;
@@ -138,6 +140,7 @@ public partial class RunTracker : Node
     public override void _Ready()
     {
         _eventBus = GetNode<EventBus>("/root/EventBus");
+        _eventBus.GameStateChanged += OnGameStateChanged;
         _eventBus.EnemySpawned += OnEnemySpawned;
         _eventBus.EnemyKilled += OnEnemyKilled;
         _eventBus.PlayerDamaged += OnPlayerDamaged;
@@ -157,6 +160,7 @@ public partial class RunTracker : Node
     public override void _ExitTree()
     {
         if (_eventBus == null) return;
+        _eventBus.GameStateChanged -= OnGameStateChanged;
         _eventBus.EnemySpawned -= OnEnemySpawned;
         _eventBus.EnemyKilled -= OnEnemyKilled;
         _eventBus.PlayerDamaged -= OnPlayerDamaged;
@@ -173,7 +177,8 @@ public partial class RunTracker : Node
 
     public override void _Process(double delta)
     {
-        _runTime += (float)delta;
+        if (!_frozen)
+            _runTime += (float)delta;
         _maintenanceTimer += (float)delta;
         if (_maintenanceTimer < MaintenanceInterval)
             return;
@@ -194,6 +199,12 @@ public partial class RunTracker : Node
         int activeEnemies = GetTree().GetNodesInGroup("enemies").Count;
         if (activeEnemies > _peakEnemies)
             _peakEnemies = activeEnemies;
+    }
+
+    private void OnGameStateChanged(string oldState, string newState)
+    {
+        if (newState == nameof(GameManager.GameState.Death))
+            _frozen = true;
     }
 
     private void OnEnemySpawned(string enemyId, float hpScale, float dmgScale)

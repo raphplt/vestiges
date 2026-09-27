@@ -165,3 +165,15 @@ Comparées sur les mêmes textes : Barlow Semi Condensed, Chakra Petch, Big Shou
 - La Collection demandée (lot C2) n'existe pas encore. Elle prendra une entrée du menu.
 - Le Hub qui évolue avec les Souvenirs se limite pour l'instant au retour des personnages débloqués autour du feu.
 - Six places sont prévues autour du feu ; au-delà, il faudra un second cercle.
+
+## Collection, première passe — 27 septembre 2026 (session cloud)
+
+Lot C2, décision de Raphaël : Collection directement accessible depuis le menu principal.
+- **Entrée « Collection »** dans le menu de l'accueil, juste après « Partir », accessible à la souris, au clavier et à la manette. Même voile, même en-tête et même « Retour » que les Chroniques ; `ui_cancel` ramène au menu, et le focus revient sur « Collection ».
+- **Deux onglets** : « Armes » (24) et « Souvenirs de run » (13, les passifs). Les objets du plan 05 n'existent pas encore ; ils prendront un troisième onglet. L'onglet choisi est conservé d'une ouverture à l'autre.
+- **Grille d'icônes**, disponibles d'abord. Une arme verrouillée n'est qu'une silhouette sombre, sans badge. Le panneau de droite, seul à porter du texte, affiche pour la case survolée ou sélectionnée son nom, « Disponible en run » ou « Pas encore disponible », son effet, ses valeurs (mêlée ou distance, forme, dégâts, cadence, portée) et, si elle est verrouillée, sa condition directe (« Se débloque en retrouvant le Souvenir « Flamme de mémoire » »). Un compteur indique « 20 / 24 disponibles ».
+- **Même règle que le loot** : `MetaSaveManager.IsWeaponUnlocked` est désormais la seule règle de disponibilité d'une arme, partagée par le tirage d'armes du joueur, les fragments de niveau et la Collection.
+- **Manette** : du premier rang, « haut » remonte aux onglets et « bas » redescend ; les deux onglets sont liés explicitement, car la recherche géométrique de Godot plongeait dans la grille.
+- **Vérifié** : `tools/capture_hub.sh` en profil dev (24/24) et en profil neuf (20/24, quatre silhouettes, condition affichée), avec navigation à la manette dans la grille, vers les onglets et retour au menu. Images regardées.
+- **Non fait** : lien vers la quête qui débloque (les armes se débloquent encore par Souvenir, en attente du plan 05 lot A et du plan 06), entrée depuis le bilan, filtre disponibles et non disponibles (inutile à 24 armes).
+

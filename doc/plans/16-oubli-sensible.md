@@ -80,7 +80,8 @@ Ordre O1 → O3 → O4/O5 → O2/O6 validé par Raphaël. Arbitrages délégués
 - Elle a aussi une chance de donner 1 Essence de plus : 15 %, 35 %, puis 60 %.
 - Réglages : `score_bonus` et `essence_chance` dans `zone_effects`. Le détour vers la frontière devient un vrai choix de risque et de récompense.
 - **Test d'intégration** : le même kill vaut 33 points au Néant, contre 16 en zone ancrée.
-- **Non fait** : le butin qui disparaît avec la zone (dépend du plan 13, non implémenté) et le « rappel » d'une zone par les Autels (V2 §11).
+- **Non fait** : le butin qui disparaît avec la zone (dépend du plan 13, non implémenté).
+- **Rappel par les Autels (26 septembre, session cloud)** : un Autel qui sert (amélioration, reforge ou soin) émet `AltarUsed` sur l'EventBus. `ErasureManager` stabilise alors sa zone, comme pour un point d'intérêt découvert : dans un rayon de 2,5 zones, la mémoire remonte au moins à 72 % (réglages `stabilize_*` de `erasure.json`), et le sol est republié aussitôt. Test d'intégration : une zone à 0,1 remonte à 0,72.
 
 **O2 livré — les choses se défont (26 septembre) :**
 - **Décors** (`prop_forget.gdshader`, un seul matériau partagé) **et canopées** (`sway.gdshader`) lisent la mémoire à leur point au sol :
@@ -90,5 +91,26 @@ Ordre O1 → O3 → O4/O5 → O2/O6 validé par Raphaël. Arbitrages délégués
   - Néant : il n'en reste que des fragments.
 - La lecture de la mémoire est commune au sol, aux décors et aux canopées (`erasure_memory.gdshaderinc`).
 - **Coût** (banc de combat dense, même moment, machine chargée) : 1 303 appels de dessin contre 1 305, FPS équivalents (58 contre 61 en 720p, 46 contre 46 en 1080p). Le rendu par lots est préservé.
-- **Non fait** : les particules qui s'élèvent des décors proches en zone Effacée (prévues au plan initial). Elles demandent un pool et un plafond à mesurer.
+- **Éclats qui s'élèvent des décors, en complément (26 septembre, session cloud)** : `World/ErasureMotes`.
+  - Toutes les 0,15 s, deux décors hauts proches du joueur sont tirés dans l'index spatial de `PropOcclusion`, sur les neuf cases autour de lui (`CollectNear`, sans allocation).
+  - Si leur pied est en zone Effacée (mémoire ≤ 25 %), trois éclats violets du Néant partent du haut de leur silhouette.
+  - Ils passent par `PixelSparks` : aucun nœud créé, et ils suivent le niveau de particules. Réglages : `motes` dans `erasure.json`.
+  - Un premier essai en gris et à 8–20 px/s restait invisible : la traînée des éclats (5/s) les arrêtait après 2 à 4 px, perdus dans le sol tramé. Désormais 40–90 px/s.
+  - La capture `--capture-erasure` se place là où les décors hauts sont les plus nombreux, et ajoute `erasure-eclats.png`, en zone Effacée au zoom ×2 : décors émiettés et quelques éclats visibles.
+
+**O6 livré — échos (26 septembre) :**
+- `World/ErasureEchoes` fait apparaître, de loin en loin, la silhouette d'un habitant dans une zone Fragile ou Effilochée (mémoire entre 25 et 75 %), à 130–300 px du joueur :
+  - premier écho après 60 s, puis un toutes les 45 à 90 s, un seul à la fois ;
+  - la silhouette est immobile ou de passage (marche lente) ;
+  - elle apparaît et s'efface en 1,6 s, et reste 10 s.
+- **Visuel** (`echo.gdshader`) :
+  - sprite d'un personnage réduit à deux tons, blanc effacement et bleu pâle ;
+  - tramage Bayer jamais plein, pieds estompés, lignes qui vacillent.
+
+  Les personnages jouables servent d'habitants (vagabond, forgeuse, traqueur), faute de sprites dédiés.
+- **Approche** : à moins de 70 px au sol, l'écho se dissout (ses pixels montent) et laisse un murmure d'une ligne, qui monte et s'efface en 3 s. Douze murmures, en français et en anglais (`ECHO_WHISPER_01`–`12`), comme « Encore cinq minutes… » ou « Ne m'oublie pas. ».
+- Pas de collision, pas d'effet de jeu. Un seul sprite et un seul texte réutilisés, aucun nœud créé pendant la run.
+- **Réglages** : `echoes` dans `data/scaling/erasure.json`.
+- **Vérification** : `CAPTURE_EXTRA_ARGS="--capture-echoes" tools/capture_run.sh <dossier>` impose une mémoire Fragile autour du joueur et force trois échos. Captures de l'apparition, de la dissolution et du murmure, regardées.
+- **Non fait** : un son de murmure (plan 15, autre fil) ; des habitants dessinés exprès (enfant, vieillard, chien), qui rendraient les échos plus lisibles que des héros décolorés ; le lien avec les anomalies du plan 14, non arbitré.
 

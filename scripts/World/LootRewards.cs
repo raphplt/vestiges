@@ -112,7 +112,7 @@ public static class LootRewards
         List<WeaponData> candidates = new();
         foreach (WeaponData weapon in WeaponDataLoader.GetAll())
         {
-            if (string.IsNullOrEmpty(weapon.RequiresSouvenir) || MetaSaveManager.HasSouvenir(weapon.RequiresSouvenir))
+            if (MetaSaveManager.IsWeaponUnlocked(weapon))
                 candidates.Add(weapon);
         }
         return candidates.Count > 0 ? candidates[(int)(GD.Randi() % candidates.Count)] : null;

@@ -35,6 +35,9 @@ public partial class ErasureManager : Node
     private bool _stabilizeOnChestOpen = true;
     // Néant (mémoire nulle) : part des PV max perdue par seconde tant que le joueur y reste (Stratégie V2 §8).
     private float _voidDamageRatioPerSecond = 0.06f;
+    // Résurgence (V2 §8, plan 03 lot C) : pendant une crise, l'oubli s'accélère partout ; il revient au rythme normal après.
+    private float _crisisDecayMultiplier = 2.5f;
+    private bool _crisisActive;
     private float _globalErasurePercent;
     private float _updateTimer;
     private float _totalElapsed;
@@ -68,6 +71,8 @@ public partial class ErasureManager : Node
         _eventBus.ChestOpened += OnChestOpened;
         _eventBus.MemorialAwakened += OnMemorialAwakened;
         _eventBus.OubliEffectChanged += OnOubliEffectChanged;
+        _eventBus.CrisisStarted += OnCrisisStarted;
+        _eventBus.CrisisEnded += OnCrisisEnded;
 
         _memoryImage = Image.CreateFromData(MemoryWindowCells, MemoryWindowCells, false, Image.Format.R8, _memoryBytes);
         _memoryTexture = ImageTexture.CreateFromImage(_memoryImage);
@@ -88,6 +93,8 @@ public partial class ErasureManager : Node
             _eventBus.ChestOpened -= OnChestOpened;
             _eventBus.MemorialAwakened -= OnMemorialAwakened;
             _eventBus.OubliEffectChanged -= OnOubliEffectChanged;
+            _eventBus.CrisisStarted -= OnCrisisStarted;
+            _eventBus.CrisisEnded -= OnCrisisEnded;
         }
     }
 
@@ -109,7 +116,7 @@ public partial class ErasureManager : Node
 
         float elapsedMinutes = _totalElapsed / 60f;
         float decayPerMinute = (_baseDecayPerMinute + _globalAccelerationPerMinute * elapsedMinutes) * _decayMultiplier;
-        float decayAmount = decayPerMinute * (_updateIntervalSec / 60f);
+        float decayAmount = decayPerMinute * (_updateIntervalSec / 60f) * (_crisisActive ? _crisisDecayMultiplier : 1f);
         float previousGlobal = _globalErasurePercent;
 
         _cellsToUpdate.Clear();
@@ -343,6 +350,10 @@ public partial class ErasureManager : Node
             _decayMultiplier = 1f + total;
     }
 
+    private void OnCrisisStarted(int crisisNumber, int intensity) => _crisisActive = true;
+
+    private void OnCrisisEnded(int crisisNumber) => _crisisActive = false;
+
     private void OnMemorialAwakened(Vector2 position)
     {
         StabilizeZone(position);
@@ -384,5 +395,6 @@ public partial class ErasureManager : Node
         _stabilizeMemoryFloor = dict.ContainsKey("stabilize_memory_floor") ? (float)dict["stabilize_memory_floor"].AsDouble() : _stabilizeMemoryFloor;
         _stabilizeOnChestOpen = !dict.ContainsKey("stabilize_on_chest_open") || dict["stabilize_on_chest_open"].AsBool();
         _voidDamageRatioPerSecond = dict.ContainsKey("void_damage_ratio_per_second") ? (float)dict["void_damage_ratio_per_second"].AsDouble() : _voidDamageRatioPerSecond;
+        _crisisDecayMultiplier = dict.ContainsKey("crisis_decay_multiplier") ? (float)dict["crisis_decay_multiplier"].AsDouble() : _crisisDecayMultiplier;
     }
 }

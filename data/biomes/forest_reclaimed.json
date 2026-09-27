@@ -22,6 +22,7 @@
     "poi_count_max": 4,
     "wang_tile_groups": ["grass", "forest"],
     "blend_terrains": true,
+    "path_style": { "tone": "#4e3a2a", "ruts": 0.0, "width_px": 26 },
     "tile_sources": {
         "grass": [
             "foret/tile_foret_sol_w00",

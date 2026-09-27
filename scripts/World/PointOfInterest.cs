@@ -34,6 +34,8 @@ public partial class PointOfInterest : StaticBody2D
     public string LootTableId => _data?.LootTableId ?? "";
     public int LootRolls => _data?.LootRolls ?? 2;
     public int ScorePoints => _data?.ScorePoints ?? 0;
+    /// <summary>Hauteur du visuel au-dessus du point d'ancrage, en pixels (forme de taille Size × 10).</summary>
+    public float VisualHeight => (_data?.Size ?? 2) * 10f;
 
     public bool CanInteract
     {

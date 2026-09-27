@@ -676,6 +676,10 @@ public partial class SpawnManager : Node2D
 
 	private void OnCrisisStarted(int crisisNumber, int intensity)
 	{
+		// Le joueur n'est résolu qu'au tick : une crise annoncée avant lui ferait échouer toute la vague.
+		CachePlayer();
+		if (_player == null || !IsInstanceValid(_player))
+			return;
 		float elapsedMinutes = _elapsedTime / 60f;
 		int burstCount = _crisisBurstBase + _crisisBurstPerIntensity * Mathf.Max(0, intensity - 1);
 		for (int i = 0; i < burstCount; i++)

@@ -1497,6 +1497,7 @@ public partial class Player : CharacterBody2D
         _footstepTimer = FootstepInterval;
 
         TerrainType terrain = GetCurrentTerrain();
+        Combat.FootstepFx.Emit(GlobalPosition, terrain, Velocity.Normalized());
         string biomeFootstep = terrain != TerrainType.Water
             ? _worldSetup?.GetBiomeAt(GlobalPosition)?.FootstepAudio
             : null;

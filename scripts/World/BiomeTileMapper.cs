@@ -613,7 +613,7 @@ public class BiomeTileMapper
 
 	/// <summary>
 	/// Sélectionne la tile de route directionnelle selon la connectivité aux 4 voisins cardinaux.
-	/// Calcule un bitmask (L=8|R=4|U=2|D=1) et cherche la clé "road_{mask}".
+	/// Calcule un bitmask (L=8|R=4|U=2|D=1) et cherche la variante de ce bitmask pour la parité du rang.
 	/// </summary>
 	private bool TryGetDirectionalRoadSource(
 		Dictionary<string, int[]> specialMap,
@@ -640,7 +640,7 @@ public class BiomeTileMapper
 				 | (hasUp ? RoadTileGenerator.ConnUp : 0)
 				 | (hasDown ? RoadTileGenerator.ConnDown : 0);
 
-		string key = RoadTileGenerator.GetRoadKey(mask);
+		string key = RoadTileGenerator.GetRoadKey(RoadTileGenerator.VariantIndex(mask, y));
 		return TryPickSpecialSource(specialMap, key, x, y, out sourceId);
 	}
 

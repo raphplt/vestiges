@@ -247,6 +247,12 @@ Ordre T2 → T1 → T3 validé par Raphaël.
 - **Vérification :** `CAPTURE_EXTRA_ARGS="--capture-junctions" tools/capture_run.sh <dossier>` capture, pour chacune des dix paires de biomes voisins, la frontière la plus proche du départ, avec les décors puis sol seul au zoom ×2. Pour l'avant, passer `enabled` à `false`. Captures regardées : les dix paires présentent une lisière organique à la place de l'escalier de losanges.
 - **Non fait :** les décors de transition (herbes entre forêt et champs, gravats entre ville et carrière) ; le sol lui-même (T1) reste granuleux, et la carrière montre toujours des losanges de cristal cyan réguliers.
 
+**Décors de transition, suite de T2 (26 septembre, session cloud) :** `World/JunctionPropPlacer`.
+- Sur les cellules à moins de deux cases d'un autre biome, 7 % reçoivent un décor tiré dans la liste de la paire de biomes (`junction_props.pairs` dans `world_gen.json`, les dix paires) : buissons, fougères et herbes hautes entre forêt et champs ; gravats et poutrelles entre ville et carrière ; roseaux entre marais et champs ; pierres moussues autour de la carrière…
+- Ils sont posés avant les décors génériques, jamais bloquants, et décalés dans leur case pour ne pas s'aligner le long de la frontière.
+- Seed de capture : 2 292 décors ajoutés. Un premier réglage à 14 % en posait 4 653, et les flaques entre marais et champs formaient des rangées : elles sont retirées de la liste.
+- Vérification : captures `--capture-junctions` des dix paires, regardées. Build sans avertissement, smoke test.
+
 ### Lot T1, premier biome : la Forêt Reconquise — 26 septembre 2026
 
 **Constat** (`python3 tools/tile_preview.py <biome> [groupe]` pave une zone comme en jeu) : les cinq sols ont trois défauts communs. Le bruit est tiré pixel par pixel ; un motif revient au même endroit de chaque tuile et dessine une trame diagonale ; des variantes de tons différents font réapparaître les losanges.
@@ -297,6 +303,44 @@ Le générateur sait désormais dessiner un dallage (`slab_px`). Les origines de
 `blend_terrains` est activé : les losanges de béton isolés disparaissent dans le dallage. Les routes, sur leur propre couche, restent nettes. Capture `--capture-props` regardée.
 
 **T1 couvre les cinq biomes.** Les anciennes tuiles restent sur le disque, inutilisées, car leurs `.import` sont référencés.
+
+### Lot T3 livré — chemins et routes, 26 septembre 2026
+
+**Chemins de terre entre les régions** (`World/PathNetworkGenerator`) :
+- Un arbre couvrant relie les centres des régions voisines de la mosaïque. S'y ajoutent des boucles (30 % des liaisons voisines courtes) et deux liaisons depuis le départ : le joueur apparaît sur un chemin.
+- Chaque liaison est tracée par A* sur la grille, avec un coût par cellule :
+  - l'eau et les immeubles sont infranchissables ;
+  - les rues et les chemins déjà tracés sont bon marché : un chemin qui entre en ville emprunte la chaussée et sort par un bout de rue, et deux chemins proches se rejoignent au lieu de courir côte à côte ;
+  - un bruit lent fait serpenter le tracé.
+- Les tronçons qui passent sur une rue ou sur un chemin déjà tracé ne sont pas redessinés.
+- Le tracé est lissé (Chaikin), ondule légèrement, puis devient un ruban maillé (`PathMeshes`) de largeur constante au sol : deux fois moins épais à l'écran quand il file vers la profondeur. Un chemin qui ne mène nulle part s'amincit sur ses derniers 72 px.
+- **Style par biome** (`path_style` dans `data/biomes/*.json` : ton, ornières, largeur) :
+  - champs : chemin de terre à deux ornières, l'herbe visible au milieu ;
+  - forêt : piste pleine et étroite ;
+  - marais : piste de vase ;
+  - carrière : piste de gravier grise, à demi ornièrée.
+
+  Le ton se fond sur une dizaine de points au passage d'un biome à l'autre.
+- **Shader** `path.gdshader` : bord tramé par amas de 2×2 pixels, lisière qui ondule, quatre tons par plaques, gravillons épars. L'oubli s'y applique comme au sol, car les fonctions d'oubli du sol sont extraites dans `ground_forget.gdshaderinc`, partagé par les deux shaders.
+- Aucun décor n'est posé sur les cellules d'un chemin, ni dans le marais.
+- **Réglages** : bloc `paths` de `data/world/world_gen.json` (voisinage, boucles, coûts, ondulation, marge au bord du monde, plafond d'exploration).
+- **Coût** (seed 221092026, conteneur cloud sans GPU) : 87 régions, 96 liaisons, 82 tronçons, 3 790 cellules. Au chargement, 257 ms de calcul CPU pour 207 000 cellules explorées. Aucun coût par frame côté CPU. Le rendu ajoute un maillage par tronçon, écarté hors écran par le moteur.
+
+**Rues verticales et bordures** (`RoadTileGenerator`) :
+- Défaut corrigé : en grille « stacked », une colonne de cellules zigzague de ±16 px d'un rang à l'autre, et chaque tile centrait sa bande verticale sur sa cellule. Les rues verticales apparaissaient donc en deux bandes séparées par un joint de trottoir.
+- Chaque bitmask existe désormais en deux variantes, une par parité de rang. La bande verticale est décalée au milieu de la colonne, et chaque tile ne dessine que sa tranche de 16 px de haut, le pas entre deux rangs. On obtient une seule chaussée droite, sans recouvrement. Les voitures et gravats des rues verticales sont recentrés d'autant.
+- Bordure de trottoir d'un pixel autour de la chaussée : claire au nord et à l'ouest, ombrée au sud et à l'est, absente par tronçons de 3 px (usure).
+
+**Vérification** :
+- Nouveau mode `CAPTURE_EXTRA_ARGS="--capture-paths" tools/capture_run.sh <dossier>` : pour chaque biome, le chemin le plus proche du départ, avec décors puis sol seul au zoom ×2 ; un raccord à une rue ; une vue dézoomée. Captures regardées.
+- `--capture-props --hide-collisions` avant/après pour la ville : la rue verticale est continue.
+- Build sans avertissement, smoke test, `MovementRegression` vert.
+
+**Non fait, points ouverts** :
+- Les allées de parcelles des champs (`WildFieldsLayout`) restent de larges bandes de terre. Les chemins les suivent de préférence (coût réduit). Leur refonte en haies et limites de parcelles relève du plan 08 P4b-3.
+- Les bouts de chemin sans issue pourraient accueillir les points d'intérêt : les POI sont placés après les chemins et n'en tiennent pas compte.
+- Pas de passerelles ni de gués : l'eau reste infranchissable pour le tracé.
+- Aucun banc de rendu sur GPU réel. Mesures et recette à faire sur le Mac.
 
 ## 10. Investigation performance — 26 septembre 2026
 

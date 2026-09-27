@@ -107,6 +107,10 @@ public partial class MovementDenseBenchmark : Node
                 await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
             }
             _world.GetNode("SpawnManager").ProcessMode = ProcessModeEnum.Disabled;
+            // Zoom fixe : le recul de caméra en foule (plan 02 J5) changerait la surface rendue d'une version à l'autre.
+            Node crowdZoom = _world.GetNodeOrNull("CrowdZoom");
+            if (crowdZoom != null)
+                crowdZoom.ProcessMode = ProcessModeEnum.Disabled;
             _world.GetNode("ErasureManager").ProcessMode = ProcessModeEnum.Disabled;
             _world.GetNode("CrisisManager").ProcessMode = ProcessModeEnum.Disabled;
             // Main signale prêt avant la fin des 200 lots de brouillard différés.
@@ -309,6 +313,11 @@ public partial class MovementDenseBenchmark : Node
                 managed_start_bytes = _managedStart, managed_end_bytes = managedEnd, allocated_bytes = allocated,
                 nodes_added = _nodesAdded,
                 nodes_added_by_type = _nodesAddedByName.OrderByDescending(pair => pair.Value).Take(12).ToDictionary(pair => pair.Key, pair => pair.Value), nodes_added_per_second = _nodesAdded / (_frames.Take(_samples).Sum() / 1000),
+                fx_dropped = new
+                {
+                    sparks = FxBudget.DroppedCount(FxBudgetKind.Sparks), shapes = FxBudget.DroppedCount(FxBudgetKind.Shapes),
+                    deaths = FxBudget.DroppedCount(FxBudgetKind.Deaths), numbers = FxBudget.DroppedCount(FxBudgetKind.Numbers),
+                },
                 native_start_bytes = _nativeStart, native_end_bytes = nativeEnd,
                 rss_start_bytes = _rssStart, rss_end_bytes = rssEnd, rss_process_peak_bytes = rssPeak,
                 fixture = "Main réelle ; profil dev temporaire sans souvenir équipé, Steam désactivé ; Ombres et Cracheurs à 5 pour 1 (120 par défaut, --enemies), HP x10000 ; traqueur invincible, arme initiale active ; spawn naturel, Effacement et crises figés ; cible orbitale commune, trajectoires réelles différentes avec dash ; code courant dans les deux cas."

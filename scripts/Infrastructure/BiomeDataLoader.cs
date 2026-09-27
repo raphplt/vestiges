@@ -28,6 +28,9 @@ public class BiomeData
     /// <summary>Les matières du biome (herbe, terre, sous-bois…) se fondent entre elles comme deux biomes voisins.</summary>
     public bool BlendTerrains;
 
+    /// <summary>Allure des chemins de terre dans ce biome (plan 10 T3) ; null : style par défaut de world_gen.json.</summary>
+    public PathStyle? PathStyle;
+
     /// <summary>
     /// Poids relatif pour la taille du secteur angulaire sur la map.
     /// Plus le poids est élevé, plus le biome occupe d'espace.
@@ -180,6 +183,9 @@ public static class BiomeDataLoader
 
         if (dict.ContainsKey("blend_terrains"))
             biome.BlendTerrains = dict["blend_terrains"].AsBool();
+
+        if (dict.ContainsKey("path_style"))
+            biome.PathStyle = Infrastructure.PathStyle.Parse(dict["path_style"].AsGodotDictionary(), Infrastructure.PathStyle.Default);
 
         if (dict.ContainsKey("wang_tile_groups"))
         {
