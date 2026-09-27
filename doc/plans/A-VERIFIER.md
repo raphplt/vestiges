@@ -60,3 +60,19 @@ Fichier temporaire. Il liste ce qu'une session cloud a livré sans pouvoir le v�
 - [ ] **Collision** : la scène bloque selon l'emprise du tracteur non incliné. Vérifier avec `--capture-props` qu'elle couvre la carrosserie sans déborder sur la mare.
 - [ ] **Ornières** : elles se lisent comme une traînée sombre derrière le tracteur. Garder, allonger, ou retirer ?
 
+## Plan 08 P2 — église et pylône
+
+- [ ] **Rareté** : au plus deux de chaque par carte (8 % et 10 % des îlots éligibles). Assez pour s'orienter ? Trop peu pour être remarqués ?
+- [ ] **Brèche du toit de l'église** : un disque sombre très régulier. À casser (bords déchiquetés, tuiles) si ça se voit en jeu.
+- [ ] **Pylône** : planté dans la cour, il bloque selon son emprise (1,1 m autour des pieds, plus le local technique hors emprise). Vérifier avec `--capture-props`.
+
+## Plan 02 J2 — morts
+
+- [ ] **Dissolution orientée** : dans le conteneur, la dissolution ne se voit qu'au ralenti. À 60 FPS, le sens du coup se lit-il ? Réglage : `vertical_bias` du shader d'entité (0,35) pèse le balayage face au bruit.
+- [ ] **Saut des orbes** : 0,35 s sans attraction. Gêne-t-il le ramassage en pleine vague ?
+
+## Plan 02 J3 — collecte
+
+- [ ] **Chaîne sonore** : à écouter. La montée (+3,5 % par orbe, 14 crans) est-elle agréable, ou trop aiguë en fin de chaîne ? Réglages en tête de `XpOrb`.
+- [ ] **Traînée des orbes** : lisible, ou brouillon quand vingt orbes convergent ?
+

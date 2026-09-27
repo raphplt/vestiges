@@ -4,7 +4,7 @@ using Godot;
 namespace Vestiges.Combat;
 
 /// <summary>
-/// Traces d'une mort, recyclées par CombatPools (plan 02 J0) : nuage de dissolution qui monte (quatre poses),
+/// Traces d'une mort, recyclées par CombatPools (plan 02 J0, J2) : nuage de dissolution qui monte (quatre poses) en dérivant avec le coup,
 /// flaque irisée au sol qui s'étend puis s'efface lentement. Animé dans _Process, sans tween ni minuterie.
 /// </summary>
 public partial class DeathFx : Node2D
@@ -26,6 +26,7 @@ public partial class DeathFx : Node2D
     private float _elapsed;
     private float _poolScale;
     private float _duration;
+    private Vector2 _drift;
 
     public static DeathFx Create(Action<DeathFx> release)
     {
@@ -52,10 +53,14 @@ public partial class DeathFx : Node2D
         return fx;
     }
 
-    /// <summary>Joue les traces d'une mort ; <paramref name="poolScale"/> ≤ 0 : nuage seul, sans flaque.</summary>
-    public void Play(Vector2 position, float poolScale)
+    /// <summary>
+    /// Joue les traces d'une mort ; <paramref name="poolScale"/> ≤ 0 : nuage seul, sans flaque. Le nuage dérive
+    /// dans le sens du dernier coup (<paramref name="direction"/>, normalisée ou nulle).
+    /// </summary>
+    public void Play(Vector2 position, float poolScale, Vector2 direction = default)
     {
         GlobalPosition = position;
+        _drift = direction * 10f;
         _elapsed = 0f;
         _poolScale = poolScale;
         _duration = poolScale > 0f ? PoolGrowSec + PoolHoldSec + PoolFadeSec : CloudSec;
@@ -74,7 +79,8 @@ public partial class DeathFx : Node2D
         if (_cloud.Visible)
         {
             float rise = Mathf.Clamp(_elapsed / CloudRiseSec, 0f, 1f);
-            _cloud.Position = new Vector2(0f, Mathf.Lerp(-8f, -16f, 1f - (1f - rise) * (1f - rise)));
+            float eased = 1f - (1f - rise) * (1f - rise);
+            _cloud.Position = new Vector2(0f, Mathf.Lerp(-8f, -16f, eased)) + _drift * eased;
             if (_elapsed >= CloudSec)
                 _cloud.Visible = false;
         }

@@ -149,17 +149,20 @@ public partial class CombatPools : Node2D
     /// de la frame, une mort ordinaire perd nuage et flaque (le sprite se dissout toujours) ; une mort
     /// <paramref name="signature"/> (élite, mini-boss) garde tout.
     /// </summary>
-    public void ShowDeath(Vector2 position, int shards, float spread, float poolScale, bool signature = false)
+    public void ShowDeath(Vector2 position, int shards, float spread, float poolScale, bool signature = false,
+                          Vector2 direction = default)
     {
         if (CombatFxSettings.ParticleLevel == ParticleLevel.Off)
             return;
-        if (shards > 0)
+        // Moitié des éclats qui s'élèvent vers le Néant, moitié projetés dans le sens du dernier coup (plan 02 J2).
+        int thrown = direction == Vector2.Zero ? 0 : shards / 2;
+        if (shards - thrown > 0)
         {
             Sparks.Emit(position + new Vector2(0f, -6f), new SparkBurst
             {
                 Family = FxFamily.Void,
                 Owner = FxOwner.Enemy,
-                Count = shards,
+                Count = shards - thrown,
                 Direction = Vector2.Up,
                 Spread = spread,
                 SpeedMin = 20f,
@@ -170,17 +173,53 @@ public partial class CombatPools : Node2D
                 Decorative = !signature,
             });
         }
+        if (thrown > 0)
+        {
+            Sparks.Emit(position + new Vector2(0f, -8f), new SparkBurst
+            {
+                Family = FxFamily.Void,
+                Owner = FxOwner.Enemy,
+                Count = thrown,
+                Direction = direction,
+                Spread = 1.1f,
+                SpeedMin = 60f,
+                SpeedMax = 140f,
+                LifeMin = 0.35f,
+                LifeMax = 0.6f,
+                Ballistic = true,
+                Size = signature ? 2 : 1,
+                Decorative = !signature,
+            });
+        }
+        if (signature)
+            ShowDeathSignature(position);
         if (signature || FxBudget.TryTake(FxBudgetKind.Deaths))
-            _deathFx.Take().Play(position, poolScale);
+            _deathFx.Take().Play(position, poolScale, direction);
+    }
+
+    /// <summary>Mort d'élite ou de Souverain : onde au sol qui s'élargit et éclair bref sur le corps.</summary>
+    private void ShowDeathSignature(Vector2 position)
+    {
+        PixelFxSpec ring = PixelFxSpec.Of(PixelFxShape.Ring, FxFamily.Void, 46f, 3f, 0.45f);
+        ring.Squash = 2f;
+        ring.Steps = 7;
+        ring.FadeTail = 0.4f;
+        ring.ZIndex = -1;
+        PlayFx(position, ring, FxOwner.Enemy);
+        PixelFxSpec flash = PixelFxSpec.Of(PixelFxShape.Star, FxFamily.Pale, 14f, 1f, 0.16f);
+        flash.Steps = 3;
+        flash.FadeTail = 0.4f;
+        flash.ZIndex = 2;
+        PlayFx(position + new Vector2(0f, -12f), flash, FxOwner.Enemy);
     }
 
     /// <summary>
     /// Pose une orbe d'XP recyclée. Différé : une mort survient souvent pendant un rappel de la physique,
     /// où une zone ne peut pas entrer dans l'arbre ni changer de surveillance.
     /// </summary>
-    public void SpawnXpOrb(Vector2 position, float xpValue)
+    public void SpawnXpOrb(Vector2 position, float xpValue, Vector2? hopFrom = null)
     {
-        Callable.From(() => _xpOrbs.Take().Launch(position, xpValue)).CallDeferred();
+        Callable.From(() => _xpOrbs.Take().Launch(position, xpValue, hopFrom)).CallDeferred();
     }
 
     /// <summary>Petite gerbe à la collecte d'une orbe d'XP.</summary>

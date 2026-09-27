@@ -147,6 +147,8 @@ public partial class Enemy : CharacterBody2D
 	private ShaderMaterial _spriteMaterial;
 	private readonly HitFeedback _hitFeedback = new();
 	private DamageNumber _damageNumber;
+	// Sens du dernier coup reçu (du joueur vers la créature) : oriente la mort (plan 02 J2).
+	private Vector2 _lastHitDirection;
 	private int _damageNumberSerial;
 
 	// Capacités composées décrites par le bloc "abilities" du JSON, réutilisées d'un spawn à l'autre
@@ -184,6 +186,7 @@ public partial class Enemy : CharacterBody2D
 	{
 		_hitFeedback.RestScale = Vector2.One;
 		_hitFeedback.Stop();
+		_lastHitDirection = Vector2.Zero;
 
 		_enemyId = data.Id;
 		_enemyType = data.Type;
@@ -1182,6 +1185,7 @@ public partial class Enemy : CharacterBody2D
 		Vector2 direction = _player != null && IsInstanceValid(_player)
 			? (GlobalPosition - _player.GlobalPosition).Normalized()
 			: Vector2.Zero;
+		_lastHitDirection = direction;
 		_hitFeedback.Trigger(_hasSprite ? _sprite : null, _spriteMaterial, _visual, _originalColor, direction);
 	}
 
@@ -1300,12 +1304,13 @@ public partial class Enemy : CharacterBody2D
 		// Retour au néant : éclats sombres, nuage de dissolution et flaque irisée, recyclés (plan 02 J0).
 		bool miniboss = _tier == "miniboss";
 		CombatPools.Instance?.ShowDeath(GlobalPosition, miniboss ? 20 : (_mods.IsVariant ? 14 : 8), Mathf.Tau,
-			miniboss ? 2.5f : (_mods.IsVariant ? 1.5f : 1.0f), miniboss || _mods.IsVariant);
+			miniboss ? 2.5f : (_mods.IsVariant ? 1.5f : 1.0f), miniboss || _mods.IsVariant, _lastHitDirection);
 
 		if (_hasSprite && _spriteMaterial != null)
 		{
-			// Dissolution via le shader unifié (pas de swap de shader)
+			// Dissolution via le shader unifié (pas de swap de shader), emportée dans le sens du dernier coup.
 			_spriteMaterial.SetShaderParameter("outline_enabled", false);
+			_spriteMaterial.SetShaderParameter("dissolve_direction", _lastHitDirection);
 
 			Tween tween = CreateTween();
 			tween.TweenMethod(
@@ -1412,7 +1417,8 @@ public partial class Enemy : CharacterBody2D
 				(float)GD.RandRange(-15, 15),
 				(float)GD.RandRange(-15, 15)
 			);
-			CombatPools.Instance?.SpawnXpOrb(GlobalPosition + offset, xpPerOrb);
+			// Le butin jaillit du corps, poussé dans le sens du coup.
+			CombatPools.Instance?.SpawnXpOrb(GlobalPosition + offset * 1.6f + _lastHitDirection * 10f, xpPerOrb, GlobalPosition);
 		}
 	}
 

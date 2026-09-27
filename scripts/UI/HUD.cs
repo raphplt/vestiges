@@ -50,6 +50,8 @@ public partial class HUD : CanvasLayer
     private ColorRect _hpChip;
     private Label _hpValueLabel;
     private ColorRect _xpFill;
+    private float _xpPulse;
+    private static readonly Color XpPulseModulate = new(1.9f, 1.9f, 1.9f, 1f);
     private PanelContainer _vitalsPlate;
 
     // --- Run progress ---
@@ -208,6 +210,11 @@ public partial class HUD : CanvasLayer
 
         UpdateHpChip(dt);
         UpdateScoreCounter(dt);
+        if (_xpPulse > 0f)
+        {
+            _xpPulse = Mathf.Max(0f, _xpPulse - dt * 5f);
+            _xpFill.Modulate = Colors.White.Lerp(XpPulseModulate, _xpPulse);
+        }
 
         _biomeTimer += dt;
         if (_biomeTimer >= BiomeUpdateInterval)
@@ -597,10 +604,13 @@ public partial class HUD : CanvasLayer
         }
     }
 
-    private void OnXpChanged(float _amount)
+    private void OnXpChanged(float amount)
     {
         if (_progression == null)
             return;
+        // Chaque orbe qui arrive fait pulser la barre (plan 02 J3).
+        if (amount > 0f)
+            _xpPulse = 1f;
         float ratio = _progression.XpToNextLevel > 0 ? _progression.CurrentXp / _progression.XpToNextLevel : 0f;
         SetBarRatio(_xpFill, ratio);
     }

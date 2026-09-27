@@ -204,3 +204,20 @@ Chaque lot : captures avant/après dans une vraie run (`tools/capture_run.sh`), 
 - **Vérifié** : build sans avertissement, `EnemyAbilityRegression` avec sept nouveaux contrôles (dont posture d'annonce conservée après un coup) (recul du visuel sans déplacer le corps, écrasement, retour au repos, flash éteint, chiffre additionné « 12 » pour 5 + 7, critique « 20! » à part), galerie des armes (`--capture-weapons`, lame, marteau, fouet, haches).
 - **Reste de J1** : le son de matière (aucun son d'impact par matière dans `assets/audio`, à produire avec le [plan 15](15-audio.md)) ; le critère « trois armes reconnaissables sans lire leur nom », à juger en jeu.
 
+### J2 livré (première passe) — 27 septembre 2026 (session cloud)
+
+- **Dissolution orientée** : la créature retient le sens du dernier coup (du joueur vers elle). Le shader d'entité reçoit `dissolve_direction` : le côté frappé se défait d'abord, le reste suit dans le sens du coup ; sans coup connu (mort par brûlure, exécution), balayage vertical comme avant. Le nuage de dissolution dérive de 10 px dans le même sens.
+- **Éclats projetés** : la moitié des éclats de mort s'élève toujours vers le Néant, l'autre est projetée dans le sens du coup, en trajectoire balistique (ils retombent et rebondissent au sol).
+- **Pop et saut du butin** : chaque orbe d'XP jaillit du corps et retombe à côté, poussée dans le sens du coup (saut de 14 px sur 0,35 s, petite au départ). Elle n'est attirée qu'après l'atterrissage. Les gerbes d'orbes des micro-événements gardent leur pose directe.
+- **Signature des élites et Souverains** : à la mort d'une variante ou d'un mini-boss, une onde au sol (anneau violet de 46 px) et un éclair pâle s'ajoutent aux secousses existantes. Ces morts ne sont jamais écartées par le budget d'effets.
+- **Relecture** (`godot-reviewer`) : après une mort en mêlée, le joueur chevauchait l'orbe dès son lancement et la ramassait avant le saut. La détection de l'orbe ne s'allume plus qu'à l'atterrissage, et signale alors un joueur déjà présent.
+- **Vérifié** : build sans avertissement, `EnemyAbilityRegression`, galerie des armes en mode létal (`--capture-weapons --lethal` : cibles à 1 PV dont une élite, ralenti ×0,25, XP symbolique pour ne pas ouvrir la montée de niveau). Images regardées : onde de l'élite, corps rongés du côté du coup, orbes qui jaillissent, flaques.
+- **Non fait** : lisibilité à 100+ morts simultanées, à juger en jeu (le banc dense ne tue pas) ; signature propre aux Souverains au-delà de l'onde (flash d'écran, son), à voir avec le plan 15.
+
+### J3 livré (première passe) — 27 septembre 2026 (session cloud)
+
+- **Orbes aspirées** : l'accélération existait (800 px/s², plafond 500 px/s). L'orbe s'étire désormais dans sa course, jusqu'à ×1,7 en longueur à pleine vitesse, et sème un éclat d'Essence toutes les 40 ms au-delà de 220 px/s (`PixelSparks`, soumis au budget d'effets, aucun nœud créé).
+- **Chaîne sonore** : chaque ramassage à moins de 0,5 s du précédent monte le son d'un cran (+3,5 %, jusqu'à +49 % en 14 crans), puis la chaîne retombe. La limite existante de 60 ms entre deux sons d'XP est conservée : une chaîne de 50 orbes ne sature pas. `AudioManager.Play` prend une hauteur de base.
+- **Barre d'XP** : elle pulse (éclat ×1,9 qui retombe en 0,2 s) à chaque orbe qui arrive.
+- **Non fait** : Essence et butin qui volent vers le HUD. Ils demandent une trajectoire de l'écran de jeu vers l'interface ; lot suivant.
+

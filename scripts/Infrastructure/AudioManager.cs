@@ -354,12 +354,13 @@ public partial class AudioManager : Node
 	/// pitchVariance : variation aléatoire de pitch (+/-).
 	/// volumeDb      : offset de volume en dB (0 = nominal, négatif = plus silencieux).
 	/// </summary>
-	public static void Play(string key, float pitchVariance = 0.05f, float volumeDb = 0f)
+	/// <summary>Joue un SFX ; <paramref name="basePitch"/> décale la hauteur (chaîne de ramassages, plan 02 J3).</summary>
+	public static void Play(string key, float pitchVariance = 0.05f, float volumeDb = 0f, float basePitch = 1f)
 	{
-		Instance?.PlaySfx(key, pitchVariance, volumeDb);
+		Instance?.PlaySfx(key, pitchVariance, volumeDb, basePitch);
 	}
 
-	public void PlaySfx(string key, float pitchVariance = 0.05f, float volumeDb = 0f)
+	public void PlaySfx(string key, float pitchVariance = 0.05f, float volumeDb = 0f, float basePitch = 1f)
 	{
 		if (!_streams.TryGetValue(key, out AudioStream stream))
 			return;
@@ -377,7 +378,7 @@ public partial class AudioManager : Node
 
 
 		player.Stream = stream;
-		player.PitchScale = 1f + (float)GD.RandRange(-pitchVariance, pitchVariance);
+		player.PitchScale = basePitch + (float)GD.RandRange(-pitchVariance, pitchVariance);
 		player.VolumeDb = volumeDb;
 		player.Play();
 	}

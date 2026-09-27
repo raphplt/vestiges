@@ -62,6 +62,9 @@ Un seul lot d'implémentation ouvert à la fois. Un échec de lisibilité, de pe
 - [16 O5](16-oubli-sensible.md) : un Autel qui sert rappelle sa zone à l'existence.
 - [08 P4b-4](08-direction-artistique.md) : scènes-récits dans les champs (pique-nique abandonné, linge étendu, épouvantail aux corbeaux, tracteur embourbé).
 - [02 J1](02-juiciness-score.md) : retour de coup sans tween (recul sur le visuel seul), chiffres de dégâts en Saira, cumulés par cible, critique distinct par la forme.
+- [08 P2](08-direction-artistique.md) : l'église et le pylône de télécommunication reviennent comme repères rares des Ruines Urbaines, refaits dans le pipeline.
+- [02 J2](02-juiciness-score.md) : morts orientées par le dernier coup (dissolution, éclats, nuage), orbes d'XP qui jaillissent du corps, onde et éclair à la mort des élites.
+- [02 J3](02-juiciness-score.md) : orbes qui s'étirent et laissent une traînée, son de ramassage qui monte le long d'une chaîne, barre d'XP qui pulse.
 - Travail fait dans un conteneur sans GPU : les points à revérifier sur la machine de Raphaël sont listés dans [A-VERIFIER.md](A-VERIFIER.md).
 
 **Mise à jour du 26 septembre (soir) :**

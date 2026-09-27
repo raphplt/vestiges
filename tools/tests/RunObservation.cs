@@ -26,7 +26,7 @@ namespace Vestiges.Tests;
 /// --capture-echoes : échos de l'oubli forcés en zone Fragile, apparition, dissolution, murmure (RunObservation.Echoes.cs).
 /// --capture-erasure : une capture par phase de l'oubli, puis un dégradé de toutes les phases.
 /// --measure-props [--measure-seconds 8] : coût de rendu des décors par biome (RunObservation.PropCost.cs).
-/// --capture-weapons [--weapons a,b] : galerie des attaques du joueur (RunObservation.Weapons.cs).
+/// --capture-weapons [--weapons a,b] [--lethal] : galerie des attaques du joueur, cibles qui meurent au premier coup avec --lethal (RunObservation.Weapons.cs).
 /// --capture-bestiary : gros plans des créatures du pilote de sprites procéduraux, autour du joueur immobile.
 /// --density : mesure de densité en spawn naturel (ennemis visibles, temps sans ennemi, débits, niveaux).
 /// --capture-every N : pendant la mesure, capture plein écran toutes les N secondes (HUD, événements).
@@ -82,7 +82,7 @@ public partial class RunObservation : Node
             else if (Array.IndexOf(args, "--measure-props") >= 0)
                 await MeasurePropCost(double.Parse(Argument(args, "--measure-seconds", "8"), CultureInfo.InvariantCulture));
             else if (Array.IndexOf(args, "--capture-weapons") >= 0)
-                await CaptureWeapons(Argument(args, "--weapons", null));
+                await CaptureWeapons(Argument(args, "--weapons", null), Array.IndexOf(args, "--lethal") >= 0);
             else if (Array.IndexOf(args, "--capture-bestiary") >= 0)
                 await CaptureBestiary();
             else if (Array.IndexOf(args, "--capture-character") >= 0)
