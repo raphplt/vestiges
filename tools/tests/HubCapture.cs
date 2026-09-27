@@ -20,6 +20,8 @@ public partial class HubCapture : Node
             await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
             string[] args = OS.GetCmdlineUserArgs();
             _output = Argument(args, "--output", "/tmp/vestiges-hub");
+            // Taille du texte des paramètres (0 normal, 1 grand, 2 très grand), pour vérifier les débordements.
+            Vestiges.UI.TextSettings.Step = int.Parse(Argument(args, "--text-step", "0"), CultureInfo.InvariantCulture);
             DirAccess.MakeDirRecursiveAbsolute(_output);
 
             GetTree().CurrentScene = null;

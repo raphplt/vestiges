@@ -122,7 +122,7 @@ public partial class LevelUpScreen : CanvasLayer
         _panel.AddChild(inner);
 
         _title = new Label { HorizontalAlignment = HorizontalAlignment.Center, Text = Tr("LEVELUP_TITLE") };
-        _title.AddThemeFontSizeOverride("font_size", 20);
+        UITheme.SetTextRole(_title, TextRole.Subhead);
         _title.AddThemeColorOverride("font_color", GoldBright);
         inner.AddChild(_title);
 
@@ -143,7 +143,7 @@ public partial class LevelUpScreen : CanvasLayer
         inner.AddChild(_cardsContainer);
 
         _hint = new Label { HorizontalAlignment = HorizontalAlignment.Center, Visible = false, Text = Tr("LEVELUP_BANISH_HINT") };
-        _hint.AddThemeFontSizeOverride("font_size", 13);
+        UITheme.SetTextRole(_hint, TextRole.Caption);
         _hint.AddThemeColorOverride("font_color", BanishColor);
         inner.AddChild(_hint);
 
@@ -229,17 +229,17 @@ public partial class LevelUpScreen : CanvasLayer
         string tag = choice.Rarity != null
             ? $"{ChoiceStyle.RarityGlyph(choice.Rarity.Rank)} {RarityPalette.DisplayName(choice.Rarity.Id).ToUpper()}".Trim()
             : Tr(isWeapon ? "LEVELUP_NEW_WEAPON" : "LEVELUP_NEW_PASSIVE");
-        header.AddChild(MakeLabel(tag, 12, frame, true));
+        header.AddChild(MakeLabel(tag, TextRole.Caption, frame, true));
         if (!isNew)
         {
             int level = isWeapon ? player?.GetWeaponFragmentLevel(choice.Id) ?? 0 : player?.GetPassiveLevel(choice.Id) ?? 0;
             int next = isWeapon ? level + 1 : Mathf.Min(level + choice.PassiveLevels, PassiveSouvenirDataLoader.Get(choice.Id)?.MaxLevel ?? level + 1);
-            header.AddChild(MakeLabel(string.Format(Tr("LEVELUP_LEVEL"), level, next), 12, TextColor, false, HorizontalAlignment.Right));
+            header.AddChild(MakeLabel(string.Format(Tr("LEVELUP_LEVEL"), level, next), TextRole.Caption, TextColor, false, HorizontalAlignment.Right));
         }
 
-        text.AddChild(MakeLabel(choice.DisplayName, 16, TextLight, false));
+        text.AddChild(MakeLabel(choice.DisplayName, TextRole.Body, TextLight, false));
         foreach ((string line, Color color) in UpgradeText.Describe(choice, player))
-            text.AddChild(MakeLabel(line, 14, color, false));
+            text.AddChild(MakeLabel(line, TextRole.Small, color, false));
 
         _cards.Add(card);
         _cardColors.Add(frame);
@@ -258,8 +258,8 @@ public partial class LevelUpScreen : CanvasLayer
         return ResourceLoader.Exists(resPath) ? GD.Load<Texture2D>(resPath) : null;
     }
 
-    private static Label MakeLabel(string text, int size, Color color, bool expand, HorizontalAlignment align = HorizontalAlignment.Left) =>
-        ChoiceStyle.MakeLabel(text, size, color, expand, align);
+    private static Label MakeLabel(string text, TextRole role, Color color, bool expand, HorizontalAlignment align = HorizontalAlignment.Left) =>
+        ChoiceStyle.MakeLabel(text, role, color, expand, align);
 
     private void StyleCard(int index, bool focused) =>
         ChoiceStyle.StyleCard(_cards[index], _banishMode ? BanishColor : _cardColors[index], _cardOptions[index].Rarity?.Rank ?? 0, focused);
@@ -290,7 +290,7 @@ public partial class LevelUpScreen : CanvasLayer
             FocusMode = Control.FocusModeEnum.None,
             ProcessMode = ProcessModeEnum.Always,
         };
-        button.AddThemeFontSizeOverride("font_size", 14);
+        UITheme.SetTextRole(button, TextRole.Small);
         button.AddThemeColorOverride("font_color", enabled ? TextColor : TextDim);
         StyleButton(button, false);
         UITheme.WireButtonAudio(button);
@@ -392,7 +392,7 @@ public partial class LevelUpScreen : CanvasLayer
             ProcessMode = ProcessModeEnum.Always,
             OffsetTop = 80,
         };
-        _synergyNotification.AddThemeFontSizeOverride("font_size", 22);
+        UITheme.SetTextRole(_synergyNotification, TextRole.Heading);
         _synergyNotification.AddThemeColorOverride("font_color", GoldBright);
         _synergyNotification.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.CenterTop);
         AddChild(_synergyNotification);

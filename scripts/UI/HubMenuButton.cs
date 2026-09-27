@@ -24,16 +24,16 @@ public partial class HubMenuButton : Button
 	private bool _silentFocus;
 	private Tween _tween;
 
-	public void Setup(string text, int fontSize, Font font)
+	public void Setup(string text, TextRole role, Font font)
 	{
 		Text = text;
 		Flat = true;
 		Alignment = HorizontalAlignment.Left;
 		FocusMode = FocusModeEnum.All;
 		MouseDefaultCursorShape = CursorShape.PointingHand;
-		CustomMinimumSize = new Vector2(420f, fontSize + 16f);
+		CustomMinimumSize = new Vector2(420f, UITheme.FontSize(role) + 16f);
 		AddThemeFontOverride("font", font);
-		AddThemeFontSizeOverride("font_size", fontSize);
+		UITheme.SetTextRole(this, role);
 		AddThemeConstantOverride("outline_size", 8);
 		AddThemeColorOverride("font_outline_color", new Color(0.03f, 0.03f, 0.06f, 0.85f));
 		ApplyColors(Idle);

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Godot;
+using Vestiges.UI;
 using Vestiges.Core;
 using Vestiges.Infrastructure;
 
@@ -194,7 +195,7 @@ public partial class QuestManager : CanvasLayer
         {
             Text = "QUÊTES DE RUN"
         };
-        title.AddThemeFontSizeOverride("font_size", 16);
+        UITheme.SetTextRole(title, TextRole.Body);
         title.AddThemeColorOverride("font_color", new Color(0.82f, 0.94f, 0.98f));
         content.AddChild(title);
 
@@ -207,7 +208,7 @@ public partial class QuestManager : CanvasLayer
             Visible = false,
             AutowrapMode = TextServer.AutowrapMode.WordSmart
         };
-        _toastLabel.AddThemeFontSizeOverride("font_size", 13);
+        UITheme.SetTextRole(_toastLabel, TextRole.Caption);
         _toastLabel.AddThemeColorOverride("font_color", new Color(0.98f, 0.88f, 0.54f));
         content.AddChild(_toastLabel);
     }
@@ -247,10 +248,10 @@ public partial class QuestManager : CanvasLayer
         while (_questRows.Count < _activeRunQuests.Count)
         {
             Label name = new();
-            name.AddThemeFontSizeOverride("font_size", 14);
+            UITheme.SetTextRole(name, TextRole.Small);
             _questList.AddChild(name);
             Label details = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart };
-            details.AddThemeFontSizeOverride("font_size", 11);
+            UITheme.SetTextRole(details, TextRole.Caption);
             _questList.AddChild(details);
             _questRows.Add((name, details));
         }

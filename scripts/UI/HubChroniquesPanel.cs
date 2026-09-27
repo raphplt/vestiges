@@ -23,7 +23,7 @@ public partial class HubChroniquesPanel : MarginContainer
 
 	public override void _Ready()
 	{
-		_tabFont = GD.Load<Font>("res://assets/fonts/saira/SairaSemiCondensed-SemiBold.ttf");
+		_tabFont = UITheme.StrongFont;
 	}
 
 	/// <summary>Reconstruit le panneau ; les lignes du personnage choisi ressortent.</summary>
@@ -55,7 +55,7 @@ public partial class HubChroniquesPanel : MarginContainer
 		btn.AddThemeStyleboxOverride("hover", hover);
 		btn.AddThemeStyleboxOverride("hover_pressed", hover);
 		btn.AddThemeFontOverride("font", _tabFont);
-		btn.AddThemeFontSizeOverride("font_size", 26);
+		UITheme.SetTextRole(btn, TextRole.Title);
 		btn.AddThemeColorOverride("font_color", active ? GoldBright : TextDim);
 		btn.AddThemeColorOverride("font_hover_color", GoldBright);
 		btn.AddThemeColorOverride("font_pressed_color", GoldBright);
@@ -157,7 +157,7 @@ public partial class HubChroniquesPanel : MarginContainer
 				Text = $"Record : {bestScore:N0}  |  Plus longue run : {FormatDuration(longestRun)}",
 				HorizontalAlignment = HorizontalAlignment.Center
 			};
-			record.AddThemeFontSizeOverride("font_size", 22);
+			UITheme.SetTextRole(record, TextRole.Heading);
 			record.AddThemeColorOverride("font_color", GoldBright);
 			container.AddChild(record);
 		}
@@ -178,7 +178,7 @@ public partial class HubChroniquesPanel : MarginContainer
 			{
 				Text = $"#{i + 1}  {charName} — {run.Score:N0} — {FormatDuration(run.RunDurationSec)} — {run.CrisesSurvived} crises"
 			};
-			runLabel.AddThemeFontSizeOverride("font_size", 16);
+			UITheme.SetTextRole(runLabel, TextRole.Body);
 
 			bool isCurrentChar = run.CharacterId == _selectedCharacterId;
 			runLabel.AddThemeColorOverride("font_color", isCurrentChar ? GoldDim : TextDim);
@@ -204,7 +204,7 @@ public partial class HubChroniquesPanel : MarginContainer
 			{
 				Text = charName
 			};
-			nameLabel.AddThemeFontSizeOverride("font_size", 18);
+			UITheme.SetTextRole(nameLabel, TextRole.Lead);
 			nameLabel.AddThemeColorOverride("font_color", charData?.VisualColor ?? TextColor);
 			container.AddChild(nameLabel);
 
@@ -212,7 +212,7 @@ public partial class HubChroniquesPanel : MarginContainer
 			{
 				Text = $"  Record: {pair.Value.BestScore:N0} — Moy: {pair.Value.AvgScore:N0} — Durée moy: {FormatDuration(pair.Value.AvgDurationSec)} — Crises moy: {pair.Value.AvgCrises:F1}"
 			};
-			statsLabel.AddThemeFontSizeOverride("font_size", 14);
+			UITheme.SetTextRole(statsLabel, TextRole.Small);
 			statsLabel.AddThemeColorOverride("font_color", TextDim);
 			container.AddChild(statsLabel);
 		}
@@ -229,7 +229,7 @@ public partial class HubChroniquesPanel : MarginContainer
 				Text = $"Endurance : {FormatDuration(longestRun)}  |  Crises max : {maxCrises}",
 				HorizontalAlignment = HorizontalAlignment.Center
 			};
-			record.AddThemeFontSizeOverride("font_size", 22);
+			UITheme.SetTextRole(record, TextRole.Heading);
 			record.AddThemeColorOverride("font_color", GoldBright);
 			container.AddChild(record);
 		}
@@ -250,7 +250,7 @@ public partial class HubChroniquesPanel : MarginContainer
 			{
 				Text = $"#{i + 1}  {charName} — {FormatDuration(run.RunDurationSec)} — {run.CrisesSurvived} crises — {run.Score:N0}"
 			};
-			runLabel.AddThemeFontSizeOverride("font_size", 16);
+			UITheme.SetTextRole(runLabel, TextRole.Body);
 
 			bool isCurrentChar = run.CharacterId == _selectedCharacterId;
 			runLabel.AddThemeColorOverride("font_color", isCurrentChar ? GoldDim : TextDim);
@@ -273,7 +273,7 @@ public partial class HubChroniquesPanel : MarginContainer
 			Text = $"Progression : {completedCount}/{progressionQuests.Count} objectifs gravés dans la pierre",
 			HorizontalAlignment = HorizontalAlignment.Center
 		};
-		summary.AddThemeFontSizeOverride("font_size", 22);
+		UITheme.SetTextRole(summary, TextRole.Heading);
 		summary.AddThemeColorOverride("font_color", GoldBright);
 		container.AddChild(summary);
 
@@ -284,7 +284,7 @@ public partial class HubChroniquesPanel : MarginContainer
 			{
 				Text = $"{(snapshot.IsClaimed ? "[Terminée]" : "[En cours]")} {snapshot.Definition.Name}"
 			};
-			title.AddThemeFontSizeOverride("font_size", 17);
+			UITheme.SetTextRole(title, TextRole.Lead);
 			title.AddThemeColorOverride("font_color", snapshot.IsClaimed ? GoldBright : TextColor);
 			container.AddChild(title);
 
@@ -293,7 +293,7 @@ public partial class HubChroniquesPanel : MarginContainer
 				Text = $"{snapshot.Definition.Description}\nAvancement : {snapshot.ProgressLabel}  |  {snapshot.RewardLabel}",
 				AutowrapMode = TextServer.AutowrapMode.WordSmart
 			};
-			details.AddThemeFontSizeOverride("font_size", 14);
+			UITheme.SetTextRole(details, TextRole.Small);
 			details.AddThemeColorOverride("font_color", snapshot.IsClaimed ? GoldDim : TextDim);
 			container.AddChild(details);
 		}
@@ -305,7 +305,7 @@ public partial class HubChroniquesPanel : MarginContainer
 			Text = "Trois quêtes sont tirées au hasard au début de chaque run. Elles offrent un coup de pouce immédiat en Essence ou en XP.",
 			AutowrapMode = TextServer.AutowrapMode.WordSmart
 		};
-		intro.AddThemeFontSizeOverride("font_size", 14);
+		UITheme.SetTextRole(intro, TextRole.Small);
 		intro.AddThemeColorOverride("font_color", TextDim);
 		container.AddChild(intro);
 
@@ -316,7 +316,7 @@ public partial class HubChroniquesPanel : MarginContainer
 				Text = $"{definition.Name} — {definition.Description}  |  {QuestManager.GetRewardSummary(definition)}",
 				AutowrapMode = TextServer.AutowrapMode.WordSmart
 			};
-			entry.AddThemeFontSizeOverride("font_size", 15);
+			UITheme.SetTextRole(entry, TextRole.Body);
 			entry.AddThemeColorOverride("font_color", TextColor);
 			container.AddChild(entry);
 		}
@@ -328,7 +328,7 @@ public partial class HubChroniquesPanel : MarginContainer
 		{
 			Text = text
 		};
-		label.AddThemeFontSizeOverride("font_size", 18);
+		UITheme.SetTextRole(label, TextRole.Lead);
 		label.AddThemeColorOverride("font_color", GoldDim);
 		return label;
 	}
@@ -354,7 +354,7 @@ public partial class HubChroniquesPanel : MarginContainer
 			Text = "Pas encore d'historique.",
 			HorizontalAlignment = HorizontalAlignment.Center
 		};
-		empty.AddThemeFontSizeOverride("font_size", 16);
+		UITheme.SetTextRole(empty, TextRole.Body);
 		empty.AddThemeColorOverride("font_color", TextVeryDim);
 		container.AddChild(empty);
 	}

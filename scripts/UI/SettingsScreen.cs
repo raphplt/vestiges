@@ -233,7 +233,7 @@ public partial class SettingsScreen : CanvasLayer
 			Text = "PARAMÈTRES",
 			HorizontalAlignment = HorizontalAlignment.Center
 		};
-		title.AddThemeFontSizeOverride("font_size", 22);
+		UITheme.SetTextRole(title, TextRole.Heading);
 		title.AddThemeColorOverride("font_color", UITheme.GoldColor);
 		row.AddChild(title);
 
@@ -248,7 +248,7 @@ public partial class SettingsScreen : CanvasLayer
 			CustomMinimumSize = new Vector2(36, 36),
 			FocusMode = Control.FocusModeEnum.None
 		};
-		closeBtn.AddThemeFontSizeOverride("font_size", 18);
+		UITheme.SetTextRole(closeBtn, TextRole.Lead);
 		UITheme.ApplyButtonStyle(closeBtn, _btnNormalTex, _btnHoverTex, _btnPressedTex, _btnDisabledTex);
 		closeBtn.Pressed += Close;
 		row.AddChild(closeBtn);
@@ -291,7 +291,7 @@ public partial class SettingsScreen : CanvasLayer
 			FocusMode = Control.FocusModeEnum.None,
 			Flat = true
 		};
-		btn.AddThemeFontSizeOverride("font_size", 15);
+		UITheme.SetTextRole(btn, TextRole.Body);
 
 		btn.Pressed += () => ShowTab(id);
 		tabBar.AddChild(btn);
@@ -323,7 +323,13 @@ public partial class SettingsScreen : CanvasLayer
 			_ => new Control()
 		};
 
-		_contentArea.AddChild(content);
+		// Le panneau garde sa taille : un onglet que le texte agrandi fait déborder défile.
+		ScrollContainer scroll = new() { HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled };
+		scroll.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
+		content.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+		content.SizeFlagsVertical = Control.SizeFlags.ExpandFill;
+		scroll.AddChild(content);
+		_contentArea.AddChild(scroll);
 	}
 
 	// ================================================================
@@ -370,7 +376,7 @@ public partial class SettingsScreen : CanvasLayer
 			Text = label,
 			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill
 		};
-		lbl.AddThemeFontSizeOverride("font_size", 15);
+		UITheme.SetTextRole(lbl, TextRole.Body);
 		lbl.AddThemeColorOverride("font_color", UITheme.TextColor);
 		headerRow.AddChild(lbl);
 
@@ -379,7 +385,7 @@ public partial class SettingsScreen : CanvasLayer
 			CustomMinimumSize = new Vector2(48, 0),
 			HorizontalAlignment = HorizontalAlignment.Right
 		};
-		pct.AddThemeFontSizeOverride("font_size", 15);
+		UITheme.SetTextRole(pct, TextRole.Body);
 		pct.AddThemeColorOverride("font_color", UITheme.TextDim);
 		headerRow.AddChild(pct);
 
@@ -499,6 +505,15 @@ public partial class SettingsScreen : CanvasLayer
 				btn.Text = ColorBlindFilter.ModeLabel(newMode);
 			}));
 
+		// Taille du texte : réappliquée sur-le-champ à tout ce qui est affiché (plan 04 lot B).
+		vbox.AddChild(BuildCycleRow("Taille du texte", TextScaleLabel(TextSettings.Step), (btn) =>
+		{
+			TextSettings.Step = (TextSettings.Step + 1) % TextSettings.Steps.Length;
+			TextSettings.Save();
+			btn.Text = TextScaleLabel(TextSettings.Step);
+			UITheme.RefreshTextScale(GetTree().Root);
+		}));
+
 		// Language
 		vbox.AddChild(BuildCycleRow("Langue",
 			LocaleManager.Instance != null
@@ -513,6 +528,8 @@ public partial class SettingsScreen : CanvasLayer
 
 		return margin;
 	}
+
+	private static string TextScaleLabel(int step) => $"{Mathf.RoundToInt(TextSettings.Steps[step] * 100f)} %";
 
 	// ================================================================
 	// EFFECTS TAB
@@ -540,7 +557,7 @@ public partial class SettingsScreen : CanvasLayer
 			Text = "Particules",
 			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill
 		};
-		particleLbl.AddThemeFontSizeOverride("font_size", 15);
+		UITheme.SetTextRole(particleLbl, TextRole.Body);
 		particleLbl.AddThemeColorOverride("font_color", UITheme.TextColor);
 		particleRow.AddChild(particleLbl);
 
@@ -550,7 +567,7 @@ public partial class SettingsScreen : CanvasLayer
 			CustomMinimumSize = new Vector2(160, 36),
 			FocusMode = Control.FocusModeEnum.None
 		};
-		particleBtn.AddThemeFontSizeOverride("font_size", 14);
+		UITheme.SetTextRole(particleBtn, TextRole.Small);
 		UITheme.ApplyButtonStyle(particleBtn, _btnNormalTex, _btnHoverTex, _btnPressedTex, _btnDisabledTex);
 		particleBtn.Pressed += () =>
 		{
@@ -591,7 +608,7 @@ public partial class SettingsScreen : CanvasLayer
 			Text = label,
 			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill
 		};
-		lbl.AddThemeFontSizeOverride("font_size", 15);
+		UITheme.SetTextRole(lbl, TextRole.Body);
 		lbl.AddThemeColorOverride("font_color", UITheme.TextColor);
 		row.AddChild(lbl);
 
@@ -601,7 +618,7 @@ public partial class SettingsScreen : CanvasLayer
 			CustomMinimumSize = new Vector2(160, 36),
 			FocusMode = Control.FocusModeEnum.None
 		};
-		btn.AddThemeFontSizeOverride("font_size", 14);
+		UITheme.SetTextRole(btn, TextRole.Small);
 		UITheme.ApplyButtonStyle(btn, _btnNormalTex, _btnHoverTex, _btnPressedTex, _btnDisabledTex);
 		btn.Pressed += () => onCycle(btn);
 		row.AddChild(btn);
@@ -619,7 +636,7 @@ public partial class SettingsScreen : CanvasLayer
 			Text = label,
 			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill
 		};
-		lbl.AddThemeFontSizeOverride("font_size", 15);
+		UITheme.SetTextRole(lbl, TextRole.Body);
 		lbl.AddThemeColorOverride("font_color", UITheme.TextColor);
 		row.AddChild(lbl);
 
@@ -632,7 +649,7 @@ public partial class SettingsScreen : CanvasLayer
 			CustomMinimumSize = new Vector2(80, 36),
 			FocusMode = Control.FocusModeEnum.None
 		};
-		toggle.AddThemeFontSizeOverride("font_size", 14);
+		UITheme.SetTextRole(toggle, TextRole.Small);
 		UITheme.ApplyButtonStyle(toggle, _btnNormalTex, _btnHoverTex, _btnPressedTex, _btnDisabledTex);
 		toggle.AddThemeColorOverride("font_color", initialValue ? UITheme.GoldColor : UITheme.TextDim);
 
@@ -673,7 +690,7 @@ public partial class SettingsScreen : CanvasLayer
 			Text = "Action",
 			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill
 		};
-		actionHeader.AddThemeFontSizeOverride("font_size", 14);
+		UITheme.SetTextRole(actionHeader, TextRole.Small);
 		actionHeader.AddThemeColorOverride("font_color", UITheme.TextDim);
 		header.AddChild(actionHeader);
 
@@ -683,7 +700,7 @@ public partial class SettingsScreen : CanvasLayer
 			CustomMinimumSize = new Vector2(120, 0),
 			HorizontalAlignment = HorizontalAlignment.Center
 		};
-		keyHeader.AddThemeFontSizeOverride("font_size", 14);
+		UITheme.SetTextRole(keyHeader, TextRole.Small);
 		keyHeader.AddThemeColorOverride("font_color", UITheme.TextDim);
 		header.AddChild(keyHeader);
 
@@ -693,7 +710,7 @@ public partial class SettingsScreen : CanvasLayer
 			CustomMinimumSize = new Vector2(120, 0),
 			HorizontalAlignment = HorizontalAlignment.Center
 		};
-		joyHeader.AddThemeFontSizeOverride("font_size", 14);
+		UITheme.SetTextRole(joyHeader, TextRole.Small);
 		joyHeader.AddThemeColorOverride("font_color", UITheme.TextDim);
 		header.AddChild(joyHeader);
 
@@ -725,7 +742,7 @@ public partial class SettingsScreen : CanvasLayer
 			CustomMinimumSize = new Vector2(180, 36),
 			FocusMode = Control.FocusModeEnum.None
 		};
-		resetBtn.AddThemeFontSizeOverride("font_size", 14);
+		UITheme.SetTextRole(resetBtn, TextRole.Small);
 		UITheme.ApplyButtonStyle(resetBtn, _btnNormalTex, _btnHoverTex, _btnPressedTex, _btnDisabledTex);
 		resetBtn.Pressed += () =>
 		{
@@ -751,7 +768,7 @@ public partial class SettingsScreen : CanvasLayer
 			Text = actionLabel,
 			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill
 		};
-		lbl.AddThemeFontSizeOverride("font_size", 14);
+		UITheme.SetTextRole(lbl, TextRole.Small);
 		lbl.AddThemeColorOverride("font_color", UITheme.TextColor);
 		row.AddChild(lbl);
 
@@ -762,7 +779,7 @@ public partial class SettingsScreen : CanvasLayer
 			CustomMinimumSize = new Vector2(120, 32),
 			FocusMode = Control.FocusModeEnum.None
 		};
-		keyBtn.AddThemeFontSizeOverride("font_size", 14);
+		UITheme.SetTextRole(keyBtn, TextRole.Small);
 		UITheme.ApplyButtonStyle(keyBtn, _btnNormalTex, _btnHoverTex, _btnPressedTex, _btnDisabledTex);
 		keyBtn.Pressed += () => StartListening(def.Action, keyBtn, true);
 		row.AddChild(keyBtn);
@@ -774,7 +791,7 @@ public partial class SettingsScreen : CanvasLayer
 			CustomMinimumSize = new Vector2(120, 32),
 			FocusMode = Control.FocusModeEnum.None
 		};
-		joyBtn.AddThemeFontSizeOverride("font_size", 14);
+		UITheme.SetTextRole(joyBtn, TextRole.Small);
 		UITheme.ApplyButtonStyle(joyBtn, _btnNormalTex, _btnHoverTex, _btnPressedTex, _btnDisabledTex);
 		joyBtn.Pressed += () => StartListening(def.Action, joyBtn, false);
 		row.AddChild(joyBtn);
@@ -810,7 +827,7 @@ public partial class SettingsScreen : CanvasLayer
 			Text = "[Échap] ou [X] Fermer",
 			HorizontalAlignment = HorizontalAlignment.Center
 		};
-		hint.AddThemeFontSizeOverride("font_size", 13);
+		UITheme.SetTextRole(hint, TextRole.Caption);
 		hint.AddThemeColorOverride("font_color", new Color(0.4f, 0.4f, 0.45f));
 		margin.AddChild(hint);
 

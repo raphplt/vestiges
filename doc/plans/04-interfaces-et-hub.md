@@ -95,6 +95,37 @@ L'étirement `canvas_items` en mode `keep` garde la même mise en page à toutes
 | B3 Rendu et agrandissement | Taille minimale par rôle ; réglage « Taille du texte » (100, 115, 130 %) dans les paramètres, appliqué par l'échelle commune, sans toucher au filtrage des sprites. |
 | B4 Mises en page souples | Là où le texte agrandi déborde : défilement (colonnes de la pause, liste des quêtes), retours à la ligne (descriptions), largeurs minimales plutôt que fixes. Vérification en « Taille du texte » 130 % avec noms longs. |
 
+**Lot B, étapes 1 à 4 livrées — 27 septembre 2026 (session locale) :**
+- **B1, système commun.** `UITheme` porte désormais :
+  - les trois graisses de Saira, chargées une fois ;
+  - neuf rôles de texte (`TextRole`) : légende 14, petit 15, corps 16, accent 18, sous-titre 20, titre de section 24, titre 30, bannière 36, affichage 46, en base 1080p ;
+  - un `MakeLabel` commun, et `TextLight` avec les autres couleurs.
+  
+  Seize écrans et panneaux en base 1080p n'ont plus aucune taille écrite en dur (pause, level-up, écrans de choix, coffres, paramètres, journal, accueil, Collection, Chroniques, bilan, chargement, quêtes de run…). Les sept `MakeLabel` passent par le rôle ; `ChoiceStyle` reprend les couleurs de `UITheme`. Correspondance : 13 px et moins → légende, 14 → petit, 15-16 → corps, 17-18 → accent, 20 → sous-titre, 22-24 → titre de section, 26-30 → titre, 34-36 → bannière, 44-48 → affichage.
+- **Hors du système, volontairement :**
+  - le HUD (base 960×540, recetté « bien mieux »), la rafale et le bandeau d'événement qui vivent dans sa racine ;
+  - les textes posés dans le monde (invite « Ouvrir », état des Mémoriaux, arme au sol, murmure des échos) ;
+  - le score géant du bilan (120 px, placé au pixel près) ;
+  - l'overlay de debug.
+- **B2, polices.** Saira Semi Condensed (Medium, SemiBold, Bold) partout dans l'interface ; PixelOperator ne reste que sur deux textes posés dans le monde (invite d'interaction, état d'un Mémorial), en cohérence avec les sprites. Comparaison de deux échelles sur la pause et le level-up, en 1280×720 : l'échelle d'avant (lore de la pause à 12 px, soit 8 px à l'écran) et l'échelle « confort » retenue, où rien ne descend sous 14 px. Captures regardées : les lignes de lore, les « dégâts infligés » et les étiquettes de rareté deviennent lisibles en 720p.
+- **B3, taille du texte.** Réglage Paramètres › Graphismes › « Taille du texte » : 100, 115 ou 130 %, enregistré dans `display_settings.cfg`.
+  - Il s'applique sur-le-champ : chaque texte retient sa taille de base, et `UITheme.RefreshTextScale` la réapplique. Ce parcours ne descend pas dans le monde : sous un `Node2D`, seuls les `CanvasLayer` sont visités, pas les milliers de décors (relevé par `godot-reviewer`).
+  - Rendu inchangé : les polices sont rastérisées à leur taille finale (suréchantillonnage de Godot), le filtrage « nearest » des sprites n'est pas touché.
+- **B4, mises en page souples.** Captures à 130 % (`--text-step 2`, nouvelle option des scènes de capture) :
+  - les colonnes Équipement et Fiche de la pause défilent, avec une gouttière pour la barre ;
+  - les onglets des paramètres défilent ;
+  - le score du bilan chevauchait « Nouveau record » à 130 % : il reste à sa taille ;
+  - level-up, quêtes de run, Chroniques et Collection tiennent sans retouche.
+- **Vérifié :**
+  - build sans avertissement, smoke test ;
+  - captures de l'accueil, de la Collection, des Chroniques, des paramètres, de la pause, du level-up, des coffres et du bilan, à 100 et 130 %, réduites en 1280×720 et regardées.
+  
+  Relecture `godot-reviewer` intégrée : parcours limité à l'interface, palier « bannière » ajouté pour ne pas rapetisser les titres du bilan et de la pause (34-36 px), hauteur des boutons de l'accueil rendue.
+- **Limites :**
+  - les onglets des paramètres ne prennent pas le focus clavier (`FocusMode.None`), donc le réglage ne s'atteint qu'à la souris : à traiter avec la navigation manette (lot C) ;
+  - le défilement de la pause se fait à la molette seulement ;
+  - les tailles au-dessus de 14 px ont bougé d'un ou deux pixels (15 → 16, 17 → 18, 22 → 24) : à juger en recette.
+
 ### Lot C — Exploration et sélection
 
 1. Reprendre les données de cartes existantes et le cache d'animations.

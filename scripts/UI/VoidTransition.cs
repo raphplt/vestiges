@@ -68,7 +68,7 @@ public partial class VoidTransition : CanvasLayer
 			Modulate = new Color(1f, 1f, 1f, 0f)
 		};
 		_voidText.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
-		_voidText.AddThemeFontSizeOverride("font_size", 28);
+		UITheme.SetTextRole(_voidText, TextRole.Title);
 		_voidText.AddThemeColorOverride("font_color", GoldFoyer);
 		_root.AddChild(_voidText);
 

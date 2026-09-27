@@ -18,6 +18,7 @@ namespace Vestiges.UI;
 public partial class GameOverScreen : CanvasLayer
 {
     private static readonly Vector2 DesignSize = new(1920f, 1080f);
+    private const int ScoreFontSize = 120;
     private const float VeilSec = 0.5f;
     private const float ScoreStart = 0.4f;
     private const float ScoreSec = 0.9f;
@@ -74,9 +75,9 @@ public partial class GameOverScreen : CanvasLayer
         Layer = 50;
         _eventBus = GetNode<EventBus>("/root/EventBus");
         _eventBus.EntityDied += OnEntityDied;
-        _bodyFont = GD.Load<Font>("res://assets/fonts/saira/SairaSemiCondensed-Medium.ttf");
-        _strongFont = GD.Load<Font>("res://assets/fonts/saira/SairaSemiCondensed-SemiBold.ttf");
-        _boldFont = GD.Load<Font>("res://assets/fonts/saira/SairaSemiCondensed-Bold.ttf");
+        _bodyFont = UITheme.BodyFont;
+        _strongFont = UITheme.StrongFont;
+        _boldFont = UITheme.BoldFont;
         BuildUI();
         Visible = false;
         SetProcess(false);
@@ -111,16 +112,18 @@ public partial class GameOverScreen : CanvasLayer
         _root = new Control { Size = DesignSize, MouseFilter = Control.MouseFilterEnum.Ignore };
         AddChild(_root);
 
-        _title = MakeLabel(Tr("UI_END_TITLE"), _strongFont, 34, UITheme.GoldDim, HorizontalAlignment.Center);
+        _title = MakeLabel(Tr("UI_END_TITLE"), _strongFont, TextRole.Banner, UITheme.GoldDim, HorizontalAlignment.Center);
         Place(_title, 0f, 70f, DesignSize.X, 50f);
 
-        _score = MakeLabel("0", _boldFont, 120, UITheme.GoldBright, HorizontalAlignment.Center, 10);
+        _score = MakeLabel("0", _boldFont, TextRole.Display, UITheme.GoldBright, HorizontalAlignment.Center, 10);
+        // Le score est le héros du bilan : hors échelle, et pas agrandi, sa place est fixée dans la composition.
+        UITheme.SetFixedTextSize(_score, ScoreFontSize);
         Place(_score, 0f, 120f, DesignSize.X, 150f);
 
-        _record = MakeLabel("", _strongFont, 30, UITheme.TextColor, HorizontalAlignment.Center);
+        _record = MakeLabel("", _strongFont, TextRole.Title, UITheme.TextColor, HorizontalAlignment.Center);
         Place(_record, 0f, 272f, DesignSize.X, 44f);
 
-        _detail = MakeLabel("", _bodyFont, 22, UITheme.TextDim, HorizontalAlignment.Center);
+        _detail = MakeLabel("", _bodyFont, TextRole.Heading, UITheme.TextDim, HorizontalAlignment.Center);
         Place(_detail, 0f, 318f, DesignSize.X, 34f);
 
         _middle = new Control { MouseFilter = Control.MouseFilterEnum.Ignore };
@@ -135,17 +138,17 @@ public partial class GameOverScreen : CanvasLayer
         buttons.AddThemeConstantOverride("separation", 40);
         Place(buttons, 0f, 930f, DesignSize.X, 70f);
         _restartButton = new HubMenuButton();
-        _restartButton.Setup(Tr("UI_END_REPLAY"), 36, _strongFont);
+        _restartButton.Setup(Tr("UI_END_REPLAY"), TextRole.Banner, _strongFont);
         _restartButton.Pressed += OnRestartPressed;
         buttons.AddChild(_restartButton);
         _hubButton = new HubMenuButton();
-        _hubButton.Setup(Tr("UI_END_HUB"), 36, _strongFont);
+        _hubButton.Setup(Tr("UI_END_HUB"), TextRole.Banner, _strongFont);
         _hubButton.Pressed += OnHubPressed;
         buttons.AddChild(_hubButton);
         _restartButton.FocusNeighborRight = _hubButton.GetPath();
         _hubButton.FocusNeighborLeft = _restartButton.GetPath();
 
-        _seed = MakeLabel("", _bodyFont, 18, UITheme.TextVeryDim, HorizontalAlignment.Left);
+        _seed = MakeLabel("", _bodyFont, TextRole.Lead, UITheme.TextVeryDim, HorizontalAlignment.Left);
         Place(_seed, 40f, 1030f, 600f, 30f);
 
         GetViewport().SizeChanged += FitToViewport;
@@ -160,11 +163,11 @@ public partial class GameOverScreen : CanvasLayer
         _root.Position = (viewport - DesignSize * scale) / 2f;
     }
 
-    private static Label MakeLabel(string text, Font font, int size, Color color, HorizontalAlignment alignment, int outline = 6)
+    private static Label MakeLabel(string text, Font font, TextRole role, Color color, HorizontalAlignment alignment, int outline = 6)
     {
         Label label = new() { Text = text, HorizontalAlignment = alignment, MouseFilter = Control.MouseFilterEnum.Ignore };
         label.AddThemeFontOverride("font", font);
-        label.AddThemeFontSizeOverride("font_size", size);
+        UITheme.SetTextRole(label, role);
         label.AddThemeColorOverride("font_color", color);
         label.AddThemeColorOverride("font_outline_color", new Color(0.02f, 0.02f, 0.04f, 0.9f));
         label.AddThemeConstantOverride("outline_size", outline);
@@ -274,7 +277,7 @@ public partial class GameOverScreen : CanvasLayer
             }
         }
 
-        Label weaponsCaption = MakeLabel(Tr("UI_END_WEAPONS"), _strongFont, 20, UITheme.TextDim, HorizontalAlignment.Left, 4);
+        Label weaponsCaption = MakeLabel(Tr("UI_END_WEAPONS"), _strongFont, TextRole.Subhead, UITheme.TextDim, HorizontalAlignment.Left, 4);
         weaponsCaption.Position = new Vector2(640f, 20f);
         _middle.AddChild(weaponsCaption);
         HBoxContainer weapons = SlotRow(new Vector2(640f, 52f));
@@ -286,7 +289,7 @@ public partial class GameOverScreen : CanvasLayer
                 : MakeSlot(null, 0, UITheme.TextVeryDim));
         }
 
-        Label passivesCaption = MakeLabel(Tr("UI_END_PASSIVES"), _strongFont, 20, UITheme.TextDim, HorizontalAlignment.Left, 4);
+        Label passivesCaption = MakeLabel(Tr("UI_END_PASSIVES"), _strongFont, TextRole.Subhead, UITheme.TextDim, HorizontalAlignment.Left, 4);
         passivesCaption.Position = new Vector2(640f, 170f);
         _middle.AddChild(passivesCaption);
         HBoxContainer passives = SlotRow(new Vector2(640f, 202f));
@@ -345,7 +348,7 @@ public partial class GameOverScreen : CanvasLayer
         }
         if (level > 0)
         {
-            Label badge = MakeLabel(string.Format(Tr("UI_END_LEVEL"), level), _boldFont, 18, UITheme.GoldBright, HorizontalAlignment.Right, 5);
+            Label badge = MakeLabel(string.Format(Tr("UI_END_LEVEL"), level), _boldFont, TextRole.Lead, UITheme.GoldBright, HorizontalAlignment.Right, 5);
             badge.VerticalAlignment = VerticalAlignment.Bottom;
             slot.AddChild(badge);
         }
@@ -356,10 +359,10 @@ public partial class GameOverScreen : CanvasLayer
     {
         HBoxContainer row = new();
         row.AddThemeConstantOverride("separation", 16);
-        Label captionLabel = MakeLabel(caption, _bodyFont, 24, UITheme.TextDim, HorizontalAlignment.Left, 4);
+        Label captionLabel = MakeLabel(caption, _bodyFont, TextRole.Heading, UITheme.TextDim, HorizontalAlignment.Left, 4);
         captionLabel.CustomMinimumSize = new Vector2(250f, 0f);
         row.AddChild(captionLabel);
-        row.AddChild(MakeLabel(value, _strongFont, 28, UITheme.TextColor, HorizontalAlignment.Left, 5));
+        row.AddChild(MakeLabel(value, _strongFont, TextRole.Title, UITheme.TextColor, HorizontalAlignment.Left, 5));
         facts.AddChild(row);
     }
 
@@ -396,7 +399,7 @@ public partial class GameOverScreen : CanvasLayer
             ContentMarginBottom = 14,
         };
         card.AddThemeStyleboxOverride("panel", style);
-        card.AddChild(MakeLabel(text, _strongFont, 24, accent, HorizontalAlignment.Center, 4));
+        card.AddChild(MakeLabel(text, _strongFont, TextRole.Heading, accent, HorizontalAlignment.Center, 4));
         return card;
     }
 

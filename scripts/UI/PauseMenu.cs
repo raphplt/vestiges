@@ -178,7 +178,7 @@ public partial class PauseMenu : CanvasLayer
 			Text = "HALTE DANS LE VIDE",
 			HorizontalAlignment = HorizontalAlignment.Center
 		};
-		eyebrow.AddThemeFontSizeOverride("font_size", 16);
+		UITheme.SetTextRole(eyebrow, TextRole.Body);
 		eyebrow.AddThemeColorOverride("font_color", TextDim);
 		vbox.AddChild(eyebrow);
 
@@ -188,7 +188,7 @@ public partial class PauseMenu : CanvasLayer
 			Text = "PAUSE",
 			HorizontalAlignment = HorizontalAlignment.Center
 		};
-		title.AddThemeFontSizeOverride("font_size", 34);
+		UITheme.SetTextRole(title, TextRole.Banner);
 		title.AddThemeColorOverride("font_color", GoldBright);
 		vbox.AddChild(title);
 
@@ -198,7 +198,7 @@ public partial class PauseMenu : CanvasLayer
 			HorizontalAlignment = HorizontalAlignment.Center,
 			AutowrapMode = TextServer.AutowrapMode.WordSmart
 		};
-		subtitle.AddThemeFontSizeOverride("font_size", 16);
+		UITheme.SetTextRole(subtitle, TextRole.Body);
 		subtitle.AddThemeColorOverride("font_color", TextColor);
 		vbox.AddChild(subtitle);
 
@@ -229,7 +229,7 @@ public partial class PauseMenu : CanvasLayer
 			Text = "[Échap] Reprendre la traversée",
 			HorizontalAlignment = HorizontalAlignment.Center
 		};
-		hint.AddThemeFontSizeOverride("font_size", 14);
+		UITheme.SetTextRole(hint, TextRole.Small);
 		hint.AddThemeColorOverride("font_color", TextVeryDim);
 		vbox.AddChild(hint);
 
@@ -254,14 +254,25 @@ public partial class PauseMenu : CanvasLayer
 		frame.AddChild(wrapper);
 
 		Label title = new() { Text = titleText };
-		title.AddThemeFontSizeOverride("font_size", 20);
+		UITheme.SetTextRole(title, TextRole.Subhead);
 		title.AddThemeColorOverride("font_color", GoldBright);
 		wrapper.AddChild(title);
 		wrapper.AddChild(CreateSeparator());
 
+		// Quatre armes, des passifs et un texte agrandi dépassent la hauteur de l'écran : la colonne défile.
+		ScrollContainer scroll = new()
+		{
+			SizeFlagsVertical = Control.SizeFlags.ExpandFill,
+			HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled,
+		};
+		wrapper.AddChild(scroll);
+		// La barre de défilement se pose sur le bord droit : la colonne des valeurs garde sa marge.
+		MarginContainer gutter = new() { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
+		gutter.AddThemeConstantOverride("margin_right", 14);
+		scroll.AddChild(gutter);
 		VBoxContainer content = new();
 		content.AddThemeConstantOverride("separation", 6);
-		wrapper.AddChild(content);
+		gutter.AddChild(content);
 		return content;
 	}
 
@@ -299,7 +310,7 @@ public partial class PauseMenu : CanvasLayer
 		VBoxContainer text = new() { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
 		text.AddThemeConstantOverride("separation", 0);
 		row.AddChild(text);
-		text.AddChild(MakeLabel($"{weapon.Name}   Niv {weapon.Level}", 15, StatValueColor));
+		text.AddChild(MakeLabel($"{weapon.Name}   Niv {weapon.Level}", TextRole.Body, StatValueColor));
 
 		List<string> parts = new()
 		{
@@ -317,18 +328,18 @@ public partial class PauseMenu : CanvasLayer
 					parts.Add($"{StatCatalog.Name(stat)} {StatCatalog.Format(stat, value)}");
 			}
 		}
-		text.AddChild(MakeLabel(string.Join("  ·  ", parts), 13, StatLabelColor));
+		text.AddChild(MakeLabel(string.Join("  ·  ", parts), TextRole.Caption, StatLabelColor));
 		if (!string.IsNullOrEmpty(weapon.Base.LoreFlavor))
 		{
-			Label lore = MakeLabel(weapon.Base.LoreFlavor, 12, TextVeryDim);
+			Label lore = MakeLabel(weapon.Base.LoreFlavor, TextRole.Caption, TextVeryDim);
 			lore.AutowrapMode = TextServer.AutowrapMode.WordSmart;
 			lore.CustomMinimumSize = new Vector2(320, 0);
 			text.AddChild(lore);
 		}
 
 		VBoxContainer dealt = new() { SizeFlagsVertical = Control.SizeFlags.ShrinkCenter };
-		dealt.AddChild(MakeLabel(Mathf.RoundToInt(player.GetDamageDealt(weapon.Id)).ToString("N0", French), 15, StatBonusColor, HorizontalAlignment.Right));
-		dealt.AddChild(MakeLabel("dégâts infligés", 11, TextVeryDim, HorizontalAlignment.Right));
+		dealt.AddChild(MakeLabel(Mathf.RoundToInt(player.GetDamageDealt(weapon.Id)).ToString("N0", French), TextRole.Body, StatBonusColor, HorizontalAlignment.Right));
+		dealt.AddChild(MakeLabel("dégâts infligés", TextRole.Caption, TextVeryDim, HorizontalAlignment.Right));
 		row.AddChild(dealt);
 		_loadoutContainer.AddChild(row);
 	}
@@ -338,11 +349,11 @@ public partial class PauseMenu : CanvasLayer
 		HBoxContainer row = new();
 		row.AddThemeConstantOverride("separation", 10);
 		row.AddChild(MakeIcon(PerkIconResolver.GetPassiveStatIconPath(passive.Data.Stat)));
-		Label name = MakeLabel($"{passive.Data.Name}   Niv {passive.Level}/{passive.Data.MaxLevel}", 15, StatValueColor);
+		Label name = MakeLabel($"{passive.Data.Name}   Niv {passive.Level}/{passive.Data.MaxLevel}", TextRole.Body, StatValueColor);
 		name.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
 		row.AddChild(name);
 		row.AddChild(MakeLabel($"{StatCatalog.Name(passive.Data.Stat)} {StatCatalog.FormatBonus(passive.Data.Stat, passive.Modifier, passive.Data.ModifierType == "multiplicative")}",
-			14, StatBonusColor, HorizontalAlignment.Right));
+			TextRole.Small, StatBonusColor, HorizontalAlignment.Right));
 		_loadoutContainer.AddChild(row);
 	}
 
@@ -382,7 +393,7 @@ public partial class PauseMenu : CanvasLayer
 			foreach (ActiveOubli oubli in peril.Oublis)
 			{
 				AddLine(_sheetContainer, "  " + Tr(oubli.Data.NameKey), oubli.Data.Permanent ? Tr("OUBLI_PERMANENT") : "", PerilColor);
-				Label effect = MakeLabel("    " + oubli.Data.Describe(), 12, TextVeryDim);
+				Label effect = MakeLabel("    " + oubli.Data.Describe(), TextRole.Caption, TextVeryDim);
 				effect.AutowrapMode = TextServer.AutowrapMode.WordSmart;
 				_sheetContainer.AddChild(effect);
 			}
@@ -414,26 +425,21 @@ public partial class PauseMenu : CanvasLayer
 
 	private static void AddSectionTitle(VBoxContainer container, string text)
 	{
-		container.AddChild(MakeLabel(text.ToUpper(), 13, TextDim));
+		container.AddChild(MakeLabel(text.ToUpper(), TextRole.Caption, TextDim));
 	}
 
 	private static void AddLine(VBoxContainer container, string label, string value, Color? color = null)
 	{
 		HBoxContainer row = new();
-		Label name = MakeLabel(label, 15, color ?? StatLabelColor);
+		Label name = MakeLabel(label, TextRole.Body, color ?? StatLabelColor);
 		name.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
 		row.AddChild(name);
-		row.AddChild(MakeLabel(value, 15, StatValueColor, HorizontalAlignment.Right));
+		row.AddChild(MakeLabel(value, TextRole.Body, StatValueColor, HorizontalAlignment.Right));
 		container.AddChild(row);
 	}
 
-	private static Label MakeLabel(string text, int size, Color color, HorizontalAlignment align = HorizontalAlignment.Left)
-	{
-		Label label = new() { Text = text, HorizontalAlignment = align };
-		label.AddThemeFontSizeOverride("font_size", size);
-		label.AddThemeColorOverride("font_color", color);
-		return label;
-	}
+	private static Label MakeLabel(string text, TextRole role, Color color, HorizontalAlignment align = HorizontalAlignment.Left) =>
+		UITheme.MakeLabel(text, role, color, TextWeight.Regular, align);
 
 	private static Control MakeIcon(string path)
 	{
@@ -507,7 +513,7 @@ public partial class PauseMenu : CanvasLayer
 			CustomMinimumSize = new Vector2(320, 48),
 			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill
 		};
-		btn.AddThemeFontSizeOverride("font_size", 20);
+		UITheme.SetTextRole(btn, TextRole.Subhead);
 		btn.AddThemeConstantOverride("h_separation", 6);
 		UITheme.ApplyButtonStyle(btn, _btnNormalTex, _btnHoverTex, _btnPressedTex, _btnDisabledTex);
 		return btn;

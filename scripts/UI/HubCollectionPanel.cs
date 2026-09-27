@@ -56,8 +56,8 @@ public partial class HubCollectionPanel : MarginContainer
 
     public override void _Ready()
     {
-        _bodyFont = GD.Load<Font>("res://assets/fonts/saira/SairaSemiCondensed-Medium.ttf");
-        _strongFont = GD.Load<Font>("res://assets/fonts/saira/SairaSemiCondensed-SemiBold.ttf");
+        _bodyFont = UITheme.BodyFont;
+        _strongFont = UITheme.StrongFont;
 
         VBoxContainer column = new();
         column.AddThemeConstantOverride("separation", 14);
@@ -96,19 +96,19 @@ public partial class HubCollectionPanel : MarginContainer
             SizeFlagsHorizontal = SizeFlags.ShrinkBegin,
         };
         detail.AddChild(_detailIcon);
-        _detailName = AddDetailLabel(detail, _strongFont, 34, UITheme.GoldBright);
-        _detailState = AddDetailLabel(detail, _bodyFont, 22, UITheme.TextDim);
-        _detailText = AddDetailLabel(detail, _bodyFont, 24, UITheme.TextColor);
-        _detailStats = AddDetailLabel(detail, _bodyFont, 22, UITheme.TextDim);
-        _detailCondition = AddDetailLabel(detail, _strongFont, 24, UITheme.CyanEssence);
-        _count = AddDetailLabel(detail, _bodyFont, 20, UITheme.TextVeryDim);
+        _detailName = AddDetailLabel(detail, _strongFont, TextRole.Banner, UITheme.GoldBright);
+        _detailState = AddDetailLabel(detail, _bodyFont, TextRole.Heading, UITheme.TextDim);
+        _detailText = AddDetailLabel(detail, _bodyFont, TextRole.Heading, UITheme.TextColor);
+        _detailStats = AddDetailLabel(detail, _bodyFont, TextRole.Heading, UITheme.TextDim);
+        _detailCondition = AddDetailLabel(detail, _strongFont, TextRole.Heading, UITheme.CyanEssence);
+        _count = AddDetailLabel(detail, _bodyFont, TextRole.Subhead, UITheme.TextVeryDim);
     }
 
-    private static Label AddDetailLabel(VBoxContainer parent, Font font, int size, Color color)
+    private static Label AddDetailLabel(VBoxContainer parent, Font font, TextRole role, Color color)
     {
         Label label = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart, CustomMinimumSize = new Vector2(420f, 0f) };
         label.AddThemeFontOverride("font", font);
-        label.AddThemeFontSizeOverride("font_size", size);
+        UITheme.SetTextRole(label, role);
         label.AddThemeColorOverride("font_color", color);
         label.AddThemeConstantOverride("outline_size", 5);
         label.AddThemeColorOverride("font_outline_color", new Color(0.02f, 0.02f, 0.05f, 0.85f));
@@ -145,7 +145,7 @@ public partial class HubCollectionPanel : MarginContainer
         foreach (string state in new[] { "normal", "pressed", "hover", "focus", "hover_pressed" })
             tab.AddThemeStyleboxOverride(state, underline);
         tab.AddThemeFontOverride("font", _strongFont);
-        tab.AddThemeFontSizeOverride("font_size", 26);
+        UITheme.SetTextRole(tab, TextRole.Title);
         tab.AddThemeColorOverride("font_color", active ? UITheme.GoldBright : UITheme.TextDim);
         tab.AddThemeColorOverride("font_hover_color", UITheme.GoldBright);
         tab.AddThemeColorOverride("font_focus_color", UITheme.GoldBright);

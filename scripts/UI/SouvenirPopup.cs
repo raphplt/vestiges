@@ -77,14 +77,14 @@ public partial class SouvenirPopup : CanvasLayer
         {
             HorizontalAlignment = HorizontalAlignment.Center
         };
-        _constellationLabel.AddThemeFontSizeOverride("font_size", 13);
+        UITheme.SetTextRole(_constellationLabel, TextRole.Caption);
         vbox.AddChild(_constellationLabel);
 
         _titleLabel = new Label
         {
             HorizontalAlignment = HorizontalAlignment.Center
         };
-        _titleLabel.AddThemeFontSizeOverride("font_size", 16);
+        UITheme.SetTextRole(_titleLabel, TextRole.Body);
         _titleLabel.AddThemeColorOverride("font_color", new Color(0.9f, 0.82f, 0.5f));
         vbox.AddChild(_titleLabel);
 
@@ -94,7 +94,7 @@ public partial class SouvenirPopup : CanvasLayer
             AutowrapMode = TextServer.AutowrapMode.WordSmart,
             CustomMinimumSize = new Vector2(360, 0)
         };
-        _textLabel.AddThemeFontSizeOverride("font_size", 14);
+        UITheme.SetTextRole(_textLabel, TextRole.Small);
         _textLabel.AddThemeColorOverride("font_color", new Color(0.7f, 0.68f, 0.6f));
         vbox.AddChild(_textLabel);
     }

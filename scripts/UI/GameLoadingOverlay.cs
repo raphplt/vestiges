@@ -75,7 +75,7 @@ public partial class GameLoadingOverlay : CanvasLayer
 		};
 		_loreLabel.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
 		_loreLabel.OffsetTop = 200f;
-		_loreLabel.AddThemeFontSizeOverride("font_size", 22);
+		UITheme.SetTextRole(_loreLabel, TextRole.Heading);
 		_loreLabel.AddThemeColorOverride("font_color", GoldFoyer);
 		_root.AddChild(_loreLabel);
 
@@ -89,7 +89,7 @@ public partial class GameLoadingOverlay : CanvasLayer
 		};
 		_progressLabel.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
 		_progressLabel.OffsetBottom = -40f;
-		_progressLabel.AddThemeFontSizeOverride("font_size", 14);
+		UITheme.SetTextRole(_progressLabel, TextRole.Small);
 		_progressLabel.AddThemeColorOverride("font_color", GoldDim);
 		_root.AddChild(_progressLabel);
 

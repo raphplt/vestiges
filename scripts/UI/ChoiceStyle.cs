@@ -10,11 +10,11 @@ public static class ChoiceStyle
 {
     public const float CardWidth = 540f;
 
-    public static readonly Color GoldBright = new(0.9f, 0.78f, 0.39f);
-    public static readonly Color GoldDim = new(0.63f, 0.47f, 0.16f);
-    public static readonly Color TextLight = new(0.92f, 0.9f, 0.85f);
-    public static readonly Color TextColor = new(0.72f, 0.7f, 0.66f);
-    public static readonly Color TextDim = new(0.5f, 0.5f, 0.55f);
+    public static readonly Color GoldBright = UITheme.GoldBright;
+    public static readonly Color GoldDim = UITheme.GoldDim;
+    public static readonly Color TextLight = UITheme.TextLight;
+    public static readonly Color TextColor = UITheme.TextColor;
+    public static readonly Color TextDim = UITheme.TextDim;
     public static readonly Color GainColor = new(0.55f, 0.85f, 0.45f);
     public static readonly Color LossColor = new(0.85f, 0.38f, 0.42f);
     public static readonly Color NeutralBorder = new(0.55f, 0.52f, 0.46f);
@@ -60,13 +60,11 @@ public static class ChoiceStyle
             button.AddThemeStyleboxOverride(state, style);
     }
 
-    public static Label MakeLabel(string text, int size, Color color, bool expand, HorizontalAlignment align = HorizontalAlignment.Left)
+    public static Label MakeLabel(string text, TextRole role, Color color, bool expand, HorizontalAlignment align = HorizontalAlignment.Left)
     {
-        Label label = new() { Text = text, HorizontalAlignment = align };
+        Label label = UITheme.MakeLabel(text, role, color, TextWeight.Regular, align);
         if (expand || align == HorizontalAlignment.Right)
             label.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
-        label.AddThemeFontSizeOverride("font_size", size);
-        label.AddThemeColorOverride("font_color", color);
         return label;
     }
 }

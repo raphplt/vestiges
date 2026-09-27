@@ -13,8 +13,6 @@ namespace Vestiges.UI;
 /// </summary>
 public partial class HubScreen : Control
 {
-	private const string BodyFontPath = "res://assets/fonts/saira/SairaSemiCondensed-Medium.ttf";
-	private const string StrongFontPath = "res://assets/fonts/saira/SairaSemiCondensed-SemiBold.ttf";
 	private const float MenuLeft = 96f;
 
 	private enum HubState { MainMenu, Chroniques, Collection }
@@ -72,8 +70,8 @@ public partial class HubScreen : Control
 
 		AudioManager.Instance?.PlayHubMusic();
 
-		_bodyFont = GD.Load<Font>(BodyFontPath);
-		_strongFont = GD.Load<Font>(StrongFontPath);
+		_bodyFont = UITheme.BodyFont;
+		_strongFont = UITheme.StrongFont;
 		SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
 		BuildUI();
 		DevelopmentBadge.AttachTo(this);
@@ -205,7 +203,7 @@ public partial class HubScreen : Control
 		flakes.Texture = ImageTexture.CreateFromImage(pixel);
 		_mainMenuLayer.AddChild(flakes);
 
-		Label motto = CreateLabel("Le monde s'oublie. Jusqu'où irez-vous ?", 22, UITheme.TextColor, false);
+		Label motto = CreateLabel("Le monde s'oublie. Jusqu'où irez-vous ?", TextRole.Heading, UITheme.TextColor, false);
 		motto.Position = new Vector2(MenuLeft, titleRect.Position.Y + size.Y + 4f);
 		_mainMenuLayer.AddChild(motto);
 	}
@@ -216,22 +214,22 @@ public partial class HubScreen : Control
 		menu.AddThemeConstantOverride("separation", 4);
 		_mainMenuLayer.AddChild(menu);
 
-		_enterVoidButton = AddMenuButton(menu, "Partir", 46, _strongFont, OnEnterVoidPressed);
+		_enterVoidButton = AddMenuButton(menu, "Partir", TextRole.Display, _strongFont, OnEnterVoidPressed);
 		menu.AddChild(new Control { CustomMinimumSize = new Vector2(0f, 20f), MouseFilter = MouseFilterEnum.Ignore });
-		_collectionButton = AddMenuButton(menu, "Collection", 30, _bodyFont, OpenCollection);
-		_chroniquesButton = AddMenuButton(menu, "Chroniques", 30, _bodyFont, OpenChroniques);
-		AddMenuButton(menu, "Paramètres", 30, _bodyFont, () =>
+		_collectionButton = AddMenuButton(menu, "Collection", TextRole.Title, _bodyFont, OpenCollection);
+		_chroniquesButton = AddMenuButton(menu, "Chroniques", TextRole.Title, _bodyFont, OpenChroniques);
+		AddMenuButton(menu, "Paramètres", TextRole.Title, _bodyFont, () =>
 		{
 			AudioManager.PlayUI("sfx_menu_confirmer");
 			_settingsScreen?.Open();
 		});
-		AddMenuButton(menu, "Quitter", 30, _bodyFont, () => GetTree().Quit());
+		AddMenuButton(menu, "Quitter", TextRole.Title, _bodyFont, () => GetTree().Quit());
 	}
 
-	private HubMenuButton AddMenuButton(VBoxContainer menu, string text, int fontSize, Font font, System.Action onPressed)
+	private HubMenuButton AddMenuButton(VBoxContainer menu, string text, TextRole role, Font font, System.Action onPressed)
 	{
 		HubMenuButton button = new();
-		button.Setup(text, fontSize, font);
+		button.Setup(text, role, font);
 		button.Pressed += onPressed;
 		menu.AddChild(button);
 		_menuButtons.Add(button);
@@ -254,13 +252,13 @@ public partial class HubScreen : Control
 		row.AddThemeConstantOverride("separation", 28);
 		_nameplate.AddChild(row);
 		row.AddChild(CreateArrow("<", -1));
-		_nameLabel = CreateLabel("", 44, NameColor, true);
+		_nameLabel = CreateLabel("", TextRole.Display, NameColor, true);
 		_nameLabel.CustomMinimumSize = new Vector2(520f, 0f);
 		_nameLabel.HorizontalAlignment = HorizontalAlignment.Center;
 		row.AddChild(_nameLabel);
 		row.AddChild(CreateArrow(">", 1));
 
-		_taglineLabel = CreateLabel("", 24, Tagline, false);
+		_taglineLabel = CreateLabel("", TextRole.Heading, Tagline, false);
 		_taglineLabel.HorizontalAlignment = HorizontalAlignment.Center;
 		_nameplate.AddChild(_taglineLabel);
 	}
@@ -276,7 +274,7 @@ public partial class HubScreen : Control
 			CustomMinimumSize = new Vector2(48f, 48f)
 		};
 		arrow.AddThemeFontOverride("font", _strongFont);
-		arrow.AddThemeFontSizeOverride("font_size", 48);
+		UITheme.SetTextRole(arrow, TextRole.Display);
 		arrow.AddThemeColorOverride("font_color", UITheme.GoldDim);
 		arrow.AddThemeColorOverride("font_hover_color", UITheme.GoldBright);
 		arrow.AddThemeColorOverride("font_pressed_color", UITheme.GoldBright);
@@ -314,7 +312,7 @@ public partial class HubScreen : Control
 				MouseFilter = MouseFilterEnum.Ignore
 			});
 		}
-		_vestigesLabel = CreateLabel("0", 30, UITheme.GoldBright, true);
+		_vestigesLabel = CreateLabel("0", TextRole.Title, UITheme.GoldBright, true);
 		_vestigesLabel.TooltipText = "Vestiges : monnaie des déblocages permanents";
 		_vestigesLabel.MouseFilter = MouseFilterEnum.Pass;
 		row.AddChild(_vestigesLabel);
@@ -344,7 +342,7 @@ public partial class HubScreen : Control
 				FocusMode = FocusModeEnum.None
 			};
 			developmentToggle.AddThemeFontOverride("font", _bodyFont);
-			developmentToggle.AddThemeFontSizeOverride("font_size", 18);
+			UITheme.SetTextRole(developmentToggle, TextRole.Lead);
 			developmentToggle.AddThemeColorOverride("font_color", UITheme.TextDim);
 			developmentToggle.Toggled += OnDevelopmentModeToggled;
 			options.AddChild(developmentToggle);
@@ -354,7 +352,7 @@ public partial class HubScreen : Control
 		HBoxContainer seedRow = new() { MouseFilter = MouseFilterEnum.Ignore };
 		seedRow.AddThemeConstantOverride("separation", 12);
 		options.AddChild(seedRow);
-		Label seedLabel = CreateLabel("Graine", 18, UITheme.TextDim, false);
+		Label seedLabel = CreateLabel("Graine", TextRole.Lead, UITheme.TextDim, false);
 		seedLabel.SizeFlagsVertical = SizeFlags.ShrinkCenter;
 		seedRow.AddChild(seedLabel);
 
@@ -365,7 +363,7 @@ public partial class HubScreen : Control
 			FocusMode = FocusModeEnum.Click
 		};
 		_seedInput.AddThemeFontOverride("font", _bodyFont);
-		_seedInput.AddThemeFontSizeOverride("font_size", 18);
+		UITheme.SetTextRole(_seedInput, TextRole.Lead);
 		_seedInput.AddThemeColorOverride("font_color", UITheme.TextColor);
 		_seedInput.AddThemeColorOverride("font_placeholder_color", UITheme.TextVeryDim);
 		StyleBoxFlat seedStyle = new()
@@ -392,14 +390,14 @@ public partial class HubScreen : Control
 		veil.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
 		_chroniquesLayer.AddChild(veil);
 
-		Label header = CreateLabel("Chroniques", 46, UITheme.GoldColor, true);
+		Label header = CreateLabel("Chroniques", TextRole.Display, UITheme.GoldColor, true);
 		header.Position = new Vector2(MenuLeft, 72f);
 		_chroniquesLayer.AddChild(header);
 
 		VBoxContainer back = new() { Position = new Vector2(MenuLeft - 40f, 980f) };
 		_chroniquesLayer.AddChild(back);
 		_chroniquesBackButton = new HubMenuButton();
-		_chroniquesBackButton.Setup("Retour", 30, _bodyFont);
+		_chroniquesBackButton.Setup("Retour", TextRole.Title, _bodyFont);
 		_chroniquesBackButton.Pressed += () =>
 		{
 			AudioManager.PlayUI("sfx_menu_confirmer");
@@ -427,14 +425,14 @@ public partial class HubScreen : Control
 		veil.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
 		_collectionLayer.AddChild(veil);
 
-		Label header = CreateLabel("Collection", 46, UITheme.GoldColor, true);
+		Label header = CreateLabel("Collection", TextRole.Display, UITheme.GoldColor, true);
 		header.Position = new Vector2(MenuLeft, 72f);
 		_collectionLayer.AddChild(header);
 
 		VBoxContainer back = new() { Position = new Vector2(MenuLeft - 40f, 980f) };
 		_collectionLayer.AddChild(back);
 		_collectionBackButton = new HubMenuButton();
-		_collectionBackButton.Setup("Retour", 30, _bodyFont);
+		_collectionBackButton.Setup("Retour", TextRole.Title, _bodyFont);
 		_collectionBackButton.Pressed += () =>
 		{
 			AudioManager.PlayUI("sfx_menu_confirmer");
@@ -457,13 +455,13 @@ public partial class HubScreen : Control
 		SetState(HubState.Collection);
 	}
 
-	private Label CreateLabel(string text, int size, Color color, bool bold)
+	private Label CreateLabel(string text, TextRole role, Color color, bool bold)
 	{
 		Label label = new() { Text = text, MouseFilter = MouseFilterEnum.Ignore };
 		label.AddThemeFontOverride("font", bold ? _strongFont : _bodyFont);
-		label.AddThemeFontSizeOverride("font_size", size);
+		UITheme.SetTextRole(label, role);
 		label.AddThemeColorOverride("font_color", color);
-		label.AddThemeConstantOverride("outline_size", size >= 30 ? 8 : 5);
+		label.AddThemeConstantOverride("outline_size", role >= TextRole.Title ? 8 : 5);
 		label.AddThemeColorOverride("font_outline_color", Outline);
 		return label;
 	}

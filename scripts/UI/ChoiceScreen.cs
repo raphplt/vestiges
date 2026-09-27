@@ -59,7 +59,7 @@ public partial class ChoiceScreen : CanvasLayer
                 CustomMinimumSize = new Vector2(150, 34),
                 FocusMode = Control.FocusModeEnum.None,
             };
-            _cancelButton.AddThemeFontSizeOverride("font_size", 14);
+            UITheme.SetTextRole(_cancelButton, TextRole.Small);
             _cancelButton.AddThemeColorOverride("font_color", ChoiceStyle.TextColor);
             UITheme.WireButtonAudio(_cancelButton);
             _cancelButton.Pressed += () => Close(-1);
@@ -101,9 +101,9 @@ public partial class ChoiceScreen : CanvasLayer
         inner.AddThemeConstantOverride("separation", 10);
         _panel.AddChild(inner);
 
-        _title = ChoiceStyle.MakeLabel("", 20, ChoiceStyle.GoldBright, false, HorizontalAlignment.Center);
+        _title = ChoiceStyle.MakeLabel("", TextRole.Subhead, ChoiceStyle.GoldBright, false, HorizontalAlignment.Center);
         inner.AddChild(_title);
-        _subtitle = ChoiceStyle.MakeLabel("", 14, ChoiceStyle.TextColor, false, HorizontalAlignment.Center);
+        _subtitle = ChoiceStyle.MakeLabel("", TextRole.Small, ChoiceStyle.TextColor, false, HorizontalAlignment.Center);
         inner.AddChild(_subtitle);
 
         _cardsContainer = new VBoxContainer();
@@ -156,14 +156,14 @@ public partial class ChoiceScreen : CanvasLayer
 
         HBoxContainer header = new();
         text.AddChild(header);
-        header.AddChild(ChoiceStyle.MakeLabel(card.Tag, 12, card.Frame, true));
+        header.AddChild(ChoiceStyle.MakeLabel(card.Tag, TextRole.Caption, card.Frame, true));
         if (!string.IsNullOrEmpty(card.Price))
-            header.AddChild(ChoiceStyle.MakeLabel(card.Price, 12, card.Enabled ? ChoiceStyle.GoldBright : ChoiceStyle.TextDim, false, HorizontalAlignment.Right));
-        text.AddChild(ChoiceStyle.MakeLabel(card.Title, 16, ChoiceStyle.TextLight, false));
+            header.AddChild(ChoiceStyle.MakeLabel(card.Price, TextRole.Caption, card.Enabled ? ChoiceStyle.GoldBright : ChoiceStyle.TextDim, false, HorizontalAlignment.Right));
+        text.AddChild(ChoiceStyle.MakeLabel(card.Title, TextRole.Body, ChoiceStyle.TextLight, false));
         foreach ((string line, Color color) in card.Lines)
         {
             // Les lignes longues (Oublis) passent à la ligne au lieu de déborder de la carte.
-            Label label = ChoiceStyle.MakeLabel(line, 14, color, false);
+            Label label = ChoiceStyle.MakeLabel(line, TextRole.Small, color, false);
             label.AutowrapMode = TextServer.AutowrapMode.WordSmart;
             // Largeur fixée : sans elle, une étiquette qui passe à la ligne se mesure à zéro et fausse la taille du panneau.
             label.CustomMinimumSize = new Vector2(TextWidth, 0f);

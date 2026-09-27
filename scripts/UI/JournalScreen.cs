@@ -103,7 +103,7 @@ public partial class JournalScreen : CanvasLayer
             Text = "SOUVENIRS",
             SizeFlagsHorizontal = Control.SizeFlags.ExpandFill
         };
-        title.AddThemeFontSizeOverride("font_size", 24);
+        UITheme.SetTextRole(title, TextRole.Heading);
         title.AddThemeColorOverride("font_color", new Color(0.9f, 0.82f, 0.5f));
         header.AddChild(title);
 
@@ -111,7 +111,7 @@ public partial class JournalScreen : CanvasLayer
         {
             HorizontalAlignment = HorizontalAlignment.Right
         };
-        _progressLabel.AddThemeFontSizeOverride("font_size", 14);
+        UITheme.SetTextRole(_progressLabel, TextRole.Small);
         _progressLabel.AddThemeColorOverride("font_color", new Color(0.55f, 0.55f, 0.6f));
         header.AddChild(_progressLabel);
 
@@ -147,7 +147,7 @@ public partial class JournalScreen : CanvasLayer
             Text = "[Échap] Fermer",
             HorizontalAlignment = HorizontalAlignment.Center
         };
-        closeHint.AddThemeFontSizeOverride("font_size", 13);
+        UITheme.SetTextRole(closeHint, TextRole.Caption);
         closeHint.AddThemeColorOverride("font_color", new Color(0.4f, 0.4f, 0.45f));
         mainVBox.AddChild(closeHint);
     }
@@ -164,7 +164,7 @@ public partial class JournalScreen : CanvasLayer
         {
             Text = "Constellations"
         };
-        sectionTitle.AddThemeFontSizeOverride("font_size", 14);
+        UITheme.SetTextRole(sectionTitle, TextRole.Small);
         sectionTitle.AddThemeColorOverride("font_color", new Color(0.65f, 0.6f, 0.5f));
         panel.AddChild(sectionTitle);
 
@@ -177,7 +177,7 @@ public partial class JournalScreen : CanvasLayer
                 ToggleMode = true,
                 CustomMinimumSize = new Vector2(190, 30)
             };
-            btn.AddThemeFontSizeOverride("font_size", 14);
+            UITheme.SetTextRole(btn, TextRole.Small);
             UITheme.WireButtonAudio(btn);
 
             string capturedId = c.Id;
@@ -203,7 +203,7 @@ public partial class JournalScreen : CanvasLayer
         {
             HorizontalAlignment = HorizontalAlignment.Center
         };
-        _fragmentTitle.AddThemeFontSizeOverride("font_size", 18);
+        UITheme.SetTextRole(_fragmentTitle, TextRole.Lead);
         _fragmentTitle.AddThemeColorOverride("font_color", new Color(0.9f, 0.82f, 0.5f));
         panel.AddChild(_fragmentTitle);
 
@@ -212,7 +212,7 @@ public partial class JournalScreen : CanvasLayer
             AutowrapMode = TextServer.AutowrapMode.WordSmart,
             CustomMinimumSize = new Vector2(340, 0)
         };
-        _fragmentText.AddThemeFontSizeOverride("font_size", 14);
+        UITheme.SetTextRole(_fragmentText, TextRole.Small);
         _fragmentText.AddThemeColorOverride("font_color", new Color(0.75f, 0.72f, 0.65f));
         panel.AddChild(_fragmentText);
 
@@ -285,7 +285,7 @@ public partial class JournalScreen : CanvasLayer
                 CustomMinimumSize = new Vector2(260, 28),
                 Disabled = !discovered
             };
-            fragmentBtn.AddThemeFontSizeOverride("font_size", 14);
+            UITheme.SetTextRole(fragmentBtn, TextRole.Small);
             UITheme.WireButtonAudio(fragmentBtn);
 
             if (discovered)

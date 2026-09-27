@@ -131,3 +131,4 @@ Captures en vraie run regardées : bilan, level-up (cartes et effet), coffre, pa
 - [ ] **Arme en main** (plan 17 lot 2C) : Paramètres › Graphismes › « Arme en main (essai) », désactivée par défaut. Garder, régler ou abandonner ?
 - [ ] **Marais et carrière refaits** (plan 08 P5, P6) : échelle, lisibilité, densité ; les grandes machines de la carrière restent rares.
 - [ ] **Synergies de perks** annoncées sans effet (plan 05, fin) : les retirer ou les implémenter ?
+- [ ] **Typographie de l'interface** (04 lot B) : tailles légèrement relevées (lore de la pause 12 → 14 px, corps 15 → 16…). Plus lisible en 720p ; trop gros en 1080p ? Réglage « Taille du texte » à 115 et 130 % : utile, ou à retirer ?

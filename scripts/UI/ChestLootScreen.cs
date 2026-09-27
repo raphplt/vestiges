@@ -163,7 +163,7 @@ public partial class ChestLootScreen : CanvasLayer
         // Title
         _title = new Label();
         _title.HorizontalAlignment = HorizontalAlignment.Center;
-        _title.AddThemeFontSizeOverride("font_size", 22);
+        UITheme.SetTextRole(_title, TextRole.Heading);
         _title.AddThemeColorOverride("font_color", GoldBright);
         _title.Text = "COFFRE";
         innerVBox.AddChild(_title);
@@ -258,7 +258,7 @@ public partial class ChestLootScreen : CanvasLayer
         Label label = new();
         label.HorizontalAlignment = HorizontalAlignment.Center;
         label.VerticalAlignment = VerticalAlignment.Center;
-        label.AddThemeFontSizeOverride("font_size", 18);
+        UITheme.SetTextRole(label, TextRole.Lead);
         label.AddThemeColorOverride("font_color", TextDim);
         label.Text = "???";
         margin.AddChild(label);
@@ -344,7 +344,7 @@ public partial class ChestLootScreen : CanvasLayer
         // Set final item
         slot.Label.Text = slot.FinalItem.Text;
         slot.Label.AddThemeColorOverride("font_color", TextLight);
-        slot.Label.AddThemeFontSizeOverride("font_size", 20);
+        UITheme.SetTextRole(slot.Label, TextRole.Subhead);
 
         // Card glow border
         StyleBoxFlat revealStyle = new();

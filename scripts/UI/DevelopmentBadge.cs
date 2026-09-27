@@ -32,7 +32,7 @@ public static class DevelopmentBadge
             Text = owner.Tr("UI_DEV_MODE"),
             MouseFilter = Control.MouseFilterEnum.Ignore
         };
-        label.AddThemeFontSizeOverride("font_size", 20);
+        UITheme.SetTextRole(label, TextRole.Subhead);
         label.AddThemeColorOverride("font_color", new Color("d4a843"));
         panel.AddChild(label);
     }

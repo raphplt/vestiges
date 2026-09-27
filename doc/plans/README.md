@@ -55,6 +55,7 @@ Un seul lot d'implémentation ouvert à la fois. Un échec de lisibilité, de pe
 **Mise à jour du 27 septembre, suite (session locale, sans Raphaël) :**
 - Bancs de A-VERIFIER toujours pas faits : charge entre 5 et 6,5 au démarrage.
 - [07 lot B](07-bestiaire-et-rencontres.md), étapes 1 et 3 : la charge de la Brute, le surgissement du Rampant et le cri du Hurleur s'annoncent au sol et laissent une fenêtre ; le Rampant ne blesse plus enfoui ; tuer un Hurleur qui crie coupe l'appel. Sons et animations branchés.
+- [04 lot B](04-interfaces-et-hub.md), étapes 1 à 4 : échelle typographique commune (rien sous 14 px en base 1080p, lisible en 720p), réglage « Taille du texte » 100/115/130 %, colonnes de la pause et onglets des paramètres qui défilent.
 
 **Mise à jour du 27 septembre (session locale, sans Raphaël) :**
 - Passage de vérification sur le Mac de ce que la session cloud avait livré sans GPU ([A-VERIFIER](A-VERIFIER.md)) : bilan, level-up, chemins, fermes, repères et échos regardés en capture. Corrigés : murmure des échos flou, brèche du toit de l'église trop régulière.
