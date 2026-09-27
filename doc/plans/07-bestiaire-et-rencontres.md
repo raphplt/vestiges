@@ -192,6 +192,39 @@ Les deux améliorations peuvent coexister, mais leur intention utilisateur n’e
 **Vérification :** chaque famille possède une action observable ; les annonces sont compréhensibles sans fiche technique.
 **Garde-fou :** présence en JSON ne prouve pas apparition normale.
 
+**Lot A, audit des données — 27 septembre 2026 (session cloud) :** étape 4 (« présence en JSON ne prouve pas apparition normale »). Outil reproductible : `python3 tools/audit_bestiary.py`. Il relève, pour chaque fiche, le rôle déclaré et tous les chemins d'apparition trouvés dans les données et le code : pools d'exploration et de crise des biomes (anciennes clés `day_enemy_pool` et `night_enemy_pool`, avec la part de la créature), gardes de points d'intérêt, micro-événements, identifiants cités dans `scripts/`.
+
+| Créature | Type · rang · comportement | Vit. | PV | Capacités | Exploration (part du pool) | Crise et fin de run | Autres chemins |
+|---|---|---|---|---|---|---|---|
+| Charognard (`charognard`) | melee · normal · pack | 85 | 18 | pounce | Forêt Reconquise 40 %, Champs Sauvages 50 % | Forêt Reconquise 17 %, Champs Sauvages 17 % | micro-événements (1) |
+| Colosse Sylvestre (`colosse_forest`) | melee · miniboss · colosse | 22 | 400 | — | — | — | — |
+| Colosse des Profondeurs (`colosse_swamp`) | melee · miniboss · colosse | 28 | 300 | — | — | — | — |
+| Colosse de Béton (`colosse_urban`) | melee · miniboss · colosse | 25 | 350 | — | — | — | — |
+| Cracheur Pâli (`fading_spitter`) | ranged · normal · default | 55 | 15 | — | Marécages 25 %, Ruines Urbaines 20 % | Ruines Urbaines 12 % | code : SpawnManager.cs |
+| Hurleur (`hurleur`) | ranged · normal · screamer | 25 | 35 | — | — | Carrière Effondrée 12 %, Forêt Reconquise 17 %, Marécages 12 %, Ruines Urbaines 12 %, Champs Sauvages 17 % | — |
+| L'Indicible (`indicible`) | boss · boss · indicible | 0 | 2000 | — | — | — | code : EndgameManager.cs, Indicible.cs, QuestManager.cs |
+| Présage (`presage`) | ranged · normal · default | 45 | 22 | omen_strike | Carrière Effondrée 20 %, Forêt Reconquise 20 %, Marécages 25 %, Ruines Urbaines 20 %, Champs Sauvages 25 % | Carrière Effondrée 12 %, Forêt Reconquise 17 %, Marécages 12 %, Ruines Urbaines 12 %, Champs Sauvages 17 % | — |
+| Rampant (`rampant`) | melee · normal · burrower | 45 | 25 | — | Carrière Effondrée 20 %, Marécages 25 % | Carrière Effondrée 12 %, Ruines Urbaines 12 % | micro-événements (1) |
+| Rôdeur (`rodeur`) | melee · normal · default | 30 | 60 | — | Carrière Effondrée 40 %, Forêt Reconquise 20 %, Ruines Urbaines 20 %, Champs Sauvages 25 % | — | micro-événements (1) |
+| Ombre (`shade`) | melee · normal · default | 100 | 10 | — | — | Carrière Effondrée 25 %, Forêt Reconquise 33 %, Marécages 38 %, Ruines Urbaines 12 %, Champs Sauvages 33 % | code : SpawnManager.cs |
+| Rampant d'Ombre (`shadow_crawler`) | melee · normal · default | 60 | 30 | — | Marécages 25 %, Ruines Urbaines 40 % | Ruines Urbaines 12 % | micro-événements (1); code : DebugActionPanel.cs, SpawnManager.cs |
+| Tisseuse (`tisseuse`) | ranged · normal · weaver | 55 | 20 | — | — | Marécages 12 % | — |
+| Tréant Corrompu (`treant_corrompu`) | melee · normal · default | 25 | 120 | — | Forêt Reconquise 20 % | — | — |
+| Brute du Vide (`void_brute`) | melee · normal · charger | 35 | 80 | — | Carrière Effondrée 20 % | Carrière Effondrée 25 %, Forêt Reconquise 17 %, Marécages 12 %, Ruines Urbaines 12 %, Champs Sauvages 17 % | garde de 3 point(s) d'intérêt; code : EnemySpriteLoader.cs, SpawnManager.cs |
+| Sentinelle Hurlante (`wailing_sentinel`) | ranged · normal · sentinel | 0 | 25 | — | — | Carrière Effondrée 12 %, Marécages 12 %, Ruines Urbaines 12 % | garde de 2 point(s) d'intérêt; code : SpawnManager.cs |
+
+Inatteignables en jeu normal : `colosse_forest`, `colosse_swamp`, `colosse_urban`.
+
+Constats :
+- **Les trois Colosses sont inatteignables** : aucun pool, aucun garde, aucun événement, aucun code ne les fait apparaître. Leur comportement (charge et onde) et leur coffre épique garanti existent pourtant dans `Enemy`.
+- **La Tisseuse n'apparaît qu'en crise dans les Marécages** (12 % du pool), le **Hurleur** qu'en crise, le **Tréant** qu'en exploration de la Forêt.
+- **Menace à distance en exploration** : le Présage partout (20 à 25 %) et le Cracheur Pâli dans les Marécages et les Ruines. Le rééquilibrage du 23 septembre a pris.
+- Les étapes 1 à 3 (filmer chaque famille isolément, remplir la fiche, classer les rôles) restent à faire en jeu ; `--capture-bestiary` en donne les images fixes.
+
+Propositions, **non appliquées** car ce sont des choix d'équilibrage :
+- Colosses : un par crise à partir de la deuxième, celui du biome où elle éclate (le Colosse est un rendez-vous, pas un habitant) ;
+- Tisseuse : l'ajouter aux crises de la Forêt et des Champs, pour qu'elle existe hors des Marécages.
+
 ### Lot B — Lisibilité et qualité des comportements
 
 1. Ajuster anticipation/récupération et préserver les commandes de 01.
