@@ -123,7 +123,7 @@ L'étirement `canvas_items` en mode `keep` garde la même mise en page à toutes
   Relecture `godot-reviewer` intégrée : parcours limité à l'interface, palier « bannière » ajouté pour ne pas rapetisser les titres du bilan et de la pause (34-36 px), hauteur des boutons de l'accueil rendue.
 - **Limites :**
   - les onglets des paramètres ne prenaient pas le focus clavier : corrigé au lot C, plus bas ;
-  - le défilement de la pause se fait à la molette seulement ;
+  - le défilement de la pause se fait à la molette seulement (stick droit et Page haut/bas ajoutés au lot C) ;
   - les tailles au-dessus de 14 px ont bougé d'un ou deux pixels (15 → 16, 17 → 18, 22 → 24) : à juger en recette.
 
 ### Lot C — Exploration et sélection
@@ -147,8 +147,8 @@ L'étirement `canvas_items` en mode `keep` garde la même mise en page à toutes
 - **Vérifié :** capture de l'accueil rejouant bas, bas, bas, entrée, puis droite et bas dans les paramètres (`tools/capture_hub.sh`) ; images regardées : onglet Graphismes ouvert au clavier, focus visible de réglage en réglage. Smoke test vert.
 - **Non fait :**
   - lien entre la condition d'un personnage verrouillé et sa quête (étape 3, dépend du plan 06) ;
-  - défilement des colonnes de la pause à la manette ;
   - le remappage d'une touche commence à l'appui sur Entrée ou A : à essayer au clavier réel.
+- **Défilement de la pause sans souris, 27 septembre au soir** : les colonnes Équipement et Fiche n'ont aucun contrôle focalisable. Elles défilent donc au stick droit ou à Page haut / Page bas (actions `scroll_up` et `scroll_down`), les deux ensemble. Vérifié par `--capture-pause --text-step 2` : à 130 %, la colonne descend jusqu'au dernier passif. À 100 % en 1080p, tout tient sans défiler.
 
 ### Lot C2 — Collection directement accessible et texte à la demande
 

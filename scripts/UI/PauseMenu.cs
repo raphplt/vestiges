@@ -41,6 +41,9 @@ public partial class PauseMenu : CanvasLayer
 
 	public bool IsOpen => _isPaused;
 	private Button _resumeButton;
+	// Colonnes Équipement et Fiche : sans contrôle focalisable, elles défilent au stick droit ou à Page haut/bas.
+	private readonly List<ScrollContainer> _columnScrolls = new();
+	private const float ColumnScrollSpeed = 900f;
 
 	public override void _Ready()
 	{
@@ -54,6 +57,18 @@ public partial class PauseMenu : CanvasLayer
 
 		BuildUI();
 		_root.Visible = false;
+	}
+
+	public override void _Process(double delta)
+	{
+		if (!_isPaused || _settingsScreen.IsOpen)
+			return;
+		float axis = Input.GetAxis("scroll_up", "scroll_down");
+		if (axis == 0f)
+			return;
+		int step = Mathf.RoundToInt(axis * ColumnScrollSpeed * (float)delta);
+		foreach (ScrollContainer scroll in _columnScrolls)
+			scroll.ScrollVertical += step;
 	}
 
 	public override void _UnhandledInput(InputEvent @event)
@@ -270,6 +285,7 @@ public partial class PauseMenu : CanvasLayer
 			HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled,
 		};
 		wrapper.AddChild(scroll);
+		_columnScrolls.Add(scroll);
 		// La barre de défilement se pose sur le bord droit : la colonne des valeurs garde sa marge.
 		MarginContainer gutter = new() { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
 		gutter.AddThemeConstantOverride("margin_right", 14);

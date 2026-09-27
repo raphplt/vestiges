@@ -81,6 +81,12 @@ public partial class RunObservation
         pause.GetType().GetMethod("Pause", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public).Invoke(pause, null);
         await Frames(10);
         SaveFrame("pause");
+        // Stick droit ou Page bas : les colonnes défilent sans souris.
+        Input.ActionPress("scroll_down");
+        await Frames(30);
+        Input.ActionRelease("scroll_down");
+        await Frames(5);
+        SaveFrame("pause-scrolled");
         GD.Print($"[RunObservation] Capture de la pause écrite dans {_output}");
     }
 }
