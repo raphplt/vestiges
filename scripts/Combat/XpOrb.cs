@@ -260,6 +260,8 @@ public partial class XpOrb : Area2D
     {
         IsAsleep = false;
         _sprite.Play(PulseAnimation);
+        // Le réglage des particules a pu changer pendant le sommeil.
+        _glow.Visible = VfxFactory.CurrentParticleLevel != ParticleLevel.Off;
         _glow.Emitting = _glow.Visible;
         SetPhysicsProcess(true);
     }
