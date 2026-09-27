@@ -70,6 +70,8 @@ Un seul lot d'implémentation ouvert à la fois. Un échec de lisibilité, de pe
 - [02 J6](02-juiciness-score.md) : traces de pas selon le sol (ronds dans l'eau, poussière), coffres qui frémissent à l'approche.
 - [02 lot A](02-juiciness-score.md) : score exact. Horloge de jeu qui exclut les pauses, score qui monte au HUD entre deux kills, « nouveau record » enfin affiché au bilan, barème en JSON.
 - [02 lot D](02-juiciness-score.md) : bilan de fin de run refait en trois zones (score et record, personnage et build complet, gains), révélé en trois temps après que le monde a pâli.
+- [04 C2](04-interfaces-et-hub.md) : Collection dans le menu de l'accueil. Armes et souvenirs de run en grille, détail et condition de déblocage à la demande, même règle de disponibilité que le loot.
+- [07 lot A](07-bestiaire-et-rencontres.md) : audit des données du bestiaire (`tools/audit_bestiary.py`). Les trois Colosses sont inatteignables en jeu, la Tisseuse ne sort qu'en crise dans les Marécages ; propositions à arbitrer.
 - Travail fait dans un conteneur sans GPU : les points à revérifier sur la machine de Raphaël sont listés dans [A-VERIFIER.md](A-VERIFIER.md).
 
 **Mise à jour du 26 septembre (soir) :**

@@ -249,6 +249,15 @@ public static class MetaSaveManager
         return IsSouvenirDiscovered(souvenirId);
     }
 
+    /// <summary>
+    /// Règle unique de disponibilité d'une arme (plan 04 C2) : loot, fragments de niveau et Collection la partagent.
+    /// Aujourd'hui, une arme liée à un Souvenir attend qu'il soit découvert.
+    /// </summary>
+    public static bool IsWeaponUnlocked(WeaponData weapon)
+    {
+        return string.IsNullOrEmpty(weapon.RequiresSouvenir) || HasSouvenir(weapon.RequiresSouvenir);
+    }
+
     public static void DiscoverSouvenir(string souvenirId)
     {
         Load();

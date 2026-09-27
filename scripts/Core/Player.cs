@@ -1962,7 +1962,7 @@ public partial class Player : CharacterBody2D
             List<WeaponData> candidates = new();
             foreach (WeaponData weapon in WeaponDataLoader.GetAll())
             {
-                if (!string.IsNullOrEmpty(weapon.RequiresSouvenir) && !MetaSaveManager.HasSouvenir(weapon.RequiresSouvenir))
+                if (!MetaSaveManager.IsWeaponUnlocked(weapon))
                     continue;
                 candidates.Add(weapon);
             }

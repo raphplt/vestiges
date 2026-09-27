@@ -100,3 +100,7 @@ Fichier temporaire. Il liste ce qu'une session cloud a livré sans pouvoir le v�
 - [ ] **Recette du bilan** : composition, textes (« LA ROUTE S'EFFACE », « Dernier coup »), rythme de la révélation (2,2 s après 1,1 s de pâleur) et délai des boutons. Captures : `CAPTURE_EXTRA_ARGS="--capture-death" tools/capture_run.sh <dossier> 8 30`.
 - [ ] **Manette** : focus sur « Rejouer », gauche/droite entre les deux boutons. Non testé au clavier réel dans le conteneur.
 
+## Plan 04 C2 — Collection
+
+- [ ] **Recette** : place de l'entrée dans le menu (après « Partir »), lisibilité des silhouettes verrouillées, textes du panneau. Capture : `tools/capture_hub.sh <dossier> ui_down,ui_accept`.
+
