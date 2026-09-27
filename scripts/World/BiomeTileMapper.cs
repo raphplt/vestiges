@@ -19,8 +19,8 @@ public class BiomeTileMapper
 	private readonly Dictionary<int, string> _biomeIds = new();
 	private readonly Dictionary<int, HashSet<TerrainType>> _wangTerrains = new();
 	private readonly Dictionary<int, HashSet<string>> _wangSpecialGroups = new();
-	// Matière de chaque source dans son biome : un groupe de tile_sources, ou 16 tuiles d'un groupe de Wang.
-	private readonly Dictionary<int, int> _materialOfSource = new();
+	// Matière de chaque tuile dans son biome : un groupe de tile_sources, ou 16 tuiles d'un groupe de Wang.
+	private readonly Dictionary<int, int> _materialOfTile = new();
 
 	/// <summary>Nombre maximal de matières distinguées par biome pour les jonctions du sol.</summary>
 	public const int MaxMaterialsPerBiome = 8;
@@ -118,7 +118,7 @@ public class BiomeTileMapper
 		_biomeIds.Clear();
 		_wangTerrains.Clear();
 		_wangSpecialGroups.Clear();
-		_materialOfSource.Clear();
+		_materialOfTile.Clear();
 		_tileTextures.Clear();
 		_atlasSourceId = -1;
 		AtlasImage = null;
@@ -162,7 +162,7 @@ public class BiomeTileMapper
 				for (int index = 0; index < sources.Length; index++)
 				{
 					int material = nextMaterial + (wangGroup ? index / WangTiles.TileCount : 0);
-					_materialOfSource.TryAdd(sources[index], Mathf.Min(material, MaxMaterialsPerBiome - 1));
+					_materialOfTile.TryAdd(sources[index], Mathf.Min(material, MaxMaterialsPerBiome - 1));
 				}
 				nextMaterial += wangGroup ? sources.Length / WangTiles.TileCount : 1;
 
@@ -294,8 +294,8 @@ public class BiomeTileMapper
 
 	public bool HasDissolutionTiles => _dissolutionSources.Length > 0;
 
-	/// <summary>Matière d'une source dans son biome (0 si inconnue, ex. tuiles de route générées).</summary>
-	public int GetMaterialOfSource(int sourceId) => _materialOfSource.TryGetValue(sourceId, out int material) ? material : 0;
+	/// <summary>Matière d'une tuile dans son biome (0 si inconnue, ex. tuiles de route générées).</summary>
+	public int GetMaterialOfTile(int tileId) => _materialOfTile.TryGetValue(tileId, out int material) ? material : 0;
 
 	/// <summary>
 	/// Rassemble toutes les tuiles enregistrées dans un atlas, ajouté au TileSet comme source unique. À appeler une fois,

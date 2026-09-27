@@ -78,7 +78,7 @@ public static class GroundMaterial
                 if (water)
                     blendId += BiomeTileMapper.MaxMaterialsPerBiome - 1;
                 else if (blendTerrains)
-                    blendId += tileMapper.GetMaterialOfSource(tileId);
+                    blendId += tileMapper.GetMaterialOfTile(tileId);
                 cells[offset] = (byte)blendId;
                 cells[offset + 1] = (byte)(tileId & 0xFF);
                 cells[offset + 2] = (byte)(tileId >> 8);
