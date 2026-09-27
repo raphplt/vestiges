@@ -78,6 +78,23 @@ Santé/danger immédiat ; score vivant ; XP/niveau ; Essence ; armes/objets ; Ef
 
 **Lot B, étape 5 (accents) — 27 septembre 2026 :** une quarantaine de textes français sans accents corrigés (la police Saira les gère) : traduction (`PARAMÈTRES`, Contrôles, Plein écran, Réduites, Désactivé, Réinitialiser, pause, accueil, Journal, chargement, « [Échap] »), écran des paramètres, comparaison d'arme au sol (« Déjà équipée », « Portée », « [E] Échanger »), Chroniques. Recherche outillée : mots des textes du code et de la traduction comparés aux formes accentuées de la doc. Quatre clés V1 inutilisées retirées de la traduction (réparer, récolter, métal, « mort avant la première crise »). Les étapes 1 à 4 restent à faire.
 
+**Lot B, étapes 1 à 4 : découpage — 27 septembre 2026 (session locale, sans Raphaël) :**
+
+*Constat de départ :*
+- 89 tailles de police écrites en dur, 18 valeurs différentes (de 7 à 120) ;
+- sept fonctions `MakeLabel` quasi identiques (pause, level-up, écrans de choix, accueil, bilan, HUD, événements) ;
+- les polices Saira chargées fichier par fichier dans six écrans ;
+- les couleurs de texte dupliquées entre `UITheme` et `ChoiceStyle`.
+
+L'étirement `canvas_items` en mode `keep` garde la même mise en page à toutes les résolutions 16:9 (bandes noires ailleurs). Le vrai risque de 720p n'est donc pas la mise en page mais la **taille physique** : un texte de 12 px en base 1080p fait 8 px à l'écran. Les lignes de lore de la pause, les détails des quêtes de run et les étiquettes du level-up sont illisibles en 720p (captures regardées, réduites en 1280×720).
+
+| Étape | Contenu |
+|---|---|
+| B1 Système commun | `UITheme` porte les polices (chargées une fois), une échelle typographique par rôle (légende, petit, corps, accent, titre de section, titre, affichage), les couleurs de texte, et un seul `MakeLabel`. `ChoiceStyle` et les écrans s'y rattachent ; plus aucune taille en dur dans les écrans en base 1080p. Le HUD (base 960×540) et les textes posés dans le monde gardent leurs tailles, mais passent par le même calcul. |
+| B2 Polices et variantes | Inventaire des polices réellement utilisées. Comparaison de deux échelles sur la pause et le level-up : l'échelle actuelle et une échelle « confort » où rien ne descend sous 14 px en base 1080p. |
+| B3 Rendu et agrandissement | Taille minimale par rôle ; réglage « Taille du texte » (100, 115, 130 %) dans les paramètres, appliqué par l'échelle commune, sans toucher au filtrage des sprites. |
+| B4 Mises en page souples | Là où le texte agrandi déborde : défilement (colonnes de la pause, liste des quêtes), retours à la ligne (descriptions), largeurs minimales plutôt que fixes. Vérification en « Taille du texte » 130 % avec noms longs. |
+
 ### Lot C — Exploration et sélection
 
 1. Reprendre les données de cartes existantes et le cache d'animations.

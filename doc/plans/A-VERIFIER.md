@@ -124,7 +124,8 @@ Captures en vraie run regardées : bilan, level-up (cartes et effet), coffre, pa
 ## Session locale du 27 septembre — à juger en jeu par Raphaël
 
 - [ ] **Mesures de coût, machine calme** (charge restée entre 3 et 16 toute la session) : `tools/bench_ab.sh 2e50f59^ <dossier>` lancé depuis un worktree au commit `2e50f59` pour les chemins T3 ; `--measure-props` pour les décors du marais (1 062 → 1 754 sur la seed de capture) et de la carrière (1 145 → 1 232).
-- [ ] **Brute du Vide** : sa charge avance enfin (200 px/s pendant 0,8 s, à moins de 200 px). Trop punitive ? Réglages dans `data/enemies/void_brute.json`.
+- [ ] **Brute du Vide** : sa charge avance enfin (200 px/s pendant 0,8 s, à moins de 200 px), désormais annoncée 0,6 s par un couloir violet et suivie de 0,9 s de récupération (07 lot B étape 1). Trop punitive, ou trop facile à éviter ? Réglages dans le bloc `abilities.charge` de `data/enemies/void_brute.json`.
+- [ ] **Rampant et Hurleur** (07 lot B étape 1) : surgissement annoncé par un cercle rouille (0,6 s), plus de dégâts enfoui ; cri du Hurleur annoncé 0,8 s, interrompu si on le tue. Lisible en pleine mêlée ?
 - [ ] **Recul des armes** : Parcmètre, Cloche, Râteau, Chronomètre repoussent vraiment (valeur `knockback` = pixels). Plaisant, ou le début de run devient-il trop facile ?
 - [ ] **Couleurs signature des armes** (plan 17 lot 2B) : chaque arme a la couleur de son icône dans ses effets.
 - [ ] **Arme en main** (plan 17 lot 2C) : Paramètres › Graphismes › « Arme en main (essai) », désactivée par défaut. Garder, régler ou abandonner ?

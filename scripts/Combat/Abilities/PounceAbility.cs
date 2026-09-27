@@ -5,8 +5,8 @@ using Vestiges.Infrastructure;
 namespace Vestiges.Combat.Abilities;
 
 /// <summary>
-/// Bond annoncé : l'ennemi s'accroupit en montrant sa trajectoire, puis bondit plus vite que le joueur
-/// dans la direction verrouillée au début de l'annonce. Un pas de côté pendant l'annonce l'évite ;
+/// Bond ou charge annoncés (Charognard, Brute du Vide) : l'ennemi s'accroupit en montrant sa trajectoire, puis
+/// fonce dans la direction verrouillée au début de l'annonce. Un pas de côté pendant l'annonce l'évite ;
 /// la récupération qui suit laisse une fenêtre pour riposter.
 /// </summary>
 public class PounceAbility : IEnemyAbility
@@ -29,6 +29,9 @@ public class PounceAbility : IEnemyAbility
     private FxFamily _family;
     private string _windupAudio;
     private string _leapAudio;
+    private bool _hasWindupFlash;
+    private Color _windupFlash;
+    private string _impactShake;
 
     private Phase _phase;
     private float _timer;
@@ -38,10 +41,10 @@ public class PounceAbility : IEnemyAbility
 
     public bool ReplacesBaseAttack => false;
 
-    public PounceAbility(Enemy owner)
+    public PounceAbility(Enemy owner, string markerName)
     {
         _owner = owner;
-        _marker = new GroundTelegraph { Name = "PounceMarker" };
+        _marker = new GroundTelegraph { Name = markerName };
         owner.AddChild(_marker);
     }
 
@@ -60,10 +63,16 @@ public class PounceAbility : IEnemyAbility
         _family = PixelPalette.ParseFamily(data.GetText("fx_family", "hostile"), FxFamily.Hostile);
         _windupAudio = data.GetText("windup_audio", "");
         _leapAudio = data.GetText("leap_audio", "");
+        string flash = data.GetText("windup_flash", "");
+        _hasWindupFlash = flash.Length > 0;
+        _windupFlash = PixelPalette.Ramp(PixelPalette.ParseFamily(flash, _family)).Light;
+        _impactShake = data.GetText("impact_shake", "");
 
         _phase = Phase.Ready;
         _marker.HideMarker();
-        _cooldownTimer = _cooldownSeconds * (float)GD.RandRange(0.3, 1.0);
+        // Sans délai fixé, un décalage aléatoire évite que des ennemis apparus ensemble frappent en rythme.
+        float firstDelay = data.GetNumber("first_delay", -1f);
+        _cooldownTimer = firstDelay >= 0f ? firstDelay : _cooldownSeconds * (float)GD.RandRange(0.3, 1.0);
     }
 
     public bool Process(Enemy owner, Player player, float distToPlayer, float delta)
@@ -85,6 +94,7 @@ public class PounceAbility : IEnemyAbility
                 {
                     _hasHit = true;
                     owner.MeleeHitPlayer(player, owner.Damage * _damageMultiplier);
+                    ShakeOnImpact();
                 }
                 if (_timer <= 0f)
                 {
@@ -129,6 +139,8 @@ public class PounceAbility : IEnemyAbility
         _timer = _windupSeconds;
         owner.Velocity = Vector2.Zero;
         owner.SetWindupPose(true);
+        if (_hasWindupFlash)
+            owner.FlashWarning(_windupFlash, _windupSeconds);
         _marker.ShowLine(owner.GlobalPosition, owner.GlobalPosition + _direction * _distance, _markerWidth, _family);
         if (_windupAudio.Length > 0)
             AudioManager.Play(_windupAudio, 0.1f, -6f);
@@ -144,5 +156,21 @@ public class PounceAbility : IEnemyAbility
         _marker.HideMarker();
         if (_leapAudio.Length > 0)
             AudioManager.Play(_leapAudio, 0.1f, -4f);
+    }
+
+    private void ShakeOnImpact()
+    {
+        switch (_impactShake)
+        {
+            case "light":
+                ScreenShake.Instance?.ShakeLight();
+                break;
+            case "medium":
+                ScreenShake.Instance?.ShakeMedium();
+                break;
+            case "heavy":
+                ScreenShake.Instance?.ShakeHeavy();
+                break;
+        }
     }
 }

@@ -2,20 +2,33 @@
     "id": "rampant",
     "name": "Rampant",
     "type": "melee",
-    "attack_audio": "sfx_rampant_surgissement",
+    "attack_audio": "sfx_rodeur_attaque",
     "stats": {
         "hp": 25,
         "speed": 45,
         "damage": 8,
-        "xp_reward": 15,
-        "burrow_duration": 2,
-        "surface_duration": 5
+        "xp_reward": 15
+    },
+    "abilities": {
+        "burrow": {
+            "surface_seconds": 5,
+            "burrow_seconds": 2,
+            "warning_seconds": 0.6,
+            "recovery_seconds": 0.4,
+            "burrow_speed_multiplier": 1.3,
+            "emerge_radius": 34,
+            "player_hit_margin": 6,
+            "damage_multiplier": 1.2,
+            "impact_flash_seconds": 0.15,
+            "fx_family": "rust",
+            "burrow_audio": "sfx_burrow_transition",
+            "emerge_audio": "sfx_rampant_surgissement"
+        }
     },
     "visual": {
         "color": "#5A4A3A",
         "shape": "square",
         "size": 11,
         "sprite_folder": "rampant"
-    },
-    "behavior": "burrower"
+    }
 }

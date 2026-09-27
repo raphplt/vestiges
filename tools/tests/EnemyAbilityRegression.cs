@@ -12,7 +12,7 @@ using Vestiges.Spawn;
 namespace Vestiges.Tests;
 
 /// <summary>
-/// Banc isolé des capacités ennemies (Présage, bond du Charognard) et du retour de coup : vrais Player et Enemy,
+/// Banc isolé des capacités ennemies (Présage, bond du Charognard, charge, surgissement, cri) et du retour de coup : vrais Player et Enemy,
 /// ticks pilotés par le banc, recharges forcées pour des scénarios déterministes.
 /// </summary>
 public partial class EnemyAbilityRegression : Node2D
@@ -45,6 +45,8 @@ public partial class EnemyAbilityRegression : Node2D
             await RunHitFeedbackChecks();
             await RunPoolReuseChecks();
             await RunChargeChecks();
+            await RunBurrowChecks();
+            await RunCryChecks();
             await RunKnockbackChecks();
 
             GD.Print($"[EnemyAbilityRegression] RESULT failures={_failures}");
@@ -293,27 +295,145 @@ public partial class EnemyAbilityRegression : Node2D
         pool.QueueFree();
     }
 
-    /// <summary>Brute du Vide : charge lue dans sa fiche (plan 07 lot B), seulement à portée de `charge_range`.</summary>
+    /// <summary>
+    /// Brute du Vide (plan 07 lot B) : charge annoncée par un couloir au sol, seulement à portée, à la vitesse de la
+    /// fiche, évitable d'un pas de côté pendant l'annonce, suivie d'une récupération immobile.
+    /// </summary>
     private async Task RunChargeChecks()
     {
-        BindingFlags flags = BindingFlags.NonPublic | BindingFlags.Instance;
-        FieldInfo cooldown = typeof(Enemy).GetField("_chargerCooldown", flags);
-        FieldInfo charging = typeof(Enemy).GetField("_chargerIsCharging", flags);
-        EnemyData data = EnemyDataLoader.Get("void_brute");
-        float range = data.GetStat("charge_range", 0f);
+        _player.AIInputOverride = Vector2.Zero;
+        _player.Position = Vector2.Zero;
+        await WaitHurtRecovery();
+        EnemyAbilityData charge = EnemyDataLoader.Get("void_brute").Abilities["charge"];
+        float range = charge.GetNumber("trigger_range", 0f);
+        float windupTicks = charge.GetNumber("windup_seconds", 0f) / Dt;
+        float leapTicks = charge.GetNumber("leap_seconds", 0f) / Dt;
+        float expectedSpeed = charge.GetNumber("distance", 0f) / charge.GetNumber("leap_seconds", 1f);
 
         Enemy brute = await SpawnReady("void_brute", new Vector2(range + 150f, 0f));
-        cooldown.SetValue(brute, 0f);
+        GroundTelegraph marker = brute.GetNode<GroundTelegraph>("ChargeMarker");
+        ForceCooldown(brute, "charge");
         await Step(2);
-        Check(!(bool)charging.GetValue(brute), $"Charge : hors de portée ({range + 150f:F0} px > {range:F0}), pas de charge");
+        Check(!marker.Visible, $"Charge : hors de portée ({range + 150f:F0} px > {range:F0}), pas d'annonce");
 
-        brute.Position = _player.Position + new Vector2(range * 0.6f, 0f);
-        cooldown.SetValue(brute, 0f);
-        await Step(2);
-        float speed = brute.Velocity.Length();
-        Check((bool)charging.GetValue(brute) && Mathf.IsEqualApprox(speed, data.GetStat("charge_speed", 0f), 1f),
-            $"Charge : à portée, charge à la vitesse de la fiche ({speed:F0} px/s)");
+        brute.Position = _player.Position + new Vector2(-range * 0.6f, 0f);
+        ForceCooldown(brute, "charge");
+        await Step(1);
+        Check(marker.Visible && brute.Velocity == Vector2.Zero, "Charge : annonce au sol, Brute immobile");
+        float hp = _player.CurrentHp;
+        float peakSpeed = 0f;
+        for (int tick = 0; tick < windupTicks + leapTicks; tick++)
+        {
+            await Step(1);
+            peakSpeed = Math.Max(peakSpeed, brute.Velocity.Length());
+        }
+        Check(Mathf.IsEqualApprox(peakSpeed, expectedSpeed, 2f), $"Charge : vitesse de la fiche ({peakSpeed:F0} px/s pour {expectedSpeed:F0})");
+        Check(_player.CurrentHp < hp, $"Charge : joueur immobile touché (PV {hp} → {_player.CurrentHp})");
+        await Step(5);
+        Check(brute.Velocity == Vector2.Zero, "Charge : récupération immobile après la charge");
         Despawn(brute);
+
+        _player.Position = Vector2.Zero;
+        await WaitHurtRecovery();
+        brute = await SpawnReady("void_brute", new Vector2(-range * 0.6f, 0f));
+        ForceCooldown(brute, "charge");
+        await Step(1);
+        _player.AIInputOverride = Vector2.Down;
+        hp = _player.CurrentHp;
+        await Step((int)(windupTicks + leapTicks));
+        Check(_player.CurrentHp >= hp - 0.001f, "Charge : pas de côté pendant l'annonce évite le coup");
+        _player.AIInputOverride = Vector2.Zero;
+        Despawn(brute);
+    }
+
+    /// <summary>
+    /// Rampant (plan 07 lot B) : enfoui, il ne touche pas et ne prend pas de coups ; son surgissement s'annonce au
+    /// sol, frappe qui reste dans la zone et épargne qui s'en écarte.
+    /// </summary>
+    private async Task RunBurrowChecks()
+    {
+        _player.AIInputOverride = Vector2.Zero;
+        _player.Position = Vector2.Zero;
+        await WaitHurtRecovery();
+        EnemyAbilityData burrow = EnemyDataLoader.Get("rampant").Abilities["burrow"];
+        int burrowTicks = Mathf.CeilToInt(burrow.GetNumber("burrow_seconds", 0f) / Dt);
+        int warningTicks = Mathf.CeilToInt(burrow.GetNumber("warning_seconds", 0f) / Dt);
+
+        Enemy rampant = await SpawnReady("rampant", new Vector2(-20f, 0f));
+        GroundTelegraph marker = rampant.GetNode<GroundTelegraph>("BurrowMarker");
+        ForceTimer(rampant, "burrow", "_timer");
+        await Step(1);
+        float hp = _player.CurrentHp;
+        float enemyHp = rampant.HpRatio;
+        rampant.TakeDamage(50f);
+        await Step(burrowTicks - 4);
+        Check(rampant.HpRatio == enemyHp && rampant.CollisionLayer == 0, "Rampant : enfoui, ni dégâts reçus ni collision");
+        Check(_player.CurrentHp >= hp - 0.001f, "Rampant : enfoui, aucun coup au contact");
+        Check(!marker.Visible, "Rampant : pas d'annonce avant la fin de l'enfouissement");
+        await Step(5);
+        Check(marker.Visible && rampant.Velocity == Vector2.Zero, "Rampant : surgissement annoncé au sol, créature immobile");
+        await Step(warningTicks + 1);
+        Check(_player.CurrentHp < hp && rampant.CollisionLayer == 2, $"Rampant : surgissement sur le joueur resté dans la zone (PV {hp} → {_player.CurrentHp})");
+        Despawn(rampant);
+
+        _player.Position = Vector2.Zero;
+        await WaitHurtRecovery();
+        rampant = await SpawnReady("rampant", new Vector2(-20f, 0f));
+        ForceTimer(rampant, "burrow", "_timer");
+        await Step(burrowTicks + 1);
+        _player.AIInputOverride = Vector2.Right;
+        hp = _player.CurrentHp;
+        await Step(warningTicks + 1);
+        Check(_player.CurrentHp >= hp - 0.001f, "Rampant : s'écarter pendant l'annonce évite le surgissement");
+        _player.AIInputOverride = Vector2.Zero;
+        Despawn(rampant);
+    }
+
+    /// <summary>
+    /// Hurleur (plan 07 lot B) : cri annoncé au sol, créature immobile ; le tuer pendant l'annonce coupe l'appel,
+    /// sinon les renforts de la fiche surgissent autour de lui.
+    /// </summary>
+    private async Task RunCryChecks()
+    {
+        EnemyPool pool = new() { Name = "EnemyPool", InitialSize = 0 };
+        AddChild(pool);
+        EnemyAbilityData cry = EnemyDataLoader.Get("hurleur").Abilities["cry"];
+        int windupTicks = Mathf.CeilToInt(cry.GetNumber("windup_seconds", 0f) / Dt);
+        int expected = Mathf.RoundToInt(cry.GetNumber("reinforcements", 0f));
+        _player.Position = Vector2.Zero;
+
+        Enemy hurleur = await SpawnReady("hurleur", new Vector2(-150f, 0f));
+        GroundTelegraph marker = hurleur.GetNode<GroundTelegraph>("CryMarker");
+        int before = CountEnemies();
+        ForceCooldown(hurleur, "cry");
+        await Step(1);
+        Check(marker.Visible && hurleur.Velocity == Vector2.Zero, "Hurleur : cri annoncé au sol, créature immobile");
+        hurleur.TakeDamage(float.MaxValue);
+        Check(!marker.Visible, "Hurleur : sa mort efface l'annonce");
+        await Step(windupTicks + 2);
+        Check(CountEnemies() - before <= 0, "Hurleur : tué pendant l'annonce, aucun renfort");
+        Despawn(hurleur);
+        await Step(40);
+
+        hurleur = await SpawnReady("hurleur", new Vector2(-150f, 0f));
+        before = CountEnemies();
+        ForceCooldown(hurleur, "cry");
+        await Step(windupTicks + 2);
+        int spawned = CountEnemies() - before;
+        Check(spawned == expected, $"Hurleur : {spawned} renforts au terme du cri (fiche : {expected})");
+        foreach (Node child in GetChildren())
+            if (child is Enemy enemy && enemy != hurleur && !_enemies.Contains(enemy))
+                enemy.QueueFree();
+        Despawn(hurleur);
+        pool.QueueFree();
+    }
+
+    private int CountEnemies()
+    {
+        int count = 0;
+        foreach (Node child in GetChildren())
+            count += child is Enemy { IsActive: true, IsDying: false } ? 1 : 0;
+        return count;
     }
 
     /// <summary>Recul des armes (stat `knockback`) : la créature est vraiment repoussée, pas seulement son visuel.</summary>
@@ -378,12 +498,14 @@ public partial class EnemyAbilityRegression : Node2D
             enemy.QueueFree();
     }
 
-    private static void ForceCooldown(Enemy enemy, string abilityId)
+    private static void ForceCooldown(Enemy enemy, string abilityId) => ForceTimer(enemy, abilityId, "_cooldownTimer");
+
+    private static void ForceTimer(Enemy enemy, string abilityId, string field)
     {
         var cache = (Dictionary<string, IEnemyAbility>)typeof(Enemy)
             .GetField("_abilityCache", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(enemy);
         IEnemyAbility ability = cache[abilityId];
-        ability.GetType().GetField("_cooldownTimer", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(ability, 0f);
+        ability.GetType().GetField(field, BindingFlags.NonPublic | BindingFlags.Instance).SetValue(ability, 0f);
     }
 
     private async Task Flee(Vector2 direction, int ticks)

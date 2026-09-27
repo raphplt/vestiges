@@ -256,6 +256,33 @@ Propositions :
 - Vérifié : deux tests dans `test_enemy_abilities` (recul de 40 → 34 px, poursuite déduite ; six coups de 60 plafonnés à 74 px) ; `test_movement` et `test_weapons` verts.
 - **À recetter :** les armes lourdes deviennent défensives, ce qui peut adoucir un début de run déjà jugé facile. Valeurs par arme dans `weapons.json`, plafond et décroissance en tête d'`Enemy`.
 
+**Lot B, étapes 1 et 3 livrées — 27 septembre 2026 (session locale) :** anticipation, récupération, sons et animations des trois comportements qui frappaient sans prévenir.
+- **Brute du Vide.** La charge partait sans annonce, sur un flash violet de 0,3 s. Elle devient une capacité `charge` du même moteur que le bond du Charognard :
+  - 0,6 s d'annonce, Brute accroupie, sprite teinté de violet et couloir au sol dans la direction verrouillée ;
+  - puis 160 px à 200 px/s, et 0,9 s de récupération immobile, la fenêtre pour riposter ;
+  - un coup qui porte secoue l'écran (`impact_shake`) ; le son de charge choisi (`sfx_enemy_charge`) accompagne l'annonce.
+  
+  Portée (200 px), recharge (8 s) et premier délai (4 s) inchangés.
+- **Rampant.** Enfoui, il frappait déjà au contact alors qu'il était à 35 % d'opacité et invulnérable. Capacité `burrow` :
+  - enfoui, il file vers le joueur un peu plus vite (×1,3) mais ne touche plus ;
+  - à la fin de l'enfouissement, il s'arrête et un cercle couleur rouille se remplit au sol pendant 0,6 s, puis il surgit : dégâts ×1,2 dans la zone annoncée, terre projetée, son de surgissement (`sfx_rampant_surgissement`, qui se jouait jusqu'ici à chaque coup au contact), puis 0,4 s de sortie immobile ;
+  - un premier essai en famille « pierre » se perdait dans l'herbe (capture), d'où la rouille.
+- **Hurleur.** Le cri appelait deux Ombres sans délai et sans son. Capacité `cry` :
+  - 0,8 s d'annonce : le Hurleur s'arrête, crie (`sfx_hurleur_cri`), se teinte, et un cercle marque où les renforts vont surgir ;
+  - **le tuer pendant l'annonce coupe l'appel** : c'est la décision « cible prioritaire » de la fiche du rôle ;
+  - relecture `godot-reviewer` : les renforts apparaissaient depuis toujours avec les PV et dégâts de la minute 0 et sans signal `EnemySpawned`. Ils reprennent désormais la montée en puissance du Hurleur et sont recensés.
+- **Sons des tirs** : un tir ennemi joue désormais le son de sa fiche (`attack_audio`, ce que le chargeur annonçait sans le faire), sinon le tir choisi en B6. La Sentinelle retrouve son tir ; le Cracheur et la Tisseuse gardent le tir choisi, `sfx_projectile_vol` n'est plus utilisé.
+- **Code** : les trois comportements quittent `Enemy.cs` (−200 lignes) pour `Combat/Abilities/` (`BurrowAbility`, `CryAbility`, `PounceAbility` généralisé : `first_delay`, `windup_flash`, `impact_shake`). Réglages dans le bloc `abilities` des fiches. `EnemyPool.Instance` permet au cri de tirer ses renforts du pool.
+- **Vérifié :**
+  - `test_enemy_abilities` : 13 assertions ajoutées, 60 au total, toutes vertes. Elles couvrent :
+    - charge : annonce, vitesse, touche, récupération, pas de côté qui l'évite ;
+    - Rampant : enfoui sans dégâts ni contact, surgissement annoncé, touche sur place, évité en s'écartant ;
+    - Hurleur : annonce, mort qui l'efface et coupe l'appel, renforts sinon ;
+  - `test_movement` vert ;
+  - captures `--capture-abilities --enemies void_brute,rampant,hurleur` (nouvelle option `--still`) regardées : couloir violet de la charge, cercle vert du cri puis deux Ombres, cercle rouille du surgissement.
+- **Non fait :** tirs du Cracheur et de la Sentinelle sans annonce, leur projectile restant lisible ; portée de la Sentinelle toujours invisible (« fenêtre sûre » de la fiche).
+- **À recetter :** la Brute devient évitable, donc plus juste mais peut-être moins dangereuse ; le Rampant ne blesse plus pendant l'enfouissement ; le Hurleur, immobile 0,8 s, est plus facile à tuer.
+
 ### Lot C — Compositions et progression
 
 1. Reprendre SpawnManager et les pools de biome.

@@ -9,12 +9,26 @@ public partial class EnemyPool : Node
 {
 	[Export] public int InitialSize = 20;
 
+	/// <summary>Pool de la run en cours : les renforts appelés par une créature en sortent.</summary>
+	public static EnemyPool Instance { get; private set; }
+
 	private PackedScene _enemyScene;
 	private readonly Queue<Enemy> _available = new();
 	private int _totalCreated;
 	private bool _prewarmed;
 
 	public int ActiveCount => _totalCreated - _available.Count;
+
+	public override void _EnterTree()
+	{
+		Instance = this;
+	}
+
+	public override void _ExitTree()
+	{
+		if (Instance == this)
+			Instance = null;
+	}
 
 	public override void _Ready()
 	{

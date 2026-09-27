@@ -4,20 +4,33 @@
     "grammatical_gender": "f",
     "type": "melee",
     "attack_audio": "sfx_brute_charge",
-    "behavior": "charger",
+    "behavior": "default",
     "stats": {
         "hp": 80,
         "speed": 35,
         "damage": 12,
         "xp_reward": 25,
         "perception": 380,
-        "leash": 700,
-        "charge_speed": 200,
-        "charge_cooldown": 8,
-        "charge_range": 200,
-        "charge_duration": 0.8,
-        "charge_first_delay": 4,
-        "charge_retry": 0.5
+        "leash": 700
+    },
+    "abilities": {
+        "charge": {
+            "trigger_range": 200,
+            "min_range": 40,
+            "windup_seconds": 0.6,
+            "distance": 160,
+            "leap_seconds": 0.8,
+            "recovery_seconds": 0.9,
+            "cooldown_seconds": 8,
+            "first_delay": 4,
+            "hit_range": 34,
+            "damage_multiplier": 1.0,
+            "marker_width": 20,
+            "fx_family": "void",
+            "windup_flash": "void",
+            "impact_shake": "medium",
+            "windup_audio": "sfx_enemy_charge"
+        }
     },
     "visual": {
         "color": "#663366",

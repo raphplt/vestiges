@@ -6,7 +6,10 @@ public static class EnemyAbilityFactory
     public static IEnemyAbility Create(string id, Enemy owner) => id switch
     {
         "omen_strike" => new OmenStrikeAbility(owner),
-        "pounce" => new PounceAbility(owner),
+        "pounce" => new PounceAbility(owner, "PounceMarker"),
+        "charge" => new PounceAbility(owner, "ChargeMarker"),
+        "burrow" => new BurrowAbility(owner),
+        "cry" => new CryAbility(owner),
         _ => null
     };
 }

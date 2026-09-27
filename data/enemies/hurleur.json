@@ -2,22 +2,30 @@
     "id": "hurleur",
     "name": "Hurleur",
     "type": "ranged",
-    "attack_audio": "sfx_hurleur_cri",
     "stats": {
         "hp": 35,
         "speed": 25,
         "damage": 4,
         "attack_range": 300,
-        "xp_reward": 30,
-        "cry_cooldown": 8,
-        "cry_range": 250,
-        "cry_reinforcements": 2
+        "xp_reward": 30
+    },
+    "abilities": {
+        "cry": {
+            "cooldown_seconds": 8,
+            "range": 250,
+            "windup_seconds": 0.8,
+            "reinforcements": 2,
+            "reinforcement_id": "shade",
+            "spawn_radius": 40,
+            "impact_flash_seconds": 0.2,
+            "fx_family": "hostile",
+            "cry_audio": "sfx_hurleur_cri"
+        }
     },
     "visual": {
         "color": "#44AA55",
         "shape": "triangle",
         "size": 18,
         "sprite_folder": "hurleur"
-    },
-    "behavior": "screamer"
+    }
 }

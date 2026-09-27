@@ -16,7 +16,8 @@ namespace Vestiges.Tests;
 
 /// <summary>
 /// Observation de la vraie scène de run, rendue.
-/// --capture-abilities [--enemies a,b] : captures des attaques d'ennemis choisis (Présage et Charognard par défaut).
+/// --capture-abilities [--enemies a,b] [--shots n] [--still] : captures des attaques d'ennemis choisis (Présage et Charognard par défaut) ;
+///     --still garde le joueur immobile, pour les attaques qui visent sa position (surgissement).
 /// --capture-map : répartition des biomes autour du spawn (plusieurs seeds) et vues dézoomées.
 /// --capture-props : zone la plus chargée en décors de chaque biome, collisions affichées (sauf --hide-collisions).
 /// --capture-junctions : frontières entre biomes les plus proches du départ, avec et sans décors.
@@ -171,7 +172,8 @@ public partial class RunObservation : Node
         foreach (Node node in GetTree().GetNodesInGroup("enemies"))
             if (node is Enemy existing && existing.IsActive)
                 _world.GetNode<EnemyPool>("EnemyPool").Return(existing);
-        await Frames(2);
+        // L'écran de chargement s'efface après l'initialisation du monde.
+        await Frames(90);
 
         SpawnManager spawner = _world.GetNode<SpawnManager>("SpawnManager");
         Vector2 origin = _player.GlobalPosition;
@@ -189,8 +191,10 @@ public partial class RunObservation : Node
             ResetAbilityCooldowns(enemy);
         }
 
-        _player.AIInputOverride = new Vector2(0.5f, 0f);
-        for (int shot = 0; shot < 12; shot++)
+        bool still = Array.IndexOf(OS.GetCmdlineUserArgs(), "--still") >= 0;
+        _player.AIInputOverride = still ? Vector2.Zero : new Vector2(0.5f, 0f);
+        int shots = int.Parse(Argument(OS.GetCmdlineUserArgs(), "--shots", "12"), CultureInfo.InvariantCulture);
+        for (int shot = 0; shot < shots; shot++)
         {
             await Frames(15);
             using Image image = GetViewport().GetTexture().GetImage();
@@ -516,7 +520,12 @@ public partial class RunObservation : Node
         var cache = (Dictionary<string, IEnemyAbility>)typeof(Enemy)
             .GetField("_abilityCache", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(enemy);
         foreach (IEnemyAbility ability in cache.Values)
+        {
             ability.GetType().GetField("_cooldownTimer", BindingFlags.NonPublic | BindingFlags.Instance)?.SetValue(ability, 0f);
+            // Enfouissement : la phase de surface se compte sur le minuteur de phase.
+            if (ability is BurrowAbility)
+                ability.GetType().GetField("_timer", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(ability, 0f);
+        }
     }
 
     private async Task Frames(int count)
