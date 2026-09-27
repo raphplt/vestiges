@@ -201,7 +201,7 @@ Trois créatures du début de run passent dans le pipeline, à la même densité
 | **P0 — Gabarit décors** | Module `tools/sprites/props/`, manifeste (dimensions, pieds, emprise, variantes), planche de contact à taille réelle sur les sols des cinq biomes | Planche et une capture en jeu |
 | **P1 — Mobilier urbain** | Voitures (2 ou 3 carrosseries), bennes, feux, cabine, lampadaire, barrières, boîte aux lettres, panneaux, débris et poutrelles | Captures en vraie run, ville dense ; ton retour |
 | **P2 — Immeubles urbains** | Modules d'immeubles (façade, angle, tour, effondré, église) à l'échelle du personnage, intérieurs visibles par les brèches | Idem, collisions et profondeur (plan 10 D1/D2) |
-| **P3 à P6** | Forêt et champs (livrés), marais, carrière, dans cet ordre sauf avis contraire | Un biome validé avant le suivant |
+| **P3 à P6** | Forêt, champs, marais et carrière livrés (27 septembre pour les deux derniers) | Un biome validé avant le suivant |
 
 Les tiles restent en l'état (jugées acceptables) ; un ajustement de contraste reste possible si les nouveaux décors l'exigent.
 
@@ -305,6 +305,22 @@ Les tiles restent en l'état (jugées acceptables) ; un ajustement de contraste 
 *Vérifications :* planches à taille réelle sur le sol du marais avec le personnage, captures `--capture-props` avec et sans collisions, deux générations identiques à l'octet, smoke test.
 
 *Points ouverts pour Raphaël :* le marais reste plus ouvert que la forêt (17 décors au point le plus chargé, 22 en forêt), par choix : l'eau doit se voir. Les grands bosquets restent rares hors de leurs zones. La carrière (P6) reste à faire.
+
+**P6 Carrière livré — 27 septembre 2026 :**
+
+*Constat :* la Carrière n'avait aucun décor propre : gravats et poutrelles de la ville, rocher et souche de la forêt. Rien de la « mine industrielle écroulée » de la charte ni des machines figées de la Bible (§5.4).
+
+*Catalogue :* `tools/sprites/props/quarry.py` (`tools/generate_props.py quarry`), 18 décors dans `assets/props/collapsed_quarry/`, palette « Carrière » de la charte :
+- Roche : deux affleurements de blocs taillés avec strate de terre rouge, bloc éboulé fendu, tas de déblais et tas de minerai.
+- Essence brute : veine de cristaux bleus lumineux jaillissant d'un bloc sombre, petite gerbe dans une poche de charbon. Seules lumières du biome avec l'orange des gyrophares.
+- Machines figées : wagonnet renversé sur son rail, voie étroite tordue, godet géant de pelleteuse avec son bras dressé (repère), convoyeur incliné au tapis déchiré, touret de câble, gyrophare de chantier.
+- Traces des ouvriers : cadre de soutènement à l'étai cassé, vestiaire renversé (casque, thermos, photo punaisée), caisse d'explosifs éventrée, panneau « danger » tordu, pioche plantée et lanterne éteinte.
+
+*Placement :* `data/props/collapsed_quarry.json` refait (densité 0,24 ; gravats et poutrelles de la ville gardés en appoint). Le placement générique refuse un décor trop proche de **n'importe quelle** case occupée : les petits décors remplissaient la carte et les grands, à distance minimale élevée, n'apparaissaient plus. Distances des grands décors réduites (2 à 4 cases, 8 pour le godet) et poids tournés vers les pièces qui font l'identité du biome. Seed de capture : 1 145 → 1 232 décors, 23 au point le plus chargé.
+
+*Vérifications :* planches à taille réelle sur le sol de la carrière avec le personnage, captures `--capture-props --hide-collisions` regardées à chaque réglage, deux générations identiques à l'octet, smoke test.
+
+*Points ouverts pour Raphaël :* première passe par placement générique. Comme pour les champs (P4b), une composition raconterait mieux la mine : entrées de galerie étayées, wagonnets le long des voies, machines groupées autour d'un chantier. À proposer si le biome paraît encore « semé au hasard ».
 
 **Retour du 26 septembre sur les champs :** « la zone ferme/campagne fait un peu vide. Il n'y a que des petits sprites éparpillés et qui ne racontent pas grand-chose. » Le dessin des objets n'est pas en cause : c'est la **composition**. Le placement générique pose des décors isolés au hasard, alors que la ville raconte ses îlots.
 

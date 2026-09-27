@@ -1,94 +1,204 @@
 {
     "biome_id": "collapsed_quarry",
-    "density": 0.15,
+    "density": 0.24,
     "props": [
         {
-            "id": "concrete_debris",
-            "name": "Debris beton",
+            "id": "rock_outcrop",
+            "name": "Affleurement rocheux",
             "weight": 3.0,
-            "terrain": ["concrete", "grass"],
+            "terrain": ["concrete", "forest", "grass"],
+            "sprite_base": "assets/props/collapsed_quarry/prop_rock_outcrop.png",
+            "blocking": true,
+            "min_distance": 2,
+            "variants": 1
+        },
+        {
+            "id": "rock_outcrop_v2",
+            "name": "Grand affleurement",
+            "weight": 1.2,
+            "terrain": ["concrete", "forest", "grass"],
+            "sprite_base": "assets/props/collapsed_quarry/prop_rock_outcrop_v2.png",
+            "blocking": true,
+            "min_distance": 3,
+            "variants": 1
+        },
+        {
+            "id": "boulder",
+            "name": "Bloc éboulé",
+            "weight": 1.2,
+            "terrain": ["concrete", "forest", "grass"],
+            "sprite_base": "assets/props/collapsed_quarry/prop_boulder.png",
+            "blocking": true,
+            "min_distance": 1,
+            "variants": 1
+        },
+        {
+            "id": "gravel_pile",
+            "name": "Tas de déblais",
+            "weight": 0.9,
+            "terrain": ["concrete", "forest", "grass"],
+            "sprite_base": "assets/props/collapsed_quarry/prop_gravel_pile.png",
+            "blocking": false,
+            "min_distance": 1,
+            "variants": 1
+        },
+        {
+            "id": "ore_pile",
+            "name": "Tas de minerai",
+            "weight": 0.5,
+            "terrain": ["concrete", "forest", "grass"],
+            "sprite_base": "assets/props/collapsed_quarry/prop_ore_pile.png",
+            "blocking": false,
+            "min_distance": 1,
+            "variants": 1
+        },
+        {
+            "id": "crystal_vein",
+            "name": "Veine d'Essence",
+            "weight": 0.9,
+            "terrain": ["concrete", "forest", "grass"],
+            "sprite_base": "assets/props/collapsed_quarry/prop_crystal_vein.png",
+            "blocking": true,
+            "min_distance": 3,
+            "variants": 1
+        },
+        {
+            "id": "crystal_cluster",
+            "name": "Gerbe de cristaux",
+            "weight": 1.0,
+            "terrain": ["concrete", "forest", "grass"],
+            "sprite_base": "assets/props/collapsed_quarry/prop_crystal_cluster.png",
+            "blocking": false,
+            "min_distance": 2,
+            "variants": 1
+        },
+        {
+            "id": "mine_cart",
+            "name": "Wagonnet renversé",
+            "weight": 0.6,
+            "terrain": ["concrete", "forest", "grass"],
+            "sprite_base": "assets/props/collapsed_quarry/prop_mine_cart.png",
+            "blocking": true,
+            "min_distance": 3,
+            "variants": 1
+        },
+        {
+            "id": "rails",
+            "name": "Voie étroite",
+            "weight": 0.7,
+            "terrain": ["concrete", "forest", "grass"],
+            "sprite_base": "assets/props/collapsed_quarry/prop_rails.png",
+            "blocking": false,
+            "min_distance": 2,
+            "variants": 1
+        },
+        {
+            "id": "excavator_bucket",
+            "name": "Godet de pelleteuse",
+            "weight": 0.15,
+            "terrain": ["concrete", "forest", "grass"],
+            "sprite_base": "assets/props/collapsed_quarry/prop_excavator_bucket.png",
+            "blocking": true,
+            "min_distance": 8,
+            "variants": 1
+        },
+        {
+            "id": "conveyor",
+            "name": "Convoyeur",
+            "weight": 0.35,
+            "terrain": ["concrete", "forest", "grass"],
+            "sprite_base": "assets/props/collapsed_quarry/prop_conveyor.png",
+            "blocking": true,
+            "min_distance": 4,
+            "variants": 1
+        },
+        {
+            "id": "cable_drum",
+            "name": "Touret de câble",
+            "weight": 0.5,
+            "terrain": ["concrete", "forest", "grass"],
+            "sprite_base": "assets/props/collapsed_quarry/prop_cable_drum.png",
+            "blocking": true,
+            "min_distance": 2,
+            "variants": 1
+        },
+        {
+            "id": "safety_lamp",
+            "name": "Gyrophare de chantier",
+            "weight": 0.45,
+            "terrain": ["concrete", "forest", "grass"],
+            "sprite_base": "assets/props/collapsed_quarry/prop_safety_lamp.png",
+            "blocking": false,
+            "min_distance": 3,
+            "variants": 1
+        },
+        {
+            "id": "mine_supports",
+            "name": "Cadre de soutènement",
+            "weight": 0.7,
+            "terrain": ["concrete", "forest", "grass"],
+            "sprite_base": "assets/props/collapsed_quarry/prop_mine_supports.png",
+            "blocking": true,
+            "min_distance": 2,
+            "variants": 1
+        },
+        {
+            "id": "worker_locker",
+            "name": "Vestiaire renversé",
+            "weight": 0.25,
+            "terrain": ["concrete", "forest", "grass"],
+            "sprite_base": "assets/props/collapsed_quarry/prop_worker_locker.png",
+            "blocking": true,
+            "min_distance": 4,
+            "variants": 1
+        },
+        {
+            "id": "explosives_crate",
+            "name": "Caisse d'explosifs",
+            "weight": 0.4,
+            "terrain": ["concrete", "forest", "grass"],
+            "sprite_base": "assets/props/collapsed_quarry/prop_explosives_crate.png",
+            "blocking": true,
+            "min_distance": 2,
+            "variants": 1
+        },
+        {
+            "id": "danger_sign",
+            "name": "Panneau danger",
+            "weight": 0.4,
+            "terrain": ["concrete", "forest", "grass"],
+            "sprite_base": "assets/props/collapsed_quarry/prop_danger_sign.png",
+            "blocking": false,
+            "min_distance": 2,
+            "variants": 1
+        },
+        {
+            "id": "pickaxe_rock",
+            "name": "Pioche plantée",
+            "weight": 0.3,
+            "terrain": ["concrete", "forest", "grass"],
+            "sprite_base": "assets/props/collapsed_quarry/prop_pickaxe_rock.png",
+            "blocking": true,
+            "min_distance": 3,
+            "variants": 1
+        },
+        {
+            "id": "concrete_debris",
+            "name": "Débris de béton",
+            "weight": 0.6,
+            "terrain": ["concrete", "forest", "grass"],
             "sprite_base": "assets/props/urban_ruins/prop_concrete_debris.png",
             "blocking": false,
             "min_distance": 1,
             "variants": 1
         },
         {
-            "id": "concrete_debris_v2",
-            "name": "Debris beton (var 2)",
-            "weight": 2.5,
-            "terrain": ["concrete", "grass"],
-            "sprite_base": "assets/props/urban_ruins/prop_concrete_debris_v2.png",
-            "blocking": false,
-            "min_distance": 1,
-            "variants": 1
-        },
-        {
-            "id": "rock_mossy",
-            "name": "Rocher moussu",
-            "weight": 1.5,
-            "terrain": ["forest", "grass", "concrete"],
-            "sprite_base": "assets/props/forest/prop_rock_mossy.png",
-            "blocking": true,
-            "min_distance": 2,
-            "variants": 1
-        },
-        {
             "id": "steel_beam",
-            "name": "Poutrelle acier",
-            "weight": 1.2,
-            "terrain": ["concrete"],
+            "name": "Poutrelle",
+            "weight": 0.4,
+            "terrain": ["concrete", "forest", "grass"],
             "sprite_base": "assets/props/urban_ruins/prop_steel_beam.png",
             "blocking": true,
-            "min_distance": 3,
-            "variants": 1
-        },
-        {
-            "id": "steel_beam_diagonal",
-            "name": "Poutrelle acier diagonale",
-            "weight": 0.8,
-            "terrain": ["concrete"],
-            "sprite_base": "assets/props/urban_ruins/prop_steel_beam_diagonal.png",
-            "blocking": true,
-            "min_distance": 3,
-            "variants": 1
-        },
-        {
-            "id": "concrete_wall_v3",
-            "name": "Mur beton effondre",
-            "weight": 0.6,
-            "terrain": ["concrete"],
-            "sprite_base": "assets/props/urban_ruins/prop_concrete_wall_v3.png",
-            "blocking": true,
-            "min_distance": 4,
-            "variants": 1
-        },
-        {
-            "id": "chain_link_fence",
-            "name": "Cloture grillagee",
-            "weight": 0.5,
-            "terrain": ["concrete", "grass"],
-            "sprite_base": "assets/props/urban_ruins/prop_chain_link_fence.png",
-            "blocking": true,
-            "min_distance": 4,
-            "variants": 1
-        },
-        {
-            "id": "stump",
-            "name": "Souche",
-            "weight": 0.4,
-            "terrain": ["forest", "grass"],
-            "sprite_base": "assets/props/forest/prop_stump.png",
-            "blocking": true,
-            "min_distance": 3,
-            "variants": 1
-        },
-        {
-            "id": "bush",
-            "name": "Buisson resistant",
-            "weight": 0.3,
-            "terrain": ["forest"],
-            "sprite_base": "assets/props/forest/prop_bush.png",
-            "blocking": false,
             "min_distance": 2,
             "variants": 1
         }
