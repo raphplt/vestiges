@@ -81,8 +81,7 @@ public partial class Enemy : CharacterBody2D
 	private readonly EnemyModifiers _mods = new();
 	private readonly EnemyTracking _tracking = new();
 	private Sprite2D _shadow;
-	private Polygon2D _modifierAura;
-	private Tween _modifierAuraTween;
+	private AffixAura _modifierAura;
 	private EnemyNameplate _nameplate;
 	private string _displayName;
 	private bool _isFeminine;
@@ -404,8 +403,7 @@ public partial class Enemy : CharacterBody2D
 		_hitFeedback.RestScale = Vector2.One;
 		_hitFeedback.Stop();
 		_damageNumber = null;
-		_modifierAuraTween?.Kill();
-		_modifierAuraTween = null;
+		_modifierAura?.HideAura();
 		CancelAbilities();
 
 		IsActive = false;
@@ -435,11 +433,7 @@ public partial class Enemy : CharacterBody2D
 			_nameplate.QueueFree();
 			_nameplate = null;
 		}
-		if (_modifierAura != null)
-		{
-			_modifierAura.QueueFree();
-			_modifierAura = null;
-		}
+		_modifierAura?.HideAura();
 		CollisionLayer = 2;
 		CollisionMask = 4;
 		Velocity = Vector2.Zero;
@@ -667,26 +661,25 @@ public partial class Enemy : CharacterBody2D
 
 	private void SpawnModifierAura(Color color)
 	{
-		if (_modifierAura != null)
-			return;
-
-		_modifierAura = new Polygon2D();
-		int segments = 8;
-		Vector2[] points = new Vector2[segments];
-		float auraSize = 16f;
-		for (int i = 0; i < segments; i++)
+		if (_modifierAura == null)
 		{
-			float angle = Mathf.Tau * i / segments;
-			points[i] = new Vector2(Mathf.Cos(angle) * auraSize, Mathf.Sin(angle) * auraSize * 0.5f);
+			_modifierAura = new AffixAura { Name = "AffixAura" };
+			AddChild(_modifierAura);
 		}
-		_modifierAura.Polygon = points;
-		_modifierAura.Color = color;
-		_modifierAura.ZIndex = -1;
-		AddChild(_modifierAura);
+		if (_modifierAura.Visible)
+			return;
+		// Sous les pieds, comme l'ombre de contact, et non au centre du corps.
+		_modifierAura.Position = _shadow.Position;
+		_modifierAura.Show(color, AuraRadius());
+	}
 
-		_modifierAuraTween = _modifierAura.CreateTween().SetLoops();
-		_modifierAuraTween.TweenProperty(_modifierAura, "scale", Vector2.One * 1.2f, 0.6f).SetTrans(Tween.TransitionType.Sine);
-		_modifierAuraTween.TweenProperty(_modifierAura, "scale", Vector2.One, 0.6f).SetTrans(Tween.TransitionType.Sine);
+	/// <summary>Demi-largeur au sol du visuel : l'anneau dépasse un peu des pieds, quelle que soit l'échelle.</summary>
+	private float AuraRadius()
+	{
+		if (!_hasSprite)
+			return 16f;
+		Texture2D frame = _sprite.SpriteFrames.GetFrameTexture(_sprite.Animation, 0);
+		return (frame?.GetWidth() ?? 32) * 0.4f * _sprite.Scale.X;
 	}
 
 	/// <summary>Garde : attaque le joueur s'il est dans le rayon de patrouille, sinon retourne au poste.</summary>
@@ -1022,7 +1015,7 @@ public partial class Enemy : CharacterBody2D
 		// Le corps se dissout : son contact avec le sol disparaît avec lui.
 		_shadow.Visible = false;
 		CancelAbilities();
-		_modifierAuraTween?.Kill();
+		_modifierAura?.HideAura();
 		_igniteDps = 0f;
 		_igniteTimer = 0f;
 		Velocity = Vector2.Zero;

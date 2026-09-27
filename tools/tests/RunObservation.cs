@@ -244,10 +244,16 @@ public partial class RunObservation : Node
         for (int i = 0; i < ids.Length && i < spots.Length; i++)
             spawner.ForceSpawnEnemy(ids[i], origin + spots[i]);
         await Frames(2);
+        // --affix id : chaque créature montrée porte cet affixe (anneau au sol).
+        string affixId = Argument(OS.GetCmdlineUserArgs(), "--affix", "");
+        EnemyAffixData affix = affixId.Length > 0 ? EnemyVariantDataLoader.GetAffix(affixId) : null;
         foreach (Node node in GetTree().GetNodesInGroup("enemies"))
         {
-            if (node is Enemy enemy && enemy.IsActive)
-                typeof(Enemy).GetField("_currentHp", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(enemy, 100000f);
+            if (node is not Enemy enemy || !enemy.IsActive)
+                continue;
+            if (affix != null)
+                enemy.ApplyAffix(affix);
+            typeof(Enemy).GetField("_currentHp", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(enemy, 100000f);
         }
 
         _player.AIInputOverride = Vector2.Zero;

@@ -203,7 +203,7 @@ Suite annoncée du pilote (« même traitement pour les autres ennemis du début
   | Rampant d'Ombre | 40×36, (20, 28) | Ombre à quatre pattes trop longues aux coudes relevés, traînées rouge sombre, masque pâle et lisse au bout du cou. Frappe : le cou se détend. |
   | Tréant corrompu | 56×72, (28, 67) | Tronc noueux sur des racines-pieds, branches-bras inégales griffues de brindilles, excroissances en visages dont deux nœuds luisent, couronne de feuillage mort. Coup de branche de haut en bas. |
 
-  Premier jet du Rampant (une dizaine de pixels) et du Rampant d'Ombre agrandis. Capture `--capture-bestiary --enemies fading_spitter,rampant,shadow_crawler,treant_corrompu,rodeur` regardée. **Les douze créatures en jeu sont désormais dans le pipeline.** Restent seulement l'Indicible (en polygones) et les auras d'affixe.
+  Premier jet du Rampant (une dizaine de pixels) et du Rampant d'Ombre agrandis. Capture `--capture-bestiary --enemies fading_spitter,rampant,shadow_crawler,treant_corrompu,rodeur` regardée. **Les douze créatures en jeu sont désormais dans le pipeline.** Restent seulement l'Indicible (en polygones) et les auras d'affixe (faites le 27 septembre au soir, ci-dessous).
 
 ### Décors procéduraux — chantier du 25 septembre 2026
 
@@ -677,3 +677,11 @@ Build, smoke dès que scènes/shaders/initialisation sont touchés, profilage de
 
 
 La cohérence du sol et des transitions relève aussi du [plan 10](10-terrain-et-tiles.md). Validation finale de la DA sur une planche commune et une séquence en mouvement : même pixel apparent, même projection, palettes compatibles, détails lisibles, aucune famille semblant importée d’un autre jeu.
+
+### Auras d'affixe en pixel art — 27 septembre 2026
+
+Les créatures à affixe avaient une ellipse lisse (`Polygon2D`), centrée sur le corps et pulsée par un tween. Le tout était recréé à chaque réutilisation de l'ennemi.
+- `AffixAura` la remplace par un anneau au sol à la couleur de l'affixe : bord plein et intérieur tramé d'un pixel sur deux, écrasé comme le sol (deux fois plus large que haut). L'anneau respire par poses, trois rayons toutes les 0,2 s, au lieu d'un glissement continu. Il se pose sous les pieds, à l'ombre de contact, et sa taille suit la largeur du sprite.
+- Un composant par ennemi, réutilisé par le pool (caché au retour, à la mort et pendant une harde) ; dessin refait au seul changement de pose, formes mises en cache par rayon.
+- **Vérifié** : `--capture-bestiary --enemies shade,void_brute,charognard,wailing_sentinel --affix enraged` (nouvelle option `--affix`), images regardées ; smoke test.
+- **Reste** : l'aura des Aberrations (particules GPU à texture ronde lisse) et l'Indicible.

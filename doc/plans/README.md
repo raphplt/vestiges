@@ -61,6 +61,7 @@ Un seul lot d'implémentation ouvert à la fois. Un échec de lisibilité, de pe
 - [04 lot C](04-interfaces-et-hub.md) : les colonnes de la pause défilent au stick droit et à Page haut/bas.
 - Crash à la fermeture du jeu lancé depuis Godot (préexistant) corrigé par une sortie propre ([10](10-terrain-et-tiles.md)).
 - Audit, lot 4 : les orbes d'XP laissées loin s'endorment. Un nomade en laisse environ 300 en 10 minutes ; avec 400 orbes, 720p passe de 244 à 289 FPS.
+- [08](08-direction-artistique.md) : auras d'affixe en pixel art, sous les pieds.
 - [06](06-personnages-quetes-defis.md) : un profil neuf commence avec le Vagabond (décision du 23 septembre) ; les profils existants gardent leurs personnages.
 
 **Mise à jour du 27 septembre, soir (session locale) :** deux bugs signalés par Raphaël.
