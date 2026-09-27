@@ -104,3 +104,7 @@ Fichier temporaire. Il liste ce qu'une session cloud a livré sans pouvoir le v�
 
 - [ ] **Recette** : place de l'entrée dans le menu (après « Partir »), lisibilité des silhouettes verrouillées, textes du panneau. Capture : `tools/capture_hub.sh <dossier> ui_down,ui_accept`.
 
+## Plan 07 lot C — Colosse de crise (choix provisoire)
+
+- [ ] **À arbitrer par Raphaël** : un Colosse à chaque crise dès la deuxième. Trop fréquent ? Difficulté d'un Colosse en pleine vague, coffre épique à chaque fois. Désactivation : `crisis_miniboss_from: 0` dans `data/scaling/spawn_flow.json`.
+

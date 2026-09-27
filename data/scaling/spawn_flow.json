@@ -32,6 +32,7 @@
     "crisis_spawn_multiplier": 1.65,
     "crisis_burst_base": 8,
     "crisis_burst_per_intensity": 4,
+    "crisis_miniboss_from": 2,
     "late_game_spawn_multiplier": 1.4,
     "endgame_spawn_multiplier": 1.85,
     "spawn_screen_margin_min": 40,

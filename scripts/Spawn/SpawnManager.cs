@@ -55,6 +55,8 @@ public partial class SpawnManager : Node2D
 	private float _sameTypeClusterSpacingMax;
 	private float _crisisSpawnMultiplier = 1.65f;
 	private int _crisisBurstBase = 8;
+	// Colosse de crise (plan 07 lot C) : à partir de cette crise, le Colosse du biome se lève ; 0 : jamais.
+	private int _crisisMinibossFrom;
 	private int _crisisBurstPerIntensity = 4;
 	private float _lateGameSpawnMultiplier = 1.4f;
 	private float _endgameSpawnMultiplier = 1.85f;
@@ -650,10 +652,32 @@ public partial class SpawnManager : Node2D
 
 	private void OnCrisisStarted(int crisisNumber, int intensity)
 	{
+		// Le joueur n'est résolu qu'au tick : une crise annoncée avant lui ferait échouer toute la vague.
+		CachePlayer();
+		if (_player == null || !IsInstanceValid(_player))
+			return;
 		float elapsedMinutes = _elapsedTime / 60f;
 		int burstCount = _crisisBurstBase + _crisisBurstPerIntensity * Mathf.Max(0, intensity - 1);
 		for (int i = 0; i < burstCount; i++)
 			TrySpawnEnemy(elapsedMinutes);
+		TrySpawnCrisisMiniboss(crisisNumber);
+	}
+
+	/// <summary>
+	/// Une crise sur le tard fait lever le Colosse du biome où elle éclate, hors écran : un rendez-vous, pas un
+	/// habitant. Sans Colosse déclaré pour le biome, rien.
+	/// </summary>
+	private void TrySpawnCrisisMiniboss(int crisisNumber)
+	{
+		if (_crisisMinibossFrom <= 0 || crisisNumber < _crisisMinibossFrom)
+			return;
+		CacheWorldSetup();
+		string minibossId = _worldSetup?.GetBiomeAt(_player.GlobalPosition)?.CrisisMiniboss;
+		if (string.IsNullOrEmpty(minibossId))
+			return;
+		Enemy miniboss = SpawnEventEnemy(minibossId, GetSpawnPosition());
+		if (miniboss != null)
+			GD.Print($"[SpawnManager] Crise {crisisNumber} : {minibossId} se lève");
 	}
 
 	// =========================================================
@@ -715,6 +739,7 @@ public partial class SpawnManager : Node2D
 		_sameTypeClusterSpacingMax = dict.ContainsKey("same_type_cluster_spacing_max") ? (float)dict["same_type_cluster_spacing_max"].AsDouble() : 46f;
 		_crisisSpawnMultiplier = dict.ContainsKey("crisis_spawn_multiplier") ? (float)dict["crisis_spawn_multiplier"].AsDouble() : _crisisSpawnMultiplier;
 		_crisisBurstBase = dict.ContainsKey("crisis_burst_base") ? (int)dict["crisis_burst_base"].AsDouble() : _crisisBurstBase;
+		_crisisMinibossFrom = dict.ContainsKey("crisis_miniboss_from") ? (int)dict["crisis_miniboss_from"].AsDouble() : 0;
 		_crisisBurstPerIntensity = dict.ContainsKey("crisis_burst_per_intensity") ? (int)dict["crisis_burst_per_intensity"].AsDouble() : _crisisBurstPerIntensity;
 		_lateGameSpawnMultiplier = dict.ContainsKey("late_game_spawn_multiplier") ? (float)dict["late_game_spawn_multiplier"].AsDouble() : _lateGameSpawnMultiplier;
 		_endgameSpawnMultiplier = dict.ContainsKey("endgame_spawn_multiplier") ? (float)dict["endgame_spawn_multiplier"].AsDouble() : _endgameSpawnMultiplier;

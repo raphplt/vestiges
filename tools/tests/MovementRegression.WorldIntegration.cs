@@ -57,6 +57,33 @@ public partial class MovementRegression
     }
 
     /// <summary>Marche vers l'est jusqu'au bord de la carte générée : le joueur ne quitte jamais le sol.</summary>
+    /// <summary>Plan 07 lot C : la première crise n'a pas de Colosse, la deuxième fait lever celui du biome.</summary>
+    private async Task CheckCrisisMiniboss(WorldSetup world)
+    {
+        EventBus bus = GetNode<EventBus>("/root/EventBus");
+        string expected = world.GetBiomeAt(_player.GlobalPosition)?.CrisisMiniboss;
+        bus.EmitSignal(EventBus.SignalName.CrisisStarted, 1, 1);
+        await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+        int afterFirst = CountEnemies(expected);
+        bus.EmitSignal(EventBus.SignalName.CrisisStarted, 2, 1);
+        await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+        int afterSecond = CountEnemies(expected);
+        Check(!string.IsNullOrEmpty(expected) && afterFirst == 0 && afterSecond == 1,
+            $"Crise : Colosse du biome ({expected}) absent à la 1re, levé à la 2e ({afterFirst} → {afterSecond})");
+        foreach (Node node in GetTree().GetNodesInGroup("enemies"))
+            if (node is Vestiges.Combat.Enemy enemy && enemy.IsActive)
+                world.GetNode<Vestiges.Spawn.EnemyPool>("EnemyPool").Return(enemy);
+    }
+
+    private int CountEnemies(string enemyId)
+    {
+        int count = 0;
+        foreach (Node node in GetTree().GetNodesInGroup("enemies"))
+            if (node is Vestiges.Combat.Enemy { IsActive: true } enemy && enemy.EnemyId == enemyId)
+                count++;
+        return count;
+    }
+
     /// <summary>Plan 02 lot A : horloge de jeu actif, score notifié sans kill, verdict du record figé avant sauvegarde.</summary>
     private async Task CheckScoreClock(WorldSetup world)
     {
@@ -191,6 +218,7 @@ public partial class MovementRegression
         await CheckGeneratedWater(world);
         await CheckWorldEdge(world);
         await CheckVoidDamage(world);
+        await CheckCrisisMiniboss(world);
         await CheckScoreClock(world);
         // Le pool historique garde ses instances préchauffées hors de l'arbre :
         // le banc les libère explicitement pour vérifier une fermeture sans erreurs RID.

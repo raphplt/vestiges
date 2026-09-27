@@ -10,6 +10,8 @@ public class BiomeData
     public Dictionary<string, float> TerrainWeights = new();
     public List<string> DayEnemyPool = new();
     public List<string> NightEnemyPool = new();
+    /// <summary>Colosse qui se lève pendant une crise éclatée dans ce biome (plan 07 lot C) ; vide : aucun.</summary>
+    public string CrisisMiniboss;
     public Dictionary<string, float> ResourceBias = new();
     public string AmbientColorDay;
     public string AmbientColorDusk;
@@ -153,6 +155,9 @@ public static class BiomeDataLoader
             foreach (Variant item in pool)
                 biome.NightEnemyPool.Add(item.AsString());
         }
+
+        if (dict.ContainsKey("crisis_miniboss"))
+            biome.CrisisMiniboss = dict["crisis_miniboss"].AsString();
 
         if (dict.ContainsKey("resource_bias"))
         {

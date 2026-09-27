@@ -72,6 +72,7 @@ Un seul lot d'implémentation ouvert à la fois. Un échec de lisibilité, de pe
 - [02 lot D](02-juiciness-score.md) : bilan de fin de run refait en trois zones (score et record, personnage et build complet, gains), révélé en trois temps après que le monde a pâli.
 - [04 C2](04-interfaces-et-hub.md) : Collection dans le menu de l'accueil. Armes et souvenirs de run en grille, détail et condition de déblocage à la demande, même règle de disponibilité que le loot.
 - [07 lot A](07-bestiaire-et-rencontres.md) : audit des données du bestiaire (`tools/audit_bestiary.py`). Les trois Colosses sont inatteignables en jeu, la Tisseuse ne sort qu'en crise dans les Marécages ; propositions à arbitrer.
+- [07 lot C](07-bestiaire-et-rencontres.md) : les Colosses reviennent en jeu, un par crise à partir de la deuxième (choix provisoire, consigné dans DECISIONS §7).
 - Travail fait dans un conteneur sans GPU : les points à revérifier sur la machine de Raphaël sont listés dans [A-VERIFIER.md](A-VERIFIER.md).
 
 **Mise à jour du 26 septembre (soir) :**

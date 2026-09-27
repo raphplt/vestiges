@@ -221,9 +221,15 @@ Constats :
 - **Menace à distance en exploration** : le Présage partout (20 à 25 %) et le Cracheur Pâli dans les Marécages et les Ruines. Le rééquilibrage du 23 septembre a pris.
 - Les étapes 1 à 3 (filmer chaque famille isolément, remplir la fiche, classer les rôles) restent à faire en jeu ; `--capture-bestiary` en donne les images fixes.
 
-Propositions, **non appliquées** car ce sont des choix d'équilibrage :
-- Colosses : un par crise à partir de la deuxième, celui du biome où elle éclate (le Colosse est un rendez-vous, pas un habitant) ;
-- Tisseuse : l'ajouter aux crises de la Forêt et des Champs, pour qu'elle existe hors des Marécages.
+Propositions :
+- **Colosses : appliquée ensuite, provisoire** (voir ci-dessous) ;
+- Tisseuse : l'ajouter aux crises de la Forêt et des Champs, pour qu'elle existe hors des Marécages. **Non appliquée.**
+
+**Lot C, Colosse de crise — 27 septembre 2026 (session cloud, choix provisoire) :** à partir de la deuxième crise, le Colosse du biome où se trouve le joueur se lève hors écran (`SpawnManager.TrySpawnCrisisMiniboss`). Il répond à l'étape 4 du lot C : donner une identité aux Résurgences sans seulement augmenter les PV.
+- Données : `crisis_miniboss_from` (2) dans `spawn_flow.json`, et `crisis_miniboss` dans chaque biome. Forêt et Champs ont le Colosse Sylvestre, Ruines et Carrière le Colosse de Béton, Marécages le Colosse des Profondeurs. Mettre `crisis_miniboss_from` à 0 désactive le tout.
+- Il garde son comportement (charge et onde), sa signature de mort (plan 02 J2) et son coffre épique garanti.
+- **Correctif trouvé en chemin** : la vague d'ouverture d'une crise plantait si la crise arrivait avant que `SpawnManager` ait résolu le joueur (il ne le résout qu'à son tick). La vague était perdue en entier.
+- Vérifié : `MovementRegression --run-integration`, dans une vraie `Main`. Pas de Colosse à la première crise, le Colosse Sylvestre à la deuxième.
 
 ### Lot B — Lisibilité et qualité des comportements
 

@@ -190,3 +190,4 @@ Raphaël, absent, demande de trancher au mieux et d'implémenter. Chaque choix c
 | Dash, invulnérabilité | 0 ms conservé (réglage validé avec le dash) | Pas de retour contraire ; le début de run vient d'être adouci |
 | Plans 13 et 14 | Recommandations des plans retenues (trois formes de butin, rareté fixe, coffres en conteneurs ; anomalies Écho, Oubli de soi, Effondrement, plafond 25 %, une ligne de texte) mais **pas d'implémentation avant les lots ci-dessus** | Gros chantiers ; le socle d'objets du plan 05 reste leur prérequis |
 | Boss de famille | Deux prototypes, plus tard (07) | Hors de l'ordre validé |
+| Colosses (07, 27 septembre, session cloud) | Un Colosse par crise à partir de la deuxième, celui du biome ; réglable et désactivable en JSON | L'audit montre les trois Colosses inatteignables en jeu ; les crises gagnent un rendez-vous au lieu de seulement plus de PV |

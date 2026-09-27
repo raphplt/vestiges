@@ -9,6 +9,7 @@
     },
     "day_enemy_pool": ["presage", "shadow_crawler", "fading_spitter", "rampant"],
     "night_enemy_pool": ["presage", "shade", "shade", "shade", "void_brute", "wailing_sentinel", "tisseuse", "hurleur"],
+    "crisis_miniboss": "colosse_swamp",
     "resource_bias": {
         "wood": 0.20,
         "stone": 0.10,
