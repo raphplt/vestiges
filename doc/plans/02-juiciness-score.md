@@ -239,7 +239,11 @@ Chaque lot : captures avant/après dans une vraie run (`tools/capture_run.sh`), 
 - **Orbes aspirées** : l'accélération existait (800 px/s², plafond 500 px/s). L'orbe s'étire désormais dans sa course, jusqu'à ×1,7 en longueur à pleine vitesse, et sème un éclat d'Essence toutes les 40 ms au-delà de 220 px/s (`PixelSparks`, soumis au budget d'effets, aucun nœud créé).
 - **Chaîne sonore** : chaque ramassage à moins de 0,5 s du précédent monte le son d'un cran (+3,5 %, jusqu'à +49 % en 14 crans), puis la chaîne retombe. La limite existante de 60 ms entre deux sons d'XP est conservée : une chaîne de 50 orbes ne sature pas. `AudioManager.Play` prend une hauteur de base.
 - **Barre d'XP** : elle pulse (éclat ×1,9 qui retombe en 0,2 s) à chaque orbe qui arrive.
-- **Non fait** : Essence et butin qui volent vers le HUD. Ils demandent une trajectoire de l'écran de jeu vers l'interface ; lot suivant.
+- **Essence vers le HUD** (ajouté ensuite) : chaque gain d'Essence localisé (mort d'une créature) envoie un grain cyan, avec une courte traînée, du lieu de la mort au compteur d'Essence. Le grain monte d'abord, puis file en accélérant (0,55 s), et le compteur pulse à son arrivée.
+  - `EssenceTracker` émet `EventBus.EssenceGained(montant, position)` ; `UI/EssenceFlights`, dans le HUD, dessine tous les grains d'un seul nœud (32 à la fois, au-delà ils sont omis).
+  - Le gain est crédité avant le vol et ne dépend pas de l'animation (garde-fou du lot C).
+  - Capture `--capture-crowd` : grains visibles entre la foule et la plaque.
+- **Non fait** : butin (armes au sol) qui vole vers le HUD ; les récompenses d'événement (sans lieu) n'ont pas de trajet.
 
 ### J4 livré (première passe) — 27 septembre 2026 (session cloud)
 

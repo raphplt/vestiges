@@ -67,6 +67,7 @@ public partial class EssenceTracker : Node
         if (GD.Randf() < ErasureEffectAt(position).EssenceChance)
             amount++;
         AddEssence(amount);
+        _eventBus.EmitSignal(EventBus.SignalName.EssenceGained, amount, position);
     }
 
     private ErasureManager _erasureManager;

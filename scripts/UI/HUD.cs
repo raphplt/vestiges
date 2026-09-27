@@ -51,6 +51,9 @@ public partial class HUD : CanvasLayer
     private Label _hpValueLabel;
     private ColorRect _xpFill;
     private float _xpPulse;
+    private EssenceFlights _essenceFlights;
+    private float _essencePulse;
+    private static readonly Color EssencePulseModulate = new(1.8f, 1.8f, 1.8f, 1f);
     private static readonly Color XpPulseModulate = new(1.9f, 1.9f, 1.9f, 1f);
     private PanelContainer _vitalsPlate;
 
@@ -159,8 +162,12 @@ public partial class HUD : CanvasLayer
 
         BuildVitals();
         _hudRoot.AddChild(new KillStreakDisplay { Name = "KillStreak", Position = new Vector2(PlateMargin + 4f, PlateMargin + 46f) });
+        _essenceFlights = new EssenceFlights { Name = "EssenceFlights" };
+        _essenceFlights.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
+        _essenceFlights.Setup(EssenceTarget, () => _essencePulse = 1f);
         BuildRunProgress();
         BuildScoreArea();
+        _hudRoot.AddChild(_essenceFlights);
         BuildWeaponBar();
         BuildPassiveBar();
 
@@ -224,6 +231,11 @@ public partial class HUD : CanvasLayer
         UpdateHpChip(dt);
         UpdateScoreCounter(dt);
         UpdateGainLabel(dt);
+        if (_essencePulse > 0f)
+        {
+            _essencePulse = Mathf.Max(0f, _essencePulse - dt * 6f);
+            _essenceLabel.Modulate = Colors.White.Lerp(EssencePulseModulate, _essencePulse);
+        }
         if (_xpPulse > 0f)
         {
             _xpPulse = Mathf.Max(0f, _xpPulse - dt * 5f);
@@ -748,6 +760,13 @@ public partial class HUD : CanvasLayer
     private void OnCrisisEnded(int crisisNumber)
     {
         _alertLabel.Text = "";
+    }
+
+    /// <summary>Arrivée des grains d'Essence : fin du compteur, dans le repère des vols.</summary>
+    private Vector2 EssenceTarget()
+    {
+        Rect2 rect = _essenceLabel.GetGlobalRect();
+        return _essenceFlights.GetGlobalTransform().AffineInverse() * new Vector2(rect.End.X - 16f, rect.GetCenter().Y);
     }
 
     private void OnEssenceChanged(int amount)
