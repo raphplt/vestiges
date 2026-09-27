@@ -38,7 +38,7 @@
     "attack_pattern": "arc",
     "fx": {
       "style": "smash",
-      "family": "heavy"
+      "family": "verdigris"
     },
     "summary": "Frappe lourde qui repousse tout.",
     "growth": { "damage": 3, "attack_speed": 2, "range": 1.5, "arc_angle": 1, "knockback": 1 },
@@ -65,7 +65,8 @@
     "damage_type": "physical",
     "attack_pattern": "linear",
     "fx": {
-      "projectile": "arrow"
+      "projectile": "arrow",
+      "family": "glass"
     },
     "summary": "Tire une flèche droit devant.",
     "growth": { "damage": 3, "attack_speed": 2, "projectile_speed": 1, "range": 1 },
@@ -92,7 +93,8 @@
     "damage_type": "physical",
     "attack_pattern": "burst",
     "fx": {
-      "projectile": "stone"
+      "projectile": "stone",
+      "family": "stone"
     },
     "summary": "Projette trois billes en éventail.",
     "growth": { "damage": 3, "attack_speed": 2, "projectile_speed": 1, "range": 1 },
@@ -119,7 +121,8 @@
     "damage_type": "physical",
     "attack_pattern": "linear",
     "fx": {
-      "style": "thrust"
+      "style": "thrust",
+      "family": "hybrid"
     },
     "summary": "Estoc rapide à courte portée.",
     "growth": { "damage": 3, "attack_speed": 2, "range": 2, "knockback": 1 },
@@ -144,7 +147,8 @@
     "damage_type": "physical",
     "attack_pattern": "linear",
     "fx": {
-      "projectile": "bolt"
+      "projectile": "bolt",
+      "family": "brass"
     },
     "summary": "Des clous qui traversent les rangs.",
     "growth": { "damage": 3, "attack_speed": 2, "projectile_speed": 1, "range": 1 },
@@ -172,7 +176,7 @@
     "attack_pattern": "arc",
     "fx": {
       "style": "cleave",
-      "family": "heavy"
+      "family": "rust"
     },
     "summary": "Balaie large autour de toi.",
     "growth": { "damage": 3, "attack_speed": 2, "range": 1.5, "arc_angle": 1, "knockback": 1 },
@@ -198,7 +202,8 @@
     "damage_type": "physical",
     "attack_pattern": "circular",
     "fx": {
-      "style": "whirl"
+      "style": "whirl",
+      "family": "rust"
     },
     "summary": "Fouette tout autour de toi.",
     "growth": { "damage": 3, "attack_speed": 2, "range": 1.5, "arc_angle": 1, "knockback": 1 },
@@ -224,7 +229,8 @@
     "damage_type": "physical",
     "attack_pattern": "burst",
     "fx": {
-      "projectile": "axe"
+      "projectile": "axe",
+      "family": "glass"
     },
     "summary": "Lance deux assiettes en éventail.",
     "growth": { "damage": 3, "attack_speed": 2, "projectile_speed": 1, "range": 1 },
@@ -284,7 +290,7 @@
     "attack_pattern": "circular",
     "fx": {
       "style": "bell",
-      "family": "heavy"
+      "family": "brass"
     },
     "summary": "Une onde qui repousse et ralentit.",
     "growth": { "damage": 3, "attack_speed": 2, "range": 1.5, "arc_angle": 1, "knockback": 1 },
@@ -315,7 +321,8 @@
     "damage_type": "physical",
     "attack_pattern": "linear",
     "fx": {
-      "style": "thrust"
+      "style": "thrust",
+      "family": "silk"
     },
     "summary": "Coups rapides qui te soignent.",
     "growth": { "damage": 3, "attack_speed": 2, "range": 2 },
@@ -371,7 +378,8 @@
     "damage_type": "essence",
     "attack_pattern": "orbital",
     "fx": {
-      "projectile": "note"
+      "projectile": "note",
+      "family": "hybrid"
     },
     "summary": "Des notes tournent autour de toi.",
     "growth": { "damage": 3, "range": 1.5, "orbital_speed": 1.5 },
@@ -397,7 +405,8 @@
     "damage_type": "hybrid",
     "attack_pattern": "chain",
     "fx": {
-      "style": "chain"
+      "style": "chain",
+      "family": "silk"
     },
     "summary": "Des clés qui sautent de cible en cible.",
     "growth": { "damage": 3, "attack_speed": 2, "chain_range": 1.5 },
@@ -424,7 +433,8 @@
     "damage_type": "physical",
     "attack_pattern": "homing",
     "fx": {
-      "projectile": "needle"
+      "projectile": "needle",
+      "family": "brass"
     },
     "summary": "Un tir qui trouve sa cible.",
     "growth": { "damage": 3, "attack_speed": 2, "projectile_speed": 1, "range": 1, "homing_strength": 0.5 },
@@ -450,7 +460,8 @@
     "damage_type": "essence",
     "attack_pattern": "burst",
     "fx": {
-      "projectile": "shard"
+      "projectile": "shard",
+      "family": "pale"
     },
     "summary": "Éblouit et désoriente.",
     "growth": { "damage": 3, "attack_speed": 2, "projectile_speed": 1, "range": 1 },
@@ -645,7 +656,8 @@
     "damage_type": "essence",
     "attack_pattern": "linear",
     "fx": {
-      "style": "cone"
+      "style": "cone",
+      "family": "verdigris"
     },
     "summary": "Un cône d'ondes qui s'élargit.",
     "growth": { "damage": 3, "attack_speed": 2, "projectile_speed": 1, "range": 1, "cone_angle_end": 1 },
@@ -679,7 +691,8 @@
     "damage_type": "hybrid",
     "attack_pattern": "arc",
     "fx": {
-      "style": "clock"
+      "style": "clock",
+      "family": "silk"
     },
     "summary": "Frappe et fige le temps autour.",
     "growth": { "damage": 3, "attack_speed": 2, "range": 1.5, "arc_angle": 1, "knockback": 1 },

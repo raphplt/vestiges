@@ -16,4 +16,7 @@ public enum FxFamily
     Rust,
     Pale,
     Silk,
+    Brass,
+    Glass,
+    Verdigris,
 }

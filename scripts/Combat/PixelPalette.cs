@@ -47,6 +47,9 @@ public static class PixelPalette
         new(FlameOrange, RustOrange, RustDark, Iridescent),             // Rust
         new(ErasureWhite, LightGray, MistViolet, DeepBlack),            // Pale
         new(ErasureWhite, OffWhite, LightGray, WarmGrayDark),           // Silk
+        new(FlowerYellow, HearthGold, RustOrange, RustDark),            // Brass
+        new(ErasureWhite, GlassBlue, OxidizedCopper, NightBlue),        // Glass
+        new(GlassBlue, OxidizedCopper, CanopyDark, DeepBlack),          // Verdigris
     };
 
     public static FxRamp Ramp(FxFamily family) => Ramps[(int)family];
@@ -67,6 +70,9 @@ public static class PixelPalette
         "rust" => FxFamily.Rust,
         "pale" => FxFamily.Pale,
         "silk" => FxFamily.Silk,
+        "brass" => FxFamily.Brass,
+        "glass" => FxFamily.Glass,
+        "verdigris" => FxFamily.Verdigris,
         _ => fallback,
     };
 
