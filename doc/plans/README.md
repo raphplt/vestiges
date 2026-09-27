@@ -53,7 +53,7 @@ Les numéros servent à identifier les plans, pas à imposer leur exécution int
 Un seul lot d'implémentation ouvert à la fois. Un échec de lisibilité, de performance ou de fun ramène au lot concerné avant expansion.
 
 **Mise à jour du 27 septembre, suite (session locale, sans Raphaël) :**
-- Bancs de A-VERIFIER toujours pas faits : charge entre 5 et 6,5 au démarrage.
+- Bancs de A-VERIFIER toujours pas faits : charge entre 4 et 7,7 toute la session (seuil fixé à 2).
 - [07 lot B](07-bestiaire-et-rencontres.md), étapes 1 et 3 : la charge de la Brute, le surgissement du Rampant et le cri du Hurleur s'annoncent au sol et laissent une fenêtre ; le Rampant ne blesse plus enfoui ; tuer un Hurleur qui crie coupe l'appel. Sons et animations branchés.
 - [04 lot B](04-interfaces-et-hub.md), étapes 1 à 4 : échelle typographique commune (rien sous 14 px en base 1080p, lisible en 720p), réglage « Taille du texte » 100/115/130 %, colonnes de la pause et onglets des paramètres qui défilent.
 - [08 P6b](08-direction-artistique.md) : un chantier par région de la carrière, sur le modèle des fermes (entrée de galerie étayée, voie et wagonnets, baraque, machines groupées). Le placement des fermes et des chantiers passe par un même `SiteComposer`.
