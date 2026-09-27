@@ -569,6 +569,8 @@ public partial class SettingsScreen : CanvasLayer
 			CombatFxSettings.PlayerAttackFx, toggled => CombatFxSettings.PlayerAttackFx = toggled));
 		vbox.AddChild(BuildToggleRow("Projectiles visibles",
 			CombatFxSettings.PlayerProjectiles, toggled => CombatFxSettings.PlayerProjectiles = toggled));
+		vbox.AddChild(BuildToggleRow("Arme en main (essai)",
+			CombatFxSettings.HeldWeapon, toggled => CombatFxSettings.HeldWeapon = toggled));
 		vbox.AddChild(BuildPercentSlider("Opacite des attaques",
 			CombatFxSettings.MinPlayerOpacity, CombatFxSettings.PlayerOpacity, value => CombatFxSettings.PlayerOpacity = value));
 		vbox.AddChild(BuildPercentSlider("Opacite des attaques ennemies",

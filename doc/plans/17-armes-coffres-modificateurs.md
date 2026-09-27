@@ -479,6 +479,15 @@ Décision 4.3 prise : la rareté vit sur les améliorations, plus sur l'arme. Ch
 
 **2B, couleur signature (27 septembre).** Chaque arme reprend la couleur de son icône dans ses effets (arcs, anneaux, éclats, impacts de projectiles), par `fx.family` dans `weapons.json`. Trois rampes ajoutées à `PixelPalette`, toutes tirées de la charte : laiton (Cloueuse, Cloche, Boussole), verre (Arc du gymnase, Assiettes) et vert-de-gris (Parcmètre, Transistor). Les autres reprennent une rampe existante : rouille (Pelle à neige, Rallonge), pierre (Lance-billes), violet (Parapluie, Boîte à musique), soie (Scalpel, Trousseau, Chronomètre), pâle (Polaroïd). Faucille, Râteau, Gomme, Lampe et les armes d'Essence gardent leur famille. Le rouge sang reste réservé aux attaques ennemies : les Gants de boxe, rouges, gardent l'Essence de l'écho. Les sprites des projectiles ne changent pas. Vérifié : `test_weapons` vert ; captures de douze armes (`--capture-weapons`), regardées.
 
+**2C livré en essai (27 septembre).** Option « Arme en main (essai) » dans Paramètres › Graphismes, **désactivée par défaut** (réponse de Raphaël au §6, question 4).
+- Seule l'arme du premier emplacement est tenue : montrer celle qui tire ferait passer la main d'une arme à l'autre à chaque coup.
+- Sprite 16×16 rendu par le même modèle que l'icône (`render_held`, `assets/weapons/held/`, champ `held_sprite` de `weapons.json`). Lisible en planche ; affiché à l'échelle 1, sans rotation (pas de pixels tournés).
+- Placement par orientation : la main droite suit le côté du corps (`HeldWeapon.Poses`) ; l'arme passe derrière le personnage quand cette main est du côté caché (SW, W, NW), et se retourne vers la gauche en regardant à gauche.
+- Élan de 3 px vers la cible à chaque coup de l'arme tenue ; l'arme suit le recul et l'écrasement du sprite (enfant du sprite du personnage) ; masquée à la mort.
+- Capture : `CAPTURE_EXTRA_ARGS="--capture-held [--weapons a,b]"`, huit directions et un coup par arme.
+- **Limites :** une seule prise par sprite (manche en bas à gauche) ; les objets posés (Boîte à musique, Polaroïd, Transistor) se tiennent comme une valise, sans pose propre. La main ne suit pas le balancement de la marche. Les personnages qui portent déjà une arme dessinée (le Traqueur et son arc dans le dos) en montrent deux.
+- À juger en jeu par Raphaël : garder, régler la taille ou la hauteur de la main, ou abandonner.
+
 ### Vague 3 — Modificateurs de run
 
 | Lot | Contenu | Vérification |

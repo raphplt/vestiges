@@ -22,6 +22,10 @@ ICON_SIZE = 32
 ICON_FILL = 30
 # Échelles essayées (pixels par unité), de la plus grande à la plus petite : l'objet remplit le cadre au mieux.
 ICON_SCALES = tuple(round(0.9 - 0.02 * i, 2) for i in range(25))
+# Arme en main (lot 2C, essai) : même modèle réduit à 16×16, la moitié de la hauteur du personnage.
+HELD_SIZE = 16
+HELD_FILL = 14
+HELD_SCALES = tuple(round(0.5 - 0.01 * i, 2) for i in range(31))
 # L'objet est modelé debout (axe +Y) puis incliné vers le haut-droit.
 DIAGONAL = rotation_z(-np.pi / 4)
 # Trois-quarts léger : la silhouette reste franche et l'objet garde son épaisseur.
@@ -71,21 +75,26 @@ def _union(*distances: np.ndarray) -> np.ndarray:
     return result
 
 
-def render_icon(model: IconModel) -> Image.Image:
+def render_icon(model: IconModel, size: int = ICON_SIZE, fill: int = ICON_FILL,
+                scales: Sequence[float] = ICON_SCALES) -> Image.Image:
     canvas = (72, 72)
     pivot = (36.0, 36.0)
     parts = [Part(_tilted(part.distance), part.material) for part in model.parts()]
-    for scale in ICON_SCALES:
+    for scale in scales:
         image = flatten(render_layers(parts, model.materials, model.yaw, canvas, pivot, scale))
         alpha = np.asarray(image)[..., 3]
         ys, xs = np.nonzero(alpha)
         width, height = xs.max() - xs.min() + 1, ys.max() - ys.min() + 1
-        if width <= ICON_FILL and height <= ICON_FILL:
-            icon = Image.new("RGBA", (ICON_SIZE, ICON_SIZE), (0, 0, 0, 0))
+        if width <= fill and height <= fill:
+            icon = Image.new("RGBA", (size, size), (0, 0, 0, 0))
             icon.paste(image.crop((xs.min(), ys.min(), xs.max() + 1, ys.max() + 1)),
-                       ((ICON_SIZE - width) // 2, (ICON_SIZE - height) // 2))
+                       ((size - width) // 2, (size - height) // 2))
             return icon
-    raise ValueError(f"{model.stem} : ne tient pas dans {ICON_FILL} px même à l'échelle {ICON_SCALES[-1]}")
+    raise ValueError(f"{model.stem} : ne tient pas dans {fill} px même à l'échelle {scales[-1]}")
+
+
+def render_held(model: IconModel) -> Image.Image:
+    return render_icon(model, HELD_SIZE, HELD_FILL, HELD_SCALES)
 
 
 def sickle() -> IconModel:

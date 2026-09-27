@@ -1,5 +1,6 @@
 """
 Icônes d'armes 32×32 du pipeline procédural (plan 17, lot 2B) : une par arme, écrite dans assets/weapons/icons/.
+Chaque arme reçoit aussi sa version 16×16 portée en main (lot 2C, essai), dans assets/weapons/held/.
 
 Usage :
     python3 tools/generate_weapon_icons.py                        # écrit les 24 icônes
@@ -18,9 +19,10 @@ from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from tools.sprites.weapons.icons import ICON_SIZE, catalog, render_icon  # noqa: E402
+from tools.sprites.weapons.icons import HELD_SIZE, ICON_SIZE, catalog, render_held, render_icon  # noqa: E402
 
 OUTPUT = Path("assets/weapons/icons")
+HELD_OUTPUT = Path("assets/weapons/held")
 
 
 def write_icons() -> list[tuple[str, Image.Image]]:
@@ -34,17 +36,29 @@ def write_icons() -> list[tuple[str, Image.Image]]:
     return icons
 
 
-def write_sheet(path: Path, icons: list[tuple[str, Image.Image]], scale: int) -> None:
+def write_held() -> list[tuple[str, Image.Image]]:
+    HELD_OUTPUT.mkdir(parents=True, exist_ok=True)
+    sprites = []
+    for model in catalog():
+        stem = model.stem.replace("weapon_icon_", "weapon_held_")
+        sprite = render_held(model)
+        sprite.save(HELD_OUTPUT / f"{stem}.png")
+        sprites.append((stem, sprite))
+    print(f"[generate_weapon_icons] {len(sprites)} armes en main dans {HELD_OUTPUT}/")
+    return sprites
+
+
+def write_sheet(path: Path, icons: list[tuple[str, Image.Image]], scale: int, size: int = ICON_SIZE) -> None:
     """Six colonnes : chaque icône agrandie sans lissage, et à taille réelle en dessous, sur fond de HUD."""
     columns = 6
-    cell = ICON_SIZE * scale + 24
+    cell = size * scale + 24
     rows = (len(icons) + columns - 1) // columns
-    sheet = Image.new("RGBA", (cell * columns, (cell + ICON_SIZE + 12) * rows), (26, 26, 46, 255))
+    sheet = Image.new("RGBA", (cell * columns, (cell + size + 12) * rows), (26, 26, 46, 255))
     for index, (_, icon) in enumerate(icons):
         x = (index % columns) * cell + 12
-        y = (index // columns) * (cell + ICON_SIZE + 12) + 12
-        sheet.alpha_composite(icon.resize((ICON_SIZE * scale, ICON_SIZE * scale), Image.NEAREST), (x, y))
-        sheet.alpha_composite(icon, (x, y + ICON_SIZE * scale + 6))
+        y = (index // columns) * (cell + size + 12) + 12
+        sheet.alpha_composite(icon.resize((size * scale, size * scale), Image.NEAREST), (x, y))
+        sheet.alpha_composite(icon, (x, y + size * scale + 6))
     path.parent.mkdir(parents=True, exist_ok=True)
     sheet.save(path)
     print(f"[generate_weapon_icons] planche : {path}")
@@ -56,8 +70,10 @@ def main() -> None:
     parser.add_argument("--scale", type=int, default=6)
     args = parser.parse_args()
     icons = write_icons()
+    held = write_held()
     if args.sheet:
         write_sheet(args.sheet, icons, args.scale)
+        write_sheet(args.sheet.with_name(f"{args.sheet.stem}-main{args.sheet.suffix}"), held, args.scale * 2, HELD_SIZE)
 
 
 if __name__ == "__main__":
