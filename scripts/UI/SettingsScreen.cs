@@ -5,7 +5,7 @@ using Vestiges.Infrastructure;
 namespace Vestiges.UI;
 
 /// <summary>
-/// Settings screen with tabbed navigation (Audio, Graphismes, Controles).
+/// Settings screen with tabbed navigation (Audio, Graphismes, Contrôles).
 /// Pixel art NinePatch styling. Close button + ESC.
 /// Usable both in-game (pause) and from the Hub via gear button.
 /// </summary>
@@ -230,7 +230,7 @@ public partial class SettingsScreen : CanvasLayer
 
 		Label title = new()
 		{
-			Text = "PARAMETRES",
+			Text = "PARAMÈTRES",
 			HorizontalAlignment = HorizontalAlignment.Center
 		};
 		title.AddThemeFontSizeOverride("font_size", 22);
@@ -275,7 +275,7 @@ public partial class SettingsScreen : CanvasLayer
 		AddTab(innerBar, "audio", "Audio");
 		AddTab(innerBar, "graphismes", "Graphismes");
 		AddTab(innerBar, "effets", "Effets");
-		AddTab(innerBar, "controles", "Controles");
+		AddTab(innerBar, "controles", "Contrôles");
 
 		tabBar.AddChild(tabMargin);
 		return tabBar;
@@ -478,7 +478,7 @@ public partial class SettingsScreen : CanvasLayer
 		margin.AddChild(vbox);
 
 		// Fullscreen toggle
-		vbox.AddChild(BuildToggleRow("Plein ecran",
+		vbox.AddChild(BuildToggleRow("Plein écran",
 			DisplayServer.WindowGetMode() != DisplayServer.WindowMode.Windowed,
 			(toggled) =>
 			{
@@ -503,7 +503,7 @@ public partial class SettingsScreen : CanvasLayer
 		vbox.AddChild(BuildCycleRow("Langue",
 			LocaleManager.Instance != null
 				? LocaleManager.Instance.CurrentLocaleName
-				: "Francais",
+				: "Français",
 			(btn) =>
 			{
 				if (LocaleManager.Instance == null) return;
@@ -571,11 +571,11 @@ public partial class SettingsScreen : CanvasLayer
 			CombatFxSettings.PlayerProjectiles, toggled => CombatFxSettings.PlayerProjectiles = toggled));
 		vbox.AddChild(BuildToggleRow("Arme en main (essai)",
 			CombatFxSettings.HeldWeapon, toggled => CombatFxSettings.HeldWeapon = toggled));
-		vbox.AddChild(BuildPercentSlider("Opacite des attaques",
+		vbox.AddChild(BuildPercentSlider("Opacité des attaques",
 			CombatFxSettings.MinPlayerOpacity, CombatFxSettings.PlayerOpacity, value => CombatFxSettings.PlayerOpacity = value));
-		vbox.AddChild(BuildPercentSlider("Opacite des attaques ennemies",
+		vbox.AddChild(BuildPercentSlider("Opacité des attaques ennemies",
 			CombatFxSettings.MinEnemyOpacity, CombatFxSettings.EnemyOpacity, value => CombatFxSettings.EnemyOpacity = value));
-		vbox.AddChild(BuildPercentSlider("Secousses d'ecran",
+		vbox.AddChild(BuildPercentSlider("Secousses d'écran",
 			0f, CombatFxSettings.ScreenShake, value => CombatFxSettings.ScreenShake = value));
 
 		return margin;
@@ -721,7 +721,7 @@ public partial class SettingsScreen : CanvasLayer
 
 		Button resetBtn = new()
 		{
-			Text = "Reinitialiser",
+			Text = "Réinitialiser",
 			CustomMinimumSize = new Vector2(180, 36),
 			FocusMode = Control.FocusModeEnum.None
 		};
@@ -807,7 +807,7 @@ public partial class SettingsScreen : CanvasLayer
 
 		Label hint = new()
 		{
-			Text = "[Echap] ou [X] Fermer",
+			Text = "[Échap] ou [X] Fermer",
 			HorizontalAlignment = HorizontalAlignment.Center
 		};
 		hint.AddThemeFontSizeOverride("font_size", 13);
@@ -822,8 +822,8 @@ public partial class SettingsScreen : CanvasLayer
 		return level switch
 		{
 			ParticleLevel.Full => "Toutes",
-			ParticleLevel.Reduced => "Reduites",
-			_ => "Desactivees",
+			ParticleLevel.Reduced => "Réduites",
+			_ => "Désactivées",
 		};
 	}
 }
