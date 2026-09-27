@@ -24,6 +24,7 @@ namespace Vestiges.Tests;
 /// --capture-paths : chemins de terre par biome, raccord à une rue, vue dézoomée du départ (RunObservation.Paths.cs).
 /// --capture-farms : fermes des Champs Sauvages les plus proches du départ, normal et dézoomé (RunObservation.Farms.cs).
 /// --capture-quarries : chantiers de la Carrière Effondrée les plus proches du départ, normal et dézoomé (idem).
+/// --capture-omen : présage d'une Résurgence, avant, pendant l'avertissement et pendant la crise (RunObservation.Omen.cs).
 /// --show-collisions : formes de collision affichées dans n'importe quel mode de capture.
 /// --capture-landmarks : églises et pylônes des Ruines Urbaines, normal et dézoomé (RunObservation.UrbanLandmarks.cs).
 /// --capture-levelup-fx : effet de montée de niveau au ralenti, puis entrée de l'écran de choix (RunObservation.LevelUpFx.cs).
@@ -87,6 +88,8 @@ public partial class RunObservation : Node
                 await CapturePropHotspots();
             else if (Array.IndexOf(args, "--capture-junctions") >= 0)
                 await CaptureJunctions();
+            else if (Array.IndexOf(args, "--capture-omen") >= 0)
+                await CaptureOmen();
             else if (Array.IndexOf(args, "--capture-quarries") >= 0)
                 await CaptureQuarrySites();
             else if (Array.IndexOf(args, "--capture-farms") >= 0)

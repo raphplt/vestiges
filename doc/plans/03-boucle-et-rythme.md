@@ -156,6 +156,14 @@ Le banc relève désormais un indice de pression : les dégâts reçus par minut
 - **Vérifié** : `MovementRegression --run-integration` dans une vraie `Main`. Oubli accéléré pendant la crise puis rétabli, coffre rare posé à 307 px hors de l'eau, Essence d'une mort 2 pendant l'accalmie puis 1 dès la crise suivante.
 - **Non fait** : étapes 1 (sémantique écrite du calendrier), 2 (signal sonore d'avertissement, plan 15) et 5 (sortie toujours possible, à juger en jeu). Le coffre n'a pas encore de repère au sol ni de flèche de bord.
 
+**Lot C, étape 2 — présage des Résurgences, 27 septembre 2026 (session locale) :** l'avertissement avait déjà sa musique (crépuscule), son son grave (« danger » choisi en A2) et son compte à rebours au HUD. Il lui manquait les deux signaux visuels de la V2 (§8).
+- **Bords de l'écran qui se désaturent** (`UI/CrisisOmen`, `crisis_omen.gdshader`) : pendant l'avertissement, les couleurs quittent les bords en trame (un pixel est terni ou ne l'est pas, charte §5). L'effet monte vite puis lentement jusqu'au début de la crise, reste pendant la crise et se retire en 2,5 s à l'accalmie. Il passe sous le voile de l'oubli et sous le HUD. Hors avertissement et crise, le calque est masqué et ne coûte rien.
+- **Créatures qui s'agitent** : pendant l'avertissement, leurs animations accélèrent (×1,7), elles piétinent. Elles ne fuient pas : le flux de la crise arrive quand même.
+- Capture `--capture-omen` (nouveau mode : la prochaine crise est avancée ; images avant, pendant l'avertissement et pendant la crise), regardée.
+- Case « Signaux précurseurs des Résurgences » cochée dans la roadmap V2 §25.
+- **Écart avec la V2 :** l'avertissement dure 20 s (`warning_duration_sec`), la V2 en prévoit 30 ; la donnée n'est pas changée.
+- **Non mesuré :** le coût de la passe plein écran pendant une crise, machine chargée toute la session. À passer au banc.
+
 ### Lot D — Montée en puissance et diversité
 
 1. Reprendre trois armes et quelques objets de 05 ; établir deux builds aux comportements visiblement différents.

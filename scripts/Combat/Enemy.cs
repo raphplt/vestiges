@@ -134,6 +134,9 @@ public partial class Enemy : CharacterBody2D
 	private readonly Dictionary<string, IEnemyAbility> _abilityCache = new();
 	private bool _abilityReplacesAttack;
 
+	/// <summary>Tempo des animations de toutes les créatures : le présage d'une Résurgence les agite (plan 03 lot C).</summary>
+	public static float AnimationTempo = 1f;
+
 	public bool IsActive { get; private set; }
 	public bool IsDying => _isDying;
 	public float HpRatio => _maxHp > 0 ? _currentHp / _maxHp : 0f;
@@ -1340,6 +1343,9 @@ public partial class Enemy : CharacterBody2D
 			action = SpriteAction.Idle;
 
 		PlaySpriteAnim(SpriteAnimations[(int)_facing.Current, (int)action]);
+		float tempo = _isDying ? 1f : AnimationTempo;
+		if (_sprite.SpeedScale != tempo)
+			_sprite.SpeedScale = tempo;
 	}
 
 	private static StringName[,] BuildSpriteAnimations()
