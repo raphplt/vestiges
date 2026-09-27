@@ -16,6 +16,9 @@ public sealed class NodePool<T> where T : Node
 
     public int Created { get; private set; }
 
+    /// <summary>Objets sortis du pool et pas encore rendus.</summary>
+    public int InUse => Created - _free.Count;
+
     public NodePool(Node parent, Func<T> factory)
     {
         _parent = parent;

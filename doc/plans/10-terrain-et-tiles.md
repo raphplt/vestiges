@@ -499,3 +499,19 @@ Le banc dense ne tuait rien (PV ×10 000). Nouveau mode `--churn` de `MovementDe
 - **Créations** : l'écran de level-up construit ses cartes à chaque niveau (Label, conteneurs, boutons), c'est attendu. Les pools grandissent jusqu'à leur régime : un `DeathFx` vit 5 s, soit environ 130 en vol à 25 morts/s. Les annonces au sol (`GroundTelegraph`) apparaissent une seule fois par ennemi et par espèce, dans le cache de capacités. Aucune création par coup ni par mort au-delà de ces régimes transitoires.
 - **Allocations** : 1,5 Mo/s avec des morts, contre 0,14 Mo/s sans. Elles restent en génération 0, sans pic visible au p99. Pas un chantier prioritaire.
 - **Reste du lot 3** : XP laissée derrière soi en run nomade longue, Effacement tardif, builds à cône continu.
+
+### Lot 4, première partie — orbes d'XP endormies loin du joueur, 27 septembre 2026
+
+**Mesure** (lot 3) : en run nomade de 10 minutes (`MEASURE_EXTRA_ARGS="--nomad" tools/measure_run.sh`, quatre seeds), 94 à 323 orbes restent au sol à la fin, jusqu'à 370. Chacune garde son rappel de physique, son sprite animé et sa lueur de particules GPU. Le banc (`--orbs 400`, orbes semées entre 1 200 et 3 000 px) chiffre leur coût à 0,7 ms par image à 720p : 294 → 244 FPS.
+
+**Correctif** : au-delà de 750 px (hors de l'écran, et au-delà de l'attraction même avec un gros aimant), une orbe s'endort. Elle n'a alors plus de physique, d'animation ni de lueur. `CombatPools` fait une ronde toutes les 0,25 s et la réveille quand le joueur revient à portée, avec 100 px d'hystérésis. Sa zone reste active : marcher dessus la ramasse. L'XP est conservée, rien ne disparaît. Un jeton de sommeil invalide l'entrée d'une orbe ramassée puis réutilisée.
+
+- **Vérifié** : `--check-orb-sleep` (orbe endormie à 1 400 px, réveillée et ramassée au retour du joueur, XP exacte) ; smoke test.
+- **Banc A/B contre `HEAD`**, 400 orbes lointaines, 2 passes :
+
+  | Résolution | FPS | p99 |
+  |---|---|---|
+  | 720p | 244,0 → **289,0** | 8,9 → 6,8 ms |
+  | 1 080p | 229,0 → **256,9** | 9,2 → 7,8 ms |
+
+- Le banc dense quitte désormais proprement, sinon le crash de fermeture interrompait la série. Il compte les orbes par parcours, pour compiler aussi dans les worktrees de base.

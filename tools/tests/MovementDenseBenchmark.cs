@@ -152,6 +152,10 @@ public partial class MovementDenseBenchmark : Node
             Node container = _world.GetNode("EnemyContainer");
             _pool = pool;
             _container = container;
+            // --orbs N : orbes d'XP semées loin du joueur, hors de portée d'attraction (butin laissé derrière soi en nomade).
+            int orbs = int.Parse(Argument(args, "--orbs", "0"), CultureInfo.InvariantCulture);
+            for (int i = 0; i < orbs; i++)
+                CombatPools.Instance.SpawnXpOrb(Vector2.FromAngle(i * 2.3999632f) * (1200f + 1800f * ((i * 0.618034f) % 1f)), 1f);
             // --weapons a,b : armes ajoutées au personnage (builds à effets de zone, morts en rafale avec --churn).
             foreach (string weapon in Argument(args, "--weapons", "").Split(',', StringSplitOptions.RemoveEmptyEntries))
                 _player.AddWeapon(WeaponDataLoader.Get(weapon));
@@ -308,6 +312,32 @@ public partial class MovementDenseBenchmark : Node
         }
     }
 
+    private static int CountXpOrbs()
+    {
+        int count = 0;
+        foreach (Node child in CombatPools.Instance.GetChildren())
+        {
+            if (child is XpOrb { Visible: true })
+                count++;
+        }
+        return count;
+    }
+
+    /// <summary>
+    /// Libère la run et fait passer le ramasse-miettes avant de quitter : sinon le crash de fermeture des builds de
+    /// debug interrompt la série. Autonome (sans GameExit) pour compiler aussi dans les worktrees de base de bench_ab.
+    /// </summary>
+    private async Task QuitCleanly(int exitCode)
+    {
+        _world.QueueFree();
+        await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+        await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+        GC.Collect();
+        GC.WaitForPendingFinalizers();
+        await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+        GetTree().Quit(exitCode);
+    }
+
     private void SeedSeenNodes(Node root)
     {
         _seenNodes.Add(root.GetInstanceId());
@@ -378,7 +408,7 @@ public partial class MovementDenseBenchmark : Node
                 traveled_pixels = _distance, dash_traveled_pixels = _dashDistance,
                 // Noms historiques du premier banc : moniteurs Godot, pas un profil CPU isolé.
                 process_cpu_mean_ms = _processSum / _samples, physics_cpu_mean_ms = _physicsSum / _samples,
-                enemies = _enemyCount, churn = _churn, respawns = _respawns,
+                enemies = _enemyCount, churn = _churn, xp_orbs = CountXpOrbs(), respawns = _respawns,
                 respawns_per_second = _respawns / (_frames.Take(_samples).Sum() / 1000),
                 render_cpu_mean_ms = _renderCpuSum / _samples, render_gpu_mean_ms = _renderGpuSum / _samples,
                 draw_calls_mean = _drawCallsSum / _samples, rendered_objects_mean = _objectsSum / _samples,
@@ -414,7 +444,7 @@ public partial class MovementDenseBenchmark : Node
             if (saved != Error.Ok)
                 throw new IOException($"Capture : {saved}");
             GD.Print($"[MovementDenseBenchmark] RESULT valid={valid} output={_output}");
-            GetTree().Quit(valid ? 0 : 1);
+            await QuitCleanly(valid ? 0 : 1);
         }
         catch (Exception ex)
         {

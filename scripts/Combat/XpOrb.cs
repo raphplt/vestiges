@@ -21,6 +21,10 @@ public partial class XpOrb : Area2D
     private const float ChainPitchStep = 0.035f;
     private const float TrailInterval = 0.04f;
     private const float TrailMinSpeed = 220f;
+    // Au-delà, l'orbe est hors de l'écran et hors d'attraction : elle s'endort (ni physique, ni animation, ni lueur)
+    // et CombatPools la réveille quand le joueur revient. Le nomade en laisse des centaines derrière lui.
+    private const float SleepDistance = 750f;
+    private const float SleepAttractionMargin = 150f;
 
     private static ulong _lastCollectMs;
     private static int _chain;
@@ -35,6 +39,15 @@ public partial class XpOrb : Area2D
     private Vector2 _hopTo;
     private float _hopElapsed = -1f;
     private float _trailTimer;
+
+    public bool IsAsleep { get; private set; }
+
+    /// <summary>Change à chaque endormissement : une entrée de CombatPools d'un sommeil précédent est périmée.</summary>
+    public int SleepToken { get; private set; }
+
+    /// <summary>Distance au joueur au-delà de laquelle l'orbe dort, attraction du joueur comprise.</summary>
+    public static float SleepRadius(Player player) =>
+        Mathf.Max(SleepDistance, BaseDriftRadius * player.XpMagnetMultiplier + SleepAttractionMargin);
 
     // Textures statiques pour l'animation 2 frames
     private static Texture2D _orbFrame1;
@@ -105,6 +118,7 @@ public partial class XpOrb : Area2D
         _xpValue = xpValue;
         _currentSpeed = 0f;
         _collected = false;
+        IsAsleep = false;
         // Léger décalage pour désynchroniser le flottement des orbes entre elles
         _floatTime = (float)GD.RandRange(0, Mathf.Tau);
         _sprite.Play(PulseAnimation);
@@ -153,6 +167,12 @@ public partial class XpOrb : Area2D
         float attractionRadiusSq = BaseAttractionRadius * magnetMult * BaseAttractionRadius * magnetMult;
         float driftRadiusSq = BaseDriftRadius * magnetMult * BaseDriftRadius * magnetMult;
         float distSq = GlobalPosition.DistanceSquaredTo(_player.GlobalPosition);
+        float sleepRadius = SleepRadius(_player);
+        if (distSq > sleepRadius * sleepRadius)
+        {
+            Sleep();
+            return;
+        }
 
         if (distSq < attractionRadiusSq)
         {
@@ -176,6 +196,8 @@ public partial class XpOrb : Area2D
         if (body is Player)
         {
             _collected = true;
+            // Ramassée en dormant (le joueur marche dessus) : CombatPools l'oubliera à sa prochaine ronde.
+            IsAsleep = false;
 
             CombatPools.Instance?.ShowXpCollect(GlobalPosition);
 
@@ -221,6 +243,25 @@ public partial class XpOrb : Area2D
             Size = 1,
             Decorative = true,
         });
+    }
+
+    /// <summary>Inerte loin du joueur ; la zone reste active, marcher dessus la ramasse quand même.</summary>
+    private void Sleep()
+    {
+        IsAsleep = true;
+        SleepToken++;
+        SetPhysicsProcess(false);
+        _sprite.Pause();
+        _glow.Emitting = false;
+        CombatPools.Instance?.AddSleepingOrb(this);
+    }
+
+    public void Wake()
+    {
+        IsAsleep = false;
+        _sprite.Play(PulseAnimation);
+        _glow.Emitting = _glow.Visible;
+        SetPhysicsProcess(true);
     }
 
     private void CachePlayer()

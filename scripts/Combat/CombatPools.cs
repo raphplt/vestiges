@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using Godot;
+using Vestiges.Core;
 
 namespace Vestiges.Combat;
 
@@ -16,6 +18,12 @@ public partial class CombatPools : Node2D
     private NodePool<PixelFx> _pixelFx;
     private NodePool<DeathFx> _deathFx;
     private NodePool<XpOrb> _xpOrbs;
+    // Orbes endormies loin du joueur : une ronde toutes les 0,25 s réveille celles dont il se rapproche.
+    private const float WakeCheckInterval = 0.25f;
+    private const float WakeHysteresis = 100f;
+    private readonly List<(XpOrb Orb, Vector2 Position, int Token)> _sleepingOrbs = new();
+    private float _wakeTimer;
+    private Player _player;
 
     /// <summary>Étincelles et éclats de combat, tracés par un seul nœud.</summary>
     public PixelSparks Sparks { get; private set; }
@@ -62,6 +70,43 @@ public partial class CombatPools : Node2D
     {
         if (Instance == this)
             Instance = null;
+    }
+
+    public void AddSleepingOrb(XpOrb orb)
+    {
+        _sleepingOrbs.Add((orb, orb.GlobalPosition, orb.SleepToken));
+    }
+
+    public override void _Process(double delta)
+    {
+        if (_sleepingOrbs.Count == 0)
+            return;
+        _wakeTimer -= (float)delta;
+        if (_wakeTimer > 0f)
+            return;
+        _wakeTimer = WakeCheckInterval;
+        if (_player == null || !IsInstanceValid(_player))
+        {
+            _player = GetTree().GetFirstNodeInGroup("player") as Player;
+            if (_player == null)
+                return;
+        }
+        Vector2 playerPosition = _player.GlobalPosition;
+        float wakeRadius = XpOrb.SleepRadius(_player) - WakeHysteresis;
+        float wakeRadiusSq = wakeRadius * wakeRadius;
+        for (int i = _sleepingOrbs.Count - 1; i >= 0; i--)
+        {
+            (XpOrb orb, Vector2 position, int token) = _sleepingOrbs[i];
+            // Ramassée en dormant, ou réutilisée depuis : l'entrée ne vaut plus rien.
+            bool stillAsleep = orb.IsAsleep && orb.SleepToken == token;
+            if (stillAsleep && position.DistanceSquaredTo(playerPosition) > wakeRadiusSq)
+                continue;
+            if (stillAsleep)
+                orb.Wake();
+            int last = _sleepingOrbs.Count - 1;
+            _sleepingOrbs[i] = _sleepingOrbs[last];
+            _sleepingOrbs.RemoveAt(last);
+        }
     }
 
     public EnemyProjectile TakeEnemyProjectile() => _enemyProjectiles.Take();
@@ -245,6 +290,9 @@ public partial class CombatPools : Node2D
             Decorative = true,
         });
     }
+
+    /// <summary>Orbes d'XP au sol, pas encore ramassées (bancs de mesure).</summary>
+    public int XpOrbsOnGround => _xpOrbs.InUse;
 
     /// <summary>Objets créés depuis le début de la run, tous pools confondus (bancs de mesure).</summary>
     public int CreatedCount => _enemyProjectiles.Created + _playerProjectiles.Created + _damageNumbers.Created + _pixelFx.Created

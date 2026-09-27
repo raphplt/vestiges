@@ -41,6 +41,7 @@ namespace Vestiges.Tests;
 /// --capture-chests : chaque coffre cadré, avec et sans décors (RunObservation.Chests.cs).
 /// --capture-levelup : l'écran de level-up, une capture par rareté (RunObservation.LevelUp.cs).
 /// --capture-oublis : les neuf Oublis de carte pris d'un coup, effets mesurés (RunObservation.Oublis.cs).
+/// --check-orb-sleep : orbe d'XP endormie loin du joueur, réveillée et ramassée à son retour (RunObservation.OrbSleep.cs).
 /// --close-window : quitte par la demande de fermeture de la fenêtre au lieu de GameExit.
 /// --capture-rift : offre d'une Faille, Péril et Oubli dans la pause, Oubli levé au Mémorial (RunObservation.Landmarks.cs).
 /// --capture-memorial : parcours complet d'un Mémorial, du réveil aux services (RunObservation.Landmarks.cs).
@@ -135,6 +136,8 @@ public partial class RunObservation : Node
                 await CaptureRift();
             else if (Array.IndexOf(args, "--capture-oublis") >= 0)
                 await CaptureOublis();
+            else if (Array.IndexOf(args, "--check-orb-sleep") >= 0)
+                await CheckOrbSleep();
             else if (Array.IndexOf(args, "--loot-draws") >= 0)
                 MeasureLootDraws(int.Parse(Argument(args, "--loot-draws", "1000"), CultureInfo.InvariantCulture));
             else if (Array.IndexOf(args, "--capture-bestiary") >= 0)
@@ -316,6 +319,7 @@ public partial class RunObservation : Node
         Dictionary<int, double> levelTimes = new();
         int lastLevel = 1;
         double firstVisible = -1;
+        int maxOrbs = 0;
         RandomNumberGenerator rng = new() { Seed = seed };
         Vector2 waypoint = _player.GlobalPosition;
         double nextSample = 1.0;
@@ -441,6 +445,7 @@ public partial class RunObservation : Node
             }
             if (visible > 0 && firstVisible < 0)
                 firstVisible = t;
+            maxOrbs = Math.Max(maxOrbs, CombatPools.Instance?.XpOrbsOnGround ?? 0);
             visibleSamples.Add(visible);
             rows.Add(string.Create(CultureInfo.InvariantCulture,
                 $"{t:F0},{visible},{near},{alive},{tracker.TotalSpawned},{tracker.TotalKilled},{level},{hitDamage:F0}"));
@@ -460,6 +465,7 @@ public partial class RunObservation : Node
                 openRifts++;
         summary.Append(CultureInfo.InvariantCulture, $" rifts={Rift.All.Count} rifts_open={openRifts}");
         summary.Append(CultureInfo.InvariantCulture, $" peril={peril} kills={tracker.TotalKilled} spawned={tracker.TotalSpawned}");
+        summary.Append(CultureInfo.InvariantCulture, $" xp_orbs_end={CombatPools.Instance?.XpOrbsOnGround ?? 0} xp_orbs_max={maxOrbs}");
         summary.Append(CultureInfo.InvariantCulture,
             $" chests_total={GetTree().GetNodesInGroup("chests").Count} chests_seen={seenChests.Count} chests_clear={clearChests.Count} chests_signaled={signaledChests.Count} first_chest_s={firstChestSeen:F0}");
         foreach ((int from, int to) in new[] { (0, 60), (60, 120), (120, 180), (180, 300) })
