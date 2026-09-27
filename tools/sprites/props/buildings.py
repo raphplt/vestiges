@@ -298,13 +298,13 @@ def church(stem: str, seed: int, mirrored: bool) -> PropModel:
     """Église de quartier, repère rare (plan 08 P2) : nef longée de contreforts et de hautes baies en ogive, clocher
     à une extrémité avec abat-sons et flèche basse, croix penchée. Toit de la nef crevé, gravats devant le portail.
     Le clocher dépasse les immeubles voisins sans sortir de la hauteur permise (~190 px)."""
-    STONE, TRIM, GLASS, ROOF, DOOR, MOSS, RUBBLE, INTERIOR, BRONZE = range(9)
+    STONE, TRIM, GLASS, ROOF, DOOR, MOSS, RUBBLE, INTERIOR, BRONZE, BEAM = range(10)
     materials = [
         make_material("stone", "#9C9384"), make_material("trim", "#BDB39C"),
         make_material("glass", "#3A3456", contrast=0.6), make_material("roof", "#4E4A54"),
         make_material("door", "#3A2E28", contrast=0.6), make_material("moss", "#5A7A38"),
         make_material("rubble", "#8A857C"), make_material("interior", "#1E1A1D", contrast=0.4),
-        make_material("bronze", "#8A6A3A"),
+        make_material("bronze", "#8A6A3A"), make_material("beam", "#6E4E36", contrast=0.7),
     ]
     w = Weathering(seed)
     half_w = 4 * CELL_WIDTH * 0.46
@@ -344,6 +344,13 @@ def church(stem: str, seed: int, mirrored: bool) -> PropModel:
         portal = ogive(p, tower_x, 0.0, 2.0 * M, 0.55 * M, tower, 0.25 * M)
         return _union(bays_cut, belfry, portal)
 
+    def breach_cut(p: np.ndarray) -> np.ndarray:
+        # Brèche cassée le long des tuiles (rangs de 0,3 m, tuiles de 0,4 m), comme les immeubles (plan 08 P2) :
+        # un bord en dents de scie au lieu d'un disque net.
+        cell = np.floor(p / np.array([0.4 * M, 0.3 * M, 0.3 * M]))
+        jag = (_hash(cell[:, 0], cell[:, 1], cell[:, 2] + seed) - 0.5) * 0.8 * M
+        return sphere(p, breach, 1.3 * M) - jag
+
     def nave_roof(p: np.ndarray) -> np.ndarray:
         local = p - np.array([nave_cx, wall_h, 0])
         slope = (np.abs(local[:, 2]) * ridge / (nave_d + 0.3 * M) + local[:, 1] - ridge) / np.sqrt(1 + (ridge / nave_d) ** 2)
@@ -365,7 +372,7 @@ def church(stem: str, seed: int, mirrored: bool) -> PropModel:
         body = _union(nave, gable, _box(p, (tower_x, tower_h / 2, 0), (tower, tower_h / 2, tower)))
         buttresses = _union(*(_box(p, (x + (2 * nave_hw) / 8, 1.4 * M, nave_d + 0.25 * M), (0.22 * M, 1.4 * M, 0.3 * M))
                               for x in bays[:-1]))
-        return np.maximum(_union(body, buttresses), -_union(openings(p), sphere(p, breach, 1.3 * M)))
+        return np.maximum(_union(body, buttresses), -_union(openings(p), breach_cut(p)))
 
     def inside(p: np.ndarray) -> np.ndarray:
         under_roof = np.maximum(nave_roof(p + np.array([0, 0.2 * M, 0])), np.abs(p[:, 0] - nave_cx) - (nave_hw - 0.3 * M))
@@ -382,7 +389,13 @@ def church(stem: str, seed: int, mirrored: bool) -> PropModel:
         return np.maximum(_union(cornice, band, eaves), -openings(p))
 
     def roof(p: np.ndarray) -> np.ndarray:
-        return _union(np.maximum(nave_roof(p), -sphere(p, breach, 1.3 * M)), spire(p))
+        return _union(np.maximum(nave_roof(p), -breach_cut(p)), spire(p))
+
+    def rafters(p: np.ndarray) -> np.ndarray:
+        # Chevrons restés en place sous les tuiles tombées : la brèche se lit comme un toit crevé, pas comme un trou.
+        under = np.abs(nave_roof(p + np.array([0, 0.2 * M, 0]))) - 0.08 * M
+        strips = _union(*(np.abs(p[:, 0] - (breach[0] + k * 0.75 * M)) - 0.08 * M for k in (-1, 0, 1)))
+        return np.maximum(np.maximum(under, strips), sphere(p, breach, 1.6 * M))
 
     def cross(p: np.ndarray) -> np.ndarray:
         # Croix de fer penchée par le temps.
@@ -409,7 +422,7 @@ def church(stem: str, seed: int, mirrored: bool) -> PropModel:
     flip = np.array([-1.0 if mirrored else 1.0, 1.0, 1.0])
 
     def parts() -> list[Part]:
-        volumes = [(inside, INTERIOR), (walls, STONE), (glass, GLASS), (trim, TRIM), (roof, ROOF), (cross, BRONZE),
+        volumes = [(inside, INTERIOR), (walls, STONE), (glass, GLASS), (trim, TRIM), (roof, ROOF), (rafters, BEAM), (cross, BRONZE),
                    (bell, BRONZE), (door, DOOR), (moss, MOSS), (rubble_part, RUBBLE)]
         return [Part(lambda p, f=f: f(p * flip), material) for f, material in volumes]
 

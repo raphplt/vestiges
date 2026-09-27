@@ -13,8 +13,6 @@ Fichier temporaire. Il liste ce qu'une session cloud a livré sans pouvoir le v�
 ## Plan 16 O6 — échos
 
 - [ ] **Fréquence et lisibilité en vraie partie** : premier écho à 60 s, puis toutes les 45 à 90 s. Il n'apparaît qu'en zone Fragile ou Effilochée, donc pas avant que l'Effacement ait progressé. Trop rare, trop discret ?
-- [ ] **Taille du murmure** : police par défaut, 9 px en monde (18 px à l'écran au zoom 2). Vérifier la lisibilité et la netteté à 1080p et en grand texte.
-- [ ] **Langue** : les captures du conteneur affichent l'anglais (locale par défaut). Vérifier le français.
 
 ## Plan 08 P4b — fermes
 
@@ -63,7 +61,6 @@ Fichier temporaire. Il liste ce qu'une session cloud a livré sans pouvoir le v�
 ## Plan 08 P2 — église et pylône
 
 - [ ] **Rareté** : au plus deux de chaque par carte (8 % et 10 % des îlots éligibles). Assez pour s'orienter ? Trop peu pour être remarqués ?
-- [ ] **Brèche du toit de l'église** : un disque sombre très régulier. À casser (bords déchiquetés, tuiles) si ça se voit en jeu.
 - [ ] **Pylône** : planté dans la cour, il bloque selon son emprise (1,1 m autour des pieds, plus le local technique hors emprise). Vérifier avec `--capture-props`.
 
 ## Plan 02 J2 — morts
@@ -112,8 +109,14 @@ Fichier temporaire. Il liste ce qu'une session cloud a livré sans pouvoir le v�
 ## Fusion de main (plans 17 et 18) — 27 septembre
 
 Apports de la nuit reportés sur les versions de main ; build, smoke test et régressions (mouvement avec intégration, capacités ennemies, mode dev, armes) verts, rien regardé en rendu.
-- [ ] **Coffre qui frémit** (J6) : désormais sur le sprite de main, qui pivote sur sa base au sol. Amplitude toujours lisible ? Capture : `--capture-micro`.
-- [ ] **Entrée de l'écran de level-up** (J4) : le zoom d'entrée est posé sur le nouvel écran à cartes de main. Pivot au centre du panneau correct ? Captures : `--capture-levelup-fx` (effet au ralenti, ancien `--capture-levelup`) et `--capture-levelup` de main.
-- [ ] **Bilan de fin de run** (lot D) : les armes n'ont plus de rareté, leurs cases prennent un cadre or neutre ; le multiplicateur inclut le Péril. Capture : `--capture-death`.
+- [ ] **Coffre qui frémit** (J6) : désormais sur le sprite de main, qui pivote sur sa base au sol. Code intact (plafond 3,4°, soit 2° à 45 px) ; la capture `--capture-micro` n'échantillonne que 12 frames et relève 0,72°, trop peu pour juger une saccade : à regarder en jeu.
 - [ ] **O5** : c'est maintenant le réveil d'un Mémorial qui rappelle sa zone (vérifié par le banc, pas en jeu).
-- [ ] **Repères urbains** : capture renommée `RunObservation.UrbanLandmarks.cs`, drapeau `--capture-landmarks` inchangé.
+
+## Passage du 27 septembre sur le Mac (Claude local)
+
+Captures en vraie run regardées : bilan, level-up (cartes et effet), coffre, pas, chemins, fermes, repères, échos.
+- Vérifiés et retirés de la liste : bilan après la fusion, entrée du level-up, capture des repères, murmure en français.
+- Corrigés : murmure des échos flou (texte de 9 px agrandi par la caméra, désormais en Saira rastérisée au double puis réduite) ; brèche du toit de l'église (bord en tuiles cassées, chevrons visibles).
+- Vu, à juger par Raphaël : raccord ville-champs de la seed de capture, où un bout de rue verticale s'arrête dans la terre (`path-raccord-ville.png`).
+- Non fait : mesures de coût (bancs A/B, `--measure-props`), machine chargée au moment du passage (charge 7 à 16).
+

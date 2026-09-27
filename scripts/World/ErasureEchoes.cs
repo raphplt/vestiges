@@ -19,6 +19,7 @@ public partial class ErasureEchoes : Node2D
     private const int SpawnAttempts = 8;
     private const float RetryDelaySec = 3f;
     private const float WalkCheckSec = 0.5f;
+    private const float WhisperScale = 0.5f;
     // Cadre des sprites de personnages (32×48) : pieds à (16, 36), comme au camp du Hub.
     private static readonly Vector2 FrameFeet = new(16f, 36f);
     private static readonly StringName PresenceParam = "presence";
@@ -83,11 +84,14 @@ public partial class ErasureEchoes : Node2D
             ZIndex = 30,
             ZAsRelative = false,
             Visible = false,
+            // Rastérisé au double puis réduit : la caméra zoome ×2, le texte reste net au lieu d'un 9 px agrandi.
+            Scale = Vector2.One * WhisperScale,
         };
-        _whisper.AddThemeFontSizeOverride("font_size", 9);
+        _whisper.AddThemeFontOverride("font", GD.Load<Font>("res://assets/fonts/saira/SairaSemiCondensed-SemiBold.ttf"));
+        _whisper.AddThemeFontSizeOverride("font_size", 18);
         _whisper.AddThemeColorOverride("font_color", new Color(0.86f, 0.9f, 0.95f));
         _whisper.AddThemeColorOverride("font_outline_color", new Color(0.12f, 0.14f, 0.2f, 0.85f));
-        _whisper.AddThemeConstantOverride("outline_size", 3);
+        _whisper.AddThemeConstantOverride("outline_size", 6);
         AddChild(_whisper);
 
         _rng.Randomize();
@@ -229,7 +233,7 @@ public partial class ErasureEchoes : Node2D
         int index = _rng.RandiRange(1, _config.WhisperCount);
         _whisper.Text = Tr($"ECHO_WHISPER_{index:00}");
         _whisper.ResetSize();
-        _whisperOrigin = new Vector2(-_whisper.Size.X * 0.5f, -FrameFeet.Y - 14f);
+        _whisperOrigin = new Vector2(-_whisper.Size.X * WhisperScale * 0.5f, -FrameFeet.Y - 14f);
         _whisper.Position = _whisperOrigin;
         _whisper.Modulate = Colors.White;
         _whisper.Visible = true;
