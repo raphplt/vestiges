@@ -17,7 +17,8 @@ public partial class PixelGroundRing : Node2D
     private static readonly int[] PoseOffsets = { 0, 1, 2, 1 };
     private static readonly Dictionary<int, (Vector2I[] Rim, Vector2I[] Fill)> Shapes = new();
 
-    private Color _color;
+    private readonly List<Color> _colors = new();
+    private int _colorIndex;
     private int _baseRadius;
     private int _pose;
     private float _poseTimer;
@@ -33,7 +34,25 @@ public partial class PixelGroundRing : Node2D
     /// <summary>Allume l'anneau, de demi-largeur <paramref name="radius"/> pixels au sol.</summary>
     public void Show(Color color, float radius)
     {
-        _color = color;
+        _colors.Clear();
+        _colors.Add(color);
+        Begin(radius);
+    }
+
+    /// <summary>Plusieurs couleurs (plusieurs affixes) : l'anneau passe de l'une à l'autre à chaque respiration.</summary>
+    public void Show(IReadOnlyList<Color> colors, float radius)
+    {
+        _colors.Clear();
+        for (int i = 0; i < colors.Count; i++)
+            _colors.Add(colors[i]);
+        if (_colors.Count == 0)
+            _colors.Add(Colors.White);
+        Begin(radius);
+    }
+
+    private void Begin(float radius)
+    {
+        _colorIndex = 0;
         _baseRadius = Mathf.Max(6, Mathf.RoundToInt(radius));
         _pose = 0;
         _poseTimer = PoseSec;
@@ -55,16 +74,19 @@ public partial class PixelGroundRing : Node2D
             return;
         _poseTimer += PoseSec;
         _pose = (_pose + 1) % PoseOffsets.Length;
+        if (_pose == 0)
+            _colorIndex = (_colorIndex + 1) % _colors.Count;
         QueueRedraw();
     }
 
     public override void _Draw()
     {
         (Vector2I[] rim, Vector2I[] fill) = ShapeOf(_baseRadius + PoseOffsets[_pose]);
-        Color fillColor = _color with { A = FillAlpha };
+        Color color = _colors[_colorIndex];
+        Color fillColor = color with { A = FillAlpha };
         foreach (Vector2I pixel in fill)
             DrawRect(new Rect2(pixel, Vector2.One), fillColor);
-        Color rimColor = _color with { A = RimAlpha };
+        Color rimColor = color with { A = RimAlpha };
         foreach (Vector2I pixel in rim)
             DrawRect(new Rect2(pixel, Vector2.One), rimColor);
     }

@@ -808,6 +808,8 @@ public partial class HUD : CanvasLayer
             if (i < weapons.Count)
             {
                 WeaponInstance weapon = weapons[i];
+                // Une case masquée par un vol de butin (HudLootFlight) ne reste pas vide si les armes changent de place.
+                _weaponSlotIcons[i].Modulate = Colors.White;
                 _weaponSlotFrames[i].Texture = _slotFilledTex;
                 _weaponSlotFrames[i].Modulate = Colors.White;
                 LoadWeaponIcon(i, weapon.Sprite);

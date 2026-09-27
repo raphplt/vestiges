@@ -82,6 +82,7 @@ public partial class Enemy : CharacterBody2D
 	private readonly EnemyTracking _tracking = new();
 	private Sprite2D _shadow;
 	private PixelGroundRing _modifierAura;
+	private readonly List<Color> _affixColors = new();
 	private EnemyNameplate _nameplate;
 	private string _displayName;
 	private bool _isFeminine;
@@ -291,7 +292,7 @@ public partial class Enemy : CharacterBody2D
 		}
 		else if (affixes.Count > 0)
 		{
-			SpawnModifierAura(affixes[0].Color with { A = 0.22f });
+			ShowAffixAura();
 		}
 
 		if (variant.Nameplate)
@@ -316,7 +317,7 @@ public partial class Enemy : CharacterBody2D
 	{
 		_mods.AddAffix(affix);
 		ScaleStats(affix.HpMult, affix.DamageMult, affix.SpeedMult);
-		SpawnModifierAura(affix.Color with { A = 0.2f });
+		ShowAffixAura();
 	}
 
 	/// <summary>Harde : la créature traverse la zone en ligne droite, en frappant ce qu'elle percute.</summary>
@@ -659,18 +660,20 @@ public partial class Enemy : CharacterBody2D
 		}
 	}
 
-	private void SpawnModifierAura(Color color)
+	/// <summary>Anneau aux couleurs de tous les affixes portés, repris à chaque nouvel affixe.</summary>
+	private void ShowAffixAura()
 	{
 		if (_modifierAura == null)
 		{
 			_modifierAura = new PixelGroundRing { Name = "AffixAura" };
 			AddChild(_modifierAura);
 		}
-		if (_modifierAura.Visible)
-			return;
+		_affixColors.Clear();
+		foreach (EnemyAffixData affix in _mods.Affixes)
+			_affixColors.Add(affix.Color);
 		// Sous les pieds, comme l'ombre de contact, et non au centre du corps.
 		_modifierAura.Position = _shadow.Position;
-		_modifierAura.Show(color, AuraRadius());
+		_modifierAura.Show(_affixColors, AuraRadius());
 	}
 
 	/// <summary>Demi-largeur au sol du visuel : l'anneau dépasse un peu des pieds, quelle que soit l'échelle.</summary>
