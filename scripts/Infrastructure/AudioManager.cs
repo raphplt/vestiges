@@ -287,24 +287,39 @@ public partial class AudioManager : Node
 	}
 
 	/// <summary>Joue un SFX UI qui fonctionne même en pause (level-up, coffre, etc.).</summary>
-	public static void PlayUI(string key, float pitchVariance = 0f, float volumeDb = 0f)
-	{
+	/// <summary>Joue un son d'interface ; le lecteur rendu permet de l'éteindre avant sa fin (<see cref="FadeOutUI"/>).</summary>
+	public static AudioStreamPlayer PlayUI(string key, float pitchVariance = 0f, float volumeDb = 0f) =>
 		Instance?.PlayUiSfx(key, pitchVariance, volumeDb);
-	}
 
-	public void PlayUiSfx(string key, float pitchVariance = 0f, float volumeDb = 0f)
+	public AudioStreamPlayer PlayUiSfx(string key, float pitchVariance = 0f, float volumeDb = 0f)
 	{
 		if (!_streams.TryGetValue(key, out AudioStream stream))
-			return;
+			return null;
 
 		AudioStreamPlayer player = GetFreeUiPoolPlayer();
 		if (player == null)
-			return;
+			return null;
 
 		player.Stream = stream;
 		player.PitchScale = 1f + (float)GD.RandRange(-pitchVariance, pitchVariance);
 		player.VolumeDb = volumeDb + _soundVolumes.GetValueOrDefault(key);
 		player.Play();
+		return player;
+	}
+
+	/// <summary>
+	/// Éteint en fondu un son d'interface lancé par <see cref="PlayUI"/>, s'il joue encore ce même son : le lecteur du
+	/// pool a pu être repris entre-temps par un autre.
+	/// </summary>
+	public static void FadeOutUI(AudioStreamPlayer player, string key, float duration)
+	{
+		if (Instance == null || player == null || !GodotObject.IsInstanceValid(player) || !player.Playing
+			|| !Instance._streams.TryGetValue(key, out AudioStream stream) || player.Stream != stream)
+			return;
+		Tween fade = player.CreateTween();
+		fade.SetPauseMode(Tween.TweenPauseMode.Process);
+		fade.TweenProperty(player, "volume_db", -40f, duration);
+		fade.TweenCallback(Callable.From(player.Stop));
 	}
 
 	private AudioStreamPlayer GetFreeUiPoolPlayer()

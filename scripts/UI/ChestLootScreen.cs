@@ -28,6 +28,8 @@ public partial class ChestLootScreen : CanvasLayer
     private const float RouletteMaxInterval = 0.35f;
     private const float RouletteDuration = 2.5f;
     private const float PostRevealDelay = 1.8f;
+    private const string RevealSound = "sfx_chest_reveal";
+    private const float RevealFadeSeconds = 0.5f;
 
     // --- Rays config ---
     private const int RayCount = 16;
@@ -48,6 +50,7 @@ public partial class ChestLootScreen : CanvasLayer
     private Action _onComplete;
     private readonly List<SlotState> _slots = new();
     private bool _isRevealing;
+    private AudioStreamPlayer _revealAudio;
     private int _slotsRevealed;
 
     // Leurres de la roulette : ce que le coffre aurait pu donner.
@@ -330,6 +333,8 @@ public partial class ChestLootScreen : CanvasLayer
         if (allStopped && _isRevealing)
         {
             _isRevealing = false;
+            // La mélodie salue le résultat complet : jamais pendant qu'une ligne défile encore.
+            _revealAudio = AudioManager.PlayUI(RevealSound, 0f);
             ScheduleClose();
         }
     }
@@ -338,8 +343,6 @@ public partial class ChestLootScreen : CanvasLayer
     {
         slot.Stopped = true;
         _slotsRevealed++;
-        if (_slotsRevealed == 1)
-            AudioManager.PlayUI("sfx_chest_reveal", 0f);
 
         // Set final item
         slot.Label.Text = slot.FinalItem.Text;
@@ -439,6 +442,9 @@ public partial class ChestLootScreen : CanvasLayer
         SceneTreeTimer timer = GetTree().CreateTimer(PostRevealDelay, processAlways: true);
         timer.Timeout += () =>
         {
+            // Elle s'éteint avec l'écran au lieu de déborder sur la reprise du jeu.
+            AudioManager.FadeOutUI(_revealAudio, RevealSound, RevealFadeSeconds);
+            _revealAudio = null;
             HideScreen();
             _onComplete?.Invoke();
         };

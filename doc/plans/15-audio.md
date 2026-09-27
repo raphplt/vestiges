@@ -41,3 +41,18 @@ Le contrôle statique ne trouve aucune nouvelle clé manquante. `sfx_rare_fragme
 `/Users/raph/Documents/Travail/Personnel/Archives/vestiges-audio/2026-09-26/`.
 
 Tous les fichiers déplacés ont été comparés par SHA-256 avant retrait du dépôt. Préparer les prochaines planches dans cette archive, avec le gabarit épuré : titre, déclenchement, lecteurs et choix. Ne plus ajouter les fichiers d’écoute et les documents intermédiaires au repo. Les décisions originales restent intactes dans l’archive ; le repo conserve ce plan, les décisions utiles, la banque et les crédits.
+
+## Correctif du 27 septembre — son des coffres
+
+Retour de Raphaël : « il y a un son d'ouverture du coffre et le son de défilement jusqu'à avoir le résultat ; le premier son dure beaucoup trop longtemps, il ne doit pas se jouer quand le défilement se fait. »
+
+Déroulé constaté dans `ChestLootScreen` :
+- le clic d'ouverture (`chest_open`, 0,9 s) part à l'ouverture ;
+- la mélodie de révélation (`chest_opening.wav`, 5 s, forte pendant 4 s) partait dès que la **première** ligne s'arrêtait, alors que les suivantes défilaient encore ;
+- elle continuait environ 2,5 s après la fermeture de l'écran, sur la reprise du jeu.
+
+Correctif :
+- la mélodie ne part qu'une fois **toutes** les lignes arrêtées ;
+- elle s'éteint en fondu de 0,5 s à la fermeture de l'écran (`AudioManager.PlayUI` rend désormais son lecteur, `AudioManager.FadeOutUI` l'éteint s'il joue encore ce son).
+
+Le clic d'ouverture est inchangé. **À réécouter en jeu** : si c'est lui que Raphaël désignait comme « premier son », le couper dès le début du défilement.
