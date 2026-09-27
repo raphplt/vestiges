@@ -52,6 +52,16 @@ Les numéros servent à identifier les plans, pas à imposer leur exécution int
 
 Un seul lot d'implémentation ouvert à la fois. Un échec de lisibilité, de performance ou de fun ramène au lot concerné avant expansion.
 
+**Mise à jour du 27 septembre (session locale, sans Raphaël) :**
+- Passage de vérification sur le Mac de ce que la session cloud avait livré sans GPU ([A-VERIFIER](A-VERIFIER.md)) : bilan, level-up, chemins, fermes, repères et échos regardés en capture. Corrigés : murmure des échos flou, brèche du toit de l'église trop régulière.
+- [17 2B](17-armes-coffres-modificateurs.md) : chaque arme reprend la couleur de son icône dans ses effets d'attaque.
+- [17 2C](17-armes-coffres-modificateurs.md) : arme en main en essai, derrière une option désactivée par défaut.
+- [07 lot B](07-bestiaire-et-rencontres.md) : **deux mécaniques qui n'avaient jamais marché** réparées. La charge de la Brute du Vide avançait à 35 px/s (vitesse écrasée par la poursuite), et le recul des armes ne repoussait rien. Réglages des comportements passés en données ; recyclage du pool vérifié par un test.
+- [04 lot B](04-interfaces-et-hub.md) : une quarantaine de textes français sans accents corrigés.
+- [05](05-armes-objets-builds.md) : les six synergies de perks s'annoncent sans aucun effet ; à arbitrer.
+- [08 P5 et P6](08-direction-artistique.md) : décors du marais refaits à l'échelle du personnage, décors propres à la carrière (roche, cristaux d'Essence, machines figées, traces des ouvriers). P3 à P6 sont livrés.
+- Non fait : bancs de performance (machine chargée toute la session).
+
 **Mise à jour des 26 et 27 septembre (nuit, session cloud sans Raphaël) :**
 - [10 T3](10-terrain-et-tiles.md#lot-t3-livré--chemins-et-routes-26-septembre-2026) : chemins de terre entre les régions, raccordés aux rues, avec un style par biome. Les rues verticales ne sont plus coupées en deux bandes, et les trottoirs ont des bordures usées.
 - [16 O6](16-oubli-sensible.md) : échos de l'oubli. Dans les zones Fragiles, la silhouette pâle d'un habitant apparaît parfois, puis se dissout à l'approche en laissant un murmure.
