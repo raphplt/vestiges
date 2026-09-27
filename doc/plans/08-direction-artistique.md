@@ -181,6 +181,21 @@ Trois créatures du début de run passent dans le pipeline, à la même densité
 - Le « chef » de meute du Charognard (un œil de plus, Bible §6.2) n'existe pas en jeu ; non modélisé.
 - Après validation : même traitement pour les autres ennemis du début (Rampant d'Ombre, Brute, Rampant, Cracheur).
 
+### Ennemis de mars dans le pipeline — 27 septembre 2026 (session locale)
+
+Suite annoncée du pilote (« même traitement pour les autres ennemis du début » après validation, design validé le 24 septembre). Les anciens sprites de ces créatures venaient de générateurs Pillow, à des tailles sans rapport avec le joueur (Brute 24×24, Ombre 12×12). Chaque créature est un modèle dans `tools/sprites/creatures/`, avec 8 directions × idle, marche, attaque, mort (128 frames), yeux vert-acide émissifs, asymétrie de la Bible §6.2 :
+
+| Créature | Cadre, pieds | Lecture recherchée |
+|---|---|---|
+| Brute du Vide | 64×56, (32, 47) | Quadrupède massif de chair violacée où le monde s'est fondu : dalle de béton hérissée de ferraille sur le dos, portière rouge sur le flanc, pied de chaise dans l'épaule, patte avant gauche en pilier de béton. Tête basse sous une plaque de pierre, trois yeux décalés. Attaque : charge tête baissée. |
+| Ombre | 32×28, (16, 21) | Flaque d'encre irisée aux filaments, crête basse, trois yeux sur des tiges de hauteurs différentes, seuls éléments solides. Attaque : la crête se dresse en vague. Mort : elle s'enfonce, les yeux en dernier. |
+| Hurleur | 32×48, (16, 45) | Colonne de chair plissée sur trois moignons de racines, bouche en entonnoir cerclée de dents, gorge vert-acide visible d'en haut. Cri : il se tasse puis s'étire bouche grande ouverte. |
+| Sentinelle | 32×56, (16, 52) | Réverbère devenu hostile : pied de béton, fût envahi de chair courbé en crosse, tête à paupières qui s'ouvrent sur trois yeux pour viser. Ne bouge pas. |
+
+- Itérations visibles sur les planches : tête de la Brute avancée (perdue sous le corps de profil) ; yeux de l'Ombre écartés (un seul ressortait) ; bouche du Hurleur creusée puis évasée (la gorge lumineuse restait cachée sous l'angle de 30°).
+- `sprite_feet_offset` ajouté aux quatre fiches. `--capture-bestiary` accepte désormais `--enemies` ; capture regardée : les quatre à l'échelle du joueur et du Rôdeur, lisibles sur les champs et la terre sombre.
+- **Reste** (plan 18, ligne 23) : Cracheur Pâli, Rampant, Rampant d'Ombre, Tréant corrompu.
+
 ### Décors procéduraux — chantier du 25 septembre 2026
 
 **Demande de Raphaël :** refonte visuelle des décors dans le pipeline procédural (`tools/sprites`), à la même densité de pixels que les personnages et les ennemis, biome par biome, en commençant par l'urbain.

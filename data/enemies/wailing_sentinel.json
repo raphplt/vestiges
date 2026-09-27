@@ -30,6 +30,7 @@
         "projectile": {
             "sprite": "howl",
             "family": "pale"
-        }
+        },
+        "sprite_feet_offset": 24
     }
 }

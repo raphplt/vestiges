@@ -230,9 +230,11 @@ public partial class RunObservation : Node
 
         SpawnManager spawner = _world.GetNode<SpawnManager>("SpawnManager");
         Vector2 origin = _player.GlobalPosition;
-        spawner.ForceSpawnEnemy("presage", origin + new Vector2(-110f, -30f));
-        spawner.ForceSpawnEnemy("rodeur", origin + new Vector2(100f, -40f));
-        spawner.ForceSpawnEnemy("charognard", origin + new Vector2(60f, 80f));
+        // --enemies a,b,c : créatures à montrer autour du joueur (le pilote par défaut).
+        string[] ids = Argument(OS.GetCmdlineUserArgs(), "--enemies", "presage,rodeur,charognard").Split(',');
+        Vector2[] spots = { new(-110f, -30f), new(100f, -40f), new(60f, 80f), new(-80f, 70f), new(0f, -90f), new(130f, 40f) };
+        for (int i = 0; i < ids.Length && i < spots.Length; i++)
+            spawner.ForceSpawnEnemy(ids[i], origin + spots[i]);
         await Frames(2);
         foreach (Node node in GetTree().GetNodesInGroup("enemies"))
         {

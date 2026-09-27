@@ -16,6 +16,7 @@
         "color": "#222233",
         "shape": "square",
         "size": 10,
-        "sprite_folder": "shade"
+        "sprite_folder": "shade",
+        "sprite_feet_offset": 7
     }
 }

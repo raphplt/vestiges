@@ -26,6 +26,7 @@
         "color": "#44AA55",
         "shape": "triangle",
         "size": 18,
-        "sprite_folder": "hurleur"
+        "sprite_folder": "hurleur",
+        "sprite_feet_offset": 21
     }
 }
