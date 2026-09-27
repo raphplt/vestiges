@@ -26,6 +26,7 @@ namespace Vestiges.Tests;
 /// --capture-levelup : effet de montée de niveau au ralenti, puis entrée de l'écran de choix (RunObservation.LevelUp.cs).
 /// --capture-crowd : foule de 60 créatures, recul de caméra puis compteur de morts en rafale (RunObservation.Crowd.cs).
 /// --capture-micro : coffre qui frémit à l'approche, poussière de pas (RunObservation.Micro.cs).
+/// --capture-death [--seconds 8] : mort réelle après quelques secondes, bilan de fin de run (RunObservation.Death.cs).
 /// --capture-echoes : échos de l'oubli forcés en zone Fragile, apparition, dissolution, murmure (RunObservation.Echoes.cs).
 /// --capture-erasure : une capture par phase de l'oubli, puis un dégradé de toutes les phases.
 /// --measure-props [--measure-seconds 8] : coût de rendu des décors par biome (RunObservation.PropCost.cs).
@@ -80,6 +81,8 @@ public partial class RunObservation : Node
                 await CaptureCrowd();
             else if (Array.IndexOf(args, "--capture-micro") >= 0)
                 await CaptureMicro();
+            else if (Array.IndexOf(args, "--capture-death") >= 0)
+                await CaptureDeath(double.Parse(Argument(args, "--seconds", "8"), CultureInfo.InvariantCulture));
             else if (Array.IndexOf(args, "--capture-echoes") >= 0)
                 await CaptureEchoes();
             else if (Array.IndexOf(args, "--capture-paths") >= 0)

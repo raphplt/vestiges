@@ -95,3 +95,8 @@ Fichier temporaire. Il liste ce qu'une session cloud a livré sans pouvoir le v�
 - [ ] **Scores comparés** : l'horloge n'avance plus pendant les pauses. Une run d'aujourd'hui marque donc un peu moins de points de survie qu'avant à durée murale égale, et les records anciens restent légèrement avantagés.
 - [ ] **Barème des points d'intérêt** : `pois.json` prévoit 25 à 300 points selon le type, mais le jeu en donne 50 partout. Faut-il brancher les valeurs des données ?
 
+## Plan 02 lot D — bilan de fin de run
+
+- [ ] **Recette du bilan** : composition, textes (« LA ROUTE S'EFFACE », « Dernier coup »), rythme de la révélation (2,2 s après 1,1 s de pâleur) et délai des boutons. Captures : `CAPTURE_EXTRA_ARGS="--capture-death" tools/capture_run.sh <dossier> 8 30`.
+- [ ] **Manette** : focus sur « Rejouer », gauche/droite entre les deux boutons. Non testé au clavier réel dans le conteneur.
+

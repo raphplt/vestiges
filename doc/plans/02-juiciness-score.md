@@ -115,6 +115,17 @@ Un événement de gain avec cause, un profil de feedback JSON et un pool supplé
 
 Raphaël valide une juiciness très poussée : mobilité, impacts, collectes, raretés et transformations doivent se sentir fortement. La cible est une réponse riche et synchronisée — poses/anticipations, courbes d’animation, timbres, trajectoires, éclats et réactions — avec montée spectaculaire du build. Les budgets de particules et les options réduites servent cette cible à 60 FPS ; ils ne justifient pas une présentation timide. Valider une séquence « départ modeste → build puissant → bilan gratifiant » avec le même vocabulaire visuel.
 
+**Lot D, première passe — 27 septembre 2026 (session cloud) :** le bilan est refait sur la composition proposée, sans maquette validée au préalable (délégation du 26 septembre) ; il reste à juger.
+- **Trois zones sur un voile sombre**, dans un espace de 1920 × 1080 mis à l'échelle comme l'accueil, en Saira :
+  - en tête, le titre (« Le Traqueur — LA ROUTE S'EFFACE ») et le score final qui défile jusqu'à sa valeur ; puis, seulement ici, « NOUVEAU RECORD » (qui pulse doucement) ou le meilleur score précédent ; puis le détail combat, survie, crises, exploration et multiplicateur ;
+  - au centre, le personnage de face (×6), le build complet — quatre cases d'armes cerclées à la couleur de leur rareté, quatre cases de souvenirs, niveau en coin, cases vides éteintes — et quatre faits : durée, éliminations, Résurgences, dernier coup (nom de la créature) ;
+  - en bas, les gains en cartes (Vestiges, quêtes accomplies, personnages qui reviennent au camp), puis « Rejouer » et « Retour au camp », boutons textuels de l'accueil.
+- **Révélation** : le monde pâlit d'abord, comme effacé (1,1 s). L'ancien fondu de `CanvasModulate` visait une couleur presque blanche et ne se voyait pas. Viennent ensuite le voile, le score, le build, puis les gains et les boutons (2,2 s). Un appui pendant la révélation la termine sans déclencher de bouton ; les boutons ne s'activent qu'après un court délai, puis « Rejouer » prend le focus (clavier, manette).
+- **Relevé figé** : le build est lu sur le joueur à sa mort, et le score après la sauvegarde qui fige le record (lot A).
+- Textes en clés de traduction (`UI_END_*`), formulés sans accord de genre.
+- **Vérifié** : build sans avertissement, smoke test, régressions, capture `--capture-death` (mort réelle après 8 s de jeu, build riche fourni par la capture). Images regardées à chaque temps de la révélation.
+- **Non fait** : les objets du plan 05 (pas encore de système), les dégâts par arme (pas d'attribution), la carte de déblocage reliée à la Collection (04 C2), le passage accéléré par animation des gains.
+
 ## 6. Recette finale et sortie
 
 Même monde et même build, séquence courte avant/après ; puis run dense réelle. La seed du monde ne fixe pas tous les tirages de spawn et de crises : utiliser spawns/calendrier contrôlés pour une comparaison stricte, sinon répéter les essais et noter leur variabilité. Tester effets réduits, son coupé et absence de secousse. Effectuer build, smoke si applicable, profilage et vérifications du [dossier](README.md).
@@ -262,6 +273,7 @@ Chaque lot : captures avant/après dans une vraie run (`tools/capture_run.sh`), 
 
 - **Traces de pas selon le sol** (`Combat/FootstepFx`, appelé au rythme des sons de pas existants) : dans l'eau, un rond qui s'élargit et quatre gouttes ; sur le béton, trois grains de poussière grise soulevés derrière le pied ; dans l'herbe, un seul grain. Tout passe par `CombatPools`, sans nœud créé, et reste soumis au budget d'effets.
 - **Coffres qui frémissent** (`Chest`) : un coffre fermé tremble par saccades quand le joueur approche. L'effet commence à 110 px et va jusqu'à 3,4° au contact ; la distance est relue dix fois par seconde. Capture `--capture-micro` : 1,6° mesuré à 45 px.
-- **Non fait** : herbes qui plient au passage (il faut d'abord un index spatial des petits décors, `PropOcclusion` n'indexe que les grands), reflets sur les points d'intérêt, retours d'interface.
+- **Reflets sur les points d'intérêt** (`World/PoiGlints`, ajouté ensuite) : toutes les 0,8 s, un point d'intérêt inexploré à moins de 520 px du joueur, tiré au hasard, accroche un éclat doré bref sur sa silhouette. Il attire l'œil sans marqueur d'interface. Capture `--capture-micro` : éclats visibles sur le point d'intérêt voisin.
+- **Non fait** : herbes qui plient au passage (il faut d'abord un index spatial des petits décors, `PropOcclusion` n'indexe que les grands), retours d'interface.
 - **Limite** : dans le conteneur, poussière et frémissement sont trop fins pour se juger sur une capture. Le frémissement est mesuré ; la poussière reste à regarder en jeu.
 

@@ -147,6 +147,23 @@ UI_DEV_TOGGLE_HINT,Profil séparé. Recharge le Hub et mémorise le choix pour F
 UI_HUD_LEVEL,NIV.,LVL
 UI_HUD_SCORE,SCORE,SCORE
 UI_HUD_KILL_STREAK,EN RAFALE,STREAK
+UI_END_TITLE,LA ROUTE S'EFFACE,THE ROAD FADES
+UI_END_TITLE_OF,{0} — LA ROUTE S'EFFACE,{0} — THE ROAD FADES
+UI_END_NEW_RECORD,NOUVEAU RECORD,NEW RECORD
+UI_END_BEST,Meilleur : {0},Best: {0}
+UI_END_DETAIL,Combat {0}  ·  Survie {1}  ·  Crises {2}  ·  Exploration {3},Combat {0}  ·  Survival {1}  ·  Crises {2}  ·  Exploration {3}
+UI_END_WEAPONS,ARMES,WEAPONS
+UI_END_PASSIVES,SOUVENIRS,SOUVENIRS
+UI_END_LEVEL,{0},{0}
+UI_END_DURATION,Durée,Duration
+UI_END_KILLS,Éliminations,Kills
+UI_END_CRISES,Résurgences,Resurgences
+UI_END_FELL_TO,Dernier coup,Last hit
+UI_END_VESTIGES,+{0} Vestiges,+{0} Vestiges
+UI_END_UNLOCK,Revient au camp : {0},Returns to camp: {0}
+UI_END_SEED,Graine {0},Seed {0}
+UI_END_REPLAY,Rejouer,Play again
+UI_END_HUB,Retour au camp,Back to camp
 UI_HUD_ESSENCE,{0} Essence,{0} Essence
 UI_HUD_PHASE_EXPLORATION,EXPLORATION,EXPLORATION
 UI_HUD_PHASE_CRISIS,RÉSURGENCE,RESURGENCE
