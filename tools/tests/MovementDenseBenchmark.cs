@@ -28,6 +28,12 @@ public partial class MovementDenseBenchmark : Node
     private bool _ready;
     private bool _finished;
     private bool _dash;
+    // --churn : PV normaux, chaque créature morte est remplacée ; mesure morts, XP, effets et recyclage du pool.
+    private bool _churn;
+    private int _respawns;
+    private EnemyPool _pool;
+    private Node _container;
+    private readonly RandomNumberGenerator _churnRng = new() { Seed = Seed };
     private string _output;
     private double _duration;
     private double _warmup;
@@ -58,6 +64,10 @@ public partial class MovementDenseBenchmark : Node
     // Nœuds ajoutés à l'arbre pendant la mesure : coût des effets créés puis libérés (plan 02 J0).
     private long _nodesAdded;
     private readonly Dictionary<string, int> _nodesAddedByName = new();
+    // Nœuds vus pour la première fois : un nœud recyclé qui rentre dans l'arbre n'est pas une création.
+    private readonly HashSet<ulong> _seenNodes = new();
+    private readonly Dictionary<string, int> _nodesCreatedByName = new();
+    private int _nodesCreated;
     private long _rssStart;
     private double _nativeStart;
     private Label _label;
@@ -76,6 +86,7 @@ public partial class MovementDenseBenchmark : Node
             await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
             string[] args = OS.GetCmdlineUserArgs();
             _dash = Array.IndexOf(args, "--dash") >= 0;
+            _churn = Array.IndexOf(args, "--churn") >= 0;
             _output = Argument(args, "--output", "/tmp/vestiges-dense");
             _duration = double.Parse(Argument(args, "--seconds", "20"), CultureInfo.InvariantCulture);
             _warmup = double.Parse(Argument(args, "--warmup", "5"), CultureInfo.InvariantCulture);
@@ -139,6 +150,11 @@ public partial class MovementDenseBenchmark : Node
             }
             EnemyPool pool = _world.GetNode<EnemyPool>("EnemyPool");
             Node container = _world.GetNode("EnemyContainer");
+            _pool = pool;
+            _container = container;
+            // --weapons a,b : armes ajoutées au personnage (builds à effets de zone, morts en rafale avec --churn).
+            foreach (string weapon in Argument(args, "--weapons", "").Split(',', StringSplitOptions.RemoveEmptyEntries))
+                _player.AddWeapon(WeaponDataLoader.Get(weapon));
             GD.Seed(Seed);
             for (int i = 0; i < _enemyCount; i++)
             {
@@ -149,7 +165,7 @@ public partial class MovementDenseBenchmark : Node
                 container.AddChild(enemy);
                 // Les HP renforcés conservent les 120 IA, attaques, collisions et impacts pendant l'essai.
                 // Même proportion qu'à 120 : cinq Ombres pour un Cracheur.
-                enemy.Initialize(EnemyDataLoader.Get(i % 6 == 5 ? "fading_spitter" : "shade"), 10000f, 1f);
+                enemy.Initialize(EnemyDataLoader.Get(i % 6 == 5 ? "fading_spitter" : "shade"), _churn ? 1f : 10000f, 1f);
                 _enemies[i] = enemy;
             }
             CanvasLayer layer = new() { Layer = 100 };
@@ -212,6 +228,11 @@ public partial class MovementDenseBenchmark : Node
         double elapsed = (now - _start) / 1e6;
         double frameMs = (now - _previous) / 1000.0;
         _previous = now;
+        if (_churn)
+        {
+            ReplaceDeadEnemies(elapsed >= _warmup);
+            PickLevelUp();
+        }
         if (elapsed < _warmup)
         {
             _activationPending = false;
@@ -221,12 +242,25 @@ public partial class MovementDenseBenchmark : Node
         {
             _managedStart = GC.GetTotalMemory(false);
             _allocatedStart = GC.GetTotalAllocatedBytes();
+            // Nœuds déjà existants au début de la mesure, arbre et réserve détachée du pool comprises.
+            SeedSeenNodes(GetTree().Root);
+            if (typeof(EnemyPool).GetField("_available", BindingFlags.NonPublic | BindingFlags.Instance)?.GetValue(_pool)
+                    is IEnumerable<Enemy> reserve)
+            {
+                foreach (Enemy pooled in reserve)
+                    SeedSeenNodes(pooled);
+            }
             GetTree().NodeAdded += node =>
             {
                 _nodesAdded++;
                 // Nom de la racine d'effet (script C# ou classe native) : repère les sources à recycler.
                 string name = node.GetScript().Obj is Script script ? script.ResourcePath.GetFile() : node.GetClass();
                 _nodesAddedByName[name] = _nodesAddedByName.GetValueOrDefault(name) + 1;
+                if (_seenNodes.Add(node.GetInstanceId()))
+                {
+                    _nodesCreated++;
+                    _nodesCreatedByName[name] = _nodesCreatedByName.GetValueOrDefault(name) + 1;
+                }
             };
             _rssStart = System.Diagnostics.Process.GetCurrentProcess().WorkingSet64;
             _nativeStart = Performance.GetMonitor(Performance.Monitor.MemoryStatic);
@@ -274,6 +308,44 @@ public partial class MovementDenseBenchmark : Node
         }
     }
 
+    private void SeedSeenNodes(Node root)
+    {
+        _seenNodes.Add(root.GetInstanceId());
+        foreach (Node child in root.GetChildren(true))
+            SeedSeenNodes(child);
+    }
+
+    /// <summary>Une créature rendue au pool est remplacée sur un anneau autour du joueur, même espèce, même proportion.</summary>
+    private void ReplaceDeadEnemies(bool counted)
+    {
+        for (int i = 0; i < _enemies.Length; i++)
+        {
+            Enemy enemy = _enemies[i];
+            if (IsInstanceValid(enemy) && enemy.IsActive)
+                continue;
+            Enemy fresh = _pool.Get();
+            fresh.Position = _player.GlobalPosition + Vector2.FromAngle(_churnRng.RandfRange(0f, Mathf.Tau)) * _churnRng.RandfRange(220f, 320f);
+            _container.AddChild(fresh);
+            fresh.Initialize(EnemyDataLoader.Get(i % 6 == 5 ? "fading_spitter" : "shade"), 1f, 1f);
+            _enemies[i] = fresh;
+            if (counted)
+                _respawns++;
+        }
+    }
+
+    /// <summary>Les morts font monter de niveau : la première carte est prise aussitôt, la run ne reste pas en pause.</summary>
+    private void PickLevelUp()
+    {
+        if (!GetTree().Paused)
+            return;
+        Node screen = _world.GetNode("LevelUpScreen");
+        if (screen.GetType().GetField("_fragmentManager", BindingFlags.NonPublic | BindingFlags.Instance)?.GetValue(screen)
+                is not Vestiges.Progression.FragmentManager fragments || !fragments.IsChoiceActive || fragments.PendingChoices.Count == 0)
+            return;
+        screen.GetType().GetMethod("OnCardChosen", BindingFlags.NonPublic | BindingFlags.Instance)
+            .Invoke(screen, new object[] { fragments.PendingChoices[0] });
+    }
+
     private async void Finish()
     {
         try
@@ -284,7 +356,9 @@ public partial class MovementDenseBenchmark : Node
             long rssEnd = process.WorkingSet64;
             long rssPeak = process.PeakWorkingSet64;
             double nativeEnd = Performance.GetMonitor(Performance.Monitor.MemoryStatic);
-            bool valid = _minLiving >= _enemyCount * 5 / 6 && _minFullAi >= _enemyCount * 5 / 6 && (!_dash || _activations >= 5)
+            // En --churn, une créature ne revient qu'après son animation de mort : une rafale creuse la population.
+            int livingFloor = _churn ? _enemyCount / 3 : _enemyCount * 5 / 6;
+            bool valid = _minLiving >= livingFloor && _minFullAi >= livingFloor && (!_dash || _activations >= 5)
                 && !GetTree().Paused && DisplayServer.GetName() != "headless"
                 && GetWindow().Size == _requestedSize && _renderSize == _requestedSize
                 && _distance > 100 && (!_dash || _dashDistance > 50);
@@ -304,13 +378,16 @@ public partial class MovementDenseBenchmark : Node
                 traveled_pixels = _distance, dash_traveled_pixels = _dashDistance,
                 // Noms historiques du premier banc : moniteurs Godot, pas un profil CPU isolé.
                 process_cpu_mean_ms = _processSum / _samples, physics_cpu_mean_ms = _physicsSum / _samples,
-                enemies = _enemyCount,
+                enemies = _enemyCount, churn = _churn, respawns = _respawns,
+                respawns_per_second = _respawns / (_frames.Take(_samples).Sum() / 1000),
                 render_cpu_mean_ms = _renderCpuSum / _samples, render_gpu_mean_ms = _renderGpuSum / _samples,
                 draw_calls_mean = _drawCallsSum / _samples, rendered_objects_mean = _objectsSum / _samples,
                 primitives_mean = _primitivesSum / _samples, collision_pairs_mean = _collisionPairsSum / _samples,
                 active_bodies_mean = _activeBodiesSum / _samples, node_count_mean = _nodeCountSum / _samples,
                 managed_start_bytes = _managedStart, managed_end_bytes = managedEnd, allocated_bytes = allocated,
                 nodes_added = _nodesAdded,
+                nodes_created = _nodesCreated,
+                nodes_created_by_type = _nodesCreatedByName.OrderByDescending(pair => pair.Value).Take(12).ToDictionary(pair => pair.Key, pair => pair.Value),
                 nodes_added_by_type = _nodesAddedByName.OrderByDescending(pair => pair.Value).Take(12).ToDictionary(pair => pair.Key, pair => pair.Value), nodes_added_per_second = _nodesAdded / (_frames.Take(_samples).Sum() / 1000),
                 fx_dropped = new
                 {

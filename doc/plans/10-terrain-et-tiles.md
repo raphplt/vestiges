@@ -482,3 +482,20 @@ Une capture sur deux environ finissait par `FATAL: Condition "csharp_lang && !cs
 - **Cause** : quitter d'un coup laissait vivantes des milliers d'enveloppes C# (1 817 formes de collision de décors, des tweens, des styles), faute de passage du ramasse-miettes. Libérées après l'arrêt du runtime .NET, elles déclenchent ce contrôle des builds de debug, c'est-à-dire du jeu lancé depuis `godot-mono`.
 - **Correctif** : `GameExit.QuitAsync` libère la scène, fait passer le ramasse-miettes, puis quitte. Le bouton Quitter du camp et de la pause l'utilisent, ainsi que la fermeture de la fenêtre, désormais interceptée par `GameManager`.
 - **Vérifié** : avant, 1 crash sur 1 run de `--capture-junctions` ; après, aucune ligne de fuite et aucun crash sur 5 runs, dont 3 fermés par la vraie demande de fermeture de la fenêtre (`--close-window`).
+
+### Lot 3, première mesure — morts en masse, 27 septembre 2026
+
+Le banc dense ne tuait rien (PV ×10 000). Nouveau mode `--churn` de `MovementDenseBenchmark` : PV normaux, chaque créature morte est remplacée sur un anneau autour du joueur, les montées de niveau sont choisies aussitôt. `--weapons a,b,c` ajoute des armes. Le banc compte aussi les **nœuds réellement créés** (`nodes_created`, première apparition de l'instance) ; l'ancien compteur (`nodes_added`) comptait aussi un ennemi recyclé qui revient dans l'arbre.
+
+`BENCH_REPEATS=1 BENCH_SECONDS=15 BENCH_EXTRA_ARGS="--churn --weapons heavy_hammer,chain_of_names,music_box" tools/benchmark_movement.sh <dossier>`, machine calme (charge 1,4), au commit du correctif de fermeture :
+
+| Résolution | Mode | FPS | p99 | Morts/s | Nœuds créés (15 s) | Alloué (15 s) |
+|---|---|---|---|---|---|---|
+| 720p | sans dash | 192 | 10,1 ms | 27 | 558 | 23 Mo |
+| 720p | dash | 203 | 9,0 ms | 25 | 370 | 23 Mo |
+| 1 080p | sans dash | 203 | 9,2 ms | 24 | 354 | 22 Mo |
+| 1 080p | dash | 191 | 10,3 ms | 26 | 427 | 22 Mo |
+
+- **Créations** : l'écran de level-up construit ses cartes à chaque niveau (Label, conteneurs, boutons), c'est attendu. Les pools grandissent jusqu'à leur régime : un `DeathFx` vit 5 s, soit environ 130 en vol à 25 morts/s. Les annonces au sol (`GroundTelegraph`) apparaissent une seule fois par ennemi et par espèce, dans le cache de capacités. Aucune création par coup ni par mort au-delà de ces régimes transitoires.
+- **Allocations** : 1,5 Mo/s avec des morts, contre 0,14 Mo/s sans. Elles restent en génération 0, sans pic visible au p99. Pas un chantier prioritaire.
+- **Reste du lot 3** : XP laissée derrière soi en run nomade longue, Effacement tardif, builds à cône continu.
