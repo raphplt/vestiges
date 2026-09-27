@@ -23,6 +23,7 @@
     "poi_count_max": 4,
     "wang_tile_groups": ["concrete", "grass", "sidewalk", "building_interior", "building_edge", "plaza"],
     "blend_terrains": true,
+    "path_style": { "tone": "#5a5a55", "ruts": 0.0, "width_px": 30 },
     "tile_sources": {
         "concrete": [
             "ruines/tile_ruines_sol_w00",

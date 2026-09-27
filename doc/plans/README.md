@@ -52,6 +52,34 @@ Les numéros servent à identifier les plans, pas à imposer leur exécution int
 
 Un seul lot d'implémentation ouvert à la fois. Un échec de lisibilité, de performance ou de fun ramène au lot concerné avant expansion.
 
+**Mise à jour des 26 et 27 septembre (nuit, session cloud sans Raphaël) :**
+- [10 T3](10-terrain-et-tiles.md#lot-t3-livré--chemins-et-routes-26-septembre-2026) : chemins de terre entre les régions, raccordés aux rues, avec un style par biome. Les rues verticales ne sont plus coupées en deux bandes, et les trottoirs ont des bordures usées.
+- [16 O6](16-oubli-sensible.md) : échos de l'oubli. Dans les zones Fragiles, la silhouette pâle d'un habitant apparaît parfois, puis se dissout à l'approche en laissant un murmure.
+- [08 P4b-1/2](08-direction-artistique.md) : une ferme par région des champs, reliée au réseau de chemins par un embranchement (maison, grange, silo, hangar, enclos, haies).
+- [02 J0](02-juiciness-score.md) terminé : les effets de mort et la collecte d'XP sont recyclés, et le panneau des quêtes ne recrée plus ses lignes quatre fois par seconde. Banc de combat dense : 284 → 8 nœuds créés en 15 s.
+- [07 §7](07-bestiaire-et-rencontres.md) : perception et laisse propres à cinq créatures (valeurs provisoires, mesure à refaire).
+- [10 T2](10-terrain-et-tiles.md) : décors de transition mêlés le long des frontières de biomes. [08 I3](08-direction-artistique.md) : hauteur de vol unique des projectiles.
+- [16 O2](16-oubli-sensible.md) : en zone Effacée, des éclats du Néant s'élèvent des décors proches.
+- [08 P4b-3](08-direction-artistique.md) : haies, murets et clôtures aux bords des parcelles, vergers en rangs.
+- [16 O5](16-oubli-sensible.md) : un Autel qui sert rappelle sa zone à l'existence. Depuis la fusion de main, c'est le réveil d'un Mémorial qui le fait (les Autels n'existent plus).
+- [08 P4b-4](08-direction-artistique.md) : scènes-récits dans les champs (pique-nique abandonné, linge étendu, épouvantail aux corbeaux, tracteur embourbé).
+- [02 J1](02-juiciness-score.md) : retour de coup sans tween (recul sur le visuel seul), chiffres de dégâts en Saira, cumulés par cible, critique distinct par la forme.
+- [08 P2](08-direction-artistique.md) : l'église et le pylône de télécommunication reviennent comme repères rares des Ruines Urbaines, refaits dans le pipeline.
+- [02 J2](02-juiciness-score.md) : morts orientées par le dernier coup (dissolution, éclats, nuage), orbes d'XP qui jaillissent du corps, onde et éclair à la mort des élites.
+- [02 J3](02-juiciness-score.md) : orbes qui s'étirent et laissent une traînée, son de ramassage qui monte le long d'une chaîne, barre d'XP qui pulse.
+- [02 J4](02-juiciness-score.md) : montée de niveau avec onde dorée, colonne de lumière, créatures proches repoussées (en apparence), barre d'XP qui éclate, écran de choix qui entre avec du punch.
+- [02 J5](02-juiciness-score.md) : compteur de morts en rafale (« ×24 »), léger recul de caméra quand l'écran se remplit, voix sonores coupées de la plus ancienne à la plus récente.
+- [02 J6](02-juiciness-score.md) : traces de pas selon le sol (ronds dans l'eau, poussière), coffres qui frémissent à l'approche.
+- [02 lot A](02-juiciness-score.md) : score exact. Horloge de jeu qui exclut les pauses, score qui monte au HUD entre deux kills, « nouveau record » enfin affiché au bilan, barème en JSON.
+- [02 lot D](02-juiciness-score.md) : bilan de fin de run refait en trois zones (score et record, personnage et build complet, gains), révélé en trois temps après que le monde a pâli.
+- [04 C2](04-interfaces-et-hub.md) : Collection dans le menu de l'accueil. Armes et souvenirs de run en grille, détail et condition de déblocage à la demande, même règle de disponibilité que le loot.
+- [07 lot A](07-bestiaire-et-rencontres.md) : audit des données du bestiaire (`tools/audit_bestiary.py`). La Tisseuse ne sort qu'en crise dans les Marécages ; propositions à arbitrer.
+- [07 lot C](07-bestiaire-et-rencontres.md) : un Colosse par crise, livré puis **retiré** à la fusion de main, qui a supprimé les Colosses (plan 17 lot 0C).
+- [03 lot C](03-boucle-et-rythme.md) : pendant une Résurgence l'oubli s'accélère ; à l'accalmie, Essence doublée 30 s et coffre rare posé à portée devant le joueur (V2 §8).
+- **À arbitrer en priorité** : la Tisseuse hors des Marécages ; le barème des points d'intérêt (valeurs de `pois.json` inutilisées) ; la recette du bilan de fin de run et de la Collection (premières passes sans maquette validée).
+- 27 septembre : main (plans 17 et 18) fusionnée dans la branche de la session. Les apports de la nuit sont reportés sur les coffres, le level-up et les Mémoriaux de main ; ce qui dépendait des Autels, des Colosses ou des raretés d'armes a été retiré.
+- Travail fait dans un conteneur sans GPU : les points à revérifier sur la machine de Raphaël sont listés dans [A-VERIFIER.md](A-VERIFIER.md).
+
 **Mise à jour du 26 septembre (plan 17, vague 0 livrée) :** coffres réintégrés et visibles ([17](17-armes-coffres-modificateurs.md#lot-0a-livré--26-septembre)).
 - 23 coffres sur toute la carte au lieu de 10 à 15 autour du départ, dégagés des décors.
 - Sprites à l'échelle des personnages, colonne de lumière à la couleur de la rareté, invite « Ouvrir », flèches de bord d'écran.

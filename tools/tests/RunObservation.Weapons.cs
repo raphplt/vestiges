@@ -10,14 +10,17 @@ using Vestiges.Spawn;
 namespace Vestiges.Tests;
 
 /// <summary>
-/// --capture-weapons [--weapons id1,id2] : galerie des attaques du joueur. Chaque arme est équipée seule,
+/// --capture-weapons [--weapons id1,id2] [--lethal] : galerie des attaques du joueur. Chaque arme est équipée seule,
 /// déclenchée sur un cercle d'ennemis immobiles, et capturée en gros plan à plusieurs instants de l'attaque.
 /// </summary>
 public partial class RunObservation
 {
     private static readonly int[] WeaponCaptureFrames = { 2, 5, 9, 14 };
+    // Avec --lethal : les cibles meurent au premier coup (plan 02 J2), captures étalées sur la dissolution et le saut du butin.
+    // Au ralenti (×0,25) : la dissolution dure 0,6 s de jeu, trop peu pour le rendu logiciel du conteneur.
+    private static readonly int[] LethalCaptureFrames = { 2, 4, 7, 11, 16, 24 };
 
-    private async Task CaptureWeapons(string weaponList)
+    private async Task CaptureWeapons(string weaponList, bool lethal)
     {
         _world.GetNode("SpawnManager").ProcessMode = ProcessModeEnum.Disabled;
         EnemyPool pool = _world.GetNode<EnemyPool>("EnemyPool");
@@ -27,6 +30,8 @@ public partial class RunObservation
 
         MethodInfo attack = typeof(Player).GetMethod("OnWeaponAttackTimeout", BindingFlags.NonPublic | BindingFlags.Instance);
         FieldInfo hp = typeof(Enemy).GetField("_currentHp", BindingFlags.NonPublic | BindingFlags.Instance);
+        // XP symbolique : les orbes jaillissent sans déclencher l'écran de montée de niveau au milieu de la galerie.
+        FieldInfo xp = typeof(Enemy).GetField("_xpReward", BindingFlags.NonPublic | BindingFlags.Instance);
         List<string> ids = new();
         if (string.IsNullOrEmpty(weaponList))
             foreach (WeaponData data in WeaponDataLoader.GetAll())
@@ -59,20 +64,38 @@ public partial class RunObservation
                 spawner.ForceSpawnEnemy("rodeur", origin + offset);
             }
             await Frames(2);
+            bool elite = true;
             foreach (Node node in GetTree().GetNodesInGroup("enemies"))
             {
                 if (node is not Enemy enemy || !enemy.IsActive)
                     continue;
-                hp.SetValue(enemy, 100000f);
+                if (lethal && elite)
+                {
+                    // Une élite parmi les cibles : sa mort porte la signature (onde, éclair).
+                    spawner.MakeVariant(enemy, "elite");
+                    elite = false;
+                }
+                hp.SetValue(enemy, lethal ? 1f : 100000f);
+                if (lethal)
+                    xp.SetValue(enemy, 0.01f);
             }
-
-            attack.Invoke(_player, new object[] { 0 });
-            int elapsed = 0;
-            for (int shot = 0; shot < WeaponCaptureFrames.Length; shot++)
+            if (lethal)
+                Engine.TimeScale = 0.25;
+            try
             {
-                await Frames(WeaponCaptureFrames[shot] - elapsed);
-                elapsed = WeaponCaptureFrames[shot];
-                SavePlayerCloseUp($"{_output}/weapon-{id}-{shot}.png", new Vector2(150f, 95f));
+                attack.Invoke(_player, new object[] { 0 });
+                int elapsed = 0;
+                int[] frames = lethal ? LethalCaptureFrames : WeaponCaptureFrames;
+                for (int shot = 0; shot < frames.Length; shot++)
+                {
+                    await Frames(frames[shot] - elapsed);
+                    elapsed = frames[shot];
+                    SavePlayerCloseUp($"{_output}/weapon-{id}-{shot}.png", new Vector2(150f, 95f));
+                }
+            }
+            finally
+            {
+                Engine.TimeScale = 1.0;
             }
         }
         GD.Print($"[RunObservation] Galerie des armes écrite dans {_output}");

@@ -26,6 +26,11 @@ public partial class QuestManager : CanvasLayer
 
     private const int MaxRunQuests = 3;
     private const float RefreshInterval = 0.25f;
+    private static readonly Color QuestTitle = new(0.90f, 0.92f, 0.95f);
+    private static readonly Color QuestDoneTitle = new(0.64f, 0.94f, 0.66f);
+    private static readonly Color QuestDetails = new(0.62f, 0.72f, 0.82f);
+    private static readonly Color QuestDoneDetails = new(0.56f, 0.86f, 0.66f);
+    private readonly List<(Label Name, Label Details)> _questRows = new();
 
     private readonly List<ActiveRunQuest> _activeRunQuests = new();
 
@@ -233,33 +238,38 @@ public partial class QuestManager : CanvasLayer
         }
     }
 
+    /// <summary>
+    /// Met à jour le panneau des quêtes. Les lignes sont créées une fois par quête puis réécrites sur place :
+    /// une quête de durée rafraîchit le panneau quatre fois par seconde.
+    /// </summary>
     private void RefreshQuestList()
     {
-        foreach (Node child in _questList.GetChildren())
-            child.QueueFree();
-
-        foreach (ActiveRunQuest quest in _activeRunQuests)
+        while (_questRows.Count < _activeRunQuests.Count)
         {
-            Label name = new()
-            {
-                Text = $"{(quest.Completed ? "[OK]" : "[ ]")} {quest.Definition.Name}"
-            };
+            Label name = new();
             name.AddThemeFontSizeOverride("font_size", 14);
-            name.AddThemeColorOverride("font_color", quest.Completed
-                ? new Color(0.64f, 0.94f, 0.66f)
-                : new Color(0.90f, 0.92f, 0.95f));
             _questList.AddChild(name);
-
-            Label details = new()
-            {
-                Text = $"{quest.Definition.Description}\n{FormatProgress(quest.Definition, quest.Progress)}  |  {GetRewardSummary(quest.Definition)}",
-                AutowrapMode = TextServer.AutowrapMode.WordSmart
-            };
+            Label details = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart };
             details.AddThemeFontSizeOverride("font_size", 11);
-            details.AddThemeColorOverride("font_color", quest.Completed
-                ? new Color(0.56f, 0.86f, 0.66f)
-                : new Color(0.62f, 0.72f, 0.82f));
             _questList.AddChild(details);
+            _questRows.Add((name, details));
+        }
+        while (_questRows.Count > _activeRunQuests.Count)
+        {
+            (Label name, Label details) = _questRows[^1];
+            name.QueueFree();
+            details.QueueFree();
+            _questRows.RemoveAt(_questRows.Count - 1);
+        }
+
+        for (int i = 0; i < _activeRunQuests.Count; i++)
+        {
+            ActiveRunQuest quest = _activeRunQuests[i];
+            (Label name, Label details) = _questRows[i];
+            name.Text = $"{(quest.Completed ? "[OK]" : "[ ]")} {quest.Definition.Name}";
+            name.AddThemeColorOverride("font_color", quest.Completed ? QuestDoneTitle : QuestTitle);
+            details.Text = $"{quest.Definition.Description}\n{FormatProgress(quest.Definition, quest.Progress)}  |  {GetRewardSummary(quest.Definition)}";
+            details.AddThemeColorOverride("font_color", quest.Completed ? QuestDoneDetails : QuestDetails);
         }
     }
 

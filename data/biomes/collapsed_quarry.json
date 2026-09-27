@@ -24,6 +24,7 @@
     "poi_count_max": 3,
     "wang_tile_groups": ["grass", "concrete", "forest"],
     "blend_terrains": true,
+    "path_style": { "tone": "#5a5050", "ruts": 0.6, "width_px": 36 },
     "tile_sources": {
         "grass": [
             "carriere/tile_carriere_sol_w00",

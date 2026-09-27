@@ -21,7 +21,6 @@ public partial class EnemyProjectile : Area2D
 	private float _slowFactor = 1f;
 	private float _age;
 	/// <summary>Hauteur de vol au-dessus du sol : le départ, la traînée et l'impact se dessinent à cette hauteur.</summary>
-	public const float FlightHeight = 10f;
 
 	private Sprite2D _visual;
 	private ProjectileSprites.SpriteSet _spriteSet;
@@ -41,7 +40,7 @@ public partial class EnemyProjectile : Area2D
 	public override void _Ready()
 	{
 		_visual = GetNode<Sprite2D>("Visual");
-		_visual.Position = new Vector2(0f, -FlightHeight);
+		_visual.Position = new Vector2(0f, -Iso.FlightHeight);
 		// Au sol sous le projectile : c'est l'écart entre l'ombre et le visuel qui dit qu'il vole.
 		AddChild(GroundShadow.Create(8f));
 		_eventBus = GetNode<EventBus>("/root/EventBus");
@@ -89,7 +88,7 @@ public partial class EnemyProjectile : Area2D
 		if (frame - _trailFrame < 3 || CombatPools.Instance == null)
 			return;
 		_trailFrame = frame;
-		CombatPools.Instance.EmitSparks(GlobalPosition + new Vector2(0f, -FlightHeight), new SparkBurst
+		CombatPools.Instance.EmitSparks(GlobalPosition + new Vector2(0f, -Iso.FlightHeight), new SparkBurst
 		{
 			Family = _family,
 			Owner = FxOwner.Enemy,
@@ -138,7 +137,7 @@ public partial class EnemyProjectile : Area2D
 	{
 		_isDespawning = true;
 		SetDeferred(Area2D.PropertyName.Monitoring, false);
-		CombatPools.Instance?.ShowEnemyImpact(GlobalPosition + new Vector2(0f, -FlightHeight), _direction, _family);
+		CombatPools.Instance?.ShowEnemyImpact(GlobalPosition + new Vector2(0f, -Iso.FlightHeight), _direction, _family);
 		CallDeferred(MethodName.Release);
 	}
 

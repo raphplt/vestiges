@@ -13,7 +13,6 @@ namespace Vestiges.Events.RunEvents;
 /// </summary>
 public sealed class RunEventContext
 {
-    private static PackedScene _xpOrbScene;
     private static PackedScene _chestScene;
 
     public Player Player { get; }
@@ -33,7 +32,6 @@ public sealed class RunEventContext
         Groups = groups;
         Progression = player.GetNodeOrNull<PlayerProgression>("PlayerProgression");
         Rng.Randomize();
-        _xpOrbScene ??= GD.Load<PackedScene>("res://scenes/combat/XpOrb.tscn");
         _chestScene ??= GD.Load<PackedScene>("res://scenes/world/Chest.tscn");
     }
 
@@ -81,10 +79,7 @@ public sealed class RunEventContext
         float perOrb = totalXp / orbCount;
         for (int i = 0; i < orbCount; i++)
         {
-            XpOrb orb = _xpOrbScene.Instantiate<XpOrb>();
-            orb.GlobalPosition = PointAround(position, 4f, 28f);
-            orb.Initialize(perOrb);
-            WorldRoot.CallDeferred(Node.MethodName.AddChild, orb);
+            CombatPools.Instance?.SpawnXpOrb(PointAround(position, 4f, 28f), perOrb);
         }
     }
 

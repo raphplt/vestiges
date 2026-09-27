@@ -774,7 +774,7 @@ Le script de post-processing doit inclure une vérification/correction de l'angl
 - [ ] Signaux précurseurs des Résurgences.
 - [ ] Sound design cleanup (retirer sons répétitifs, ajuster XP, musique adaptative).
 - [x] Intégration des 50 choix audio A–B6 applicables et nettoyage des fichiers inutilisés ; banque JSON, crédits et archives d’écoute hors dépôt (plan 15).
-- [ ] Écran de mort reworké (transition visuelle + score détaillé + stats).
+- [x] Écran de mort reworké (transition visuelle + score détaillé + stats) : bilan en trois zones, première passe du plan 02 lot D (27 septembre 2026), recette de Raphaël attendue.
 
 ### Phase E — Quêtes et personnages (2-3 semaines)
 

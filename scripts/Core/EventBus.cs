@@ -101,4 +101,8 @@ public partial class EventBus : Node
 
     // --- Essence (V2) ---
     [Signal] public delegate void EssenceChangedEventHandler(int newAmount);
+    /// <summary>Essence gagnée à un endroit du monde (Vector2.Zero : sans lieu), pour son trajet vers le HUD.</summary>
+    [Signal] public delegate void EssenceGainedEventHandler(int amount, Vector2 worldPosition);
+    /// <summary>Multiplicateur d'Essence en cours (accalmie après une crise) et sa durée ; 1 et 0 à la fin.</summary>
+    [Signal] public delegate void EssenceMultiplierChangedEventHandler(float multiplier, float seconds);
 }

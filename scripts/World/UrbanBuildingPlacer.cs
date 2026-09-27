@@ -18,6 +18,15 @@ public static class UrbanBuildingPlacer
 	// Distance du centre du module au bord de l'îlot : la façade s'arrête juste avant le trottoir.
 	private const int FrontInsetRows = 2;
 	private const int AlleyChance = 22;
+	// Repères rares (plan 08 P2) : église en tête de rangée d'un îlot préservé, pylône dans une cour d'îlot.
+	private const int ChurchChance = 8;
+	private const int MaxChurches = 2;
+	private const float ChurchMinIntegrity = 0.55f;
+	private const int MastChance = 10;
+	private const int MaxMasts = 2;
+	private const string MastSprite = "assets/props/urban_ruins/prop_radio_mast.png";
+	// Deux repères du même genre à moins de cette distance à l'écran se répètent au lieu de guider.
+	private const float LandmarkSpacingPx = 1600f;
 
 	private static Dictionary<string, List<(int Width, string Path)>> _catalog;
 
@@ -37,46 +46,75 @@ public static class UrbanBuildingPlacer
 		}
 
 		int placed = 0;
+		List<Vector2> churches = new();
+		List<Vector2> masts = new();
 		foreach (BuildingFootprint block in layout.Buildings)
 		{
 			if (block.Size.X < 4 || block.Size.Y < 4)
 				continue;
 
+			uint blockHash = UrbanPropPlacer.HashCell(block.Origin, seed ^ 0xC4A9EUL);
+			Vector2 blockCenter = ground.MapToLocal(block.Origin + block.Size / 2);
+			bool church = churches.Count < MaxChurches && block.Integrity >= ChurchMinIntegrity && blockHash % 100 < ChurchChance
+				&& FarFrom(churches, blockCenter);
 			// Une seule rangée, au sud : elle s'élève au-dessus de la cour de son îlot plutôt que de la rue au nord.
 			int southRow = block.Origin.Y + block.Size.Y - 1 - FrontInsetRows;
-			placed += PlaceRow(block, southRow, ground, container, usedCells, cache, seed);
+			placed += PlaceRow(block, southRow, church, ground, container, usedCells, cache, seed, out bool churchPlaced);
+			if (churchPlaced)
+				churches.Add(blockCenter);
+
+			// Pylône au milieu de la cour, derrière la rangée : il dépasse des toits.
+			int courtyardEnd = southRow - ModuleDepthRows / 2 - 1;
+			if (masts.Count < MaxMasts && courtyardEnd > block.Origin.Y + 1 && (blockHash >> 8) % 100 < MastChance
+				&& FarFrom(masts, blockCenter))
+			{
+				Vector2I anchor = new(block.Origin.X + block.Size.X / 2, (block.Origin.Y + 1 + courtyardEnd) / 2);
+				if (UrbanPropPlacer.TryPlaceProp(MastSprite, anchor, ground, container, usedCells, cache))
+				{
+					masts.Add(blockCenter);
+					placed++;
+				}
+			}
 
 			// Cour intérieure : gravats, sous les rangées déjà réservées.
 			if (block.Size.X * block.Size.Y >= 30)
 				UrbanPropPlacer.PlaceInteriorDebris(block, ground, container, usedCells, cache, seed ^ (ulong)block.Origin.X, ref placed);
 			UrbanPropPlacer.ReserveBuildingFootprint(block, usedCells, inset: 0);
 		}
+		GD.Print($"[UrbanBuildingPlacer] Repères : {churches.Count} église(s), {masts.Count} pylône(s)");
 		return placed;
 	}
 
+	/// <summary>Rangée de modules ; avec <paramref name="church"/>, l'église ouvre la rangée si elle y tient.</summary>
 	private static int PlaceRow(
 		BuildingFootprint block,
 		int row,
+		bool church,
 		TileMapLayer ground,
 		Node2D container,
 		HashSet<Vector2I> usedCells,
 		Dictionary<string, Texture2D> cache,
-		ulong seed)
+		ulong seed,
+		out bool churchPlaced)
 	{
+		churchPlaced = false;
 		int placed = 0;
 		int x = block.Origin.X + 1;
 		int end = block.Origin.X + block.Size.X - 2;
 		while (x <= end)
 		{
 			uint hash = UrbanPropPlacer.HashCell(new Vector2I(x, row), seed ^ 0xB17DUL);
-			if (hash % 100 < AlleyChance)
+			bool first = x == block.Origin.X + 1;
+			if (!(church && first) && hash % 100 < AlleyChance)
 			{
 				x++;
 				continue;
 			}
 
-			string style = PickStyle(block.Integrity, hash);
-			(int width, string path) = PickModule(style, end - x + 1, hash >> 8);
+			(int width, string path) = church && first ? PickModule("church", end - x + 1, hash >> 8) : (0, null);
+			bool isChurch = width > 0;
+			if (width == 0)
+				(width, path) = PickModule(PickStyle(block.Integrity, hash), end - x + 1, hash >> 8);
 			if (width == 0)
 			{
 				(width, path) = PickModule("ruin", end - x + 1, hash >> 8);
@@ -88,11 +126,22 @@ public static class UrbanBuildingPlacer
 			if (UrbanPropPlacer.TryPlaceProp(path, anchor, ground, container, usedCells, cache))
 			{
 				placed++;
+				churchPlaced |= isChurch;
 				Reserve(usedCells, x, width, row);
 			}
 			x += width;
 		}
 		return placed;
+	}
+
+	private static bool FarFrom(List<Vector2> others, Vector2 point)
+	{
+		foreach (Vector2 other in others)
+		{
+			if (other.DistanceSquaredTo(point) < LandmarkSpacingPx * LandmarkSpacingPx)
+				return false;
+		}
+		return true;
 	}
 
 	/// <summary>Îlot abîmé → ruines, sinon immeubles, commerces et maisons.</summary>

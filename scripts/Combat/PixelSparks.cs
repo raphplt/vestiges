@@ -23,7 +23,7 @@ public partial class PixelSparks : Node2D
     private readonly byte[] _family = new byte[Capacity];
     private readonly byte[] _size = new byte[Capacity];
     private readonly bool[] _ballistic = new bool[Capacity];
-    private readonly bool[] _hostile = new bool[Capacity];
+    private readonly byte[] _owner = new byte[Capacity];
     private readonly Random _random = new();
     private int _next;
     private int _active;
@@ -42,6 +42,10 @@ public partial class PixelSparks : Node2D
         if (level == ParticleLevel.Off || (burst.Owner == FxOwner.Player && !CombatFxSettings.PlayerAttackFx))
             return;
         int count = level == ParticleLevel.Reduced ? Mathf.Max(1, burst.Count / 2) : burst.Count;
+        if (burst.Owner == FxOwner.Player || burst.Decorative)
+            count = FxBudget.Take(FxBudgetKind.Sparks, count);
+        if (count == 0)
+            return;
         float baseAngle = burst.Direction == Vector2.Zero ? 0f : burst.Direction.Angle();
         float spread = burst.Direction == Vector2.Zero ? Mathf.Tau : burst.Spread;
 
@@ -75,7 +79,7 @@ public partial class PixelSparks : Node2D
             _maxLife[index] = life;
             _family[index] = (byte)burst.Family;
             _size[index] = (byte)Mathf.Clamp(burst.Size, 1, 3);
-            _hostile[index] = burst.Owner == FxOwner.Enemy;
+            _owner[index] = (byte)burst.Owner;
         }
         SetProcess(true);
     }
@@ -129,7 +133,7 @@ public partial class PixelSparks : Node2D
             FxRamp ramp = PixelPalette.Ramp((FxFamily)_family[i]);
             float age = 1f - _life[i] / _maxLife[i];
             Color color = age < 0.3f ? ramp.Light : age < 0.65f ? ramp.Mid : ramp.Dark;
-            color.A = _hostile[i] ? enemyOpacity : playerOpacity;
+            color.A = (FxOwner)_owner[i] switch { FxOwner.Enemy => enemyOpacity, FxOwner.Player => playerOpacity, _ => 1f };
             Vector2 corner = new(Mathf.Floor(_position[i].X), Mathf.Floor(_position[i].Y - _height[i]));
             float size = _size[i];
             // Les éclats rétrécissent d'un texel en fin de vie plutôt que de devenir transparents.

@@ -23,6 +23,8 @@ public partial class LevelUpScreen : CanvasLayer
     private static readonly Color TextDim = ChoiceStyle.TextDim;
     private static readonly Color NeutralBorder = ChoiceStyle.NeutralBorder;
     private static readonly Color OverlayColor = ChoiceStyle.OverlayColor;
+    private const float PanelEntranceScale = 0.82f;
+    private Tween _entranceTween;
     private static readonly Color BanishColor = new(0.85f, 0.25f, 0.2f);
 
     private const int RayCount = 14;
@@ -443,10 +445,39 @@ public partial class LevelUpScreen : CanvasLayer
             if (Visible)
                 AudioManager.PlayLoop("sfx_level_up_loop", -4f);
         };
+        PlayEntrance();
+    }
+
+    /// <summary>
+    /// Entrée avec du punch (plan 02 J4) : le voile tombe en 0,12 s, le panneau jaillit de 82 % avec un léger
+    /// dépassement. Les cartes sont cliquables dès la première frame : le délai jusqu'au choix ne change pas.
+    /// </summary>
+    private void PlayEntrance()
+    {
+        _entranceTween?.Kill();
+        _overlay.Color = new Color(OverlayColor, 0f);
+        SetPanelScale(PanelEntranceScale);
+        _entranceTween = CreateTween();
+        _entranceTween.SetPauseMode(Tween.TweenPauseMode.Process);
+        _entranceTween.SetParallel();
+        _entranceTween.TweenProperty(_overlay, "color", OverlayColor, 0.12f);
+        _entranceTween.TweenMethod(Callable.From<float>(SetPanelScale), PanelEntranceScale, 1f, 0.22f)
+            .SetTrans(Tween.TransitionType.Back).SetEase(Tween.EaseType.Out);
+    }
+
+    private void SetPanelScale(float scale)
+    {
+        // Le panneau vient d'être rempli et sa mise en page est différée : sa taille minimale, calculée sur demande,
+        // donne déjà le bon centre dès la première frame.
+        _panel.PivotOffset = _panel.GetCombinedMinimumSize() / 2f;
+        _panel.Scale = Vector2.One * scale;
     }
 
     private void HideScreen()
     {
+        _entranceTween?.Kill();
+        _panel.Scale = Vector2.One;
+        _overlay.Color = OverlayColor;
         _overlay.Visible = false;
         _rays.Visible = false;
         _panel.Visible = false;

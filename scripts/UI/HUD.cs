@@ -50,6 +50,11 @@ public partial class HUD : CanvasLayer
     private ColorRect _hpChip;
     private Label _hpValueLabel;
     private ColorRect _xpFill;
+    private float _xpPulse;
+    private EssenceFlights _essenceFlights;
+    private float _essencePulse;
+    private static readonly Color EssencePulseModulate = new(1.8f, 1.8f, 1.8f, 1f);
+    private static readonly Color XpPulseModulate = new(1.9f, 1.9f, 1.9f, 1f);
     private PanelContainer _vitalsPlate;
 
     // --- Run progress ---
@@ -92,8 +97,16 @@ public partial class HUD : CanvasLayer
     private float _biomeTimer;
     private float _scoreTimer;
     private float _runSeconds;
+    private RunTracker _runTracker;
     private int _shownSeconds = -1;
     private int _targetScore;
+    private Label _gainLabel;
+    private int _pendingGain;
+    private float _gainAge = float.MaxValue;
+    private const int MinShownGain = 5;
+    private const float GainGroupSec = 0.6f;
+    private const float GainShowSec = 0.9f;
+    private const float GainFadeSec = 0.4f;
     private float _shownScore;
     private float _hpRatio = 1f;
     private float _chipRatio = 1f;
@@ -122,6 +135,7 @@ public partial class HUD : CanvasLayer
         _eventBus = GetNode<EventBus>("/root/EventBus");
         _groupCache = GetNodeOrNull<GroupCache>("/root/GroupCache");
         _gameManager = GetNodeOrNull<GameManager>("/root/GameManager");
+        _runTracker = GetNodeOrNull<RunTracker>("../RunTracker");
         _eventBus.PlayerDamaged += OnPlayerDamaged;
         _eventBus.XpGained += OnXpChanged;
         _eventBus.LevelUp += OnLevelUp;
@@ -131,6 +145,7 @@ public partial class HUD : CanvasLayer
         _eventBus.CrisisWarning += OnCrisisWarning;
         _eventBus.CrisisStarted += OnCrisisStarted;
         _eventBus.CrisisEnded += OnCrisisEnded;
+        _eventBus.EssenceMultiplierChanged += OnEssenceMultiplierChanged;
         _eventBus.EssenceChanged += OnEssenceChanged;
         _eventBus.WeaponInventoryChanged += OnWeaponInventoryChanged;
         _eventBus.WeaponUpgraded += OnWeaponUpgraded;
@@ -147,8 +162,13 @@ public partial class HUD : CanvasLayer
         GetViewport().SizeChanged += OnViewportResized;
 
         BuildVitals();
+        _hudRoot.AddChild(new KillStreakDisplay { Name = "KillStreak", Position = new Vector2(PlateMargin + 4f, PlateMargin + 46f) });
+        _essenceFlights = new EssenceFlights { Name = "EssenceFlights" };
+        _essenceFlights.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
+        _essenceFlights.Setup(EssenceTarget, () => _essencePulse = 1f);
         BuildRunProgress();
         BuildScoreArea();
+        _hudRoot.AddChild(_essenceFlights);
         BuildWeaponBar();
         BuildPassiveBar();
 
@@ -191,7 +211,10 @@ public partial class HUD : CanvasLayer
             _fpsLabel.Text = $"{Engine.GetFramesPerSecond()} FPS";
         }
 
-        if (_gameManager == null || _gameManager.CurrentState == GameManager.GameState.Run)
+        // Même horloge que le score et le bilan (plan 02 lot A) ; compteur propre seulement hors run complète.
+        if (_runTracker != null)
+            _runSeconds = _runTracker.RunDurationSeconds;
+        else if (_gameManager == null || _gameManager.CurrentState == GameManager.GameState.Run)
             _runSeconds += dt;
         int seconds = (int)_runSeconds;
         if (seconds != _shownSeconds)
@@ -209,6 +232,17 @@ public partial class HUD : CanvasLayer
 
         UpdateHpChip(dt);
         UpdateScoreCounter(dt);
+        UpdateGainLabel(dt);
+        if (_essencePulse > 0f)
+        {
+            _essencePulse = Mathf.Max(0f, _essencePulse - dt * 6f);
+            _essenceLabel.Modulate = Colors.White.Lerp(EssencePulseModulate, _essencePulse);
+        }
+        if (_xpPulse > 0f)
+        {
+            _xpPulse = Mathf.Max(0f, _xpPulse - dt * 5f);
+            _xpFill.Modulate = Colors.White.Lerp(XpPulseModulate, Mathf.Min(_xpPulse, 1f));
+        }
 
         _biomeTimer += dt;
         if (_biomeTimer >= BiomeUpdateInterval)
@@ -231,6 +265,7 @@ public partial class HUD : CanvasLayer
             _eventBus.CrisisWarning -= OnCrisisWarning;
             _eventBus.CrisisStarted -= OnCrisisStarted;
             _eventBus.CrisisEnded -= OnCrisisEnded;
+            _eventBus.EssenceMultiplierChanged -= OnEssenceMultiplierChanged;
             _eventBus.EssenceChanged -= OnEssenceChanged;
             _eventBus.WeaponInventoryChanged -= OnWeaponInventoryChanged;
             _eventBus.WeaponUpgraded -= OnWeaponUpgraded;
@@ -440,6 +475,14 @@ public partial class HUD : CanvasLayer
         _scoreLabel.HorizontalAlignment = HorizontalAlignment.Right;
         content.AddChild(_scoreLabel);
 
+        // Gains rapprochés regroupés (plan 02 lot A) : « +120 » à gauche de la plaque, puis s'efface.
+        _gainLabel = MakeLabel("", 13, PalGold, 4);
+        _gainLabel.Position = new Vector2(-ScorePlateWidth - PlateMargin - 88f, PlateMargin + 10f);
+        _gainLabel.Size = new Vector2(80f, 20f);
+        _gainLabel.HorizontalAlignment = HorizontalAlignment.Right;
+        _gainLabel.Modulate = new Color(1f, 1f, 1f, 0f);
+        anchor.AddChild(_gainLabel);
+
         _essenceLabel = MakeLabel("", 10, PalCyanEssence);
         _essenceLabel.Position = new Vector2(8, 22);
         _essenceLabel.Size = new Vector2(ScorePlateWidth - 16, 15);
@@ -601,10 +644,13 @@ public partial class HUD : CanvasLayer
         }
     }
 
-    private void OnXpChanged(float _amount)
+    private void OnXpChanged(float amount)
     {
         if (_progression == null)
             return;
+        // Chaque orbe qui arrive fait pulser la barre (plan 02 J3).
+        if (amount > 0f)
+            _xpPulse = 1f;
         float ratio = _progression.XpToNextLevel > 0 ? _progression.CurrentXp / _progression.XpToNextLevel : 0f;
         SetBarRatio(_xpFill, ratio);
     }
@@ -613,13 +659,35 @@ public partial class HUD : CanvasLayer
     {
         _levelLabel.Text = $"{newLevel}";
         OnXpChanged(0);
+        // La barre repart de zéro en éclatant (plan 02 J4) : pulse plus long que celui d'une orbe.
+        _xpPulse = 2f;
         _levelLabel.PivotOffset = _levelLabel.Size / 2f;
         Tween tween = CreateTween();
         tween.TweenProperty(_levelLabel, "scale", new Vector2(1.5f, 1.5f), 0.08f);
         tween.TweenProperty(_levelLabel, "scale", Vector2.One, 0.25f).SetTrans(Tween.TransitionType.Back).SetEase(Tween.EaseType.Out);
     }
 
-    private void OnScoreChanged(int newScore) => _targetScore = newScore;
+    private void OnScoreChanged(int newScore)
+    {
+        int gain = newScore - _targetScore;
+        _targetScore = newScore;
+        // Les points de survie arrivent un à un : seuls les vrais gains (kill, coffre, lieu) s'affichent.
+        if (gain < MinShownGain)
+            return;
+        _pendingGain = _gainAge < GainGroupSec ? _pendingGain + gain : gain;
+        _gainAge = 0f;
+        _gainLabel.Text = $"+{_pendingGain:N0}";
+        _gainLabel.Modulate = Colors.White;
+    }
+
+    private void UpdateGainLabel(float dt)
+    {
+        if (_gainAge > GainShowSec + GainFadeSec)
+            return;
+        _gainAge += dt;
+        float fade = Mathf.Clamp((_gainAge - GainShowSec) / GainFadeSec, 0f, 1f);
+        _gainLabel.Modulate = new Color(1f, 1f, 1f, 1f - fade);
+    }
 
     /// <summary>Le score défile vers sa cible : chaque gain se voit, sans reconstruire la chaîne à chaque frame.</summary>
     private void UpdateScoreCounter(float dt)
@@ -698,6 +766,27 @@ public partial class HUD : CanvasLayer
     private void OnCrisisEnded(int crisisNumber)
     {
         _alertLabel.Text = "";
+    }
+
+    /// <summary>Accalmie après une crise (plan 03 lot C) : l'annonce dure autant que le bonus d'Essence.</summary>
+    private void OnEssenceMultiplierChanged(float multiplier, float seconds)
+    {
+        if (multiplier > 1f)
+        {
+            _alertLabel.Text = string.Format(Tr("UI_HUD_CALM"), multiplier.ToString("0.#"));
+            _alertLabel.AddThemeColorOverride("font_color", PalCyanEssence);
+        }
+        else if (_warningCountdown <= 0f)
+        {
+            _alertLabel.Text = "";
+        }
+    }
+
+    /// <summary>Arrivée des grains d'Essence : fin du compteur, dans le repère des vols.</summary>
+    private Vector2 EssenceTarget()
+    {
+        Rect2 rect = _essenceLabel.GetGlobalRect();
+        return _essenceFlights.GetGlobalTransform().AffineInverse() * new Vector2(rect.End.X - 16f, rect.GetCenter().Y);
     }
 
     private void OnEssenceChanged(int amount)

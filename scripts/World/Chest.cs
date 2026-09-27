@@ -21,6 +21,15 @@ public partial class Chest : StaticBody2D, IInteractable
     private LightColumn _column;
     private Texture2D _openTexture;
     private EventBus _eventBus;
+    private GroupCache _groups;
+
+    // Frémissement à l'approche (plan 02 J6) : le coffre fermé tremble de plus en plus quand le joueur s'en approche.
+    private const float QuiverRange = 110f;
+    private const float QuiverMaxRadians = 0.06f;
+    private const float QuiverCheckInterval = 0.1f;
+    private float _quiverCheck;
+    private float _quiverAmount;
+    private float _quiverTime;
 
     /// <summary>Coffres fermés présents dans la scène.</summary>
     public static IReadOnlyList<Chest> Closed => _closed;
@@ -66,7 +75,38 @@ public partial class Chest : StaticBody2D, IInteractable
     public override void _Ready()
     {
         _eventBus = GetNode<EventBus>("/root/EventBus");
+        _groups = GetNode<GroupCache>("/root/GroupCache");
         AddToGroup("chests");
+    }
+
+    public override void _Process(double delta)
+    {
+        if (_isOpened || _sprite == null)
+            return;
+        float dt = (float)delta;
+        _quiverCheck -= dt;
+        if (_quiverCheck <= 0f)
+        {
+            _quiverCheck = QuiverCheckInterval;
+            _quiverAmount = 0f;
+            if (_groups.GetPlayer() is Node2D player)
+            {
+                float distance = GlobalPosition.DistanceTo(player.GlobalPosition);
+                _quiverAmount = Mathf.Clamp(1f - distance / QuiverRange, 0f, 1f);
+            }
+        }
+
+        if (_quiverAmount <= 0f)
+        {
+            if (_sprite.Rotation != 0f)
+                _sprite.Rotation = 0f;
+            return;
+        }
+        // Secousses brèves par saccades, pas une oscillation régulière : quelque chose bouge dedans.
+        // Le sprite est décalé de son pivot au sol : il pivote sur sa base.
+        _quiverTime += dt;
+        float burst = Mathf.Max(0f, Mathf.Sin(_quiverTime * 3.1f));
+        _sprite.Rotation = Mathf.Sin(_quiverTime * 41f) * QuiverMaxRadians * _quiverAmount * burst;
     }
 
     public void Initialize(ChestData data)
@@ -97,6 +137,7 @@ public partial class Chest : StaticBody2D, IInteractable
             return new();
 
         _isOpened = true;
+        _sprite.Rotation = 0f;
         _closed.Remove(this);
         Interactables.Unregister(this);
         if (_openTexture != null)

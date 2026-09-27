@@ -3,14 +3,40 @@ using Godot;
 
 namespace Vestiges.Combat;
 
-/// <summary>Chiffre de dégâts recyclé par CombatPools : monte, s'efface, retourne au pool.</summary>
+/// <summary>
+/// Chiffre de dégâts recyclé par CombatPools (plan 02 J1). En Saira cerné de sombre pour rester lisible sur tous les sols.
+/// Les coups normaux rapprochés sur une même cible s'additionnent dans un seul chiffre qui reste en place et
+/// pulse à chaque ajout, puis s'envole ; le critique ne se fond jamais : plus gros, doré, suffixé « ! », il jaillit.
+/// Animé dans _Process, sans tween.
+/// </summary>
 public partial class DamageNumber : Node2D
 {
+	private const float PopSec = 0.08f;
+	private const float MergeWindowSec = 0.25f;
+	private const float MaxHoldSec = 1.0f;
+	private const float FloatSec = 0.5f;
+	private const float NormalRisePx = 30f;
+	private const float CritRisePx = 50f;
+	private const float NormalPopScale = 1.35f;
+	private static readonly Vector2 CritPopScale = new(1.8f, 0.7f);
+	private static readonly Vector2 CritRestScale = new(1.1f, 1.1f);
 	private static readonly RandomNumberGenerator Rng = new();
 
+	private static LabelSettings _small;
+	private static LabelSettings _medium;
+	private static LabelSettings _large;
+	private static LabelSettings _crit;
+
 	private Label _label;
-	private Tween _tween;
 	private Action<DamageNumber> _release;
+	private Vector2 _origin;
+	private float _total;
+	private float _elapsed;
+	private float _sinceHit;
+	private bool _isCrit;
+
+	/// <summary>Numéro de lancement : un détenteur vérifie que le chiffre n'a pas été recyclé pour une autre cible.</summary>
+	public int Serial { get; private set; }
 
 	public void SetRelease(Action<DamageNumber> release)
 	{
@@ -22,52 +48,93 @@ public partial class DamageNumber : Node2D
 		// Toujours lisible au-dessus des entités triées en Y et du brouillard.
 		ZIndex = 30;
 		_label = GetNode<Label>("Label");
+		if (_small == null)
+		{
+			Font semiBold = GD.Load<Font>("res://assets/fonts/saira/SairaSemiCondensed-SemiBold.ttf");
+			Font bold = GD.Load<Font>("res://assets/fonts/saira/SairaSemiCondensed-Bold.ttf");
+			Color normal = new(1f, 0.96f, 0.82f);
+			Color outline = new(0.08f, 0.05f, 0.1f);
+			_small = Settings(semiBold, 14, normal, outline);
+			_medium = Settings(semiBold, 16, normal, outline);
+			_large = Settings(bold, 19, new Color(1f, 0.9f, 0.45f), outline);
+			_crit = Settings(bold, 24, new Color(1f, 0.74f, 0.12f), new Color(0.35f, 0.05f, 0.02f));
+		}
+		SetProcess(false);
 	}
 
 	public void Play(Vector2 position, float damage, bool isCrit)
 	{
-		// Décalage latéral aléatoire pour éviter les empilements.
-		GlobalPosition = position + new Vector2(Rng.RandfRange(-12f, 12f), 0f);
-		Visible = true;
+		Serial++;
+		// Décalage latéral aléatoire pour éviter les empilements entre cibles voisines.
+		_origin = position + new Vector2(Rng.RandfRange(-12f, 12f), 0f);
+		GlobalPosition = _origin;
+		_isCrit = isCrit;
+		_total = 0f;
+		_elapsed = 0f;
 		Modulate = Colors.White;
-		_label.Text = ((int)damage).ToString();
+		Visible = true;
+		SetProcess(true);
+		Add(damage);
+	}
 
-		if (isCrit)
-		{
-			_label.AddThemeColorOverride("font_color", new Color(1f, 0.75f, 0.1f));
-			_label.AddThemeFontSizeOverride("font_size", 22);
-			_label.Text += "!";
-			Scale = new Vector2(1.6f, 0.6f);
-		}
-		else
-		{
-			// Taille proportionnelle aux dégâts (petits coups = plus discrets).
-			_label.AddThemeColorOverride("font_color", new Color(1f, 1f, 0.3f));
-			_label.AddThemeFontSizeOverride("font_size", damage > 30 ? 18 : (damage > 15 ? 16 : 14));
-			Scale = Vector2.One;
-		}
+	/// <summary>
+	/// Ajoute un coup normal au chiffre s'il appartient encore à cette cible (<paramref name="serial"/>)
+	/// et qu'il n'a pas commencé à s'envoler. Faux : le détenteur en lance un nouveau.
+	/// </summary>
+	public bool TryMerge(int serial, float damage)
+	{
+		if (serial != Serial || !Visible || _isCrit || _sinceHit > MergeWindowSec || _elapsed > MaxHoldSec)
+			return false;
+		Add(damage);
+		return true;
+	}
 
-		_tween?.Kill();
-		_tween = CreateTween();
-		_tween.SetParallel(true);
-		float rise = isCrit ? -55f : -35f;
-		_tween.TweenProperty(this, "position", Position + new Vector2(0, rise), 0.7f)
-			.SetEase(Tween.EaseType.Out)
-			.SetTrans(Tween.TransitionType.Quad);
-		if (isCrit)
-		{
-			_tween.TweenProperty(this, "scale", Vector2.One * 1.1f, 0.1f)
-				.SetTrans(Tween.TransitionType.Back)
-				.SetEase(Tween.EaseType.Out);
-		}
-		_tween.TweenProperty(this, "modulate:a", 0.0f, 0.5f).SetDelay(0.35f);
-		_tween.SetParallel(false);
-		_tween.TweenCallback(Callable.From(Finish));
+	public override void _Process(double delta)
+	{
+		float dt = (float)delta;
+		_elapsed += dt;
+		_sinceHit += dt;
+
+		float pop = Mathf.Clamp(_sinceHit / PopSec, 0f, 1f);
+		pop = 1f - (1f - pop) * (1f - pop);
+		Scale = _isCrit
+			? CritPopScale.Lerp(CritRestScale, pop)
+			: Vector2.One * Mathf.Lerp(NormalPopScale, 1f, pop);
+
+		// Tenu en place tant que les coups s'enchaînent, puis s'envole et s'efface.
+		float hold = _isCrit ? PopSec : MergeWindowSec;
+		if (_sinceHit < hold)
+			return;
+		float flight = Mathf.Clamp((_sinceHit - hold) / FloatSec, 0f, 1f);
+		float rise = 1f - (1f - flight) * (1f - flight);
+		GlobalPosition = _origin + new Vector2(0f, -(_isCrit ? CritRisePx : NormalRisePx) * rise);
+		Modulate = new Color(1f, 1f, 1f, 1f - Mathf.Clamp((flight - 0.3f) / 0.7f, 0f, 1f));
+		if (flight >= 1f)
+			Finish();
+	}
+
+	private void Add(float damage)
+	{
+		_total += damage;
+		_sinceHit = 0f;
+		int shown = Mathf.Max(1, (int)_total);
+		_label.Text = _isCrit ? $"{shown}!" : shown.ToString();
+		_label.LabelSettings = _isCrit ? _crit : _total > 30f ? _large : _total > 15f ? _medium : _small;
 	}
 
 	private void Finish()
 	{
 		Visible = false;
+		SetProcess(false);
 		_release(this);
 	}
+
+	private static LabelSettings Settings(Font font, int size, Color color, Color outline) => new()
+	{
+		Font = font,
+		FontSize = size,
+		FontColor = color,
+		OutlineSize = 4,
+		OutlineColor = outline,
+	};
 }

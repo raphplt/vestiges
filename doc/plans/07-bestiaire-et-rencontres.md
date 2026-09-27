@@ -192,6 +192,45 @@ Les deux améliorations peuvent coexister, mais leur intention utilisateur n’e
 **Vérification :** chaque famille possède une action observable ; les annonces sont compréhensibles sans fiche technique.
 **Garde-fou :** présence en JSON ne prouve pas apparition normale.
 
+**Lot A, audit des données — 27 septembre 2026 (session cloud) :** étape 4 (« présence en JSON ne prouve pas apparition normale »). Outil reproductible : `python3 tools/audit_bestiary.py`. Il relève, pour chaque fiche, le rôle déclaré et tous les chemins d'apparition trouvés dans les données et le code : pools d'exploration et de crise des biomes (anciennes clés `day_enemy_pool` et `night_enemy_pool`, avec la part de la créature), gardes de points d'intérêt, micro-événements, identifiants cités dans `scripts/`.
+
+| Créature | Type · rang · comportement | Vit. | PV | Capacités | Exploration (part du pool) | Crise et fin de run | Autres chemins |
+|---|---|---|---|---|---|---|---|
+| Charognard (`charognard`) | melee · normal · pack | 85 | 18 | pounce | Forêt Reconquise 40 %, Champs Sauvages 50 % | Forêt Reconquise 17 %, Champs Sauvages 17 % | micro-événements (1) |
+| Colosse Sylvestre (`colosse_forest`) | melee · miniboss · colosse | 22 | 400 | — | — | — | — |
+| Colosse des Profondeurs (`colosse_swamp`) | melee · miniboss · colosse | 28 | 300 | — | — | — | — |
+| Colosse de Béton (`colosse_urban`) | melee · miniboss · colosse | 25 | 350 | — | — | — | — |
+| Cracheur Pâli (`fading_spitter`) | ranged · normal · default | 55 | 15 | — | Marécages 25 %, Ruines Urbaines 20 % | Ruines Urbaines 12 % | code : SpawnManager.cs |
+| Hurleur (`hurleur`) | ranged · normal · screamer | 25 | 35 | — | — | Carrière Effondrée 12 %, Forêt Reconquise 17 %, Marécages 12 %, Ruines Urbaines 12 %, Champs Sauvages 17 % | — |
+| L'Indicible (`indicible`) | boss · boss · indicible | 0 | 2000 | — | — | — | code : EndgameManager.cs, Indicible.cs, QuestManager.cs |
+| Présage (`presage`) | ranged · normal · default | 45 | 22 | omen_strike | Carrière Effondrée 20 %, Forêt Reconquise 20 %, Marécages 25 %, Ruines Urbaines 20 %, Champs Sauvages 25 % | Carrière Effondrée 12 %, Forêt Reconquise 17 %, Marécages 12 %, Ruines Urbaines 12 %, Champs Sauvages 17 % | — |
+| Rampant (`rampant`) | melee · normal · burrower | 45 | 25 | — | Carrière Effondrée 20 %, Marécages 25 % | Carrière Effondrée 12 %, Ruines Urbaines 12 % | micro-événements (1) |
+| Rôdeur (`rodeur`) | melee · normal · default | 30 | 60 | — | Carrière Effondrée 40 %, Forêt Reconquise 20 %, Ruines Urbaines 20 %, Champs Sauvages 25 % | — | micro-événements (1) |
+| Ombre (`shade`) | melee · normal · default | 100 | 10 | — | — | Carrière Effondrée 25 %, Forêt Reconquise 33 %, Marécages 38 %, Ruines Urbaines 12 %, Champs Sauvages 33 % | code : SpawnManager.cs |
+| Rampant d'Ombre (`shadow_crawler`) | melee · normal · default | 60 | 30 | — | Marécages 25 %, Ruines Urbaines 40 % | Ruines Urbaines 12 % | micro-événements (1); code : DebugActionPanel.cs, SpawnManager.cs |
+| Tisseuse (`tisseuse`) | ranged · normal · weaver | 55 | 20 | — | — | Marécages 12 % | — |
+| Tréant Corrompu (`treant_corrompu`) | melee · normal · default | 25 | 120 | — | Forêt Reconquise 20 % | — | — |
+| Brute du Vide (`void_brute`) | melee · normal · charger | 35 | 80 | — | Carrière Effondrée 20 % | Carrière Effondrée 25 %, Forêt Reconquise 17 %, Marécages 12 %, Ruines Urbaines 12 %, Champs Sauvages 17 % | garde de 3 point(s) d'intérêt; code : EnemySpriteLoader.cs, SpawnManager.cs |
+| Sentinelle Hurlante (`wailing_sentinel`) | ranged · normal · sentinel | 0 | 25 | — | — | Carrière Effondrée 12 %, Marécages 12 %, Ruines Urbaines 12 % | garde de 2 point(s) d'intérêt; code : SpawnManager.cs |
+
+Inatteignables en jeu normal : `colosse_forest`, `colosse_swamp`, `colosse_urban`.
+
+Constats :
+- **Les trois Colosses sont inatteignables** : aucun pool, aucun garde, aucun événement, aucun code ne les fait apparaître. Leur comportement (charge et onde) et leur coffre épique garanti existent pourtant dans `Enemy`.
+- **La Tisseuse n'apparaît qu'en crise dans les Marécages** (12 % du pool), le **Hurleur** qu'en crise, le **Tréant** qu'en exploration de la Forêt.
+- **Menace à distance en exploration** : le Présage partout (20 à 25 %) et le Cracheur Pâli dans les Marécages et les Ruines. Le rééquilibrage du 23 septembre a pris.
+- Les étapes 1 à 3 (filmer chaque famille isolément, remplir la fiche, classer les rôles) restent à faire en jeu ; `--capture-bestiary` en donne les images fixes.
+
+Propositions :
+- **Colosses : appliquée ensuite, provisoire, puis retirée** (voir ci-dessous) ;
+- Tisseuse : l'ajouter aux crises de la Forêt et des Champs, pour qu'elle existe hors des Marécages. **Non appliquée.**
+
+**Lot C, Colosse de crise — 27 septembre 2026 (session cloud, choix provisoire) — retiré à la fusion de main le même jour** : le plan 17 (lot 0C) a supprimé les Colosses (données, sprites, comportement), la décision prime. Seul le correctif de la vague d'ouverture reste. Pour mémoire, ce qui avait été livré : à partir de la deuxième crise, le Colosse du biome où se trouve le joueur se lève hors écran (`SpawnManager.TrySpawnCrisisMiniboss`). Il répond à l'étape 4 du lot C : donner une identité aux Résurgences sans seulement augmenter les PV.
+- Données : `crisis_miniboss_from` (2) dans `spawn_flow.json`, et `crisis_miniboss` dans chaque biome. Forêt et Champs ont le Colosse Sylvestre, Ruines et Carrière le Colosse de Béton, Marécages le Colosse des Profondeurs. Mettre `crisis_miniboss_from` à 0 désactive le tout.
+- Il garde son comportement (charge et onde), sa signature de mort (plan 02 J2) et son coffre épique garanti.
+- **Correctif trouvé en chemin** : la vague d'ouverture d'une crise plantait si la crise arrivait avant que `SpawnManager` ait résolu le joueur (il ne le résout qu'à son tick). La vague était perdue en entier.
+- Vérifié : `MovementRegression --run-integration`, dans une vraie `Main`. Pas de Colosse à la première crise, le Colosse Sylvestre à la deuxième.
+
 ### Lot B — Lisibilité et qualité des comportements
 
 1. Ajuster anticipation/récupération et préserver les commandes de 01.
@@ -259,6 +298,26 @@ Proposition retenue par arbitrage délégué ([DECISIONS §7](DECISIONS.md#7-arb
 - **Perte de piste** (`Combat/EnemyTracking`, réglages dans `data/scaling/enemy_tracking.json`). Une créature qui a approché le joueur à moins de 450 px, puis est restée à plus de 800 px pendant 4 s, perd sa trace. Elle erre au ralenti (×0,35, changement de cap toutes les 2,5 s) jusqu'à ce que le joueur revienne à portée ou qu'elle soit retirée à 1 400 px. Les créatures qui arrivent du flux, les hardes en traversée et les créatures d'événement ne sont pas concernées.
 - **Gardiens de POI :** ils ne quittent plus leur poste quand le joueur est hors du traitement complet (600 px). Avant, le déplacement simplifié les faisait converger vers lui.
 - **Non fait :** perception propre à chaque créature (champs `perception` et `leash` par fiche) ; le réglage reste global.
+
+**Perception par créature — 26 septembre 2026 (session cloud) :**
+- Une fiche peut fixer `perception` (distance d'engagement) et `leash` (distance de perte de trace) dans ses `stats`. Sans ces champs, le réglage commun de `enemy_tracking.json` s'applique (450 et 800 px).
+- **Valeurs provisoires, à juger en jeu :**
+
+  | Créature | Perception | Laisse | Profil |
+  |---|---|---|---|
+  | Ombre | 560 px | 1 000 px | Rapide et tenace |
+  | Charognard | 520 px | 950 px | Meute qui flaire de loin |
+  | Rôdeur | 400 px | 720 px | Lent |
+  | Brute du Vide | 380 px | 700 px | Lente |
+  | Tréant corrompu | 360 px | 680 px | Lent, décroche vite |
+- **Mesure non concluante** (`SECONDS_PER_RUN=150 tools/measure_density.sh`, seeds 221092026 et 777, conteneur cloud à environ 5 FPS). Le bot n'y est pas reproductible : sur des runs presque identiques, les morts varient de 35 à 21 et de 18 à 67.
+
+  | Indicateur | Avant | Après |
+  |---|---|---|
+  | Médiane des visibles, minutes 1–2 | 12 | 9 |
+  | Médiane des visibles, minutes 2–3 | 14 | 19 |
+
+  Mesure à refaire sur une machine qui tient 60 FPS.
 
 **Mesure** (`SECONDS_PER_RUN=180 tools/measure_density.sh`, seeds 221092026 et 777, bot nomade sans esquive, avant → après) :
 

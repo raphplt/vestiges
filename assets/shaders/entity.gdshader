@@ -16,6 +16,8 @@ uniform vec4 edge_color : source_color = vec4(0.176, 0.106, 0.239, 1.0);
 uniform vec4 edge_highlight : source_color = vec4(0.353, 0.227, 0.478, 1.0);
 uniform float noise_scale : hint_range(1.0, 40.0) = 12.0;
 uniform float vertical_bias : hint_range(0.0, 1.0) = 0.35;
+// Sens du dernier coup, à l'écran (plan 02 J2) : le côté frappé se défait d'abord. Nul : de haut en bas.
+uniform vec2 dissolve_direction = vec2(0.0);
 
 // === Aberration tint ===
 uniform float aberration_amount : hint_range(0.0, 1.0) = 0.0;
@@ -63,7 +65,11 @@ void fragment() {
 	// --- Dissolve pass ---
 	if (!done && dissolve_amount > 0.001) {
 		float n = noise(UV * noise_scale);
-		float vertical = mix(n, 1.0 - UV.y, vertical_bias);
+		float sweep = 1.0 - UV.y;
+		if (length(dissolve_direction) > 0.01) {
+			sweep = dot(UV - vec2(0.5), normalize(dissolve_direction)) + 0.5;
+		}
+		float vertical = mix(n, sweep, vertical_bias);
 		float diff = vertical - dissolve_amount;
 
 		if (diff < 0.0) {

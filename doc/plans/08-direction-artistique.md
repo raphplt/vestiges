@@ -226,6 +226,21 @@ Les tiles restent en l'état (jugées acceptables) ; un ajustement de contraste 
 - Vérifié : build sans avertissement, smoke test, `MovementRegression`, captures en vraie run (seed 1002). Combat dense : ≈ 110 FPS, p99 ≈ 13,5 ms, en 720p comme en 1080p (≈ 120 FPS avant les immeubles ; la zone du banc n'est pas forcément urbaine).
 - Points ouverts : église et antenne à refaire dans le pipeline comme repères rares ; brèches des ruines encore anguleuses ; façades nord et rues verticales moins soignées que les façades sud.
 
+**P2, repères rares — 27 septembre 2026 (session cloud) :** l'église et l'antenne reviennent, refaites dans le pipeline.
+- **Église** (`church` dans `buildings.py`, `prop_bld_church_w4_a|b`) :
+  - Module de rangée de 4 cellules : nef longée de contreforts et de hautes baies en ogive (vitraux violets, une baie crevée), toit d'ardoise percé d'une brèche qui laisse voir l'intérieur sombre, lierre, gravats devant.
+  - Clocher à abat-sons, cloche, flèche basse et croix de fer penchée.
+  - Hauteur 189 à 190 px, dans la borne des immeubles. Le premier essai (214 px) a été abaissé. La variante b est un miroir, pour que le clocher reste du côté proche de la caméra (en simple lacet opposé, il reculait et montait à 203 px).
+- **Pylône de télécommunication** (`radio_mast`, `prop_radio_mast`) :
+  - Treillis à trois pieds qui s'affine, bandes rouges et blanches (l'accent de couleur des repères), deux paraboles, feu de balisage éteint, local technique au pied, une traverse manquante.
+  - 219 px de haut mais 82 de large : il dépasse des toits sans masquer une rue.
+- **Placement** (`UrbanBuildingPlacer`) :
+  - L'église ouvre la rangée sud d'un îlot préservé (intégrité ≥ 0,55, 8 % des îlots). Le pylône se plante au milieu de la cour, derrière la rangée (10 %), et bloque.
+  - Au plus deux de chaque par carte, à au moins 1 600 px l'un de l'autre. Réglages en constantes, comme les ruelles voisines.
+  - Seed de capture : 2 églises, 2 pylônes.
+- **Capture** `--capture-landmarks` : chaque repère au zoom normal et dézoomé. Images regardées : l'église se lit d'un coup d'œil dans sa rangée, et le pylône dépasse des immeubles de la cour.
+- **Brèches des immeubles abîmés et des ruines**, le même jour : les trous étaient des disques parfaits. Leur bord casse désormais le long des blocs de maçonnerie (décalage constant par bloc d'environ 0,5 × 0,3 m), d'où un contour en escalier. Le même traitement sur les grands plans d'effondrement les couvrait de mouchetures : ils restent nets. Six sprites regénérés (immeubles abîmés et ruines), pivots et emprises inchangés. Point ouvert restant : façades nord et rues verticales.
+
 **P3 Forêt livré — 25 septembre 2026 :**
 
 *Catalogue :* `tools/sprites/props/forest.py` (`tools/generate_props.py forest`), 23 fichiers aux couleurs de la palette forêt (charte §3) :
@@ -286,6 +301,48 @@ Les tiles restent en l'état (jugées acceptables) ; un ajustement de contraste 
 | P4b-4 Récits | Scènes courtes lisibles d'un coup d'œil : pique-nique abandonné, tracteur embourbé, épouvantail couronné de corbeaux, linge encore étendu. Rares, en lien avec le lore (plan 08 lot D) |
 
 Critère de réussite : sur une capture des champs, on reconnaît une ferme, des parcelles et des chemins, pas un semis d'objets. Un lot à la fois, avec captures `--capture-props --hide-collisions`.
+
+**P4b-1 et P4b-2 livrés — fermes, 26 septembre (session cloud) :**
+- *Modèles* (`tools/sprites/props/farm.py`, `python3 tools/generate_props.py fields_farm`), 21 fichiers dans `assets/props/wild_fields/` :
+  - bâtiments : maison de ferme en pierre au toit de tuiles, avec moins de fenêtres qu'un immeuble (`window_spacing` ajouté à `BuildingSpec`, les immeubles urbains restent identiques octet pour octet) ; grange à pignon face à la caméra, bardage de planches rouge ou gris, grande porte à croix, fenil, toit de tôle ondulée ; hangar ouvert en appentis, bottes de paille à l'abri ; silo intact à toit conique et échelle ;
+  - cour : abreuvoir en pierre, remorque chargée de bottes, poteau électrique penché au câble rompu, portail entrouvert ;
+  - limites : haies bocagères, clôtures et muret dans les deux axes.
+
+  Le suffixe `_h` ou `_v` dit si l'élément file à l'horizontale de l'écran ou vers la profondeur. Un modèle long en x prend `AXIS_Y_YAW` pour rester horizontal : les clôtures déjà en place filaient vers la profondeur.
+- *Composition* (`World/WildFieldsComposer`, plan dans `data/world/farms.json`) :
+  - une ferme par région des Champs Sauvages, choisie au chargement au plus près du centre de la région, là où toute son emprise (940 × 300 px) tient dans les champs, hors de l'eau et des chemins ;
+  - au nord de la cour, la maison et la grange ; à l'est, le silo, le hangar et le foin ; à l'ouest, un enclos clôturé et bordé de haies, avec portail, abreuvoir et puits ; au sud, tracteur, remorque et poteaux ;
+  - retournée d'est en ouest une fois sur deux ; variantes et éléments facultatifs tirés par graine ;
+  - un **embranchement** part de la cour vers le sud et rejoint le chemin le plus proche (`PathNetworkGenerator.AddSpur`), de préférence au sud de la ferme ;
+  - les cellules de la ferme sont réservées avant les points d'intérêt, les coffres et les décors génériques.
+- *Mesure* (seed 221092026) : 16 fermes pour 20 régions de champs. Les autres n'ont pas de chemin à portée au sud ni sur les côtés ; un raccord au nord traverserait les bâtiments. Placement : 273 ms de calcul au chargement dans le conteneur cloud, rien par frame.
+- *Vérification* : `CAPTURE_EXTRA_ARGS="--capture-farms" tools/capture_run.sh <dossier>` capture les quatre fermes les plus proches du départ, au zoom normal et dézoomées. Captures regardées : maison, grange, silo, hangar et enclos se lisent comme une ferme, et le chemin y mène. Planches `--sheet` regardées. Build sans avertissement, smoke test, `MovementRegression` vert.
+- *Points ouverts* :
+  - toutes les fermes suivent le même plan, seulement retourné : à varier (deux ou trois plans) si la répétition se remarque ;
+  - quand le seul chemin proche passe à côté de la ferme, l'embranchement longe l'enclos ;
+  - le placement (273 ms) peut être accéléré si le chargement s'en ressent : tri des candidats et test d'emprise par région ;
+  - P4b-4 : livré plus bas.
+
+**P4b-3 livré — bords de parcelles et vergers, 26 septembre (session cloud) :**
+- **Bords de parcelles.** `WildFieldsLayoutGenerator` marque les cellules de bord le long des allées : à l'est des allées principales (qui montent vers la droite à l'écran), au sud des secondaires (presque horizontales). Il en garde une sur deux ou sur quatre selon l'axe, pour ne pas empiler les rangs de la grille « stacked », et 70 % d'entre elles. `WildFieldsComposer.PlaceParcelProps` y pose une haie, un muret ou une clôture horizontale (`parcel_edges` dans `farms.json`), jamais bloquants.
+- **Vergers.** Une parcelle tirée en prairie sur trois devient un verger : un arbre toutes les deux colonnes et quatre rangs. Deux nouveaux arbres bas (`prop_orchard_tree`, en feuilles ou en fleurs), en tronc et canopée comme en forêt ; le tronc bloque.
+- Fermes, chemins et points d'intérêt gardent la priorité sur ces cellules.
+- Seed de capture : 683 bords marqués et 295 arbres de verger, soit 763 décors posés.
+- Captures `--capture-farms` et `--capture-map` regardées : les parcelles gagnent des limites, et un verger en fleurs en rangs se lit près d'une ferme.
+- *Limite* : les allées restent de larges bandes de terre en biais ; les haies les bordent sans les redessiner.
+
+**P4b-4 livré — scènes-récits, 26 septembre (session cloud) :**
+- **Trois scènes lisibles d'un coup d'œil**, modélisées dans `farm.py` :
+  - pique-nique abandonné : nappe à carreaux au coin relevé, panier ouvert, bouteille couchée, assiettes ;
+  - linge encore étendu : deux poteaux, corde qui ploie, draps et chemises bleues qui battent ;
+  - épouvantail couronné de corbeaux : trois corbeaux perchés sur les bras et le chapeau.
+- **Placement** (`WildFieldsComposer.PlaceScenes`, liste `scenes` dans `farms.json`) : une région de champs sur deux en reçoit une, près de son centre, hors fermes, chemins et points d'intérêt. Seed de capture : 6 scènes.
+- `--capture-farms` capture aussi les trois scènes les plus proches, au zoom ×2 ; images regardées.
+- Deux corrections pendant la mise au point :
+  - l'épouvantail, tourné vers la profondeur, cachait ses corbeaux : il prend l'axe horizontal ;
+  - le tirage du linge ne donnait que des draps : draps et chemises alternent désormais.
+- *Non fait* : le lien avec le lore (un fragment à lire près de la scène) reste à décider avec le plan 14.
+- **Tracteur embourbé** (ajouté ensuite, même session) : le tracteur des champs, piqué du nez et roulant de biais, enfoncé dans une mare de boue avec flaques et ornières derrière lui. `mired_tractor` réutilise le modèle `tractor` de `fields.py`, transformé et coupé à la surface de la boue. Seule scène qui bloque (`blocking_scenes` dans `farms.json`, emprise du manifeste). `--capture-farms` capture désormais les six scènes les plus proches ; le tracteur y est lisible, à l'échelle du personnage. Les ornières se lisent plutôt comme une traînée sombre que comme deux sillons.
 - `--measure-props` en 1080p, machine calme : champs 159 FPS (3 197 décors), forêt 160, ville 158, carrière 152, marais 146, p99 entre 8 et 10 ms. C'est la plage d'avant les lots P3–P4 : pas de régression.
 
 *Points ouverts pour Raphaël :*
@@ -447,7 +504,7 @@ Hors périmètre : morts, dissolution et butin (plan 02 J2/J3), police des chiff
 - **Projectiles** : l'ombre reste au sol pendant que le visuel vole à 10–11 px ; cet écart dit que le projectile est en l'air.
 - **Coût** (banc de combat dense, 120 ennemis, 720p) : +24 appels de dessin (+2,3 %) et +141 objets rendus, FPS inchangés (80 contre 80, machine chargée), aucun nœud créé pendant le combat.
 - **Vérification** : captures du bestiaire et d'une run, recadrées ; les créatures tiennent au sol.
-- **Reste à faire** : une constante de hauteur de vol unique pour le joueur et les créatures (11 et 10 px aujourd'hui).
+- **Hauteur de vol unifiée (26 septembre, session cloud)** : `Iso.FlightHeight`, 10 px, sert aux projectiles du joueur (11 px auparavant) comme à ceux des créatures, à leurs éclats et à leurs flashs.
 
 **I4 livré (26 septembre) :**
 - **Cône de la « Dernière Émission »** : dessiné et mesuré au sol (angle, portée et ouverture au sol).

@@ -20,9 +20,17 @@ namespace Vestiges.Tests;
 /// --capture-map : répartition des biomes autour du spawn (plusieurs seeds) et vues dézoomées.
 /// --capture-props : zone la plus chargée en décors de chaque biome, collisions affichées (sauf --hide-collisions).
 /// --capture-junctions : frontières entre biomes les plus proches du départ, avec et sans décors.
+/// --capture-paths : chemins de terre par biome, raccord à une rue, vue dézoomée du départ (RunObservation.Paths.cs).
+/// --capture-farms : fermes des Champs Sauvages les plus proches du départ, normal et dézoomé (RunObservation.Farms.cs).
+/// --capture-landmarks : églises et pylônes des Ruines Urbaines, normal et dézoomé (RunObservation.UrbanLandmarks.cs).
+/// --capture-levelup-fx : effet de montée de niveau au ralenti, puis entrée de l'écran de choix (RunObservation.LevelUpFx.cs).
+/// --capture-crowd : foule de 60 créatures, recul de caméra puis compteur de morts en rafale (RunObservation.Crowd.cs).
+/// --capture-micro : coffre qui frémit à l'approche, poussière de pas (RunObservation.Micro.cs).
+/// --capture-death [--seconds 8] : mort réelle après quelques secondes, bilan de fin de run (RunObservation.Death.cs).
+/// --capture-echoes : échos de l'oubli forcés en zone Fragile, apparition, dissolution, murmure (RunObservation.Echoes.cs).
 /// --capture-erasure : une capture par phase de l'oubli, puis un dégradé de toutes les phases.
 /// --measure-props [--measure-seconds 8] : coût de rendu des décors par biome (RunObservation.PropCost.cs).
-/// --capture-weapons [--weapons a,b] : galerie des attaques du joueur (RunObservation.Weapons.cs).
+/// --capture-weapons [--weapons a,b] [--lethal] : galerie des attaques du joueur, cibles qui meurent au premier coup avec --lethal (RunObservation.Weapons.cs).
 /// --capture-chests : chaque coffre cadré, avec et sans décors (RunObservation.Chests.cs).
 /// --capture-levelup : l'écran de level-up, une capture par rareté (RunObservation.LevelUp.cs).
 /// --capture-rift : offre d'une Faille, Péril et Oubli dans la pause, Oubli levé au Mémorial (RunObservation.Landmarks.cs).
@@ -72,6 +80,22 @@ public partial class RunObservation : Node
                 await CapturePropHotspots();
             else if (Array.IndexOf(args, "--capture-junctions") >= 0)
                 await CaptureJunctions();
+            else if (Array.IndexOf(args, "--capture-farms") >= 0)
+                await CaptureFarms();
+            else if (Array.IndexOf(args, "--capture-landmarks") >= 0)
+                await CaptureLandmarks();
+            else if (Array.IndexOf(args, "--capture-levelup-fx") >= 0)
+                await CaptureLevelUpFx();
+            else if (Array.IndexOf(args, "--capture-crowd") >= 0)
+                await CaptureCrowd();
+            else if (Array.IndexOf(args, "--capture-micro") >= 0)
+                await CaptureMicro();
+            else if (Array.IndexOf(args, "--capture-death") >= 0)
+                await CaptureDeath(double.Parse(Argument(args, "--seconds", "8"), CultureInfo.InvariantCulture));
+            else if (Array.IndexOf(args, "--capture-echoes") >= 0)
+                await CaptureEchoes();
+            else if (Array.IndexOf(args, "--capture-paths") >= 0)
+                await CapturePaths();
             else if (Array.IndexOf(args, "--capture-erasure") >= 0)
                 await CaptureErasure();
             else if (Array.IndexOf(args, "--capture-abilities") >= 0)
@@ -79,7 +103,7 @@ public partial class RunObservation : Node
             else if (Array.IndexOf(args, "--measure-props") >= 0)
                 await MeasurePropCost(double.Parse(Argument(args, "--measure-seconds", "8"), CultureInfo.InvariantCulture));
             else if (Array.IndexOf(args, "--capture-weapons") >= 0)
-                await CaptureWeapons(Argument(args, "--weapons", null));
+                await CaptureWeapons(Argument(args, "--weapons", null), Array.IndexOf(args, "--lethal") >= 0);
             else if (Array.IndexOf(args, "--capture-chests") >= 0)
                 await CaptureChests();
             else if (Array.IndexOf(args, "--capture-levelup") >= 0)

@@ -4,11 +4,14 @@ using System.Collections.Generic;
 namespace Vestiges.World;
 
 /// <summary>
-/// Génère 16 tiles isométriques 64×32 de route pixel art directionnelles.
-/// Chaque tile = combinaison de connectivité (L/R/U/D).
+/// Génère les tiles isométriques 64×32 de route pixel art directionnelles.
+/// Chaque tile = combinaison de connectivité (L/R/U/D) × parité du rang.
 /// Palette issue de la charte graphique Ruines Urbaines.
 /// La route est un overlay transparent en dehors de la chaussée,
 /// dessiné au-dessus du sol urbain.
+/// Grille « stacked » : une colonne de cellules zigzague de ±16 px d'un rang à l'autre. La bande verticale est donc
+/// décalée vers le milieu de la colonne selon la parité du rang, et chaque tile ne dessine que sa tranche de 16 px
+/// de haut (le pas entre deux rangs) : une rue verticale forme une seule chaussée droite, sans joint.
 /// </summary>
 public static class RoadTileGenerator
 {
@@ -21,13 +24,17 @@ public static class RoadTileGenerator
 	// Le ratio 2:1 maintient une largeur visuelle égale en iso
 	private const int RoadHalfH = 6;   // bande horizontale (L↔R)
 	private const int RoadHalfV = 12;  // bande verticale (U↔D)
+	private const int ColumnShift = 16; // décalage de la bande verticale vers le milieu de sa colonne
+	private const int SlotTop = CenterY - 8;
+	private const int SlotBottom = CenterY + 8;
 
 	// Bitmask de connectivité
 	public const int ConnLeft  = 8;
 	public const int ConnRight = 4;
 	public const int ConnUp    = 2;
 	public const int ConnDown  = 1;
-	public const int VariantCount = 16;
+	public const int MaskCount = 16;
+	public const int VariantCount = MaskCount * 2;
 
 	// ── Palette Ruines Urbaines (charte graphique) ──
 
@@ -57,11 +64,15 @@ public static class RoadTileGenerator
 	// Débris/rouille — #6B3A24 de la charte
 	private static readonly Color DebrisColor = new(0.420f, 0.227f, 0.141f);   // #6B3A24
 
+	// Bordure de trottoir usée : pierre claire côté lumière (nord, ouest), ombrée côté sud et est
+	private static readonly Color CurbLight = new(0.541f, 0.537f, 0.510f);     // #8A8982
+	private static readonly Color CurbShade = new(0.408f, 0.404f, 0.384f);     // #686762
+
 	// Cache
 	private static ImageTexture[] _roadTextures;
 
 	/// <summary>
-	/// Retourne les 16 textures de route (indexées par bitmask).
+	/// Retourne les 32 textures de route, indexées par <see cref="VariantIndex"/>.
 	/// </summary>
 	public static ImageTexture[] GetOrGenerate()
 	{
@@ -69,20 +80,27 @@ public static class RoadTileGenerator
 			return _roadTextures;
 
 		_roadTextures = new ImageTexture[VariantCount];
-		for (int mask = 0; mask < VariantCount; mask++)
-			_roadTextures[mask] = GenerateRoadTile(mask, seed: 42 + mask * 137);
+		for (int variant = 0; variant < VariantCount; variant++)
+		{
+			int mask = variant % MaskCount;
+			int shift = variant < MaskCount ? ColumnShift : -ColumnShift;
+			_roadTextures[variant] = GenerateRoadTile(mask, shift, seed: 42 + variant * 137);
+		}
 
 		return _roadTextures;
 	}
 
-	/// <summary>Clé de source pour un bitmask (ex: "road_5").</summary>
-	public static string GetRoadKey(int connectivity) => $"road_{connectivity}";
+	/// <summary>Variante pour un bitmask et le rang de la cellule (pair : bande verticale décalée vers la droite).</summary>
+	public static int VariantIndex(int connectivity, int row) => connectivity + ((row & 1) != 0 ? MaskCount : 0);
+
+	/// <summary>Clé de source d'une variante (ex: "road_21").</summary>
+	public static string GetRoadKey(int variant) => $"road_{variant}";
 
 	// =====================================================================
 	//  GÉNÉRATION PRINCIPALE
 	// =====================================================================
 
-	private static ImageTexture GenerateRoadTile(int connectivity, int seed)
+	private static ImageTexture GenerateRoadTile(int connectivity, int shift, int seed)
 	{
 		bool hasLeft  = (connectivity & ConnLeft) != 0;
 		bool hasRight = (connectivity & ConnRight) != 0;
@@ -95,32 +113,35 @@ public static class RoadTileGenerator
 		uint rng = (uint)seed;
 
 		// ── Passe 1 : Base asphalte avec bruit directionnel ──
-		FillAsphalt(img, ref rng, hasLeft, hasRight, hasUp, hasDown);
+		FillAsphalt(img, ref rng, hasLeft, hasRight, hasUp, hasDown, shift);
 
 		// ── Passe 2 : Caniveau (bande sombre le long des bords) ──
-		DrawGutters(img, hasLeft, hasRight, hasUp, hasDown);
+		DrawGutters(img, hasLeft, hasRight, hasUp, hasDown, shift);
+
+		// ── Passe 2b : Bordures de trottoir, usées par endroits ──
+		DrawCurbs(img, hasLeft, hasRight, hasUp, hasDown, shift, seed);
 
 		// ── Passe 3 : Fissures organiques ──
 		int connCount = (hasLeft ? 1 : 0) + (hasRight ? 1 : 0)
 					  + (hasUp ? 1 : 0) + (hasDown ? 1 : 0);
 		int crackCount = connCount >= 3 ? 4 : connCount >= 2 ? 3 : 2;
-		DrawCracks(img, ref rng, hasLeft, hasRight, hasUp, hasDown, crackCount);
+		DrawCracks(img, ref rng, hasLeft, hasRight, hasUp, hasDown, shift, crackCount);
 
 		// ── Passe 4 : Rustines d'asphalte (réparations) ──
 		if (connCount >= 2)
-			DrawPatch(img, ref rng, hasLeft, hasRight, hasUp, hasDown);
+			DrawPatch(img, ref rng, hasLeft, hasRight, hasUp, hasDown, shift);
 
 		// ── Passe 5 : Marquages centraux (lignes droites seulement) ──
 		if (hasLeft && hasRight && !hasUp && !hasDown)
 			DrawHorizontalMarking(img, ref rng);
 		if (hasUp && hasDown && !hasLeft && !hasRight)
-			DrawVerticalMarking(img, ref rng);
+			DrawVerticalMarking(img, ref rng, CenterX + shift);
 
 		// ── Passe 6 : Nature reconquérante (herbe dans les fissures) ──
-		DrawGrassInCracks(img, ref rng, hasLeft, hasRight, hasUp, hasDown);
+		DrawGrassInCracks(img, ref rng, hasLeft, hasRight, hasUp, hasDown, shift);
 
 		// ── Passe 7 : Débris près des bordures ──
-		DrawDebris(img, ref rng, hasLeft, hasRight, hasUp, hasDown);
+		DrawDebris(img, ref rng, hasLeft, hasRight, hasUp, hasDown, shift);
 
 		return ImageTexture.CreateFromImage(img);
 	}
@@ -130,13 +151,13 @@ public static class RoadTileGenerator
 	// =====================================================================
 
 	private static void FillAsphalt(Image img, ref uint rng,
-		bool left, bool right, bool up, bool down)
+		bool left, bool right, bool up, bool down, int shift)
 	{
 		for (int y = 0; y < TileH; y++)
 		{
 			for (int x = 0; x < TileW; x++)
 			{
-				if (!IsVisibleRoadPixel(x, y, left, right, up, down))
+				if (!IsRoadPixel(x, y, left, right, up, down, shift))
 					continue;
 
 				// Bruit d'asphalte (variation granuleuse)
@@ -170,16 +191,13 @@ public static class RoadTileGenerator
 	//  CANIVEAU — bande sombre de 1px le long des bords intérieurs
 	// =====================================================================
 
-	private static void DrawGutters(Image img, bool left, bool right, bool up, bool down)
+	private static void DrawGutters(Image img, bool left, bool right, bool up, bool down, int shift)
 	{
 		for (int y = 0; y < TileH; y++)
 		{
 			for (int x = 0; x < TileW; x++)
 			{
-				// Caniveau uniquement dans le losange (pas dans les extensions)
-				if (!IsInsideDiamond(x, y))
-					continue;
-				if (!IsRoadPixel(x, y, left, right, up, down))
+				if (!IsRoadPixel(x, y, left, right, up, down, shift))
 					continue;
 
 				// Pixel de route adjacent à un pixel non-route
@@ -191,9 +209,10 @@ public static class RoadTileGenerator
 						if (dx == 0 && dy == 0) continue;
 						int nx = x + dx;
 						int ny = y + dy;
-						if (nx < 0 || nx >= TileW || ny < 0 || ny >= TileH)
+						// Hors de la tranche du rang, la chaussée continue dans la tile voisine : pas de bord.
+						if (nx < 0 || nx >= TileW || ny < SlotTop || ny >= SlotBottom)
 							continue;
-						if (!IsVisibleRoadPixel(nx, ny, left, right, up, down))
+						if (!IsRoadPixel(nx, ny, left, right, up, down, shift))
 						{
 							adjacentToEdge = true;
 							break;
@@ -209,11 +228,42 @@ public static class RoadTileGenerator
 	}
 
 	// =====================================================================
+	//  BORDURES — pierre de 1 px autour de la chaussée, manquante par tronçons
+	// =====================================================================
+
+	private static void DrawCurbs(Image img, bool left, bool right, bool up, bool down, int shift, int seed)
+	{
+		for (int y = SlotTop; y < SlotBottom; y++)
+		{
+			for (int x = 0; x < TileW; x++)
+			{
+				if (IsRoadPixel(x, y, left, right, up, down, shift))
+					continue;
+
+				// Côté de la chaussée : la bordure au nord et à l'ouest prend la lumière.
+				bool roadBelow = IsRoadPixel(x, y + 1, left, right, up, down, shift);
+				bool roadRight = IsRoadPixel(x + 1, y, left, right, up, down, shift);
+				bool roadAbove = IsRoadPixel(x, y - 1, left, right, up, down, shift);
+				bool roadLeft = IsRoadPixel(x - 1, y, left, right, up, down, shift);
+				if (!roadBelow && !roadRight && !roadAbove && !roadLeft)
+					continue;
+
+				// Usure par tronçons de 3 px : une bordure sur quatre a disparu.
+				uint wear = Xorshift((uint)(seed * 7919 + (x / 3) * 131 + (y / 3) * 977 + 1));
+				if (wear % 4 == 0)
+					continue;
+
+				img.SetPixel(x, y, roadBelow || roadRight ? CurbLight : CurbShade);
+			}
+		}
+	}
+
+	// =====================================================================
 	//  FISSURES — marche aléatoire organique
 	// =====================================================================
 
 	private static void DrawCracks(Image img, ref uint rng,
-		bool left, bool right, bool up, bool down, int count)
+		bool left, bool right, bool up, bool down, int shift, int count)
 	{
 		for (int i = 0; i < count; i++)
 		{
@@ -232,8 +282,7 @@ public static class RoadTileGenerator
 			for (int step = 0; step < length; step++)
 			{
 				if (cx >= 0 && cx < TileW && cy >= 0 && cy < TileH
-					&& IsInsideDiamond(cx, cy)
-					&& IsRoadPixel(cx, cy, left, right, up, down))
+					&& IsRoadPixel(cx, cy, left, right, up, down, shift))
 				{
 					Color crackColor = (step % 3 == 0) ? CrackDark : CrackLight;
 					img.SetPixel(cx, cy, crackColor);
@@ -245,8 +294,7 @@ public static class RoadTileGenerator
 						int bx = horizontal ? cx : cx + ((rng % 2 == 0) ? 1 : -1);
 						int by = horizontal ? cy + ((rng % 2 == 0) ? 1 : -1) : cy;
 						if (bx >= 0 && bx < TileW && by >= 0 && by < TileH
-							&& IsInsideDiamond(bx, by)
-							&& IsRoadPixel(bx, by, left, right, up, down))
+							&& IsRoadPixel(bx, by, left, right, up, down, shift))
 						{
 							img.SetPixel(bx, by, CrackLight);
 						}
@@ -285,7 +333,7 @@ public static class RoadTileGenerator
 	// =====================================================================
 
 	private static void DrawPatch(Image img, ref uint rng,
-		bool left, bool right, bool up, bool down)
+		bool left, bool right, bool up, bool down, int shift)
 	{
 		rng = Xorshift(rng);
 		if (rng % 3 != 0) return; // ~33% chance d'avoir un patch
@@ -306,8 +354,7 @@ public static class RoadTileGenerator
 				int tx = px + dx;
 				int ty = py + dy;
 				if (tx >= TileW || ty >= TileH) continue;
-				if (!IsInsideDiamond(tx, ty)) continue;
-				if (!IsRoadPixel(tx, ty, left, right, up, down)) continue;
+				if (!IsRoadPixel(tx, ty, left, right, up, down, shift)) continue;
 
 				rng = Xorshift(rng);
 				Color pc = (rng % 3 == 0) ? PatchLight : PatchDark;
@@ -329,8 +376,6 @@ public static class RoadTileGenerator
 
 		for (int x = 6; x < TileW - 6; x++)
 		{
-			if (!IsInsideDiamond(x, CenterY)) continue;
-
 			if (drawing)
 			{
 				Color existing = img.GetPixel(x, CenterY);
@@ -349,22 +394,20 @@ public static class RoadTileGenerator
 		}
 	}
 
-	private static void DrawVerticalMarking(Image img, ref uint rng)
+	private static void DrawVerticalMarking(Image img, ref uint rng, int column)
 	{
 		int dashLen = 0;
 		bool drawing = true;
 		rng = Xorshift(rng);
 		int nextSwitch = (int)(rng % 2) + 3;
 
-		for (int y = 3; y < TileH - 3; y++)
+		for (int y = SlotTop; y < SlotBottom; y++)
 		{
-			if (!IsInsideDiamond(CenterX, y)) continue;
-
 			if (drawing)
 			{
-				Color existing = img.GetPixel(CenterX, y);
+				Color existing = img.GetPixel(column, y);
 				if (existing.A > 0.5f)
-					img.SetPixel(CenterX, y, existing.Lerp(MarkingYellow, MarkingYellow.A));
+					img.SetPixel(column, y, existing.Lerp(MarkingYellow, MarkingYellow.A));
 			}
 
 			dashLen++;
@@ -383,7 +426,7 @@ public static class RoadTileGenerator
 	// =====================================================================
 
 	private static void DrawGrassInCracks(Image img, ref uint rng,
-		bool left, bool right, bool up, bool down)
+		bool left, bool right, bool up, bool down, int shift)
 	{
 		rng = Xorshift(rng);
 		int grassCount = (int)(rng % 4) + 1;
@@ -394,9 +437,7 @@ public static class RoadTileGenerator
 			int gx = (int)(rng % (uint)TileW);
 			rng = Xorshift(rng);
 			int gy = (int)(rng % (uint)TileH);
-
-			if (!IsInsideDiamond(gx, gy)) continue;
-			if (!IsRoadPixel(gx, gy, left, right, up, down)) continue;
+			if (!IsRoadPixel(gx, gy, left, right, up, down, shift)) continue;
 
 			// Vérifier qu'on est près d'une fissure (pixel sombre)
 			Color existing = img.GetPixel(gx, gy);
@@ -411,8 +452,7 @@ public static class RoadTileGenerator
 					int nx = gx + dx;
 					int ny = gy + dy;
 					if (nx >= 0 && nx < TileW && ny >= 0 && ny < TileH
-						&& IsInsideDiamond(nx, ny)
-						&& !IsRoadPixel(nx, ny, left, right, up, down))
+						&& !IsRoadPixel(nx, ny, left, right, up, down, shift))
 					{
 						nearEdge = true;
 					}
@@ -430,8 +470,8 @@ public static class RoadTileGenerator
 			if (rng % 2 == 0)
 			{
 				int nx = gx + ((rng % 3 == 0) ? 1 : -1);
-				if (nx >= 0 && nx < TileW && IsInsideDiamond(nx, gy)
-					&& IsRoadPixel(nx, gy, left, right, up, down))
+				if (nx >= 0 && nx < TileW
+					&& IsRoadPixel(nx, gy, left, right, up, down, shift))
 				{
 					rng = Xorshift(rng);
 					img.SetPixel(nx, gy, (rng % 2 == 0) ? GrassDark : GrassLight);
@@ -445,7 +485,7 @@ public static class RoadTileGenerator
 	// =====================================================================
 
 	private static void DrawDebris(Image img, ref uint rng,
-		bool left, bool right, bool up, bool down)
+		bool left, bool right, bool up, bool down, int shift)
 	{
 		rng = Xorshift(rng);
 		int debrisCount = (int)(rng % 3) + 1;
@@ -456,9 +496,7 @@ public static class RoadTileGenerator
 			int dx = (int)(rng % (uint)TileW);
 			rng = Xorshift(rng);
 			int dy = (int)(rng % (uint)TileH);
-
-			if (!IsInsideDiamond(dx, dy)) continue;
-			if (!IsRoadPixel(dx, dy, left, right, up, down)) continue;
+			if (!IsRoadPixel(dx, dy, left, right, up, down, shift)) continue;
 
 			// Doit être près du bord de la route
 			bool nearEdge = false;
@@ -469,8 +507,7 @@ public static class RoadTileGenerator
 					int tx = dx + nx;
 					int ty = dy + ny;
 					if (tx >= 0 && tx < TileW && ty >= 0 && ty < TileH
-						&& IsInsideDiamond(tx, ty)
-						&& !IsRoadPixel(tx, ty, left, right, up, down))
+						&& !IsRoadPixel(tx, ty, left, right, up, down, shift))
 					{
 						nearEdge = true;
 					}
@@ -488,21 +525,23 @@ public static class RoadTileGenerator
 	// =====================================================================
 
 	/// <summary>
-	/// Le pixel (x,y) fait-il partie de la bande de route ?
+	/// Le pixel (x,y) fait-il partie de la chaussée ? Seule la tranche du rang (16 px de haut) est dessinée :
+	/// les rangs voisins couvrent le reste, sans recouvrement.
 	/// </summary>
-	private static bool IsRoadPixel(int x, int y, bool left, bool right, bool up, bool down)
+	private static bool IsRoadPixel(int x, int y, bool left, bool right, bool up, bool down, int shift)
 	{
-		int distH = Mathf.Abs(y - CenterY);
-		int distV = Mathf.Abs(x - CenterX);
+		if (x < 0 || x >= TileW || y < SlotTop || y >= SlotBottom)
+			return false;
 
-		bool inHStrip = distH <= RoadHalfH;
-		bool inVStrip = distV <= RoadHalfV;
+		int column = CenterX + shift;
+		bool inHStrip = Mathf.Abs(y - CenterY) <= RoadHalfH;
+		bool inVStrip = Mathf.Abs(x - column) <= RoadHalfV;
 
-		// Bande horizontale (L↔R)
+		// Bande horizontale (L↔R), jusqu'à la bande verticale
 		if (inHStrip)
 		{
-			if (left && x <= CenterX + RoadHalfV) return true;
-			if (right && x >= CenterX - RoadHalfV) return true;
+			if (left && x <= column + RoadHalfV) return true;
+			if (right && x >= column - RoadHalfV) return true;
 		}
 
 		// Bande verticale (U↔D)
@@ -513,41 +552,6 @@ public static class RoadTileGenerator
 		}
 
 		return false;
-	}
-
-	/// <summary>
-	/// Le pixel fait-il partie de la zone de route visible ?
-	/// Inclut les extensions hors losange aux bords connectés pour éviter
-	/// le rétrécissement de la route aux jonctions de tiles.
-	/// </summary>
-	private static bool IsVisibleRoadPixel(int x, int y, bool left, bool right, bool up, bool down)
-	{
-		if (x < 0 || x >= TileW || y < 0 || y >= TileH)
-			return false;
-		if (!IsRoadPixel(x, y, left, right, up, down))
-			return false;
-		if (IsInsideDiamond(x, y))
-			return true;
-
-		// Hors losange : autoriser l'extension vers les bords connectés
-		int dx = x - CenterX;
-		int dy = y - CenterY;
-		if (left && dx < 0) return true;
-		if (right && dx > 0) return true;
-		if (up && dy < 0) return true;
-		if (down && dy > 0) return true;
-
-		return false;
-	}
-
-	private static bool IsInsideDiamond(int x, int y)
-	{
-		if (x < 0 || x >= TileW || y < 0 || y >= TileH)
-			return false;
-
-		int dx = x - CenterX;
-		int dy = y - CenterY;
-		return Mathf.Abs(dx) * TileH + Mathf.Abs(dy) * TileW <= TileW * TileH / 2;
 	}
 
 	private static uint Xorshift(uint state)

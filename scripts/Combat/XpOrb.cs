@@ -1,3 +1,4 @@
+using System;
 using Godot;
 using Vestiges.Core;
 using Vestiges.Infrastructure;
@@ -11,6 +12,18 @@ public partial class XpOrb : Area2D
     private const float MaxSpeed = 500f;
     private const float Acceleration = 800f;
     private const float DriftSpeed = 40f;
+    // Saut du butin (plan 02 J2) : l'orbe jaillit du corps et retombe à côté, avant de pouvoir être attirée.
+    private const float HopSec = 0.35f;
+    private const float HopHeightPx = 14f;
+    // Collecte (plan 02 J3) : chaque ramassage rapproché monte le son d'un cran ; l'orbe aspirée s'étire et traîne des éclats.
+    private const ulong ChainWindowMs = 500;
+    private const int ChainMax = 14;
+    private const float ChainPitchStep = 0.035f;
+    private const float TrailInterval = 0.04f;
+    private const float TrailMinSpeed = 220f;
+
+    private static ulong _lastCollectMs;
+    private static int _chain;
 
     private float _xpValue;
     private float _currentSpeed;
@@ -18,6 +31,10 @@ public partial class XpOrb : Area2D
     private bool _collected;
     private Node2D _visualRoot;
     private float _floatTime;
+    private Vector2 _hopFrom;
+    private Vector2 _hopTo;
+    private float _hopElapsed = -1f;
+    private float _trailTimer;
 
     // Textures statiques pour l'animation 2 frames
     private static Texture2D _orbFrame1;
@@ -25,14 +42,17 @@ public partial class XpOrb : Area2D
     private static Texture2D OrbFrame1 => _orbFrame1 ??= GD.Load<Texture2D>("res://assets/vfx/vfx_orb_xp.png");
     private static Texture2D OrbFrame2 => _orbFrame2 ??= GD.Load<Texture2D>("res://assets/vfx/vfx_orb_xp_f2.png");
 
-    public void Initialize(float xpValue)
-    {
-        _xpValue = xpValue;
-        _currentSpeed = 0f;
-        _collected = false;
-    }
+    private static SpriteFrames _frames;
+    private static readonly StringName PulseAnimation = "pulse";
 
     private GpuParticles2D _glow;
+    private AnimatedSprite2D _sprite;
+    private Action<XpOrb> _release;
+
+    public void SetRelease(Action<XpOrb> release)
+    {
+        _release = release;
+    }
 
     public override void _Ready()
     {
@@ -47,29 +67,54 @@ public partial class XpOrb : Area2D
             oldSprite.QueueFree();
         }
 
-        SpriteFrames frames = new();
-        frames.AddAnimation("pulse");
-        frames.SetAnimationSpeed("pulse", 4);
-        frames.SetAnimationLoopMode("pulse", SpriteFrames.LoopMode.Linear);
-        frames.AddFrame("pulse", OrbFrame1);
-        frames.AddFrame("pulse", OrbFrame2);
+        if (_frames == null)
+        {
+            _frames = new SpriteFrames();
+            _frames.AddAnimation(PulseAnimation);
+            _frames.SetAnimationSpeed(PulseAnimation, 4);
+            _frames.SetAnimationLoopMode(PulseAnimation, SpriteFrames.LoopMode.Linear);
+            _frames.AddFrame(PulseAnimation, OrbFrame1);
+            _frames.AddFrame(PulseAnimation, OrbFrame2);
+        }
 
-        AnimatedSprite2D animSprite = new()
+        _sprite = new AnimatedSprite2D
         {
             Name = "Visual",
-            SpriteFrames = frames,
+            SpriteFrames = _frames,
             TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
         };
-        animSprite.Play("pulse");
-        AddChild(animSprite);
-        _visualRoot = animSprite;
+        AddChild(_sprite);
+        _visualRoot = _sprite;
 
         _glow = VfxFactory.CreateXpOrbGlow();
-        if (_glow != null)
-            AddChild(_glow);
+        AddChild(_glow);
+    }
 
-        // Léger offset aléatoire pour désynchroniser les orbes entre elles
+    /// <summary>
+    /// Pose une orbe recyclée par CombatPools : tout l'état se réinitialise ici. Avec <paramref name="origin"/>,
+    /// elle saute de ce point jusqu'à <paramref name="position"/>.
+    /// </summary>
+    public void Launch(Vector2 position, float xpValue, Vector2? origin = null)
+    {
+        _hopFrom = origin ?? position;
+        _hopTo = position;
+        _hopElapsed = origin.HasValue ? 0f : -1f;
+        GlobalPosition = _hopFrom;
+        _sprite.Scale = Vector2.One;
+        _sprite.Rotation = 0f;
+        _xpValue = xpValue;
+        _currentSpeed = 0f;
+        _collected = false;
+        // Léger décalage pour désynchroniser le flottement des orbes entre elles
         _floatTime = (float)GD.RandRange(0, Mathf.Tau);
+        _sprite.Play(PulseAnimation);
+        bool glow = VfxFactory.CurrentParticleLevel != ParticleLevel.Off;
+        _glow.Visible = glow;
+        _glow.Emitting = glow;
+        Visible = true;
+        SetPhysicsProcess(true);
+        // Pendant le saut, pas de ramassage : la détection s'allume à l'atterrissage (et signale alors un joueur déjà là).
+        SetDeferred(Area2D.PropertyName.Monitoring, !origin.HasValue);
     }
 
     public override void _PhysicsProcess(double delta)
@@ -78,6 +123,22 @@ public partial class XpOrb : Area2D
             return;
 
         float dt = (float)delta;
+
+        if (_hopElapsed >= 0f)
+        {
+            _hopElapsed += dt;
+            float t = Mathf.Clamp(_hopElapsed / HopSec, 0f, 1f);
+            GlobalPosition = _hopFrom.Lerp(_hopTo, 1f - (1f - t) * (1f - t));
+            _visualRoot.Position = new Vector2(0f, -Mathf.Sin(t * Mathf.Pi) * HopHeightPx);
+            // Pop : petite au départ, légèrement écrasée à l'atterrissage.
+            _sprite.Scale = t < 1f ? Vector2.One * Mathf.Lerp(0.5f, 1f, Mathf.Min(1f, t * 2.5f)) : Vector2.One;
+            if (t >= 1f)
+            {
+                _hopElapsed = -1f;
+                SetDeferred(Area2D.PropertyName.Monitoring, true);
+            }
+            return;
+        }
 
         // Animation de flottement subtile (sub-pixel bobbing)
         _floatTime += dt * 3f;
@@ -98,6 +159,7 @@ public partial class XpOrb : Area2D
             _currentSpeed = Mathf.Min(_currentSpeed + Acceleration * dt, MaxSpeed);
             Vector2 direction = (_player.GlobalPosition - GlobalPosition).Normalized();
             GlobalPosition += direction * _currentSpeed * dt;
+            Stretch(direction, dt);
         }
         else if (distSq < driftRadiusSq)
         {
@@ -115,17 +177,50 @@ public partial class XpOrb : Area2D
         {
             _collected = true;
 
-            // Burst doré à la collecte
-            Node2D burst = VfxFactory.CreateXpCollectBurst(GlobalPosition);
-            if (burst != null)
-                GetTree().CurrentScene.AddChild(burst);
+            CombatPools.Instance?.ShowXpCollect(GlobalPosition);
 
-            AudioManager.Play("xp_gain", 0.03f, -1.5f);
+            ulong now = Time.GetTicksMsec();
+            _chain = now - _lastCollectMs < ChainWindowMs ? Mathf.Min(_chain + 1, ChainMax) : 0;
+            _lastCollectMs = now;
+            AudioManager.Play("xp_gain", 0.01f, -1.5f, 1f + _chain * ChainPitchStep);
 
             EventBus eventBus = GetNode<EventBus>("/root/EventBus");
             eventBus.EmitSignal(EventBus.SignalName.XpGained, _xpValue);
-            CallDeferred(MethodName.QueueFree);
+
+            // Retour au pool : invisible, inerte, prête pour la prochaine mort.
+            Visible = false;
+            _sprite.Stop();
+            _glow.Emitting = false;
+            SetPhysicsProcess(false);
+            SetDeferred(Area2D.PropertyName.Monitoring, false);
+            _release(this);
         }
+    }
+
+    /// <summary>Aspirée, l'orbe s'étire dans sa course et sème des éclats d'Essence derrière elle.</summary>
+    private void Stretch(Vector2 direction, float dt)
+    {
+        float k = _currentSpeed / MaxSpeed;
+        _sprite.Rotation = direction.Angle();
+        _sprite.Scale = new Vector2(1f + k * 0.7f, 1f - k * 0.3f);
+        _trailTimer -= dt;
+        if (_currentSpeed < TrailMinSpeed || _trailTimer > 0f || CombatPools.Instance == null)
+            return;
+        _trailTimer = TrailInterval;
+        CombatPools.Instance.EmitSparks(GlobalPosition, new SparkBurst
+        {
+            Family = FxFamily.Essence,
+            Owner = FxOwner.World,
+            Count = 1,
+            Direction = -direction,
+            Spread = 0.6f,
+            SpeedMin = 10f,
+            SpeedMax = 30f,
+            LifeMin = 0.12f,
+            LifeMax = 0.22f,
+            Size = 1,
+            Decorative = true,
+        });
     }
 
     private void CachePlayer()

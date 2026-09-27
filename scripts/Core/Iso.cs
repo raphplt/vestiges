@@ -12,6 +12,9 @@ public static class Iso
     /// <summary>Rapport hauteur/largeur d'une forme posée au sol (même valeur que le paramètre squash de pixel_fx).</summary>
     public const float GroundSquash = 2f;
 
+    /// <summary>Hauteur de vol commune des projectiles, du joueur comme des créatures : leur ombre reste au sol.</summary>
+    public const float FlightHeight = 10f;
+
     public static Vector2 ToGround(Vector2 screen) => new(screen.X, screen.Y * GroundSquash);
 
     public static Vector2 ToScreen(Vector2 ground) => new(ground.X, ground.Y / GroundSquash);

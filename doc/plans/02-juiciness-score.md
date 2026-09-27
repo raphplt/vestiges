@@ -64,6 +64,15 @@ Un événement de gain avec cause, un profil de feedback JSON et un pool supplé
 **Vérification :** score évolue pendant 10 secondes sans kill ; HUD/bilan/historique concordent exactement ; pause et mort n'ajoutent pas de temps ; gros nombre sans débordement.
 **Garde-fou :** pas de formule indépendante dans le HUD, pas de double comptage de Résurgence ou boss, pas de record comparé à une valeur déjà écrasée.
 
+**Lot A livré (première passe) — 27 septembre 2026 (session cloud) :**
+- **Horloge de jeu actif** : `RunTracker` compte le temps de jeu lui-même (nœud suspendu avec l'arbre). Pauses, choix de niveau et coffres n'avancent plus l'horloge, qui s'arrête à la mort. Score de survie, quêtes de durée, fenêtres glissantes (DPS, débits), bilan, historique et horloge du HUD lisent tous cette même valeur. Avant, le temps mural comptait les pauses.
+- **Score notifié sans kill** : `ScoreChanged` n'était émis qu'à un kill, un coffre ou un point d'intérêt. Le HUD restait donc figé entre deux kills alors que le score de survie montait. `ScoreManager` le notifie désormais quatre fois par seconde, seulement si la valeur a changé ; le compteur du HUD défile vers elle.
+- **Record** : `SaveEndOfRun` écrivait le nouveau record avant que le bilan ne lise `IsNewRecord`, si bien que « NOUVEAU RECORD ! » ne s'affichait jamais et que « Meilleur » montrait le score de la run. L'ancien record et le verdict sont désormais figés avant la sauvegarde.
+- **Barème en données** : `data/scaling/score.json` (lu par `ScoreConfig`) reprend exactement les anciennes constantes : points par créature, par seconde, par crise, par point d'intérêt, par coffre selon la rareté, boss et endgame. Les `score_points` de `pois.json` diffèrent de la valeur unique de 50 appliquée jusqu'ici ; ils restent inutilisés dans cette passe pour ne pas changer l'économie.
+- **Vérifié** : `MovementRegression --run-integration`, dans une vraie `Main`, avec quatre contrôles de plus : score notifié sans kill (4 notifications en 1,2 s), pause qui n'avance pas l'horloge, record encore lu après la sauvegarde, horloge arrêtée à la mort.
+- **Gains regroupés** (ajoutés ensuite) : un « +N » à gauche de la plaque de score cumule les gains à moins de 0,6 s d'intervalle, reste 0,9 s puis s'efface. Les points de survie, qui arrivent un à un, ne s'y affichent pas (seuil de 5). Capture `--capture-crowd` : « +166 », puis « +548 » pendant la rafale, pendant que le compteur rattrape.
+- **Reste du lot A** : rien dans cette passe ; le détail du score figure au bilan (lot D).
+
 ### Lot B — Combat perceptible
 
 1. Reprendre le feedback existant et l'appliquer à la représentation réellement visible, avec un point d'ancrage visuel commun si nécessaire.
@@ -106,6 +115,17 @@ Un événement de gain avec cause, un profil de feedback JSON et un pool supplé
 ### Ambition de sensation
 
 Raphaël valide une juiciness très poussée : mobilité, impacts, collectes, raretés et transformations doivent se sentir fortement. La cible est une réponse riche et synchronisée — poses/anticipations, courbes d’animation, timbres, trajectoires, éclats et réactions — avec montée spectaculaire du build. Les budgets de particules et les options réduites servent cette cible à 60 FPS ; ils ne justifient pas une présentation timide. Valider une séquence « départ modeste → build puissant → bilan gratifiant » avec le même vocabulaire visuel.
+
+**Lot D, première passe — 27 septembre 2026 (session cloud) :** le bilan est refait sur la composition proposée, sans maquette validée au préalable (délégation du 26 septembre) ; il reste à juger.
+- **Trois zones sur un voile sombre**, dans un espace de 1920 × 1080 mis à l'échelle comme l'accueil, en Saira :
+  - en tête, le titre (« Le Traqueur — LA ROUTE S'EFFACE ») et le score final qui défile jusqu'à sa valeur ; puis, seulement ici, « NOUVEAU RECORD » (qui pulse doucement) ou le meilleur score précédent ; puis le détail combat, survie, crises, exploration et multiplicateur ;
+  - au centre, le personnage de face (×6), le build complet — quatre cases d'armes cerclées à la couleur de leur rareté, quatre cases de souvenirs, niveau en coin, cases vides éteintes — et quatre faits : durée, éliminations, Résurgences, dernier coup (nom de la créature) ;
+  - en bas, les gains en cartes (Vestiges, quêtes accomplies, personnages qui reviennent au camp), puis « Rejouer » et « Retour au camp », boutons textuels de l'accueil.
+- **Révélation** : le monde pâlit d'abord, comme effacé (1,1 s). L'ancien fondu de `CanvasModulate` visait une couleur presque blanche et ne se voyait pas. Viennent ensuite le voile, le score, le build, puis les gains et les boutons (2,2 s). Un appui pendant la révélation la termine sans déclencher de bouton ; les boutons ne s'activent qu'après un court délai, puis « Rejouer » prend le focus (clavier, manette).
+- **Relevé figé** : le build est lu sur le joueur à sa mort, et le score après la sauvegarde qui fige le record (lot A).
+- Textes en clés de traduction (`UI_END_*`), formulés sans accord de genre.
+- **Vérifié** : build sans avertissement, smoke test, régressions, capture `--capture-death` (mort réelle après 8 s de jeu, build riche fourni par la capture). Images regardées à chaque temps de la révélation.
+- **Non fait** : les objets du plan 05 (pas encore de système), les dégâts par arme (pas d'attribution), la carte de déblocage reliée à la Collection (04 C2), le passage accéléré par animation des gains.
 
 ## 6. Recette finale et sortie
 
@@ -150,3 +170,115 @@ Chaque lot : captures avant/après dans une vraie run (`tools/capture_run.sh`), 
 - Vérifié : build sans avertissement, smoke test, `MovementRegression`, `EnemyAbilityRegression`.
 - Reste de J0 : projectiles du joueur, effets de mort (dissolution, flaque) et burst d'XP, puis budget d'effets par frame selon `ParticleLevel`.
 - Mise à jour du 25 septembre (plan 08, effets d'attaque) : projectiles du joueur recyclés, flashs et étincelles d'attaque passés sur `PixelFx` et `PixelSparks`. Nœuds créés par seconde : 19 à 43 → 12 ; allocations : 3,4 → 1,75 Mo sur 15 s. Restent les effets de mort et le burst d'XP.
+
+### J0 terminé — 26 septembre 2026 (session cloud)
+
+- **Effets de mort recyclés.** Chaque mort créait environ sept nœuds :
+  - des particules GPU de désintégration et leur minuterie ;
+  - le nuage de dissolution, avec son sprite animé et sa minuterie ;
+  - la flaque irisée et son sprite.
+
+  Désormais :
+  - les éclats passent par `PixelSparks` (famille `Void`, qui s'élèvent) ;
+  - nuage et flaque sont joués par `DeathFx`, un nœud recyclé par `CombatPools`, animé dans `_Process` (ni tween ni minuterie).
+
+  Les durées sont inchangées : nuage 0,6 s, flaque qui s'étend en 0,3 s puis s'efface de 1,3 à 5,3 s. La flaque reste sous les entités.
+- **Collecte d'XP :** la gerbe de chaque orbe (nœud, particules GPU, minuterie) devient 4 éclats `PixelSparks` de la famille `Essence`. `VfxFactory.CreateDissolutionVfx`, `CreateIridescentBloodSplatter` et `CreateXpCollectBurst` sont retirés.
+- **Trouvaille du banc : le panneau des quêtes de run.** Il recréait toutes ses lignes quatre fois par seconde dès qu'une quête de durée était active (« Tenir la cadence »), et à chaque créature tuée. Ses lignes sont désormais créées une fois et réécrites sur place.
+- **Mesure** (`tools/benchmark_movement.sh`, 120 ennemis, 15 s, conteneur cloud sans GPU, même seed) :
+
+  | Mesure | Avant | Après |
+  |---|---|---|
+  | Nœuds créés en 15 s, 720p | 284 (270 `Label`) | 8 |
+  | Nœuds créés en 15 s, 720p avec dash | 300 | 16 |
+  | Allocations managées sur 15 s, 720p | 1,58 Mo | 1,48 Mo |
+
+  Les créatures du banc ne meurent pas : le gain des effets de mort n'y apparaît pas. Il se déduit du code, soit sept nœuds de moins par mort et trois par orbe ramassée. FPS non mesurés (rendu logiciel).
+- **Vérification :** build sans avertissement, `EnemyAbilityRegression` vert, capture en vraie run avec combats (panneau des quêtes à jour, 9 créatures tuées).
+- **Orbes d'XP recyclées.** Chaque orbe instanciait sa scène, remplaçait son sprite, créait ses propres `SpriteFrames`, ses particules et leur matériau, puis se libérait à la collecte. Soit une à trois orbes par mort, et autant pour les gerbes des micro-événements.
+  - Elles viennent désormais d'un pool de `CombatPools` (`SpawnXpOrb`, appel différé, car une mort survient souvent pendant un rappel de la physique).
+  - Sprite animé et matériau de lueur sont partagés, et la lueur s'allume ou non à chaque lancement selon `ParticleLevel`.
+  - Vérifié en vraie run : XP ramassée, niveau 2 atteint à 42 s contre 43 s avant, aucune erreur de physique. `MovementRegression`, `EnemyAbilityRegression` et `DevelopmentModeRegression` verts.
+- **Reste :** le budget d'effets par frame selon `ParticleLevel`.
+- **Budget d'effets par frame (26 septembre, session cloud)** : `Combat/FxBudget`, plafonds dans `data/scaling/fx_budget.json`.
+  - Quatre catégories comptées par frame : étincelles, étoiles d'impact, nuages et flaques de mort, chiffres de dégâts.
+  - Plafonds (Toutes / Réduites) : 320 / 120 étincelles, 32 / 12 étoiles, 12 / 5 morts, 24 / 12 chiffres. Au-delà, l'effet est écarté au lieu de s'empiler ; une gerbe partiellement servie est tronquée.
+  - Jamais écartés : les attaques ennemies (information de danger), les critiques, et la mort des élites et mini-boss (elle garde nuage et flaque). Une mort ordinaire hors budget garde ses éclats et la dissolution de son sprite.
+  - Particules coupées : les chiffres de dégâts restent, au plafond réduit.
+  - Mesure : le banc écrit `fx_dropped` par catégorie ; `EnemyAbilityRegression` vérifie qu'une rafale de 100 étoiles dans une frame en joue 32.
+  - Banc de combat dense (120 ennemis, arme de départ, 15 s) : aucun effet écarté dans les quatre passes ; le budget n'agit qu'au-delà d'un combat dense ordinaire. Nœuds créés : 6 à 21 selon la passe, tous des `PixelFx` à la montée en charge du pool.
+
+### J1 livré (première passe) — 26 septembre 2026 (session cloud)
+
+- **Retour du coup sur la créature** (`Combat/HitFeedback`) : le flash blanc (shader et `SelfModulate`), l'écrasement élastique et le recul existaient, joués par un tween créé à chaque coup. Le recul déplaçait le corps physique de 3 px, puis le ramenait, en luttant avec le déplacement de la créature. Désormais :
+  - mêmes courbes et durées (flash 0,06 + 0,15 s, écrasement 0,15 s, recul 0,1 s), animées dans le tick physique de l'ennemi, sans tween ni allocation par coup ;
+  - le recul porte sur le visuel (sprite, ou polygone de repli), jamais sur le corps ;
+  - un coup fatal finit son flash pendant l'animation de mort ; recyclage et réinitialisation remettent le visuel au repos.
+- **Étincelles orientées** : déjà livrées avec les effets d'attaque (`PlayerAttackFx.PlayHit`, dans le sens du coup, dorées et plus fournies au critique).
+- **Chiffres de dégâts** (`Combat/DamageNumber`) :
+  - Saira SemiCondensed cernée de sombre (`LabelSettings` partagés), lisible sur herbe comme sur terre ; trois tailles selon le total ;
+  - regroupés par cible : les coups normaux d'une même créature à moins de 0,25 s s'additionnent dans un seul chiffre, qui reste en place et pulse à chaque ajout, puis s'envole (au plus 1 s de cumul) ;
+  - critique distinct par la forme, pas seulement la couleur : jamais fusionné, plus gros, en gras, suffixé « ! », il jaillit écrasé puis se redresse et monte plus haut ;
+  - animés dans `_Process` : plus de tween par chiffre.
+- **Relecture** (`godot-reviewer`) : un coup encaissé pendant une posture d'annonce l'effaçait (déjà vrai avec l'ancien tween). L'écrasement multiplie désormais l'échelle de repos (`HitFeedback.RestScale`, posée par `SetWindupPose`).
+- **Vérifié** : build sans avertissement, `EnemyAbilityRegression` avec sept nouveaux contrôles (dont posture d'annonce conservée après un coup) (recul du visuel sans déplacer le corps, écrasement, retour au repos, flash éteint, chiffre additionné « 12 » pour 5 + 7, critique « 20! » à part), galerie des armes (`--capture-weapons`, lame, marteau, fouet, haches).
+- **Reste de J1** : le son de matière (aucun son d'impact par matière dans `assets/audio`, à produire avec le [plan 15](15-audio.md)) ; le critère « trois armes reconnaissables sans lire leur nom », à juger en jeu.
+
+### J2 livré (première passe) — 27 septembre 2026 (session cloud)
+
+- **Dissolution orientée** : la créature retient le sens du dernier coup (du joueur vers elle). Le shader d'entité reçoit `dissolve_direction` : le côté frappé se défait d'abord, le reste suit dans le sens du coup ; sans coup connu (mort par brûlure, exécution), balayage vertical comme avant. Le nuage de dissolution dérive de 10 px dans le même sens.
+- **Éclats projetés** : la moitié des éclats de mort s'élève toujours vers le Néant, l'autre est projetée dans le sens du coup, en trajectoire balistique (ils retombent et rebondissent au sol).
+- **Pop et saut du butin** : chaque orbe d'XP jaillit du corps et retombe à côté, poussée dans le sens du coup (saut de 14 px sur 0,35 s, petite au départ). Elle n'est attirée qu'après l'atterrissage. Les gerbes d'orbes des micro-événements gardent leur pose directe.
+- **Signature des élites et Souverains** : à la mort d'une variante ou d'un mini-boss, une onde au sol (anneau violet de 46 px) et un éclair pâle s'ajoutent aux secousses existantes. Ces morts ne sont jamais écartées par le budget d'effets.
+- **Relecture** (`godot-reviewer`) : après une mort en mêlée, le joueur chevauchait l'orbe dès son lancement et la ramassait avant le saut. La détection de l'orbe ne s'allume plus qu'à l'atterrissage, et signale alors un joueur déjà présent.
+- **Vérifié** : build sans avertissement, `EnemyAbilityRegression`, galerie des armes en mode létal (`--capture-weapons --lethal` : cibles à 1 PV dont une élite, ralenti ×0,25, XP symbolique pour ne pas ouvrir la montée de niveau). Images regardées : onde de l'élite, corps rongés du côté du coup, orbes qui jaillissent, flaques.
+- **Non fait** : lisibilité à 100+ morts simultanées, à juger en jeu (le banc dense ne tue pas) ; signature propre aux Souverains au-delà de l'onde (flash d'écran, son), à voir avec le plan 15.
+
+### J3 livré (première passe) — 27 septembre 2026 (session cloud)
+
+- **Orbes aspirées** : l'accélération existait (800 px/s², plafond 500 px/s). L'orbe s'étire désormais dans sa course, jusqu'à ×1,7 en longueur à pleine vitesse, et sème un éclat d'Essence toutes les 40 ms au-delà de 220 px/s (`PixelSparks`, soumis au budget d'effets, aucun nœud créé).
+- **Chaîne sonore** : chaque ramassage à moins de 0,5 s du précédent monte le son d'un cran (+3,5 %, jusqu'à +49 % en 14 crans), puis la chaîne retombe. La limite existante de 60 ms entre deux sons d'XP est conservée : une chaîne de 50 orbes ne sature pas. `AudioManager.Play` prend une hauteur de base.
+- **Barre d'XP** : elle pulse (éclat ×1,9 qui retombe en 0,2 s) à chaque orbe qui arrive.
+- **Essence vers le HUD** (ajouté ensuite) : chaque gain d'Essence localisé (mort d'une créature) envoie un grain cyan, avec une courte traînée, du lieu de la mort au compteur d'Essence. Le grain monte d'abord, puis file en accélérant (0,55 s), et le compteur pulse à son arrivée.
+  - `EssenceTracker` émet `EventBus.EssenceGained(montant, position)` ; `UI/EssenceFlights`, dans le HUD, dessine tous les grains d'un seul nœud (32 à la fois, au-delà ils sont omis).
+  - Le gain est crédité avant le vol et ne dépend pas de l'animation (garde-fou du lot C).
+  - Capture `--capture-crowd` : grains visibles entre la foule et la plaque.
+- **Non fait** : butin (armes au sol) qui vole vers le HUD ; les récompenses d'événement (sans lieu) n'ont pas de trajet.
+
+### J4 livré (première passe) — 27 septembre 2026 (session cloud)
+
+- **Effet de montée de niveau** (`Combat/LevelUpFx`), qui remplace la gerbe de particules GPU (`VfxFactory.CreateLevelUpBurst`, retirée : trois nœuds créés à chaque niveau) :
+  - onde dorée au sol qui s'élargit jusqu'à 90 px ;
+  - colonne de lumière, un trait qui jaillit des pieds vers le ciel. Le rayon brisé `Beam`, essayé d'abord, se lisait comme un éclair reçu ;
+  - gerbe de 18 éclats dorés, tout par `CombatPools`, sans nœud créé.
+- **Créatures repoussées en apparence** : dans un rayon de 150 px, le visuel de chaque créature recule de 10 px au contact (dégressif jusqu'au bord) et s'écrase, sans flash, sur 0,3 s. Corps, IA et position ne bougent pas (`HitFeedback.Shove`).
+- **Barre d'XP** : elle éclate plus longtemps au passage de niveau qu'à l'arrivée d'une orbe.
+- **Écran de choix** : le voile tombe en 0,12 s et le panneau jaillit de 82 % avec un léger dépassement (0,22 s). Les cartes sont cliquables dès la première frame et la pause tombe au même moment qu'avant : le délai jusqu'au choix est inchangé.
+- **Pause** : l'écran met le jeu en pause aussitôt. L'effet dans le monde se fige derrière le voile et se joue au retour dans la run.
+- **Relecture** (`godot-reviewer`) :
+  - le premier pas de l'entrée prenait son pivot sur la taille du panneau d'avant les cartes ; il vient désormais de la taille minimale, calculée sur demande ;
+  - l'effet était marqué « ennemi », donc atténué par le réglage d'opacité des attaques ennemies. Un troisième propriétaire d'effet, `FxOwner.World`, couvre montée de niveau, collecte d'XP et éclats de l'oubli : pleine opacité, seul le réglage « Particules » s'applique.
+- **Vérifié** : build sans avertissement, smoke test, `MovementRegression`, `EnemyAbilityRegression` (deux contrôles de plus : poussée visuelle sans déplacer le corps ni flasher, retour en place). Capture `--capture-levelup-fx` : effet au ralenti dans un cercle de créatures, puis entrée de l'écran. Images regardées.
+
+### J5 livré (première passe) — 27 septembre 2026 (session cloud)
+
+- **Compteur de morts en rafale** (`UI/KillStreakDisplay`, sous la plaque de vie) :
+  - « ×N » à partir de cinq créatures abattues à moins de 1,5 s d'intervalle ;
+  - il pulse à chaque mort, grossit et se dore jusqu'à 50, puis s'efface 0,6 s après la dernière ;
+  - le texte n'est réécrit qu'à une mort.
+- **Recul de caméra en foule** (`Combat/CrowdZoom`) :
+  - au-delà de 25 créatures à l'écran, le zoom recule doucement, jusqu'à 8 % à 70 créatures, puis revient ;
+  - comptage quatre fois par seconde via `GroupCache` ;
+  - désactivé dans le banc dense, pour que la surface rendue reste comparable d'une version à l'autre.
+- **Sons superposés** : la limite existait (12 voix, intervalle minimal par son). Quand toutes les voix sonnent, c'est désormais celle qui joue depuis le plus longtemps qui est coupée, et non toujours la première.
+- **Effets qui grandissent avec le build** : les lots précédents y contribuent déjà (morts orientées, budget qui absorbe les rafales, compteur). Pas d'échelle d'effets indexée sur les dégâts par seconde dans cette passe.
+- **Vérifié** : capture `--capture-crowd`, 60 créatures autour du joueur. Zoom 1,94 → 1,88 en 3 s. Au marteau, 33 puis 43 morts en rafale affichées. Images regardées.
+
+### J6 livré (première passe) — 27 septembre 2026 (session cloud)
+
+- **Traces de pas selon le sol** (`Combat/FootstepFx`, appelé au rythme des sons de pas existants) : dans l'eau, un rond qui s'élargit et quatre gouttes ; sur le béton, trois grains de poussière grise soulevés derrière le pied ; dans l'herbe, un seul grain. Tout passe par `CombatPools`, sans nœud créé, et reste soumis au budget d'effets.
+- **Coffres qui frémissent** (`Chest`) : un coffre fermé tremble par saccades quand le joueur approche. L'effet commence à 110 px et va jusqu'à 3,4° au contact ; la distance est relue dix fois par seconde. Capture `--capture-micro` : 1,6° mesuré à 45 px.
+- **Reflets sur les points d'intérêt** (`World/PoiGlints`, ajouté ensuite) : toutes les 0,8 s, un point d'intérêt inexploré à moins de 520 px du joueur, tiré au hasard, accroche un éclat doré bref sur sa silhouette. Il attire l'œil sans marqueur d'interface. Capture `--capture-micro` : éclats visibles sur le point d'intérêt voisin.
+- **Non fait** : herbes qui plient au passage (il faut d'abord un index spatial des petits décors, `PropOcclusion` n'indexe que les grands), retours d'interface.
+- **Limite** : dans le conteneur, poussière et frémissement sont trop fins pour se juger sur une capture. Le frémissement est mesuré ; la poussière reste à regarder en jeu.
+
