@@ -181,11 +181,9 @@ public partial class Indicible : Node2D
 
 	private void OnHitboxAreaEntered(Area2D area)
 	{
-		if (area is Projectile projectile && !_isDying)
-		{
-			TakeDamage(20f); // Dégâts fixes des projectiles sur L'Indicible
-			projectile.QueueFree();
-		}
+		// Le projectile vient d'un pool : il y rentre, il ne se libère pas.
+		if (area is Projectile projectile && !_isDying && projectile.TryAbsorb(out float damage))
+			TakeDamage(damage);
 	}
 
 	private void PositionEdgeSegments()

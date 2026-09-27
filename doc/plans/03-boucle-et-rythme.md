@@ -232,3 +232,15 @@ Mesure sur le Mac (M1 Pro, machine chargée : ces indicateurs ne dépendent pas 
 | 1002 | 7 → 7 s | 11,8 → 19,2 s | 54 → 27 | 61 → 46 |
 
 Les trente premières secondes sont nettement plus calmes. Les dégâts reçus sur toute la première minute ne baissent pas (275 → 316 par minute, médiane des trois seeds) : le bot n'esquive jamais et une meute qui tombe au mauvais moment suffit à faire varier ce total. Recette en jeu attendue.
+
+### Lot E, étape 1 : état des lieux de l'Indicible — 27 septembre 2026
+
+Nouvelle capture `--capture-endgame`. L'Indicible est forcé à côté du joueur, qui le combat 40 s avec quatre armes à distance (arc, arbalète, haches, fronde) en tournant autour du point d'arrivée. Ensuite, ses PV sont vidés pour dérouler la fin.
+
+**Résultat** : `hp=6400->6400 player_hits=0`, puis `defeated=True endgame=True phase=Endgame`. La mort, le passage en endgame, le tempo des crises et la libération du boss fonctionnent. **Le combat, lui, ne fonctionne pas.**
+- L'Indicible n'est pas une créature `Enemy` : aucune arme ne le prend pour cible, et la mêlée ne peut pas le toucher. Seul un projectile qui traverse par hasard l'une de ses quatre zones le blesse.
+- Ces zones sont quatre rectangles violets plats (`Polygon2D`), posés à 350 px du point d'arrivée et figés dans le monde. Le joueur s'en éloigne en marchant : rien n'est « trop grand pour l'écran ».
+- Ses yeux font quelques pixels. Ses tentacules (couloirs annoncés) partent de ces bords fixes et ne touchent pas un joueur qui bouge.
+- **Corrigé en passant** : quand un projectile le touchait, il était détruit (`QueueFree`) alors qu'il appartient à un pool. Le pool aurait ensuite resservi un objet détruit. Il y rentre désormais et applique ses vrais dégâts, au lieu de 20 fixes.
+
+**À arbitrer** : l'Indicible est à refaire entièrement (présence à l'écran, cible des armes de mêlée comme de distance, attaques, sprites). C'est aussi un choix de lore (plan 19 : révélation et fin non tranchées). Proposition : attendre la direction du lore, puis concevoir le boss avec Raphaël. La capture `--capture-endgame` servira de recette.

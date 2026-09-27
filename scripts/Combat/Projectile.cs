@@ -246,6 +246,20 @@ public partial class Projectile : Area2D
         }
     }
 
+    /// <summary>
+    /// Impact sur une cible qui n'est pas une créature (l'Indicible) : donne ses dégâts et rentre au pool, sans
+    /// perforation. Faux si le projectile a déjà touché ce qui l'arrête.
+    /// </summary>
+    public bool TryAbsorb(out float damage)
+    {
+        damage = _damage;
+        if (_isDespawning)
+            return false;
+        _isDespawning = true;
+        CallDeferred(MethodName.Release);
+        return true;
+    }
+
     private void Release()
     {
         _isDespawning = true;

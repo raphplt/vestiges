@@ -62,6 +62,7 @@ Un seul lot d'implémentation ouvert à la fois. Un échec de lisibilité, de pe
 - Crash à la fermeture du jeu lancé depuis Godot (préexistant) corrigé par une sortie propre ([10](10-terrain-et-tiles.md)).
 - Audit, lot 4 : les orbes d'XP laissées loin s'endorment. Un nomade en laisse environ 300 en 10 minutes ; avec 400 orbes, 720p passe de 244 à 289 FPS.
 - [08](08-direction-artistique.md) : auras d'affixe en pixel art, sous les pieds.
+- [03 lot E](03-boucle-et-rythme.md) : **l'Indicible n'est pas combattable** (aucune arme ne le vise, 0 PV perdu en 40 s de combat). Sa mort et le passage en endgame marchent. Refonte à arbitrer avec le lore.
 - [06](06-personnages-quetes-defis.md) : un profil neuf commence avec le Vagabond (décision du 23 septembre) ; les profils existants gardent leurs personnages.
 
 **Mise à jour du 27 septembre, soir (session locale) :** deux bugs signalés par Raphaël.

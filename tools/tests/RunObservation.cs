@@ -42,6 +42,7 @@ namespace Vestiges.Tests;
 /// --capture-levelup : l'écran de level-up, une capture par rareté (RunObservation.LevelUp.cs).
 /// --capture-oublis : les neuf Oublis de carte pris d'un coup, effets mesurés (RunObservation.Oublis.cs).
 /// --check-orb-sleep : orbe d'XP endormie loin du joueur, réveillée et ramassée à son retour (RunObservation.OrbSleep.cs).
+/// --capture-endgame : Indicible forcé, combat, mort et passage en endgame (RunObservation.Endgame.cs).
 /// --close-window : quitte par la demande de fermeture de la fenêtre au lieu de GameExit.
 /// --capture-rift : offre d'une Faille, Péril et Oubli dans la pause, Oubli levé au Mémorial (RunObservation.Landmarks.cs).
 /// --capture-memorial : parcours complet d'un Mémorial, du réveil aux services (RunObservation.Landmarks.cs).
@@ -138,6 +139,8 @@ public partial class RunObservation : Node
                 await CaptureOublis();
             else if (Array.IndexOf(args, "--check-orb-sleep") >= 0)
                 await CheckOrbSleep();
+            else if (Array.IndexOf(args, "--capture-endgame") >= 0)
+                await CaptureEndgame(double.Parse(Argument(args, "--seconds", "40"), CultureInfo.InvariantCulture));
             else if (Array.IndexOf(args, "--loot-draws") >= 0)
                 MeasureLootDraws(int.Parse(Argument(args, "--loot-draws", "1000"), CultureInfo.InvariantCulture));
             else if (Array.IndexOf(args, "--capture-bestiary") >= 0)
