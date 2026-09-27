@@ -54,7 +54,7 @@ Un seul lot d'implémentation ouvert à la fois. Un échec de lisibilité, de pe
 
 **Mise à jour du 27 septembre, soir (session locale) :** deux bugs signalés par Raphaël.
 - [Son des coffres](15-audio.md) : la mélodie de révélation ne part plus pendant le défilement et s'éteint avec l'écran.
-- [Chargement](10-terrain-et-tiles.md) : plus de frame de carte vide au départ, et chargement ramené de 6,0 à 3,6 s.
+- [Chargement](10-terrain-et-tiles.md) : plus de frame de carte vide au départ, et chargement ramené de 6,0 à 3,5 s (génération sur un thread, décors construits hors de l'arbre).
 - [07 lot B](07-bestiaire-et-rencontres.md), fin : tirs du Cracheur, de la Sentinelle et de la Tisseuse annoncés par un couloir de visée ; portée de la Sentinelle dessinée au sol.
 - [04 lot C](04-interfaces-et-hub.md) : paramètres entièrement navigables au clavier et à la manette (ils étaient à la souris seule), pause ouverte sur « Reprendre », cadre doré sur le focus.
 - [03 lot C](03-boucle-et-rythme.md) : présage des Résurgences, les bords de l'écran se ternissent pendant l'avertissement et les créatures s'agitent.

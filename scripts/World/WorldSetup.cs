@@ -117,6 +117,22 @@ public partial class WorldSetup : Node2D
         if (Seed == 0)
             Seed = GD.Randi();
 
+        // Génération du monde (calcul pur) sur un thread : l'écran de chargement s'affiche et s'anime pendant ce temps.
+        // Ses résultats ne sont lus qu'après l'attente, au début d'InitializeWorldAsync.
+        _generation = Task.Run(GenerateWorld);
+    }
+
+    private Task _generation;
+    // Décors en attente, hors de l'arbre, entre les placeurs et le découpage en tronçons.
+    private Node2D _propStaging;
+
+    /// <summary>
+    /// Terrain, biomes, plans de la ville, du marais et des champs, chemins, fermes et chantiers. Calcul pur, sans nœud
+    /// ni ressource du moteur hors bruits : peut tourner hors du thread principal. Chronométré étape par étape.
+    /// </summary>
+    private void GenerateWorld()
+    {
+        ulong step = Time.GetTicksUsec();
         _generator = new WorldGenerator(
             _config.MapRadius,
             _config.SpawnClearance,
@@ -135,7 +151,7 @@ public partial class WorldSetup : Node2D
             _terrain = _generator.Generate(availableBiomes, _config.BiomeCount);
         else
             _terrain = _generator.Generate();
-        LoadProfiler.Mark("terrain et biomes");
+        LoadProfiler.Span("terrain et biomes (thread)", ref step);
 
         // Layouts urbains/marais (CPU pur)
         if (_generator.ActiveBiomes.Any(b => b.Id == "urban_ruins"))
@@ -151,12 +167,12 @@ public partial class WorldSetup : Node2D
             _wildFieldsLayout = wildFieldsGen.Apply(_terrain, _generator, "wild_fields");
         }
 
-        LoadProfiler.Mark("plans de la ville, du marais et des champs");
+        LoadProfiler.Span("plans de la ville, du marais et des champs (thread)", ref step);
         // Chemins de terre entre les régions, raccordés aux rues (plan 10 T3) : rien ne pousse dessus.
         _pathNetwork = PathNetworkGenerator.Build(_generator, _terrain, _urbanLayout, _wildFieldsLayout, _config.Paths,
                                                   _config.BiomeLayout.RegionSpacing, Seed);
         _swampLayout?.Placements.RemoveAll(placement => _pathNetwork.Cells.Contains(placement.Cell));
-        LoadProfiler.Mark("chemins");
+        LoadProfiler.Span("chemins (thread)", ref step);
 
         // Fermes des champs (plan 08 P4b) : cellules réservées avant les points d'intérêt, embranchement vers un chemin.
         _farmConfig = FarmConfig.Load();
@@ -165,9 +181,13 @@ public partial class WorldSetup : Node2D
         _quarryPlan = SitePlan.Load("res://data/world/quarry_sites.json", "collapsed_quarry",
                                     "res://assets/props/collapsed_quarry/", "chantiers");
         _quarrySites = SiteComposer.Plan(_generator, _pathNetwork, _usedCells, _quarryPlan, Seed);
-        LoadProfiler.Mark("fermes et chantiers");
+        LoadProfiler.Span("fermes et chantiers (thread)", ref step);
 
-        // Préparer le TileSet et mapper (rapide)
+    }
+
+    /// <summary>TileSet dupliqué, correspondance des tuiles et routes générées : sur le thread principal, après la génération.</summary>
+    private void PrepareTiles()
+    {
         _ground.TileSet = _ground.TileSet.Duplicate() as TileSet;
         EnsureRoadOverlayLayer();
         _tileMapper = new BiomeTileMapper();
@@ -202,8 +222,9 @@ public partial class WorldSetup : Node2D
         onProgress?.Invoke("Création du monde...");
         CreateVoidBackground();
 
-        // Étaler ApplyTerrain sur plusieurs frames (le plus gros coût)
-        LoadProfiler.Mark("scène prête");
+        await _generation;
+        PrepareTiles();
+        LoadProfiler.Mark("génération attendue, tuiles préparées");
         await ApplyTerrainAsync(_terrain, _urbanLayout, onProgress);
         LoadProfiler.Mark("tuiles");
         GroundMaterial.Apply(_ground, _roadOverlay, _generator, _tileMapper, _terrain, _config.MapRadius, _config.GroundBlend);
@@ -227,23 +248,23 @@ public partial class WorldSetup : Node2D
 
         onProgress?.Invoke("Décors...");
         SpawnEnvironmentProps(_urbanLayout, _swampLayout);
+        LoadProfiler.Mark("décors des biomes");
         await YieldFrame();
 
         if (_urbanLayout != null)
         {
-            Node2D propContainer = GetNode<Node2D>("PropContainer");
-            UrbanPropPlacer.PlaceProps(_urbanLayout, _ground, propContainer, _usedCells, Seed);
+            UrbanPropPlacer.PlaceProps(_urbanLayout, _ground, _propStaging, _usedCells, Seed);
+            LoadProfiler.Mark("décors de la ville");
             await YieldFrame();
         }
         if (_swampLayout != null)
         {
-            Node2D propContainer = GetNode<Node2D>("PropContainer");
-            SwampPropPlacer.PlaceProps(_swampLayout, _ground, propContainer, _usedCells);
+            SwampPropPlacer.PlaceProps(_swampLayout, _ground, _propStaging, _usedCells);
         }
-        LoadProfiler.Mark("décors");
+        LoadProfiler.Mark("décors du marais");
         BuildPropOcclusion();
         await YieldFrame();
-        LoadProfiler.Mark("index d'occlusion");
+        LoadProfiler.Mark("tronçons de décors");
 
         onProgress?.Invoke("Atmosphère...");
         if (_config.LoreElementsEnabled)
@@ -266,6 +287,8 @@ public partial class WorldSetup : Node2D
     /// <summary>Initialisation synchrone legacy (simulation / fallback).</summary>
     public void InitializeWorldSync()
     {
+        _generation.Wait();
+        PrepareTiles();
         CreateVoidBackground();
         ApplyTerrain(_terrain, _urbanLayout);
         GroundMaterial.Apply(_ground, _roadOverlay, _generator, _tileMapper, _terrain, _config.MapRadius, _config.GroundBlend);
@@ -277,13 +300,11 @@ public partial class WorldSetup : Node2D
         SpawnEnvironmentProps(_urbanLayout, _swampLayout);
         if (_urbanLayout != null)
         {
-            Node2D propContainer = GetNode<Node2D>("PropContainer");
-            UrbanPropPlacer.PlaceProps(_urbanLayout, _ground, propContainer, _usedCells, Seed);
+            UrbanPropPlacer.PlaceProps(_urbanLayout, _ground, _propStaging, _usedCells, Seed);
         }
         if (_swampLayout != null)
         {
-            Node2D propContainer = GetNode<Node2D>("PropContainer");
-            SwampPropPlacer.PlaceProps(_swampLayout, _ground, propContainer, _usedCells);
+            SwampPropPlacer.PlaceProps(_swampLayout, _ground, _propStaging, _usedCells);
         }
         BuildPropOcclusion();
         if (_config.LoreElementsEnabled)
@@ -528,34 +549,42 @@ public partial class WorldSetup : Node2D
 
     private void BuildPropOcclusion()
     {
-        Node propContainer = GetNode("PropContainer");
-        SeparateGroundDecals(propContainer);
+        Node2D propContainer = GetNode<Node2D>("PropContainer");
+        Node2D decals = new() { Name = "GroundDecals", ZIndex = -1 };
+        AddChild(decals);
+        Node2D decalStaging = new();
+        SeparateGroundDecals(_propStaging, decalStaging);
+        LoadProfiler.Mark("décalques séparés");
         Node2D player = GetNodeOrNull<Node2D>("Player");
         PropOcclusion occlusion = new() { Name = "PropOcclusion" };
         AddChild(occlusion);
-        occlusion.Build(propContainer, player);
+        occlusion.Build(_propStaging, player);
+        LoadProfiler.Mark("index d'occlusion construit");
 
-        // En dernier : ensuite, les décors ne sont plus enfants directs du conteneur (voir PropChunks).
+        // En dernier : les décors, rangés en tronçons hors de l'arbre, y entrent d'un bloc (voir PropChunks).
         PropChunks chunks = new() { Name = "PropChunks" };
         AddChild(chunks);
-        chunks.Build(player?.GetNodeOrNull<Camera2D>("Camera"), (Node2D)propContainer, GetNode<Node2D>("GroundDecals"));
+        chunks.Build(player?.GetNodeOrNull<Camera2D>("Camera"), (_propStaging, propContainer), (decalStaging, decals));
+        _propStaging.Free();
+        _propStaging = null;
+        decalStaging.Free();
     }
 
     /// <summary>
     /// Les décalques au sol (débris, fleurs, flaques) passent dans un conteneur non trié :
     /// le tri en Y de la scène ne porte plus que sur les décors qui ont une hauteur.
     /// </summary>
-    private void SeparateGroundDecals(Node propContainer)
+    private static void SeparateGroundDecals(Node2D propContainer, Node2D decals)
     {
-        Node2D decals = new() { Name = "GroundDecals", ZIndex = -1 };
-        AddChild(decals);
         int moved = 0;
         foreach (Node child in propContainer.GetChildren())
         {
             if (child is not EnvironmentProp { ZIndex: -1 } prop)
                 continue;
             prop.ZIndex = 0;
-            prop.Reparent(decals);
+            // Hors de l'arbre et conteneurs à l'origine : déplacer le nœud garde sa position, sans sortie ni entrée.
+            propContainer.RemoveChild(prop);
+            decals.AddChild(prop);
             moved++;
         }
         GD.Print($"[WorldSetup] Décalques au sol hors tri : {moved} / {moved + propContainer.GetChildCount()}");
@@ -563,14 +592,13 @@ public partial class WorldSetup : Node2D
 
     private void SpawnEnvironmentProps(UrbanLayout urbanLayout, SwampPropLayout swampLayout)
     {
-        // Créer le container pour les props (si pas déjà dans la scène)
-        Node2D propContainer = GetNodeOrNull<Node2D>("PropContainer");
-        if (propContainer == null)
-        {
-            // Trié en Y avec le joueur, les ennemis et les POI : un décor masque ce qui passe derrière lui.
-            propContainer = new Node2D { Name = "PropContainer", YSortEnabled = true };
-            AddChild(propContainer);
-        }
+        // Conteneur final, trié en Y avec le joueur, les ennemis et les POI : un décor masque ce qui passe derrière lui.
+        if (GetNodeOrNull<Node2D>("PropContainer") == null)
+            AddChild(new Node2D { Name = "PropContainer", YSortEnabled = true });
+        // Les placeurs posent les décors hors de l'arbre : 10 000 entrées dans la scène coûtent cher, et le découpage en
+        // tronçons les déplacerait une seconde fois. Ils y entrent une seule fois, déjà rangés (BuildPropOcclusion).
+        _propStaging = new Node2D { Name = "PropStaging" };
+        Node2D propContainer = _propStaging;
 
         _propSpawner = new PropSpawner { Name = "PropSpawner" };
         AddChild(_propSpawner);

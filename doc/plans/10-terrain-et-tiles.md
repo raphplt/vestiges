@@ -402,6 +402,22 @@ Les tuiles coûtaient cher par l'attente, pas par le calcul. La boucle rendait l
 - les tuiles et les routes sont posées par tranches de temps ;
 - une frame de respiration sépare les placeurs de décors.
 
-**Pistes suivantes, non faites :**
-- la génération synchrone (1,1 s) fige l'écran noir de la transition : elle pourrait passer après l'écran de chargement, ou sur un thread (calcul pur) ;
-- le déplacement des décors dans leurs conteneurs finaux (décalques, tronçons) coûte 0,4 s : les poser directement au bon endroit l'éviterait.
+**Suite, le même jour :**
+- **Génération sur un thread.** Terrain, biomes, plans, chemins, fermes et chantiers sont du calcul pur. Ils partent sur un thread dès le `_Ready` de `WorldSetup` et sont attendus au début d'`InitializeWorldAsync`. Le `TileSet` et les tuiles de route restent sur le thread principal (`PrepareTiles`). Aucun nœud ne lit le générateur avant : les enfants de la scène sont prêts avant leur parent, et l'arbre est en pause pendant le chargement.
+  - Effet : 1,1 s d'écran noir figé devient un écran de chargement animé.
+  - Le total ne baisse pas sur une machine chargée (le thread met 1,4 s, charge 6 à 7).
+- **Décors construits hors de l'arbre.** Les placeurs posent les 10 700 décors dans un conteneur détaché. Les décors sont rangés en tronçons hors de l'arbre, puis les 248 tronçons y entrent d'un bloc. Avant, chaque décor entrait dans la scène, puis en sortait et y rentrait au découpage.
+  - `EnvironmentProp.VisibleWorldRect` se calcule par les transformations locales (conteneurs à l'origine) ;
+  - la position des scènes-récits se lit en local.
+- Mesure, même seed (charge 7) :
+
+  | Étape | Avant | Après |
+  |---|---|---|
+  | Décors des biomes | 635 ms | 425 ms |
+  | Décors de la ville | 221 ms | 119 ms |
+  | Décors du marais | 63 ms | 34 ms |
+  | Tronçons (entrée des décors dans la scène) | 360 ms | 325 ms |
+  | **Total** (6,0 s au départ) | 3,8 s | **3,5 s** |
+- **Vérifié :** `test_movement` (intégration dans une vraie `Main`) et smoke test verts. Captures `--capture-props` de la ville et de la forêt regardées : décors, collisions et transparence derrière les immeubles et les canopées intacts.
+- **Constat en passant :** la séparation des « décalques au sol » (décors plats hors du tri en Y, `SeparateGroundDecals`) ne trouve plus aucun décor : 0 sur 10 694, déjà avant ces changements. Depuis la refonte des décors à l'échelle du personnage, aucun ne passe sous la hauteur de `ground_decal_max_height`. À revoir si le tri en Y redevient coûteux.
+- **Reste :** l'entrée des décors dans la scène (0,3 s d'un bloc) pourrait s'étaler sur plusieurs frames, et le calcul des chemins (0,4 s) explore 186 000 cellules.

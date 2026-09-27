@@ -17,6 +17,14 @@ public static class LoadProfiler
         _last = _start;
     }
 
+    /// <summary>Durée depuis <paramref name="since"/>, qui avance : pour un travail sur un autre thread, sans toucher au fil principal.</summary>
+    public static void Span(string step, ref ulong since)
+    {
+        ulong now = Time.GetTicksUsec();
+        GD.Print($"[Chargement] {step} : {(now - since) / 1000.0:F0} ms");
+        since = now;
+    }
+
     public static void Mark(string step)
     {
         ulong now = Time.GetTicksUsec();

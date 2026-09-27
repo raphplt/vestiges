@@ -135,15 +135,18 @@ public partial class EnvironmentProp : StaticBody2D
 
 	public bool HasCanopy => _canopySprite != null;
 
-	/// <summary>Silhouette visible en coordonnées monde (pour l'occlusion), canopée comprise.</summary>
+	/// <summary>
+	/// Silhouette visible en coordonnées monde (pour l'occlusion), canopée comprise. Calculée par les transformations
+	/// locales : valable hors de l'arbre, pendant le chargement, parce que les conteneurs de décors sont à l'origine.
+	/// </summary>
 	public Rect2 VisibleWorldRect()
 	{
 		Rect2 rect = _baseSprite.GetRect();
-		rect.Position += _baseSprite.GlobalPosition;
+		rect.Position += (Transform * _baseSprite.Transform).Origin;
 		if (_canopySprite != null)
 		{
 			Rect2 canopy = _canopySprite.GetRect();
-			canopy.Position += _canopySprite.GlobalPosition;
+			canopy.Position += (Transform * _canopySprite.Transform).Origin;
 			rect = rect.Merge(canopy);
 		}
 		return rect;

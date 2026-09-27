@@ -21,35 +21,38 @@ public partial class PropChunks : Node
     private Rect2I _visibleRange;
     private bool _hasRange;
 
-    /// <summary>Répartit les enfants des conteneurs dans des tronçons, qui héritent du tri en Y de leur parent.</summary>
-    public void Build(Camera2D camera, params Node2D[] containers)
+    /// <summary>
+    /// Range les décors de chaque source, hors de l'arbre et à l'origine, dans des tronçons masqués, puis ajoute les
+    /// tronçons à leur conteneur final, qui leur transmet son tri en Y : chaque décor entre une seule fois dans la scène.
+    /// </summary>
+    public void Build(Camera2D camera, params (Node2D Source, Node2D Target)[] containers)
     {
         _camera = camera;
         int moved = 0;
-        foreach (Node2D container in containers)
+        foreach ((Node2D source, Node2D target) in containers)
         {
             Dictionary<Vector2I, Node2D> byCell = new();
-            foreach (Node child in container.GetChildren())
+            foreach (Node child in source.GetChildren())
             {
                 if (child is not Node2D prop)
                     continue;
-                Vector2I cell = CellOf(prop.GlobalPosition);
+                // Source à l'origine : la position locale est la position monde.
+                Vector2I cell = CellOf(prop.Position);
                 if (!byCell.TryGetValue(cell, out Node2D chunk))
                 {
-                    chunk = new Node2D { Name = $"Chunk_{cell.X}_{cell.Y}", YSortEnabled = container.YSortEnabled };
-                    container.AddChild(chunk);
+                    chunk = new Node2D { Name = $"Chunk_{cell.X}_{cell.Y}", YSortEnabled = target.YSortEnabled, Visible = false };
                     byCell[cell] = chunk;
                     if (!_chunks.TryGetValue(cell, out List<Node2D> list))
                         _chunks[cell] = list = new List<Node2D>();
                     list.Add(chunk);
                 }
-                prop.Reparent(chunk);
+                source.RemoveChild(prop);
+                chunk.AddChild(prop);
                 moved++;
             }
+            foreach (Node2D chunk in byCell.Values)
+                target.AddChild(chunk);
         }
-        foreach (List<Node2D> list in _chunks.Values)
-            foreach (Node2D chunk in list)
-                chunk.Visible = false;
         GD.Print($"[PropChunks] {moved} décors répartis en {_chunks.Count} tronçons de {ChunkSize} px");
     }
 

@@ -94,7 +94,8 @@ public static class WildFieldsComposer
             container.AddChild(prop);
             prop.Initialize(texture, null, 0f, System.Array.IndexOf(config.BlockingScenes, sprite) >= 0);
             usedCells.Add(cell);
-            spots.Add(prop.GlobalPosition);
+            // Le conteneur est à l'origine (et hors de l'arbre au chargement) : la position locale est la position monde.
+            spots.Add(prop.Position);
         }
         GD.Print($"[WildFieldsComposer] {spots.Count} scènes-récits");
         return spots;
