@@ -26,6 +26,7 @@ namespace Vestiges.Tests;
 /// --capture-quarries : chantiers de la Carrière Effondrée les plus proches du départ, normal et dézoomé (idem).
 /// --capture-omen : présage d'une Résurgence, avant, pendant l'avertissement et pendant la crise (RunObservation.Omen.cs).
 /// --check-connectivity : coffres, Mémoriaux et Failles accessibles à pied depuis le départ (RunObservation.Connectivity.cs).
+/// --capture-trample : herbes qui plient au passage du joueur (RunObservation.Trample.cs).
 /// --show-collisions : formes de collision affichées dans n'importe quel mode de capture.
 /// --capture-landmarks : églises et pylônes des Ruines Urbaines, normal et dézoomé (RunObservation.UrbanLandmarks.cs).
 /// --capture-levelup-fx : effet de montée de niveau au ralenti, puis entrée de l'écran de choix (RunObservation.LevelUpFx.cs).
@@ -91,6 +92,8 @@ public partial class RunObservation : Node
                 await CaptureJunctions();
             else if (Array.IndexOf(args, "--check-connectivity") >= 0)
                 await CheckConnectivity();
+            else if (Array.IndexOf(args, "--capture-trample") >= 0)
+                await CaptureTrample();
             else if (Array.IndexOf(args, "--capture-omen") >= 0)
                 await CaptureOmen();
             else if (Array.IndexOf(args, "--capture-quarries") >= 0)

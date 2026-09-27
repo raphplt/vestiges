@@ -280,6 +280,6 @@ Chaque lot : captures avant/après dans une vraie run (`tools/capture_run.sh`), 
 - **Traces de pas selon le sol** (`Combat/FootstepFx`, appelé au rythme des sons de pas existants) : dans l'eau, un rond qui s'élargit et quatre gouttes ; sur le béton, trois grains de poussière grise soulevés derrière le pied ; dans l'herbe, un seul grain. Tout passe par `CombatPools`, sans nœud créé, et reste soumis au budget d'effets.
 - **Coffres qui frémissent** (`Chest`) : un coffre fermé tremble par saccades quand le joueur approche. L'effet commence à 110 px et va jusqu'à 3,4° au contact ; la distance est relue dix fois par seconde. Capture `--capture-micro` : 1,6° mesuré à 45 px.
 - **Reflets sur les points d'intérêt** (`World/PoiGlints`, ajouté ensuite) : toutes les 0,8 s, un point d'intérêt inexploré à moins de 520 px du joueur, tiré au hasard, accroche un éclat doré bref sur sa silhouette. Il attire l'œil sans marqueur d'interface. Capture `--capture-micro` : éclats visibles sur le point d'intérêt voisin.
-- **Non fait** : herbes qui plient au passage (il faut d'abord un index spatial des petits décors, `PropOcclusion` n'indexe que les grands), retours d'interface.
+- **Non fait** : retours d'interface. Les herbes qui plient au passage sont livrées le 27 septembre par un uniforme global de shader, sans index spatial ([plan 10 lot E](10-terrain-et-tiles.md)).
 - **Limite** : dans le conteneur, poussière et frémissement sont trop fins pour se juger sur une capture. Le frémissement est mesuré ; la poussière reste à regarder en jeu.
 

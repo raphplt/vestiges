@@ -6,7 +6,9 @@
         "min_blocking_pixels": 150,
         "footprint_scale": 0.85,
         "ground_decal_max_height": 12,
-        "occluder_min_height": 24
+        "occluder_min_height": 24,
+        "trample_max_height": 40,
+        "trample_prefixes": ["prop_tall_grass", "prop_poppies", "prop_flowers", "prop_fern", "prop_reeds", "prop_bush"]
     },
     "ground_blend": {
         "enabled": true,

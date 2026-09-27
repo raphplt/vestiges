@@ -20,6 +20,7 @@ public partial class EnvironmentProp : StaticBody2D
 	private static ShaderMaterial _swayMaterial;
 	// Partagé par tous les décors : un seul matériau garde le rendu par lots (≈ 10 000 décors par carte).
 	private static ShaderMaterial _forgetMaterial;
+	private static ShaderMaterial _trampleMaterial;
 
 	/// <summary>
 	/// Initialise le prop. La position courante est le centre de la cellule. Avec un manifeste, le pivot au sol
@@ -74,6 +75,7 @@ public partial class EnvironmentProp : StaticBody2D
 		}
 
 		_forgetMaterial ??= new ShaderMaterial { Shader = GD.Load<Shader>("res://assets/shaders/prop_forget.gdshader") };
+		_trampleMaterial ??= new ShaderMaterial { Shader = GD.Load<Shader>("res://assets/shaders/prop_trample.gdshader") };
 		_baseSprite = new Sprite2D
 		{
 			Texture = baseTexture,
@@ -98,6 +100,10 @@ public partial class EnvironmentProp : StaticBody2D
 			CollisionLayer = 0;
 		}
 		CollisionMask = 0;
+
+		// Herbes, fleurs, roseaux : bas et traversables, ils plient au passage (plan 10 lot E).
+		if (!blocks && canopyTexture == null && _footprint.VisibleHeight <= rules.TrampleMaxHeight && rules.Tramples(baseTexture.ResourcePath))
+			_baseSprite.Material = _trampleMaterial;
 
 		if (!blocks && canopyTexture == null && _footprint.VisibleHeight <= rules.GroundDecalMaxHeight)
 			ZIndex = -1;

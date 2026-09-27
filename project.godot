@@ -116,3 +116,7 @@ erasure_far_memory={
 "type": "float",
 "value": 1.0
 }
+trample_origin={
+"type": "vec4",
+"value": Vector4(1e+06, 1e+06, 0, 0)
+}

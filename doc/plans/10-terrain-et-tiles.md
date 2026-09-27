@@ -104,6 +104,15 @@ La transition visuelle ne doit pas rendre ambigu le biome de gameplay : définir
 **Vérification :** monde réactif sans gêne de lecture ni coût proportionnel à toute la map ; effets réduits cohérents.
 **Garde-fou :** les shaders ne déplacent pas des collisions réelles à l'insu du joueur.
 
+**Lot E, étape 2 — herbes qui plient, 27 septembre 2026 (session locale) :**
+- Les herbes hautes, coquelicots, fleurs, fougères, roseaux et buissons bas s'écartent du joueur. Leur haut se cisaille à l'opposé de lui, la base reste plantée (5 px au plus, sur 30 px autour).
+- **Sans index spatial ni boucle sur les décors** :
+  - `GrassTrample` écrit une fois par frame la position du joueur dans l'uniforme global `trample_origin` ;
+  - le shader `prop_trample` (le shader de l'oubli des décors, plus un cisaillement dans `vertex()`, via `prop_forget.gdshaderinc` partagé) fait le reste sur le GPU.
+- Choix des décors : non bloquants, sans canopée, 40 px de haut au plus, et dont le nom commence par un préfixe de végétation (`trample_prefixes` et `trample_max_height` dans `world_gen.json`). La hauteur seule prenait aussi des tas de gravats (capture).
+- Capture `--capture-trample` (nouveau mode) regardée : une touffe d'herbe haute penche d'un côté puis de l'autre selon la position du joueur.
+- **Non fait :** traces temporaires (étape 2, suite) ; seules les herbes réagissent au joueur, pas aux créatures.
+
 ## 5. Recette et décision finale
 
 Même scènes/seeds/trajectoires avant/après, clavier/manette, biomes/effacement et densité normale/forte. Garantir 60 FPS cible, génération raisonnable et chemins lisibles ; build et smoke pour scènes/shaders/initialisation.

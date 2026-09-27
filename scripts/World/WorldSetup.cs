@@ -1112,6 +1112,8 @@ public class WorldGenConfig
                 FootprintScale = (float)props.GetValueOrDefault("footprint_scale", defaults.FootprintScale).AsDouble(),
                 GroundDecalMaxHeight = (float)props.GetValueOrDefault("ground_decal_max_height", defaults.GroundDecalMaxHeight).AsDouble(),
                 OccluderMinHeight = (float)props.GetValueOrDefault("occluder_min_height", defaults.OccluderMinHeight).AsDouble(),
+                TrampleMaxHeight = (float)props.GetValueOrDefault("trample_max_height", defaults.TrampleMaxHeight).AsDouble(),
+                TramplePrefixes = props.ContainsKey("trample_prefixes") ? props["trample_prefixes"].AsStringArray() : defaults.TramplePrefixes,
             };
         }
 

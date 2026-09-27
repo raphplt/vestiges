@@ -13,6 +13,22 @@ public struct PropRules
     public float GroundDecalMaxHeight;
     /// <summary>Hauteur visible à partir de laquelle un décor devient transparent quand le joueur passe derrière.</summary>
     public float OccluderMinHeight;
+    /// <summary>Un décor non bloquant sans canopée, pas plus haut que ceci, plie au passage du joueur (herbes, fleurs).</summary>
+    public float TrampleMaxHeight;
+    /// <summary>Débuts de noms de fichiers des décors qui plient : la végétation, jamais un caillou ou des gravats.</summary>
+    public string[] TramplePrefixes;
+
+    /// <summary>Le décor de cette texture est-il une plante basse qui plie au passage ?</summary>
+    public readonly bool Tramples(string texturePath)
+    {
+        if (TramplePrefixes == null || string.IsNullOrEmpty(texturePath))
+            return false;
+        string file = texturePath[(texturePath.LastIndexOf('/') + 1)..];
+        foreach (string prefix in TramplePrefixes)
+            if (file.StartsWith(prefix, System.StringComparison.Ordinal))
+                return true;
+        return false;
+    }
 
     public static PropRules Default => new()
     {
@@ -21,6 +37,8 @@ public struct PropRules
         FootprintScale = 0.85f,
         GroundDecalMaxHeight = 12f,
         OccluderMinHeight = 24f,
+        TrampleMaxHeight = 40f,
+        TramplePrefixes = System.Array.Empty<string>(),
     };
 
     public static PropRules Current { get; set; } = Default;

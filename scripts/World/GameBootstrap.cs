@@ -177,6 +177,7 @@ public partial class GameBootstrap : Node
 
         GetNode("..").CallDeferred("add_child", new ErasureVeil { Name = "ErasureVeil" });
         GetNode("..").CallDeferred("add_child", new CrisisOmen { Name = "CrisisOmen" });
+        GetNode("..").CallDeferred("add_child", new GrassTrample { Name = "GrassTrample" });
 
         DebugActionPanel debugPanel = new DebugActionPanel { Name = "DebugActionPanel" };
         GetNode("..").CallDeferred("add_child", debugPanel);
