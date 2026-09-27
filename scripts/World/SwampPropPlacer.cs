@@ -195,8 +195,9 @@ public static class SwampPropPlacer
 		}
 
 		SortCells(candidates, seed ^ 0x710FUL);
-		int targetCount = Mathf.Clamp(candidates.Count / 72, 4, 6);
-		List<Vector2I> anchors = PickSpacedCells(candidates, targetCount, 13, layout.ReservedCells);
+		// Proportionnel à la surface : le marais est éclaté en plusieurs régions de la mosaïque (plan 08 P5).
+		int targetCount = Mathf.Clamp(candidates.Count / 40, 4, 14);
+		List<Vector2I> anchors = PickSpacedCells(candidates, targetCount, 11, layout.ReservedCells);
 
 		foreach (Vector2I anchor in anchors)
 			MarkZoneRadius(layout.Zones, anchor, 3, SwampZoneType.DeadGrove, SwampZoneType.WetClearing);

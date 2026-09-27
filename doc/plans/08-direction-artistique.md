@@ -289,6 +289,23 @@ Les tiles restent en l'état (jugées acceptables) ; un ajustement de contraste 
 - Build sans avertissement, smoke test, `MovementRegression`.
 - Captures en vraie run (seed 1002) des champs, de la ville et du marais.
 
+**P5 Marais livré — 27 septembre 2026 :**
+
+*Constat :* les 26 décors du marais dataient d'avant l'agrandissement (poteau 8×22, tonneau 12×14 pour un personnage de 32×40) ; la canopée de l'arbre mort était une tache brune trouée. Marais le moins garni de tous les biomes (1 062 décors sur la seed de capture, contre 1 948 en forêt).
+
+*Catalogue :* `tools/sprites/props/swamp.py` (`tools/generate_props.py swamp`), palette « Marécages » de la charte, mêmes noms de fichiers (mêmes uid) :
+- Arbres morts en bois blanchi : le grand arbre en tronc et canopée (branches hautes, rameaux nus et barbes de lichen pendantes), l'arbre moussu, le chicot brisé, l'arbre lié de chaînes rouillées et de lambeaux de tissu.
+- Palétuviers perchés sur leurs racines en arceaux (deux tirages), souche renversée avec sa galette de racines.
+- Végétation : massettes, nénuphars entaillés avec une fleur pâle, rideau de lianes, chicot drapé de mousse, champignons violets piqués de spores lumineuses, vesses-de-loup luisantes.
+- Bois noyé et vestiges : tronc couché, souche creuse, grand tronc englouti, caillebotis sur pilotis, ponton basculé, barque et charrette embourbées, fût rouillé avec sa flaque irisée, pieu d'amarrage, os de bête, oratoire de pierre enfoncé de biais avec sa bougie verte, lanterne de passeur.
+- Ce qui est noyé est coupé à un niveau d'eau : l'objet s'enfonce dans la tuile au lieu d'y être posé.
+
+*Placement :* la composition de `SwampPropPlacer` (eaux, berges, bosquets morts, poches fongiques) est gardée. Nombre de bosquets morts proportionnel à la surface (4 à 14 au lieu de 4 à 6 pour tout le marais) ; densité du remplissage 0,115 → 0,18 ; rideaux de lianes moins fréquents (ils se lisaient comme des portails), roseaux, nénuphars et chicots plus fréquents. Seed de capture : 1 062 → 1 754 décors.
+
+*Vérifications :* planches à taille réelle sur le sol du marais avec le personnage, captures `--capture-props` avec et sans collisions, deux générations identiques à l'octet, smoke test.
+
+*Points ouverts pour Raphaël :* le marais reste plus ouvert que la forêt (17 décors au point le plus chargé, 22 en forêt), par choix : l'eau doit se voir. Les grands bosquets restent rares hors de leurs zones. La carrière (P6) reste à faire.
+
 **Retour du 26 septembre sur les champs :** « la zone ferme/campagne fait un peu vide. Il n'y a que des petits sprites éparpillés et qui ne racontent pas grand-chose. » Le dessin des objets n'est pas en cause : c'est la **composition**. Le placement générique pose des décors isolés au hasard, alors que la ville raconte ses îlots.
 
 **P4b proposé — composer la campagne :**

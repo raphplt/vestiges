@@ -1,6 +1,6 @@
 """
 Génère les décors d'un biome avec le pipeline procédural commun (plan 08, lots P0–P6).
-Biomes disponibles : urban, urban_buildings, forest, fields, fields_farm ; « chests » produit les coffres (plan 17, lot 0A), « landmarks » le Mémorial et la Faille (vague 3).
+Biomes disponibles : urban, urban_buildings, forest, swamp, fields, fields_farm ; « chests » produit les coffres (plan 17, lot 0A), « landmarks » le Mémorial et la Faille (vague 3).
 
 Usage :
     python3 tools/generate_props.py urban                        # écrit assets/props/urban_ruins/
@@ -34,12 +34,15 @@ FOREST_TILES = ["assets/tiles/foret/tile_foret_sol_base.png", "assets/tiles/fore
                 "assets/tiles/foret/tile_foret_sousbois_base.png"]
 FIELDS_TILES = ["assets/tiles/champs/tile_champs_herbe_base.png", "assets/tiles/champs/tile_champs_herbe_v2.png",
                 "assets/tiles/champs/tile_champs_ble_base.png"]
+SWAMP_TILES = ["assets/tiles/marecages/tile_marecages_sol_base.png", "assets/tiles/marecages/tile_marecages_sol_humide.png",
+               "assets/tiles/marecages/tile_marecages_eau_base.png"]
 BIOMES = {
     "chests": ("tools.sprites.props.chests", "assets/chests", FOREST_TILES),
     "landmarks": ("tools.sprites.props.landmarks", "assets/landmarks", FOREST_TILES),
     "fields": ("tools.sprites.props.fields", "assets/props/wild_fields", FIELDS_TILES),
     "fields_farm": ("tools.sprites.props.farm", "assets/props/wild_fields", FIELDS_TILES),
     "forest": ("tools.sprites.props.forest", "assets/props/forest", FOREST_TILES),
+    "swamp": ("tools.sprites.props.swamp", "assets/props/swamp", SWAMP_TILES),
     "urban_buildings": ("tools.sprites.props.buildings", "assets/props/urban_ruins", URBAN_TILES),
     "urban": ("tools.sprites.props.urban", "assets/props/urban_ruins",
               ["assets/tiles/ruines/tile_ruines_sol_base.png", "assets/tiles/ruines/tile_ruines_sol_v2.png",

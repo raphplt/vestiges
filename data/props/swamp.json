@@ -1,6 +1,6 @@
 {
     "biome_id": "swamp",
-    "density": 0.115,
+    "density": 0.18,
     "props": [
         {
             "id": "dead_tree_large",
@@ -27,7 +27,7 @@
         {
             "id": "dead_tree_small",
             "name": "Arbre mort (petit)",
-            "weight": 0.55,
+            "weight": 0.7,
             "terrain": ["forest", "grass"],
             "sprite_base": "assets/props/swamp/prop_dead_tree_small.png",
             "blocking": true,
@@ -67,7 +67,7 @@
         {
             "id": "vine_curtain",
             "name": "Rideau de lianes",
-            "weight": 0.46,
+            "weight": 0.18,
             "terrain": ["forest", "grass"],
             "sprite_base": "assets/props/swamp/prop_vine_curtain.png",
             "blocking": false,
@@ -77,7 +77,7 @@
         {
             "id": "reeds",
             "name": "Roseaux",
-            "weight": 0.56,
+            "weight": 0.8,
             "terrain": ["grass", "forest"],
             "sprite_base": "assets/props/swamp/prop_reeds.png",
             "blocking": false,
@@ -87,7 +87,7 @@
         {
             "id": "lily_pads",
             "name": "Nénuphars",
-            "weight": 0.30,
+            "weight": 0.45,
             "terrain": ["grass"],
             "sprite_base": "assets/props/swamp/prop_lily_pads.png",
             "blocking": false,
@@ -147,7 +147,7 @@
         {
             "id": "hanging_moss",
             "name": "Mousse pendante",
-            "weight": 0.28,
+            "weight": 0.35,
             "terrain": ["forest", "grass"],
             "sprite_base": "assets/props/swamp/prop_hanging_moss.png",
             "blocking": false,
