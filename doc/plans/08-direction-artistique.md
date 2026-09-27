@@ -681,7 +681,7 @@ La cohérence du sol et des transitions relève aussi du [plan 10](10-terrain-et
 ### Auras d'affixe en pixel art — 27 septembre 2026
 
 Les créatures à affixe avaient une ellipse lisse (`Polygon2D`), centrée sur le corps et pulsée par un tween. Le tout était recréé à chaque réutilisation de l'ennemi.
-- `AffixAura` la remplace par un anneau au sol à la couleur de l'affixe : bord plein et intérieur tramé d'un pixel sur deux, écrasé comme le sol (deux fois plus large que haut). L'anneau respire par poses, trois rayons toutes les 0,2 s, au lieu d'un glissement continu. Il se pose sous les pieds, à l'ombre de contact, et sa taille suit la largeur du sprite.
+- `PixelGroundRing` (d'abord nommé `AffixAura`) la remplace par un anneau au sol à la couleur de l'affixe : bord plein et intérieur tramé d'un pixel sur deux, écrasé comme le sol (deux fois plus large que haut). L'anneau respire par poses, trois rayons toutes les 0,2 s, au lieu d'un glissement continu. Il se pose sous les pieds, à l'ombre de contact, et sa taille suit la largeur du sprite.
 - Un composant par ennemi, réutilisé par le pool (caché au retour, à la mort et pendant une harde) ; dessin refait au seul changement de pose, formes mises en cache par rayon.
 - **Vérifié** : `--capture-bestiary --enemies shade,void_brute,charognard,wailing_sentinel --affix enraged` (nouvelle option `--affix`), images regardées ; smoke test.
 - **Reste** : l'aura des Aberrations (particules GPU à texture ronde lisse) et l'Indicible.

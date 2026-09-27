@@ -162,6 +162,7 @@ public partial class HUD : CanvasLayer
         GetViewport().SizeChanged += OnViewportResized;
 
         BuildVitals();
+        _hudRoot.AddChild(new HudLootFlight(WeaponSlotIconOf) { Name = "LootFlight" });
         _hudRoot.AddChild(new KillStreakDisplay { Name = "KillStreak", Position = new Vector2(PlateMargin + 4f, PlateMargin + 46f) });
         _essenceFlights = new EssenceFlights { Name = "EssenceFlights" };
         _essenceFlights.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
@@ -866,6 +867,21 @@ public partial class HUD : CanvasLayer
                 _passiveSlotLabels[i].Text = "";
             }
         }
+    }
+
+    /// <summary>Icône de la case qui porte l'arme <paramref name="weaponId"/>, ou nul.</summary>
+    private Control WeaponSlotIconOf(string weaponId)
+    {
+        Player player = ResolvePlayer();
+        if (player == null)
+            return null;
+        System.Collections.Generic.IReadOnlyList<WeaponInstance> weapons = player.WeaponSlots;
+        for (int i = 0; i < weapons.Count && i < Player.MaxWeaponSlots; i++)
+        {
+            if (weapons[i].Id == weaponId)
+                return _weaponSlotIcons[i];
+        }
+        return null;
     }
 
     private Player ResolvePlayer()

@@ -79,6 +79,7 @@ MEMORIAL_LEAVE,Partir,Leave
 MEMORIAL_HEALED,Le corps se souvient,The body remembers
 LANDMARK_RIFT,Faille,Rift
 RIFT_PROMPT,Sonder,Reach in
+WEAPON_SWAP_PROMPT,Échanger : {0},Swap: {0}
 RIFT_TITLE,FAILLE,RIFT
 RIFT_SUBTITLE,L'Effacement rend ce qu'il a pris. Pas pour rien.,The Erasure gives back what it took. At a price.
 RIFT_REFUSE,Refuser,Refuse

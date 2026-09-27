@@ -5,11 +5,11 @@ using Vestiges.Core;
 namespace Vestiges.Combat;
 
 /// <summary>
-/// Anneau au sol d'une créature à affixe, en pixel art : bord plein et intérieur tramé à la couleur de l'affixe, qui
-/// respire par poses (trois rayons) plutôt qu'en glissement continu. Un par créature, réutilisé par le pool : le
-/// dessin ne se refait qu'au changement de pose.
+/// Anneau au sol en pixel art : bord plein et intérieur tramé, qui respire par poses (trois rayons) plutôt qu'en
+/// glissement continu. Aura des créatures à affixe (une par créature, réutilisée par le pool), repère des armes au sol.
+/// Le dessin ne se refait qu'au changement de pose.
 /// </summary>
-public partial class AffixAura : Node2D
+public partial class PixelGroundRing : Node2D
 {
     private const float PoseSec = 0.2f;
     private const float RimAlpha = 0.7f;
@@ -22,7 +22,7 @@ public partial class AffixAura : Node2D
     private int _pose;
     private float _poseTimer;
 
-    public AffixAura()
+    public PixelGroundRing()
     {
         // Au sol, sous le corps de la créature.
         ZIndex = -1;
@@ -30,7 +30,7 @@ public partial class AffixAura : Node2D
         SetProcess(false);
     }
 
-    /// <summary>Allume l'anneau autour d'une créature de demi-largeur <paramref name="radius"/> pixels.</summary>
+    /// <summary>Allume l'anneau, de demi-largeur <paramref name="radius"/> pixels au sol.</summary>
     public void Show(Color color, float radius)
     {
         _color = color;

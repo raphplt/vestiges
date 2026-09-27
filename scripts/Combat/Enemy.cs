@@ -81,7 +81,7 @@ public partial class Enemy : CharacterBody2D
 	private readonly EnemyModifiers _mods = new();
 	private readonly EnemyTracking _tracking = new();
 	private Sprite2D _shadow;
-	private AffixAura _modifierAura;
+	private PixelGroundRing _modifierAura;
 	private EnemyNameplate _nameplate;
 	private string _displayName;
 	private bool _isFeminine;
@@ -663,7 +663,7 @@ public partial class Enemy : CharacterBody2D
 	{
 		if (_modifierAura == null)
 		{
-			_modifierAura = new AffixAura { Name = "AffixAura" };
+			_modifierAura = new PixelGroundRing { Name = "AffixAura" };
 			AddChild(_modifierAura);
 		}
 		if (_modifierAura.Visible)

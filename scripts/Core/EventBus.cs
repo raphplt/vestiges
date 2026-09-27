@@ -45,6 +45,8 @@ public partial class EventBus : Node
     [Signal] public delegate void WeaponInventoryChangedEventHandler();
     [Signal] public delegate void WeaponUpgradedEventHandler(string weaponId, int slotIndex, string stat, int newLevel);
     [Signal] public delegate void WeaponDroppedEventHandler(string weaponId);
+    /// <summary>Arme ramassée au sol : le HUD fait voler son icône de ce point jusqu'à sa case.</summary>
+    [Signal] public delegate void WeaponPickedUpEventHandler(string weaponId, Vector2 worldPosition);
 
     // --- Passive Souvenirs (level-up) ---
     [Signal] public delegate void PassiveSouvenirAddedEventHandler(string passiveId, int slotIndex);

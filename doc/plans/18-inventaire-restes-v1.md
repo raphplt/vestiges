@@ -40,9 +40,9 @@ Classé du plus fréquent au plus rare.
 | 12 | Barre de « récolte » (`_harvestBar`, `Player.cs:1597`) : `ProgressBar` à coins arrondis au-dessus du joueur, pour fouiller et ouvrir | Nom V1 + visuel lisse | Chaque ouverture | Jauge pixel, renommée | 0A |
 | 13 | Popups de butin en `Label` de 12 px posés dans le monde (`Player.cs:2012-2047`) | Visuel lisse | Chaque butin | Texte au style des chiffres de dégâts, ou HUD | 0A |
 | 14 | **Autels** : losange `Polygon2D`, halo, `Label` ; touches Maj et Ctrl codées en dur ; agit sur le slot 0 seulement | Mécanique V2, visuel provisoire | 4 par carte | Refondre en Mémorial (plan 17 §4.5) | 3B |
-| 15 | **Arme au sol** (`WeaponPickup`) : halo en losange, deux `Label` de 10 à 12 px sans accents, icône à ×0,5 (densité de pixels mélangée) | Visuel lisse | Chaque arme lâchée | Refaire avec les icônes de la vague 2 | 2B |
+| 15 | ~~**Arme au sol** (`WeaponPickup`) : halo en losange, deux `Label` de 10 à 12 px sans accents, icône à ×0,5 (densité de pixels mélangée)~~ **Refaite le 27 septembre** : anneau pixel, icône 32×32 à l'échelle 1, plus de texte au sol ; l'échange passe par l'invite commune des coffres | Visuel lisse | Chaque arme lâchée | Fait | 2B |
 | 16 | **Icônes d'armes** 64×64 de mars, agrandies par facteurs non entiers, affichées à 22 et 48 px | PNG, écart d'échelle | Chaque arme | Refaire (plan 17 §4.7) | 2B |
-| 17 | Aura d'affixe des élites : ellipse `Polygon2D` (`Enemy.cs:867-890`) | Visuel lisse | Chaque élite | Refaire en pixel | 08 |
+| 17 | ~~Aura d'affixe des élites : ellipse `Polygon2D`~~ **Refaite le 27 septembre** en anneau pixel ([08](08-direction-artistique.md)) | Visuel lisse | Chaque élite | Fait | 08 |
 | 18 | **Coffres** 16×12 de mars, trop petits face aux décors refaits | PNG, échelle | 12 à 14 par carte | Refaire (plan 17 §4.9) | 0A |
 | 19 | **Props du marais** : 26 fichiers de l'ancien pipeline, alpha en dégradé (`prop_vine_curtain` à 87 % d'alpha partiel, `prop_hanging_moss`) | PNG, ancien pipeline | Biome marais | Régénérer comme forêt, ville et champs | 08 |
 | 20 | **Tisseuse en triangle** : `data/enemies/tisseuse.json:18` utilise `"sprite"` au lieu de `sprite_folder`. L'ennemi s'affiche en `Polygon2D` ; ses 128 PNG ne servent pas | Bug de données | Résurgences au marais | Corriger la clé, vérifier l'ancrage des pieds | 0B |

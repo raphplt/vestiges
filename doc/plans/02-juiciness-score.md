@@ -249,7 +249,8 @@ Chaque lot : captures avant/après dans une vraie run (`tools/capture_run.sh`), 
   - `EssenceTracker` émet `EventBus.EssenceGained(montant, position)` ; `UI/EssenceFlights`, dans le HUD, dessine tous les grains d'un seul nœud (32 à la fois, au-delà ils sont omis).
   - Le gain est crédité avant le vol et ne dépend pas de l'animation (garde-fou du lot C).
   - Capture `--capture-crowd` : grains visibles entre la foule et la plaque.
-- **Non fait** : butin (armes au sol) qui vole vers le HUD ; les récompenses d'événement (sans lieu) n'ont pas de trajet.
+- **Non fait** : butin (armes au sol) qui vole vers le HUD (fait le 27 septembre au soir, ci-dessous) ; les récompenses d'événement (sans lieu) n'ont pas de trajet.
+- **Arme au sol qui vole vers le HUD, 27 septembre au soir** : au ramassage, l'icône part de sa place dans le monde et rejoint sa case de la barre d'armes en 0,45 s, en rétrécissant. La case reste vide pendant le vol et s'allume à l'arrivée (`HudLootFlight`, signal `WeaponPickedUp`). Capture `--capture-weapon-pickup` regardée.
 
 ### J4 livré (première passe) — 27 septembre 2026 (session cloud)
 

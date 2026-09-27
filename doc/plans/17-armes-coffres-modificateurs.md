@@ -622,3 +622,12 @@ Tous les chiffres de ce plan sont des points de départ, pas des réglages mesur
 | Oublis | « Je préfère des malus sur la map que des malus de stats » ; les neuf Oublis de carte : « je valide tout », noms « un détail » | Lot 3D : Oublis de carte à la place des malus de stats |
 | Noms des armes (4.6) | Tous validés sauf Dessin d'enfant et Aiguille d'horloge (le nom seulement) | Lot 2A ; noms provisoires **Craies** et **Chronomètre**, à confirmer |
 | Icônes v2 (Faucille, Cloueuse, Boîte à musique) | Validées ; « tu n'as pas fait les nouveaux assets de la majorité des armes ? » | Lot 2B : les 21 autres icônes dans ce style |
+
+### Arme au sol refaite — 27 septembre 2026 au soir
+
+`WeaponPickup` datait d'avant les décisions du 26 septembre. Il colorait l'arme selon son *tier* (la rareté porte désormais sur les améliorations). Quand les emplacements étaient pleins, il affichait une comparaison « Dgt / Cad. / Portée », alors que Raphaël a demandé de ne plus montrer ces valeurs au choix d'une arme. La touche « [E] » était écrite en dur, et les textes, de 10 à 12 px, n'avaient pas d'accents.
+- L'arme au sol est un anneau pixel doré (`PixelGroundRing`) sous son icône 32×32 à l'échelle 1, qui flotte par pixels entiers. Plus aucun texte au sol.
+- Un emplacement libre : ramassage automatique, comme avant. Tous pris : c'est un lieu activable comme un coffre, et l'invite commune propose « [touche] Échanger : *nom* », avec la touche remappée et une courte jauge. L'échange remplace l'arme du premier emplacement, qui tombe au sol.
+- Au ramassage, l'icône vole jusqu'à sa case du HUD (plan 02 J3).
+- **Vérifié** : `--capture-weapon-pickup` (ramassage 1 → 2 armes, arme restée au sol quand tout est plein, échange effectué), images regardées ; smoke test.
+- **À juger** : l'échange vise toujours le premier emplacement, comme avant. Choisir l'arme à remplacer demanderait un petit écran.
