@@ -22,6 +22,15 @@ public partial class Chest : StaticBody2D
     private bool _usesSprite;
     private Color _originalColor;
     private EventBus _eventBus;
+    private GroupCache _groups;
+
+    // Frémissement à l'approche (plan 02 J6) : le coffre fermé tremble de plus en plus quand le joueur s'en approche.
+    private const float QuiverRange = 110f;
+    private const float QuiverMaxRadians = 0.06f;
+    private const float QuiverCheckInterval = 0.1f;
+    private float _quiverCheck;
+    private float _quiverAmount;
+    private float _quiverTime;
 
     public bool IsOpened => _isOpened;
     public float OpenTime => _chestData?.OpenTime ?? 0.5f;
@@ -37,7 +46,40 @@ public partial class Chest : StaticBody2D
     {
         _visual = GetNodeOrNull<Polygon2D>("Visual");
         _eventBus = GetNode<EventBus>("/root/EventBus");
+        _groups = GetNode<GroupCache>("/root/GroupCache");
         AddToGroup("chests");
+    }
+
+    public override void _Process(double delta)
+    {
+        if (_isOpened)
+            return;
+        float dt = (float)delta;
+        _quiverCheck -= dt;
+        if (_quiverCheck <= 0f)
+        {
+            _quiverCheck = QuiverCheckInterval;
+            _quiverAmount = 0f;
+            if (_groups.GetPlayer() is Node2D player)
+            {
+                float distance = GlobalPosition.DistanceTo(player.GlobalPosition);
+                _quiverAmount = Mathf.Clamp(1f - distance / QuiverRange, 0f, 1f);
+            }
+        }
+
+        Node2D shown = _usesSprite ? _sprite : _visual;
+        if (shown == null)
+            return;
+        if (_quiverAmount <= 0f)
+        {
+            if (shown.Rotation != 0f)
+                shown.Rotation = 0f;
+            return;
+        }
+        // Secousses brèves par saccades, pas une oscillation régulière : quelque chose bouge dedans.
+        _quiverTime += dt;
+        float burst = Mathf.Max(0f, Mathf.Sin(_quiverTime * 3.1f));
+        shown.Rotation = Mathf.Sin(_quiverTime * 41f) * QuiverMaxRadians * _quiverAmount * burst;
     }
 
     public void Initialize(ChestData data)
@@ -106,6 +148,9 @@ public partial class Chest : StaticBody2D
             return new();
 
         _isOpened = true;
+        Node2D shown = _usesSprite ? _sprite : _visual;
+        if (shown != null)
+            shown.Rotation = 0f;
 
         if (_usesSprite && _sprite != null)
         {

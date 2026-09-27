@@ -27,6 +27,8 @@ public partial class LevelUpScreen : CanvasLayer
     private static readonly Color PassiveNewColor = new(0.5f, 0.85f, 1f);
     private static readonly Color PassiveUpgradeColor = new(0.3f, 0.7f, 0.95f);
     private static readonly Color OverlayColor = new(0.0f, 0.0f, 0.02f, 0.75f);
+    private const float PanelEntranceScale = 0.82f;
+    private Tween _entranceTween;
 
     // --- Cached textures ---
     private Texture2D _panelTex;
@@ -889,6 +891,32 @@ public partial class LevelUpScreen : CanvasLayer
         // Play intro sound (uses UI pool that works during pause)
         Infrastructure.AudioManager.PlayUI("sfx_level_up");
         StartLoopAfterIntro();
+        PlayEntrance();
+    }
+
+    /// <summary>
+    /// Entrée avec du punch (plan 02 J4) : le voile tombe en 0,12 s, le panneau jaillit de 82 % avec un léger
+    /// dépassement. Les cartes sont cliquables dès la première frame : le délai jusqu'au choix ne change pas.
+    /// </summary>
+    private void PlayEntrance()
+    {
+        _entranceTween?.Kill();
+        _overlay.Color = new Color(OverlayColor, 0f);
+        SetPanelScale(PanelEntranceScale);
+        _entranceTween = CreateTween();
+        _entranceTween.SetPauseMode(Tween.TweenPauseMode.Process);
+        _entranceTween.SetParallel();
+        _entranceTween.TweenProperty(_overlay, "color", OverlayColor, 0.12f);
+        _entranceTween.TweenMethod(Callable.From<float>(SetPanelScale), PanelEntranceScale, 1f, 0.22f)
+            .SetTrans(Tween.TransitionType.Back).SetEase(Tween.EaseType.Out);
+    }
+
+    private void SetPanelScale(float scale)
+    {
+        // Le panneau vient d'être rempli et sa mise en page est différée : sa taille minimale, calculée sur demande,
+        // donne déjà le bon centre dès la première frame.
+        _panel.PivotOffset = _panel.GetCombinedMinimumSize() / 2f;
+        _panel.Scale = Vector2.One * scale;
     }
 
     private void StartLoopAfterIntro()
@@ -904,6 +932,9 @@ public partial class LevelUpScreen : CanvasLayer
 
     private void HideScreen()
     {
+        _entranceTween?.Kill();
+        _panel.Scale = Vector2.One;
+        _overlay.Color = OverlayColor;
         _overlay.Visible = false;
         _rays.Visible = false;
         _panel.Visible = false;

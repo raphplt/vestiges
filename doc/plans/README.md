@@ -65,6 +65,9 @@ Un seul lot d'implémentation ouvert à la fois. Un échec de lisibilité, de pe
 - [08 P2](08-direction-artistique.md) : l'église et le pylône de télécommunication reviennent comme repères rares des Ruines Urbaines, refaits dans le pipeline.
 - [02 J2](02-juiciness-score.md) : morts orientées par le dernier coup (dissolution, éclats, nuage), orbes d'XP qui jaillissent du corps, onde et éclair à la mort des élites.
 - [02 J3](02-juiciness-score.md) : orbes qui s'étirent et laissent une traînée, son de ramassage qui monte le long d'une chaîne, barre d'XP qui pulse.
+- [02 J4](02-juiciness-score.md) : montée de niveau avec onde dorée, colonne de lumière, créatures proches repoussées (en apparence), barre d'XP qui éclate, écran de choix qui entre avec du punch.
+- [02 J5](02-juiciness-score.md) : compteur de morts en rafale (« ×24 »), léger recul de caméra quand l'écran se remplit, voix sonores coupées de la plus ancienne à la plus récente.
+- [02 J6](02-juiciness-score.md) : traces de pas selon le sol (ronds dans l'eau, poussière), coffres qui frémissent à l'approche.
 - Travail fait dans un conteneur sans GPU : les points à revérifier sur la machine de Raphaël sont listés dans [A-VERIFIER.md](A-VERIFIER.md).
 
 **Mise à jour du 26 septembre (soir) :**

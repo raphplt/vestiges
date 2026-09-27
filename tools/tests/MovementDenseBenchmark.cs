@@ -107,6 +107,10 @@ public partial class MovementDenseBenchmark : Node
                 await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
             }
             _world.GetNode("SpawnManager").ProcessMode = ProcessModeEnum.Disabled;
+            // Zoom fixe : le recul de caméra en foule (plan 02 J5) changerait la surface rendue d'une version à l'autre.
+            Node crowdZoom = _world.GetNodeOrNull("CrowdZoom");
+            if (crowdZoom != null)
+                crowdZoom.ProcessMode = ProcessModeEnum.Disabled;
             _world.GetNode("ErasureManager").ProcessMode = ProcessModeEnum.Disabled;
             _world.GetNode("CrisisManager").ProcessMode = ProcessModeEnum.Disabled;
             // Main signale prêt avant la fin des 200 lots de brouillard différés.

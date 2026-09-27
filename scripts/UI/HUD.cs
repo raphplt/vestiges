@@ -149,6 +149,7 @@ public partial class HUD : CanvasLayer
         GetViewport().SizeChanged += OnViewportResized;
 
         BuildVitals();
+        _hudRoot.AddChild(new KillStreakDisplay { Name = "KillStreak", Position = new Vector2(PlateMargin + 4f, PlateMargin + 46f) });
         BuildRunProgress();
         BuildScoreArea();
         BuildWeaponBar();
@@ -213,7 +214,7 @@ public partial class HUD : CanvasLayer
         if (_xpPulse > 0f)
         {
             _xpPulse = Mathf.Max(0f, _xpPulse - dt * 5f);
-            _xpFill.Modulate = Colors.White.Lerp(XpPulseModulate, _xpPulse);
+            _xpFill.Modulate = Colors.White.Lerp(XpPulseModulate, Mathf.Min(_xpPulse, 1f));
         }
 
         _biomeTimer += dt;
@@ -619,6 +620,8 @@ public partial class HUD : CanvasLayer
     {
         _levelLabel.Text = $"{newLevel}";
         OnXpChanged(0);
+        // La barre repart de zéro en éclatant (plan 02 J4) : pulse plus long que celui d'une orbe.
+        _xpPulse = 2f;
         _levelLabel.PivotOffset = _levelLabel.Size / 2f;
         Tween tween = CreateTween();
         tween.TweenProperty(_levelLabel, "scale", new Vector2(1.5f, 1.5f), 0.08f);

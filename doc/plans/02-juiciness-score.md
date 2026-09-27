@@ -221,3 +221,39 @@ Chaque lot : captures avant/après dans une vraie run (`tools/capture_run.sh`), 
 - **Barre d'XP** : elle pulse (éclat ×1,9 qui retombe en 0,2 s) à chaque orbe qui arrive.
 - **Non fait** : Essence et butin qui volent vers le HUD. Ils demandent une trajectoire de l'écran de jeu vers l'interface ; lot suivant.
 
+### J4 livré (première passe) — 27 septembre 2026 (session cloud)
+
+- **Effet de montée de niveau** (`Combat/LevelUpFx`), qui remplace la gerbe de particules GPU (`VfxFactory.CreateLevelUpBurst`, retirée : trois nœuds créés à chaque niveau) :
+  - onde dorée au sol qui s'élargit jusqu'à 90 px ;
+  - colonne de lumière, un trait qui jaillit des pieds vers le ciel. Le rayon brisé `Beam`, essayé d'abord, se lisait comme un éclair reçu ;
+  - gerbe de 18 éclats dorés, tout par `CombatPools`, sans nœud créé.
+- **Créatures repoussées en apparence** : dans un rayon de 150 px, le visuel de chaque créature recule de 10 px au contact (dégressif jusqu'au bord) et s'écrase, sans flash, sur 0,3 s. Corps, IA et position ne bougent pas (`HitFeedback.Shove`).
+- **Barre d'XP** : elle éclate plus longtemps au passage de niveau qu'à l'arrivée d'une orbe.
+- **Écran de choix** : le voile tombe en 0,12 s et le panneau jaillit de 82 % avec un léger dépassement (0,22 s). Les cartes sont cliquables dès la première frame et la pause tombe au même moment qu'avant : le délai jusqu'au choix est inchangé.
+- **Pause** : l'écran met le jeu en pause aussitôt. L'effet dans le monde se fige derrière le voile et se joue au retour dans la run.
+- **Relecture** (`godot-reviewer`) :
+  - le premier pas de l'entrée prenait son pivot sur la taille du panneau d'avant les cartes ; il vient désormais de la taille minimale, calculée sur demande ;
+  - l'effet était marqué « ennemi », donc atténué par le réglage d'opacité des attaques ennemies. Un troisième propriétaire d'effet, `FxOwner.World`, couvre montée de niveau, collecte d'XP et éclats de l'oubli : pleine opacité, seul le réglage « Particules » s'applique.
+- **Vérifié** : build sans avertissement, smoke test, `MovementRegression`, `EnemyAbilityRegression` (deux contrôles de plus : poussée visuelle sans déplacer le corps ni flasher, retour en place). Capture `--capture-levelup` : effet au ralenti dans un cercle de créatures, puis entrée de l'écran. Images regardées.
+
+### J5 livré (première passe) — 27 septembre 2026 (session cloud)
+
+- **Compteur de morts en rafale** (`UI/KillStreakDisplay`, sous la plaque de vie) :
+  - « ×N » à partir de cinq créatures abattues à moins de 1,5 s d'intervalle ;
+  - il pulse à chaque mort, grossit et se dore jusqu'à 50, puis s'efface 0,6 s après la dernière ;
+  - le texte n'est réécrit qu'à une mort.
+- **Recul de caméra en foule** (`Combat/CrowdZoom`) :
+  - au-delà de 25 créatures à l'écran, le zoom recule doucement, jusqu'à 8 % à 70 créatures, puis revient ;
+  - comptage quatre fois par seconde via `GroupCache` ;
+  - désactivé dans le banc dense, pour que la surface rendue reste comparable d'une version à l'autre.
+- **Sons superposés** : la limite existait (12 voix, intervalle minimal par son). Quand toutes les voix sonnent, c'est désormais celle qui joue depuis le plus longtemps qui est coupée, et non toujours la première.
+- **Effets qui grandissent avec le build** : les lots précédents y contribuent déjà (morts orientées, budget qui absorbe les rafales, compteur). Pas d'échelle d'effets indexée sur les dégâts par seconde dans cette passe.
+- **Vérifié** : capture `--capture-crowd`, 60 créatures autour du joueur. Zoom 1,94 → 1,88 en 3 s. Au marteau, 33 puis 43 morts en rafale affichées. Images regardées.
+
+### J6 livré (première passe) — 27 septembre 2026 (session cloud)
+
+- **Traces de pas selon le sol** (`Combat/FootstepFx`, appelé au rythme des sons de pas existants) : dans l'eau, un rond qui s'élargit et quatre gouttes ; sur le béton, trois grains de poussière grise soulevés derrière le pied ; dans l'herbe, un seul grain. Tout passe par `CombatPools`, sans nœud créé, et reste soumis au budget d'effets.
+- **Coffres qui frémissent** (`Chest`) : un coffre fermé tremble par saccades quand le joueur approche. L'effet commence à 110 px et va jusqu'à 3,4° au contact ; la distance est relue dix fois par seconde. Capture `--capture-micro` : 1,6° mesuré à 45 px.
+- **Non fait** : herbes qui plient au passage (il faut d'abord un index spatial des petits décors, `PropOcclusion` n'indexe que les grands), reflets sur les points d'intérêt, retours d'interface.
+- **Limite** : dans le conteneur, poussière et frémissement sont trop fins pour se juger sur une capture. Le frémissement est mesuré ; la poussière reste à regarder en jeu.
+

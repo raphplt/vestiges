@@ -1624,6 +1624,12 @@ public partial class Enemy : CharacterBody2D
 		EnemyAttackFx.PlayMeleeHit(GlobalPosition, player.GlobalPosition);
 	}
 
+	/// <summary>Poussée purement visuelle (onde de montée de niveau) : le corps et l'IA ne bougent pas.</summary>
+	public void Shove(Vector2 direction, float distance)
+	{
+		_hitFeedback.Shove(_hasSprite ? _sprite : null, _visual, direction, distance);
+	}
+
 	internal void PlayAttackAnim() => TriggerAttackAnim();
 
 	/// <summary>Posture accroupie d'annonce, sur le visuel seul pour ne pas toucher l'échelle d'Aberration.</summary>

@@ -210,7 +210,7 @@ public partial class XpOrb : Area2D
         CombatPools.Instance.EmitSparks(GlobalPosition, new SparkBurst
         {
             Family = FxFamily.Essence,
-            Owner = FxOwner.Enemy,
+            Owner = FxOwner.World,
             Count = 1,
             Direction = -direction,
             Spread = 0.6f,

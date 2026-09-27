@@ -135,7 +135,12 @@ public partial class CombatPools : Node2D
     {
         if (owner == FxOwner.Player && !CombatFxSettings.PlayerAttackFx)
             return null;
-        float opacity = owner == FxOwner.Player ? CombatFxSettings.PlayerOpacity : CombatFxSettings.EnemyOpacity;
+        float opacity = owner switch
+        {
+            FxOwner.Player => CombatFxSettings.PlayerOpacity,
+            FxOwner.Enemy => CombatFxSettings.EnemyOpacity,
+            _ => 1f,
+        };
         PixelFx fx = _pixelFx.Take();
         fx.Play(position, spec, opacity, follow);
         return fx;
@@ -228,7 +233,7 @@ public partial class CombatPools : Node2D
         Sparks.Emit(position, new SparkBurst
         {
             Family = FxFamily.Essence,
-            Owner = FxOwner.Enemy,
+            Owner = FxOwner.World,
             Count = 4,
             Direction = Vector2.Up,
             Spread = Mathf.Tau,

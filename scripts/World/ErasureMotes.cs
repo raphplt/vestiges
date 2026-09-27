@@ -58,7 +58,7 @@ public partial class ErasureMotes : Node
             CombatPools.Instance.EmitSparks(origin, new SparkBurst
             {
                 Family = FxFamily.Void,
-                Owner = FxOwner.Enemy,
+                Owner = FxOwner.World,
                 Count = _count,
                 Direction = Vector2.Up,
                 Spread = 0.7f,
@@ -67,6 +67,7 @@ public partial class ErasureMotes : Node
                 LifeMin = _lifeMin,
                 LifeMax = _lifeMax,
                 Size = 2,
+                Decorative = true,
             });
         }
     }

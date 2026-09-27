@@ -205,20 +205,39 @@ public partial class EnemyAbilityRegression : Node2D
         await Step(30);
         Check(shown.Scale.IsEqualApprox(new Vector2(1.18f, 0.78f)), $"Coup pendant une annonce : posture conservée ({shown.Scale})");
         enemy.SetWindupPose(false);
+
+        // Onde de montée de niveau (J4) : créature repoussée en apparence, corps immobile, sans flash.
+        await Step(30);
+        enemy.Position = _player.Position + new Vector2(60f, 0f);
+        body = enemy.Position;
+        LevelUpFx.Play(_player, GetNode<GroupCache>("/root/GroupCache"));
+        bool pushed = shown.Position.X > 1f && enemy.Position == body;
+        bool noFlash = !(sprite.Visible && sprite.Material is ShaderMaterial shoveMaterial)
+            || shoveMaterial.GetShaderParameter("flash_amount").AsSingle() == 0f;
+        Check(pushed && noFlash, $"Montée de niveau : créature repoussée en apparence ({shown.Position.Length():F1} px), corps immobile, sans flash");
+        await Step(30);
+        Check(shown.Position == Vector2.Zero, "Montée de niveau : visuel revenu en place");
         Despawn(enemy);
 
         // Budget par frame : au-delà du plafond, les étoiles d'impact de la frame sont écartées.
         await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
         long droppedBefore = FxBudget.DroppedCount(FxBudgetKind.Shapes);
+        int stars = -VisibleFx(pools);
         for (int i = 0; i < 100; i++)
             pools.ShowHitFlash(_player.Position + new Vector2(i, 0f));
-        int stars = 0;
-        foreach (Node child in pools.GetChildren())
-            if (child is PixelFx { Visible: true })
-                stars++;
+        stars += VisibleFx(pools);
         long dropped = FxBudget.DroppedCount(FxBudgetKind.Shapes) - droppedBefore;
         Check(stars > 0 && stars < 100 && stars + dropped == 100, $"Budget d'effets : {stars} étoiles jouées, {dropped} écartées sur 100");
         pools.QueueFree();
+    }
+
+    private static int VisibleFx(Node pools)
+    {
+        int count = 0;
+        foreach (Node child in pools.GetChildren())
+            if (child is PixelFx { Visible: true })
+                count++;
+        return count;
     }
 
     private static int VisibleNumbers(Node pools, out string texts)

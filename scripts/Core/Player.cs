@@ -1583,7 +1583,9 @@ public partial class Player : CharacterBody2D
 
         _footstepTimer = FootstepInterval;
 
-        string key = GetCurrentTerrain() switch
+        TerrainType terrain = GetCurrentTerrain();
+        Combat.FootstepFx.Emit(GlobalPosition, terrain, Velocity.Normalized());
+        string key = terrain switch
         {
             TerrainType.Water    => "sfx_pas_eau",
             TerrainType.Concrete => "sfx_pas_beton",

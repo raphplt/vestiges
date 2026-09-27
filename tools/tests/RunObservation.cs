@@ -23,6 +23,9 @@ namespace Vestiges.Tests;
 /// --capture-paths : chemins de terre par biome, raccord à une rue, vue dézoomée du départ (RunObservation.Paths.cs).
 /// --capture-farms : fermes des Champs Sauvages les plus proches du départ, normal et dézoomé (RunObservation.Farms.cs).
 /// --capture-landmarks : églises et pylônes des Ruines Urbaines, normal et dézoomé (RunObservation.Landmarks.cs).
+/// --capture-levelup : effet de montée de niveau au ralenti, puis entrée de l'écran de choix (RunObservation.LevelUp.cs).
+/// --capture-crowd : foule de 60 créatures, recul de caméra puis compteur de morts en rafale (RunObservation.Crowd.cs).
+/// --capture-micro : coffre qui frémit à l'approche, poussière de pas (RunObservation.Micro.cs).
 /// --capture-echoes : échos de l'oubli forcés en zone Fragile, apparition, dissolution, murmure (RunObservation.Echoes.cs).
 /// --capture-erasure : une capture par phase de l'oubli, puis un dégradé de toutes les phases.
 /// --measure-props [--measure-seconds 8] : coût de rendu des décors par biome (RunObservation.PropCost.cs).
@@ -71,6 +74,12 @@ public partial class RunObservation : Node
                 await CaptureFarms();
             else if (Array.IndexOf(args, "--capture-landmarks") >= 0)
                 await CaptureLandmarks();
+            else if (Array.IndexOf(args, "--capture-levelup") >= 0)
+                await CaptureLevelUp();
+            else if (Array.IndexOf(args, "--capture-crowd") >= 0)
+                await CaptureCrowd();
+            else if (Array.IndexOf(args, "--capture-micro") >= 0)
+                await CaptureMicro();
             else if (Array.IndexOf(args, "--capture-echoes") >= 0)
                 await CaptureEchoes();
             else if (Array.IndexOf(args, "--capture-paths") >= 0)

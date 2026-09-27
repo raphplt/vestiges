@@ -76,3 +76,17 @@ Fichier temporaire. Il liste ce qu'une session cloud a livré sans pouvoir le v�
 - [ ] **Chaîne sonore** : à écouter. La montée (+3,5 % par orbe, 14 crans) est-elle agréable, ou trop aiguë en fin de chaîne ? Réglages en tête de `XpOrb`.
 - [ ] **Traînée des orbes** : lisible, ou brouillon quand vingt orbes convergent ?
 
+## Plan 02 J4 — montée de niveau
+
+- [ ] **Moment de l'effet** : l'écran de choix met en pause dès la montée de niveau, donc onde, colonne et poussée se jouent au retour dans la run. Est-ce le bon moment, ou faut-il qu'elles se voient derrière le voile, animées pendant la pause ?
+
+## Plan 02 J5 — rouler sur la game
+
+- [ ] **Recul de caméra** : 8 % au plus. Perceptible sans gêner ? Il élargit aussi la zone où les créatures sont visibles, donc le rythme d'apparition hors écran (le `SpawnManager` lit le zoom courant).
+- [ ] **Compteur de rafale** : légende « EN RAFALE ». Position sous la plaque de vie à valider, ainsi que le seuil (5 morts, 1,5 s).
+
+## Plan 02 J6 — micro-interactions
+
+- [ ] **Poussière de pas** : à regarder en jeu (herbe, béton, eau). Trop discrète ? Réglages dans `FootstepFx`.
+- [ ] **Coffres qui frémissent** : 3,4° au plus, par saccades. Assez pour attirer l'œil sans agacer ?
+

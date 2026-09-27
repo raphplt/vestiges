@@ -146,6 +146,7 @@ UI_DEV_TOGGLE,Dev : tout débloqué,Dev: unlock everything
 UI_DEV_TOGGLE_HINT,Profil séparé. Recharge le Hub et mémorise le choix pour F5.,Separate profile. Reloads the Hub and remembers the choice for F5.
 UI_HUD_LEVEL,NIV.,LVL
 UI_HUD_SCORE,SCORE,SCORE
+UI_HUD_KILL_STREAK,EN RAFALE,STREAK
 UI_HUD_ESSENCE,{0} Essence,{0} Essence
 UI_HUD_PHASE_EXPLORATION,EXPLORATION,EXPLORATION
 UI_HUD_PHASE_CRISIS,RÉSURGENCE,RESURGENCE

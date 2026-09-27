@@ -561,7 +561,20 @@ public partial class AudioManager : Node
 			if (!p.Playing)
 				return p;
 		}
-		return _sfxPool.Count > 0 ? _sfxPool[0] : null;
+		// Toutes les voix sonnent (combat dense, plan 02 J5) : on coupe celle qui joue depuis le plus longtemps,
+		// plutôt que toujours la première.
+		AudioStreamPlayer oldest = null;
+		float longest = -1f;
+		foreach (AudioStreamPlayer p in _sfxPool)
+		{
+			float position = p.GetPlaybackPosition();
+			if (position > longest)
+			{
+				longest = position;
+				oldest = p;
+			}
+		}
+		return oldest;
 	}
 
 	// =========================================================

@@ -14,6 +14,7 @@ public sealed class HitFeedback
     private const float SquashSec = 0.15f;
     private const float RecoilSec = 0.1f;
     private const float RecoilPx = 3f;
+    private const float ShoveSec = 0.3f;
     private static readonly Vector2 SquashScale = new(1.25f, 0.75f);
     private static readonly Color FlashModulate = new(3f, 3f, 3f, 1f);
     private static readonly StringName FlashParam = "flash_amount";
@@ -25,6 +26,8 @@ public sealed class HitFeedback
     private Color _polygonColor;
     private Vector2 _recoil;
     private float _elapsed = -1f;
+    private bool _flash;
+    private float _recoilSec = RecoilSec;
 
     public bool IsActive => _elapsed >= 0f;
 
@@ -47,6 +50,27 @@ public sealed class HitFeedback
         _polygonColor = polygonColor;
         _target = hasSprite ? sprite : polygon;
         _recoil = direction * RecoilPx;
+        _recoilSec = RecoilSec;
+        _flash = true;
+        _elapsed = 0f;
+        Apply();
+    }
+
+    /// <summary>
+    /// Poussée visuelle sans flash (onde de montée de niveau, plan 02 J4) : écrasement et recul de
+    /// <paramref name="distance"/> pixels. N'interrompt pas un coup en cours.
+    /// </summary>
+    public void Shove(AnimatedSprite2D sprite, Polygon2D polygon, Vector2 direction, float distance)
+    {
+        if (IsActive)
+            return;
+        _sprite = null;
+        _material = null;
+        _polygon = null;
+        _target = sprite != null && sprite.Visible ? sprite : polygon;
+        _recoil = direction * distance;
+        _recoilSec = ShoveSec;
+        _flash = false;
         _elapsed = 0f;
         Apply();
     }
@@ -58,7 +82,7 @@ public sealed class HitFeedback
             return;
         _elapsed += delta;
         Apply();
-        if (_elapsed >= FlashDelay + FlashSec)
+        if (_elapsed >= Mathf.Max(FlashDelay + FlashSec, _recoilSec))
             Stop();
     }
 
@@ -89,7 +113,7 @@ public sealed class HitFeedback
             return;
 
         // Flash : plein pendant FlashDelay, puis s'éteint linéairement.
-        float flash = 1f - Mathf.Clamp((_elapsed - FlashDelay) / FlashSec, 0f, 1f);
+        float flash = _flash ? 1f - Mathf.Clamp((_elapsed - FlashDelay) / FlashSec, 0f, 1f) : 0f;
         if (_sprite != null)
         {
             _material.SetShaderParameter(FlashParam, flash);
@@ -107,7 +131,7 @@ public sealed class HitFeedback
         _target.Scale = RestScale * SquashScale.Lerp(Vector2.One, elastic);
 
         // Recul bref dans le sens du coup, qui revient en douceur.
-        float recoil = Mathf.Clamp(_elapsed / RecoilSec, 0f, 1f);
+        float recoil = Mathf.Clamp(_elapsed / _recoilSec, 0f, 1f);
         _target.Position = _recoil * (1f - recoil) * (1f - recoil);
     }
 }
