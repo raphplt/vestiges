@@ -65,7 +65,7 @@ public partial class GameOverScreen : CanvasLayer
     {
         public string CharacterId;
         public string CharacterName;
-        public readonly List<(string Icon, int Level)> Weapons = new();
+        public readonly List<(string Icon, int Level, float Damage)> Weapons = new();
         public readonly List<(string Icon, int Level)> Passives = new();
     }
 
@@ -203,7 +203,7 @@ public partial class GameOverScreen : CanvasLayer
         BuildSnapshot build = new() { CharacterId = player.CharacterId };
         build.CharacterName = CharacterDataLoader.Get(player.CharacterId)?.Name ?? player.CharacterId;
         foreach (WeaponInstance weapon in player.WeaponSlots)
-            build.Weapons.Add((weapon.Sprite, weapon.Level));
+            build.Weapons.Add((weapon.Sprite, weapon.Level, player.GetDamageDealt(weapon.Id)));
         foreach (ActivePassiveSouvenir passive in player.PassiveSlots)
             build.Passives.Add((PerkIconResolver.GetPassiveStatIconPath(passive.Data.Stat), passive.Level));
         return build;
@@ -281,12 +281,27 @@ public partial class GameOverScreen : CanvasLayer
         weaponsCaption.Position = new Vector2(640f, 20f);
         _middle.AddChild(weaponsCaption);
         HBoxContainer weapons = SlotRow(new Vector2(640f, 52f));
+        float topDamage = 0f;
+        if (_build != null)
+            foreach ((string _, int _, float damage) in _build.Weapons)
+                topDamage = Mathf.Max(topDamage, damage);
         for (int i = 0; i < Player.MaxWeaponSlots; i++)
         {
             bool filled = _build != null && i < _build.Weapons.Count;
-            weapons.AddChild(filled
-                ? MakeSlot(_build.Weapons[i].Icon, _build.Weapons[i].Level, UITheme.GoldDim)
-                : MakeSlot(null, 0, UITheme.TextVeryDim));
+            if (!filled)
+            {
+                weapons.AddChild(MakeSlot(null, 0, UITheme.TextVeryDim));
+                continue;
+            }
+            // Sous chaque arme, ses dégâts de la run ; l'arme qui a porté le build ressort en or (plan 02 lot D).
+            (string icon, int level, float damage) = _build.Weapons[i];
+            VBoxContainer column = new();
+            column.AddThemeConstantOverride("separation", 2);
+            column.AddChild(MakeSlot(icon, level, UITheme.GoldDim));
+            Label dealt = MakeLabel(Mathf.RoundToInt(damage).ToString("N0"), _strongFont, TextRole.Body,
+                damage > 0f && damage >= topDamage ? UITheme.GoldBright : UITheme.TextDim, HorizontalAlignment.Center, 4);
+            column.AddChild(dealt);
+            weapons.AddChild(column);
         }
 
         Label passivesCaption = MakeLabel(Tr("UI_END_PASSIVES"), _strongFont, TextRole.Subhead, UITheme.TextDim, HorizontalAlignment.Left, 4);
@@ -323,7 +338,8 @@ public partial class GameOverScreen : CanvasLayer
     /// <summary>Case du build : icône, cadre coloré selon la famille (armes, souvenirs), niveau en coin. Vide : cadre éteint.</summary>
     private Control MakeSlot(string iconPath, int level, Color frame)
     {
-        PanelContainer slot = new() { CustomMinimumSize = new Vector2(IconSize + 24f, IconSize + 24f) };
+        // Pas étirée par une colonne voisine plus haute (case d'arme et ses dégâts).
+        PanelContainer slot = new() { CustomMinimumSize = new Vector2(IconSize + 24f, IconSize + 24f), SizeFlagsVertical = Control.SizeFlags.ShrinkBegin };
         StyleBoxFlat style = new()
         {
             BgColor = SlotColor,

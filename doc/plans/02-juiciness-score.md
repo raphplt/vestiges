@@ -125,7 +125,8 @@ Raphaël valide une juiciness très poussée : mobilité, impacts, collectes, ra
 - **Relevé figé** : le build est lu sur le joueur à sa mort, et le score après la sauvegarde qui fige le record (lot A).
 - Textes en clés de traduction (`UI_END_*`), formulés sans accord de genre.
 - **Vérifié** : build sans avertissement, smoke test, régressions, capture `--capture-death` (mort réelle après 8 s de jeu, build riche fourni par la capture). Images regardées à chaque temps de la révélation.
-- **Non fait** : les objets du plan 05 (pas encore de système), les dégâts par arme (pas d'attribution), la carte de déblocage reliée à la Collection (04 C2), le passage accéléré par animation des gains.
+- **Non fait** : les objets du plan 05 (pas encore de système), la carte de déblocage reliée à la Collection (04 C2), le passage accéléré par animation des gains.
+- **Dégâts par arme, 27 septembre 2026 (session locale)** : l'attribution existe depuis le plan 17 (lot 1C, pause). Le bilan montre sous chaque arme les dégâts de la run ; celle qui a porté le build ressort en or. Capture `--capture-death` regardée.
 
 ## 6. Recette finale et sortie
 
