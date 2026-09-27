@@ -515,3 +515,9 @@ Le banc dense ne tuait rien (PV ×10 000). Nouveau mode `--churn` de `MovementDe
   | 1 080p | 229,0 → **256,9** | 9,2 → 7,8 ms |
 
 - Le banc dense quitte désormais proprement, sinon le crash de fermeture interrompait la série. Il compte les orbes par parcours, pour compiler aussi dans les worktrees de base.
+
+### Lot 5, première partie — animations des créatures préchargées, 27 septembre 2026
+
+`EnemySpriteLoader` chargeait les 16 à 32 animations d'une espèce à sa première apparition, en 16 à 25 ms, soit au moins une image sautée à 60 FPS. Sur une run nomade de 5 minutes, sept espèces se chargeaient juste après l'écran de chargement (environ 140 ms de saccades au démarrage), et les autres en pleine partie. Le chronomètre est désormais dans le journal.
+
+Les animations de toutes les espèces se chargent sous l'écran de chargement, une par image pour qu'il reste animé : nouvelle étape « animations des créatures », 222 ms. Le chargement total passe de 3,15 à 3,25 s. Plus aucun chargement d'animations pendant la partie (journal d'une run nomade de 300 s vérifié).

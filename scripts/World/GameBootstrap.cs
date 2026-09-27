@@ -61,6 +61,22 @@ public partial class GameBootstrap : Node
             progression, fragmentManager, overlay);
     }
 
+    /// <summary>
+    /// Animations de toutes les espèces chargées sous l'écran de chargement, une par image : chargées à la première
+    /// apparition, elles coûtaient 16 à 25 ms chacune, une image sautée à chaque nouvelle espèce en pleine partie.
+    /// </summary>
+    private async Task PreloadEnemySprites()
+    {
+        foreach (string id in EnemyDataLoader.GetAllIds())
+        {
+            EnemyData data = EnemyDataLoader.Get(id);
+            if (string.IsNullOrEmpty(data?.Visual.SpriteFolder))
+                continue;
+            Combat.EnemySpriteLoader.LoadOrGet(id, data.Visual.SpriteFolder);
+            await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+        }
+    }
+
     public override void _ExitTree()
     {
         // L'EventBus survit à la run : sans désabonnement, chaque run laisserait un rappel de plus.
@@ -100,6 +116,8 @@ public partial class GameBootstrap : Node
         EnemyPool enemyPool = GetNode<EnemyPool>("../EnemyPool");
         await enemyPool.PrewarmAsync(4);
         LoadProfiler.Mark("créatures du pool");
+        await PreloadEnemySprites();
+        LoadProfiler.Mark("animations des créatures");
 
         // --- Wire des systèmes (rapide, synchrone) ---
         overlay.SetProgress("Initialisation...");

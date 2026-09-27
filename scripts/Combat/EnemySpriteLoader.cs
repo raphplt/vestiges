@@ -47,6 +47,7 @@ public static class EnemySpriteLoader
 		if (_cache.TryGetValue(enemyId, out SpriteFrames cached))
 			return cached;
 
+		ulong started = Time.GetTicksUsec();
 		SpriteFrames frames = new();
 
 		if (frames.HasAnimation("default"))
@@ -125,7 +126,7 @@ public static class EnemySpriteLoader
 		if (totalAnims > 0)
 		{
 			_cache[enemyId] = frames;
-			GD.Print($"[EnemySpriteLoader] '{enemyId}' : {totalAnims} animations chargées depuis '{folder}'");
+			GD.Print($"[EnemySpriteLoader] '{enemyId}' : {totalAnims} animations chargées depuis '{folder}' en {(Time.GetTicksUsec() - started) / 1000.0:F1} ms");
 			return frames;
 		}
 
