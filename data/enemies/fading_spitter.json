@@ -25,6 +25,7 @@
         "projectile": {
             "sprite": "bile",
             "family": "rust"
-        }
+        },
+        "sprite_feet_offset": 21
     }
 }

@@ -136,4 +136,4 @@ Captures en vraie run regardées : bilan, level-up (cartes et effet), coffre, pa
 - [ ] **Tirs annoncés** (07 lot B) : couloir de visée avant chaque tir du Cracheur, de la Sentinelle et de la Tisseuse ; contour de portée de la Sentinelle. Trop d'indications à l'écran en pleine vague ? Tireurs devenus trop faciles ?
 - [ ] **Présage des Résurgences** (03 lot C) : bords ternis en trame pendant l'avertissement et la crise, créatures agitées. Assez fort, trop fort ? Coût de la passe plein écran en combat dense de crise à mesurer (`/bench`).
 - [ ] **Herbes qui plient** (10 lot E) : amplitude (5 px) et rayon (30 px) à juger en marchant ; réglages en tête de `prop_forget.gdshaderinc`.
-- [ ] **Ennemis refaits** (08) : Brute, Ombre, Hurleur, Sentinelle. Silhouettes, couleurs, animations (charge, vague, cri, visée) à juger en mouvement.
+- [ ] **Ennemis refaits** (08) : Brute, Ombre, Hurleur, Sentinelle, Cracheur, Rampant, Rampant d'Ombre, Tréant. Silhouettes, couleurs, animations (charge, vague, cri, visée, surgissement) à juger en mouvement.

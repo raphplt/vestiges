@@ -13,6 +13,7 @@
         "color": "#CC3333",
         "shape": "square",
         "size": 16,
-        "sprite_folder": "shadow_crawler"
+        "sprite_folder": "shadow_crawler",
+        "sprite_feet_offset": 10
     }
 }

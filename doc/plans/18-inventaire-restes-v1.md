@@ -48,7 +48,7 @@ Classé du plus fréquent au plus rare.
 | 20 | **Tisseuse en triangle** : `data/enemies/tisseuse.json:18` utilise `"sprite"` au lieu de `sprite_folder`. L'ennemi s'affiche en `Polygon2D` ; ses 128 PNG ne servent pas | Bug de données | Résurgences au marais | Corriger la clé, vérifier l'ancrage des pieds | 0B |
 | 21 | Marqueurs de micro-événements (`RunEventMarker`) : ellipses et colonne en `_Draw`. Plaque des ennemis et jauge de PV en `_Draw` avec police Saira | V2, vectoriel | Toutes les 2 à 3 min | Colonne sur la grille des texels, commune avec les coffres ; plaques : choix du plan 04 à confirmer | 0A |
 | 22 | Anciens VFX encore chargés : orbe d'XP, explosion, dissolution (`dissolution_f1` à 100 % d'alpha partiel), éclaboussure | PNG anciens | Fréquent | Refaire (plan 08) | 08 |
-| 23 | Ennemis de mars non régénérés : cracheur, rampant, shadow_crawler, shade, sentinelle, hurleur, void_brute, tréant | PNG, ancien pipeline | Selon biome et phase | Régénérer (plan 07/08) | 08 |
+| 23 | ~~Ennemis de mars non régénérés : cracheur, rampant, shadow_crawler, shade, sentinelle, hurleur, void_brute, tréant~~ **Régénérés le 27 septembre** dans le pipeline procédural ([08](08-direction-artistique.md)) | PNG, ancien pipeline | Selon biome et phase | Fait | 08 |
 | 24 | **Indicible** : entièrement en `Polygon2D` (`Indicible.cs`) | Visuel lisse | Fin de run | Sprites | 08 |
 | 25 | **Appel du Vide** : perk de coffre qui ajoute un bouton ON/OFF dans la pause ; malus pur ; l'activer efface les malédictions | Mécanique héritée | Si obtenu | Remplacé par le Péril (plan 17 §4.5) | 3A |
 | 26 | Musique « jour », « crépuscule », « nuit » (`AudioManager.cs:103-108`) réaffectée aux phases V2 | Noms V1 | Toute la run | Renommer ou recomposer (plan 15) | 15 |

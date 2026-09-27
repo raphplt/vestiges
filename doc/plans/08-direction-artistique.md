@@ -181,7 +181,7 @@ Trois créatures du début de run passent dans le pipeline, à la même densité
 - Le « chef » de meute du Charognard (un œil de plus, Bible §6.2) n'existe pas en jeu ; non modélisé.
 - Après validation : même traitement pour les autres ennemis du début (Rampant d'Ombre, Brute, Rampant, Cracheur).
 
-### Ennemis de mars dans le pipeline — 27 septembre 2026 (session locale)
+### Ennemis de mars dans le pipeline — 27 septembre 2026 (session locale), les huit
 
 Suite annoncée du pilote (« même traitement pour les autres ennemis du début » après validation, design validé le 24 septembre). Les anciens sprites de ces créatures venaient de générateurs Pillow, à des tailles sans rapport avec le joueur (Brute 24×24, Ombre 12×12). Chaque créature est un modèle dans `tools/sprites/creatures/`, avec 8 directions × idle, marche, attaque, mort (128 frames), yeux vert-acide émissifs, asymétrie de la Bible §6.2 :
 
@@ -194,7 +194,16 @@ Suite annoncée du pilote (« même traitement pour les autres ennemis du début
 
 - Itérations visibles sur les planches : tête de la Brute avancée (perdue sous le corps de profil) ; yeux de l'Ombre écartés (un seul ressortait) ; bouche du Hurleur creusée puis évasée (la gorge lumineuse restait cachée sous l'angle de 30°).
 - `sprite_feet_offset` ajouté aux quatre fiches. `--capture-bestiary` accepte désormais `--enemies` ; capture regardée : les quatre à l'échelle du joueur et du Rôdeur, lisibles sur les champs et la terre sombre.
-- **Reste** (plan 18, ligne 23) : Cracheur Pâli, Rampant, Rampant d'Ombre, Tréant corrompu.
+- Suite le même jour, les quatre derniers :
+
+  | Créature | Cadre, pieds | Lecture recherchée |
+  |---|---|---|
+  | Cracheur Pâli | 36×48, (18, 45) | Silhouette humaine délavée, maigre et voûtée, côtes saillantes, poche de bile rouille sous la mâchoire. Tir : il se cambre, gonfle, projette la tête. |
+  | Rampant | 48×40, (24, 31) | Larve segmentée et basse, cuirassée de plaques de pierre et de mottes, gueule ronde à trois mandibules. Surgissement : il se dresse gueule ouverte. |
+  | Rampant d'Ombre | 40×36, (20, 28) | Ombre à quatre pattes trop longues aux coudes relevés, traînées rouge sombre, masque pâle et lisse au bout du cou. Frappe : le cou se détend. |
+  | Tréant corrompu | 56×72, (28, 67) | Tronc noueux sur des racines-pieds, branches-bras inégales griffues de brindilles, excroissances en visages dont deux nœuds luisent, couronne de feuillage mort. Coup de branche de haut en bas. |
+
+  Premier jet du Rampant (une dizaine de pixels) et du Rampant d'Ombre agrandis. Capture `--capture-bestiary --enemies fading_spitter,rampant,shadow_crawler,treant_corrompu,rodeur` regardée. **Les douze créatures en jeu sont désormais dans le pipeline.** Restent seulement l'Indicible (en polygones) et les auras d'affixe.
 
 ### Décors procéduraux — chantier du 25 septembre 2026
 
