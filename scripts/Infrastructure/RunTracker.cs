@@ -11,7 +11,10 @@ namespace Vestiges.Infrastructure;
 public partial class RunTracker : Node
 {
     private EventBus _eventBus;
-    private float _runStartTimeMsec;
+    // Temps de jeu actif (plan 02 lot A) : ce nœud est suspendu avec l'arbre, donc pauses, choix de niveau et coffres
+    // n'avancent pas l'horloge ; elle s'arrête à la mort. Score, quêtes, fenêtres glissantes et bilan la partagent.
+    private float _activeSeconds;
+    private bool _frozen;
 
     private float _totalDamageDealt;
     private float _totalDamageTaken;
@@ -58,7 +61,7 @@ public partial class RunTracker : Node
     public string LastHitByEnemyId => _lastHitByEnemyId;
     public string CurrentPhase => _currentPhase;
     public int CurrentNight => _crisesSurvived;
-    public float RunDurationSeconds => (Time.GetTicksMsec() - _runStartTimeMsec) / 1000f;
+    public float RunDurationSeconds => _activeSeconds;
 
     // --- Difficulty metrics ---
     public int TotalSpawned => _totalSpawned;
@@ -72,7 +75,7 @@ public partial class RunTracker : Node
     {
         get
         {
-            float now = Time.GetTicksMsec() / 1000f;
+            float now = _activeSeconds;
             float windowStart = now - RateWindowSeconds;
             int count = 0;
             foreach (float t in _spawnTimestamps)
@@ -88,7 +91,7 @@ public partial class RunTracker : Node
     {
         get
         {
-            float now = Time.GetTicksMsec() / 1000f;
+            float now = _activeSeconds;
             float windowStart = now - RateWindowSeconds;
             int count = 0;
             foreach (float t in _killTimestamps)
@@ -118,7 +121,7 @@ public partial class RunTracker : Node
     {
         get
         {
-            float now = Time.GetTicksMsec() / 1000f;
+            float now = _activeSeconds;
             float windowStart = now - DpsWindowSeconds;
             float total = 0f;
             foreach ((float time, float damage) entry in _damageEvents)
@@ -143,9 +146,8 @@ public partial class RunTracker : Node
 
     public override void _Ready()
     {
-        _runStartTimeMsec = Time.GetTicksMsec();
-
         _eventBus = GetNode<EventBus>("/root/EventBus");
+        _eventBus.GameStateChanged += OnGameStateChanged;
         _eventBus.EnemySpawned += OnEnemySpawned;
         _eventBus.EnemyKilled += OnEnemyKilled;
         _eventBus.PlayerDamaged += OnPlayerDamaged;
@@ -165,6 +167,7 @@ public partial class RunTracker : Node
     public override void _ExitTree()
     {
         if (_eventBus == null) return;
+        _eventBus.GameStateChanged -= OnGameStateChanged;
         _eventBus.EnemySpawned -= OnEnemySpawned;
         _eventBus.EnemyKilled -= OnEnemyKilled;
         _eventBus.PlayerDamaged -= OnPlayerDamaged;
@@ -181,12 +184,14 @@ public partial class RunTracker : Node
 
     public override void _Process(double delta)
     {
+        if (!_frozen)
+            _activeSeconds += (float)delta;
         _maintenanceTimer += (float)delta;
         if (_maintenanceTimer < MaintenanceInterval)
             return;
         _maintenanceTimer = 0f;
 
-        float now = Time.GetTicksMsec() / 1000f;
+        float now = _activeSeconds;
 
         // Purge old DPS entries
         float dpsWindowStart = now - DpsWindowSeconds;
@@ -203,19 +208,25 @@ public partial class RunTracker : Node
             _peakEnemies = activeEnemies;
     }
 
+    private void OnGameStateChanged(string oldState, string newState)
+    {
+        if (newState == nameof(GameManager.GameState.Death))
+            _frozen = true;
+    }
+
     private void OnEnemySpawned(string enemyId, float hpScale, float dmgScale)
     {
         _totalSpawned++;
         _lastHpScale = hpScale;
         _lastDmgScale = dmgScale;
-        float now = Time.GetTicksMsec() / 1000f;
+        float now = _activeSeconds;
         _spawnTimestamps.Add(now);
     }
 
     private void OnEnemyKilled(string enemyId, Vector2 position)
     {
         _totalKilled++;
-        float now = Time.GetTicksMsec() / 1000f;
+        float now = _activeSeconds;
         _killTimestamps.Add(now);
     }
 
@@ -225,7 +236,7 @@ public partial class RunTracker : Node
         if (entity is not Player)
         {
             _totalDamageDealt += amount;
-            float now = Time.GetTicksMsec() / 1000f;
+            float now = _activeSeconds;
             _damageEvents.Add((now, amount));
         }
     }

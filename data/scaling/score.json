@@ -1,0 +1,32 @@
+{
+  "_doc": "Barème du score (plan 02 lot A), repris tel quel des constantes de ScoreManager. kill_points : par identifiant de créature, default pour les autres. chest_points : par rareté de coffre. Lu par Infrastructure/ScoreConfig.",
+  "points_per_second": 3,
+  "points_per_crisis": 175,
+  "points_per_poi": 50,
+  "points_boss_defeated": 2500,
+  "points_endgame_reached": 1000,
+  "kill_points": {
+    "default": 10,
+    "shadow_crawler": 10,
+    "fading_spitter": 15,
+    "presage": 15,
+    "void_brute": 30,
+    "shade": 5,
+    "wailing_sentinel": 25,
+    "hurleur": 30,
+    "tisseuse": 20,
+    "rampant": 15,
+    "rodeur": 15,
+    "colosse_forest": 200,
+    "colosse_urban": 200,
+    "colosse_swamp": 200,
+    "indicible": 5000
+  },
+  "chest_points": {
+    "default": 25,
+    "common": 25,
+    "rare": 75,
+    "epic": 200,
+    "lore": 100
+  }
+}

@@ -14,22 +14,14 @@ namespace Vestiges.Score;
 /// </summary>
 public partial class ScoreManager : Node
 {
-    private const int PointsPerMeleeKill = 10;
-    private const int PointsPerRangedKill = 15;
-    private const int PointsPerBruteKill = 30;
-    private const int PointsPerShadeKill = 5;
-    private const int PointsPerSentinelKill = 25;
-    private const int PointsPerHurleurKill = 30;
-    private const int PointsPerTisseuseKill = 20;
-    private const int PointsPerRampantKill = 15;
-    private const int PointsPerRodeurKill = 15;
-    private const int PointsPerColosseKill = 200;
-    private const int PointsPerIndicibleKill = 5000;
-    private const int PointsPerSecondSurvived = 3;
-    private const int PointsPerCrisisSurvived = 175;
-    private const int PointsPerPoiExplored = 50;
-    private const int PointsBossDefeated = 2500;
-    private const int PointsEndgameReached = 1000;
+    // Le score de survie croît chaque seconde : notifié à cadence bornée, et seulement s'il a changé (plan 02 lot A).
+    private const float NotifyInterval = 0.25f;
+    private ScoreConfig _config;
+    private float _notifyTimer;
+    private int _notifiedScore = -1;
+    private bool _endSettled;
+    private bool _endedWithRecord;
+    private int _previousBest;
     private static string HighScorePath => DevelopmentMode.GetSavePath("highscore.save");
 
     private int _combatScore;
@@ -52,7 +44,7 @@ public partial class ScoreManager : Node
         {
             if (_runTracker == null)
                 return _survivalScore;
-            return Mathf.RoundToInt(_runTracker.RunDurationSeconds * PointsPerSecondSurvived);
+            return Mathf.RoundToInt(_runTracker.RunDurationSeconds * _config.PointsPerSecond);
         }
     }
     public int BonusScore
@@ -61,14 +53,16 @@ public partial class ScoreManager : Node
         {
             if (_runTracker == null)
                 return _bonusScore;
-            return _bonusScore + _runTracker.CrisesSurvived * PointsPerCrisisSurvived;
+            return _bonusScore + _runTracker.CrisesSurvived * _config.PointsPerCrisis;
         }
     }
     public int ExplorationScore => _explorationScore;
     public int TotalKills => _totalKills;
     public int NoDamageNights => 0;
-    public int BestScore => _bestScore;
-    public bool IsNewRecord => CurrentScore > _bestScore;
+    /// <summary>Meilleur score avant cette run : figé par SaveEndOfRun, qui écrit ensuite le nouveau record.</summary>
+    public int BestScore => _endSettled ? _previousBest : _bestScore;
+    /// <summary>Verdict figé en fin de run, avant la sauvegarde qui écraserait la comparaison (plan 02 lot A).</summary>
+    public bool IsNewRecord => _endSettled ? _endedWithRecord : CurrentScore > _bestScore;
     public int VestigesEarned { get; private set; }
     public float CharacterMultiplier => _scoreMultiplier;
     public float MutatorMultiplier => _mutatorMultiplier;
@@ -77,6 +71,7 @@ public partial class ScoreManager : Node
 
     public override void _Ready()
     {
+        _config = ScoreConfig.Load();
         _eventBus = GetNode<EventBus>("/root/EventBus");
         _eventBus.EnemyKilled += OnEnemyKilled;
         _eventBus.PlayerDamaged += OnPlayerDamaged;
@@ -85,6 +80,23 @@ public partial class ScoreManager : Node
         _eventBus.RunPhaseChanged += OnRunPhaseChanged;
 
         LoadBestScore();
+    }
+
+    public override void _Process(double delta)
+    {
+        _notifyTimer -= (float)delta;
+        if (_notifyTimer > 0f)
+            return;
+        _notifyTimer = NotifyInterval;
+        if (CurrentScore != _notifiedScore)
+            NotifyScore();
+    }
+
+    /// <summary>Seul point d'émission de ScoreChanged : un gain immédiat n'est pas réémis au tick suivant.</summary>
+    private void NotifyScore()
+    {
+        _notifiedScore = CurrentScore;
+        _eventBus.EmitSignal(EventBus.SignalName.ScoreChanged, _notifiedScore);
     }
 
     public override void _ExitTree()
@@ -119,7 +131,10 @@ public partial class ScoreManager : Node
     /// <summary>Sauvegarde le score, enregistre la run, calcule les Vestiges, vérifie les déblocages.</summary>
     public void SaveEndOfRun()
     {
-        if (CurrentScore > _bestScore)
+        _previousBest = _bestScore;
+        _endedWithRecord = CurrentScore > _bestScore;
+        _endSettled = true;
+        if (_endedWithRecord)
         {
             _bestScore = CurrentScore;
             SaveBestScore();
@@ -224,7 +239,7 @@ public partial class ScoreManager : Node
     {
         _totalKills++;
 
-        int points = GetPointsForEnemy(enemyId);
+        int points = _config.KillPoints(enemyId);
         // Combattre là où le monde s'oublie rapporte davantage.
         points = Mathf.RoundToInt(points * (1f + ErasureEffectAt(position).ScoreBonus));
         _combatScore += points;
@@ -232,10 +247,10 @@ public partial class ScoreManager : Node
         if (enemyId == "indicible" && !_bossDefeated)
         {
             _bossDefeated = true;
-            _bonusScore += PointsBossDefeated;
+            _bonusScore += _config.PointsBossDefeated;
         }
 
-        _eventBus.EmitSignal(EventBus.SignalName.ScoreChanged, CurrentScore);
+        NotifyScore();
     }
 
     private void OnPlayerDamaged(float currentHp, float maxHp)
@@ -252,44 +267,18 @@ public partial class ScoreManager : Node
         return _erasureManager == null ? ErasureEffects.Effect.None : ErasureEffects.For(_erasureManager.GetZonePhaseAt(position));
     }
 
-    private int GetPointsForEnemy(string enemyId)
-    {
-        return enemyId switch
-        {
-            "shadow_crawler" => PointsPerMeleeKill,
-            "fading_spitter" or "presage" => PointsPerRangedKill,
-            "void_brute" => PointsPerBruteKill,
-            "shade" => PointsPerShadeKill,
-            "wailing_sentinel" => PointsPerSentinelKill,
-            "hurleur" => PointsPerHurleurKill,
-            "tisseuse" => PointsPerTisseuseKill,
-            "rampant" => PointsPerRampantKill,
-            "rodeur" => PointsPerRodeurKill,
-            "colosse_forest" or "colosse_urban" or "colosse_swamp" => PointsPerColosseKill,
-            "indicible" => PointsPerIndicibleKill,
-            _ => PointsPerMeleeKill
-        };
-    }
-
     private void OnPoiExplored(string poiId, string poiType)
     {
-        _explorationScore += PointsPerPoiExplored;
-        _eventBus.EmitSignal(EventBus.SignalName.ScoreChanged, CurrentScore);
-        GD.Print($"[ScoreManager] POI explored: {poiId} ({poiType}) +{PointsPerPoiExplored}pts");
+        _explorationScore += _config.PointsPerPoi;
+        NotifyScore();
+        GD.Print($"[ScoreManager] POI explored: {poiId} ({poiType}) +{_config.PointsPerPoi}pts");
     }
 
     private void OnChestOpened(string chestId, string rarity, Vector2 position)
     {
-        int points = rarity switch
-        {
-            "common" => 25,
-            "rare" => 75,
-            "epic" => 200,
-            "lore" => 100,
-            _ => 25
-        };
+        int points = _config.ChestPoints(rarity);
         _explorationScore += points;
-        _eventBus.EmitSignal(EventBus.SignalName.ScoreChanged, CurrentScore);
+        NotifyScore();
         GD.Print($"[ScoreManager] Chest opened: {chestId} ({rarity}) +{points}pts");
     }
 
@@ -298,15 +287,9 @@ public partial class ScoreManager : Node
         if (newPhase == "Endgame" && !_endgameReached)
         {
             _endgameReached = true;
-            _bonusScore += PointsEndgameReached;
-            _eventBus.EmitSignal(EventBus.SignalName.ScoreChanged, CurrentScore);
+            _bonusScore += _config.PointsEndgameReached;
+            NotifyScore();
         }
-    }
-
-    /// <summary>Legacy helper conserve pour les outils qui l'appellent encore.</summary>
-    private int GetSurvivalPoints(int nightNumber)
-    {
-        return Mathf.RoundToInt(Mathf.Max(0, nightNumber) * 100);
     }
 
     private void LoadBestScore()

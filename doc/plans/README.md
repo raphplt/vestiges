@@ -68,6 +68,7 @@ Un seul lot d'implémentation ouvert à la fois. Un échec de lisibilité, de pe
 - [02 J4](02-juiciness-score.md) : montée de niveau avec onde dorée, colonne de lumière, créatures proches repoussées (en apparence), barre d'XP qui éclate, écran de choix qui entre avec du punch.
 - [02 J5](02-juiciness-score.md) : compteur de morts en rafale (« ×24 »), léger recul de caméra quand l'écran se remplit, voix sonores coupées de la plus ancienne à la plus récente.
 - [02 J6](02-juiciness-score.md) : traces de pas selon le sol (ronds dans l'eau, poussière), coffres qui frémissent à l'approche.
+- [02 lot A](02-juiciness-score.md) : score exact. Horloge de jeu qui exclut les pauses, score qui monte au HUD entre deux kills, « nouveau record » enfin affiché au bilan, barème en JSON.
 - Travail fait dans un conteneur sans GPU : les points à revérifier sur la machine de Raphaël sont listés dans [A-VERIFIER.md](A-VERIFIER.md).
 
 **Mise à jour du 26 septembre (soir) :**

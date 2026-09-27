@@ -90,3 +90,8 @@ Fichier temporaire. Il liste ce qu'une session cloud a livré sans pouvoir le v�
 - [ ] **Poussière de pas** : à regarder en jeu (herbe, béton, eau). Trop discrète ? Réglages dans `FootstepFx`.
 - [ ] **Coffres qui frémissent** : 3,4° au plus, par saccades. Assez pour attirer l'œil sans agacer ?
 
+## Plan 02 lot A — score
+
+- [ ] **Scores comparés** : l'horloge n'avance plus pendant les pauses. Une run d'aujourd'hui marque donc un peu moins de points de survie qu'avant à durée murale égale, et les records anciens restent légèrement avantagés.
+- [ ] **Barème des points d'intérêt** : `pois.json` prévoit 25 à 300 points selon le type, mais le jeu en donne 50 partout. Faut-il brancher les valeurs des données ?
+

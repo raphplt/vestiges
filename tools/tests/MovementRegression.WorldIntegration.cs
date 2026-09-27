@@ -57,6 +57,51 @@ public partial class MovementRegression
     }
 
     /// <summary>Marche vers l'est jusqu'au bord de la carte générée : le joueur ne quitte jamais le sol.</summary>
+    /// <summary>Plan 02 lot A : horloge de jeu actif, score notifié sans kill, verdict du record figé avant sauvegarde.</summary>
+    private async Task CheckScoreClock(WorldSetup world)
+    {
+        Vestiges.Infrastructure.RunTracker tracker = world.GetNode<Vestiges.Infrastructure.RunTracker>("RunTracker");
+        Vestiges.Score.ScoreManager score = world.GetNode<Vestiges.Score.ScoreManager>("ScoreManager");
+        EventBus bus = GetNode<EventBus>("/root/EventBus");
+        int notified = 0;
+        int lastNotified = -1;
+        void OnScore(int value)
+        {
+            notified++;
+            lastNotified = value;
+        }
+        bus.ScoreChanged += OnScore;
+        float start = tracker.RunDurationSeconds;
+        int frames = 0;
+        while (tracker.RunDurationSeconds - start < 1.2f && frames < 2000)
+        {
+            await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+            frames++;
+        }
+        bus.ScoreChanged -= OnScore;
+        Check(notified > 0 && lastNotified <= score.CurrentScore && score.SurvivalScore > 0,
+            $"Score : {notified} notification(s) sans kill en {tracker.RunDurationSeconds - start:0.0} s de jeu, survie {score.SurvivalScore}");
+
+        float beforePause = tracker.RunDurationSeconds;
+        GetTree().Paused = true;
+        for (int i = 0; i < 20; i++)
+            await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+        GetTree().Paused = false;
+        Check(Mathf.IsEqualApprox(tracker.RunDurationSeconds, beforePause), "Score : la pause n'avance pas l'horloge de la run");
+
+        FieldInfo best = typeof(Vestiges.Score.ScoreManager).GetField("_bestScore", BindingFlags.Instance | BindingFlags.NonPublic);
+        int previous = Math.Max(0, score.CurrentScore - 1);
+        best.SetValue(score, previous);
+        _manager.ChangeState(GameManager.GameState.Death);
+        score.SaveEndOfRun();
+        float atDeath = tracker.RunDurationSeconds;
+        for (int i = 0; i < 20; i++)
+            await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+        Check(score.IsNewRecord && score.BestScore == previous,
+            $"Record : nouveau record encore lu après la sauvegarde (ancien {score.BestScore}, score {score.CurrentScore})");
+        Check(Mathf.IsEqualApprox(tracker.RunDurationSeconds, atDeath), "Score : l'horloge s'arrête à la mort");
+    }
+
     private async Task CheckWorldEdge(WorldSetup world)
     {
         TileMapLayer ground = world.GetNode<TileMapLayer>("Ground");
@@ -146,6 +191,7 @@ public partial class MovementRegression
         await CheckGeneratedWater(world);
         await CheckWorldEdge(world);
         await CheckVoidDamage(world);
+        await CheckScoreClock(world);
         // Le pool historique garde ses instances préchauffées hors de l'arbre :
         // le banc les libère explicitement pour vérifier une fermeture sans erreurs RID.
         Vestiges.Spawn.EnemyPool pool = world.GetNode<Vestiges.Spawn.EnemyPool>("EnemyPool");

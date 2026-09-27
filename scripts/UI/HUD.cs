@@ -94,6 +94,7 @@ public partial class HUD : CanvasLayer
     private float _biomeTimer;
     private float _scoreTimer;
     private float _runSeconds;
+    private RunTracker _runTracker;
     private int _shownSeconds = -1;
     private int _targetScore;
     private float _shownScore;
@@ -124,6 +125,7 @@ public partial class HUD : CanvasLayer
         _eventBus = GetNode<EventBus>("/root/EventBus");
         _groupCache = GetNodeOrNull<GroupCache>("/root/GroupCache");
         _gameManager = GetNodeOrNull<GameManager>("/root/GameManager");
+        _runTracker = GetNodeOrNull<RunTracker>("../RunTracker");
         _eventBus.PlayerDamaged += OnPlayerDamaged;
         _eventBus.XpGained += OnXpChanged;
         _eventBus.LevelUp += OnLevelUp;
@@ -193,7 +195,10 @@ public partial class HUD : CanvasLayer
             _fpsLabel.Text = $"{Engine.GetFramesPerSecond()} FPS";
         }
 
-        if (_gameManager == null || _gameManager.CurrentState == GameManager.GameState.Run)
+        // Même horloge que le score et le bilan (plan 02 lot A) ; compteur propre seulement hors run complète.
+        if (_runTracker != null)
+            _runSeconds = _runTracker.RunDurationSeconds;
+        else if (_gameManager == null || _gameManager.CurrentState == GameManager.GameState.Run)
             _runSeconds += dt;
         int seconds = (int)_runSeconds;
         if (seconds != _shownSeconds)

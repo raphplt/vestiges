@@ -64,6 +64,14 @@ Un événement de gain avec cause, un profil de feedback JSON et un pool supplé
 **Vérification :** score évolue pendant 10 secondes sans kill ; HUD/bilan/historique concordent exactement ; pause et mort n'ajoutent pas de temps ; gros nombre sans débordement.
 **Garde-fou :** pas de formule indépendante dans le HUD, pas de double comptage de Résurgence ou boss, pas de record comparé à une valeur déjà écrasée.
 
+**Lot A livré (première passe) — 27 septembre 2026 (session cloud) :**
+- **Horloge de jeu actif** : `RunTracker` compte le temps de jeu lui-même (nœud suspendu avec l'arbre). Pauses, choix de niveau et coffres n'avancent plus l'horloge, qui s'arrête à la mort. Score de survie, quêtes de durée, fenêtres glissantes (DPS, débits), bilan, historique et horloge du HUD lisent tous cette même valeur. Avant, le temps mural comptait les pauses.
+- **Score notifié sans kill** : `ScoreChanged` n'était émis qu'à un kill, un coffre ou un point d'intérêt. Le HUD restait donc figé entre deux kills alors que le score de survie montait. `ScoreManager` le notifie désormais quatre fois par seconde, seulement si la valeur a changé ; le compteur du HUD défile vers elle.
+- **Record** : `SaveEndOfRun` écrivait le nouveau record avant que le bilan ne lise `IsNewRecord`, si bien que « NOUVEAU RECORD ! » ne s'affichait jamais et que « Meilleur » montrait le score de la run. L'ancien record et le verdict sont désormais figés avant la sauvegarde.
+- **Barème en données** : `data/scaling/score.json` (lu par `ScoreConfig`) reprend exactement les anciennes constantes : points par créature, par seconde, par crise, par point d'intérêt, par coffre selon la rareté, boss et endgame. Les `score_points` de `pois.json` diffèrent de la valeur unique de 50 appliquée jusqu'ici ; ils restent inutilisés dans cette passe pour ne pas changer l'économie.
+- **Vérifié** : `MovementRegression --run-integration`, dans une vraie `Main`, avec quatre contrôles de plus : score notifié sans kill (4 notifications en 1,2 s), pause qui n'avance pas l'horloge, record encore lu après la sauvegarde, horloge arrêtée à la mort.
+- **Reste du lot A** : regrouper visuellement les gains rapprochés (« +120 »), détail du score au bilan (lot D).
+
 ### Lot B — Combat perceptible
 
 1. Reprendre le feedback existant et l'appliquer à la représentation réellement visible, avec un point d'ancrage visuel commun si nécessaire.
