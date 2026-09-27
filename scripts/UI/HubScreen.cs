@@ -231,7 +231,7 @@ public partial class HubScreen : Control
 			AudioManager.PlayUI("sfx_menu_confirmer");
 			_settingsScreen?.Open();
 		});
-		AddMenuButton(menu, "Quitter", TextRole.Title, _bodyFont, () => GetTree().Quit());
+		AddMenuButton(menu, "Quitter", TextRole.Title, _bodyFont, () => _ = GameExit.QuitAsync(GetTree()));
 	}
 
 	private HubMenuButton AddMenuButton(VBoxContainer menu, string text, TextRole role, Font font, System.Action onPressed)

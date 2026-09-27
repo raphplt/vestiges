@@ -41,6 +41,7 @@ namespace Vestiges.Tests;
 /// --capture-chests : chaque coffre cadré, avec et sans décors (RunObservation.Chests.cs).
 /// --capture-levelup : l'écran de level-up, une capture par rareté (RunObservation.LevelUp.cs).
 /// --capture-oublis : les neuf Oublis de carte pris d'un coup, effets mesurés (RunObservation.Oublis.cs).
+/// --close-window : quitte par la demande de fermeture de la fenêtre au lieu de GameExit.
 /// --capture-rift : offre d'une Faille, Péril et Oubli dans la pause, Oubli levé au Mémorial (RunObservation.Landmarks.cs).
 /// --capture-memorial : parcours complet d'un Mémorial, du réveil aux services (RunObservation.Landmarks.cs).
 /// --loot-draws N : tirages de butin de chaque coffre, sans les appliquer (RunObservation.Chests.cs).
@@ -149,7 +150,11 @@ public partial class RunObservation : Node
                 await MeasureDensity(double.Parse(Argument(args, "--seconds", "180"), CultureInfo.InvariantCulture), seed);
             }
 
-            GetTree().Quit(0);
+            // --close-window : sortie par la demande de fermeture de la fenêtre, comme le joueur (sortie propre de GameManager).
+            if (Array.IndexOf(args, "--close-window") >= 0)
+                GetTree().Root.PropagateNotification((int)NotificationWMCloseRequest);
+            else
+                await GameExit.QuitAsync(GetTree());
         }
         catch (Exception exception)
         {

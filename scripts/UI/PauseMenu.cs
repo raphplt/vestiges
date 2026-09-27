@@ -132,7 +132,7 @@ public partial class PauseMenu : CanvasLayer
 	{
 		AudioManager.PlayUI("sfx_menu_confirmer");
 		AudioManager.Instance?.SaveSettings();
-		GetTree().Quit();
+		_ = GameExit.QuitAsync(GetTree());
 	}
 
 	private void BuildUI()

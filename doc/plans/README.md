@@ -59,6 +59,7 @@ Un seul lot d'implémentation ouvert à la fois. Un échec de lisibilité, de pe
 - Banc des chemins T3 fait : pas de coût mesurable.
 - [02 lot D](02-juiciness-score.md) et [04 C2](04-interfaces-et-hub.md) : une arme gagnée pendant la run a sa carte au bilan, avec « Voir dans la Collection », qui ouvre la Collection sur elle.
 - [04 lot C](04-interfaces-et-hub.md) : les colonnes de la pause défilent au stick droit et à Page haut/bas.
+- Crash à la fermeture du jeu lancé depuis Godot (préexistant) corrigé par une sortie propre ([10](10-terrain-et-tiles.md)).
 - [06](06-personnages-quetes-defis.md) : un profil neuf commence avec le Vagabond (décision du 23 septembre) ; les profils existants gardent leurs personnages.
 
 **Mise à jour du 27 septembre, soir (session locale) :** deux bugs signalés par Raphaël.

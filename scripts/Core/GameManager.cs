@@ -61,6 +61,14 @@ public partial class GameManager : Node
     public override void _Ready()
     {
         _eventBus = GetNode<EventBus>("/root/EventBus");
+        // La fermeture de la fenêtre passe par la sortie propre, comme le bouton Quitter.
+        GetTree().AutoAcceptQuit = false;
+    }
+
+    public override void _Notification(int what)
+    {
+        if (what == NotificationWMCloseRequest)
+            _ = GameExit.QuitAsync(GetTree());
     }
 
     public void ChangeState(GameState newState)

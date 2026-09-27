@@ -475,3 +475,10 @@ Chaque variante de tuile était une source du `TileSet` avec sa propre texture :
 
 - Chargement : tuiles et matériau du sol 458 → 350 à 370 ms (deux runs).
 - **Vérifié :** build 0 warning, smoke test, `test_movement`, `test_dev_mode`.
+
+### Crash à la fermeture du jeu — 27 septembre 2026
+
+Une capture sur deux environ finissait par `FATAL: Condition "csharp_lang && !csharp_lang->script_bindings.is_empty()"` et un core dump. Le crash était déjà présent avant cette session : reproduit au commit `c78e1dd6`.
+- **Cause** : quitter d'un coup laissait vivantes des milliers d'enveloppes C# (1 817 formes de collision de décors, des tweens, des styles), faute de passage du ramasse-miettes. Libérées après l'arrêt du runtime .NET, elles déclenchent ce contrôle des builds de debug, c'est-à-dire du jeu lancé depuis `godot-mono`.
+- **Correctif** : `GameExit.QuitAsync` libère la scène, fait passer le ramasse-miettes, puis quitte. Le bouton Quitter du camp et de la pause l'utilisent, ainsi que la fermeture de la fenêtre, désormais interceptée par `GameManager`.
+- **Vérifié** : avant, 1 crash sur 1 run de `--capture-junctions` ; après, aucune ligne de fuite et aucun crash sur 5 runs, dont 3 fermés par la vraie demande de fermeture de la fenêtre (`--close-window`).

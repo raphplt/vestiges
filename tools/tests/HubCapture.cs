@@ -48,7 +48,7 @@ public partial class HubCapture : Node
             int record = int.Parse(Argument(args, "--record", "0"), CultureInfo.InvariantCulture);
             if (record > 0)
                 await Record(record);
-            GetTree().Quit(0);
+            await Vestiges.Core.GameExit.QuitAsync(GetTree());
         }
         catch (Exception exception)
         {
