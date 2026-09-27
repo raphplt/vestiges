@@ -185,9 +185,8 @@ public partial class CrazyClock : Node2D
 
 		// Récompense
 		_eventBus.EmitSignal(EventBus.SignalName.XpGained, 30f);
-		_eventBus.EmitSignal(EventBus.SignalName.SouvenirDiscovered, "souvenir_les_signes", "Les Signes", "les_signes");
 
-		GD.Print("[CrazyClock] Horloge folle activée — +30 XP, Souvenir 'Les Signes'");
+		GD.Print("[CrazyClock] Horloge folle activée — +30 XP");
 	}
 
 	private static Vector2[] CreateCircle(float radius, int segments)

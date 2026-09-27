@@ -1,6 +1,6 @@
 """
 Génère les décors d'un biome avec le pipeline procédural commun (plan 08, lots P0–P6).
-Biomes disponibles : urban, urban_buildings, forest, fields, fields_farm.
+Biomes disponibles : urban, urban_buildings, forest, fields, fields_farm ; « chests » produit les coffres (plan 17, lot 0A), « landmarks » le Mémorial et la Faille (vague 3).
 
 Usage :
     python3 tools/generate_props.py urban                        # écrit assets/props/urban_ruins/
@@ -35,6 +35,8 @@ FOREST_TILES = ["assets/tiles/foret/tile_foret_sol_base.png", "assets/tiles/fore
 FIELDS_TILES = ["assets/tiles/champs/tile_champs_herbe_base.png", "assets/tiles/champs/tile_champs_herbe_v2.png",
                 "assets/tiles/champs/tile_champs_ble_base.png"]
 BIOMES = {
+    "chests": ("tools.sprites.props.chests", "assets/chests", FOREST_TILES),
+    "landmarks": ("tools.sprites.props.landmarks", "assets/landmarks", FOREST_TILES),
     "fields": ("tools.sprites.props.fields", "assets/props/wild_fields", FIELDS_TILES),
     "fields_farm": ("tools.sprites.props.farm", "assets/props/wild_fields", FIELDS_TILES),
     "forest": ("tools.sprites.props.forest", "assets/props/forest", FOREST_TILES),

@@ -10,8 +10,8 @@ namespace Vestiges.UI;
 
 /// <summary>
 /// Bilan de fin de run (plan 02 lot D, première passe). Trois zones sur un voile sombre : en tête le score final qui
-/// défile et, seulement ici, le record ; au centre le personnage, son build complet (armes et souvenirs avec niveau et
-/// rareté) et quelques faits ; en bas les gains, puis « Rejouer » et « Retour au camp ». Révélation en trois temps
+/// défile et, seulement ici, le record ; au centre le personnage, son build complet (armes et souvenirs avec leur
+/// niveau) et quelques faits ; en bas les gains, puis « Rejouer » et « Retour au camp ». Révélation en trois temps
 /// qu'une touche accélère ; les boutons ne s'activent qu'après un court délai, pour qu'un clic de combat ne relance pas
 /// la run par accident. Le monde pâlit d'abord, comme effacé. Le build est figé à la mort, avant que la run ne se défasse.
 /// </summary>
@@ -64,7 +64,7 @@ public partial class GameOverScreen : CanvasLayer
     {
         public string CharacterId;
         public string CharacterName;
-        public readonly List<(string Icon, int Level, Color Rarity)> Weapons = new();
+        public readonly List<(string Icon, int Level)> Weapons = new();
         public readonly List<(string Icon, int Level)> Passives = new();
     }
 
@@ -200,7 +200,7 @@ public partial class GameOverScreen : CanvasLayer
         BuildSnapshot build = new() { CharacterId = player.CharacterId };
         build.CharacterName = CharacterDataLoader.Get(player.CharacterId)?.Name ?? player.CharacterId;
         foreach (WeaponInstance weapon in player.WeaponSlots)
-            build.Weapons.Add((weapon.Sprite, weapon.Level, weapon.RarityColor));
+            build.Weapons.Add((weapon.Sprite, weapon.Level));
         foreach (ActivePassiveSouvenir passive in player.PassiveSlots)
             build.Passives.Add((PerkIconResolver.GetPassiveStatIconPath(passive.Data.Stat), passive.Level));
         return build;
@@ -244,7 +244,7 @@ public partial class GameOverScreen : CanvasLayer
         string detail = string.Format(Tr("UI_END_DETAIL"), _scoreManager.CombatScore.ToString("N0"),
             _scoreManager.SurvivalScore.ToString("N0"), _scoreManager.BonusScore.ToString("N0"),
             _scoreManager.ExplorationScore.ToString("N0"));
-        float multiplier = _scoreManager.CharacterMultiplier * _scoreManager.MutatorMultiplier;
+        float multiplier = _scoreManager.CharacterMultiplier * _scoreManager.MutatorMultiplier * _scoreManager.PerilMultiplier;
         return multiplier > 1.001f ? $"{detail}  ·  ×{multiplier:0.00}" : detail;
     }
 
@@ -282,7 +282,7 @@ public partial class GameOverScreen : CanvasLayer
         {
             bool filled = _build != null && i < _build.Weapons.Count;
             weapons.AddChild(filled
-                ? MakeSlot(_build.Weapons[i].Icon, _build.Weapons[i].Level, _build.Weapons[i].Rarity)
+                ? MakeSlot(_build.Weapons[i].Icon, _build.Weapons[i].Level, UITheme.GoldDim)
                 : MakeSlot(null, 0, UITheme.TextVeryDim));
         }
 
@@ -317,7 +317,7 @@ public partial class GameOverScreen : CanvasLayer
         return row;
     }
 
-    /// <summary>Case du build : icône, cadre à la couleur de la rareté, niveau en coin. Vide : cadre éteint.</summary>
+    /// <summary>Case du build : icône, cadre coloré selon la famille (armes, souvenirs), niveau en coin. Vide : cadre éteint.</summary>
     private Control MakeSlot(string iconPath, int level, Color frame)
     {
         PanelContainer slot = new() { CustomMinimumSize = new Vector2(IconSize + 24f, IconSize + 24f) };

@@ -1,5 +1,7 @@
 using Godot;
 using Vestiges.Core;
+using Vestiges.Combat;
+using Vestiges.Progression;
 using Vestiges.Spawn;
 
 namespace Vestiges.UI;
@@ -132,7 +134,8 @@ public partial class DebugActionPanel : CanvasLayer
         {
             if (_player != null && _player.EquippedWeapon != null)
             {
-                _player.UpgradeWeaponFragmentLevel(_player.EquippedWeapon.Id);
+                WeaponInstance weapon = _player.EquippedWeapon;
+                _player.UpgradeWeapon(weapon.Id, UpgradeRoller.RollWeaponGains(weapon, UpgradeRoller.Get("rare"), new RandomNumberGenerator()));
                 GD.Print($"[Debug] Upgraded weapon {_player.EquippedWeapon.Id}");
             }
         };

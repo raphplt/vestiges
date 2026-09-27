@@ -1,5 +1,6 @@
 using System.Threading.Tasks;
 using Godot;
+using Vestiges.Combat;
 using Vestiges.Infrastructure;
 
 namespace Vestiges.Tests;
@@ -15,15 +16,15 @@ public partial class RunObservation
     private async Task CaptureDeath(double playSeconds)
     {
         await Seconds(playSeconds);
-        // Build fourni pour juger la mise en page d'une run riche : quatre armes, niveaux et raretés variés, souvenirs.
-        _player.AddWeapon(WeaponDataLoader.Get("heavy_hammer"), "rare");
-        _player.AddWeapon(WeaponDataLoader.Get("makeshift_bow"), "epic");
+        // Build fourni pour juger la mise en page d'une run riche : quatre armes, niveaux variés, souvenirs.
+        _player.AddWeapon(WeaponDataLoader.Get("heavy_hammer"));
+        _player.AddWeapon(WeaponDataLoader.Get("makeshift_bow"));
         _player.AddWeapon(WeaponDataLoader.Get("chain_of_names"));
         for (int i = 0; i < 3; i++)
-            _player.UpgradeWeaponFragmentLevel("heavy_hammer");
+            _player.UpgradeWeapon("heavy_hammer", System.Array.Empty<StatGain>());
         foreach (string passive in PassiveIds)
-            _player.AddOrUpgradePassive(passive);
-        _player.AddOrUpgradePassive(PassiveIds[0]);
+            _player.AddOrUpgradePassive(passive, 1f, 1);
+        _player.AddOrUpgradePassive(PassiveIds[0], 1f, 1);
         _player.IsGodMode = false;
         _player.TakeDamage(100000f);
         double[] moments = { 1.0, 2.1, 2.6, 3.2, 4.5 };

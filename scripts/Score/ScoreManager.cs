@@ -32,11 +32,12 @@ public partial class ScoreManager : Node
     private int _bestScore;
     private float _scoreMultiplier = 1f;
     private float _mutatorMultiplier = 1f;
+    private float _perilMultiplier = 1f;
     private EventBus _eventBus;
     private bool _bossDefeated;
     private bool _endgameReached;
 
-    public int CurrentScore => (int)((_combatScore + SurvivalScore + BonusScore + _explorationScore) * _scoreMultiplier * _mutatorMultiplier);
+    public int CurrentScore => (int)((_combatScore + SurvivalScore + BonusScore + _explorationScore) * _scoreMultiplier * _mutatorMultiplier * _perilMultiplier);
     public int CombatScore => _combatScore;
     public int SurvivalScore
     {
@@ -58,7 +59,6 @@ public partial class ScoreManager : Node
     }
     public int ExplorationScore => _explorationScore;
     public int TotalKills => _totalKills;
-    public int NoDamageNights => 0;
     /// <summary>Meilleur score avant cette run : figé par SaveEndOfRun, qui écrit ensuite le nouveau record.</summary>
     public int BestScore => _endSettled ? _previousBest : _bestScore;
     /// <summary>Verdict figé en fin de run, avant la sauvegarde qui écraserait la comparaison (plan 02 lot A).</summary>
@@ -66,6 +66,7 @@ public partial class ScoreManager : Node
     public int VestigesEarned { get; private set; }
     public float CharacterMultiplier => _scoreMultiplier;
     public float MutatorMultiplier => _mutatorMultiplier;
+    public float PerilMultiplier => _perilMultiplier;
 
     private RunTracker _runTracker;
 
@@ -78,6 +79,7 @@ public partial class ScoreManager : Node
         _eventBus.PoiExplored += OnPoiExplored;
         _eventBus.ChestOpened += OnChestOpened;
         _eventBus.RunPhaseChanged += OnRunPhaseChanged;
+        _eventBus.PerilChanged += OnPerilChanged;
 
         LoadBestScore();
     }
@@ -108,7 +110,13 @@ public partial class ScoreManager : Node
             _eventBus.PoiExplored -= OnPoiExplored;
             _eventBus.ChestOpened -= OnChestOpened;
             _eventBus.RunPhaseChanged -= OnRunPhaseChanged;
+            _eventBus.PerilChanged -= OnPerilChanged;
         }
+    }
+
+    private void OnPerilChanged(int peril)
+    {
+        _perilMultiplier = PerilDataLoader.ScoreMultiplier(peril);
     }
 
     public void SetRunTracker(RunTracker runTracker)
@@ -187,7 +195,6 @@ public partial class ScoreManager : Node
             CharacterId = characterId,
             CharacterName = charData?.Name ?? characterId,
             Score = CurrentScore,
-            NightsSurvived = 0,
             CrisesSurvived = _runTracker?.CrisesSurvived ?? 0,
             TotalKills = _totalKills,
             Date = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm"),
@@ -195,7 +202,6 @@ public partial class ScoreManager : Node
             CombatScoreDetail = _combatScore,
             SurvivalScoreDetail = SurvivalScore,
             BonusScoreDetail = BonusScore,
-            BuildScoreDetail = 0,
             ExplorationScoreDetail = _explorationScore,
             Seed = gm.RunSeed,
             ActiveMutators = gm.ActiveMutators != null && gm.ActiveMutators.Count > 0
@@ -211,16 +217,12 @@ public partial class ScoreManager : Node
         if (_runTracker != null)
         {
             record.DeathCause = _runTracker.LastHitByEnemyId;
-            record.DeathNight = 0;
             record.DeathPhase = _runTracker.CurrentPhase;
             record.PerkIds = _runTracker.PerkIds.Count > 0
                 ? new System.Collections.Generic.List<string>(_runTracker.PerkIds)
                 : null;
             record.TotalDamageDealt = _runTracker.TotalDamageDealt;
             record.TotalDamageTaken = _runTracker.TotalDamageTaken;
-            record.ResourcesCollected = null;
-            record.StructuresPlaced = 0;
-            record.StructuresLost = 0;
             record.PoisExplored = _runTracker.PoisExplored;
             record.ChestsOpened = _runTracker.ChestsOpened;
             record.MaxLevel = _runTracker.MaxLevel;

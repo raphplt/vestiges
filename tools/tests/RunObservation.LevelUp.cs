@@ -1,55 +1,86 @@
+using System.Collections.Generic;
+using System.Reflection;
 using System.Threading.Tasks;
 using Godot;
 using Vestiges.Combat;
 using Vestiges.Core;
-using Vestiges.Spawn;
+using Vestiges.Infrastructure;
+using Vestiges.Progression;
 
 namespace Vestiges.Tests;
 
 /// <summary>
-/// --capture-levelup : temps fort de la montée de niveau (plan 02 J4). L'effet seul d'abord, au ralenti (×0,25) au milieu
-/// d'un cercle de créatures, pour voir onde, colonne et poussée ; puis une vraie montée de niveau par XP, pour l'entrée
-/// de l'écran de choix.
+/// --capture-levelup : l'écran de level-up montré une fois par rareté (Commun à Légendaire), avec une amélioration
+/// d'arme, une amélioration de passif et une arme nouvelle, puis une fois avec le focus sur les actions.
+/// --capture-pause : la pause après 20 s de combat, quatre armes et trois passifs portés.
 /// </summary>
 public partial class RunObservation
 {
-    private static readonly int[] LevelUpCaptureFrames = { 1, 3, 6, 10, 15 };
-
     private async Task CaptureLevelUp()
     {
         _world.GetNode("SpawnManager").ProcessMode = ProcessModeEnum.Disabled;
-        SpawnManager spawner = _world.GetNode<SpawnManager>("SpawnManager");
+        ProcessMode = ProcessModeEnum.Always;
         await Frames(90);
-        _player.AIInputOverride = Vector2.Zero;
-        Vector2 origin = _player.GlobalPosition;
-        for (int index = 0; index < 6; index++)
-            spawner.ForceSpawnEnemy("rodeur", origin + Vector2.FromAngle(index * Mathf.Tau / 6f) * (50f + index % 2 * 40f));
-        await Frames(2);
 
-        Engine.TimeScale = 0.25;
-        try
+        FragmentManager fragments = _world.GetNode<FragmentManager>("FragmentManager");
+        _player.AddOrUpgradePassive("flamme_interieure", 1f, 1);
+        _player.AddWeapon(WeaponDataLoader.Get("crossbow"));
+        List<FragmentOption> pending = (List<FragmentOption>)typeof(FragmentManager)
+            .GetField("_pendingChoices", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(fragments);
+        FieldInfo active = typeof(FragmentManager).GetField("_choosingActive", BindingFlags.NonPublic | BindingFlags.Instance);
+        EventBus eventBus = GetNode<EventBus>("/root/EventBus");
+        RandomNumberGenerator rng = new() { Seed = 3 };
+        Node screen = _world.GetNode("LevelUpScreen");
+
+        foreach (UpgradeRarity rarity in UpgradeRoller.Rarities)
         {
-            LevelUpFx.Play(_player, GetNode<GroupCache>("/root/GroupCache"));
-            int elapsed = 0;
-            for (int shot = 0; shot < LevelUpCaptureFrames.Length; shot++)
+            WeaponInstance crossbow = _player.WeaponSlots[_player.WeaponSlots.Count - 1];
+            pending.Clear();
+            pending.Add(new FragmentOption(crossbow.Id, "weapon_upgrade", crossbow.Name, 1)
+                .WithWeaponUpgrade(rarity, UpgradeRoller.RollWeaponGains(crossbow, rarity, rng)));
+            pending.Add(new FragmentOption("flamme_interieure", "passive_upgrade", PassiveSouvenirDataLoader.Get("flamme_interieure").Name, 1)
+                .WithPassiveUpgrade(rarity, rarity.PassiveGain, 1));
+            pending.Add(new FragmentOption("sling", "weapon_new", WeaponDataLoader.Get("sling").Name, 1));
+            active.SetValue(fragments, true);
+            eventBus.EmitSignal(EventBus.SignalName.FragmentChoicesReady, pending.Count);
+            await Frames(20);
+            SaveFrame($"levelup-{rarity.Rank}-{rarity.Id}");
+            if (rarity.Rank == UpgradeRoller.Rarities.Count - 1)
             {
-                await Frames(LevelUpCaptureFrames[shot] - elapsed);
-                elapsed = LevelUpCaptureFrames[shot];
-                SavePlayerCloseUp($"{_output}/levelup-fx-{shot}.png", new Vector2(160f, 110f));
+                screen.GetType().GetMethod("SetFocus", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(screen, new object[] { 4 });
+                await Frames(4);
+                SaveFrame("levelup-focus-actions");
             }
+            screen.GetType().GetMethod("Skip", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(screen, null);
+            await Frames(4);
         }
-        finally
-        {
-            Engine.TimeScale = 1.0;
-        }
+        GD.Print($"[RunObservation] Captures du level-up écrites dans {_output}");
+    }
 
-        // Vraie montée de niveau : l'écran de choix met en pause, son entrée se joue quand même.
-        GetNode<EventBus>("/root/EventBus").EmitSignal(EventBus.SignalName.XpGained, 10000f);
-        for (int shot = 0; shot < 4; shot++)
+    private async Task CapturePause()
+    {
+        ProcessMode = ProcessModeEnum.Always;
+        await Frames(90);
+        foreach (string weapon in new[] { "crossbow", "music_box", "nail_mace" })
+            _player.AddWeapon(WeaponDataLoader.Get(weapon));
+        foreach (string passive in new[] { "flamme_interieure", "memoire_vive", "resonance" })
+            _player.AddOrUpgradePassive(passive, 1f, 1);
+        WeaponInstance equipped = _player.EquippedWeapon;
+        _player.UpgradeWeapon(equipped.Id, UpgradeRoller.RollWeaponGains(equipped,
+            UpgradeRoller.Get("rare"), new RandomNumberGenerator()));
+        _player.AIInputOverride = new Vector2(0.6f, 0.2f);
+        double until = Time.GetTicksMsec() / 1000.0 + 20.0;
+        while (Time.GetTicksMsec() / 1000.0 < until)
         {
-            await Frames(shot == 0 ? 1 : 3);
-            Save($"levelup-screen-{shot}.png");
+            await Frames(1);
+            if (GetTree().Paused)
+                AutoPickLevelUp();
         }
-        GD.Print("[RunObservation] RESULT levelup captured");
+        _player.AIInputOverride = Vector2.Zero;
+        Node pause = _world.GetNode("PauseMenu");
+        pause.GetType().GetMethod("Pause", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public).Invoke(pause, null);
+        await Frames(10);
+        SaveFrame("pause");
+        GD.Print($"[RunObservation] Capture de la pause écrite dans {_output}");
     }
 }

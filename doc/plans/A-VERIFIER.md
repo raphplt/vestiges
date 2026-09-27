@@ -104,12 +104,16 @@ Fichier temporaire. Il liste ce qu'une session cloud a livré sans pouvoir le v�
 
 - [ ] **Recette** : place de l'entrée dans le menu (après « Partir »), lisibilité des silhouettes verrouillées, textes du panneau. Capture : `tools/capture_hub.sh <dossier> ui_down,ui_accept`.
 
-## Plan 07 lot C — Colosse de crise (choix provisoire)
-
-- [ ] **À arbitrer par Raphaël** : un Colosse à chaque crise dès la deuxième. Trop fréquent ? Difficulté d'un Colosse en pleine vague, coffre épique à chaque fois. Désactivation : `crisis_miniboss_from: 0` dans `data/scaling/spawn_flow.json`.
-
 ## Plan 03 lot C — Résurgence et accalmie
 
 - [ ] **Rythme** : oubli ×2,5 pendant une crise de 70 s. La fin de run arrive-t-elle trop vite ? Le late game se déclenche à 68 % d'oubli global.
 - [ ] **Coffre d'accalmie** : trouvé naturellement devant soi, ou manqué faute de repère ?
 
+## Fusion de main (plans 17 et 18) — 27 septembre
+
+Apports de la nuit reportés sur les versions de main ; build, smoke test et régressions (mouvement avec intégration, capacités ennemies, mode dev, armes) verts, rien regardé en rendu.
+- [ ] **Coffre qui frémit** (J6) : désormais sur le sprite de main, qui pivote sur sa base au sol. Amplitude toujours lisible ? Capture : `--capture-micro`.
+- [ ] **Entrée de l'écran de level-up** (J4) : le zoom d'entrée est posé sur le nouvel écran à cartes de main. Pivot au centre du panneau correct ? Captures : `--capture-levelup-fx` (effet au ralenti, ancien `--capture-levelup`) et `--capture-levelup` de main.
+- [ ] **Bilan de fin de run** (lot D) : les armes n'ont plus de rareté, leurs cases prennent un cadre or neutre ; le multiplicateur inclut le Péril. Capture : `--capture-death`.
+- [ ] **O5** : c'est maintenant le réveil d'un Mémorial qui rappelle sa zone (vérifié par le banc, pas en jeu).
+- [ ] **Repères urbains** : capture renommée `RunObservation.UrbanLandmarks.cs`, drapeau `--capture-landmarks` inchangé.

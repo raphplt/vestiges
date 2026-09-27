@@ -3,14 +3,14 @@ using Godot;
 using Vestiges.Combat;
 using Vestiges.Core;
 using Vestiges.Infrastructure;
+using Vestiges.World;
 
 namespace Vestiges.Progression;
 
 /// <summary>
-/// Gère le système de Fragments de Mémoire au level-up.
-/// Remplace PerkManager pour les choix de level-up.
-/// Propose un mélange d'armes et de Souvenirs Passifs (3 choix).
-/// Gère la détection de fusions (arme max + passif max → Vestige).
+/// Fragments de mémoire du level-up : trois choix entre armes et Souvenirs passifs, nouveaux ou améliorés.
+/// Chaque amélioration tire sa rareté (plan 17 lot 1B) et ses gains à l'offre, pour que la carte montre
+/// exactement ce qu'elle donne.
 /// </summary>
 public partial class FragmentManager : Node
 {
@@ -21,6 +21,7 @@ public partial class FragmentManager : Node
 	private EventBus _eventBus;
 	private Player _player;
 	private int _currentLevel = 1;
+	private int _peril;
 
 	// Level-up queue (multi-level-up support)
 	private readonly Queue<int> _levelUpQueue = new();
@@ -34,8 +35,7 @@ public partial class FragmentManager : Node
 	public int RerollsRemaining => _rerollsRemaining;
 	public int BanishesRemaining => _banishesRemaining;
 
-	// Pending fusion (offered at next chest)
-	private FusionData _pendingFusion;
+	private readonly RandomNumberGenerator _rng = new();
 
 	// Choix en attente — l'UI lit PendingChoices après le signal
 	private readonly List<FragmentOption> _pendingChoices = new();
@@ -49,11 +49,10 @@ public partial class FragmentManager : Node
 	public override void _Ready()
 	{
 		PassiveSouvenirDataLoader.Load();
-		FusionDataLoader.Load();
 
 		_eventBus = GetNode<EventBus>("/root/EventBus");
 		_eventBus.LevelUp += OnLevelUp;
-		_eventBus.ChestOpened += OnChestOpened;
+		_eventBus.PerilChanged += OnPerilChanged;
 	}
 
 	public override void _ExitTree()
@@ -61,8 +60,13 @@ public partial class FragmentManager : Node
 		if (_eventBus != null)
 		{
 			_eventBus.LevelUp -= OnLevelUp;
-			_eventBus.ChestOpened -= OnChestOpened;
+			_eventBus.PerilChanged -= OnPerilChanged;
 		}
+	}
+
+	private void OnPerilChanged(int peril)
+	{
+		_peril = peril;
 	}
 
 	private void OnLevelUp(int newLevel)
@@ -114,7 +118,8 @@ public partial class FragmentManager : Node
 		}
 
 		_pendingChoices.Clear();
-		_pendingChoices.AddRange(PickRandom(options, FragmentsPerChoice));
+		foreach (FragmentOption option in PickRandom(options, FragmentsPerChoice))
+			_pendingChoices.Add(RollUpgrade(option));
 		_choosingActive = true;
 
 		GD.Print($"[FragmentManager] Level {level} (maxTier={GetMaxFragmentTier(level)}): offering {_pendingChoices.Count} fragments (pool had {options.Count})");
@@ -166,13 +171,6 @@ public partial class FragmentManager : Node
 		return baseTier;
 	}
 
-	private static string TierToRarity(int tier)
-	{
-		if (tier >= 4) return "rare";
-		if (tier >= 3) return "uncommon";
-		return "common";
-	}
-
 	private List<FragmentOption> BuildFragmentPool()
 	{
 		List<FragmentOption> pool = new();
@@ -200,18 +198,19 @@ public partial class FragmentManager : Node
 				if (!MetaSaveManager.IsWeaponUnlocked(weapon))
 					continue;
 
-				pool.Add(new FragmentOption(weapon.Id, "weapon_new", weapon.Name, weapon.Tier, TierToRarity(weapon.Tier)));
+				pool.Add(new FragmentOption(weapon.Id, "weapon_new", weapon.Name, weapon.Tier));
 			}
 		}
 
 		// Upgrades d'armes existantes
 		foreach (WeaponInstance w in _player.WeaponSlots)
 		{
+			// Bannir une arme ou un passif l'écarte de la run entière, améliorations comprises.
+			if (_banishedIds.Contains(w.Id))
+				continue;
 			if (!_player.IsWeaponFragmentMaxed(w.Id))
 			{
-				int level = _player.GetWeaponFragmentLevel(w.Id);
-				string rarity = TierToRarity(w.Tier);
-				pool.Add(new FragmentOption(w.Id, "weapon_upgrade", w.Name, level + 1, rarity));
+				pool.Add(new FragmentOption(w.Id, "weapon_upgrade", w.Name, 1));
 			}
 		}
 
@@ -235,10 +234,11 @@ public partial class FragmentManager : Node
 		// Upgrades de passifs existants
 		foreach (ActivePassiveSouvenir p in _player.PassiveSlots)
 		{
+			if (_banishedIds.Contains(p.Id))
+				continue;
 			if (!p.IsMaxLevel)
 			{
-				string rarity = p.Level + 1 >= p.Data.MaxLevel ? "uncommon" : "common";
-				pool.Add(new FragmentOption(p.Id, "passive_upgrade", p.Data.Name, p.Level + 1, rarity));
+				pool.Add(new FragmentOption(p.Id, "passive_upgrade", p.Data.Name, 1));
 			}
 		}
 
@@ -263,6 +263,13 @@ public partial class FragmentManager : Node
 			return;
 
 		_banishedIds.Add(id);
+		// Un bannissement qui viderait l'offre laisserait l'écran ouvert sans carte : il est refusé et non consommé.
+		if (BuildFragmentPool().Count == 0)
+		{
+			_banishedIds.Remove(id);
+			GD.Print($"[FragmentManager] Banish of '{id}' refused: nothing left to offer");
+			return;
+		}
 		_banishesRemaining--;
 		GD.Print($"[FragmentManager] Banished '{id}' ({_banishesRemaining} remaining, total banished: {_banishedIds.Count})");
 		OfferFragments(_currentLevel);
@@ -271,134 +278,50 @@ public partial class FragmentManager : Node
 	public void AddRerolls(int count) => _rerollsRemaining += count;
 	public void AddBanishes(int count) => _banishesRemaining += count;
 
-	public void SelectFragment(string fragmentId, string fragmentType)
+	public void SelectFragment(FragmentOption option)
 	{
 		CachePlayer();
 		if (_player == null)
 			return;
 
-		bool success = false;
-
-		switch (fragmentType)
+		string fragmentId = option.Id;
+		string fragmentType = option.Type;
+		if (!option.ApplyTo(_player))
 		{
-			case "weapon_new":
-				WeaponData weaponData = WeaponDataLoader.Get(fragmentId);
-				if (weaponData != null)
-					success = _player.AddWeapon(weaponData);
-				break;
-			case "weapon_upgrade":
-				success = _player.UpgradeWeaponFragmentLevel(fragmentId);
-				break;
-			case "passive_new":
-			case "passive_upgrade":
-				success = _player.AddOrUpgradePassive(fragmentId);
-				break;
-		}
-
-		if (success)
-		{
-			_pendingChoices.Clear();
-			_eventBus.EmitSignal(EventBus.SignalName.FragmentChosen, fragmentId, fragmentType);
-			GD.Print($"[FragmentManager] Fragment selected: {fragmentId} ({fragmentType})");
-			CheckFusions();
-			ProcessNextInQueue();
-		}
-	}
-
-	private void CheckFusions()
-	{
-		if (_pendingFusion != null)
+			// L'offre a vieilli pendant l'écran (arme ramassée, emplacements pleins) : sans nouvelle offre,
+			// l'écran fermé laissait le jeu en pause pour de bon.
+			GD.PushWarning($"[FragmentManager] Choix devenu impossible ({fragmentId}, {fragmentType}) : nouvelle offre");
+			OfferFragments(_currentLevel);
 			return;
-
-		List<string> maxedWeapons = _player.GetMaxedWeaponIds();
-		List<string> maxedPassives = _player.GetMaxedPassiveIds();
-
-		if (maxedWeapons.Count == 0 || maxedPassives.Count == 0)
-			return;
-
-		List<FusionData> available = FusionDataLoader.FindAvailableFusions(maxedWeapons, maxedPassives);
-		if (available.Count == 0)
-			return;
-
-		_pendingFusion = available[0];
-		_eventBus.EmitSignal(EventBus.SignalName.FusionAvailable, _pendingFusion.Id, _pendingFusion.WeaponId, _pendingFusion.PassiveId);
-		GD.Print($"[FragmentManager] Fusion available: {_pendingFusion.Name} ({_pendingFusion.WeaponId} + {_pendingFusion.PassiveId})");
-	}
-
-	private void OnChestOpened(string chestId, string rarity, Vector2 position)
-	{
-		if (_pendingFusion == null)
-			return;
-		GD.Print($"[FragmentManager] Offering fusion at chest: {_pendingFusion.Name}");
-	}
-
-	public bool ApplyFusion(string fusionId)
-	{
-		CachePlayer();
-		FusionData fusion = FusionDataLoader.Get(fusionId);
-		if (fusion == null || _player == null)
-			return false;
-
-		int weaponSlotIndex = -1;
-		for (int i = 0; i < _player.WeaponSlots.Count; i++)
-		{
-			if (_player.WeaponSlots[i].Id == fusion.WeaponId)
-			{
-				weaponSlotIndex = i;
-				break;
-			}
 		}
 
-		if (weaponSlotIndex < 0)
-			return false;
-
-		_player.RemoveWeapon(weaponSlotIndex);
-		_player.RemovePassive(fusion.PassiveId);
-		WeaponData vestige = CreateVestigeWeapon(fusion);
-		_player.AddWeapon(vestige);
-		_pendingFusion = null;
-
-		_eventBus.EmitSignal(EventBus.SignalName.FusionCompleted, fusionId);
-		GD.Print($"[FragmentManager] Fusion completed: {fusion.Name}");
-		return true;
+		_pendingChoices.Clear();
+		_eventBus.EmitSignal(EventBus.SignalName.FragmentChosen, fragmentId, fragmentType);
+		GD.Print($"[FragmentManager] Fragment selected: {fragmentId} ({fragmentType}, {option.Rarity?.Id ?? "nouveau"})");
+		ProcessNextInQueue();
 	}
 
-	public void DeclineFusion()
+	/// <summary>Passer le choix : le niveau est acquis, aucune carte n'est prise.</summary>
+	public void SkipChoice()
 	{
-		if (_pendingFusion != null)
-		{
-			GD.Print($"[FragmentManager] Fusion declined: {_pendingFusion.Name}");
-			_pendingFusion = null;
-		}
+		_pendingChoices.Clear();
+		ProcessNextInQueue();
 	}
 
-	public bool HasPendingFusion => _pendingFusion != null;
-	public FusionData PendingFusion => _pendingFusion;
-
-	private static WeaponData CreateVestigeWeapon(FusionData fusion)
+	/// <summary>
+	/// Rareté et gains d'une amélioration, tirés à l'offre : la Chance du joueur, l'oubli de la zone où il se
+	/// tient et le Péril font monter la rareté (plan 17 §4.4). Les nouveautés n'ont pas de rareté.
+	/// </summary>
+	private FragmentOption RollUpgrade(FragmentOption option)
 	{
-		WeaponData vestige = new()
-		{
-			Id = fusion.Id,
-			Name = fusion.Name,
-			Description = fusion.Description,
-			Tier = 5,
-			Type = fusion.Type ?? "melee",
-			DamageType = fusion.DamageType ?? "physical",
-			AttackPattern = fusion.AttackPattern ?? "arc",
-			Stats = new Dictionary<string, float>(fusion.Stats)
-		};
+		if (option.Type is not ("weapon_upgrade" or "passive_upgrade"))
+			return option;
 
-		if (!string.IsNullOrEmpty(fusion.SpecialEffectType))
-		{
-			vestige.SpecialEffect = new WeaponSpecialEffect
-			{
-				Type = fusion.SpecialEffectType,
-				Params = new Dictionary<string, float>(fusion.SpecialEffectParams)
-			};
-		}
+		ErasureManager.ErasureZonePhase phase = GetTree().CurrentScene?.GetNodeOrNull<ErasureManager>("ErasureManager")
+			?.GetZonePhaseAt(_player.GlobalPosition) ?? ErasureManager.ErasureZonePhase.Anchored;
+		UpgradeRarity rarity = UpgradeRoller.RollRarity(UpgradeRoller.BumpSteps(_player.LuckBonus, phase, _peril), _rng);
 
-		return vestige;
+		return UpgradeRoller.RollGains(option, _player, rarity, _rng);
 	}
 
 	private List<FragmentOption> PickRandom(List<FragmentOption> pool, int count)
@@ -490,16 +413,46 @@ public class FragmentOption
 	public string Id { get; }
 	public string Type { get; }
 	public string DisplayName { get; }
+	/// <summary>Tier de l'arme nouvelle (pondère l'offre), 1 sinon.</summary>
 	public int SortWeight { get; }
-	/// <summary>"common", "uncommon", ou "rare" — déterminé par le tier.</summary>
-	public string Rarity { get; }
+	/// <summary>Rareté de l'amélioration ; null pour une arme ou un passif nouveaux.</summary>
+	public UpgradeRarity Rarity { get; private init; }
+	/// <summary>Gains d'une amélioration d'arme, tirés à l'offre.</summary>
+	public IReadOnlyList<StatGain> WeaponGains { get; private init; } = System.Array.Empty<StatGain>();
+	/// <summary>Amélioration de passif : multiple de l'effet d'un niveau, et niveaux gagnés.</summary>
+	public float PassiveGain { get; private init; } = 1f;
+	public int PassiveLevels { get; private init; } = 1;
 
-	public FragmentOption(string id, string type, string displayName, int sortWeight, string rarity = "common")
+	public FragmentOption(string id, string type, string displayName, int sortWeight)
 	{
 		Id = id;
 		Type = type;
 		DisplayName = displayName;
 		SortWeight = sortWeight;
-		Rarity = rarity;
+	}
+
+	public FragmentOption WithWeaponUpgrade(UpgradeRarity rarity, IReadOnlyList<StatGain> gains) =>
+		new(Id, Type, DisplayName, SortWeight) { Rarity = rarity, WeaponGains = gains };
+
+	public FragmentOption WithPassiveUpgrade(UpgradeRarity rarity, float gain, int levels) =>
+		new(Id, Type, DisplayName, SortWeight) { Rarity = rarity, PassiveGain = gain, PassiveLevels = levels };
+
+	/// <summary>Donne le fragment au joueur ; faux si l'offre a vieilli (arme déjà là, emplacements pleins, maximum).</summary>
+	public bool ApplyTo(Player player)
+	{
+		switch (Type)
+		{
+			case "weapon_new":
+				WeaponData weaponData = WeaponDataLoader.Get(Id);
+				return weaponData != null && player.AddWeapon(weaponData);
+			case "weapon_upgrade":
+				return player.UpgradeWeapon(Id, WeaponGains);
+			case "passive_new":
+				return player.AddOrUpgradePassive(Id, 1f, 1);
+			case "passive_upgrade":
+				return player.AddOrUpgradePassive(Id, PassiveGain, PassiveLevels);
+			default:
+				return false;
+		}
 	}
 }

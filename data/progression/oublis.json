@@ -1,0 +1,13 @@
+{
+	"_comment": "Oublis des Failles (plan 17 lot 3C) : le prix d'une amélioration arrachée à l'Effacement. Malus durable de stat, jusqu'à ce qu'un Mémorial le lève. multiplicative : ×(1 + amount), amount négatif ; additive : + amount. Le gain de rareté ne s'applique pas : un Oubli pèse toujours le même poids.",
+	"oublis": [
+		{ "id": "oubli_heavy_limbs", "name_key": "OUBLI_HEAVY_LIMBS", "stat": "speed", "modifier_type": "multiplicative", "amount": -0.08 },
+		{ "id": "oubli_thin_blood", "name_key": "OUBLI_THIN_BLOOD", "stat": "max_hp", "modifier_type": "multiplicative", "amount": -0.12 },
+		{ "id": "oubli_blunt_edge", "name_key": "OUBLI_BLUNT_EDGE", "stat": "damage", "modifier_type": "multiplicative", "amount": -0.08 },
+		{ "id": "oubli_lost_rhythm", "name_key": "OUBLI_LOST_RHYTHM", "stat": "attack_speed", "modifier_type": "multiplicative", "amount": -0.08 },
+		{ "id": "oubli_open_wounds", "name_key": "OUBLI_OPEN_WOUNDS", "stat": "armor", "modifier_type": "additive", "amount": -3 },
+		{ "id": "oubli_narrow_gesture", "name_key": "OUBLI_NARROW_GESTURE", "stat": "aoe_radius", "modifier_type": "multiplicative", "amount": -0.1 },
+		{ "id": "oubli_bad_star", "name_key": "OUBLI_BAD_STAR", "stat": "luck", "modifier_type": "additive", "amount": -0.05 },
+		{ "id": "oubli_dull_senses", "name_key": "OUBLI_DULL_SENSES", "stat": "xp_magnet_radius", "modifier_type": "multiplicative", "amount": -0.2 }
+	]
+}

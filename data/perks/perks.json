@@ -359,113 +359,6 @@
         }
     },
     "_comment_survival",
-    {
-        "id": "architect",
-        "name": "Architecte",
-        "description": "+25% HP des structures",
-        "icon": "assets/ui/icons/ui_icon_perk_architect.png",
-        "category": "survival",
-        "rarity": "uncommon",
-        "stat": "structure_hp",
-        "modifier": 1.25,
-        "modifier_type": "multiplicative",
-        "max_stacks": 6,
-        "tags": [
-            "base"
-        ]
-    },
-    {
-        "id": "salvager",
-        "name": "Récupérateur",
-        "description": "Les structures détruites rendent 75% des matériaux (au lieu de 50%)",
-        "icon": "assets/ui/icons/ui_icon_perk_salvager.png",
-        "category": "survival",
-        "rarity": "uncommon",
-        "max_stacks": 1,
-        "tags": [
-            "base",
-            "economy"
-        ],
-        "effect": {
-            "trigger": "passive",
-            "action": "modify_stat",
-            "stat": "salvage_return",
-            "modifier": 0.75,
-            "modifier_type": "override"
-        }
-    },
-    {
-        "id": "torch_bearer",
-        "name": "Torche Vivante",
-        "description": "Le joueur émet de la lumière, renforçant la réalité et repoussant les créatures proches",
-        "icon": "assets/ui/icons/ui_icon_perk_torch_bearer.png",
-        "category": "survival",
-        "rarity": "uncommon",
-        "max_stacks": 3,
-        "tags": [
-            "defense",
-            "light"
-        ],
-        "effect": {
-            "trigger": "passive",
-            "action": "emit_light",
-            "base_radius": 60,
-            "radius_per_stack": 20,
-            "pushback_force": 30
-        }
-    },
-    {
-        "id": "quick_fix",
-        "name": "Réparation Express",
-        "description": "Répare les structures 40% plus vite",
-        "icon": "assets/ui/icons/ui_icon_perk_quick_fix.png",
-        "category": "survival",
-        "rarity": "common",
-        "stat": "repair_speed",
-        "modifier": 1.4,
-        "modifier_type": "multiplicative",
-        "max_stacks": 4,
-        "tags": [
-            "base"
-        ]
-    },
-    {
-        "id": "harvest_bounty",
-        "name": "Récolte Abondante",
-        "description": "+1 ressource par récolte",
-        "icon": "assets/ui/icons/ui_icon_perk_harvest_bounty.png",
-        "category": "survival",
-        "rarity": "uncommon",
-        "max_stacks": 3,
-        "tags": [
-            "economy"
-        ],
-        "effect": {
-            "trigger": "on_harvest",
-            "action": "bonus_resource",
-            "value": 1
-        }
-    },
-    {
-        "id": "night_vision",
-        "name": "Vision Nocturne",
-        "description": "+30% rayon de vision la nuit",
-        "icon": "assets/ui/icons/ui_icon_perk_night_vision.png",
-        "category": "survival",
-        "rarity": "common",
-        "max_stacks": 3,
-        "tags": [
-            "utility"
-        ],
-        "effect": {
-            "trigger": "passive_conditional",
-            "condition": "is_night",
-            "action": "modify_stat",
-            "stat": "vision_radius",
-            "modifier": 1.3,
-            "modifier_type": "multiplicative"
-        }
-    },
     "_comment_essence",
     {
         "id": "channeling",
@@ -517,25 +410,6 @@
             "backfire_damage_percent": 0.15
         }
     },
-    {
-        "id": "essence_regen",
-        "name": "Méditation",
-        "description": "+0.3 Essence/sec de jour",
-        "icon": "assets/ui/icons/ui_icon_perk_essence_regen.png",
-        "category": "essence",
-        "rarity": "uncommon",
-        "max_stacks": 5,
-        "tags": [
-            "essence"
-        ],
-        "effect": {
-            "trigger": "passive_conditional",
-            "condition": "is_day",
-            "action": "regen_resource",
-            "resource": "essence",
-            "value": 0.3
-        }
-    },
     "_comment_rare",
     {
         "id": "second_wind",
@@ -555,43 +429,6 @@
             "action": "revive",
             "heal_percent": 0.5,
             "uses": 1
-        }
-    },
-    {
-        "id": "time_master",
-        "name": "Maître du Temps",
-        "description": "Le jour dure 20% plus longtemps",
-        "icon": "assets/ui/icons/ui_icon_perk_time_master.png",
-        "category": "rare",
-        "rarity": "rare",
-        "max_stacks": 1,
-        "tags": [
-            "utility"
-        ],
-        "weight": 0.3,
-        "effect": {
-            "trigger": "passive",
-            "action": "modify_stat",
-            "stat": "day_duration",
-            "modifier": 1.2,
-            "modifier_type": "multiplicative"
-        }
-    },
-    {
-        "id": "awakened_sight",
-        "name": "Éveillé",
-        "description": "Voir les créatures nocturnes à travers les murs et le fog",
-        "icon": "assets/ui/icons/ui_icon_perk_awakened_sight.png",
-        "category": "rare",
-        "rarity": "rare",
-        "max_stacks": 1,
-        "tags": [
-            "utility"
-        ],
-        "weight": 0.3,
-        "effect": {
-            "trigger": "passive",
-            "action": "reveal_enemies_in_fog"
         }
     },
     {
@@ -619,95 +456,6 @@
                 "modifier_type": "multiplicative"
             }
         ]
-    },
-    {
-        "id": "last_stand",
-        "name": "Dernier Rempart",
-        "description": "+5% dégâts par structure détruite cette nuit (reset à l'aube)",
-        "icon": "assets/ui/icons/ui_icon_perk_last_stand.png",
-        "category": "rare",
-        "rarity": "rare",
-        "max_stacks": 1,
-        "tags": [
-            "damage",
-            "base",
-            "clutch"
-        ],
-        "weight": 0.4,
-        "effect": {
-            "trigger": "on_structure_destroyed",
-            "action": "stack_buff",
-            "stat": "damage",
-            "modifier_per_stack": 1.05,
-            "reset_on": "dawn"
-        }
-    },
-    {
-        "id": "memory_anchor",
-        "name": "Ancrage Mémoriel",
-        "description": "Le Foyer gagne +20% de rayon. Les créatures dans le rayon subissent 2 dég/sec",
-        "icon": "assets/ui/icons/ui_icon_perk_memory_anchor.png",
-        "category": "rare",
-        "rarity": "rare",
-        "max_stacks": 1,
-        "tags": [
-            "base",
-            "light",
-            "damage"
-        ],
-        "weight": 0.3,
-        "effect": {
-            "trigger": "passive",
-            "actions": [
-                {
-                    "action": "modify_stat",
-                    "stat": "foyer_radius",
-                    "modifier": 1.2,
-                    "modifier_type": "multiplicative"
-                },
-                {
-                    "action": "foyer_aura_damage",
-                    "dps": 2
-                }
-            ]
-        }
-    },
-    "_comment_difficulty",
-    {
-        "id": "appel_du_vide",
-        "name": "Appel du Vide",
-        "description": "Invoque plus d'ennemis, plus forts, mais plus d'XP.",
-        "icon": "assets/ui/icons/ui_icon_perk_appel_du_vide.png",
-        "category": "difficulty",
-        "rarity": "rare",
-        "max_stacks": 3,
-        "is_toggleable": true,
-        "tags": [
-            "difficulty",
-            "risk"
-        ],
-        "weight": 0.5,
-        "effect": {
-            "trigger": "passive",
-            "action": "difficulty_toggle",
-            "per_stack": {
-                "enemy_count_mult": [
-                    1.3,
-                    1.6,
-                    2.0
-                ],
-                "enemy_hp_mult": [
-                    1.2,
-                    1.5,
-                    2.0
-                ],
-                "xp_mult": [
-                    1.25,
-                    1.6,
-                    2.2
-                ]
-            }
-        }
     },
     "_comment_synergies",
     {
@@ -762,22 +510,6 @@
         "notification": "⚡ TEMPÊTE D'ESSENCE activée"
     },
     {
-        "id": "synergy_fortress",
-        "name": "Forteresse",
-        "type": "synergy",
-        "description": "Les structures dans le rayon du Foyer se réparent lentement (1 HP/sec)",
-        "required_perks": [
-            "architect",
-            "memory_anchor"
-        ],
-        "effect": {
-            "trigger": "passive",
-            "action": "structures_regen_in_foyer",
-            "regen_rate": 1.0
-        },
-        "notification": "⚡ FORTERESSE activée"
-    },
-    {
         "id": "synergy_glass_berserker",
         "name": "Kamikaze",
         "type": "synergy",
@@ -809,23 +541,6 @@
             ]
         },
         "notification": "💀 KAMIKAZE activé"
-    },
-    {
-        "id": "synergy_torchfire",
-        "name": "Feu Intérieur",
-        "type": "synergy",
-        "description": "L'aura de Torche Vivante enflamme les créatures qui entrent dedans",
-        "required_perks": [
-            "torch_bearer",
-            "ignite"
-        ],
-        "effect": {
-            "trigger": "on_enter_light_aura",
-            "action": "apply_dot",
-            "dot_damage": 3,
-            "dot_duration": 3.0
-        },
-        "notification": "⚡ FEU INTÉRIEUR activé"
     },
     {
         "id": "synergy_ricochet_crit",

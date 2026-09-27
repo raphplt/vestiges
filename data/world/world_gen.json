@@ -79,6 +79,8 @@
         }
     ],
     "poi_min_distance_between": 18,
+    "pois_enabled": false,
+    "lore_elements_enabled": false,
     "fog_reveal_radius": 25,
     "fog_initial_clear_radius": 25
 }

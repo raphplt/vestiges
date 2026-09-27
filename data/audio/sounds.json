@@ -1,0 +1,467 @@
+{
+  "mus_jour_exploration": {
+    "path": "res://assets/audio/musique/mus_jour_exploration.ogg",
+    "volume_db": 0,
+    "min_interval_ms": 0
+  },
+  "mus_jour_combat": {
+    "path": "res://assets/audio/musique/mus_jour_combat.ogg",
+    "volume_db": 0,
+    "min_interval_ms": 0
+  },
+  "mus_crepuscule": {
+    "path": "res://assets/audio/musique/mus_crepuscule.ogg",
+    "volume_db": 0,
+    "min_interval_ms": 0
+  },
+  "mus_nuit_vagues": {
+    "path": "res://assets/audio/musique/mus_nuit_vagues.ogg",
+    "volume_db": 0,
+    "min_interval_ms": 0
+  },
+  "mus_nuit_chaos": {
+    "path": "res://assets/audio/musique/mus_nuit_chaos.ogg",
+    "volume_db": 0,
+    "min_interval_ms": 0
+  },
+  "mus_hub": {
+    "path": "res://assets/audio/musique/mus_hub.ogg",
+    "volume_db": 0,
+    "min_interval_ms": 0
+  },
+  "mus_mort": {
+    "path": "res://assets/audio/musique/mus_mort.ogg",
+    "volume_db": 0,
+    "min_interval_ms": 0
+  },
+  "sfx_pas_herbe": {
+    "path": "res://assets/audio/sfx/selected/step_grass.wav",
+    "volume_db": 0,
+    "min_interval_ms": 120,
+    "effect_id": "step_grass"
+  },
+  "sfx_pas_eau": {
+    "path": "res://assets/audio/sfx/joueur/pas/sfx_pas_eau.wav",
+    "volume_db": 0,
+    "min_interval_ms": 0
+  },
+  "sfx_pas_beton": {
+    "path": "res://assets/audio/sfx/selected/step_concrete.wav",
+    "volume_db": 0,
+    "min_interval_ms": 120,
+    "effect_id": "step_concrete"
+  },
+  "sfx_pas_bois": {
+    "path": "res://assets/audio/sfx/selected/step_wood.wav",
+    "volume_db": 0,
+    "min_interval_ms": 120,
+    "effect_id": "step_wood"
+  },
+  "sfx_pas_gravier": {
+    "path": "res://assets/audio/sfx/selected/step_gravel.wav",
+    "volume_db": 0,
+    "min_interval_ms": 120,
+    "effect_id": "step_gravel"
+  },
+  "sfx_perk_choix": {
+    "path": "res://assets/audio/sfx/selected/perk_select.wav",
+    "volume_db": 0,
+    "min_interval_ms": 120,
+    "effect_id": "perk_select"
+  },
+  "sfx_souvenir_trouve": {
+    "path": "res://assets/audio/sfx/gameplay/sfx_souvenir_trouve.wav",
+    "volume_db": 0,
+    "min_interval_ms": 0
+  },
+  "sfx_level_up": {
+    "path": "res://assets/audio/sfx/selected/level_up.wav",
+    "volume_db": 0,
+    "min_interval_ms": 120,
+    "effect_id": "level_up"
+  },
+  "sfx_level_up_loop": {
+    "path": "res://assets/audio/sfx/gameplay/level_up_loop.wav",
+    "volume_db": 0,
+    "min_interval_ms": 0
+  },
+  "sfx_level_up_after": {
+    "path": "res://assets/audio/sfx/gameplay/level_up_after.wav",
+    "volume_db": -3,
+    "min_interval_ms": 0
+  },
+  "sfx_chest_opening": {
+    "path": "res://assets/audio/sfx/selected/chest_open.wav",
+    "volume_db": 0,
+    "min_interval_ms": 120,
+    "effect_id": "chest_open"
+  },
+  "xp_gain": {
+    "path": "res://assets/audio/sfx/gameplay/xp_gain.wav",
+    "volume_db": 0,
+    "min_interval_ms": 60
+  },
+  "sfx_perk_refuse": {
+    "path": "res://assets/audio/sfx/selected/perk_refuse.wav",
+    "volume_db": 0,
+    "min_interval_ms": 120,
+    "effect_id": "perk_refuse"
+  },
+  "sfx_artefact_trouve": {
+    "path": "res://assets/audio/sfx/gameplay/sfx_artefact_trouve.wav",
+    "volume_db": 0,
+    "min_interval_ms": 0
+  },
+  "sfx_danger_building": {
+    "path": "res://assets/audio/sfx/selected/danger_warning.wav",
+    "volume_db": 0,
+    "min_interval_ms": 120,
+    "effect_id": "danger_warning"
+  },
+  "sfx_sante_basse": {
+    "path": "res://assets/audio/sfx/gameplay/sfx_sante_basse.wav",
+    "volume_db": 0,
+    "min_interval_ms": 0
+  },
+  "sfx_monde_dissolution": {
+    "path": "res://assets/audio/sfx/selected/dissolution.wav",
+    "volume_db": 0,
+    "min_interval_ms": 200,
+    "effect_id": "dissolution"
+  },
+  "sfx_hit_ennemi": {
+    "path": "res://assets/audio/sfx/selected/enemy_hit.wav",
+    "volume_db": 0,
+    "min_interval_ms": 80,
+    "effect_id": "enemy_hit"
+  },
+  "sfx_hit_critique": {
+    "path": "res://assets/audio/sfx/selected/critical_hit.wav",
+    "volume_db": 0,
+    "min_interval_ms": 80,
+    "effect_id": "critical_hit"
+  },
+  "sfx_hit_joueur": {
+    "path": "res://assets/audio/sfx/selected/player_hit.wav",
+    "volume_db": 0,
+    "min_interval_ms": 150,
+    "effect_id": "player_hit"
+  },
+  "sfx_degat_critique_recu": {
+    "path": "res://assets/audio/sfx/combat/sfx_degat_critique_recu.wav",
+    "volume_db": 0,
+    "min_interval_ms": 180
+  },
+  "sfx_projectile_vol": {
+    "path": "res://assets/audio/sfx/combat/sfx_projectile_vol.wav",
+    "volume_db": 0,
+    "min_interval_ms": 90
+  },
+  "sfx_ombre_attaque": {
+    "path": "res://assets/audio/sfx/creatures/sfx_ombre_attaque.wav",
+    "volume_db": 0,
+    "min_interval_ms": 90
+  },
+  "sfx_rodeur_attaque": {
+    "path": "res://assets/audio/sfx/creatures/sfx_rodeur_attaque.wav",
+    "volume_db": 0,
+    "min_interval_ms": 90
+  },
+  "sfx_brute_charge": {
+    "path": "res://assets/audio/sfx/creatures/sfx_brute_charge.wav",
+    "volume_db": 0,
+    "min_interval_ms": 90
+  },
+  "sfx_hurleur_cri": {
+    "path": "res://assets/audio/sfx/creatures/sfx_hurleur_cri.wav",
+    "volume_db": 0,
+    "min_interval_ms": 90
+  },
+  "sfx_sentinelle_tir": {
+    "path": "res://assets/audio/sfx/creatures/sfx_sentinelle_tir.wav",
+    "volume_db": 0,
+    "min_interval_ms": 90
+  },
+  "sfx_rampant_surgissement": {
+    "path": "res://assets/audio/sfx/creatures/sfx_rampant_surgissement.wav",
+    "volume_db": 0,
+    "min_interval_ms": 90
+  },
+  "sfx_menu_clic": {
+    "path": "res://assets/audio/sfx/selected/ui_click.wav",
+    "volume_db": 0,
+    "min_interval_ms": 120,
+    "effect_id": "ui_click"
+  },
+  "sfx_menu_survol": {
+    "path": "res://assets/audio/sfx/selected/ui_hover.wav",
+    "volume_db": 0,
+    "min_interval_ms": 120,
+    "effect_id": "ui_hover"
+  },
+  "sfx_menu_confirmer": {
+    "path": "res://assets/audio/sfx/selected/ui_confirm.wav",
+    "volume_db": 0,
+    "min_interval_ms": 120,
+    "effect_id": "ui_confirm"
+  },
+  "sfx_inventaire_ouvrir": {
+    "path": "res://assets/audio/sfx/selected/journal_open.wav",
+    "volume_db": 0,
+    "min_interval_ms": 120,
+    "effect_id": "journal_open"
+  },
+  "sfx_inventaire_fermer": {
+    "path": "res://assets/audio/sfx/selected/journal_close.wav",
+    "volume_db": 0,
+    "min_interval_ms": 120,
+    "effect_id": "journal_close"
+  },
+  "sfx_ambiance_foret": {
+    "path": "res://assets/audio/sfx/ambiance/sfx_ambiance_foret.wav",
+    "volume_db": 0,
+    "min_interval_ms": 0
+  },
+  "sfx_ambiance_oiseaux_1": {
+    "path": "res://assets/audio/sfx/ambiance/sfx_ambiance_oiseaux_1.wav",
+    "volume_db": 0,
+    "min_interval_ms": 0
+  },
+  "sfx_ambiance_oiseaux_2": {
+    "path": "res://assets/audio/sfx/ambiance/sfx_ambiance_oiseaux_2.wav",
+    "volume_db": 0,
+    "min_interval_ms": 0
+  },
+  "sfx_tonnerre_lointain": {
+    "path": "res://assets/audio/sfx/ambiance/sfx_tonnerre_lointain.wav",
+    "volume_db": 0,
+    "min_interval_ms": 0
+  },
+  "sfx_pluie_legere": {
+    "path": "res://assets/audio/sfx/ambiance/sfx_pluie_legere.wav",
+    "volume_db": 0,
+    "min_interval_ms": 0
+  },
+  "sfx_orage_proche": {
+    "path": "res://assets/audio/sfx/ambiance/sfx_orage_proche.wav",
+    "volume_db": 0,
+    "min_interval_ms": 0
+  },
+  "sfx_foret_rafales": {
+    "path": "res://assets/audio/sfx/ambiance/sfx_foret_rafales.wav",
+    "volume_db": 0,
+    "min_interval_ms": 0
+  },
+  "sfx_brouillard": {
+    "path": "res://assets/audio/sfx/ambiance/sfx_brouillard.wav",
+    "volume_db": 0,
+    "min_interval_ms": 0
+  },
+  "sfx_bord_effacement_proche": {
+    "path": "res://assets/audio/sfx/ambiance/sfx_bord_effacement_proche.wav",
+    "volume_db": 0,
+    "min_interval_ms": 0
+  },
+  "sfx_colosse_lointain": {
+    "path": "res://assets/audio/sfx/ambiance/sfx_colosse_lointain.wav",
+    "volume_db": 0,
+    "min_interval_ms": 0
+  },
+  "sfx_dash_start": {
+    "path": "res://assets/audio/sfx/selected/dash_start.wav",
+    "volume_db": 0,
+    "min_interval_ms": 120,
+    "effect_id": "dash_start"
+  },
+  "sfx_dash_end": {
+    "path": "res://assets/audio/sfx/selected/dash_end.wav",
+    "volume_db": 0,
+    "min_interval_ms": 120,
+    "effect_id": "dash_end"
+  },
+  "sfx_weapon_equip": {
+    "path": "res://assets/audio/sfx/selected/weapon_equip.wav",
+    "volume_db": 0,
+    "min_interval_ms": 120,
+    "effect_id": "weapon_equip"
+  },
+  "sfx_weapon_drop": {
+    "path": "res://assets/audio/sfx/selected/weapon_drop.wav",
+    "volume_db": 0,
+    "min_interval_ms": 120,
+    "effect_id": "weapon_drop"
+  },
+  "sfx_interaction_unavailable": {
+    "path": "res://assets/audio/sfx/selected/interaction_unavailable.wav",
+    "volume_db": 0,
+    "min_interval_ms": 120,
+    "effect_id": "interaction_unavailable"
+  },
+  "sfx_poi_search": {
+    "path": "res://assets/audio/sfx/selected/poi_search.wav",
+    "volume_db": 0,
+    "min_interval_ms": 120,
+    "effect_id": "poi_search"
+  },
+  "sfx_poi_activate": {
+    "path": "res://assets/audio/sfx/selected/poi_activate.wav",
+    "volume_db": 0,
+    "min_interval_ms": 120,
+    "effect_id": "poi_activate"
+  },
+  "sfx_relic_fall": {
+    "path": "res://assets/audio/sfx/selected/relic_fall.wav",
+    "volume_db": 0,
+    "min_interval_ms": 120,
+    "effect_id": "relic_fall"
+  },
+  "sfx_shard_strike": {
+    "path": "res://assets/audio/sfx/selected/shard_strike.wav",
+    "volume_db": 0,
+    "min_interval_ms": 120,
+    "effect_id": "shard_strike"
+  },
+  "sfx_blade_swing": {
+    "path": "res://assets/audio/sfx/selected/blade_swing.wav",
+    "volume_db": -8,
+    "min_interval_ms": 180,
+    "effect_id": "blade_swing"
+  },
+  "sfx_heavy_swing": {
+    "path": "res://assets/audio/sfx/selected/heavy_swing.wav",
+    "volume_db": -8,
+    "min_interval_ms": 180,
+    "effect_id": "heavy_swing"
+  },
+  "sfx_bow_release": {
+    "path": "res://assets/audio/sfx/selected/bow_release.wav",
+    "volume_db": -8,
+    "min_interval_ms": 180,
+    "effect_id": "bow_release"
+  },
+  "sfx_crossbow_release": {
+    "path": "res://assets/audio/sfx/selected/crossbow_release.wav",
+    "volume_db": -8,
+    "min_interval_ms": 180,
+    "effect_id": "crossbow_release"
+  },
+  "sfx_throw_release": {
+    "path": "res://assets/audio/sfx/selected/throw_release.wav",
+    "volume_db": -8,
+    "min_interval_ms": 180,
+    "effect_id": "throw_release"
+  },
+  "sfx_whip_snap": {
+    "path": "res://assets/audio/sfx/selected/whip_snap.wav",
+    "volume_db": -8,
+    "min_interval_ms": 180,
+    "effect_id": "whip_snap"
+  },
+  "sfx_bell_pulse": {
+    "path": "res://assets/audio/sfx/selected/bell_pulse.wav",
+    "volume_db": -8,
+    "min_interval_ms": 180,
+    "effect_id": "bell_pulse"
+  },
+  "sfx_light_shot": {
+    "path": "res://assets/audio/sfx/selected/light_shot.wav",
+    "volume_db": -8,
+    "min_interval_ms": 180,
+    "effect_id": "light_shot"
+  },
+  "sfx_chain_jump": {
+    "path": "res://assets/audio/sfx/selected/chain_jump.wav",
+    "volume_db": -8,
+    "min_interval_ms": 180,
+    "effect_id": "chain_jump"
+  },
+  "sfx_needle_shot": {
+    "path": "res://assets/audio/sfx/selected/needle_shot.wav",
+    "volume_db": -8,
+    "min_interval_ms": 180,
+    "effect_id": "needle_shot"
+  },
+  "sfx_void_slash": {
+    "path": "res://assets/audio/sfx/selected/void_slash.wav",
+    "volume_db": -8,
+    "min_interval_ms": 180,
+    "effect_id": "void_slash"
+  },
+  "sfx_lantern_fire": {
+    "path": "res://assets/audio/sfx/selected/lantern_fire.wav",
+    "volume_db": -8,
+    "min_interval_ms": 180,
+    "effect_id": "lantern_fire"
+  },
+  "sfx_clock_strike": {
+    "path": "res://assets/audio/sfx/selected/clock_strike.wav",
+    "volume_db": -8,
+    "min_interval_ms": 180,
+    "effect_id": "clock_strike"
+  },
+  "sfx_pounce_windup": {
+    "path": "res://assets/audio/sfx/selected/pounce_windup.wav",
+    "volume_db": 0,
+    "min_interval_ms": 120,
+    "effect_id": "pounce_windup"
+  },
+  "sfx_pounce_leap": {
+    "path": "res://assets/audio/sfx/selected/pounce_leap.wav",
+    "volume_db": 0,
+    "min_interval_ms": 120,
+    "effect_id": "pounce_leap"
+  },
+  "sfx_omen_cast": {
+    "path": "res://assets/audio/sfx/selected/omen_cast.wav",
+    "volume_db": 0,
+    "min_interval_ms": 120,
+    "effect_id": "omen_cast"
+  },
+  "sfx_omen_impact": {
+    "path": "res://assets/audio/sfx/selected/omen_impact.wav",
+    "volume_db": 0,
+    "min_interval_ms": 120,
+    "effect_id": "omen_impact"
+  },
+  "sfx_enemy_ranged_shot": {
+    "path": "res://assets/audio/sfx/selected/enemy_ranged_shot.wav",
+    "volume_db": 0,
+    "min_interval_ms": 120,
+    "effect_id": "enemy_ranged_shot"
+  },
+  "sfx_burrow_transition": {
+    "path": "res://assets/audio/sfx/selected/burrow_transition.wav",
+    "volume_db": 0,
+    "min_interval_ms": 120,
+    "effect_id": "burrow_transition"
+  },
+  "sfx_enemy_charge": {
+    "path": "res://assets/audio/sfx/selected/enemy_charge.wav",
+    "volume_db": 0,
+    "min_interval_ms": 120,
+    "effect_id": "enemy_charge"
+  },
+  "sfx_boss_tentacle": {
+    "path": "res://assets/audio/sfx/selected/boss_tentacle.wav",
+    "volume_db": 0,
+    "min_interval_ms": 250,
+    "effect_id": "boss_tentacle"
+  },
+  "sfx_boss_enrage": {
+    "path": "res://assets/audio/sfx/selected/boss_enrage.wav",
+    "volume_db": 0,
+    "min_interval_ms": 250,
+    "effect_id": "boss_enrage"
+  },
+  "sfx_boss_death": {
+    "path": "res://assets/audio/sfx/selected/boss_death.wav",
+    "volume_db": 0,
+    "min_interval_ms": 250,
+    "effect_id": "boss_death"
+  },
+  "sfx_chest_reveal": {
+    "path": "res://assets/audio/sfx/gameplay/chest_opening.wav",
+    "volume_db": 0,
+    "min_interval_ms": 0
+  }
+}

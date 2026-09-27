@@ -178,10 +178,10 @@ Définir attribution, ordre des effets, cible morte, dégâts secondaires, pause
 **Vérification :** nouvelles options utiles sans rendre le départ médiocre ; offre compréhensible même slots pleins.
 **Garde-fou :** le nombre de définitions n'est pas le critère de réussite.
 
-## 7. Recette et référence Megabonk
+## 7. Recette
 
 Tester profil neuf/avancé, quatre slots armes/passifs pleins mais nouveaux objets toujours acquis, grandes piles, reroll, bannissement, offres vides, fusion, changements de scène, sauvegarde et interactions de procs. Build, smoke si applicable et combat dense.
 
-Megabonk met officiellement en avant armes, personnages et objets à synergies : [page Steam](https://store.steampowered.com/app/3405340/Megabonk/). Les mécanismes de conditions d'accès et d'effets combinables sont décrits par son [wiki communautaire sur les objets](https://megabonk.wiki/wiki/Items) ; source indicative consultée via résultats indexés, accès direct refusé pendant cet audit. Aucun nombre de contenus ni réglage du jeu de référence n'est une cible pour Vestiges.
+Les jeux du genre servent de repère sur les synergies entre armes et objets ; aucun nombre de contenus ni réglage n'est une cible ([Stratégie V2, « Références et garde-fous »](../VESTIGES-STRATEGIE-V2.md#références-et-garde-fous)).
 
 Roadmap B/E/G et validation de puissance de A/C. Acceptation : chaque choix du lot a une utilité explicable, les synergies se ressentent, les récompenses promises fonctionnent et les accès sont cohérents.

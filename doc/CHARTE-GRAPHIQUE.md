@@ -36,7 +36,8 @@
 | **Décor moyen** (arbres, ruines) | 16×24 à 32×48 | |
 | **Structures joueur** (murs, pièges) | 32×16 à 32×32 | S'alignent sur la grille |
 | **Icônes UI** (items, perks) | 16×16 | |
-| **Coffres** | 16×12 | 4 variants de rareté |
+| **Icônes d'armes** | 32×32 | Amendement du 26 septembre 2026 (plan 17 §4.7, validé par Raphaël) : objet du monde d'avant en diagonale, pipeline SDF (`tools/generate_weapon_icons.py`), toujours affiché à échelle entière (×1 ou ×2) |
+| **Coffres** | ≈ 28×28 à 32×35 | 4 silhouettes (bois, métal, cristal, ancien), fermé et ouvert, pipeline procédural ; la rareté se lit par la colonne de lumière (palette `data/ui/rarities.json`) — plan 17, lot 0A |
 
 ---
 

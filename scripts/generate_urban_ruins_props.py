@@ -56,8 +56,6 @@ OUTLINE_MAP = {
 
 DEFAULT_TARGETS = [
     "prop_chain_link_fence",
-    "prop_collapsed_stairs",
-    "prop_supermarket_shelves",
     "prop_phone_booth",
     "prop_torn_billboard",
     "prop_steel_beam",
@@ -214,55 +212,6 @@ def gen_chain_link_fence() -> Image.Image:
     line(px, 13, 6, 18, 12, PAL["warm_gray"], width, height)
     sprinkle(px, [(5, 8), (5, 11), (18, 9)], PAL["orange_rust"], width, height)
     add_weeds(px, [(4, 14), (10, 14), (19, 13)], width, height)
-    return img
-
-
-def gen_collapsed_stairs() -> Image.Image:
-    width, height = 24, 24
-    img = new_image(width, height)
-    px = img.load()
-    line(px, 3, 11, 3, 21, PAL["dark_concrete"], width, height)
-    line(px, 4, 10, 4, 21, PAL["med_concrete"], width, height)
-    for step in range(4):
-        sx = 4 + step * 3
-        sy = 20 - step * 3
-        fill_rect(px, sx, sy - 1, sx + 5, sy, PAL["light_concrete"], width, height)
-        fill_rect(px, sx, sy + 1, sx + 5, sy + 1, PAL["dark_concrete"], width, height)
-        put(px, sx + 1, sy - 1, PAL["off_white"], width, height)
-        put(px, sx + 4, sy, PAL["med_concrete"], width, height)
-    fill_rect(px, 16, 8, 19, 9, PAL["light_concrete"], width, height)
-    erase(px, 18, 8, width, height)
-    erase(px, 19, 9, width, height)
-    line(px, 17, 9, 20, 6, PAL["dark_rust"], width, height)
-    line(px, 18, 10, 21, 7, PAL["orange_rust"], width, height)
-    line(px, 6, 19, 10, 15, PAL["warm_gray"], width, height)
-    sprinkle(px, [(8, 17), (9, 17)], PAL["peeling_blue"], width, height)
-    put(px, 9, 16, PAL["off_white"], width, height)
-    add_rubble(px, 22, [(5, 21, 2), (9, 22, 2), (13, 21, 2), (17, 22, 2)], width, height)
-    add_weeds(px, [(6, 22), (14, 22)], width, height)
-    return img
-
-
-def gen_supermarket_shelves() -> Image.Image:
-    width, height = 24, 20
-    img = new_image(width, height)
-    px = img.load()
-    line(px, 4, 4, 4, 18, PAL["warm_gray"], width, height)
-    line(px, 9, 2, 9, 16, PAL["light_gray"], width, height)
-    line(px, 18, 1, 18, 13, PAL["warm_gray"], width, height)
-    for front_y, back_y in [(6, 4), (10, 8), (14, 12)]:
-        line(px, 4, front_y, 18, back_y, PAL["light_gray"], width, height)
-        line(px, 4, front_y + 1, 18, back_y + 1, PAL["warm_gray"], width, height)
-    for y in range(5, 16):
-        for x in range(5, 18):
-            if 4 < x < 9 and 6 < y < 16 and (x + y) % 5 == 0:
-                put(px, x, y, PAL["dark_warm_gray"], width, height)
-            elif 9 < x < 17 and 4 < y < 14 and (x + y) % 4 == 0:
-                put(px, x, y, PAL["dark_warm_gray"], width, height)
-    line(px, 17, 5, 18, 13, PAL["dark_concrete"], width, height)
-    line(px, 6, 10, 9, 8, PAL["signage_yellow"], width, height)
-    sprinkle(px, [(5, 17), (8, 16), (13, 15), (16, 14)], PAL["light_gray"], width, height)
-    put(px, 6, 11, PAL["off_white"], width, height)
     return img
 
 
@@ -482,8 +431,6 @@ def gen_concrete_debris_v3() -> Image.Image:
 
 GENERATORS = {
     "prop_chain_link_fence": gen_chain_link_fence,
-    "prop_collapsed_stairs": gen_collapsed_stairs,
-    "prop_supermarket_shelves": gen_supermarket_shelves,
     "prop_phone_booth": gen_phone_booth,
     "prop_torn_billboard": gen_torn_billboard,
     "prop_steel_beam": gen_steel_beam,

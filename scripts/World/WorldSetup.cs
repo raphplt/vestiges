@@ -31,7 +31,7 @@ public partial class WorldSetup : Node2D
     /// <summary>Seed de la run, injectée par GameBootstrap.</summary>
     public ulong Seed { get; set; }
 
-    /// <summary>Si true, aucun POI ni coffre n'est généré (mutateur "Isolement").</summary>
+    /// <summary>Si true, aucun POI n'est généré (mutateur "Isolement"). Les coffres restent.</summary>
     public bool PoisDisabled { get; set; }
 
     /// <summary>Référence publique au générateur pour les autres systèmes.</summary>
@@ -190,13 +190,14 @@ public partial class WorldSetup : Node2D
         InitializeFog();
         await YieldFrame();
 
-        if (!PoisDisabled)
+        if (_config.PoisEnabled && !PoisDisabled)
         {
             onProgress?.Invoke("Points d'intérêt...");
             SpawnPois();
-            SpawnChests();
             await YieldFrame();
         }
+        // Avant les décors : chaque coffre et chaque lieu réserve son dégagement.
+        SpawnSites();
 
         onProgress?.Invoke("Décors...");
         SpawnEnvironmentProps(_urbanLayout, _swampLayout);
@@ -214,8 +215,9 @@ public partial class WorldSetup : Node2D
         BuildPropOcclusion();
         await YieldFrame();
 
-        onProgress?.Invoke("Éléments de lore...");
-        SpawnLoreElements();
+        onProgress?.Invoke("Atmosphère...");
+        if (_config.LoreElementsEnabled)
+            SpawnLoreElements();
         InitBiomeAtmosphere();
         await YieldFrame();
 
@@ -238,11 +240,9 @@ public partial class WorldSetup : Node2D
         GroundMaterial.Apply(_ground, _roadOverlay, _generator, _tileMapper, _terrain, _config.MapRadius, _config.GroundBlend);
         AddPaths();
         InitializeFog();
-        if (!PoisDisabled)
-        {
+        if (_config.PoisEnabled && !PoisDisabled)
             SpawnPois();
-            SpawnChests();
-        }
+        SpawnSites();
         SpawnEnvironmentProps(_urbanLayout, _swampLayout);
         if (_urbanLayout != null)
         {
@@ -255,7 +255,8 @@ public partial class WorldSetup : Node2D
             SwampPropPlacer.PlaceProps(_swampLayout, _ground, propContainer, _usedCells);
         }
         BuildPropOcclusion();
-        SpawnLoreElements();
+        if (_config.LoreElementsEnabled)
+            SpawnLoreElements();
         InitBiomeAtmosphere();
 
         _terrain = null;
@@ -472,9 +473,11 @@ public partial class WorldSetup : Node2D
             enemyPool, enemyContainer);
     }
 
-    private void SpawnChests()
+    private void SpawnSites()
     {
-        ChestSpawner.SpawnChests(_generator, _ground, _poiContainer, _usedCells);
+        SitePlacer placer = new(_generator, _ground, _usedCells, Seed, _urbanLayout, _wildFieldsLayout, ChestDataLoader.LoadPlacement());
+        ChestSpawner.SpawnChests(placer, _poiContainer);
+        LandmarkSpawner.SpawnLandmarks(placer, _poiContainer);
     }
 
     private void BuildPropOcclusion()
@@ -922,6 +925,9 @@ public class WorldGenConfig
     public int BiomeCount = 3;
     public int EdgeFadeWidth = 5;
     public int PoiMinDistanceBetween = 8;
+    /// <summary>POI et éléments de lore V1, désactivés jusqu'à leur refonte (plan 18 §5, plan 17 lot 0B).</summary>
+    public bool PoisEnabled = true;
+    public bool LoreElementsEnabled = true;
     public int FogRevealRadius = 6;
     public int FogInitialClearRadius = 8;
     public List<string> AvailableBiomes = new();
@@ -970,6 +976,12 @@ public class WorldGenConfig
 
         if (dict.ContainsKey("poi_min_distance_between"))
             config.PoiMinDistanceBetween = (int)dict["poi_min_distance_between"].AsDouble();
+
+        if (dict.ContainsKey("pois_enabled"))
+            config.PoisEnabled = dict["pois_enabled"].AsBool();
+
+        if (dict.ContainsKey("lore_elements_enabled"))
+            config.LoreElementsEnabled = dict["lore_elements_enabled"].AsBool();
 
         if (dict.ContainsKey("fog_reveal_radius"))
             config.FogRevealRadius = (int)dict["fog_reveal_radius"].AsDouble();

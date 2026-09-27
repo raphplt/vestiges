@@ -56,8 +56,6 @@ public partial class EventBus : Node
     [Signal] public delegate void FragmentChosenEventHandler(string fragmentId, string fragmentType);
 
     // --- Fusions (Vestiges) ---
-    [Signal] public delegate void FusionAvailableEventHandler(string fusionId, string weaponId, string passiveId);
-    [Signal] public delegate void FusionCompletedEventHandler(string fusionId);
 
     // --- Fog of War ---
     [Signal] public delegate void ZoneDiscoveredEventHandler(int cellX, int cellY, int cellCount);
@@ -78,26 +76,28 @@ public partial class EventBus : Node
     // --- Variantes d'ennemis ---
     [Signal] public delegate void VariantEnemyKilledEventHandler(string displayName, string variantId, Vector2 position);
 
-    // --- Bonus événementiels ---
-    [Signal] public delegate void XpMultiplierChangedEventHandler(float multiplier);
-    [Signal] public delegate void PlayerBuffAppliedEventHandler(string buffId, float duration);
-    [Signal] public delegate void FogRevealBurstEventHandler(int cellX, int cellY, int radius);
-
-    // --- Difficulte dynamique ---
+    // --- Péril (plan 17 lot 3A) ---
     [Signal] public delegate void DifficultyModifierChangedEventHandler(float enemyCountMult, float enemyHpMult, float enemyDmgMult, float xpMult);
+    [Signal] public delegate void PerilChangedEventHandler(int peril);
 
     // --- Effacement (V2) ---
     [Signal] public delegate void ErasureUpdatedEventHandler(float globalErasurePercent);
     [Signal] public delegate void ZonePhaseChangedEventHandler(int cellX, int cellY, int phase);
     /// <summary>Phase de la zone où se tient le joueur (ErasureManager.ErasureZonePhase), émise quand elle change.</summary>
     [Signal] public delegate void PlayerErasurePhaseChangedEventHandler(int phase);
-    /// <summary>Un Autel vient de servir : il « rappelle » sa zone à l'existence (Stratégie V2 §11, plan 16 O5).</summary>
-    [Signal] public delegate void AltarUsedEventHandler(Vector2 position);
 
     // --- Résurgences (V2) ---
     [Signal] public delegate void CrisisWarningEventHandler(int crisisNumber, float countdown);
     [Signal] public delegate void CrisisStartedEventHandler(int crisisNumber, int intensity);
     [Signal] public delegate void CrisisEndedEventHandler(int crisisNumber);
+
+    // --- Mémoriaux (plan 17 lot 3B) ---
+    [Signal] public delegate void MemorialInteractedEventHandler(Node2D memorial);
+    /// <summary>Un Mémorial vient d'être ravivé : la zone autour se souvient.</summary>
+    [Signal] public delegate void MemorialAwakenedEventHandler(Vector2 position);
+
+    // --- Failles (plan 17 lot 3C) ---
+    [Signal] public delegate void RiftInteractedEventHandler(Node2D rift);
 
     // --- Essence (V2) ---
     [Signal] public delegate void EssenceChangedEventHandler(int newAmount);

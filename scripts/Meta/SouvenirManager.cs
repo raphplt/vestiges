@@ -72,7 +72,7 @@ public partial class SouvenirManager : Node
     /// Utilisé par le loot system quand type = "souvenir".
     /// Retourne null si tout est découvert.
     /// </summary>
-    public string PickRandomUndiscovered()
+    public static string PickRandomUndiscovered()
     {
         List<SouvenirData> all = SouvenirDataLoader.GetAll();
         List<string> candidates = new();
@@ -104,10 +104,9 @@ public partial class SouvenirManager : Node
                 MetaSaveManager.UnlockCharacter(data.UnlockId);
                 GD.Print($"[SouvenirManager] Unlocked character: {data.UnlockId}");
                 break;
-            case "recipe":
-                // La recette est gatée par requires_souvenir dans WeaponData.
-                // CraftManager vérifie HasSouvenir() — la découverte suffit à débloquer.
-                GD.Print($"[SouvenirManager] Recipe unlocked: {data.UnlockId}");
+            case "weapon":
+                // L'arme est gardée par requires_souvenir dans WeaponData : la découverte suffit à la débloquer.
+                GD.Print($"[SouvenirManager] Weapon unlocked: {data.UnlockId}");
                 break;
             case "perk":
                 GD.Print($"[SouvenirManager] Perk unlocked: {data.UnlockId}");

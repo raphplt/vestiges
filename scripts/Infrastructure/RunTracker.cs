@@ -11,18 +11,15 @@ namespace Vestiges.Infrastructure;
 public partial class RunTracker : Node
 {
     private EventBus _eventBus;
-    // Temps de jeu actif (plan 02 lot A) : ce nœud est suspendu avec l'arbre, donc pauses, choix de niveau et coffres
-    // n'avancent pas l'horloge ; elle s'arrête à la mort. Score, quêtes, fenêtres glissantes et bilan la partagent.
-    private float _activeSeconds;
+    // Temps de jeu écoulé, pauses exclues (écran de niveau, butin, menu) : durée, score de survie, cadences.
+    private float _runTime;
+    // L'horloge s'arrête à la mort (plan 02 lot A) : le bilan et le score de survie lisent la durée de la run jouée.
     private bool _frozen;
 
     private float _totalDamageDealt;
     private float _totalDamageTaken;
     private float _previousHp;
     private float _previousMaxHp;
-    private readonly Dictionary<string, int> _resourcesCollected = new();
-    private int _structuresPlaced;
-    private int _structuresLost;
     private int _poisExplored;
     private int _chestsOpened;
     private int _crisesSurvived;
@@ -50,9 +47,6 @@ public partial class RunTracker : Node
 
     public float TotalDamageDealt => _totalDamageDealt;
     public float TotalDamageTaken => _totalDamageTaken;
-    public Dictionary<string, int> ResourcesCollected => _resourcesCollected;
-    public int StructuresPlaced => _structuresPlaced;
-    public int StructuresLost => _structuresLost;
     public int PoisExplored => _poisExplored;
     public int ChestsOpened => _chestsOpened;
     public int CrisesSurvived => _crisesSurvived;
@@ -60,8 +54,7 @@ public partial class RunTracker : Node
     public List<string> PerkIds => _perkIds;
     public string LastHitByEnemyId => _lastHitByEnemyId;
     public string CurrentPhase => _currentPhase;
-    public int CurrentNight => _crisesSurvived;
-    public float RunDurationSeconds => _activeSeconds;
+    public float RunDurationSeconds => _runTime;
 
     // --- Difficulty metrics ---
     public int TotalSpawned => _totalSpawned;
@@ -75,7 +68,7 @@ public partial class RunTracker : Node
     {
         get
         {
-            float now = _activeSeconds;
+            float now = _runTime;
             float windowStart = now - RateWindowSeconds;
             int count = 0;
             foreach (float t in _spawnTimestamps)
@@ -91,7 +84,7 @@ public partial class RunTracker : Node
     {
         get
         {
-            float now = _activeSeconds;
+            float now = _runTime;
             float windowStart = now - RateWindowSeconds;
             int count = 0;
             foreach (float t in _killTimestamps)
@@ -121,7 +114,7 @@ public partial class RunTracker : Node
     {
         get
         {
-            float now = _activeSeconds;
+            float now = _runTime;
             float windowStart = now - DpsWindowSeconds;
             float total = 0f;
             foreach ((float time, float damage) entry in _damageEvents)
@@ -185,13 +178,13 @@ public partial class RunTracker : Node
     public override void _Process(double delta)
     {
         if (!_frozen)
-            _activeSeconds += (float)delta;
+            _runTime += (float)delta;
         _maintenanceTimer += (float)delta;
         if (_maintenanceTimer < MaintenanceInterval)
             return;
         _maintenanceTimer = 0f;
 
-        float now = _activeSeconds;
+        float now = _runTime;
 
         // Purge old DPS entries
         float dpsWindowStart = now - DpsWindowSeconds;
@@ -219,14 +212,14 @@ public partial class RunTracker : Node
         _totalSpawned++;
         _lastHpScale = hpScale;
         _lastDmgScale = dmgScale;
-        float now = _activeSeconds;
+        float now = _runTime;
         _spawnTimestamps.Add(now);
     }
 
     private void OnEnemyKilled(string enemyId, Vector2 position)
     {
         _totalKilled++;
-        float now = _activeSeconds;
+        float now = _runTime;
         _killTimestamps.Add(now);
     }
 
@@ -236,7 +229,7 @@ public partial class RunTracker : Node
         if (entity is not Player)
         {
             _totalDamageDealt += amount;
-            float now = _activeSeconds;
+            float now = _runTime;
             _damageEvents.Add((now, amount));
         }
     }

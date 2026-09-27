@@ -112,7 +112,7 @@ public partial class HubChroniquesPanel : MarginContainer
 				BuildChroniquesPerso(scrollContent);
 				break;
 			case "endurance":
-				BuildChroniquesNuits(scrollContent);
+				BuildChroniquesEndurance(scrollContent);
 				break;
 			case "quetes":
 				BuildChroniquesQuetes(scrollContent);
@@ -218,7 +218,7 @@ public partial class HubChroniquesPanel : MarginContainer
 		}
 	}
 
-	private void BuildChroniquesNuits(VBoxContainer container)
+	private void BuildChroniquesEndurance(VBoxContainer container)
 	{
 		float longestRun = RunHistoryManager.GetLongestRunDurationSec();
 		int maxCrises = RunHistoryManager.GetMaxCrises();

@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using Godot;
+using Vestiges.Combat;
 using Vestiges.Core;
 using Vestiges.Infrastructure;
 using Vestiges.Progression;
@@ -21,14 +23,14 @@ public partial class PauseMenu : CanvasLayer
 	private static readonly Color StatLabelColor = new(0.62f, 0.60f, 0.54f);
 	private static readonly Color StatValueColor = new(0.9f, 0.86f, 0.78f);
 	private static readonly Color StatBonusColor = new(0.42f, 0.73f, 0.45f);
+	private static readonly Color PerilColor = new(0.85f, 0.38f, 0.42f);
 	private const string MenusPath = UITheme.MenusPath;
 
 	private Control _root;
 	private bool _isPaused;
 	private SettingsScreen _settingsScreen;
-	private Button _appelDuVideBtn;
-	private PerkManager _perkManager;
-	private VBoxContainer _statsContainer;
+	private VBoxContainer _loadoutContainer;
+	private VBoxContainer _sheetContainer;
 	private Texture2D _panelTex;
 	private Texture2D _panelSelectedTex;
 	private Texture2D _btnNormalTex;
@@ -82,7 +84,6 @@ public partial class PauseMenu : CanvasLayer
 		_isPaused = true;
 		_root.Visible = true;
 		GetTree().Paused = true;
-		UpdateAppelDuVideButton();
 		UpdateStats();
 	}
 
@@ -136,10 +137,10 @@ public partial class PauseMenu : CanvasLayer
 
 		MarginContainer shell = new();
 		shell.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
-		shell.AddThemeConstantOverride("margin_left", 150);
-		shell.AddThemeConstantOverride("margin_top", 110);
-		shell.AddThemeConstantOverride("margin_right", 150);
-		shell.AddThemeConstantOverride("margin_bottom", 110);
+		shell.AddThemeConstantOverride("margin_left", 80);
+		shell.AddThemeConstantOverride("margin_top", 90);
+		shell.AddThemeConstantOverride("margin_right", 80);
+		shell.AddThemeConstantOverride("margin_bottom", 90);
 		_root.AddChild(shell);
 
 		HBoxContainer hbox = new();
@@ -149,12 +150,11 @@ public partial class PauseMenu : CanvasLayer
 		hbox.AddThemeConstantOverride("separation", 26);
 		shell.AddChild(hbox);
 
-		// --- Stats panel (gauche) ---
-		BuildStatsPanel(hbox);
+		// Armes et passifs à gauche, boutons au centre, fiche du personnage à droite (plan 17 lot 1C).
+		_loadoutContainer = BuildInfoPanel(hbox, "ÉQUIPEMENT", 560);
 
-		// --- Panel central (boutons) ---
 		PanelContainer panel = new();
-		panel.CustomMinimumSize = new Vector2(430, 510);
+		panel.CustomMinimumSize = new Vector2(360, 560);
 		ApplyPanelStyle(panel, true);
 		hbox.AddChild(panel);
 
@@ -208,14 +208,9 @@ public partial class PauseMenu : CanvasLayer
 		resumeBtn.Pressed += Resume;
 		vbox.AddChild(resumeBtn);
 
-		Button settingsBtn = CreateButton("Parametres");
+		Button settingsBtn = CreateButton("Paramètres");
 		settingsBtn.Pressed += OpenSettings;
 		vbox.AddChild(settingsBtn);
-
-		_appelDuVideBtn = CreateButton("Appel du Vide: OFF");
-		_appelDuVideBtn.Pressed += ToggleAppelDuVide;
-		_appelDuVideBtn.Visible = false;
-		vbox.AddChild(_appelDuVideBtn);
 
 		Button hubBtn = CreateButton("Retour au Hub");
 		hubBtn.Pressed += ReturnToHub;
@@ -237,183 +232,221 @@ public partial class PauseMenu : CanvasLayer
 		hint.AddThemeFontSizeOverride("font_size", 14);
 		hint.AddThemeColorOverride("font_color", TextVeryDim);
 		vbox.AddChild(hint);
+
+		_sheetContainer = BuildInfoPanel(hbox, "FICHE DU PASSEUR", 360);
 	}
 
-	private void BuildStatsPanel(HBoxContainer parent)
+	private VBoxContainer BuildInfoPanel(HBoxContainer parent, string titleText, float width)
 	{
-		PanelContainer statsPanel = new();
-		statsPanel.CustomMinimumSize = new Vector2(400, 510);
-		ApplyPanelStyle(statsPanel, false);
-
-		parent.AddChild(statsPanel);
+		PanelContainer panel = new() { CustomMinimumSize = new Vector2(width, 560) };
+		ApplyPanelStyle(panel, false);
+		parent.AddChild(panel);
 
 		MarginContainer frame = new();
-		frame.AddThemeConstantOverride("margin_left", 28);
-		frame.AddThemeConstantOverride("margin_top", 26);
-		frame.AddThemeConstantOverride("margin_right", 28);
-		frame.AddThemeConstantOverride("margin_bottom", 26);
-		statsPanel.AddChild(frame);
+		frame.AddThemeConstantOverride("margin_left", 24);
+		frame.AddThemeConstantOverride("margin_top", 22);
+		frame.AddThemeConstantOverride("margin_right", 24);
+		frame.AddThemeConstantOverride("margin_bottom", 22);
+		panel.AddChild(frame);
 
 		VBoxContainer wrapper = new();
-		wrapper.AddThemeConstantOverride("separation", 10);
+		wrapper.AddThemeConstantOverride("separation", 8);
 		frame.AddChild(wrapper);
 
-		Label statsTitle = new()
-		{
-			Text = "ÉTAT DU PASSEUR",
-			HorizontalAlignment = HorizontalAlignment.Left
-		};
-		statsTitle.AddThemeFontSizeOverride("font_size", 20);
-		statsTitle.AddThemeColorOverride("font_color", GoldBright);
-		wrapper.AddChild(statsTitle);
-
-		Label statsSubtitle = new()
-		{
-			Text = "Lecture instantanée de la run en cours.",
-			HorizontalAlignment = HorizontalAlignment.Left
-		};
-		statsSubtitle.AddThemeFontSizeOverride("font_size", 14);
-		statsSubtitle.AddThemeColorOverride("font_color", TextDim);
-		wrapper.AddChild(statsSubtitle);
-
+		Label title = new() { Text = titleText };
+		title.AddThemeFontSizeOverride("font_size", 20);
+		title.AddThemeColorOverride("font_color", GoldBright);
+		wrapper.AddChild(title);
 		wrapper.AddChild(CreateSeparator());
 
-		_statsContainer = new VBoxContainer();
-		_statsContainer.AddThemeConstantOverride("separation", 6);
-		wrapper.AddChild(_statsContainer);
+		VBoxContainer content = new();
+		content.AddThemeConstantOverride("separation", 6);
+		wrapper.AddChild(content);
+		return content;
 	}
 
 	private void UpdateStats()
 	{
-		if (_statsContainer == null) return;
-
-		foreach (Node child in _statsContainer.GetChildren())
+		if (_loadoutContainer == null)
+			return;
+		foreach (Node child in _loadoutContainer.GetChildren())
+			child.QueueFree();
+		foreach (Node child in _sheetContainer.GetChildren())
 			child.QueueFree();
 
-		Node playerNode = GetTree().GetFirstNodeInGroup("player");
-		if (playerNode is not Player player) return;
+		if (GetTree().GetFirstNodeInGroup("player") is not Player player)
+			return;
 
-		EssenceTracker essenceTracker = GetNodeOrNull<EssenceTracker>("/root/Main/EssenceTracker");
-		if (player.EquippedWeapon != null)
-		{
-			AddStatLine("Arme", player.EquippedWeapon.Name);
-			AddStatLine("Rarete", player.EquippedWeapon.RarityDisplayName);
-		}
-		if (essenceTracker != null)
-			AddStatLine("Essence", essenceTracker.CurrentEssence.ToString());
+		AddSectionTitle(_loadoutContainer, "Armes");
+		foreach (WeaponInstance weapon in player.WeaponSlots)
+			AddWeaponRow(player, weapon);
+		AddSectionTitle(_loadoutContainer, "Passifs");
+		foreach (ActivePassiveSouvenir passive in player.PassiveSlots)
+			AddPassiveRow(passive);
+		if (player.PassiveSlots.Count == 0)
+			AddLine(_loadoutContainer, "Aucun pour l'instant.", "", TextVeryDim);
 
-		AddStatLine("PV", $"{player.CurrentHp:F0} / {player.EffectiveMaxHp:F0}");
-		AddStatLine("Dégâts", $"{player.AttackDamage:F0}", FormatMult(player.DamageMultiplier));
-		AddStatLine("Vit. Attaque", $"{player.AttackSpeed:F1}", FormatMult(player.AttackSpeedMultiplier));
-		AddStatLine("Portée", $"{player.EffectiveAttackRange:F0}");
-		AddStatLine("Vitesse", $"{player.Speed:F0}", FormatMult(player.SpeedMultiplier));
-		AddStatLine("Régen.", $"{player.BaseRegenRate + player.BonusRegenRate:F1}/s");
-		AddStatLine("Armure", $"{player.Armor:F0}");
-		AddStatLine("Crit", $"{player.CritChance * 100:F0}%  x{player.CritMultiplier:F1}");
-
-		if (player.ExtraProjectiles > 0)
-			AddStatLine("Proj. bonus", $"+{player.ExtraProjectiles}");
-		if (player.ProjectilePierce > 0)
-			AddStatLine("Perçage", $"+{player.ProjectilePierce}");
-		if (player.AoeMultiplier > 1f)
-			AddStatLine("Zone", FormatMult(player.AoeMultiplier));
-		if (player.VampirismPercent > 0f)
-			AddStatLine("Vampirisme", $"{player.VampirismPercent * 100:F0}%");
-		if (player.DodgeChance > 0f)
-			AddStatLine("Esquive", $"{player.DodgeChance * 100:F0}%");
-		if (player.ThornsPercent > 0f)
-			AddStatLine("Épines", $"{player.ThornsPercent * 100:F0}%");
-		if (player.IgniteChance > 0f)
-			AddStatLine("Ignition", $"{player.IgniteChance * 100:F0}%");
-		if (player.RicochetChance > 0f)
-			AddStatLine("Ricochet", $"{player.RicochetChance * 100:F0}%");
-		if (player.LuckBonus > 0f)
-			AddStatLine("Chance", $"+{player.LuckBonus * 100:F0}%");
+		UpdateSheet(player);
 	}
 
-	private void AddStatLine(string label, string value, string bonus = null)
+	/// <summary>Arme : icône, nom, niveau, stats effectives utiles à son motif, dégâts infligés depuis le début.</summary>
+	private void AddWeaponRow(Player player, WeaponInstance weapon)
 	{
 		HBoxContainer row = new();
-		row.AddThemeConstantOverride("separation", 8);
+		row.AddThemeConstantOverride("separation", 10);
+		row.AddChild(MakeIcon(weapon.Sprite));
 
-		Label lbl = new() { Text = label };
-		lbl.AddThemeFontSizeOverride("font_size", 15);
-		lbl.AddThemeColorOverride("font_color", StatLabelColor);
-		lbl.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
-		row.AddChild(lbl);
+		VBoxContainer text = new() { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
+		text.AddThemeConstantOverride("separation", 0);
+		row.AddChild(text);
+		text.AddChild(MakeLabel($"{weapon.Name}   Niv {weapon.Level}", 15, StatValueColor));
 
-		Label val = new() { Text = value };
-		val.AddThemeFontSizeOverride("font_size", 15);
-		val.AddThemeColorOverride("font_color", StatValueColor);
-		val.HorizontalAlignment = HorizontalAlignment.Right;
-		row.AddChild(val);
-
-		if (!string.IsNullOrEmpty(bonus))
+		List<string> parts = new()
 		{
-			Label bonusLbl = new() { Text = bonus };
-			bonusLbl.AddThemeFontSizeOverride("font_size", 14);
-			bonusLbl.AddThemeColorOverride("font_color", StatBonusColor);
-			row.AddChild(bonusLbl);
+			$"{StatCatalog.Name("damage")} {StatCatalog.Format("damage", player.GetWeaponStatForDisplay(weapon, "damage"))}",
+		};
+		if (weapon.GetStat("attack_speed", 0f) > 0f)
+			parts.Add($"{StatCatalog.Name("attack_speed")} {StatCatalog.Format("attack_speed", player.GetWeaponStatForDisplay(weapon, "attack_speed"))}");
+		foreach (string stat in new[] { "projectile_count", "projectile_pierce", "chain_targets", "orbital_count" })
+		{
+			if (weapon.Base.Stats.ContainsKey(stat) || weapon.Base.Milestones.Contains(stat))
+			{
+				float value = player.GetWeaponStatForDisplay(weapon, stat);
+				// Un seul projectile, aucun perçage : rien à signaler.
+				if (value > (stat == "projectile_count" ? 1f : 0f))
+					parts.Add($"{StatCatalog.Name(stat)} {StatCatalog.Format(stat, value)}");
+			}
+		}
+		text.AddChild(MakeLabel(string.Join("  ·  ", parts), 13, StatLabelColor));
+		if (!string.IsNullOrEmpty(weapon.Base.LoreFlavor))
+		{
+			Label lore = MakeLabel(weapon.Base.LoreFlavor, 12, TextVeryDim);
+			lore.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+			lore.CustomMinimumSize = new Vector2(320, 0);
+			text.AddChild(lore);
 		}
 
-		_statsContainer.AddChild(row);
+		VBoxContainer dealt = new() { SizeFlagsVertical = Control.SizeFlags.ShrinkCenter };
+		dealt.AddChild(MakeLabel(Mathf.RoundToInt(player.GetDamageDealt(weapon.Id)).ToString("N0", French), 15, StatBonusColor, HorizontalAlignment.Right));
+		dealt.AddChild(MakeLabel("dégâts infligés", 11, TextVeryDim, HorizontalAlignment.Right));
+		row.AddChild(dealt);
+		_loadoutContainer.AddChild(row);
 	}
 
-	private static string FormatMult(float mult)
+	private void AddPassiveRow(ActivePassiveSouvenir passive)
 	{
-		if (Mathf.IsEqualApprox(mult, 1f))
-			return null;
-		return $"x{mult:F2}";
+		HBoxContainer row = new();
+		row.AddThemeConstantOverride("separation", 10);
+		row.AddChild(MakeIcon(PerkIconResolver.GetPassiveStatIconPath(passive.Data.Stat)));
+		Label name = MakeLabel($"{passive.Data.Name}   Niv {passive.Level}/{passive.Data.MaxLevel}", 15, StatValueColor);
+		name.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+		row.AddChild(name);
+		row.AddChild(MakeLabel($"{StatCatalog.Name(passive.Data.Stat)} {StatCatalog.FormatBonus(passive.Data.Stat, passive.Modifier, passive.Data.ModifierType == "multiplicative")}",
+			14, StatBonusColor, HorizontalAlignment.Right));
+		_loadoutContainer.AddChild(row);
 	}
 
-	private void ToggleAppelDuVide()
+	/// <summary>Toutes les stats du joueur ; les multiplicateurs se lisent en pourcentage de bonus.</summary>
+	private void UpdateSheet(Player player)
 	{
-		CachePerkManager();
-		_perkManager?.ToggleAppelDuVide();
-		UpdateAppelDuVideButton();
-	}
-
-	private void UpdateAppelDuVideButton()
-	{
-		CachePerkManager();
-		if (_perkManager == null || _perkManager.AppelDuVideLevel <= 0)
+		EssenceTracker essenceTracker = GetNodeOrNull<EssenceTracker>("/root/Main/EssenceTracker");
+		AddLine(_sheetContainer, Tr("STAT_MAX_HP"), $"{player.CurrentHp:F0} / {player.EffectiveMaxHp:F0}");
+		AddLine(_sheetContainer, Tr("STAT_REGEN"), $"{(player.BaseRegenRate + player.BonusRegenRate).ToString("0.0", French)} PV/s");
+		AddLine(_sheetContainer, Tr("STAT_ARMOR"), $"{player.Armor:F0}");
+		AddLine(_sheetContainer, Tr("STAT_DODGE"), Percent(player.DodgeChance));
+		AddLine(_sheetContainer, Tr("STAT_SPEED"), Bonus(player.SpeedMultiplier));
+		AddLine(_sheetContainer, Tr("STAT_DAMAGE"), Bonus(player.DamageMultiplier));
+		AddLine(_sheetContainer, Tr("STAT_ATTACK_SPEED"), Bonus(player.AttackSpeedMultiplier));
+		AddLine(_sheetContainer, Tr("STAT_CRIT"), $"{Percent(player.CritChance)}  ×{player.CritMultiplier.ToString("0.0", French)}");
+		AddLine(_sheetContainer, Tr("STAT_RANGE"), Bonus(player.AttackRangeMultiplier));
+		AddLine(_sheetContainer, Tr("STAT_AOE"), Bonus(player.AoeMultiplier));
+		AddLine(_sheetContainer, Tr("STAT_XP_RANGE"), Bonus(player.XpMagnetMultiplier));
+		AddLine(_sheetContainer, Tr("STAT_LUCK"), Percent(player.LuckBonus));
+		if (player.ExtraProjectiles > 0)
+			AddLine(_sheetContainer, Tr("STAT_BONUS_PROJ"), $"+{player.ExtraProjectiles}");
+		if (player.ProjectilePierce > 0)
+			AddLine(_sheetContainer, Tr("STAT_PIERCE"), $"+{player.ProjectilePierce}");
+		if (player.VampirismPercent > 0f)
+			AddLine(_sheetContainer, Tr("STAT_LIFESTEAL"), Percent(player.VampirismPercent));
+		if (player.ThornsPercent > 0f)
+			AddLine(_sheetContainer, Tr("STAT_THORNS"), Percent(player.ThornsPercent));
+		if (player.IgniteChance > 0f)
+			AddLine(_sheetContainer, Tr("STAT_IGNITE"), Percent(player.IgniteChance));
+		if (player.RicochetChance > 0f)
+			AddLine(_sheetContainer, Tr("STAT_RICOCHET"), Percent(player.RicochetChance));
+		if (essenceTracker != null)
+			AddLine(_sheetContainer, "Essence", essenceTracker.CurrentEssence.ToString());
+		if (GetNodeOrNull<PerilManager>("/root/Main/PerilManager") is { } peril)
 		{
-			_appelDuVideBtn.Visible = false;
+			AddPerilLines(peril.Peril);
+			foreach (ActiveOubli oubli in peril.Oublis)
+				AddLine(_sheetContainer, "  " + Tr(oubli.Data.NameKey), oubli.Modifier.Describe(), PerilColor);
+		}
+	}
+
+	/// <summary>Péril : le niveau, puis ce qu'il coûte et ce qu'il rapporte.</summary>
+	private void AddPerilLines(int peril)
+	{
+		AddLine(_sheetContainer, Tr("STAT_PERIL"), peril.ToString(), peril > 0 ? PerilColor : null);
+		if (peril == 0)
 			return;
-		}
-
-		_appelDuVideBtn.Visible = true;
-		bool active = _perkManager.IsAppelDuVideActive;
-		int level = _perkManager.AppelDuVideLevel;
-		_appelDuVideBtn.Text = $"Appel du Vide Lv{level}: {(active ? "ON" : "OFF")}";
-
-		StyleBoxFlat style = new();
-		if (active)
-		{
-			style.BgColor = new Color(0.4f, 0.1f, 0.15f, 0.8f);
-			style.BorderColor = new Color(0.8f, 0.2f, 0.3f);
-		}
-		else
-		{
-			style.BgColor = new Color(0.15f, 0.1f, 0.2f, 0.6f);
-			style.BorderColor = new Color(0.4f, 0.3f, 0.5f);
-		}
-		style.BorderWidthBottom = 1;
-		style.BorderWidthTop = 1;
-		style.BorderWidthLeft = 1;
-		style.BorderWidthRight = 1;
-		style.CornerRadiusTopLeft = 4;
-		style.CornerRadiusTopRight = 4;
-		style.CornerRadiusBottomLeft = 4;
-		style.CornerRadiusBottomRight = 4;
-		_appelDuVideBtn.AddThemeStyleboxOverride("normal", style);
+		AddLine(_sheetContainer, "  " + Tr("PERIL_CREATURES"),
+			$"{Bonus(PerilDataLoader.EnemyCountMultiplier(peril))} · PV {Bonus(PerilDataLoader.EnemyHpMultiplier(peril))}", TextDim);
+		AddLine(_sheetContainer, "  " + Tr("PERIL_REWARDS"),
+			$"XP {Bonus(PerilDataLoader.XpMultiplier(peril))} · score {Bonus(PerilDataLoader.ScoreMultiplier(peril))}", TextDim);
 	}
 
-	private void CachePerkManager()
+	private static readonly System.Globalization.CultureInfo French = System.Globalization.CultureInfo.GetCultureInfo("fr-FR");
+
+	private static string Percent(float fraction) => $"{Mathf.RoundToInt(fraction * 100f)} %";
+
+	/// <summary>Multiplicateur lu en bonus : ×1,15 devient « +15 % », ×1 devient « — ».</summary>
+	private static string Bonus(float multiplier)
 	{
-		if (_perkManager != null && IsInstanceValid(_perkManager))
-			return;
-		_perkManager = GetNodeOrNull<PerkManager>("/root/Main/PerkManager");
+		int percent = Mathf.RoundToInt((multiplier - 1f) * 100f);
+		return percent == 0 ? "—" : $"{(percent > 0 ? "+" : "")}{percent} %";
+	}
+
+	private static void AddSectionTitle(VBoxContainer container, string text)
+	{
+		container.AddChild(MakeLabel(text.ToUpper(), 13, TextDim));
+	}
+
+	private static void AddLine(VBoxContainer container, string label, string value, Color? color = null)
+	{
+		HBoxContainer row = new();
+		Label name = MakeLabel(label, 15, color ?? StatLabelColor);
+		name.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+		row.AddChild(name);
+		row.AddChild(MakeLabel(value, 15, StatValueColor, HorizontalAlignment.Right));
+		container.AddChild(row);
+	}
+
+	private static Label MakeLabel(string text, int size, Color color, HorizontalAlignment align = HorizontalAlignment.Left)
+	{
+		Label label = new() { Text = text, HorizontalAlignment = align };
+		label.AddThemeFontSizeOverride("font_size", size);
+		label.AddThemeColorOverride("font_color", color);
+		return label;
+	}
+
+	private static Control MakeIcon(string path)
+	{
+		TextureRect icon = new()
+		{
+			CustomMinimumSize = new Vector2(32, 32),
+			ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
+			StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
+			TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
+			SizeFlagsVertical = Control.SizeFlags.ShrinkCenter,
+		};
+		if (!string.IsNullOrEmpty(path))
+		{
+			string resPath = path.StartsWith("res://") ? path : $"res://{path}";
+			if (ResourceLoader.Exists(resPath))
+				icon.Texture = GD.Load<Texture2D>(resPath);
+		}
+		return icon;
 	}
 
 	private void LoadTextures()

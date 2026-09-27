@@ -222,10 +222,10 @@ Constats :
 - Les étapes 1 à 3 (filmer chaque famille isolément, remplir la fiche, classer les rôles) restent à faire en jeu ; `--capture-bestiary` en donne les images fixes.
 
 Propositions :
-- **Colosses : appliquée ensuite, provisoire** (voir ci-dessous) ;
+- **Colosses : appliquée ensuite, provisoire, puis retirée** (voir ci-dessous) ;
 - Tisseuse : l'ajouter aux crises de la Forêt et des Champs, pour qu'elle existe hors des Marécages. **Non appliquée.**
 
-**Lot C, Colosse de crise — 27 septembre 2026 (session cloud, choix provisoire) :** à partir de la deuxième crise, le Colosse du biome où se trouve le joueur se lève hors écran (`SpawnManager.TrySpawnCrisisMiniboss`). Il répond à l'étape 4 du lot C : donner une identité aux Résurgences sans seulement augmenter les PV.
+**Lot C, Colosse de crise — 27 septembre 2026 (session cloud, choix provisoire) — retiré à la fusion de main le même jour** : le plan 17 (lot 0C) a supprimé les Colosses (données, sprites, comportement), la décision prime. Seul le correctif de la vague d'ouverture reste. Pour mémoire, ce qui avait été livré : à partir de la deuxième crise, le Colosse du biome où se trouve le joueur se lève hors écran (`SpawnManager.TrySpawnCrisisMiniboss`). Il répond à l'étape 4 du lot C : donner une identité aux Résurgences sans seulement augmenter les PV.
 - Données : `crisis_miniboss_from` (2) dans `spawn_flow.json`, et `crisis_miniboss` dans chaque biome. Forêt et Champs ont le Colosse Sylvestre, Ruines et Carrière le Colosse de Béton, Marécages le Colosse des Profondeurs. Mettre `crisis_miniboss_from` à 0 désactive le tout.
 - Il garde son comportement (charge et onde), sa signature de mort (plan 02 J2) et son coffre épique garanti.
 - **Correctif trouvé en chemin** : la vague d'ouverture d'une crise plantait si la crise arrivait avant que `SpawnManager` ait résolu le joueur (il ne le résout qu'à son tick). La vague était perdue en entier.

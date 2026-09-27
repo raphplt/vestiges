@@ -25,12 +25,6 @@ public partial class Enemy : CharacterBody2D
 	private const int ScreamerSpawnCount = 2;
 	private const float BurrowerPhaseDuration = 2f;
 	private const float BurrowerPhaseInterval = 5f;
-	private const float ColosseChargeInterval = 7f;
-	private const float ColosseChargeSpeed = 280f;
-	private const float ColosseChargeDuration = 0.6f;
-	private const float ColosseSlamRange = 50f;
-	private const float ColosseSlamAoeRadius = 120f;
-	private const float ColosseSlamCooldown = 4f;
 
 	private float _maxHp;
 	private float _baseHp;
@@ -63,12 +57,6 @@ public partial class Enemy : CharacterBody2D
 	private float _burrowerPhaseTimer;
 	private bool _isBurrowed;
 
-	// Colosse : charge + ground slam
-	private float _colosseChargeTimer;
-	private float _colosseSlamTimer;
-	private bool _isCharging;
-	private float _chargeDurationLeft;
-	private Vector2 _chargeDirection;
 	private string _tier = "normal";
 
 	// Void Brute (charger) : charge vers les murs/structures
@@ -221,10 +209,6 @@ public partial class Enemy : CharacterBody2D
 		_screamerTimer = ScreamerCryCooldown * 0.5f;
 		_burrowerPhaseTimer = BurrowerPhaseInterval;
 		_isBurrowed = false;
-		_colosseChargeTimer = ColosseChargeInterval * 0.5f;
-		_colosseSlamTimer = ColosseSlamCooldown;
-		_isCharging = false;
-		_chargeDurationLeft = 0f;
 		_chargerCooldown = 4f;
 		_chargerIsCharging = false;
 		_chargerDurationLeft = 0f;
@@ -432,8 +416,6 @@ public partial class Enemy : CharacterBody2D
 		_guardTarget = null;
 		_tracking.Reset();
 		_isBurrowed = false;
-		_isCharging = false;
-		_chargeDurationLeft = 0f;
 		_tier = "normal";
 		_behavior = "default";
 		_currentHp = 0;
@@ -562,13 +544,6 @@ public partial class Enemy : CharacterBody2D
 
 		ProcessBehaviorAbilities(distToPlayer, dt);
 
-		// Colosse en charge : skip le mouvement normal
-		if (_isCharging)
-		{
-			MoveAndSlide();
-			return;
-		}
-
 		if (_mods.IsTraveling)
 		{
 			ProcessTravel(distToPlayer, dt);
@@ -615,9 +590,6 @@ public partial class Enemy : CharacterBody2D
 				break;
 			case "burrower":
 				ProcessBurrowerPhase(delta);
-				break;
-			case "colosse":
-				ProcessColosseAbilities(distToPlayer, delta);
 				break;
 			case "charger":
 				ProcessChargerAbilities(distToPlayer, delta);
@@ -673,6 +645,12 @@ public partial class Enemy : CharacterBody2D
 		}
 	}
 
+	private void PlayActionAudio(string key)
+	{
+		if (_player != null && IsInstanceValid(_player) && GlobalPosition.DistanceSquaredTo(_player.GlobalPosition) < RangedAttackAudioRadius * RangedAttackAudioRadius)
+			Infrastructure.AudioManager.Play(key, 0.06f, -7f);
+	}
+
 	/// <summary>Rampant : alterne entre phase souterraine (invulnérable, ignore murs) et surface.</summary>
 	private void ProcessBurrowerPhase(float delta)
 	{
@@ -685,6 +663,7 @@ public partial class Enemy : CharacterBody2D
 			// Émerge : redevient vulnérable et visible
 			_isBurrowed = false;
 			_burrowerPhaseTimer = BurrowerPhaseInterval;
+			PlayActionAudio("sfx_burrow_transition");
 			CollisionLayer = 2;
 			Modulate = new Color(1f, 1f, 1f, 1f);
 		}
@@ -696,80 +675,6 @@ public partial class Enemy : CharacterBody2D
 			CollisionLayer = 0;
 			Modulate = new Color(1f, 1f, 1f, 0.35f);
 		}
-	}
-
-	/// <summary>Colosse : charge périodique + ground slam AoE au contact.</summary>
-	private void ProcessColosseAbilities(float distToPlayer, float delta)
-	{
-		// Phase de charge active : le colosse fonce dans une direction
-		if (_isCharging)
-		{
-			_chargeDurationLeft -= delta;
-			Velocity = _chargeDirection * ColosseChargeSpeed;
-
-			if (_chargeDurationLeft <= 0f)
-			{
-				_isCharging = false;
-				_colosseChargeTimer = ColosseChargeInterval;
-			}
-
-			// Impact joueur pendant la charge
-			if (distToPlayer < MeleeRange * 2f)
-			{
-				_isCharging = false;
-				_colosseChargeTimer = ColosseChargeInterval;
-				_eventBus.EmitSignal(EventBus.SignalName.PlayerHitBy, _enemyId, _damage * 1.5f);
-				_player.TakeDamage(_damage * 1.5f);
-				PlayColosseSlamVfx();
-			}
-			return;
-		}
-
-		// Timer de charge : lance une charge vers la position du joueur
-		_colosseChargeTimer -= delta;
-		if (_colosseChargeTimer <= 0f && distToPlayer < 350f && distToPlayer > ColosseSlamRange)
-		{
-			_isCharging = true;
-			_chargeDurationLeft = ColosseChargeDuration;
-			_chargeDirection = (_player.GlobalPosition - GlobalPosition).Normalized();
-			// VFX : flash rouge + tremblement
-			if (_hasSprite)
-				EnemyAttackFx.FlashWarning(_sprite, PixelPalette.PlayerBlood, 0.3f);
-			_visual.Color = new Color(1f, 0.2f, 0.2f);
-			Tween chargeTween = CreateTween();
-			chargeTween.TweenProperty(_visual, "color", _originalColor, 0.3f).SetDelay(0.1f);
-		}
-
-		// Ground slam au contact : AoE qui repousse le joueur
-		_colosseSlamTimer -= delta;
-		if (_colosseSlamTimer <= 0f && distToPlayer < ColosseSlamRange)
-		{
-			_colosseSlamTimer = ColosseSlamCooldown;
-			PerformGroundSlam();
-		}
-	}
-
-	private void PerformGroundSlam()
-	{
-		_eventBus.EmitSignal(EventBus.SignalName.PlayerHitBy, _enemyId, _damage * 2f);
-		_player.TakeDamage(_damage * 2f);
-
-		// Knockback joueur
-		Vector2 knockbackDir = (_player.GlobalPosition - GlobalPosition).Normalized();
-		_player.Velocity += knockbackDir * 300f;
-
-		PlayColosseSlamVfx();
-	}
-
-	private void PlayColosseSlamVfx()
-	{
-		EnemyAttackFx.PlaySlam(GlobalPosition, ColosseSlamRange);
-
-		// Shake visuel du colosse
-		_visual.Scale = new Vector2(1.3f, 0.7f);
-		Tween squash = CreateTween();
-		squash.TweenProperty(_visual, "scale", Vector2.One, 0.25f)
-			.SetTrans(Tween.TransitionType.Elastic).SetEase(Tween.EaseType.Out);
 	}
 
 	/// <summary>Sentinelle : immobile, tire à distance. Pilier organique ancré.</summary>
@@ -809,6 +714,7 @@ public partial class Enemy : CharacterBody2D
 			if (_player != null && IsInstanceValid(_player))
 			{
 				_chargerIsCharging = true;
+				PlayActionAudio("sfx_enemy_charge");
 				_chargerDurationLeft = 0.8f;
 				_chargerDirection = (_player.GlobalPosition - GlobalPosition).Normalized();
 				if (_hasSprite)
@@ -999,8 +905,7 @@ public partial class Enemy : CharacterBody2D
 
 		Vector2 direction = (_player.GlobalPosition - GlobalPosition).Normalized();
 		PlayRangedAttackVfx(direction);
-		if (_attackAudio != null && GlobalPosition.DistanceSquaredTo(_player.GlobalPosition) < RangedAttackAudioRadius * RangedAttackAudioRadius)
-			Infrastructure.AudioManager.Play(_attackAudio, 0.08f, -9f);
+		PlayActionAudio("sfx_enemy_ranged_shot");
 		// Tisseuse : les projectiles ralentissent le joueur
 		bool slows = _behavior == "weaver";
 		CombatPools.Instance?.TakeEnemyProjectile()
@@ -1100,7 +1005,7 @@ public partial class Enemy : CharacterBody2D
 	/// <summary>Applique un knockback (vélocité instantanée) depuis une direction.</summary>
 	public void ApplyKnockback(Vector2 direction, float force)
 	{
-		if (_isDying || _isCharging || _tier == "miniboss")
+		if (_isDying || _tier == "miniboss")
 			return;
 		Velocity += direction.Normalized() * force;
 	}

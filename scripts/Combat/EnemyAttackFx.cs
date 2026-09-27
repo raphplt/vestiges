@@ -3,7 +3,7 @@ using Godot;
 namespace Vestiges.Combat;
 
 /// <summary>
-/// Mise en scène des attaques ennemies (plan 08, effets d'attaque) : griffe de mêlée, slam des Colosses,
+/// Mise en scène des attaques ennemies (plan 08, effets d'attaque) : griffe de mêlée,
 /// annonce de charge et de cri. Toujours affichée (information de danger), opacité réglable.
 /// </summary>
 public static class EnemyAttackFx
@@ -40,32 +40,6 @@ public static class EnemyAttackFx
             LifeMax = 0.4f,
             Ballistic = true,
             Size = 1,
-        });
-    }
-
-    /// <summary>Slam d'un Colosse : onde de poussière au sol et gravats projetés.</summary>
-    public static void PlaySlam(Vector2 ground, float radius)
-    {
-        if (Pools == null)
-            return;
-        PixelFxSpec ring = PixelFxSpec.Of(PixelFxShape.Ring, FxFamily.Stone, radius, 5f, 0.35f);
-        ring.Squash = 2f;
-        ring.Steps = 6;
-        ring.FadeTail = 0.35f;
-        ring.ZIndex = -1;
-        Pools.PlayFx(ground, ring, FxOwner.Enemy);
-        Pools.EmitSparks(ground, new SparkBurst
-        {
-            Family = FxFamily.Stone,
-            Owner = FxOwner.Enemy,
-            Count = 14,
-            Spread = Mathf.Tau,
-            SpeedMin = 70f,
-            SpeedMax = 150f,
-            LifeMin = 0.4f,
-            LifeMax = 0.65f,
-            Ballistic = true,
-            Size = 2,
         });
     }
 

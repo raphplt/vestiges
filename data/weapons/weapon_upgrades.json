@@ -1,43 +1,20 @@
 {
-	"weapon_max_level": 8,
+	"_comment": "Croissance des armes (plan 17 lot 1A). Chaque arme liste dans weapons.json ses stats montables (growth : stat → poids du tirage) et ses paliers (milestones : stats entières, réservées aux raretés Épique et Légendaire). Ici, le pas de chaque stat pour une amélioration Commune : multiplicative = +pas × gain en pourcentage cumulé sur la base, additive = +pas × gain. max_level : niveau maximal d'une arme (une amélioration = un niveau).",
+	"weapon_max_level": 50,
 	"stats": {
-		"damage": {
-			"max_level": 5,
-			"per_level": 0.15,
-			"mode": "multiplicative",
-			"display_name": "Dégâts"
-		},
-		"attack_speed": {
-			"max_level": 5,
-			"per_level": 0.10,
-			"mode": "multiplicative",
-			"display_name": "Vitesse d'attaque"
-		},
-		"knockback": {
-			"max_level": 3,
-			"per_level": 0.25,
-			"mode": "multiplicative",
-			"display_name": "Recul"
-		},
-		"projectile_count": {
-			"max_level": 3,
-			"per_level": 1,
-			"mode": "additive",
-			"display_name": "Projectiles",
-			"types": ["ranged"]
-		},
-		"projectile_pierce": {
-			"max_level": 3,
-			"per_level": 1,
-			"mode": "additive",
-			"display_name": "Perçage",
-			"types": ["ranged"]
-		},
-		"range": {
-			"max_level": 3,
-			"per_level": 0.15,
-			"mode": "multiplicative",
-			"display_name": "Portée"
-		}
+		"damage": { "step": 0.12, "mode": "multiplicative" },
+		"attack_speed": { "step": 0.08, "mode": "multiplicative" },
+		"range": { "step": 0.06, "mode": "multiplicative" },
+		"arc_angle": { "step": 0.08, "mode": "multiplicative", "max": 360 },
+		"cone_angle_end": { "step": 0.08, "mode": "multiplicative", "max": 180 },
+		"knockback": { "step": 0.15, "mode": "multiplicative" },
+		"projectile_speed": { "step": 0.1, "mode": "multiplicative" },
+		"orbital_speed": { "step": 0.1, "mode": "multiplicative" },
+		"chain_range": { "step": 0.08, "mode": "multiplicative" },
+		"homing_strength": { "step": 0.1, "mode": "multiplicative" },
+		"projectile_count": { "step": 1, "mode": "additive" },
+		"projectile_pierce": { "step": 1, "mode": "additive" },
+		"chain_targets": { "step": 1, "mode": "additive" },
+		"orbital_count": { "step": 1, "mode": "additive" }
 	}
 }

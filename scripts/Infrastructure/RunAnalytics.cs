@@ -24,11 +24,6 @@ public static class RunAnalytics
         return (float)history.Average(r => r.CrisesSurvived);
     }
 
-    public static float GetAverageNights()
-    {
-        return GetAverageCrises();
-    }
-
     public static float GetAverageScore()
     {
         List<RunRecord> history = RunHistoryManager.GetHistory();
@@ -108,11 +103,6 @@ public static class RunAnalytics
         List<RunRecord> withDuration = history.Where(r => r.RunDurationSec > 0f).ToList();
         if (withDuration.Count == 0) return 0f;
         return (float)withDuration.Average(r => r.TotalDamageDealt / r.RunDurationSec);
-    }
-
-    public static float GetAverageDeathNight()
-    {
-        return 0f;
     }
 
     public static float GetAveragePressure()

@@ -36,7 +36,7 @@ Le prototype V1 (Phases 0-6 complétées) a mis en lumière trois frictions fond
 
 **Le craft n'a pas prouvé sa valeur.** L'UI n'était pas assez fluide, les assets pas au niveau (Polygon2D), le rapport effort/récompense illisible. Le joueur pouvait survivre sans crafter. Un système que le joueur ignore est un système mort.
 
-**Les runs étaient trop longues.** 15 min/cycle × 3-4 cycles = 45min-1h. Pour un roguelite où la mort est permanente, un investissement de 45 min avant de mourir est frustrant, pas motivant. Les références (Megabonk, Vampire Survivors) visent 15-30 min par run.
+**Les runs étaient trop longues.** 15 min/cycle × 3-4 cycles = 45min-1h. Pour un roguelite où la mort est permanente, un investissement de 45 min avant de mourir est frustrant, pas motivant. Les jeux du genre visent 15 à 30 min par run.
 
 ## 2. La nouvelle identité
 
@@ -53,6 +53,23 @@ VESTIGES passe d'un **hybride roguelite/survie/craft** à un **roguelite d'explo
 3. **Montée en puissance addictive.** Perks, loot d'armes avec raretés, upgrades aux Autels. Le joueur doit se sentir plus fort chaque minute.
 4. **Endgame ouvert.** Pas de mort forcée à 30 min. Les bons joueurs peuvent aller très loin. Un boss/événement majeur marque la fin du "late game" classique, puis c'est l'endgame infini.
 5. **Lore intégré au gameplay.** L'Effacement, les Souvenirs, les Autels — chaque mécanique a un sens dans l'univers.
+
+### Références et garde-fous
+
+Section unique pour les jeux cités (plan 17, lot 0D). Ailleurs dans la doc, on renvoie ici.
+
+**Conventions du genre, communes à tous et assumées :** auto-attaque, level-up à trois choix, raretés colorées, montée en puissance continue, runs de 15 à 30 min, score, « encore une partie ».
+
+**Citations de Raphaël** (registre des décisions) :
+- *Megabonk* : inspiration pour le bilan de mort, et pour la variété du butin, avec une présentation « différente de Megabonk » (24 septembre).
+- *Outer Wilds*, *Celeste*, *Megabonk* : inspirations pour la bande-son (26 septembre, plan 15).
+
+**Garde-fous :**
+- Aucune mécanique signature d'un jeu précis n'est reprise telle quelle. Chaque système propre part de l'Effacement ou de la mémoire (plan 17, principe 5).
+- Aucun nombre de contenus ni réglage d'un autre jeu n'est une cible. Les chiffres cités (densités, durées) sont des ordres de grandeur, jamais des objectifs.
+- Un écran inspiré d'un autre jeu s'adapte à Vestiges ; il ne se copie pas.
+
+**Atmosphère et lecture** (GDD §1) : *Hades* (lisibilité), *Hollow Knight*, *Stalker*, *The Last of Us*, *Gris* (monde mort rendu vivant, mélancolie, couleur au service de l'émotion).
 
 ## 3. Ce qui disparaît
 
@@ -135,7 +152,7 @@ ENDGAME (infini, pour les meilleurs)
 │  Vagues continues d'ennemis. Scaling infini.
 │  Le joueur survit aussi longtemps que son build le permet.
 │  Chaque seconde supplémentaire = score massif.
-│  → C'est le "Vampire Survivors after boss" / "Megabonk endgame".
+│  → Après le boss, la seule question : jusqu'où tient le build.
 │  ↓
 │
 MORT
@@ -299,6 +316,8 @@ Le prototype V1 avait des ennemis trop passifs et trop loin. En V2 :
 
 ### Armes avec raretés
 
+> **Amendement du 26 septembre 2026 (décision de Raphaël, plan 17 §4.3)** : la rareté n'est plus portée par l'arme. Une arme n'a qu'un niveau et les gains accumulés de ses améliorations ; chaque amélioration du level-up tire une rareté (Commun à Légendaire) qui fixe l'ampleur du gain et le nombre de stats touchées. L'Autel donne une amélioration Rare au moins ; le reforgeage disparaît. Le tableau ci-dessous décrit l'ancienne intention.
+
 **Chaque personnage démarre avec une arme de base (tier 1, commune).** Les autres armes sont trouvées en jeu.
 
 | Rareté | Couleur bordure | Fréquence | Caractéristiques |
@@ -318,6 +337,8 @@ Le prototype V1 avait des ennemis trop passifs et trop loin. En V2 :
 **Upgrades aux Autels :** dépenser de l'Essence pour monter la rareté d'une arme (Commun → Inhabituel coûte 10, Inhabituel → Rare coûte 25, etc.). Chaque upgrade ajoute ou améliore un effet.
 
 ## 11. Les Autels d'Essence
+
+> **Amendement du 26 septembre 2026 (plan 17, vague 3, direction validée par Raphaël)** : l'Autel devient le **Mémorial**. On le ravive en rassemblant ses trois éclats (20 s) ; il stabilise sa zone et offre une bénédiction à rareté, puis des services contre de l'Essence (raviver une arme au choix, Rare au moins ; soin ; lever un Oubli). Son miroir est la **Faille** : une amélioration Épique ou Légendaire contre un **Oubli** (malus durable) et un point de **Péril** (créatures plus fortes, score, XP et raretés majorés), toujours refusable. L'Appel du Vide et les malédictions disparaissent. Écart avec le paragraphe « Interaction » ci-dessous, validé par Raphaël : le choix se fait sur un écran de trois cartes qui fige la run, comme le level-up.
 
 ### Concept
 
@@ -724,8 +745,9 @@ Le script de post-processing doit inclure une vérification/correction de l'angl
 
 ### Phase B — Autels et montée en puissance (2-3 semaines)
 
-- [x] Implémenter AltarSystem (spawn, interaction, upgrades d'armes).
-- [ ] Implémenter WeaponRaritySystem (Commun → Légendaire, effets, génération).
+- [x] Implémenter AltarSystem (spawn, interaction, upgrades d'armes) ; refondu en Mémoriaux (plan 17 lot 3B, 26 septembre 2026).
+- [x] Raretés Commun → Légendaire, portées par les améliorations d'arme et de passif plutôt que par l'arme (décision 4.3 du [plan 17](plans/17-armes-coffres-modificateurs.md), vague 1, 26 septembre 2026).
+- [x] Risque choisi : Péril, Failles et Oublis, à la place de l'Appel du Vide et des malédictions ([plan 17](plans/17-armes-coffres-modificateurs.md) lots 3A et 3C, 26 septembre 2026).
 - [x] Rendre les armes lootables dans les coffres dès le début de run.
 - [x] Implémenter EssenceTracker (remplace l'inventaire).
 - [ ] Ajuster l'économie d'Essence (drop rates, coûts d'upgrade aux Autels).
@@ -745,12 +767,13 @@ Le script de post-processing doit inclure une vérification/correction de l'angl
 - [x] Barre d'XP fullwidth en bas de l'écran (déplacée le 24 septembre 2026 dans la plaque de vie du HUD refait, [plan 04](plans/04-interfaces-et-hub.md#retour-de-raphaël-et-hud-de-run--24-septembre-2026)).
 - [x] HUD de run lisible : plaques contrastées, jauge de PV sous le héros, police Saira Semi Condensed, boussole retirée ; captures 1080p/4K vérifiées (plan 04, 24 septembre 2026).
 - [x] Recette humaine du HUD refait et de la police : « HUD bien mieux » (Raphaël, 25 septembre 2026).
-- [ ] Armes dans le menu pause avec stats et rareté.
+- [x] Armes dans le menu pause avec stats effectives et dégâts infligés, passifs et fiche du personnage (plan 17 lot 1C ; la rareté n'est plus portée par l'arme).
 - [ ] Menu pause compact.
 - [ ] Onboarding implicite (les 5 premières minutes doivent être auto-explicatives).
 - [x] Indicateurs visuels de l'Effacement (phases, transitions de couleur) : sol qui oublie et lisière de l'Effacé, plan 16 O1/O3 (26 septembre 2026) ; les décors suivront en O2.
 - [ ] Signaux précurseurs des Résurgences.
 - [ ] Sound design cleanup (retirer sons répétitifs, ajuster XP, musique adaptative).
+- [x] Intégration des 50 choix audio A–B6 applicables et nettoyage des fichiers inutilisés ; banque JSON, crédits et archives d’écoute hors dépôt (plan 15).
 - [x] Écran de mort reworké (transition visuelle + score détaillé + stats) : bilan en trois zones, première passe du plan 02 lot D (27 septembre 2026), recette de Raphaël attendue.
 
 ### Phase E — Quêtes et personnages (2-3 semaines)
@@ -769,7 +792,7 @@ Le script de post-processing doit inclure une vérification/correction de l'angl
 - [ ] Remplacer les Polygon2D priorité 1 (Player, ennemis principaux, projectiles).
 - [x] Remplacer les Polygon2D priorité 2 (coffres, armes, orbes).
 - [x] Tiles d'Effacement (phases visuelles des zones : Ancrée → Effacée) : shader du sol, plan 16 O1 (26 septembre 2026).
-- [ ] Sprites des Autels.
+- [x] Sprites des Autels : Mémorial (endormi, ravivé), éclat et Faille, procéduraux (plan 17 lot 3B, 26 septembre 2026).
 - [ ] Sprites des Résurgents (ennemis de Résurgence).
 - [x] Hub visuel (camp du Foyer vivant, validé par Raphaël le 26 septembre 2026, plan 04).
 - [ ] Musiques adaptatives (5-6 tracks).

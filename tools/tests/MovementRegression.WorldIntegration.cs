@@ -48,31 +48,12 @@ public partial class MovementRegression
         ErasureEffects.Effect restored = ReadPlayerField<ErasureEffects.Effect>("_erasurePenalty");
         Check(restored.Speed == 1f && restored.Damage == 1f, "retour en zone ancrée : pénalités levées");
 
-        // Un Autel qui sert rappelle sa zone : une zone effacée remonte au moins en Fragile (plan 16 O5).
-        Vector2 altar = new(0f, -2 * erasure.CellSize * 4f);
-        Vector2I altarCell = new(Mathf.FloorToInt(altar.X / erasure.CellSize), Mathf.FloorToInt(altar.Y / erasure.CellSize));
-        erasure.OverrideMemory(altarCell, 0.1f);
-        bus.EmitSignal(EventBus.SignalName.AltarUsed, altar);
-        Check(erasure.GetMemoryAt(altar) >= 0.7f, $"Autel utilisé : la mémoire de sa zone remonte de 0,1 à {erasure.GetMemoryAt(altar):0.00}");
-    }
-
-    /// <summary>Marche vers l'est jusqu'au bord de la carte générée : le joueur ne quitte jamais le sol.</summary>
-    /// <summary>Plan 07 lot C : la première crise n'a pas de Colosse, la deuxième fait lever celui du biome.</summary>
-    private async Task CheckCrisisMiniboss(WorldSetup world)
-    {
-        EventBus bus = GetNode<EventBus>("/root/EventBus");
-        string expected = world.GetBiomeAt(_player.GlobalPosition)?.CrisisMiniboss;
-        bus.EmitSignal(EventBus.SignalName.CrisisStarted, 1, 1);
-        await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
-        int afterFirst = CountEnemies(expected);
-        bus.EmitSignal(EventBus.SignalName.CrisisStarted, 2, 1);
-        await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
-        int afterSecond = CountEnemies(expected);
-        Check(!string.IsNullOrEmpty(expected) && afterFirst == 0 && afterSecond == 1,
-            $"Crise : Colosse du biome ({expected}) absent à la 1re, levé à la 2e ({afterFirst} → {afterSecond})");
-        foreach (Node node in GetTree().GetNodesInGroup("enemies"))
-            if (node is Vestiges.Combat.Enemy enemy && enemy.IsActive)
-                world.GetNode<Vestiges.Spawn.EnemyPool>("EnemyPool").Return(enemy);
+        // Un Mémorial ravivé rappelle sa zone : une zone effacée remonte au moins en Fragile (plan 16 O5).
+        Vector2 memorial = new(0f, -2 * erasure.CellSize * 4f);
+        Vector2I memorialCell = new(Mathf.FloorToInt(memorial.X / erasure.CellSize), Mathf.FloorToInt(memorial.Y / erasure.CellSize));
+        erasure.OverrideMemory(memorialCell, 0.1f);
+        bus.EmitSignal(EventBus.SignalName.MemorialAwakened, memorial);
+        Check(erasure.GetMemoryAt(memorial) >= 0.7f, $"Mémorial ravivé : la mémoire de sa zone remonte de 0,1 à {erasure.GetMemoryAt(memorial):0.00}");
     }
 
     /// <summary>Plan 03 lot C : oubli accéléré pendant la crise ; accalmie avec coffre rare à portée et Essence doublée.</summary>
@@ -112,15 +93,6 @@ public partial class MovementRegression
         foreach (Node node in GetTree().GetNodesInGroup("enemies"))
             if (node is Vestiges.Combat.Enemy enemy && enemy.IsActive)
                 world.GetNode<Vestiges.Spawn.EnemyPool>("EnemyPool").Return(enemy);
-    }
-
-    private int CountEnemies(string enemyId)
-    {
-        int count = 0;
-        foreach (Node node in GetTree().GetNodesInGroup("enemies"))
-            if (node is Vestiges.Combat.Enemy { IsActive: true } enemy && enemy.EnemyId == enemyId)
-                count++;
-        return count;
     }
 
     /// <summary>Plan 02 lot A : horloge de jeu actif, score notifié sans kill, verdict du record figé avant sauvegarde.</summary>
@@ -168,6 +140,7 @@ public partial class MovementRegression
         Check(Mathf.IsEqualApprox(tracker.RunDurationSeconds, atDeath), "Score : l'horloge s'arrête à la mort");
     }
 
+    /// <summary>Marche vers l'est jusqu'au bord de la carte générée : le joueur ne quitte jamais le sol.</summary>
     private async Task CheckWorldEdge(WorldSetup world)
     {
         TileMapLayer ground = world.GetNode<TileMapLayer>("Ground");
@@ -257,7 +230,6 @@ public partial class MovementRegression
         await CheckGeneratedWater(world);
         await CheckWorldEdge(world);
         await CheckVoidDamage(world);
-        await CheckCrisisMiniboss(world);
         await CheckCrisisAftermath(world);
         await CheckScoreClock(world);
         // Le pool historique garde ses instances préchauffées hors de l'arbre :

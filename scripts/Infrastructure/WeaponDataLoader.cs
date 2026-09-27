@@ -40,11 +40,20 @@ public class WeaponData
 	public string Type { get; set; }
 	public string DamageType { get; set; }
 	public string AttackPattern { get; set; }
+	public string AttackAudio { get; set; }
 	public string DefaultFor { get; set; }
 	public string Sprite { get; set; }
 	public string Source { get; set; }
 	public string RequiresSouvenir { get; set; }
+	/// <summary>Ce que fait l'arme, en une phrase, sans chiffre (carte « Nouvelle » du level-up).</summary>
+	public string Summary { get; set; }
+	/// <summary>Une ligne sur l'ancien propriétaire de l'objet (pause, Collection).</summary>
+	public string LoreFlavor { get; set; }
 	public Dictionary<string, float> Stats { get; set; } = new();
+	/// <summary>Stats qui peuvent monter à chaque amélioration, avec leur poids dans le tirage.</summary>
+	public Dictionary<string, float> Growth { get; set; } = new();
+	/// <summary>Stats entières (projectiles, perçage, rebonds, notes) : +1 par palier, aux raretés Épique et Légendaire.</summary>
+	public List<string> Milestones { get; set; } = new();
 	public WeaponOnHitEffect OnHitEffect { get; set; }
 	public WeaponSpecialEffect SpecialEffect { get; set; }
 	public WeaponFxData Fx { get; set; } = new();
@@ -144,12 +153,32 @@ public static class WeaponDataLoader
             Tier = dict.ContainsKey("tier") ? (int)dict["tier"].AsDouble() : 1,
             Type = dict.ContainsKey("type") ? dict["type"].AsString() : "ranged",
             DamageType = dict.ContainsKey("damage_type") ? dict["damage_type"].AsString() : "physical",
+            AttackAudio = dict.ContainsKey("attack_audio") ? dict["attack_audio"].AsString() : null,
             AttackPattern = dict.ContainsKey("attack_pattern") ? dict["attack_pattern"].AsString() : "linear",
             DefaultFor = dict.ContainsKey("default_for") ? dict["default_for"].AsString() : null,
             Sprite = dict.ContainsKey("sprite") ? dict["sprite"].AsString() : null,
             Source = dict.ContainsKey("source") ? dict["source"].AsString() : null,
-            RequiresSouvenir = dict.ContainsKey("requires_souvenir") ? dict["requires_souvenir"].AsString() : null
+            RequiresSouvenir = dict.ContainsKey("requires_souvenir") ? dict["requires_souvenir"].AsString() : null,
+            Summary = dict.ContainsKey("summary") ? dict["summary"].AsString() : "",
+            LoreFlavor = dict.ContainsKey("lore_flavor") ? dict["lore_flavor"].AsString() : ""
         };
+
+        if (dict.ContainsKey("growth"))
+        {
+            foreach ((Variant key, Variant value) in dict["growth"].AsGodotDictionary())
+                weapon.Growth[key.AsString()] = (float)value.AsDouble();
+        }
+        else
+        {
+            weapon.Growth["damage"] = 3f;
+            weapon.Growth["attack_speed"] = 2f;
+        }
+
+        if (dict.ContainsKey("milestones"))
+        {
+            foreach (Variant item in dict["milestones"].AsGodotArray())
+                weapon.Milestones.Add(item.AsString());
+        }
 
         if (dict.ContainsKey("stats"))
         {

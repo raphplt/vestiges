@@ -55,15 +55,13 @@ public partial class SpawnManager : Node2D
 	private float _sameTypeClusterSpacingMax;
 	private float _crisisSpawnMultiplier = 1.65f;
 	private int _crisisBurstBase = 8;
-	// Colosse de crise (plan 07 lot C) : à partir de cette crise, le Colosse du biome se lève ; 0 : jamais.
-	private int _crisisMinibossFrom;
 	private int _crisisBurstPerIntensity = 4;
 	private float _lateGameSpawnMultiplier = 1.4f;
 	private float _endgameSpawnMultiplier = 1.85f;
 	private float _flatHpMultiplier = 1f;
 	private float _flatDmgMultiplier = 1f;
 
-	// Difficulty modifiers from Appel du Vide / Cursed Items
+	// Péril (PerilManager)
 	private float _diffEnemyCountMult = 1f;
 	private float _diffEnemyHpMult = 1f;
 	private float _diffEnemyDmgMult = 1f;
@@ -97,8 +95,8 @@ public partial class SpawnManager : Node2D
 	private CrisisManager _crisisManager;
 
 	// Fallback quand aucun biome n'est disponible
-	private static readonly List<string> FallbackDayPool = new() { "shadow_crawler", "fading_spitter" };
-	private static readonly List<string> FallbackNightPool = new() { "shadow_crawler", "shade", "shade", "fading_spitter", "void_brute", "wailing_sentinel" };
+	private static readonly List<string> FallbackExplorationPool = new() { "shadow_crawler", "fading_spitter" };
+	private static readonly List<string> FallbackResurgencePool = new() { "shadow_crawler", "shade", "shade", "fading_spitter", "void_brute", "wailing_sentinel" };
 
 	public override void _Ready()
 	{
@@ -135,7 +133,7 @@ public partial class SpawnManager : Node2D
 		_diffEnemyCountMult = enemyCountMult;
 		_diffEnemyHpMult = enemyHpMult;
 		_diffEnemyDmgMult = enemyDmgMult;
-		GD.Print($"[SpawnManager] Difficulty modifiers updated — count: x{enemyCountMult:F1}, HP: x{enemyHpMult:F1}, DMG: x{enemyDmgMult:F1}");
+		GD.Print($"[SpawnManager] Péril : nombre x{enemyCountMult:F2}, PV x{enemyHpMult:F2}, dégâts x{enemyDmgMult:F2}");
 	}
 
 	public override void _Process(double delta)
@@ -210,7 +208,7 @@ public partial class SpawnManager : Node2D
 			dmgScale *= 1.32f;
 		}
 
-		// Difficulty modifiers (Appel du Vide + Cursed Items)
+		// Péril
 		hpScale *= _diffEnemyHpMult;
 		dmgScale *= _diffEnemyDmgMult;
 	}
@@ -273,9 +271,9 @@ public partial class SpawnManager : Node2D
 	public string PickLocalEnemyId(Vector2 worldPos, IReadOnlyList<string> preferred = null)
 	{
 		CacheWorldSetup();
-		List<string> pool = _worldSetup?.GetBiomeAt(worldPos)?.DayEnemyPool;
+		List<string> pool = _worldSetup?.GetBiomeAt(worldPos)?.ExplorationEnemyPool;
 		if (pool == null || pool.Count == 0)
-			pool = FallbackDayPool;
+			pool = FallbackExplorationPool;
 
 		if (preferred != null)
 		{
@@ -531,7 +529,7 @@ public partial class SpawnManager : Node2D
 	/// </summary>
 	private string PickEnemyForPosition(Vector2 worldPos)
 	{
-		bool isNight = _currentRunPhase is GameManager.RunPhase.Crisis or GameManager.RunPhase.LateGame or GameManager.RunPhase.Endgame;
+		bool isResurgence = _currentRunPhase is GameManager.RunPhase.Crisis or GameManager.RunPhase.LateGame or GameManager.RunPhase.Endgame;
 
 		CacheWorldSetup();
 		BiomeData biome = _worldSetup?.GetBiomeAt(worldPos);
@@ -539,13 +537,13 @@ public partial class SpawnManager : Node2D
 		List<string> pool;
 		if (biome != null)
 		{
-			pool = isNight ? biome.NightEnemyPool : biome.DayEnemyPool;
+			pool = isResurgence ? biome.ResurgenceEnemyPool : biome.ExplorationEnemyPool;
 			if (pool == null || pool.Count == 0)
-				pool = isNight ? FallbackNightPool : FallbackDayPool;
+				pool = isResurgence ? FallbackResurgencePool : FallbackExplorationPool;
 		}
 		else
 		{
-			pool = isNight ? FallbackNightPool : FallbackDayPool;
+			pool = isResurgence ? FallbackResurgencePool : FallbackExplorationPool;
 		}
 
 		if (_clusterRemaining > 0 && !string.IsNullOrEmpty(_clusterEnemyId))
@@ -660,24 +658,6 @@ public partial class SpawnManager : Node2D
 		int burstCount = _crisisBurstBase + _crisisBurstPerIntensity * Mathf.Max(0, intensity - 1);
 		for (int i = 0; i < burstCount; i++)
 			TrySpawnEnemy(elapsedMinutes);
-		TrySpawnCrisisMiniboss(crisisNumber);
-	}
-
-	/// <summary>
-	/// Une crise sur le tard fait lever le Colosse du biome où elle éclate, hors écran : un rendez-vous, pas un
-	/// habitant. Sans Colosse déclaré pour le biome, rien.
-	/// </summary>
-	private void TrySpawnCrisisMiniboss(int crisisNumber)
-	{
-		if (_crisisMinibossFrom <= 0 || crisisNumber < _crisisMinibossFrom)
-			return;
-		CacheWorldSetup();
-		string minibossId = _worldSetup?.GetBiomeAt(_player.GlobalPosition)?.CrisisMiniboss;
-		if (string.IsNullOrEmpty(minibossId))
-			return;
-		Enemy miniboss = SpawnEventEnemy(minibossId, GetSpawnPosition());
-		if (miniboss != null)
-			GD.Print($"[SpawnManager] Crise {crisisNumber} : {minibossId} se lève");
 	}
 
 	// =========================================================
@@ -739,7 +719,6 @@ public partial class SpawnManager : Node2D
 		_sameTypeClusterSpacingMax = dict.ContainsKey("same_type_cluster_spacing_max") ? (float)dict["same_type_cluster_spacing_max"].AsDouble() : 46f;
 		_crisisSpawnMultiplier = dict.ContainsKey("crisis_spawn_multiplier") ? (float)dict["crisis_spawn_multiplier"].AsDouble() : _crisisSpawnMultiplier;
 		_crisisBurstBase = dict.ContainsKey("crisis_burst_base") ? (int)dict["crisis_burst_base"].AsDouble() : _crisisBurstBase;
-		_crisisMinibossFrom = dict.ContainsKey("crisis_miniboss_from") ? (int)dict["crisis_miniboss_from"].AsDouble() : 0;
 		_crisisBurstPerIntensity = dict.ContainsKey("crisis_burst_per_intensity") ? (int)dict["crisis_burst_per_intensity"].AsDouble() : _crisisBurstPerIntensity;
 		_lateGameSpawnMultiplier = dict.ContainsKey("late_game_spawn_multiplier") ? (float)dict["late_game_spawn_multiplier"].AsDouble() : _lateGameSpawnMultiplier;
 		_endgameSpawnMultiplier = dict.ContainsKey("endgame_spawn_multiplier") ? (float)dict["endgame_spawn_multiplier"].AsDouble() : _endgameSpawnMultiplier;

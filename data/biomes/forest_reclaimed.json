@@ -7,24 +7,14 @@
         "water": 0.05,
         "forest": 0.60
     },
-    "day_enemy_pool": ["presage", "charognard", "charognard", "treant_corrompu", "rodeur"],
-    "night_enemy_pool": ["presage", "shade", "shade", "charognard", "void_brute", "hurleur"],
-    "crisis_miniboss": "colosse_forest",
-    "resource_bias": {
-        "wood": 0.55,
-        "stone": 0.20,
-        "metal": 0.10,
-        "fiber": 0.15
-    },
-    "ambient_color_day": "#D4C89A",
-    "ambient_color_dusk": "#8B7DBB",
+    "exploration_enemy_pool": ["presage", "charognard", "charognard", "treant_corrompu", "rodeur"],
+    "resurgence_enemy_pool": ["presage", "shade", "shade", "charognard", "void_brute", "hurleur"],
     "danger_level": 1,
     "poi_pool": {
         "searchable_building": 1.0,
         "resource_cache": 1.2,
         "guarded_chest": 0.8,
         "lore_ruin": 1.0,
-        "merchant_npc": 1.0,
         "anomaly": 0.5,
         "sanctuary": 0.15
     },

@@ -7,17 +7,8 @@
         "water": 0.05,
         "forest": 0.25
     },
-    "day_enemy_pool": ["presage", "shadow_crawler", "shadow_crawler", "fading_spitter", "rodeur"],
-    "night_enemy_pool": ["presage", "shadow_crawler", "shade", "fading_spitter", "void_brute", "wailing_sentinel", "rampant", "hurleur"],
-    "crisis_miniboss": "colosse_urban",
-    "resource_bias": {
-        "wood": 0.10,
-        "stone": 0.40,
-        "metal": 0.40,
-        "fiber": 0.10
-    },
-    "ambient_color_day": "#C8C0B4",
-    "ambient_color_dusk": "#7A6E9A",
+    "exploration_enemy_pool": ["presage", "shadow_crawler", "shadow_crawler", "fading_spitter", "rodeur"],
+    "resurgence_enemy_pool": ["presage", "shadow_crawler", "shade", "fading_spitter", "void_brute", "wailing_sentinel", "rampant", "hurleur"],
     "danger_level": 2,
     "map_weight": 1.0,
     "poi_pool": {
@@ -25,7 +16,6 @@
         "resource_cache": 1.0,
         "guarded_chest": 1.2,
         "lore_ruin": 1.0,
-        "merchant_npc": 0.8,
         "anomaly": 0.8,
         "sanctuary": 0.15
     },

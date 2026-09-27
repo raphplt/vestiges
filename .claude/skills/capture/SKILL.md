@@ -1,7 +1,7 @@
 ---
 name: capture
-description: Capture l'écran d'une vraie run de Vestiges (bot invincible, 1080p) pour vérifier un changement visible — HUD, micro-événement, carte des biomes, décors et collisions, bestiaire — puis regarde les images. À utiliser après toute modification de rendu, de génération du monde, de décors, de VFX ou d'UI en run, et pour montrer un avant/après.
-argument-hint: "[run|event <id>|map|props|props-clean|bestiary] [seed]"
+description: Capture l'écran d'une vraie run de Vestiges (bot invincible, 1080p) pour vérifier un changement visible — HUD, micro-événement, carte des biomes, décors et collisions, bestiaire, coffres — puis regarde les images. À utiliser après toute modification de rendu, de génération du monde, de décors, de VFX ou d'UI en run, et pour montrer un avant/après.
+argument-hint: "[run|event <id>|map|props|props-clean|bestiary|chests] [seed]"
 allowed-tools: Bash(tools/capture_run.sh *) Bash(python3 *) Bash(ls *) Bash(grep *) Read
 ---
 
@@ -19,6 +19,9 @@ Le smoke test ne boote que le Hub ; ce skill lance `res://tools/tests/RunObserva
 | `props` | `--capture-props` | Zone la plus chargée en décors de chaque biome, formes de collision affichées, et vue « derrière » le plus haut décor |
 | `props-clean` | `--capture-props --hide-collisions` | Idem, rendu propre (pour juger la beauté) |
 | `bestiary` | `--capture-bestiary` | Gros plans des créatures du pilote autour du joueur |
+| `chests` | `--capture-chests` | Chaque coffre cadré avec invite (puis sans décors, `-bare`), départ, coffre hors cadre (colonne, flèche de bord), ouverture et écran de butin ; ligne `RESULT chests` (nombre par type, distance au départ en fraction du rayon) |
+
+Le mode `run` écrit aussi dans sa ligne `RESULT` les coffres entrés dans le cadre (`chests_seen`), ceux qu'aucun décor ne masquait (`chests_clear`) et le premier vu (`first_chest_s`). Ajouter `--nomad` pour un bot qui garde un cap au lieu d'errer autour du départ. Pour ces chiffres seuls, sans image, préférer `tools/measure_run.sh` (headless, temps accéléré, plusieurs seeds en une minute).
 
 ## Procédure
 

@@ -4,7 +4,7 @@ Audit des données du bestiaire (plan 07, lot A, étape 4 : « présence en JSON
 
 Pour chaque fiche de data/enemies : rôle déclaré (type, rang, comportement, capacités), vitesse et gabarit, puis
 tous les chemins d'apparition trouvés dans les données et le code :
-  - pools d'exploration et de crise de chaque biome (anciennes clés day_enemy_pool / night_enemy_pool),
+  - pools d'exploration et de crise de chaque biome (exploration_enemy_pool / resurgence_enemy_pool),
     avec la part de la créature dans le pool (les doublons pondèrent) ;
   - gardes des points d'intérêt (data/pois) ;
   - micro-événements (data/events) ;
@@ -45,8 +45,8 @@ def biome_pools() -> dict[str, tuple[Counter, Counter]]:
         if path.name.startswith("_"):
             continue
         data = load(path)
-        pools[data.get("name", data.get("id", path.stem))] = (Counter(data.get("day_enemy_pool", [])),
-                                                              Counter(data.get("night_enemy_pool", [])))
+        pools[data.get("name", data.get("id", path.stem))] = (Counter(data.get("exploration_enemy_pool", [])),
+                                                              Counter(data.get("resurgence_enemy_pool", [])))
     return pools
 
 

@@ -119,7 +119,7 @@ public partial class HUD : CanvasLayer
     private static readonly Color PalGrayWarm = new(0x6B / 255f, 0x61 / 255f, 0x61 / 255f);
     private static readonly Color PalGrayLight = new(0x9E / 255f, 0x94 / 255f, 0x94 / 255f);
     private static readonly Color PalWhiteOff = new(0xE8 / 255f, 0xE0 / 255f, 0xD4 / 255f);
-    private static readonly Color PalGoldFoyer = new(0xD4 / 255f, 0xA8 / 255f, 0x43 / 255f);
+    private static readonly Color PalGold = new(0xD4 / 255f, 0xA8 / 255f, 0x43 / 255f);
     private static readonly Color PalOrangeFlame = new(0xE0 / 255f, 0x7B / 255f, 0x39 / 255f);
     private static readonly Color PalRedBlood = new(0xC4 / 255f, 0x43 / 255f, 0x2B / 255f);
     private static readonly Color PalCyanEssence = new(0x5E / 255f, 0xC4 / 255f, 0xC4 / 255f);
@@ -172,6 +172,7 @@ public partial class HUD : CanvasLayer
         BuildWeaponBar();
         BuildPassiveBar();
 
+        _hudRoot.AddChild(new ChestPointers { Name = "ChestPointers" });
         RunEventHud eventHud = new() { Name = "RunEventHud" };
         _hudRoot.AddChild(eventHud);
     }
@@ -468,14 +469,14 @@ public partial class HUD : CanvasLayer
         caption.Size = new Vector2(50, 10);
         content.AddChild(caption);
 
-        _scoreLabel = MakeLabel("0", 18, PalGoldFoyer, 4);
+        _scoreLabel = MakeLabel("0", 18, PalGold, 4);
         _scoreLabel.Position = new Vector2(8, 0);
         _scoreLabel.Size = new Vector2(ScorePlateWidth - 16, 24);
         _scoreLabel.HorizontalAlignment = HorizontalAlignment.Right;
         content.AddChild(_scoreLabel);
 
         // Gains rapprochés regroupés (plan 02 lot A) : « +120 » à gauche de la plaque, puis s'efface.
-        _gainLabel = MakeLabel("", 13, PalGoldFoyer, 4);
+        _gainLabel = MakeLabel("", 13, PalGold, 4);
         _gainLabel.Position = new Vector2(-ScorePlateWidth - PlateMargin - 88f, PlateMargin + 10f);
         _gainLabel.Size = new Vector2(80f, 20f);
         _gainLabel.HorizontalAlignment = HorizontalAlignment.Right;
@@ -491,7 +492,8 @@ public partial class HUD : CanvasLayer
 
     private void BuildWeaponBar()
     {
-        const float slotSize = 28f;
+        // Icônes 32×32 à ×2 (HUD dessiné à ×2, icône de 32 unités) : 2 unités de cadre autour.
+        const float slotSize = 36f;
         HBoxContainer bar = new() { MouseFilter = Control.MouseFilterEnum.Ignore };
         bar.AnchorLeft = 0.5f;
         bar.AnchorRight = 0.5f;
@@ -500,7 +502,7 @@ public partial class HUD : CanvasLayer
         float totalWidth = Player.MaxWeaponSlots * (slotSize + 3);
         bar.OffsetLeft = -totalWidth / 2;
         bar.OffsetRight = totalWidth / 2;
-        bar.OffsetTop = -54;
+        bar.OffsetTop = -26 - slotSize;
         bar.OffsetBottom = -26;
         bar.AddThemeConstantOverride("separation", 3);
         bar.Alignment = BoxContainer.AlignmentMode.Center;
@@ -512,19 +514,21 @@ public partial class HUD : CanvasLayer
             NinePatchRect frame = MakeSlotFrame(_slotEmptyTex, 4);
             slotRoot.AddChild(frame);
 
-            const float iconSize = 22f;
             TextureRect icon = new()
             {
                 ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
                 StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
                 TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
-                Position = new Vector2((slotSize - iconSize) / 2, (slotSize - iconSize) / 2 - 1),
-                Size = new Vector2(iconSize, iconSize),
                 Visible = false
             };
+            icon.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
+            icon.OffsetLeft = 2;
+            icon.OffsetTop = 2;
+            icon.OffsetRight = -2;
+            icon.OffsetBottom = -2;
             slotRoot.AddChild(icon);
 
-            Label level = MakeLabel("", 9, PalGoldFoyer, 3);
+            Label level = MakeLabel("", 9, PalGold, 3);
             level.Position = new Vector2(slotSize - 14, slotSize - 13);
             level.Size = new Vector2(13, 12);
             level.HorizontalAlignment = HorizontalAlignment.Right;
@@ -717,7 +721,7 @@ public partial class HUD : CanvasLayer
         {
             "Crisis" => PalOrangeFlame,
             "LateGame" => PalRedBlood,
-            "Endgame" => PalGoldFoyer,
+            "Endgame" => PalGold,
             _ => PalWhiteOff
         };
         _phaseLabel.AddThemeColorOverride("font_color", phaseColor);
@@ -726,7 +730,7 @@ public partial class HUD : CanvasLayer
         {
             "Crisis" => PalOrangeFlame,
             "LateGame" => PalRedBlood,
-            "Endgame" => PalGoldFoyer,
+            "Endgame" => PalGold,
             _ => PalCyanEssence
         };
         CreateTween().TweenProperty(_erasureFill, "color", barColor, 1f);
@@ -804,7 +808,7 @@ public partial class HUD : CanvasLayer
             {
                 WeaponInstance weapon = weapons[i];
                 _weaponSlotFrames[i].Texture = _slotFilledTex;
-                _weaponSlotFrames[i].Modulate = weapon.RarityColor;
+                _weaponSlotFrames[i].Modulate = Colors.White;
                 LoadWeaponIcon(i, weapon.Sprite);
                 int fragLevel = player.GetWeaponFragmentLevel(weapon.Id);
                 _weaponSlotLevels[i].Text = fragLevel > 1 ? $"{fragLevel}" : "";

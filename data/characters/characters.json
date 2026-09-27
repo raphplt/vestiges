@@ -41,7 +41,7 @@
         "visual_color": [0.48, 0.36, 0.26, 1.0],
         "sprite_folder": "vagabond",
         "sprite_feet_offset": 16,
-        "unlock_condition": "survive_3_nights"
+        "unlock_condition": "survive_12_minutes"
     },
     {
         "id": "forgeuse",

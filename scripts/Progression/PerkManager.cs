@@ -13,7 +13,6 @@ namespace Vestiges.Progression;
 /// </summary>
 public partial class PerkManager : Node
 {
-    private const int PerksPerChoice = 3;
 
     /// <summary>
     /// Perks whose mechanics depend on systems not yet implemented.
@@ -22,19 +21,9 @@ public partial class PerkManager : Node
     /// </summary>
     private static readonly HashSet<string> _disabledPerks = new()
     {
-        // Essence system : perks spécifiques essence pas encore câblés
-        "channeling", "siphon", "instability", "essence_regen",
-        // Light / vision / fog system not implemented
-        "torch_bearer", "night_vision", "awakened_sight",
-        // Day cycle modifier not implemented
-        "time_master",
-        // Foyer aura / structure-count mechanics not implemented
-        "memory_anchor", "last_stand",
-        // Structure and harvest perks still tied to removed base systems
-        "architect", "quick_fix", "harvest_bounty",
-        // Salvage system not implemented
-        "salvager",
-        // Complex perks still tied to removed systems
+        // Perks d'Essence pas encore câblés
+        "channeling", "siphon", "instability",
+        // Perks de personnage encore liés à des systèmes retirés
         "traqueur_ambush", "traqueur_marked",
     };
 
@@ -44,18 +33,6 @@ public partial class PerkManager : Node
     private Player _player;
     private string _characterId;
 
-    // Appel du Vide (difficulty toggle)
-    private bool _appelDuVideActive;
-    public bool IsAppelDuVideActive => _appelDuVideActive;
-    public int AppelDuVideLevel => _activeStacks.GetValueOrDefault("appel_du_vide", 0);
-
-    // Aggregated difficulty modifiers (Appel du Vide + Cursed Items)
-    private float _diffEnemyCountMult = 1f;
-    private float _diffEnemyHpMult = 1f;
-    private float _diffEnemyDmgMult = 1f;
-    private float _diffXpMult = 1f;
-
-    [Signal] public delegate void PerkChoicesReadyEventHandler(string[] perkIds);
     [Signal] public delegate void PerkAppliedEventHandler(string perkId, int stacks);
     [Signal] public delegate void SynergyActivatedEventHandler(string synergyId, string notification);
 
@@ -63,9 +40,8 @@ public partial class PerkManager : Node
     {
         PerkDataLoader.Load();
         _eventBus = GetNode<EventBus>("/root/EventBus");
-        // Level-up choices are now handled by FragmentManager (weapons + passives).
-        // PerkManager only handles Memorial perks and world perks (chests, POIs, events).
-        _eventBus.MemorialActivated += OnMemorialActivated;
+        // Les choix de niveau passent par FragmentManager (armes, passifs) ; PerkManager applique
+        // les perks reçus du monde (coffres, événements).
         _eventBus.LootReceived += OnLootReceived;
     }
 
@@ -73,7 +49,6 @@ public partial class PerkManager : Node
     {
         if (_eventBus != null)
         {
-            _eventBus.MemorialActivated -= OnMemorialActivated;
             _eventBus.LootReceived -= OnLootReceived;
         }
     }
@@ -94,16 +69,9 @@ public partial class PerkManager : Node
         }
     }
 
-    private void OnMemorialActivated()
-    {
-        string[] choices = PickRandomPerks(PerksPerChoice);
-        if (choices.Length > 0)
-            EmitSignal(SignalName.PerkChoicesReady, choices);
-    }
-
     /// <summary>
     /// Auto-applique un perk reçu depuis le monde (coffre, POI, événement).
-    /// Le perkId est déjà résolu par Player.ResolvePerkLoot().
+    /// Le perkId est déjà résolu par LootRewards (PickLootPerk).
     /// </summary>
     private void OnLootReceived(string itemType, string itemId, int amount)
     {
@@ -212,17 +180,12 @@ public partial class PerkManager : Node
                 _player.AddKillSpeed(fx.Modifier, fx.Duration, fx.MaxBuffStacks);
                 break;
 
-            case "bonus_resource":
-                // V2: Harvest system removed — bonus_resource perk effect disabled
-                GD.Print($"[PerkManager] bonus_resource effect skipped (V2: harvest system removed)");
-                break;
-
             case "dodge":
                 _player.AddDodge(fx.Chance);
                 break;
 
             default:
-                // Effects not yet implemented (torch_bearer, night_vision, essence perks, etc.)
+                // Effets pas encore câblés (perks d'Essence)
                 GD.Print($"[PerkManager] Complex effect '{fx.Action}' for {data.Id} not yet implemented");
                 break;
         }
@@ -252,6 +215,13 @@ public partial class PerkManager : Node
 
             GD.Print($"[PerkManager] Synergy activated: {synergy.Name}");
         }
+    }
+
+    /// <summary>Perk tiré pour un butin (coffre, POI) : mêmes règles que les offres, perks V1 exclus. Null si aucun.</summary>
+    public string PickLootPerk()
+    {
+        string[] picked = PickRandomPerks(1);
+        return picked.Length > 0 ? picked[0] : null;
     }
 
     /// <summary>
@@ -313,64 +283,6 @@ public partial class PerkManager : Node
         if (luck > 0f && w < 1f)
             w = Mathf.Lerp(w, 1f, luck);
         return w;
-    }
-
-    /// <summary>Active/desactive l'Appel du Vide et emet les modificateurs de difficulte.</summary>
-    public void ToggleAppelDuVide()
-    {
-        int level = AppelDuVideLevel;
-        if (level <= 0)
-            return;
-
-        _appelDuVideActive = !_appelDuVideActive;
-        RecalculateDifficultyModifiers();
-        GD.Print($"[PerkManager] Appel du Vide {(_appelDuVideActive ? "ON" : "OFF")} (level {level})");
-    }
-
-    /// <summary>
-    /// Applique des multiplicateurs de difficulte externes (cursed items).
-    /// Multiplie les valeurs existantes (stack avec Appel du Vide).
-    /// </summary>
-    public void ApplyExternalDifficultyModifiers(float enemyCountMult, float enemyHpMult, float enemyDmgMult, float xpMult)
-    {
-        _diffEnemyCountMult *= enemyCountMult;
-        _diffEnemyHpMult *= enemyHpMult;
-        _diffEnemyDmgMult *= enemyDmgMult;
-        _diffXpMult *= xpMult;
-        EmitDifficultyChanged();
-    }
-
-    private void RecalculateDifficultyModifiers()
-    {
-        // Reset to 1.0 then apply Appel du Vide if active
-        _diffEnemyCountMult = 1f;
-        _diffEnemyHpMult = 1f;
-        _diffEnemyDmgMult = 1f;
-        _diffXpMult = 1f;
-
-        if (_appelDuVideActive)
-        {
-            int level = AppelDuVideLevel;
-            PerkData data = PerkDataLoader.Get("appel_du_vide");
-            if (data?.Effect?.PerStack != null && level > 0)
-            {
-                int idx = Mathf.Min(level - 1, 2);
-                if (data.Effect.PerStack.TryGetValue("enemy_count_mult", out float[] countArr) && idx < countArr.Length)
-                    _diffEnemyCountMult = countArr[idx];
-                if (data.Effect.PerStack.TryGetValue("enemy_hp_mult", out float[] hpArr) && idx < hpArr.Length)
-                    _diffEnemyHpMult = hpArr[idx];
-                if (data.Effect.PerStack.TryGetValue("xp_mult", out float[] xpArr) && idx < xpArr.Length)
-                    _diffXpMult = xpArr[idx];
-            }
-        }
-
-        EmitDifficultyChanged();
-    }
-
-    private void EmitDifficultyChanged()
-    {
-        _eventBus?.EmitSignal(EventBus.SignalName.DifficultyModifierChanged,
-            _diffEnemyCountMult, _diffEnemyHpMult, _diffEnemyDmgMult, _diffXpMult);
     }
 
     public int GetStacks(string perkId)

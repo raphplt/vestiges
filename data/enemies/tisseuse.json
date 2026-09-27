@@ -15,7 +15,8 @@
         "color": "#556B5A",
         "shape": "triangle",
         "size": 13,
-        "sprite": "tisseuse",
+        "sprite_folder": "tisseuse",
+        "sprite_feet_offset": 19,
         "projectile": {
             "sprite": "web",
             "family": "silk"

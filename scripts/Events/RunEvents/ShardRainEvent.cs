@@ -119,6 +119,7 @@ public sealed class ShardRainEvent : RunEvent
 
     private void Impact(int slot)
     {
+        Infrastructure.AudioManager.Play("sfx_shard_strike", 0.04f, -4f);
         Vector2 position = _strikes[slot].GlobalPosition;
         _kills += Context.DamageEnemiesInRadius(position, _radius, _enemyDamage);
         Context.DamagePlayerIfInside(position, _radius, Data.Number("player_damage_ratio", 0.12f));

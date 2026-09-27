@@ -111,25 +111,6 @@ public class RunRecord
 
     [JsonPropertyName("sim_perk_strategy")]
     public string SimPerkStrategy { get; set; }
-
-    // Compatibilite legacy V1. Ces champs ne sont plus alimentes dans les nouvelles runs.
-    [JsonPropertyName("nights_survived")]
-    public int NightsSurvived { get; set; }
-
-    [JsonPropertyName("death_night")]
-    public int DeathNight { get; set; }
-
-    [JsonPropertyName("resources_collected")]
-    public Dictionary<string, int> ResourcesCollected { get; set; }
-
-    [JsonPropertyName("structures_placed")]
-    public int StructuresPlaced { get; set; }
-
-    [JsonPropertyName("structures_lost")]
-    public int StructuresLost { get; set; }
-
-    [JsonPropertyName("build_score")]
-    public int BuildScoreDetail { get; set; }
 }
 
 /// <summary>
@@ -224,11 +205,6 @@ public static class RunHistoryManager
         return best;
     }
 
-    public static int GetMaxNights()
-    {
-        return GetMaxCrises();
-    }
-
     public static int GetMaxCrises()
     {
         Load();
@@ -259,11 +235,6 @@ public static class RunHistoryManager
         List<RunRecord> sorted = new(_history);
         sorted.Sort((a, b) => b.Score.CompareTo(a.Score));
         return sorted.GetRange(0, System.Math.Min(count, sorted.Count));
-    }
-
-    public static List<RunRecord> GetTopByNights(int count = 10)
-    {
-        return GetTopByCrises(count);
     }
 
     public static List<RunRecord> GetTopByCrises(int count = 10)

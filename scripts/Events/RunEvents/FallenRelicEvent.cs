@@ -72,7 +72,7 @@ public sealed class FallenRelicEvent : RunEvent
         fade.TweenCallback(Callable.From(_telegraph.HideMarker));
         _marker.SetFall(1f);
         ScreenShake.Instance?.ShakeMedium();
-        Infrastructure.AudioManager.Play("sfx_monde_dissolution", 0.05f, -2f);
+        Infrastructure.AudioManager.Play("sfx_relic_fall", 0.05f, -2f);
 
         Context.DamageEnemiesInRadius(_position, radius, Data.Number("impact_enemy_damage", 60f));
         Context.DamagePlayerIfInside(_position, radius, Data.Number("impact_player_damage_ratio", 0.2f));

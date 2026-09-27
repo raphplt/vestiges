@@ -49,6 +49,8 @@ public partial class Projectile : Area2D
 
     /// <summary>Arme d'origine : effets à l'impact et apparence.</summary>
     public WeaponData SourceWeapon { get; private set; }
+    /// <summary>Arme portée qui a tiré : ses effets au contact et son recul s'appliquent, pas ceux de la dernière arme.</summary>
+    public WeaponInstance SourceInstance { get; private set; }
 
     public void SetRelease(Action<Projectile> release)
     {
@@ -66,7 +68,7 @@ public partial class Projectile : Area2D
     }
 
     public void Launch(Vector2 position, Vector2 direction, float damage, float speed, float lifetime, int pierce,
-                       bool isCrit, Player owner, WeaponData weapon, bool isRicochet = false)
+                       bool isCrit, Player owner, WeaponData weapon, WeaponInstance source, bool isRicochet = false)
     {
         GlobalPosition = position;
         _direction = direction.Normalized();
@@ -79,6 +81,7 @@ public partial class Projectile : Area2D
         _owner = owner;
         _isRicochet = isRicochet;
         SourceWeapon = weapon;
+        SourceInstance = source;
         _isDespawning = false;
         _hitEnemies.Clear();
         _homingStrength = 0f;
@@ -223,7 +226,7 @@ public partial class Projectile : Area2D
 
             // Notify owner for perk effects (vampirism, ignite, execution, ricochet)
             if (_owner != null && IsInstanceValid(_owner))
-                _owner.OnProjectileHit(enemy, _damage, _isCrit, _isRicochet);
+                _owner.OnProjectileHit(enemy, _damage, _isCrit, _isRicochet, SourceInstance);
 
             if (_spawnsGroundFire)
             {
@@ -252,6 +255,7 @@ public partial class Projectile : Area2D
         SetDeferred(Node.PropertyName.ProcessMode, (int)ProcessModeEnum.Disabled);
         _homingTarget = null;
         _owner = null;
+        SourceInstance = null;
         if (_release != null)
             _release(this);
         else

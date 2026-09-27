@@ -9,13 +9,16 @@ using Vestiges.World;
 namespace Vestiges.Core;
 
 /// <summary>
-/// Instance runtime d'un Souvenir Passif équipé. Niveau 1 à MaxLevel.
+/// Souvenir passif porté : son niveau et l'effet cumulé de ses améliorations. Une amélioration ajoute l'écart
+/// entre deux niveaux de la table, multiplié par le gain de sa rareté (plan 17 lot 1B).
 /// </summary>
 public class ActivePassiveSouvenir
 {
 	public string Id { get; }
 	public PassiveSouvenirData Data { get; }
 	public int Level { get; private set; }
+	/// <summary>Effet total appliqué au joueur (multiplicateur ou valeur ajoutée, selon le passif).</summary>
+	public float Modifier { get; private set; }
 	public bool IsMaxLevel => Level >= Data.MaxLevel;
 
 	public ActivePassiveSouvenir(PassiveSouvenirData data)
@@ -23,32 +26,30 @@ public class ActivePassiveSouvenir
 		Data = data;
 		Id = data.Id;
 		Level = 1;
+		Modifier = TableValue(1);
 	}
 
-	/// <summary>Retourne le modifier pour le niveau actuel.</summary>
-	public float GetCurrentModifier()
+	/// <summary>Effet après une amélioration de <paramref name="levels"/> niveaux au gain <paramref name="gain"/>.</summary>
+	public float PreviewModifier(float gain, int levels)
 	{
-		if (Data.PerLevel == null || Data.PerLevel.Length == 0)
-			return 0f;
-		int idx = Mathf.Clamp(Level - 1, 0, Data.PerLevel.Length - 1);
-		return Data.PerLevel[idx];
+		int target = Mathf.Min(Data.MaxLevel, Level + levels);
+		return Modifier + (TableValue(target) - TableValue(Level)) * gain;
 	}
 
-	/// <summary>Retourne le modifier du niveau précédent (pour calculer le delta).</summary>
-	public float GetPreviousModifier()
-	{
-		if (Level <= 1 || Data.PerLevel == null || Data.PerLevel.Length == 0)
-			return 0f;
-		int idx = Mathf.Clamp(Level - 2, 0, Data.PerLevel.Length - 1);
-		return Data.PerLevel[idx];
-	}
-
-	public bool Upgrade()
+	public bool Upgrade(float gain, int levels)
 	{
 		if (IsMaxLevel)
 			return false;
-		Level++;
+		Modifier = PreviewModifier(gain, levels);
+		Level = Mathf.Min(Data.MaxLevel, Level + levels);
 		return true;
+	}
+
+	private float TableValue(int level)
+	{
+		if (Data.PerLevel == null || Data.PerLevel.Length == 0)
+			return 0f;
+		return Data.PerLevel[Mathf.Clamp(level - 1, 0, Data.PerLevel.Length - 1)];
 	}
 }
 
@@ -94,10 +95,8 @@ public partial class Player : CharacterBody2D
     // Passive Souvenir inventory (max 4, from level-up)
     public const int MaxPassiveSlots = 4;
     private readonly List<ActivePassiveSouvenir> _passiveSlots = new();
-
-    // Weapon "Fragment level" — how many times re-selected at level-up (distinct from per-stat upgrades)
-    public const int MaxWeaponFragmentLevel = 8;
-    private readonly Dictionary<string, int> _weaponFragmentLevels = new();
+    // Dégâts infligés par arme depuis le début de la run (pause, plan 17 lot 1C).
+    private readonly Dictionary<string, float> _damageDealtByWeapon = new();
 
     private Vector2 _facingDirection = new(1f, 0f);
 
@@ -128,7 +127,6 @@ public partial class Player : CharacterBody2D
     private float _bonusMaxHp;
     private int _extraProjectiles;
     private float _aoeMultiplier = 1f;
-    private float _interactionSpeedMultiplier = 1f;
     private float _attackRangeMultiplier = 1f;
     private float _bonusRegenRate;
     private float _armor;
@@ -165,7 +163,7 @@ public partial class Player : CharacterBody2D
 
     // Orbital weapon system
     private readonly System.Collections.Generic.List<Node2D> _orbitalProjectiles = new();
-    private WeaponData _orbitalWeapon;
+    private WeaponInstance _orbitalWeapon;
     private float _orbitalAngle;
 
     // Sustained cone attack
@@ -176,35 +174,28 @@ public partial class Player : CharacterBody2D
     private float _coneAngleEnd;
     private float _coneRange;
     private float _coneBaseDamage;
+    private WeaponInstance _coneWeapon;
     private bool _isConeActive;
 
-    // Coût en essence pour armes Tier 4+
-    private float _essenceDamagePenalty = 1f;
-
-    // Interaction bar (coffres, POIs)
-    private ProgressBar _harvestBar;
+    // Jauge de fouille des POI (les lieux du monde ont la leur, dans WorldInteraction)
+    private InteractionGauge _interactionGauge;
 
     // Footsteps
     private float _footstepTimer;
     private const float FootstepInterval = 0.55f;
-
-    // Vision targeting
-    private float _visionRadius = 150f;
 
     // POI interaction
     private PointOfInterest _poiTarget;
     private float _poiProgress;
     private bool _isExploringPoi;
 
-    // Chest interaction
-    private Chest _chestTarget;
-    private float _chestProgress;
-    private bool _isOpeningChest;
-    private UI.ChestLootScreen _chestLootScreen;
+    private WorldInteraction _interaction;
+    private PerkManager _perkManager;
 
     public float CurrentHp => _currentHp;
     public float EffectiveMaxHp => MaxHp + _bonusMaxHp;
     public float EffectiveAttackRange => AttackRange * _attackRangeMultiplier;
+    public float AttackRangeMultiplier => _attackRangeMultiplier;
     // V2: StructureHpMultiplier, CraftSpeedMultiplier, RepairSpeedMultiplier retires
     public int ProjectilePierce => _projectilePierce;
     public float XpMagnetMultiplier => _xpMagnetMultiplier;
@@ -227,7 +218,6 @@ public partial class Player : CharacterBody2D
     public float DodgeChance => _dodgeChance;
     public float ThornsPercent => _thornsPercent;
     public int ExtraProjectiles => _extraProjectiles;
-    public float HarvestSpeedMultiplier => _interactionSpeedMultiplier;
     public float IgniteChance => _igniteChance;
     public float RicochetChance => _ricochetChance;
     public float LuckBonus => _luckBonus;
@@ -247,7 +237,11 @@ public partial class Player : CharacterBody2D
 
         _entityShader ??= GD.Load<Shader>("res://assets/shaders/entity.gdshader");
 
-        CreateHarvestBar();
+        _interactionGauge = new InteractionGauge { Name = "InteractionGauge", Position = new Vector2(0f, -44f) };
+        AddChild(_interactionGauge);
+        _interaction = new WorldInteraction { Name = "WorldInteraction" };
+        AddChild(_interaction);
+        _interaction.Setup(this);
         Mobility = new PlayerMobility(MobilityConfig.Load());
         _mobilityFeedback = new MobilityFeedback { Name = "MobilityFeedback" };
         AddChild(_mobilityFeedback);
@@ -345,13 +339,12 @@ public partial class Player : CharacterBody2D
         AddWeapon(weapon);
     }
 
-    public bool AddWeapon(WeaponData weapon, string rarity = "common")
+    public bool AddWeapon(WeaponData weapon)
     {
         if (weapon == null)
             return false;
 
-        WeaponInstance instance = new(weapon, rarity);
-        return AddWeapon(instance);
+        return AddWeapon(new WeaponInstance(weapon));
     }
 
     public bool AddWeapon(WeaponInstance instance)
@@ -377,11 +370,15 @@ public partial class Player : CharacterBody2D
         AddChild(timer);
         _weaponTimers.Add(timer);
 
+        // Une orbitale n'attend pas le premier tic de son minuteur (20 s pour la Boîte à musique) : ses orbes
+        // apparaissent dès qu'elle est portée.
+        if (instance.AttackPattern?.ToLower() == "orbital")
+            SetupOrbitalWeapon(instance);
+
         _eventBus?.EmitSignal(EventBus.SignalName.WeaponEquipped, instance.Id, capturedIndex);
         _eventBus?.EmitSignal(EventBus.SignalName.WeaponInventoryChanged);
 
-        InitWeaponFragmentLevel(instance.Id);
-        GD.Print($"[Player] Weapon added [{capturedIndex}]: {instance.Name} ({instance.Rarity})");
+        GD.Print($"[Player] Weapon added [{capturedIndex}]: {instance.Name}");
         return true;
     }
 
@@ -397,6 +394,8 @@ public partial class Player : CharacterBody2D
         _weaponSlots.RemoveAt(slotIndex);
         if (_isConeActive && removed.Base.SpecialEffect?.Type == "sustained_cone")
             DeactivateSustainedCone();
+        if (removed == _orbitalWeapon)
+            ClearOrbitals();
 
         if (slotIndex < _weaponTimers.Count)
         {
@@ -417,7 +416,7 @@ public partial class Player : CharacterBody2D
         else
             _equippedWeapon = null;
 
-        GD.Print($"[Player] Weapon removed [{slotIndex}]: {removed.Name} ({removed.Rarity})");
+        GD.Print($"[Player] Weapon removed [{slotIndex}]: {removed.Name}");
         return removed;
     }
 
@@ -443,35 +442,6 @@ public partial class Player : CharacterBody2D
         return _weaponSlots[slotIndex];
     }
 
-    public bool UpgradeEquippedWeaponAtAltar()
-    {
-        WeaponInstance equipped = EquippedWeapon;
-        if (equipped == null || !equipped.CanLevelUp)
-            return false;
-
-        if (!equipped.LevelUp())
-            return false;
-
-        RefreshAttackSpeed();
-        _eventBus?.EmitSignal(EventBus.SignalName.WeaponUpgraded, equipped.Id, 0, "altar", equipped.Level);
-        _eventBus?.EmitSignal(EventBus.SignalName.WeaponInventoryChanged);
-        return true;
-    }
-
-    public bool ReforgeEquippedWeapon(string newRarity)
-    {
-        WeaponInstance equipped = EquippedWeapon;
-        if (equipped == null)
-            return false;
-
-        WeaponInstance reforged = equipped.CloneWithRarity(newRarity);
-        _weaponSlots[0] = reforged;
-        _equippedWeapon = reforged;
-        RefreshAttackSpeed();
-        _eventBus?.EmitSignal(EventBus.SignalName.WeaponInventoryChanged);
-        return true;
-    }
-
     /// <summary>Recalcule les timers d'attaque (appelé après upgrade d'attack_speed).</summary>
     public void RefreshAttackSpeed()
     {
@@ -480,29 +450,22 @@ public partial class Player : CharacterBody2D
 
     // --- Passive Souvenirs ---
 
-    /// <summary>
-    /// Ajoute un Souvenir Passif ou upgrade un existant.
-    /// Retourne true si ajouté/upgradé, false si slots pleins ou déjà max.
-    /// </summary>
-    public bool AddOrUpgradePassive(string passiveId)
+    /// <summary>Ajoute un passif, ou l'améliore : écart de la table × <paramref name="gain"/>, sur <paramref name="levels"/> niveaux.</summary>
+    public bool AddOrUpgradePassive(string passiveId, float gain, int levels)
     {
         PassiveSouvenirData data = PassiveSouvenirDataLoader.Get(passiveId);
         if (data == null)
             return false;
 
-        // Upgrade existant ?
         foreach (ActivePassiveSouvenir existing in _passiveSlots)
         {
             if (existing.Id == passiveId)
             {
-                if (existing.IsMaxLevel)
+                float prevMod = existing.Modifier;
+                if (!existing.Upgrade(gain, levels))
                     return false;
 
-                float prevMod = existing.GetCurrentModifier();
-                existing.Upgrade();
-                float newMod = existing.GetCurrentModifier();
-
-                ApplyPassiveModifierDelta(data, prevMod, newMod);
+                ApplyPassiveModifierDelta(data, prevMod, existing.Modifier);
 
                 _eventBus?.EmitSignal(EventBus.SignalName.PassiveSouvenirUpgraded, passiveId, existing.Level);
                 _eventBus?.EmitSignal(EventBus.SignalName.PassiveSouvenirSlotsChanged);
@@ -519,7 +482,7 @@ public partial class Player : CharacterBody2D
         ActivePassiveSouvenir passive = new(data);
         _passiveSlots.Add(passive);
 
-        ApplyPassiveModifier(data, passive.GetCurrentModifier());
+        ApplyPassiveModifier(data, passive.Modifier);
 
         int slotIndex = _passiveSlots.Count - 1;
         _eventBus?.EmitSignal(EventBus.SignalName.PassiveSouvenirAdded, passiveId, slotIndex);
@@ -551,36 +514,6 @@ public partial class Player : CharacterBody2D
         return 0;
     }
 
-    /// <summary>Retourne les IDs des passifs au niveau max.</summary>
-    public List<string> GetMaxedPassiveIds()
-    {
-        List<string> result = new();
-        foreach (ActivePassiveSouvenir p in _passiveSlots)
-        {
-            if (p.IsMaxLevel)
-                result.Add(p.Id);
-        }
-        return result;
-    }
-
-    /// <summary>
-    /// Retire un passif (utilisé par la fusion : le passif est absorbé par le Vestige).
-    /// </summary>
-    public bool RemovePassive(string passiveId)
-    {
-        for (int i = 0; i < _passiveSlots.Count; i++)
-        {
-            if (_passiveSlots[i].Id == passiveId)
-            {
-                _passiveSlots.RemoveAt(i);
-                _eventBus?.EmitSignal(EventBus.SignalName.PassiveSouvenirSlotsChanged);
-                GD.Print($"[Player] Passive removed: {passiveId}");
-                return true;
-            }
-        }
-        return false;
-    }
-
     private void ApplyPassiveModifier(PassiveSouvenirData data, float value)
     {
         ApplyPerkModifier(data.Stat, value, data.ModifierType);
@@ -603,60 +536,43 @@ public partial class Player : CharacterBody2D
 
     // --- Weapon Fragment Levels (level-up re-selection) ---
 
-    /// <summary>
-    /// Upgrade le niveau fragment d'une arme (quand le joueur re-sélectionne l'arme au level-up).
-    /// Monte le niveau global de l'arme — toutes les stats scalent automatiquement via GetStat().
-    /// </summary>
-    public bool UpgradeWeaponFragmentLevel(string weaponId)
+    /// <summary>Applique une amélioration tirée au level-up, au Mémorial ou à la Faille : ses gains, et un niveau de plus.</summary>
+    public bool UpgradeWeapon(string weaponId, IReadOnlyList<StatGain> gains)
     {
-        int current = _weaponFragmentLevels.GetValueOrDefault(weaponId, 0);
-        if (current >= MaxWeaponFragmentLevel)
+        // Le niveau n'existe qu'à un endroit, l'instance d'arme : level-up, Mémorial et badge le lisent tous.
+        WeaponInstance weapon = FindWeaponSlot(weaponId, out int slot);
+        if (weapon == null || !weapon.ApplyUpgrade(gains))
             return false;
 
-        _weaponFragmentLevels[weaponId] = current + 1;
-
-        for (int i = 0; i < _weaponSlots.Count; i++)
-        {
-            if (_weaponSlots[i].Id == weaponId)
-            {
-                _weaponSlots[i].LevelUp();
-                RefreshAttackSpeed();
-                _eventBus?.EmitSignal(EventBus.SignalName.WeaponUpgraded, weaponId, i, "all", current + 1);
-                break;
-            }
-        }
-
-        GD.Print($"[Player] Weapon fragment level: {weaponId} → {current + 1}/{MaxWeaponFragmentLevel}");
+        RefreshAttackSpeed();
+        if (weapon == _orbitalWeapon)
+            SetupOrbitalWeapon(weapon);
+        _eventBus?.EmitSignal(EventBus.SignalName.WeaponUpgraded, weaponId, slot, "all", weapon.Level);
+        _eventBus?.EmitSignal(EventBus.SignalName.WeaponInventoryChanged);
+        GD.Print($"[Player] Weapon level: {weaponId} → {weapon.Level}/{weapon.MaxLevel}");
         return true;
     }
 
-    public int GetWeaponFragmentLevel(string weaponId)
-    {
-        return _weaponFragmentLevels.GetValueOrDefault(weaponId, 0);
-    }
+    /// <summary>Dégâts portés par une arme depuis le début de la run.</summary>
+    public float GetDamageDealt(string weaponId) => _damageDealtByWeapon.GetValueOrDefault(weaponId);
+
+    public int GetWeaponFragmentLevel(string weaponId) => FindWeaponSlot(weaponId, out _)?.Level ?? 0;
 
     public bool IsWeaponFragmentMaxed(string weaponId)
     {
-        return _weaponFragmentLevels.GetValueOrDefault(weaponId, 0) >= MaxWeaponFragmentLevel;
+        WeaponInstance weapon = FindWeaponSlot(weaponId, out _);
+        return weapon != null && !weapon.CanLevelUp;
     }
 
-    /// <summary>Retourne les IDs des armes au niveau fragment max.</summary>
-    public List<string> GetMaxedWeaponIds()
+    private WeaponInstance FindWeaponSlot(string weaponId, out int slot)
     {
-        List<string> result = new();
-        foreach (KeyValuePair<string, int> kv in _weaponFragmentLevels)
+        for (slot = 0; slot < _weaponSlots.Count; slot++)
         {
-            if (kv.Value >= MaxWeaponFragmentLevel)
-                result.Add(kv.Key);
+            if (_weaponSlots[slot].Id == weaponId)
+                return _weaponSlots[slot];
         }
-        return result;
-    }
-
-    /// <summary>Initialise le fragment level à 1 quand une arme est équipée pour la première fois.</summary>
-    private void InitWeaponFragmentLevel(string weaponId)
-    {
-        if (!_weaponFragmentLevels.ContainsKey(weaponId))
-            _weaponFragmentLevels[weaponId] = 1;
+        slot = -1;
+        return null;
     }
 
     public override void _PhysicsProcess(double delta)
@@ -677,7 +593,7 @@ public partial class Player : CharacterBody2D
         if (inputDir != Vector2.Zero || Mobility.IsDashStep)
         {
             CancelPoiExplore();
-            CancelChestOpen();
+            _interaction.Cancel();
             if (inputDir != Vector2.Zero)
                 _facingDirection = inputDir.Normalized();
         }
@@ -721,7 +637,7 @@ public partial class Player : CharacterBody2D
         ApplyRegen(dt);
         ProcessSlowDecay(dt);
         ProcessPoiExplore(dt);
-        ProcessChestOpen(dt);
+        _interaction.Step(dt, !_isExploringPoi && !Mobility.IsDashing);
         ProcessKillSpeedDecay(dt);
         ProcessOrbitalWeapons(dt);
         ProcessSustainedCone(dt);
@@ -752,16 +668,16 @@ public partial class Player : CharacterBody2D
         {
             if (Mobility.IsDashing)
                 return;
-            if (_isExploringPoi || _isOpeningChest)
+            if (_isExploringPoi || _interaction.IsActive)
             {
                 CancelPoiExplore();
-                CancelChestOpen();
+                _interaction.Cancel();
             }
             else if (TryStartPoiExplore())
             {
                 // POI interaction takes priority
             }
-            else if (TryStartChestOpen())
+            else if (_interaction.TryStart())
             {
                 // Chest interaction
             }
@@ -788,7 +704,7 @@ public partial class Player : CharacterBody2D
         _mobilityRequiresRelease = true;
         Velocity = Vector2.Zero;
         CancelPoiExplore();
-        CancelChestOpen();
+        _interaction.Cancel();
     }
 
     /// <summary>Le bord du monde (cellules hors carte ou dissoutes) ne se traverse pas, même en marchant.</summary>
@@ -847,13 +763,13 @@ public partial class Player : CharacterBody2D
     public void AITriggerInteract()
     {
         if (_isDead || !IsAIControlled || Mobility.IsDashing || _gameManager.CurrentState != GameManager.GameState.Run || GetTree().Paused) return;
-        if (_isExploringPoi || _isOpeningChest)
+        if (_isExploringPoi || _interaction.IsActive)
         {
             CancelPoiExplore();
-            CancelChestOpen();
+            _interaction.Cancel();
         }
         else if (TryStartPoiExplore()) { }
-        else if (TryStartChestOpen()) { }
+        else if (_interaction.TryStart()) { }
     }
 
     // --- Journal ---
@@ -926,10 +842,6 @@ public partial class Player : CharacterBody2D
             case "aoe_radius":
                 if (modifierType == "multiplicative") _aoeMultiplier *= value;
                 break;
-            case "harvest_speed":
-                if (modifierType == "multiplicative") _interactionSpeedMultiplier *= value;
-                break;
-            // V2: structure_hp et craft_speed retires
             case "attack_range":
                 if (modifierType == "multiplicative") _attackRangeMultiplier *= value;
                 break;
@@ -1015,12 +927,16 @@ public partial class Player : CharacterBody2D
     /// <summary>
     /// Called by projectiles and melee hits. Handles vampirism, ignite, execution, ricochet.
     /// </summary>
-    public void OnProjectileHit(Enemy enemy, float damage, bool isCrit, bool isRicochet)
+    public void OnProjectileHit(Enemy enemy, float damage, bool isCrit, bool isRicochet, WeaponInstance source)
     {
-        OnAttackHit(enemy, damage, isCrit, isRicochet);
+        OnAttackHit(enemy, damage, isCrit, isRicochet, source);
     }
 
-    private void OnAttackHit(Enemy enemy, float damage, bool isCrit, bool isRicochet, int triggerCount = 1)
+    /// <summary>
+    /// Effets d'un coup porté par <paramref name="source"/>. Les effets de perks (vampirisme, embrasement…) sont
+    /// globaux ; ceux de l'arme (effet au contact, recul, effet spécial) restent ceux de l'arme qui a frappé.
+    /// </summary>
+    private void OnAttackHit(Enemy enemy, float damage, bool isCrit, bool isRicochet, WeaponInstance source, int triggerCount = 1)
     {
         if (_isDead)
             return;
@@ -1028,7 +944,9 @@ public partial class Player : CharacterBody2D
         if (!IsInstanceValid(enemy) || enemy.IsQueuedForDeletion())
             return;
 
-        _attackFx.PlayHit(_equippedWeapon?.Base, enemy.GlobalPosition, isCrit);
+        _attackFx.PlayHit(source?.Base, enemy.GlobalPosition, isCrit);
+        if (source != null)
+            _damageDealtByWeapon[source.Id] = _damageDealtByWeapon.GetValueOrDefault(source.Id) + damage;
         int procRollCount = Mathf.Max(1, triggerCount);
 
         // Vampirism: heal % of damage dealt
@@ -1045,10 +963,10 @@ public partial class Player : CharacterBody2D
 
         // Ricochet: bounce to nearby enemy (only from original projectiles)
         if (!isRicochet && _ricochetChance > 0f && GD.Randf() < GetCombinedProcChance(_ricochetChance, procRollCount))
-            SpawnRicochet(enemy, damage, isCrit);
+            SpawnRicochet(enemy, damage, isCrit, source);
 
         // --- Weapon on-hit effects ---
-        WeaponOnHitEffect ohe = _equippedWeapon?.Base.OnHitEffect;
+        WeaponOnHitEffect ohe = source?.Base.OnHitEffect;
         if (ohe != null)
         {
             switch (ohe.Type)
@@ -1066,7 +984,7 @@ public partial class Player : CharacterBody2D
         }
 
         // --- Weapon knockback ---
-        float knockback = GetWeaponStat("knockback", 0f);
+        float knockback = source?.GetStat("knockback", 0f) ?? 0f;
         if (knockback > 0f)
         {
             Vector2 knockDir = (enemy.GlobalPosition - GlobalPosition).Normalized();
@@ -1074,9 +992,9 @@ public partial class Player : CharacterBody2D
         }
 
         // --- Weapon special effects ---
-        WeaponSpecialEffect se = _equippedWeapon?.Base.SpecialEffect;
+        WeaponSpecialEffect se = source?.Base.SpecialEffect;
         if (se != null)
-            ProcessWeaponSpecialOnHit(se, enemy, damage);
+            ProcessWeaponSpecialOnHit(se, enemy, damage, source);
     }
 
     private float GetCombinedProcChance(float perHitChance, int triggerCount)
@@ -1090,7 +1008,7 @@ public partial class Player : CharacterBody2D
         return 1f - Mathf.Pow(1f - clampedChance, triggerCount);
     }
 
-    private void SpawnRicochet(Enemy sourceEnemy, float damage, bool isCrit)
+    private void SpawnRicochet(Enemy sourceEnemy, float damage, bool isCrit, WeaponInstance source)
     {
         Godot.Collections.Array<Node> enemies = _groupCache.GetEnemies();
         Node2D bounceTarget = null;
@@ -1100,8 +1018,6 @@ public partial class Player : CharacterBody2D
         {
             if (node is Node2D candidate && candidate != sourceEnemy && !candidate.IsQueuedForDeletion())
             {
-                if (!IsPositionVisible(candidate.GlobalPosition))
-                    continue;
                 float dist = sourceEnemy.GlobalPosition.DistanceTo(candidate.GlobalPosition);
                 if (dist < nearestDist)
                 {
@@ -1115,20 +1031,20 @@ public partial class Player : CharacterBody2D
             return;
 
         Vector2 direction = (bounceTarget.GlobalPosition - sourceEnemy.GlobalPosition).Normalized();
-        float speed = GetWeaponStat("projectile_speed", 400f);
+        float speed = source?.GetStat("projectile_speed", 400f) ?? 400f;
         CombatPools.Instance?.TakePlayerProjectile().Launch(sourceEnemy.GlobalPosition, direction, damage * 0.75f, speed,
-            Mathf.Clamp(_ricochetRange / Mathf.Max(speed, 1f), 0.2f, 2f), 0, isCrit, this, _equippedWeapon?.Base, isRicochet: true);
+            Mathf.Clamp(_ricochetRange / Mathf.Max(speed, 1f), 0.2f, 2f), 0, isCrit, this, source?.Base, source, isRicochet: true);
     }
 
     // --- Weapon Special Effects ---
 
-    private void ProcessWeaponSpecialOnHit(WeaponSpecialEffect se, Enemy enemy, float damage)
+    private void ProcessWeaponSpecialOnHit(WeaponSpecialEffect se, Enemy enemy, float damage, WeaponInstance source)
     {
         switch (se.Type)
         {
             case "heal_every_n_hits":
             {
-                string weaponId = _equippedWeapon.Id;
+                string weaponId = source.Id;
                 _weaponHitCounters.TryGetValue(weaponId, out int count);
                 count++;
                 int n = se.Params.TryGetValue("n", out float nVal) ? Mathf.Max(1, (int)nVal) : 5;
@@ -1157,6 +1073,7 @@ public partial class Player : CharacterBody2D
                 float echoPct = se.Params.TryGetValue("echo_damage_percent", out float p) ? p : 0.6f;
                 float echoDamage = damage * echoPct;
                 Vector2 echoPos = enemy.GlobalPosition;
+                float echoRadius = ZoneScale(se.Params.TryGetValue("echo_radius", out float er) ? er : 40f);
                 ulong enemyId = enemy.GetInstanceId();
                 GetTree().CreateTimer(delay).Timeout += () =>
                 {
@@ -1166,7 +1083,7 @@ public partial class Player : CharacterBody2D
                     {
                         if (node is Enemy e && IsInstanceValid(e) && !e.IsDying)
                         {
-                            if (e.GlobalPosition.DistanceTo(echoPos) < 40f)
+                            if (e.GlobalPosition.DistanceTo(echoPos) < echoRadius)
                                 e.TakeDamage(echoDamage);
                         }
                     }
@@ -1181,7 +1098,7 @@ public partial class Player : CharacterBody2D
             }
             case "local_time_slow":
             {
-                float radius = se.Params.TryGetValue("slow_radius", out float r) ? r : 80f;
+                float radius = ZoneScale(se.Params.TryGetValue("slow_radius", out float r) ? r : 80f);
                 float factor = se.Params.TryGetValue("slow_factor", out float f) ? f : 0.3f;
                 float duration = se.Params.TryGetValue("slow_duration", out float dur) ? dur : 0.5f;
                 Vector2 impactPos = enemy.GlobalPosition;
@@ -1199,7 +1116,7 @@ public partial class Player : CharacterBody2D
             }
             case "random_shape":
             {
-                float aoeRadius = se.Params.TryGetValue("shape_aoe_on_impact", out float aoe) ? aoe : 50f;
+                float aoeRadius = ZoneScale(se.Params.TryGetValue("shape_aoe_on_impact", out float aoe) ? aoe : 50f);
                 Vector2 impactPos = enemy.GlobalPosition;
                 Godot.Collections.Array<Node> enemies = _groupCache.GetEnemies();
                 foreach (Node node in enemies)
@@ -1227,24 +1144,18 @@ public partial class Player : CharacterBody2D
 
     // --- Orbital Weapons ---
 
-    private void SetupOrbitalWeapon(WeaponData weapon)
+    /// <summary>
+    /// Crée les orbes d'une arme orbitale dès qu'elle est portée, et les recrée quand leur nombre change
+    /// (montée de niveau). Les dégâts se calculent à l'impact, avec le niveau courant de l'arme.
+    /// </summary>
+    private void SetupOrbitalWeapon(WeaponInstance weapon)
     {
-        if (_orbitalWeapon?.Id == weapon.Id && _orbitalProjectiles.Count > 0)
+        int orbitalCount = Mathf.Max(1, (int)weapon.GetStat("orbital_count", 3f));
+        if (_orbitalWeapon == weapon && _orbitalProjectiles.Count == orbitalCount)
             return;
 
+        ClearOrbitals();
         _orbitalWeapon = weapon;
-        int orbitalCount = Mathf.Max(1, (int)GetWeaponStat("orbital_count", 3f));
-        float orbitalRadius = GetWeaponStat("range", 90f);
-        float damage = ComputeBaseAttackDamage();
-
-        // Nettoyage des anciens orbitaux
-        foreach (Node2D old in _orbitalProjectiles)
-        {
-            if (IsInstanceValid(old))
-                old.QueueFree();
-        }
-        _orbitalProjectiles.Clear();
-
         for (int i = 0; i < orbitalCount; i++)
         {
             Area2D orb = new() { Name = $"OrbitalOrb_{i}" };
@@ -1252,18 +1163,18 @@ public partial class Player : CharacterBody2D
             orb.CollisionMask = 2;
 
             CollisionShape2D shape = new();
-            CircleShape2D circle = new() { Radius = 8f };
+            CircleShape2D circle = new() { Radius = ZoneScale(8f) };
             shape.Shape = circle;
             orb.AddChild(shape);
             orb.AddChild(PlayerAttackFx.CreateOrbitalVisual());
 
-            float capturedDamage = damage;
             orb.BodyEntered += (Node2D body) =>
             {
-                if (body is Enemy enemy && !enemy.IsDying && IsInstanceValid(enemy))
+                if (body is Enemy enemy && !enemy.IsDying && IsInstanceValid(enemy) && _orbitalWeapon != null)
                 {
-                    enemy.TakeDamage(capturedDamage);
-                    OnAttackHit(enemy, capturedDamage, false, false);
+                    float damage = ComputeBaseAttackDamage(_orbitalWeapon);
+                    enemy.TakeDamage(damage);
+                    OnAttackHit(enemy, damage, false, false, _orbitalWeapon);
                 }
             };
 
@@ -1272,13 +1183,25 @@ public partial class Player : CharacterBody2D
         }
     }
 
+    private void ClearOrbitals()
+    {
+        foreach (Node2D old in _orbitalProjectiles)
+        {
+            if (IsInstanceValid(old))
+                old.QueueFree();
+        }
+        _orbitalProjectiles.Clear();
+        _orbitalWeapon = null;
+    }
+
     private void ProcessOrbitalWeapons(float delta)
     {
         if (_orbitalProjectiles.Count == 0 || _orbitalWeapon == null)
             return;
 
-        float orbitalSpeed = GetStatFromWeapon(_orbitalWeapon, "orbital_speed", 180f);
-        float orbitalRadius = GetStatFromWeapon(_orbitalWeapon, "range", 90f);
+        float orbitalSpeed = _orbitalWeapon.GetStat("orbital_speed", 180f);
+        // Le rayon d'orbite est une portée : il suit les bonus de portée, comme l'allonge des coups.
+        float orbitalRadius = GetEffectiveWeaponRange(_orbitalWeapon);
         _orbitalAngle += Mathf.DegToRad(orbitalSpeed) * delta;
         if (_orbitalAngle > Mathf.Tau)
             _orbitalAngle -= Mathf.Tau;
@@ -1296,13 +1219,6 @@ public partial class Player : CharacterBody2D
         }
     }
 
-    private float GetStatFromWeapon(WeaponData weapon, string key, float defaultVal)
-    {
-        if (weapon?.Stats != null && weapon.Stats.TryGetValue(key, out float val))
-            return val;
-        return defaultVal;
-    }
-
     // --- Sustained Cone Attack ---
 
     private void ActivateSustainedCone(WeaponSpecialEffect effect)
@@ -1311,10 +1227,11 @@ public partial class Player : CharacterBody2D
         _coneDuration = effect.Params.TryGetValue("duration", out float dur) ? dur : 2f;
         _coneAttackTimer = _coneDuration;
         _coneDamageRampPerSec = effect.Params.TryGetValue("damage_ramp_per_sec", out float ramp) ? ramp : 1.5f;
-        _coneAngleStart = GetWeaponStat("cone_angle_start", 15f);
-        _coneAngleEnd = GetWeaponStat("cone_angle_end", 60f);
+        _coneAngleStart = Mathf.Min(180f, ZoneScale(GetWeaponStat("cone_angle_start", 15f)));
+        _coneAngleEnd = Mathf.Min(180f, ZoneScale(GetWeaponStat("cone_angle_end", 60f)));
         _coneRange = GetEffectiveWeaponRange();
         _coneBaseDamage = ComputeBaseAttackDamage();
+        _coneWeapon = _equippedWeapon;
 
         UpdateConeVisual(0f);
 
@@ -1355,9 +1272,6 @@ public partial class Player : CharacterBody2D
             if (node is not Enemy enemy || enemy.IsDying || !IsInstanceValid(enemy))
                 continue;
 
-            if (!IsPositionVisible(enemy.GlobalPosition))
-                continue;
-
             // Cône posé au sol : portée et ouverture mesurées au sol, comme l'éventail dessiné.
             Vector2 toEnemy = Iso.ToGround(enemy.GlobalPosition - GlobalPosition);
             float dist = toEnemy.Length();
@@ -1369,7 +1283,7 @@ public partial class Player : CharacterBody2D
                 continue;
 
             enemy.TakeDamage(damage);
-            OnAttackHit(enemy, damage, false, false);
+            OnAttackHit(enemy, damage, false, false, _coneWeapon);
         }
     }
 
@@ -1377,13 +1291,14 @@ public partial class Player : CharacterBody2D
     {
         float progress = Mathf.Clamp(elapsed / _coneDuration, 0f, 1f);
         float currentAngleDeg = Mathf.Lerp(_coneAngleStart, _coneAngleEnd, progress);
-        _attackFx.UpdateCone(_equippedWeapon?.Base, _facingDirection, _coneRange, Mathf.DegToRad(currentAngleDeg * 0.5f));
+        _attackFx.UpdateCone(_coneWeapon?.Base, _facingDirection, _coneRange, Mathf.DegToRad(currentAngleDeg * 0.5f));
     }
 
     private void DeactivateSustainedCone()
     {
         _isConeActive = false;
         _coneAttackTimer = 0f;
+        _coneWeapon = null;
 
         _attackFx.StopCone();
 
@@ -1412,7 +1327,7 @@ public partial class Player : CharacterBody2D
         bool isCrit = _critChance > 0f && GD.Randf() < _critChance;
         float currentDamage = isCrit ? baseDamage * _critMultiplier : baseDamage;
         firstTarget.TakeDamage(currentDamage, isCrit);
-        OnAttackHit(firstTarget, currentDamage, isCrit, false);
+        OnAttackHit(firstTarget, currentDamage, isCrit, false, _equippedWeapon);
 
         // Chain vers les ennemis adjacents
         HashSet<ulong> hitIds = new() { firstTarget.GetInstanceId() };
@@ -1428,7 +1343,7 @@ public partial class Player : CharacterBody2D
             hitIds.Add(nextTarget.GetInstanceId());
             SpawnChainVisual(current.GlobalPosition, nextTarget.GlobalPosition);
             nextTarget.TakeDamage(currentDamage);
-            OnAttackHit(nextTarget, currentDamage, false, false);
+            OnAttackHit(nextTarget, currentDamage, false, false, _equippedWeapon);
             current = nextTarget;
         }
     }
@@ -1444,8 +1359,6 @@ public partial class Player : CharacterBody2D
             if (node is Enemy enemy && IsInstanceValid(enemy) && !enemy.IsDying)
             {
                 if (excludeIds.Contains(enemy.GetInstanceId()))
-                    continue;
-                if (!IsPositionVisible(enemy.GlobalPosition))
                     continue;
 
                 float dist = from.DistanceTo(enemy.GlobalPosition);
@@ -1465,6 +1378,9 @@ public partial class Player : CharacterBody2D
     }
 
     // --- Health ---
+
+    /// <summary>Ramène les PV courants à <paramref name="max"/> au plus, sans dégât ni événement (levée d'un Oubli).</summary>
+    public void CapCurrentHp(float max) => _currentHp = Mathf.Min(_currentHp, max);
 
     public void Heal(float amount)
     {
@@ -1585,42 +1501,17 @@ public partial class Player : CharacterBody2D
 
         TerrainType terrain = GetCurrentTerrain();
         Combat.FootstepFx.Emit(GlobalPosition, terrain, Velocity.Normalized());
-        string key = terrain switch
+        string biomeFootstep = terrain != TerrainType.Water
+            ? _worldSetup?.GetBiomeAt(GlobalPosition)?.FootstepAudio
+            : null;
+        string key = biomeFootstep ?? (terrain switch
         {
             TerrainType.Water    => "sfx_pas_eau",
             TerrainType.Concrete => "sfx_pas_beton",
+            TerrainType.Forest   => "sfx_pas_bois",
             _                    => "sfx_pas_herbe",
-        };
+        });
         Infrastructure.AudioManager.Play(key, 0.05f, -4f);
-    }
-
-    // V2: harvest system retire — remplace par EssenceTracker
-
-    private void CreateHarvestBar()
-    {
-        _harvestBar = new ProgressBar();
-        _harvestBar.CustomMinimumSize = new Vector2(40, 5);
-        _harvestBar.Position = new Vector2(-20, -25);
-        _harvestBar.ShowPercentage = false;
-        _harvestBar.Visible = false;
-
-        StyleBoxFlat fillStyle = new();
-        fillStyle.BgColor = new Color(0.9f, 0.75f, 0.2f);
-        fillStyle.CornerRadiusBottomLeft = 2;
-        fillStyle.CornerRadiusBottomRight = 2;
-        fillStyle.CornerRadiusTopLeft = 2;
-        fillStyle.CornerRadiusTopRight = 2;
-        _harvestBar.AddThemeStyleboxOverride("fill", fillStyle);
-
-        StyleBoxFlat bgStyle = new();
-        bgStyle.BgColor = new Color(0.1f, 0.1f, 0.1f, 0.7f);
-        bgStyle.CornerRadiusBottomLeft = 2;
-        bgStyle.CornerRadiusBottomRight = 2;
-        bgStyle.CornerRadiusTopLeft = 2;
-        bgStyle.CornerRadiusTopRight = 2;
-        _harvestBar.AddThemeStyleboxOverride("background", bgStyle);
-
-        AddChild(_harvestBar);
     }
 
     // --- POI Exploration ---
@@ -1628,8 +1519,13 @@ public partial class Player : CharacterBody2D
     private bool TryStartPoiExplore()
     {
         PointOfInterest nearest = FindNearestPoi();
-        if (nearest == null || !nearest.CanInteract)
+        if (nearest == null)
             return false;
+        if (!nearest.CanInteract)
+        {
+            Infrastructure.AudioManager.Play("sfx_interaction_unavailable", 0f);
+            return false;
+        }
 
         // Les POI sans temps de recherche sont explorés instantanément
         if (nearest.SearchTime <= 0f)
@@ -1644,9 +1540,8 @@ public partial class Player : CharacterBody2D
         _poiTarget = nearest;
         _poiProgress = 0f;
         _isExploringPoi = true;
-        _harvestBar.Visible = true;
-        _harvestBar.MaxValue = nearest.SearchTime;
-        _harvestBar.Value = 0;
+        Infrastructure.AudioManager.Play("sfx_poi_search", 0.03f);
+        _interactionGauge.Begin(new Color("D4A843"));
         return true;
     }
 
@@ -1668,8 +1563,8 @@ public partial class Player : CharacterBody2D
             return;
         }
 
-        _poiProgress += delta * _interactionSpeedMultiplier;
-        _harvestBar.Value = _poiProgress;
+        _poiProgress += delta;
+        _interactionGauge.SetRatio(_poiProgress / _poiTarget.SearchTime);
 
         if (_poiProgress >= _poiTarget.SearchTime)
             CompletePoiExplore();
@@ -1689,7 +1584,7 @@ public partial class Player : CharacterBody2D
             _poiTarget.PoiId, _poiTarget.PoiType, _poiTarget.GlobalPosition);
 
         _isExploringPoi = false;
-        _harvestBar.Visible = false;
+        _interactionGauge.End();
         _poiTarget = null;
         _poiProgress = 0f;
     }
@@ -1700,7 +1595,7 @@ public partial class Player : CharacterBody2D
             return;
 
         _isExploringPoi = false;
-        _harvestBar.Visible = false;
+        _interactionGauge.End();
         _poiTarget = null;
         _poiProgress = 0f;
     }
@@ -1710,58 +1605,11 @@ public partial class Player : CharacterBody2D
         if (string.IsNullOrEmpty(poi.LootTableId))
             return;
 
-        System.Collections.Generic.List<LootResolver.LootResult> loots =
-            LootResolver.Roll(poi.LootTableId, poi.LootRolls);
-        // V2: inventory retire
-
-        int lootIndex = 0;
-        foreach (LootResolver.LootResult loot in loots)
+        List<ResolvedLoot> loots = LootRewards.Resolve(LootResolver.Roll(poi.LootTableId, poi.LootRolls), _perkManager);
+        for (int i = 0; i < loots.Count; i++)
         {
-            string displayName = loot.ItemId;
-            Color displayColor = new(0.9f, 0.85f, 0.6f);
-
-            switch (loot.Type)
-            {
-                case "essence":
-                    _eventBus?.EmitSignal(EventBus.SignalName.LootReceived,
-                        loot.Type, loot.ItemId, loot.Amount);
-                    displayName = $"Essence x{loot.Amount}";
-                    displayColor = new Color(0.35f, 0.78f, 0.78f);
-                    break;
-                case "resource":
-                    GD.PushWarning($"[Player] Legacy resource loot ignored at POI: {loot.ItemId}");
-                    continue;
-                case "xp":
-                    _eventBus?.EmitSignal(EventBus.SignalName.XpGained, (float)loot.Amount);
-                    displayName = $"+{loot.Amount} XP";
-                    displayColor = new Color(0.4f, 0.8f, 1f);
-                    break;
-                case "perk":
-                    string poiPerkName = ResolvePerkLoot(loot.ItemId);
-                    displayName = poiPerkName;
-                    displayColor = new Color(0.5f, 1f, 0.5f);
-                    break;
-                case "weapon":
-                    displayName = ResolveWeaponLoot(loot.ItemId, poi.GlobalPosition);
-                    displayColor = new Color(1f, 0.82f, 0.38f);
-                    break;
-                case "souvenir":
-                    _eventBus?.EmitSignal(EventBus.SignalName.LootReceived,
-                        loot.Type, loot.ItemId, loot.Amount);
-                    displayName = $"Souvenir: {loot.ItemId}";
-                    displayColor = new Color(0.8f, 0.85f, 1f);
-                    break;
-                case "cursed_item":
-                    string poiCurseName = ResolveCursedItemLoot(loot.ItemId);
-                    displayName = poiCurseName;
-                    displayColor = new Color(0.6f, 0.15f, 0.3f);
-                    break;
-                default:
-                    continue;
-            }
-
-            SpawnLootPopup(displayName, displayColor, poi.GlobalPosition, lootIndex);
-            lootIndex++;
+            LootRewards.Apply(loots[i], this, _eventBus, poi.GlobalPosition);
+            SpawnLootPopup(loots[i].Label, loots[i].Color, poi.GlobalPosition, i);
         }
     }
 
@@ -1789,225 +1637,11 @@ public partial class Player : CharacterBody2D
 
     // --- Chest Opening ---
 
-    public void SetChestLootScreen(UI.ChestLootScreen screen) => _chestLootScreen = screen;
-
-    private bool TryStartChestOpen()
+    /// <summary>Services du butin : écran de roulette des coffres et tirage des perks.</summary>
+    public void ConfigureLoot(UI.ChestLootScreen lootScreen, PerkManager perkManager)
     {
-        Chest nearest = FindNearestChest();
-        if (nearest == null || !nearest.CanOpen)
-            return false;
-
-        if (nearest.OpenTime <= 0f)
-        {
-            System.Collections.Generic.List<LootResolver.LootResult> loots = nearest.Open();
-            if (_chestLootScreen != null && loots.Count > 0)
-            {
-                Chest instantChest = nearest;
-                _chestLootScreen.ShowLoot(loots, instantChest.Rarity, () =>
-                {
-                    ApplyChestLootResults(loots, instantChest);
-                });
-            }
-            else
-            {
-                ApplyChestLootResults(loots, nearest);
-            }
-            return true;
-        }
-
-        _chestTarget = nearest;
-        _chestProgress = 0f;
-        _isOpeningChest = true;
-        _harvestBar.Visible = true;
-        _harvestBar.MaxValue = nearest.OpenTime;
-        _harvestBar.Value = 0;
-        return true;
-    }
-
-    private void ProcessChestOpen(float delta)
-    {
-        if (!_isOpeningChest || _chestTarget == null)
-            return;
-
-        if (!IsInstanceValid(_chestTarget) || _chestTarget.IsOpened)
-        {
-            CancelChestOpen();
-            return;
-        }
-
-        float dist = GlobalPosition.DistanceTo(_chestTarget.GlobalPosition);
-        if (dist > InteractRange * 1.5f)
-        {
-            CancelChestOpen();
-            return;
-        }
-
-        _chestProgress += delta;
-        _harvestBar.Value = _chestProgress;
-
-        if (_chestProgress >= _chestTarget.OpenTime)
-            CompleteChestOpen();
-    }
-
-    private void CompleteChestOpen()
-    {
-        if (_chestTarget == null || !IsInstanceValid(_chestTarget))
-        {
-            CancelChestOpen();
-            return;
-        }
-
-        System.Collections.Generic.List<LootResolver.LootResult> loots = _chestTarget.Open();
-        Chest openedChest = _chestTarget;
-
-        _isOpeningChest = false;
-        _harvestBar.Visible = false;
-        _chestTarget = null;
-        _chestProgress = 0f;
-
-        if (_chestLootScreen != null && loots.Count > 0)
-        {
-            // Show roulette screen — loot is applied after animation
-            _chestLootScreen.ShowLoot(loots, openedChest.Rarity, () =>
-            {
-                ApplyChestLootResults(loots, openedChest);
-            });
-        }
-        else
-        {
-            ApplyChestLootResults(loots, openedChest);
-        }
-    }
-
-    private void ApplyChestLootResults(System.Collections.Generic.List<LootResolver.LootResult> loots, Chest chest)
-    {
-        // V2: inventory retire
-
-        int lootIndex = 0;
-        foreach (LootResolver.LootResult loot in loots)
-        {
-            string displayName = loot.ItemId;
-            Color displayColor = new(0.9f, 0.85f, 0.6f);
-
-            switch (loot.Type)
-            {
-                case "essence":
-                    _eventBus?.EmitSignal(EventBus.SignalName.LootReceived,
-                        loot.Type, loot.ItemId, loot.Amount);
-                    displayName = $"Essence x{loot.Amount}";
-                    displayColor = new Color(0.35f, 0.78f, 0.78f);
-                    break;
-                case "resource":
-                    GD.PushWarning($"[Player] Legacy resource loot ignored in chest: {loot.ItemId}");
-                    continue;
-                case "xp":
-                    _eventBus?.EmitSignal(EventBus.SignalName.XpGained, (float)loot.Amount);
-                    displayName = $"+{loot.Amount} XP";
-                    displayColor = new Color(0.4f, 0.8f, 1f);
-                    break;
-                case "perk":
-                    string chestPerkName = ResolvePerkLoot(loot.ItemId);
-                    displayName = chestPerkName;
-                    displayColor = new Color(0.5f, 1f, 0.5f);
-                    break;
-                case "weapon":
-                    displayName = ResolveWeaponLoot(loot.ItemId, chest.GlobalPosition);
-                    displayColor = new Color(1f, 0.82f, 0.38f);
-                    break;
-                case "souvenir":
-                    _eventBus?.EmitSignal(EventBus.SignalName.LootReceived,
-                        loot.Type, loot.ItemId, loot.Amount);
-                    displayName = $"Souvenir: {loot.ItemId}";
-                    displayColor = new Color(0.8f, 0.85f, 1f);
-                    break;
-                case "cursed_item":
-                    string curseDisplayName = ResolveCursedItemLoot(loot.ItemId);
-                    displayName = curseDisplayName;
-                    displayColor = new Color(0.6f, 0.15f, 0.3f);
-                    break;
-                default:
-                    continue;
-            }
-
-            SpawnLootPopup(displayName, displayColor, chest.GlobalPosition, lootIndex);
-            lootIndex++;
-        }
-    }
-
-
-    /// <summary>
-    /// Résout un perk loot (random_perk → perk concret), l'applique via LootReceived, et retourne le nom.
-    /// </summary>
-    private string ResolvePerkLoot(string perkItemId)
-    {
-        string resolvedId = perkItemId;
-        if (resolvedId == "random_perk")
-        {
-            System.Collections.Generic.List<PerkData> allPerks = PerkDataLoader.GetAll();
-            if (allPerks != null && allPerks.Count > 0)
-                resolvedId = allPerks[(int)(GD.Randi() % allPerks.Count)].Id;
-        }
-
-        _eventBus?.EmitSignal(EventBus.SignalName.LootReceived, "perk", resolvedId, 1);
-
-        PerkData data = PerkDataLoader.Get(resolvedId);
-        return data != null ? data.Name : resolvedId;
-    }
-
-    private string ResolveWeaponLoot(string weaponItemId, Vector2 worldPos)
-    {
-        string resolvedId = weaponItemId;
-        if (resolvedId == "random_weapon")
-        {
-            List<WeaponData> candidates = new();
-            foreach (WeaponData weapon in WeaponDataLoader.GetAll())
-            {
-                if (!MetaSaveManager.IsWeaponUnlocked(weapon))
-                    continue;
-                candidates.Add(weapon);
-            }
-
-            if (candidates.Count == 0)
-                return "Arme perdue";
-
-            resolvedId = candidates[(int)(GD.Randi() % candidates.Count)].Id;
-        }
-
-        WeaponData data = WeaponDataLoader.Get(resolvedId);
-        if (data == null)
-            return resolvedId;
-
-        string rarity = WeaponRarityDataLoader.RollDropRarity(data.Tier);
-        _eventBus?.EmitSignal(EventBus.SignalName.LootReceived, "weapon", resolvedId, 1);
-
-        if (AddWeapon(data, rarity))
-            return data.Name;
-
-        WeaponPickup pickup = new();
-        WeaponInstance droppedInstance = new(data, rarity);
-        pickup.Initialize(droppedInstance, worldPos + new Vector2((float)GD.RandRange(-18, 18), (float)GD.RandRange(-12, 12)));
-        GetTree().CurrentScene.CallDeferred(Node.MethodName.AddChild, pickup);
-        return $"{data.Name} [{droppedInstance.RarityDisplayName}]";
-    }
-
-    /// <summary>
-    /// Resout un cursed_item loot (random_curse → curse concrete), l'applique via CursedItemManager.
-    /// </summary>
-    private string ResolveCursedItemLoot(string curseItemId)
-    {
-        List<CursedItemData> allCurses = CursedItemManager.GetAllCurseData();
-        if (allCurses == null || allCurses.Count == 0)
-            return "???";
-
-        string resolvedId = curseItemId;
-        if (resolvedId == "random_curse")
-            resolvedId = allCurses[(int)(GD.Randi() % allCurses.Count)].Id;
-
-        CursedItemManager cursedMgr = GetNodeOrNull<CursedItemManager>("/root/Main/CursedItemManager");
-        cursedMgr?.AddCurse(resolvedId);
-
-        CursedItemData data = CursedItemManager.GetCurseData(resolvedId);
-        return data != null ? $"Malediction: {data.Name}" : resolvedId;
+        _perkManager = perkManager;
+        _interaction.Configure(lootScreen, perkManager);
     }
 
     /// <summary>Texte flottant montrant le loot obtenu, empilé verticalement.</summary>
@@ -2048,39 +1682,6 @@ public partial class Player : CharacterBody2D
         };
     }
 
-    private void CancelChestOpen()
-    {
-        if (!_isOpeningChest)
-            return;
-
-        _isOpeningChest = false;
-        _harvestBar.Visible = false;
-        _chestTarget = null;
-        _chestProgress = 0f;
-    }
-
-    private Chest FindNearestChest()
-    {
-        Godot.Collections.Array<Node> chests = GetTree().GetNodesInGroup("chests");
-        Chest nearest = null;
-        float nearestDist = InteractRange;
-
-        foreach (Node node in chests)
-        {
-            if (node is Chest chest && chest.CanOpen)
-            {
-                float dist = GlobalPosition.DistanceTo(chest.GlobalPosition);
-                if (dist < nearestDist)
-                {
-                    nearest = chest;
-                    nearestDist = dist;
-                }
-            }
-        }
-
-        return nearest;
-    }
-
     // V2: CacheInventory retire — EssenceTracker remplacera
 
     // --- Combat ---
@@ -2103,7 +1704,7 @@ public partial class Player : CharacterBody2D
         _mobilityFeedback.Suspend();
         _mobilityFeedback.Visible = false;
         CancelPoiExplore();
-        CancelChestOpen();
+        _interaction.Cancel();
         Velocity = Vector2.Zero;
         foreach (Timer timer in _weaponTimers)
             timer.Stop();
@@ -2242,9 +1843,6 @@ public partial class Player : CharacterBody2D
 
         _equippedWeapon = _weaponSlots[slotIndex];
 
-        // V2: cout en essence via EssenceTracker (a implementer)
-        _essenceDamagePenalty = 1f;
-
         string type = _equippedWeapon.Type?.ToLower() ?? "ranged";
         string pattern = _equippedWeapon.AttackPattern?.ToLower() ?? "linear";
 
@@ -2260,7 +1858,7 @@ public partial class Player : CharacterBody2D
         // Orbital : pas d'attaque par timer, géré dans _PhysicsProcess
         if (pattern == "orbital")
         {
-            SetupOrbitalWeapon(_equippedWeapon.Base);
+            SetupOrbitalWeapon(_equippedWeapon);
             return;
         }
 
@@ -2319,7 +1917,7 @@ public partial class Player : CharacterBody2D
                 WeaponSpecialEffect se = _equippedWeapon.Base.SpecialEffect;
                 float gDmg = se.Params.TryGetValue("ground_damage", out float gd) ? gd : 5f;
                 float gDur = se.Params.TryGetValue("ground_duration", out float gdur) ? gdur : 2f;
-                float gRad = se.Params.TryGetValue("ground_radius", out float grad) ? grad : 30f;
+                float gRad = ZoneScale(se.Params.TryGetValue("ground_radius", out float grad) ? grad : 30f);
                 proj.SetGroundFire(gDmg, gDur, gRad);
             }
         }
@@ -2327,12 +1925,13 @@ public partial class Player : CharacterBody2D
 
     private void PerformMeleeAttack(string pattern)
     {
-        float range = GetEffectiveWeaponRange();
+        // Onde circulaire : son rayon est une zone. Arc : la portée donne l'allonge, la zone l'ouverture.
+        float range = pattern == "circular" ? ZoneScale(GetEffectiveWeaponRange()) : GetEffectiveWeaponRange();
         float arcAngle = pattern switch
         {
             "circular" => 360f,
             "linear" => 60f,
-            _ => GetWeaponStat("arc_angle", 120f)
+            _ => Mathf.Min(360f, ZoneScale(GetWeaponStat("arc_angle", 120f)))
         };
 
         System.Collections.Generic.List<Enemy> enemies = FindEnemiesInArc(range, arcAngle);
@@ -2412,7 +2011,7 @@ public partial class Player : CharacterBody2D
             float totalDamage = baseDamage * hitMultiplierSum * critDamageFactor;
             bool hasCrit = clampedCritChance > 0f && GD.Randf() < GetCombinedProcChance(clampedCritChance, hitCount);
             enemy.TakeDamage(totalDamage, hasCrit);
-            OnAttackHit(enemy, totalDamage, hasCrit, isRicochet: false, triggerCount: hitCount);
+            OnAttackHit(enemy, totalDamage, hasCrit, isRicochet: false, _equippedWeapon, triggerCount: hitCount);
         }
     }
 
@@ -2490,17 +2089,8 @@ public partial class Player : CharacterBody2D
     {
         Projectile projectile = CombatPools.Instance?.TakePlayerProjectile();
         projectile?.Launch(GlobalPosition, direction, damage, speed, Mathf.Clamp(range / Mathf.Max(speed, 1f), 0.2f, 4f),
-            pierce, isCrit, this, _equippedWeapon?.Base);
+            pierce, isCrit, this, _equippedWeapon?.Base, _equippedWeapon);
         return projectile;
-    }
-
-    /// <summary>
-    /// V2: pas de cycle jour/nuit, tout est toujours visible.
-    /// La visibilite sera geree par l'Effacement plus tard.
-    /// </summary>
-    private bool IsPositionVisible(Vector2 worldPos)
-    {
-        return true;
     }
 
     private System.Collections.Generic.List<Node2D> FindNearestEnemies(int count, float maxRange)
@@ -2512,8 +2102,6 @@ public partial class Player : CharacterBody2D
         {
             if (node is Node2D enemy)
             {
-                if (!IsPositionVisible(enemy.GlobalPosition))
-                    continue;
                 float dist = GlobalPosition.DistanceTo(enemy.GlobalPosition);
                 if (dist < maxRange)
                     inRange.Add((enemy, dist));
@@ -2538,9 +2126,6 @@ public partial class Player : CharacterBody2D
         foreach (Node node in enemies)
         {
             if (node is not Enemy enemy || enemy.IsDying)
-                continue;
-
-            if (!IsPositionVisible(enemy.GlobalPosition))
                 continue;
 
             Vector2 toEnemy = enemy.GlobalPosition - GlobalPosition;
@@ -2578,27 +2163,50 @@ public partial class Player : CharacterBody2D
         return result;
     }
 
-    private float ComputeBaseAttackDamage()
+    private float ComputeBaseAttackDamage() => ComputeBaseAttackDamage(_equippedWeapon);
+
+    private float ComputeBaseAttackDamage(WeaponInstance weapon)
     {
-        float weaponDamage = GetWeaponStat("damage", AttackDamage);
+        float weaponDamage = weapon?.GetStat("damage", AttackDamage) ?? AttackDamage;
         float characterDamageFactor = AttackDamage / 10f;
         float damage = weaponDamage * characterDamageFactor * _damageMultiplier * _erasurePenalty.Damage;
 
         if (_berserkerThreshold > 0f && _currentHp / EffectiveMaxHp < _berserkerThreshold)
             damage *= _berserkerDamageMult;
 
-        // Pénalité si manque d'essence (armes Tier 4+)
-        damage *= _essenceDamagePenalty;
-
         return damage;
     }
 
-    private float GetEffectiveWeaponRange()
+    private float GetEffectiveWeaponRange() => GetEffectiveWeaponRange(_equippedWeapon);
+
+    /// <summary>
+    /// Portée : allonge d'un coup, distance d'un tir (plan 05 §4). La zone ne l'allonge pas ; elle agrandit les
+    /// arcs, ondes, cônes, feux et explosions (<see cref="ZoneScale"/>).
+    /// </summary>
+    private float GetEffectiveWeaponRange(WeaponInstance weapon)
     {
-        float weaponRange = GetWeaponStat("range", AttackRange);
-        float characterRangeFactor = AttackRange / 300f;
-        return weaponRange * characterRangeFactor * _attackRangeMultiplier * _aoeMultiplier;
+        float weaponRange = weapon?.GetStat("range", AttackRange) ?? AttackRange;
+        return weaponRange * (AttackRange / 300f) * _attackRangeMultiplier;
     }
+
+    /// <summary>Taille d'une zone d'effet (rayon, angle) après les bonus de zone du joueur.</summary>
+    private float ZoneScale(float value) => value * _aoeMultiplier;
+
+    /// <summary>
+    /// Valeur effective d'une stat d'arme, telle que le combat l'applique (arme × niveau × personnage × bonus) :
+    /// c'est elle que montrent le level-up et la pause, jamais la base des données.
+    /// </summary>
+    public float GetWeaponStatForDisplay(WeaponInstance weapon, string key) => key switch
+    {
+        "damage" => ComputeBaseAttackDamage(weapon),
+        "attack_speed" => AttackSpeed * weapon.GetStat("attack_speed", 1f) * _attackSpeedMultiplier,
+        "range" => weapon.AttackPattern == "circular" ? ZoneScale(GetEffectiveWeaponRange(weapon)) : GetEffectiveWeaponRange(weapon),
+        "arc_angle" => Mathf.Min(360f, ZoneScale(weapon.GetStat("arc_angle", 120f))),
+        "cone_angle_end" => Mathf.Min(180f, ZoneScale(weapon.GetStat("cone_angle_end", 60f))),
+        "projectile_count" => weapon.GetStat("projectile_count", 1f) + _extraProjectiles,
+        "projectile_pierce" => weapon.GetStat("projectile_pierce", 0f) + _projectilePierce,
+        _ => weapon.GetStat(key, 0f),
+    };
 
     private float GetWeaponStat(string key, float fallback)
     {
@@ -2610,6 +2218,9 @@ public partial class Player : CharacterBody2D
 
     private void PlayAttackFeedback(bool isMelee, Vector2 direction)
     {
+        string attackAudio = _equippedWeapon?.Base.AttackAudio;
+        if (!string.IsNullOrEmpty(attackAudio))
+            Infrastructure.AudioManager.Play(attackAudio, 0.04f);
         if (_visual == null)
             return;
 

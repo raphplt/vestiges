@@ -29,6 +29,8 @@ public partial class ErasureManager : Node
     private int _trackedRadiusCells = 14;
     private float _stabilizeRadiusCells = 2.5f;
     private float _stabilizeMemoryFloor = 0.72f;
+    // Sans POI (plan 17 lot 0B), ouvrir un coffre est le geste d'exploration qui ravive la mémoire alentour.
+    private bool _stabilizeOnChestOpen = true;
     // Néant (mémoire nulle) : part des PV max perdue par seconde tant que le joueur y reste (Stratégie V2 §8).
     private float _voidDamageRatioPerSecond = 0.06f;
     // Résurgence (V2 §8, plan 03 lot C) : pendant une crise, l'oubli s'accélère partout ; il revient au rythme normal après.
@@ -64,7 +66,8 @@ public partial class ErasureManager : Node
         _eventBus = GetNode<EventBus>("/root/EventBus");
         _eventBus.SouvenirDiscovered += OnSouvenirDiscovered;
         _eventBus.PoiDiscovered += OnPoiDiscovered;
-        _eventBus.AltarUsed += OnAltarUsed;
+        _eventBus.ChestOpened += OnChestOpened;
+        _eventBus.MemorialAwakened += OnMemorialAwakened;
         _eventBus.CrisisStarted += OnCrisisStarted;
         _eventBus.CrisisEnded += OnCrisisEnded;
 
@@ -84,7 +87,8 @@ public partial class ErasureManager : Node
         {
             _eventBus.SouvenirDiscovered -= OnSouvenirDiscovered;
             _eventBus.PoiDiscovered -= OnPoiDiscovered;
-            _eventBus.AltarUsed -= OnAltarUsed;
+            _eventBus.ChestOpened -= OnChestOpened;
+            _eventBus.MemorialAwakened -= OnMemorialAwakened;
             _eventBus.CrisisStarted -= OnCrisisStarted;
             _eventBus.CrisisEnded -= OnCrisisEnded;
         }
@@ -254,7 +258,7 @@ public partial class ErasureManager : Node
         return new Vector2(cell.X * _cellSize, cell.Y * _cellSize);
     }
 
-    private Vector2 CellCenterToWorld(Vector2I cell)
+    public Vector2 CellCenterToWorld(Vector2I cell)
     {
         return CellToWorld(cell) + new Vector2(_cellSize * 0.5f, _cellSize * 0.5f);
     }
@@ -340,10 +344,15 @@ public partial class ErasureManager : Node
 
     private void OnCrisisEnded(int crisisNumber) => _crisisActive = false;
 
-    private void OnAltarUsed(Vector2 position)
+    private void OnMemorialAwakened(Vector2 position)
     {
         StabilizeZone(position);
-        PublishGroundMemory();
+    }
+
+    private void OnChestOpened(string chestId, string rarity, Vector2 position)
+    {
+        if (_stabilizeOnChestOpen)
+            StabilizeZone(position);
     }
 
     private void LoadConfig()
@@ -374,6 +383,7 @@ public partial class ErasureManager : Node
         _trackedRadiusCells = dict.ContainsKey("tracked_radius_cells") ? (int)dict["tracked_radius_cells"].AsDouble() : _trackedRadiusCells;
         _stabilizeRadiusCells = dict.ContainsKey("stabilize_radius_cells") ? (float)dict["stabilize_radius_cells"].AsDouble() : _stabilizeRadiusCells;
         _stabilizeMemoryFloor = dict.ContainsKey("stabilize_memory_floor") ? (float)dict["stabilize_memory_floor"].AsDouble() : _stabilizeMemoryFloor;
+        _stabilizeOnChestOpen = !dict.ContainsKey("stabilize_on_chest_open") || dict["stabilize_on_chest_open"].AsBool();
         _voidDamageRatioPerSecond = dict.ContainsKey("void_damage_ratio_per_second") ? (float)dict["void_damage_ratio_per_second"].AsDouble() : _voidDamageRatioPerSecond;
         _crisisDecayMultiplier = dict.ContainsKey("crisis_decay_multiplier") ? (float)dict["crisis_decay_multiplier"].AsDouble() : _crisisDecayMultiplier;
     }

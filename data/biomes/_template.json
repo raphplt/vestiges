@@ -1,9 +1,8 @@
 {
     "id": "biome_id",
     "name": "Nom du biome",
-    "tile_palette": "res://assets/tiles/biome_id.tres",
-    "enemy_pool": ["shadow_crawler", "fading_spitter"],
-    "resource_pool": ["wood", "stone"],
-    "ambient_color": "#445566",
-    "danger_level": 1
+    "danger_level": 1,
+    "terrain_weights": { "grass": 0.5, "forest": 0.5 },
+    "exploration_enemy_pool": ["presage", "rodeur"],
+    "resurgence_enemy_pool": ["presage", "shade"]
 }

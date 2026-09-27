@@ -27,10 +27,8 @@ public partial class GameBootstrap : Node
         CharacterDataLoader.Load();
         WeaponDataLoader.Load();
         WeaponUpgradeDataLoader.Load();
-        WeaponRarityDataLoader.Load();
         PerkDataLoader.Load();
         PassiveSouvenirDataLoader.Load();
-        FusionDataLoader.Load();
         MetaSaveManager.Load();
         SouvenirDataLoader.Load();
 
@@ -100,7 +98,7 @@ public partial class GameBootstrap : Node
         gameOverScreen.SetScoreManager(scoreManager);
 
         if (chestLootScreen != null)
-            player.SetChestLootScreen(chestLootScreen);
+            player.ConfigureLoot(chestLootScreen, perkManager);
 
         Node sceneRoot = GetNode("..");
         ErasureManager erasureManager = new() { Name = "ErasureManager" };
@@ -108,6 +106,9 @@ public partial class GameBootstrap : Node
 
         EssenceTracker essenceTracker = new() { Name = "EssenceTracker" };
         sceneRoot.AddChild(essenceTracker);
+
+        PerilManager perilManager = new() { Name = "PerilManager" };
+        sceneRoot.AddChild(perilManager);
 
         CrisisManager crisisManager = new() { Name = "CrisisManager" };
         sceneRoot.AddChild(crisisManager);
@@ -118,8 +119,16 @@ public partial class GameBootstrap : Node
         EndgameManager endgameManager = new() { Name = "EndgameManager" };
         sceneRoot.AddChild(endgameManager);
 
-        AltarManager altarManager = new() { Name = "AltarManager" };
-        sceneRoot.AddChild(altarManager);
+        ChoiceScreen choiceScreen = new() { Name = "ChoiceScreen" };
+        sceneRoot.AddChild(choiceScreen);
+
+        MemorialDirector memorialDirector = new() { Name = "MemorialDirector" };
+        memorialDirector.Setup(choiceScreen, essenceTracker, erasureManager, perilManager);
+        sceneRoot.AddChild(memorialDirector);
+
+        RiftDirector riftDirector = new() { Name = "RiftDirector" };
+        riftDirector.Setup(choiceScreen, perilManager, erasureManager);
+        sceneRoot.AddChild(riftDirector);
 
         QuestManager questManager = new() { Name = "QuestManager" };
         sceneRoot.AddChild(questManager);
@@ -134,10 +143,6 @@ public partial class GameBootstrap : Node
             GD.Print($"[GameBootstrap] Catching up missed level-ups: player is level {progression.CurrentLevel}");
             fragmentManager.TriggerLevelUp(progression.CurrentLevel);
         }
-
-        CursedItemManager cursedItemManager = new() { Name = "CursedItemManager" };
-        cursedItemManager.SetPerkManager(perkManager);
-        GetNode("..").CallDeferred("add_child", cursedItemManager);
 
         Combat.CombatPools combatPools = new() { Name = "CombatPools" };
         GetNode("..").CallDeferred("add_child", combatPools);

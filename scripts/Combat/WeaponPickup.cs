@@ -148,7 +148,7 @@ public partial class WeaponPickup : Area2D
 			EventBus eventBus = GetNodeOrNull<EventBus>("/root/EventBus");
 			eventBus?.EmitSignal(EventBus.SignalName.LootReceived, "weapon", _weaponInstance.Id, 1);
 
-			GD.Print($"[WeaponPickup] {_weaponInstance.Name} ({_weaponInstance.Rarity}) ramassee");
+			GD.Print($"[WeaponPickup] {_weaponInstance.Name} ramassée");
 		}
 		else
 		{
@@ -175,7 +175,7 @@ public partial class WeaponPickup : Area2D
 	{
 		Label floatLabel = new()
 		{
-			Text = $"+ {_weaponInstance.Name} [{_weaponInstance.RarityDisplayName}]",
+			Text = $"+ {_weaponInstance.Name}",
 			HorizontalAlignment = HorizontalAlignment.Center,
 			GlobalPosition = GlobalPosition + new Vector2(0, -20)
 		};
@@ -256,7 +256,7 @@ public partial class WeaponPickup : Area2D
 					Texture = weaponTexture,
 					Centered = true,
 					TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
-					Scale = new Vector2(0.5f, 0.5f)
+					Scale = Vector2.One
 				};
 			_visualRoot.AddChild(_visual);
 		}
@@ -277,7 +277,7 @@ public partial class WeaponPickup : Area2D
 	{
 		_nameLabel = new Label
 		{
-			Text = $"{_weaponInstance?.Name ?? "???"}\n{_weaponInstance?.RarityDisplayName ?? "Commun"}",
+			Text = _weaponInstance?.Name ?? "???",
 			HorizontalAlignment = HorizontalAlignment.Center,
 			Position = new Vector2(-52, -36)
 		};
@@ -304,9 +304,6 @@ public partial class WeaponPickup : Area2D
 
 	private Color GetPickupColor()
 	{
-		if (_weaponInstance != null)
-			return _weaponInstance.RarityColor;
-
 		int tier = Weapon?.Tier ?? 1;
 		return tier switch
 		{

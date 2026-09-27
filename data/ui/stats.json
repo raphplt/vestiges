@@ -1,0 +1,28 @@
+{
+    "_comment": "Catalogue des stats affichées (plan 17 §4.2, lots 1B et 1C) : clé de traduction, et comment les montrer. value = valeur avant → après (dégâts et cadence à une décimale) ; count = entier ; percent = seulement le gain en pourcentage (portée, zone, vitesses : leurs chiffres ne parlent pas au joueur) ; fraction = une part (0,05) montrée en pourcentage.",
+    "stats": [
+        { "id": "damage", "name_key": "STAT_DAMAGE", "display": "value" },
+        { "id": "attack_speed", "name_key": "STAT_ATTACK_SPEED", "display": "value", "unit": "/s" },
+        { "id": "range", "name_key": "STAT_RANGE", "display": "percent" },
+        { "id": "arc_angle", "name_key": "STAT_AOE", "display": "percent" },
+        { "id": "cone_angle_end", "name_key": "STAT_AOE", "display": "percent" },
+        { "id": "knockback", "name_key": "STAT_KNOCKBACK", "display": "percent" },
+        { "id": "projectile_speed", "name_key": "STAT_PROJECTILE_SPEED", "display": "percent" },
+        { "id": "orbital_speed", "name_key": "STAT_ORBIT_SPEED", "display": "percent" },
+        { "id": "chain_range", "name_key": "STAT_CHAIN_RANGE", "display": "percent" },
+        { "id": "homing_strength", "name_key": "STAT_HOMING", "display": "percent" },
+        { "id": "projectile_count", "name_key": "STAT_PROJECTILES", "display": "count" },
+        { "id": "projectile_pierce", "name_key": "STAT_PIERCE", "display": "count" },
+        { "id": "chain_targets", "name_key": "STAT_CHAIN_TARGETS", "display": "count" },
+        { "id": "orbital_count", "name_key": "STAT_ORBITALS", "display": "count" },
+        { "id": "max_hp", "name_key": "STAT_MAX_HP", "display": "count" },
+        { "id": "speed", "name_key": "STAT_SPEED", "display": "percent" },
+        { "id": "aoe_radius", "name_key": "STAT_AOE", "display": "percent" },
+        { "id": "attack_range", "name_key": "STAT_RANGE", "display": "percent" },
+        { "id": "xp_magnet_radius", "name_key": "STAT_XP_RANGE", "display": "percent" },
+        { "id": "armor", "name_key": "STAT_ARMOR", "display": "count" },
+        { "id": "crit_chance", "name_key": "STAT_CRIT", "display": "fraction" },
+        { "id": "regen_rate", "name_key": "STAT_REGEN", "display": "value", "unit": "PV/s" },
+        { "id": "luck", "name_key": "STAT_LUCK", "display": "fraction" }
+    ]
+}

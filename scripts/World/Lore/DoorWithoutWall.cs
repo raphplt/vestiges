@@ -166,10 +166,8 @@ public partial class DoorWithoutWall : Node2D
 
 		// Récompenses
 		_eventBus.EmitSignal(EventBus.SignalName.XpGained, 20f);
-		_eventBus.EmitSignal(EventBus.SignalName.PlayerBuffApplied, "warmth", 60f);
-		_eventBus.EmitSignal(EventBus.SignalName.SouvenirDiscovered, "souvenir_avant", "L'Avant", "l_avant");
 
-		GD.Print("[DoorWithoutWall] Porte ouverte — souffle de chaleur, buff Chaleur 60s, Souvenir 'L'Avant'");
+		GD.Print("[DoorWithoutWall] Porte ouverte — souffle de chaleur, +20 XP");
 	}
 
 	private static Vector2[] CreateCircle(float radius, int segments)

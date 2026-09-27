@@ -6,7 +6,7 @@ namespace Vestiges.Infrastructure;
 
 /// <summary>
 /// Gestionnaire audio central — Autoload singleton.
-/// Gère la musique adaptative (jour/nuit/hub) et tous les SFX du jeu
+/// Gère la musique adaptative (exploration/combat/Résurgences/Hub) et tous les SFX du jeu
 /// via abonnement à l'EventBus. Crée les buses audio si absentes.
 /// Persiste les réglages dans user://audio_settings.cfg.
 /// </summary>
@@ -52,26 +52,7 @@ public partial class AudioManager : Node
 
 	// --- SFX throttle (prevents spam of the same sound) ---
 	private readonly Dictionary<string, ulong> _sfxLastPlayTime = new();
-	private static readonly Dictionary<string, ulong> SfxMinIntervals = new()
-	{
-		["sfx_hit_joueur"] = 150,
-		["sfx_hit_ennemi"] = 80,
-		// Attaques ennemies : en combat dense, une voix toutes les 90 ms par son suffit à lire la menace.
-		["sfx_ombre_attaque"] = 90,
-		["sfx_rodeur_attaque"] = 90,
-		["sfx_brute_charge"] = 90,
-		["sfx_hurleur_cri"] = 90,
-		["sfx_sentinelle_tir"] = 90,
-		["sfx_rampant_surgissement"] = 90,
-		["sfx_projectile_vol"] = 90,
-		["sfx_hit_critique"] = 80,
-		["sfx_monde_dissolution"] = 200,
-		["sfx_recolte_obtenu"] = 100,
-		["xp_gain"] = 60,
-		["sfx_structure_impossible"] = 180,
-		["sfx_perk_refuse"] = 120,
-		["sfx_degat_critique_recu"] = 180,
-	};
+	private readonly Dictionary<string, ulong> _sfxMinIntervals = new();
 	private const ulong DefaultMinInterval = 0;
 
 	// --- Musique adaptative ---
@@ -97,105 +78,26 @@ public partial class AudioManager : Node
 	private const string SettingsPath = "user://audio_settings.cfg";
 
 	// --- Chemins de tous les streams ---
-	private static readonly Dictionary<string, string> Paths = new()
+	private readonly Dictionary<string, string> _paths = new();
+	private readonly Dictionary<string, float> _soundVolumes = new();
+
+	private void LoadSoundBank()
 	{
-		// Musique
-		["mus_jour_exploration"] = "res://assets/audio/musique/mus_jour_exploration.ogg",
-		["mus_jour_combat"]      = "res://assets/audio/musique/mus_jour_combat.ogg",
-		["mus_crepuscule"]       = "res://assets/audio/musique/mus_crepuscule.ogg",
-		["mus_nuit_vagues"]      = "res://assets/audio/musique/mus_nuit_vagues.ogg",
-		["mus_nuit_chaos"]       = "res://assets/audio/musique/mus_nuit_chaos.ogg",
-		["mus_aube"]             = "res://assets/audio/musique/mus_aube.ogg",
-		["mus_hub"]              = "res://assets/audio/musique/mus_hub.ogg",
-		["mus_mort"]             = "res://assets/audio/musique/mus_mort.ogg",
-
-		// Pas du joueur
-		["sfx_pas_herbe"]   = "res://assets/audio/sfx/joueur/pas/sfx_pas_herbe.wav",
-		["sfx_pas_eau"]     = "res://assets/audio/sfx/joueur/pas/sfx_pas_eau.wav",
-		["sfx_pas_beton"]   = "res://assets/audio/sfx/joueur/pas/sfx_pas_beton.wav",
-		["sfx_pas_bois"]    = "res://assets/audio/sfx/joueur/pas/sfx_pas_bois.wav",
-		["sfx_pas_gravier"] = "res://assets/audio/sfx/joueur/pas/sfx_pas_gravier.wav",
-
-		// Récolte
-		["sfx_recolte_hache"]    = "res://assets/audio/sfx/gameplay/sfx_recolte_hache.wav",
-		["sfx_recolte_pioche"]   = "res://assets/audio/sfx/gameplay/sfx_recolte_pioche.wav",
-		["sfx_recolte_obtenu"]   = "res://assets/audio/sfx/gameplay/sfx_recolte_obtenu.wav",
-
-		// Craft & construction
-		["sfx_craft_termine"]    = "res://assets/audio/sfx/gameplay/sfx_craft_termine.wav",
-		["sfx_structure_pose"]   = "res://assets/audio/sfx/gameplay/sfx_structure_pose.wav",
-		["sfx_craft_impossible"] = "res://assets/audio/sfx/gameplay/sfx_craft_impossible.wav",
-
-		// Progression
-		["sfx_perk_choix"]      = "res://assets/audio/sfx/gameplay/sfx_perk_choix.wav",
-		["sfx_souvenir_trouve"] = "res://assets/audio/sfx/gameplay/sfx_souvenir_trouve.wav",
-		["sfx_level_up"]        = "res://assets/audio/sfx/gameplay/level_up.wav",
-		["sfx_level_up_loop"]   = "res://assets/audio/sfx/gameplay/level_up_loop.wav",
-		["sfx_level_up_after"]  = "res://assets/audio/sfx/gameplay/level_up_after.wav",
-		["sfx_chest_opening"]   = "res://assets/audio/sfx/gameplay/chest_opening.wav",
-		["xp_gain"]            = "res://assets/audio/sfx/gameplay/xp_gain.wav",
-		["sfx_perk_refuse"]     = "res://assets/audio/sfx/gameplay/sfx_perk_refuse.wav",
-		["sfx_malediction_acceptee"] = "res://assets/audio/sfx/gameplay/sfx_malediction_acceptee.wav",
-		["sfx_artefact_trouve"] = "res://assets/audio/sfx/gameplay/sfx_artefact_trouve.wav",
-		["sfx_danger_building"] = "res://assets/audio/sfx/gameplay/sfx_danger_building.wav",
-		["sfx_sante_basse"]     = "res://assets/audio/sfx/gameplay/sfx_sante_basse.wav",
-		["sfx_structure_impossible"] = "res://assets/audio/sfx/gameplay/sfx_structure_impossible.wav",
-
-		// Monde
-		["sfx_monde_tuile_apparait"] = "res://assets/audio/sfx/gameplay/sfx_monde_tuile_apparait.wav",
-		["sfx_monde_dissolution"]    = "res://assets/audio/sfx/gameplay/sfx_monde_dissolution.wav",
-		["sfx_monde_bord_map"]       = "res://assets/audio/sfx/gameplay/sfx_monde_bord_map.wav",
-		["sfx_monde_crepuscule"]     = "res://assets/audio/sfx/gameplay/sfx_monde_crepuscule.wav",
-		["sfx_monde_aube"]           = "res://assets/audio/sfx/gameplay/sfx_monde_aube.wav",
-
-		// Combat
-		["sfx_hit_ennemi"]   = "res://assets/audio/sfx/combat/sfx_hit_ennemi.wav",
-		["sfx_hit_critique"] = "res://assets/audio/sfx/combat/sfx_hit_critique.wav",
-		["sfx_hit_joueur"]   = "res://assets/audio/sfx/combat/sfx_hit_joueur.wav",
-		["sfx_degat_critique_recu"] = "res://assets/audio/sfx/combat/sfx_degat_critique_recu.wav",
-		["sfx_projectile_vol"]    = "res://assets/audio/sfx/combat/sfx_projectile_vol.wav",
-		["sfx_projectile_impact"] = "res://assets/audio/sfx/combat/sfx_projectile_impact.wav",
-
-		// Créatures (sons provisoires : la sélection définitive suit le plan 15)
-		["sfx_ombre_attaque"] = "res://assets/audio/sfx/creatures/sfx_ombre_attaque.wav",
-		["sfx_rodeur_attaque"] = "res://assets/audio/sfx/creatures/sfx_rodeur_attaque.wav",
-		["sfx_brute_charge"] = "res://assets/audio/sfx/creatures/sfx_brute_charge.wav",
-		["sfx_brute_pas"] = "res://assets/audio/sfx/creatures/sfx_brute_pas.wav",
-		["sfx_hurleur_cri"] = "res://assets/audio/sfx/creatures/sfx_hurleur_cri.wav",
-		["sfx_sentinelle_tir"] = "res://assets/audio/sfx/creatures/sfx_sentinelle_tir.wav",
-		["sfx_sentinelle_activation"] = "res://assets/audio/sfx/creatures/sfx_sentinelle_activation.wav",
-		["sfx_rampant_surgissement"] = "res://assets/audio/sfx/creatures/sfx_rampant_surgissement.wav",
-		["sfx_charognard_meute"] = "res://assets/audio/sfx/creatures/sfx_charognard_meute.wav",
-		["sfx_charognard_idle"] = "res://assets/audio/sfx/creatures/sfx_charognard_idle.wav",
-
-		// UI
-		["sfx_menu_clic"]         = "res://assets/audio/sfx/ui/sfx_menu_clic.wav",
-		["sfx_menu_survol"]       = "res://assets/audio/sfx/ui/sfx_menu_survol.wav",
-		["sfx_menu_confirmer"]    = "res://assets/audio/sfx/ui/sfx_menu_confirmer.wav",
-		["sfx_inventaire_ouvrir"] = "res://assets/audio/sfx/ui/sfx_inventaire_ouvrir.wav",
-		["sfx_inventaire_fermer"] = "res://assets/audio/sfx/ui/sfx_inventaire_fermer.wav",
-
-		// Ambiance biomes
-		["sfx_ambiance_foret"]     = "res://assets/audio/sfx/ambiance/sfx_ambiance_foret.wav",
-		["sfx_ambiance_ruines"]    = "res://assets/audio/sfx/ambiance/sfx_ambiance_ruines.wav",
-		["sfx_ambiance_marecages"] = "res://assets/audio/sfx/ambiance/sfx_ambiance_marecages.wav",
-		["sfx_ambiance_oiseaux_1"] = "res://assets/audio/sfx/ambiance/sfx_ambiance_oiseaux_1.wav",
-		["sfx_ambiance_oiseaux_2"] = "res://assets/audio/sfx/ambiance/sfx_ambiance_oiseaux_2.wav",
-		["sfx_ambiance_bulle"]     = "res://assets/audio/sfx/ambiance/sfx_ambiance_bulle.wav",
-		["sfx_tonnerre_lointain"] = "res://assets/audio/sfx/ambiance/sfx_tonnerre_lointain.wav",
-		["sfx_pluie_legere"]      = "res://assets/audio/sfx/ambiance/sfx_pluie_legere.wav",
-		["sfx_orage_proche"]      = "res://assets/audio/sfx/ambiance/sfx_orage_proche.wav",
-		["sfx_foret_rafales"]     = "res://assets/audio/sfx/ambiance/sfx_foret_rafales.wav",
-		["sfx_brouillard"]        = "res://assets/audio/sfx/ambiance/sfx_brouillard.wav",
-		["sfx_bord_effacement_proche"] = "res://assets/audio/sfx/ambiance/sfx_bord_effacement_proche.wav",
-		["sfx_colosse_lointain"]  = "res://assets/audio/sfx/ambiance/sfx_colosse_lointain.wav",
-
-		// Foyer
-		["sfx_foyer_crepitement"] = "res://assets/audio/sfx/foyer/sfx_foyer_crepitement.wav",
-		["sfx_foyer_aura"]        = "res://assets/audio/sfx/foyer/sfx_foyer_aura.wav",
-		["sfx_foyer_upgrade"]     = "res://assets/audio/sfx/foyer/sfx_foyer_upgrade.wav",
-
-	};
+		using FileAccess file = FileAccess.Open("res://data/audio/sounds.json", FileAccess.ModeFlags.Read);
+		if (file == null)
+			throw new System.InvalidOperationException("Banque audio introuvable.");
+		using Json json = new();
+		if (json.Parse(file.GetAsText()) != Error.Ok)
+			throw new System.InvalidOperationException($"Banque audio invalide : {json.GetErrorMessage()}");
+		foreach (System.Collections.Generic.KeyValuePair<Variant, Variant> entry in json.Data.AsGodotDictionary())
+		{
+			string key = entry.Key.AsString();
+			Godot.Collections.Dictionary settings = entry.Value.AsGodotDictionary();
+			_paths[key] = settings["path"].AsString();
+			_soundVolumes[key] = (float)settings["volume_db"].AsDouble();
+			_sfxMinIntervals[key] = (ulong)settings["min_interval_ms"].AsInt64();
+		}
+	}
 
 	public override void _Ready()
 	{
@@ -203,6 +105,7 @@ public partial class AudioManager : Node
 
 		EnsureAudioBuses();
 		LoadSettings();
+		LoadSoundBank();
 		PreloadStreams();
 
 		_musicPlayerA = new AudioStreamPlayer { Bus = BusMusic, Name = "MusicA", VolumeDb = -80f };
@@ -326,7 +229,7 @@ public partial class AudioManager : Node
 	private void PreloadStreams()
 	{
 		float serverRate = AudioServer.GetMixRate();
-		foreach (KeyValuePair<string, string> kv in Paths)
+		foreach (KeyValuePair<string, string> kv in _paths)
 		{
 			AudioStream stream = GD.Load<AudioStream>(kv.Value);
 			if (stream != null)
@@ -367,7 +270,7 @@ public partial class AudioManager : Node
 
 		// Throttle: skip if same SFX was played too recently
 		ulong now = Time.GetTicksMsec();
-		ulong minInterval = SfxMinIntervals.TryGetValue(key, out ulong interval) ? interval : DefaultMinInterval;
+		ulong minInterval = _sfxMinIntervals.TryGetValue(key, out ulong interval) ? interval : DefaultMinInterval;
 		if (minInterval > 0 && _sfxLastPlayTime.TryGetValue(key, out ulong lastTime) && now - lastTime < minInterval)
 			return;
 		_sfxLastPlayTime[key] = now;
@@ -379,7 +282,7 @@ public partial class AudioManager : Node
 
 		player.Stream = stream;
 		player.PitchScale = basePitch + (float)GD.RandRange(-pitchVariance, pitchVariance);
-		player.VolumeDb = volumeDb;
+		player.VolumeDb = volumeDb + _soundVolumes.GetValueOrDefault(key);
 		player.Play();
 	}
 
@@ -400,7 +303,7 @@ public partial class AudioManager : Node
 
 		player.Stream = stream;
 		player.PitchScale = 1f + (float)GD.RandRange(-pitchVariance, pitchVariance);
-		player.VolumeDb = volumeDb;
+		player.VolumeDb = volumeDb + _soundVolumes.GetValueOrDefault(key);
 		player.Play();
 	}
 
@@ -631,6 +534,8 @@ public partial class AudioManager : Node
 		eb.GameStateChanged   += OnGameStateChanged;
 		eb.ChestOpened        += OnChestOpened;
 		eb.PoiExplored        += OnPoiExplored;
+		eb.WeaponEquipped += OnWeaponEquipped;
+		eb.WeaponDropped += OnWeaponDropped;
 		eb.RandomEventTriggered += OnRandomEventTriggered;
 		eb.RandomEventEnded   += OnRandomEventEnded;
 	}
@@ -651,6 +556,8 @@ public partial class AudioManager : Node
 		eb.GameStateChanged   -= OnGameStateChanged;
 		eb.ChestOpened        -= OnChestOpened;
 		eb.PoiExplored        -= OnPoiExplored;
+		eb.WeaponEquipped -= OnWeaponEquipped;
+		eb.WeaponDropped -= OnWeaponDropped;
 		eb.RandomEventTriggered -= OnRandomEventTriggered;
 		eb.RandomEventEnded   -= OnRandomEventEnded;
 	}
@@ -764,8 +671,13 @@ public partial class AudioManager : Node
 			PlaySfx("sfx_artefact_trouve", 0f, -3f);
 	}
 
+	private void OnWeaponEquipped(string weaponId, int slotIndex) => PlayUiSfx("sfx_weapon_equip", 0.03f);
+
+	private void OnWeaponDropped(string weaponId) => PlayUiSfx("sfx_weapon_drop", 0.03f);
+
 	private void OnPoiExplored(string poiId, string poiType)
 	{
+		PlaySfx("sfx_poi_activate", 0.03f);
 		if (poiType == "lore" || poiType == "sanctuary")
 			PlaySfx("sfx_artefact_trouve", 0f, -3f);
 	}
@@ -924,7 +836,7 @@ public partial class AudioManager : Node
 			return;
 
 		player.Stream = CreateLoopableStream(stream);
-		player.VolumeDb = volumeDb;
+		player.VolumeDb = volumeDb + _soundVolumes.GetValueOrDefault(key);
 		player.Play();
 		currentKey = key;
 	}

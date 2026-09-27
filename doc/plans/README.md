@@ -36,6 +36,8 @@ La [Stratégie V2](../VESTIGES-STRATEGIE-V2.md) reste l'autorité gameplay/roadm
 | [14 — Anomalies du monde](14-anomalies-du-monde.md) | P1 | Anomalies rares liées au joueur et à l'oubli, jamais mortelles | 12, 13 |
 | [15 — Audio](15-audio.md) | Choix A2 consignés | Six candidats retenus, révélation du coffre actuelle conservée ; 3 refus à retravailler et 102 autres besoins à rechercher | [Retours A2](../audio/lot-a2/RETOURS.md) ; dissolution complète préparée, intégration à faire |
 | [16 — L'oubli rendu sensible](16-oubli-sensible.md) | P1 | Lots O1–O6 : sol qui oublie, choses qui se défont, frontière visible, coût et récompense de l'oubli | 10 (shader du sol), 02, 13, 15 |
+| [17 — Armes, coffres et modificateurs](17-armes-coffres-modificateurs.md) | P0 | Vagues 0–5 ; rareté sur les améliorations ; noms d'armes ; Mémoriaux et Failles | 05, 08, 13, 16, 18 |
+| [18 — Inventaire des restes V1](18-inventaire-restes-v1.md) | P0 | Éléments de lore et POI vectoriels, Colosses, identifiants Steam « nuits » | 17 (lots 0B/0C) |
 
 Les numéros servent à identifier les plans, pas à imposer leur exécution intégrale dans cet ordre. Le [registre](DECISIONS.md) fait foi pour leur statut de validation.
 
@@ -59,7 +61,7 @@ Un seul lot d'implémentation ouvert à la fois. Un échec de lisibilité, de pe
 - [10 T2](10-terrain-et-tiles.md) : décors de transition mêlés le long des frontières de biomes. [08 I3](08-direction-artistique.md) : hauteur de vol unique des projectiles.
 - [16 O2](16-oubli-sensible.md) : en zone Effacée, des éclats du Néant s'élèvent des décors proches.
 - [08 P4b-3](08-direction-artistique.md) : haies, murets et clôtures aux bords des parcelles, vergers en rangs.
-- [16 O5](16-oubli-sensible.md) : un Autel qui sert rappelle sa zone à l'existence.
+- [16 O5](16-oubli-sensible.md) : un Autel qui sert rappelle sa zone à l'existence. Depuis la fusion de main, c'est le réveil d'un Mémorial qui le fait (les Autels n'existent plus).
 - [08 P4b-4](08-direction-artistique.md) : scènes-récits dans les champs (pique-nique abandonné, linge étendu, épouvantail aux corbeaux, tracteur embourbé).
 - [02 J1](02-juiciness-score.md) : retour de coup sans tween (recul sur le visuel seul), chiffres de dégâts en Saira, cumulés par cible, critique distinct par la forme.
 - [08 P2](08-direction-artistique.md) : l'église et le pylône de télécommunication reviennent comme repères rares des Ruines Urbaines, refaits dans le pipeline.
@@ -71,11 +73,29 @@ Un seul lot d'implémentation ouvert à la fois. Un échec de lisibilité, de pe
 - [02 lot A](02-juiciness-score.md) : score exact. Horloge de jeu qui exclut les pauses, score qui monte au HUD entre deux kills, « nouveau record » enfin affiché au bilan, barème en JSON.
 - [02 lot D](02-juiciness-score.md) : bilan de fin de run refait en trois zones (score et record, personnage et build complet, gains), révélé en trois temps après que le monde a pâli.
 - [04 C2](04-interfaces-et-hub.md) : Collection dans le menu de l'accueil. Armes et souvenirs de run en grille, détail et condition de déblocage à la demande, même règle de disponibilité que le loot.
-- [07 lot A](07-bestiaire-et-rencontres.md) : audit des données du bestiaire (`tools/audit_bestiary.py`). Les trois Colosses sont inatteignables en jeu, la Tisseuse ne sort qu'en crise dans les Marécages ; propositions à arbitrer.
-- [07 lot C](07-bestiaire-et-rencontres.md) : les Colosses reviennent en jeu, un par crise à partir de la deuxième (choix provisoire, consigné dans DECISIONS §7).
+- [07 lot A](07-bestiaire-et-rencontres.md) : audit des données du bestiaire (`tools/audit_bestiary.py`). La Tisseuse ne sort qu'en crise dans les Marécages ; propositions à arbitrer.
+- [07 lot C](07-bestiaire-et-rencontres.md) : un Colosse par crise, livré puis **retiré** à la fusion de main, qui a supprimé les Colosses (plan 17 lot 0C).
 - [03 lot C](03-boucle-et-rythme.md) : pendant une Résurgence l'oubli s'accélère ; à l'accalmie, Essence doublée 30 s et coffre rare posé à portée devant le joueur (V2 §8).
-- **À arbitrer en priorité** : le Colosse à chaque crise (choix provisoire, désactivable en JSON) ; la Tisseuse hors des Marécages ; le barème des points d'intérêt (valeurs de `pois.json` inutilisées) ; la recette du bilan de fin de run et de la Collection (premières passes sans maquette validée).
+- **À arbitrer en priorité** : la Tisseuse hors des Marécages ; le barème des points d'intérêt (valeurs de `pois.json` inutilisées) ; la recette du bilan de fin de run et de la Collection (premières passes sans maquette validée).
+- 27 septembre : main (plans 17 et 18) fusionnée dans la branche de la session. Les apports de la nuit sont reportés sur les coffres, le level-up et les Mémoriaux de main ; ce qui dépendait des Autels, des Colosses ou des raretés d'armes a été retiré.
 - Travail fait dans un conteneur sans GPU : les points à revérifier sur la machine de Raphaël sont listés dans [A-VERIFIER.md](A-VERIFIER.md).
+
+**Mise à jour du 26 septembre (plan 17, vague 0 livrée) :** coffres réintégrés et visibles ([17](17-armes-coffres-modificateurs.md#lot-0a-livré--26-septembre)).
+- 23 coffres sur toute la carte au lieu de 10 à 15 autour du départ, dégagés des décors.
+- Sprites à l'échelle des personnages, colonne de lumière à la couleur de la rareté, invite « Ouvrir », flèches de bord d'écran.
+- Palette de rareté unique ; butin montré tel qu'obtenu, sans perks V1 ni malédictions.
+- Mesure de densité désormais headless en temps accéléré (`tools/measure_run.sh`) : 5 seeds × 3 min en ≈ 1 min.
+- Enchaînés le même jour, à la demande de Raphaël : 0B (restes V1 visibles retirés, POI et éléments de lore désactivés), 0C (code, données et 306 PNG morts, Colosses), 0D (références au jeu du genre ramenées à une section de garde-fous).
+- Deux correctifs trouvés en route : blocage de partie au level-up, durée de run comptée en temps réel.
+- Vague 1, sans attendre la décision 4.3 : les quatre bugs de build corrigés (effets de l'arme qui frappe, notes de la Boîte à musique, niveau unique, bannissement), banc `tools/test_weapons.sh` ; pilote de trois icônes d'armes 32×32 à juger.
+- Soir : décision 4.3 prise (rareté seulement sur les améliorations) ; coffres et icônes v2 ; vague 1 livrée : croissance des armes en données, level-up à raretés (Chance et oubli), cartes « avant → après », pause avec équipement et fiche. Recette groupée attendue.
+- Nuit : vague 3 livrée ([17](17-armes-coffres-modificateurs.md#vague-3-détaillée--26-septembre-soir)). Péril à la place de l'Appel du Vide et des malédictions (3A) ; Mémoriaux à raviver à la place des Autels (3B) ; Failles et Oublis (3C). Écran de choix commun et lieux interactifs partagés avec les coffres. Question ouverte : ces écrans figent la run (V2 §11 voulait l'Autel sans pause). Vague 2 en attente des noms d'armes et du style d'icônes ; vague 4 dépend du plan 13.
+
+**Mise à jour du 26 septembre (armes, coffres, modificateurs) :** nouvelle priorité de Raphaël, auditée puis planifiée, rien d'implémenté.
+- [Plan 17](17-armes-coffres-modificateurs.md) : armes (sprites, noms, présentation, level-up à raretés, pause), coffres, modificateurs de run (Chance, Péril, Mémoriaux et Failles), objets ensuite, north star.
+- Coffres : ils apparaissent toujours (13 et 14 dans les logs du jour) mais ne sont jamais ouverts. Sprites restés à 16×12 face aux décors agrandis, placement confiné à 7,6 % de la carte depuis le passage au rayon 200, aucun signal.
+- [Plan 18](18-inventaire-restes-v1.md) : inventaire des restes V1. Les visuels « lisses » viennent du rendu procédural (polygones, dégradés, lumières texturées par le logo Godot), pas des PNG.
+- Décisions attendues : plan 17 §6 et plan 18 §5.
 
 **Mise à jour du 26 septembre (soir) :**
 - Raphaël valide les tuiles de la forêt (« mille fois mieux »).
@@ -98,7 +118,7 @@ Un seul lot d'implémentation ouvert à la fois. Un échec de lisibilité, de pe
 **Mise à jour du 26 septembre :** l'écran d'accueil est refait sur demande de Raphaël (« trop classique », pas de stats mais le sprite, « surprends-moi »). Le Hub devient le camp du Foyer, vivant ; les personnages veillent autour du feu ; le menu est textuel. Compte rendu et limites : [plan 04](04-interfaces-et-hub.md#accueil-refait--26-septembre-2026). Recette attendue.
 
 **Mise à jour du 25 septembre :**
-- Audio : [retours A2](../audio/lot-a2/RETOURS.md) reçus le 26 septembre. Six candidats retenus depuis A : critique, ouverture physique du coffre, dash, dissolution B complète (1,40 s), perk A et danger A. Révélation du coffre actuelle conservée ; impacts ennemi/joueur et level-up à retravailler ; XP en attente. Le [catalogue](../audio/COUVERTURE.md) suit 113 besoins, 51 propositions sur 11 besoins et 102 autres besoins à rechercher ou arbitrer ; aucun nouveau son intégré. Sources CC0 ou CC-BY documentées. Contrôle : `python3 tools/audio/build_catalogue.py --check` ; pages historiques [A](../audio/lot-a/index.html) et [A2](../audio/lot-a2/index.html) préservées.
+- Audio : [50 choix branchés, nettoyage et suite](15-audio.md) ; [archives hors dépôt](../audio/README.md).
 - Recette de Raphaël : cadence des micro-événements validée en l'état, élites bien dosées, micro-événements appréciés, HUD « bien mieux ». Le soin, peut-être trop rare, est noté pour les plans 13 et 03.
 - Nouveau chantier prioritaire : **visuel et juiciness de tout le jeu**.
   - Régression des biomes : cause trouvée dans l'historique (14 mars), mesurée, corrigée ([10 §6](10-terrain-et-tiles.md#6-régression-un-seul-biome-autour-du-départ--25-septembre-2026)).

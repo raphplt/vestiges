@@ -54,59 +54,89 @@ HUD_WOOD,Bois,Wood
 HUD_STONE,Pierre,Stone
 HUD_METAL,Metal,Metal
 HUD_NIGHT_SUMMARY,"Crise {0} survecue !\nKills : {1} — Score : +{2}","Crisis {0} survived!\nKills: {1} — Score: +{2}"
-CRAFT_CRAFTING,Fabrication : {0}...,Crafting: {0}...
-CRAFT_LIMIT,Limite atteinte,Limit reached
-CRAFT_BUILD,Fabriquer,Craft
-CRAFT_BUILD_INSTANT,Fabriquer (instantane),Craft (instant)
-CRAFT_DONE_CHAIN,"Fabrication terminee : place puis maintiens clic pour construire en chaine","Crafting done: place then hold click to chain-build"
-CRAFT_DONE,Fabrication terminee !,Crafting done!
-CRAFT_HP,PV,HP
-CRAFT_DAMAGE,degats,damage
-CRAFT_RANGE,portee,range
-CRAFT_USES,utilisations,uses
-CRAFT_RADIUS,rayon,radius
-CRAFT_HEAL_HP,+{0} PV,+{0} HP
-CRAFT_DEFENSE,Defense,Defense
-CRAFT_TRAPS,Pieges,Traps
-CRAFT_UTILITY,Utilitaire,Utility
-CRAFT_CONSUMABLES,Consommables,Consumables
 CHEST_COMMON,COFFRE,CHEST
-CHEST_EPIC,COFFRE EPIQUE,EPIC CHEST
+CHEST_EPIC,COFFRE ÉPIQUE,EPIC CHEST
 CHEST_RARE,COFFRE RARE,RARE CHEST
 CHEST_LORE,COFFRE ANCESTRAL,ANCESTRAL CHEST
-CHEST_RANDOM_PERK,Perk Aleatoire,Random Perk
-LEVELUP_TITLE,FRAGMENT DE MEMOIRE,MEMORY FRAGMENT
-LEVELUP_WEAPON,Arme,Weapon
-LEVELUP_NEW,NOUVEAU,NEW
-LEVELUP_LEVEL,NIV {0} → {1},LVL {0} → {1}
-LEVELUP_PASSIVE,Passif,Passive
-LEVELUP_REROLL,Relancer ({0}),Reroll ({0})
-LEVELUP_BANISH,Bannir ({0}),Banish ({0})
-LEVELUP_CANCEL,Annuler,Cancel
-LEVELUP_MEMORIAL,MEMORIAL,MEMORIAL
 RARITY_COMMON,Commun,Common
-RARITY_UNCOMMON,Peu commun,Uncommon
+RARITY_UNCOMMON,Inhabituel,Uncommon
 RARITY_RARE,Rare,Rare
-STAT_DAMAGE,Degats,Damage
-STAT_ATTACK_SPEED,Vit. attaque,Attack Speed
+RARITY_EPIC,Épique,Epic
+RARITY_LEGENDARY,Légendaire,Legendary
+RARITY_LORE,Ancien,Ancient
+CHEST_OPEN_PROMPT,Ouvrir,Open
+MEMORIAL_WAKE_PROMPT,Raviver,Rekindle
+MEMORIAL_SERVICES_PROMPT,Honorer,Honor
+LANDMARK_MEMORIAL,Mémorial,Memorial
+MEMORIAL_GATHER_STATUS,Éclats {0}/{1} · {2} s,Shards {0}/{1} · {2} s
+MEMORIAL_AWAKE_TITLE,MÉMORIAL RAVIVÉ,MEMORIAL REKINDLED
+MEMORIAL_AWAKE_SUBTITLE,La zone se souvient. Choisis une bénédiction.,The area remembers. Choose a blessing.
+MEMORIAL_SERVICES_TITLE,MÉMORIAL,MEMORIAL
+MEMORIAL_WEAPON_TAG,Amélioration {0} au moins,{0} upgrade or better
+MEMORIAL_WEAPON_TITLE,Raviver : {0},Rekindle: {0}
+MEMORIAL_PRICE,{0} Essence,{0} Essence
+MEMORIAL_HEAL_TAG,Soin,Healing
+MEMORIAL_HEAL_TITLE,Se recueillir,Rest a while
+MEMORIAL_HEAL_LINE,+{0} % des PV,+{0}% HP
+MEMORIAL_ESSENCE,Essence : {0},Essence: {0}
+MEMORIAL_LEAVE,Partir,Leave
+MEMORIAL_HEALED,Le corps se souvient,The body remembers
+LANDMARK_RIFT,Faille,Rift
+RIFT_PROMPT,Sonder,Reach in
+RIFT_TITLE,FAILLE,RIFT
+RIFT_SUBTITLE,L'Effacement rend ce qu'il a pris. Pas pour rien.,The Erasure gives back what it took. At a price.
+RIFT_REFUSE,Refuser,Refuse
+RIFT_OUBLI_LINE,Oubli : {0} · {1},Forgetting: {0} · {1}
+RIFT_PERIL_LINE,Péril +{0},Peril +{0}
+MEMORIAL_LIFT_TAG,Lever un Oubli,Lift a Forgetting
+MEMORIAL_LIFT_TITLE,Se rappeler : {0},Remember: {0}
+MEMORIAL_LIFTED,{0} : levé,{0}: lifted
+BLESSING_BREATH,Souffle retrouvé,Breath Regained
+BLESSING_SURE_HAND,Geste sûr,Sure Hand
+BLESSING_LIGHT_STEP,Pas léger,Light Step
+BLESSING_OLD_RHYTHM,Rythme ancien,Old Rhythm
+BLESSING_MENDING,Chair qui se souvient,Flesh Remembers
+BLESSING_BULWARK,Rempart,Bulwark
+BLESSING_TRUE_EYE,Œil juste,True Eye
+BLESSING_WIDE_GESTURE,Geste ample,Wide Gesture
+BLESSING_GOOD_STAR,Bonne étoile,Lucky Star
+BLESSING_CALL_OF_SHARDS,Appel des éclats,Call of Shards
+OUBLI_HEAVY_LIMBS,Membres lourds,Heavy Limbs
+OUBLI_THIN_BLOOD,Sang léger,Thin Blood
+OUBLI_BLUNT_EDGE,Fil émoussé,Blunt Edge
+OUBLI_LOST_RHYTHM,Rythme perdu,Lost Rhythm
+OUBLI_OPEN_WOUNDS,Plaies ouvertes,Open Wounds
+OUBLI_NARROW_GESTURE,Geste étroit,Narrow Gesture
+OUBLI_BAD_STAR,Mauvaise étoile,Ill Star
+OUBLI_DULL_SENSES,Sens émoussés,Dull Senses
+CHEST_LOOT_ESSENCE,Essence ×{0},Essence ×{0}
+CHEST_LOOT_XP,+{0} XP,+{0} XP
+CHEST_LOOT_SOUVENIR,Souvenir : {0},Memory: {0}
+CHEST_LOOT_WEAPON,Arme : {0},Weapon: {0}
+CHEST_LOOT_PERK,Don : {0},Boon: {0}
+STAT_DAMAGE,Dégâts,Damage
+STAT_ATTACK_SPEED,Cadence,Attack rate
 STAT_MAX_HP,PV max,Max HP
 STAT_SPEED,Vitesse,Speed
-STAT_AOE,Zone d'effet,Area of Effect
-STAT_XP_RANGE,Rayon XP,XP Range
+STAT_AOE,Zone,Area
+STAT_XP_RANGE,Aimant,Magnet
 STAT_ARMOR,Armure,Armor
-STAT_CRIT,Chance crit,Crit Chance
-STAT_REGEN,Regen HP/s,Regen HP/s
-STAT_RANGE,Portee,Range
+STAT_CRIT,Critique,Crit chance
+STAT_REGEN,Régénération,Regeneration
+STAT_RANGE,Portée,Range
 STAT_PROJECTILES,Projectiles,Projectiles
-STAT_CDR,Reduction CD,CD Reduction
-STAT_PIERCE,Percage,Pierce
+STAT_CDR,Réduction de recharge,Cooldown reduction
+STAT_PIERCE,Perçage,Pierce
 STAT_LIFESTEAL,Vampirisme,Lifesteal
 STAT_DODGE,Esquive,Dodge
-STAT_THORNS,Epines,Thorns
-STAT_IGNITE,Ignition,Ignite
+STAT_THORNS,Épines,Thorns
+STAT_IGNITE,Embrasement,Ignite
 STAT_RICOCHET,Ricochet,Ricochet
 STAT_LUCK,Chance,Luck
-STAT_BONUS_PROJ,Proj. bonus,Bonus Proj.
+STAT_PERIL,Péril,Peril
+PERIL_CREATURES,Créatures,Creatures
+PERIL_REWARDS,Gains,Rewards
+STAT_BONUS_PROJ,Projectiles en plus,Extra projectiles
 WEAPON_BOW,Arc,Bow
 WEAPON_LINE,Ligne,Line
 WEAPON_CIRCLE,Cercle,Circle
@@ -119,7 +149,6 @@ PAUSE_TITLE,HALTE DANS LE VIDE,HALT IN THE VOID
 PAUSE_SUBTITLE,"Le monde se fige, mais ta memoire reste eveillee.","The world freezes, but your memory stays awake."
 PAUSE_RESUME,Reprendre,Resume
 PAUSE_SETTINGS,Parametres,Settings
-PAUSE_VOID_CALL,Appel du Vide,Call of the Void
 PAUSE_HUB,Retour au Hub,Return to Hub
 PAUSE_QUIT,Quitter,Quit
 PAUSE_HINT,[Echap] Reprendre la traversee,[Esc] Resume the crossing
@@ -210,3 +239,21 @@ ECHO_WHISPER_09,« Rentre avant la nuit. »,“Be home before dark.”
 ECHO_WHISPER_10,"« C'était ici, la boulangerie ? »",“Wasn't the bakery right here?”
 ECHO_WHISPER_11,« Ne m'oublie pas. »,“Don't forget me.”
 ECHO_WHISPER_12,"« Quelqu'un chantait, là-bas. »","“Someone was singing, over there.”"
+STAT_KNOCKBACK,Recul,Knockback
+STAT_PROJECTILE_SPEED,Vitesse des tirs,Projectile speed
+STAT_ORBIT_SPEED,Rotation,Orbit speed
+STAT_CHAIN_RANGE,Portée des rebonds,Bounce range
+STAT_HOMING,Guidage,Homing
+STAT_CHAIN_TARGETS,Rebonds,Bounces
+STAT_ORBITALS,Notes,Notes
+LEVELUP_TITLE,FRAGMENT DE MÉMOIRE,MEMORY FRAGMENT
+LEVELUP_NEW_WEAPON,NOUVELLE ARME,NEW WEAPON
+LEVELUP_NEW_PASSIVE,NOUVEAU PASSIF,NEW PASSIVE
+LEVELUP_LEVEL,Niv {0} → {1},Lv {0} → {1}
+LEVELUP_MELEE,Mêlée,Melee
+LEVELUP_RANGED,Distance,Ranged
+LEVELUP_REROLL,Relancer ({0}),Reroll ({0})
+LEVELUP_BANISH,Bannir ({0}),Banish ({0})
+LEVELUP_BANISH_CANCEL,Annuler,Cancel
+LEVELUP_SKIP,Passer,Skip
+LEVELUP_BANISH_HINT,Choisis la carte à bannir pour toute la partie,Pick the card to banish for the whole run

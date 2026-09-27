@@ -50,6 +50,13 @@ Ce registre intègre les retours structurants après la première lecture des pl
 | Écran d'accueil (26 septembre) | Trop classique ; ne plus afficher les statistiques du personnage (PV, attaque…) mais **montrer son sprite** ; affichage de jeu fini, dans la DA ; « surprends-moi » | 04 : [accueil refait](04-interfaces-et-hub.md#accueil-refait--26-septembre-2026), recette attendue |
 | Recette du 26 septembre (après-midi) | Accueil refait **validé** ; effets d'attaque en pixel art (V0–V3) **validés** ; fluidité « ok » ; ouverture de run « ok, peut-être un tout petit trop peu adoucie » ; sons : traités par un autre agent. Nouvelle machine : Mac Apple Silicon (M1 Pro) | 04 et 08 V0–V3 recettés ; ouverture adoucie un cran de plus ([03 §7](03-boucle-et-rythme.md#7-ouverture-de-run--26-septembre-2026)) ; plan 15 hors de ce fil ; Steam et outils rendus compatibles Mac |
 | Retours du 26 septembre (soir) | Nouvelles tuiles de la forêt « validées à 100 %, mille fois mieux » ; les sorts ennemis apparaissent « en vertical » alors que la carte est en 2.5D, et le respect de la vue isométrique mérite une étude plus large ; le joueur peut se promener dans le Néant du bord de carte sans limite | Forêt : référence de style pour les autres biomes ([10 T1](10-terrain-et-tiles.md)) ; audit et lots I1–I4 ([08](08-direction-artistique.md#respect-de-la-vue-isométrique--chantier-du-26-septembre-2026)) ; bord du monde infranchissable à la marche comme au dash |
+| Armes, coffres, modificateurs (26 septembre) | Tous les sprites d'armes à revoir (hors DA) ; noms d'armes « trop clichés » ; ne plus montrer portée/dégâts au choix d'une arme, au plus une description courte ; au level-up, montrer la ou les stats augmentées, avec des raretés d'amélioration (plus rare = plus fort ou plusieurs stats) ; armes et stats visibles en pause ; stats à virgule envisagées ; coffres « disparus » à réintégrer et rendre visibles ; modificateurs en jeu (chance, difficulté), mécanique liée à l'Effacement, sanctuaires de mémoire à bonus et mécanique miroir à malus, « sans devenir lourdingue » ; objets importants mais peut-être plus tard ; moins de mentions du jeu de référence dans la doc ; inventaire complet des restes V1 ; traiter vague par vague avec soin | Audit et plan : [17](17-armes-coffres-modificateurs.md), [18](18-inventaire-restes-v1.md) ; rien d'implémenté, décisions 17 §6 et 18 §5 attendues |
+| Arbitrages des plans 17 et 18 (26 septembre) | Ordre des vagues laissé au plus logique ; noms d'armes « beaucoup mieux » ; icônes 32×32 ; arme en main « à tester », désactivée par défaut ; Mémoriaux et Failles validés ; plafond de niveau d'arme à déterminer (« 50, 100 ? ») ; éléments de lore et POI désactivés jusqu'à leur refonte (POI : vague 3) ; Colosses « supprimer peut-être » ; jeu absent de Steam. Rareté sur l'arme ou seulement sur les améliorations : **sans réponse** | [17 §6](17-armes-coffres-modificateurs.md#réponses-de-raphaël--26-septembre-2026), [18 §5](18-inventaire-restes-v1.md#réponses-de-raphaël--26-septembre-2026) ; rareté à confirmer avant le lot 1A |
+| Lot 0A, coffres (26 septembre) | Lancement du plan 17 par le lot 0A, un seul lot puis compte rendu pour la recette. En cours de lot : « essaie de voir si tu peux pas faire certains bench en headless […] je veux bien que tu l'implémentes » ; puis « hésite pas à avancer à fond en parallèle sur d'autres sujets » | [17, lot 0A livré](17-armes-coffres-modificateurs.md#lot-0a-livré--26-septembre), recette attendue ; mesure headless `tools/measure_run.sh` |
+| Plan 17, arbitrages du soir (26 septembre) | Rareté « seulement sur les améliorations » ; « le mot don me va » ; décors urbains jamais placés : « tu peux les virer » ; style des icônes et fréquence des coffres à juger en recette | [17 §6](17-armes-coffres-modificateurs.md#réponses-de-raphaël--26-septembre-soir) ; vague 1 débloquée |
+| Recette des planches du plan 17 (26 septembre) | « Tu peux faire mieux pour les armes » ; coffres « un peu plus détaillés / avoir des motifs » ; « pour le reste c'est parfait. Go » | Coffres et icônes v2 ([17 §6](17-armes-coffres-modificateurs.md#réponses-de-raphaël--26-septembre-soir)) ; vague 1 lancée |
+| Vague 3 du plan 17, retours (26 septembre, nuit) | Pause des écrans Mémorial et Faille : « garder la pause, pas de soucis ». Malus des Failles : « je préfère des malus sur la map que des malus de stats », liste à revoir avant validation | [17, vague 3](17-armes-coffres-modificateurs.md#vague-3-détaillée--26-septembre-soir) ; Stratégie V2 §11 amendée ; Oublis à refaire en effets de carte après son choix |
+| Recette des noms, icônes et Oublis (26 septembre, nuit) | Noms du catalogue 4.6 validés sauf « Dessin d'enfant » et « Aiguille d'horloge » (« j'aime pas trop le nom ») ; les trois icônes v2 validées ; les neuf Oublis de carte validés, leurs noms « un détail » | [17 §6](17-armes-coffres-modificateurs.md#réponses-de-raphaël--26-septembre-nuit) ; vague 2 (2A, 2B) et Oublis de carte lancés ; noms provisoires Craies et Chronomètre |
 | Ordre des chantiers (26 septembre) | « Oui je valide l'ordre » : relecture en suspens, puis sol (T2 jonctions → T1 → T3) et oubli (O1 → O3 → O4/O5 → O2/O6). Raphaël, absent, délègue les autres arbitrages : « prends les décisions les plus rationnelles […] implémente-les » | Arbitrages délégués en §7, **provisoires jusqu'à sa relecture** |
 
 « Les mobs avancent successivement » reste ambigu au moment de cette révision. Une clarification a été demandée : arrivée en file jugée problématique, introduction progressive des types, ou les deux. Le plan 07 sépare ces deux sujets ; aucun comportement n'est présenté comme une préférence confirmée.
@@ -88,7 +95,7 @@ Les cases de la roadmap signifient « implémenté et vérifié ». Une validati
 
 Trois sélections explicites : `critical_hit_a`, `chest_open_a` (mécanisme d’ouverture seulement), `dash_start_a`. Aucune intégration effectuée. Les sept autres décisions restent `none`/`pending` telles qu’exportées. XP actuelle appréciée sans sélection définitive. Ajout d’un besoin `chest_reveal` : mélodie de quelques secondes après l’ouverture. Lot A2 de sept besoins détaillé dans [le plan 15](15-audio.md#3-bis-lot-a2--rechercher-après-le-retour-du-25-septembre).
 
-Source probante : [export original](../audio/lot-a/choix-raphael-2026-09-25.json), identique octet pour octet au fichier transmis ; [synthèse et explication impact/arme](../audio/lot-a/RETOURS.md). Verbatim des notes (chaînes JSON pour conserver aussi les espaces finaux) :
+Source probante : [export original](../audio/README.md), identique octet pour octet au fichier transmis ; [synthèse et explication impact/arme](../audio/README.md). Verbatim des notes (chaînes JSON pour conserver aussi les espaces finaux) :
 
 ### enemy_hit — none
 
@@ -173,7 +180,7 @@ Candidat : `None`.
 
 ## 6. Retours audio du 26 septembre — lot A2
 
-[Export original archivé](../audio/lot-a2/choix-raphael-2026-09-26.json) et [verbatim, décisions et préparation](../audio/lot-a2/RETOURS.md). Trois nouveaux choix : `dissolution_a2_b`, `perk_select_a2_a`, `danger_warning_a2_a`. Dissolution : « le B mais ne pas le cropper à un seconde » ; conserver les 1,395828 s de l’original. Impacts ennemi et joueur, montée de niveau : `none`, recherche à reprendre. Révélation du coffre : « garder l'actuel » ; suivi **actuel conservé**, sans transformer le `pending` exporté en sélection de candidat. XP inchangée. Six candidats retenus au total, aucun intégré ni recetté.
+[Export original archivé](../audio/README.md) et [verbatim, décisions et préparation](../audio/README.md). Trois nouveaux choix : `dissolution_a2_b`, `perk_select_a2_a`, `danger_warning_a2_a`. Dissolution : « le B mais ne pas le cropper à un seconde » ; conserver les 1,395828 s de l’original. Impacts ennemi et joueur, montée de niveau : `none`, recherche à reprendre. Révélation du coffre : « garder l'actuel » ; suivi **actuel conservé**, sans transformer le `pending` exporté en sélection de candidat. XP inchangée. Six candidats retenus au total, aucun intégré ni recetté.
 
 ## 7. Arbitrages délégués du 26 septembre
 
@@ -190,4 +197,50 @@ Raphaël, absent, demande de trancher au mieux et d'implémenter. Chaque choix c
 | Dash, invulnérabilité | 0 ms conservé (réglage validé avec le dash) | Pas de retour contraire ; le début de run vient d'être adouci |
 | Plans 13 et 14 | Recommandations des plans retenues (trois formes de butin, rareté fixe, coffres en conteneurs ; anomalies Écho, Oubli de soi, Effondrement, plafond 25 %, une ligne de texte) mais **pas d'implémentation avant les lots ci-dessus** | Gros chantiers ; le socle d'objets du plan 05 reste leur prérequis |
 | Boss de famille | Deux prototypes, plus tard (07) | Hors de l'ordre validé |
-| Colosses (07, 27 septembre, session cloud) | Un Colosse par crise à partir de la deuxième, celui du biome ; réglable et désactivable en JSON | L'audit montre les trois Colosses inatteignables en jeu ; les crises gagnent un rendez-vous au lieu de seulement plus de PV |
+| Colosses (07, 27 septembre, session cloud) | Un Colosse par crise à partir de la deuxième, proposé puis **retiré** à la fusion de main : le plan 17 (lot 0C) a supprimé les Colosses | La décision 0C prime ; plus rien à faire apparaître |
+
+## 8. Retour audio A3 — 26 septembre 2026
+
+[Export et notes exactes](../audio/README.md) : impact ennemi B (`enemy_hit_a3_b`) retenu ; aucun dégât joueur satisfaisant ; level-up jugé hors thème (champ `pending` conservé). Sept candidats retenus au total, sans intégration. Ne pas déduire un nouveau style musical du refus. Le son de level-up actuel reste la référence précédemment préférée ; la correction de méthode proposée par l’agent est détaillée au plan 15.
+
+## 9. Étude de BO et planche A4 — 26 septembre 2026
+
+Raphaël demande la prochaine planche et une étude des moyens de créer une BO cohérente, soignée, avec Outer Wilds, Celeste et Megabonk comme inspirations. Budget à comparer : 0–100 €, davantage si nécessaire ; aucun achat demandé. Niveau grand débutant, quelques essais FL Studio et Ableton, apprentissage de plusieurs mois non souhaité. Les titres précis et l’équilibre entre ces inspirations restent à préciser ; ils ne remplacent pas automatiquement la direction V2.
+
+## 10. Choix A4 et outils de composition — 26 septembre 2026
+
+Choix exprimés directement dans le chat : montée de niveau **B, Plus doux** (`level_up_a4_b`) et dégât joueur **A, Coup plus grave** (`player_hit_a4_a`). Neuf candidats retenus au total, sans nouvelle intégration ni recette. [Transcription du retour](../audio/README.md).
+
+Raphaël attend des planches couvrant dix effets plutôt que seulement deux. A4 avait été limité par l’agent aux deux refus restants ; viser dix besoins dans les prochains lots lorsque possible. Pour la BO, priorité aux outils permettant de composer et s’amuser soi-même (mélodie, timbres et variantes), locaux/open source de préférence ; l’assistance est possible mais la génération de morceaux complets n’est pas le seul objectif.
+
+## 11. Retour B1 — 26 septembre 2026
+
+[Export et décisions](../audio/README.md) : neuf choix retenus, 18 au total. `step_wood` reste en attente et à retravailler : « non ca va pas il faut un bruit plus genre marcher sur des feuilles ». Prochaine planche de dix effets demandée ; correction feuilles en priorité. Aucun remplacement runtime implicitement validé par la préparation de cette planche.
+
+## 12. Retour B2 — 26 septembre 2026
+
+[Export original et notes exactes](../audio/README.md). Huit candidats retenus : feuilles B, gravier C, survol B, clic A, confirmation A, refus de perk B, interaction indisponible B et fouille A. Total : 26 candidats retenus, sans nouvelle intégration.
+
+Sortie du level-up : « garder l'actuel imo mais baisser un peu le gain ». Champ exporté `pending` préservé, suivi **actuel conservé** ; essai local −3 dB préparé comme proposition de réglage. Échec d’événement : « aucun des trois là c'est juste des sons ultra aigus » ; `pending` préservé, suivi **à retravailler**. Éviter ces trois sons pour la prochaine recherche, explorer une matière moins aiguë sans déduire une nouvelle DA globale.
+
+## 13. Retour B3 — 26 septembre 2026
+
+[Export et notes exactes](../audio/README.md) : cloche A, chaîne A, lanterne B, horloge C, relique A et éclat B retenus ; **32 candidats retenus au total**. Cloche : « 1 mais aigus trop attenués » ; essai séparé avec passe-bas moins restrictif proposé, sans modifier le candidat ni le runtime. Échec d’événement et flash refusés. Lumière : « aucun ne va ils sont trop electroniques » ; aiguille : « aucun ne va pas ils sont trop electroniques ». Conserver les deux `pending` exportés et suivre ces besoins comme à retravailler. Recherche moins électronique pour ces deux effets, sans généraliser ce refus à toute la direction audio.
+
+## 14. Retour B4 — 26 septembre 2026
+
+[Choix et verbatim](../audio/README.md) : cloche B sans filtre, lumière B, aiguille B, arc B, arbalète B et Vide A retenus. 37 besoins avec candidat choisi. Flash en attente, sans décision de silence. Échec : « aucun n'est dans la da du jeu ». Fin d’esquive : « aucun chercher pus discret ». Coup majeur : « chercher un son qui fasse plus impact sur un corps mou / semi rigide ». Aucun choix de son ne vaut validation de sa cadence en combat ; l’arbitrage des armes silencieuses reste à faire en run.
+
+## 15. Audio — retours B5, 26 septembre 2026
+
+Raphaël retient la fin d’esquive B, la préparation et le départ du bond C, la charge C, le surgissement C, l’impact du Présage C et l’activation de POI A. Pour le coup majeur : « aucune ne va cherche autre chose ». Pour les pas dans l’eau : « garder l’actuel ». Ces deux entrées gardent leur champ `pending` original ; le suivi applique les notes explicites. Explosion : aucun candidat. Export complet : [retours B5](../audio/README.md). Aucun choix de silence supplémentaire ni intégration demandée.
+
+## 16. Audio — retour B6 et textes des planches
+
+Raphaël demande de retirer les slogans, introductions et consignes génériques des prochaines planches. Afficher les informations utiles à l’écoute et aux choix, avec la provenance accessible.
+
+Sept choix B6 retenus : Présage B, tir ennemi A, Colosse C, tentacule B, rage C, mort du boss C, fouet A. Coup majeur : abandonner les anciennes contraintes et proposer trois nouveaux sons. Explosion : courte mais identifiable, B6 trop sec. Hurleur : plus impactant. Notes exactes et décisions exportées conservées dans [les retours B6](../audio/README.md).
+
+## 17. Audio — intégration avant fin des sélections et nettoyage
+
+Raphaël demande de brancher les choix déjà faits avant de finir les recherches, de retirer les sons inutilisés et de sortir les documents intermédiaires du repo. Les futurs lots restent dans l’archive externe indiquée au [plan audio](15-audio.md). Cinquante choix ont un usage actuel ; le coup du Colosse reste en archive sans réintroduire son ancien système. Les anciens sons et toutes les décisions sont sauvegardés avant retrait.
