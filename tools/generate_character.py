@@ -5,6 +5,7 @@ Usage :
     python3 tools/generate_character.py vagabond                  # remplace assets/characters/<id>/
     python3 tools/generate_character.py vagabond --sheet out.png  # planche de contrôle ×4 en plus
     python3 tools/generate_character.py vagabond --dry-run --sheet out.png
+    python3 tools/generate_character.py habitant_ecoliere --actions idle,walk  # habitants des échos de l'oubli
 
 Les PNG du dossier qui ne sont pas réécrits (ancien nombre de frames) sont retirés avec leur .import :
 CharacterSpriteLoader les chargerait à la suite des nouvelles frames.
@@ -30,13 +31,14 @@ DIRECTIONS = {
 ACTIONS = ("idle", "walk", "dash", "hurt", "death")
 
 
-def generate(character_id: str, output: Path | None, sheet: Path | None, scale: int, editable: bool = False) -> None:
+def generate(character_id: str, output: Path | None, sheet: Path | None, scale: int, editable: bool = False,
+             actions: tuple[str, ...] = ACTIONS) -> None:
     model = character(character_id)
     written: set[Path] = set()
     frames: dict[tuple[str, str], list[Image.Image]] = {}
     for direction, (dx, dy) in DIRECTIONS.items():
         yaw = screen_direction_to_yaw(dx, dy)
-        for action in ACTIONS:
+        for action in actions:
             layered = [model.render_layers(pose, yaw) for pose in model.animations[action]]
             images = [flatten(layers) for layers in layered]
             frames[(direction, action)] = images
@@ -54,7 +56,7 @@ def generate(character_id: str, output: Path | None, sheet: Path | None, scale: 
     if output is not None:
         _remove_orphans(output, written)
     if sheet is not None:
-        write_sheet(frames, sheet, scale, ACTIONS, model.frame_size, model.pivot)
+        write_sheet(frames, sheet, scale, actions, model.frame_size, model.pivot)
 
 
 def _remove_orphans(folder: Path, written: set[Path]) -> None:
@@ -102,11 +104,13 @@ def main() -> None:
     parser.add_argument("--sheet", type=Path)
     parser.add_argument("--scale", type=int, default=4)
     parser.add_argument("--dry-run", action="store_true", help="n'écrit pas dans assets/")
+    parser.add_argument("--actions", default=",".join(ACTIONS),
+                        help="actions à produire, séparées par des virgules (habitants des échos : idle,walk)")
     parser.add_argument("--editable", action="store_true",
                         help="crée les retouches Aseprite (une par direction et action) dans art/retouches/")
     args = parser.parse_args()
     output = None if args.dry_run else Path("assets/characters") / args.character
-    generate(args.character, output, args.sheet, args.scale, args.editable)
+    generate(args.character, output, args.sheet, args.scale, args.editable, tuple(args.actions.split(",")))
 
 
 if __name__ == "__main__":

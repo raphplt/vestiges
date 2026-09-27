@@ -107,7 +107,12 @@ Ordre O1 → O3 → O4/O5 → O2/O6 validé par Raphaël. Arbitrages délégués
   - sprite d'un personnage réduit à deux tons, blanc effacement et bleu pâle ;
   - tramage Bayer jamais plein, pieds estompés, lignes qui vacillent.
 
-  Les personnages jouables servent d'habitants (vagabond, forgeuse, traqueur), faute de sprites dédiés.
+  Les personnages jouables servent d'habitants (vagabond, forgeuse, traqueur), faute de sprites dédiés. **Remplacés le 27 septembre (session locale)** par trois habitants dessinés dans le pipeline des personnages, en idle et marche seulement (`python3 tools/generate_character.py <id> --actions idle,walk`) :
+  - une écolière au cartable rouge, aux proportions d'enfant ;
+  - un vieil homme voûté au chapeau de feutre et à la canne ;
+  - une ouvrière en bleu de travail, casquée, gamelle à la main.
+
+  Liste `inhabitants` dans `erasure.json` ; les personnages jouables ne servent plus qu'à défaut. Planches et capture `--capture-echoes` regardées. Un premier jet du vieil homme penchait tant qu'il semblait tomber : voussure réduite.
 - **Approche** : à moins de 70 px au sol, l'écho se dissout (ses pixels montent) et laisse un murmure d'une ligne, qui monte et s'efface en 3 s. Douze murmures, en français et en anglais (`ECHO_WHISPER_01`–`12`), comme « Encore cinq minutes… » ou « Ne m'oublie pas. ».
 - Pas de collision, pas d'effet de jeu. Un seul sprite et un seul texte réutilisés, aucun nœud créé pendant la run.
 - **Réglages** : `echoes` dans `data/scaling/erasure.json`.

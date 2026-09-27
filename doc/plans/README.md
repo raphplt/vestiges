@@ -62,6 +62,7 @@ Un seul lot d'implémentation ouvert à la fois. Un échec de lisibilité, de pe
 - [17 lot 3B](17-armes-coffres-modificateurs.md) : au Mémorial ravivé, relancer les bénédictions contre de l'Essence.
 - [10 lot D](10-terrain-et-tiles.md) : contrôle automatique de connectivité ; sur 13 seeds, les 31 coffres, Mémoriaux et Failles de chaque carte sont accessibles à pied depuis le départ.
 - [10 lot E](10-terrain-et-tiles.md) : herbes, fleurs et roseaux plient au passage du joueur (shader, aucune boucle sur les décors).
+- [16 O6](16-oubli-sensible.md) : les échos de l'oubli montrent de vrais habitants (écolière, vieil homme, ouvrière) au lieu des personnages jouables.
 
 **Mise à jour du 27 septembre, suite (session locale, sans Raphaël) :**
 - Bancs de A-VERIFIER toujours pas faits : charge entre 4 et 7,7 toute la session (seuil fixé à 2).

@@ -46,7 +46,8 @@
         "whisper_count": 12,
         "whisper_sec": 3.2,
         "whisper_rise_px": 18,
-        "characters": ["vagabond", "forgeuse", "traqueur"]
+        "characters": ["vagabond", "forgeuse", "traqueur"],
+        "inhabitants": ["habitant_ecoliere", "habitant_vieil_homme", "habitant_ouvriere"]
     },
     "zone_effects": {
         "fragile": {

@@ -53,12 +53,22 @@ public partial class ErasureEchoes : Node2D
             return;
         }
 
-        foreach (string id in _config.Characters)
+        // Habitants dessinés pour les échos (plan 16 O6) ; à défaut, les personnages jouables.
+        foreach (string id in _config.Inhabitants)
         {
-            CharacterData data = CharacterDataLoader.Get(id);
-            SpriteFrames frames = data == null ? null : CharacterSpriteLoader.LoadOrGet(data.Id, data.SpriteFolder);
+            SpriteFrames frames = CharacterSpriteLoader.LoadOrGet(id, id);
             if (frames != null && CharacterSpriteLoader.HasEightDirections(frames))
                 _frames.Add(frames);
+        }
+        if (_frames.Count == 0)
+        {
+            foreach (string id in _config.Characters)
+            {
+                CharacterData data = CharacterDataLoader.Get(id);
+                SpriteFrames frames = data == null ? null : CharacterSpriteLoader.LoadOrGet(data.Id, data.SpriteFolder);
+                if (frames != null && CharacterSpriteLoader.HasEightDirections(frames))
+                    _frames.Add(frames);
+            }
         }
         if (_frames.Count == 0)
         {

@@ -27,6 +27,8 @@ public sealed class EchoConfig
     public float WhisperSec = 3.2f;
     public float WhisperRisePx = 18f;
     public List<string> Characters = new();
+    /// <summary>Habitants dessinés pour les échos (dossiers assets/characters/&lt;id&gt;) ; les personnages ne servent qu'à défaut.</summary>
+    public List<string> Inhabitants = new();
 
     public static EchoConfig Load()
     {
@@ -66,6 +68,11 @@ public sealed class EchoConfig
         {
             foreach (Variant id in d["characters"].AsGodotArray())
                 config.Characters.Add(id.AsString());
+        }
+        if (d.ContainsKey("inhabitants"))
+        {
+            foreach (Variant id in d["inhabitants"].AsGodotArray())
+                config.Inhabitants.Add(id.AsString());
         }
         return config;
     }
