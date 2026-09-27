@@ -242,6 +242,8 @@ Propositions :
 **Vérification :** charge évitable ; surgissement annoncé ; disparition d'un ennemi retire ses effets ; respawn sans état hérité.
 **Garde-fou :** pas de télégraphie purement colorée ; pas de création de nœuds coûteux à chaque frame.
 
+**Lot B, étape 5 vérifiée — 27 septembre 2026 :** une créature rendue au pool en plein état temporaire repart neuve. Test ajouté à `tools/test_enemy_abilities.sh` (`RunPoolReuseChecks`) : une Brute du Vide Aberration avec affixe, brûlée, saignante, ralentie, désorientée, en traversée, enfouie et frappée, rendue au pool puis réutilisée en Rôdeur. Huit vérifications vertes : ni variante ni affixe, effets effacés, vitesse et PV de la nouvelle fiche, taille, opacité et collisions d'origine, aura et plaque de nom retirées, shader propre. Aucun défaut trouvé dans `Enemy.Reset` ; le test garde ce contrat pour la suite. Étapes 1 à 4 non commencées.
+
 ### Lot C — Compositions et progression
 
 1. Reprendre SpawnManager et les pools de biome.

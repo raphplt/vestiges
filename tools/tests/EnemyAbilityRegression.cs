@@ -7,6 +7,7 @@ using Vestiges.Combat;
 using Vestiges.Combat.Abilities;
 using Vestiges.Core;
 using Vestiges.Infrastructure;
+using Vestiges.Spawn;
 
 namespace Vestiges.Tests;
 
@@ -42,6 +43,7 @@ public partial class EnemyAbilityRegression : Node2D
             await RunOmenChecks();
             await RunPounceChecks();
             await RunHitFeedbackChecks();
+            await RunPoolReuseChecks();
 
             GD.Print($"[EnemyAbilityRegression] RESULT failures={_failures}");
             GetTree().Quit(_failures == 0 ? 0 : 1);
@@ -229,6 +231,64 @@ public partial class EnemyAbilityRegression : Node2D
         long dropped = FxBudget.DroppedCount(FxBudgetKind.Shapes) - droppedBefore;
         Check(stars > 0 && stars < 100 && stars + dropped == 100, $"Budget d'effets : {stars} étoiles jouées, {dropped} écartées sur 100");
         pools.QueueFree();
+    }
+
+    /// <summary>
+    /// Plan 07 lot B, étape 5 : une créature rendue au pool en plein état temporaire (variante, affixe, brûlure,
+    /// saignement, ralentissement, désorientation, traversée, enfouissement, recul) repart neuve à sa réutilisation.
+    /// </summary>
+    private async Task RunPoolReuseChecks()
+    {
+        EnemyPool pool = new() { Name = "EnemyPool", InitialSize = 0 };
+        AddChild(pool);
+        BindingFlags flags = BindingFlags.NonPublic | BindingFlags.Instance;
+        float Field(Enemy target, string name) => Convert.ToSingle(typeof(Enemy).GetField(name, flags).GetValue(target));
+
+        Enemy dirty = pool.Get();
+        AddChild(dirty);
+        dirty.Initialize(EnemyDataLoader.Get("void_brute"), 1f, 1f);
+        dirty.SetPhysicsProcess(false);
+        dirty.ApplyVariant(EnemyVariantDataLoader.GetVariant("aberration"),
+            new List<EnemyAffixData> { EnemyVariantDataLoader.GetAffix("swift") });
+        dirty.ApplyIgnite(5f, 10f);
+        dirty.ApplyBleed(5f, 10f);
+        dirty.ApplySlow(0.4f, 10f);
+        dirty.ApplyDisorient(10f);
+        dirty.StartTravel(Vector2.Right, 2f, 10f);
+        typeof(Enemy).GetField("_isBurrowed", flags).SetValue(dirty, true);
+        dirty.CollisionLayer = 0;
+        dirty.Modulate = new Color(1f, 1f, 1f, 0.35f);
+        dirty.TakeDamage(3f);
+        await ToSignal(GetTree(), SceneTree.SignalName.PhysicsFrame);
+        pool.Return(dirty);
+        await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+
+        Enemy reused = pool.Get();
+        Check(reused == dirty, "Pool : la créature rendue est bien celle qu'on réutilise");
+        AddChild(reused);
+        EnemyData rodeur = EnemyDataLoader.Get("rodeur");
+        reused.Initialize(rodeur, 1f, 1f);
+        reused.SetPhysicsProcess(false);
+        await ToSignal(GetTree(), SceneTree.SignalName.PhysicsFrame);
+
+        Check(!reused.Modifiers.IsVariant && reused.Modifiers.Affixes.Count == 0 && !reused.Modifiers.IsTraveling,
+            "Pool : ni variante, ni affixe, ni traversée hérités");
+        Check(Field(reused, "_igniteDps") == 0f && Field(reused, "_bleedDps") == 0f && Field(reused, "_slowFactor") == 1f
+              && Field(reused, "_disorientTimer") == 0f, "Pool : brûlure, saignement, ralentissement et désorientation effacés");
+        Check(Field(reused, "_speed") == rodeur.Stats.Speed && reused.HpRatio == 1f,
+            $"Pool : vitesse et PV de la nouvelle fiche ({Field(reused, "_speed")} pour {rodeur.Stats.Speed})");
+        Check(reused.Scale == Vector2.One && reused.Modulate == Colors.White && reused.CollisionLayer == 2,
+            $"Pool : taille, opacité et collisions d'origine (échelle {reused.Scale}, alpha {reused.Modulate.A}, couche {reused.CollisionLayer})");
+        Check(reused.GetNodeOrNull("AberrationAura") == null && reused.GetNodeOrNull("Nameplate") == null,
+            "Pool : ni aura d'Aberration ni plaque de nom restées accrochées");
+        AnimatedSprite2D sprite = reused.GetNode<AnimatedSprite2D>("Sprite");
+        if (sprite.Visible && sprite.Material is ShaderMaterial material)
+            Check(material.GetShaderParameter("aberration_amount").AsSingle() == 0f
+                  && material.GetShaderParameter("flash_amount").AsSingle() == 0f, "Pool : shader sans aberration ni flash");
+        Check(reused.IsInGroup("enemies") && reused.IsActive && !reused.IsDying, "Pool : créature active et recensée");
+
+        reused.QueueFree();
+        pool.QueueFree();
     }
 
     private static int VisibleFx(Node pools)
