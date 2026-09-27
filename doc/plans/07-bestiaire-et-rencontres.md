@@ -384,3 +384,14 @@ Proposition retenue par arbitrage délégué ([DECISIONS §7](DECISIONS.md#7-arb
 
 Les amas qui suivaient le joueur disparaissent : sur la seed 777, le bot finissait enseveli sous 46 à 49 créatures. La pression ne s'effondre pas, les moments creux n'augmentent pas, et le flux apparaît davantage puisque les places se libèrent. La médiane baisse d'environ 15 % : à juger en jeu.
 
+
+**Mesure refaite machine calme, 27 septembre au soir** (Linux, RX 6950 XT, 60 FPS tenus ; `tools/measure_density.sh` dans des worktrees au parent de « perception et laisse par créature » puis à ce commit, seeds 221092026 et 777, 180 s) :
+
+| Indicateur | Avant | Après |
+|---|---|---|
+| Créatures visibles, médiane minutes 0–1 / 1–2 / 2–3 | 6 / 15 / 25,5 | 4 / 24 / 28 |
+| Moins de 5 créatures visibles, minutes 0–1 / 1–2 / 2–3 | 46 % / 12 % / 4 % | 55 % / 6 % / 2 % |
+| Créatures tuées (deux seeds) | 198 / 34 | 28 / 181 |
+| Dégâts reçus par minute, minutes 1–2 / 2–3 | 1 028 / 1 346 | 3 764 / 5 892 |
+
+Toujours **non concluante**, pour une autre raison que dans le conteneur : même à 60 FPS, le bot n'est pas reproductible. Ses morts s'inversent d'une seed à l'autre (198 → 28, 34 → 181), et ce sont elles qui font la densité : un bot qui tue peu s'entoure. Aucune baisse de pression n'apparaît. Seul un bot au comportement stable, ou le ressenti en jeu, tranchera.

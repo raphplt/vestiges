@@ -26,7 +26,6 @@ Fichier temporaire. Il liste ce qu'une session cloud a livré sans pouvoir le v�
 
 ## Plan 07 §7 — perception par créature
 
-- [ ] **Mesure de densité avant/après** (`tools/measure_density.sh`, deux seeds) sur le Mac : celle du conteneur n'est pas concluante, le bot y est irrégulier à 5 FPS. Commit de référence : le parent de « perception et laisse par créature ».
 - [ ] **Ressenti** : les Ombres et Charognards doivent coller davantage, les créatures lentes décrocher plus vite.
 
 ## Plan 10 T2 — décors de transition
