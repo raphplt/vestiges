@@ -440,11 +440,13 @@ public partial class ChestLootScreen : CanvasLayer
     private void ScheduleClose()
     {
         SceneTreeTimer timer = GetTree().CreateTimer(PostRevealDelay, processAlways: true);
+        // Le lecteur de cette ouverture-ci : un minuteur en retard n'éteint jamais la mélodie d'un coffre suivant.
+        AudioStreamPlayer revealAudio = _revealAudio;
+        _revealAudio = null;
         timer.Timeout += () =>
         {
             // Elle s'éteint avec l'écran au lieu de déborder sur la reprise du jeu.
-            AudioManager.FadeOutUI(_revealAudio, RevealSound, RevealFadeSeconds);
-            _revealAudio = null;
+            AudioManager.FadeOutUI(revealAudio, RevealSound, RevealFadeSeconds);
             HideScreen();
             _onComplete?.Invoke();
         };
