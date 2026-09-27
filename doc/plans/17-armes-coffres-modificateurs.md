@@ -522,7 +522,7 @@ Vérifié : build sans avertissement, smoke test, `tools/test_weapons.sh`, `tool
 **Écarts et questions pour la recette :**
 - **Pause** : Mémorial et Faille ouvrent un écran de trois cartes qui fige la run, comme le level-up. **Validé par Raphaël** (« garder la pause, pas de soucis »).
 - **Faille** : activée par la touche d'interaction (maintien 0,8 s), pas au simple contact, pour éviter de l'ouvrir en courant.
-- **Lever un Oubli** est un service payant du Mémorial, pas une bénédiction ; « relancer la bénédiction » (4.5) n'est pas fait.
+- **Lever un Oubli** est un service payant du Mémorial, pas une bénédiction. « Relancer la bénédiction » (4.5) est livré le 27 septembre (session locale) : à l'écran des bénédictions, une quatrième carte relance les trois offres contre de l'Essence (15, +50 % par usage au même Mémorial, `blessing_reroll_cost` dans `landmarks.json`). Capture `--capture-memorial` regardée : carte grisée tant que l'Essence manque.
 - Oublis limités aux stats du joueur. **Retour de Raphaël** : il préfère des malus sur la carte ; liste de propositions à valider une par une ci-dessous (« Oublis de carte »).
 - Toutes les valeurs (coûts, prix des services, taux d'ouverture, poids du Péril) sont des points de départ.
 

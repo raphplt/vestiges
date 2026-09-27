@@ -28,6 +28,8 @@ public class MemorialConfig
     public float HealPercent = 0.4f;
     public float CostGrowth = 0.5f;
     public int LiftOubliCost = 40;
+    /// <summary>Relancer les trois bénédictions d'un Mémorial qu'on vient de raviver (plan 17, 4.5).</summary>
+    public int BlessingRerollCost = 15;
 }
 
 /// <summary>Réglages des Failles (section <c>rift</c> de data/world/landmarks.json).</summary>
@@ -113,6 +115,7 @@ public static class LandmarkDataLoader
         c.HealPercent = Float(services, "heal_percent", c.HealPercent);
         c.CostGrowth = Float(services, "cost_growth", c.CostGrowth);
         c.LiftOubliCost = (int)Float(services, "lift_oubli_cost", c.LiftOubliCost);
+        c.BlessingRerollCost = (int)Float(services, "blessing_reroll_cost", c.BlessingRerollCost);
 
         Godot.Collections.Dictionary rift = root["rift"].AsGodotDictionary();
         RiftConfig r = _rift;

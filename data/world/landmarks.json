@@ -22,7 +22,8 @@
 			"heal_cost": 20,
 			"heal_percent": 0.4,
 			"cost_growth": 0.5,
-			"lift_oubli_cost": 40
+			"lift_oubli_cost": 40,
+			"blessing_reroll_cost": 15
 		}
 	},
 	"rift": {

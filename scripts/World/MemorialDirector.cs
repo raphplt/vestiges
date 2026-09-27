@@ -20,6 +20,7 @@ public partial class MemorialDirector : Node
     private const string ServiceWeapon = "weapon";
     private const string ServiceHeal = "heal";
     private const string ServiceLift = "lift";
+    private const string ServiceReroll = "reroll";
 
     private readonly MemorialConfig _config = LandmarkDataLoader.Memorial;
     private readonly RandomNumberGenerator _rng = new();
@@ -217,11 +218,38 @@ public partial class MemorialDirector : Node
             cards.Add(card);
         }
 
+        // Relance payante : trois nouvelles offres, plus chère à chaque usage au même Mémorial.
+        int essence = _essence?.CurrentEssence ?? 0;
+        int rerollCost = Price(_config.BlessingRerollCost, memorial.ServiceUses(ServiceReroll));
+        ChoiceCard reroll = new()
+        {
+            Tag = Tr("MEMORIAL_REROLL_TAG").ToUpper(),
+            Frame = RarityPalette.Main("memorial"),
+            Title = Tr("MEMORIAL_REROLL_TITLE"),
+            Price = string.Format(Tr("MEMORIAL_PRICE"), rerollCost),
+            Enabled = essence >= rerollCost,
+        };
+        reroll.Lines.Add((string.Format(Tr("MEMORIAL_REROLL_LINE"), modifiers.Count), ChoiceStyle.TextColor));
+        cards.Add(reroll);
+
         _choices.Open(Tr("MEMORIAL_AWAKE_TITLE"), Tr("MEMORIAL_AWAKE_SUBTITLE"), cards, null, choice =>
         {
-            if (choice >= 0 && CachePlayer())
+            if (choice == modifiers.Count)
+                RerollBlessings(memorial, rerollCost);
+            else if (choice >= 0 && CachePlayer())
                 modifiers[choice].ApplyTo(_player);
         });
+    }
+
+    private void RerollBlessings(Memorial memorial, int cost)
+    {
+        if (_essence == null || !_essence.TrySpend(cost))
+        {
+            OpenBlessings(memorial);
+            return;
+        }
+        memorial.RecordServiceUse(ServiceReroll);
+        OpenBlessings(memorial);
     }
 
     // ==============================

@@ -87,6 +87,9 @@ RIFT_PERIL_LINE,Péril +{0},Peril +{0}
 MEMORIAL_LIFT_TAG,Lever un Oubli,Lift a Forgetting
 MEMORIAL_LIFT_TITLE,Se rappeler : {0},Remember: {0}
 MEMORIAL_LIFTED,{0} : levé,{0}: lifted
+MEMORIAL_REROLL_TAG,Relance,Reroll
+MEMORIAL_REROLL_TITLE,Relancer les bénédictions,Reroll the blessings
+MEMORIAL_REROLL_LINE,{0} nouvelles offres,{0} new offers
 OUBLI_PERMANENT,définitif,permanent
 OUBLI_FEAR,Oubli de la peur,Forgotten Fear
 OUBLI_FEAR_DESC,Une élite de plus rôde en permanence,One more elite always prowls
