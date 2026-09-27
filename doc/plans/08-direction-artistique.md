@@ -239,6 +239,7 @@ Les tiles restent en l'état (jugées acceptables) ; un ajustement de contraste 
   - Au plus deux de chaque par carte, à au moins 1 600 px l'un de l'autre. Réglages en constantes, comme les ruelles voisines.
   - Seed de capture : 2 églises, 2 pylônes.
 - **Capture** `--capture-landmarks` : chaque repère au zoom normal et dézoomé. Images regardées : l'église se lit d'un coup d'œil dans sa rangée, et le pylône dépasse des immeubles de la cour.
+- **Brèches des immeubles abîmés et des ruines**, le même jour : les trous étaient des disques parfaits. Leur bord casse désormais le long des blocs de maçonnerie (décalage constant par bloc d'environ 0,5 × 0,3 m), d'où un contour en escalier. Le même traitement sur les grands plans d'effondrement les couvrait de mouchetures : ils restent nets. Six sprites regénérés (immeubles abîmés et ruines), pivots et emprises inchangés. Point ouvert restant : façades nord et rues verticales.
 
 **P3 Forêt livré — 25 septembre 2026 :**
 

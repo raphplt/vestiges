@@ -168,6 +168,12 @@ def building(spec: BuildingSpec) -> PropModel:
     streaks = [np.array([w.uniform(-0.85, 0.85) * half_w, w.uniform(0.3, 0.8) * height, half_d]) for _ in range(5)]
     ivy = [np.array([w.uniform(-0.9, 0.9) * half_w, w.uniform(0.25, 0.55) * height, half_d]) for _ in range(2 + int(spec.damage * 3))]
 
+    def masonry(p: np.ndarray) -> np.ndarray:
+        # Brèches cassées le long des blocs (plan 08 P2) : décalage constant par bloc de maçonnerie, d'où des bords
+        # en escalier au lieu de trous ronds. Bloc d'environ 0,5 × 0,3 m, amplitude ±0,3 m.
+        cell = np.floor(p / np.array([0.5 * M, 0.3 * M, 0.5 * M]))
+        return (_hash(cell[:, 0], cell[:, 1], cell[:, 2] + spec.seed) - 0.5) * 0.6 * M
+
     def collapse_cut(p: np.ndarray, shrink: float = 1.0) -> np.ndarray:
         if not collapse:
             return np.full(len(p), np.inf)
@@ -179,7 +185,8 @@ def building(spec: BuildingSpec) -> PropModel:
         if shop:
             carve = np.minimum(carve, _box(p, (0, 1.2 * M, half_d), (half_w * 0.8, 0.95 * M, 0.2 * M)))
         for center, radius in holes:
-            carve = np.minimum(carve, sphere(p, center, radius))
+            carve = np.minimum(carve, sphere(p, center, radius) - masonry(p))
+        # Les grands plans d'effondrement restent nets : décalés par bloc, ils se couvraient de mouchetures.
         carve = np.minimum(carve, collapse_cut(p))
         return np.maximum(outer, -carve)
 
