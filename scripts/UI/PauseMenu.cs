@@ -40,6 +40,7 @@ public partial class PauseMenu : CanvasLayer
 	private Texture2D _separatorTex;
 
 	public bool IsOpen => _isPaused;
+	private Button _resumeButton;
 
 	public override void _Ready()
 	{
@@ -85,6 +86,8 @@ public partial class PauseMenu : CanvasLayer
 		_root.Visible = true;
 		GetTree().Paused = true;
 		UpdateStats();
+		// Clavier et manette : la pause s'ouvre sur « Reprendre ».
+		_resumeButton.GrabFocus();
 	}
 
 	private void Resume()
@@ -205,6 +208,7 @@ public partial class PauseMenu : CanvasLayer
 		vbox.AddChild(CreateSeparator());
 
 		Button resumeBtn = CreateButton("Reprendre");
+		_resumeButton = resumeBtn;
 		resumeBtn.Pressed += Resume;
 		vbox.AddChild(resumeBtn);
 

@@ -164,7 +164,17 @@ public static class UITheme
 		btn.AddThemeColorOverride("font_hover_color", GoldBright);
 		btn.AddThemeColorOverride("font_pressed_color", GoldBright);
 		btn.AddThemeColorOverride("font_disabled_color", TextVeryDim);
+		ApplyFocusStyle(btn);
 		WireButtonAudio(btn);
+	}
+
+	/// <summary>Cadre doré du contrôle qui a le focus clavier ou manette : on sait toujours où l'on est.</summary>
+	public static void ApplyFocusStyle(Control control)
+	{
+		StyleBoxFlat focus = new() { DrawCenter = false, BorderColor = GoldBright };
+		focus.SetBorderWidthAll(2);
+		focus.SetExpandMarginAll(2);
+		control.AddThemeStyleboxOverride("focus", focus);
 	}
 
 	/// <summary>Applique le style NinePatch pour un onglet.</summary>
@@ -185,6 +195,7 @@ public static class UITheme
 		btn.AddThemeColorOverride("font_color", fontColor);
 		btn.AddThemeColorOverride("font_hover_color", GoldColor);
 		btn.AddThemeColorOverride("font_pressed_color", GoldBright);
+		ApplyFocusStyle(btn);
 		WireButtonAudio(btn);
 	}
 

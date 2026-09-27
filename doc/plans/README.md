@@ -56,6 +56,7 @@ Un seul lot d'implémentation ouvert à la fois. Un échec de lisibilité, de pe
 - [Son des coffres](15-audio.md) : la mélodie de révélation ne part plus pendant le défilement et s'éteint avec l'écran.
 - [Chargement](10-terrain-et-tiles.md) : plus de frame de carte vide au départ, et chargement ramené de 6,0 à 3,6 s.
 - [07 lot B](07-bestiaire-et-rencontres.md), fin : tirs du Cracheur, de la Sentinelle et de la Tisseuse annoncés par un couloir de visée ; portée de la Sentinelle dessinée au sol.
+- [04 lot C](04-interfaces-et-hub.md) : paramètres entièrement navigables au clavier et à la manette (ils étaient à la souris seule), pause ouverte sur « Reprendre », cadre doré sur le focus.
 
 **Mise à jour du 27 septembre, suite (session locale, sans Raphaël) :**
 - Bancs de A-VERIFIER toujours pas faits : charge entre 4 et 7,7 toute la session (seuil fixé à 2).

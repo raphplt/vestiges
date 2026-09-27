@@ -122,7 +122,7 @@ L'étirement `canvas_items` en mode `keep` garde la même mise en page à toutes
   
   Relecture `godot-reviewer` intégrée : parcours limité à l'interface, palier « bannière » ajouté pour ne pas rapetisser les titres du bilan et de la pause (34-36 px), hauteur des boutons de l'accueil rendue.
 - **Limites :**
-  - les onglets des paramètres ne prennent pas le focus clavier (`FocusMode.None`), donc le réglage ne s'atteint qu'à la souris : à traiter avec la navigation manette (lot C) ;
+  - les onglets des paramètres ne prenaient pas le focus clavier : corrigé au lot C, plus bas ;
   - le défilement de la pause se fait à la molette seulement ;
   - les tailles au-dessus de 14 px ont bougé d'un ou deux pixels (15 → 16, 17 → 18, 22 → 24) : à juger en recette.
 
@@ -136,6 +136,19 @@ L'étirement `canvas_items` en mode `keep` garde la même mise en page à toutes
 
 **Vérification :** depuis une sauvegarde vierge, choisir et lancer sans aide ; parcourir sans souris ; aperçu conforme au personnage réellement chargé.
 **Garde-fou :** pas de déblocage local simulé par l'interface ; aucune dépendance à un futur service distant.
+
+**Lot C, navigation clavier et manette — 27 septembre 2026 (session locale) :** l'étape 2 (« parcourir sans souris »), hors écran de sélection, déjà navigable depuis l'accueil refait.
+- **Paramètres**, jusqu'ici entièrement à la souris :
+  - aucun contrôle ne prenait le focus (`FocusMode.None` partout) ; onglets, boutons, curseurs, remappage et bouton de fermeture le prennent désormais ;
+  - l'écran s'ouvre sur l'onglet actif. Gauche et droite parcourent les onglets et les ouvrent ; bas mène au premier réglage ; Échap ou B ferme et rend le focus au bouton qui l'avait ouvert (pause ou accueil) ;
+  - les curseurs avancent par pas de 5 % au lieu de 1 %, sinon il fallait cent appuis.
+- **Pause** : elle s'ouvre sur « Reprendre », avec le focus.
+- **Repère commun** : `UITheme.ApplyFocusStyle`, un cadre doré sur le contrôle qui a le focus, appliqué aux boutons, onglets et curseurs stylés par `UITheme`.
+- **Vérifié :** capture de l'accueil rejouant bas, bas, bas, entrée, puis droite et bas dans les paramètres (`tools/capture_hub.sh`) ; images regardées : onglet Graphismes ouvert au clavier, focus visible de réglage en réglage. Smoke test vert.
+- **Non fait :**
+  - lien entre la condition d'un personnage verrouillé et sa quête (étape 3, dépend du plan 06) ;
+  - défilement des colonnes de la pause à la manette ;
+  - le remappage d'une touche commence à l'appui sur Entrée ou A : à essayer au clavier réel.
 
 ### Lot C2 — Collection directement accessible et texte à la demande
 

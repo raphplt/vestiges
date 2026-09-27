@@ -15,6 +15,8 @@ public partial class SettingsScreen : CanvasLayer
 
 	private Control _root;
 	private Control _contentArea;
+	// Contrôle qui avait le focus avant l'ouverture (bouton Paramètres de la pause ou de l'accueil) : il le retrouve.
+	private Control _returnFocus;
 	private string _activeTab = "audio";
 	private readonly System.Collections.Generic.Dictionary<string, Button> _tabButtons = new();
 
@@ -98,8 +100,10 @@ public partial class SettingsScreen : CanvasLayer
 	public void Open()
 	{
 		IsOpen = true;
+		_returnFocus = GetViewport().GuiGetFocusOwner();
 		_root.Visible = true;
 		ShowTab(_activeTab);
+		_tabButtons[_activeTab].CallDeferred(Control.MethodName.GrabFocus);
 	}
 
 	public void Close()
@@ -109,6 +113,9 @@ public partial class SettingsScreen : CanvasLayer
 		_root.Visible = false;
 		AudioManager.Instance?.SaveSettings();
 		CombatFxSettings.Save();
+		if (_returnFocus != null && IsInstanceValid(_returnFocus) && _returnFocus.IsVisibleInTree())
+			_returnFocus.GrabFocus();
+		_returnFocus = null;
 	}
 
 	private void CancelListening()
@@ -246,7 +253,7 @@ public partial class SettingsScreen : CanvasLayer
 		{
 			Text = "X",
 			CustomMinimumSize = new Vector2(36, 36),
-			FocusMode = Control.FocusModeEnum.None
+			FocusMode = Control.FocusModeEnum.All
 		};
 		UITheme.SetTextRole(closeBtn, TextRole.Lead);
 		UITheme.ApplyButtonStyle(closeBtn, _btnNormalTex, _btnHoverTex, _btnPressedTex, _btnDisabledTex);
@@ -288,12 +295,18 @@ public partial class SettingsScreen : CanvasLayer
 			Text = label,
 			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
 			CustomMinimumSize = new Vector2(0, 38),
-			FocusMode = Control.FocusModeEnum.None,
+			FocusMode = Control.FocusModeEnum.All,
 			Flat = true
 		};
 		UITheme.SetTextRole(btn, TextRole.Body);
 
 		btn.Pressed += () => ShowTab(id);
+		// Au clavier et à la manette, parcourir les onglets suffit à les ouvrir.
+		btn.FocusEntered += () =>
+		{
+			if (_activeTab != id)
+				ShowTab(id);
+		};
 		tabBar.AddChild(btn);
 		_tabButtons[id] = btn;
 	}
@@ -330,6 +343,32 @@ public partial class SettingsScreen : CanvasLayer
 		content.SizeFlagsVertical = Control.SizeFlags.ExpandFill;
 		scroll.AddChild(content);
 		_contentArea.AddChild(scroll);
+		Callable.From(() => LinkTabsToContent(content)).CallDeferred();
+	}
+
+	/// <summary>Bas depuis un onglet : le premier réglage de l'onglet ouvert.</summary>
+	private void LinkTabsToContent(Control content)
+	{
+		if (!IsInstanceValid(content))
+			return;
+		Control first = FirstFocusable(content);
+		if (first == null)
+			return;
+		foreach (Button tab in _tabButtons.Values)
+			tab.FocusNeighborBottom = first.GetPath();
+	}
+
+	private static Control FirstFocusable(Node node)
+	{
+		foreach (Node child in node.GetChildren())
+		{
+			if (child is Control { FocusMode: Control.FocusModeEnum.All, Visible: true } control)
+				return control;
+			Control nested = FirstFocusable(child);
+			if (nested != null)
+				return nested;
+		}
+		return null;
 	}
 
 	// ================================================================
@@ -395,12 +434,14 @@ public partial class SettingsScreen : CanvasLayer
 		{
 			MinValue = minValue,
 			MaxValue = 1.0,
-			Step = 0.01,
+			// Pas de 5 % : au clavier et au stick, un appui déplace d'un cran lisible (1 % demandait cent appuis).
+			Step = 0.05,
 			CustomMinimumSize = new Vector2(0, 24),
 			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill
 		};
 		slider.ProcessMode = ProcessModeEnum.Always;
 		StyleSlider(slider);
+		UITheme.ApplyFocusStyle(slider);
 		slider.Value = initialValue;
 		pct.Text = $"{Mathf.RoundToInt(initialValue * 100)}%";
 
@@ -565,7 +606,7 @@ public partial class SettingsScreen : CanvasLayer
 		{
 			Text = ParticleLevelLabel(VfxFactory.CurrentParticleLevel),
 			CustomMinimumSize = new Vector2(160, 36),
-			FocusMode = Control.FocusModeEnum.None
+			FocusMode = Control.FocusModeEnum.All
 		};
 		UITheme.SetTextRole(particleBtn, TextRole.Small);
 		UITheme.ApplyButtonStyle(particleBtn, _btnNormalTex, _btnHoverTex, _btnPressedTex, _btnDisabledTex);
@@ -616,7 +657,7 @@ public partial class SettingsScreen : CanvasLayer
 		{
 			Text = initialText,
 			CustomMinimumSize = new Vector2(160, 36),
-			FocusMode = Control.FocusModeEnum.None
+			FocusMode = Control.FocusModeEnum.All
 		};
 		UITheme.SetTextRole(btn, TextRole.Small);
 		UITheme.ApplyButtonStyle(btn, _btnNormalTex, _btnHoverTex, _btnPressedTex, _btnDisabledTex);
@@ -647,7 +688,7 @@ public partial class SettingsScreen : CanvasLayer
 			ToggleMode = true,
 			ButtonPressed = initialValue,
 			CustomMinimumSize = new Vector2(80, 36),
-			FocusMode = Control.FocusModeEnum.None
+			FocusMode = Control.FocusModeEnum.All
 		};
 		UITheme.SetTextRole(toggle, TextRole.Small);
 		UITheme.ApplyButtonStyle(toggle, _btnNormalTex, _btnHoverTex, _btnPressedTex, _btnDisabledTex);
@@ -740,7 +781,7 @@ public partial class SettingsScreen : CanvasLayer
 		{
 			Text = "Réinitialiser",
 			CustomMinimumSize = new Vector2(180, 36),
-			FocusMode = Control.FocusModeEnum.None
+			FocusMode = Control.FocusModeEnum.All
 		};
 		UITheme.SetTextRole(resetBtn, TextRole.Small);
 		UITheme.ApplyButtonStyle(resetBtn, _btnNormalTex, _btnHoverTex, _btnPressedTex, _btnDisabledTex);
@@ -777,7 +818,7 @@ public partial class SettingsScreen : CanvasLayer
 		{
 			Text = InputRemapManager.GetKeyName(def.Action),
 			CustomMinimumSize = new Vector2(120, 32),
-			FocusMode = Control.FocusModeEnum.None
+			FocusMode = Control.FocusModeEnum.All
 		};
 		UITheme.SetTextRole(keyBtn, TextRole.Small);
 		UITheme.ApplyButtonStyle(keyBtn, _btnNormalTex, _btnHoverTex, _btnPressedTex, _btnDisabledTex);
@@ -789,7 +830,7 @@ public partial class SettingsScreen : CanvasLayer
 		{
 			Text = InputRemapManager.GetJoyButtonName(def.Action),
 			CustomMinimumSize = new Vector2(120, 32),
-			FocusMode = Control.FocusModeEnum.None
+			FocusMode = Control.FocusModeEnum.All
 		};
 		UITheme.SetTextRole(joyBtn, TextRole.Small);
 		UITheme.ApplyButtonStyle(joyBtn, _btnNormalTex, _btnHoverTex, _btnPressedTex, _btnDisabledTex);
