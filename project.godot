@@ -130,5 +130,21 @@ erasure_far_memory={
 }
 trample_origin={
 "type": "vec4",
-"value": Vector4(1e+06, 1e+06, 0, 0)
+"value": Vector4(1000000, 1000000, 0, 0)
+}
+trample_creatures_0={
+"type": "vec4",
+"value": Vector4(1000000, 1000000, 1000000, 1000000)
+}
+trample_creatures_1={
+"type": "vec4",
+"value": Vector4(1000000, 1000000, 1000000, 1000000)
+}
+trample_creatures_2={
+"type": "vec4",
+"value": Vector4(1000000, 1000000, 1000000, 1000000)
+}
+trample_creatures_3={
+"type": "vec4",
+"value": Vector4(1000000, 1000000, 1000000, 1000000)
 }

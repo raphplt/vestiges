@@ -65,6 +65,7 @@ Un seul lot d'implémentation ouvert à la fois. Un échec de lisibilité, de pe
 - [03 lot E](03-boucle-et-rythme.md) : **l'Indicible n'est pas combattable** (aucune arme ne le vise, 0 PV perdu en 40 s de combat). Sa mort et le passage en endgame marchent. Refonte à arbitrer avec le lore.
 - [17](17-armes-coffres-modificateurs.md) et [02 J3](02-juiciness-score.md) : arme au sol refaite (anneau pixel, invite commune « Échanger », plus de stats ni de texte au sol), icône qui vole vers le HUD.
 - Audit, lot 5 : les animations des créatures se chargent sous l'écran de chargement. Avant, chaque nouvelle espèce faisait sauter une image en pleine partie.
+- [10 lot E](10-terrain-et-tiles.md) : les herbes plient aussi au passage des huit créatures les plus proches.
 - [06](06-personnages-quetes-defis.md) : un profil neuf commence avec le Vagabond (décision du 23 septembre) ; les profils existants gardent leurs personnages.
 
 **Mise à jour du 27 septembre, soir (session locale) :** deux bugs signalés par Raphaël.

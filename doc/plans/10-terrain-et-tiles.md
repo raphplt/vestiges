@@ -111,7 +111,13 @@ La transition visuelle ne doit pas rendre ambigu le biome de gameplay : définir
   - le shader `prop_trample` (le shader de l'oubli des décors, plus un cisaillement dans `vertex()`, via `prop_forget.gdshaderinc` partagé) fait le reste sur le GPU.
 - Choix des décors : non bloquants, sans canopée, 40 px de haut au plus, et dont le nom commence par un préfixe de végétation (`trample_prefixes` et `trample_max_height` dans `world_gen.json`). La hauteur seule prenait aussi des tas de gravats (capture).
 - Capture `--capture-trample` (nouveau mode) regardée : une touffe d'herbe haute penche d'un côté puis de l'autre selon la position du joueur.
-- **Non fait :** traces temporaires (étape 2, suite) ; seules les herbes réagissent au joueur, pas aux créatures.
+- **Non fait :** traces temporaires (étape 2, suite) ; seules les herbes réagissent au joueur, pas aux créatures (fait le 27 septembre au soir, ci-dessous).
+
+**Lot E, étape 2 (suite) — herbes qui plient aussi pour les créatures, 27-28 septembre 2026 :**
+- `GrassTrample` choisit, toutes les 50 ms, les huit créatures les plus proches du joueur dans un rayon de 600 px, par insertion dans un tableau fixe, sans allocation. Il les écrit dans quatre uniformes globaux (`trample_creatures_0` à `_3`, deux positions par vecteur). Dans `vertex()`, le shader retient le passage le plus proche, joueur ou créature.
+- Relecture à 20 Hz plutôt qu'à chaque image. Le premier banc, à chaque image, coûtait 0,19 ms par image à 720p (291 → 276 FPS), à cause du parcours des créatures. À 20 Hz, une créature bouge de quelques pixels entre deux lectures, ce qui ne se voit pas sur une flexion de 5 px.
+- **Mesure** : trois bancs A/B contre `HEAD` à 20 Hz. Les FPS sont inexploitables : la charge est montée jusqu'à 4,8 et les passes vont de 162 à 273 FPS. Le temps GPU, insensible à la charge, est identique (720p 0,40 → 0,39 ms, 1 080p 0,68 → 0,66 ms). Le CPU restant vaut au plus le tiers des 0,19 ms.
+- **Vérifié** : `--capture-trample` complétée : une Ombre posée à gauche d'une touffe, le joueur hors de portée, et la touffe se couche vers la droite. Image regardée ; smoke test.
 
 ## 5. Recette et décision finale
 

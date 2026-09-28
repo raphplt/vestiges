@@ -9,6 +9,11 @@ varying float prop_memory;
 // Herbes qui plient (plan 10 lot E) : les petits décors traversables s'écartent du joueur. Le haut du sprite se cisaille
 // à l'opposé de lui, la base reste plantée. Position du joueur en uniforme global : aucune boucle sur les décors.
 global uniform vec4 trample_origin;
+// Huit créatures les plus proches du joueur, deux par vecteur (xy, zw) ; loin = 1e6.
+global uniform vec4 trample_creatures_0;
+global uniform vec4 trample_creatures_1;
+global uniform vec4 trample_creatures_2;
+global uniform vec4 trample_creatures_3;
 const float TRAMPLE_RADIUS = 30.0;
 const float TRAMPLE_BEND = 5.0;
 const float TRAMPLE_SINK = 2.0;
@@ -19,9 +24,20 @@ void vertex() {
 	vec2 ground = (MODEL_MATRIX * vec4(0.0, 0.0, 0.0, 1.0)).xy;
 	prop_memory = memory_at(ground);
 #ifdef PROP_TRAMPLE
+	// Le passage le plus proche (joueur ou créature) couche la touffe.
 	vec2 away = ground - trample_origin.xy;
+	vec2 origins[8] = vec2[8](trample_creatures_0.xy, trample_creatures_0.zw, trample_creatures_1.xy, trample_creatures_1.zw,
+		trample_creatures_2.xy, trample_creatures_2.zw, trample_creatures_3.xy, trample_creatures_3.zw);
 	// Distance au sol : un rang vaut une demi-colonne.
 	float distance_on_ground = length(vec2(away.x, away.y * 2.0));
+	for (int i = 0; i < 8; i++) {
+		vec2 creature_away = ground - origins[i];
+		float creature_distance = length(vec2(creature_away.x, creature_away.y * 2.0));
+		if (creature_distance < distance_on_ground) {
+			distance_on_ground = creature_distance;
+			away = creature_away;
+		}
+	}
 	float push = 1.0 - smoothstep(TRAMPLE_RADIUS * 0.35, TRAMPLE_RADIUS, distance_on_ground);
 	float side = away.x >= 0.0 ? 1.0 : -1.0;
 	float lift = clamp(-VERTEX.y / TRAMPLE_HEIGHT, 0.0, 1.0);
