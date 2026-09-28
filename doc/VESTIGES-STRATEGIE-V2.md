@@ -776,7 +776,7 @@ Le script de post-processing doit inclure une vérification/correction de l'angl
 - [x] Signaux précurseurs des Résurgences.
 - [ ] Sound design cleanup (retirer sons répétitifs, ajuster XP, musique adaptative).
 - [x] Intégration des 50 choix audio A–B6 applicables et nettoyage des fichiers inutilisés ; banque JSON, crédits et archives d’écoute hors dépôt (plan 15).
-- [x] Écran de mort reworké (transition visuelle + score détaillé + stats) : bilan en trois zones, première passe du plan 02 lot D (27 septembre 2026) ; séquence de mort dans le monde, lot M1 (28 septembre 2026). Bilan dense et distance (M2–M4) à suivre.
+- [x] Écran de mort reworké (transition visuelle + score détaillé + stats) : bilan en trois zones, première passe du plan 02 lot D (27 septembre 2026) ; séquence de mort dans le monde, lot M1 ; distance, éliminations par arme et frise relevées, lot M2 (28 septembre 2026). Bilan dense (M3–M4) à suivre.
 
 ### Phase E — Quêtes et personnages (2-3 semaines)
 

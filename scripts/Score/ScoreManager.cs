@@ -1,6 +1,8 @@
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Godot;
 using Vestiges.World;
+using Vestiges.Combat;
 using Vestiges.Core;
 using Vestiges.Infrastructure;
 using Vestiges.Infrastructure.Analytics;
@@ -187,7 +189,8 @@ public partial class ScoreManager : Node
         string characterId = gm.SelectedCharacterId ?? "unknown";
         CharacterData charData = CharacterDataLoader.Get(characterId);
 
-        Player player = GetTree().GetFirstNodeInGroup("player") as Player;
+        // À la mort, le joueur a déjà quitté le groupe « player » : on le prend dans la scène de run.
+        Player player = GetTree().CurrentScene?.GetNodeOrNull<Player>("Player");
         string weaponId = player?.EquippedWeapon?.Id ?? "unknown";
 
         RunRecord record = new()
@@ -205,7 +208,7 @@ public partial class ScoreManager : Node
             ExplorationScoreDetail = _explorationScore,
             Seed = gm.RunSeed,
             ActiveMutators = gm.ActiveMutators != null && gm.ActiveMutators.Count > 0
-                ? new System.Collections.Generic.List<string>(gm.ActiveMutators)
+                ? new List<string>(gm.ActiveMutators)
                 : null,
             MutatorMultiplier = _mutatorMultiplier,
             RunPhase = _runTracker?.CurrentPhase ?? GameManager.RunPhase.Exploration.ToString(),
@@ -219,7 +222,7 @@ public partial class ScoreManager : Node
             record.DeathCause = _runTracker.LastHitByEnemyId;
             record.DeathPhase = _runTracker.CurrentPhase;
             record.PerkIds = _runTracker.PerkIds.Count > 0
-                ? new System.Collections.Generic.List<string>(_runTracker.PerkIds)
+                ? new List<string>(_runTracker.PerkIds)
                 : null;
             record.TotalDamageDealt = _runTracker.TotalDamageDealt;
             record.TotalDamageTaken = _runTracker.TotalDamageTaken;
@@ -232,6 +235,26 @@ public partial class ScoreManager : Node
             record.AvgPressure = _runTracker.PressureRatio;
             record.FinalHpScale = _runTracker.LastHpScale;
             record.FinalDmgScale = _runTracker.LastDmgScale;
+            record.MaxDistanceMeters = _runTracker.Journey.MaxDistanceMeters;
+            record.TravelledMeters = _runTracker.Journey.TravelledMeters;
+            record.ElitesKilled = _runTracker.ElitesKilled;
+            record.SovereignsKilled = _runTracker.SovereignsKilled;
+            record.BossesKilled = _runTracker.BossesKilled;
+        }
+
+        if (player != null)
+        {
+            record.Weapons = new List<RunWeaponRecord>();
+            foreach (WeaponInstance weapon in player.WeaponSlots)
+            {
+                record.Weapons.Add(new RunWeaponRecord
+                {
+                    Id = weapon.Id,
+                    Level = weapon.Level,
+                    Damage = player.GetDamageDealt(weapon.Id),
+                    Kills = player.GetKills(weapon.Id),
+                });
+            }
         }
 
         return record;

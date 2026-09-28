@@ -8,7 +8,7 @@ namespace Vestiges.Infrastructure;
 public class RunRecord
 {
     [JsonPropertyName("version")]
-    public int Version { get; set; } = 2;
+    public int Version { get; set; } = RunHistoryManager.CurrentVersion;
 
     [JsonPropertyName("character_id")]
     public string CharacterId { get; set; }
@@ -111,15 +111,58 @@ public class RunRecord
 
     [JsonPropertyName("sim_perk_strategy")]
     public string SimPerkStrategy { get; set; }
+
+    // Relevés du bilan (version 3, plan 02 lot D M2). Absents des runs plus anciennes : null = non mesuré, jamais zéro.
+
+    /// <summary>Plus grande distance au sol atteinte depuis le départ, en mètres.</summary>
+    [JsonPropertyName("max_distance_m")]
+    public float? MaxDistanceMeters { get; set; }
+
+    [JsonPropertyName("travelled_m")]
+    public float? TravelledMeters { get; set; }
+
+    /// <summary>Armes en fin de run, dans l'ordre des emplacements.</summary>
+    [JsonPropertyName("weapons")]
+    public List<RunWeaponRecord> Weapons { get; set; }
+
+    [JsonPropertyName("elites_killed")]
+    public int? ElitesKilled { get; set; }
+
+    [JsonPropertyName("sovereigns_killed")]
+    public int? SovereignsKilled { get; set; }
+
+    [JsonPropertyName("bosses_killed")]
+    public int? BossesKilled { get; set; }
+}
+
+/// <summary>Une arme du build à la fin de la run : niveau, dégâts infligés et créatures achevées.</summary>
+public class RunWeaponRecord
+{
+    [JsonPropertyName("id")]
+    public string Id { get; set; }
+
+    [JsonPropertyName("level")]
+    public int Level { get; set; }
+
+    [JsonPropertyName("damage")]
+    public float Damage { get; set; }
+
+    [JsonPropertyName("kills")]
+    public int Kills { get; set; }
 }
 
 /// <summary>
 /// Historique de runs V2.
 /// Les historiques V1 sont archives separement puis l'historique V2 repart proprement.
+/// Les versions suivantes (3 : relevés du bilan) ne font qu'ajouter des champs facultatifs : une run plus ancienne
+/// se relit telle quelle, ses champs absents valent « non mesuré ».
 /// </summary>
 public static class RunHistoryManager
 {
-    private const int CurrentVersion = 2;
+    public const int CurrentVersion = 3;
+    // Première version V2 : en dessous, c'est un historique V1 (archivé). Une hausse de CurrentVersion ne doit
+    // jamais y envoyer les runs V2.
+    private const int FirstV2Version = 2;
     private static string HistoryPath => DevelopmentMode.GetSavePath("run_history.json");
     private static string LegacyHistoryPath => DevelopmentMode.GetSavePath("run_history_legacy_v1.json");
     private const int MaxEntries = 50;
@@ -295,7 +338,7 @@ public static class RunHistoryManager
             if (!item.TryGetProperty("version", out JsonElement versionElement))
                 return true;
 
-            if (versionElement.ValueKind != JsonValueKind.Number || versionElement.GetInt32() < CurrentVersion)
+            if (versionElement.ValueKind != JsonValueKind.Number || versionElement.GetInt32() < FirstV2Version)
                 return true;
         }
 

@@ -1,0 +1,6 @@
+{
+    "_comment": "Relevés de run pour le bilan (plan 02 lot D, M2). pixels_per_meter : un adulte mesure 28 px de haut dans les sprites, soit 1,75 m à 16 px par mètre ; les distances sont mesurées au sol (hauteur écran doublée, vue iso). distance_step_seconds : pas du relevé de position (le trajet est la somme de ces pas). timeline_sample_seconds : pas des échantillons de la frise du bilan.",
+    "pixels_per_meter": 16,
+    "distance_step_seconds": 0.25,
+    "timeline_sample_seconds": 10
+}

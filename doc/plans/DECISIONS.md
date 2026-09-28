@@ -280,3 +280,5 @@ Acquis :
 - découpage [plan 02 lot D, seconde passe](02-juiciness-score.md) : M1 séquence, M2 données, M3 bilan dense, M4 gains animés.
 
 Même retenue voulue pour les textes du chargement de run (`GameLoadingOverlay`, fragments « Le monde oublie ce qu'il était… ») : direction notée, réécriture non faite. Le rendu de M1 reste à juger en jeu.
+
+Après la livraison de M1, Raphaël : « continue m2 ». M2 (données de run) est lancé ; l'échelle des distances (16 px par mètre) reste une proposition.

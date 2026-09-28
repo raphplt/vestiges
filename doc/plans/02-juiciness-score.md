@@ -165,6 +165,33 @@ Raphaël valide une juiciness très poussée : mobilité, impacts, collectes, ra
 - **Vérifié** : build sans avertissement, smoke test, captures regardées à chaque temps. Premier essai corrigé : une zone épargnée autour du joueur (disque vert), une autre autour du tueur (tache sombre) et un recouvrement final tramé en grille régulière (effet moustiquaire).
 - **À juger en jeu par Raphaël** : durée totale (2,9 s), force du ralenti, gris de l'effacement sur les biomes sombres. Le son n'a pas été écouté (capture headless).
 
+**M2 livré — 28 septembre 2026.** Demande de Raphaël : « continue m2 ».
+- **Distance** : `RunJourney`, relevé par `RunTracker` toutes les 0,25 s de jeu. Deux mesures, au sol (hauteur écran doublée, comme les portées) :
+  - la plus grande distance atteinte depuis le départ (« jusqu'où ») ;
+  - le chemin parcouru.
+  L'échelle est de 16 px par mètre : un adulte fait 28 px de haut, soit 1,75 m. Réglages dans `data/ui/run_summary.json`.
+- **Frise** : un échantillon toutes les 10 s (temps, niveau, éliminations, distance), plus un dernier à la mort. S'y ajoutent des marqueurs horodatés : montées de niveau, Résurgences, coffres, élites, Souverains, boss. Tout reste en mémoire de run pour le bilan ; seul le résumé est sauvegardé.
+- **Éliminations par arme** : `WeaponLedger` remplace le dictionnaire de dégâts de `Player`. Une créature tuée par un coup accorde l'élimination une seule fois, à l'arme de ce coup et dans la même image (`Enemy.ClaimKillCredit`). Brûlure, feu au sol et explosions ne sont attribués à aucune arme : ni leurs dégâts, ni leurs éliminations. Le bilan pourra les montrer en « autres ».
+- **Élites, Souverains, boss** : comptés d'après les variantes `elite` et `champion` et le rang `boss`/`miniboss` des créatures.
+- **Historique** : `RunRecord` passe en version 3, avec des champs facultatifs : distances, armes (id, niveau, dégâts, éliminations), élites, Souverains, boss. Une run plus ancienne les laisse vides, soit « non mesuré », jamais zéro.
+- **Corrigé au passage, deux défauts** :
+  - toute version inférieure à la courante était traitée comme un historique V1, archivée puis vidée : passer en version 3 aurait effacé les 12 runs de Raphaël ;
+  - `weapon_id` n'avait jamais été rempli : à sa mort, le joueur a déjà quitté le groupe `player` ; il est maintenant pris dans la scène.
+- **Capture `--capture-death`**, trois options :
+  - `--play-bot` : le bot de mesure joue avant de mourir (avec `--nomad`, il garde un cap) ;
+  - `--history-fixture` : un historique est posé dans le profil isolé avant la mort ;
+  - le relevé enregistré et la frise sont imprimés.
+  Le coup fatal passe par `TakeErasureDamage` : l'esquive, un bouclier ou un second souffle annulaient le coup unique.
+- **Vérifié** :
+  - bot nomade, 120 s : 748 m au plus loin, 1 883 m parcourus, 64 éliminations ; par arme : arc 21, fronde 14, haches 10 ; 1 élite ;
+  - bot nomade, 90 s : 10 échantillons, 2 montées de niveau marquées, 26 éliminations toutes attribuées (arc 20, tuyau 6) ;
+  - copie de l'historique dev réel (9 runs V2) : relue, conservée, et la nouvelle run s'y ajoute en version 3 ;
+  - build sans avertissement, smoke test, régressions armes, déplacements, capacités ennemies et mode dev.
+- **Relecture `godot-reviewer`** : rien de bloquant. Vérifiés : double comptage, pool, rang boss et variantes exclusifs, historique V2, coût par image. Corrigés : un commentaire déplacé et un nom de type qualifié inutilement.
+- **Points ouverts** :
+  - l'échelle de 16 px/m est une proposition : un bot en ligne droite fait environ 750 m en deux minutes ;
+  - sur les longues runs (300 à 400 niveaux visés au plan 20), les marqueurs de niveau seront nombreux : M3 devra les regrouper sur la frise.
+
 ## 6. Recette finale et sortie
 
 Même monde et même build, séquence courte avant/après ; puis run dense réelle. La seed du monde ne fixe pas tous les tirages de spawn et de crises : utiliser spawns/calendrier contrôlés pour une comparaison stricte, sinon répéter les essais et noter leur variabilité. Tester effets réduits, son coupé et absence de secousse. Effectuer build, smoke si applicable, profilage et vérifications du [dossier](README.md).

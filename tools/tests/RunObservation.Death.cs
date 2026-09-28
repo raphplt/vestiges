@@ -13,6 +13,9 @@ namespace Vestiges.Tests;
 /// --capture-death : mort et bilan de fin de run (plan 02 lot D, M1). Le bot joue --seconds secondes pour se constituer
 /// un build, puis meurt pour de bon sous le coup de la créature la plus proche ; captures pendant l'impact, l'effacement,
 /// les trois temps de la révélation et l'écran final.
+/// --play-bot : le bot de mesure joue pendant ces secondes (avec --nomad, il garde un cap) ; relevés de M2 réalistes.
+/// --history-fixture &lt;fichier&gt; : historique posé dans le profil isolé avant la mort, pour vérifier qu'une run
+/// s'y ajoute sans perdre les anciennes (plan 02 M2). Le relevé enregistré est imprimé (RECORD).
 /// </summary>
 public partial class RunObservation
 {
@@ -20,7 +23,11 @@ public partial class RunObservation
 
     private async Task CaptureDeath(double playSeconds)
     {
-        await Seconds(playSeconds);
+        // --play-bot : le bot de mesure joue (déplacements, combats, choix de niveau) au lieu d'attendre sur place.
+        if (System.Array.IndexOf(OS.GetCmdlineUserArgs(), "--play-bot") >= 0)
+            await MeasureDensity(playSeconds, GetNode<GameManager>("/root/GameManager").RunSeed);
+        else
+            await Seconds(playSeconds);
         // Build fourni pour juger la mise en page d'une run riche : quatre armes, niveaux variés, souvenirs.
         _player.AddWeapon(WeaponDataLoader.Get("heavy_hammer"));
         _player.AddWeapon(WeaponDataLoader.Get("makeshift_bow"));
@@ -39,14 +46,11 @@ public partial class RunObservation
         Enemy killer = NearestEnemy();
         if (killer != null)
             GetNode<EventBus>("/root/EventBus").EmitSignal(EventBus.SignalName.PlayerHitBy, killer.EnemyId, 1f);
+        LoadHistoryFixture(Argument(OS.GetCmdlineUserArgs(), "--history-fixture", ""));
         _player.IsGodMode = false;
-        // Esquive (Instinct) ou dash du bot peuvent annuler un coup : on frappe jusqu'à la mort.
-        for (int attempt = 0; attempt < 120 && !_player.IsDead; attempt++)
-        {
-            _player.TakeDamage(100000f);
-            if (!_player.IsDead)
-                await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
-        }
+        // Le Néant passe esquive, bouclier et invulnérabilité ; un second souffle éventuel demande un deuxième coup.
+        for (int attempt = 0; attempt < 4 && !_player.IsDead; attempt++)
+            _player.TakeErasureDamage(100000f);
         // Séquence de mort : impact, le joueur se défait, effacement naissant, à mi-course, écran couvert ; puis le bilan.
         double[] moments = { 0.08, 0.6, 1.2, 1.8, 2.4, 3.3, 6.0 };
         // Instants comptés depuis la mort : l'écriture d'une capture 4K prend elle-même plusieurs centaines de ms.
@@ -61,7 +65,35 @@ public partial class RunObservation
             Save($"death-{shot}.png");
             GD.Print($"[RunObservation] death-{shot} at {(Time.GetTicksMsec() - deathMsec) / 1000.0:0.00} s");
         }
+        List<RunRecord> history = RunHistoryManager.GetHistory();
+        Dictionary<int, int> versions = new();
+        foreach (RunRecord run in history)
+            versions[run.Version] = versions.GetValueOrDefault(run.Version) + 1;
+        GD.Print($"[RunObservation] HISTORY runs={history.Count} versions={System.Text.Json.JsonSerializer.Serialize(versions)}");
+        if (history.Count > 0)
+            GD.Print($"[RunObservation] RECORD {System.Text.Json.JsonSerializer.Serialize(history[0])}");
+        RunJourney journey = _world.GetNode<RunTracker>("RunTracker").Journey;
+        Dictionary<RunMarkerKind, int> markers = new();
+        foreach (RunMarker marker in journey.Markers)
+            markers[marker.Kind] = markers.GetValueOrDefault(marker.Kind) + 1;
+        RunSample last = journey.Samples.Count > 0 ? journey.Samples[^1] : default;
+        GD.Print($"[RunObservation] JOURNEY samples={journey.Samples.Count} last=({last.Time:0.0} s, niv. {last.Level}, {last.Kills} élim., {last.DistanceMeters:0} m) markers={System.Text.Json.JsonSerializer.Serialize(markers)}");
         GD.Print($"[RunObservation] RESULT death captured, killer={killer?.EnemyId ?? "none"}, dead={_player.IsDead}");
+    }
+
+    private static void LoadHistoryFixture(string path)
+    {
+        if (string.IsNullOrEmpty(path))
+            return;
+        using FileAccess source = FileAccess.Open(path, FileAccess.ModeFlags.Read);
+        if (source == null)
+        {
+            GD.PushError($"[RunObservation] Historique introuvable : {path}");
+            return;
+        }
+        using FileAccess target = FileAccess.Open(DevelopmentMode.GetSavePath("run_history.json"), FileAccess.ModeFlags.Write);
+        target.StoreString(source.GetAsText());
+        RunHistoryManager.ForceReload();
     }
 
     private Enemy NearestEnemy()

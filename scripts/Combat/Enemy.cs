@@ -111,6 +111,11 @@ public partial class Enemy : CharacterBody2D
 	// Sprite animé (remplace Polygon2D quand sprite_folder est défini)
 	private AnimatedSprite2D _sprite;
 	private bool _hasSprite;
+	// Image de la mort par un coup (pas d'une évanescence) : l'arme qui achève la créature réclame l'élimination
+	// dans la foulée de son coup, une seule fois (bilan, plan 02 M2). Brûlure ou explosion : personne ne la réclame.
+	private bool _killed;
+	private ulong _killedFrame;
+	private bool _killCredited;
 	private readonly CharacterFacing _facing = new();
 	private StringName _currentAnimName;
 	private enum SpriteAction { Idle, Walk, Attack, Death }
@@ -198,6 +203,8 @@ public partial class Enemy : CharacterBody2D
 		_xpReward = data.Stats.XpReward;
 		_tracking.Configure(data.ExtraStats.GetValueOrDefault("perception"), data.ExtraStats.GetValueOrDefault("leash"));
 		_isDying = false;
+		_killed = false;
+		_killCredited = false;
 		_attackTimer = 0f;
 		_meleeAttackCooldown = MeleeAttackCooldown;
 		_rangedAttackCooldown = RangedAttackCooldown;
@@ -251,6 +258,15 @@ public partial class Enemy : CharacterBody2D
 		_rangedAttackCooldown = RangedAttackCooldown / _spawnAggressionMultiplier;
 		_playerProximityRange = PlayerProximityRange * (1f + (_spawnAggressionMultiplier - 1f) * 0.9f);
 		_damage *= 1f + (_spawnAggressionMultiplier - 1f) * 0.2f;
+	}
+
+	/// <summary>Vrai une seule fois, pour le coup qui vient de tuer la créature : il lui vaut l'élimination.</summary>
+	public bool ClaimKillCredit()
+	{
+		if (!_killed || _killCredited || _killedFrame != Engine.GetProcessFrames())
+			return false;
+		_killCredited = true;
+		return true;
 	}
 
 	/// <summary>Assigne cet ennemi comme garde d'un POI. Il patrouillera autour.</summary>
@@ -414,6 +430,8 @@ public partial class Enemy : CharacterBody2D
 
 		IsActive = false;
 		_isDying = false;
+		_killed = false;
+		_killCredited = false;
 		_guardTarget = null;
 		_tracking.Reset();
 		_isBurrowed = false;
@@ -1041,6 +1059,8 @@ public partial class Enemy : CharacterBody2D
 	private void Die()
 	{
 		_isDying = true;
+		_killed = true;
+		_killedFrame = Engine.GetProcessFrames();
 		// Le corps se dissout : son contact avec le sol disparaît avec lui.
 		_shadow.Visible = false;
 		CancelAbilities();

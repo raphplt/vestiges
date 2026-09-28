@@ -95,8 +95,7 @@ public partial class Player : CharacterBody2D
     // Passive Souvenir inventory (max 4, from level-up)
     public const int MaxPassiveSlots = 4;
     private readonly List<ActivePassiveSouvenir> _passiveSlots = new();
-    // Dégâts infligés par arme depuis le début de la run (pause, plan 17 lot 1C).
-    private readonly Dictionary<string, float> _damageDealtByWeapon = new();
+    private readonly WeaponLedger _weaponLedger = new();
 
     private Vector2 _facingDirection = new(1f, 0f);
 
@@ -567,7 +566,8 @@ public partial class Player : CharacterBody2D
     }
 
     /// <summary>Dégâts portés par une arme depuis le début de la run.</summary>
-    public float GetDamageDealt(string weaponId) => _damageDealtByWeapon.GetValueOrDefault(weaponId);
+    public float GetDamageDealt(string weaponId) => _weaponLedger.DamageOf(weaponId);
+    public int GetKills(string weaponId) => _weaponLedger.KillsOf(weaponId);
 
     public int GetWeaponFragmentLevel(string weaponId) => FindWeaponSlot(weaponId, out _)?.Level ?? 0;
 
@@ -970,7 +970,7 @@ public partial class Player : CharacterBody2D
         if (showImpact)
             _attackFx.PlayHit(source?.Base, enemy.GlobalPosition, isCrit);
         if (source != null)
-            _damageDealtByWeapon[source.Id] = _damageDealtByWeapon.GetValueOrDefault(source.Id) + damage;
+            _weaponLedger.AddDamage(source.Id, damage);
         int procRollCount = Mathf.Max(1, triggerCount);
 
         // Vampirism: heal % of damage dealt
@@ -984,6 +984,9 @@ public partial class Player : CharacterBody2D
         // Execution: instant kill enemies below HP threshold
         if (_executionThreshold > 0f && !enemy.IsDying && enemy.HpRatio > 0f && enemy.HpRatio < _executionThreshold)
             enemy.Execute();
+
+        if (source != null && enemy.ClaimKillCredit())
+            _weaponLedger.AddKill(source.Id);
 
         // Ricochet: bounce to nearby enemy (only from original projectiles)
         if (!isRicochet && _ricochetChance > 0f && GD.Randf() < GetCombinedProcChance(_ricochetChance, procRollCount))

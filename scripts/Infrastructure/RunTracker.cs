@@ -45,6 +45,18 @@ public partial class RunTracker : Node
 
     private const float MaintenanceInterval = 0.25f;
 
+    // Trajet, frise et prises marquantes pour le bilan (plan 02 lot D, M2).
+    private RunJourney _journey;
+    private GroupCache _groups;
+    private float _journeyStep;
+    private float _journeyTimer;
+    private int _elitesKilled;
+    private int _sovereignsKilled;
+    private int _bossesKilled;
+    // Variantes comptées à part au bilan : ids de data/enemies/_variants.json.
+    private const string EliteVariantId = "elite";
+    private const string SovereignVariantId = "champion";
+
     public float TotalDamageDealt => _totalDamageDealt;
     public float TotalDamageTaken => _totalDamageTaken;
     public int PoisExplored => _poisExplored;
@@ -55,6 +67,10 @@ public partial class RunTracker : Node
     public string LastHitByEnemyId => _lastHitByEnemyId;
     public string CurrentPhase => _currentPhase;
     public float RunDurationSeconds => _runTime;
+    public RunJourney Journey => _journey;
+    public int ElitesKilled => _elitesKilled;
+    public int SovereignsKilled => _sovereignsKilled;
+    public int BossesKilled => _bossesKilled;
 
     // --- Difficulty metrics ---
     public int TotalSpawned => _totalSpawned;
@@ -153,6 +169,13 @@ public partial class RunTracker : Node
         _eventBus.LevelUp += OnLevelUp;
         _eventBus.PerkChosen += OnPerkChosen;
         _eventBus.EntityDamaged += OnEntityDamaged;
+        _eventBus.CrisisStarted += OnCrisisStarted;
+        _eventBus.VariantEnemyKilled += OnVariantEnemyKilled;
+
+        RunSummaryConfig summaryConfig = RunSummaryConfig.Load();
+        _journey = new RunJourney(summaryConfig);
+        _journeyStep = summaryConfig.DistanceStepSeconds;
+        _groups = GetNode<GroupCache>("/root/GroupCache");
 
         GD.Print("[RunTracker] Tracking started");
     }
@@ -173,12 +196,22 @@ public partial class RunTracker : Node
         _eventBus.LevelUp -= OnLevelUp;
         _eventBus.PerkChosen -= OnPerkChosen;
         _eventBus.EntityDamaged -= OnEntityDamaged;
+        _eventBus.CrisisStarted -= OnCrisisStarted;
+        _eventBus.VariantEnemyKilled -= OnVariantEnemyKilled;
     }
 
     public override void _Process(double delta)
     {
         if (!_frozen)
+        {
             _runTime += (float)delta;
+            _journeyTimer += (float)delta;
+            if (_journeyTimer >= _journeyStep)
+            {
+                _journeyTimer = 0f;
+                TrackJourney();
+            }
+        }
         _maintenanceTimer += (float)delta;
         if (_maintenanceTimer < MaintenanceInterval)
             return;
@@ -203,8 +236,20 @@ public partial class RunTracker : Node
 
     private void OnGameStateChanged(string oldState, string newState)
     {
-        if (newState == nameof(GameManager.GameState.Death))
-            _frozen = true;
+        if (newState != nameof(GameManager.GameState.Death) || _frozen)
+            return;
+        _frozen = true;
+        _journey.Close(_runTime, CurrentLevel, _totalKilled);
+    }
+
+    // Le niveau 1 n'émet pas de montée : il n'est pas dans _maxLevel.
+    private int CurrentLevel => Mathf.Max(1, _maxLevel);
+
+    private void TrackJourney()
+    {
+        if (_groups.GetPlayer() is Node2D player)
+            _journey.Track(player.GlobalPosition);
+        _journey.Sample(_runTime, CurrentLevel, _totalKilled);
     }
 
     private void OnEnemySpawned(string enemyId, float hpScale, float dmgScale)
@@ -221,6 +266,32 @@ public partial class RunTracker : Node
         _totalKilled++;
         float now = _runTime;
         _killTimestamps.Add(now);
+
+        string tier = EnemyDataLoader.Get(enemyId)?.Tier;
+        if (tier is "boss" or "miniboss")
+        {
+            _bossesKilled++;
+            _journey.Mark(_runTime, RunMarkerKind.Boss);
+        }
+    }
+
+    private void OnVariantEnemyKilled(string displayName, string variantId, Vector2 position)
+    {
+        if (variantId == EliteVariantId)
+        {
+            _elitesKilled++;
+            _journey.Mark(_runTime, RunMarkerKind.Elite);
+        }
+        else if (variantId == SovereignVariantId)
+        {
+            _sovereignsKilled++;
+            _journey.Mark(_runTime, RunMarkerKind.Sovereign);
+        }
+    }
+
+    private void OnCrisisStarted(int crisisNumber, int intensity)
+    {
+        _journey.Mark(_runTime, RunMarkerKind.Crisis);
     }
 
     private void OnEntityDamaged(Node entity, float amount)
@@ -270,12 +341,14 @@ public partial class RunTracker : Node
     private void OnChestOpened(string chestId, string rarity, Vector2 position)
     {
         _chestsOpened++;
+        _journey.Mark(_runTime, RunMarkerKind.Chest);
     }
 
     private void OnLevelUp(int newLevel)
     {
         if (newLevel > _maxLevel)
             _maxLevel = newLevel;
+        _journey.Mark(_runTime, RunMarkerKind.LevelUp);
 
         // Repère de calibrage du rythme XP (plan 03) : durée murale, écrans de choix inclus.
         GD.Print($"[RunTracker] Niveau {newLevel} à {RunDurationSeconds:F1} s ({_totalKilled} éliminations)");
