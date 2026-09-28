@@ -291,6 +291,22 @@ R1-A et R1-G ne sont **ni compilés, ni testés, ni mesurés**. À reprendre : b
 
 **Refonte des perks, en même temps** (réponse de Raphaël) : audit des passifs et de l'ancien catalogue en cours. Le catalogue proposé (XP, chance, oubli, taille des projectiles, niveaux au-delà de 5) sera soumis à validation avant d'être codé, comme les noms et icônes d'armes au plan 17.
 
+### 6.10 Audit des perks (28 septembre, à la pause)
+
+- **Passifs** (`passive_souvenirs.json`, 13 actifs, niveau 5 au plus) :
+  - `per_level` est une valeur **cumulée** : Souffle du Néant `[1,1,1,1,2]` et Reflet Brisé `[1,1,2,2,3]` ne donnent rien à certains niveaux ;
+  - la ligne Légendaire « gain ×3 + effet » du plan 17 n'est pas implémentée ;
+  - Siphon promet de l'Essence mais agrandit l'aimant ;
+  - `cooldown_reduction` n'a aucun effet ;
+  - la description n'apparaît jamais sur la carte de level-up, et les noms sont en dur, sans traduction ;
+  - « Mémoire vive » est déjà pris (cadence d'attaque) : trouver un autre nom pour le passif d'XP.
+- **Ancien catalogue** (`perks.json`, 50 entrées) :
+  - il n'est atteignable que par les coffres et les points d'intérêt (« Don ») : 23 perks génériques et les exclusifs du personnage ;
+  - douze doublonnent un passif ;
+  - les synergies ne font que s'annoncer.
+  - La **Chance** ne vient que du perk `lucky`, de Fouineur (exclusif du Vagabond) et de la bénédiction Bonne Étoile. Aucun passif n'en donne.
+- **Taille des projectiles** : rayon fixé en dur (`Projectile.tscn`, 6 px) ; aucune stat ne le modifie.
+
 ## 7. Dégâts à distance — 28 septembre 2026 (§5.4)
 
 Même mesure que §6 (30 min, deux seeds). Le bot n'esquive rien. Le filtrage ne garde que les coups qui passeraient l'invulnérabilité de 0,5 s ; c'est la colonne qui compte pour comparer les rôles. Rapport = part des dégâts filtrés ÷ part de l'exposition (1 = la créature blesse en proportion de sa présence).
