@@ -560,3 +560,14 @@ Ordre proposé, **non implémenté** ; un seul lot de correction ouvert à la fo
 | **6D — Corps optionnels des décors** | Corps réservé aux décors bloquants ; streaming physique conditionnel séparé | Vérifier le potentiel mémoire ~5,88 Mio ; ne streamer les formes que si leur coût natif est établi |
 
 Aucune case de la roadmap V2 n’est cochée par cet audit. Les pistes ECS, C++, changement de renderer, carrés de distance généralisés et reprise des optimisations déjà livrées restent écartées sans mesure nouvelle.
+
+
+### Lot 6A — horloges : exécution autorisée le 28 septembre 2026
+
+Raphaël autorise le démarrage des corrections par les problèmes critiques après le TLDR de l’audit. Ce lot est réalisé avant le cône et le préchauffage.
+
+1. **6A.1 — Statuts des ennemis.** Expiration du ralentissement et de la désorientation, régénération et décroissance du recul indépendantes de la distance ; aucune décision aléatoire de direction hors de la zone d’IA complète. DOT inchangés en cadence, mais arrêt du tick si un DOT tue la créature. Les annonces restent annulées au loin ; aucun déplacement physique coûteux ajouté hors champ.
+2. **6A.2 — Effacement.** Conserver le reste de temps et rejouer les pas logiques de 0,5 s, au plus quatre par image. Conserver la dette au-delà, publier la texture une fois par image ; ne pas sauter les transitions de phase ni regrouper les dégâts du Néant. Temps de simulation Godot : pause/hitstop ne deviennent pas du temps mural. Les pas rattrapés utilisent la position et les multiplicateurs disponibles, sans inventer un historique du joueur pendant une image non simulée.
+3. **Validation avant livraison.** Banc ciblé avant/après (statuts proches/lointains/retour, DOT/mort/recyclage, horloges régulières/jitter/hitch, dette bornée, transitions et dégâts du Néant), régressions capacités/déplacement, smoke et courte capture de run. Pas de promesse de FPS : c’est un correctif de robustesse préalable aux optimisations.
+
+**Livré et vérifié le 28 septembre.** [Banc, résultats et limites](../audits/performance-2026-09-28/lot-6a/README.md) : 26 assertions, 13 échecs avant → zéro après. À 1 500 px, les deux statuts de 2 s expirent, recul et régénération restent cohérents avec la proximité. À 1 Hz, dix minutes simulées donnent 30,8037 % d’Effacement au lieu de 15,4037 %, comme à 30/60/144 Hz. Dette conservée sous jitter et blocage de 10 s, au plus quatre pas par image ; phases et dégâts du Néant restent séquentiels. Build sans avertissement, capacités/déplacement, smoke et capture de run passent. Le test optionnel d’intégration Main headless expire à 1 500 frames avant comme après : limite conservée dans les preuves. La roadmap coche seulement ce correctif vérifié ; 6B et les autres lots restent à réaliser.

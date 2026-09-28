@@ -54,6 +54,8 @@ Les numéros servent à identifier les plans, pas à imposer leur exécution int
 
 Un seul lot d'implémentation ouvert à la fois. Un échec de lisibilité, de performance ou de fun ramène au lot concerné avant expansion.
 
+**Mise à jour du 28 septembre — lot 6A livré après autorisation :** les statuts expirent au loin et l’Effacement conserve ses pas manqués (rattrapage limité à quatre par image). Même banc : 13 échecs avant, zéro après sur 26 assertions ; à 1 Hz, 30,80 % d’oubli en dix minutes au lieu de 15,40 %. Build sans avertissement, capacités/déplacement, smoke et capture de run vérifiés. L’intégration Main headless expire avant comme après et reste signalée. [Preuves et limites](../audits/performance-2026-09-28/lot-6a/README.md). Prochain lot : 6B (cône).
+
 **Mise à jour du 28 septembre — seconde passe de performances et robustesse (diagnostic uniquement) :** [rapport](../AUDIT-PERFORMANCES-2026-09-28.md), [preuves et scripts](../audits/performance-2026-09-28/README.md), [lots proposés au plan 10 §11](10-terrain-et-tiles.md#11-audit-de-performances-du-27-septembre--lots).
 - Cône : 12 000 impacts et 3,05–3,18 Mo alloués dans quatre secondes d’émission sur 50 cibles, après chauffe.
 - Deux défauts temporels reproduits : statuts lointains qui n’expirent pas ; temps excédentaire perdu par l’Effacement.

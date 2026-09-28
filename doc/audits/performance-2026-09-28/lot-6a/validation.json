@@ -1,0 +1,16 @@
+{
+  "date": "2026-09-28",
+  "base": "66dd704fd08dd5bbcf7bdb2eb95a86b718a1ae84",
+  "seed": 221092026,
+  "engine": "4.7.2.stable.mono.official.ed1daf0bf",
+  "checks": 26,
+  "before_failures": 13,
+  "after_failures": 0,
+  "gameplay_comparison": "Même fixture, même seed et données initiales ; ancien code puis lot 6A seul dans une copie isolée. Comparaison de comportements simulés, aucune mesure de FPS.",
+  "sha256": {
+    "tools/tests/TemporalRegression.cs": "0fd31878e1f987c4fff7319034c5ebd65d8665f25d00980fd82a3fe3fb596672",
+    "tools/test_temporal.sh": "9e060d1879060fb3150fb1df7f586d96abdeb5e2d3163fd92beb5db91f911335",
+    "scripts/World/ErasureManager.cs": "4214b0d625efa228c474931a4135fe3b34d47ae4ebad92da54571c01a9510dbd",
+    "scripts/Combat/Enemy.cs (lot 6A seul)": "af3497f32dda5d22ef85f50261d62e868cfcda81aae1d0f4d900adf410625a1c"
+  }
+}

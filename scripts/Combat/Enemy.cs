@@ -482,15 +482,26 @@ public partial class Enemy : CharacterBody2D
 
 		float distToPlayerSq = GlobalPosition.DistanceSquaredTo(_player.GlobalPosition);
 		float dt = (float)delta;
+		bool fullProcessing = distToPlayerSq <= ActiveProcessingRangeSq;
+		// La distance allège les décisions et les collisions, jamais la durée des effets déjà appliqués.
+		ProcessIgnite(dt);
+		if (_isDying) return;
+		ProcessBleed(dt);
+		if (_isDying) return;
+		ProcessSlowDecay(dt);
+		ProcessDisorient(dt, fullProcessing);
+		float regen = _mods.TickRegen(dt, _maxHp);
+		if (regen > 0f)
+			_currentHp = Mathf.Min(_currentHp + regen, _maxHp);
 		// Gardiens, hardes et créatures d'événement ont leur propre logique de déplacement.
 		bool lostTrack = _guardTarget == null && !_mods.IsEventBound && !_mods.IsTraveling
 			&& _tracking.Tick(distToPlayerSq, dt);
 
 		// Off-screen culling : ennemis loin du joueur → traitement minimal
-		if (distToPlayerSq > ActiveProcessingRangeSq)
+		if (!fullProcessing)
 		{
-			ProcessIgnite(dt);
-			ProcessBleed(dt);
+			// Le déplacement simplifié n'applique pas le recul, mais il ne doit pas le restituer au retour.
+			DecayKnockback(dt);
 			// Une annonce en cours ne doit pas rester figée à l'écran hors du traitement complet.
 			CancelAbilities();
 
@@ -516,11 +527,6 @@ public partial class Enemy : CharacterBody2D
 		}
 
 		float distToPlayer = Mathf.Sqrt(distToPlayerSq);
-
-		ProcessIgnite(dt);
-		ProcessBleed(dt);
-		ProcessSlowDecay(dt);
-		ProcessDisorient(dt);
 
 		if (lostTrack)
 		{
@@ -577,22 +583,25 @@ public partial class Enemy : CharacterBody2D
 		if (_knockVelocity != Vector2.Zero)
 		{
 			Velocity += _knockVelocity;
-			_knockVelocity *= Mathf.Exp(-KnockbackDecay * delta);
-			if (_knockVelocity.LengthSquared() < 1f)
-				_knockVelocity = Vector2.Zero;
+			DecayKnockback(delta);
 		}
 		MoveAndSlide();
 	}
 
-	/// <summary>Bonus de meute et régénération : les actions annoncées passent par les capacités composées.</summary>
+	private void DecayKnockback(float delta)
+	{
+		if (_knockVelocity == Vector2.Zero)
+			return;
+		_knockVelocity *= Mathf.Exp(-KnockbackDecay * delta);
+		if (_knockVelocity.LengthSquared() < 1f)
+			_knockVelocity = Vector2.Zero;
+	}
+
+	/// <summary>Bonus de meute à proximité : les actions annoncées passent par les capacités composées.</summary>
 	private void ProcessBehaviorAbilities(float delta)
 	{
 		if (_behavior == "pack")
 			ProcessPackBonus(delta);
-
-		float regen = _mods.TickRegen(delta, _maxHp);
-		if (regen > 0f)
-			_currentHp = Mathf.Min(_currentHp + regen, _maxHp);
 	}
 
 	/// <summary>Son d'une action de la créature, muet si elle est loin : l'AudioManager n'est pas spatialisé.</summary>
@@ -960,14 +969,14 @@ public partial class Enemy : CharacterBody2D
 		}
 	}
 
-	private void ProcessDisorient(float delta)
+	private void ProcessDisorient(float delta, bool updateDirection)
 	{
 		if (_disorientTimer <= 0f)
 			return;
 
-		_disorientTimer -= delta;
-		// Changement de direction aléatoire régulier
-		if (GD.Randf() < delta * 2f)
+		_disorientTimer = Mathf.Max(0f, _disorientTimer - delta);
+		// Hors de l'IA complète, seule l'expiration compte : aucun tirage aléatoire ni choix de direction.
+		if (updateDirection && GD.Randf() < delta * 2f)
 		{
 			float angle = (float)GD.RandRange(0, Mathf.Tau);
 			_disorientDirection = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle));

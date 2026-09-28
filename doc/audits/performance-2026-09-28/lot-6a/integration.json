@@ -1,0 +1,150 @@
+{
+  "seed": 221092026,
+  "failures": 0,
+  "results": [
+    {
+      "scenario": "enemy",
+      "radius": 100,
+      "seconds": 10,
+      "slow": 0,
+      "disorient": 0,
+      "hp": 5900
+    },
+    {
+      "check": "slow expire \u00E0 100 px",
+      "pass": true
+    },
+    {
+      "check": "d\u00E9sorientation expire \u00E0 100 px",
+      "pass": true
+    },
+    {
+      "check": "recul expir\u00E9 \u00E0 100 px",
+      "pass": true
+    },
+    {
+      "check": "retour proche sans ancien slow",
+      "pass": true
+    },
+    {
+      "check": "pause conserve la dur\u00E9e des statuts",
+      "pass": true
+    },
+    {
+      "check": "r\u00E9utilisation nettoie les \u00E9tats",
+      "pass": true
+    },
+    {
+      "check": "mort par DOT arr\u00EAte le tick",
+      "pass": true
+    },
+    {
+      "scenario": "enemy",
+      "radius": 1500,
+      "seconds": 10,
+      "slow": 0,
+      "disorient": 0,
+      "hp": 5900
+    },
+    {
+      "check": "slow expire \u00E0 1500 px",
+      "pass": true
+    },
+    {
+      "check": "d\u00E9sorientation expire \u00E0 1500 px",
+      "pass": true
+    },
+    {
+      "check": "recul expir\u00E9 \u00E0 1500 px",
+      "pass": true
+    },
+    {
+      "check": "r\u00E9g\u00E9n\u00E9ration proche/loin identique",
+      "pass": true
+    },
+    {
+      "check": "retour proche sans ancien slow",
+      "pass": true
+    },
+    {
+      "check": "pause conserve la dur\u00E9e des statuts",
+      "pass": true
+    },
+    {
+      "check": "r\u00E9utilisation nettoie les \u00E9tats",
+      "pass": true
+    },
+    {
+      "check": "mort par DOT arr\u00EAte le tick",
+      "pass": true
+    },
+    {
+      "scenario": "erasure_clock",
+      "hz": 60,
+      "seconds": 600,
+      "global": 0.3080367
+    },
+    {
+      "scenario": "erasure_clock",
+      "hz": 30,
+      "seconds": 600,
+      "global": 0.3080367
+    },
+    {
+      "check": "600 s \u00E0 30 Hz \u00E9quivalent \u00E0 60 Hz",
+      "pass": true
+    },
+    {
+      "scenario": "erasure_clock",
+      "hz": 144,
+      "seconds": 600,
+      "global": 0.3080367
+    },
+    {
+      "check": "600 s \u00E0 144 Hz \u00E9quivalent \u00E0 60 Hz",
+      "pass": true
+    },
+    {
+      "scenario": "erasure_clock",
+      "hz": 1,
+      "seconds": 600,
+      "global": 0.3080367
+    },
+    {
+      "check": "600 s \u00E0 1 Hz \u00E9quivalent \u00E0 60 Hz",
+      "pass": true
+    },
+    {
+      "check": "hitch de 10 s : au plus 4 pas par image",
+      "pass": true
+    },
+    {
+      "check": "dette de 10 s rattrap\u00E9e sans perte",
+      "pass": true
+    },
+    {
+      "check": "reste temporel conserv\u00E9 sous jitter",
+      "pass": true
+    },
+    {
+      "check": "pause : horloge d\u2019Effacement fig\u00E9e",
+      "pass": true
+    },
+    {
+      "check": "ralenti : cinq secondes simul\u00E9es, pas dix secondes murales",
+      "pass": true
+    },
+    {
+      "check": "N\u00E9ant : 4 impacts et 12 % des PV en 2 s, delta=0.5",
+      "pass": true
+    },
+    {
+      "check": "N\u00E9ant : 4 impacts et 12 % des PV en 2 s, delta=1",
+      "pass": true
+    },
+    {
+      "check": "rattrapage conserve les quatre transitions de phase",
+      "pass": true
+    }
+  ]
+}

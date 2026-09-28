@@ -178,11 +178,13 @@ public partial class PerformanceAudit20260928 : Node
             ErasureManager erasure = NewErasure();
             _player.GlobalPosition = Vector2.Zero;
             int updates = 0;
+            EventBus bus = GetNode<EventBus>("/root/EventBus");
+            // Dans ce scénario stationnaire de 10 min, chaque pas modifie encore la mémoire globale.
+            void Updated(float amount) => updates++;
+            bus.ErasureUpdated += Updated;
             for (int i = 0; i < hz * 600; i++)
-            {
                 erasure._Process(1.0 / hz);
-                if (Get<float>(erasure, "_updateTimer") == 0f) updates++;
-            }
+            bus.ErasureUpdated -= Updated;
             _results.Add(new { kind = "erasure_clock", hz, seconds = 600, updates,
                 global = erasure.GlobalErasurePercent, origin_memory = Get<Dictionary<Vector2I, float>>(erasure, "_zoneMemory")[Vector2I.Zero] });
             erasure.Free();

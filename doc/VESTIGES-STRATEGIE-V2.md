@@ -721,6 +721,7 @@ Le script de post-processing doit inclure une vérification/correction de l'angl
 
 - [x] Retirer/désactiver les systèmes obsolètes (craft, base, Foyer in-run, cycle jour/nuit).
 - [x] Implémenter ErasureManager (mémoire par zone, rythme global, phases visuelles en placeholder — même juste un changement de teinte sur les tiles).
+- [x] Fiabiliser les horloges : expiration des statuts des ennemis au loin, reste temporel et rattrapage borné de l’Effacement, phases et dégâts conservés ; 26 assertions automatisées (plan 10, lot 6A, 28 septembre 2026).
 - [x] Implémenter CrisisManager (Résurgences toutes les 3-5 min, spawns en burst).
 - [x] Adapter SpawnManager (spawns liés à l'Effacement, plus proches, plus denses).
 - [x] Agrandir la map (doubler la taille pour tester, objectif final 4-5x).

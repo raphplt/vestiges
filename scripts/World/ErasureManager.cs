@@ -46,8 +46,10 @@ public partial class ErasureManager : Node
     private float _crisisDecayMultiplier = 1.5f;
     private bool _crisisActive;
     private float _globalErasurePercent;
-    private float _updateTimer;
-    private float _totalElapsed;
+    // Budget de travail, pas règle d'équilibrage : conserver la dette au-delà évite de bloquer une image.
+    private const int MaxUpdatesPerFrame = 4;
+    private double _updateTimer;
+    private double _totalElapsed;
 
     private readonly Dictionary<Vector2I, float> _zoneMemory = new();
     private readonly Dictionary<Vector2I, ErasureZonePhase> _zonePhases = new();
@@ -107,21 +109,35 @@ public partial class ErasureManager : Node
 
     public override void _Process(double delta)
     {
-        float dt = (float)delta;
-        _totalElapsed += dt;
-        _updateTimer += dt;
-
-        if (_updateTimer < _updateIntervalSec)
+        _totalElapsed += delta;
+        _updateTimer += delta;
+        // Tolérance au bruit d'addition des deltas, sans faire perdre le reste de temps à chaque pas.
+        if (_updateTimer + 1e-9 < _updateIntervalSec)
             return;
 
-        _updateTimer = 0f;
         CachePlayer();
-        if (_player == null || !IsInstanceValid(_player))
+        if (_player == null || !IsInstanceValid(_player) || _player.IsDead)
             return;
 
         SeedAroundPlayer();
+        int updates = 0;
+        while (_updateTimer + 1e-9 >= _updateIntervalSec && updates < MaxUpdatesPerFrame)
+        {
+            _updateTimer = System.Math.Max(0, _updateTimer - _updateIntervalSec);
+            updates++;
+            // Évaluer la montée du déclin à la date de ce pas, pas quatre fois à la fin du hitch.
+            AdvanceMemory((float)((_totalElapsed - _updateTimer) / 60.0));
+            PublishPlayerPhase();
+            HurtPlayerInVoid();
+            if (_player.IsDead || GetTree().Paused)
+                break;
+        }
+        // Les phases et dégâts restent séquentiels ; seul l'upload de leur résultat est mutualisé.
+        PublishGroundMemory();
+    }
 
-        float elapsedMinutes = _totalElapsed / 60f;
+    private void AdvanceMemory(float elapsedMinutes)
+    {
         float decayPerMinute = (_baseDecayPerMinute + _globalAccelerationPerMinute * elapsedMinutes) * _decayMultiplier;
         float decayAmount = decayPerMinute * (_updateIntervalSec / 60f) * (_crisisActive ? _crisisDecayMultiplier : 1f);
         float previousGlobal = _globalErasurePercent;
@@ -151,10 +167,6 @@ public partial class ErasureManager : Node
 
         if (!Mathf.IsEqualApprox(previousGlobal, _globalErasurePercent))
             _eventBus?.EmitSignal(EventBus.SignalName.ErasureUpdated, _globalErasurePercent);
-
-        PublishGroundMemory();
-        PublishPlayerPhase();
-        HurtPlayerInVoid();
     }
 
     private void PublishPlayerPhase()
