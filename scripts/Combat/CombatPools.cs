@@ -24,6 +24,7 @@ public partial class CombatPools : Node2D
     private readonly List<(XpOrb Orb, Vector2 Position, int Token)> _sleepingOrbs = new();
     private float _wakeTimer;
     private Player _player;
+    private GroundFire _groundFire;
 
     /// <summary>Étincelles et éclats de combat, tracés par un seul nœud.</summary>
     public PixelSparks Sparks { get; private set; }
@@ -62,6 +63,7 @@ public partial class CombatPools : Node2D
             orb.SetRelease(_xpOrbs.Return);
             return orb;
         });
+        _groundFire = new GroundFire(GetNode<GroupCache>("/root/GroupCache"));
         Sparks = new PixelSparks { Name = "PixelSparks" };
         AddChild(Sparks);
     }
@@ -77,8 +79,23 @@ public partial class CombatPools : Node2D
         _sleepingOrbs.Add((orb, orb.GlobalPosition, orb.SleepToken));
     }
 
+    /// <summary>Flaque de feu : dégâts au sol pendant <paramref name="duration"/> secondes, zone tramée qui la montre.</summary>
+    public void AddGroundFire(Vector2 position, float damage, float duration, float radius, AttackContext source = default)
+    {
+        _groundFire.Add(position, damage, duration, radius, source);
+        PixelFxSpec spec = PixelFxSpec.Of(PixelFxShape.Zone, FxFamily.Fire, radius, 1f, duration);
+        spec.Squash = Iso.GroundSquash;
+        spec.FillDensity = 0.3f;
+        spec.ProgressFill = false;
+        spec.Steps = 8;
+        spec.FadeTail = 0.4f;
+        spec.ZIndex = -1;
+        PlayFx(position, spec, FxOwner.Player);
+    }
+
     public override void _Process(double delta)
     {
+        _groundFire.Process((float)delta);
         if (_sleepingOrbs.Count == 0)
             return;
         _wakeTimer -= (float)delta;

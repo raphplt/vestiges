@@ -1,12 +1,12 @@
 {
-	"_comment": "Péril (plan 17 lot 3A) : stat de run qui échange difficulté contre récompense. Il vient des Failles (un point par amélioration acceptée). Chaque point ajoute linéairement per_point à chaque multiplicateur (1 + valeur × Péril) ; rarity_steps ajoute des crans de montée de rareté (voir upgrade_rarities.json). max borne le Péril d'une run.",
-	"max": 10,
-	"per_point": {
-		"enemy_count": 0.06,
-		"enemy_hp": 0.1,
-		"enemy_damage": 0.06,
-		"xp": 0.08,
-		"score": 0.12,
-		"rarity_steps": 0.5
-	}
+  "_comment": "Péril (plan 17 lot 3A) : stat de run qui échange difficulté contre récompense. Il vient des Failles (un point par amélioration acceptée). Chaque point ajoute linéairement per_point à chaque multiplicateur (1 + valeur × Péril) ; rarity_steps ajoute des crans de montée de rareté (voir upgrade_rarities.json). max borne le Péril d'une run.",
+  "max": 10,
+  "per_point": {
+    "enemy_count": 0.06,
+    "enemy_hp": 0.1,
+    "enemy_damage": 0.06,
+    "xp": 0.12,
+    "score": 0.12,
+    "rarity_steps": 0.5
+  }
 }

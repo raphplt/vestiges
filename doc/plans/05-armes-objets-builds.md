@@ -1,6 +1,10 @@
 # Plan 05 — Armes, objets et construction des builds
 
-Statut : **4 armes / 4 passifs et objets illimités validés ; spécifications proposées** · Priorité : P1 · Dépendances : tempo initial 03 ; rendu 02/08.
+> **Priorité du 28 septembre — objets et perks ensemble.** Raphaël confirme : objets sans plafond de slots ni d'exemplaires, perks limités à quatre types équipés. Il valide la préparation du [catalogue commun](05-catalogue-objets-perks.md) avant implémentation. Cette annexe remplace le périmètre du trio pilote et les anciens lots objets ci-dessous ; ses 16 perks, 24 objets, règles de progression et réaffectations restent des propositions à valider. L'audit et certaines APIs de ce document sont historiques : consulter la phase 0 de l'annexe pour l'état actuel.
+
+> **Direction B validée :** quatre perks qualitatifs sans niveaux, armes améliorables et objets cumulables. La proposition courante est [Perks de spécialisation](05-perks-specialisations.md) : neuf règles détaillées et comparaison des plafonds d'armes 70/99 avec la courbe. Les seize perks à dix niveaux sont historiques ; le catalogue V1 de neuf perks est maintenant validé et extensible, B0 livré et vérifié. Le plafond 70 recommandé reste à arbitrer.
+
+Statut : **4 armes / 4 perks qualitatifs sans niveaux / objets illimités validés ; neuf perks V1 validés, B0 livré et vérifié** · Priorité : P0 · Dépendances : tempo initial 03 ; rendu 02/08 ; progression 20.
 Références : V2 §10–13/17 ; [PROGRESSION-SYSTEM](../PROGRESSION-SYSTEM.md) sous réserve de ses conflits V2 ; [dossier](README.md).
 
 ## 1. Objectif et arbitrage préalable

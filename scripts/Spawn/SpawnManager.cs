@@ -19,8 +19,13 @@ public partial class SpawnManager : Node2D
 	private float _minSpawnInterval;
 	private float _spawnIntervalDecay;
 	private float _hpScalingPerMinute;
+	private float _lateHpScalingPerMinute;
+	private float _lateHpScalingFromMinute = float.MaxValue;
 	private float _dmgScalingPerMinute;
 	private float _rangedDamageGrowthShare = 1f;
+	private float _xpGrowthPerMinute;
+	private float _xpOblivionBonus;
+	private float _xpCrisisMultiplier = 1f;
 	private int _maxEnemies;
 	private float _maxEnemiesGrowthPerMinute;
 	private float _enemySpeedBaseMultiplier;
@@ -216,7 +221,11 @@ public partial class SpawnManager : Node2D
 
 	private void ComputeScaling(EnemyData data, float elapsedMinutes, out float hpScale, out float dmgScale)
 	{
-		hpScale = Mathf.Pow(_hpScalingPerMinute, elapsedMinutes) * _flatHpMultiplier;
+		// Passé l'heure de l'Indicible, les PV montent plus vite quelle que soit la phase : l'endgame n'est pas
+		// toujours atteint, et le joueur de fin de run tue deux fois plus vite qu'à 10 min (plan 20 §6.8, R1-F).
+		float lateMinutes = Mathf.Max(0f, elapsedMinutes - _lateHpScalingFromMinute);
+		hpScale = Mathf.Pow(_hpScalingPerMinute, elapsedMinutes - lateMinutes)
+			* Mathf.Pow(_lateHpScalingPerMinute, lateMinutes) * _flatHpMultiplier;
 		// Les tirs et les zones touchent de loin, en nombre, et leurs créatures meurent peu : leurs dégâts ne suivent
 		// qu'une part de la croissance commune (plan 20 §7.1).
 		float damageGrowthMinutes = data.Type == "ranged" ? elapsedMinutes * _rangedDamageGrowthShare : elapsedMinutes;
@@ -502,8 +511,23 @@ public partial class SpawnManager : Node2D
 		float speedMultiplier = ComputeEnemySpeedMultiplier(data, elapsedMinutes, spawnPos);
 		float aggressionMultiplier = ComputeEnemyAggressionMultiplier(data, elapsedMinutes);
 		enemy.ApplySpawnTuning(speedMultiplier, aggressionMultiplier);
+		enemy.MultiplyXpReward(ComputeXpMultiplier(elapsedMinutes, spawnPos));
 		_eventBus.EmitSignal(EventBus.SignalName.EnemySpawned, data.Id, hpScale, dmgScale);
 		return enemy;
+	}
+
+	/// <summary>
+	/// XP qui suit le risque (plan 20 §6.9, R1-A) : plus la run avance, plus le lieu est oublié, et pendant une
+	/// Résurgence, plus chaque créature rapporte. Fixée à l'apparition : rien ne se calcule à la mort.
+	/// </summary>
+	private float ComputeXpMultiplier(float elapsedMinutes, Vector2 spawnPos)
+	{
+		float multiplier = 1f + _xpGrowthPerMinute * elapsedMinutes;
+		if (_erasureManager != null)
+			multiplier *= 1f + _xpOblivionBonus * (1f - _erasureManager.GetMemoryAt(spawnPos));
+		if (_currentRunPhase == GameManager.RunPhase.Crisis)
+			multiplier *= _xpCrisisMultiplier;
+		return multiplier;
 	}
 
 	private float ComputeEnemySpeedMultiplier(EnemyData data, float elapsedMinutes, Vector2 spawnPos = default)
@@ -757,8 +781,13 @@ public partial class SpawnManager : Node2D
 		_minSpawnInterval = (float)dict["min_spawn_interval"].AsDouble();
 		_spawnIntervalDecay = (float)dict["spawn_interval_decay_per_minute"].AsDouble();
 		_hpScalingPerMinute = (float)dict["hp_scaling_per_minute"].AsDouble();
+		_lateHpScalingPerMinute = dict.ContainsKey("late_hp_scaling_per_minute") ? (float)dict["late_hp_scaling_per_minute"].AsDouble() : _hpScalingPerMinute;
+		_lateHpScalingFromMinute = dict.ContainsKey("late_hp_scaling_from_minute") ? (float)dict["late_hp_scaling_from_minute"].AsDouble() : float.MaxValue;
 		_dmgScalingPerMinute = (float)dict["damage_scaling_per_minute"].AsDouble();
 		_rangedDamageGrowthShare = dict.ContainsKey("ranged_damage_growth_share") ? (float)dict["ranged_damage_growth_share"].AsDouble() : 1f;
+		_xpGrowthPerMinute = dict.ContainsKey("xp_growth_per_minute") ? (float)dict["xp_growth_per_minute"].AsDouble() : 0f;
+		_xpOblivionBonus = dict.ContainsKey("xp_oblivion_bonus") ? (float)dict["xp_oblivion_bonus"].AsDouble() : 0f;
+		_xpCrisisMultiplier = dict.ContainsKey("xp_crisis_multiplier") ? (float)dict["xp_crisis_multiplier"].AsDouble() : 1f;
 		_maxEnemies = (int)dict["max_enemies_on_screen"].AsDouble();
 		_maxEnemiesGrowthPerMinute = dict.ContainsKey("max_enemies_growth_per_minute") ? (float)dict["max_enemies_growth_per_minute"].AsDouble() : 0f;
 		_enemySpeedBaseMultiplier = dict.ContainsKey("enemy_speed_base_multiplier") ? (float)dict["enemy_speed_base_multiplier"].AsDouble() : 1f;
@@ -848,6 +877,11 @@ public partial class SpawnManager : Node2D
 				case "min_spawn_interval": _minSpawnInterval = kv.Value; break;
 				case "spawn_interval_decay_per_minute": _spawnIntervalDecay = kv.Value; break;
 				case "hp_scaling_per_minute": _hpScalingPerMinute = kv.Value; break;
+				case "late_hp_scaling_per_minute": _lateHpScalingPerMinute = kv.Value; break;
+				case "late_hp_scaling_from_minute": _lateHpScalingFromMinute = kv.Value; break;
+				case "xp_growth_per_minute": _xpGrowthPerMinute = kv.Value; break;
+				case "xp_oblivion_bonus": _xpOblivionBonus = kv.Value; break;
+				case "xp_crisis_multiplier": _xpCrisisMultiplier = kv.Value; break;
 				case "damage_scaling_per_minute": _dmgScalingPerMinute = kv.Value; break;
 				case "ranged_damage_growth_share": _rangedDamageGrowthShare = kv.Value; break;
 				case "max_enemies_on_screen": _maxEnemies = (int)kv.Value; break;

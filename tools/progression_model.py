@@ -4,22 +4,31 @@ XP que cela suppose, et comparaison avec des runs mesurées.
 
 Usage :
     python3 tools/progression_model.py                         # courbes et archétypes cibles
-    python3 tools/progression_model.py <dossier de mesure>...  # + niveaux mesurés (density-*.csv de measure_run.sh)
-                                                               #   et simulation des leviers (LEVERS, PLAY)
+    python3 tools/progression_model.py <dossier de mesure>...  # mesures seules, provenance inconnue
+    python3 tools/progression_model.py --xp-provenance pre-r1-a <dossier>...  # anciens relevés, sources à simuler
+    python3 tools/progression_model.py --xp-provenance post-r1-a <dossier>... # sources déjà dans xp_gained
+
+L’option de provenance s’applique à tous les dossiers du même appel ; ne pas mélanger les versions.
+Les anciennes commandes restent valides pour afficher les mesures, mais ne déclenchent plus de projection
+sans provenance explicite. L’API simulate exige elle aussi xp_provenance. Aucune provenance n’est déduite
+du nom/date du dossier. En post-R1-A, les leviers temps/oubli/Résurgence sont déjà inclus dans la mesure :
+on ne les réapplique pas et on ne prétend pas les retirer pour simuler un autre réglage. Les scénarios
+harvest/build/Péril et niveaux bonus de boss restent des hypothèses, pas une reproduction de cette run.
+Ne pas utiliser les bonus de boss proposés si le relevé contient déjà ces mêmes récompenses garanties.
 
 La simulation part de l'XP ramassée minute par minute par le bot de mesure (run passive : il prend la première
 carte, ne cherche ni combat ni orbe, ne meurt pas), puis applique à chaque archétype sa façon de jouer (PLAY)
 et les leviers proposés (LEVERS), avec la courbe du jeu. Ce sont des hypothèses de travail,
 pas des mesures : elles servent à vérifier qu'un jeu de leviers donne l'écart voulu entre archétypes avant d'en
-coder un seul.
+les comparer en jeu.
 
 La courbe est lue dans data/scaling/progression.json, comme le jeu (XpCurveConfig).
 """
 from __future__ import annotations
 
+import argparse
 import csv
 import json
-import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -182,9 +191,15 @@ def level_after(level: int, carry: float, xp: float, curve: Curve) -> tuple[int,
     return level, carry
 
 
-def simulate(bot_xp: list[float], bot_oblivion: list[float], curve: Curve, levers: dict) -> dict[str, dict[int, int]]:
+def simulate(bot_xp: list[float], bot_oblivion: list[float], curve: Curve, levers: dict,
+             *, xp_provenance: str) -> dict[str, dict[int, int]]:
     """Niveau de chaque archétype aux paliers, avec les leviers donnés. Au-delà de la mesure, la dernière
-    minute mesurée se prolonge avec la pente moyenne des cinq dernières."""
+    minute mesurée se prolonge avec la pente moyenne des cinq dernières.
+    post-r1-a conserve le revenu de source observé ; ces agrégats ne permettent pas de le désentrelacer."""
+    if xp_provenance not in ("pre-r1-a", "post-r1-a"):
+        raise ValueError("La simulation exige une provenance XP pre-r1-a ou post-r1-a.")
+    if not bot_xp or len(bot_xp) != len(bot_oblivion):
+        raise ValueError("Les relevés XP/oubli doivent être non vides et de même longueur.")
     slope = (bot_xp[-1] - bot_xp[-6]) / 5 if len(bot_xp) > 6 else 0
     result = {}
     for name, play in PLAY.items():
@@ -197,10 +212,12 @@ def simulate(bot_xp: list[float], bot_oblivion: list[float], curve: Curve, lever
             oblivion = bot_oblivion[min(index, len(bot_oblivion) - 1)]
             ramp = min(minute / 20, 1)
             crisis_share = 70 / 240 if minute > 4 else 0
-            xp = (flow * play["harvest"]
-                  * (1 + levers["time_growth"] * minute)
-                  * (1 + levers["oblivion_xp"] * min(1, oblivion * play["oblivion"]))
-                  * (1 + crisis_share * play["crisis"] * (levers["crisis_xp"] - 1))
+            source_multiplier = 1.0
+            if xp_provenance == "pre-r1-a":
+                source_multiplier = ((1 + levers["time_growth"] * minute)
+                                     * (1 + levers["oblivion_xp"] * min(1, oblivion * play["oblivion"]))
+                                     * (1 + crisis_share * play["crisis"] * (levers["crisis_xp"] - 1)))
+            xp = (flow * source_multiplier * play["harvest"]
                   * (1 + levers["peril_xp"] * play["peril"] * ramp)
                   * (1 + play["build_xp"] * ramp))
             level, carry = level_after(level, carry, xp, curve)
@@ -250,7 +267,12 @@ def curve_table(curves: dict[str, Curve]) -> None:
 
 
 def main() -> None:
-    folders = [Path(arg) for arg in sys.argv[1:]]
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("folders", nargs="*", type=Path)
+    parser.add_argument("--xp-provenance", choices=("pre-r1-a", "post-r1-a"),
+                        help="Version commune des sources XP des dossiers ; nécessaire pour simuler.")
+    args = parser.parse_args()
+    folders = args.folders
     game = read_curve()
     without_cap = uncapped(game)
     print(f"Courbe sans plafond : {without_cap.describe()} ; courbe du jeu : {game.describe()}\n")
@@ -267,13 +289,25 @@ def main() -> None:
     measured_flow(runs)
 
     bot_xp, bot_oblivion = bot_minutes(folders)
-    if bot_xp:
+    if bot_xp and args.xp_provenance is None:
+        print("\nProvenance XP inconnue : mesures affichées, simulation désactivée. "
+              "Préciser --xp-provenance pre-r1-a ou post-r1-a pour des dossiers homogènes.")
+    elif bot_xp:
+        print(f"\nProvenance déclarée : {args.xp_provenance} (hypothèses PLAY, pas une nouvelle mesure).")
         status_quo = dict(LEVERS, time_growth=0.0, oblivion_xp=0.0, crisis_xp=1.0, peril_xp=0.08, mid_boss_levels={},
                           final_boss_levels=0)
-        print("\nSimulation, sans plafond ni leviers (seuls la façon de jouer et le Péril à 8 % changent) :\n")
-        table(simulate(bot_xp, bot_oblivion, without_cap, status_quo), without_cap)
-        print(f"\nSimulation, courbe du jeu et leviers {LEVERS} :\n")
-        simulated = simulate(bot_xp, bot_oblivion, game, LEVERS)
+        if args.xp_provenance == "pre-r1-a":
+            print("\nScénario historique sans plafond, sources sans R1-A (PLAY et Péril à 8 %) :\n")
+        else:
+            print("\nScénario sans plafond conservant les sources post-R1-A observées (PLAY et Péril à 8 %) :\n")
+        table(simulate(bot_xp, bot_oblivion, without_cap, status_quo,
+                       xp_provenance=args.xp_provenance), without_cap)
+        if args.xp_provenance == "post-r1-a":
+            print("\nCourbe du jeu : sources observées conservées, leviers temps/oubli/Résurgence non réappliqués. "
+                  "PLAY/Péril et boss bonus proposés restent hypothétiques.\n")
+        else:
+            print(f"\nSimulation, courbe du jeu et leviers {LEVERS} :\n")
+        simulated = simulate(bot_xp, bot_oblivion, game, LEVERS, xp_provenance=args.xp_provenance)
         table(simulated, game)
         print()
         flow(simulated, game)

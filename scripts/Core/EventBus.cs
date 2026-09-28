@@ -12,6 +12,17 @@ public partial class EventBus : Node
     [Signal] public delegate void GameStateChangedEventHandler(string oldState, string newState);
     [Signal] public delegate void RunPhaseChangedEventHandler(string oldPhase, string newPhase);
 
+    // Contrats C# typés : aucune conversion Variant ni allocation par impact.
+    public event System.Action<Combat.DamageResult> EnemyDamageResolved;
+    public event System.Action<Combat.EnemyKillResult> EnemyKillResolved;
+    public event System.Action<HealingResult> PlayerHealingResolved;
+    public event System.Action<PlayerDamageResult> PlayerDamageResolved;
+
+    public void PublishEnemyDamage(Combat.DamageResult result) => EnemyDamageResolved?.Invoke(result);
+    public void PublishEnemyKill(Combat.EnemyKillResult result) => EnemyKillResolved?.Invoke(result);
+    public void PublishPlayerHealing(HealingResult result) => PlayerHealingResolved?.Invoke(result);
+    public void PublishPlayerDamage(PlayerDamageResult result) => PlayerDamageResolved?.Invoke(result);
+
     // --- Combat ---
     [Signal] public delegate void EntityDamagedEventHandler(Node entity, float amount);
     [Signal] public delegate void EntityDiedEventHandler(Node entity);

@@ -1,64 +1,83 @@
+using System.Collections.Generic;
 using Godot;
 using Vestiges.Core;
 
 namespace Vestiges.Combat;
 
 /// <summary>
-/// Flaque de feu laissée par la Lanterne Mémorielle (effet spécial `ground_fire`) :
-/// dégâts toutes les demi-secondes dans le rayon, zone tramée orange au sol.
+/// Flaques de feu laissées par la Lanterne Mémorielle (effet spécial `ground_fire`) : dégâts toutes les demi-secondes
+/// dans le rayon, mesuré au sol comme la zone tramée orange qui les montre. Des données tenues par CombatPools,
+/// sans nœud par flaque (audit de performances §11).
 /// </summary>
-public partial class GroundFire : Node2D
+public sealed class GroundFire
 {
     private const float TickSeconds = 0.5f;
 
-    private float _damage;
-    private float _radiusSq;
-    private float _remaining;
-    private float _tick;
-    private GroupCache _groupCache;
-
-    public static void Spawn(Node context, Vector2 position, float damage, float duration, float radius, GroupCache groupCache)
+    private struct Flame
     {
-        GroundFire fire = new()
-        {
-            Name = "GroundFire",
-            GlobalPosition = position,
-            _damage = damage,
-            _radiusSq = radius * radius,
-            _remaining = duration,
-            _tick = TickSeconds,
-            _groupCache = groupCache,
-        };
-        context.GetTree().CurrentScene.CallDeferred(Node.MethodName.AddChild, fire);
-
-        if (CombatPools.Instance == null)
-            return;
-        PixelFxSpec spec = PixelFxSpec.Of(PixelFxShape.Zone, FxFamily.Fire, radius, 1f, duration);
-        spec.Squash = 2f;
-        spec.FillDensity = 0.3f;
-        spec.ProgressFill = false;
-        spec.Steps = 8;
-        spec.FadeTail = 0.4f;
-        spec.ZIndex = -1;
-        CombatPools.Instance.PlayFx(position, spec, FxOwner.Player);
+        public Vector2 Position;
+        public float Damage;
+        public float RadiusSq;
+        public float Remaining;
+        public float Tick;
+        public AttackContext Source;
     }
 
-    public override void _Process(double delta)
+    private readonly List<Flame> _flames = new();
+    private readonly GroupCache _groupCache;
+
+    public GroundFire(GroupCache groupCache)
     {
-        float dt = (float)delta;
-        _remaining -= dt;
-        _tick -= dt;
-        if (_tick <= 0f)
+        _groupCache = groupCache;
+    }
+
+    public static void Spawn(Vector2 position, float damage, float duration, float radius, AttackContext source = default)
+    {
+        CombatPools.Instance?.AddGroundFire(position, damage, duration, radius, source);
+    }
+
+    public void Add(Vector2 position, float damage, float duration, float radius, AttackContext source = default)
+    {
+        _flames.Add(new Flame
         {
-            _tick += TickSeconds;
-            foreach (Node node in _groupCache.GetEnemies())
+            Source = source,
+            Position = position,
+            Damage = damage,
+            RadiusSq = radius * radius,
+            Remaining = duration,
+            Tick = TickSeconds,
+        });
+    }
+
+    public void Process(float delta)
+    {
+        for (int i = _flames.Count - 1; i >= 0; i--)
+        {
+            Flame flame = _flames[i];
+            flame.Remaining -= delta;
+            flame.Tick -= delta;
+            if (flame.Tick <= 0f)
             {
-                if (node is Enemy enemy && IsInstanceValid(enemy) && !enemy.IsDying
-                    && enemy.GlobalPosition.DistanceSquaredTo(GlobalPosition) < _radiusSq)
-                    enemy.TakeDamage(_damage);
+                flame.Tick += TickSeconds;
+                Burn(flame);
             }
+            if (flame.Remaining <= 0f)
+            {
+                _flames[i] = _flames[^1];
+                _flames.RemoveAt(_flames.Count - 1);
+                continue;
+            }
+            _flames[i] = flame;
         }
-        if (_remaining <= 0f)
-            QueueFree();
+    }
+
+    private void Burn(in Flame flame)
+    {
+        foreach (Node node in _groupCache.GetEnemies())
+        {
+            if (node is Enemy enemy && GodotObject.IsInstanceValid(enemy) && !enemy.IsDying
+                && Iso.GroundDistanceSquared(enemy.GlobalPosition, flame.Position) < flame.RadiusSq)
+                enemy.TakeDamage(flame.Damage, source: flame.Source);
+        }
     }
 }

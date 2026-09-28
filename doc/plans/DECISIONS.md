@@ -266,6 +266,20 @@ Raphaël : « okok. je te laisse commencer à travailler pour résoudre ces prob
 
 Après l’explication du cône, Raphaël : « okok. continue sur ca alors ». Lot 6B ouvert : réduire le travail de feedback du Transistor sans changer les dégâts, l’attribution ni la cadence des procs.
 
+## 20. Priorité conjointe objets et perks — 28 septembre 2026
+
+Raphaël refuse la verticale limitée à trois objets pour les coffres : « Pour moi le plus important à traiter et urgent c'est les objets et les perks (objets : stackables à l'infini , perks = 4 max dans l'inventaire) ».
+
+Il valide ensuite (« oui ok parfait ») le recadrage : refonte conjointe du catalogue et des effets, quatre perks de spécialisation, objets indépendants cumulables, axes XP/chance/oubli, acquisition et présentation complètes. La première étape convenue est de présenter **la répartition concrète des effets et le catalogue avant implémentation**.
+
+Le [catalogue commun du plan 05](05-catalogue-objets-perks.md) est préparé dans ce cadre. Ses 16 perks, dix niveaux proposés, 24 objets, noms, coefficients, conditions d'accès et retraits d'anciens effets ne sont pas implicitement validés par l'accord sur la préparation. Aucun changement de gameplay ni case de roadmap cochée à cette étape. Le chantier XP/réserve déjà en cours au plan 20 reste coordonné séparément.
+
+## 21. Identité des objets/perks et proximité avec Megabonk — 28 septembre 2026
+
+Raphaël : « certaines perks ou objets sont trop proches dans leur identité des armes du jeu » ; l'ensemble « 4 armes / 4 tomes (ici \"perks\") et objets illimité » lui paraît très proche de Megabonk. Il demande si Megabonk a inventé cette formule, si sa reprise est appropriée et s'il faut envisager les choses autrement.
+
+Le [catalogue §11](05-catalogue-objets-perks.md#11-réexamen-de-lidentité-et-de-la-structure--28-septembre) consigne les chevauchements, les antériorités recherchées et trois directions à comparer. **Le catalogue reste non validé.** La préférence de l'agent pour des perks qui changent les règles de jeu plutôt que des statistiques répétées est une recommandation, pas une décision de Raphaël. Ni suppression des quatre slots ni nouvelle formule acquise ; aucune implémentation engagée.
+
 ## 22. Refonte de la mort — 28 septembre 2026
 
 Raphaël : « la mort est à revoir. actuellement c'est un simple écran de fin game over il faudrait quelque chose de plus spectaculaire et qui fasse "vrai jeu". par exemple je pense à la mort dans megabonk avec une animation de mort et ensuite un écran de résumé avec toutes les states sur la run. »
@@ -286,3 +300,33 @@ Après la livraison de M1, Raphaël : « continue m2 ». M2 (données de run) es
 Après M2, Raphaël : « go m3 ». M3 (bilan dense) est lancé ; sa composition reste à juger en jeu.
 
 Après M3, Raphaël : « go m4 ». M4 (gains animés) est lancé.
+
+## 23. Approfondissement des trois formules objets/perks — 28 septembre 2026
+
+Raphaël : « ok ces trois réflexions peuvent être intéressantes essaie de les pousser et d'aller au bout de ton idée stp ».
+
+Demande acquise : développer les trois directions jusqu'à leurs conséquences concrètes, avant implémentation. Le [catalogue commun](05-catalogue-objets-perks.md), §12, compare acquisition, run, XP/Chance, identité des armes/personnages, saturation et coût de production. A conserve quatre perks de statistiques améliorables ; B propose quatre règles qualitatives sans niveaux ; C retire les perks et combine branches d'armes et choix de butin. Sept exemples de règles détaillent B, avec limites et critères de validation.
+
+La recommandation de l'agent est B ; **Raphaël n'a encore choisi aucune formule**. Ni les paliers d'acquisition proposés, ni les sept exemples, ni la suppression des niveaux ou des emplacements ne sont validés. L'étude explicite le surplus plus précoce de B/C et les dépendances aux récompenses du monde. Aucun code de gameplay changé pour cette étude ; aucune case de roadmap cochée.
+
+## 24. Direction B retenue et catalogue abouti — 28 septembre 2026
+
+Raphaël : « la B est définitivement la plus intéressante. on essaie de faire une version définitive des nouvelles perks ? Pour le sujet des niveaux peut etre qu'il faut réhausser le niveau max des armes (à 99? ou 70?) ou accepter de retravailler la courbe des niveaux ».
+
+**Acquis : direction B**, quatre perks qualitatifs sans niveaux, distincts des armes et des objets cumulables. Demande : définir le catalogue complet et étudier les plafonds d'armes 70/99 ainsi que la courbe. Les constats de non-choix aux §21–23 sont désormais historiques.
+
+Le [catalogue de spécialisation](05-perks-specialisations.md) propose neuf règles avec acquisition, valeurs initiales, limites, interactions et lots. Seconde lecture devient le report d'une carte non choisie ; Traversée sort de cette version ; Propagation, Reprise et Habitude complètent les autres fiches. L'agent recommande d'essayer un plafond d'arme de 70 en conservant d'abord la courbe actuelle, puis d'ajuster d'après mesure ; comparaison chiffrée avec 99 et coûts XP plafonnés à 3 500/4 000/4 200.
+
+**Non acquis :** les neuf effets, leurs noms/coefficient/paliers, le plafond 70 ou 99, une nouvelle courbe, l'implémentation. Aucun changement de gameplay ni case de roadmap cochée pour cette demande de conception. Le catalogue d'objets reste à réviser conjointement avant migration définitive.
+
+
+## 25. Catalogue V1 validé, début de l’implémentation — 28 septembre 2026
+
+Raphaël : « ok ca me va le cataloque pour une v1 en n'excluant pas de rajouter des perks plus tar. commence limplementation ».
+
+**Acquis :** le catalogue V1 de neuf perks du [plan 05](05-perks-specialisations.md), extensible ultérieurement, et le démarrage de l’implémentation. Quatre perks qualitatifs équipés au maximum, une acquisition chacun, sans niveaux ni raretés. Les coefficients et le calendrier d’acquisition sont des valeurs initiales d’essai, pas un équilibrage validé par le jeu.
+
+**Premier lot engagé : B0**, données, contrats, provenance du modèle XP et préparation de migration des anciens passifs vers les objets. Garder les anciennes sources jouables jusqu’à un remplacement effectif ; aucun perk inactif présenté au joueur. L’accord sur le catalogue ne tranche pas explicitement entre armes à 70, à 99 ou révision de courbe : B0 conserve le plafond et la courbe actuels.
+
+
+Livraison de B0 : données et loader extensibles, contrats de dégâts/soins/statuts intégrés, modèle XP corrigé par provenance, migration des anciennes statistiques documentée. Build sans avertissement ; régressions contrats (32), armes (13), capacités ennemies (55), modèle Python (6) et smoke 600 frames verts. Seule la case B0 est cochée ; les neuf nouveaux effets, leur acquisition et la migration d’objets restent à intégrer. Aucun arbitrage de plafond d’armes ni changement de courbe déduit de cette livraison. [Compte rendu](05-perks-specialisations.md#11-compte-rendu-b0--socle-livré-et-vérifié-le-28-septembre-2026).

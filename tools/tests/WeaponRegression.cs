@@ -44,6 +44,7 @@ public partial class WeaponRegression : Node2D
             CheckOubliEffects();
             CheckUpgradeGains();
             CheckRangeAndZone();
+            await CheckGroundFireOnGround();
 
             GD.Print($"[WeaponRegression] RESULT failures={_failures}");
             GetTree().Quit(_failures == 0 ? 0 : 1);
@@ -53,6 +54,36 @@ public partial class WeaponRegression : Node2D
             GD.PushError(exception.ToString());
             GetTree().Quit(2);
         }
+    }
+
+    /// <summary>
+    /// Flaque de feu de la Lanterne : dégâts mesurés au sol, comme l'ellipse dessinée. À 0,8 rayon à l'horizontale une
+    /// créature brûle ; à 0,8 rayon à la verticale de l'écran (1,6 au sol), elle est hors de la flaque.
+    /// </summary>
+    private async Task CheckGroundFireOnGround()
+    {
+        const float radius = 40f;
+        Vector2 center = _player.Position + new Vector2(0f, 300f);
+        Enemy beside = EnemyScene.Instantiate<Enemy>();
+        Enemy below = EnemyScene.Instantiate<Enemy>();
+        foreach (Enemy enemy in new[] { beside, below })
+        {
+            AddChild(enemy);
+            enemy.Initialize(EnemyDataLoader.Get("rodeur"), 1000f, 1f);
+            enemy.SetPhysicsProcess(false);
+        }
+        beside.Position = center + new Vector2(radius * 0.8f, 0f);
+        below.Position = center + new Vector2(0f, radius * 0.8f);
+        await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+        float besideBefore = beside.HpRatio;
+        float belowBefore = below.HpRatio;
+        GroundFire fire = new(GetNode<GroupCache>("/root/GroupCache"));
+        fire.Add(center, 50f, 1f, radius);
+        fire.Process(0.6f);
+        Check(beside.HpRatio < besideBefore && Mathf.IsEqualApprox(below.HpRatio, belowBefore),
+            $"Flaque de feu mesurée au sol : à côté {besideBefore:0.00} → {beside.HpRatio:0.00}, en dessous {belowBefore:0.00} → {below.HpRatio:0.00}");
+        beside.QueueFree();
+        below.QueueFree();
     }
 
     private void CheckOrbitalOnEquip()

@@ -2,6 +2,8 @@
 
 Version 0.4 · 28 septembre 2026 · Statut : **paliers de 300 à 400 niveaux validés (§6.6–§6.7) ; lots D1 (§7.2), R1-0 et R1-T (§6.8) livrés ; R1-F proposé ; autres lots à valider**. Les faits de §2 ont été vérifiés dans le code le jour même.
 
+> **Coordination objets/perks :** Raphaël a choisi B, quatre perks qualitatifs sans niveaux. [Le nouveau catalogue](05-perks-specialisations.md) compare plafonds d'armes 50/70/99, coût de sélection et courbes ; le niveau 70 est recommandé mais non validé. Les budgets historiques fondés sur quatre passifs à cinq niveaux et le bonus d'XP d'un perk chiffré ne sont plus la cible. Attention à la provenance des mesures dans le modèle : ne pas réappliquer R1-A à une XP qui le contient déjà. Aucun réglage de ce plan n'est changé par cette étude.
+
 ## 1. Retours de Raphaël (28 septembre, après les lots 8A–8C)
 
 1. **Équilibrage** : « globalement l'équilibrage est mieux maintenant ». L'Effacement n'est pas trop rapide, et la difficulté face aux ennemis se gère bien. Vision : le jeu reste **assez dur** ; la réussite dépend en partie du **build** et des **déplacements**, sans devenir impossible. Des **pics de difficulté** au cours de la run sont bienvenus.

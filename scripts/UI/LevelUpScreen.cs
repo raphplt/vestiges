@@ -63,6 +63,7 @@ public partial class LevelUpScreen : CanvasLayer
 
         _eventBus = GetNode<EventBus>("/root/EventBus");
         _eventBus.FragmentChoicesReady += OnFragmentChoicesReady;
+        _eventBus.LevelUp += OnLevelUp;
 
         CreateSynergyNotification();
         HideScreen();
@@ -70,8 +71,23 @@ public partial class LevelUpScreen : CanvasLayer
 
     public override void _ExitTree()
     {
-        if (_eventBus != null)
-            _eventBus.FragmentChoicesReady -= OnFragmentChoicesReady;
+        if (_eventBus == null)
+            return;
+        _eventBus.FragmentChoicesReady -= OnFragmentChoicesReady;
+        _eventBus.LevelUp -= OnLevelUp;
+    }
+
+    /// <summary>Une cascade ajoute ses niveaux après l'ouverture : le compteur se met à jour une fois la file remplie.</summary>
+    private void OnLevelUp(int level)
+    {
+        if (Visible)
+            Callable.From(RefreshTitle).CallDeferred();
+    }
+
+    private void RefreshTitle()
+    {
+        int queued = _fragmentManager?.QueuedLevels ?? 0;
+        _title.Text = queued > 0 ? string.Format(Tr("LEVELUP_TITLE_QUEUED"), Tr("LEVELUP_TITLE"), queued) : Tr("LEVELUP_TITLE");
     }
 
     public void SetPerkManager(PerkManager perkManager)
@@ -172,8 +188,11 @@ public partial class LevelUpScreen : CanvasLayer
         }
         BuildActionButtons();
         SetFocus(0);
+        RefreshTitle();
 
-        ShowScreen();
+        // Choix suivant d'une même réserve : l'écran reste ouvert, seules les cartes changent (plan 20 §6.7).
+        if (!Visible)
+            ShowScreen();
         if (bestRank >= UpgradeRoller.Get("rare").Rank)
             AudioManager.PlayUI("sfx_rare_fragment");
     }
@@ -359,23 +378,23 @@ public partial class LevelUpScreen : CanvasLayer
             return;
         }
 
-        HideScreen();
         _fragmentManager?.SelectFragment(option);
-        ResumeIfDone();
+        CloseIfDone();
     }
 
     private void Skip()
     {
-        HideScreen();
         _fragmentManager?.SkipChoice();
-        ResumeIfDone();
+        CloseIfDone();
     }
 
-    /// <summary>Le jeu ne reprend que lorsque la file des niveaux est vide.</summary>
-    private void ResumeIfDone()
+    /// <summary>L'écran ne se ferme, et le jeu ne reprend, que lorsque la file des niveaux est vide.</summary>
+    private void CloseIfDone()
     {
-        if (_fragmentManager == null || !_fragmentManager.IsChoiceActive)
-            GetTree().Paused = false;
+        if (_fragmentManager != null && _fragmentManager.IsChoiceActive)
+            return;
+        HideScreen();
+        GetTree().Paused = false;
     }
 
     // ==============================

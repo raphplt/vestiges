@@ -21,6 +21,24 @@ public partial class Enemy : CharacterBody2D
 	// V2: StructureDetectRange retire
 	private const float GuardPatrolRadius = 150f;
 
+	private ulong _lifeGeneration;
+	private AttackContext _igniteSource;
+	private AttackContext _bleedSource;
+	private AttackContext _slowSource;
+	private AttackContext _disorientSource;
+	private ControlOrigin _slowOrigin;
+	private ControlOrigin _disorientOrigin;
+	private ControlState _nativeSlow;
+	private ControlState _nativeDisorientation;
+	private float _propagatedDisorientationRemaining;
+	public EnemyLife Life => new(GetInstanceId(), _lifeGeneration);
+	public bool IsPriorityTarget => _mods.IsVariant && _mods.Variant.Id is "elite" or "champion";
+	/// <summary>Contribution native transmissible, sinon provenance du contrôle actif non transmissible.</summary>
+	public ControlState SlowControl => _nativeSlow.Remaining > 0f ? _nativeSlow
+		: new(_slowFactor, Mathf.Max(0f, _slowTimer), _slowSource, ControlOrigin.Propagated == _slowOrigin ? _slowOrigin : ControlOrigin.Unknown);
+	public ControlState DisorientationControl => _nativeDisorientation.Remaining > 0f ? _nativeDisorientation
+		: new(1f, Mathf.Max(0f, _disorientTimer), _disorientSource, ControlOrigin.Propagated == _disorientOrigin ? _disorientOrigin : ControlOrigin.Unknown);
+
 	private float _maxHp;
 	private float _baseHp;
 	private float _currentHp;
@@ -179,6 +197,7 @@ public partial class Enemy : CharacterBody2D
 
 	public void Initialize(EnemyData data, float hpScale, float dmgScale)
 	{
+		_lifeGeneration++;
 		_hitFeedback.RestScale = Vector2.One;
 		_hitFeedback.Stop();
 		_continuousImpact = default;
@@ -211,6 +230,10 @@ public partial class Enemy : CharacterBody2D
 		_playerProximityRange = PlayerProximityRange;
 		_spawnSpeedMultiplier = 1f;
 		_spawnAggressionMultiplier = 1f;
+		_igniteSource = _bleedSource = _slowSource = _disorientSource = default;
+		_slowOrigin = _disorientOrigin = ControlOrigin.Unknown;
+		_nativeSlow = _nativeDisorientation = default;
+		_propagatedDisorientationRemaining = 0f;
 		_igniteDps = 0f;
 		_igniteTimer = 0f;
 		_bleedDps = 0f;
@@ -438,6 +461,10 @@ public partial class Enemy : CharacterBody2D
 		_tier = "normal";
 		_behavior = "default";
 		_currentHp = 0;
+		_igniteSource = _bleedSource = _slowSource = _disorientSource = default;
+		_slowOrigin = _disorientOrigin = ControlOrigin.Unknown;
+		_nativeSlow = _nativeDisorientation = default;
+		_propagatedDisorientationRemaining = 0f;
 		_igniteDps = 0f;
 		_igniteTimer = 0f;
 		_bleedDps = 0f;
@@ -852,19 +879,21 @@ public partial class Enemy : CharacterBody2D
 	// --- Damage & Death ---
 
 	/// <summary>Dégâts et signaux à chaque tick ; seule la mise en scène est cadencée.</summary>
-	public bool TakeContinuousDamage(float damage, float delta)
+	public bool TakeContinuousDamage(float damage, float delta, AttackContext source = default)
 	{
 		bool showImpact = _continuousImpact.Advance(delta) || damage * _mods.DamageTakenMultiplier >= _currentHp;
-		TakeDamage(damage, false, showImpact);
+		TakeDamage(damage, false, showImpact, source);
 		return showImpact;
 	}
 
-	public void TakeDamage(float damage, bool isCrit = false, bool showImpact = true)
+	public DamageResult TakeDamage(float damage, bool isCrit = false, bool showImpact = true,
+		AttackContext source = default, float carriedDamage = 0f)
 	{
 		if (_currentHp <= 0 || _isDying || _isBurrowed)
-			return;
+			return default;
 
-		damage *= _mods.DamageTakenMultiplier;
+		DamageResult result = DamageResult.Resolve(Life, source, _currentHp, damage, carriedDamage, _mods.DamageTakenMultiplier);
+		damage = result.NativeDamage + result.CarriedDamage;
 		_mods.NotifyDamaged();
 		_currentHp -= damage;
 		// La surcharge Span évite un tableau params par tick, tout en gardant le signal Godot synchrone.
@@ -888,49 +917,79 @@ public partial class Enemy : CharacterBody2D
 			ScreenShake.Instance?.ShakeLight();
 		}
 
-		if (_currentHp <= 0)
-			Die();
+		_eventBus.PublishEnemyDamage(result);
+		if (result.Fatal)
+			Die(result);
+		return result;
 	}
 
 	/// <summary>Instant kill from execution perk.</summary>
-	public void Execute()
+	public void Execute(AttackContext source = default)
 	{
 		if (_currentHp <= 0 || _isDying || _isBurrowed)
 			return;
 
+		DamageResult result = DamageResult.Resolve(Life, source.As(DamageKind.Execution), _currentHp, _currentHp, 0f);
 		SpawnDamageNumber(_currentHp, false);
 		_currentHp = 0;
-		Die();
+		_eventBus.PublishEnemyDamage(result);
+		Die(result);
 	}
 
 	/// <summary>Apply ignite DOT (damage over time). Refreshes if already ignited.</summary>
-	public void ApplyIgnite(float dps, float duration)
+	public void ApplyIgnite(float dps, float duration, AttackContext source = default)
 	{
+		_igniteSource = source.As(DamageKind.DamageOverTime);
 		_igniteDps = dps;
 		_igniteTimer = duration;
 		_visual.Color = new Color(1f, 0.5f, 0.1f);
 	}
 
 	/// <summary>Apply bleed DOT (weapon on_hit_effect type "dot"). Refreshes if already bleeding.</summary>
-	public void ApplyBleed(float dps, float duration)
+	public void ApplyBleed(float dps, float duration, AttackContext source = default)
 	{
+		_bleedSource = source.As(DamageKind.DamageOverTime);
 		_bleedDps = dps;
 		_bleedTimer = duration;
 		_visual.Color = new Color(0.8f, 0.15f, 0.15f);
 	}
 
 	/// <summary>Ralentit l'ennemi pendant une durée. Facteur 0.5 = 50% de vitesse.</summary>
-	public void ApplySlow(float factor, float duration)
+	public void ApplySlow(float factor, float duration, AttackContext source = default, ControlOrigin origin = ControlOrigin.NativeWeapon)
 	{
+		_slowSource = source;
+		_slowOrigin = origin == ControlOrigin.Propagated ? origin
+			: source.IsDirectWeapon ? origin : ControlOrigin.Unknown;
+		if (_slowOrigin == ControlOrigin.NativeWeapon)
+		{
+			// Le report éventuel ne prête jamais son intensité ou sa durée au contrôle natif.
+			bool sameOwner = _nativeSlow.Remaining > 0f && _nativeSlow.Source.OwnerId == source.OwnerId;
+			_nativeSlow = new(sameOwner ? Mathf.Min(_nativeSlow.Strength, factor) : factor,
+				sameOwner ? Mathf.Max(_nativeSlow.Remaining, duration) : duration, source, origin);
+		}
 		_slowFactor = Mathf.Min(_slowFactor, factor);
 		_slowTimer = Mathf.Max(_slowTimer, duration);
 		_visual.Color = _visual.Color.Lerp(new Color(0.4f, 0.6f, 1f), 0.4f);
 	}
 
 	/// <summary>Désorientation : l'ennemi erre aléatoirement pendant la durée.</summary>
-	public void ApplyDisorient(float duration)
+	public void ApplyDisorient(float duration, AttackContext source = default, ControlOrigin origin = ControlOrigin.NativeWeapon)
 	{
-		_disorientTimer = duration;
+		_disorientSource = source;
+		_disorientOrigin = origin == ControlOrigin.Propagated ? origin
+			: source.IsDirectWeapon ? origin : ControlOrigin.Unknown;
+		if (_disorientOrigin == ControlOrigin.NativeWeapon)
+			_nativeDisorientation = new(1f, duration, source, origin);
+		else if (origin != ControlOrigin.Propagated)
+			_nativeDisorientation = _nativeDisorientation with { Remaining = Mathf.Min(_nativeDisorientation.Remaining, duration) };
+		// La transmission ne raccourcit pas un contrôle présent ; les applications natives gardent leur comportement.
+		if (origin == ControlOrigin.Propagated)
+		{
+			_propagatedDisorientationRemaining = Mathf.Max(_propagatedDisorientationRemaining, duration);
+			_disorientTimer = Mathf.Max(_disorientTimer, duration);
+		}
+		else
+			_disorientTimer = Mathf.Max(duration, _propagatedDisorientationRemaining);
 		float angle = (float)GD.RandRange(0, Mathf.Tau);
 		_disorientDirection = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle));
 		_visual.Color = new Color(1f, 1f, 0.4f);
@@ -956,8 +1015,10 @@ public partial class Enemy : CharacterBody2D
 
 		_igniteTimer -= delta;
 		float igniteDamage = _igniteDps * delta;
+		DamageResult result = DamageResult.Resolve(Life, _igniteSource, _currentHp, igniteDamage, 0f);
 		_currentHp -= igniteDamage;
 		_eventBus.EmitSignal(EventBus.SignalName.EntityDamaged, this, igniteDamage);
+		_eventBus.PublishEnemyDamage(result);
 
 		if (_igniteTimer <= 0f)
 		{
@@ -965,8 +1026,8 @@ public partial class Enemy : CharacterBody2D
 			_visual.Color = _originalColor;
 		}
 
-		if (_currentHp <= 0 && !_isDying)
-			Die();
+		if (result.Fatal && !_isDying)
+			Die(result);
 	}
 
 	private void ProcessBleed(float delta)
@@ -976,8 +1037,10 @@ public partial class Enemy : CharacterBody2D
 
 		_bleedTimer -= delta;
 		float bleedDamage = _bleedDps * delta;
+		DamageResult result = DamageResult.Resolve(Life, _bleedSource, _currentHp, bleedDamage, 0f);
 		_currentHp -= bleedDamage;
 		_eventBus.EmitSignal(EventBus.SignalName.EntityDamaged, this, bleedDamage);
+		_eventBus.PublishEnemyDamage(result);
 
 		if (_bleedTimer <= 0f)
 		{
@@ -985,12 +1048,13 @@ public partial class Enemy : CharacterBody2D
 			_visual.Color = _originalColor;
 		}
 
-		if (_currentHp <= 0 && !_isDying)
-			Die();
+		if (result.Fatal && !_isDying)
+			Die(result);
 	}
 
 	private void ProcessSlowDecay(float delta)
 	{
+		_nativeSlow = _nativeSlow with { Remaining = Mathf.Max(0f, _nativeSlow.Remaining - delta) };
 		if (_slowTimer <= 0f)
 			return;
 
@@ -1006,6 +1070,8 @@ public partial class Enemy : CharacterBody2D
 
 	private void ProcessDisorient(float delta, bool updateDirection)
 	{
+		_nativeDisorientation = _nativeDisorientation with { Remaining = Mathf.Max(0f, _nativeDisorientation.Remaining - delta) };
+		_propagatedDisorientationRemaining = Mathf.Max(0f, _propagatedDisorientationRemaining - delta);
 		if (_disorientTimer <= 0f)
 			return;
 
@@ -1056,9 +1122,13 @@ public partial class Enemy : CharacterBody2D
 		_damageNumberSerial = number.Serial;
 	}
 
-	private void Die()
+	private void Die(DamageResult damage)
 	{
+		if (_isDying)
+			return;
 		_isDying = true;
+		// Capturer les contrôles avant leur nettoyage et avant les explosions de mort en cascade.
+		_eventBus.PublishEnemyKill(new EnemyKillResult(Life, _enemyId, GlobalPosition, damage, SlowControl, DisorientationControl));
 		_killed = true;
 		_killedFrame = Engine.GetProcessFrames();
 		// Le corps se dissout : son contact avec le sol disparaît avec lui.
@@ -1118,7 +1188,7 @@ public partial class Enemy : CharacterBody2D
 				if (node is Enemy e && e != this && IsInstanceValid(e) && !e.IsDying)
 				{
 					if (Iso.GroundDistanceSquared(GlobalPosition, e.GlobalPosition) < explosionRadiusSq)
-						e.TakeDamage(explosionDamage * 0.5f);
+						e.TakeDamage(explosionDamage * 0.5f, source: new AttackContext(0, null, 0, DamageKind.EnemyExplosion));
 				}
 			}
 

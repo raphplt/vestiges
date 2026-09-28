@@ -25,6 +25,7 @@ public partial class Projectile : Area2D
     private bool _isRicochet;
     private bool _isDespawning;
     private Player _owner;
+    private AttackContext _context;
     private Sprite2D _sprite;
     private ProjectileSprites.SpriteSet _spriteSet;
     private int _spriteDirection = -1;
@@ -68,7 +69,7 @@ public partial class Projectile : Area2D
     }
 
     public void Launch(Vector2 position, Vector2 direction, float damage, float speed, float lifetime, int pierce,
-                       bool isCrit, Player owner, WeaponData weapon, WeaponInstance source, bool isRicochet = false)
+                       bool isCrit, Player owner, WeaponData weapon, WeaponInstance source, bool isRicochet = false, AttackContext context = default)
     {
         GlobalPosition = position;
         _direction = direction.Normalized();
@@ -79,6 +80,8 @@ public partial class Projectile : Area2D
         _pierceRemaining = pierce;
         _isCrit = isCrit;
         _owner = owner;
+        _context = context.OwnerId != 0 || owner == null ? context
+            : owner.BeginAttack(source, damage, isRicochet ? DamageKind.Passive : DamageKind.DirectWeapon);
         _isRicochet = isRicochet;
         SourceWeapon = weapon;
         SourceInstance = source;
@@ -222,15 +225,15 @@ public partial class Projectile : Area2D
                 return;
 
             _hitEnemies.Add(id);
-            enemy.TakeDamage(_damage, _isCrit);
+            enemy.TakeDamage(_damage, _isCrit, source: _context);
 
             // Notify owner for perk effects (vampirism, ignite, execution, ricochet)
             if (_owner != null && IsInstanceValid(_owner))
-                _owner.OnProjectileHit(enemy, _damage, _isCrit, _isRicochet, SourceInstance);
+                _owner.OnProjectileHit(enemy, _damage, _isCrit, _isRicochet, SourceInstance, _context);
 
             if (_spawnsGroundFire)
             {
-                GroundFire.Spawn(this, enemy.GlobalPosition, _groundDamage, _groundDuration, _groundRadius, _groupCache);
+                GroundFire.Spawn(enemy.GlobalPosition, _groundDamage, _groundDuration, _groundRadius, _context.As(DamageKind.DamageOverTime));
                 _spawnsGroundFire = false;
             }
 
@@ -269,6 +272,7 @@ public partial class Projectile : Area2D
         SetDeferred(Node.PropertyName.ProcessMode, (int)ProcessModeEnum.Disabled);
         _homingTarget = null;
         _owner = null;
+        _context = default;
         SourceInstance = null;
         if (_release != null)
             _release(this);

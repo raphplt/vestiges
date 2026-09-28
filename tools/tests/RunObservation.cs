@@ -40,6 +40,7 @@ namespace Vestiges.Tests;
 /// --capture-held [--weapons a,b] : arme en main dans les huit directions et pendant un coup (RunObservation.HeldWeapon.cs).
 /// --capture-chests : chaque coffre cadré, avec et sans décors (RunObservation.Chests.cs).
 /// --capture-levelup : l'écran de level-up, une capture par rareté (RunObservation.LevelUp.cs).
+/// --capture-cascade : réserve de niveaux, cinq niveaux enchaînés puis retenue (RunObservation.Cascade.cs).
 /// --capture-oublis : les neuf Oublis de carte pris d'un coup, effets mesurés (RunObservation.Oublis.cs).
 /// --check-orb-sleep : orbe d'XP endormie loin du joueur, réveillée et ramassée à son retour (RunObservation.OrbSleep.cs).
 /// --capture-endgame : Indicible forcé, combat, mort et passage en endgame (RunObservation.Endgame.cs).
@@ -51,6 +52,7 @@ namespace Vestiges.Tests;
 /// --capture-bestiary : gros plans des créatures du pilote de sprites procéduraux, autour du joueur immobile.
 /// --density : mesure de densité en spawn naturel (ennemis visibles, temps sans ennemi, débits, niveaux,
 /// coffres entrés dans le cadre, et parmi eux ceux qu'aucun décor ne masquait).
+/// --scaling cle=valeur,… : surcharge des réglages d'apparition (spawn_flow.json) pendant la mesure de densité.
 /// --nomad : pendant la mesure, le bot garde un cap (tiré de la seed) au lieu d'errer autour du départ,
 /// et en change quand il bute sur le bord du monde.
 /// --peril N : pendant la mesure, la run commence avec N points de Péril (plan 17 lot 3A).
@@ -128,6 +130,8 @@ public partial class RunObservation : Node
                 await CaptureWeapons(Argument(args, "--weapons", null), Array.IndexOf(args, "--lethal") >= 0);
             else if (Array.IndexOf(args, "--capture-chests") >= 0)
                 await CaptureChests();
+            else if (Array.IndexOf(args, "--capture-cascade") >= 0)
+                await CaptureCascade();
             else if (Array.IndexOf(args, "--capture-levelup") >= 0)
                 await CaptureLevelUp();
             else if (Array.IndexOf(args, "--capture-pause") >= 0)
@@ -313,6 +317,20 @@ public partial class RunObservation : Node
         int peril = int.Parse(Argument(OS.GetCmdlineUserArgs(), "--peril", "0"), CultureInfo.InvariantCulture);
         if (peril > 0)
             _world.GetNode<Vestiges.Progression.PerilManager>("PerilManager").AddPeril(peril);
+        // --scaling cle=valeur,… : surcharge des réglages d'apparition pour un avant/après sur le même build, sans
+        // toucher aux fichiers de data/ (plan 20, R1-F et R1-A).
+        string scaling = Argument(OS.GetCmdlineUserArgs(), "--scaling", "");
+        if (scaling.Length > 0)
+        {
+            Dictionary<string, float> overrides = new();
+            foreach (string pair in scaling.Split(',', StringSplitOptions.RemoveEmptyEntries))
+            {
+                string[] parts = pair.Split('=');
+                overrides[parts[0]] = float.Parse(parts[1], CultureInfo.InvariantCulture);
+            }
+            _world.GetNode<SpawnManager>("SpawnManager").ApplyScalingOverrides(overrides);
+            GD.Print($"[RunObservation] Réglages surchargés : {scaling}");
+        }
         List<string> rows = new() { "t,visible,near600,alive,spawned,killed,level,hit_damage,memory,erasure_global,xp_gained,xp_orbs,spawned_hp,damage_dealt" };
         // Mémoire de la zone sous le joueur et Effacement global, pour mesurer le tempo de l'oubli (retour du 28 septembre).
         ErasureManager erasure = _world.GetNode<ErasureManager>("ErasureManager");

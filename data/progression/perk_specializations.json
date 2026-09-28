@@ -1,0 +1,137 @@
+{
+  "schema_version": 1,
+  "acquisition": {
+    "max_equipped": 4,
+    "offer_size": 3,
+    "offer_levels": [
+      2,
+      6,
+      12,
+      20
+    ]
+  },
+  "perks": [
+    {
+      "id": "priority_targeting",
+      "effect": "priority_targeting",
+      "name": "Convergence",
+      "description": "Tes armes à ciblage privilégient les élites et les Souverains à portée.",
+      "family": "combat",
+      "eligibility": {
+        "targeting_weapon": true
+      },
+      "parameters": {}
+    },
+    {
+      "id": "overflow",
+      "effect": "overflow",
+      "name": "Débordement",
+      "description": "Une partie des dégâts inutilisés d’un coup fatal renforce le prochain impact de cette arme.",
+      "family": "combat",
+      "eligibility": {
+        "direct_damage_weapon": true
+      },
+      "parameters": {
+        "carry_fraction": 0.5,
+        "duration_seconds": 3,
+        "attack_damage_cap_ratio": 1
+      }
+    },
+    {
+      "id": "carry_control",
+      "effect": "carry_control",
+      "name": "Propagation",
+      "description": "À leur mort, les ennemis transmettent leur ralentissement et leur désorientation à un voisin.",
+      "family": "combat",
+      "eligibility": {
+        "native_control_weapon": true
+      },
+      "parameters": {
+        "radius_pixels": 120,
+        "target_count": 1
+      }
+    },
+    {
+      "id": "overheal_reserve",
+      "effect": "overheal_reserve",
+      "name": "Prévoyance",
+      "description": "Tes soins excédentaires sont conservés pour te rendre des PV après une blessure.",
+      "family": "survival",
+      "eligibility": {},
+      "parameters": {
+        "max_health_fraction": 0.2,
+        "initial_fill_fraction": 1
+      }
+    },
+    {
+      "id": "rally",
+      "effect": "rally",
+      "name": "Reprise",
+      "description": "Après une blessure, tuer rapidement peut te rendre une partie des PV perdus.",
+      "family": "survival",
+      "eligibility": {},
+      "parameters": {
+        "duration_seconds": 4,
+        "recoverable_damage_fraction": 0.4,
+        "max_health_fraction": 0.2,
+        "heal_per_kill_health_fraction": 0.02
+      }
+    },
+    {
+      "id": "xp_trail",
+      "effect": "xp_trail",
+      "name": "Sillage",
+      "description": "Ton trajet récent continue de ramasser l’XP derrière toi.",
+      "family": "collection",
+      "eligibility": {},
+      "parameters": {
+        "duration_seconds": 6,
+        "pickup_radius_multiplier": 1
+      }
+    },
+    {
+      "id": "salvage_xp",
+      "effect": "salvage_xp",
+      "name": "Délestage",
+      "description": "Dans les récompenses à choix, tu peux abandonner un objet contre de l’XP.",
+      "family": "rewards",
+      "eligibility": {
+        "item_choice_rewards": true
+      },
+      "parameters": {
+        "common_level_cost_fraction": 0.2,
+        "uncommon_level_cost_fraction": 0.4,
+        "rare_level_cost_fraction": 0.75,
+        "epic_level_cost_fraction": 1.25
+      }
+    },
+    {
+      "id": "carried_choice",
+      "effect": "carried_choice",
+      "name": "Seconde lecture",
+      "description": "Une amélioration laissée de côté peut revenir au prochain choix de niveau.",
+      "family": "rewards",
+      "eligibility": {
+        "min_upgradeable_weapons": 2
+      },
+      "parameters": {
+        "carried_card_count": 1,
+        "ordinary_offer_lifetime": 1
+      }
+    },
+    {
+      "id": "familiar_loot",
+      "effect": "familiar_loot",
+      "name": "Habitude",
+      "description": "Dans les récompenses à choix, tu peux préférer une copie d’un objet que tu possèdes déjà.",
+      "family": "rewards",
+      "eligibility": {
+        "item_choice_rewards": true,
+        "owned_item": true
+      },
+      "parameters": {
+        "alternative_count": 1
+      }
+    }
+  ]
+}

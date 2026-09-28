@@ -536,6 +536,13 @@ L'audit (§11) relevait que chaque explosion d'une créature à l'affixe Instabl
 - `VfxFactory.CreateExplosionVfx`, les cinq images `vfx_explosion_f*` (non supprimées, voir plan 08) et la texture d'étincelle en losange ne sont plus utilisés, et le code correspondant est retiré.
 - **Vérifié** : `--capture-bestiary --affix explosive --kill` (nouvelle option `--kill`), images regardées ; smoke test.
 
+### Lot 4, suite — flaques de feu sans nœud et mesurées au sol, 28 septembre 2026
+
+Chaque flaque de feu de la Lanterne Mémorielle créait un nœud et parcourait toutes les créatures à chaque tick de dégâts (audit §11). Ses dégâts étaient mesurés en cercle à l'écran, alors que la zone dessinée est une ellipse au sol.
+- `GroundFire` devient une simple liste de données tenue par `CombatPools`, sans nœud par flaque, avec un seul traitement pour toutes les flaques. La zone tramée passe par `CombatPools.AddGroundFire`.
+- Les dégâts sont mesurés au sol : ils touchent exactement l'ellipse montrée.
+- **Test** : `test_weapons` a un nouveau contrôle. Une créature à 0,8 rayon à l'horizontale brûle ; une autre à 0,8 rayon à la verticale de l'écran (1,6 rayon au sol) reste hors de la flaque.
+
 
 ### Seconde passe d’audit — 28 septembre 2026 : lots proposés, aucun correctif
 

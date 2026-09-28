@@ -950,16 +950,16 @@ public partial class Player : CharacterBody2D
     /// <summary>
     /// Called by projectiles and melee hits. Handles vampirism, ignite, execution, ricochet.
     /// </summary>
-    public void OnProjectileHit(Enemy enemy, float damage, bool isCrit, bool isRicochet, WeaponInstance source)
+    public void OnProjectileHit(Enemy enemy, float damage, bool isCrit, bool isRicochet, WeaponInstance source, AttackContext context = default)
     {
-        OnAttackHit(enemy, damage, isCrit, isRicochet, source);
+        OnAttackHit(enemy, damage, isCrit, isRicochet, source, context: context);
     }
 
     /// <summary>
     /// Effets d'un coup porté par <paramref name="source"/>. Les effets de perks (vampirisme, embrasement…) sont
     /// globaux ; ceux de l'arme (effet au contact, recul, effet spécial) restent ceux de l'arme qui a frappé.
     /// </summary>
-    private void OnAttackHit(Enemy enemy, float damage, bool isCrit, bool isRicochet, WeaponInstance source, int triggerCount = 1, bool showImpact = true)
+    private void OnAttackHit(Enemy enemy, float damage, bool isCrit, bool isRicochet, WeaponInstance source, int triggerCount = 1, bool showImpact = true, AttackContext context = default)
     {
         if (_isDead)
             return;
@@ -972,6 +972,8 @@ public partial class Player : CharacterBody2D
         if (source != null)
             _weaponLedger.AddDamage(source.Id, damage);
         int procRollCount = Mathf.Max(1, triggerCount);
+        if (context.OwnerId == 0)
+            context = BeginAttack(source, damage, isRicochet ? DamageKind.SecondaryWeapon : DamageKind.DirectWeapon);
 
         // Vampirism: heal % of damage dealt
         if (_vampirismPercent > 0f)
@@ -979,18 +981,18 @@ public partial class Player : CharacterBody2D
 
         // Ignite: chance to apply DOT
         if (_igniteChance > 0f && GD.Randf() < GetCombinedProcChance(_igniteChance, procRollCount))
-            enemy.ApplyIgnite(_igniteDamage, _igniteDuration);
+            enemy.ApplyIgnite(_igniteDamage, _igniteDuration, context.As(DamageKind.Passive));
 
         // Execution: instant kill enemies below HP threshold
         if (_executionThreshold > 0f && !enemy.IsDying && enemy.HpRatio > 0f && enemy.HpRatio < _executionThreshold)
-            enemy.Execute();
+            enemy.Execute(context);
 
         if (source != null && enemy.ClaimKillCredit())
             _weaponLedger.AddKill(source.Id);
 
         // Ricochet: bounce to nearby enemy (only from original projectiles)
         if (!isRicochet && _ricochetChance > 0f && GD.Randf() < GetCombinedProcChance(_ricochetChance, procRollCount))
-            SpawnRicochet(enemy, damage, isCrit, source);
+            SpawnRicochet(enemy, damage, isCrit, source, context);
 
         // --- Weapon on-hit effects ---
         WeaponOnHitEffect ohe = source?.Base.OnHitEffect;
@@ -999,13 +1001,13 @@ public partial class Player : CharacterBody2D
             switch (ohe.Type)
             {
                 case "dot":
-                    enemy.ApplyBleed(ohe.Damage, ohe.Duration);
+                    enemy.ApplyBleed(ohe.Damage, ohe.Duration, context);
                     break;
                 case "slow":
-                    enemy.ApplySlow(ohe.Value, ohe.Duration);
+                    enemy.ApplySlow(ohe.Value, ohe.Duration, context);
                     break;
                 case "disorient":
-                    enemy.ApplyDisorient(ohe.Duration);
+                    enemy.ApplyDisorient(ohe.Duration, context);
                     break;
             }
         }
@@ -1021,7 +1023,7 @@ public partial class Player : CharacterBody2D
         // --- Weapon special effects ---
         WeaponSpecialEffect se = source?.Base.SpecialEffect;
         if (se != null)
-            ProcessWeaponSpecialOnHit(se, enemy, damage, source);
+            ProcessWeaponSpecialOnHit(se, enemy, damage, source, context);
     }
 
     private float GetCombinedProcChance(float perHitChance, int triggerCount)
@@ -1035,7 +1037,7 @@ public partial class Player : CharacterBody2D
         return 1f - Mathf.Pow(1f - clampedChance, triggerCount);
     }
 
-    private void SpawnRicochet(Enemy sourceEnemy, float damage, bool isCrit, WeaponInstance source)
+    private void SpawnRicochet(Enemy sourceEnemy, float damage, bool isCrit, WeaponInstance source, AttackContext context)
     {
         Godot.Collections.Array<Node> enemies = _groupCache.GetEnemies();
         Node2D bounceTarget = null;
@@ -1060,12 +1062,12 @@ public partial class Player : CharacterBody2D
         Vector2 direction = (bounceTarget.GlobalPosition - sourceEnemy.GlobalPosition).Normalized();
         float speed = source?.GetStat("projectile_speed", 400f) ?? 400f;
         CombatPools.Instance?.TakePlayerProjectile().Launch(sourceEnemy.GlobalPosition, direction, damage * 0.75f, speed,
-            Mathf.Clamp(_ricochetRange / Mathf.Max(speed, 1f), 0.2f, 2f), 0, isCrit, this, source?.Base, source, isRicochet: true);
+            Mathf.Clamp(_ricochetRange / Mathf.Max(speed, 1f), 0.2f, 2f), 0, isCrit, this, source?.Base, source, isRicochet: true, context: context.As(DamageKind.Passive));
     }
 
     // --- Weapon Special Effects ---
 
-    private void ProcessWeaponSpecialOnHit(WeaponSpecialEffect se, Enemy enemy, float damage, WeaponInstance source)
+    private void ProcessWeaponSpecialOnHit(WeaponSpecialEffect se, Enemy enemy, float damage, WeaponInstance source, AttackContext context)
     {
         switch (se.Type)
         {
@@ -1111,7 +1113,7 @@ public partial class Player : CharacterBody2D
                         if (node is Enemy e && IsInstanceValid(e) && !e.IsDying)
                         {
                             if (e.GlobalPosition.DistanceTo(echoPos) < echoRadius)
-                                e.TakeDamage(echoDamage);
+                                e.TakeDamage(echoDamage, source: context.As(DamageKind.SecondaryWeapon));
                         }
                     }
                     SpawnEchoVisual(echoPos);
@@ -1135,7 +1137,7 @@ public partial class Player : CharacterBody2D
                     if (node is Enemy e && IsInstanceValid(e) && !e.IsDying)
                     {
                         if (e.GlobalPosition.DistanceTo(impactPos) < radius)
-                            e.ApplySlow(factor, duration);
+                            e.ApplySlow(factor, duration, context);
                     }
                 }
                 SpawnTimeSlowVisual(impactPos, radius, duration);
@@ -1151,7 +1153,7 @@ public partial class Player : CharacterBody2D
                     if (node is Enemy e && IsInstanceValid(e) && !e.IsDying && e != enemy)
                     {
                         if (e.GlobalPosition.DistanceTo(impactPos) < aoeRadius)
-                            e.TakeDamage(damage * 0.5f);
+                            e.TakeDamage(damage * 0.5f, source: context.As(DamageKind.SecondaryWeapon));
                     }
                 }
                 break;
@@ -1200,8 +1202,9 @@ public partial class Player : CharacterBody2D
                 if (body is Enemy enemy && !enemy.IsDying && IsInstanceValid(enemy) && _orbitalWeapon != null)
                 {
                     float damage = ComputeBaseAttackDamage(_orbitalWeapon);
-                    enemy.TakeDamage(damage);
-                    OnAttackHit(enemy, damage, false, false, _orbitalWeapon);
+                    AttackContext context = BeginAttack(_orbitalWeapon, damage);
+                    enemy.TakeDamage(damage, source: context);
+                    OnAttackHit(enemy, damage, false, false, _orbitalWeapon, context: context);
                 }
             };
 
@@ -1259,6 +1262,7 @@ public partial class Player : CharacterBody2D
         _coneRange = GetEffectiveWeaponRange();
         _coneBaseDamage = ComputeBaseAttackDamage();
         _coneWeapon = _equippedWeapon;
+        _coneContext = BeginAttack(_coneWeapon, _coneBaseDamage * _coneDuration * (1f + _coneDamageRampPerSec * _coneDuration * 0.5f));
 
         UpdateConeVisual(0f);
 
@@ -1309,8 +1313,8 @@ public partial class Player : CharacterBody2D
             if (groundFacing.Dot(dirToEnemy) < dotThreshold)
                 continue;
 
-            bool showImpact = enemy.TakeContinuousDamage(damage, delta);
-            OnAttackHit(enemy, damage, false, false, _coneWeapon, showImpact: showImpact);
+            bool showImpact = enemy.TakeContinuousDamage(damage, delta, _coneContext);
+            OnAttackHit(enemy, damage, false, false, _coneWeapon, showImpact: showImpact, context: _coneContext);
         }
     }
 
@@ -1353,8 +1357,9 @@ public partial class Player : CharacterBody2D
 
         bool isCrit = _critChance > 0f && GD.Randf() < _critChance;
         float currentDamage = isCrit ? baseDamage * _critMultiplier : baseDamage;
-        firstTarget.TakeDamage(currentDamage, isCrit);
-        OnAttackHit(firstTarget, currentDamage, isCrit, false, _equippedWeapon);
+        AttackContext context = BeginAttack(_equippedWeapon, currentDamage);
+        firstTarget.TakeDamage(currentDamage, isCrit, source: context);
+        OnAttackHit(firstTarget, currentDamage, isCrit, false, _equippedWeapon, context: context);
 
         // Chain vers les ennemis adjacents
         HashSet<ulong> hitIds = new() { firstTarget.GetInstanceId() };
@@ -1369,8 +1374,8 @@ public partial class Player : CharacterBody2D
 
             hitIds.Add(nextTarget.GetInstanceId());
             SpawnChainVisual(current.GlobalPosition, nextTarget.GlobalPosition);
-            nextTarget.TakeDamage(currentDamage);
-            OnAttackHit(nextTarget, currentDamage, false, false, _equippedWeapon);
+            nextTarget.TakeDamage(currentDamage, source: context);
+            OnAttackHit(nextTarget, currentDamage, false, false, _equippedWeapon, context: context);
             current = nextTarget;
         }
     }
@@ -1406,26 +1411,27 @@ public partial class Player : CharacterBody2D
 
     // --- Health ---
 
-    public void Heal(float amount)
+    public HealingResult Heal(float amount, HealingKind kind = HealingKind.Normal)
     {
-        if (_isDead || amount <= 0)
-            return;
+        if (_isDead || amount <= 0f)
+            return default;
 
-        _currentHp = Mathf.Min(_currentHp + amount, EffectiveMaxHp);
-
+        HealingResult result = HealingResult.Resolve(GetInstanceId(), kind, amount, _currentHp, EffectiveMaxHp);
+        _currentHp += result.HpRestored;
         _eventBus.EmitSignal(EventBus.SignalName.PlayerDamaged, _currentHp, EffectiveMaxHp);
+        _eventBus.PublishPlayerHealing(result);
+        return result;
     }
 
-    public void TakeDamage(float damage)
+    public PlayerDamageResult TakeDamage(float damage)
     {
         if (_currentHp <= 0 || IsGodMode || Mobility.IsInvulnerable || _defense.IsInvulnerable)
-            return;
+            return default;
 
-        // Dodge check
         if (_dodgeChance > 0f && GD.Randf() < _dodgeChance)
         {
             GD.Print("[Player] Dodged!");
-            return;
+            return default;
         }
 
         PlayerDefense.Outcome outcome = _defense.Absorb(damage, _armor);
@@ -1436,23 +1442,28 @@ public partial class Player : CharacterBody2D
         {
             EmitShield();
             Flash(ShieldFlashColor, outcome.ShieldBroke);
-            return;
+            PlayerDamageResult shieldResult = new(GetInstanceId(), PlayerDamageKind.Combat, _currentHp, 0f, false, true, true);
+            _eventBus.PublishPlayerDamage(shieldResult);
+            return shieldResult;
         }
 
-        LoseHp(outcome.HpDamage);
+        return LoseHp(outcome.HpDamage, PlayerDamageKind.Combat);
     }
 
     /// <summary>Le Néant consume : ni bouclier, ni armure, ni invulnérabilité ne l'arrêtent.</summary>
-    public void TakeErasureDamage(float damage)
+    public PlayerDamageResult TakeErasureDamage(float damage)
     {
         if (_currentHp <= 0 || IsGodMode)
-            return;
-        LoseHp(damage);
+            return default;
+        return LoseHp(damage, PlayerDamageKind.Erasure);
     }
 
-    private void LoseHp(float damage)
+    private PlayerDamageResult LoseHp(float damage, PlayerDamageKind kind)
     {
+        float before = _currentHp;
         _currentHp -= damage;
+        PlayerDamageResult result = new(GetInstanceId(), kind, before,
+            Mathf.Clamp(damage, 0f, before), _currentHp <= 0f, false, true);
         Mobility.Hurt(Mobility.Config.HurtRecoverySeconds);
         Flash(HurtFlashColor, true);
         if (_hasSprite)
@@ -1460,11 +1471,13 @@ public partial class Player : CharacterBody2D
 
         _eventBus.EmitSignal(EventBus.SignalName.PlayerDamaged, _currentHp, EffectiveMaxHp);
 
-        if (_currentHp <= 0)
+        if (result.Fatal)
         {
             _currentHp = 0;
             Die();
         }
+        _eventBus.PublishPlayerDamage(result);
+        return result;
     }
 
     private void StepDefense(float dt)
@@ -1513,7 +1526,7 @@ public partial class Player : CharacterBody2D
             }
         }
 
-        nearestEnemy?.TakeDamage(reflectedDamage);
+        nearestEnemy?.TakeDamage(reflectedDamage, source: BeginAttack(null, reflectedDamage, DamageKind.Passive));
     }
 
     // --- Debuffs ---
@@ -1759,6 +1772,8 @@ public partial class Player : CharacterBody2D
         {
             _secondWindAvailable = false;
             _currentHp = EffectiveMaxHp * _secondWindHealPercent;
+            _eventBus.PublishPlayerHealing(new HealingResult(GetInstanceId(), HealingKind.Revival,
+                _currentHp, _currentHp, 0f, true));
             _eventBus.EmitSignal(EventBus.SignalName.PlayerDamaged, _currentHp, EffectiveMaxHp);
             Flash(HurtFlashColor, true);
             GD.Print($"[Player] Second Wind! Revived at {_currentHp:F0} HP");
@@ -1808,13 +1823,15 @@ public partial class Player : CharacterBody2D
 
     private void ApplyRegen(float delta)
     {
-        if (_currentHp >= EffectiveMaxHp)
+        float amount = (BaseRegenRate + _bonusRegenRate) * delta;
+        if (_isDead || amount <= 0f)
             return;
-
-        float effectiveRegen = BaseRegenRate + _bonusRegenRate;
-        _currentHp = Mathf.Min(_currentHp + effectiveRegen * delta, EffectiveMaxHp);
-
-        _eventBus.EmitSignal(EventBus.SignalName.PlayerDamaged, _currentHp, EffectiveMaxHp);
+        HealingResult result = HealingResult.Resolve(GetInstanceId(), HealingKind.Regeneration, amount, _currentHp, EffectiveMaxHp);
+        _currentHp += result.HpRestored;
+        // À pleine vie, seul le contrat de soin reçoit l'excédent ; aucun signal UI supplémentaire par frame.
+        if (result.HpRestored > 0f)
+            _eventBus.EmitSignal(EventBus.SignalName.PlayerDamaged, _currentHp, EffectiveMaxHp);
+        _eventBus.PublishPlayerHealing(result);
     }
 
     private void Flash(Color color, bool shake)
@@ -1951,6 +1968,7 @@ public partial class Player : CharacterBody2D
             return;
 
         float baseDamage = ComputeBaseAttackDamage();
+        _launchContext = BeginAttack(_equippedWeapon, baseDamage);
         float projectileSpeed = GetWeaponStat("projectile_speed", 400f);
         int totalPierce = Mathf.Max(0, Mathf.RoundToInt(GetWeaponStat("projectile_pierce", 0f)) + _projectilePierce);
         Vector2 baseDirection = (targets[0].GlobalPosition - GlobalPosition).Normalized();
@@ -2008,6 +2026,7 @@ public partial class Player : CharacterBody2D
         PlayAttackFeedback(isMelee: true, attackDirection);
 
         float baseDamage = ComputeBaseAttackDamage();
+        AttackContext context = BeginAttack(_equippedWeapon, baseDamage);
         int strikeCount = Mathf.Max(1, 1 + _extraProjectiles);
         float spreadAngle = strikeCount > 1
             ? Mathf.Clamp(GetWeaponStat("spread_angle", 20f), 0f, 120f)
@@ -2076,8 +2095,9 @@ public partial class Player : CharacterBody2D
 
             float totalDamage = baseDamage * hitMultiplierSum * critDamageFactor;
             bool hasCrit = clampedCritChance > 0f && GD.Randf() < GetCombinedProcChance(clampedCritChance, hitCount);
-            enemy.TakeDamage(totalDamage, hasCrit);
-            OnAttackHit(enemy, totalDamage, hasCrit, isRicochet: false, _equippedWeapon, triggerCount: hitCount);
+            AttackContext hitContext = context with { ReferenceDamage = totalDamage };
+            enemy.TakeDamage(totalDamage, hasCrit, source: hitContext);
+            OnAttackHit(enemy, totalDamage, hasCrit, isRicochet: false, _equippedWeapon, triggerCount: hitCount, context: hitContext);
         }
     }
 
@@ -2155,7 +2175,7 @@ public partial class Player : CharacterBody2D
     {
         Projectile projectile = CombatPools.Instance?.TakePlayerProjectile();
         projectile?.Launch(GlobalPosition, direction, damage, speed, Mathf.Clamp(range / Mathf.Max(speed, 1f), 0.2f, 4f),
-            pierce, isCrit, this, _equippedWeapon?.Base, _equippedWeapon);
+            pierce, isCrit, this, _equippedWeapon?.Base, _equippedWeapon, context: _launchContext with { ReferenceDamage = damage });
         return projectile;
     }
 
