@@ -267,6 +267,30 @@ Lecture :
 
 **Proposition R1-F** (à caler par la même mesure) : à partir de 22 min, l'heure de l'Indicible, et quelle que soit la phase, les PV des créatures montent de **×1,07 par minute au lieu de ×1,05**. Cela donne ×1,5 à 45 min par rapport à aujourd'hui, de quoi ramener le temps pour tuer du bot vers 0,27 s. Pour les runs à plusieurs centaines de niveaux, il faudra recaler après R1-A : le bot montera alors bien plus haut et donnera enfin la mesure.
 
+### 6.9 Lot R1-A + R1-G, découpage (28 septembre, nuit)
+
+**R1-A — XP qui suit le risque**, fixée à l'apparition de chaque créature par `SpawnManager`, qui connaît déjà la minute, la phase et la mémoire du lieu (il s'en sert pour la vitesse). Aucun calcul n'est ajouté à la mort ni par image :
+- XP × (1 + 0,02 × minute) (`xp_growth_per_minute`) ;
+- XP × (1 + 0,5 × oubli du lieu d'apparition) (`xp_oblivion_bonus`) ;
+- XP ×2 pour une créature apparue pendant une Résurgence (`xp_crisis_multiplier`) ;
+- Péril : +12 % d'XP par point au lieu de +8 % (`data/scaling/peril.json`).
+Réglages dans `data/scaling/spawn_flow.json`, à côté des montées de PV et de dégâts.
+
+**R1-G — réserve de niveaux** (règle de §6.7), dans `FragmentManager` et `LevelUpScreen` :
+- l'écran **reste ouvert** tant que la file n'est pas vide : les cartes se renouvellent sans refermer ni rejouer l'entrée, avec le nombre de choix restants affiché ;
+- ouverture retenue au plus 3 s quand un autre niveau arrive dans les 3 s, ou quand plus de 60 créatures sont à l'écran (`data/ui/level_up.json` ou équivalent) ; jamais à la fin d'un boss ;
+- la mise en scène de la montée de niveau (onde, colonne, plan 02 J4) ne se joue qu'une fois par ouverture, avec le nombre de niveaux gagnés.
+
+**Vérification** : mesure de 45 min avant/après (niveaux, XP par minute, temps pour tuer) ; simulation attendue pour le bot (§6.5) ; régressions ; capture d'une cascade (réserve, compteur, enchaînement) ; relecture `godot-reviewer`.
+
+**État à la pause du 28 septembre, 17 h (non committé, dans l'arbre de travail)** :
+- R1-F codé (`SpawnManager.ComputeScaling`, `late_hp_scaling_*` dans `spawn_flow.json`), build à 0 avertissement ; mesure de 45 min lancée, à relancer si perdue (référence avant : même commande, avant R1-F) ;
+- R1-A codé (`ComputeXpMultiplier`, `xp_*` dans `spawn_flow.json`, Péril à 0,12) ;
+- R1-G codé (`LevelReserveConfig`, bloc `level_reserve` de `progression.json`, `FragmentManager`, `LevelUpScreen`, clé `LEVELUP_TITLE_QUEUED`).
+R1-A et R1-G ne sont **ni compilés, ni testés, ni mesurés**. À reprendre : build, smoke test (uid du nouveau `.cs`), régressions, mesure, capture d'une cascade, relecture. `peril.json` et `progression.json` avaient été réindentés par ailleurs (sans changement de valeur).
+
+**Refonte des perks, en même temps** (réponse de Raphaël) : audit des passifs et de l'ancien catalogue en cours. Le catalogue proposé (XP, chance, oubli, taille des projectiles, niveaux au-delà de 5) sera soumis à validation avant d'être codé, comme les noms et icônes d'armes au plan 17.
+
 ## 7. Dégâts à distance — 28 septembre 2026 (§5.4)
 
 Même mesure que §6 (30 min, deux seeds). Le bot n'esquive rien. Le filtrage ne garde que les coups qui passeraient l'invulnérabilité de 0,5 s ; c'est la colonne qui compte pour comparer les rôles. Rapport = part des dégâts filtrés ÷ part de l'exposition (1 = la créature blesse en proportion de sa présence).
