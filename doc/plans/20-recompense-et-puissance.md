@@ -223,7 +223,29 @@ La courbe plafonnée seule ne suffit pas : sans les leviers de §6.5, l'excellen
 3. **La difficulté doit suivre** : les PV des créatures montent de ×1,05 par minute (×9 à 45 min). Mesure proposée : le **temps moyen pour tuer une créature**, par palier, relevé par `RunObservation`. S'il s'effondre en fin de run excellente, la difficulté ne suit plus. Deux réponses possibles : une montée plus forte en endgame (déjà ×1,55 de PV), ou une part de la montée liée au niveau du joueur. La seconde punit la montée de niveau ; elle est à éviter si possible.
 4. **Récompenses de boss en niveaux** : le rang 5 (+15 niveaux) ne vaut plus que 45 000 XP au-delà du niveau 41. Le reflux et les Résurgences deviennent les vraies vagues.
 
-## 7. Dégâts à distance — 28 septembre 2026 (§5.4)
+### 6.7 Réponses du 28 septembre (nuit)
+
+- **Paliers de §6.6 validés** (médiocre à excellente, jusqu'à 380 niveaux à 45 min).
+- **Au-delà du build complet**, les niveaux ne servent plus à rien, ou à quelque chose de relativement trivial. Raphaël est ouvert aux idées (ci-dessous).
+- **Réserve de niveaux** : un « cache » rapide, **toujours automatique, jamais manuel**. Il ne se déclenche qu'après quelques secondes, et seulement quand beaucoup de niveaux arrivent ou qu'il y a beaucoup de créatures. Sinon, l'écran s'ouvre comme aujourd'hui.
+- **Montée plus forte des créatures en endgame** : retenue, plutôt qu'une part liée au niveau du joueur.
+- **XP et chance** : pas de tomes, mais des **objets dédiés** (pas encore refondus ni branchés, plan 13) et des **perks**, les quatre passifs empilables sous les armes. Ils se cumulent entre eux. Les perks n'ont pas encore été refondus : seules les armes l'ont été (plan 17).
+
+**Réserve de niveaux, règle proposée** (lot R1-G, valeurs en données) :
+- un niveau gagné ouvre l'écran immédiatement, comme aujourd'hui ;
+- l'écran est retenu au plus **3 s** quand un second niveau arrive dans les 3 s, ou quand plus de **60 créatures** sont à l'écran. Les niveaux arrivés entre-temps s'empilent, puis s'enchaînent dans le même écran, avec le nombre restant affiché ;
+- aucun écran ne s'ouvre à moins de 3 s de la fermeture du précédent, sauf à la fin d'un boss (la cascade doit se voir tout de suite).
+
+**Idées pour les niveaux de surplus**, triviales mais senties, à choisir (plusieurs possibles) :
+- **A. Un souffle** : chaque niveau rend 5 % des PV et remplit le bouclier. Le niveau garde un effet immédiat en combat, sans rien ajouter au build.
+- **B. De l'Essence** : chaque niveau rapporte de l'Essence à dépenser aux Mémoriaux. L'XP excédentaire nourrit les points de dépense (retour 2).
+- **C. La mémoire repousse l'oubli** : chaque niveau remonte un peu la mémoire de la zone autour du joueur. C'est propre au monde de Vestiges, et utile au joueur qui avance loin.
+- **D. Une onde tous les 10 niveaux** : une vague qui repousse et blesse les créatures proches, dans la mise en scène de la montée de niveau (plan 02 J4). Puissance visible, sans stat.
+- **E. Du score seulement** : le plus simple, utile pour le classement (plan 09).
+
+Recommandation : **A et D** ensemble, qui donnent de la dopamine sans toucher au build ; **B** si les Mémoriaux manquent encore de raisons d'être visités.
+
+ — 28 septembre 2026 (§5.4)
 
 Même mesure que §6 (30 min, deux seeds). Le bot n'esquive rien. Le filtrage ne garde que les coups qui passeraient l'invulnérabilité de 0,5 s ; c'est la colonne qui compte pour comparer les rôles. Rapport = part des dégâts filtrés ÷ part de l'exposition (1 = la créature blesse en proportion de sa présence).
 
@@ -306,23 +328,24 @@ Les pistes 3 (tireurs qui se rapprochent) et 4 (jetons d'attaque) attendent le r
 | **R1-0** | Courbe d'XP et multiplicateurs en JSON (`data/scaling/progression.json`), lus par `PlayerProgression` et par `tools/progression_model.py` ; coût plafonné à 3 000 XP par niveau (§6.6) | Données | Même niveau atteint jusqu'au niveau 40, même seed |
 | **D1** | Pression à distance (§7.1) : poids d'apparition du Présage, croissance des dégâts à distance à part, tir annoncé du Hurleur | **Livré** (§7.2) | Zones et tirs 46,6 → 34,2 % |
 | **R1-A** | XP selon le temps, l'oubli, les Résurgences, Péril à 12 % | Données et un calcul dans `Enemy`/`XpOrb` | Mesure 30 min ; simulation pour le bot : 27 → 36 niveaux à 20 min, 37 → 54 à 30 min, quasi rien avant 5 min (8 → 9) |
-| **R1-G** | Réserve de niveaux : compteur au HUD, choix enchaînés sans fermer l'écran, ouverture espacée ou à la demande (§6.6) | Interface (plan 02 J4, plan 04) | Capture d'une cascade de 15 niveaux ; aucune ouverture à moins de 20 s d'intervalle |
+| **R1-G** | Réserve de niveaux automatique (règle de §6.7) : écran retenu 3 s quand les niveaux affluent ou que la foule dépasse 60 créatures, choix enchaînés | Interface (plan 02 J4, plan 04) | Capture d'une cascade de 15 niveaux ; un seul niveau ouvre toujours l'écran tout de suite |
 | **R1-B** | Reflux à l'accalmie, fusion des orbes | Code | Mesure (orbes au sol, XP par Résurgence), capture de la cascade |
 | **R1-C** | Boss intermédiaire, **option A retenue** (sceaux des Mémoriaux) | Conception détaillée, puis prototype | Recette par Raphaël ; niveaux gagnés par rang |
 | **R1-D** | Indicible en niveaux (+8) | Données | Mesure |
-| **R1-H** | Niveaux de surplus au-delà du build complet (≈ 219 montées) : bonus automatique, coût réduit (§6.6) | Données et code | Simulation, puis run dev poussée au-delà de 219 |
+| **R1-H** | Niveaux de surplus au-delà du build complet (≈ 219 montées) : effet à choisir parmi §6.7 (A–E), coût réduit | Données et code | Simulation, puis run dev poussée au-delà de 219 |
+| **R1-F** | Montée plus forte des créatures en endgame, calée sur le temps pour tuer (R1-T) | Données | Mesure 45 min : temps pour tuer stable ou en hausse après l'Indicible |
 | **R1-T** | Temps moyen pour tuer une créature, par palier, dans `RunObservation` | Outil | Relevé sur 45 min |
-| **R1-E** | Passifs d'XP et d'oubli ; Chance ressentie (R5) | Contenu (plan 05) | Simulation, puis recette |
+| **R1-E** | XP, chance et oubli par des **perks** (les quatre passifs sous les armes, à refondre comme les armes) et des **objets dédiés** (plan 13, non branché) ; pas de tomes | Contenu (plans 05, 13, 17) | Simulation, puis recette |
 | **P** | Densité : ~500 créatures en très late game et dans les Résurgences les plus dures, plus si le rendu le permet | Optimisation (**autre agent**) ; rendu à juger en capture | Banc de foule, `/bench`, captures |
 
-Ordre recommandé : D1 (fait, voir §7.2), puis R1-0 et R1-T (données et mesure, sans risque). Ensuite R1-A et R1-G ensemble : avec plus d'XP, les écrans de choix se multiplient. Puis R1-B, la conception de R1-C, et R1-H.
+Ordre recommandé : D1 (fait, voir §7.2), puis R1-0 et R1-T (données et mesure, sans risque), puis R1-F calé sur la mesure. Ensuite R1-A et R1-G ensemble : avec plus d'XP, les écrans de choix se multiplient. Puis R1-B, la conception de R1-C, R1-H et, après la refonte des perks, R1-E.
 
 ## 9. Questions ouvertes
 
 Réponses de Raphaël du 28 septembre (soir) : excellente run à 300–400 niveaux en 45 min, voire 1 000 avec des armes plafonnées (§6.6) ; boss intermédiaire en **option A** ; axe de build de l'oubli **d'accord** ; cascades **enchaînées**, avec une réserve qui empile les niveaux ; dégâts à distance « à toi de voir » (lot D1 fait) ; densité visée d'environ 500 en très late game et dans les Résurgences les plus dures, l'optimisation étant confiée à un autre agent.
 
+Réponses du 28 septembre (nuit) consignées en §6.7 : paliers validés, réserve automatique, montée plus forte en endgame, XP et chance par perks et objets.
+
 Restent :
-1. Les **cibles révisées** de §6.6 (en particulier les paliers intermédiaires de la run excellente) ?
-2. **Niveaux de surplus** au-delà du build complet : un bonus automatique à chaque niveau (lequel ?), ou de simples points de score ?
-3. **Réserve de niveaux** : l'écran s'ouvre-t-il seul toutes les 20 à 30 s, ou seulement quand le joueur appuie sur une touche ?
-4. **Difficulté en fin de run** : si le temps pour tuer s'effondre, faut-il une montée plus forte en endgame, ou une part liée au niveau du joueur ?
+1. **Niveaux de surplus** : quelle idée de §6.7 (A à E) ?
+2. **Refonte des perks** : elle conditionne R1-E. À planifier sur le modèle de la refonte des armes (plan 17), avant ou après les leviers d'XP ?
