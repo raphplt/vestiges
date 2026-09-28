@@ -244,3 +244,45 @@ Nouvelle capture `--capture-endgame`. L'Indicible est forcé à côté du joueur
 - **Corrigé en passant** : quand un projectile le touchait, il était détruit (`QueueFree`) alors qu'il appartient à un pool. Le pool aurait ensuite resservi un objet détruit. Il y rentre désormais et applique ses vrais dégâts, au lieu de 20 fixes.
 
 **À arbitrer** : l'Indicible est à refaire entièrement (présence à l'écran, cible des armes de mêlée comme de distance, attaques, sprites). C'est aussi un choix de lore (plan 19 : révélation et fin non tranchées). Proposition : attendre la direction du lore, puis concevoir le boss avec Raphaël. La capture `--capture-endgame` servira de recette.
+
+## 8. Tempo de l'oubli et survie — 28 septembre 2026
+
+Retour de Raphaël après une partie longue : l'oubli « commence très tôt », vers 4 min, et en moins d'une minute des zones entières deviennent blanches. La difficulté est déjà forte à 4 min. « Le personnage est une chips » : peu de PV, aucun moyen perçu d'en gagner, pas de bouclier, une réduction de dégâts douteuse, une régénération lente. L'effet visuel de l'oubli est jugé « très réussi ».
+
+### Mesure
+
+`MEASURE_EXTRA_ARGS="--nomad" tools/measure_run.sh <dossier> 960 "221092026 42"`. Le relevé de densité note désormais la mémoire sous le joueur et l'Effacement global (colonnes `memory` et `erasure_global`). Bot invincible qui garde un cap et rebondit au bord de la carte.
+
+| Temps | Mémoire sous le joueur (deux seeds) | Effacement global |
+|---|---|---|
+| 1 min | 0,81 / 0,74 | 0,02 |
+| 4 min | 0,43 / 0,59 | 0,13 |
+| 5 min | **0,00 / 0,00** (Néant, dès 4 min 55 s) | 0,26 |
+| 9 min 30 s | 0,00 / 0,00 | 0,68 : seuil du late game |
+| 12 min | 0,00 / 0,00 | **1,00** |
+
+Après chaque Résurgence, le coffre d'accalmie n'est pas posé : « Aucun sol praticable devant le joueur », car tout est Néant devant lui. La récompense d'accalmie est donc perdue.
+
+### Causes
+
+1. **Résurgence ×2,5 sur l'oubli** (plan 03 lot C, 27 septembre) : la première, à 4 min, fait passer l'Effacement global de 0,13 à 0,26 en 70 s. C'est la vague blanche observée.
+2. **La courbe de base** est bien plus rapide que la V2 (§8 : lent au début, rapide à 20 min, brutal à 30 min). Même sans le ×2,5, la simulation donne un sol entièrement Effacé ou Néant vers 13–14 min, car les zones nouvelles naissent avec une mémoire de `1 − 0,85 × global`.
+3. **Aucune mémoire ne revient** : la carte est finie, et une zone traversée deux fois est déjà oubliée. Seuls les coffres et les Mémoriaux la remontent, à 0,72 sur 2,5 cases.
+4. **L'oubli durcit le combat** : jusqu'à ×2,2 d'apparitions et +30 % de vitesse des créatures à mémoire nulle, −12 % de vitesse et de dégâts pour le joueur en zone Effacée, 6 % des PV max par seconde dans le Néant. Il s'ajoute aux courbes du temps : PV des créatures ×1,05 par minute composé (×1,22 à 4 min, ×1,63 à 10 min), dégâts ×1,035 par minute composé, 14 créatures visées autour du joueur plus 6 par minute. À 4 min, tout arrive en même temps.
+
+### Survie : état réel
+
+| Levier | Existe | Pourquoi il ne se perçoit pas |
+|---|---|---|
+| PV max | Passif Ancrage (+15 à +40 par niveau), bénédiction Souffle retrouvé (+10) | Trois passifs de survie sur treize, quatre emplacements, tirage au hasard ; « Ancrage » ne dit pas « PV » |
+| Régénération | 0,5 PV/s de base (Vagabond) ; passif Régénération ; bénédiction +0,2 | Il faut 200 s pour remonter 100 PV ; même rareté de tirage |
+| Armure | Plate : dégât − armure, minimum 1 | Forte contre les petits coups, négligeable contre un Rôdeur (15 × 1,4 à 10 min) ; son poids baisse à mesure que les dégâts montent |
+| Invulnérabilité après un coup | **Aucune** (0 s) | Dix créatures au contact frappent chacune à leur rythme : c'est l'effet « chips » |
+| Bouclier, soin actif | Aucun, hors service de soin du Mémorial, Scalpel et récompense « Soins » d'événement | — |
+
+### Lots proposés, non validés
+
+- **8A — Tempo de l'oubli** : retirer ou réduire le ×2,5 des Résurgences, ralentir la courbe de base pour viser la V2 (sol Fragile vers 8–10 min, Effiloché vers 15 min, Effacé vers 20–25 min), et ne plus laisser naître des zones neuves déjà mortes. Réglages en JSON ; mesure avant/après avec la même commande.
+- **8B — Survie** : une courte invulnérabilité après un coup (0,4–0,6 s, standard du genre) ; une place garantie à un choix de survie dans les tirages de niveau ; des libellés qui disent la stat ; une armure en pourcentage ou avec plancher. Ensuite, décider d'un bouclier ou de soins trouvés sur la carte (lié au plan 13).
+- **8C — Lisibilité des tirs** : les « balles », ennemies comme du joueur, sont peu visibles (taille, contraste, contour) ; à traiter avec le plan 08.
+- **Contenu des coffres** : à revoir, rattaché au plan 13, toujours non arbitré.
