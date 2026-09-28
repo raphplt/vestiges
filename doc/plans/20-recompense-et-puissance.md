@@ -1,6 +1,6 @@
 # Plan 20 — Récompense, montée en puissance et points de dépense
 
-Version 0.3 · 28 septembre 2026 · Statut : **modèle de progression révisé pour 300 à 400 niveaux (§6.6), cibles à valider ; lot D1 (pression à distance) livré (§7.2) ; autres lots à valider**. Les faits de §2 ont été vérifiés dans le code le jour même.
+Version 0.4 · 28 septembre 2026 · Statut : **paliers de 300 à 400 niveaux validés (§6.6–§6.7) ; lots D1 (§7.2), R1-0 et R1-T (§6.8) livrés ; R1-F proposé ; autres lots à valider**. Les faits de §2 ont été vérifiés dans le code le jour même.
 
 ## 1. Retours de Raphaël (28 septembre, après les lots 8A–8C)
 
@@ -112,7 +112,7 @@ L'espace d'amélioration suffit pour 150 niveaux et plus : arme jusqu'au niveau 
 
 Vérification des constats :
 - **XP par créature fixe** : confirmé. Charognard 8, Ombre 5, Rôdeur 20, Brute 25, Tréant 35 ; seules les variantes la multiplient (élite ×4, champion ×14, aberration ×2) et la Harde (×1,5). Rien ne suit le temps, l'oubli ni les Résurgences. Les PV des créatures montent de ×1,05 par minute, composé (×1,63 à 10 min, ×2,65 à 20, ×4,32 à 30) : **l'XP par PV à abattre est divisée par 4 à 30 min**.
-- **Orbes au sol** : 750 à 920 au maximum sur 30 min, pas des milliers. En comptant les morts par espèce, le bot ramasse l'essentiel de l'XP lâchée : au plus 10 à 15 % reste au sol. La vraie perte est ailleurs : **73 % des créatures apparues ne meurent jamais** (17 354 apparues, 4 568 tuées sur une seed). Le joueur les distance et elles sont recyclées au-delà de 1 400 px.
+- **Orbes au sol** : 750 à 920 au maximum sur 30 min, mais **2 300 à 2 600 à 45 min** (mesure de §6.8) : les milliers apparaissent en fin de run. En comptant les morts par espèce, le bot ramasse l'essentiel de l'XP lâchée : au plus 10 à 15 % reste au sol. La vraie perte est ailleurs : **73 % des créatures apparues ne meurent jamais** (17 354 apparues, 4 568 tuées sur une seed). Le joueur les distance et elles sont recyclées au-delà de 1 400 px.
 - **L'Indicible rapporte 500 XP**, moins d'un cinquième de niveau à 40 (2 909 XP pour le suivant) ; les coffres, 15 à 100 XP.
 
 ### 6.4 Cibles par archétype (à valider par Raphaël)
@@ -245,7 +245,29 @@ La courbe plafonnée seule ne suffit pas : sans les leviers de §6.5, l'excellen
 
 Recommandation : **A et D** ensemble, qui donnent de la dopamine sans toucher au build ; **B** si les Mémoriaux manquent encore de raisons d'être visités.
 
- — 28 septembre 2026 (§5.4)
+### 6.8 Lots R1-0 et R1-T livrés (28 septembre, nuit)
+
+**R1-0** : la courbe d'XP quitte `PlayerProgression.cs` pour `data/scaling/progression.json`, lue par `XpCurveConfig` (même modèle que `DefenseConfig`) et par `tools/progression_model.py`. Le coût est identique jusqu'au niveau 41, puis plafonné à 3 000 XP par niveau. `RunEventContext.XpForLevelRatio` et la barre d'XP du HUD lisent toujours `XpToNextLevel` et suivent d'eux-mêmes.
+
+**R1-T** : `RunObservation` relève en cumul les PV des créatures apparues et les dégâts infligés. L'outil en déduit, par palier, le **temps pour tuer** : le PV moyen d'une créature divisé par les dégâts infligés par seconde. Les dégâts comptent aussi ceux qui dépassent la vie restante : c'est une tendance, pas une durée exacte. `tools/measure_run.sh` accorde désormais à chaque seed le double de la durée demandée au-delà de 900 s (coupure à 1 800 s auparavant).
+
+**Mesure** : `MEASURE_EXTRA_ARGS="--nomad" MEASURE_JOBS=2 tools/measure_run.sh <dossier> 2700 "221092026 42"`.
+
+| Palier | 5→10 min | 10→15 | 15→20 | 20→30 | 30→40 | 40→45 |
+|---|---|---|---|---|---|---|
+| Temps pour tuer (s), deux seeds | 0,27 / 0,33 | 0,28 / 0,24 | 0,24 / 0,20 | 0,22 / 0,19 | 0,21 / 0,12 | 0,22 / 0,14 |
+| XP ramassée par minute | 1 467 / 1 506 | 1 414 / 2 133 | 2 035 / 2 718 | 2 242 / 3 076 | 2 407 / 4 138 | 2 943 / 3 247 |
+| Orbes au sol en fin de palier | 418 / 376 | 837 / 661 | 1 198 / 1 013 | 1 932 / 1 541 | 2 413 / 1 925 | 2 616 / 2 288 |
+
+Niveau à 45 min : 52 et 65. Sur la seed 221092026, le bot reste au niveau 5 jusqu'à 5 min : ses premiers choix sont des passifs (§6.1).
+
+Lecture :
+- **Le bot, un build faible, dépasse déjà la montée des créatures** : son temps pour tuer baisse de moitié entre 10 et 45 min (0,30 → 0,18 s en moyenne). Une run à 380 niveaux l'effondrerait. R1-F est confirmé.
+- **L'endgame n'est jamais atteint** : les deux runs restent en late game jusqu'au bout, car l'Indicible n'est pas combattable (plan 03 lot E, 27 septembre). Aujourd'hui, la montée « d'endgame » (PV ×1,55) ne s'applique donc jamais.
+
+**Proposition R1-F** (à caler par la même mesure) : à partir de 22 min, l'heure de l'Indicible, et quelle que soit la phase, les PV des créatures montent de **×1,07 par minute au lieu de ×1,05**. Cela donne ×1,5 à 45 min par rapport à aujourd'hui, de quoi ramener le temps pour tuer du bot vers 0,27 s. Pour les runs à plusieurs centaines de niveaux, il faudra recaler après R1-A : le bot montera alors bien plus haut et donnera enfin la mesure.
+
+## 7. Dégâts à distance — 28 septembre 2026 (§5.4)
 
 Même mesure que §6 (30 min, deux seeds). Le bot n'esquive rien. Le filtrage ne garde que les coups qui passeraient l'invulnérabilité de 0,5 s ; c'est la colonne qui compte pour comparer les rôles. Rapport = part des dégâts filtrés ÷ part de l'exposition (1 = la créature blesse en proportion de sa présence).
 
@@ -325,7 +347,7 @@ Les pistes 3 (tireurs qui se rapprochent) et 4 (jetons d'attaque) attendent le r
 
 | Lot | Contenu | Nature | Vérification |
 |---|---|---|---|
-| **R1-0** | Courbe d'XP et multiplicateurs en JSON (`data/scaling/progression.json`), lus par `PlayerProgression` et par `tools/progression_model.py` ; coût plafonné à 3 000 XP par niveau (§6.6) | Données | Même niveau atteint jusqu'au niveau 40, même seed |
+| **R1-0** | Courbe d'XP en JSON (`data/scaling/progression.json`), plafonnée à 3 000 XP par niveau | **Livré** (§6.8) | Formule identique jusqu'au niveau 41 |
 | **D1** | Pression à distance (§7.1) : poids d'apparition du Présage, croissance des dégâts à distance à part, tir annoncé du Hurleur | **Livré** (§7.2) | Zones et tirs 46,6 → 34,2 % |
 | **R1-A** | XP selon le temps, l'oubli, les Résurgences, Péril à 12 % | Données et un calcul dans `Enemy`/`XpOrb` | Mesure 30 min ; simulation pour le bot : 27 → 36 niveaux à 20 min, 37 → 54 à 30 min, quasi rien avant 5 min (8 → 9) |
 | **R1-G** | Réserve de niveaux automatique (règle de §6.7) : écran retenu 3 s quand les niveaux affluent ou que la foule dépasse 60 créatures, choix enchaînés | Interface (plan 02 J4, plan 04) | Capture d'une cascade de 15 niveaux ; un seul niveau ouvre toujours l'écran tout de suite |
@@ -333,8 +355,8 @@ Les pistes 3 (tireurs qui se rapprochent) et 4 (jetons d'attaque) attendent le r
 | **R1-C** | Boss intermédiaire, **option A retenue** (sceaux des Mémoriaux) | Conception détaillée, puis prototype | Recette par Raphaël ; niveaux gagnés par rang |
 | **R1-D** | Indicible en niveaux (+8) | Données | Mesure |
 | **R1-H** | Niveaux de surplus au-delà du build complet (≈ 219 montées) : effet à choisir parmi §6.7 (A–E), coût réduit | Données et code | Simulation, puis run dev poussée au-delà de 219 |
-| **R1-F** | Montée plus forte des créatures en endgame, calée sur le temps pour tuer (R1-T) | Données | Mesure 45 min : temps pour tuer stable ou en hausse après l'Indicible |
-| **R1-T** | Temps moyen pour tuer une créature, par palier, dans `RunObservation` | Outil | Relevé sur 45 min |
+| **R1-F** | Montée plus forte des PV des créatures après 22 min (×1,07 par minute au lieu de ×1,05, §6.8), l'endgame n'étant jamais atteint | Données et un calcul dans `SpawnManager` | Mesure 45 min : temps pour tuer du bot autour de 0,27 s après 30 min |
+| **R1-T** | Temps moyen pour tuer une créature, par palier, dans `RunObservation` | **Livré** (§6.8) | Relevé sur 45 min |
 | **R1-E** | XP, chance et oubli par des **perks** (les quatre passifs sous les armes, à refondre comme les armes) et des **objets dédiés** (plan 13, non branché) ; pas de tomes | Contenu (plans 05, 13, 17) | Simulation, puis recette |
 | **P** | Densité : ~500 créatures en très late game et dans les Résurgences les plus dures, plus si le rendu le permet | Optimisation (**autre agent**) ; rendu à juger en capture | Banc de foule, `/bench`, captures |
 

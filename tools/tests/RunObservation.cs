@@ -313,7 +313,7 @@ public partial class RunObservation : Node
         int peril = int.Parse(Argument(OS.GetCmdlineUserArgs(), "--peril", "0"), CultureInfo.InvariantCulture);
         if (peril > 0)
             _world.GetNode<Vestiges.Progression.PerilManager>("PerilManager").AddPeril(peril);
-        List<string> rows = new() { "t,visible,near600,alive,spawned,killed,level,hit_damage,memory,erasure_global,xp_gained,xp_orbs" };
+        List<string> rows = new() { "t,visible,near600,alive,spawned,killed,level,hit_damage,memory,erasure_global,xp_gained,xp_orbs,spawned_hp,damage_dealt" };
         // Mémoire de la zone sous le joueur et Effacement global, pour mesurer le tempo de l'oubli (retour du 28 septembre).
         ErasureManager erasure = _world.GetNode<ErasureManager>("ErasureManager");
         // Indice de pression : dégâts que les ennemis infligent à un joueur qui n'esquive jamais (invincible ici).
@@ -337,6 +337,14 @@ public partial class RunObservation : Node
         Dictionary<string, double> killsById = new();
         EventBus.EnemyKilledEventHandler onKill = (enemyId, _) => killsById[enemyId] = killsById.GetValueOrDefault(enemyId) + 1;
         eventBus.EnemyKilled += onKill;
+        // Temps pour tuer (plan 20, R1-T) : PV des créatures apparues et dégâts infligés, cumulés ; le modèle en
+        // déduit, par palier, le PV moyen d'une créature divisé par les dégâts infligés par seconde.
+        double spawnedHp = 0, damageDealt = 0;
+        EventBus.EnemySpawnedEventHandler onSpawned = (enemyId, hpScale, _) =>
+            spawnedHp += (EnemyDataLoader.Get(enemyId)?.Stats.Hp ?? 0f) * hpScale;
+        EventBus.EntityDamagedEventHandler onDamaged = (_, amount) => damageDealt += amount;
+        eventBus.EnemySpawned += onSpawned;
+        eventBus.EntityDamaged += onDamaged;
         double xpGained = 0;
         EventBus.XpGainedEventHandler onXp = amount => xpGained += amount;
         eventBus.XpGained += onXp;
@@ -495,12 +503,14 @@ public partial class RunObservation : Node
             maxOrbs = Math.Max(maxOrbs, orbs);
             visibleSamples.Add(visible);
             rows.Add(string.Create(CultureInfo.InvariantCulture,
-                $"{t:F0},{visible},{near},{alive},{tracker.TotalSpawned},{tracker.TotalKilled},{level},{hitDamage:F0},{erasure.GetMemoryAt(_player.GlobalPosition):F2},{erasure.GlobalErasurePercent:F2},{xpGained:F0},{orbs}"));
+                $"{t:F0},{visible},{near},{alive},{tracker.TotalSpawned},{tracker.TotalKilled},{level},{hitDamage:F0},{erasure.GetMemoryAt(_player.GlobalPosition):F2},{erasure.GlobalErasurePercent:F2},{xpGained:F0},{orbs},{spawnedHp:F0},{damageDealt:F0}"));
         }
 
         eventBus.PlayerHitBy -= onHit;
         eventBus.XpGained -= onXp;
         eventBus.EnemyKilled -= onKill;
+        eventBus.EnemySpawned -= onSpawned;
+        eventBus.EntityDamaged -= onDamaged;
         using (FileAccess csv = FileAccess.Open($"{_output}/density-{seed}.csv", FileAccess.ModeFlags.Write))
             csv.StoreString(string.Join("\n", rows) + "\n");
 

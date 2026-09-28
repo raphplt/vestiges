@@ -23,7 +23,8 @@ run_seed() {
     profile=$(mktemp -d "${TMPDIR:-/tmp}/vestiges-measure.XXXXXX")
     (
         isolate_godot_profile "$profile"
-        run_timeout 1800 "$GODOT" --headless --fixed-fps 60 --audio-driver Dummy --path . \
+        # Une seconde de jeu dure de 0,3 à 0,6 s d'horloge selon la foule : garde de 1 800 s, ou le double de la run.
+        run_timeout "$(( RUN_SECONDS > 900 ? RUN_SECONDS * 2 : 1800 ))" "$GODOT" --headless --fixed-fps 60 --audio-driver Dummy --path . \
             res://tools/tests/RunObservation.tscn -- --dev --density --seconds "$RUN_SECONDS" \
             --seed "$seed" --output "$OUTPUT/seed-$seed" $MEASURE_EXTRA_ARGS >"$OUTPUT/seed-$seed.log" 2>&1
     ) || echo "[measure_run] seed $seed en échec : $OUTPUT/seed-$seed.log" >&2

@@ -1,5 +1,6 @@
 using Godot;
 using Vestiges.Core;
+using Vestiges.Infrastructure;
 
 namespace Vestiges.Progression;
 
@@ -9,14 +10,12 @@ namespace Vestiges.Progression;
 /// </summary>
 public partial class PlayerProgression : Node
 {
-    private const float BaseXpToLevel = 20f;
-    private const float XpScalingExponent = 1.35f;
-
     private float _currentXp;
     private int _currentLevel = 1;
     private float _xpToNextLevel;
     private float _xpMultiplier = 1f;
     private EventBus _eventBus;
+    private XpCurveConfig _curve;
 
     public int CurrentLevel => _currentLevel;
     public float CurrentXp => _currentXp;
@@ -26,9 +25,10 @@ public partial class PlayerProgression : Node
     public override void _Ready()
     {
         _eventBus = GetNode<EventBus>("/root/EventBus");
+        _curve = XpCurveConfig.Load();
         _eventBus.XpGained += OnXpGained;
         _eventBus.DifficultyModifierChanged += OnDifficultyModifierChanged;
-        _xpToNextLevel = CalculateXpForLevel(_currentLevel);
+        _xpToNextLevel = _curve.CostOf(_currentLevel);
     }
 
     public override void _ExitTree()
@@ -53,23 +53,9 @@ public partial class PlayerProgression : Node
         {
             _currentXp -= _xpToNextLevel;
             _currentLevel++;
-            _xpToNextLevel = CalculateXpForLevel(_currentLevel);
+            _xpToNextLevel = _curve.CostOf(_currentLevel);
             _eventBus.EmitSignal(EventBus.SignalName.LevelUp, _currentLevel);
             GD.Print($"[Progression] Level up! Now level {_currentLevel} (next: {_xpToNextLevel} XP)");
         }
-    }
-
-    private static float CalculateXpForLevel(int level)
-    {
-        float baseXp = BaseXpToLevel * Mathf.Pow(level, XpScalingExponent);
-
-        if (level <= 5)
-        {
-            float t = (level - 1) / 4f;
-            float earlyMultiplier = Mathf.Lerp(1.65f, 1.20f, t);
-            return baseXp * earlyMultiplier;
-        }
-
-        return baseXp;
     }
 }

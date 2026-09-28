@@ -9,22 +9,21 @@ Usage :
 
 La simulation part de l'XP ramassée minute par minute par le bot de mesure (run passive : il prend la première
 carte, ne cherche ni combat ni orbe, ne meurt pas), puis applique à chaque archétype sa façon de jouer (PLAY)
-et les leviers proposés (LEVERS), avec la courbe proposée (PROPOSED_CURVE). Ce sont des hypothèses de travail,
+et les leviers proposés (LEVERS), avec la courbe du jeu. Ce sont des hypothèses de travail,
 pas des mesures : elles servent à vérifier qu'un jeu de leviers donne l'écart voulu entre archétypes avant d'en
 coder un seul.
 
-La courbe actuelle est lue dans scripts/Progression/PlayerProgression.cs (constantes BaseXpToLevel et
-XpScalingExponent, majoration des niveaux 1 à 5), pour rester alignée sur le jeu.
+La courbe est lue dans data/scaling/progression.json, comme le jeu (XpCurveConfig).
 """
 from __future__ import annotations
 
 import csv
-import re
+import json
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 
-PROGRESSION_CS = Path("scripts/Progression/PlayerProgression.cs")
+PROGRESSION_JSON = Path("data/scaling/progression.json")
 PALIERS_MIN = (2, 5, 10, 15, 20, 30, 40, 45)
 
 # Cibles proposées (à valider par Raphaël) : niveau atteint à chaque palier, en minutes.
@@ -63,17 +62,21 @@ PLAY = {
 
 @dataclass
 class Curve:
-    """XP pour passer du niveau n au suivant : base × n^exponent, majorée aux niveaux 1 à 5 comme
-    PlayerProgression.CalculateXpForLevel, et plafonnée à `cap` si donné."""
+    """XP pour passer du niveau n au suivant : base × n^exponent, majorée aux premiers niveaux et plafonnée
+    à `cap` si donné, comme XpCurveConfig.CostOf."""
     base: float
     exponent: float
     cap: float | None = None
+    early_levels: int = 5
+    early_start: float = 1.65
+    early_end: float = 1.2
     _cumulative: list[float] = field(default_factory=lambda: [0.0, 0.0], repr=False)
 
     def cost(self, level: int) -> float:
         xp = self.base * level ** self.exponent
-        if level <= 5:
-            xp *= 1.65 + (1.20 - 1.65) * (level - 1) / 4
+        if level <= self.early_levels:
+            t = (level - 1) / (self.early_levels - 1) if self.early_levels > 1 else 0
+            xp *= self.early_start + (self.early_end - self.early_start) * t
         return min(xp, self.cap) if self.cap else xp
 
     def cumulative(self, level: int) -> float:
@@ -88,15 +91,14 @@ class Curve:
 
 
 def read_curve() -> Curve:
-    text = PROGRESSION_CS.read_text()
-    base = float(re.search(r"BaseXpToLevel\s*=\s*([\d.]+)f", text).group(1))
-    exponent = float(re.search(r"XpScalingExponent\s*=\s*([\d.]+)f", text).group(1))
-    return Curve(base, exponent)
+    data = json.loads(PROGRESSION_JSON.read_text())
+    return Curve(data["base_xp"], data["exponent"], data.get("max_xp_per_level"), data.get("early_levels", 5),
+                 data.get("early_multiplier_start", 1.65), data.get("early_multiplier_end", 1.2))
 
 
-def proposed_curve(current: Curve) -> Curve:
-    """Courbe proposée (plan 20 §6.6) : identique jusqu'au niveau 41, puis 3 000 XP par niveau."""
-    return Curve(current.base, current.exponent, cap=3000)
+def uncapped(curve: Curve) -> Curve:
+    """La même courbe sans plafond : celle du jeu avant le 28 septembre (plan 20 §6.6)."""
+    return Curve(curve.base, curve.exponent, None, curve.early_levels, curve.early_start, curve.early_end)
 
 
 def measured_runs(folders: list[Path]) -> dict[str, dict[int, dict[str, str]]]:
@@ -121,7 +123,7 @@ def measured_levels(runs: dict[str, dict[int, dict[str, str]]]) -> dict[str, dic
 
 
 def measured_flow(runs: dict[str, dict[int, dict[str, str]]]) -> None:
-    """XP réellement ramassée (avant multiplicateur de Péril), morts et orbes au sol, par palier."""
+    """XP réellement ramassée (avant multiplicateur de Péril), morts, orbes au sol et temps pour tuer, par palier."""
     if not any("xp_gained" in row for rows in runs.values() for row in rows.values()):
         return
     print("\nMesure : XP ramassée par minute sur le palier, morts par minute, orbes au sol en fin de palier :\n")
@@ -133,10 +135,23 @@ def measured_flow(runs: dict[str, dict[int, dict[str, str]]]) -> None:
             if a in rows and b in rows and "xp_gained" in rows[b]:
                 xp = (float(rows[b]["xp_gained"]) - float(rows[a]["xp_gained"])) / (b - a)
                 kills = (int(rows[b]["killed"]) - int(rows[a]["killed"])) / (b - a)
-                cells.append(f"{xp:.0f} XP · {kills:.0f} morts · {rows[b]['xp_orbs']} orbes")
+                cell = f"{xp:.0f} XP · {kills:.0f} morts · {rows[b]['xp_orbs']} orbes"
+                if "damage_dealt" in rows[b]:
+                    cell += f" · {time_to_kill(rows[a], rows[b], b - a):.2f} s pour tuer"
+                cells.append(cell)
             else:
                 cells.append("—")
         print(f"| {name} | " + " | ".join(cells) + " |")
+
+
+def time_to_kill(start: dict[str, str], end: dict[str, str], minutes: int) -> float:
+    """PV moyen d'une créature apparue sur le palier, divisé par les dégâts infligés par seconde (plan 20, R1-T).
+    Il baisse quand le joueur gagne en puissance plus vite que les créatures ; il doit rester stable ou monter."""
+    spawned = int(end["spawned"]) - int(start["spawned"])
+    dps = (float(end["damage_dealt"]) - float(start["damage_dealt"])) / (60 * minutes)
+    if spawned <= 0 or dps <= 0:
+        return float("nan")
+    return (float(end["spawned_hp"]) - float(start["spawned_hp"])) / spawned / dps
 
 
 def bot_minutes(folders: list[Path]) -> tuple[list[float], list[float]]:
@@ -236,15 +251,15 @@ def curve_table(curves: dict[str, Curve]) -> None:
 
 def main() -> None:
     folders = [Path(arg) for arg in sys.argv[1:]]
-    current = read_curve()
-    proposed = proposed_curve(current)
-    print(f"Courbe actuelle : {current.describe()} ; proposée : {proposed.describe()}\n")
-    curve_table({"actuelle": current, "proposée": proposed})
+    game = read_curve()
+    without_cap = uncapped(game)
+    print(f"Courbe sans plafond : {without_cap.describe()} ; courbe du jeu : {game.describe()}\n")
+    curve_table({"sans plafond": without_cap, "du jeu": game})
 
     runs = measured_runs(folders)
     rows = dict(ARCHETYPES)
     rows.update(measured_levels(runs))
-    for label, curve in (("actuelle", current), ("proposée", proposed)):
+    for label, curve in (("sans plafond", without_cap), ("du jeu", game)):
         print(f"\nCibles et mesures, courbe {label} : niveau atteint (XP cumulée, en milliers)\n")
         table(rows, curve)
         print(f"\nXP à ramasser et niveaux gagnés par minute, courbe {label} :\n")
@@ -255,13 +270,13 @@ def main() -> None:
     if bot_xp:
         status_quo = dict(LEVERS, time_growth=0.0, oblivion_xp=0.0, crisis_xp=1.0, peril_xp=0.08, mid_boss_levels={},
                           final_boss_levels=0)
-        print("\nSimulation, jeu actuel (courbe actuelle ; seuls la façon de jouer et le Péril à 8 % changent) :\n")
-        table(simulate(bot_xp, bot_oblivion, current, status_quo), current)
-        print(f"\nSimulation, courbe proposée et leviers {LEVERS} :\n")
-        simulated = simulate(bot_xp, bot_oblivion, proposed, LEVERS)
-        table(simulated, proposed)
+        print("\nSimulation, sans plafond ni leviers (seuls la façon de jouer et le Péril à 8 % changent) :\n")
+        table(simulate(bot_xp, bot_oblivion, without_cap, status_quo), without_cap)
+        print(f"\nSimulation, courbe du jeu et leviers {LEVERS} :\n")
+        simulated = simulate(bot_xp, bot_oblivion, game, LEVERS)
+        table(simulated, game)
         print()
-        flow(simulated, proposed)
+        flow(simulated, game)
 
 
 if __name__ == "__main__":
