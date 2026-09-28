@@ -141,6 +141,16 @@
     "min_interval_ms": 80,
     "effect_id": "critical_hit"
   },
+  "sfx_shield_block": {
+    "path": "res://assets/audio/sfx/joueur/shield_block.wav",
+    "volume_db": 0,
+    "min_interval_ms": 120
+  },
+  "sfx_shield_break": {
+    "path": "res://assets/audio/sfx/joueur/shield_break.wav",
+    "volume_db": 0,
+    "min_interval_ms": 200
+  },
   "sfx_hit_joueur": {
     "path": "res://assets/audio/sfx/selected/player_hit.wav",
     "volume_db": 0,

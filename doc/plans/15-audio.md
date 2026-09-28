@@ -69,3 +69,11 @@ Ordre désormais :
 3. son fondu de 0,5 s à la fermeture de l'écran, inchangé.
 
 Garde : un minuteur en retard ne relance jamais la mélodie sur un coffre suivant. **À réécouter en jeu.**
+
+## Bouclier — 28 septembre
+
+Raphaël fournit deux sons pour le bouclier du lot 8B (plan 03 §8) : `shield-block.mp3` et `shield-break.mp3`. Intégrés en WAV 48 kHz dans `assets/audio/sfx/joueur/` :
+- `sfx_shield_block` : le bouclier encaisse un coup et tient. L'original durait 1,8 s dont 1,5 s de silence, pic à −12,7 dB : coupé à 0,45 s avec un fondu, remonté à −4 dB ;
+- `sfx_shield_break` : le bouclier tombe à zéro. Coupé à 0,5 s, niveau d'origine (−1,4 dB).
+
+Déclenchés par `AudioManager` sur `PlayerShieldChanged` quand le bouclier baisse. La recharge reste muette, et un coup encaissé ne joue pas le son de blessure. **À écouter en jeu**, niveau compris.

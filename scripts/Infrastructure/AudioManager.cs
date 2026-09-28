@@ -542,6 +542,7 @@ public partial class AudioManager : Node
 		eb.EnemySpawned       += OnEnemySpawned;
 		eb.EnemyKilled        += OnEnemyKilled;
 		eb.PlayerDamaged      += OnPlayerDamaged;
+		eb.PlayerShieldChanged += OnPlayerShieldChanged;
 		eb.SouvenirDiscovered += OnSouvenirDiscovered;
 		eb.ZoneDiscovered     += OnZoneDiscovered;
 		eb.PerkChosen         += OnPerkChosen;
@@ -564,6 +565,7 @@ public partial class AudioManager : Node
 		eb.EnemySpawned       -= OnEnemySpawned;
 		eb.EnemyKilled        -= OnEnemyKilled;
 		eb.PlayerDamaged      -= OnPlayerDamaged;
+		eb.PlayerShieldChanged -= OnPlayerShieldChanged;
 		eb.SouvenirDiscovered -= OnSouvenirDiscovered;
 		eb.ZoneDiscovered     -= OnZoneDiscovered;
 		eb.PerkChosen         -= OnPerkChosen;
@@ -647,6 +649,17 @@ public partial class AudioManager : Node
 	}
 
 	private float _lastKnownHp = -1f;
+	private float _lastKnownShield = -1f;
+
+	/// <summary>Le bouclier qui baisse a encaissé un coup : parade s'il tient, bris s'il tombe à zéro. Sa recharge reste muette.</summary>
+	private void OnPlayerShieldChanged(float shield, float maxShield)
+	{
+		bool absorbed = _lastKnownShield > 0f && shield < _lastKnownShield - 0.01f;
+		_lastKnownShield = shield;
+		if (absorbed)
+			PlaySfx(shield <= 0f ? "sfx_shield_break" : "sfx_shield_block");
+	}
+
 
 	private void OnPlayerDamaged(float currentHp, float maxHp)
 	{
