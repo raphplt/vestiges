@@ -527,3 +527,11 @@ Le banc dense ne tuait rien (PV ×10 000). Nouveau mode `--churn` de `MovementDe
 `EnemySpriteLoader` chargeait les 16 à 32 animations d'une espèce à sa première apparition, en 16 à 25 ms, soit au moins une image sautée à 60 FPS. Sur une run nomade de 5 minutes, sept espèces se chargeaient juste après l'écran de chargement (environ 140 ms de saccades au démarrage), et les autres en pleine partie. Le chronomètre est désormais dans le journal.
 
 Les animations de toutes les espèces se chargent sous l'écran de chargement, une par image pour qu'il reste animé : nouvelle étape « animations des créatures », 222 ms. Le chargement total passe de 3,15 à 3,25 s. Plus aucun chargement d'animations pendant la partie (journal d'une run nomade de 300 s vérifié).
+
+### Lot 4, suite — explosion des créatures instables recyclée, 28 septembre 2026
+
+L'audit (§11) relevait que chaque explosion d'une créature à l'affixe Instable recréait ses `SpriteFrames`, son sprite, ses particules GPU, son matériau et un minuteur, avec des PNG de mars (plan 18, n° 22).
+- `CombatPools.ShowExplosion` la remplace par des effets du pool commun : une zone au sol tramée du **rayon réel des dégâts** (ellipse 2:1), une onde, un éclair et une gerbe de braises qui retombent.
+- Les dégâts de l'explosion sont désormais mesurés au sol, comme toutes les zones depuis les lots I du plan 08. Elle touche exactement ce qui est dessiné : plus loin à l'horizontale, moitié moins à la verticale de l'écran.
+- `VfxFactory.CreateExplosionVfx`, les cinq images `vfx_explosion_f*` (non supprimées, voir plan 08) et la texture d'étincelle en losange ne sont plus utilisés, et le code correspondant est retiré.
+- **Vérifié** : `--capture-bestiary --affix explosive --kill` (nouvelle option `--kill`), images regardées ; smoke test.

@@ -264,9 +264,17 @@ public partial class RunObservation : Node
 
         _player.AIInputOverride = Vector2.Zero;
         Vector2 half = new(200f, 120f);
+        // --kill : les créatures montrées meurent après la quatrième vue (mort, explosion d'un affixe instable).
+        bool kill = Array.IndexOf(OS.GetCmdlineUserArgs(), "--kill") >= 0;
         for (int shot = 0; shot < 16; shot++)
         {
-            await Frames(12);
+            if (kill && shot == 4)
+            {
+                foreach (Node node in GetTree().GetNodesInGroup("enemies"))
+                    if (node is Enemy { IsActive: true, IsDying: false } victim)
+                        victim.TakeDamage(1000000f, false);
+            }
+            await Frames(shot >= 4 && kill ? 4 : 12);
             using Image image = GetViewport().GetTexture().GetImage();
             // Gros plan sur le joueur, en pixels physiques de la capture (écrans à haute densité compris).
             float pixelRatio = image.GetWidth() / GetViewport().GetVisibleRect().Size.X;

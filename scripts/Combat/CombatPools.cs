@@ -247,6 +247,47 @@ public partial class CombatPools : Node2D
             _deathFx.Take().Play(position, poolScale, direction);
     }
 
+    /// <summary>
+    /// Explosion d'une créature instable : zone au sol du rayon réel des dégâts (ellipse 2:1, mesurée au sol comme eux),
+    /// onde qui s'élargit, éclair et gerbe de braises. Recyclé, comme tous les effets de combat.
+    /// </summary>
+    public void ShowExplosion(Vector2 position, float radius)
+    {
+        PixelFxSpec zone = PixelFxSpec.Of(PixelFxShape.Zone, FxFamily.Fire, radius, 1f, 0.35f);
+        zone.Squash = Iso.GroundSquash;
+        zone.ProgressFill = false;
+        zone.FillDensity = 0.5f;
+        zone.Steps = 4;
+        zone.FadeTail = 0.5f;
+        zone.ZIndex = -1;
+        PlayFx(position, zone, FxOwner.Enemy);
+        PixelFxSpec ring = PixelFxSpec.Of(PixelFxShape.Ring, FxFamily.Fire, radius, 2f, 0.3f);
+        ring.Squash = Iso.GroundSquash;
+        ring.Steps = 5;
+        ring.FadeTail = 0.4f;
+        ring.ZIndex = -1;
+        PlayFx(position, ring, FxOwner.Enemy);
+        PixelFxSpec flash = PixelFxSpec.Of(PixelFxShape.Star, FxFamily.Fire, 12f, 1f, 0.14f);
+        flash.Steps = 3;
+        flash.FadeTail = 0.4f;
+        flash.ZIndex = 2;
+        PlayFx(position + new Vector2(0f, -10f), flash, FxOwner.Enemy);
+        Sparks.Emit(position + new Vector2(0f, -6f), new SparkBurst
+        {
+            Family = FxFamily.Fire,
+            Owner = FxOwner.Enemy,
+            Count = 14,
+            Direction = Vector2.Zero,
+            Spread = Mathf.Tau,
+            SpeedMin = 60f,
+            SpeedMax = 140f,
+            LifeMin = 0.2f,
+            LifeMax = 0.4f,
+            Ballistic = true,
+            Size = 1,
+        });
+    }
+
     /// <summary>Mort d'élite ou de Souverain : onde au sol qui s'élargit et éclair bref sur le corps.</summary>
     private void ShowDeathSignature(Vector2 position)
     {

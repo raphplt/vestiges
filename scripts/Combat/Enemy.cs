@@ -1056,7 +1056,8 @@ public partial class Enemy : CharacterBody2D
 			float explosionRadiusSq = explosionRadius * explosionRadius;
 			if (_player != null && IsInstanceValid(_player))
 			{
-				float distToPlayerSq = GlobalPosition.DistanceSquaredTo(_player.GlobalPosition);
+				// Mesurée au sol, comme la zone dessinée : plus large que haute à l'écran.
+				float distToPlayerSq = Iso.GroundDistanceSquared(GlobalPosition, _player.GlobalPosition);
 				if (distToPlayerSq < explosionRadiusSq)
 				{
 					float distToPlayer = Mathf.Sqrt(distToPlayerSq);
@@ -1070,15 +1071,12 @@ public partial class Enemy : CharacterBody2D
 			{
 				if (node is Enemy e && e != this && IsInstanceValid(e) && !e.IsDying)
 				{
-					if (GlobalPosition.DistanceSquaredTo(e.GlobalPosition) < explosionRadiusSq)
+					if (Iso.GroundDistanceSquared(GlobalPosition, e.GlobalPosition) < explosionRadiusSq)
 						e.TakeDamage(explosionDamage * 0.5f);
 				}
 			}
 
-			// VFX explosion (sprite animé 5 frames + particules)
-			Node2D explosionVfx = VfxFactory.CreateExplosionVfx(GlobalPosition);
-			if (explosionVfx != null)
-				GetTree().CurrentScene.AddChild(explosionVfx);
+			CombatPools.Instance?.ShowExplosion(GlobalPosition, explosionRadius);
 		}
 
 		if (IsInGroup("enemies"))
