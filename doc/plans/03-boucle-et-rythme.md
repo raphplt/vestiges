@@ -286,3 +286,32 @@ Après chaque Résurgence, le coffre d'accalmie n'est pas posé : « Aucun sol p
 - **8B — Survie** : une courte invulnérabilité après un coup (0,4–0,6 s, standard du genre) ; une place garantie à un choix de survie dans les tirages de niveau ; des libellés qui disent la stat ; une armure en pourcentage ou avec plancher. Ensuite, décider d'un bouclier ou de soins trouvés sur la carte (lié au plan 13).
 - **8C — Lisibilité des tirs** : les « balles », ennemies comme du joueur, sont peu visibles (taille, contraste, contour) ; à traiter avec le plan 08.
 - **Contenu des coffres** : à revoir, rattaché au plan 13, toujours non arbitré.
+
+### Lot 8A livré — tempo de l'oubli (28 septembre)
+
+Validé par Raphaël le 28 septembre (« ok ça me va »), avec les cibles proposées.
+
+**Réglages** (`data/scaling/erasure.json`) :
+- oubli de base 0,018 → **0,012** par minute, accélération 0,01 → **0,0004** par minute² ;
+- Résurgence ×2,5 → **×1,5** : le pouls reste visible sans raser la carte ;
+- effet de la distance **plafonné à 8 cases** (`distance_decay_max_cells`). La carte est finie et se retraverse en une minute : sans plafond, une zone quittée s'oubliait jusqu'à 6,5 fois plus vite, et tout était Néant vers 10 min dès que le joueur revenait sur ses pas ;
+- l'Effacement global a son propre rythme (`global_decay_factor`, 2,2) : le late game reste vers 18 min ;
+- une zone neuve naît moins pâle en lisière (`seed_distance_penalty` 0,012 → 0,005, sorti du code).
+
+**Premier essai écarté :** accélération 0,002 sans plafond. La simulation en ligne droite tenait les cibles, mais la mesure réelle (bot qui rebondit sur les bords) montrait encore du Néant sous le joueur dès 10 min. La simulation a été refaite dans une carte bornée avant le second réglage.
+
+**Mesure** (même commande, 22 min, bot nomade, seeds 221092026 et 42) :
+
+| | Avant | Après |
+|---|---|---|
+| Mémoire sous le joueur à 4 min | 0,43 / 0,59 | 0,82 / 0,82 |
+| Fragile (< 0,75) | ~4 min | 6–8 min |
+| Effiloché (< 0,50) | ~5 min | 14 min |
+| Effacé (≤ 0,25) | ~5 min | 20–21 min |
+| Temps passé dans le Néant | ≈ 100 % après 5 min | **0 %** sur 22 min |
+| Late game (global 0,68) | 9 min 30 s | 18 min |
+| Coffres d'accalmie non posés | 5 | 0 |
+
+L'Indicible est atteint (5ᵉ Résurgence).
+
+**Effet de bord à surveiller en recette :** les grandes zones blanches, dont le rendu plaît, n'apparaissent plus avant le dernier tiers de la run.

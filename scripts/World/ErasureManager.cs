@@ -17,11 +17,16 @@ public partial class ErasureManager : Node
 
     private int _cellSize = 128;
     private float _seededMemory = 1f;
-    private float _baseDecayPerMinute = 0.018f;
+    private float _baseDecayPerMinute = 0.012f;
     // Oubli du chemin (plan 17 lot 3D) : l'oubli avance plus vite.
     private float _decayMultiplier = 1f;
-    private float _globalAccelerationPerMinute = 0.010f;
+    private float _globalAccelerationPerMinute = 0.0004f;
     private float _distanceDecayMultiplier = 0.11f;
+    // La carte est finie et se retraverse en une minute : sans plafond, une zone quittée s'oubliait jusqu'à ×6,5 plus vite
+    // et la carte entière était Néant vers 10 min (mesure du 28 septembre, plan 03 §8).
+    private float _distanceDecayMaxCells = 8f;
+    // Rythme de l'Effacement global (late game, zones neuves, HUD) rapporté à l'oubli d'une zone.
+    private float _globalDecayFactor = 2.2f;
     private float _playerPresenceFalloffCells = 2.5f;
     private float _playerDecayReduction = 0.72f;
     private float _spawnDensityAtZeroMemory = 2.2f;
@@ -29,6 +34,8 @@ public partial class ErasureManager : Node
     private float _lateGameThreshold = 0.68f;
     private float _updateIntervalSec = 0.5f;
     private int _trackedRadiusCells = 14;
+    // Une zone naît d'autant moins ancrée qu'elle est loin du joueur quand il l'atteint : lisière pâle, sans zones mortes-nées.
+    private float _seedDistancePenalty = 0.005f;
     private float _stabilizeRadiusCells = 2.5f;
     private float _stabilizeMemoryFloor = 0.72f;
     // Sans POI (plan 17 lot 0B), ouvrir un coffre est le geste d'exploration qui ravive la mémoire alentour.
@@ -36,7 +43,7 @@ public partial class ErasureManager : Node
     // Néant (mémoire nulle) : part des PV max perdue par seconde tant que le joueur y reste (Stratégie V2 §8).
     private float _voidDamageRatioPerSecond = 0.06f;
     // Résurgence (V2 §8, plan 03 lot C) : pendant une crise, l'oubli s'accélère partout ; il revient au rythme normal après.
-    private float _crisisDecayMultiplier = 2.5f;
+    private float _crisisDecayMultiplier = 1.5f;
     private bool _crisisActive;
     private float _globalErasurePercent;
     private float _updateTimer;
@@ -127,7 +134,7 @@ public partial class ErasureManager : Node
             float playerDistCells = worldPos.DistanceTo(_player.GlobalPosition) / Mathf.Max(_cellSize, 1);
             float proximity = Mathf.Clamp(1f - (playerDistCells / Mathf.Max(_playerPresenceFalloffCells, 0.01f)), 0f, 1f);
 
-            float localDecay = decayAmount * (1f + playerDistCells * _distanceDecayMultiplier);
+            float localDecay = decayAmount * (1f + Mathf.Min(playerDistCells, _distanceDecayMaxCells) * _distanceDecayMultiplier);
             localDecay *= 1f - proximity * _playerDecayReduction;
             localDecay = Mathf.Max(0.0001f, localDecay);
 
@@ -138,7 +145,7 @@ public partial class ErasureManager : Node
         }
 
         _globalErasurePercent = Mathf.Clamp(
-            _globalErasurePercent + decayAmount * 0.85f,
+            _globalErasurePercent + decayAmount * _globalDecayFactor,
             0f,
             1f);
 
@@ -279,7 +286,7 @@ public partial class ErasureManager : Node
                     continue;
 
                 float dist = Mathf.Sqrt(dx * dx + dy * dy);
-                float seeded = Mathf.Clamp(_seededMemory - _globalErasurePercent * 0.85f - dist * 0.012f, 0.08f, 1f);
+                float seeded = Mathf.Clamp(_seededMemory - _globalErasurePercent * 0.85f - dist * _seedDistancePenalty, 0.08f, 1f);
                 _zoneMemory[cell] = seeded;
                 UpdateZonePhase(cell, seeded, true);
             }
@@ -384,6 +391,8 @@ public partial class ErasureManager : Node
         _baseDecayPerMinute = dict.ContainsKey("base_decay_per_minute") ? (float)dict["base_decay_per_minute"].AsDouble() : _baseDecayPerMinute;
         _globalAccelerationPerMinute = dict.ContainsKey("acceleration_per_minute") ? (float)dict["acceleration_per_minute"].AsDouble() : _globalAccelerationPerMinute;
         _distanceDecayMultiplier = dict.ContainsKey("distance_decay_multiplier") ? (float)dict["distance_decay_multiplier"].AsDouble() : _distanceDecayMultiplier;
+        _distanceDecayMaxCells = dict.ContainsKey("distance_decay_max_cells") ? (float)dict["distance_decay_max_cells"].AsDouble() : _distanceDecayMaxCells;
+        _globalDecayFactor = dict.ContainsKey("global_decay_factor") ? (float)dict["global_decay_factor"].AsDouble() : _globalDecayFactor;
         _playerPresenceFalloffCells = dict.ContainsKey("player_presence_falloff_cells") ? (float)dict["player_presence_falloff_cells"].AsDouble() : _playerPresenceFalloffCells;
         _playerDecayReduction = dict.ContainsKey("player_decay_reduction") ? (float)dict["player_decay_reduction"].AsDouble() : _playerDecayReduction;
         _spawnDensityAtZeroMemory = dict.ContainsKey("spawn_density_at_zero_memory") ? (float)dict["spawn_density_at_zero_memory"].AsDouble() : _spawnDensityAtZeroMemory;
@@ -391,6 +400,7 @@ public partial class ErasureManager : Node
         _lateGameThreshold = dict.ContainsKey("late_game_threshold") ? (float)dict["late_game_threshold"].AsDouble() : _lateGameThreshold;
         _updateIntervalSec = dict.ContainsKey("update_interval_sec") ? (float)dict["update_interval_sec"].AsDouble() : _updateIntervalSec;
         _trackedRadiusCells = dict.ContainsKey("tracked_radius_cells") ? (int)dict["tracked_radius_cells"].AsDouble() : _trackedRadiusCells;
+        _seedDistancePenalty = dict.ContainsKey("seed_distance_penalty") ? (float)dict["seed_distance_penalty"].AsDouble() : _seedDistancePenalty;
         _stabilizeRadiusCells = dict.ContainsKey("stabilize_radius_cells") ? (float)dict["stabilize_radius_cells"].AsDouble() : _stabilizeRadiusCells;
         _stabilizeMemoryFloor = dict.ContainsKey("stabilize_memory_floor") ? (float)dict["stabilize_memory_floor"].AsDouble() : _stabilizeMemoryFloor;
         _stabilizeOnChestOpen = !dict.ContainsKey("stabilize_on_chest_open") || dict["stabilize_on_chest_open"].AsBool();
