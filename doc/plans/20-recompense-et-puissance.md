@@ -368,6 +368,4 @@ Réponses de Raphaël du 28 septembre (soir) : excellente run à 300–400 nivea
 
 Réponses du 28 septembre (nuit) consignées en §6.7 : paliers validés, réserve automatique, montée plus forte en endgame, XP et chance par perks et objets.
 
-Restent :
-1. **Niveaux de surplus** : quelle idée de §6.7 (A à E) ?
-2. **Refonte des perks** : elle conditionne R1-E. À planifier sur le modèle de la refonte des armes (plan 17), avant ou après les leviers d'XP ?
+Réponses du 28 septembre (fin de nuit) : niveaux de surplus **A et D**, **E** éventuellement, « mais ça ne doit pas devenir overkill » ; refonte des perks **en même temps** que les leviers d'XP (R1-A avec R1-E) ; R1-F **d'accord** (PV ×1,07 par minute après 22 min, mesure de 45 min avant/après). Mise en pause à la demande de Raphaël : rien n'est engagé.
