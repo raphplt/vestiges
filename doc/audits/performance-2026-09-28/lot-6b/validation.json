@@ -1,0 +1,28 @@
+{
+  "base": "57c759f527a79dc8e111ab3ccf8730930383e5ff",
+  "seed": 221092026,
+  "order": [
+    "b2",
+    "a2",
+    "b3",
+    "a3"
+  ],
+  "engine": "Godot 4.7.2 Mono",
+  "mode": "headless, fixed-fps 60, vrai Player/Enemy/CombatPools ; une activation de chauffe puis deux mesurées par cas",
+  "checks_after": 38,
+  "failures_after": 0,
+  "load_observations": [
+    {
+      "time": "15:53:56",
+      "one_minute": 4.23
+    },
+    {
+      "time": "16:00:39",
+      "one_minute": 3.92
+    }
+  ],
+  "bench_ab_load_limit": 4,
+  "fps_conclusion": null,
+  "scope": "allocations managées du thread appelant dans ProcessSustainedCone ; hors observation du banc et hors effets animés entre les appels",
+  "fixture_sha256": "ea06b9b9f48ae2ca67ff771bd6633469313d3cecaa32f70bee81cbaf14a833e2"
+}

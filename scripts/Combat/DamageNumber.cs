@@ -11,6 +11,9 @@ namespace Vestiges.Combat;
 /// </summary>
 public partial class DamageNumber : Node2D
 {
+	private int _shown = -1;
+	private LabelSettings _currentSettings;
+
 	private const float PopSec = 0.08f;
 	private const float MergeWindowSec = 0.25f;
 	private const float MaxHoldSec = 1.0f;
@@ -70,6 +73,7 @@ public partial class DamageNumber : Node2D
 		GlobalPosition = _origin;
 		_isCrit = isCrit;
 		_total = 0f;
+		_shown = -1;
 		_elapsed = 0f;
 		Modulate = Colors.White;
 		Visible = true;
@@ -118,8 +122,18 @@ public partial class DamageNumber : Node2D
 		_total += damage;
 		_sinceHit = 0f;
 		int shown = Mathf.Max(1, (int)_total);
-		_label.Text = _isCrit ? $"{shown}!" : shown.ToString();
-		_label.LabelSettings = _isCrit ? _crit : _total > 30f ? _large : _total > 15f ? _medium : _small;
+		// Un flux de dégâts fractionnaires conserve sa somme sans reformater le même entier 60 fois/s.
+		if (shown != _shown)
+		{
+			_shown = shown;
+			_label.Text = _isCrit ? $"{shown}!" : shown.ToString();
+		}
+		LabelSettings settings = _isCrit ? _crit : _total > 30f ? _large : _total > 15f ? _medium : _small;
+		if (settings != _currentSettings)
+		{
+			_currentSettings = settings;
+			_label.LabelSettings = settings;
+		}
 	}
 
 	private void Finish()

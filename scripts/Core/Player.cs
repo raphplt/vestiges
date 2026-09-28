@@ -959,7 +959,7 @@ public partial class Player : CharacterBody2D
     /// Effets d'un coup porté par <paramref name="source"/>. Les effets de perks (vampirisme, embrasement…) sont
     /// globaux ; ceux de l'arme (effet au contact, recul, effet spécial) restent ceux de l'arme qui a frappé.
     /// </summary>
-    private void OnAttackHit(Enemy enemy, float damage, bool isCrit, bool isRicochet, WeaponInstance source, int triggerCount = 1)
+    private void OnAttackHit(Enemy enemy, float damage, bool isCrit, bool isRicochet, WeaponInstance source, int triggerCount = 1, bool showImpact = true)
     {
         if (_isDead)
             return;
@@ -967,7 +967,8 @@ public partial class Player : CharacterBody2D
         if (!IsInstanceValid(enemy) || enemy.IsQueuedForDeletion())
             return;
 
-        _attackFx.PlayHit(source?.Base, enemy.GlobalPosition, isCrit);
+        if (showImpact)
+            _attackFx.PlayHit(source?.Base, enemy.GlobalPosition, isCrit);
         if (source != null)
             _damageDealtByWeapon[source.Id] = _damageDealtByWeapon.GetValueOrDefault(source.Id) + damage;
         int procRollCount = Mathf.Max(1, triggerCount);
@@ -1292,7 +1293,7 @@ public partial class Player : CharacterBody2D
         Godot.Collections.Array<Node> enemies = _groupCache.GetEnemies();
         foreach (Node node in enemies)
         {
-            if (node is not Enemy enemy || enemy.IsDying || !IsInstanceValid(enemy))
+            if (node is not Enemy enemy || !IsInstanceValid(enemy) || !enemy.IsActive || enemy.IsDying)
                 continue;
 
             // Cône posé au sol : portée et ouverture mesurées au sol, comme l'éventail dessiné.
@@ -1305,8 +1306,8 @@ public partial class Player : CharacterBody2D
             if (groundFacing.Dot(dirToEnemy) < dotThreshold)
                 continue;
 
-            enemy.TakeDamage(damage);
-            OnAttackHit(enemy, damage, false, false, _coneWeapon);
+            bool showImpact = enemy.TakeContinuousDamage(damage, delta);
+            OnAttackHit(enemy, damage, false, false, _coneWeapon, showImpact: showImpact);
         }
     }
 

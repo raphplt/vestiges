@@ -260,3 +260,7 @@ Raphaël demande de brancher les choix déjà faits avant de finir les recherche
 ## 18. Corrections après le second audit — 28 septembre 2026
 
 Raphaël : « okok. je te laisse commencer à travailler pour résoudre ces problemes en commencant par les plus critiques stp ». Début par le lot 6A du plan 10 (horloges et statuts à distance), puis les impacts continus et le préchauffage selon la priorité de l’audit. Autorisation d’implémentation, sans reprendre les changements de feu et d’équilibrage déjà en cours dans l’arbre.
+
+## 19. Impacts continus — 28 septembre 2026
+
+Après l’explication du cône, Raphaël : « okok. continue sur ca alors ». Lot 6B ouvert : réduire le travail de feedback du Transistor sans changer les dégâts, l’attribution ni la cadence des procs.

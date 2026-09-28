@@ -11,7 +11,8 @@ namespace Vestiges.Tests;
 
 /// <summary>
 /// --capture-weapons [--weapons id1,id2] [--lethal] : galerie des attaques du joueur. Chaque arme est équipée seule,
-/// déclenchée sur un cercle d'ennemis immobiles, et capturée en gros plan à plusieurs instants de l'attaque.
+/// Avec id1+id2, plusieurs armes sont équipées ensemble pour vérifier leurs interactions.
+/// Chaque configuration est déclenchée sur un cercle d'ennemis immobiles, et capturée en gros plan à plusieurs instants de l'attaque.
 /// </summary>
 public partial class RunObservation
 {
@@ -41,7 +42,8 @@ public partial class RunObservation
 
         foreach (string id in ids)
         {
-            WeaponData weapon = WeaponDataLoader.Get(id);
+            string[] equippedIds = id.Split('+');
+            WeaponData weapon = WeaponDataLoader.Get(equippedIds[0]);
             if (weapon == null)
             {
                 GD.PushError($"[RunObservation] Arme inconnue : {id}");
@@ -56,7 +58,8 @@ public partial class RunObservation
             // Laisse les effets de l'arme précédente s'éteindre.
             await Frames(40);
 
-            _player.AddWeapon(weapon);
+            foreach (string equippedId in equippedIds)
+                _player.AddWeapon(WeaponDataLoader.Get(equippedId));
             Vector2 origin = _player.GlobalPosition;
             for (int index = 0; index < 5; index++)
             {
@@ -83,9 +86,11 @@ public partial class RunObservation
                 Engine.TimeScale = 0.25;
             try
             {
-                attack.Invoke(_player, new object[] { 0 });
+                for (int slot = 0; slot < _player.WeaponSlots.Count; slot++)
+                    attack.Invoke(_player, new object[] { slot });
                 int elapsed = 0;
-                int[] frames = lethal ? LethalCaptureFrames : WeaponCaptureFrames;
+                int[] frames = lethal ? LethalCaptureFrames : equippedIds.Length > 1
+                    ? new[] { 2, 9, 30, 60, 120, 180 } : WeaponCaptureFrames;
                 for (int shot = 0; shot < frames.Length; shot++)
                 {
                     await Frames(frames[shot] - elapsed);
@@ -98,7 +103,7 @@ public partial class RunObservation
                 Engine.TimeScale = 1.0;
             }
         }
-        GD.Print($"[RunObservation] Galerie des armes écrite dans {_output}");
+        GD.Print($"[RunObservation] RESULT galerie armes={ids.Count} lethal={lethal} dossier={_output}");
     }
 
     /// <summary>Gros plan centré sur le joueur, en pixels physiques de la capture (écrans à haute densité compris).</summary>

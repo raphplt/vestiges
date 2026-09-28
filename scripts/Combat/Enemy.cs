@@ -124,6 +124,7 @@ public partial class Enemy : CharacterBody2D
 	private static Shader _entityShader;
 	private ShaderMaterial _spriteMaterial;
 	private readonly HitFeedback _hitFeedback = new();
+	private ContinuousImpactCadence _continuousImpact;
 	private DamageNumber _damageNumber;
 	// Sens du dernier coup reçu (du joueur vers la créature) : oriente la mort (plan 02 J2).
 	private Vector2 _lastHitDirection;
@@ -173,6 +174,7 @@ public partial class Enemy : CharacterBody2D
 	{
 		_hitFeedback.RestScale = Vector2.One;
 		_hitFeedback.Stop();
+		_continuousImpact = default;
 		_lastHitDirection = Vector2.Zero;
 
 		_enemyId = data.Id;
@@ -403,6 +405,7 @@ public partial class Enemy : CharacterBody2D
 		// (les tweens Godot sont pauses quand le node quitte l'arbre et reprennent quand il y revient)
 		_hitFeedback.RestScale = Vector2.One;
 		_hitFeedback.Stop();
+		_continuousImpact = default;
 		_damageNumber = null;
 		_modifierAura?.HideAura();
 		CancelAbilities();
@@ -828,7 +831,15 @@ public partial class Enemy : CharacterBody2D
 
 	// --- Damage & Death ---
 
-	public void TakeDamage(float damage, bool isCrit = false)
+	/// <summary>Dégâts et signaux à chaque tick ; seule la mise en scène est cadencée.</summary>
+	public bool TakeContinuousDamage(float damage, float delta)
+	{
+		bool showImpact = _continuousImpact.Advance(delta) || damage * _mods.DamageTakenMultiplier >= _currentHp;
+		TakeDamage(damage, false, showImpact);
+		return showImpact;
+	}
+
+	public void TakeDamage(float damage, bool isCrit = false, bool showImpact = true)
 	{
 		if (_currentHp <= 0 || _isDying || _isBurrowed)
 			return;
@@ -836,11 +847,15 @@ public partial class Enemy : CharacterBody2D
 		damage *= _mods.DamageTakenMultiplier;
 		_mods.NotifyDamaged();
 		_currentHp -= damage;
-		_eventBus.EmitSignal(EventBus.SignalName.EntityDamaged, this, damage);
-		TriggerHitFeedback();
-		SpawnHitFlashSprite();
+		// La surcharge Span évite un tableau params par tick, tout en gardant le signal Godot synchrone.
+		_eventBus.EmitSignal(EventBus.SignalName.EntityDamaged, (System.ReadOnlySpan<Variant>)[this, damage]);
 		SpawnDamageNumber(damage, isCrit);
-		Infrastructure.AudioManager.Play(isCrit ? "sfx_hit_critique" : "sfx_hit_ennemi", 0.07f);
+		if (showImpact)
+		{
+			TriggerHitFeedback();
+			SpawnHitFlashSprite();
+			Infrastructure.AudioManager.Play(isCrit ? "sfx_hit_critique" : "sfx_hit_ennemi", 0.07f);
+		}
 
 		// Screen shake + hitstop selon l'intensité
 		if (isCrit)
@@ -848,7 +863,7 @@ public partial class Enemy : CharacterBody2D
 			ScreenShake.Instance?.ShakeHeavy();
 			ScreenShake.Instance?.Hitstop(0.045f);
 		}
-		else if (damage > 20f)
+		else if (showImpact && damage > 20f)
 		{
 			ScreenShake.Instance?.ShakeLight();
 		}
