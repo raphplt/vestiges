@@ -253,6 +253,7 @@ public partial class ScoreManager : Node
                     Level = weapon.Level,
                     Damage = player.GetDamageDealt(weapon.Id),
                     Kills = player.GetKills(weapon.Id),
+                    HeldSeconds = _runTracker?.WeaponHeldSeconds(weapon.Id),
                 });
             }
         }

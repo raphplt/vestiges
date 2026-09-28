@@ -193,8 +193,6 @@ UI_END_BEST,Meilleur : {0},Best: {0}
 UI_END_DETAIL,Combat {0}  ·  Survie {1}  ·  Crises {2}  ·  Exploration {3},Combat {0}  ·  Survival {1}  ·  Crises {2}  ·  Exploration {3}
 UI_END_WEAPONS,ARMES,WEAPONS
 UI_END_PASSIVES,SOUVENIRS,SOUVENIRS
-UI_END_LEVEL,{0},{0}
-UI_END_DURATION,Durée,Duration
 UI_END_KILLS,Éliminations,Kills
 UI_END_CRISES,Résurgences,Resurgences
 UI_END_FELL_TO,Dernier coup,Last hit
@@ -205,6 +203,24 @@ UI_END_REPLAY,Rejouer,Play again
 UI_END_HUB,Retour au camp,Back to camp
 UI_END_NEW_WEAPON,Arme retrouvée : {0},Weapon found: {0}
 UI_END_COLLECTION,Voir dans la Collection,See in the Collection
+UI_END_FARTHEST,au plus loin,farthest
+UI_END_DISTANCE_M,{0} m,{0} m
+UI_END_DURATION_CAPTION,durée,duration
+UI_END_WEAPON_LEVEL,Niveau {0},Level {0}
+UI_END_COL_DAMAGE,Dégâts,Damage
+UI_END_COL_DPS,DPS,DPS
+UI_END_COL_KILLS,Élim.,Kills
+UI_END_OTHER_EFFECTS,"Autres effets (brûlure, feu, explosions)","Other effects (burn, fire, explosions)"
+UI_END_KILLER_ERASURE,L'Effacement,The Erasure
+UI_END_AT_TIME,à {0},at {0}
+UI_END_LEVEL_REACHED,Niveau atteint,Level reached
+UI_END_ELITES,Élites,Elites
+UI_END_SOVEREIGNS,Souverains,Sovereigns
+UI_END_BOSSES,Boss,Bosses
+UI_END_TRAVELLED,Parcouru,Travelled
+UI_END_CHESTS,Coffres ouverts,Chests opened
+UI_END_DAMAGE_TAKEN,Dégâts subis,Damage taken
+UI_END_TIMELINE,Distance au départ au fil de la run,Distance from the start over the run
 UI_HUD_ESSENCE,{0} Essence,{0} Essence
 UI_HUD_PHASE_EXPLORATION,EXPLORATION,EXPLORATION
 UI_HUD_PHASE_CRISIS,RÉSURGENCE,RESURGENCE

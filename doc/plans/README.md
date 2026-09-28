@@ -21,7 +21,7 @@ La [Stratégie V2](../VESTIGES-STRATEGIE-V2.md) reste l'autorité gameplay/roadm
 |---|---|---|---|
 | [00 — État des lieux et sources](00-etat-des-lieux.md) | Référence | Constats et limites de l'audit | Aucune |
 | [01 — Déplacements](01-deplacements.md) | P0 | Socle B/C et dash D validés ; E après nouveau casting et sprites (06/08) | 03 pour calibrer la mobilité active |
-| [02 — Juiciness, score et récompenses](02-juiciness-score.md) | P0 | Direction validée ; score en run, record au bilan seulement ; refonte de la mort : M1 et M2 livrés, M3 et M4 proposés | 01 pour le ressenti ; cadrage 08 |
+| [02 — Juiciness, score et récompenses](02-juiciness-score.md) | P0 | Direction validée ; score en run, record au bilan seulement ; refonte de la mort : M1 à M3 livrés, M4 proposé | 01 pour le ressenti ; cadrage 08 |
 | [03 — Boucle et rythme](03-boucle-et-rythme.md) | P0 | Direction validée ; début plus menaçant et XP moins rapide | Première passe 01/02 |
 | [04 — Interfaces et Hub](04-interfaces-et-hub.md) | P1 | Navigation, sélection, typographie et affichage adaptatif | Cadrage 08 ; contrats 05/06 |
 | [05 — Armes, objets et builds](05-armes-objets-builds.md) | P1 | 4 armes + 4 passifs validés ; objets distincts cumulables sans limite | Hypothèses de tempo 03 |
@@ -57,6 +57,8 @@ Un seul lot d'implémentation ouvert à la fois. Un échec de lisibilité, de pe
 **Mise à jour du 28 septembre — mort refondue, lot M1 livré :** [plan 02 lot D, seconde passe](02-juiciness-score.md). La mort se joue dans le monde : impact et ralenti, le joueur se défait, l'Effacement part de sa place et décolore l'écran, le tueur reste en couleur. Le bilan suit sans titre explicite. Direction validée ([DECISIONS §22](DECISIONS.md)) : une seule page de bilan dense, distance mise en avant. Suite proposée : M2 (données de run).
 
 **Mise à jour du 28 septembre — lot M2 livré :** [plan 02 lot D](02-juiciness-score.md). La run relève sa distance (au plus loin et parcourue), une frise, les éliminations par arme, les élites, Souverains et boss. L'historique passe en version 3 sans perdre les runs V2 ; une montée de version les aurait effacées, c'est corrigé. Suite proposée : M3 (bilan dense).
+
+**Mise à jour du 28 septembre — lot M3 livré :** [plan 02 lot D](02-juiciness-score.md). Le bilan tient en une page dense. En tête : distance, score et durée. Au centre : le tableau des armes (part, DPS, éliminations), le tueur et les faits. Dessous : la frise de la run. Suite proposée : M4 (gains animés).
 
 **Mise à jour du 28 septembre — lot 6B livré :** le feedback du cône du Transistor est cadencé, les dégâts et procs restent à chaque tick. À 50 cibles sur quatre secondes : allocations directes **2,66 → 1,41 Mo (−47 %)** et feedback **12 000 → 2 000 (−83 %)**, mêmes dégâts et attribution. 38 assertions et régressions armes/capacités vertes, smoke et captures avec chaîne/homing vérifiés. [Preuves, scripts et limites](../audits/performance-2026-09-28/lot-6b/README.md). Aucun gain FPS revendiqué. Suite proposée : 5B (préchauffage).
 

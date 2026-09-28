@@ -282,3 +282,5 @@ Acquis :
 Même retenue voulue pour les textes du chargement de run (`GameLoadingOverlay`, fragments « Le monde oublie ce qu'il était… ») : direction notée, réécriture non faite. Le rendu de M1 reste à juger en jeu.
 
 Après la livraison de M1, Raphaël : « continue m2 ». M2 (données de run) est lancé ; l'échelle des distances (16 px par mètre) reste une proposition.
+
+Après M2, Raphaël : « go m3 ». M3 (bilan dense) est lancé ; sa composition reste à juger en jeu.

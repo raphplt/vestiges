@@ -149,6 +149,10 @@ public class RunWeaponRecord
 
     [JsonPropertyName("kills")]
     public int Kills { get; set; }
+
+    /// <summary>Temps passé dans le build, pour les dégâts par seconde (absent avant le bilan dense).</summary>
+    [JsonPropertyName("held_sec")]
+    public float? HeldSeconds { get; set; }
 }
 
 /// <summary>

@@ -53,6 +53,12 @@ public partial class RunTracker : Node
     private int _elitesKilled;
     private int _sovereignsKilled;
     private int _bossesKilled;
+    // Temps passé dans le build par arme, pour les dégâts par seconde du bilan : périodes closes (arme retirée), et
+    // entrée de la période en cours. Au premier relevé, le build de départ compte depuis zéro.
+    private readonly Dictionary<string, float> _weaponHeldBefore = new();
+    private readonly Dictionary<string, float> _weaponHeldSince = new();
+    private readonly List<string> _weaponsLeft = new();
+    private bool _weaponsSeen;
     // Variantes comptées à part au bilan : ids de data/enemies/_variants.json.
     private const string EliteVariantId = "elite";
     private const string SovereignVariantId = "champion";
@@ -71,6 +77,17 @@ public partial class RunTracker : Node
     public int ElitesKilled => _elitesKilled;
     public int SovereignsKilled => _sovereignsKilled;
     public int BossesKilled => _bossesKilled;
+
+    /// <summary>Temps passé dans le build par cette arme, jusqu'à la fin de la run.</summary>
+    public float WeaponHeldSeconds(string weaponId)
+    {
+        float held = _weaponHeldBefore.GetValueOrDefault(weaponId);
+        if (_weaponHeldSince.TryGetValue(weaponId, out float since))
+            held += _runTime - since;
+        else if (!_weaponsSeen)
+            held = _runTime;
+        return held;
+    }
 
     // --- Difficulty metrics ---
     public int TotalSpawned => _totalSpawned;
@@ -171,6 +188,7 @@ public partial class RunTracker : Node
         _eventBus.EntityDamaged += OnEntityDamaged;
         _eventBus.CrisisStarted += OnCrisisStarted;
         _eventBus.VariantEnemyKilled += OnVariantEnemyKilled;
+        _eventBus.WeaponInventoryChanged += OnWeaponInventoryChanged;
 
         RunSummaryConfig summaryConfig = RunSummaryConfig.Load();
         _journey = new RunJourney(summaryConfig);
@@ -198,6 +216,7 @@ public partial class RunTracker : Node
         _eventBus.EntityDamaged -= OnEntityDamaged;
         _eventBus.CrisisStarted -= OnCrisisStarted;
         _eventBus.VariantEnemyKilled -= OnVariantEnemyKilled;
+        _eventBus.WeaponInventoryChanged -= OnWeaponInventoryChanged;
     }
 
     public override void _Process(double delta)
@@ -289,6 +308,27 @@ public partial class RunTracker : Node
         }
     }
 
+    private void OnWeaponInventoryChanged()
+    {
+        if (_groups.GetPlayer() is not Player player)
+            return;
+        float entry = _weaponsSeen ? _runTime : 0f;
+        _weaponsSeen = true;
+        _weaponsLeft.Clear();
+        foreach (string id in _weaponHeldSince.Keys)
+            _weaponsLeft.Add(id);
+        foreach (Combat.WeaponInstance weapon in player.WeaponSlots)
+        {
+            _weaponsLeft.Remove(weapon.Id);
+            _weaponHeldSince.TryAdd(weapon.Id, entry);
+        }
+        foreach (string id in _weaponsLeft)
+        {
+            _weaponHeldBefore[id] = _weaponHeldBefore.GetValueOrDefault(id) + _runTime - _weaponHeldSince[id];
+            _weaponHeldSince.Remove(id);
+        }
+    }
+
     private void OnCrisisStarted(int crisisNumber, int intensity)
     {
         _journey.Mark(_runTime, RunMarkerKind.Crisis);
@@ -307,8 +347,15 @@ public partial class RunTracker : Node
 
     private void OnPlayerDamaged(float currentHp, float maxHp)
     {
-        // Detect damage taken (HP decreased)
-        if (_previousMaxHp > 0f && currentHp < _previousHp)
+        // Le coup fatal peut passer sous zéro : seuls les PV réellement perdus comptent.
+        currentHp = Mathf.Max(0f, currentHp);
+        // La run commence à pleine vie : sans cette référence, le premier coup reçu n'était jamais compté.
+        if (_previousMaxHp <= 0f)
+        {
+            _previousHp = maxHp;
+            _previousMaxHp = maxHp;
+        }
+        if (currentHp < _previousHp)
         {
             float damageTaken = _previousHp - currentHp;
             _totalDamageTaken += damageTaken;

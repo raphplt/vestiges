@@ -192,6 +192,34 @@ Raphaël valide une juiciness très poussée : mobilité, impacts, collectes, ra
   - l'échelle de 16 px/m est une proposition : un bot en ligne droite fait environ 750 m en deux minutes ;
   - sur les longues runs (300 à 400 niveaux visés au plan 20), les marqueurs de niveau seront nombreux : M3 devra les regrouper sur la frise.
 
+**M3 livré — 28 septembre 2026.** Demande de Raphaël : « go m3 ». Une seule page, en 1920 × 1080 mis à l'échelle :
+- **En tête**, trois chiffres qui montent ensemble : la distance au plus loin, le score (le record reste seulement ici), la durée. Viennent ensuite le record et le détail du score. Le titre est le nom du personnage.
+- **À gauche** : le personnage de face, puis « Dernier coup ». La carte montre la créature (portrait rogné à ses pixels visibles, ×4), son nom et la minute. Si l'Effacement a tué, c'est lui qui est nommé.
+- **Au centre**, le tableau des armes :
+  - icône, nom et niveau ;
+  - part des dégâts du build (barre et pourcentage) ;
+  - dégâts, dégâts par seconde, éliminations ;
+  - l'arme qui a porté le build en or ;
+  - une ligne « Autres effets (brûlure, feu, explosions) » pour les éliminations sans arme, quand il y en a.
+  Les souvenirs sont en dessous.
+- **Dégâts par seconde** : ils se comptent depuis l'entrée de l'arme dans le build. `RunTracker` la date via `WeaponInventoryChanged` (`held_sec` dans l'historique) : une arme prise tard n'est pas pénalisée.
+- **À droite**, les faits : niveau atteint, éliminations, élites, Souverains, boss (s'il y en a), chemin parcouru, Résurgences, coffres, dégâts subis.
+- **Frise** (`RunTimelineStrip`) sur toute la largeur. La courbe est la distance au départ au fil de la run, dévoilée de gauche à droite. Marqueurs : Résurgences en trait orange, élites, Souverains et boss en losanges, coffres en points. Les montées de niveau forment une bande dont l'intensité suit la densité (96 cases), ce qui tient pour 300 niveaux comme pour 14.
+- **En bas** : les gains, en cartes plus compactes, puis les boutons. Révélation, garde des boutons, accélération et lien vers la Collection sont inchangés.
+- **Blocs** : ils sont construits par `RunSummaryPanels` depuis le relevé de fin de run. `GameOverScreen` garde l'orchestration.
+- **Dégâts subis, deux défauts corrigés** :
+  - le coup fatal comptait en entier, au-delà de zéro PV ;
+  - le premier coup reçu d'une run n'était jamais compté : il servait de référence.
+- **Relecture `godot-reviewer`** : rien de bloquant. Boutons, révélation, entrées et Collection sont inchangés ; la page tient sans relevé. Suites données :
+  - la ligne « Autres effets » est alignée sur la colonne des éliminations ;
+  - une arme retirée puis reprise ne compte plus son absence dans son temps de détention ;
+  - format de durée unique ;
+  - deux clés de traduction devenues inutiles sont retirées.
+- **Vérifié** : build sans avertissement et smoke test.
+  - Bot nomade, 120 s puis 360 s, captures regardées. Run de 6 min : 717 m au plus loin, 5 620 m parcourus. Les 332 éliminations sont toutes attribuées, pelle à neige en tête (38 %, 155 éliminations). La frise montre une Résurgence et 13 montées de niveau.
+  - Réduction à 1280 × 720 regardée : tout reste lisible, les plus petits textes (niveau d'arme, pourcentages) sont au plancher de l'échelle typographique.
+- **Non vérifié** : manette et clavier sur les boutons (comportement inchangé), texte anglais, frise d'une run à plusieurs élites ou Souverains (aucun dans les deux runs mesurées).
+
 ## 6. Recette finale et sortie
 
 Même monde et même build, séquence courte avant/après ; puis run dense réelle. La seed du monde ne fixe pas tous les tirages de spawn et de crises : utiliser spawns/calendrier contrôlés pour une comparaison stricte, sinon répéter les essais et noter leur variabilité. Tester effets réduits, son coupé et absence de secousse. Effectuer build, smoke si applicable, profilage et vérifications du [dossier](README.md).

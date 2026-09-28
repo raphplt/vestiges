@@ -9,30 +9,37 @@ using Vestiges.Score;
 namespace Vestiges.UI;
 
 /// <summary>
-/// Bilan de fin de run (plan 02 lot D, première passe). Trois zones sur un voile sombre : en tête le score final qui
-/// défile et, seulement ici, le record ; au centre le personnage, son build complet (armes et souvenirs avec leur
-/// niveau) et quelques faits ; en bas les gains, puis « Rejouer » et « Retour au camp ». Révélation en trois temps
-/// qu'une touche accélère ; les boutons ne s'activent qu'après un court délai, pour qu'un clic de combat ne relance pas
-/// la run par accident. Le build et le score sont figés à la mort ; le bilan n'apparaît qu'à la fin de la séquence
-/// de mort (<see cref="DeathSequence"/>, qui appelle <see cref="Reveal"/>).
+/// Bilan de fin de run, en une page dense (plan 02 lot D, M3). En tête, trois chiffres : jusqu'où le joueur est allé,
+/// le score (et, seulement ici, le record), la durée. Au centre, le personnage et ce qui l'a emporté, le tableau des
+/// armes (dégâts, part, dégâts par seconde, éliminations), les souvenirs et les faits de la run. Dessous, la frise de
+/// la run, puis les gains et les boutons. Révélation en quelques temps qu'une touche accélère ; les boutons ne
+/// s'activent qu'après un court délai, pour qu'un clic de combat ne relance pas la run par accident. Tout est relevé à
+/// la mort ; le bilan n'apparaît qu'à la fin de la séquence de mort (<see cref="DeathSequence"/> appelle
+/// <see cref="Reveal"/>).
 /// </summary>
 public partial class GameOverScreen : CanvasLayer
 {
     private static readonly Vector2 DesignSize = new(1920f, 1080f);
-    private const int ScoreFontSize = 120;
+    private const int ScoreFontSize = 110;
     private const float VeilSec = 0.5f;
     private const float ScoreStart = 0.4f;
     private const float ScoreSec = 0.9f;
     private const float BuildStart = 1.2f;
-    private const float GainsStart = 1.7f;
-    private const float RevealEnd = 2.2f;
+    private const float TimelineStart = 1.5f;
+    private const float TimelineSec = 0.8f;
+    private const float GainsStart = 2f;
+    private const float RevealEnd = 2.5f;
     private const float ButtonGuardSec = 0.35f;
-    private const float IconSize = 64f;
+    private const float SlideIn = 24f;
+    private const float MiddleY = 300f;
+    private const float TimelineY = 766f;
+    private const float GainsY = 884f;
     private static readonly Color VeilColor = new(0.025f, 0.02f, 0.05f, 0.93f);
     private static readonly Color SlotColor = new(0.08f, 0.07f, 0.12f, 0.9f);
 
     private EventBus _eventBus;
     private ScoreManager _scoreManager;
+    private RunTracker _runTracker;
     private Font _bodyFont;
     private Font _strongFont;
     private Font _boldFont;
@@ -42,9 +49,15 @@ public partial class GameOverScreen : CanvasLayer
     private Control _root;
     private Label _title;
     private Label _score;
+    private Label _distance;
+    private Label _distanceCaption;
+    private Label _duration;
+    private Label _durationCaption;
     private Label _record;
     private Label _detail;
     private Control _middle;
+    private Label _timelineCaption;
+    private RunTimelineStrip _timeline;
     private Control _gains;
     private HubMenuButton _restartButton;
     private HubMenuButton _hubButton;
@@ -58,15 +71,16 @@ public partial class GameOverScreen : CanvasLayer
     private float _elapsed;
     private float _buttonsAt = float.MaxValue;
     private int _finalScore;
+    private float _finalDistance;
+    private float _finalDuration;
     private bool _isRecord;
     private BuildSnapshot _build;
 
-    /// <summary>Build du joueur relevé à sa mort : ce que le bilan montre ne dépend plus de la run.</summary>
+    /// <summary>Personnage et souvenirs relevés à la mort : ce que le bilan montre ne dépend plus de la run.</summary>
     private sealed class BuildSnapshot
     {
         public string CharacterId;
         public string CharacterName;
-        public readonly List<(string Icon, int Level, float Damage)> Weapons = new();
         public readonly List<(string Icon, int Level)> Passives = new();
     }
 
@@ -98,6 +112,11 @@ public partial class GameOverScreen : CanvasLayer
         _scoreManager = scoreManager;
     }
 
+    public void SetRunTracker(RunTracker runTracker)
+    {
+        _runTracker = runTracker;
+    }
+
     // ==============================
     // Construction
     // ==============================
@@ -112,30 +131,42 @@ public partial class GameOverScreen : CanvasLayer
         AddChild(_root);
 
         _title = MakeLabel("", _strongFont, TextRole.Banner, UITheme.GoldDim, HorizontalAlignment.Center);
-        Place(_title, 0f, 70f, DesignSize.X, 50f);
+        Place(_title, 0f, 24f, DesignSize.X, 48f);
 
+        // Trois chiffres en tête : jusqu'où, le score (le héros du bilan, hors échelle), la durée.
         _score = MakeLabel("0", _boldFont, TextRole.Display, UITheme.GoldBright, HorizontalAlignment.Center, 10);
-        // Le score est le héros du bilan : hors échelle, et pas agrandi, sa place est fixée dans la composition.
         UITheme.SetFixedTextSize(_score, ScoreFontSize);
-        Place(_score, 0f, 120f, DesignSize.X, 150f);
+        Place(_score, 660f, 70f, 600f, 132f);
+        _distance = MakeLabel("", _boldFont, TextRole.Display, UITheme.TextLight, HorizontalAlignment.Center, 8);
+        Place(_distance, 180f, 96f, 480f, 64f);
+        _distanceCaption = MakeLabel(Tr("UI_END_FARTHEST"), _bodyFont, TextRole.Heading, UITheme.TextDim, HorizontalAlignment.Center, 4);
+        Place(_distanceCaption, 180f, 160f, 480f, 34f);
+        _duration = MakeLabel("", _boldFont, TextRole.Display, UITheme.TextLight, HorizontalAlignment.Center, 8);
+        Place(_duration, 1260f, 96f, 480f, 64f);
+        _durationCaption = MakeLabel(Tr("UI_END_DURATION_CAPTION"), _bodyFont, TextRole.Heading, UITheme.TextDim, HorizontalAlignment.Center, 4);
+        Place(_durationCaption, 1260f, 160f, 480f, 34f);
 
         _record = MakeLabel("", _strongFont, TextRole.Title, UITheme.TextColor, HorizontalAlignment.Center);
-        Place(_record, 0f, 272f, DesignSize.X, 44f);
-
-        _detail = MakeLabel("", _bodyFont, TextRole.Heading, UITheme.TextDim, HorizontalAlignment.Center);
-        Place(_detail, 0f, 318f, DesignSize.X, 34f);
+        Place(_record, 0f, 204f, DesignSize.X, 42f);
+        _detail = MakeLabel("", _bodyFont, TextRole.Lead, UITheme.TextDim, HorizontalAlignment.Center, 4);
+        Place(_detail, 0f, 246f, DesignSize.X, 30f);
 
         _middle = new Control { MouseFilter = Control.MouseFilterEnum.Ignore };
-        Place(_middle, 0f, 390f, DesignSize.X, 360f);
+        Place(_middle, 0f, MiddleY, DesignSize.X, 440f);
+
+        _timelineCaption = MakeLabel(Tr("UI_END_TIMELINE"), _bodyFont, TextRole.Small, UITheme.TextDim, HorizontalAlignment.Left, 4);
+        Place(_timelineCaption, 60f, TimelineY - 26f, 900f, 24f);
+        _timeline = new RunTimelineStrip { MouseFilter = Control.MouseFilterEnum.Ignore };
+        Place(_timeline, 60f, TimelineY, DesignSize.X - 120f, 100f);
 
         _gains = new HBoxContainer { MouseFilter = Control.MouseFilterEnum.Ignore, Alignment = BoxContainer.AlignmentMode.Center };
-        _gains.AddThemeConstantOverride("separation", 24);
-        Place(_gains, 0f, 790f, DesignSize.X, 90f);
+        _gains.AddThemeConstantOverride("separation", 20);
+        Place(_gains, 0f, GainsY, DesignSize.X, 64f);
 
         HBoxContainer buttons = new() { Alignment = BoxContainer.AlignmentMode.Center };
         _buttons = buttons;
         buttons.AddThemeConstantOverride("separation", 40);
-        Place(buttons, 0f, 930f, DesignSize.X, 70f);
+        Place(buttons, 0f, 962f, DesignSize.X, 70f);
         _restartButton = new HubMenuButton();
         _restartButton.Setup(Tr("UI_END_REPLAY"), TextRole.Banner, _strongFont);
         _restartButton.Pressed += OnRestartPressed;
@@ -153,8 +184,8 @@ public partial class GameOverScreen : CanvasLayer
         _hubButton.FocusNeighborRight = _collectionButton.GetPath();
         _collectionButton.FocusNeighborLeft = _hubButton.GetPath();
 
-        _seed = MakeLabel("", _bodyFont, TextRole.Lead, UITheme.TextVeryDim, HorizontalAlignment.Left);
-        Place(_seed, 40f, 1030f, 600f, 30f);
+        _seed = MakeLabel("", _bodyFont, TextRole.Small, UITheme.TextVeryDim, HorizontalAlignment.Left);
+        Place(_seed, 40f, 1040f, 600f, 28f);
 
         GetViewport().SizeChanged += FitToViewport;
         FitToViewport();
@@ -212,8 +243,6 @@ public partial class GameOverScreen : CanvasLayer
     {
         BuildSnapshot build = new() { CharacterId = player.CharacterId };
         build.CharacterName = CharacterDataLoader.Get(player.CharacterId)?.Name ?? player.CharacterId;
-        foreach (WeaponInstance weapon in player.WeaponSlots)
-            build.Weapons.Add((weapon.Sprite, weapon.Level, player.GetDamageDealt(weapon.Id)));
         foreach (ActivePassiveSouvenir passive in player.PassiveSlots)
             build.Passives.Add((PerkIconResolver.GetPassiveStatIconPath(passive.Data.Stat), passive.Level));
         return build;
@@ -230,6 +259,8 @@ public partial class GameOverScreen : CanvasLayer
         RunRecord record = gm.LastRunData;
         _finalScore = _scoreManager?.CurrentScore ?? 0;
         _isRecord = _scoreManager?.IsNewRecord ?? false;
+        _finalDistance = record?.MaxDistanceMeters ?? 0f;
+        _finalDuration = record?.RunDurationSec ?? 0f;
 
         _title.Text = _build?.CharacterName ?? "";
         _record.Text = _isRecord ? Tr("UI_END_NEW_RECORD") : string.Format(Tr("UI_END_BEST"), (_scoreManager?.BestScore ?? 0).ToString("N0"));
@@ -238,6 +269,7 @@ public partial class GameOverScreen : CanvasLayer
         _seed.Text = gm.RunSeed > 0 ? string.Format(Tr("UI_END_SEED"), gm.RunSeed) : "";
 
         BuildMiddle(record);
+        BuildTimeline();
         BuildGains(gm);
 
         _score.Text = "0";
@@ -266,7 +298,7 @@ public partial class GameOverScreen : CanvasLayer
         foreach (Node child in _middle.GetChildren())
             child.QueueFree();
 
-        // Le personnage, de face, à l'échelle ×6 de ses pixels.
+        // Colonne de gauche : le personnage, de face, et ce qui l'a emporté.
         if (_build != null)
         {
             CharacterData data = CharacterDataLoader.Get(_build.CharacterId);
@@ -278,119 +310,78 @@ public partial class GameOverScreen : CanvasLayer
                 {
                     SpriteFrames = frames,
                     Animation = animation,
-                    Scale = new Vector2(6f, 6f),
-                    Position = new Vector2(420f, 170f),
+                    Scale = new Vector2(5f, 5f),
+                    Position = new Vector2(300f, 110f),
                     TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
                 };
                 _middle.AddChild(sprite);
                 sprite.Play(animation);
             }
         }
-
-        Label weaponsCaption = MakeLabel(Tr("UI_END_WEAPONS"), _strongFont, TextRole.Subhead, UITheme.TextDim, HorizontalAlignment.Left, 4);
-        weaponsCaption.Position = new Vector2(640f, 20f);
-        _middle.AddChild(weaponsCaption);
-        HBoxContainer weapons = SlotRow(new Vector2(640f, 52f));
-        float topDamage = 0f;
-        if (_build != null)
-            foreach ((string _, int _, float damage) in _build.Weapons)
-                topDamage = Mathf.Max(topDamage, damage);
-        for (int i = 0; i < Player.MaxWeaponSlots; i++)
+        Control killer = RunSummaryPanels.KillerCard(record?.DeathCause, _finalDuration);
+        if (killer != null)
         {
-            bool filled = _build != null && i < _build.Weapons.Count;
-            if (!filled)
-            {
-                weapons.AddChild(MakeSlot(null, 0, UITheme.TextVeryDim));
-                continue;
-            }
-            // Sous chaque arme, ses dégâts de la run ; l'arme qui a porté le build ressort en or (plan 02 lot D).
-            (string icon, int level, float damage) = _build.Weapons[i];
-            VBoxContainer column = new();
-            column.AddThemeConstantOverride("separation", 2);
-            column.AddChild(MakeSlot(icon, level, UITheme.GoldDim));
-            Label dealt = MakeLabel(Mathf.RoundToInt(damage).ToString("N0"), _strongFont, TextRole.Body,
-                damage > 0f && damage >= topDamage ? UITheme.GoldBright : UITheme.TextDim, HorizontalAlignment.Center, 4);
-            column.AddChild(dealt);
-            weapons.AddChild(column);
+            killer.Position = new Vector2(60f, 250f);
+            killer.CustomMinimumSize = new Vector2(480f, 0f);
+            _middle.AddChild(killer);
         }
 
+        // Colonne centrale : les armes, puis les souvenirs.
+        int totalKills = _scoreManager?.TotalKills ?? 0;
+        Control weapons = RunSummaryPanels.WeaponTable(record?.Weapons ?? new List<RunWeaponRecord>(), totalKills, _finalDuration);
+        weapons.Position = new Vector2(580f, 0f);
+        _middle.AddChild(weapons);
+
         Label passivesCaption = MakeLabel(Tr("UI_END_PASSIVES"), _strongFont, TextRole.Subhead, UITheme.TextDim, HorizontalAlignment.Left, 4);
-        passivesCaption.Position = new Vector2(640f, 170f);
+        passivesCaption.Position = new Vector2(580f, 348f);
         _middle.AddChild(passivesCaption);
-        HBoxContainer passives = SlotRow(new Vector2(640f, 202f));
+        HBoxContainer passives = new() { Position = new Vector2(580f, 376f), MouseFilter = Control.MouseFilterEnum.Ignore };
+        passives.AddThemeConstantOverride("separation", 12);
+        _middle.AddChild(passives);
         for (int i = 0; i < Player.MaxPassiveSlots; i++)
         {
             bool filled = _build != null && i < _build.Passives.Count;
             passives.AddChild(filled
-                ? MakeSlot(_build.Passives[i].Icon, _build.Passives[i].Level, UITheme.CyanEssence)
-                : MakeSlot(null, 0, UITheme.TextVeryDim));
+                ? RunSummaryPanels.Slot(_build.Passives[i].Icon, _build.Passives[i].Level, UITheme.CyanEssence)
+                : RunSummaryPanels.Slot(null, 0, UITheme.TextVeryDim));
         }
 
-        VBoxContainer facts = new() { Position = new Vector2(1180f, 30f), Size = new Vector2(520f, 300f) };
-        facts.AddThemeConstantOverride("separation", 14);
+        // Colonne de droite : les faits de la run.
+        Control facts = RunSummaryPanels.Facts(BuildFacts(record, totalKills));
+        facts.Position = new Vector2(1480f, 6f);
         _middle.AddChild(facts);
-        AddFact(facts, Tr("UI_END_DURATION"), FormatDuration(record?.RunDurationSec ?? 0f));
-        AddFact(facts, Tr("UI_END_KILLS"), (_scoreManager?.TotalKills ?? 0).ToString("N0"));
-        AddFact(facts, Tr("UI_END_CRISES"), (record?.CrisesSurvived ?? 0).ToString());
-        string cause = record?.DeathCause;
-        string causeName = string.IsNullOrEmpty(cause) || cause == "unknown" ? "—" : EnemyDataLoader.Get(cause)?.Name ?? cause;
-        AddFact(facts, Tr("UI_END_FELL_TO"), causeName);
     }
 
-    private HBoxContainer SlotRow(Vector2 position)
+    private List<(string Caption, string Value)> BuildFacts(RunRecord record, int totalKills)
     {
-        HBoxContainer row = new() { Position = position };
-        row.AddThemeConstantOverride("separation", 16);
-        _middle.AddChild(row);
-        return row;
-    }
-
-    /// <summary>Case du build : icône, cadre coloré selon la famille (armes, souvenirs), niveau en coin. Vide : cadre éteint.</summary>
-    private Control MakeSlot(string iconPath, int level, Color frame)
-    {
-        // Pas étirée par une colonne voisine plus haute (case d'arme et ses dégâts).
-        PanelContainer slot = new() { CustomMinimumSize = new Vector2(IconSize + 24f, IconSize + 24f), SizeFlagsVertical = Control.SizeFlags.ShrinkBegin };
-        StyleBoxFlat style = new()
+        List<(string, string)> facts = new()
         {
-            BgColor = SlotColor,
-            BorderColor = frame,
-            BorderWidthLeft = 3,
-            BorderWidthRight = 3,
-            BorderWidthTop = 3,
-            BorderWidthBottom = 3,
+            (Tr("UI_END_LEVEL_REACHED"), Mathf.Max(1, record?.MaxLevel ?? 1).ToString()),
+            (Tr("UI_END_KILLS"), totalKills.ToString("N0")),
+            (Tr("UI_END_ELITES"), (record?.ElitesKilled ?? 0).ToString("N0")),
+            (Tr("UI_END_SOVEREIGNS"), (record?.SovereignsKilled ?? 0).ToString("N0")),
         };
-        slot.AddThemeStyleboxOverride("panel", style);
-        if (!string.IsNullOrEmpty(iconPath) && ResourceLoader.Exists(iconPath))
-        {
-            TextureRect icon = new()
-            {
-                Texture = GD.Load<Texture2D>(iconPath),
-                ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
-                StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
-                TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
-                CustomMinimumSize = new Vector2(IconSize, IconSize),
-            };
-            slot.AddChild(icon);
-        }
-        if (level > 0)
-        {
-            Label badge = MakeLabel(string.Format(Tr("UI_END_LEVEL"), level), _boldFont, TextRole.Lead, UITheme.GoldBright, HorizontalAlignment.Right, 5);
-            badge.VerticalAlignment = VerticalAlignment.Bottom;
-            slot.AddChild(badge);
-        }
-        return slot;
+        if (record?.BossesKilled is > 0)
+            facts.Add((Tr("UI_END_BOSSES"), record.BossesKilled.Value.ToString("N0")));
+        facts.Add((Tr("UI_END_TRAVELLED"), FormatMeters(record?.TravelledMeters ?? 0f)));
+        facts.Add((Tr("UI_END_CRISES"), (record?.CrisesSurvived ?? 0).ToString()));
+        facts.Add((Tr("UI_END_CHESTS"), (record?.ChestsOpened ?? 0).ToString("N0")));
+        facts.Add((Tr("UI_END_DAMAGE_TAKEN"), Mathf.RoundToInt(record?.TotalDamageTaken ?? 0f).ToString("N0")));
+        return facts;
     }
 
-    private void AddFact(VBoxContainer facts, string caption, string value)
+    private void BuildTimeline()
     {
-        HBoxContainer row = new();
-        row.AddThemeConstantOverride("separation", 16);
-        Label captionLabel = MakeLabel(caption, _bodyFont, TextRole.Heading, UITheme.TextDim, HorizontalAlignment.Left, 4);
-        captionLabel.CustomMinimumSize = new Vector2(250f, 0f);
-        row.AddChild(captionLabel);
-        row.AddChild(MakeLabel(value, _strongFont, TextRole.Title, UITheme.TextColor, HorizontalAlignment.Left, 5));
-        facts.AddChild(row);
+        RunJourney journey = _runTracker?.Journey;
+        _timeline.Visible = journey != null && journey.Samples.Count >= 2;
+        _timelineCaption.Visible = _timeline.Visible;
+        if (!_timeline.Visible)
+            return;
+        _timeline.SetData(journey.Samples, journey.Markers, _finalDuration, RunSummaryPanels.FormatDuration(0f), RunSummaryPanels.FormatDuration(_finalDuration));
+        _timeline.Reveal = 0f;
     }
+
+    private string FormatMeters(float meters) => string.Format(Tr("UI_END_DISTANCE_M"), Mathf.RoundToInt(meters).ToString("N0"));
 
     private void BuildGains(GameManager gm)
     {
@@ -433,24 +424,24 @@ public partial class GameOverScreen : CanvasLayer
             BgColor = SlotColor,
             BorderColor = accent,
             BorderWidthTop = 3,
-            ContentMarginLeft = 22,
-            ContentMarginRight = 22,
-            ContentMarginTop = 14,
-            ContentMarginBottom = 14,
+            ContentMarginLeft = 20,
+            ContentMarginRight = 20,
+            ContentMarginTop = 10,
+            ContentMarginBottom = 10,
         };
         card.AddThemeStyleboxOverride("panel", style);
-        Label label = MakeLabel(text, _strongFont, TextRole.Heading, accent, HorizontalAlignment.Center, 4);
+        Label label = MakeLabel(text, _strongFont, TextRole.Lead, accent, HorizontalAlignment.Center, 4);
         if (string.IsNullOrEmpty(icon) || !ResourceLoader.Exists(icon))
         {
             card.AddChild(label);
             return card;
         }
         HBoxContainer row = new() { MouseFilter = Control.MouseFilterEnum.Ignore };
-        row.AddThemeConstantOverride("separation", 14);
+        row.AddThemeConstantOverride("separation", 12);
         row.AddChild(new TextureRect
         {
             Texture = GD.Load<Texture2D>(icon),
-            CustomMinimumSize = new Vector2(48f, 48f),
+            CustomMinimumSize = new Vector2(36f, 36f),
             ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
             StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
             TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
@@ -499,10 +490,20 @@ public partial class GameOverScreen : CanvasLayer
         _veil.Color = new Color(VeilColor, VeilColor.A * veil);
         _title.Modulate = new Color(1f, 1f, 1f, veil);
 
+        // Score, distance et durée montent ensemble.
         float count = Mathf.Clamp((_elapsed - ScoreStart) / ScoreSec, 0f, 1f);
         float eased = 1f - Mathf.Pow(1f - count, 3f);
+        float heroIn = Mathf.Clamp((_elapsed - ScoreStart) / 0.15f, 0f, 1f);
         _score.Text = Mathf.RoundToInt(_finalScore * eased).ToString("N0");
-        _score.Modulate = new Color(1f, 1f, 1f, Mathf.Clamp((_elapsed - ScoreStart) / 0.15f, 0f, 1f));
+        _distance.Text = FormatMeters(_finalDistance * eased);
+        _duration.Text = RunSummaryPanels.FormatDuration(_finalDuration * eased);
+        Color hero = new(1f, 1f, 1f, heroIn);
+        _score.Modulate = hero;
+        _distance.Modulate = hero;
+        _distanceCaption.Modulate = hero;
+        _duration.Modulate = hero;
+        _durationCaption.Modulate = hero;
+
         float recordIn = Mathf.Clamp((_elapsed - ScoreStart - ScoreSec) / 0.2f, 0f, 1f);
         // Le record pulse doucement, une fois révélé : c'est la seule célébration de la run.
         float pulse = _isRecord && recordIn >= 1f ? 0.75f + 0.25f * Mathf.Sin(_elapsed * 4f) : 1f;
@@ -511,11 +512,17 @@ public partial class GameOverScreen : CanvasLayer
 
         float middle = Mathf.Clamp((_elapsed - BuildStart) / 0.35f, 0f, 1f);
         _middle.Modulate = new Color(1f, 1f, 1f, middle);
-        _middle.Position = new Vector2(0f, 390f + (1f - middle) * 24f);
+        _middle.Position = new Vector2(0f, MiddleY + (1f - middle) * SlideIn);
+
+        float timeline = Mathf.Clamp((_elapsed - TimelineStart) / TimelineSec, 0f, 1f);
+        _timelineCaption.Modulate = new Color(1f, 1f, 1f, Mathf.Clamp(timeline * 4f, 0f, 1f));
+        _timeline.Modulate = _timelineCaption.Modulate;
+        _timeline.Reveal = timeline;
+
         float gains = Mathf.Clamp((_elapsed - GainsStart) / 0.35f, 0f, 1f);
         _gains.Modulate = new Color(1f, 1f, 1f, gains);
-        _gains.Position = new Vector2(0f, 790f + (1f - gains) * 24f);
-        _buttons.Modulate = new Color(1f, 1f, 1f, Mathf.Clamp((_elapsed - GainsStart) / 0.35f, 0f, 1f));
+        _gains.Position = new Vector2(0f, GainsY + (1f - gains) * SlideIn);
+        _buttons.Modulate = new Color(1f, 1f, 1f, gains);
     }
 
     private void SetButtonsEnabled(bool enabled)
@@ -523,12 +530,6 @@ public partial class GameOverScreen : CanvasLayer
         _restartButton.Disabled = !enabled;
         _hubButton.Disabled = !enabled;
         _collectionButton.Disabled = !enabled;
-    }
-
-    private static string FormatDuration(float durationSec)
-    {
-        int total = Mathf.Max(0, Mathf.RoundToInt(durationSec));
-        return $"{total / 60:00}:{total % 60:00}";
     }
 
     private void OnRestartPressed()

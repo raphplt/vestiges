@@ -133,6 +133,7 @@ public partial class GameBootstrap : Node
         levelUpScreen.SetFragmentManager(fragmentManager);
         levelUpScreen.SetPerkManager(perkManager);
         gameOverScreen.SetScoreManager(scoreManager);
+        gameOverScreen.SetRunTracker(runTracker);
 
         if (chestLootScreen != null)
             player.ConfigureLoot(chestLootScreen, perkManager);
