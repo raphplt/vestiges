@@ -313,7 +313,9 @@ public partial class RunObservation : Node
         int peril = int.Parse(Argument(OS.GetCmdlineUserArgs(), "--peril", "0"), CultureInfo.InvariantCulture);
         if (peril > 0)
             _world.GetNode<Vestiges.Progression.PerilManager>("PerilManager").AddPeril(peril);
-        List<string> rows = new() { "t,visible,near600,alive,spawned,killed,level,hit_damage" };
+        List<string> rows = new() { "t,visible,near600,alive,spawned,killed,level,hit_damage,memory,erasure_global" };
+        // Mémoire de la zone sous le joueur et Effacement global, pour mesurer le tempo de l'oubli (retour du 28 septembre).
+        ErasureManager erasure = _world.GetNode<ErasureManager>("ErasureManager");
         // Indice de pression : dégâts que les ennemis infligent à un joueur qui n'esquive jamais (invincible ici).
         double hitDamage = 0;
         EventBus eventBus = GetNode<EventBus>("/root/EventBus");
@@ -468,7 +470,7 @@ public partial class RunObservation : Node
             maxOrbs = Math.Max(maxOrbs, CombatPools.Instance?.XpOrbsOnGround ?? 0);
             visibleSamples.Add(visible);
             rows.Add(string.Create(CultureInfo.InvariantCulture,
-                $"{t:F0},{visible},{near},{alive},{tracker.TotalSpawned},{tracker.TotalKilled},{level},{hitDamage:F0}"));
+                $"{t:F0},{visible},{near},{alive},{tracker.TotalSpawned},{tracker.TotalKilled},{level},{hitDamage:F0},{erasure.GetMemoryAt(_player.GlobalPosition):F2},{erasure.GlobalErasurePercent:F2}"));
         }
 
         eventBus.PlayerHitBy -= onHit;
