@@ -755,6 +755,9 @@ public partial class HUD : CanvasLayer
             _ => PalCyanEssence
         };
         CreateTween().TweenProperty(_erasureFill, "color", barColor, 1f);
+
+        if (newPhase == "Death")
+            DeathSequence.FadeOutLayer(this);
     }
 
     private void OnErasureUpdated(float globalErasurePercent)

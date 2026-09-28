@@ -133,6 +133,38 @@ Raphaël valide une juiciness très poussée : mobilité, impacts, collectes, ra
   - Reste : le passage accéléré par animation des gains.
 - **Dégâts par arme, 27 septembre 2026 (session locale)** : l'attribution existe depuis le plan 17 (lot 1C, pause). Le bilan montre sous chaque arme les dégâts de la run ; celle qui a porté le build ressort en or. Capture `--capture-death` regardée.
 
+#### Seconde passe : la mort et le bilan dense — 28 septembre 2026
+
+**Retour de Raphaël :** « la mort est à revoir. actuellement c'est un simple écran de fin game over il faudrait quelque chose de plus spectaculaire et qui fasse "vrai jeu" », en citant la mort de Megabonk (animation de mort, puis écran de résumé avec toutes les stats de la run). Direction validée ([DECISIONS §22](DECISIONS.md)) :
+- deux tons enchaînés : l'impact brutal, puis l'effacement ;
+- aucun titre explicite (« La route s'efface » retiré) : le jeu dit déjà ce qui arrive ;
+- **une seule page de bilan, plus dense**, sans page de détails ;
+- la **distance** (« jusqu'où ») comme chiffre vedette à côté du score.
+
+| Lot | Contenu | Vérification |
+|---|---|---|
+| **M1 — Séquence de mort** | Quasi-gel à l'impact, ralenti, caméra qui se resserre, sons du monde assourdis ; le joueur se défait en éclats, puis l'Effacement part de là où il se tenait et décolore l'écran ; le tueur reste en couleur, cerné de clair, et se défait le dernier ; le monde est figé sous le bilan | Capture `--capture-death` à chaque temps |
+| **M2 — Données de run** | Distance (plus loin du départ, parcourue), éliminations par arme, élites et Souverains abattus, échantillons pour une frise ; `RunRecord` versionné et migré sans perte d'historique | Mesure headless, ancienne sauvegarde relue |
+| **M3 — Bilan dense** | Une page : score, record et distance en tête ; tableau des armes (niveau, dégâts, part du total, DPS, éliminations) ; souvenirs ; carte du tueur (sprite, nom, minute) ; faits clés ; petite frise de la run ; gains ; boutons | Captures run courte et run riche, 720p et 1080p, clavier et manette |
+| **M4 — Gains animés** | Les Vestiges montent dans un compteur, les cartes de quêtes et de déblocages se retournent ; récompenses attribuées avant toute animation | Gains identiques animation passée ou non |
+
+**M1 livré — 28 septembre 2026.**
+- `DeathSequence` (couche 45, sous le bilan) prend la main à la mort du joueur. Tout se compte en secondes réelles, car `Engine.TimeScale` ralentit le monde et pas la séquence :
+  - 0 à 0,14 s : quasi-gel (×0,03) et secousse (réglage de secousse respecté) ;
+  - ensuite, ralenti ×0,22 ; zoom ×1,45 sur 2 s ;
+  - sons du monde étouffés en 0,6 s (passe-bas sur les bus SFX et Ambiance ; la musique de mort reste claire) ;
+  - 0,2 à 1 s : le joueur se dissout en éclats pâles qui montent (gerbe commune, aucun nœud créé) ;
+  - 0,7 à 2,3 s : l'Effacement part de sa place, avec le son de dissolution du monde ;
+  - 2,9 s : fin, le monde est figé et `GameOverScreen.Reveal` prend le relais.
+- **Le front** (`death_erasure.gdshader`) est un cercle à lobes irréguliers, tramé en violet brume, calculé en pixels du monde pour que la trame ne glisse pas au zoom. Derrière lui, le monde passe en niveaux de gris puis pâlit vers le blanc d'effacement.
+- **Le tueur** est la créature la plus proche du type qui a frappé en dernier. Une copie de son sprite est dessinée au-dessus de l'effacement, cernée de clair, et se dissout à 2,35 s. Une zone épargnée dans le shader laissait voir un disque du sol : abandonnée.
+- **Interface** : le HUD, les quêtes de run et la jauge de vie sous le héros s'effacent dès la mort. Le bilan ne pâlit plus lui-même le monde. Son titre est le nom du personnage (clés `UI_END_TITLE*` retirées).
+- **Entrées** : un appui après 0,4 s termine la séquence. Aucun appui n'atteint le monde ni le menu de pause pendant qu'elle joue.
+- **Capture `--capture-death`** : elle frappe jusqu'à la mort, car l'esquive d'Instinct ou un dash du bot annulaient le coup unique. Le tueur est désigné, et les instants sont comptés depuis la mort (écrire une capture 4K prend environ 0,5 s).
+- **Relecture `godot-reviewer`** : rien de bloquant (TimeScale, filtre audio, second souffle, entrées vérifiés). Suite donnée : la dissolution du joueur est pilotée par la séquence (`Player.SetDeathDissolve`), une seule source pour ses instants.
+- **Vérifié** : build sans avertissement, smoke test, captures regardées à chaque temps. Premier essai corrigé : une zone épargnée autour du joueur (disque vert), une autre autour du tueur (tache sombre) et un recouvrement final tramé en grille régulière (effet moustiquaire).
+- **À juger en jeu par Raphaël** : durée totale (2,9 s), force du ralenti, gris de l'effacement sur les biomes sombres. Le son n'a pas été écouté (capture headless).
+
 ## 6. Recette finale et sortie
 
 Même monde et même build, séquence courte avant/après ; puis run dense réelle. La seed du monde ne fixe pas tous les tirages de spawn et de crises : utiliser spawns/calendrier contrôlés pour une comparaison stricte, sinon répéter les essais et noter leur variabilité. Tester effets réduits, son coupé et absence de secousse. Effectuer build, smoke si applicable, profilage et vérifications du [dossier](README.md).

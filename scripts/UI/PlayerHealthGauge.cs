@@ -53,6 +53,8 @@ public partial class PlayerHealthGauge : Node2D
 
     private void OnPlayerDamaged(float currentHp, float maxHp)
     {
+        // Sans vie, la jauge s'efface avec le héros (séquence de mort) ; un second souffle la ramène.
+        Visible = currentHp > 0f;
         float ratio = Mathf.Clamp(currentHp / Mathf.Max(1f, maxHp), 0f, 1f);
         if (ratio > _ratio)
             _chipRatio = ratio;

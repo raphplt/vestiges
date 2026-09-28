@@ -188,8 +188,6 @@ UI_DEV_TOGGLE_HINT,Profil séparé. Recharge le Hub et mémorise le choix pour F
 UI_HUD_LEVEL,NIV.,LVL
 UI_HUD_SCORE,SCORE,SCORE
 UI_HUD_KILL_STREAK,EN RAFALE,STREAK
-UI_END_TITLE,LA ROUTE S'EFFACE,THE ROAD FADES
-UI_END_TITLE_OF,{0} — LA ROUTE S'EFFACE,{0} — THE ROAD FADES
 UI_END_NEW_RECORD,NOUVEAU RECORD,NEW RECORD
 UI_END_BEST,Meilleur : {0},Best: {0}
 UI_END_DETAIL,Combat {0}  ·  Survie {1}  ·  Crises {2}  ·  Exploration {3},Combat {0}  ·  Survival {1}  ·  Crises {2}  ·  Exploration {3}

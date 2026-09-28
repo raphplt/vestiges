@@ -265,3 +265,18 @@ Raphaël : « okok. je te laisse commencer à travailler pour résoudre ces prob
 ## 19. Impacts continus — 28 septembre 2026
 
 Après l’explication du cône, Raphaël : « okok. continue sur ca alors ». Lot 6B ouvert : réduire le travail de feedback du Transistor sans changer les dégâts, l’attribution ni la cadence des procs.
+
+## 22. Refonte de la mort — 28 septembre 2026
+
+Raphaël : « la mort est à revoir. actuellement c'est un simple écran de fin game over il faudrait quelque chose de plus spectaculaire et qui fasse "vrai jeu". par exemple je pense à la mort dans megabonk avec une animation de mort et ensuite un écran de résumé avec toutes les states sur la run. »
+
+Sur la proposition (séquence de mort en trois actes, bilan, données à ajouter, lots M1 à M5), il répond : « "la route s'efface" j'éviterai un truc aussi direct , le jeu est déjà assez explicite en soit. d'ailleurs c'est un truc que je changerai aussi au chargement initial de la partie (sur les textes). Du reste ca me va. et oui les deux dans le ton de la mort ca me va. pour les pages une seule plus dense je dirai. et ok pour la distance pq pas ».
+
+Acquis :
+- ton de la mort : impact brutal puis effacement, enchaînés ;
+- pas de titre explicite au bilan ni de carte « type YOU DIED » ;
+- bilan sur une seule page plus dense, sans page de détails ;
+- distance parcourue comme chiffre mis en avant ;
+- découpage [plan 02 lot D, seconde passe](02-juiciness-score.md) : M1 séquence, M2 données, M3 bilan dense, M4 gains animés.
+
+Même retenue voulue pour les textes du chargement de run (`GameLoadingOverlay`, fragments « Le monde oublie ce qu'il était… ») : direction notée, réécriture non faite. Le rendu de M1 reste à juger en jeu.

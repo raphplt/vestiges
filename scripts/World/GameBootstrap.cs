@@ -192,6 +192,12 @@ public partial class GameBootstrap : Node
         crowdZoom.SetCamera(player.GetNode<Camera2D>("Camera"));
         GetNode("..").CallDeferred("add_child", crowdZoom);
 
+        // La mort se joue dans le monde avant le bilan (plan 02 M1).
+        DeathSequence deathSequence = new() { Name = "DeathSequence" };
+        deathSequence.Setup(player.GetNode<Camera2D>("Camera"), screenShake, crowdZoom);
+        deathSequence.Finished += gameOverScreen.Reveal;
+        GetNode("..").CallDeferred("add_child", deathSequence);
+
         AmbientParticles ambientParticles = new() { Name = "AmbientParticles" };
         GetNode("..").CallDeferred("add_child", ambientParticles);
 

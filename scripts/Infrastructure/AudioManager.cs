@@ -19,6 +19,12 @@ public partial class AudioManager : Node
 	private const string BusSfx      = "SFX";
 	private const string BusAmbiance = "Ambiance";
 
+	// --- Monde assourdi (mort du joueur) ---
+	private const float MuffleOpenHz = 20000f;
+	private const float MuffleClosedHz = 500f;
+	private static readonly string[] MuffledBuses = { BusSfx, BusAmbiance };
+	private readonly List<AudioEffectLowPassFilter> _muffles = new();
+
 	// --- Music players (cross-fade A/B) ---
 	private AudioStreamPlayer _musicPlayerA;
 	private AudioStreamPlayer _musicPlayerB;
@@ -149,6 +155,7 @@ public partial class AudioManager : Node
 
 	public override void _ExitTree()
 	{
+		RemoveWorldMuffle();
 		Instance = null;
 		Core.EventBus eventBus = GetNodeOrNull<Core.EventBus>("/root/EventBus");
 		if (eventBus != null)
@@ -158,6 +165,53 @@ public partial class AudioManager : Node
 	// =========================================================
 	// BUS MANAGEMENT
 	// =========================================================
+
+	/// <summary>
+	/// Assourdit les sons du monde, de 0 (net, filtre retiré) à 1 (étouffé), pendant la séquence de mort (plan 02 M1).
+	/// La musique n'est pas filtrée : la musique de mort reste claire.
+	/// </summary>
+	public static void SetWorldMuffle(float amount) => Instance?.ApplyWorldMuffle(amount);
+
+	private void ApplyWorldMuffle(float amount)
+	{
+		if (amount <= 0f)
+		{
+			RemoveWorldMuffle();
+			return;
+		}
+		if (_muffles.Count == 0)
+		{
+			foreach (string bus in MuffledBuses)
+			{
+				int index = AudioServer.GetBusIndex(bus);
+				if (index < 0)
+					continue;
+				AudioEffectLowPassFilter filter = new();
+				AudioServer.AddBusEffect(index, filter);
+				_muffles.Add(filter);
+			}
+		}
+		// Balayage exponentiel : l'oreille entend les octaves, pas les hertz.
+		float cutoff = MuffleOpenHz * Mathf.Pow(MuffleClosedHz / MuffleOpenHz, Mathf.Clamp(amount, 0f, 1f));
+		foreach (AudioEffectLowPassFilter filter in _muffles)
+			filter.CutoffHz = cutoff;
+	}
+
+	private void RemoveWorldMuffle()
+	{
+		if (_muffles.Count == 0)
+			return;
+		foreach (string bus in MuffledBuses)
+		{
+			int index = AudioServer.GetBusIndex(bus);
+			for (int i = index < 0 ? -1 : AudioServer.GetBusEffectCount(index) - 1; i >= 0; i--)
+			{
+				if (AudioServer.GetBusEffect(index, i) is AudioEffectLowPassFilter filter && _muffles.Contains(filter))
+					AudioServer.RemoveBusEffect(index, i);
+			}
+		}
+		_muffles.Clear();
+	}
 
 	private static void EnsureAudioBuses()
 	{

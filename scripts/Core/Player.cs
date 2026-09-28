@@ -1784,26 +1784,23 @@ public partial class Player : CharacterBody2D
         _eventBus.EmitSignal(EventBus.SignalName.EntityDied, this);
 
         if (_hasSprite && _spriteMaterial != null)
-        {
-            // Dissolution via le shader unifié (pas de swap)
             _spriteMaterial.SetShaderParameter("outline_enabled", false);
+    }
 
-            Tween tween = CreateTween();
-            tween.TweenMethod(
-                Callable.From((float v) => _spriteMaterial.SetShaderParameter("dissolve_amount", v)),
-                0.0f, 1.0f, 0.8f
-            );
-            tween.TweenCallback(Callable.From(() => GetTree().Paused = true));
-        }
-        else
+    /// <summary>
+    /// Avancement de la dissolution du joueur mort, de 0 à 1. La séquence de mort (DeathSequence) le pilote en temps
+    /// réel, en phase avec ses éclats et le départ de l'Effacement.
+    /// </summary>
+    public void SetDeathDissolve(float amount)
+    {
+        if (_hasSprite && _spriteMaterial != null)
         {
-            // Fallback Polygon2D
-            Tween tween = CreateTween();
-            tween.SetParallel();
-            tween.TweenProperty(_visual, "modulate:a", 0.3f, 0.8f);
-            tween.TweenProperty(this, "scale", Vector2.One * 0.5f, 0.8f);
-            tween.Chain().TweenCallback(Callable.From(() => GetTree().Paused = true));
+            _spriteMaterial.SetShaderParameter("dissolve_amount", amount);
+            return;
         }
+        // Repli Polygon2D
+        _visual.Modulate = new Color(_visual.Modulate, Mathf.Lerp(1f, 0.3f, amount));
+        Scale = Vector2.One * Mathf.Lerp(1f, 0.5f, amount);
     }
 
     private void ApplyRegen(float delta)

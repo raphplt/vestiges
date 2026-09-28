@@ -325,6 +325,8 @@ public partial class QuestManager : CanvasLayer
     {
         if (newPhase == GameManager.RunPhase.Endgame.ToString())
             SetAbsoluteProgress("reach_endgame", 1f);
+        else if (newPhase == GameManager.RunPhase.Death.ToString())
+            DeathSequence.FadeOutLayer(this);
     }
 
     private void AddProgress(string objectiveType, float delta)

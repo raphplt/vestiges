@@ -13,7 +13,8 @@ namespace Vestiges.UI;
 /// défile et, seulement ici, le record ; au centre le personnage, son build complet (armes et souvenirs avec leur
 /// niveau) et quelques faits ; en bas les gains, puis « Rejouer » et « Retour au camp ». Révélation en trois temps
 /// qu'une touche accélère ; les boutons ne s'activent qu'après un court délai, pour qu'un clic de combat ne relance pas
-/// la run par accident. Le monde pâlit d'abord, comme effacé. Le build est figé à la mort, avant que la run ne se défasse.
+/// la run par accident. Le build et le score sont figés à la mort ; le bilan n'apparaît qu'à la fin de la séquence
+/// de mort (<see cref="DeathSequence"/>, qui appelle <see cref="Reveal"/>).
 /// </summary>
 public partial class GameOverScreen : CanvasLayer
 {
@@ -27,9 +28,6 @@ public partial class GameOverScreen : CanvasLayer
     private const float RevealEnd = 2.2f;
     private const float ButtonGuardSec = 0.35f;
     private const float IconSize = 64f;
-    // Avant le voile, le monde pâlit comme effacé (1,1 s), sans rien retarder d'autre qu'une respiration.
-    private const float WashLead = 1.1f;
-    private static readonly Color WashColor = new(0.93f, 0.91f, 0.88f, 0.55f);
     private static readonly Color VeilColor = new(0.025f, 0.02f, 0.05f, 0.93f);
     private static readonly Color SlotColor = new(0.08f, 0.07f, 0.12f, 0.9f);
 
@@ -39,7 +37,6 @@ public partial class GameOverScreen : CanvasLayer
     private Font _strongFont;
     private Font _boldFont;
 
-    private ColorRect _wash;
     private ColorRect _veil;
     private Control _buttons;
     private Control _root;
@@ -107,9 +104,6 @@ public partial class GameOverScreen : CanvasLayer
 
     private void BuildUI()
     {
-        _wash = new ColorRect { Color = WashColor, MouseFilter = Control.MouseFilterEnum.Stop };
-        _wash.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
-        AddChild(_wash);
         _veil = new ColorRect { Color = VeilColor, MouseFilter = Control.MouseFilterEnum.Ignore };
         _veil.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
         AddChild(_veil);
@@ -117,7 +111,7 @@ public partial class GameOverScreen : CanvasLayer
         _root = new Control { Size = DesignSize, MouseFilter = Control.MouseFilterEnum.Ignore };
         AddChild(_root);
 
-        _title = MakeLabel(Tr("UI_END_TITLE"), _strongFont, TextRole.Banner, UITheme.GoldDim, HorizontalAlignment.Center);
+        _title = MakeLabel("", _strongFont, TextRole.Banner, UITheme.GoldDim, HorizontalAlignment.Center);
         Place(_title, 0f, 70f, DesignSize.X, 50f);
 
         _score = MakeLabel("0", _boldFont, TextRole.Display, UITheme.GoldBright, HorizontalAlignment.Center, 10);
@@ -212,7 +206,6 @@ public partial class GameOverScreen : CanvasLayer
             if (!_weaponsAtStart.Contains(weapon.Id) && MetaSaveManager.IsWeaponUnlocked(weapon))
                 _newWeapons.Add(weapon);
         }
-        ShowGameOver();
     }
 
     private static BuildSnapshot Snapshot(Player player)
@@ -230,14 +223,15 @@ public partial class GameOverScreen : CanvasLayer
     // Bilan
     // ==============================
 
-    private void ShowGameOver()
+    /// <summary>Montre le bilan relevé à la mort ; appelé à la fin de la séquence de mort.</summary>
+    public void Reveal()
     {
         GameManager gm = GetNode<GameManager>("/root/GameManager");
         RunRecord record = gm.LastRunData;
         _finalScore = _scoreManager?.CurrentScore ?? 0;
         _isRecord = _scoreManager?.IsNewRecord ?? false;
 
-        _title.Text = _build != null ? string.Format(Tr("UI_END_TITLE_OF"), _build.CharacterName) : Tr("UI_END_TITLE");
+        _title.Text = _build?.CharacterName ?? "";
         _record.Text = _isRecord ? Tr("UI_END_NEW_RECORD") : string.Format(Tr("UI_END_BEST"), (_scoreManager?.BestScore ?? 0).ToString("N0"));
         _record.AddThemeColorOverride("font_color", _isRecord ? UITheme.GoldBright : UITheme.TextDim);
         _detail.Text = FormatDetail();
@@ -247,8 +241,7 @@ public partial class GameOverScreen : CanvasLayer
         BuildGains(gm);
 
         _score.Text = "0";
-        // Temps négatif : le monde pâlit d'abord, puis la révélation commence à zéro.
-        _elapsed = -WashLead;
+        _elapsed = 0f;
         _buttonsAt = RevealEnd;
         SetButtonsEnabled(false);
         ApplyReveal();
@@ -502,8 +495,6 @@ public partial class GameOverScreen : CanvasLayer
 
     private void ApplyReveal()
     {
-        float wash = Mathf.Clamp((_elapsed + WashLead) / WashLead, 0f, 1f);
-        _wash.Color = new Color(WashColor, WashColor.A * wash * wash);
         float veil = Mathf.Clamp(_elapsed / VeilSec, 0f, 1f);
         _veil.Color = new Color(VeilColor, VeilColor.A * veil);
         _title.Modulate = new Color(1f, 1f, 1f, veil);

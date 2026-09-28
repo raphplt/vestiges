@@ -143,6 +143,8 @@ public partial class Enemy : CharacterBody2D
 	public float HpRatio => _maxHp > 0 ? _currentHp / _maxHp : 0f;
 	public EnemyModifiers Modifiers => _mods;
 	public string EnemyId => _enemyId;
+	/// <summary>Sprite animé de la créature, ou null si elle n'est dessinée que par son polygone de repli.</summary>
+	public AnimatedSprite2D Sprite => _hasSprite ? _sprite : null;
 	public string DisplayName => _displayName;
 	public bool IsFeminine => _isFeminine;
 	internal float Damage => _damage;
