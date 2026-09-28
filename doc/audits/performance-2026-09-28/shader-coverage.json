@@ -1,0 +1,122 @@
+{
+  "sway.gdshader": {
+    "listed_in_warmup": true,
+    "literal_references": [
+      "scripts/World/GameBootstrap.cs",
+      "scripts/World/EnvironmentProp.cs"
+    ]
+  },
+  "swamp_atmosphere.gdshader": {
+    "listed_in_warmup": true,
+    "literal_references": [
+      "scripts/World/GameBootstrap.cs",
+      "scripts/World/BiomeAtmosphere.cs"
+    ]
+  },
+  "prop_trample.gdshader": {
+    "listed_in_warmup": false,
+    "literal_references": [
+      "scripts/World/EnvironmentProp.cs"
+    ]
+  },
+  "prop_forget.gdshader": {
+    "listed_in_warmup": false,
+    "literal_references": [
+      "scripts/World/EnvironmentProp.cs"
+    ]
+  },
+  "pixel_fx.gdshader": {
+    "listed_in_warmup": false,
+    "literal_references": [
+      "scripts/Combat/PixelFx.cs"
+    ]
+  },
+  "path.gdshader": {
+    "listed_in_warmup": false,
+    "literal_references": [
+      "scripts/World/PathMeshes.cs"
+    ]
+  },
+  "outline.gdshader": {
+    "listed_in_warmup": true,
+    "literal_references": [
+      "scripts/World/GameBootstrap.cs",
+      "scripts/UI/HubCamp.cs"
+    ]
+  },
+  "light_column.gdshader": {
+    "listed_in_warmup": false,
+    "literal_references": [
+      "scripts/World/LightColumn.cs"
+    ]
+  },
+  "iridescent_fluid.gdshader": {
+    "listed_in_warmup": false,
+    "literal_references": [
+      "scripts/Combat/DeathFx.cs"
+    ]
+  },
+  "hub_forgotten.gdshader": {
+    "listed_in_warmup": false,
+    "literal_references": [
+      "scripts/UI/HubCamp.cs"
+    ]
+  },
+  "hit_flash.gdshader": {
+    "listed_in_warmup": true,
+    "literal_references": [
+      "scripts/World/GameBootstrap.cs"
+    ]
+  },
+  "ground.gdshader": {
+    "listed_in_warmup": false,
+    "literal_references": [
+      "scripts/World/GroundMaterial.cs"
+    ]
+  },
+  "erasure_veil.gdshader": {
+    "listed_in_warmup": false,
+    "literal_references": [
+      "scripts/UI/ErasureVeil.cs"
+    ]
+  },
+  "entity.gdshader": {
+    "listed_in_warmup": true,
+    "literal_references": [
+      "scripts/World/GameBootstrap.cs",
+      "scripts/Core/Player.cs",
+      "scripts/Combat/Enemy.cs"
+    ]
+  },
+  "echo.gdshader": {
+    "listed_in_warmup": false,
+    "literal_references": [
+      "scripts/World/ErasureEchoes.cs"
+    ]
+  },
+  "dissolve.gdshader": {
+    "listed_in_warmup": true,
+    "literal_references": [
+      "scripts/World/GameBootstrap.cs"
+    ]
+  },
+  "crisis_omen.gdshader": {
+    "listed_in_warmup": false,
+    "literal_references": [
+      "scripts/UI/CrisisOmen.cs"
+    ]
+  },
+  "colorblind.gdshader": {
+    "listed_in_warmup": true,
+    "literal_references": [
+      "scripts/World/GameBootstrap.cs",
+      "scripts/Infrastructure/ColorBlindFilter.cs"
+    ]
+  },
+  "aberration_aura.gdshader": {
+    "listed_in_warmup": true,
+    "literal_references": [
+      "scripts/World/GameBootstrap.cs"
+    ]
+  }
+}

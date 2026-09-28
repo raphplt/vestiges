@@ -1,0 +1,2153 @@
+{
+  "systems-a": [
+    {
+      "kind": "map_census",
+      "props": 10694,
+      "shapes": 2318,
+      "shapeless": 8376,
+      "layerZero": 8376,
+      "zeroWithShapes": 0,
+      "nodes": 36093
+    },
+    {
+      "kind": "erasure_clock",
+      "hz": 60,
+      "seconds": 600,
+      "updates": 1200,
+      "global": 0.3080316,
+      "origin_memory": 0.8799801
+    },
+    {
+      "kind": "erasure_clock",
+      "hz": 30,
+      "seconds": 600,
+      "updates": 1200,
+      "global": 0.30803555,
+      "origin_memory": 0.8799801
+    },
+    {
+      "kind": "erasure_clock",
+      "hz": 144,
+      "seconds": 600,
+      "updates": 1200,
+      "global": 0.3080591,
+      "origin_memory": 0.8799801
+    },
+    {
+      "kind": "erasure_clock",
+      "hz": 1,
+      "seconds": 600,
+      "updates": 600,
+      "global": 0.15403666,
+      "origin_memory": 0.93999004
+    },
+    {
+      "kind": "erasure_roaming",
+      "checkpoints": [
+        {
+          "seconds": 300,
+          "cells": 4693,
+          "zeros": 0
+        },
+        {
+          "seconds": 600,
+          "cells": 6522,
+          "zeros": 0
+        },
+        {
+          "seconds": 900,
+          "cells": 6552,
+          "zeros": 0
+        },
+        {
+          "seconds": 1200,
+          "cells": 6555,
+          "zeros": 0
+        },
+        {
+          "seconds": 1500,
+          "cells": 6593,
+          "zeros": 0
+        },
+        {
+          "seconds": 1800,
+          "cells": 6753,
+          "zeros": 6744
+        }
+      ],
+      "visits": 21195630,
+      "zero_visits_after_update": 1621264,
+      "allocation_including_observer": 5788440,
+      "timing_diagnostic_only": {
+        "samples": 3600,
+        "median_ms": 1.31895,
+        "p99_ms": 1.9023,
+        "max_ms": 4.8445
+      }
+    },
+    {
+      "kind": "erasure_zero_cells",
+      "cells": 841,
+      "allocated_bytes": 68000,
+      "timing_diagnostic_only": {
+        "samples": 100,
+        "median_ms": 0.24135,
+        "p99_ms": 0.2993,
+        "max_ms": 0.2993
+      }
+    },
+    {
+      "kind": "erasure_zero_cells",
+      "cells": 6000,
+      "allocated_bytes": 68000,
+      "timing_diagnostic_only": {
+        "samples": 100,
+        "median_ms": 1.20405,
+        "p99_ms": 1.3885,
+        "max_ms": 1.3885
+      }
+    },
+    {
+      "kind": "erasure_zero_cells",
+      "cells": 6000,
+      "allocated_bytes": 68000,
+      "timing_diagnostic_only": {
+        "samples": 100,
+        "median_ms": 1.2464,
+        "p99_ms": 2.1773,
+        "max_ms": 2.1773
+      }
+    },
+    {
+      "kind": "erasure_zero_cells",
+      "cells": 841,
+      "allocated_bytes": 68000,
+      "timing_diagnostic_only": {
+        "samples": 100,
+        "median_ms": 0.25165,
+        "p99_ms": 0.4355,
+        "max_ms": 0.4355
+      }
+    },
+    {
+      "kind": "crowd_method",
+      "count": 60,
+      "part": "observer",
+      "allocated_bytes": 0,
+      "timing_diagnostic_only": {
+        "samples": 100,
+        "median_ms": 0.0068,
+        "p99_ms": 0.1134,
+        "max_ms": 0.1134
+      }
+    },
+    {
+      "kind": "crowd_method",
+      "count": 60,
+      "part": "animation",
+      "allocated_bytes": 0,
+      "timing_diagnostic_only": {
+        "samples": 100,
+        "median_ms": 0.0147,
+        "p99_ms": 0.9731,
+        "max_ms": 0.9731
+      }
+    },
+    {
+      "kind": "crowd_method",
+      "count": 60,
+      "part": "move",
+      "allocated_bytes": 0,
+      "timing_diagnostic_only": {
+        "samples": 100,
+        "median_ms": 0.0483,
+        "p99_ms": 0.2074,
+        "max_ms": 0.2074
+      }
+    },
+    {
+      "kind": "crowd_method",
+      "count": 60,
+      "part": "behavior",
+      "allocated_bytes": 0,
+      "timing_diagnostic_only": {
+        "samples": 100,
+        "median_ms": 0.0016,
+        "p99_ms": 0.3129,
+        "max_ms": 0.3129
+      }
+    },
+    {
+      "kind": "crowd_method",
+      "count": 60,
+      "part": "physics_total",
+      "allocated_bytes": 96,
+      "timing_diagnostic_only": {
+        "samples": 100,
+        "median_ms": 0.09095,
+        "p99_ms": 1.8868,
+        "max_ms": 1.8868
+      }
+    },
+    {
+      "kind": "crowd_method",
+      "count": 240,
+      "part": "observer",
+      "allocated_bytes": 0,
+      "timing_diagnostic_only": {
+        "samples": 100,
+        "median_ms": 0.029,
+        "p99_ms": 0.0497,
+        "max_ms": 0.0497
+      }
+    },
+    {
+      "kind": "crowd_method",
+      "count": 240,
+      "part": "animation",
+      "allocated_bytes": 0,
+      "timing_diagnostic_only": {
+        "samples": 100,
+        "median_ms": 0.061,
+        "p99_ms": 0.6318,
+        "max_ms": 0.6318
+      }
+    },
+    {
+      "kind": "crowd_method",
+      "count": 240,
+      "part": "move",
+      "allocated_bytes": 0,
+      "timing_diagnostic_only": {
+        "samples": 100,
+        "median_ms": 0.20395,
+        "p99_ms": 0.3304,
+        "max_ms": 0.3304
+      }
+    },
+    {
+      "kind": "crowd_method",
+      "count": 240,
+      "part": "behavior",
+      "allocated_bytes": 0,
+      "timing_diagnostic_only": {
+        "samples": 100,
+        "median_ms": 0.00685,
+        "p99_ms": 0.0317,
+        "max_ms": 0.0317
+      }
+    },
+    {
+      "kind": "crowd_method",
+      "count": 240,
+      "part": "physics_total",
+      "allocated_bytes": 0,
+      "timing_diagnostic_only": {
+        "samples": 100,
+        "median_ms": 0.4196,
+        "p99_ms": 0.9523,
+        "max_ms": 0.9523
+      }
+    },
+    {
+      "kind": "crowd_method",
+      "count": 240,
+      "part": "observer",
+      "allocated_bytes": 0,
+      "timing_diagnostic_only": {
+        "samples": 100,
+        "median_ms": 0.0352,
+        "p99_ms": 0.0591,
+        "max_ms": 0.0591
+      }
+    },
+    {
+      "kind": "crowd_method",
+      "count": 240,
+      "part": "animation",
+      "allocated_bytes": 0,
+      "timing_diagnostic_only": {
+        "samples": 100,
+        "median_ms": 0.06235,
+        "p99_ms": 0.6574,
+        "max_ms": 0.6574
+      }
+    },
+    {
+      "kind": "crowd_method",
+      "count": 240,
+      "part": "move",
+      "allocated_bytes": 0,
+      "timing_diagnostic_only": {
+        "samples": 100,
+        "median_ms": 0.21600000000000003,
+        "p99_ms": 0.3865,
+        "max_ms": 0.3865
+      }
+    },
+    {
+      "kind": "crowd_method",
+      "count": 240,
+      "part": "behavior",
+      "allocated_bytes": 0,
+      "timing_diagnostic_only": {
+        "samples": 100,
+        "median_ms": 0.00865,
+        "p99_ms": 0.0361,
+        "max_ms": 0.0361
+      }
+    },
+    {
+      "kind": "crowd_method",
+      "count": 240,
+      "part": "physics_total",
+      "allocated_bytes": 0,
+      "timing_diagnostic_only": {
+        "samples": 100,
+        "median_ms": 0.37985,
+        "p99_ms": 1.3323,
+        "max_ms": 1.3323
+      }
+    },
+    {
+      "kind": "crowd_method",
+      "count": 60,
+      "part": "observer",
+      "allocated_bytes": 0,
+      "timing_diagnostic_only": {
+        "samples": 100,
+        "median_ms": 0.0068,
+        "p99_ms": 0.0138,
+        "max_ms": 0.0138
+      }
+    },
+    {
+      "kind": "crowd_method",
+      "count": 60,
+      "part": "animation",
+      "allocated_bytes": 0,
+      "timing_diagnostic_only": {
+        "samples": 100,
+        "median_ms": 0.0148,
+        "p99_ms": 0.1638,
+        "max_ms": 0.1638
+      }
+    },
+    {
+      "kind": "crowd_method",
+      "count": 60,
+      "part": "move",
+      "allocated_bytes": 0,
+      "timing_diagnostic_only": {
+        "samples": 100,
+        "median_ms": 0.0483,
+        "p99_ms": 0.0942,
+        "max_ms": 0.0942
+      }
+    },
+    {
+      "kind": "crowd_method",
+      "count": 60,
+      "part": "behavior",
+      "allocated_bytes": 0,
+      "timing_diagnostic_only": {
+        "samples": 100,
+        "median_ms": 0.0015,
+        "p99_ms": 0.0071,
+        "max_ms": 0.0071
+      }
+    },
+    {
+      "kind": "crowd_method",
+      "count": 60,
+      "part": "physics_total",
+      "allocated_bytes": 0,
+      "timing_diagnostic_only": {
+        "samples": 100,
+        "median_ms": 0.08885000000000001,
+        "p99_ms": 0.2291,
+        "max_ms": 0.2291
+      }
+    },
+    {
+      "kind": "far_status",
+      "radius": 100,
+      "simulated_seconds": 10,
+      "slow_remaining": 0,
+      "slow_factor": 1,
+      "disorient_remaining": -0.016665434
+    },
+    {
+      "kind": "far_status",
+      "radius": 1500,
+      "simulated_seconds": 10,
+      "slow_remaining": 2,
+      "slow_factor": 0.5,
+      "disorient_remaining": 2
+    },
+    {
+      "kind": "cone",
+      "targets": 0,
+      "measured_ticks": 240,
+      "hits": 0,
+      "damage": 0,
+      "allocated_bytes_in_cone_call": 63360,
+      "timing_diagnostic_only": {
+        "samples": 240,
+        "median_ms": 0.2258,
+        "p99_ms": 0.2459,
+        "max_ms": 0.2497
+      }
+    },
+    {
+      "kind": "cone",
+      "targets": 50,
+      "measured_ticks": 240,
+      "hits": 12000,
+      "damage": 4245.117990672588,
+      "allocated_bytes_in_cone_call": 3048624,
+      "timing_diagnostic_only": {
+        "samples": 240,
+        "median_ms": 0.6731499999999999,
+        "p99_ms": 0.9892,
+        "max_ms": 1.0937
+      }
+    },
+    {
+      "kind": "cone",
+      "targets": 50,
+      "measured_ticks": 240,
+      "hits": 12000,
+      "damage": 4245.117990672588,
+      "allocated_bytes_in_cone_call": 3179672,
+      "timing_diagnostic_only": {
+        "samples": 240,
+        "median_ms": 0.70665,
+        "p99_ms": 1.1055,
+        "max_ms": 1.7
+      }
+    },
+    {
+      "kind": "cone",
+      "targets": 0,
+      "measured_ticks": 240,
+      "hits": 0,
+      "damage": 0,
+      "allocated_bytes_in_cone_call": 63360,
+      "timing_diagnostic_only": {
+        "samples": 240,
+        "median_ms": 0.22735,
+        "p99_ms": 0.2682,
+        "max_ms": 0.2835
+      }
+    }
+  ],
+  "systems-b": [
+    {
+      "kind": "map_census",
+      "props": 10694,
+      "shapes": 2318,
+      "shapeless": 8376,
+      "layerZero": 8376,
+      "zeroWithShapes": 0,
+      "nodes": 36092
+    },
+    {
+      "kind": "erasure_clock",
+      "hz": 60,
+      "seconds": 600,
+      "updates": 1200,
+      "global": 0.3080316,
+      "origin_memory": 0.8799801
+    },
+    {
+      "kind": "erasure_clock",
+      "hz": 30,
+      "seconds": 600,
+      "updates": 1200,
+      "global": 0.30803555,
+      "origin_memory": 0.8799801
+    },
+    {
+      "kind": "erasure_clock",
+      "hz": 144,
+      "seconds": 600,
+      "updates": 1200,
+      "global": 0.3080591,
+      "origin_memory": 0.8799801
+    },
+    {
+      "kind": "erasure_clock",
+      "hz": 1,
+      "seconds": 600,
+      "updates": 600,
+      "global": 0.15403666,
+      "origin_memory": 0.93999004
+    },
+    {
+      "kind": "erasure_roaming",
+      "checkpoints": [
+        {
+          "seconds": 300,
+          "cells": 4693,
+          "zeros": 0
+        },
+        {
+          "seconds": 600,
+          "cells": 6522,
+          "zeros": 0
+        },
+        {
+          "seconds": 900,
+          "cells": 6552,
+          "zeros": 0
+        },
+        {
+          "seconds": 1200,
+          "cells": 6555,
+          "zeros": 0
+        },
+        {
+          "seconds": 1500,
+          "cells": 6593,
+          "zeros": 0
+        },
+        {
+          "seconds": 1800,
+          "cells": 6753,
+          "zeros": 6744
+        }
+      ],
+      "visits": 21195630,
+      "zero_visits_after_update": 1621264,
+      "allocation_including_observer": 5788680,
+      "timing_diagnostic_only": {
+        "samples": 3600,
+        "median_ms": 1.3232,
+        "p99_ms": 1.9362,
+        "max_ms": 4.849
+      }
+    },
+    {
+      "kind": "erasure_zero_cells",
+      "cells": 841,
+      "allocated_bytes": 68000,
+      "timing_diagnostic_only": {
+        "samples": 100,
+        "median_ms": 0.2344,
+        "p99_ms": 0.2881,
+        "max_ms": 0.2881
+      }
+    },
+    {
+      "kind": "erasure_zero_cells",
+      "cells": 6000,
+      "allocated_bytes": 68000,
+      "timing_diagnostic_only": {
+        "samples": 100,
+        "median_ms": 1.2202,
+        "p99_ms": 1.3636,
+        "max_ms": 1.3636
+      }
+    },
+    {
+      "kind": "erasure_zero_cells",
+      "cells": 6000,
+      "allocated_bytes": 68000,
+      "timing_diagnostic_only": {
+        "samples": 100,
+        "median_ms": 1.1978,
+        "p99_ms": 1.5995,
+        "max_ms": 1.5995
+      }
+    },
+    {
+      "kind": "erasure_zero_cells",
+      "cells": 841,
+      "allocated_bytes": 68000,
+      "timing_diagnostic_only": {
+        "samples": 100,
+        "median_ms": 0.22995,
+        "p99_ms": 0.2555,
+        "max_ms": 0.2555
+      }
+    },
+    {
+      "kind": "crowd_method",
+      "count": 60,
+      "part": "observer",
+      "allocated_bytes": 0,
+      "timing_diagnostic_only": {
+        "samples": 100,
+        "median_ms": 0.0065,
+        "p99_ms": 0.1543,
+        "max_ms": 0.1543
+      }
+    },
+    {
+      "kind": "crowd_method",
+      "count": 60,
+      "part": "animation",
+      "allocated_bytes": 0,
+      "timing_diagnostic_only": {
+        "samples": 100,
+        "median_ms": 0.0144,
+        "p99_ms": 0.9843,
+        "max_ms": 0.9843
+      }
+    },
+    {
+      "kind": "crowd_method",
+      "count": 60,
+      "part": "move",
+      "allocated_bytes": 0,
+      "timing_diagnostic_only": {
+        "samples": 100,
+        "median_ms": 0.0485,
+        "p99_ms": 0.2901,
+        "max_ms": 0.2901
+      }
+    },
+    {
+      "kind": "crowd_method",
+      "count": 60,
+      "part": "behavior",
+      "allocated_bytes": 0,
+      "timing_diagnostic_only": {
+        "samples": 100,
+        "median_ms": 0.0014,
+        "p99_ms": 0.327,
+        "max_ms": 0.327
+      }
+    },
+    {
+      "kind": "crowd_method",
+      "count": 60,
+      "part": "physics_total",
+      "allocated_bytes": 96,
+      "timing_diagnostic_only": {
+        "samples": 100,
+        "median_ms": 0.0897,
+        "p99_ms": 1.9331,
+        "max_ms": 1.9331
+      }
+    },
+    {
+      "kind": "crowd_method",
+      "count": 240,
+      "part": "observer",
+      "allocated_bytes": 0,
+      "timing_diagnostic_only": {
+        "samples": 100,
+        "median_ms": 0.0262,
+        "p99_ms": 0.0741,
+        "max_ms": 0.0741
+      }
+    },
+    {
+      "kind": "crowd_method",
+      "count": 240,
+      "part": "animation",
+      "allocated_bytes": 0,
+      "timing_diagnostic_only": {
+        "samples": 100,
+        "median_ms": 0.05925,
+        "p99_ms": 0.6647,
+        "max_ms": 0.6647
+      }
+    },
+    {
+      "kind": "crowd_method",
+      "count": 240,
+      "part": "move",
+      "allocated_bytes": 0,
+      "timing_diagnostic_only": {
+        "samples": 100,
+        "median_ms": 0.20195000000000002,
+        "p99_ms": 0.3461,
+        "max_ms": 0.3461
+      }
+    },
+    {
+      "kind": "crowd_method",
+      "count": 240,
+      "part": "behavior",
+      "allocated_bytes": 0,
+      "timing_diagnostic_only": {
+        "samples": 100,
+        "median_ms": 0.0061,
+        "p99_ms": 0.0361,
+        "max_ms": 0.0361
+      }
+    },
+    {
+      "kind": "crowd_method",
+      "count": 240,
+      "part": "physics_total",
+      "allocated_bytes": 0,
+      "timing_diagnostic_only": {
+        "samples": 100,
+        "median_ms": 0.3806,
+        "p99_ms": 1.1142,
+        "max_ms": 1.1142
+      }
+    },
+    {
+      "kind": "crowd_method",
+      "count": 240,
+      "part": "observer",
+      "allocated_bytes": 0,
+      "timing_diagnostic_only": {
+        "samples": 100,
+        "median_ms": 0.02695,
+        "p99_ms": 0.0582,
+        "max_ms": 0.0582
+      }
+    },
+    {
+      "kind": "crowd_method",
+      "count": 240,
+      "part": "animation",
+      "allocated_bytes": 0,
+      "timing_diagnostic_only": {
+        "samples": 100,
+        "median_ms": 0.06155,
+        "p99_ms": 0.8043,
+        "max_ms": 0.8043
+      }
+    },
+    {
+      "kind": "crowd_method",
+      "count": 240,
+      "part": "move",
+      "allocated_bytes": 0,
+      "timing_diagnostic_only": {
+        "samples": 100,
+        "median_ms": 0.20835,
+        "p99_ms": 0.3094,
+        "max_ms": 0.3094
+      }
+    },
+    {
+      "kind": "crowd_method",
+      "count": 240,
+      "part": "behavior",
+      "allocated_bytes": 0,
+      "timing_diagnostic_only": {
+        "samples": 100,
+        "median_ms": 0.0061,
+        "p99_ms": 0.0175,
+        "max_ms": 0.0175
+      }
+    },
+    {
+      "kind": "crowd_method",
+      "count": 240,
+      "part": "physics_total",
+      "allocated_bytes": 0,
+      "timing_diagnostic_only": {
+        "samples": 100,
+        "median_ms": 0.37955,
+        "p99_ms": 0.9916,
+        "max_ms": 0.9916
+      }
+    },
+    {
+      "kind": "crowd_method",
+      "count": 60,
+      "part": "observer",
+      "allocated_bytes": 0,
+      "timing_diagnostic_only": {
+        "samples": 100,
+        "median_ms": 0.0066,
+        "p99_ms": 0.0109,
+        "max_ms": 0.0109
+      }
+    },
+    {
+      "kind": "crowd_method",
+      "count": 60,
+      "part": "animation",
+      "allocated_bytes": 0,
+      "timing_diagnostic_only": {
+        "samples": 100,
+        "median_ms": 0.0143,
+        "p99_ms": 0.1552,
+        "max_ms": 0.1552
+      }
+    },
+    {
+      "kind": "crowd_method",
+      "count": 60,
+      "part": "move",
+      "allocated_bytes": 0,
+      "timing_diagnostic_only": {
+        "samples": 100,
+        "median_ms": 0.04825,
+        "p99_ms": 0.0732,
+        "max_ms": 0.0732
+      }
+    },
+    {
+      "kind": "crowd_method",
+      "count": 60,
+      "part": "behavior",
+      "allocated_bytes": 0,
+      "timing_diagnostic_only": {
+        "samples": 100,
+        "median_ms": 0.0014,
+        "p99_ms": 0.0027,
+        "max_ms": 0.0027
+      }
+    },
+    {
+      "kind": "crowd_method",
+      "count": 60,
+      "part": "physics_total",
+      "allocated_bytes": 0,
+      "timing_diagnostic_only": {
+        "samples": 100,
+        "median_ms": 0.08965000000000001,
+        "p99_ms": 0.245,
+        "max_ms": 0.245
+      }
+    },
+    {
+      "kind": "far_status",
+      "radius": 100,
+      "simulated_seconds": 10,
+      "slow_remaining": 0,
+      "slow_factor": 1,
+      "disorient_remaining": -0.016665434
+    },
+    {
+      "kind": "far_status",
+      "radius": 1500,
+      "simulated_seconds": 10,
+      "slow_remaining": 2,
+      "slow_factor": 0.5,
+      "disorient_remaining": 2
+    },
+    {
+      "kind": "cone",
+      "targets": 0,
+      "measured_ticks": 240,
+      "hits": 0,
+      "damage": 0,
+      "allocated_bytes_in_cone_call": 63360,
+      "timing_diagnostic_only": {
+        "samples": 240,
+        "median_ms": 0.23515,
+        "p99_ms": 0.3408,
+        "max_ms": 0.4172
+      }
+    },
+    {
+      "kind": "cone",
+      "targets": 50,
+      "measured_ticks": 240,
+      "hits": 12000,
+      "damage": 4245.117990672588,
+      "allocated_bytes_in_cone_call": 3048624,
+      "timing_diagnostic_only": {
+        "samples": 240,
+        "median_ms": 0.7212000000000001,
+        "p99_ms": 1.0127,
+        "max_ms": 1.1514
+      }
+    },
+    {
+      "kind": "cone",
+      "targets": 50,
+      "measured_ticks": 240,
+      "hits": 12000,
+      "damage": 4245.117990672588,
+      "allocated_bytes_in_cone_call": 3179672,
+      "timing_diagnostic_only": {
+        "samples": 240,
+        "median_ms": 0.7262,
+        "p99_ms": 1.05,
+        "max_ms": 1.8959
+      }
+    },
+    {
+      "kind": "cone",
+      "targets": 0,
+      "measured_ticks": 240,
+      "hits": 0,
+      "damage": 0,
+      "allocated_bytes_in_cone_call": 63360,
+      "timing_diagnostic_only": {
+        "samples": 240,
+        "median_ms": 0.24565,
+        "p99_ms": 0.6005,
+        "max_ms": 0.7926
+      }
+    }
+  ],
+  "physics": {
+    "evidence": "reproduction isolée headless, pas de coût broadphase mesuré",
+    "intervals": [
+      {
+        "count": 10000,
+        "kind": "node",
+        "native_delta_bytes": 27747076.0,
+        "trial": 0
+      },
+      {
+        "count": 10000,
+        "kind": "body",
+        "native_delta_bytes": 28370956.0,
+        "trial": 1
+      },
+      {
+        "count": 10000,
+        "kind": "body",
+        "native_delta_bytes": 27142568.0,
+        "trial": 2
+      },
+      {
+        "count": 10000,
+        "kind": "node",
+        "native_delta_bytes": 19782568.0,
+        "trial": 3
+      },
+      {
+        "count": 10000,
+        "kind": "node",
+        "native_delta_bytes": 19782568.0,
+        "trial": 4
+      },
+      {
+        "count": 10000,
+        "kind": "body",
+        "native_delta_bytes": 27142568.0,
+        "trial": 5
+      },
+      {
+        "count": 10000,
+        "kind": "body",
+        "native_delta_bytes": 27142568.0,
+        "trial": 6
+      },
+      {
+        "count": 10000,
+        "kind": "node",
+        "native_delta_bytes": 19782568.0,
+        "trial": 7
+      }
+    ]
+  },
+  "shaders": {
+    "intervals": [
+      {
+        "draw_calls": 0,
+        "frame": 0,
+        "mode": "offscreen",
+        "objects": 0
+      },
+      {
+        "draw_calls": 0,
+        "frame": 1,
+        "mode": "offscreen",
+        "objects": 0
+      },
+      {
+        "draw_calls": 0,
+        "frame": 2,
+        "mode": "offscreen",
+        "objects": 0
+      },
+      {
+        "draw_calls": 0,
+        "frame": 3,
+        "mode": "offscreen",
+        "objects": 0
+      },
+      {
+        "draw_calls": 0,
+        "frame": 4,
+        "mode": "offscreen",
+        "objects": 0
+      },
+      {
+        "draw_calls": 8,
+        "frame": 0,
+        "mode": "visible",
+        "objects": 8
+      },
+      {
+        "draw_calls": 8,
+        "frame": 1,
+        "mode": "visible",
+        "objects": 8
+      },
+      {
+        "draw_calls": 8,
+        "frame": 2,
+        "mode": "visible",
+        "objects": 8
+      },
+      {
+        "draw_calls": 8,
+        "frame": 3,
+        "mode": "visible",
+        "objects": 8
+      },
+      {
+        "draw_calls": 8,
+        "frame": 4,
+        "mode": "visible",
+        "objects": 8
+      },
+      {
+        "draw_calls": 8,
+        "frame": 0,
+        "mode": "visible",
+        "objects": 8
+      },
+      {
+        "draw_calls": 8,
+        "frame": 1,
+        "mode": "visible",
+        "objects": 8
+      },
+      {
+        "draw_calls": 8,
+        "frame": 2,
+        "mode": "visible",
+        "objects": 8
+      },
+      {
+        "draw_calls": 8,
+        "frame": 3,
+        "mode": "visible",
+        "objects": 8
+      },
+      {
+        "draw_calls": 8,
+        "frame": 4,
+        "mode": "visible",
+        "objects": 8
+      },
+      {
+        "draw_calls": 0,
+        "frame": 0,
+        "mode": "offscreen",
+        "objects": 0
+      },
+      {
+        "draw_calls": 0,
+        "frame": 1,
+        "mode": "offscreen",
+        "objects": 0
+      },
+      {
+        "draw_calls": 0,
+        "frame": 2,
+        "mode": "offscreen",
+        "objects": 0
+      },
+      {
+        "draw_calls": 0,
+        "frame": 3,
+        "mode": "offscreen",
+        "objects": 0
+      },
+      {
+        "draw_calls": 0,
+        "frame": 4,
+        "mode": "offscreen",
+        "objects": 0
+      }
+    ],
+    "paths": [
+      "res://assets/shaders/entity.gdshader",
+      "res://assets/shaders/sway.gdshader",
+      "res://assets/shaders/swamp_atmosphere.gdshader",
+      "res://assets/shaders/hit_flash.gdshader",
+      "res://assets/shaders/dissolve.gdshader",
+      "res://assets/shaders/outline.gdshader",
+      "res://assets/shaders/aberration_aura.gdshader",
+      "res://assets/shaders/colorblind.gdshader"
+    ],
+    "renderer": "gl_compatibility"
+  },
+  "cycles": {
+    "seed": 221092026,
+    "cycles": [
+      {
+        "cycle": 0,
+        "nodes": 148,
+        "orphans": 0,
+        "objects": 2978,
+        "resources": 584,
+        "native_bytes": 101718257,
+        "managed_bytes": 1298040,
+        "rss_bytes": 246824960
+      },
+      {
+        "cycle": 1,
+        "nodes": 148,
+        "orphans": 0,
+        "objects": 8263,
+        "resources": 2884,
+        "native_bytes": 177905177,
+        "managed_bytes": 8242032,
+        "rss_bytes": 546037760
+      },
+      {
+        "cycle": 2,
+        "nodes": 148,
+        "orphans": 0,
+        "objects": 8272,
+        "resources": 2884,
+        "native_bytes": 186992637,
+        "managed_bytes": 8242240,
+        "rss_bytes": 556969984
+      },
+      {
+        "cycle": 3,
+        "nodes": 148,
+        "orphans": 0,
+        "objects": 8296,
+        "resources": 2891,
+        "native_bytes": 187996689,
+        "managed_bytes": 8242344,
+        "rss_bytes": 560947200
+      },
+      {
+        "cycle": 4,
+        "nodes": 148,
+        "orphans": 0,
+        "objects": 8273,
+        "resources": 2884,
+        "native_bytes": 187876285,
+        "managed_bytes": 8242448,
+        "rss_bytes": 561500160
+      },
+      {
+        "cycle": 5,
+        "nodes": 148,
+        "orphans": 0,
+        "objects": 8474,
+        "resources": 2889,
+        "native_bytes": 188541525,
+        "managed_bytes": 8225304,
+        "rss_bytes": 562266112
+      },
+      {
+        "cycle": 6,
+        "nodes": 148,
+        "orphans": 0,
+        "objects": 8269,
+        "resources": 2884,
+        "native_bytes": 187233001,
+        "managed_bytes": 8225408,
+        "rss_bytes": 563671040
+      },
+      {
+        "cycle": 7,
+        "nodes": 148,
+        "orphans": 0,
+        "objects": 8266,
+        "resources": 2884,
+        "native_bytes": 187221825,
+        "managed_bytes": 8225512,
+        "rss_bytes": 562761728
+      },
+      {
+        "cycle": 8,
+        "nodes": 148,
+        "orphans": 0,
+        "objects": 8281,
+        "resources": 2889,
+        "native_bytes": 188684645,
+        "managed_bytes": 8225616,
+        "rss_bytes": 559882240
+      },
+      {
+        "cycle": 9,
+        "nodes": 148,
+        "orphans": 0,
+        "objects": 8274,
+        "resources": 2888,
+        "native_bytes": 188027873,
+        "managed_bytes": 8225784,
+        "rss_bytes": 561152000
+      },
+      {
+        "cycle": 10,
+        "nodes": 148,
+        "orphans": 0,
+        "objects": 8266,
+        "resources": 2884,
+        "native_bytes": 187714177,
+        "managed_bytes": 8225888,
+        "rss_bytes": 561782784
+      },
+      {
+        "cycle": 11,
+        "nodes": 148,
+        "orphans": 0,
+        "objects": 8269,
+        "resources": 2884,
+        "native_bytes": 187722549,
+        "managed_bytes": 8226000,
+        "rss_bytes": 560013312
+      },
+      {
+        "cycle": 12,
+        "nodes": 148,
+        "orphans": 0,
+        "objects": 8274,
+        "resources": 2884,
+        "native_bytes": 188383873,
+        "managed_bytes": 8226112,
+        "rss_bytes": 556687360
+      },
+      {
+        "cycle": 13,
+        "nodes": 148,
+        "orphans": 0,
+        "objects": 8269,
+        "resources": 2884,
+        "native_bytes": 187779361,
+        "managed_bytes": 8226224,
+        "rss_bytes": 556072960
+      },
+      {
+        "cycle": 14,
+        "nodes": 148,
+        "orphans": 0,
+        "objects": 8313,
+        "resources": 2887,
+        "native_bytes": 188744545,
+        "managed_bytes": 8226336,
+        "rss_bytes": 556797952
+      },
+      {
+        "cycle": 15,
+        "nodes": 148,
+        "orphans": 0,
+        "objects": 8284,
+        "resources": 2889,
+        "native_bytes": 188429601,
+        "managed_bytes": 8226448,
+        "rss_bytes": 554852352
+      },
+      {
+        "cycle": 16,
+        "nodes": 148,
+        "orphans": 0,
+        "objects": 8296,
+        "resources": 2892,
+        "native_bytes": 189517025,
+        "managed_bytes": 8226560,
+        "rss_bytes": 556978176
+      },
+      {
+        "cycle": 17,
+        "nodes": 148,
+        "orphans": 0,
+        "objects": 8292,
+        "resources": 2891,
+        "native_bytes": 189440753,
+        "managed_bytes": 8226800,
+        "rss_bytes": 556609536
+      },
+      {
+        "cycle": 18,
+        "nodes": 148,
+        "orphans": 0,
+        "objects": 8466,
+        "resources": 2885,
+        "native_bytes": 189311325,
+        "managed_bytes": 8226912,
+        "rss_bytes": 557445120
+      },
+      {
+        "cycle": 19,
+        "nodes": 148,
+        "orphans": 0,
+        "objects": 8271,
+        "resources": 2884,
+        "native_bytes": 189357453,
+        "managed_bytes": 8227024,
+        "rss_bytes": 557744128
+      },
+      {
+        "cycle": 20,
+        "nodes": 148,
+        "orphans": 0,
+        "objects": 8281,
+        "resources": 2889,
+        "native_bytes": 189426549,
+        "managed_bytes": 8227136,
+        "rss_bytes": 554831872
+      }
+    ]
+  },
+  "rendered_benchmarks": {
+    "crowd": [
+      {
+        "file": "crowd-240-0-1.json",
+        "enemies": 240,
+        "observer_period": 1,
+        "frames": {
+          "count": 1199,
+          "mean_ms": 8.353483736447043,
+          "fps": 119.71053413762034,
+          "p95_ms": 13.026,
+          "p99_ms": 14.619,
+          "max_ms": 119.526,
+          "over_16_67_percent": 0.3336113427856547
+        },
+        "max_frame_index": 1,
+        "first_five_ms": [
+          11.772,
+          119.526,
+          20.161,
+          9.951,
+          10.195
+        ],
+        "observer_mean_usec": 36.528773978315265,
+        "observer_total_usec": 43798,
+        "observer_samples": 1199,
+        "valid": true
+      },
+      {
+        "file": "crowd-240-0-60.json",
+        "enemies": 240,
+        "observer_period": 60,
+        "frames": {
+          "count": 1135,
+          "mean_ms": 8.818146255506605,
+          "fps": 113.40251919450044,
+          "p95_ms": 13.88,
+          "p99_ms": 16.502,
+          "max_ms": 114.368,
+          "over_16_67_percent": 0.7929515418502202
+        },
+        "max_frame_index": 1,
+        "first_five_ms": [
+          4.446,
+          114.368,
+          21.168,
+          10.414,
+          10.983
+        ],
+        "observer_mean_usec": 46.55,
+        "observer_total_usec": 931,
+        "observer_samples": 20,
+        "valid": true
+      },
+      {
+        "file": "crowd-240-1-1.json",
+        "enemies": 240,
+        "observer_period": 1,
+        "frames": {
+          "count": 1328,
+          "mean_ms": 7.5325692771084425,
+          "fps": 132.75682747970345,
+          "p95_ms": 11.963,
+          "p99_ms": 13.585,
+          "max_ms": 121.752,
+          "over_16_67_percent": 0.37650602409638556
+        },
+        "max_frame_index": 1,
+        "first_five_ms": [
+          4.664,
+          121.752,
+          20.627,
+          9.49,
+          12.125
+        ],
+        "observer_mean_usec": 31.896084337349397,
+        "observer_total_usec": 42358,
+        "observer_samples": 1328,
+        "valid": true
+      },
+      {
+        "file": "crowd-240-1-60.json",
+        "enemies": 240,
+        "observer_period": 60,
+        "frames": {
+          "count": 1234,
+          "mean_ms": 8.109904376012954,
+          "fps": 123.30601615448722,
+          "p95_ms": 13.009,
+          "p99_ms": 14.575,
+          "max_ms": 125.918,
+          "over_16_67_percent": 0.3241491085899514
+        },
+        "max_frame_index": 1,
+        "first_five_ms": [
+          9.913,
+          125.918,
+          19.69,
+          10.177,
+          11.419
+        ],
+        "observer_mean_usec": 40.40909090909091,
+        "observer_total_usec": 889,
+        "observer_samples": 22,
+        "valid": true
+      },
+      {
+        "file": "crowd-60-0-1.json",
+        "enemies": 60,
+        "observer_period": 1,
+        "frames": {
+          "count": 4283,
+          "mean_ms": 2.3354744338080806,
+          "fps": 428.1785257522437,
+          "p95_ms": 3.697,
+          "p99_ms": 4.411,
+          "max_ms": 111.055,
+          "over_16_67_percent": 0.023348120476301658
+        },
+        "max_frame_index": 1,
+        "first_five_ms": [
+          1.892,
+          111.055,
+          5.009,
+          2.28,
+          2.046
+        ],
+        "observer_mean_usec": 8.346486107868317,
+        "observer_total_usec": 35748,
+        "observer_samples": 4283,
+        "valid": true
+      },
+      {
+        "file": "crowd-60-0-60.json",
+        "enemies": 60,
+        "observer_period": 60,
+        "frames": {
+          "count": 4019,
+          "mean_ms": 2.488571784025875,
+          "fps": 401.83691160487837,
+          "p95_ms": 4.024,
+          "p99_ms": 5.303,
+          "max_ms": 109.74,
+          "over_16_67_percent": 0.02488181139586962
+        },
+        "max_frame_index": 1,
+        "first_five_ms": [
+          2.328,
+          109.74,
+          5.011,
+          2.138,
+          2.012
+        ],
+        "observer_mean_usec": 12.588235294117647,
+        "observer_total_usec": 856,
+        "observer_samples": 68,
+        "valid": true
+      },
+      {
+        "file": "crowd-60-1-1.json",
+        "enemies": 60,
+        "observer_period": 1,
+        "frames": {
+          "count": 4364,
+          "mean_ms": 2.292380384967922,
+          "fps": 436.2277772735319,
+          "p95_ms": 3.594,
+          "p99_ms": 4.495,
+          "max_ms": 111.524,
+          "over_16_67_percent": 0.022914757103574702
+        },
+        "max_frame_index": 1,
+        "first_five_ms": [
+          3.387,
+          111.524,
+          6.716,
+          2.383,
+          2.549
+        ],
+        "observer_mean_usec": 8.202337305224564,
+        "observer_total_usec": 35795,
+        "observer_samples": 4364,
+        "valid": true
+      },
+      {
+        "file": "crowd-60-1-60.json",
+        "enemies": 60,
+        "observer_period": 60,
+        "frames": {
+          "count": 3698,
+          "mean_ms": 2.7048163872363444,
+          "fps": 369.7108627110003,
+          "p95_ms": 4.641,
+          "p99_ms": 6.178,
+          "max_ms": 110.164,
+          "over_16_67_percent": 0.08112493239588967
+        },
+        "max_frame_index": 1,
+        "first_five_ms": [
+          2.213,
+          110.164,
+          3.91,
+          3.164,
+          1.88
+        ],
+        "observer_mean_usec": 14.365079365079366,
+        "observer_total_usec": 905,
+        "observer_samples": 63,
+        "valid": true
+      }
+    ],
+    "density": [
+      {
+        "file": "density-0-60.json",
+        "enemies": 60,
+        "observer_period": 60,
+        "frames": {
+          "count": 4389,
+          "mean_ms": 2.278778765094549,
+          "fps": 438.8315422794055,
+          "p95_ms": 3.622,
+          "p99_ms": 4.236,
+          "max_ms": 108.201,
+          "over_16_67_percent": 0.0227842333105491
+        },
+        "max_frame_index": 1,
+        "first_five_ms": [
+          1.893,
+          108.201,
+          3.761,
+          1.865,
+          3.019
+        ],
+        "observer_mean_usec": 11.08,
+        "observer_total_usec": 831,
+        "observer_samples": 75,
+        "valid": true
+      },
+      {
+        "file": "density-1-240.json",
+        "enemies": 240,
+        "observer_period": 60,
+        "frames": {
+          "count": 1321,
+          "mean_ms": 7.5757592732778125,
+          "fps": 131.999970422414,
+          "p95_ms": 12.118,
+          "p99_ms": 14.148,
+          "max_ms": 119.022,
+          "over_16_67_percent": 0.757002271006813
+        },
+        "max_frame_index": 1,
+        "first_five_ms": [
+          10.082,
+          119.022,
+          21.036,
+          9.779,
+          4.877
+        ],
+        "observer_mean_usec": 41.391304347826086,
+        "observer_total_usec": 952,
+        "observer_samples": 23,
+        "valid": true
+      },
+      {
+        "file": "density-2-240.json",
+        "enemies": 240,
+        "observer_period": 60,
+        "frames": {
+          "count": 1347,
+          "mean_ms": 7.424359317000742,
+          "fps": 134.6917568644799,
+          "p95_ms": 11.831,
+          "p99_ms": 12.715,
+          "max_ms": 117.974,
+          "over_16_67_percent": 0.14847809948032664
+        },
+        "max_frame_index": 1,
+        "first_five_ms": [
+          4.626,
+          117.974,
+          28.254,
+          12.073,
+          10.867
+        ],
+        "observer_mean_usec": 37.833333333333336,
+        "observer_total_usec": 908,
+        "observer_samples": 24,
+        "valid": true
+      },
+      {
+        "file": "density-3-60.json",
+        "enemies": 60,
+        "observer_period": 60,
+        "frames": {
+          "count": 4012,
+          "mean_ms": 2.4928546859421776,
+          "fps": 401.14652716792784,
+          "p95_ms": 4.101,
+          "p99_ms": 5.012,
+          "max_ms": 137.413,
+          "over_16_67_percent": 0.024925224327018942
+        },
+        "max_frame_index": 1,
+        "first_five_ms": [
+          2.875,
+          137.413,
+          6.589,
+          3.211,
+          3.129
+        ],
+        "observer_mean_usec": 15.191176470588236,
+        "observer_total_usec": 1033,
+        "observer_samples": 68,
+        "valid": true
+      }
+    ]
+  },
+  "managed_profiles": [
+    {
+      "file": "0-60.speedscope.json.gz",
+      "thread": "Thread (581110)",
+      "sampled_span_ms": 10015.86084134961,
+      "warning": "Temps mural échantillonné, appels natifs inclus dans les appelants ; les pourcentages inclusifs se recouvrent.",
+      "methods": [
+        {
+          "method": "Vestiges!Vestiges.Combat.Enemy.InvokeGodotClassMethod(required_modifier System.Runtime.InteropServices.InAttribute value class Godot.NativeInterop.godot_string_name&,value class Godot.NativeInterop.NativeVariantPtrArgs,value class Godot.NativeInterop.godot_variant&)",
+          "inclusive_sampled_ms": 3287.9367256271416,
+          "exclusive_sampled_ms": 1.2522888681587574e-07,
+          "inclusive_percent_main_thread": 32.82730039591985
+        },
+        {
+          "method": "Vestiges!Vestiges.Combat.Enemy._PhysicsProcess(float64)",
+          "inclusive_sampled_ms": 3198.3383593848016,
+          "exclusive_sampled_ms": 1.93592852610891e-05,
+          "inclusive_percent_main_thread": 31.932735588545118
+        },
+        {
+          "method": "GodotSharp!Godot.CharacterBody2D.MoveAndSlide()",
+          "inclusive_sampled_ms": 827.6726019054503,
+          "exclusive_sampled_ms": 0.0,
+          "inclusive_percent_main_thread": 8.263619223706424
+        },
+        {
+          "method": "Vestiges!Vestiges.Combat.Enemy.MoveWithKnockback(float32)",
+          "inclusive_sampled_ms": 784.582806678918,
+          "exclusive_sampled_ms": 0.0,
+          "inclusive_percent_main_thread": 7.833403629569574
+        },
+        {
+          "method": "Vestiges!Vestiges.Combat.Enemy.UpdateSpriteAnimation(float32)",
+          "inclusive_sampled_ms": 734.1286436471675,
+          "exclusive_sampled_ms": 0.0,
+          "inclusive_percent_main_thread": 7.32966097748065
+        },
+        {
+          "method": "Vestiges!Vestiges.Combat.Enemy.PlaySpriteAnim(class Godot.StringName)",
+          "inclusive_sampled_ms": 664.1751168005025,
+          "exclusive_sampled_ms": 4.76837158203125e-07,
+          "inclusive_percent_main_thread": 6.631233473797013
+        },
+        {
+          "method": "Vestiges!Vestiges.Combat.Enemy.ProcessMelee(float32,float32)",
+          "inclusive_sampled_ms": 405.08578844474755,
+          "exclusive_sampled_ms": 0.0,
+          "inclusive_percent_main_thread": 4.044443057479255
+        },
+        {
+          "method": "Vestiges!Vestiges.World.GrassTrample._Process(float64)",
+          "inclusive_sampled_ms": 388.7979123970878,
+          "exclusive_sampled_ms": 1.049133061314933e-06,
+          "inclusive_percent_main_thread": 3.8818222273213854
+        },
+        {
+          "method": "Vestiges!Vestiges.Combat.Enemy.MeleeHitPlayer(class Vestiges.Core.Player,float32)",
+          "inclusive_sampled_ms": 335.05042173774723,
+          "exclusive_sampled_ms": 0.0,
+          "inclusive_percent_main_thread": 3.3451984511857504
+        },
+        {
+          "method": "Vestiges!Vestiges.Core.Player._PhysicsProcess(float64)",
+          "inclusive_sampled_ms": 220.7542417828373,
+          "exclusive_sampled_ms": 0.0,
+          "inclusive_percent_main_thread": 2.204046614460463
+        },
+        {
+          "method": "Vestiges!Vestiges.Tests.MovementDenseBenchmark._Process(float64)",
+          "inclusive_sampled_ms": 215.38422570942646,
+          "exclusive_sampled_ms": 0.0,
+          "inclusive_percent_main_thread": 2.1504314918217657
+        },
+        {
+          "method": "Vestiges!Vestiges.Combat.Enemy.ProcessAbilities(float32,float32)",
+          "inclusive_sampled_ms": 196.8982328566351,
+          "exclusive_sampled_ms": 0.0,
+          "inclusive_percent_main_thread": 1.9658643023848523
+        },
+        {
+          "method": "Vestiges!Vestiges.Combat.Enemy.ShootProjectile(value class Godot.Vector2)",
+          "inclusive_sampled_ms": 105.30430156821171,
+          "exclusive_sampled_ms": 0.0,
+          "inclusive_percent_main_thread": 1.0513754457676974
+        },
+        {
+          "method": "Vestiges!Vestiges.Combat.Enemy.HitPlayer(class Vestiges.Core.Player,float32)",
+          "inclusive_sampled_ms": 101.1089672587741,
+          "exclusive_sampled_ms": 0.0,
+          "inclusive_percent_main_thread": 1.0094885388318748
+        },
+        {
+          "method": "Vestiges!Vestiges.Combat.Enemy.PlayRangedAttackVfx(value class Godot.Vector2)",
+          "inclusive_sampled_ms": 56.98691982444507,
+          "exclusive_sampled_ms": 0.0,
+          "inclusive_percent_main_thread": 0.568966769078695
+        },
+        {
+          "method": "Vestiges!Vestiges.Tests.MovementDenseBenchmark._PhysicsProcess(float64)",
+          "inclusive_sampled_ms": 55.990071109986275,
+          "exclusive_sampled_ms": 0.0,
+          "inclusive_percent_main_thread": 0.5590140677557753
+        },
+        {
+          "method": "Vestiges!Vestiges.Combat.Enemy.FlashWarning(value class Godot.Color,float32)",
+          "inclusive_sampled_ms": 37.70694486004686,
+          "exclusive_sampled_ms": 0.0,
+          "inclusive_percent_main_thread": 0.3764723318077366
+        },
+        {
+          "method": "Vestiges!Vestiges.Combat.Enemy.HasGodotClassMethod(required_modifier System.Runtime.InteropServices.InAttribute value class Godot.NativeInterop.godot_string_name&)",
+          "inclusive_sampled_ms": 36.58674893171701,
+          "exclusive_sampled_ms": 0.0,
+          "inclusive_percent_main_thread": 0.3652881116386103
+        },
+        {
+          "method": "Vestiges!Vestiges.Combat.Enemy.ProcessRanged(float32,float32)",
+          "inclusive_sampled_ms": 29.039075809722362,
+          "exclusive_sampled_ms": 0.0,
+          "inclusive_percent_main_thread": 0.2899309032912784
+        },
+        {
+          "method": "Vestiges!Vestiges.Combat.Enemy.PlayNearbyAudio(class System.String)",
+          "inclusive_sampled_ms": 20.418239495985972,
+          "exclusive_sampled_ms": 0.0,
+          "inclusive_percent_main_thread": 0.2038590573432395
+        },
+        {
+          "method": "Vestiges!Vestiges.Combat.Enemy.TakeDamage(float32,bool)",
+          "inclusive_sampled_ms": 18.280861767701026,
+          "exclusive_sampled_ms": 0.0,
+          "inclusive_percent_main_thread": 0.18251912698537184
+        },
+        {
+          "method": "Vestiges!Vestiges.Core.GroupCache.GetEnemies()",
+          "inclusive_sampled_ms": 6.47253290637218,
+          "exclusive_sampled_ms": 0.0,
+          "inclusive_percent_main_thread": 0.06462283181542311
+        }
+      ]
+    },
+    {
+      "file": "1-240.speedscope.json.gz",
+      "thread": "Thread (581989)",
+      "sampled_span_ms": 10022.17578125,
+      "warning": "Temps mural échantillonné, appels natifs inclus dans les appelants ; les pourcentages inclusifs se recouvrent.",
+      "methods": [
+        {
+          "method": "Vestiges!Vestiges.Combat.Enemy.InvokeGodotClassMethod(required_modifier System.Runtime.InteropServices.InAttribute value class Godot.NativeInterop.godot_string_name&,value class Godot.NativeInterop.NativeVariantPtrArgs,value class Godot.NativeInterop.godot_variant&)",
+          "inclusive_sampled_ms": 6063.695073912312,
+          "exclusive_sampled_ms": 2.918700374721084e-07,
+          "inclusive_percent_main_thread": 60.5027810952646
+        },
+        {
+          "method": "Vestiges!Vestiges.Combat.Enemy._PhysicsProcess(float64)",
+          "inclusive_sampled_ms": 5991.425858740423,
+          "exclusive_sampled_ms": 0.00012149097780334017,
+          "inclusive_percent_main_thread": 59.781688023767146
+        },
+        {
+          "method": "GodotSharp!Godot.CharacterBody2D.MoveAndSlide()",
+          "inclusive_sampled_ms": 1954.3998415875253,
+          "exclusive_sampled_ms": 0.0,
+          "inclusive_percent_main_thread": 19.500753970449377
+        },
+        {
+          "method": "Vestiges!Vestiges.Combat.Enemy.MoveWithKnockback(float32)",
+          "inclusive_sampled_ms": 1939.312084853966,
+          "exclusive_sampled_ms": 0.0,
+          "inclusive_percent_main_thread": 19.3502102455849
+        },
+        {
+          "method": "Vestiges!Vestiges.Combat.Enemy.UpdateSpriteAnimation(float32)",
+          "inclusive_sampled_ms": 1226.093747249472,
+          "exclusive_sampled_ms": 2.589526147289689e-06,
+          "inclusive_percent_main_thread": 12.233808047383393
+        },
+        {
+          "method": "Vestiges!Vestiges.Combat.Enemy.PlaySpriteAnim(class Godot.StringName)",
+          "inclusive_sampled_ms": 1022.7489851585184,
+          "exclusive_sampled_ms": 9.66935658652801e-07,
+          "inclusive_percent_main_thread": 10.204859777773303
+        },
+        {
+          "method": "Vestiges!Vestiges.Combat.Enemy.ProcessMelee(float32,float32)",
+          "inclusive_sampled_ms": 475.2100756835737,
+          "exclusive_sampled_ms": 8.719794095668476e-07,
+          "inclusive_percent_main_thread": 4.741585919622573
+        },
+        {
+          "method": "Vestiges!Vestiges.World.GrassTrample._Process(float64)",
+          "inclusive_sampled_ms": 368.14898859084724,
+          "exclusive_sampled_ms": 1.6455032891826704e-07,
+          "inclusive_percent_main_thread": 3.673343958700058
+        },
+        {
+          "method": "Vestiges!Vestiges.Combat.Enemy.MeleeHitPlayer(class Vestiges.Core.Player,float32)",
+          "inclusive_sampled_ms": 283.44822787501414,
+          "exclusive_sampled_ms": 7.639737304998562e-07,
+          "inclusive_percent_main_thread": 2.828210501010206
+        },
+        {
+          "method": "Vestiges!Vestiges.Combat.Enemy.ProcessAbilities(float32,float32)",
+          "inclusive_sampled_ms": 201.55004988756815,
+          "exclusive_sampled_ms": 0.0,
+          "inclusive_percent_main_thread": 2.011040858659038
+        },
+        {
+          "method": "Vestiges!Vestiges.Combat.Enemy.HitPlayer(class Vestiges.Core.Player,float32)",
+          "inclusive_sampled_ms": 122.73034840838022,
+          "exclusive_sampled_ms": 4.227422323310748e-08,
+          "inclusive_percent_main_thread": 1.2245878648226312
+        },
+        {
+          "method": "Vestiges!Vestiges.Combat.Enemy.FlashWarning(value class Godot.Color,float32)",
+          "inclusive_sampled_ms": 94.21344229345584,
+          "exclusive_sampled_ms": 0.0,
+          "inclusive_percent_main_thread": 0.9400497890858707
+        },
+        {
+          "method": "Vestiges!Vestiges.Tests.MovementDenseBenchmark._Process(float64)",
+          "inclusive_sampled_ms": 77.68034543496606,
+          "exclusive_sampled_ms": 0.0,
+          "inclusive_percent_main_thread": 0.775084643598992
+        },
+        {
+          "method": "Vestiges!Vestiges.Combat.Enemy.ShootProjectile(value class Godot.Vector2)",
+          "inclusive_sampled_ms": 77.01499674557067,
+          "exclusive_sampled_ms": 0.0,
+          "inclusive_percent_main_thread": 0.7684458786848887
+        },
+        {
+          "method": "Vestiges!Vestiges.Core.Player._PhysicsProcess(float64)",
+          "inclusive_sampled_ms": 59.630638204231445,
+          "exclusive_sampled_ms": 0.0,
+          "inclusive_percent_main_thread": 0.5949869519929146
+        },
+        {
+          "method": "Vestiges!Vestiges.Combat.Enemy.PlayRangedAttackVfx(value class Godot.Vector2)",
+          "inclusive_sampled_ms": 45.334180672225784,
+          "exclusive_sampled_ms": 0.0,
+          "inclusive_percent_main_thread": 0.4523387102932209
+        },
+        {
+          "method": "Vestiges!Vestiges.Combat.Enemy.ProcessRanged(float32,float32)",
+          "inclusive_sampled_ms": 39.865627899878746,
+          "exclusive_sampled_ms": 0.0,
+          "inclusive_percent_main_thread": 0.39777418367039025
+        },
+        {
+          "method": "Vestiges!Vestiges.Combat.Enemy.HasGodotClassMethod(required_modifier System.Runtime.InteropServices.InAttribute value class Godot.NativeInterop.godot_string_name&)",
+          "inclusive_sampled_ms": 11.809522811431634,
+          "exclusive_sampled_ms": 0.0,
+          "inclusive_percent_main_thread": 0.11783392218609351
+        },
+        {
+          "method": "Vestiges!Vestiges.Tests.MovementDenseBenchmark._PhysicsProcess(float64)",
+          "inclusive_sampled_ms": 9.664177208251886,
+          "exclusive_sampled_ms": 0.0,
+          "inclusive_percent_main_thread": 0.0964279356018892
+        },
+        {
+          "method": "Vestiges!Vestiges.Combat.Enemy.TakeDamage(float32,bool)",
+          "inclusive_sampled_ms": 6.466455080551896,
+          "exclusive_sampled_ms": 0.0,
+          "inclusive_percent_main_thread": 0.06452146940637053
+        },
+        {
+          "method": "Vestiges!Vestiges.Combat.Enemy.PlayNearbyAudio(class System.String)",
+          "inclusive_sampled_ms": 1.0906619751281141,
+          "exclusive_sampled_ms": 0.0,
+          "inclusive_percent_main_thread": 0.01088248698619496
+        }
+      ]
+    },
+    {
+      "file": "2-240.speedscope.json.gz",
+      "thread": "Thread (582807)",
+      "sampled_span_ms": 10021.609375,
+      "warning": "Temps mural échantillonné, appels natifs inclus dans les appelants ; les pourcentages inclusifs se recouvrent.",
+      "methods": [
+        {
+          "method": "Vestiges!Vestiges.Combat.Enemy.InvokeGodotClassMethod(required_modifier System.Runtime.InteropServices.InAttribute value class Godot.NativeInterop.godot_string_name&,value class Godot.NativeInterop.NativeVariantPtrArgs,value class Godot.NativeInterop.godot_variant&)",
+          "inclusive_sampled_ms": 6248.52950941762,
+          "exclusive_sampled_ms": 3.83841029361065e-06,
+          "inclusive_percent_main_thread": 62.35055943215328
+        },
+        {
+          "method": "Vestiges!Vestiges.Combat.Enemy._PhysicsProcess(float64)",
+          "inclusive_sampled_ms": 6189.8417641706255,
+          "exclusive_sampled_ms": 0.00014212126784141077,
+          "inclusive_percent_main_thread": 61.76494745057478
+        },
+        {
+          "method": "GodotSharp!Godot.CharacterBody2D.MoveAndSlide()",
+          "inclusive_sampled_ms": 2278.251430473815,
+          "exclusive_sampled_ms": 0.0,
+          "inclusive_percent_main_thread": 22.733388872222086
+        },
+        {
+          "method": "Vestiges!Vestiges.Combat.Enemy.MoveWithKnockback(float32)",
+          "inclusive_sampled_ms": 2264.1848851461327,
+          "exclusive_sampled_ms": 0.0,
+          "inclusive_percent_main_thread": 22.593026732756012
+        },
+        {
+          "method": "Vestiges!Vestiges.Combat.Enemy.UpdateSpriteAnimation(float32)",
+          "inclusive_sampled_ms": 1206.6211949982169,
+          "exclusive_sampled_ms": 2.1782907424494624e-06,
+          "inclusive_percent_main_thread": 12.040193843598267
+        },
+        {
+          "method": "Vestiges!Vestiges.Combat.Enemy.PlaySpriteAnim(class Godot.StringName)",
+          "inclusive_sampled_ms": 958.5461320431089,
+          "exclusive_sampled_ms": 2.039410674115061e-06,
+          "inclusive_percent_main_thread": 9.564792401850216
+        },
+        {
+          "method": "Vestiges!Vestiges.Combat.Enemy.ProcessMelee(float32,float32)",
+          "inclusive_sampled_ms": 541.9238687049133,
+          "exclusive_sampled_ms": 2.246390636173601e-06,
+          "inclusive_percent_main_thread": 5.407553302334868
+        },
+        {
+          "method": "Vestiges!Vestiges.Combat.Enemy.MeleeHitPlayer(class Vestiges.Core.Player,float32)",
+          "inclusive_sampled_ms": 318.37916816053365,
+          "exclusive_sampled_ms": 1.0672538337530568e-06,
+          "inclusive_percent_main_thread": 3.176926541906186
+        },
+        {
+          "method": "Vestiges!Vestiges.World.GrassTrample._Process(float64)",
+          "inclusive_sampled_ms": 270.33244884278054,
+          "exclusive_sampled_ms": 1.9699109543580562e-07,
+          "inclusive_percent_main_thread": 2.6974953695277164
+        },
+        {
+          "method": "Vestiges!Vestiges.Combat.Enemy.ProcessAbilities(float32,float32)",
+          "inclusive_sampled_ms": 220.73713385822066,
+          "exclusive_sampled_ms": 0.0,
+          "inclusive_percent_main_thread": 2.2026116325075846
+        },
+        {
+          "method": "Vestiges!Vestiges.Combat.Enemy.ShootProjectile(value class Godot.Vector2)",
+          "inclusive_sampled_ms": 121.85789945762644,
+          "exclusive_sampled_ms": 0.0,
+          "inclusive_percent_main_thread": 1.2159513995986941
+        },
+        {
+          "method": "Vestiges!Vestiges.Combat.Enemy.HitPlayer(class Vestiges.Core.Player,float32)",
+          "inclusive_sampled_ms": 110.03583998854623,
+          "exclusive_sampled_ms": 0.0,
+          "inclusive_percent_main_thread": 1.0979857213656985
+        },
+        {
+          "method": "Vestiges!Vestiges.Combat.Enemy.PlayRangedAttackVfx(value class Godot.Vector2)",
+          "inclusive_sampled_ms": 85.33485817116593,
+          "exclusive_sampled_ms": 0.0,
+          "inclusive_percent_main_thread": 0.851508525008399
+        },
+        {
+          "method": "Vestiges!Vestiges.Tests.MovementDenseBenchmark._Process(float64)",
+          "inclusive_sampled_ms": 78.36986233683734,
+          "exclusive_sampled_ms": 0.0,
+          "inclusive_percent_main_thread": 0.7820087513322913
+        },
+        {
+          "method": "Vestiges!Vestiges.Combat.Enemy.ProcessRanged(float32,float32)",
+          "inclusive_sampled_ms": 65.79459043865609,
+          "exclusive_sampled_ms": 0.0,
+          "inclusive_percent_main_thread": 0.6565271901615711
+        },
+        {
+          "method": "Vestiges!Vestiges.Combat.Enemy.FlashWarning(value class Godot.Color,float32)",
+          "inclusive_sampled_ms": 41.867941397330014,
+          "exclusive_sampled_ms": 0.0,
+          "inclusive_percent_main_thread": 0.41777662479815036
+        },
+        {
+          "method": "Vestiges!Vestiges.Core.Player._PhysicsProcess(float64)",
+          "inclusive_sampled_ms": 32.48281334031691,
+          "exclusive_sampled_ms": 0.0,
+          "inclusive_percent_main_thread": 0.32412771367190624
+        },
+        {
+          "method": "Vestiges!Vestiges.Tests.MovementDenseBenchmark._PhysicsProcess(float64)",
+          "inclusive_sampled_ms": 23.719095890533026,
+          "exclusive_sampled_ms": 0.0,
+          "inclusive_percent_main_thread": 0.23667950927824932
+        },
+        {
+          "method": "Vestiges!Vestiges.Combat.Enemy.PlayNearbyAudio(class System.String)",
+          "inclusive_sampled_ms": 17.11093347975884,
+          "exclusive_sampled_ms": 0.0,
+          "inclusive_percent_main_thread": 0.17074037551736884
+        },
+        {
+          "method": "Vestiges!Vestiges.Combat.Enemy.HasGodotClassMethod(required_modifier System.Runtime.InteropServices.InAttribute value class Godot.NativeInterop.godot_string_name&)",
+          "inclusive_sampled_ms": 11.06695487808156,
+          "exclusive_sampled_ms": 0.0,
+          "inclusive_percent_main_thread": 0.1104309144765639
+        },
+        {
+          "method": "Vestiges!Vestiges.Combat.Enemy.TakeDamage(float32,bool)",
+          "inclusive_sampled_ms": 2.159132057089323,
+          "exclusive_sampled_ms": 0.0,
+          "inclusive_percent_main_thread": 0.021544763683121734
+        },
+        {
+          "method": "Vestiges!Vestiges.Combat.Enemy.SpawnDamageNumber(float32,bool)",
+          "inclusive_sampled_ms": 1.0804403883590794,
+          "exclusive_sampled_ms": 0.0,
+          "inclusive_percent_main_thread": 0.010781106586077442
+        }
+      ]
+    },
+    {
+      "file": "3-60.speedscope.json.gz",
+      "thread": "Thread (583632)",
+      "sampled_span_ms": 10004.785315004685,
+      "warning": "Temps mural échantillonné, appels natifs inclus dans les appelants ; les pourcentages inclusifs se recouvrent.",
+      "methods": [
+        {
+          "method": "Vestiges!Vestiges.Combat.Enemy.InvokeGodotClassMethod(required_modifier System.Runtime.InteropServices.InAttribute value class Godot.NativeInterop.godot_string_name&,value class Godot.NativeInterop.NativeVariantPtrArgs,value class Godot.NativeInterop.godot_variant&)",
+          "inclusive_sampled_ms": 3123.4070756052156,
+          "exclusive_sampled_ms": 9.5367431640625e-07,
+          "inclusive_percent_main_thread": 31.219131418251255
+        },
+        {
+          "method": "Vestiges!Vestiges.Combat.Enemy._PhysicsProcess(float64)",
+          "inclusive_sampled_ms": 3073.0313785038975,
+          "exclusive_sampled_ms": 1.8524954839449492e-05,
+          "inclusive_percent_main_thread": 30.715615395515943
+        },
+        {
+          "method": "Vestiges!Vestiges.Combat.Enemy.UpdateSpriteAnimation(float32)",
+          "inclusive_sampled_ms": 625.573720148239,
+          "exclusive_sampled_ms": 3.063951226067729e-08,
+          "inclusive_percent_main_thread": 6.252745066003908
+        },
+        {
+          "method": "GodotSharp!Godot.CharacterBody2D.MoveAndSlide()",
+          "inclusive_sampled_ms": 615.18733236507,
+          "exclusive_sampled_ms": 0.0,
+          "inclusive_percent_main_thread": 6.148930866536859
+        },
+        {
+          "method": "Vestiges!Vestiges.Combat.Enemy.MoveWithKnockback(float32)",
+          "inclusive_sampled_ms": 604.399532330913,
+          "exclusive_sampled_ms": 0.0,
+          "inclusive_percent_main_thread": 6.041104464525233
+        },
+        {
+          "method": "Vestiges!Vestiges.Combat.Enemy.ProcessMelee(float32,float32)",
+          "inclusive_sampled_ms": 508.06350358964767,
+          "exclusive_sampled_ms": 0.0,
+          "inclusive_percent_main_thread": 5.078204954859741
+        },
+        {
+          "method": "Vestiges!Vestiges.Combat.Enemy.PlaySpriteAnim(class Godot.StringName)",
+          "inclusive_sampled_ms": 504.8738125457377,
+          "exclusive_sampled_ms": 0.0,
+          "inclusive_percent_main_thread": 5.046323300796398
+        },
+        {
+          "method": "Vestiges!Vestiges.Combat.Enemy.MeleeHitPlayer(class Vestiges.Core.Player,float32)",
+          "inclusive_sampled_ms": 349.7785492163267,
+          "exclusive_sampled_ms": 0.0,
+          "inclusive_percent_main_thread": 3.496112492206565
+        },
+        {
+          "method": "Vestiges!Vestiges.World.GrassTrample._Process(float64)",
+          "inclusive_sampled_ms": 348.6072646889029,
+          "exclusive_sampled_ms": 0.0,
+          "inclusive_percent_main_thread": 3.4844052492168807
+        },
+        {
+          "method": "Vestiges!Vestiges.Combat.Enemy.ProcessAbilities(float32,float32)",
+          "inclusive_sampled_ms": 196.4419740391554,
+          "exclusive_sampled_ms": 0.0,
+          "inclusive_percent_main_thread": 1.9634801532876611
+        },
+        {
+          "method": "Vestiges!Vestiges.Tests.MovementDenseBenchmark._Process(float64)",
+          "inclusive_sampled_ms": 164.7245901437458,
+          "exclusive_sampled_ms": 0.0,
+          "inclusive_percent_main_thread": 1.6464580194109706
+        },
+        {
+          "method": "Vestiges!Vestiges.Combat.Enemy.HitPlayer(class Vestiges.Core.Player,float32)",
+          "inclusive_sampled_ms": 124.62028072646717,
+          "exclusive_sampled_ms": 0.0,
+          "inclusive_percent_main_thread": 1.2456067451998976
+        },
+        {
+          "method": "Vestiges!Vestiges.Combat.Enemy.ShootProjectile(value class Godot.Vector2)",
+          "inclusive_sampled_ms": 102.89987981053127,
+          "exclusive_sampled_ms": 5.587935447692871e-08,
+          "inclusive_percent_main_thread": 1.0285066252866726
+        },
+        {
+          "method": "Vestiges!Vestiges.Core.Player._PhysicsProcess(float64)",
+          "inclusive_sampled_ms": 95.93325891895302,
+          "exclusive_sampled_ms": 0.0,
+          "inclusive_percent_main_thread": 0.9588737379009726
+        },
+        {
+          "method": "Vestiges!Vestiges.Combat.Enemy.FlashWarning(value class Godot.Color,float32)",
+          "inclusive_sampled_ms": 69.76410600193822,
+          "exclusive_sampled_ms": 0.0,
+          "inclusive_percent_main_thread": 0.6973073764742302
+        },
+        {
+          "method": "Vestiges!Vestiges.Combat.Enemy.PlayRangedAttackVfx(value class Godot.Vector2)",
+          "inclusive_sampled_ms": 43.5379910201018,
+          "exclusive_sampled_ms": 0.0,
+          "inclusive_percent_main_thread": 0.4351716668503187
+        },
+        {
+          "method": "Vestiges!Vestiges.Combat.Enemy.PlayNearbyAudio(class System.String)",
+          "inclusive_sampled_ms": 17.36085509698478,
+          "exclusive_sampled_ms": 0.0,
+          "inclusive_percent_main_thread": 0.1735255135454813
+        },
+        {
+          "method": "Vestiges!Vestiges.Combat.Enemy.HasGodotClassMethod(required_modifier System.Runtime.InteropServices.InAttribute value class Godot.NativeInterop.godot_string_name&)",
+          "inclusive_sampled_ms": 16.059870719909668,
+          "exclusive_sampled_ms": 0.0,
+          "inclusive_percent_main_thread": 0.1605218924170603
+        },
+        {
+          "method": "Vestiges!Vestiges.Combat.Enemy.ProcessRanged(float32,float32)",
+          "inclusive_sampled_ms": 15.087439135940556,
+          "exclusive_sampled_ms": 0.0,
+          "inclusive_percent_main_thread": 0.15080222774308968
+        },
+        {
+          "method": "Vestiges!Vestiges.Tests.MovementDenseBenchmark._PhysicsProcess(float64)",
+          "inclusive_sampled_ms": 1.0798418603744722,
+          "exclusive_sampled_ms": 0.0,
+          "inclusive_percent_main_thread": 0.010793253691860618
+        }
+      ]
+    }
+  ]
+}

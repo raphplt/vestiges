@@ -54,6 +54,13 @@ Les numéros servent à identifier les plans, pas à imposer leur exécution int
 
 Un seul lot d'implémentation ouvert à la fois. Un échec de lisibilité, de performance ou de fun ramène au lot concerné avant expansion.
 
+**Mise à jour du 28 septembre — seconde passe de performances et robustesse (diagnostic uniquement) :** [rapport](../AUDIT-PERFORMANCES-2026-09-28.md), [preuves et scripts](../audits/performance-2026-09-28/README.md), [lots proposés au plan 10 §11](10-terrain-et-tiles.md#11-audit-de-performances-du-27-septembre--lots).
+- Cône : 12 000 impacts et 3,05–3,18 Mo alloués dans quatre secondes d’émission sur 50 cibles, après chauffe.
+- Deux défauts temporels reproduits : statuts lointains qui n’expirent pas ; temps excédentaire perdu par l’Effacement.
+- Préchauffage : zéro dessin hors champ contre huit dans le champ. Physique : 10 694 corps de décor, mais seulement 2 318 formes ; potentiel mémoire estimé des corps inutiles ≈5,88 Mio.
+- Vingt cycles techniques Hub/run/Hub : 148 nœuds et zéro orphelin à chaque retour. Profils managés de foule archivés. A/B final au calme : 2,28–2,49 ms/image à 60 ennemis, 7,42–7,58 ms à 240 ; inspection du banc trop faible pour expliquer cette pente. Pic initial de 108–137 ms à isoler de la mesure du combat. Aucune conclusion de FPS sous charge.
+- Suites proposées : 6A horloges, 6B impacts continus, 5B préchauffage, 3B attribution foule, 6C cellules actives, 6D corps optionnels. **Aucun correctif de production, aucune case de roadmap cochée ; travail de feu préexistant préservé.**
+
 **Mise à jour du 28 septembre, après-midi :** [plan 20 §6–§9](20-recompense-et-puissance.md#6-modèle-de-progression--28-septembre-2026-proposition-cibles-à-valider). Mesure de 30 min (bot nomade, deux seeds) et `tools/progression_model.py`.
 - Niveaux cibles par archétype à valider, leviers d'XP chiffrés et simulés (temps, oubli, Résurgences, Péril, boss intermédiaire à rang choisi, Indicible, build).
 - Constats : l'XP par PV à abattre est divisée par 4 à 30 min ; les orbes laissées pèsent au plus 15 % de l'XP (750 à 920 au sol), alors que 73 % des créatures apparues ne meurent jamais.

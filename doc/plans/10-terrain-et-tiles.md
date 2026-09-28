@@ -535,3 +535,28 @@ L'audit (§11) relevait que chaque explosion d'une créature à l'affixe Instabl
 - Les dégâts de l'explosion sont désormais mesurés au sol, comme toutes les zones depuis les lots I du plan 08. Elle touche exactement ce qui est dessiné : plus loin à l'horizontale, moitié moins à la verticale de l'écran.
 - `VfxFactory.CreateExplosionVfx`, les cinq images `vfx_explosion_f*` (non supprimées, voir plan 08) et la texture d'étincelle en losange ne sont plus utilisés, et le code correspondant est retiré.
 - **Vérifié** : `--capture-bestiary --affix explosive --kill` (nouvelle option `--kill`), images regardées ; smoke test.
+
+
+### Seconde passe d’audit — 28 septembre 2026 : lots proposés, aucun correctif
+
+Le [rapport du 28 septembre](../AUDIT-PERFORMANCES-2026-09-28.md) complète les zones non mesurées du premier audit. [Preuves et reproduction](../audits/performance-2026-09-28/README.md). Les lots déjà livrés ne sont pas rouverts ; les flaques de feu trouvées en cours restent intactes.
+
+- Cône : 50 cibles, **12 000 impacts et 3,05–3,18 Mo alloués dans les appels sur 4 s d’émission active**, après chauffe ; deux processus reproduisent les compteurs.
+- Robustesse : à 1 500 px, deux statuts de 2 s ont encore 2 s après 10 s simulées. L’Effacement perd le temps excédentaire : appels à 1 Hz → 15,40 % au lieu de 30,80 % à 10 min (fixture de hitch, pas FPS observés).
+- Préchauffage : les huit sprites soumis au même viewport produisent **0 dessin hors champ, 8 dans le champ** ; dix shaders de run absents de la liste. Compilations froides non chronométrées.
+- Physique : **10 694 corps, mais 2 318 formes** ; 8 376 décors sans forme. Surcoût natif isolé de 736 octets/corps, soit un potentiel estimé de **5,88 Mio** ; aucun gain FPS établi.
+- Durée de vie : **20 cycles techniques Hub → Main → Hub, 148 nœuds et 0 orphelin à chaque retour** ; pas de preuve nouvelle de fuite de nœuds dans ce scénario court.
+- Foule : observateur décimable ajouté au banc, profils managés 60/240/240/60 archivés ; sous charge, leurs pourcentages ne décident pas d’un gain. Un A/B final au calme confirme 2,28–2,49 ms/image à 60 ennemis contre 7,42–7,58 ms à 240, observateur décimé. Le profil natif reste à établir ; le pic initial du banc (108–137 ms, index 1) doit être exclu par préparation avant chronométrage, pas supprimé des données brutes.
+
+Ordre proposé, **non implémenté** ; un seul lot de correction ouvert à la fois :
+
+| Lot | Périmètre | Validation qui décide |
+|---|---|---|
+| **6A — Horloges et distance** | D’abord expiration des statuts lointains ; puis reste temporel/rattrapage borné de l’Effacement | Même expiration avec éloignement/retour ; même intégrale, dégâts et transitions sous jitter, hitch, pause et hitstop |
+| **6B — Impacts continus** | Séparer dégâts, procs et retours visuels/audio du cône | Baisser appels/allocations à dégâts et attribution d’arme conservés ; contrat des procs validé |
+| **5B — Préchauffage rendu** | Variantes réelles rendues sous l’overlay, attente de fin de rendu | Soumission non nulle, comparaison cache pilote froid/chaud, premiers effets sans compilation tardive attribuable |
+| **3B — Attribution de la foule** | A/B observateur fait ; déplacer l’inventaire avant mesure, fixer les quêtes dans la fixture, profiler le natif puis varier bestiaire/zoom | Même seed/build, charge ≤ seuil de `bench_ab.sh`, intervalles bruts ; aucune refonte avant attribution |
+| **6C — Cellules actives de l’Effacement** | Éviter les visites des cellules à zéro, sans supprimer leur mémoire | Même historique de phases, Failles et stabilisations ; compteur de visites réduit en late game |
+| **6D — Corps optionnels des décors** | Corps réservé aux décors bloquants ; streaming physique conditionnel séparé | Vérifier le potentiel mémoire ~5,88 Mio ; ne streamer les formes que si leur coût natif est établi |
+
+Aucune case de la roadmap V2 n’est cochée par cet audit. Les pistes ECS, C++, changement de renderer, carrés de distance généralisés et reprise des optimisations déjà livrées restent écartées sans mesure nouvelle.

@@ -1,0 +1,1222 @@
+{
+  "utc": "2026-09-28T12:27:50.274185+00:00",
+  "mode": "crowd",
+  "seed": 221092026,
+  "threshold_load1": 4,
+  "head": "0383e05379cc148496c24c4ef01ea7a3e7769fb6",
+  "status": " M doc/plans/10-terrain-et-tiles.md\n M doc/plans/20-recompense-et-puissance.md\n M scripts/Combat/CombatPools.cs\n M scripts/Combat/GroundFire.cs\n M scripts/Combat/Projectile.cs\n M tools/tests/MovementDenseBenchmark.cs\n M tools/tests/RunObservation.cs\n M tools/tests/WeaponRegression.cs\n?? tools/audit_performance_20260928.sh\n?? tools/profile_crowd_20260928.sh\n?? tools/tests/PerformanceAudit20260928.cs\n?? tools/tests/PerformanceAudit20260928.cs.uid\n?? tools/tests/PerformanceAudit20260928.tscn\n?? tools/tests/PhysicsBodyAudit.gd\n?? tools/tests/PhysicsBodyAudit.tscn\n?? tools/tests/ShaderWarmupAudit.gd\n?? tools/tests/ShaderWarmupAudit.tscn\n",
+  "dll_sha256": "ce4f62be3faca9cced319ce0d0ebcc3590b44f3dad55e5788d2046f9e71fb658",
+  "source_sha256": {
+    "scripts/Combat/Abilities/AimedShotAbility.cs": "50ea0bf28c62c901c04dc5b75139d52f55309e91ddbf8d90b094e6100b78c3dd",
+    "scripts/Combat/Abilities/BurrowAbility.cs": "89f2eb92018087e907268b40a49434a6f12079a1aad8f3579d77d47a2d147399",
+    "scripts/Combat/Abilities/CryAbility.cs": "2a8f71e9b46bca624516886edcd878fd48c8c54e96a197ea37eb092cf35818a4",
+    "scripts/Combat/Abilities/EnemyAbilityFactory.cs": "a88b7330d472f8a1ce9bc1adf06a77ffbf8a7921aa8b6cc27034b4814dbb2132",
+    "scripts/Combat/Abilities/GroundTelegraph.cs": "40fbd1769ba4966be6efb57649a431f25feb9abb538f9d89a337be56e0c503d9",
+    "scripts/Combat/Abilities/IEnemyAbility.cs": "aac68104faf62621afe4466f2a9f32d87c86a4fda33f9564dcf261cba93b3df0",
+    "scripts/Combat/Abilities/OmenStrikeAbility.cs": "877a75ffe2bb86690f7045375271872adb7f6b61509c86e54b0e69a6e1cc5331",
+    "scripts/Combat/Abilities/PounceAbility.cs": "e9b4f7aed210843830a30b0f4b381a2e3160c7cfb3d022ee7fd8a252c7bd75ca",
+    "scripts/Combat/CharacterFacing.cs": "fe2b34d216de967027e477134934e4087feffab9c2ad0bc4f0eb9ad0471f01ae",
+    "scripts/Combat/CharacterSpriteLoader.cs": "57eadb7a957cfc6f53047acfbdf09b5ebc320808266723e0435ac55e7440a40f",
+    "scripts/Combat/CombatFxSettings.cs": "e63e9ce486ca137dc542931bd4a6b3f9197f28e745727f1a21839bfb78b3439a",
+    "scripts/Combat/CombatPools.cs": "1b8a5cd013a866276c61dab5bddbf245de78251811e4314273d6c788e66254f0",
+    "scripts/Combat/CrowdZoom.cs": "69cf7a753cc0e6aa6a8dee82116f2133df48ee99bfd12ba212c3b8b83ce71f09",
+    "scripts/Combat/DamageNumber.cs": "7bb321e672994e1cb868a7de6e729d5983bf13f0e3549468e9ec1e45d261f4ca",
+    "scripts/Combat/DeathFx.cs": "f2aa4f704c5ddd7233786552aa9177fd80b9cc5ea8329c866f1e761dc88112c3",
+    "scripts/Combat/Enemy.cs": "6a3a42236aa9569299c71695bc7460378d963399eb7b3228deda1711ca9ad7dc",
+    "scripts/Combat/EnemyAttackFx.cs": "5d190d85caa420473b6145743768496253f5d97e2f16868a4f46290a92ffd346",
+    "scripts/Combat/EnemyModifiers.cs": "ce062a87e23db22ae41b50b8fa9dc19f3f5738c2a921a390af5997ccaeb592c2",
+    "scripts/Combat/EnemyNameplate.cs": "4c1172d9788e121c3bb14bcf00b2c050a8e503b1b55577639c180f121b6ae823",
+    "scripts/Combat/EnemyProjectile.cs": "ffd88eb6bf26c748366541c52862722c7d7b8590b79466ef18d46e76a09952c8",
+    "scripts/Combat/EnemySpriteLoader.cs": "cd10337798d1176f14de7f22046d41235ba545c177f5358ab1bd5c5b156a16b3",
+    "scripts/Combat/EnemyTracking.cs": "6961f808b87461be3351ba74277830157ee926a373ee24d84dbe503db58b4d03",
+    "scripts/Combat/FootstepFx.cs": "d3043f8e985771857a6848fecccc5b4175e9e7049bdef5e0690afa7fbca11332",
+    "scripts/Combat/FxBudget.cs": "8c7ac0282aab55969c398142c8ed9787298735f7395fe7ffe5af4e08f107ba6a",
+    "scripts/Combat/FxFamily.cs": "7e574788fb938729cd4f6eb60fcf63bf1505d88a911348622ba9795e9db5faba",
+    "scripts/Combat/FxOwner.cs": "690fc3bf44355dbbb34a914d5a6187aadb7b674181b67260f81ffb416eb374f3",
+    "scripts/Combat/FxRamp.cs": "4b2507b8de87585e5934183d990904e895362584b97cd577929846c173b82ef8",
+    "scripts/Combat/GroundFire.cs": "585d346bc73025ba628cd43fd8fca149d13ff2d4aa5e54ddc589d63911786dba",
+    "scripts/Combat/HeldWeapon.cs": "226e6880de1eb43f3a67c1958624594312b86450b7d3c0f4b15732b2c038288b",
+    "scripts/Combat/HitFeedback.cs": "f7390a1d85100d861f333246120276aa2ea9cb7a2dd043829af8cdaeda9b3f4c",
+    "scripts/Combat/Indicible.cs": "3bd20cb2c4c3ea45b74bf0c318e20acad416e7e7e73a25bbfd946d15ac711a74",
+    "scripts/Combat/LevelUpFx.cs": "5e0cf205a05b0a1940ffb72478f8eb989bea2f97c009bc576630f547b0454e82",
+    "scripts/Combat/MobilityFeedback.cs": "9d2a498aba7dd77694a4b921ad4b20ceb309002eb087e69adc805d489be58fcd",
+    "scripts/Combat/NodePool.cs": "00e1b864e08ef9f7999521c2c3d1fab958161ab70ef5679a5d1cf42d2e2b9ff0",
+    "scripts/Combat/PixelFx.cs": "9093c6dfd7e36a03c27e2b8309538da75da60856f6354b86ccb2efd624db4acb",
+    "scripts/Combat/PixelFxShape.cs": "d412a9d62f7a7432a64e0ea8a781d4d21a73dc4bed070425e5059d4ec5f31af3",
+    "scripts/Combat/PixelFxSpec.cs": "9b75dd04a71e7d929396748587addbaff2a532188b36207a8bd8599be3d40d7e",
+    "scripts/Combat/PixelGroundRing.cs": "44b102b441b0359ef532eb3015b7b72a7af05c37a61cbe539d44046d5e5281c9",
+    "scripts/Combat/PixelPalette.cs": "d6aba89ed249f3ffa7b536f5480f5c9fcf9c3e5c42113b0bce7da07cdc1c8349",
+    "scripts/Combat/PixelSparks.cs": "f4641adba47cfaf8cd99b64bcb99908c7fabe86922f8e38607c363caf5e09cf6",
+    "scripts/Combat/PlayerAttackFx.cs": "c693a13129ad78bfb724c28041f2d1f11b6f8ce9667ede6abf0b17e7fe400222",
+    "scripts/Combat/Projectile.cs": "6f90ec9ad3da1aa9cf093ebea067397a609f3ac735740238284080aefdf6318a",
+    "scripts/Combat/ProjectileSprites.cs": "2b9c26caef3b5b107b1055986b7411e51c3a79fc244afbebb367d623fde4944f",
+    "scripts/Combat/ScreenShake.cs": "4a5f9882e939e307a90b4baba64831dff1c396684ce12d091f91a004031a8571",
+    "scripts/Combat/SparkBurst.cs": "499aee6549cc7b04e7496d831c74c051b83d147b795a38628a52f37dfa83920c",
+    "scripts/Combat/VfxFactory.cs": "770e4931dcf20b955ce9685fd7df511b00cb9be236868f0f63b086f09dd6ba87",
+    "scripts/Combat/WeaponInstance.cs": "b39b7dc0d7c0db61ec2e8836112e833c06d6957564aca98ff1592c36836884a0",
+    "scripts/Combat/WeaponPickup.cs": "716c94435a7b7549028d3a105f5d82bbcd8841648d5bde19e7147c82f64c205e",
+    "scripts/Combat/XpOrb.cs": "8118959c3ab0761eababf110232f05d10a72296005dc42937651aa8c0834b999",
+    "scripts/Core/EventBus.cs": "757d208d745d6d1aa839ffb5befdd1c6035127180468aacf467314014b4fd8df",
+    "scripts/Core/GameExit.cs": "905391077a93db7e369b22ee3b9fcde5426e4ee972b591a67eb80e1a47340372",
+    "scripts/Core/GameManager.cs": "9856ad1ba58b0d8e920598003fb0c0b9d7ba6b389feec8880a8072e8e92b26ee",
+    "scripts/Core/GroundShadow.cs": "d120af37cd13edabbf1c76cf9fd45899175bf8aa812e31a69eeffd0ef2a8f8e6",
+    "scripts/Core/GroupCache.cs": "c20abc341d2d66794ffe980e0ba9330f3265edb5d12263ebd8e2fca8e4787deb",
+    "scripts/Core/InteractionGauge.cs": "3b2e933a3deacaafea338dc0f07b6922d73fe0f2024687eab6a74445c192b5ae",
+    "scripts/Core/InteractionPrompt.cs": "323a0e76001ec3c583b70b0a24325368ff808cedc1fd49af50862d3ac2fb79de",
+    "scripts/Core/Iso.cs": "825343b9ceac2c2a9fa3ba494cdfdedac1ddf36c9e103b713628ddb15acf6ecd",
+    "scripts/Core/Player.cs": "e6b727a891f84e62c52c6e3f31225bf730b54690dc2e2989f1f684b12f02d864",
+    "scripts/Core/PlayerDefense.cs": "b8fe6229e70d9507bba58bee59a019d949eef4065ef0a0d8871e5e6bdbdcc804",
+    "scripts/Core/PlayerMobility.cs": "764dafdc85f248dcf6718aa4087a9c4a45fa6ba751c79f72bde4243400272b07",
+    "scripts/Events/CrisisAftermath.cs": "dfd60da0156d064e685276697d25057843dff4ccc6ef91c58b5146068231b74b",
+    "scripts/Events/CrisisManager.cs": "3f27e218fcfade91ccae6152de2f08eee39fe75f166ad07bddea17451ac57f00",
+    "scripts/Events/EndgameManager.cs": "50b4f5bdadc0837a4b9a6628880eeced2ecbbd67143b24e860cb63b8b49d8104",
+    "scripts/Events/RunEventDirector.cs": "aac5a70d52e20ca8dc652a185c69f584c4ea71b6ef01d82f101087064cf66805",
+    "scripts/Events/RunEvents/FallenRelicEvent.cs": "5517bc53f985633120820aa0a2ce709ed223d636541ff4c0faf57ac95d89df7d",
+    "scripts/Events/RunEvents/HuntEvent.cs": "e9b02ec23a6c3ac2b79295b0e364d84df9d11b804b33ca9c01dc9a4c7551c78b",
+    "scripts/Events/RunEvents/RunEvent.cs": "df317b209fef7638273493b02ab46eb3afd6dff3bc71e0921417d0ef5d93867f",
+    "scripts/Events/RunEvents/RunEventContext.cs": "2b4a6d4dff16d3c603a1587115ebfbf491d6b31754bef8fb1eb5045f6d2e7324",
+    "scripts/Events/RunEvents/RunEventMarker.cs": "8d2d7a3112a23b67b58a13f37bc01772adaa921e0a434878bee89d09b8b94b19",
+    "scripts/Events/RunEvents/ShardRainEvent.cs": "1e298a75625c4ebde99dd4f336e6343461638e1d154a482748b063c95b050e18",
+    "scripts/Events/RunEvents/StampedeEvent.cs": "04db32914e7196f7b5d1a7084d6fba4f5511d940b6838247ee618cd6e73ed913",
+    "scripts/Events/RunEvents/VigilEvent.cs": "1ce6f47bd1018b996f5cf3b492ec8d0d5886559eb04d28b9f927bd2f9cd66efc",
+    "scripts/Infrastructure/Analytics/AnalyticsManager.cs": "7c54fad5528fe0be3620ebedf12cc380a6a265c810b70cad4305976336416de6",
+    "scripts/Infrastructure/AudioManager.cs": "a87c01768f31e69f25f56aa51cee520ef1376db1d698242b68646232a0c7f147",
+    "scripts/Infrastructure/BiomeDataLoader.cs": "2d7b3f043ecaeb7b48c2954da6ce093322190170c1a07d8f81a455910565f363",
+    "scripts/Infrastructure/BlessingDataLoader.cs": "83b29202f53ceb4ef843236fb66b472d0d85f6bd560733fd71fc8d119fe265ee",
+    "scripts/Infrastructure/CharacterDataLoader.cs": "f948ca38fdfe2930f4878d2b5ae29ba9147d2716649aa06835f23b10512f9758",
+    "scripts/Infrastructure/ChestDataLoader.cs": "2b1ed5ea730bfd9e69efa1b342ee0159e6f6f13a8f60c2bf0e1f9120bbda42b4",
+    "scripts/Infrastructure/ColorBlindFilter.cs": "9d90db8117b911c64e319f85f5cd7990ff92703cefac421f8ee724e85f7e7883",
+    "scripts/Infrastructure/DefenseConfig.cs": "f30ddc9ad4f9bf01a393d9a9ea1f407f6b7148bed8ed6c777eacd4554ca2b0af",
+    "scripts/Infrastructure/DevelopmentMode.cs": "762e1a13c5375789834992c750f1e3e22477cd6641002146cb297125d3c83652",
+    "scripts/Infrastructure/EnemyDataLoader.cs": "268180b9db68acfb4c36e69001810890f8594bf1ce844c2abd208d6d1bfe5ffe",
+    "scripts/Infrastructure/EnemyVariantDataLoader.cs": "025e6e08bb9f2516308d380a282047c0be929623db5241ffc669931230703a66",
+    "scripts/Infrastructure/InputRemapManager.cs": "93dacc451e826e2ec2956e1f9b96ac369855fabf4eff87c0a066b0de62f7c4e0",
+    "scripts/Infrastructure/LandmarkDataLoader.cs": "e1e596208f3e804921a2f9131430624d4efb71afe681e29e62b240721372a407",
+    "scripts/Infrastructure/LocaleManager.cs": "efb610684643f4e95c93167992d48e4b5db72f2279ea34f003793e3710c566ab",
+    "scripts/Infrastructure/LootTableLoader.cs": "61625acf2f05c504d58fb32a33f4d404515e5c8b9ecc215f480f992c4b3b21e7",
+    "scripts/Infrastructure/MetaSaveManager.cs": "9e405a7573bd41a198140822d336846a96ea56f4a79df5f69ab6eeac98a1629b",
+    "scripts/Infrastructure/MobilityConfig.cs": "6aee8b6b0e8a367ec0e424881ad5813d0daed9de5705cfeeb8cd015cf8593f84",
+    "scripts/Infrastructure/OubliDataLoader.cs": "02e84734ae07ed9892f4795b47832b51aa2a4112e42ad968301eb31b3e2cd97a",
+    "scripts/Infrastructure/PassiveSouvenirDataLoader.cs": "215aea81ea77002c7bdcda386c9de4ec9779837ca74e3e1db0e621d7f17c2656",
+    "scripts/Infrastructure/PathStyle.cs": "90d73274c35676e9da1fb3df8b38bec4d85b9d1c559c407d4a6ba72f957ba3b6",
+    "scripts/Infrastructure/PerilDataLoader.cs": "360ee30705ae010fed73ffa6c679cbfaedb6d40e11bccd506603791a98be2ef5",
+    "scripts/Infrastructure/PerkDataLoader.cs": "c9617d89e912819e9181d16630cc8815e7fec69864650f951b44bc8cdaab455c",
+    "scripts/Infrastructure/PoiDataLoader.cs": "87ff9d98499429896d23e4fd10ae41fbdc3f0f132899e9edd91be4fb0264ee88",
+    "scripts/Infrastructure/QuestDataLoader.cs": "9f3b91658520223afab297cc059a2815e352d9760d24056884e0332cff5eb94a",
+    "scripts/Infrastructure/RarityPalette.cs": "b729e8e7e1a6e716d0e476f6298cf03b1286b942b908d8138977288c607b14dc",
+    "scripts/Infrastructure/RunAnalytics.cs": "785f46a44fb554e11d9e1f50802f4df94e296c36ba62693fcb9e650036110bbe",
+    "scripts/Infrastructure/RunEventDataLoader.cs": "5f8feca7ea4a64aab1f203317f0ca347cf90af568293b7a2fe7fd23f1e07ba1e",
+    "scripts/Infrastructure/RunHistoryManager.cs": "4f89b5a010cb57d68707285471573faf70b38faba2b24d15cf7d36687a3b6d49",
+    "scripts/Infrastructure/RunTracker.cs": "66cdaa968942f8294e62e24edbb1beed78577449fe4ef6858f065dca19842e7c",
+    "scripts/Infrastructure/ScoreConfig.cs": "c102eb03705ed0960b6195287920db5c31b9dcdae3aab539ce70fc9595b804ff",
+    "scripts/Infrastructure/SouvenirDataLoader.cs": "3d140c23fe758ff17cb0bb6fd9377969df34731bcacc25607ae4b01d696b348e",
+    "scripts/Infrastructure/StatCatalog.cs": "0269e6e704e25064b3969854f430e20dcfc7d2dfca3c48f7895cebc624369416",
+    "scripts/Infrastructure/StatEffectData.cs": "c9950f4ac219373dd8779adffe109cc49aae70d70313139581438bfa232b5893",
+    "scripts/Infrastructure/Steam/SteamAchievements.cs": "928a270f3b704ff6b8385183459fb3ab6c269cd3b92984b7960e4754222fd800",
+    "scripts/Infrastructure/Steam/SteamLeaderboards.cs": "9275459b25b3be2f6998f38c5bacdeb566fba7440cb89cc44cf0f449693f0075",
+    "scripts/Infrastructure/Steam/SteamManager.cs": "8bedb71fef03625008b5f8c9c20dfcf19c7be819eadba76ef8867630033b4d7e",
+    "scripts/Infrastructure/WeaponDataLoader.cs": "d7539701f441db0e0a8df69e09fa9fbf3f515aea9cbbe2b73eecdc4a1fa9efea",
+    "scripts/Infrastructure/WeaponUpgradeDataLoader.cs": "08654c04589a0104705b83095edef56107b9756715512fb6753db29f2a36dceb",
+    "scripts/Meta/SouvenirManager.cs": "e5eea79b4d1fb58b1415fbec03b6613e7d59b49de00f086b8c41d93e3ac11af3",
+    "scripts/Progression/ActiveOubli.cs": "7dfc920c52d3d49ff99a433c44dedd2b39fccbb989fd59b4c4baca675e6a38d0",
+    "scripts/Progression/EssenceTracker.cs": "cab1a89a5749820916d665978482b3f827ee47a2137ec6cde0b4eec66a8fe2a1",
+    "scripts/Progression/FragmentManager.cs": "e4f003d9743a2940acbed43354821faa885fc47602340cf33190cc62d13eda00",
+    "scripts/Progression/PerilManager.cs": "40db0b82c8e5ec51b9ed9963751dec48650b375a91bbb5ba3621c91c07739ce1",
+    "scripts/Progression/PerkManager.cs": "8ad47f09827d515a5da9a8f648a1f13cb3805ae82af8f130689d9fdabdbcc905",
+    "scripts/Progression/PlayerProgression.cs": "95e792e4640d108ac2f995a9d509f7e3a2b98afaaa8faf2e8748858023bf429f",
+    "scripts/Progression/QuestManager.cs": "10decf923e1f2dd0c534c787d64e71d0b89cc61df6cbc91dccfc86f839d7f757",
+    "scripts/Progression/StatModifier.cs": "9bf95b8576abd91010edd49aa63ffdebf6df9144d20830374aa74035f7241986",
+    "scripts/Progression/UpgradeRoller.cs": "4faa4a3909531ee1403e84f1797944b5c4482bf7535d0ca2481e1b6b32f5e3db",
+    "scripts/Score/ScoreManager.cs": "38b86c6df76d84c965a5a07373271f3e895539b60a57c98f54103370347a1173",
+    "scripts/Spawn/EnemyPool.cs": "1e16055e4bef57926a3e7a528800a3f98245b7c4cf4f36b1c5864dfff1607959",
+    "scripts/Spawn/SpawnManager.cs": "47ae7f705121fc51f5a438c70530807408f31c85432bf6c6ba54af2ae3555f22",
+    "scripts/Spawn/SpawnPositionPicker.cs": "9cbb1bace6599c8490cced12eb37f066994926cca11cf19c784186fa66073986",
+    "scripts/UI/ChestLootScreen.cs": "399c53fd519899ddd713181b72cd7d4a3741a701257e85b93f94b63b915ffe28",
+    "scripts/UI/ChestPointers.cs": "1fe9148d7ecd6e8d6fce6ef49184037402ee670b262040c08c38ad38a04066d4",
+    "scripts/UI/ChoiceCard.cs": "50f0f4712b2535f33d4eb07c0b541d55369003ca010057b61d88ab27793ac300",
+    "scripts/UI/ChoiceScreen.cs": "7888623b0331a25fca1a24c9c7684874f004fa372b9cd6b7f304e6ba5741fe1c",
+    "scripts/UI/ChoiceStyle.cs": "87b5db2b93699caac3da83795e9ead34dc115a2d37ce464c1975229930af361f",
+    "scripts/UI/CrisisOmen.cs": "8666a5d8ea274e0065cef2842b1adb68a20010a56bcb51dc1b685d3512028bb7",
+    "scripts/UI/DebugActionPanel.cs": "653dac5e68861abf8802a05aa37da858ad6f3b96ffc33f5bb3d531395ba1a5fb",
+    "scripts/UI/DebugOverlay.cs": "9166d142d16cd00ecef75f7589963753cfb1ef2b980d555169ccd5e1e32222ad",
+    "scripts/UI/DevelopmentBadge.cs": "13bb56f722d31ac5fa74d0323e93d050ff5e79eb82eda26e0cfc277c003cb1e9",
+    "scripts/UI/ErasureVeil.cs": "b08839c3ca8579a180249839be847df54dd503b28f79810abbffcbdc4d408527",
+    "scripts/UI/EssenceFlights.cs": "5d6e2f7bb43c971030c943ac009a26c66e12bc7317879ef2917e9d29c7702585",
+    "scripts/UI/GameLoadingOverlay.cs": "27e12a561c3516444aa223802fa93aef5d627d33fedbd6dc40afb501151642b8",
+    "scripts/UI/GameOverScreen.cs": "db5859058e4cf5e52b34ad5aea08706cb8a0888917278f10e1703c4e6e5cd31d",
+    "scripts/UI/HUD.cs": "b1de50f53be5157c314bd5568e38ff5daef77682464994937fb0e21661143733",
+    "scripts/UI/HubBackdrop.cs": "486d9f2a14fb7b14a614893957c782e307d4a1946c336bac00744f49a318f717",
+    "scripts/UI/HubCamp.cs": "a8725920b61f376b0409d7d7d33dd2e0991ae01ce0e2f69383e76acb2d5a0f32",
+    "scripts/UI/HubChroniquesPanel.cs": "1883a312442acb17b46ba70716d4b716954c5ede04f4e107fba1384d00d45c63",
+    "scripts/UI/HubCollectionPanel.cs": "386edb12020fdc103497c360882f47b19f7ed15592c99067051d042f30087315",
+    "scripts/UI/HubMenuButton.cs": "e2a5eb9d19e404ed705a1a9d08ee48a7de21904870d26b25dea041da77e0aa2c",
+    "scripts/UI/HubScreen.cs": "9141837882582895f49db4b61da4b2cff9a64eddc081d88c6afc56b47797c4a0",
+    "scripts/UI/HudLootFlight.cs": "5616a9b82d0532e93a16a9d7921d25671dbeb11ccf7376af00db678a74d2a4c5",
+    "scripts/UI/JournalScreen.cs": "17bd5269014a679d7fd23076e62bf5b6dc62f25c76a0525ac2e7906c2bdb5186",
+    "scripts/UI/KillStreakDisplay.cs": "dc82f96b067e1ec492fd4723c1bcad9d778548e9afecc7ae18f2f59616b202ae",
+    "scripts/UI/LevelUpScreen.cs": "8545927556ce0a49b0adda98b374af4230de49fc767dcc266ee456f9d203a560",
+    "scripts/UI/PauseMenu.cs": "1cbe2a5b2a0f14b489c2b209515c4fbaa59a7bf1bf3a00b39b06cb51eeb20278",
+    "scripts/UI/PerkIconResolver.cs": "3f89273f02d5083939ad09545653c6a64fcc9b08f904288b4d390553fb07e42b",
+    "scripts/UI/PlayerHealthGauge.cs": "d47855c22dd6dbf09260a3856abad0d097cd247b06f45590b0941288658031bc",
+    "scripts/UI/RunEventHud.cs": "8526b7dfdad82e93863df23f01c17e04833aa1e2ee0ce4a3d4674dacec2d3e31",
+    "scripts/UI/SettingsScreen.cs": "06321e0d52d7eb44abdd6d2854aaff42a0e33c9f109c1ef000faf9f11fa6ce5e",
+    "scripts/UI/SouvenirPopup.cs": "5c9bf4c73c0acf3c00e9d3a1862d37db26fd1105ad2c23e4ee256fd46afb96cb",
+    "scripts/UI/TextSettings.cs": "c1fbeed87c196082ad67d57501469ba87f2ab54f50cc3c214ee9a22ef24d45b5",
+    "scripts/UI/UITheme.cs": "e42a5cfa30e71958955193b51024fab2b880109757a685655fe3e76b59cded7c",
+    "scripts/UI/UpgradeText.cs": "c1294fb355a8f21a421cdcb43bd11bf08ad8331a8e7e03b893535a8483c0c90a",
+    "scripts/UI/VoidTransition.cs": "476a3f67ab3fa59a070f2163cf11c2e3e285b88cb0567f5c09e6747aaf3b941d",
+    "scripts/World/AmbientParticles.cs": "ef8665dd54c6a4b74116119c225bb623337f9fb80bbb0c3bbcab47f8d129a2c7",
+    "scripts/World/BiomeAtmosphere.cs": "896aaede74a2a3caffa77cc1bd29f0a9ee84b069582892a79684ee7a631776fb",
+    "scripts/World/BiomeTileMapper.cs": "acc240fedb7a3ef5672f238a93ab909ef6781123dbb51bd46aaabbf0e147b66d",
+    "scripts/World/CellHash.cs": "c5c46a3b8dd972cea6f9dbed20d4a39d0021eeb771a3ace6697bd6be4e3587c7",
+    "scripts/World/Chest.cs": "68fca27de74ccc1d41ca7a4308b2241eea6dc8c4bc49958d8f2fa5236820f9d9",
+    "scripts/World/ChestSpawner.cs": "287fa17f3e4698186bf79883f944011fc2527616037ed24a5072dd550b00cbf8",
+    "scripts/World/CompositionSite.cs": "0f4552521dc8cb9e6a5a4455f9d25ddaf775f75a252a771c53fb67fe74b462be",
+    "scripts/World/EchoConfig.cs": "25d01ec561072e66934777c174bb5c11a3c9a7105d4dba3b7a9e316802dbd975",
+    "scripts/World/EnvironmentProp.cs": "19dd0943646739333a2155ebf4353f7f6e0aa4c0bc5c9115cd309ce9b98026aa",
+    "scripts/World/ErasureEchoes.cs": "56f912a9bebaa2f197276289ccd151af2c5cff087ac94996d351fec22b32b53f",
+    "scripts/World/ErasureEffects.cs": "058b460cd8359042980b704131d5856cad850c6f6b150b51a2903186e6c80be5",
+    "scripts/World/ErasureManager.cs": "8581f51f25f7f431267b57a13113dd5d01a9c04bd77e9ada5d95ed64743d6fe9",
+    "scripts/World/ErasureMotes.cs": "cd8617f8c6e83b7c33c1c73e040de1aa0ea4c1a80ee814a4798fcd8daba2fe9e",
+    "scripts/World/FarmConfig.cs": "f866be4217d59b1d1dae2b40c9e265b5fc6dad14101eea46bb38605d3e9a610c",
+    "scripts/World/FogOfWar.cs": "42bfdb528987a0f36780984ba2c902429a02ff118280f2114bae4686f1df49c5",
+    "scripts/World/GameBootstrap.cs": "132de8f0afc164561afc317066adf4c65209deb66223ba0b621890c569d1ea0b",
+    "scripts/World/GrassTrample.cs": "f66f1e2cd34693bcb7eba851a5e96e1362daa4e89a4a805cc82bb13af5c43741",
+    "scripts/World/GroundMaterial.cs": "85c2e7cccdc6fb8554d1079d805c00994d89dfa23a81c9aa4a38068346fe491b",
+    "scripts/World/IInteractable.cs": "c7e28b47435febd9bd16dc3d46aaf1bf65452c63ff21230f86be79325c782b78",
+    "scripts/World/InteractableAura.cs": "aaf95fc63ff2fa2283a3f98d95d4d27e69263148c878d407035c0e3c0f775399",
+    "scripts/World/Interactables.cs": "43cc720fc0e84cb4cc375fc2301e0f191ce3d53159a12cd2ed0226a3bf97e169",
+    "scripts/World/JunctionPropPlacer.cs": "6dc6a45c3a2bb253a080d29db9a87e0c6386189256ee1ef6d506cde7cb1154f6",
+    "scripts/World/LandmarkSpawner.cs": "26a0fbf27d1b8818dcbdcbfab92ac75add2a014ca21f0394e70d467a1a878db0",
+    "scripts/World/LightColumn.cs": "9e51974807f7ed40b8d3451ba53be13ff0ba64b8762fbd4d64654874295f0707",
+    "scripts/World/LoadProfiler.cs": "e992180b4dfc902aded7e1498292259f72ebb6249e9d3674d0b14ebd4dacfd59",
+    "scripts/World/LootResolver.cs": "a43b4e3a540ffa3c04c50c2b0871f4ddeb86da6867d2e77c80b35547c72675e5",
+    "scripts/World/LootRewards.cs": "caf73d4fac3258270acd4b6993de47f4d208184d02e4812855db63315669fc48",
+    "scripts/World/Lore/BioluminescentMushrooms.cs": "12717c6c12d136d2b216ef9ca94d115dae27ce7a26701b67f176ec0af3717923",
+    "scripts/World/Lore/CrazyClock.cs": "94bca01559e7c356a60debe8030f9ae195a513d615e4aeada1aeadd805b5d106",
+    "scripts/World/Lore/DoorWithoutWall.cs": "c12c050a6e88cf8b587ad2a2f6e6f811bee97f75df03c2c207eeafb86fb30285",
+    "scripts/World/Lore/EmptyShelves.cs": "1fd5e7e3bd9b655c292baa5fbd233053d637f6492fa319690d30275af918f61d",
+    "scripts/World/Lore/GhostChime.cs": "3d7966a90909d3d9f1eb856865a28ec61ae01ecdcc61e6bcccdaf4b42b39ea7e",
+    "scripts/World/Lore/GhostSwing.cs": "7050f1323d5f04c6ff7fc86d122d598642e71346025590449f19bc9d08d80646",
+    "scripts/World/Lore/InterruptedFootsteps.cs": "61729f62179ef0c7d6c0c1aa7ee16eb37a4dc37460309ecce1aa88209a56f726",
+    "scripts/World/Lore/RootLetters.cs": "5fba256d7e831b6973a07f371dec45bb754fbd423bc687e065bb1f75d003a2d1",
+    "scripts/World/Lore/SurvivingGraffiti.cs": "4a953dfc6f2d7dad238861cff47ab69f3f694a3b56b805731f8c2242b76df31f",
+    "scripts/World/Lore/SwallowedSign.cs": "5c92f584e8a5963c62183dacd7a2190bdee8ff3429ed342ea7fd8d15f63ce232",
+    "scripts/World/Lore/WaterMirror.cs": "20489a71772eb7fa980ddc32ac7bfe7f084c0602b2c7237b4a6dd7b848553261",
+    "scripts/World/Memorial.cs": "e5fc90d738736c3742ce8183399aa6941bd7056a15242ae6e03c92b89d81e9f9",
+    "scripts/World/MemorialDirector.cs": "8143cd3893b5176545c9531206e34da73f0c28aab5ec6d9e640f84fa102d8e37",
+    "scripts/World/MemoryShard.cs": "153e09717ea0190ed4e2399ad41e1dc765384c340ad7e8ecd8d4c819e6cdb17c",
+    "scripts/World/PathMeshes.cs": "13ed553d68b51e1508eea4f5d1d76a826cac66a55a8390d276f1ef1c95f135f2",
+    "scripts/World/PathNetwork.cs": "46ac48da2b46e46ce3b66344fde40b590ff548f2bb1351c9f5263fc267dec4a7",
+    "scripts/World/PathNetworkConfig.cs": "60d90bc7daa903a9a2a7dba892958d6027e46fb74f822b0d656d429ad66da782",
+    "scripts/World/PathNetworkGenerator.cs": "fcf9099d64538f246c81d942005015abc7a3896aa2fb9fe98834b45d84db729b",
+    "scripts/World/PathStroke.cs": "003f839137a66c98540d616cd0ff68e4137664141abd1968e8e3f026a0c9fdbd",
+    "scripts/World/PoiGlints.cs": "e86190209cdefa97f26db5045805256e6d326b0a28d5264e506a758e2f21396c",
+    "scripts/World/PoiManager.cs": "f915456a313386ba61967b5ac65c55b3984993a7d85028c2d847f7ab5a862c59",
+    "scripts/World/PointOfInterest.cs": "6c6329768acecf74ae63d0996029b8e4fecc776a848532f0ed7ca9d4687e37bd",
+    "scripts/World/PropChunks.cs": "c41927df187f4f35796934a9b05b267e52e35684a47311b3017065c767113642",
+    "scripts/World/PropFootprint.cs": "d79fb70510b3e734356551f85627d54a2d83312f8b67e983f3bbbe054f298f79",
+    "scripts/World/PropManifest.cs": "39da468f2ad68814ec17eb746e303e167ccedd92e8946f08045f946bb6954fea",
+    "scripts/World/PropOcclusion.cs": "132f31a28a7be10a091d88c8f28c6fa184567014a2be8e606ca323d6f8845e8f",
+    "scripts/World/PropRules.cs": "3c6399ca0fea41276689948c5cfac1ced18e1ea1ecd8d71d23fdaa62691ef533",
+    "scripts/World/PropShadow.cs": "0e1af6dac94ba59f548c67a76214bcfce9e42c9fa57f92f3be0ce345fb567aab",
+    "scripts/World/PropSpawner.cs": "ef04fd72192e8ee0fac65bcf9a80f230c69aaaf1f029531c6826b6e8b6d0e25f",
+    "scripts/World/Rift.cs": "85c95cf4c9e798a1763ad417e6924e2fa9092e8961671d694757a50ff851246b",
+    "scripts/World/RiftDirector.cs": "3bb0bc7fec6420914b27bc20c050cd6fc14f079e1248279530246299e6675951",
+    "scripts/World/RoadTileGenerator.cs": "47135292e91c4d300b42acac07db49520da6d0a3bb00ca27dbd168a7e96c6a7d",
+    "scripts/World/SiteComposer.cs": "c8d2d2cbd3f8292d029aad7c27b62f8b608f6409cb04c4ecc304ce224bae2d0b",
+    "scripts/World/SitePlacer.cs": "630820e00d761a9fcaa3cd7b271847e4be3279146937debc9035f23f73b45978",
+    "scripts/World/SitePlan.cs": "70b9ee2b2db8ce6d1104ce3f6cf4f525b96527e31f2dc2abb8c864475c456609",
+    "scripts/World/SwampPropPlacer.cs": "99cf166eb98e6fc50c3583e4d928c4e1d562131e2e7a4b2bffe1c6a7a3903cfb",
+    "scripts/World/UrbanBuildingPlacer.cs": "e52935aed0318d8e0ef2b6197ba55cd9fa19aae1f5964f24fdf7fb97a7eadd1e",
+    "scripts/World/UrbanLayoutGenerator.cs": "7a1b2a1381ca14cfb8130394c5b32fccba5ff7000cb9913678047223fdf42cd1",
+    "scripts/World/UrbanPropPlacer.cs": "cd7607787b98a3dd795670a3b0daa9107bcc87c7037edd2d6c8b679f083d36be",
+    "scripts/World/WangTiles.cs": "c09f42e67946afd20b3c688576c6c074c79043124bdc31351b491e0a5c0bf5e8",
+    "scripts/World/WildFieldsComposer.cs": "fa4fefcc6af7db2d330b73e31d451267d43037a4b2ad932e32b684b05c83913b",
+    "scripts/World/WildFieldsLayoutGenerator.cs": "d23b10d7a8b27fe8b90498259b01bdc04bfca5a83a76dff0e0a2853658de7bc7",
+    "scripts/World/WorldGenerator.cs": "579295c935528015db8d6f37214cef68952b2d4cbd947ee92dd85b73e979c430",
+    "scripts/World/WorldInteraction.cs": "f5dfedc0347681f1d1b83339813fc8382ec559c18a025bfbe2eb620930a47d45",
+    "scripts/World/WorldSetup.cs": "1eed843d2c43cb84ef6d51590897b7c3eb3c3dc21b7097ecddd53540940f996c",
+    "tools/tests/DevelopmentModeRegression.cs": "21813a3c2197764922e28f987b3d5cd2d29ffc1a78bc2e41e6f92a51039805fb",
+    "tools/tests/EnemyAbilityRegression.cs": "6fc21045752398214709d6f694e4337546d8b752fb67fa95550aeb81431e89d6",
+    "tools/tests/HubCapture.cs": "3b0345f1f79e5772631d5f5a7afe0263ae965f01ab51cd73c6d2288a8661ae10",
+    "tools/tests/MovementDenseBenchmark.cs": "3547ecb2032b642561d137a753f686d9c9c7c4733a369e5c6f181acb31398092",
+    "tools/tests/MovementRegression.Facing.cs": "688da4d64f4c54c223153b967d1419d31bf32f4cb906d07d9e5292d87c6d9ffd",
+    "tools/tests/MovementRegression.Mobility.cs": "22c626cb0ea438386494d5a5576a44722dc36451f905cae350294b2022e982b8",
+    "tools/tests/MovementRegression.WorldIntegration.cs": "ffee4c55a9edf0c8812aae526492fcf695a640a2ac0026eb2b7d70923c2da07d",
+    "tools/tests/MovementRegression.cs": "25b0843ef3ceffc37934755d89c3df04cece112fca3e201a5f74209e28849807",
+    "tools/tests/PerformanceAudit20260928.cs": "ad399f8d313f8f87bec4f2fcf714da88ec2bff7458d65bf4e7010ad412482b68",
+    "tools/tests/RunObservation.Chests.cs": "343ac44965ab09df181998d39f9a0072e8ae679fbb4dd88af21a69d0218bd85c",
+    "tools/tests/RunObservation.Connectivity.cs": "d565d4ec75384c12b27fd609db04fc5b5516dc97771a2011ed44d6476e731425",
+    "tools/tests/RunObservation.Crowd.cs": "cecd579e0f2892bada63709007fcaa93b3f57cb5d174016175d3917133970924",
+    "tools/tests/RunObservation.Death.cs": "a77933d3f9cb185d2bc84915b54d58574931ebde4ce8d0fed659d819d98d7eac",
+    "tools/tests/RunObservation.Echoes.cs": "955b9328177a5261da3c2e18a0b85819e3ff415a963e90d8f0a0be5e928ce4ee",
+    "tools/tests/RunObservation.Endgame.cs": "3846bd7d2cc30897667ce96bebe2cd27005b09db2ec338daf73052f4d3b8fe65",
+    "tools/tests/RunObservation.Erasure.cs": "92d6c14977cdd82c3176393eb4e35436800dda61990447c3378d3d921d112498",
+    "tools/tests/RunObservation.Farms.cs": "faa2d93c189bbc07a10d8389d3f28794b4982ddf501a00b3a3e1249532c3e702",
+    "tools/tests/RunObservation.HeldWeapon.cs": "f63efc10d2748b421b1535c476062166333a3094cc2b27a9784e2b8fde6e21d5",
+    "tools/tests/RunObservation.Junctions.cs": "3d5d23d6a54bb3adcabb63f739411fcf586fd6fa46a8d6aeef12838f0ceb3b50",
+    "tools/tests/RunObservation.Landmarks.cs": "091198713b8e774e788114fda63354d50df62d39f8c2d894c394253e53da5ff1",
+    "tools/tests/RunObservation.LevelUp.cs": "621e6161c5644b13f38db1fd38e946901e3bd91889dffff30390e3edea3c4c24",
+    "tools/tests/RunObservation.LevelUpFx.cs": "485e530c7bee19071b45277f65d75322ec748ac32a2bb00d65b5361ce09d272e",
+    "tools/tests/RunObservation.Map.cs": "af27747ca3dc5801e87f2bc45ab8fa1d9f63cdce7ecb54120a2c711b54253514",
+    "tools/tests/RunObservation.Micro.cs": "347a6f48e68905c33684f401ed23707e59b7d5780bea64f8741cc3b0ed6c42b5",
+    "tools/tests/RunObservation.Omen.cs": "c31c969b3e2159f5a4697ac8fd1a86bb2eaea62399db3f2f15c74f0d2c09fb10",
+    "tools/tests/RunObservation.OrbSleep.cs": "c533caf0243ca2d5bb3a39bdcb1083ada3ec359b15406e7bb849fd37b47af93e",
+    "tools/tests/RunObservation.Oublis.cs": "fd85d7ebd3926f3642875682d677ec852e190b4d7e6ea7d3c01f692e087cafc9",
+    "tools/tests/RunObservation.Paths.cs": "24c8a222465f2c66e0d2575a9b127650332cca25edb5698ddf9a1f5230985207",
+    "tools/tests/RunObservation.PropCost.cs": "495470e228a39d092bf341e7a09ea2a481089a4325aaa52624dfe2fe0dd723b5",
+    "tools/tests/RunObservation.Trample.cs": "2f1a2eacf231539612eaae0f5b3b9aa908951af660cccc2277ef2d4c3e4ed182",
+    "tools/tests/RunObservation.UrbanLandmarks.cs": "13c9f51a272601bf013e692567b740a1baeef4bca2098b182180f64275a298e1",
+    "tools/tests/RunObservation.WeaponPickup.cs": "5d1a848a5e59b1fb4a4d6941cdd2b1144b8b240393fec36b08dffbdcaff1d442",
+    "tools/tests/RunObservation.Weapons.cs": "1a2418ceba849d8c96ccfe7cdf4d334eaac8163a660641cf6aca223be987d63a",
+    "tools/tests/RunObservation.cs": "a8c7e7df766ec32e5e7cfef8f1964c4c8c88baa2b7a351450ad03bc9542ef0ac",
+    "tools/tests/WeaponRegression.cs": "6a56d2974167a44aaaedcec7f9624d31af4715d7dfa7ff5606d835f692d1d1a6"
+  },
+  "runs": [
+    {
+      "name": "crowd-60-0-1",
+      "command": [
+        "godot-mono",
+        "--path",
+        ".",
+        "--audio-driver",
+        "Dummy",
+        "--windowed",
+        "--resolution",
+        "1280x720",
+        "--rendering-method",
+        "gl_compatibility",
+        "--disable-vsync",
+        "--max-fps",
+        "0",
+        "res://tools/tests/MovementDenseBenchmark.tscn",
+        "--",
+        "--dev",
+        "--output",
+        "/tmp/vestiges-audit-crowd-retry/crowd-60-0-1",
+        "--enemies",
+        "60",
+        "--audit-observer-period",
+        "1",
+        "--seconds",
+        "10",
+        "--warmup",
+        "3",
+        "--width",
+        "1280",
+        "--height",
+        "720"
+      ],
+      "load_samples": [
+        {
+          "wall_s": 0.0,
+          "load1": 1.60791015625
+        },
+        {
+          "wall_s": 1.0,
+          "load1": 1.60791015625
+        },
+        {
+          "wall_s": 2.001,
+          "load1": 1.60791015625
+        },
+        {
+          "wall_s": 3.001,
+          "load1": 1.7197265625
+        },
+        {
+          "wall_s": 4.001,
+          "load1": 1.7197265625
+        },
+        {
+          "wall_s": 5.001,
+          "load1": 1.7197265625
+        },
+        {
+          "wall_s": 6.001,
+          "load1": 1.7197265625
+        },
+        {
+          "wall_s": 7.001,
+          "load1": 1.7197265625
+        },
+        {
+          "wall_s": 8.001,
+          "load1": 1.982421875
+        },
+        {
+          "wall_s": 9.001,
+          "load1": 1.982421875
+        },
+        {
+          "wall_s": 10.001,
+          "load1": 1.982421875
+        },
+        {
+          "wall_s": 11.001,
+          "load1": 1.982421875
+        },
+        {
+          "wall_s": 12.001,
+          "load1": 1.982421875
+        },
+        {
+          "wall_s": 13.002,
+          "load1": 2.14404296875
+        },
+        {
+          "wall_s": 14.002,
+          "load1": 2.14404296875
+        },
+        {
+          "wall_s": 15.002,
+          "load1": 2.14404296875
+        },
+        {
+          "wall_s": 16.002,
+          "load1": 2.14404296875
+        },
+        {
+          "wall_s": 17.002,
+          "load1": 2.14404296875
+        },
+        {
+          "wall_s": 18.002,
+          "load1": 2.13232421875
+        }
+      ],
+      "uptime_before": "14:27:50 up  4:59,  1 user,  load average: 1.61, 2.94, 3.28",
+      "exit_code": 0,
+      "uptime_after": "14:28:09 up  5:00,  1 user,  load average: 2.13, 2.98, 3.28",
+      "fps_eligible": true,
+      "errors": []
+    },
+    {
+      "name": "crowd-60-0-60",
+      "command": [
+        "godot-mono",
+        "--path",
+        ".",
+        "--audio-driver",
+        "Dummy",
+        "--windowed",
+        "--resolution",
+        "1280x720",
+        "--rendering-method",
+        "gl_compatibility",
+        "--disable-vsync",
+        "--max-fps",
+        "0",
+        "res://tools/tests/MovementDenseBenchmark.tscn",
+        "--",
+        "--dev",
+        "--output",
+        "/tmp/vestiges-audit-crowd-retry/crowd-60-0-60",
+        "--enemies",
+        "60",
+        "--audit-observer-period",
+        "60",
+        "--seconds",
+        "10",
+        "--warmup",
+        "3",
+        "--width",
+        "1280",
+        "--height",
+        "720"
+      ],
+      "load_samples": [
+        {
+          "wall_s": 0.0,
+          "load1": 2.13232421875
+        },
+        {
+          "wall_s": 1.0,
+          "load1": 2.13232421875
+        },
+        {
+          "wall_s": 2.001,
+          "load1": 2.13232421875
+        },
+        {
+          "wall_s": 3.001,
+          "load1": 2.13232421875
+        },
+        {
+          "wall_s": 4.001,
+          "load1": 2.04150390625
+        },
+        {
+          "wall_s": 5.001,
+          "load1": 2.04150390625
+        },
+        {
+          "wall_s": 6.001,
+          "load1": 2.04150390625
+        },
+        {
+          "wall_s": 7.001,
+          "load1": 2.04150390625
+        },
+        {
+          "wall_s": 8.001,
+          "load1": 2.04150390625
+        },
+        {
+          "wall_s": 9.001,
+          "load1": 2.0380859375
+        },
+        {
+          "wall_s": 10.001,
+          "load1": 2.0380859375
+        },
+        {
+          "wall_s": 11.001,
+          "load1": 2.0380859375
+        },
+        {
+          "wall_s": 12.002,
+          "load1": 2.0380859375
+        },
+        {
+          "wall_s": 13.002,
+          "load1": 2.0380859375
+        },
+        {
+          "wall_s": 14.002,
+          "load1": 2.03466796875
+        },
+        {
+          "wall_s": 15.002,
+          "load1": 2.03466796875
+        },
+        {
+          "wall_s": 16.002,
+          "load1": 2.03466796875
+        },
+        {
+          "wall_s": 17.002,
+          "load1": 2.03466796875
+        },
+        {
+          "wall_s": 18.002,
+          "load1": 2.03466796875
+        }
+      ],
+      "uptime_before": "14:28:09 up  5:00,  1 user,  load average: 2.13, 2.98, 3.28",
+      "exit_code": 0,
+      "uptime_after": "14:28:28 up  5:00,  1 user,  load average: 2.03, 2.90, 3.25",
+      "fps_eligible": true,
+      "errors": []
+    },
+    {
+      "name": "crowd-60-1-60",
+      "command": [
+        "godot-mono",
+        "--path",
+        ".",
+        "--audio-driver",
+        "Dummy",
+        "--windowed",
+        "--resolution",
+        "1280x720",
+        "--rendering-method",
+        "gl_compatibility",
+        "--disable-vsync",
+        "--max-fps",
+        "0",
+        "res://tools/tests/MovementDenseBenchmark.tscn",
+        "--",
+        "--dev",
+        "--output",
+        "/tmp/vestiges-audit-crowd-retry/crowd-60-1-60",
+        "--enemies",
+        "60",
+        "--audit-observer-period",
+        "60",
+        "--seconds",
+        "10",
+        "--warmup",
+        "3",
+        "--width",
+        "1280",
+        "--height",
+        "720"
+      ],
+      "load_samples": [
+        {
+          "wall_s": 0.0,
+          "load1": 2.03173828125
+        },
+        {
+          "wall_s": 1.0,
+          "load1": 2.03173828125
+        },
+        {
+          "wall_s": 2.0,
+          "load1": 2.03173828125
+        },
+        {
+          "wall_s": 3.001,
+          "load1": 2.03173828125
+        },
+        {
+          "wall_s": 4.001,
+          "load1": 2.03173828125
+        },
+        {
+          "wall_s": 5.001,
+          "load1": 2.109375
+        },
+        {
+          "wall_s": 6.001,
+          "load1": 2.109375
+        },
+        {
+          "wall_s": 7.001,
+          "load1": 2.109375
+        },
+        {
+          "wall_s": 8.001,
+          "load1": 2.109375
+        },
+        {
+          "wall_s": 9.001,
+          "load1": 2.109375
+        },
+        {
+          "wall_s": 10.001,
+          "load1": 2.34130859375
+        },
+        {
+          "wall_s": 11.001,
+          "load1": 2.34130859375
+        },
+        {
+          "wall_s": 12.001,
+          "load1": 2.34130859375
+        },
+        {
+          "wall_s": 13.002,
+          "load1": 2.34130859375
+        },
+        {
+          "wall_s": 14.002,
+          "load1": 2.34130859375
+        },
+        {
+          "wall_s": 15.002,
+          "load1": 2.39453125
+        },
+        {
+          "wall_s": 16.002,
+          "load1": 2.39453125
+        },
+        {
+          "wall_s": 17.002,
+          "load1": 2.39453125
+        },
+        {
+          "wall_s": 18.002,
+          "load1": 2.39453125
+        }
+      ],
+      "uptime_before": "14:28:28 up  5:00,  1 user,  load average: 2.03, 2.90, 3.25",
+      "exit_code": 0,
+      "uptime_after": "14:28:47 up  5:00,  1 user,  load average: 2.39, 2.93, 3.25",
+      "fps_eligible": true,
+      "errors": []
+    },
+    {
+      "name": "crowd-60-1-1",
+      "command": [
+        "godot-mono",
+        "--path",
+        ".",
+        "--audio-driver",
+        "Dummy",
+        "--windowed",
+        "--resolution",
+        "1280x720",
+        "--rendering-method",
+        "gl_compatibility",
+        "--disable-vsync",
+        "--max-fps",
+        "0",
+        "res://tools/tests/MovementDenseBenchmark.tscn",
+        "--",
+        "--dev",
+        "--output",
+        "/tmp/vestiges-audit-crowd-retry/crowd-60-1-1",
+        "--enemies",
+        "60",
+        "--audit-observer-period",
+        "1",
+        "--seconds",
+        "10",
+        "--warmup",
+        "3",
+        "--width",
+        "1280",
+        "--height",
+        "720"
+      ],
+      "load_samples": [
+        {
+          "wall_s": 0.0,
+          "load1": 2.39453125
+        },
+        {
+          "wall_s": 1.0,
+          "load1": 2.36279296875
+        },
+        {
+          "wall_s": 2.0,
+          "load1": 2.36279296875
+        },
+        {
+          "wall_s": 3.001,
+          "load1": 2.36279296875
+        },
+        {
+          "wall_s": 4.001,
+          "load1": 2.36279296875
+        },
+        {
+          "wall_s": 5.001,
+          "load1": 2.36279296875
+        },
+        {
+          "wall_s": 6.001,
+          "load1": 3.294921875
+        },
+        {
+          "wall_s": 7.001,
+          "load1": 3.294921875
+        },
+        {
+          "wall_s": 8.001,
+          "load1": 3.294921875
+        },
+        {
+          "wall_s": 9.001,
+          "load1": 3.294921875
+        },
+        {
+          "wall_s": 10.001,
+          "load1": 3.294921875
+        },
+        {
+          "wall_s": 11.001,
+          "load1": 3.19091796875
+        },
+        {
+          "wall_s": 12.001,
+          "load1": 3.19091796875
+        },
+        {
+          "wall_s": 13.002,
+          "load1": 3.19091796875
+        },
+        {
+          "wall_s": 14.002,
+          "load1": 3.19091796875
+        },
+        {
+          "wall_s": 15.002,
+          "load1": 3.19091796875
+        },
+        {
+          "wall_s": 16.002,
+          "load1": 3.17529296875
+        },
+        {
+          "wall_s": 17.002,
+          "load1": 3.17529296875
+        },
+        {
+          "wall_s": 18.002,
+          "load1": 3.17529296875
+        }
+      ],
+      "uptime_before": "14:28:47 up  5:00,  1 user,  load average: 2.39, 2.93, 3.25",
+      "exit_code": 0,
+      "uptime_after": "14:29:06 up  5:01,  1 user,  load average: 3.18, 3.08, 3.30",
+      "fps_eligible": true,
+      "errors": []
+    },
+    {
+      "name": "crowd-240-0-1",
+      "command": [
+        "godot-mono",
+        "--path",
+        ".",
+        "--audio-driver",
+        "Dummy",
+        "--windowed",
+        "--resolution",
+        "1280x720",
+        "--rendering-method",
+        "gl_compatibility",
+        "--disable-vsync",
+        "--max-fps",
+        "0",
+        "res://tools/tests/MovementDenseBenchmark.tscn",
+        "--",
+        "--dev",
+        "--output",
+        "/tmp/vestiges-audit-crowd-retry/crowd-240-0-1",
+        "--enemies",
+        "240",
+        "--audit-observer-period",
+        "1",
+        "--seconds",
+        "10",
+        "--warmup",
+        "3",
+        "--width",
+        "1280",
+        "--height",
+        "720"
+      ],
+      "load_samples": [
+        {
+          "wall_s": 0.0,
+          "load1": 3.17529296875
+        },
+        {
+          "wall_s": 1.0,
+          "load1": 3.17529296875
+        },
+        {
+          "wall_s": 2.0,
+          "load1": 3.48193359375
+        },
+        {
+          "wall_s": 3.001,
+          "load1": 3.48193359375
+        },
+        {
+          "wall_s": 4.001,
+          "load1": 3.48193359375
+        },
+        {
+          "wall_s": 5.001,
+          "load1": 3.48193359375
+        },
+        {
+          "wall_s": 6.001,
+          "load1": 3.48193359375
+        },
+        {
+          "wall_s": 7.001,
+          "load1": 3.44287109375
+        },
+        {
+          "wall_s": 8.001,
+          "load1": 3.44287109375
+        },
+        {
+          "wall_s": 9.001,
+          "load1": 3.44287109375
+        },
+        {
+          "wall_s": 10.001,
+          "load1": 3.44287109375
+        },
+        {
+          "wall_s": 11.001,
+          "load1": 3.44287109375
+        },
+        {
+          "wall_s": 12.001,
+          "load1": 3.4072265625
+        },
+        {
+          "wall_s": 13.001,
+          "load1": 3.4072265625
+        },
+        {
+          "wall_s": 14.002,
+          "load1": 3.4072265625
+        },
+        {
+          "wall_s": 15.002,
+          "load1": 3.4072265625
+        },
+        {
+          "wall_s": 16.002,
+          "load1": 3.4072265625
+        },
+        {
+          "wall_s": 17.002,
+          "load1": 3.21435546875
+        },
+        {
+          "wall_s": 18.002,
+          "load1": 3.21435546875
+        }
+      ],
+      "uptime_before": "14:29:06 up  5:01,  1 user,  load average: 3.18, 3.08, 3.30",
+      "exit_code": 0,
+      "uptime_after": "14:29:25 up  5:01,  1 user,  load average: 3.21, 3.11, 3.30",
+      "fps_eligible": true,
+      "errors": []
+    },
+    {
+      "name": "crowd-240-0-60",
+      "command": [
+        "godot-mono",
+        "--path",
+        ".",
+        "--audio-driver",
+        "Dummy",
+        "--windowed",
+        "--resolution",
+        "1280x720",
+        "--rendering-method",
+        "gl_compatibility",
+        "--disable-vsync",
+        "--max-fps",
+        "0",
+        "res://tools/tests/MovementDenseBenchmark.tscn",
+        "--",
+        "--dev",
+        "--output",
+        "/tmp/vestiges-audit-crowd-retry/crowd-240-0-60",
+        "--enemies",
+        "240",
+        "--audit-observer-period",
+        "60",
+        "--seconds",
+        "10",
+        "--warmup",
+        "3",
+        "--width",
+        "1280",
+        "--height",
+        "720"
+      ],
+      "load_samples": [
+        {
+          "wall_s": 0.0,
+          "load1": 3.21435546875
+        },
+        {
+          "wall_s": 1.0,
+          "load1": 3.21435546875
+        },
+        {
+          "wall_s": 2.001,
+          "load1": 3.21435546875
+        },
+        {
+          "wall_s": 3.001,
+          "load1": 3.677734375
+        },
+        {
+          "wall_s": 4.001,
+          "load1": 3.677734375
+        },
+        {
+          "wall_s": 5.001,
+          "load1": 3.677734375
+        },
+        {
+          "wall_s": 6.001,
+          "load1": 3.677734375
+        },
+        {
+          "wall_s": 7.001,
+          "load1": 3.677734375
+        },
+        {
+          "wall_s": 8.001,
+          "load1": 3.70361328125
+        },
+        {
+          "wall_s": 9.001,
+          "load1": 3.70361328125
+        },
+        {
+          "wall_s": 10.001,
+          "load1": 3.70361328125
+        },
+        {
+          "wall_s": 11.001,
+          "load1": 3.70361328125
+        },
+        {
+          "wall_s": 12.001,
+          "load1": 3.70361328125
+        },
+        {
+          "wall_s": 13.002,
+          "load1": 3.8876953125
+        },
+        {
+          "wall_s": 14.002,
+          "load1": 3.8876953125
+        },
+        {
+          "wall_s": 15.002,
+          "load1": 3.8876953125
+        },
+        {
+          "wall_s": 16.002,
+          "load1": 3.8876953125
+        },
+        {
+          "wall_s": 17.002,
+          "load1": 3.8876953125
+        },
+        {
+          "wall_s": 18.002,
+          "load1": 3.65625
+        }
+      ],
+      "uptime_before": "14:29:25 up  5:01,  1 user,  load average: 3.21, 3.11, 3.30",
+      "exit_code": 0,
+      "uptime_after": "14:29:44 up  5:01,  1 user,  load average: 3.66, 3.23, 3.34",
+      "fps_eligible": true,
+      "errors": []
+    },
+    {
+      "name": "crowd-240-1-60",
+      "command": [
+        "godot-mono",
+        "--path",
+        ".",
+        "--audio-driver",
+        "Dummy",
+        "--windowed",
+        "--resolution",
+        "1280x720",
+        "--rendering-method",
+        "gl_compatibility",
+        "--disable-vsync",
+        "--max-fps",
+        "0",
+        "res://tools/tests/MovementDenseBenchmark.tscn",
+        "--",
+        "--dev",
+        "--output",
+        "/tmp/vestiges-audit-crowd-retry/crowd-240-1-60",
+        "--enemies",
+        "240",
+        "--audit-observer-period",
+        "60",
+        "--seconds",
+        "10",
+        "--warmup",
+        "3",
+        "--width",
+        "1280",
+        "--height",
+        "720"
+      ],
+      "load_samples": [
+        {
+          "wall_s": 0.0,
+          "load1": 3.65625
+        },
+        {
+          "wall_s": 1.0,
+          "load1": 3.65625
+        },
+        {
+          "wall_s": 2.0,
+          "load1": 3.65625
+        },
+        {
+          "wall_s": 3.001,
+          "load1": 3.65625
+        },
+        {
+          "wall_s": 4.001,
+          "load1": 3.5234375
+        },
+        {
+          "wall_s": 5.001,
+          "load1": 3.5234375
+        },
+        {
+          "wall_s": 6.001,
+          "load1": 3.5234375
+        },
+        {
+          "wall_s": 7.001,
+          "load1": 3.5234375
+        },
+        {
+          "wall_s": 8.001,
+          "load1": 3.5234375
+        },
+        {
+          "wall_s": 9.001,
+          "load1": 3.3212890625
+        },
+        {
+          "wall_s": 10.001,
+          "load1": 3.3212890625
+        },
+        {
+          "wall_s": 11.001,
+          "load1": 3.3212890625
+        },
+        {
+          "wall_s": 12.001,
+          "load1": 3.3212890625
+        },
+        {
+          "wall_s": 13.002,
+          "load1": 3.3212890625
+        },
+        {
+          "wall_s": 14.002,
+          "load1": 3.29541015625
+        },
+        {
+          "wall_s": 15.002,
+          "load1": 3.29541015625
+        },
+        {
+          "wall_s": 16.002,
+          "load1": 3.29541015625
+        },
+        {
+          "wall_s": 17.002,
+          "load1": 3.29541015625
+        },
+        {
+          "wall_s": 18.002,
+          "load1": 3.29541015625
+        }
+      ],
+      "uptime_before": "14:29:44 up  5:01,  1 user,  load average: 3.66, 3.23, 3.34",
+      "exit_code": 0,
+      "uptime_after": "14:30:03 up  5:02,  1 user,  load average: 3.19, 3.15, 3.31",
+      "fps_eligible": true,
+      "errors": []
+    },
+    {
+      "name": "crowd-240-1-1",
+      "command": [
+        "godot-mono",
+        "--path",
+        ".",
+        "--audio-driver",
+        "Dummy",
+        "--windowed",
+        "--resolution",
+        "1280x720",
+        "--rendering-method",
+        "gl_compatibility",
+        "--disable-vsync",
+        "--max-fps",
+        "0",
+        "res://tools/tests/MovementDenseBenchmark.tscn",
+        "--",
+        "--dev",
+        "--output",
+        "/tmp/vestiges-audit-crowd-retry/crowd-240-1-1",
+        "--enemies",
+        "240",
+        "--audit-observer-period",
+        "1",
+        "--seconds",
+        "10",
+        "--warmup",
+        "3",
+        "--width",
+        "1280",
+        "--height",
+        "720"
+      ],
+      "load_samples": [
+        {
+          "wall_s": 0.0,
+          "load1": 3.19140625
+        },
+        {
+          "wall_s": 1.0,
+          "load1": 3.19140625
+        },
+        {
+          "wall_s": 2.001,
+          "load1": 3.19140625
+        },
+        {
+          "wall_s": 3.001,
+          "load1": 3.19140625
+        },
+        {
+          "wall_s": 4.001,
+          "load1": 3.19140625
+        },
+        {
+          "wall_s": 5.001,
+          "load1": 3.095703125
+        },
+        {
+          "wall_s": 6.001,
+          "load1": 3.095703125
+        },
+        {
+          "wall_s": 7.001,
+          "load1": 3.095703125
+        },
+        {
+          "wall_s": 8.001,
+          "load1": 3.095703125
+        },
+        {
+          "wall_s": 9.001,
+          "load1": 3.095703125
+        },
+        {
+          "wall_s": 10.001,
+          "load1": 3.16845703125
+        },
+        {
+          "wall_s": 11.001,
+          "load1": 3.16845703125
+        },
+        {
+          "wall_s": 12.002,
+          "load1": 3.16845703125
+        },
+        {
+          "wall_s": 13.002,
+          "load1": 3.16845703125
+        },
+        {
+          "wall_s": 14.002,
+          "load1": 3.16845703125
+        },
+        {
+          "wall_s": 15.002,
+          "load1": 3.3154296875
+        },
+        {
+          "wall_s": 16.002,
+          "load1": 3.3154296875
+        },
+        {
+          "wall_s": 17.002,
+          "load1": 3.3154296875
+        },
+        {
+          "wall_s": 18.002,
+          "load1": 3.3154296875
+        }
+      ],
+      "uptime_before": "14:30:03 up  5:02,  1 user,  load average: 3.19, 3.15, 3.31",
+      "exit_code": 0,
+      "uptime_after": "14:30:22 up  5:02,  1 user,  load average: 3.32, 3.17, 3.31",
+      "fps_eligible": true,
+      "errors": []
+    }
+  ]
+}

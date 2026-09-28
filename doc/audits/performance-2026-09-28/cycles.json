@@ -1,0 +1,215 @@
+{
+  "seed": 221092026,
+  "cycles": [
+    {
+      "cycle": 0,
+      "nodes": 148,
+      "orphans": 0,
+      "objects": 2978,
+      "resources": 584,
+      "native_bytes": 101718257,
+      "managed_bytes": 1298040,
+      "rss_bytes": 246824960
+    },
+    {
+      "cycle": 1,
+      "nodes": 148,
+      "orphans": 0,
+      "objects": 8263,
+      "resources": 2884,
+      "native_bytes": 177905177,
+      "managed_bytes": 8242032,
+      "rss_bytes": 546037760
+    },
+    {
+      "cycle": 2,
+      "nodes": 148,
+      "orphans": 0,
+      "objects": 8272,
+      "resources": 2884,
+      "native_bytes": 186992637,
+      "managed_bytes": 8242240,
+      "rss_bytes": 556969984
+    },
+    {
+      "cycle": 3,
+      "nodes": 148,
+      "orphans": 0,
+      "objects": 8296,
+      "resources": 2891,
+      "native_bytes": 187996689,
+      "managed_bytes": 8242344,
+      "rss_bytes": 560947200
+    },
+    {
+      "cycle": 4,
+      "nodes": 148,
+      "orphans": 0,
+      "objects": 8273,
+      "resources": 2884,
+      "native_bytes": 187876285,
+      "managed_bytes": 8242448,
+      "rss_bytes": 561500160
+    },
+    {
+      "cycle": 5,
+      "nodes": 148,
+      "orphans": 0,
+      "objects": 8474,
+      "resources": 2889,
+      "native_bytes": 188541525,
+      "managed_bytes": 8225304,
+      "rss_bytes": 562266112
+    },
+    {
+      "cycle": 6,
+      "nodes": 148,
+      "orphans": 0,
+      "objects": 8269,
+      "resources": 2884,
+      "native_bytes": 187233001,
+      "managed_bytes": 8225408,
+      "rss_bytes": 563671040
+    },
+    {
+      "cycle": 7,
+      "nodes": 148,
+      "orphans": 0,
+      "objects": 8266,
+      "resources": 2884,
+      "native_bytes": 187221825,
+      "managed_bytes": 8225512,
+      "rss_bytes": 562761728
+    },
+    {
+      "cycle": 8,
+      "nodes": 148,
+      "orphans": 0,
+      "objects": 8281,
+      "resources": 2889,
+      "native_bytes": 188684645,
+      "managed_bytes": 8225616,
+      "rss_bytes": 559882240
+    },
+    {
+      "cycle": 9,
+      "nodes": 148,
+      "orphans": 0,
+      "objects": 8274,
+      "resources": 2888,
+      "native_bytes": 188027873,
+      "managed_bytes": 8225784,
+      "rss_bytes": 561152000
+    },
+    {
+      "cycle": 10,
+      "nodes": 148,
+      "orphans": 0,
+      "objects": 8266,
+      "resources": 2884,
+      "native_bytes": 187714177,
+      "managed_bytes": 8225888,
+      "rss_bytes": 561782784
+    },
+    {
+      "cycle": 11,
+      "nodes": 148,
+      "orphans": 0,
+      "objects": 8269,
+      "resources": 2884,
+      "native_bytes": 187722549,
+      "managed_bytes": 8226000,
+      "rss_bytes": 560013312
+    },
+    {
+      "cycle": 12,
+      "nodes": 148,
+      "orphans": 0,
+      "objects": 8274,
+      "resources": 2884,
+      "native_bytes": 188383873,
+      "managed_bytes": 8226112,
+      "rss_bytes": 556687360
+    },
+    {
+      "cycle": 13,
+      "nodes": 148,
+      "orphans": 0,
+      "objects": 8269,
+      "resources": 2884,
+      "native_bytes": 187779361,
+      "managed_bytes": 8226224,
+      "rss_bytes": 556072960
+    },
+    {
+      "cycle": 14,
+      "nodes": 148,
+      "orphans": 0,
+      "objects": 8313,
+      "resources": 2887,
+      "native_bytes": 188744545,
+      "managed_bytes": 8226336,
+      "rss_bytes": 556797952
+    },
+    {
+      "cycle": 15,
+      "nodes": 148,
+      "orphans": 0,
+      "objects": 8284,
+      "resources": 2889,
+      "native_bytes": 188429601,
+      "managed_bytes": 8226448,
+      "rss_bytes": 554852352
+    },
+    {
+      "cycle": 16,
+      "nodes": 148,
+      "orphans": 0,
+      "objects": 8296,
+      "resources": 2892,
+      "native_bytes": 189517025,
+      "managed_bytes": 8226560,
+      "rss_bytes": 556978176
+    },
+    {
+      "cycle": 17,
+      "nodes": 148,
+      "orphans": 0,
+      "objects": 8292,
+      "resources": 2891,
+      "native_bytes": 189440753,
+      "managed_bytes": 8226800,
+      "rss_bytes": 556609536
+    },
+    {
+      "cycle": 18,
+      "nodes": 148,
+      "orphans": 0,
+      "objects": 8466,
+      "resources": 2885,
+      "native_bytes": 189311325,
+      "managed_bytes": 8226912,
+      "rss_bytes": 557445120
+    },
+    {
+      "cycle": 19,
+      "nodes": 148,
+      "orphans": 0,
+      "objects": 8271,
+      "resources": 2884,
+      "native_bytes": 189357453,
+      "managed_bytes": 8227024,
+      "rss_bytes": 557744128
+    },
+    {
+      "cycle": 20,
+      "nodes": 148,
+      "orphans": 0,
+      "objects": 8281,
+      "resources": 2889,
+      "native_bytes": 189426549,
+      "managed_bytes": 8227136,
+      "rss_bytes": 554831872
+    }
+  ]
+}

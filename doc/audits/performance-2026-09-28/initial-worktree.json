@@ -1,0 +1,15 @@
+{
+  "head": "0383e05379cc148496c24c4ef01ea7a3e7769fb6",
+  "status": " M doc/plans/10-terrain-et-tiles.md\n M doc/plans/20-recompense-et-puissance.md\n M scripts/Combat/CombatPools.cs\n M scripts/Combat/GroundFire.cs\n M scripts/Combat/Projectile.cs\n M tools/tests/RunObservation.cs\n M tools/tests/WeaponRegression.cs\n?? tools/progression_model.py\n",
+  "initial_sha256": {
+    "tools/progression_model.py": "d3bac158b289f31d6d0114d080bad806ff259e9485dd074bfa547ff549680403",
+    "doc/plans/10-terrain-et-tiles.md": "147865c7382432064516959f48f28bb8cf906d793b5208276376bc0a0c42e4b7",
+    "doc/plans/20-recompense-et-puissance.md": "cfe6200e3bbf8e94f32a061aab09d1a3c1eb5a7dfdb9347224095c98d9df3178",
+    "scripts/Combat/CombatPools.cs": "1b8a5cd013a866276c61dab5bddbf245de78251811e4314273d6c788e66254f0",
+    "scripts/Combat/GroundFire.cs": "585d346bc73025ba628cd43fd8fca149d13ff2d4aa5e54ddc589d63911786dba",
+    "scripts/Combat/Projectile.cs": "6f90ec9ad3da1aa9cf093ebea067397a609f3ac735740238284080aefdf6318a",
+    "tools/tests/RunObservation.cs": "a8c7e7df766ec32e5e7cfef8f1964c4c8c88baa2b7a351450ad03bc9542ef0ac",
+    "tools/tests/WeaponRegression.cs": "6a56d2974167a44aaaedcec7f9624d31af4715d7dfa7ff5606d835f692d1d1a6"
+  },
+  "note": "Empreintes seulement : le diff et les fichiers de travail préexistants ne sont pas inclus dans ce commit."
+}

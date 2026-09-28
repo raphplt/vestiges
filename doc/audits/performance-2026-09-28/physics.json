@@ -1,0 +1,53 @@
+{
+	"evidence": "reproduction isolée headless, pas de coût broadphase mesuré",
+	"intervals": [
+		{
+			"count": 10000,
+			"kind": "node",
+			"native_delta_bytes": 27747076.0,
+			"trial": 0
+		},
+		{
+			"count": 10000,
+			"kind": "body",
+			"native_delta_bytes": 28370956.0,
+			"trial": 1
+		},
+		{
+			"count": 10000,
+			"kind": "body",
+			"native_delta_bytes": 27142568.0,
+			"trial": 2
+		},
+		{
+			"count": 10000,
+			"kind": "node",
+			"native_delta_bytes": 19782568.0,
+			"trial": 3
+		},
+		{
+			"count": 10000,
+			"kind": "node",
+			"native_delta_bytes": 19782568.0,
+			"trial": 4
+		},
+		{
+			"count": 10000,
+			"kind": "body",
+			"native_delta_bytes": 27142568.0,
+			"trial": 5
+		},
+		{
+			"count": 10000,
+			"kind": "body",
+			"native_delta_bytes": 27142568.0,
+			"trial": 6
+		},
+		{
+			"count": 10000,
+			"kind": "node",
+			"native_delta_bytes": 19782568.0,
+			"trial": 7
+		}
+	]
+}

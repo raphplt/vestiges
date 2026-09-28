@@ -19,6 +19,10 @@ namespace Vestiges.Tests;
 public partial class MovementDenseBenchmark : Node
 {
     private int _enemyCount = 120;
+    // Audit du 28 septembre : quantifier le coût de l'observateur, sans changer le combat.
+    private int _auditObserverPeriod = 1;
+    private int _auditObserverSamples;
+    private ulong _auditObserverUsec;
     private const ulong Seed = 221092026;
     private Enemy[] _enemies;
     private readonly double[] _frames = new double[200000];
@@ -94,6 +98,7 @@ public partial class MovementDenseBenchmark : Node
             _requestedSize = size;
             _enemyCount = int.Parse(Argument(args, "--enemies", "120"), CultureInfo.InvariantCulture);
             _enemies = new Enemy[_enemyCount];
+            _auditObserverPeriod = Math.Max(1, int.Parse(Argument(args, "--audit-observer-period", "1"), CultureInfo.InvariantCulture));
             // Temps de rendu CPU/GPU du viewport : décompose la frame au-delà du temps mural (investigation perf).
             RenderingServer.ViewportSetMeasureRenderTime(GetViewport().GetViewportRid(), true);
             GetWindow().Mode = Window.ModeEnum.Windowed;
@@ -291,20 +296,26 @@ public partial class MovementDenseBenchmark : Node
         _collisionPairsSum += Performance.GetMonitor(Performance.Monitor.Physics2DCollisionPairs);
         _activeBodiesSum += Performance.GetMonitor(Performance.Monitor.Physics2DActiveObjects);
         _nodeCountSum += Performance.GetMonitor(Performance.Monitor.ObjectNodeCount);
-        int living = 0;
-        int fullAi = 0;
-        foreach (Enemy enemy in _enemies)
+        if ((_samples - 1) % _auditObserverPeriod == 0 || elapsed >= _warmup + _duration)
         {
-            if (IsInstanceValid(enemy) && enemy.IsActive && !enemy.IsDying && enemy.HpRatio > 0)
+            ulong observerStart = Time.GetTicksUsec();
+            int living = 0;
+            int fullAi = 0;
+            foreach (Enemy enemy in _enemies)
             {
-                living++;
-                if (enemy.GlobalPosition.DistanceSquaredTo(_player.GlobalPosition) <= 600f * 600f)
-                    fullAi++;
+                if (IsInstanceValid(enemy) && enemy.IsActive && !enemy.IsDying && enemy.HpRatio > 0)
+                {
+                    living++;
+                    if (enemy.GlobalPosition.DistanceSquaredTo(_player.GlobalPosition) <= 600f * 600f)
+                        fullAi++;
+                }
             }
+            _minLiving = Math.Min(_minLiving, living);
+            _maxLiving = Math.Max(_maxLiving, living);
+            _minFullAi = Math.Min(_minFullAi, fullAi);
+            _auditObserverUsec += Time.GetTicksUsec() - observerStart;
+            _auditObserverSamples++;
         }
-        _minLiving = Math.Min(_minLiving, living);
-        _maxLiving = Math.Max(_maxLiving, living);
-        _minFullAi = Math.Min(_minFullAi, fullAi);
         if (elapsed >= _warmup + _duration)
         {
             _finished = true;
@@ -394,6 +405,8 @@ public partial class MovementDenseBenchmark : Node
                 && _distance > 100 && (!_dash || _dashDistance > 50);
             var result = new
             {
+                observer_period_frames = _auditObserverPeriod, observer_samples = _auditObserverSamples,
+                observer_total_usec = _auditObserverUsec,
                 valid, dash = _dash, seed = Seed, warmup_seconds = _warmup, requested_seconds = _duration,
                 measured_seconds = _frames.Take(_samples).Sum() / 1000,
                 resolution = new[] { GetWindow().Size.X, GetWindow().Size.Y },

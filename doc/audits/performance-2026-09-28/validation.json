@@ -1,0 +1,11 @@
+{
+  "build": "0 warning, 0 error",
+  "smoke": "tools/smoke_test.sh : 600 frames, Hub, profil XDG isolé, OK",
+  "production_initial_dirty_hashes_unchanged": {
+    "scripts/Combat/CombatPools.cs": true,
+    "scripts/Combat/GroundFire.cs": true,
+    "scripts/Combat/Projectile.cs": true
+  },
+  "head_at_validation": "bf7299d4dd6b38d7439a5db89867146342be4045",
+  "note": "RunObservation, progression_model et plan 20 ont évolué puis été commités par un travail concurrent. Cet audit ne les restaure ni ne les inclut dans son commit. Les mesures de référence sont décrites par leurs manifestes, indépendamment du HEAD final."
+}

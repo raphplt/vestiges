@@ -1,0 +1,135 @@
+{
+	"intervals": [
+		{
+			"draw_calls": 0,
+			"frame": 0,
+			"mode": "offscreen",
+			"objects": 0
+		},
+		{
+			"draw_calls": 0,
+			"frame": 1,
+			"mode": "offscreen",
+			"objects": 0
+		},
+		{
+			"draw_calls": 0,
+			"frame": 2,
+			"mode": "offscreen",
+			"objects": 0
+		},
+		{
+			"draw_calls": 0,
+			"frame": 3,
+			"mode": "offscreen",
+			"objects": 0
+		},
+		{
+			"draw_calls": 0,
+			"frame": 4,
+			"mode": "offscreen",
+			"objects": 0
+		},
+		{
+			"draw_calls": 8,
+			"frame": 0,
+			"mode": "visible",
+			"objects": 8
+		},
+		{
+			"draw_calls": 8,
+			"frame": 1,
+			"mode": "visible",
+			"objects": 8
+		},
+		{
+			"draw_calls": 8,
+			"frame": 2,
+			"mode": "visible",
+			"objects": 8
+		},
+		{
+			"draw_calls": 8,
+			"frame": 3,
+			"mode": "visible",
+			"objects": 8
+		},
+		{
+			"draw_calls": 8,
+			"frame": 4,
+			"mode": "visible",
+			"objects": 8
+		},
+		{
+			"draw_calls": 8,
+			"frame": 0,
+			"mode": "visible",
+			"objects": 8
+		},
+		{
+			"draw_calls": 8,
+			"frame": 1,
+			"mode": "visible",
+			"objects": 8
+		},
+		{
+			"draw_calls": 8,
+			"frame": 2,
+			"mode": "visible",
+			"objects": 8
+		},
+		{
+			"draw_calls": 8,
+			"frame": 3,
+			"mode": "visible",
+			"objects": 8
+		},
+		{
+			"draw_calls": 8,
+			"frame": 4,
+			"mode": "visible",
+			"objects": 8
+		},
+		{
+			"draw_calls": 0,
+			"frame": 0,
+			"mode": "offscreen",
+			"objects": 0
+		},
+		{
+			"draw_calls": 0,
+			"frame": 1,
+			"mode": "offscreen",
+			"objects": 0
+		},
+		{
+			"draw_calls": 0,
+			"frame": 2,
+			"mode": "offscreen",
+			"objects": 0
+		},
+		{
+			"draw_calls": 0,
+			"frame": 3,
+			"mode": "offscreen",
+			"objects": 0
+		},
+		{
+			"draw_calls": 0,
+			"frame": 4,
+			"mode": "offscreen",
+			"objects": 0
+		}
+	],
+	"paths": [
+		"res://assets/shaders/entity.gdshader",
+		"res://assets/shaders/sway.gdshader",
+		"res://assets/shaders/swamp_atmosphere.gdshader",
+		"res://assets/shaders/hit_flash.gdshader",
+		"res://assets/shaders/dissolve.gdshader",
+		"res://assets/shaders/outline.gdshader",
+		"res://assets/shaders/aberration_aura.gdshader",
+		"res://assets/shaders/colorblind.gdshader"
+	],
+	"renderer": "gl_compatibility"
+}
