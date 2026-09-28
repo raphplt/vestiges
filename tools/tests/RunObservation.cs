@@ -313,7 +313,7 @@ public partial class RunObservation : Node
         int peril = int.Parse(Argument(OS.GetCmdlineUserArgs(), "--peril", "0"), CultureInfo.InvariantCulture);
         if (peril > 0)
             _world.GetNode<Vestiges.Progression.PerilManager>("PerilManager").AddPeril(peril);
-        List<string> rows = new() { "t,visible,near600,alive,spawned,killed,level,hit_damage,memory,erasure_global" };
+        List<string> rows = new() { "t,visible,near600,alive,spawned,killed,level,hit_damage,memory,erasure_global,xp_gained,xp_orbs" };
         // Mémoire de la zone sous le joueur et Effacement global, pour mesurer le tempo de l'oubli (retour du 28 septembre).
         ErasureManager erasure = _world.GetNode<ErasureManager>("ErasureManager");
         // Indice de pression : dégâts que les ennemis infligent à un joueur qui n'esquive jamais (invincible ici).
@@ -325,9 +325,30 @@ public partial class RunObservation : Node
         // accéléré (--fixed-fps), où une seconde de jeu dure bien moins qu'une seconde d'horloge.
         double gameTime = 0;
         int pausedFrames = 0;
-        EventBus.PlayerHitByEventHandler onHit = (_, damage) =>
+        // Part de chaque créature dans la pression subie, et XP réellement ramassée (retour du 28 septembre, plan 20).
+        Dictionary<string, double> damageBySource = new();
+        // Le bot est invincible et compte chaque coup ; « gated » ne garde que les coups qui passeraient
+        // l'invulnérabilité après un coup (plan 03 lot 8B), pour comparer tir et mêlée à armes égales.
+        Dictionary<string, double> gatedBySource = new();
+        float hurtInvulnerability = DefenseConfig.Load().HurtInvulnerabilitySeconds;
+        double lastGatedHit = double.NegativeInfinity;
+        // Exposition : secondes × créatures à moins de 600 px, par espèce ; et morts par espèce.
+        Dictionary<string, double> exposureById = new();
+        Dictionary<string, double> killsById = new();
+        EventBus.EnemyKilledEventHandler onKill = (enemyId, _) => killsById[enemyId] = killsById.GetValueOrDefault(enemyId) + 1;
+        eventBus.EnemyKilled += onKill;
+        double xpGained = 0;
+        EventBus.XpGainedEventHandler onXp = amount => xpGained += amount;
+        eventBus.XpGained += onXp;
+        EventBus.PlayerHitByEventHandler onHit = (source, damage) =>
         {
             hitDamage += damage;
+            damageBySource[source] = damageBySource.GetValueOrDefault(source) + damage;
+            if (gameTime - lastGatedHit >= hurtInvulnerability)
+            {
+                lastGatedHit = gameTime;
+                gatedBySource[source] = gatedBySource.GetValueOrDefault(source) + damage;
+            }
             double at = gameTime;
             if (firstHit < 0)
                 firstHit = at;
@@ -463,17 +484,23 @@ public partial class RunObservation : Node
                 if (view.HasPoint(enemy.GlobalPosition))
                     visible++;
                 if (enemy.GlobalPosition.DistanceTo(_player.GlobalPosition) <= 600f)
+                {
                     near++;
+                    exposureById[enemy.EnemyId] = exposureById.GetValueOrDefault(enemy.EnemyId) + 1;
+                }
             }
             if (visible > 0 && firstVisible < 0)
                 firstVisible = t;
-            maxOrbs = Math.Max(maxOrbs, CombatPools.Instance?.XpOrbsOnGround ?? 0);
+            int orbs = CombatPools.Instance?.XpOrbsOnGround ?? 0;
+            maxOrbs = Math.Max(maxOrbs, orbs);
             visibleSamples.Add(visible);
             rows.Add(string.Create(CultureInfo.InvariantCulture,
-                $"{t:F0},{visible},{near},{alive},{tracker.TotalSpawned},{tracker.TotalKilled},{level},{hitDamage:F0},{erasure.GetMemoryAt(_player.GlobalPosition):F2},{erasure.GlobalErasurePercent:F2}"));
+                $"{t:F0},{visible},{near},{alive},{tracker.TotalSpawned},{tracker.TotalKilled},{level},{hitDamage:F0},{erasure.GetMemoryAt(_player.GlobalPosition):F2},{erasure.GlobalErasurePercent:F2},{xpGained:F0},{orbs}"));
         }
 
         eventBus.PlayerHitBy -= onHit;
+        eventBus.XpGained -= onXp;
+        eventBus.EnemyKilled -= onKill;
         using (FileAccess csv = FileAccess.Open($"{_output}/density-{seed}.csv", FileAccess.ModeFlags.Write))
             csv.StoreString(string.Join("\n", rows) + "\n");
 
@@ -487,6 +514,11 @@ public partial class RunObservation : Node
                 openRifts++;
         summary.Append(CultureInfo.InvariantCulture, $" rifts={Rift.All.Count} rifts_open={openRifts}");
         summary.Append(CultureInfo.InvariantCulture, $" peril={peril} kills={tracker.TotalKilled} spawned={tracker.TotalSpawned}");
+        summary.Append(CultureInfo.InvariantCulture, $" xp_gained={xpGained:F0}");
+        AppendBreakdown(summary, "hit_by", damageBySource);
+        AppendBreakdown(summary, "hit_gated", gatedBySource);
+        AppendBreakdown(summary, "near_by", exposureById);
+        AppendBreakdown(summary, "kills_by", killsById);
         summary.Append(CultureInfo.InvariantCulture, $" xp_orbs_end={CombatPools.Instance?.XpOrbsOnGround ?? 0} xp_orbs_max={maxOrbs}");
         summary.Append(CultureInfo.InvariantCulture,
             $" chests_total={GetTree().GetNodesInGroup("chests").Count} chests_seen={seenChests.Count} chests_clear={clearChests.Count} chests_signaled={signaledChests.Count} first_chest_s={firstChestSeen:F0}");
@@ -531,6 +563,16 @@ public partial class RunObservation : Node
     }
 
     /// <summary>Le haut du coffre est couvert par un décor trié devant lui, ou par une canopée.</summary>
+    /// <summary>Ajoute « nom=clé:valeur,… » au résumé, trié par valeur décroissante.</summary>
+    private static void AppendBreakdown(StringBuilder summary, string name, Dictionary<string, double> values)
+    {
+        List<KeyValuePair<string, double>> entries = new(values);
+        entries.Sort((x, y) => y.Value.CompareTo(x.Value));
+        summary.Append(CultureInfo.InvariantCulture, $" {name}=");
+        foreach (KeyValuePair<string, double> entry in entries)
+            summary.Append(CultureInfo.InvariantCulture, $"{entry.Key}:{entry.Value:F0},");
+    }
+
     private static bool IsChestMasked(Vector2 chest, List<(Rect2 Rect, float SortY, bool Canopy)> props)
     {
         Vector2 top = chest + new Vector2(0f, -12f);
