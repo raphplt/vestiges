@@ -109,16 +109,16 @@ def _stone() -> ProjectileModel:
     def parts(frame: int) -> Sequence[Part]:
         roll = rotation_z(frame * np.pi / 2)
         return (
-            Part(_rotated(lambda p: ellipsoid(p, (0, 0, 0), (3.2, 2.6, 2.9)), roll), 0),
-            Part(_rotated(lambda p: sphere(p, (1.6, -1.4, 0.8), 1.5), roll), 1),
+            Part(_rotated(lambda p: ellipsoid(p, (0, 0, 0), (4.6, 3.8, 4.2)), roll), 0),
+            Part(_rotated(lambda p: sphere(p, (2.3, -2.0, 1.1), 2.1), roll), 1),
         )
 
-    return ProjectileModel(materials, parts, (16, 16), 1, 4, 14)
+    return ProjectileModel(materials, parts, (24, 24), 1, 4, 14)
 
 
 def _orb(hex_color: str) -> ProjectileModel:
     materials = (make_emissive("core", hex_color), make_material("shell", hex_color, contrast=1.1))
-    radii = (2.4, 2.9, 3.3, 2.9)
+    radii = (3.8, 4.5, 5.0, 4.5)
 
     def parts(frame: int) -> Sequence[Part]:
         radius = radii[frame]
@@ -127,7 +127,7 @@ def _orb(hex_color: str) -> ProjectileModel:
             Part(lambda p: sphere(p, (0, 0, 0), radius), 1),
         )
 
-    return ProjectileModel(materials, parts, (16, 16), 1, len(radii), 10)
+    return ProjectileModel(materials, parts, (24, 24), 1, len(radii), 10)
 
 
 def _note() -> ProjectileModel:
@@ -147,33 +147,36 @@ def _note() -> ProjectileModel:
 def _spit() -> ProjectileModel:
     """Crachat de créature : goutte vert-acide (Bible §6.2) qui ondule, perlée de fluide iridescent."""
     materials = (make_emissive("acid", "#7FFF00"), make_material("fluid", "#5A3A7A", contrast=1.1))
-    wobble = ((3.4, 2.8), (3.0, 3.2), (3.6, 2.6), (3.1, 3.0))
+    wobble = ((5.4, 4.5), (4.8, 5.1), (5.8, 4.2), (5.0, 4.8))
 
     def parts(frame: int) -> Sequence[Part]:
         rx, ry = wobble[frame]
         return (
             Part(lambda p: ellipsoid(p, (0, 0, 0), (rx, ry, rx)), 0),
-            Part(lambda p: sphere(p, (-rx * 0.9, -ry * 0.6, -0.8), 1.4), 1),
-            Part(lambda p: sphere(p, (rx * 0.7, -ry * 0.9, -0.4), 0.9), 1),
+            Part(lambda p: sphere(p, (-rx * 0.9, -ry * 0.6, -0.8), 2.1), 1),
+            Part(lambda p: sphere(p, (rx * 0.7, -ry * 0.9, -0.4), 1.4), 1),
         )
 
-    return ProjectileModel(materials, parts, (16, 16), 1, len(wobble), 10)
+    return ProjectileModel(materials, parts, (24, 24), 1, len(wobble), 10)
 
 
 def _bile() -> ProjectileModel:
     """Caillot du Cracheur Pâli : bile rouille qui tremble, écume pâle de sa chair effacée."""
-    materials = (make_material("bile", "#A85C30", contrast=1.2), make_material("foam", "#E8E0D4", contrast=0.7))
-    wobble = ((3.3, 2.7), (2.9, 3.1), (3.5, 2.5), (3.0, 2.9))
+    # Cœur orangé qui luit : la bile rouille se confondait avec les sols bruns (retour du 28 septembre).
+    materials = (make_material("bile", "#C4602B", contrast=1.3), make_material("foam", "#E8E0D4", contrast=0.7),
+                 make_emissive("ember", "#FF9A3C"))
+    wobble = ((5.3, 4.3), (4.6, 5.0), (5.6, 4.0), (4.8, 4.6))
 
     def parts(frame: int) -> Sequence[Part]:
         rx, ry = wobble[frame]
         return (
             Part(lambda p: ellipsoid(p, (0, 0, 0), (rx, ry, rx)), 0),
-            Part(lambda p: sphere(p, (-rx * 0.45, ry * 0.55, 0.8), 1.3), 1),
-            Part(lambda p: sphere(p, (rx * 0.85, -ry * 0.7, -0.3), 0.9), 0),
+            Part(lambda p: sphere(p, (0.3, 0.4, 1.6), rx * 0.5), 2),
+            Part(lambda p: sphere(p, (-rx * 0.45, ry * 0.55, 0.8), 2.0), 1),
+            Part(lambda p: sphere(p, (rx * 0.85, -ry * 0.7, -0.3), 1.4), 0),
         )
 
-    return ProjectileModel(materials, parts, (16, 16), 1, len(wobble), 10)
+    return ProjectileModel(materials, parts, (24, 24), 1, len(wobble), 10)
 
 
 def _flat_arc(p: np.ndarray, center, major: float, minor: float, spread: float) -> np.ndarray:
@@ -208,13 +211,13 @@ def _web() -> ProjectileModel:
     def parts(frame: int) -> Sequence[Part]:
         turn = rotation_y(frame * np.pi / 4)
         return (
-            Part(_rotated(lambda p: capsule(p, (-3.6, 0, -1.0), (3.6, 0, 1.0), 0.9), turn), 0),
-            Part(_rotated(lambda p: capsule(p, (-1.0, 0, -3.6), (1.0, 0, 3.6), 0.9), turn), 0),
-            Part(lambda p: ellipsoid(p, (0, 0, 0), (2.4, 1.4, 2.4)), 0),
-            Part(lambda p: sphere(p, (0, 1.1, 0.4), 0.9), 1),
+            Part(_rotated(lambda p: capsule(p, (-5.6, 0, -1.6), (5.6, 0, 1.6), 1.2), turn), 0),
+            Part(_rotated(lambda p: capsule(p, (-1.6, 0, -5.6), (1.6, 0, 5.6), 1.2), turn), 0),
+            Part(lambda p: ellipsoid(p, (0, 0, 0), (3.6, 2.1, 3.6)), 0),
+            Part(lambda p: sphere(p, (0, 1.6, 0.6), 1.5), 1),
         )
 
-    return ProjectileModel(materials, parts, (16, 16), 1, 2, 6)
+    return ProjectileModel(materials, parts, (24, 24), 1, 2, 6)
 
 
 MODELS: dict[str, Callable[[], ProjectileModel]] = {
