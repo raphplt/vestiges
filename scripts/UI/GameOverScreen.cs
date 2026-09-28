@@ -12,7 +12,8 @@ namespace Vestiges.UI;
 /// Bilan de fin de run, en une page dense (plan 02 lot D, M3). En tête, trois chiffres : jusqu'où le joueur est allé,
 /// le score (et, seulement ici, le record), la durée. Au centre, le personnage et ce qui l'a emporté, le tableau des
 /// armes (dégâts, part, dégâts par seconde, éliminations), les souvenirs et les faits de la run. Dessous, la frise de
-/// la run, puis les gains et les boutons. Révélation en quelques temps qu'une touche accélère ; les boutons ne
+/// la run, puis les gains, cartes qui se retournent une à une (M4), et les boutons. Révélation en quelques temps
+/// qu'une touche termine (gains compris, sans son) ; les boutons ne
 /// s'activent qu'après un court délai, pour qu'un clic de combat ne relance pas la run par accident. Tout est relevé à
 /// la mort ; le bilan n'apparaît qu'à la fin de la séquence de mort (<see cref="DeathSequence"/> appelle
 /// <see cref="Reveal"/>).
@@ -28,14 +29,16 @@ public partial class GameOverScreen : CanvasLayer
     private const float TimelineStart = 1.5f;
     private const float TimelineSec = 0.8f;
     private const float GainsStart = 2f;
-    private const float RevealEnd = 2.5f;
+    // Première carte de gain retournée après l'apparition de la rangée, les suivantes à la file.
+    private const float FirstCardDelay = 0.25f;
+    private const float CardStagger = 0.22f;
+    private const float MinRevealEnd = 2.5f;
     private const float ButtonGuardSec = 0.35f;
     private const float SlideIn = 24f;
     private const float MiddleY = 300f;
     private const float TimelineY = 766f;
     private const float GainsY = 884f;
     private static readonly Color VeilColor = new(0.025f, 0.02f, 0.05f, 0.93f);
-    private static readonly Color SlotColor = new(0.08f, 0.07f, 0.12f, 0.9f);
 
     private EventBus _eventBus;
     private ScoreManager _scoreManager;
@@ -66,10 +69,14 @@ public partial class GameOverScreen : CanvasLayer
     // Armes disponibles au départ de la run : celles qui s'y ajoutent au bilan (Souvenir retrouvé) mènent à la Collection.
     private readonly HashSet<string> _weaponsAtStart = new();
     private readonly List<WeaponData> _newWeapons = new();
+    private readonly List<EndGainCard> _gainCards = new();
 
     private bool _showing;
     private float _elapsed;
     private float _buttonsAt = float.MaxValue;
+    // Fin de la révélation : après la dernière carte de gain, au plus tôt MinRevealEnd.
+    private float _revealEnd = MinRevealEnd;
+    private bool _skipped;
     private int _finalScore;
     private float _finalDistance;
     private float _finalDuration;
@@ -274,7 +281,11 @@ public partial class GameOverScreen : CanvasLayer
 
         _score.Text = "0";
         _elapsed = 0f;
-        _buttonsAt = RevealEnd;
+        _skipped = false;
+        _revealEnd = MinRevealEnd;
+        for (int i = 0; i < _gainCards.Count; i++)
+            _revealEnd = Mathf.Max(_revealEnd, CardStart(i) + _gainCards[i].Duration);
+        _buttonsAt = _revealEnd;
         SetButtonsEnabled(false);
         ApplyReveal();
         Visible = true;
@@ -383,27 +394,40 @@ public partial class GameOverScreen : CanvasLayer
 
     private string FormatMeters(float meters) => string.Format(Tr("UI_END_DISTANCE_M"), Mathf.RoundToInt(meters).ToString("N0"));
 
+    /// <summary>Les gains sont déjà acquis (sauvegardés à la mort) : les cartes ne font que les montrer.</summary>
     private void BuildGains(GameManager gm)
     {
         foreach (Node child in _gains.GetChildren())
             child.QueueFree();
+        _gainCards.Clear();
         int vestiges = _scoreManager?.VestigesEarned ?? 0;
         if (vestiges > 0)
-            _gains.AddChild(MakeGainCard(string.Format(Tr("UI_END_VESTIGES"), vestiges), UITheme.GoldBright));
+            AddGainCard(string.Format(Tr("UI_END_VESTIGES"), vestiges), UITheme.GoldBright).SetCounter(Tr("UI_END_VESTIGES"), vestiges);
         if (gm.LastQuestCompletions != null)
         {
             foreach (string quest in gm.LastQuestCompletions)
-                _gains.AddChild(MakeGainCard(quest, UITheme.CyanEssence));
+                AddGainCard(quest, UITheme.CyanEssence);
         }
         if (gm.LastUnlocks != null)
         {
             foreach (string id in gm.LastUnlocks)
-                _gains.AddChild(MakeGainCard(string.Format(Tr("UI_END_UNLOCK"), CharacterDataLoader.Get(id)?.Name ?? id), UITheme.GreenKit));
+                AddGainCard(string.Format(Tr("UI_END_UNLOCK"), CharacterDataLoader.Get(id)?.Name ?? id), UITheme.GreenKit, flipSound: "sfx_souvenir_trouve");
         }
         foreach (WeaponData weapon in _newWeapons)
-            _gains.AddChild(MakeGainCard(string.Format(Tr("UI_END_NEW_WEAPON"), weapon.Name), UITheme.GoldBright, weapon.Sprite));
+            AddGainCard(string.Format(Tr("UI_END_NEW_WEAPON"), weapon.Name), UITheme.GoldBright, weapon.Sprite, "sfx_souvenir_trouve");
         _collectionButton.Visible = _newWeapons.Count > 0;
     }
+
+    private EndGainCard AddGainCard(string text, Color accent, string icon = null, string flipSound = null)
+    {
+        EndGainCard card = new();
+        card.Setup(text, accent, _strongFont, icon, flipSound);
+        _gains.AddChild(card);
+        _gainCards.Add(card);
+        return card;
+    }
+
+    private static float CardStart(int index) => GainsStart + FirstCardDelay + index * CardStagger;
 
     private static IEnumerable<string> AvailableWeaponIds()
     {
@@ -414,42 +438,6 @@ public partial class GameOverScreen : CanvasLayer
             if (MetaSaveManager.IsWeaponUnlocked(weapon))
                 yield return weapon.Id;
         }
-    }
-
-    private PanelContainer MakeGainCard(string text, Color accent, string icon = null)
-    {
-        PanelContainer card = new();
-        StyleBoxFlat style = new()
-        {
-            BgColor = SlotColor,
-            BorderColor = accent,
-            BorderWidthTop = 3,
-            ContentMarginLeft = 20,
-            ContentMarginRight = 20,
-            ContentMarginTop = 10,
-            ContentMarginBottom = 10,
-        };
-        card.AddThemeStyleboxOverride("panel", style);
-        Label label = MakeLabel(text, _strongFont, TextRole.Lead, accent, HorizontalAlignment.Center, 4);
-        if (string.IsNullOrEmpty(icon) || !ResourceLoader.Exists(icon))
-        {
-            card.AddChild(label);
-            return card;
-        }
-        HBoxContainer row = new() { MouseFilter = Control.MouseFilterEnum.Ignore };
-        row.AddThemeConstantOverride("separation", 12);
-        row.AddChild(new TextureRect
-        {
-            Texture = GD.Load<Texture2D>(icon),
-            CustomMinimumSize = new Vector2(36f, 36f),
-            ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
-            StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
-            TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
-            MouseFilter = Control.MouseFilterEnum.Ignore,
-        });
-        row.AddChild(label);
-        card.AddChild(row);
-        return card;
     }
 
     // ==============================
@@ -467,19 +455,20 @@ public partial class GameOverScreen : CanvasLayer
             SetButtonsEnabled(true);
             _restartButton.GrabFocus();
         }
-        if (_elapsed > RevealEnd + ButtonGuardSec && !_isRecord)
+        if (_elapsed > _revealEnd + ButtonGuardSec && !_isRecord)
             SetProcess(false);
     }
 
-    /// <summary>Un appui pendant la révélation la termine ; il ne déclenche jamais un bouton.</summary>
+    /// <summary>Un appui pendant la révélation la termine, gains compris et sans son ; il ne déclenche jamais un bouton.</summary>
     public override void _Input(InputEvent @event)
     {
-        if (!_showing || _elapsed >= RevealEnd || !@event.IsPressed() || @event.IsEcho())
+        if (!_showing || _elapsed >= _revealEnd || !@event.IsPressed() || @event.IsEcho())
             return;
         if (@event is not (InputEventKey or InputEventMouseButton or InputEventJoypadButton))
             return;
-        _elapsed = RevealEnd;
-        _buttonsAt = RevealEnd + ButtonGuardSec;
+        _elapsed = _revealEnd;
+        _skipped = true;
+        _buttonsAt = _revealEnd + ButtonGuardSec;
         ApplyReveal();
         GetViewport().SetInputAsHandled();
     }
@@ -522,6 +511,8 @@ public partial class GameOverScreen : CanvasLayer
         float gains = Mathf.Clamp((_elapsed - GainsStart) / 0.35f, 0f, 1f);
         _gains.Modulate = new Color(1f, 1f, 1f, gains);
         _gains.Position = new Vector2(0f, GainsY + (1f - gains) * SlideIn);
+        for (int i = 0; i < _gainCards.Count; i++)
+            _gainCards[i].Advance(_elapsed - CardStart(i), _skipped);
         _buttons.Modulate = new Color(1f, 1f, 1f, gains);
     }
 

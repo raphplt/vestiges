@@ -220,6 +220,19 @@ Raphaël valide une juiciness très poussée : mobilité, impacts, collectes, ra
   - Réduction à 1280 × 720 regardée : tout reste lisible, les plus petits textes (niveau d'arme, pourcentages) sont au plancher de l'échelle typographique.
 - **Non vérifié** : manette et clavier sur les boutons (comportement inchangé), texte anglais, frise d'une run à plusieurs élites ou Souverains (aucun dans les deux runs mesurées).
 
+**M4 livré — 28 septembre 2026.** Demande de Raphaël : « go m4 ».
+- **Cartes de gain** (`EndGainCard`) : chacune attend face cachée (fond sombre, cadre à la couleur du gain), puis se retourne à son tour. L'échelle horizontale s'écrase et se redéplie en 0,3 s, 0,22 s après la précédente.
+- **Sons** : le son du choix de perk ; « Souvenir trouvé » pour une arme retrouvée ou un personnage qui revient au camp.
+- **Vestiges** : le compteur monte de zéro à la valeur gagnée en 0,8 s, avec un tic discret au plus toutes les 0,06 s. La carte a d'emblée la largeur du texte final.
+- **Durée** : la révélation dure jusqu'à la dernière carte, au moins 2,5 s. Les boutons ne s'activent qu'ensuite.
+- **Appui pendant la révélation** : il montre aussitôt l'état final, gains compris et sans aucun son.
+- **Gains** : ils restent acquis à la mort, avant toute animation. Les cartes ne font que les montrer.
+- **Capture** : `--skip-reveal` envoie un appui à 3,5 s.
+- **Vérifié** : build sans avertissement et smoke test. Captures pendant le retournement, pendant le décompte et à la fin.
+  - Deux passages de la même run, l'un regardé, l'autre passé : la rangée des gains est identique au pixel près dans l'état final (+4 Vestiges, Arme retrouvée : Trousseau).
+- **Relecture `godot-reviewer`** : rien de sérieux. Vérifiés : gains acquis avant l'animation, état final identique, boutons et focus inchangés, échelle dans un conteneur. Suite donnée : la carte des Vestiges naît avec son texte final plutôt que le format brut.
+- **Non vérifié** : le son (captures sans audio) ; une rangée de nombreuses cartes (plusieurs quêtes et déblocages dans la même run).
+
 ## 6. Recette finale et sortie
 
 Même monde et même build, séquence courte avant/après ; puis run dense réelle. La seed du monde ne fixe pas tous les tirages de spawn et de crises : utiliser spawns/calendrier contrôlés pour une comparaison stricte, sinon répéter les essais et noter leur variabilité. Tester effets réduits, son coupé et absence de secousse. Effectuer build, smoke si applicable, profilage et vérifications du [dossier](README.md).

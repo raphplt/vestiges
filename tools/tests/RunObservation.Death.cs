@@ -13,6 +13,7 @@ namespace Vestiges.Tests;
 /// --capture-death : mort et bilan de fin de run (plan 02 lot D, M1). Le bot joue --seconds secondes pour se constituer
 /// un build, puis meurt pour de bon sous le coup de la créature la plus proche ; captures pendant l'impact, l'effacement,
 /// les trois temps de la révélation et l'écran final.
+/// --skip-reveal : un appui pendant la révélation du bilan, pour vérifier que l'état final ne change pas (M4).
 /// --play-bot : le bot de mesure joue pendant ces secondes (avec --nomad, il garde un cap) ; relevés de M2 réalistes.
 /// --history-fixture &lt;fichier&gt; : historique posé dans le profil isolé avant la mort, pour vérifier qu'une run
 /// s'y ajoute sans perdre les anciennes (plan 02 M2). Le relevé enregistré est imprimé (RECORD).
@@ -52,7 +53,11 @@ public partial class RunObservation
         for (int attempt = 0; attempt < 4 && !_player.IsDead; attempt++)
             _player.TakeErasureDamage(100000f);
         // Séquence de mort : impact, le joueur se défait, effacement naissant, à mi-course, écran couvert ; puis le bilan.
-        double[] moments = { 0.08, 0.6, 1.2, 1.8, 2.4, 3.3, 6.0 };
+        // Puis les cartes de gain qui se retournent, le compteur de Vestiges, l'état final.
+        double[] moments = { 0.08, 0.6, 1.2, 1.8, 2.4, 3.3, 5.2, 5.8, 8.0 };
+        // --skip-reveal : un appui à 3,5 s termine la révélation ; l'état final doit être le même, gains compris.
+        bool skip = System.Array.IndexOf(OS.GetCmdlineUserArgs(), "--skip-reveal") >= 0;
+        const double SkipAt = 3.5;
         // Instants comptés depuis la mort : l'écriture d'une capture 4K prend elle-même plusieurs centaines de ms.
         ulong deathMsec = Time.GetTicksMsec();
         for (int shot = 0; shot < moments.Length; shot++)
@@ -60,6 +65,16 @@ public partial class RunObservation
             double wait = moments[shot] - (Time.GetTicksMsec() - deathMsec) / 1000.0;
             // Au moins une image rendue entre deux captures : l'écriture de la précédente a pu consommer l'attente.
             await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+            if (skip && moments[shot] > SkipAt)
+            {
+                double untilSkip = SkipAt - (Time.GetTicksMsec() - deathMsec) / 1000.0;
+                if (untilSkip > 0.0)
+                    await Seconds(untilSkip);
+                Input.ParseInputEvent(new InputEventKey { Keycode = Key.Space, Pressed = true });
+                Input.ParseInputEvent(new InputEventKey { Keycode = Key.Space, Pressed = false });
+                skip = false;
+                wait = moments[shot] - (Time.GetTicksMsec() - deathMsec) / 1000.0;
+            }
             if (wait > 0.0)
                 await Seconds(wait);
             Save($"death-{shot}.png");
