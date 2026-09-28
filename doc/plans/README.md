@@ -39,7 +39,7 @@ La [Stratégie V2](../VESTIGES-STRATEGIE-V2.md) reste l'autorité gameplay/roadm
 | [17 — Armes, coffres et modificateurs](17-armes-coffres-modificateurs.md) | P0 | Vagues 0–5 ; rareté sur les améliorations ; noms d'armes ; Mémoriaux et Failles | 05, 08, 13, 16, 18 |
 | [18 — Inventaire des restes V1](18-inventaire-restes-v1.md) | P0 | Éléments de lore et POI vectoriels, Colosses, identifiants Steam « nuits » | 17 (lots 0B/0C) |
 | [19 — Lore](19-lore.md) | Transversal | Étape A : incohérences, textes trop directs, 14 questions à trancher, pistes de révélation | 06 (casting), 16 (échos), 17 (noms d'armes) |
-| [20 — Récompense et puissance](20-recompense-et-puissance.md) | P0 (R1 capital) | Retours du 28 septembre : dopamine et scaling, risque récompensé, Mémoriaux trouvables, coffres, chance, rareté, projectiles, pouvoir par personnage ; rien de traité | 03, 05, 06, 13, 16, 17 |
+| [20 — Récompense et puissance](20-recompense-et-puissance.md) | P0 (R1 capital) | Retours du 28 septembre ; modèle de progression par archétype, leviers chiffrés, étude des dégâts à distance et lots proposés (§6–§9), cibles à valider ; rien d'implémenté | 03, 05, 06, 13, 16, 17 |
 
 Les numéros servent à identifier les plans, pas à imposer leur exécution intégrale dans cet ordre. Le [registre](DECISIONS.md) fait foi pour leur statut de validation.
 
@@ -53,6 +53,13 @@ Les numéros servent à identifier les plans, pas à imposer leur exécution int
 6. Traiter 09 seulement après stabilisation des règles de score.
 
 Un seul lot d'implémentation ouvert à la fois. Un échec de lisibilité, de performance ou de fun ramène au lot concerné avant expansion.
+
+**Mise à jour du 28 septembre, après-midi :** [plan 20 §6–§9](20-recompense-et-puissance.md#6-modèle-de-progression--28-septembre-2026-proposition-cibles-à-valider). Mesure de 30 min (bot nomade, deux seeds) et `tools/progression_model.py`.
+- Niveaux cibles par archétype à valider, leviers d'XP chiffrés et simulés (temps, oubli, Résurgences, Péril, boss intermédiaire à rang choisi, Indicible, build).
+- Constats : l'XP par PV à abattre est divisée par 4 à 30 min ; les orbes laissées pèsent au plus 15 % de l'XP (750 à 920 au sol), alors que 73 % des créatures apparues ne meurent jamais.
+- Dégâts à distance (`tools/damage_sources.py`) : c'est le Présage qui pèse (24 % des coups, présent dans tous les biomes), pas les tireurs, qui blessent en proportion de leur présence.
+- Densité vers 1 000 créatures : environ trois fois moins de coût par créature à trouver.
+- Rien n'est implémenté côté jeu.
 
 **Mise à jour du 27 septembre, nuit (session locale, sans Raphaël) :** machine enfin calme, [audit de performances](../AUDIT-PERFORMANCES-2026-09-27.md) repris en lots ([10 §11](10-terrain-et-tiles.md)).
 - Lot 1 : le pool d'ennemis ne laisse plus d'ennemis orphelins en fin de run (20 par run avant), abonnement de la montée de niveau désabonné. Le brouillard, invisible depuis mars, est retiré ; **à arbitrer** : l'Oubli du regard n'avait donc aucun effet visible.

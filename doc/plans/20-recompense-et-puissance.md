@@ -1,6 +1,6 @@
 # Plan 20 — Récompense, montée en puissance et points de dépense
 
-Version 0.1 · 28 septembre 2026 · Statut : **retours consignés, rien de traité**. Raphaël demande de ranger ces retours dans un plan sans les traiter. Les faits de §2 ont été vérifiés dans le code le jour même. Aucune solution n'est choisie.
+Version 0.2 · 28 septembre 2026 · Statut : **retours consignés ; modèle de progression et étude des dégâts à distance proposés (§6, §7), cibles et lots à valider, rien d'implémenté côté jeu**. Les faits de §2 ont été vérifiés dans le code le jour même.
 
 ## 1. Retours de Raphaël (28 septembre, après les lots 8A–8C)
 
@@ -53,3 +53,204 @@ Version 0.1 · 28 septembre 2026 · Statut : **retours consignés, rien de trait
 - Dans le « scaling » recherché, qu'est-ce qui procure le plus de plaisir : la **cascade de niveaux** elle-même, l'écran de choix qui s'enchaîne, ou la puissance visible qui en résulte (écran rempli d'effets, ennemis balayés) ?
 - Les pics d'XP doivent-ils venir surtout d'**actes risqués** (Failles, Péril, élites, zones effacées), d'une **récompense de boss**, ou d'un **objet de build** qui multiplie l'XP ?
 - Jusqu'où monter le nombre d'ennemis simultanés : 200, 500 ou davantage ? Cela fixe le chantier de performance à mener avant.
+
+## 5. Réponses de Raphaël (28 septembre)
+
+1. **Ce qui fait plaisir** : la cascade de niveaux, les choix qui s'enchaînent et la puissance visible, tous les trois, à des degrés différents. La cascade ne doit pas être permanente. Il demande **un document qui montre, de runs médiocres à excellentes, les niveaux attendus par palier** (5, 10, 20, 40 min…) :
+   - l'exponentiel et les grosses cascades sont réservés aux très bonnes runs (chance, bon build, bonne exécution) ;
+   - le gain de niveaux doit remonter un peu pour tous les archétypes ;
+   - « avoir des métriques et des calculs pour ça est quelque chose d'important ».
+2. **D'où vient l'XP** : des actes risqués, d'une bonne gestion de la masse et des boss battus.
+   - **Un boss intermédiaire difficile à mi-parcours.** Le joueur doit pouvoir **régler la difficulté du boss**, par exemple en activant des autels ou selon son score ; un boss plus dur rapporte plus.
+   - Les boss lâchent beaucoup d'XP, mais ce sont **surtout les Résurgences** qui doivent en donner plus : plus de danger et plus de créatures, plus d'XP, mais plus dur à gérer.
+   - Le contrôle de la difficulté du jeu de référence est « une idée excellente », mais le recopier tel quel serait du pompage : trouver des adaptations.
+   - On doit pouvoir **construire son build autour de l'XP et de la chance**, pourquoi pas d'un troisième axe (maîtrise du chaos ou de l'oubli), par les passifs ou par les objets.
+3. **Nombre d'ennemis** : « plus de 1000 ?? En fait, le plus possible. »
+4. **Nouveau point** : les ennemis infligent peut-être trop de dégâts à distance, ce qui gonfle la difficulté. À creuser.
+
+## 6. Modèle de progression — 28 septembre 2026 (proposition, cibles à valider)
+
+Réponse à §5.1 : niveaux attendus par palier, de la run médiocre à l'excellente, avec les calculs qui les justifient. Rien n'est implémenté côté jeu.
+
+### 6.1 Outils et mesure
+
+- `tools/progression_model.py [dossier de mesure]` : courbe d'XP lue dans `PlayerProgression.cs`, cibles par archétype, XP par minute qu'elles supposent, niveaux et XP mesurés, et **simulation des leviers** (dictionnaires `LEVERS` et `PLAY` en tête du fichier).
+- `tools/damage_sources.py <dossier>` : répartition des dégâts reçus par créature et par rôle (§7).
+- `RunObservation` (mesure de densité) relève désormais l'XP ramassée et les orbes au sol chaque seconde, les dégâts reçus par créature (bruts, et filtrés par l'invulnérabilité de 0,5 s), l'exposition et les morts par espèce.
+- Mesure : `MEASURE_EXTRA_ARGS="--nomad" MEASURE_JOBS=2 tools/measure_run.sh <dossier> 1800 "221092026 42"`, soit 30 min de jeu en 942 s d'horloge.
+
+**Limite du bot** : il est invincible et garde un cap. Au level-up, il prend toujours la première carte, sans chercher ni combat ni orbe. C'est une **run passive**, entre médiocre et moyenne pour le build, mais qui ne meurt jamais. Sur la seed 42, ses trois premiers choix sont des passifs : le Traqueur reste au niveau 4 de 2 à 5 min (11 morts en 3 min).
+
+### 6.2 Courbe actuelle
+
+XP pour passer du niveau n au suivant : 20 × n^1,35, majorée de 65 % à 20 % aux niveaux 1 à 5. **Constantes en dur** dans `PlayerProgression.cs` (contraire à la règle data-driven) ; seul le Péril (+8 % par point) multiplie l'XP. Aucune stat, aucun passif ni aucun objet n'augmente le gain d'XP ; seul l'aimant (`xp_magnet_radius`) agrandit le ramassage.
+
+| Niveau | XP pour le suivant | XP cumulée |
+|---|---|---|
+| 10 | 448 | 1 839 |
+| 20 | 1 141 | 9 302 |
+| 30 | 1 973 | 24 362 |
+| 40 | 2 909 | 48 229 |
+| 50 | 3 932 | 81 860 |
+| 75 | 6 798 | 213 712 |
+| 100 | 10 024 | 421 695 |
+| 150 | 17 328 | 1 097 556 |
+
+L'espace d'amélioration suffit pour 150 niveaux et plus : arme jusqu'au niveau 50, quatre armes et quatre passifs (niveau 5), soit plus de 200 montées utiles. Une cascade est déjà possible techniquement : `PlayerProgression` enchaîne les niveaux, `FragmentManager` met les écrans de choix en file.
+
+### 6.3 Ce que mesure le jeu actuel (bot, seeds 221092026 / 42)
+
+| | 2 min | 5 min | 10 min | 15 min | 20 min | 30 min |
+|---|---|---|---|---|---|---|
+| Niveau | 4 / 4 | 11 / 4 | 17 / 16 | 20 / 23 | 25 / 29 | 34 / 40 |
+
+| | 5→10 min | 10→15 min | 15→20 min | 20→30 min |
+|---|---|---|---|---|
+| XP ramassée par minute | 861 / 1 039 | 590 / 1 667 | 1 425 / 1 778 | 1 622 / 2 697 |
+| Morts par minute | 84 / 115 | 93 / 181 | 203 / 190 | 234 / 322 |
+| Orbes au sol en fin de palier | 190 / 284 | 358 / 421 | 533 / 497 | 859 / 765 |
+
+Vérification des constats :
+- **XP par créature fixe** : confirmé. Charognard 8, Ombre 5, Rôdeur 20, Brute 25, Tréant 35 ; seules les variantes la multiplient (élite ×4, champion ×14, aberration ×2) et la Harde (×1,5). Rien ne suit le temps, l'oubli ni les Résurgences. Les PV des créatures montent de ×1,05 par minute, composé (×1,63 à 10 min, ×2,65 à 20, ×4,32 à 30) : **l'XP par PV à abattre est divisée par 4 à 30 min**.
+- **Orbes au sol** : 750 à 920 au maximum sur 30 min, pas des milliers. En comptant les morts par espèce, le bot ramasse l'essentiel de l'XP lâchée : au plus 10 à 15 % reste au sol. La vraie perte est ailleurs : **73 % des créatures apparues ne meurent jamais** (17 354 apparues, 4 568 tuées sur une seed). Le joueur les distance et elles sont recyclées au-delà de 1 400 px.
+- **L'Indicible rapporte 500 XP**, moins d'un cinquième de niveau à 40 (2 909 XP pour le suivant) ; les coffres, 15 à 100 XP.
+
+### 6.4 Cibles par archétype (à valider par Raphaël)
+
+Durées de vie reprises de la V2 (§5) : un joueur régulier meurt entre 15 et 25 min, un bon joueur tient de 25 à 40 min.
+
+| Archétype | Ce qui la distingue | 2 min | 5 min | 10 min | 15 min | 20 min | 30 min | 40 min |
+|---|---|---|---|---|---|---|---|---|
+| Médiocre | build dispersé, évite le risque, meurt vers 17 min | 4 | 10 | 18 | 25 | — | — | — |
+| Moyenne | build correct, boss de rang 2, meurt vers 25 min | 4 | 11 | 21 | 31 | 38 | — | — |
+| Bonne | build cohérent, Résurgences jouées au cœur, Péril 3, bat l'Indicible | 5 | 12 | 24 | 40 | 52 | 72 | 90 |
+| Excellente | build XP ou oubli, Péril 6, boss de rang 5, cascades | 5 | 13 | 27 | 50 | 72 | 110 | 150 |
+
+Principes :
+- **Début inchangé** (≤ 5 min), conformément au plan 03 (début menaçant, XP pas trop rapide) : l'écart vient de la façon de jouer, pas du départ.
+- **Tous les archétypes montent un peu** : +20 à +40 % de niveaux au milieu de run par rapport au jeu actuel simulé (médiocre : 15 → 18 à 10 min ; moyenne : 22 → 31 à 15 min).
+- **Les cascades n'arrivent qu'aux runs qui empilent les risques** : les leviers se multiplient entre eux, et seule une run qui les cumule décolle.
+
+XP à ramasser par minute pour tenir ces cibles, comparée au bot :
+
+| | 10→15 min | 15→20 min | 20→30 min | 30→40 min |
+|---|---|---|---|---|
+| Médiocre | 1 710 | — | — | — |
+| Moyenne | 3 178 | 3 273 | — | — |
+| Bonne | 6 778 | 8 320 | 10 422 | 13 476 |
+| Excellente | 12 578 | 22 438 | 33 404 | 56 947 |
+| Bot mesuré | 590–1 667 | 1 425–1 778 | 1 622–2 697 | — |
+
+Une run moyenne doit donc ramasser deux à trois fois plus que le bot ; une bonne, cinq fois plus ; une excellente, quinze à vingt-cinq fois plus en fin de run. Aucune de ces trois n'est atteignable aujourd'hui : la simulation du jeu actuel donne 22 niveaux à 15 min pour une run moyenne, 47 à 30 min pour une bonne, 61 pour une excellente.
+
+### 6.5 Leviers chiffrés
+
+La simulation part de l'XP ramassée par le bot, minute par minute. Pour chaque archétype, elle applique une façon de jouer (`PLAY`) : récolte par rapport au bot (0,8 à 1,5), temps passé en zone oubliée, engagement dans les Résurgences, Péril, bonus d'XP de build, rang du boss choisi. Ce sont des **hypothèses** à discuter ; le modèle sert à vérifier qu'un jeu de leviers donne l'écart voulu avant d'en coder un seul.
+
+Jeu de leviers calibré : il tient les cibles à ±10 % à chaque palier, sauf l'excellente à 40 min (133 pour 150).
+
+| Levier | Aujourd'hui | Proposé | Effet simulé en le retirant seul (moyenne à 20 min / excellente à 30 min) |
+|---|---|---|---|
+| XP par créature selon le temps | fixe | × (1 + 0,02 × minute) : ×1,2 à 10 min, ×1,4 à 20, ×1,6 à 30 | 38 → 35 / 109 → 96 |
+| XP selon l'oubli de la zone | rien (l'oubli majore score et Essence seulement) | × (1 + 0,5 × oubli) : ×1,25 en Effilochée, jusqu'à ×1,5 en Effacée | 38 → 35 / 109 → 95 |
+| XP pendant une Résurgence | rien (seulement plus de créatures) | ×2 pendant les 70 s | 38 → 36 / 109 → 99 |
+| Péril | +8 % par point | +12 % par point (×1,72 à Péril 6) | 38 → 38 / 109 → 103 |
+| Boss intermédiaire vers 13 min | n'existe pas | selon le rang choisi : +2, +4, +7, +10 ou +15 niveaux | 38 → 36 / 109 → 103 (et 57 → 44 à 15 min) |
+| XP de l'Indicible | 500 XP | +8 niveaux (≈ 34 000 XP vers le niveau 50) | — / 109 → 103 |
+| Build orienté XP | aucun moyen | jusqu'à +60 % à 20 min (hypothèse de l'excellente) | — / 109 → 93 |
+
+**Récompenses de boss en niveaux, pas en XP.** Exprimer le gain en niveaux (« rang 5 = +15 niveaux ») garde la cascade intacte même si la courbe change. Le rang 5 vaut environ 39 000 XP au niveau 30.
+
+**Boss intermédiaire à difficulté choisie**, adaptations possibles (le contrôle de difficulté du jeu de référence n'est pas recopié) :
+- **A. Sceaux des Mémoriaux** (recommandée) : le boss s'appelle à un Mémorial, entre 10 et 16 min. Son rang, de 1 à 5, vaut le nombre de Mémoriaux ravivés et de Failles ouvertes avant l'appel. Sans appel, il vient seul à 16 min, au rang 1. Cela réutilise des lieux existants et donne enfin une raison de les chercher (retours 2 et 8).
+- **B. Le boss se nourrit de l'oubli** : il absorbe les orbes laissées au sol et grossit d'autant, puis les rend doublées à sa mort. Le joueur règle la difficulté par ce qu'il abandonne derrière lui.
+- **C. Rang = Péril** au moment du combat : simple, mais sans geste propre au boss.
+
+**Résurgences plus payantes.** En plus du ×2, un **reflux à l'accalmie** : à la fin d'une Résurgence, les orbes laissées dans un large rayon (1,5 écran) rejoignent le joueur. Plus il a tué au cœur de la vague, plus la cascade est grande. C'est lisible (« la mémoire revient ») et récompense la gestion de la masse, sans coût de ramassage.
+
+**Ramassage.** Ce n'est pas le premier gisement (≤ 15 % de l'XP lâchée). Deux actions restent utiles : la **fusion des orbes** proches (moins de nœuds, et une grosse orbe se voit mieux), et un aimant plus présent dans les tirages.
+
+**Axes de build (pas de tomes)**, par passifs d'abord, objets ensuite (plan 13, non arbitré) :
+- **XP** : un passif du type « Mémoire vive », +8 % d'XP par niveau (+40 % au niveau 5), une bénédiction de Mémorial équivalente.
+- **Chance** : elle existe mais se sent à peine (≈ 9 % avec Bonne Étoile, §2) ; chantier R5.
+- **Oubli (troisième axe)** : un passif qui renforce le levier d'oubli (par exemple +50 % d'XP et de dégâts en zone Effacée), et une récompense de kill en zone oubliée (une orbe de plus). Il pousse vers le danger que l'Effacement crée déjà, ce qui est propre à Vestiges.
+
+**Mise en scène d'une cascade** : 15 niveaux d'un coup, ce sont 15 écrans de choix à la suite. C'est ce que Raphaël aime (§5.1), mais le rythme de ces écrans est à concevoir avec le plan 02 (J4). Par exemple, une entrée plus rapide à partir du deuxième, et le compteur de niveaux restants affiché.
+
+#### Densité vers 1 000 créatures et plus
+
+Mesure de l'audit du 27 septembre (banc de combat dense, 1080p) : de 60 à 240 créatures, le temps d'image passe de 4,71 à 11,08 ms, soit **≈ 35 µs par créature**. En prolongeant cette pente, 500 créatures donneraient ≈ 20 ms (50 FPS) et 1 000 ≈ 38 ms (26 FPS). Pour tenir 60 FPS à 1 000, il faut descendre sous ≈ 12 µs par créature, **trois fois moins** ; à 2 000, six fois moins. Aujourd'hui, le plafond est de 110 créatures à l'écran, plus 4 par minute (230 à 30 min).
+
+Ce que coûte une créature aujourd'hui : un `CharacterBody2D` avec `MoveAndSlide`, un `AnimatedSprite2D`, ses capacités, son ombre et ses marqueurs, chacun traité dans son propre `_PhysicsProcess`. À chaque attaque, les armes parcourent toute la liste des créatures (`GroupCache.GetEnemies`, `Player.cs`) : ce coût croît avec la foule et le nombre d'armes.
+
+Travail à prévoir, dans l'ordre :
+1. **Banc de foule réaliste** : 250, 500, 1 000 et 2 000 créatures, avec morts, orbes et renouvellement (le banc actuel empêche les morts). Attribuer le coût : physique, scripts, rendu.
+2. **Déplacement de foule** : un gestionnaire unique qui déplace toutes les créatures depuis des tableaux C#, avec une grille spatiale pour la séparation et une carte des obstacles précalculée, au lieu d'un `MoveAndSlide` par créature.
+3. **Rendu** : des éléments de dessin directs (`RenderingServer`) plutôt que des nœuds. Un `MultiMesh` serait plus rapide mais sort du tri en Y de `Main` : les créatures ne passeraient plus derrière les décors.
+4. **Niveau de détail** : les créatures hors écran se mettent à jour une image sur quatre, sans animation.
+5. **Orbes et effets** : fusion des orbes proches, chiffres de dégâts agrégés (budget `fx_budget.json`).
+6. **Ciblage des armes** par la même grille spatiale, au lieu d'un parcours complet de la liste.
+
+C'est un chantier à part entière (plusieurs lots), qui touche le cœur du combat. **Densité et XP sont liées** : multiplier les créatures par cinq multiplie le flux d'XP. Il faudra alors rejouer le modèle et baisser l'XP par créature, sans quoi toutes les runs cascadent.
+
+## 7. Dégâts à distance — 28 septembre 2026 (§5.4)
+
+Même mesure que §6 (30 min, deux seeds). Le bot n'esquive rien. Le filtrage ne garde que les coups qui passeraient l'invulnérabilité de 0,5 s ; c'est la colonne qui compte pour comparer les rôles. Rapport = part des dégâts filtrés ÷ part de l'exposition (1 = la créature blesse en proportion de sa présence).
+
+| Rôle | Dégâts bruts | Dégâts filtrés | Exposition (à moins de 600 px) | Morts | Rapport |
+|---|---|---|---|---|---|
+| Mêlée | 81,9 % | 63,5 % | 68,3 % | 94,0 % | 0,93 |
+| Zones du Présage | 4,8 % | **24,3 %** | **20,1 %** | 3,5 % | 1,21 |
+| Tir (Cracheur, Tisseuse, Sentinelle) | 12,8 % | 10,8 % | 11,6 % | 2,5 % | 0,94 |
+| Boss, Néant | 0,4 % | 1,3 % | — | — | — |
+
+| Créature | Dégâts filtrés | Exposition | Morts | Rapport |
+|---|---|---|---|---|
+| Présage | 24,3 % | 20,1 % | 3,5 % | 1,21 |
+| Brute du Vide | 14,6 % | 9,4 % | 3,1 % | **1,56** |
+| Hurleur | 11,4 % | 9,9 % | 0,8 % | 1,15 |
+| Ombre | 10,3 % | 17,5 % | 50,9 % | 0,59 |
+| Charognard | 9,7 % | 14,7 % | 27,6 % | 0,66 |
+| Rôdeur | 8,1 % | 5,9 % | 2,0 % | 1,37 |
+| Cracheur Pâli | 7,5 % | 5,5 % | 1,4 % | 1,37 |
+| Tisseuse | 2,4 % | 2,5 % | 0,8 % | 1,00 |
+| Sentinelle Hurlante | 0,8 % | 3,6 % | 0,2 % | 0,23 |
+
+Lecture :
+- **La pression « à distance » vient surtout du Présage**, pas des tireurs. Il figure dans le groupe d'exploration de **tous** les biomes (une entrée sur quatre ou cinq). En moyenne, 16 Présages rôdent à moins de 600 px du joueur, et le plafond global de deux zones actives (`OmenStrikeAbility`) est donc presque toujours atteint : une pluie continue de zones de 42 px.
+- **Les créatures à distance ne meurent presque pas** : 32 % de l'exposition (Présages et tireurs), 6 % des morts. Elles restent à 250–320 px, hors de portée des armes qui visent la plus proche, et s'accumulent. Elles pèsent donc par leur nombre plus que par coup.
+- **Les tireurs purs ne sont pas surdosés** (rapport 0,94). Le Cracheur est le plus lourd (1,37), la Sentinelle presque inoffensive (0,23).
+- **Tous les dégâts montent de ×1,035 par minute** (×2 à 20 min), tir compris.
+- Le bot sous-estime ce que fait un joueur qui esquive : les tirs et les zones sont annoncés, et s'évitent mieux qu'une foule au contact. La part ressentie en jeu dépend donc de la lisibilité (lot 8C, couloirs de visée).
+
+Pistes chiffrées (données seulement, mesurables avec la même commande) :
+1. **Présage moins présent** : une entrée sur huit au lieu d'une sur quatre ou cinq dans les groupes d'exploration, et absent avant 3 min. Attendu : exposition 20 → ~10 %, dégâts filtrés 24 → ~12 %.
+2. **Croissance des dégâts à distance à part** (`ranged_damage_scaling_per_minute`) : ×1,02 par minute au lieu de ×1,035, soit ×1,49 à 20 min au lieu de ×1,99 (−25 %).
+3. **Tireurs qui se rapprochent** : un tireur hors de portée des armes depuis plus de 6 s avance jusqu'à 180 px. Il devient tuable et rapporte son XP (lien avec §6).
+4. Si cela ne suffit pas : **jetons d'attaque**, pas plus de quatre tireurs qui visent le joueur en même temps (en plus des deux zones de Présage). C'est le moyen le plus sûr de garder des pics lisibles, mais il demande du code.
+
+Objectif proposé : zones et tirs sous 25 % des dégâts filtrés (35 % aujourd'hui), sans toucher à la mêlée, qui porte la difficulté voulue (build et déplacements).
+
+## 8. Lots proposés (un à la fois, à valider)
+
+| Lot | Contenu | Nature | Vérification |
+|---|---|---|---|
+| **R1-0** | Courbe d'XP et multiplicateurs en JSON (`data/scaling/progression.json`), lus par `PlayerProgression` et par `tools/progression_model.py` | Données, sans effet de jeu | Même niveau atteint avant/après, même seed |
+| **D1** | Pistes 1 et 2 de §7 (Présage, croissance des dégâts à distance) | Données | `measure_run.sh` 30 min, `damage_sources.py` : zones et tirs < 25 % |
+| **R1-A** | XP selon le temps, l'oubli, les Résurgences, Péril à 12 % | Données et un calcul dans `Enemy`/`XpOrb` | Mesure 30 min ; simulation pour le bot : 27 → 36 niveaux à 20 min, 37 → 54 à 30 min, quasi rien avant 5 min (8 → 9) |
+| **R1-B** | Reflux à l'accalmie, fusion des orbes | Code | Mesure (orbes au sol, XP par Résurgence), capture de la cascade |
+| **R1-C** | Boss intermédiaire à rang choisi | Conception à valider d'abord (A, B ou C, §6.5), puis prototype | Recette par Raphaël ; niveaux gagnés par rang |
+| **R1-D** | Indicible en niveaux (+8) ; mise en scène des cascades (plan 02 J4) | Données et interface | Capture d'une cascade de 15 niveaux |
+| **R1-E** | Passifs d'XP et d'oubli ; Chance ressentie (R5) | Contenu (plan 05) | Simulation, puis recette |
+| **P1–P6** | Densité vers 1 000 créatures (§6.5) | Architecture | Banc de foule 250–2 000, `/bench` avant/après |
+
+Ordre recommandé : R1-0 et D1, qui sont peu risqués et purement des données, puis R1-A, avec une mesure qui recale le modèle. Viennent ensuite R1-B, puis la conception de R1-C. P1 (le banc de foule) peut commencer en parallèle, car il ne change rien au jeu.
+
+## 9. Questions ouvertes
+
+1. **Les cibles de §6.4** conviennent-elles ? En particulier 150 niveaux à 40 min pour une run excellente, qui suppose environ 57 000 XP par minute en fin de run et un choix toutes les 10 à 15 s.
+2. **Boss intermédiaire** : quelle adaptation, A (sceaux des Mémoriaux), B (il se nourrit de l'oubli) ou C (rang = Péril) ? À quel moment : 13 min, après la 3ᵉ Résurgence ?
+3. **Troisième axe de build** : l'oubli (bonus en zones Effacées) plutôt que le chaos ?
+4. **Cascades** : faut-il accélérer la suite d'écrans de choix, ou chaque choix doit-il garder son temps ?
+5. **Dégâts à distance** : partir des pistes 1 et 2 (données) avant de toucher au comportement des tireurs ?
+6. **Densité** : lancer le chantier de performance (P1–P6) avant les leviers d'XP, ou après ?
