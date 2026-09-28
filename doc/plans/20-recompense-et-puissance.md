@@ -1,6 +1,6 @@
 # Plan 20 — Récompense, montée en puissance et points de dépense
 
-Version 0.2 · 28 septembre 2026 · Statut : **retours consignés ; modèle de progression et étude des dégâts à distance proposés (§6, §7), cibles et lots à valider, rien d'implémenté côté jeu**. Les faits de §2 ont été vérifiés dans le code le jour même.
+Version 0.3 · 28 septembre 2026 · Statut : **modèle de progression révisé pour 300 à 400 niveaux (§6.6), cibles à valider ; lot D1 (pression à distance) livré (§7.2) ; autres lots à valider**. Les faits de §2 ont été vérifiés dans le code le jour même.
 
 ## 1. Retours de Raphaël (28 septembre, après les lots 8A–8C)
 
@@ -191,7 +191,37 @@ Travail à prévoir, dans l'ordre :
 5. **Orbes et effets** : fusion des orbes proches, chiffres de dégâts agrégés (budget `fx_budget.json`).
 6. **Ciblage des armes** par la même grille spatiale, au lieu d'un parcours complet de la liste.
 
-C'est un chantier à part entière (plusieurs lots), qui touche le cœur du combat. **Densité et XP sont liées** : multiplier les créatures par cinq multiplie le flux d'XP. Il faudra alors rejouer le modèle et baisser l'XP par créature, sans quoi toutes les runs cascadent.
+C'est un chantier à part entière (plusieurs lots), qui touche le cœur du combat. **Réponse de Raphaël** : viser environ 500 créatures, réservées au très late game et aux Résurgences les plus dures, davantage si possible. L'optimisation est confiée à un autre agent. Le rendu d'une telle foule reste à juger en capture. **Densité et XP sont liées** : multiplier les créatures par cinq multiplie le flux d'XP. Il faudra alors rejouer le modèle et baisser l'XP par créature, sans quoi toutes les runs cascadent.
+
+### 6.6 Révision du 28 septembre (soir) : 300 à 400 niveaux en 45 min
+
+Retour de Raphaël sur §6.4 : une excellente run doit atteindre **300 à 400 niveaux en 45 min**, voire 1 000 si les armes plafonnent (au-delà, les niveaux ne servent plus). La difficulté des créatures doit suivre. La montée n'est pas linéaire : elle vient **par vagues** (boss, événements) et dépend beaucoup du build et du talent.
+
+**La courbe actuelle l'interdit** : le niveau 400 coûte 11 millions d'XP, le niveau 150 déjà 1,1 million. **Courbe proposée** : identique jusqu'au niveau 41, puis **3 000 XP par niveau, fixe**. Le niveau 400 revient alors à 1,13 million d'XP. Les runs médiocres et moyennes ne dépassent pas le niveau 40 : elles ne voient aucune différence.
+
+| Niveau | Actuelle : pour le suivant / cumulée | Proposée : pour le suivant / cumulée |
+|---|---|---|
+| 40 | 2 909 / 48 229 | 2 909 / 48 229 |
+| 100 | 10 024 / 421 695 | 3 000 / 228 138 |
+| 200 | 25 552 / 2 162 008 | 3 000 / 528 138 |
+| 400 | 65 134 / 11 054 325 | 3 000 / 1 128 138 |
+
+**Cibles révisées (à valider)** et simulation avec la courbe proposée et les leviers de §6.5, inchangés :
+
+| Archétype | 5 min | 10 min | 15 min | 20 min | 30 min | 40 min | 45 min |
+|---|---|---|---|---|---|---|---|
+| Médiocre, cible / simulée | 10 / 8 | 18 / 17 | 25 / 25 | — | — | — | — |
+| Moyenne | 11 / 9 | 21 / 19 | 32 / 31 | 40 / 38 | — | — | — |
+| Bonne | 12 / 11 | 25 / 24 | 42 / 40 | 55 / 53 | 105 / 102 | 150 / 153 | — |
+| Excellente | 13 / 13 | 30 / 30 | 60 / 59 | 90 / 86 | 190 / 181 | 300 / 288 | 380 / 358 |
+
+La courbe plafonnée seule ne suffit pas : sans les leviers de §6.5, l'excellente run s'arrête à 112 niveaux à 45 min et la bonne à 62 à 40 min. Il faut à la fois des sources d'XP qui se multiplient et un coût de niveau qui cesse de croître.
+
+**Conséquences à concevoir :**
+1. **Cadence** : en fin de run excellente, 10 à 16 niveaux par minute, soit un toutes les 4 à 6 s. Il faut une **réserve de niveaux** (réponse de Raphaël à la question 4). Les niveaux gagnés s'empilent dans un compteur au HUD, et l'écran de choix enchaîne tous les choix en attente sans se refermer entre deux. Il s'ouvre au plus toutes les 20 à 30 s, ou quand le joueur le demande, pour ne pas hacher le combat. Les cascades de boss et de reflux passent par la même réserve.
+2. **Plafond du build** : un build complet (quatre armes au niveau 50, quatre passifs au niveau 5) représente **environ 219 montées**. Au-delà, il n'y a plus rien à choisir. Proposition : des **niveaux de surplus** sans écran, chacun ajoutant un petit bonus automatique en données (par exemple +1 % de dégâts ou +2 PV max), et **moins chers** (750 XP). Avec la même XP, l'excellente run atteindrait alors **environ 860 niveaux** (1 180 à 500 XP par niveau de surplus). C'est la voie vers « 1 000 si les armes plafonnent ».
+3. **La difficulté doit suivre** : les PV des créatures montent de ×1,05 par minute (×9 à 45 min). Mesure proposée : le **temps moyen pour tuer une créature**, par palier, relevé par `RunObservation`. S'il s'effondre en fin de run excellente, la difficulté ne suit plus. Deux réponses possibles : une montée plus forte en endgame (déjà ×1,55 de PV), ou une part de la montée liée au niveau du joueur. La seconde punit la montée de niveau ; elle est à éviter si possible.
+4. **Récompenses de boss en niveaux** : le rang 5 (+15 niveaux) ne vaut plus que 45 000 XP au-delà du niveau 41. Le reflux et les Résurgences deviennent les vraies vagues.
 
 ## 7. Dégâts à distance — 28 septembre 2026 (§5.4)
 
@@ -229,28 +259,70 @@ Pistes chiffrées (données seulement, mesurables avec la même commande) :
 3. **Tireurs qui se rapprochent** : un tireur hors de portée des armes depuis plus de 6 s avance jusqu'à 180 px. Il devient tuable et rapporte son XP (lien avec §6).
 4. Si cela ne suffit pas : **jetons d'attaque**, pas plus de quatre tireurs qui visent le joueur en même temps (en plus des deux zones de Présage). C'est le moyen le plus sûr de garder des pics lisibles, mais il demande du code.
 
-Objectif proposé : zones et tirs sous 25 % des dégâts filtrés (35 % aujourd'hui), sans toucher à la mêlée, qui porte la difficulté voulue (build et déplacements).
+Objectif proposé : zones et tirs sous 25 % des dégâts filtrés (35 % aujourd'hui), sans toucher à la mêlée, qui porte la difficulté voulue (build et déplacements). Révisé en §7.1 après la correction sur le Hurleur.
+
+### 7.1 Correction et lot D1 (28 septembre, soir, demandé par Raphaël : « concrétise tes suggestions »)
+
+**Correction** : le Hurleur est typé `ranged` (`data/enemies/hurleur.json`). Sa capacité `cry` ne remplace pas l'attaque de base, donc il **tire** aussi : un projectile toutes les 1,1 s à 300 px, **sans couloir d'annonce**. Le lot B du plan 07 a annoncé les tirs du Cracheur, de la Tisseuse et de la Sentinelle, mais pas le sien. Recomptée, la pression à distance pèse donc **46 % des dégâts filtrés** (zones du Présage 24 %, tirs 22 %) pour 42 % de l'exposition et 7 % des morts. L'intuition de Raphaël est confirmée.
+
+**Lot D1 — pression à distance** (objectif : zones et tirs sous 35 % des dégâts filtrés, chaque tireur à un rapport ≤ 1,1, mêlée inchangée) :
+1. **Poids d'apparition par créature** : `spawn_weight` (1 par défaut) et `spawn_from_minute` (0 par défaut) dans les `stats` de la fiche, pris en compte au tirage du groupe du biome. Présage : poids 0,5, pas avant 3 min.
+2. **Croissance des dégâts à distance à part** : `ranged_damage_scaling_per_minute` = 1,02 dans `data/scaling/spawn_flow.json`, appliquée aux créatures `ranged` (×1,49 à 20 min au lieu de ×1,99).
+3. **Hurleur** : son tir passe par la visée annoncée (`aimed_shot`), comme les autres tireurs.
+
+Vérification : même mesure de 30 min et mêmes seeds, `tools/damage_sources.py` avant/après ; régressions des capacités ennemies ; capture du tir annoncé du Hurleur.
+Les pistes 3 (tireurs qui se rapprochent) et 4 (jetons d'attaque) attendent le résultat de D1.
+
+### 7.2 Lot D1 livré (28 septembre, soir)
+
+**Réglages** :
+- `spawn_weight` et `spawn_from_minute` dans les `stats` des fiches, pris en compte au tirage des groupes de biome (exploration et Résurgences). Présage : 0,5, pas avant 3 min. Un groupe sans aucune créature éligible avertit dans la console.
+- `ranged_damage_growth_share` = 0,57 dans `data/scaling/spawn_flow.json` : les créatures `ranged` (Présage, Cracheur, Tisseuse, Sentinelle, Hurleur) montent de ×1,02 par minute au lieu de ×1,035. Un mutateur qui change `damage_scaling_per_minute` s'applique toujours à elles.
+- Hurleur : tir annoncé (`aimed_shot`, couloir de 0,4 s). Relecture `godot-reviewer` : le cri et la visée pouvaient s'annoncer en même temps. Désormais, une créature ne lance pas une capacité pendant qu'une autre est en cours (`IEnemyAbility.IsActive`).
+
+**Mesure** (même commande de 30 min, mêmes seeds, `tools/damage_sources.py`) :
+
+| | Avant | Après |
+|---|---|---|
+| Zones du Présage, part des dégâts filtrés | 24,3 % | 16,1 % |
+| Tirs (Cracheur, Tisseuse, Sentinelle, Hurleur) | 22,3 % | 18,1 % |
+| **Zones et tirs** | **46,6 %** | **34,2 %** (objectif < 35 %) |
+| Exposition au Présage | 20,1 % | 11,1 % |
+| Dégâts filtrés totaux (deux seeds) | 24 977 / 27 898 | 19 916 / 23 854 (−20 % / −15 %) |
+| Morts | 4 568 / 5 727 | 6 029 / 6 729 |
+| XP ramassée | 33 032 / 49 816 | 48 416 / 56 610 |
+| Niveau à 30 min | 34 / 40 | 40 / 42 |
+
+- La mêlée garde sa part (63,5 %) : la difficulté voulue, celle du build et des déplacements, n'est pas touchée.
+- Moins de créatures à distance hors de portée, c'est plus de morts et plus d'XP : effet de bord favorable pour le plan 20.
+- **Reste au-dessus de sa présence** : le Cracheur Pâli (rapport 1,66) et le Présage (1,46), moins nombreux mais aussi lourds par créature. Si la recette le confirme, suite D2 : la piste 3 (tireurs qui se rapprochent) pour le Cracheur, ou un délai de zone du Présage porté de 1,0 à 1,2 s.
+
+**Vérifications** : build à 0 avertissement ; régressions des capacités ennemies à 0 échec (dont les quatre tests du cri du Hurleur) ; capture du tir annoncé du Hurleur regardée (couloir vert, puis tir). Réserve : la mesure « après » a pu inclure le travail non committé de l'autre agent sur les créatures lointaines (`Enemy.cs`), qui ne touche pas aux coups portés au joueur.
 
 ## 8. Lots proposés (un à la fois, à valider)
 
 | Lot | Contenu | Nature | Vérification |
 |---|---|---|---|
-| **R1-0** | Courbe d'XP et multiplicateurs en JSON (`data/scaling/progression.json`), lus par `PlayerProgression` et par `tools/progression_model.py` | Données, sans effet de jeu | Même niveau atteint avant/après, même seed |
-| **D1** | Pistes 1 et 2 de §7 (Présage, croissance des dégâts à distance) | Données | `measure_run.sh` 30 min, `damage_sources.py` : zones et tirs < 25 % |
+| **R1-0** | Courbe d'XP et multiplicateurs en JSON (`data/scaling/progression.json`), lus par `PlayerProgression` et par `tools/progression_model.py` ; coût plafonné à 3 000 XP par niveau (§6.6) | Données | Même niveau atteint jusqu'au niveau 40, même seed |
+| **D1** | Pression à distance (§7.1) : poids d'apparition du Présage, croissance des dégâts à distance à part, tir annoncé du Hurleur | **Livré** (§7.2) | Zones et tirs 46,6 → 34,2 % |
 | **R1-A** | XP selon le temps, l'oubli, les Résurgences, Péril à 12 % | Données et un calcul dans `Enemy`/`XpOrb` | Mesure 30 min ; simulation pour le bot : 27 → 36 niveaux à 20 min, 37 → 54 à 30 min, quasi rien avant 5 min (8 → 9) |
+| **R1-G** | Réserve de niveaux : compteur au HUD, choix enchaînés sans fermer l'écran, ouverture espacée ou à la demande (§6.6) | Interface (plan 02 J4, plan 04) | Capture d'une cascade de 15 niveaux ; aucune ouverture à moins de 20 s d'intervalle |
 | **R1-B** | Reflux à l'accalmie, fusion des orbes | Code | Mesure (orbes au sol, XP par Résurgence), capture de la cascade |
-| **R1-C** | Boss intermédiaire à rang choisi | Conception à valider d'abord (A, B ou C, §6.5), puis prototype | Recette par Raphaël ; niveaux gagnés par rang |
-| **R1-D** | Indicible en niveaux (+8) ; mise en scène des cascades (plan 02 J4) | Données et interface | Capture d'une cascade de 15 niveaux |
+| **R1-C** | Boss intermédiaire, **option A retenue** (sceaux des Mémoriaux) | Conception détaillée, puis prototype | Recette par Raphaël ; niveaux gagnés par rang |
+| **R1-D** | Indicible en niveaux (+8) | Données | Mesure |
+| **R1-H** | Niveaux de surplus au-delà du build complet (≈ 219 montées) : bonus automatique, coût réduit (§6.6) | Données et code | Simulation, puis run dev poussée au-delà de 219 |
+| **R1-T** | Temps moyen pour tuer une créature, par palier, dans `RunObservation` | Outil | Relevé sur 45 min |
 | **R1-E** | Passifs d'XP et d'oubli ; Chance ressentie (R5) | Contenu (plan 05) | Simulation, puis recette |
-| **P1–P6** | Densité vers 1 000 créatures (§6.5) | Architecture | Banc de foule 250–2 000, `/bench` avant/après |
+| **P** | Densité : ~500 créatures en très late game et dans les Résurgences les plus dures, plus si le rendu le permet | Optimisation (**autre agent**) ; rendu à juger en capture | Banc de foule, `/bench`, captures |
 
-Ordre recommandé : R1-0 et D1, qui sont peu risqués et purement des données, puis R1-A, avec une mesure qui recale le modèle. Viennent ensuite R1-B, puis la conception de R1-C. P1 (le banc de foule) peut commencer en parallèle, car il ne change rien au jeu.
+Ordre recommandé : D1 (fait, voir §7.2), puis R1-0 et R1-T (données et mesure, sans risque). Ensuite R1-A et R1-G ensemble : avec plus d'XP, les écrans de choix se multiplient. Puis R1-B, la conception de R1-C, et R1-H.
 
 ## 9. Questions ouvertes
 
-1. **Les cibles de §6.4** conviennent-elles ? En particulier 150 niveaux à 40 min pour une run excellente, qui suppose environ 57 000 XP par minute en fin de run et un choix toutes les 10 à 15 s.
-2. **Boss intermédiaire** : quelle adaptation, A (sceaux des Mémoriaux), B (il se nourrit de l'oubli) ou C (rang = Péril) ? À quel moment : 13 min, après la 3ᵉ Résurgence ?
-3. **Troisième axe de build** : l'oubli (bonus en zones Effacées) plutôt que le chaos ?
-4. **Cascades** : faut-il accélérer la suite d'écrans de choix, ou chaque choix doit-il garder son temps ?
-5. **Dégâts à distance** : partir des pistes 1 et 2 (données) avant de toucher au comportement des tireurs ?
-6. **Densité** : lancer le chantier de performance (P1–P6) avant les leviers d'XP, ou après ?
+Réponses de Raphaël du 28 septembre (soir) : excellente run à 300–400 niveaux en 45 min, voire 1 000 avec des armes plafonnées (§6.6) ; boss intermédiaire en **option A** ; axe de build de l'oubli **d'accord** ; cascades **enchaînées**, avec une réserve qui empile les niveaux ; dégâts à distance « à toi de voir » (lot D1 fait) ; densité visée d'environ 500 en très late game et dans les Résurgences les plus dures, l'optimisation étant confiée à un autre agent.
+
+Restent :
+1. Les **cibles révisées** de §6.6 (en particulier les paliers intermédiaires de la run excellente) ?
+2. **Niveaux de surplus** au-delà du build complet : un bonus automatique à chaque niveau (lequel ?), ou de simples points de score ?
+3. **Réserve de niveaux** : l'écran s'ouvre-t-il seul toutes les 20 à 30 s, ou seulement quand le joueur appuie sur une touche ?
+4. **Difficulté en fin de run** : si le temps pour tuer s'effondre, faut-il une montée plus forte en endgame, ou une part liée au niveau du joueur ?

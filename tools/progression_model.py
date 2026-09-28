@@ -3,16 +3,17 @@ Modèle de progression (plan 20) : niveaux attendus par palier de temps selon l'
 XP que cela suppose, et comparaison avec des runs mesurées.
 
 Usage :
-    python3 tools/progression_model.py                         # courbe actuelle et archétypes cibles
+    python3 tools/progression_model.py                         # courbes et archétypes cibles
     python3 tools/progression_model.py <dossier de mesure>...  # + niveaux mesurés (density-*.csv de measure_run.sh)
                                                                #   et simulation des leviers (LEVERS, PLAY)
 
 La simulation part de l'XP ramassée minute par minute par le bot de mesure (run passive : il prend la première
 carte, ne cherche ni combat ni orbe, ne meurt pas), puis applique à chaque archétype sa façon de jouer (PLAY)
-et les leviers proposés (LEVERS). Ce sont des hypothèses de travail, pas des mesures : elles servent à vérifier
-qu'un jeu de leviers donne l'écart voulu entre archétypes avant d'en coder un seul.
+et les leviers proposés (LEVERS), avec la courbe proposée (PROPOSED_CURVE). Ce sont des hypothèses de travail,
+pas des mesures : elles servent à vérifier qu'un jeu de leviers donne l'écart voulu entre archétypes avant d'en
+coder un seul.
 
-La courbe d'XP est lue dans scripts/Progression/PlayerProgression.cs (constantes BaseXpToLevel et
+La courbe actuelle est lue dans scripts/Progression/PlayerProgression.cs (constantes BaseXpToLevel et
 XpScalingExponent, majoration des niveaux 1 à 5), pour rester alignée sur le jeu.
 """
 from __future__ import annotations
@@ -20,20 +21,20 @@ from __future__ import annotations
 import csv
 import re
 import sys
+from dataclasses import dataclass, field
 from pathlib import Path
 
 PROGRESSION_CS = Path("scripts/Progression/PlayerProgression.cs")
-PALIERS_MIN = (2, 5, 10, 15, 20, 30, 40)
+PALIERS_MIN = (2, 5, 10, 15, 20, 30, 40, 45)
 
 # Cibles proposées (à valider par Raphaël) : niveau atteint à chaque palier, en minutes.
-# Une run excellente ne suit pas une pente régulière : elle encaisse des cascades (boss, Résurgences maîtrisées).
+# Raphaël, 28 septembre : une excellente run atteint 300 à 400 niveaux en 45 min, par vagues (boss, Résurgences).
 ARCHETYPES: dict[str, dict[int, int]] = {
     "médiocre": {2: 4, 5: 10, 10: 18, 15: 25},
-    "moyenne": {2: 4, 5: 11, 10: 21, 15: 31, 20: 38},
-    "bonne": {2: 5, 5: 12, 10: 24, 15: 40, 20: 52, 30: 72, 40: 90},
-    "excellente": {2: 5, 5: 13, 10: 27, 15: 50, 20: 72, 30: 110, 40: 150},
+    "moyenne": {2: 4, 5: 11, 10: 21, 15: 32, 20: 40},
+    "bonne": {2: 5, 5: 12, 10: 25, 15: 42, 20: 55, 30: 105, 40: 150},
+    "excellente": {2: 5, 5: 13, 10: 30, 15: 60, 20: 90, 30: 190, 40: 300, 45: 380},
 }
-
 
 # Leviers proposés (plan 20 §6.5), destinés à data/ s'ils sont retenus. Valeurs à calibrer.
 LEVERS = {
@@ -56,29 +57,46 @@ PLAY = {
     "médiocre": {"harvest": 0.8, "oblivion": 0.6, "crisis": 0.3, "peril": 0, "build_xp": 0.0, "boss_rank": 1, "death": 17},
     "moyenne": {"harvest": 1.0, "oblivion": 1.0, "crisis": 0.5, "peril": 1, "build_xp": 0.0, "boss_rank": 2, "death": 25},
     "bonne": {"harvest": 1.25, "oblivion": 1.3, "crisis": 0.8, "peril": 3, "build_xp": 0.2, "boss_rank": 3, "death": 40},
-    "excellente": {"harvest": 1.5, "oblivion": 1.6, "crisis": 1.0, "peril": 6, "build_xp": 0.6, "boss_rank": 5, "death": 40},
+    "excellente": {"harvest": 1.5, "oblivion": 1.6, "crisis": 1.0, "peril": 6, "build_xp": 0.6, "boss_rank": 5, "death": 45},
 }
 
 
-def read_curve() -> tuple[float, float]:
+@dataclass
+class Curve:
+    """XP pour passer du niveau n au suivant : base × n^exponent, majorée aux niveaux 1 à 5 comme
+    PlayerProgression.CalculateXpForLevel, et plafonnée à `cap` si donné."""
+    base: float
+    exponent: float
+    cap: float | None = None
+    _cumulative: list[float] = field(default_factory=lambda: [0.0, 0.0], repr=False)
+
+    def cost(self, level: int) -> float:
+        xp = self.base * level ** self.exponent
+        if level <= 5:
+            xp *= 1.65 + (1.20 - 1.65) * (level - 1) / 4
+        return min(xp, self.cap) if self.cap else xp
+
+    def cumulative(self, level: int) -> float:
+        """XP totale pour atteindre `level` depuis le niveau 1."""
+        while len(self._cumulative) <= level:
+            self._cumulative.append(self._cumulative[-1] + self.cost(len(self._cumulative) - 1))
+        return self._cumulative[level]
+
+    def describe(self) -> str:
+        text = f"{self.base:g} × niveau^{self.exponent:g}"
+        return text + (f", plafonnée à {self.cap:g} XP par niveau" if self.cap else "")
+
+
+def read_curve() -> Curve:
     text = PROGRESSION_CS.read_text()
     base = float(re.search(r"BaseXpToLevel\s*=\s*([\d.]+)f", text).group(1))
     exponent = float(re.search(r"XpScalingExponent\s*=\s*([\d.]+)f", text).group(1))
-    return base, exponent
+    return Curve(base, exponent)
 
 
-def xp_for_level(level: int, base: float, exponent: float) -> float:
-    """XP pour passer du niveau `level` au suivant, comme PlayerProgression.CalculateXpForLevel."""
-    xp = base * level ** exponent
-    if level <= 5:
-        t = (level - 1) / 4
-        xp *= 1.65 + (1.20 - 1.65) * t
-    return xp
-
-
-def cumulative_xp(level: int, base: float, exponent: float) -> float:
-    """XP totale pour atteindre `level` depuis le niveau 1."""
-    return sum(xp_for_level(l, base, exponent) for l in range(1, level))
+def proposed_curve(current: Curve) -> Curve:
+    """Courbe proposée (plan 20 §6.6) : identique jusqu'au niveau 41, puis 3 000 XP par niveau."""
+    return Curve(current.base, current.exponent, cap=3000)
 
 
 def measured_runs(folders: list[Path]) -> dict[str, dict[int, dict[str, str]]]:
@@ -141,18 +159,17 @@ def bot_minutes(folders: list[Path]) -> tuple[list[float], list[float]]:
     return average(xp_runs), average(oblivion_runs)
 
 
-def level_after(level: int, carry: float, xp: float, base: float, exponent: float) -> tuple[int, float]:
+def level_after(level: int, carry: float, xp: float, curve: Curve) -> tuple[int, float]:
     carry += xp
-    while carry >= xp_for_level(level, base, exponent):
-        carry -= xp_for_level(level, base, exponent)
+    while carry >= curve.cost(level):
+        carry -= curve.cost(level)
         level += 1
     return level, carry
 
 
-def simulate(bot_xp: list[float], bot_oblivion: list[float], base: float, exponent: float,
-             levers: dict) -> dict[str, dict[int, int]]:
+def simulate(bot_xp: list[float], bot_oblivion: list[float], curve: Curve, levers: dict) -> dict[str, dict[int, int]]:
     """Niveau de chaque archétype aux paliers, avec les leviers donnés. Au-delà de la mesure, la dernière
-    minute mesurée se prolonge avec la pente des cinq dernières."""
+    minute mesurée se prolonge avec la pente moyenne des cinq dernières."""
     slope = (bot_xp[-1] - bot_xp[-6]) / 5 if len(bot_xp) > 6 else 0
     result = {}
     for name, play in PLAY.items():
@@ -171,70 +188,80 @@ def simulate(bot_xp: list[float], bot_oblivion: list[float], base: float, expone
                   * (1 + crisis_share * play["crisis"] * (levers["crisis_xp"] - 1))
                   * (1 + levers["peril_xp"] * play["peril"] * ramp)
                   * (1 + play["build_xp"] * ramp))
-            level, carry = level_after(level, carry, xp, base, exponent)
+            level, carry = level_after(level, carry, xp, curve)
             for at, gained in ((levers["mid_boss_minute"], levers["mid_boss_levels"].get(play["boss_rank"], 0)),
                                (levers["final_boss_minute"], levers["final_boss_levels"])):
                 if minute == at and gained:
-                    bonus = cumulative_xp(level + gained, base, exponent) - cumulative_xp(level, base, exponent)
-                    level, carry = level_after(level, carry, bonus, base, exponent)
+                    bonus = curve.cumulative(level + gained) - curve.cumulative(level)
+                    level, carry = level_after(level, carry, bonus, curve)
             if minute in PALIERS_MIN:
                 levels[minute] = level
         result[name] = levels
     return result
 
 
-def table(rows: dict[str, dict[int, int]], base: float, exponent: float) -> None:
-    header = "| Run | " + " | ".join(f"{p} min" for p in PALIERS_MIN) + " |"
-    print(header)
+def table(rows: dict[str, dict[int, int]], curve: Curve) -> None:
+    print("| Run | " + " | ".join(f"{p} min" for p in PALIERS_MIN) + " |")
     print("|" + "---|" * (len(PALIERS_MIN) + 1))
     for name, levels in rows.items():
         cells = []
         for palier in PALIERS_MIN:
             level = levels.get(palier)
-            cells.append("—" if level is None else f"{level} ({cumulative_xp(level, base, exponent) / 1000:.1f} k)")
+            cells.append("—" if level is None else f"{level} ({curve.cumulative(level) / 1000:.1f} k)")
         print(f"| {name} | " + " | ".join(cells) + " |")
 
 
-def flow(rows: dict[str, dict[int, int]], base: float, exponent: float) -> None:
-    """XP par minute qu'il faut ramasser entre deux paliers pour tenir la cible."""
-    print("\n| Run | " + " | ".join(f"{a}→{b} min" for a, b in zip(PALIERS_MIN, PALIERS_MIN[1:])) + " |")
+def flow(rows: dict[str, dict[int, int]], curve: Curve) -> None:
+    """XP par minute qu'il faut ramasser entre deux paliers pour tenir la cible, et niveaux gagnés par minute."""
+    print("| Run | " + " | ".join(f"{a}→{b} min" for a, b in zip(PALIERS_MIN, PALIERS_MIN[1:])) + " |")
     print("|" + "---|" * len(PALIERS_MIN))
     for name, levels in rows.items():
         cells = []
         for a, b in zip(PALIERS_MIN, PALIERS_MIN[1:]):
             if a in levels and b in levels:
-                gained = cumulative_xp(levels[b], base, exponent) - cumulative_xp(levels[a], base, exponent)
-                cells.append(f"{gained / (b - a):.0f}")
+                gained = curve.cumulative(levels[b]) - curve.cumulative(levels[a])
+                cells.append(f"{gained / (b - a):.0f} XP · {(levels[b] - levels[a]) / (b - a):.1f} niv.")
             else:
                 cells.append("—")
         print(f"| {name} | " + " | ".join(cells) + " |")
 
 
-def main() -> None:
-    base, exponent = read_curve()
-    print(f"Courbe : XP(niveau) = {base:g} × niveau^{exponent:g} (niveaux 1 à 5 majorés de 65 % à 20 %)\n")
-    print("| Niveau | XP pour le suivant | XP cumulée |")
-    print("|---|---|---|")
-    for level in (5, 10, 20, 30, 40, 50, 75, 100, 150):
-        print(f"| {level} | {xp_for_level(level, base, exponent):.0f} | {cumulative_xp(level, base, exponent):.0f} |")
+def curve_table(curves: dict[str, Curve]) -> None:
+    print("| Niveau | " + " | ".join(f"{name} : pour le suivant | {name} : cumulée" for name in curves) + " |")
+    print("|---|" + "---|---|" * len(curves))
+    for level in (5, 10, 20, 30, 40, 50, 100, 150, 200, 300, 400, 1000):
+        cells = [f"{curve.cost(level):.0f} | {curve.cumulative(level):.0f}" for curve in curves.values()]
+        print(f"| {level} | " + " | ".join(cells) + " |")
 
-    runs = measured_runs([Path(arg) for arg in sys.argv[1:]])
+
+def main() -> None:
+    folders = [Path(arg) for arg in sys.argv[1:]]
+    current = read_curve()
+    proposed = proposed_curve(current)
+    print(f"Courbe actuelle : {current.describe()} ; proposée : {proposed.describe()}\n")
+    curve_table({"actuelle": current, "proposée": proposed})
+
+    runs = measured_runs(folders)
     rows = dict(ARCHETYPES)
     rows.update(measured_levels(runs))
-    print("\nNiveau atteint (XP cumulée, en milliers) :\n")
-    table(rows, base, exponent)
-    print("\nXP à ramasser par minute entre deux paliers :")
-    flow(rows, base, exponent)
+    for label, curve in (("actuelle", current), ("proposée", proposed)):
+        print(f"\nCibles et mesures, courbe {label} : niveau atteint (XP cumulée, en milliers)\n")
+        table(rows, curve)
+        print(f"\nXP à ramasser et niveaux gagnés par minute, courbe {label} :\n")
+        flow(rows, curve)
     measured_flow(runs)
 
-    bot_xp, bot_oblivion = bot_minutes([Path(arg) for arg in sys.argv[1:]])
+    bot_xp, bot_oblivion = bot_minutes(folders)
     if bot_xp:
         status_quo = dict(LEVERS, time_growth=0.0, oblivion_xp=0.0, crisis_xp=1.0, peril_xp=0.08, mid_boss_levels={},
                           final_boss_levels=0)
-        print("\nSimulation, jeu actuel (seuls la façon de jouer et le Péril à 8 % par point changent) :\n")
-        table(simulate(bot_xp, bot_oblivion, base, exponent, status_quo), base, exponent)
-        print(f"\nSimulation avec les leviers proposés {LEVERS} :\n")
-        table(simulate(bot_xp, bot_oblivion, base, exponent, LEVERS), base, exponent)
+        print("\nSimulation, jeu actuel (courbe actuelle ; seuls la façon de jouer et le Péril à 8 % changent) :\n")
+        table(simulate(bot_xp, bot_oblivion, current, status_quo), current)
+        print(f"\nSimulation, courbe proposée et leviers {LEVERS} :\n")
+        simulated = simulate(bot_xp, bot_oblivion, proposed, LEVERS)
+        table(simulated, proposed)
+        print()
+        flow(simulated, proposed)
 
 
 if __name__ == "__main__":

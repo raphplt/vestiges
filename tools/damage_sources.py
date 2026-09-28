@@ -14,20 +14,26 @@ Le bot rend une pression « à joueur immobile » : il ne juge pas l'esquive, se
 """
 from __future__ import annotations
 
+import json
 import sys
 from collections import defaultdict
 from pathlib import Path
 
-# Rôle d'attaque par créature (données de data/enemies/*.json : aimed_shot, omen_strike, contact).
-CATEGORIES = {
-    "fading_spitter": "tir",
-    "tisseuse": "tir",
-    "wailing_sentinel": "tir",
-    "presage": "zone (Présage)",
-    "void": "Néant",
-    "indicible": "boss",
-}
 FIELDS = ("hit_by", "hit_gated", "near_by", "kills_by")
+
+
+def roles() -> dict[str, str]:
+    """Rôle d'attaque lu dans les fiches : zone (omen_strike), tir (type ranged), boss, sinon mêlée."""
+    found = {"void": "Néant"}
+    for path in Path("data/enemies").glob("[a-z]*.json"):
+        data = json.loads(path.read_text())
+        if data.get("tier") == "boss":
+            found[data["id"]] = "boss"
+        elif "omen_strike" in data.get("abilities", {}):
+            found[data["id"]] = "zone (Présage)"
+        elif data.get("type") == "ranged":
+            found[data["id"]] = "tir"
+    return found
 
 
 def parse(line: str) -> dict[str, dict[str, float]]:
@@ -55,6 +61,7 @@ def main() -> None:
     if not runs:
         sys.exit("aucune ligne RESULT")
 
+    role_of = roles()
     sums = {field: sum(totals[field].values()) or 1 for field in FIELDS}
     names = sorted(set().union(*totals.values()), key=lambda n: -totals["hit_gated"].get(n, 0))
     print(f"{runs} run(s). Parts en % du total ; « rapport » = part des dégâts filtrés / part de l'exposition.\n")
@@ -62,7 +69,7 @@ def main() -> None:
     print("|---|---|---|---|---|---|---|")
     categories: dict[str, dict[str, float]] = defaultdict(lambda: defaultdict(float))
     for name in names:
-        role = CATEGORIES.get(name, "mêlée")
+        role = role_of.get(name, "mêlée")
         shares = {field: 100 * totals[field].get(name, 0) / sums[field] for field in FIELDS}
         for field, share in shares.items():
             categories[role][field] += share

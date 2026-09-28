@@ -39,7 +39,7 @@ La [Stratégie V2](../VESTIGES-STRATEGIE-V2.md) reste l'autorité gameplay/roadm
 | [17 — Armes, coffres et modificateurs](17-armes-coffres-modificateurs.md) | P0 | Vagues 0–5 ; rareté sur les améliorations ; noms d'armes ; Mémoriaux et Failles | 05, 08, 13, 16, 18 |
 | [18 — Inventaire des restes V1](18-inventaire-restes-v1.md) | P0 | Éléments de lore et POI vectoriels, Colosses, identifiants Steam « nuits » | 17 (lots 0B/0C) |
 | [19 — Lore](19-lore.md) | Transversal | Étape A : incohérences, textes trop directs, 14 questions à trancher, pistes de révélation | 06 (casting), 16 (échos), 17 (noms d'armes) |
-| [20 — Récompense et puissance](20-recompense-et-puissance.md) | P0 (R1 capital) | Retours du 28 septembre ; modèle de progression par archétype, leviers chiffrés, étude des dégâts à distance et lots proposés (§6–§9), cibles à valider ; rien d'implémenté | 03, 05, 06, 13, 16, 17 |
+| [20 — Récompense et puissance](20-recompense-et-puissance.md) | P0 (R1 capital) | Retours du 28 septembre ; modèle de progression révisé pour 300 à 400 niveaux en 45 min (§6.6), cibles à valider ; lot D1 livré (pression à distance, §7.2) ; lots R1 à valider | 03, 05, 06, 13, 16, 17 |
 
 Les numéros servent à identifier les plans, pas à imposer leur exécution intégrale dans cet ordre. Le [registre](DECISIONS.md) fait foi pour leur statut de validation.
 
@@ -62,6 +62,10 @@ Un seul lot d'implémentation ouvert à la fois. Un échec de lisibilité, de pe
 - Préchauffage : zéro dessin hors champ contre huit dans le champ. Physique : 10 694 corps de décor, mais seulement 2 318 formes ; potentiel mémoire estimé des corps inutiles ≈5,88 Mio.
 - Vingt cycles techniques Hub/run/Hub : 148 nœuds et zéro orphelin à chaque retour. Profils managés de foule archivés. A/B final au calme : 2,28–2,49 ms/image à 60 ennemis, 7,42–7,58 ms à 240 ; inspection du banc trop faible pour expliquer cette pente. Pic initial de 108–137 ms à isoler de la mesure du combat. Aucune conclusion de FPS sous charge.
 - Suites proposées : 6A horloges, 6B impacts continus, 5B préchauffage, 3B attribution foule, 6C cellules actives, 6D corps optionnels. **Aucun correctif de production, aucune case de roadmap cochée ; travail de feu préexistant préservé.**
+
+**Mise à jour du 28 septembre, soir :** [plan 20](20-recompense-et-puissance.md) après les réponses de Raphaël.
+- §6.6 : une excellente run vise 300 à 400 niveaux en 45 min. Coût de niveau plafonné à 3 000 XP au-delà du niveau 41 (simulé : 358 niveaux à 45 min) ; réserve de niveaux pour enchaîner les choix ; niveaux de surplus au-delà d'un build complet (≈ 219 montées).
+- Lot D1 livré (§7.2) : Présage moins fréquent et absent avant 3 min, dégâts à distance à ×1,02 par minute, tir du Hurleur annoncé. Zones et tirs : 46,6 → 34,2 % des dégâts filtrés.
 
 **Mise à jour du 28 septembre, après-midi :** [plan 20 §6–§9](20-recompense-et-puissance.md#6-modèle-de-progression--28-septembre-2026-proposition-cibles-à-valider). Mesure de 30 min (bot nomade, deux seeds) et `tools/progression_model.py`.
 - Niveaux cibles par archétype à valider, leviers d'XP chiffrés et simulés (temps, oubli, Résurgences, Péril, boss intermédiaire à rang choisi, Indicible, build).
