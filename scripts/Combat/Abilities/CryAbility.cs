@@ -30,6 +30,7 @@ public class CryAbility : IEnemyAbility
     private float _flashTimer;
 
     public bool ReplacesBaseAttack => false;
+    public bool IsActive => _isCrying;
 
     public CryAbility(Enemy owner)
     {
@@ -69,7 +70,7 @@ public class CryAbility : IEnemyAbility
         }
 
         _cooldownTimer -= delta;
-        if (_cooldownTimer > 0f || distToPlayer > _range || owner.IsDisoriented)
+        if (_cooldownTimer > 0f || distToPlayer > _range || owner.IsDisoriented || owner.IsAnotherAbilityActive(this))
             return false;
 
         _isCrying = true;

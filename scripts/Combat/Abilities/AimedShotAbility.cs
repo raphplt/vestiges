@@ -30,6 +30,7 @@ public class AimedShotAbility : IEnemyAbility
     private Vector2 _direction;
 
     public bool ReplacesBaseAttack => true;
+    public bool IsActive => _aiming;
 
     public AimedShotAbility(Enemy owner)
     {
@@ -80,7 +81,7 @@ public class AimedShotAbility : IEnemyAbility
         }
 
         _cooldownTimer -= delta;
-        if (_cooldownTimer > 0f || reach > owner.AttackRange || owner.IsDisoriented)
+        if (_cooldownTimer > 0f || reach > owner.AttackRange || owner.IsDisoriented || owner.IsAnotherAbilityActive(this))
             return false;
 
         _aiming = true;

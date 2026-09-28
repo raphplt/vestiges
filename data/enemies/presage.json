@@ -7,7 +7,9 @@
         "speed": 45,
         "damage": 9,
         "attack_range": 300,
-        "xp_reward": 12
+        "xp_reward": 12,
+        "spawn_weight": 0.5,
+        "spawn_from_minute": 3
     },
     "abilities": {
         "omen_strike": {

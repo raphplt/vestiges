@@ -12,6 +12,9 @@ public interface IEnemyAbility
     /// <summary>true si l'attaque de base du type (contact ou projectile) est remplacée par la capacité.</summary>
     bool ReplacesBaseAttack { get; }
 
+    /// <summary>true pendant une action annoncée ou en cours : une autre capacité du même porteur attend qu'elle finisse.</summary>
+    bool IsActive => false;
+
     void Configure(EnemyAbilityData data);
 
     /// <summary>Retourne true si la capacité pilote la vélocité de l'ennemi pendant ce tick.</summary>

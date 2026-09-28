@@ -10,6 +10,12 @@
         "xp_reward": 30
     },
     "abilities": {
+        "aimed_shot": {
+            "windup_seconds": 0.4,
+            "lane_length": 90,
+            "lane_width": 6,
+            "fx_family": "hostile"
+        },
         "cry": {
             "cooldown_seconds": 8,
             "range": 250,

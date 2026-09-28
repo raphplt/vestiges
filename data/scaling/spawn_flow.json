@@ -4,6 +4,8 @@
     "spawn_interval_decay_per_minute": 0.045,
     "hp_scaling_per_minute": 1.05,
     "damage_scaling_per_minute": 1.035,
+    "_doc_ranged_damage_growth_share": "Part de la croissance des dégâts que reçoivent les créatures à distance (type ranged) : 0,57 donne ×1,02 par minute au lieu de ×1,035 (plan 20 §7.1).",
+    "ranged_damage_growth_share": 0.57,
     "max_enemies_on_screen": 110,
     "max_enemies_growth_per_minute": 4.0,
     "enemy_speed_base_multiplier": 1.0,

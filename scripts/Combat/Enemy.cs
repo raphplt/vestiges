@@ -1398,6 +1398,17 @@ public partial class Enemy : CharacterBody2D
 		}
 	}
 
+	/// <summary>Une annonce à la fois : le Hurleur ne vise pas pendant son cri, pour que chaque signal reste lisible.</summary>
+	internal bool IsAnotherAbilityActive(IEnemyAbility self)
+	{
+		foreach (IEnemyAbility ability in _abilities)
+		{
+			if (ability != self && ability.IsActive)
+				return true;
+		}
+		return false;
+	}
+
 	/// <summary>Retourne true si une capacité pilote le mouvement de ce tick.</summary>
 	private bool ProcessAbilities(float distToPlayer, float delta)
 	{

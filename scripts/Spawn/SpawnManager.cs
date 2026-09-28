@@ -20,6 +20,7 @@ public partial class SpawnManager : Node2D
 	private float _spawnIntervalDecay;
 	private float _hpScalingPerMinute;
 	private float _dmgScalingPerMinute;
+	private float _rangedDamageGrowthShare = 1f;
 	private int _maxEnemies;
 	private float _maxEnemiesGrowthPerMinute;
 	private float _enemySpeedBaseMultiplier;
@@ -213,10 +214,13 @@ public partial class SpawnManager : Node2D
 	// Scaling
 	// =========================================================
 
-	private void ComputeScaling(float elapsedMinutes, out float hpScale, out float dmgScale)
+	private void ComputeScaling(EnemyData data, float elapsedMinutes, out float hpScale, out float dmgScale)
 	{
 		hpScale = Mathf.Pow(_hpScalingPerMinute, elapsedMinutes) * _flatHpMultiplier;
-		dmgScale = Mathf.Pow(_dmgScalingPerMinute, elapsedMinutes) * _flatDmgMultiplier;
+		// Les tirs et les zones touchent de loin, en nombre, et leurs créatures meurent peu : leurs dégâts ne suivent
+		// qu'une part de la croissance commune (plan 20 §7.1).
+		float damageGrowthMinutes = data.Type == "ranged" ? elapsedMinutes * _rangedDamageGrowthShare : elapsedMinutes;
+		dmgScale = Mathf.Pow(_dmgScalingPerMinute, damageGrowthMinutes) * _flatDmgMultiplier;
 
 		if (_currentRunPhase == GameManager.RunPhase.Crisis)
 		{
@@ -312,7 +316,7 @@ public partial class SpawnManager : Node2D
 
 		for (int attempt = 0; attempt < 8; attempt++)
 		{
-			string id = pool[(int)(GD.Randi() % pool.Count)];
+			string id = PickWeighted(pool, _elapsedTime / 60f);
 			if (EnemyDataLoader.Get(id)?.Tier == "normal")
 				return id;
 		}
@@ -489,7 +493,7 @@ public partial class SpawnManager : Node2D
 
 	private Enemy SpawnAt(EnemyData data, Vector2 spawnPos, float elapsedMinutes)
 	{
-		ComputeScaling(elapsedMinutes, out float hpScale, out float dmgScale);
+		ComputeScaling(data, elapsedMinutes, out float hpScale, out float dmgScale);
 
 		Enemy enemy = _pool.Get();
 		enemy.GlobalPosition = spawnPos;
@@ -578,8 +582,7 @@ public partial class SpawnManager : Node2D
 			return _clusterEnemyId;
 		}
 
-		int index = (int)(GD.Randi() % pool.Count);
-		string picked = pool[index];
+		string picked = PickWeighted(pool, _elapsedTime / 60f);
 
 		if (GD.Randf() < _sameTypeClusterChance)
 		{
@@ -595,6 +598,44 @@ public partial class SpawnManager : Node2D
 		}
 
 		return picked;
+	}
+
+	/// <summary>
+	/// Tirage dans un groupe de biome, pondéré par les fiches (stats <c>spawn_weight</c>, 1 par défaut, et
+	/// <c>spawn_from_minute</c>, 0 par défaut). Un identifiant répété dans le groupe compte autant de fois.
+	/// </summary>
+	private static string PickWeighted(List<string> pool, float elapsedMinutes)
+	{
+		float total = 0f;
+		foreach (string id in pool)
+			total += SpawnWeight(id, elapsedMinutes);
+		if (total <= 0f)
+		{
+			GD.PushWarning($"[SpawnManager] Aucune créature éligible à {elapsedMinutes:F1} min dans un groupe de {pool.Count} : tirage uniforme");
+			return pool[(int)(GD.Randi() % pool.Count)];
+		}
+
+		float roll = GD.Randf() * total;
+		string picked = null;
+		foreach (string id in pool)
+		{
+			float weight = SpawnWeight(id, elapsedMinutes);
+			if (weight <= 0f)
+				continue;
+			picked = id;
+			roll -= weight;
+			if (roll < 0f)
+				break;
+		}
+		return picked;
+	}
+
+	private static float SpawnWeight(string enemyId, float elapsedMinutes)
+	{
+		EnemyData data = EnemyDataLoader.Get(enemyId);
+		if (data == null || elapsedMinutes < data.GetStat("spawn_from_minute", 0f))
+			return 0f;
+		return data.GetStat("spawn_weight", 1f);
 	}
 
 	private Vector2 ApplyClusterSpawnOffset(Vector2 spawnPos, string enemyId)
@@ -717,6 +758,7 @@ public partial class SpawnManager : Node2D
 		_spawnIntervalDecay = (float)dict["spawn_interval_decay_per_minute"].AsDouble();
 		_hpScalingPerMinute = (float)dict["hp_scaling_per_minute"].AsDouble();
 		_dmgScalingPerMinute = (float)dict["damage_scaling_per_minute"].AsDouble();
+		_rangedDamageGrowthShare = dict.ContainsKey("ranged_damage_growth_share") ? (float)dict["ranged_damage_growth_share"].AsDouble() : 1f;
 		_maxEnemies = (int)dict["max_enemies_on_screen"].AsDouble();
 		_maxEnemiesGrowthPerMinute = dict.ContainsKey("max_enemies_growth_per_minute") ? (float)dict["max_enemies_growth_per_minute"].AsDouble() : 0f;
 		_enemySpeedBaseMultiplier = dict.ContainsKey("enemy_speed_base_multiplier") ? (float)dict["enemy_speed_base_multiplier"].AsDouble() : 1f;
@@ -807,6 +849,7 @@ public partial class SpawnManager : Node2D
 				case "spawn_interval_decay_per_minute": _spawnIntervalDecay = kv.Value; break;
 				case "hp_scaling_per_minute": _hpScalingPerMinute = kv.Value; break;
 				case "damage_scaling_per_minute": _dmgScalingPerMinute = kv.Value; break;
+				case "ranged_damage_growth_share": _rangedDamageGrowthShare = kv.Value; break;
 				case "max_enemies_on_screen": _maxEnemies = (int)kv.Value; break;
 				case "max_enemies_growth_per_minute": _maxEnemiesGrowthPerMinute = kv.Value; break;
 				case "enemy_speed_base_multiplier": _enemySpeedBaseMultiplier = kv.Value; break;
