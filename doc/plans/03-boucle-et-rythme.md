@@ -315,3 +315,31 @@ Validé par Raphaël le 28 septembre (« ok ça me va »), avec les cibles propo
 L'Indicible est atteint (5ᵉ Résurgence).
 
 **Effet de bord à surveiller en recette :** les grandes zones blanches, dont le rendu plaît, n'apparaissent plus avant le dernier tiers de la run.
+
+### Lot 8B livré — survie (28 septembre)
+
+Demande de Raphaël pour le bouclier : chaque personnage a un bouclier de base, plus ou moins grand, qui encaisse un coup (ou plusieurs petits) sans limite de dégâts, pour éviter d'être tué d'un coup. Adaptation retenue, **à juger en recette** :
+- **Bouclier par personnage** (`base_stats.shield`) : Vagabond 20, Traqueur 12, Forgeuse 30. Il encaisse le coup entier, même s'il casse dessus. Il se recharge en 2 s après 5 s sans être touché.
+- **0,5 s d'invulnérabilité après chaque coup** (qu'il touche le bouclier ou la vie), avec clignotement du personnage : une foule au contact ne vide plus la vie en un instant.
+- **Armure en pourcentage** : réduction = armure / (armure + 15), plafond 75 %. La fiche de pause affiche la réduction.
+- **Le Néant traverse tout** : ni bouclier, ni armure, ni invulnérabilité (`TakeErasureDamage`).
+- **Passif Carapace** (+8 à +20 de bouclier par niveau).
+- **Un passif de survie garanti au tirage** (Ancrage, Régénération, Peau Dure, Carapace) tant que le joueur n'en a aucun : la dernière des trois cartes est remplacée.
+- **Lecture** : liseré bleu pâle en haut de la barre de PV du HUD, trait bleu pâle au-dessus de la jauge sous les pieds, éclair bleu sans secousse quand le bouclier encaisse. La ligne « Bouclier » est ajoutée à la fiche de pause.
+
+Réglages dans `data/characters/defense.json`. Composant `Core/PlayerDefense` (Player.cs n'en porte que l'appel).
+
+**Vérifications :**
+- build à 0 avertissement ;
+- régressions déplacements, capacités ennemies et armes à 0 échec, avec de nouveaux tests de défense (coup de 1000 encaissé, invulnérabilité, recharge, armure). Les anciens tests de coups coupent la défense (`DisableDefenseForTests`) pour lire les PV ;
+- smoke test vert ;
+- capture du HUD et de la jauge regardée ;
+- relecture `godot-reviewer` sans problème bloquant.
+
+**Restes :** un son de bouclier encaissé ou brisé (plan 15, choix de Raphaël) ; une icône dédiée (celle de l'armure sert provisoirement). Le bot de mesure est invincible, donc l'effet sur la survie se juge en jouant.
+
+### Lot 8C livré — tirs plus lisibles (28 septembre)
+
+Les tirs ronds mesuraient environ 6 × 6 pixels, et la bile rouille se confondait avec les sols bruns. Crachat, bile, toile, billes et orbes sont régénérés dans des cadres de 24 pixels, environ 1,6 fois plus grands. La bile est plus saturée, avec un cœur qui luit. Les hitbox sont inchangées : le visuel est un peu plus large que la zone qui blesse. Flèches, carreaux, aiguilles et éclats étaient déjà en 24 pixels.
+
+**Vérifications :** planche regardée ; régressions armes et capacités ennemies à 0 échec ; capture de la galerie d'armes (orbe d'Essence nettement visible). Les tirs ennemis n'ont pas pu être cadrés en capture : à confirmer en jeu.

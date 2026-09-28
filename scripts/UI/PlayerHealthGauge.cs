@@ -23,24 +23,32 @@ public partial class PlayerHealthGauge : Node2D
     private static readonly Color WoundedColor = new(0.88f, 0.48f, 0.22f);
     private static readonly Color CriticalColor = new(0.77f, 0.26f, 0.17f);
     private static readonly Color ChipColor = new(0.91f, 0.88f, 0.83f);
+    private static readonly Color ShieldColor = new(0.72f, 0.86f, 1f);
 
     private EventBus _eventBus;
     private float _ratio = 1f;
     private float _chipRatio = 1f;
     private float _emphasis;
     private float _pulse;
+    private float _shieldRatio;
 
     public override void _Ready()
     {
         ZIndex = 5;
         _eventBus = GetNode<EventBus>("/root/EventBus");
         _eventBus.PlayerDamaged += OnPlayerDamaged;
+        _eventBus.PlayerShieldChanged += OnShieldChanged;
+        if (GetParent() is Player player)
+            OnShieldChanged(player.Shield, player.MaxShield);
     }
 
     public override void _ExitTree()
     {
         if (_eventBus != null)
+        {
             _eventBus.PlayerDamaged -= OnPlayerDamaged;
+            _eventBus.PlayerShieldChanged -= OnShieldChanged;
+        }
     }
 
     private void OnPlayerDamaged(float currentHp, float maxHp)
@@ -50,6 +58,17 @@ public partial class PlayerHealthGauge : Node2D
             _chipRatio = ratio;
         _ratio = ratio;
         _emphasis = EmphasisDuration;
+        QueueRedraw();
+    }
+
+    private void OnShieldChanged(float shield, float maxShield)
+    {
+        float ratio = maxShield > 0f ? Mathf.Clamp(shield / maxShield, 0f, 1f) : 0f;
+        if (Mathf.IsEqualApprox(ratio, _shieldRatio))
+            return;
+        if (ratio < _shieldRatio)
+            _emphasis = EmphasisDuration;
+        _shieldRatio = ratio;
         QueueRedraw();
     }
 
@@ -93,5 +112,8 @@ public partial class PlayerHealthGauge : Node2D
         DrawRect(new Rect2(-Width / 2f, OffsetY, inner * _ratio, Height), fill with { A = alpha });
         // Reflet d'un pixel : la barre se lit comme un objet, pas comme un aplat.
         DrawRect(new Rect2(-Width / 2f, OffsetY, inner * _ratio, 1f), Colors.White with { A = 0.25f * alpha });
+        // Bouclier : un trait bleu pâle au-dessus de la vie, qui se vide au coup encaissé.
+        if (_shieldRatio > 0f)
+            DrawRect(new Rect2(-Width / 2f, OffsetY - 2f, inner * _shieldRatio, 1f), ShieldColor with { A = alpha });
     }
 }

@@ -13,6 +13,8 @@ public class PassiveSouvenirData
 	public string Stat;
 	public string ModifierType;
 	public float[] PerLevel;
+	/// <summary>Passif de survie (PV, régénération, armure, bouclier) : garanti au tirage tant que le joueur n'en a aucun.</summary>
+	public bool Survival;
 }
 
 public static class PassiveSouvenirDataLoader
@@ -74,7 +76,8 @@ public static class PassiveSouvenirDataLoader
 			Description = dict.ContainsKey("description") ? dict["description"].AsString() : "",
 			MaxLevel = dict.ContainsKey("max_level") ? (int)dict["max_level"].AsDouble() : 5,
 			Stat = dict.ContainsKey("stat") ? dict["stat"].AsString() : "",
-			ModifierType = dict.ContainsKey("modifier_type") ? dict["modifier_type"].AsString() : "multiplicative"
+			ModifierType = dict.ContainsKey("modifier_type") ? dict["modifier_type"].AsString() : "multiplicative",
+			Survival = dict.ContainsKey("survival") && dict["survival"].AsBool()
 		};
 
 		if (dict.ContainsKey("icon_color"))

@@ -131,6 +131,8 @@ public partial class Player : CharacterBody2D
     private float _attackRangeMultiplier = 1f;
     private float _bonusRegenRate;
     private float _armor;
+    private PlayerDefense _defense;
+    private bool _blinkHidden;
     private float _critChance;
     private float _critMultiplier = 2f;
     private int _projectilePierce;
@@ -213,6 +215,9 @@ public partial class Player : CharacterBody2D
     public float SpeedMultiplier => _speedMultiplier;
     public float AttackSpeedMultiplier => _attackSpeedMultiplier;
     public float Armor => _armor;
+    public float ArmorReduction => _defense?.ArmorReduction(_armor) ?? 0f;
+    public float Shield => _defense?.Shield ?? 0f;
+    public float MaxShield => _defense?.MaxShield ?? 0f;
     public float BonusRegenRate => _bonusRegenRate;
     public float AoeMultiplier => _aoeMultiplier;
     public float VampirismPercent => _vampirismPercent;
@@ -224,6 +229,9 @@ public partial class Player : CharacterBody2D
     public float LuckBonus => _luckBonus;
 
     private const float ShadowWidth = 22f;
+    // Blessure : éclair blanc chaud ; coup encaissé par le bouclier : éclair bleu pâle, sans secousse tant qu'il tient.
+    private static readonly Color HurtFlashColor = new(1f, 0.92f, 0.88f);
+    private static readonly Color ShieldFlashColor = new(0.7f, 0.85f, 1f);
 
     public override void _Ready()
     {
@@ -245,6 +253,7 @@ public partial class Player : CharacterBody2D
         AddChild(_interaction);
         _interaction.Setup(this);
         Mobility = new PlayerMobility(MobilityConfig.Load());
+        _defense = new PlayerDefense(DefenseConfig.Load());
         _mobilityFeedback = new MobilityFeedback { Name = "MobilityFeedback" };
         AddChild(_mobilityFeedback);
         CacheWorldSetup();
@@ -285,6 +294,8 @@ public partial class Player : CharacterBody2D
         InteractRange = data.BaseStats.InteractRange;
 
         _currentHp = MaxHp;
+        _defense.SetBaseShield(data.BaseStats.Shield);
+        EmitShield();
         EquipStartingWeapon(data.StartingWeaponId);
         UpdateAttackSpeed();
 
@@ -639,6 +650,7 @@ public partial class Player : CharacterBody2D
             _heldWeapon.Update(dt, EquippedWeapon?.Base, _facing.Current);
         ProcessFootsteps(dt, dashMovement ? 0f : movementRate);
         ApplyRegen(dt);
+        StepDefense(dt);
         ProcessSlowDecay(dt);
         ProcessPoiExplore(dt);
         _interaction.Step(dt, !_isExploringPoi && !Mobility.IsDashing);
@@ -854,6 +866,13 @@ public partial class Player : CharacterBody2D
                 break;
             case "armor":
                 if (modifierType == "additive") _armor += value;
+                break;
+            case "shield":
+                if (modifierType == "additive")
+                {
+                    _defense.AddShield(value);
+                    EmitShield();
+                }
                 break;
             case "crit_chance":
                 if (modifierType == "additive") _critChance += value;
@@ -1395,7 +1414,7 @@ public partial class Player : CharacterBody2D
 
     public void TakeDamage(float damage)
     {
-        if (_currentHp <= 0 || IsGodMode || Mobility.IsInvulnerable)
+        if (_currentHp <= 0 || IsGodMode || Mobility.IsInvulnerable || _defense.IsInvulnerable)
             return;
 
         // Dodge check
@@ -1405,18 +1424,37 @@ public partial class Player : CharacterBody2D
             return;
         }
 
-        float reduced = Mathf.Max(1f, damage - _armor);
-        _currentHp -= reduced;
+        PlayerDefense.Outcome outcome = _defense.Absorb(damage, _armor);
+        if (_thornsPercent > 0f)
+            ApplyThorns(outcome.Reduced);
+
+        if (outcome.ShieldAbsorbed)
+        {
+            EmitShield();
+            Flash(ShieldFlashColor, outcome.ShieldBroke);
+            return;
+        }
+
+        LoseHp(outcome.HpDamage);
+    }
+
+    /// <summary>Le Néant consume : ni bouclier, ni armure, ni invulnérabilité ne l'arrêtent.</summary>
+    public void TakeErasureDamage(float damage)
+    {
+        if (_currentHp <= 0 || IsGodMode)
+            return;
+        LoseHp(damage);
+    }
+
+    private void LoseHp(float damage)
+    {
+        _currentHp -= damage;
         Mobility.Hurt(Mobility.Config.HurtRecoverySeconds);
-        HitFlash();
+        Flash(HurtFlashColor, true);
         if (_hasSprite)
             _hurtAnimTimer = Mobility.Config.HurtRecoverySeconds;
 
         _eventBus.EmitSignal(EventBus.SignalName.PlayerDamaged, _currentHp, EffectiveMaxHp);
-
-        // Thorns: reflect damage to nearest enemy
-        if (_thornsPercent > 0f)
-            ApplyThorns(reduced);
 
         if (_currentHp <= 0)
         {
@@ -1424,6 +1462,29 @@ public partial class Player : CharacterBody2D
             Die();
         }
     }
+
+    private void StepDefense(float dt)
+    {
+        if (_defense.Step(dt))
+            EmitShield();
+
+        // Clignotement pendant l'invulnérabilité qui suit un coup : la fenêtre se lit sans interface.
+        bool hidden = _defense.IsInvulnerable && Mathf.PosMod(_defense.InvulnerableTimer, 0.12f) < 0.06f;
+        if (hidden == _blinkHidden || !_hasSprite)
+            return;
+        _blinkHidden = hidden;
+        _sprite.Modulate = hidden ? new Color(1f, 1f, 1f, 0.4f) : Colors.White;
+    }
+
+    /// <summary>Bancs de régression : les coups reçus se mesurent sur les PV, sans bouclier ni invulnérabilité.</summary>
+    internal void DisableDefenseForTests()
+    {
+        _defense.Disable();
+        EmitShield();
+    }
+
+    private void EmitShield() =>
+        _eventBus?.EmitSignal(EventBus.SignalName.PlayerShieldChanged, _defense.Shield, _defense.MaxShield);
 
     private void ApplyThorns(float damageTaken)
     {
@@ -1695,7 +1756,7 @@ public partial class Player : CharacterBody2D
             _secondWindAvailable = false;
             _currentHp = EffectiveMaxHp * _secondWindHealPercent;
             _eventBus.EmitSignal(EventBus.SignalName.PlayerDamaged, _currentHp, EffectiveMaxHp);
-            HitFlash();
+            Flash(HurtFlashColor, true);
             GD.Print($"[Player] Second Wind! Revived at {_currentHp:F0} HP");
             return;
         }
@@ -1755,15 +1816,16 @@ public partial class Player : CharacterBody2D
         _eventBus.EmitSignal(EventBus.SignalName.PlayerDamaged, _currentHp, EffectiveMaxHp);
     }
 
-    private void HitFlash()
+    private void Flash(Color color, bool shake)
     {
-        _visual.Color = new Color(1f, 0.3f, 0.3f);
+        _visual.Color = color;
         Tween tween = CreateTween();
         tween.TweenProperty(_visual, "color", _originalColor, 0.2f)
             .SetDelay(0.05f);
 
         if (_hasSprite && _spriteMaterial != null)
         {
+            _spriteMaterial.SetShaderParameter("flash_color", color);
             _spriteMaterial.SetShaderParameter("flash_amount", 1.0f);
             tween.Parallel().TweenMethod(
                 Callable.From((float v) => _spriteMaterial.SetShaderParameter("flash_amount", v)),
@@ -1771,7 +1833,8 @@ public partial class Player : CharacterBody2D
             ).SetDelay(0.05f);
         }
 
-        Combat.ScreenShake.Instance?.ShakeMedium();
+        if (shake)
+            Combat.ScreenShake.Instance?.ShakeMedium();
     }
 
     // --- Sprite Animation ---

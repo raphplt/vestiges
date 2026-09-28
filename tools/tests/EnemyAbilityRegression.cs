@@ -32,6 +32,7 @@ public partial class EnemyAbilityRegression : Node2D
             _player = GD.Load<PackedScene>("res://scenes/Player.tscn").Instantiate<Player>();
             AddChild(_player);
             _player.InitializeCharacter(CharacterDataLoader.Get("traqueur"));
+            _player.DisableDefenseForTests();
             _player.SetPhysicsProcess(false);
             _player.IsAIControlled = true;
             // Arme automatique coupée : seuls les effets des capacités ennemies sont observés.

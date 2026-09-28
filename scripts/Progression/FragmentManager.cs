@@ -118,7 +118,9 @@ public partial class FragmentManager : Node
 		}
 
 		_pendingChoices.Clear();
-		foreach (FragmentOption option in PickRandom(options, FragmentsPerChoice))
+		List<FragmentOption> picked = PickRandom(options, FragmentsPerChoice);
+		EnsureSurvivalChoice(picked, options);
+		foreach (FragmentOption option in picked)
 			_pendingChoices.Add(RollUpgrade(option));
 		_choosingActive = true;
 
@@ -323,6 +325,34 @@ public partial class FragmentManager : Node
 
 		return UpgradeRoller.RollGains(option, _player, rarity, _rng);
 	}
+
+	/// <summary>
+	/// Tant que le joueur n'a aucun passif de survie, une des cartes en propose un (plan 03, lot 8B) :
+	/// sans cela, trois passifs de survie sur quatorze passaient souvent toute une run sans être vus.
+	/// La dernière carte est remplacée, les deux premières gardant le mélange nouveauté / amélioration.
+	/// </summary>
+	private void EnsureSurvivalChoice(List<FragmentOption> picked, List<FragmentOption> pool)
+	{
+		if (picked.Count < 3)
+			return;
+		foreach (ActivePassiveSouvenir owned in _player.PassiveSlots)
+			if (owned.Data.Survival)
+				return;
+		foreach (FragmentOption option in picked)
+			if (IsSurvival(option))
+				return;
+
+		List<FragmentOption> survival = new();
+		foreach (FragmentOption option in pool)
+			if (IsSurvival(option))
+				survival.Add(option);
+		if (survival.Count == 0)
+			return;
+		picked[picked.Count - 1] = WeightedPick(survival, _player.LuckBonus);
+	}
+
+	private static bool IsSurvival(FragmentOption option) =>
+		option.Type == "passive_new" && (PassiveSouvenirDataLoader.Get(option.Id)?.Survival ?? false);
 
 	private List<FragmentOption> PickRandom(List<FragmentOption> pool, int count)
 	{

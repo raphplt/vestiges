@@ -48,6 +48,7 @@ public partial class HUD : CanvasLayer
     private Label _levelLabel;
     private ColorRect _hpFill;
     private ColorRect _hpChip;
+    private ColorRect _shieldFill;
     private Label _hpValueLabel;
     private ColorRect _xpFill;
     private float _xpPulse;
@@ -125,6 +126,7 @@ public partial class HUD : CanvasLayer
     private static readonly Color PalCyanEssence = new(0x5E / 255f, 0xC4 / 255f, 0xC4 / 255f);
     private static readonly Color PalVioletMist = new(0x4A / 255f, 0x30 / 255f, 0x66 / 255f);
     private static readonly Color HealthyColor = new(0.42f, 0.74f, 0.36f);
+    private static readonly Color ShieldColor = new(0.72f, 0.86f, 1f);
     private static readonly Color PlateColor = new(0.04f, 0.045f, 0.08f, 0.82f);
     private static readonly Color PlateBorder = new(0.83f, 0.66f, 0.26f, 0.35f);
     private static readonly Color BarTrack = new(0.02f, 0.02f, 0.04f, 0.9f);
@@ -137,6 +139,7 @@ public partial class HUD : CanvasLayer
         _gameManager = GetNodeOrNull<GameManager>("/root/GameManager");
         _runTracker = GetNodeOrNull<RunTracker>("../RunTracker");
         _eventBus.PlayerDamaged += OnPlayerDamaged;
+        _eventBus.PlayerShieldChanged += OnShieldChanged;
         _eventBus.XpGained += OnXpChanged;
         _eventBus.LevelUp += OnLevelUp;
         _eventBus.ScoreChanged += OnScoreChanged;
@@ -258,6 +261,7 @@ public partial class HUD : CanvasLayer
         if (_eventBus != null)
         {
             _eventBus.PlayerDamaged -= OnPlayerDamaged;
+            _eventBus.PlayerShieldChanged -= OnShieldChanged;
             _eventBus.XpGained -= OnXpChanged;
             _eventBus.LevelUp -= OnLevelUp;
             _eventBus.ScoreChanged -= OnScoreChanged;
@@ -294,6 +298,7 @@ public partial class HUD : CanvasLayer
             return;
         player.AddChild(new PlayerHealthGauge { Name = "HealthGauge" });
         UpdateHpDisplay(player.CurrentHp, player.EffectiveMaxHp);
+        OnShieldChanged(player.Shield, player.MaxShield);
     }
 
     // ==================== CONSTRUCTION ====================
@@ -388,6 +393,12 @@ public partial class HUD : CanvasLayer
         _hpChip.OffsetBottom = -1f;
         hpTrack.AddChild(_hpChip);
         hpTrack.MoveChild(_hpChip, 0);
+        // Bouclier : un liseré bleu pâle en haut de la barre de PV, plein quand il est chargé.
+        _shieldFill = new ColorRect { Color = ShieldColor, MouseFilter = Control.MouseFilterEnum.Ignore };
+        _shieldFill.OffsetLeft = 1f;
+        _shieldFill.OffsetTop = 1f;
+        _shieldFill.OffsetBottom = 5f;
+        hpTrack.AddChild(_shieldFill);
         _hpValueLabel = MakeLabel("100 / 100", 11, PalWhiteOff);
         _hpValueLabel.Position = Vector2.Zero;
         _hpValueLabel.Size = hpRect.Size;
@@ -610,6 +621,15 @@ public partial class HUD : CanvasLayer
     // ==================== MISES À JOUR ====================
 
     private void OnPlayerDamaged(float currentHp, float maxHp) => UpdateHpDisplay(currentHp, maxHp);
+
+    private void OnShieldChanged(float shield, float maxShield)
+    {
+        if (_shieldFill == null)
+            return;
+        _shieldFill.Visible = maxShield > 0f && shield > 0f;
+        _shieldFill.AnchorRight = maxShield > 0f ? Mathf.Clamp(shield / maxShield, 0f, 1f) : 0f;
+        _shieldFill.OffsetRight = _shieldFill.AnchorRight >= 1f ? -1f : 0f;
+    }
 
     private void UpdateHpDisplay(float currentHp, float maxHp)
     {

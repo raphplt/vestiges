@@ -383,7 +383,8 @@ public partial class PauseMenu : CanvasLayer
 		EssenceTracker essenceTracker = GetNodeOrNull<EssenceTracker>("/root/Main/EssenceTracker");
 		AddLine(_sheetContainer, Tr("STAT_MAX_HP"), $"{player.CurrentHp:F0} / {player.EffectiveMaxHp:F0}");
 		AddLine(_sheetContainer, Tr("STAT_REGEN"), $"{(player.BaseRegenRate + player.BonusRegenRate).ToString("0.0", French)} PV/s");
-		AddLine(_sheetContainer, Tr("STAT_ARMOR"), $"{player.Armor:F0}");
+		AddLine(_sheetContainer, Tr("STAT_SHIELD"), $"{player.Shield:F0} / {player.MaxShield:F0}");
+		AddLine(_sheetContainer, Tr("STAT_ARMOR"), $"{player.Armor:F0}  (−{Percent(player.ArmorReduction)})");
 		AddLine(_sheetContainer, Tr("STAT_DODGE"), Percent(player.DodgeChance));
 		AddLine(_sheetContainer, Tr("STAT_SPEED"), Bonus(player.SpeedMultiplier));
 		AddLine(_sheetContainer, Tr("STAT_DAMAGE"), Bonus(player.DamageMultiplier));

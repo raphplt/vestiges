@@ -25,6 +25,7 @@
         "description": "+HP max par niveau",
         "icon_color": [0.3, 0.8, 0.4],
         "max_level": 5,
+        "survival": true,
         "stat": "max_hp",
         "modifier_type": "additive",
         "per_level": [15, 20, 25, 30, 40]
@@ -65,6 +66,7 @@
         "description": "+armure par niveau",
         "icon_color": [0.6, 0.6, 0.7],
         "max_level": 5,
+        "survival": true,
         "stat": "armor",
         "modifier_type": "additive",
         "per_level": [2, 3, 4, 5, 7]
@@ -85,6 +87,7 @@
         "description": "+regen HP/s par niveau",
         "icon_color": [0.4, 1.0, 0.5],
         "max_level": 5,
+        "survival": true,
         "stat": "regen_rate",
         "modifier_type": "additive",
         "per_level": [0.5, 0.7, 1.0, 1.3, 1.8]
@@ -129,5 +132,16 @@
         "stat": "projectile_pierce",
         "modifier_type": "additive",
         "per_level": [1, 1, 2, 2, 3]
+    },
+    {
+        "id": "carapace",
+        "name": "Carapace",
+        "description": "+bouclier par niveau",
+        "icon_color": [0.72, 0.86, 1.0],
+        "max_level": 5,
+        "survival": true,
+        "stat": "shield",
+        "modifier_type": "additive",
+        "per_level": [8, 10, 12, 15, 20]
     }
 ]

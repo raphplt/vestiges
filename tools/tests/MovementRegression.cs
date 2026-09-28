@@ -32,6 +32,7 @@ public partial class MovementRegression : Node2D
                 _player = GD.Load<PackedScene>("res://scenes/Player.tscn").Instantiate<Player>();
                 AddChild(_player);
                 _player.InitializeCharacter(CharacterDataLoader.Get("traqueur"));
+                _player.DisableDefenseForTests();
                 // Un seul appel du vrai contrôleur par tick physique, piloté par le banc.
                 _player.SetPhysicsProcess(false);
                 _sprite = _player.GetNode<AnimatedSprite2D>("Sprite");
@@ -47,8 +48,32 @@ public partial class MovementRegression : Node2D
         }
     }
 
+    /// <summary>Défense du joueur (plan 03, lot 8B) : le bouclier encaisse un coup entier, l'invulnérabilité suit, puis la recharge.</summary>
+    private void CheckDefense()
+    {
+        PlayerDefense defense = new(DefenseConfig.Load());
+        defense.SetBaseShield(20f);
+        PlayerDefense.Outcome oneShot = defense.Absorb(1000f, 0f);
+        Check(oneShot.ShieldAbsorbed && oneShot.ShieldBroke && oneShot.HpDamage == 0f && defense.Shield == 0f,
+            $"bouclier : un coup de 1000 est encaissé en entier (PV perdus {oneShot.HpDamage}, bouclier {defense.Shield})");
+        Check(defense.IsInvulnerable, "bouclier : invulnérabilité après le coup encaissé");
+        defense.Step(defense.Config.HurtInvulnerabilitySeconds + 0.01f);
+        Check(!defense.IsInvulnerable, "invulnérabilité : fenêtre expirée");
+        PlayerDefense.Outcome hit = defense.Absorb(10f, 0f);
+        Check(!hit.ShieldAbsorbed && Math.Abs(hit.HpDamage - 10f) < 0.001f, $"bouclier vide : le coup atteint les PV ({hit.HpDamage})");
+        defense.Step(defense.Config.ShieldRechargeDelaySeconds - 0.1f);
+        Check(defense.Shield == 0f, "bouclier : pas de recharge avant le délai");
+        for (int i = 0; i < 60; i++)
+            defense.Step((defense.Config.ShieldRechargeSeconds + 0.2f) / 60f);
+        Check(Math.Abs(defense.Shield - 20f) < 0.001f, $"bouclier : rechargé après le délai ({defense.Shield})");
+        Check(Math.Abs(defense.ArmorReduction(defense.Config.ArmorHalfValue) - 0.5f) < 0.001f,
+            "armure : la valeur de moitié réduit de 50 %");
+        Check(defense.ArmorReduction(10000f) <= defense.Config.ArmorMaxReduction + 0.0001f, "armure : réduction plafonnée");
+    }
+
     private async Task RunChecks()
     {
+        CheckDefense();
         Vector2[] directions = { Vector2.Right, Vector2.Down, Vector2.Left, Vector2.Up,
             new(1, 1), new(-1, 1), new(-1, -1), new(1, -1) };
         float fullDistance = _player.Speed * Frames / Engine.PhysicsTicksPerSecond;

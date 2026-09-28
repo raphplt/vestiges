@@ -198,6 +198,7 @@ public partial class MovementRegression
         Check(ReferenceEquals(ReadPlayerField<WorldSetup>("_worldSetup"), world),
             "Main réelle : Player relié au générateur de terrain");
         _player.InitializeCharacter(Vestiges.Infrastructure.CharacterDataLoader.Get("traqueur"));
+        _player.DisableDefenseForTests();
         Check(ReferenceEquals(ReadPlayerField<ErasureManager>("_erasureManager"), erasure),
             "initialisation personnage avec état déjà Run : liaison Effacement conservée");
 

@@ -132,6 +132,7 @@ STAT_SPEED,Vitesse,Speed
 STAT_AOE,Zone,Area
 STAT_XP_RANGE,Aimant,Magnet
 STAT_ARMOR,Armure,Armor
+STAT_SHIELD,Bouclier,Shield
 STAT_CRIT,Critique,Crit chance
 STAT_REGEN,Régénération,Regeneration
 STAT_RANGE,Portée,Range

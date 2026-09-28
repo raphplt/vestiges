@@ -21,6 +21,7 @@
         { "id": "attack_range", "name_key": "STAT_RANGE", "display": "percent" },
         { "id": "xp_magnet_radius", "name_key": "STAT_XP_RANGE", "display": "percent" },
         { "id": "armor", "name_key": "STAT_ARMOR", "display": "count" },
+        { "id": "shield", "name_key": "STAT_SHIELD", "display": "count" },
         { "id": "crit_chance", "name_key": "STAT_CRIT", "display": "fraction" },
         { "id": "regen_rate", "name_key": "STAT_REGEN", "display": "value", "unit": "PV/s" },
         { "id": "luck", "name_key": "STAT_LUCK", "display": "fraction" }

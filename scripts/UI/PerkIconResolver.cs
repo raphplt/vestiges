@@ -11,6 +11,7 @@ public static class PerkIconResolver
             "max_hp" => "assets/ui/icons/ui_icon_perk_hp_up.png",
             "speed" => "assets/ui/icons/ui_icon_perk_speed_up.png",
             "armor" => "assets/ui/icons/ui_icon_perk_armor_up.png",
+            "shield" => "assets/ui/icons/ui_icon_perk_armor_up.png",
             "aoe_radius" => "assets/ui/icons/ui_icon_perk_aoe_up.png",
             "projectile_count" => "assets/ui/icons/ui_icon_perk_extra_projectile.png",
             "crit_chance" => "assets/ui/icons/ui_icon_perk_crit_chance.png",

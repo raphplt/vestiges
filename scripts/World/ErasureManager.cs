@@ -173,7 +173,7 @@ public partial class ErasureManager : Node
             return;
         float damage = _player.EffectiveMaxHp * _voidDamageRatioPerSecond * _updateIntervalSec;
         _eventBus?.EmitSignal(EventBus.SignalName.PlayerHitBy, "void", damage);
-        _player.TakeDamage(damage);
+        _player.TakeErasureDamage(damage);
     }
 
     /// <summary>Recopie la mémoire des zones autour du joueur dans la texture lue par le shader du sol.</summary>

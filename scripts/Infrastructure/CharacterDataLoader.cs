@@ -11,6 +11,7 @@ public class CharacterStats
     public float AttackRange { get; set; }
     public float MaxHp { get; set; }
     public float RegenRate { get; set; }
+    public float Shield { get; set; }
     public float InteractRange { get; set; }
 }
 
@@ -74,6 +75,7 @@ public static class CharacterDataLoader
                 AttackRange = (float)statsDict["attack_range"].AsDouble(),
                 MaxHp = (float)statsDict["max_hp"].AsDouble(),
                 RegenRate = (float)statsDict["regen_rate"].AsDouble(),
+                Shield = statsDict.ContainsKey("shield") ? (float)statsDict["shield"].AsDouble() : 0f,
                 InteractRange = (float)statsDict["interact_range"].AsDouble()
             };
 
