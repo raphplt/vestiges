@@ -30,6 +30,8 @@ public partial class ChestLootScreen : CanvasLayer
     private const float PostRevealDelay = 1.8f;
     private const string RevealSound = "sfx_chest_reveal";
     private const float RevealFadeSeconds = 0.5f;
+    // Le clic d'ouverture frappe dans ses 0,3 premières secondes : la mélodie entre juste après, sur le défilement.
+    private const float RevealMelodyDelay = 0.3f;
 
     // --- Rays config ---
     private const int RayCount = 16;
@@ -51,6 +53,7 @@ public partial class ChestLootScreen : CanvasLayer
     private readonly List<SlotState> _slots = new();
     private bool _isRevealing;
     private AudioStreamPlayer _revealAudio;
+    private int _openingSerial;
     private int _slotsRevealed;
 
     // Leurres de la roulette : ce que le coffre aurait pu donner.
@@ -224,8 +227,14 @@ public partial class ChestLootScreen : CanvasLayer
 
         ShowScreen();
 
-        // Play chest opening sound
+        // Le clic d'ouverture d'abord, puis la mélodie qui accompagne le défilement (retour du 28 septembre).
         AudioManager.PlayUI("sfx_chest_opening", 0f);
+        int opening = ++_openingSerial;
+        GetTree().CreateTimer(RevealMelodyDelay, processAlways: true).Timeout += () =>
+        {
+            if (opening == _openingSerial && _isRevealing)
+                _revealAudio = AudioManager.PlayUI(RevealSound, 0f);
+        };
     }
 
     // ==============================
@@ -333,8 +342,6 @@ public partial class ChestLootScreen : CanvasLayer
         if (allStopped && _isRevealing)
         {
             _isRevealing = false;
-            // La mélodie salue le résultat complet : jamais pendant qu'une ligne défile encore.
-            _revealAudio = AudioManager.PlayUI(RevealSound, 0f);
             ScheduleClose();
         }
     }

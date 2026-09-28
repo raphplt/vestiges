@@ -56,3 +56,16 @@ Correctif :
 - elle s'éteint en fondu de 0,5 s à la fermeture de l'écran (`AudioManager.PlayUI` rend désormais son lecteur, `AudioManager.FadeOutUI` l'éteint s'il joue encore ce son).
 
 Le clic d'ouverture est inchangé. **À réécouter en jeu** : si c'est lui que Raphaël désignait comme « premier son », le couper dès le début du défilement.
+
+## Correctif du 28 septembre — son des coffres, ordre rétabli
+
+Retour de Raphaël : « il y a deux sons, l'un avec une mélodie qui doit se jouer quand on a lancé l'ouverture du coffre pendant que les items défilent, et l'autre qui est un bruit qui doit se jouer en premier […] le bruit pendant le défilement se joue trop tard. »
+
+Le correctif du 27 septembre avait mal lu le premier retour : en attendant l'arrêt de toutes les lignes, il faisait partir la mélodie 2,5 à 3,3 s après l'ouverture, une fois le défilement fini.
+
+Ordre désormais :
+1. le clic d'ouverture (`chest_open`, attaque dans les 0,3 premières secondes) ;
+2. la mélodie (`chest_opening.wav`) 0,3 s plus tard, **pendant** le défilement ;
+3. son fondu de 0,5 s à la fermeture de l'écran, inchangé.
+
+Garde : un minuteur en retard ne relance jamais la mélodie sur un coffre suivant. **À réécouter en jeu.**
