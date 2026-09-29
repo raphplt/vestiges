@@ -28,7 +28,7 @@ La [Stratégie V2](../VESTIGES-STRATEGIE-V2.md) reste l'autorité gameplay/roadm
 | [02 — Juiciness, score et récompenses](02-juiciness-score.md) | P0 | Direction validée ; score en run, record au bilan seulement ; refonte de la mort : M1 à M4 livrés, recette en jeu attendue | 01 pour le ressenti ; cadrage 08 |
 | [03 — Boucle et rythme](03-boucle-et-rythme.md) | P0 | Direction validée ; début plus menaçant et XP moins rapide | Première passe 01/02 |
 | [04 — Interfaces et Hub](04-interfaces-et-hub.md) | P1 | Navigation, sélection, typographie et affichage adaptatif | Cadrage 08 ; contrats 05/06 |
-| [05 — Armes, objets et builds](05-armes-objets-builds.md) | **P0, priorité actuelle** | [Neuf perks V1](05-perks-specialisations.md) validés et extensibles ; B0 à B3 sans objets livrés (sept perks actifs) ; objets (B4) à décider | 13/17, XP 20 |
+| [05 — Armes, objets et builds](05-armes-objets-builds.md) | **P0, priorité actuelle** | [Neuf perks V1](05-perks-specialisations.md) validés et extensibles ; B0 à B3 sans objets livrés (sept perks actifs) ; [catalogue d'objets V1](05-objets-catalogue-v1.md) proposé, à valider | 13/17, XP 20 |
 | [06 — Personnages, quêtes et défis](06-personnages-quetes-defis.md) | P0 casting ; P2 progression | Casting initial, récompenses, progression et défis | 05 ; présentation 04 |
 | [07 — Bestiaire et rencontres](07-bestiaire-et-rencontres.md) | P1 début de run ; P2 reste | Menaces à distance originales, rôles, compositions | 01/03 ; cadrage 08 |
 | [08 — Direction artistique, sprites et lore](08-direction-artistique.md) | Transversal | Référence visuelle, personnages mémorables, pipeline | Cadrage immédiat, production après validation gameplay |
@@ -57,6 +57,8 @@ Les numéros servent à identifier les plans, pas à imposer leur exécution int
 6. Traiter 09 seulement après stabilisation des règles de score.
 
 Un seul lot d'implémentation ouvert à la fois. Un échec de lisibilité, de performance ou de fun ramène au lot concerné avant expansion.
+
+**Mise à jour du 29 septembre — catalogue d'objets révisé et planche d'icônes de perks, à valider :** le [catalogue d'objets V1](05-objets-catalogue-v1.md) propose 23 objets. Il retire les cinq qui copiaient une signature d'arme, donne une destination aux treize passifs et une source à part pour la récompense à choix (le Reliquaire, Triptyque du plan 13). La [planche d'icônes de perks](planches/perks-icones-proposition-1.png) propose des pin's émaillés, en deux variantes d'émail. Rien n'est créé en jeu avant validation.
 
 **Mise à jour du 29 septembre — B3 sans objets livré :** [plan 05 §14](05-perks-specialisations.md#14-compte-rendu-b3-partie-sans-objets--sillage-et-seconde-lecture-29-septembre-2026). Sillage et Seconde lecture sont actifs. Propagation, mesurée sur les trois armes de contrôle, reste inchangée : seule la Cloche échoue, c'est un réglage d'arme. Délestage et Habitude sont bloqués : il n'existe ni inventaire d'objets ni récompense à choix. Banc d'effets de 66 assertions.
 

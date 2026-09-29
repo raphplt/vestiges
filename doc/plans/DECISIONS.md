@@ -350,3 +350,10 @@ Raphaël, après B2 : « Ok top. et tu as créé les sprites de ces perks. pour 
 **Acquis :** B2 tel que livré. Le réglage de Propagation est laissé au jugement de l'agent, à éclairer par les autres armes de contrôle et pas par la seule Cloche. **Demandé :** implémenter les perks restants (Sillage, Seconde lecture, Délestage, Habitude). Question sur les sprites des perks : aucun n'a été créé en B1/B2, les cartes de perk n'ont pas d'icône.
 
 Suite donnée : la règle de Propagation est conservée après mesure sur Cloche, Polaroïd et Chronomètre (0, 9 et 10 éliminations transmissibles sur 14, 9 et 13) ; la Cloche seule échoue, c'est un réglage d'arme. Sillage et Seconde lecture sont livrés. Délestage et Habitude ne le sont pas, faute d'objets et de récompense à choix ; leurs prérequis sont listés au [plan 05 §14](05-perks-specialisations.md#14-compte-rendu-b3-partie-sans-objets--sillage-et-seconde-lecture-29-septembre-2026). Aucune icône de perk n'a été créée : direction à valider.
+
+
+## 28. Objets à réviser et à créer, récompense à choix hors coffres, planche d'icônes — 29 septembre 2026
+
+Raphaël : « ouais en effet pour le catalogue d'objets il va falloir réviser la liste et les créer. une proposition récente a été fait mais elle reste à retravailler. c'est le moment de faire ca. récompense à choix : à déterminer, pour moi en dehors des coffres dans un truc à part. à déterminer.. 3 oui il me faut une planche de proposition ».
+
+**Acquis :** le catalogue d'objets est le chantier courant. La proposition récente est à retravailler, puis les objets seront créés. La récompense à choix d'objets est **distincte des coffres**, dans une source à part dont la forme reste à déterminer. Une planche de proposition d'icônes de perks est demandée. **Non acquis :** la forme de cette source, le contenu du catalogue révisé, le style des icônes.
