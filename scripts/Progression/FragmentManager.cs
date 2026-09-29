@@ -17,6 +17,7 @@ public partial class FragmentManager : Node
     private const int FragmentsPerChoice = 3;
     private const int DefaultRerolls = 3;
     private const int DefaultBanishes = 3;
+    private const string CarriedChoiceEffect = SpecializationRuntime.CarriedChoiceEffect;
 
     private EventBus _eventBus;
     private Player _player;
@@ -41,6 +42,7 @@ public partial class FragmentManager : Node
     private readonly HashSet<string> _banishedIds = new();
 
     private PerkSpecializationOffers _specializations;
+    private readonly CarriedChoice _carriedChoice = new();
     private bool _specializationChoice;
 
     public int RerollsRemaining => _rerollsRemaining;
@@ -173,8 +175,12 @@ public partial class FragmentManager : Node
         if (_specializations.IsDue(level, _player) && OfferSpecializations(level))
             return;
 
+        // Seconde lecture : la carte reportée prend une place, les autres ne réaméliorent pas la même arme.
+        FragmentOption carried = _carriedChoice.Validate(_player, _banishedIds);
         List<FragmentOption> options = BuildFragmentPool();
-        if (options.Count == 0)
+        if (carried != null)
+            options.RemoveAll(option => option.Type == CarriedChoice.UpgradeType && option.Id == carried.Id);
+        if (options.Count == 0 && carried == null)
         {
             GD.PushWarning($"[FragmentManager] OfferFragments: pool is empty (level {level})");
             ProcessNextInQueue();
@@ -182,10 +188,12 @@ public partial class FragmentManager : Node
         }
 
         _pendingChoices.Clear();
-        List<FragmentOption> picked = PickRandom(options, FragmentsPerChoice);
+        List<FragmentOption> picked = PickRandom(options, FragmentsPerChoice - (carried != null ? 1 : 0));
+        if (carried != null)
+            picked.Insert(0, carried);
         EnsureSurvivalChoice(picked, options);
         foreach (FragmentOption option in picked)
-            _pendingChoices.Add(RollUpgrade(option));
+            _pendingChoices.Add(option.IsCarried ? option : RollUpgrade(option));
         _choosingActive = true;
 
         GD.Print($"[FragmentManager] Level {level} (maxTier={GetMaxFragmentTier(level)}): offering {_pendingChoices.Count} fragments (pool had {options.Count})");
@@ -396,9 +404,11 @@ public partial class FragmentManager : Node
             return;
         }
 
-        _pendingChoices.Clear();
         if (_specializationChoice)
             _specializations.Served(_currentLevel);
+        else
+            _carriedChoice.Resolve(_pendingChoices, option, _player.HasSpecializationEffect(CarriedChoiceEffect));
+        _pendingChoices.Clear();
         _specializationChoice = false;
         _eventBus.EmitSignal(EventBus.SignalName.FragmentChosen, fragmentId, fragmentType);
         GD.Print($"[FragmentManager] Fragment selected: {fragmentId} ({fragmentType}, {option.Rarity?.Id ?? "nouveau"})");
@@ -412,6 +422,8 @@ public partial class FragmentManager : Node
         // Passer un perk consomme le niveau et garde le droit, proposé de nouveau au niveau suivant.
         if (_specializationChoice)
             _specializations.Served(_currentLevel);
+        else
+            _carriedChoice.Clear();
         _specializationChoice = false;
         ProcessNextInQueue();
     }
@@ -569,6 +581,12 @@ public class FragmentOption
 
     public FragmentOption WithWeaponUpgrade(UpgradeRarity rarity, IReadOnlyList<StatGain> gains) =>
         new(Id, Type, DisplayName, SortWeight) { Rarity = rarity, WeaponGains = gains };
+
+    /// <summary>Carte reportée par Seconde lecture : mêmes gains et même rareté, marquée pour l'écran.</summary>
+    public bool IsCarried { get; private init; }
+
+    public FragmentOption AsCarried() =>
+        new(Id, Type, DisplayName, SortWeight) { Rarity = Rarity, WeaponGains = WeaponGains, PassiveGain = PassiveGain, PassiveLevels = PassiveLevels, IsCarried = true };
 
     public FragmentOption WithPassiveUpgrade(UpgradeRarity rarity, float gain, int levels) =>
         new(Id, Type, DisplayName, SortWeight) { Rarity = rarity, PassiveGain = gain, PassiveLevels = levels };

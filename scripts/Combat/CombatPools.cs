@@ -116,10 +116,16 @@ public partial class CombatPools : Node2D
             (XpOrb orb, Vector2 position, int token) = _sleepingOrbs[i];
             // Ramassée en dormant, ou réutilisée depuis : l'entrée ne vaut plus rien.
             bool stillAsleep = orb.IsAsleep && orb.SleepToken == token;
+            bool trailBound = false;
             if (stillAsleep && position.DistanceSquaredTo(playerPosition) > wakeRadiusSq)
-                continue;
+            {
+                // Sillage : une orbe endormie dans le couloir récent du joueur se réveille pour le rejoindre.
+                trailBound = XpTrail.Any && XpTrail.Covers(position);
+                if (!trailBound)
+                    continue;
+            }
             if (stillAsleep)
-                orb.Wake();
+                orb.Wake(trailBound);
             int last = _sleepingOrbs.Count - 1;
             _sleepingOrbs[i] = _sleepingOrbs[last];
             _sleepingOrbs.RemoveAt(last);

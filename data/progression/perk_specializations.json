@@ -91,7 +91,9 @@
       "eligibility": {},
       "parameters": {
         "duration_seconds": 6,
-        "pickup_radius_multiplier": 1
+        "pickup_radius_multiplier": 1,
+        "sample_seconds": 0.1,
+        "teleport_break_pixels": 200
       }
     },
     {

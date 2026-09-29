@@ -1,10 +1,12 @@
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Threading.Tasks;
 using Godot;
 using Vestiges.Combat;
 using Vestiges.Core;
 using Vestiges.Infrastructure;
+using Vestiges.Progression;
 using Vestiges.Spawn;
 
 namespace Vestiges.Tests;
@@ -16,6 +18,8 @@ namespace Vestiges.Tests;
 /// chiffre renforcé. priority : une élite plus lointaine que les rôdeurs est visée et entourée de son repère.
 /// carry : la Cloche ralentit une grappe, puis une transmission certaine montre le trait vers le receveur.
 /// status : arsenal plein, une onde au sol dont l'échange rendrait Convergence inactive, puis la pause et ses états.
+/// trail : le joueur avance, des orbes apparaissent loin derrière sur son trajet et le rejoignent par le Sillage.
+/// carried : deux niveaux d'un coup ; le premier choix laisse une amélioration épique, le second la montre « Reportée ».
 /// </summary>
 public partial class RunObservation
 {
@@ -39,6 +43,12 @@ public partial class RunObservation
                 break;
             case "status":
                 await CapturePerkStatus();
+                break;
+            case "trail":
+                await CaptureXpTrail();
+                break;
+            case "carried":
+                await CaptureCarriedChoice();
                 break;
             default:
                 GD.PushError($"[Perks] Scène inconnue : {scene}");
@@ -112,12 +122,16 @@ public partial class RunObservation
     private async Task CaptureCarryControl()
     {
         Acquire("carry_control");
+        // --perk-weapons : arsenal de la mesure (Cloche seule par défaut), pour comparer les armes de contrôle.
+        string[] arsenal = Argument(OS.GetCmdlineUserArgs(), "--perk-weapons", "teachers_bell").Split(',');
         _player.RemoveWeapon(0);
-        _player.AddWeapon(WeaponDataLoader.Get("teachers_bell"));
+        foreach (string id in arsenal)
+            _player.AddWeapon(WeaponDataLoader.Get(id));
         SpawnManager spawner = _world.GetNode<SpawnManager>("SpawnManager");
         int transmitted = 0;
         int kills = 0;
         int oneShots = 0;
+        int controlled = 0;
         System.Collections.Generic.Dictionary<EnemyLife, ulong> lastHit = new();
         System.Collections.Generic.List<ulong> gaps = new();
         EventBus bus = GetNode<EventBus>("/root/EventBus");
@@ -129,6 +143,7 @@ public partial class RunObservation
         bus.EnemyKillResolved += kill =>
         {
             kills++;
+            controlled += kill.Slow.CanPropagate(_player.GetInstanceId()) || kill.Disorientation.CanPropagate(_player.GetInstanceId()) ? 1 : 0;
             if (lastHit.TryGetValue(kill.Target, out ulong previous))
                 gaps.Add(Time.GetTicksMsec() - previous);
             else
@@ -141,16 +156,18 @@ public partial class RunObservation
         int seen = 0;
         int shots = 0;
         ulong deadline = Time.GetTicksMsec() + 15000;
-        while (Time.GetTicksMsec() < deadline && shots < 6)
+        while (Time.GetTicksMsec() < deadline)
         {
             await Frames(1);
             await SkipLevelChoices();
             if (transmitted == seen)
                 continue;
             seen = transmitted;
-            SavePlayerCloseUp($"{_output}/perks-carry-{shots++}.png", new Vector2(200f, 130f));
+            if (shots < 6)
+                SavePlayerCloseUp($"{_output}/perks-carry-{shots++}.png", new Vector2(200f, 130f));
         }
-        GD.Print($"[Perks] Cloche seule, 15 s : {kills} éliminations, {oneShots} d'un seul coup, {transmitted} encore ralenties ; écarts avant le coup fatal (ms) : {string.Join(", ", gaps)}");
+        GD.Print($"[Perks] MESURE {string.Join("+", arsenal)}, 15 s : {kills} éliminations, {oneShots} d'un seul coup, "
+            + $"{controlled} transmissibles ; écarts avant le coup fatal (ms) : {string.Join(", ", gaps)}");
 
         // Transmission certaine pour juger le trait : terrain vidé, une victime ralentie par la Cloche, une voisine.
         foreach (Node node in GetTree().GetNodesInGroup("enemies"))
@@ -158,6 +175,8 @@ public partial class RunObservation
                 _world.GetNode<EnemyPool>("EnemyPool").Return(existing);
         await Frames(2);
         WeaponInstance bell = _player.WeaponSlots[0];
+        if (!WeaponTraits.AppliesNativeControl(bell.Base))
+            return;
         Enemy victim = spawner.SpawnEventEnemy("rodeur", _player.GlobalPosition + new Vector2(-60f, -60f));
         Enemy receiver = spawner.SpawnEventEnemy("rodeur", _player.GlobalPosition + new Vector2(30f, -110f));
         await Frames(2);
@@ -200,6 +219,55 @@ public partial class RunObservation
         await Frames(5);
         SaveFrame("perks-status-pause-scrolled");
         GD.Print("[Perks] RESULT pause et invite capturées");
+    }
+
+    private async Task CaptureXpTrail()
+    {
+        Acquire("xp_trail");
+        Vector2 start = _player.GlobalPosition;
+        float xp = 0f;
+        GetNode<EventBus>("/root/EventBus").XpGained += amount => xp += amount;
+        _player.AIInputOverride = Vector2.Right;
+        await Seconds(3f);
+        _player.AIInputOverride = Vector2.Zero;
+        Vector2 end = _player.GlobalPosition;
+        // Des orbes sur le trajet, bien au-delà du rayon d'attraction, et d'autres à l'écart du trajet.
+        for (int index = 0; index < 8; index++)
+        {
+            Vector2 onPath = start.Lerp(end, 0.1f + index * 0.08f) + new Vector2(0f, (index % 3 - 1) * 40f);
+            CombatPools.Instance.SpawnXpOrb(onPath, 5f);
+            CombatPools.Instance.SpawnXpOrb(onPath + new Vector2(0f, 420f), 5f);
+        }
+        GD.Print($"[Perks] trajet {start.DistanceTo(end):0} px, rayon de collecte {XpOrb.AttractionRadius(_player):0} px");
+        for (int shot = 0; shot < 4; shot++)
+        {
+            await Seconds(0.35f);
+            SavePlayerCloseUp($"{_output}/perks-trail-{shot}.png", new Vector2(Mathf.Max(260f, start.DistanceTo(end) * 0.6f), 260f));
+        }
+        await Seconds(2f);
+        GD.Print($"[Perks] RESULT XP rejointe par le Sillage : {xp:0} sur 40 posées dans le couloir");
+    }
+
+    private async Task CaptureCarriedChoice()
+    {
+        Acquire("carried_choice");
+        _player.AddWeapon(WeaponDataLoader.Get("teachers_bell"));
+        WeaponInstance bell = _player.WeaponSlots[1];
+        PlayerProgression progression = _player.GetNode<PlayerProgression>("PlayerProgression");
+        FragmentManager fragments = _world.GetNode<FragmentManager>("FragmentManager");
+        GetNode<EventBus>("/root/EventBus").EmitSignal(EventBus.SignalName.XpGained, XpForLevels(progression, 2));
+        await Frames(20);
+        // Offre imposée pour garantir une amélioration épique laissée de côté.
+        List<FragmentOption> pending = (List<FragmentOption>)typeof(FragmentManager).GetField("_pendingChoices", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(fragments);
+        RandomNumberGenerator rng = new() { Seed = 7 };
+        UpgradeRarity epic = UpgradeRoller.Get("epic");
+        pending.Clear();
+        pending.Add(new FragmentOption("flamme_interieure", "passive_new", "Flamme intérieure", 1));
+        pending.Add(new FragmentOption(bell.Id, "weapon_upgrade", bell.Name, 1).WithWeaponUpgrade(epic, UpgradeRoller.RollWeaponGains(bell, epic, rng)));
+        fragments.SelectFragment(pending[0]);
+        await Frames(10);
+        SaveFrame("perks-carried-offer");
+        GD.Print($"[Perks] RESULT carte reportée affichée : {fragments.PendingChoices.Count > 0 && fragments.PendingChoices[0].IsCarried}");
     }
 
     private void Acquire(params string[] ids)

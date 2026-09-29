@@ -16,6 +16,8 @@ public static class PerkSpecializationEffects
         SpecializationRuntime.OverflowEffect,
         SpecializationRuntime.PriorityTargetingEffect,
         SpecializationRuntime.CarryControlEffect,
+        SpecializationRuntime.XpTrailEffect,
+        SpecializationRuntime.CarriedChoiceEffect,
     };
 
     public static bool IsImplemented(string effect) => Implemented.Contains(effect);

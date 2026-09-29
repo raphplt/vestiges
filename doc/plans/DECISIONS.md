@@ -341,3 +341,10 @@ Raphaël, après la livraison de B1 (acquisition en sommeil tant qu'aucun effet 
 **Acquis :** B1 tel que livré, y compris le report d'un perk passé à chaque niveau suivant jusqu'à ce qu'un perk soit pris (§2 du plan 05). **Engagé :** lot B2, effets de combat et de survie (Prévoyance, Reprise, Débordement, Convergence, Propagation) et leurs retours visuels, découpés au [plan 05 §8.3](05-perks-specialisations.md). Les coefficients restent des valeurs d'essai.
 
 Livraison de B2 : les cinq effets sont actifs en run et donc proposés aux paliers. Leurs coefficients restent les valeurs d'essai des fiches. **À trancher par Raphaël :** avec la Cloche seule, Propagation ne se déclenche presque jamais (le ralentissement de 2 s expire avant le coup fatal), voir [plan 05 §13](05-perks-specialisations.md#13-compte-rendu-b2--effets-de-combat-et-de-survie-livrés-le-29-septembre-2026). Aucun coefficient n'a été modifié.
+
+
+## 27. B2 validé, Propagation laissée à l'agent, perks manquants — 29 septembre 2026
+
+Raphaël, après B2 : « Ok top. et tu as créé les sprites de ces perks. pour propagation jsp moi fais comme tu veux apres la cloche est juste une arme sur les 24. ca dit quoi pour les autres. et fais les perks manquantes ».
+
+**Acquis :** B2 tel que livré. Le réglage de Propagation est laissé au jugement de l'agent, à éclairer par les autres armes de contrôle et pas par la seule Cloche. **Demandé :** implémenter les perks restants (Sillage, Seconde lecture, Délestage, Habitude). Question sur les sprites des perks : aucun n'a été créé en B1/B2, les cartes de perk n'ont pas d'icône.

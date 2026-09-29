@@ -253,6 +253,8 @@ public partial class LevelUpScreen : CanvasLayer
             ? $"{ChoiceStyle.RarityGlyph(choice.Rarity.Rank)} {RarityPalette.DisplayName(choice.Rarity.Id).ToUpper()}".Trim()
             : isPerk ? PerkTag(choice.Id)
             : Tr(isWeapon ? "LEVELUP_NEW_WEAPON" : "LEVELUP_NEW_PASSIVE");
+        if (choice.IsCarried)
+            tag = $"{tag}  ·  {Tr("LEVELUP_CARRIED")}";
         header.AddChild(MakeLabel(tag, TextRole.Caption, frame, true));
         if (!isNew)
         {

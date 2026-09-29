@@ -25,6 +25,14 @@ public partial class Player
         return false;
     }
 
+    public bool HasSpecializationEffect(string effect)
+    {
+        foreach (PerkSpecializationData owned in _specializations)
+            if (owned.Effect == effect)
+                return true;
+        return false;
+    }
+
     /// <summary>Faux si le perk est inconnu, déjà acquis ou si les emplacements sont pleins.</summary>
     public bool AcquireSpecialization(PerkSpecializationData perk)
     {

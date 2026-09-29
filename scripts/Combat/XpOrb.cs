@@ -25,6 +25,8 @@ public partial class XpOrb : Area2D
     // et CombatPools la réveille quand le joueur revient. Le nomade en laisse des centaines derrière lui.
     private const float SleepDistance = 750f;
     private const float SleepAttractionMargin = 150f;
+    // Sillage : une orbe hors d'attraction consulte le couloir du joueur à ce rythme, pas à chaque pas physique.
+    private const float TrailCheckInterval = 0.15f;
 
     private static ulong _lastCollectMs;
     private static int _chain;
@@ -39,6 +41,8 @@ public partial class XpOrb : Area2D
     private Vector2 _hopTo;
     private float _hopElapsed = -1f;
     private float _trailTimer;
+    private float _trailCheckTimer;
+    private bool _trailBound;
 
     public bool IsAsleep { get; private set; }
 
@@ -46,6 +50,9 @@ public partial class XpOrb : Area2D
     public int SleepToken { get; private set; }
 
     /// <summary>Distance au joueur au-delà de laquelle l'orbe dort, attraction du joueur comprise.</summary>
+    /// <summary>Rayon dans lequel l'orbe fonce vers le joueur ; il donne aussi la demi-largeur du couloir de Sillage.</summary>
+    public static float AttractionRadius(Player player) => BaseAttractionRadius * player.XpMagnetMultiplier;
+
     public static float SleepRadius(Player player) =>
         Mathf.Max(SleepDistance, BaseDriftRadius * player.XpMagnetMultiplier + SleepAttractionMargin);
 
@@ -118,6 +125,8 @@ public partial class XpOrb : Area2D
         _xpValue = xpValue;
         _currentSpeed = 0f;
         _collected = false;
+        _trailBound = false;
+        _trailCheckTimer = (float)GD.RandRange(0.0, TrailCheckInterval);
         IsAsleep = false;
         // Léger décalage pour désynchroniser le flottement des orbes entre elles
         _floatTime = (float)GD.RandRange(0, Mathf.Tau);
@@ -167,14 +176,24 @@ public partial class XpOrb : Area2D
         float attractionRadiusSq = BaseAttractionRadius * magnetMult * BaseAttractionRadius * magnetMult;
         float driftRadiusSq = BaseDriftRadius * magnetMult * BaseDriftRadius * magnetMult;
         float distSq = GlobalPosition.DistanceSquaredTo(_player.GlobalPosition);
+        if (!_trailBound && distSq >= attractionRadiusSq && XpTrail.Any)
+        {
+            _trailCheckTimer -= dt;
+            if (_trailCheckTimer <= 0f)
+            {
+                _trailCheckTimer = TrailCheckInterval;
+                _trailBound = XpTrail.Covers(GlobalPosition);
+            }
+        }
         float sleepRadius = SleepRadius(_player);
-        if (distSq > sleepRadius * sleepRadius)
+        if (!_trailBound && distSq > sleepRadius * sleepRadius)
         {
             Sleep();
             return;
         }
 
-        if (distSq < attractionRadiusSq)
+        // Une orbe prise dans le Sillage rejoint le joueur jusqu'au bout, même si le couloir vieillit entre-temps.
+        if (distSq < attractionRadiusSq || _trailBound)
         {
             _currentSpeed = Mathf.Min(_currentSpeed + Acceleration * dt, MaxSpeed);
             Vector2 direction = (_player.GlobalPosition - GlobalPosition).Normalized();
@@ -256,9 +275,11 @@ public partial class XpOrb : Area2D
         CombatPools.Instance?.AddSleepingOrb(this);
     }
 
-    public void Wake()
+    /// <summary>Réveillée par la ronde ; <paramref name="trailBound"/> : le Sillage l'appelle depuis le couloir.</summary>
+    public void Wake(bool trailBound = false)
     {
         IsAsleep = false;
+        _trailBound = trailBound;
         _sprite.Play(PulseAnimation);
         // Le réglage des particules a pu changer pendant le sommeil.
         _glow.Visible = VfxFactory.CurrentParticleLevel != ParticleLevel.Off;

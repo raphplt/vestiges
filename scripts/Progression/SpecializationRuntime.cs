@@ -17,6 +17,9 @@ public partial class SpecializationRuntime : Node
     public const string OverflowEffect = "overflow";
     public const string PriorityTargetingEffect = "priority_targeting";
     public const string CarryControlEffect = "carry_control";
+    public const string XpTrailEffect = "xp_trail";
+    // Seconde lecture vit dans la file des choix de niveau (FragmentManager) : aucun état ici.
+    public const string CarriedChoiceEffect = "carried_choice";
 
     private Player _player;
     private ulong _playerId;
@@ -26,12 +29,14 @@ public partial class SpecializationRuntime : Node
     private OverflowCharge _overflow;
     private PriorityTargeting _priorityTargeting;
     private ControlPropagation _propagation;
+    private XpTrail _trail;
     private readonly System.Collections.Generic.List<WeaponInstance> _expired = new();
 
     public OverhealReserve Reserve => _reserve;
     public RallyWindow Rally => _rally;
     public OverflowCharge Overflow => _overflow;
     public PriorityTargeting PriorityTargeting => _priorityTargeting;
+    public XpTrail Trail => _trail;
 
     public void Initialize(Player player)
     {
@@ -59,6 +64,7 @@ public partial class SpecializationRuntime : Node
         _eventBus.EnemyKillResolved -= OnEnemyKill;
         _eventBus.PlayerDamaged -= OnVitalsChanged;
         _eventBus.WeaponInventoryChanged -= OnWeaponInventoryChanged;
+        _trail?.Unregister();
         if (_overflow == null)
             return;
         _eventBus.EnemyDamageResolved -= OnEnemyDamage;
@@ -90,6 +96,12 @@ public partial class SpecializationRuntime : Node
             case CarryControlEffect:
                 _propagation = new ControlPropagation(_playerId, perk, GetNode<GroupCache>("/root/GroupCache"));
                 break;
+            case XpTrailEffect:
+                _trail = new XpTrail(_player, Parameter(perk, "duration_seconds"), Parameter(perk, "sample_seconds"),
+                    Parameter(perk, "teleport_break_pixels"), Parameter(perk, "pickup_radius_multiplier"));
+                _trail.Register();
+                SetProcess(true);
+                break;
         }
     }
 
@@ -106,11 +118,12 @@ public partial class SpecializationRuntime : Node
             _overflow.Advance(dt, _expired);
             PublishExpiredOverflow();
         }
+        _trail?.Advance(dt);
         SetProcess(NeedsClock);
     }
 
-    /// <summary>Le temps de jeu ne compte que pour une fenêtre ou une réserve limitée dans le temps.</summary>
-    private bool NeedsClock => (_rally?.IsOpen ?? false) || (_overflow?.HasReserves ?? false);
+    /// <summary>Le temps de jeu compte pour une fenêtre, une réserve limitée dans le temps ou le trajet de Sillage.</summary>
+    private bool NeedsClock => (_rally?.IsOpen ?? false) || (_overflow?.HasReserves ?? false) || _trail != null;
 
     private void OnEnemyDamage(DamageResult result)
     {

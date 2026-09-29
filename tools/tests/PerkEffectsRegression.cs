@@ -20,6 +20,7 @@ public partial class PerkEffectsRegression : Node2D
     private Player _player;
     private EventBus _events;
     private readonly List<SpecializationGauge> _gauges = new();
+    private float _xpGained;
 
     public override async void _Ready()
     {
@@ -28,6 +29,7 @@ public partial class PerkEffectsRegression : Node2D
             GetNode<GameManager>("/root/GameManager").ChangeState(GameManager.GameState.Run);
             _events = GetNode<EventBus>("/root/EventBus");
             _events.SpecializationGaugeChanged += gauge => _gauges.Add(gauge);
+            _events.XpGained += amount => _xpGained += amount;
             PerkSpecializationDataLoader.Load();
 
             CheckOverhealReserve();
@@ -37,6 +39,8 @@ public partial class PerkEffectsRegression : Node2D
             await CheckPriorityTargeting();
             await CheckCarryControl();
             CheckInactiveAfterSwap();
+            await CheckXpTrail();
+            CheckCarriedChoice();
             GD.Print($"[PerkEffectsRegression] RESULT failures={_failures}");
             GetTree().Quit(_failures == 0 ? 0 : 1);
         }
@@ -337,6 +341,163 @@ public partial class PerkEffectsRegression : Node2D
             && PerkSpecializationOffers.IsActive(PerkSpecializationDataLoader.Get("carry_control"), _player)
             && PerkSpecializationOffers.IsActive(PerkSpecializationDataLoader.Get("overheal_reserve"), _player),
             "Arc retiré : Convergence inactive, Propagation (Cloche) et Prévoyance restent actives");
+    }
+
+    /// <summary>Sillage : couloir des 6 dernières secondes, coupé par une téléportation, orbes endormies rappelées.</summary>
+    private async Task CheckXpTrail()
+    {
+        Setup("xp_trail");
+        XpTrail trail = _player.SpecializationRuntime.Trail;
+        float radius = XpOrb.AttractionRadius(_player);
+        WalkTo(new Vector2(1200f, 0f), 24f);
+        Check(XpTrail.Covers(new Vector2(600f, radius * 0.8f)) && !XpTrail.Covers(new Vector2(600f, radius * 1.5f)),
+            $"Couloir de demi-largeur égale au rayon de collecte ({radius:0} px) le long du trajet");
+
+        CombatPools pools = new() { Name = "CombatPools" };
+        AddChild(pools);
+        PackedScene orbScene = GD.Load<PackedScene>("res://scenes/combat/XpOrb.tscn");
+        XpOrb onTrail = SpawnOrb(orbScene, new Vector2(300f, 60f));
+        XpOrb offTrail = SpawnOrb(orbScene, new Vector2(300f, 420f));
+        float xpBefore = _xpGained;
+        for (int frame = 0; frame < 20; frame++)
+            await ToSignal(GetTree(), SceneTree.SignalName.PhysicsFrame);
+        bool offAsleep = offTrail.IsAsleep;
+        for (int frame = 0; frame < 150 && _xpGained <= xpBefore; frame++)
+            await ToSignal(GetTree(), SceneTree.SignalName.PhysicsFrame);
+        Check(_xpGained > xpBefore, "Orbe endormie dans le couloir : réveillée, elle rejoint le joueur et crédite son XP");
+        Check(offAsleep && offTrail.IsAsleep, "Orbe hors du couloir : elle reste endormie");
+
+        Setup("xp_trail");
+        WalkTo(new Vector2(240f, 0f), 24f);
+        _player.GlobalPosition = new Vector2(1240f, 0f);
+        Advance(0.1f);
+        WalkTo(new Vector2(1480f, 0f), 24f);
+        Check(XpTrail.Covers(new Vector2(120f, 0f)) && XpTrail.Covers(new Vector2(1400f, 0f)) && !XpTrail.Covers(new Vector2(740f, 0f)),
+            "Téléportation : aucune collecte le long du saut, le trajet avant et après reste actif");
+
+        Advance(6.2f);
+        Check(!XpTrail.Covers(new Vector2(1400f, 0f)) && _player.SpecializationRuntime.Trail.SampleCount == 0,
+            "Joueur immobile : le trajet vieillit et disparaît après 6 s");
+        Setup();
+        Check(!XpTrail.Any, $"Joueur retiré : plus aucun couloir actif ({trail.SampleCount} points laissés)");
+        RemoveChild(pools);
+        pools.QueueFree();
+    }
+
+    /// <summary>Seconde lecture : la plus rare des améliorations laissées revient une fois, intacte, puis expire.</summary>
+    private void CheckCarriedChoice()
+    {
+        // Trois perks : aucun droit de perk n'interrompt les niveaux 3 à 19 du scénario.
+        Setup("carried_choice", "overheal_reserve", "rally");
+        WeaponInstance bow = _player.WeaponSlots[0];
+        WeaponInstance bell = AddWeapon("teachers_bell");
+        FragmentManager fragments = new() { Name = "FragmentManager" };
+        AddChild(fragments);
+        List<FragmentOption> pending = (List<FragmentOption>)typeof(FragmentManager).GetField("_pendingChoices", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(fragments);
+        CarriedChoice carried = (CarriedChoice)typeof(FragmentManager).GetField("_carriedChoice", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(fragments);
+        RandomNumberGenerator rng = new() { Seed = 5 };
+        FragmentOption Upgrade(WeaponInstance weapon, string rarity) => new FragmentOption(weapon.Id, "weapon_upgrade", weapon.Name, 1)
+            .WithWeaponUpgrade(UpgradeRoller.Get(rarity), UpgradeRoller.RollWeaponGains(weapon, UpgradeRoller.Get(rarity), rng));
+        FragmentOption Passive() => new("flamme_interieure", "passive_new", "Flamme", 1);
+        void Offer(int level, params FragmentOption[] options)
+        {
+            fragments.TriggerLevelUp(level);
+            pending.Clear();
+            pending.AddRange(options);
+        }
+
+        FragmentOption epicBell = Upgrade(bell, "epic");
+        Offer(3, Passive(), Upgrade(bow, "rare"), epicBell);
+        fragments.SelectFragment(pending[0]);
+        Check(carried.Pending is { IsCarried: true } report && report.Id == bell.Id && report.Rarity == epicBell.Rarity
+            && report.WeaponGains == epicBell.WeaponGains, "Sélection : la plus rare des améliorations laissées est reportée, gains figés");
+
+        fragments.TriggerLevelUp(4);
+        bool shown = fragments.PendingChoices.Count > 0 && fragments.PendingChoices[0].IsCarried && fragments.PendingChoices[0].Id == bell.Id;
+        int sameWeapon = 0;
+        foreach (FragmentOption option in fragments.PendingChoices)
+            sameWeapon += option.Type == "weapon_upgrade" && option.Id == bell.Id ? 1 : 0;
+        Check(shown && sameWeapon == 1, "Offre suivante : la carte reportée prend une place, aucune autre amélioration de la même arme");
+        fragments.AddRerolls(1);
+        fragments.Reroll();
+        Check(fragments.PendingChoices[0].IsCarried && fragments.PendingChoices[0].Id == bell.Id, "Relance : les cartes neuves changent, le report reste");
+        FragmentOption other = fragments.PendingChoices[1];
+        fragments.SelectFragment(other);
+        Check(carried.Pending == null || carried.Pending.Id != bell.Id, "Report non choisi : il expire et n'est jamais reporté deux fois");
+
+        Offer(5, Passive(), Upgrade(bow, "rare"), Upgrade(bell, "rare"));
+        fragments.SelectFragment(pending[0]);
+        Check(carried.Pending?.Id == bow.Id, "Égalité de rareté : la carte la plus à gauche est reportée");
+        fragments.TriggerLevelUp(6);
+        fragments.SkipChoice();
+        Check(carried.Pending == null, "Passer l'offre : le report est effacé");
+
+        Offer(7, Passive(), Upgrade(bell, "epic"));
+        fragments.SelectFragment(pending[0]);
+        _player.RemoveWeapon(1);
+        fragments.TriggerLevelUp(8);
+        bool anyCarried = false;
+        foreach (FragmentOption option in fragments.PendingChoices)
+            anyCarried |= option.IsCarried;
+        Check(!anyCarried && carried.Pending == null, "Arme partie : la carte reportée est libérée, offre normale");
+        fragments.SkipChoice();
+
+        bell = AddWeapon("teachers_bell");
+        Offer(9, Passive(), Upgrade(bell, "epic"));
+        fragments.SelectFragment(pending[0]);
+        fragments.TriggerLevelUp(10);
+        fragments.AddBanishes(1);
+        fragments.BanishFragment(bell.Id);
+        Check(carried.Pending == null && !fragments.PendingChoices[0].IsCarried, "Bannir l'arme reportée efface le report");
+        fragments.SkipChoice();
+
+        Offer(11, Passive(), Upgrade(bow, "uncommon"));
+        fragments.SelectFragment(pending[0]);
+        PerkSpecializationEffects.PreviewInactive = true;
+        fragments.TriggerLevelUp(20);
+        bool perkOffer = fragments.IsSpecializationChoice;
+        fragments.SelectFragment(fragments.PendingChoices[0]);
+        PerkSpecializationEffects.PreviewInactive = false;
+        Check(perkOffer && carried.Pending?.Id == bow.Id, "Un choix de perk ne consomme ni ne crée de report");
+        fragments.SkipChoice();
+
+        Setup();
+        _player.AddWeapon(WeaponDataLoader.Get("teachers_bell"));
+        FragmentManager plain = new() { Name = "FragmentManagerPlain" };
+        AddChild(plain);
+        CarriedChoice none = (CarriedChoice)typeof(FragmentManager).GetField("_carriedChoice", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(plain);
+        List<FragmentOption> plainPending = (List<FragmentOption>)typeof(FragmentManager).GetField("_pendingChoices", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(plain);
+        plain.TriggerLevelUp(3);
+        plainPending.Clear();
+        plainPending.AddRange(new[] { Passive(), Upgrade(_player.WeaponSlots[1], "epic") });
+        plain.SelectFragment(plainPending[0]);
+        Check(none.Pending == null, "Sans Seconde lecture : aucun report");
+        RemoveChild(fragments);
+        fragments.QueueFree();
+        RemoveChild(plain);
+        plain.QueueFree();
+    }
+
+    private void WalkTo(Vector2 target, float step)
+    {
+        Vector2 position = _player.GlobalPosition;
+        while (position.DistanceTo(target) > step)
+        {
+            position = position.MoveToward(target, step);
+            _player.GlobalPosition = position;
+            Advance(0.1f);
+        }
+        _player.GlobalPosition = target;
+        Advance(0.1f);
+    }
+
+    private XpOrb SpawnOrb(PackedScene scene, Vector2 position)
+    {
+        XpOrb orb = scene.Instantiate<XpOrb>();
+        orb.SetRelease(released => released.Visible = false);
+        AddChild(orb);
+        orb.Launch(position, 5f);
+        return orb;
     }
 
     private Node2D Nearest(float range)
