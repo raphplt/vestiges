@@ -1,8 +1,8 @@
 # Plan 05 — Perks de spécialisation, catalogue B V1
 
-29 septembre 2026 · **Catalogue V1 de neuf perks validé et extensible ; socle B0 et acquisition B1 livrés et vérifiés (acquisition en sommeil jusqu’aux effets de B2). Coefficients à éprouver, plafond d’armes non arbitré.**
+29 septembre 2026 · **Catalogue V1 de neuf perks validé et extensible ; B0, B1 et B2 livrés et vérifiés : cinq perks de combat et de survie actifs en run. Collecte/récompenses (B3) et objets (B4) à venir. Coefficients à éprouver, plafond d’armes non arbitré.**
 
-Références : [Stratégie V2](../VESTIGES-STRATEGIE-V2.md), [audit et étude A/B/C](05-catalogue-objets-perks.md), [personnages](06-fiches-casting.md), [progression](20-recompense-et-puissance.md). Ce document devient le contrat courant des perks. Les seize perks à dix niveaux et les sept exemples de l’étude sont historiques. La V1 est validée ; elle n’interdit pas de futurs ajouts. Les effets ne sont pas encore actifs dans les runs normales.
+Références : [Stratégie V2](../VESTIGES-STRATEGIE-V2.md), [audit et étude A/B/C](05-catalogue-objets-perks.md), [personnages](06-fiches-casting.md), [progression](20-recompense-et-puissance.md). Ce document devient le contrat courant des perks. Les seize perks à dix niveaux et les sept exemples de l’étude sont historiques. La V1 est validée ; elle n’interdit pas de futurs ajouts. Depuis B2, Prévoyance, Reprise, Débordement, Convergence et Propagation sont actifs en run ; les quatre autres effets restent hors des offres.
 
 ## 1. Contrat retenu et portée de cette version
 
@@ -364,9 +364,43 @@ L'acquisition des quatre perks est branchée dans la file de niveaux existante. 
 Vérifications :
 
 - `dotnet build` : zéro avertissement, zéro erreur.
-- `tools/test_perk_acquisition.sh` (nouveau) : 24 assertions, zéro échec. Run normale sans aucune carte de perk sur les niveaux 2 à 30 ; droit reporté puis servi au niveau suivant ; soixante premières offres toutes composées survie/combat/collecte, Prévoyance et Reprise vues toutes deux ; relance consommée ; paliers 2/6/12/20 ; passage reporté ; cascade 11→13 ; offres de 3, 2 puis 1 carte après bannissements et dernier bannissement refusé ; limite du catalogue ; éligibilité selon l'arsenal (arc, Cloche, arme bannie) ; cinquième perk et doublon refusés.
+- `tools/test_perk_acquisition.sh` (nouveau) : 21 assertions (chiffre corrigé le 29 septembre, 24 annoncé par erreur), zéro échec. Run normale sans aucune carte de perk sur les niveaux 2 à 30 ; droit reporté puis servi au niveau suivant ; soixante premières offres toutes composées survie/combat/collecte, Prévoyance et Reprise vues toutes deux ; relance consommée ; paliers 2/6/12/20 ; passage reporté ; cascade 11→13 ; offres de 3, 2 puis 1 carte après bannissements et dernier bannissement refusé ; limite du catalogue ; éligibilité selon l'arsenal (arc, Cloche, arme bannie) ; cinquième perk et doublon refusés.
 - `tools/test_perk_contracts.sh`, `tools/test_weapons.sh`, `tools/test_enemy_abilities.sh` : zéro échec.
 - `tools/smoke_test.sh 600` : vert.
 - Capture `CAPTURE_EXTRA_ARGS="--capture-cascade --preview-perks"` : cascade de cinq niveaux, perks aux niveaux 2 et 6 dans le même écran ouvert, règles de la réserve toutes PASS ; cartes et titre lisibles à 1080p.
 
 **Reporté à B2 :** état « inactif » d'un perk dont l'arme support a été échangée, avertissement avant l'échange au sol, chiffres utiles dans la pause. Ils n'ont de sens qu'avec des effets actifs. Aucune règle de profil ou de déblocage n'a changé : les neuf perks sont accessibles d'emblée, comme prévu au §1.
+
+
+## 13. Compte rendu B2 — effets de combat et de survie livrés le 29 septembre 2026
+
+Les cinq perks de combat et de survie sont actifs en run normale. Ils sont proposés aux paliers 2/6/12/20 selon l'arsenal. Sillage, Délestage, Seconde lecture et Habitude restent hors des offres (B3/B4) : une run compte donc au plus cinq candidats, et la première offre ne peut pas encore présenter de perk de collecte.
+
+| Perk | Comportement livré | Retour visuel |
+|---|---|---|
+| Prévoyance | Réserve de 20 % des PV max, pleine à l'acquisition, remplie par les seuls excédents de soin et de régénération (y compris à PV pleins). Restitution après un coup non fatal, au plus la perte et le stock ; ni Néant, ni coup fatal, ni recharge par une restitution. Tronquée pour de bon si les PV max baissent. | Liseré doré au bas de la barre de PV |
+| Reprise | Fenêtre de 4 s après un coup non fatal ; 40 % de la perte restant après Prévoyance deviennent récupérables, plafonnés à 20 % des PV max. Chaque élimination attribuée rend jusqu'à 2 % des PV max. Un second coup n'allonge pas l'échéance ; les soins extérieurs réduisent le budget. | Part récupérable en clair après les PV, qui pâlit avec la fenêtre et bat dans sa dernière seconde et demie |
+| Débordement | La moitié de l'excédent natif d'un coup direct fatal va en réserve pour l'arme, plafonnée à la référence de l'attaque qui charge, pendant 3 s. Le premier impact direct d'un lancement ultérieur de cette arme l'emporte. Pas de charge par un report seul, un DOT ou un coup secondaire ; réserve perdue si l'arme quitte l'inventaire, effacée avec le joueur. | Case d'arme cernée de bleu pâle ; chiffre de dégâts « »N » bleu pâle au coup renforcé |
+| Convergence | Les recherches de cible des armes qui visent (projectiles, arcs, chaîne) placent en tête l'élite ou le Souverain à portée déjà suivi, sinon le plus proche. Portée et motif inchangés ; onde, orbite et cône non concernés. | Quatre coins dorés au sol autour de la cible suivie |
+| Propagation | À une élimination attribuée, le ralentissement et la désorientation natifs encore actifs passent au plus proche voisin vivant à 120 px, avec intensité et durée restante. Pas de retransmission, et un contrôle plus fort déjà présent n'est pas affaibli. | Trait pâle de la victime au receveur |
+
+S'y ajoutent l'état **inactif** d'un perk sans arme support (pause) et l'avertissement de l'invite d'échange au sol (« Échanger : X · rend inactif : Convergence »). La pause affiche pour chaque perk sa règle et son état du moment : réserve, part récupérable et temps restant, réserves prêtes par arme, élite suivie.
+
+Architecture : un composant `SpecializationRuntime` par joueur, créé au premier perk, écoute les résultats B0 de l'`EventBus` et ordonne les réactions. Seul Débordement lit chaque impact, et seulement s'il est acquis. Le reste du temps, un impact paie une lecture de liste vide (`OverflowLedger.Take`) et une recherche de cible un test de nullité. Le composant ne tourne par frame que pendant une fenêtre ou une réserve. Les jauges passent par `EventBus.SpecializationGaugeChanged`.
+
+Vérifications :
+
+- `dotnet build` : zéro avertissement, zéro erreur.
+- `tools/test_perk_effects.sh` (nouveau) : 50 assertions, zéro échec, sur le vrai joueur et de vrais ennemis. Il couvre les cas limites des fiches listés ci-dessus, ainsi que l'échange d'arme et l'état inactif.
+- `tools/test_perk_acquisition.sh` : 21 assertions, adapté aux effets désormais actifs (seuls des perks branchés sont proposés ; report sans candidat vérifié sans arme).
+- Contrats (32), armes, capacités ennemies, déplacements : zéro échec ; `tools/smoke_test.sh 600` vert.
+- Captures `CAPTURE_EXTRA_ARGS="--capture-perks --perk-scene <survival|overflow|priority|carry|status>"`, regardées : liseré et part récupérable, case d'arme et chiffre renforcé, repère sur une élite plus lointaine que les rôdeurs, trait de Propagation, pause et invite d'échange lisibles en 1080p.
+- Banc dense A/B `b2420397` (B1) contre B2 : FPS médians 306,8 → 315,9 (720p) et 294,8 → 287,3 (1080p), p99 6,6 → 6,3 / 6,6 → 6,7 ms, 1 nœud créé/s des deux côtés. Écarts dans le bruit ; charge de 1,25 à 2,10 sur 2 cœurs, donc aucune conclusion fine sur les FPS. **Limite :** ce banc tourne sans perk et sans élimination ; il établit l'absence de coût pour un joueur sans perk, pas le coût des effets actifs en foule.
+
+Relecture de code (sous-agent) sans bug bloquant. Deux points corrigés avant clôture : l'invite d'échange gardée en cache jusqu'au prochain changement d'arme ou de perk (elle était recalculée à chaque pas physique), et l'état actif d'un perk qui ignore désormais le nombre d'armes améliorables (condition d'offre seulement). Limites connues, laissées en l'état :
+
+- Débordement sur l'orbite : chaque contact d'orbe est une attaque autonome (contrat B0), donc une réserve chargée par un contact est souvent emportée par le suivant, presque aussitôt. Le cône garde un seul lancement pour toute son émission.
+- Propagation lors d'une mort groupée : le voisin choisi peut mourir dans la même frappe de zone, et le contrôle transmis est alors perdu.
+- Un échange au sol qui échouerait après le retrait de l'arme ferait perdre sa réserve de Débordement ; cas presque inatteignable, les doublons étant refusés avant.
+
+**Constat de réglage à trancher — Propagation avec la Cloche seule.** Dans la scène `carry` (Cloche seule, rôdeurs de début de partie, 15 s), sur 14 éliminations, aucune n'est faite d'un seul coup, et pourtant aucune victime n'est encore ralentie au coup fatal. L'écart entre le dernier coup et le coup fatal va de 2,1 à 3,2 s (temps réel de capture), au-delà des 2 s de ralentissement, vraisemblablement parce que le recul de 60 px sort la cible de portée. La règle fonctionne (banc, transmission contrôlée), mais la synergie « Cloche + Propagation » citée par la fiche ne se produit presque pas sans une autre arme qui achève. Pistes, non appliquées : allonger le ralentissement de la Cloche, réduire son recul, ou admettre un contrôle expiré depuis moins d'une seconde. Décision de Raphaël.

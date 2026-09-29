@@ -112,10 +112,16 @@ public sealed class PerkSpecializationOffers
 
     /// <summary>Conditions d'offre de la fiche, évaluées sur l'arsenal courant (armes bannies non améliorables).</summary>
     public static bool IsEligible(PerkSpecializationData perk, Player player, IReadOnlySet<string> banishedWeapons) =>
-        IsEligible(perk, player.WeaponSlots, banishedWeapons);
+        IsEligible(perk, player.WeaponSlots, banishedWeapons, true);
 
-    /// <summary>Un perk acquis reste sans effet tant que l'arsenal ne remplit plus sa condition (arme support échangée).</summary>
-    public static bool IsActive(PerkSpecializationData perk, Player player) => IsEligible(perk, player.WeaponSlots, NoBanishedWeapons);
+    /// <summary>
+    /// Un perk acquis reste sans effet tant que l'arsenal ne remplit plus sa condition (arme support échangée). Le
+    /// nombre d'armes améliorables ne compte que pour l'offre : des armes au maximum ne rendent rien inactif.
+    /// </summary>
+    public static bool IsActive(PerkSpecializationData perk, Player player) => IsActive(perk, player.WeaponSlots);
+
+    private static bool IsActive(PerkSpecializationData perk, IReadOnlyList<WeaponInstance> weapons) =>
+        IsEligible(perk, weapons, NoBanishedWeapons, false);
 
     /// <summary>
     /// Perks aujourd'hui actifs qu'un échange de l'arme du premier emplacement contre <paramref name="incoming"/>
@@ -132,13 +138,14 @@ public sealed class PerkSpecializationOffers
         string names = "";
         foreach (PerkSpecializationData perk in player.Specializations)
         {
-            if (IsActive(perk, player) && !IsEligible(perk, SwapPreview, NoBanishedWeapons))
+            if (IsActive(perk, player) && !IsActive(perk, SwapPreview))
                 names = names.Length == 0 ? perk.Name : $"{names}, {perk.Name}";
         }
         return names;
     }
 
-    private static bool IsEligible(PerkSpecializationData perk, IReadOnlyList<WeaponInstance> weapons, IReadOnlySet<string> banishedWeapons)
+    private static bool IsEligible(PerkSpecializationData perk, IReadOnlyList<WeaponInstance> weapons, IReadOnlySet<string> banishedWeapons,
+        bool countUpgradeable)
     {
         PerkSpecializationEligibility conditions = perk.Eligibility;
         // Aucune récompense d'objets à choix n'existe en run avant le catalogue d'objets (B4).
@@ -160,7 +167,7 @@ public sealed class PerkSpecializationOffers
         return (!conditions.TargetingWeapon || targeting)
             && (!conditions.DirectDamageWeapon || directHits)
             && (!conditions.NativeControlWeapon || nativeControl)
-            && upgradeable >= conditions.MinUpgradeableWeapons;
+            && (!countUpgradeable || upgradeable >= conditions.MinUpgradeableWeapons);
     }
 
     private bool IsAvailable(PerkSpecializationData perk, Player player) =>

@@ -31,6 +31,8 @@ public partial class WeaponPickup : Area2D, IInteractable
 	private float _scatterTimer;
 	private bool _collected;
 	private GroupCache _groupCache;
+	private EventBus _eventBus;
+	private string _prompt;
 
 	public WeaponData Weapon => _weaponInstance?.Base;
 	public WeaponInstance WeaponInstance => _weaponInstance;
@@ -39,11 +41,14 @@ public partial class WeaponPickup : Area2D, IInteractable
 	public Vector2 InteractPosition => GlobalPosition;
 	public Vector2 PromptPosition => GlobalPosition + new Vector2(0f, -24f);
 	// L'invite traduit sa clé : un texte déjà composé s'affiche tel quel.
-	public string PromptVerbKey => SwapPrompt();
+	public string PromptVerbKey => _prompt ??= SwapPrompt();
 	public float HoldTime => SwapHoldSec;
 	public Color GaugeColor => UITheme.GoldBright;
 
-	/// <summary>L'échange prévient s'il laisserait un perk sans arme compatible (plan 05, B2).</summary>
+	/// <summary>
+	/// L'échange prévient s'il laisserait un perk sans arme compatible (plan 05, B2). L'invite est lue à chaque pas
+	/// physique : le texte est gardé jusqu'au prochain changement d'arme ou de perk.
+	/// </summary>
 	private string SwapPrompt()
 	{
 		string prompt = string.Format(Tr("WEAPON_SWAP_PROMPT"), _weaponInstance?.Name ?? "");
@@ -71,12 +76,25 @@ public partial class WeaponPickup : Area2D, IInteractable
 	public override void _EnterTree()
 	{
 		Interactables.Register(this);
+		_eventBus = GetNodeOrNull<EventBus>("/root/EventBus");
+		if (_eventBus == null)
+			return;
+		_eventBus.WeaponInventoryChanged += InvalidatePrompt;
+		_eventBus.SpecializationAcquired += OnSpecializationAcquired;
 	}
 
 	public override void _ExitTree()
 	{
 		Interactables.Unregister(this);
+		if (_eventBus == null)
+			return;
+		_eventBus.WeaponInventoryChanged -= InvalidatePrompt;
+		_eventBus.SpecializationAcquired -= OnSpecializationAcquired;
 	}
+
+	private void InvalidatePrompt() => _prompt = null;
+
+	private void OnSpecializationAcquired(string specializationId) => _prompt = null;
 
 	public override void _Ready()
 	{

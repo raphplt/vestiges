@@ -339,3 +339,5 @@ Livraison de B0 : données et loader extensibles, contrats de dégâts/soins/sta
 Raphaël, après la livraison de B1 (acquisition en sommeil tant qu'aucun effet n'est branché) : « je valide et passe a B2 ».
 
 **Acquis :** B1 tel que livré, y compris le report d'un perk passé à chaque niveau suivant jusqu'à ce qu'un perk soit pris (§2 du plan 05). **Engagé :** lot B2, effets de combat et de survie (Prévoyance, Reprise, Débordement, Convergence, Propagation) et leurs retours visuels, découpés au [plan 05 §8.3](05-perks-specialisations.md). Les coefficients restent des valeurs d'essai.
+
+Livraison de B2 : les cinq effets sont actifs en run et donc proposés aux paliers. Leurs coefficients restent les valeurs d'essai des fiches. **À trancher par Raphaël :** avec la Cloche seule, Propagation ne se déclenche presque jamais (le ralentissement de 2 s expire avant le coup fatal), voir [plan 05 §13](05-perks-specialisations.md#13-compte-rendu-b2--effets-de-combat-et-de-survie-livrés-le-29-septembre-2026). Aucun coefficient n'a été modifié.
