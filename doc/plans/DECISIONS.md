@@ -357,3 +357,15 @@ Suite donnée : la règle de Propagation est conservée après mesure sur Cloche
 Raphaël : « ouais en effet pour le catalogue d'objets il va falloir réviser la liste et les créer. une proposition récente a été fait mais elle reste à retravailler. c'est le moment de faire ca. récompense à choix : à déterminer, pour moi en dehors des coffres dans un truc à part. à déterminer.. 3 oui il me faut une planche de proposition ».
 
 **Acquis :** le catalogue d'objets est le chantier courant. La proposition récente est à retravailler, puis les objets seront créés. La récompense à choix d'objets est **distincte des coffres**, dans une source à part dont la forme reste à déterminer. Une planche de proposition d'icônes de perks est demandée. **Non acquis :** la forme de cette source, le contenu du catalogue révisé, le style des icônes.
+
+
+## 29. Retours sur le catalogue d'objets V1 et la planche de perks — 29 septembre 2026
+
+Raphaël : « pour les icons de perks je prefer e par famille juste je trouve que certains comme la propagation, la prévoyange le sillage - en vrai presque tous - ne sont pas assez "reconnaissables". Pour les objets c'est pas mal apres le truc qui me gene c'est que les objets sont quasi tous des multiplicateurs. il faudrait plus de diversité et d'originalité. ca peut pas etre que des multiplicateurs meme si c'est bien d'en avoir. avoir mis plusieurs difficultés c'est bien. je te laisse etre créatif sur ce que pourraient faire les objets regarde du coté de megabonk notamment (à ne pas copier telle quelle). aussi pour info ca c'est important mais les objets et armes ne sont pas tous débloqués par défaut il y aura un nombre limité de dispos et le reste accessible via des quetes / achats (si on a un systeme de monnaie persistante). Ah et en vrai les perks sous forme de pins j'aime pas trop, je verrai une autre forme du type des fragments par exemple ».
+
+**Acquis :**
+- Icônes de perks : couleur **par famille** ; pas de pin's, une autre forme, par exemple des **fragments** ; motifs à rendre bien plus reconnaissables.
+- Objets : garder quelques multiplicateurs et les **raretés** (« plusieurs difficultés »), mais la majorité doit apporter des effets **divers et originaux**. S'inspirer de Megabonk sans copier.
+- **Armes et objets ne sont pas tous débloqués par défaut** : une réserve de départ limitée, le reste par quêtes ou achats (monnaie persistante, si elle existe).
+
+**Non acquis :** la liste d'objets, la source à choix, la forme exacte des fragments.

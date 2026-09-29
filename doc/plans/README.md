@@ -58,6 +58,8 @@ Les numéros servent à identifier les plans, pas à imposer leur exécution int
 
 Un seul lot d'implémentation ouvert à la fois. Un échec de lisibilité, de performance ou de fun ramène au lot concerné avant expansion.
 
+**Mise à jour du 29 septembre, suite — proposition 2 des objets et des icônes, à valider :** le [catalogue d'objets](05-objets-catalogue-v1.md) compte 30 objets, dont 19 à condition, contrepartie ou effet sur le monde et 11 multiplicateurs. Il ajoute les déblocages : 13 objets au départ, les autres par quêtes ou achats en Vestiges au Hub. Les [icônes de perks](planches/perks-icones-proposition-2.png) deviennent des fragments teintés par famille, aux pictogrammes repris des retours visuels du jeu ([plan 05 §15](05-perks-specialisations.md)).
+
 **Mise à jour du 29 septembre — catalogue d'objets révisé et planche d'icônes de perks, à valider :** le [catalogue d'objets V1](05-objets-catalogue-v1.md) propose 23 objets. Il retire les cinq qui copiaient une signature d'arme, donne une destination aux treize passifs et une source à part pour la récompense à choix (le Reliquaire, Triptyque du plan 13). La [planche d'icônes de perks](planches/perks-icones-proposition-1.png) propose des pin's émaillés, en deux variantes d'émail. Rien n'est créé en jeu avant validation.
 
 **Mise à jour du 29 septembre — B3 sans objets livré :** [plan 05 §14](05-perks-specialisations.md#14-compte-rendu-b3-partie-sans-objets--sillage-et-seconde-lecture-29-septembre-2026). Sillage et Seconde lecture sont actifs. Propagation, mesurée sur les trois armes de contrôle, reste inchangée : seule la Cloche échoue, c'est un réglage d'arme. Délestage et Habitude sont bloqués : il n'existe ni inventaire d'objets ni récompense à choix. Banc d'effets de 66 assertions.

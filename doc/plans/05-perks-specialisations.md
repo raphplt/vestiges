@@ -469,3 +469,24 @@ Les implémenter sur les anciens Dons reviendrait à trancher le catalogue d'obj
 - `tools/test_perk_acquisition.sh` : 21 assertions, zéro échec.
 - Contrats, armes, capacités ennemies : zéro échec. `tools/smoke_test.sh 600` : vert.
 - Incident de procédure : un commit (`98661434`) est passé avec un échec du banc d'acquisition, dû au banc lui-même (joueur sans arme en aperçu). Il est corrigé par `a7ea44d1` ; le jeu n'était pas en cause.
+
+
+## 15. Icônes des perks — proposition 2, 29 septembre 2026
+
+Retour sur la proposition 1 (pin's émaillés) : couleur par famille retenue, pin's écartés, motifs pas assez reconnaissables, forme de fragment suggérée ([DECISIONS §29](DECISIONS.md)).
+
+[Planche 2](planches/perks-icones-proposition-2.png), générée par `python3 tools/generate_perk_icons.py --sheet <fichier>` (`tools/sprites/perks/icons.py`). Chaque perk est un **fragment de mémoire** : un éclat à facettes teinté par sa famille (rouge combat, vert survie, bleu collecte, violet récompenses), qui fait écho aux « Fragments de mémoire » de l'écran de niveau. Le pictogramme est gravé dessus. Il reprend quand il le peut un retour visuel déjà vu en jeu, pour que l'icône et l'effet se reconnaissent l'un l'autre.
+
+| Perk | Pictogramme |
+|---|---|
+| Convergence | Les quatre coins du repère posé en jeu autour d'une couronne |
+| Débordement | Le « » » du chiffre renforcé, qui déborde en gouttes |
+| Propagation | Une cible tombée (croix), un saut, une spirale de vertige |
+| Prévoyance | Un cœur et, dessous, le liseré doré de la réserve |
+| Reprise | Un cœur et la flèche qui revient vers lui |
+| Sillage | Le trajet en pointillés fléché et les orbes qu'il ramasse |
+| Délestage | Une balance : un objet contre une orbe |
+| Seconde lecture | Une carte et la flèche qui la ramène |
+| Habitude | L'icône « dupliquer » |
+
+Points faibles connus : Sillage reste le moins évident, et l'éclat évoque parfois un caillou plus qu'un cristal (facettes trop douces). Rien n'est écrit dans `assets/` ni branché sur les cartes avant validation.
