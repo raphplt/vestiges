@@ -1,6 +1,6 @@
 # Plan 21 — Le système de build, reconçu depuis les principes
 
-29 septembre 2026 · **Proposition à valider par Raphaël.** Demande ([DECISIONS §31](DECISIONS.md)) : repartir d'un point de vue neutre, sans présupposé, et construire la manière dont le build se fait en respectant les [douze principes](../PRINCIPES-BUILD.md), quitte à remettre en cause ce qui était prévu ou déjà implémenté. Aucun code modifié par ce document.
+29 septembre 2026 · **Version 2 après les arbitrages de Raphaël ([DECISIONS §32](DECISIONS.md)) : la [§16](#16-version-2--arbitrages-du-29-septembre) fait foi là où elle contredit les sections précédentes.** Demande ([DECISIONS §31](DECISIONS.md)) : repartir d'un point de vue neutre, sans présupposé, et construire la manière dont le build se fait en respectant les [douze principes](../PRINCIPES-BUILD.md), quitte à remettre en cause ce qui était prévu ou déjà implémenté. Aucun code modifié par ce document.
 
 Méthode : partir de ce que Vestiges possède déjà en propre (l'Effacement, les zones oubliées, l'Essence, les Mémoriaux, les Failles et le Péril, les Résurgences, l'exploration nomade, les personnages du plan 06) ; poser une structure ; la vérifier principe par principe ; puis seulement comparer avec l'existant.
 
@@ -298,3 +298,60 @@ Chaque lot se mesure par des runs de bot orientées par archétype.
 4. Courbe de 80 à 110 niveaux au lieu de 300 à 400 : acceptes-tu de revoir le plan 20 ?
 5. Pas de trait « +dégâts » universel : d'accord ?
 6. Par quel lot commencer ? Recommandation : G0 puis G1, car ils touchent peu de code et rendent tout le reste possible.
+
+## 16. Version 2 — arbitrages du 29 septembre
+
+Raphaël tranche la plupart des questions ([DECISIONS §32](DECISIONS.md)). Cette section remplace les passages contraires des §4, §5, §6, §9, §10 et §11.
+
+### Armes : quoi, inchangé dans le cœur, avec une ascension
+
+- Niveau max **50**. Amélioration par **tirage aléatoire de stats** au level-up, avec rareté : la Chance favorise les rares, et une amélioration peut toucher plusieurs stats. C'est le système actuel du plan 17. Le plan 21 garde sa grammaire : la carte nomme les propriétés touchées (Fréquence, Nombre, Taille…), ce qui répond au principe 2 sans supprimer le hasard.
+- **Ascension au niveau max :** deux voies finales au choix. Les voies de la §4 (Volée ou Transpercer, Glas ou Tocsin…) deviennent ces ascensions. C'est le changement de régime (P5), qui récompense d'avoir mené une arme au bout.
+- **Objet légendaire proposé :** une amélioration d'arme touche une stat de plus. Inspiré du marteau de Megabonk ; son nom, sa forme et son effet exact restent à rendre propres à Vestiges. Par exemple, l'**Établi de grand-père** : chaque amélioration d'arme gagne +1 stat, et +1 de plus tous les 25 niveaux de l'objet.
+
+### Objets : quand, en 6 emplacements qui montent loin
+
+- **6 emplacements**, niveaux **jusqu'à 50**.
+- **Proposition d'acquisition :** un objet **neuf** vient du monde (Reliquaire, Souverain, ligne de coffre) ; ses **niveaux** viennent du level-up, comme ceux des armes, et des doublons trouvés dans le monde.
+  - Avec 4 armes et 6 objets à 50 niveaux, le level-up a environ 490 améliorations à offrir : de quoi porter les 300 à 400 niveaux visés sans surplus précoce.
+  - Chaque niveau d'objet monte son effet ; les niveaux 10, 25 et 50 sont des paliers marquants (seuil franchi, effet supplémentaire, régime). Exemples : l'Allumette enflamme plus souvent, puis la Brûlure se propage au palier 25 ; le Pétard explose plus grand, puis en deux temps au palier 50.
+
+### Traits : recommandation, les fondre dans les objets
+
+Question de Raphaël : comment obtient-on les traits, et sont-ils nécessaires ?
+
+- **Obtention prévue en version 1 :** par le level-up, comme les passifs actuels. Une carte « nouveau trait » quand un emplacement est libre, puis des cartes de niveau.
+- **Sont-ils nécessaires ? Plus maintenant.** Les objets montent désormais par le level-up jusqu'au niveau 50 : ils peuvent porter à la fois les interactions (quand) et les propriétés communes (combien).
+  - Un objet comme **Démultiplication** (+1 Nombre à certains paliers) ou **Cadence** remplit le rôle d'un trait. Il occupe un des 6 emplacements, donc il se paie en place (P8).
+  - Garder une cinquième famille avec 4 emplacements de plus ajouterait une couche à apprendre sans fonction distincte (P1).
+
+**Recommandation :** pas de famille « traits ». Les objets se répartissent entre objets de **propriété** (Cadence, Démultiplication, Envergure, Allonge, Persistance, Précision, Vigueur, Élan, Mémoire, Fortune) et objets de **déclencheur** (Allumette, Pétard, Dé à coudre…). Les 6 emplacements obligent à doser les deux.
+
+Les passifs actuels migrent vers ces objets de propriété, sauf Flamme (« +dégâts » uniforme, P2). La structure devient **4 armes, 6 objets, 4 fragments, 1 personnage**.
+
+### Fragments : comment, source changée
+
+Un fragment se cristallise **après chaque Résurgence survécue**, au choix parmi trois ; parfois aussi sur un Souverain. Quatre au maximum. C'est validé et prêt à implémenter : les effets livrés ne changent pas.
+
+### Hasard et orientation
+
+- **Relances :** nombre limité par run (3 aujourd'hui).
+- **Bannissements :** les 3 premiers sont gratuits. Ensuite chacun coûte du Péril, de plus en plus : +⅓, puis +⅔, puis +1, +1⅓… Bannir reste possible sans limite, mais oublier se paie de plus en plus cher.
+
+### Courbe et surplus
+
+300 à 400 niveaux sont conservés : les gains restent visibles en début de partie, et les cascades de niveaux de milieu et fin de partie (réserve automatique, plan 20) sont voulues. Le §10 du plan 21 est annulé sur ce point.
+
+### Chemins
+
+La §11 n'est qu'un **aperçu de six directions parmi des dizaines ou des centaines**. La grammaire commune est justement faite pour que des combinaisons non prévues fonctionnent sans règle spéciale. Aucune pièce n'est conçue « pour » un archétype.
+
+### Lots révisés
+
+| Lot | Contenu | Statut |
+|---|---|---|
+| G1 | Fragments offerts après chaque Résurgence (source d'offre), bannissements gratuits puis Péril croissant | **Validé, prêt** |
+| G0 | Grammaire commune dans le code : propriétés nommées sur les cartes d'armes, déclencheurs et statuts partagés | À faire avant les objets |
+| G2 | Objets : 6 emplacements, 50 niveaux, neuf par le monde (Reliquaire), niveaux par le level-up ; migration des passifs | Après validation du catalogue et de la question des traits |
+| G3 | Ascensions d'armes au niveau max (deux voies) | Après G0 |
+| G4 | Personnages : affinités d'offre | Avec le plan 06 |

@@ -396,3 +396,22 @@ Raphaël : « ok juste avant de toute valider essaie de prendre un point de vue 
 - l'agent est libre sur la forme (armes, fragments, objets, autre chose).
 
 **Non acquis :** la proposition qui en découlera, à présenter avant validation.
+
+
+## 32. Arbitrages sur le plan 21 — 29 septembre 2026
+
+Raphaël : « je garderai le niveau 50 pour les armes (ou en tout cas, plus que 10). et je garderai aussi le fait qu'augmenter une arme se fasse par le level up aléatoire de stats. c'est plus stimulant. (en sachant qu'avec plus de chance ca augmente les augments rares et qu'une amélioration d'arme peut contenir plusieurs stats. il faut ptet un item qui augmente le nombre de stat augmenté par amélioration (item légendaire mais copie du marteau de megabonkà). par contre pourquoi pas rajouter un systeme quand on passe level max d'une arme qui propose deux "voies" ou améliorations finales, ca c'est pas mal du tout. Les passifs/traits ok mais je ne comprend pas trop comment on les obtient ni s'ils sont réellement nécessaires. Pour les fragments ca me va de changer la source d'offre tres bonne idée. pour les objets ca me va d'en avoir 6 par contre je mettrai pas level 3 max mais genre level 30 ou 50. Top sinon les propositions pour les personnages ca me va et ca manquait clairemenet. Limiter les relances ca me va aussi. et pour les banissements ce que je ferai c'est en avoir des gratuits et au fur et à mesure ca commence à couter du péril et de plus en plus. Viser 300 à 400 niveaux n'est pas grave du tout et ca ne diluera pas la perception des gains. déjà car ca restera visible en early game et en mid / late game il y aura des mécaniques qui feront que l'xp pourra s'accumuler en gros on pourra monter de plusiuers niveaux à la fois. pour ta liste de "plusiuers chemins" ok si c'est juste un petit apercu mais attention à ne pas limiter le jeu selon une vision trop réduite de chemin possible il y en aura des dizaines ou des centaines. »
+
+**Acquis :**
+- **Armes :** niveau max 50 (au moins bien plus que 10). Amélioration par tirage aléatoire de stats au level-up, avec rareté (la Chance favorise les rares) et plusieurs stats possibles par amélioration.
+- **Voies finales :** au niveau max, deux voies ou améliorations finales au choix.
+- **Idée d'objet légendaire** qui augmente le nombre de stats par amélioration d'arme (inspiré du marteau de Megabonk, à rendre propre à Vestiges).
+- **Fragments :** offerts après les Résurgences au lieu des niveaux 2/6/12/20.
+- **Objets :** 6 emplacements, niveaux jusqu'à 30 ou 50.
+- **Personnages :** affinités et orientation du plan 21 §8.
+- **Relances :** limitées.
+- **Bannissements :** quelques-uns gratuits, puis un coût en Péril croissant.
+- **Courbe :** 300 à 400 niveaux conservés ; la montée de plusieurs niveaux à la fois en mi-partie et en fin de partie est voulue.
+- **Chemins :** la liste d'archétypes n'est qu'un aperçu ; le jeu doit permettre des dizaines ou des centaines de chemins.
+
+**Question ouverte :** les traits (comment on les obtient, sont-ils nécessaires ?).
