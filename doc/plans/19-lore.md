@@ -558,3 +558,22 @@ Ce que ce fil montre du principe :
 2. Le ton des trois documents te va-t-il ? Trop sombre, trop sec, trop littéraire, ou juste ?
 3. Le fil du Facteur te donne-t-il l'effet « présent dès le début, compris très tard » que tu cherchais ?
 4. Une fin personnelle qui passe par un autre personnage (se nommer l'un l'autre) : est-ce la bonne forme de fin, ou faut-il qu'elle soit possible seul ?
+
+## 13. Script global — 29 septembre
+
+Retour de Raphaël sur §12 : la correction « l'oubli ne marche qu'à plusieurs » est « mieux, à la fois plus poétique et plausible » ; le ton des documents est « top » ; le fil du Facteur est « bien ». Direction générale ajoutée : une histoire **mémorable**, qu'on peut manquer si l'on ne cherche pas, mais parfaitement ficelée, touchante, profonde, avec plusieurs niveaux de lecture. Il demande une version finale rapide du lore, « une sorte de script global et détaillé », rédigée en auteur, pour pouvoir ensuite se concentrer sur le jeu.
+
+**Livré : [VESTIGES-LORE.md](../VESTIGES-LORE.md)**, version 1.0, à relire. Contenu :
+- résumé en une page ;
+- règles du monde ;
+- lieu (Vaulme, provisoire) et biomes ;
+- chronologie ;
+- la nuit du 14 novembre heure par heure ;
+- dix personnages : les six du casting et quatre ajouts (le Sonneur, l'Écolière, la Photographe, la Veilleuse en personnage caché), plus une version alternative (l'Enfant du Bas-Port) ;
+- les figures non jouables ;
+- le sens de chaque système du jeu ;
+- les niveaux de lecture et les paliers de découverte ;
+- les fins personnelles, la vraie fin, l'après-fin ;
+- les règles d'écriture, ce qui reste ouvert, les conséquences pour le jeu, les trente et un noms.
+
+Les choix d'auteur non validés y sont marqués « à valider ».
