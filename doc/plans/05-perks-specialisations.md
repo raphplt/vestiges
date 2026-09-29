@@ -1,6 +1,6 @@
 # Plan 05 — Perks de spécialisation, catalogue B V1
 
-28 septembre 2026 · **Catalogue V1 de neuf perks validé et extensible ; socle B0 livré et vérifié. Coefficients à éprouver, plafond d’armes non arbitré.**
+29 septembre 2026 · **Catalogue V1 de neuf perks validé et extensible ; socle B0 et acquisition B1 livrés et vérifiés (acquisition en sommeil jusqu’aux effets de B2). Coefficients à éprouver, plafond d’armes non arbitré.**
 
 Références : [Stratégie V2](../VESTIGES-STRATEGIE-V2.md), [audit et étude A/B/C](05-catalogue-objets-perks.md), [personnages](06-fiches-casting.md), [progression](20-recompense-et-puissance.md). Ce document devient le contrat courant des perks. Les seize perks à dix niveaux et les sept exemples de l’étude sont historiques. La V1 est validée ; elle n’interdit pas de futurs ajouts. Les effets ne sont pas encore actifs dans les runs normales.
 
@@ -258,6 +258,15 @@ Les lots intermédiaires restent sous contrôle dev tant que les effets annoncé
 
 L’état de validation est consigné au §11. B1/B2/B3/B4 ne sont pas livrés par ce socle.
 
+### 8.2 Découpage de B1 engagé — 29 septembre 2026
+
+1. **Activation par effet** : un registre côté code liste les effets réellement branchés. En B1 il est vide : aucune carte de perk n’apparaît en run normale, le calendrier reporte simplement son droit. Un aperçu réservé aux bancs et captures (compilé seulement avec `TOOLS`) permet d’éprouver l’acquisition sans prétendre à un effet. Chaque lot suivant active ses effets au fur et à mesure.
+2. **État de run** : les perks équipés vivent sur le joueur (ordre d’acquisition, aucun doublon, quatre au plus), un signal `EventBus` annonce chaque acquisition pour les effets et l’interface futurs.
+3. **Éligibilité** : traits d’arme dérivés des données existantes (recherche de cible hors onde/orbite, impacts directs, ralentissement/désorientation natifs, armes encore améliorables). Conditions d’objets fausses tant que B4 n’existe pas.
+4. **Calendrier dans la file existante** : droits gagnés aux paliers 2/6/12/20, un droit servi au plus par niveau, report au niveau suivant après passage ou sans candidat, place conservée dans une cascade. Composition de la première offre en données (survie, combat, collecte/récompenses). Relance et bannissement communs ; bannissement refusé s’il empêcherait de remplir les emplacements restants.
+5. **Interface** : carte de perk distincte (famille, phrase d’effet), titre indiquant l’emplacement servi, liste des perks dans la pause.
+6. **Validation** : nouveau banc de régression d’acquisition, capture d’une cascade en aperçu, régressions armes/contrats, smoke. Hors B1 : état « inactif » d’un perk après changement d’arme et avertissement avant échange, qui n’ont de sens qu’avec des effets actifs (B2).
+
 
 ## 9. Migration conjointe des statistiques — préparation B0
 
@@ -325,3 +334,27 @@ Vérifications déjà exécutées sur ce socle :
 - `python3 -m unittest discover -s tools/tests -p test_progression_model.py -v` : six tests verts.
 
 `git diff --check` vert ; tous les nouveaux scripts C# ont leur UID. La case B0 est cochée dans la roadmap V2, aucune autre case de cette verticale. Ce socle n’introduit pas de nouveau rendu de perks : la capture de recette en run accompagne les futurs effets et leur interface. Aucune affirmation de performance ou d’équilibrage n’est déduite de ces régressions.
+
+
+## 12. Compte rendu B1 — acquisition livrée et vérifiée le 29 septembre 2026
+
+L'acquisition des quatre perks est branchée dans la file de niveaux existante. **Elle reste en sommeil en run normale** : aucun effet n'étant encore actif, aucun perk n'est proposable et chaque droit se reporte sans rien changer au jeu. B2 activera ses effets un à un dans `PerkSpecializationEffects` ; les cartes correspondantes apparaîtront alors d'elles-mêmes.
+
+| Élément livré | Comportement |
+|---|---|
+| `PerkSpecializationEffects` | Liste des effets branchés, vide en B1. `PreviewInactive` (compilé seulement avec `TOOLS`, activé par `--preview-perks` dans les captures et par le banc) propose aussi les effets non branchés ; leurs cartes portent alors « Aperçu : effet pas encore branché ». |
+| `Player.Specializations`, `AcquireSpecialization` | Perks de la run dans l'ordre d'acquisition, sans doublon, quatre au plus ; signal `EventBus.SpecializationAcquired`. |
+| `WeaponTraits` | Recherche de cible (ni onde, ni orbite, ni cône orienté par le regard), impacts directs, ralentissement/désorientation natifs (Cloche, Polaroïd, Chronomètre). |
+| `PerkSpecializationOffers` | Droits aux paliers 2/6/12/20 ; un droit servi au plus par niveau ; passé ou sans candidat, il revient au niveau suivant. Première offre composée d'après `first_offer_families` (survie, combat, collecte/récompenses), défensif tiré uniformément, ordre mélangé. Seconde lecture exige deux armes améliorables non bannies. Délestage et Habitude restent exclus tant que les objets à choix n'existent pas (B4). |
+| `FragmentManager` | Au niveau dû, l'offre de perks remplace le choix ordinaire et garde sa place dans une cascade ; la relance et le bannissement communs s'appliquent. Un bannissement de perk est refusé, sans être consommé, s'il empêcherait de remplir les emplacements restants avec le catalogue, ou s'il viderait l'offre affichée. |
+| Interface | Carte à cadre parchemin, bandeau « PERK · famille », règle en une phrase ; titre « PERK · EMPLACEMENT n/4 » avec le compteur de cascade ; section « Perks » dans la pause. |
+
+Vérifications :
+
+- `dotnet build` : zéro avertissement, zéro erreur.
+- `tools/test_perk_acquisition.sh` (nouveau) : 24 assertions, zéro échec. Run normale sans aucune carte de perk sur les niveaux 2 à 30 ; droit reporté puis servi au niveau suivant ; soixante premières offres toutes composées survie/combat/collecte, Prévoyance et Reprise vues toutes deux ; relance consommée ; paliers 2/6/12/20 ; passage reporté ; cascade 11→13 ; offres de 3, 2 puis 1 carte après bannissements et dernier bannissement refusé ; limite du catalogue ; éligibilité selon l'arsenal (arc, Cloche, arme bannie) ; cinquième perk et doublon refusés.
+- `tools/test_perk_contracts.sh`, `tools/test_weapons.sh`, `tools/test_enemy_abilities.sh` : zéro échec.
+- `tools/smoke_test.sh 600` : vert.
+- Capture `CAPTURE_EXTRA_ARGS="--capture-cascade --preview-perks"` : cascade de cinq niveaux, perks aux niveaux 2 et 6 dans le même écran ouvert, règles de la réserve toutes PASS ; cartes et titre lisibles à 1080p.
+
+**Reporté à B2 :** état « inactif » d'un perk dont l'arme support a été échangée, avertissement avant l'échange au sol, chiffres utiles dans la pause. Ils n'ont de sens qu'avec des effets actifs. Aucune règle de profil ou de déblocage n'a changé : les neuf perks sont accessibles d'emblée, comme prévu au §1.

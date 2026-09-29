@@ -1,6 +1,6 @@
 # VESTIGES — Dossier de plans à valider
 
-**Priorité actuelle — 28 septembre : objets et perks.** Raphaël demande leur refonte conjointe : objets cumulables sans plafond, quatre perks équipés au maximum. Le [catalogue de neuf spécialisations](05-perks-specialisations.md) est validé pour une V1 extensible ; B0 (données/contrats/provenance XP) est livré et vérifié ; les nouveaux effets ne sont pas encore actifs en run. Le [catalogue commun historique](05-catalogue-objets-perks.md) garde l’audit et la proposition d’objets à réviser. Ce chantier coordonne les plans 05/13/17/20, sans ajouter un nouveau plan numéroté. Les autres priorités ci-dessous constituent l'historique et les dépendances des chantiers concernés.
+**Priorité actuelle — 28 septembre : objets et perks.** Raphaël demande leur refonte conjointe : objets cumulables sans plafond, quatre perks équipés au maximum. Le [catalogue de neuf spécialisations](05-perks-specialisations.md) est validé pour une V1 extensible ; B0 (données/contrats/provenance XP) et B1 (acquisition) sont livrés et vérifiés ; les effets ne sont pas encore actifs, l'acquisition reste donc en sommeil en run normale. Prochain lot : B2 (effets de combat et de survie). Le [catalogue commun historique](05-catalogue-objets-perks.md) garde l’audit et la proposition d’objets à réviser. Ce chantier coordonne les plans 05/13/17/20, sans ajouter un nouveau plan numéroté. Les autres priorités ci-dessous constituent l'historique et les dépendances des chantiers concernés.
 
 **Catalogue B V1 validé :** quatre perks qualitatifs sans niveaux parmi neuf, avec ajouts futurs possibles. Le [catalogue V1 de neuf perks](05-perks-specialisations.md) précise leurs règles, acquisition et interactions, et compare les plafonds d'armes 70/99 à la courbe d'XP. Le contenu V1 est validé ; coefficients à mesurer, nouveau plafond non arbitré. L'étude A/B/C est conservée au §12 du catalogue historique.
 
@@ -28,7 +28,7 @@ La [Stratégie V2](../VESTIGES-STRATEGIE-V2.md) reste l'autorité gameplay/roadm
 | [02 — Juiciness, score et récompenses](02-juiciness-score.md) | P0 | Direction validée ; score en run, record au bilan seulement ; refonte de la mort : M1 à M4 livrés, recette en jeu attendue | 01 pour le ressenti ; cadrage 08 |
 | [03 — Boucle et rythme](03-boucle-et-rythme.md) | P0 | Direction validée ; début plus menaçant et XP moins rapide | Première passe 01/02 |
 | [04 — Interfaces et Hub](04-interfaces-et-hub.md) | P1 | Navigation, sélection, typographie et affichage adaptatif | Cadrage 08 ; contrats 05/06 |
-| [05 — Armes, objets et builds](05-armes-objets-builds.md) | **P0, priorité actuelle** | [Neuf perks V1](05-perks-specialisations.md) validés et extensibles ; B0 livré/vérifié ; acquisition, effets et objets à intégrer | 13/17, XP 20 |
+| [05 — Armes, objets et builds](05-armes-objets-builds.md) | **P0, priorité actuelle** | [Neuf perks V1](05-perks-specialisations.md) validés et extensibles ; B0 et B1 livrés/vérifiés ; effets et objets à intégrer | 13/17, XP 20 |
 | [06 — Personnages, quêtes et défis](06-personnages-quetes-defis.md) | P0 casting ; P2 progression | Casting initial, récompenses, progression et défis | 05 ; présentation 04 |
 | [07 — Bestiaire et rencontres](07-bestiaire-et-rencontres.md) | P1 début de run ; P2 reste | Menaces à distance originales, rôles, compositions | 01/03 ; cadrage 08 |
 | [08 — Direction artistique, sprites et lore](08-direction-artistique.md) | Transversal | Référence visuelle, personnages mémorables, pipeline | Cadrage immédiat, production après validation gameplay |
@@ -57,6 +57,8 @@ Les numéros servent à identifier les plans, pas à imposer leur exécution int
 6. Traiter 09 seulement après stabilisation des règles de score.
 
 Un seul lot d'implémentation ouvert à la fois. Un échec de lisibilité, de performance ou de fun ramène au lot concerné avant expansion.
+
+**Mise à jour du 29 septembre — lot B1 livré (acquisition des perks) :** [plan 05 §12](05-perks-specialisations.md#12-compte-rendu-b1--acquisition-livrée-et-vérifiée-le-29-septembre-2026). Quatre droits aux paliers 2/6/12/20 dans la file de niveaux, report, cascade, relance, bannissement protégé, première offre composée, éligibilité selon l'arsenal, carte et pause. En sommeil en run normale tant qu'aucun effet n'est branché ; vérifié par un banc de 24 assertions et une capture en aperçu. Suite proposée : B2.
 
 **Mise à jour du 28 septembre — mort refondue, lot M1 livré :** [plan 02 lot D, seconde passe](02-juiciness-score.md). La mort se joue dans le monde : impact et ralenti, le joueur se défait, l'Effacement part de sa place et décolore l'écran, le tueur reste en couleur. Le bilan suit sans titre explicite. Direction validée ([DECISIONS §22](DECISIONS.md)) : une seule page de bilan dense, distance mise en avant. Suite proposée : M2 (données de run).
 

@@ -32,6 +32,8 @@ public sealed class PerkSpecializationConfig
     public int MaxEquipped { get; init; }
     public int OfferSize { get; init; }
     public IReadOnlyList<int> OfferLevels { get; init; }
+    /// <summary>Première offre : une place par groupe de familles acceptées, dans l'ordre ; les places restantes sont libres.</summary>
+    public IReadOnlyList<IReadOnlyList<string>> FirstOfferFamilies { get; init; }
 }
 
 public sealed class PerkSpecializationCatalogue
@@ -119,6 +121,22 @@ public static class PerkSpecializationDataLoader
             }
             if (offerLevels.Count != maxEquipped)
                 throw new FormatException("Chaque emplacement doit avoir un palier d'acquisition.");
+            List<IReadOnlyList<string>> firstOfferFamilies = new();
+            foreach (Variant group in ArrayValue(Required(acquisition, "first_offer_families"), "first_offer_families"))
+            {
+                List<string> families = new();
+                foreach (Variant family in ArrayValue(group, "first_offer_families"))
+                {
+                    if (family.VariantType != Variant.Type.String || string.IsNullOrWhiteSpace(family.AsString()))
+                        throw new FormatException("Une famille de première offre doit être un texte non vide.");
+                    families.Add(family.AsString());
+                }
+                if (families.Count == 0)
+                    throw new FormatException("Un groupe de première offre ne peut pas être vide.");
+                firstOfferFamilies.Add(families.AsReadOnly());
+            }
+            if (firstOfferFamilies.Count > offerSize)
+                throw new FormatException("La première offre ne peut pas imposer plus de places que la taille d'offre.");
 
             List<PerkSpecializationData> perks = new();
             HashSet<string> ids = new(StringComparer.Ordinal);
@@ -155,9 +173,19 @@ public static class PerkSpecializationDataLoader
             }
             if (perks.Count < maxEquipped)
                 throw new FormatException("Le catalogue doit contenir au moins autant de perks que d'emplacements.");
+            foreach (IReadOnlyList<string> group in firstOfferFamilies)
+                foreach (string family in group)
+                    if (!perks.Exists(perk => perk.Family == family))
+                        throw new FormatException($"Famille de première offre sans perk : {family}.");
             catalogue = new PerkSpecializationCatalogue
             {
-                Config = new PerkSpecializationConfig { MaxEquipped = maxEquipped, OfferSize = offerSize, OfferLevels = offerLevels.AsReadOnly() },
+                Config = new PerkSpecializationConfig
+                {
+                    MaxEquipped = maxEquipped,
+                    OfferSize = offerSize,
+                    OfferLevels = offerLevels.AsReadOnly(),
+                    FirstOfferFamilies = firstOfferFamilies.AsReadOnly()
+                },
                 Perks = perks.AsReadOnly()
             };
             return true;

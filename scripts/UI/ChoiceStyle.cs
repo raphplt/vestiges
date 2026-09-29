@@ -18,6 +18,8 @@ public static class ChoiceStyle
     public static readonly Color GainColor = new(0.55f, 0.85f, 0.45f);
     public static readonly Color LossColor = new(0.85f, 0.38f, 0.42f);
     public static readonly Color NeutralBorder = new(0.55f, 0.52f, 0.46f);
+    /// <summary>Cadre des perks : sans rareté, distinct des couleurs de rareté et du cadre neutre des nouveautés.</summary>
+    public static readonly Color PerkBorder = new(0.80f, 0.74f, 0.58f);
     public static readonly Color CardBg = new(0.07f, 0.07f, 0.11f, 0.96f);
     public static readonly Color OverlayColor = new(0.0f, 0.0f, 0.02f, 0.75f);
 

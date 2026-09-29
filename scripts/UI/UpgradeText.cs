@@ -41,6 +41,16 @@ public static class UpgradeText
                     lines.Add(($"{StatCatalog.Name(passive.Stat)}  {StatCatalog.FormatBonus(passive.Stat, passive.PerLevel[0], passive.ModifierType == "multiplicative")}", ChoiceStyle.GainColor));
                 break;
             }
+            case PerkSpecializationOffers.OptionType:
+            {
+                PerkSpecializationData perk = PerkSpecializationDataLoader.Get(choice.Id);
+                if (perk == null)
+                    break;
+                lines.Add((perk.Description, ChoiceStyle.TextColor));
+                if (!PerkSpecializationEffects.IsImplemented(perk.Effect))
+                    lines.Add((TranslationServer.Translate("LEVELUP_PERK_PREVIEW"), ChoiceStyle.TextDim));
+                break;
+            }
             case "passive_upgrade":
             {
                 ActivePassiveSouvenir passive = FindPassive(player, choice.Id);

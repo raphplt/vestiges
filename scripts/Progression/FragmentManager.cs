@@ -10,7 +10,7 @@ namespace Vestiges.Progression;
 /// <summary>
 /// Fragments de mémoire du level-up : trois choix entre armes et Souvenirs passifs, nouveaux ou améliorés.
 /// Chaque amélioration tire sa rareté et ses gains à l'offre, pour que la carte montre exactement
-/// ce qu'elle donne.
+/// ce qu'elle donne. Aux paliers de perks, le niveau propose des perks à la place (plan 05, B1).
 /// </summary>
 public partial class FragmentManager : Node
 {
@@ -40,6 +40,9 @@ public partial class FragmentManager : Node
     private int _banishesRemaining = DefaultBanishes;
     private readonly HashSet<string> _banishedIds = new();
 
+    private PerkSpecializationOffers _specializations;
+    private bool _specializationChoice;
+
     public int RerollsRemaining => _rerollsRemaining;
     public int BanishesRemaining => _banishesRemaining;
 
@@ -54,12 +57,20 @@ public partial class FragmentManager : Node
     /// <summary>Niveaux gagnés qui attendent encore leur choix, après celui affiché.</summary>
     public int QueuedLevels => _levelUpQueue.Count;
 
+    /// <summary>Le choix affiché sert un droit de perk plutôt qu'un choix ordinaire.</summary>
+    public bool IsSpecializationChoice => _specializationChoice;
+
+    /// <summary>Emplacements de perks de la run.</summary>
+    public int SpecializationCapacity => _specializations?.Capacity ?? 0;
+
     // Plus de signaux locaux — tout passe par l'EventBus (Autoload fiable)
     // Les signaux sur nodes dynamiques (new + AddChild) ne sont pas fiables en Godot C#.
 
     public override void _Ready()
     {
         PassiveSouvenirDataLoader.Load();
+        PerkSpecializationDataLoader.Load();
+        _specializations = new PerkSpecializationOffers(PerkSpecializationDataLoader.Config);
 
         _eventBus = GetNode<EventBus>("/root/EventBus");
         _groupCache = GetNode<GroupCache>("/root/GroupCache");
@@ -158,6 +169,10 @@ public partial class FragmentManager : Node
     private void OfferFragments(int level)
     {
         _currentLevel = level;
+        _specializationChoice = false;
+        if (_specializations.IsDue(level, _player) && OfferSpecializations(level))
+            return;
+
         List<FragmentOption> options = BuildFragmentPool();
         if (options.Count == 0)
         {
@@ -176,6 +191,26 @@ public partial class FragmentManager : Node
         GD.Print($"[FragmentManager] Level {level} (maxTier={GetMaxFragmentTier(level)}): offering {_pendingChoices.Count} fragments (pool had {options.Count})");
 
         _eventBus.EmitSignal(EventBus.SignalName.FragmentChoicesReady, _pendingChoices.Count);
+    }
+
+    /// <summary>Faux sans candidat : le niveau reste un choix ordinaire et le droit revient au niveau suivant.</summary>
+    private bool OfferSpecializations(int level)
+    {
+        List<FragmentOption> candidates = _specializations.Candidates(_player, _banishedIds);
+        if (candidates.Count == 0)
+        {
+            _specializations.Served(level);
+            GD.Print($"[FragmentManager] Level {level}: aucun perk proposable, droit reporté");
+            return false;
+        }
+
+        _pendingChoices.Clear();
+        _pendingChoices.AddRange(_specializations.Pick(candidates, _player.Specializations.Count == 0, _rng));
+        _specializationChoice = true;
+        _choosingActive = true;
+        GD.Print($"[FragmentManager] Level {level}: offering {_pendingChoices.Count} perks (slot {_player.Specializations.Count + 1}/{_specializations.Capacity})");
+        _eventBus.EmitSignal(EventBus.SignalName.FragmentChoicesReady, _pendingChoices.Count);
+        return true;
     }
 
     /// <summary>Traite le prochain level-up en attente, ou signale la fin des choix.</summary>
@@ -315,6 +350,19 @@ public partial class FragmentManager : Node
         if (_banishesRemaining <= 0)
             return;
 
+        if (_specializationChoice)
+        {
+            if (!_specializations.TryBanish(id, _player, _banishedIds))
+            {
+                GD.Print($"[FragmentManager] Banish of perk '{id}' refused: slots or offer would be left empty");
+                return;
+            }
+            _banishesRemaining--;
+            GD.Print($"[FragmentManager] Banished perk '{id}' ({_banishesRemaining} remaining)");
+            OfferFragments(_currentLevel);
+            return;
+        }
+
         _banishedIds.Add(id);
         // Un bannissement qui viderait l'offre laisserait l'écran ouvert sans carte : il est refusé et non consommé.
         if (BuildFragmentPool().Count == 0)
@@ -349,6 +397,9 @@ public partial class FragmentManager : Node
         }
 
         _pendingChoices.Clear();
+        if (_specializationChoice)
+            _specializations.Served(_currentLevel);
+        _specializationChoice = false;
         _eventBus.EmitSignal(EventBus.SignalName.FragmentChosen, fragmentId, fragmentType);
         GD.Print($"[FragmentManager] Fragment selected: {fragmentId} ({fragmentType}, {option.Rarity?.Id ?? "nouveau"})");
         ProcessNextInQueue();
@@ -358,6 +409,10 @@ public partial class FragmentManager : Node
     public void SkipChoice()
     {
         _pendingChoices.Clear();
+        // Passer un perk consomme le niveau et garde le droit, proposé de nouveau au niveau suivant.
+        if (_specializationChoice)
+            _specializations.Served(_currentLevel);
+        _specializationChoice = false;
         ProcessNextInQueue();
     }
 
@@ -532,6 +587,8 @@ public class FragmentOption
                 return player.AddOrUpgradePassive(Id, 1f, 1);
             case "passive_upgrade":
                 return player.AddOrUpgradePassive(Id, PassiveGain, PassiveLevels);
+            case PerkSpecializationOffers.OptionType:
+                return player.AcquireSpecialization(PerkSpecializationDataLoader.Get(Id));
             default:
                 return false;
         }

@@ -8,6 +8,11 @@
       6,
       12,
       20
+    ],
+    "first_offer_families": [
+      ["survival"],
+      ["combat"],
+      ["collection", "rewards"]
     ]
   },
   "perks": [

@@ -316,6 +316,11 @@ public partial class PauseMenu : CanvasLayer
 			AddPassiveRow(passive);
 		if (player.PassiveSlots.Count == 0)
 			AddLine(_loadoutContainer, "Aucun pour l'instant.", "", TextVeryDim);
+		AddSectionTitle(_loadoutContainer, "Perks");
+		foreach (PerkSpecializationData perk in player.Specializations)
+			AddPerkRow(perk);
+		if (player.Specializations.Count == 0)
+			AddLine(_loadoutContainer, "Aucun pour l'instant.", "", TextVeryDim);
 
 		UpdateSheet(player);
 	}
@@ -375,6 +380,18 @@ public partial class PauseMenu : CanvasLayer
 		row.AddChild(MakeLabel($"{StatCatalog.Name(passive.Data.Stat)} {StatCatalog.FormatBonus(passive.Data.Stat, passive.Modifier, passive.Data.ModifierType == "multiplicative")}",
 			TextRole.Small, StatBonusColor, HorizontalAlignment.Right));
 		_loadoutContainer.AddChild(row);
+	}
+
+	/// <summary>Perk : nom et règle ; ses chiffres et états viendront avec les effets (plan 05, B2–B3).</summary>
+	private void AddPerkRow(PerkSpecializationData perk)
+	{
+		VBoxContainer text = new();
+		text.AddThemeConstantOverride("separation", 0);
+		text.AddChild(MakeLabel(perk.Name, TextRole.Body, StatValueColor));
+		Label rule = MakeLabel(perk.Description, TextRole.Small, StatBonusColor);
+		rule.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+		text.AddChild(rule);
+		_loadoutContainer.AddChild(text);
 	}
 
 	/// <summary>Toutes les stats du joueur ; les multiplicateurs se lisent en pourcentage de bonus.</summary>

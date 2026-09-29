@@ -69,6 +69,9 @@ public partial class EventBus : Node
     [Signal] public delegate void FragmentChoicesReadyEventHandler(int count);
     [Signal] public delegate void FragmentChosenEventHandler(string fragmentId, string fragmentType);
 
+    // --- Perks de spécialisation (plan 05, catalogue B) ---
+    [Signal] public delegate void SpecializationAcquiredEventHandler(string specializationId);
+
     // --- Fusions (Vestiges) ---
 
     // --- Fog of War ---

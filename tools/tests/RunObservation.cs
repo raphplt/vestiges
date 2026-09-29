@@ -86,6 +86,8 @@ public partial class RunObservation : Node
             bool captureProps = Array.IndexOf(args, "--capture-props") >= 0;
             if ((captureProps && Array.IndexOf(args, "--hide-collisions") < 0) || Array.IndexOf(args, "--show-collisions") >= 0)
                 GetTree().DebugCollisionsHint = true;
+            // Acquisition des perks sans effets branchés (plan 05, B1) : pour voir les cartes, jamais en run normale.
+            Vestiges.Progression.PerkSpecializationEffects.PreviewInactive = Array.IndexOf(args, "--preview-perks") >= 0;
             if (captureMap)
                 MeasureBiomeLayout(seed, int.Parse(Argument(args, "--map-seeds", "40"), CultureInfo.InvariantCulture), 4);
             await LoadRun(seed, Argument(args, "--character", "traqueur"));

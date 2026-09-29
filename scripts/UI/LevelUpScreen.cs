@@ -87,7 +87,10 @@ public partial class LevelUpScreen : CanvasLayer
     private void RefreshTitle()
     {
         int queued = _fragmentManager?.QueuedLevels ?? 0;
-        _title.Text = queued > 0 ? string.Format(Tr("LEVELUP_TITLE_QUEUED"), Tr("LEVELUP_TITLE"), queued) : Tr("LEVELUP_TITLE");
+        string title = Tr("LEVELUP_TITLE");
+        if (_fragmentManager is { IsSpecializationChoice: true } && GetTree().GetFirstNodeInGroup("player") is Player player)
+            title = string.Format(Tr("LEVELUP_TITLE_PERK"), player.Specializations.Count + 1, _fragmentManager.SpecializationCapacity);
+        _title.Text = queued > 0 ? string.Format(Tr("LEVELUP_TITLE_QUEUED"), title, queued) : title;
     }
 
     public void SetPerkManager(PerkManager perkManager)
@@ -200,8 +203,9 @@ public partial class LevelUpScreen : CanvasLayer
     private void BuildCard(FragmentOption choice, Player player)
     {
         bool isWeapon = choice.Type is "weapon_new" or "weapon_upgrade";
-        bool isNew = choice.Type is "weapon_new" or "passive_new";
-        Color frame = choice.Rarity != null ? RarityPalette.Main(choice.Rarity.Id) : NeutralBorder;
+        bool isPerk = choice.Type == PerkSpecializationOffers.OptionType;
+        bool isNew = isPerk || choice.Type is "weapon_new" or "passive_new";
+        Color frame = choice.Rarity != null ? RarityPalette.Main(choice.Rarity.Id) : isPerk ? ChoiceStyle.PerkBorder : NeutralBorder;
 
         PanelContainer card = new() { CustomMinimumSize = new Vector2(CardWidth, 76), MouseFilter = Control.MouseFilterEnum.Stop };
         int index = _cards.Count;
@@ -223,7 +227,7 @@ public partial class LevelUpScreen : CanvasLayer
         row.AddThemeConstantOverride("separation", 14);
         margin.AddChild(row);
 
-        Texture2D icon = LoadIcon(choice, isWeapon);
+        Texture2D icon = isPerk ? null : LoadIcon(choice, isWeapon);
         if (icon != null)
         {
             row.AddChild(new TextureRect
@@ -242,11 +246,12 @@ public partial class LevelUpScreen : CanvasLayer
         text.AddThemeConstantOverride("separation", 2);
         row.AddChild(text);
 
-        // Bandeau : rareté (symbole et nom) ou « nouvelle arme / nouveau passif », puis le niveau à droite.
+        // Bandeau : rareté (symbole et nom), « nouvelle arme / nouveau passif » ou famille du perk, puis le niveau à droite.
         HBoxContainer header = new();
         text.AddChild(header);
         string tag = choice.Rarity != null
             ? $"{ChoiceStyle.RarityGlyph(choice.Rarity.Rank)} {RarityPalette.DisplayName(choice.Rarity.Id).ToUpper()}".Trim()
+            : isPerk ? PerkTag(choice.Id)
             : Tr(isWeapon ? "LEVELUP_NEW_WEAPON" : "LEVELUP_NEW_PASSIVE");
         header.AddChild(MakeLabel(tag, TextRole.Caption, frame, true));
         if (!isNew)
@@ -264,6 +269,12 @@ public partial class LevelUpScreen : CanvasLayer
         _cardColors.Add(frame);
         _cardsContainer.AddChild(card);
         StyleCard(index, false);
+    }
+
+    private string PerkTag(string id)
+    {
+        string family = PerkSpecializationDataLoader.Get(id)?.Family ?? "";
+        return $"{Tr("LEVELUP_NEW_PERK")}  ·  {Tr($"PERK_FAMILY_{family.ToUpperInvariant()}")}";
     }
 
     private static Texture2D LoadIcon(FragmentOption choice, bool isWeapon)
