@@ -1,8 +1,8 @@
 # Plan 05 — Perks de spécialisation, catalogue B V1
 
-29 septembre 2026 · **Catalogue V1 de neuf perks validé et extensible ; B0, B1 et B2 livrés et vérifiés : cinq perks de combat et de survie actifs en run. Collecte/récompenses (B3) et objets (B4) à venir. Coefficients à éprouver, plafond d’armes non arbitré.**
+29 septembre 2026 · **Catalogue V1 de neuf perks validé et extensible ; B0, B1, B2 et la partie sans objets de B3 livrés et vérifiés : sept perks actifs en run. Délestage et Habitude attendent les objets (B4). Coefficients à éprouver, plafond d’armes non arbitré.**
 
-Références : [Stratégie V2](../VESTIGES-STRATEGIE-V2.md), [audit et étude A/B/C](05-catalogue-objets-perks.md), [personnages](06-fiches-casting.md), [progression](20-recompense-et-puissance.md). Ce document devient le contrat courant des perks. Les seize perks à dix niveaux et les sept exemples de l’étude sont historiques. La V1 est validée ; elle n’interdit pas de futurs ajouts. Depuis B2, Prévoyance, Reprise, Débordement, Convergence et Propagation sont actifs en run ; les quatre autres effets restent hors des offres.
+Références : [Stratégie V2](../VESTIGES-STRATEGIE-V2.md), [audit et étude A/B/C](05-catalogue-objets-perks.md), [personnages](06-fiches-casting.md), [progression](20-recompense-et-puissance.md). Ce document devient le contrat courant des perks. Les seize perks à dix niveaux et les sept exemples de l’étude sont historiques. La V1 est validée ; elle n’interdit pas de futurs ajouts. Sept effets sont actifs en run (Prévoyance, Reprise, Débordement, Convergence, Propagation, Sillage, Seconde lecture) ; Délestage et Habitude restent hors des offres jusqu'aux objets.
 
 ## 1. Contrat retenu et portée de cette version
 
@@ -404,3 +404,68 @@ Relecture de code (sous-agent) sans bug bloquant. Deux points corrigés avant cl
 - Un échange au sol qui échouerait après le retrait de l'arme ferait perdre sa réserve de Débordement ; cas presque inatteignable, les doublons étant refusés avant.
 
 **Constat de réglage à trancher — Propagation avec la Cloche seule.** Dans la scène `carry` (Cloche seule, rôdeurs de début de partie, 15 s), sur 14 éliminations, aucune n'est faite d'un seul coup, et pourtant aucune victime n'est encore ralentie au coup fatal. L'écart entre le dernier coup et le coup fatal va de 2,1 à 3,2 s (temps réel de capture), au-delà des 2 s de ralentissement, vraisemblablement parce que le recul de 60 px sort la cible de portée. La règle fonctionne (banc, transmission contrôlée), mais la synergie « Cloche + Propagation » citée par la fiche ne se produit presque pas sans une autre arme qui achève. Pistes, non appliquées : allonger le ralentissement de la Cloche, réduire son recul, ou admettre un contrôle expiré depuis moins d'une seconde. Décision de Raphaël.
+
+
+## 14. Compte rendu B3 (partie sans objets) — Sillage et Seconde lecture, 29 septembre 2026
+
+Raphaël laisse le réglage de Propagation à l'agent et demande les perks manquants ([DECISIONS §27](DECISIONS.md)).
+
+### Propagation : mesure sur les trois armes de contrôle, règle conservée
+
+Scène `carry` étendue par `--perk-weapons`, 15 s de rôdeurs de début de partie, éliminations dont la victime portait un contrôle transmissible :
+
+| Arsenal | Éliminations | Transmissibles |
+|---|---:|---:|
+| Cloche seule | 14 | 0 |
+| Polaroïd seul | 9 | 9 |
+| Chronomètre seul | 13 | 10 |
+| Cloche + arc | 14 | 2 |
+| Polaroïd + arc | 9 | 8 |
+| Chronomètre + arc | 14 | 7 |
+
+Le Polaroïd désoriente avec le premier projectile d'une salve et achève avec les suivants. Le Chronomètre ralentit toute une zone, donc les voisins de sa cible. Seule la Cloche échoue, à cause de son recul et de l'intervalle entre ses coups. **Décision de l'agent : Propagation reste telle quelle.** Le cas de la Cloche relève du réglage de l'arme (plan 17), pas du perk.
+
+### Sillage (`xp_trail`)
+
+`XpTrail` échantillonne toutes les 0,1 s (temps de jeu) le déplacement réel du joueur et garde 6 s de trajet. Un saut de plus de 200 px entre deux échantillons coupe le couloir (téléportation) ; un dash (≈ 58 px par échantillon) le trace. Ces deux valeurs sont en données. Demi-largeur du couloir : le rayon d'attraction courant des orbes (150 px × aimant). Une orbe hors d'attraction consulte le couloir toutes les 0,15 s, jamais à chaque pas physique. Une orbe endormie loin du joueur est réveillée par la ronde de `CombatPools` si elle est dans le couloir. Une orbe prise dans le Sillage rejoint le joueur jusqu'au bout, sans double crédit. Immobile, le joueur ne trace rien et le trajet expire ; la pause le fige.
+
+Capture `--perk-scene trail` : après 3 s de marche, 8 orbes posées sur le trajet (jusqu'à ≈ 650 px derrière) et 8 à l'écart. En 3,4 s, 35 XP sur 40 rejoignent le joueur ; celles à l'écart restent au sol. L'orbe manquante n'est pas expliquée à ce stade : peut-être encore en route, ou posée juste hors du couloir par le décalage vertical de ±40 px.
+
+### Seconde lecture (`carried_choice`)
+
+`CarriedChoice` dans la file des niveaux :
+
+- **Report :** après une sélection ordinaire, la plus rare des améliorations d'arme non choisies (la plus à gauche à égalité) est reportée avec ses gains figés.
+- **Offre suivante :** au prochain choix ordinaire, elle prend une place marquée « REPORTÉE ». Les autres cartes sont neuves et n'améliorent pas la même arme.
+- **Expiration :** la carte expire si elle n'est pas prise et n'est jamais reportée deux fois.
+- **Effacement :** passer l'offre l'efface, bannir son arme l'efface, et une arme partie ou au maximum la libère.
+- **Conservation :** une relance la garde, et un choix de perk ne la consomme ni ne la crée.
+
+Capture `--perk-scene carried` : carte « ✶ ÉPIQUE · REPORTÉE » en tête de l'offre, gains conservés.
+
+Observation hors lot : cette amélioration épique de la Cloche affiche « Zone +0 % », un gain trop petit pour l'arrondi. Cela vient du tirage des améliorations existant (plan 17), pas de ce lot.
+
+### Délestage et Habitude : bloqués par l'absence d'objets
+
+Tous deux agissent sur « un objet révélé dans une récompense à choix » (coffre ou Souverain avec écran). Constat du code au 29 septembre :
+
+- **Aucun inventaire d'objets cumulables.** Le joueur n'a que ses emplacements d'armes et de Souvenirs passifs. Le seul compteur par identifiant est celui des anciens Dons (`PerkManager._activeStacks`).
+- **Aucune récompense à choix d'objet.**
+  - Le coffre, et donc la récompense du Souverain (un `chest_rare` garanti), passe par une roulette qui applique tout le butin tiré (`ChestLootScreen`, `LootRewards.Resolve/Apply`).
+  - Un Don de coffre est tiré et appliqué d'office (`PerkManager.PickLootPerk/OnLootReceived`).
+  - Les seuls écrans de choix du monde, Mémorial et Faille, proposent des bénédictions, des services et des améliorations d'arme, pas des objets.
+- **Aucune transaction unique de butin :** chaque entrée est appliquée à part.
+
+Les implémenter sur les anciens Dons reviendrait à trancher le catalogue d'objets à la place de Raphaël, alors que la fiche le réserve au catalogue révisé (§4, §9). **Rien n'est livré pour ces deux perks.** Ils restent hors des offres (`item_choice_rewards` et `owned_item` faux). Prérequis à décider pour B4 :
+
+1. le catalogue d'objets V1 (l'ancienne proposition de 24 objets n'est pas adoptée) ;
+2. la forme de la récompense à choix dans les coffres et chez les Souverains (écran, nombre d'objets révélés, rareté) ;
+3. l'inventaire cumulable avec agrégation par statistique, sans coût par pile.
+
+### Vérifications
+
+- `dotnet build` : zéro avertissement.
+- `tools/test_perk_effects.sh` : 66 assertions, zéro échec. Il couvre le couloir, la téléportation, l'expiration, une orbe endormie rappelée, une orbe hors couloir restée endormie, et les neuf cas de Seconde lecture.
+- `tools/test_perk_acquisition.sh` : 21 assertions, zéro échec.
+- Contrats, armes, capacités ennemies : zéro échec. `tools/smoke_test.sh 600` : vert.
+- Incident de procédure : un commit (`98661434`) est passé avec un échec du banc d'acquisition, dû au banc lui-même (joueur sans arme en aperçu). Il est corrigé par `a7ea44d1` ; le jeu n'était pas en cause.
