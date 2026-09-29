@@ -152,3 +152,34 @@ Chaque lot se termine par un banc, des captures et des mesures d'économie.
 2. Le Calendrier arraché, qui accélère l'Effacement contre de la croissance, te semble-t-il dans l'esprit du jeu ?
 3. Déblocages : 13 objets au départ, puis quêtes et achats en Vestiges au Hub. Le principe te va-t-il, et veux-tu le même pour les armes ?
 4. Source à choix : Reliquaire, ou une autre idée ?
+
+## 7. Remise en question du 29 septembre : objets limités et intégrés au level-up
+
+Raphaël se demande s'il faut limiter les objets (4, 8 ou 12) et les intégrer au level-up, comme les anciens passifs ([DECISIONS §30](DECISIONS.md)). **Avis de l'agent : oui, avec huit emplacements d'objets qui montent de niveau.** Ce n'est pas une décision.
+
+**Pourquoi limiter :**
+- **Choix réels.** Avec un inventaire illimité, prendre un objet ne coûte rien. Avec des emplacements, chaque nouvel objet ferme une porte : c'est là que naît le build.
+- **Contenu pour les 300 à 400 niveaux visés (plan 20).** Quatre armes au niveau 70 donnent 276 améliorations. Huit objets à dix niveaux en ajoutent environ 80, ce qui retarde la phase de surplus sans gonfler les armes.
+- **Équilibrage borné.** Des niveaux plafonnés remplacent les piles de 1 000 exemplaires, leur arithmétique et leur banc de stress.
+- **Lisibilité.** HUD de quatre armes, huit objets et quatre fragments, au lieu d'un inventaire qui défile.
+- **Moins proche de Megabonk.** Sa formule, c'est quatre armes, quatre tomes et des objets illimités trouvés dans le monde. Des objets limités qui montent de niveau rapprochent plutôt de Vampire Survivors, avec les fragments (règles) comme couche propre à Vestiges.
+
+**Pourquoi huit :** quatre est trop peu pour 30 objets où les multiplicateurs et les mécaniques se disputent la place. Douze dilue les décisions et encombre le HUD. Huit laisse, par exemple, quatre socles chiffrés et quatre mécaniques.
+
+**Ce que ça change :**
+1. Les objets absorbent les passifs actuels (quatre emplacements, cinq niveaux) : ils deviennent la couche des passifs, élargie à huit et enrichie des mécaniques de la proposition 2. Le projectile supplémentaire revient comme objet à paliers.
+2. Level-up : nouvelles armes, améliorations d'armes, nouveaux objets, niveaux d'objets, avec leur rareté. Fragments aux paliers 2/6/12/20, inchangés.
+3. Le monde garde un rôle d'objet. Le Reliquaire offre un objet neuf ou un niveau d'un objet possédé, trois alcôves au choix. Les coffres donnent des niveaux d'objets et d'armes.
+4. Les fragments s'ajustent :
+   - Délestage (convertir un objet en XP) et Habitude (préférer un objet possédé) passent aux cartes d'objets, du level-up comme du Reliquaire ;
+   - Habitude devient « préférer un niveau d'objet possédé » ;
+   - Seconde lecture s'étend aux cartes d'objets.
+5. Chaque objet porte un effet par niveau, avec un palier marquant au maximum. Plus de règle « × n exemplaires ».
+
+**Bannir, c'est oublier :** la version la plus simple branche le bannissement sur le **Péril**, qui échange déjà difficulté contre récompense (`peril.json`).
+- Chaque bannissement ajoute une fraction de Péril, par exemple un point tous les trois.
+- Les bannissements ne sont plus limités à trois : leur prix est l'oubli.
+- Écarter une option rend le monde plus dur et la récompense meilleure.
+- Variante : bannir accélère l'Effacement. Plus radical, moins lisible.
+
+**Nom « fragments » :** tout choix de niveau s'appelle aujourd'hui « Fragment de mémoire » (titre de l'écran, `FragmentManager`). Si les perks deviennent les fragments, l'écran de niveau doit changer de titre (« Souvenir », « Réminiscence »…) pour éviter la confusion.

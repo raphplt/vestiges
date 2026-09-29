@@ -369,3 +369,18 @@ Raphaël : « pour les icons de perks je prefer e par famille juste je trouve qu
 - **Armes et objets ne sont pas tous débloqués par défaut** : une réserve de départ limitée, le reste par quêtes ou achats (monnaie persistante, si elle existe).
 
 **Non acquis :** la liste d'objets, la source à choix, la forme exacte des fragments.
+
+
+## 30. Bannir = oublier, icônes 2, objets peut-être limités et intégrés au level-up, perks renommés « fragments » — 29 septembre 2026
+
+Raphaël : « idée : le fait de bannir des armes / perks / items dans les choix est un "oubli" et contribue à ce que l'oubli général augmente. La proposition deux des icons des perks : mieux. en vrai à la réflexion je me demande s'il ne faudrait pas limiter les objets aussi. tu en penses quoi ? et limite les intégrer avec le level up... oui je sais ca bouscule tout mais en y réflechissant les anciennes perks étaient super bien par exemple les projectiles en plus ect... donc ouais faudrait peut etre revoir comment les objets fonctionnet et les limiter (soit à 4 ou bien à genre 8 ou 12). je me demande vraiment car sinon ca sera plus dur de les stacker. et par contre limiter les "perks" qu'on peut appeler fragments maintenents toujours à 4. »
+
+**Acquis :**
+- icônes de perks, proposition 2 (fragments teintés par famille) : meilleure direction ;
+- les perks restent **limités à quatre** et peuvent s'appeler **« fragments »**.
+
+**En réflexion, rien de décidé :**
+- objets limités (4, 8 ou 12 emplacements) et intégrés au level-up, sur le modèle des anciens passifs (projectile supplémentaire, etc.) ;
+- bannir une arme, un fragment ou un objet compterait comme un oubli qui nourrit l'oubli général.
+
+L'avis de l'agent est consigné au [catalogue d'objets §7](05-objets-catalogue-v1.md#7-remise-en-question-du-29-septembre--objets-limités-et-intégrés-au-level-up).
