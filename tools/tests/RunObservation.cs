@@ -41,6 +41,7 @@ namespace Vestiges.Tests;
 /// --capture-chests : chaque coffre cadré, avec et sans décors (RunObservation.Chests.cs).
 /// --capture-levelup : l'écran de level-up, une capture par rareté (RunObservation.LevelUp.cs).
 /// --capture-cascade : réserve de niveaux, cinq niveaux enchaînés puis retenue (RunObservation.Cascade.cs).
+/// --capture-perks : effets des perks en run et leurs retours sur le HUD (RunObservation.Perks.cs).
 /// --capture-oublis : les neuf Oublis de carte pris d'un coup, effets mesurés (RunObservation.Oublis.cs).
 /// --check-orb-sleep : orbe d'XP endormie loin du joueur, réveillée et ramassée à son retour (RunObservation.OrbSleep.cs).
 /// --capture-endgame : Indicible forcé, combat, mort et passage en endgame (RunObservation.Endgame.cs).
@@ -134,6 +135,8 @@ public partial class RunObservation : Node
                 await CaptureChests();
             else if (Array.IndexOf(args, "--capture-cascade") >= 0)
                 await CaptureCascade();
+            else if (Array.IndexOf(args, "--capture-perks") >= 0)
+                await CapturePerks();
             else if (Array.IndexOf(args, "--capture-levelup") >= 0)
                 await CaptureLevelUp();
             else if (Array.IndexOf(args, "--capture-pause") >= 0)

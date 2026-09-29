@@ -332,3 +332,10 @@ Raphaël : « ok ca me va le cataloque pour une v1 en n'excluant pas de rajouter
 
 
 Livraison de B0 : données et loader extensibles, contrats de dégâts/soins/statuts intégrés, modèle XP corrigé par provenance, migration des anciennes statistiques documentée. Build sans avertissement ; régressions contrats (32), armes (13), capacités ennemies (55), modèle Python (6) et smoke 600 frames verts. Seule la case B0 est cochée ; les neuf nouveaux effets, leur acquisition et la migration d’objets restent à intégrer. Aucun arbitrage de plafond d’armes ni changement de courbe déduit de cette livraison. [Compte rendu](05-perks-specialisations.md#11-compte-rendu-b0--socle-livré-et-vérifié-le-28-septembre-2026).
+
+
+## 26. B1 validé, passage à B2 — 29 septembre 2026
+
+Raphaël, après la livraison de B1 (acquisition en sommeil tant qu'aucun effet n'est branché) : « je valide et passe a B2 ».
+
+**Acquis :** B1 tel que livré, y compris le report d'un perk passé à chaque niveau suivant jusqu'à ce qu'un perk soit pris (§2 du plan 05). **Engagé :** lot B2, effets de combat et de survie (Prévoyance, Reprise, Débordement, Convergence, Propagation) et leurs retours visuels, découpés au [plan 05 §8.3](05-perks-specialisations.md). Les coefficients restent des valeurs d'essai.

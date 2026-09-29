@@ -268,6 +268,18 @@ L’état de validation est consigné au §11. B1/B2/B3/B4 ne sont pas livrés p
 6. **Validation** : nouveau banc de régression d’acquisition, capture d’une cascade en aperçu, régressions armes/contrats, smoke. Hors B1 : état « inactif » d’un perk après changement d’arme et avertissement avant échange, qui n’ont de sens qu’avec des effets actifs (B2).
 
 
+### 8.3 Découpage de B2 engagé — 29 septembre 2026
+
+Chaque étape active son effet dans `PerkSpecializationEffects` seulement une fois vérifiée ; sa carte apparaît alors en run normale. Un seul composant par joueur porte l'état des perks et ordonne les réactions (Prévoyance avant Reprise sur une même blessure), abonné aux résultats B0 de l'`EventBus` et sans travail par frame hors fenêtre ou réserve active.
+
+1. **Survie — Prévoyance et Reprise** : réserve remplie à l'acquisition puis par les excédents de soin/régénération, restitution après un coup non fatal ; fenêtre de Reprise, budget plafonné, crédit par élimination attribuée, soins extérieurs déduits. Retours : réserve en liseré sous la barre de PV, part récupérable sur la barre avec l'expiration visible.
+2. **Débordement** : réserve par arme alimentée par l'excédent natif d'un coup fatal direct, plafonnée à la référence de l'attaque qui charge, consommée par le premier impact direct d'un lancement ultérieur, durée 3 s, perdue si l'arme quitte l'inventaire. Retour : case d'arme marquée tant que la réserve est prête, éclat à la consommation.
+3. **Convergence** : les recherches de cible des armes qui visent préfèrent élites et Souverains à portée, en gardant la cible prioritaire déjà suivie. Retour : repère discret sur la cible suivie.
+4. **Propagation** : à une élimination attribuée, les ralentissements/désorientations natifs encore actifs passent au plus proche voisin vivant à 120 px, sans prolongation ni affaiblissement d'un contrôle plus fort. Retour : bref lien entre la victime et le receveur.
+5. **État inactif et pause** : un perk sans arme support est signalé inactif dans la pause, qui affiche aussi réserves et budgets ; l'échange d'arme au sol prévient avant de rendre un perk inactif.
+
+Validation : banc de régression par effet sur le vrai joueur et les vrais ennemis (cas limites des fiches §3), captures en run pour les retours visuels, banc dense avant/après pour vérifier l'absence de coût mesurable, smoke.
+
 ## 9. Migration conjointe des statistiques — préparation B0
 
 Le fichier `data/progression/passive_souvenirs.json` contient **14 définitions**, dont Fragment d’Éternité désactivé, donc 13 dans le pool actif. Elles sont distinctes des anciens Dons de `data/perks/perks.json`. Les noms ci-dessous désignent les IDs existants, pas un catalogue de nouveaux objets implicitement adopté.

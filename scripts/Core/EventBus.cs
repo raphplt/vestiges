@@ -23,6 +23,10 @@ public partial class EventBus : Node
     public void PublishPlayerHealing(HealingResult result) => PlayerHealingResolved?.Invoke(result);
     public void PublishPlayerDamage(PlayerDamageResult result) => PlayerDamageResolved?.Invoke(result);
 
+    /// <summary>Jauges des perks (réserves, fenêtres) pour leurs retours visuels, publiées à chaque changement.</summary>
+    public event System.Action<SpecializationGauge> SpecializationGaugeChanged;
+    public void PublishSpecializationGauge(SpecializationGauge gauge) => SpecializationGaugeChanged?.Invoke(gauge);
+
     // --- Combat ---
     [Signal] public delegate void EntityDamagedEventHandler(Node entity, float amount);
     [Signal] public delegate void EntityDiedEventHandler(Node entity);

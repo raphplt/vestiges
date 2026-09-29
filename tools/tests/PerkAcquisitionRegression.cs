@@ -45,37 +45,53 @@ public partial class PerkAcquisitionRegression : Node2D
         }
     }
 
-    /// <summary>Run normale en B1 : aucun effet branché, donc aucune carte de perk, et les choix ordinaires continuent.</summary>
+    /// <summary>Run normale : seuls les perks dont l'effet est branché sont proposés, les choix ordinaires continuent.</summary>
     private void CheckNormalRunOffersNothing()
     {
         Setup(preview: false);
-        bool anyPerk = false;
-        bool allOrdinary = true;
+        bool onlyImplemented = true;
+        bool allOffered = true;
         for (int level = 2; level <= 30; level++)
         {
             _fragments.TriggerLevelUp(level);
-            anyPerk |= _fragments.IsSpecializationChoice || HasPerkCard();
-            allOrdinary &= _fragments.PendingChoices.Count > 0;
-            _fragments.SkipChoice();
+            foreach (FragmentOption option in _fragments.PendingChoices)
+                onlyImplemented &= option.Type != PerkSpecializationOffers.OptionType
+                    || PerkSpecializationEffects.IsImplemented(PerkSpecializationDataLoader.Get(option.Id).Effect);
+            allOffered &= _fragments.PendingChoices.Count > 0;
+            if (_fragments.IsSpecializationChoice)
+                Select(0);
+            else
+                _fragments.SkipChoice();
         }
-        Check(!anyPerk && allOrdinary && _player.Specializations.Count == 0,
-            "Run normale : aucun perk proposé tant qu'aucun effet n'est branché, choix ordinaires intacts");
+        bool acquiredImplemented = true;
+        foreach (PerkSpecializationData perk in _player.Specializations)
+            acquiredImplemented &= PerkSpecializationEffects.IsImplemented(perk.Effect);
+        Check(onlyImplemented && allOffered && acquiredImplemented,
+            $"Run normale : seuls des perks branchés sont proposés ({_player.Specializations.Count} acquis), choix ordinaires intacts");
     }
 
     /// <summary>Un droit sans candidat laisse un choix ordinaire et revient au niveau suivant.</summary>
     private void CheckDeferredRight()
     {
         Setup(preview: false);
-        _fragments.TriggerLevelUp(2);
+        // Sans arme, seuls les perks sans condition restent éligibles ; une fois acquis, le palier suivant n'a aucun candidat.
+        while (_player.WeaponSlots.Count > 0)
+            _player.RemoveWeapon(0);
+        foreach (FragmentOption option in new PerkSpecializationOffers(PerkSpecializationDataLoader.Config).Candidates(_player, NoBanishedWeapons))
+            if (_player.Specializations.Count < 3)
+                _player.AcquireSpecialization(PerkSpecializationDataLoader.Get(option.Id));
+        int owned = _player.Specializations.Count;
+        int threshold = PerkSpecializationDataLoader.Config.OfferLevels[owned];
+        _fragments.TriggerLevelUp(threshold);
         bool ordinary = !_fragments.IsSpecializationChoice;
         _fragments.SkipChoice();
         PerkSpecializationEffects.PreviewInactive = true;
-        _fragments.TriggerLevelUp(3);
-        bool offered = _fragments.IsSpecializationChoice && _fragments.PendingChoices.Count == 3;
+        _fragments.TriggerLevelUp(threshold + 1);
+        bool offered = _fragments.IsSpecializationChoice;
         Select(0);
-        _fragments.TriggerLevelUp(4);
-        Check(ordinary && offered && _player.Specializations.Count == 1 && !_fragments.IsSpecializationChoice,
-            "Droit sans candidat au palier 2 : choix ordinaire, puis perk au niveau 3, puis retour à l'ordinaire");
+        _fragments.TriggerLevelUp(threshold + 2);
+        Check(ordinary && offered && _player.Specializations.Count == owned + 1 && !_fragments.IsSpecializationChoice,
+            $"Droit sans candidat au palier {threshold} : choix ordinaire, perk au niveau suivant, puis retour à l'ordinaire");
         _fragments.SkipChoice();
     }
 
@@ -216,7 +232,10 @@ public partial class PerkAcquisitionRegression : Node2D
         Check(!withBell.Contains("salvage_xp") && !withBell.Contains("familiar_loot"),
             "Délestage et Habitude absents tant que les objets à choix n'existent pas");
         PerkSpecializationEffects.PreviewInactive = false;
-        Check(offers.Candidates(_player, NoBanishedWeapons).Count == 0, "Sans aperçu : aucun candidat en B1");
+        bool implementedOnly = true;
+        foreach (FragmentOption option in offers.Candidates(_player, NoBanishedWeapons))
+            implementedOnly &= PerkSpecializationEffects.IsImplemented(PerkSpecializationDataLoader.Get(option.Id).Effect);
+        Check(implementedOnly, "Sans aperçu : seuls les effets branchés sont candidats");
     }
 
     /// <summary>Quatre perks distincts au plus ; ensuite plus aucune offre de perk.</summary>

@@ -5,11 +5,15 @@ namespace Vestiges.Progression;
 
 /// <summary>
 /// Effets de perk réellement branchés en run. Un perk n'est proposé que si son effet y figure : aucune carte
-/// n'annonce une règle inactive (plan 05 §8). Chaque lot y ajoute les effets qu'il livre ; B1 n'en livre aucun.
+/// n'annonce une règle inactive (plan 05 §8). Chaque étape de B2 y ajoute les effets qu'elle livre, une fois vérifiés.
 /// </summary>
 public static class PerkSpecializationEffects
 {
-    private static readonly HashSet<string> Implemented = new(StringComparer.Ordinal);
+    private static readonly HashSet<string> Implemented = new(StringComparer.Ordinal)
+    {
+        SpecializationRuntime.OverhealReserveEffect,
+        SpecializationRuntime.RallyEffect,
+    };
 
     public static bool IsImplemented(string effect) => Implemented.Contains(effect);
 

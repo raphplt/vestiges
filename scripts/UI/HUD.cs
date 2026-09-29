@@ -399,6 +399,8 @@ public partial class HUD : CanvasLayer
         _shieldFill.OffsetTop = 1f;
         _shieldFill.OffsetBottom = 5f;
         hpTrack.AddChild(_shieldFill);
+        // Perks de survie : réserve de Prévoyance et part récupérable de Reprise, sous le chiffre des PV.
+        hpTrack.AddChild(new VitalsPerkOverlay());
         _hpValueLabel = MakeLabel("100 / 100", 11, PalWhiteOff);
         _hpValueLabel.Position = Vector2.Zero;
         _hpValueLabel.Size = hpRect.Size;
