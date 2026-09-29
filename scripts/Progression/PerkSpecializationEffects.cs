@@ -13,6 +13,7 @@ public static class PerkSpecializationEffects
     {
         SpecializationRuntime.OverhealReserveEffect,
         SpecializationRuntime.RallyEffect,
+        SpecializationRuntime.OverflowEffect,
     };
 
     public static bool IsImplemented(string effect) => Implemented.Contains(effect);

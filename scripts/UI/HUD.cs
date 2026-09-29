@@ -127,6 +127,9 @@ public partial class HUD : CanvasLayer
     private static readonly Color PalVioletMist = new(0x4A / 255f, 0x30 / 255f, 0x66 / 255f);
     private static readonly Color HealthyColor = new(0.42f, 0.74f, 0.36f);
     private static readonly Color ShieldColor = new(0.72f, 0.86f, 1f);
+    // Réserve de Débordement prête : la case de l'arme s'éclaire en bleu pâle, comme le chiffre du coup renforcé.
+    private static readonly Color OverflowSlotTint = new(0.75f, 1.05f, 1.45f);
+    private readonly System.Collections.Generic.HashSet<string> _overflowReady = new();
     private static readonly Color PlateColor = new(0.04f, 0.045f, 0.08f, 0.82f);
     private static readonly Color PlateBorder = new(0.83f, 0.66f, 0.26f, 0.35f);
     private static readonly Color BarTrack = new(0.02f, 0.02f, 0.04f, 0.9f);
@@ -153,6 +156,7 @@ public partial class HUD : CanvasLayer
         _eventBus.WeaponInventoryChanged += OnWeaponInventoryChanged;
         _eventBus.WeaponUpgraded += OnWeaponUpgraded;
         _eventBus.PassiveSouvenirSlotsChanged += OnPassiveSlotsChanged;
+        _eventBus.SpecializationGaugeChanged += OnSpecializationGauge;
 
         _slotEmptyTex = GD.Load<Texture2D>("res://assets/ui/hud/hud_slot_empty.png");
         _slotFilledTex = GD.Load<Texture2D>("res://assets/ui/hud/hud_slot_filled.png");
@@ -275,6 +279,7 @@ public partial class HUD : CanvasLayer
             _eventBus.WeaponInventoryChanged -= OnWeaponInventoryChanged;
             _eventBus.WeaponUpgraded -= OnWeaponUpgraded;
             _eventBus.PassiveSouvenirSlotsChanged -= OnPassiveSlotsChanged;
+            _eventBus.SpecializationGaugeChanged -= OnSpecializationGauge;
         }
 
         if (GetViewport() != null)
@@ -836,7 +841,7 @@ public partial class HUD : CanvasLayer
                 // Une case masquée par un vol de butin (HudLootFlight) ne reste pas vide si les armes changent de place.
                 _weaponSlotIcons[i].Modulate = Colors.White;
                 _weaponSlotFrames[i].Texture = _slotFilledTex;
-                _weaponSlotFrames[i].Modulate = Colors.White;
+                _weaponSlotFrames[i].Modulate = _overflowReady.Contains(weapon.Id) ? OverflowSlotTint : Colors.White;
                 LoadWeaponIcon(i, weapon.Sprite);
                 int fragLevel = player.GetWeaponFragmentLevel(weapon.Id);
                 _weaponSlotLevels[i].Text = fragLevel > 1 ? $"{fragLevel}" : "";
@@ -849,6 +854,17 @@ public partial class HUD : CanvasLayer
                 _weaponSlotLevels[i].Text = "";
             }
         }
+    }
+
+    private void OnSpecializationGauge(SpecializationGauge gauge)
+    {
+        if (gauge.Effect != Progression.SpecializationRuntime.OverflowEffect)
+            return;
+        bool changed = gauge.Value > 0f ? _overflowReady.Add(gauge.Key) : _overflowReady.Remove(gauge.Key);
+        if (!changed || ResolvePlayer() is not Player player)
+            return;
+        for (int i = 0; i < player.WeaponSlots.Count && i < Player.MaxWeaponSlots; i++)
+            _weaponSlotFrames[i].Modulate = _overflowReady.Contains(player.WeaponSlots[i].Id) ? OverflowSlotTint : Colors.White;
     }
 
     private void LoadWeaponIcon(int slotIndex, string spritePath)

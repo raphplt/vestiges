@@ -134,12 +134,12 @@ public partial class CombatPools : Node2D
     /// Lance un chiffre de dégâts ; le rendu permet à la cible d'y additionner ses coups suivants.
     /// Nul quand le budget de la frame est épuisé ; un critique passe toujours.
     /// </summary>
-    public DamageNumber ShowDamageNumber(Vector2 position, float damage, bool isCrit)
+    public DamageNumber ShowDamageNumber(Vector2 position, float damage, bool isCrit, bool isCarried = false)
     {
-        if (!isCrit && !FxBudget.TryTake(FxBudgetKind.Numbers))
+        if (!isCrit && !isCarried && !FxBudget.TryTake(FxBudgetKind.Numbers))
             return null;
         DamageNumber number = _damageNumbers.Take();
-        number.Play(position, damage, isCrit);
+        number.Play(position, damage, isCrit, isCarried);
         return number;
     }
 

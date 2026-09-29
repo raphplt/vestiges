@@ -31,6 +31,7 @@ public partial class PerkEffectsRegression : Node2D
             CheckOverhealReserve();
             CheckRally();
             CheckSurvivalOrder();
+            CheckOverflow();
             GD.Print($"[PerkEffectsRegression] RESULT failures={_failures}");
             GetTree().Quit(_failures == 0 ? 0 : 1);
         }
@@ -143,6 +144,88 @@ public partial class PerkEffectsRegression : Node2D
             $"Prévoyance puis Reprise : {stock:0.#} rendus, {runtime.Rally.Recoverable:0.#} récupérables sur le reste");
         Kill(_player.GetInstanceId());
         Check(Near(runtime.Reserve.Stock, 0f), "Une restitution de Reprise n'alimente pas Prévoyance");
+    }
+
+    /// <summary>Débordement : excédent natif, plafond de l'attaque qui charge, lancement ultérieur, expirations.</summary>
+    private void CheckOverflow()
+    {
+        Setup("overflow");
+        WeaponInstance bow = _player.WeaponSlots[0];
+        AttackContext launchA = _player.BeginAttack(bow, 30f);
+        Enemy first = SpawnEnemy();
+        first.TakeDamage(Hp(first) + 20f, source: launchA);
+        Check(Near(OverflowLedger.Amount(_player.GetInstanceId(), bow), 10f) && LastGauge("overflow") is { Value: 10f } gauge
+            && gauge.Key == bow.Id, "Coup fatal direct : la moitié de l'excédent natif en réserve, jauge de l'arme publiée");
+
+        Enemy secondVictim = SpawnEnemy();
+        secondVictim.TakeDamage(Hp(secondVictim) + 60f, source: launchA);
+        Check(Near(OverflowLedger.Amount(_player.GetInstanceId(), bow), 30f),
+            "Deux impacts du même lancement : excédents agrégés sous le plafond de l'attaque (30)");
+
+        Enemy sameLaunch = SpawnEnemy();
+        DamageResult own = sameLaunch.TakeDamage(5f, source: launchA);
+        Check(Near(own.CarriedDamage, 0f) && Near(OverflowLedger.Amount(_player.GetInstanceId(), bow), 30f),
+            "Le lancement qui charge ne consomme pas sa propre réserve");
+
+        WeaponInstance bell = AddWeapon("teachers_bell");
+        DamageResult other = SpawnEnemy().TakeDamage(5f, source: _player.BeginAttack(bell, 5f));
+        DamageResult dot = SpawnEnemy().TakeDamage(5f, source: _player.BeginAttack(bow, 5f).As(DamageKind.DamageOverTime));
+        Check(Near(other.CarriedDamage, 0f) && Near(dot.CarriedDamage, 0f), "Une autre arme ou un DOT ne consomment pas la réserve");
+
+        Enemy target = SpawnEnemy();
+        DamageResult carried = target.TakeDamage(5f, source: _player.BeginAttack(bow, 5f));
+        Check(Near(carried.CarriedDamage, 30f) && Near(carried.HpLost, 35f) && Near(OverflowLedger.Amount(_player.GetInstanceId(), bow), 0f)
+            && LastGauge("overflow") is { Value: 0f }, $"Lancement suivant : réserve entière sur le premier impact ({carried.HpLost:0.#} PV)");
+        DamageResult second = target.TakeDamage(5f, source: _player.BeginAttack(bow, 5f));
+        Check(Near(second.CarriedDamage, 0f), "Réserve consommée une seule fois");
+
+        OverflowLedger.Charge(_player.GetInstanceId(), bow, 999, 10f, 10f, 3f);
+        Enemy finished = SpawnEnemy();
+        float finishedHp = Hp(finished);
+        DamageResult reportKill = finished.TakeDamage(finishedHp - 2f, source: _player.BeginAttack(bow, 50f));
+        Check(reportKill.Fatal && Near(reportKill.NativeOverkill, 0f) && Near(OverflowLedger.Amount(_player.GetInstanceId(), bow), 0f),
+            "Mort due au seul report : aucun nouvel excédent natif");
+
+        Enemy dotVictim = SpawnEnemy();
+        dotVictim.TakeDamage(Hp(dotVictim) + 50f, source: _player.BeginAttack(bow, 50f).As(DamageKind.SecondaryWeapon));
+        Check(Near(OverflowLedger.Amount(_player.GetInstanceId(), bow), 0f), "Un coup secondaire fatal ne charge rien");
+
+        Enemy timed = SpawnEnemy();
+        timed.TakeDamage(Hp(timed) + 10f, source: _player.BeginAttack(bow, 50f));
+        Advance(2.9f);
+        bool alive = OverflowLedger.Amount(_player.GetInstanceId(), bow) > 0f;
+        Advance(0.2f);
+        Check(alive && Near(OverflowLedger.Amount(_player.GetInstanceId(), bow), 0f) && LastGauge("overflow") is { Value: 0f },
+            "Réserve valable 3 s, puis perdue");
+
+        Enemy dropped = SpawnEnemy();
+        dropped.TakeDamage(Hp(dropped) + 10f, source: _player.BeginAttack(bow, 50f));
+        _player.RemoveWeapon(0);
+        Check(Near(OverflowLedger.Amount(_player.GetInstanceId(), bow), 0f), "Arme retirée : sa réserve disparaît");
+
+        ulong owner = _player.GetInstanceId();
+        OverflowLedger.Charge(owner, bell, 1, 5f, 5f, 3f);
+        Setup();
+        Check(Near(OverflowLedger.Amount(owner, bell), 0f), "Joueur retiré : aucune réserve ne lui survit");
+    }
+
+    private Enemy SpawnEnemy()
+    {
+        Enemy enemy = GD.Load<PackedScene>("res://scenes/enemies/Enemy.tscn").Instantiate<Enemy>();
+        AddChild(enemy);
+        enemy.Initialize(EnemyDataLoader.Get("rodeur"), 1f, 1f);
+        enemy.SetPhysicsProcess(false);
+        enemy.Position = new Vector2(1000f, 1000f);
+        return enemy;
+    }
+
+    private static float Hp(Enemy enemy) =>
+        (float)typeof(Enemy).GetField("_currentHp", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).GetValue(enemy);
+
+    private WeaponInstance AddWeapon(string id)
+    {
+        _player.AddWeapon(WeaponDataLoader.Get(id));
+        return _player.WeaponSlots[_player.WeaponSlots.Count - 1];
     }
 
     private void Setup(params string[] perks)

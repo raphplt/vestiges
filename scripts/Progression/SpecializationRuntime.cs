@@ -14,15 +14,19 @@ public partial class SpecializationRuntime : Node
 {
     public const string OverhealReserveEffect = "overheal_reserve";
     public const string RallyEffect = "rally";
+    public const string OverflowEffect = "overflow";
 
     private Player _player;
     private ulong _playerId;
     private EventBus _eventBus;
     private OverhealReserve _reserve;
     private RallyWindow _rally;
+    private OverflowCharge _overflow;
+    private readonly System.Collections.Generic.List<WeaponInstance> _expired = new();
 
     public OverhealReserve Reserve => _reserve;
     public RallyWindow Rally => _rally;
+    public OverflowCharge Overflow => _overflow;
 
     public void Initialize(Player player)
     {
@@ -48,6 +52,11 @@ public partial class SpecializationRuntime : Node
         _eventBus.PlayerHealingResolved -= OnPlayerHealing;
         _eventBus.EnemyKillResolved -= OnEnemyKill;
         _eventBus.PlayerDamaged -= OnVitalsChanged;
+        if (_overflow == null)
+            return;
+        _eventBus.EnemyDamageResolved -= OnEnemyDamage;
+        _eventBus.WeaponInventoryChanged -= OnWeaponInventoryChanged;
+        _overflow.Clear();
     }
 
     /// <summary>Branche l'effet d'un perk acquis ; un effet non encore implémenté n'a pas d'état.</summary>
@@ -62,18 +71,54 @@ public partial class SpecializationRuntime : Node
             case RallyEffect:
                 _rally = new RallyWindow(_player, perk);
                 break;
+            case OverflowEffect:
+                // Seul perk à lire chaque impact : l'abonnement n'existe que s'il est acquis.
+                _overflow = new OverflowCharge(_playerId, perk);
+                _eventBus.EnemyDamageResolved += OnEnemyDamage;
+                _eventBus.WeaponInventoryChanged += OnWeaponInventoryChanged;
+                break;
         }
     }
 
     public override void _Process(double delta)
     {
-        if (_rally == null || !_rally.IsOpen)
+        float dt = (float)delta;
+        if (_rally != null && _rally.IsOpen)
         {
-            SetProcess(false);
-            return;
+            _rally.Advance(dt);
+            PublishRally();
         }
-        _rally.Advance((float)delta);
-        PublishRally();
+        if (_overflow != null && _overflow.HasReserves)
+        {
+            _overflow.Advance(dt, _expired);
+            PublishExpiredOverflow();
+        }
+        SetProcess(NeedsClock);
+    }
+
+    /// <summary>Le temps de jeu ne compte que pour une fenêtre ou une réserve limitée dans le temps.</summary>
+    private bool NeedsClock => (_rally?.IsOpen ?? false) || (_overflow?.HasReserves ?? false);
+
+    private void OnEnemyDamage(DamageResult result)
+    {
+        if (!_overflow.Resolve(result))
+            return;
+        WeaponInstance weapon = result.Source.Weapon;
+        PublishOverflow(weapon, _overflow.Amount(weapon));
+        SetProcess(NeedsClock);
+    }
+
+    private void OnWeaponInventoryChanged()
+    {
+        _overflow.DropMissing(_player.WeaponSlots, _expired);
+        PublishExpiredOverflow();
+    }
+
+    private void PublishExpiredOverflow()
+    {
+        foreach (WeaponInstance weapon in _expired)
+            PublishOverflow(weapon, 0f);
+        _expired.Clear();
     }
 
     private void OnPlayerDamage(PlayerDamageResult result)
@@ -89,7 +134,7 @@ public partial class SpecializationRuntime : Node
         if (_rally != null)
         {
             _rally.Wound(result.HpLost - restored);
-            SetProcess(_rally.IsOpen);
+            SetProcess(NeedsClock);
             PublishRally();
         }
     }
@@ -122,6 +167,9 @@ public partial class SpecializationRuntime : Node
     private void PublishReserve() =>
         _eventBus?.PublishSpecializationGauge(new SpecializationGauge(_playerId, OverhealReserveEffect, "",
             _reserve.Stock, _reserve.Capacity));
+
+    private void PublishOverflow(WeaponInstance weapon, float amount) =>
+        _eventBus?.PublishSpecializationGauge(new SpecializationGauge(_playerId, OverflowEffect, weapon.Id, amount, amount));
 
     private void PublishRally() =>
         _eventBus?.PublishSpecializationGauge(new SpecializationGauge(_playerId, RallyEffect, "",

@@ -892,13 +892,16 @@ public partial class Enemy : CharacterBody2D
 		if (_currentHp <= 0 || _isDying || _isBurrowed)
 			return default;
 
+		// Débordement : le premier impact direct d'un lancement ultérieur emporte la réserve de son arme.
+		if (carriedDamage <= 0f)
+			carriedDamage = OverflowLedger.Take(source);
 		DamageResult result = DamageResult.Resolve(Life, source, _currentHp, damage, carriedDamage, _mods.DamageTakenMultiplier);
 		damage = result.NativeDamage + result.CarriedDamage;
 		_mods.NotifyDamaged();
 		_currentHp -= damage;
 		// La surcharge Span évite un tableau params par tick, tout en gardant le signal Godot synchrone.
 		_eventBus.EmitSignal(EventBus.SignalName.EntityDamaged, (System.ReadOnlySpan<Variant>)[this, damage]);
-		SpawnDamageNumber(damage, isCrit);
+		SpawnDamageNumber(damage, isCrit, result.CarriedDamage > 0f);
 		if (showImpact)
 		{
 			TriggerHitFeedback();
@@ -1108,15 +1111,16 @@ public partial class Enemy : CharacterBody2D
 		CombatPools.Instance?.ShowHitFlash(GlobalPosition + new Vector2(0, -8));
 	}
 
-	private void SpawnDamageNumber(float damage, bool isCrit = false)
+	private void SpawnDamageNumber(float damage, bool isCrit = false, bool isCarried = false)
 	{
 		if (CombatPools.Instance == null)
 			return;
-		// Les coups rapprochés s'additionnent dans le même chiffre ; un critique a toujours le sien.
-		if (!isCrit && IsInstanceValid(_damageNumber) && _damageNumber.TryMerge(_damageNumberSerial, damage))
+		// Les coups rapprochés s'additionnent dans le même chiffre ; un critique ou un coup renforcé a toujours le sien.
+		bool pops = isCrit || isCarried;
+		if (!pops && IsInstanceValid(_damageNumber) && _damageNumber.TryMerge(_damageNumberSerial, damage))
 			return;
-		DamageNumber number = CombatPools.Instance.ShowDamageNumber(GlobalPosition + new Vector2(0, -20), damage, isCrit);
-		if (isCrit || number == null)
+		DamageNumber number = CombatPools.Instance.ShowDamageNumber(GlobalPosition + new Vector2(0, -20), damage, isCrit, isCarried);
+		if (pops || number == null)
 			return;
 		_damageNumber = number;
 		_damageNumberSerial = number.Serial;
