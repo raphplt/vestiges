@@ -44,6 +44,7 @@ La [Stratégie V2](../VESTIGES-STRATEGIE-V2.md) reste l'autorité gameplay/roadm
 | [18 — Inventaire des restes V1](18-inventaire-restes-v1.md) | P0 | Éléments de lore et POI vectoriels, Colosses, identifiants Steam « nuits » | 17 (lots 0B/0C) |
 | [19 — Lore](19-lore.md) | Transversal | Étape A : incohérences, textes trop directs, 14 questions à trancher, pistes de révélation | 06 (casting), 16 (échos), 17 (noms d'armes) |
 | [20 — Récompense et puissance](20-recompense-et-puissance.md) | P0 (R1 capital) | Retours du 28 septembre ; modèle de progression révisé pour 300 à 400 niveaux en 45 min (§6.6), cibles à valider ; paliers validés ; lots D1, R1-0 et R1-T livrés ; R1-F proposé | 03, 05, 06, 13, 16, 17 |
+| [21 — Système de build](21-systeme-de-build.md) | **P0, priorité actuelle** | Refonte depuis les [douze principes](../PRINCIPES-BUILD.md) : armes (quoi), traits (combien), objets (quand), fragments (comment), personnage (pourquoi) ; à valider | 05, 06, 13, 17, 20 |
 
 Les numéros servent à identifier les plans, pas à imposer leur exécution intégrale dans cet ordre. Le [registre](DECISIONS.md) fait foi pour leur statut de validation.
 
@@ -57,6 +58,13 @@ Les numéros servent à identifier les plans, pas à imposer leur exécution int
 6. Traiter 09 seulement après stabilisation des règles de score.
 
 Un seul lot d'implémentation ouvert à la fois. Un échec de lisibilité, de performance ou de fun ramène au lot concerné avant expansion.
+
+**Mise à jour du 29 septembre, soir — refonte du build depuis les principes :** Raphaël fixe [douze principes de conception des builds](../PRINCIPES-BUILD.md) et demande une reconception neutre. Le [plan 21](21-systeme-de-build.md) propose cinq familles aux rôles nets et trois canaux d'acquisition :
+- armes (voies au niveau 5) et traits sur propriétés communes, par le level-up ;
+- objets à déclencheurs communs, par le monde ;
+- fragments après chaque Résurgence.
+
+Il propose aussi une courbe de 80 à 110 niveaux au lieu de 300 à 400. Les catalogues d'objets et de perks précédents deviennent des matériaux pour ce plan. À valider avant tout code.
 
 **Mise à jour du 29 septembre, suite — proposition 2 des objets et des icônes, à valider :** le [catalogue d'objets](05-objets-catalogue-v1.md) compte 30 objets, dont 19 à condition, contrepartie ou effet sur le monde et 11 multiplicateurs. Il ajoute les déblocages : 13 objets au départ, les autres par quêtes ou achats en Vestiges au Hub. Les [icônes de perks](planches/perks-icones-proposition-2.png) deviennent des fragments teintés par famille, aux pictogrammes repris des retours visuels du jeu ([plan 05 §15](05-perks-specialisations.md)).
 

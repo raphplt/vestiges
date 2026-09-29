@@ -384,3 +384,15 @@ Raphaël : « idée : le fait de bannir des armes / perks / items dans les choix
 - bannir une arme, un fragment ou un objet compterait comme un oubli qui nourrit l'oubli général.
 
 L'avis de l'agent est consigné au [catalogue d'objets §7](05-objets-catalogue-v1.md#7-remise-en-question-du-29-septembre--objets-limités-et-intégrés-au-level-up).
+
+
+## 31. Refonte du build depuis un point de vue neutre, douze principes — 29 septembre 2026
+
+Raphaël : « ok juste avant de toute valider essaie de prendre un point de vue neutre et en dehors de toutes mes indications et meme de tes proprees pensées. dit toi qu'on te drop sur vestiges, avec le lore ect mais c'est à toi de construire la manière dont le build se fait. tu peux implémenter ca comme tu veux tu es libre (armes, perks, objets, autre chose). A partir de maintenant au lieu de se baser sur le hasard ou des intuitions on va s'efforcer de respecter les règles suivantes meme si ca implique des réflexions et chantiers sur ce qui était prévu initialement voir déjà implémenté. il faut savoir etre flexible le jeu est encore dans une phase relativement jeune de son développement », suivi des douze principes consignés dans [PRINCIPES-BUILD](../PRINCIPES-BUILD.md).
+
+**Acquis :**
+- les douze principes font désormais référence pour toute conception de build ;
+- le système de build est à reconcevoir sans présupposé, en remettant en cause si besoin ce qui était prévu ou déjà implémenté (fragments B, objets, passifs, raretés d'amélioration) ;
+- l'agent est libre sur la forme (armes, fragments, objets, autre chose).
+
+**Non acquis :** la proposition qui en découlera, à présenter avant validation.
