@@ -86,6 +86,7 @@ public partial class PerkAcquisitionRegression : Node2D
         bool ordinary = !_fragments.IsSpecializationChoice;
         _fragments.SkipChoice();
         PerkSpecializationEffects.PreviewInactive = true;
+        _player.AddWeapon(WeaponDataLoader.Get("makeshift_bow"));
         _fragments.TriggerLevelUp(threshold + 1);
         bool offered = _fragments.IsSpecializationChoice;
         Select(0);
