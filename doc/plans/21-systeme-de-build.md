@@ -376,4 +376,11 @@ La §11 n'est qu'un **aperçu de six directions parmi des dizaines ou des centai
 - Effets (66), contrats, armes, capacités ennemies : zéro échec. Smoke vert.
 - Capture `--perk-scene resurgence` : offre après la Résurgence, puis deux cartes et « Bannir (+0,3 Péril) » après trois bannissements gratuits.
 
+Relecture par sous-agent après le commit : aucun bug bloquant. Corrections apportées ensuite :
+- **Coût exact** : il est tenu en fractions entières (`banish.peril_divisor`, 3), donc sans dérive d'arrondi. Il est affiché en fractions (« +⅓ », « +⅔ », « +1⅓ Péril »), et l'aide précise que les fractions s'additionnent.
+- **Dette conservée** : elle n'est plus effacée sans paiement si le gestionnaire de Péril est absent. Au Péril maximal, plus rien ne se paie.
+- **Données** : le chargement du bloc `banish` signale une erreur s'il manque.
+- **Écran** : il se referme après une relance ou un bannissement si l'offre ne peut pas être renouvelée.
+- **Report** : un fragment passé revient aussi juste après un niveau déjà en file.
+
 Non fait : l'offre ponctuelle d'un fragment par un Souverain (§7), qui reste à régler (fréquence).

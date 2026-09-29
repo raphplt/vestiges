@@ -86,7 +86,7 @@ public partial class PerkAcquisitionRegression : Node2D
         _fragments.SkipChoice();
     }
 
-    /// <summary>Pendant un choix de niveau, le fragment attend son tour et passe avant les niveaux en file ; passé, il revient au niveau suivant.</summary>
+    /// <summary>Pendant un choix de niveau, le fragment attend son tour et passe avant les niveaux en file ; passé, il revient après le niveau suivant.</summary>
     private void CheckQueueAndDeferral()
     {
         Setup(preview: false);
@@ -99,16 +99,22 @@ public partial class PerkAcquisitionRegression : Node2D
         _fragments.SkipChoice();
         bool levelAfter = _fragments.IsChoiceActive && !_fragments.IsSpecializationChoice;
         _fragments.SkipChoice();
-        Check(waited && before && levelAfter && !_fragments.IsChoiceActive,
-            "Résurgence pendant un choix : fragment après le choix courant, avant le niveau en file");
+        bool backAfterQueuedLevel = _fragments.IsSpecializationChoice;
+        Select(0);
+        Check(waited && before && levelAfter && backAfterQueuedLevel && !_fragments.IsChoiceActive && _player.Specializations.Count == 1,
+            "Résurgence pendant un choix : fragment avant le niveau en file ; passé, il revient juste après ce niveau");
 
+        Resurgence(2);
+        bool offered = _fragments.IsSpecializationChoice;
+        _fragments.SkipChoice();
+        bool closed = !_fragments.IsChoiceActive;
         LevelUp(5);
         bool reoffered = _fragments.IsSpecializationChoice && _fragments.QueuedLevels == 1;
         Select(0);
         bool thenLevel = _fragments.IsChoiceActive && !_fragments.IsSpecializationChoice;
         _fragments.SkipChoice();
-        Check(reoffered && thenLevel && _player.Specializations.Count == 1,
-            "Fragment passé : il revient au niveau gagné suivant, puis ce niveau est proposé");
+        Check(offered && closed && reoffered && thenLevel && _player.Specializations.Count == 2,
+            "Fragment passé sans niveau en file : l'écran se ferme, il revient au niveau gagné suivant, avant ce niveau");
     }
 
     /// <summary>Sans candidat, le droit attend ; une arme compatible et un niveau plus tard, il est servi.</summary>

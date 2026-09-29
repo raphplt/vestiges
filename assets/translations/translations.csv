@@ -285,7 +285,7 @@ LEVELUP_REROLL,Relancer ({0}),Reroll ({0})
 LEVELUP_BANISH,Bannir ({0}),Banish ({0})
 LEVELUP_BANISH_CANCEL,Annuler,Cancel
 LEVELUP_SKIP,Passer,Skip
-LEVELUP_BANISH_HINT,Choisis la carte à bannir pour toute la partie,Pick the card to banish for the whole run
+LEVELUP_BANISH_HINT,"Choisis la carte à bannir pour toute la partie ; au-delà des gratuits, les fractions de Péril s'additionnent","Pick the card to banish for the whole run; past the free ones, Peril fractions add up"
 LEVELUP_TITLE_PERK,"FRAGMENT  ·  EMPLACEMENT {0}/{1}","FRAGMENT  ·  SLOT {0}/{1}"
 LEVELUP_NEW_PERK,FRAGMENT,FRAGMENT
 LEVELUP_PERK_PREVIEW,Aperçu : effet pas encore branché,Preview: effect not wired yet

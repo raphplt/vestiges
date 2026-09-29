@@ -16,7 +16,7 @@ public static class PerilDataLoader
     private static float _score;
     private static float _raritySteps;
     private static int _banishFree = 3;
-    private static float _banishPerilStep;
+    private static int _banishPerilDivisor = 3;
     private static bool _loaded;
 
     public static int Max
@@ -75,13 +75,13 @@ public static class PerilDataLoader
         }
     }
 
-    /// <summary>Le n-ième bannissement payant coûte n × ce pas de Péril.</summary>
-    public static float BanishPerilStep
+    /// <summary>Le n-ième bannissement payant coûte n fractions de Péril ; il en faut autant pour un point.</summary>
+    public static int BanishPerilDivisor
     {
         get
         {
             Load();
-            return _banishPerilStep;
+            return _banishPerilDivisor;
         }
     }
 
@@ -108,10 +108,18 @@ public static class PerilDataLoader
         _xp = (float)perPoint["xp"].AsDouble();
         _score = (float)perPoint["score"].AsDouble();
         _raritySteps = (float)perPoint["rarity_steps"].AsDouble();
-        if (!root.ContainsKey("banish"))
+        if (!root.ContainsKey("banish") || root["banish"].VariantType != Variant.Type.Dictionary)
+        {
+            GD.PushError("[PerilDataLoader] Bloc banish absent : 3 bannissements gratuits, puis un tiers de Péril de plus à chacun");
             return;
+        }
         Godot.Collections.Dictionary banish = root["banish"].AsGodotDictionary();
-        _banishFree = (int)banish["free"].AsDouble();
-        _banishPerilStep = (float)banish["peril_step"].AsDouble();
+        if (!banish.ContainsKey("free") || !banish.ContainsKey("peril_divisor"))
+        {
+            GD.PushError("[PerilDataLoader] banish doit définir free et peril_divisor");
+            return;
+        }
+        _banishFree = Mathf.Max(0, (int)banish["free"].AsDouble());
+        _banishPerilDivisor = Mathf.Max(1, (int)banish["peril_divisor"].AsDouble());
     }
 }

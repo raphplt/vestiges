@@ -40,7 +40,8 @@ public partial class FragmentManager : Node
     // Bannir, c'est oublier (plan 21 §16) : les premiers sont gratuits, les suivants coûtent du Péril, de plus en plus.
     private int _banishesRemaining;
     private int _paidBanishes;
-    private float _banishPerilDebt;
+    // Dette en fractions de Péril (1 / BanishPerilDivisor), réglée par points entiers : aucune dérive d'arrondi.
+    private int _banishPerilDebt;
     private readonly HashSet<string> _banishedIds = new();
 
     private PerkSpecializationOffers _specializations;
@@ -51,8 +52,11 @@ public partial class FragmentManager : Node
     /// <summary>Bannissements gratuits restants.</summary>
     public int BanishesRemaining => _banishesRemaining;
 
-    /// <summary>Péril que coûtera le prochain bannissement (0 tant qu'il en reste de gratuits).</summary>
-    public float NextBanishPerilCost => _banishesRemaining > 0 ? 0f : PerilDataLoader.BanishPerilStep * (_paidBanishes + 1);
+    /// <summary>Fractions de Péril que coûtera le prochain bannissement (0 tant qu'il en reste de gratuits).</summary>
+    public int NextBanishPerilFractions => _banishesRemaining > 0 ? 0 : _paidBanishes + 1;
+
+    /// <summary>Même coût en points de Péril, pour les mesures.</summary>
+    public float NextBanishPerilCost => NextBanishPerilFractions / (float)PerilDataLoader.BanishPerilDivisor;
 
     private readonly RandomNumberGenerator _rng = new();
 
@@ -260,6 +264,8 @@ public partial class FragmentManager : Node
         if (_levelUpQueue.Count > 0)
         {
             int nextLevel = _levelUpQueue.Dequeue();
+            // Un fragment passé retrouve une occasion après ce niveau déjà gagné.
+            _specializations.Resume();
             GD.Print($"[FragmentManager] Processing queued level-up: {nextLevel} ({_levelUpQueue.Count} remaining)");
             OfferFragments(nextLevel);
         }
@@ -268,6 +274,8 @@ public partial class FragmentManager : Node
             if (_choosingActive)
                 _lastCloseMsec = Time.GetTicksMsec();
             _choosingActive = false;
+            _specializationChoice = false;
+            _pendingChoices.Clear();
         }
     }
 
@@ -424,12 +432,13 @@ public partial class FragmentManager : Node
             return;
         }
         _paidBanishes++;
-        _banishPerilDebt += PerilDataLoader.BanishPerilStep * _paidBanishes;
-        int points = Mathf.FloorToInt(_banishPerilDebt + 0.001f);
-        if (points <= 0)
+        _banishPerilDebt += _paidBanishes;
+        int points = _banishPerilDebt / PerilDataLoader.BanishPerilDivisor;
+        // Sans gestionnaire de Péril, la dette attend ; au Péril maximal, rien de plus ne peut être payé.
+        if (points <= 0 || PerilManager.Current == null)
             return;
-        _banishPerilDebt -= points;
-        PerilManager.Current?.AddPeril(points);
+        _banishPerilDebt -= points * PerilDataLoader.BanishPerilDivisor;
+        PerilManager.Current.AddPeril(points);
     }
 
     /// <summary>Nouvelle offre du même moment : fragments après une Résurgence, sinon le niveau en cours.</summary>

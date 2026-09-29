@@ -303,7 +303,11 @@ public partial class LevelUpScreen : CanvasLayer
     private void BuildActionButtons()
     {
         _buttons.Add(CreateActionButton(string.Format(Tr("LEVELUP_REROLL"), _fragmentManager.RerollsRemaining),
-            _fragmentManager.RerollsRemaining > 0, () => _fragmentManager.Reroll()));
+            _fragmentManager.RerollsRemaining > 0, () =>
+            {
+                _fragmentManager.Reroll();
+                CloseIfDone();
+            }));
         _banishButton = CreateActionButton(BanishLabel(), true, ToggleBanish);
         _buttons.Add(_banishButton);
         _buttons.Add(CreateActionButton(Tr("LEVELUP_SKIP"), true, Skip));
@@ -381,10 +385,18 @@ public partial class LevelUpScreen : CanvasLayer
         SetFocus(_banishMode ? 0 : _focusIndex);
     }
 
-    /// <summary>Gratuits restants, puis le Péril que coûtera le prochain bannissement.</summary>
+    /// <summary>Gratuits restants, puis le Péril que coûtera le prochain bannissement, en fractions (⅓, ⅔, 1⅓…).</summary>
     private string BanishLabel() => _fragmentManager.BanishesRemaining > 0
         ? string.Format(Tr("LEVELUP_BANISH"), _fragmentManager.BanishesRemaining)
-        : string.Format(Tr("LEVELUP_BANISH_PERIL"), _fragmentManager.NextBanishPerilCost.ToString("0.#", System.Globalization.CultureInfo.GetCultureInfo("fr-FR")));
+        : string.Format(Tr("LEVELUP_BANISH_PERIL"), Fraction(_fragmentManager.NextBanishPerilFractions, PerilDataLoader.BanishPerilDivisor));
+
+    private static string Fraction(int numerator, int denominator)
+    {
+        int whole = numerator / denominator;
+        int rest = numerator % denominator;
+        string part = rest == 0 ? "" : denominator == 3 ? (rest == 1 ? "⅓" : "⅔") : $"{rest}/{denominator}";
+        return whole == 0 ? part : $"{whole}{part}";
+    }
 
     private void OnCardChosen(FragmentOption option)
     {
@@ -392,6 +404,7 @@ public partial class LevelUpScreen : CanvasLayer
         {
             AudioManager.PlayUI("sfx_perk_refuse", 0f);
             _fragmentManager?.BanishFragment(option.Id);
+            CloseIfDone();
             return;
         }
 
