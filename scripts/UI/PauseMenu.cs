@@ -318,7 +318,7 @@ public partial class PauseMenu : CanvasLayer
 			AddLine(_loadoutContainer, "Aucun pour l'instant.", "", TextVeryDim);
 		AddSectionTitle(_loadoutContainer, "Perks");
 		foreach (PerkSpecializationData perk in player.Specializations)
-			AddPerkRow(perk);
+			AddPerkRow(perk, player);
 		if (player.Specializations.Count == 0)
 			AddLine(_loadoutContainer, "Aucun pour l'instant.", "", TextVeryDim);
 
@@ -382,8 +382,8 @@ public partial class PauseMenu : CanvasLayer
 		_loadoutContainer.AddChild(row);
 	}
 
-	/// <summary>Perk : nom et règle ; ses chiffres et états viendront avec les effets (plan 05, B2–B3).</summary>
-	private void AddPerkRow(PerkSpecializationData perk)
+	/// <summary>Perk : nom, règle, puis son état du moment (réserve, fenêtre, cible) ou son inactivité faute d'arme.</summary>
+	private void AddPerkRow(PerkSpecializationData perk, Player player)
 	{
 		VBoxContainer text = new();
 		text.AddThemeConstantOverride("separation", 0);
@@ -391,7 +391,41 @@ public partial class PauseMenu : CanvasLayer
 		Label rule = MakeLabel(perk.Description, TextRole.Small, StatBonusColor);
 		rule.AutowrapMode = TextServer.AutowrapMode.WordSmart;
 		text.AddChild(rule);
+		bool active = PerkSpecializationOffers.IsActive(perk, player);
+		string state = active ? PerkState(perk, player) : Tr("PAUSE_PERK_INACTIVE");
+		if (state.Length > 0)
+			text.AddChild(MakeLabel(state, TextRole.Small, active ? StatValueColor : TextVeryDim));
 		_loadoutContainer.AddChild(text);
+	}
+
+	private string PerkState(PerkSpecializationData perk, Player player)
+	{
+		SpecializationRuntime runtime = player.SpecializationRuntime;
+		switch (perk.Effect)
+		{
+			case SpecializationRuntime.OverhealReserveEffect when runtime?.Reserve != null:
+				return string.Format(Tr("PAUSE_PERK_RESERVE"), runtime.Reserve.Stock.ToString("0", French), runtime.Reserve.Capacity.ToString("0", French));
+			case SpecializationRuntime.RallyEffect when runtime?.Rally != null:
+				return runtime.Rally.Recoverable > 0f
+					? string.Format(Tr("PAUSE_PERK_RALLY"), runtime.Rally.Recoverable.ToString("0", French), runtime.Rally.Remaining.ToString("0.0", French))
+					: Tr("PAUSE_PERK_RALLY_IDLE");
+			case SpecializationRuntime.OverflowEffect when runtime?.Overflow != null:
+			{
+				string ready = "";
+				foreach (WeaponInstance weapon in runtime.Overflow.Ready)
+				{
+					string entry = $"{weapon.Name} +{runtime.Overflow.Amount(weapon).ToString("0", French)}";
+					ready = ready.Length == 0 ? entry : $"{ready}, {entry}";
+				}
+				return ready.Length > 0 ? string.Format(Tr("PAUSE_PERK_OVERFLOW"), ready) : Tr("PAUSE_PERK_OVERFLOW_IDLE");
+			}
+			case SpecializationRuntime.PriorityTargetingEffect when runtime?.PriorityTargeting != null:
+				return runtime.PriorityTargeting.Current is Enemy target
+					? string.Format(Tr("PAUSE_PERK_TARGET"), target.DisplayName)
+					: Tr("PAUSE_PERK_TARGET_IDLE");
+			default:
+				return "";
+		}
 	}
 
 	/// <summary>Toutes les stats du joueur ; les multiplicateurs se lisent en pourcentage de bonus.</summary>

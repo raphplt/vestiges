@@ -30,6 +30,7 @@ public partial class WeaponPickup : Area2D, IInteractable
 	private Vector2 _scatterVelocity;
 	private float _scatterTimer;
 	private bool _collected;
+	private GroupCache _groupCache;
 
 	public WeaponData Weapon => _weaponInstance?.Base;
 	public WeaponInstance WeaponInstance => _weaponInstance;
@@ -38,9 +39,19 @@ public partial class WeaponPickup : Area2D, IInteractable
 	public Vector2 InteractPosition => GlobalPosition;
 	public Vector2 PromptPosition => GlobalPosition + new Vector2(0f, -24f);
 	// L'invite traduit sa clé : un texte déjà composé s'affiche tel quel.
-	public string PromptVerbKey => string.Format(Tr("WEAPON_SWAP_PROMPT"), _weaponInstance?.Name ?? "");
+	public string PromptVerbKey => SwapPrompt();
 	public float HoldTime => SwapHoldSec;
 	public Color GaugeColor => UITheme.GoldBright;
+
+	/// <summary>L'échange prévient s'il laisserait un perk sans arme compatible (plan 05, B2).</summary>
+	private string SwapPrompt()
+	{
+		string prompt = string.Format(Tr("WEAPON_SWAP_PROMPT"), _weaponInstance?.Name ?? "");
+		if (_weaponInstance == null || _groupCache?.GetPlayer() is not Player { WeaponSlots.Count: >= Player.MaxWeaponSlots } player)
+			return prompt;
+		string deactivated = Progression.PerkSpecializationOffers.DeactivatedBySwap(player, _weaponInstance);
+		return deactivated.Length == 0 ? prompt : string.Format(Tr("WEAPON_SWAP_PERK_WARNING"), prompt, deactivated);
+	}
 
 	public void Initialize(WeaponData weapon, Vector2 position)
 	{
@@ -69,6 +80,7 @@ public partial class WeaponPickup : Area2D, IInteractable
 
 	public override void _Ready()
 	{
+		_groupCache = GetNodeOrNull<GroupCache>("/root/GroupCache");
 		CollisionLayer = 0;
 		CollisionMask = 1;
 

@@ -43,6 +43,9 @@ public sealed class OverflowCharge
 
     public bool HasReserves => _ready.Count > 0;
 
+    /// <summary>Armes dont la réserve est prête.</summary>
+    public IReadOnlyList<WeaponInstance> Ready => _ready;
+
     public float Amount(WeaponInstance weapon) => OverflowLedger.Amount(_ownerId, weapon);
 
     /// <summary>Fait vieillir les réserves ; les armes dont la réserve a expiré sont ajoutées à <paramref name="expired"/>.</summary>

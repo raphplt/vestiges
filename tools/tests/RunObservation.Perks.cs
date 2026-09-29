@@ -15,6 +15,7 @@ namespace Vestiges.Tests;
 /// récupérable de Reprise sur la barre de PV. overflow : l'arc surpuissant achève des rôdeurs, case d'arme éclairée et
 /// chiffre renforcé. priority : une élite plus lointaine que les rôdeurs est visée et entourée de son repère.
 /// carry : la Cloche ralentit une grappe, puis une transmission certaine montre le trait vers le receveur.
+/// status : arsenal plein, une onde au sol dont l'échange rendrait Convergence inactive, puis la pause et ses états.
 /// </summary>
 public partial class RunObservation
 {
@@ -35,6 +36,9 @@ public partial class RunObservation
                 break;
             case "carry":
                 await CaptureCarryControl();
+                break;
+            case "status":
+                await CapturePerkStatus();
                 break;
             default:
                 GD.PushError($"[Perks] Scène inconnue : {scene}");
@@ -167,6 +171,35 @@ public partial class RunObservation
             SavePlayerCloseUp($"{_output}/perks-link-{frame}.png", new Vector2(160f, 100f));
         }
         GD.Print($"[Perks] RESULT voisine ralentie par Propagation : {propagated}");
+    }
+
+    private async Task CapturePerkStatus()
+    {
+        Acquire("overheal_reserve", "rally", "priority_targeting", "carry_control");
+        foreach (string id in new[] { "teachers_bell", "music_box", "whip" })
+            _player.AddWeapon(WeaponDataLoader.Get(id));
+        _player.IsGodMode = false;
+        _player.DisableDefenseForTests();
+        _player.TakeDamage(_player.EffectiveMaxHp * 0.5f);
+        _player.IsGodMode = true;
+
+        WeaponPickup pickup = new();
+        pickup.Initialize(WeaponDataLoader.Get("last_broadcast"), _player.GlobalPosition + new Vector2(18f, 6f));
+        _world.AddChild(pickup);
+        await Frames(20);
+        SavePlayerCloseUp($"{_output}/perks-status-swap.png", new Vector2(200f, 120f));
+
+        _player.RemoveWeapon(0);
+        Node pause = _world.GetNode("PauseMenu");
+        pause.GetType().GetMethod("Pause", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public).Invoke(pause, null);
+        await Frames(10);
+        SaveFrame("perks-status-pause");
+        Input.ActionPress("scroll_down");
+        await Frames(30);
+        Input.ActionRelease("scroll_down");
+        await Frames(5);
+        SaveFrame("perks-status-pause-scrolled");
+        GD.Print("[Perks] RESULT pause et invite capturées");
     }
 
     private void Acquire(params string[] ids)

@@ -36,6 +36,7 @@ public partial class PerkEffectsRegression : Node2D
             CheckOverflow();
             await CheckPriorityTargeting();
             await CheckCarryControl();
+            CheckInactiveAfterSwap();
             GD.Print($"[PerkEffectsRegression] RESULT failures={_failures}");
             GetTree().Quit(_failures == 0 ? 0 : 1);
         }
@@ -317,6 +318,25 @@ public partial class PerkEffectsRegression : Node2D
         Check(true, "Aucun voisin dans le rayon : élimination sans effet ni erreur");
         foreach (Enemy enemy in enemies.ToArray())
             Free(enemy, enemies);
+    }
+
+    /// <summary>Un perk sans arme support devient inactif ; l'échange au sol l'annonce avant de le faire.</summary>
+    private void CheckInactiveAfterSwap()
+    {
+        Setup("priority_targeting", "carry_control", "overheal_reserve");
+        foreach (string id in new[] { "teachers_bell", "whip", "music_box" })
+            AddWeapon(id);
+        PerkSpecializationData convergence = PerkSpecializationDataLoader.Get("priority_targeting");
+        string lost = PerkSpecializationOffers.DeactivatedBySwap(_player, new WeaponInstance(WeaponDataLoader.Get("cleaver")));
+        string lostToWave = PerkSpecializationOffers.DeactivatedBySwap(_player, new WeaponInstance(WeaponDataLoader.Get("chipped_blade")));
+        Check(lost.Length == 0 && lostToWave.Length == 0, "Échanger l'arc contre une arme qui vise : aucun perk perdu");
+        string lostToOrbit = PerkSpecializationOffers.DeactivatedBySwap(_player, new WeaponInstance(WeaponDataLoader.Get("whip")));
+        Check(lostToOrbit == convergence.Name, $"Échanger l'arc contre une onde : Convergence annoncée ({lostToOrbit})");
+        _player.RemoveWeapon(0);
+        Check(!PerkSpecializationOffers.IsActive(convergence, _player)
+            && PerkSpecializationOffers.IsActive(PerkSpecializationDataLoader.Get("carry_control"), _player)
+            && PerkSpecializationOffers.IsActive(PerkSpecializationDataLoader.Get("overheal_reserve"), _player),
+            "Arc retiré : Convergence inactive, Propagation (Cloche) et Prévoyance restent actives");
     }
 
     private Node2D Nearest(float range)

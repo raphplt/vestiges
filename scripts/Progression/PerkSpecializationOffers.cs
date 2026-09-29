@@ -15,6 +15,10 @@ public sealed class PerkSpecializationOffers
 {
     public const string OptionType = "specialization";
 
+    private static readonly HashSet<string> NoBanishedWeapons = new();
+    // Arsenal simulé d'un échange, réutilisé : l'invite d'échange le recalcule à chaque frame.
+    private static readonly List<WeaponInstance> SwapPreview = new();
+
     private readonly PerkSpecializationConfig _config;
     private readonly HashSet<string> _banished = new();
     private int _earliestLevel;
@@ -107,7 +111,34 @@ public sealed class PerkSpecializationOffers
     }
 
     /// <summary>Conditions d'offre de la fiche, évaluées sur l'arsenal courant (armes bannies non améliorables).</summary>
-    public static bool IsEligible(PerkSpecializationData perk, Player player, IReadOnlySet<string> banishedWeapons)
+    public static bool IsEligible(PerkSpecializationData perk, Player player, IReadOnlySet<string> banishedWeapons) =>
+        IsEligible(perk, player.WeaponSlots, banishedWeapons);
+
+    /// <summary>Un perk acquis reste sans effet tant que l'arsenal ne remplit plus sa condition (arme support échangée).</summary>
+    public static bool IsActive(PerkSpecializationData perk, Player player) => IsEligible(perk, player.WeaponSlots, NoBanishedWeapons);
+
+    /// <summary>
+    /// Perks aujourd'hui actifs qu'un échange de l'arme du premier emplacement contre <paramref name="incoming"/>
+    /// rendrait inactifs, séparés par des virgules ; vide sinon.
+    /// </summary>
+    public static string DeactivatedBySwap(Player player, WeaponInstance incoming)
+    {
+        if (player.Specializations.Count == 0 || player.WeaponSlots.Count == 0)
+            return "";
+        SwapPreview.Clear();
+        for (int i = 1; i < player.WeaponSlots.Count; i++)
+            SwapPreview.Add(player.WeaponSlots[i]);
+        SwapPreview.Add(incoming);
+        string names = "";
+        foreach (PerkSpecializationData perk in player.Specializations)
+        {
+            if (IsActive(perk, player) && !IsEligible(perk, SwapPreview, NoBanishedWeapons))
+                names = names.Length == 0 ? perk.Name : $"{names}, {perk.Name}";
+        }
+        return names;
+    }
+
+    private static bool IsEligible(PerkSpecializationData perk, IReadOnlyList<WeaponInstance> weapons, IReadOnlySet<string> banishedWeapons)
     {
         PerkSpecializationEligibility conditions = perk.Eligibility;
         // Aucune récompense d'objets à choix n'existe en run avant le catalogue d'objets (B4).
@@ -118,7 +149,7 @@ public sealed class PerkSpecializationOffers
         bool directHits = false;
         bool nativeControl = false;
         int upgradeable = 0;
-        foreach (WeaponInstance weapon in player.WeaponSlots)
+        foreach (WeaponInstance weapon in weapons)
         {
             targeting |= WeaponTraits.SearchesTarget(weapon.Base);
             directHits |= WeaponTraits.DealsDirectHits(weapon.Base);

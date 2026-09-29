@@ -293,3 +293,12 @@ PERK_FAMILY_COMBAT,COMBAT,COMBAT
 PERK_FAMILY_SURVIVAL,SURVIE,SURVIVAL
 PERK_FAMILY_COLLECTION,COLLECTE,COLLECTION
 PERK_FAMILY_REWARDS,RÉCOMPENSES,REWARDS
+WEAPON_SWAP_PERK_WARNING,"{0}  ·  rend inactif : {1}","{0}  ·  disables: {1}"
+PAUSE_PERK_INACTIVE,Inactif : aucune arme compatible,Inactive: no compatible weapon
+PAUSE_PERK_RESERVE,"Réserve {0} / {1} PV","Reserve {0} / {1} HP"
+PAUSE_PERK_RALLY,"Récupérable {0} PV  ·  {1} s","Recoverable {0} HP  ·  {1} s"
+PAUSE_PERK_RALLY_IDLE,Aucune blessure récente,No recent wound
+PAUSE_PERK_OVERFLOW,Prêt : {0},Ready: {0}
+PAUSE_PERK_OVERFLOW_IDLE,Aucune réserve,No reserve
+PAUSE_PERK_TARGET,Suivi : {0},Tracking: {0}
+PAUSE_PERK_TARGET_IDLE,Aucune élite suivie,No elite tracked

@@ -20,6 +20,9 @@ public sealed class PriorityTargeting
         _marker = marker;
     }
 
+    /// <summary>Cible prioritaire effectivement suivie, ou null.</summary>
+    public Enemy Current => _marker.Target;
+
     public void Promote<T>(WeaponInstance weapon, List<T> sortedByDistance, Func<T, Node2D> enemyOf)
     {
         if (weapon == null || !WeaponTraits.SearchesTarget(weapon.Base))
