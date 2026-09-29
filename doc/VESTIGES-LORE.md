@@ -1,6 +1,6 @@
 # VESTIGES — Le lore
 
-Version 1.0 · 29 septembre 2026 · Statut : **première version complète, à relire par Raphaël**.
+Version 1.1 · 29 septembre 2026 · Statut : **à relire par Raphaël**. La 1.1 intègre ses retours sur la 1.0 : la carte qui change à chaque run est justifiée par l'histoire, toute convention de run est vérifiée (§7 bis), un objet est débloqué par la vraie fin, et les scènes sont déplacées en fin de run.
 
 Ce document est le script caché du jeu : ce qui s'est vraiment passé, qui sont les personnages, comment le joueur le découvre. Il est réservé à l'équipe. Le joueur n'en lira jamais une ligne telle quelle ; il en reconstituera une partie, à sa mesure.
 
@@ -37,6 +37,7 @@ Le jeu ne les énonce jamais. Ce sont les lois que chaque texte, chaque décor e
 | **Ce qu'on n'entretient plus s'efface** | Une chose existe tant que quelqu'un s'en souvient. Plus il y a de gens qui s'en souviennent, plus elle tient (les ponts, la gare, l'église) | Le monde se délave là où le joueur ne passe pas ; les grands monuments tiennent plus longtemps |
 | **L'oubli ne marche qu'à plusieurs** | Oublier seul ne change rien. Quand assez de gens acceptent ensemble de ne plus nommer une chose, elle se défait | Faire-part d'oubli, registres, signatures ; jamais de machine ni de magie qui exauce |
 | **Ce qu'on oublie tire ce qui s'y tient** | Oublier une chose entraîne ce qui n'existait que par elle. Oublier la mer a tari la pluie | Parapluie, Pelle à neige (« il ne pleut plus ») ; le marais là où était la côte |
+| **On se souvient des lieux, pas des chemins** | La mémoire garde les endroits (l'église, l'école, le quai) mais perd ce qui les relie : les distances, les rues, l'orientation. Personne ne nomme jamais le chemin entre deux lieux ; c'est donc lui qui s'efface le premier | La carte change à chaque run ; les lieux reviennent, pas leur disposition (§7 bis) |
 | **Une personne oubliée demeure** | Elle se souvient d'elle-même. Elle devient mince, sans nom, mais elle reste | Les personnages jouables n'ont pas de nom, seulement une fonction |
 | **Une mort sans témoin n'a pas lieu** | Personne ne se souvient de la mort d'un oublié : elle ne compte pas | La boucle : on retombe, on repart |
 | **Être nommé rend mortel** | Quand quelqu'un prononce à nouveau le nom d'un oublié, il redevient réel, et donc capable de finir | Les fins personnelles |
@@ -80,7 +81,7 @@ Les dates exactes restent floues exprès. Le joueur ne connaît jamais l'année,
 | **L'année d'après** | Deuil et honte. Les familles se taisent. Des premières demandes intimes : on convient, entre soi, de ne plus parler d'un fils, d'un soir, d'une porte |
 | **Le 14 novembre suivant** | La ville se réunit à Saint-Aubin et convient de ne plus jamais nommer la nuit. C'est le premier **oubli collectif**. Il marche. La nuit devient ce qu'on ne peut pas dire : l'Indicible |
 | **Les années d'après** | Pour que la nuit ne revienne pas, il faut oublier ce qui y mène : le Bas-Port, ses gens, puis la mer qu'on voit de partout. Ceux qui refusent sont oubliés à leur tour (« trouble à l'ordre »). La coutume se répand : **faire-part d'oubli**, registres de la mairie, signatures de témoins. On oublie un mari violent, une dette, un enfant mort, un voisin gênant |
-| **Les Signes** | Les choses commencent à manquer. Une rue ne mène plus nulle part. Il ne pleut plus. Des cartes ne se ressemblent plus d'un relevé à l'autre. Personne ne fait le lien : on a oublié ce qu'on a oublié |
+| **Les Signes** | Les choses commencent à manquer. Une rue ne mène plus nulle part. Il ne pleut plus. Le service du cadastre constate que ses relevés ne se ressemblent plus d'une année à l'autre : les bâtiments sont là, mais pas à la même distance les uns des autres. Personne ne fait le lien : on a oublié ce qu'on a oublié |
 | **L'Effacement** | Des décennies plus tard, ce qu'il reste ne tient plus. La nature couvre la ville. Les habitants pâlissent, puis se dissolvent. Le blanc gagne |
 | **Maintenant** | Les oubliés marchent dans ce qui tient encore. La nuit du 14 remonte, par vagues (les Résurgences) |
 
@@ -263,6 +264,41 @@ Chaque système du jeu a un sens dans l'histoire. Aucun n'est expliqué ; tous t
 
 ---
 
+## 7 bis. Pourquoi une run est ce qu'elle est
+
+Aucune convention de jeu ne reste sans raison dans l'histoire. Tout découle des règles de §1 ; rien n'est ajouté pour l'occasion.
+
+### La carte change à chaque run
+
+**Ce qui est vrai :** la vallée n'a plus de géographie. Les lieux tiennent encore, parce qu'on s'en souvient : la Haute-Ville, le clocher, le marais, la carrière, les champs, les bois. Mais personne ne se souvient de ce qui les sépare. La distance entre l'école et le quai, le virage de la rue, la pente du plateau : ce sont les premières choses oubliées, parce qu'on ne les nomme jamais. C'est aussi ce que les Oublis de Faille retirent au joueur (« Oubli du chemin », « Oubli des repères »).
+
+**Pendant une run**, c'est l'oublié qui tient la vallée, en la parcourant et en s'en souvenant : là où il passe, le monde est ancré (la mécanique de l'Effacement le montre déjà). Ce qu'il a vu reste à sa place tant qu'il marche.
+
+**Quand il tombe**, sa mort n'a pas de témoin, donc elle n'a pas eu lieu, et sa marche non plus. La disposition qu'il avait tenue n'est tenue par personne. Il repart, et les lieux se rassemblent autrement, comme dans un rêve où l'on passe de son école à la cuisine d'une grand-mère.
+
+**Ce qui le montre dès le début :**
+- les biomes cousus en mosaïque, sans logique géographique ;
+- des chemins qui s'interrompent, des rues qui ne mènent nulle part ;
+- le rapport du cadastre (§3), trouvable tôt, qui constatait le phénomène bien avant le jeu : ce n'est pas une règle de jeu, c'est ce que l'Effacement faisait déjà.
+
+**Ce qui ne bouge jamais :** les lieux eux-mêmes (la porte verte est toujours verte, le clocher toujours le même) et **la Montée**, le seul chemin dont tout Vaulme se souvient, justement parce qu'elle a voulu l'oublier. **(à valider côté jeu : la Montée comme tracé présent dans chaque carte)**
+
+**Au bord de la carte**, le Néant : au-delà de ce dont quelqu'un se souvient encore.
+
+### Le reste de la run
+
+| Convention de jeu | Raison dans l'histoire |
+|---|---|
+| **On repart toujours d'un endroit calme** | L'oublié se réveille là où la vallée tient le mieux à ce moment-là : le point le plus ancré (mémoire pleine au départ) |
+| **La difficulté monte pendant la run** | Toute marche mène à la nuit du 14. Plus on marche, plus on s'en approche : les Résurgences reviennent, plus fortes, et l'Indicible finit par se lever |
+| **Les Résurgences reviennent à intervalles** | Ce sont les vagues de cette nuit-là. La mer frappait par vagues ; la nuit remonte de la même façon |
+| **On perd sa puissance à la mort** | La marche n'a pas eu lieu. Les armes ramassées (des objets de Vaulme) retournent où elles étaient ; l'Essence retourne aux créatures |
+| **Ce qui est débloqué reste** | Ce que l'oublié a appris, il le garde : lui se souvient. Un personnage débloqué, c'est un autre oublié dont on a trouvé assez de traces pour qu'il existe à nouveau pour nous ; un objet débloqué, c'est un objet dont on se souvient désormais |
+| **Un seul personnage marche à la fois** | Chaque oublié marche seul. Ils se croisent par leurs traces, jamais en personne, sauf aux fins |
+| **Ouvrir un coffre ravive la zone** (mécanique existante) | Les coffres sont des malles et des buffets où l'on rangeait ce qu'on ne voulait plus voir. En sortir un objet, c'est le rappeler : la zone autour s'en souvient un peu |
+| **Les créatures viennent vers nous** | Cette nuit-là, la foule montait vers la Haute-Ville. La peur qui en est née va toujours vers ceux qui sont de l'autre côté |
+| **XP, niveaux, score** | Hors de la fiction, par décision (comme le Hub) |
+
 ## 8. Comment le joueur le découvre
 
 L'histoire se lit à plusieurs niveaux. Un joueur qui ne cherche pas en aura assez pour être touché ; un joueur qui cherche en trouvera beaucoup plus.
@@ -323,6 +359,8 @@ Conditions : la fin du Vagabond (Jeanne est débloquée), les trente et un noms 
 - **Il pleut désormais dans les runs**, par moments. Le parapluie s'ouvre.
 - Au bord de la carte, là où il y avait le Néant, il y a par endroits **la mer**.
 - L'Enfant du Bas-Port est débloqué.
+- **Un objet est débloqué : la Clé verte** *(à valider)*, la clé de la porte de Jeanne. Une fois par run, quand un coup devrait être fatal, une porte s'ouvre : le personnage est tiré à l'abri, avec un peu de vie. C'est le seul objet du jeu qui sauve, et il vient de la seule porte qui s'est ouverte.
+- Dans la même logique, **chaque fin personnelle débloque un objet lié à son histoire** *(à valider, dépend du système d'objets du plan 05)* : la lettre de Marc, la lanterne de Julien, la chaîne brisée d'Odette, la fiche de standard de Mireille, la corde de la cloche, la marelle de Lise, la troisième photo de Claire. Les objets se découvrent ainsi petit à petit, en même temps que l'histoire.
 - Rien d'autre ne change : le jeu continue. Les créatures sont toujours là, parce que la peur ne disparaît pas d'avoir été comprise.
 
 ---
@@ -352,12 +390,16 @@ Conditions : la fin du Vagabond (Jeanne est débloquée), les trente et un noms 
 | Murmure d'écho | Une phrase de tous les jours | « Rentre avant la nuit. » |
 | Description d'objet (arme) | Un détail et un geste, sans morale | « Le manche est usé à l'endroit exact où une main s'est posée chaque été. » |
 
-### 10.3 Interruptions de run
+### 10.3 Interruptions et scènes
 
-Rares, brèves, jamais répétées, jamais pendant une Résurgence (Q12 : parcimonie) :
-- la première fois que le joueur trouve le formulaire qui reprend l'écran de la Faille : rien ne se passe, sinon que la prochaine Faille s'ouvre avec un son différent ;
-- les fins personnelles : une scène de quelques secondes, sans texte hors du nom ;
-- la vraie fin.
+**Principe (retour du 29 septembre) : les scènes se jouent en fin de run, pas pendant.** Le combat n'est jamais coupé.
+
+- **Pendant la run**, seuls des signes sans arrêt : un son différent à l'ouverture d'une Faille après qu'on a trouvé le formulaire de la mairie, une silhouette qui se retourne, une porte qui grince. Aucun écran, aucune pause.
+- **Les fins personnelles** : leur condition se remplit pendant la run (une lettre remise, une porte atteinte). La scène se joue **au moment où la run se termine**, avant le bilan, que le personnage soit tombé ou non. Le bilan se referme alors sur une seule ligne : son nom.
+- **Les trouvailles importantes** (un premier faire-part, un nom qui revient) peuvent se relire au bilan, dans une ligne « Retrouvé » discrète, sans commentaire.
+- **La vraie fin** est la seule exception : elle est elle-même la fin d'une run.
+
+À valider en jouant : une scène jouée en fin de run peut perdre de sa force si le joueur est mort bêtement juste avant. Si c'est le cas, la fin personnelle peut **terminer la run au moment où elle se remplit**, comme une victoire, plutôt qu'attendre la mort.
 
 ---
 
@@ -384,6 +426,9 @@ Une vérité au centre, des bords ouverts (Q1 B) :
 - **Nouveaux personnages** (Sonneur, Écolière, Photographe, Veilleuse, Enfant du Bas-Port) : fiches à faire au plan 06.
 - **Boss intermédiaire « La Barrière »** et difficulté réglée par les Mémoriaux : à rapprocher du plan 20.
 - **Pluie et mer après la vraie fin** : à prévoir dans le rendu.
+- **La Montée**, tracé présent dans chaque carte, et chemins qui s'interrompent : à étudier avec la génération (plan 10).
+- **Objets débloqués par les fins** (la Clé verte et un objet par fin personnelle) : à rattacher au système d'objets (plan 05).
+- **Scènes de fin personnelle au bilan** et ligne « Retrouvé » : à rattacher au bilan (plans 02 et 04).
 - **Textes d'interface** à dépouiller de leurs commentaires : « La zone se souvient », « Le corps se souvient », « Halte dans le vide », « État du Passeur ».
 
 ---
