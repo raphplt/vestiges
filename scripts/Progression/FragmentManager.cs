@@ -16,7 +16,6 @@ public partial class FragmentManager : Node
 {
     private const int FragmentsPerChoice = 3;
     private const int DefaultRerolls = 3;
-    private const int DefaultBanishes = 3;
     private const string CarriedChoiceEffect = SpecializationRuntime.CarriedChoiceEffect;
 
     private EventBus _eventBus;
@@ -38,7 +37,10 @@ public partial class FragmentManager : Node
 
     // Reroll & Banish
     private int _rerollsRemaining = DefaultRerolls;
-    private int _banishesRemaining = DefaultBanishes;
+    // Bannir, c'est oublier (plan 21 §16) : les premiers sont gratuits, les suivants coûtent du Péril, de plus en plus.
+    private int _banishesRemaining;
+    private int _paidBanishes;
+    private float _banishPerilDebt;
     private readonly HashSet<string> _banishedIds = new();
 
     private PerkSpecializationOffers _specializations;
@@ -46,7 +48,11 @@ public partial class FragmentManager : Node
     private bool _specializationChoice;
 
     public int RerollsRemaining => _rerollsRemaining;
+    /// <summary>Bannissements gratuits restants.</summary>
     public int BanishesRemaining => _banishesRemaining;
+
+    /// <summary>Péril que coûtera le prochain bannissement (0 tant qu'il en reste de gratuits).</summary>
+    public float NextBanishPerilCost => _banishesRemaining > 0 ? 0f : PerilDataLoader.BanishPerilStep * (_paidBanishes + 1);
 
     private readonly RandomNumberGenerator _rng = new();
 
@@ -59,7 +65,7 @@ public partial class FragmentManager : Node
     /// <summary>Niveaux gagnés qui attendent encore leur choix, après celui affiché.</summary>
     public int QueuedLevels => _levelUpQueue.Count;
 
-    /// <summary>Le choix affiché sert un droit de perk plutôt qu'un choix ordinaire.</summary>
+    /// <summary>Le choix affiché sert un droit de fragment (après une Résurgence) plutôt qu'un choix de niveau.</summary>
     public bool IsSpecializationChoice => _specializationChoice;
 
     /// <summary>Emplacements de perks de la run.</summary>
@@ -73,6 +79,7 @@ public partial class FragmentManager : Node
         PassiveSouvenirDataLoader.Load();
         PerkSpecializationDataLoader.Load();
         _specializations = new PerkSpecializationOffers(PerkSpecializationDataLoader.Config);
+        _banishesRemaining = PerilDataLoader.BanishFree;
 
         _eventBus = GetNode<EventBus>("/root/EventBus");
         _groupCache = GetNode<GroupCache>("/root/GroupCache");
@@ -83,6 +90,7 @@ public partial class FragmentManager : Node
         _eventBus.LevelUp += OnLevelUp;
         _eventBus.GameStateChanged += OnGameStateChanged;
         _eventBus.PerilChanged += OnPerilChanged;
+        _eventBus.CrisisEnded += OnCrisisEnded;
     }
 
     public override void _ExitTree()
@@ -92,6 +100,7 @@ public partial class FragmentManager : Node
             _eventBus.LevelUp -= OnLevelUp;
             _eventBus.GameStateChanged -= OnGameStateChanged;
             _eventBus.PerilChanged -= OnPerilChanged;
+            _eventBus.CrisisEnded -= OnCrisisEnded;
         }
     }
 
@@ -110,6 +119,8 @@ public partial class FragmentManager : Node
             return;
         }
 
+        // Un fragment reporté retrouve une occasion à chaque niveau gagné.
+        _specializations.Resume();
         bool hold = !_choosingActive && _holdTimer.IsStopped() && ShouldHold();
         _lastLevelUpMsec = Time.GetTicksMsec();
         if (_choosingActive || !_holdTimer.IsStopped() || hold)
@@ -121,7 +132,27 @@ public partial class FragmentManager : Node
             return;
         }
 
+        // Un fragment en attente passe avant ce niveau, qui suit dans la même file.
+        if (TryOfferSpecializations())
+        {
+            _levelUpQueue.Enqueue(newLevel);
+            return;
+        }
         OfferFragments(newLevel);
+    }
+
+    /// <summary>
+    /// Une Résurgence survécue cristallise un fragment (plan 21 §16) : offert aussitôt, ou juste après le choix en
+    /// cours, avant les niveaux en attente.
+    /// </summary>
+    private void OnCrisisEnded(int crisisNumber)
+    {
+        CachePlayer();
+        if (_player == null || !_specializations.GrantMoment(_player))
+            return;
+        GD.Print($"[FragmentManager] Résurgence {crisisNumber} survécue : droit de fragment ({_specializations.PendingMoments} en attente)");
+        if (!_choosingActive && _holdTimer.IsStopped())
+            TryOfferSpecializations();
     }
 
     /// <summary>Une run finie ne propose plus de choix : un niveau retenu ne doit pas s'ouvrir sur le bilan.</summary>
@@ -172,8 +203,6 @@ public partial class FragmentManager : Node
     {
         _currentLevel = level;
         _specializationChoice = false;
-        if (_specializations.IsDue(level, _player) && OfferSpecializations(level))
-            return;
 
         // Seconde lecture : la carte reportée prend une place, les autres ne réaméliorent pas la même arme.
         FragmentOption carried = _carriedChoice.Validate(_player, _banishedIds);
@@ -201,14 +230,16 @@ public partial class FragmentManager : Node
         _eventBus.EmitSignal(EventBus.SignalName.FragmentChoicesReady, _pendingChoices.Count);
     }
 
-    /// <summary>Faux sans candidat : le niveau reste un choix ordinaire et le droit revient au niveau suivant.</summary>
-    private bool OfferSpecializations(int level)
+    /// <summary>Offre de fragments si un droit est prêt ; faux sinon, ou sans candidat (le droit est alors reporté).</summary>
+    private bool TryOfferSpecializations()
     {
+        if (!_specializations.IsReady(_player))
+            return false;
         List<FragmentOption> candidates = _specializations.Candidates(_player, _banishedIds);
         if (candidates.Count == 0)
         {
-            _specializations.Served(level);
-            GD.Print($"[FragmentManager] Level {level}: aucun perk proposable, droit reporté");
+            _specializations.Defer();
+            GD.Print("[FragmentManager] Aucun fragment proposable : droit reporté");
             return false;
         }
 
@@ -216,7 +247,7 @@ public partial class FragmentManager : Node
         _pendingChoices.AddRange(_specializations.Pick(candidates, _player.Specializations.Count == 0, _rng));
         _specializationChoice = true;
         _choosingActive = true;
-        GD.Print($"[FragmentManager] Level {level}: offering {_pendingChoices.Count} perks (slot {_player.Specializations.Count + 1}/{_specializations.Capacity})");
+        GD.Print($"[FragmentManager] Offering {_pendingChoices.Count} fragments (slot {_player.Specializations.Count + 1}/{_specializations.Capacity})");
         _eventBus.EmitSignal(EventBus.SignalName.FragmentChoicesReady, _pendingChoices.Count);
         return true;
     }
@@ -224,6 +255,8 @@ public partial class FragmentManager : Node
     /// <summary>Traite le prochain level-up en attente, ou signale la fin des choix.</summary>
     private void ProcessNextInQueue()
     {
+        if (TryOfferSpecializations())
+            return;
         if (_levelUpQueue.Count > 0)
         {
             int nextLevel = _levelUpQueue.Dequeue();
@@ -349,38 +382,65 @@ public partial class FragmentManager : Node
 
         _rerollsRemaining--;
         GD.Print($"[FragmentManager] Reroll used ({_rerollsRemaining} remaining)");
-        OfferFragments(_currentLevel);
+        RenewOffer();
     }
 
-    /// <summary>Bannit un fragment du pool de la run entière et re-propose des choix.</summary>
+    /// <summary>
+    /// Bannit une carte pour la run et renouvelle l'offre. Les premiers bannissements sont gratuits, les suivants
+    /// coûtent du Péril, de plus en plus. Un bannissement qui viderait l'offre (ou, pour un fragment, empêcherait de
+    /// remplir les emplacements restants) est refusé et ne coûte rien.
+    /// </summary>
     public void BanishFragment(string id)
     {
-        if (_banishesRemaining <= 0)
-            return;
-
         if (_specializationChoice)
         {
             if (!_specializations.TryBanish(id, _player, _banishedIds))
             {
-                GD.Print($"[FragmentManager] Banish of perk '{id}' refused: slots or offer would be left empty");
+                GD.Print($"[FragmentManager] Banish of fragment '{id}' refused: slots or offer would be left empty");
                 return;
             }
-            _banishesRemaining--;
-            GD.Print($"[FragmentManager] Banished perk '{id}' ({_banishesRemaining} remaining)");
-            OfferFragments(_currentLevel);
-            return;
         }
-
-        _banishedIds.Add(id);
-        // Un bannissement qui viderait l'offre laisserait l'écran ouvert sans carte : il est refusé et non consommé.
-        if (BuildFragmentPool().Count == 0)
+        else
         {
-            _banishedIds.Remove(id);
-            GD.Print($"[FragmentManager] Banish of '{id}' refused: nothing left to offer");
+            _banishedIds.Add(id);
+            if (BuildFragmentPool().Count == 0)
+            {
+                _banishedIds.Remove(id);
+                GD.Print($"[FragmentManager] Banish of '{id}' refused: nothing left to offer");
+                return;
+            }
+        }
+        PayBanish();
+        GD.Print($"[FragmentManager] Banished '{id}' ({_banishesRemaining} free left, {_paidBanishes} paid)");
+        RenewOffer();
+    }
+
+    /// <summary>Bannir, c'est oublier : au-delà des gratuits, la dette de Péril croît et se règle par points entiers.</summary>
+    private void PayBanish()
+    {
+        if (_banishesRemaining > 0)
+        {
+            _banishesRemaining--;
             return;
         }
-        _banishesRemaining--;
-        GD.Print($"[FragmentManager] Banished '{id}' ({_banishesRemaining} remaining, total banished: {_banishedIds.Count})");
+        _paidBanishes++;
+        _banishPerilDebt += PerilDataLoader.BanishPerilStep * _paidBanishes;
+        int points = Mathf.FloorToInt(_banishPerilDebt + 0.001f);
+        if (points <= 0)
+            return;
+        _banishPerilDebt -= points;
+        PerilManager.Current?.AddPeril(points);
+    }
+
+    /// <summary>Nouvelle offre du même moment : fragments après une Résurgence, sinon le niveau en cours.</summary>
+    private void RenewOffer()
+    {
+        if (_specializationChoice)
+        {
+            if (!TryOfferSpecializations())
+                ProcessNextInQueue();
+            return;
+        }
         OfferFragments(_currentLevel);
     }
 
@@ -400,12 +460,12 @@ public partial class FragmentManager : Node
             // L'offre a vieilli pendant l'écran (arme ramassée, emplacements pleins) : sans nouvelle offre,
             // l'écran fermé laissait le jeu en pause pour de bon.
             GD.PushWarning($"[FragmentManager] Choix devenu impossible ({fragmentId}, {fragmentType}) : nouvelle offre");
-            OfferFragments(_currentLevel);
+            RenewOffer();
             return;
         }
 
         if (_specializationChoice)
-            _specializations.Served(_currentLevel);
+            _specializations.Consume();
         else
             _carriedChoice.Resolve(_pendingChoices, option, _player.HasSpecializationEffect(CarriedChoiceEffect));
         _pendingChoices.Clear();
@@ -415,13 +475,12 @@ public partial class FragmentManager : Node
         ProcessNextInQueue();
     }
 
-    /// <summary>Passer le choix : le niveau est acquis, aucune carte n'est prise.</summary>
+    /// <summary>Passer le choix : un niveau est acquis sans carte ; un fragment passé attend le prochain niveau.</summary>
     public void SkipChoice()
     {
         _pendingChoices.Clear();
-        // Passer un perk consomme le niveau et garde le droit, proposé de nouveau au niveau suivant.
         if (_specializationChoice)
-            _specializations.Served(_currentLevel);
+            _specializations.Defer();
         else
             _carriedChoice.Clear();
         _specializationChoice = false;

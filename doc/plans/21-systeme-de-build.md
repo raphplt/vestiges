@@ -350,8 +350,30 @@ La §11 n'est qu'un **aperçu de six directions parmi des dizaines ou des centai
 
 | Lot | Contenu | Statut |
 |---|---|---|
-| G1 | Fragments offerts après chaque Résurgence (source d'offre), bannissements gratuits puis Péril croissant | **Validé, prêt** |
+| G1 | Fragments offerts après chaque Résurgence (source d'offre), bannissements gratuits puis Péril croissant | **Livré le 29 septembre** (§17) |
 | G0 | Grammaire commune dans le code : propriétés nommées sur les cartes d'armes, déclencheurs et statuts partagés | À faire avant les objets |
 | G2 | Objets : 6 emplacements, 50 niveaux, neuf par le monde (Reliquaire), niveaux par le level-up ; migration des passifs | Après validation du catalogue et de la question des traits |
 | G3 | Ascensions d'armes au niveau max (deux voies) | Après G0 |
 | G4 | Personnages : affinités d'offre | Avec le plan 06 |
+
+## 17. Compte rendu G1 — fragments après les Résurgences, bannir coûte du Péril
+
+- **Source des fragments :** chaque Résurgence survécue (`EventBus.CrisisEnded`) ouvre un droit, dans la limite des emplacements libres. Les paliers de niveau 2/6/12/20 sont retirés des données et du code.
+- **Moment de l'offre :** si aucun choix n'est ouvert, l'offre de trois fragments s'ouvre aussitôt. Sinon elle passe juste après le choix en cours, avant les niveaux en file.
+- **Droit reporté :** un fragment passé, ou sans candidat, attend le niveau gagné suivant (servi avant ce niveau) ou la Résurgence suivante.
+- **Contenu de l'offre :** première offre composée, relance, bannissement protégé et éligibilité inchangés.
+- **Bannissements :** 3 gratuits par run, puis le n-ième payant coûte n × ⅓ de Péril. La dette est cumulée et réglée par points entiers. Valeurs dans `data/scaling/peril.json` (`banish.free`, `banish.peril_step`).
+  - Coût des bannissements 4 à 6 : 0,33, puis 0,67, puis 1. Le Péril passe à 1 puis à 2.
+  - Le bouton affiche le prochain coût : « Bannir (+0,3 Péril) ».
+- **Libellés :** « FRAGMENT · EMPLACEMENT n/4 », familles « FRAGMENT · COMBAT »… ; la section de la pause s'appelle « Fragments ». Le titre ordinaire du level-up reste « Fragment de mémoire » : conflit de nom à trancher (plan 05 objets §7).
+
+**Vérifications :**
+- `dotnet build` : zéro avertissement.
+- `tools/test_perk_acquisition.sh`, réécrit autour des Résurgences : 22 assertions, zéro échec.
+  - Niveaux seuls sans fragment ; offre à la Résurgence.
+  - Place dans la file ; report au niveau suivant ; droit sans candidat gardé puis servi.
+  - Première offre ; offres courtes ; coût croissant en Péril ; limite du catalogue ; éligibilité ; quatre emplacements.
+- Effets (66), contrats, armes, capacités ennemies : zéro échec. Smoke vert.
+- Capture `--perk-scene resurgence` : offre après la Résurgence, puis deux cartes et « Bannir (+0,3 Péril) » après trois bannissements gratuits.
+
+Non fait : l'offre ponctuelle d'un fragment par un Souverain (§7), qui reste à régler (fréquence).

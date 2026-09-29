@@ -316,7 +316,7 @@ public partial class PauseMenu : CanvasLayer
 			AddPassiveRow(passive);
 		if (player.PassiveSlots.Count == 0)
 			AddLine(_loadoutContainer, "Aucun pour l'instant.", "", TextVeryDim);
-		AddSectionTitle(_loadoutContainer, "Perks");
+		AddSectionTitle(_loadoutContainer, "Fragments");
 		foreach (PerkSpecializationData perk in player.Specializations)
 			AddPerkRow(perk, player);
 		if (player.Specializations.Count == 0)

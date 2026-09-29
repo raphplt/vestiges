@@ -1,6 +1,11 @@
 {
   "_comment": "Péril (plan 17 lot 3A) : stat de run qui échange difficulté contre récompense. Il vient des Failles (un point par amélioration acceptée). Chaque point ajoute linéairement per_point à chaque multiplicateur (1 + valeur × Péril) ; rarity_steps ajoute des crans de montée de rareté (voir upgrade_rarities.json). max borne le Péril d'une run.",
   "max": 10,
+  "banish": {
+    "_comment": "Bannir, c'est oublier (plan 21 §16) : free bannissements gratuits par run, puis le n-ième payant coûte n × peril_step de Péril, cumulé et réglé par points entiers.",
+    "free": 3,
+    "peril_step": 0.3333
+  },
   "per_point": {
     "enemy_count": 0.06,
     "enemy_hp": 0.1,

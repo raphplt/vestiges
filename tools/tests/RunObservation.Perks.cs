@@ -20,6 +20,7 @@ namespace Vestiges.Tests;
 /// status : arsenal plein, une onde au sol dont l'échange rendrait Convergence inactive, puis la pause et ses états.
 /// trail : le joueur avance, des orbes apparaissent loin derrière sur son trajet et le rejoignent par le Sillage.
 /// carried : deux niveaux d'un coup ; le premier choix laisse une amélioration épique, le second la montre « Reportée ».
+/// resurgence : fin de Résurgence, offre de fragments, puis bannissements jusqu'au premier payé en Péril.
 /// </summary>
 public partial class RunObservation
 {
@@ -49,6 +50,9 @@ public partial class RunObservation
                 break;
             case "carried":
                 await CaptureCarriedChoice();
+                break;
+            case "resurgence":
+                await CaptureResurgenceFragments();
                 break;
             default:
                 GD.PushError($"[Perks] Scène inconnue : {scene}");
@@ -268,6 +272,26 @@ public partial class RunObservation
         await Frames(10);
         SaveFrame("perks-carried-offer");
         GD.Print($"[Perks] RESULT carte reportée affichée : {fragments.PendingChoices.Count > 0 && fragments.PendingChoices[0].IsCarried}");
+    }
+
+    private async Task CaptureResurgenceFragments()
+    {
+        GetNode<EventBus>("/root/EventBus").EmitSignal(EventBus.SignalName.CrisisEnded, 1);
+        await Frames(20);
+        SaveFrame("perks-resurgence-offer");
+        FragmentManager fragments = _world.GetNode<FragmentManager>("FragmentManager");
+        Node screen = _world.GetNode("LevelUpScreen");
+        MethodInfo toggle = screen.GetType().GetMethod("ToggleBanish", BindingFlags.NonPublic | BindingFlags.Instance);
+        MethodInfo activate = screen.GetType().GetMethod("Activate", BindingFlags.NonPublic | BindingFlags.Instance);
+        for (int i = 0; i < 3; i++)
+        {
+            toggle.Invoke(screen, null);
+            activate.Invoke(screen, new object[] { 0 });
+            await Frames(6);
+        }
+        SaveFrame("perks-resurgence-banish-paid");
+        GD.Print($"[Perks] RESULT offre de fragments : {fragments.IsSpecializationChoice}, bannissements gratuits restants : {fragments.BanishesRemaining}, "
+            + $"prochain coût : {fragments.NextBanishPerilCost:0.00} Péril");
     }
 
     private void Acquire(params string[] ids)

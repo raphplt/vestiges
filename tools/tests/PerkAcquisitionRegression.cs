@@ -8,8 +8,9 @@ using Vestiges.Progression;
 namespace Vestiges.Tests;
 
 /// <summary>
-/// Acquisition des perks B1 (plan 05 §8.2) sur un vrai joueur et le vrai gestionnaire de niveaux : paliers, report,
-/// cascade, première offre, bannissement, offres courtes, éligibilité selon l'arsenal, quatre emplacements.
+/// Acquisition des fragments (plan 21 §16, lot G1) sur un vrai joueur et le vrai gestionnaire de niveaux : un droit par
+/// Résurgence survécue, place dans la file, report au niveau suivant, première offre, bannissements gratuits puis payés
+/// en Péril, offres courtes, éligibilité selon l'arsenal, quatre emplacements.
 /// </summary>
 public partial class PerkAcquisitionRegression : Node2D
 {
@@ -18,6 +19,8 @@ public partial class PerkAcquisitionRegression : Node2D
     private Player _player;
     private FragmentManager _fragments;
     private readonly List<string> _acquired = new();
+    private EventBus _bus;
+    private PerilManager _peril;
 
     public override void _Ready()
     {
@@ -27,11 +30,14 @@ public partial class PerkAcquisitionRegression : Node2D
             GetNode<EventBus>("/root/EventBus").SpecializationAcquired += id => _acquired.Add(id);
             PerkSpecializationDataLoader.Load();
 
-            CheckNormalRunOffersNothing();
-            CheckDeferredRight();
+            _bus = GetNode<EventBus>("/root/EventBus");
+            CheckLevelsAloneOfferNoFragment();
+            CheckResurgenceOffers();
+            CheckQueueAndDeferral();
+            CheckNoCandidate();
             CheckFirstOffer();
-            CheckCalendarAndCascade();
             CheckBanishAndShortOffers();
+            CheckBanishCostsPeril();
             CheckCatalogueBanishLimit();
             CheckEligibility();
             CheckFourSlots();
@@ -45,55 +51,83 @@ public partial class PerkAcquisitionRegression : Node2D
         }
     }
 
-    /// <summary>Run normale : seuls les perks dont l'effet est branché sont proposés, les choix ordinaires continuent.</summary>
-    private void CheckNormalRunOffersNothing()
+    /// <summary>Sans Résurgence, les niveaux ne proposent jamais de fragment ; les choix ordinaires continuent.</summary>
+    private void CheckLevelsAloneOfferNoFragment()
     {
         Setup(preview: false);
-        bool onlyImplemented = true;
+        bool anyFragment = false;
         bool allOffered = true;
         for (int level = 2; level <= 30; level++)
         {
-            _fragments.TriggerLevelUp(level);
-            foreach (FragmentOption option in _fragments.PendingChoices)
-                onlyImplemented &= option.Type != PerkSpecializationOffers.OptionType
-                    || PerkSpecializationEffects.IsImplemented(PerkSpecializationDataLoader.Get(option.Id).Effect);
+            LevelUp(level);
+            anyFragment |= _fragments.IsSpecializationChoice || HasPerkCard();
             allOffered &= _fragments.PendingChoices.Count > 0;
-            if (_fragments.IsSpecializationChoice)
-                Select(0);
-            else
-                _fragments.SkipChoice();
+            _fragments.SkipChoice();
         }
-        bool acquiredImplemented = true;
-        foreach (PerkSpecializationData perk in _player.Specializations)
-            acquiredImplemented &= PerkSpecializationEffects.IsImplemented(perk.Effect);
-        Check(onlyImplemented && allOffered && acquiredImplemented,
-            $"Run normale : seuls des perks branchés sont proposés ({_player.Specializations.Count} acquis), choix ordinaires intacts");
+        Check(!anyFragment && allOffered && _player.Specializations.Count == 0, "Niveaux 2 à 30 sans Résurgence : aucun fragment, choix ordinaires intacts");
     }
 
-    /// <summary>Un droit sans candidat laisse un choix ordinaire et revient au niveau suivant.</summary>
-    private void CheckDeferredRight()
+    /// <summary>Une Résurgence survécue ouvre aussitôt une offre de trois fragments, puis les niveaux redeviennent ordinaires.</summary>
+    private void CheckResurgenceOffers()
     {
         Setup(preview: false);
-        // Sans arme, seuls les perks sans condition restent éligibles ; une fois acquis, le palier suivant n'a aucun candidat.
+        _acquired.Clear();
+        Resurgence(1);
+        bool offered = _fragments.IsSpecializationChoice && _fragments.PendingChoices.Count == 3;
+        bool onlyImplemented = true;
+        foreach (FragmentOption option in _fragments.PendingChoices)
+            onlyImplemented &= PerkSpecializationEffects.IsImplemented(PerkSpecializationDataLoader.Get(option.Id).Effect);
+        string chosen = _fragments.PendingChoices[0].Id;
+        Select(0);
+        Check(offered && onlyImplemented && _acquired.Count == 1 && _acquired[0] == chosen && !_fragments.IsChoiceActive,
+            "Résurgence survécue : offre de trois fragments branchés, acquisition annoncée, écran refermé");
+        LevelUp(5);
+        Check(!_fragments.IsSpecializationChoice && !HasPerkCard(), "Niveau suivant : choix ordinaire");
+        _fragments.SkipChoice();
+    }
+
+    /// <summary>Pendant un choix de niveau, le fragment attend son tour et passe avant les niveaux en file ; passé, il revient au niveau suivant.</summary>
+    private void CheckQueueAndDeferral()
+    {
+        Setup(preview: false);
+        LevelUp(3);
+        LevelUp(4);
+        Resurgence(1);
+        bool waited = !_fragments.IsSpecializationChoice && _fragments.QueuedLevels == 1;
+        _fragments.SkipChoice();
+        bool before = _fragments.IsSpecializationChoice && _fragments.QueuedLevels == 1;
+        _fragments.SkipChoice();
+        bool levelAfter = _fragments.IsChoiceActive && !_fragments.IsSpecializationChoice;
+        _fragments.SkipChoice();
+        Check(waited && before && levelAfter && !_fragments.IsChoiceActive,
+            "Résurgence pendant un choix : fragment après le choix courant, avant le niveau en file");
+
+        LevelUp(5);
+        bool reoffered = _fragments.IsSpecializationChoice && _fragments.QueuedLevels == 1;
+        Select(0);
+        bool thenLevel = _fragments.IsChoiceActive && !_fragments.IsSpecializationChoice;
+        _fragments.SkipChoice();
+        Check(reoffered && thenLevel && _player.Specializations.Count == 1,
+            "Fragment passé : il revient au niveau gagné suivant, puis ce niveau est proposé");
+    }
+
+    /// <summary>Sans candidat, le droit attend ; une arme compatible et un niveau plus tard, il est servi.</summary>
+    private void CheckNoCandidate()
+    {
+        Setup(preview: false);
         while (_player.WeaponSlots.Count > 0)
             _player.RemoveWeapon(0);
         foreach (FragmentOption option in new PerkSpecializationOffers(PerkSpecializationDataLoader.Config).Candidates(_player, NoBanishedWeapons))
             if (_player.Specializations.Count < 3)
                 _player.AcquireSpecialization(PerkSpecializationDataLoader.Get(option.Id));
-        int owned = _player.Specializations.Count;
-        int threshold = PerkSpecializationDataLoader.Config.OfferLevels[owned];
-        _fragments.TriggerLevelUp(threshold);
-        bool ordinary = !_fragments.IsSpecializationChoice;
-        _fragments.SkipChoice();
-        PerkSpecializationEffects.PreviewInactive = true;
+        Resurgence(1);
+        bool waiting = !_fragments.IsChoiceActive;
         _player.AddWeapon(WeaponDataLoader.Get("makeshift_bow"));
-        _fragments.TriggerLevelUp(threshold + 1);
-        bool offered = _fragments.IsSpecializationChoice;
+        LevelUp(6);
+        bool served = _fragments.IsSpecializationChoice;
         Select(0);
-        _fragments.TriggerLevelUp(threshold + 2);
-        Check(ordinary && offered && _player.Specializations.Count == owned + 1 && !_fragments.IsSpecializationChoice,
-            $"Droit sans candidat au palier {threshold} : choix ordinaire, perk au niveau suivant, puis retour à l'ordinaire");
         _fragments.SkipChoice();
+        Check(waiting && served && _player.Specializations.Count == 4, "Aucun fragment proposable : droit gardé, servi au niveau suivant");
     }
 
     /// <summary>Première offre : un défensif, un combat, une collecte ou récompense ; les deux défensifs alternent.</summary>
@@ -102,7 +136,7 @@ public partial class PerkAcquisitionRegression : Node2D
         Setup(preview: true);
         _fragments.AddRerolls(60);
         int rerolls = _fragments.RerollsRemaining;
-        _fragments.TriggerLevelUp(2);
+        Resurgence(1);
         bool composed = true;
         bool distinct = true;
         HashSet<string> survival = new();
@@ -125,50 +159,7 @@ public partial class PerkAcquisitionRegression : Node2D
         }
         Check(composed && distinct, "Première offre : trois perks distincts, survie + combat + collecte/récompenses, à chaque relance");
         Check(survival.Contains("overheal_reserve") && survival.Contains("rally"), "Première offre : Prévoyance et Reprise alternent");
-        Check(_fragments.RerollsRemaining == rerolls - 60 && _fragments.IsSpecializationChoice, "Relancer un perk consomme une relance et propose encore des perks");
-    }
-
-    /// <summary>Paliers 2/6/12, passage reporté au niveau suivant, place du perk conservée dans une cascade.</summary>
-    private void CheckCalendarAndCascade()
-    {
-        Setup(preview: true);
-        _acquired.Clear();
-        _fragments.TriggerLevelUp(2);
-        string first = _fragments.PendingChoices[0].Id;
-        Select(0);
-        Check(_player.Specializations.Count == 1 && _acquired.Count == 1 && _acquired[0] == first,
-            "Perk choisi au palier 2 : acquis et annoncé sur l'EventBus");
-
-        bool ordinary = true;
-        for (int level = 3; level <= 5; level++)
-        {
-            _fragments.TriggerLevelUp(level);
-            ordinary &= !_fragments.IsSpecializationChoice && !HasPerkCard();
-            _fragments.SkipChoice();
-        }
-        Check(ordinary, "Niveaux 3 à 5 : choix ordinaires");
-
-        _fragments.TriggerLevelUp(6);
-        bool secondOffer = _fragments.IsSpecializationChoice && !Offers(first);
-        _fragments.SkipChoice();
-        _fragments.TriggerLevelUp(7);
-        bool reported = _fragments.IsSpecializationChoice;
-        Select(0);
-        Check(secondOffer && reported && _player.Specializations.Count == 2,
-            "Palier 6 sans doublon ; passé, il revient au niveau 7");
-
-        EventBus bus = GetNode<EventBus>("/root/EventBus");
-        _fragments.TriggerLevelUp(11);
-        bus.EmitSignal(EventBus.SignalName.LevelUp, 12);
-        bus.EmitSignal(EventBus.SignalName.LevelUp, 13);
-        bool queued = !_fragments.IsSpecializationChoice && _fragments.QueuedLevels == 2;
-        _fragments.SkipChoice();
-        bool twelve = _fragments.IsSpecializationChoice;
-        Select(0);
-        bool thirteen = _fragments.IsChoiceActive && !_fragments.IsSpecializationChoice && !HasPerkCard();
-        _fragments.SkipChoice();
-        Check(queued && twelve && thirteen && !_fragments.IsChoiceActive && _player.Specializations.Count == 3,
-            "Cascade 11→13 : le palier 12 garde sa place, un seul droit servi, 13 ordinaire");
+        Check(_fragments.RerollsRemaining == rerolls - 60 && _fragments.IsSpecializationChoice, "Relancer des fragments consomme une relance et propose encore des perks");
     }
 
     /// <summary>Bannir raccourcit l'offre ; le bannissement qui viderait l'offre est refusé sans être consommé.</summary>
@@ -179,7 +170,7 @@ public partial class PerkAcquisitionRegression : Node2D
             _player.AcquireSpecialization(PerkSpecializationDataLoader.Get(id));
         _player.AddWeapon(WeaponDataLoader.Get("teachers_bell"));
         _fragments.AddBanishes(10);
-        _fragments.TriggerLevelUp(20);
+        Resurgence(4);
         // Candidats : Convergence, Débordement, Propagation, Seconde lecture.
         List<int> sizes = new() { _fragments.PendingChoices.Count };
         for (int i = 0; i < 3; i++)
@@ -192,9 +183,28 @@ public partial class PerkAcquisitionRegression : Node2D
         _fragments.BanishFragment(last);
         Check(string.Join(",", sizes) == "3,3,2,1", $"Offres courtes après bannissements : {string.Join(",", sizes)}");
         Check(_fragments.BanishesRemaining == banishes && _fragments.IsSpecializationChoice && Offers(last),
-            "Bannir la dernière carte de perk : refusé, non consommé");
+            "Bannir la dernière carte de fragment : refusé, non consommé");
         Select(0);
         Check(_player.Specializations.Count == 4, "Offre d'une carte : le quatrième perk s'acquiert");
+    }
+
+    /// <summary>Bannir, c'est oublier : trois gratuits, puis +⅓, +⅔, +1 Péril… réglés par points entiers.</summary>
+    private void CheckBanishCostsPeril()
+    {
+        Setup(preview: false);
+        LevelUp(8);
+        List<float> costs = new();
+        List<int> peril = new();
+        for (int i = 0; i < 6; i++)
+        {
+            costs.Add(_fragments.NextBanishPerilCost);
+            _fragments.BanishFragment(_fragments.PendingChoices[0].Id);
+            peril.Add(_peril.Peril);
+        }
+        _fragments.SkipChoice();
+        string costText = string.Join(" ", costs.ConvertAll(cost => cost.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)));
+        Check(costText == "0.00 0.00 0.00 0.33 0.67 1.00" && string.Join(",", peril) == "0,0,0,0,1,2" && _fragments.BanishesRemaining == 0,
+            $"Bannissements : trois gratuits, puis coût croissant en Péril ({costText} ; Péril {string.Join(",", peril)})");
     }
 
     /// <summary>Le catalogue doit toujours pouvoir remplir les emplacements restants.</summary>
@@ -239,37 +249,32 @@ public partial class PerkAcquisitionRegression : Node2D
         Check(implementedOnly, "Sans aperçu : seuls les effets branchés sont candidats");
     }
 
-    /// <summary>Quatre perks distincts au plus ; ensuite plus aucune offre de perk.</summary>
+    /// <summary>Quatre fragments distincts au plus ; les Résurgences suivantes n'en offrent plus.</summary>
     private void CheckFourSlots()
     {
         Setup(preview: true);
         _player.AddWeapon(WeaponDataLoader.Get("teachers_bell"));
-        bool perksAtThresholds = true;
-        bool neverAfter = true;
-        for (int level = 2; level <= 60; level++)
+        bool eachOffered = true;
+        for (int crisis = 1; crisis <= 4; crisis++)
         {
-            _fragments.TriggerLevelUp(level);
-            bool threshold = level is 2 or 6 or 12 or 20;
-            if (threshold)
-                perksAtThresholds &= _fragments.IsSpecializationChoice;
-            else
-                neverAfter &= !_fragments.IsSpecializationChoice;
-            if (threshold)
-                Select(0);
-            else
-                _fragments.SkipChoice();
+            Resurgence(crisis);
+            eachOffered &= _fragments.IsSpecializationChoice;
+            Select(0);
         }
+        Resurgence(5);
+        Resurgence(6);
+        bool noMore = !_fragments.IsChoiceActive;
         HashSet<string> ids = new();
         foreach (PerkSpecializationData perk in _player.Specializations)
             ids.Add(perk.Id);
-        Check(perksAtThresholds && neverAfter && _player.Specializations.Count == 4 && ids.Count == 4,
-            "Paliers 2/6/12/20 servis, quatre perks distincts, aucune offre ensuite");
+        Check(eachOffered && noMore && _player.Specializations.Count == 4 && ids.Count == 4,
+            "Quatre Résurgences, quatre fragments distincts ; les suivantes n'en offrent plus");
         PerkSpecializationData fifth = null;
         foreach (PerkSpecializationData perk in PerkSpecializationDataLoader.GetAll())
             if (!ids.Contains(perk.Id))
                 fifth = perk;
         Check(!_player.AcquireSpecialization(fifth) && !_player.AcquireSpecialization(_player.Specializations[0])
-            && _player.Specializations.Count == 4, "Cinquième perk et doublon refusés");
+            && _player.Specializations.Count == 4, "Cinquième fragment et doublon refusés");
     }
 
     private void Setup(bool preview)
@@ -290,9 +295,30 @@ public partial class PerkAcquisitionRegression : Node2D
         _player.InitializeCharacter(CharacterDataLoader.Get("traqueur"));
         _player.IsAIControlled = true;
         _player.SetPhysicsProcess(false);
+        if (_peril != null)
+        {
+            RemoveChild(_peril);
+            _peril.QueueFree();
+        }
+        _peril = new PerilManager { Name = "PerilManager" };
+        AddChild(_peril);
         _fragments = new FragmentManager { Name = "FragmentManager" };
         AddChild(_fragments);
     }
+
+    /// <summary>Niveau gagné tel que le jeu l'émet ; une retenue de la réserve est levée aussitôt, comme à son expiration.</summary>
+    private void LevelUp(int level)
+    {
+        const System.Reflection.BindingFlags Private = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic;
+        _bus.EmitSignal(EventBus.SignalName.LevelUp, level);
+        Timer hold = (Timer)typeof(FragmentManager).GetField("_holdTimer", Private).GetValue(_fragments);
+        if (hold.IsStopped())
+            return;
+        hold.Stop();
+        typeof(FragmentManager).GetMethod("ProcessNextInQueue", Private).Invoke(_fragments, null);
+    }
+
+    private void Resurgence(int number) => _bus.EmitSignal(EventBus.SignalName.CrisisEnded, number);
 
     private void Select(int index) => _fragments.SelectFragment(_fragments.PendingChoices[index]);
 

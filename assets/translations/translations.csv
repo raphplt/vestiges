@@ -286,8 +286,8 @@ LEVELUP_BANISH,Bannir ({0}),Banish ({0})
 LEVELUP_BANISH_CANCEL,Annuler,Cancel
 LEVELUP_SKIP,Passer,Skip
 LEVELUP_BANISH_HINT,Choisis la carte à bannir pour toute la partie,Pick the card to banish for the whole run
-LEVELUP_TITLE_PERK,"PERK  ·  EMPLACEMENT {0}/{1}","PERK  ·  SLOT {0}/{1}"
-LEVELUP_NEW_PERK,PERK,PERK
+LEVELUP_TITLE_PERK,"FRAGMENT  ·  EMPLACEMENT {0}/{1}","FRAGMENT  ·  SLOT {0}/{1}"
+LEVELUP_NEW_PERK,FRAGMENT,FRAGMENT
 LEVELUP_PERK_PREVIEW,Aperçu : effet pas encore branché,Preview: effect not wired yet
 PERK_FAMILY_COMBAT,COMBAT,COMBAT
 PERK_FAMILY_SURVIVAL,SURVIE,SURVIVAL
@@ -303,3 +303,4 @@ PAUSE_PERK_OVERFLOW_IDLE,Aucune réserve,No reserve
 PAUSE_PERK_TARGET,Suivi : {0},Tracking: {0}
 PAUSE_PERK_TARGET_IDLE,Aucune élite suivie,No elite tracked
 LEVELUP_CARRIED,REPORTÉE,CARRIED OVER
+LEVELUP_BANISH_PERIL,Bannir (+{0} Péril),Banish (+{0} Peril)

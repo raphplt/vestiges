@@ -59,6 +59,15 @@ Les numéros servent à identifier les plans, pas à imposer leur exécution int
 
 Un seul lot d'implémentation ouvert à la fois. Un échec de lisibilité, de performance ou de fun ramène au lot concerné avant expansion.
 
+**Mise à jour du 29 septembre, nuit — plan 21 version 2 et lot G1 livré :** Raphaël tranche le plan 21 ([DECISIONS §32](DECISIONS.md)) :
+- armes au niveau 50 par stats aléatoires, avec ascension à deux voies au niveau max ;
+- objets en 6 emplacements jusqu'au niveau 50 ;
+- fragments après les Résurgences ;
+- bannissements gratuits puis payés en Péril ;
+- courbe de 300 à 400 niveaux conservée.
+
+Le [lot G1](21-systeme-de-build.md#17-compte-rendu-g1--fragments-après-les-résurgences-bannir-coûte-du-péril) est livré. Question ouverte : les traits, dont l'agent recommande la fusion dans les objets.
+
 **Mise à jour du 29 septembre, soir — refonte du build depuis les principes :** Raphaël fixe [douze principes de conception des builds](../PRINCIPES-BUILD.md) et demande une reconception neutre. Le [plan 21](21-systeme-de-build.md) propose cinq familles aux rôles nets et trois canaux d'acquisition :
 - armes (voies au niveau 5) et traits sur propriétés communes, par le level-up ;
 - objets à déclencheurs communs, par le monde ;

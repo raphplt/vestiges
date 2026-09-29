@@ -21,7 +21,7 @@ Les familles servent à composer des offres variées ; elles n'imposent aucun em
 
 ## 2. Acquisition, lisibilité et durée de vie
 
-- Choix aux **niveaux joueur 2, 6, 12 et 20**, parmi trois perks, à la place du choix ordinaire. Calendrier de départ à mesurer ; aucun écran supplémentaire pour ce même niveau.
+- **Remplacé le 29 septembre (plan 21 §16–17) :** un fragment est offert après chaque Résurgence survécue, et non plus aux niveaux 2, 6, 12 et 20. Historique : choix aux **niveaux joueur 2, 6, 12 et 20**, parmi trois perks, à la place du choix ordinaire. Calendrier de départ à mesurer ; aucun écran supplémentaire pour ce même niveau.
 - Les autres niveaux proposent armes et améliorations d'armes, avec leur rareté. Le cumul des niveaux et la réserve automatique R1-G restent communs. Une cascade franchissant un palier conserve ce choix à sa place dans la file.
 - Première offre : au moins un défensif ; si les candidats le permettent, un combat et un déplacement/récompense. Ne pas forcer Prévoyance dans toutes les runs : alterner les deux défenses. En l'absence d'un candidat compatible dans une famille, compléter avec un autre perk éligible.
 - Éligibilité selon l'équipement et les services réellement disponibles, précisée dans les fiches. Aucun doublon. Une famille n'est pas une garantie que chaque candidat sera proposé.

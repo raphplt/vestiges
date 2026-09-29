@@ -3,12 +3,6 @@
   "acquisition": {
     "max_equipped": 4,
     "offer_size": 3,
-    "offer_levels": [
-      2,
-      6,
-      12,
-      20
-    ],
     "first_offer_families": [
       ["survival"],
       ["combat"],

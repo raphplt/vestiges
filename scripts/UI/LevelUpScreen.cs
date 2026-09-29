@@ -304,8 +304,7 @@ public partial class LevelUpScreen : CanvasLayer
     {
         _buttons.Add(CreateActionButton(string.Format(Tr("LEVELUP_REROLL"), _fragmentManager.RerollsRemaining),
             _fragmentManager.RerollsRemaining > 0, () => _fragmentManager.Reroll()));
-        _banishButton = CreateActionButton(string.Format(Tr("LEVELUP_BANISH"), _fragmentManager.BanishesRemaining),
-            _fragmentManager.BanishesRemaining > 0, ToggleBanish);
+        _banishButton = CreateActionButton(BanishLabel(), true, ToggleBanish);
         _buttons.Add(_banishButton);
         _buttons.Add(CreateActionButton(Tr("LEVELUP_SKIP"), true, Skip));
         foreach (Button button in _buttons)
@@ -378,9 +377,14 @@ public partial class LevelUpScreen : CanvasLayer
         _hint.Visible = _banishMode;
         _banishButton.Text = _banishMode
             ? Tr("LEVELUP_BANISH_CANCEL")
-            : string.Format(Tr("LEVELUP_BANISH"), _fragmentManager.BanishesRemaining);
+            : BanishLabel();
         SetFocus(_banishMode ? 0 : _focusIndex);
     }
+
+    /// <summary>Gratuits restants, puis le Péril que coûtera le prochain bannissement.</summary>
+    private string BanishLabel() => _fragmentManager.BanishesRemaining > 0
+        ? string.Format(Tr("LEVELUP_BANISH"), _fragmentManager.BanishesRemaining)
+        : string.Format(Tr("LEVELUP_BANISH_PERIL"), _fragmentManager.NextBanishPerilCost.ToString("0.#", System.Globalization.CultureInfo.GetCultureInfo("fr-FR")));
 
     private void OnCardChosen(FragmentOption option)
     {

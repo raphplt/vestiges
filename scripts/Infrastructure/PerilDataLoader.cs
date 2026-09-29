@@ -15,6 +15,8 @@ public static class PerilDataLoader
     private static float _xp;
     private static float _score;
     private static float _raritySteps;
+    private static int _banishFree = 3;
+    private static float _banishPerilStep;
     private static bool _loaded;
 
     public static int Max
@@ -63,6 +65,26 @@ public static class PerilDataLoader
         return _raritySteps * peril;
     }
 
+    /// <summary>Bannissements gratuits par run avant qu'ils ne coûtent du Péril.</summary>
+    public static int BanishFree
+    {
+        get
+        {
+            Load();
+            return _banishFree;
+        }
+    }
+
+    /// <summary>Le n-ième bannissement payant coûte n × ce pas de Péril.</summary>
+    public static float BanishPerilStep
+    {
+        get
+        {
+            Load();
+            return _banishPerilStep;
+        }
+    }
+
     private static void Load()
     {
         if (_loaded)
@@ -86,5 +108,10 @@ public static class PerilDataLoader
         _xp = (float)perPoint["xp"].AsDouble();
         _score = (float)perPoint["score"].AsDouble();
         _raritySteps = (float)perPoint["rarity_steps"].AsDouble();
+        if (!root.ContainsKey("banish"))
+            return;
+        Godot.Collections.Dictionary banish = root["banish"].AsGodotDictionary();
+        _banishFree = (int)banish["free"].AsDouble();
+        _banishPerilStep = (float)banish["peril_step"].AsDouble();
     }
 }

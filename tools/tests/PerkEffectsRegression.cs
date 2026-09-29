@@ -454,7 +454,7 @@ public partial class PerkEffectsRegression : Node2D
         Offer(11, Passive(), Upgrade(bow, "uncommon"));
         fragments.SelectFragment(pending[0]);
         PerkSpecializationEffects.PreviewInactive = true;
-        fragments.TriggerLevelUp(20);
+        GetNode<EventBus>("/root/EventBus").EmitSignal(EventBus.SignalName.CrisisEnded, 1);
         bool perkOffer = fragments.IsSpecializationChoice;
         fragments.SelectFragment(fragments.PendingChoices[0]);
         PerkSpecializationEffects.PreviewInactive = false;

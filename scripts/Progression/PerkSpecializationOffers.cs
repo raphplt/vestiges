@@ -8,8 +8,9 @@ using Vestiges.Infrastructure;
 namespace Vestiges.Progression;
 
 /// <summary>
-/// Calendrier et composition des offres de perks (plan 05, B1). Chaque palier donne un droit ; un niveau sert au plus
-/// un droit, à la place du choix ordinaire. Un droit passé ou sans candidat revient au niveau suivant, jamais au même.
+/// Droits et composition des offres de fragments (plan 21 §16, lot G1). Chaque Résurgence survécue ouvre un droit,
+/// dans la limite des emplacements. Un droit passé, ou sans candidat, attend le prochain niveau gagné ou la prochaine
+/// Résurgence ; il ne se rouvre jamais aussitôt.
 /// </summary>
 public sealed class PerkSpecializationOffers
 {
@@ -21,7 +22,8 @@ public sealed class PerkSpecializationOffers
 
     private readonly PerkSpecializationConfig _config;
     private readonly HashSet<string> _banished = new();
-    private int _earliestLevel;
+    private int _pendingMoments;
+    private bool _deferred;
 
     public PerkSpecializationOffers(PerkSpecializationConfig config)
     {
@@ -30,24 +32,30 @@ public sealed class PerkSpecializationOffers
 
     public int Capacity => _config?.MaxEquipped ?? 0;
 
-    /// <summary>Droits ouverts par les paliers atteints à ce niveau.</summary>
-    public int RightsEarned(int level)
+    /// <summary>Droits ouverts par les Résurgences et pas encore servis.</summary>
+    public int PendingMoments => _pendingMoments;
+
+    /// <summary>Une Résurgence survécue ouvre un droit, sans dépasser les emplacements encore libres.</summary>
+    public bool GrantMoment(Player player)
     {
-        if (_config == null)
-            return 0;
-        int rights = 0;
-        foreach (int offerLevel in _config.OfferLevels)
-            if (offerLevel <= level)
-                rights++;
-        return Mathf.Min(rights, Capacity);
+        if (_pendingMoments + player.Specializations.Count >= Capacity)
+            return false;
+        _pendingMoments++;
+        _deferred = false;
+        return true;
     }
 
-    /// <summary>Ce niveau doit-il servir un droit de perk plutôt qu'un choix ordinaire ?</summary>
-    public bool IsDue(int level, Player player) =>
-        level >= _earliestLevel && RightsEarned(level) > player.Specializations.Count;
+    /// <summary>Un droit peut être servi maintenant : il en reste un, un emplacement est libre, il n'est pas reporté.</summary>
+    public bool IsReady(Player player) => _pendingMoments > 0 && !_deferred && player.Specializations.Count < Capacity;
 
-    /// <summary>Le niveau a servi un droit, ou tenté faute de candidat : le prochain essai attend le niveau suivant.</summary>
-    public void Served(int level) => _earliestLevel = level + 1;
+    /// <summary>Fragment choisi : le droit est servi.</summary>
+    public void Consume() => _pendingMoments = Mathf.Max(0, _pendingMoments - 1);
+
+    /// <summary>Passé ou sans candidat : le droit attend le prochain niveau gagné ou la prochaine Résurgence.</summary>
+    public void Defer() => _deferred = true;
+
+    /// <summary>Un nouveau niveau gagné redonne une occasion au droit reporté.</summary>
+    public void Resume() => _deferred = false;
 
     /// <summary>Perks proposables maintenant : effet branché, ni acquis ni banni, conditions remplies par l'arsenal.</summary>
     public List<FragmentOption> Candidates(Player player, IReadOnlySet<string> banishedWeapons)

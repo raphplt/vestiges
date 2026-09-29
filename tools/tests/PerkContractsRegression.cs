@@ -53,7 +53,7 @@ public partial class PerkContractsRegression : Node2D
         IReadOnlyList<PerkSpecializationData> perks = PerkSpecializationDataLoader.GetAll();
         PerkSpecializationConfig config = PerkSpecializationDataLoader.Config;
         Check(perks.Count == 9 && config.MaxEquipped == 4 && config.OfferSize == 3
-            && string.Join(",", config.OfferLevels) == "2,6,12,20", "Catalogue V1 : neuf règles, quatre emplacements et paliers");
+            && config.FirstOfferFamilies.Count == 3, "Catalogue V1 : neuf règles, quatre emplacements, première offre composée");
         using Godot.FileAccess file = Godot.FileAccess.Open("res://data/progression/perk_specializations.json", Godot.FileAccess.ModeFlags.Read);
         string source = file.GetAsText();
         JsonNode root = JsonNode.Parse(source);

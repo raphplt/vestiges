@@ -31,7 +31,6 @@ public sealed class PerkSpecializationConfig
 {
     public int MaxEquipped { get; init; }
     public int OfferSize { get; init; }
-    public IReadOnlyList<int> OfferLevels { get; init; }
     /// <summary>Première offre : une place par groupe de familles acceptées, dans l'ordre ; les places restantes sont libres.</summary>
     public IReadOnlyList<IReadOnlyList<string>> FirstOfferFamilies { get; init; }
 }
@@ -108,19 +107,6 @@ public static class PerkSpecializationDataLoader
             Godot.Collections.Dictionary acquisition = Dictionary(Required(root, "acquisition"), "acquisition");
             int maxEquipped = PositiveInteger(acquisition, "max_equipped");
             int offerSize = PositiveInteger(acquisition, "offer_size");
-            Godot.Collections.Array levels = ArrayValue(Required(acquisition, "offer_levels"), "offer_levels");
-            List<int> offerLevels = new();
-            int previous = 1;
-            foreach (Variant level in levels)
-            {
-                int current = Integer(level, "offer_levels");
-                if (current <= previous)
-                    throw new FormatException("Les paliers doivent être strictement croissants, après le niveau 1.");
-                offerLevels.Add(current);
-                previous = current;
-            }
-            if (offerLevels.Count != maxEquipped)
-                throw new FormatException("Chaque emplacement doit avoir un palier d'acquisition.");
             List<IReadOnlyList<string>> firstOfferFamilies = new();
             foreach (Variant group in ArrayValue(Required(acquisition, "first_offer_families"), "first_offer_families"))
             {
@@ -183,7 +169,6 @@ public static class PerkSpecializationDataLoader
                 {
                     MaxEquipped = maxEquipped,
                     OfferSize = offerSize,
-                    OfferLevels = offerLevels.AsReadOnly(),
                     FirstOfferFamilies = firstOfferFamilies.AsReadOnly()
                 },
                 Perks = perks.AsReadOnly()
