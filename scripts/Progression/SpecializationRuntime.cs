@@ -16,6 +16,7 @@ public partial class SpecializationRuntime : Node
     public const string RallyEffect = "rally";
     public const string OverflowEffect = "overflow";
     public const string PriorityTargetingEffect = "priority_targeting";
+    public const string CarryControlEffect = "carry_control";
 
     private Player _player;
     private ulong _playerId;
@@ -24,6 +25,7 @@ public partial class SpecializationRuntime : Node
     private RallyWindow _rally;
     private OverflowCharge _overflow;
     private PriorityTargeting _priorityTargeting;
+    private ControlPropagation _propagation;
     private readonly System.Collections.Generic.List<WeaponInstance> _expired = new();
 
     public OverhealReserve Reserve => _reserve;
@@ -84,6 +86,9 @@ public partial class SpecializationRuntime : Node
                 PriorityTargetMarker marker = new() { Name = "PriorityTargetMarker" };
                 AddChild(marker);
                 _priorityTargeting = new PriorityTargeting(marker);
+                break;
+            case CarryControlEffect:
+                _propagation = new ControlPropagation(_playerId, perk, GetNode<GroupCache>("/root/GroupCache"));
                 break;
         }
     }
@@ -163,10 +168,11 @@ public partial class SpecializationRuntime : Node
 
     private void OnEnemyKill(EnemyKillResult result)
     {
-        if (_rally == null || result.Damage.Source.OwnerId != _playerId || !_rally.IsOpen)
+        if (result.Damage.Source.OwnerId != _playerId)
             return;
-        if (_rally.Kill())
+        if (_rally != null && _rally.IsOpen && _rally.Kill())
             PublishRally();
+        _propagation?.Resolve(result);
     }
 
     private void OnVitalsChanged(float currentHp, float maxHp)

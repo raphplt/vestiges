@@ -35,6 +35,7 @@ public partial class PerkEffectsRegression : Node2D
             CheckSurvivalOrder();
             CheckOverflow();
             await CheckPriorityTargeting();
+            await CheckCarryControl();
             GD.Print($"[PerkEffectsRegression] RESULT failures={_failures}");
             GetTree().Quit(_failures == 0 ? 0 : 1);
         }
@@ -254,6 +255,68 @@ public partial class PerkEffectsRegression : Node2D
     {
         await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
         await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+    }
+
+    /// <summary>Propagation : contrôles natifs transmis au plus proche voisin, jamais retransmis ni affaiblis.</summary>
+    private async Task CheckCarryControl()
+    {
+        Setup("carry_control");
+        WeaponInstance bell = AddWeapon("teachers_bell");
+        List<Enemy> enemies = new();
+        Enemy victim = SpawnEnemyAt(new Vector2(300f, 0f), enemies);
+        Enemy neighbour = SpawnEnemyAt(new Vector2(390f, 0f), enemies);
+        Enemy farther = SpawnEnemyAt(new Vector2(480f, 0f), enemies);
+        await NextFrame();
+
+        victim.ApplySlow(0.5f, 2f, _player.BeginAttack(bell, 5f));
+        victim.TakeDamage(1e6f, source: _player.BeginAttack(bell, 1f));
+        ControlState received = neighbour.SlowControl;
+        Check(received.Origin == ControlOrigin.Propagated && Near(received.Strength, 0.5f) && Near(received.Remaining, 2f)
+            && farther.SlowControl.Remaining <= 0f, "Ralentissement natif transmis au plus proche voisin, intensité et durée restante");
+        await NextFrame();
+
+        neighbour.TakeDamage(1e6f, source: _player.BeginAttack(bell, 1f));
+        Check(farther.SlowControl.Remaining <= 0f, "Un contrôle reçu par Propagation ne se retransmet pas");
+
+        Enemy flashed = SpawnEnemyAt(new Vector2(600f, 0f), enemies);
+        Enemy dazed = SpawnEnemyAt(new Vector2(660f, 40f), enemies);
+        await NextFrame();
+        WeaponInstance flash = AddWeapon("photographers_flash");
+        flashed.ApplyDisorient(1.5f, _player.BeginAttack(flash, 5f));
+        flashed.TakeDamage(1e6f, source: _player.BeginAttack(flash, 1f));
+        Check(dazed.DisorientationControl.Origin == ControlOrigin.Propagated && Near(dazed.DisorientationControl.Remaining, 1.5f),
+            "Désorientation native transmise");
+
+        Enemy foreignVictim = SpawnEnemyAt(new Vector2(800f, 0f), enemies);
+        Enemy foreignNeighbour = SpawnEnemyAt(new Vector2(850f, 0f), enemies);
+        Enemy dotVictim = SpawnEnemyAt(new Vector2(1000f, 0f), enemies);
+        Enemy dotNeighbour = SpawnEnemyAt(new Vector2(1050f, 0f), enemies);
+        Enemy strong = SpawnEnemyAt(new Vector2(1250f, 0f), enemies);
+        Enemy strongVictim = SpawnEnemyAt(new Vector2(1200f, 0f), enemies);
+        Enemy lonely = SpawnEnemyAt(new Vector2(1600f, 0f), enemies);
+        await NextFrame();
+
+        foreignVictim.ApplySlow(0.5f, 2f, _player.BeginAttack(bell, 5f));
+        foreignVictim.TakeDamage(1e6f, source: new AttackContext(0, null, 0, DamageKind.EnemyExplosion));
+        Check(foreignNeighbour.SlowControl.Remaining <= 0f, "Mort non attribuée au joueur : aucune transmission");
+
+        dotVictim.ApplySlow(0.5f, 2f, _player.BeginAttack(bell, 5f).As(DamageKind.DamageOverTime));
+        dotVictim.TakeDamage(1e6f, source: _player.BeginAttack(bell, 1f));
+        Check(dotNeighbour.SlowControl.Remaining <= 0f, "Ralentissement non natif : aucune transmission");
+
+        strong.ApplySlow(0.2f, 5f, _player.BeginAttack(bell, 5f));
+        strongVictim.ApplySlow(0.5f, 2f, _player.BeginAttack(bell, 5f));
+        strongVictim.TakeDamage(1e6f, source: _player.BeginAttack(bell, 1f));
+        FieldInfo factor = typeof(Enemy).GetField("_slowFactor", BindingFlags.Instance | BindingFlags.NonPublic);
+        FieldInfo timer = typeof(Enemy).GetField("_slowTimer", BindingFlags.Instance | BindingFlags.NonPublic);
+        Check(Near((float)factor.GetValue(strong), 0.2f) && Near((float)timer.GetValue(strong), 5f),
+            "Contrôle plus fort déjà présent : ni affaibli ni raccourci");
+
+        lonely.ApplySlow(0.5f, 2f, _player.BeginAttack(bell, 5f));
+        lonely.TakeDamage(1e6f, source: _player.BeginAttack(bell, 1f));
+        Check(true, "Aucun voisin dans le rayon : élimination sans effet ni erreur");
+        foreach (Enemy enemy in enemies.ToArray())
+            Free(enemy, enemies);
     }
 
     private Node2D Nearest(float range)
