@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Reflection;
+using System.Threading.Tasks;
 using Godot;
 using Vestiges.Combat;
 using Vestiges.Core;
@@ -19,7 +21,7 @@ public partial class PerkEffectsRegression : Node2D
     private EventBus _events;
     private readonly List<SpecializationGauge> _gauges = new();
 
-    public override void _Ready()
+    public override async void _Ready()
     {
         try
         {
@@ -32,6 +34,7 @@ public partial class PerkEffectsRegression : Node2D
             CheckRally();
             CheckSurvivalOrder();
             CheckOverflow();
+            await CheckPriorityTargeting();
             GD.Print($"[PerkEffectsRegression] RESULT failures={_failures}");
             GetTree().Quit(_failures == 0 ? 0 : 1);
         }
@@ -207,6 +210,78 @@ public partial class PerkEffectsRegression : Node2D
         OverflowLedger.Charge(owner, bell, 1, 5f, 5f, 3f);
         Setup();
         Check(Near(OverflowLedger.Amount(owner, bell), 0f), "Joueur retiré : aucune réserve ne lui survit");
+    }
+
+    /// <summary>Convergence : élite en tête des recherches, cible suivie conservée, portée et motif respectés, repère.</summary>
+    private async Task CheckPriorityTargeting()
+    {
+        Setup();
+        List<Enemy> enemies = new();
+        Enemy near = SpawnEnemyAt(new Vector2(60f, 0f), enemies);
+        Enemy elite = SpawnEnemyAt(new Vector2(-150f, 0f), enemies, "elite");
+        await NextFrame();
+        Check(Nearest(400f) == near, "Sans Convergence : l'arc vise le plus proche");
+
+        _player.AcquireSpecialization(PerkSpecializationDataLoader.Get("priority_targeting"));
+        PriorityTargetMarker marker = _player.SpecializationRuntime.GetNode<PriorityTargetMarker>("PriorityTargetMarker");
+        Check(Nearest(400f) == elite && marker.Target == elite && marker.Visible, "Convergence : l'élite à portée passe en tête, repère posé");
+        Check(Nearest(120f) == near, "Élite hors de portée : la portée de l'arme reste la règle");
+        Check(Nearest(400f) == elite, "De retour à portée : l'élite redevient la cible suivie");
+
+        Enemy closerElite = SpawnEnemyAt(new Vector2(0f, 100f), enemies, "elite");
+        await NextFrame();
+        Check(Nearest(400f) == elite, "Une élite plus proche apparaît : la cible suivie est conservée");
+        Free(elite, enemies);
+        await NextFrame();
+        Check(Nearest(400f) == closerElite && marker.Target == closerElite, "Cible suivie disparue : l'élite la plus proche prend le relais");
+
+        SetEquipped(AddWeapon("whip"));
+        Check(Nearest(400f) == near, "Fouet (onde) : aucune priorité, recherche inchangée");
+        SetEquipped(AddWeapon("chipped_blade"));
+        List<Enemy> arc = (List<Enemy>)typeof(Player).GetMethod("FindEnemiesInArc", BindingFlags.Instance | BindingFlags.NonPublic)
+            .Invoke(_player, new object[] { 400f, 90f, null });
+        Check(arc.Count > 0 && arc[0] == closerElite && !arc.Contains(near), "Lame (arc) : l'attaque s'oriente vers l'élite");
+
+        closerElite.TakeDamage(1e6f, source: _player.BeginAttack(_player.WeaponSlots[0], 1f));
+        await NextFrame();
+        Check(!marker.Visible, "Cible morte : le repère s'efface");
+        foreach (Enemy enemy in enemies.ToArray())
+            Free(enemy, enemies);
+    }
+
+    /// <summary>Le cache de groupes se renouvelle à chaque frame de process : deux frames garantissent la relecture.</summary>
+    private async Task NextFrame()
+    {
+        await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+        await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+    }
+
+    private Node2D Nearest(float range)
+    {
+        List<Node2D> targets = (List<Node2D>)typeof(Player).GetMethod("FindNearestEnemies", BindingFlags.Instance | BindingFlags.NonPublic)
+            .Invoke(_player, new object[] { 1, range });
+        return targets.Count > 0 ? targets[0] : null;
+    }
+
+    private void SetEquipped(WeaponInstance weapon) =>
+        typeof(Player).GetField("_equippedWeapon", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(_player, weapon);
+
+    private Enemy SpawnEnemyAt(Vector2 position, List<Enemy> enemies, string variant = null)
+    {
+        Enemy enemy = SpawnEnemy();
+        enemy.Position = position;
+        if (variant != null)
+            enemy.ApplyVariant(EnemyVariantDataLoader.GetVariant(variant), Array.Empty<EnemyAffixData>());
+        enemies.Add(enemy);
+        return enemy;
+    }
+
+    private void Free(Enemy enemy, List<Enemy> enemies)
+    {
+        enemies.Remove(enemy);
+        if (enemy.GetParent() == this)
+            RemoveChild(enemy);
+        enemy.QueueFree();
     }
 
     private Enemy SpawnEnemy()

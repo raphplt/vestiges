@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using Godot;
 using Vestiges.Infrastructure;
 using Vestiges.Progression;
 
@@ -40,4 +42,8 @@ public partial class Player
         _eventBus?.EmitSignal(EventBus.SignalName.SpecializationAcquired, perk.Id);
         return true;
     }
+
+    /// <summary>Convergence : place en tête d'une recherche triée la cible prioritaire de l'arme qui attaque.</summary>
+    private void PromotePriorityTarget<T>(List<T> sortedByDistance, Func<T, Node2D> enemyOf) =>
+        _specializationRuntime?.PriorityTargeting?.Promote(_equippedWeapon, sortedByDistance, enemyOf);
 }

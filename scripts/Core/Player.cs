@@ -2195,6 +2195,7 @@ public partial class Player : CharacterBody2D
         }
 
         inRange.Sort((a, b) => a.dist.CompareTo(b.dist));
+        PromotePriorityTarget(inRange, static candidate => candidate.enemy);
 
         System.Collections.Generic.List<Node2D> result = new();
         int limit = System.Math.Min(count, inRange.Count);
@@ -2233,6 +2234,7 @@ public partial class Player : CharacterBody2D
         else
         {
             candidates.Sort((a, b) => a.dist.CompareTo(b.dist));
+            PromotePriorityTarget(candidates, static candidate => candidate.enemy);
             forward = candidates[0].dir;
         }
 

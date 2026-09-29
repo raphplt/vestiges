@@ -15,6 +15,7 @@ public partial class SpecializationRuntime : Node
     public const string OverhealReserveEffect = "overheal_reserve";
     public const string RallyEffect = "rally";
     public const string OverflowEffect = "overflow";
+    public const string PriorityTargetingEffect = "priority_targeting";
 
     private Player _player;
     private ulong _playerId;
@@ -22,11 +23,13 @@ public partial class SpecializationRuntime : Node
     private OverhealReserve _reserve;
     private RallyWindow _rally;
     private OverflowCharge _overflow;
+    private PriorityTargeting _priorityTargeting;
     private readonly System.Collections.Generic.List<WeaponInstance> _expired = new();
 
     public OverhealReserve Reserve => _reserve;
     public RallyWindow Rally => _rally;
     public OverflowCharge Overflow => _overflow;
+    public PriorityTargeting PriorityTargeting => _priorityTargeting;
 
     public void Initialize(Player player)
     {
@@ -41,6 +44,7 @@ public partial class SpecializationRuntime : Node
         _eventBus.PlayerHealingResolved += OnPlayerHealing;
         _eventBus.EnemyKillResolved += OnEnemyKill;
         _eventBus.PlayerDamaged += OnVitalsChanged;
+        _eventBus.WeaponInventoryChanged += OnWeaponInventoryChanged;
         SetProcess(false);
     }
 
@@ -52,10 +56,10 @@ public partial class SpecializationRuntime : Node
         _eventBus.PlayerHealingResolved -= OnPlayerHealing;
         _eventBus.EnemyKillResolved -= OnEnemyKill;
         _eventBus.PlayerDamaged -= OnVitalsChanged;
+        _eventBus.WeaponInventoryChanged -= OnWeaponInventoryChanged;
         if (_overflow == null)
             return;
         _eventBus.EnemyDamageResolved -= OnEnemyDamage;
-        _eventBus.WeaponInventoryChanged -= OnWeaponInventoryChanged;
         _overflow.Clear();
     }
 
@@ -75,7 +79,11 @@ public partial class SpecializationRuntime : Node
                 // Seul perk à lire chaque impact : l'abonnement n'existe que s'il est acquis.
                 _overflow = new OverflowCharge(_playerId, perk);
                 _eventBus.EnemyDamageResolved += OnEnemyDamage;
-                _eventBus.WeaponInventoryChanged += OnWeaponInventoryChanged;
+                break;
+            case PriorityTargetingEffect:
+                PriorityTargetMarker marker = new() { Name = "PriorityTargetMarker" };
+                AddChild(marker);
+                _priorityTargeting = new PriorityTargeting(marker);
                 break;
         }
     }
@@ -110,6 +118,9 @@ public partial class SpecializationRuntime : Node
 
     private void OnWeaponInventoryChanged()
     {
+        _priorityTargeting?.Forget(_player.WeaponSlots);
+        if (_overflow == null)
+            return;
         _overflow.DropMissing(_player.WeaponSlots, _expired);
         PublishExpiredOverflow();
     }
