@@ -483,3 +483,78 @@ Raphaël s'arrête là : « j'ai un peu de mal à me projeter […] on reprendra
 **Rappel sur les Failles.** C'est une mécanique déjà en jeu (plan 17, vague 3, validée le 26 septembre), le miroir du Mémorial. Sur la carte, une Faille propose une amélioration Épique ou Légendaire. En échange, le joueur prend un **Oubli** (un malus de carte, par exemple « Oubli des repères » : plus de flèches vers les coffres) et un point de **Péril** (créatures plus fortes, meilleurs gains). On peut toujours refuser. Dans N1, accepter une Faille revient à faire une demande d'oubli pour devenir plus fort.
 
 **Pour reprendre.** La difficulté à se projeter vient probablement de la méthode : on a posé des questions abstraites. La prochaine séance partira de matière concrète, pour réagir plutôt qu'imaginer. Par exemple : deux ou trois documents d'exemple dans le ton visé ; l'histoire d'un seul personnage de bout en bout, avec ses indices dans le jeu ; ou la liste de ce qu'un joueur verrait dans ses cinq premières runs.
+
+## 12. Reprise sur du concret — 29 septembre
+
+Matière à juger, **rien n'est validé**. Les textes ci-dessous sont des exemples de ton et de mécanique, pas des textes du jeu.
+
+### 12.1 Ce qui clochait peut-être, et une correction
+
+Dans N1, une demande d'oubli était *exaucée* : par qui ? L'histoire supposait un guichet magique sans guichetier. Plus on la rendait réaliste, plus ce trou se voyait.
+
+**Proposition : personne n'exauce rien. L'oubli ne marche qu'à plusieurs.** Dans ce monde, une chose tient parce qu'on s'en souvient ; la Bible le disait déjà (« le pont tient parce que tout le monde le connaît »). Oublier seul ne change rien. Mais quand **assez de gens acceptent ensemble** de ne plus nommer quelque chose, elle se défait pour de bon. La « demande » n'est donc pas adressée à une puissance : c'est une démarche sociale, **obtenir des autres qu'ils oublient avec soi**.
+
+Ce que ça règle :
+- **Plus besoin d'une magie qui exauce.** La seule règle du monde est celle que le jeu montre depuis le début : ce qu'on n'entretient plus s'efface.
+- **Le réalisme tient aux gens, pas au mécanisme.** On voit des rituels, des papiers, des pressions, des complicités ; jamais une machine.
+- **La dérive devient naturelle.** Du deuil qu'une famille décide de taire, on passe à la rumeur qu'un village choisit d'ignorer, puis au nom qu'une commune raye de ses registres (la *damnatio memoriae* des Romains existait déjà).
+- **Les personnages jouables s'expliquent**, avec une règle qu'on comprend tard : une chose oubliée disparaît, **une personne oubliée, non**, parce qu'elle, elle se souvient d'elle-même. Les oubliés sont ce qui reste quand tout le monde a lâché : les vestiges.
+- **La boucle s'explique** par la même règle (P6). La mort d'un oublié n'a aucun témoin ; ce dont personne ne se souvient n'a pas eu lieu. Il reprend la route et, lui, se souvient. Il sait donc qu'il recommence (ta préférence).
+
+### 12.2 Trois exemples de documents
+
+Du plus tôt trouvé au plus tard. Le premier se lit comme un papier banal ; il ne prend son sens qu'une fois les autres trouvés.
+
+**Carte postale, sans timbre** *(trouvable dès les premières runs)*
+> Chers tous,
+> On arrive jeudi par le car de 9 h. Ne venez pas nous chercher, on connaît le chemin.
+> M.
+
+*Au dos, d'une autre écriture, au crayon :* « Qui est M. ? »
+
+**Faire-part, carton imprimé** *(milieu de parcours)*
+> La famille Vasseur a la tristesse de vous faire part de l'oubli de
+> **Lucien Vasseur**
+> le 3 mars, en l'église Saint-Aubin.
+> Merci de ne plus prononcer son nom.
+> Ni fleurs ni visites.
+
+Le rituel copie celui des obsèques, mais on enterre des vivants. Le joueur a peut-être déjà croisé « L. Vasseur » sur une boîte aux lettres, une étiquette du Trousseau ou le carter de la Cloueuse.
+
+**Registre de la commune, page arrachée** *(tard, rare)*
+
+| Nom | Motif | Témoins |
+|---|---|---|
+| Vasseur Lucien | à la demande de la famille | 3 signatures |
+| Oriol Jeanne | trouble à l'ordre | 5 signatures |
+| ~~illisible~~ | à sa propre demande | aucune — *refusé* |
+| La nuit du 14 | — | la commune |
+
+La dernière ligne n'est pas une personne. C'est la chose au centre (P4). Tout le village a signé pour l'oublier.
+
+### 12.3 Un fil de bout en bout : le Facteur sans destination
+
+Ce que le joueur rencontre, dans l'ordre, et par quel canal. Les numéros de run sont indicatifs.
+
+| Quand | Canal | Ce qu'il voit | Ce qu'il comprend |
+|---|---|---|---|
+| Dès qu'il est débloqué | Mécanique | Le Facteur jette des lettres qui rebondissent « en cherchant une adresse » (fiche 06) | Rien : c'est une arme amusante |
+| Runs 3–5 | Décor | Des boîtes aux lettres débordantes, des sacs postaux éventrés, « Retour à l'envoyeur, destinataire inconnu » | Un détail d'ambiance |
+| Runs 8–15 | Documents | Des lettres jamais distribuées, toutes adressées à des noms qu'on retrouve sur des faire-part | Ce sont des lettres à des gens oubliés |
+| Runs 15–25 | Écho | Un vieil homme pâle attend devant une boîte aux lettres, puis se dissout : « Rien pour moi aujourd'hui ? » | Quelqu'un attendait ; il oublie à son tour |
+| Runs 25–40 | Croisement | Dans la sacoche du Facteur (fiche de pause, après un certain nombre de fragments), une lettre qu'il ne lance jamais. Adresse : le quai du port qu'aucune carte ne montre | Elle est pour quelqu'un qu'on connaît… |
+| Tard | Croisement | La Scaphandrière cherche « la côte qui manque sur toutes les cartes ». Le port, c'est la nuit du 14 | La lettre du Facteur est pour elle. Les deux fils n'en font qu'un |
+| Fin personnelle | Mécanique | Porter la lettre à la Scaphandrière. Chacun nomme l'autre : ils redeviennent capables de finir | Deux oubliés se sauvent en se souvenant l'un de l'autre |
+
+Ce que ce fil montre du principe :
+- **Aucune ligne n'explique.** Chaque canal apporte un fait ; c'est le recoupement qui raconte.
+- **L'arme du début prend un sens tard.** Des lettres qui cherchent une adresse, c'est exactement ce qu'il est.
+- **Les histoires se croisent vraiment** : une fin personnelle passe par un autre personnage, et on ne le devine pas.
+- **Rien ne coupe la run**, sauf peut-être la fin personnelle (moment rare, Q12).
+
+### 12.4 Questions
+
+1. La correction de 12.1 (« l'oubli ne marche qu'à plusieurs ») règle-t-elle ton malaise, ou ce qui clochait était ailleurs ?
+2. Le ton des trois documents te va-t-il ? Trop sombre, trop sec, trop littéraire, ou juste ?
+3. Le fil du Facteur te donne-t-il l'effet « présent dès le début, compris très tard » que tu cherchais ?
+4. Une fin personnelle qui passe par un autre personnage (se nommer l'un l'autre) : est-ce la bonne forme de fin, ou faut-il qu'elle soit possible seul ?
