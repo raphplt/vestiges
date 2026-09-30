@@ -24,8 +24,9 @@ public partial class SmallPlacesRegression : Node2D
 			GetNode<GameManager>("/root/GameManager").ChangeState(GameManager.GameState.Run);
 			Node2D props = new() { Name = "PropContainer" };
 			AddChild(props);
-			// Dix puits en ligne tous les 700 px (le quota en garde six), deux veines trop proches l'une de l'autre, un épouvantail.
-			for (int i = 0; i < 10; i++)
+			// Quatre puits de plus que le quota, en ligne tous les 700 px ; deux veines trop proches l'une de l'autre, un épouvantail.
+			int wellQuota = SmallPlaceDataLoader.Load().Places.Find(data => data.Id == "well").MaxPerMap;
+			for (int i = 0; i < wellQuota + 4; i++)
 				AddProp(props, "wild_fields/prop_abandoned_well", new Vector2(i * 700f, 0f));
 			AddProp(props, "collapsed_quarry/prop_crystal_vein", new Vector2(0f, 2000f));
 			AddProp(props, "collapsed_quarry/prop_crystal_vein", new Vector2(100f, 2000f));
@@ -48,7 +49,7 @@ public partial class SmallPlacesRegression : Node2D
 				foreach (SmallPlace other in director.Places)
 					spaced &= other == place || other.GlobalPosition.DistanceTo(place.GlobalPosition) >= 600f;
 			}
-			Check(wells == 6 && veins == 1 && scarecrows == 1 && spaced, $"Placement : {wells} puits (quota 6), {veins} veine (écart 600 px), {scarecrows} épouvantail");
+			Check(wells == wellQuota && veins == 1 && scarecrows == 1 && spaced, $"Placement : {wells} puits (quota {wellQuota}), {veins} veine (écart 600 px), {scarecrows} épouvantail");
 			Check(first.Count == again.Count && first.TrueForAll(again.Contains), "Placement : même graine, mêmes lieux");
 			bool allKinds = true;
 			foreach (string kind in new[] { "mailbox", "mine_cart", "abandoned_car", "phone_booth", "bus_shelter", "picnic" })
