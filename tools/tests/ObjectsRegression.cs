@@ -6,6 +6,7 @@ using Vestiges.Combat;
 using Vestiges.Core;
 using Vestiges.Infrastructure;
 using Vestiges.Progression;
+using Vestiges.UI;
 
 namespace Vestiges.Tests;
 
@@ -198,24 +199,29 @@ public partial class ObjectsRegression : Node2D
         Setup();
         _player.AddOrUpgradePassive("souffle_du_neant");
         _player.AddOrUpgradePassive("souffle_du_neant", 20);
-        string upcoming = CardText(new FragmentOption("souffle_du_neant", "passive_upgrade", "Papier carbone", 1)
-            .WithPassiveUpgrade(UpgradeRoller.Get("common"), 1));
-        string crossing = CardText(new FragmentOption("souffle_du_neant", "passive_upgrade", "Papier carbone", 1)
-            .WithPassiveUpgrade(UpgradeRoller.Get("legendary"), 5));
-        string fresh = CardText(new FragmentOption("persistance", "passive_new", "Pince à linge", 1));
-        Check(upcoming.Contains("Palier 25 :") && crossing.Contains("Palier 25 atteint") && !crossing.Contains("Palier 50")
-            && fresh.Contains("Palier 25 :") && fresh.Contains("Durée"),
-            "Cartes : le prochain palier annoncé, « atteint » quand l'amélioration le franchit");
+        FragmentOption upcoming = new FragmentOption("souffle_du_neant", "passive_upgrade", "Papier carbone", 1)
+            .WithPassiveUpgrade(UpgradeRoller.Get("common"), 1);
+        FragmentOption crossing = new FragmentOption("souffle_du_neant", "passive_upgrade", "Papier carbone", 1)
+            .WithPassiveUpgrade(UpgradeRoller.Get("legendary"), 5);
+        FragmentOption fresh = new("persistance", "passive_new", "Pince à linge", 1);
+        string freshText = CardText(fresh);
+        Check(!UpgradeText.ReachesMilestone(upcoming, _player) && UpgradeText.ReachesMilestone(crossing, _player)
+            && !UpgradeText.ReachesMilestone(fresh, _player)
+            && !CardText(upcoming).Contains("Palier") && !CardText(crossing).Contains("Palier") && freshText.Contains("Durée"),
+            "Cartes : un palier atteint est un badge, jamais une ligne de texte (plan 23 R2)");
 
         bool coded = true;
         foreach (PassiveSouvenirData data in PassiveSouvenirDataLoader.GetAll())
             foreach (ObjectMilestoneData milestone in data.Milestones)
-                if (!ObjectMilestoneEffects.IsImplemented(milestone.Effect))
+                if (!ObjectMilestoneEffects.IsImplemented(milestone.Effect) && milestone.Level > 1)
                 {
-                    string card = CardText(new FragmentOption(data.Id, "passive_new", data.Name, 1));
-                    coded &= !card.Contains(milestone.Text);
+                    Setup();
+                    _player.AddOrUpgradePassive(data.Id);
+                    _player.AddOrUpgradePassive(data.Id, milestone.Level - 2);
+                    coded &= !UpgradeText.ReachesMilestone(new FragmentOption(data.Id, "passive_upgrade", data.Name, 1)
+                        .WithPassiveUpgrade(UpgradeRoller.Get("common"), 1), _player);
                 }
-        Check(coded && !ObjectMilestoneEffects.IsImplemented("inconnu"), "Un palier non codé n'est pas annoncé");
+        Check(coded && !ObjectMilestoneEffects.IsImplemented("inconnu"), "Un palier non codé n'a pas de badge");
     }
 
     private void CheckAttackCopies()
@@ -671,9 +677,9 @@ public partial class ObjectsRegression : Node2D
 
     private void CheckNamedProperties()
     {
-        Check(StatCatalog.NameWithProperty("attack_speed") == "Fréquence · Cadence" && StatCatalog.NameWithProperty("attack_range") == "Portée"
-            && StatCatalog.NameWithProperty("max_hp") == StatCatalog.Name("max_hp") && StatCatalog.Property("projectile_pierce") == "count",
-            $"Cartes : la stat nomme sa propriété (« {StatCatalog.NameWithProperty("attack_speed")} »), sans doublon ni pour la survie");
+        Check(StatCatalog.Property("attack_speed") == "frequency" && StatCatalog.Property("max_hp") == null
+            && StatCatalog.Property("projectile_pierce") == "count",
+            "Propriétés : chaque stat d'arme a la sienne, la survie n'en a pas");
 
         WeaponInstance bow = new(WeaponDataLoader.Get("makeshift_bow"));
         WeaponInstance bell = new(WeaponDataLoader.Get("teachers_bell"));
@@ -689,12 +695,27 @@ public partial class ObjectsRegression : Node2D
         Check(rules, "Armes concernées : Taille pour la mêlée en zone et le cône, Nombre pour tirs et frappes, rien d'autre que Portée et Force pour l'orbite");
 
         Setup();
-        string alone = CardText(new FragmentOption("resonance", "passive_new", "Rondelle de cuivre", 1));
+        FragmentOption washer = new("resonance", "passive_new", "Rondelle de cuivre", 1);
+        List<WeaponInstance> alone = UpgradeText.ConcernedWeapons(washer, _player);
         _player.AddWeapon(WeaponDataLoader.Get("chipped_blade"));
-        string withBlade = CardText(new FragmentOption("resonance", "passive_new", "Rondelle de cuivre", 1));
-        string survival = CardText(new FragmentOption("ancrage", "passive_new", "Bouton de manteau", 1));
-        Check(alone.Contains("Aucune de tes armes") && withBlade.Contains("Pour : Faucille") && !survival.Contains("Pour :"),
-            $"Carte d'objet : les armes qu'il renforce ({withBlade})");
+        List<WeaponInstance> withBlade = UpgradeText.ConcernedWeapons(washer, _player);
+        List<WeaponInstance> survival = UpgradeText.ConcernedWeapons(new FragmentOption("ancrage", "passive_new", "Bouton de manteau", 1), _player);
+        string card = CardText(washer);
+        Check(alone is { Count: 0 } && withBlade is { Count: 1 } && withBlade[0].Id == "chipped_blade" && survival == null
+            && !card.Contains("Pour :") && !card.Contains("Aucune de tes armes") && !card.Contains("Taille ·"),
+            $"Carte d'objet : ni propriété ni armes sur la carte, armes concernées pour l'inventaire ({card})");
+
+        // Une amélioration d'arme à trois stats tient en deux lignes : la première en valeur, la seconde regroupe.
+        Setup();
+        WeaponInstance equipped = _player.EquippedWeapon;
+        FragmentOption legendary = new FragmentOption(equipped.Id, "weapon_upgrade", equipped.Name, 1)
+            .WithWeaponUpgrade(UpgradeRoller.Get("legendary"), UpgradeRoller.RollWeaponGains(equipped, UpgradeRoller.Get("legendary"), new RandomNumberGenerator { Seed = 5 }));
+        List<(string, Color)> lines = UpgradeText.Describe(legendary, _player);
+        bool fits = lines.Count <= 2;
+        foreach (PassiveSouvenirData data in PassiveSouvenirDataLoader.GetAll())
+            fits &= UpgradeText.Describe(new FragmentOption(data.Id, "passive_new", data.Name, 1), _player).Count <= 2;
+        Check(fits && lines.Count == 2 && lines[1].Item1.StartsWith("et "),
+            $"Cartes : deux lignes de gain au plus ({string.Join(" | ", lines.ConvertAll(line => line.Item1))})");
     }
 
     private static float Hp(Enemy enemy) => (float)typeof(Enemy).GetField("_currentHp", Private).GetValue(enemy);
@@ -702,7 +723,7 @@ public partial class ObjectsRegression : Node2D
     private string CardText(FragmentOption option)
     {
         List<string> lines = new();
-        foreach ((string line, Color _) in Vestiges.UI.UpgradeText.Describe(option, _player))
+        foreach ((string line, Color _) in UpgradeText.Describe(option, _player))
             lines.Add(line);
         return string.Join(" | ", lines);
     }

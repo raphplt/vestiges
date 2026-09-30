@@ -12,7 +12,7 @@ namespace Vestiges.Tests;
 /// <summary>
 /// --capture-levelup : l'écran de level-up montré une fois par rareté (Commun à Légendaire), avec une amélioration
 /// d'arme, une amélioration d'objet qui approche puis franchit son palier 25 et un objet nouveau, puis une fois avec
-/// le focus sur les actions.
+/// le focus sur les actions, puis sur la carte d'objet (armes concernées allumées dans l'inventaire).
 /// --capture-pause : le HUD sans bouclier, puis la pause après 20 s de combat, quatre armes et six objets portés
 /// (dont l'Écusson de pompier, seule source de bouclier), dont un au-delà de son palier.
 /// </summary>
@@ -53,6 +53,10 @@ public partial class RunObservation
                 screen.GetType().GetMethod("SetFocus", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(screen, new object[] { 4 });
                 await Frames(4);
                 SaveFrame("levelup-focus-actions");
+                // Carte d'objet focalisée : l'inventaire allume les armes qu'il renforce (plan 23 R2).
+                screen.GetType().GetMethod("SetFocus", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(screen, new object[] { 1 });
+                await Frames(4);
+                SaveFrame("levelup-focus-object");
             }
             screen.GetType().GetMethod("Skip", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(screen, null);
             await Frames(4);

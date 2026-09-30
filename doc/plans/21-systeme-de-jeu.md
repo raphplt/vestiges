@@ -265,12 +265,12 @@ Quand une carte ne peut plus rien offrir (4 armes ascensionnées, 6 objets au ni
 | Paliers des 14 objets de propriété (niveau 25, et 50 pour Papier carbone) | En jeu, **à déplacer** au niveau 15 | Plan 23, R3 |
 | Stats entières fractionnaires, pas d'armes relevés | À faire | Plan 23, R4 |
 | Bouclier de départ retiré, invulnérabilité réduite (0,25 s, à confirmer en jeu) | **En jeu** | Plan 23, R1 |
-| Cartes de niveau à la Megabonk, inventaire et stats à côté | À faire | Plan 23, R2 |
+| Cartes de niveau à la Megabonk, inventaire et stats à côté | **En jeu** | Plan 23, R2 |
 | Statut Fragilité, coefficient de déclenchement par arme ; Allumette humide, Glaçon, Thermomètre, Épingle à nourrice | **En jeu** | G2b, étape 2 |
 | Pétard mouillé, Dé à coudre, Semelle usée, Boîte de pansements | **En jeu** | G2b, étape 3 |
 | Onze autres objets de déclencheur | À faire | G2c |
 | Reliquaire, objets « monde », remplacement | À faire | Plan 22, C3 |
-| Propriétés nommées sur les cartes d'armes et d'objets, armes concernées par un objet | En jeu, **à retirer des cartes** (§11) ; la règle des armes concernées reste pour le panneau d'inventaire et les affinités | G0, plan 23 R2 |
+| Propriétés nommées sur les cartes d'armes et d'objets, armes concernées par un objet | **Retirées des cartes** ; les armes concernées s'allument dans l'inventaire au focus d'une carte d'objet, la règle reste pour les affinités | G0, plan 23 R2 |
 | Ascensions d'armes : mécanique et quatre armes (Arc, Faucille, Cloche, Boîte à musique) | **En jeu** | G3, étape 1 |
 | Ascensions des 20 autres armes | **Proposées, à valider par Raphaël** | G3, étape 2 |
 | Affinités des personnages, Souverain à 25 % | À faire | G4 |

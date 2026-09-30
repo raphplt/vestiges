@@ -223,3 +223,31 @@ Conteneur cloud sans Godot ni .NET au départ : SDK .NET 10.0.401 installé par 
 **Corrigé en passant :** le HUD affichait 100 / 100 pour le Traqueur (70 PV) et la Forgeuse (120 PV) jusqu'au premier coup. Il est relié au joueur avant l'application du personnage, qui n'envoyait pas ses PV ; `InitializeCharacter` les envoie maintenant.
 
 **Reste :** la valeur de 0,25 s est à confirmer en jeu par Raphaël (tableau de bord §2).
+
+### R2 : cartes de niveau à la Megabonk
+
+**Fait :**
+- **Carte** (`LevelUpScreen`, `UpgradeText`) :
+  - bandeau : rareté en petit (symbole et nom), sinon « ARME » ou « OBJET » ; à droite « Niv 3 → 4 », « NOUVEAU », ou « DÉFINITIVE » pour une voie d'ascension ;
+  - nom, suivi d'un badge doré « Palier ! » si la carte fait atteindre un palier codé ;
+  - une ligne de gain en valeur (« Cadence 0,8 /s → 0,9 /s », « Durée +1,5 % »), deux au plus. La deuxième regroupe les autres stats : « et Portée +12 %, Dégâts +24 %, Perçage +1 ». Pour un objet à plusieurs effets, la ligne en valeur montre le premier effet qui bouge ;
+  - carte d'ascension : « Arme : Voie », puis la règle en une ligne ;
+  - retirés : préfixe de propriété (`StatCatalog.NameWithProperty` supprimé), ligne « Pour : … » ou « Aucune de tes armes », texte de palier, ligne « Voie définitive ». Les clés de traduction devenues inutiles sont retirées.
+- **Panneaux pendant le choix :**
+  - à gauche, l'inventaire : armes avec niveau et voie, objets avec niveau, Réminiscences, chaque section avec ses emplacements (« Armes 2/4 ») ;
+  - à droite, les stats de la fiche de la pause, en plus petit, sans le détail des Oublis ;
+  - la règle des armes concernées reste : au focus d'une carte d'objet, les armes qu'il renforce s'allument en doré dans l'inventaire, les autres s'éteignent.
+- **Composant partagé** `UI/PlayerSheet` : fiche des stats, lignes, icônes et inventaire compact, utilisé par la pause et par le level-up. `PauseMenu` n'a plus sa propre copie des lignes de stats.
+- **Navigation** inchangée (haut/bas entre cartes et actions, validation) ; l'animation d'entrée porte sur les trois colonnes.
+- La Faille, qui reprend `UpgradeText.Describe`, hérite des cartes courtes.
+
+**Vérifié :**
+- `dotnet build` : 0 avertissement.
+- `test_objects.sh` : `RESULT failures=0`. Les contrôles de cartes sont réécrits : un palier atteint est un badge et jamais une ligne ; aucune carte d'objet ne dépasse deux lignes ; une amélioration légendaire d'arme à quatre gains tient en deux lignes ; les armes concernées sont calculées pour l'inventaire, pas écrites sur la carte.
+- Captures `--capture-levelup` à 1080p, regardées : les cinq raretés, la carte d'ascension, le focus sur les actions et le focus sur une carte d'objet (Arc et Cloueuse allumés par le Papier carbone). Chaque carte a au plus trois lignes sous le bandeau : nom, puis une ou deux lignes de gain.
+- Capture `--capture-pause` : fiche et équipement identiques à avant l'extraction.
+
+- Relecture `godot-reviewer` : rien de bloquant. Suites données : les colonnes latérales défilent au stick droit ou à Page haut/bas, comme la pause (un inventaire plein peut dépasser la hauteur) ; `PauseMenu` appelle `PlayerSheet` sans alias. Les clés `PROPERTY_*` n'ont plus de lecteur ; gardées pour l'affichage des affinités des personnages (G4).
+
+**Reste :** la ligne « Dégâts des copies » disparaît avec les copies au lot R3. La carte d'ascension dit « DÉFINITIVE » au lieu de « l'autre voie est oubliée » : à confirmer par Raphaël.
+

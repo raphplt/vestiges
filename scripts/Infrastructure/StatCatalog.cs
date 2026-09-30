@@ -43,20 +43,6 @@ public static class StatCatalog
         return _properties.GetValueOrDefault(stat);
     }
 
-    /// <summary>
-    /// Nom d'une stat précédé de sa propriété : « Fréquence · Cadence ». Le préfixe tombe si la stat porte déjà le
-    /// nom de la propriété (« Portée ») ou n'en a pas.
-    /// </summary>
-    public static string NameWithProperty(string stat)
-    {
-        string name = Name(stat);
-        string property = Property(stat);
-        if (property == null)
-            return name;
-        string propertyName = TranslationServer.Translate($"PROPERTY_{property.ToUpperInvariant()}");
-        return propertyName == name ? name : $"{propertyName} · {name}";
-    }
-
     /// <summary>Valeur formatée : une décimale pour une valeur, entier pour un compte, avec l'unité éventuelle.</summary>
     public static string Format(string stat, float value)
     {

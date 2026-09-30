@@ -8,9 +8,10 @@ using Vestiges.Progression;
 namespace Vestiges.UI;
 
 /// <summary>
-/// Écran du level-up (plan 17, lot 1B) : trois Fragments de mémoire. Une amélioration montre sa rareté (couleur
-/// et symbole) et ce qui change, « avant → après » sur les valeurs effectives ; une nouveauté montre ce qu'elle fait,
-/// en une phrase. Souris, clavier et manette : haut/bas entre les cartes et les actions, validation pour choisir.
+/// Écran du level-up (plan 17 lot 1B, forme Megabonk du plan 23 R2) : trois cartes au centre, l'inventaire à gauche
+/// et les stats du joueur à droite. Une carte montre sa rareté en petit, son nom, son niveau à droite et une ligne de
+/// gain en valeur (deux au plus) ; un palier atteint se signale par un badge. Souris, clavier et manette : haut/bas
+/// entre les cartes et les actions, validation pour choisir.
 /// </summary>
 public partial class LevelUpScreen : CanvasLayer
 {
@@ -24,6 +25,9 @@ public partial class LevelUpScreen : CanvasLayer
     private static readonly Color NeutralBorder = ChoiceStyle.NeutralBorder;
     private static readonly Color OverlayColor = ChoiceStyle.OverlayColor;
     private const float PanelEntranceScale = 0.82f;
+    private const float InventoryWidth = 330f;
+    private const float StatsWidth = 300f;
+    private const float SideMinHeight = 480f;
     private Tween _entranceTween;
     private static readonly Color BanishColor = new(0.85f, 0.25f, 0.2f);
 
@@ -37,7 +41,14 @@ public partial class LevelUpScreen : CanvasLayer
 
     private ColorRect _overlay;
     private LightRaysControl _rays;
+    private HBoxContainer _layout;
     private PanelContainer _panel;
+    private VBoxContainer _inventoryContainer;
+    private VBoxContainer _statsContainer;
+    private Dictionary<WeaponInstance, Label> _inventoryWeapons = new();
+    // Colonnes latérales : sans contrôle focalisable, elles défilent au stick droit ou à Page haut/bas, comme la pause.
+    private readonly List<ScrollContainer> _sideScrolls = new();
+    private const float SideScrollSpeed = 900f;
     private VBoxContainer _cardsContainer;
     private HBoxContainer _actionButtons;
     private Label _title;
@@ -112,20 +123,18 @@ public partial class LevelUpScreen : CanvasLayer
         _rays.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
         AddChild(_rays);
 
+        // Inventaire à gauche, cartes au centre, stats à droite : on choisit en voyant ce qu'on a (plan 23 R2).
+        _layout = new HBoxContainer();
+        _layout.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.Center);
+        _layout.GrowHorizontal = Control.GrowDirection.Both;
+        _layout.GrowVertical = Control.GrowDirection.Both;
+        _layout.AddThemeConstantOverride("separation", 18);
+        AddChild(_layout);
+
+        _inventoryContainer = BuildSidePanel(Tr("LEVELUP_INVENTORY"), InventoryWidth);
         _panel = new PanelContainer { CustomMinimumSize = new Vector2(CardWidth + 40f, 100) };
-        _panel.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.Center);
-        _panel.GrowHorizontal = Control.GrowDirection.Both;
-        _panel.GrowVertical = Control.GrowDirection.Both;
-        if (_panelTex != null)
-        {
-            StyleBoxTexture panelStyle = UITheme.CreateNinePatch(_panelTex, 6, 6, 6, 6);
-            panelStyle.ContentMarginLeft = 20;
-            panelStyle.ContentMarginRight = 20;
-            panelStyle.ContentMarginTop = 16;
-            panelStyle.ContentMarginBottom = 18;
-            _panel.AddThemeStyleboxOverride("panel", panelStyle);
-        }
-        AddChild(_panel);
+        StylePanel(_panel);
+        _layout.AddChild(_panel);
 
         VBoxContainer inner = new();
         inner.AddThemeConstantOverride("separation", 10);
@@ -160,6 +169,66 @@ public partial class LevelUpScreen : CanvasLayer
         _actionButtons = new HBoxContainer { Alignment = BoxContainer.AlignmentMode.Center };
         _actionButtons.AddThemeConstantOverride("separation", 14);
         inner.AddChild(_actionButtons);
+
+        _statsContainer = BuildSidePanel(Tr("LEVELUP_STATS"), StatsWidth);
+    }
+
+    private void StylePanel(PanelContainer panel)
+    {
+        if (_panelTex == null)
+            return;
+        StyleBoxTexture panelStyle = UITheme.CreateNinePatch(_panelTex, 6, 6, 6, 6);
+        panelStyle.ContentMarginLeft = 20;
+        panelStyle.ContentMarginRight = 20;
+        panelStyle.ContentMarginTop = 16;
+        panelStyle.ContentMarginBottom = 18;
+        panel.AddThemeStyleboxOverride("panel", panelStyle);
+    }
+
+    /// <summary>Colonne latérale : titre, puis un contenu qui défile s'il dépasse la hauteur des cartes.</summary>
+    private VBoxContainer BuildSidePanel(string title, float width)
+    {
+        PanelContainer panel = new() { CustomMinimumSize = new Vector2(width, 0) };
+        StylePanel(panel);
+        _layout.AddChild(panel);
+        VBoxContainer inner = new();
+        inner.AddThemeConstantOverride("separation", 8);
+        panel.AddChild(inner);
+        Label label = new() { Text = title };
+        UITheme.SetTextRole(label, TextRole.Small);
+        label.AddThemeColorOverride("font_color", GoldBright);
+        inner.AddChild(label);
+        ScrollContainer scroll = new()
+        {
+            SizeFlagsVertical = Control.SizeFlags.ExpandFill,
+            HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled,
+            CustomMinimumSize = new Vector2(0, SideMinHeight),
+        };
+        inner.AddChild(scroll);
+        _sideScrolls.Add(scroll);
+        // La barre de défilement se pose sur le bord droit : la colonne des valeurs garde sa marge.
+        MarginContainer gutter = new() { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
+        gutter.AddThemeConstantOverride("margin_right", 14);
+        scroll.AddChild(gutter);
+        VBoxContainer content = new();
+        content.AddThemeConstantOverride("separation", 4);
+        gutter.AddChild(content);
+        return content;
+    }
+
+    /// <summary>Inventaire et stats du moment : reconstruits à chaque offre, un choix précédent a pu les changer.</summary>
+    private void RefreshSidePanels(Player player)
+    {
+        foreach (Node child in _inventoryContainer.GetChildren())
+            child.QueueFree();
+        foreach (Node child in _statsContainer.GetChildren())
+            child.QueueFree();
+        _inventoryWeapons.Clear();
+        if (player == null)
+            return;
+        _inventoryWeapons = PlayerSheet.AddCompactInventory(_inventoryContainer, player, _fragmentManager?.SpecializationCapacity ?? 0);
+        PlayerSheet.AddStatLines(_statsContainer, player, GetNodeOrNull<EssenceTracker>("/root/Main/EssenceTracker"),
+            GetNodeOrNull<PerilManager>("/root/Main/PerilManager"), withOublis: false, TextRole.Small);
     }
 
     // ==============================
@@ -173,6 +242,7 @@ public partial class LevelUpScreen : CanvasLayer
 
         ClearCards();
         Player player = GetTree().GetFirstNodeInGroup("player") as Player;
+        RefreshSidePanels(player);
         int bestRank = -1;
         foreach (FragmentOption choice in _fragmentManager.PendingChoices)
         {
@@ -239,25 +309,26 @@ public partial class LevelUpScreen : CanvasLayer
         text.AddThemeConstantOverride("separation", 2);
         row.AddChild(text);
 
-        // Bandeau : rareté (symbole et nom), « nouvelle arme / nouveau passif » ou famille du perk, puis le niveau à droite.
+        // Bandeau : rareté en petit (symbole et nom), sinon la nature de la carte ; le niveau à droite, ou « nouveau ».
         HBoxContainer header = new();
         text.AddChild(header);
         string tag = choice.Rarity != null
             ? $"{ChoiceStyle.RarityGlyph(choice.Rarity.Rank)} {RarityPalette.DisplayName(choice.Rarity.Id).ToUpper()}".Trim()
             : isPerk ? PerkTag(choice.Id)
             : isAscension ? Tr("LEVELUP_ASCENSION")
-            : Tr(isWeapon ? "LEVELUP_NEW_WEAPON" : "LEVELUP_NEW_PASSIVE");
+            : Tr(isWeapon ? "LEVELUP_KIND_WEAPON" : "LEVELUP_KIND_OBJECT");
         if (choice.IsCarried)
             tag = $"{tag}  ·  {Tr("LEVELUP_CARRIED")}";
         header.AddChild(MakeLabel(tag, TextRole.Caption, frame, true));
-        if (!isNew)
-        {
-            int level = isWeapon ? player?.GetWeaponFragmentLevel(choice.Id) ?? 0 : player?.GetPassiveLevel(choice.Id) ?? 0;
-            int next = isWeapon ? level + 1 : Mathf.Min(level + choice.PassiveLevels, PassiveSouvenirDataLoader.Get(choice.Id)?.MaxLevel ?? level + 1);
-            header.AddChild(MakeLabel(string.Format(Tr("LEVELUP_LEVEL"), level, next), TextRole.Caption, TextColor, false, HorizontalAlignment.Right));
-        }
+        header.AddChild(MakeLabel(LevelText(choice, player, isWeapon, isAscension, isPerk, isNew), TextRole.Caption,
+            isNew && !isPerk ? GoldBright : TextColor, false, HorizontalAlignment.Right));
 
-        text.AddChild(MakeLabel(choice.DisplayName, TextRole.Body, TextLight, false));
+        HBoxContainer title = new();
+        title.AddThemeConstantOverride("separation", 10);
+        text.AddChild(title);
+        title.AddChild(MakeLabel(choice.DisplayName, TextRole.Body, TextLight, false));
+        if (UpgradeText.ReachesMilestone(choice, player))
+            title.AddChild(MilestoneBadge());
         foreach ((string line, Color color) in UpgradeText.Describe(choice, player))
             text.AddChild(MakeLabel(line, TextRole.Small, color, false));
 
@@ -265,6 +336,34 @@ public partial class LevelUpScreen : CanvasLayer
         _cardColors.Add(frame);
         _cardsContainer.AddChild(card);
         StyleCard(index, false);
+    }
+
+    /// <summary>« Niv 3 → 4 » pour une amélioration, « NOUVEAU » pour une arme ou un objet, « DÉFINITIVE » pour une voie.</summary>
+    private string LevelText(FragmentOption choice, Player player, bool isWeapon, bool isAscension, bool isPerk, bool isNew)
+    {
+        if (isAscension)
+            return Tr("LEVELUP_ASCENSION_FINAL");
+        if (isPerk)
+            return "";
+        if (isNew)
+            return Tr("LEVELUP_NEW");
+        int level = isWeapon ? player?.GetWeaponFragmentLevel(choice.Id) ?? 0 : player?.GetPassiveLevel(choice.Id) ?? 0;
+        int next = isWeapon ? level + 1 : Mathf.Min(level + choice.PassiveLevels, PassiveSouvenirDataLoader.Get(choice.Id)?.MaxLevel ?? level + 1);
+        return string.Format(Tr("LEVELUP_LEVEL"), level, next);
+    }
+
+    /// <summary>Badge doré « Palier ! » : la carte fait atteindre à l'objet un effet qui change la manière de jouer.</summary>
+    private Control MilestoneBadge()
+    {
+        PanelContainer badge = new() { SizeFlagsVertical = Control.SizeFlags.ShrinkCenter };
+        StyleBoxFlat style = new() { BgColor = GoldBright with { A = 0.18f }, BorderColor = GoldBright };
+        style.SetBorderWidthAll(1);
+        style.SetCornerRadiusAll(3);
+        style.ContentMarginLeft = 6;
+        style.ContentMarginRight = 6;
+        badge.AddThemeStyleboxOverride("panel", style);
+        badge.AddChild(MakeLabel(Tr("LEVELUP_MILESTONE_BADGE"), TextRole.Caption, GoldBright, false));
+        return badge;
     }
 
     private string PerkTag(string id)
@@ -331,6 +430,18 @@ public partial class LevelUpScreen : CanvasLayer
 
     private static void StyleButton(Button button, bool focused) => ChoiceStyle.StyleButton(button, focused);
 
+    public override void _Process(double delta)
+    {
+        if (!Visible)
+            return;
+        float axis = Input.GetAxis("scroll_up", "scroll_down");
+        if (axis == 0f)
+            return;
+        int step = Mathf.RoundToInt(axis * SideScrollSpeed * (float)delta);
+        foreach (ScrollContainer scroll in _sideScrolls)
+            scroll.ScrollVertical += step;
+    }
+
     public override void _Input(InputEvent @event)
     {
         if (!Visible || _cards.Count == 0)
@@ -355,6 +466,22 @@ public partial class LevelUpScreen : CanvasLayer
             StyleCard(i, i == index);
         for (int i = 0; i < _buttons.Count; i++)
             StyleButton(_buttons[i], _cards.Count + i == index);
+        HighlightConcernedWeapons(index < _cardOptions.Count ? _cardOptions[index] : null);
+    }
+
+    /// <summary>Un objet focalisé allume dans l'inventaire les armes qu'il renforce (plan 21 §11, règle des armes concernées).</summary>
+    private void HighlightConcernedWeapons(FragmentOption option)
+    {
+        List<WeaponInstance> concerned = option != null && GetTree().GetFirstNodeInGroup("player") is Player player
+            ? UpgradeText.ConcernedWeapons(option, player)
+            : null;
+        foreach ((WeaponInstance weapon, Label label) in _inventoryWeapons)
+        {
+            if (!IsInstanceValid(label))
+                continue;
+            bool lit = concerned != null && concerned.Contains(weapon);
+            label.AddThemeColorOverride("font_color", lit ? GoldBright : concerned != null ? TextDim : PlayerSheet.StatValueColor);
+        }
     }
 
     private void Activate(int index)
@@ -447,7 +574,7 @@ public partial class LevelUpScreen : CanvasLayer
         _overlay.Visible = true;
         _rays.Visible = true;
         _rays.ResetAngle();
-        _panel.Visible = true;
+        _layout.Visible = true;
         Visible = true;
         GetTree().Paused = true;
         ProcessMode = ProcessModeEnum.Always;
@@ -481,20 +608,20 @@ public partial class LevelUpScreen : CanvasLayer
 
     private void SetPanelScale(float scale)
     {
-        // Le panneau vient d'être rempli et sa mise en page est différée : sa taille minimale, calculée sur demande,
-        // donne déjà le bon centre dès la première frame.
-        _panel.PivotOffset = _panel.GetCombinedMinimumSize() / 2f;
-        _panel.Scale = Vector2.One * scale;
+        // Les colonnes viennent d'être remplies et leur mise en page est différée : la taille minimale, calculée sur
+        // demande, donne déjà le bon centre dès la première frame.
+        _layout.PivotOffset = _layout.GetCombinedMinimumSize() / 2f;
+        _layout.Scale = Vector2.One * scale;
     }
 
     private void HideScreen()
     {
         _entranceTween?.Kill();
-        _panel.Scale = Vector2.One;
+        _layout.Scale = Vector2.One;
         _overlay.Color = OverlayColor;
         _overlay.Visible = false;
         _rays.Visible = false;
-        _panel.Visible = false;
+        _layout.Visible = false;
         Visible = false;
         AudioManager.StopLoop();
         AudioManager.PlayUI("sfx_level_up_after");

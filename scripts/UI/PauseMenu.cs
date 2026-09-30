@@ -20,10 +20,9 @@ public partial class PauseMenu : CanvasLayer
 	private static readonly Color TextColor = UITheme.TextColor;
 	private static readonly Color TextDim = UITheme.TextDim;
 	private static readonly Color TextVeryDim = UITheme.TextVeryDim;
-	private static readonly Color StatLabelColor = new(0.62f, 0.60f, 0.54f);
-	private static readonly Color StatValueColor = new(0.9f, 0.86f, 0.78f);
-	private static readonly Color StatBonusColor = new(0.42f, 0.73f, 0.45f);
-	private static readonly Color PerilColor = new(0.85f, 0.38f, 0.42f);
+	private static readonly Color StatLabelColor = PlayerSheet.StatLabelColor;
+	private static readonly Color StatValueColor = PlayerSheet.StatValueColor;
+	private static readonly Color StatBonusColor = PlayerSheet.StatBonusColor;
 	private const string MenusPath = UITheme.MenusPath;
 
 	private Control _root;
@@ -308,19 +307,19 @@ public partial class PauseMenu : CanvasLayer
 		if (GetTree().GetFirstNodeInGroup("player") is not Player player)
 			return;
 
-		AddSectionTitle(_loadoutContainer, "Armes");
+		PlayerSheet.AddSectionTitle(_loadoutContainer, "Armes");
 		foreach (WeaponInstance weapon in player.WeaponSlots)
 			AddWeaponRow(player, weapon);
-		AddSectionTitle(_loadoutContainer, "Objets");
+		PlayerSheet.AddSectionTitle(_loadoutContainer, "Objets");
 		foreach (ActivePassiveSouvenir passive in player.PassiveSlots)
 			AddPassiveRow(passive);
 		if (player.PassiveSlots.Count == 0)
-			AddLine(_loadoutContainer, "Aucun pour l'instant.", "", TextVeryDim);
-		AddSectionTitle(_loadoutContainer, "Réminiscences");
+			PlayerSheet.AddLine(_loadoutContainer, "Aucun pour l'instant.", "", TextVeryDim);
+		PlayerSheet.AddSectionTitle(_loadoutContainer, "Réminiscences");
 		foreach (PerkSpecializationData perk in player.Specializations)
 			AddPerkRow(perk, player);
 		if (player.Specializations.Count == 0)
-			AddLine(_loadoutContainer, "Aucune pour l'instant.", "", TextVeryDim);
+			PlayerSheet.AddLine(_loadoutContainer, "Aucune pour l'instant.", "", TextVeryDim);
 
 		UpdateSheet(player);
 	}
@@ -330,13 +329,13 @@ public partial class PauseMenu : CanvasLayer
 	{
 		HBoxContainer row = new();
 		row.AddThemeConstantOverride("separation", 10);
-		row.AddChild(MakeIcon(weapon.Sprite));
+		row.AddChild(PlayerSheet.MakeIcon(weapon.Sprite));
 
 		VBoxContainer text = new() { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
 		text.AddThemeConstantOverride("separation", 0);
 		row.AddChild(text);
 		string title = weapon.Ascension != null ? $"{weapon.Name} · {weapon.Ascension.Name}" : weapon.Name;
-		text.AddChild(MakeLabel($"{title}   Niv {weapon.Level}", TextRole.Body, StatValueColor));
+		text.AddChild(PlayerSheet.MakeLabel($"{title}   Niv {weapon.Level}", TextRole.Body, StatValueColor));
 
 		List<string> parts = new()
 		{
@@ -354,18 +353,18 @@ public partial class PauseMenu : CanvasLayer
 					parts.Add($"{StatCatalog.Name(stat)} {StatCatalog.Format(stat, value)}");
 			}
 		}
-		text.AddChild(MakeLabel(string.Join("  ·  ", parts), TextRole.Caption, StatLabelColor));
+		text.AddChild(PlayerSheet.MakeLabel(string.Join("  ·  ", parts), TextRole.Caption, StatLabelColor));
 		if (!string.IsNullOrEmpty(weapon.Base.LoreFlavor))
 		{
-			Label lore = MakeLabel(weapon.Base.LoreFlavor, TextRole.Caption, TextVeryDim);
+			Label lore = PlayerSheet.MakeLabel(weapon.Base.LoreFlavor, TextRole.Caption, TextVeryDim);
 			lore.AutowrapMode = TextServer.AutowrapMode.WordSmart;
 			lore.CustomMinimumSize = new Vector2(320, 0);
 			text.AddChild(lore);
 		}
 
 		VBoxContainer dealt = new() { SizeFlagsVertical = Control.SizeFlags.ShrinkCenter };
-		dealt.AddChild(MakeLabel(Mathf.RoundToInt(player.GetDamageDealt(weapon.Id)).ToString("N0", French), TextRole.Body, StatBonusColor, HorizontalAlignment.Right));
-		dealt.AddChild(MakeLabel("dégâts infligés", TextRole.Caption, TextVeryDim, HorizontalAlignment.Right));
+		dealt.AddChild(PlayerSheet.MakeLabel(Mathf.RoundToInt(player.GetDamageDealt(weapon.Id)).ToString("N0", PlayerSheet.French), TextRole.Body, StatBonusColor, HorizontalAlignment.Right));
+		dealt.AddChild(PlayerSheet.MakeLabel("dégâts infligés", TextRole.Caption, TextVeryDim, HorizontalAlignment.Right));
 		row.AddChild(dealt);
 		_loadoutContainer.AddChild(row);
 	}
@@ -374,8 +373,8 @@ public partial class PauseMenu : CanvasLayer
 	{
 		HBoxContainer row = new();
 		row.AddThemeConstantOverride("separation", 10);
-		row.AddChild(MakeIcon(PerkIconResolver.GetPassiveStatIconPath(passive.Data.Stat)));
-		Label name = MakeLabel($"{passive.Data.Name}   Niv {passive.Level}/{passive.Data.MaxLevel}", TextRole.Body, StatValueColor);
+		row.AddChild(PlayerSheet.MakeIcon(PerkIconResolver.GetPassiveStatIconPath(passive.Data.Stat)));
+		Label name = PlayerSheet.MakeLabel($"{passive.Data.Name}   Niv {passive.Level}/{passive.Data.MaxLevel}", TextRole.Body, StatValueColor);
 		name.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
 		row.AddChild(name);
 		string effects = "";
@@ -385,7 +384,7 @@ public partial class PauseMenu : CanvasLayer
 			string line = $"{StatCatalog.Name(effect.Stat)} {StatCatalog.FormatBonus(effect.Stat, passive.Value(i), effect.Multiplicative)}";
 			effects = effects.Length == 0 ? line : $"{effects}  ·  {line}";
 		}
-		row.AddChild(MakeLabel(effects, TextRole.Small, StatBonusColor, HorizontalAlignment.Right));
+		row.AddChild(PlayerSheet.MakeLabel(effects, TextRole.Small, StatBonusColor, HorizontalAlignment.Right));
 		_loadoutContainer.AddChild(row);
 		// Paliers codés, sous l'objet : dorés une fois atteints, grisés avant.
 		foreach (ObjectMilestoneData milestone in passive.Data.Milestones)
@@ -394,7 +393,7 @@ public partial class PauseMenu : CanvasLayer
 				continue;
 			MarginContainer indent = new();
 			indent.AddThemeConstantOverride("margin_left", 42);
-			indent.AddChild(MakeLabel(string.Format(Tr("LEVELUP_MILESTONE"), milestone.Level, milestone.Text), TextRole.Small,
+			indent.AddChild(PlayerSheet.MakeLabel(string.Format(Tr("LEVELUP_MILESTONE"), milestone.Level, milestone.Text), TextRole.Small,
 				passive.Reached(milestone) ? GoldBright : TextVeryDim));
 			_loadoutContainer.AddChild(indent);
 		}
@@ -405,14 +404,14 @@ public partial class PauseMenu : CanvasLayer
 	{
 		VBoxContainer text = new();
 		text.AddThemeConstantOverride("separation", 0);
-		text.AddChild(MakeLabel(perk.Name, TextRole.Body, StatValueColor));
-		Label rule = MakeLabel(perk.Description, TextRole.Small, StatBonusColor);
+		text.AddChild(PlayerSheet.MakeLabel(perk.Name, TextRole.Body, StatValueColor));
+		Label rule = PlayerSheet.MakeLabel(perk.Description, TextRole.Small, StatBonusColor);
 		rule.AutowrapMode = TextServer.AutowrapMode.WordSmart;
 		text.AddChild(rule);
 		bool active = PerkSpecializationOffers.IsActive(perk, player);
 		string state = active ? PerkState(perk, player) : Tr("PAUSE_PERK_INACTIVE");
 		if (state.Length > 0)
-			text.AddChild(MakeLabel(state, TextRole.Small, active ? StatValueColor : TextVeryDim));
+			text.AddChild(PlayerSheet.MakeLabel(state, TextRole.Small, active ? StatValueColor : TextVeryDim));
 		_loadoutContainer.AddChild(text);
 	}
 
@@ -422,17 +421,17 @@ public partial class PauseMenu : CanvasLayer
 		switch (perk.Effect)
 		{
 			case SpecializationRuntime.OverhealReserveEffect when runtime?.Reserve != null:
-				return string.Format(Tr("PAUSE_PERK_RESERVE"), runtime.Reserve.Stock.ToString("0", French), runtime.Reserve.Capacity.ToString("0", French));
+				return string.Format(Tr("PAUSE_PERK_RESERVE"), runtime.Reserve.Stock.ToString("0", PlayerSheet.French), runtime.Reserve.Capacity.ToString("0", PlayerSheet.French));
 			case SpecializationRuntime.RallyEffect when runtime?.Rally != null:
 				return runtime.Rally.Recoverable > 0f
-					? string.Format(Tr("PAUSE_PERK_RALLY"), runtime.Rally.Recoverable.ToString("0", French), runtime.Rally.Remaining.ToString("0.0", French))
+					? string.Format(Tr("PAUSE_PERK_RALLY"), runtime.Rally.Recoverable.ToString("0", PlayerSheet.French), runtime.Rally.Remaining.ToString("0.0", PlayerSheet.French))
 					: Tr("PAUSE_PERK_RALLY_IDLE");
 			case SpecializationRuntime.OverflowEffect when runtime?.Overflow != null:
 			{
 				string ready = "";
 				foreach (WeaponInstance weapon in runtime.Overflow.Ready)
 				{
-					string entry = $"{weapon.Name} +{runtime.Overflow.Amount(weapon).ToString("0", French)}";
+					string entry = $"{weapon.Name} +{runtime.Overflow.Amount(weapon).ToString("0", PlayerSheet.French)}";
 					ready = ready.Length == 0 ? entry : $"{ready}, {entry}";
 				}
 				return ready.Length > 0 ? string.Format(Tr("PAUSE_PERK_OVERFLOW"), ready) : Tr("PAUSE_PERK_OVERFLOW_IDLE");
@@ -446,103 +445,10 @@ public partial class PauseMenu : CanvasLayer
 		}
 	}
 
-	/// <summary>Toutes les stats du joueur ; les multiplicateurs se lisent en pourcentage de bonus.</summary>
-	private void UpdateSheet(Player player)
-	{
-		EssenceTracker essenceTracker = GetNodeOrNull<EssenceTracker>("/root/Main/EssenceTracker");
-		AddLine(_sheetContainer, Tr("STAT_MAX_HP"), $"{player.CurrentHp:F0} / {player.EffectiveMaxHp:F0}");
-		AddLine(_sheetContainer, Tr("STAT_REGEN"), $"{(player.BaseRegenRate + player.BonusRegenRate).ToString("0.0", French)} PV/s");
-		// Plus de bouclier de départ (plan 23 R1) : la ligne n'apparaît qu'avec un objet qui en donne.
-		if (player.MaxShield > 0f)
-			AddLine(_sheetContainer, Tr("STAT_SHIELD"), $"{player.Shield:F0} / {player.MaxShield:F0}");
-		AddLine(_sheetContainer, Tr("STAT_ARMOR"), $"{player.Armor:F0}  (−{Percent(player.ArmorReduction)})");
-		AddLine(_sheetContainer, Tr("STAT_SPEED"), Bonus(player.SpeedMultiplier));
-		AddLine(_sheetContainer, Tr("STAT_DAMAGE"), Bonus(player.DamageMultiplier));
-		AddLine(_sheetContainer, Tr("STAT_ATTACK_SPEED"), Bonus(player.AttackSpeedMultiplier));
-		AddLine(_sheetContainer, Tr("STAT_CRIT"), $"{Percent(player.CritChance)}  ×{player.CritMultiplier.ToString("0.0", French)}");
-		AddLine(_sheetContainer, Tr("STAT_RANGE"), Bonus(player.AttackRangeMultiplier));
-		AddLine(_sheetContainer, Tr("STAT_AOE"), Bonus(player.AoeMultiplier));
-		AddLine(_sheetContainer, Tr("STAT_STATUS_DURATION"), Bonus(player.StatusDurationMultiplier));
-		AddLine(_sheetContainer, Tr("STAT_XP_RANGE"), Bonus(player.XpMagnetMultiplier));
-		AddLine(_sheetContainer, Tr("STAT_LUCK"), Percent(player.LuckBonus));
-		if (player.AttackCopies > 0)
-			AddLine(_sheetContainer, Tr("STAT_ATTACK_COPIES"), $"+{player.AttackCopies}  ({Percent(player.CopyDamageFactor)})");
-		if (player.ProjectilePierce > 0)
-			AddLine(_sheetContainer, Tr("STAT_PIERCE"), $"+{player.ProjectilePierce}");
-		if (essenceTracker != null)
-			AddLine(_sheetContainer, "Essence", essenceTracker.CurrentEssence.ToString());
-		if (GetNodeOrNull<PerilManager>("/root/Main/PerilManager") is { } peril)
-		{
-			AddPerilLines(peril.Peril);
-			foreach (ActiveOubli oubli in peril.Oublis)
-			{
-				AddLine(_sheetContainer, "  " + Tr(oubli.Data.NameKey), oubli.Data.Permanent ? Tr("OUBLI_PERMANENT") : "", PerilColor);
-				Label effect = MakeLabel("    " + oubli.Data.Describe(), TextRole.Caption, TextVeryDim);
-				effect.AutowrapMode = TextServer.AutowrapMode.WordSmart;
-				_sheetContainer.AddChild(effect);
-			}
-		}
-	}
-
-	/// <summary>Péril : le niveau, puis ce qu'il coûte et ce qu'il rapporte.</summary>
-	private void AddPerilLines(int peril)
-	{
-		AddLine(_sheetContainer, Tr("STAT_PERIL"), peril.ToString(), peril > 0 ? PerilColor : null);
-		if (peril == 0)
-			return;
-		AddLine(_sheetContainer, "  " + Tr("PERIL_CREATURES"),
-			$"{Bonus(PerilDataLoader.EnemyCountMultiplier(peril))} · PV {Bonus(PerilDataLoader.EnemyHpMultiplier(peril))}", TextDim);
-		AddLine(_sheetContainer, "  " + Tr("PERIL_REWARDS"),
-			$"XP {Bonus(PerilDataLoader.XpMultiplier(peril))} · score {Bonus(PerilDataLoader.ScoreMultiplier(peril))}", TextDim);
-	}
-
-	private static readonly System.Globalization.CultureInfo French = System.Globalization.CultureInfo.GetCultureInfo("fr-FR");
-
-	private static string Percent(float fraction) => $"{Mathf.RoundToInt(fraction * 100f)} %";
-
-	/// <summary>Multiplicateur lu en bonus : ×1,15 devient « +15 % », ×1 devient « — ».</summary>
-	private static string Bonus(float multiplier)
-	{
-		int percent = Mathf.RoundToInt((multiplier - 1f) * 100f);
-		return percent == 0 ? "—" : $"{(percent > 0 ? "+" : "")}{percent} %";
-	}
-
-	private static void AddSectionTitle(VBoxContainer container, string text)
-	{
-		container.AddChild(MakeLabel(text.ToUpper(), TextRole.Caption, TextDim));
-	}
-
-	private static void AddLine(VBoxContainer container, string label, string value, Color? color = null)
-	{
-		HBoxContainer row = new();
-		Label name = MakeLabel(label, TextRole.Body, color ?? StatLabelColor);
-		name.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
-		row.AddChild(name);
-		row.AddChild(MakeLabel(value, TextRole.Body, StatValueColor, HorizontalAlignment.Right));
-		container.AddChild(row);
-	}
-
-	private static Label MakeLabel(string text, TextRole role, Color color, HorizontalAlignment align = HorizontalAlignment.Left) =>
-		UITheme.MakeLabel(text, role, color, TextWeight.Regular, align);
-
-	private static Control MakeIcon(string path)
-	{
-		TextureRect icon = new()
-		{
-			CustomMinimumSize = new Vector2(32, 32),
-			ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
-			StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
-			TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
-			SizeFlagsVertical = Control.SizeFlags.ShrinkCenter,
-		};
-		if (!string.IsNullOrEmpty(path))
-		{
-			string resPath = path.StartsWith("res://") ? path : $"res://{path}";
-			if (ResourceLoader.Exists(resPath))
-				icon.Texture = GD.Load<Texture2D>(resPath);
-		}
-		return icon;
-	}
+	/// <summary>Toutes les stats du joueur, Oublis compris : la même fiche que pendant le level-up.</summary>
+	private void UpdateSheet(Player player) =>
+		PlayerSheet.AddStatLines(_sheetContainer, player, GetNodeOrNull<EssenceTracker>("/root/Main/EssenceTracker"),
+			GetNodeOrNull<PerilManager>("/root/Main/PerilManager"), withOublis: true);
 
 	private void LoadTextures()
 	{
