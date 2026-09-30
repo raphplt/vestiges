@@ -124,7 +124,7 @@ Un onglet de la Collection. Chaque type de lieu, puis chaque lieu remarquable, y
 
 | Lot | Contenu | Vérification |
 |---|---|---|
-| C0 | **Mesure de départ** : lieux rencontrés et visités par minute, Essence gagnée et dépensée, avec `tools/measure_run.sh` étendu | Chiffres de référence avant tout changement |
+| C0 | **Mesure de départ** : lieux rencontrés et visités par minute, Essence gagnée et dépensée, avec `tools/measure_run.sh` étendu | **Livré le 30 septembre** ([§12](#12-compte-rendu-c0--mesure-de-départ-30-septembre)) |
 | C1 | Trois petits lieux sur des décors déjà générés (Puits, Veine de cristal, Épouvantail) ; socle commun des petits lieux | Captures, banc, mesure de densité |
 | C2 | Atelier : niveau d'arme, Retrempe, Trempe | Banc, captures, mesure de l'Essence dépensée |
 | C3 | Reliquaire, avec les objets du plan 21 (lot G2) | Dépend du catalogue d'objets |
@@ -150,3 +150,35 @@ Pour qu'elles ne se perdent pas ([tableau de bord §4](TABLEAU-DE-BORD.md)) :
 3. Déplacer le service « niveau d'arme » du Mémorial vers l'Atelier ?
 4. Environ 70 lieux au lieu de 31 : la bonne échelle, ou plus prudent pour commencer ?
 5. Les Repères et l'Atlas : on les garde, ou on simplifie ?
+
+## 12. Compte rendu C0 : mesure de départ (30 septembre)
+
+**Outil.** `tools/measure_run.sh` donne maintenant, en plus de la densité :
+- les lieux croisés, c'est-à-dire entrés dans le cadre (coffres, Mémoriaux, Failles) ;
+- les lieux visités, c'est-à-dire un lieu encore utile atteint à portée d'interaction ;
+- les micro-événements lancés ;
+- l'Essence gagnée et dépensée. Un achat raté puis remboursé dans la même frame ne compte pas.
+
+L'option `--visit` (`MEASURE_EXTRA_ARGS="--nomad --visit"`) fait jouer un bot qui ratisse. Il se détourne vers le lieu vu le plus proche (700 px au plus), ouvre les coffres, ravive les Mémoriaux et achète un service s'il recroise un Mémorial éveillé. Il n'ouvre pas les Failles, qui changeraient le Péril de la mesure. Code : `tools/tests/RunObservation.Places.cs`.
+
+**Mesure.** 5 seeds × 10 min de jeu, bot nomade, Péril 0, au commit du lot.
+
+| Par run de 10 min (moyenne, min–max) | Nomade qui ne se détourne pas | Nomade qui ratisse (`--visit`) |
+|---|---|---|
+| Lieux croisés | 14,6 (13–17), soit 1,5 par minute | 14,0 (12–19), soit 1,4 par minute |
+| Lieux visités | 3,4 (1–6) | 13,8 (11–19) |
+| dont coffres croisés / visités | 12,0 / 3,0 | 10,6 / 10,4 |
+| dont Mémoriaux croisés / visités | 1,4 / 0,2 | 2,8 / 2,8 |
+| dont Failles croisées / visitées | 1,2 / 0,2 | 0,6 / 0,6 |
+| Premier lieu en vue | 33 s (0–137) | 24 s (0–89) |
+| Micro-événements | 4,0 (0,4 par minute) | 3,8 |
+| Essence gagnée | 1 190 (800–1 560), soit 119 par minute | 1 544 (1 355–1 764), soit 154 par minute |
+| Essence dépensée | 0 | 0 |
+
+**Ce que ça dit, face aux cibles du §2 :**
+- Un lieu en vue toutes les **41 à 43 s**, contre une cible de 20 à 30 s pour les seuls petits lieux. Il faut à peu près doubler la densité de lieux croisés.
+- Un Mémorial toutes les **3,5 à 7 min**, contre une cible d'un lieu de choix toutes les 2 à 3 min.
+- Ratisser rapporte : +30 % d'Essence (surtout par les éliminations autour des lieux) et trois fois plus de coffres ouverts.
+- **Aucune Essence dépensée**, même par le bot qui ratisse : il ravive les Mémoriaux mais ne revient pas une fois qu'ils sont éveillés. Un joueur nomade n'a presque jamais l'occasion de dépenser. Cela confirme le constat du §1 : l'Essence ne mène presque nulle part. C'est la mesure de référence pour l'Atelier (C2).
+
+**Limites :** le bot suit un cap et ne revient jamais en arrière, et son écran a le cadrage de la capture (967 × 544 px de monde). Un joueur qui explore reviendrait parfois sur ses pas.

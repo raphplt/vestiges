@@ -8,8 +8,8 @@ Le [registre](DECISIONS.md) garde les mots de Raphaël. Les plans gardent le dé
 
 | Chantier | Plan | Prochaine action |
 |---|---|---|
-| Système de jeu | [21, référence unique](21-systeme-de-jeu.md) | G1, G2a et G2a-2 livrés (14 objets de propriété avec leurs paliers). G2b livré : anciens Dons retirés, Fragilité, coefficient, 8 objets de déclencheur (22 objets proposés). Agent : plan 22 lot C0 (mesure de départ de la carte), puis G2c, G0, G3 |
-| Carte à explorer | [22](22-carte-a-explorer.md) | Direction validée. Agent : lot C0 (mesure de départ), **suivant**, puis C1 |
+| Système de jeu | [21, référence unique](21-systeme-de-jeu.md) | G1, G2a et G2a-2 livrés (14 objets de propriété avec leurs paliers). G2b livré : anciens Dons retirés, Fragilité, coefficient, 8 objets de déclencheur (22 objets proposés). Agent : G0 (propriétés nommées sur les cartes), puis G3 (ascensions), G2c |
+| Carte à explorer | [22](22-carte-a-explorer.md) | C0 livré : un lieu en vue toutes les 41 s (cible 20–30 s), aucune Essence dépensée. Agent : C1 après G0 et G3 |
 
 ## 2. Décisions attendues de Raphaël
 

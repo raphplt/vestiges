@@ -223,7 +223,8 @@ public partial class ChoiceScreen : CanvasLayer
         Close(index);
     }
 
-    private int FirstEnabled()
+    /// <summary>Première carte choisissable ; le nombre de cartes s'il n'y en a aucune.</summary>
+    internal int FirstEnabled()
     {
         for (int i = 0; i < _cards.Count; i++)
             if (_cards[i].Enabled)

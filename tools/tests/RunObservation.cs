@@ -52,10 +52,13 @@ namespace Vestiges.Tests;
 /// --loot-draws N : tirages de butin de chaque coffre, sans les appliquer (RunObservation.Chests.cs).
 /// --capture-bestiary : gros plans des créatures du pilote de sprites procéduraux, autour du joueur immobile.
 /// --density : mesure de densité en spawn naturel (ennemis visibles, temps sans ennemi, débits, niveaux,
-/// coffres entrés dans le cadre, et parmi eux ceux qu'aucun décor ne masquait).
+/// coffres entrés dans le cadre, et parmi eux ceux qu'aucun décor ne masquait ; lieux croisés et visités par minute,
+/// micro-événements, Essence gagnée et dépensée).
 /// --scaling cle=valeur,… : surcharge des réglages d'apparition (spawn_flow.json) pendant la mesure de densité.
 /// --nomad : pendant la mesure, le bot garde un cap (tiré de la seed) au lieu d'errer autour du départ,
 /// et en change quand il bute sur le bord du monde.
+/// --visit : pendant la mesure, le bot ratisse : il se détourne vers les lieux vus, ouvre, ravive et dépense
+/// (RunObservation.Places.cs). Sans lui, les lieux « visités » ne sont que ceux que le trajet traverse.
 /// --peril N : pendant la mesure, la run commence avec N points de Péril (plan 17 lot 3A).
 /// --capture-every N : pendant la mesure, capture plein écran toutes les N secondes (HUD, événements).
 /// --event ID : force le micro-événement ID à 3 s de run (bancs de capture).
@@ -415,6 +418,14 @@ public partial class RunObservation : Node
         ProcessMode = ProcessModeEnum.Always;
         Vector2 lastProgressPosition = _player.GlobalPosition;
         double lastProgressTime = 0;
+        // Lieux croisés et visités, événements, Essence (plan 22, lot C0).
+        PlaceTracker places = new(_world.GetNode<Vestiges.Progression.EssenceTracker>("EssenceTracker").CurrentEssence);
+        _placeTracker = places;
+        _visitPlaces = Array.IndexOf(OS.GetCmdlineUserArgs(), "--visit") >= 0;
+        EventBus.EssenceChangedEventHandler onEssence = places.OnEssence;
+        EventBus.RunEventStartedEventHandler onEvent = (_, _, _, _) => places.Events++;
+        eventBus.EssenceChanged += onEssence;
+        eventBus.RunEventStarted += onEvent;
 
         while (true)
         {
@@ -455,7 +466,12 @@ public partial class RunObservation : Node
             // Comme un joueur, le bot suit la cible d'un micro-événement en cours (vestige, veille, Souverain).
             if (director.TryGetActiveTarget(out Vector2 eventTarget))
                 waypoint = eventTarget;
-            _player.AIInputOverride = _player.GlobalPosition.DistanceTo(waypoint) > 12f
+            bool holding = _visitPlaces && !director.IsEventActive && places.Steer(t, _player, ref waypoint);
+            // Tenir une interaction n'est pas un blocage : le cap et le point de passage restent ceux d'avant.
+            if (holding)
+                lastProgressTime = t;
+            places.CheckReach(_player.GlobalPosition);
+            _player.AIInputOverride = !holding && _player.GlobalPosition.DistanceTo(waypoint) > 12f
                 ? (waypoint - _player.GlobalPosition).Normalized()
                 : Vector2.Zero;
 
@@ -484,7 +500,9 @@ public partial class RunObservation : Node
             {
                 nextChestSample += 0.25;
                 Rect2 chestView = VisibleWorldRect();
-                foreach (Node node in GetTree().GetNodesInGroup("chests"))
+                Godot.Collections.Array<Node> chestNodes = GetTree().GetNodesInGroup("chests");
+                places.Sample(t, chestView, chestNodes);
+                foreach (Node node in chestNodes)
                 {
                     if (node is not Chest chest)
                         continue;
@@ -534,6 +552,8 @@ public partial class RunObservation : Node
         eventBus.EnemyKilled -= onKill;
         eventBus.EnemySpawned -= onSpawned;
         eventBus.EntityDamaged -= onDamaged;
+        eventBus.EssenceChanged -= onEssence;
+        eventBus.RunEventStarted -= onEvent;
         using (FileAccess csv = FileAccess.Open($"{_output}/density-{seed}.csv", FileAccess.ModeFlags.Write))
             csv.StoreString(string.Join("\n", rows) + "\n");
 
@@ -571,6 +591,7 @@ public partial class RunObservation : Node
             summary.Append(CultureInfo.InvariantCulture,
                 $" | {from}-{end}s visible_mean={sum / (end - from):F1} empty={100.0 * empty / (end - from):F0}%");
         }
+        places.Append(summary, seconds);
         foreach (KeyValuePair<int, double> entry in levelTimes)
             summary.Append(CultureInfo.InvariantCulture, $" L{entry.Key}={entry.Value:F0}s");
         GD.Print($"[RunObservation] RESULT {summary}");
@@ -622,7 +643,9 @@ public partial class RunObservation : Node
         // Écran de choix (Mémorial, Faille) : le bot sort quand c'est permis, sinon prend la première carte.
         if (_world.GetNodeOrNull<Vestiges.UI.ChoiceScreen>("ChoiceScreen") is { IsOpen: true } choices)
         {
-            choices.Activate(choices.CanCancel ? int.MaxValue : 0);
+            // --visit : le bot achète le premier service qu'il peut payer, comme un joueur qui dépense son Essence.
+            int pick = _visitPlaces && _placeTracker != null && _placeTracker.TakePurchase() ? choices.FirstEnabled() : int.MaxValue;
+            choices.Activate(choices.CanCancel ? pick : 0);
             return;
         }
         Node screen = _world.GetNode("LevelUpScreen");

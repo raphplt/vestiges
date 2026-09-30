@@ -3,7 +3,9 @@
 # Compile et importe une fois, puis joue chaque seed en headless avec --fixed-fps 60 : une seconde de jeu
 # ne dure plus une seconde d'horloge. Pour juger une image, utiliser tools/capture_run.sh.
 # Usage : tools/measure_run.sh <répertoire> [secondes=180] ["seed seed …"]
-# MEASURE_EXTRA_ARGS : arguments de RunObservation (ex. "--nomad") ; MEASURE_JOBS : seeds en parallèle (défaut 1).
+# MEASURE_EXTRA_ARGS : arguments de RunObservation (ex. "--nomad", "--nomad --visit" pour un bot qui ratisse les
+# lieux vus) ; MEASURE_JOBS : seeds en parallèle (défaut 1). Le résumé donne aussi les lieux croisés et visités par
+# minute, les micro-événements, l'Essence gagnée et dépensée (plan 22, lot C0).
 set -euo pipefail
 cd "$(dirname "$0")/.."
 source tools/lib/portable.sh
