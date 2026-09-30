@@ -80,6 +80,36 @@ Avant de toucher aux valeurs, mesurer ce que vaut le joueur face aux ennemis auj
   - Essence gagnée.
 - Consigner le tableau au §6. C'est la référence des lots R3 à R5.
 
+### R0 : mesure de référence de la puissance
+
+Mesuré sur `a9203af` (avant R1), dans une copie séparée du dépôt pour pouvoir compiler à côté. `tools/measure_run.sh`, 900 s de jeu, seeds 221092026, 1002, 7, 42, 20260926. Le bot prend la première carte de chaque offre ; il est invincible et compte chaque coup reçu, sans l'invulnérabilité après un coup. Le CSV de densité gagne une colonne `essence_gained` ; le dépouillement par tranche est dans `tools/summarize_power.py` (réutilisé pour R5).
+
+**Nomade** (`--nomad`), moyenne des 5 seeds :
+
+| Tranche | Éliminations | Dégâts reçus | PV moyen d'une créature | Dégâts infligés /s | Temps pour tuer (s) | PV apparus / dégâts | Niveau en fin de tranche | Essence gagnée |
+|---|---|---|---|---|---|---|---|---|
+| 0–3 min | 56 | 4 657 | 39,6 | 15,2 | 3,05 | 9,12 | 4,2 | 71 |
+| 3–6 min | 245 | 14 781 | 42,9 | 69,2 | 0,76 | 4,01 | 12,0 | 308 |
+| 6–9 min | 482 | 8 822 | 50,8 | 162,3 | 0,32 | 2,62 | 18,8 | 572 |
+| 9–12 min | 542 | 10 987 | 58,2 | 181,6 | 0,33 | 3,33 | 25,0 | 745 |
+| 12–15 min | 569 | 16 403 | 68,4 | 253,0 | 0,30 | 2,80 | 29,8 | 697 |
+
+**Nomade qui visite les lieux** (`--nomad --visit`), moyenne des 5 seeds (deux passées avant un redémarrage du conteneur, trois après, même build) :
+
+| Tranche | Éliminations | Dégâts reçus | PV moyen d'une créature | Dégâts infligés /s | Temps pour tuer (s) | PV apparus / dégâts | Niveau en fin de tranche | Essence gagnée |
+|---|---|---|---|---|---|---|---|---|
+| 0–3 min | 121 | 4 960 | 42,6 | 30,3 | 1,93 | 5,45 | 7,2 | 197 |
+| 3–6 min | 471 | 6 945 | 44,1 | 123,7 | 0,37 | 2,51 | 17,4 | 587 |
+| 6–9 min | 505 | 4 854 | 51,9 | 165,0 | 0,32 | 2,98 | 23,4 | 619 |
+| 9–12 min | 714 | 7 419 | 55,2 | 229,3 | 0,26 | 2,56 | 30,4 | 1 051 |
+| 12–15 min | 725 | 14 110 | 67,3 | 296,5 | 0,23 | 2,29 | 35,8 | 941 |
+
+**Lecture :**
+- Le temps pour tuer tombe de 2 à 3 s à 0,3 s dès 6 min, puis reste à plat : les dégâts du joueur montent aussi vite que les PV des créatures (×1,7 de PV moyen entre la première et la dernière tranche, ×10 à ×17 de dégâts infligés par seconde).
+- Les dégâts reçus creusent entre 6 et 9 min, puis remontent en fin de run (foule plus dense, créatures plus dures).
+- Niveau 30 environ à 15 min en nomade, 36 en visitant les lieux ; Essence gagnée : 140 à 190 par minute, jamais dépensée par le bot nomade.
+- Cible de R5 : retrouver ces courbes de temps pour tuer et de dégâts reçus à ±20 %, pour le même bot.
+
 ### R1 : défense (petit lot, rapide)
 
 - `data/characters/characters.json` : `shield` à 0 pour les trois personnages.

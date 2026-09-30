@@ -74,6 +74,8 @@ public partial class RunObservation
         public int Events { get; set; }
         public int EssenceGained { get; private set; }
         public int EssenceSpent { get; private set; }
+        /// <summary>Essence gagnée jusqu'ici, gain de la frame en cours compris (colonne du CSV de densité).</summary>
+        public int EssenceGainedSoFar => EssenceGained + System.Math.Max(0, _frameDelta);
 
         public PlaceTracker(int essence) => _lastEssence = essence;
 

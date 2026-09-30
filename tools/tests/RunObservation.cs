@@ -342,7 +342,7 @@ public partial class RunObservation : Node
             _world.GetNode<SpawnManager>("SpawnManager").ApplyScalingOverrides(overrides);
             GD.Print($"[RunObservation] Réglages surchargés : {scaling}");
         }
-        List<string> rows = new() { "t,visible,near600,alive,spawned,killed,level,hit_damage,memory,erasure_global,xp_gained,xp_orbs,spawned_hp,damage_dealt" };
+        List<string> rows = new() { "t,visible,near600,alive,spawned,killed,level,hit_damage,memory,erasure_global,xp_gained,xp_orbs,spawned_hp,damage_dealt,essence_gained" };
         // Mémoire de la zone sous le joueur et Effacement global, pour mesurer le tempo de l'oubli (retour du 28 septembre).
         ErasureManager erasure = _world.GetNode<ErasureManager>("ErasureManager");
         // Indice de pression : dégâts que les ennemis infligent à un joueur qui n'esquive jamais (invincible ici).
@@ -547,7 +547,7 @@ public partial class RunObservation : Node
             maxOrbs = Math.Max(maxOrbs, orbs);
             visibleSamples.Add(visible);
             rows.Add(string.Create(CultureInfo.InvariantCulture,
-                $"{t:F0},{visible},{near},{alive},{tracker.TotalSpawned},{tracker.TotalKilled},{level},{hitDamage:F0},{erasure.GetMemoryAt(_player.GlobalPosition):F2},{erasure.GlobalErasurePercent:F2},{xpGained:F0},{orbs},{spawnedHp:F0},{damageDealt:F0}"));
+                $"{t:F0},{visible},{near},{alive},{tracker.TotalSpawned},{tracker.TotalKilled},{level},{hitDamage:F0},{erasure.GetMemoryAt(_player.GlobalPosition):F2},{erasure.GlobalErasurePercent:F2},{xpGained:F0},{orbs},{spawnedHp:F0},{damageDealt:F0},{places.EssenceGainedSoFar}"));
         }
 
         eventBus.PlayerHitBy -= onHit;
