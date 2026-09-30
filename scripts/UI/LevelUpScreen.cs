@@ -193,10 +193,12 @@ public partial class LevelUpScreen : CanvasLayer
 
     private void BuildCard(FragmentOption choice, Player player)
     {
-        bool isWeapon = choice.Type is "weapon_new" or "weapon_upgrade";
+        bool isAscension = choice.Type == FragmentOption.AscensionType;
+        bool isWeapon = isAscension || choice.Type is "weapon_new" or "weapon_upgrade";
         bool isPerk = choice.Type == PerkSpecializationOffers.OptionType;
-        bool isNew = isPerk || choice.Type is "weapon_new" or "passive_new";
-        Color frame = choice.Rarity != null ? RarityPalette.Main(choice.Rarity.Id) : isPerk ? ChoiceStyle.PerkBorder : NeutralBorder;
+        bool isNew = isPerk || isAscension || choice.Type is "weapon_new" or "passive_new";
+        Color frame = choice.Rarity != null ? RarityPalette.Main(choice.Rarity.Id)
+            : isAscension ? ChoiceStyle.GoldBright : isPerk ? ChoiceStyle.PerkBorder : NeutralBorder;
 
         PanelContainer card = new() { CustomMinimumSize = new Vector2(CardWidth, 76), MouseFilter = Control.MouseFilterEnum.Stop };
         int index = _cards.Count;
@@ -243,6 +245,7 @@ public partial class LevelUpScreen : CanvasLayer
         string tag = choice.Rarity != null
             ? $"{ChoiceStyle.RarityGlyph(choice.Rarity.Rank)} {RarityPalette.DisplayName(choice.Rarity.Id).ToUpper()}".Trim()
             : isPerk ? PerkTag(choice.Id)
+            : isAscension ? Tr("LEVELUP_ASCENSION")
             : Tr(isWeapon ? "LEVELUP_NEW_WEAPON" : "LEVELUP_NEW_PASSIVE");
         if (choice.IsCarried)
             tag = $"{tag}  ·  {Tr("LEVELUP_CARRIED")}";
@@ -394,6 +397,9 @@ public partial class LevelUpScreen : CanvasLayer
         if (_banishMode)
         {
             AudioManager.PlayUI("sfx_perk_refuse", 0f);
+            // Une voie d'ascension ne s'oublie pas : on la choisit, ou on passe.
+            if (option.Type == FragmentOption.AscensionType)
+                return;
             _fragmentManager?.BanishFragment(option.Id);
             CloseIfDone();
             return;

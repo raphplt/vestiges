@@ -58,6 +58,8 @@ public class WeaponData
 	public Dictionary<string, float> Growth { get; set; } = new();
 	/// <summary>Stats entières (projectiles, perçage, rebonds, notes) : +1 par palier, aux raretés Épique et Légendaire.</summary>
 	public List<string> Milestones { get; set; } = new();
+	/// <summary>Deux voies d'ascension au niveau maximal (plan 21 §3), ou aucune.</summary>
+	public List<WeaponAscensionData> Ascensions { get; set; } = new();
 	public WeaponOnHitEffect OnHitEffect { get; set; }
 	public WeaponSpecialEffect SpecialEffect { get; set; }
 	public WeaponFxData Fx { get; set; } = new();
@@ -147,6 +149,46 @@ public static class WeaponDataLoader
         return _allWeapons;
     }
 
+    private static WeaponOnHitEffect ParseOnHit(Godot.Collections.Dictionary ohe) => new()
+    {
+        Type = ohe.ContainsKey("type") ? ohe["type"].AsString() : "",
+        Value = ohe.ContainsKey("value") ? (float)ohe["value"].AsDouble() : 0f,
+        Damage = ohe.ContainsKey("damage") ? (float)ohe["damage"].AsDouble() : 0f,
+        Duration = ohe.ContainsKey("duration") ? (float)ohe["duration"].AsDouble() : 0f
+    };
+
+    private static Dictionary<string, float> ParseFloats(Godot.Collections.Dictionary dict, string key)
+    {
+        Dictionary<string, float> values = new();
+        if (!dict.ContainsKey(key))
+            return values;
+        Godot.Collections.Dictionary entries = dict[key].AsGodotDictionary();
+        foreach (Variant name in entries.Keys)
+            values[name.AsString()] = (float)entries[name].AsDouble();
+        return values;
+    }
+
+    private static WeaponAscensionData ParseAscension(string weaponId, Godot.Collections.Dictionary dict)
+    {
+        HashSet<string> flags = new();
+        if (dict.ContainsKey("flags"))
+            foreach (Variant flag in dict["flags"].AsGodotArray())
+                flags.Add(flag.AsString());
+        return new WeaponAscensionData
+        {
+            Id = dict.ContainsKey("id") ? dict["id"].AsString() : weaponId,
+            Name = dict.ContainsKey("name") ? dict["name"].AsString() : weaponId,
+            Description = dict.ContainsKey("description") ? dict["description"].AsString() : "",
+            AttackPattern = dict.ContainsKey("attack_pattern") ? dict["attack_pattern"].AsString() : null,
+            StatMultipliers = ParseFloats(dict, "stat_multipliers"),
+            StatOverrides = ParseFloats(dict, "stat_overrides"),
+            OnHitEffect = dict.ContainsKey("on_hit_effect") ? ParseOnHit(dict["on_hit_effect"].AsGodotDictionary()) : null,
+            CopiesMultiplier = dict.ContainsKey("copies_multiplier") ? (float)dict["copies_multiplier"].AsDouble() : 1f,
+            Flags = flags,
+            Parameters = ParseFloats(dict, "params"),
+        };
+    }
+
     private static WeaponData ParseWeapon(Godot.Collections.Dictionary dict)
     {
         WeaponData weapon = new()
@@ -210,16 +252,12 @@ public static class WeaponDataLoader
         }
 
         if (dict.ContainsKey("on_hit_effect"))
-        {
-            Godot.Collections.Dictionary ohe = dict["on_hit_effect"].AsGodotDictionary();
-            weapon.OnHitEffect = new WeaponOnHitEffect
-            {
-                Type = ohe.ContainsKey("type") ? ohe["type"].AsString() : "",
-                Value = ohe.ContainsKey("value") ? (float)ohe["value"].AsDouble() : 0f,
-                Damage = ohe.ContainsKey("damage") ? (float)ohe["damage"].AsDouble() : 0f,
-                Duration = ohe.ContainsKey("duration") ? (float)ohe["duration"].AsDouble() : 0f
-            };
-        }
+            weapon.OnHitEffect = ParseOnHit(dict["on_hit_effect"].AsGodotDictionary());
+        if (dict.ContainsKey("ascensions"))
+            foreach (Variant entry in dict["ascensions"].AsGodotArray())
+                weapon.Ascensions.Add(ParseAscension(weapon.Id, entry.AsGodotDictionary()));
+        if (weapon.Ascensions.Count is not (0 or 2))
+            GD.PushError($"[WeaponDataLoader] {weapon.Id} : {weapon.Ascensions.Count} voies d'ascension, il en faut deux");
 
         if (dict.ContainsKey("special_effect"))
         {

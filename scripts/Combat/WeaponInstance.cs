@@ -22,7 +22,16 @@ public class WeaponInstance
 	public int Tier => Base.Tier;
 	public string Type => Base.Type;
 	public string DamageType => Base.DamageType;
-	public string AttackPattern => Base.AttackPattern;
+	/// <summary>Motif d'attaque : celui de la voie d'ascension choisie, sinon celui de l'arme.</summary>
+	public string AttackPattern => Ascension?.AttackPattern ?? Base.AttackPattern;
+	/// <summary>Effet à l'impact : celui de la voie d'ascension, sinon celui de l'arme.</summary>
+	public WeaponOnHitEffect OnHitEffect => Ascension?.OnHitEffect ?? Base.OnHitEffect;
+	/// <summary>Voie choisie au niveau maximal (plan 21 §3) ; null avant l'ascension.</summary>
+	public WeaponAscensionData Ascension { get; private set; }
+	/// <summary>L'arme est au niveau maximal, n'a pas encore choisi et a deux voies à proposer.</summary>
+	public bool CanAscend => !CanLevelUp && Ascension == null && Base.Ascensions.Count == 2;
+	/// <summary>Part des copies du Papier carbone que reçoit l'arme.</summary>
+	public float CopiesMultiplier => Ascension?.CopiesMultiplier ?? 1f;
 	public string Sprite => Base.Sprite;
 	public string DefaultFor => Base.DefaultFor;
 
@@ -46,6 +55,23 @@ public class WeaponInstance
 		return true;
 	}
 
+	/// <summary>Choisit une voie d'ascension, pour de bon ; faux si l'arme ne peut pas encore ou plus choisir.</summary>
+	public bool Ascend(string ascensionId)
+	{
+		if (!CanAscend)
+			return false;
+		foreach (WeaponAscensionData ascension in Base.Ascensions)
+		{
+			if (ascension.Id != ascensionId)
+				continue;
+			Ascension = ascension;
+			return true;
+		}
+		return false;
+	}
+
+	public bool HasFlag(string flag) => Ascension != null && Ascension.Flags.Contains(flag);
+
 	/// <summary>Copie de l'arme avec une amélioration appliquée : sert à montrer « avant → après ».</summary>
 	public WeaponInstance PreviewWith(IReadOnlyList<StatGain> gains)
 	{
@@ -56,8 +82,20 @@ public class WeaponInstance
 		return preview;
 	}
 
-	/// <summary>Stat de l'arme : base des données, plus les gains accumulés (en pourcentage de la base, ou ajoutés).</summary>
+	/// <summary>
+	/// Stat de l'arme : base des données, plus les gains accumulés (en pourcentage de la base, ou ajoutés), puis la voie
+	/// d'ascension (valeur fixée, ou multipliée).
+	/// </summary>
 	public float GetStat(string key, float fallback)
+	{
+		if (Ascension != null && Ascension.StatOverrides.TryGetValue(key, out float overridden))
+			return overridden;
+		float value = LeveledStat(key, fallback);
+		return Ascension != null && Ascension.StatMultipliers.TryGetValue(key, out float multiplier) ? value * multiplier : value;
+	}
+
+	/// <summary>Stat avant l'ascension : base des données et gains de niveau, plafonnée selon sa configuration.</summary>
+	private float LeveledStat(string key, float fallback)
 	{
 		float baseValue = Base.Stats.TryGetValue(key, out float v) ? v : fallback;
 		if (!_bonuses.TryGetValue(key, out float bonus))

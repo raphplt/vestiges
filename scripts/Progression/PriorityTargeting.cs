@@ -25,7 +25,7 @@ public sealed class PriorityTargeting
 
     public void Promote<T>(WeaponInstance weapon, List<T> sortedByDistance, Func<T, Node2D> enemyOf)
     {
-        if (weapon == null || !WeaponTraits.SearchesTarget(weapon.Base))
+        if (weapon == null || !WeaponTraits.SearchesTarget(weapon))
             return;
         bool hasTracked = _tracked.TryGetValue(weapon, out EnemyLife tracked);
         int chosen = -1;

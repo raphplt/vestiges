@@ -769,7 +769,7 @@ public partial class Player : CharacterBody2D
             _weaponLedger.AddKill(source.Id);
 
         // --- Weapon on-hit effects ---
-        WeaponOnHitEffect ohe = source?.Base.OnHitEffect;
+        WeaponOnHitEffect ohe = source?.OnHitEffect;
         if (ohe != null)
         {
             switch (ohe.Type)
@@ -782,6 +782,9 @@ public partial class Player : CharacterBody2D
                     break;
                 case "disorient":
                     enemy.ApplyDisorient(StatusDuration(ohe.Duration), context);
+                    break;
+                case "freeze":
+                    enemy.Freeze(StatusDuration(ohe.Duration));
                     break;
             }
         }
@@ -986,7 +989,7 @@ public partial class Player : CharacterBody2D
 
         float orbitalSpeed = _orbitalWeapon.GetStat("orbital_speed", 180f);
         // Le rayon d'orbite est une portée : il suit les bonus de portée, comme l'allonge des coups.
-        float orbitalRadius = GetEffectiveWeaponRange(_orbitalWeapon);
+        float orbitalRadius = GetEffectiveWeaponRange(_orbitalWeapon) * OrbitPulse(_orbitalWeapon, delta);
         _orbitalAngle += Mathf.DegToRad(orbitalSpeed) * delta;
         if (_orbitalAngle > Mathf.Tau)
             _orbitalAngle -= Mathf.Tau;
@@ -1680,7 +1683,7 @@ public partial class Player : CharacterBody2D
     private void PerformRangedAttack(string pattern)
     {
         int baseProjectileCount = Mathf.Max(1, Mathf.RoundToInt(GetWeaponStat("projectile_count", 1f)));
-        int totalProjectiles = baseProjectileCount + _attackCopies;
+        int totalProjectiles = baseProjectileCount + CopiesFor(_equippedWeapon);
         float range = GetEffectiveWeaponRange();
         System.Collections.Generic.List<Node2D> targets = FindNearestEnemies(totalProjectiles, range);
         if (targets.Count == 0)
@@ -1747,7 +1750,8 @@ public partial class Player : CharacterBody2D
 
         float baseDamage = ComputeBaseAttackDamage();
         AttackContext context = BeginAttack(_equippedWeapon, baseDamage);
-        int strikeCount = 1 + _attackCopies;
+        int copies = CopiesFor(_equippedWeapon);
+        int strikeCount = 1 + copies;
         float spreadAngle = strikeCount > 1
             ? Mathf.Clamp(GetWeaponStat("spread_angle", 20f), 0f, 120f)
             : 0f;
@@ -1809,7 +1813,7 @@ public partial class Player : CharacterBody2D
             if (hitCount <= 0)
                 continue;
 
-            float hitMultiplierSum = StrikeMultiplierSum(firstHitIndex, lastHitIndex);
+            float hitMultiplierSum = StrikeMultiplierSum(firstHitIndex, lastHitIndex, copies);
             if (hitMultiplierSum <= 0f)
                 continue;
 
@@ -1820,7 +1824,7 @@ public partial class Player : CharacterBody2D
             OnAttackHit(enemy, totalDamage, hasCrit, _equippedWeapon, triggerCount: hitCount, context: hitContext);
         }
         if (_objectMilestones?.HasZoneEcho == true)
-            QueueMeleeEchoes(attackDirection, range, arcAngle, strikeCount, startOffset, step, baseDamage * critDamageFactor, context);
+            QueueMeleeEchoes(attackDirection, range, arcAngle, strikeCount, startOffset, step, baseDamage * critDamageFactor, copies, context);
     }
 
     private void SpawnMeleeSlashVisuals(Vector2 baseDirection, float range, float arcAngle, int strikeCount, float spreadAngle)
@@ -1842,9 +1846,9 @@ public partial class Player : CharacterBody2D
     /// Part des dégâts portée par les frappes <paramref name="fromIndex"/> à <paramref name="toIndex"/> : la frappe
     /// pleine tient le centre de l'éventail, les copies du Papier carbone se partagent ses deux bords.
     /// </summary>
-    private float StrikeMultiplierSum(int fromIndex, int toIndex)
+    private float StrikeMultiplierSum(int fromIndex, int toIndex, int copies)
     {
-        int centerIndex = _attackCopies / 2;
+        int centerIndex = copies / 2;
         float sum = 0f;
         for (int index = fromIndex; index <= toIndex; index++)
             sum += index == centerIndex ? 1f : _copyDamageFactor;

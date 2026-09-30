@@ -735,3 +735,96 @@ Livré comme découpé. `WeaponProperties.Concerns` porte la règle des armes co
 Relecture par sous-agent. Corrigé : Durée comptée pour toute arme quand un objet pose des statuts ; Taille pour les orbes ; motif et type d'arme lus sans tenir compte de la casse.
 
 Laissé tel quel : la Perforation reste rangée en Nombre alors qu'elle ne vaut que pour les tirs. Aucun objet proposé ne la porte (Reflet brisé est retiré), donc aucune carte ne peut la montrer fausse. À revoir si un objet de perforation revient.
+
+## 28. Lot G3 — ascensions d'armes : découpage et proposition pour 20 armes (30 septembre)
+
+Application de la [référence](21-systeme-de-jeu.md) §3 : au niveau 50, la carte suivante de l'arme propose deux voies, au choix et pour de bon.
+
+### Mécanique (étape 1)
+
+- **Données :** une arme porte deux `ascensions` dans `weapons.json`. Chaque voie se décrit par les mêmes leviers, sans code propre à l'arme :
+  - motif d'attaque remplacé (`attack_pattern`) ;
+  - stats multipliées (`stat_multipliers`) ou fixées (`stat_overrides`), après les gains de niveau ;
+  - effet à l'impact remplacé (`on_hit_effect`) : ralentir, désorienter, faire saigner, et désormais figer ;
+  - réglages de l'effet spécial remplacés (`special_overrides`) ;
+  - part des copies du Papier carbone (`copies_multiplier`) ;
+  - drapeaux de comportement (`flags`), pour ce que les stats ne disent pas (orbite qui s'éloigne et revient).
+- **Offre :** tant qu'une arme au niveau 50 n'a pas choisi, chaque offre de niveau montre ses deux voies et une troisième carte. Passer la laisse en attente. La bannir écarte l'arme de la run, comme pour une amélioration.
+- **Lisibilité :** carte « ASCENSION » (nom, règle, « Voie définitive ») ; la pause affiche « Arc du gymnase · Volée ».
+- **Voies de l'étape 1 :** les huit de la référence (Arc du gymnase, Faucille, Cloche d'école, Boîte à musique). Valeurs de départ :
+
+| Arme | Voie | Leviers |
+|---|---|---|
+| Arc du gymnase | Volée | Salve en éventail, projectiles × 2, copies × 2 |
+| Arc du gymnase | Transpercer | Un seul trait, perforation illimitée, dégâts × 1,5, aucune copie |
+| Faucille | Moisson | Cercle complet, cadence × 0,75 |
+| Faucille | Estoc | Frappe droite, portée × 2 |
+| Cloche d'école | Glas | Ralentissement deux fois plus long, sans recul |
+| Cloche d'école | Tocsin | Recul × 2,5, désoriente 1 s au lieu de ralentir |
+| Boîte à musique | Ronde | Les orbes s'éloignent et reviennent (portée de 0,6 à 1,6 × en 2 s) |
+| Boîte à musique | Berceuse | Orbes à 0,6 × la portée, qui figent 0,6 s au contact |
+
+### Proposition pour les 20 autres armes (étape 2, à valider par Raphaël)
+
+Chaque arme reçoit une voie « plus large » et une voie « plus concentrée », pour que le choix change la façon de jouer (P5) et tire vers des objets différents (P2).
+
+| Arme | Voie A | Voie B |
+|---|---|---|
+| Parcmètre | **Séisme** : onde tout autour, cadence × 0,7 | **Contravention** : coup droit, dégâts × 1,8, recul × 2 |
+| Lance-billes | **Grêle** : billes × 2, dégâts × 0,7 | **Bille d'acier** : une bille, perforation 5, dégâts × 2,5 |
+| Parapluie | **Rafale** : cadence × 1,6, portée × 0,8 | **Ouvert** : frappe en arc de 120°, recul |
+| Cloueuse | **Agrafeuse** : salve de 3, dégâts × 0,5 | **Clou de charpente** : dégâts × 2, perforation illimitée, cadence × 0,7 |
+| Pelle à neige | **Congère** : ralentit 2 s | **Déblayer** : cercle complet, recul × 2 |
+| Rallonge | **Court-circuit** : désoriente 0,8 s | **Enrouleur** : portée × 1,5, cadence × 0,8 |
+| Assiettes | **Service complet** : assiettes × 2 | **Vaisselle cassée** : perforation 3 |
+| Râteau | **Herse** : Saignement deux fois plus long | **Ratisser** : cercle complet |
+| Scalpel | **Suture** : soigne tous les 3 coups au lieu de 5 | **Incision** : fait saigner |
+| Lentille de phare | **Balayage** : trois rayons, dégâts × 0,6 | **Foyer** : dégâts × 2, cadence × 0,6 |
+| Trousseau | **Passe-partout** : sauts de chaîne × 2 | **Clé unique** : un seul saut, dégâts × 2,2 |
+| Boussole | **Rose des vents** : tirs × 3, dégâts × 0,5 | **Nord** : perforation 3, guidage fort |
+| Polaroïd | **Rafale de flashs** : cadence × 1,5 | **Surexposition** : désorientation deux fois plus longue |
+| Baguette de sourcier | **Fourche** : tirs × 2 | **Source** : dégâts × 1,8 |
+| Gomme | **Mie de pain** : cercle complet | **Encre** : dégâts × 1,6, portée × 1,3 |
+| Lampe à pétrole | **Nappe** : feu au sol deux fois plus long et plus large | **Mèche courte** : tirs × 2, feu plus petit |
+| Gants de boxe | **Enchaînement** : l'écho frappe deux fois | **Crochet** : dégâts × 1,7, recul × 2 |
+| Craies | **Marelle** : formes plus grandes | **Dessin appliqué** : tirs × 2 |
+| Transistor | **Grandes ondes** : cône plus large | **Fréquence pirate** : le cône désoriente |
+| Chronomètre | **Arrêt sur image** : fige au lieu de ralentir | **Compte à rebours** : cadence × 1,5 |
+
+**Hors lot :** les traits d'arme lus par les Réminiscences (cible cherchée, contrôle natif) restent ceux de l'arme de base. Une Faucille en Moisson (cercle) garde donc son éligibilité à Convergence. À revoir si l'écart gêne.
+
+## 29. Compte rendu G3, étape 1 : mécanique et quatre armes (30 septembre)
+
+- **Données :** `ascensions` dans `weapons.json` pour l'Arc du gymnase, la Faucille, la Cloche d'école et la Boîte à musique, avec les leviers et valeurs du §28. Le levier `special_overrides` (réglages d'un effet spécial) n'est pas encore codé : aucune des huit voies n'en a besoin, il viendra avec l'étape 2.
+- **Arme :** la voie choisie remplace le motif et l'effet à l'impact, multiplie ou fixe des stats après les gains de niveau, et règle la part des copies du Papier carbone.
+  - Nouvel effet à l'impact, « figer », par l'état de gel des créatures.
+  - Nouveau drapeau « orbite qui va et vient » : le rayon passe de 0,6 à 1,6 × la portée en 2 s.
+- **Offre :** tant qu'une arme au niveau 50 n'a pas choisi, chaque offre montre ses deux voies et une troisième carte.
+  - La carte de survie ne remplace jamais une voie.
+  - Une voie ne se bannit pas : on la choisit ou on passe.
+  - Une relance ne change que la troisième carte.
+- **Partout où l'arme compte :** propriétés concernées (cartes d'objets), traits lus par les Réminiscences, pause (« Arc du gymnase · Volée »), perforation illimitée affichée « ∞ ».
+- **Code :** `Player.Ascensions.cs` (choix de la voie, orbite), `WeaponAscensionData`, `FragmentOption.AscensionType`.
+
+**Vérifications :**
+- `dotnet build` : zéro avertissement.
+- `tools/test_weapons.sh` : zéro échec, dont huit contrôles d'ascension :
+  - deux voies par arme et choix définitif ;
+  - Volée (éventail, flèches et copies × 2) et Transpercer (une flèche, × 1,5, perforation illimitée, aucune copie) ;
+  - offre des deux voies ensemble ; Berceuse qui fige ; Ronde de 0,60 à 1,60 ;
+  - la voie comptée par les règles de propriétés et de traits.
+- Objets, effets et contrats des Réminiscences, acquisition, capacités ennemies, déplacements : zéro échec. Smoke vert.
+  - Un passage du banc d'effets a fini sur une exception à la fermeture, après « RESULT failures=0 ». Elle ne s'est pas reproduite aux passages suivants.
+- Captures regardées :
+  - `--capture-levelup` : « ASCENSION · NIVEAU 50 », Volée et Transpercer côte à côte avec « Voie définitive : l'autre est oubliée », puis une troisième carte ;
+  - `--capture-weapons --ascensions makeshift_bow:volley,chipped_blade:harvest,music_box:round` : l'Arc tire en éventail, la Faucille touche les cinq cibles tout autour, les notes de la Ronde s'éloignent puis reviennent.
+
+Relecture par sous-agent. Corrigé :
+- règles de propriétés et de traits lues sur l'arme portée, voie comprise ;
+- bannissement d'une voie refusé ;
+- perforation illimitée affichée « ∞ ».
+
+**Reste :**
+- la Faucille en Moisson frappe en cercle mais dessine encore l'arc de la faucille : le visuel d'onde circulaire est à reprendre avec la direction artistique ;
+- l'historique de run ne retient pas la voie choisie ;
+- les voies des 20 autres armes attendent l'avis de Raphaël (§28).

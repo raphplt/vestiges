@@ -56,6 +56,16 @@ public partial class RunObservation
             screen.GetType().GetMethod("Skip", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(screen, null);
             await Frames(4);
         }
+        // Ascension : l'arme de départ au niveau 50 montre ses deux voies ensemble, et une troisième carte.
+        WeaponInstance starting = _player.WeaponSlots[0];
+        while (starting.CanLevelUp)
+            starting.ApplyUpgrade(System.Array.Empty<StatGain>());
+        typeof(FragmentManager).GetMethod("CachePlayer", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(fragments, null);
+        typeof(FragmentManager).GetMethod("OfferFragments", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(fragments, new object[] { 60 });
+        await Frames(20);
+        SaveFrame("levelup-ascension");
+        screen.GetType().GetMethod("Skip", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(screen, null);
+        await Frames(4);
         GD.Print($"[RunObservation] Captures du level-up écrites dans {_output}");
     }
 

@@ -179,7 +179,7 @@ public partial class RunObservation
                 _world.GetNode<EnemyPool>("EnemyPool").Return(existing);
         await Frames(2);
         WeaponInstance bell = _player.WeaponSlots[0];
-        if (!WeaponTraits.AppliesNativeControl(bell.Base))
+        if (!WeaponTraits.AppliesNativeControl(bell))
             return;
         Enemy victim = spawner.SpawnEventEnemy("rodeur", _player.GlobalPosition + new Vector2(-60f, -60f));
         Enemy receiver = spawner.SpawnEventEnemy("rodeur", _player.GlobalPosition + new Vector2(30f, -110f));

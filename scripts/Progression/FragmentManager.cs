@@ -214,9 +214,10 @@ public partial class FragmentManager : Node
         // Seconde lecture : la carte reportée prend une place, les autres ne réaméliorent pas la même arme.
         FragmentOption carried = _carriedChoice.Validate(_player, _banishedIds);
         List<FragmentOption> options = BuildFragmentPool();
+        List<FragmentOption> ascension = AscensionChoices();
         if (carried != null)
             options.RemoveAll(option => option.Type == CarriedChoice.UpgradeType && option.Id == carried.Id);
-        if (options.Count == 0 && carried == null)
+        if (options.Count == 0 && carried == null && ascension.Count == 0)
         {
             GD.PushWarning($"[FragmentManager] OfferFragments: pool is empty (level {level})");
             ProcessNextInQueue();
@@ -224,7 +225,8 @@ public partial class FragmentManager : Node
         }
 
         _pendingChoices.Clear();
-        List<FragmentOption> picked = PickRandom(options, FragmentsPerChoice - (carried != null ? 1 : 0));
+        List<FragmentOption> picked = PickRandom(options, Mathf.Max(0, FragmentsPerChoice - (carried != null ? 1 : 0) - ascension.Count));
+        picked.InsertRange(0, ascension);
         if (carried != null)
             picked.Insert(0, carried);
         EnsureSurvivalChoice(picked, options);
@@ -309,6 +311,24 @@ public partial class FragmentManager : Node
         }
 
         return baseTier;
+    }
+
+    /// <summary>
+    /// Ascension (plan 21 §3) : la première arme au niveau maximal qui n'a pas choisi montre ses deux voies, à chaque
+    /// offre, jusqu'à ce qu'une soit prise. Une arme bannie ne les propose plus.
+    /// </summary>
+    private List<FragmentOption> AscensionChoices()
+    {
+        List<FragmentOption> choices = new();
+        foreach (WeaponInstance weapon in _player.WeaponSlots)
+        {
+            if (!weapon.CanAscend || _banishedIds.Contains(weapon.Id))
+                continue;
+            foreach (WeaponAscensionData ascension in weapon.Base.Ascensions)
+                choices.Add(FragmentOption.ForAscension(weapon, ascension));
+            break;
+        }
+        return choices;
     }
 
     private List<FragmentOption> BuildFragmentPool()
@@ -522,7 +542,8 @@ public partial class FragmentManager : Node
     /// </summary>
     private void EnsureSurvivalChoice(List<FragmentOption> picked, List<FragmentOption> pool)
     {
-        if (picked.Count < 3)
+        // Les voies d'une ascension vont ensemble : la carte de survie ne prend jamais la place de l'une d'elles.
+        if (picked.Count < 3 || picked[^1].Type == FragmentOption.AscensionType)
             return;
         foreach (ActivePassiveSouvenir owned in _player.PassiveSlots)
             if (owned.Data.Survival)
@@ -629,6 +650,8 @@ public partial class FragmentManager : Node
 
 public class FragmentOption
 {
+    public const string AscensionType = "weapon_ascension";
+
     public string Id { get; }
     public string Type { get; }
     public string DisplayName { get; }
@@ -640,6 +663,11 @@ public class FragmentOption
     public IReadOnlyList<StatGain> WeaponGains { get; private init; } = System.Array.Empty<StatGain>();
     /// <summary>Amélioration d'objet : niveaux gagnés, selon la rareté (plan 21 §4).</summary>
     public int PassiveLevels { get; private init; } = 1;
+    /// <summary>Voie d'ascension proposée pour l'arme <see cref="Id"/>.</summary>
+    public WeaponAscensionData Ascension { get; private init; }
+
+    public static FragmentOption ForAscension(WeaponInstance weapon, WeaponAscensionData ascension) =>
+        new(weapon.Id, AscensionType, $"{weapon.Name} : {ascension.Name}", 1) { Ascension = ascension };
 
     public FragmentOption(string id, string type, string displayName, int sortWeight)
     {
@@ -671,6 +699,8 @@ public class FragmentOption
                 return weaponData != null && player.AddWeapon(weaponData);
             case "weapon_upgrade":
                 return player.UpgradeWeapon(Id, WeaponGains);
+            case AscensionType:
+                return player.AscendWeapon(Id, Ascension.Id);
             case "passive_new":
                 return player.AddOrUpgradePassive(Id);
             case "passive_upgrade":

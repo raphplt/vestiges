@@ -10,9 +10,10 @@ using Vestiges.Spawn;
 namespace Vestiges.Tests;
 
 /// <summary>
-/// --capture-weapons [--weapons id1,id2] [--lethal] [--objects id:niveau,…] : galerie des attaques du joueur. Chaque arme
-/// est équipée seule. Avec id1+id2, plusieurs armes sont équipées ensemble pour vérifier leurs interactions. Avec
-/// --objects, les objets donnés sont portés au niveau voulu avant la galerie (copies, paliers).
+/// --capture-weapons [--weapons id1,id2] [--lethal] [--objects id:niveau,…] [--ascensions arme:voie,…] : galerie des
+/// attaques du joueur. Chaque arme est équipée seule. Avec id1+id2, plusieurs armes sont équipées ensemble pour vérifier
+/// leurs interactions. Avec --objects, les objets donnés sont portés au niveau voulu avant la galerie (copies, paliers) ;
+/// avec --ascensions, une arme de la galerie est montée au niveau 50 et prend la voie donnée.
 /// Chaque configuration est déclenchée sur un cercle d'ennemis immobiles, et capturée en gros plan à plusieurs instants de l'attaque.
 /// </summary>
 public partial class RunObservation
@@ -69,6 +70,18 @@ public partial class RunObservation
 
             foreach (string equippedId in equippedIds)
                 _player.AddWeapon(WeaponDataLoader.Get(equippedId));
+            foreach (string entry in Argument(OS.GetCmdlineUserArgs(), "--ascensions", "").Split(',', System.StringSplitOptions.RemoveEmptyEntries))
+            {
+                string[] parts = entry.Split(':');
+                foreach (WeaponInstance held in _player.WeaponSlots)
+                {
+                    if (held.Id != parts[0])
+                        continue;
+                    while (held.CanLevelUp)
+                        held.ApplyUpgrade(System.Array.Empty<StatGain>());
+                    _player.AscendWeapon(held.Id, parts[1]);
+                }
+            }
             Vector2 origin = _player.GlobalPosition;
             for (int index = 0; index < 5; index++)
             {

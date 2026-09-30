@@ -223,10 +223,10 @@ public partial class ObjectsRegression : Node2D
         Setup();
         MethodInfo strikes = typeof(Player).GetMethod("StrikeMultiplierSum", Private);
         MethodInfo projectile = typeof(Player).GetMethod("ProjectileDamage", Private);
-        float soloStrike = (float)strikes.Invoke(_player, new object[] { 0, 0 });
+        float soloStrike = (float)strikes.Invoke(_player, new object[] { 0, 0, 0 });
         _player.AddOrUpgradePassive("souffle_du_neant");
-        float withCopy = (float)strikes.Invoke(_player, new object[] { 0, 1 });
-        float copyOnly = (float)strikes.Invoke(_player, new object[] { 1, 1 });
+        float withCopy = (float)strikes.Invoke(_player, new object[] { 0, 1, 1 });
+        float copyOnly = (float)strikes.Invoke(_player, new object[] { 1, 1, 1 });
         float copyShot = (float)projectile.Invoke(_player, new object[] { 10f, false, true });
         float fullShot = (float)projectile.Invoke(_player, new object[] { 10f, false, false });
         Check(Near(soloStrike, 1f) && Near(withCopy, 1.314f) && Near(copyOnly, 0.314f) && Near(copyShot, 3.14f) && Near(fullShot, 10f),
@@ -675,11 +675,11 @@ public partial class ObjectsRegression : Node2D
             && StatCatalog.NameWithProperty("max_hp") == StatCatalog.Name("max_hp") && StatCatalog.Property("projectile_pierce") == "count",
             $"Cartes : la stat nomme sa propriété (« {StatCatalog.NameWithProperty("attack_speed")} »), sans doublon ni pour la survie");
 
-        WeaponData bow = WeaponDataLoader.Get("makeshift_bow");
-        WeaponData bell = WeaponDataLoader.Get("teachers_bell");
-        WeaponData musicBox = WeaponDataLoader.Get("music_box");
-        WeaponData broadcast = WeaponDataLoader.Get("last_broadcast");
-        WeaponData chain = WeaponDataLoader.Get("chain_of_names");
+        WeaponInstance bow = new(WeaponDataLoader.Get("makeshift_bow"));
+        WeaponInstance bell = new(WeaponDataLoader.Get("teachers_bell"));
+        WeaponInstance musicBox = new(WeaponDataLoader.Get("music_box"));
+        WeaponInstance broadcast = new(WeaponDataLoader.Get("last_broadcast"));
+        WeaponInstance chain = new(WeaponDataLoader.Get("chain_of_names"));
         bool rules = !WeaponProperties.Concerns(bow, "size") && WeaponProperties.Concerns(bow, "count")
             && WeaponProperties.Concerns(bell, "size") && WeaponProperties.Concerns(bell, "duration")
             && !WeaponProperties.Concerns(musicBox, "frequency") && WeaponProperties.Concerns(musicBox, "range") && WeaponProperties.Concerns(musicBox, "size")

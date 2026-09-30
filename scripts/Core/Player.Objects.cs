@@ -194,17 +194,20 @@ public partial class Player
     /// (copies comprises) ; un cercle complet refrappe d'un seul tenant.
     /// </summary>
     private void QueueMeleeEchoes(Vector2 direction, float range, float arcAngle, int strikeCount, float startOffset,
-        float step, float strikeDamage, AttackContext context)
+        float step, float strikeDamage, int copies, AttackContext context)
     {
         if (arcAngle >= 359f)
         {
-            _objectMilestones.QueueArcEcho(direction, range, 360f, strikeDamage * StrikeMultiplierSum(0, strikeCount - 1), _equippedWeapon, context);
+            _objectMilestones.QueueArcEcho(direction, range, 360f, strikeDamage * StrikeMultiplierSum(0, strikeCount - 1, copies), _equippedWeapon, context);
             return;
         }
         for (int strike = 0; strike < strikeCount; strike++)
             _objectMilestones.QueueArcEcho(direction.Rotated(Mathf.DegToRad(startOffset + step * strike)), range, arcAngle,
-                strikeDamage * StrikeMultiplierSum(strike, strike), _equippedWeapon, context);
+                strikeDamage * StrikeMultiplierSum(strike, strike, copies), _equippedWeapon, context);
     }
+
+    /// <summary>Copies du Papier carbone que reçoit une arme : sa voie d'ascension peut les doubler ou les refuser.</summary>
+    private int CopiesFor(WeaponInstance weapon) => Mathf.RoundToInt(_attackCopies * (weapon?.CopiesMultiplier ?? 1f));
 
     /// <summary>Un projectile d'arme arrive en bout de course sans avoir été arrêté (Mètre pliant, palier 25).</summary>
     internal void OnProjectileSpent(Vector2 position, float damage, AttackContext context)

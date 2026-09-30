@@ -45,6 +45,7 @@ public partial class WeaponRegression : Node2D
             CheckUpgradeGains();
             CheckRangeAndZone();
             await CheckGroundFireOnGround();
+            CheckAscensions();
 
             GD.Print($"[WeaponRegression] RESULT failures={_failures}");
             GetTree().Quit(_failures == 0 ? 0 : 1);
@@ -282,6 +283,98 @@ public partial class WeaponRegression : Node2D
     {
         _player.AddWeapon(WeaponDataLoader.Get(id));
         return FindSlot(id);
+    }
+
+    /// <summary>
+    /// Ascensions (plan 21 §3, lot G3) : deux voies au niveau 50, offertes ensemble, choisies pour de bon ; leurs
+    /// leviers (motif, stats, copies, effet à l'impact, orbite qui va et vient). Un joueur à part, pour ne pas toucher
+    /// aux armes des autres contrôles.
+    /// </summary>
+    private void CheckAscensions()
+    {
+        int withPaths = 0;
+        foreach (WeaponData data in WeaponDataLoader.GetAll())
+            withPaths += data.Ascensions.Count == 2 ? 1 : 0;
+        Check(withPaths >= 4, $"Ascensions : {withPaths} armes ont leurs deux voies");
+
+        WeaponInstance bow = MaxedWeapon("makeshift_bow");
+        bool ready = bow.CanAscend && !MaxedWeapon("heavy_hammer").CanAscend;
+        bool chosen = bow.Ascend("volley");
+        Check(ready && chosen && !bow.Ascend("pierce_through") && bow.AttackPattern == "burst"
+            && bow.GetStat("projectile_count", 1f) >= 2f && Mathf.IsEqualApprox(bow.GetStat("spread_angle", 20f), 40f) && Mathf.IsEqualApprox(bow.CopiesMultiplier, 2f),
+            "Volée : éventail, deux fois plus de flèches et de copies ; la voie est définitive");
+        WeaponInstance piercing = MaxedWeapon("makeshift_bow");
+        float before = piercing.GetStat("damage", 1f);
+        piercing.Ascend("pierce_through");
+        WeaponInstance thrust = MaxedWeapon("chipped_blade");
+        thrust.Ascend("thrust");
+        WeaponInstance harvest = MaxedWeapon("chipped_blade");
+        harvest.Ascend("harvest");
+        Check(!WeaponProperties.Concerns(thrust, "size") && WeaponProperties.Concerns(harvest, "size") && !WeaponTraits.SearchesTarget(harvest)
+            && StatCatalog.Format("projectile_pierce", 999f) == "∞",
+            "La voie choisie compte partout : Estoc ne grandit plus par la Taille, Moisson ne cherche plus de cible ; perforation « ∞ »");
+        Check(Mathf.IsEqualApprox(piercing.GetStat("damage", 1f), before * 1.5f) && piercing.GetStat("projectile_pierce", 0f) >= 999f
+            && Mathf.IsEqualApprox(piercing.GetStat("projectile_count", 1f), 1f) && piercing.CopiesMultiplier == 0f,
+            "Transpercer : une flèche, dégâts × 1,5, perforation illimitée, aucune copie");
+
+        Player player = GD.Load<PackedScene>("res://scenes/Player.tscn").Instantiate<Player>();
+        AddChild(player);
+        player.InitializeCharacter(CharacterDataLoader.Get("traqueur"));
+        player.SetPhysicsProcess(false);
+        player.IsAIControlled = true;
+        WeaponInstance starting = player.WeaponSlots[0];
+        while (starting.CanLevelUp)
+            starting.ApplyUpgrade(Array.Empty<StatGain>());
+        player.AddWeapon(WeaponDataLoader.Get("music_box"));
+        WeaponInstance box = player.WeaponSlots[1];
+        while (box.CanLevelUp)
+            box.ApplyUpgrade(Array.Empty<StatGain>());
+
+        FragmentManager fragments = new() { Name = "AscensionFragments" };
+        AddChild(fragments);
+        typeof(FragmentManager).GetField("_player", Private).SetValue(fragments, player);
+        typeof(FragmentManager).GetMethod("OfferFragments", Private).Invoke(fragments, new object[] { 60 });
+        List<FragmentOption> offer = new(fragments.PendingChoices);
+        bool paired = offer.Count == 3 && offer[0].Type == FragmentOption.AscensionType && offer[1].Type == FragmentOption.AscensionType
+            && offer[0].Id == offer[1].Id && offer[0].Ascension.Id != offer[1].Ascension.Id && offer[2].Type != FragmentOption.AscensionType;
+        fragments.SelectFragment(offer[0]);
+        WeaponInstance ascended = player.WeaponSlots[0].Id == offer[0].Id ? player.WeaponSlots[0] : player.WeaponSlots[1];
+        Check(paired && ascended.Ascension?.Id == offer[0].Ascension.Id,
+            $"Offre : les deux voies de {offer[0].DisplayName.Split(':')[0].Trim()} ensemble et une autre carte ; le choix transforme l'arme");
+
+        box = player.WeaponSlots[1];
+        bool lullaby = player.AscendWeapon(box.Id, "lullaby");
+        Enemy enemy = EnemyScene.Instantiate<Enemy>();
+        AddChild(enemy);
+        enemy.Initialize(EnemyDataLoader.Get("rodeur"), 1f, 1f);
+        enemy.SetPhysicsProcess(false);
+        enemy.Position = new Vector2(4000f, 4000f);
+        player.OnProjectileHit(enemy, 1f, false, box);
+        float frozen = (float)typeof(Enemy).GetField("_freezeTimer", Private).GetValue(enemy);
+        Check(lullaby && frozen > 0.5f, "Berceuse : une note fige un instant l'ennemi qu'elle touche");
+
+        WeaponInstance round = MaxedWeapon("music_box");
+        round.Ascend("round");
+        MethodInfo pulse = typeof(Player).GetMethod("OrbitPulse", Private);
+        float low = 10f, high = 0f;
+        for (int i = 0; i < 40; i++)
+        {
+            float factor = (float)pulse.Invoke(player, new object[] { round, 0.05f });
+            low = Mathf.Min(low, factor);
+            high = Mathf.Max(high, factor);
+        }
+        Check(low < 0.7f && high > 1.5f, $"Ronde : l'orbite va de {low:0.00} à {high:0.00} fois la portée en 2 s");
+        enemy.QueueFree();
+        fragments.QueueFree();
+        player.QueueFree();
+    }
+
+    private static WeaponInstance MaxedWeapon(string id)
+    {
+        WeaponInstance weapon = new(WeaponDataLoader.Get(id));
+        while (weapon.CanLevelUp)
+            weapon.ApplyUpgrade(Array.Empty<StatGain>());
+        return weapon;
     }
 
     private void Check(bool passed, string message)

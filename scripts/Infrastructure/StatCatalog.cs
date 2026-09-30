@@ -29,6 +29,7 @@ public static class StatCatalog
     private static readonly Dictionary<string, string> _properties = new();
     private static readonly CultureInfo French = CultureInfo.GetCultureInfo("fr-FR");
     private static bool _loaded;
+    private const float UnlimitedCount = 999f;
 
     public static string Name(string stat) => TranslationServer.Translate(Entry(stat).NameKey);
 
@@ -60,8 +61,9 @@ public static class StatCatalog
     public static string Format(string stat, float value)
     {
         (string _, StatDisplay display, string unit) = Entry(stat);
+        // Une perforation « illimitée » (Transpercer, Lentille de phare) vaut 999 dans les données.
         string number = display == StatDisplay.Count
-            ? Mathf.RoundToInt(value).ToString(French)
+            ? value >= UnlimitedCount ? "∞" : Mathf.RoundToInt(value).ToString(French)
             : value.ToString("0.0", French);
         return string.IsNullOrEmpty(unit) ? number : $"{number} {unit}";
     }

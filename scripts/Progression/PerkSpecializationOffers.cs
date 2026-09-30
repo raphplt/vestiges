@@ -166,9 +166,9 @@ public sealed class PerkSpecializationOffers
         int upgradeable = 0;
         foreach (WeaponInstance weapon in weapons)
         {
-            targeting |= WeaponTraits.SearchesTarget(weapon.Base);
-            directHits |= WeaponTraits.DealsDirectHits(weapon.Base);
-            nativeControl |= WeaponTraits.AppliesNativeControl(weapon.Base);
+            targeting |= WeaponTraits.SearchesTarget(weapon);
+            directHits |= WeaponTraits.DealsDirectHits(weapon);
+            nativeControl |= WeaponTraits.AppliesNativeControl(weapon);
             if (weapon.CanLevelUp && !banishedWeapons.Contains(weapon.Id))
                 upgradeable++;
         }

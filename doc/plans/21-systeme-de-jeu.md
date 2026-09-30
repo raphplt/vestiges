@@ -68,7 +68,7 @@ Il n'existe pas d'autre famille : ni traits, ni passifs, ni Dons de coffre.
 | Cloche d'école | **Glas** : ralentit deux fois plus longtemps, sans recul | **Tocsin** : repousse fort et désoriente |
 | Boîte à musique | **Ronde** : les orbes s'éloignent et reviennent | **Berceuse** : orbes proches, qui endorment un instant |
 
-Les deux voies de chacune des 24 armes s'écrivent au lot G3.
+Les deux voies de chacune des 24 armes s'écrivent au lot G3. Les quatre exemples ci-dessus sont en jeu. Les voies des 20 autres armes sont proposées dans [21-historique.md §28](21-historique.md#28-lot-g3--ascensions-darmes--découpage-et-proposition-pour-20-armes-30-septembre), à valider.
 
 ## 4. Objets
 
@@ -244,7 +244,8 @@ Quand une carte ne peut plus rien offrir (4 armes ascensionnées, 6 objets au ni
 | Onze autres objets de déclencheur | À faire | G2c |
 | Reliquaire, objets « monde », remplacement | À faire | Plan 22, C3 |
 | Propriétés nommées sur les cartes d'armes et d'objets, armes concernées par un objet | **En jeu** | G0 |
-| Ascensions d'armes | À faire | G3 |
+| Ascensions d'armes : mécanique et quatre armes (Arc, Faucille, Cloche, Boîte à musique) | **En jeu** | G3, étape 1 |
+| Ascensions des 20 autres armes | **Proposées, à valider par Raphaël** | G3, étape 2 |
 | Affinités des personnages, Souverain à 25 % | À faire | G4 |
 | Sept Réminiscences restantes | À faire | G5 |
 | Surplus, déblocages | À faire | Plans 20, 22 |

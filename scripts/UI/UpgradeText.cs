@@ -34,6 +34,10 @@ public static class UpgradeText
                         player.GetWeaponStatForDisplay(after, gain.Stat)), ChoiceStyle.GainColor));
                 break;
             }
+            case FragmentOption.AscensionType:
+                lines.Add((choice.Ascension.Description, ChoiceStyle.GainColor));
+                lines.Add((TranslationServer.Translate("LEVELUP_ASCENSION_FINAL"), ChoiceStyle.TextDim));
+                break;
             case "passive_new":
             {
                 PassiveSouvenirData passive = PassiveSouvenirDataLoader.Get(choice.Id);
@@ -90,7 +94,7 @@ public static class UpgradeText
                 continue;
             weaponProperty = true;
             foreach (WeaponInstance weapon in player.WeaponSlots)
-                if (WeaponProperties.Concerns(weapon.Base, property, objectStatuses) && !names.Contains(weapon.Name))
+                if (WeaponProperties.Concerns(weapon, property, objectStatuses) && !names.Contains(weapon.Name))
                     names.Add(weapon.Name);
         }
         if (!weaponProperty)

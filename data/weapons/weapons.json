@@ -17,6 +17,26 @@
     "summary": "Fauche en arc devant toi.",
     "growth": { "damage": 3, "attack_speed": 2, "range": 1.5, "arc_angle": 1, "knockback": 1 },
     "milestones": [],
+    "ascensions": [
+      {
+        "id": "harvest",
+        "name": "Moisson",
+        "description": "Fauche en cercle complet, plus lentement.",
+        "attack_pattern": "circular",
+        "stat_multipliers": {
+          "attack_speed": 0.75
+        }
+      },
+      {
+        "id": "thrust",
+        "name": "Estoc",
+        "description": "Une frappe droite deux fois plus longue.",
+        "attack_pattern": "linear",
+        "stat_multipliers": {
+          "range": 2
+        }
+      }
+    ],
     "stats": {
       "damage": 10,
       "attack_speed": 1.0,
@@ -77,6 +97,34 @@
     "summary": "Tire une flèche droit devant.",
     "growth": { "damage": 3, "attack_speed": 2, "projectile_speed": 1, "range": 1 },
     "milestones": ["projectile_pierce"],
+    "ascensions": [
+      {
+        "id": "volley",
+        "name": "Volée",
+        "description": "Tire en éventail : le Nombre compte double.",
+        "attack_pattern": "burst",
+        "stat_multipliers": {
+          "projectile_count": 2
+        },
+        "stat_overrides": {
+          "spread_angle": 40
+        },
+        "copies_multiplier": 2
+      },
+      {
+        "id": "pierce_through",
+        "name": "Transpercer",
+        "description": "Une seule flèche, plus forte, qui traverse tout.",
+        "stat_multipliers": {
+          "damage": 1.5
+        },
+        "stat_overrides": {
+          "projectile_count": 1,
+          "projectile_pierce": 999
+        },
+        "copies_multiplier": 0
+      }
+    ],
     "stats": {
       "damage": 8,
       "attack_speed": 1.2,
@@ -317,6 +365,33 @@
     "summary": "Une onde qui repousse et ralentit.",
     "growth": { "damage": 3, "attack_speed": 2, "range": 1.5, "arc_angle": 1, "knockback": 1 },
     "milestones": [],
+    "ascensions": [
+      {
+        "id": "knell",
+        "name": "Glas",
+        "description": "Ralentit deux fois plus longtemps, sans repousser.",
+        "stat_overrides": {
+          "knockback": 0
+        },
+        "on_hit_effect": {
+          "type": "slow",
+          "value": 0.5,
+          "duration": 4.0
+        }
+      },
+      {
+        "id": "alarm",
+        "name": "Tocsin",
+        "description": "Repousse fort et désoriente au lieu de ralentir.",
+        "stat_multipliers": {
+          "knockback": 2.5
+        },
+        "on_hit_effect": {
+          "type": "disorient",
+          "duration": 1.0
+        }
+      }
+    ],
     "stats": {
       "damage": 12,
       "attack_speed": 0.7,
@@ -412,6 +487,33 @@
     "summary": "Des notes tournent autour de toi.",
     "growth": { "damage": 3, "range": 1.5, "orbital_speed": 1.5 },
     "milestones": ["orbital_count"],
+    "ascensions": [
+      {
+        "id": "round",
+        "name": "Ronde",
+        "description": "Les notes s'éloignent et reviennent.",
+        "flags": [
+          "orbit_pulse"
+        ],
+        "params": {
+          "pulse_min": 0.6,
+          "pulse_max": 1.6,
+          "pulse_period": 2.0
+        }
+      },
+      {
+        "id": "lullaby",
+        "name": "Berceuse",
+        "description": "Les notes tournent près de toi et endorment un instant.",
+        "stat_multipliers": {
+          "range": 0.6
+        },
+        "on_hit_effect": {
+          "type": "freeze",
+          "duration": 0.6
+        }
+      }
+    ],
     "stats": {
       "damage": 7,
       "attack_speed": 0.0,

@@ -335,7 +335,8 @@ public partial class PauseMenu : CanvasLayer
 		VBoxContainer text = new() { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
 		text.AddThemeConstantOverride("separation", 0);
 		row.AddChild(text);
-		text.AddChild(MakeLabel($"{weapon.Name}   Niv {weapon.Level}", TextRole.Body, StatValueColor));
+		string title = weapon.Ascension != null ? $"{weapon.Name} · {weapon.Ascension.Name}" : weapon.Name;
+		text.AddChild(MakeLabel($"{title}   Niv {weapon.Level}", TextRole.Body, StatValueColor));
 
 		List<string> parts = new()
 		{
