@@ -46,7 +46,7 @@ public readonly record struct ControlState(float Strength, float Remaining, Atta
 }
 
 public readonly record struct EnemyKillResult(EnemyLife Target, string EnemyId, Vector2 Position,
-    DamageResult Damage, ControlState Slow, ControlState Disorientation, ControlState Burn = default);
+    DamageResult Damage, ControlState Slow, ControlState Disorientation, ControlState Burn = default, bool Elite = false);
 
 public enum StatusKind { Burn, Bleed, Slow, Disorientation, Fragility }
 

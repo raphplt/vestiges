@@ -29,6 +29,10 @@ public static class ObjectMilestoneEffects
         ObjectTriggers.DoubleSlowFreezeEffect,
         ObjectTriggers.BurnSlowsEffect,
         ObjectTriggers.SlowKillExtendsEffect,
+        ObjectTriggers.DoubleExplosionEffect,
+        ObjectTriggers.EliteKillHealEffect,
+        ObjectTriggers.DoubleStrideEffect,
+        ObjectTriggers.CascadeInvulnerabilityEffect,
     };
 
     public static bool IsImplemented(string effect) => Implemented.Contains(effect);

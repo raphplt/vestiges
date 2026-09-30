@@ -7,7 +7,8 @@ namespace Vestiges.Progression;
 
 /// <summary>
 /// Objets de déclencheur d'un joueur (plan 21 §4) : ce qui se passe à l'impact d'une arme, contre une cible déjà
-/// touchée par un statut, à l'élimination. Créé au premier objet de ce type. Règles communes (§7) :
+/// touchée par un statut, à l'élimination, après une marche, au niveau gagné. Créé au premier objet de ce type ; il ne
+/// tourne par frame que pour la Semelle usée ou une explosion en attente. Règles communes (§7) :
 /// <list type="bullet">
 /// <item>seul un coup direct d'arme déclenche, jamais un effet déjà déclenché ;</item>
 /// <item>une chance est multipliée par le coefficient de déclenchement de l'arme ;</item>
@@ -20,13 +21,30 @@ public partial class ObjectTriggers : Node
     public const string ChillChanceStat = "chill_chance";
     public const string BurningTargetDamageStat = "burning_target_damage";
     public const string SlowedTargetDamageStat = "slowed_target_damage";
+    public const string KillExplosionStat = "kill_explosion";
+    public const string KillHealStat = "kill_heal";
+    public const string StrideDamageStat = "stride_damage";
+    public const string LevelHealStat = "level_heal";
 
     public const string BurnSpreadEffect = "burn_spread";
     public const string DoubleSlowFreezeEffect = "double_slow_freeze";
     public const string BurnSlowsEffect = "burn_slows";
     public const string SlowKillExtendsEffect = "slow_kill_extends";
+    public const string DoubleExplosionEffect = "double_explosion";
+    public const string EliteKillHealEffect = "elite_kill_heal";
+    public const string DoubleStrideEffect = "double_stride";
+    public const string CascadeInvulnerabilityEffect = "cascade_invulnerability";
 
     private const float SparkHeight = 12f;
+    private const float MovingSpeedSq = 25f;
+
+    private struct PendingExplosion
+    {
+        public Vector2 Position;
+        public float Damage;
+        public float Remaining;
+        public AttackContext Source;
+    }
 
     private Player _player;
     private ulong _playerId;
@@ -49,17 +67,37 @@ public partial class ObjectTriggers : Node
     private float _slowKillSeconds;
     private float _slowKillMaxSeconds;
 
+    private float _killExplosion;
+    private float _explosionRadius;
+    private float _secondExplosionDelay = -1f;
+    private readonly System.Collections.Generic.List<PendingExplosion> _pendingExplosions = new();
+    private float _killHeal;
+    private float _eliteHealRatio;
+    private float _strideDamage;
+    private float _strideSeconds;
+    private int _strideMaxCharges = 1;
+    private float _strideElapsed;
+    private int _strideCharges;
+    private float _levelHeal;
+    private int _cascadeLevels;
+    private float _cascadeSeconds;
+    private ulong _levelFrame;
+    private int _levelsThisFrame;
+
     /// <summary>Tirages des déclencheurs ; les bancs le graine pour rester déterministes.</summary>
     internal RandomNumberGenerator Rng { get; } = new();
 
     public float BurnChance => _burnChance;
     public float ChillChance => _chillChance;
+    public int StrideCharges => _strideCharges;
 
     public static bool IsTriggerStat(string stat) =>
-        stat is BurnChanceStat or ChillChanceStat or BurningTargetDamageStat or SlowedTargetDamageStat;
+        stat is BurnChanceStat or ChillChanceStat or BurningTargetDamageStat or SlowedTargetDamageStat
+            or KillExplosionStat or KillHealStat or StrideDamageStat or LevelHealStat;
 
     public static bool IsTriggerMilestone(string effect) =>
-        effect is BurnSpreadEffect or DoubleSlowFreezeEffect or BurnSlowsEffect or SlowKillExtendsEffect;
+        effect is BurnSpreadEffect or DoubleSlowFreezeEffect or BurnSlowsEffect or SlowKillExtendsEffect
+            or DoubleExplosionEffect or EliteKillHealEffect or DoubleStrideEffect or CascadeInvulnerabilityEffect;
 
     public void Initialize(Player player)
     {
@@ -73,12 +111,44 @@ public partial class ObjectTriggers : Node
         _eventBus = GetNode<EventBus>("/root/EventBus");
         _groupCache = GetNode<GroupCache>("/root/GroupCache");
         _eventBus.EnemyKillResolved += OnEnemyKill;
+        _eventBus.LevelUp += OnLevelUp;
+        SetProcess(NeedsClock);
     }
 
     public override void _ExitTree()
     {
-        if (_eventBus != null)
-            _eventBus.EnemyKillResolved -= OnEnemyKill;
+        if (_eventBus == null)
+            return;
+        _eventBus.EnemyKillResolved -= OnEnemyKill;
+        _eventBus.LevelUp -= OnLevelUp;
+    }
+
+    private bool NeedsClock => _strideDamage > 0f || _pendingExplosions.Count > 0;
+
+    public override void _Process(double delta)
+    {
+        float dt = (float)delta;
+        if (_player.IsDead)
+        {
+            _pendingExplosions.Clear();
+            SetProcess(false);
+            return;
+        }
+        AdvanceStride(dt);
+        for (int i = _pendingExplosions.Count - 1; i >= 0; i--)
+        {
+            PendingExplosion explosion = _pendingExplosions[i];
+            explosion.Remaining -= dt;
+            if (explosion.Remaining > 0f)
+            {
+                _pendingExplosions[i] = explosion;
+                continue;
+            }
+            _pendingExplosions[i] = _pendingExplosions[^1];
+            _pendingExplosions.RemoveAt(_pendingExplosions.Count - 1);
+            Explode(explosion.Position, explosion.Damage, explosion.Source);
+        }
+        SetProcess(NeedsClock);
     }
 
     /// <summary>Réglages d'un objet de déclencheur, lus à son arrivée.</summary>
@@ -96,6 +166,13 @@ public partial class ObjectTriggers : Node
                     _chillFactor = Parameter(data, "slow_factor");
                     _chillSeconds = Parameter(data, "slow_seconds");
                     break;
+                case KillExplosionStat:
+                    _explosionRadius = Parameter(data, "radius");
+                    break;
+                case StrideDamageStat:
+                    _strideSeconds = Parameter(data, "move_seconds");
+                    SetProcess(true);
+                    break;
             }
         }
     }
@@ -109,6 +186,10 @@ public partial class ObjectTriggers : Node
             case ChillChanceStat: _chillChance += change; break;
             case BurningTargetDamageStat: _burningTargetDamage += change; break;
             case SlowedTargetDamageStat: _slowedTargetDamage += change; break;
+            case KillExplosionStat: _killExplosion += change; break;
+            case KillHealStat: _killHeal += change; break;
+            case StrideDamageStat: _strideDamage += change; break;
+            case LevelHealStat: _levelHeal += change; break;
         }
     }
 
@@ -124,6 +205,13 @@ public partial class ObjectTriggers : Node
                 _slowKillRadius = milestone.Parameter("radius");
                 _slowKillSeconds = milestone.Parameter("seconds");
                 _slowKillMaxSeconds = milestone.Parameter("max_remaining_seconds");
+                break;
+            case DoubleExplosionEffect: _secondExplosionDelay = milestone.Parameter("delay_seconds"); break;
+            case EliteKillHealEffect: _eliteHealRatio = milestone.Parameter("max_hp_ratio"); break;
+            case DoubleStrideEffect: _strideMaxCharges = Mathf.Max(1, Mathf.RoundToInt(milestone.Parameter("charges"))); break;
+            case CascadeInvulnerabilityEffect:
+                _cascadeLevels = Mathf.Max(1, Mathf.RoundToInt(milestone.Parameter("levels")));
+                _cascadeSeconds = milestone.Parameter("seconds");
                 break;
         }
     }
@@ -194,11 +282,86 @@ public partial class ObjectTriggers : Node
         Spark(enemy, FxFamily.Pale);
     }
 
-    /// <summary>Allumette humide et Épingle à nourrice, paliers 25 : ce qu'une élimination transmet aux voisins.</summary>
+    /// <summary>
+    /// Semelle usée : <paramref name="seconds"/> de marche sans arrêt chargent les prochaines attaques. Appelé par
+    /// l'attaque elle-même : rend le multiplicateur de dégâts et consomme une charge.
+    /// </summary>
+    public float ConsumeStride()
+    {
+        if (_strideCharges <= 0)
+            return 1f;
+        _strideCharges--;
+        // La marche suivante repart de zéro : une charge se regagne, elle ne se reprend pas en continu.
+        _strideElapsed = 0f;
+        return 1f + _strideDamage;
+    }
+
+    private void AdvanceStride(float delta)
+    {
+        if (_strideDamage <= 0f)
+            return;
+        if (_player.Velocity.LengthSquared() < MovingSpeedSq || _strideCharges >= _strideMaxCharges)
+        {
+            _strideElapsed = 0f;
+            return;
+        }
+        _strideElapsed += delta;
+        if (_strideElapsed < _strideSeconds)
+            return;
+        _strideElapsed = 0f;
+        _strideCharges = _strideMaxCharges;
+        CombatPools.Instance?.EmitSparks(_player.GlobalPosition, new SparkBurst
+        {
+            Family = FxFamily.Brass,
+            Owner = FxOwner.Player,
+            Count = 6,
+            Direction = Vector2.Up,
+            Spread = 2.5f,
+            SpeedMin = 20f,
+            SpeedMax = 45f,
+            LifeMin = 0.2f,
+            LifeMax = 0.35f,
+            Size = 1,
+        });
+    }
+
+    /// <summary>Boîte de pansements : chaque niveau soigne ; au palier, une cascade rend invulnérable un instant.</summary>
+    private void OnLevelUp(int newLevel)
+    {
+        if (_levelHeal <= 0f || _player.IsDead)
+            return;
+        _player.Heal(_player.EffectiveMaxHp * _levelHeal);
+        ulong frame = Engine.GetProcessFrames();
+        _levelsThisFrame = frame == _levelFrame ? _levelsThisFrame + 1 : 1;
+        _levelFrame = frame;
+        if (_cascadeLevels > 0 && _levelsThisFrame == _cascadeLevels)
+            _player.GrantInvulnerability(_cascadeSeconds);
+    }
+
+    /// <summary>Pétard mouillé : la victime explose ; l'explosion ne déclenche aucun objet (plan 21 §7).</summary>
+    private void Explode(Vector2 position, float damage, AttackContext source)
+    {
+        float radius = _explosionRadius * _player.AoeMultiplier;
+        float radiusSq = radius * radius;
+        foreach (Node node in _groupCache.GetEnemies())
+        {
+            if (node is Enemy { IsActive: true, IsDying: false } enemy
+                && Iso.GroundDistanceSquared(enemy.GlobalPosition, position) <= radiusSq)
+                enemy.TakeDamage(damage, source: source);
+        }
+        _player.AttackFx.PlayBurst(position, FxFamily.Fire, radius);
+    }
+
+    /// <summary>
+    /// Élimination par un coup direct d'arme : Pétard mouillé, Dé à coudre. Paliers 25 de l'Allumette et de
+    /// l'Épingle : ce que la victime transmet à ses voisins, quel que soit le coup qui l'a tuée.
+    /// </summary>
     private void OnEnemyKill(EnemyKillResult kill)
     {
         if (kill.Damage.Source.OwnerId != _playerId)
             return;
+        if (kill.Damage.Source.Kind == DamageKind.DirectWeapon)
+            RewardDirectKill(kill);
         bool spreadBurn = _burnSpreadRadius > 0f && kill.Burn.Remaining > 0f && kill.Burn.Source.OwnerId == _playerId;
         bool extendSlows = _slowKillRadius > 0f && kill.Slow.Remaining > 0f;
         if (!spreadBurn && !extendSlows)
@@ -225,6 +388,23 @@ public partial class ObjectTriggers : Node
         nearest.ApplyIgnite(kill.Burn.Strength, kill.Burn.Remaining, kill.Burn.Source);
         SlowBurning(nearest, kill.Burn.Remaining, kill.Burn.Source);
         Spark(nearest, FxFamily.Fire);
+    }
+
+    private void RewardDirectKill(in EnemyKillResult kill)
+    {
+        if (_killExplosion > 0f)
+        {
+            float damage = kill.Damage.NativeDamage * _killExplosion;
+            AttackContext source = kill.Damage.Source.As(DamageKind.Passive);
+            Explode(kill.Position, damage, source);
+            if (_secondExplosionDelay >= 0f)
+            {
+                _pendingExplosions.Add(new PendingExplosion { Position = kill.Position, Damage = damage, Remaining = _secondExplosionDelay, Source = source });
+                SetProcess(true);
+            }
+        }
+        if (_killHeal > 0f)
+            _player.Heal(_killHeal + (kill.Elite ? _player.EffectiveMaxHp * _eliteHealRatio : 0f));
     }
 
     private static void Spark(Enemy enemy, FxFamily family)

@@ -791,6 +791,7 @@ Le script de post-processing doit inclure une vérification/correction de l'angl
 - [x] Plan 21 lot G2a-2, étape 2 : paliers du niveau 25 des douze autres objets de propriété, chacun avec son retour en jeu ([compte rendu](plans/21-historique.md#22-compte-rendu-g2a-2-étape-2--les-douze-paliers)).
 - [x] Plan 21 lot G2b, étape 1 : anciens Dons retirés des coffres et des fouilles (niveaux d'objet à la place), avec leurs six synergies et les effets qui n'existaient que par eux ([compte rendu](plans/21-historique.md#24-compte-rendu-g2b-étape-1--retrait-des-anciens-dons)).
 - [x] Plan 21 lot G2b, étape 2 : statut Fragilité, coefficient de déclenchement par arme, Allumette humide, Glaçon, Thermomètre et Épingle à nourrice avec leurs paliers ([compte rendu](plans/21-historique.md#25-compte-rendu-g2b-étape-2--socle-des-déclencheurs-et-quatre-objets-dimpact)).
+- [x] Plan 21 lot G2b, étape 3 : Pétard mouillé, Dé à coudre, Semelle usée et Boîte de pansements avec leurs paliers ([compte rendu](plans/21-historique.md#26-compte-rendu-g2b-étape-3--élimination-marche-niveau)).
 - [ ] Délestage et Habitude, puis B4 : catalogue d'objets, récompense à choix, inventaire cumulable, migration des anciennes sources, intégration UI et validation en run ([prérequis](plans/05-perks-specialisations.md#14-compte-rendu-b3-partie-sans-objets--sillage-et-seconde-lecture-29-septembre-2026)).
 
 ### Phase E — Quêtes et personnages (2-3 semaines)

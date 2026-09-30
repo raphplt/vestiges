@@ -34,6 +34,10 @@
         { "id": "burn_chance", "name_key": "STAT_BURN_CHANCE", "display": "fraction" },
         { "id": "chill_chance", "name_key": "STAT_CHILL_CHANCE", "display": "fraction" },
         { "id": "burning_target_damage", "name_key": "STAT_BURNING_TARGET_DAMAGE", "display": "fraction" },
-        { "id": "slowed_target_damage", "name_key": "STAT_SLOWED_TARGET_DAMAGE", "display": "fraction" }
+        { "id": "slowed_target_damage", "name_key": "STAT_SLOWED_TARGET_DAMAGE", "display": "fraction" },
+        { "id": "kill_explosion", "name_key": "STAT_KILL_EXPLOSION", "display": "share" },
+        { "id": "kill_heal", "name_key": "STAT_KILL_HEAL", "display": "value", "unit": "PV" },
+        { "id": "stride_damage", "name_key": "STAT_STRIDE_DAMAGE", "display": "fraction" },
+        { "id": "level_heal", "name_key": "STAT_LEVEL_HEAL", "display": "share" }
     ]
 }

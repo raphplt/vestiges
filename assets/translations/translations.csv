@@ -311,3 +311,7 @@ STAT_BURN_CHANCE,Chance de Brûlure,Burn chance
 STAT_CHILL_CHANCE,Chance de ralentir,Chill chance
 STAT_BURNING_TARGET_DAMAGE,Dégâts contre les cibles brûlées,Damage to burning targets
 STAT_SLOWED_TARGET_DAMAGE,Dégâts contre les cibles ralenties,Damage to slowed targets
+STAT_KILL_EXPLOSION,Explosion (part du coup fatal),Explosion (share of the killing blow)
+STAT_KILL_HEAL,Soin par élimination,Heal per kill
+STAT_STRIDE_DAMAGE,Attaque après la marche,Attack after walking
+STAT_LEVEL_HEAL,Soin par niveau (PV max),Heal per level (max HP)

@@ -71,6 +71,9 @@ public sealed class PlayerDefense
         return true;
     }
 
+    /// <summary>Invulnérabilité accordée par un effet (Boîte de pansements) ; ne raccourcit jamais celle en cours.</summary>
+    public void GrantInvulnerability(float seconds) => _invulnerableTimer = Mathf.Max(_invulnerableTimer, seconds);
+
     /// <summary>Résout un coup déjà accepté (ni esquivé ni pendant l'invulnérabilité).</summary>
     public Outcome Absorb(float damage, float armor)
     {

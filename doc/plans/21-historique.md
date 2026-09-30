@@ -670,3 +670,31 @@ Relecture par sous-agent. Corrigé :
 - le palier du Thermomètre vaut aussi pour une Brûlure transmise.
 
 Laissé tel quel : le crédit d'un DOT va à la dernière application, même plus faible.
+
+## 26. Compte rendu G2b, étape 3 : élimination, marche, niveau (30 septembre)
+
+| Objet | Niveau n | Palier 25 |
+|---|---|---|
+| Pétard mouillé | Une victime d'un coup direct d'arme explose : 20 % + 1,6 % × n des dégâts du coup fatal, dans 50 px × Taille | L'explosion se répète 0,25 s après |
+| Dé à coudre | Une élimination par un coup direct d'arme rend 0,1 + 0,02 × n PV | Une élite, un champion, un miniboss ou un boss tué rend en plus 5 % des PV max |
+| Semelle usée | Après 2 s de marche sans arrêt, la prochaine attaque fait +15 % + 1 % × n ; la marche repart de zéro après l'attaque | Deux attaques chargées |
+| Boîte de pansements | Chaque niveau gagné soigne 1 % + 0,06 % × n des PV max | Trois niveaux gagnés dans la même frame : 1 s d'invulnérabilité |
+
+- **Pas de récursion :** l'explosion frappe comme un effet déclenché, donc une victime de l'explosion ne réexplose pas et ne soigne pas.
+- **Soins ordinaires :** le Dé et la Boîte soignent normalement. Prévoyance stocke leur excédent, et une Reprise en cours les compte comme une récupération : c'est voulu (P4).
+- **Semelle :** la charge est prise par l'attaque qui part (tir, frappe, chaîne après avoir trouvé une cible, cône à son allumage), jamais par l'affichage ni par une orbite. Retour : bouffée cuivrée aux pieds quand elle est prête.
+- **Catalogue :** 22 objets proposés, 14 de propriété et 8 de déclencheur. Les accès « Q » et « V » de la référence ne sont pas encore appliqués : tout est proposé, en attendant les déblocages.
+
+**Vérifications :**
+- `dotnet build` : zéro avertissement.
+- `tools/test_objects.sh` : 51 assertions, zéro échec. Parmi elles :
+  - double explosion à 60 % du coup fatal au niveau 25 ;
+  - soin par élimination, bonus d'élite, rien pour une élimination par effet ;
+  - charge de marche, remise à zéro par l'arrêt et après l'attaque, deux charges au palier ;
+  - soin par niveau et invulnérabilité de cascade.
+- Effets et contrats des Réminiscences, acquisition, armes, capacités ennemies, déplacements : zéro échec. Smoke vert.
+- Capture `--capture-weapons --lethal --weapons heavy_hammer --objects petard_mouille:25`, regardée : chaque cible tuée par le Marteau laisse une zone de feu tramée à sa place.
+
+Relecture par sous-agent. Corrigé : la Semelle se rechargeait aussitôt après une attaque tant que le joueur marchait.
+
+**À mesurer :** chaque explosion parcourt la liste des ennemis. Une arme de zone qui tue 20 ennemis par frame fait 20 parcours, 40 au palier. Ce coût n'est pas encore passé au banc dense (`/bench` avec le Pétard).

@@ -1097,7 +1097,6 @@ public partial class Player : CharacterBody2D
     private void PerformChainAttack()
     {
         float range = GetEffectiveWeaponRange();
-        float baseDamage = ComputeBaseAttackDamage();
         int chainTargets = Mathf.Max(1, (int)GetWeaponStat("chain_targets", 2f));
         float chainRange = GetWeaponStat("chain_range", 100f);
         float chainFalloff = GetWeaponStat("chain_damage_falloff", 0.8f);
@@ -1108,6 +1107,7 @@ public partial class Player : CharacterBody2D
             return;
 
         Enemy firstTarget = enemies[0];
+        float baseDamage = ComputeBaseAttackDamage();
         Vector2 attackDir = (firstTarget.GlobalPosition - GlobalPosition).Normalized();
         PlayAttackFeedback(isMelee: true, attackDir);
 
@@ -1968,7 +1968,8 @@ public partial class Player : CharacterBody2D
         return result;
     }
 
-    private float ComputeBaseAttackDamage() => ComputeBaseAttackDamage(_equippedWeapon);
+    /// <summary>Dégâts de l'attaque qui part : ceux de l'arme active, et la charge de la Semelle usée s'il y en a une.</summary>
+    private float ComputeBaseAttackDamage() => ComputeBaseAttackDamage(_equippedWeapon) * (_objectTriggers?.ConsumeStride() ?? 1f);
 
     private float ComputeBaseAttackDamage(WeaponInstance weapon)
     {

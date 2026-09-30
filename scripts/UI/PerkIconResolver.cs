@@ -28,6 +28,10 @@ public static class PerkIconResolver
             "chill_chance" => "assets/ui/icons/ui_icon_perk_memory_anchor.png",
             "burning_target_damage" => "assets/ui/icons/ui_icon_perk_torche_vivante.png",
             "slowed_target_damage" => "assets/ui/icons/ui_icon_perk_piercing_shot.png",
+            "kill_explosion" => "assets/ui/icons/ui_icon_perk_instabilite.png",
+            "kill_heal" => "assets/ui/icons/ui_icon_perk_vampirisme.png",
+            "stride_damage" => "assets/ui/icons/ui_icon_perk_traqueur_swiftness.png",
+            "level_heal" => "assets/ui/icons/ui_icon_perk_quick_fix.png",
             _ => "assets/ui/icons/ui_icon_perk_damage_up.png"
         };
     }

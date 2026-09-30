@@ -553,6 +553,131 @@
         ]
     },
     {
+        "id": "petard_mouille",
+        "name": "Pétard mouillé",
+        "description": "Un ennemi que tu tues avec une arme explose autour de lui.",
+        "icon_color": [
+            0.95,
+            0.45,
+            0.3
+        ],
+        "max_level": 50,
+        "params": {
+            "radius": 50
+        },
+        "effects": [
+            {
+                "stat": "kill_explosion",
+                "modifier_type": "additive",
+                "base": 0.2,
+                "per_level": 0.016
+            }
+        ],
+        "milestones": [
+            {
+                "level": 25,
+                "effect": "double_explosion",
+                "text": "L'explosion se produit deux fois",
+                "params": {
+                    "delay_seconds": 0.25
+                }
+            }
+        ]
+    },
+    {
+        "id": "de_a_coudre",
+        "name": "Dé à coudre",
+        "description": "Chaque ennemi que tu tues avec une arme te rend un peu de vie.",
+        "icon_color": [
+            0.8,
+            0.8,
+            0.75
+        ],
+        "max_level": 50,
+        "survival": true,
+        "effects": [
+            {
+                "stat": "kill_heal",
+                "modifier_type": "additive",
+                "base": 0.1,
+                "per_level": 0.02
+            }
+        ],
+        "milestones": [
+            {
+                "level": 25,
+                "effect": "elite_kill_heal",
+                "text": "Une élite tuée rend 5 % des PV max",
+                "params": {
+                    "max_hp_ratio": 0.05
+                }
+            }
+        ]
+    },
+    {
+        "id": "semelle_usee",
+        "name": "Semelle usée",
+        "description": "Après 2 s de marche sans t'arrêter, ta prochaine attaque frappe plus fort.",
+        "icon_color": [
+            0.6,
+            0.45,
+            0.3
+        ],
+        "max_level": 50,
+        "params": {
+            "move_seconds": 2
+        },
+        "effects": [
+            {
+                "stat": "stride_damage",
+                "modifier_type": "additive",
+                "base": 0.15,
+                "per_level": 0.01
+            }
+        ],
+        "milestones": [
+            {
+                "level": 25,
+                "effect": "double_stride",
+                "text": "Vaut pour les deux prochaines attaques",
+                "params": {
+                    "charges": 2
+                }
+            }
+        ]
+    },
+    {
+        "id": "boite_de_pansements",
+        "name": "Boîte de pansements",
+        "description": "Chaque niveau gagné te soigne.",
+        "icon_color": [
+            0.95,
+            0.9,
+            0.85
+        ],
+        "max_level": 50,
+        "survival": true,
+        "effects": [
+            {
+                "stat": "level_heal",
+                "modifier_type": "additive",
+                "base": 0.01,
+                "per_level": 0.0006
+            }
+        ],
+        "milestones": [
+            {
+                "level": 25,
+                "effect": "cascade_invulnerability",
+                "text": "Une cascade de 3 niveaux ou plus donne 1 s d'invulnérabilité",
+                "params": {
+                    "levels": 3,
+                    "seconds": 1
+                }
+            }
+        ]
+    },
+    {
         "_comment": "Retiré des offres : un +dégâts universel vaut autant pour tous les builds (plan 21 §4).",
         "id": "flamme_interieure",
         "name": "Flamme Intérieure",

@@ -149,6 +149,9 @@ public partial class Player
 
     internal PlayerAttackFx AttackFx => _attackFx;
 
+    /// <summary>Invulnérabilité brève accordée par un objet (Boîte de pansements, palier 25).</summary>
+    internal void GrantInvulnerability(float seconds) => _defense.GrantInvulnerability(seconds);
+
     private static bool HasTriggerEffect(PassiveSouvenirData data)
     {
         foreach (PassiveEffectData effect in data.Effects)

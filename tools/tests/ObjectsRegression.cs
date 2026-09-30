@@ -44,6 +44,8 @@ public partial class ObjectsRegression : Node2D
             CheckTargetBonuses();
             CheckKillTransmissions();
             CheckFragility();
+            CheckKillRewards();
+            CheckStrideAndLevels();
             GD.Print($"[ObjectsRegression] RESULT failures={_failures}");
             GetTree().Quit(_failures == 0 ? 0 : 1);
         }
@@ -64,7 +66,7 @@ public partial class ObjectsRegression : Node2D
             wellFormed &= data.MaxLevel == 50 && data.Effects.Count > 0 && !string.IsNullOrEmpty(data.Name);
             anySurvival |= data.Survival;
         }
-        Check(offered.Count == 18 && wellFormed && anySurvival, $"Catalogue : {offered.Count} objets proposés, niveau max 50, au moins un de survie");
+        Check(offered.Count == 22 && wellFormed && anySurvival, $"Catalogue : {offered.Count} objets proposés, niveau max 50, au moins un de survie");
         bool retired = true;
         foreach (string id in new[] { "flamme_interieure", "reflet_brise", "fragment_deternite" })
             retired &= PassiveSouvenirDataLoader.Get(id) != null && !offered.Exists(data => data.Id == id);
@@ -159,7 +161,7 @@ public partial class ObjectsRegression : Node2D
         List<FragmentOption> pool = (List<FragmentOption>)typeof(FragmentManager).GetMethod("BuildFragmentPool", Private).Invoke(fragments, null);
         int fresh = pool.FindAll(option => option.Type == "passive_new").Count;
         bool noRetired = !pool.Exists(option => option.Id is "flamme_interieure" or "reflet_brise");
-        Check(fresh == 18 && noRetired, $"Offre de niveau : {fresh} objets neufs possibles, aucun objet retiré");
+        Check(fresh == 22 && noRetired, $"Offre de niveau : {fresh} objets neufs possibles, aucun objet retiré");
 
         foreach (string id in new[] { "memoire_vive", "resonance", "portee_etendue", "oeil_critique", "ancrage", "regeneration" })
             _player.AddOrUpgradePassive(id);
@@ -431,7 +433,7 @@ public partial class ObjectsRegression : Node2D
         foreach (PassiveSouvenirData data in PassiveSouvenirDataLoader.GetAll())
             foreach (ObjectMilestoneData milestone in data.Milestones)
                 allCoded &= ObjectMilestoneEffects.IsImplemented(milestone.Effect);
-        Check(allCoded, "Les paliers des 18 objets proposés sont tous codés");
+        Check(allCoded, "Les paliers des 22 objets proposés sont tous codés");
     }
 
     private static readonly FieldInfo IgniteTimer = typeof(Enemy).GetField("_igniteTimer", Private);
@@ -578,6 +580,92 @@ public partial class ObjectsRegression : Node2D
             "Fragilité : +20 % de dégâts subis, la plus forte intensité garde la main, puis expire");
         control.QueueFree();
         fragile.QueueFree();
+    }
+
+    private void CheckKillRewards()
+    {
+        Setup();
+        Enemy victim = SpawnEnemy();
+        victim.Position = new Vector2(5000f, 5000f);
+        Enemy neighbour = SpawnEnemy();
+        neighbour.Position = victim.Position + new Vector2(30f, 0f);
+        Enemy elite = SpawnEnemy();
+        elite.Position = new Vector2(-5000f, 5000f);
+        elite.ApplyVariant(EnemyVariantDataLoader.GetVariant("elite"), System.Array.Empty<EnemyAffixData>());
+        typeof(GroupCache).GetField("_enemiesFrame", Private).SetValue(GetNode<GroupCache>("/root/GroupCache"), ulong.MaxValue);
+        Raise("petard_mouille", 25);
+        Raise("de_a_coudre", 25);
+        _player.DisableDefenseForTests();
+        _player.TakeDamage(40f);
+        _player.AddWeapon(WeaponDataLoader.Get("heavy_hammer"));
+        WeaponInstance hammer = _player.WeaponSlots[1];
+
+        // Le voisin encaisse les deux explosions sans mourir.
+        typeof(Enemy).GetField("_currentHp", Private).SetValue(neighbour, 1e7f);
+        float neighbourHp = Hp(neighbour);
+        float playerHp = _player.CurrentHp;
+        DamageResult fatal = victim.TakeDamage(100000f, source: _player.BeginAttack(hammer, 100000f));
+        float firstBlast = neighbourHp - Hp(neighbour);
+        float healed = _player.CurrentHp - playerHp;
+        typeof(ObjectTriggers).GetMethod("_Process").Invoke(_player.ObjectTriggers, new object[] { 0.3 });
+        float secondBlast = neighbourHp - Hp(neighbour) - firstBlast;
+        Check(firstBlast > 0f && Mathf.Abs(firstBlast - secondBlast) < 1f && Mathf.Abs(firstBlast - fatal.NativeDamage * 0.6f) < 1f,
+            $"Pétard mouillé : la victime explose ({firstBlast:0} PV au voisin, 60 % du coup fatal au niveau 25), deux fois au palier 25");
+        Check(Near(healed, 0.6f), $"Dé à coudre niveau 25 : une élimination rend 0,6 PV ({healed:0.00})");
+
+        playerHp = _player.CurrentHp;
+        elite.TakeDamage(100000f, source: _player.BeginAttack(hammer, 100000f));
+        Check(Near(_player.CurrentHp - playerHp, 0.6f + _player.EffectiveMaxHp * 0.05f), "Dé à coudre palier 25 : une élite tuée rend en plus 5 % des PV max");
+
+        playerHp = _player.CurrentHp;
+        Enemy byEffect = SpawnEnemy();
+        byEffect.TakeDamage(100000f, source: _player.BeginAttack(hammer, 1f, DamageKind.Passive));
+        Check(Near(_player.CurrentHp, playerHp), "Une élimination par un effet déclenché ne déclenche rien");
+        foreach (Enemy enemy in new[] { victim, neighbour, elite, byEffect })
+            enemy.QueueFree();
+    }
+
+    private void CheckStrideAndLevels()
+    {
+        Setup();
+        Raise("semelle_usee", 1);
+        ObjectTriggers triggers = _player.ObjectTriggers;
+        MethodInfo process = typeof(ObjectTriggers).GetMethod("_Process");
+        _player.Velocity = new Vector2(150f, 0f);
+        process.Invoke(triggers, new object[] { 1.0 });
+        bool notYet = triggers.StrideCharges == 0;
+        process.Invoke(triggers, new object[] { 1.1 });
+        process.Invoke(triggers, new object[] { 3.0 });
+        float charged = triggers.ConsumeStride();
+        float spent = triggers.ConsumeStride();
+        process.Invoke(triggers, new object[] { 0.5 });
+        bool noRefill = triggers.StrideCharges == 0;
+        Check(notYet && Near(charged, 1.16f) && Near(spent, 1f) && noRefill,
+            "Semelle usée niveau 1 : après 2 s de marche, la prochaine attaque fait +16 %, une seule fois ; la marche repart de zéro");
+        _player.Velocity = Vector2.Zero;
+        process.Invoke(triggers, new object[] { 1.5 });
+        _player.Velocity = new Vector2(150f, 0f);
+        process.Invoke(triggers, new object[] { 1.5 });
+        bool reset = triggers.StrideCharges == 0;
+        _player.AddOrUpgradePassive("semelle_usee", 24);
+        process.Invoke(triggers, new object[] { 2.1 });
+        Check(reset && triggers.StrideCharges == 2, "Semelle usée : un arrêt remet la marche à zéro ; au palier 25, deux attaques chargées");
+        _player.Velocity = Vector2.Zero;
+
+        Setup();
+        _player.DisableDefenseForTests();
+        Raise("boite_de_pansements", 25);
+        _player.TakeDamage(50f);
+        float hp = _player.CurrentHp;
+        MethodInfo levelUp = typeof(ObjectTriggers).GetMethod("OnLevelUp", Private);
+        levelUp.Invoke(_player.ObjectTriggers, new object[] { 30 });
+        float heal = _player.CurrentHp - hp;
+        PlayerDefense defense = (PlayerDefense)typeof(Player).GetField("_defense", Private).GetValue(_player);
+        bool notYetInvulnerable = !defense.IsInvulnerable;
+        levelUp.Invoke(_player.ObjectTriggers, new object[] { 31 });
+        levelUp.Invoke(_player.ObjectTriggers, new object[] { 32 });
+        Check(Near(heal, _player.EffectiveMaxHp * 0.025f) && notYetInvulnerable && defense.IsInvulnerable,
+            "Boîte de pansements niveau 25 : un niveau soigne 2,5 % des PV max ; trois niveaux d'un coup rendent invulnérable");
     }
 
     private static float Hp(Enemy enemy) => (float)typeof(Enemy).GetField("_currentHp", Private).GetValue(enemy);
