@@ -316,4 +316,6 @@ Conteneur cloud sans Godot ni .NET au départ : SDK .NET 10.0.401 installé par 
 - Autres bancs à `RESULT failures=0` : objets, effets, acquisition, contrats, capacités ennemies, déplacements, petits lieux.
 - Capture `--capture-weapons --integer-gains 3` sur l'Arc, le Lance-billes, le Trousseau et la Boîte à musique, regardée : chaîne de cinq sauts, quatre notes en orbite, salves plus fournies.
 
+- Relecture `godot-reviewer` : aucun bug. Remarque gardée telle quelle : la carte et la pause affichent « Orbes 3,5 » alors que 3 orbes tournent ; la décimale montre ce qui manque avant la suivante.
+
 **Reste :** la puissance d'ensemble se mesure en R5.
