@@ -471,3 +471,25 @@ Raphaël : « le level up est pas assez fun/attrayant car les valeurs de level u
 - Demandé : l'inventaire des objets et des armes, la liste des stats du joueur ([21-inventaire.md](21-inventaire.md)).
 
 **Non acquis :** la nouvelle échelle des objets (nombre de niveaux, valeur d'un niveau), la forme des cartes, le nouveau butin des coffres. Propositions de l'agent à valider.
+
+
+## 37. Projectiles en plus au lieu des copies, plus de bouclier de départ, gros gains, objets à 30 niveaux, cartes validées — 30 septembre 2026
+
+Raphaël : « copie d'attaque j'aime pas remet juste projectile supplémentaire. ah et aussi retire le bouclier par défaut sur tous les personnages. et réduit la durée d'invicibilité stp. Ah et pour les gains trop petit c'est pas grave que le total au niveau 50 te paraisse déraisonnable. le jeu et la difficulté / puissance des ennemis devra augmenter en conséqunence. Ah et pour les entiers en gros un truc : c'est bien d'avoir des décimaux mais 1 n'est pas le max. par exemple pour les projectiles ca peut aller de 0.5 (par exemple pas valeur finale) à 3 environ (augment légendaire). Je valide ta proposition des cartes. Pour les niveaux des objets non pas 10 niveaux je veux plus. ok si tu veux pas 50 on essaie 30 d'abord. Encore une fois c'est ok si les stats atteingnent des valeurs qui te paraissent énorme. Et ducoup si je comprends il manque aussi des objets et autres à créer donc il va falloir le faire. et la map fait encore vide c'était un autre plan mais il est lié à celui ci. Bref consigne mes retours et prépare moi un plan je vais faire tourner un agent en cloud. »
+
+**Acquis :**
+- **Copies d'attaque supprimées :** l'objet donne des projectiles supplémentaires, à pleins dégâts.
+- **Bouclier de départ retiré** sur les trois personnages. Le bouclier ne vient plus que des objets (Écusson de pompier).
+- **Invulnérabilité après un coup réduite.** Elle vaut 0,5 s aujourd'hui ; valeur de départ proposée 0,25 s.
+- **Gains francs :** les totaux peuvent devenir très grands (façon Megabonk). La difficulté et la puissance des ennemis montent en conséquence.
+- **Stats entières fractionnaires :** projectiles, perforation, sauts, orbes montent par fractions. Exemple : de +0,5 projectile (commune) à environ +3 (légendaire). 1 n'est pas le maximum d'une amélioration.
+- **Cartes de niveau :** proposition validée. Forme Megabonk (rareté, nom, niveau, une ligne de gain en valeur, deux au plus), sans propriété, sans « Pour : », sans texte de palier ; inventaire et stats affichés à côté pendant le choix.
+- **Objets à 30 niveaux** pour commencer (ni 10 ni 50), chaque niveau étant un gain franc.
+- **Contenu manquant à créer :** objets restants, et une carte qui fait encore vide (plan 22, lié au plan 21).
+- **Plan pour un agent en cloud** demandé : [23-plan-agent.md](23-plan-agent.md).
+
+**Non acquis :**
+- la nouvelle forme des coffres (proposition §36 : un choix d'une amélioration parmi trois, de rareté garantie) ;
+- la valeur exacte de l'invulnérabilité ;
+- les chiffres des objets à 30 niveaux, qui sont des valeurs de départ ;
+- l'Atelier et les voies d'ascension des 20 autres armes, toujours en attente.

@@ -8,6 +8,7 @@ Le [registre](DECISIONS.md) garde les mots de Raphaël. Les plans gardent le dé
 
 | Chantier | Plan | Prochaine action |
 |---|---|---|
+| **Gains qui se sentent** (objets à 30 niveaux, projectiles fractionnaires, cartes à la Megabonk, défense, difficulté, objets manquants, carte moins vide) | [23, plan d'exécution](23-plan-agent.md) | Décidé le 30 septembre ([DECISIONS §36–37](DECISIONS.md)). Agent en cloud : R0 à R7 dans l'ordre ; R8 (coffres) attend la confirmation de Raphaël |
 | Système de jeu | [21, référence unique](21-systeme-de-jeu.md) | G1, G2a et G2a-2 livrés (14 objets de propriété avec leurs paliers). G2b livré : anciens Dons retirés, Fragilité, coefficient, 8 objets de déclencheur (22 objets proposés). G0 et G3 étape 1 livrés (ascensions de 4 armes). Agent : G2c, puis C1 ; G3 étape 2 attend la validation des voies |
 | Carte à explorer | [22](22-carte-a-explorer.md) | C0 et C1 livrés : un lieu en vue toutes les 24 s (41 s avant), trois petits lieux ; aucune Essence dépensée. Agent : C2 (Atelier), après confirmation de Raphaël (§11) |
 
@@ -18,6 +19,8 @@ Le [registre](DECISIONS.md) garde les mots de Raphaël. Les plans gardent le dé
 | Carte à explorer | 22 §11 | Atelier et Trempe, service « niveau d'arme » déplacé du Mémorial, Repères et Atlas : pas encore confirmés un par un |
 | Catalogue d'objets | 21 §4 | 33 objets écrits avec effet par niveau et palier 25 : à relire, chiffres à régler en jeu. 22 sont en jeu |
 | Ascensions des 20 autres armes | 21-historique §28 | Deux voies par arme proposées (une « plus large », une « plus concentrée ») : à valider avant codage |
+| Coffres | 23 R8, DECISIONS §36 | Un choix d'une amélioration parmi trois, de rareté garantie, au lieu d'Essence et d'armes : à confirmer |
+| Invulnérabilité après un coup | 23 R1 | 0,25 s proposé au lieu de 0,5 s : à confirmer en jeu |
 | Icônes des ex-perks | 05 §15 | Direction « fragments teintés » jugée meilleure ; motifs à valider avant branchement |
 | Recette de la mort et du bilan | 02 | Durée de la séquence, densité de la page, échelle des distances |
 | Déplacements | 01 | Inertie, invulnérabilité du dash, recette manette |

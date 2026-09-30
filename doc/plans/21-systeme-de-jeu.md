@@ -2,6 +2,15 @@
 
 30 septembre 2026 · **Ce document fait foi.** Il fixe comment un build se construit dans Vestiges : armes, objets, Réminiscences, personnages, niveaux, hasard. Demande de Raphaël ([DECISIONS §35](DECISIONS.md)) : une seule version, détaillée, gardée à un seul endroit, puis appliquée.
 
+> **Mise à jour du 30 septembre au soir ([DECISIONS §36 et §37](DECISIONS.md)) :**
+> - objets à 30 niveaux et gains francs, dont la rareté renforce le gain ;
+> - stats entières fractionnaires ;
+> - projectiles en plus au lieu des copies ;
+> - plus de bouclier de départ, invulnérabilité réduite ;
+> - cartes de niveau à la Megabonk.
+>
+> Les sections ci-dessous sont à jour de ces décisions. Leur application est planifiée dans [23-plan-agent.md](23-plan-agent.md).
+
 **Règles de tenue du document :**
 - Toute décision qui touche au build se reporte ici avant d'être codée. Aucun autre plan ne redéfinit ce qui est écrit ici.
 - La **structure** est fixée. Les **chiffres** sont des valeurs de départ, à régler par mesure ; ils se changent ici et dans `data/`.
@@ -35,10 +44,11 @@ Il n'existe pas d'autre famille : ni traits, ni passifs, ni Dons de coffre.
 | Nouvelle arme | Un emplacement d'arme est libre | Ajoute l'arme au niveau 1 |
 | Amélioration d'arme | L'arme n'est pas au niveau 50 | +1 niveau, des stats tirées au hasard (§3) |
 | Nouvel objet | Un emplacement d'objet est libre | Ajoute l'objet au niveau 1 |
-| Amélioration d'objet | L'objet n'est pas au niveau 50 | +1 à +5 niveaux selon la rareté (§4) |
+| Amélioration d'objet | L'objet n'est pas au niveau 30 | +1 niveau, dont le gain dépend de la rareté (§4) |
 
 - **Composition :** si c'est possible, au moins une nouveauté et au moins une amélioration. Tant que le joueur n'a aucun objet de survie, une des trois cartes en propose un.
 - **Rareté d'une amélioration :** commune, inhabituelle, rare, épique, légendaire, de poids 60 / 25 / 11 / 3,5 / 0,5. La **Chance**, l'**oubli de la zone** où se tient le joueur et le **Péril** ajoutent des crans de montée.
+- **Gains francs :** une carte commune doit se sentir en jeu. Les totaux peuvent devenir très grands, façon Megabonk. La difficulté et la puissance des ennemis montent en conséquence (DECISIONS §37).
 - **Relancer :** 3 par run.
 - **Bannir, c'est oublier :** 3 gratuits par run, puis le n-ième payant coûte n tiers de point de Péril. Une carte bannie ne revient plus de la run.
 - **Passer :** toujours possible.
@@ -49,16 +59,18 @@ Il n'existe pas d'autre famille : ni traits, ni passifs, ni Dons de coffre.
 - **24 armes**, toutes de même rang : il n'y a pas d'arme « rare ». La rareté porte sur les améliorations.
 - **Niveau 1 à 50.** Chaque amélioration tire au hasard une ou plusieurs stats parmi celles que l'arme peut monter, pondérées par arme :
 
-| Rareté | Stats touchées | Ampleur par stat | Palier (stat entière : projectile, perforation, saut, orbe) |
+| Rareté | Stats touchées | Ampleur par stat | Stat entière (projectile, perforation, saut, orbe) |
 |---|---|---|---|
-| Commune | 1 | × 1 | — |
-| Inhabituelle | 1 | × 1,5 | — |
-| Rare | 2 | × 1,25 | — |
-| Épique | 1 | × 1,75 | +1, sinon 2 stats |
-| Légendaire | 3 | × 2 | +1, sinon 3 stats |
+| Commune | 1 | × 1 | +0,5 |
+| Inhabituelle | 1 | × 1,5 | +0,75 |
+| Rare | 2 | × 1,25 | +1 |
+| Épique | 1 | × 1,75 | +2 |
+| Légendaire | 3 | × 2 | +3 |
 
-- **Pas par stat**, à l'ampleur × 1 : dégâts +12 %, cadence +8 %, portée +6 %, taille d'arc ou de cône +8 %, recul +15 %, vitesse de projectile ou d'orbite +10 %.
-- **La carte nomme la propriété touchée** (§7) et montre la valeur avant → après.
+- **Stats entières fractionnaires :** une stat entière peut être tirée dès la rareté commune, et monte par fractions. La partie entière s'applique toujours ; la partie décimale est la chance, à chaque attaque, d'en avoir une de plus. Exemple : 2,5 projectiles, c'est 2 projectiles et une chance sur deux d'en tirer un troisième.
+
+- **Pas par stat**, à l'ampleur × 1 (valeurs de départ, relevées de moitié pour des gains francs) : dégâts +18 %, cadence +12 %, portée +9 %, taille d'arc ou de cône +12 %, recul +20 %, vitesse de projectile ou d'orbite +15 %.
+- **La carte montre la valeur avant → après** (§11).
 - **Ascension au niveau 50 :** la carte suivante de cette arme propose **deux voies**, au choix et pour de bon. Une voie transforme l'arme et ouvre un changement de régime. Exemples :
 
 | Arme | Voie A | Voie B |
@@ -72,7 +84,8 @@ Les deux voies de chacune des 24 armes s'écrivent au lot G3. Les quatre exemple
 
 ## 4. Objets
 
-- **6 emplacements.** Un objet ne se cumule pas en exemplaires : il **monte de niveau**, de 1 à 50.
+- **6 emplacements.** Un objet ne se cumule pas en exemplaires : il **monte de niveau**, de 1 à **30**.
+- **Un niveau = un gain franc.** Chaque carte donne un niveau. Son gain est le pas de l'objet multiplié par la rareté : commune × 1, inhabituelle × 1,5, rare × 2, épique × 2,5, légendaire × 3. La valeur d'un objet est la somme des gains de ses cartes.
 - **Deux sortes**, dans les mêmes emplacements :
   - objets de **propriété** : montent une propriété commune (§7) ;
   - objets de **déclencheur** : font quelque chose à un moment précis (impact, élimination, critique, blessure, dash, niveau gagné, zone oubliée).
@@ -80,40 +93,45 @@ Les deux voies de chacune des 24 armes s'écrivent au lot G3. Les quatre exemple
   - par une carte « nouvel objet » au niveau, tant qu'un emplacement est libre ;
   - par un **Reliquaire** (plan 22) : trois alcôves, une prise, les deux autres s'effacent. Certains objets ne se trouvent que là (« monde »).
 - **Monter un objet :**
-  - par une carte d'amélioration au niveau : commune +1 niveau, inhabituelle +2, rare +3, épique +4, légendaire +5 ;
+  - par une carte d'amélioration au niveau : un niveau, gain selon la rareté ;
   - par le monde : Reliquaire une fois les 6 emplacements pris, coffres.
-- **Palier au niveau 25 :** chaque objet y gagne un effet propre. C'est là qu'un objet change la manière de jouer.
+- **Palier au niveau 15 :** chaque objet y gagne un effet propre. C'est là qu'un objet change la manière de jouer. Les effets de palier écrits ci-dessous, auparavant au niveau 25, passent au niveau 15.
 - **Remplacer :** un Reliquaire peut proposer de remplacer un objet. Le nouveau démarre à la moitié du niveau de l'ancien.
 - **Accès :** D = disponible dès le départ ; Q = débloqué par une quête ; V = acheté en Vestiges ; M = monde seulement (Reliquaire).
 
-### Objets de propriété (14)
+### Objets de propriété (15)
 
-`n` = niveau de l'objet.
+Pas = gain d'une carte commune. Au niveau 30 en cartes communes seules, l'objet vaut 30 pas. Valeurs de départ, à régler par mesure.
 
-| Objet | ID | Effet au niveau n | Palier 25 | Accès |
+| Objet | ID | Pas (carte commune) | Palier 15 | Accès |
 |---|---|---|---|---|
-| Ressort de sommier | `memoire_vive` | Fréquence +1,2 % × n | Chaque 10ᵉ attaque d'une arme part deux fois | D |
-| Papier carbone | `souffle_du_neant` | +1 copie d'attaque, qui inflige 30 % + 1,4 % × n des dégâts | +1 copie de plus (et une autre au niveau 50) | Q |
-| Rondelle de cuivre | `resonance` | Taille +1,2 % × n | Les zones frappent une seconde fois, à 30 % | D |
-| Mètre pliant | `portee_etendue` | Portée +1 % × n | Un projectile en bout de course éclate en petite zone | D |
-| Pince à linge | `persistance` | Durée +1,5 % × n (statuts, zones au sol ; orbites quand elles auront une durée) | Un statut qui expire a 25 % de chance de se renouveler | D |
-| Lunettes de lecture | `oeil_critique` | Chance de critique +0,6 % × n, dégâts critiques +1 % × n | Un critique sur une cible à PV pleins compte double | Q |
-| Bouton de manteau | `ancrage` | PV max +4 × n | Les coups inférieurs à 3 % des PV max sont ignorés | D |
-| Bobine de fil | `regeneration` | +0,06 PV/s × n | La régénération double pendant 3 s après une blessure | D |
-| Genouillère | `peau_dure` | Armure +0,8 × n | L'armure compte double pendant le dash et 1 s après | V |
-| Écusson de pompier | `carapace` | Bouclier max +1,5 × n | Quand le bouclier casse, une onde repousse les ennemis proches | V |
-| Lacet rouge | `instinct` | Vitesse +0,6 % × n, recharge du dash +1 % × n | Le dash va 30 % plus loin | D |
-| Aimant de frigo | `siphon_essence` | Rayon d'attraction de l'XP +3 % × n | Chaque orbe ramassée rend 0,2 PV | D |
-| Photo de classe | `photo_de_classe` | XP +1 % × n | Chaque niveau gagné donne 3 Essence | D |
-| Jeton de fête foraine | `jeton_de_fete` | Chance +0,01 × n | +1 relance tous les 15 niveaux du joueur | D |
+| Ressort de sommier | `memoire_vive` | Fréquence +8 % | Chaque 10ᵉ attaque d'une arme part deux fois | D |
+| Papier carbone | `souffle_du_neant` | **+0,5 projectile** à toutes les armes à projectiles ou à frappes, à pleins dégâts | Les projectiles en plus visent chacun une cible différente | Q |
+| Reflet brisé | `reflet_brise` | +0,5 perforation aux tirs | Un projectile qui perfore gagne +10 % de dégâts par ennemi traversé | Q |
+| Rondelle de cuivre | `resonance` | Taille +8 % | Les zones frappent une seconde fois, à 30 % | D |
+| Mètre pliant | `portee_etendue` | Portée +6 % | Un projectile en bout de course éclate en petite zone | D |
+| Pince à linge | `persistance` | Durée +8 % (statuts, zones au sol) | Un statut qui expire a 25 % de chance de se renouveler | D |
+| Lunettes de lecture | `oeil_critique` | Critique +2 %, dégâts critiques +10 % | Un critique sur une cible à PV pleins compte double | Q |
+| Bouton de manteau | `ancrage` | PV max +15 | Les coups inférieurs à 3 % des PV max sont ignorés | D |
+| Bobine de fil | `regeneration` | +0,4 PV/s | La régénération double pendant 3 s après une blessure | D |
+| Genouillère | `peau_dure` | Armure +2 | L'armure compte double pendant le dash et 1 s après | V |
+| Écusson de pompier | `carapace` | Bouclier +5 | Quand le bouclier casse, une onde repousse les ennemis proches | V |
+| Lacet rouge | `instinct` | Vitesse +3 %, recharge du dash +5 % | Le dash va 30 % plus loin | D |
+| Aimant de frigo | `siphon_essence` | Aimant +15 % | Chaque orbe ramassée rend 0,2 PV | D |
+| Photo de classe | `photo_de_classe` | XP +5 % | Chaque niveau gagné donne 3 Essence | D |
+| Jeton de fête foraine | `jeton_de_fete` | Chance +3 % | +1 relance tous les 15 niveaux du joueur | D |
 
-Un palier se décrit en données avec l'objet (`milestones` : niveau, effet, texte, paramètres). Il n'est annoncé sur une carte ou dans la pause que si son effet est codé. Les copies du Papier carbone sont des crans de la formule de l'effet (`step`, `step_levels`).
+Les **copies d'attaque** (projectiles à dégâts réduits) sont supprimées (DECISIONS §37). Les projectiles en plus du Papier carbone sont pleins. Ils suivent la règle des stats fractionnaires (§3) ; une arme de mêlée les reçoit en frappes.
+
+Un palier se décrit en données avec l'objet (`milestones` : niveau, effet, texte, paramètres). Il n'est annoncé que si son effet est codé.
 
 Il n'existe **pas** d'objet « +dégâts » universel : les dégâts viennent des niveaux d'armes.
 
 Les ID des anciens passifs sont conservés pour ceux qui migrent. `flamme_interieure` et `reflet_brise` ne sont plus proposés (désactivés, ID gardés).
 
 ### Objets de déclencheur (19)
+
+Les valeurs ci-dessous sont écrites pour 50 niveaux. Au passage à 30 niveaux, le pas de chacun est recalculé : au niveau 30, l'objet vaut au moins ce qu'il valait au niveau 50, et une carte commune se sent. Le palier passe au niveau 15.
 
 | Objet | Déclencheur | Effet au niveau n | Palier 25 | Accès |
 |---|---|---|---|---|
@@ -167,6 +185,8 @@ Deux objets d'exploration (Carte routière, Pied-de-biche) sont décrits au plan
 ## 6. Personnages
 
 Chaque personnage apporte une signature, une arme de départ, une mobilité (plan 06) et **deux affinités** : les cartes qui portent ces propriétés sont deux fois plus probables dans ses offres. L'affinité oriente, elle n'interdit rien.
+
+**Défense commune (DECISIONS §37) :** aucun personnage n'a de bouclier de départ ; le bouclier ne vient que des objets (Écusson de pompier). L'invulnérabilité après un coup passe de 0,5 s à 0,25 s (valeur de départ).
 
 | Personnage | Signature | Affinités |
 |---|---|---|
@@ -224,7 +244,11 @@ Quand une carte ne peut plus rien offrir (4 armes ascensionnées, 6 objets au ni
 
 ## 11. Lisibilité
 
-- **Carte de niveau :** la propriété touchée, la valeur avant → après, les armes concernées.
+- **Carte de niveau** (forme Megabonk, validée en DECISIONS §37) :
+  - rareté en petit ; nom ; niveau à droite (« Niv 3 → 4 », ou « NOUVEAU ») ;
+  - **une ligne de gain en valeur** (« Cadence 1,2 → 1,4 /s »), deux au plus ;
+  - ni propriété nommée, ni « Pour : … », ni texte de palier. Un palier que la carte fait atteindre se signale par un badge doré.
+- **Pendant le choix :** l'inventaire à gauche (armes, objets, Réminiscences, avec leurs niveaux) et les stats du joueur à droite.
 - **Pause :** armes, objets avec leur niveau et leur effet du moment, Réminiscences avec leur état.
 - **Combat :** chaque déclencheur d'objet et chaque Réminiscence a un retour visuel propre.
 - **Bilan :** dégâts par source (armes, objets, Réminiscences) et la chaîne la plus rentable de la run.
@@ -236,14 +260,17 @@ Quand une carte ne peut plus rien offrir (4 armes ascensionnées, 6 objets au ni
 | Armes : 4 emplacements, niveau 50, stats aléatoires à rareté | **En jeu** | — |
 | Relances limitées, bannissements gratuits puis Péril | **En jeu** | G1 |
 | Réminiscences après les Résurgences, 7 sur 14, libellées « Réminiscence » | **En jeu** | G1, G2a |
-| Objets : 6 emplacements, 50 niveaux par formule, effets multiples, rareté qui donne 1 à 5 niveaux | **En jeu** | G2a |
-| 14 objets de propriété, dont Papier carbone (copies à dégâts réduits) et Pince à linge (Durée) | **En jeu** | G2a, G2a-2 |
-| Paliers des 14 objets de propriété (niveau 25, et 50 pour Papier carbone) | **En jeu** | G2a-2 |
+| Objets : 6 emplacements, 50 niveaux par formule, effets multiples, rareté qui donne 1 à 5 niveaux | En jeu, **à refaire** : 30 niveaux, gain selon la rareté | Plan 23, R3 |
+| 14 objets de propriété, dont Papier carbone (copies à dégâts réduits) et Pince à linge (Durée) | En jeu, **à refaire** : pas francs, Papier carbone en projectiles pleins, Reflet brisé réactivé | Plan 23, R3 |
+| Paliers des 14 objets de propriété (niveau 25, et 50 pour Papier carbone) | En jeu, **à déplacer** au niveau 15 | Plan 23, R3 |
+| Stats entières fractionnaires, pas d'armes relevés | À faire | Plan 23, R4 |
+| Bouclier de départ retiré, invulnérabilité réduite | À faire | Plan 23, R1 |
+| Cartes de niveau à la Megabonk, inventaire et stats à côté | À faire | Plan 23, R2 |
 | Statut Fragilité, coefficient de déclenchement par arme ; Allumette humide, Glaçon, Thermomètre, Épingle à nourrice | **En jeu** | G2b, étape 2 |
 | Pétard mouillé, Dé à coudre, Semelle usée, Boîte de pansements | **En jeu** | G2b, étape 3 |
 | Onze autres objets de déclencheur | À faire | G2c |
 | Reliquaire, objets « monde », remplacement | À faire | Plan 22, C3 |
-| Propriétés nommées sur les cartes d'armes et d'objets, armes concernées par un objet | **En jeu** | G0 |
+| Propriétés nommées sur les cartes d'armes et d'objets, armes concernées par un objet | En jeu, **à retirer des cartes** (§11) ; la règle des armes concernées reste pour le panneau d'inventaire et les affinités | G0, plan 23 R2 |
 | Ascensions d'armes : mécanique et quatre armes (Arc, Faucille, Cloche, Boîte à musique) | **En jeu** | G3, étape 1 |
 | Ascensions des 20 autres armes | **Proposées, à valider par Raphaël** | G3, étape 2 |
 | Affinités des personnages, Souverain à 25 % | À faire | G4 |
