@@ -1,5 +1,5 @@
 {
-    "_comment": "Placement des coffres du monde (plan 17 lot 0A). band = distance au départ en fraction du rayon de carte (tirage uniforme en surface). Les groupes sont placés dans l'ordre : les plus rares d'abord. Comptes doublés avec la carte agrandie en hauteur (plan 23 R7, plan 22 C6) : même densité par surface. Distances et dégagements en pixels monde (une cellule = 64 px de large, un rang = 16 px de haut).",
+    "_comment": "Placement des coffres du monde (plan 17 lot 0A). band = distance au départ en fraction du rayon de carte (tirage uniforme en surface). Les groupes sont placés dans l'ordre : les plus rares d'abord. Comptes relevés avec la carte agrandie en hauteur (plan 23 R7, plan 22 C6) : coffres croisés par un nomade ramenés à leur rythme d'avant. Distances et dégagements en pixels monde (une cellule = 64 px de large, un rang = 16 px de haut).",
     "min_spacing_px": 720,
     "candidates_per_chest": 10,
     "attempts_per_chest": 80,
@@ -12,6 +12,6 @@
         { "chest": "chest_epic", "count": 4, "band": [0.45, 0.95] },
         { "chest": "chest_lore", "count": 6, "band": [0.25, 0.9] },
         { "chest": "chest_rare", "count": 12, "band": [0.2, 0.9] },
-        { "chest": "chest_common", "count": 22, "band": [0.12, 0.9] }
+        { "chest": "chest_common", "count": 16, "band": [0.12, 0.9] }
     ]
 }
