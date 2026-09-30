@@ -14,6 +14,12 @@ public sealed class PlayerMobility
     public bool UseInvulnerabilityTrial { get; set; }
     public MobilityState State { get; private set; }
     public float CooldownRemaining { get; private set; }
+
+    /// <summary>Vitesse de recharge du dash (1 = réglage de base) : le temps de recharge est divisé par ce facteur.</summary>
+    public float RechargeMultiplier { get; set; } = 1f;
+
+    /// <summary>Temps de recharge effectif d'un dash, recharge accélérée comprise : base des jauges.</summary>
+    public float CooldownSeconds => Config.CooldownSeconds / Mathf.Max(0.01f, RechargeMultiplier);
     public float BufferRemaining { get; private set; }
     public bool StartedThisStep { get; private set; }
     public bool IsDashStep { get; private set; }
@@ -75,7 +81,7 @@ public sealed class PlayerMobility
             _dashDirection = _lastDirection;
             _dashRemaining = Config.DurationSeconds;
             _dashElapsed = 0f;
-            CooldownRemaining = Config.CooldownSeconds;
+            CooldownRemaining = CooldownSeconds;
             ClearBuffer();
             StartedThisStep = true;
         }

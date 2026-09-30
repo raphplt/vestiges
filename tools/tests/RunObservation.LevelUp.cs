@@ -23,7 +23,7 @@ public partial class RunObservation
         await Frames(90);
 
         FragmentManager fragments = _world.GetNode<FragmentManager>("FragmentManager");
-        _player.AddOrUpgradePassive("flamme_interieure", 1f, 1);
+        _player.AddOrUpgradePassive("memoire_vive");
         _player.AddWeapon(WeaponDataLoader.Get("crossbow"));
         List<FragmentOption> pending = (List<FragmentOption>)typeof(FragmentManager)
             .GetField("_pendingChoices", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(fragments);
@@ -38,8 +38,8 @@ public partial class RunObservation
             pending.Clear();
             pending.Add(new FragmentOption(crossbow.Id, "weapon_upgrade", crossbow.Name, 1)
                 .WithWeaponUpgrade(rarity, UpgradeRoller.RollWeaponGains(crossbow, rarity, rng)));
-            pending.Add(new FragmentOption("flamme_interieure", "passive_upgrade", PassiveSouvenirDataLoader.Get("flamme_interieure").Name, 1)
-                .WithPassiveUpgrade(rarity, rarity.PassiveGain, 1));
+            pending.Add(new FragmentOption("memoire_vive", "passive_upgrade", PassiveSouvenirDataLoader.Get("memoire_vive").Name, 1)
+                .WithPassiveUpgrade(rarity, rarity.ObjectLevels));
             pending.Add(new FragmentOption("sling", "weapon_new", WeaponDataLoader.Get("sling").Name, 1));
             active.SetValue(fragments, true);
             eventBus.EmitSignal(EventBus.SignalName.FragmentChoicesReady, pending.Count);
@@ -63,8 +63,8 @@ public partial class RunObservation
         await Frames(90);
         foreach (string weapon in new[] { "crossbow", "music_box", "nail_mace" })
             _player.AddWeapon(WeaponDataLoader.Get(weapon));
-        foreach (string passive in new[] { "flamme_interieure", "memoire_vive", "resonance" })
-            _player.AddOrUpgradePassive(passive, 1f, 1);
+        foreach (string passive in new[] { "oeil_critique", "memoire_vive", "resonance" })
+            _player.AddOrUpgradePassive(passive);
         WeaponInstance equipped = _player.EquippedWeapon;
         _player.UpgradeWeapon(equipped.Id, UpgradeRoller.RollWeaponGains(equipped,
             UpgradeRoller.Get("rare"), new RandomNumberGenerator()));

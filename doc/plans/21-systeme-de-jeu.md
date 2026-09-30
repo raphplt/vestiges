@@ -233,8 +233,10 @@ Quand une carte ne peut plus rien offrir (4 armes ascensionnées, 6 objets au ni
 |---|---|---|
 | Armes : 4 emplacements, niveau 50, stats aléatoires à rareté | **En jeu** | — |
 | Relances limitées, bannissements gratuits puis Péril | **En jeu** | G1 |
-| Réminiscences après les Résurgences, 7 sur 14 | **En jeu** (libellé « Fragment » à renommer) | G1 |
-| Objets de propriété : 6 emplacements, 50 niveaux, 14 objets, palier 25 | À faire ; le moteur des passifs (4 emplacements, 5 niveaux) sert de base | **G2a, en cours** |
+| Réminiscences après les Résurgences, 7 sur 14, libellées « Réminiscence » | **En jeu** | G1, G2a |
+| Objets : 6 emplacements, 50 niveaux par formule, effets multiples, rareté qui donne 1 à 5 niveaux | **En jeu** | G2a |
+| 12 objets de propriété sur 14 (tous sauf Papier carbone et Pince à linge) | **En jeu**, sans leur palier 25 | G2a |
+| Paliers 25 des objets de propriété ; Papier carbone (copies à dégâts réduits) ; Pince à linge (Durée) | À faire | **G2a-2, suivant** |
 | Objets de déclencheur, statut Fragilité, coefficients | À faire | G2b |
 | Reliquaire, objets « monde », remplacement | À faire | Plan 22, C3 |
 | Propriétés nommées sur les cartes d'armes | À faire | G0 |
@@ -246,7 +248,7 @@ Quand une carte ne peut plus rien offrir (4 armes ascensionnées, 6 objets au ni
 
 ## 13. Ce que ce document remplace
 
-- [21-historique.md](21-historique.md) : raisonnement et compte rendu du lot G1.
+- [21-historique.md](21-historique.md) : raisonnement et comptes rendus des lots G1 et G2a.
 - [05-perks-specialisations.md](05-perks-specialisations.md) : reste la fiche technique détaillée des sept effets livrés (cas limites, contrats). Son calendrier d'acquisition et ses lots B3–B4 sont périmés.
 - [05-objets-catalogue-v1.md](05-objets-catalogue-v1.md), [05-catalogue-objets-perks.md](05-catalogue-objets-perks.md), [05-armes-objets-builds.md](05-armes-objets-builds.md) : périmés pour tout ce qui concerne les objets, les passifs et les perks.
 - Plan 17, vague 4 et plafond d'armes ; plan 20, mentions d'un plafond à 70 : périmés.

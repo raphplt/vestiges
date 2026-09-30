@@ -311,16 +311,16 @@ public partial class PauseMenu : CanvasLayer
 		AddSectionTitle(_loadoutContainer, "Armes");
 		foreach (WeaponInstance weapon in player.WeaponSlots)
 			AddWeaponRow(player, weapon);
-		AddSectionTitle(_loadoutContainer, "Passifs");
+		AddSectionTitle(_loadoutContainer, "Objets");
 		foreach (ActivePassiveSouvenir passive in player.PassiveSlots)
 			AddPassiveRow(passive);
 		if (player.PassiveSlots.Count == 0)
 			AddLine(_loadoutContainer, "Aucun pour l'instant.", "", TextVeryDim);
-		AddSectionTitle(_loadoutContainer, "Fragments");
+		AddSectionTitle(_loadoutContainer, "Réminiscences");
 		foreach (PerkSpecializationData perk in player.Specializations)
 			AddPerkRow(perk, player);
 		if (player.Specializations.Count == 0)
-			AddLine(_loadoutContainer, "Aucun pour l'instant.", "", TextVeryDim);
+			AddLine(_loadoutContainer, "Aucune pour l'instant.", "", TextVeryDim);
 
 		UpdateSheet(player);
 	}
@@ -377,8 +377,14 @@ public partial class PauseMenu : CanvasLayer
 		Label name = MakeLabel($"{passive.Data.Name}   Niv {passive.Level}/{passive.Data.MaxLevel}", TextRole.Body, StatValueColor);
 		name.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
 		row.AddChild(name);
-		row.AddChild(MakeLabel($"{StatCatalog.Name(passive.Data.Stat)} {StatCatalog.FormatBonus(passive.Data.Stat, passive.Modifier, passive.Data.ModifierType == "multiplicative")}",
-			TextRole.Small, StatBonusColor, HorizontalAlignment.Right));
+		string effects = "";
+		for (int i = 0; i < passive.Data.Effects.Count; i++)
+		{
+			PassiveEffectData effect = passive.Data.Effects[i];
+			string line = $"{StatCatalog.Name(effect.Stat)} {StatCatalog.FormatBonus(effect.Stat, passive.Value(i), effect.Multiplicative)}";
+			effects = effects.Length == 0 ? line : $"{effects}  ·  {line}";
+		}
+		row.AddChild(MakeLabel(effects, TextRole.Small, StatBonusColor, HorizontalAlignment.Right));
 		_loadoutContainer.AddChild(row);
 	}
 

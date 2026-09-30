@@ -1,147 +1,312 @@
 [
     {
-        "id": "flamme_interieure",
-        "name": "Flamme Intérieure",
-        "description": "+% dégâts par niveau",
-        "icon_color": [1.0, 0.5, 0.2],
-        "max_level": 5,
-        "stat": "damage",
-        "modifier_type": "multiplicative",
-        "per_level": [1.10, 1.12, 1.15, 1.18, 1.22]
-    },
-    {
+        "_comment": "Objets du joueur (plan 21 §4, référence unique) : 6 emplacements, niveau 1 à 50. Chaque effet vaut, au niveau n, 1 + per_level × n (multiplicative) ou per_level × n (additive). survival : objet de survie, garanti dans une offre tant que le joueur n'en a aucun. enabled false : identifiant gardé pour les sauvegardes, retiré des offres. Le nom du fichier et les identifiants viennent des anciens passifs.",
         "id": "memoire_vive",
-        "name": "Mémoire Vive",
-        "description": "+% vitesse d'attaque par niveau",
-        "icon_color": [0.9, 0.9, 0.3],
-        "max_level": 5,
-        "stat": "attack_speed",
-        "modifier_type": "multiplicative",
-        "per_level": [1.08, 1.10, 1.12, 1.15, 1.18]
-    },
-    {
-        "id": "ancrage",
-        "name": "Ancrage",
-        "description": "+HP max par niveau",
-        "icon_color": [0.3, 0.8, 0.4],
-        "max_level": 5,
-        "survival": true,
-        "stat": "max_hp",
-        "modifier_type": "additive",
-        "per_level": [15, 20, 25, 30, 40]
-    },
-    {
-        "id": "instinct",
-        "name": "Instinct",
-        "description": "+% vitesse de déplacement par niveau",
-        "icon_color": [0.3, 0.7, 1.0],
-        "max_level": 5,
-        "stat": "speed",
-        "modifier_type": "multiplicative",
-        "per_level": [1.06, 1.08, 1.10, 1.12, 1.15]
+        "name": "Ressort de sommier",
+        "description": "Tes armes attaquent plus vite.",
+        "icon_color": [
+            0.9,
+            0.9,
+            0.3
+        ],
+        "max_level": 50,
+        "effects": [
+            {
+                "stat": "attack_speed",
+                "modifier_type": "multiplicative",
+                "per_level": 0.012
+            }
+        ]
     },
     {
         "id": "resonance",
-        "name": "Résonance",
-        "description": "+% zone d'effet par niveau",
-        "icon_color": [0.7, 0.4, 1.0],
-        "max_level": 5,
-        "stat": "aoe_radius",
-        "modifier_type": "multiplicative",
-        "per_level": [1.10, 1.12, 1.15, 1.18, 1.22]
-    },
-    {
-        "id": "siphon_essence",
-        "name": "Siphon",
-        "description": "+% drop d'Essence par niveau",
-        "icon_color": [0.45, 0.85, 1.0],
-        "max_level": 5,
-        "stat": "xp_magnet_radius",
-        "modifier_type": "multiplicative",
-        "per_level": [1.12, 1.15, 1.18, 1.22, 1.28]
-    },
-    {
-        "id": "peau_dure",
-        "name": "Peau Dure",
-        "description": "+armure par niveau",
-        "icon_color": [0.6, 0.6, 0.7],
-        "max_level": 5,
-        "survival": true,
-        "stat": "armor",
-        "modifier_type": "additive",
-        "per_level": [2, 3, 4, 5, 7]
-    },
-    {
-        "id": "oeil_critique",
-        "name": "Œil Critique",
-        "description": "+% chance de critique par niveau",
-        "icon_color": [1.0, 0.3, 0.3],
-        "max_level": 5,
-        "stat": "crit_chance",
-        "modifier_type": "additive",
-        "per_level": [0.05, 0.06, 0.07, 0.08, 0.10]
-    },
-    {
-        "id": "regeneration",
-        "name": "Régénération",
-        "description": "+regen HP/s par niveau",
-        "icon_color": [0.4, 1.0, 0.5],
-        "max_level": 5,
-        "survival": true,
-        "stat": "regen_rate",
-        "modifier_type": "additive",
-        "per_level": [0.5, 0.7, 1.0, 1.3, 1.8]
+        "name": "Rondelle de cuivre",
+        "description": "Tes zones, arcs et ondes sont plus grands.",
+        "icon_color": [
+            0.6,
+            0.4,
+            1.0
+        ],
+        "max_level": 50,
+        "effects": [
+            {
+                "stat": "aoe_radius",
+                "modifier_type": "multiplicative",
+                "per_level": 0.012
+            }
+        ]
     },
     {
         "id": "portee_etendue",
-        "name": "Portée Étendue",
-        "description": "+% portée d'attaque par niveau",
-        "icon_color": [0.8, 0.7, 0.3],
-        "max_level": 5,
-        "stat": "attack_range",
-        "modifier_type": "multiplicative",
-        "per_level": [1.08, 1.10, 1.12, 1.15, 1.18]
+        "name": "Mètre pliant",
+        "description": "Tes armes portent plus loin.",
+        "icon_color": [
+            0.5,
+            0.8,
+            0.9
+        ],
+        "max_level": 50,
+        "effects": [
+            {
+                "stat": "attack_range",
+                "modifier_type": "multiplicative",
+                "per_level": 0.01
+            }
+        ]
     },
     {
-        "id": "souffle_du_neant",
-        "name": "Souffle du Néant",
-        "description": "+projectile par niveau",
-        "icon_color": [0.6, 0.3, 0.9],
-        "max_level": 5,
-        "stat": "projectile_count",
-        "modifier_type": "additive",
-        "per_level": [1, 1, 1, 1, 2]
+        "id": "oeil_critique",
+        "name": "Lunettes de lecture",
+        "description": "Tes coups critiques sont plus fréquents et plus forts.",
+        "icon_color": [
+            1.0,
+            0.3,
+            0.3
+        ],
+        "max_level": 50,
+        "effects": [
+            {
+                "stat": "crit_chance",
+                "modifier_type": "additive",
+                "per_level": 0.006
+            },
+            {
+                "stat": "crit_multiplier",
+                "modifier_type": "additive",
+                "per_level": 0.01
+            }
+        ]
     },
     {
-        "id": "fragment_deternite",
-        "enabled": false,
-        "name": "Fragment d'Éternité",
-        "description": "-% cooldown par niveau",
-        "icon_color": [0.9, 0.8, 0.2],
-        "max_level": 5,
-        "stat": "cooldown_reduction",
-        "modifier_type": "multiplicative",
-        "per_level": [0.95, 0.92, 0.88, 0.84, 0.80]
+        "id": "ancrage",
+        "name": "Bouton de manteau",
+        "description": "Tes PV maximum augmentent.",
+        "icon_color": [
+            0.3,
+            0.8,
+            0.4
+        ],
+        "max_level": 50,
+        "survival": true,
+        "effects": [
+            {
+                "stat": "max_hp",
+                "modifier_type": "additive",
+                "per_level": 4
+            }
+        ]
     },
     {
-        "id": "reflet_brise",
-        "name": "Reflet Brisé",
-        "description": "+perçage projectile par niveau",
-        "icon_color": [0.4, 0.9, 0.7],
-        "max_level": 5,
-        "stat": "projectile_pierce",
-        "modifier_type": "additive",
-        "per_level": [1, 1, 2, 2, 3]
+        "id": "regeneration",
+        "name": "Bobine de fil",
+        "description": "Tu récupères des PV en continu.",
+        "icon_color": [
+            0.4,
+            1.0,
+            0.5
+        ],
+        "max_level": 50,
+        "survival": true,
+        "effects": [
+            {
+                "stat": "regen_rate",
+                "modifier_type": "additive",
+                "per_level": 0.06
+            }
+        ]
+    },
+    {
+        "id": "peau_dure",
+        "name": "Genouillère",
+        "description": "Ton armure réduit les coups reçus.",
+        "icon_color": [
+            0.6,
+            0.5,
+            0.4
+        ],
+        "max_level": 50,
+        "survival": true,
+        "effects": [
+            {
+                "stat": "armor",
+                "modifier_type": "additive",
+                "per_level": 0.8
+            }
+        ]
     },
     {
         "id": "carapace",
-        "name": "Carapace",
-        "description": "+bouclier par niveau",
-        "icon_color": [0.72, 0.86, 1.0],
-        "max_level": 5,
+        "name": "Écusson de pompier",
+        "description": "Ton bouclier encaisse davantage.",
+        "icon_color": [
+            0.4,
+            0.6,
+            0.9
+        ],
+        "max_level": 50,
         "survival": true,
-        "stat": "shield",
-        "modifier_type": "additive",
-        "per_level": [8, 10, 12, 15, 20]
+        "effects": [
+            {
+                "stat": "shield",
+                "modifier_type": "additive",
+                "per_level": 1.5
+            }
+        ]
+    },
+    {
+        "id": "instinct",
+        "name": "Lacet rouge",
+        "description": "Tu te déplaces plus vite et ton dash se recharge plus vite.",
+        "icon_color": [
+            0.3,
+            0.7,
+            1.0
+        ],
+        "max_level": 50,
+        "effects": [
+            {
+                "stat": "speed",
+                "modifier_type": "multiplicative",
+                "per_level": 0.006
+            },
+            {
+                "stat": "dash_recharge",
+                "modifier_type": "multiplicative",
+                "per_level": 0.01
+            }
+        ]
+    },
+    {
+        "id": "siphon_essence",
+        "name": "Aimant de frigo",
+        "description": "Tu attires l'XP de plus loin.",
+        "icon_color": [
+            0.3,
+            0.9,
+            0.9
+        ],
+        "max_level": 50,
+        "effects": [
+            {
+                "stat": "xp_magnet_radius",
+                "modifier_type": "multiplicative",
+                "per_level": 0.03
+            }
+        ]
+    },
+    {
+        "id": "photo_de_classe",
+        "name": "Photo de classe",
+        "description": "Tu gagnes plus d'XP.",
+        "icon_color": [
+            0.95,
+            0.85,
+            0.6
+        ],
+        "max_level": 50,
+        "effects": [
+            {
+                "stat": "xp_gain",
+                "modifier_type": "multiplicative",
+                "per_level": 0.01
+            }
+        ]
+    },
+    {
+        "id": "jeton_de_fete",
+        "name": "Jeton de fête foraine",
+        "description": "Ta Chance monte : les améliorations rares sortent plus souvent.",
+        "icon_color": [
+            1.0,
+            0.75,
+            0.2
+        ],
+        "max_level": 50,
+        "effects": [
+            {
+                "stat": "luck",
+                "modifier_type": "additive",
+                "per_level": 0.01
+            }
+        ]
+    },
+    {
+        "_comment": "Papier carbone : copies d'attaque à dégâts réduits, prévu au lot G2a-2.",
+        "id": "souffle_du_neant",
+        "name": "Papier carbone",
+        "description": "Tes attaques partent en plus d'exemplaires.",
+        "icon_color": [
+            0.7,
+            0.3,
+            0.9
+        ],
+        "max_level": 50,
+        "enabled": false,
+        "effects": [
+            {
+                "stat": "projectile_count",
+                "modifier_type": "additive",
+                "per_level": 1
+            }
+        ]
+    },
+    {
+        "_comment": "Retiré des offres : un +dégâts universel vaut autant pour tous les builds (plan 21 §4).",
+        "id": "flamme_interieure",
+        "name": "Flamme Intérieure",
+        "description": "",
+        "icon_color": [
+            1.0,
+            0.5,
+            0.2
+        ],
+        "max_level": 50,
+        "enabled": false,
+        "effects": [
+            {
+                "stat": "damage",
+                "modifier_type": "multiplicative",
+                "per_level": 0.01
+            }
+        ]
+    },
+    {
+        "_comment": "Retiré des offres : la perforation reste aux armes (plan 21 §4).",
+        "id": "reflet_brise",
+        "name": "Reflet Brisé",
+        "description": "",
+        "icon_color": [
+            0.8,
+            0.8,
+            1.0
+        ],
+        "max_level": 50,
+        "enabled": false,
+        "effects": [
+            {
+                "stat": "projectile_pierce",
+                "modifier_type": "additive",
+                "per_level": 1
+            }
+        ]
+    },
+    {
+        "id": "fragment_deternite",
+        "name": "Fragment d'Éternité",
+        "description": "",
+        "icon_color": [
+            0.9,
+            0.7,
+            1.0
+        ],
+        "max_level": 50,
+        "enabled": false,
+        "effects": [
+            {
+                "stat": "cooldown_reduction",
+                "modifier_type": "multiplicative",
+                "per_level": 0
+            }
+        ]
     }
 ]

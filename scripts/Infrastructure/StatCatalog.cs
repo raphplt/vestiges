@@ -48,17 +48,25 @@ public static class StatCatalog
     public static string FormatBonus(string stat, float modifier, bool multiplicative)
     {
         if (multiplicative)
-            return Signed(Mathf.RoundToInt((modifier - 1f) * 100f)) + " %";
+            return SignedPercent((modifier - 1f) * 100f);
         (string _, StatDisplay display, string unit) = Entry(stat);
         return display switch
         {
             StatDisplay.Count => Signed(Mathf.RoundToInt(modifier)),
-            StatDisplay.Fraction => Signed(Mathf.RoundToInt(modifier * 100f)) + " %",
-            _ => (modifier >= 0f ? "+" : "") + modifier.ToString("0.0", French) + (string.IsNullOrEmpty(unit) ? "" : $" {unit}"),
+            StatDisplay.Fraction => SignedPercent(modifier * 100f),
+            _ => (modifier >= 0f ? "+" : "") + modifier.ToString("0.0#", French) + (string.IsNullOrEmpty(unit) ? "" : $" {unit}"),
         };
     }
 
     private static string Signed(int value) => (value >= 0 ? "+" : "") + value.ToString(French);
+
+    /// <summary>Pourcentage signé, avec une décimale seulement si elle compte : un niveau d'objet qui ajoute 0,6 % doit se voir.</summary>
+    private static string SignedPercent(float percent)
+    {
+        // Arrondi avant le signe : un multiplicateur de 0,9999999 ne doit pas afficher « -0 % ».
+        float rounded = Mathf.Round(percent * 10f) / 10f;
+        return (rounded >= 0f ? "+" : "") + rounded.ToString("0.#", French) + " %";
+    }
 
     /// <summary>Écart en pourcentage entier, signé : « +18 % ».</summary>
     public static string FormatGain(float before, float after)

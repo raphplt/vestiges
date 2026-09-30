@@ -8,7 +8,7 @@ Le [registre](DECISIONS.md) garde les mots de Raphaël. Les plans gardent le dé
 
 | Chantier | Plan | Prochaine action |
 |---|---|---|
-| Système de jeu | [21, référence unique](21-systeme-de-jeu.md) | Agent : lot G2a (objets de propriété : 6 emplacements, 50 niveaux), puis G2b |
+| Système de jeu | [21, référence unique](21-systeme-de-jeu.md) | G1 et G2a livrés. Agent : G2a-2 (paliers 25, Papier carbone, Pince à linge), puis G2b (objets de déclencheur) |
 | Carte à explorer | [22](22-carte-a-explorer.md) | Direction validée. Agent : lot C0 (mesure de départ), puis C1 |
 
 ## 2. Décisions attendues de Raphaël

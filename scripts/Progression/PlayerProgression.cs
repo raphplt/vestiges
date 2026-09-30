@@ -16,6 +16,7 @@ public partial class PlayerProgression : Node
     private float _xpMultiplier = 1f;
     private EventBus _eventBus;
     private XpCurveConfig _curve;
+    private Player _player;
 
     public int CurrentLevel => _currentLevel;
     public float CurrentXp => _currentXp;
@@ -26,6 +27,7 @@ public partial class PlayerProgression : Node
     {
         _eventBus = GetNode<EventBus>("/root/EventBus");
         _curve = XpCurveConfig.Load();
+        _player = GetParent() as Player;
         _eventBus.XpGained += OnXpGained;
         _eventBus.DifficultyModifierChanged += OnDifficultyModifierChanged;
         _xpToNextLevel = _curve.CostOf(_currentLevel);
@@ -47,7 +49,7 @@ public partial class PlayerProgression : Node
 
     private void OnXpGained(float amount)
     {
-        _currentXp += amount * _xpMultiplier;
+        _currentXp += amount * _xpMultiplier * (_player?.XpGainMultiplier ?? 1f);
 
         while (_currentXp >= _xpToNextLevel)
         {

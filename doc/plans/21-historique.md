@@ -446,3 +446,24 @@ Si l'essai montre que la carte cesse d'attirer après les 6 objets, le repli est
 ### Chantier qui manque : la carte à ratisser
 
 À ouvrir comme plan à part. Principe proposé : beaucoup de lieux petits et lisibles de loin, chacun avec une règle simple et une récompense immédiate, **plus riches près du front d'Effacement et perdus quand leur zone s'efface**. C'est la version Vestiges de la liste de courses : on ne peut pas tout prendre, et la carte elle-même choisit ce qu'on perd.
+
+## 19. Compte rendu G2a — les passifs deviennent des objets (30 septembre)
+
+Première application de la [référence unique](21-systeme-de-jeu.md) §4.
+
+- **Emplacements et niveaux :** 6 emplacements au lieu de 4 ; niveau 1 à 50 au lieu de 5.
+- **Effet par formule :** au niveau n, un effet vaut `1 + per_level × n` (multiplicatif) ou `per_level × n` (additif). Plus de table de cinq valeurs ni de gain multiplié par la rareté : l'effet d'un objet ne dépend que de son niveau.
+- **Effets multiples :** un objet peut porter plusieurs effets (Lunettes de lecture : chance et dégâts de critique ; Lacet rouge : vitesse et recharge du dash).
+- **Rareté :** une amélioration d'objet donne 1, 2, 3, 4 ou 5 niveaux de la commune à la légendaire (`object_levels` dans `upgrade_rarities.json`).
+- **Catalogue :** 12 objets de propriété proposés, avec leurs nouveaux noms. Les identifiants des anciens passifs sont conservés.
+- **Retirés des offres :** Flamme intérieure (+dégâts universel), Reflet brisé (perforation), et Papier carbone en attendant ses copies à dégâts réduits.
+- **Nouvelles stats :** XP gagnée (appliquée une fois au gain) et recharge du dash.
+- **Interface :** cartes « NOUVEL OBJET », niveau « 1 → 6 » et effet avant → après ; pause « Objets » avec tous les effets ; HUD à 6 cases. Les pourcentages gardent une décimale quand elle compte (« +1,2 % »). Les ex-perks s'affichent « Réminiscence ».
+
+**Non fait, annoncé :** les paliers du niveau 25, Papier carbone, Pince à linge (lot G2a-2) ; les objets de déclencheur (G2b). Les classes internes gardent leur nom (`PassiveSouvenir…`, fichier `passive_souvenirs.json`) : renommage technique à prévoir, sans effet en jeu.
+
+**Vérifications :**
+- `dotnet build` : zéro avertissement.
+- `tools/test_objects.sh` (nouveau) : 15 assertions, zéro échec (emplacements, formule jusqu'au niveau 50, effets multiples, XP, dash, Chance, niveaux par rareté, offres).
+- Effets des Réminiscences (66), acquisition (22), contrats, armes, capacités ennemies, déplacements : zéro échec. Smoke vert.
+- Captures `--capture-levelup` et `--capture-pause`, regardées : carte légendaire « Ressort de sommier, Niv 1 → 6, Cadence +1,2 % → +7,2 % », section « Objets » de la pause, six cases au HUD.

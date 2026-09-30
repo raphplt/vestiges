@@ -20,6 +20,8 @@ public static class PerkIconResolver
             "xp_magnet_radius" => "assets/ui/icons/ui_icon_perk_xp_magnet.png",
             "cooldown_reduction" => "assets/ui/icons/ui_icon_perk_channeling.png",
             "projectile_pierce" => "assets/ui/icons/ui_icon_perk_piercing_shot.png",
+            "luck" => "assets/ui/icons/ui_icon_perk_lucky.png",
+            "xp_gain" => "assets/ui/icons/ui_icon_perk_xp_magnet.png",
             _ => "assets/ui/icons/ui_icon_perk_damage_up.png"
         };
     }

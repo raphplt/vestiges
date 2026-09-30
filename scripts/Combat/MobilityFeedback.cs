@@ -40,7 +40,7 @@ public partial class MobilityFeedback : Node2D
 
     public void UpdateFeedback(float delta, PlayerMobility mobility, Vector2 position, bool moved)
     {
-        _charge = 1f - mobility.CooldownRemaining / mobility.Config.CooldownSeconds;
+        _charge = 1f - mobility.CooldownRemaining / mobility.CooldownSeconds;
         _dashVisible = mobility.IsDashStep && moved;
         if (mobility.StartedThisStep)
         {

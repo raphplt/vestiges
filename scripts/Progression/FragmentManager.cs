@@ -635,8 +635,7 @@ public class FragmentOption
     public UpgradeRarity Rarity { get; private init; }
     /// <summary>Gains d'une amélioration d'arme, tirés à l'offre.</summary>
     public IReadOnlyList<StatGain> WeaponGains { get; private init; } = System.Array.Empty<StatGain>();
-    /// <summary>Amélioration de passif : multiple de l'effet d'un niveau, et niveaux gagnés.</summary>
-    public float PassiveGain { get; private init; } = 1f;
+    /// <summary>Amélioration d'objet : niveaux gagnés, selon la rareté (plan 21 §4).</summary>
     public int PassiveLevels { get; private init; } = 1;
 
     public FragmentOption(string id, string type, string displayName, int sortWeight)
@@ -654,10 +653,10 @@ public class FragmentOption
     public bool IsCarried { get; private init; }
 
     public FragmentOption AsCarried() =>
-        new(Id, Type, DisplayName, SortWeight) { Rarity = Rarity, WeaponGains = WeaponGains, PassiveGain = PassiveGain, PassiveLevels = PassiveLevels, IsCarried = true };
+        new(Id, Type, DisplayName, SortWeight) { Rarity = Rarity, WeaponGains = WeaponGains, PassiveLevels = PassiveLevels, IsCarried = true };
 
-    public FragmentOption WithPassiveUpgrade(UpgradeRarity rarity, float gain, int levels) =>
-        new(Id, Type, DisplayName, SortWeight) { Rarity = rarity, PassiveGain = gain, PassiveLevels = levels };
+    public FragmentOption WithPassiveUpgrade(UpgradeRarity rarity, int levels) =>
+        new(Id, Type, DisplayName, SortWeight) { Rarity = rarity, PassiveLevels = levels };
 
     /// <summary>Donne le fragment au joueur ; faux si l'offre a vieilli (arme déjà là, emplacements pleins, maximum).</summary>
     public bool ApplyTo(Player player)
@@ -670,9 +669,9 @@ public class FragmentOption
             case "weapon_upgrade":
                 return player.UpgradeWeapon(Id, WeaponGains);
             case "passive_new":
-                return player.AddOrUpgradePassive(Id, 1f, 1);
+                return player.AddOrUpgradePassive(Id);
             case "passive_upgrade":
-                return player.AddOrUpgradePassive(Id, PassiveGain, PassiveLevels);
+                return player.AddOrUpgradePassive(Id, PassiveLevels);
             case PerkSpecializationOffers.OptionType:
                 return player.AcquireSpecialization(PerkSpecializationDataLoader.Get(Id));
             default:

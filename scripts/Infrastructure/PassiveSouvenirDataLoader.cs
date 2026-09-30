@@ -10,9 +10,10 @@ public class PassiveSouvenirData
 	public string Description;
 	public Color IconColor;
 	public int MaxLevel;
+	/// <summary>Stat et type du premier effet : icône et libellé principal de l'objet.</summary>
 	public string Stat;
 	public string ModifierType;
-	public float[] PerLevel;
+	public List<PassiveEffectData> Effects = new();
 	/// <summary>Passif de survie (PV, régénération, armure, bouclier) : garanti au tirage tant que le joueur n'en a aucun.</summary>
 	public bool Survival;
 }
@@ -74,9 +75,7 @@ public static class PassiveSouvenirDataLoader
 			Id = dict["id"].AsString(),
 			Name = dict.ContainsKey("name") ? dict["name"].AsString() : dict["id"].AsString(),
 			Description = dict.ContainsKey("description") ? dict["description"].AsString() : "",
-			MaxLevel = dict.ContainsKey("max_level") ? (int)dict["max_level"].AsDouble() : 5,
-			Stat = dict.ContainsKey("stat") ? dict["stat"].AsString() : "",
-			ModifierType = dict.ContainsKey("modifier_type") ? dict["modifier_type"].AsString() : "multiplicative",
+			MaxLevel = dict.ContainsKey("max_level") ? (int)dict["max_level"].AsDouble() : 50,
 			Survival = dict.ContainsKey("survival") && dict["survival"].AsBool()
 		};
 
@@ -90,13 +89,37 @@ public static class PassiveSouvenirDataLoader
 			);
 		}
 
-		if (dict.ContainsKey("per_level"))
+		if (!dict.ContainsKey("effects"))
 		{
-			Godot.Collections.Array lvlArr = dict["per_level"].AsGodotArray();
-			data.PerLevel = new float[lvlArr.Count];
-			for (int i = 0; i < lvlArr.Count; i++)
-				data.PerLevel[i] = (float)lvlArr[i].AsDouble();
+			GD.PushError($"[PassiveSouvenirDataLoader] {data.Id} : aucun effet défini");
+			return null;
 		}
+		foreach (Variant entry in dict["effects"].AsGodotArray())
+		{
+			Godot.Collections.Dictionary effect = entry.AsGodotDictionary();
+			data.Effects.Add(new PassiveEffectData
+			{
+				Stat = effect["stat"].AsString(),
+				ModifierType = effect.ContainsKey("modifier_type") ? effect["modifier_type"].AsString() : "multiplicative",
+				PerLevel = (float)effect["per_level"].AsDouble(),
+			});
+		}
+		if (data.Effects.Count == 0)
+		{
+			GD.PushError($"[PassiveSouvenirDataLoader] {data.Id} : liste d'effets vide");
+			return null;
+		}
+		foreach (PassiveEffectData effect in data.Effects)
+		{
+			// Un facteur nul ou négatif ferait diviser par zéro au passage d'un niveau à l'autre.
+			if (effect.Multiplicative && effect.ValueAt(data.MaxLevel) <= 0f)
+			{
+				GD.PushError($"[PassiveSouvenirDataLoader] {data.Id} : {effect.Stat} s'annule avant le niveau {data.MaxLevel}");
+				return null;
+			}
+		}
+		data.Stat = data.Effects[0].Stat;
+		data.ModifierType = data.Effects[0].ModifierType;
 
 		return data;
 	}

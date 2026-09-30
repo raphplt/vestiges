@@ -20,7 +20,7 @@ namespace Vestiges.Tests;
 /// </summary>
 public partial class RunObservation
 {
-    private static readonly string[] PassiveIds = { "flamme_interieure", "memoire_vive", "instinct" };
+    private static readonly string[] PassiveIds = { "oeil_critique", "memoire_vive", "instinct" };
 
     private async Task CaptureDeath(double playSeconds)
     {
@@ -36,8 +36,8 @@ public partial class RunObservation
         for (int i = 0; i < 3; i++)
             _player.UpgradeWeapon("heavy_hammer", System.Array.Empty<StatGain>());
         foreach (string passive in PassiveIds)
-            _player.AddOrUpgradePassive(passive, 1f, 1);
-        _player.AddOrUpgradePassive(PassiveIds[0], 1f, 1);
+            _player.AddOrUpgradePassive(passive);
+        _player.AddOrUpgradePassive(PassiveIds[0]);
         // Profil dev, tout est débloqué : on fait comme si la Chaîne des noms avait été retrouvée pendant la run,
         // pour montrer la carte « Arme retrouvée » et l'entrée de la Collection.
         GameOverScreen gameOver = _world.GetNode<GameOverScreen>("GameOverScreen");

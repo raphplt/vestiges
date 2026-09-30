@@ -17,8 +17,6 @@ public class ActivePassiveSouvenir
 	public string Id { get; }
 	public PassiveSouvenirData Data { get; }
 	public int Level { get; private set; }
-	/// <summary>Effet total appliqué au joueur (multiplicateur ou valeur ajoutée, selon le passif).</summary>
-	public float Modifier { get; private set; }
 	public bool IsMaxLevel => Level >= Data.MaxLevel;
 
 	public ActivePassiveSouvenir(PassiveSouvenirData data)
@@ -26,30 +24,20 @@ public class ActivePassiveSouvenir
 		Data = data;
 		Id = data.Id;
 		Level = 1;
-		Modifier = TableValue(1);
 	}
 
-	/// <summary>Effet après une amélioration de <paramref name="levels"/> niveaux au gain <paramref name="gain"/>.</summary>
-	public float PreviewModifier(float gain, int levels)
-	{
-		int target = Mathf.Min(Data.MaxLevel, Level + levels);
-		return Modifier + (TableValue(target) - TableValue(Level)) * gain;
-	}
+	/// <summary>Valeur d'un effet au niveau courant de l'objet.</summary>
+	public float Value(int effect) => Data.Effects[effect].ValueAt(Level);
 
-	public bool Upgrade(float gain, int levels)
+	/// <summary>Niveau atteint après une amélioration de <paramref name="levels"/> niveaux, borné au maximum.</summary>
+	public int LevelAfter(int levels) => Mathf.Min(Data.MaxLevel, Level + levels);
+
+	public bool Upgrade(int levels)
 	{
 		if (IsMaxLevel)
 			return false;
-		Modifier = PreviewModifier(gain, levels);
-		Level = Mathf.Min(Data.MaxLevel, Level + levels);
+		Level = LevelAfter(levels);
 		return true;
-	}
-
-	private float TableValue(int level)
-	{
-		if (Data.PerLevel == null || Data.PerLevel.Length == 0)
-			return 0f;
-		return Data.PerLevel[Mathf.Clamp(level - 1, 0, Data.PerLevel.Length - 1)];
 	}
 }
 
@@ -93,7 +81,7 @@ public partial class Player : CharacterBody2D
     private readonly List<Timer> _weaponTimers = new();
 
     // Passive Souvenir inventory (max 4, from level-up)
-    public const int MaxPassiveSlots = 4;
+    public const int MaxPassiveSlots = 6;
     private readonly List<ActivePassiveSouvenir> _passiveSlots = new();
     private readonly WeaponLedger _weaponLedger = new();
 
@@ -129,6 +117,7 @@ public partial class Player : CharacterBody2D
     private float _aoeMultiplier = 1f;
     private float _attackRangeMultiplier = 1f;
     private float _bonusRegenRate;
+    private float _xpGainMultiplier = 1f;
     private float _armor;
     private PlayerDefense _defense;
     private bool _blinkHidden;
@@ -201,6 +190,8 @@ public partial class Player : CharacterBody2D
     // V2: StructureHpMultiplier, CraftSpeedMultiplier, RepairSpeedMultiplier retires
     public int ProjectilePierce => _projectilePierce;
     public float XpMagnetMultiplier => _xpMagnetMultiplier;
+    /// <summary>Bonus d'XP du build, appliqué une fois au gain (plan 21 §4, Photo de classe).</summary>
+    public float XpGainMultiplier => _xpGainMultiplier;
     public float CritChance => _critChance;
     public float CritMultiplier => _critMultiplier;
     public bool IsDead => _isDead;
@@ -462,8 +453,8 @@ public partial class Player : CharacterBody2D
 
     // --- Passive Souvenirs ---
 
-    /// <summary>Ajoute un passif, ou l'améliore : écart de la table × <paramref name="gain"/>, sur <paramref name="levels"/> niveaux.</summary>
-    public bool AddOrUpgradePassive(string passiveId, float gain, int levels)
+    /// <summary>Ajoute un objet au niveau 1, ou monte un objet possédé de <paramref name="levels"/> niveaux (plan 21 §4).</summary>
+    public bool AddOrUpgradePassive(string passiveId, int levels = 1)
     {
         PassiveSouvenirData data = PassiveSouvenirDataLoader.Get(passiveId);
         if (data == null)
@@ -473,11 +464,11 @@ public partial class Player : CharacterBody2D
         {
             if (existing.Id == passiveId)
             {
-                float prevMod = existing.Modifier;
-                if (!existing.Upgrade(gain, levels))
+                int previousLevel = existing.Level;
+                if (!existing.Upgrade(levels))
                     return false;
 
-                ApplyPassiveModifierDelta(data, prevMod, existing.Modifier);
+                ApplyPassiveEffects(data, previousLevel, existing.Level);
 
                 _eventBus?.EmitSignal(EventBus.SignalName.PassiveSouvenirUpgraded, passiveId, existing.Level);
                 _eventBus?.EmitSignal(EventBus.SignalName.PassiveSouvenirSlotsChanged);
@@ -494,7 +485,7 @@ public partial class Player : CharacterBody2D
         ActivePassiveSouvenir passive = new(data);
         _passiveSlots.Add(passive);
 
-        ApplyPassiveModifier(data, passive.Modifier);
+        ApplyPassiveEffects(data, 0, passive.Level);
 
         int slotIndex = _passiveSlots.Count - 1;
         _eventBus?.EmitSignal(EventBus.SignalName.PassiveSouvenirAdded, passiveId, slotIndex);
@@ -526,23 +517,19 @@ public partial class Player : CharacterBody2D
         return 0;
     }
 
-    private void ApplyPassiveModifier(PassiveSouvenirData data, float value)
+    /// <summary>
+    /// Fait passer chaque effet de l'objet de sa valeur au niveau <paramref name="fromLevel"/> à celle du niveau
+    /// <paramref name="toLevel"/> ; niveau 0 : l'objet n'était pas encore possédé.
+    /// </summary>
+    private void ApplyPassiveEffects(PassiveSouvenirData data, int fromLevel, int toLevel)
     {
-        ApplyPerkModifier(data.Stat, value, data.ModifierType);
-    }
-
-    private void ApplyPassiveModifierDelta(PassiveSouvenirData data, float oldValue, float newValue)
-    {
-        if (data.ModifierType == "multiplicative")
+        foreach (PassiveEffectData effect in data.Effects)
         {
-            // Undo old multiplier, apply new one
-            if (oldValue > 0f)
-                ApplyPerkModifier(data.Stat, newValue / oldValue, data.ModifierType);
-        }
-        else
-        {
-            // Additive: apply only the delta
-            ApplyPerkModifier(data.Stat, newValue - oldValue, data.ModifierType);
+            float before = effect.ValueAt(fromLevel);
+            float after = effect.ValueAt(toLevel);
+            // Multiplicatif : on retire l'ancien facteur en appliquant le rapport ; additif : seulement l'écart.
+            float change = effect.Multiplicative ? after / before : after - before;
+            ApplyPerkModifier(effect.Stat, change, effect.ModifierType);
         }
     }
 
@@ -889,6 +876,12 @@ public partial class Player : CharacterBody2D
             // V2: repair_speed retire
             case "luck":
                 if (modifierType == "additive") _luckBonus += value;
+                break;
+            case "xp_gain":
+                if (modifierType == "multiplicative") _xpGainMultiplier *= value;
+                break;
+            case "dash_recharge":
+                if (modifierType == "multiplicative") Mobility.RechargeMultiplier *= value;
                 break;
         }
     }

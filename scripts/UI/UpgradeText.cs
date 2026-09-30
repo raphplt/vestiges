@@ -37,8 +37,10 @@ public static class UpgradeText
             case "passive_new":
             {
                 PassiveSouvenirData passive = PassiveSouvenirDataLoader.Get(choice.Id);
-                if (passive?.PerLevel is { Length: > 0 })
-                    lines.Add(($"{StatCatalog.Name(passive.Stat)}  {StatCatalog.FormatBonus(passive.Stat, passive.PerLevel[0], passive.ModifierType == "multiplicative")}", ChoiceStyle.GainColor));
+                if (passive == null)
+                    break;
+                foreach (PassiveEffectData effect in passive.Effects)
+                    lines.Add(($"{StatCatalog.Name(effect.Stat)}  {StatCatalog.FormatBonus(effect.Stat, effect.ValueAt(1), effect.Multiplicative)}", ChoiceStyle.GainColor));
                 break;
             }
             case PerkSpecializationOffers.OptionType:
@@ -56,10 +58,10 @@ public static class UpgradeText
                 ActivePassiveSouvenir passive = FindPassive(player, choice.Id);
                 if (passive == null)
                     break;
-                bool multiplicative = passive.Data.ModifierType == "multiplicative";
-                float next = passive.PreviewModifier(choice.PassiveGain, choice.PassiveLevels);
-                lines.Add(($"{StatCatalog.Name(passive.Data.Stat)}  {StatCatalog.FormatBonus(passive.Data.Stat, passive.Modifier, multiplicative)}"
-                    + $"  →  {StatCatalog.FormatBonus(passive.Data.Stat, next, multiplicative)}", ChoiceStyle.GainColor));
+                int next = passive.LevelAfter(choice.PassiveLevels);
+                foreach (PassiveEffectData effect in passive.Data.Effects)
+                    lines.Add(($"{StatCatalog.Name(effect.Stat)}  {StatCatalog.FormatBonus(effect.Stat, effect.ValueAt(passive.Level), effect.Multiplicative)}"
+                        + $"  →  {StatCatalog.FormatBonus(effect.Stat, effect.ValueAt(next), effect.Multiplicative)}", ChoiceStyle.GainColor));
                 break;
             }
         }

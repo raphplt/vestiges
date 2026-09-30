@@ -277,7 +277,7 @@ STAT_ORBITALS,Notes,Notes
 LEVELUP_TITLE,FRAGMENT DE MÉMOIRE,MEMORY FRAGMENT
 LEVELUP_TITLE_QUEUED,"{0}  ·  ENCORE {1}","{0}  ·  {1} MORE"
 LEVELUP_NEW_WEAPON,NOUVELLE ARME,NEW WEAPON
-LEVELUP_NEW_PASSIVE,NOUVEAU PASSIF,NEW PASSIVE
+LEVELUP_NEW_PASSIVE,NOUVEL OBJET,NEW ITEM
 LEVELUP_LEVEL,Niv {0} → {1},Lv {0} → {1}
 LEVELUP_MELEE,Mêlée,Melee
 LEVELUP_RANGED,Distance,Ranged
@@ -286,8 +286,8 @@ LEVELUP_BANISH,Bannir ({0}),Banish ({0})
 LEVELUP_BANISH_CANCEL,Annuler,Cancel
 LEVELUP_SKIP,Passer,Skip
 LEVELUP_BANISH_HINT,"Choisis la carte à bannir pour toute la partie ; au-delà des gratuits, les fractions de Péril s'additionnent","Pick the card to banish for the whole run; past the free ones, Peril fractions add up"
-LEVELUP_TITLE_PERK,"FRAGMENT  ·  EMPLACEMENT {0}/{1}","FRAGMENT  ·  SLOT {0}/{1}"
-LEVELUP_NEW_PERK,FRAGMENT,FRAGMENT
+LEVELUP_TITLE_PERK,"RÉMINISCENCE  ·  EMPLACEMENT {0}/{1}","REMINISCENCE  ·  SLOT {0}/{1}"
+LEVELUP_NEW_PERK,RÉMINISCENCE,REMINISCENCE
 LEVELUP_PERK_PREVIEW,Aperçu : effet pas encore branché,Preview: effect not wired yet
 PERK_FAMILY_COMBAT,COMBAT,COMBAT
 PERK_FAMILY_SURVIVAL,SURVIE,SURVIVAL
@@ -304,3 +304,6 @@ PAUSE_PERK_TARGET,Suivi : {0},Tracking: {0}
 PAUSE_PERK_TARGET_IDLE,Aucune élite suivie,No elite tracked
 LEVELUP_CARRIED,REPORTÉE,CARRIED OVER
 LEVELUP_BANISH_PERIL,Bannir (+{0} Péril),Banish (+{0} Peril)
+STAT_CRIT_DAMAGE,Dégâts critiques,Crit damage
+STAT_XP_GAIN,XP gagnée,XP gain
+STAT_DASH_RECHARGE,Recharge du dash,Dash recharge
