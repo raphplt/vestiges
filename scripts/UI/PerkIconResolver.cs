@@ -32,6 +32,14 @@ public static class PerkIconResolver
             "kill_heal" => "assets/ui/icons/ui_icon_perk_vampirisme.png",
             "stride_damage" => "assets/ui/icons/ui_icon_perk_traqueur_swiftness.png",
             "level_heal" => "assets/ui/icons/ui_icon_perk_quick_fix.png",
+            "crit_fragile" => "assets/ui/icons/ui_icon_perk_awakened_sight.png",
+            "crit_echo" => "assets/ui/icons/ui_icon_perk_ricochet.png",
+            "still_attack_speed" => "assets/ui/icons/ui_icon_perk_channeling.png",
+            "dash_trail" => "assets/ui/icons/ui_icon_perk_traqueur_evasion.png",
+            "crowd_damage" => "assets/ui/icons/ui_icon_perk_thorns.png",
+            "high_hp_damage" => "assets/ui/icons/ui_icon_perk_glass_cannon.png",
+            "low_hp_damage" => "assets/ui/icons/ui_icon_perk_last_stand.png",
+            "essence_damage_cap" => "assets/ui/icons/ui_icon_perk_essence_regen.png",
             _ => "assets/ui/icons/ui_icon_perk_damage_up.png"
         };
     }

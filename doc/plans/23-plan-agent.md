@@ -319,3 +319,34 @@ Conteneur cloud sans Godot ni .NET au départ : SDK .NET 10.0.401 installé par 
 - Relecture `godot-reviewer` : aucun bug. Remarque gardée telle quelle : la carte et la pause affichent « Orbes 3,5 » alors que 3 orbes tournent ; la décimale montre ce qui manque avant la suivante.
 
 **Reste :** la puissance d'ensemble se mesure en R5.
+
+
+### R6 : objets de déclencheur restants (G2c)
+
+**Fait :** huit objets au modèle à 30 niveaux, pas et paliers de la référence §4 (`passive_souvenirs.json`) ; 31 objets proposés.
+
+| Objet | Où | Retour visuel |
+|---|---|---|
+| Loupe de philatéliste | `ObjectTriggers`, au critique : Fragile 2 s (4 s au palier) | Éclats de verre sur la cible |
+| Stylo à quatre couleurs | `ObjectTriggers`, au critique : une part du coup repart vers la cible la plus proche à 180 px (deux au palier), en effet déclenché | Rayon brisé couleur critique entre les cibles |
+| Tabouret de camping | `ObjectStances` : immobile 1 s, cadence en plus (et armure +10 au palier), appliquées par écart | Étincelles laiton à l'arrêt |
+| Chewing-gum | `ObjectTriggers` : pendant le dash, une tache tous les 22 px, posée le long du trajet quelle que soit la cadence d'image ; elle ralentit (et rend Fragile au palier) quatre fois par seconde, 1 s + le pas | Tache tramée au sol, le temps qu'elle dure |
+| Gilet réfléchissant | `ObjectStances` : ennemis à 120 px, 10 au plus (20 au palier), relus dix fois par seconde | Étincelles laiton quand le plafond est atteint |
+| Thermos | `ObjectStances` : PV à 90 % ou plus (75 % au palier) | Étincelles pâles quand l'état s'active |
+| Médaille cabossée | `ObjectStances` : PV sous 35 % ; vitesse +15 % au palier | Étincelles rouge sang quand l'état s'active |
+| Porte-monnaie usé | `ObjectStances` : +1 % par 10 Essence gardées, plafonné ; au palier, 20 % de chaque dépense rendue, en différé | Étincelles d'Essence à chaque tranche de 5 % ; l'Essence rendue vole vers le compteur |
+
+- `ObjectStances` (nouveau) porte les objets d'état : il relit ses conditions dix fois par seconde, donne un multiplicateur de dégâts appliqué dans `Player.ResolveHitDamage`, et applique cadence, armure et vitesse par écart, sans fuite quand l'objet monte pendant qu'un état tient.
+- Règles communes tenues : ce qui repart du Stylo est un effet déclenché, qui ne redéclenche rien ; la traînée pose ses statuts au nom du joueur (Pince à linge et Propagation les reconnaissent).
+- Galerie d'armes : option `--dash`.
+
+**Vérifié :**
+- `dotnet build` : 0 avertissement.
+- `test_objects.sh` : `RESULT failures=0`, avec trois contrôles nouveaux : critiques (Fragile +25 % 2 s au niveau 5, 60 % du critique vers la cible la plus proche au niveau 10 et rien au-delà de 180 px, 4 s et deux cibles au palier) ; traînée (tache posée au dash, ralentissement 0,6, effacée après 2 s) ; états (cadence +30 % après 1 s immobile, Gilet et Thermos ×1,26 avec trois ennemis, Médaille +30 % sous 35 %, Porte-monnaie plafonné à 30 %, 200 Essence rendues sur 1 000 dépensées, armure +10 et vitesse +15 % aux paliers).
+- Captures regardées : `--capture-weapons` avec Lunettes, Loupe, Stylo, Gilet et Thermos (critique de 129 qui repart à 116 sur deux cibles, rayons visibles) ; `--dash` avec le Chewing-gum (traînée tramée sur tout le trajet du dash).
+- Relecture `godot-reviewer` : un défaut corrigé (la traînée posait ses statuts sans source et privait la Pince à linge de son renouvellement) ; remboursement du Porte-monnaie différé pour ne pas imbriquer deux `EssenceChanged`.
+
+**Reste :**
+- l'Essence rendue par le Porte-monnaie compte, comme celle de la Photo de classe, pour la quête « Accumuler de l'Essence » : à trancher ensemble ;
+- à pleine puissance, le Stylo fait repartir plus que le coup d'origine (180 % au niveau 30 en communes), conforme à la référence : à surveiller à l'équilibrage ;
+- les trois objets « monde » (Presse-papier, Calendrier, Médaillon) attendent le Reliquaire.

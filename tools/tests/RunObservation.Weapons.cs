@@ -11,11 +11,12 @@ using Vestiges.Spawn;
 namespace Vestiges.Tests;
 
 /// <summary>
-/// --capture-weapons [--weapons id1,id2] [--lethal] [--objects id:niveau,…] [--ascensions arme:voie,…] [--integer-gains N] : galerie des
+/// --capture-weapons [--weapons id1,id2] [--lethal] [--objects id:niveau,…] [--ascensions arme:voie,…] [--integer-gains N] [--dash] : galerie des
 /// attaques du joueur. Chaque arme est équipée seule. Avec id1+id2, plusieurs armes sont équipées ensemble pour vérifier
 /// leurs interactions. Avec --objects, les objets donnés sont portés au niveau voulu avant la galerie (projectiles en plus, paliers) ;
 /// avec --ascensions, une arme de la galerie est montée au niveau 50 et prend la voie donnée ; avec --integer-gains,
-/// chaque stat entière de l'arme (projectile, perforation, saut, orbe) gagne N fois +0,5.
+/// chaque stat entière de l'arme (projectile, perforation, saut, orbe) gagne N fois +0,5 ; avec --dash, le joueur
+/// dashe vers la droite au moment de l'attaque.
 /// Chaque configuration est déclenchée sur un cercle d'ennemis immobiles, et capturée en gros plan à plusieurs instants de l'attaque.
 /// </summary>
 public partial class RunObservation
@@ -41,6 +42,7 @@ public partial class RunObservation
                 _player.AddOrUpgradePassive(parts[0], level - 1);
         }
 
+        bool dash = System.Array.IndexOf(OS.GetCmdlineUserArgs(), "--dash") >= 0;
         MethodInfo attack = typeof(Player).GetMethod("OnWeaponAttackTimeout", BindingFlags.NonPublic | BindingFlags.Instance);
         FieldInfo hp = typeof(Enemy).GetField("_currentHp", BindingFlags.NonPublic | BindingFlags.Instance);
         // XP symbolique : les orbes jaillissent sans déclencher l'écran de montée de niveau au milieu de la galerie.
@@ -119,6 +121,12 @@ public partial class RunObservation
             {
                 for (int slot = 0; slot < _player.WeaponSlots.Count; slot++)
                     attack.Invoke(_player, new object[] { slot });
+                // --dash : un dash vers la droite au moment de l'attaque (traînée du Chewing-gum, plan 23 R6).
+                if (dash)
+                {
+                    _player.AIInputOverride = Vector2.Right;
+                    _player.Mobility.Request();
+                }
                 int elapsed = 0;
                 int[] frames = lethal ? LethalCaptureFrames : equippedIds.Length > 1
                     ? new[] { 2, 9, 30, 60, 120, 180 } : WeaponCaptureFrames;
@@ -127,11 +135,14 @@ public partial class RunObservation
                     await Frames(frames[shot] - elapsed);
                     elapsed = frames[shot];
                     SavePlayerCloseUp($"{_output}/weapon-{id}-{shot}.png", new Vector2(150f, 95f));
+                    if (dash && shot == 0)
+                        _player.AIInputOverride = Vector2.Zero;
                 }
             }
             finally
             {
                 Engine.TimeScale = 1.0;
+                _player.AIInputOverride = Vector2.Zero;
             }
         }
         GD.Print($"[RunObservation] RESULT galerie armes={ids.Count} lethal={lethal} dossier={_output}");

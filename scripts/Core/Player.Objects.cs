@@ -23,6 +23,7 @@ public partial class Player
     private readonly float[] _passiveValuesBefore = new float[PassiveSouvenirDataLoader.MaxEffects];
     private ObjectMilestones _objectMilestones;
     private ObjectTriggers _objectTriggers;
+    private ObjectStances _objectStances;
 
     public IReadOnlyList<ActivePassiveSouvenir> PassiveSlots => _passiveSlots;
     /// <summary>Projectiles, ou frappes de mêlée, en plus à chaque attaque (Papier carbone), en fraction.</summary>
@@ -33,6 +34,8 @@ public partial class Player
     public ObjectMilestones ObjectMilestones => _objectMilestones;
     /// <summary>Objets de déclencheur portés ; absent tant qu'aucun ne l'est.</summary>
     public ObjectTriggers ObjectTriggers => _objectTriggers;
+    /// <summary>Objets d'état portés (Tabouret, Gilet, Thermos, Médaille, Porte-monnaie) ; absent tant qu'aucun ne l'est.</summary>
+    public ObjectStances ObjectStances => _objectStances;
 
     /// <summary>
     /// Ajoute un objet au niveau 1, ou le monte de <paramref name="cards"/> cartes de gain <paramref name="gain"/>
@@ -75,6 +78,8 @@ public partial class Player
         _passiveSlots.Add(passive);
         if (HasTriggerEffect(data))
             EnsureObjectTriggers().Configure(data);
+        if (HasStanceEffect(data))
+            EnsureObjectStances().Configure(data);
 
         for (int i = 0; i < data.Effects.Count; i++)
             _passiveValuesBefore[i] = data.Effects[i].Neutral;
@@ -124,6 +129,8 @@ public partial class Player
             float change = effect.Multiplicative ? after / before : after - before;
             if (ObjectTriggers.IsTriggerStat(effect.Stat))
                 EnsureObjectTriggers().Add(effect.Stat, change);
+            else if (ObjectStances.IsStanceStat(effect.Stat))
+                EnsureObjectStances().Add(effect.Stat, change);
             else
                 ApplyPerkModifier(effect.Stat, change, effect.ModifierType);
         }
@@ -139,6 +146,8 @@ public partial class Player
                 continue;
             if (ObjectTriggers.IsTriggerMilestone(milestone.Effect))
                 EnsureObjectTriggers().Activate(milestone);
+            else if (ObjectStances.IsStanceMilestone(milestone.Effect))
+                EnsureObjectStances().Activate(milestone);
             else
             {
                 if (_objectMilestones == null)
@@ -170,6 +179,24 @@ public partial class Player
         return false;
     }
 
+    private static bool HasStanceEffect(PassiveSouvenirData data)
+    {
+        foreach (PassiveEffectData effect in data.Effects)
+            if (ObjectStances.IsStanceStat(effect.Stat))
+                return true;
+        return false;
+    }
+
+    private ObjectStances EnsureObjectStances()
+    {
+        if (_objectStances != null)
+            return _objectStances;
+        _objectStances = new ObjectStances { Name = "ObjectStances" };
+        _objectStances.Initialize(this);
+        AddChild(_objectStances);
+        return _objectStances;
+    }
+
     private ObjectTriggers EnsureObjectTriggers()
     {
         if (_objectTriggers != null)
@@ -190,13 +217,14 @@ public partial class Player
     }
 
     /// <summary>
-    /// Dégâts d'un coup d'arme au moment de toucher sa cible : critique sur PV pleins (Lunettes de lecture, palier 25),
-    /// cible brûlée ou ralentie (Thermomètre, Épingle à nourrice).
+    /// Dégâts d'un coup d'arme au moment de toucher sa cible : critique sur PV pleins (Lunettes de lecture, palier 15),
+    /// cible brûlée ou ralentie (Thermomètre, Épingle à nourrice), états du joueur (Gilet, Thermos, Médaille, Porte-monnaie).
     /// </summary>
     internal float ResolveHitDamage(Enemy enemy, float damage, bool isCrit)
     {
         float resolved = _objectMilestones?.CritAgainst(enemy, damage, isCrit) ?? damage;
-        return _objectTriggers?.AgainstTarget(enemy, resolved) ?? resolved;
+        resolved = _objectTriggers?.AgainstTarget(enemy, resolved) ?? resolved;
+        return resolved * (_objectStances?.DamageMultiplier ?? 1f);
     }
 
     /// <summary>

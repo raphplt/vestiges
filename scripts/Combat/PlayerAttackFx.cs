@@ -219,6 +219,21 @@ public sealed class PlayerAttackFx
         EmitSparks(ground + new Vector2(0f, -TorsoHeight * 0.5f), Vector2.Zero, family, 5, 0f, 40f, 90f, 1);
     }
 
+    /// <summary>Tache collante du Chewing-gum, tramée au sol le temps qu'elle ralentit.</summary>
+    public void PlayTrail(Vector2 position, float radius, float duration)
+    {
+        if (Pools == null)
+            return;
+        PixelFxSpec spec = PixelFxSpec.Of(PixelFxShape.Zone, FxFamily.Silk, radius, 1f, duration);
+        spec.Squash = Iso.GroundSquash;
+        spec.FillDensity = 0.35f;
+        spec.ProgressFill = false;
+        spec.Steps = 4;
+        spec.FadeTail = 0.3f;
+        spec.ZIndex = -1;
+        Pools.PlayFx(position, spec, FxOwner.Player);
+    }
+
     /// <summary>Champ de ralentissement de l'Aiguille de l'Horloge, posé au sol.</summary>
     public void PlayTimeField(Vector2 position, float radius, float duration)
     {
@@ -237,13 +252,16 @@ public sealed class PlayerAttackFx
     }
 
     /// <summary>Chaîne des Noms : rayon brisé entre deux cibles.</summary>
-    public void PlayChain(Vector2 from, Vector2 to, WeaponData weapon)
+    public void PlayChain(Vector2 from, Vector2 to, WeaponData weapon) => PlayBeam(from, to, FamilyOf(weapon));
+
+    /// <summary>Rayon brisé entre deux cibles, de la famille donnée (chaîne, coup critique qui repart).</summary>
+    public void PlayBeam(Vector2 from, Vector2 to, FxFamily family)
     {
         if (Pools == null)
             return;
         Vector2 offset = new(0f, -TorsoHeight);
         Vector2 delta = to - from;
-        PixelFxSpec spec = PixelFxSpec.Of(PixelFxShape.Beam, FamilyOf(weapon), delta.Length() * 0.5f, 3f, 0.22f);
+        PixelFxSpec spec = PixelFxSpec.Of(PixelFxShape.Beam, family, delta.Length() * 0.5f, 3f, 0.22f);
         spec.Angle = delta.Angle();
         spec.Steps = 5;
         spec.ZIndex = 2;

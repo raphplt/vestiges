@@ -792,7 +792,7 @@ public partial class Player : CharacterBody2D
         // Objets à l'impact : après l'effet de l'arme (un ralentissement de la Cloche compte pour le Glaçon), seulement
         // sur un coup direct, et au rythme des impacts visibles pour un cône continu.
         if (_objectTriggers != null && showImpact && context.Kind == DamageKind.DirectWeapon)
-            _objectTriggers.OnWeaponImpact(enemy, ComputeBaseAttackDamage(source), source, triggerCount, context);
+            _objectTriggers.OnWeaponImpact(enemy, ComputeBaseAttackDamage(source), source, triggerCount, context, isCrit, damage);
 
         // --- Weapon knockback ---
         float knockback = source?.GetStat("knockback", 0f) ?? 0f;

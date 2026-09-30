@@ -34,6 +34,14 @@ public static class ObjectMilestoneEffects
         ObjectTriggers.EliteKillHealEffect,
         ObjectTriggers.DoubleStrideEffect,
         ObjectTriggers.CascadeInvulnerabilityEffect,
+        ObjectTriggers.LongFragileEffect,
+        ObjectTriggers.DoubleCritEchoEffect,
+        ObjectTriggers.StickyFragileEffect,
+        ObjectStances.StillArmorEffect,
+        ObjectStances.CrowdCapEffect,
+        ObjectStances.ThermosThresholdEffect,
+        ObjectStances.LowHpSpeedEffect,
+        ObjectStances.EssenceRefundEffect,
     };
 
     public static bool IsImplemented(string effect) => Implemented.Contains(effect);

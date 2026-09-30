@@ -336,3 +336,11 @@ STAT_KILL_EXPLOSION,Explosion (part du coup fatal),Explosion (share of the killi
 STAT_KILL_HEAL,Soin par élimination,Heal per kill
 STAT_STRIDE_DAMAGE,Attaque après la marche,Attack after walking
 STAT_LEVEL_HEAL,Soin par niveau (PV max),Heal per level (max HP)
+STAT_CRIT_FRAGILE,Fragilité au critique,Fragile on crit
+STAT_CRIT_ECHO,Critique qui repart,Crit echo
+STAT_STILL_ATTACK_SPEED,Cadence immobile,Attack rate when still
+STAT_DASH_TRAIL,Traînée de dash,Dash trail
+STAT_CROWD_DAMAGE,Dégâts par ennemi proche,Damage per nearby enemy
+STAT_HIGH_HP_DAMAGE,Dégâts en pleine forme,Damage at high health
+STAT_LOW_HP_DAMAGE,Dégâts au bord de la chute,Damage at low health
+STAT_ESSENCE_DAMAGE_CAP,Plafond des dégâts d'Essence,Essence damage cap

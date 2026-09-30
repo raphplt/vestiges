@@ -37,6 +37,14 @@
         { "id": "kill_explosion", "name_key": "STAT_KILL_EXPLOSION", "display": "share" },
         { "id": "kill_heal", "name_key": "STAT_KILL_HEAL", "display": "value", "unit": "PV" },
         { "id": "stride_damage", "name_key": "STAT_STRIDE_DAMAGE", "display": "fraction" },
-        { "id": "level_heal", "name_key": "STAT_LEVEL_HEAL", "display": "share" }
+        { "id": "level_heal", "name_key": "STAT_LEVEL_HEAL", "display": "share" },
+        { "id": "crit_fragile", "name_key": "STAT_CRIT_FRAGILE", "display": "fraction" },
+        { "id": "crit_echo", "name_key": "STAT_CRIT_ECHO", "display": "share" },
+        { "id": "still_attack_speed", "name_key": "STAT_STILL_ATTACK_SPEED", "display": "fraction" },
+        { "id": "dash_trail", "name_key": "STAT_DASH_TRAIL", "display": "value", "unit": "s" },
+        { "id": "crowd_damage", "name_key": "STAT_CROWD_DAMAGE", "display": "fraction" },
+        { "id": "high_hp_damage", "name_key": "STAT_HIGH_HP_DAMAGE", "display": "fraction" },
+        { "id": "low_hp_damage", "name_key": "STAT_LOW_HP_DAMAGE", "display": "fraction" },
+        { "id": "essence_damage_cap", "name_key": "STAT_ESSENCE_DAMAGE_CAP", "display": "fraction" }
     ]
 }

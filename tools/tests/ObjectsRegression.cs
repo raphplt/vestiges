@@ -48,6 +48,9 @@ public partial class ObjectsRegression : Node2D
             CheckKillRewards();
             CheckStrideAndLevels();
             CheckNamedProperties();
+            CheckCritTriggers();
+            CheckDashTrail();
+            CheckStances();
             GD.Print($"[ObjectsRegression] RESULT failures={_failures}");
             GetTree().Quit(_failures == 0 ? 0 : 1);
         }
@@ -70,7 +73,7 @@ public partial class ObjectsRegression : Node2D
             foreach (ObjectMilestoneData milestone in data.Milestones)
                 wellFormed &= milestone.Level == 15;
         }
-        Check(offered.Count == 23 && wellFormed && anySurvival, $"Catalogue : {offered.Count} objets proposés, niveau max 30, paliers au niveau 15, au moins un de survie");
+        Check(offered.Count == 31 && wellFormed && anySurvival, $"Catalogue : {offered.Count} objets proposés, niveau max 30, paliers au niveau 15, au moins un de survie");
         bool retired = true;
         foreach (string id in new[] { "flamme_interieure", "fragment_deternite" })
             retired &= PassiveSouvenirDataLoader.Get(id) != null && !offered.Exists(data => data.Id == id);
@@ -176,7 +179,7 @@ public partial class ObjectsRegression : Node2D
         List<FragmentOption> pool = (List<FragmentOption>)typeof(FragmentManager).GetMethod("BuildFragmentPool", Private).Invoke(fragments, null);
         int fresh = pool.FindAll(option => option.Type == "passive_new").Count;
         bool noRetired = !pool.Exists(option => option.Id is "flamme_interieure" or "fragment_deternite");
-        Check(fresh == 23 && noRetired, $"Offre de niveau : {fresh} objets neufs possibles, aucun objet retiré");
+        Check(fresh == 31 && noRetired, $"Offre de niveau : {fresh} objets neufs possibles, aucun objet retiré");
 
         foreach (string id in new[] { "memoire_vive", "resonance", "portee_etendue", "oeil_critique", "ancrage", "regeneration" })
             _player.AddOrUpgradePassive(id);
@@ -478,13 +481,15 @@ public partial class ObjectsRegression : Node2D
         Check(essence.CurrentEssence - before == 3, "Photo de classe palier 15 : un niveau gagné donne 3 Essence");
         Check(milestones.GrantsRerollAt(15) && !milestones.GrantsRerollAt(16) && milestones.GrantsRerollAt(30),
             "Jeton de fête foraine palier 15 : une relance aux niveaux 15, 30…");
+        // Retiré de l'arbre tout de suite : il ne doit plus écouter les butins des contrôles suivants.
+        RemoveChild(essence);
         essence.QueueFree();
 
         bool allCoded = true;
         foreach (PassiveSouvenirData data in PassiveSouvenirDataLoader.GetAll())
             foreach (ObjectMilestoneData milestone in data.Milestones)
                 allCoded &= ObjectMilestoneEffects.IsImplemented(milestone.Effect);
-        Check(allCoded, "Les paliers des 23 objets proposés sont tous codés");
+        Check(allCoded, "Les paliers des 31 objets proposés sont tous codés");
     }
 
     private static readonly FieldInfo IgniteTimer = typeof(Enemy).GetField("_igniteTimer", Private);
@@ -760,6 +765,139 @@ public partial class ObjectsRegression : Node2D
             fits &= UpgradeText.Describe(new FragmentOption(data.Id, "passive_new", data.Name, 1), _player).Count <= 2;
         Check(fits && lines.Count == 2 && lines[1].Item1.StartsWith("et "),
             $"Cartes : deux lignes de gain au plus ({string.Join(" | ", lines.ConvertAll(line => line.Item1))})");
+    }
+
+    /// <summary>Loin des ennemis des contrôles précédents, et la liste du GroupCache relue.</summary>
+    private Enemy SpawnAt(Vector2 position)
+    {
+        Enemy enemy = SpawnEnemy();
+        enemy.Position = position;
+        typeof(GroupCache).GetField("_enemiesFrame", Private).SetValue(GetNode<GroupCache>("/root/GroupCache"), ulong.MaxValue);
+        return enemy;
+    }
+
+    private static readonly FieldInfo FragileBonus = typeof(Enemy).GetField("_fragileBonus", Private);
+    private static readonly FieldInfo FragileTimer = typeof(Enemy).GetField("_fragileTimer", Private);
+
+    private void CheckCritTriggers()
+    {
+        Setup();
+        Vector2 origin = new(9000f, 9000f);
+        Raise("loupe_de_philateliste", 5);
+        Raise("stylo_quatre_couleurs", 10);
+        _player.AddWeapon(WeaponDataLoader.Get("heavy_hammer"));
+        WeaponInstance hammer = _player.WeaponSlots[1];
+        Enemy target = SpawnAt(origin);
+        Enemy near = SpawnAt(origin + new Vector2(50f, 0f));
+        Enemy second = SpawnAt(origin + new Vector2(0f, 60f));
+        Enemy far = SpawnAt(origin + new Vector2(600f, 0f));
+        float nearHp = Hp(near), secondHp = Hp(second), farHp = Hp(far);
+        _player.OnProjectileHit(target, 10f, false, hammer, _player.BeginAttack(hammer, 10f));
+        bool noCrit = (float)FragileTimer.GetValue(target) <= 0f && Near(Hp(near), nearHp);
+        _player.OnProjectileHit(target, 10f, true, hammer, _player.BeginAttack(hammer, 10f));
+        bool fragile = Near((float)FragileBonus.GetValue(target), 0.25f) && Near((float)FragileTimer.GetValue(target), 2f);
+        bool echoed = Near(nearHp - Hp(near), 6f) && Near(Hp(second), secondHp) && Near(Hp(far), farHp);
+        Check(noCrit && fragile, "Loupe de philatéliste niveau 5 : un critique rend la cible Fragile (+25 %) 2 s ; un coup normal, rien");
+        Check(echoed, $"Stylo à quatre couleurs niveau 10 : 60 % d'un critique repartent sur la cible la plus proche ({nearHp - Hp(near):0.0} PV), pas au-delà de 180 px");
+
+        _player.AddOrUpgradePassive("loupe_de_philateliste", 10);
+        _player.AddOrUpgradePassive("stylo_quatre_couleurs", 5);
+        nearHp = Hp(near);
+        secondHp = Hp(second);
+        _player.OnProjectileHit(target, 10f, true, hammer, _player.BeginAttack(hammer, 10f));
+        Check(Near((float)FragileTimer.GetValue(target), 4f) && nearHp > Hp(near) && secondHp > Hp(second),
+            "Paliers 15 : Fragile dure 4 s ; le critique repart sur deux cibles");
+        foreach (Enemy enemy in new[] { target, near, second, far })
+            enemy.QueueFree();
+    }
+
+    private void CheckDashTrail()
+    {
+        Setup();
+        Vector2 origin = new(12000f, 12000f);
+        _player.GlobalPosition = origin;
+        Raise("chewing_gum", 10);
+        ObjectTriggers triggers = _player.ObjectTriggers;
+        MethodInfo process = typeof(ObjectTriggers).GetMethod("_Process");
+        System.Collections.IList patches = (System.Collections.IList)typeof(ObjectTriggers).GetField("_trailPatches", Private).GetValue(triggers);
+        Enemy stuck = SpawnAt(origin + new Vector2(10f, 0f));
+        PlayerMobility mobility = _player.Mobility;
+        mobility.Request();
+        mobility.Step(1f / 60f, Vector2.Right, 200f, 1f, true);
+        bool dashing = mobility.IsDashing;
+        process.Invoke(triggers, new object[] { 0.3 });
+        bool laid = patches.Count >= 1;
+        float slow = (float)SlowFactor.GetValue(stuck);
+        for (int i = 0; i < 40; i++)
+            mobility.Step(1f / 60f, Vector2.Zero, 200f, 1f, true);
+        process.Invoke(triggers, new object[] { 2.1 });
+        Check(dashing && laid && slow < 1f && patches.Count == 0,
+            $"Chewing-gum niveau 10 : le dash pose une tache qui ralentit ({slow:0.00}), elle s'efface après 1 + 1 s");
+        stuck.QueueFree();
+    }
+
+    private void CheckStances()
+    {
+        Setup();
+        Vector2 origin = new(15000f, 15000f);
+        _player.GlobalPosition = origin;
+        _player.DisableDefenseForTests();
+        foreach (string id in new[] { "tabouret_de_camping", "gilet_reflechissant", "thermos", "medaille_cabossee", "porte_monnaie_use" })
+            Raise(id, 10);
+        ObjectStances stances = _player.ObjectStances;
+        MethodInfo process = typeof(ObjectStances).GetMethod("_Process");
+        float speed = _player.AttackSpeedMultiplier;
+        _player.Velocity = Vector2.Zero;
+        process.Invoke(stances, new object[] { 0.5 });
+        bool notYet = !stances.IsStill;
+        process.Invoke(stances, new object[] { 0.6 });
+        bool still = stances.IsStill && Near(_player.AttackSpeedMultiplier / speed, 1.3f);
+        _player.Velocity = new Vector2(150f, 0f);
+        process.Invoke(stances, new object[] { 0.1 });
+        Check(notYet && still && Near(_player.AttackSpeedMultiplier, speed),
+            "Tabouret de camping niveau 10 : immobile 1 s, cadence +30 % ; en mouvement, rien");
+        _player.Velocity = Vector2.Zero;
+
+        // Pleine forme (Thermos +20 %), trois ennemis proches (Gilet +2 % chacun), pas d'Essence.
+        Enemy[] crowd = { SpawnAt(origin + new Vector2(30f, 0f)), SpawnAt(origin + new Vector2(-40f, 0f)), SpawnAt(origin + new Vector2(0f, 20f)) };
+        Enemy distant = SpawnAt(origin + new Vector2(400f, 0f));
+        process.Invoke(stances, new object[] { 0.2 });
+        Check(stances.CrowdCount == 3 && Near(stances.DamageMultiplier, 1f + 0.2f + 0.06f),
+            $"Gilet réfléchissant et Thermos niveau 10 : trois ennemis à moins de 120 px, PV pleins : dégâts ×{stances.DamageMultiplier:0.00}");
+
+        _player.TakeDamage(_player.EffectiveMaxHp * 0.7f);
+        process.Invoke(stances, new object[] { 0.2 });
+        Check(Near(stances.DamageMultiplier, 1f + 0.06f + 0.3f), $"Médaille cabossée niveau 10 : sous 35 % des PV, dégâts +30 % et plus de Thermos (×{stances.DamageMultiplier:0.00})");
+
+        EventBus events = GetNode<EventBus>("/root/EventBus");
+        EssenceTracker wallet = new() { Name = "EssenceTracker" };
+        AddChild(wallet);
+        wallet.AddEssence(200);
+        float withEssence = stances.DamageMultiplier;
+        wallet.AddEssence(4800);
+        Check(Near(withEssence, 1.36f + 0.2f) && Near(stances.DamageMultiplier, 1.36f + 0.3f),
+            "Porte-monnaie usé niveau 10 : +1 % par 10 Essence gardées, plafond 30 %");
+
+        float armor = _player.Armor;
+        Raise("porte_monnaie_use", 15);
+        _player.AddOrUpgradePassive("tabouret_de_camping", 5);
+        _player.AddOrUpgradePassive("medaille_cabossee", 5);
+        int refunded = 0;
+        EventBus.LootReceivedEventHandler onLoot = (type, source, amount) => refunded += source == ObjectStances.EssenceRefundEffect ? amount : 0;
+        events.LootReceived += onLoot;
+        wallet.TrySpend(1000);
+        // Le remboursement part en différé, après la dépense : le banc le déclenche lui-même.
+        typeof(ObjectStances).GetMethod("FlushRefund", Private).Invoke(stances, null);
+        events.LootReceived -= onLoot;
+        bool refundedToWallet = wallet.CurrentEssence == 4200;
+        RemoveChild(wallet);
+        wallet.QueueFree();
+        process.Invoke(stances, new object[] { 1.1 });
+        Check(refunded == 200 && refundedToWallet && _player.Armor - armor >= 9.99f && Near(_player.SpeedMultiplier, 1.15f),
+            $"Paliers 15 : 20 % de l'Essence dépensée rendue ({refunded}), armure +10 immobile, vitesse +15 % sous le seuil");
+        foreach (Enemy enemy in crowd)
+            enemy.QueueFree();
+        distant.QueueFree();
     }
 
     private static float Hp(Enemy enemy) => (float)typeof(Enemy).GetField("_currentHp", Private).GetValue(enemy);

@@ -25,6 +25,9 @@ public partial class ObjectTriggers : Node
     public const string KillHealStat = "kill_heal";
     public const string StrideDamageStat = "stride_damage";
     public const string LevelHealStat = "level_heal";
+    public const string CritFragileStat = "crit_fragile";
+    public const string CritEchoStat = "crit_echo";
+    public const string DashTrailStat = "dash_trail";
 
     public const string BurnSpreadEffect = "burn_spread";
     public const string DoubleSlowFreezeEffect = "double_slow_freeze";
@@ -34,9 +37,19 @@ public partial class ObjectTriggers : Node
     public const string EliteKillHealEffect = "elite_kill_heal";
     public const string DoubleStrideEffect = "double_stride";
     public const string CascadeInvulnerabilityEffect = "cascade_invulnerability";
+    public const string LongFragileEffect = "long_fragile";
+    public const string DoubleCritEchoEffect = "double_crit_echo";
+    public const string StickyFragileEffect = "sticky_fragile";
+    private const float TrailTickSeconds = 0.25f;
 
     private const float SparkHeight = 12f;
     private const float MovingSpeedSq = 25f;
+
+    private struct TrailPatch
+    {
+        public Vector2 Position;
+        public float Remaining;
+    }
 
     private struct PendingExplosion
     {
@@ -84,6 +97,27 @@ public partial class ObjectTriggers : Node
     private ulong _levelFrame;
     private int _levelsThisFrame;
 
+    // Loupe de philatéliste, Stylo à quatre couleurs : ce qu'un coup critique déclenche.
+    private float _critFragile;
+    private float _critFragileSeconds;
+    private float _critEcho;
+    private float _critEchoRadius;
+    private int _critEchoTargets = 1;
+    private readonly System.Collections.Generic.List<Enemy> _echoTargets = new();
+    // Chewing-gum : traînée collante du dash, taches au sol qui ralentissent.
+    private float _dashTrail;
+    private float _trailBaseSeconds;
+    private float _trailSlowFactor = 1f;
+    private float _trailRadius;
+    private float _trailSpacing;
+    private float _trailFragile;
+    private float _trailTick;
+    private Vector2 _lastPatch;
+    private bool _trailDashing;
+    // Source des statuts posés par la traînée : le joueur, pour que la Pince à linge et la Propagation les reconnaissent.
+    private AttackContext _trailSource;
+    private readonly System.Collections.Generic.List<TrailPatch> _trailPatches = new();
+
     /// <summary>Tirages des déclencheurs ; les bancs le graine pour rester déterministes.</summary>
     internal RandomNumberGenerator Rng { get; } = new();
 
@@ -93,11 +127,13 @@ public partial class ObjectTriggers : Node
 
     public static bool IsTriggerStat(string stat) =>
         stat is BurnChanceStat or ChillChanceStat or BurningTargetDamageStat or SlowedTargetDamageStat
-            or KillExplosionStat or KillHealStat or StrideDamageStat or LevelHealStat;
+            or KillExplosionStat or KillHealStat or StrideDamageStat or LevelHealStat
+            or CritFragileStat or CritEchoStat or DashTrailStat;
 
     public static bool IsTriggerMilestone(string effect) =>
         effect is BurnSpreadEffect or DoubleSlowFreezeEffect or BurnSlowsEffect or SlowKillExtendsEffect
-            or DoubleExplosionEffect or EliteKillHealEffect or DoubleStrideEffect or CascadeInvulnerabilityEffect;
+            or DoubleExplosionEffect or EliteKillHealEffect or DoubleStrideEffect or CascadeInvulnerabilityEffect
+            or LongFragileEffect or DoubleCritEchoEffect or StickyFragileEffect;
 
     public void Initialize(Player player)
     {
@@ -123,7 +159,7 @@ public partial class ObjectTriggers : Node
         _eventBus.LevelUp -= OnLevelUp;
     }
 
-    private bool NeedsClock => _strideDamage > 0f || _pendingExplosions.Count > 0;
+    private bool NeedsClock => _strideDamage > 0f || _pendingExplosions.Count > 0 || _dashTrail > 0f;
 
     public override void _Process(double delta)
     {
@@ -135,6 +171,7 @@ public partial class ObjectTriggers : Node
             return;
         }
         AdvanceStride(dt);
+        AdvanceTrail(dt);
         for (int i = _pendingExplosions.Count - 1; i >= 0; i--)
         {
             PendingExplosion explosion = _pendingExplosions[i];
@@ -173,6 +210,20 @@ public partial class ObjectTriggers : Node
                     _strideSeconds = Parameter(data, "move_seconds");
                     SetProcess(true);
                     break;
+                case CritFragileStat:
+                    _critFragileSeconds = Parameter(data, "fragile_seconds");
+                    break;
+                case CritEchoStat:
+                    _critEchoRadius = Parameter(data, "radius");
+                    break;
+                case DashTrailStat:
+                    _trailBaseSeconds = Parameter(data, "base_seconds");
+                    _trailSlowFactor = Parameter(data, "slow_factor");
+                    _trailRadius = Parameter(data, "radius");
+                    // Un écart nul ferait poser des taches sans fin.
+                    _trailSpacing = Mathf.Max(4f, Parameter(data, "spacing"));
+                    SetProcess(true);
+                    break;
             }
         }
     }
@@ -190,6 +241,9 @@ public partial class ObjectTriggers : Node
             case KillHealStat: _killHeal += change; break;
             case StrideDamageStat: _strideDamage += change; break;
             case LevelHealStat: _levelHeal += change; break;
+            case CritFragileStat: _critFragile += change; break;
+            case CritEchoStat: _critEcho += change; break;
+            case DashTrailStat: _dashTrail += change; break;
         }
     }
 
@@ -209,6 +263,9 @@ public partial class ObjectTriggers : Node
             case DoubleExplosionEffect: _secondExplosionDelay = milestone.Parameter("delay_seconds"); break;
             case EliteKillHealEffect: _eliteHealRatio = milestone.Parameter("max_hp_ratio"); break;
             case DoubleStrideEffect: _strideMaxCharges = Mathf.Max(1, Mathf.RoundToInt(milestone.Parameter("charges"))); break;
+            case LongFragileEffect: _critFragileSeconds = milestone.Parameter("seconds"); break;
+            case DoubleCritEchoEffect: _critEchoTargets = Mathf.Max(1, Mathf.RoundToInt(milestone.Parameter("targets"))); break;
+            case StickyFragileEffect: _trailFragile = milestone.Parameter("bonus"); break;
             case CascadeInvulnerabilityEffect:
                 _cascadeLevels = Mathf.Max(1, Mathf.RoundToInt(milestone.Parameter("levels")));
                 _cascadeSeconds = milestone.Parameter("seconds");
@@ -232,8 +289,11 @@ public partial class ObjectTriggers : Node
     /// nombre de frappes qui ont touché ensemble. <paramref name="hitDamage"/> est le coup de base de l'arme : un
     /// cône continu, qui touche par fractions de frame, brûle comme les autres armes.
     /// </summary>
-    public void OnWeaponImpact(Enemy enemy, float hitDamage, WeaponInstance weapon, int hits, AttackContext context)
+    public void OnWeaponImpact(Enemy enemy, float hitDamage, WeaponInstance weapon, int hits, AttackContext context,
+        bool isCrit = false, float dealt = 0f)
     {
+        if (isCrit)
+            OnCrit(enemy, dealt, context);
         if (enemy.IsDying)
             return;
         float coefficient = weapon?.Base.TriggerCoefficient ?? 1f;
@@ -241,6 +301,114 @@ public partial class ObjectTriggers : Node
             Burn(enemy, hitDamage * _burnDamageRatio * burnStrength, context);
         if (_chillChance > 0f && Roll(_chillChance * coefficient, hits, out float chillStrength))
             Chill(enemy, chillStrength, context);
+    }
+
+    /// <summary>
+    /// Coup critique direct : la Loupe rend la cible Fragile ; le Stylo fait repartir une part des dégâts vers la
+    /// ou les cibles les plus proches. Ce qui repart ne déclenche rien (plan 21 §7).
+    /// </summary>
+    private void OnCrit(Enemy enemy, float dealt, AttackContext context)
+    {
+        if (_critFragile > 0f && !enemy.IsDying)
+        {
+            enemy.ApplyFragile(_critFragile, _critFragileSeconds * _player.StatusDurationMultiplier, context);
+            Spark(enemy, FxFamily.Glass);
+        }
+        if (_critEcho <= 0f || dealt <= 0f)
+            return;
+        NearestOthers(enemy, _critEchoRadius, _critEchoTargets, _echoTargets);
+        AttackContext echo = context.As(DamageKind.Passive);
+        foreach (Enemy target in _echoTargets)
+        {
+            target.TakeDamage(dealt * _critEcho, source: echo);
+            _player.AttackFx.PlayBeam(enemy.GlobalPosition, target.GlobalPosition, FxFamily.Crit);
+        }
+    }
+
+    private void LayPatch(Vector2 position)
+    {
+        float seconds = (_trailBaseSeconds + _dashTrail) * _player.StatusDurationMultiplier;
+        _trailPatches.Add(new TrailPatch { Position = position, Remaining = seconds });
+        _lastPatch = position;
+        _player.AttackFx.PlayTrail(position, _trailRadius, seconds);
+    }
+
+    /// <summary>Les <paramref name="count"/> ennemis actifs les plus proches de <paramref name="from"/>, à moins de <paramref name="radius"/>.</summary>
+    private void NearestOthers(Enemy from, float radius, int count, System.Collections.Generic.List<Enemy> result)
+    {
+        result.Clear();
+        float radiusSq = radius * radius;
+        foreach (Node node in _groupCache.GetEnemies())
+        {
+            if (node is not Enemy { IsActive: true, IsDying: false } enemy || enemy == from)
+                continue;
+            float distanceSq = Iso.GroundDistanceSquared(enemy.GlobalPosition, from.GlobalPosition);
+            if (distanceSq > radiusSq)
+                continue;
+            int index = result.Count;
+            while (index > 0 && Iso.GroundDistanceSquared(result[index - 1].GlobalPosition, from.GlobalPosition) > distanceSq)
+                index--;
+            if (index >= count)
+                continue;
+            result.Insert(index, enemy);
+            if (result.Count > count)
+                result.RemoveAt(result.Count - 1);
+        }
+    }
+
+    /// <summary>
+    /// Chewing-gum : pendant le dash, une tache collante tous les quelques pixels ; chaque tache ralentit (et rend
+    /// Fragile au palier) les ennemis qui s'y trouvent, quatre fois par seconde, le temps qu'elle dure.
+    /// </summary>
+    private void AdvanceTrail(float delta)
+    {
+        if (_dashTrail <= 0f)
+            return;
+        bool dashing = _player.Mobility?.IsDashing == true;
+        Vector2 position = _player.GlobalPosition;
+        if (dashing && !_trailDashing)
+        {
+            _trailSource = _player.BeginAttack(null, 0f, DamageKind.Passive);
+            LayPatch(position);
+        }
+        // Le long du trajet depuis la dernière tache, quelle que soit la cadence d'image : à faible fréquence, une
+        // seule frame peut couvrir tout le dash.
+        if (dashing || _trailDashing)
+        {
+            while (_lastPatch.DistanceSquaredTo(position) >= _trailSpacing * _trailSpacing)
+                LayPatch(_lastPatch + (position - _lastPatch).Normalized() * _trailSpacing);
+        }
+        _trailDashing = dashing;
+        if (_trailPatches.Count == 0)
+            return;
+        _trailTick -= delta;
+        bool tick = _trailTick <= 0f;
+        if (tick)
+            _trailTick = TrailTickSeconds;
+        float radiusSq = _trailRadius * _trailRadius;
+        for (int i = _trailPatches.Count - 1; i >= 0; i--)
+        {
+            TrailPatch patch = _trailPatches[i];
+            patch.Remaining -= delta;
+            if (patch.Remaining <= 0f)
+            {
+                _trailPatches[i] = _trailPatches[^1];
+                _trailPatches.RemoveAt(_trailPatches.Count - 1);
+                continue;
+            }
+            _trailPatches[i] = patch;
+            if (!tick)
+                continue;
+            foreach (Node node in _groupCache.GetEnemies())
+            {
+                if (node is not Enemy { IsActive: true, IsDying: false } enemy
+                    || Iso.GroundDistanceSquared(enemy.GlobalPosition, patch.Position) > radiusSq)
+                    continue;
+                enemy.ApplySlow(_trailSlowFactor, TrailTickSeconds * 2f, _trailSource, ControlOrigin.Unknown);
+                if (_trailFragile > 0f)
+                    enemy.ApplyFragile(_trailFragile, TrailTickSeconds * 2f, _trailSource);
+            }
+        }
     }
 
     /// <summary>

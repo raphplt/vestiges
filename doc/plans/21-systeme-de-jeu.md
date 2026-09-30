@@ -272,7 +272,8 @@ Quand une carte ne peut plus rien offrir (4 armes ascensionnées, 6 objets au ni
 | Cartes de niveau à la Megabonk, inventaire et stats à côté | **En jeu** | Plan 23, R2 |
 | Statut Fragilité, coefficient de déclenchement par arme ; Allumette humide, Glaçon, Thermomètre, Épingle à nourrice | **En jeu** | G2b, étape 2 |
 | Pétard mouillé, Dé à coudre, Semelle usée, Boîte de pansements | **En jeu** | G2b, étape 3 |
-| Onze autres objets de déclencheur | À faire | G2c |
+| Huit objets de déclencheur de G2c : Loupe, Stylo, Tabouret, Chewing-gum, Gilet, Thermos, Médaille, Porte-monnaie (31 objets proposés) | **En jeu** | Plan 23, R6 |
+| Trois objets « monde » : Presse-papier, Calendrier, Médaillon | À faire | Avec le Reliquaire (plan 22, C3) |
 | Reliquaire, objets « monde », remplacement | À faire | Plan 22, C3 |
 | Propriétés nommées sur les cartes d'armes et d'objets, armes concernées par un objet | **Retirées des cartes** ; les armes concernées s'allument dans l'inventaire au focus d'une carte d'objet, la règle reste pour les affinités | G0, plan 23 R2 |
 | Ascensions d'armes : mécanique et quatre armes (Arc, Faucille, Cloche, Boîte à musique) | **En jeu** | G3, étape 1 |

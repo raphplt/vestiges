@@ -653,6 +653,259 @@
         ]
     },
     {
+        "id": "loupe_de_philateliste",
+        "name": "Loupe de philatéliste",
+        "description": "Un coup critique rend sa cible Fragile : elle encaisse davantage, un moment.",
+        "icon_color": [
+            0.85,
+            0.8,
+            0.5
+        ],
+        "max_level": 30,
+        "params": {
+            "fragile_seconds": 2
+        },
+        "effects": [
+            {
+                "stat": "crit_fragile",
+                "modifier_type": "additive",
+                "step": 0.05
+            }
+        ],
+        "milestones": [
+            {
+                "level": 15,
+                "effect": "long_fragile",
+                "text": "Fragile dure 4 s",
+                "params": {
+                    "seconds": 4
+                }
+            }
+        ]
+    },
+    {
+        "id": "stylo_quatre_couleurs",
+        "name": "Stylo à quatre couleurs",
+        "description": "Un coup critique repart sur une autre cible proche.",
+        "icon_color": [
+            0.4,
+            0.55,
+            0.95
+        ],
+        "max_level": 30,
+        "params": {
+            "radius": 180
+        },
+        "effects": [
+            {
+                "stat": "crit_echo",
+                "modifier_type": "additive",
+                "step": 0.06
+            }
+        ],
+        "milestones": [
+            {
+                "level": 15,
+                "effect": "double_crit_echo",
+                "text": "Le coup repart sur deux cibles",
+                "params": {
+                    "targets": 2
+                }
+            }
+        ]
+    },
+    {
+        "id": "tabouret_de_camping",
+        "name": "Tabouret de camping",
+        "description": "Immobile depuis une seconde, tu attaques plus vite.",
+        "icon_color": [
+            0.6,
+            0.45,
+            0.3
+        ],
+        "max_level": 30,
+        "params": {
+            "still_seconds": 1
+        },
+        "effects": [
+            {
+                "stat": "still_attack_speed",
+                "modifier_type": "additive",
+                "step": 0.03
+            }
+        ],
+        "milestones": [
+            {
+                "level": 15,
+                "effect": "still_armor",
+                "text": "Immobile, tu gagnes aussi 10 d'armure",
+                "params": {
+                    "armor": 10
+                }
+            }
+        ]
+    },
+    {
+        "id": "chewing_gum",
+        "name": "Chewing-gum",
+        "description": "Ton dash laisse une traînée collante qui ralentit.",
+        "icon_color": [
+            0.95,
+            0.55,
+            0.75
+        ],
+        "max_level": 30,
+        "params": {
+            "base_seconds": 1,
+            "slow_factor": 0.6,
+            "radius": 30,
+            "spacing": 22
+        },
+        "effects": [
+            {
+                "stat": "dash_trail",
+                "modifier_type": "additive",
+                "step": 0.1
+            }
+        ],
+        "milestones": [
+            {
+                "level": 15,
+                "effect": "sticky_fragile",
+                "text": "La traînée rend aussi Fragile",
+                "params": {
+                    "bonus": 0.2
+                }
+            }
+        ]
+    },
+    {
+        "id": "gilet_reflechissant",
+        "name": "Gilet réfléchissant",
+        "description": "Plus les ennemis sont proches, plus tes coups portent.",
+        "icon_color": [
+            0.95,
+            0.85,
+            0.2
+        ],
+        "max_level": 30,
+        "params": {
+            "radius": 120,
+            "max_enemies": 10
+        },
+        "effects": [
+            {
+                "stat": "crowd_damage",
+                "modifier_type": "additive",
+                "step": 0.002
+            }
+        ],
+        "milestones": [
+            {
+                "level": 15,
+                "effect": "crowd_cap",
+                "text": "Compte jusqu'à 20 ennemis",
+                "params": {
+                    "max_enemies": 20
+                }
+            }
+        ]
+    },
+    {
+        "id": "thermos",
+        "name": "Thermos",
+        "description": "En pleine forme, tes coups portent davantage.",
+        "icon_color": [
+            0.6,
+            0.7,
+            0.75
+        ],
+        "max_level": 30,
+        "params": {
+            "threshold": 0.9
+        },
+        "effects": [
+            {
+                "stat": "high_hp_damage",
+                "modifier_type": "additive",
+                "step": 0.02
+            }
+        ],
+        "milestones": [
+            {
+                "level": 15,
+                "effect": "thermos_threshold",
+                "text": "Le seuil descend à 75 % des PV",
+                "params": {
+                    "threshold": 0.75
+                }
+            }
+        ]
+    },
+    {
+        "id": "medaille_cabossee",
+        "name": "Médaille cabossée",
+        "description": "Au bord de la chute, tes coups portent davantage.",
+        "icon_color": [
+            0.8,
+            0.6,
+            0.3
+        ],
+        "max_level": 30,
+        "params": {
+            "threshold": 0.35
+        },
+        "effects": [
+            {
+                "stat": "low_hp_damage",
+                "modifier_type": "additive",
+                "step": 0.03
+            }
+        ],
+        "milestones": [
+            {
+                "level": 15,
+                "effect": "low_hp_speed",
+                "text": "Sous le seuil, tu cours aussi 15 % plus vite",
+                "params": {
+                    "speed": 0.15
+                }
+            }
+        ]
+    },
+    {
+        "id": "porte_monnaie_use",
+        "name": "Porte-monnaie usé",
+        "description": "L'Essence que tu gardes renforce tes coups.",
+        "icon_color": [
+            0.45,
+            0.8,
+            0.75
+        ],
+        "max_level": 30,
+        "params": {
+            "essence_per_step": 10,
+            "damage_per_step": 0.01
+        },
+        "effects": [
+            {
+                "stat": "essence_damage_cap",
+                "modifier_type": "additive",
+                "step": 0.03
+            }
+        ],
+        "milestones": [
+            {
+                "level": 15,
+                "effect": "essence_refund",
+                "text": "20 % de l'Essence dépensée est rendue",
+                "params": {
+                    "ratio": 0.2
+                }
+            }
+        ]
+    },
+    {
         "_comment": "Retiré des offres : un +dégâts universel vaut autant pour tous les builds (plan 21 §4).",
         "id": "flamme_interieure",
         "name": "Flamme Intérieure",
