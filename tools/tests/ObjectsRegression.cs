@@ -37,6 +37,9 @@ public partial class ObjectsRegression : Node2D
             CheckAttackCopies();
             CheckStatusDuration();
             CheckStatusRenewal();
+            CheckCombatMilestones();
+            CheckSurvivalMilestones();
+            CheckRewardMilestones();
             GD.Print($"[ObjectsRegression] RESULT failures={_failures}");
             GetTree().Quit(_failures == 0 ? 0 : 1);
         }
@@ -295,6 +298,139 @@ public partial class ObjectsRegression : Node2D
             $"Pince à linge palier 25 : {share:P0} des ralentissements expirés renouvelés, même durée ; rien pour un statut sans joueur");
         enemy.QueueFree();
     }
+
+    /// <summary>Monte un objet (neuf) jusqu'au niveau voulu.</summary>
+    private void Raise(string id, int level)
+    {
+        _player.AddOrUpgradePassive(id);
+        if (level > 1)
+            _player.AddOrUpgradePassive(id, level - 1);
+    }
+
+    private void CheckCombatMilestones()
+    {
+        Setup();
+        Enemy control = SpawnEnemy();
+        Enemy echoed = SpawnEnemy();
+        echoed.Position = new Vector2(500f, 0f);
+        Enemy burst = SpawnEnemy();
+        burst.Position = new Vector2(-500f, 0f);
+        Enemy pushed = SpawnEnemy();
+        pushed.Position = new Vector2(40f, 0f);
+        // GroupCache garde sa liste pour la frame, et tout le banc tient dans la première : on la fait relire.
+        typeof(GroupCache).GetField("_enemiesFrame", Private).SetValue(GetNode<GroupCache>("/root/GroupCache"), ulong.MaxValue);
+        float hpBefore = Hp(control);
+        control.TakeDamage(10f);
+        float fullLoss = hpBefore - Hp(control);
+
+        foreach (string id in new[] { "memoire_vive", "resonance", "portee_etendue", "oeil_critique", "carapace", "instinct" })
+            Raise(id, 25);
+        ObjectMilestones milestones = _player.ObjectMilestones;
+        MethodInfo process = typeof(ObjectMilestones).GetMethod("_Process");
+        System.Collections.IList repeats = (System.Collections.IList)typeof(ObjectMilestones).GetField("_pendingRepeats", Private).GetValue(milestones);
+        WeaponInstance bow = _player.WeaponSlots[0];
+        for (int i = 0; i < 9; i++)
+            milestones.CountAttack(bow);
+        bool ninth = repeats.Count == 0;
+        milestones.CountAttack(bow);
+        bool tenth = repeats.Count == 1;
+        process.Invoke(milestones, new object[] { 0.2 });
+        Check(ninth && tenth && repeats.Count == 0, "Ressort de sommier palier 25 : la 10ᵉ attaque d'une arme repart, puis la file se vide");
+        for (int i = 0; i < 5; i++)
+            milestones.CountAttack(bow);
+        _player.UpgradeWeapon(bow.Id, UpgradeRoller.RollWeaponGains(bow, UpgradeRoller.Get("common"), new RandomNumberGenerator { Seed = 1 }));
+        for (int i = 0; i < 5; i++)
+            milestones.CountAttack(bow);
+        Check(repeats.Count == 1, "Ressort de sommier : une montée de niveau de l'arme ne remet pas son compte à zéro");
+        process.Invoke(milestones, new object[] { 0.2 });
+
+        hpBefore = Hp(echoed);
+        milestones.QueueCircleEcho(echoed.GlobalPosition, 30f, 10f, bow, _player.BeginAttack(bow, 10f));
+        bool delayed = Near(Hp(echoed), hpBefore);
+        process.Invoke(milestones, new object[] { 0.3 });
+        Check(milestones.HasZoneEcho && delayed && Near(hpBefore - Hp(echoed), fullLoss * 0.3f),
+            $"Rondelle de cuivre palier 25 : la zone refrappe après 0,25 s, à 30 % ({hpBefore - Hp(echoed):0.0} PV)");
+
+        hpBefore = Hp(burst);
+        _player.OnProjectileSpent(burst.GlobalPosition, 10f, _player.BeginAttack(bow, 10f));
+        Check(Near(hpBefore - Hp(burst), fullLoss * 0.5f), $"Mètre pliant palier 25 : un projectile en bout de course éclate à 50 % ({hpBefore - Hp(burst):0.0} PV)");
+
+        bool fullDouble = Near(_player.ResolveHitDamage(pushed, 10f, true), 20f);
+        bool damagedSame = Near(_player.ResolveHitDamage(control, 10f, true), 10f);
+        bool normal = Near(_player.ResolveHitDamage(pushed, 10f, false), 10f);
+        Check(fullDouble && damagedSame && normal,
+            "Lunettes de lecture palier 25 : un critique sur une cible à PV pleins compte double, pas sur une cible entamée");
+
+        milestones.OnShieldBroken();
+        FieldInfo knock = typeof(Enemy).GetField("_knockVelocity", Private);
+        Check(((Vector2)knock.GetValue(pushed)).X > 0f && ((Vector2)knock.GetValue(control)) == Vector2.Zero,
+            "Écusson de pompier palier 25 : le bouclier cassé repousse les ennemis proches, pas les lointains");
+        Check(Near(_player.Mobility.DistanceMultiplier, 1.3f), "Lacet rouge palier 25 : dash 30 % plus long");
+        foreach (Enemy enemy in new[] { control, echoed, burst, pushed })
+            enemy.QueueFree();
+    }
+
+    private void CheckSurvivalMilestones()
+    {
+        Setup();
+        _player.DisableDefenseForTests();
+        foreach (string id in new[] { "ancrage", "regeneration", "peau_dure", "siphon_essence" })
+            Raise(id, 25);
+        ObjectMilestones milestones = _player.ObjectMilestones;
+        float hp = _player.CurrentHp;
+        float small = _player.EffectiveMaxHp * 0.03f - 0.5f;
+        _player.TakeDamage(small);
+        bool ignored = Near(_player.CurrentHp, hp);
+        _player.TakeDamage(small + 1f);
+        Check(ignored && _player.CurrentHp < hp, $"Bouton de manteau palier 25 : un coup sous 3 % des PV max ({small:0.0}) est ignoré, pas au-dessus");
+
+        Check(Near(milestones.RegenMultiplier, 2f), "Bobine de fil palier 25 : régénération doublée après la blessure");
+        typeof(ObjectMilestones).GetMethod("_Process").Invoke(milestones, new object[] { 3.1 });
+        Check(Near(milestones.RegenMultiplier, 1f), "Bobine de fil palier 25 : retour à la normale après 3 s");
+
+        PlayerMobility mobility = _player.Mobility;
+        // Le coup encaissé plus haut laisse le joueur sonné : il s'en remet avant de dasher.
+        mobility.Step(1f, Vector2.Zero, 200f, 1f, true);
+        bool calm = Near(milestones.ArmorMultiplier(mobility), 1f);
+        mobility.Request();
+        mobility.Step(1f / 60f, Vector2.Right, 200f, 1f, true);
+        bool dashing = mobility.IsDashing && Near(milestones.ArmorMultiplier(mobility), 2f);
+        for (int i = 0; i < 30; i++)
+            mobility.Step(1f / 60f, Vector2.Zero, 200f, 1f, true);
+        bool after = !mobility.IsDashing && Near(milestones.ArmorMultiplier(mobility), 2f);
+        for (int i = 0; i < 90; i++)
+            mobility.Step(1f / 60f, Vector2.Zero, 200f, 1f, true);
+        Check(calm && dashing && after && Near(milestones.ArmorMultiplier(mobility), 1f),
+            "Genouillère palier 25 : armure doublée pendant le dash et la seconde qui suit");
+
+        hp = _player.CurrentHp;
+        _player.OnXpOrbCollected();
+        Check(Near(_player.CurrentHp - hp, 0.2f), "Aimant de frigo palier 25 : une orbe ramassée rend 0,2 PV");
+    }
+
+    private void CheckRewardMilestones()
+    {
+        Setup();
+        EssenceTracker essence = new() { Name = "EssenceTracker" };
+        AddChild(essence);
+        foreach (string id in new[] { "photo_de_classe", "jeton_de_fete" })
+            Raise(id, 25);
+        ObjectMilestones milestones = _player.ObjectMilestones;
+        int before = essence.CurrentEssence;
+        typeof(ObjectMilestones).GetMethod("OnLevelUp", Private).Invoke(milestones, new object[] { 26 });
+        Check(essence.CurrentEssence - before == 3, "Photo de classe palier 25 : un niveau gagné donne 3 Essence");
+        Check(milestones.GrantsRerollAt(15) && !milestones.GrantsRerollAt(16) && milestones.GrantsRerollAt(30),
+            "Jeton de fête foraine palier 25 : une relance aux niveaux 15, 30…");
+        essence.QueueFree();
+
+        bool allCoded = true;
+        foreach (PassiveSouvenirData data in PassiveSouvenirDataLoader.GetAll())
+            foreach (ObjectMilestoneData milestone in data.Milestones)
+                allCoded &= ObjectMilestoneEffects.IsImplemented(milestone.Effect);
+        Check(allCoded, "Les paliers des 14 objets proposés sont tous codés");
+    }
+
+    private static float Hp(Enemy enemy) => (float)typeof(Enemy).GetField("_currentHp", Private).GetValue(enemy);
 
     private string CardText(FragmentOption option)
     {

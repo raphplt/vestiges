@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Godot;
+using Vestiges.Combat;
 using Vestiges.Infrastructure;
 using Vestiges.Progression;
 
@@ -10,6 +11,9 @@ public partial class Player
 {
     public const int MaxPassiveSlots = 6;
     private static readonly Color MilestoneColor = new(1f, 0.82f, 0.35f);
+    private static readonly Color IgnoredHitColor = new(0.72f, 0.72f, 0.7f);
+    private const ulong IgnoredHitFlashIntervalMsec = 250;
+    private ulong _lastIgnoredHitFlashMsec;
 
     private readonly List<ActivePassiveSouvenir> _passiveSlots = new();
     // Papier carbone : copies d'attaque à dégâts réduits, à part des projectiles pleins des anciens Dons.
@@ -129,4 +133,56 @@ public partial class Player
 
     /// <summary>Durée d'un statut ou d'une zone au sol posés par le joueur, Pince à linge comprise.</summary>
     private float StatusDuration(float seconds) => seconds * _statusDurationMultiplier;
+
+    internal PlayerAttackFx AttackFx => _attackFx;
+
+    /// <summary>Ressort de sommier : l'arme repart, si elle est toujours portée ; cette attaque ne se compte pas.</summary>
+    internal void RepeatAttack(WeaponInstance weapon)
+    {
+        if (_isDead || !_weaponSlots.Contains(weapon))
+            return;
+        _equippedWeapon = weapon;
+        PerformDiscreteAttack(weapon.Type?.ToLower() ?? "ranged", weapon.AttackPattern?.ToLower() ?? "linear");
+    }
+
+    /// <summary>Dégâts d'un coup d'arme au moment de toucher sa cible : Lunettes de lecture, palier 25.</summary>
+    internal float ResolveHitDamage(Enemy enemy, float damage, bool isCrit) =>
+        _objectMilestones?.CritAgainst(enemy, damage, isCrit) ?? damage;
+
+    /// <summary>
+    /// Rondelle de cuivre : chaque frappe de mêlée refrappera dans sa propre direction, avec sa part des dégâts
+    /// (copies comprises) ; un cercle complet refrappe d'un seul tenant.
+    /// </summary>
+    private void QueueMeleeEchoes(Vector2 direction, float range, float arcAngle, int strikeCount, float startOffset,
+        float step, float strikeDamage, AttackContext context)
+    {
+        if (arcAngle >= 359f)
+        {
+            _objectMilestones.QueueArcEcho(direction, range, 360f, strikeDamage * StrikeMultiplierSum(0, strikeCount - 1), _equippedWeapon, context);
+            return;
+        }
+        for (int strike = 0; strike < strikeCount; strike++)
+            _objectMilestones.QueueArcEcho(direction.Rotated(Mathf.DegToRad(startOffset + step * strike)), range, arcAngle,
+                strikeDamage * StrikeMultiplierSum(strike, strike), _equippedWeapon, context);
+    }
+
+    /// <summary>Un projectile d'arme arrive en bout de course sans avoir été arrêté (Mètre pliant, palier 25).</summary>
+    internal void OnProjectileSpent(Vector2 position, float damage, AttackContext context)
+    {
+        if (!_isDead && _objectMilestones?.HasRangeEndBurst == true)
+            _objectMilestones.BurstAtRangeEnd(position, damage, context);
+    }
+
+    /// <summary>Orbe d'XP ramassée par ce joueur (Aimant de frigo, palier 25).</summary>
+    internal void OnXpOrbCollected() => _objectMilestones?.OnOrbCollected();
+
+    /// <summary>Coup ignoré par le Bouton de manteau : éclair gris bref, au plus quatre fois par seconde dans une foule.</summary>
+    private void ShowIgnoredHit()
+    {
+        ulong now = Time.GetTicksMsec();
+        if (now - _lastIgnoredHitFlashMsec < IgnoredHitFlashIntervalMsec)
+            return;
+        _lastIgnoredHitFlashMsec = now;
+        Flash(IgnoredHitColor, false);
+    }
 }

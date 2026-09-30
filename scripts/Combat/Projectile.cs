@@ -137,6 +137,9 @@ public partial class Projectile : Area2D
         _age += dt;
         if (_age >= _lifetime)
         {
+            // Bout de course : un ricochet est déjà un effet déclenché, il n'éclate pas (plan 21 §7).
+            if (!_isRicochet && _owner != null && IsInstanceValid(_owner))
+                _owner.OnProjectileSpent(GlobalPosition, _damage, _context);
             // Différé comme à l'impact : le retour au pool et la désactivation doivent passer ensemble,
             // sinon une relance dans la même frame serait désactivée après coup.
             _isDespawning = true;
@@ -231,11 +234,13 @@ public partial class Projectile : Area2D
                 return;
 
             _hitEnemies.Add(id);
-            enemy.TakeDamage(_damage, _isCrit, source: _context);
+            bool ownerValid = _owner != null && IsInstanceValid(_owner);
+            float damage = ownerValid && !_isRicochet ? _owner.ResolveHitDamage(enemy, _damage, _isCrit) : _damage;
+            enemy.TakeDamage(damage, _isCrit, source: _context);
 
             // Notify owner for perk effects (vampirism, ignite, execution, ricochet)
-            if (_owner != null && IsInstanceValid(_owner))
-                _owner.OnProjectileHit(enemy, _damage, _isCrit, _isRicochet, SourceInstance, _context);
+            if (ownerValid)
+                _owner.OnProjectileHit(enemy, damage, _isCrit, _isRicochet, SourceInstance, _context);
 
             if (_spawnsGroundFire)
             {

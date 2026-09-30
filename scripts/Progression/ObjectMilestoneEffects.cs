@@ -13,6 +13,18 @@ public static class ObjectMilestoneEffects
     {
         ObjectMilestones.StatStepEffect,
         ObjectMilestones.StatusRenewEffect,
+        ObjectMilestones.RepeatAttackEffect,
+        ObjectMilestones.ZoneEchoEffect,
+        ObjectMilestones.RangeEndBurstEffect,
+        ObjectMilestones.FullHpCritEffect,
+        ObjectMilestones.IgnoreSmallHitsEffect,
+        ObjectMilestones.WoundRegenEffect,
+        ObjectMilestones.DashArmorEffect,
+        ObjectMilestones.ShieldBreakWaveEffect,
+        ObjectMilestones.DashDistanceEffect,
+        ObjectMilestones.OrbHealEffect,
+        ObjectMilestones.LevelEssenceEffect,
+        ObjectMilestones.LevelRerollEffect,
     };
 
     public static bool IsImplemented(string effect) => Implemented.Contains(effect);

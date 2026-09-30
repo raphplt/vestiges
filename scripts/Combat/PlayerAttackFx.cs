@@ -196,6 +196,29 @@ public sealed class PlayerAttackFx
         PlayGroundRing(position, FxFamily.Hybrid, 18f, 2f, 0.25f);
     }
 
+    /// <summary>Anneau au sol d'un palier d'objet : zone qui refrappe, onde du bouclier cassé.</summary>
+    public void PlayObjectRing(Vector2 ground, FxFamily family, float radius)
+    {
+        PlayGroundRing(ground, family, radius, 2f, 0.3f);
+    }
+
+    /// <summary>Éclat d'un projectile en bout de course (Mètre pliant) : zone tramée du rayon réel, anneau, étincelles.</summary>
+    public void PlayBurst(Vector2 ground, FxFamily family, float radius)
+    {
+        if (Pools == null)
+            return;
+        PixelFxSpec zone = PixelFxSpec.Of(PixelFxShape.Zone, family, radius, 1f, 0.25f);
+        zone.Squash = Iso.GroundSquash;
+        zone.ProgressFill = false;
+        zone.FillDensity = 0.4f;
+        zone.Steps = 4;
+        zone.FadeTail = 0.5f;
+        zone.ZIndex = -1;
+        Pools.PlayFx(ground, zone, FxOwner.Player);
+        PlayGroundRing(ground, family, radius, 2f, 0.22f);
+        EmitSparks(ground + new Vector2(0f, -TorsoHeight * 0.5f), Vector2.Zero, family, 5, 0f, 40f, 90f, 1);
+    }
+
     /// <summary>Champ de ralentissement de l'Aiguille de l'Horloge, posé au sol.</summary>
     public void PlayTimeField(Vector2 position, float radius, float duration)
     {

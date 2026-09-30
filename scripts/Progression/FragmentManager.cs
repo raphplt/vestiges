@@ -123,6 +123,9 @@ public partial class FragmentManager : Node
             return;
         }
 
+        // Jeton de fête foraine, palier 25 : la relance arrive avant l'écran de ce niveau.
+        if (_player.ObjectMilestones?.GrantsRerollAt(newLevel) == true)
+            AddRerolls(1);
         // Un fragment reporté retrouve une occasion à chaque niveau gagné.
         _specializations.Resume();
         bool hold = !_choosingActive && _holdTimer.IsStopped() && ShouldHold();

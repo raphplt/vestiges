@@ -212,7 +212,7 @@ public partial class XpOrb : Area2D
         if (_collected)
             return;
 
-        if (body is Player)
+        if (body is Player player)
         {
             _collected = true;
             // Ramassée en dormant (le joueur marche dessus) : CombatPools l'oubliera à sa prochaine ronde.
@@ -227,6 +227,7 @@ public partial class XpOrb : Area2D
 
             EventBus eventBus = GetNode<EventBus>("/root/EventBus");
             eventBus.EmitSignal(EventBus.SignalName.XpGained, _xpValue);
+            player.OnXpOrbCollected();
 
             // Retour au pool : invisible, inerte, prête pour la prochaine mort.
             Visible = false;

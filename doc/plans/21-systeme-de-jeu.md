@@ -238,9 +238,8 @@ Quand une carte ne peut plus rien offrir (4 armes ascensionnées, 6 objets au ni
 | Réminiscences après les Résurgences, 7 sur 14, libellées « Réminiscence » | **En jeu** | G1, G2a |
 | Objets : 6 emplacements, 50 niveaux par formule, effets multiples, rareté qui donne 1 à 5 niveaux | **En jeu** | G2a |
 | 14 objets de propriété, dont Papier carbone (copies à dégâts réduits) et Pince à linge (Durée) | **En jeu** | G2a, G2a-2 |
-| Socle des paliers ; paliers de Papier carbone et Pince à linge | **En jeu** | G2a-2, étape 1 |
-| Paliers 25 des douze autres objets de propriété | À faire | **G2a-2, étape 2, suivant** |
-| Objets de déclencheur, statut Fragilité, coefficients | À faire | G2b |
+| Paliers des 14 objets de propriété (niveau 25, et 50 pour Papier carbone) | **En jeu** | G2a-2 |
+| Objets de déclencheur, statut Fragilité, coefficients | À faire | **G2b, suivant** |
 | Reliquaire, objets « monde », remplacement | À faire | Plan 22, C3 |
 | Propriétés nommées sur les cartes d'armes | À faire | G0 |
 | Ascensions d'armes | À faire | G3 |

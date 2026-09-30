@@ -20,6 +20,12 @@ public sealed class PlayerMobility
 
     /// <summary>Temps de recharge effectif d'un dash, recharge accélérée comprise : base des jauges.</summary>
     public float CooldownSeconds => Config.CooldownSeconds / Mathf.Max(0.01f, RechargeMultiplier);
+
+    /// <summary>Longueur du dash (1 = réglage de base) : même durée, vitesse accrue (Lacet rouge, palier 25).</summary>
+    public float DistanceMultiplier { get; set; } = 1f;
+
+    /// <summary>Temps écoulé depuis la fin du dernier dash ; nul pendant un dash, infini avant le premier.</summary>
+    public float SecondsSinceDash { get; private set; } = float.MaxValue;
     public float BufferRemaining { get; private set; }
     public bool StartedThisStep { get; private set; }
     public bool IsDashStep { get; private set; }
@@ -93,6 +99,7 @@ public sealed class PlayerMobility
                 ClearBuffer();
         }
 
+        SecondsSinceDash = IsDashing ? 0f : SecondsSinceDash + delta;
         if (IsDashing)
         {
             IsDashStep = true;
@@ -100,7 +107,7 @@ public sealed class PlayerMobility
             _dashRemaining = Mathf.Max(0f, _dashRemaining - activeDelta);
             _dashElapsed += activeDelta;
             // La dernière fraction de tick conserve la distance prévue, même hors 60 Hz.
-            return _dashDirection * (speed * terrainFactor * Config.SpeedMultiplier * activeDelta / delta);
+            return _dashDirection * (speed * terrainFactor * Config.SpeedMultiplier * DistanceMultiplier * activeDelta / delta);
         }
 
         if (speed <= 0f || terrainFactor <= 0f)

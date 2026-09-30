@@ -551,3 +551,37 @@ Valeurs de départ, en données (`params` du palier) :
   - `--capture-weapons --objects souffle_du_neant:50` : l'arc touche quatre cibles (un tir et trois copies).
 
 Relecture par sous-agent avant le commit. Corrigé : origine d'un contrôle conservée au renouvellement ; copies réparties sur les deux bords de l'éventail ; nombre de frappes jamais nul ; texte du palier traduit. Deux textes de palier se superposaient au-dessus du joueur ; ils s'empilent désormais.
+
+## 22. Compte rendu G2a-2, étape 2 : les douze paliers (30 septembre)
+
+Les 14 objets de propriété ont maintenant leur palier en jeu, avec les valeurs de départ du §20.
+
+| Objet | Palier 25 en jeu | Retour visible |
+|---|---|---|
+| Ressort de sommier | La 10ᵉ attaque d'une arme repart 0,12 s après. Compte par arme, gardé quand l'arme monte de niveau ; une attaque répétée ne se compte pas | Deuxième attaque |
+| Rondelle de cuivre | Chaque frappe de mêlée refrappe 0,25 s après dans sa direction, à 30 % de sa part (copies comprises) ; échos des Gantelets et éclats du Dessin aussi. Un écho suit une frappe qui a touché ; il ne déclenche aucun effet à l'impact | Arc rejoué, anneau au sol |
+| Mètre pliant | Un projectile d'arme en bout de course éclate : 50 % de ses dégâts dans 36 px × Taille. Ni ricochet ni effet à l'impact | Éclat au sol, six au plus par frame |
+| Lunettes de lecture | Critique sur une cible à PV pleins : dégâts × 2 (projectile, mêlée, chaîne) | Chiffre critique |
+| Bouton de manteau | Coup sous 3 % des PV max ignoré | Éclair gris, quatre fois par seconde au plus |
+| Bobine de fil | Régénération × 2 pendant 3 s après une blessure | Aucun propre |
+| Genouillère | Armure × 2 pendant le dash et 1 s après | Aucun propre |
+| Écusson de pompier | Bouclier cassé : recul de 90 px dans 110 px | Double anneau cuivré |
+| Lacet rouge | Dash 30 % plus long (vitesse, même durée) | Le dash lui-même |
+| Aimant de frigo | 0,2 PV par orbe ramassée (soin ordinaire : Prévoyance stocke l'excédent) | Barre de PV |
+| Photo de classe | 3 Essence par niveau gagné | Vol d'Essence |
+| Jeton de fête foraine | +1 relance à chaque niveau multiple de 15, avant l'ouverture de l'écran | Compteur de relances |
+
+- **Code :** l'état des paliers vit dans `ObjectMilestones` (horloge par frame seulement pendant une attente) et `ZoneEchoes`. Les branchements dans le joueur tiennent en une ligne chacun ; `Player.cs` passe de 2 306 à 2 324 lignes.
+- **Dash :** `PlayerMobility` tient la longueur du dash et le temps écoulé depuis le dernier.
+
+**Vérifications :**
+- `dotnet build` : zéro avertissement.
+- `tools/test_objects.sh` : 36 assertions, zéro échec, dont une par palier et le compte du Ressort gardé après une montée de niveau de l'arme.
+- Effets des Réminiscences, acquisition, contrats, armes, capacités ennemies, déplacements : zéro échec. Smoke vert.
+- Capture `--capture-weapons --weapons chipped_blade+chipped_blade --objects resonance:25,souffle_du_neant:50`, regardée : l'arc du Couteau ébréché est rejoué 0,25 s après, et chaque cible reprend 30 % de son coup (48 → 62, 36 → 46).
+- L'éclat du Mètre pliant n'apparaît pas dans le cadre serré de la galerie, où tous les tirs touchent : il n'est vérifié que par le banc.
+- Le banc de combat dense n'a pas été relancé : sans objet au palier, rien ne change par frame ; l'expiration d'un statut coûte un test de propriétaire.
+
+Relecture par sous-agent. Corrigé : plus d'écho ni d'attaque répétée après la mort ; compte du Ressort gardé quand une arme monte de niveau (le signal d'inventaire part aussi alors) ; éclats dessinés limités à six par frame ; plus d'identifiant d'objet écrit en dur.
+
+**Reste à régler en jeu :** toutes les valeurs de palier sont des valeurs de départ. Bobine et Genouillère n'ont pas de retour visuel propre.

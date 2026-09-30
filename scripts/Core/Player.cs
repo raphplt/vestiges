@@ -1000,6 +1000,8 @@ public partial class Player : CharacterBody2D
                         }
                     }
                     SpawnEchoVisual(echoPos);
+                    if (_objectMilestones?.HasZoneEcho == true)
+                        _objectMilestones.QueueCircleEcho(echoPos, echoRadius, echoDamage, source, context);
                 };
                 break;
             }
@@ -1039,6 +1041,8 @@ public partial class Player : CharacterBody2D
                             e.TakeDamage(damage * 0.5f, source: context.As(DamageKind.SecondaryWeapon));
                     }
                 }
+                if (_objectMilestones?.HasZoneEcho == true)
+                    _objectMilestones.QueueCircleEcho(impactPos, aoeRadius, damage * 0.5f, source, context);
                 break;
             }
         }
@@ -1241,8 +1245,9 @@ public partial class Player : CharacterBody2D
         bool isCrit = _critChance > 0f && GD.Randf() < _critChance;
         float currentDamage = isCrit ? baseDamage * _critMultiplier : baseDamage;
         AttackContext context = BeginAttack(_equippedWeapon, currentDamage);
-        firstTarget.TakeDamage(currentDamage, isCrit, source: context);
-        OnAttackHit(firstTarget, currentDamage, isCrit, false, _equippedWeapon, context: context);
+        float firstDamage = ResolveHitDamage(firstTarget, currentDamage, isCrit);
+        firstTarget.TakeDamage(firstDamage, isCrit, source: context);
+        OnAttackHit(firstTarget, firstDamage, isCrit, false, _equippedWeapon, context: context);
 
         // Chain vers les ennemis adjacents
         HashSet<ulong> hitIds = new() { firstTarget.GetInstanceId() };
@@ -1316,8 +1321,14 @@ public partial class Player : CharacterBody2D
             GD.Print("[Player] Dodged!");
             return default;
         }
+        if (_objectMilestones != null && _objectMilestones.Ignores(damage, EffectiveMaxHp))
+        {
+            ShowIgnoredHit();
+            return default;
+        }
 
-        PlayerDefense.Outcome outcome = _defense.Absorb(damage, _armor);
+        float armor = _armor * (_objectMilestones?.ArmorMultiplier(Mobility) ?? 1f);
+        PlayerDefense.Outcome outcome = _defense.Absorb(damage, armor);
         if (_thornsPercent > 0f)
             ApplyThorns(outcome.Reduced);
 
@@ -1325,6 +1336,8 @@ public partial class Player : CharacterBody2D
         {
             EmitShield();
             Flash(ShieldFlashColor, outcome.ShieldBroke);
+            if (outcome.ShieldBroke)
+                _objectMilestones?.OnShieldBroken();
             PlayerDamageResult shieldResult = new(GetInstanceId(), PlayerDamageKind.Combat, _currentHp, 0f, false, true, true);
             _eventBus.PublishPlayerDamage(shieldResult);
             return shieldResult;
@@ -1706,7 +1719,7 @@ public partial class Player : CharacterBody2D
 
     private void ApplyRegen(float delta)
     {
-        float amount = (BaseRegenRate + _bonusRegenRate) * delta;
+        float amount = (BaseRegenRate + _bonusRegenRate) * (_objectMilestones?.RegenMultiplier ?? 1f) * delta;
         if (_isDead || amount <= 0f)
             return;
         HealingResult result = HealingResult.Resolve(GetInstanceId(), HealingKind.Regeneration, amount, _currentHp, EffectiveMaxHp);
@@ -1828,14 +1841,17 @@ public partial class Player : CharacterBody2D
             return;
         }
 
+        PerformDiscreteAttack(type, pattern);
+        _objectMilestones?.CountAttack(_equippedWeapon);
+    }
+
+    /// <summary>Attaque ponctuelle de l'arme active : chaîne, mêlée ou tir (ni cône continu ni orbite).</summary>
+    private void PerformDiscreteAttack(string type, string pattern)
+    {
         // Chain melee : attaque spéciale avec rebond
         if (pattern == "chain")
-        {
             PerformChainAttack();
-            return;
-        }
-
-        if (type == "melee")
+        else if (type == "melee")
             PerformMeleeAttack(pattern);
         else
             PerformRangedAttack(pattern);
@@ -1978,12 +1994,14 @@ public partial class Player : CharacterBody2D
             if (hitMultiplierSum <= 0f)
                 continue;
 
-            float totalDamage = baseDamage * hitMultiplierSum * critDamageFactor;
             bool hasCrit = clampedCritChance > 0f && GD.Randf() < GetCombinedProcChance(clampedCritChance, hitCount);
+            float totalDamage = ResolveHitDamage(enemy, baseDamage * hitMultiplierSum * critDamageFactor, hasCrit);
             AttackContext hitContext = context with { ReferenceDamage = totalDamage };
             enemy.TakeDamage(totalDamage, hasCrit, source: hitContext);
             OnAttackHit(enemy, totalDamage, hasCrit, isRicochet: false, _equippedWeapon, triggerCount: hitCount, context: hitContext);
         }
+        if (_objectMilestones?.HasZoneEcho == true)
+            QueueMeleeEchoes(attackDirection, range, arcAngle, strikeCount, startOffset, step, baseDamage * critDamageFactor, context);
     }
 
     private void SpawnMeleeSlashVisuals(Vector2 baseDirection, float range, float arcAngle, int strikeCount, float spreadAngle)

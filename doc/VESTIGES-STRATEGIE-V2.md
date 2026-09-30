@@ -788,6 +788,7 @@ Le script de post-processing doit inclure une vérification/correction de l'angl
 - [x] Plan 21 lot G1 : fragments offerts après chaque Résurgence survécue (fin des paliers de niveau) ; bannissements gratuits puis coût croissant en Péril ([compte rendu](plans/21-historique.md#17-compte-rendu-g1--fragments-après-les-résurgences-bannir-coûte-du-péril)).
 - [x] Plan 21 lot G2a : les passifs deviennent des objets (6 emplacements, 50 niveaux par formule, effets multiples, 1 à 5 niveaux selon la rareté, 12 objets de propriété) ([compte rendu](plans/21-historique.md)).
 - [x] Plan 21 lot G2a-2, étape 1 : paliers d'objets (données, activation au franchissement, annoncés seulement s'ils sont codés, cartes et pause), Papier carbone (copies d'attaque à dégâts réduits, +1 copie aux niveaux 25 et 50) et Pince à linge (Durée des statuts, renouvellement au palier 25) ([compte rendu](plans/21-historique.md#21-compte-rendu-g2a-2-étape-1--socle-des-paliers-papier-carbone-pince-à-linge)).
+- [x] Plan 21 lot G2a-2, étape 2 : paliers du niveau 25 des douze autres objets de propriété, chacun avec son retour en jeu ([compte rendu](plans/21-historique.md#22-compte-rendu-g2a-2-étape-2--les-douze-paliers)).
 - [ ] Délestage et Habitude, puis B4 : catalogue d'objets, récompense à choix, inventaire cumulable, migration des anciennes sources, intégration UI et validation en run ([prérequis](plans/05-perks-specialisations.md#14-compte-rendu-b3-partie-sans-objets--sillage-et-seconde-lecture-29-septembre-2026)).
 
 ### Phase E — Quêtes et personnages (2-3 semaines)
