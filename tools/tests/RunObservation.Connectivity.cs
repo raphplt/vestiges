@@ -24,9 +24,8 @@ public partial class RunObservation
         ulong started = Time.GetTicksMsec();
         TileMapLayer ground = _world.GetNode<TileMapLayer>("Ground");
         WorldGenerator generator = _world.Generator;
-        int radius = generator.MapRadius;
-        Vector2 min = ground.MapToLocal(new Vector2I(-radius, -radius)) - new Vector2(96f, 48f);
-        Vector2 max = ground.MapToLocal(new Vector2I(radius, radius)) + new Vector2(96f, 48f);
+        Vector2 min = ground.MapToLocal(new Vector2I(-generator.MapRadiusX, -generator.MapRadiusY)) - new Vector2(96f, 48f);
+        Vector2 max = ground.MapToLocal(new Vector2I(generator.MapRadiusX, generator.MapRadiusY)) + new Vector2(96f, 48f);
         int width = Mathf.CeilToInt((max.X - min.X) / ConnectivityStep);
         int height = Mathf.CeilToInt((max.Y - min.Y) / ConnectivityStep);
         bool[] blocked = new bool[width * height];

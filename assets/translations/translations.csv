@@ -81,6 +81,16 @@ LANDMARK_RIFT,Faille,Rift
 PLACE_WELL_PROMPT,Boire,Drink
 PLACE_CRYSTAL_PROMPT,Briser,Break
 PLACE_SCARECROW_PROMPT,Secouer,Shake
+PLACE_MAILBOX_PROMPT,Lire le courrier,Read the mail
+PLACE_MINE_CART_PROMPT,Vider,Empty
+PLACE_CAR_PROMPT,Fouiller,Search
+PLACE_PHONE_PROMPT,Décrocher,Pick up
+PLACE_BUS_PROMPT,Lire l'horaire,Read the timetable
+PLACE_PICNIC_PROMPT,S'asseoir,Sit down
+PLACE_PICNIC_LORE_01,"Une nappe à carreaux, deux tasses. Quelqu'un comptait revenir.","A checkered cloth, two cups. Someone meant to come back."
+PLACE_PICNIC_LORE_02,"Des miettes de pain sec. Même les oiseaux ont oublié de venir.","Crumbs of stale bread. Even the birds forgot to come."
+PLACE_PICNIC_LORE_03,"Un prénom gravé dans le bois, à moitié effacé. On le lit quand même.","A name carved in the wood, half worn away. You read it anyway."
+PLACE_PICNIC_LORE_04,"Une radio à piles, muette. Le bouton est resté sur la station du dimanche.","A battery radio, silent. The dial still rests on the Sunday station."
 RIFT_PROMPT,Sonder,Reach in
 WEAPON_SWAP_PROMPT,Échanger : {0},Swap: {0}
 RIFT_TITLE,FAILLE,RIFT

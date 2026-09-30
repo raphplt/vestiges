@@ -3,7 +3,7 @@ using Godot;
 
 namespace Vestiges.Infrastructure;
 
-/// <summary>Un type de petit lieu (plan 22, lot C1) : les décors qui le portent, le geste, la récompense.</summary>
+/// <summary>Un type de petit lieu (plan 22, lots C1 et C4) : les décors qui le portent, le geste, la récompense.</summary>
 public sealed class SmallPlaceData
 {
 	public string Id { get; init; }
@@ -18,6 +18,14 @@ public sealed class SmallPlaceData
 	public float AmbushRadiusPx { get; init; }
 	public float AmbushTimeoutSeconds { get; init; }
 	public int MaxPerMap { get; init; }
+	/// <summary>Chance d'une récompense rare (arme du wagonnet, soin de la voiture) ; sinon de l'Essence.</summary>
+	public float Chance { get; init; }
+	/// <summary>Durée d'un effet (vitesse de l'abribus, flèches de la cabine), en secondes.</summary>
+	public float DurationSeconds { get; init; }
+	/// <summary>Portée d'un effet (lieux révélés par la cabine), en pixels.</summary>
+	public float RadiusPx { get; init; }
+	/// <summary>Lignes de lore possibles (clés de traduction), une tirée à l'usage.</summary>
+	public List<string> Lore { get; init; } = new();
 	public Color Color { get; init; }
 	/// <summary>Famille d'effets des étincelles du signe (« essence », « pale »…).</summary>
 	public string Family { get; init; }
@@ -58,6 +66,10 @@ public static class SmallPlaceDataLoader
 			List<string> sprites = new();
 			foreach (Variant sprite in dict["sprites"].AsGodotArray())
 				sprites.Add(sprite.AsString());
+			List<string> lore = new();
+			if (dict.ContainsKey("lore"))
+				foreach (Variant line in dict["lore"].AsGodotArray())
+					lore.Add(line.AsString());
 			Godot.Collections.Array color = dict["color"].AsGodotArray();
 			places.Add(new SmallPlaceData
 			{
@@ -73,6 +85,10 @@ public static class SmallPlaceDataLoader
 				AmbushRadiusPx = Float(dict, "ambush_radius_px"),
 				AmbushTimeoutSeconds = Float(dict, "ambush_timeout_s"),
 				MaxPerMap = (int)Float(dict, "max_per_map"),
+				Chance = Float(dict, "chance"),
+				DurationSeconds = Float(dict, "duration_s"),
+				RadiusPx = Float(dict, "radius_px"),
+				Lore = lore,
 				Color = new Color((float)color[0].AsDouble(), (float)color[1].AsDouble(), (float)color[2].AsDouble()),
 				Family = dict.ContainsKey("family") ? dict["family"].AsString() : null,
 			});

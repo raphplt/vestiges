@@ -95,6 +95,17 @@ public partial class WorldSetup : Node2D
     /// <summary>Indique si l'initialisation async est terminée.</summary>
     public bool IsWorldReady { get; private set; }
 
+    /// <summary>Rectangle monde qui contient toute la carte (minimap) : des coins de la grille, d'une cellule de marge.</summary>
+    public Rect2 WorldBounds
+    {
+        get
+        {
+            Vector2 min = _ground.MapToLocal(new Vector2I(-_config.MapRadius - 1, -_config.MapRadiusY - 1));
+            Vector2 max = _ground.MapToLocal(new Vector2I(_config.MapRadius + 1, _config.MapRadiusY + 1));
+            return new Rect2(_ground.GlobalPosition + min, max - min);
+        }
+    }
+
     public override void _Ready()
     {
         LoadProfiler.Begin();
@@ -135,6 +146,7 @@ public partial class WorldSetup : Node2D
         ulong step = Time.GetTicksUsec();
         _generator = new WorldGenerator(
             _config.MapRadius,
+            _config.MapRadiusY,
             _config.SpawnClearance,
             _config.CaIterations,
             _config.Zones,
@@ -156,14 +168,14 @@ public partial class WorldSetup : Node2D
         // Layouts urbains/marais (CPU pur)
         if (_generator.ActiveBiomes.Any(b => b.Id == "urban_ruins"))
         {
-            UrbanLayoutGenerator urbanGen = new(Seed, _config.MapRadius);
+            UrbanLayoutGenerator urbanGen = new(Seed, _config.MapRadius, _config.MapRadiusY);
             _urbanLayout = urbanGen.Apply(_terrain, _generator, "urban_ruins");
         }
         if (_generator.ActiveBiomes.Any(b => b.Id == "swamp"))
             _swampLayout = SwampPropPlacer.BuildLayout(_generator, Seed);
         if (_generator.ActiveBiomes.Any(b => b.Id == "wild_fields"))
         {
-            WildFieldsLayoutGenerator wildFieldsGen = new(Seed, _config.MapRadius);
+            WildFieldsLayoutGenerator wildFieldsGen = new(Seed, _config.MapRadius, _config.MapRadiusY);
             _wildFieldsLayout = wildFieldsGen.Apply(_terrain, _generator, "wild_fields");
         }
 
@@ -228,7 +240,7 @@ public partial class WorldSetup : Node2D
         LoadProfiler.Mark("génération attendue, tuiles préparées");
         await ApplyTerrainAsync(_terrain, _urbanLayout, onProgress);
         LoadProfiler.Mark("tuiles");
-        GroundMaterial.Apply(_ground, _roadOverlay, _generator, _tileMapper, _terrain, _config.MapRadius, _config.GroundBlend);
+        GroundMaterial.Apply(_ground, _roadOverlay, _generator, _tileMapper, _terrain, new Vector2I(_config.MapRadius, _config.MapRadiusY), _config.GroundBlend);
         AddPaths();
         LoadProfiler.Mark("matériau du sol et chemins");
 
@@ -292,7 +304,7 @@ public partial class WorldSetup : Node2D
         PrepareTiles();
         CreateVoidBackground();
         ApplyTerrain(_terrain, _urbanLayout);
-        GroundMaterial.Apply(_ground, _roadOverlay, _generator, _tileMapper, _terrain, _config.MapRadius, _config.GroundBlend);
+        GroundMaterial.Apply(_ground, _roadOverlay, _generator, _tileMapper, _terrain, new Vector2I(_config.MapRadius, _config.MapRadiusY), _config.GroundBlend);
         AddPaths();
         InitializeFog();
         if (_config.PoisEnabled && !PoisDisabled)
@@ -371,7 +383,7 @@ public partial class WorldSetup : Node2D
     private void CreateVoidBackground()
     {
         ColorRect voidBg = new();
-        float worldSize = _config.MapRadius * 64f * 4f;
+        float worldSize = Mathf.Max(_config.MapRadius, _config.MapRadiusY) * 64f * 4f;
         voidBg.Size = new Vector2(worldSize, worldSize);
         voidBg.Position = new Vector2(-worldSize * 0.5f, -worldSize * 0.5f);
         voidBg.Color = new Color(0f, 0f, 0f, 1f);
@@ -386,22 +398,22 @@ public partial class WorldSetup : Node2D
         _roadOverlay?.Clear();
 
         int radius = _config.MapRadius;
-        int size = radius * 2 + 1;
+        int radiusY = _config.MapRadiusY;
         float fadeStart = radius - _config.EdgeFadeWidth;
         bool hasDissolution = _tileMapper.HasDissolutionTiles;
 
-        for (int gx = 0; gx < size; gx++)
+        for (int gx = 0; gx < radius * 2 + 1; gx++)
         {
-            for (int gy = 0; gy < size; gy++)
+            for (int gy = 0; gy < radiusY * 2 + 1; gy++)
             {
                 int x = gx - radius;
-                int y = gy - radius;
+                int y = gy - radiusY;
 
                 if (!_generator.IsWithinBounds(x, y))
                     continue;
 
                 Vector2I cell = new(x, y);
-                float dist = Mathf.Sqrt(x * x + y * y);
+                float dist = _generator.EllipseDistance(x, y);
 
                 if (_generator.IsErased(x, y))
                 {
@@ -441,26 +453,26 @@ public partial class WorldSetup : Node2D
         _roadOverlay?.Clear();
 
         int radius = _config.MapRadius;
-        int size = radius * 2 + 1;
-        int totalCells = size * size;
+        int radiusY = _config.MapRadiusY;
+        int totalCells = (radius * 2 + 1) * (radiusY * 2 + 1);
         float fadeStart = radius - _config.EdgeFadeWidth;
         bool hasDissolution = _tileMapper.HasDissolutionTiles;
 
         int count = 0;
         BeginLoadSlice();
 
-        for (int gx = 0; gx < size; gx++)
+        for (int gx = 0; gx < radius * 2 + 1; gx++)
         {
-            for (int gy = 0; gy < size; gy++)
+            for (int gy = 0; gy < radiusY * 2 + 1; gy++)
             {
                 int x = gx - radius;
-                int y = gy - radius;
+                int y = gy - radiusY;
 
                 if (!_generator.IsWithinBounds(x, y))
                     continue;
 
                 Vector2I cell = new(x, y);
-                float dist = Mathf.Sqrt(x * x + y * y);
+                float dist = _generator.EllipseDistance(x, y);
 
                 if (_generator.IsErased(x, y))
                 {
@@ -617,17 +629,14 @@ public partial class WorldSetup : Node2D
 
         if (urbanLayout != null)
         {
-            int radius = urbanLayout.MapRadius;
-            int size = radius * 2 + 1;
-
-            for (int gx = 0; gx < size; gx++)
+            for (int gx = 0; gx < urbanLayout.CellGrid.GetLength(0); gx++)
             {
-                for (int gy = 0; gy < size; gy++)
+                for (int gy = 0; gy < urbanLayout.CellGrid.GetLength(1); gy++)
                 {
                     if (urbanLayout.CellGrid[gx, gy] == UrbanCellType.None)
                         continue;
 
-                    blocked.Add(new Vector2I(gx - radius, gy - radius));
+                    blocked.Add(new Vector2I(gx - urbanLayout.MapRadius, gy - urbanLayout.MapRadiusY));
                 }
             }
         }
@@ -674,21 +683,19 @@ public partial class WorldSetup : Node2D
         if (urbanLayout == null)
             return;
 
-        int radius = urbanLayout.MapRadius;
-        int size = radius * 2 + 1;
         int urbanIndex = _tileMapper.GetBiomeIndex("urban_ruins");
         if (urbanIndex < 0)
             return;
 
-        for (int gx = 0; gx < size; gx++)
+        for (int gx = 0; gx < urbanLayout.CellGrid.GetLength(0); gx++)
         {
-            for (int gy = 0; gy < size; gy++)
+            for (int gy = 0; gy < urbanLayout.CellGrid.GetLength(1); gy++)
             {
                 if (urbanLayout.CellGrid[gx, gy] != UrbanCellType.Road)
                     continue;
 
-                int x = gx - radius;
-                int y = gy - radius;
+                int x = gx - urbanLayout.MapRadius;
+                int y = gy - urbanLayout.MapRadiusY;
                 if (_tileMapper.TryGetUrbanRoadOverlaySourceId(urbanIndex, x, y, out int sourceId) && sourceId >= 0)
                     _tileMapper.SetCell(_roadOverlay, new Vector2I(x, y), sourceId);
             }
@@ -704,8 +711,6 @@ public partial class WorldSetup : Node2D
         if (urbanLayout == null)
             return;
 
-        int radius = urbanLayout.MapRadius;
-        int size = radius * 2 + 1;
         int urbanIndex = _tileMapper.GetBiomeIndex("urban_ruins");
         if (urbanIndex < 0)
             return;
@@ -916,13 +921,13 @@ public partial class WorldSetup : Node2D
     /// <summary>Choisit une cellule valide pour un élément de lore (hors eau, void, spawn, cells occupées).</summary>
     private Vector2I PickLoreCell(int minDistFromSpawn)
     {
-        int radius = _config.MapRadius;
-        int safeRadius = radius - _config.EdgeFadeWidth;
+        int safeRadius = _config.MapRadius - _config.EdgeFadeWidth;
+        int safeRadiusY = _config.MapRadiusY - _config.EdgeFadeWidth;
 
         for (int attempt = 0; attempt < 40; attempt++)
         {
             int x = (int)GD.RandRange(-safeRadius + 1, safeRadius);
-            int y = (int)GD.RandRange(-safeRadius + 1, safeRadius);
+            int y = (int)GD.RandRange(-safeRadiusY + 1, safeRadiusY);
             Vector2I cell = new(x, y);
 
             if (!IsValidLoreCell(cell))
@@ -938,13 +943,13 @@ public partial class WorldSetup : Node2D
     /// <summary>Choisit une cellule valide dans un biome spécifique.</summary>
     private Vector2I PickLoreCellInBiome(string biomeId, int minDistFromSpawn)
     {
-        int radius = _config.MapRadius;
-        int safeRadius = radius - _config.EdgeFadeWidth;
+        int safeRadius = _config.MapRadius - _config.EdgeFadeWidth;
+        int safeRadiusY = _config.MapRadiusY - _config.EdgeFadeWidth;
 
         for (int attempt = 0; attempt < 60; attempt++)
         {
             int x = (int)GD.RandRange(-safeRadius + 1, safeRadius);
-            int y = (int)GD.RandRange(-safeRadius + 1, safeRadius);
+            int y = (int)GD.RandRange(-safeRadiusY + 1, safeRadiusY);
             Vector2I cell = new(x, y);
 
             if (!IsValidLoreCell(cell))
@@ -963,10 +968,7 @@ public partial class WorldSetup : Node2D
 
     private bool IsValidLoreCell(Vector2I cell)
     {
-        int radius = _config.MapRadius;
-        int safeRadius = radius - _config.EdgeFadeWidth;
-
-        if (cell.X * cell.X + cell.Y * cell.Y > safeRadius * safeRadius)
+        if (_generator.EllipseDistance(cell.X, cell.Y) > _config.MapRadius - _config.EdgeFadeWidth)
             return false;
         if (_usedCells.Contains(cell))
             return false;
@@ -993,7 +995,10 @@ public partial class WorldSetup : Node2D
 /// </summary>
 public class WorldGenConfig
 {
+    /// <summary>Demi-largeur de la carte, en colonnes de cellules (map_radius).</summary>
     public int MapRadius;
+    /// <summary>Demi-hauteur, en rangées (map_radius_y, plan 22 C6) ; égale à la largeur si absente.</summary>
+    public int MapRadiusY;
     public int SpawnClearance;
     public int CaIterations;
     public List<WorldGenerator.ZoneConfig> Zones = new();
@@ -1038,6 +1043,7 @@ public class WorldGenConfig
         Godot.Collections.Dictionary dict = json.Data.AsGodotDictionary();
 
         config.MapRadius = (int)dict["map_radius"].AsDouble();
+        config.MapRadiusY = dict.ContainsKey("map_radius_y") ? (int)dict["map_radius_y"].AsDouble() : config.MapRadius;
         config.SpawnClearance = dict.ContainsKey("spawn_clearance")
             ? (int)dict["spawn_clearance"].AsDouble()
             : 4;
@@ -1134,13 +1140,14 @@ public class WorldGenConfig
             config.Zones.Add(zone);
         }
 
-        GD.Print($"[WorldGenConfig] Loaded — radius={config.MapRadius}, zones={config.Zones.Count}, biomes={config.BiomeCount}");
+        GD.Print($"[WorldGenConfig] Loaded — radius={config.MapRadius}×{config.MapRadiusY}, zones={config.Zones.Count}, biomes={config.BiomeCount}");
         return config;
     }
 
     private void SetDefaults()
     {
         MapRadius = 30;
+        MapRadiusY = 30;
         SpawnClearance = 4;
         CaIterations = 4;
 

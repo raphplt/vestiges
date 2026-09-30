@@ -3,12 +3,13 @@ using Godot;
 using Vestiges.Combat;
 using Vestiges.Core;
 using Vestiges.Infrastructure;
+using Vestiges.Progression;
 using Vestiges.Spawn;
 
 namespace Vestiges.World;
 
 /// <summary>
-/// Petits lieux de la carte (plan 22, lot C1). Après la génération, parcourt une fois les décors posés et en retient
+/// Petits lieux de la carte (plan 22, lots C1 et C4). Après la génération, parcourt une fois les décors posés et en retient
 /// une partie, selon data/world/small_places.json ; ensuite, quatre fois par seconde, montre les signes proches,
 /// éteint les lieux passés au Néant et suit les embuscades. Aucune boucle par frame sur les décors. Une embuscade ne
 /// paie que gagnée : le joueur qui secoue l'épouvantail et s'enfuit n'a rien.
@@ -21,6 +22,10 @@ public partial class SmallPlaceDirector : Node
 
 	private readonly List<SmallPlace> _places = new();
 	private readonly List<Ambush> _ambushes = new();
+	// Abribus : vitesse accordée, et le temps qu'il lui reste ; retirée par écart à l'expiration.
+	private readonly List<(float Bonus, float Remaining)> _speedBoosts = new();
+	private Player _boostedPlayer;
+	private PlayerProgression _progression;
 	private SmallPlaceConfig _config;
 	private SpawnManager _spawner;
 	private ErasureManager _erasure;
@@ -55,6 +60,7 @@ public partial class SmallPlaceDirector : Node
 		_eventBus = GetNode<EventBus>("/root/EventBus");
 		_groups = GetNode<GroupCache>("/root/GroupCache");
 		_eventBus.EnemyKillResolved += OnEnemyKill;
+		_progression = GetNodeOrNull<PlayerProgression>("/root/Main/Player/PlayerProgression");
 	}
 
 	public override void _ExitTree()
@@ -142,6 +148,8 @@ public partial class SmallPlaceDirector : Node
 	{
 		float dt = (float)delta;
 		AdvanceAmbushes(dt);
+		AdvanceBoosts(dt);
+		AdvanceReveals(dt);
 		_timer -= dt;
 		if (_timer > 0f || _places.Count == 0)
 			return;
@@ -194,6 +202,92 @@ public partial class SmallPlaceDirector : Node
 			case "ambush":
 				StartAmbush(place);
 				break;
+			case "xp":
+				// Une lettre jamais lue : une part de l'XP du niveau suivant, qui garde son poids à tout moment de la run.
+				if (_progression != null)
+					_eventBus.EmitSignal(EventBus.SignalName.XpGained, _progression.XpToNextLevel * data.Amount);
+				Burst(place);
+				break;
+			case "essence_or_weapon":
+				if (_rng.Randf() >= data.Chance || !DropWeapon(place))
+					GiveEssence(place, _rng.RandiRange(data.AmountMin, data.AmountMax));
+				Burst(place);
+				break;
+			case "search":
+				if (_rng.Randf() < data.Chance)
+					player.Heal(player.EffectiveMaxHp * data.Amount);
+				else
+					GiveEssence(place, _rng.RandiRange(data.AmountMin, data.AmountMax));
+				Burst(place);
+				break;
+			case "reveal":
+				RevealAround(place, data);
+				Burst(place);
+				break;
+			case "speed":
+				player.ApplyPerkModifier("speed", 1f + data.Amount, "multiplicative");
+				_boostedPlayer = player;
+				_speedBoosts.Add((data.Amount, data.DurationSeconds));
+				Burst(place);
+				break;
+			case "lore_heal":
+				player.Heal(player.EffectiveMaxHp * data.Amount);
+				if (data.Lore.Count > 0)
+					place.ShowLine(Tr(data.Lore[_rng.RandiRange(0, data.Lore.Count - 1)]));
+				Burst(place);
+				break;
+		}
+	}
+
+	/// <summary>Wagonnet : une arme au hasard, posée à côté, à ramasser comme celles des coffres. Faux s'il n'y en a pas.</summary>
+	private bool DropWeapon(SmallPlace place)
+	{
+		WeaponData data = LootRewards.PickRandomWeapon();
+		if (data == null)
+			return false;
+		WeaponPickup pickup = new();
+		pickup.Initialize(new WeaponInstance(data), place.GlobalPosition + Iso.ToScreen(new Vector2(40f, 0f)));
+		place.GetParent().CallDeferred(Node.MethodName.AddChild, pickup);
+		_eventBus.EmitSignal(EventBus.SignalName.LootReceived, "weapon", data.Id, 1);
+		return true;
+	}
+
+	/// <summary>Cabine téléphonique : les lieux encore utiles à portée reçoivent une flèche de bord d'écran un moment.</summary>
+	private void RevealAround(SmallPlace booth, SmallPlaceData data)
+	{
+		float radiusSq = data.RadiusPx * data.RadiusPx;
+		foreach (SmallPlace place in _places)
+			if (place != booth && place.CanInteract && place.GlobalPosition.DistanceSquaredTo(booth.GlobalPosition) <= radiusSq)
+				place.Reveal(data.DurationSeconds);
+	}
+
+	private void AdvanceReveals(float delta)
+	{
+		IReadOnlyList<SmallPlace> revealed = SmallPlace.Revealed;
+		for (int i = revealed.Count - 1; i >= 0; i--)
+		{
+			SmallPlace place = revealed[i];
+			place.RevealRemaining -= delta;
+			if (place.RevealRemaining <= 0f)
+				place.Unreveal();
+		}
+	}
+
+	/// <summary>Abribus : chaque vitesse accordée se retire d'elle-même, par écart, sans toucher aux autres bonus.</summary>
+	private void AdvanceBoosts(float delta)
+	{
+		for (int i = _speedBoosts.Count - 1; i >= 0; i--)
+		{
+			(float bonus, float remaining) = _speedBoosts[i];
+			remaining -= delta;
+			if (remaining > 0f)
+			{
+				_speedBoosts[i] = (bonus, remaining);
+				continue;
+			}
+			_speedBoosts.RemoveAt(i);
+			if (IsInstanceValid(_boostedPlayer))
+				_boostedPlayer.ApplyPerkModifier("speed", 1f / (1f + bonus), "multiplicative");
 		}
 	}
 

@@ -12,7 +12,7 @@ shader_type canvas_item;
 uniform sampler2D cell_map : filter_nearest, repeat_disable;
 uniform sampler2D tile_atlas : filter_nearest, repeat_disable;
 uniform bool blend_enabled = true;
-uniform int map_radius = 200;
+uniform ivec2 map_radius = ivec2(200, 200);
 uniform int atlas_columns = 16;
 // Portée du mélange de part et d'autre de la frontière, en pixels au sol.
 uniform float band_px = 34.0;
@@ -57,9 +57,9 @@ ivec2 cell_of(vec2 p) {
 }
 
 vec4 cell_data(ivec2 c) {
-	ivec2 texel = c + ivec2(map_radius);
-	int size = map_radius * 2 + 1;
-	if (texel.x < 0 || texel.y < 0 || texel.x >= size || texel.y >= size)
+	ivec2 texel = c + map_radius;
+	ivec2 size = map_radius * 2 + ivec2(1);
+	if (texel.x < 0 || texel.y < 0 || texel.x >= size.x || texel.y >= size.y)
 		return vec4(1.0, 0.0, 0.0, 0.0);
 	return texelFetch(cell_map, texel, 0);
 }

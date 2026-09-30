@@ -35,7 +35,7 @@ public partial class RunObservation
         foreach (Memorial memorial in memorials)
         {
             Vector2I cell = ground.LocalToMap(ground.ToLocal(memorial.GlobalPosition));
-            bands.Add((Mathf.Sqrt(cell.X * cell.X + cell.Y * cell.Y) / _world.Generator.MapRadius).ToString("F2", CultureInfo.InvariantCulture));
+            bands.Add((_world.Generator.EllipseDistance(cell.X, cell.Y) / _world.Generator.MapRadiusX).ToString("F2", CultureInfo.InvariantCulture));
         }
         if (memorials.Count == 0)
         {

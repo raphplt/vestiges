@@ -31,7 +31,7 @@ public static class GroundMaterial
     private const byte NoBlend = 255;
 
     public static void Apply(TileMapLayer ground, TileMapLayer roads, WorldGenerator generator, BiomeTileMapper tileMapper,
-                             TerrainType[,] terrain, int radius, GroundBlendConfig config)
+                             TerrainType[,] terrain, Vector2I radius, GroundBlendConfig config)
     {
         Shader shader = GD.Load<Shader>(ShaderPath);
         // Les routes s'effacent comme le sol mais ne participent pas aux jonctions.
@@ -49,18 +49,18 @@ public static class GroundMaterial
             return;
 
         ulong started = Time.GetTicksMsec();
-        int size = radius * 2 + 1;
-        byte[] cells = new byte[size * size * 4];
+        Vector2I size = radius * 2 + Vector2I.One;
+        byte[] cells = new byte[size.X * size.Y * 4];
 
-        for (int gy = 0; gy < size; gy++)
+        for (int gy = 0; gy < size.Y; gy++)
         {
-            for (int gx = 0; gx < size; gx++)
+            for (int gx = 0; gx < size.X; gx++)
             {
-                int offset = (gy * size + gx) * 4;
+                int offset = (gy * size.X + gx) * 4;
                 cells[offset] = NoBlend;
 
-                int x = gx - radius;
-                int y = gy - radius;
+                int x = gx - radius.X;
+                int y = gy - radius.Y;
                 if (!generator.IsWithinBounds(x, y) || generator.IsErased(x, y))
                     continue;
 
@@ -91,14 +91,14 @@ public static class GroundMaterial
             return;
 
         material.SetShaderParameter("blend_enabled", true);
-        material.SetShaderParameter("cell_map", ImageTexture.CreateFromImage(Image.CreateFromData(size, size, false, Image.Format.Rgba8, cells)));
+        material.SetShaderParameter("cell_map", ImageTexture.CreateFromImage(Image.CreateFromData(size.X, size.Y, false, Image.Format.Rgba8, cells)));
         material.SetShaderParameter("tile_atlas", ImageTexture.CreateFromImage(atlas));
         material.SetShaderParameter("map_radius", radius);
         material.SetShaderParameter("atlas_columns", BiomeTileMapper.AtlasColumns);
         material.SetShaderParameter("band_px", config.BandPx);
         material.SetShaderParameter("edge_noise", config.EdgeNoise);
         material.SetShaderParameter("noise_scale", config.NoiseScale);
-        GD.Print($"[GroundMaterial] {size}×{size} cellules décrites en {Time.GetTicksMsec() - started} ms");
+        GD.Print($"[GroundMaterial] {size.X}×{size.Y} cellules décrites en {Time.GetTicksMsec() - started} ms");
     }
 
     /// <summary>
@@ -106,13 +106,13 @@ public static class GroundMaterial
     /// que là, les autres pixels sortent après une seule lecture. En grille « stacked », deux cases de distance
     /// valent ±2 colonnes et ±4 rangs.
     /// </summary>
-    private static void MarkBorderCells(byte[] cells, int size)
+    private static void MarkBorderCells(byte[] cells, Vector2I size)
     {
-        for (int gy = 0; gy < size; gy++)
+        for (int gy = 0; gy < size.Y; gy++)
         {
-            for (int gx = 0; gx < size; gx++)
+            for (int gx = 0; gx < size.X; gx++)
             {
-                int offset = (gy * size + gx) * 4;
+                int offset = (gy * size.X + gx) * 4;
                 byte biome = cells[offset];
                 if (biome == NoBlend)
                     continue;
@@ -120,14 +120,14 @@ public static class GroundMaterial
                 for (int dy = -4; dy <= 4 && !border; dy++)
                 {
                     int ny = gy + dy;
-                    if (ny < 0 || ny >= size)
+                    if (ny < 0 || ny >= size.Y)
                         continue;
                     for (int dx = -2; dx <= 2; dx++)
                     {
                         int nx = gx + dx;
-                        if (nx < 0 || nx >= size)
+                        if (nx < 0 || nx >= size.X)
                             continue;
-                        byte other = cells[(ny * size + nx) * 4];
+                        byte other = cells[(ny * size.X + nx) * 4];
                         if (other != NoBlend && other != biome)
                         {
                             border = true;

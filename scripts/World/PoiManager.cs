@@ -146,15 +146,15 @@ public partial class PoiManager : Node
 
     private Vector2I PickPoiCell(string biomeId, PoiData data)
     {
-        int mapRadius = _generator.MapRadius;
-        int safeRadius = mapRadius - 5; // Pas dans la zone de décomposition
+        int safeRadius = _generator.MapRadiusX - 5; // Pas dans la zone de décomposition
+        int safeRadiusY = _generator.MapRadiusY - 5;
 
         for (int attempt = 0; attempt < 50; attempt++)
         {
             int x = (int)GD.RandRange(-safeRadius + 1, safeRadius);
-            int y = (int)GD.RandRange(-safeRadius + 1, safeRadius);
+            int y = (int)GD.RandRange(-safeRadiusY + 1, safeRadiusY);
 
-            float distFromCenter = Mathf.Sqrt(x * x + y * y);
+            float distFromCenter = _generator.EllipseDistance(x, y);
 
             // Hors du cercle de la map
             if (distFromCenter > safeRadius)

@@ -23,7 +23,10 @@ public class WildFieldsLayout
 	public HashSet<Vector2I> HedgeCells = new();
 	/// <summary>Arbres de verger, en rangs, dans une partie des prairies (plan 08 P4b-3).</summary>
 	public HashSet<Vector2I> OrchardCells = new();
+	/// <summary>Demi-largeur de la grille, en colonnes (CellGrid[x + MapRadius, y + MapRadiusY]).</summary>
 	public int MapRadius;
+	/// <summary>Demi-hauteur de la grille, en rangées (plan 22 C6).</summary>
+	public int MapRadiusY;
 }
 
 /// <summary>
@@ -34,7 +37,9 @@ public class WildFieldsLayout
 public class WildFieldsLayoutGenerator
 {
 	private readonly int _mapRadius;
+	private readonly int _mapRadiusY;
 	private readonly int _size;
+	private readonly int _sizeY;
 	private readonly ulong _seed;
 
 	private const int ParcelWidth = 13;
@@ -48,32 +53,35 @@ public class WildFieldsLayoutGenerator
 	private const int FallowRoll = 72;
 	private const int MeadowRoll = FallowRoll;
 
-	public WildFieldsLayoutGenerator(ulong seed, int mapRadius)
+	public WildFieldsLayoutGenerator(ulong seed, int mapRadius, int mapRadiusY)
 	{
 		_seed = seed ^ 0x71A1D5UL;
 		_mapRadius = mapRadius;
+		_mapRadiusY = mapRadiusY;
 		_size = mapRadius * 2 + 1;
+		_sizeY = mapRadiusY * 2 + 1;
 	}
 
 	public WildFieldsLayout Apply(TerrainType[,] terrain, WorldGenerator generator, string biomeId)
 	{
 		WildFieldsLayout layout = new()
 		{
-			CellGrid = new WildFieldCellType[_size, _size],
+			CellGrid = new WildFieldCellType[_size, _sizeY],
 			MapRadius = _mapRadius,
+			MapRadiusY = _mapRadiusY,
 		};
 		TerrainType[,] baseTerrain = (TerrainType[,])terrain.Clone();
 
 		int wildCellCount = 0;
 		for (int x = -_mapRadius; x <= _mapRadius; x++)
 		{
-			for (int y = -_mapRadius; y <= _mapRadius; y++)
+			for (int y = -_mapRadiusY; y <= _mapRadiusY; y++)
 			{
 				if (!generator.IsWithinBounds(x, y) || generator.IsErased(x, y))
 					continue;
 				if (generator.GetBiomeId(x, y) != biomeId)
 					continue;
-				if (terrain[x + _mapRadius, y + _mapRadius] == TerrainType.Water)
+				if (terrain[x + _mapRadius, y + _mapRadiusY] == TerrainType.Water)
 					continue;
 
 				wildCellCount++;
@@ -88,7 +96,7 @@ public class WildFieldsLayoutGenerator
 
 		for (int x = -_mapRadius; x <= _mapRadius; x++)
 		{
-			for (int y = -_mapRadius; y <= _mapRadius; y++)
+			for (int y = -_mapRadiusY; y <= _mapRadiusY; y++)
 			{
 				if (!generator.IsWithinBounds(x, y) || generator.IsErased(x, y))
 					continue;
@@ -96,7 +104,7 @@ public class WildFieldsLayoutGenerator
 					continue;
 
 				int gx = x + _mapRadius;
-				int gy = y + _mapRadius;
+				int gy = y + _mapRadiusY;
 				TerrainType current = terrain[gx, gy];
 				if (current == TerrainType.Water)
 					continue;
@@ -265,7 +273,7 @@ public class WildFieldsLayoutGenerator
 				int ny = y + dy;
 				if (!generator.IsWithinBounds(nx, ny) || generator.IsErased(nx, ny))
 					continue;
-				if (terrainGrid[nx + _mapRadius, ny + _mapRadius] == terrain)
+				if (terrainGrid[nx + _mapRadius, ny + _mapRadiusY] == terrain)
 					count++;
 			}
 		}

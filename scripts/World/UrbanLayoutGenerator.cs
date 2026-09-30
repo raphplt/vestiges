@@ -31,7 +31,10 @@ public class UrbanLayout
 	public HashSet<Vector2I> WallCells = new();
 	public HashSet<Vector2I> RoadCells = new();
 	public HashSet<Vector2I> SidewalkCells = new();
+	/// <summary>Demi-largeur de la grille, en colonnes (CellGrid[x + MapRadius, y + MapRadiusY]).</summary>
 	public int MapRadius;
+	/// <summary>Demi-hauteur de la grille, en rangées (plan 22 C6).</summary>
+	public int MapRadiusY;
 }
 
 /// <summary>
@@ -43,7 +46,9 @@ public class UrbanLayoutGenerator
 {
 	private readonly RandomNumberGenerator _rng = new();
 	private readonly int _mapRadius;
+	private readonly int _mapRadiusY;
 	private readonly int _size;
+	private readonly int _sizeY;
 
 	// Parametres de generation
 	private const int RoadSpacingBase = 14;
@@ -58,11 +63,13 @@ public class UrbanLayoutGenerator
 	private const float IntegrityMax = 0.9f;
 	private const int MinBuildingSize = 6;
 
-	public UrbanLayoutGenerator(ulong seed, int mapRadius)
+	public UrbanLayoutGenerator(ulong seed, int mapRadius, int mapRadiusY)
 	{
 		_rng.Seed = seed ^ 0xC17EFACE;
 		_mapRadius = mapRadius;
+		_mapRadiusY = mapRadiusY;
 		_size = mapRadius * 2 + 1;
+		_sizeY = mapRadiusY * 2 + 1;
 	}
 
 	/// <summary>
@@ -72,8 +79,9 @@ public class UrbanLayoutGenerator
 	{
 		UrbanLayout layout = new()
 		{
-			CellGrid = new UrbanCellType[_size, _size],
+			CellGrid = new UrbanCellType[_size, _sizeY],
 			MapRadius = _mapRadius,
+			MapRadiusY = _mapRadiusY,
 		};
 
 		// Step 1 : collecter les cells urbaines
@@ -83,7 +91,7 @@ public class UrbanLayoutGenerator
 
 		for (int x = -_mapRadius; x <= _mapRadius; x++)
 		{
-			for (int y = -_mapRadius; y <= _mapRadius; y++)
+			for (int y = -_mapRadiusY; y <= _mapRadiusY; y++)
 			{
 				if (!generator.IsWithinBounds(x, y) || generator.IsErased(x, y))
 					continue;
@@ -365,7 +373,7 @@ public class UrbanLayoutGenerator
 	{
 		for (int gx = 0; gx < _size; gx++)
 		{
-			for (int gy = 0; gy < _size; gy++)
+			for (int gy = 0; gy < _sizeY; gy++)
 			{
 				UrbanCellType cellType = layout.CellGrid[gx, gy];
 				if (cellType == UrbanCellType.None)
@@ -390,8 +398,8 @@ public class UrbanLayoutGenerator
 	private void SetCell(UrbanLayout layout, Vector2I worldCell, UrbanCellType type)
 	{
 		int gx = worldCell.X + _mapRadius;
-		int gy = worldCell.Y + _mapRadius;
-		if (gx >= 0 && gx < _size && gy >= 0 && gy < _size)
+		int gy = worldCell.Y + _mapRadiusY;
+		if (gx >= 0 && gx < _size && gy >= 0 && gy < _sizeY)
 			layout.CellGrid[gx, gy] = type;
 	}
 }

@@ -74,8 +74,9 @@ public partial class PropSpawner : Node2D
 			FractalOctaves = 2,
 		};
 
-		int radius = generator.MapRadius;
+		int radius = generator.MapRadiusX;
 		int safeRadius = radius - 5;
+		int safeRadiusY = generator.MapRadiusY - 5;
 		int spawnExclusion = generator.SpawnClearance + 2;
 		int totalSpawned = 0;
 
@@ -92,9 +93,9 @@ public partial class PropSpawner : Node2D
 
 		for (int x = -safeRadius; x <= safeRadius; x++)
 		{
-			for (int y = -safeRadius; y <= safeRadius; y++)
+			for (int y = -safeRadiusY; y <= safeRadiusY; y++)
 			{
-				if (x * x + y * y > safeRadius * safeRadius)
+				if (generator.EllipseDistance(x, y) > safeRadius)
 					continue;
 
 				if (Mathf.Abs(x) <= spawnExclusion && Mathf.Abs(y) <= spawnExclusion)
@@ -388,9 +389,8 @@ public partial class PropSpawner : Node2D
 	{
 		if (terrainGrid != null)
 		{
-			int radius = terrainGrid.GetLength(0) / 2;
-			int gx = x + radius;
-			int gy = y + radius;
+			int gx = x + terrainGrid.GetLength(0) / 2;
+			int gy = y + terrainGrid.GetLength(1) / 2;
 			if (gx >= 0 && gy >= 0 && gx < terrainGrid.GetLength(0) && gy < terrainGrid.GetLength(1))
 				return terrainGrid[gx, gy];
 		}

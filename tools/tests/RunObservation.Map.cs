@@ -73,7 +73,7 @@ public partial class RunObservation
         for (int index = 0; index < seedCount; index++)
         {
             ulong seed = firstSeed + (ulong)index;
-            WorldGenerator generator = new(config.MapRadius, config.SpawnClearance, config.CaIterations, config.Zones, seed, config.EdgeFadeWidth)
+            WorldGenerator generator = new(config.MapRadius, config.MapRadiusY, config.SpawnClearance, config.CaIterations, config.Zones, seed, config.EdgeFadeWidth)
             {
                 BiomeLayout = config.BiomeLayout
             };
@@ -99,7 +99,7 @@ public partial class RunObservation
         }
 
         StringBuilder result = new("[RunObservation] RESULT map");
-        result.Append(CultureInfo.InvariantCulture, $" seeds={seedCount} radius={config.MapRadius}");
+        result.Append(CultureInfo.InvariantCulture, $" seeds={seedCount} radius={config.MapRadius}x{config.MapRadiusY}");
         for (int r = 0; r < MeasuredRadii.Length; r++)
         {
             result.Append(CultureInfo.InvariantCulture,
@@ -155,7 +155,7 @@ public partial class RunObservation
     private static int DistanceToOtherBiome(WorldGenerator generator)
     {
         int origin = generator.GetBiomeIndex(0, 0);
-        for (int radius = 1; radius <= generator.MapRadius; radius++)
+        for (int radius = 1; radius <= generator.MapRadiusX; radius++)
         {
             for (int x = -radius; x <= radius; x++)
             {
@@ -168,25 +168,25 @@ public partial class RunObservation
                 }
             }
         }
-        return generator.MapRadius;
+        return generator.MapRadiusX;
     }
 
     private static void SaveBiomeImage(WorldGenerator generator, string path)
     {
-        int radius = generator.MapRadius;
-        int size = radius * 2 + 1;
-        using Image image = Image.CreateEmpty(size, size, false, Image.Format.Rgb8);
+        int radiusX = generator.MapRadiusX;
+        int radiusY = generator.MapRadiusY;
+        using Image image = Image.CreateEmpty(radiusX * 2 + 1, radiusY * 2 + 1, false, Image.Format.Rgb8);
         image.Fill(Colors.Black);
-        for (int x = -radius; x <= radius; x++)
+        for (int x = -radiusX; x <= radiusX; x++)
         {
-            for (int y = -radius; y <= radius; y++)
+            for (int y = -radiusY; y <= radiusY; y++)
             {
                 if (generator.IsErased(x, y))
                     continue;
                 Color color = BiomeColors.GetValueOrDefault(generator.GetBiomeId(x, y), Colors.Magenta);
                 if (generator.GetTerrain(x, y) == TerrainType.Water)
                     color = color.Darkened(0.45f);
-                image.SetPixel(x + radius, y + radius, color);
+                image.SetPixel(x + radiusX, y + radiusY, color);
             }
         }
         // Repères : 20 et 40 cellules autour du spawn (≈ un et deux écrans).
@@ -195,10 +195,10 @@ public partial class RunObservation
             for (int step = 0; step < 360; step++)
             {
                 float angle = Mathf.DegToRad(step);
-                image.SetPixel(radius + Mathf.RoundToInt(Mathf.Cos(angle) * ring), radius + Mathf.RoundToInt(Mathf.Sin(angle) * ring), Colors.White);
+                image.SetPixel(radiusX + Mathf.RoundToInt(Mathf.Cos(angle) * ring), radiusY + Mathf.RoundToInt(Mathf.Sin(angle) * ring), Colors.White);
             }
         }
-        image.Resize(size * 3, size * 3, Image.Interpolation.Nearest);
+        image.Resize((radiusX * 2 + 1) * 3, (radiusY * 2 + 1) * 3, Image.Interpolation.Nearest);
         image.SavePng(path);
     }
 

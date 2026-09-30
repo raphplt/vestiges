@@ -43,12 +43,11 @@ public static class JunctionPropPlacer
 
         uint threshold = (uint)(Mathf.Clamp(config.Chance, 0f, 1f) * 1000f);
         Dictionary<string, Texture2D> cache = new();
-        int radius = generator.MapRadius;
         int band = Mathf.Max(1, config.BandCells);
         int placed = 0;
-        for (int y = -radius; y <= radius; y++)
+        for (int y = -generator.MapRadiusY; y <= generator.MapRadiusY; y++)
         {
-            for (int x = -radius; x <= radius; x++)
+            for (int x = -generator.MapRadiusX; x <= generator.MapRadiusX; x++)
             {
                 if (!generator.IsWithinBounds(x, y) || generator.IsErased(x, y) || generator.GetTerrain(x, y) == TerrainType.Water)
                     continue;

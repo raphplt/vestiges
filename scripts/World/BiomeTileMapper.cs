@@ -497,7 +497,7 @@ public class BiomeTileMapper
 			return false;
 
 		int gx = x + _wildFieldsLayout.MapRadius;
-		int gy = y + _wildFieldsLayout.MapRadius;
+		int gy = y + _wildFieldsLayout.MapRadiusY;
 		if (gx < 0 || gy < 0 || gx >= _wildFieldsLayout.CellGrid.GetLength(0) || gy >= _wildFieldsLayout.CellGrid.GetLength(1))
 			return false;
 
@@ -682,15 +682,13 @@ public class BiomeTileMapper
 		if (_urbanLayout == null || specialMap == null)
 			return false;
 
-		int radius = _urbanLayout.MapRadius;
-		int gridSize = radius * 2 + 1;
-		int gx = x + radius;
-		int gy = y + radius;
+		int gx = x + _urbanLayout.MapRadius;
+		int gy = y + _urbanLayout.MapRadiusY;
 
-		bool hasLeft  = IsUrbanRoad(gx - 1, gy, gridSize);
-		bool hasRight = IsUrbanRoad(gx + 1, gy, gridSize);
-		bool hasUp    = IsUrbanRoad(gx, gy - 1, gridSize);
-		bool hasDown  = IsUrbanRoad(gx, gy + 1, gridSize);
+		bool hasLeft  = IsUrbanRoad(gx - 1, gy);
+		bool hasRight = IsUrbanRoad(gx + 1, gy);
+		bool hasUp    = IsUrbanRoad(gx, gy - 1);
+		bool hasDown  = IsUrbanRoad(gx, gy + 1);
 
 		int mask = (hasLeft ? RoadTileGenerator.ConnLeft : 0)
 				 | (hasRight ? RoadTileGenerator.ConnRight : 0)
@@ -701,9 +699,9 @@ public class BiomeTileMapper
 		return TryPickSpecialSource(specialMap, key, x, y, out sourceId);
 	}
 
-	private bool IsUrbanRoad(int gx, int gy, int gridSize)
+	private bool IsUrbanRoad(int gx, int gy)
 	{
-		if (gx < 0 || gx >= gridSize || gy < 0 || gy >= gridSize)
+		if (gx < 0 || gx >= _urbanLayout.CellGrid.GetLength(0) || gy < 0 || gy >= _urbanLayout.CellGrid.GetLength(1))
 			return false;
 		return _urbanLayout.CellGrid[gx, gy] == UrbanCellType.Road;
 	}

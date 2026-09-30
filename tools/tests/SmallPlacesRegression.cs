@@ -9,8 +9,8 @@ using Vestiges.World;
 namespace Vestiges.Tests;
 
 /// <summary>
-/// Petits lieux (plan 22, lot C1) sur de vrais décors : placement (types reconnus, quota, écart, graine), signe à
-/// portée, usage unique et récompenses (soin, Essence).
+/// Petits lieux (plan 22, lots C1 et C4) sur de vrais décors : placement (types reconnus, quota, écart, graine), signe à
+/// portée, usage unique et récompenses (soin, Essence, XP, arme, révélation, vitesse, lore).
 /// </summary>
 public partial class SmallPlacesRegression : Node2D
 {
@@ -29,6 +29,11 @@ public partial class SmallPlacesRegression : Node2D
 			AddProp(props, "collapsed_quarry/prop_crystal_vein", new Vector2(0f, 2000f));
 			AddProp(props, "collapsed_quarry/prop_crystal_vein", new Vector2(100f, 2000f));
 			AddProp(props, "wild_fields/prop_scarecrow_broken", new Vector2(5000f, 5000f));
+			// Les six lieux du lot C4, un de chaque, en ligne tous les 700 px.
+			string[] c4 = { "urban_ruins/prop_mailbox", "collapsed_quarry/prop_mine_cart", "urban_ruins/prop_urban_car_red_x",
+				"urban_ruins/prop_phone_booth", "urban_ruins/prop_bus_shelter", "wild_fields/prop_scene_picnic" };
+			for (int i = 0; i < c4.Length; i++)
+				AddProp(props, c4[i], new Vector2(i * 700f, 4000f));
 
 			List<Vector2> first = Place(props, out SmallPlaceDirector director, 7);
 			List<Vector2> again = Place(props, out _, 7);
@@ -44,6 +49,10 @@ public partial class SmallPlacesRegression : Node2D
 			}
 			Check(wells == 6 && veins == 1 && scarecrows == 1 && spaced, $"Placement : {wells} puits (quota 6), {veins} veine (écart 600 px), {scarecrows} épouvantail");
 			Check(first.Count == again.Count && first.TrueForAll(again.Contains), "Placement : même graine, mêmes lieux");
+			bool allKinds = true;
+			foreach (string kind in new[] { "mailbox", "mine_cart", "abandoned_car", "phone_booth", "bus_shelter", "picnic" })
+				allKinds &= new List<SmallPlace>(director.Places).Exists(place => place.Data.Id == kind);
+			Check(allKinds, "Placement : les six lieux du lot C4 reconnus sur leurs décors");
 
 			Player player = GD.Load<PackedScene>("res://scenes/Player.tscn").Instantiate<Player>();
 			AddChild(player);
@@ -75,6 +84,8 @@ public partial class SmallPlacesRegression : Node2D
 			well.ShowSign(true);
 			Check(shown && !well.SignVisible, "Signe : visible sur un lieu encore utile, jamais sur un lieu déjà utilisé");
 
+			CheckC4(director, player, essence);
+
 			GD.Print($"[SmallPlacesRegression] RESULT failures={_failures}");
 			GetTree().Quit(_failures == 0 ? 0 : 1);
 		}
@@ -83,6 +94,73 @@ public partial class SmallPlacesRegression : Node2D
 			GD.PushError(exception.ToString());
 			GetTree().Quit(2);
 		}
+	}
+
+	private void CheckC4(SmallPlaceDirector director, Player player, EssenceTracker essence)
+	{
+		List<SmallPlace> places = new(director.Places);
+		SmallPlace Find(string id) => places.Find(place => place.Data.Id == id);
+		EventBus events = GetNode<EventBus>("/root/EventBus");
+
+		PlayerProgression progression = new() { Name = "PlayerProgression" };
+		player.AddChild(progression);
+		typeof(SmallPlaceDirector).GetField("_progression", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
+			.SetValue(director, progression);
+		float xp = 0f;
+		EventBus.XpGainedEventHandler onXp = amount => xp += amount;
+		events.XpGained += onXp;
+		Find("mailbox").Interact(player);
+		events.XpGained -= onXp;
+		Check(Mathf.IsEqualApprox(xp, progression.XpToNextLevel * 0.5f), $"Boîte aux lettres : la moitié de l'XP du niveau suivant ({xp:0})");
+
+		int essenceBefore = essence.CurrentEssence;
+		string weapon = null;
+		EventBus.LootReceivedEventHandler onLoot = (type, id, _) => weapon = type == "weapon" ? id : weapon;
+		events.LootReceived += onLoot;
+		Find("mine_cart").Interact(player);
+		events.LootReceived -= onLoot;
+		Check(weapon != null || essence.CurrentEssence - essenceBefore is >= 8 and <= 14,
+			$"Wagonnet : une arme au sol ({weapon ?? "non"}) ou 8 à 14 Essence ({essence.CurrentEssence - essenceBefore})");
+
+		player.TakeDamage(30f);
+		float hp = player.CurrentHp;
+		essenceBefore = essence.CurrentEssence;
+		Find("abandoned_car").Interact(player);
+		Check(player.CurrentHp > hp || essence.CurrentEssence - essenceBefore is >= 6 and <= 11, "Voiture abandonnée : un soin ou de l'Essence");
+
+		SmallPlace booth = Find("phone_booth");
+		booth.Interact(player);
+		bool revealed = Revealed(Find("bus_shelter")) && Revealed(Find("picnic"))
+			&& !Revealed(booth) && !Revealed(Find("mailbox"));
+		director._Process(46.0);
+		Check(revealed && !Revealed(Find("bus_shelter")),
+			"Cabine téléphonique : les lieux encore utiles à portée reçoivent une flèche, 45 s");
+
+		float speed = player.SpeedMultiplier;
+		Find("bus_shelter").Interact(player);
+		bool faster = Mathf.IsEqualApprox(player.SpeedMultiplier / speed, 1.2f);
+		director._Process(21.0);
+		Check(faster && Mathf.IsEqualApprox(player.SpeedMultiplier, speed), "Abribus : vitesse +20 % pendant 20 s, puis retirée");
+
+		// PV pleins d'abord : les coups des contrôles précédents laissent moins de 20 PV au Traqueur.
+		player.Heal(player.EffectiveMaxHp);
+		player.TakeDamage(20f);
+		hp = player.CurrentHp;
+		SmallPlace picnic = Find("picnic");
+		picnic.Interact(player);
+		Label line = null;
+		foreach (Node child in picnic.GetChildren())
+			line ??= child as Label;
+		Check(player.CurrentHp > hp && line is { Visible: true } && line.Text.Length > 0 && !line.Text.StartsWith("PLACE_"),
+			$"Table de pique-nique : soin léger et une ligne de lore (« {line?.Text} »)");
+	}
+
+	private static bool Revealed(SmallPlace place)
+	{
+		foreach (SmallPlace revealed in SmallPlace.Revealed)
+			if (revealed == place)
+				return true;
+		return false;
 	}
 
 	private List<Vector2> Place(Node2D props, out SmallPlaceDirector director, ulong seed)

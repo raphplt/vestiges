@@ -7,7 +7,8 @@ using Vestiges.World;
 namespace Vestiges.UI;
 
 /// <summary>
-/// Flèches au bord de l'écran vers les coffres fermés proches mais hors du cadre, à la couleur de leur rareté.
+/// Flèches au bord de l'écran vers les coffres fermés proches mais hors du cadre, à la couleur de leur rareté, et vers
+/// les petits lieux qu'une cabine téléphonique a révélés (plan 22 C4), à la couleur du lieu, plus petites.
 /// Enfant de la racine mise à l'échelle du HUD (unités de référence 960×540), comme la flèche des événements.
 /// </summary>
 public partial class ChestPointers : Control
@@ -16,12 +17,16 @@ public partial class ChestPointers : Control
     // Vitalité, progression et score occupent le haut du HUD, armes et passifs le bas : les flèches restent entre.
     private const float TopMargin = 58f;
     private const float BottomMargin = 70f;
+    private const int RevealedMax = 4;
 
     private readonly Vector2[] _arrow = new Vector2[3];
     private readonly Chest[] _shown;
     private readonly float[] _distances;
     private readonly float _rangeSq;
     private int _count;
+    private readonly SmallPlace[] _places = new SmallPlace[RevealedMax];
+    private readonly float[] _placeDistances = new float[RevealedMax];
+    private int _placeCount;
     private bool _drawn;
     private EventBus _eventBus;
 
@@ -60,10 +65,13 @@ public partial class ChestPointers : Control
     {
         Camera2D camera = GetViewport().GetCamera2D();
         _count = 0;
+        _placeCount = 0;
         if (camera != null && _shown.Length > 0)
             CollectNearest(camera);
+        if (camera != null && SmallPlace.Revealed.Count > 0)
+            CollectRevealed(camera);
         // Redessin tant qu'une flèche vit, et une fois de plus pour effacer la dernière.
-        if (_count > 0 || _drawn)
+        if (_count > 0 || _placeCount > 0 || _drawn)
             QueueRedraw();
     }
 
@@ -100,10 +108,40 @@ public partial class ChestPointers : Control
         }
     }
 
+    /// <summary>Les lieux révélés hors du cadre, les plus proches d'abord, sans allocation.</summary>
+    private void CollectRevealed(Camera2D camera)
+    {
+        Vector2 center = camera.GetScreenCenterPosition();
+        Vector2 half = GetViewport().GetVisibleRect().Size / (2f * camera.Zoom);
+        Rect2 view = new(center - half, half * 2f);
+        IReadOnlyList<SmallPlace> revealed = SmallPlace.Revealed;
+        for (int i = 0; i < revealed.Count; i++)
+        {
+            SmallPlace place = revealed[i];
+            if (view.HasPoint(place.GlobalPosition))
+                continue;
+            float distanceSq = center.DistanceSquaredTo(place.GlobalPosition);
+            int slot;
+            if (_placeCount < RevealedMax)
+                slot = _placeCount++;
+            else if (distanceSq < _placeDistances[_placeCount - 1])
+                slot = _placeCount - 1;
+            else
+                continue;
+            _places[slot] = place;
+            _placeDistances[slot] = distanceSq;
+            for (int j = slot; j > 0 && _placeDistances[j] < _placeDistances[j - 1]; j--)
+            {
+                (_places[j], _places[j - 1]) = (_places[j - 1], _places[j]);
+                (_placeDistances[j], _placeDistances[j - 1]) = (_placeDistances[j - 1], _placeDistances[j]);
+            }
+        }
+    }
+
     public override void _Draw()
     {
-        _drawn = _count > 0;
-        if (_count == 0)
+        _drawn = _count > 0 || _placeCount > 0;
+        if (!_drawn)
             return;
 
         Transform2D canvas = GetViewport().GetCanvasTransform();
@@ -124,6 +162,17 @@ public partial class ChestPointers : Control
             Color color = RarityPalette.Main(_shown[i].Rarity) with { A = 0.55f + 0.45f * closeness };
             DrawArrow(tip, direction, 1.9f * pulse, new Color(0.1f, 0.1f, 0.18f, color.A));
             DrawArrow(tip, direction, 1.5f * pulse, color);
+        }
+        for (int i = 0; i < _placeCount; i++)
+        {
+            Vector2 local = canvas * _places[i].GlobalPosition / hudScale;
+            Vector2 direction = (local - middle).Normalized();
+            float tx = direction.X != 0f ? (inner.Size.X / 2f) / Mathf.Abs(direction.X) : float.MaxValue;
+            float ty = direction.Y != 0f ? (inner.Size.Y / 2f) / Mathf.Abs(direction.Y) : float.MaxValue;
+            Vector2 tip = (middle + direction * Mathf.Min(tx, ty)).Round();
+            Color color = _places[i].Data.Color with { A = 0.85f };
+            DrawArrow(tip, direction, 1.4f * pulse, new Color(0.1f, 0.1f, 0.18f, color.A));
+            DrawArrow(tip, direction, 1.1f * pulse, color);
         }
     }
 

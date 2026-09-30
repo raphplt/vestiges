@@ -29,14 +29,13 @@ public partial class RunObservation
         Vector2 spawn = _player.GlobalPosition;
         chests.Sort((a, b) => a.GlobalPosition.DistanceSquaredTo(spawn).CompareTo(b.GlobalPosition.DistanceSquaredTo(spawn)));
         TileMapLayer ground = _world.GetNode<TileMapLayer>("Ground");
-        int radius = _world.Generator.MapRadius;
-        Dictionary<string, int> counts = new();
+                Dictionary<string, int> counts = new();
         List<string> bands = new();
         foreach (Chest chest in chests)
         {
             counts[chest.ChestId] = counts.GetValueOrDefault(chest.ChestId) + 1;
             Vector2I cell = ground.LocalToMap(ground.ToLocal(chest.GlobalPosition));
-            bands.Add(string.Create(CultureInfo.InvariantCulture, $"{chest.ChestId[6..]}:{Mathf.Sqrt(cell.X * cell.X + cell.Y * cell.Y) / radius:F2}"));
+            bands.Add(string.Create(CultureInfo.InvariantCulture, $"{chest.ChestId[6..]}:{_world.Generator.EllipseDistance(cell.X, cell.Y) / _world.Generator.MapRadiusX:F2}"));
         }
 
         Node2D props = _world.GetNode<Node2D>("PropContainer");

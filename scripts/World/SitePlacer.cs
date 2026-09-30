@@ -58,7 +58,9 @@ public sealed class SitePlacer
     {
         best = default;
         float bestScore = float.MinValue;
-        int radius = _generator.MapRadius;
+        int radius = _generator.MapRadiusX;
+        // Couronne en unités de largeur, étirée en hauteur comme la carte (plan 22 C6).
+        float stretchY = (float)_generator.MapRadiusY / _generator.MapRadiusX;
         float innerSq = bandMin * bandMin;
         float outerSq = bandMax * bandMax;
         int valid = 0;
@@ -68,7 +70,7 @@ public sealed class SitePlacer
             // Uniforme en surface dans la couronne : sans la racine, les lieux s'entasseraient au bord intérieur.
             float distance = radius * Mathf.Sqrt(_rng.RandfRange(innerSq, outerSq));
             float angle = _rng.RandfRange(0f, Mathf.Tau);
-            Vector2I cell = new(Mathf.RoundToInt(Mathf.Cos(angle) * distance), Mathf.RoundToInt(Mathf.Sin(angle) * distance));
+            Vector2I cell = new(Mathf.RoundToInt(Mathf.Cos(angle) * distance), Mathf.RoundToInt(Mathf.Sin(angle) * distance * stretchY));
             if (!IsCellAllowed(cell))
                 continue;
 
@@ -129,7 +131,7 @@ public sealed class SitePlacer
     private UrbanCellType UrbanCell(Vector2I cell)
     {
         int gx = cell.X + _urban.MapRadius;
-        int gy = cell.Y + _urban.MapRadius;
+        int gy = cell.Y + _urban.MapRadiusY;
         if (gx < 0 || gy < 0 || gx >= _urban.CellGrid.GetLength(0) || gy >= _urban.CellGrid.GetLength(1))
             return UrbanCellType.None;
         return _urban.CellGrid[gx, gy];

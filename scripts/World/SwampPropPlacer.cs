@@ -131,10 +131,9 @@ public static class SwampPropPlacer
 		List<Vector2I> deepWaterCells,
 		List<Vector2I> wetClearingCells)
 	{
-		int radius = generator.MapRadius;
-		for (int x = -radius; x <= radius; x++)
+		for (int x = -generator.MapRadiusX; x <= generator.MapRadiusX; x++)
 		{
-			for (int y = -radius; y <= radius; y++)
+			for (int y = -generator.MapRadiusY; y <= generator.MapRadiusY; y++)
 			{
 				if (!generator.IsWithinBounds(x, y) || generator.IsErased(x, y))
 					continue;

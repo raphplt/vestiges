@@ -198,6 +198,40 @@ def mailbox(stem: str, seed: int) -> PropModel:
     return PropModel(stem, parts, materials, AXIS_X_YAW, canvas=(40, 56))
 
 
+def bus_shelter(stem: str, seed: int) -> PropModel:
+    """Abribus (plan 23 R7) : toit plat, vitre de fond fêlée, banc, panneau de ligne. On y attendait ; on repart."""
+    FRAME, GLASS, ROOF, BENCH, SIGN, MOSS, RUST = range(7)
+    materials = [
+        make_material("frame", "#5B6770"),
+        make_material("glass", "#6F8C94", contrast=0.5),
+        make_material("roof", "#3A4248"),
+        make_material("bench", "#7A5A3C"),
+        make_material("sign", "#C7BC94", contrast=0.5),
+        make_material("moss", "#5C7A3A"),
+        make_material("rust", "#6A4430"),
+    ]
+
+    def parts() -> list[Part]:
+        w = Weathering(seed)
+        half_len = 1.1 * M
+        posts = [(x * 0.42 * M, 1.1 * M, z * half_len) for x in (-1, 1) for z in (-1, 1)]
+        rust = [(w.uniform(-0.4, 0.4) * M, 2.2 * M, w.uniform(-1.0, 1.0) * M) for _ in range(3)]
+        return [
+            Part(lambda p: _union(*(rounded_box(p, c, (0.04 * M, 1.1 * M, 0.04 * M), 0.015 * M) for c in posts)), FRAME),
+            Part(lambda p: rounded_box(p, (0.42 * M, 1.2 * M, 0), (0.02 * M, 0.8 * M, half_len * 0.95), 0.01 * M), GLASS),
+            Part(lambda p: rounded_box(p, (0, 2.25 * M, 0), (0.55 * M, 0.06 * M, half_len + 0.12 * M), 0.03 * M,
+                                       rotation_z(w.uniform(-0.04, 0.04))), ROOF),
+            Part(lambda p: rounded_box(p, (0.2 * M, 0.5 * M, 0), (0.16 * M, 0.04 * M, half_len * 0.8), 0.02 * M), BENCH),
+            Part(lambda p: _union(*(rounded_box(p, (0.2 * M, 0.25 * M, z * half_len * 0.7), (0.03 * M, 0.25 * M, 0.03 * M), 0.01 * M)
+                                    for z in (-1, 1))), FRAME),
+            Part(lambda p: rounded_box(p, (-0.46 * M, 1.95 * M, half_len + 0.05 * M), (0.03 * M, 0.2 * M, 0.2 * M), 0.02 * M), SIGN),
+            Part(_spots(rust, 0.08 * M, 0.14 * M, w), RUST),
+            Part(lambda p: ellipsoid(p, (w.uniform(-0.2, 0.2) * M, 2.32 * M, w.uniform(-0.6, 0.6) * M), (0.3 * M, 0.07 * M, 0.45 * M)), MOSS),
+        ]
+
+    return PropModel(stem, parts, materials, AXIS_X_YAW, canvas=(80, 100), footprint=box_footprint(0.45 * M, 1.15 * M))
+
+
 def chain_link_fence(stem: str, seed: int) -> PropModel:
     POST, WIRE, RUST = range(3)
     materials = [
@@ -342,6 +376,7 @@ def catalog() -> list[PropModel]:
         traffic_light("prop_traffic_light", 51),
         phone_booth("prop_phone_booth", 61),
         mailbox("prop_mailbox", 71),
+        bus_shelter("prop_bus_shelter", 75),
         chain_link_fence("prop_chain_link_fence", 81),
         torn_billboard("prop_torn_billboard", 91),
         concrete_debris("prop_concrete_debris", 101),

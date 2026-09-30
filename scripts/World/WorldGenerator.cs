@@ -20,7 +20,8 @@ public enum TerrainType
 /// </summary>
 public class WorldGenerator
 {
-    private readonly int _mapRadius;
+    private readonly int _radiusX;
+    private readonly int _radiusY;
     private readonly int _spawnClearance;
     private readonly int _caIterations;
     private readonly int _edgeFadeWidth;
@@ -30,14 +31,16 @@ public class WorldGenerator
     private int[,] _biomeGrid;
     private bool[,] _withinBounds;
     private bool[,] _erasedGrid;
-    private int _size;
+    private readonly int _sizeX;
+    private readonly int _sizeY;
 
     private List<BiomeData> _activeBiomes = new();
     private readonly List<Vector2> _regionCenters = new();
     private readonly List<int> _regionBiomes = new();
     private List<int>[,] _regionBuckets;
     private float _regionBucketSize;
-    private int _regionBucketCount;
+    private int _regionBucketCountX;
+    private int _regionBucketCountY;
     private FastNoiseLite _biomeWarpNoiseX;
     private FastNoiseLite _biomeWarpNoiseY;
     private BiomeLayoutConfig _biomeLayout = BiomeLayoutConfig.Default;
@@ -46,7 +49,10 @@ public class WorldGenerator
     private const float RegionNeighbourFactor = 1.9f;
     private const float RegionSameNeighbourPenalty = 100f;
 
-    public int MapRadius => _mapRadius;
+    /// <summary>Demi-largeur de la carte, en colonnes de cellules.</summary>
+    public int MapRadiusX => _radiusX;
+    /// <summary>Demi-hauteur de la carte, en rangées de cellules (plan 22 C6 : deux fois la largeur).</summary>
+    public int MapRadiusY => _radiusY;
     public int SpawnClearance => _spawnClearance;
     public List<BiomeData> ActiveBiomes => _activeBiomes;
     public int BiomeRegionCount => _regionCenters.Count;
@@ -79,9 +85,10 @@ public class WorldGenerator
         public float ForestWeight;
     }
 
-    public WorldGenerator(int mapRadius, int spawnClearance, int caIterations, List<ZoneConfig> zones, ulong seed, int edgeFadeWidth = 5)
+    public WorldGenerator(int mapRadiusX, int mapRadiusY, int spawnClearance, int caIterations, List<ZoneConfig> zones, ulong seed, int edgeFadeWidth = 5)
     {
-        _mapRadius = mapRadius;
+        _radiusX = mapRadiusX;
+        _radiusY = mapRadiusY;
         _spawnClearance = spawnClearance;
         _caIterations = caIterations;
         _edgeFadeWidth = edgeFadeWidth;
@@ -90,11 +97,12 @@ public class WorldGenerator
         _rng = new RandomNumberGenerator();
         _rng.Seed = seed;
 
-        _size = mapRadius * 2 + 1;
-        _grid = new TerrainType[_size, _size];
-        _biomeGrid = new int[_size, _size];
-        _withinBounds = new bool[_size, _size];
-        _erasedGrid = new bool[_size, _size];
+        _sizeX = mapRadiusX * 2 + 1;
+        _sizeY = mapRadiusY * 2 + 1;
+        _grid = new TerrainType[_sizeX, _sizeY];
+        _biomeGrid = new int[_sizeX, _sizeY];
+        _withinBounds = new bool[_sizeX, _sizeY];
+        _erasedGrid = new bool[_sizeX, _sizeY];
     }
 
     public TerrainType[,] Generate(List<BiomeData> availableBiomes, int biomeCount)
@@ -111,7 +119,7 @@ public class WorldGenerator
         EnsureWaterConnectivity();
 
         string biomeNames = string.Join(", ", _activeBiomes.ConvertAll(b => b.Name));
-        GD.Print($"[WorldGenerator] Generated circular map radius={_mapRadius} — biomes: {biomeNames}");
+        GD.Print($"[WorldGenerator] Generated elliptic map radius={_radiusX}×{_radiusY} — biomes: {biomeNames}");
         return _grid;
     }
 
@@ -127,15 +135,15 @@ public class WorldGenerator
         ApplyEdgeDecay();
         EnsureWaterConnectivity();
 
-        GD.Print($"[WorldGenerator] Generated circular map radius={_mapRadius} (no biomes)");
+        GD.Print($"[WorldGenerator] Generated elliptic map radius={_radiusX}×{_radiusY} (no biomes)");
         return _grid;
     }
 
     public TerrainType GetTerrain(int x, int y)
     {
-        int gx = x + _mapRadius;
-        int gy = y + _mapRadius;
-        if (gx < 0 || gy < 0 || gx >= _size || gy >= _size)
+        int gx = x + _radiusX;
+        int gy = y + _radiusY;
+        if (gx < 0 || gy < 0 || gx >= _sizeX || gy >= _sizeY)
             return TerrainType.Water;
         if (!_withinBounds[gx, gy])
             return TerrainType.Water;
@@ -147,9 +155,9 @@ public class WorldGenerator
         if (_activeBiomes.Count == 0)
             return null;
 
-        int gx = x + _mapRadius;
-        int gy = y + _mapRadius;
-        if (gx < 0 || gy < 0 || gx >= _size || gy >= _size)
+        int gx = x + _radiusX;
+        int gy = y + _radiusY;
+        if (gx < 0 || gy < 0 || gx >= _sizeX || gy >= _sizeY)
             return _activeBiomes[0];
 
         int index = _biomeGrid[gx, gy];
@@ -161,9 +169,9 @@ public class WorldGenerator
         if (_activeBiomes.Count == 0)
             return -1;
 
-        int gx = x + _mapRadius;
-        int gy = y + _mapRadius;
-        if (gx < 0 || gy < 0 || gx >= _size || gy >= _size)
+        int gx = x + _radiusX;
+        int gy = y + _radiusY;
+        if (gx < 0 || gy < 0 || gx >= _sizeX || gy >= _sizeY)
             return 0;
 
         return _biomeGrid[gx, gy];
@@ -185,9 +193,9 @@ public class WorldGenerator
     /// </summary>
     public bool IsWithinBounds(int x, int y)
     {
-        int gx = x + _mapRadius;
-        int gy = y + _mapRadius;
-        if (gx < 0 || gy < 0 || gx >= _size || gy >= _size)
+        int gx = x + _radiusX;
+        int gy = y + _radiusY;
+        if (gx < 0 || gy < 0 || gx >= _sizeX || gy >= _sizeY)
             return false;
         return _withinBounds[gx, gy];
     }
@@ -198,9 +206,9 @@ public class WorldGenerator
     /// </summary>
     public bool IsErased(int x, int y)
     {
-        int gx = x + _mapRadius;
-        int gy = y + _mapRadius;
-        if (gx < 0 || gy < 0 || gx >= _size || gy >= _size)
+        int gx = x + _radiusX;
+        int gy = y + _radiusY;
+        if (gx < 0 || gy < 0 || gx >= _sizeX || gy >= _sizeY)
             return true;
         if (!_withinBounds[gx, gy])
             return true;
@@ -212,14 +220,14 @@ public class WorldGenerator
     /// </summary>
     private void ComputeCircularBounds()
     {
-        for (int gx = 0; gx < _size; gx++)
+        for (int gx = 0; gx < _sizeX; gx++)
         {
-            for (int gy = 0; gy < _size; gy++)
+            for (int gy = 0; gy < _sizeY; gy++)
             {
-                int x = gx - _mapRadius;
-                int y = gy - _mapRadius;
-                float dist = Mathf.Sqrt(x * x + y * y);
-                _withinBounds[gx, gy] = dist <= _mapRadius;
+                int x = gx - _radiusX;
+                int y = gy - _radiusY;
+                float dist = EllipseDistance(x, y);
+                _withinBounds[gx, gy] = dist <= _radiusX;
             }
         }
     }
@@ -232,11 +240,11 @@ public class WorldGenerator
     /// </summary>
     private void ApplyEdgeDecay()
     {
-        float fadeStart = _mapRadius - _edgeFadeWidth;
+        float fadeStart = _radiusX - _edgeFadeWidth;
 
-        for (int gx = 0; gx < _size; gx++)
+        for (int gx = 0; gx < _sizeX; gx++)
         {
-            for (int gy = 0; gy < _size; gy++)
+            for (int gy = 0; gy < _sizeY; gy++)
             {
                 if (!_withinBounds[gx, gy])
                 {
@@ -244,9 +252,9 @@ public class WorldGenerator
                     continue;
                 }
 
-                int x = gx - _mapRadius;
-                int y = gy - _mapRadius;
-                float dist = Mathf.Sqrt(x * x + y * y);
+                int x = gx - _radiusX;
+                int y = gy - _radiusY;
+                float dist = EllipseDistance(x, y);
 
                 if (dist <= fadeStart)
                     continue;
@@ -288,9 +296,9 @@ public class WorldGenerator
         _biomeWarpNoiseX = CreateBiomeWarpNoise((int)_rng.Randi());
         _biomeWarpNoiseY = CreateBiomeWarpNoise((int)_rng.Randi());
 
-        for (int gx = 0; gx < _size; gx++)
+        for (int gx = 0; gx < _sizeX; gx++)
         {
-            for (int gy = 0; gy < _size; gy++)
+            for (int gy = 0; gy < _sizeY; gy++)
             {
                 if (!_withinBounds[gx, gy])
                 {
@@ -298,8 +306,8 @@ public class WorldGenerator
                     continue;
                 }
 
-                int x = gx - _mapRadius;
-                int y = gy - _mapRadius;
+                int x = gx - _radiusX;
+                int y = gy - _radiusY;
                 Vector2 samplePoint = GetWarpedBiomeSample(new Vector2(x, y));
                 _biomeGrid[gx, gy] = FindClosestRegionBiome(samplePoint);
             }
@@ -315,8 +323,9 @@ public class WorldGenerator
     {
         float spacing = Mathf.Max(8f, _biomeLayout.RegionSpacing);
         _regionBucketSize = spacing;
-        _regionBucketCount = Mathf.CeilToInt(_size / spacing) + 1;
-        _regionBuckets = new List<int>[_regionBucketCount, _regionBucketCount];
+        _regionBucketCountX = Mathf.CeilToInt(_sizeX / spacing) + 1;
+        _regionBucketCountY = Mathf.CeilToInt(_sizeY / spacing) + 1;
+        _regionBuckets = new List<int>[_regionBucketCountX, _regionBucketCountY];
         _regionCenters.Clear();
         _regionBiomes.Clear();
 
@@ -327,7 +336,7 @@ public class WorldGenerator
         int failures = 0;
         while (failures < RegionPlacementMaxFailures)
         {
-            Vector2 candidate = SampleBiomeSeed(0f, _mapRadius + spacing * 0.5f);
+            Vector2 candidate = SampleBiomeSeed(0f, _radiusX + spacing * 0.5f);
             if (NearestRegionDistanceSquared(candidate, 1) < spacingSq)
             {
                 failures++;
@@ -380,8 +389,8 @@ public class WorldGenerator
 
     private Vector2I RegionBucket(Vector2 point)
     {
-        int bx = Mathf.Clamp(Mathf.FloorToInt((point.X + _mapRadius) / _regionBucketSize), 0, _regionBucketCount - 1);
-        int by = Mathf.Clamp(Mathf.FloorToInt((point.Y + _mapRadius) / _regionBucketSize), 0, _regionBucketCount - 1);
+        int bx = Mathf.Clamp(Mathf.FloorToInt((point.X + _radiusX) / _regionBucketSize), 0, _regionBucketCountX - 1);
+        int by = Mathf.Clamp(Mathf.FloorToInt((point.Y + _radiusY) / _regionBucketSize), 0, _regionBucketCountY - 1);
         return new Vector2I(bx, by);
     }
 
@@ -399,7 +408,7 @@ public class WorldGenerator
         {
             for (int by = bucket.Y - bucketRange; by <= bucket.Y + bucketRange; by++)
             {
-                if (bx < 0 || by < 0 || bx >= _regionBucketCount || by >= _regionBucketCount)
+                if (bx < 0 || by < 0 || bx >= _regionBucketCountX || by >= _regionBucketCountY)
                     continue;
                 List<int> regions = _regionBuckets[bx, by];
                 if (regions == null)
@@ -433,7 +442,18 @@ public class WorldGenerator
     {
         float angle = _rng.RandfRange(0f, Mathf.Tau);
         float radius = Mathf.Lerp(minRadius, maxRadius, Mathf.Sqrt(_rng.Randf()));
-        return new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * radius;
+        // Un disque en unités de largeur, étiré en hauteur : la carte est une ellipse de cellules (plan 22 C6).
+        return new Vector2(Mathf.Cos(angle), Mathf.Sin(angle) * _radiusY / _radiusX) * radius;
+    }
+
+    /// <summary>
+    /// Distance au centre en unités de largeur de la carte : 1 rayon X au bord, dans toutes les directions de l'ellipse.
+    /// Une rangée compte pour une demi-colonne quand la carte est deux fois plus haute (en cellules) que large.
+    /// </summary>
+    public float EllipseDistance(int x, int y)
+    {
+        float ny = y * (float)_radiusX / _radiusY;
+        return Mathf.Sqrt(x * x + ny * ny);
     }
 
     private Vector2 GetWarpedBiomeSample(Vector2 cellPosition)
@@ -452,7 +472,7 @@ public class WorldGenerator
         // Le tirage de Poisson laisse des trous inférieurs à deux espacements : deux cases de voisinage suffisent.
         int region = NearestRegion(samplePoint, 2, out _);
         if (region < 0)
-            region = NearestRegion(samplePoint, _regionBucketCount, out _);
+            region = NearestRegion(samplePoint, Mathf.Max(_regionBucketCountX, _regionBucketCountY), out _);
         return _regionBiomes[region];
     }
 
@@ -460,9 +480,9 @@ public class WorldGenerator
     {
         bool hasBiomes = _activeBiomes.Count > 0;
 
-        for (int gx = 0; gx < _size; gx++)
+        for (int gx = 0; gx < _sizeX; gx++)
         {
-            for (int gy = 0; gy < _size; gy++)
+            for (int gy = 0; gy < _sizeY; gy++)
             {
                 if (!_withinBounds[gx, gy])
                 {
@@ -470,9 +490,9 @@ public class WorldGenerator
                     continue;
                 }
 
-                int x = gx - _mapRadius;
-                int y = gy - _mapRadius;
-                float dist = Mathf.Sqrt(x * x + y * y);
+                int x = gx - _radiusX;
+                int y = gy - _radiusY;
+                float dist = EllipseDistance(x, y);
 
                 if (hasBiomes)
                 {
@@ -520,11 +540,11 @@ public class WorldGenerator
 
     private void SmoothPass()
     {
-        TerrainType[,] next = new TerrainType[_size, _size];
+        TerrainType[,] next = new TerrainType[_sizeX, _sizeY];
 
-        for (int gx = 0; gx < _size; gx++)
+        for (int gx = 0; gx < _sizeX; gx++)
         {
-            for (int gy = 0; gy < _size; gy++)
+            for (int gy = 0; gy < _sizeY; gy++)
             {
                 if (!_withinBounds[gx, gy])
                 {
@@ -545,7 +565,7 @@ public class WorldGenerator
                         int nx = gx + dx;
                         int ny = gy + dy;
 
-                        if (nx < 0 || ny < 0 || nx >= _size || ny >= _size)
+                        if (nx < 0 || ny < 0 || nx >= _sizeX || ny >= _sizeY)
                             continue;
 
                         if (!_withinBounds[nx, ny])
@@ -578,12 +598,12 @@ public class WorldGenerator
 
     private void ClearSpawnArea()
     {
-        for (int gx = 0; gx < _size; gx++)
+        for (int gx = 0; gx < _sizeX; gx++)
         {
-            for (int gy = 0; gy < _size; gy++)
+            for (int gy = 0; gy < _sizeY; gy++)
             {
-                int x = gx - _mapRadius;
-                int y = gy - _mapRadius;
+                int x = gx - _radiusX;
+                int y = gy - _radiusY;
 
                 if (Mathf.Abs(x) <= _spawnClearance && Mathf.Abs(y) <= _spawnClearance)
                     _grid[gx, gy] = TerrainType.Grass;
@@ -593,11 +613,11 @@ public class WorldGenerator
 
     private void EnsureWaterConnectivity()
     {
-        float fadeStart = _mapRadius - _edgeFadeWidth;
+        float fadeStart = _radiusX - _edgeFadeWidth;
 
-        for (int gx = 0; gx < _size; gx++)
+        for (int gx = 0; gx < _sizeX; gx++)
         {
-            for (int gy = 0; gy < _size; gy++)
+            for (int gy = 0; gy < _sizeY; gy++)
             {
                 if (!_withinBounds[gx, gy])
                     continue;
@@ -605,9 +625,9 @@ public class WorldGenerator
                 if (_grid[gx, gy] != TerrainType.Water)
                     continue;
 
-                int x = gx - _mapRadius;
-                int y = gy - _mapRadius;
-                float dist = Mathf.Sqrt(x * x + y * y);
+                int x = gx - _radiusX;
+                int y = gy - _radiusY;
+                float dist = EllipseDistance(x, y);
 
                 // Ne pas retirer l'eau de la zone de décomposition
                 if (dist >= fadeStart)
@@ -624,7 +644,7 @@ public class WorldGenerator
                         int nx = gx + dx;
                         int ny = gy + dy;
 
-                        if (nx >= 0 && ny >= 0 && nx < _size && ny < _size
+                        if (nx >= 0 && ny >= 0 && nx < _sizeX && ny < _sizeY
                             && _grid[nx, ny] == TerrainType.Water)
                         {
                             waterNeighbors++;

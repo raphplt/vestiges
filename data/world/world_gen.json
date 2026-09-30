@@ -1,5 +1,6 @@
 {
     "map_radius": 200,
+    "map_radius_y": 400,
     "spawn_clearance": 4,
     "props": {
         "min_blocking_height": 18,

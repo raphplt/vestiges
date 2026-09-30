@@ -390,7 +390,9 @@ public static class PathNetworkGenerator
         private readonly WorldGenerator _generator;
         private readonly PathNetworkConfig _config;
         private readonly int _radius;
+        private readonly int _radiusY;
         private readonly int _size;
+        private readonly int _sizeY;
         private readonly float[] _cost;
         private readonly bool[] _road;
         private readonly bool[] _claimed;
@@ -407,9 +409,11 @@ public static class PathNetworkGenerator
         {
             _generator = generator;
             _config = config;
-            _radius = generator.MapRadius;
+            _radius = generator.MapRadiusX;
+            _radiusY = generator.MapRadiusY;
             _size = _radius * 2 + 1;
-            int total = _size * _size;
+            _sizeY = _radiusY * 2 + 1;
+            int total = _size * _sizeY;
             _cost = new float[total];
             _road = new bool[total];
             _claimed = new bool[total];
@@ -424,15 +428,15 @@ public static class PathNetworkGenerator
                 Frequency = config.NoiseFrequency,
             };
             float limit = _radius - config.EdgeMargin;
-            for (int gy = 0; gy < _size; gy++)
+            for (int gy = 0; gy < _sizeY; gy++)
             {
                 for (int gx = 0; gx < _size; gx++)
                 {
                     int x = gx - _radius;
-                    int y = gy - _radius;
+                    int y = gy - _radiusY;
                     int index = gy * _size + gx;
                     _cost[index] = Impassable;
-                    if (x * x + y * y > limit * limit || !generator.IsWithinBounds(x, y) || generator.IsErased(x, y))
+                    if (generator.EllipseDistance(x, y) > limit || !generator.IsWithinBounds(x, y) || generator.IsErased(x, y))
                         continue;
                     TerrainType type = terrain[gx, gy];
                     if (type == TerrainType.Water)
@@ -468,13 +472,13 @@ public static class PathNetworkGenerator
             }
         }
 
-        public Vector2I CellOf(int index) => new(index % _size - _radius, index / _size - _radius);
+        public Vector2I CellOf(int index) => new(index % _size - _radius, index / _size - _radiusY);
 
         private int IndexOf(int x, int y)
         {
             int gx = x + _radius;
-            int gy = y + _radius;
-            if (gx < 0 || gy < 0 || gx >= _size || gy >= _size)
+            int gy = y + _radiusY;
+            if (gx < 0 || gy < 0 || gx >= _size || gy >= _sizeY)
                 return -1;
             return gy * _size + gx;
         }

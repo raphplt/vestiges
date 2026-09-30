@@ -145,7 +145,7 @@ public partial class MovementRegression
     {
         TileMapLayer ground = world.GetNode<TileMapLayer>("Ground");
         int edgeX = 0;
-        while (edgeX < world.Generator.MapRadius + 2 && world.Generator.IsWithinBounds(edgeX, 0) && !world.Generator.IsErased(edgeX, 0))
+        while (edgeX < world.Generator.MapRadiusX + 2 && world.Generator.IsWithinBounds(edgeX, 0) && !world.Generator.IsErased(edgeX, 0))
             edgeX++;
         Vector2 start = ground.MapToLocal(new Vector2I(edgeX - 3, 0));
         _player.Position = start;
@@ -252,11 +252,12 @@ public partial class MovementRegression
         bool found = false;
         float nearestDistance = float.MaxValue;
         ErasureManager erasure = world.GetNode<ErasureManager>("ErasureManager");
-        int radius = world.Generator.MapRadius;
+        int radiusX = world.Generator.MapRadiusX;
+        int radiusY = world.Generator.MapRadiusY;
         // Chercher un trajet horizontal de 50 px entièrement dans une vraie nappe générée.
-        for (int x = -radius; x <= radius; x++)
+        for (int x = -radiusX; x <= radiusX; x++)
         {
-            for (int y = -radius; y <= radius; y++)
+            for (int y = -radiusY; y <= radiusY; y++)
             {
                 if (!world.Generator.IsWithinBounds(x, y) || world.Generator.GetTerrain(x, y) != TerrainType.Water)
                     continue;

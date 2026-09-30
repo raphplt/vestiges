@@ -42,6 +42,8 @@ public static class UrbanPropPlacer
 		"assets/props/urban_ruins/prop_dumpster_v2.png",
 		"assets/props/urban_ruins/prop_chain_link_fence.png",
 		"assets/props/urban_ruins/prop_torn_billboard.png",
+		// Abribus (plan 23 R7) : petit lieu de vitesse, le long des trottoirs.
+		"assets/props/urban_ruins/prop_bus_shelter.png",
 	};
 
 	private static readonly string[] InteriorDebrisSprites = {
@@ -68,6 +70,7 @@ public static class UrbanPropPlacer
 		"prop_dumpster_v2.png",
 		"prop_chain_link_fence.png",
 		"prop_torn_billboard.png",
+		"prop_bus_shelter.png",
 		"prop_radio_mast.png",
 	};
 
@@ -310,7 +313,7 @@ public static class UrbanPropPlacer
 	internal static UrbanCellType GetCellType(UrbanLayout layout, Vector2I cell)
 	{
 		int gx = cell.X + layout.MapRadius;
-		int gy = cell.Y + layout.MapRadius;
+		int gy = cell.Y + layout.MapRadiusY;
 		if (gx < 0 || gy < 0 || gx >= layout.CellGrid.GetLength(0) || gy >= layout.CellGrid.GetLength(1))
 			return UrbanCellType.None;
 

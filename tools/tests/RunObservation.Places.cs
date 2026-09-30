@@ -111,6 +111,12 @@ public partial class RunObservation
         }
 
         /// <summary>Lieux entrés dans le cadre ; <paramref name="chests"/> est le groupe déjà lu par la mesure des coffres.</summary>
+        private static readonly string[] PlaceKinds =
+        {
+            "chest", "memorial", "rift", "well", "crystal_vein", "scarecrow",
+            "mailbox", "mine_cart", "abandoned_car", "phone_booth", "bus_shelter", "picnic",
+        };
+
         public void Sample(double t, Rect2 view, Godot.Collections.Array<Node> chests, SmallPlaceDirector smallPlaces)
         {
             _places.Clear();
@@ -235,9 +241,16 @@ public partial class RunObservation
                 visited += count;
             summary.Append(CultureInfo.InvariantCulture,
                 $" places_seen={seen} places_visited={visited} places_seen_per_min={seen / minutes:F2} places_visited_per_min={visited / minutes:F2} first_place_s={_firstSeen:F0}");
-            foreach (string kind in new[] { "chest", "memorial", "rift", "well", "crystal_vein", "scarecrow" })
+            foreach (string kind in PlaceKinds)
                 summary.Append(CultureInfo.InvariantCulture,
                     $" {kind}_seen={_seenByKind.GetValueOrDefault(kind)} {kind}_visited={_visitedByKind.GetValueOrDefault(kind)}");
+            // Petits lieux seuls, tous types confondus : la cible du plan 22 §2 (un toutes les 20 à 30 s de marche).
+            int small = 0;
+            foreach ((string kind, int count) in _seenByKind)
+                if (kind is not ("chest" or "memorial" or "rift"))
+                    small += count;
+            summary.Append(CultureInfo.InvariantCulture,
+                $" small_places_seen={small} small_place_every_s={(small > 0 ? seconds / small : 0):F0}");
             summary.Append(CultureInfo.InvariantCulture,
                 $" events={Events} events_per_min={Events / minutes:F2} essence_gained={EssenceGained} essence_spent={EssenceSpent} essence_gained_per_min={EssenceGained / minutes:F1}");
         }

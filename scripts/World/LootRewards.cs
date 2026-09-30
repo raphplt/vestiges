@@ -133,11 +133,12 @@ public static class LootRewards
     private static ResolvedLoot Essence(int amount) =>
         new("essence", "essence", amount, Format("CHEST_LOOT_ESSENCE", amount), EssenceColor);
 
-    private static WeaponData PickWeapon(string itemId)
-    {
-        if (itemId != "random_weapon")
-            return WeaponDataLoader.Get(itemId);
+    private static WeaponData PickWeapon(string itemId) =>
+        itemId != "random_weapon" ? WeaponDataLoader.Get(itemId) : PickRandomWeapon();
 
+    /// <summary>Une arme débloquée au hasard (coffres, Wagonnet), ou null s'il n'y en a aucune.</summary>
+    public static WeaponData PickRandomWeapon()
+    {
         List<WeaponData> candidates = new();
         foreach (WeaponData weapon in WeaponDataLoader.GetAll())
         {

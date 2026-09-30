@@ -897,8 +897,8 @@ public partial class AudioManager : Node
 			return false;
 
 		Vector2I cell = _ground.LocalToMap(_ground.ToLocal(worldPos));
-		float dist = Mathf.Sqrt(cell.X * cell.X + cell.Y * cell.Y);
-		float mapRadius = _worldSetup.Generator.MapRadius;
+		float dist = _worldSetup.Generator.EllipseDistance(cell.X, cell.Y);
+		float mapRadius = _worldSetup.Generator.MapRadiusX;
 		return dist >= mapRadius - MapBorderWarningCells;
 	}
 
