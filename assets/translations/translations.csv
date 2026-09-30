@@ -304,6 +304,16 @@ LEVELUP_BANISH_PERIL,Bannir (+{0} Péril),Banish (+{0} Peril)
 STAT_CRIT_DAMAGE,Dégâts critiques,Crit damage
 STAT_XP_GAIN,XP gagnée,XP gain
 STAT_DASH_RECHARGE,Recharge du dash,Dash recharge
+PROPERTY_FORCE,Force,Force
+PROPERTY_FREQUENCY,Fréquence,Frequency
+PROPERTY_COUNT,Nombre,Count
+PROPERTY_SIZE,Taille,Size
+PROPERTY_RANGE,Portée,Range
+PROPERTY_DURATION,Durée,Duration
+PROPERTY_PRECISION,Précision,Precision
+PROPERTY_MOMENTUM,Élan,Momentum
+LEVELUP_OBJECT_WEAPONS,Pour : {0},For: {0}
+LEVELUP_OBJECT_NO_WEAPON,Aucune de tes armes,None of your weapons
 STAT_ATTACK_COPIES,Copies d'attaque,Attack copies
 STAT_COPY_DAMAGE,Dégâts des copies,Copy damage
 STAT_STATUS_DURATION,Durée,Duration

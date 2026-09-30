@@ -40,7 +40,8 @@ public static class UpgradeText
                 if (passive == null)
                     break;
                 foreach (PassiveEffectData effect in passive.Effects)
-                    lines.Add(($"{StatCatalog.Name(effect.Stat)}  {StatCatalog.FormatBonus(effect.Stat, effect.ValueAt(1), effect.Multiplicative)}", ChoiceStyle.GainColor));
+                    lines.Add(($"{StatCatalog.NameWithProperty(effect.Stat)}  {StatCatalog.FormatBonus(effect.Stat, effect.ValueAt(1), effect.Multiplicative)}", ChoiceStyle.GainColor));
+                AddWeaponsLine(lines, passive, player);
                 AddMilestoneLines(lines, passive, 0, 1);
                 break;
             }
@@ -61,13 +62,42 @@ public static class UpgradeText
                     break;
                 int next = passive.LevelAfter(choice.PassiveLevels);
                 foreach (PassiveEffectData effect in passive.Data.Effects)
-                    lines.Add(($"{StatCatalog.Name(effect.Stat)}  {StatCatalog.FormatBonus(effect.Stat, effect.ValueAt(passive.Level), effect.Multiplicative)}"
+                    lines.Add(($"{StatCatalog.NameWithProperty(effect.Stat)}  {StatCatalog.FormatBonus(effect.Stat, effect.ValueAt(passive.Level), effect.Multiplicative)}"
                         + $"  →  {StatCatalog.FormatBonus(effect.Stat, effect.ValueAt(next), effect.Multiplicative)}", ChoiceStyle.GainColor));
+                AddWeaponsLine(lines, passive.Data, player);
                 AddMilestoneLines(lines, passive.Data, passive.Level, next);
                 break;
             }
         }
         return lines;
+    }
+
+    /// <summary>
+    /// Objet de propriété : les armes portées qu'il renforce (plan 21 §11), ou le constat qu'il n'en renforce aucune.
+    /// Rien pour un objet sans propriété d'arme (survie, Élan, déclencheur).
+    /// </summary>
+    private static void AddWeaponsLine(List<(string, Color)> lines, PassiveSouvenirData data, Player player)
+    {
+        if (player == null)
+            return;
+        bool weaponProperty = false;
+        bool objectStatuses = player.ObjectTriggers is { } triggers && (triggers.BurnChance > 0f || triggers.ChillChance > 0f);
+        List<string> names = new();
+        foreach (PassiveEffectData effect in data.Effects)
+        {
+            string property = StatCatalog.Property(effect.Stat);
+            if (property is null or "momentum")
+                continue;
+            weaponProperty = true;
+            foreach (WeaponInstance weapon in player.WeaponSlots)
+                if (WeaponProperties.Concerns(weapon.Base, property, objectStatuses) && !names.Contains(weapon.Name))
+                    names.Add(weapon.Name);
+        }
+        if (!weaponProperty)
+            return;
+        lines.Add(names.Count > 0
+            ? (string.Format(TranslationServer.Translate("LEVELUP_OBJECT_WEAPONS"), string.Join(", ", names)), ChoiceStyle.TextColor)
+            : (TranslationServer.Translate("LEVELUP_OBJECT_NO_WEAPON"), ChoiceStyle.LossColor));
     }
 
     /// <summary>
@@ -97,7 +127,7 @@ public static class UpgradeText
     /// <summary>« Dégâts  14,2 → 16,8  +18 % » ; « Portée  +6 % » pour une stat qui ne se lit qu'en pourcentage.</summary>
     private static string DescribeStat(string stat, float before, float after)
     {
-        string name = StatCatalog.Name(stat);
+        string name = StatCatalog.NameWithProperty(stat);
         return StatCatalog.Display(stat) switch
         {
             StatDisplay.Percent => $"{name}  {StatCatalog.FormatGain(before, after)}",

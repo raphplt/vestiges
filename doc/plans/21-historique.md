@@ -698,3 +698,40 @@ Laissé tel quel : le crédit d'un DOT va à la dernière application, même plu
 Relecture par sous-agent. Corrigé : la Semelle se rechargeait aussitôt après une attaque tant que le joueur marchait.
 
 **À mesurer :** chaque explosion parcourt la liste des ennemis. Une arme de zone qui tue 20 ennemis par frame fait 20 parcours, 40 au palier. Ce coût n'est pas encore passé au banc dense (`/bench` avec le Pétard).
+
+## 27. Lot G0 — les propriétés nommées sur les cartes : découpage (30 septembre)
+
+Application de la [référence](21-systeme-de-jeu.md) §3 (« la carte nomme la propriété touchée ») et §11 (« la propriété touchée, la valeur avant → après, les armes concernées »). Un commit.
+
+- **Données :** chaque stat affichée (`data/ui/stats.json`) porte sa propriété de la grammaire §7 : Force, Fréquence, Nombre, Taille, Portée, Durée, Précision, Élan. Les stats de survie et de collecte n'en ont pas. Les stats d'arme hors grammaire sont rangées ainsi :
+  - vitesse de projectile : Portée ;
+  - vitesse d'orbite : Fréquence ;
+  - guidage : Précision ;
+  - recul : Force ;
+  - perforation : Nombre.
+- **Cartes d'arme :** « Fréquence · Cadence 0,8 /s → 0,9 /s +16 % ». Le préfixe tombe quand la stat porte déjà le nom de la propriété (« Portée +12 % »).
+- **Cartes d'objet :** la même règle pour chaque effet, puis une ligne « Pour : Faucille, Arc du gymnase » qui nomme les armes portées que l'objet renforce. Elle dit « Aucune de tes armes » si l'objet ne sert à rien aujourd'hui (P2 : que renforce-t-il dans ma construction ?).
+- **Armes concernées par propriété :** une seule règle, dans le code des armes, lue par la carte (et plus tard par les affinités G4).
+  - Fréquence, Précision : toute arme qui attaque par coups (ni orbite ni cône continu) ;
+  - Nombre : tirs, salves, frappes de mêlée ;
+  - Taille : mêlée en arc ou en cercle, cône, orbes, zones des armes spéciales ;
+  - Portée : toutes ;
+  - Durée : armes à statut, feu au sol, champ de l'Aiguille ; toute arme qui frappe si un objet pose des statuts (Allumette, Glaçon).
+- **Vérification :** `tools/test_objects.sh` (propriétés et armes concernées), capture `--capture-levelup`.
+
+### Compte rendu (30 septembre)
+
+Livré comme découpé. `WeaponProperties.Concerns` porte la règle des armes concernées ; `StatCatalog` lit la propriété de chaque stat.
+
+**Vérifications :**
+- `dotnet build` : zéro avertissement.
+- `tools/test_objects.sh` : 54 assertions, zéro échec, dont les noms de propriété, la règle des armes concernées (y compris orbes et Durée par objet) et la ligne « Pour » d'une carte.
+- Effets des Réminiscences, acquisition, armes : zéro échec. Smoke vert.
+- Capture `--capture-levelup`, regardée, sur la carte légendaire :
+  - Cloueuse : « Fréquence · Cadence 0,8 /s → 0,9 /s +16 % », « Portée +12 % », « Force · Dégâts », « Nombre · Perçage 3 → 4 » ;
+  - Papier carbone : « Pour : Arc du gymnase, Cloueuse » ;
+  - Pince à linge : « Aucune de tes armes » en rouge, car ni l'arc ni la cloueuse ne posent de statut.
+
+Relecture par sous-agent. Corrigé : Durée comptée pour toute arme quand un objet pose des statuts ; Taille pour les orbes ; motif et type d'arme lus sans tenir compte de la casse.
+
+Laissé tel quel : la Perforation reste rangée en Nombre alors qu'elle ne vaut que pour les tirs. Aucun objet proposé ne la porte (Reflet brisé est retiré), donc aucune carte ne peut la montrer fausse. À revoir si un objet de perforation revient.

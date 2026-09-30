@@ -26,12 +26,35 @@ public enum StatDisplay
 public static class StatCatalog
 {
     private static readonly Dictionary<string, (string NameKey, StatDisplay Display, string Unit)> _stats = new();
+    private static readonly Dictionary<string, string> _properties = new();
     private static readonly CultureInfo French = CultureInfo.GetCultureInfo("fr-FR");
     private static bool _loaded;
 
     public static string Name(string stat) => TranslationServer.Translate(Entry(stat).NameKey);
 
     public static StatDisplay Display(string stat) => Entry(stat).Display;
+
+    /// <summary>Propriété de la grammaire commune que la stat monte (plan 21 §7) ; null pour la survie ou la collecte.</summary>
+    public static string Property(string stat)
+    {
+        if (!_loaded)
+            Load();
+        return _properties.GetValueOrDefault(stat);
+    }
+
+    /// <summary>
+    /// Nom d'une stat précédé de sa propriété : « Fréquence · Cadence ». Le préfixe tombe si la stat porte déjà le
+    /// nom de la propriété (« Portée ») ou n'en a pas.
+    /// </summary>
+    public static string NameWithProperty(string stat)
+    {
+        string name = Name(stat);
+        string property = Property(stat);
+        if (property == null)
+            return name;
+        string propertyName = TranslationServer.Translate($"PROPERTY_{property.ToUpperInvariant()}");
+        return propertyName == name ? name : $"{propertyName} · {name}";
+    }
 
     /// <summary>Valeur formatée : une décimale pour une valeur, entier pour un compte, avec l'unité éventuelle.</summary>
     public static string Format(string stat, float value)
@@ -111,7 +134,10 @@ public static class StatCatalog
                 "share" => StatDisplay.Share,
                 _ => StatDisplay.Percent,
             };
-            _stats[dict["id"].AsString()] = (dict["name_key"].AsString(), display, dict.ContainsKey("unit") ? dict["unit"].AsString() : "");
+            string id = dict["id"].AsString();
+            _stats[id] = (dict["name_key"].AsString(), display, dict.ContainsKey("unit") ? dict["unit"].AsString() : "");
+            if (dict.ContainsKey("property"))
+                _properties[id] = dict["property"].AsString();
         }
     }
 }

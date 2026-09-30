@@ -46,6 +46,7 @@ public partial class ObjectsRegression : Node2D
             CheckFragility();
             CheckKillRewards();
             CheckStrideAndLevels();
+            CheckNamedProperties();
             GD.Print($"[ObjectsRegression] RESULT failures={_failures}");
             GetTree().Quit(_failures == 0 ? 0 : 1);
         }
@@ -666,6 +667,34 @@ public partial class ObjectsRegression : Node2D
         levelUp.Invoke(_player.ObjectTriggers, new object[] { 32 });
         Check(Near(heal, _player.EffectiveMaxHp * 0.025f) && notYetInvulnerable && defense.IsInvulnerable,
             "Boîte de pansements niveau 25 : un niveau soigne 2,5 % des PV max ; trois niveaux d'un coup rendent invulnérable");
+    }
+
+    private void CheckNamedProperties()
+    {
+        Check(StatCatalog.NameWithProperty("attack_speed") == "Fréquence · Cadence" && StatCatalog.NameWithProperty("attack_range") == "Portée"
+            && StatCatalog.NameWithProperty("max_hp") == StatCatalog.Name("max_hp") && StatCatalog.Property("projectile_pierce") == "count",
+            $"Cartes : la stat nomme sa propriété (« {StatCatalog.NameWithProperty("attack_speed")} »), sans doublon ni pour la survie");
+
+        WeaponData bow = WeaponDataLoader.Get("makeshift_bow");
+        WeaponData bell = WeaponDataLoader.Get("teachers_bell");
+        WeaponData musicBox = WeaponDataLoader.Get("music_box");
+        WeaponData broadcast = WeaponDataLoader.Get("last_broadcast");
+        WeaponData chain = WeaponDataLoader.Get("chain_of_names");
+        bool rules = !WeaponProperties.Concerns(bow, "size") && WeaponProperties.Concerns(bow, "count")
+            && WeaponProperties.Concerns(bell, "size") && WeaponProperties.Concerns(bell, "duration")
+            && !WeaponProperties.Concerns(musicBox, "frequency") && WeaponProperties.Concerns(musicBox, "range") && WeaponProperties.Concerns(musicBox, "size")
+            && !WeaponProperties.Concerns(bow, "duration") && WeaponProperties.Concerns(bow, "duration", objectStatuses: true)
+            && WeaponProperties.Concerns(broadcast, "size") && !WeaponProperties.Concerns(broadcast, "count")
+            && !WeaponProperties.Concerns(chain, "count") && WeaponProperties.Concerns(chain, "precision");
+        Check(rules, "Armes concernées : Taille pour la mêlée en zone et le cône, Nombre pour tirs et frappes, rien d'autre que Portée et Force pour l'orbite");
+
+        Setup();
+        string alone = CardText(new FragmentOption("resonance", "passive_new", "Rondelle de cuivre", 1));
+        _player.AddWeapon(WeaponDataLoader.Get("chipped_blade"));
+        string withBlade = CardText(new FragmentOption("resonance", "passive_new", "Rondelle de cuivre", 1));
+        string survival = CardText(new FragmentOption("ancrage", "passive_new", "Bouton de manteau", 1));
+        Check(alone.Contains("Aucune de tes armes") && withBlade.Contains("Pour : Faucille") && !survival.Contains("Pour :"),
+            $"Carte d'objet : les armes qu'il renforce ({withBlade})");
     }
 
     private static float Hp(Enemy enemy) => (float)typeof(Enemy).GetField("_currentHp", Private).GetValue(enemy);

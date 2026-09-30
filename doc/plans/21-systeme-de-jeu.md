@@ -243,7 +243,7 @@ Quand une carte ne peut plus rien offrir (4 armes ascensionnées, 6 objets au ni
 | Pétard mouillé, Dé à coudre, Semelle usée, Boîte de pansements | **En jeu** | G2b, étape 3 |
 | Onze autres objets de déclencheur | À faire | G2c |
 | Reliquaire, objets « monde », remplacement | À faire | Plan 22, C3 |
-| Propriétés nommées sur les cartes d'armes | À faire | G0 |
+| Propriétés nommées sur les cartes d'armes et d'objets, armes concernées par un objet | **En jeu** | G0 |
 | Ascensions d'armes | À faire | G3 |
 | Affinités des personnages, Souverain à 25 % | À faire | G4 |
 | Sept Réminiscences restantes | À faire | G5 |
