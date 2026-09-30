@@ -246,7 +246,7 @@ Quand une carte ne peut plus rien offrir (4 armes ascensionnées, 6 objets au ni
 | Affinités des personnages, Souverain à 25 % | À faire | G4 |
 | Sept Réminiscences restantes | À faire | G5 |
 | Surplus, déblocages | À faire | Plans 20, 22 |
-| Anciens Dons des coffres | En jeu, **à retirer** | G2b |
+| Anciens Dons des coffres et leurs synergies | **Retirés** ; les coffres donnent des niveaux d'objet | G2b, étape 1 |
 
 ## 13. Ce que ce document remplace
 

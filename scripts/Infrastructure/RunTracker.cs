@@ -184,7 +184,7 @@ public partial class RunTracker : Node
         _eventBus.PoiExplored += OnPoiExplored;
         _eventBus.ChestOpened += OnChestOpened;
         _eventBus.LevelUp += OnLevelUp;
-        _eventBus.PerkChosen += OnPerkChosen;
+        _eventBus.SpecializationAcquired += OnSpecializationAcquired;
         _eventBus.EntityDamaged += OnEntityDamaged;
         _eventBus.CrisisStarted += OnCrisisStarted;
         _eventBus.VariantEnemyKilled += OnVariantEnemyKilled;
@@ -212,7 +212,7 @@ public partial class RunTracker : Node
         _eventBus.PoiExplored -= OnPoiExplored;
         _eventBus.ChestOpened -= OnChestOpened;
         _eventBus.LevelUp -= OnLevelUp;
-        _eventBus.PerkChosen -= OnPerkChosen;
+        _eventBus.SpecializationAcquired -= OnSpecializationAcquired;
         _eventBus.EntityDamaged -= OnEntityDamaged;
         _eventBus.CrisisStarted -= OnCrisisStarted;
         _eventBus.VariantEnemyKilled -= OnVariantEnemyKilled;
@@ -401,8 +401,9 @@ public partial class RunTracker : Node
         GD.Print($"[RunTracker] Niveau {newLevel} à {RunDurationSeconds:F1} s ({_totalKilled} éliminations)");
     }
 
-    private void OnPerkChosen(string perkId)
+    /// <summary>Réminiscences acquises : l'historique de run les retient (les anciens Dons sont retirés).</summary>
+    private void OnSpecializationAcquired(string specializationId)
     {
-        _perkIds.Add(perkId);
+        _perkIds.Add(specializationId);
     }
 }

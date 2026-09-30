@@ -599,7 +599,6 @@ public partial class AudioManager : Node
 		eb.PlayerShieldChanged += OnPlayerShieldChanged;
 		eb.SouvenirDiscovered += OnSouvenirDiscovered;
 		eb.ZoneDiscovered     += OnZoneDiscovered;
-		eb.PerkChosen         += OnPerkChosen;
 		eb.FragmentChosen     += OnFragmentChosen;
 		eb.GameStateChanged   += OnGameStateChanged;
 		eb.ChestOpened        += OnChestOpened;
@@ -622,7 +621,6 @@ public partial class AudioManager : Node
 		eb.PlayerShieldChanged -= OnPlayerShieldChanged;
 		eb.SouvenirDiscovered -= OnSouvenirDiscovered;
 		eb.ZoneDiscovered     -= OnZoneDiscovered;
-		eb.PerkChosen         -= OnPerkChosen;
 		eb.FragmentChosen     -= OnFragmentChosen;
 		eb.GameStateChanged   -= OnGameStateChanged;
 		eb.ChestOpened        -= OnChestOpened;
@@ -735,11 +733,6 @@ public partial class AudioManager : Node
 
 	private void OnZoneDiscovered(int cellX, int cellY, int cellCount)
 	{
-	}
-
-	private void OnPerkChosen(string perkId)
-	{
-		PlaySfx("sfx_perk_choix", 0f);
 	}
 
 	private void OnFragmentChosen(string fragmentId, string fragmentType)

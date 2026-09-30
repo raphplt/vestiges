@@ -22,7 +22,6 @@ public partial class Projectile : Area2D
     private float _age;
     private int _pierceRemaining;
     private bool _isCrit;
-    private bool _isRicochet;
     private bool _isDespawning;
     private Player _owner;
     private AttackContext _context;
@@ -69,7 +68,7 @@ public partial class Projectile : Area2D
     }
 
     public void Launch(Vector2 position, Vector2 direction, float damage, float speed, float lifetime, int pierce,
-                       bool isCrit, Player owner, WeaponData weapon, WeaponInstance source, bool isRicochet = false, AttackContext context = default)
+                       bool isCrit, Player owner, WeaponData weapon, WeaponInstance source, AttackContext context = default)
     {
         GlobalPosition = position;
         _direction = direction.Normalized();
@@ -81,8 +80,7 @@ public partial class Projectile : Area2D
         _isCrit = isCrit;
         _owner = owner;
         _context = context.OwnerId != 0 || owner == null ? context
-            : owner.BeginAttack(source, damage, isRicochet ? DamageKind.Passive : DamageKind.DirectWeapon);
-        _isRicochet = isRicochet;
+            : owner.BeginAttack(source, damage);
         SourceWeapon = weapon;
         SourceInstance = source;
         _isDespawning = false;
@@ -137,8 +135,7 @@ public partial class Projectile : Area2D
         _age += dt;
         if (_age >= _lifetime)
         {
-            // Bout de course : un ricochet est déjà un effet déclenché, il n'éclate pas (plan 21 §7).
-            if (!_isRicochet && _owner != null && IsInstanceValid(_owner))
+            if (_owner != null && IsInstanceValid(_owner))
                 _owner.OnProjectileSpent(GlobalPosition, _damage, _context);
             // Différé comme à l'impact : le retour au pool et la désactivation doivent passer ensemble,
             // sinon une relance dans la même frame serait désactivée après coup.
@@ -235,12 +232,12 @@ public partial class Projectile : Area2D
 
             _hitEnemies.Add(id);
             bool ownerValid = _owner != null && IsInstanceValid(_owner);
-            float damage = ownerValid && !_isRicochet ? _owner.ResolveHitDamage(enemy, _damage, _isCrit) : _damage;
+            float damage = ownerValid ? _owner.ResolveHitDamage(enemy, _damage, _isCrit) : _damage;
             enemy.TakeDamage(damage, _isCrit, source: _context);
 
             // Notify owner for perk effects (vampirism, ignite, execution, ricochet)
             if (ownerValid)
-                _owner.OnProjectileHit(enemy, damage, _isCrit, _isRicochet, SourceInstance, _context);
+                _owner.OnProjectileHit(enemy, damage, _isCrit, SourceInstance, _context);
 
             if (_spawnsGroundFire)
             {

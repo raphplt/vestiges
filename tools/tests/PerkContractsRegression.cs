@@ -133,7 +133,6 @@ public partial class PerkContractsRegression : Node2D
         _events.EnemyKillResolved += OnKill;
         DamageResult hit = enemy.TakeDamage(10000f, showImpact: false, source: attack);
         DamageResult ignored = enemy.TakeDamage(10000f, showImpact: false, source: attack);
-        enemy.Execute(attack);
         _events.EnemyKillResolved -= OnKill;
         Check(hit.Fatal && hit.Source == attack && hit.Target == enemy.Life && !ignored.Applied && kills == 1,
             "Une seule élimination attribuée par vie, même avec impacts supplémentaires");
@@ -202,10 +201,8 @@ public partial class PerkContractsRegression : Node2D
             "La régénération à pleine vie expose son excédent sans changer les PV");
         PlayerDamageResult erasure = _player.TakeErasureDamage(3f);
         Check(erasure.HpLost == 3f && !erasure.CanRecover, "Le Néant reste une origine non récupérable");
-        _player.SetSecondWind(0.5f);
         PlayerDamageResult fatal = _player.TakeDamage(10000f);
-        Check(fatal.Fatal && !fatal.CanRecover && _player.CurrentHp > 0f,
-            "Le coup reste fatal dans le contrat même si Second souffle ressuscite ensuite");
+        Check(fatal.Fatal && !fatal.CanRecover, "Un coup fatal reste fatal et non récupérable dans le contrat");
     }
 
     private void Check(bool condition, string message)

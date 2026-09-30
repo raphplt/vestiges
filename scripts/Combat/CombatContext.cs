@@ -2,7 +2,7 @@ using Godot;
 
 namespace Vestiges.Combat;
 
-public enum DamageKind { Unknown, DirectWeapon, SecondaryWeapon, DamageOverTime, Passive, Execution, EnemyExplosion }
+public enum DamageKind { Unknown, DirectWeapon, SecondaryWeapon, DamageOverTime, Passive, EnemyExplosion }
 
 /// <summary>
 /// Origine conservée même si l'arme quitte l'inventaire. LaunchId regroupe l'émission entière ; ReferenceDamage

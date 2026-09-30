@@ -58,7 +58,7 @@ public partial class AnalyticsManager : Node
 		LoadAggregate();
 
 		_eventBus = GetNode<EventBus>("/root/EventBus");
-		_eventBus.PerkChosen += OnPerkChosen;
+		_eventBus.SpecializationAcquired += OnSpecializationAcquired;
 		_eventBus.EnemyKilled += OnEnemyKilled;
 		_eventBus.SouvenirDiscovered += OnSouvenirDiscovered;
 	}
@@ -67,7 +67,7 @@ public partial class AnalyticsManager : Node
 	{
 		if (_eventBus != null)
 		{
-			_eventBus.PerkChosen -= OnPerkChosen;
+			_eventBus.SpecializationAcquired -= OnSpecializationAcquired;
 			_eventBus.EnemyKilled -= OnEnemyKilled;
 			_eventBus.SouvenirDiscovered -= OnSouvenirDiscovered;
 		}
@@ -139,9 +139,9 @@ public partial class AnalyticsManager : Node
 
 	// --- EventBus handlers ---
 
-	private void OnPerkChosen(string perkId)
+	private void OnSpecializationAcquired(string specializationId)
 	{
-		Increment(_perkPicks, perkId);
+		Increment(_perkPicks, specializationId);
 	}
 
 	private void OnEnemyKilled(string enemyId, Vector2 position)

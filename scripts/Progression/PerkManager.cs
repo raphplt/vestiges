@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-using System.Linq;
 using Godot;
 using Vestiges.Core;
 using Vestiges.Infrastructure;
@@ -7,301 +5,32 @@ using Vestiges.Infrastructure;
 namespace Vestiges.Progression;
 
 /// <summary>
-/// Gère les perks actifs, propose des choix au level up, applique les modifiers au joueur.
-/// Supporte les perks passifs, les perks exclusifs par personnage, la sélection pondérée,
-/// la détection de synergies, et les effets complexes (vampirism, ignite, etc.).
+/// Signature de départ d'un personnage (perks `is_passive` de perks.json), appliquée une fois au début de la run.
+/// Les anciens Dons des coffres et leurs synergies sont retirés (plan 21, lot G2b) ; les affinités des personnages
+/// remplaceront ces signatures au lot G4.
 /// </summary>
 public partial class PerkManager : Node
 {
-
-    /// <summary>
-    /// Perks whose mechanics depend on systems not yet implemented.
-    /// They are loaded as data but never offered in level-up or memorial choices.
-    /// Remove IDs from this set as their systems come online.
-    /// </summary>
-    private static readonly HashSet<string> _disabledPerks = new()
-    {
-        // Perks d'Essence pas encore câblés
-        "channeling", "siphon", "instability",
-        // Perks de personnage encore liés à des systèmes retirés
-        "traqueur_ambush", "traqueur_marked",
-    };
-
-    private readonly Dictionary<string, int> _activeStacks = new();
-    private readonly HashSet<string> _activeSynergies = new();
-    private EventBus _eventBus;
-    private Player _player;
-    private string _characterId;
-
-    [Signal] public delegate void PerkAppliedEventHandler(string perkId, int stacks);
-    [Signal] public delegate void SynergyActivatedEventHandler(string synergyId, string notification);
-
     public override void _Ready()
     {
         PerkDataLoader.Load();
-        _eventBus = GetNode<EventBus>("/root/EventBus");
-        // Les choix de niveau passent par FragmentManager (armes, passifs) ; PerkManager applique
-        // les perks reçus du monde (coffres, événements).
-        _eventBus.LootReceived += OnLootReceived;
-    }
-
-    public override void _ExitTree()
-    {
-        if (_eventBus != null)
-        {
-            _eventBus.LootReceived -= OnLootReceived;
-        }
     }
 
     public void ApplyPassivePerks(string characterId)
     {
-        _characterId = characterId;
-
-        List<PerkData> passives = PerkDataLoader.GetAll()
-            .Where(p => p.IsPassive && p.CharacterId == characterId)
-            .ToList();
-
-        foreach (PerkData passive in passives)
+        if (GetTree().GetFirstNodeInGroup("player") is not Player player)
+            return;
+        foreach (PerkData passive in PerkDataLoader.GetAll())
         {
-            _activeStacks[passive.Id] = 1;
-            ApplyPerkToPlayer(passive);
+            if (!passive.IsPassive || passive.CharacterId != characterId)
+                continue;
+            if (passive.Effects != null)
+                foreach (PerkEffect effect in passive.Effects)
+                    if (effect.Stat != null)
+                        player.ApplyPerkModifier(effect.Stat, effect.Modifier, effect.ModifierType);
+            if (passive.Stat != null)
+                player.ApplyPerkModifier(passive.Stat, passive.Modifier, passive.ModifierType);
             GD.Print($"[PerkManager] Applied passive: {passive.Name}");
         }
-    }
-
-    /// <summary>
-    /// Auto-applique un perk reçu depuis le monde (coffre, POI, événement).
-    /// Le perkId est déjà résolu par LootRewards (PickLootPerk).
-    /// </summary>
-    private void OnLootReceived(string itemType, string itemId, int amount)
-    {
-        if (itemType != "perk")
-            return;
-
-        if (string.IsNullOrEmpty(itemId))
-            return;
-
-        for (int i = 0; i < amount; i++)
-            SelectPerk(itemId);
-    }
-
-    public void SelectPerk(string perkId)
-    {
-        PerkData data = PerkDataLoader.Get(perkId);
-        if (data == null)
-            return;
-
-        int currentStacks = _activeStacks.GetValueOrDefault(perkId, 0);
-        if (currentStacks >= data.MaxStacks)
-            return;
-
-        _activeStacks[perkId] = currentStacks + 1;
-        ApplyPerkToPlayer(data);
-
-        _eventBus.EmitSignal(EventBus.SignalName.PerkChosen, perkId);
-        EmitSignal(SignalName.PerkApplied, perkId, _activeStacks[perkId]);
-
-        GD.Print($"[PerkManager] Applied {data.Name} (stack {_activeStacks[perkId]}/{data.MaxStacks})");
-
-        CheckSynergies();
-    }
-
-    private void ApplyPerkToPlayer(PerkData data)
-    {
-        CachePlayer();
-        if (_player == null)
-            return;
-
-        // Multi-effect perks (effects array)
-        if (data.Effects != null && data.Effects.Count > 0)
-        {
-            foreach (PerkEffect effect in data.Effects)
-            {
-                if (effect.Stat != null)
-                    _player.ApplyPerkModifier(effect.Stat, effect.Modifier, effect.ModifierType);
-            }
-        }
-        // Simple stat modifier
-        else if (data.Stat != null)
-        {
-            _player.ApplyPerkModifier(data.Stat, data.Modifier, data.ModifierType);
-        }
-
-        // Complex effect (singular effect dict)
-        if (data.Effect != null)
-            ApplyComplexEffect(data);
-    }
-
-    private void ApplyComplexEffect(PerkData data)
-    {
-        ComplexEffect fx = data.Effect;
-
-        // Stat modifiers in effect format (trigger=passive, action=modify_stat)
-        if (fx.Action == "modify_stat" && fx.Stat != null && fx.Trigger == "passive")
-        {
-            _player.ApplyPerkModifier(fx.Stat, fx.Modifier, fx.ModifierType);
-            return;
-        }
-
-        // Conditional stat modifier (berserker-type: bonus when HP below threshold)
-        if (fx.Trigger == "passive_conditional" && fx.Condition == "hp_percent_below" && fx.Action == "modify_stat")
-        {
-            _player.AddBerserker(fx.ConditionValue, fx.Modifier);
-            return;
-        }
-
-        switch (fx.Action)
-        {
-            case "heal_percent_of_damage":
-                _player.AddVampirism(fx.Value);
-                break;
-
-            case "apply_dot":
-                _player.AddIgnite(fx.Chance, fx.DotDamage, fx.DotDuration);
-                break;
-
-            case "bounce_to_nearby":
-                _player.AddRicochet(fx.Chance, fx.BounceRange);
-                break;
-
-            case "reflect_damage_percent":
-                _player.AddThorns(fx.Value);
-                break;
-
-            case "execute_below_percent":
-                _player.AddExecution(fx.Value);
-                break;
-
-            case "revive":
-                _player.SetSecondWind(fx.HealPercent);
-                break;
-
-            case "temporary_buff":
-                _player.AddKillSpeed(fx.Modifier, fx.Duration, fx.MaxBuffStacks);
-                break;
-
-            case "dodge":
-                _player.AddDodge(fx.Chance);
-                break;
-
-            default:
-                // Effets pas encore câblés (perks d'Essence)
-                GD.Print($"[PerkManager] Complex effect '{fx.Action}' for {data.Id} not yet implemented");
-                break;
-        }
-    }
-
-    private void CheckSynergies()
-    {
-        List<PerkData> synergies = PerkDataLoader.GetSynergies();
-
-        foreach (PerkData synergy in synergies)
-        {
-            if (_activeSynergies.Contains(synergy.Id))
-                continue;
-
-            if (synergy.RequiredPerks == null || synergy.RequiredPerks.Count == 0)
-                continue;
-
-            bool allPresent = synergy.RequiredPerks.All(req => _activeStacks.ContainsKey(req));
-            if (!allPresent)
-                continue;
-
-            _activeSynergies.Add(synergy.Id);
-
-            string notification = synergy.Notification ?? synergy.Name;
-            EmitSignal(SignalName.SynergyActivated, synergy.Id, notification);
-            _eventBus.EmitSignal(EventBus.SignalName.SynergyActivated, synergy.Id, notification);
-
-            GD.Print($"[PerkManager] Synergy activated: {synergy.Name}");
-        }
-    }
-
-    /// <summary>Perk tiré pour un butin (coffre, POI) : mêmes règles que les offres, perks V1 exclus. Null si aucun.</summary>
-    public string PickLootPerk()
-    {
-        string[] picked = PickRandomPerks(1);
-        return picked.Length > 0 ? picked[0] : null;
-    }
-
-    /// <summary>
-    /// Weighted random selection. Perks with lower Weight (e.g. 0.25 for rares) appear less often.
-    /// </summary>
-    private string[] PickRandomPerks(int count)
-    {
-        List<PerkData> available = PerkDataLoader.GetAll()
-            .Where(p =>
-                !p.IsPassive
-                && !_disabledPerks.Contains(p.Id)
-                && _activeStacks.GetValueOrDefault(p.Id, 0) < p.MaxStacks
-                && (p.CharacterId == null || p.CharacterId == _characterId))
-            .ToList();
-
-        if (available.Count == 0)
-            return System.Array.Empty<string>();
-
-        CachePlayer();
-        float luck = _player?.LuckBonus ?? 0f;
-
-        List<string> picked = new();
-        for (int i = 0; i < count && available.Count > 0; i++)
-        {
-            PerkData selected = WeightedRandom(available, luck);
-            picked.Add(selected.Id);
-            available.Remove(selected);
-        }
-
-        return picked.ToArray();
-    }
-
-    /// <summary>
-    /// Sélection pondérée. La luck booste le poids des perks rares vers 1.0.
-    /// </summary>
-    private static PerkData WeightedRandom(List<PerkData> perks, float luck)
-    {
-        float totalWeight = 0f;
-        foreach (PerkData perk in perks)
-            totalWeight += GetAdjustedWeight(perk, luck);
-
-        float roll = (float)(GD.Randf() * totalWeight);
-        float cumulative = 0f;
-
-        foreach (PerkData perk in perks)
-        {
-            cumulative += GetAdjustedWeight(perk, luck);
-            if (roll <= cumulative)
-                return perk;
-        }
-
-        return perks[perks.Count - 1];
-    }
-
-    private static float GetAdjustedWeight(PerkData perk, float luck)
-    {
-        float w = perk.Weight;
-        // La luck rapproche les poids rares (< 1.0) vers 1.0
-        if (luck > 0f && w < 1f)
-            w = Mathf.Lerp(w, 1f, luck);
-        return w;
-    }
-
-    public int GetStacks(string perkId)
-    {
-        return _activeStacks.GetValueOrDefault(perkId, 0);
-    }
-
-    public bool IsSynergyActive(string synergyId)
-    {
-        return _activeSynergies.Contains(synergyId);
-    }
-
-    private void CachePlayer()
-    {
-        if (_player != null && IsInstanceValid(_player))
-            return;
-
-        Node playerNode = GetTree().GetFirstNodeInGroup("player");
-        if (playerNode is Player p)
-            _player = p;
     }
 }

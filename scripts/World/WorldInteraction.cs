@@ -16,7 +16,6 @@ public partial class WorldInteraction : Node
     private Player _player;
     private EventBus _eventBus;
     private ChestLootScreen _lootScreen;
-    private PerkManager _perks;
     private InteractionPrompt _prompt;
     private InteractionGauge _gauge;
     private IInteractable _target;
@@ -34,11 +33,7 @@ public partial class WorldInteraction : Node
         AddChild(_gauge);
     }
 
-    public void Configure(ChestLootScreen lootScreen, PerkManager perks)
-    {
-        _lootScreen = lootScreen;
-        _perks = perks;
-    }
+    public void Configure(ChestLootScreen lootScreen) => _lootScreen = lootScreen;
 
     /// <summary>Appelé à chaque pas physique du joueur : jauge et invite.</summary>
     public void Step(float delta, bool canInteract)
@@ -104,7 +99,7 @@ public partial class WorldInteraction : Node
 
     private void OpenChest(Chest chest)
     {
-        List<ResolvedLoot> loots = LootRewards.Resolve(chest.Open(), _perks);
+        List<ResolvedLoot> loots = LootRewards.Resolve(chest.Open(), _player);
         Vector2 position = chest.GlobalPosition;
         if (_lootScreen != null && loots.Count > 0)
             _lootScreen.ShowLoot(loots, chest.Rarity, () => ApplyAll(loots, position));

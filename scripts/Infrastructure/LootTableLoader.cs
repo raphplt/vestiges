@@ -10,6 +10,8 @@ public class LootEntry
     public float Weight;
     public int MinAmount;
     public int MaxAmount;
+    /// <summary>Essence donnée si l'entrée ne peut pas servir (niveaux d'objet sans objet à monter).</summary>
+    public int FallbackEssence;
 }
 
 public class LootTableData
@@ -97,7 +99,8 @@ public static class LootTableLoader
                     Item = entryDict["item"].AsString(),
                     Weight = (float)entryDict["weight"].AsDouble(),
                     MinAmount = (int)entryDict["min_amount"].AsDouble(),
-                    MaxAmount = (int)entryDict["max_amount"].AsDouble()
+                    MaxAmount = (int)entryDict["max_amount"].AsDouble(),
+                    FallbackEssence = entryDict.ContainsKey("fallback_essence") ? (int)entryDict["fallback_essence"].AsDouble() : 0
                 };
                 table.Entries.Add(entry);
             }

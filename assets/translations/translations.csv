@@ -124,7 +124,7 @@ CHEST_LOOT_ESSENCE,Essence ×{0},Essence ×{0}
 CHEST_LOOT_XP,+{0} XP,+{0} XP
 CHEST_LOOT_SOUVENIR,Souvenir : {0},Memory: {0}
 CHEST_LOOT_WEAPON,Arme : {0},Weapon: {0}
-CHEST_LOOT_PERK,Don : {0},Boon: {0}
+CHEST_LOOT_OBJECT_LEVEL,{0} +{1} niv.,{0} +{1} lv
 STAT_DAMAGE,Dégâts,Damage
 STAT_ATTACK_SPEED,Cadence,Attack rate
 STAT_MAX_HP,PV max,Max HP
@@ -139,16 +139,10 @@ STAT_RANGE,Portée,Range
 STAT_PROJECTILES,Projectiles,Projectiles
 STAT_CDR,Réduction de recharge,Cooldown reduction
 STAT_PIERCE,Perçage,Pierce
-STAT_LIFESTEAL,Vampirisme,Lifesteal
-STAT_DODGE,Esquive,Dodge
-STAT_THORNS,Épines,Thorns
-STAT_IGNITE,Embrasement,Ignite
-STAT_RICOCHET,Ricochet,Ricochet
 STAT_LUCK,Chance,Luck
 STAT_PERIL,Péril,Peril
 PERIL_CREATURES,Créatures,Creatures
 PERIL_REWARDS,Gains,Rewards
-STAT_BONUS_PROJ,Projectiles en plus,Extra projectiles
 WEAPON_BOW,Arc,Bow
 WEAPON_LINE,Ligne,Line
 WEAPON_CIRCLE,Cercle,Circle

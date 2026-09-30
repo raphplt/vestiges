@@ -15,6 +15,7 @@ public static class LootResolver
         public string Type;
         public string ItemId;
         public int Amount;
+        public int FallbackEssence;
     }
 
     /// <summary>
@@ -43,7 +44,8 @@ public static class LootResolver
             {
                 Type = entry.Type,
                 ItemId = entry.Item,
-                Amount = amount
+                Amount = amount,
+                FallbackEssence = entry.FallbackEssence
             });
         }
 

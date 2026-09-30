@@ -932,19 +932,6 @@ public partial class Enemy : CharacterBody2D
 		return result;
 	}
 
-	/// <summary>Instant kill from execution perk.</summary>
-	public void Execute(AttackContext source = default)
-	{
-		if (_currentHp <= 0 || _isDying || _isBurrowed)
-			return;
-
-		DamageResult result = DamageResult.Resolve(Life, source.As(DamageKind.Execution), _currentHp, _currentHp, 0f);
-		SpawnDamageNumber(_currentHp, false);
-		_currentHp = 0;
-		_eventBus.PublishEnemyDamage(result);
-		Die(result);
-	}
-
 	/// <summary>Apply ignite DOT (damage over time). Refreshes if already ignited.</summary>
 	public void ApplyIgnite(float dps, float duration, AttackContext source = default)
 	{

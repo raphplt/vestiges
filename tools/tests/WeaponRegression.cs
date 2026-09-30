@@ -126,11 +126,11 @@ public partial class WeaponRegression : Node2D
         enemy.Position = _player.Position + new Vector2(80f, 0f);
         await ToSignal(GetTree(), SceneTree.SignalName.PhysicsFrame);
 
-        _player.OnProjectileHit(enemy, 1f, false, false, bow);
+        _player.OnProjectileHit(enemy, 1f, false, bow);
         float bleed = (float)typeof(Enemy).GetField("_bleedTimer", Private).GetValue(enemy);
         Check(bleed <= 0f, $"flèche de l'arc après un coup de masse : pas de saignement emprunté (timer {bleed:F1} s)");
 
-        _player.OnProjectileHit(enemy, 1f, false, false, mace);
+        _player.OnProjectileHit(enemy, 1f, false, mace);
         bleed = (float)typeof(Enemy).GetField("_bleedTimer", Private).GetValue(enemy);
         Check(bleed > 0f, $"coup de la masse : saignement appliqué (timer {bleed:F1} s)");
         enemy.QueueFree();

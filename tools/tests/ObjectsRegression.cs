@@ -234,7 +234,7 @@ public partial class ObjectsRegression : Node2D
         _player.AddWeapon(WeaponDataLoader.Get("teachers_bell"));
         WeaponInstance bell = _player.WeaponSlots[_player.WeaponSlots.Count - 1];
         Enemy enemy = SpawnEnemy();
-        _player.OnProjectileHit(enemy, 1f, false, false, bell);
+        _player.OnProjectileHit(enemy, 1f, false, bell);
         float slow = (float)typeof(Enemy).GetField("_slowTimer", Private).GetValue(enemy);
         Check(Near(_player.StatusDurationMultiplier, 1.15f) && Near(slow, 2f * 1.15f),
             $"Pince à linge niveau 10 : statuts +15 % (ralentissement de la Cloche {slow:0.00} s au lieu de 2 s)");

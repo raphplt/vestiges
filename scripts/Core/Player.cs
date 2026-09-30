@@ -77,7 +77,6 @@ public partial class Player : CharacterBody2D
     private ErasureEffects.Effect _erasurePenalty = ErasureEffects.Effect.None;
     private float _attackSpeedMultiplier = 1f;
     private float _bonusMaxHp;
-    private int _extraProjectiles;
     private float _aoeMultiplier = 1f;
     private float _attackRangeMultiplier = 1f;
     private float _bonusRegenRate;
@@ -90,28 +89,6 @@ public partial class Player : CharacterBody2D
     private int _projectilePierce;
     private float _xpMagnetMultiplier = 1f;
     private float _luckBonus;
-
-    // Complex perk effects
-    private float _vampirismPercent;
-    private float _berserkerThreshold;
-    private float _berserkerDamageMult = 1f;
-    private float _thornsPercent;
-    private float _executionThreshold;
-    private float _dodgeChance;
-    private bool _secondWindAvailable;
-    private float _secondWindHealPercent;
-    private float _igniteChance;
-    private float _igniteDamage;
-    private float _igniteDuration;
-    private float _ricochetChance;
-    private float _ricochetRange = 120f;
-
-    // Kill speed buff
-    private float _killSpeedBonusPerKill;
-    private float _killSpeedDuration;
-    private int _killSpeedMaxStacks;
-    private int _killSpeedActiveStacks;
-    private float _killSpeedTimer;
 
     // Weapon special effect tracking (per-weapon hit counters)
     private readonly System.Collections.Generic.Dictionary<string, int> _weaponHitCounters = new();
@@ -145,7 +122,6 @@ public partial class Player : CharacterBody2D
     private bool _isExploringPoi;
 
     private WorldInteraction _interaction;
-    private PerkManager _perkManager;
 
     public float CurrentHp => _currentHp;
     public float EffectiveMaxHp => MaxHp + _bonusMaxHp;
@@ -173,12 +149,6 @@ public partial class Player : CharacterBody2D
     public float MaxShield => _defense?.MaxShield ?? 0f;
     public float BonusRegenRate => _bonusRegenRate;
     public float AoeMultiplier => _aoeMultiplier;
-    public float VampirismPercent => _vampirismPercent;
-    public float DodgeChance => _dodgeChance;
-    public float ThornsPercent => _thornsPercent;
-    public int ExtraProjectiles => _extraProjectiles;
-    public float IgniteChance => _igniteChance;
-    public float RicochetChance => _ricochetChance;
     public float LuckBonus => _luckBonus;
 
     private const float ShadowWidth = 22f;
@@ -212,7 +182,6 @@ public partial class Player : CharacterBody2D
         CacheWorldSetup();
 
         _eventBus = GetNode<EventBus>("/root/EventBus");
-        _eventBus.EnemyKilled += OnEnemyKilled;
         _eventBus.GameStateChanged += OnMovementGameStateChanged;
         _eventBus.PlayerErasurePhaseChanged += OnErasurePhaseChanged;
         _gameManager = GetNode<GameManager>("/root/GameManager");
@@ -223,7 +192,6 @@ public partial class Player : CharacterBody2D
     {
         if (_eventBus != null)
         {
-            _eventBus.EnemyKilled -= OnEnemyKilled;
             _eventBus.PlayerErasurePhaseChanged -= OnErasurePhaseChanged;
             _eventBus.GameStateChanged -= OnMovementGameStateChanged;
         }
@@ -522,7 +490,6 @@ public partial class Player : CharacterBody2D
         ProcessSlowDecay(dt);
         ProcessPoiExplore(dt);
         _interaction.Step(dt, !_isExploringPoi && !Mobility.IsDashing);
-        ProcessKillSpeedDecay(dt);
         ProcessOrbitalWeapons(dt);
         ProcessSustainedCone(dt);
     }
@@ -720,9 +687,6 @@ public partial class Player : CharacterBody2D
                     UpdateAttackSpeed();
                 }
                 break;
-            case "projectile_count":
-                if (modifierType == "additive") _extraProjectiles += (int)value;
-                break;
             case "aoe_radius":
                 if (modifierType == "multiplicative") _aoeMultiplier *= value;
                 break;
@@ -776,73 +740,17 @@ public partial class Player : CharacterBody2D
         }
     }
 
-    // --- Complex Perk Effects ---
-
-    public void AddVampirism(float percentPerStack)
+    /// <summary>Appelé par les projectiles à l'impact : effets du coup.</summary>
+    public void OnProjectileHit(Enemy enemy, float damage, bool isCrit, WeaponInstance source, AttackContext context = default)
     {
-        _vampirismPercent += percentPerStack;
-    }
-
-    public void AddBerserker(float hpThreshold, float damageMult)
-    {
-        _berserkerThreshold = hpThreshold;
-        _berserkerDamageMult += (damageMult - 1f);
-    }
-
-    public void AddThorns(float percentPerStack)
-    {
-        _thornsPercent += percentPerStack;
-    }
-
-    public void AddExecution(float threshold)
-    {
-        _executionThreshold += threshold;
-    }
-
-    public void AddDodge(float chancePerStack)
-    {
-        _dodgeChance += chancePerStack;
-    }
-
-    public void SetSecondWind(float healPercent)
-    {
-        _secondWindAvailable = true;
-        _secondWindHealPercent = healPercent;
-    }
-
-    public void AddIgnite(float chance, float damage, float duration)
-    {
-        _igniteChance += chance;
-        _igniteDamage = Mathf.Max(_igniteDamage, damage);
-        _igniteDuration = Mathf.Max(_igniteDuration, duration);
-    }
-
-    public void AddRicochet(float chance, float range)
-    {
-        _ricochetChance += chance;
-        _ricochetRange = Mathf.Max(_ricochetRange, range);
-    }
-
-    public void AddKillSpeed(float bonusPerKill, float duration, int maxStacks)
-    {
-        _killSpeedBonusPerKill += (bonusPerKill - 1f);
-        _killSpeedDuration = Mathf.Max(_killSpeedDuration, duration);
-        _killSpeedMaxStacks = System.Math.Max(_killSpeedMaxStacks, maxStacks);
+        OnAttackHit(enemy, damage, isCrit, source, context: context);
     }
 
     /// <summary>
-    /// Called by projectiles and melee hits. Handles vampirism, ignite, execution, ricochet.
+    /// Effets d'un coup porté par <paramref name="source"/> : ceux de l'arme (effet au contact, recul, effet spécial)
+    /// restent ceux de l'arme qui a frappé.
     /// </summary>
-    public void OnProjectileHit(Enemy enemy, float damage, bool isCrit, bool isRicochet, WeaponInstance source, AttackContext context = default)
-    {
-        OnAttackHit(enemy, damage, isCrit, isRicochet, source, context: context);
-    }
-
-    /// <summary>
-    /// Effets d'un coup porté par <paramref name="source"/>. Les effets de perks (vampirisme, embrasement…) sont
-    /// globaux ; ceux de l'arme (effet au contact, recul, effet spécial) restent ceux de l'arme qui a frappé.
-    /// </summary>
-    private void OnAttackHit(Enemy enemy, float damage, bool isCrit, bool isRicochet, WeaponInstance source, int triggerCount = 1, bool showImpact = true, AttackContext context = default)
+    private void OnAttackHit(Enemy enemy, float damage, bool isCrit, WeaponInstance source, int triggerCount = 1, bool showImpact = true, AttackContext context = default)
     {
         if (_isDead)
             return;
@@ -854,28 +762,11 @@ public partial class Player : CharacterBody2D
             _attackFx.PlayHit(source?.Base, enemy.GlobalPosition, isCrit);
         if (source != null)
             _weaponLedger.AddDamage(source.Id, damage);
-        int procRollCount = Mathf.Max(1, triggerCount);
         if (context.OwnerId == 0)
-            context = BeginAttack(source, damage, isRicochet ? DamageKind.SecondaryWeapon : DamageKind.DirectWeapon);
-
-        // Vampirism: heal % of damage dealt
-        if (_vampirismPercent > 0f)
-            Heal(damage * _vampirismPercent);
-
-        // Ignite: chance to apply DOT
-        if (_igniteChance > 0f && GD.Randf() < GetCombinedProcChance(_igniteChance, procRollCount))
-            enemy.ApplyIgnite(_igniteDamage, StatusDuration(_igniteDuration), context.As(DamageKind.Passive));
-
-        // Execution: instant kill enemies below HP threshold
-        if (_executionThreshold > 0f && !enemy.IsDying && enemy.HpRatio > 0f && enemy.HpRatio < _executionThreshold)
-            enemy.Execute(context);
+            context = BeginAttack(source, damage);
 
         if (source != null && enemy.ClaimKillCredit())
             _weaponLedger.AddKill(source.Id);
-
-        // Ricochet: bounce to nearby enemy (only from original projectiles)
-        if (!isRicochet && _ricochetChance > 0f && GD.Randf() < GetCombinedProcChance(_ricochetChance, procRollCount))
-            SpawnRicochet(enemy, damage, isCrit, source, context);
 
         // --- Weapon on-hit effects ---
         WeaponOnHitEffect ohe = source?.Base.OnHitEffect;
@@ -918,34 +809,6 @@ public partial class Player : CharacterBody2D
             return 1f;
 
         return 1f - Mathf.Pow(1f - clampedChance, triggerCount);
-    }
-
-    private void SpawnRicochet(Enemy sourceEnemy, float damage, bool isCrit, WeaponInstance source, AttackContext context)
-    {
-        Godot.Collections.Array<Node> enemies = _groupCache.GetEnemies();
-        Node2D bounceTarget = null;
-        float nearestDist = _ricochetRange;
-
-        foreach (Node node in enemies)
-        {
-            if (node is Node2D candidate && candidate != sourceEnemy && !candidate.IsQueuedForDeletion())
-            {
-                float dist = sourceEnemy.GlobalPosition.DistanceTo(candidate.GlobalPosition);
-                if (dist < nearestDist)
-                {
-                    bounceTarget = candidate;
-                    nearestDist = dist;
-                }
-            }
-        }
-
-        if (bounceTarget == null)
-            return;
-
-        Vector2 direction = (bounceTarget.GlobalPosition - sourceEnemy.GlobalPosition).Normalized();
-        float speed = source?.GetStat("projectile_speed", 400f) ?? 400f;
-        CombatPools.Instance?.TakePlayerProjectile().Launch(sourceEnemy.GlobalPosition, direction, damage * 0.75f, speed,
-            Mathf.Clamp(_ricochetRange / Mathf.Max(speed, 1f), 0.2f, 2f), 0, isCrit, this, source?.Base, source, isRicochet: true, context: context.As(DamageKind.Passive));
     }
 
     // --- Weapon Special Effects ---
@@ -1091,7 +954,7 @@ public partial class Player : CharacterBody2D
                     float damage = ComputeBaseAttackDamage(_orbitalWeapon);
                     AttackContext context = BeginAttack(_orbitalWeapon, damage);
                     enemy.TakeDamage(damage, source: context);
-                    OnAttackHit(enemy, damage, false, false, _orbitalWeapon, context: context);
+                    OnAttackHit(enemy, damage, false, _orbitalWeapon, context: context);
                 }
             };
 
@@ -1201,7 +1064,7 @@ public partial class Player : CharacterBody2D
                 continue;
 
             bool showImpact = enemy.TakeContinuousDamage(damage, delta, _coneContext);
-            OnAttackHit(enemy, damage, false, false, _coneWeapon, showImpact: showImpact, context: _coneContext);
+            OnAttackHit(enemy, damage, false, _coneWeapon, showImpact: showImpact, context: _coneContext);
         }
     }
 
@@ -1247,7 +1110,7 @@ public partial class Player : CharacterBody2D
         AttackContext context = BeginAttack(_equippedWeapon, currentDamage);
         float firstDamage = ResolveHitDamage(firstTarget, currentDamage, isCrit);
         firstTarget.TakeDamage(firstDamage, isCrit, source: context);
-        OnAttackHit(firstTarget, firstDamage, isCrit, false, _equippedWeapon, context: context);
+        OnAttackHit(firstTarget, firstDamage, isCrit, _equippedWeapon, context: context);
 
         // Chain vers les ennemis adjacents
         HashSet<ulong> hitIds = new() { firstTarget.GetInstanceId() };
@@ -1263,7 +1126,7 @@ public partial class Player : CharacterBody2D
             hitIds.Add(nextTarget.GetInstanceId());
             SpawnChainVisual(current.GlobalPosition, nextTarget.GlobalPosition);
             nextTarget.TakeDamage(currentDamage, source: context);
-            OnAttackHit(nextTarget, currentDamage, false, false, _equippedWeapon, context: context);
+            OnAttackHit(nextTarget, currentDamage, false, _equippedWeapon, context: context);
             current = nextTarget;
         }
     }
@@ -1316,11 +1179,6 @@ public partial class Player : CharacterBody2D
         if (_currentHp <= 0 || IsGodMode || Mobility.IsInvulnerable || _defense.IsInvulnerable)
             return default;
 
-        if (_dodgeChance > 0f && GD.Randf() < _dodgeChance)
-        {
-            GD.Print("[Player] Dodged!");
-            return default;
-        }
         if (_objectMilestones != null && _objectMilestones.Ignores(damage, EffectiveMaxHp))
         {
             ShowIgnoredHit();
@@ -1329,8 +1187,6 @@ public partial class Player : CharacterBody2D
 
         float armor = _armor * (_objectMilestones?.ArmorMultiplier(Mobility) ?? 1f);
         PlayerDefense.Outcome outcome = _defense.Absorb(damage, armor);
-        if (_thornsPercent > 0f)
-            ApplyThorns(outcome.Reduced);
 
         if (outcome.ShieldAbsorbed)
         {
@@ -1398,32 +1254,6 @@ public partial class Player : CharacterBody2D
 
     private void EmitShield() =>
         _eventBus?.EmitSignal(EventBus.SignalName.PlayerShieldChanged, _defense.Shield, _defense.MaxShield);
-
-    private void ApplyThorns(float damageTaken)
-    {
-        float reflectedDamage = damageTaken * _thornsPercent;
-        if (reflectedDamage <= 0f)
-            return;
-
-        Godot.Collections.Array<Node> enemies = _groupCache.GetEnemies();
-        float nearestDist = 60f;
-        Enemy nearestEnemy = null;
-
-        foreach (Node node in enemies)
-        {
-            if (node is Enemy enemy && !enemy.IsDying)
-            {
-                float dist = GlobalPosition.DistanceTo(enemy.GlobalPosition);
-                if (dist < nearestDist)
-                {
-                    nearestEnemy = enemy;
-                    nearestDist = dist;
-                }
-            }
-        }
-
-        nearestEnemy?.TakeDamage(reflectedDamage, source: BeginAttack(null, reflectedDamage, DamageKind.Passive));
-    }
 
     // --- Debuffs ---
 
@@ -1580,7 +1410,7 @@ public partial class Player : CharacterBody2D
         if (string.IsNullOrEmpty(poi.LootTableId))
             return;
 
-        List<ResolvedLoot> loots = LootRewards.Resolve(LootResolver.Roll(poi.LootTableId, poi.LootRolls), _perkManager);
+        List<ResolvedLoot> loots = LootRewards.Resolve(LootResolver.Roll(poi.LootTableId, poi.LootRolls), this);
         for (int i = 0; i < loots.Count; i++)
         {
             LootRewards.Apply(loots[i], this, _eventBus, poi.GlobalPosition);
@@ -1612,12 +1442,8 @@ public partial class Player : CharacterBody2D
 
     // --- Chest Opening ---
 
-    /// <summary>Services du butin : écran de roulette des coffres et tirage des perks.</summary>
-    public void ConfigureLoot(UI.ChestLootScreen lootScreen, PerkManager perkManager)
-    {
-        _perkManager = perkManager;
-        _interaction.Configure(lootScreen, perkManager);
-    }
+    /// <summary>Écran de roulette des coffres.</summary>
+    public void ConfigureLoot(UI.ChestLootScreen lootScreen) => _interaction.Configure(lootScreen);
 
     /// <summary>Texte flottant montrant le loot obtenu, empilé verticalement.</summary>
     private void SpawnLootPopup(string text, Color color, Vector2 worldPos, int stackIndex)
@@ -1663,19 +1489,6 @@ public partial class Player : CharacterBody2D
 
     private void Die()
     {
-        // Second Wind: revive once per run
-        if (_secondWindAvailable)
-        {
-            _secondWindAvailable = false;
-            _currentHp = EffectiveMaxHp * _secondWindHealPercent;
-            _eventBus.PublishPlayerHealing(new HealingResult(GetInstanceId(), HealingKind.Revival,
-                _currentHp, _currentHp, 0f, true));
-            _eventBus.EmitSignal(EventBus.SignalName.PlayerDamaged, _currentHp, EffectiveMaxHp);
-            Flash(HurtFlashColor, true);
-            GD.Print($"[Player] Second Wind! Revived at {_currentHp:F0} HP");
-            return;
-        }
-
         _isDead = true;
         Mobility.Die();
         _mobilityFeedback.Suspend();
@@ -1860,8 +1673,7 @@ public partial class Player : CharacterBody2D
     private void PerformRangedAttack(string pattern)
     {
         int baseProjectileCount = Mathf.Max(1, Mathf.RoundToInt(GetWeaponStat("projectile_count", 1f)));
-        int fullProjectiles = Mathf.Max(1, baseProjectileCount + _extraProjectiles);
-        int totalProjectiles = fullProjectiles + _attackCopies;
+        int totalProjectiles = baseProjectileCount + _attackCopies;
         float range = GetEffectiveWeaponRange();
         System.Collections.Generic.List<Node2D> targets = FindNearestEnemies(totalProjectiles, range);
         if (targets.Count == 0)
@@ -1877,7 +1689,7 @@ public partial class Player : CharacterBody2D
         if (pattern == "burst")
         {
             float spreadAngle = GetWeaponStat("spread_angle", 20f);
-            SpawnBurstProjectiles(totalProjectiles, fullProjectiles, spreadAngle, baseDirection, baseDamage, projectileSpeed, totalPierce);
+            SpawnBurstProjectiles(totalProjectiles, baseProjectileCount, spreadAngle, baseDirection, baseDamage, projectileSpeed, totalPierce);
             return;
         }
 
@@ -1888,7 +1700,7 @@ public partial class Player : CharacterBody2D
         {
             Node2D target = targets[i % targets.Count];
             Vector2 direction = (target.GlobalPosition - GlobalPosition).Normalized();
-            bool isCopy = i >= fullProjectiles;
+            bool isCopy = i >= baseProjectileCount;
             bool isCrit = _critChance > 0f && GD.Randf() < _critChance;
             float effectiveDamage = ProjectileDamage(baseDamage, isCrit, isCopy);
             Projectile proj = SpawnProjectile(direction, effectiveDamage, projectileSpeed, range, totalPierce, isCrit, isCopy);
@@ -1928,7 +1740,7 @@ public partial class Player : CharacterBody2D
 
         float baseDamage = ComputeBaseAttackDamage();
         AttackContext context = BeginAttack(_equippedWeapon, baseDamage);
-        int strikeCount = Mathf.Max(1, 1 + _extraProjectiles) + _attackCopies;
+        int strikeCount = 1 + _attackCopies;
         float spreadAngle = strikeCount > 1
             ? Mathf.Clamp(GetWeaponStat("spread_angle", 20f), 0f, 120f)
             : 0f;
@@ -1998,7 +1810,7 @@ public partial class Player : CharacterBody2D
             float totalDamage = ResolveHitDamage(enemy, baseDamage * hitMultiplierSum * critDamageFactor, hasCrit);
             AttackContext hitContext = context with { ReferenceDamage = totalDamage };
             enemy.TakeDamage(totalDamage, hasCrit, source: hitContext);
-            OnAttackHit(enemy, totalDamage, hasCrit, isRicochet: false, _equippedWeapon, triggerCount: hitCount, context: hitContext);
+            OnAttackHit(enemy, totalDamage, hasCrit, _equippedWeapon, triggerCount: hitCount, context: hitContext);
         }
         if (_objectMilestones?.HasZoneEcho == true)
             QueueMeleeEchoes(attackDirection, range, arcAngle, strikeCount, startOffset, step, baseDamage * critDamageFactor, context);
@@ -2020,20 +1832,15 @@ public partial class Player : CharacterBody2D
     }
 
     /// <summary>
-    /// Part des dégâts portée par les frappes <paramref name="fromIndex"/> à <paramref name="toIndex"/>. Les frappes
-    /// pleines (la première, puis celles des anciens Dons, dégressives) tiennent le centre de l'éventail ; les copies
-    /// du Papier carbone se partagent ses deux bords.
+    /// Part des dégâts portée par les frappes <paramref name="fromIndex"/> à <paramref name="toIndex"/> : la frappe
+    /// pleine tient le centre de l'éventail, les copies du Papier carbone se partagent ses deux bords.
     /// </summary>
     private float StrikeMultiplierSum(int fromIndex, int toIndex)
     {
-        int full = Mathf.Max(1, 1 + _extraProjectiles);
-        int leadingCopies = _attackCopies / 2;
+        int centerIndex = _attackCopies / 2;
         float sum = 0f;
         for (int index = fromIndex; index <= toIndex; index++)
-        {
-            int rank = index - leadingCopies;
-            sum += rank < 0 || rank >= full ? _copyDamageFactor : SumMeleeStrikeDamageMultipliers(rank, rank);
-        }
+            sum += index == centerIndex ? 1f : _copyDamageFactor;
         return sum;
     }
 
@@ -2042,39 +1849,6 @@ public partial class Player : CharacterBody2D
     {
         int leadingCopies = (count - fullCount) / 2;
         return index < leadingCopies || index >= leadingCopies + fullCount;
-    }
-
-    private float SumMeleeStrikeDamageMultipliers(int fromIndex, int toIndex)
-    {
-        if (toIndex < fromIndex)
-            return 0f;
-
-        int start = Mathf.Max(0, fromIndex);
-        int end = Mathf.Max(start, toIndex);
-        float sum = 0f;
-
-        if (start == 0)
-        {
-            sum += 1f;
-            start = 1;
-        }
-
-        if (start > end)
-            return sum;
-
-        int linearEnd = Mathf.Min(end, 3);
-        if (start <= linearEnd)
-        {
-            int count = linearEnd - start + 1;
-            float sumIndices = (start + linearEnd) * count * 0.5f;
-            sum += (0.95f * count) - (0.1f * sumIndices);
-            start = linearEnd + 1;
-        }
-
-        if (start <= end)
-            sum += (end - start + 1) * 0.55f;
-
-        return sum;
     }
 
     /// <summary>Salve en éventail de <paramref name="count"/> projectiles, dont <paramref name="fullCount"/> pleins au centre.</summary>
@@ -2194,10 +1968,6 @@ public partial class Player : CharacterBody2D
         float weaponDamage = weapon?.GetStat("damage", AttackDamage) ?? AttackDamage;
         float characterDamageFactor = AttackDamage / 10f;
         float damage = weaponDamage * characterDamageFactor * _damageMultiplier * _erasurePenalty.Damage;
-
-        if (_berserkerThreshold > 0f && _currentHp / EffectiveMaxHp < _berserkerThreshold)
-            damage *= _berserkerDamageMult;
-
         return damage;
     }
 
@@ -2227,7 +1997,6 @@ public partial class Player : CharacterBody2D
         "range" => weapon.AttackPattern == "circular" ? ZoneScale(GetEffectiveWeaponRange(weapon)) : GetEffectiveWeaponRange(weapon),
         "arc_angle" => Mathf.Min(360f, ZoneScale(weapon.GetStat("arc_angle", 120f))),
         "cone_angle_end" => Mathf.Min(180f, ZoneScale(weapon.GetStat("cone_angle_end", 60f))),
-        "projectile_count" => weapon.GetStat("projectile_count", 1f) + _extraProjectiles,
         "projectile_pierce" => weapon.GetStat("projectile_pierce", 0f) + _projectilePierce,
         _ => weapon.GetStat(key, 0f),
     };
@@ -2280,38 +2049,9 @@ public partial class Player : CharacterBody2D
         _attackFx.PlayMelee(_equippedWeapon?.Base, direction, range, arcAngle);
     }
 
-    // --- Kill Speed Buff ---
-
-    private void OnEnemyKilled(string enemyId, Vector2 position)
-    {
-        if (_killSpeedBonusPerKill <= 0f || _isDead)
-            return;
-
-        _killSpeedActiveStacks = System.Math.Min(_killSpeedActiveStacks + 1, _killSpeedMaxStacks);
-        _killSpeedTimer = _killSpeedDuration;
-        UpdateAttackSpeed();
-    }
-
-    private void ProcessKillSpeedDecay(float delta)
-    {
-        if (_killSpeedActiveStacks <= 0)
-            return;
-
-        _killSpeedTimer -= delta;
-        if (_killSpeedTimer <= 0f)
-        {
-            _killSpeedActiveStacks = 0;
-            _killSpeedTimer = 0f;
-            UpdateAttackSpeed();
-        }
-    }
-
     private void UpdateAttackSpeed()
     {
         float mult = _attackSpeedMultiplier;
-        if (_killSpeedActiveStacks > 0 && _killSpeedBonusPerKill > 0f)
-            mult *= 1f + _killSpeedBonusPerKill * _killSpeedActiveStacks;
-
         for (int i = 0; i < _weaponSlots.Count && i < _weaponTimers.Count; i++)
         {
             WeaponInstance weapon = _weaponSlots[i];

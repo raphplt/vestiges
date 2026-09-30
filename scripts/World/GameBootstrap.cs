@@ -131,12 +131,11 @@ public partial class GameBootstrap : Node
         hud.SetPlayer(player);
 
         levelUpScreen.SetFragmentManager(fragmentManager);
-        levelUpScreen.SetPerkManager(perkManager);
         gameOverScreen.SetScoreManager(scoreManager);
         gameOverScreen.SetRunTracker(runTracker);
 
         if (chestLootScreen != null)
-            player.ConfigureLoot(chestLootScreen, perkManager);
+            player.ConfigureLoot(chestLootScreen);
 
         Node sceneRoot = GetNode("..");
         ErasureManager erasureManager = new() { Name = "ErasureManager" };

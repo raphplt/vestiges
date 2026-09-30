@@ -585,3 +585,50 @@ Les 14 objets de propriété ont maintenant leur palier en jeu, avec les valeurs
 Relecture par sous-agent. Corrigé : plus d'écho ni d'attaque répétée après la mort ; compte du Ressort gardé quand une arme monte de niveau (le signal d'inventaire part aussi alors) ; éclats dessinés limités à six par frame ; plus d'identifiant d'objet écrit en dur.
 
 **Reste à régler en jeu :** toutes les valeurs de palier sont des valeurs de départ. Bobine et Genouillère n'ont pas de retour visuel propre.
+
+## 23. Lot G2b — objets de déclencheur : découpage (30 septembre)
+
+Application de la [référence](21-systeme-de-jeu.md) §4 (objets de déclencheur) et §7 (Fragilité, coefficient, pas de récursion). Trois étapes, un commit chacune.
+
+### Étape 1 : retrait des anciens Dons
+
+- **Coffres et fouilles :** l'entrée « perk » des tables de butin devient `object_level`, soit des niveaux pour un objet possédé tiré au hasard (1 dans un coffre commun, 1 à 2 dans un rare, 2 à 3 dans un épique). Sans objet à monter, elle donne de l'Essence. La référence prévoit que les coffres montent les objets (§4).
+- **PerkManager :** il ne garde que les signatures de départ des personnages (`is_passive`), en attendant G4. Sortent : le tirage de butin, les offres, les six synergies (code, données, notification du level-up), les Dons dans `perks.json`.
+- **Joueur :** sortent les effets qui n'existaient que par les Dons : vol de vie, berserker, épines, exécution, esquive, second souffle, embrasement, ricochet, cadence par élimination, projectiles pleins en plus. Leurs lignes quittent la fiche de la pause. La Brûlure revient à l'étape 2 par l'Allumette humide ; la survie au coup fatal reviendra avec le Médaillon ouvrant.
+- **Historique de run et analytics :** ils retiennent les Réminiscences acquises à la place des Dons. Le signal `PerkChosen` disparaît.
+
+### Étape 2 : socle des déclencheurs et quatre objets d'impact
+
+- **Statut Fragilité** sur les créatures : dégâts subis augmentés, même règle de cumul que les autres statuts (§7).
+- **Coefficient de déclenchement** par arme, en données (`trigger_coefficient` dans `weapons.json`) : les chances d'impact et d'élimination sont multipliées par lui. Le cône continu déclenche à la cadence de ses impacts visibles.
+- **Pas de récursion :** seuls les coups directs d'arme déclenchent les objets.
+- **Objets :** Allumette humide (Brûlure), Glaçon dans un mouchoir (ralentissement), Thermomètre (dégâts contre une cible brûlée), Épingle à nourrice (dégâts contre une cible ralentie), avec leurs paliers 25.
+
+### Étape 3 : élimination, mouvement, niveau
+
+- **Objets :** Pétard mouillé (explosion de la victime), Dé à coudre (soin à l'élimination), Semelle usée (déplacement continu), Boîte de pansements (soin au niveau gagné), avec leurs paliers 25.
+- Les onze autres objets de déclencheur suivent dans un lot G2c (Loupe, Stylo, Tabouret, Chewing-gum, Gilet, Thermos, Médaille, Porte-monnaie, puis les trois objets « monde » avec le Reliquaire).
+
+**Vérification à chaque étape :** bancs d'objets, d'effets, de contrats, d'armes ; smoke ; capture des cartes et d'un combat. Étape 1 : `--loot-draws` pour la répartition du butin des coffres.
+
+## 24. Compte rendu G2b, étape 1 : retrait des anciens Dons (30 septembre)
+
+- **Coffres et fouilles :** l'entrée « perk » des huit tables de butin devient `object_level`. Elle donne des niveaux à un objet possédé tiré au hasard : 1 dans un coffre commun, 1 à 2 dans un rare, 2 à 3 dans un épique.
+  - La carte du butin dit ce qui arrive vraiment : un objet proche du niveau 50 ne reçoit que les niveaux qui lui manquent, et deux tirages d'un même coffre ne dépassent pas son maximum.
+  - Sans objet à monter, l'entrée donne de l'Essence (`fallback_essence` dans la table : 6, 10 ou 15).
+- **Retirés :**
+  - le tirage de Dons, les offres et les six synergies (code, données, notification au level-up) ;
+  - `perks.json` ne garde que les trois signatures de départ des personnages ;
+  - dans le joueur : vol de vie, berserker, épines, exécution, esquive, second souffle, embrasement, ricochet, cadence par élimination, projectiles pleins en plus, et leurs lignes dans la pause ;
+  - `Enemy.Execute`, `DamageKind.Execution`, `HealingKind.Revival`, le drapeau de ricochet des projectiles, les signaux `PerkChosen` et `SynergyActivated`.
+- **Pause :** la fiche montre la Durée et, s'il y en a, les copies d'attaque avec leur part des dégâts.
+- **Historique de run et analytics :** ils retiennent les Réminiscences acquises. Les champs gardent leur nom (`PerkIds`) pour lire les sauvegardes existantes.
+- **Code :** `Player.cs` passe de 2 324 à 2 064 lignes.
+
+**Vérifications :**
+- `dotnet build` : zéro avertissement.
+- `--loot-draws 1000`, avec un objet à monter et un objet au niveau 50 : aucun Don, aucun niveau pour l'objet au maximum, zéro échec. Niveaux d'objet tirés : commun 407, rare 399, épique 715 pour 1 000 coffres.
+- Objets, effets et contrats des Réminiscences, acquisition, armes : zéro échec. Smoke vert.
+  - Le contrat « coup fatal » ne teste plus le second souffle, retiré avec les Dons. La survie au coup fatal reviendra avec le Médaillon ouvrant.
+
+Relecture par sous-agent. Corrigé : Essence de repli passée en données ; niveaux annoncés bornés au maximum, y compris quand deux tirages visent le même objet ; drapeau de ricochet et alias devenus inutiles supprimés.

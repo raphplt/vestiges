@@ -89,31 +89,28 @@ public partial class RunObservation
         GD.Print($"[RunObservation] RESULT chests total={chests.Count} {string.Join(" ", summary)} bands={string.Join(",", bands)}");
     }
 
+    /// <summary>
+    /// --loot-draws : répartition du butin de chaque coffre. Le joueur porte un objet à monter et un objet au niveau
+    /// maximal : un niveau d'objet ne doit viser que le premier ; plus aucun Don ne sort.
+    /// </summary>
     private void MeasureLootDraws(int draws)
     {
-        Vestiges.Progression.PerkManager perks = _world.GetNode<Vestiges.Progression.PerkManager>("PerkManager");
-        HashSet<string> disabled = (HashSet<string>)typeof(Vestiges.Progression.PerkManager)
-            .GetField("_disabledPerks", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)
-            .GetValue(null);
+        _player.AddOrUpgradePassive("resonance");
+        _player.AddOrUpgradePassive("ancrage");
+        _player.AddOrUpgradePassive("ancrage", 49);
         int failures = 0;
         foreach (Vestiges.Infrastructure.ChestData chest in Vestiges.Infrastructure.ChestDataLoader.GetAll())
         {
             Dictionary<string, int> types = new();
-            HashSet<string> perkIds = new();
             for (int i = 0; i < draws; i++)
             {
-                foreach (ResolvedLoot loot in LootRewards.Resolve(LootResolver.Roll(chest.LootTableId, chest.LootRolls), perks))
+                foreach (ResolvedLoot loot in LootRewards.Resolve(LootResolver.Roll(chest.LootTableId, chest.LootRolls), _player))
                 {
                     types[loot.Type] = types.GetValueOrDefault(loot.Type) + 1;
-                    if (loot.Type != "perk")
-                        continue;
-                    perkIds.Add(loot.ItemId);
-                    Vestiges.Infrastructure.PerkData data = Vestiges.Infrastructure.PerkDataLoader.Get(loot.ItemId);
-                    if (data == null || data.IsPassive || disabled.Contains(loot.ItemId)
-                        || (data.CharacterId != null && data.CharacterId != _player.CharacterId))
+                    if (loot.Type == "perk" || (loot.Type == "object_level" && loot.ItemId != "resonance"))
                     {
                         failures++;
-                        GD.PushError($"[RunObservation] perk exclu tiré : {loot.ItemId} ({chest.Id})");
+                        GD.PushError($"[RunObservation] butin inattendu : {loot.Type} {loot.ItemId} ({chest.Id})");
                     }
                 }
             }
@@ -122,7 +119,7 @@ public partial class RunObservation
             List<string> parts = new();
             foreach (KeyValuePair<string, int> entry in types)
                 parts.Add($"{entry.Key}={entry.Value}");
-            GD.Print($"[RunObservation] RESULT loot {chest.Id} draws={draws} {string.Join(" ", parts)} distinct_perks={perkIds.Count}");
+            GD.Print($"[RunObservation] RESULT loot {chest.Id} draws={draws} {string.Join(" ", parts)}");
         }
         GD.Print($"[RunObservation] RESULT loot failures={failures}");
     }

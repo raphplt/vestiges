@@ -8,7 +8,7 @@ Le [registre](DECISIONS.md) garde les mots de Raphaël. Les plans gardent le dé
 
 | Chantier | Plan | Prochaine action |
 |---|---|---|
-| Système de jeu | [21, référence unique](21-systeme-de-jeu.md) | G1, G2a et G2a-2 livrés (14 objets de propriété avec leurs paliers). Agent : G2b (objets de déclencheur, Fragilité, retrait des anciens Dons) |
+| Système de jeu | [21, référence unique](21-systeme-de-jeu.md) | G1, G2a et G2a-2 livrés (14 objets de propriété avec leurs paliers). Anciens Dons retirés (G2b étape 1). Agent : G2b étape 2 (Fragilité, coefficient, quatre objets d'impact) |
 | Carte à explorer | [22](22-carte-a-explorer.md) | Direction validée. Agent : lot C0 (mesure de départ), puis C1 |
 
 ## 2. Décisions attendues de Raphaël
@@ -57,7 +57,6 @@ Le [registre](DECISIONS.md) garde les mots de Raphaël. Les plans gardent le dé
 | Pouvoir par personnage, taille des projectiles | 20 R7, R8 | 21 §3 et §8 |
 | Délestage et Habitude | 05 perks §14 | 21 §7 : s'appliquent au Reliquaire |
 | Comptoir du Hub, prix en Vestiges | 05 objets §3 | 22 §5 C (Atlas) et plan 04 |
-| Six synergies inopérantes des anciens Dons | 05 armes | À retirer avec les anciens Dons (21 G2) |
 | Porte-Nom, Rémanent, Glaneur | 07 | Bestiaire, plus tard |
 | Défi hebdomadaire | 09 | Plus tard |
 

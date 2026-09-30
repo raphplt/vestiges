@@ -42,7 +42,6 @@ public partial class LevelUpScreen : CanvasLayer
     private HBoxContainer _actionButtons;
     private Label _title;
     private Label _hint;
-    private Label _synergyNotification;
     private readonly List<PanelContainer> _cards = new();
     private readonly List<FragmentOption> _cardOptions = new();
     private readonly List<Color> _cardColors = new();
@@ -51,7 +50,6 @@ public partial class LevelUpScreen : CanvasLayer
     private int _focusIndex;
     private bool _banishMode;
 
-    private PerkManager _perkManager;
     private FragmentManager _fragmentManager;
     private EventBus _eventBus;
 
@@ -65,7 +63,6 @@ public partial class LevelUpScreen : CanvasLayer
         _eventBus.FragmentChoicesReady += OnFragmentChoicesReady;
         _eventBus.LevelUp += OnLevelUp;
 
-        CreateSynergyNotification();
         HideScreen();
     }
 
@@ -91,12 +88,6 @@ public partial class LevelUpScreen : CanvasLayer
         if (_fragmentManager is { IsSpecializationChoice: true } && GetTree().GetFirstNodeInGroup("player") is Player player)
             title = string.Format(Tr("LEVELUP_TITLE_PERK"), player.Specializations.Count + 1, _fragmentManager.SpecializationCapacity);
         _title.Text = queued > 0 ? string.Format(Tr("LEVELUP_TITLE_QUEUED"), title, queued) : title;
-    }
-
-    public void SetPerkManager(PerkManager perkManager)
-    {
-        _perkManager = perkManager;
-        _perkManager.SynergyActivated += OnSynergyActivated;
     }
 
     public void SetFragmentManager(FragmentManager fragmentManager) => _fragmentManager = fragmentManager;
@@ -425,38 +416,6 @@ public partial class LevelUpScreen : CanvasLayer
             return;
         HideScreen();
         GetTree().Paused = false;
-    }
-
-    // ==============================
-    // Synergies
-    // ==============================
-
-    private void CreateSynergyNotification()
-    {
-        _synergyNotification = new Label
-        {
-            HorizontalAlignment = HorizontalAlignment.Center,
-            VerticalAlignment = VerticalAlignment.Center,
-            Visible = false,
-            ProcessMode = ProcessModeEnum.Always,
-            OffsetTop = 80,
-        };
-        UITheme.SetTextRole(_synergyNotification, TextRole.Heading);
-        _synergyNotification.AddThemeColorOverride("font_color", GoldBright);
-        _synergyNotification.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.CenterTop);
-        AddChild(_synergyNotification);
-    }
-
-    private void OnSynergyActivated(string synergyId, string notification)
-    {
-        _synergyNotification.Text = notification;
-        _synergyNotification.Visible = true;
-        _synergyNotification.Modulate = Colors.White;
-
-        Tween tween = CreateTween();
-        tween.TweenInterval(2.0f);
-        tween.TweenProperty(_synergyNotification, "modulate:a", 0f, 1.0f);
-        tween.TweenCallback(Callable.From(() => _synergyNotification.Visible = false));
     }
 
     // ==============================

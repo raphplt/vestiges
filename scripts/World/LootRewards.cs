@@ -9,7 +9,7 @@ using Vestiges.Progression;
 namespace Vestiges.World;
 
 /// <summary>
-/// Butin concret d'un coffre ou d'un POI. Les tirages « au hasard » (perk, arme, Souvenir) sont résolus
+/// Butin concret d'un coffre ou d'un POI. Les tirages « au hasard » (objet à monter, arme, Souvenir) sont résolus
 /// avant l'affichage, pour que l'écran de butin montre ce que le joueur reçoit vraiment, puis appliqués.
 /// </summary>
 public readonly struct ResolvedLoot
@@ -34,16 +34,18 @@ public static class LootRewards
 {
     private static readonly Color EssenceColor = new("5EC4C4");
     private static readonly Color XpColor = new("8AB8C4");
-    private static readonly Color PerkColor = new("6ACA5A");
+    private static readonly Color ObjectColor = new("6ACA5A");
     private static readonly Color WeaponColor = new("E8E0D4");
 
     /// <summary>
     /// Tirages concrets. Les butins sans équivalent V2 (ressources, malédictions) sont ignorés ; un Souvenir
-    /// quand tous sont retrouvés devient de l'Essence.
+    /// quand tous sont retrouvés, ou des niveaux d'objet sans objet à monter, deviennent de l'Essence.
     /// </summary>
-    public static List<ResolvedLoot> Resolve(List<LootResolver.LootResult> loots, PerkManager perks)
+    public static List<ResolvedLoot> Resolve(List<LootResolver.LootResult> loots, Player player)
     {
         List<ResolvedLoot> resolved = new();
+        // Niveaux déjà promis par ce même butin : deux tirages sur un objet ne dépassent pas son maximum.
+        Dictionary<string, int> reserved = new();
         foreach (LootResolver.LootResult loot in loots)
         {
             switch (loot.Type)
@@ -54,11 +56,18 @@ public static class LootRewards
                 case "xp":
                     resolved.Add(new ResolvedLoot("xp", "xp", loot.Amount, Format("CHEST_LOOT_XP", loot.Amount), XpColor));
                     break;
-                case "perk":
-                    string perkId = loot.ItemId == "random_perk" ? perks?.PickLootPerk() : loot.ItemId;
-                    PerkData perk = perkId != null ? PerkDataLoader.Get(perkId) : null;
-                    if (perk != null)
-                        resolved.Add(new ResolvedLoot("perk", perkId, 1, Format("CHEST_LOOT_PERK", perk.Name), PerkColor));
+                case "object_level":
+                    ActivePassiveSouvenir owned = PickOwnedObject(player, reserved);
+                    if (owned == null)
+                    {
+                        resolved.Add(Essence(loot.FallbackEssence));
+                        break;
+                    }
+                    int already = reserved.GetValueOrDefault(owned.Id);
+                    int levels = owned.LevelAfter(already + loot.Amount) - owned.Level - already;
+                    reserved[owned.Id] = already + levels;
+                    resolved.Add(new ResolvedLoot("object_level", owned.Id, levels,
+                        string.Format(TranslationServer.Translate("CHEST_LOOT_OBJECT_LEVEL"), owned.Data.Name, levels), ObjectColor));
                     break;
                 case "weapon":
                     WeaponData weapon = PickWeapon(loot.ItemId);
@@ -85,6 +94,10 @@ public static class LootRewards
             case "xp":
                 eventBus.EmitSignal(EventBus.SignalName.XpGained, (float)loot.Amount);
                 break;
+            case "object_level":
+                player.AddOrUpgradePassive(loot.ItemId, loot.Amount);
+                eventBus.EmitSignal(EventBus.SignalName.LootReceived, loot.Type, loot.ItemId, loot.Amount);
+                break;
             case "weapon":
                 WeaponData data = WeaponDataLoader.Get(loot.ItemId);
                 eventBus.EmitSignal(EventBus.SignalName.LootReceived, loot.Type, loot.ItemId, 1);
@@ -99,6 +112,21 @@ public static class LootRewards
                 eventBus.EmitSignal(EventBus.SignalName.LootReceived, loot.Type, loot.ItemId, loot.Amount);
                 break;
         }
+    }
+
+    /// <summary>
+    /// Objet porté qui peut encore monter, niveaux déjà promis compris, au hasard ; null si aucun (plan 21 §4 : les
+    /// coffres montent les objets).
+    /// </summary>
+    private static ActivePassiveSouvenir PickOwnedObject(Player player, Dictionary<string, int> reserved)
+    {
+        if (player == null)
+            return null;
+        List<ActivePassiveSouvenir> candidates = new();
+        foreach (ActivePassiveSouvenir passive in player.PassiveSlots)
+            if (passive.Level + reserved.GetValueOrDefault(passive.Id) < passive.Data.MaxLevel)
+                candidates.Add(passive);
+        return candidates.Count > 0 ? candidates[(int)(GD.Randi() % candidates.Count)] : null;
     }
 
     private static ResolvedLoot Essence(int amount) =>

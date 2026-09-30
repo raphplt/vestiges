@@ -2,7 +2,7 @@ using Godot;
 
 namespace Vestiges.Core;
 
-public enum HealingKind { Normal, Regeneration, PerkRecovery, Revival }
+public enum HealingKind { Normal, Regeneration, PerkRecovery }
 public enum PlayerDamageKind { Combat, Erasure }
 
 /// <summary>Les PV réellement rendus et l'excédent restent séparés ; une restitution ne doit pas se recharger.</summary>

@@ -3,7 +3,7 @@
     "entries": [
         { "type": "essence", "item": "essence", "weight": 40, "min_amount": 4, "max_amount": 9 },
         { "type": "xp", "item": "xp", "weight": 20, "min_amount": 15, "max_amount": 35 },
-        { "type": "perk", "item": "random_perk", "weight": 20, "min_amount": 1, "max_amount": 1 },
+        { "type": "object_level", "item": "random_owned_object", "weight": 20, "min_amount": 1, "max_amount": 1, "fallback_essence": 6 },
         { "type": "weapon", "item": "random_weapon", "weight": 20, "min_amount": 1, "max_amount": 1 }
     ]
 }

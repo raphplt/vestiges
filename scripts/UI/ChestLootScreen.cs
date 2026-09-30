@@ -8,7 +8,7 @@ namespace Vestiges.UI;
 
 /// <summary>
 /// Écran roulette du butin d'un coffre : chaque case fait défiler des leurres puis s'arrête sur le butin
-/// déjà résolu (l'arme, le perk ou le Souvenir obtenus). Met le jeu en pause, joue le son d'ouverture.
+/// déjà résolu (l'arme, les niveaux d'objet ou le Souvenir obtenus). Met le jeu en pause, joue le son d'ouverture.
 /// Couleurs de rareté : palette unique (RarityPalette).
 /// </summary>
 public partial class ChestLootScreen : CanvasLayer

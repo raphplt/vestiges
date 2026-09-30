@@ -453,27 +453,19 @@ public partial class PauseMenu : CanvasLayer
 		AddLine(_sheetContainer, Tr("STAT_REGEN"), $"{(player.BaseRegenRate + player.BonusRegenRate).ToString("0.0", French)} PV/s");
 		AddLine(_sheetContainer, Tr("STAT_SHIELD"), $"{player.Shield:F0} / {player.MaxShield:F0}");
 		AddLine(_sheetContainer, Tr("STAT_ARMOR"), $"{player.Armor:F0}  (−{Percent(player.ArmorReduction)})");
-		AddLine(_sheetContainer, Tr("STAT_DODGE"), Percent(player.DodgeChance));
 		AddLine(_sheetContainer, Tr("STAT_SPEED"), Bonus(player.SpeedMultiplier));
 		AddLine(_sheetContainer, Tr("STAT_DAMAGE"), Bonus(player.DamageMultiplier));
 		AddLine(_sheetContainer, Tr("STAT_ATTACK_SPEED"), Bonus(player.AttackSpeedMultiplier));
 		AddLine(_sheetContainer, Tr("STAT_CRIT"), $"{Percent(player.CritChance)}  ×{player.CritMultiplier.ToString("0.0", French)}");
 		AddLine(_sheetContainer, Tr("STAT_RANGE"), Bonus(player.AttackRangeMultiplier));
 		AddLine(_sheetContainer, Tr("STAT_AOE"), Bonus(player.AoeMultiplier));
+		AddLine(_sheetContainer, Tr("STAT_STATUS_DURATION"), Bonus(player.StatusDurationMultiplier));
 		AddLine(_sheetContainer, Tr("STAT_XP_RANGE"), Bonus(player.XpMagnetMultiplier));
 		AddLine(_sheetContainer, Tr("STAT_LUCK"), Percent(player.LuckBonus));
-		if (player.ExtraProjectiles > 0)
-			AddLine(_sheetContainer, Tr("STAT_BONUS_PROJ"), $"+{player.ExtraProjectiles}");
+		if (player.AttackCopies > 0)
+			AddLine(_sheetContainer, Tr("STAT_ATTACK_COPIES"), $"+{player.AttackCopies}  ({Percent(player.CopyDamageFactor)})");
 		if (player.ProjectilePierce > 0)
 			AddLine(_sheetContainer, Tr("STAT_PIERCE"), $"+{player.ProjectilePierce}");
-		if (player.VampirismPercent > 0f)
-			AddLine(_sheetContainer, Tr("STAT_LIFESTEAL"), Percent(player.VampirismPercent));
-		if (player.ThornsPercent > 0f)
-			AddLine(_sheetContainer, Tr("STAT_THORNS"), Percent(player.ThornsPercent));
-		if (player.IgniteChance > 0f)
-			AddLine(_sheetContainer, Tr("STAT_IGNITE"), Percent(player.IgniteChance));
-		if (player.RicochetChance > 0f)
-			AddLine(_sheetContainer, Tr("STAT_RICOCHET"), Percent(player.RicochetChance));
 		if (essenceTracker != null)
 			AddLine(_sheetContainer, "Essence", essenceTracker.CurrentEssence.ToString());
 		if (GetNodeOrNull<PerilManager>("/root/Main/PerilManager") is { } peril)
