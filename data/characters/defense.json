@@ -1,6 +1,6 @@
 {
-    "_doc": "Défense du joueur (plan 03 §8, lot 8B, 28 septembre). Le bouclier de chaque personnage (base_stats.shield dans characters.json) encaisse un coup entier quelle que soit sa force, puis se recharge en shield_recharge_seconds après shield_recharge_delay_seconds sans être touché. Chaque coup accepté donne hurt_invulnerability_seconds d'invulnérabilité. Armure : réduction = armure / (armure + armor_half_value), plafonnée à armor_max_reduction. Le Néant traverse bouclier et invulnérabilité.",
-    "hurt_invulnerability_seconds": 0.5,
+    "_doc": "Défense du joueur (plan 03 §8, lot 8B, 28 septembre). Le bouclier (base_stats.shield dans characters.json, 0 pour tous depuis le plan 23 R1 : il ne vient plus que des objets) encaisse un coup entier quelle que soit sa force, puis se recharge en shield_recharge_seconds après shield_recharge_delay_seconds sans être touché. Chaque coup accepté donne hurt_invulnerability_seconds d'invulnérabilité. Armure : réduction = armure / (armure + armor_half_value), plafonnée à armor_max_reduction. Le Néant traverse bouclier et invulnérabilité.",
+    "hurt_invulnerability_seconds": 0.25,
     "shield_recharge_delay_seconds": 5.0,
     "shield_recharge_seconds": 2.0,
     "armor_half_value": 15,

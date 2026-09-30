@@ -264,7 +264,7 @@ Quand une carte ne peut plus rien offrir (4 armes ascensionnées, 6 objets au ni
 | 14 objets de propriété, dont Papier carbone (copies à dégâts réduits) et Pince à linge (Durée) | En jeu, **à refaire** : pas francs, Papier carbone en projectiles pleins, Reflet brisé réactivé | Plan 23, R3 |
 | Paliers des 14 objets de propriété (niveau 25, et 50 pour Papier carbone) | En jeu, **à déplacer** au niveau 15 | Plan 23, R3 |
 | Stats entières fractionnaires, pas d'armes relevés | À faire | Plan 23, R4 |
-| Bouclier de départ retiré, invulnérabilité réduite | À faire | Plan 23, R1 |
+| Bouclier de départ retiré, invulnérabilité réduite (0,25 s, à confirmer en jeu) | **En jeu** | Plan 23, R1 |
 | Cartes de niveau à la Megabonk, inventaire et stats à côté | À faire | Plan 23, R2 |
 | Statut Fragilité, coefficient de déclenchement par arme ; Allumette humide, Glaçon, Thermomètre, Épingle à nourrice | **En jeu** | G2b, étape 2 |
 | Pétard mouillé, Dé à coudre, Semelle usée, Boîte de pansements | **En jeu** | G2b, étape 3 |

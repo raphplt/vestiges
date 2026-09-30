@@ -199,3 +199,27 @@ Si la confirmation n'est pas dans `DECISIONS.md` au moment d'y arriver, ne pas l
 ## 6. Comptes rendus
 
 À remplir lot par lot : ce qui a été fait, les chiffres avant/après, les vérifications avec leur résultat réel, ce qui reste. Le tableau de bord et la référence §12 se mettent à jour en même temps.
+
+### Environnement de l'agent (30 septembre)
+
+Conteneur cloud sans Godot ni .NET au départ : SDK .NET 10.0.401 installé par `dotnet-install.sh`, Godot 4.7.2 .NET officiel décompressé et lié en `godot-mono`, Pillow installé. Captures sous `xvfb-run -a -s "-screen 0 1920x1080x24"` avec le rendu logiciel de Mesa : elles fonctionnent (3 à 8 images par seconde, sans effet sur le rendu capturé).
+
+**Langue :** sans `LANG`, Godot démarre en anglais et trois contrôles de `test_objects.sh` échouent déjà sur `a9203af` (ils attendent les libellés français). Tous les bancs se lancent donc avec `LANG=fr_FR.UTF-8`.
+
+### R1 : défense
+
+**Fait :**
+- `shield` à 0 pour le Traqueur, le Vagabond et la Forgeuse (`data/characters/characters.json`) ; le bouclier ne vient plus que de l'Écusson de pompier.
+- Invulnérabilité après un coup de 0,5 à 0,25 s (`data/characters/defense.json`, et la valeur par défaut de `DefenseConfig`).
+- Pause : la ligne « Bouclier » n'apparaît que si le maximum dépasse 0. Le HUD et la jauge sous le joueur masquaient déjà le liseré à 0.
+- Banc de contrats : le coup « encaissé par le bouclier » donne d'abord un bouclier d'objet (il supposait celui de départ).
+- Capture `--capture-pause` : HUD sans bouclier au départ (`hud-no-shield`), puis l'Écusson de pompier parmi six objets (`hud-shield`, `pause`).
+
+**Vérifié :**
+- `dotnet build` : 0 avertissement.
+- `test_movement.sh` : `RESULT failures=0` ; `test_perk_contracts.sh` : `RESULT failures=0` ; `test_objects.sh` : `RESULT failures=0`.
+- Captures regardées : en run, la barre de PV n'a plus de liseré bleu ; avec l'Écusson de pompier, le liseré revient et la fiche affiche « Bouclier 2 / 2 ».
+
+**Corrigé en passant :** le HUD affichait 100 / 100 pour le Traqueur (70 PV) et la Forgeuse (120 PV) jusqu'au premier coup. Il est relié au joueur avant l'application du personnage, qui n'envoyait pas ses PV ; `InitializeCharacter` les envoie maintenant.
+
+**Reste :** la valeur de 0,25 s est à confirmer en jeu par Raphaël (tableau de bord §2).

@@ -11,7 +11,7 @@
             "attack_range": 380,
             "max_hp": 70,
             "regen_rate": 0.3,
-            "shield": 12,
+            "shield": 0,
             "interact_range": 55
         },
         "passive_perk": "traqueur_precision",
@@ -34,7 +34,7 @@
             "attack_range": 300,
             "max_hp": 100,
             "regen_rate": 0.5,
-            "shield": 20,
+            "shield": 0,
             "interact_range": 60
         },
         "passive_perk": "vagabond_harvest",
@@ -57,7 +57,7 @@
             "attack_range": 250,
             "max_hp": 120,
             "regen_rate": 0.6,
-            "shield": 30,
+            "shield": 0,
             "interact_range": 70
         },
         "passive_perk": "forgeuse_fortify",

@@ -13,7 +13,8 @@ namespace Vestiges.Tests;
 /// --capture-levelup : l'écran de level-up montré une fois par rareté (Commun à Légendaire), avec une amélioration
 /// d'arme, une amélioration d'objet qui approche puis franchit son palier 25 et un objet nouveau, puis une fois avec
 /// le focus sur les actions.
-/// --capture-pause : la pause après 20 s de combat, quatre armes et cinq objets portés, dont un au-delà de son palier.
+/// --capture-pause : le HUD sans bouclier, puis la pause après 20 s de combat, quatre armes et six objets portés
+/// (dont l'Écusson de pompier, seule source de bouclier), dont un au-delà de son palier.
 /// </summary>
 public partial class RunObservation
 {
@@ -73,9 +74,11 @@ public partial class RunObservation
     {
         ProcessMode = ProcessModeEnum.Always;
         await Frames(90);
+        // Sans objet de bouclier, ni liseré sur la barre de PV ni ligne dans la fiche (plan 23 R1).
+        SaveFrame("hud-no-shield");
         foreach (string weapon in new[] { "crossbow", "music_box", "nail_mace" })
             _player.AddWeapon(WeaponDataLoader.Get(weapon));
-        foreach (string passive in new[] { "oeil_critique", "memoire_vive", "resonance", "souffle_du_neant", "persistance" })
+        foreach (string passive in new[] { "oeil_critique", "memoire_vive", "resonance", "souffle_du_neant", "persistance", "carapace" })
             _player.AddOrUpgradePassive(passive);
         // Niveaux à deux chiffres dans les cases du HUD, un palier atteint et un palier à venir dans la pause.
         _player.AddOrUpgradePassive("souffle_du_neant", 29);
@@ -92,6 +95,7 @@ public partial class RunObservation
                 AutoPickLevelUp();
         }
         _player.AIInputOverride = Vector2.Zero;
+        SaveFrame("hud-shield");
         Node pause = _world.GetNode("PauseMenu");
         pause.GetType().GetMethod("Pause", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public).Invoke(pause, null);
         await Frames(10);

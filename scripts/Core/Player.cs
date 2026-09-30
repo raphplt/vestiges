@@ -215,6 +215,8 @@ public partial class Player : CharacterBody2D
         InteractRange = data.BaseStats.InteractRange;
 
         _currentHp = MaxHp;
+        // Le HUD est relié au joueur avant cette initialisation : sans cet envoi, il garde les PV par défaut.
+        _eventBus?.EmitSignal(EventBus.SignalName.PlayerDamaged, _currentHp, EffectiveMaxHp);
         _defense.SetBaseShield(data.BaseStats.Shield);
         EmitShield();
         EquipStartingWeapon(data.StartingWeaponId);

@@ -181,6 +181,8 @@ public partial class PerkContractsRegression : Node2D
 
     private void CheckHealth()
     {
+        // Plus de bouclier de départ (plan 23 R1) : celui d'un objet (Écusson de pompier) encaisse le premier coup.
+        _player.ApplyPerkModifier("shield", 10f, "additive");
         PlayerDamageResult shield = _player.TakeDamage(5f);
         Check(shield.Applied && shield.ShieldAbsorbed && shield.HpLost == 0f && !shield.CanRecover,
             "Un coup sur le bouclier n'est pas une blessure récupérable");

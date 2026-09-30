@@ -5,7 +5,7 @@ namespace Vestiges.Infrastructure;
 /// <summary>Règles communes de la défense du joueur, lues dans data/characters/defense.json.</summary>
 public sealed class DefenseConfig
 {
-    public float HurtInvulnerabilitySeconds { get; private init; } = 0.5f;
+    public float HurtInvulnerabilitySeconds { get; private init; } = 0.25f;
     public float ShieldRechargeDelaySeconds { get; private init; } = 5f;
     public float ShieldRechargeSeconds { get; private init; } = 2f;
     public float ArmorHalfValue { get; private init; } = 15f;

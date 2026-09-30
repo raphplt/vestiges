@@ -797,7 +797,7 @@ Le script de post-processing doit inclure une vérification/correction de l'angl
 - [x] Plan 21 lot G3, étape 1 : ascensions au niveau 50, deux voies au choix et définitives ; Arc du gymnase, Faucille, Cloche d'école, Boîte à musique ([compte rendu](plans/21-historique.md#29-compte-rendu-g3-étape-1--mécanique-et-quatre-armes)).
 - [x] Plan 22 lot C1 : Puits, Veine de cristal et Épouvantail sur les décors déjà générés, avec signe discret, usage unique et perte au Néant ([compte rendu](plans/22-carte-a-explorer.md#14-compte-rendu-c1--trois-petits-lieux-30-septembre)).
 - [ ] Plan 23 R0 : mesure de référence de la puissance du joueur face aux ennemis.
-- [ ] Plan 23 R1 : bouclier de départ retiré, invulnérabilité après un coup réduite.
+- [x] Plan 23 R1 : bouclier de départ retiré, invulnérabilité après un coup réduite.
 - [ ] Plan 23 R2 : cartes de niveau à la Megabonk, inventaire et stats affichés pendant le choix.
 - [ ] Plan 23 R3 : objets à 30 niveaux et gains francs, projectiles en plus au lieu des copies, Reflet brisé réactivé, paliers au niveau 15.
 - [ ] Plan 23 R4 : stats entières fractionnaires et pas d'armes relevés.
