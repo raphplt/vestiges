@@ -458,3 +458,16 @@ Raphaël : « je pense que de 1 la map peut etre un peu agrandie surtout vertica
 - **Référence unique :** fixer le système de jeu (armes, Réminiscences, objets, détails) en **une seule version**, dans un seul plan, et commencer à l'appliquer vite. C'est la priorité.
 
 Suite donnée : le plan 21 devient la référence unique du système de build ; son historique part en annexe.
+
+
+## 36. Level-up pas assez attrayant, cartes illisibles, coffres à revoir — 30 septembre 2026
+
+Raphaël : « le level up est pas assez fun/attrayant car les valeurs de level up sont trop petites (0.05 de regen ect), avant il y avait des trucs genre +1 projectile (par arme), +1 transpercer... il faut reprendre plutot ce genre de valeurs (apres oui la regen est lente ok mais à ce point ?) Bref fait moi un inventaire des objets et arme. et aussi le menu de level up et chiant et dur à comprendre il peut y avoir 5 /6 lignes en tout avec le statut (nouveau) le nom de l'arme les stats ect bref genre peu lisible. [capture de l'écran de level-up de Megabonk] regarde ce que fait megabonk en comparaison. et memes les coffres sont chiant on choppe des essences et des armes le loot est à revoir imo. Et redit moi aussi la liste des stats du joueur au fait. »
+
+**Acquis :**
+- Les gains d'un niveau sont trop petits pour être sentis (Bobine de fil : +0,06 PV/s par niveau). Il faut revenir à des gains francs du type « +1 projectile par arme », « +1 perforation ».
+- L'écran de level-up est trop chargé : jusqu'à 5 ou 6 lignes par carte (statut, nom, stats, propriété, armes concernées, palier). Référence : Megabonk, une carte = rareté, nom, niveau, une ligne de gain, avec l'inventaire et les stats du joueur affichés à côté.
+- Le butin des coffres (Essence, armes) est ennuyeux, à revoir.
+- Demandé : l'inventaire des objets et des armes, la liste des stats du joueur ([21-inventaire.md](21-inventaire.md)).
+
+**Non acquis :** la nouvelle échelle des objets (nombre de niveaux, valeur d'un niveau), la forme des cartes, le nouveau butin des coffres. Propositions de l'agent à valider.
