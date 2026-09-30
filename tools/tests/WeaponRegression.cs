@@ -240,22 +240,69 @@ public partial class WeaponRegression : Node2D
         Check(highErased > highAnchored * 2, $"raretés : zone Effacée, Épique et Légendaire plus fréquents ({highAnchored} → {highErased})");
     }
 
-    /// <summary>Une amélioration Légendaire de l'arbalète : trois stats à ×2, et un palier de perçage.</summary>
+    /// <summary>
+    /// Plan 23 R4 : une Légendaire touche trois stats, chacune au double de son pas relevé, ou +3 pour une stat
+    /// entière ; une stat entière se tire dès la commune (+0,5) ; la décimale se joue à chaque attaque, sauf pour les
+    /// orbes, qui ne comptent que la partie entière.
+    /// </summary>
     private void CheckUpgradeGains()
     {
         WeaponInstance crossbow = new(WeaponDataLoader.Get("crossbow"));
         RandomNumberGenerator rng = new() { Seed = 5 };
         List<StatGain> gains = UpgradeRoller.RollWeaponGains(crossbow, UpgradeRoller.Get("legendary"), rng);
-        int stats = gains.FindAll(g => !g.Milestone).Count;
-        bool milestone = gains.Exists(g => g.Milestone && g.Stat == "projectile_pierce");
-        float pierceBefore = crossbow.GetStat("projectile_pierce", 0f);
+        bool amounts = gains.Count == 3;
+        foreach (StatGain gain in gains)
+        {
+            WeaponUpgradeStatConfig config = WeaponUpgradeDataLoader.GetStatConfig(gain.Stat);
+            amounts &= config.Integer ? Mathf.IsEqualApprox(gain.Amount, 3f) : Mathf.IsEqualApprox(gain.Amount, config.Step * 2f);
+        }
         float damageBefore = crossbow.GetStat("damage", 0f);
         crossbow.ApplyUpgrade(gains);
         StatGain damageGain = gains.Find(g => g.Stat == "damage");
         float expectedDamage = damageGain.Stat == null ? damageBefore : damageBefore * (1f + damageGain.Amount);
-        Check(stats == 3 && milestone && Mathf.IsEqualApprox(crossbow.GetStat("projectile_pierce", 0f), pierceBefore + 1f)
-              && Mathf.IsEqualApprox(crossbow.GetStat("damage", 0f), expectedDamage) && crossbow.Level == 2,
-            $"Légendaire sur l'arbalète : {stats} stats, palier de perçage {pierceBefore} → {crossbow.GetStat("projectile_pierce", 0f)}, niveau {crossbow.Level}");
+        Check(amounts && Mathf.IsEqualApprox(crossbow.GetStat("damage", 0f), expectedDamage) && crossbow.Level == 2
+              && Mathf.IsEqualApprox(WeaponUpgradeDataLoader.GetStatConfig("damage").Step, 0.18f),
+            $"Légendaire sur la Cloueuse : {gains.Count} stats au double du pas (dégâts +18 % par commune), +3 pour une stat entière");
+
+        // Une commune finit par tirer la perforation, stat entière de la Cloueuse : +0,5.
+        WeaponInstance nailer = new(WeaponDataLoader.Get("crossbow"));
+        float pierceBefore = nailer.GetStat("projectile_pierce", 0f);
+        StatGain pierce = default;
+        for (int i = 0; i < 200 && pierce.Stat == null; i++)
+            pierce = UpgradeRoller.RollWeaponGains(nailer, UpgradeRoller.Get("common"), rng).Find(g => g.Stat == "projectile_pierce");
+        nailer.ApplyUpgrade(new[] { pierce });
+        Check(pierce.Stat != null && Mathf.IsEqualApprox(nailer.GetStat("projectile_pierce", 0f), pierceBefore + 0.5f)
+              && StatCatalog.Format("projectile_pierce", nailer.GetStat("projectile_pierce", 0f)) == "3,5",
+            $"Commune sur la Cloueuse : perforation {pierceBefore} → {StatCatalog.Format("projectile_pierce", nailer.GetStat("projectile_pierce", 0f))}");
+
+        // Lance-billes à 3,5 projectiles : 3 ou 4 par salve, la moitié du temps chacun, sur 1 000 attaques.
+        WeaponInstance sling = new(WeaponDataLoader.Get("sling"));
+        sling.ApplyUpgrade(new[] { new StatGain("projectile_count", 0.5f) });
+        RandomNumberGenerator attacks = new() { Seed = 9 };
+        int total = 0, low = int.MaxValue, high = 0;
+        for (int i = 0; i < 1000; i++)
+        {
+            int count = FractionalCount.Roll(sling.GetStat("projectile_count", 1f), attacks.Randf());
+            total += count;
+            low = Mathf.Min(low, count);
+            high = Mathf.Max(high, count);
+        }
+        Check(low == 3 && high == 4 && total > 3420 && total < 3580,
+            $"Lance-billes à 3,5 projectiles : {low} à {high} par salve, {total / 1000f:0.00} en moyenne sur 1 000 attaques");
+
+        // Boîte à musique à 3,5 puis 4 orbes : 3 orbes, puis 4, sans perte ni doublon.
+        WeaponInstance box = FindSlot("music_box") ?? AddAndFind("music_box");
+        MethodInfo setup = typeof(Player).GetMethod("SetupOrbitalWeapon", Private);
+        List<Node2D> orbs = (List<Node2D>)typeof(Player).GetField("_orbitalProjectiles", Private).GetValue(_player);
+        box.ApplyUpgrade(new[] { new StatGain("orbital_count", 0.5f) });
+        setup.Invoke(_player, new object[] { box });
+        int half = orbs.Count;
+        box.ApplyUpgrade(new[] { new StatGain("orbital_count", 0.5f) });
+        setup.Invoke(_player, new object[] { box });
+        int whole = orbs.Count;
+        HashSet<Node2D> distinct = new(orbs);
+        Check(half == 3 && whole == 4 && distinct.Count == 4,
+            $"Boîte à musique : 3,5 orbes en font {half}, 4 en font {whole}, toutes distinctes");
     }
 
     /// <summary>Un bonus de zone ouvre l'arc sans allonger la portée (plan 05 §4).</summary>

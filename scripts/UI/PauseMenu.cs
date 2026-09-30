@@ -345,7 +345,7 @@ public partial class PauseMenu : CanvasLayer
 			parts.Add($"{StatCatalog.Name("attack_speed")} {StatCatalog.Format("attack_speed", player.GetWeaponStatForDisplay(weapon, "attack_speed"))}");
 		foreach (string stat in new[] { "projectile_count", "projectile_pierce", "chain_targets", "orbital_count" })
 		{
-			if (weapon.Base.Stats.ContainsKey(stat) || weapon.Base.Milestones.Contains(stat))
+			if (weapon.Base.Stats.ContainsKey(stat) || weapon.Base.Growth.ContainsKey(stat))
 			{
 				float value = player.GetWeaponStatForDisplay(weapon, stat);
 				// Un seul projectile, aucun perçage : rien à signaler.

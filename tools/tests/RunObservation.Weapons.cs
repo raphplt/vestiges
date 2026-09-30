@@ -5,15 +5,17 @@ using Godot;
 using Vestiges.Combat;
 using Vestiges.Core;
 using Vestiges.Infrastructure;
+using Vestiges.Progression;
 using Vestiges.Spawn;
 
 namespace Vestiges.Tests;
 
 /// <summary>
-/// --capture-weapons [--weapons id1,id2] [--lethal] [--objects id:niveau,…] [--ascensions arme:voie,…] : galerie des
+/// --capture-weapons [--weapons id1,id2] [--lethal] [--objects id:niveau,…] [--ascensions arme:voie,…] [--integer-gains N] : galerie des
 /// attaques du joueur. Chaque arme est équipée seule. Avec id1+id2, plusieurs armes sont équipées ensemble pour vérifier
 /// leurs interactions. Avec --objects, les objets donnés sont portés au niveau voulu avant la galerie (projectiles en plus, paliers) ;
-/// avec --ascensions, une arme de la galerie est montée au niveau 50 et prend la voie donnée.
+/// avec --ascensions, une arme de la galerie est montée au niveau 50 et prend la voie donnée ; avec --integer-gains,
+/// chaque stat entière de l'arme (projectile, perforation, saut, orbe) gagne N fois +0,5.
 /// Chaque configuration est déclenchée sur un cercle d'ennemis immobiles, et capturée en gros plan à plusieurs instants de l'attaque.
 /// </summary>
 public partial class RunObservation
@@ -82,6 +84,13 @@ public partial class RunObservation
                     _player.AscendWeapon(held.Id, parts[1]);
                 }
             }
+            // --integer-gains N : N améliorations communes de +0,5 sur chaque stat entière de l'arme (plan 23 R4).
+            int integerGains = int.Parse(Argument(OS.GetCmdlineUserArgs(), "--integer-gains", "0"), System.Globalization.CultureInfo.InvariantCulture);
+            foreach (WeaponInstance held in _player.WeaponSlots)
+                foreach (string stat in held.Base.Growth.Keys)
+                    if (WeaponUpgradeDataLoader.GetStatConfig(stat) is { Integer: true })
+                        for (int gain = 0; gain < integerGains && held.CanLevelUp; gain++)
+                            _player.UpgradeWeapon(held.Id, new[] { new StatGain(stat, UpgradeRoller.Get("common").IntegerGain) });
             Vector2 origin = _player.GlobalPosition;
             for (int index = 0; index < 5; index++)
             {

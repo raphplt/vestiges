@@ -10,6 +10,11 @@ public class WeaponUpgradeStatConfig
 	/// <summary>Gain d'une amélioration Commune : fraction de la base (multiplicative) ou valeur ajoutée (additive).</summary>
 	public float Step { get; set; }
 	public bool Additive { get; set; }
+	/// <summary>
+	/// Stat entière fractionnaire (projectile, perforation, saut, orbe ; plan 23 R4) : son gain vient de la rareté, et
+	/// sa partie décimale se joue à chaque attaque.
+	/// </summary>
+	public bool Integer { get; set; }
 	/// <summary>Plafond de la valeur effective (angles), 0 si aucun.</summary>
 	public float Max { get; set; }
 }
@@ -49,7 +54,8 @@ public static class WeaponUpgradeDataLoader
 			_statConfigs[key.AsString()] = new WeaponUpgradeStatConfig
 			{
 				Key = key.AsString(),
-				Step = (float)stat["step"].AsDouble(),
+				Step = stat.ContainsKey("step") ? (float)stat["step"].AsDouble() : 0f,
+				Integer = stat.ContainsKey("integer") && stat["integer"].AsBool(),
 				Additive = stat.ContainsKey("mode") && stat["mode"].AsString() == "additive",
 				Max = stat.ContainsKey("max") ? (float)stat["max"].AsDouble() : 0f,
 			};

@@ -267,7 +267,7 @@ Quand une carte ne peut plus rien offrir (4 armes ascensionnées, 6 objets au ni
 | Objets : 6 emplacements, 30 niveaux, une carte = un niveau, gain du pas × 1 à × 3 selon la rareté, effets multiples | **En jeu** | Plan 23, R3 |
 | 15 objets de propriété à pas francs, dont Papier carbone (projectiles en plus, pleins, fractionnaires) et Reflet brisé (perforation fractionnaire) | **En jeu** | Plan 23, R3 |
 | Paliers de tous les objets au niveau 15, dont les deux nouveaux (Papier carbone, Reflet brisé) | **En jeu** | Plan 23, R3 |
-| Stats entières fractionnaires, pas d'armes relevés | À faire | Plan 23, R4 |
+| Stats entières fractionnaires (dès la commune, 0,5 à 3), pas d'armes relevés de moitié | **En jeu** | Plan 23, R4 |
 | Bouclier de départ retiré, invulnérabilité réduite (0,25 s, à confirmer en jeu) | **En jeu** | Plan 23, R1 |
 | Cartes de niveau à la Megabonk, inventaire et stats à côté | **En jeu** | Plan 23, R2 |
 | Statut Fragilité, coefficient de déclenchement par arme ; Allumette humide, Glaçon, Thermomètre, Épingle à nourrice | **En jeu** | G2b, étape 2 |

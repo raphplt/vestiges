@@ -14,8 +14,8 @@ public class UpgradeRarity
 	public float Weight;
 	public int WeaponStats;
 	public float WeaponGain;
-	public int Milestones;
-	public int FallbackStats;
+	/// <summary>Gain d'une stat entière tirée (0,5 en commune à 3 en légendaire ; plan 23 R4).</summary>
+	public float IntegerGain;
 	/// <summary>Multiple du pas d'un objet pour une carte de cette rareté (plan 23 R3), et des bénédictions des Mémoriaux.</summary>
 	public float PassiveGain;
 	public int Rank;
@@ -97,28 +97,22 @@ public static class UpgradeRoller
 	}
 
 	/// <summary>
-	/// Gains d'une amélioration d'arme : stats montables tirées selon leur poids (sans répétition), au gain de la
-	/// rareté ; paliers (+1 à une stat entière) aux raretés qui en donnent, si l'arme en a.
+	/// Gains d'une amélioration d'arme : stats montables tirées selon leur poids (sans répétition). Une stat de pas
+	/// gagne son pas au gain de la rareté ; une stat entière (projectile, perforation, saut, orbe) gagne la part
+	/// entière de la rareté, en fraction (plan 23 R4).
 	/// </summary>
 	public static List<StatGain> RollWeaponGains(WeaponInstance weapon, UpgradeRarity rarity, RandomNumberGenerator rng)
 	{
 		List<StatGain> gains = new();
-		List<string> milestones = weapon.Base.Milestones;
-		int milestoneCount = milestones.Count > 0 ? rarity.Milestones : 0;
-		int statCount = milestones.Count > 0 || rarity.Milestones == 0 ? rarity.WeaponStats : Mathf.Max(rarity.WeaponStats, rarity.FallbackStats);
-
 		Dictionary<string, float> pool = new(weapon.Base.Growth);
-		for (int i = 0; i < statCount && pool.Count > 0; i++)
+		for (int i = 0; i < rarity.WeaponStats && pool.Count > 0; i++)
 		{
 			string stat = WeightedPick(pool, rng);
 			pool.Remove(stat);
 			WeaponUpgradeStatConfig config = WeaponUpgradeDataLoader.GetStatConfig(stat);
 			if (config != null)
-				gains.Add(new StatGain(stat, config.Step * rarity.WeaponGain, false));
+				gains.Add(new StatGain(stat, config.Integer ? rarity.IntegerGain : config.Step * rarity.WeaponGain));
 		}
-
-		for (int i = 0; i < milestoneCount; i++)
-			gains.Add(new StatGain(milestones[rng.RandiRange(0, milestones.Count - 1)], 1f, true));
 		return gains;
 	}
 
@@ -180,8 +174,7 @@ public static class UpgradeRoller
 				Weight = (float)dict["weight"].AsDouble(),
 				WeaponStats = (int)dict["weapon_stats"].AsDouble(),
 				WeaponGain = (float)dict["weapon_gain"].AsDouble(),
-				Milestones = dict.ContainsKey("milestones") ? (int)dict["milestones"].AsDouble() : 0,
-				FallbackStats = dict.ContainsKey("fallback_stats") ? (int)dict["fallback_stats"].AsDouble() : 0,
+				IntegerGain = (float)dict["integer_gain"].AsDouble(),
 				PassiveGain = (float)dict["passive_gain"].AsDouble(),
 				Rank = rank++,
 			});

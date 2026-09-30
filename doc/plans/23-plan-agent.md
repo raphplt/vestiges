@@ -300,3 +300,20 @@ Conteneur cloud sans Godot ni .NET au départ : SDK .NET 10.0.401 installé par 
 - Relecture `godot-reviewer` : aucun bug. Corrigé au passage : un objet à plus de 8 effets est refusé au chargement (tampon sans allocation du joueur), deux bancs datés des 50 niveaux.
 
 **Reste :** les chiffres sont des valeurs de départ ; R5 dira si la difficulté suit. Un objet neuf vaut un pas quelle que soit la carte (les cartes « nouvel objet » n'ont pas de rareté), comme le veut la référence.
+
+### R4 : armes, stats entières fractionnaires et pas relevés
+
+**Fait :**
+- **Pas relevés de moitié** (`weapon_upgrades.json`) : dégâts 0,18, cadence 0,12, portée 0,09, arc et cône 0,12, recul 0,20, vitesses de projectile et d'orbite 0,15 ; portée de chaîne et guidage montés dans la même proportion (0,12 et 0,15).
+- **Stats entières** (projectile, perforation, saut de chaîne, orbe) : marquées `integer` ; elles entrent dans `growth` des armes qui les avaient en `milestones`, au poids 0,5 (la liste `milestones` disparaît des armes et du chargeur). Tirées dès la commune, elles gagnent `integer_gain` de la rareté : 0,5 / 0,75 / 1 / 2 / 3. Les anciens paliers Épique et Légendaire (`milestones`, `fallback_stats`) sont retirés des raretés, qui gardent le nombre de stats de la référence §3.
+- **En combat :** projectiles, sauts et perforation (arme et Reflet brisé ensemble) tirent leur décimale à chaque attaque (`FractionalCount`) ; les orbes de la Boîte à musique ne comptent que la partie entière. La Lentille de phare, à perforation illimitée, n'a pas de perforation à monter.
+- **Cartes et pause :** « Perforation 3 → 3,5 », « Projectiles 1 → 1,5 ».
+- **Galerie d'armes :** option `--integer-gains N` (N fois +0,5 sur chaque stat entière de l'arme).
+
+**Vérifié :**
+- `dotnet build` : 0 avertissement.
+- `test_weapons.sh` : `RESULT failures=0`, dont : Légendaire à trois stats au double du pas ou +3 pour une stat entière ; commune qui monte la perforation de la Cloueuse de 3 à 3,5 ; Lance-billes à 3,5 projectiles, 3 ou 4 par salve, 3,50 en moyenne sur 1 000 attaques ; Boîte à musique à 3,5 puis 4 orbes, soit 3 puis 4 orbes distinctes, sans perte ni doublon.
+- Autres bancs à `RESULT failures=0` : objets, effets, acquisition, contrats, capacités ennemies, déplacements, petits lieux.
+- Capture `--capture-weapons --integer-gains 3` sur l'Arc, le Lance-billes, le Trousseau et la Boîte à musique, regardée : chaîne de cinq sauts, quatre notes en orbite, salves plus fournies.
+
+**Reste :** la puissance d'ensemble se mesure en R5.

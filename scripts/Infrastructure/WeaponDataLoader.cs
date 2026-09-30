@@ -56,8 +56,6 @@ public class WeaponData
 	public Dictionary<string, float> Stats { get; set; } = new();
 	/// <summary>Stats qui peuvent monter à chaque amélioration, avec leur poids dans le tirage.</summary>
 	public Dictionary<string, float> Growth { get; set; } = new();
-	/// <summary>Stats entières (projectiles, perçage, rebonds, notes) : +1 par palier, aux raretés Épique et Légendaire.</summary>
-	public List<string> Milestones { get; set; } = new();
 	/// <summary>Deux voies d'ascension au niveau maximal (plan 21 §3), ou aucune.</summary>
 	public List<WeaponAscensionData> Ascensions { get; set; } = new();
 	public WeaponOnHitEffect OnHitEffect { get; set; }
@@ -220,12 +218,6 @@ public static class WeaponDataLoader
         {
             weapon.Growth["damage"] = 3f;
             weapon.Growth["attack_speed"] = 2f;
-        }
-
-        if (dict.ContainsKey("milestones"))
-        {
-            foreach (Variant item in dict["milestones"].AsGodotArray())
-                weapon.Milestones.Add(item.AsString());
         }
 
         if (dict.ContainsKey("stats"))

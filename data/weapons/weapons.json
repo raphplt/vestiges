@@ -16,7 +16,6 @@
     },
     "summary": "Fauche en arc devant toi.",
     "growth": { "damage": 3, "attack_speed": 2, "range": 1.5, "arc_angle": 1, "knockback": 1 },
-    "milestones": [],
     "ascensions": [
       {
         "id": "harvest",
@@ -66,7 +65,6 @@
     },
     "summary": "Frappe lourde qui repousse tout.",
     "growth": { "damage": 3, "attack_speed": 2, "range": 1.5, "arc_angle": 1, "knockback": 1 },
-    "milestones": [],
     "stats": {
       "damage": 16,
       "attack_speed": 0.65,
@@ -95,8 +93,7 @@
       "family": "glass"
     },
     "summary": "Tire une flèche droit devant.",
-    "growth": { "damage": 3, "attack_speed": 2, "projectile_speed": 1, "range": 1 },
-    "milestones": ["projectile_pierce"],
+    "growth": { "damage": 3, "attack_speed": 2, "projectile_speed": 1, "range": 1, "projectile_pierce": 0.5 },
     "ascensions": [
       {
         "id": "volley",
@@ -153,8 +150,7 @@
       "family": "stone"
     },
     "summary": "Projette trois billes en éventail.",
-    "growth": { "damage": 3, "attack_speed": 2, "projectile_speed": 1, "range": 1 },
-    "milestones": ["projectile_count"],
+    "growth": { "damage": 3, "attack_speed": 2, "projectile_speed": 1, "range": 1, "projectile_count": 0.5 },
     "stats": {
       "damage": 4,
       "attack_speed": 1.8,
@@ -184,7 +180,6 @@
     },
     "summary": "Estoc rapide à courte portée.",
     "growth": { "damage": 3, "attack_speed": 2, "range": 2, "knockback": 1 },
-    "milestones": [],
     "stats": {
       "damage": 7,
       "attack_speed": 1.5,
@@ -211,8 +206,7 @@
       "family": "brass"
     },
     "summary": "Des clous qui traversent les rangs.",
-    "growth": { "damage": 3, "attack_speed": 2, "projectile_speed": 1, "range": 1 },
-    "milestones": ["projectile_pierce"],
+    "growth": { "damage": 3, "attack_speed": 2, "projectile_speed": 1, "range": 1, "projectile_pierce": 0.5 },
     "stats": {
       "damage": 22,
       "attack_speed": 0.6,
@@ -242,7 +236,6 @@
     },
     "summary": "Balaie large autour de toi.",
     "growth": { "damage": 3, "attack_speed": 2, "range": 1.5, "arc_angle": 1, "knockback": 1 },
-    "milestones": [],
     "stats": {
       "damage": 18,
       "attack_speed": 0.8,
@@ -271,7 +264,6 @@
     },
     "summary": "Fouette tout autour de toi.",
     "growth": { "damage": 3, "attack_speed": 2, "range": 1.5, "arc_angle": 1, "knockback": 1 },
-    "milestones": [],
     "stats": {
       "damage": 9,
       "attack_speed": 0.9,
@@ -299,8 +291,7 @@
       "family": "glass"
     },
     "summary": "Lance deux assiettes en éventail.",
-    "growth": { "damage": 3, "attack_speed": 2, "projectile_speed": 1, "range": 1 },
-    "milestones": ["projectile_count"],
+    "growth": { "damage": 3, "attack_speed": 2, "projectile_speed": 1, "range": 1, "projectile_count": 0.5 },
     "stats": {
       "damage": 11,
       "attack_speed": 1.1,
@@ -330,7 +321,6 @@
     },
     "summary": "Griffe et fait saigner.",
     "growth": { "damage": 3, "attack_speed": 2, "range": 1.5, "arc_angle": 1, "knockback": 1 },
-    "milestones": [],
     "stats": {
       "damage": 25,
       "attack_speed": 0.5,
@@ -364,7 +354,6 @@
     },
     "summary": "Une onde qui repousse et ralentit.",
     "growth": { "damage": 3, "attack_speed": 2, "range": 1.5, "arc_angle": 1, "knockback": 1 },
-    "milestones": [],
     "ascensions": [
       {
         "id": "knell",
@@ -425,7 +414,6 @@
     },
     "summary": "Coups rapides qui te soignent.",
     "growth": { "damage": 3, "attack_speed": 2, "range": 2 },
-    "milestones": [],
     "stats": {
       "damage": 6,
       "attack_speed": 2.5,
@@ -457,7 +445,6 @@
     },
     "summary": "Un rayon qui traverse tout.",
     "growth": { "damage": 3, "attack_speed": 2, "projectile_speed": 1, "range": 1 },
-    "milestones": ["projectile_pierce"],
     "stats": {
       "damage": 30,
       "attack_speed": 0.4,
@@ -485,8 +472,7 @@
       "family": "hybrid"
     },
     "summary": "Des notes tournent autour de toi.",
-    "growth": { "damage": 3, "range": 1.5, "orbital_speed": 1.5 },
-    "milestones": ["orbital_count"],
+    "growth": { "damage": 3, "range": 1.5, "orbital_speed": 1.5, "orbital_count": 0.5 },
     "ascensions": [
       {
         "id": "round",
@@ -541,8 +527,7 @@
       "family": "silk"
     },
     "summary": "Des clés qui sautent de cible en cible.",
-    "growth": { "damage": 3, "attack_speed": 2, "chain_range": 1.5 },
-    "milestones": ["chain_targets"],
+    "growth": { "damage": 3, "attack_speed": 2, "chain_range": 1.5, "chain_targets": 0.5 },
     "stats": {
       "damage": 14,
       "attack_speed": 0.8,
@@ -571,8 +556,7 @@
       "family": "brass"
     },
     "summary": "Un tir qui trouve sa cible.",
-    "growth": { "damage": 3, "attack_speed": 2, "projectile_speed": 1, "range": 1, "homing_strength": 0.5 },
-    "milestones": ["projectile_count"],
+    "growth": { "damage": 3, "attack_speed": 2, "projectile_speed": 1, "range": 1, "homing_strength": 0.5, "projectile_count": 0.5 },
     "stats": {
       "damage": 13,
       "attack_speed": 1.0,
@@ -600,8 +584,7 @@
       "family": "pale"
     },
     "summary": "Éblouit et désoriente.",
-    "growth": { "damage": 3, "attack_speed": 2, "projectile_speed": 1, "range": 1 },
-    "milestones": ["projectile_count"],
+    "growth": { "damage": 3, "attack_speed": 2, "projectile_speed": 1, "range": 1, "projectile_count": 0.5 },
     "stats": {
       "damage": 18,
       "attack_speed": 0.5,
@@ -632,8 +615,7 @@
       "projectile": "orb"
     },
     "summary": "Des tirs qui cherchent leur proie.",
-    "growth": { "damage": 3, "attack_speed": 2, "projectile_speed": 1, "range": 1, "homing_strength": 0.5 },
-    "milestones": ["projectile_count"],
+    "growth": { "damage": 3, "attack_speed": 2, "projectile_speed": 1, "range": 1, "homing_strength": 0.5, "projectile_count": 0.5 },
     "stats": {
       "damage": 20,
       "attack_speed": 0.8,
@@ -665,7 +647,6 @@
     },
     "summary": "Efface ce qu'elle touche.",
     "growth": { "damage": 3, "attack_speed": 2, "range": 1.5, "arc_angle": 1 },
-    "milestones": [],
     "stats": {
       "damage": 15,
       "attack_speed": 1.8,
@@ -698,8 +679,7 @@
       "family": "fire"
     },
     "summary": "Laisse le sol en feu.",
-    "growth": { "damage": 3, "attack_speed": 2, "projectile_speed": 1, "range": 1 },
-    "milestones": ["projectile_pierce"],
+    "growth": { "damage": 3, "attack_speed": 2, "projectile_speed": 1, "range": 1, "projectile_pierce": 0.5 },
     "stats": {
       "damage": 10,
       "attack_speed": 0.6,
@@ -734,7 +714,6 @@
     },
     "summary": "Chaque coup frappe deux fois.",
     "growth": { "damage": 3, "attack_speed": 2, "range": 1.5, "arc_angle": 1, "knockback": 1 },
-    "milestones": [],
     "stats": {
       "damage": 11,
       "attack_speed": 1.4,
@@ -767,8 +746,7 @@
       "projectile": "orb"
     },
     "summary": "Des formes imprévisibles.",
-    "growth": { "damage": 3, "attack_speed": 2, "projectile_speed": 1, "range": 1, "homing_strength": 0.5 },
-    "milestones": ["projectile_count"],
+    "growth": { "damage": 3, "attack_speed": 2, "projectile_speed": 1, "range": 1, "homing_strength": 0.5, "projectile_count": 0.5 },
     "stats": {
       "damage": 25,
       "attack_speed": 0.6,
@@ -809,7 +787,6 @@
     },
     "summary": "Un cône d'ondes qui s'élargit.",
     "growth": { "damage": 3, "attack_speed": 2, "projectile_speed": 1, "range": 1, "cone_angle_end": 1 },
-    "milestones": [],
     "stats": {
       "damage": 8,
       "attack_speed": 0.3,
@@ -846,7 +823,6 @@
     },
     "summary": "Frappe et fige le temps autour.",
     "growth": { "damage": 3, "attack_speed": 2, "range": 1.5, "arc_angle": 1, "knockback": 1 },
-    "milestones": [],
     "stats": {
       "damage": 35,
       "attack_speed": 0.35,

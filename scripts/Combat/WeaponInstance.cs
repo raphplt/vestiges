@@ -4,7 +4,7 @@ using Vestiges.Infrastructure;
 namespace Vestiges.Combat;
 
 /// <summary>Gain d'une amélioration sur une stat d'arme : fraction de la base (multiplicative) ou valeur (additive, paliers).</summary>
-public readonly record struct StatGain(string Stat, float Amount, bool Milestone);
+public readonly record struct StatGain(string Stat, float Amount);
 
 /// <summary>
 /// Arme portée en run (plan 17, décision 4.3 : pas de rareté d'arme). Un niveau, et les gains accumulés de chaque

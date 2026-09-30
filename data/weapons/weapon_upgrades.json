@@ -1,20 +1,20 @@
 {
-	"_comment": "Croissance des armes (plan 17 lot 1A). Chaque arme liste dans weapons.json ses stats montables (growth : stat → poids du tirage) et ses paliers (milestones : stats entières, réservées aux raretés Épique et Légendaire). Ici, le pas de chaque stat pour une amélioration Commune : multiplicative = +pas × gain en pourcentage cumulé sur la base, additive = +pas × gain. max_level : niveau maximal d'une arme (une amélioration = un niveau).",
+	"_comment": "Croissance des armes (plan 17 lot 1A). Chaque arme liste dans weapons.json ses stats montables (growth : stat → poids du tirage), stats entières comprises (projectile, perforation, saut de chaîne, orbe ; poids de départ 0,5, plan 23 R4). Ici, le pas de chaque stat pour une amélioration Commune, relevé de moitié au plan 23 R4 : multiplicative = +pas × gain en pourcentage cumulé sur la base, additive = +pas × gain. integer : stat entière fractionnaire, dont le gain vient de la rareté (integer_gain de upgrade_rarities.json : 0,5 en commune à 3 en légendaire) ; la partie décimale est une chance par attaque d'en avoir une de plus, sauf pour les orbes, qui ne comptent que la partie entière. max_level : niveau maximal d'une arme (une amélioration = un niveau).",
 	"weapon_max_level": 50,
 	"stats": {
-		"damage": { "step": 0.12, "mode": "multiplicative" },
-		"attack_speed": { "step": 0.08, "mode": "multiplicative" },
-		"range": { "step": 0.06, "mode": "multiplicative" },
-		"arc_angle": { "step": 0.08, "mode": "multiplicative", "max": 360 },
-		"cone_angle_end": { "step": 0.08, "mode": "multiplicative", "max": 180 },
-		"knockback": { "step": 0.15, "mode": "multiplicative" },
-		"projectile_speed": { "step": 0.1, "mode": "multiplicative" },
-		"orbital_speed": { "step": 0.1, "mode": "multiplicative" },
-		"chain_range": { "step": 0.08, "mode": "multiplicative" },
-		"homing_strength": { "step": 0.1, "mode": "multiplicative" },
-		"projectile_count": { "step": 1, "mode": "additive" },
-		"projectile_pierce": { "step": 1, "mode": "additive" },
-		"chain_targets": { "step": 1, "mode": "additive" },
-		"orbital_count": { "step": 1, "mode": "additive" }
+		"damage": { "step": 0.18, "mode": "multiplicative" },
+		"attack_speed": { "step": 0.12, "mode": "multiplicative" },
+		"range": { "step": 0.09, "mode": "multiplicative" },
+		"arc_angle": { "step": 0.12, "mode": "multiplicative", "max": 360 },
+		"cone_angle_end": { "step": 0.12, "mode": "multiplicative", "max": 180 },
+		"knockback": { "step": 0.2, "mode": "multiplicative" },
+		"projectile_speed": { "step": 0.15, "mode": "multiplicative" },
+		"orbital_speed": { "step": 0.15, "mode": "multiplicative" },
+		"chain_range": { "step": 0.12, "mode": "multiplicative" },
+		"homing_strength": { "step": 0.15, "mode": "multiplicative" },
+		"projectile_count": { "mode": "additive", "integer": true },
+		"projectile_pierce": { "mode": "additive", "integer": true },
+		"chain_targets": { "mode": "additive", "integer": true },
+		"orbital_count": { "mode": "additive", "integer": true }
 	}
 }

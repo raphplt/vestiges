@@ -937,7 +937,8 @@ public partial class Player : CharacterBody2D
     /// </summary>
     private void SetupOrbitalWeapon(WeaponInstance weapon)
     {
-        int orbitalCount = Mathf.Max(1, (int)weapon.GetStat("orbital_count", 3f));
+        // Une orbe ne peut pas apparaître une attaque sur deux : seule la partie entière compte (plan 23 R4).
+        int orbitalCount = Mathf.Max(1, Mathf.FloorToInt(weapon.GetStat("orbital_count", 3f)));
         if (_orbitalWeapon == weapon && _orbitalProjectiles.Count == orbitalCount)
             return;
 
@@ -1100,7 +1101,8 @@ public partial class Player : CharacterBody2D
     private void PerformChainAttack()
     {
         float range = GetEffectiveWeaponRange();
-        int chainTargets = Mathf.Max(1, (int)GetWeaponStat("chain_targets", 2f));
+        // Stat entière fractionnaire (plan 23 R4) : la décimale est une chance, à chaque attaque, d'un saut de plus.
+        int chainTargets = Mathf.Max(1, FractionalCount.Roll(GetWeaponStat("chain_targets", 2f), GD.Randf()));
         float chainRange = GetWeaponStat("chain_range", 100f);
         float chainFalloff = GetWeaponStat("chain_damage_falloff", 0.8f);
 
@@ -1682,7 +1684,8 @@ public partial class Player : CharacterBody2D
 
     private void PerformRangedAttack(string pattern)
     {
-        int ownCount = Mathf.Max(1, Mathf.RoundToInt(GetWeaponStat("projectile_count", 1f)));
+        // Stats entières fractionnaires (plan 23 R4) : 1,5 projectile, c'est un tir et une chance sur deux d'un second.
+        int ownCount = Mathf.Max(1, FractionalCount.Roll(GetWeaponStat("projectile_count", 1f), GD.Randf()));
         int extraCount = RollBonusProjectiles(_equippedWeapon);
         int totalProjectiles = ownCount + extraCount;
         bool spreadExtras = ExtraProjectilesSpread;
@@ -1694,7 +1697,7 @@ public partial class Player : CharacterBody2D
         float baseDamage = ComputeBaseAttackDamage();
         _launchContext = BeginAttack(_equippedWeapon, baseDamage);
         float projectileSpeed = GetWeaponStat("projectile_speed", 400f);
-        int totalPierce = Mathf.Max(0, Mathf.RoundToInt(GetWeaponStat("projectile_pierce", 0f)) + FractionalCount.Roll(_projectilePierce, GD.Randf()));
+        int totalPierce = FractionalCount.Roll(GetWeaponStat("projectile_pierce", 0f) + _projectilePierce, GD.Randf());
         Vector2 baseDirection = (targets[0].GlobalPosition - GlobalPosition).Normalized();
         PlayAttackFeedback(isMelee: false, baseDirection);
         float spreadAngle = GetWeaponStat("spread_angle", 20f);
