@@ -801,7 +801,7 @@ Le script de post-processing doit inclure une vérification/correction de l'angl
 - [x] Plan 23 R2 : cartes de niveau à la Megabonk, inventaire et stats affichés pendant le choix.
 - [x] Plan 23 R3 : objets à 30 niveaux et gains francs, projectiles en plus au lieu des copies, Reflet brisé réactivé, paliers au niveau 15.
 - [x] Plan 23 R4 : stats entières fractionnaires et pas d'armes relevés.
-- [ ] Plan 23 R5 : difficulté réglée sur la nouvelle puissance, mesurée.
+- [x] Plan 23 R5 : difficulté réglée sur la nouvelle puissance, mesurée.
 - [x] Plan 23 R6 : huit objets de déclencheur restants (G2c).
 - [ ] Plan 23 R7 : six autres petits lieux, carte agrandie en hauteur et minimap (plan 22 C4, C6).
 - [ ] Plan 23 R8 : coffres à choix d'amélioration garantie (à confirmer).

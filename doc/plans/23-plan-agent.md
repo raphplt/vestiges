@@ -320,6 +320,52 @@ Conteneur cloud sans Godot ni .NET au départ : SDK .NET 10.0.401 installé par 
 
 **Reste :** la puissance d'ensemble se mesure en R5.
 
+### R5 : la difficulté suit
+
+**Mesure après R3 et R4**, mêmes seeds et même outil que R0 (5 seeds × 15 min, bot nomade qui prend la première carte, `tools/summarize_power.py`) : le joueur a pris de l'avance partout.
+
+| Tranche | Temps pour tuer R0 → après R4 | Dégâts reçus R0 → après R4 | Niveau R0 → après R4 |
+|---|---|---|---|
+| 0–3 min | 3,05 → 2,04 s | 4 657 → 3 404 | 4,2 → 5,6 |
+| 3–6 min | 0,76 → 0,45 s | 14 781 → 2 877 | 12,0 → 15,8 |
+| 6–9 min | 0,32 → 0,30 s | 8 822 → 6 627 | 18,8 → 23,0 |
+| 9–12 min | 0,33 → 0,28 s | 10 987 → 7 910 | 25,0 → 30,8 |
+| 12–15 min | 0,30 → 0,25 s | 16 403 → 9 398 | 29,8 → 41,2 |
+
+**Essais**, par surcharge `--scaling` sur l'arbre de R4 (5 seeds × 15 min chacun) :
+
+| Essai | Réglage | Verdict |
+|---|---|---|
+| t1 | PV ×1,4 d'emblée, ×1,035 par minute | 3–6 min trop lent (2,03 s), fin juste |
+| t2 | PV ×1,3, dégâts ennemis ×1,1 | dégâts reçus triplés en fin de run : écarté, les dégâts ne bougent pas |
+| t3 | PV ×1,5, ×1,03 par minute | fin conforme, 3–6 min trop lent (1,81 s) |
+| t4 | PV ×1,25, ×1,04 par minute | 0–6 min conforme, le joueur repart devant après 9 min (0,20 s, niveau 37) |
+| **t5** | **PV ×1,25, ×1,04 jusqu'à 6 min, ×1,075 ensuite** | **retenu** |
+
+La tranche 3–6 min est la plus sensible : entre ×1,5 et ×1,7 de PV à 4 min 30, le bot n'amorce plus sa montée et reste lent jusqu'à 9 min. Le premier écart se joue donc sur la pente, pas sur le multiplicateur de départ.
+
+**Réglage retenu** (`data/scaling/spawn_flow.json`) : `flat_hp_multiplier` 1,25 (clé nouvelle, lue par `SpawnManager`), `hp_scaling_per_minute` 1,04, `late_hp_scaling_per_minute` 1,075 à partir de 6 min. Avant : ×1,05 par minute, ×1,07 après 22 min. Les PV valent ×1,25 au départ, ×1,58 à 6 min, ×3,0 à 15 min (R0 : ×1, ×1,34, ×2,08). Dégâts des créatures inchangés.
+
+| Tranche | Temps pour tuer R0 → R5 | Dégâts reçus R0 → R5 | Niveau R0 → R5 |
+|---|---|---|---|
+| 0–3 min (9 runs) | 3,05 → 2,43 s (−20 %) | 4 657 → 3 861 (−17 %) | 4,2 → 5,8 |
+| 3–6 min (9 runs) | 0,76 → 0,73 s (−4 %) | 14 781 → 8 029 (−46 %) | 12,0 → 13,1 |
+| 6–9 min | 0,32 → 0,38 s (+19 %) | 8 822 → 11 532 (+31 %) | 18,8 → 20,6 |
+| 9–12 min | 0,33 → 0,34 s (+3 %) | 10 987 → 11 795 (+7 %) | 25,0 → 26,4 |
+| 12–15 min | 0,30 → 0,28 s (−7 %) | 16 403 → 16 669 (+2 %) | 29,8 → 31,8 |
+
+Les deux premières tranches regroupent t4 et t5, identiques avant 6 min. Sur les mêmes réglages, t4 et t5 donnent 3,13 et 1,88 s de temps pour tuer à 0–3 min : cette tranche dépend surtout des premières armes tirées.
+
+**Vérifié :**
+- temps pour tuer à ±20 % de R0 sur les cinq tranches ; dégâts reçus à ±20 % sauf 3–6 min, où R0 est porté par deux runs très touchées, et 6–9 min (+31 %) ;
+- la valeur lue dans les données donne les mêmes créatures que la surcharge : seed 1002, 46,1 PV par créature à 60 s contre 46,2 dans l'essai ;
+- `dotnet build` : 0 avertissement.
+
+**Reste :**
+- un bot qui prend la première carte ne construit pas : le joueur qui choisit bien doit garder son avance, à juger en jeu ;
+- au-delà de 15 min, la pente de 1,075 donne des PV ×5 à 22 min (×2,9 avant) : non mesuré, à surveiller avec l'endgame ;
+- un plantage du moteur (signal 11, « propagate_notification » appelé depuis un autre thread sur `/root`) sur 1 run de 45, au début d'une Résurgence, sur l'arbre de R4 : non reproduit, aucun thread de notre code actif à ce moment.
+
 
 ### R6 : objets de déclencheur restants (G2c)
 

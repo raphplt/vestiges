@@ -221,8 +221,8 @@ public partial class SpawnManager : Node2D
 
 	private void ComputeScaling(EnemyData data, float elapsedMinutes, out float hpScale, out float dmgScale)
 	{
-		// Passé l'heure de l'Indicible, les PV montent plus vite quelle que soit la phase : l'endgame n'est pas
-		// toujours atteint, et le joueur de fin de run tue deux fois plus vite qu'à 10 min (plan 20 §6.8, R1-F).
+		// Deux pentes, quelle que soit la phase : le joueur accélère une fois son build lancé, les PV suivent plus vite
+		// passé late_hp_scaling_from_minute (plan 20 §6.8, recalé au plan 23 R5).
 		float lateMinutes = Mathf.Max(0f, elapsedMinutes - _lateHpScalingFromMinute);
 		hpScale = Mathf.Pow(_hpScalingPerMinute, elapsedMinutes - lateMinutes)
 			* Mathf.Pow(_lateHpScalingPerMinute, lateMinutes) * _flatHpMultiplier;
