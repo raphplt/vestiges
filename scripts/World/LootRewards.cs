@@ -136,16 +136,29 @@ public static class LootRewards
     private static WeaponData PickWeapon(string itemId) =>
         itemId != "random_weapon" ? WeaponDataLoader.Get(itemId) : PickRandomWeapon();
 
-    /// <summary>Une arme débloquée au hasard (coffres, Wagonnet), ou null s'il n'y en a aucune.</summary>
-    public static WeaponData PickRandomWeapon()
+    /// <summary>
+    /// Une arme débloquée au hasard (coffres, Wagonnet), ou null s'il n'y en a aucune. Avec <paramref name="holder"/>,
+    /// les armes qu'il porte sont écartées : son ramassage les refuserait.
+    /// </summary>
+    public static WeaponData PickRandomWeapon(Player holder = null)
     {
         List<WeaponData> candidates = new();
         foreach (WeaponData weapon in WeaponDataLoader.GetAll())
         {
-            if (MetaSaveManager.IsWeaponUnlocked(weapon))
+            if (MetaSaveManager.IsWeaponUnlocked(weapon) && !Holds(holder, weapon.Id))
                 candidates.Add(weapon);
         }
         return candidates.Count > 0 ? candidates[(int)(GD.Randi() % candidates.Count)] : null;
+    }
+
+    private static bool Holds(Player holder, string weaponId)
+    {
+        if (holder == null)
+            return false;
+        foreach (WeaponInstance weapon in holder.WeaponSlots)
+            if (weapon.Id == weaponId)
+                return true;
+        return false;
     }
 
     private static string Format(string key, object value) => string.Format(TranslationServer.Translate(key), value);

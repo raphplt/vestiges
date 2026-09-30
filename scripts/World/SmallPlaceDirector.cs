@@ -206,10 +206,12 @@ public partial class SmallPlaceDirector : Node
 				// Une lettre jamais lue : une part de l'XP du niveau suivant, qui garde son poids à tout moment de la run.
 				if (_progression != null)
 					_eventBus.EmitSignal(EventBus.SignalName.XpGained, _progression.XpToNextLevel * data.Amount);
+				else
+					GD.PushWarning("[SmallPlaceDirector] Boîte aux lettres sans PlayerProgression : aucune XP donnée");
 				Burst(place);
 				break;
 			case "essence_or_weapon":
-				if (_rng.Randf() >= data.Chance || !DropWeapon(place))
+				if (_rng.Randf() >= data.Chance || !DropWeapon(place, player))
 					GiveEssence(place, _rng.RandiRange(data.AmountMin, data.AmountMax));
 				Burst(place);
 				break;
@@ -239,16 +241,18 @@ public partial class SmallPlaceDirector : Node
 		}
 	}
 
-	/// <summary>Wagonnet : une arme au hasard, posée à côté, à ramasser comme celles des coffres. Faux s'il n'y en a pas.</summary>
-	private bool DropWeapon(SmallPlace place)
+	/// <summary>
+	/// Wagonnet : une arme au hasard que le joueur ne porte pas, posée à côté, à ramasser comme celles des coffres.
+	/// Faux s'il n'y en a pas. Le ramassage émet LootReceived, pas la pose.
+	/// </summary>
+	private bool DropWeapon(SmallPlace place, Player player)
 	{
-		WeaponData data = LootRewards.PickRandomWeapon();
+		WeaponData data = LootRewards.PickRandomWeapon(player);
 		if (data == null)
 			return false;
 		WeaponPickup pickup = new();
 		pickup.Initialize(new WeaponInstance(data), place.GlobalPosition + Iso.ToScreen(new Vector2(40f, 0f)));
 		place.GetParent().CallDeferred(Node.MethodName.AddChild, pickup);
-		_eventBus.EmitSignal(EventBus.SignalName.LootReceived, "weapon", data.Id, 1);
 		return true;
 	}
 

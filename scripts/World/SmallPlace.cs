@@ -56,6 +56,8 @@ public partial class SmallPlace : Node2D, IInteractable
 		_sign.SetActive(false);
 	}
 
+	public override void _Ready() => SetProcess(false);
+
 	public override void _EnterTree() => Interactables.Register(this);
 
 	public override void _ExitTree()
@@ -99,8 +101,6 @@ public partial class SmallPlace : Node2D, IInteractable
 		_line.Visible = true;
 		SetProcess(true);
 	}
-
-	public override void _Ready() => SetProcess(false);
 
 	public override void _Process(double delta)
 	{

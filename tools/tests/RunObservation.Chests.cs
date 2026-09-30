@@ -29,7 +29,7 @@ public partial class RunObservation
         Vector2 spawn = _player.GlobalPosition;
         chests.Sort((a, b) => a.GlobalPosition.DistanceSquaredTo(spawn).CompareTo(b.GlobalPosition.DistanceSquaredTo(spawn)));
         TileMapLayer ground = _world.GetNode<TileMapLayer>("Ground");
-                Dictionary<string, int> counts = new();
+        Dictionary<string, int> counts = new();
         List<string> bands = new();
         foreach (Chest chest in chests)
         {

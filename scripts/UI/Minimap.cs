@@ -1,6 +1,7 @@
 using Godot;
 using Vestiges.Core;
 using Vestiges.Infrastructure;
+using Vestiges.Progression;
 using Vestiges.World;
 
 namespace Vestiges.UI;
@@ -45,6 +46,10 @@ public partial class Minimap : Control
     private Image _image;
     private ImageTexture _texture;
     private bool[] _known;
+    private int _width;
+    private int _height;
+    // Oubli des repères (plan 17 lot 3D) : comme les flèches, les coffres quittent la carte tant qu'il est porté.
+    private bool _chestSignalsForgotten;
     private float _timer;
     private bool _dirty;
     private Vector2 _playerPosition;
@@ -55,13 +60,23 @@ public partial class Minimap : Control
         _groups = GetNode<GroupCache>("/root/GroupCache");
         _eventBus = GetNode<EventBus>("/root/EventBus");
         _eventBus.ZonePhaseChanged += OnZonePhaseChanged;
+        _eventBus.OubliEffectChanged += OnOubliEffectChanged;
         Visible = false;
     }
 
     public override void _ExitTree()
     {
         if (_eventBus != null)
+        {
             _eventBus.ZonePhaseChanged -= OnZonePhaseChanged;
+            _eventBus.OubliEffectChanged -= OnOubliEffectChanged;
+        }
+    }
+
+    private void OnOubliEffectChanged(string effect, float total)
+    {
+        if (effect == "chest_signals")
+            _chestSignalsForgotten = total > 0f;
     }
 
     /// <summary>La carte n'existe qu'une fois le monde généré : l'image se crée à la première mise à jour possible.</summary>
@@ -74,16 +89,17 @@ public partial class Minimap : Control
         if (_world is not { IsWorldReady: true } || _erasure == null)
             return false;
         _places = GetNodeOrNull<SmallPlaceDirector>("/root/Main/SmallPlaceDirector");
+        _chestSignalsForgotten = (PerilManager.Current?.EffectTotal("chest_signals") ?? 0f) > 0f;
         _bounds = _world.WorldBounds;
         _cellSize = _erasure.CellSize;
         _origin = new Vector2I(Mathf.FloorToInt(_bounds.Position.X / _cellSize), Mathf.FloorToInt(_bounds.Position.Y / _cellSize));
-        int width = Mathf.CeilToInt(_bounds.Size.X / _cellSize) + 1;
-        int height = Mathf.CeilToInt(_bounds.Size.Y / _cellSize) + 1;
-        _image = Image.CreateEmpty(width, height, false, Image.Format.Rgba8);
+        _width = Mathf.CeilToInt(_bounds.Size.X / _cellSize) + 1;
+        _height = Mathf.CeilToInt(_bounds.Size.Y / _cellSize) + 1;
+        _image = Image.CreateEmpty(_width, _height, false, Image.Format.Rgba8);
         _texture = ImageTexture.CreateFromImage(_image);
-        _known = new bool[width * height];
-        float scale = Width / width;
-        CustomMinimumSize = new Vector2(Width, height * scale);
+        _known = new bool[_width * _height];
+        float scale = Width / _width;
+        CustomMinimumSize = new Vector2(Width, _height * scale);
         Size = CustomMinimumSize;
         Visible = true;
         return true;
@@ -151,7 +167,7 @@ public partial class Minimap : Control
     {
         int x = cell.X - _origin.X;
         int y = cell.Y - _origin.Y;
-        return x < 0 || y < 0 || x >= _image.GetWidth() || y >= _image.GetHeight() ? -1 : y * _image.GetWidth() + x;
+        return x < 0 || y < 0 || x >= _width || y >= _height ? -1 : y * _width + x;
     }
 
     private bool Known(Vector2 world)
@@ -170,19 +186,31 @@ public partial class Minimap : Control
         DrawRect(area.Grow(2f), Frame);
         DrawTextureRect(_texture, area, false);
         DrawRect(area.Grow(2f), Border, false, 1f);
+        // Boucles indexées : un foreach sur une IReadOnlyList alloue son énumérateur à chaque repeinte.
         if (_places != null)
-            foreach (SmallPlace place in _places.Places)
+        {
+            for (int i = 0; i < _places.Places.Count; i++)
+            {
+                SmallPlace place = _places.Places[i];
                 if (Known(place.GlobalPosition))
                     DrawDot(place.GlobalPosition, place.CanInteract ? place.Data.Color : UsedPlaceColor, 1.5f);
-        foreach (Chest chest in Chest.Closed)
-            if (chest.CanOpen && Known(chest.GlobalPosition))
-                DrawDot(chest.GlobalPosition, RarityPalette.Main(chest.Rarity), 2f);
-        foreach (Memorial memorial in Memorial.All)
-            if (Known(memorial.GlobalPosition))
-                DrawDot(memorial.GlobalPosition, MemorialColor, 2.5f);
-        foreach (Rift rift in Rift.All)
-            if (Known(rift.GlobalPosition))
-                DrawDot(rift.GlobalPosition, RiftColor, 2.5f);
+            }
+        }
+        if (!_chestSignalsForgotten)
+        {
+            for (int i = 0; i < Chest.Closed.Count; i++)
+            {
+                Chest chest = Chest.Closed[i];
+                if (chest.CanOpen && Known(chest.GlobalPosition))
+                    DrawDot(chest.GlobalPosition, RarityPalette.Main(chest.Rarity), 2f);
+            }
+        }
+        for (int i = 0; i < Memorial.All.Count; i++)
+            if (Known(Memorial.All[i].GlobalPosition))
+                DrawDot(Memorial.All[i].GlobalPosition, MemorialColor, 2.5f);
+        for (int i = 0; i < Rift.All.Count; i++)
+            if (Known(Rift.All[i].GlobalPosition))
+                DrawDot(Rift.All[i].GlobalPosition, RiftColor, 2.5f);
         Vector2 player = ToMap(_playerPosition);
         DrawCircle(player, 3f, Frame);
         DrawCircle(player, 2f, PlayerColor);

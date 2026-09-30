@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Godot;
+using Vestiges.Combat;
 using Vestiges.Core;
 using Vestiges.Infrastructure;
 using Vestiges.Progression;
@@ -16,7 +17,7 @@ public partial class SmallPlacesRegression : Node2D
 {
 	private int _failures;
 
-	public override void _Ready()
+	public override async void _Ready()
 	{
 		try
 		{
@@ -84,7 +85,7 @@ public partial class SmallPlacesRegression : Node2D
 			well.ShowSign(true);
 			Check(shown && !well.SignVisible, "Signe : visible sur un lieu encore utile, jamais sur un lieu déjà utilisé");
 
-			CheckC4(director, player, essence);
+			await CheckC4(director, player, essence);
 
 			GD.Print($"[SmallPlacesRegression] RESULT failures={_failures}");
 			GetTree().Quit(_failures == 0 ? 0 : 1);
@@ -96,7 +97,7 @@ public partial class SmallPlacesRegression : Node2D
 		}
 	}
 
-	private void CheckC4(SmallPlaceDirector director, Player player, EssenceTracker essence)
+	private async System.Threading.Tasks.Task CheckC4(SmallPlaceDirector director, Player player, EssenceTracker essence)
 	{
 		List<SmallPlace> places = new(director.Places);
 		SmallPlace Find(string id) => places.Find(place => place.Data.Id == id);
@@ -114,11 +115,14 @@ public partial class SmallPlacesRegression : Node2D
 		Check(Mathf.IsEqualApprox(xp, progression.XpToNextLevel * 0.5f), $"Boîte aux lettres : la moitié de l'XP du niveau suivant ({xp:0})");
 
 		int essenceBefore = essence.CurrentEssence;
+		SmallPlace cart = Find("mine_cart");
+		cart.Interact(player);
+		// L'arme est posée en différé, à côté du wagonnet : elle apparaît à la frame suivante.
+		await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
 		string weapon = null;
-		EventBus.LootReceivedEventHandler onLoot = (type, id, _) => weapon = type == "weapon" ? id : weapon;
-		events.LootReceived += onLoot;
-		Find("mine_cart").Interact(player);
-		events.LootReceived -= onLoot;
+		foreach (Node child in cart.GetParent().GetChildren())
+			if (child is WeaponPickup pickup)
+				weapon = pickup.WeaponInstance.Id;
 		Check(weapon != null || essence.CurrentEssence - essenceBefore is >= 8 and <= 14,
 			$"Wagonnet : une arme au sol ({weapon ?? "non"}) ou 8 à 14 Essence ({essence.CurrentEssence - essenceBefore})");
 

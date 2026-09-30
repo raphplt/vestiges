@@ -110,12 +110,13 @@ public partial class RunObservation
             return allowed;
         }
 
-        /// <summary>Lieux entrés dans le cadre ; <paramref name="chests"/> est le groupe déjà lu par la mesure des coffres.</summary>
         private static readonly string[] PlaceKinds =
         {
             "chest", "memorial", "rift", "well", "crystal_vein", "scarecrow",
             "mailbox", "mine_cart", "abandoned_car", "phone_booth", "bus_shelter", "picnic",
         };
+
+        /// <summary>Lieux entrés dans le cadre ; <paramref name="chests"/> est le groupe déjà lu par la mesure des coffres.</summary>
 
         public void Sample(double t, Rect2 view, Godot.Collections.Array<Node> chests, SmallPlaceDirector smallPlaces)
         {
