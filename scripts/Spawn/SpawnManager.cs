@@ -783,7 +783,9 @@ public partial class SpawnManager : Node2D
 		_hpScalingPerMinute = (float)dict["hp_scaling_per_minute"].AsDouble();
 		_lateHpScalingPerMinute = dict.ContainsKey("late_hp_scaling_per_minute") ? (float)dict["late_hp_scaling_per_minute"].AsDouble() : _hpScalingPerMinute;
 		_lateHpScalingFromMinute = dict.ContainsKey("late_hp_scaling_from_minute") ? (float)dict["late_hp_scaling_from_minute"].AsDouble() : float.MaxValue;
+		_flatHpMultiplier = dict.ContainsKey("flat_hp_multiplier") ? (float)dict["flat_hp_multiplier"].AsDouble() : 1f;
 		_dmgScalingPerMinute = (float)dict["damage_scaling_per_minute"].AsDouble();
+		_flatDmgMultiplier = dict.ContainsKey("flat_dmg_multiplier") ? (float)dict["flat_dmg_multiplier"].AsDouble() : 1f;
 		_rangedDamageGrowthShare = dict.ContainsKey("ranged_damage_growth_share") ? (float)dict["ranged_damage_growth_share"].AsDouble() : 1f;
 		_xpGrowthPerMinute = dict.ContainsKey("xp_growth_per_minute") ? (float)dict["xp_growth_per_minute"].AsDouble() : 0f;
 		_xpOblivionBonus = dict.ContainsKey("xp_oblivion_bonus") ? (float)dict["xp_oblivion_bonus"].AsDouble() : 0f;
