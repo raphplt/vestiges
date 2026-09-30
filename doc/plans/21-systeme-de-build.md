@@ -352,7 +352,7 @@ La §11 n'est qu'un **aperçu de six directions parmi des dizaines ou des centai
 |---|---|---|
 | G1 | Fragments offerts après chaque Résurgence (source d'offre), bannissements gratuits puis Péril croissant | **Livré le 29 septembre** (§17) |
 | G0 | Grammaire commune dans le code : propriétés nommées sur les cartes d'armes, déclencheurs et statuts partagés | À faire avant les objets |
-| G2 | Objets : 6 emplacements, 50 niveaux, neuf par le monde (Reliquaire), niveaux par le level-up ; migration des passifs | Après validation du catalogue et de la question des traits |
+| G2 | Objets : 6 emplacements, 50 niveaux, neuf par le monde (Reliquaire), niveaux par le level-up ; migration des passifs ; retrait des anciens Dons et de leurs six synergies inopérantes | Traits supprimés et 6 × 50 validés ([DECISIONS §33](DECISIONS.md)) ; reste le catalogue à réécrire |
 | G3 | Ascensions d'armes au niveau max (deux voies) | Après G0 |
 | G4 | Personnages : affinités d'offre | Avec le plan 06 |
 

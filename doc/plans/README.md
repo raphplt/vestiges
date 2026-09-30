@@ -1,5 +1,7 @@
 # VESTIGES — Dossier de plans à valider
 
+**Où en est chaque chose : [tableau de bord](TABLEAU-DE-BORD.md)** (une page, tenue à jour à chaque lot et à chaque décision). Priorité du 30 septembre : le [système de build](21-systeme-de-build.md) (4 armes, 6 objets à niveaux, ex-perks après les Résurgences) et la [carte à explorer](22-carte-a-explorer.md). Les paragraphes ci-dessous gardent l'historique ; là où ils parlent d'objets sans plafond, de traits ou de quatre passifs conservés, ils sont périmés ([DECISIONS §32 à §34](DECISIONS.md)).
+
 **Priorité actuelle — 28 septembre : objets et perks.** Raphaël demande leur refonte conjointe : objets cumulables sans plafond, quatre perks équipés au maximum. Le [catalogue de neuf spécialisations](05-perks-specialisations.md) est validé pour une V1 extensible ; B0 à B2 et la partie sans objets de B3 sont livrés et vérifiés : sept perks sur neuf sont proposés en run. Délestage et Habitude attendent les objets (B4), dont le catalogue, la récompense à choix et l'inventaire restent à décider par Raphaël. Le [catalogue commun historique](05-catalogue-objets-perks.md) garde l’audit et la proposition d’objets à réviser. Ce chantier coordonne les plans 05/13/17/20, sans ajouter un nouveau plan numéroté. Les autres priorités ci-dessous constituent l'historique et les dépendances des chantiers concernés.
 
 **Catalogue B V1 validé :** quatre perks qualitatifs sans niveaux parmi neuf, avec ajouts futurs possibles. Le [catalogue V1 de neuf perks](05-perks-specialisations.md) précise leurs règles, acquisition et interactions, et compare les plafonds d'armes 70/99 à la courbe d'XP. Le contenu V1 est validé ; coefficients à mesurer, nouveau plafond non arbitré. L'étude A/B/C est conservée au §12 du catalogue historique.
@@ -36,7 +38,7 @@ La [Stratégie V2](../VESTIGES-STRATEGIE-V2.md) reste l'autorité gameplay/roadm
 | [10 — Terrain et tiles](10-terrain-et-tiles.md) | P1 transversal | Cohérence, transitions, circulation et coût du terrain | Cadrage 08 ; déplacements 01 |
 | [11 — Mécaniques originales](11-mecaniques-originales.md) | Prototypes | Sélection et critères d'abandon des innovations | 01/03/05/10 selon proposition |
 | [12 — Micro-événements et variantes](12-micro-evenements.md) | P0 | Cadence, cinq événements, élites et Souverains (v1 livrée) | 03/07 |
-| [13 — Butin](13-butin.md) | P0 après recette 12 | Trois formes de butin (Vestige figé, Triptyque, Pacte d'oubli), raretés, sources lisibles | Objets 05, idée B 11 |
+| [13 — Butin](13-butin.md) | P0 après recette 12 | Trois formes de butin (Vestige figé, Triptyque, Pacte d'oubli), raretés, sources lisibles | Objets 05, idée B 11 | **Absorbé par le plan 22.**
 | [14 — Anomalies du monde](14-anomalies-du-monde.md) | P1 | Anomalies rares liées au joueur et à l'oubli, jamais mortelles | 12, 13 |
 | [15 — Audio](15-audio.md) | Choix A2 consignés | Six candidats retenus, révélation du coffre actuelle conservée ; 3 refus à retravailler et 102 autres besoins à rechercher | [Retours A2](../audio/lot-a2/RETOURS.md) ; dissolution complète préparée, intégration à faire |
 | [16 — L'oubli rendu sensible](16-oubli-sensible.md) | P1 | Lots O1–O6 : sol qui oublie, choses qui se défont, frontière visible, coût et récompense de l'oubli | 10 (shader du sol), 02, 13, 15 |
@@ -44,7 +46,8 @@ La [Stratégie V2](../VESTIGES-STRATEGIE-V2.md) reste l'autorité gameplay/roadm
 | [18 — Inventaire des restes V1](18-inventaire-restes-v1.md) | P0 | Éléments de lore et POI vectoriels, Colosses, identifiants Steam « nuits » | 17 (lots 0B/0C) |
 | [19 — Lore](19-lore.md) | Transversal | Étape A : incohérences, textes trop directs, 14 questions à trancher, pistes de révélation | 06 (casting), 16 (échos), 17 (noms d'armes) |
 | [20 — Récompense et puissance](20-recompense-et-puissance.md) | P0 (R1 capital) | Retours du 28 septembre ; modèle de progression révisé pour 300 à 400 niveaux en 45 min (§6.6), cibles à valider ; paliers validés ; lots D1, R1-0 et R1-T livrés ; R1-F proposé | 03, 05, 06, 13, 16, 17 |
-| [21 — Système de build](21-systeme-de-build.md) | **P0, priorité actuelle** | Refonte depuis les [douze principes](../PRINCIPES-BUILD.md) : armes (quoi), traits (combien), objets (quand), fragments (comment), personnage (pourquoi) ; à valider | 05, 06, 13, 17, 20 |
+| [21 — Système de build](21-systeme-de-build.md) | **P0, priorité actuelle** | Refonte depuis les [douze principes](../PRINCIPES-BUILD.md) : 4 armes (niveau 50, ascension), 6 objets à 50 niveaux, 4 ex-perks après les Résurgences, personnages à affinités ; lot G1 livré | 05, 06, 17, 20, 22 |
+| [22 — Carte à explorer](22-carte-a-explorer.md) | **P0** | Décors qui deviennent des lieux, Atelier et Trempe, Reliquaire, Repères, Atlas ; absorbe 13, 11 B et les POI de 18 ; à valider | 21, 12, 16, 17 |
 
 Les numéros servent à identifier les plans, pas à imposer leur exécution intégrale dans cet ordre. Le [registre](DECISIONS.md) fait foi pour leur statut de validation.
 

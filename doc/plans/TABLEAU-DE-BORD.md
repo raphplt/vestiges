@@ -1,0 +1,78 @@
+# Tableau de bord des plans
+
+30 septembre 2026 · **Une page pour ne rien perdre.** Établi par recensement des 23 plans, du README et du registre. Pour les plans 02, 04, 07, 08, 10 et 19, le recensement a lu les en-têtes, les lots et les comptes rendus, pas le texte entier. À tenir à jour à chaque clôture de lot et à chaque décision : une ligne change ici avant tout autre document.
+
+Le [registre](DECISIONS.md) garde les mots de Raphaël. Les plans gardent le détail. Ce tableau dit seulement **où en est chaque chose et qui doit agir**.
+
+## 1. En cours
+
+| Chantier | Plan | Prochaine action |
+|---|---|---|
+| Système de build | [21](21-systeme-de-build.md) | Raphaël : nom des ex-perks. Agent : catalogue d'objets à niveaux, puis lot G2 |
+| Carte à explorer | [22](22-carte-a-explorer.md) | Raphaël : cinq questions du §10. Agent : lot C0 (mesure de départ) |
+
+## 2. Décisions attendues de Raphaël
+
+| Sujet | Plan | Question |
+|---|---|---|
+| Nom des ex-perks | 21 §18 | Réminiscences, Certitudes ou Ancres |
+| Carte à explorer | 22 §10 | Décors comme lieux, Atelier et Trempe, échelle de 70 lieux, Repères et Atlas |
+| Catalogue d'objets | 21, [05 objets](05-objets-catalogue-v1.md) | À réécrire par l'agent en 6 emplacements × 50 niveaux, puis à valider |
+| Icônes des ex-perks | 05 §15 | Direction « fragments teintés » jugée meilleure ; motifs à valider avant branchement |
+| Recette de la mort et du bilan | 02 | Durée de la séquence, densité de la page, échelle des distances |
+| Déplacements | 01 | Inertie, invulnérabilité du dash, recette manette |
+| Bestiaire | 07 | Tisseuse hors Marécages ; « mobs successifs » |
+| Direction artistique | 08 | Traqueur peu lisible, double contour |
+| Anomalies | 14 | Trois décisions, jamais arbitrées |
+| Lore | 19 | Relecture du script v1.1 ; questions P1, P6 à P10 ; fin |
+| Audio | 15 | Écoute en run ; quatre sons à reprendre |
+| Récompense et puissance | 20 | Reprise après la pause ; à réaligner sur le plan 21 |
+| Classement | 09 | Toutes les décisions, plus tard |
+| Points à vérifier en jeu | `A-VERIFIER.md` | 54 cases non cochées |
+
+## 3. Validé, pas encore fait
+
+| Quoi | Plan |
+|---|---|
+| Objets : 6 emplacements, 50 niveaux, migration des passifs (lot G2) | 21 |
+| Grammaire commune sur les cartes d'armes (G0), ascensions au niveau max (G3), affinités des personnages (G4) | 21 |
+| Bannissements payés en Péril, fragments après les Résurgences | 21 — **livrés (G1)** |
+| Déblocages par quêtes et achats en Vestiges | 21, 22 §5 C |
+| Mobilités par personnage (lot E) | 01 |
+| Trois personnages à intégrer, leurs sprites, leurs armes de départ (Sacoche de lettres, Fusil-harpon) | 06, 08 |
+| Réécriture des textes de chargement, trop directs | 02, 19 |
+| Butin qui disparaît avec sa zone | 16, repris par 22 §6 |
+| Préchauffage des effets (5B) | 10 |
+| Essai XP, niveaux de surplus, réserve automatique | 20 |
+
+## 4. Idées en suspens, rattachées pour ne pas les perdre
+
+| Idée | D'où elle vient | Rattachée à |
+|---|---|---|
+| Vestige figé, Pacte d'oubli, source de soin | 13 §4, §8 | 22 (lieux et Reliquaire) |
+| Marchand ambulant, escorte, événements de biome | 12 §6 | 22 (épreuves) |
+| Fragment de lore près des scènes-récits | 08 | 22 §3 (Table de pique-nique) et Atlas |
+| Rémanence offensive, chemins rémanents | 11 A et C | 21 (personnages) |
+| Éveil des armes | 17 vague 5 | 21 G3 : même idée que les ascensions |
+| Établi de grand-père (une stat de plus par amélioration) | 21 §16 | 22 §5 A : devient la Trempe de l'Atelier |
+| Pouvoir par personnage, taille des projectiles | 20 R7, R8 | 21 §3 et §8 |
+| Délestage et Habitude | 05 perks §14 | 21 §7 : s'appliquent au Reliquaire |
+| Comptoir du Hub, prix en Vestiges | 05 objets §3 | 22 §5 C (Atlas) et plan 04 |
+| Six synergies inopérantes des anciens Dons | 05 armes | À retirer avec les anciens Dons (21 G2) |
+| Porte-Nom, Rémanent, Glaneur | 07 | Bestiaire, plus tard |
+| Défi hebdomadaire | 09 | Plus tard |
+
+## 5. Plans remplacés ou absorbés
+
+| Plan | Devenu |
+|---|---|
+| 05, perks B et catalogues d'objets | Plan 21. Les effets livrés restent ; les fiches restent la référence de chaque effet |
+| 13, butin | Plan 22 (Reliquaire, lieux) |
+| 11, idée B | Plan 22 §6 |
+| 18, refonte des POI | Plan 22 §3 |
+| 17, vague 4 et plafond d'armes | Plan 21 : niveau max 50, confirmé ([DECISIONS §32](DECISIONS.md)). Les mentions « 70 recommandé » des plans 05 et 20 sont périmées |
+| Objets illimités, quatre passifs conservés ([DECISIONS §1](DECISIONS.md), 05 armes) | Périmés : 6 objets, traits supprimés ([DECISIONS §33](DECISIONS.md)) |
+
+## 6. Plans sans action en attente
+
+00 (référence), 03, 04, 10, 12, 16 : lots livrés, recettes à faire en jeu par Raphaël quand il le souhaite.

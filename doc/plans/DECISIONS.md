@@ -427,3 +427,18 @@ Raphaël : « oui pour les fragments ceux du plan 21 il faudrait trouver un autr
 - **Nom :** les ex-perks du plan 21 doivent prendre un autre nom que « fragments » ; proposition demandée à l'agent.
 
 **Constat de Raphaël, à traiter :** Megabonk est la référence de qualité, avec le risque de le cloner. Ce qui manque le plus à Vestiges par rapport à lui : une carte pleine de points d'intérêt et de petites récompenses, qui pousse à explorer et à ratisser.
+
+
+## 34. Carte à ratisser : plan à ouvrir, densité mesurée, intérêt long terme hors objets — 30 septembre 2026
+
+Raphaël : « alors la carte à ratisser c'est bien et ouais ca me va d'ouvrir un plan (seulement ca fait 22 plans déjà... ca commence à faire beaucoup et j'ai peur que des idées de perdent de l'un à l'autre ou que le retard s'accumule. mais bon en l'occurence c'est important là). je pense qu'en terme de quantité on ne doit pas etre au meme niveau que megabonk car si la map fourmille trop de POIs partout on perd en immersion et on se rapproche trop de megabonk dans sa dynamique mais il faut quand meme revoir à la hausse le nombre de lieux et récompenses tout en veillant à bien les intégrer au lore quand cest possibles. Les 6 objets max moi ca me va. et ducoup peut etre que pour se distinguer de megabonk on peut garder un intéret sur le long terme à explorer et continuer de joueur par autre chose que l'accumulation d'objets. ca pourrait etre lié aux essences , aux améliorations d'armes ou à autre chose de pas encore créé. »
+
+**Acquis :**
+- ouvrir le plan de la carte à explorer ;
+- plus de lieux et de récompenses qu'aujourd'hui, mais **moins dense que Megabonk**, pour préserver l'immersion ;
+- lieux intégrés au lore quand c'est possible ;
+- **6 objets maximum**, confirmé ;
+- l'intérêt d'explorer sur la durée doit venir **d'autre chose que l'accumulation d'objets** : Essence, améliorations d'armes, ou un système à créer.
+
+**Inquiétude à traiter :** trop de plans (22), risque d'idées perdues et de retard accumulé.
+**En attente :** le nom des ex-perks (Réminiscences, Certitudes ou Ancres).
