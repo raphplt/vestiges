@@ -415,3 +415,15 @@ Raphaël : « je garderai le niveau 50 pour les armes (ou en tout cas, plus que 
 - **Chemins :** la liste d'archétypes n'est qu'un aperçu ; le jeu doit permettre des dizaines ou des centaines de chemins.
 
 **Question ouverte :** les traits (comment on les obtient, sont-ils nécessaires ?).
+
+
+## 33. Traits supprimés, objets 6 × 50, nom des fragments à trouver, Megabonk comme référence — 30 septembre 2026
+
+Raphaël : « oui pour les fragments ceux du plan 21 il faudrait trouver un autre nom je te laise me proposer qq chose. Ca me va de supprimer les traits et de ne garder que les objets comme ca ca sera plus clair. Et c'est bien d'avoir 6 objets seulement (à affiner au besoin de chiffre) et jusqu'au niveau 50. bon ok avec du recul ma problématique est la suivante : mégabonk est une grosse inspiration et je trouve ses mécaniques et sa construction parfait. je voudrais un jeu qui s'approche de cette "perfection", mais j'ai trop tendance à vouloir le cloner. si je dis ca c'est car mégabonk est construit de la manière suivante : 4 armes avec 40 niveaux chacune. les armes ont la meme rareté. les améliorations d'armes ont des raretés et se font sur une state aléatoire de l'arme (ou plusieurs) et plus la rareté est importante, plus les stats de l'amélioration. apres il y a les 4 tomes jusqu'au niveu 99 de mémoire et les objets sans limite et qu'on peut stacker tout du long de la partie. bref c'est vraiment parfait quoi. et en plus il y a plein de trucs partout sur la map différents pois ou micro rewards bref ca favorise vraiment l'exploration et de ratisser la map ce qui nous manque encore. »
+
+**Acquis :**
+- **Traits supprimés :** les objets portent aussi les statistiques.
+- **Objets :** 6 emplacements (chiffre à affiner), jusqu'au niveau 50.
+- **Nom :** les ex-perks du plan 21 doivent prendre un autre nom que « fragments » ; proposition demandée à l'agent.
+
+**Constat de Raphaël, à traiter :** Megabonk est la référence de qualité, avec le risque de le cloner. Ce qui manque le plus à Vestiges par rapport à lui : une carte pleine de points d'intérêt et de petites récompenses, qui pousse à explorer et à ratisser.

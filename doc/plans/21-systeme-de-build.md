@@ -384,3 +384,63 @@ Relecture par sous-agent après le commit : aucun bug bloquant. Corrections appo
 - **Report** : un fragment passé revient aussi juste après un niveau déjà en file.
 
 Non fait : l'offre ponctuelle d'un fragment par un Souverain (§7), qui reste à régler (fréquence).
+
+## 18. Megabonk comme référence : ce qu'on prend, ce qu'on ne clone pas — 30 septembre
+
+Raphaël valide la suppression des traits et les 6 objets jusqu'au niveau 50, demande un autre nom pour les ex-perks, et pose sa vraie difficulté ([DECISIONS §33](DECISIONS.md)) : Megabonk lui paraît parfait, il veut s'en approcher sans le cloner, et il constate que Vestiges manque de choses à trouver sur la carte.
+
+### Les deux structures côte à côte
+
+| | Megabonk | Vestiges (plan 21 version 2) |
+|---|---|---|
+| Armes | 4, 40 niveaux, améliorations à rareté sur stats aléatoires | 4, 50 niveaux, même principe (déjà en jeu, plan 17), plus une ascension à deux voies au niveau max |
+| Statistiques | 4 tomes montés par le level-up | Portées par les objets |
+| Objets | Illimités, trouvés sur la carte, empilés toute la partie | 6 emplacements, 50 niveaux ; neufs par le monde, niveaux par le level-up et le monde |
+| Règles | — | 4 (ex-perks), une par Résurgence survécue |
+| Carte | Fixe ; coffres payants, statues à choix gratuites, marchands, huit sanctuaires, pots, micro-ondes | Qui s'efface ; coffres, 5 Mémoriaux, 3 Failles, 5 micro-événements ; POI désactivés (`pois_enabled: false`) |
+
+Sources : [objets](https://commonsensegamer.com/megabonk-items/), [sanctuaires](https://deltiasgaming.com/?p=355916), [conseils et lieux de la carte](https://www.gfinityesports.com/article/megabonk-beginners-guide-7-essential-tips-to-survive-the-hordes-in-style).
+
+### Ce qui fait la qualité de Megabonk, lu par les douze principes
+
+- **Trois horloges de récompense :** le niveau (souvent, petit), l'objet trouvé (parfois, surprenant), le sanctuaire ou le boss (rare, fort). Il se passe toujours quelque chose (P10).
+- **La carte est une liste de courses :** de nombreux lieux de types différents, visibles de loin, chacun avec une règle simple. Ratisser est la manière normale de jouer (P6, P10).
+- **Les objets illimités gardent chaque coffre désirable jusqu'à la fin** (P7).
+- **Les tomes limités donnent l'identité du build** (P8).
+
+Rien de cela n'est une invention de Megabonk. Le squelette (armes à emplacements, statistiques au level-up, objets trouvés) est une convention du genre : Vampire Survivors, Risk of Rain, Brotato. Le reprendre n'est pas cloner. Ce qui ferait de Vestiges un clone, ce serait de reprendre en plus ses objets, ses lieux et sa boucle de carte fixe.
+
+### Où Vestiges est déjà autre chose
+
+1. **Le monde s'efface.** Megabonk se joue sur une carte fixe qu'on nettoie. Dans Vestiges, ce qu'on n'a pas visité disparaît. Explorer, c'est choisir ce qu'on sauve et ce qu'on laisse oublier.
+2. **Choisir, c'est oublier.** Reliquaire (une alcôve prise, deux effacées), bannissement payé en Péril, Failles.
+3. **Les Résurgences** rythment la run et donnent les règles.
+4. **Les personnages** orientent le build (plan 06).
+
+Conclusion de l'agent : le risque n'est pas dans la structure du build. Il est dans la carte. Tant que Vestiges n'a pas ses propres lieux, liés à l'Effacement, le joueur ne sentira pas la différence.
+
+### Tension à surveiller : 6 objets et l'envie de ratisser
+
+Dans Megabonk, l'objet illimité fait de chaque coffre une bonne nouvelle jusqu'à la fin. Avec 6 emplacements, le monde n'a plus d'objet neuf à offrir une fois les 6 pris. Pour que la carte reste désirable, trois garde-fous :
+
+- le monde donne surtout des **niveaux** d'objets et d'armes (300 niveaux d'objets à gagner sur une run) ;
+- un Reliquaire peut toujours proposer de **remplacer** un objet, le nouveau héritant d'une partie des niveaux ;
+- les petites récompenses sont variées : Essence, soin, XP, relances, bénédiction courte.
+
+Si l'essai montre que la carte cesse d'attirer après les 6 objets, le repli est connu : des objets trouvés sans limite d'emplacements, à côté des objets de niveau. Ce serait un choix de conception assumé, pas un échec.
+
+### Nom des ex-perks
+
+« Fragment de mémoire » désigne déjà chaque choix de niveau. Propositions pour les quatre règles gagnées après les Résurgences :
+
+| Nom | Pourquoi |
+|---|---|
+| **Réminiscences** (recommandé) | Ce qui revient après une Résurgence : le monde pulse, un souvenir de règle reste. Le couple Résurgence et Réminiscence se retient |
+| Certitudes | Dans un monde qui s'oublie, quatre choses restent vraies pour toi |
+| Ancres | Reprend l'état « ancré » des zones : ce qui tient quand tout s'efface |
+
+Écartés, parce que déjà pris dans le jeu : Échos (Gants de boxe, plan 16), Empreintes (Traqueur), Rémanences (Éveillée), Éclats (Mémoriaux), Souvenirs (lore et méta).
+
+### Chantier qui manque : la carte à ratisser
+
+À ouvrir comme plan à part. Principe proposé : beaucoup de lieux petits et lisibles de loin, chacun avec une règle simple et une récompense immédiate, **plus riches près du front d'Effacement et perdus quand leur zone s'efface**. C'est la version Vestiges de la liste de courses : on ne peut pas tout prendre, et la carte elle-même choisit ce qu'on perd.
