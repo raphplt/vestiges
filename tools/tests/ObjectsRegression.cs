@@ -40,6 +40,10 @@ public partial class ObjectsRegression : Node2D
             CheckCombatMilestones();
             CheckSurvivalMilestones();
             CheckRewardMilestones();
+            CheckImpactTriggers();
+            CheckTargetBonuses();
+            CheckKillTransmissions();
+            CheckFragility();
             GD.Print($"[ObjectsRegression] RESULT failures={_failures}");
             GetTree().Quit(_failures == 0 ? 0 : 1);
         }
@@ -60,7 +64,7 @@ public partial class ObjectsRegression : Node2D
             wellFormed &= data.MaxLevel == 50 && data.Effects.Count > 0 && !string.IsNullOrEmpty(data.Name);
             anySurvival |= data.Survival;
         }
-        Check(offered.Count == 14 && wellFormed && anySurvival, $"Catalogue : {offered.Count} objets proposés, niveau max 50, au moins un de survie");
+        Check(offered.Count == 18 && wellFormed && anySurvival, $"Catalogue : {offered.Count} objets proposés, niveau max 50, au moins un de survie");
         bool retired = true;
         foreach (string id in new[] { "flamme_interieure", "reflet_brise", "fragment_deternite" })
             retired &= PassiveSouvenirDataLoader.Get(id) != null && !offered.Exists(data => data.Id == id);
@@ -155,7 +159,7 @@ public partial class ObjectsRegression : Node2D
         List<FragmentOption> pool = (List<FragmentOption>)typeof(FragmentManager).GetMethod("BuildFragmentPool", Private).Invoke(fragments, null);
         int fresh = pool.FindAll(option => option.Type == "passive_new").Count;
         bool noRetired = !pool.Exists(option => option.Id is "flamme_interieure" or "reflet_brise");
-        Check(fresh == 14 && noRetired, $"Offre de niveau : {fresh} objets neufs possibles, aucun objet retiré");
+        Check(fresh == 18 && noRetired, $"Offre de niveau : {fresh} objets neufs possibles, aucun objet retiré");
 
         foreach (string id in new[] { "memoire_vive", "resonance", "portee_etendue", "oeil_critique", "ancrage", "regeneration" })
             _player.AddOrUpgradePassive(id);
@@ -427,7 +431,153 @@ public partial class ObjectsRegression : Node2D
         foreach (PassiveSouvenirData data in PassiveSouvenirDataLoader.GetAll())
             foreach (ObjectMilestoneData milestone in data.Milestones)
                 allCoded &= ObjectMilestoneEffects.IsImplemented(milestone.Effect);
-        Check(allCoded, "Les paliers des 14 objets proposés sont tous codés");
+        Check(allCoded, "Les paliers des 18 objets proposés sont tous codés");
+    }
+
+    private static readonly FieldInfo IgniteTimer = typeof(Enemy).GetField("_igniteTimer", Private);
+    private static readonly FieldInfo IgniteDps = typeof(Enemy).GetField("_igniteDps", Private);
+    private static readonly FieldInfo SlowTimer = typeof(Enemy).GetField("_slowTimer", Private);
+    private static readonly FieldInfo SlowFactor = typeof(Enemy).GetField("_slowFactor", Private);
+
+    private void ClearStatuses(Enemy enemy)
+    {
+        IgniteTimer.SetValue(enemy, 0f);
+        SlowTimer.SetValue(enemy, 0f);
+        SlowFactor.SetValue(enemy, 1f);
+    }
+
+    /// <summary>Part des impacts d'une arme qui enflamment, sur <paramref name="trials"/> coups directs.</summary>
+    private float BurnShare(Enemy enemy, WeaponInstance weapon, int trials, DamageKind kind = DamageKind.DirectWeapon)
+    {
+        int burns = 0;
+        for (int i = 0; i < trials; i++)
+        {
+            ClearStatuses(enemy);
+            _player.OnProjectileHit(enemy, 10f, false, weapon, _player.BeginAttack(weapon, 10f, kind));
+            burns += enemy.IsBurning ? 1 : 0;
+        }
+        return burns / (float)trials;
+    }
+
+    private void CheckImpactTriggers()
+    {
+        Setup();
+        Raise("allumette_humide", 50);
+        _player.ObjectTriggers.Rng.Seed = 11;
+        _player.AddWeapon(WeaponDataLoader.Get("heavy_hammer"));
+        _player.AddWeapon(WeaponDataLoader.Get("sling"));
+        WeaponInstance hammer = _player.WeaponSlots[1];
+        WeaponInstance sling = _player.WeaponSlots[2];
+        Enemy enemy = SpawnEnemy();
+        float heavy = BurnShare(enemy, hammer, 2000);
+        float light = BurnShare(enemy, sling, 2000);
+        float passive = BurnShare(enemy, hammer, 300, DamageKind.Passive);
+        Check(Near(_player.ObjectTriggers.BurnChance, 0.26f) && heavy > 0.22f && heavy < 0.30f && light > 0.09f && light < 0.15f && passive == 0f,
+            $"Allumette humide niveau 50 : 26 % d'enflammer ; Marteau (coefficient 1) {heavy:P0}, Fronde (0,45) {light:P0}, effet déclenché 0 %");
+
+        ClearStatuses(enemy);
+        while (!enemy.IsBurning)
+            _player.OnProjectileHit(enemy, 10f, false, hammer, _player.BeginAttack(hammer, 10f));
+        float hammerHit = (float)typeof(Player).GetMethod("ComputeBaseAttackDamage", Private, new[] { typeof(WeaponInstance) }).Invoke(_player, new object[] { hammer });
+        Check(Near((float)IgniteDps.GetValue(enemy), hammerHit * 0.25f) && Near((float)IgniteTimer.GetValue(enemy), 3f),
+            $"Brûlure : 25 % du coup de base de l'arme par seconde ({hammerHit * 0.25f:0.0}), pendant 3 s");
+        enemy.QueueFree();
+
+        Setup();
+        Raise("glacon", 25);
+        _player.ObjectTriggers.Rng.Seed = 5;
+        _player.AddWeapon(WeaponDataLoader.Get("heavy_hammer"));
+        hammer = _player.WeaponSlots[1];
+        enemy = SpawnEnemy();
+        ClearStatuses(enemy);
+        while (!enemy.IsSlowed)
+            _player.OnProjectileHit(enemy, 1f, false, hammer, _player.BeginAttack(hammer, 1f));
+        bool chilled = Near((float)SlowFactor.GetValue(enemy), 0.6f) && Near((float)SlowTimer.GetValue(enemy), 1.5f);
+        FieldInfo freeze = typeof(Enemy).GetField("_freezeTimer", Private);
+        while ((float)freeze.GetValue(enemy) <= 0f)
+            _player.OnProjectileHit(enemy, 1f, false, hammer, _player.BeginAttack(hammer, 1f));
+        Check(chilled && Near((float)freeze.GetValue(enemy), 0.5f) && Near((float)SlowFactor.GetValue(enemy), 0.6f),
+            "Glaçon : ralentit de 40 % pendant 1,5 s ; au palier 25, un ennemi ralenti deux fois est figé 0,5 s, sans toucher au ralentissement");
+        enemy.QueueFree();
+    }
+
+    private void CheckTargetBonuses()
+    {
+        Setup();
+        Raise("thermometre", 1);
+        Raise("epingle_a_nourrice", 1);
+        Enemy enemy = SpawnEnemy();
+        float plain = _player.ResolveHitDamage(enemy, 10f, false);
+        enemy.ApplyIgnite(1f, 5f);
+        float burning = _player.ResolveHitDamage(enemy, 10f, false);
+        enemy.ApplySlow(0.5f, 5f);
+        float both = _player.ResolveHitDamage(enemy, 10f, false);
+        Check(Near(plain, 10f) && Near(burning, 11.08f) && Near(both, 12.16f),
+            "Thermomètre et Épingle à nourrice niveau 1 : +10,8 % contre une cible brûlée, autant contre une cible ralentie");
+
+        Raise("allumette_humide", 1);
+        _player.AddOrUpgradePassive("thermometre", 24);
+        _player.ObjectTriggers.Rng.Seed = 2;
+        _player.AddWeapon(WeaponDataLoader.Get("heavy_hammer"));
+        WeaponInstance hammer = _player.WeaponSlots[1];
+        ClearStatuses(enemy);
+        while (!enemy.IsBurning)
+            _player.OnProjectileHit(enemy, 1f, false, hammer, _player.BeginAttack(hammer, 1f));
+        Check(Near((float)SlowFactor.GetValue(enemy), 0.85f), "Thermomètre palier 25 : un ennemi enflammé est aussi ralenti de 15 %");
+        enemy.QueueFree();
+    }
+
+    private void CheckKillTransmissions()
+    {
+        Setup();
+        // Loin des ennemis des contrôles précédents, encore dans l'arbre jusqu'à la fin de la frame.
+        Enemy victim = SpawnEnemy();
+        victim.Position = new Vector2(3000f, 3000f);
+        Enemy neighbour = SpawnEnemy();
+        neighbour.Position = victim.Position + new Vector2(40f, 0f);
+        Enemy slowedNeighbour = SpawnEnemy();
+        slowedNeighbour.Position = victim.Position + new Vector2(0f, 30f);
+        typeof(GroupCache).GetField("_enemiesFrame", Private).SetValue(GetNode<GroupCache>("/root/GroupCache"), ulong.MaxValue);
+        Raise("allumette_humide", 25);
+        Raise("epingle_a_nourrice", 25);
+        _player.AddWeapon(WeaponDataLoader.Get("heavy_hammer"));
+        WeaponInstance hammer = _player.WeaponSlots[1];
+        AttackContext attack = _player.BeginAttack(hammer, 1f);
+        victim.ApplyIgnite(3f, 2f, attack);
+        victim.ApplySlow(0.5f, 2f, attack);
+        slowedNeighbour.ApplySlow(0.5f, 1f, attack);
+        victim.TakeDamage(100000f, source: attack);
+        Check(neighbour.IsBurning && Near((float)IgniteDps.GetValue(neighbour), 3f),
+            "Allumette humide palier 25 : la Brûlure d'un ennemi tué passe à son plus proche voisin");
+        bool extended = Near((float)SlowTimer.GetValue(slowedNeighbour), 2f);
+        for (int i = 0; i < 5; i++)
+            slowedNeighbour.ExtendSlow(1f, 4f);
+        Check(extended && Near((float)SlowTimer.GetValue(slowedNeighbour), 4f),
+            "Épingle à nourrice palier 25 : un ennemi ralenti tué prolonge de 1 s le ralentissement de ses voisins, 4 s restantes au plus");
+        foreach (Enemy enemy in new[] { victim, neighbour, slowedNeighbour })
+            enemy.QueueFree();
+    }
+
+    private void CheckFragility()
+    {
+        Setup();
+        Enemy control = SpawnEnemy();
+        Enemy fragile = SpawnEnemy();
+        float before = Hp(control);
+        control.TakeDamage(10f);
+        float plain = before - Hp(control);
+        fragile.ApplyFragile(0.2f, 2f);
+        fragile.ApplyFragile(0.1f, 1f);
+        before = Hp(fragile);
+        fragile.TakeDamage(10f);
+        bool stronger = Near(before - Hp(fragile), plain * 1.2f);
+        typeof(Enemy).GetMethod("ProcessFragility", Private).Invoke(fragile, new object[] { 2.1f });
+        before = Hp(fragile);
+        fragile.TakeDamage(10f);
+        Check(stronger && Near(before - Hp(fragile), plain),
+            "Fragilité : +20 % de dégâts subis, la plus forte intensité garde la main, puis expire");
+        control.QueueFree();
+        fragile.QueueFree();
     }
 
     private static float Hp(Enemy enemy) => (float)typeof(Enemy).GetField("_currentHp", Private).GetValue(enemy);

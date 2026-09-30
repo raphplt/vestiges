@@ -120,6 +120,19 @@ public partial class Enemy : CharacterBody2D
 	// Disorientation (mouvement aléatoire)
 	private float _disorientTimer;
 
+	private const float BurnEmberInterval = 0.3f;
+	private const float BurnEmberHeight = 12f;
+	private float _burnEmberTimer;
+
+	// Gel (Glaçon, palier 25) : immobile, à part du ralentissement pour ne pas en prendre la durée.
+	private float _freezeTimer;
+
+	// Fragilité (plan 21 §7) : dégâts subis augmentés tant qu'elle dure.
+	private float _fragileBonus;
+	private float _fragileTimer;
+	private float _fragileDuration;
+	private AttackContext _fragileSource;
+
 	// Durée posée par la dernière application de chaque statut : ce qu'un renouvellement reprend (Pince à linge).
 	private float _igniteDuration;
 	private float _bleedDuration;
@@ -236,8 +249,9 @@ public partial class Enemy : CharacterBody2D
 		_playerProximityRange = PlayerProximityRange;
 		_spawnSpeedMultiplier = 1f;
 		_spawnAggressionMultiplier = 1f;
-		_igniteSource = _bleedSource = _slowSource = _disorientSource = default;
+		_igniteSource = _bleedSource = _slowSource = _disorientSource = _fragileSource = default;
 		_slowOrigin = _disorientOrigin = ControlOrigin.Unknown;
+		_fragileBonus = _fragileTimer = _freezeTimer = 0f;
 		_nativeSlow = _nativeDisorientation = default;
 		_propagatedDisorientationRemaining = 0f;
 		_igniteDps = 0f;
@@ -467,8 +481,9 @@ public partial class Enemy : CharacterBody2D
 		_tier = "normal";
 		_behavior = "default";
 		_currentHp = 0;
-		_igniteSource = _bleedSource = _slowSource = _disorientSource = default;
+		_igniteSource = _bleedSource = _slowSource = _disorientSource = _fragileSource = default;
 		_slowOrigin = _disorientOrigin = ControlOrigin.Unknown;
+		_fragileBonus = _fragileTimer = _freezeTimer = 0f;
 		_nativeSlow = _nativeDisorientation = default;
 		_propagatedDisorientationRemaining = 0f;
 		_igniteDps = 0f;
@@ -546,6 +561,7 @@ public partial class Enemy : CharacterBody2D
 		if (_isDying) return;
 		ProcessSlowDecay(dt);
 		ProcessDisorient(dt, fullProcessing);
+		ProcessFragility(dt);
 		float regen = _mods.TickRegen(dt, _maxHp);
 		if (regen > 0f)
 			_currentHp = Mathf.Min(_currentHp + regen, _maxHp);
@@ -566,7 +582,7 @@ public partial class Enemy : CharacterBody2D
 				return;
 			if (lostTrack)
 			{
-				GlobalPosition += _tracking.WanderDirection * _speed * _tracking.WanderSpeedFactor * _slowFactor * dt;
+				GlobalPosition += _tracking.WanderDirection * _speed * _tracking.WanderSpeedFactor * MoveFactor * dt;
 				return;
 			}
 
@@ -574,11 +590,11 @@ public partial class Enemy : CharacterBody2D
 			if (_mods.IsTraveling)
 			{
 				_mods.TickTravel(dt);
-				GlobalPosition += _mods.TravelDirection * _speed * _mods.TravelSpeedMultiplier * _slowFactor * dt;
+				GlobalPosition += _mods.TravelDirection * _speed * _mods.TravelSpeedMultiplier * MoveFactor * dt;
 				return;
 			}
 			Vector2 direction = (_player.GlobalPosition - GlobalPosition).Normalized();
-			GlobalPosition += direction * _speed * _slowFactor * dt;
+			GlobalPosition += direction * _speed * MoveFactor * dt;
 			return;
 		}
 
@@ -586,7 +602,7 @@ public partial class Enemy : CharacterBody2D
 
 		if (lostTrack)
 		{
-			Velocity = _tracking.WanderDirection * _speed * _tracking.WanderSpeedFactor * _slowFactor;
+			Velocity = _tracking.WanderDirection * _speed * _tracking.WanderSpeedFactor * MoveFactor;
 			UpdateSpriteAnimation(dt);
 			MoveWithKnockback(dt);
 			return;
@@ -716,7 +732,7 @@ public partial class Enemy : CharacterBody2D
 	private void ProcessTravel(float distToPlayer, float delta)
 	{
 		_mods.TickTravel(delta);
-		Velocity = _mods.TravelDirection * _speed * _mods.TravelSpeedMultiplier * _slowFactor;
+		Velocity = _mods.TravelDirection * _speed * _mods.TravelSpeedMultiplier * MoveFactor;
 		_attackTimer -= delta;
 		if (distToPlayer < MeleeRange && _attackTimer <= 0f)
 		{
@@ -806,11 +822,11 @@ public partial class Enemy : CharacterBody2D
 	{
 		if (_disorientTimer > 0f)
 		{
-			Velocity = _disorientDirection * _speed * _slowFactor * 0.4f;
+			Velocity = _disorientDirection * _speed * MoveFactor * 0.4f;
 			return;
 		}
 		Vector2 direction = (_player.GlobalPosition - GlobalPosition).Normalized();
-		Velocity = direction * _speed * _slowFactor;
+		Velocity = direction * _speed * MoveFactor;
 
 		_attackTimer -= delta;
 		if (!_abilityReplacesAttack && distToPlayer < MeleeRange && _attackTimer <= 0f)
@@ -901,7 +917,8 @@ public partial class Enemy : CharacterBody2D
 		// Débordement : le premier impact direct d'un lancement ultérieur emporte la réserve de son arme.
 		if (carriedDamage <= 0f)
 			carriedDamage = OverflowLedger.Take(source);
-		DamageResult result = DamageResult.Resolve(Life, source, _currentHp, damage, carriedDamage, _mods.DamageTakenMultiplier);
+		float taken = _fragileTimer > 0f ? _mods.DamageTakenMultiplier * (1f + _fragileBonus) : _mods.DamageTakenMultiplier;
+		DamageResult result = DamageResult.Resolve(Life, source, _currentHp, damage, carriedDamage, taken);
 		damage = result.NativeDamage + result.CarriedDamage;
 		_mods.NotifyDamaged();
 		_currentHp -= damage;
@@ -932,21 +949,21 @@ public partial class Enemy : CharacterBody2D
 		return result;
 	}
 
-	/// <summary>Apply ignite DOT (damage over time). Refreshes if already ignited.</summary>
+	/// <summary>Brûlure (plan 21 §7) : une nouvelle application rafraîchit la durée et garde la plus forte intensité.</summary>
 	public void ApplyIgnite(float dps, float duration, AttackContext source = default)
 	{
 		_igniteSource = source.As(DamageKind.DamageOverTime);
-		_igniteDps = dps;
-		_igniteTimer = _igniteDuration = duration;
+		_igniteDps = _igniteTimer > 0f ? Mathf.Max(_igniteDps, dps) : dps;
+		_igniteTimer = _igniteDuration = Mathf.Max(_igniteTimer, duration);
 		_visual.Color = new Color(1f, 0.5f, 0.1f);
 	}
 
-	/// <summary>Apply bleed DOT (weapon on_hit_effect type "dot"). Refreshes if already bleeding.</summary>
+	/// <summary>Saignement (effet à l'impact des armes) : même règle de cumul que la Brûlure.</summary>
 	public void ApplyBleed(float dps, float duration, AttackContext source = default)
 	{
 		_bleedSource = source.As(DamageKind.DamageOverTime);
-		_bleedDps = dps;
-		_bleedTimer = _bleedDuration = duration;
+		_bleedDps = _bleedTimer > 0f ? Mathf.Max(_bleedDps, dps) : dps;
+		_bleedTimer = _bleedDuration = Mathf.Max(_bleedTimer, duration);
 		_visual.Color = new Color(0.8f, 0.15f, 0.15f);
 	}
 
@@ -1011,6 +1028,7 @@ public partial class Enemy : CharacterBody2D
 			return;
 
 		_igniteTimer -= delta;
+		EmitBurnEmbers(delta);
 		float igniteDamage = _igniteDps * delta;
 		DamageResult result = DamageResult.Resolve(Life, _igniteSource, _currentHp, igniteDamage, 0f);
 		_currentHp -= igniteDamage;
@@ -1057,6 +1075,7 @@ public partial class Enemy : CharacterBody2D
 
 	private void ProcessSlowDecay(float delta)
 	{
+		_freezeTimer = Mathf.Max(0f, _freezeTimer - delta);
 		_nativeSlow = _nativeSlow with { Remaining = Mathf.Max(0f, _nativeSlow.Remaining - delta) };
 		if (_slowTimer <= 0f)
 			return;
@@ -1093,6 +1112,72 @@ public partial class Enemy : CharacterBody2D
 				_visual.Color = _originalColor;
 			PublishStatusExpiry(StatusKind.Disorientation, 1f, _disorientDuration, _disorientSource, _disorientOrigin);
 		}
+	}
+
+	public bool IsBurning => _igniteTimer > 0f;
+	public bool IsSlowed => _slowTimer > 0f || _freezeTimer > 0f;
+	private float MoveFactor => _freezeTimer > 0f ? 0f : _slowFactor;
+
+	/// <summary>Fige la créature <paramref name="seconds"/> secondes, sans toucher au ralentissement en cours.</summary>
+	public void Freeze(float seconds) => _freezeTimer = Mathf.Max(_freezeTimer, seconds);
+
+	/// <summary>
+	/// Fragilité : les dégâts subis augmentent de <paramref name="bonus"/> (0,1 = +10 %). Même cumul que les autres
+	/// statuts : la durée repart, l'intensité la plus forte reste.
+	/// </summary>
+	public void ApplyFragile(float bonus, float duration, AttackContext source = default)
+	{
+		_fragileBonus = _fragileTimer > 0f ? Mathf.Max(_fragileBonus, bonus) : bonus;
+		_fragileTimer = _fragileDuration = Mathf.Max(_fragileTimer, duration);
+		_fragileSource = source;
+	}
+
+	/// <summary>
+	/// Prolonge un ralentissement en cours (Épingle à nourrice), sans dépasser <paramref name="maxRemaining"/> secondes
+	/// restantes ; sans effet sur une créature non ralentie.
+	/// </summary>
+	public void ExtendSlow(float seconds, float maxRemaining)
+	{
+		if (_slowTimer > 0f)
+			_slowTimer = Mathf.Max(_slowTimer, Mathf.Min(_slowTimer + seconds, maxRemaining));
+	}
+
+	private void ProcessFragility(float delta)
+	{
+		if (_fragileTimer <= 0f)
+			return;
+		_fragileTimer -= delta;
+		if (_fragileTimer > 0f)
+			return;
+		float bonus = _fragileBonus;
+		_fragileBonus = 0f;
+		_fragileTimer = 0f;
+		PublishStatusExpiry(StatusKind.Fragility, bonus, _fragileDuration, _fragileSource);
+	}
+
+	/// <summary>
+	/// Une créature qui brûle le montre : sur un sprite, la teinte du polygone de repli ne se voit pas. Deux braises
+	/// toutes les 0,3 s, par le pool d'étincelles.
+	/// </summary>
+	private void EmitBurnEmbers(float delta)
+	{
+		_burnEmberTimer -= delta;
+		if (_burnEmberTimer > 0f || CombatPools.Instance == null)
+			return;
+		_burnEmberTimer = BurnEmberInterval;
+		CombatPools.Instance.EmitSparks(GlobalPosition + new Vector2(0f, -BurnEmberHeight), new SparkBurst
+		{
+			Family = FxFamily.Fire,
+			Owner = FxOwner.Player,
+			Count = 2,
+			Direction = Vector2.Up,
+			Spread = 0.8f,
+			SpeedMin = 15f,
+			SpeedMax = 35f,
+			LifeMin = 0.25f,
+			LifeMax = 0.4f,
+			Size = 1,
+		});
 	}
 
 	/// <summary>Statut d'un joueur arrivé à son terme sur une créature vivante : publié pour ce qui le prolonge.</summary>
@@ -1143,7 +1228,8 @@ public partial class Enemy : CharacterBody2D
 			return;
 		_isDying = true;
 		// Capturer les contrôles avant leur nettoyage et avant les explosions de mort en cascade.
-		_eventBus.PublishEnemyKill(new EnemyKillResult(Life, _enemyId, GlobalPosition, damage, SlowControl, DisorientationControl));
+		_eventBus.PublishEnemyKill(new EnemyKillResult(Life, _enemyId, GlobalPosition, damage, SlowControl, DisorientationControl,
+			new ControlState(_igniteDps, Mathf.Max(0f, _igniteTimer), _igniteSource, ControlOrigin.Unknown)));
 		_killed = true;
 		_killedFrame = Engine.GetProcessFrames();
 		// Le corps se dissout : son contact avec le sol disparaît avec lui.

@@ -786,6 +786,11 @@ public partial class Player : CharacterBody2D
             }
         }
 
+        // Objets à l'impact : après l'effet de l'arme (un ralentissement de la Cloche compte pour le Glaçon), seulement
+        // sur un coup direct, et au rythme des impacts visibles pour un cône continu.
+        if (_objectTriggers != null && showImpact && context.Kind == DamageKind.DirectWeapon)
+            _objectTriggers.OnWeaponImpact(enemy, ComputeBaseAttackDamage(source), source, triggerCount, context);
+
         // --- Weapon knockback ---
         float knockback = source?.GetStat("knockback", 0f) ?? 0f;
         if (knockback > 0f)
@@ -951,7 +956,7 @@ public partial class Player : CharacterBody2D
             {
                 if (body is Enemy enemy && !enemy.IsDying && IsInstanceValid(enemy) && _orbitalWeapon != null)
                 {
-                    float damage = ComputeBaseAttackDamage(_orbitalWeapon);
+                    float damage = ResolveHitDamage(enemy, ComputeBaseAttackDamage(_orbitalWeapon), false);
                     AttackContext context = BeginAttack(_orbitalWeapon, damage);
                     enemy.TakeDamage(damage, source: context);
                     OnAttackHit(enemy, damage, false, _orbitalWeapon, context: context);
@@ -1063,8 +1068,9 @@ public partial class Player : CharacterBody2D
             if (groundFacing.Dot(dirToEnemy) < dotThreshold)
                 continue;
 
-            bool showImpact = enemy.TakeContinuousDamage(damage, delta, _coneContext);
-            OnAttackHit(enemy, damage, false, _coneWeapon, showImpact: showImpact, context: _coneContext);
+            float hitDamage = ResolveHitDamage(enemy, damage, false);
+            bool showImpact = enemy.TakeContinuousDamage(hitDamage, delta, _coneContext);
+            OnAttackHit(enemy, hitDamage, false, _coneWeapon, showImpact: showImpact, context: _coneContext);
         }
     }
 
@@ -1125,8 +1131,9 @@ public partial class Player : CharacterBody2D
 
             hitIds.Add(nextTarget.GetInstanceId());
             SpawnChainVisual(current.GlobalPosition, nextTarget.GlobalPosition);
-            nextTarget.TakeDamage(currentDamage, source: context);
-            OnAttackHit(nextTarget, currentDamage, false, _equippedWeapon, context: context);
+            float linkDamage = ResolveHitDamage(nextTarget, currentDamage, false);
+            nextTarget.TakeDamage(linkDamage, source: context);
+            OnAttackHit(nextTarget, linkDamage, false, _equippedWeapon, context: context);
             current = nextTarget;
         }
     }

@@ -40,6 +40,8 @@ public class WeaponData
 	public string Type { get; set; }
 	public string DamageType { get; set; }
 	public string AttackPattern { get; set; }
+	/// <summary>Poids d'un impact pour les objets à déclencheur (plan 21 §7) : moins pour une arme rapide ou multiple.</summary>
+	public float TriggerCoefficient { get; set; } = 1f;
 	public string AttackAudio { get; set; }
 	public string DefaultFor { get; set; }
 	public string Sprite { get; set; }
@@ -157,6 +159,7 @@ public static class WeaponDataLoader
             DamageType = dict.ContainsKey("damage_type") ? dict["damage_type"].AsString() : "physical",
             AttackAudio = dict.ContainsKey("attack_audio") ? dict["attack_audio"].AsString() : null,
             AttackPattern = dict.ContainsKey("attack_pattern") ? dict["attack_pattern"].AsString() : "linear",
+            TriggerCoefficient = dict.ContainsKey("trigger_coefficient") ? (float)dict["trigger_coefficient"].AsDouble() : 1f,
             DefaultFor = dict.ContainsKey("default_for") ? dict["default_for"].AsString() : null,
             Sprite = dict.ContainsKey("sprite") ? dict["sprite"].AsString() : null,
             HeldSprite = dict.ContainsKey("held_sprite") ? dict["held_sprite"].AsString() : null,

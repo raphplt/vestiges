@@ -10,6 +10,7 @@
     "type": "melee",
     "damage_type": "physical",
     "attack_pattern": "arc",
+    "trigger_coefficient": 0.8,
     "fx": {
       "style": "slash"
     },
@@ -38,6 +39,7 @@
     "type": "melee",
     "damage_type": "physical",
     "attack_pattern": "arc",
+    "trigger_coefficient": 1.0,
     "fx": {
       "style": "smash",
       "family": "verdigris"
@@ -67,6 +69,7 @@
     "type": "ranged",
     "damage_type": "physical",
     "attack_pattern": "linear",
+    "trigger_coefficient": 0.9,
     "fx": {
       "projectile": "arrow",
       "family": "glass"
@@ -96,6 +99,7 @@
     "type": "ranged",
     "damage_type": "physical",
     "attack_pattern": "burst",
+    "trigger_coefficient": 0.45,
     "fx": {
       "projectile": "stone",
       "family": "stone"
@@ -125,6 +129,7 @@
     "type": "melee",
     "damage_type": "physical",
     "attack_pattern": "linear",
+    "trigger_coefficient": 0.8,
     "fx": {
       "style": "thrust",
       "family": "hybrid"
@@ -152,6 +157,7 @@
     "type": "ranged",
     "damage_type": "physical",
     "attack_pattern": "linear",
+    "trigger_coefficient": 1.05,
     "fx": {
       "projectile": "bolt",
       "family": "brass"
@@ -181,6 +187,7 @@
     "type": "melee",
     "damage_type": "physical",
     "attack_pattern": "arc",
+    "trigger_coefficient": 0.9,
     "fx": {
       "style": "cleave",
       "family": "rust"
@@ -209,6 +216,7 @@
     "type": "melee",
     "damage_type": "physical",
     "attack_pattern": "circular",
+    "trigger_coefficient": 0.85,
     "fx": {
       "style": "whirl",
       "family": "rust"
@@ -237,6 +245,7 @@
     "type": "ranged",
     "damage_type": "physical",
     "attack_pattern": "burst",
+    "trigger_coefficient": 0.65,
     "fx": {
       "projectile": "axe",
       "family": "glass"
@@ -266,6 +275,7 @@
     "type": "melee",
     "damage_type": "physical",
     "attack_pattern": "arc",
+    "trigger_coefficient": 1.15,
     "fx": {
       "style": "smash",
       "family": "heavy"
@@ -299,6 +309,7 @@
     "type": "melee",
     "damage_type": "hybrid",
     "attack_pattern": "circular",
+    "trigger_coefficient": 1.0,
     "fx": {
       "style": "bell",
       "family": "brass"
@@ -332,6 +343,7 @@
     "type": "melee",
     "damage_type": "physical",
     "attack_pattern": "linear",
+    "trigger_coefficient": 0.65,
     "fx": {
       "style": "thrust",
       "family": "silk"
@@ -364,6 +376,7 @@
     "type": "ranged",
     "damage_type": "essence",
     "attack_pattern": "linear",
+    "trigger_coefficient": 1.3,
     "fx": {
       "projectile": "shard"
     },
@@ -391,6 +404,7 @@
     "type": "special",
     "damage_type": "essence",
     "attack_pattern": "orbital",
+    "trigger_coefficient": 0.35,
     "fx": {
       "projectile": "note",
       "family": "hybrid"
@@ -419,6 +433,7 @@
     "type": "melee",
     "damage_type": "hybrid",
     "attack_pattern": "chain",
+    "trigger_coefficient": 0.85,
     "fx": {
       "style": "chain",
       "family": "silk"
@@ -448,6 +463,7 @@
     "type": "ranged",
     "damage_type": "physical",
     "attack_pattern": "homing",
+    "trigger_coefficient": 1.0,
     "fx": {
       "projectile": "needle",
       "family": "brass"
@@ -476,6 +492,7 @@
     "type": "ranged",
     "damage_type": "essence",
     "attack_pattern": "burst",
+    "trigger_coefficient": 0.65,
     "fx": {
       "projectile": "shard",
       "family": "pale"
@@ -508,6 +525,7 @@
     "type": "ranged",
     "damage_type": "essence",
     "attack_pattern": "homing",
+    "trigger_coefficient": 1.1,
     "fx": {
       "projectile": "orb"
     },
@@ -538,6 +556,7 @@
     "type": "melee",
     "damage_type": "essence",
     "attack_pattern": "arc",
+    "trigger_coefficient": 0.6,
     "fx": {
       "style": "void",
       "family": "void"
@@ -571,6 +590,7 @@
     "type": "ranged",
     "damage_type": "essence",
     "attack_pattern": "linear",
+    "trigger_coefficient": 1.3,
     "fx": {
       "projectile": "orb",
       "family": "fire"
@@ -606,6 +626,7 @@
     "type": "melee",
     "damage_type": "essence",
     "attack_pattern": "arc",
+    "trigger_coefficient": 0.7,
     "fx": {
       "style": "slash"
     },
@@ -639,6 +660,7 @@
     "type": "special",
     "damage_type": "essence",
     "attack_pattern": "homing",
+    "trigger_coefficient": 0.9,
     "fx": {
       "projectile": "orb"
     },
@@ -678,6 +700,7 @@
     "type": "ranged",
     "damage_type": "essence",
     "attack_pattern": "linear",
+    "trigger_coefficient": 0.3,
     "fx": {
       "style": "cone",
       "family": "verdigris"
@@ -714,6 +737,7 @@
     "type": "melee",
     "damage_type": "hybrid",
     "attack_pattern": "arc",
+    "trigger_coefficient": 1.4,
     "fx": {
       "style": "clock",
       "family": "silk"

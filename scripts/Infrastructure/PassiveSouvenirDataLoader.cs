@@ -14,6 +14,8 @@ public class PassiveSouvenirData
 	public string Stat;
 	public string ModifierType;
 	public List<PassiveEffectData> Effects = new();
+	/// <summary>Réglages propres à l'objet (durée d'une Brûlure, force d'un ralentissement…).</summary>
+	public Dictionary<string, float> Parameters = new();
 	/// <summary>Paliers de l'objet, par niveau croissant (plan 21 §4).</summary>
 	public List<ObjectMilestoneData> Milestones = new();
 	/// <summary>Passif de survie (PV, régénération, armure, bouclier) : garanti au tirage tant que le joueur n'en a aucun.</summary>
@@ -122,6 +124,12 @@ public static class PassiveSouvenirDataLoader
 				GD.PushError($"[PassiveSouvenirDataLoader] {data.Id} : {effect.Stat} s'annule avant le niveau {data.MaxLevel}");
 				return null;
 			}
+		}
+		if (dict.ContainsKey("params"))
+		{
+			Godot.Collections.Dictionary values = dict["params"].AsGodotDictionary();
+			foreach (Variant key in values.Keys)
+				data.Parameters[key.AsString()] = (float)values[key].AsDouble();
 		}
 		if (dict.ContainsKey("milestones") && !ParseMilestones(data, dict["milestones"].AsGodotArray()))
 			return null;

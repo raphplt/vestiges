@@ -24,6 +24,10 @@ public static class PerkIconResolver
             "xp_gain" => "assets/ui/icons/ui_icon_perk_xp_magnet.png",
             "attack_copies" => "assets/ui/icons/ui_icon_perk_echo.png",
             "status_duration" => "assets/ui/icons/ui_icon_perk_time_master.png",
+            "burn_chance" => "assets/ui/icons/ui_icon_perk_ignite.png",
+            "chill_chance" => "assets/ui/icons/ui_icon_perk_memory_anchor.png",
+            "burning_target_damage" => "assets/ui/icons/ui_icon_perk_torche_vivante.png",
+            "slowed_target_damage" => "assets/ui/icons/ui_icon_perk_piercing_shot.png",
             _ => "assets/ui/icons/ui_icon_perk_damage_up.png"
         };
     }

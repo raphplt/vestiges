@@ -307,3 +307,7 @@ STAT_DASH_RECHARGE,Recharge du dash,Dash recharge
 STAT_ATTACK_COPIES,Copies d'attaque,Attack copies
 STAT_COPY_DAMAGE,Dégâts des copies,Copy damage
 STAT_STATUS_DURATION,Durée,Duration
+STAT_BURN_CHANCE,Chance de Brûlure,Burn chance
+STAT_CHILL_CHANCE,Chance de ralentir,Chill chance
+STAT_BURNING_TARGET_DAMAGE,Dégâts contre les cibles brûlées,Damage to burning targets
+STAT_SLOWED_TARGET_DAMAGE,Dégâts contre les cibles ralenties,Damage to slowed targets

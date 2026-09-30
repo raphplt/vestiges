@@ -21,6 +21,7 @@ public partial class Player
     private float _copyDamageFactor;
     private float _statusDurationMultiplier = 1f;
     private ObjectMilestones _objectMilestones;
+    private ObjectTriggers _objectTriggers;
 
     public IReadOnlyList<ActivePassiveSouvenir> PassiveSlots => _passiveSlots;
     public int AttackCopies => _attackCopies;
@@ -30,6 +31,8 @@ public partial class Player
     public float StatusDurationMultiplier => _statusDurationMultiplier;
     /// <summary>Paliers d'objets atteints ; absent tant qu'aucun ne l'est.</summary>
     public ObjectMilestones ObjectMilestones => _objectMilestones;
+    /// <summary>Objets de déclencheur portés ; absent tant qu'aucun ne l'est.</summary>
+    public ObjectTriggers ObjectTriggers => _objectTriggers;
 
     /// <summary>Ajoute un objet au niveau 1, ou monte un objet possédé de <paramref name="levels"/> niveaux (plan 21 §4).</summary>
     public bool AddOrUpgradePassive(string passiveId, int levels = 1)
@@ -62,6 +65,8 @@ public partial class Player
 
         ActivePassiveSouvenir passive = new(data);
         _passiveSlots.Add(passive);
+        if (HasTriggerEffect(data))
+            EnsureObjectTriggers().Configure(data);
 
         ApplyPassiveEffects(data, 0, passive.Level);
 
@@ -107,7 +112,10 @@ public partial class Player
             float after = effect.ValueAt(toLevel);
             // Multiplicatif : on retire l'ancien facteur en appliquant le rapport ; additif : seulement l'écart.
             float change = effect.Multiplicative ? after / before : after - before;
-            ApplyPerkModifier(effect.Stat, change, effect.ModifierType);
+            if (ObjectTriggers.IsTriggerStat(effect.Stat))
+                EnsureObjectTriggers().Add(effect.Stat, change);
+            else
+                ApplyPerkModifier(effect.Stat, change, effect.ModifierType);
         }
     }
 
@@ -119,13 +127,18 @@ public partial class Player
         {
             if (milestone.Level <= fromLevel || !passive.Reached(milestone) || !ObjectMilestoneEffects.IsImplemented(milestone.Effect))
                 continue;
-            if (_objectMilestones == null)
+            if (ObjectTriggers.IsTriggerMilestone(milestone.Effect))
+                EnsureObjectTriggers().Activate(milestone);
+            else
             {
-                _objectMilestones = new ObjectMilestones { Name = "ObjectMilestones" };
-                _objectMilestones.Initialize(this);
-                AddChild(_objectMilestones);
+                if (_objectMilestones == null)
+                {
+                    _objectMilestones = new ObjectMilestones { Name = "ObjectMilestones" };
+                    _objectMilestones.Initialize(this);
+                    AddChild(_objectMilestones);
+                }
+                _objectMilestones.Activate(milestone);
             }
-            _objectMilestones.Activate(milestone);
             SpawnLootPopup(string.Format(Tr("OBJECT_MILESTONE_REACHED"), passive.Data.Name, milestone.Level), MilestoneColor, GlobalPosition, reached++);
             GD.Print($"[Player] Milestone reached: {passive.Data.Name} level {milestone.Level} ({milestone.Effect})");
         }
@@ -136,6 +149,24 @@ public partial class Player
 
     internal PlayerAttackFx AttackFx => _attackFx;
 
+    private static bool HasTriggerEffect(PassiveSouvenirData data)
+    {
+        foreach (PassiveEffectData effect in data.Effects)
+            if (ObjectTriggers.IsTriggerStat(effect.Stat))
+                return true;
+        return false;
+    }
+
+    private ObjectTriggers EnsureObjectTriggers()
+    {
+        if (_objectTriggers != null)
+            return _objectTriggers;
+        _objectTriggers = new ObjectTriggers { Name = "ObjectTriggers" };
+        _objectTriggers.Initialize(this);
+        AddChild(_objectTriggers);
+        return _objectTriggers;
+    }
+
     /// <summary>Ressort de sommier : l'arme repart, si elle est toujours portée ; cette attaque ne se compte pas.</summary>
     internal void RepeatAttack(WeaponInstance weapon)
     {
@@ -145,9 +176,15 @@ public partial class Player
         PerformDiscreteAttack(weapon.Type?.ToLower() ?? "ranged", weapon.AttackPattern?.ToLower() ?? "linear");
     }
 
-    /// <summary>Dégâts d'un coup d'arme au moment de toucher sa cible : Lunettes de lecture, palier 25.</summary>
-    internal float ResolveHitDamage(Enemy enemy, float damage, bool isCrit) =>
-        _objectMilestones?.CritAgainst(enemy, damage, isCrit) ?? damage;
+    /// <summary>
+    /// Dégâts d'un coup d'arme au moment de toucher sa cible : critique sur PV pleins (Lunettes de lecture, palier 25),
+    /// cible brûlée ou ralentie (Thermomètre, Épingle à nourrice).
+    /// </summary>
+    internal float ResolveHitDamage(Enemy enemy, float damage, bool isCrit)
+    {
+        float resolved = _objectMilestones?.CritAgainst(enemy, damage, isCrit) ?? damage;
+        return _objectTriggers?.AgainstTarget(enemy, resolved) ?? resolved;
+    }
 
     /// <summary>
     /// Rondelle de cuivre : chaque frappe de mêlée refrappera dans sa propre direction, avec sa part des dégâts

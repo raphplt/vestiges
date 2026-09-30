@@ -632,3 +632,41 @@ Application de la [référence](21-systeme-de-jeu.md) §4 (objets de déclencheu
   - Le contrat « coup fatal » ne teste plus le second souffle, retiré avec les Dons. La survie au coup fatal reviendra avec le Médaillon ouvrant.
 
 Relecture par sous-agent. Corrigé : Essence de repli passée en données ; niveaux annoncés bornés au maximum, y compris quand deux tirages visent le même objet ; drapeau de ricochet et alias devenus inutiles supprimés.
+
+## 25. Compte rendu G2b, étape 2 : socle des déclencheurs et quatre objets d'impact (30 septembre)
+
+- **Socle :** un composant `ObjectTriggers`, enfant du joueur, porte les objets de déclencheur. Leurs effets de niveau passent par lui, leurs réglages sont en données (`params`).
+  - Seul un coup direct d'arme déclenche. Le cône continu déclenche au rythme de ses impacts visibles.
+  - La chance est multipliée par le coefficient de l'arme (`trigger_coefficient`), et combinée sur les frappes qui touchent ensemble. Au-delà de 100 %, l'excédent renforce l'effet.
+- **Coefficient par arme :** de 0,3 (Dernière émission) et 0,35 (Boîte à musique) à 1,4 (Aiguille de l'Horloge). Valeurs de départ tirées de la cadence, du nombre de coups et de la zone ; réglage en jeu.
+- **Fragilité :** dégâts subis augmentés, même règle de cumul que les autres statuts. La Pince à linge la renouvelle. Aucun objet ne la pose encore : Loupe et Chewing-gum viendront en G2c.
+- **Règle de cumul (§7) :** Brûlure et Saignement gardent désormais la plus forte intensité et la plus longue durée restante.
+- **Objets et paliers :**
+
+| Objet | Niveau n | Palier 25 |
+|---|---|---|
+| Allumette humide | 6 % + 0,4 % × n d'enflammer : 25 % du coup de base de l'arme par seconde, 3 s × Durée | La Brûlure d'un ennemi tué passe à son plus proche voisin (120 px) |
+| Glaçon dans un mouchoir | 6 % + 0,4 % × n de ralentir de 40 % pendant 1,5 s × Durée. Le ralentissement compte comme celui de l'arme (Propagation, Pince à linge) | Un ennemi déjà ralenti est figé 0,5 s, sans toucher à son ralentissement |
+| Thermomètre | +10 % + 0,8 % × n contre une cible brûlée | Tes Brûlures ralentissent aussi de 15 %. Texte précisé, la référence disait « les ennemis brûlés » |
+| Épingle à nourrice | +10 % + 0,8 % × n contre une cible ralentie ou figée | Un ennemi ralenti tué prolonge de 1 s le ralentissement de ses voisins (120 px), 4 s restantes au plus |
+
+- **Retour visuel :** étincelles à l'allumage, au ralentissement et à la transmission. Une créature qui brûle lâche deux braises toutes les 0,3 s : sur un sprite, la teinte du polygone de repli ne se voyait pas.
+- **Dégâts contre une cible :** orbites, cône et maillons de chaîne passent aussi par le calcul à l'impact (Lunettes, Thermomètre, Épingle).
+
+**Vérifications :**
+- `dotnet build` : zéro avertissement.
+- `tools/test_objects.sh` : 47 assertions, zéro échec, dont :
+  - Allumette au niveau 50 : 26 % avec le Marteau (coefficient 1), 12 % avec la Fronde (0,45), 0 % sur un effet déclenché ;
+  - dégâts et durée de la Brûlure, gel de 0,5 s sans toucher au ralentissement, bonus contre cible brûlée et ralentie ;
+  - transmission de la Brûlure et prolongation plafonnée des ralentissements à l'élimination ;
+  - Fragilité (+20 %, intensité la plus forte, expiration).
+- Effets et contrats des Réminiscences, acquisition, armes, capacités ennemies, déplacements : zéro échec. Smoke vert.
+- Capture `--capture-weapons --objects allumette_humide:50,thermometre:25` (Marteau), regardée : frappes et chiffres normaux, mais aucune cible ne brûle dans les six images, faute de chance. Les braises ne sont donc pas vérifiées à l'écran ; à regarder en vraie run.
+
+Relecture par sous-agent. Corrigé :
+- la Brûlure d'un cône continu partait des dégâts d'une frame, donc environ 60 fois trop faible : elle part maintenant du coup de base de l'arme ;
+- le gel prenait la durée du ralentissement en cours : c'est désormais un état à part ;
+- la prolongation de l'Épingle est plafonnée en données ;
+- le palier du Thermomètre vaut aussi pour une Brûlure transmise.
+
+Laissé tel quel : le crédit d'un DOT va à la dernière application, même plus faible.

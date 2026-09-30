@@ -46,9 +46,9 @@ public readonly record struct ControlState(float Strength, float Remaining, Atta
 }
 
 public readonly record struct EnemyKillResult(EnemyLife Target, string EnemyId, Vector2 Position,
-    DamageResult Damage, ControlState Slow, ControlState Disorientation);
+    DamageResult Damage, ControlState Slow, ControlState Disorientation, ControlState Burn = default);
 
-public enum StatusKind { Burn, Bleed, Slow, Disorientation }
+public enum StatusKind { Burn, Bleed, Slow, Disorientation, Fragility }
 
 /// <summary>
 /// Statut infligé par un joueur qui vient d'expirer sur une créature vivante. Strength est l'intensité (dégâts par

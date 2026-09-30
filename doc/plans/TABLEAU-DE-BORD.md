@@ -8,7 +8,7 @@ Le [registre](DECISIONS.md) garde les mots de Raphaël. Les plans gardent le dé
 
 | Chantier | Plan | Prochaine action |
 |---|---|---|
-| Système de jeu | [21, référence unique](21-systeme-de-jeu.md) | G1, G2a et G2a-2 livrés (14 objets de propriété avec leurs paliers). Anciens Dons retirés (G2b étape 1). Agent : G2b étape 2 (Fragilité, coefficient, quatre objets d'impact) |
+| Système de jeu | [21, référence unique](21-systeme-de-jeu.md) | G1, G2a et G2a-2 livrés (14 objets de propriété avec leurs paliers). Anciens Dons retirés, Fragilité, coefficient et quatre objets d'impact en jeu (G2b étapes 1 et 2). Agent : G2b étape 3 (Pétard, Dé à coudre, Semelle, Pansements) |
 | Carte à explorer | [22](22-carte-a-explorer.md) | Direction validée. Agent : lot C0 (mesure de départ), puis C1 |
 
 ## 2. Décisions attendues de Raphaël

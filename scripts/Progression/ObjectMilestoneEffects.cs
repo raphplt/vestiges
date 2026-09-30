@@ -25,6 +25,10 @@ public static class ObjectMilestoneEffects
         ObjectMilestones.OrbHealEffect,
         ObjectMilestones.LevelEssenceEffect,
         ObjectMilestones.LevelRerollEffect,
+        ObjectTriggers.BurnSpreadEffect,
+        ObjectTriggers.DoubleSlowFreezeEffect,
+        ObjectTriggers.BurnSlowsEffect,
+        ObjectTriggers.SlowKillExtendsEffect,
     };
 
     public static bool IsImplemented(string effect) => Implemented.Contains(effect);

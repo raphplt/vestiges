@@ -351,6 +351,10 @@ public partial class ObjectMilestones : Node
                 target.ApplySlow(expiry.Strength, expiry.Duration, expiry.Source, RenewedOrigin(expiry));
                 family = FxFamily.Hybrid;
                 break;
+            case StatusKind.Fragility:
+                target.ApplyFragile(expiry.Strength, expiry.Duration, expiry.Source);
+                family = FxFamily.Void;
+                break;
             default:
                 target.ApplyDisorient(expiry.Duration, expiry.Source, RenewedOrigin(expiry));
                 family = FxFamily.Brass;

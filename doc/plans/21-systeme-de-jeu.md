@@ -130,7 +130,7 @@ Les ID des anciens passifs sont conservés pour ceux qui migrent. `flamme_interi
 | Thermos | PV au-dessus de 90 % | Dégâts +5 % + 0,5 % × n | Seuil abaissé à 75 % | V |
 | Médaille cabossée | PV sous 35 % | Dégâts +8 % + 0,6 % × n | Et vitesse +15 % | Q |
 | Boîte de pansements | Niveau gagné | Soigne 1 % + 0,06 % × n des PV max | Une cascade de 3 niveaux ou plus donne 1 s d'invulnérabilité | V |
-| Thermomètre | Cible brûlée | Dégâts +10 % + 0,8 % × n contre elle | Les ennemis brûlés sont aussi ralentis de 15 % | D |
+| Thermomètre | Cible brûlée | Dégâts +10 % + 0,8 % × n contre elle | Tes Brûlures ralentissent aussi de 15 % | D |
 | Épingle à nourrice | Cible ralentie | Dégâts +10 % + 0,8 % × n contre elle | Un ennemi ralenti tué prolonge de 1 s le ralentissement de ses voisins | D |
 | Porte-monnaie usé | Essence gardée | +1 % de dégâts par tranche de 10 Essence, plafond 10 % + 1 % × n | 20 % de l'Essence dépensée est rendue | Q |
 | Presse-papier en verre | En zone oubliée | Dégâts +5 % + 0,5 % × n | Les malus de vitesse des zones oubliées ne s'appliquent plus | M |
@@ -239,7 +239,9 @@ Quand une carte ne peut plus rien offrir (4 armes ascensionnées, 6 objets au ni
 | Objets : 6 emplacements, 50 niveaux par formule, effets multiples, rareté qui donne 1 à 5 niveaux | **En jeu** | G2a |
 | 14 objets de propriété, dont Papier carbone (copies à dégâts réduits) et Pince à linge (Durée) | **En jeu** | G2a, G2a-2 |
 | Paliers des 14 objets de propriété (niveau 25, et 50 pour Papier carbone) | **En jeu** | G2a-2 |
-| Objets de déclencheur, statut Fragilité, coefficients | À faire | **G2b, suivant** |
+| Statut Fragilité, coefficient de déclenchement par arme ; Allumette humide, Glaçon, Thermomètre, Épingle à nourrice | **En jeu** | G2b, étape 2 |
+| Pétard mouillé, Dé à coudre, Semelle usée, Boîte de pansements | À faire | **G2b, étape 3, suivant** |
+| Onze autres objets de déclencheur | À faire | G2c |
 | Reliquaire, objets « monde », remplacement | À faire | Plan 22, C3 |
 | Propriétés nommées sur les cartes d'armes | À faire | G0 |
 | Ascensions d'armes | À faire | G3 |

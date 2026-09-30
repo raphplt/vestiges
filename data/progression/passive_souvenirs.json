@@ -1,6 +1,6 @@
 [
     {
-        "_comment": "Objets du joueur (plan 21 §4, référence unique) : 6 emplacements, niveau 1 à 50. Chaque effet vaut, au niveau n, 1 + base + per_level × n (multiplicative) ou base + per_level × n (additive) ; base vaut 0 si elle est absente. milestones : paliers de l'objet (niveau, effet, texte montré au joueur, paramètres) ; un palier dont l'effet n'est pas codé n'est ni annoncé ni activé (ObjectMilestoneEffects). survival : objet de survie, garanti dans une offre tant que le joueur n'en a aucun. enabled false : identifiant gardé pour les sauvegardes, retiré des offres. Le nom du fichier et les identifiants viennent des anciens passifs.",
+        "_comment": "Objets du joueur (plan 21 §4, référence unique) : 6 emplacements, niveau 1 à 50. Chaque effet vaut, au niveau n, 1 + base + per_level × n (multiplicative) ou base + per_level × n (additive) ; base vaut 0 si elle est absente. params : réglages propres à l'objet (objets de déclencheur). milestones : paliers de l'objet (niveau, effet, texte montré au joueur, paramètres) ; un palier dont l'effet n'est pas codé n'est ni annoncé ni activé (ObjectMilestoneEffects). survival : objet de survie, garanti dans une offre tant que le joueur n'en a aucun. enabled false : identifiant gardé pour les sauvegardes, retiré des offres. Le nom du fichier et les identifiants viennent des anciens passifs.",
         "id": "memoire_vive",
         "name": "Ressort de sommier",
         "description": "Tes armes attaquent plus vite.",
@@ -422,6 +422,132 @@
                 "text": "Un statut qui expire a 25 % de chance de se renouveler",
                 "params": {
                     "chance": 0.25
+                }
+            }
+        ]
+    },
+    {
+        "id": "allumette_humide",
+        "name": "Allumette humide",
+        "description": "Tes coups d'arme peuvent enflammer : la cible brûle quelques secondes.",
+        "icon_color": [
+            1.0,
+            0.55,
+            0.2
+        ],
+        "max_level": 50,
+        "params": {
+            "burn_damage_ratio": 0.25,
+            "burn_seconds": 3
+        },
+        "effects": [
+            {
+                "stat": "burn_chance",
+                "modifier_type": "additive",
+                "base": 0.06,
+                "per_level": 0.004
+            }
+        ],
+        "milestones": [
+            {
+                "level": 25,
+                "effect": "burn_spread",
+                "text": "La Brûlure passe au voisin quand la cible meurt",
+                "params": {
+                    "radius": 120
+                }
+            }
+        ]
+    },
+    {
+        "id": "glacon",
+        "name": "Glaçon dans un mouchoir",
+        "description": "Tes coups d'arme peuvent ralentir la cible.",
+        "icon_color": [
+            0.6,
+            0.85,
+            1.0
+        ],
+        "max_level": 50,
+        "params": {
+            "slow_factor": 0.6,
+            "slow_seconds": 1.5
+        },
+        "effects": [
+            {
+                "stat": "chill_chance",
+                "modifier_type": "additive",
+                "base": 0.06,
+                "per_level": 0.004
+            }
+        ],
+        "milestones": [
+            {
+                "level": 25,
+                "effect": "double_slow_freeze",
+                "text": "Un ennemi ralenti deux fois est figé 0,5 s",
+                "params": {
+                    "freeze_seconds": 0.5
+                }
+            }
+        ]
+    },
+    {
+        "id": "thermometre",
+        "name": "Thermomètre",
+        "description": "Tu frappes plus fort les ennemis qui brûlent.",
+        "icon_color": [
+            0.95,
+            0.35,
+            0.3
+        ],
+        "max_level": 50,
+        "effects": [
+            {
+                "stat": "burning_target_damage",
+                "modifier_type": "additive",
+                "base": 0.1,
+                "per_level": 0.008
+            }
+        ],
+        "milestones": [
+            {
+                "level": 25,
+                "effect": "burn_slows",
+                "text": "Tes Brûlures ralentissent aussi de 15 %",
+                "params": {
+                    "slow_factor": 0.85
+                }
+            }
+        ]
+    },
+    {
+        "id": "epingle_a_nourrice",
+        "name": "Épingle à nourrice",
+        "description": "Tu frappes plus fort les ennemis ralentis.",
+        "icon_color": [
+            0.75,
+            0.8,
+            0.85
+        ],
+        "max_level": 50,
+        "effects": [
+            {
+                "stat": "slowed_target_damage",
+                "modifier_type": "additive",
+                "base": 0.1,
+                "per_level": 0.008
+            }
+        ],
+        "milestones": [
+            {
+                "level": 25,
+                "effect": "slow_kill_extends",
+                "text": "Un ennemi ralenti tué prolonge de 1 s le ralentissement de ses voisins",
+                "params": {
+                    "radius": 120,
+                    "seconds": 1,
+                    "max_remaining_seconds": 4
                 }
             }
         ]

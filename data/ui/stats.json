@@ -30,6 +30,10 @@
         { "id": "dash_recharge", "name_key": "STAT_DASH_RECHARGE", "display": "percent" },
         { "id": "attack_copies", "name_key": "STAT_ATTACK_COPIES", "display": "count" },
         { "id": "copy_damage", "name_key": "STAT_COPY_DAMAGE", "display": "share" },
-        { "id": "status_duration", "name_key": "STAT_STATUS_DURATION", "display": "percent" }
+        { "id": "status_duration", "name_key": "STAT_STATUS_DURATION", "display": "percent" },
+        { "id": "burn_chance", "name_key": "STAT_BURN_CHANCE", "display": "fraction" },
+        { "id": "chill_chance", "name_key": "STAT_CHILL_CHANCE", "display": "fraction" },
+        { "id": "burning_target_damage", "name_key": "STAT_BURNING_TARGET_DAMAGE", "display": "fraction" },
+        { "id": "slowed_target_damage", "name_key": "STAT_SLOWED_TARGET_DAMAGE", "display": "fraction" }
     ]
 }
