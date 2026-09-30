@@ -1,5 +1,5 @@
 {
-    "_comment": "Catalogue des stats affichées (plan 17 §4.2, lots 1B et 1C) : clé de traduction, et comment les montrer. property : propriété de la grammaire commune (plan 21 §7 : force, frequency, count, size, range, duration, precision, momentum), nommée sur les cartes ; absente pour la survie et la collecte. value = valeur avant → après (dégâts et cadence à une décimale) ; count = entier ; percent = seulement le gain en pourcentage (portée, zone, vitesses : leurs chiffres ne parlent pas au joueur) ; fraction = une part (0,05) montrée en pourcentage signé ; share = une part montrée en pourcentage, sans signe (dégâts des copies : 31,4 %).",
+    "_comment": "Catalogue des stats affichées (plan 17 §4.2, lots 1B et 1C) : clé de traduction, et comment les montrer. property : propriété de la grammaire commune (plan 21 §7 : force, frequency, count, size, range, duration, precision, momentum), nommée sur les cartes ; absente pour la survie et la collecte. value = valeur avant → après (dégâts et cadence à une décimale) ; count = compte, en fraction s'il le faut (1,5 projectile : la décimale est une chance par attaque, plan 23) ; percent = seulement le gain en pourcentage (portée, zone, vitesses : leurs chiffres ne parlent pas au joueur) ; fraction = une part (0,05) montrée en pourcentage signé ; share = une part montrée en pourcentage, sans signe (explosion du Pétard mouillé : 30 % du coup).",
     "stats": [
         { "id": "damage", "name_key": "STAT_DAMAGE", "display": "value", "property": "force" },
         { "id": "attack_speed", "name_key": "STAT_ATTACK_SPEED", "display": "value", "unit": "/s", "property": "frequency" },
@@ -28,8 +28,7 @@
         { "id": "crit_multiplier", "name_key": "STAT_CRIT_DAMAGE", "display": "fraction", "property": "precision" },
         { "id": "xp_gain", "name_key": "STAT_XP_GAIN", "display": "percent" },
         { "id": "dash_recharge", "name_key": "STAT_DASH_RECHARGE", "display": "percent", "property": "momentum" },
-        { "id": "attack_copies", "name_key": "STAT_ATTACK_COPIES", "display": "count", "property": "count" },
-        { "id": "copy_damage", "name_key": "STAT_COPY_DAMAGE", "display": "share", "property": "count" },
+        { "id": "projectile_bonus", "name_key": "STAT_PROJECTILE_BONUS", "display": "count", "property": "count" },
         { "id": "status_duration", "name_key": "STAT_STATUS_DURATION", "display": "percent", "property": "duration" },
         { "id": "burn_chance", "name_key": "STAT_BURN_CHANCE", "display": "fraction" },
         { "id": "chill_chance", "name_key": "STAT_CHILL_CHANCE", "display": "fraction" },

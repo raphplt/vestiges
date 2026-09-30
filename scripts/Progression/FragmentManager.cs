@@ -661,8 +661,8 @@ public class FragmentOption
     public UpgradeRarity Rarity { get; private init; }
     /// <summary>Gains d'une amélioration d'arme, tirés à l'offre.</summary>
     public IReadOnlyList<StatGain> WeaponGains { get; private init; } = System.Array.Empty<StatGain>();
-    /// <summary>Amélioration d'objet : niveaux gagnés, selon la rareté (plan 21 §4).</summary>
-    public int PassiveLevels { get; private init; } = 1;
+    /// <summary>Amélioration d'objet : un niveau, dont le gain multiplie le pas de l'objet selon la rareté (plan 23 R3).</summary>
+    public float PassiveGain { get; private init; } = 1f;
     /// <summary>Voie d'ascension proposée pour l'arme <see cref="Id"/>.</summary>
     public WeaponAscensionData Ascension { get; private init; }
 
@@ -684,10 +684,10 @@ public class FragmentOption
     public bool IsCarried { get; private init; }
 
     public FragmentOption AsCarried() =>
-        new(Id, Type, DisplayName, SortWeight) { Rarity = Rarity, WeaponGains = WeaponGains, PassiveLevels = PassiveLevels, IsCarried = true };
+        new(Id, Type, DisplayName, SortWeight) { Rarity = Rarity, WeaponGains = WeaponGains, PassiveGain = PassiveGain, IsCarried = true };
 
-    public FragmentOption WithPassiveUpgrade(UpgradeRarity rarity, int levels) =>
-        new(Id, Type, DisplayName, SortWeight) { Rarity = rarity, PassiveLevels = levels };
+    public FragmentOption WithPassiveUpgrade(UpgradeRarity rarity) =>
+        new(Id, Type, DisplayName, SortWeight) { Rarity = rarity, PassiveGain = rarity.PassiveGain };
 
     /// <summary>Donne le fragment au joueur ; faux si l'offre a vieilli (arme déjà là, emplacements pleins, maximum).</summary>
     public bool ApplyTo(Player player)
@@ -704,7 +704,7 @@ public class FragmentOption
             case "passive_new":
                 return player.AddOrUpgradePassive(Id);
             case "passive_upgrade":
-                return player.AddOrUpgradePassive(Id, PassiveLevels);
+                return player.AddOrUpgradePassive(Id, 1, PassiveGain);
             case PerkSpecializationOffers.OptionType:
                 return player.AcquireSpecialization(PerkSpecializationDataLoader.Get(Id));
             default:

@@ -1,11 +1,11 @@
 {
-	"_comment": "Raretés des améliorations du level-up (plan 17 lot 1B, décision 4.3 : la rareté vit sur les améliorations, pas sur l'arme). weight : poids de base du tirage. Arme : weapon_stats stats montables différentes, chacune à weapon_gain fois le pas ; milestones paliers (+1 à une stat entière) si l'arme en a, sinon fallback_stats stats au même gain. Objet : object_levels niveaux gagnés (plan 21 §4). passive_gain : multiple des bénédictions de Mémorial. Montée de rareté : chaque cran (Chance, oubli de la zone du joueur) donne bump_chance_per_step de monter d'une rareté.",
+	"_comment": "Raretés des améliorations du level-up (plan 17 lot 1B, décision 4.3 : la rareté vit sur les améliorations, pas sur l'arme). weight : poids de base du tirage. Arme : weapon_stats stats montables différentes, chacune à weapon_gain fois le pas ; milestones paliers (+1 à une stat entière) si l'arme en a, sinon fallback_stats stats au même gain. Objet : une carte donne un niveau, et passive_gain multiplie le pas de chaque effet (plan 23 R3) ; même multiple pour les bénédictions de Mémorial. Montée de rareté : chaque cran (Chance, oubli de la zone du joueur) donne bump_chance_per_step de monter d'une rareté.",
 	"rarities": [
-		{ "id": "common", "weight": 60, "weapon_stats": 1, "weapon_gain": 1.0, "milestones": 0, "passive_gain": 1.0, "object_levels": 1 },
-		{ "id": "uncommon", "weight": 25, "weapon_stats": 1, "weapon_gain": 1.5, "milestones": 0, "passive_gain": 1.5, "object_levels": 2 },
-		{ "id": "rare", "weight": 11, "weapon_stats": 2, "weapon_gain": 1.25, "milestones": 0, "passive_gain": 2.0, "object_levels": 3 },
-		{ "id": "epic", "weight": 3.5, "weapon_stats": 1, "weapon_gain": 1.75, "milestones": 1, "fallback_stats": 2, "passive_gain": 2.5, "object_levels": 4 },
-		{ "id": "legendary", "weight": 0.5, "weapon_stats": 3, "weapon_gain": 2.0, "milestones": 1, "fallback_stats": 3, "passive_gain": 3.0, "object_levels": 5 }
+		{ "id": "common", "weight": 60, "weapon_stats": 1, "weapon_gain": 1.0, "milestones": 0, "passive_gain": 1.0 },
+		{ "id": "uncommon", "weight": 25, "weapon_stats": 1, "weapon_gain": 1.5, "milestones": 0, "passive_gain": 1.5 },
+		{ "id": "rare", "weight": 11, "weapon_stats": 2, "weapon_gain": 1.25, "milestones": 0, "passive_gain": 2.0 },
+		{ "id": "epic", "weight": 3.5, "weapon_stats": 1, "weapon_gain": 1.75, "milestones": 1, "fallback_stats": 2, "passive_gain": 2.5 },
+		{ "id": "legendary", "weight": 0.5, "weapon_stats": 3, "weapon_gain": 2.0, "milestones": 1, "fallback_stats": 3, "passive_gain": 3.0 }
 	],
 	"bump_chance_per_step": 0.3,
 	"luck_steps_per_point": 10,

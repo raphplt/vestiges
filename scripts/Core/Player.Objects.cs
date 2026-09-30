@@ -6,7 +6,7 @@ using Vestiges.Progression;
 
 namespace Vestiges.Core;
 
-/// <summary>Objets du joueur (plan 21 §4) : six emplacements, cinquante niveaux, des effets par formule et des paliers.</summary>
+/// <summary>Objets du joueur (plan 21 §4, plan 23 R3) : six emplacements, trente niveaux, des gains selon la rareté et des paliers.</summary>
 public partial class Player
 {
     public const int MaxPassiveSlots = 6;
@@ -16,17 +16,17 @@ public partial class Player
     private ulong _lastIgnoredHitFlashMsec;
 
     private readonly List<ActivePassiveSouvenir> _passiveSlots = new();
-    // Papier carbone : copies d'attaque à dégâts réduits, à part des projectiles pleins des anciens Dons.
-    private int _attackCopies;
-    private float _copyDamageFactor;
+    // Papier carbone : projectiles en plus, pleins, en fraction (2,5 : deux, et une chance sur deux d'un troisième).
+    private float _bonusProjectiles;
     private float _statusDurationMultiplier = 1f;
+    // Valeurs des effets d'un objet avant une carte ; le chargeur refuse un objet à plus d'effets que de cases.
+    private readonly float[] _passiveValuesBefore = new float[PassiveSouvenirDataLoader.MaxEffects];
     private ObjectMilestones _objectMilestones;
     private ObjectTriggers _objectTriggers;
 
     public IReadOnlyList<ActivePassiveSouvenir> PassiveSlots => _passiveSlots;
-    public int AttackCopies => _attackCopies;
-    /// <summary>Part des dégâts d'une attaque que porte chacune de ses copies.</summary>
-    public float CopyDamageFactor => _copyDamageFactor;
+    /// <summary>Projectiles, ou frappes de mêlée, en plus à chaque attaque (Papier carbone), en fraction.</summary>
+    public float BonusProjectiles => _bonusProjectiles;
     /// <summary>Durée des statuts infligés et des zones au sol (Pince à linge).</summary>
     public float StatusDurationMultiplier => _statusDurationMultiplier;
     /// <summary>Paliers d'objets atteints ; absent tant qu'aucun ne l'est.</summary>
@@ -34,8 +34,11 @@ public partial class Player
     /// <summary>Objets de déclencheur portés ; absent tant qu'aucun ne l'est.</summary>
     public ObjectTriggers ObjectTriggers => _objectTriggers;
 
-    /// <summary>Ajoute un objet au niveau 1, ou monte un objet possédé de <paramref name="levels"/> niveaux (plan 21 §4).</summary>
-    public bool AddOrUpgradePassive(string passiveId, int levels = 1)
+    /// <summary>
+    /// Ajoute un objet au niveau 1, ou le monte de <paramref name="cards"/> cartes de gain <paramref name="gain"/>
+    /// chacune (1 pour une commune, 3 pour une légendaire ; plan 23 R3). Faux si rien n'a changé.
+    /// </summary>
+    public bool AddOrUpgradePassive(string passiveId, int cards = 1, float gain = 1f)
     {
         PassiveSouvenirData data = PassiveSouvenirDataLoader.Get(passiveId);
         if (data == null)
@@ -46,10 +49,15 @@ public partial class Player
             if (existing.Id == passiveId)
             {
                 int previousLevel = existing.Level;
-                if (!existing.Upgrade(levels))
+                for (int card = 0; card < cards && !existing.IsMaxLevel; card++)
+                {
+                    for (int i = 0; i < data.Effects.Count; i++)
+                        _passiveValuesBefore[i] = existing.Value(i);
+                    existing.Upgrade(gain);
+                    ApplyPassiveEffects(existing, _passiveValuesBefore);
+                }
+                if (existing.Level == previousLevel)
                     return false;
-
-                ApplyPassiveEffects(data, previousLevel, existing.Level);
                 ReachMilestones(existing, previousLevel);
 
                 _eventBus?.EmitSignal(EventBus.SignalName.PassiveSouvenirUpgraded, passiveId, existing.Level);
@@ -68,13 +76,17 @@ public partial class Player
         if (HasTriggerEffect(data))
             EnsureObjectTriggers().Configure(data);
 
-        ApplyPassiveEffects(data, 0, passive.Level);
+        for (int i = 0; i < data.Effects.Count; i++)
+            _passiveValuesBefore[i] = data.Effects[i].Neutral;
+        ApplyPassiveEffects(passive, _passiveValuesBefore);
 
         int slotIndex = _passiveSlots.Count - 1;
         _eventBus?.EmitSignal(EventBus.SignalName.PassiveSouvenirAdded, passiveId, slotIndex);
         _eventBus?.EmitSignal(EventBus.SignalName.PassiveSouvenirSlotsChanged);
 
         GD.Print($"[Player] Passive added [{slotIndex}]: {data.Name} (level 1/{data.MaxLevel})");
+        if (cards > 1)
+            AddOrUpgradePassive(passiveId, cards - 1, gain);
         return true;
     }
 
@@ -100,16 +112,14 @@ public partial class Player
         return 0;
     }
 
-    /// <summary>
-    /// Fait passer chaque effet de l'objet de sa valeur au niveau <paramref name="fromLevel"/> à celle du niveau
-    /// <paramref name="toLevel"/> ; niveau 0 : l'objet n'était pas encore possédé.
-    /// </summary>
-    private void ApplyPassiveEffects(PassiveSouvenirData data, int fromLevel, int toLevel)
+    /// <summary>Fait passer chaque effet de l'objet de sa valeur d'avant la carte (<paramref name="before"/>) à sa valeur actuelle.</summary>
+    private void ApplyPassiveEffects(ActivePassiveSouvenir passive, float[] valuesBefore)
     {
-        foreach (PassiveEffectData effect in data.Effects)
+        for (int i = 0; i < passive.Data.Effects.Count; i++)
         {
-            float before = effect.ValueAt(fromLevel);
-            float after = effect.ValueAt(toLevel);
+            PassiveEffectData effect = passive.Data.Effects[i];
+            float before = valuesBefore[i];
+            float after = passive.Value(i);
             // Multiplicatif : on retire l'ancien facteur en appliquant le rapport ; additif : seulement l'écart.
             float change = effect.Multiplicative ? after / before : after - before;
             if (ObjectTriggers.IsTriggerStat(effect.Stat))
@@ -190,24 +200,34 @@ public partial class Player
     }
 
     /// <summary>
-    /// Rondelle de cuivre : chaque frappe de mêlée refrappera dans sa propre direction, avec sa part des dégâts
-    /// (copies comprises) ; un cercle complet refrappe d'un seul tenant.
+    /// Rondelle de cuivre : chaque frappe de mêlée refrappera dans sa propre direction ; un cercle complet refrappe
+    /// d'un seul tenant, avec toutes ses frappes.
     /// </summary>
     private void QueueMeleeEchoes(Vector2 direction, float range, float arcAngle, int strikeCount, float startOffset,
-        float step, float strikeDamage, int copies, AttackContext context)
+        float step, float strikeDamage, AttackContext context)
     {
         if (arcAngle >= 359f)
         {
-            _objectMilestones.QueueArcEcho(direction, range, 360f, strikeDamage * StrikeMultiplierSum(0, strikeCount - 1, copies), _equippedWeapon, context);
+            _objectMilestones.QueueArcEcho(direction, range, 360f, strikeDamage * strikeCount, _equippedWeapon, context);
             return;
         }
         for (int strike = 0; strike < strikeCount; strike++)
             _objectMilestones.QueueArcEcho(direction.Rotated(Mathf.DegToRad(startOffset + step * strike)), range, arcAngle,
-                strikeDamage * StrikeMultiplierSum(strike, strike, copies), _equippedWeapon, context);
+                strikeDamage, _equippedWeapon, context);
     }
 
-    /// <summary>Copies du Papier carbone que reçoit une arme : sa voie d'ascension peut les doubler ou les refuser.</summary>
-    private int CopiesFor(WeaponInstance weapon) => Mathf.RoundToInt(_attackCopies * (weapon?.CopiesMultiplier ?? 1f));
+    /// <summary>
+    /// Projectiles ou frappes en plus du Papier carbone pour cette attaque, fraction tirée : la voie d'ascension de
+    /// l'arme peut les doubler (Volée) ou les refuser (Transpercer).
+    /// </summary>
+    private int RollBonusProjectiles(WeaponInstance weapon) =>
+        FractionalCount.Roll(_bonusProjectiles * (weapon?.BonusProjectileMultiplier ?? 1f), GD.Randf());
+
+    /// <summary>Papier carbone, palier 15 : les projectiles en plus visent chacun leur propre cible.</summary>
+    private bool ExtraProjectilesSpread => _objectMilestones?.SpreadsExtraProjectiles == true;
+
+    /// <summary>Reflet brisé, palier 15 : gain de dégâts d'un projectile par ennemi traversé (0 sans le palier).</summary>
+    private float PierceDamageRamp => _objectMilestones?.PierceDamageRamp ?? 0f;
 
     /// <summary>Un projectile d'arme arrive en bout de course sans avoir été arrêté (Mètre pliant, palier 25).</summary>
     internal void OnProjectileSpent(Vector2 position, float damage, AttackContext context)

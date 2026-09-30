@@ -30,8 +30,8 @@ public class WeaponInstance
 	public WeaponAscensionData Ascension { get; private set; }
 	/// <summary>L'arme est au niveau maximal, n'a pas encore choisi et a deux voies à proposer.</summary>
 	public bool CanAscend => !CanLevelUp && Ascension == null && Base.Ascensions.Count == 2;
-	/// <summary>Part des copies du Papier carbone que reçoit l'arme.</summary>
-	public float CopiesMultiplier => Ascension?.CopiesMultiplier ?? 1f;
+	/// <summary>Part des projectiles en plus du Papier carbone que reçoit l'arme (Volée : double, Transpercer : aucun).</summary>
+	public float BonusProjectileMultiplier => Ascension?.BonusProjectileMultiplier ?? 1f;
 	public string Sprite => Base.Sprite;
 	public string DefaultFor => Base.DefaultFor;
 

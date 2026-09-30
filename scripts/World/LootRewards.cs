@@ -64,7 +64,8 @@ public static class LootRewards
                         break;
                     }
                     int already = reserved.GetValueOrDefault(owned.Id);
-                    int levels = owned.LevelAfter(already + loot.Amount) - owned.Level - already;
+                    // Un niveau d'objet de coffre vaut une carte commune (plan 23 R3, en attendant R8), borné au niveau maximal.
+                    int levels = Mathf.Min(owned.Level + already + loot.Amount, owned.Data.MaxLevel) - owned.Level - already;
                     reserved[owned.Id] = already + levels;
                     resolved.Add(new ResolvedLoot("object_level", owned.Id, levels,
                         string.Format(TranslationServer.Translate("CHEST_LOOT_OBJECT_LEVEL"), owned.Data.Name, levels), ObjectColor));

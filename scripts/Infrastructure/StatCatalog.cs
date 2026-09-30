@@ -9,13 +9,13 @@ public enum StatDisplay
 {
     /// <summary>Valeur avant → après, une décimale (dégâts, cadence).</summary>
     Value,
-    /// <summary>Entier (projectiles, perçage, rebonds, notes).</summary>
+    /// <summary>Compte (projectiles, perçage, rebonds, notes), en fraction s'il le faut : 1,5 projectile (plan 23).</summary>
     Count,
     /// <summary>Seulement le gain en pourcentage (portée, zone, vitesses).</summary>
     Percent,
     /// <summary>Une part (0,05) montrée en pourcentage signé (critique).</summary>
     Fraction,
-    /// <summary>Une part montrée en pourcentage, sans signe : ce n'est pas un bonus mais une proportion (dégâts des copies).</summary>
+    /// <summary>Une part montrée en pourcentage, sans signe : ce n'est pas un bonus mais une proportion (explosion du Pétard mouillé).</summary>
     Share,
 }
 
@@ -49,7 +49,7 @@ public static class StatCatalog
         (string _, StatDisplay display, string unit) = Entry(stat);
         // Une perforation « illimitée » (Transpercer, Lentille de phare) vaut 999 dans les données.
         string number = display == StatDisplay.Count
-            ? value >= UnlimitedCount ? "∞" : Mathf.RoundToInt(value).ToString(French)
+            ? value >= UnlimitedCount ? "∞" : CountText(value)
             : value.ToString("0.0", French);
         return string.IsNullOrEmpty(unit) ? number : $"{number} {unit}";
     }
@@ -65,14 +65,15 @@ public static class StatCatalog
         (string _, StatDisplay display, string unit) = Entry(stat);
         return display switch
         {
-            StatDisplay.Count => Signed(Mathf.RoundToInt(modifier)),
+            StatDisplay.Count => (modifier >= 0f ? "+" : "") + CountText(modifier),
             StatDisplay.Fraction => SignedPercent(modifier * 100f),
             StatDisplay.Share => Percent(modifier * 100f),
             _ => (modifier >= 0f ? "+" : "") + modifier.ToString("0.0#", French) + (string.IsNullOrEmpty(unit) ? "" : $" {unit}"),
         };
     }
 
-    private static string Signed(int value) => (value >= 0 ? "+" : "") + value.ToString(French);
+    /// <summary>Compte à la française, décimales seulement si elles existent : « 2 », « 1,5 », « 0,75 ».</summary>
+    public static string CountText(float value) => (Mathf.Round(value * 100f) / 100f).ToString("0.##", French);
 
     /// <summary>Pourcentage signé, avec une décimale seulement si elle compte : un niveau d'objet qui ajoute 0,6 % doit se voir.</summary>
     private static string SignedPercent(float percent)

@@ -21,6 +21,9 @@ public partial class Projectile : Area2D
     private float _lifetime;
     private float _age;
     private int _pierceRemaining;
+    // Reflet brisé, palier 15 : chaque ennemi traversé ajoute cette part des dégâts de départ.
+    private float _pierceDamageRamp;
+    private float _launchDamage;
     private bool _isCrit;
     private bool _isDespawning;
     private Player _owner;
@@ -68,7 +71,8 @@ public partial class Projectile : Area2D
     }
 
     public void Launch(Vector2 position, Vector2 direction, float damage, float speed, float lifetime, int pierce,
-                       bool isCrit, Player owner, WeaponData weapon, WeaponInstance source, AttackContext context = default)
+                       bool isCrit, Player owner, WeaponData weapon, WeaponInstance source, AttackContext context = default,
+                       float pierceDamageRamp = 0f)
     {
         GlobalPosition = position;
         _direction = direction.Normalized();
@@ -77,6 +81,8 @@ public partial class Projectile : Area2D
         _lifetime = lifetime;
         _age = 0f;
         _pierceRemaining = pierce;
+        _pierceDamageRamp = pierceDamageRamp;
+        _launchDamage = damage;
         _isCrit = isCrit;
         _owner = owner;
         _context = context.OwnerId != 0 || owner == null ? context
@@ -110,12 +116,6 @@ public partial class Projectile : Area2D
     {
         _homingStrength = strength;
         _homingTarget = target;
-    }
-
-    /// <summary>Copie du Papier carbone : même vol, teinte bleutée et plus pâle, pour la distinguer du tir plein.</summary>
-    public void MarkAsCopy()
-    {
-        _sprite.Modulate = new Color(0.7f, 0.78f, 1f, CombatFxSettings.PlayerOpacity * 0.75f);
     }
 
     public void SetGroundFire(float damage, float duration, float radius)
@@ -253,6 +253,7 @@ public partial class Projectile : Area2D
             else
             {
                 _pierceRemaining--;
+                _damage += _launchDamage * _pierceDamageRamp;
             }
         }
     }

@@ -8,8 +8,8 @@ Le [registre](DECISIONS.md) garde les mots de Raphaël. Les plans gardent le dé
 
 | Chantier | Plan | Prochaine action |
 |---|---|---|
-| **Gains qui se sentent** (objets à 30 niveaux, projectiles fractionnaires, cartes à la Megabonk, défense, difficulté, objets manquants, carte moins vide) | [23, plan d'exécution](23-plan-agent.md) | Décidé le 30 septembre ([DECISIONS §36–37](DECISIONS.md)). R0, R1 et R2 livrés (mesure de référence ; bouclier de départ retiré, invulnérabilité 0,25 s ; cartes à la Megabonk avec inventaire et stats). Agent : R3 à R7 ; R8 (coffres) attend la confirmation de Raphaël |
-| Système de jeu | [21, référence unique](21-systeme-de-jeu.md) | G1, G2a et G2a-2 livrés (14 objets de propriété avec leurs paliers). G2b livré : anciens Dons retirés, Fragilité, coefficient, 8 objets de déclencheur (22 objets proposés). G0 et G3 étape 1 livrés (ascensions de 4 armes). Agent : G2c, puis C1 ; G3 étape 2 attend la validation des voies |
+| **Gains qui se sentent** (objets à 30 niveaux, projectiles fractionnaires, cartes à la Megabonk, défense, difficulté, objets manquants, carte moins vide) | [23, plan d'exécution](23-plan-agent.md) | Décidé le 30 septembre ([DECISIONS §36–37](DECISIONS.md)). R0 à R3 livrés (mesure de référence ; bouclier de départ retiré, invulnérabilité 0,25 s ; cartes à la Megabonk ; objets à 30 niveaux, projectiles en plus au lieu des copies, paliers à 15). Agent : R4 à R7 ; R8 (coffres) attend la confirmation de Raphaël |
+| Système de jeu | [21, référence unique](21-systeme-de-jeu.md) | G1, G2a et G2a-2 livrés, refaits au plan 23 R3 (30 niveaux, paliers à 15, 15 objets de propriété). G2b livré : anciens Dons retirés, Fragilité, coefficient, 8 objets de déclencheur (23 objets proposés). G0 et G3 étape 1 livrés (ascensions de 4 armes). Agent : G2c, puis C1 ; G3 étape 2 attend la validation des voies |
 | Carte à explorer | [22](22-carte-a-explorer.md) | C0 et C1 livrés : un lieu en vue toutes les 24 s (41 s avant), trois petits lieux ; aucune Essence dépensée. Agent : C2 (Atelier), après confirmation de Raphaël (§11) |
 
 ## 2. Décisions attendues de Raphaël
@@ -37,7 +37,7 @@ Le [registre](DECISIONS.md) garde les mots de Raphaël. Les plans gardent le dé
 
 | Quoi | Plan |
 |---|---|
-| Objets : 6 emplacements, 50 niveaux, migration des passifs (lot G2) | 21 |
+| Objets : 6 emplacements, 30 niveaux (plan 23 R3), migration des passifs (lot G2) — **livré** | 21, 23 |
 | Grammaire commune sur les cartes d'armes (G0), ascensions au niveau max (G3), affinités des personnages (G4) | 21 |
 | Bannissements payés en Péril, fragments après les Résurgences | 21 — **livrés (G1)** |
 | Déblocages par quêtes et achats en Vestiges | 21, 22 §5 C |

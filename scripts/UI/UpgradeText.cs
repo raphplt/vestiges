@@ -59,7 +59,7 @@ public static class UpgradeText
                 for (int i = 0; i < passive.Effects.Count; i++)
                 {
                     PassiveEffectData effect = passive.Effects[i];
-                    string line = $"{StatCatalog.Name(effect.Stat)}  {StatCatalog.FormatBonus(effect.Stat, effect.ValueAt(1), effect.Multiplicative)}";
+                    string line = $"{StatCatalog.Name(effect.Stat)}  {StatCatalog.FormatBonus(effect.Stat, effect.Neutral + effect.Step, effect.Multiplicative)}";
                     if (i == 0)
                         lines.Add((line, ChoiceStyle.GainColor));
                     else
@@ -83,15 +83,14 @@ public static class UpgradeText
                 ActivePassiveSouvenir passive = FindPassive(player, choice.Id);
                 if (passive == null)
                     break;
-                int next = passive.LevelAfter(choice.PassiveLevels);
                 List<string> others = new();
                 // La ligne en valeur montre le premier effet qui bouge ; un effet inchangé ne s'affiche pas.
                 bool first = true;
                 for (int i = 0; i < passive.Data.Effects.Count; i++)
                 {
                     PassiveEffectData effect = passive.Data.Effects[i];
-                    float before = effect.ValueAt(passive.Level);
-                    float after = effect.ValueAt(next);
+                    float before = passive.Value(i);
+                    float after = passive.ValueAfter(i, choice.PassiveGain);
                     if (Mathf.IsEqualApprox(before, after))
                         continue;
                     if (first)
@@ -113,7 +112,7 @@ public static class UpgradeText
     {
         if (choice.Type != "passive_upgrade" || FindPassive(player, choice.Id) is not { } passive)
             return false;
-        int next = passive.LevelAfter(choice.PassiveLevels);
+        int next = passive.Level + 1;
         foreach (ObjectMilestoneData milestone in passive.Data.Milestones)
             if (milestone.Level > passive.Level && milestone.Level <= next && ObjectMilestoneEffects.IsImplemented(milestone.Effect))
                 return true;

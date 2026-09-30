@@ -13,8 +13,8 @@ namespace Vestiges.Progression;
 /// </summary>
 public partial class ObjectMilestones : Node
 {
-    /// <summary>Palier porté par la formule d'un effet (cran <c>step</c>) : rien à brancher, seulement à annoncer.</summary>
-    public const string StatStepEffect = "stat_step";
+    public const string SpreadTargetsEffect = "spread_targets";
+    public const string PierceDamageRampEffect = "pierce_damage_ramp";
     public const string StatusRenewEffect = "status_renew";
     public const string RepeatAttackEffect = "repeat_attack";
     public const string ZoneEchoEffect = "zone_echo";
@@ -28,6 +28,11 @@ public partial class ObjectMilestones : Node
     public const string OrbHealEffect = "orb_heal";
     public const string LevelEssenceEffect = "level_essence";
     public const string LevelRerollEffect = "level_reroll";
+
+    /// <summary>Papier carbone, palier 15 : les projectiles en plus visent chacun leur propre cible.</summary>
+    public bool SpreadsExtraProjectiles => _spreadExtraProjectiles;
+    /// <summary>Reflet brisé, palier 15 : part des dégâts de départ gagnée par ennemi traversé.</summary>
+    public float PierceDamageRamp => _pierceDamageRamp;
 
     private const float SparkHeight = 14f;
     private const int MaxBurstFxPerFrame = 6;
@@ -44,6 +49,8 @@ public partial class ObjectMilestones : Node
     private GroupCache _groupCache;
 
     private float _renewChance;
+    private bool _spreadExtraProjectiles;
+    private float _pierceDamageRamp;
     private int _repeatEvery;
     private float _repeatDelay;
     private readonly Dictionary<WeaponInstance, int> _attackCounts = new();
@@ -107,6 +114,12 @@ public partial class ObjectMilestones : Node
     {
         switch (milestone.Effect)
         {
+            case SpreadTargetsEffect:
+                _spreadExtraProjectiles = true;
+                break;
+            case PierceDamageRampEffect:
+                _pierceDamageRamp = milestone.Parameter("per_enemy");
+                break;
             case StatusRenewEffect:
                 _renewChance = milestone.Parameter("chance");
                 break;
@@ -232,7 +245,7 @@ public partial class ObjectMilestones : Node
                 && Iso.GroundDistanceSquared(enemy.GlobalPosition, position) <= radiusSq)
                 enemy.TakeDamage(damage, source: burst);
         }
-        // Une salve de copies peut éclater d'un coup : quelques éclats dessinés par frame suffisent à le lire.
+        // Une salve de projectiles peut éclater d'un coup : quelques éclats dessinés par frame suffisent à le lire.
         ulong frame = Engine.GetProcessFrames();
         if (frame != _burstFrame)
         {

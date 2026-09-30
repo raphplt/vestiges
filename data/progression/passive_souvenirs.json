@@ -1,6 +1,6 @@
 [
     {
-        "_comment": "Objets du joueur (plan 21 §4, référence unique) : 6 emplacements, niveau 1 à 50. Chaque effet vaut, au niveau n, 1 + base + per_level × n (multiplicative) ou base + per_level × n (additive) ; base vaut 0 si elle est absente. params : réglages propres à l'objet (objets de déclencheur). milestones : paliers de l'objet (niveau, effet, texte montré au joueur, paramètres) ; un palier dont l'effet n'est pas codé n'est ni annoncé ni activé (ObjectMilestoneEffects). survival : objet de survie, garanti dans une offre tant que le joueur n'en a aucun. enabled false : identifiant gardé pour les sauvegardes, retiré des offres. Le nom du fichier et les identifiants viennent des anciens passifs.",
+        "_comment": "Objets du joueur (plan 21 §4, référence unique ; plan 23 R3) : 6 emplacements, niveau 1 à 30. Chaque carte donne un niveau et ajoute à chaque effet son step multiplié par le gain de la rareté (passive_gain de upgrade_rarities.json : commune 1 à légendaire 3) ; un objet neuf vaut un step. La valeur d'un effet est la somme de ses gains : 1 + somme (multiplicative) ou somme (additive). params : réglages propres à l'objet (objets de déclencheur). milestones : paliers de l'objet (niveau, effet, texte montré au joueur, paramètres) ; un palier dont l'effet n'est pas codé n'est ni annoncé ni activé (ObjectMilestoneEffects). survival : objet de survie, garanti dans une offre tant que le joueur n'en a aucun. enabled false : identifiant gardé pour les sauvegardes, retiré des offres. Le nom du fichier et les identifiants viennent des anciens passifs.",
         "id": "memoire_vive",
         "name": "Ressort de sommier",
         "description": "Tes armes attaquent plus vite.",
@@ -9,17 +9,17 @@
             0.9,
             0.3
         ],
-        "max_level": 50,
+        "max_level": 30,
         "effects": [
             {
                 "stat": "attack_speed",
                 "modifier_type": "multiplicative",
-                "per_level": 0.012
+                "step": 0.08
             }
         ],
         "milestones": [
             {
-                "level": 25,
+                "level": 15,
                 "effect": "repeat_attack",
                 "text": "Chaque 10ᵉ attaque d'une arme part deux fois",
                 "params": {
@@ -38,17 +38,17 @@
             0.4,
             1.0
         ],
-        "max_level": 50,
+        "max_level": 30,
         "effects": [
             {
                 "stat": "aoe_radius",
                 "modifier_type": "multiplicative",
-                "per_level": 0.012
+                "step": 0.08
             }
         ],
         "milestones": [
             {
-                "level": 25,
+                "level": 15,
                 "effect": "zone_echo",
                 "text": "Les zones frappent une seconde fois, à 30 %",
                 "params": {
@@ -67,17 +67,17 @@
             0.8,
             0.9
         ],
-        "max_level": 50,
+        "max_level": 30,
         "effects": [
             {
                 "stat": "attack_range",
                 "modifier_type": "multiplicative",
-                "per_level": 0.01
+                "step": 0.06
             }
         ],
         "milestones": [
             {
-                "level": 25,
+                "level": 15,
                 "effect": "range_end_burst",
                 "text": "Un projectile en bout de course éclate en petite zone",
                 "params": {
@@ -96,22 +96,22 @@
             0.3,
             0.3
         ],
-        "max_level": 50,
+        "max_level": 30,
         "effects": [
             {
                 "stat": "crit_chance",
                 "modifier_type": "additive",
-                "per_level": 0.006
+                "step": 0.02
             },
             {
                 "stat": "crit_multiplier",
                 "modifier_type": "additive",
-                "per_level": 0.01
+                "step": 0.1
             }
         ],
         "milestones": [
             {
-                "level": 25,
+                "level": 15,
                 "effect": "full_hp_crit",
                 "text": "Un critique sur une cible à PV pleins compte double",
                 "params": {
@@ -129,18 +129,18 @@
             0.8,
             0.4
         ],
-        "max_level": 50,
+        "max_level": 30,
         "survival": true,
         "effects": [
             {
                 "stat": "max_hp",
                 "modifier_type": "additive",
-                "per_level": 4
+                "step": 15
             }
         ],
         "milestones": [
             {
-                "level": 25,
+                "level": 15,
                 "effect": "ignore_small_hits",
                 "text": "Les coups inférieurs à 3 % des PV max sont ignorés",
                 "params": {
@@ -158,18 +158,18 @@
             1.0,
             0.5
         ],
-        "max_level": 50,
+        "max_level": 30,
         "survival": true,
         "effects": [
             {
                 "stat": "regen_rate",
                 "modifier_type": "additive",
-                "per_level": 0.06
+                "step": 0.4
             }
         ],
         "milestones": [
             {
-                "level": 25,
+                "level": 15,
                 "effect": "wound_regen",
                 "text": "La régénération double pendant 3 s après une blessure",
                 "params": {
@@ -188,18 +188,18 @@
             0.5,
             0.4
         ],
-        "max_level": 50,
+        "max_level": 30,
         "survival": true,
         "effects": [
             {
                 "stat": "armor",
                 "modifier_type": "additive",
-                "per_level": 0.8
+                "step": 2
             }
         ],
         "milestones": [
             {
-                "level": 25,
+                "level": 15,
                 "effect": "dash_armor",
                 "text": "L'armure compte double pendant le dash et 1 s après",
                 "params": {
@@ -218,18 +218,18 @@
             0.6,
             0.9
         ],
-        "max_level": 50,
+        "max_level": 30,
         "survival": true,
         "effects": [
             {
                 "stat": "shield",
                 "modifier_type": "additive",
-                "per_level": 1.5
+                "step": 5
             }
         ],
         "milestones": [
             {
-                "level": 25,
+                "level": 15,
                 "effect": "shield_break_wave",
                 "text": "Quand le bouclier casse, une onde repousse les ennemis proches",
                 "params": {
@@ -248,22 +248,22 @@
             0.7,
             1.0
         ],
-        "max_level": 50,
+        "max_level": 30,
         "effects": [
             {
                 "stat": "speed",
                 "modifier_type": "multiplicative",
-                "per_level": 0.006
+                "step": 0.03
             },
             {
                 "stat": "dash_recharge",
                 "modifier_type": "multiplicative",
-                "per_level": 0.01
+                "step": 0.05
             }
         ],
         "milestones": [
             {
-                "level": 25,
+                "level": 15,
                 "effect": "dash_distance",
                 "text": "Le dash va 30 % plus loin",
                 "params": {
@@ -281,17 +281,17 @@
             0.9,
             0.9
         ],
-        "max_level": 50,
+        "max_level": 30,
         "effects": [
             {
                 "stat": "xp_magnet_radius",
                 "modifier_type": "multiplicative",
-                "per_level": 0.03
+                "step": 0.15
             }
         ],
         "milestones": [
             {
-                "level": 25,
+                "level": 15,
                 "effect": "orb_heal",
                 "text": "Chaque orbe ramassée rend 0,2 PV",
                 "params": {
@@ -309,17 +309,17 @@
             0.85,
             0.6
         ],
-        "max_level": 50,
+        "max_level": 30,
         "effects": [
             {
                 "stat": "xp_gain",
                 "modifier_type": "multiplicative",
-                "per_level": 0.01
+                "step": 0.05
             }
         ],
         "milestones": [
             {
-                "level": 25,
+                "level": 15,
                 "effect": "level_essence",
                 "text": "Chaque niveau gagné donne 3 Essence",
                 "params": {
@@ -337,17 +337,17 @@
             0.75,
             0.2
         ],
-        "max_level": 50,
+        "max_level": 30,
         "effects": [
             {
                 "stat": "luck",
                 "modifier_type": "additive",
-                "per_level": 0.01
+                "step": 0.03
             }
         ],
         "milestones": [
             {
-                "level": 25,
+                "level": 15,
                 "effect": "level_reroll",
                 "text": "+1 relance tous les 15 niveaux du joueur",
                 "params": {
@@ -359,42 +359,25 @@
     {
         "id": "souffle_du_neant",
         "name": "Papier carbone",
-        "description": "Tes attaques partent avec des copies, plus faibles que l'original.",
+        "description": "Tes armes tirent plus de projectiles et frappent plus de fois, à pleins dégâts.",
         "icon_color": [
             0.7,
             0.3,
             0.9
         ],
-        "max_level": 50,
+        "max_level": 30,
         "effects": [
             {
-                "stat": "attack_copies",
+                "stat": "projectile_bonus",
                 "modifier_type": "additive",
-                "base": 1,
-                "per_level": 0,
-                "step": 1,
-                "step_levels": [
-                    25,
-                    50
-                ]
-            },
-            {
-                "stat": "copy_damage",
-                "modifier_type": "additive",
-                "base": 0.3,
-                "per_level": 0.014
+                "step": 0.5
             }
         ],
         "milestones": [
             {
-                "level": 25,
-                "effect": "stat_step",
-                "text": "+1 copie d'attaque"
-            },
-            {
-                "level": 50,
-                "effect": "stat_step",
-                "text": "+1 copie d'attaque"
+                "level": 15,
+                "effect": "spread_targets",
+                "text": "Les projectiles en plus visent chacun une cible différente"
             }
         ]
     },
@@ -407,17 +390,17 @@
             0.75,
             0.55
         ],
-        "max_level": 50,
+        "max_level": 30,
         "effects": [
             {
                 "stat": "status_duration",
                 "modifier_type": "multiplicative",
-                "per_level": 0.015
+                "step": 0.08
             }
         ],
         "milestones": [
             {
-                "level": 25,
+                "level": 15,
                 "effect": "status_renew",
                 "text": "Un statut qui expire a 25 % de chance de se renouveler",
                 "params": {
@@ -435,7 +418,7 @@
             0.55,
             0.2
         ],
-        "max_level": 50,
+        "max_level": 30,
         "params": {
             "burn_damage_ratio": 0.25,
             "burn_seconds": 3
@@ -444,13 +427,12 @@
             {
                 "stat": "burn_chance",
                 "modifier_type": "additive",
-                "base": 0.06,
-                "per_level": 0.004
+                "step": 0.03
             }
         ],
         "milestones": [
             {
-                "level": 25,
+                "level": 15,
                 "effect": "burn_spread",
                 "text": "La Brûlure passe au voisin quand la cible meurt",
                 "params": {
@@ -468,7 +450,7 @@
             0.85,
             1.0
         ],
-        "max_level": 50,
+        "max_level": 30,
         "params": {
             "slow_factor": 0.6,
             "slow_seconds": 1.5
@@ -477,13 +459,12 @@
             {
                 "stat": "chill_chance",
                 "modifier_type": "additive",
-                "base": 0.06,
-                "per_level": 0.004
+                "step": 0.03
             }
         ],
         "milestones": [
             {
-                "level": 25,
+                "level": 15,
                 "effect": "double_slow_freeze",
                 "text": "Un ennemi ralenti deux fois est figé 0,5 s",
                 "params": {
@@ -501,18 +482,17 @@
             0.35,
             0.3
         ],
-        "max_level": 50,
+        "max_level": 30,
         "effects": [
             {
                 "stat": "burning_target_damage",
                 "modifier_type": "additive",
-                "base": 0.1,
-                "per_level": 0.008
+                "step": 0.04
             }
         ],
         "milestones": [
             {
-                "level": 25,
+                "level": 15,
                 "effect": "burn_slows",
                 "text": "Tes Brûlures ralentissent aussi de 15 %",
                 "params": {
@@ -530,18 +510,17 @@
             0.8,
             0.85
         ],
-        "max_level": 50,
+        "max_level": 30,
         "effects": [
             {
                 "stat": "slowed_target_damage",
                 "modifier_type": "additive",
-                "base": 0.1,
-                "per_level": 0.008
+                "step": 0.04
             }
         ],
         "milestones": [
             {
-                "level": 25,
+                "level": 15,
                 "effect": "slow_kill_extends",
                 "text": "Un ennemi ralenti tué prolonge de 1 s le ralentissement de ses voisins",
                 "params": {
@@ -561,7 +540,7 @@
             0.45,
             0.3
         ],
-        "max_level": 50,
+        "max_level": 30,
         "params": {
             "radius": 50
         },
@@ -569,13 +548,12 @@
             {
                 "stat": "kill_explosion",
                 "modifier_type": "additive",
-                "base": 0.2,
-                "per_level": 0.016
+                "step": 0.1
             }
         ],
         "milestones": [
             {
-                "level": 25,
+                "level": 15,
                 "effect": "double_explosion",
                 "text": "L'explosion se produit deux fois",
                 "params": {
@@ -593,19 +571,18 @@
             0.8,
             0.75
         ],
-        "max_level": 50,
+        "max_level": 30,
         "survival": true,
         "effects": [
             {
                 "stat": "kill_heal",
                 "modifier_type": "additive",
-                "base": 0.1,
-                "per_level": 0.02
+                "step": 0.1
             }
         ],
         "milestones": [
             {
-                "level": 25,
+                "level": 15,
                 "effect": "elite_kill_heal",
                 "text": "Une élite tuée rend 5 % des PV max",
                 "params": {
@@ -623,7 +600,7 @@
             0.45,
             0.3
         ],
-        "max_level": 50,
+        "max_level": 30,
         "params": {
             "move_seconds": 2
         },
@@ -631,13 +608,12 @@
             {
                 "stat": "stride_damage",
                 "modifier_type": "additive",
-                "base": 0.15,
-                "per_level": 0.01
+                "step": 0.06
             }
         ],
         "milestones": [
             {
-                "level": 25,
+                "level": 15,
                 "effect": "double_stride",
                 "text": "Vaut pour les deux prochaines attaques",
                 "params": {
@@ -655,19 +631,18 @@
             0.9,
             0.85
         ],
-        "max_level": 50,
+        "max_level": 30,
         "survival": true,
         "effects": [
             {
                 "stat": "level_heal",
                 "modifier_type": "additive",
-                "base": 0.01,
-                "per_level": 0.0006
+                "step": 0.003
             }
         ],
         "milestones": [
             {
-                "level": 25,
+                "level": 15,
                 "effect": "cascade_invulnerability",
                 "text": "Une cascade de 3 niveaux ou plus donne 1 s d'invulnérabilité",
                 "params": {
@@ -687,33 +662,41 @@
             0.5,
             0.2
         ],
-        "max_level": 50,
+        "max_level": 30,
         "enabled": false,
         "effects": [
             {
                 "stat": "damage",
                 "modifier_type": "multiplicative",
-                "per_level": 0.01
+                "step": 0
             }
         ]
     },
     {
-        "_comment": "Retiré des offres : la perforation reste aux armes (plan 21 §4).",
         "id": "reflet_brise",
-        "name": "Reflet Brisé",
-        "description": "",
+        "name": "Reflet brisé",
+        "description": "Tes projectiles traversent plus d'ennemis.",
         "icon_color": [
             0.8,
             0.8,
             1.0
         ],
-        "max_level": 50,
-        "enabled": false,
+        "max_level": 30,
         "effects": [
             {
                 "stat": "projectile_pierce",
                 "modifier_type": "additive",
-                "per_level": 1
+                "step": 0.5
+            }
+        ],
+        "milestones": [
+            {
+                "level": 15,
+                "effect": "pierce_damage_ramp",
+                "text": "Un projectile qui perfore gagne +10 % de dégâts par ennemi traversé",
+                "params": {
+                    "per_enemy": 0.1
+                }
             }
         ]
     },
@@ -726,13 +709,13 @@
             0.7,
             1.0
         ],
-        "max_level": 50,
+        "max_level": 30,
         "enabled": false,
         "effects": [
             {
                 "stat": "cooldown_reduction",
                 "modifier_type": "multiplicative",
-                "per_level": 0
+                "step": 0
             }
         ]
     }

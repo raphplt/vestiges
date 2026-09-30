@@ -42,10 +42,10 @@ public static class PlayerSheet
         AddLine(container, Tr("STAT_STATUS_DURATION"), Bonus(player.StatusDurationMultiplier), null, role);
         AddLine(container, Tr("STAT_XP_RANGE"), Bonus(player.XpMagnetMultiplier), null, role);
         AddLine(container, Tr("STAT_LUCK"), Percent(player.LuckBonus), null, role);
-        if (player.AttackCopies > 0)
-            AddLine(container, Tr("STAT_ATTACK_COPIES"), $"+{player.AttackCopies}  ({Percent(player.CopyDamageFactor)})", null, role);
-        if (player.ProjectilePierce > 0)
-            AddLine(container, Tr("STAT_PIERCE"), $"+{player.ProjectilePierce}", null, role);
+        if (player.BonusProjectiles > 0f)
+            AddLine(container, Tr("STAT_PROJECTILE_BONUS"), $"+{StatCatalog.CountText(player.BonusProjectiles)}", null, role);
+        if (player.ProjectilePierce > 0f)
+            AddLine(container, Tr("STAT_PIERCE"), $"+{StatCatalog.CountText(player.ProjectilePierce)}", null, role);
         if (essence != null)
             AddLine(container, "Essence", essence.CurrentEssence.ToString(), null, role);
         if (peril == null)

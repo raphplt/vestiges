@@ -11,7 +11,8 @@ public static class ObjectMilestoneEffects
 {
     private static readonly HashSet<string> Implemented = new(StringComparer.Ordinal)
     {
-        ObjectMilestones.StatStepEffect,
+        ObjectMilestones.SpreadTargetsEffect,
+        ObjectMilestones.PierceDamageRampEffect,
         ObjectMilestones.StatusRenewEffect,
         ObjectMilestones.RepeatAttackEffect,
         ObjectMilestones.ZoneEchoEffect,

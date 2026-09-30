@@ -12,7 +12,7 @@ namespace Vestiges.Tests;
 /// <summary>
 /// --capture-weapons [--weapons id1,id2] [--lethal] [--objects id:niveau,…] [--ascensions arme:voie,…] : galerie des
 /// attaques du joueur. Chaque arme est équipée seule. Avec id1+id2, plusieurs armes sont équipées ensemble pour vérifier
-/// leurs interactions. Avec --objects, les objets donnés sont portés au niveau voulu avant la galerie (copies, paliers) ;
+/// leurs interactions. Avec --objects, les objets donnés sont portés au niveau voulu avant la galerie (projectiles en plus, paliers) ;
 /// avec --ascensions, une arme de la galerie est montée au niveau 50 et prend la voie donnée.
 /// Chaque configuration est déclenchée sur un cercle d'ennemis immobiles, et capturée en gros plan à plusieurs instants de l'attaque.
 /// </summary>

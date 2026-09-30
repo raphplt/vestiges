@@ -348,8 +348,7 @@ public partial class LevelUpScreen : CanvasLayer
         if (isNew)
             return Tr("LEVELUP_NEW");
         int level = isWeapon ? player?.GetWeaponFragmentLevel(choice.Id) ?? 0 : player?.GetPassiveLevel(choice.Id) ?? 0;
-        int next = isWeapon ? level + 1 : Mathf.Min(level + choice.PassiveLevels, PassiveSouvenirDataLoader.Get(choice.Id)?.MaxLevel ?? level + 1);
-        return string.Format(Tr("LEVELUP_LEVEL"), level, next);
+        return string.Format(Tr("LEVELUP_LEVEL"), level, level + 1);
     }
 
     /// <summary>Badge doré « Palier ! » : la carte fait atteindre à l'objet un effet qui change la manière de jouer.</summary>

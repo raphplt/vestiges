@@ -287,7 +287,7 @@ public partial class WeaponRegression : Node2D
 
     /// <summary>
     /// Ascensions (plan 21 §3, lot G3) : deux voies au niveau 50, offertes ensemble, choisies pour de bon ; leurs
-    /// leviers (motif, stats, copies, effet à l'impact, orbite qui va et vient). Un joueur à part, pour ne pas toucher
+    /// leviers (motif, stats, projectiles en plus, effet à l'impact, orbite qui va et vient). Un joueur à part, pour ne pas toucher
     /// aux armes des autres contrôles.
     /// </summary>
     private void CheckAscensions()
@@ -301,8 +301,8 @@ public partial class WeaponRegression : Node2D
         bool ready = bow.CanAscend && !MaxedWeapon("heavy_hammer").CanAscend;
         bool chosen = bow.Ascend("volley");
         Check(ready && chosen && !bow.Ascend("pierce_through") && bow.AttackPattern == "burst"
-            && bow.GetStat("projectile_count", 1f) >= 2f && Mathf.IsEqualApprox(bow.GetStat("spread_angle", 20f), 40f) && Mathf.IsEqualApprox(bow.CopiesMultiplier, 2f),
-            "Volée : éventail, deux fois plus de flèches et de copies ; la voie est définitive");
+            && bow.GetStat("projectile_count", 1f) >= 2f && Mathf.IsEqualApprox(bow.GetStat("spread_angle", 20f), 40f) && Mathf.IsEqualApprox(bow.BonusProjectileMultiplier, 2f),
+            "Volée : éventail, deux fois plus de flèches et de projectiles en plus ; la voie est définitive");
         WeaponInstance piercing = MaxedWeapon("makeshift_bow");
         float before = piercing.GetStat("damage", 1f);
         piercing.Ascend("pierce_through");
@@ -314,8 +314,8 @@ public partial class WeaponRegression : Node2D
             && StatCatalog.Format("projectile_pierce", 999f) == "∞",
             "La voie choisie compte partout : Estoc ne grandit plus par la Taille, Moisson ne cherche plus de cible ; perforation « ∞ »");
         Check(Mathf.IsEqualApprox(piercing.GetStat("damage", 1f), before * 1.5f) && piercing.GetStat("projectile_pierce", 0f) >= 999f
-            && Mathf.IsEqualApprox(piercing.GetStat("projectile_count", 1f), 1f) && piercing.CopiesMultiplier == 0f,
-            "Transpercer : une flèche, dégâts × 1,5, perforation illimitée, aucune copie");
+            && Mathf.IsEqualApprox(piercing.GetStat("projectile_count", 1f), 1f) && piercing.BonusProjectileMultiplier == 0f,
+            "Transpercer : une flèche, dégâts × 1,5, perforation illimitée, aucun projectile en plus");
 
         Player player = GD.Load<PackedScene>("res://scenes/Player.tscn").Instantiate<Player>();
         AddChild(player);

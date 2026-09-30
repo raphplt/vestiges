@@ -11,9 +11,9 @@ using Vestiges.UI;
 namespace Vestiges.Tests;
 
 /// <summary>
-/// Objets du joueur (plan 21 §4, lots G2a et G2a-2) sur un vrai joueur : six emplacements, cinquante niveaux par
-/// formule, effets multiples, niveaux gagnés selon la rareté, objets retirés des offres, paliers, copies d'attaque,
-/// Durée et renouvellement des statuts.
+/// Objets du joueur (plan 21 §4, lots G2a et G2a-2, plan 23 R3) sur un vrai joueur : six emplacements, trente
+/// niveaux, valeur égale à la somme des gains, gain selon la rareté, objets retirés des offres, paliers au niveau 15,
+/// projectiles en plus fractionnaires, Durée et renouvellement des statuts.
 /// </summary>
 public partial class ObjectsRegression : Node2D
 {
@@ -31,11 +31,11 @@ public partial class ObjectsRegression : Node2D
             CheckLevels();
             CheckMultipleEffects();
             CheckNewStats();
-            CheckRarityLevels();
+            CheckRarityGains();
             CheckOffers();
             CheckMilestoneActivation();
             CheckMilestoneCards();
-            CheckAttackCopies();
+            CheckExtraProjectiles();
             CheckStatusDuration();
             CheckStatusRenewal();
             CheckCombatMilestones();
@@ -65,12 +65,14 @@ public partial class ObjectsRegression : Node2D
         bool anySurvival = false;
         foreach (PassiveSouvenirData data in offered)
         {
-            wellFormed &= data.MaxLevel == 50 && data.Effects.Count > 0 && !string.IsNullOrEmpty(data.Name);
+            wellFormed &= data.MaxLevel == 30 && data.Effects.Count > 0 && !string.IsNullOrEmpty(data.Name);
             anySurvival |= data.Survival;
+            foreach (ObjectMilestoneData milestone in data.Milestones)
+                wellFormed &= milestone.Level == 15;
         }
-        Check(offered.Count == 22 && wellFormed && anySurvival, $"Catalogue : {offered.Count} objets proposés, niveau max 50, au moins un de survie");
+        Check(offered.Count == 23 && wellFormed && anySurvival, $"Catalogue : {offered.Count} objets proposés, niveau max 30, paliers au niveau 15, au moins un de survie");
         bool retired = true;
-        foreach (string id in new[] { "flamme_interieure", "reflet_brise", "fragment_deternite" })
+        foreach (string id in new[] { "flamme_interieure", "fragment_deternite" })
             retired &= PassiveSouvenirDataLoader.Get(id) != null && !offered.Exists(data => data.Id == id);
         Check(retired, "Objets retirés : identifiants gardés, hors des offres");
     }
@@ -91,19 +93,19 @@ public partial class ObjectsRegression : Node2D
         Setup();
         float baseSpeed = _player.AttackSpeedMultiplier;
         _player.AddOrUpgradePassive("memoire_vive");
-        bool one = Near(_player.AttackSpeedMultiplier / baseSpeed, 1.012f);
+        bool one = Near(_player.AttackSpeedMultiplier / baseSpeed, 1.08f);
         _player.AddOrUpgradePassive("memoire_vive", 4);
-        bool five = Near(_player.AttackSpeedMultiplier / baseSpeed, 1.06f) && _player.GetPassiveLevel("memoire_vive") == 5;
+        bool five = Near(_player.AttackSpeedMultiplier / baseSpeed, 1.4f) && _player.GetPassiveLevel("memoire_vive") == 5;
         _player.AddOrUpgradePassive("memoire_vive", 200);
-        bool fifty = Near(_player.AttackSpeedMultiplier / baseSpeed, 1.6f) && _player.GetPassiveLevel("memoire_vive") == 50;
-        bool capped = !_player.AddOrUpgradePassive("memoire_vive") && Near(_player.AttackSpeedMultiplier / baseSpeed, 1.6f);
-        Check(one && five && fifty && capped, "Ressort de sommier : +1,2 % de cadence par niveau, +60 % au niveau 50, plafonné");
+        bool thirty = Near(_player.AttackSpeedMultiplier / baseSpeed, 3.4f) && _player.GetPassiveLevel("memoire_vive") == 30;
+        bool capped = !_player.AddOrUpgradePassive("memoire_vive") && Near(_player.AttackSpeedMultiplier / baseSpeed, 3.4f);
+        Check(one && five && thirty && capped, "Ressort de sommier : +8 % de cadence par carte commune, +240 % au niveau 30, plafonné");
 
         float hp = _player.EffectiveMaxHp;
         float current = _player.CurrentHp;
         _player.AddOrUpgradePassive("ancrage");
         _player.AddOrUpgradePassive("ancrage", 9);
-        Check(Near(_player.EffectiveMaxHp, hp + 40f) && Near(_player.CurrentHp, current + 40f), "Bouton de manteau : +4 PV max par niveau, PV courants suivis");
+        Check(Near(_player.EffectiveMaxHp, hp + 150f) && Near(_player.CurrentHp, current + 150f), "Bouton de manteau : +15 PV max par carte commune, PV courants suivis");
     }
 
     private void CheckMultipleEffects()
@@ -113,7 +115,7 @@ public partial class ObjectsRegression : Node2D
         float multiplier = _player.CritMultiplier;
         _player.AddOrUpgradePassive("oeil_critique");
         _player.AddOrUpgradePassive("oeil_critique", 9);
-        Check(Near(_player.CritChance, chance + 0.06f) && Near(_player.CritMultiplier, multiplier + 0.1f),
+        Check(Near(_player.CritChance, chance + 0.2f) && Near(_player.CritMultiplier, multiplier + 1f),
             "Lunettes de lecture : deux effets montés ensemble (chance et dégâts critiques)");
     }
 
@@ -127,30 +129,41 @@ public partial class ObjectsRegression : Node2D
         _player.AddOrUpgradePassive("photo_de_classe", 9);
         float before = progression.CurrentXp;
         GetNode<EventBus>("/root/EventBus").EmitSignal(EventBus.SignalName.XpGained, 1f);
-        Check(Near(progression.CurrentXp - before, 1.1f), "Photo de classe niveau 10 : +10 % d'XP, appliqué une fois au gain");
+        Check(Near(progression.CurrentXp - before, 1.5f), "Photo de classe niveau 10 : +50 % d'XP, appliqué une fois au gain");
 
         _player.AddOrUpgradePassive("instinct");
         _player.AddOrUpgradePassive("instinct", 9);
-        Check(Near(_player.Mobility.RechargeMultiplier, 1.1f) && Near(_player.SpeedMultiplier, 1.06f),
-            "Lacet rouge niveau 10 : vitesse +6 %, dash rechargé 10 % plus vite");
+        Check(Near(_player.Mobility.RechargeMultiplier, 1.5f) && Near(_player.SpeedMultiplier, 1.3f),
+            "Lacet rouge niveau 10 : vitesse +30 %, dash rechargé 50 % plus vite");
 
         float luck = _player.LuckBonus;
         _player.AddOrUpgradePassive("jeton_de_fete");
-        Check(Near(_player.LuckBonus, luck + 0.01f), "Jeton de fête foraine : +0,01 Chance par niveau");
+        Check(Near(_player.LuckBonus, luck + 0.03f), "Jeton de fête foraine : +0,03 Chance par carte commune");
     }
 
-    private void CheckRarityLevels()
+    private void CheckRarityGains()
     {
-        Setup();
-        _player.AddOrUpgradePassive("resonance");
         RandomNumberGenerator rng = new() { Seed = 4 };
-        List<int> levels = new();
+        List<string> values = new();
+        bool oneLevel = true;
         foreach (UpgradeRarity rarity in UpgradeRoller.Rarities)
         {
+            Setup();
+            float baseAoe = _player.AoeMultiplier;
+            _player.AddOrUpgradePassive("resonance");
             FragmentOption option = UpgradeRoller.RollGains(new FragmentOption("resonance", "passive_upgrade", "Rondelle de cuivre", 1), _player, rarity, rng);
-            levels.Add(option.PassiveLevels);
+            option.ApplyTo(_player);
+            oneLevel &= _player.GetPassiveLevel("resonance") == 2;
+            values.Add(((_player.AoeMultiplier / baseAoe - 1f) * 100f).ToString("0.#", System.Globalization.CultureInfo.InvariantCulture));
         }
-        Check(string.Join(",", levels) == "1,2,3,4,5", $"Rareté d'une amélioration d'objet : {string.Join(",", levels)} niveaux");
+        Check(oneLevel && string.Join(",", values) == "16,20,24,28,32",
+            $"Rareté d'une carte d'objet : un niveau, gain du pas × 1 à × 3 (Rondelle au niveau 2 : +{string.Join(" / +", values)} %)");
+
+        Setup();
+        _player.AddOrUpgradePassive("resonance");
+        _player.AddOrUpgradePassive("resonance", 1, 3f);
+        _player.AddOrUpgradePassive("resonance", 1, 1.5f);
+        Check(Near(_player.AoeMultiplier, 1f + 0.08f * 5.5f), "La valeur d'un objet est la somme de ses gains : 1 + 3 + 1,5 pas");
     }
 
     private void CheckOffers()
@@ -162,8 +175,8 @@ public partial class ObjectsRegression : Node2D
         typeof(FragmentManager).GetField("_currentLevel", Private).SetValue(fragments, 5);
         List<FragmentOption> pool = (List<FragmentOption>)typeof(FragmentManager).GetMethod("BuildFragmentPool", Private).Invoke(fragments, null);
         int fresh = pool.FindAll(option => option.Type == "passive_new").Count;
-        bool noRetired = !pool.Exists(option => option.Id is "flamme_interieure" or "reflet_brise");
-        Check(fresh == 22 && noRetired, $"Offre de niveau : {fresh} objets neufs possibles, aucun objet retiré");
+        bool noRetired = !pool.Exists(option => option.Id is "flamme_interieure" or "fragment_deternite");
+        Check(fresh == 23 && noRetired, $"Offre de niveau : {fresh} objets neufs possibles, aucun objet retiré");
 
         foreach (string id in new[] { "memoire_vive", "resonance", "portee_etendue", "oeil_critique", "ancrage", "regeneration" })
             _player.AddOrUpgradePassive(id);
@@ -176,38 +189,60 @@ public partial class ObjectsRegression : Node2D
     {
         Setup();
         _player.AddOrUpgradePassive("souffle_du_neant");
-        bool one = _player.AttackCopies == 1 && Near(_player.CopyDamageFactor, 0.314f) && _player.ObjectMilestones == null;
-        _player.AddOrUpgradePassive("souffle_du_neant", 23);
-        bool before = _player.AttackCopies == 1 && _player.GetPassiveLevel("souffle_du_neant") == 24;
+        bool one = Near(_player.BonusProjectiles, 0.5f) && _player.ObjectMilestones == null;
+        _player.AddOrUpgradePassive("souffle_du_neant", 13);
+        bool before = Near(_player.BonusProjectiles, 7f) && _player.GetPassiveLevel("souffle_du_neant") == 14 && _player.ObjectMilestones == null;
         _player.AddOrUpgradePassive("souffle_du_neant");
-        bool reached = _player.AttackCopies == 2 && _player.ObjectMilestones != null;
-        _player.AddOrUpgradePassive("souffle_du_neant", 10);
-        bool once = _player.AttackCopies == 2;
-        _player.AddOrUpgradePassive("souffle_du_neant", 20);
-        bool fifty = _player.AttackCopies == 3 && Near(_player.CopyDamageFactor, 1f);
-        Check(one && before && reached && once && fifty,
-            "Papier carbone : 1 copie à 31,4 % au niveau 1, 2 au palier 25 (une seule fois), 3 à 100 % au niveau 50");
+        bool reached = _player.ObjectMilestones is { SpreadsExtraProjectiles: true } && Near(_player.BonusProjectiles, 7.5f);
+        Check(one && before && reached,
+            "Papier carbone : +0,5 projectile par carte commune ; au palier 15, les projectiles en plus visent chacun leur cible");
 
         Setup();
-        _player.AddOrUpgradePassive("souffle_du_neant");
-        _player.AddOrUpgradePassive("souffle_du_neant", 49);
-        Check(_player.AttackCopies == 3, "Une amélioration qui franchit deux paliers les active tous les deux");
+        _player.AddOrUpgradePassive("reflet_brise");
+        _player.AddOrUpgradePassive("reflet_brise", 14, 2f);
+        Check(Near(_player.ProjectilePierce, 0.5f + 14f) && _player.ObjectMilestones is { } milestones && Near(milestones.PierceDamageRamp, 0.1f),
+            "Reflet brisé : +0,5 perforation par carte commune (× 2 en rare) ; au palier 15, +10 % de dégâts par ennemi traversé");
+
+        // Un tir qui perfore trois ennemis : le deuxième encaisse 110 %, le troisième 120 %.
+        Projectile shot = GD.Load<PackedScene>("res://scenes/combat/Projectile.tscn").Instantiate<Projectile>();
+        AddChild(shot);
+        WeaponInstance bow = _player.WeaponSlots[0];
+        shot.Launch(new Vector2(7000f, 7000f), Vector2.Right, 10f, 400f, 1f, 5, false, _player, bow.Base, bow,
+            _player.BeginAttack(bow, 10f), pierceDamageRamp: 0.1f);
+        MethodInfo enter = typeof(Projectile).GetMethod("OnBodyEntered", Private);
+        List<float> losses = new();
+        for (int i = 0; i < 3; i++)
+        {
+            Enemy target = SpawnEnemy();
+            target.Position = new Vector2(7000f + i * 40f, 7000f);
+            float hp = Hp(target);
+            enter.Invoke(shot, new object[] { target });
+            losses.Add(hp - Hp(target));
+            target.QueueFree();
+        }
+        Check(Near(losses[1], losses[0] * 1.1f) && Near(losses[2], losses[0] * 1.2f),
+            $"Reflet brisé palier 15 : dégâts d'un tir qui perfore {losses[0]:0.0} → {losses[1]:0.0} → {losses[2]:0.0}");
+        shot.QueueFree();
     }
 
     private void CheckMilestoneCards()
     {
         Setup();
         _player.AddOrUpgradePassive("souffle_du_neant");
-        _player.AddOrUpgradePassive("souffle_du_neant", 20);
+        _player.AddOrUpgradePassive("souffle_du_neant", 12);
+        // Niveau 13 : même une légendaire ne mène qu'au niveau 14, sans palier.
         FragmentOption upcoming = new FragmentOption("souffle_du_neant", "passive_upgrade", "Papier carbone", 1)
-            .WithPassiveUpgrade(UpgradeRoller.Get("common"), 1);
+            .WithPassiveUpgrade(UpgradeRoller.Get("legendary"));
+        bool upcomingBadge = UpgradeText.ReachesMilestone(upcoming, _player);
+        string upcomingText = CardText(upcoming);
+        _player.AddOrUpgradePassive("souffle_du_neant");
         FragmentOption crossing = new FragmentOption("souffle_du_neant", "passive_upgrade", "Papier carbone", 1)
-            .WithPassiveUpgrade(UpgradeRoller.Get("legendary"), 5);
+            .WithPassiveUpgrade(UpgradeRoller.Get("common"));
         FragmentOption fresh = new("persistance", "passive_new", "Pince à linge", 1);
         string freshText = CardText(fresh);
-        Check(!UpgradeText.ReachesMilestone(upcoming, _player) && UpgradeText.ReachesMilestone(crossing, _player)
+        Check(!upcomingBadge && UpgradeText.ReachesMilestone(crossing, _player)
             && !UpgradeText.ReachesMilestone(fresh, _player)
-            && !CardText(upcoming).Contains("Palier") && !CardText(crossing).Contains("Palier") && freshText.Contains("Durée"),
+            && !upcomingText.Contains("Palier") && !CardText(crossing).Contains("Palier") && freshText.Contains("Durée"),
             "Cartes : un palier atteint est un badge, jamais une ligne de texte (plan 23 R2)");
 
         bool coded = true;
@@ -219,24 +254,33 @@ public partial class ObjectsRegression : Node2D
                     _player.AddOrUpgradePassive(data.Id);
                     _player.AddOrUpgradePassive(data.Id, milestone.Level - 2);
                     coded &= !UpgradeText.ReachesMilestone(new FragmentOption(data.Id, "passive_upgrade", data.Name, 1)
-                        .WithPassiveUpgrade(UpgradeRoller.Get("common"), 1), _player);
+                        .WithPassiveUpgrade(UpgradeRoller.Get("common")), _player);
                 }
         Check(coded && !ObjectMilestoneEffects.IsImplemented("inconnu"), "Un palier non codé n'a pas de badge");
     }
 
-    private void CheckAttackCopies()
+    private void CheckExtraProjectiles()
     {
+        bool rolls = FractionalCount.Roll(2.5f, 0.4f) == 3 && FractionalCount.Roll(2.5f, 0.6f) == 2 && FractionalCount.Roll(0f, 0f) == 0
+            && FractionalCount.Roll(1f, 0.999f) == 1 && FractionalCount.Roll(0.75f, 0.74f) == 1 && FractionalCount.Roll(0.75f, 0.76f) == 0;
+        Check(rolls, "Stat fractionnaire : la partie entière toujours, la décimale en chance");
+
         Setup();
-        MethodInfo strikes = typeof(Player).GetMethod("StrikeMultiplierSum", Private);
-        MethodInfo projectile = typeof(Player).GetMethod("ProjectileDamage", Private);
-        float soloStrike = (float)strikes.Invoke(_player, new object[] { 0, 0, 0 });
-        _player.AddOrUpgradePassive("souffle_du_neant");
-        float withCopy = (float)strikes.Invoke(_player, new object[] { 0, 1, 1 });
-        float copyOnly = (float)strikes.Invoke(_player, new object[] { 1, 1, 1 });
-        float copyShot = (float)projectile.Invoke(_player, new object[] { 10f, false, true });
-        float fullShot = (float)projectile.Invoke(_player, new object[] { 10f, false, false });
-        Check(Near(soloStrike, 1f) && Near(withCopy, 1.314f) && Near(copyOnly, 0.314f) && Near(copyShot, 3.14f) && Near(fullShot, 10f),
-            "Copies : une frappe ou un tir de plus, à 31,4 % des dégâts au niveau 1");
+        _player.AddOrUpgradePassive("souffle_du_neant", 5);
+        MethodInfo roll = typeof(Player).GetMethod("RollBonusProjectiles", Private);
+        WeaponInstance bow = _player.WeaponSlots[0];
+        int total = 0, low = int.MaxValue, high = 0;
+        const int attacks = 1000;
+        for (int i = 0; i < attacks; i++)
+        {
+            int extra = (int)roll.Invoke(_player, new object[] { bow });
+            total += extra;
+            low = Math.Min(low, extra);
+            high = Math.Max(high, extra);
+        }
+        float mean = total / (float)attacks;
+        Check(low == 2 && high == 3 && mean > 2.42f && mean < 2.58f,
+            $"Papier carbone niveau 5 : 2,5 projectiles en plus, soit 2 ou 3 par attaque ({mean:0.00} en moyenne sur {attacks})");
     }
 
     private void CheckStatusDuration()
@@ -249,8 +293,8 @@ public partial class ObjectsRegression : Node2D
         Enemy enemy = SpawnEnemy();
         _player.OnProjectileHit(enemy, 1f, false, bell);
         float slow = (float)typeof(Enemy).GetField("_slowTimer", Private).GetValue(enemy);
-        Check(Near(_player.StatusDurationMultiplier, 1.15f) && Near(slow, 2f * 1.15f),
-            $"Pince à linge niveau 10 : statuts +15 % (ralentissement de la Cloche {slow:0.00} s au lieu de 2 s)");
+        Check(Near(_player.StatusDurationMultiplier, 1.8f) && Near(slow, 2f * 1.8f),
+            $"Pince à linge niveau 10 : statuts +80 % (ralentissement de la Cloche {slow:0.00} s au lieu de 2 s)");
         enemy.QueueFree();
     }
 
@@ -258,7 +302,7 @@ public partial class ObjectsRegression : Node2D
     {
         Setup();
         _player.AddOrUpgradePassive("persistance");
-        _player.AddOrUpgradePassive("persistance", 24);
+        _player.AddOrUpgradePassive("persistance", 14);
         _player.ObjectMilestones.Rng.Seed = 7;
         _player.AddWeapon(WeaponDataLoader.Get("teachers_bell"));
         WeaponInstance bell = _player.WeaponSlots[_player.WeaponSlots.Count - 1];
@@ -308,7 +352,7 @@ public partial class ObjectsRegression : Node2D
         }
         float share = renewed / (float)trials;
         Check(share > 0.18f && share < 0.32f && sameDuration && foreign == 0,
-            $"Pince à linge palier 25 : {share:P0} des ralentissements expirés renouvelés, même durée ; rien pour un statut sans joueur");
+            $"Pince à linge palier 15 : {share:P0} des ralentissements expirés renouvelés, même durée ; rien pour un statut sans joueur");
         enemy.QueueFree();
     }
 
@@ -337,7 +381,7 @@ public partial class ObjectsRegression : Node2D
         float fullLoss = hpBefore - Hp(control);
 
         foreach (string id in new[] { "memoire_vive", "resonance", "portee_etendue", "oeil_critique", "carapace", "instinct" })
-            Raise(id, 25);
+            Raise(id, 15);
         ObjectMilestones milestones = _player.ObjectMilestones;
         MethodInfo process = typeof(ObjectMilestones).GetMethod("_Process");
         System.Collections.IList repeats = (System.Collections.IList)typeof(ObjectMilestones).GetField("_pendingRepeats", Private).GetValue(milestones);
@@ -348,7 +392,7 @@ public partial class ObjectsRegression : Node2D
         milestones.CountAttack(bow);
         bool tenth = repeats.Count == 1;
         process.Invoke(milestones, new object[] { 0.2 });
-        Check(ninth && tenth && repeats.Count == 0, "Ressort de sommier palier 25 : la 10ᵉ attaque d'une arme repart, puis la file se vide");
+        Check(ninth && tenth && repeats.Count == 0, "Ressort de sommier palier 15 : la 10ᵉ attaque d'une arme repart, puis la file se vide");
         for (int i = 0; i < 5; i++)
             milestones.CountAttack(bow);
         _player.UpgradeWeapon(bow.Id, UpgradeRoller.RollWeaponGains(bow, UpgradeRoller.Get("common"), new RandomNumberGenerator { Seed = 1 }));
@@ -362,23 +406,23 @@ public partial class ObjectsRegression : Node2D
         bool delayed = Near(Hp(echoed), hpBefore);
         process.Invoke(milestones, new object[] { 0.3 });
         Check(milestones.HasZoneEcho && delayed && Near(hpBefore - Hp(echoed), fullLoss * 0.3f),
-            $"Rondelle de cuivre palier 25 : la zone refrappe après 0,25 s, à 30 % ({hpBefore - Hp(echoed):0.0} PV)");
+            $"Rondelle de cuivre palier 15 : la zone refrappe après 0,25 s, à 30 % ({hpBefore - Hp(echoed):0.0} PV)");
 
         hpBefore = Hp(burst);
         _player.OnProjectileSpent(burst.GlobalPosition, 10f, _player.BeginAttack(bow, 10f));
-        Check(Near(hpBefore - Hp(burst), fullLoss * 0.5f), $"Mètre pliant palier 25 : un projectile en bout de course éclate à 50 % ({hpBefore - Hp(burst):0.0} PV)");
+        Check(Near(hpBefore - Hp(burst), fullLoss * 0.5f), $"Mètre pliant palier 15 : un projectile en bout de course éclate à 50 % ({hpBefore - Hp(burst):0.0} PV)");
 
         bool fullDouble = Near(_player.ResolveHitDamage(pushed, 10f, true), 20f);
         bool damagedSame = Near(_player.ResolveHitDamage(control, 10f, true), 10f);
         bool normal = Near(_player.ResolveHitDamage(pushed, 10f, false), 10f);
         Check(fullDouble && damagedSame && normal,
-            "Lunettes de lecture palier 25 : un critique sur une cible à PV pleins compte double, pas sur une cible entamée");
+            "Lunettes de lecture palier 15 : un critique sur une cible à PV pleins compte double, pas sur une cible entamée");
 
         milestones.OnShieldBroken();
         FieldInfo knock = typeof(Enemy).GetField("_knockVelocity", Private);
         Check(((Vector2)knock.GetValue(pushed)).X > 0f && ((Vector2)knock.GetValue(control)) == Vector2.Zero,
-            "Écusson de pompier palier 25 : le bouclier cassé repousse les ennemis proches, pas les lointains");
-        Check(Near(_player.Mobility.DistanceMultiplier, 1.3f), "Lacet rouge palier 25 : dash 30 % plus long");
+            "Écusson de pompier palier 15 : le bouclier cassé repousse les ennemis proches, pas les lointains");
+        Check(Near(_player.Mobility.DistanceMultiplier, 1.3f), "Lacet rouge palier 15 : dash 30 % plus long");
         foreach (Enemy enemy in new[] { control, echoed, burst, pushed })
             enemy.QueueFree();
     }
@@ -388,18 +432,18 @@ public partial class ObjectsRegression : Node2D
         Setup();
         _player.DisableDefenseForTests();
         foreach (string id in new[] { "ancrage", "regeneration", "peau_dure", "siphon_essence" })
-            Raise(id, 25);
+            Raise(id, 15);
         ObjectMilestones milestones = _player.ObjectMilestones;
         float hp = _player.CurrentHp;
         float small = _player.EffectiveMaxHp * 0.03f - 0.5f;
         _player.TakeDamage(small);
         bool ignored = Near(_player.CurrentHp, hp);
         _player.TakeDamage(small + 1f);
-        Check(ignored && _player.CurrentHp < hp, $"Bouton de manteau palier 25 : un coup sous 3 % des PV max ({small:0.0}) est ignoré, pas au-dessus");
+        Check(ignored && _player.CurrentHp < hp, $"Bouton de manteau palier 15 : un coup sous 3 % des PV max ({small:0.0}) est ignoré, pas au-dessus");
 
-        Check(Near(milestones.RegenMultiplier, 2f), "Bobine de fil palier 25 : régénération doublée après la blessure");
+        Check(Near(milestones.RegenMultiplier, 2f), "Bobine de fil palier 15 : régénération doublée après la blessure");
         typeof(ObjectMilestones).GetMethod("_Process").Invoke(milestones, new object[] { 3.1 });
-        Check(Near(milestones.RegenMultiplier, 1f), "Bobine de fil palier 25 : retour à la normale après 3 s");
+        Check(Near(milestones.RegenMultiplier, 1f), "Bobine de fil palier 15 : retour à la normale après 3 s");
 
         PlayerMobility mobility = _player.Mobility;
         // Le coup encaissé plus haut laisse le joueur sonné : il s'en remet avant de dasher.
@@ -414,11 +458,11 @@ public partial class ObjectsRegression : Node2D
         for (int i = 0; i < 90; i++)
             mobility.Step(1f / 60f, Vector2.Zero, 200f, 1f, true);
         Check(calm && dashing && after && Near(milestones.ArmorMultiplier(mobility), 1f),
-            "Genouillère palier 25 : armure doublée pendant le dash et la seconde qui suit");
+            "Genouillère palier 15 : armure doublée pendant le dash et la seconde qui suit");
 
         hp = _player.CurrentHp;
         _player.OnXpOrbCollected();
-        Check(Near(_player.CurrentHp - hp, 0.2f), "Aimant de frigo palier 25 : une orbe ramassée rend 0,2 PV");
+        Check(Near(_player.CurrentHp - hp, 0.2f), "Aimant de frigo palier 15 : une orbe ramassée rend 0,2 PV");
     }
 
     private void CheckRewardMilestones()
@@ -427,20 +471,20 @@ public partial class ObjectsRegression : Node2D
         EssenceTracker essence = new() { Name = "EssenceTracker" };
         AddChild(essence);
         foreach (string id in new[] { "photo_de_classe", "jeton_de_fete" })
-            Raise(id, 25);
+            Raise(id, 15);
         ObjectMilestones milestones = _player.ObjectMilestones;
         int before = essence.CurrentEssence;
         typeof(ObjectMilestones).GetMethod("OnLevelUp", Private).Invoke(milestones, new object[] { 26 });
-        Check(essence.CurrentEssence - before == 3, "Photo de classe palier 25 : un niveau gagné donne 3 Essence");
+        Check(essence.CurrentEssence - before == 3, "Photo de classe palier 15 : un niveau gagné donne 3 Essence");
         Check(milestones.GrantsRerollAt(15) && !milestones.GrantsRerollAt(16) && milestones.GrantsRerollAt(30),
-            "Jeton de fête foraine palier 25 : une relance aux niveaux 15, 30…");
+            "Jeton de fête foraine palier 15 : une relance aux niveaux 15, 30…");
         essence.QueueFree();
 
         bool allCoded = true;
         foreach (PassiveSouvenirData data in PassiveSouvenirDataLoader.GetAll())
             foreach (ObjectMilestoneData milestone in data.Milestones)
                 allCoded &= ObjectMilestoneEffects.IsImplemented(milestone.Effect);
-        Check(allCoded, "Les paliers des 22 objets proposés sont tous codés");
+        Check(allCoded, "Les paliers des 23 objets proposés sont tous codés");
     }
 
     private static readonly FieldInfo IgniteTimer = typeof(Enemy).GetField("_igniteTimer", Private);
@@ -471,7 +515,7 @@ public partial class ObjectsRegression : Node2D
     private void CheckImpactTriggers()
     {
         Setup();
-        Raise("allumette_humide", 50);
+        Raise("allumette_humide", 30);
         _player.ObjectTriggers.Rng.Seed = 11;
         _player.AddWeapon(WeaponDataLoader.Get("heavy_hammer"));
         _player.AddWeapon(WeaponDataLoader.Get("sling"));
@@ -481,8 +525,8 @@ public partial class ObjectsRegression : Node2D
         float heavy = BurnShare(enemy, hammer, 2000);
         float light = BurnShare(enemy, sling, 2000);
         float passive = BurnShare(enemy, hammer, 300, DamageKind.Passive);
-        Check(Near(_player.ObjectTriggers.BurnChance, 0.26f) && heavy > 0.22f && heavy < 0.30f && light > 0.09f && light < 0.15f && passive == 0f,
-            $"Allumette humide niveau 50 : 26 % d'enflammer ; Marteau (coefficient 1) {heavy:P0}, Fronde (0,45) {light:P0}, effet déclenché 0 %");
+        Check(Near(_player.ObjectTriggers.BurnChance, 0.9f) && heavy > 0.87f && heavy < 0.93f && light > 0.37f && light < 0.44f && passive == 0f,
+            $"Allumette humide niveau 30 : 90 % d'enflammer ; Marteau (coefficient 1) {heavy:P0}, Fronde (0,45) {light:P0}, effet déclenché 0 %");
 
         ClearStatuses(enemy);
         while (!enemy.IsBurning)
@@ -493,7 +537,7 @@ public partial class ObjectsRegression : Node2D
         enemy.QueueFree();
 
         Setup();
-        Raise("glacon", 25);
+        Raise("glacon", 15);
         _player.ObjectTriggers.Rng.Seed = 5;
         _player.AddWeapon(WeaponDataLoader.Get("heavy_hammer"));
         hammer = _player.WeaponSlots[1];
@@ -506,7 +550,7 @@ public partial class ObjectsRegression : Node2D
         while ((float)freeze.GetValue(enemy) <= 0f)
             _player.OnProjectileHit(enemy, 1f, false, hammer, _player.BeginAttack(hammer, 1f));
         Check(chilled && Near((float)freeze.GetValue(enemy), 0.5f) && Near((float)SlowFactor.GetValue(enemy), 0.6f),
-            "Glaçon : ralentit de 40 % pendant 1,5 s ; au palier 25, un ennemi ralenti deux fois est figé 0,5 s, sans toucher au ralentissement");
+            "Glaçon : ralentit de 40 % pendant 1,5 s ; au palier 15, un ennemi ralenti deux fois est figé 0,5 s, sans toucher au ralentissement");
         enemy.QueueFree();
     }
 
@@ -521,18 +565,18 @@ public partial class ObjectsRegression : Node2D
         float burning = _player.ResolveHitDamage(enemy, 10f, false);
         enemy.ApplySlow(0.5f, 5f);
         float both = _player.ResolveHitDamage(enemy, 10f, false);
-        Check(Near(plain, 10f) && Near(burning, 11.08f) && Near(both, 12.16f),
-            "Thermomètre et Épingle à nourrice niveau 1 : +10,8 % contre une cible brûlée, autant contre une cible ralentie");
+        Check(Near(plain, 10f) && Near(burning, 10.4f) && Near(both, 10.8f),
+            "Thermomètre et Épingle à nourrice niveau 1 : +4 % contre une cible brûlée, autant contre une cible ralentie");
 
         Raise("allumette_humide", 1);
-        _player.AddOrUpgradePassive("thermometre", 24);
+        _player.AddOrUpgradePassive("thermometre", 14);
         _player.ObjectTriggers.Rng.Seed = 2;
         _player.AddWeapon(WeaponDataLoader.Get("heavy_hammer"));
         WeaponInstance hammer = _player.WeaponSlots[1];
         ClearStatuses(enemy);
         while (!enemy.IsBurning)
             _player.OnProjectileHit(enemy, 1f, false, hammer, _player.BeginAttack(hammer, 1f));
-        Check(Near((float)SlowFactor.GetValue(enemy), 0.85f), "Thermomètre palier 25 : un ennemi enflammé est aussi ralenti de 15 %");
+        Check(Near((float)SlowFactor.GetValue(enemy), 0.85f), "Thermomètre palier 15 : un ennemi enflammé est aussi ralenti de 15 %");
         enemy.QueueFree();
     }
 
@@ -547,8 +591,8 @@ public partial class ObjectsRegression : Node2D
         Enemy slowedNeighbour = SpawnEnemy();
         slowedNeighbour.Position = victim.Position + new Vector2(0f, 30f);
         typeof(GroupCache).GetField("_enemiesFrame", Private).SetValue(GetNode<GroupCache>("/root/GroupCache"), ulong.MaxValue);
-        Raise("allumette_humide", 25);
-        Raise("epingle_a_nourrice", 25);
+        Raise("allumette_humide", 15);
+        Raise("epingle_a_nourrice", 15);
         _player.AddWeapon(WeaponDataLoader.Get("heavy_hammer"));
         WeaponInstance hammer = _player.WeaponSlots[1];
         AttackContext attack = _player.BeginAttack(hammer, 1f);
@@ -557,12 +601,12 @@ public partial class ObjectsRegression : Node2D
         slowedNeighbour.ApplySlow(0.5f, 1f, attack);
         victim.TakeDamage(100000f, source: attack);
         Check(neighbour.IsBurning && Near((float)IgniteDps.GetValue(neighbour), 3f),
-            "Allumette humide palier 25 : la Brûlure d'un ennemi tué passe à son plus proche voisin");
+            "Allumette humide palier 15 : la Brûlure d'un ennemi tué passe à son plus proche voisin");
         bool extended = Near((float)SlowTimer.GetValue(slowedNeighbour), 2f);
         for (int i = 0; i < 5; i++)
             slowedNeighbour.ExtendSlow(1f, 4f);
         Check(extended && Near((float)SlowTimer.GetValue(slowedNeighbour), 4f),
-            "Épingle à nourrice palier 25 : un ennemi ralenti tué prolonge de 1 s le ralentissement de ses voisins, 4 s restantes au plus");
+            "Épingle à nourrice palier 15 : un ennemi ralenti tué prolonge de 1 s le ralentissement de ses voisins, 4 s restantes au plus");
         foreach (Enemy enemy in new[] { victim, neighbour, slowedNeighbour })
             enemy.QueueFree();
     }
@@ -600,8 +644,8 @@ public partial class ObjectsRegression : Node2D
         elite.Position = new Vector2(-5000f, 5000f);
         elite.ApplyVariant(EnemyVariantDataLoader.GetVariant("elite"), System.Array.Empty<EnemyAffixData>());
         typeof(GroupCache).GetField("_enemiesFrame", Private).SetValue(GetNode<GroupCache>("/root/GroupCache"), ulong.MaxValue);
-        Raise("petard_mouille", 25);
-        Raise("de_a_coudre", 25);
+        Raise("petard_mouille", 15);
+        Raise("de_a_coudre", 15);
         _player.DisableDefenseForTests();
         _player.TakeDamage(40f);
         _player.AddWeapon(WeaponDataLoader.Get("heavy_hammer"));
@@ -616,13 +660,13 @@ public partial class ObjectsRegression : Node2D
         float healed = _player.CurrentHp - playerHp;
         typeof(ObjectTriggers).GetMethod("_Process").Invoke(_player.ObjectTriggers, new object[] { 0.3 });
         float secondBlast = neighbourHp - Hp(neighbour) - firstBlast;
-        Check(firstBlast > 0f && Mathf.Abs(firstBlast - secondBlast) < 1f && Mathf.Abs(firstBlast - fatal.NativeDamage * 0.6f) < 1f,
-            $"Pétard mouillé : la victime explose ({firstBlast:0} PV au voisin, 60 % du coup fatal au niveau 25), deux fois au palier 25");
-        Check(Near(healed, 0.6f), $"Dé à coudre niveau 25 : une élimination rend 0,6 PV ({healed:0.00})");
+        Check(firstBlast > 0f && Mathf.Abs(firstBlast - secondBlast) < 1f && Mathf.Abs(firstBlast - fatal.NativeDamage * 1.5f) < 1f,
+            $"Pétard mouillé : la victime explose ({firstBlast:0} PV au voisin, 150 % du coup fatal au niveau 15), deux fois au palier 15");
+        Check(Near(healed, 1.5f), $"Dé à coudre niveau 15 : une élimination rend 1,5 PV ({healed:0.00})");
 
         playerHp = _player.CurrentHp;
         elite.TakeDamage(100000f, source: _player.BeginAttack(hammer, 100000f));
-        Check(Near(_player.CurrentHp - playerHp, 0.6f + _player.EffectiveMaxHp * 0.05f), "Dé à coudre palier 25 : une élite tuée rend en plus 5 % des PV max");
+        Check(Near(_player.CurrentHp - playerHp, 1.5f + _player.EffectiveMaxHp * 0.05f), "Dé à coudre palier 15 : une élite tuée rend en plus 5 % des PV max");
 
         playerHp = _player.CurrentHp;
         Enemy byEffect = SpawnEnemy();
@@ -647,21 +691,21 @@ public partial class ObjectsRegression : Node2D
         float spent = triggers.ConsumeStride();
         process.Invoke(triggers, new object[] { 0.5 });
         bool noRefill = triggers.StrideCharges == 0;
-        Check(notYet && Near(charged, 1.16f) && Near(spent, 1f) && noRefill,
-            "Semelle usée niveau 1 : après 2 s de marche, la prochaine attaque fait +16 %, une seule fois ; la marche repart de zéro");
+        Check(notYet && Near(charged, 1.06f) && Near(spent, 1f) && noRefill,
+            "Semelle usée niveau 1 : après 2 s de marche, la prochaine attaque fait +6 %, une seule fois ; la marche repart de zéro");
         _player.Velocity = Vector2.Zero;
         process.Invoke(triggers, new object[] { 1.5 });
         _player.Velocity = new Vector2(150f, 0f);
         process.Invoke(triggers, new object[] { 1.5 });
         bool reset = triggers.StrideCharges == 0;
-        _player.AddOrUpgradePassive("semelle_usee", 24);
+        _player.AddOrUpgradePassive("semelle_usee", 14);
         process.Invoke(triggers, new object[] { 2.1 });
-        Check(reset && triggers.StrideCharges == 2, "Semelle usée : un arrêt remet la marche à zéro ; au palier 25, deux attaques chargées");
+        Check(reset && triggers.StrideCharges == 2, "Semelle usée : un arrêt remet la marche à zéro ; au palier 15, deux attaques chargées");
         _player.Velocity = Vector2.Zero;
 
         Setup();
         _player.DisableDefenseForTests();
-        Raise("boite_de_pansements", 25);
+        Raise("boite_de_pansements", 15);
         _player.TakeDamage(50f);
         float hp = _player.CurrentHp;
         MethodInfo levelUp = typeof(ObjectTriggers).GetMethod("OnLevelUp", Private);
@@ -671,8 +715,8 @@ public partial class ObjectsRegression : Node2D
         bool notYetInvulnerable = !defense.IsInvulnerable;
         levelUp.Invoke(_player.ObjectTriggers, new object[] { 31 });
         levelUp.Invoke(_player.ObjectTriggers, new object[] { 32 });
-        Check(Near(heal, _player.EffectiveMaxHp * 0.025f) && notYetInvulnerable && defense.IsInvulnerable,
-            "Boîte de pansements niveau 25 : un niveau soigne 2,5 % des PV max ; trois niveaux d'un coup rendent invulnérable");
+        Check(Near(heal, _player.EffectiveMaxHp * 0.045f) && notYetInvulnerable && defense.IsInvulnerable,
+            "Boîte de pansements niveau 15 : un niveau soigne 4,5 % des PV max ; trois niveaux d'un coup rendent invulnérable");
     }
 
     private void CheckNamedProperties()

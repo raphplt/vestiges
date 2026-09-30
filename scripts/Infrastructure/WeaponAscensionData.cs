@@ -5,7 +5,7 @@ namespace Vestiges.Infrastructure;
 
 /// <summary>
 /// Voie d'ascension d'une arme au niveau maximal (plan 21 §3) : une transformation définitive, décrite par des leviers
-/// communs (motif, stats, effet à l'impact, copies, drapeaux) plutôt que par du code propre à l'arme.
+/// communs (motif, stats, effet à l'impact, projectiles en plus, drapeaux) plutôt que par du code propre à l'arme.
 /// </summary>
 public sealed class WeaponAscensionData
 {
@@ -21,8 +21,8 @@ public sealed class WeaponAscensionData
 	public Dictionary<string, float> StatOverrides { get; init; } = new();
 	/// <summary>Effet à l'impact remplacé ; null pour garder celui de l'arme.</summary>
 	public WeaponOnHitEffect OnHitEffect { get; init; }
-	/// <summary>Part des copies du Papier carbone que l'arme reçoit (0 : aucune, 2 : le double).</summary>
-	public float CopiesMultiplier { get; init; } = 1f;
+	/// <summary>Part des projectiles en plus du Papier carbone que l'arme reçoit (0 : aucun, 2 : le double).</summary>
+	public float BonusProjectileMultiplier { get; init; } = 1f;
 	public HashSet<string> Flags { get; init; } = new();
 	public Dictionary<string, float> Parameters { get; init; } = new();
 

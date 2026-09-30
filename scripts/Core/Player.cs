@@ -86,7 +86,7 @@ public partial class Player : CharacterBody2D
     private bool _blinkHidden;
     private float _critChance;
     private float _critMultiplier = 2f;
-    private int _projectilePierce;
+    private float _projectilePierce;
     private float _xpMagnetMultiplier = 1f;
     private float _luckBonus;
 
@@ -128,7 +128,8 @@ public partial class Player : CharacterBody2D
     public float EffectiveAttackRange => AttackRange * _attackRangeMultiplier;
     public float AttackRangeMultiplier => _attackRangeMultiplier;
     // V2: StructureHpMultiplier, CraftSpeedMultiplier, RepairSpeedMultiplier retires
-    public int ProjectilePierce => _projectilePierce;
+    /// <summary>Perforation ajoutée aux tirs (Reflet brisé), en fraction : la partie décimale est une chance par tir.</summary>
+    public float ProjectilePierce => _projectilePierce;
     public float XpMagnetMultiplier => _xpMagnetMultiplier;
     /// <summary>Bonus d'XP du build, appliqué une fois au gain (plan 21 §4, Photo de classe).</summary>
     public float XpGainMultiplier => _xpGainMultiplier;
@@ -715,7 +716,7 @@ public partial class Player : CharacterBody2D
                 if (modifierType == "additive") _critMultiplier += value;
                 break;
             case "projectile_pierce":
-                if (modifierType == "additive") _projectilePierce += (int)value;
+                if (modifierType == "additive") _projectilePierce += value;
                 break;
             case "xp_magnet_radius":
                 if (modifierType == "multiplicative") _xpMagnetMultiplier *= value;
@@ -730,11 +731,8 @@ public partial class Player : CharacterBody2D
             case "dash_recharge":
                 if (modifierType == "multiplicative") Mobility.RechargeMultiplier *= value;
                 break;
-            case "attack_copies":
-                if (modifierType == "additive") _attackCopies += Mathf.RoundToInt(value);
-                break;
-            case "copy_damage":
-                if (modifierType == "additive") _copyDamageFactor += value;
+            case "projectile_bonus":
+                if (modifierType == "additive") _bonusProjectiles += value;
                 break;
             case "status_duration":
                 if (modifierType == "multiplicative") _statusDurationMultiplier *= value;
@@ -1684,41 +1682,42 @@ public partial class Player : CharacterBody2D
 
     private void PerformRangedAttack(string pattern)
     {
-        int baseProjectileCount = Mathf.Max(1, Mathf.RoundToInt(GetWeaponStat("projectile_count", 1f)));
-        int totalProjectiles = baseProjectileCount + CopiesFor(_equippedWeapon);
+        int ownCount = Mathf.Max(1, Mathf.RoundToInt(GetWeaponStat("projectile_count", 1f)));
+        int extraCount = RollBonusProjectiles(_equippedWeapon);
+        int totalProjectiles = ownCount + extraCount;
+        bool spreadExtras = ExtraProjectilesSpread;
         float range = GetEffectiveWeaponRange();
-        System.Collections.Generic.List<Node2D> targets = FindNearestEnemies(totalProjectiles, range);
+        System.Collections.Generic.List<Node2D> targets = FindNearestEnemies(spreadExtras ? totalProjectiles : ownCount, range);
         if (targets.Count == 0)
             return;
 
         float baseDamage = ComputeBaseAttackDamage();
         _launchContext = BeginAttack(_equippedWeapon, baseDamage);
         float projectileSpeed = GetWeaponStat("projectile_speed", 400f);
-        int totalPierce = Mathf.Max(0, Mathf.RoundToInt(GetWeaponStat("projectile_pierce", 0f)) + _projectilePierce);
+        int totalPierce = Mathf.Max(0, Mathf.RoundToInt(GetWeaponStat("projectile_pierce", 0f)) + FractionalCount.Roll(_projectilePierce, GD.Randf()));
         Vector2 baseDirection = (targets[0].GlobalPosition - GlobalPosition).Normalized();
         PlayAttackFeedback(isMelee: false, baseDirection);
+        float spreadAngle = GetWeaponStat("spread_angle", 20f);
 
         if (pattern == "burst")
         {
-            float spreadAngle = GetWeaponStat("spread_angle", 20f);
-            SpawnBurstProjectiles(totalProjectiles, baseProjectileCount, spreadAngle, baseDirection, baseDamage, projectileSpeed, totalPierce);
+            // Salve : les projectiles en plus élargissent l'éventail, ou partent chacun vers leur cible au palier.
+            SpawnBurstProjectiles(spreadExtras ? ownCount : totalProjectiles, spreadAngle, baseDirection, baseDamage, projectileSpeed, totalPierce);
+            if (spreadExtras)
+                for (int i = 0; i < extraCount; i++)
+                    SpawnAimedProjectile(targets[(ownCount + i) % targets.Count], false, 0f, baseDamage, projectileSpeed, range, totalPierce);
             return;
         }
 
         float homingStrength = GetWeaponStat("homing_strength", 0f);
         bool isHoming = pattern == "homing" || homingStrength > 0f;
-
         for (int i = 0; i < totalProjectiles; i++)
         {
-            Node2D target = targets[i % targets.Count];
-            Vector2 direction = (target.GlobalPosition - GlobalPosition).Normalized();
-            bool isCopy = i >= baseProjectileCount;
-            bool isCrit = _critChance > 0f && GD.Randf() < _critChance;
-            float effectiveDamage = ProjectileDamage(baseDamage, isCrit, isCopy);
-            Projectile proj = SpawnProjectile(direction, effectiveDamage, projectileSpeed, range, totalPierce, isCrit, isCopy);
-
-            if (proj != null && isHoming)
-                proj.SetHoming(homingStrength > 0f ? homingStrength : 0.8f, target);
+            bool extra = i >= ownCount;
+            // Sans le palier du Papier carbone, un projectile en plus part en éventail autour du tir principal.
+            float offset = extra && !spreadExtras ? ExtraFanOffset(i - ownCount, extraCount, spreadAngle) : 0f;
+            Node2D target = extra && !spreadExtras ? targets[0] : targets[i % targets.Count];
+            Projectile proj = SpawnAimedProjectile(target, isHoming, homingStrength, baseDamage, projectileSpeed, range, totalPierce, offset);
 
             // Ground fire : configurer le projectile pour spawner une zone au sol à l'impact
             if (proj != null && _equippedWeapon?.Base.SpecialEffect?.Type == "ground_fire")
@@ -1730,6 +1729,28 @@ public partial class Player : CharacterBody2D
                 proj.SetGroundFire(gDmg, gDur, gRad);
             }
         }
+    }
+
+    /// <summary>Un tir vers <paramref name="target"/>, dévié de <paramref name="offsetDegrees"/>, guidé si l'arme l'est.</summary>
+    private Projectile SpawnAimedProjectile(Node2D target, bool isHoming, float homingStrength, float baseDamage, float speed,
+        float range, int pierce, float offsetDegrees = 0f)
+    {
+        Vector2 direction = (target.GlobalPosition - GlobalPosition).Normalized().Rotated(Mathf.DegToRad(offsetDegrees));
+        bool isCrit = _critChance > 0f && GD.Randf() < _critChance;
+        Projectile proj = SpawnProjectile(direction, ProjectileDamage(baseDamage, isCrit), speed, range, pierce, isCrit);
+        if (proj != null && isHoming)
+            proj.SetHoming(homingStrength > 0f ? homingStrength : 0.8f, target);
+        return proj;
+    }
+
+    /// <summary>
+    /// Écart du <paramref name="index"/>-ième projectile en plus, de part et d'autre du tir principal : ±1, ±2… pas,
+    /// le pas partageant l'angle d'éventail de l'arme entre les projectiles en plus.
+    /// </summary>
+    private static float ExtraFanOffset(int index, int count, float spreadAngle)
+    {
+        float step = spreadAngle / Mathf.Max(2, count);
+        return step * (index / 2 + 1) * (index % 2 == 0 ? 1f : -1f);
     }
 
     private void PerformMeleeAttack(string pattern)
@@ -1752,8 +1773,7 @@ public partial class Player : CharacterBody2D
 
         float baseDamage = ComputeBaseAttackDamage();
         AttackContext context = BeginAttack(_equippedWeapon, baseDamage);
-        int copies = CopiesFor(_equippedWeapon);
-        int strikeCount = 1 + copies;
+        int strikeCount = 1 + RollBonusProjectiles(_equippedWeapon);
         float spreadAngle = strikeCount > 1
             ? Mathf.Clamp(GetWeaponStat("spread_angle", 20f), 0f, 120f)
             : 0f;
@@ -1815,18 +1835,14 @@ public partial class Player : CharacterBody2D
             if (hitCount <= 0)
                 continue;
 
-            float hitMultiplierSum = StrikeMultiplierSum(firstHitIndex, lastHitIndex, copies);
-            if (hitMultiplierSum <= 0f)
-                continue;
-
             bool hasCrit = clampedCritChance > 0f && GD.Randf() < GetCombinedProcChance(clampedCritChance, hitCount);
-            float totalDamage = ResolveHitDamage(enemy, baseDamage * hitMultiplierSum * critDamageFactor, hasCrit);
+            float totalDamage = ResolveHitDamage(enemy, baseDamage * hitCount * critDamageFactor, hasCrit);
             AttackContext hitContext = context with { ReferenceDamage = totalDamage };
             enemy.TakeDamage(totalDamage, hasCrit, source: hitContext);
             OnAttackHit(enemy, totalDamage, hasCrit, _equippedWeapon, triggerCount: hitCount, context: hitContext);
         }
         if (_objectMilestones?.HasZoneEcho == true)
-            QueueMeleeEchoes(attackDirection, range, arcAngle, strikeCount, startOffset, step, baseDamage * critDamageFactor, copies, context);
+            QueueMeleeEchoes(attackDirection, range, arcAngle, strikeCount, startOffset, step, baseDamage * critDamageFactor, context);
     }
 
     private void SpawnMeleeSlashVisuals(Vector2 baseDirection, float range, float arcAngle, int strikeCount, float spreadAngle)
@@ -1844,61 +1860,28 @@ public partial class Player : CharacterBody2D
         }
     }
 
-    /// <summary>
-    /// Part des dégâts portée par les frappes <paramref name="fromIndex"/> à <paramref name="toIndex"/> : la frappe
-    /// pleine tient le centre de l'éventail, les copies du Papier carbone se partagent ses deux bords.
-    /// </summary>
-    private float StrikeMultiplierSum(int fromIndex, int toIndex, int copies)
+    /// <summary>Salve en éventail de <paramref name="count"/> projectiles pleins.</summary>
+    private void SpawnBurstProjectiles(int count, float spreadAngle, Vector2 baseDirection, float baseDamage, float projectileSpeed, int pierce)
     {
-        int centerIndex = copies / 2;
-        float sum = 0f;
-        for (int index = fromIndex; index <= toIndex; index++)
-            sum += index == centerIndex ? 1f : _copyDamageFactor;
-        return sum;
-    }
-
-    /// <summary>Dans un éventail de <paramref name="count"/> tirs, les copies occupent les deux bords.</summary>
-    private static bool IsEdgeCopy(int index, int count, int fullCount)
-    {
-        int leadingCopies = (count - fullCount) / 2;
-        return index < leadingCopies || index >= leadingCopies + fullCount;
-    }
-
-    /// <summary>Salve en éventail de <paramref name="count"/> projectiles, dont <paramref name="fullCount"/> pleins au centre.</summary>
-    private void SpawnBurstProjectiles(int count, int fullCount, float spreadAngle, Vector2 baseDirection, float baseDamage, float projectileSpeed, int pierce)
-    {
-        if (count <= 1)
-        {
-            bool isCrit = _critChance > 0f && GD.Randf() < _critChance;
-            SpawnProjectile(baseDirection, ProjectileDamage(baseDamage, isCrit, false), projectileSpeed, GetEffectiveWeaponRange(), pierce, isCrit);
-            return;
-        }
-
-        float start = -spreadAngle * 0.5f;
-        float step = spreadAngle / (count - 1);
+        float range = GetEffectiveWeaponRange();
+        float start = count <= 1 ? 0f : -spreadAngle * 0.5f;
+        float step = count <= 1 ? 0f : spreadAngle / (count - 1);
         for (int i = 0; i < count; i++)
         {
-            float angleOffset = start + step * i;
-            Vector2 direction = baseDirection.Rotated(Mathf.DegToRad(angleOffset)).Normalized();
-            bool isCopy = IsEdgeCopy(i, count, fullCount);
+            Vector2 direction = baseDirection.Rotated(Mathf.DegToRad(start + step * i)).Normalized();
             bool isCrit = _critChance > 0f && GD.Randf() < _critChance;
-            SpawnProjectile(direction, ProjectileDamage(baseDamage, isCrit, isCopy), projectileSpeed, GetEffectiveWeaponRange(), pierce, isCrit, isCopy);
+            SpawnProjectile(direction, ProjectileDamage(baseDamage, isCrit), projectileSpeed, range, pierce, isCrit);
         }
     }
 
-    private float ProjectileDamage(float baseDamage, bool isCrit, bool isCopy)
-    {
-        float damage = isCopy ? baseDamage * _copyDamageFactor : baseDamage;
-        return isCrit ? damage * _critMultiplier : damage;
-    }
+    private float ProjectileDamage(float baseDamage, bool isCrit) => isCrit ? baseDamage * _critMultiplier : baseDamage;
 
-    private Projectile SpawnProjectile(Vector2 direction, float damage, float speed, float range, int pierce, bool isCrit, bool isCopy = false)
+    private Projectile SpawnProjectile(Vector2 direction, float damage, float speed, float range, int pierce, bool isCrit)
     {
         Projectile projectile = CombatPools.Instance?.TakePlayerProjectile();
         projectile?.Launch(GlobalPosition, direction, damage, speed, Mathf.Clamp(range / Mathf.Max(speed, 1f), 0.2f, 4f),
-            pierce, isCrit, this, _equippedWeapon?.Base, _equippedWeapon, context: _launchContext with { ReferenceDamage = damage });
-        if (isCopy)
-            projectile?.MarkAsCopy();
+            pierce, isCrit, this, _equippedWeapon?.Base, _equippedWeapon, context: _launchContext with { ReferenceDamage = damage },
+            pierceDamageRamp: PierceDamageRamp);
         return projectile;
     }
 

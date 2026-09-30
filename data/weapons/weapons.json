@@ -109,7 +109,7 @@
         "stat_overrides": {
           "spread_angle": 40
         },
-        "copies_multiplier": 2
+        "bonus_projectile_multiplier": 2
       },
       {
         "id": "pierce_through",
@@ -122,7 +122,7 @@
           "projectile_count": 1,
           "projectile_pierce": 999
         },
-        "copies_multiplier": 0
+        "bonus_projectile_multiplier": 0
       }
     ],
     "stats": {

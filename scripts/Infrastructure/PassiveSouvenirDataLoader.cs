@@ -24,6 +24,10 @@ public class PassiveSouvenirData
 
 public static class PassiveSouvenirDataLoader
 {
+	/// <summary>Effets au plus par objet (tampon du joueur pour appliquer une carte sans allouer).</summary>
+	public const int MaxEffects = 8;
+	/// <summary>Gain d'une carte légendaire, le plus fort (upgrade_rarities.json) : borne de la vérification des facteurs.</summary>
+	private const float MaxRarityGain = 3f;
 	private static readonly Dictionary<string, PassiveSouvenirData> _cache = new();
 	private static readonly List<PassiveSouvenirData> _all = new();
 	private static bool _loaded;
@@ -79,7 +83,7 @@ public static class PassiveSouvenirDataLoader
 			Id = dict["id"].AsString(),
 			Name = dict.ContainsKey("name") ? dict["name"].AsString() : dict["id"].AsString(),
 			Description = dict.ContainsKey("description") ? dict["description"].AsString() : "",
-			MaxLevel = dict.ContainsKey("max_level") ? (int)dict["max_level"].AsDouble() : 50,
+			MaxLevel = dict.ContainsKey("max_level") ? (int)dict["max_level"].AsDouble() : 30,
 			Survival = dict.ContainsKey("survival") && dict["survival"].AsBool()
 		};
 
@@ -101,25 +105,28 @@ public static class PassiveSouvenirDataLoader
 		foreach (Variant entry in dict["effects"].AsGodotArray())
 		{
 			Godot.Collections.Dictionary effect = entry.AsGodotDictionary();
+			if (!effect.ContainsKey("step"))
+			{
+				GD.PushError($"[PassiveSouvenirDataLoader] {data.Id} : effet {effect["stat"]} sans step");
+				return null;
+			}
 			data.Effects.Add(new PassiveEffectData
 			{
 				Stat = effect["stat"].AsString(),
 				ModifierType = effect.ContainsKey("modifier_type") ? effect["modifier_type"].AsString() : "multiplicative",
-				Base = effect.ContainsKey("base") ? (float)effect["base"].AsDouble() : 0f,
-				PerLevel = (float)effect["per_level"].AsDouble(),
-				Step = effect.ContainsKey("step") ? (float)effect["step"].AsDouble() : 0f,
-				StepLevels = effect.ContainsKey("step_levels") ? effect["step_levels"].AsInt32Array() : System.Array.Empty<int>(),
+				Step = (float)effect["step"].AsDouble(),
 			});
 		}
-		if (data.Effects.Count == 0)
+		if (data.Effects.Count == 0 || data.Effects.Count > MaxEffects)
 		{
-			GD.PushError($"[PassiveSouvenirDataLoader] {data.Id} : liste d'effets vide");
+			GD.PushError($"[PassiveSouvenirDataLoader] {data.Id} : {data.Effects.Count} effets, entre 1 et {MaxEffects} attendus");
 			return null;
 		}
 		foreach (PassiveEffectData effect in data.Effects)
 		{
-			// Un facteur nul ou négatif ferait diviser par zéro au passage d'un niveau à l'autre.
-			if (effect.Multiplicative && effect.ValueAt(data.MaxLevel) <= 0f)
+			// Un facteur nul ou négatif ferait diviser par zéro au passage d'un niveau à l'autre : on le vérifie
+			// au pire cas, toutes les cartes au gain maximal de rareté.
+			if (effect.Multiplicative && 1f + effect.Step * data.MaxLevel * MaxRarityGain <= 0f)
 			{
 				GD.PushError($"[PassiveSouvenirDataLoader] {data.Id} : {effect.Stat} s'annule avant le niveau {data.MaxLevel}");
 				return null;

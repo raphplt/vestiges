@@ -16,10 +16,8 @@ public class UpgradeRarity
 	public float WeaponGain;
 	public int Milestones;
 	public int FallbackStats;
-	/// <summary>Multiple appliqué aux bénédictions des Mémoriaux.</summary>
+	/// <summary>Multiple du pas d'un objet pour une carte de cette rareté (plan 23 R3), et des bénédictions des Mémoriaux.</summary>
 	public float PassiveGain;
-	/// <summary>Niveaux gagnés par une amélioration d'objet de cette rareté.</summary>
-	public int ObjectLevels;
 	public int Rank;
 }
 
@@ -137,7 +135,7 @@ public static class UpgradeRoller
 			return option;
 		}
 
-		return option.Type == "passive_upgrade" ? option.WithPassiveUpgrade(rarity, rarity.ObjectLevels) : option;
+		return option.Type == "passive_upgrade" ? option.WithPassiveUpgrade(rarity) : option;
 	}
 
 	private static string WeightedPick(Dictionary<string, float> weights, RandomNumberGenerator rng)
@@ -185,7 +183,6 @@ public static class UpgradeRoller
 				Milestones = dict.ContainsKey("milestones") ? (int)dict["milestones"].AsDouble() : 0,
 				FallbackStats = dict.ContainsKey("fallback_stats") ? (int)dict["fallback_stats"].AsDouble() : 0,
 				PassiveGain = (float)dict["passive_gain"].AsDouble(),
-				ObjectLevels = dict.ContainsKey("object_levels") ? (int)dict["object_levels"].AsDouble() : 1,
 				Rank = rank++,
 			});
 		}

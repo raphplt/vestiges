@@ -11,7 +11,7 @@ namespace Vestiges.Tests;
 
 /// <summary>
 /// --capture-levelup : l'écran de level-up montré une fois par rareté (Commun à Légendaire), avec une amélioration
-/// d'arme, une amélioration d'objet qui approche puis franchit son palier 25 et un objet nouveau, puis une fois avec
+/// d'arme, une amélioration d'objet qui franchit son palier 15 et un objet nouveau, puis une fois avec
 /// le focus sur les actions, puis sur la carte d'objet (armes concernées allumées dans l'inventaire).
 /// --capture-pause : le HUD sans bouclier, puis la pause après 20 s de combat, quatre armes et six objets portés
 /// (dont l'Écusson de pompier, seule source de bouclier), dont un au-delà de son palier.
@@ -26,7 +26,8 @@ public partial class RunObservation
 
         FragmentManager fragments = _world.GetNode<FragmentManager>("FragmentManager");
         _player.AddOrUpgradePassive("souffle_du_neant");
-        _player.AddOrUpgradePassive("souffle_du_neant", 21);
+        // Niveau 14 : l'amélioration d'objet fait atteindre le palier 15 (badge doré).
+        _player.AddOrUpgradePassive("souffle_du_neant", 13);
         _player.AddWeapon(WeaponDataLoader.Get("crossbow"));
         List<FragmentOption> pending = (List<FragmentOption>)typeof(FragmentManager)
             .GetField("_pendingChoices", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(fragments);
@@ -42,7 +43,7 @@ public partial class RunObservation
             pending.Add(new FragmentOption(crossbow.Id, "weapon_upgrade", crossbow.Name, 1)
                 .WithWeaponUpgrade(rarity, UpgradeRoller.RollWeaponGains(crossbow, rarity, rng)));
             pending.Add(new FragmentOption("souffle_du_neant", "passive_upgrade", PassiveSouvenirDataLoader.Get("souffle_du_neant").Name, 1)
-                .WithPassiveUpgrade(rarity, rarity.ObjectLevels));
+                .WithPassiveUpgrade(rarity));
             pending.Add(new FragmentOption("persistance", "passive_new", PassiveSouvenirDataLoader.Get("persistance").Name, 1));
             active.SetValue(fragments, true);
             eventBus.EmitSignal(EventBus.SignalName.FragmentChoicesReady, pending.Count);

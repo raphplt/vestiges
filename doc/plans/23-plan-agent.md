@@ -281,3 +281,22 @@ Conteneur cloud sans Godot ni .NET au départ : SDK .NET 10.0.401 installé par 
 
 **Reste :** la ligne « Dégâts des copies » disparaît avec les copies au lot R3. La carte d'ascension dit « DÉFINITIVE » au lieu de « l'autre voie est oubliée » : à confirmer par Raphaël.
 
+### R3 : objets à 30 niveaux, gains francs
+
+**Fait :**
+- **Modèle** (`ActivePassiveSouvenir`, `PassiveEffectData`) : un objet monte de 1 à 30. Chaque carte donne un niveau et ajoute à chaque effet son pas multiplié par le gain de rareté (`passive_gain` : 1 / 1,5 / 2 / 2,5 / 3). L'objet neuf vaut un pas. La valeur d'un effet est la somme de ses gains. La formule par niveau (`base`, `per_level`, `step_levels`) et `object_levels` sont supprimés ; `passive_gain` sert aussi, comme avant, aux bénédictions de Mémorial (seul autre lecteur).
+- **Données** (`passive_souvenirs.json`) : `max_level` 30, un `step` par effet, tous les paliers au niveau 15. Les pas suivent la référence §4 : ceux des objets de propriété y étaient déjà écrits ; ceux des objets de déclencheur sont recalculés et consignés dans la référence avant le code (au niveau 30 en communes, au moins la valeur de l'ancien niveau 50).
+- **Copies supprimées :** `attack_copies`, `copy_damage`, `CopiesFor`, `StrikeMultiplierSum`, la teinte des projectiles copiés et `copies_multiplier`. Le Papier carbone donne `projectile_bonus` (+0,5 par carte commune), tiré à chaque attaque par `FractionalCount` (partie entière toujours, décimale en chance ; partagé avec R4). Les tirs en plus partent en éventail vers la cible de l'arme ; une arme de mêlée les reçoit en frappes pleines. Volée double les projectiles en plus (`bonus_projectile_multiplier` 2), Transpercer les refuse (0).
+- **Reflet brisé réactivé :** +0,5 perforation par carte commune, fractionnaire aussi. 23 objets proposés.
+- **Paliers nouveaux :** Papier carbone, les projectiles en plus visent chacun leur cible (`spread_targets`) ; Reflet brisé, +10 % des dégâts de départ par ennemi traversé (`pierce_damage_ramp`, dans `Projectile`, remis à zéro au lancement).
+- **Coffres :** un « niveau d'objet » de coffre = une carte commune, borné au niveau 30.
+- **Cartes et pause :** « Projectiles en plus +7 → +8,25 » ; niveau « Niv 14 → 15 » (une carte = un niveau) ; fiche : « Projectiles en plus », « Perforation » en fraction.
+
+**Vérifié :**
+- `dotnet build` : 0 avertissement. `Player.cs` passe de 2 078 à 2 061 lignes.
+- Bancs, tous à `RESULT failures=0` : `test_objects.sh` (réécrit : 30 niveaux, somme des gains, rareté × 1 à × 3, paliers à 15, 23 objets, tirage fractionnaire sur 1 000 attaques entre 2 et 3 projectiles en plus pour 2,5, dégâts d'un tir qui perfore 10 → 11 → 12), `test_weapons.sh`, `test_perk_effects.sh`, `test_perk_acquisition.sh`, `test_perk_contracts.sh`, `test_enemy_abilities.sh`, `test_movement.sh`, `test_small_places.sh`.
+- Captures regardées : `--capture-weapons` avec le Papier carbone au niveau 10 (Arc : six flèches groupées sur la cible ; Faucille : frappes cumulées, 72 au lieu de 12), puis Papier carbone et Reflet brisé au niveau 15 (flèches vers des cibles distinctes, chiffres de dégâts qui montent le long d'une perforation) ; `--capture-levelup` (badge « Palier ! » sur Niv 14 → 15) ; `--capture-pause`.
+
+- Relecture `godot-reviewer` : aucun bug. Corrigé au passage : un objet à plus de 8 effets est refusé au chargement (tampon sans allocation du joueur), deux bancs datés des 50 niveaux.
+
+**Reste :** les chiffres sont des valeurs de départ ; R5 dira si la difficulté suit. Un objet neuf vaut un pas quelle que soit la carte (les cartes « nouvel objet » n'ont pas de rareté), comme le veut la référence.

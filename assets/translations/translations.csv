@@ -326,8 +326,7 @@ PROPERTY_RANGE,Portée,Range
 PROPERTY_DURATION,Durée,Duration
 PROPERTY_PRECISION,Précision,Precision
 PROPERTY_MOMENTUM,Élan,Momentum
-STAT_ATTACK_COPIES,Copies d'attaque,Attack copies
-STAT_COPY_DAMAGE,Dégâts des copies,Copy damage
+STAT_PROJECTILE_BONUS,Projectiles en plus,Extra projectiles
 STAT_STATUS_DURATION,Durée,Duration
 STAT_BURN_CHANCE,Chance de Brûlure,Burn chance
 STAT_CHILL_CHANCE,Chance de ralentir,Chill chance

@@ -22,7 +22,7 @@
 | Famille | Question | Emplacements | Niveaux | D'où ça vient |
 |---|---|---|---|---|
 | **Armes** | Quoi : comment j'attaque | 4 | 1 à 50, puis ascension | Niveau ; au sol |
-| **Objets** | Combien et quand : l'efficacité et ce qui se déclenche | 6 | 1 à 50, palier au niveau 25 | Niveau ; Reliquaire |
+| **Objets** | Combien et quand : l'efficacité et ce qui se déclenche | 6 | 1 à 30, palier au niveau 15 | Niveau ; Reliquaire |
 | **Réminiscences** | Comment : une règle réécrite | 4 | Aucun | Après chaque Résurgence survécue |
 | **Personnage** | Pourquoi : l'orientation | 1 | — | Choix au Hub |
 
@@ -121,39 +121,43 @@ Pas = gain d'une carte commune. Au niveau 30 en cartes communes seules, l'objet 
 | Photo de classe | `photo_de_classe` | XP +5 % | Chaque niveau gagné donne 3 Essence | D |
 | Jeton de fête foraine | `jeton_de_fete` | Chance +3 % | +1 relance tous les 15 niveaux du joueur | D |
 
-Les **copies d'attaque** (projectiles à dégâts réduits) sont supprimées (DECISIONS §37). Les projectiles en plus du Papier carbone sont pleins. Ils suivent la règle des stats fractionnaires (§3) ; une arme de mêlée les reçoit en frappes.
+Les **copies d'attaque** (projectiles à dégâts réduits) sont supprimées (DECISIONS §37). Les projectiles en plus du Papier carbone sont pleins. Ils suivent la règle des stats fractionnaires (§3) : 2,5 projectiles en plus, c'est 2 projectiles et une chance sur deux d'un troisième, à chaque attaque. Une arme de mêlée les reçoit en frappes, en éventail. Sans le palier, les projectiles en plus partent en éventail vers la cible de l'arme ; au palier, chacun vise sa propre cible.
+
+**Voies d'ascension et projectiles en plus :** Volée double le total (projectiles de l'arme et projectiles en plus) ; Transpercer tire une seule flèche, et les projectiles en plus ne s'y appliquent pas.
 
 Un palier se décrit en données avec l'objet (`milestones` : niveau, effet, texte, paramètres). Il n'est annoncé que si son effet est codé.
 
 Il n'existe **pas** d'objet « +dégâts » universel : les dégâts viennent des niveaux d'armes.
 
-Les ID des anciens passifs sont conservés pour ceux qui migrent. `flamme_interieure` et `reflet_brise` ne sont plus proposés (désactivés, ID gardés).
+Les ID des anciens passifs sont conservés pour ceux qui migrent. `flamme_interieure` n'est plus proposé (désactivé, ID gardé) ; `reflet_brise` est réactivé en perforation fractionnaire (plan 23, R3).
 
 ### Objets de déclencheur (19)
 
-Les valeurs ci-dessous sont écrites pour 50 niveaux. Au passage à 30 niveaux, le pas de chacun est recalculé : au niveau 30, l'objet vaut au moins ce qu'il valait au niveau 50, et une carte commune se sent. Le palier passe au niveau 15.
+Pas écrits pour 30 niveaux (plan 23, R3) : au niveau 30 en cartes communes seules, chaque objet vaut au moins ce qu'il valait au niveau 50 de l'ancienne formule, et le premier niveau reste perceptible. Il n'y a plus de valeur de départ : le premier niveau vaut un pas. Seules les durées de base d'un effet (traînée du Chewing-gum, invulnérabilité du Médaillon) sont des réglages fixes de l'objet, auxquels le pas s'ajoute.
 
-| Objet | Déclencheur | Effet au niveau n | Palier 25 | Accès |
-|---|---|---|---|---|
-| Allumette humide | Impact | 6 % + 0,4 % × n d'enflammer (Brûlure) | La Brûlure passe au voisin quand la cible meurt | D |
-| Glaçon dans un mouchoir | Impact | 6 % + 0,4 % × n de ralentir | Un ennemi ralenti deux fois est figé 0,5 s | D |
-| Pétard mouillé | Élimination | La victime explose : 20 % + 1,6 % × n des dégâts du coup | L'explosion se produit deux fois | Q |
-| Dé à coudre | Élimination | Rend 0,1 + 0,02 × n PV | Une élite tuée rend 5 % des PV max | D |
-| Loupe de philatéliste | Critique | La cible devient Fragile 2 s : +10 % + 0,4 % × n de dégâts subis | Fragile dure 4 s | Q |
-| Stylo à quatre couleurs | Critique | L'attaque repart sur une autre cible, à 20 % + 1,2 % × n | Elle repart sur deux cibles | Q |
-| Semelle usée | Déplacement continu de 2 s | La prochaine attaque fait +15 % + 1 % × n | Vaut pour les deux prochaines attaques | D |
-| Tabouret de camping | Immobile depuis 1 s | Fréquence +10 % + 0,8 % × n | Et armure +10 | Q |
-| Chewing-gum | Dash | Traînée qui ralentit, 1 s + 0,04 s × n | La traînée rend aussi Fragile | D |
-| Gilet réfléchissant | Ennemis à moins de 120 px | +0,5 % + 0,05 % × n de dégâts par ennemi, 10 au plus | 20 ennemis au plus | Q |
-| Thermos | PV au-dessus de 90 % | Dégâts +5 % + 0,5 % × n | Seuil abaissé à 75 % | V |
-| Médaille cabossée | PV sous 35 % | Dégâts +8 % + 0,6 % × n | Et vitesse +15 % | Q |
-| Boîte de pansements | Niveau gagné | Soigne 1 % + 0,06 % × n des PV max | Une cascade de 3 niveaux ou plus donne 1 s d'invulnérabilité | V |
-| Thermomètre | Cible brûlée | Dégâts +10 % + 0,8 % × n contre elle | Tes Brûlures ralentissent aussi de 15 % | D |
-| Épingle à nourrice | Cible ralentie | Dégâts +10 % + 0,8 % × n contre elle | Un ennemi ralenti tué prolonge de 1 s le ralentissement de ses voisins | D |
-| Porte-monnaie usé | Essence gardée | +1 % de dégâts par tranche de 10 Essence, plafond 10 % + 1 % × n | 20 % de l'Essence dépensée est rendue | Q |
-| Presse-papier en verre | En zone oubliée | Dégâts +5 % + 0,5 % × n | Les malus de vitesse des zones oubliées ne s'appliquent plus | M |
-| Calendrier arraché | Permanent | L'Effacement avance 10 % plus vite ; XP et Essence +6 % + 0,5 % × n | Chaque Résurgence survécue laisse un coffre de plus | M |
-| Médaillon ouvrant | Coup fatal | Une fois par run : reste à 1 PV, invulnérable 1 s + 0,04 s × n | Se recharge à chaque Résurgence survécue | M |
+| Objet | Déclencheur | Pas (carte commune) | Niv 30 en communes (ancien niv 50) | Palier 15 | Accès |
+|---|---|---|---|---|---|
+| Allumette humide | Impact | Chance d'enflammer (Brûlure) +3 % | 90 % (26 %) | La Brûlure passe au voisin quand la cible meurt | D |
+| Glaçon dans un mouchoir | Impact | Chance de ralentir +3 % | 90 % (26 %) | Un ennemi ralenti deux fois est figé 0,5 s | D |
+| Pétard mouillé | Élimination | La victime explose : +10 % des dégâts du coup | 300 % (100 %) | L'explosion se produit deux fois | Q |
+| Dé à coudre | Élimination | +0,1 PV | 3 PV (1,1) | Une élite tuée rend 5 % des PV max | D |
+| Loupe de philatéliste | Critique | La cible devient Fragile 2 s : +5 % de dégâts subis | 150 % (30 %) | Fragile dure 4 s | Q |
+| Stylo à quatre couleurs | Critique | L'attaque repart sur une autre cible : +6 % de ses dégâts | 180 % (80 %) | Elle repart sur deux cibles | Q |
+| Semelle usée | Déplacement continu de 2 s | La prochaine attaque : +6 % | 180 % (65 %) | Vaut pour les deux prochaines attaques | D |
+| Tabouret de camping | Immobile depuis 1 s | Fréquence +3 % | 90 % (50 %) | Et armure +10 | Q |
+| Chewing-gum | Dash | Traînée qui ralentit : 1 s, +0,1 s | 4 s (3 s) | La traînée rend aussi Fragile | D |
+| Gilet réfléchissant | Ennemis à moins de 120 px | Dégâts +0,2 % par ennemi, 10 au plus | 6 % par ennemi, 60 % au plus (3 %, 30 %) | 20 ennemis au plus | Q |
+| Thermos | PV au-dessus de 90 % | Dégâts +2 % | 60 % (30 %) | Seuil abaissé à 75 % | V |
+| Médaille cabossée | PV sous 35 % | Dégâts +3 % | 90 % (38 %) | Et vitesse +15 % | Q |
+| Boîte de pansements | Niveau gagné | Soin +0,3 % des PV max | 9 % (4 %) | Une cascade de 3 niveaux ou plus donne 1 s d'invulnérabilité | V |
+| Thermomètre | Cible brûlée | Dégâts contre elle +4 % | 120 % (50 %) | Tes Brûlures ralentissent aussi de 15 % | D |
+| Épingle à nourrice | Cible ralentie | Dégâts contre elle +4 % | 120 % (50 %) | Un ennemi ralenti tué prolonge de 1 s le ralentissement de ses voisins | D |
+| Porte-monnaie usé | Essence gardée | +1 % de dégâts par tranche de 10 Essence ; plafond +3 % | plafond 90 % (60 %) | 20 % de l'Essence dépensée est rendue | Q |
+| Presse-papier en verre | En zone oubliée | Dégâts +2 % | 60 % (30 %) | Les malus de vitesse des zones oubliées ne s'appliquent plus | M |
+| Calendrier arraché | Permanent | L'Effacement avance 10 % plus vite ; XP et Essence +2 % | 60 % (31 %) | Chaque Résurgence survécue laisse un coffre de plus | M |
+| Médaillon ouvrant | Coup fatal | Une fois par run : reste à 1 PV, invulnérable 1 s, +0,1 s | 4 s (3 s) | Se recharge à chaque Résurgence survécue | M |
+
+Une chance au-delà de 100 % part toujours, et l'excédent renforce l'effet (§7).
 
 Deux objets d'exploration (Carte routière, Pied-de-biche) sont décrits au plan 22, car ils dépendent des lieux.
 
@@ -260,9 +264,9 @@ Quand une carte ne peut plus rien offrir (4 armes ascensionnées, 6 objets au ni
 | Armes : 4 emplacements, niveau 50, stats aléatoires à rareté | **En jeu** | — |
 | Relances limitées, bannissements gratuits puis Péril | **En jeu** | G1 |
 | Réminiscences après les Résurgences, 7 sur 14, libellées « Réminiscence » | **En jeu** | G1, G2a |
-| Objets : 6 emplacements, 50 niveaux par formule, effets multiples, rareté qui donne 1 à 5 niveaux | En jeu, **à refaire** : 30 niveaux, gain selon la rareté | Plan 23, R3 |
-| 14 objets de propriété, dont Papier carbone (copies à dégâts réduits) et Pince à linge (Durée) | En jeu, **à refaire** : pas francs, Papier carbone en projectiles pleins, Reflet brisé réactivé | Plan 23, R3 |
-| Paliers des 14 objets de propriété (niveau 25, et 50 pour Papier carbone) | En jeu, **à déplacer** au niveau 15 | Plan 23, R3 |
+| Objets : 6 emplacements, 30 niveaux, une carte = un niveau, gain du pas × 1 à × 3 selon la rareté, effets multiples | **En jeu** | Plan 23, R3 |
+| 15 objets de propriété à pas francs, dont Papier carbone (projectiles en plus, pleins, fractionnaires) et Reflet brisé (perforation fractionnaire) | **En jeu** | Plan 23, R3 |
+| Paliers de tous les objets au niveau 15, dont les deux nouveaux (Papier carbone, Reflet brisé) | **En jeu** | Plan 23, R3 |
 | Stats entières fractionnaires, pas d'armes relevés | À faire | Plan 23, R4 |
 | Bouclier de départ retiré, invulnérabilité réduite (0,25 s, à confirmer en jeu) | **En jeu** | Plan 23, R1 |
 | Cartes de niveau à la Megabonk, inventaire et stats à côté | **En jeu** | Plan 23, R2 |
@@ -276,7 +280,7 @@ Quand une carte ne peut plus rien offrir (4 armes ascensionnées, 6 objets au ni
 | Affinités des personnages, Souverain à 25 % | À faire | G4 |
 | Sept Réminiscences restantes | À faire | G5 |
 | Surplus, déblocages | À faire | Plans 20, 22 |
-| Anciens Dons des coffres et leurs synergies | **Retirés** ; les coffres donnent des niveaux d'objet | G2b, étape 1 |
+| Anciens Dons des coffres et leurs synergies | **Retirés** ; les coffres donnent des niveaux d'objet (un niveau = une carte commune, en attendant R8) | G2b, étape 1, plan 23 R3 |
 
 ## 13. Ce que ce document remplace
 

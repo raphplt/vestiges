@@ -97,7 +97,7 @@ public partial class RunObservation
     {
         _player.AddOrUpgradePassive("resonance");
         _player.AddOrUpgradePassive("ancrage");
-        _player.AddOrUpgradePassive("ancrage", 49);
+        _player.AddOrUpgradePassive("ancrage", 29);
         int failures = 0;
         foreach (Vestiges.Infrastructure.ChestData chest in Vestiges.Infrastructure.ChestDataLoader.GetAll())
         {
