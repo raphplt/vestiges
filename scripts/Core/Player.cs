@@ -8,39 +8,6 @@ using Vestiges.World;
 
 namespace Vestiges.Core;
 
-/// <summary>
-/// Souvenir passif porté : son niveau et l'effet cumulé de ses améliorations. Une amélioration ajoute l'écart
-/// entre deux niveaux de la table, multiplié par le gain de sa rareté (plan 17 lot 1B).
-/// </summary>
-public class ActivePassiveSouvenir
-{
-	public string Id { get; }
-	public PassiveSouvenirData Data { get; }
-	public int Level { get; private set; }
-	public bool IsMaxLevel => Level >= Data.MaxLevel;
-
-	public ActivePassiveSouvenir(PassiveSouvenirData data)
-	{
-		Data = data;
-		Id = data.Id;
-		Level = 1;
-	}
-
-	/// <summary>Valeur d'un effet au niveau courant de l'objet.</summary>
-	public float Value(int effect) => Data.Effects[effect].ValueAt(Level);
-
-	/// <summary>Niveau atteint après une amélioration de <paramref name="levels"/> niveaux, borné au maximum.</summary>
-	public int LevelAfter(int levels) => Mathf.Min(Data.MaxLevel, Level + levels);
-
-	public bool Upgrade(int levels)
-	{
-		if (IsMaxLevel)
-			return false;
-		Level = LevelAfter(levels);
-		return true;
-	}
-}
-
 public partial class Player : CharacterBody2D
 {
     [Export] public float Speed = 200f;
@@ -80,9 +47,6 @@ public partial class Player : CharacterBody2D
     private readonly List<WeaponInstance> _weaponSlots = new();
     private readonly List<Timer> _weaponTimers = new();
 
-    // Passive Souvenir inventory (max 4, from level-up)
-    public const int MaxPassiveSlots = 6;
-    private readonly List<ActivePassiveSouvenir> _passiveSlots = new();
     private readonly WeaponLedger _weaponLedger = new();
 
     private Vector2 _facingDirection = new(1f, 0f);
@@ -198,7 +162,6 @@ public partial class Player : CharacterBody2D
     public string CharacterId => _characterId;
     public WeaponInstance EquippedWeapon => _weaponSlots.Count > 0 ? _weaponSlots[0] : null;
     public IReadOnlyList<WeaponInstance> WeaponSlots => _weaponSlots;
-    public IReadOnlyList<ActivePassiveSouvenir> PassiveSlots => _passiveSlots;
 
     // Stat getters pour le menu pause
     public float DamageMultiplier => _damageMultiplier;
@@ -449,88 +412,6 @@ public partial class Player : CharacterBody2D
     public void RefreshAttackSpeed()
     {
         UpdateAttackSpeed();
-    }
-
-    // --- Passive Souvenirs ---
-
-    /// <summary>Ajoute un objet au niveau 1, ou monte un objet possédé de <paramref name="levels"/> niveaux (plan 21 §4).</summary>
-    public bool AddOrUpgradePassive(string passiveId, int levels = 1)
-    {
-        PassiveSouvenirData data = PassiveSouvenirDataLoader.Get(passiveId);
-        if (data == null)
-            return false;
-
-        foreach (ActivePassiveSouvenir existing in _passiveSlots)
-        {
-            if (existing.Id == passiveId)
-            {
-                int previousLevel = existing.Level;
-                if (!existing.Upgrade(levels))
-                    return false;
-
-                ApplyPassiveEffects(data, previousLevel, existing.Level);
-
-                _eventBus?.EmitSignal(EventBus.SignalName.PassiveSouvenirUpgraded, passiveId, existing.Level);
-                _eventBus?.EmitSignal(EventBus.SignalName.PassiveSouvenirSlotsChanged);
-
-                GD.Print($"[Player] Passive upgraded: {data.Name} → level {existing.Level}/{data.MaxLevel}");
-                return true;
-            }
-        }
-
-        // Nouveau slot
-        if (_passiveSlots.Count >= MaxPassiveSlots)
-            return false;
-
-        ActivePassiveSouvenir passive = new(data);
-        _passiveSlots.Add(passive);
-
-        ApplyPassiveEffects(data, 0, passive.Level);
-
-        int slotIndex = _passiveSlots.Count - 1;
-        _eventBus?.EmitSignal(EventBus.SignalName.PassiveSouvenirAdded, passiveId, slotIndex);
-        _eventBus?.EmitSignal(EventBus.SignalName.PassiveSouvenirSlotsChanged);
-
-        GD.Print($"[Player] Passive added [{slotIndex}]: {data.Name} (level 1/{data.MaxLevel})");
-        return true;
-    }
-
-    /// <summary>Vérifie si un passif donné est au max.</summary>
-    public bool IsPassiveMaxLevel(string passiveId)
-    {
-        foreach (ActivePassiveSouvenir p in _passiveSlots)
-        {
-            if (p.Id == passiveId)
-                return p.IsMaxLevel;
-        }
-        return false;
-    }
-
-    /// <summary>Retourne le niveau actuel d'un passif (0 si pas équipé).</summary>
-    public int GetPassiveLevel(string passiveId)
-    {
-        foreach (ActivePassiveSouvenir p in _passiveSlots)
-        {
-            if (p.Id == passiveId)
-                return p.Level;
-        }
-        return 0;
-    }
-
-    /// <summary>
-    /// Fait passer chaque effet de l'objet de sa valeur au niveau <paramref name="fromLevel"/> à celle du niveau
-    /// <paramref name="toLevel"/> ; niveau 0 : l'objet n'était pas encore possédé.
-    /// </summary>
-    private void ApplyPassiveEffects(PassiveSouvenirData data, int fromLevel, int toLevel)
-    {
-        foreach (PassiveEffectData effect in data.Effects)
-        {
-            float before = effect.ValueAt(fromLevel);
-            float after = effect.ValueAt(toLevel);
-            // Multiplicatif : on retire l'ancien facteur en appliquant le rapport ; additif : seulement l'écart.
-            float change = effect.Multiplicative ? after / before : after - before;
-            ApplyPerkModifier(effect.Stat, change, effect.ModifierType);
-        }
     }
 
     // --- Weapon Fragment Levels (level-up re-selection) ---
@@ -883,6 +764,15 @@ public partial class Player : CharacterBody2D
             case "dash_recharge":
                 if (modifierType == "multiplicative") Mobility.RechargeMultiplier *= value;
                 break;
+            case "attack_copies":
+                if (modifierType == "additive") _attackCopies += Mathf.RoundToInt(value);
+                break;
+            case "copy_damage":
+                if (modifierType == "additive") _copyDamageFactor += value;
+                break;
+            case "status_duration":
+                if (modifierType == "multiplicative") _statusDurationMultiplier *= value;
+                break;
         }
     }
 
@@ -974,7 +864,7 @@ public partial class Player : CharacterBody2D
 
         // Ignite: chance to apply DOT
         if (_igniteChance > 0f && GD.Randf() < GetCombinedProcChance(_igniteChance, procRollCount))
-            enemy.ApplyIgnite(_igniteDamage, _igniteDuration, context.As(DamageKind.Passive));
+            enemy.ApplyIgnite(_igniteDamage, StatusDuration(_igniteDuration), context.As(DamageKind.Passive));
 
         // Execution: instant kill enemies below HP threshold
         if (_executionThreshold > 0f && !enemy.IsDying && enemy.HpRatio > 0f && enemy.HpRatio < _executionThreshold)
@@ -994,13 +884,13 @@ public partial class Player : CharacterBody2D
             switch (ohe.Type)
             {
                 case "dot":
-                    enemy.ApplyBleed(ohe.Damage, ohe.Duration, context);
+                    enemy.ApplyBleed(ohe.Damage, StatusDuration(ohe.Duration), context);
                     break;
                 case "slow":
-                    enemy.ApplySlow(ohe.Value, ohe.Duration, context);
+                    enemy.ApplySlow(ohe.Value, StatusDuration(ohe.Duration), context);
                     break;
                 case "disorient":
-                    enemy.ApplyDisorient(ohe.Duration, context);
+                    enemy.ApplyDisorient(StatusDuration(ohe.Duration), context);
                     break;
             }
         }
@@ -1122,7 +1012,7 @@ public partial class Player : CharacterBody2D
             {
                 float radius = ZoneScale(se.Params.TryGetValue("slow_radius", out float r) ? r : 80f);
                 float factor = se.Params.TryGetValue("slow_factor", out float f) ? f : 0.3f;
-                float duration = se.Params.TryGetValue("slow_duration", out float dur) ? dur : 0.5f;
+                float duration = StatusDuration(se.Params.TryGetValue("slow_duration", out float dur) ? dur : 0.5f);
                 Vector2 impactPos = enemy.GlobalPosition;
                 Godot.Collections.Array<Node> enemies = _groupCache.GetEnemies();
                 foreach (Node node in enemies)
@@ -1954,7 +1844,8 @@ public partial class Player : CharacterBody2D
     private void PerformRangedAttack(string pattern)
     {
         int baseProjectileCount = Mathf.Max(1, Mathf.RoundToInt(GetWeaponStat("projectile_count", 1f)));
-        int totalProjectiles = Mathf.Max(1, baseProjectileCount + _extraProjectiles);
+        int fullProjectiles = Mathf.Max(1, baseProjectileCount + _extraProjectiles);
+        int totalProjectiles = fullProjectiles + _attackCopies;
         float range = GetEffectiveWeaponRange();
         System.Collections.Generic.List<Node2D> targets = FindNearestEnemies(totalProjectiles, range);
         if (targets.Count == 0)
@@ -1970,7 +1861,7 @@ public partial class Player : CharacterBody2D
         if (pattern == "burst")
         {
             float spreadAngle = GetWeaponStat("spread_angle", 20f);
-            SpawnBurstProjectiles(totalProjectiles, spreadAngle, baseDirection, baseDamage, projectileSpeed, totalPierce);
+            SpawnBurstProjectiles(totalProjectiles, fullProjectiles, spreadAngle, baseDirection, baseDamage, projectileSpeed, totalPierce);
             return;
         }
 
@@ -1981,9 +1872,10 @@ public partial class Player : CharacterBody2D
         {
             Node2D target = targets[i % targets.Count];
             Vector2 direction = (target.GlobalPosition - GlobalPosition).Normalized();
+            bool isCopy = i >= fullProjectiles;
             bool isCrit = _critChance > 0f && GD.Randf() < _critChance;
-            float effectiveDamage = isCrit ? baseDamage * _critMultiplier : baseDamage;
-            Projectile proj = SpawnProjectile(direction, effectiveDamage, projectileSpeed, range, totalPierce, isCrit);
+            float effectiveDamage = ProjectileDamage(baseDamage, isCrit, isCopy);
+            Projectile proj = SpawnProjectile(direction, effectiveDamage, projectileSpeed, range, totalPierce, isCrit, isCopy);
 
             if (proj != null && isHoming)
                 proj.SetHoming(homingStrength > 0f ? homingStrength : 0.8f, target);
@@ -1993,7 +1885,7 @@ public partial class Player : CharacterBody2D
             {
                 WeaponSpecialEffect se = _equippedWeapon.Base.SpecialEffect;
                 float gDmg = se.Params.TryGetValue("ground_damage", out float gd) ? gd : 5f;
-                float gDur = se.Params.TryGetValue("ground_duration", out float gdur) ? gdur : 2f;
+                float gDur = StatusDuration(se.Params.TryGetValue("ground_duration", out float gdur) ? gdur : 2f);
                 float gRad = ZoneScale(se.Params.TryGetValue("ground_radius", out float grad) ? grad : 30f);
                 proj.SetGroundFire(gDmg, gDur, gRad);
             }
@@ -2020,7 +1912,7 @@ public partial class Player : CharacterBody2D
 
         float baseDamage = ComputeBaseAttackDamage();
         AttackContext context = BeginAttack(_equippedWeapon, baseDamage);
-        int strikeCount = Mathf.Max(1, 1 + _extraProjectiles);
+        int strikeCount = Mathf.Max(1, 1 + _extraProjectiles) + _attackCopies;
         float spreadAngle = strikeCount > 1
             ? Mathf.Clamp(GetWeaponStat("spread_angle", 20f), 0f, 120f)
             : 0f;
@@ -2082,7 +1974,7 @@ public partial class Player : CharacterBody2D
             if (hitCount <= 0)
                 continue;
 
-            float hitMultiplierSum = SumMeleeStrikeDamageMultipliers(firstHitIndex, lastHitIndex);
+            float hitMultiplierSum = StrikeMultiplierSum(firstHitIndex, lastHitIndex);
             if (hitMultiplierSum <= 0f)
                 continue;
 
@@ -2107,6 +1999,31 @@ public partial class Player : CharacterBody2D
             Vector2 visualDirection = baseDirection.Rotated(Mathf.DegToRad(angleOffset)).Normalized();
             SpawnSlashEffect(visualDirection, range, arcAngle);
         }
+    }
+
+    /// <summary>
+    /// Part des dégâts portée par les frappes <paramref name="fromIndex"/> à <paramref name="toIndex"/>. Les frappes
+    /// pleines (la première, puis celles des anciens Dons, dégressives) tiennent le centre de l'éventail ; les copies
+    /// du Papier carbone se partagent ses deux bords.
+    /// </summary>
+    private float StrikeMultiplierSum(int fromIndex, int toIndex)
+    {
+        int full = Mathf.Max(1, 1 + _extraProjectiles);
+        int leadingCopies = _attackCopies / 2;
+        float sum = 0f;
+        for (int index = fromIndex; index <= toIndex; index++)
+        {
+            int rank = index - leadingCopies;
+            sum += rank < 0 || rank >= full ? _copyDamageFactor : SumMeleeStrikeDamageMultipliers(rank, rank);
+        }
+        return sum;
+    }
+
+    /// <summary>Dans un éventail de <paramref name="count"/> tirs, les copies occupent les deux bords.</summary>
+    private static bool IsEdgeCopy(int index, int count, int fullCount)
+    {
+        int leadingCopies = (count - fullCount) / 2;
+        return index < leadingCopies || index >= leadingCopies + fullCount;
     }
 
     private float SumMeleeStrikeDamageMultipliers(int fromIndex, int toIndex)
@@ -2142,13 +2059,13 @@ public partial class Player : CharacterBody2D
         return sum;
     }
 
-    private void SpawnBurstProjectiles(int count, float spreadAngle, Vector2 baseDirection, float baseDamage, float projectileSpeed, int pierce)
+    /// <summary>Salve en éventail de <paramref name="count"/> projectiles, dont <paramref name="fullCount"/> pleins au centre.</summary>
+    private void SpawnBurstProjectiles(int count, int fullCount, float spreadAngle, Vector2 baseDirection, float baseDamage, float projectileSpeed, int pierce)
     {
         if (count <= 1)
         {
             bool isCrit = _critChance > 0f && GD.Randf() < _critChance;
-            float effectiveDamage = isCrit ? baseDamage * _critMultiplier : baseDamage;
-            SpawnProjectile(baseDirection, effectiveDamage, projectileSpeed, GetEffectiveWeaponRange(), pierce, isCrit);
+            SpawnProjectile(baseDirection, ProjectileDamage(baseDamage, isCrit, false), projectileSpeed, GetEffectiveWeaponRange(), pierce, isCrit);
             return;
         }
 
@@ -2158,17 +2075,25 @@ public partial class Player : CharacterBody2D
         {
             float angleOffset = start + step * i;
             Vector2 direction = baseDirection.Rotated(Mathf.DegToRad(angleOffset)).Normalized();
+            bool isCopy = IsEdgeCopy(i, count, fullCount);
             bool isCrit = _critChance > 0f && GD.Randf() < _critChance;
-            float effectiveDamage = isCrit ? baseDamage * _critMultiplier : baseDamage;
-            SpawnProjectile(direction, effectiveDamage, projectileSpeed, GetEffectiveWeaponRange(), pierce, isCrit);
+            SpawnProjectile(direction, ProjectileDamage(baseDamage, isCrit, isCopy), projectileSpeed, GetEffectiveWeaponRange(), pierce, isCrit, isCopy);
         }
     }
 
-    private Projectile SpawnProjectile(Vector2 direction, float damage, float speed, float range, int pierce, bool isCrit)
+    private float ProjectileDamage(float baseDamage, bool isCrit, bool isCopy)
+    {
+        float damage = isCopy ? baseDamage * _copyDamageFactor : baseDamage;
+        return isCrit ? damage * _critMultiplier : damage;
+    }
+
+    private Projectile SpawnProjectile(Vector2 direction, float damage, float speed, float range, int pierce, bool isCrit, bool isCopy = false)
     {
         Projectile projectile = CombatPools.Instance?.TakePlayerProjectile();
         projectile?.Launch(GlobalPosition, direction, damage, speed, Mathf.Clamp(range / Mathf.Max(speed, 1f), 0.2f, 4f),
             pierce, isCrit, this, _equippedWeapon?.Base, _equippedWeapon, context: _launchContext with { ReferenceDamage = damage });
+        if (isCopy)
+            projectile?.MarkAsCopy();
         return projectile;
     }
 

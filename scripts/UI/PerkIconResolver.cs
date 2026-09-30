@@ -22,6 +22,8 @@ public static class PerkIconResolver
             "projectile_pierce" => "assets/ui/icons/ui_icon_perk_piercing_shot.png",
             "luck" => "assets/ui/icons/ui_icon_perk_lucky.png",
             "xp_gain" => "assets/ui/icons/ui_icon_perk_xp_magnet.png",
+            "attack_copies" => "assets/ui/icons/ui_icon_perk_echo.png",
+            "status_duration" => "assets/ui/icons/ui_icon_perk_time_master.png",
             _ => "assets/ui/icons/ui_icon_perk_damage_up.png"
         };
     }

@@ -14,6 +14,8 @@ public class PassiveSouvenirData
 	public string Stat;
 	public string ModifierType;
 	public List<PassiveEffectData> Effects = new();
+	/// <summary>Paliers de l'objet, par niveau croissant (plan 21 §4).</summary>
+	public List<ObjectMilestoneData> Milestones = new();
 	/// <summary>Passif de survie (PV, régénération, armure, bouclier) : garanti au tirage tant que le joueur n'en a aucun.</summary>
 	public bool Survival;
 }
@@ -101,7 +103,10 @@ public static class PassiveSouvenirDataLoader
 			{
 				Stat = effect["stat"].AsString(),
 				ModifierType = effect.ContainsKey("modifier_type") ? effect["modifier_type"].AsString() : "multiplicative",
+				Base = effect.ContainsKey("base") ? (float)effect["base"].AsDouble() : 0f,
 				PerLevel = (float)effect["per_level"].AsDouble(),
+				Step = effect.ContainsKey("step") ? (float)effect["step"].AsDouble() : 0f,
+				StepLevels = effect.ContainsKey("step_levels") ? effect["step_levels"].AsInt32Array() : System.Array.Empty<int>(),
 			});
 		}
 		if (data.Effects.Count == 0)
@@ -118,10 +123,47 @@ public static class PassiveSouvenirDataLoader
 				return null;
 			}
 		}
+		if (dict.ContainsKey("milestones") && !ParseMilestones(data, dict["milestones"].AsGodotArray()))
+			return null;
 		data.Stat = data.Effects[0].Stat;
 		data.ModifierType = data.Effects[0].ModifierType;
 
 		return data;
+	}
+
+	private static bool ParseMilestones(PassiveSouvenirData data, Godot.Collections.Array entries)
+	{
+		foreach (Variant entry in entries)
+		{
+			Godot.Collections.Dictionary milestone = entry.AsGodotDictionary();
+			if (!milestone.ContainsKey("level") || !milestone.ContainsKey("effect") || !milestone.ContainsKey("text"))
+			{
+				GD.PushError($"[PassiveSouvenirDataLoader] {data.Id} : palier sans niveau, effet ou texte");
+				return false;
+			}
+			Dictionary<string, float> parameters = new();
+			if (milestone.ContainsKey("params"))
+			{
+				Godot.Collections.Dictionary values = milestone["params"].AsGodotDictionary();
+				foreach (Variant key in values.Keys)
+					parameters[key.AsString()] = (float)values[key].AsDouble();
+			}
+			int level = (int)milestone["level"].AsDouble();
+			if (level < 2 || level > data.MaxLevel)
+			{
+				GD.PushError($"[PassiveSouvenirDataLoader] {data.Id} : palier au niveau {level}, hors de 2 à {data.MaxLevel}");
+				return false;
+			}
+			data.Milestones.Add(new ObjectMilestoneData
+			{
+				Level = level,
+				Effect = milestone["effect"].AsString(),
+				Text = milestone["text"].AsString(),
+				Parameters = parameters,
+			});
+		}
+		data.Milestones.Sort((a, b) => a.Level.CompareTo(b.Level));
+		return true;
 	}
 
 	public static PassiveSouvenirData Get(string id)

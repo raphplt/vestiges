@@ -13,8 +13,10 @@ public enum StatDisplay
     Count,
     /// <summary>Seulement le gain en pourcentage (portée, zone, vitesses).</summary>
     Percent,
-    /// <summary>Une part (0,05) montrée en pourcentage (critique).</summary>
+    /// <summary>Une part (0,05) montrée en pourcentage signé (critique).</summary>
     Fraction,
+    /// <summary>Une part montrée en pourcentage, sans signe : ce n'est pas un bonus mais une proportion (dégâts des copies).</summary>
+    Share,
 }
 
 /// <summary>
@@ -54,6 +56,7 @@ public static class StatCatalog
         {
             StatDisplay.Count => Signed(Mathf.RoundToInt(modifier)),
             StatDisplay.Fraction => SignedPercent(modifier * 100f),
+            StatDisplay.Share => Percent(modifier * 100f),
             _ => (modifier >= 0f ? "+" : "") + modifier.ToString("0.0#", French) + (string.IsNullOrEmpty(unit) ? "" : $" {unit}"),
         };
     }
@@ -65,8 +68,10 @@ public static class StatCatalog
     {
         // Arrondi avant le signe : un multiplicateur de 0,9999999 ne doit pas afficher « -0 % ».
         float rounded = Mathf.Round(percent * 10f) / 10f;
-        return (rounded >= 0f ? "+" : "") + rounded.ToString("0.#", French) + " %";
+        return (rounded >= 0f ? "+" : "") + Percent(rounded);
     }
+
+    private static string Percent(float percent) => (Mathf.Round(percent * 10f) / 10f).ToString("0.#", French) + " %";
 
     /// <summary>Écart en pourcentage entier, signé : « +18 % ».</summary>
     public static string FormatGain(float before, float after)
@@ -103,6 +108,7 @@ public static class StatCatalog
                 "value" => StatDisplay.Value,
                 "count" => StatDisplay.Count,
                 "fraction" => StatDisplay.Fraction,
+                "share" => StatDisplay.Share,
                 _ => StatDisplay.Percent,
             };
             _stats[dict["id"].AsString()] = (dict["name_key"].AsString(), display, dict.ContainsKey("unit") ? dict["unit"].AsString() : "");

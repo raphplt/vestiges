@@ -119,6 +119,12 @@ public partial class Enemy : CharacterBody2D
 
 	// Disorientation (mouvement aléatoire)
 	private float _disorientTimer;
+
+	// Durée posée par la dernière application de chaque statut : ce qu'un renouvellement reprend (Pince à linge).
+	private float _igniteDuration;
+	private float _bleedDuration;
+	private float _slowDuration;
+	private float _disorientDuration;
 	private Vector2 _disorientDirection;
 
 	private Polygon2D _visual;
@@ -944,7 +950,7 @@ public partial class Enemy : CharacterBody2D
 	{
 		_igniteSource = source.As(DamageKind.DamageOverTime);
 		_igniteDps = dps;
-		_igniteTimer = duration;
+		_igniteTimer = _igniteDuration = duration;
 		_visual.Color = new Color(1f, 0.5f, 0.1f);
 	}
 
@@ -953,7 +959,7 @@ public partial class Enemy : CharacterBody2D
 	{
 		_bleedSource = source.As(DamageKind.DamageOverTime);
 		_bleedDps = dps;
-		_bleedTimer = duration;
+		_bleedTimer = _bleedDuration = duration;
 		_visual.Color = new Color(0.8f, 0.15f, 0.15f);
 	}
 
@@ -971,7 +977,7 @@ public partial class Enemy : CharacterBody2D
 				sameOwner ? Mathf.Max(_nativeSlow.Remaining, duration) : duration, source, origin);
 		}
 		_slowFactor = Mathf.Min(_slowFactor, factor);
-		_slowTimer = Mathf.Max(_slowTimer, duration);
+		_slowTimer = _slowDuration = Mathf.Max(_slowTimer, duration);
 		_visual.Color = _visual.Color.Lerp(new Color(0.4f, 0.6f, 1f), 0.4f);
 	}
 
@@ -993,6 +999,7 @@ public partial class Enemy : CharacterBody2D
 		}
 		else
 			_disorientTimer = Mathf.Max(duration, _propagatedDisorientationRemaining);
+		_disorientDuration = _disorientTimer;
 		float angle = (float)GD.RandRange(0, Mathf.Tau);
 		_disorientDirection = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle));
 		_visual.Color = new Color(1f, 1f, 0.4f);
@@ -1025,8 +1032,11 @@ public partial class Enemy : CharacterBody2D
 
 		if (_igniteTimer <= 0f)
 		{
+			float dps = _igniteDps;
 			_igniteDps = 0f;
 			_visual.Color = _originalColor;
+			if (!result.Fatal)
+				PublishStatusExpiry(StatusKind.Burn, dps, _igniteDuration, _igniteSource);
 		}
 
 		if (result.Fatal && !_isDying)
@@ -1047,8 +1057,11 @@ public partial class Enemy : CharacterBody2D
 
 		if (_bleedTimer <= 0f)
 		{
+			float dps = _bleedDps;
 			_bleedDps = 0f;
 			_visual.Color = _originalColor;
+			if (!result.Fatal)
+				PublishStatusExpiry(StatusKind.Bleed, dps, _bleedDuration, _bleedSource);
 		}
 
 		if (result.Fatal && !_isDying)
@@ -1064,10 +1077,12 @@ public partial class Enemy : CharacterBody2D
 		_slowTimer -= delta;
 		if (_slowTimer <= 0f)
 		{
+			float factor = _slowFactor;
 			_slowFactor = 1f;
 			_slowTimer = 0f;
 			if (_igniteTimer <= 0f && _bleedTimer <= 0f && _disorientTimer <= 0f)
 				_visual.Color = _originalColor;
+			PublishStatusExpiry(StatusKind.Slow, factor, _slowDuration, _slowSource, _slowOrigin);
 		}
 	}
 
@@ -1089,7 +1104,16 @@ public partial class Enemy : CharacterBody2D
 		{
 			if (_igniteTimer <= 0f && _bleedTimer <= 0f && _slowTimer <= 0f)
 				_visual.Color = _originalColor;
+			PublishStatusExpiry(StatusKind.Disorientation, 1f, _disorientDuration, _disorientSource, _disorientOrigin);
 		}
+	}
+
+	/// <summary>Statut d'un joueur arrivé à son terme sur une créature vivante : publié pour ce qui le prolonge.</summary>
+	private void PublishStatusExpiry(StatusKind kind, float strength, float duration, AttackContext source,
+		ControlOrigin origin = ControlOrigin.Unknown)
+	{
+		if (source.IsPlayerOwned && !_isDying && duration > 0f)
+			_eventBus.PublishStatusExpiry(new StatusExpiry(this, kind, strength, duration, source, origin));
 	}
 
 	private void TriggerHitFeedback()

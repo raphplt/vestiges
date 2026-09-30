@@ -467,3 +467,87 @@ Première application de la [référence unique](21-systeme-de-jeu.md) §4.
 - `tools/test_objects.sh` (nouveau) : 15 assertions, zéro échec (emplacements, formule jusqu'au niveau 50, effets multiples, XP, dash, Chance, niveaux par rareté, offres).
 - Effets des Réminiscences (66), acquisition (22), contrats, armes, capacités ennemies, déplacements : zéro échec. Smoke vert.
 - Captures `--capture-levelup` et `--capture-pause`, regardées : carte légendaire « Ressort de sommier, Niv 1 → 6, Cadence +1,2 % → +7,2 % », section « Objets » de la pause, six cases au HUD.
+
+## 20. Lot G2a-2 — paliers du niveau 25, Papier carbone, Pince à linge : découpage (30 septembre)
+
+Application de la [référence](21-systeme-de-jeu.md) §4. Deux étapes, un commit chacune.
+
+### Étape 1 : le socle des paliers et les deux objets manquants
+
+- **Données :** un objet porte une liste `milestones` (niveau, effet, texte, paramètres). Un effet d'objet vaut `base + per_level × n` au niveau n ; `base` est facultative (Papier carbone : 30 % + 1,4 % × n).
+- **Activation :** un palier s'active quand une amélioration franchit son niveau, une seule fois. Un composant `ObjectMilestones`, enfant du joueur comme celui des Réminiscences, porte l'état et les paramètres des paliers atteints.
+- **Annoncé seulement si codé :** un registre des effets branchés (sur le modèle de `PerkSpecializationEffects`). Un palier absent du registre n'apparaît ni sur les cartes ni dans la pause.
+- **Lisibilité :**
+  - carte d'objet neuf ou d'amélioration : « Palier 25 : … » tant qu'il n'est pas atteint ;
+  - amélioration qui le franchit : « Palier 25 atteint : … » en couleur de gain ;
+  - pause : le palier sous chaque objet, grisé tant qu'il n'est pas atteint.
+- **Papier carbone** (`souffle_du_neant`, réactivé) :
+  - stats `attack_copies` (+1) et `copy_damage` (30 % + 1,4 % × n) ;
+  - les copies s'ajoutent aux tirs, aux salves et aux frappes de mêlée, à dégâts réduits ; les projectiles copiés sont teintés ;
+  - paliers 25 et 50 : +1 copie chacun.
+- **Pince à linge** (`persistance`, nouveau) :
+  - stat `status_duration` (+1,5 % × n), appliquée là où une durée est posée : effets à l'impact des armes (Saignement, Ralentissement, Désorientation), embrasement, feu au sol, champ de l'Aiguille ;
+  - les orbites sont permanentes aujourd'hui : la Durée ne s'y applique pas encore ; la carte ne les annonce pas ;
+  - palier 25 : un statut infligé par le joueur qui expire a 25 % de chance de se renouveler. L'ennemi publie l'expiration sur l'EventBus ; le composant des paliers décide.
+- **Code :** les méthodes d'objets quittent `Player.cs` pour une partie `Player.Objects.cs` ; `ActivePassiveSouvenir` prend son propre fichier.
+- **Vérification :** `tools/test_objects.sh` étendu (formule avec base, activation au franchissement, registre, copies, Durée, renouvellement) ; captures `--capture-levelup` et `--capture-pause`.
+
+### Étape 2 : les douze autres paliers
+
+Valeurs de départ, en données (`params` du palier) :
+
+| Objet | Palier 25 | Branchement |
+|---|---|---|
+| Ressort de sommier | Chaque 10ᵉ attaque d'une arme repart 0,12 s après | Minuteur d'attaque de l'arme ; tirs, frappes et chaînes (ni cône continu ni orbite) |
+| Rondelle de cuivre | Les zones refrappent 0,25 s après, à 30 % | Frappes de mêlée (arcs, cercles), échos et éclats d'armes spéciales. Un effet déclenché ne refrappe pas (§7, pas de récursion) |
+| Mètre pliant | Un projectile en bout de course éclate : 50 % de ses dégâts dans 36 px × Taille | Fin de course d'un projectile d'arme, pas d'un ricochet |
+| Lunettes de lecture | Critique sur une cible à PV pleins : dégâts × 2 | Au moment de l'impact (projectile, mêlée, chaîne) |
+| Bouton de manteau | Coup inférieur à 3 % des PV max ignoré | Coup reçu, avant l'armure ; éclair pâle, limité en fréquence |
+| Bobine de fil | Régénération × 2 pendant 3 s après une blessure | Blessure publiée sur l'EventBus |
+| Genouillère | Armure × 2 pendant le dash et 1 s après | Temps depuis le dernier dash, tenu par la mobilité |
+| Écusson de pompier | Bouclier cassé : onde qui repousse de 90 px dans 110 px | Coup qui casse le bouclier |
+| Lacet rouge | Dash 30 % plus long | Vitesse du dash, même durée |
+| Aimant de frigo | Chaque orbe ramassée rend 0,2 PV | Ramassage d'orbe (soin ordinaire : Prévoyance le stocke) |
+| Photo de classe | Chaque niveau gagné donne 3 Essence | Niveau gagné |
+| Jeton de fête foraine | +1 relance à chaque niveau de joueur multiple de 15 | Gestionnaire des choix de niveau, avant l'ouverture de l'écran |
+
+- **Retour visuel :** repli visible de l'attaque, arc rejoué, éclat au sol, étincelle au renouvellement, anneau de l'onde, vol d'Essence. Bobine et Genouillère n'ont pas d'effet visible propre à ce lot.
+- **Vérification :** `tools/test_objects.sh` (un contrôle par palier) ; capture en run avec des objets au-delà du niveau 25.
+
+**Hors lot :** renommage technique (`PassiveSouvenir…`) ; dégâts par source dans le bilan ; Durée des orbites (quand une orbite aura une durée, G3).
+
+## 21. Compte rendu G2a-2, étape 1 : socle des paliers, Papier carbone, Pince à linge (30 septembre)
+
+- **Paliers :** chaque objet porte ses paliers dans `passive_souvenirs.json` (niveau, effet, texte, paramètres). Les douze paliers des objets déjà en jeu y sont écrits, mais ne sont ni annoncés ni activés tant que leur effet n'est pas codé (`ObjectMilestoneEffects`).
+  - Un palier s'active une seule fois, quand une amélioration franchit son niveau ; une amélioration peut en franchir deux.
+  - Retour : un texte doré au-dessus du joueur (« Papier carbone : palier 25 »).
+  - Le composant `ObjectMilestones`, enfant du joueur, naît au premier palier atteint et n'écoute que les événements des paliers actifs.
+- **Cartes :** « Palier 25 : … » grisé tant qu'il est à venir, « Palier 25 atteint : … » doré quand l'amélioration le franchit. **Pause :** les paliers sous chaque objet, dorés une fois atteints.
+- **Papier carbone** (proposé à nouveau) :
+  - effets `attack_copies` et `copy_damage` (30 % + 1,4 % × n) ;
+  - les copies sont des crans de la formule (`step_levels` 25 et 50), donc la carte montre « Copies +1 → +2 » ;
+  - tirs : les copies visent les cibles suivantes ; salves et frappes de mêlée : les coups pleins tiennent le centre de l'éventail, les copies les deux bords ;
+  - projectiles copiés teintés de bleu et plus pâles.
+- **Pince à linge** (`persistance`, nouveau) :
+  - Durée +1,5 % × n sur Saignement, Ralentissement, Désorientation des armes, embrasement, feu au sol et champ de l'Aiguille ;
+  - palier 25 : à l'expiration d'un statut infligé par le joueur (événement `EnemyStatusExpired`), 25 % de chance de le reposer avec la même intensité et la même durée, avec une étincelle de la couleur du statut ;
+  - un contrôle reçu par Propagation reste non transmissible une fois renouvelé.
+- **Code :** les méthodes d'objets sont passées dans `Player.Objects.cs` et `ActivePassiveSouvenir` dans son fichier (`Player.cs` : 2 381 → 2 306 lignes). Format d'affichage `share` pour une part sans signe (« 31,4 % »).
+- **Capture :** `--capture-weapons` accepte `--objects id:niveau,…`.
+
+**Vérifications :**
+- `dotnet build` : zéro avertissement.
+- `tools/test_objects.sh` : 21 assertions, zéro échec. Parmi elles :
+  - formule avec base et crans ;
+  - paliers franchis une fois, deux d'un coup ;
+  - cartes : palier à venir, atteint, non codé absent ;
+  - part des copies en mêlée et en tir ;
+  - Cloche : 2,30 s de ralentissement au niveau 10 ;
+  - 23 % de renouvellements sur 400 expirations, rien pour un statut sans joueur, contrôle propagé non retransmis.
+- Effets des Réminiscences, acquisition, contrats, armes, capacités ennemies, déplacements : zéro échec.
+- Captures regardées :
+  - `--capture-levelup` : Papier carbone du niveau 22, « Palier 25 : +1 copie » aux raretés commune et inhabituelle, « Palier 25 atteint » et « Copies +1 → +2 » dès la rare ; carte « Nouvel objet » de la Pince à linge avec son palier ;
+  - `--capture-pause` : paliers dorés et grisés sous les objets ; niveaux 30 et 12 lisibles dans les cases du HUD, le second touche à peine le bord de sa case ;
+  - `--capture-weapons --objects souffle_du_neant:50` : l'arc touche quatre cibles (un tir et trois copies).
+
+Relecture par sous-agent avant le commit. Corrigé : origine d'un contrôle conservée au renouvellement ; copies réparties sur les deux bords de l'éventail ; nombre de frappes jamais nul ; texte du palier traduit. Deux textes de palier se superposaient au-dessus du joueur ; ils s'empilent désormais.

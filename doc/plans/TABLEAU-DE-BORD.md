@@ -8,7 +8,7 @@ Le [registre](DECISIONS.md) garde les mots de Raphaël. Les plans gardent le dé
 
 | Chantier | Plan | Prochaine action |
 |---|---|---|
-| Système de jeu | [21, référence unique](21-systeme-de-jeu.md) | G1 et G2a livrés. Agent : G2a-2 (paliers 25, Papier carbone, Pince à linge), puis G2b (objets de déclencheur) |
+| Système de jeu | [21, référence unique](21-systeme-de-jeu.md) | G1, G2a et G2a-2 étape 1 (socle des paliers, Papier carbone, Pince à linge) livrés. Agent : G2a-2 étape 2 (douze paliers), puis G2b (objets de déclencheur) |
 | Carte à explorer | [22](22-carte-a-explorer.md) | Direction validée. Agent : lot C0 (mesure de départ), puis C1 |
 
 ## 2. Décisions attendues de Raphaël

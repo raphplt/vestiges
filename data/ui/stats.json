@@ -1,5 +1,5 @@
 {
-    "_comment": "Catalogue des stats affichées (plan 17 §4.2, lots 1B et 1C) : clé de traduction, et comment les montrer. value = valeur avant → après (dégâts et cadence à une décimale) ; count = entier ; percent = seulement le gain en pourcentage (portée, zone, vitesses : leurs chiffres ne parlent pas au joueur) ; fraction = une part (0,05) montrée en pourcentage.",
+    "_comment": "Catalogue des stats affichées (plan 17 §4.2, lots 1B et 1C) : clé de traduction, et comment les montrer. value = valeur avant → après (dégâts et cadence à une décimale) ; count = entier ; percent = seulement le gain en pourcentage (portée, zone, vitesses : leurs chiffres ne parlent pas au joueur) ; fraction = une part (0,05) montrée en pourcentage signé ; share = une part montrée en pourcentage, sans signe (dégâts des copies : 31,4 %).",
     "stats": [
         { "id": "damage", "name_key": "STAT_DAMAGE", "display": "value" },
         { "id": "attack_speed", "name_key": "STAT_ATTACK_SPEED", "display": "value", "unit": "/s" },
@@ -27,6 +27,9 @@
         { "id": "luck", "name_key": "STAT_LUCK", "display": "fraction" },
         { "id": "crit_multiplier", "name_key": "STAT_CRIT_DAMAGE", "display": "fraction" },
         { "id": "xp_gain", "name_key": "STAT_XP_GAIN", "display": "percent" },
-        { "id": "dash_recharge", "name_key": "STAT_DASH_RECHARGE", "display": "percent" }
+        { "id": "dash_recharge", "name_key": "STAT_DASH_RECHARGE", "display": "percent" },
+        { "id": "attack_copies", "name_key": "STAT_ATTACK_COPIES", "display": "count" },
+        { "id": "copy_damage", "name_key": "STAT_COPY_DAMAGE", "display": "share" },
+        { "id": "status_duration", "name_key": "STAT_STATUS_DURATION", "display": "percent" }
     ]
 }

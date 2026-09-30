@@ -1,6 +1,6 @@
 [
     {
-        "_comment": "Objets du joueur (plan 21 §4, référence unique) : 6 emplacements, niveau 1 à 50. Chaque effet vaut, au niveau n, 1 + per_level × n (multiplicative) ou per_level × n (additive). survival : objet de survie, garanti dans une offre tant que le joueur n'en a aucun. enabled false : identifiant gardé pour les sauvegardes, retiré des offres. Le nom du fichier et les identifiants viennent des anciens passifs.",
+        "_comment": "Objets du joueur (plan 21 §4, référence unique) : 6 emplacements, niveau 1 à 50. Chaque effet vaut, au niveau n, 1 + base + per_level × n (multiplicative) ou base + per_level × n (additive) ; base vaut 0 si elle est absente. milestones : paliers de l'objet (niveau, effet, texte montré au joueur, paramètres) ; un palier dont l'effet n'est pas codé n'est ni annoncé ni activé (ObjectMilestoneEffects). survival : objet de survie, garanti dans une offre tant que le joueur n'en a aucun. enabled false : identifiant gardé pour les sauvegardes, retiré des offres. Le nom du fichier et les identifiants viennent des anciens passifs.",
         "id": "memoire_vive",
         "name": "Ressort de sommier",
         "description": "Tes armes attaquent plus vite.",
@@ -15,6 +15,17 @@
                 "stat": "attack_speed",
                 "modifier_type": "multiplicative",
                 "per_level": 0.012
+            }
+        ],
+        "milestones": [
+            {
+                "level": 25,
+                "effect": "repeat_attack",
+                "text": "Chaque 10ᵉ attaque d'une arme part deux fois",
+                "params": {
+                    "every": 10,
+                    "delay_seconds": 0.12
+                }
             }
         ]
     },
@@ -34,6 +45,17 @@
                 "modifier_type": "multiplicative",
                 "per_level": 0.012
             }
+        ],
+        "milestones": [
+            {
+                "level": 25,
+                "effect": "zone_echo",
+                "text": "Les zones frappent une seconde fois, à 30 %",
+                "params": {
+                    "ratio": 0.3,
+                    "delay_seconds": 0.25
+                }
+            }
         ]
     },
     {
@@ -51,6 +73,17 @@
                 "stat": "attack_range",
                 "modifier_type": "multiplicative",
                 "per_level": 0.01
+            }
+        ],
+        "milestones": [
+            {
+                "level": 25,
+                "effect": "range_end_burst",
+                "text": "Un projectile en bout de course éclate en petite zone",
+                "params": {
+                    "damage_ratio": 0.5,
+                    "radius": 36
+                }
             }
         ]
     },
@@ -75,6 +108,16 @@
                 "modifier_type": "additive",
                 "per_level": 0.01
             }
+        ],
+        "milestones": [
+            {
+                "level": 25,
+                "effect": "full_hp_crit",
+                "text": "Un critique sur une cible à PV pleins compte double",
+                "params": {
+                    "multiplier": 2
+                }
+            }
         ]
     },
     {
@@ -93,6 +136,16 @@
                 "stat": "max_hp",
                 "modifier_type": "additive",
                 "per_level": 4
+            }
+        ],
+        "milestones": [
+            {
+                "level": 25,
+                "effect": "ignore_small_hits",
+                "text": "Les coups inférieurs à 3 % des PV max sont ignorés",
+                "params": {
+                    "max_hp_ratio": 0.03
+                }
             }
         ]
     },
@@ -113,6 +166,17 @@
                 "modifier_type": "additive",
                 "per_level": 0.06
             }
+        ],
+        "milestones": [
+            {
+                "level": 25,
+                "effect": "wound_regen",
+                "text": "La régénération double pendant 3 s après une blessure",
+                "params": {
+                    "multiplier": 2,
+                    "seconds": 3
+                }
+            }
         ]
     },
     {
@@ -132,6 +196,17 @@
                 "modifier_type": "additive",
                 "per_level": 0.8
             }
+        ],
+        "milestones": [
+            {
+                "level": 25,
+                "effect": "dash_armor",
+                "text": "L'armure compte double pendant le dash et 1 s après",
+                "params": {
+                    "multiplier": 2,
+                    "seconds_after": 1
+                }
+            }
         ]
     },
     {
@@ -150,6 +225,17 @@
                 "stat": "shield",
                 "modifier_type": "additive",
                 "per_level": 1.5
+            }
+        ],
+        "milestones": [
+            {
+                "level": 25,
+                "effect": "shield_break_wave",
+                "text": "Quand le bouclier casse, une onde repousse les ennemis proches",
+                "params": {
+                    "radius": 110,
+                    "knockback": 90
+                }
             }
         ]
     },
@@ -174,6 +260,16 @@
                 "modifier_type": "multiplicative",
                 "per_level": 0.01
             }
+        ],
+        "milestones": [
+            {
+                "level": 25,
+                "effect": "dash_distance",
+                "text": "Le dash va 30 % plus loin",
+                "params": {
+                    "bonus": 0.3
+                }
+            }
         ]
     },
     {
@@ -191,6 +287,16 @@
                 "stat": "xp_magnet_radius",
                 "modifier_type": "multiplicative",
                 "per_level": 0.03
+            }
+        ],
+        "milestones": [
+            {
+                "level": 25,
+                "effect": "orb_heal",
+                "text": "Chaque orbe ramassée rend 0,2 PV",
+                "params": {
+                    "heal": 0.2
+                }
             }
         ]
     },
@@ -210,6 +316,16 @@
                 "modifier_type": "multiplicative",
                 "per_level": 0.01
             }
+        ],
+        "milestones": [
+            {
+                "level": 25,
+                "effect": "level_essence",
+                "text": "Chaque niveau gagné donne 3 Essence",
+                "params": {
+                    "essence": 3
+                }
+            }
         ]
     },
     {
@@ -228,25 +344,85 @@
                 "modifier_type": "additive",
                 "per_level": 0.01
             }
+        ],
+        "milestones": [
+            {
+                "level": 25,
+                "effect": "level_reroll",
+                "text": "+1 relance tous les 15 niveaux du joueur",
+                "params": {
+                    "every_levels": 15
+                }
+            }
         ]
     },
     {
-        "_comment": "Papier carbone : copies d'attaque à dégâts réduits, prévu au lot G2a-2.",
         "id": "souffle_du_neant",
         "name": "Papier carbone",
-        "description": "Tes attaques partent en plus d'exemplaires.",
+        "description": "Tes attaques partent avec des copies, plus faibles que l'original.",
         "icon_color": [
             0.7,
             0.3,
             0.9
         ],
         "max_level": 50,
-        "enabled": false,
         "effects": [
             {
-                "stat": "projectile_count",
+                "stat": "attack_copies",
                 "modifier_type": "additive",
-                "per_level": 1
+                "base": 1,
+                "per_level": 0,
+                "step": 1,
+                "step_levels": [
+                    25,
+                    50
+                ]
+            },
+            {
+                "stat": "copy_damage",
+                "modifier_type": "additive",
+                "base": 0.3,
+                "per_level": 0.014
+            }
+        ],
+        "milestones": [
+            {
+                "level": 25,
+                "effect": "stat_step",
+                "text": "+1 copie d'attaque"
+            },
+            {
+                "level": 50,
+                "effect": "stat_step",
+                "text": "+1 copie d'attaque"
+            }
+        ]
+    },
+    {
+        "id": "persistance",
+        "name": "Pince à linge",
+        "description": "Tes statuts et tes zones au sol durent plus longtemps.",
+        "icon_color": [
+            0.85,
+            0.75,
+            0.55
+        ],
+        "max_level": 50,
+        "effects": [
+            {
+                "stat": "status_duration",
+                "modifier_type": "multiplicative",
+                "per_level": 0.015
+            }
+        ],
+        "milestones": [
+            {
+                "level": 25,
+                "effect": "status_renew",
+                "text": "Un statut qui expire a 25 % de chance de se renouveler",
+                "params": {
+                    "chance": 0.25
+                }
             }
         ]
     },

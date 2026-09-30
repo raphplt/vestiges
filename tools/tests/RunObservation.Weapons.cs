@@ -10,8 +10,9 @@ using Vestiges.Spawn;
 namespace Vestiges.Tests;
 
 /// <summary>
-/// --capture-weapons [--weapons id1,id2] [--lethal] : galerie des attaques du joueur. Chaque arme est équipée seule,
-/// Avec id1+id2, plusieurs armes sont équipées ensemble pour vérifier leurs interactions.
+/// --capture-weapons [--weapons id1,id2] [--lethal] [--objects id:niveau,…] : galerie des attaques du joueur. Chaque arme
+/// est équipée seule. Avec id1+id2, plusieurs armes sont équipées ensemble pour vérifier leurs interactions. Avec
+/// --objects, les objets donnés sont portés au niveau voulu avant la galerie (copies, paliers).
 /// Chaque configuration est déclenchée sur un cercle d'ennemis immobiles, et capturée en gros plan à plusieurs instants de l'attaque.
 /// </summary>
 public partial class RunObservation
@@ -28,6 +29,14 @@ public partial class RunObservation
         SpawnManager spawner = _world.GetNode<SpawnManager>("SpawnManager");
         await Frames(90);
         _player.AIInputOverride = Vector2.Zero;
+        foreach (string entry in Argument(OS.GetCmdlineUserArgs(), "--objects", "").Split(',', System.StringSplitOptions.RemoveEmptyEntries))
+        {
+            string[] parts = entry.Split(':');
+            int level = parts.Length > 1 ? int.Parse(parts[1], System.Globalization.CultureInfo.InvariantCulture) : 1;
+            _player.AddOrUpgradePassive(parts[0]);
+            if (level > 1)
+                _player.AddOrUpgradePassive(parts[0], level - 1);
+        }
 
         MethodInfo attack = typeof(Player).GetMethod("OnWeaponAttackTimeout", BindingFlags.NonPublic | BindingFlags.Instance);
         FieldInfo hp = typeof(Enemy).GetField("_currentHp", BindingFlags.NonPublic | BindingFlags.Instance);

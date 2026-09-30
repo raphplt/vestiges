@@ -386,6 +386,17 @@ public partial class PauseMenu : CanvasLayer
 		}
 		row.AddChild(MakeLabel(effects, TextRole.Small, StatBonusColor, HorizontalAlignment.Right));
 		_loadoutContainer.AddChild(row);
+		// Paliers codés, sous l'objet : dorés une fois atteints, grisés avant.
+		foreach (ObjectMilestoneData milestone in passive.Data.Milestones)
+		{
+			if (!ObjectMilestoneEffects.IsImplemented(milestone.Effect))
+				continue;
+			MarginContainer indent = new();
+			indent.AddThemeConstantOverride("margin_left", 42);
+			indent.AddChild(MakeLabel(string.Format(Tr("LEVELUP_MILESTONE"), milestone.Level, milestone.Text), TextRole.Small,
+				passive.Reached(milestone) ? GoldBright : TextVeryDim));
+			_loadoutContainer.AddChild(indent);
+		}
 	}
 
 	/// <summary>Perk : nom, règle, puis son état du moment (réserve, fenêtre, cible) ou son inactivité faute d'arme.</summary>

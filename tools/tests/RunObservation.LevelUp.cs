@@ -11,8 +11,9 @@ namespace Vestiges.Tests;
 
 /// <summary>
 /// --capture-levelup : l'écran de level-up montré une fois par rareté (Commun à Légendaire), avec une amélioration
-/// d'arme, une amélioration de passif et une arme nouvelle, puis une fois avec le focus sur les actions.
-/// --capture-pause : la pause après 20 s de combat, quatre armes et trois passifs portés.
+/// d'arme, une amélioration d'objet qui approche puis franchit son palier 25 et un objet nouveau, puis une fois avec
+/// le focus sur les actions.
+/// --capture-pause : la pause après 20 s de combat, quatre armes et cinq objets portés, dont un au-delà de son palier.
 /// </summary>
 public partial class RunObservation
 {
@@ -23,7 +24,8 @@ public partial class RunObservation
         await Frames(90);
 
         FragmentManager fragments = _world.GetNode<FragmentManager>("FragmentManager");
-        _player.AddOrUpgradePassive("memoire_vive");
+        _player.AddOrUpgradePassive("souffle_du_neant");
+        _player.AddOrUpgradePassive("souffle_du_neant", 21);
         _player.AddWeapon(WeaponDataLoader.Get("crossbow"));
         List<FragmentOption> pending = (List<FragmentOption>)typeof(FragmentManager)
             .GetField("_pendingChoices", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(fragments);
@@ -38,9 +40,9 @@ public partial class RunObservation
             pending.Clear();
             pending.Add(new FragmentOption(crossbow.Id, "weapon_upgrade", crossbow.Name, 1)
                 .WithWeaponUpgrade(rarity, UpgradeRoller.RollWeaponGains(crossbow, rarity, rng)));
-            pending.Add(new FragmentOption("memoire_vive", "passive_upgrade", PassiveSouvenirDataLoader.Get("memoire_vive").Name, 1)
+            pending.Add(new FragmentOption("souffle_du_neant", "passive_upgrade", PassiveSouvenirDataLoader.Get("souffle_du_neant").Name, 1)
                 .WithPassiveUpgrade(rarity, rarity.ObjectLevels));
-            pending.Add(new FragmentOption("sling", "weapon_new", WeaponDataLoader.Get("sling").Name, 1));
+            pending.Add(new FragmentOption("persistance", "passive_new", PassiveSouvenirDataLoader.Get("persistance").Name, 1));
             active.SetValue(fragments, true);
             eventBus.EmitSignal(EventBus.SignalName.FragmentChoicesReady, pending.Count);
             await Frames(20);
@@ -63,8 +65,11 @@ public partial class RunObservation
         await Frames(90);
         foreach (string weapon in new[] { "crossbow", "music_box", "nail_mace" })
             _player.AddWeapon(WeaponDataLoader.Get(weapon));
-        foreach (string passive in new[] { "oeil_critique", "memoire_vive", "resonance" })
+        foreach (string passive in new[] { "oeil_critique", "memoire_vive", "resonance", "souffle_du_neant", "persistance" })
             _player.AddOrUpgradePassive(passive);
+        // Niveaux à deux chiffres dans les cases du HUD, un palier atteint et un palier à venir dans la pause.
+        _player.AddOrUpgradePassive("souffle_du_neant", 29);
+        _player.AddOrUpgradePassive("persistance", 11);
         WeaponInstance equipped = _player.EquippedWeapon;
         _player.UpgradeWeapon(equipped.Id, UpgradeRoller.RollWeaponGains(equipped,
             UpgradeRoller.Get("rare"), new RandomNumberGenerator()));

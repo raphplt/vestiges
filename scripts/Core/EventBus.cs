@@ -22,6 +22,9 @@ public partial class EventBus : Node
     public void PublishEnemyKill(Combat.EnemyKillResult result) => EnemyKillResolved?.Invoke(result);
     public void PublishPlayerHealing(HealingResult result) => PlayerHealingResolved?.Invoke(result);
     public void PublishPlayerDamage(PlayerDamageResult result) => PlayerDamageResolved?.Invoke(result);
+    /// <summary>Expiration d'un statut infligé par un joueur, pour les effets qui le prolongent (Pince à linge, plan 21 §4).</summary>
+    public event System.Action<Combat.StatusExpiry> EnemyStatusExpired;
+    public void PublishStatusExpiry(Combat.StatusExpiry expiry) => EnemyStatusExpired?.Invoke(expiry);
 
     /// <summary>Jauges des perks (réserves, fenêtres) pour leurs retours visuels, publiées à chaque changement.</summary>
     public event System.Action<SpecializationGauge> SpecializationGaugeChanged;

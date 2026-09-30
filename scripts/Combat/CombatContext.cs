@@ -47,3 +47,13 @@ public readonly record struct ControlState(float Strength, float Remaining, Atta
 
 public readonly record struct EnemyKillResult(EnemyLife Target, string EnemyId, Vector2 Position,
     DamageResult Damage, ControlState Slow, ControlState Disorientation);
+
+public enum StatusKind { Burn, Bleed, Slow, Disorientation }
+
+/// <summary>
+/// Statut infligé par un joueur qui vient d'expirer sur une créature vivante. Strength est l'intensité (dégâts par
+/// seconde, facteur de vitesse), Duration la durée de la dernière application qui l'a posé. Origin garde la provenance
+/// d'un contrôle : renouvelé, un contrôle reçu par Propagation ne redevient pas transmissible.
+/// </summary>
+public readonly record struct StatusExpiry(Enemy Target, StatusKind Kind, float Strength, float Duration, AttackContext Source,
+    ControlOrigin Origin = ControlOrigin.Unknown);

@@ -96,7 +96,7 @@ Les deux voies de chacune des 24 armes s'écrivent au lot G3.
 | Papier carbone | `souffle_du_neant` | +1 copie d'attaque, qui inflige 30 % + 1,4 % × n des dégâts | +1 copie de plus (et une autre au niveau 50) | Q |
 | Rondelle de cuivre | `resonance` | Taille +1,2 % × n | Les zones frappent une seconde fois, à 30 % | D |
 | Mètre pliant | `portee_etendue` | Portée +1 % × n | Un projectile en bout de course éclate en petite zone | D |
-| Pince à linge | `persistance` | Durée +1,5 % × n (statuts, zones au sol, orbites) | Un statut qui expire a 25 % de chance de se renouveler | D |
+| Pince à linge | `persistance` | Durée +1,5 % × n (statuts, zones au sol ; orbites quand elles auront une durée) | Un statut qui expire a 25 % de chance de se renouveler | D |
 | Lunettes de lecture | `oeil_critique` | Chance de critique +0,6 % × n, dégâts critiques +1 % × n | Un critique sur une cible à PV pleins compte double | Q |
 | Bouton de manteau | `ancrage` | PV max +4 × n | Les coups inférieurs à 3 % des PV max sont ignorés | D |
 | Bobine de fil | `regeneration` | +0,06 PV/s × n | La régénération double pendant 3 s après une blessure | D |
@@ -106,6 +106,8 @@ Les deux voies de chacune des 24 armes s'écrivent au lot G3.
 | Aimant de frigo | `siphon_essence` | Rayon d'attraction de l'XP +3 % × n | Chaque orbe ramassée rend 0,2 PV | D |
 | Photo de classe | `photo_de_classe` | XP +1 % × n | Chaque niveau gagné donne 3 Essence | D |
 | Jeton de fête foraine | `jeton_de_fete` | Chance +0,01 × n | +1 relance tous les 15 niveaux du joueur | D |
+
+Un palier se décrit en données avec l'objet (`milestones` : niveau, effet, texte, paramètres). Il n'est annoncé sur une carte ou dans la pause que si son effet est codé. Les copies du Papier carbone sont des crans de la formule de l'effet (`step`, `step_levels`).
 
 Il n'existe **pas** d'objet « +dégâts » universel : les dégâts viennent des niveaux d'armes.
 
@@ -235,8 +237,9 @@ Quand une carte ne peut plus rien offrir (4 armes ascensionnées, 6 objets au ni
 | Relances limitées, bannissements gratuits puis Péril | **En jeu** | G1 |
 | Réminiscences après les Résurgences, 7 sur 14, libellées « Réminiscence » | **En jeu** | G1, G2a |
 | Objets : 6 emplacements, 50 niveaux par formule, effets multiples, rareté qui donne 1 à 5 niveaux | **En jeu** | G2a |
-| 12 objets de propriété sur 14 (tous sauf Papier carbone et Pince à linge) | **En jeu**, sans leur palier 25 | G2a |
-| Paliers 25 des objets de propriété ; Papier carbone (copies à dégâts réduits) ; Pince à linge (Durée) | À faire | **G2a-2, suivant** |
+| 14 objets de propriété, dont Papier carbone (copies à dégâts réduits) et Pince à linge (Durée) | **En jeu** | G2a, G2a-2 |
+| Socle des paliers ; paliers de Papier carbone et Pince à linge | **En jeu** | G2a-2, étape 1 |
+| Paliers 25 des douze autres objets de propriété | À faire | **G2a-2, étape 2, suivant** |
 | Objets de déclencheur, statut Fragilité, coefficients | À faire | G2b |
 | Reliquaire, objets « monde », remplacement | À faire | Plan 22, C3 |
 | Propriétés nommées sur les cartes d'armes | À faire | G0 |

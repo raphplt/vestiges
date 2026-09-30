@@ -41,6 +41,7 @@ public static class UpgradeText
                     break;
                 foreach (PassiveEffectData effect in passive.Effects)
                     lines.Add(($"{StatCatalog.Name(effect.Stat)}  {StatCatalog.FormatBonus(effect.Stat, effect.ValueAt(1), effect.Multiplicative)}", ChoiceStyle.GainColor));
+                AddMilestoneLines(lines, passive, 0, 1);
                 break;
             }
             case PerkSpecializationOffers.OptionType:
@@ -62,10 +63,35 @@ public static class UpgradeText
                 foreach (PassiveEffectData effect in passive.Data.Effects)
                     lines.Add(($"{StatCatalog.Name(effect.Stat)}  {StatCatalog.FormatBonus(effect.Stat, effect.ValueAt(passive.Level), effect.Multiplicative)}"
                         + $"  →  {StatCatalog.FormatBonus(effect.Stat, effect.ValueAt(next), effect.Multiplicative)}", ChoiceStyle.GainColor));
+                AddMilestoneLines(lines, passive.Data, passive.Level, next);
                 break;
             }
         }
         return lines;
+    }
+
+    /// <summary>
+    /// Paliers d'un objet qui passe du niveau <paramref name="level"/> à <paramref name="next"/> : ceux que la carte
+    /// fait atteindre, sinon le prochain, pour qu'on le voie venir. Seuls les paliers codés sont annoncés.
+    /// </summary>
+    private static void AddMilestoneLines(List<(string, Color)> lines, PassiveSouvenirData data, int level, int next)
+    {
+        ObjectMilestoneData upcoming = null;
+        bool reachedAny = false;
+        foreach (ObjectMilestoneData milestone in data.Milestones)
+        {
+            if (milestone.Level <= level || !ObjectMilestoneEffects.IsImplemented(milestone.Effect))
+                continue;
+            if (milestone.Level <= next)
+            {
+                lines.Add((string.Format(TranslationServer.Translate("LEVELUP_MILESTONE_REACHED"), milestone.Level, milestone.Text), ChoiceStyle.GoldBright));
+                reachedAny = true;
+            }
+            else
+                upcoming ??= milestone;
+        }
+        if (!reachedAny && upcoming != null)
+            lines.Add((string.Format(TranslationServer.Translate("LEVELUP_MILESTONE"), upcoming.Level, upcoming.Text), ChoiceStyle.TextDim));
     }
 
     /// <summary>« Dégâts  14,2 → 16,8  +18 % » ; « Portée  +6 % » pour une stat qui ne se lit qu'en pourcentage.</summary>

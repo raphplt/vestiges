@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using Godot;
+using Vestiges.Combat;
 using Vestiges.Core;
 using Vestiges.Infrastructure;
 using Vestiges.Progression;
@@ -9,8 +10,9 @@ using Vestiges.Progression;
 namespace Vestiges.Tests;
 
 /// <summary>
-/// Objets du joueur (plan 21 §4, lot G2a) sur un vrai joueur : six emplacements, cinquante niveaux par formule, effets
-/// multiples, niveaux gagnés selon la rareté, objets retirés des offres.
+/// Objets du joueur (plan 21 §4, lots G2a et G2a-2) sur un vrai joueur : six emplacements, cinquante niveaux par
+/// formule, effets multiples, niveaux gagnés selon la rareté, objets retirés des offres, paliers, copies d'attaque,
+/// Durée et renouvellement des statuts.
 /// </summary>
 public partial class ObjectsRegression : Node2D
 {
@@ -30,6 +32,11 @@ public partial class ObjectsRegression : Node2D
             CheckNewStats();
             CheckRarityLevels();
             CheckOffers();
+            CheckMilestoneActivation();
+            CheckMilestoneCards();
+            CheckAttackCopies();
+            CheckStatusDuration();
+            CheckStatusRenewal();
             GD.Print($"[ObjectsRegression] RESULT failures={_failures}");
             GetTree().Quit(_failures == 0 ? 0 : 1);
         }
@@ -50,9 +57,9 @@ public partial class ObjectsRegression : Node2D
             wellFormed &= data.MaxLevel == 50 && data.Effects.Count > 0 && !string.IsNullOrEmpty(data.Name);
             anySurvival |= data.Survival;
         }
-        Check(offered.Count == 12 && wellFormed && anySurvival, $"Catalogue : {offered.Count} objets proposés, niveau max 50, au moins un de survie");
+        Check(offered.Count == 14 && wellFormed && anySurvival, $"Catalogue : {offered.Count} objets proposés, niveau max 50, au moins un de survie");
         bool retired = true;
-        foreach (string id in new[] { "flamme_interieure", "reflet_brise", "souffle_du_neant", "fragment_deternite" })
+        foreach (string id in new[] { "flamme_interieure", "reflet_brise", "fragment_deternite" })
             retired &= PassiveSouvenirDataLoader.Get(id) != null && !offered.Exists(data => data.Id == id);
         Check(retired, "Objets retirés : identifiants gardés, hors des offres");
     }
@@ -144,14 +151,167 @@ public partial class ObjectsRegression : Node2D
         typeof(FragmentManager).GetField("_currentLevel", Private).SetValue(fragments, 5);
         List<FragmentOption> pool = (List<FragmentOption>)typeof(FragmentManager).GetMethod("BuildFragmentPool", Private).Invoke(fragments, null);
         int fresh = pool.FindAll(option => option.Type == "passive_new").Count;
-        bool noRetired = !pool.Exists(option => option.Id is "flamme_interieure" or "reflet_brise" or "souffle_du_neant");
-        Check(fresh == 12 && noRetired, $"Offre de niveau : {fresh} objets neufs possibles, aucun objet retiré");
+        bool noRetired = !pool.Exists(option => option.Id is "flamme_interieure" or "reflet_brise");
+        Check(fresh == 14 && noRetired, $"Offre de niveau : {fresh} objets neufs possibles, aucun objet retiré");
 
         foreach (string id in new[] { "memoire_vive", "resonance", "portee_etendue", "oeil_critique", "ancrage", "regeneration" })
             _player.AddOrUpgradePassive(id);
         pool = (List<FragmentOption>)typeof(FragmentManager).GetMethod("BuildFragmentPool", Private).Invoke(fragments, null);
         Check(!pool.Exists(option => option.Type == "passive_new") && pool.FindAll(option => option.Type == "passive_upgrade").Count == 6,
             "Six objets pris : plus d'objet neuf, six améliorations possibles");
+    }
+
+    private void CheckMilestoneActivation()
+    {
+        Setup();
+        _player.AddOrUpgradePassive("souffle_du_neant");
+        bool one = _player.AttackCopies == 1 && Near(_player.CopyDamageFactor, 0.314f) && _player.ObjectMilestones == null;
+        _player.AddOrUpgradePassive("souffle_du_neant", 23);
+        bool before = _player.AttackCopies == 1 && _player.GetPassiveLevel("souffle_du_neant") == 24;
+        _player.AddOrUpgradePassive("souffle_du_neant");
+        bool reached = _player.AttackCopies == 2 && _player.ObjectMilestones != null;
+        _player.AddOrUpgradePassive("souffle_du_neant", 10);
+        bool once = _player.AttackCopies == 2;
+        _player.AddOrUpgradePassive("souffle_du_neant", 20);
+        bool fifty = _player.AttackCopies == 3 && Near(_player.CopyDamageFactor, 1f);
+        Check(one && before && reached && once && fifty,
+            "Papier carbone : 1 copie à 31,4 % au niveau 1, 2 au palier 25 (une seule fois), 3 à 100 % au niveau 50");
+
+        Setup();
+        _player.AddOrUpgradePassive("souffle_du_neant");
+        _player.AddOrUpgradePassive("souffle_du_neant", 49);
+        Check(_player.AttackCopies == 3, "Une amélioration qui franchit deux paliers les active tous les deux");
+    }
+
+    private void CheckMilestoneCards()
+    {
+        Setup();
+        _player.AddOrUpgradePassive("souffle_du_neant");
+        _player.AddOrUpgradePassive("souffle_du_neant", 20);
+        string upcoming = CardText(new FragmentOption("souffle_du_neant", "passive_upgrade", "Papier carbone", 1)
+            .WithPassiveUpgrade(UpgradeRoller.Get("common"), 1));
+        string crossing = CardText(new FragmentOption("souffle_du_neant", "passive_upgrade", "Papier carbone", 1)
+            .WithPassiveUpgrade(UpgradeRoller.Get("legendary"), 5));
+        string fresh = CardText(new FragmentOption("persistance", "passive_new", "Pince à linge", 1));
+        Check(upcoming.Contains("Palier 25 :") && crossing.Contains("Palier 25 atteint") && !crossing.Contains("Palier 50")
+            && fresh.Contains("Palier 25 :") && fresh.Contains("Durée"),
+            "Cartes : le prochain palier annoncé, « atteint » quand l'amélioration le franchit");
+
+        bool coded = true;
+        foreach (PassiveSouvenirData data in PassiveSouvenirDataLoader.GetAll())
+            foreach (ObjectMilestoneData milestone in data.Milestones)
+                if (!ObjectMilestoneEffects.IsImplemented(milestone.Effect))
+                {
+                    string card = CardText(new FragmentOption(data.Id, "passive_new", data.Name, 1));
+                    coded &= !card.Contains(milestone.Text);
+                }
+        Check(coded && !ObjectMilestoneEffects.IsImplemented("inconnu"), "Un palier non codé n'est pas annoncé");
+    }
+
+    private void CheckAttackCopies()
+    {
+        Setup();
+        MethodInfo strikes = typeof(Player).GetMethod("StrikeMultiplierSum", Private);
+        MethodInfo projectile = typeof(Player).GetMethod("ProjectileDamage", Private);
+        float soloStrike = (float)strikes.Invoke(_player, new object[] { 0, 0 });
+        _player.AddOrUpgradePassive("souffle_du_neant");
+        float withCopy = (float)strikes.Invoke(_player, new object[] { 0, 1 });
+        float copyOnly = (float)strikes.Invoke(_player, new object[] { 1, 1 });
+        float copyShot = (float)projectile.Invoke(_player, new object[] { 10f, false, true });
+        float fullShot = (float)projectile.Invoke(_player, new object[] { 10f, false, false });
+        Check(Near(soloStrike, 1f) && Near(withCopy, 1.314f) && Near(copyOnly, 0.314f) && Near(copyShot, 3.14f) && Near(fullShot, 10f),
+            "Copies : une frappe ou un tir de plus, à 31,4 % des dégâts au niveau 1");
+    }
+
+    private void CheckStatusDuration()
+    {
+        Setup();
+        _player.AddOrUpgradePassive("persistance");
+        _player.AddOrUpgradePassive("persistance", 9);
+        _player.AddWeapon(WeaponDataLoader.Get("teachers_bell"));
+        WeaponInstance bell = _player.WeaponSlots[_player.WeaponSlots.Count - 1];
+        Enemy enemy = SpawnEnemy();
+        _player.OnProjectileHit(enemy, 1f, false, false, bell);
+        float slow = (float)typeof(Enemy).GetField("_slowTimer", Private).GetValue(enemy);
+        Check(Near(_player.StatusDurationMultiplier, 1.15f) && Near(slow, 2f * 1.15f),
+            $"Pince à linge niveau 10 : statuts +15 % (ralentissement de la Cloche {slow:0.00} s au lieu de 2 s)");
+        enemy.QueueFree();
+    }
+
+    private void CheckStatusRenewal()
+    {
+        Setup();
+        _player.AddOrUpgradePassive("persistance");
+        _player.AddOrUpgradePassive("persistance", 24);
+        _player.ObjectMilestones.Rng.Seed = 7;
+        _player.AddWeapon(WeaponDataLoader.Get("teachers_bell"));
+        WeaponInstance bell = _player.WeaponSlots[_player.WeaponSlots.Count - 1];
+        Enemy enemy = SpawnEnemy();
+        MethodInfo decay = typeof(Enemy).GetMethod("ProcessSlowDecay", Private);
+        FieldInfo timer = typeof(Enemy).GetField("_slowTimer", Private);
+        int renewed = 0;
+        bool sameDuration = true;
+        const int trials = 400;
+        for (int i = 0; i < trials; i++)
+        {
+            enemy.ApplySlow(0.5f, 1f, _player.BeginAttack(bell, 1f));
+            decay.Invoke(enemy, new object[] { 1.5f });
+            float remaining = (float)timer.GetValue(enemy);
+            if (remaining > 0f)
+            {
+                renewed++;
+                sameDuration &= Near(remaining, 1f);
+                decay.Invoke(enemy, new object[] { 1.5f });
+                // Un renouvellement peut lui-même se renouveler : on vide jusqu'à l'expiration définitive.
+                while ((float)timer.GetValue(enemy) > 0f)
+                    decay.Invoke(enemy, new object[] { 1.5f });
+            }
+        }
+        int propagatedRenewals = 0;
+        bool stayedPropagated = true;
+        for (int i = 0; i < 100; i++)
+        {
+            enemy.ApplySlow(0.5f, 1f, _player.BeginAttack(bell, 1f), ControlOrigin.Propagated);
+            decay.Invoke(enemy, new object[] { 1.5f });
+            if ((float)timer.GetValue(enemy) <= 0f)
+                continue;
+            propagatedRenewals++;
+            stayedPropagated &= !enemy.SlowControl.CanPropagate(_player.GetInstanceId());
+            while ((float)timer.GetValue(enemy) > 0f)
+                decay.Invoke(enemy, new object[] { 1.5f });
+        }
+        Check(propagatedRenewals > 0 && stayedPropagated, $"Un ralentissement reçu par Propagation, renouvelé {propagatedRenewals} fois, ne redevient pas transmissible");
+
+        enemy.ApplySlow(0.5f, 1f);
+        int foreign = 0;
+        for (int i = 0; i < 40; i++)
+        {
+            decay.Invoke(enemy, new object[] { 1.5f });
+            foreign += (float)timer.GetValue(enemy) > 0f ? 1 : 0;
+            enemy.ApplySlow(0.5f, 1f);
+        }
+        float share = renewed / (float)trials;
+        Check(share > 0.18f && share < 0.32f && sameDuration && foreign == 0,
+            $"Pince à linge palier 25 : {share:P0} des ralentissements expirés renouvelés, même durée ; rien pour un statut sans joueur");
+        enemy.QueueFree();
+    }
+
+    private string CardText(FragmentOption option)
+    {
+        List<string> lines = new();
+        foreach ((string line, Color _) in Vestiges.UI.UpgradeText.Describe(option, _player))
+            lines.Add(line);
+        return string.Join(" | ", lines);
+    }
+
+    private Enemy SpawnEnemy()
+    {
+        Enemy enemy = GD.Load<PackedScene>("res://scenes/enemies/Enemy.tscn").Instantiate<Enemy>();
+        AddChild(enemy);
+        enemy.Initialize(EnemyDataLoader.Get("rodeur"), 1f, 1f);
+        enemy.SetPhysicsProcess(false);
+        enemy.Position = new Vector2(1000f, 1000f);
+        return enemy;
     }
 
     private void Setup()
