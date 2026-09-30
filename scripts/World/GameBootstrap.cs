@@ -167,6 +167,12 @@ public partial class GameBootstrap : Node
         riftDirector.Setup(choiceScreen, perilManager, erasureManager);
         sceneRoot.AddChild(riftDirector);
 
+        // Petits lieux (plan 22, lot C1) : des décors déjà posés qui se souviennent.
+        SmallPlaceDirector smallPlaces = new() { Name = "SmallPlaceDirector" };
+        smallPlaces.Setup(GetNode<Vestiges.Spawn.SpawnManager>("../SpawnManager"), erasureManager, worldSetup.Seed);
+        sceneRoot.AddChild(smallPlaces);
+        smallPlaces.PlacePlaces(GetNode("../PropContainer"), GetNode<Node2D>("../PoiContainer"));
+
         QuestManager questManager = new() { Name = "QuestManager" };
         sceneRoot.AddChild(questManager);
 

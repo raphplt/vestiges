@@ -159,4 +159,7 @@ public partial class EnvironmentProp : StaticBody2D
 	}
 
 	public PropFootprint Footprint => _footprint;
+
+	/// <summary>Texture de base : les petits lieux reconnaissent leurs décors par elle, sans chaîne par décor.</summary>
+	public Texture2D BaseTexture => _baseSprite?.Texture;
 }

@@ -125,7 +125,7 @@ Un onglet de la Collection. Chaque type de lieu, puis chaque lieu remarquable, y
 | Lot | Contenu | Vérification |
 |---|---|---|
 | C0 | **Mesure de départ** : lieux rencontrés et visités par minute, Essence gagnée et dépensée, avec `tools/measure_run.sh` étendu | **Livré le 30 septembre** ([§12](#12-compte-rendu-c0--mesure-de-départ-30-septembre)) |
-| C1 | Trois petits lieux sur des décors déjà générés (Puits, Veine de cristal, Épouvantail) ; socle commun des petits lieux | Captures, banc, mesure de densité |
+| C1 | Trois petits lieux sur des décors déjà générés (Puits, Veine de cristal, Épouvantail) ; socle commun des petits lieux | **Livré le 30 septembre** ([§14](#14-compte-rendu-c1--trois-petits-lieux-30-septembre)) |
 | C2 | Atelier : niveau d'arme, Retrempe, Trempe | Banc, captures, mesure de l'Essence dépensée |
 | C3 | Reliquaire, avec les objets du plan 21 (lot G2) | Dépend du catalogue d'objets |
 | C4 | Les six autres petits lieux, Repères | Mesure : types visités par run |
@@ -182,3 +182,72 @@ L'option `--visit` (`MEASURE_EXTRA_ARGS="--nomad --visit"`) fait jouer un bot qu
 - **Aucune Essence dépensée**, même par le bot qui ratisse : il ravive les Mémoriaux mais ne revient pas une fois qu'ils sont éveillés. Un joueur nomade n'a presque jamais l'occasion de dépenser. Cela confirme le constat du §1 : l'Essence ne mène presque nulle part. C'est la mesure de référence pour l'Atelier (C2).
 
 **Limites :** le bot suit un cap et ne revient jamais en arrière, et son écran a le cadrage de la capture (967 × 544 px de monde). Un joueur qui explore reviendrait parfois sur ses pas.
+
+## 13. Lot C1 — trois petits lieux sur des décors déjà générés : découpage (30 septembre)
+
+Principes du §2 et du §3 : un geste court, une récompense immédiate, un seul usage, un signe discret à moins de 400 px, perdu quand sa zone s'efface.
+
+- **Socle commun :** `data/world/small_places.json` décrit chaque type (décors qui le portent, maintien, récompense, nombre par carte). Après la génération, un directeur parcourt une fois les décors posés et en retient une partie :
+  - au plus N par type ;
+  - au moins 600 px entre deux lieux, chaque type posant à son tour pour qu'un type rare ne soit pas évincé ;
+  - tirés avec la graine de la carte.
+
+  Sur chacun, il pose un lieu activable (`SmallPlace`), sans nouveau sprite : c'est le décor lui-même qui se souvient.
+- **Signe :** une lueur au sol, légère (halo `InteractableAura`), visible seulement quand le joueur passe à moins de 400 px et tant que le lieu n'a pas servi. Le directeur la met à jour quatre fois par seconde, sans boucle par frame sur les décors.
+- **Perte :** un lieu dont la zone passe au Néant s'éteint pour de bon.
+- **Les trois lieux** (valeurs de départ) :
+
+| Lieu | Décor | Maintien | Récompense | Par carte |
+|---|---|---|---|---|
+| Puits | `prop_abandoned_well` (fermes, champs) | 0,6 s | Soin de 15 % des PV max | 6 au plus |
+| Veine de cristal | `prop_crystal_vein` (carrières) | 1 s, « briser » | 6 à 10 Essence, qui volent vers le compteur | 8 au plus |
+| Épouvantail | `prop_scarecrow_broken`, `prop_scene_crow_scarecrow` | 0,5 s | Trois créatures du biome sortent autour ; si elles tombent toutes en 20 s, 15 Essence. Fuir ne rapporte rien | 6 au plus |
+
+- **Vérification :**
+  - `tools/measure_run.sh` avant et après, avec les mêmes seeds que C0. Les nouveaux lieux entrent dans les lieux croisés et visités ; le bot qui ratisse les utilise.
+  - Capture d'un lieu, avec son signe, avant et après usage.
+  - Banc : placement (quota, écart, graine), récompenses, perte au Néant.
+
+## 14. Compte rendu C1 : trois petits lieux (30 septembre)
+
+Livré comme découpé au §13. Code : `SmallPlaceDirector`, `SmallPlace`, `SmallPlaceDataLoader` ; données : `data/world/small_places.json`.
+
+- **Placement :** 13 à 17 lieux par carte selon la graine (6 puits, 4 à 8 veines, 2 à 3 épouvantails). Les décors reconnus sont limités par ce que la carte génère : la carte en porte 6 à 13 puits, 5 à 12 veines et 2 à 5 épouvantails.
+- **Signe :** une lueur au sol de la couleur du lieu, plus large que le pied du décor, et deux étincelles qui montent de temps en temps. Le tout seulement à moins de 400 px, et éteint dès l'usage.
+- **Embuscade :** trois créatures du biome, jamais posées dans l'eau. Elle ne paie que gagnée, en 20 s. Fuir ne rapporte rien.
+
+**Mesure (C0 → C1)**, 5 seeds × 10 min, bot nomade. Même outil qu'au §12 ; le trajet du bot varie d'un passage à l'autre, les écarts de coffres et de Mémoriaux sont du bruit.
+
+| Par run de 10 min | C0, sans se détourner | C1, sans se détourner | C0, qui ratisse | C1, qui ratisse |
+|---|---|---|---|---|
+| Lieux croisés | 14,6, soit 1 toutes les 41 s | **25,4, soit 1 toutes les 24 s** | 14,0 | 19,4 (15–24) |
+| Lieux visités | 3,4 | 3,6 | 13,8 | 18,4 (13–22) |
+| dont petits lieux croisés (puits, veines, épouvantails) | — | 7,2 | — | 6,4 |
+| Essence gagnée par minute | 119 | 113 | 154 | **184** |
+| Essence dépensée | 0 | 0 | 0 | 0 |
+
+- La cible du §2, un petit lieu en vue toutes les 20 à 30 s, est atteinte en comptant tous les lieux : un toutes les 24 s. Les petits lieux seuls, eux, reviennent toutes les 80 s environ ; les six autres types (C4) doivent combler l'écart.
+- Ratisser rapporte 20 % d'Essence de plus qu'en C0.
+- L'Essence n'est toujours **jamais dépensée**. C'est le travail de l'Atelier (C2).
+
+**Vérifications :**
+- `dotnet build` : zéro avertissement.
+- `tools/test_small_places.sh` (nouveau) : 5 assertions, zéro échec. Il couvre le quota, l'écart, la graine, le soin unique du puits, l'Essence de la veine et le signe éteint après usage.
+- Objets, armes, déplacements : zéro échec. Smoke vert.
+- Capture `--capture-places` (nouvelle), regardée :
+  - « [E] Boire », « [E] Briser », « [E] Secouer » au-dessus du décor ;
+  - la lueur sous la veine ;
+  - après usage, le signe éteint, et les créatures de l'épouvantail sortent et attaquent.
+
+Relecture par sous-agent. Corrigé :
+- décors reconnus par leur texture, sans chaîne par décor ;
+- les petits lieux ne comptent plus pour les quêtes d'exploration de POI ;
+- créatures d'embuscade jamais dans l'eau ;
+- l'embuscade ne paie que gagnée ;
+- tirage du placement séparé de celui des récompenses.
+
+**Reste :**
+- la lueur au sol est un losange translucide lisse, qui tranche avec le pixel art : à reprendre avec la direction artistique ;
+- sur l'herbe, la lueur de l'épouvantail se voit mal ;
+- la veine brisée garde son sprite intact ;
+- la perte au Néant n'est vérifiée que par lecture du code.

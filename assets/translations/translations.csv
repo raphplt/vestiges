@@ -78,6 +78,9 @@ MEMORIAL_ESSENCE,Essence : {0},Essence: {0}
 MEMORIAL_LEAVE,Partir,Leave
 MEMORIAL_HEALED,Le corps se souvient,The body remembers
 LANDMARK_RIFT,Faille,Rift
+PLACE_WELL_PROMPT,Boire,Drink
+PLACE_CRYSTAL_PROMPT,Briser,Break
+PLACE_SCARECROW_PROMPT,Secouer,Shake
 RIFT_PROMPT,Sonder,Reach in
 WEAPON_SWAP_PROMPT,Échanger : {0},Swap: {0}
 RIFT_TITLE,FAILLE,RIFT

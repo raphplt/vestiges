@@ -1,0 +1,64 @@
+{
+    "_doc": "Petits lieux (plan 22, lot C1) : des décors déjà générés qui se souviennent. Après la génération, SmallPlaceDirector retient une partie des décors listés dans 'sprites' (au plus 'max_per_map' par type, 'min_spacing_px' entre deux lieux, tirés avec la graine de la carte) et y pose un lieu activable, sans nouveau sprite. 'reward' : heal (part des PV max 'amount'), essence (entre 'amount_min' et 'amount_max'), ambush ('enemies' créatures du biome autour, puis 'amount' Essence quand elles sont toutes tombées ; au-delà de 'ambush_timeout_s', l'embuscade s'oublie sans rien donner). Le signe (lueur au sol et quelques étincelles de la famille 'family') ne se montre qu'à moins de 'sign_range_px' du joueur, tant que le lieu n'a pas servi ; un lieu dont la zone passe au Néant s'éteint.",
+    "enabled": true,
+    "min_spacing_px": 600,
+    "sign_range_px": 400,
+    "places": [
+        {
+            "id": "well",
+            "sprites": [
+                "prop_abandoned_well"
+            ],
+            "prompt": "PLACE_WELL_PROMPT",
+            "hold_seconds": 0.6,
+            "reward": "heal",
+            "amount": 0.15,
+            "max_per_map": 6,
+            "color": [
+                0.45,
+                0.75,
+                0.95
+            ],
+            "family": "pale"
+        },
+        {
+            "id": "crystal_vein",
+            "sprites": [
+                "prop_crystal_vein"
+            ],
+            "prompt": "PLACE_CRYSTAL_PROMPT",
+            "hold_seconds": 1.0,
+            "reward": "essence",
+            "amount_min": 6,
+            "amount_max": 10,
+            "max_per_map": 8,
+            "color": [
+                0.37,
+                0.77,
+                0.77
+            ],
+            "family": "essence"
+        },
+        {
+            "id": "scarecrow",
+            "sprites": [
+                "prop_scarecrow_broken",
+                "prop_scene_crow_scarecrow"
+            ],
+            "prompt": "PLACE_SCARECROW_PROMPT",
+            "hold_seconds": 0.5,
+            "reward": "ambush",
+            "enemies": 3,
+            "ambush_radius_px": 140,
+            "ambush_timeout_s": 20,
+            "amount": 15,
+            "max_per_map": 6,
+            "color": [
+                0.85,
+                0.7,
+                0.4
+            ],
+            "family": "brass"
+        }
+    ]
+}

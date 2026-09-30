@@ -795,6 +795,7 @@ Le script de post-processing doit inclure une vérification/correction de l'angl
 - [x] Plan 22 lot C0 : mesure de départ de la carte (lieux croisés et visités par minute, événements, Essence gagnée et dépensée ; bot qui ratisse) ([compte rendu](plans/22-carte-a-explorer.md#12-compte-rendu-c0--mesure-de-départ-30-septembre)).
 - [x] Plan 21 lot G0 : propriétés de la grammaire commune nommées sur les cartes d'armes et d'objets, armes concernées par un objet ([compte rendu](plans/21-historique.md#27-lot-g0--les-propriétés-nommées-sur-les-cartes--découpage-30-septembre)).
 - [x] Plan 21 lot G3, étape 1 : ascensions au niveau 50, deux voies au choix et définitives ; Arc du gymnase, Faucille, Cloche d'école, Boîte à musique ([compte rendu](plans/21-historique.md#29-compte-rendu-g3-étape-1--mécanique-et-quatre-armes)).
+- [x] Plan 22 lot C1 : Puits, Veine de cristal et Épouvantail sur les décors déjà générés, avec signe discret, usage unique et perte au Néant ([compte rendu](plans/22-carte-a-explorer.md#14-compte-rendu-c1--trois-petits-lieux-30-septembre)).
 - [ ] Plan 21 lot G3, étape 2 : voies des 20 autres armes, proposées, à valider par Raphaël.
 - [ ] Délestage et Habitude, puis B4 : catalogue d'objets, récompense à choix, inventaire cumulable, migration des anciennes sources, intégration UI et validation en run ([prérequis](plans/05-perks-specialisations.md#14-compte-rendu-b3-partie-sans-objets--sillage-et-seconde-lecture-29-septembre-2026)).
 

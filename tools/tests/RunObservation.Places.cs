@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
+using System.Threading.Tasks;
 using Godot;
 using Vestiges.Core;
 using Vestiges.World;
@@ -24,6 +25,32 @@ public partial class RunObservation
 
     private bool _visitPlaces;
     private PlaceTracker _placeTracker;
+
+    private async Task CapturePlaces()
+    {
+        _world.GetNode("SpawnManager").ProcessMode = ProcessModeEnum.Disabled;
+        ProcessMode = ProcessModeEnum.Always;
+        await Frames(90);
+        SmallPlaceDirector director = _world.GetNode<SmallPlaceDirector>("SmallPlaceDirector");
+        // Un maintien s'annule dès que le joueur bouge : le bot reste immobile pendant toute la capture.
+        _player.AIInputOverride = Vector2.Zero;
+        HashSet<string> done = new();
+        foreach (SmallPlace place in director.Places)
+        {
+            if (!done.Add(place.Data.Id))
+                continue;
+            _player.GlobalPosition = place.GlobalPosition + new Vector2(-30f, 20f);
+            _camera.ResetSmoothing();
+            await Frames(40);
+            SaveFrame($"place-{place.Data.Id}-near");
+            _player.AITriggerInteract();
+            // Le maintien se compte en temps de jeu : 180 frames couvrent le plus long (1 s) même à 150 images par seconde.
+            await Frames(180);
+            SaveFrame($"place-{place.Data.Id}-used");
+            GD.Print($"[RunObservation] lieu {place.Data.Id} : utilisé={place.Used}");
+        }
+        GD.Print($"[RunObservation] RESULT places captured={done.Count} dossier={_output}");
+    }
 
     private sealed class PlaceTracker
     {
@@ -82,9 +109,12 @@ public partial class RunObservation
         }
 
         /// <summary>Lieux entrés dans le cadre ; <paramref name="chests"/> est le groupe déjà lu par la mesure des coffres.</summary>
-        public void Sample(double t, Rect2 view, Godot.Collections.Array<Node> chests)
+        public void Sample(double t, Rect2 view, Godot.Collections.Array<Node> chests, SmallPlaceDirector smallPlaces)
         {
             _places.Clear();
+            if (smallPlaces != null)
+                foreach (SmallPlace place in smallPlaces.Places)
+                    _places.Add((place, place.Data.Id));
             foreach (Node node in chests)
                 if (node is Chest chest)
                     _places.Add((chest, "chest"));
@@ -188,6 +218,7 @@ public partial class RunObservation
             Chest chest => !chest.IsOpened,
             Memorial memorial => memorial.CanInteract,
             Rift rift => rift.IsOpen,
+            SmallPlace place => place.CanInteract,
             _ => false,
         };
 
@@ -202,7 +233,7 @@ public partial class RunObservation
                 visited += count;
             summary.Append(CultureInfo.InvariantCulture,
                 $" places_seen={seen} places_visited={visited} places_seen_per_min={seen / minutes:F2} places_visited_per_min={visited / minutes:F2} first_place_s={_firstSeen:F0}");
-            foreach (string kind in new[] { "chest", "memorial", "rift" })
+            foreach (string kind in new[] { "chest", "memorial", "rift", "well", "crystal_vein", "scarecrow" })
                 summary.Append(CultureInfo.InvariantCulture,
                     $" {kind}_seen={_seenByKind.GetValueOrDefault(kind)} {kind}_visited={_visitedByKind.GetValueOrDefault(kind)}");
             summary.Append(CultureInfo.InvariantCulture,
