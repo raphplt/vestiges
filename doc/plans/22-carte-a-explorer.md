@@ -1,8 +1,17 @@
 # Plan 22 — La carte à explorer
 
-30 septembre 2026 · **Proposition à valider par Raphaël.** Ouvert à sa demande ([DECISIONS §34](DECISIONS.md)). Conçu avec les [douze principes](../PRINCIPES-BUILD.md) et le [plan 21](21-systeme-de-build.md). Aucun code modifié par ce document.
+30 septembre 2026 · **Direction validée par Raphaël ([DECISIONS §35](DECISIONS.md)) : feu vert, avec les arbitrages du §0.** Ouvert à sa demande ([DECISIONS §34](DECISIONS.md)). Conçu avec les [douze principes](../PRINCIPES-BUILD.md) et le [plan 21](21-systeme-de-jeu.md). Aucun code modifié par ce document.
 
 **Ce plan regroupe au lieu d'ajouter.** Il absorbe le plan 13 (butin), l'idée B du plan 11 (butin à sauver de l'Effacement) et la remise en service des POI prévue au plan 18. Ces documents restent comme historique ; les décisions à prendre sont ici.
+
+## 0. Arbitrages du 30 septembre
+
+- **Feu vert** sur la direction : les décors deviennent des lieux.
+- **Carte agrandie, surtout en hauteur.** Elle mesure aujourd'hui environ 25 600 × 6 400 px, soit quatre fois plus large que haute. Cible de départ : doubler la hauteur (12 800 px), largeur inchangée. À mesurer : coût de génération, nombre de décors, temps de traversée.
+- **Un peu plus de lieux** que proposé : viser **85 à 90** au lieu de 70. Avec la carte agrandie, l'espacement moyen reste voisin de celui d'aujourd'hui.
+- **Le Mémorial reste la pièce centrale** des lieux de choix : un autel à raviver, qui protège sa zone de l'Effacement et donne un bonus. Il est déjà en jeu (plan 17, vague 3).
+- **Minimap : oui**, au lieu d'un simple écran de carte en dernier lot.
+- Les ex-perks s'appellent les **Réminiscences** ; le système de build est fixé dans la [référence unique](21-systeme-de-jeu.md).
 
 ## 1. La demande et le constat
 
@@ -81,7 +90,7 @@ Chaque **type** de lieu reconnu pour la première fois dans la run donne un Rep�
 
 ### C. L'Atlas : ce qu'on découvre reste, d'une run à l'autre
 
-Un onglet de la Collection. Chaque type de lieu, puis chaque lieu remarquable, y inscrit une ligne de lore la première fois. Compléter une page débloque une arme ou un objet : c'est la voie « quêtes » des déblocages ([DECISIONS §29](DECISIONS.md)). Une partie ratée laisse quand même une page avancée (principe 12).
+Un onglet de la Collection. Chaque type de lieu, puis chaque lieu remarquable, y inscrit une ligne de lore la première fois. Compléter une page débloque une arme ou un objet : c'est une des voies de déblocage de la référence (plan 21 §10) ([DECISIONS §29](DECISIONS.md)). Une partie ratée laisse quand même une page avancée (principe 12).
 
 ## 6. Lien avec l'Effacement
 
@@ -120,7 +129,8 @@ Un onglet de la Collection. Chaque type de lieu, puis chaque lieu remarquable, y
 | C2 | Atelier : niveau d'arme, Retrempe, Trempe | Banc, captures, mesure de l'Essence dépensée |
 | C3 | Reliquaire, avec les objets du plan 21 (lot G2) | Dépend du catalogue d'objets |
 | C4 | Les six autres petits lieux, Repères | Mesure : types visités par run |
-| C5 | Traces des lieux effacés, Atlas, écran de carte | Captures, essai de Raphaël |
+| C5 | Traces des lieux effacés, Atlas | Captures, essai de Raphaël |
+| C6 | Carte agrandie en hauteur ; **minimap** (lieux découverts, front de l'Effacement) | Mesure du coût de génération, banc, captures |
 
 ## 10. Idées reprises d'autres plans, à placer
 

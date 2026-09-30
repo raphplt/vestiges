@@ -8,16 +8,15 @@ Le [registre](DECISIONS.md) garde les mots de Raphaël. Les plans gardent le dé
 
 | Chantier | Plan | Prochaine action |
 |---|---|---|
-| Système de build | [21](21-systeme-de-build.md) | Raphaël : nom des ex-perks. Agent : catalogue d'objets à niveaux, puis lot G2 |
-| Carte à explorer | [22](22-carte-a-explorer.md) | Raphaël : cinq questions du §10. Agent : lot C0 (mesure de départ) |
+| Système de jeu | [21, référence unique](21-systeme-de-jeu.md) | Agent : lot G2a (objets de propriété : 6 emplacements, 50 niveaux), puis G2b |
+| Carte à explorer | [22](22-carte-a-explorer.md) | Direction validée. Agent : lot C0 (mesure de départ), puis C1 |
 
 ## 2. Décisions attendues de Raphaël
 
 | Sujet | Plan | Question |
 |---|---|---|
-| Nom des ex-perks | 21 §18 | Réminiscences, Certitudes ou Ancres |
-| Carte à explorer | 22 §10 | Décors comme lieux, Atelier et Trempe, échelle de 70 lieux, Repères et Atlas |
-| Catalogue d'objets | 21, [05 objets](05-objets-catalogue-v1.md) | À réécrire par l'agent en 6 emplacements × 50 niveaux, puis à valider |
+| Carte à explorer | 22 §11 | Atelier et Trempe, service « niveau d'arme » déplacé du Mémorial, Repères et Atlas : pas encore confirmés un par un |
+| Catalogue d'objets | 21 §4 | 33 objets écrits avec effet par niveau et palier 25 : à relire, chiffres à régler en jeu |
 | Icônes des ex-perks | 05 §15 | Direction « fragments teintés » jugée meilleure ; motifs à valider avant branchement |
 | Recette de la mort et du bilan | 02 | Durée de la séquence, densité de la page, échelle des distances |
 | Déplacements | 01 | Inertie, invulnérabilité du dash, recette manette |

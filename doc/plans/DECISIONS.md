@@ -442,3 +442,19 @@ Raphaël : « alors la carte à ratisser c'est bien et ouais ca me va d'ouvrir u
 
 **Inquiétude à traiter :** trop de plans (22), risque d'idées perdues et de retard accumulé.
 **En attente :** le nom des ex-perks (Réminiscences, Certitudes ou Ancres).
+
+
+## 35. Carte agrandie, plus de lieux, Mémorial confirmé, minimap, Réminiscences, et une référence unique du système de jeu — 30 septembre 2026
+
+Raphaël : « je pense que de 1 la map peut etre un peu agrandie surtout verticalement et de deux il faut augmenter un peu la proportions de poi visés. aussi j'aime bien le principe d'hotel (pas le vrai nom) à activer qui protège la zone de l'effacement et donne un bonus. j'espère qu'il est consigné quelque part. la minimap bonne idée. Pour les ex perks ca me va réminiscences on garde ca. Allez go. Et est ce que pour de bon on peut enfin fixer le systeme du jeu (armes perks objects ect ect avec les détails) et garder une seule version de ca qq part dans un des plans et commencer à l'appliquer rapidement ?? c'est limite le plus important du jeu enfait. »
+
+**Acquis :**
+- **Carte :** à agrandir un peu, surtout en hauteur.
+- **Lieux :** viser un peu plus de lieux que les 70 proposés au plan 22.
+- **Mémorial :** le principe de l'autel à activer, qui protège sa zone de l'Effacement et donne un bonus, plaît. Il existe déjà en jeu (plan 17, vague 3) et reste la pièce centrale des lieux de choix.
+- **Minimap :** oui.
+- **Nom :** les ex-perks s'appellent les **Réminiscences**.
+- **Plan 22 :** feu vert.
+- **Référence unique :** fixer le système de jeu (armes, Réminiscences, objets, détails) en **une seule version**, dans un seul plan, et commencer à l'appliquer vite. C'est la priorité.
+
+Suite donnée : le plan 21 devient la référence unique du système de build ; son historique part en annexe.

@@ -1,6 +1,6 @@
 # VESTIGES — Dossier de plans à valider
 
-**Où en est chaque chose : [tableau de bord](TABLEAU-DE-BORD.md)** (une page, tenue à jour à chaque lot et à chaque décision). Priorité du 30 septembre : le [système de build](21-systeme-de-build.md) (4 armes, 6 objets à niveaux, ex-perks après les Résurgences) et la [carte à explorer](22-carte-a-explorer.md). Les paragraphes ci-dessous gardent l'historique ; là où ils parlent d'objets sans plafond, de traits ou de quatre passifs conservés, ils sont périmés ([DECISIONS §32 à §34](DECISIONS.md)).
+**Où en est chaque chose : [tableau de bord](TABLEAU-DE-BORD.md)** (une page, tenue à jour à chaque lot et à chaque décision). Priorité du 30 septembre : le [système de jeu, référence unique](21-systeme-de-jeu.md) (4 armes, 6 objets à niveaux, 4 Réminiscences après les Résurgences) et la [carte à explorer](22-carte-a-explorer.md). Les paragraphes ci-dessous gardent l'historique ; là où ils parlent d'objets sans plafond, de traits ou de quatre passifs conservés, ils sont périmés ([DECISIONS §32 à §34](DECISIONS.md)).
 
 **Priorité actuelle — 28 septembre : objets et perks.** Raphaël demande leur refonte conjointe : objets cumulables sans plafond, quatre perks équipés au maximum. Le [catalogue de neuf spécialisations](05-perks-specialisations.md) est validé pour une V1 extensible ; B0 à B2 et la partie sans objets de B3 sont livrés et vérifiés : sept perks sur neuf sont proposés en run. Délestage et Habitude attendent les objets (B4), dont le catalogue, la récompense à choix et l'inventaire restent à décider par Raphaël. Le [catalogue commun historique](05-catalogue-objets-perks.md) garde l’audit et la proposition d’objets à réviser. Ce chantier coordonne les plans 05/13/17/20, sans ajouter un nouveau plan numéroté. Les autres priorités ci-dessous constituent l'historique et les dépendances des chantiers concernés.
 
@@ -46,7 +46,7 @@ La [Stratégie V2](../VESTIGES-STRATEGIE-V2.md) reste l'autorité gameplay/roadm
 | [18 — Inventaire des restes V1](18-inventaire-restes-v1.md) | P0 | Éléments de lore et POI vectoriels, Colosses, identifiants Steam « nuits » | 17 (lots 0B/0C) |
 | [19 — Lore](19-lore.md) | Transversal | Étape A : incohérences, textes trop directs, 14 questions à trancher, pistes de révélation | 06 (casting), 16 (échos), 17 (noms d'armes) |
 | [20 — Récompense et puissance](20-recompense-et-puissance.md) | P0 (R1 capital) | Retours du 28 septembre ; modèle de progression révisé pour 300 à 400 niveaux en 45 min (§6.6), cibles à valider ; paliers validés ; lots D1, R1-0 et R1-T livrés ; R1-F proposé | 03, 05, 06, 13, 16, 17 |
-| [21 — Système de build](21-systeme-de-build.md) | **P0, priorité actuelle** | Refonte depuis les [douze principes](../PRINCIPES-BUILD.md) : 4 armes (niveau 50, ascension), 6 objets à 50 niveaux, 4 ex-perks après les Résurgences, personnages à affinités ; lot G1 livré | 05, 06, 17, 20, 22 |
+| [21 — Système de jeu](21-systeme-de-jeu.md) | **P0, référence unique** | Fixe le build : 4 armes (niveau 50, ascension), 6 objets à 50 niveaux, 4 Réminiscences après les Résurgences, personnages à affinités. [Historique](21-historique.md) ; lot G1 livré, G2a en cours | 05, 06, 17, 20, 22 |
 | [22 — Carte à explorer](22-carte-a-explorer.md) | **P0** | Décors qui deviennent des lieux, Atelier et Trempe, Reliquaire, Repères, Atlas ; absorbe 13, 11 B et les POI de 18 ; à valider | 21, 12, 16, 17 |
 
 Les numéros servent à identifier les plans, pas à imposer leur exécution intégrale dans cet ordre. Le [registre](DECISIONS.md) fait foi pour leur statut de validation.
@@ -69,9 +69,9 @@ Un seul lot d'implémentation ouvert à la fois. Un échec de lisibilité, de pe
 - bannissements gratuits puis payés en Péril ;
 - courbe de 300 à 400 niveaux conservée.
 
-Le [lot G1](21-systeme-de-build.md#17-compte-rendu-g1--fragments-après-les-résurgences-bannir-coûte-du-péril) est livré. Question ouverte : les traits, dont l'agent recommande la fusion dans les objets.
+Le [lot G1](21-historique.md) est livré. Question ouverte : les traits, dont l'agent recommande la fusion dans les objets.
 
-**Mise à jour du 29 septembre, soir — refonte du build depuis les principes :** Raphaël fixe [douze principes de conception des builds](../PRINCIPES-BUILD.md) et demande une reconception neutre. Le [plan 21](21-systeme-de-build.md) propose cinq familles aux rôles nets et trois canaux d'acquisition :
+**Mise à jour du 29 septembre, soir — refonte du build depuis les principes :** Raphaël fixe [douze principes de conception des builds](../PRINCIPES-BUILD.md) et demande une reconception neutre. Le [plan 21](21-systeme-de-jeu.md) propose cinq familles aux rôles nets et trois canaux d'acquisition :
 - armes (voies au niveau 5) et traits sur propriétés communes, par le level-up ;
 - objets à déclencheurs communs, par le monde ;
 - fragments après chaque Résurgence.

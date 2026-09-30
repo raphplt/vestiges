@@ -1,4 +1,6 @@
-# Plan 21 — Le système de build, reconçu depuis les principes
+# Plan 21 — Historique de la conception (29 et 30 septembre 2026)
+
+> **Document d'archive.** La référence unique du système de jeu est [21-systeme-de-jeu.md](21-systeme-de-jeu.md). Ce fichier garde le raisonnement, les versions successives et le compte rendu du lot G1 ; en cas de contradiction, la référence fait foi.
 
 29 septembre 2026 · **Version 2 après les arbitrages de Raphaël ([DECISIONS §32](DECISIONS.md)) : la [§16](#16-version-2--arbitrages-du-29-septembre) fait foi là où elle contredit les sections précédentes.** Demande ([DECISIONS §31](DECISIONS.md)) : repartir d'un point de vue neutre, sans présupposé, et construire la manière dont le build se fait en respectant les [douze principes](../PRINCIPES-BUILD.md), quitte à remettre en cause ce qui était prévu ou déjà implémenté. Aucun code modifié par ce document.
 
