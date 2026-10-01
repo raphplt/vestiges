@@ -365,3 +365,34 @@ Machine chargée : comparaison FPS reportée, pas de garantie 60 FPS déduite.
 Sortie réelle 4K, réduction de lecture 720p inspectée, pas de test natif 720p.
 Le caractère gris et uniforme du fond est traité ; l’appréciation de Raphaël
 et une éventuelle reprise du terrain du monde restent ouvertes.
+
+### R7 — entrées des écrans de choix : lot engagé le 1er octobre
+
+La reprise de L6b étant travaillée dans un autre checkout, isoler ici le
+contrat de `ChoiceScreen`, commun aux Mémoriaux et aux Failles. Défauts lus :
+une réouverture sans animation conserve le titre ou les actions transparents
+si l'entrée précédente a été interrompue ; `Activate` peut sélectionner avant
+la fin de l'entrée ; l'animation précédente peut viser des cartes supprimées.
+
+1. Faire passer tous les chemins de validation par la même garde : premier
+   appui = terminer l'entrée, suivant = choix. Conserver la navigation et les
+   cartes désactivées ; ne modifier aucun son, prix, gain ni durée d'animation.
+2. Arrêter l'ancien tween à chaque ouverture et remettre le titre, les actions
+   et le fond dans leur état final avant une éventuelle nouvelle entrée.
+   Détacher immédiatement les anciennes cartes lors d'une relance.
+3. Vérifier ces cas avant/après avec un banc Godot headless, puis capturer les
+   réouvertures dans Main sur ViewSonic. Vérifier pause continue, annulation
+   autorisée seulement aux services/Failles et absence de double récompense.
+
+
+**R7 livré et vérifié — 1er octobre.** La réouverture coupe l'entrée précédente
+et restaure titre, sous-titre, actions, voile et fond. Les anciennes cartes
+quittent immédiatement leur conteneur. Validation directe, bouton et input
+partagent la garde d'entrée ; un premier appui ne choisit pas de bénédiction.
+Le fondu termine aussi quand on passe l'animation. Rotation à 8°/s conservée.
+
+[Preuves et limites](../audits/choice-screen-2026-10-01/README.md) : 24 contrôles,
+12 échecs avant → zéro après ; 169 contrôles des assets/UI verts, build sans
+warning, smoke 600 frames vert. Quatre captures Main regardées sur ViewSonic.
+Prix, récompenses et audio inchangés. Test clavier/manette par événements
+injectés ; appréciation en jeu toujours distincte de ces vérifications.

@@ -99,6 +99,8 @@ public partial class RunObservation
             await ToSignal(GetTree().CreateTimer(2.5, processAlways: true), SceneTreeTimer.SignalName.Timeout);
             SaveFrame(blessingsFrame);
         }
+        if (choices.IsEntering)
+            choices.Activate(0);
         choices.Activate(0);
         await Frames(10);
         return shards.Count;

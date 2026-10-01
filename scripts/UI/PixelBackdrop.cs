@@ -43,6 +43,13 @@ public partial class PixelBackdrop : TextureRect
         material.SetShaderParameter("rotation_degrees_per_second", ScreenArt.RotationDegreesPerSecond);
     }
 
+    /// <summary>Passer une entrée termine aussi son fondu, sans changer la rotation.</summary>
+    public void FinishFade()
+    {
+        _fade?.Kill();
+        Modulate = new Color(1f, 1f, 1f, 0.75f);
+    }
+
     /// <summary>Le fond monte de rien à plein en <paramref name="seconds"/>.</summary>
     public void FadeIn(float seconds)
     {

@@ -1,5 +1,7 @@
 # VESTIGES — Dossier de plans à valider
 
+**1er octobre — robustesse des choix :** relances et entrées interrompues corrigées, 24 contrôles (12 échecs → zéro), captures Main vérifiées ; [plan 04 R7](04-interfaces-et-hub.md#r7--entrées-des-écrans-de-choix--lot-engagé-le-1er-octobre).
+
 **1er octobre (soir) — audio A0/A1 livrés :** enregistrement audible de référence (Movie Maker de Godot, mixage du moteur, trace et rapport), puis pilotage de la musique stabilisé : intention séparée de la phase, annonce tenue jusqu'au début, accalmie, endgame, première run enfin musicale, fondus à puissance constante ; 22 contrôles verts. Avant/après et planche A2 (points d'entrée des morceaux d'annonce et de crise) hors dépôt, **à écouter par Raphaël** : quatre questions au plan 15. Le rôle exploration/combat reste à choisir (foule permanente). [Plan 15](15-audio.md#a0-et-a1--livrés-le-1er-octobre-soir).
 
 **1er octobre — retours visuels et combat :** R1/R2 (pause, survols et icônes de butin), R3b (cadence du Hurleur), R5a–c (trois personnages, 456 PNG) et R6 (carte par biome) livrés et vérifiés. Rotation des coffres préservée. Restent le ressenti humain, l’approbation artistique et le banc FPS de la carte sur machine calme. [État courant au plan 24 §12](24-retours-du-1er-octobre.md#12-retours-de-recette--1er-octobre-2026). Cette continuation exclut l’audio (DECISIONS §47) ; son suivi indépendant reste au plan 15.

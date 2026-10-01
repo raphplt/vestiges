@@ -170,6 +170,8 @@ public partial class RunObservation : Node
                 await CaptureLevelUp();
             else if (Array.IndexOf(args, "--capture-pause") >= 0)
                 await CapturePause();
+            else if (Array.IndexOf(args, "--capture-choices") >= 0)
+                await CaptureChoiceReopen();
             else if (Array.IndexOf(args, "--capture-memorial") >= 0)
                 await CaptureMemorial();
             else if (Array.IndexOf(args, "--capture-rift") >= 0)
@@ -787,6 +789,12 @@ public partial class RunObservation : Node
         // Écran de choix (Mémorial, Faille) : le bot sort quand c'est permis, sinon prend la première carte.
         if (_world.GetNodeOrNull<Vestiges.UI.ChoiceScreen>("ChoiceScreen") is { IsOpen: true } choices)
         {
+            // Passer l'entrée avant de consommer l'intention d'achat du bot.
+            if (choices.IsEntering)
+            {
+                choices.Activate(choices.FirstEnabled());
+                return;
+            }
             // --visit : le bot achète le premier service qu'il peut payer, comme un joueur qui dépense son Essence.
             int pick = _visitPlaces && _placeTracker != null && _placeTracker.TakePurchase() ? choices.FirstEnabled() : int.MaxValue;
             choices.Activate(choices.CanCancel ? pick : 0);

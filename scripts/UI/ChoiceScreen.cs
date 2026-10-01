@@ -30,6 +30,7 @@ public partial class ChoiceScreen : CanvasLayer
     private int _focusIndex;
 
     public bool IsOpen => Visible;
+    public bool IsEntering => _entrance != null && _entrance.IsRunning();
     public bool CanCancel => _cancelButton != null;
 
     public override void _Ready()
@@ -47,7 +48,10 @@ public partial class ChoiceScreen : CanvasLayer
     public void Open(string title, string subtitle, IReadOnlyList<ChoiceCard> cards, string cancelText, Action<int> onChosen,
         Color? tint = null, bool animate = true)
     {
+        _entrance?.Kill();
+        _entrance = null;
         Clear();
+        ResetEntrance();
         _backdrop.SetTint(tint ?? PixelBackdrop.GoldTint);
         _title.Text = title;
         _subtitle.Text = subtitle ?? "";
@@ -66,7 +70,7 @@ public partial class ChoiceScreen : CanvasLayer
             UITheme.SetTextRole(_cancelButton, TextRole.Small);
             _cancelButton.AddThemeColorOverride("font_color", ChoiceStyle.TextColor);
             UITheme.WireButtonAudio(_cancelButton);
-            _cancelButton.Pressed += () => Close(-1);
+            _cancelButton.Pressed += () => Activate(_cards.Count);
             int index = _cards.Count;
             _cancelButton.MouseEntered += () => SetFocus(index);
             _actions.AddChild(_cancelButton);
@@ -122,6 +126,13 @@ public partial class ChoiceScreen : CanvasLayer
         if (_entrance == null || !_entrance.IsRunning())
             return;
         _entrance.Kill();
+        ResetEntrance();
+    }
+
+    /// <summary>Une relance sans animation doit aussi repartir d'un écran entièrement visible.</summary>
+    private void ResetEntrance()
+    {
+        _backdrop.FinishFade();
         _overlay.Color = ChoiceStyle.OverlayColor;
         _title.VisibleRatio = 1f;
         _subtitle.Modulate = Colors.White;
@@ -282,6 +293,16 @@ public partial class ChoiceScreen : CanvasLayer
     /// <summary>Choix au clavier ou par un bot de test : même effet qu'un clic.</summary>
     public void Activate(int index)
     {
+        if (!Visible)
+            return;
+        // Même garde pour un clic de carte, un bouton de sortie ou un bot que pour l'input clavier/manette.
+        if (_entrance != null && _entrance.IsRunning())
+        {
+            FinishEntrance();
+            return;
+        }
+        if (index < 0)
+            return;
         if (index >= _cards.Count)
         {
             if (_cancelButton != null)
@@ -319,9 +340,15 @@ public partial class ChoiceScreen : CanvasLayer
     private void Clear()
     {
         foreach (Node child in _cardsContainer.GetChildren())
+        {
+            _cardsContainer.RemoveChild(child);
             child.QueueFree();
+        }
         foreach (Node child in _actions.GetChildren())
+        {
+            _actions.RemoveChild(child);
             child.QueueFree();
+        }
         _cards.Clear();
         _cardPanels.Clear();
         _cancelButton = null;

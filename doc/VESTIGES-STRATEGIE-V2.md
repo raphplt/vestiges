@@ -766,6 +766,8 @@ Le script de post-processing doit inclure une vérification/correction de l'angl
 
 ### Phase D — Lisibilité et UX (2-3 semaines)
 
+- [x] Écrans de choix : réouverture et entrée interrompue sans éléments masqués ni sélection prématurée ; 24 contrôles et captures Main vérifiés (plan 04 R7, 1er octobre 2026).
+
 - [x] Radar et carte : détails de terrain par biome, routes/eau, phases et légende ; 17 contrôles et captures Main vérifiés (plan 04 R6). Recette artistique humaine encore ouverte.
 
 - [x] Pression des tirs, première correction ciblée : recharge du Hurleur ×2,5 en données, cri conservé ; banc fixe, quatre runs et captures vérifiés (plan 07 R3b). Ressenti humain encore ouvert.
