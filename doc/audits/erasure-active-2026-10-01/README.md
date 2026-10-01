@@ -132,3 +132,8 @@ la comparaison des 3 600 états/25 514 signaux est toujours identique, les
 20 contrôles 6C passent, ainsi que les 26 contrôles Main et les **31 contrôles
 des choix/révélations**. Journaux `integrated-*.log.gz` et
 [integrated-comparison.json](integrated-comparison.json). Build : zéro warning.
+
+
+**Livraison :** `f9e55684`, avancée directe de `main` après `36a318f3`.
+Le checkout principal a été recompilé (zéro avertissement/erreur), importé et
+vérifié par le smoke de 600 frames : vert, journal `main-smoke.log.gz`.
