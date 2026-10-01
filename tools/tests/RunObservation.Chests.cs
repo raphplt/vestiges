@@ -146,6 +146,22 @@ public partial class RunObservation
         await Frames(10);
         Node interaction = _player.GetNode("WorldInteraction");
         interaction.GetType().GetMethod("OpenChest", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(interaction, new object[] { nearest });
+        if (System.Array.IndexOf(OS.GetCmdlineUserArgs(), "--capture-loot-motion") >= 0)
+        {
+            // Après le fondu : le fond doit rester stable entre les images, seules les poussières scintillent.
+            await ToSignal(GetTree().CreateTimer(0.7, processAlways: true), SceneTreeTimer.SignalName.Timeout);
+            for (int sample = 0; sample < 32; sample++)
+            {
+                await ToSignal(GetTree().CreateTimer(1.0 / 30, processAlways: true), SceneTreeTimer.SignalName.Timeout);
+                await ToSignal(RenderingServer.Singleton, RenderingServer.SignalName.FramePostDraw);
+                using Image motion = GetViewport().GetTexture().GetImage();
+                motion.Resize(960, 540, Image.Interpolation.Nearest);
+                motion.SavePng($"{_output}/loot-motion-{sample:00}.png");
+            }
+            SaveFrame("loot-motion-end");
+            GD.Print($"[RunObservation] RESULT loot-motion frames=32 dossier={_output}");
+            return;
+        }
         int elapsed = 0;
         foreach (int frame in new[] { 20, 28, 36, 44 })
         {

@@ -468,3 +468,22 @@ La seconde comparaison a été interrompue pour livrer sans prolonger les
 vérifications supplémentaires, après le retour de Raphaël. Aucune conclusion
 de gain ni d'absence de régression n'est revendiquée. Build sans avertissement,
 smoke et vérifications fonctionnelles terminés ; arbre livré sur `main`.
+
+### Correctif I6 — fond de coffre saccadé
+
+Retour de Raphaël : le fond d'ouverture donne la nausée avec sa faible
+cadence. Cause : huit poses de rotation à 3 images/s, soit 5,625° par saut.
+Lot ciblé : rayons stables et poussières qui scintillent en continu ; même
+composant corrigé dans les autres écrans de choix. Conserver les pixels
+natifs et vérifier une ouverture réelle, le build et le smoke.
+
+Livré : quatre textures natives fixes remplacent les huit poses de chaque
+teinte. Le shader module seulement les pixels des poussières avec une
+sinusoïde continue ; aucune rotation, aucun changement d'image en C#.
+Le fondu d'ouverture et les révélations du butin sont conservés.
+
+Build sans avertissement et smoke 600 frames verts. Capture de 32 images
+successives d'un vrai coffre inspectée (`/tmp/vestiges-plan25-i6-loot/`).
+Dans une zone du fond hors HUD/cartes, seuls 12 pixels sur 28 600 changent
+de luminosité entre les images : les rayons restent en place. Les 21 PNG
+réexportés (textures et planches) sont identiques lors d'une seconde génération.

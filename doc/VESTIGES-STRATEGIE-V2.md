@@ -831,7 +831,7 @@ Le script de post-processing doit inclure une vérification/correction de l'angl
 - [x] Plan 25 S5 : cinq bonus 16 px branchés au plan 24 C4, flottement, lueur 2:1 et disparition ; cinq ramassages capturés, effets et réutilisation du pool vérifiés.
 - [x] Plan 25 S1 : cinq raretés, cadres et reflets légendaires, sauts de Chance et trèfle branchés ; glyphes retirés, écrans de choix capturés.
 - [x] Plan 25 S2/S3 : 34 icônes d'objets natives 32/16 px ; 31 objets actifs raccordés aux écrans, HUD, pause et bilan, trois objets du monde visibles « À venir » en Collection. Résolveur d'anciennes icônes supprimé.
-- [x] Plan 25 S7 : quatre fonds animés natifs, neuf habillages de menus et cinq sols de chargement branchés ; rendu nearest vérifié par captures.
+- [x] Plan 25 S7 : quatre fonds animés natifs, neuf habillages de menus et cinq sols de chargement branchés ; rendu nearest vérifié par captures. Correctif I6 : rayons stabilisés et poussières continues après le retour sur les saccades (DECISIONS §42).
 - [x] Plan 25 S8 : 14 icônes de Réminiscences en Collection, neuf définitions raccordées aux interfaces ; les effets non implémentés restent « À venir ». Choix et inventaire capturés.
 - [x] Hub visuel (camp du Foyer vivant, validé par Raphaël le 26 septembre 2026, plan 04).
 - [ ] Musiques adaptatives (5-6 tracks).

@@ -4,9 +4,8 @@
       480,
       270
     ],
-    "frames": 8,
-    "fps": 3,
-    "layout": "horizontal",
+    "frames": 1,
+    "animation": "dust_twinkle",
     "tints": [
       "gold",
       "cyan",

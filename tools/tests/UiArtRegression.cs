@@ -43,7 +43,7 @@ public partial class UiArtRegression : Node
                     && art.Glow.GetWidth() == art.Glow.GetHeight() * 2, $"Bonus {bonus.Id} : animation et lueur 2:1");
             }
             for (int tint = 0; tint < 4; tint++)
-                Check(Frames(ScreenArt.Background(tint), 8, 480, 270), $"Fond natif {tint}");
+                Check(ScreenArt.Background(tint).GetSize() == new Vector2(480, 270), $"Fond natif stable {tint}");
             Check(Frames(ScreenArt.Grounds, 5, 128, 32), "Les cinq sols de chargement sont importés");
             foreach (string skin in new[] { "button_normal", "button_hover", "button_pressed", "button_disabled",
                 "card_normal", "card_selected", "card_locked", "panel_frame", "panel_frame_selected" })
@@ -64,10 +64,8 @@ public partial class UiArtRegression : Node
                 "Chance : trois rangs révélés, animation arrêtée au bon éclat");
             PixelBackdrop backdrop = new(PixelBackdrop.MemorialTint);
             AddChild(backdrop);
-            Texture2D first = backdrop.Texture;
-            backdrop._Process(0.5);
-            Check(backdrop.Texture != first && backdrop.TextureFilter == CanvasItem.TextureFilterEnum.Nearest,
-                "Le fond change de pose et garde le filtre nearest");
+            Check(backdrop.Material is ShaderMaterial && backdrop.TextureFilter == CanvasItem.TextureFilterEnum.Nearest,
+                "Le scintillement conserve les pixels natifs sans faire défiler des poses");
             GD.Print($"[UiArtRegression] RESULT failures={_failures}");
             GetTree().Quit(_failures == 0 ? 0 : 1);
         }

@@ -21,7 +21,7 @@ def write_sheets(folder: Path, images: dict[str, Image.Image]) -> None:
     draw = ImageDraw.Draw(sheet)
     for index, tint in enumerate(TINTS):
         x, y = index % 2 * 512 + 16, index // 2 * 400 + 28
-        panel = background(tint, 0)
+        panel = background(tint)
         # Cadres réels : la planche vérifie que les rayons restent derrière le contenu.
         for card in range(3):
             panel.alpha_composite(nine_patch(skin("ui_card_normal"), (124, 144)), (42 + card * 134, 64))
@@ -30,7 +30,7 @@ def write_sheets(folder: Path, images: dict[str, Image.Image]) -> None:
         sheet.alpha_composite(panel, (x, y))
         draw.text((x, y - 24), f"{tint} — fond natif 480 × 270", font=font, fill="#E8E0D4")
         for f in range(4):
-            crop = background(tint, f * 2).crop((300, 30, 324, 54)).resize((96, 96), Image.Resampling.NEAREST)
+            crop = background(tint).crop((300 + f * 24, 30, 324 + f * 24, 54)).resize((96, 96), Image.Resampling.NEAREST)
             sheet.alpha_composite(crop, (x + f * 112, y + 278))
     sheet.save(folder / "25-s7-ecrans.png")
     rows = [(name, [image]) for name, image in images.items() if name.startswith("ui_")]
@@ -55,7 +55,7 @@ def main() -> None:
     if args.export:
         output = Path("assets/ui/screens/plan25")
         export(images, output, "generate_screen_sprites")
-        manifest = {"background": {"frame_size": list(SIZE), "frames": FRAMES, "fps": 3, "layout": "horizontal", "tints": list(TINTS)},
+        manifest = {"background": {"frame_size": list(SIZE), "frames": FRAMES, "animation": "dust_twinkle", "tints": list(TINTS)},
                     "skin_margins": [4, 4, 4, 4], "loading_ground": {"size": [128, 32], "repeat_axis": "x", "biomes": list(BIOMES)},
                     "filter": "nearest"}
         (output / "screens_manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")

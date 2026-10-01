@@ -547,3 +547,9 @@ Raphaël : « bah branche tout alors stp (retourne sur main et fais les changeme
 du plan 25 directement sur `main`, sans nouvel arrêt de validation graphique.
 Les composants du plan 24 maintenant disponibles sont réunis avec les sprites
 pour brancher également bonus, sceaux, écrans animés et chargement.
+
+## 42. Fond d'ouverture de coffre saccadé — 1er octobre 2026
+
+Raphaël : « l'animation quand un coffre s'ouvre en fond là elle est a 5 fps
+elle donne la gerbe c'est pas possible ». Corriger le mouvement du fond ;
+ce retour invalide la cadence et les sauts de rotation livrés au plan 25 I4.

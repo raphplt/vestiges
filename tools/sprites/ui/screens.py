@@ -7,15 +7,15 @@ from pathlib import Path
 import numpy as np
 from PIL import Image, ImageDraw
 
-from .kit import BIOMES, ground_patch, strip
+from .kit import BIOMES, ground_patch
 
-FRAMES = 8
+FRAMES = 1
 SIZE = (480, 270)
 COLORS = {p["id"]: p for p in json.loads(Path("data/ui/rarities.json").read_text())["rarities"]}
 TINTS = {"gold": "legendary", "cyan": "memorial", "violet": "rift", "neutral": "common"}
 
 
-def background(tint: str, frame: int) -> Image.Image:
+def background(tint: str) -> Image.Image:
     rgb = np.asarray(tuple(bytes.fromhex(COLORS[TINTS[tint]]["color"][1:])), dtype=float)
     # Quatre niveaux discrets pour toute l'image ; la faible valeur laisse les cartes au premier plan.
     palette = np.asarray([(12, 12, 21), tuple((rgb * .09 + 13).astype(int)),
@@ -23,14 +23,15 @@ def background(tint: str, frame: int) -> Image.Image:
     yy, xx = np.mgrid[:SIZE[1], :SIZE[0]]
     x, y = xx - 240, yy - 144
     angle = np.arctan2(y, x)
-    ray = np.mod(angle / (np.pi / 4) + frame / FRAMES, 1)
+    # Les grands rayons restent fixes : leur rotation par poses faisait sauter tout l'écran.
+    ray = np.mod(angle / (np.pi / 4), 1)
     radius = np.hypot(x, y)
     indices = np.where(ray < .2, 2, np.where(ray < .28, 1, 0))
     indices[radius < 24] = 0
-    # Une poussière éparse, phase cyclique sans nouveau hasard à chaque génération.
+    # Positions fixes ; seul leur éclat varie dans le shader, à la cadence du rendu.
     rng = np.random.default_rng(2507)
     for px, py, phase in rng.integers(0, 480, (140, 3)):
-        if (int(phase) + frame) % FRAMES < 4:
+        if int(phase) % 8 < 4:
             indices[int(py) % 270, int(px)] = 3
     data = np.concatenate([palette[indices], np.full((270, 480, 1), 255, dtype=np.uint8)], axis=2)
     return Image.fromarray(data)
@@ -75,7 +76,7 @@ def loading_ground(biome: str) -> Image.Image:
 
 
 def assets() -> dict[str, Image.Image]:
-    result = {f"choice_dust_{tint}": strip([background(tint, f) for f in range(FRAMES)]) for tint in TINTS}
+    result = {f"choice_dust_{tint}": background(tint) for tint in TINTS}
     for path in sorted(Path("assets/ui/menus").glob("*.png")):
         if path.stem.startswith(("ui_button_", "ui_card_", "ui_panel_frame")):
             result[path.stem] = skin(path.stem)
