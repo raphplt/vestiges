@@ -4,9 +4,10 @@ using Godot;
 namespace Vestiges.UI;
 
 /// <summary>
-/// Overlay de chargement affiché pendant l'initialisation async du monde.
-/// Démarre noir (seamless avec VoidTransition), affiche des particules
-/// dorées flottantes et des fragments de lore, puis fade-out vers le gameplay.
+/// Overlay de chargement affiché pendant l'initialisation async du monde (plan 24 B5). Démarre noir (raccord avec la
+/// VoidTransition du Hub) ; le personnage marche sur une bande de sol qui se dessine au rythme du chargement
+/// (<see cref="LoadingWalkStrip"/>), sous une phrase courte, et quelques poussières dorées montent. Les étapes
+/// techniques ne s'affichent plus : elles vont au journal. Puis fondu vers la partie.
 /// </summary>
 public partial class GameLoadingOverlay : CanvasLayer
 {
@@ -16,22 +17,29 @@ public partial class GameLoadingOverlay : CanvasLayer
 	private static readonly Color VioletBrume = new(0.29f, 0.19f, 0.4f);
 	private static readonly Color CyanEssence = new(0.37f, 0.77f, 0.77f);
 
-	private static readonly string[] LoreFragments = new[]
+	// Phrases réécrites, moins directes (plan 19, plan 24 B5) : des choses vues, pas des explications.
+	private const int LoreCount = 8;
+
+	// Étapes du chargement (GameBootstrap, WorldSetup) : début de leur part de la progression, et sa fin. Un « N % »
+	// dans le texte place la progression à l'intérieur de l'étape.
+	private static readonly (string Prefix, float Start, float End)[] Steps =
 	{
-		"Le monde oublie ce qu'il était...",
-		"Les Constellations veillent encore...",
-		"Une braise resiste encore a l'Effacement...",
-		"Des vestiges murmurent dans l'ombre...",
-		"La mémoire est la dernière forteresse...",
-		"Le Vide grignote les bords du réel...",
-		"Quelque chose persiste, malgré tout...",
-		"Les étoiles se souviennent de vos noms...",
+		("Préparation des shaders", 0f, 0.05f),
+		("Création du monde", 0.05f, 0.1f),
+		("Terrain", 0.1f, 0.45f),
+		("Routes", 0.45f, 0.6f),
+		("Brouillard", 0.6f, 0.65f),
+		("Points d'intérêt", 0.65f, 0.7f),
+		("Décors", 0.7f, 0.85f),
+		("Atmosphère", 0.85f, 0.88f),
+		("Préparation des créatures", 0.88f, 0.97f),
+		("Initialisation", 0.97f, 1f),
 	};
 
 	private Control _root;
 	private ColorRect _background;
 	private Label _loreLabel;
-	private Label _progressLabel;
+	private LoadingWalkStrip _strip;
 	private Control _particleLayer;
 	private RandomNumberGenerator _rng = new();
 	private bool _isVisible = true;
@@ -45,7 +53,7 @@ public partial class GameLoadingOverlay : CanvasLayer
 		ProcessMode = ProcessModeEnum.Always;
 
 		_rng.Seed = (ulong)Time.GetTicksMsec();
-		_loreIndex = (int)(_rng.Randi() % (uint)LoreFragments.Length);
+		_loreIndex = (int)(_rng.Randi() % LoreCount);
 
 		_root = new Control();
 		_root.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
@@ -65,33 +73,24 @@ public partial class GameLoadingOverlay : CanvasLayer
 		_particleLayer.MouseFilter = Control.MouseFilterEnum.Ignore;
 		_root.AddChild(_particleLayer);
 
-		// Texte de lore (centre bas)
+		// Bande de sol et personnage qui marche.
+		_strip = new LoadingWalkStrip();
+		_strip.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
+		_root.AddChild(_strip);
+
+		// Phrase au-dessus de la bande.
 		_loreLabel = new Label
 		{
-			Text = LoreFragments[_loreIndex],
+			Text = LoreLine(_loreIndex),
 			HorizontalAlignment = HorizontalAlignment.Center,
 			VerticalAlignment = VerticalAlignment.Center,
 			Modulate = new Color(1f, 1f, 1f, 0f),
 		};
 		_loreLabel.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
-		_loreLabel.OffsetTop = 200f;
+		_loreLabel.OffsetBottom = -260f;
 		UITheme.SetTextRole(_loreLabel, TextRole.Heading);
 		_loreLabel.AddThemeColorOverride("font_color", GoldFoyer);
 		_root.AddChild(_loreLabel);
-
-		// Indicateur de progression (bas)
-		_progressLabel = new Label
-		{
-			Text = "...",
-			HorizontalAlignment = HorizontalAlignment.Center,
-			VerticalAlignment = VerticalAlignment.Bottom,
-			Modulate = new Color(1f, 1f, 1f, 0.5f),
-		};
-		_progressLabel.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
-		_progressLabel.OffsetBottom = -40f;
-		UITheme.SetTextRole(_progressLabel, TextRole.Small);
-		_progressLabel.AddThemeColorOverride("font_color", GoldDim);
-		_root.AddChild(_progressLabel);
 
 		// Fade-in initial du texte de lore
 		FadeInLoreText();
@@ -105,12 +104,12 @@ public partial class GameLoadingOverlay : CanvasLayer
 		_loreTimer += (float)delta;
 		_particleTimer += (float)delta;
 
-		// Changer le texte de lore toutes les 3s
-		if (_loreTimer > 3f)
+		// Changer la phrase toutes les 4 s
+		if (_loreTimer > 4f)
 		{
 			_loreTimer = 0f;
-			_loreIndex = (_loreIndex + 1) % LoreFragments.Length;
-			TransitionLoreText(LoreFragments[_loreIndex]);
+			_loreIndex = (_loreIndex + 1) % LoreCount;
+			TransitionLoreText(LoreLine(_loreIndex));
 		}
 
 		// Spawner des particules ambiantes régulièrement
@@ -121,11 +120,31 @@ public partial class GameLoadingOverlay : CanvasLayer
 		}
 	}
 
-	/// <summary>Met à jour le texte de progression affiché en bas.</summary>
+	private static string LoreLine(int index) => TranslationServer.Translate($"LOADING_LINE_{index + 1}");
+
+	/// <summary>Étape du chargement : elle avance la marche ; son texte ne va qu'au journal.</summary>
 	public void SetProgress(string text)
 	{
-		if (_progressLabel != null && IsInstanceValid(_progressLabel))
-			_progressLabel.Text = text;
+		GD.Print($"[Chargement] {text}");
+		if (_strip == null || !IsInstanceValid(_strip))
+			return;
+		foreach ((string prefix, float start, float end) in Steps)
+		{
+			if (!text.StartsWith(prefix, StringComparison.Ordinal))
+				continue;
+			int percentAt = text.LastIndexOf('%');
+			float inside = 0f;
+			if (percentAt > 0)
+			{
+				int from = percentAt - 1;
+				while (from > 0 && char.IsDigit(text[from - 1]))
+					from--;
+				if (int.TryParse(text.AsSpan(from, percentAt - from).Trim(), out int percent))
+					inside = percent / 100f;
+			}
+			_strip.SetProgress(Mathf.Lerp(start, end, inside));
+			return;
+		}
 	}
 
 	/// <summary>Fade-out de l'overlay vers le gameplay. Appelle onComplete quand fini.</summary>
@@ -136,9 +155,11 @@ public partial class GameLoadingOverlay : CanvasLayer
 		Tween tween = CreateTween();
 		tween.SetProcessMode(Tween.TweenProcessMode.Idle);
 
-		// Fade-out du texte de lore
+		// La marche arrive au bout, puis la phrase et la bande s'effacent.
+		_strip.SetProgress(1f);
+		tween.TweenInterval(0.35f);
 		tween.TweenProperty(_loreLabel, "modulate:a", 0f, 0.3f);
-		tween.Parallel().TweenProperty(_progressLabel, "modulate:a", 0f, 0.3f);
+		tween.Parallel().TweenProperty(_strip, "modulate:a", 0f, 0.5f);
 
 		// Petite pause dans le noir
 		tween.TweenInterval(0.2f);

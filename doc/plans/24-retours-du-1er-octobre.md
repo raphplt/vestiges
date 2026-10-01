@@ -466,3 +466,13 @@ Chaque type de lieu donne, à son premier usage dans la run, le gain du tableau 
 **Vérifications :** build sans avertissement, smoke vert, `test_objects`, `test_perk_acquisition`, `test_weapons` à zéro échec. Captures en vraie run regardées : bénédictions du Mémorial (fond cyan tramé, poussière, liseré violet allégé après une première capture trop chargée), level-up épique (fond or). Le saut de rareté n'a pas été capturé : il demande de la Chance au moment de l'offre.
 
 **Reste :** la mise en scène dans le monde avant l'écran (l'écran qui se pixelise, les éclats qui tournent autour de la stèle) ; les icônes de rareté, qui restent des glyphes absents de la police jusqu'au lot S1 du plan 25.
+
+### L11 — écran de chargement (1er octobre)
+
+- Le personnage choisi marche (ses vraies animations, ×3) sur une bande de sol en gros pixels (`LoadingWalkStrip`) : devant lui, le sol se dessine au rythme du chargement, sa dernière colonne scintille ; derrière, il s'efface en pixels violets. C'est la barre de progression, sans barre.
+- La progression vient des étapes réelles (`GameBootstrap`, `WorldSetup`) : chaque étape a sa part, et un « N % » dans son texte la place à l'intérieur. Les textes techniques ne s'affichent plus ; ils vont au journal (`[Chargement] …`).
+- Huit phrases réécrites, moins directes, traduites (`LOADING_LINE_1` à `8`) : « Quelqu'un a laissé la lumière allumée. », « Personne n'a fermé la barrière. »… À relire avec le plan 19.
+- Au fondu, la marche va au bout, puis la phrase et la bande s'effacent. Le noir de départ reste raccord avec la transition du Hub.
+- Banc : `tools/tests/LoadingCapture.tscn` joue l'overlay seul avec les vraies étapes et le photographie trois fois.
+
+**Vérifications :** build sans avertissement, smoke vert, capture regardée (bande à mi-chemin, personnage qui marche, lisière effacée, phrase au-dessus).
