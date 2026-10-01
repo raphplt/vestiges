@@ -220,3 +220,25 @@ inspectée à côté des armes. Build sans avertissement et smoke verts.
 **Planche soumise à validation ; les règles des objets du monde ne sont
 pas créées. `PerkIconResolver` reste présent tant que S2/S3 ne sont pas
 validés et branchés.** Suite : S6.
+
+### S6 — HUD branché, sceaux préparés, 1er octobre 2026
+
+`tools/generate_hud_sprites.py` livre 23 textures dans
+`assets/ui/hud/plan25/` et `hud_manifest.json` (tailles, marges, poses).
+[Planche S6](planches/25-s6-hud.png) inspectée, génération identique octet
+pour octet. Barre d'XP : rail métal patiné en nine-patch, quatre remplissages
+dorés, pointe lumineuse, reflet en marches et éclats au niveau gagné.
+`XpBar`, `PixelSkull` et les cinq pictogrammes de `Minimap` utilisent les
+textures en nearest, chargées une fois.
+
+Sceaux : trois couleurs, neuf états de progression (0/8 à 8/8), bris doré
+en cinq poses. **Le code de quêtes repliées du plan 24 L4 est absent de
+cette branche.** Le manifeste est prêt ; aucune logique de quête ajoutée.
+Le banc `--capture-hud-art` présente les sceaux en galerie explicitement
+distincte du HUD fonctionnel, dans la vraie scène Main.
+
+Build sans avertissement, smoke vert, captures 1080p seed 1002 inspectées
+dans `/tmp/vestiges-plan25-s6-run/` (remplissage, éclat de niveau, aperçu
+des sceaux). Relecture locale des caches et chemins de textures. Nouvelle
+comparaison A/B des changements runtime S4+S6 dans
+`/tmp/vestiges-plan25-runtime-ab/` ; résultat à consigner à sa fin.

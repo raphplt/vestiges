@@ -53,10 +53,22 @@ public partial class Minimap : Control
     private float _timer;
     private bool _dirty;
     private Vector2 _playerPosition;
+    private Texture2D _placeIcon;
+    private Texture2D _chestIcon;
+    private Texture2D _memorialIcon;
+    private Texture2D _riftIcon;
+    private Texture2D _playerIcon;
 
     public override void _Ready()
     {
         MouseFilter = MouseFilterEnum.Ignore;
+        TextureFilter = TextureFilterEnum.Nearest;
+        const string iconFolder = "res://assets/ui/hud/plan25/";
+        _placeIcon = GD.Load<Texture2D>(iconFolder + "minimap_place.png");
+        _chestIcon = GD.Load<Texture2D>(iconFolder + "minimap_chest.png");
+        _memorialIcon = GD.Load<Texture2D>(iconFolder + "minimap_memorial.png");
+        _riftIcon = GD.Load<Texture2D>(iconFolder + "minimap_rift.png");
+        _playerIcon = GD.Load<Texture2D>(iconFolder + "minimap_player.png");
         _groups = GetNode<GroupCache>("/root/GroupCache");
         _eventBus = GetNode<EventBus>("/root/EventBus");
         _eventBus.ZonePhaseChanged += OnZonePhaseChanged;
@@ -193,7 +205,7 @@ public partial class Minimap : Control
             {
                 SmallPlace place = _places.Places[i];
                 if (Known(place.GlobalPosition))
-                    DrawDot(place.GlobalPosition, place.CanInteract ? place.Data.Color : UsedPlaceColor, 1.5f);
+                    DrawIcon(_placeIcon, place.GlobalPosition, place.CanInteract ? place.Data.Color : UsedPlaceColor);
             }
         }
         if (!_chestSignalsForgotten)
@@ -202,19 +214,19 @@ public partial class Minimap : Control
             {
                 Chest chest = Chest.Closed[i];
                 if (chest.CanOpen && Known(chest.GlobalPosition))
-                    DrawDot(chest.GlobalPosition, RarityPalette.Main(chest.Rarity), 2f);
+                    DrawIcon(_chestIcon, chest.GlobalPosition, RarityPalette.Main(chest.Rarity));
             }
         }
         for (int i = 0; i < Memorial.All.Count; i++)
             if (Known(Memorial.All[i].GlobalPosition))
-                DrawDot(Memorial.All[i].GlobalPosition, MemorialColor, 2.5f);
+                DrawIcon(_memorialIcon, Memorial.All[i].GlobalPosition, MemorialColor);
         for (int i = 0; i < Rift.All.Count; i++)
             if (Known(Rift.All[i].GlobalPosition))
-                DrawDot(Rift.All[i].GlobalPosition, RiftColor, 2.5f);
+                DrawIcon(_riftIcon, Rift.All[i].GlobalPosition, RiftColor);
         Vector2 player = ToMap(_playerPosition);
         DrawCircle(player, 3f, Frame);
-        DrawCircle(player, 2f, PlayerColor);
+        DrawIcon(_playerIcon, _playerPosition, PlayerColor);
     }
 
-    private void DrawDot(Vector2 world, Color color, float radius) => DrawRect(new Rect2(ToMap(world) - Vector2.One * radius, Vector2.One * radius * 2f), color);
+    private void DrawIcon(Texture2D icon, Vector2 world, Color color) => DrawTexture(icon, ToMap(world).Floor() - new Vector2(2, 2), color);
 }
