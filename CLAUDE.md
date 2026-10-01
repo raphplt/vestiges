@@ -9,6 +9,7 @@
 1. `git status` : des fichiers modifiés par Raphaël pendant ses tests sont **volontaires**, ne pas les annuler.
 2. Lire `doc/plans/README.md` (état du dossier, mises à jour datées) et `doc/plans/DECISIONS.md` (ce qui est acquis).
 3. `git log --oneline -15` pour le dernier lot livré.
+4. **Avant tout travail, poser à Raphaël toutes les questions qui l'attendent** (demande du 1er octobre 2026, DECISIONS §48) : reprendre chaque ligne de `doc/plans/TABLEAU-DE-BORD.md` §2, et les points ouverts du plan concerné, en question concrète avec options et recommandation ; les poser avec `AskUserQuestion` (quatre par appel, autant d'appels qu'il faut). Consigner ses réponses dans `DECISIONS.md` et mettre à jour le tableau de bord, puis seulement choisir un chantier. Une question qu'il reporte reste au §2.
 
 Les plans 13 (butin) et 14 (anomalies) ne sont pas arbitrés : ne pas les implémenter sans accord explicite.
 

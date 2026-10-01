@@ -602,3 +602,17 @@ Raphaël autorise à continuer en autonomie et à avancer autant que possible en
 conservant une qualité maximale. Il exclut explicitement l'audio de cette
 continuation. Les travaux audio déjà présents dans son checkout sont préservés.
 Le travail reste seul, par lots vérifiés ; les fenêtres restent sur ViewSonic.
+
+## 48. Projectiles trop rares, vol de vie, level-up rapide, builds XP/Chance, sprites d'armes adaptatifs — 1er octobre 2026
+
+Raphaël, après une partie : « globalement multiplier le nombre de projectiles est trop dur (il faudrait que toutes les armes aient une option pour level up cette stat et elle apparait trop lentement tout comme l'objet de projectiles. il manque une stat de vol de vie. le level up est peut etre un peu trop rapide surtout quand on le build pas l'XP / la luck. il peut etre dur de faire un build autour de l'XP/la luck car il me semble qu'il manque d'objets explicitement luck/xp (ou alors je ne les ai pas vu sur ma run c'est probable). il faut que les sprites des armes soient adaptatifs (si la taille de l'arme ou le nombre de projectile augmentent) ». Il demande de consigner seulement, sans implémenter.
+
+**Retours reformulés :**
+
+- **Projectiles :** en multiplier le nombre est trop difficile. Toutes les armes doivent pouvoir gagner des projectiles en montant de niveau. Cette stat apparaît trop lentement dans les offres, comme l'objet qui donne des projectiles.
+- **Vol de vie :** la stat manque.
+- **Level-up :** peut-être un peu trop rapide, surtout sans build tourné vers l'XP ou la Chance. Formulé comme un doute : à mesurer avant de toucher la courbe.
+- **Builds XP/Chance :** difficiles à construire ; il semble manquer d'objets explicitement orientés Chance ou XP. Raphaël admet qu'il ne les a peut-être simplement pas vus dans sa run : vérifier le catalogue et leur fréquence d'apparition avant d'en ajouter.
+- **Sprites d'armes :** ils doivent s'adapter quand la taille de l'arme ou son nombre de projectiles augmente.
+
+**Rattachement :** projectiles, vol de vie, level-up et builds XP/Chance au [plan 21](21-systeme-de-jeu.md), courbe d'XP en appui du [plan 20](20-recompense-et-puissance.md) ; sprites d'armes adaptatifs aux plans [08](08-direction-artistique.md) et [25](25-sprites-et-design.md). Rien n'est encore décidé sur les solutions : le prochain agent mesure, propose des lots et pose les questions du [tableau de bord §2](TABLEAU-DE-BORD.md#2-décisions-attendues-de-raphaël).

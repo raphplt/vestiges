@@ -8,6 +8,7 @@ Le [registre](DECISIONS.md) garde les mots de Raphaël. Les plans gardent le dé
 
 | Chantier | Plan | Prochaine action |
 |---|---|---|
+| **Retours du 1er octobre, soir** (projectiles trop rares, vol de vie, level-up rapide, builds XP/Chance, sprites d'armes adaptatifs) | [DECISIONS §48](DECISIONS.md), 21, 20, 08/25 | Consignés seulement. Agent : mesurer (fréquence des offres de projectiles, temps entre deux level-up avec et sans XP/Chance, objets Chance/XP du catalogue et leur apparition), puis proposer les lots au plan 21 après réponse aux questions §2 |
 | **Nouvelle recette après intégration des sprites** | [24 §12](24-retours-du-1er-octobre.md#12-retours-de-recette--1er-octobre-2026), [DECISIONS §44/47](DECISIONS.md) | **R1/R2, R3b, R5a–c et R6 livrés et vérifiés** : interfaces, cadence du Hurleur, trois personnages et carte par biome. Recette humaine du combat et du visuel à faire ; banc FPS de la carte sur machine calme. Rotation des coffres conservée. Suivi audio indépendant sur la ligne dédiée. |
 | **Effacement : cellules actives** | [10 6C](10-terrain-et-tiles.md) | **Livré et vérifié** : états et signaux identiques, recalculs −23,8 % sur le scénario de 30 min ; 72 contrôles, captures ViewSonic et run réelle de 30 min. Index +157,5 Kio pour 6 753 cellules. FPS à mesurer au calme. |
 | **Préchauffage rendu** | [10 5B1](10-terrain-et-tiles.md) | **Livré et vérifié** : 16 shaders + lueur d’XP soumis puis viewport libéré ; banc Main réparé, 26 contrôles verts. 5B2 : cache froid/chaud et premiers effets, machine calme requise. |
@@ -34,6 +35,12 @@ Le [registre](DECISIONS.md) garde les mots de Raphaël. Les plans gardent le dé
 | Lore | 19 | Relecture du script v1.1 ; questions P1, P6 à P10 ; fin |
 | Audio | 15 | Écoute en run et choix restants ; chantier élargi à toute l'identité sonore, avec les Résurgences comme premier cas proposé (§44). |
 | Récompense et puissance | 20 | Reprise après la pause ; à réaligner sur le plan 21 |
+| Projectiles en plus | 21, §48 | Toutes les armes gagnent-elles des projectiles en montant de niveau, ou seulement une voie (palier, ascension) ? À quelle fréquence la stat et l'objet de projectiles doivent-ils apparaître ? |
+| Vol de vie | 21, §48 | Sous quelle forme : stat d'objet, bénédiction, gain de coffre, gain d'arme ? Quel ordre de grandeur, et un plafond ? |
+| Vitesse du level-up | 20/21, §48 | Après mesure : ralentir la courbe d'XP pour tous, ou seulement réduire l'XP sans build XP/Chance ? |
+| Builds XP/Chance | 21, §48 | Après inventaire du catalogue : ajouter des objets Chance/XP, ou faire apparaître plus souvent ceux qui existent ? |
+| Sprites d'armes adaptatifs | 08/25, §48 | Que doit changer à l'écran : taille du sprite avec la stat de taille, sprites distincts par nombre de projectiles, ou les deux ? Jusqu'où (lisibilité en foule) ? |
+| Réveil du Mémorial et de la Faille | 24 L6b | Durée totale (environ 2 s avec l'entrée de l'écran) et son de fusion provisoire (`sfx_souvenir_trouve`) : à garder ? |
 | Classement | 09 | Toutes les décisions, plus tard |
 | Points à vérifier en jeu | `A-VERIFIER.md` | 55 cases non cochées |
 
