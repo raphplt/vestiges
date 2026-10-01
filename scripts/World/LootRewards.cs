@@ -19,14 +19,19 @@ public readonly struct ResolvedLoot
     public readonly int Amount;
     public readonly string Label;
     public readonly Color Color;
+    /// <summary>Bonus de stat : valeur passée au joueur (×(1 + x) en multiplicatif) et type de modificateur.</summary>
+    public readonly float Value;
+    public readonly string ModifierType;
 
-    public ResolvedLoot(string type, string itemId, int amount, string label, Color color)
+    public ResolvedLoot(string type, string itemId, int amount, string label, Color color, float value = 0f, string modifierType = null)
     {
         Type = type;
         ItemId = itemId;
         Amount = amount;
         Label = label;
         Color = color;
+        Value = value;
+        ModifierType = modifierType;
     }
 }
 
@@ -36,6 +41,7 @@ public static class LootRewards
     private static readonly Color XpColor = new("8AB8C4");
     private static readonly Color ObjectColor = new("6ACA5A");
     private static readonly Color WeaponColor = new("E8E0D4");
+    private static readonly Color StatColor = new("E6C45A");
 
     /// <summary>
     /// Tirages concrets. Les butins sans équivalent V2 (ressources, malédictions) sont ignorés ; un Souvenir
@@ -87,6 +93,23 @@ public static class LootRewards
         return resolved;
     }
 
+    /// <summary>
+    /// Bonus d'une stat au hasard, en plus du butin tiré (DECISIONS §38) : un niveau d'objet commun de la stat, multiplié
+    /// selon la rareté du coffre. Null si la table est vide.
+    /// </summary>
+    public static ResolvedLoot? RollStatBonus(string chestRarity)
+    {
+        ChestStatBonusData data = ChestDataLoader.LoadStatBonus();
+        if (data.Stats.Count == 0)
+            return null;
+        ChestStatBonus bonus = data.Stats[(int)(GD.Randi() % data.Stats.Count)];
+        float amount = bonus.Amount * data.Multiplier(chestRarity);
+        bool multiplicative = bonus.ModifierType == "multiplicative";
+        float value = multiplicative ? 1f + amount : amount;
+        string label = $"{StatCatalog.Name(bonus.Stat)} {StatCatalog.FormatBonus(bonus.Stat, value, multiplicative)}";
+        return new ResolvedLoot("stat", bonus.Stat, 1, label, StatColor, value, bonus.ModifierType);
+    }
+
     /// <summary>Applique un butin résolu. Une arme sans emplacement libre tombe au sol près de <paramref name="position"/>.</summary>
     public static void Apply(in ResolvedLoot loot, Player player, EventBus eventBus, Vector2 position)
     {
@@ -94,6 +117,10 @@ public static class LootRewards
         {
             case "xp":
                 eventBus.EmitSignal(EventBus.SignalName.XpGained, (float)loot.Amount);
+                break;
+            case "stat":
+                player.ApplyPerkModifier(loot.ItemId, loot.Value, loot.ModifierType);
+                eventBus.EmitSignal(EventBus.SignalName.LootReceived, loot.Type, loot.ItemId, loot.Amount);
                 break;
             case "object_level":
                 player.AddOrUpgradePassive(loot.ItemId, loot.Amount);

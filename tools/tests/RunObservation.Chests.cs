@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Globalization;
+using System.Reflection;
 using System.Threading.Tasks;
 using Godot;
 using Vestiges.World;
@@ -121,6 +122,37 @@ public partial class RunObservation
             GD.Print($"[RunObservation] RESULT loot {chest.Id} draws={draws} {string.Join(" ", parts)}");
         }
         GD.Print($"[RunObservation] RESULT loot failures={failures}");
+    }
+
+    /// <summary>
+    /// --capture-loot : le joueur ouvre le coffre fermé le plus proche par le vrai chemin d'ouverture (plan 23 R8) ;
+    /// l'écran de butin est capturé pendant que ses lignes apparaissent.
+    /// </summary>
+    private async Task CaptureLootScreen()
+    {
+        _world.GetNode("SpawnManager").ProcessMode = ProcessModeEnum.Disabled;
+        await Frames(90);
+        Chest nearest = null;
+        foreach (Chest chest in Chest.Closed)
+            if (nearest == null || chest.GlobalPosition.DistanceSquaredTo(_player.GlobalPosition) < nearest.GlobalPosition.DistanceSquaredTo(_player.GlobalPosition))
+                nearest = chest;
+        if (nearest == null)
+        {
+            GD.PushError("[RunObservation] Aucun coffre fermé");
+            return;
+        }
+        _player.GlobalPosition = nearest.GlobalPosition + new Vector2(0f, 40f);
+        await Frames(10);
+        Node interaction = _player.GetNode("WorldInteraction");
+        interaction.GetType().GetMethod("OpenChest", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(interaction, new object[] { nearest });
+        int elapsed = 0;
+        foreach (int frame in new[] { 20, 28, 36, 44 })
+        {
+            await Frames(frame - elapsed);
+            elapsed = frame;
+            SaveFrame($"loot-{frame}");
+        }
+        GD.Print($"[RunObservation] RESULT loot-screen chest={nearest.ChestId} dossier={_output}");
     }
 
     private void SaveFrame(string name)

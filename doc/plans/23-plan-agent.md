@@ -216,15 +216,23 @@ Direction validée par Raphaël, lots de plan 22 sans question ouverte :
   - `tools/measure_run.sh` avant et après, avec les mêmes seeds que le compte rendu C1 (plan 22 §14) ;
   - `--capture-places`, `--capture-map`, captures de la minimap.
 
-### R8 : coffres (à faire seulement si Raphaël a confirmé)
+### R8 : coffres, l'Essence reste, un bonus de stat en plus (révisé le 1er octobre)
 
-Proposition de l'agent (DECISIONS §36), non encore confirmée :
-- un coffre ouvre un **choix d'une amélioration parmi trois**, de rareté garantie : commun au moins inhabituelle, rare au moins rare, épique épique ou légendaire ;
-- le choix porte sur les armes et les objets du joueur, et sur un objet neuf s'il reste un emplacement ;
-- l'Essence et l'XP deviennent un petit bonus en plus ;
-- les armes neuves ne sortent plus des coffres.
+Raphaël n'a pas retenu le choix parmi trois du §36 ([DECISIONS §38](DECISIONS.md)) : « Un coffre peut donner de l'essence ca me va. il doit aussi donner un bonus d'une stat au hasard. »
 
-Si la confirmation n'est pas dans `DECISIONS.md` au moment d'y arriver, ne pas le faire et le signaler.
+Découpage :
+- le butin tiré reste tel quel (Essence, XP, niveau d'objet, arme) ;
+- **chaque coffre ouvert donne en plus un bonus d'une stat du joueur tirée au hasard**, pour le reste de la run ;
+- liste des stats et taille du bonus dans `data/chests/chest_stat_bonus.json` : les stats des objets proposés, un coffre commun valant un niveau d'objet commun, multiplié selon la rareté du coffre ;
+- pas de +dégâts universel, retiré des objets pour la même raison (plan 21 §4) ; ni projectiles ni perforation, trop forts pour un tirage ;
+- la ligne s'affiche à l'écran de butin avec les autres (« Cadence +16 % ») ;
+- vérifier : banc d'objets ou de coffres (le bonus s'applique, une fois, à la bonne valeur), capture de l'écran de butin, mesure `--visit`.
+
+### R9 : Porte-monnaie et Repères (laissés au choix de l'agent, DECISIONS §38)
+
+- **Porte-monnaie usé :** l'Essence rendue est une remise, pas de l'Essence gagnée. Elle ne compte plus pour la quête « Accumuler de l'Essence ». L'Essence de la Photo de classe, gagnée, compte toujours.
+- **Repères** (plan 22 §3 B) : le premier usage de chaque type de lieu dans la run donne un peu de Chance. Douze types : les neuf petits lieux, coffre, Mémorial éveillé, Faille. Valeur dans `data/world/waymarks.json` ; un texte au-dessus du joueur (« Repère : Puits · Chance +2 % »).
+- Vérifier : banc des petits lieux (Repère donné une fois par type), banc d'objets (quête et Porte-monnaie).
 
 ## 6. Comptes rendus
 

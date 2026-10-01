@@ -7,6 +7,7 @@ using Vestiges.Core;
 using Vestiges.Infrastructure;
 using Vestiges.Progression;
 using Vestiges.UI;
+using Vestiges.World;
 
 namespace Vestiges.Tests;
 
@@ -51,6 +52,7 @@ public partial class ObjectsRegression : Node2D
             CheckCritTriggers();
             CheckDashTrail();
             CheckStances();
+            CheckChestStatBonus();
             GD.Print($"[ObjectsRegression] RESULT failures={_failures}");
             GetTree().Quit(_failures == 0 ? 0 : 1);
         }
@@ -834,6 +836,48 @@ public partial class ObjectsRegression : Node2D
         Check(dashing && laid && slow < 1f && patches.Count == 0,
             $"Chewing-gum niveau 10 : le dash pose une tache qui ralentit ({slow:0.00}), elle s'efface après 1 + 1 s");
         stuck.QueueFree();
+    }
+
+    /// <summary>
+    /// Bonus de stat des coffres (DECISIONS §38, plan 23 R8) : tiré dans la table, jamais de +dégâts universel ;
+    /// un niveau d'objet commun pour un coffre commun, le triple pour un épique, appliqué une fois.
+    /// </summary>
+    private void CheckChestStatBonus()
+    {
+        Setup();
+        ChestStatBonusData table = ChestDataLoader.LoadStatBonus();
+        HashSet<string> allowed = new();
+        foreach (ChestStatBonus entry in table.Stats)
+            allowed.Add(entry.Stat);
+        HashSet<string> drawn = new();
+        bool inTable = true;
+        for (int i = 0; i < 400; i++)
+        {
+            ResolvedLoot loot = LootRewards.RollStatBonus("common").Value;
+            drawn.Add(loot.ItemId);
+            inTable &= allowed.Contains(loot.ItemId) && loot.ItemId != "damage" && loot.Label.Length > 0;
+        }
+        Check(inTable && drawn.Count == allowed.Count, $"Coffre : stat tirée dans la table, sans +dégâts ({drawn.Count}/{allowed.Count} stats vues sur 400 tirages)");
+
+        ResolvedLoot Draw(string rarity, string stat)
+        {
+            for (int i = 0; i < 2000; i++)
+                if (LootRewards.RollStatBonus(rarity) is { } loot && loot.ItemId == stat)
+                    return loot;
+            throw new InvalidOperationException($"{stat} jamais tiré");
+        }
+        EventBus events = GetNode<EventBus>("/root/EventBus");
+        float before = _player.AttackSpeedMultiplier;
+        ResolvedLoot common = Draw("common", "attack_speed");
+        LootRewards.Apply(common, _player, events, Vector2.Zero);
+        float afterCommon = _player.AttackSpeedMultiplier;
+        ResolvedLoot epic = Draw("epic", "attack_speed");
+        LootRewards.Apply(epic, _player, events, Vector2.Zero);
+        float armor = _player.Armor;
+        LootRewards.Apply(Draw("rare", "armor"), _player, events, Vector2.Zero);
+        Check(Mathf.IsEqualApprox(afterCommon / before, 1.08f) && Mathf.IsEqualApprox(_player.AttackSpeedMultiplier / afterCommon, 1.24f)
+              && Mathf.IsEqualApprox(_player.Armor - armor, 4f),
+            $"Coffre : cadence ×1,08 (commun, « {common.Label} ») puis ×1,24 (épique), armure +4 (rare)");
     }
 
     private void CheckStances()

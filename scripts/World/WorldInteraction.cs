@@ -100,6 +100,8 @@ public partial class WorldInteraction : Node
     private void OpenChest(Chest chest)
     {
         List<ResolvedLoot> loots = LootRewards.Resolve(chest.Open(), _player);
+        if (LootRewards.RollStatBonus(chest.Rarity) is { } statBonus)
+            loots.Add(statBonus);
         Vector2 position = chest.GlobalPosition;
         if (_lootScreen != null && loots.Count > 0)
             _lootScreen.ShowLoot(loots, chest.Rarity, () => ApplyAll(loots, position));

@@ -42,6 +42,18 @@ public class ChestPlacementData
     public List<ChestPlacementGroup> Groups = new();
 }
 
+/// <summary>Une stat que le bonus d'un coffre peut tirer ; <see cref="Amount"/> vaut pour un coffre commun.</summary>
+public readonly record struct ChestStatBonus(string Stat, string ModifierType, float Amount);
+
+/// <summary>Bonus d'une stat au hasard donné par chaque coffre (data/chests/chest_stat_bonus.json, DECISIONS §38).</summary>
+public class ChestStatBonusData
+{
+    public List<ChestStatBonus> Stats = new();
+    public Dictionary<string, float> RarityMultiplier = new();
+
+    public float Multiplier(string rarity) => RarityMultiplier.GetValueOrDefault(rarity, 1f);
+}
+
 public static class ChestDataLoader
 {
     private static readonly Dictionary<string, ChestData> _cache = new();
@@ -101,6 +113,41 @@ public static class ChestDataLoader
     }
 
     private static ChestPlacementData _placement;
+    private static ChestStatBonusData _statBonus;
+
+    public static ChestStatBonusData LoadStatBonus()
+    {
+        if (_statBonus != null)
+            return _statBonus;
+        ChestStatBonusData bonus = _statBonus = new();
+        using FileAccess file = FileAccess.Open("res://data/chests/chest_stat_bonus.json", FileAccess.ModeFlags.Read);
+        if (file == null)
+        {
+            GD.PushError("[ChestDataLoader] Cannot open data/chests/chest_stat_bonus.json");
+            return bonus;
+        }
+        Json json = new();
+        if (json.Parse(file.GetAsText()) != Error.Ok)
+        {
+            GD.PushError($"[ChestDataLoader] Stat bonus parse error: {json.GetErrorMessage()}");
+            return bonus;
+        }
+        Godot.Collections.Dictionary dict = json.Data.AsGodotDictionary();
+        if (dict.ContainsKey("rarity_multiplier"))
+            foreach (KeyValuePair<Variant, Variant> entry in dict["rarity_multiplier"].AsGodotDictionary())
+                bonus.RarityMultiplier[entry.Key.AsString()] = (float)entry.Value.AsDouble();
+        if (dict.ContainsKey("stats"))
+        {
+            foreach (Variant item in dict["stats"].AsGodotArray())
+            {
+                Godot.Collections.Dictionary stat = item.AsGodotDictionary();
+                bonus.Stats.Add(new ChestStatBonus(stat["stat"].AsString(),
+                    stat.ContainsKey("modifier_type") ? stat["modifier_type"].AsString() : "additive",
+                    (float)stat["amount"].AsDouble()));
+            }
+        }
+        return bonus;
+    }
 
     public static ChestPlacementData LoadPlacement()
     {

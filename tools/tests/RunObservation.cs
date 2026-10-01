@@ -39,6 +39,7 @@ namespace Vestiges.Tests;
 /// --capture-weapons [--weapons a,b] [--lethal] [--objects id:niveau,…] : galerie des attaques du joueur, cibles qui meurent au premier coup avec --lethal, objets portés avec --objects (RunObservation.Weapons.cs).
 /// --capture-held [--weapons a,b] : arme en main dans les huit directions et pendant un coup (RunObservation.HeldWeapon.cs).
 /// --capture-chests : chaque coffre cadré, avec et sans décors (RunObservation.Chests.cs).
+/// --capture-loot : écran de butin du coffre le plus proche, bonus de stat compris (RunObservation.Chests.cs).
 /// --capture-places : un petit lieu de chaque type, joueur à côté (signe), puis juste après usage (RunObservation.Places.cs).
 /// --capture-levelup : l'écran de level-up, une capture par rareté (RunObservation.LevelUp.cs).
 /// --capture-cascade : réserve de niveaux, cinq niveaux enchaînés puis retenue (RunObservation.Cascade.cs).
@@ -139,6 +140,8 @@ public partial class RunObservation : Node
                 await CapturePlaces();
             else if (Array.IndexOf(args, "--capture-chests") >= 0)
                 await CaptureChests();
+            else if (Array.IndexOf(args, "--capture-loot") >= 0)
+                await CaptureLootScreen();
             else if (Array.IndexOf(args, "--capture-cascade") >= 0)
                 await CaptureCascade();
             else if (Array.IndexOf(args, "--capture-perks") >= 0)

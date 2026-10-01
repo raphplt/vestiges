@@ -493,3 +493,16 @@ Raphaël : « copie d'attaque j'aime pas remet juste projectile supplémentaire.
 - la valeur exacte de l'invulnérabilité ;
 - les chiffres des objets à 30 niveaux, qui sont des valeurs de départ ;
 - l'Atelier et les voies d'ascension des 20 autres armes, toujours en attente.
+
+
+## 38. Coffres : Essence gardée, bonus d'une stat au hasard ; Porte-monnaie et Repères laissés à l'agent ; travail mis sur main — 1er octobre 2026
+
+Raphaël, après le compte rendu des lots R0 à R7 du plan 23 : « Un coffre peut donner de l'essence ca me va. il doit aussi donner un bonus d'une stat au hasard. Porte monnai usé : fais comme tu veux. reperes : fait comme tu veux. Et ps met ce que tu as fait sur main stp »
+
+**Acquis :**
+- **Coffres :** l'Essence reste dans le butin. Chaque coffre donne **en plus un bonus d'une stat au hasard**. La proposition du §36 (choix d'une amélioration parmi trois) n'est pas retenue sous cette forme ; R8 du plan 23 devient ce bonus.
+- **Porte-monnaie usé** (Essence rendue et quête « Accumuler de l'Essence ») : laissé au choix de l'agent.
+- **Repères** (plan 22 §3 B, question 5 du §11) : laissés au choix de l'agent.
+- Le travail des lots R0 à R7 va sur `main`.
+
+**Non acquis :** la taille du bonus de stat et la liste des stats tirées, valeurs de départ de l'agent.
