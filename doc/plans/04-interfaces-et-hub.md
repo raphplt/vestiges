@@ -243,7 +243,7 @@ Lot C2, décision de Raphaël : Collection directement accessible depuis le menu
 
 ## Reprise de la pause, des boutons et de la carte — 1er octobre 2026
 
-Plan rouvert après recette ([DECISIONS §44](DECISIONS.md)). Lots coordonnés au [plan 24 §12](24-retours-du-1er-octobre.md#12-retours-de-recette--1er-octobre-2026), **non implémentés** :
+Plan rouvert après recette ([DECISIONS §44](DECISIONS.md)). Lots coordonnés au [plan 24 §12](24-retours-du-1er-octobre.md#12-retours-de-recette--1er-octobre-2026), **R1/R2 livrés ci-dessous, R6 à entreprendre** :
 
 - **R1 :** retirer les descriptions des armes dans l'équipement, « HALTE DANS LE VIDE », le sous-titre « Le monde se fige, mais ta mémoire reste éveillée. » et l'explication sous Chance. Conserver les valeurs utiles au build. Reprendre la composition visuelle de la pause, pas seulement ses textes.
 - **R1 :** simplifier les contours superposés au survol des boutons ; vérifier aussi le focus clavier/manette et les écrans partageant ces styles.
@@ -317,3 +317,20 @@ regardées dans `/tmp/vestiges-r2-loot` (100 %) et `/tmp/vestiges-r2-verified`
 tout et convertit un tirage aléatoire en Essence. Elle présente les récompenses
 sans les attribuer au joueur. Écran de rendu vérifié par le journal : X11,
 écran 1, position (3840, 0), donc ViewSonic. Rotation I7 et audio inchangés.
+
+### R6 — carte conservée au programme, premier périmètre préparé
+
+Après les corrections courtes et le premier cycle audio, reprendre **radar et
+carte agrandie**. Le code actuel de `Minimap` utilise un pixel par cellule
+d'Effacement, agrandi en nearest ; le radar montre 26 cellules sur 104 unités.
+La couleur de fond vient de la phase d'Effacement, sans dessin des biomes ou
+chemins. Cela donne une piste concrète pour le caractère grossier et peu varié
+signalé ; ce constat de code reste à confronter aux captures de référence.
+
+Premier lot à borner : finesse du fond cartographique distincte de la grille
+logique d'Effacement, palette, puis hiérarchie joueur/lieux/coffres et légende.
+Conserver découverte et information de danger ; ne pas changer les règles de
+l'Effacement pour améliorer le dessin. Capturer radar et carte entière aux
+mêmes positions/seeds, avec et sans foule, à leur taille d'usage et avec grand
+texte. Étendre au terrain seulement si les images confirment ce périmètre,
+au plan 10. Aucun rendu de carte modifié dans cette reprise R1–R4.

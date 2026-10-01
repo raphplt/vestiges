@@ -510,10 +510,10 @@ Régénération des 21 PNG de textures/planches identique octet pour octet.
 
 ## 7. Retours après intégration — 1er octobre 2026
 
-[DECISIONS §44](DECISIONS.md), coordination au [plan 24 §12](24-retours-du-1er-octobre.md#12-retours-de-recette--1er-octobre-2026). Le travail livré est globalement apprécié. Restent de nouveaux compléments graphiques à traiter :
+[DECISIONS §44](DECISIONS.md), coordination au [plan 24 §12](24-retours-du-1er-octobre.md#12-retours-de-recette--1er-octobre-2026). Le travail livré est globalement apprécié. État des compléments graphiques (R1/R2 désormais livrés ci-dessous) :
 
-- **R2 :** icônes identifiant les gains des coffres (Essence, dégâts critiques, PV, etc.). Les éclats déjà branchés indiquent la rareté ; ils ne suffisent pas à identifier la nature du gain. Faire l'inventaire des icônes réutilisables, puis produire les manquantes par le pipeline et les vérifier dans la roulette et le résultat.
-- **R1/R6 :** appui au plan 04 pour une pause mieux composée, des survols sans empilement de contours et une carte mieux dessinée/colorée.
+- **R2 livré :** icônes identifiant les gains des coffres (Essence, dégâts critiques, PV, etc.). Les éclats déjà branchés indiquent la rareté ; ils ne suffisent pas à identifier la nature du gain. Inventaire réalisé, sprites existants réutilisés et vérifiés dans la roulette et le résultat.
+- **R1 livré / R6 à entreprendre :** pause recomposée et survols simplifiés au plan 04 ; carte mieux dessinée/colorée encore au programme.
 - **R5 :** refonte des trois personnages jouables portée par le plan 08, distincte des lots d'objets déjà livrés.
 
 La pression des tirs relève du plan 07 ; leur embellissement S4 ne résout pas à lui seul le retour de gameplay. La rotation continue du fond des coffres (I7) reste à préserver. Cette note n'ajoute aucun asset et ne clôt aucun nouveau lot.

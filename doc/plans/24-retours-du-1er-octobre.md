@@ -496,7 +496,7 @@ Source : [DECISIONS §44](DECISIONS.md), après intégration du plan 25 et corre
 
 ### Lots proposés pour la reprise
 
-Les demandes sont consignées ; **l'ordre suivant et les solutions précises restent des propositions**. Un lot terminé et vérifié avant le suivant. L'audio peut commencer dès les corrections courtes, sans attendre la production des personnages et de la carte.
+**L’ordre est confirmé par la reprise en DECISIONS §45 ; les solutions non livrées restent des essais à vérifier.** Un lot terminé et vérifié avant le suivant. L'audio peut commencer dès les corrections courtes, sans attendre la production des personnages et de la carte.
 
 | Lot | Action bornée | Vérification attendue |
 |---|---|---|
@@ -539,3 +539,19 @@ mais les variations de composition empêchent de valider la réduction de durée
 Aucun réglage de combat changé en production. Suite au plan 07 : rencontre fixe,
 cadence du Hurleur comme seul levier, puis partie jouée. R3 reste ouvert pour la
 recette de gameplay ; son diagnostic demandé est livré.
+
+### R4 — préparation audio livrée ; R5/R6 maintenus
+
+Le [plan 15](15-audio.md#r4--préparation-livrée-écoute-à-entreprendre) donne le
+diagnostic des transitions, le protocole d'écoute de 360 s et les lots A0–A3.
+Priorités techniques repérées : annonce musicale écrasée par le rafraîchissement
+adaptatif, compteur d'ennemis non corrigé par les retraits lointains, absence
+d'accalmie musicale explicite. Ces constats de code restent à écouter en contexte.
+Aucun son ni gain changé ; **A0, l'enregistrement et l'écoute réels, est la
+prochaine action**, uniquement sur ViewSonic pour la fenêtre.
+
+R5 reste Traqueur → Vagabond → Forgeuse, avec planches puis animation en run
+(plan 08). R6 commence par radar/carte agrandie : résolution du dessin et palette
+(plan 04), sans étendre automatiquement au terrain. Le premier cycle audio
+reste prioritaire ; ces deux demandes ne sont ni closes ni perdues. Les lots
+visuels R1/R2 préservent la rotation du coffre à 8°/s et son ordre sonore.

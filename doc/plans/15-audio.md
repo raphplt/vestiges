@@ -92,3 +92,59 @@ Déclenchés par `AudioManager` sur `PlayerShieldChanged` quand le bouclier bais
 4. **Effets et mixage.** Reprendre impact des coups, attaques ennemies, retours du joueur, récompenses et UI ; vérifier les priorités sonores, répétitions, volumes et sons simultanés en combat dense. Réintégrer les choix encore ouverts dans cet audit.
 
 Les 50 choix déjà branchés restent la base de travail ; le retour n'annule pas toutes les sélections antérieures. Pour chaque lot, livrer une séquence audible avant/après et décrire ce qui a changé. L'acceptation vise une Résurgence reconnaissable, un combat lisible à l'oreille et une écoute soutenable sur une run complète. Aucun fichier sonore ni réglage n'est modifié par cette mise à jour du plan.
+
+### R4 — préparation livrée, écoute à entreprendre
+
+Reprise demandée en [DECISIONS §45](DECISIONS.md). **Aucun son, gain ou comportement audio n'est modifié dans ce lot de préparation.** Les constats ci-dessous viennent du code et des fichiers ; ils ne constituent pas une écoute. Les 50 choix intégrés restent la base. Les captures UI réalisées pour R1/R2 sont muettes et ne valident rien ici.
+
+#### Diagnostic du cycle actuel
+
+| Moment | Déclenchement actuel | Point à traiter |
+|---|---|---|
+| Annonce, 20 s avant la crise | `OnCrisisWarning` lance `mus_crepuscule` (fondu 2 s) et `sfx_danger_building` (−5 dB supplémentaires) | L'état reste `Exploration` : `_Process` appelle `RefreshExplorationMusic` toutes les 120 images et remplace le morceau d'annonce. À 60 images/s, cela peut intervenir en moins de 2 s, avant la fin du fondu. Le délai dépend du framerate. |
+| Début et phase active, 70 s | `RunPhaseChanged(Crisis)` puis `CrisisStarted` demandent tous deux `mus_nuit_vagues` et la baisse d'ambiance | La seconde demande musicale est ignorée car la clé est déjà courante ; le fondu réellement retenu est celui de 3 s. Aucun effet de début distinct dans ces handlers. Écouter l'attaque du morceau avant de choisir un nouveau signal. |
+| Fin et accalmie de récompense, 30 s | `CrisisEnded` est émis **avant** le retour de phase ; `OnCrisisEnded` relit encore l'ancienne phase. Le changement de phase suivant relance l'exploration adaptative | Pas d'état musical d'accalmie ; le combat peut revenir immédiatement. Ne pas augmenter les volumes pour compenser l'absence de contraste. |
+| Exploration/combat | Seuil de trois ennemis sur `_activeEnemyCount`, incrémenté aux apparitions, décrémenté aux morts | Les retraits lointains par `CullFarDayEnemies` → `EnemyPool.Return` ne sont pas des morts et ne décrémentent pas ce compteur. Il peut rester supérieur à la population réelle ; ce n'est pas un indicateur de combat local. |
+| Résurgences tardives | L'annonce audio ne traite que `Exploration` | Vérifier explicitement LateGame/Endgame et le retour au Hub, pas seulement la première crise. |
+
+Sources : [AudioManager](../../scripts/Infrastructure/AudioManager.cs), [CrisisManager](../../scripts/Events/CrisisManager.cs), [SpawnManager](../../scripts/Spawn/SpawnManager.cs), [EnemyPool](../../scripts/Spawn/EnemyPool.cs), [réglages des crises](../../data/scaling/crises.json).
+
+La banque contient bien les clés utilisées. Durées lues dans les fichiers avec `ffprobe` : exploration 238,72 s, combat 136,96 s, annonce 174,68 s, Résurgence 290,96 s ; danger 2,60 s. Ces durées ne disent rien de leur qualité musicale ni de leur audibilité. Le signal de danger utilise le pool SFX commun, qui coupe la voix la plus ancienne s'il est plein : masquage ou interruption restent **à écouter**, pas constatés à l'oreille.
+
+Le visuel `CrisisOmen` monte déjà de 0 à 0,8 pendant l'annonce, passe à 0,9 en 1,2 s au début et s'efface en 2,5 s à la fin ; les créatures accélèrent leur animation pendant l'annonce. Conserver ces repères pour synchroniser l'audio, puis décider sur une capture si un complément visuel est nécessaire. Aucun bandeau textuel réintroduit par défaut.
+
+#### A0 — référence audible avant correction
+
+1. Enregistrer une vraie `Main` pendant **360 s de jeu**, seed 221092026, Traqueur, profil isolé, volumes consignés. Exploration avant 220 s, annonce 220–240, crise 240–310, accalmie 310–340 ; les horodatages des signaux font foi si un événement ou une pause décale l'horloge.
+2. Utiliser une sortie réelle. `tools/capture_run.sh` impose actuellement `--audio-driver Dummy` : prévoir un paramètre explicite pour le driver et une capture du flux propre au jeu. Linux dispose de `ffmpeg`, `pactl` et PulseAudio via PipeWire ; préférer une sortie temporaire dédiée au seul processus Vestiges, sans changer la sortie par défaut ni enregistrer les autres applications. Fenêtre uniquement avec `VESTIGES_SCREEN=1`, après vérification que l'index désigne toujours le ViewSonic. Écouter ensuite le fichier, avec les images de la run.
+3. Journaliser les signaux Warning/Started/Ended, la phase et les changements de clé musicale. Cette trace permettra de reproduire le remplacement de l'annonce ; elle ne remplace pas l'écoute.
+4. Noter, avec horodatages : moment où l'événement devient reconnaissable, sons masqués, répétition fatigante, clarté des attaques et du retour au calme. Faire une passe mix complet, puis une passe musique/ambiances seules si le diagnostic reste ambigu. Capturer aussi une ouverture de coffre et un level-up pour vérifier les transitions UI.
+
+Livrable A0 : enregistrement audible complet, trace des événements et courte fiche d'écoute. Les médias et candidats restent **hors dépôt**. Le chemin d'archive historique ci-dessus est celui du Mac ; pour l'écoute Linux, utiliser un dossier local d'audition, par exemple `/home/raphael/.local/share/vestiges-audio/2026-10-01/`, puis archiver avec la même traçabilité. Aucun enregistrement A0 n'a été produit dans cette préparation.
+
+#### A1 — stabiliser le pilotage avec la banque actuelle
+
+- Séparer l'intention musicale (exploration, combat, annonce, Résurgence, accalmie) de la phase gameplay. Une annonce conserve sa priorité jusqu'au début réel, une annulation ou une transition supérieure (mort, sortie de run, boss selon le contexte).
+- Centraliser la résolution de cette intention pour éviter les demandes concurrentes de `RunPhaseChanged` et `CrisisStarted`. Traiter la fin après résolution de la nouvelle phase ; préserver LateGame/Endgame.
+- Remplacer le rythme de 120 images par du temps de jeu et une hystérésis configurable. Calculer la présence ennemie utile depuis un cache à fréquence bornée, en tenant compte des retraits ; aucune recherche de groupe par frame, aucun faux `EnemyKilled` envoyé pour compenser un retrait.
+- Prendre les durées d'annonce et d'accalmie dans les données de crise ou les signaux existants, sans dupliquer des constantes. Les écrans en pause ne doivent pas consommer ces fenêtres.
+- Conserver les pistes déjà branchées pour entendre d'abord la différence de transitions. Vérifier 30/60/144 images/s, pause pendant annonce et crise, retour au Hub, mort, deuxième crise et crises tardives.
+
+Livrable A1 : correction technique isolée, régression des priorités/transitions et écoute avant/après de la même séquence A0. `AudioBankSmoke` vérifie chargement et gains ; build/smoke restent requis. **Aucun de ces tests ne valide seul le mix.**
+
+#### A2 — identité de la Résurgence, premier lot artistique
+
+| Phase | Résultat recherché | Proposition à écouter |
+|---|---|---|
+| Annonce | Reconnaissance immédiate, tension croissante sur les 20 s | Motif court identifiable puis arrangement qui se densifie ; signal existant gardé comme référence |
+| Début | Rupture perceptible sans masquer une attaque | Accent d'entrée synchronisé au début réel, intégré musicalement |
+| Active | Énergie tenue, distincte de l'exploration en combat | Mélodie, rythme et variations sur 70 s, selon le brief Résurgence du guide audio ; espace laissé aux ennemis |
+| Accalmie | Soulagement audible et envie de repartir | Retrait de couches et reprise d'un motif d'exploration ; écouter le contraste avec les ennemis encore présents |
+
+Choix à l'oreille en contexte, par petits groupes de propositions comparables en niveau. Les préférences et licences suivent le [guide audio](../AUDIO-GUIDE.md) ; aucune dépense ou substitution générale des 50 choix n'est engagée. Essayer le cycle complet avant d'étendre à toutes les musiques. Si les sources sont indépendantes, vérifier raccords et cohérence musicale plutôt que supposer qu'elles partagent un thème.
+
+#### A3 — lisibilité du mix puis extension
+
+Après le cycle : priorités des signaux de danger, voix simultanées en foule, répétitions d'armes/impacts, retours joueur, gains et UI. Préserver l'ordre sonore établi du coffre (clic, mélodie à +0,3 s, fondu à la fermeture), ainsi que sa rotation visuelle fluide. Refaire une run complète au mix final, puis réauditer les 59 besoins historiques avant de chercher de nouveaux fichiers.
+
+Recette : une Résurgence se reconnaît sans lire d'annonce, l'entrée et la sortie s'entendent, les attaques restent lisibles et la répétition est soutenable. Noter les limites d'écoute ; ne cocher les cases audio de la roadmap qu'après intégration **et** écoute réelle. **État au terme de R4 : préparation prête ; A0 à A3 non réalisés.**

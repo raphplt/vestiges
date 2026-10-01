@@ -693,3 +693,14 @@ Les créatures à affixe avaient une ellipse lisse (`Polygon2D`), centrée sur l
 Lot **R5**, coordonné au [plan 24 §12](24-retours-du-1er-octobre.md#12-retours-de-recette--1er-octobre-2026) : partir des générateurs actuels, améliorer silhouette, volumes, visage/orientation et contraste, puis comparer ancien et nouveau à taille réelle sur plusieurs biomes. Les pistes précises viennent de l'inspection, pas d'un diagnostic présumé. Vérifier les animations et les directions en vraie run après la planche ; production déterministe et imports Godot selon la charte.
 
 Deux appuis graphiques sont également ouverts : **Résurgences** plus reconnaissables avec le plan 15 (sans masquer le combat), et **carte** moins grise et moins grossière avec le plan 04. Le mot « carte » reste à localiser entre radar, carte agrandie et terrain avant une refonte générale des sols.
+
+### R5 — prochaine passe conservée après le premier cycle audio
+
+La préparation R4 du plan 15 ne remplace pas cette demande. Premier sous-lot :
+planche de référence **Traqueur** depuis le générateur actuel, à taille réelle
+sur forêt, ruines et carrière, puis reprise de silhouette, volumes et contraste.
+Comparer toutes les directions et les animations existantes, avec l'arme portée,
+sans changer échelle globale, pivot des pieds ni gameplay par inadvertance.
+Après ce pilote, appliquer la qualité retenue au **Vagabond**, puis à la
+**Forgeuse**. Graines fixes, imports et captures en mouvement sur ViewSonic.
+Aucun sprite de personnage n'est modifié par R1–R4 ; aucune case R5 cochée.
