@@ -7,6 +7,7 @@ namespace Vestiges.Infrastructure;
 public sealed class FieldBonusData
 {
 	public string Id { get; init; }
+	public string Sprite { get; init; }
 	public string NameKey { get; init; }
 	public float Weight { get; init; }
 	public string Effect { get; init; }
@@ -70,6 +71,7 @@ public static class FieldBonusDataLoader
 			bonuses.Add(new FieldBonusData
 			{
 				Id = dict["id"].AsString(),
+				Sprite = dict["sprite"].AsString(),
 				NameKey = dict["name_key"].AsString(),
 				Weight = (float)dict["weight"].AsDouble(),
 				Effect = dict["effect"].AsString(),

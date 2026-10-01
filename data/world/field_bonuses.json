@@ -11,10 +11,10 @@
     "crisis_end": 2,
     "crisis_first": "canteen",
     "bonuses": [
-        { "id": "canteen", "name_key": "BONUS_CANTEEN", "weight": 3, "effect": "heal", "ratio": 0.2, "color": [0.45, 0.75, 0.55] },
-        { "id": "magnet", "name_key": "BONUS_MAGNET", "weight": 2, "effect": "magnet", "multiplier": 25, "duration_s": 3, "color": [0.85, 0.3, 0.3] },
-        { "id": "blanket", "name_key": "BONUS_BLANKET", "weight": 2, "effect": "shield", "ratio": 0.3, "duration_s": 15, "color": [0.95, 0.8, 0.4] },
-        { "id": "coffee", "name_key": "BONUS_COFFEE", "weight": 2, "effect": "frenzy", "amount": 0.3, "duration_s": 10, "color": [0.6, 0.42, 0.28] },
-        { "id": "firecracker", "name_key": "BONUS_FIRECRACKER", "weight": 1, "effect": "blast", "radius_px": 160, "hp_ratio": 0.6, "knockback_px": 70, "color": [0.9, 0.25, 0.2] }
+        { "id": "canteen", "sprite": "heal", "name_key": "BONUS_CANTEEN", "weight": 3, "effect": "heal", "ratio": 0.2, "color": [0.45, 0.75, 0.55] },
+        { "id": "magnet", "sprite": "magnet", "name_key": "BONUS_MAGNET", "weight": 2, "effect": "magnet", "multiplier": 25, "duration_s": 3, "color": [0.85, 0.3, 0.3] },
+        { "id": "blanket", "sprite": "shield", "name_key": "BONUS_BLANKET", "weight": 2, "effect": "shield", "ratio": 0.3, "duration_s": 15, "color": [0.95, 0.8, 0.4] },
+        { "id": "coffee", "sprite": "haste", "name_key": "BONUS_COFFEE", "weight": 2, "effect": "frenzy", "amount": 0.3, "duration_s": 10, "color": [0.6, 0.42, 0.28] },
+        { "id": "firecracker", "sprite": "blast", "name_key": "BONUS_FIRECRACKER", "weight": 1, "effect": "blast", "radius_px": 160, "hp_ratio": 0.6, "knockback_px": 70, "color": [0.9, 0.25, 0.2] }
     ]
 }

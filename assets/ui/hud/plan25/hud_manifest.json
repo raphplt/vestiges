@@ -47,6 +47,7 @@
     "layout": "horizontal",
     "progress_frames": 9,
     "break_frames": 5,
-    "break_fps": 12
+    "break_fps": 12,
+    "complete": "quest_seal_complete.png"
   }
 }

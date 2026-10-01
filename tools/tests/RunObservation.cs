@@ -152,6 +152,8 @@ public partial class RunObservation : Node
                 await CaptureCascade();
             else if (Array.IndexOf(args, "--capture-perks") >= 0)
                 await CapturePerks(Argument(args, "--perk-scene", "survival"));
+            else if (Array.IndexOf(args, "--capture-integrated-art") >= 0)
+                await CaptureIntegratedArt();
             else if (Array.IndexOf(args, "--capture-levelup") >= 0)
                 await CaptureLevelUp();
             else if (Array.IndexOf(args, "--capture-pause") >= 0)

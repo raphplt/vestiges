@@ -103,4 +103,7 @@ def assets() -> dict[str, Image.Image]:
     for name, color in (("red", "#C4432B"), ("green", "#4A8C3F"), ("blue", "#5A7A9A")):
         images[f"quest_seal_{name}"] = strip([seal(color, step) for step in range(9)])
     images["quest_seal_break"] = strip([burst(frame) for frame in range(5)])
+    complete = seal(GOLD[2], 8)
+    ImageDraw.Draw(complete).line([(5, 8), (7, 10), (11, 5)], fill=GOLD[0], width=1)
+    images["quest_seal_complete"] = complete
     return images

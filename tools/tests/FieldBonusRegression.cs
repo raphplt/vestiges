@@ -77,7 +77,15 @@ public partial class FieldBonusRegression : Node2D
 			await Frames(2);
 			FieldBonus left = director.Active[0];
 			left._Process(config.LifetimeSeconds + 1f);
-			Check(director.Active.Count == 0 && !left.Visible, "Un bonus jamais ramassé s'efface au bout de sa durée");
+			Check(director.Active.Count == 0 && !left.Active && left.Visible, "Fin de vie : retiré du ramassage pendant la dissolution");
+			left._Process(1f);
+			Check(!left.Visible && !left.IsProcessing(), "Dissolution terminée : nœud caché et arrêté");
+			director.Spawn(config.Get("canteen"), new Vector2(4000f, 20f));
+			await Frames(2);
+			Check(ReferenceEquals(left, director.Active[0]) && left.Active && left.Modulate == Colors.White
+				&& left.GlobalPosition == new Vector2(4000f, 20f)
+				&& ((Sprite2D)left.GetChild(1)).Texture == FieldBonusArt.Get("heal").Idle[0],
+				"Réutilisation : même nœud, nouvelle position, autre bonus et première pose réinitialisés");
 
 			GD.Print($"[FieldBonusRegression] RESULT failures={_failures}");
 			GetTree().Quit(_failures == 0 ? 0 : 1);

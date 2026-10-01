@@ -84,7 +84,7 @@ public partial class FieldBonusDirector : Node
         _pool ??= new NodePool<FieldBonus>(GetParent(), () =>
         {
             FieldBonus bonus = new() { Name = "FieldBonus" };
-            bonus.SetRelease(OnReleased);
+            bonus.SetRelease(OnReleased, OnDespawnStarted);
             return bonus;
         });
         // Réservé tout de suite : deux morts dans la même frame ne dépassent pas la limite.
@@ -98,6 +98,9 @@ public partial class FieldBonusDirector : Node
         _active.Remove(bonus);
         _pool.Return(bonus);
     }
+
+    // Le ramassable ne compte plus parmi les quatre au sol pendant sa courte disparition visuelle.
+    private void OnDespawnStarted(FieldBonus bonus) => _active.Remove(bonus);
 
     public override void _Process(double delta)
     {

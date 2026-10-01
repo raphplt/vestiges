@@ -394,3 +394,22 @@ Captures Main (`/tmp/vestiges-plan25-i2-final/`) et Collection
 (`/tmp/vestiges-plan25-i2-collection-perks/`, `…-items/`) inspectées.
 Le mode `--capture-levelup` couvre désormais les Réminiscences et retourne
 une ligne `RESULT`, corrigeant son ancien faux échec de script.
+
+### I3 — bonus et sceaux branchés, 1er octobre 2026
+
+Les cinq IDs de bonus du plan 24 pointent vers les sprites S5 par un champ
+`sprite` ; flottement en quatre poses, lueur 2:1 au sol et disparition en
+trois poses. Le ramassage désactive immédiatement le bonus ; le nœud reste
+hors des quatre places au sol pendant sa disparition, puis retourne au pool.
+Réinitialisation des textures, opacité et position à chaque réutilisation.
+Les effets, chances de butin et durées restent ceux du plan 24.
+
+Les sceaux utilisent leurs neuf états de progression, leurs cinq poses de
+bris, puis une texture dorée de complétion ajoutée au générateur S6.
+Liaisons existantes à `QuestManager`/`EventBus` conservées.
+
+Build sans avertissement, smoke vert, `test_field_bonuses.sh` : zéro échec,
+dont dissolution et reprise du même nœud avec un autre bonus. Capture des
+cinq ramassages et d'une quête complétée par `QuestManager` dans Main,
+inspectée dans `/tmp/vestiges-plan25-i3-final/`. Le premier parcours était
+masqué par le level-up accordé en récompense ; le bot le résout désormais.

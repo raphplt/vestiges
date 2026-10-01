@@ -1,5 +1,6 @@
 using Godot;
 using Vestiges.Core;
+using Vestiges.Infrastructure;
 
 namespace Vestiges.UI;
 
@@ -7,7 +8,7 @@ namespace Vestiges.UI;
 /// Quêtes de run repliées (plan 24 A2) : un sceau de cire par quête, sous la plaque du score, sans texte. L'anneau de
 /// huit crans autour du sceau se remplit avec la progression ; une avancée fait pulser le sceau ; une quête remplie le
 /// brise en éclats dorés, il reste doré, et une ligne courte passe dessous. Le détail est dans la pause, ou en
-/// maintenant « show_quests ». Dessiné en unités du HUD (deux pixels à 1080p), en attendant les sceaux du plan 25 (S6).
+/// maintenant « show_quests ». Textures du plan 25 (S6), dessinées en unités du HUD (deux pixels à 1080p).
 /// Ne se redessine que pendant une animation ou à un changement.
 /// </summary>
 public partial class RunQuestSeals : Control
@@ -19,20 +20,10 @@ public partial class RunQuestSeals : Control
     private const float PulseSec = 0.35f;
     private const float ShatterSec = 0.7f;
     private const float ToastSec = 2.6f;
-    private const int Shards = 12;
-
-    private static readonly Color[] WaxColors =
-    {
-        new(0.66f, 0.23f, 0.23f),
-        new(0.23f, 0.54f, 0.52f),
-        new(0.69f, 0.47f, 0.18f),
-    };
+    private readonly Texture2D[][] _wax = new Texture2D[MaxSeals][];
+    private Texture2D _goldWax;
+    private Texture2D[] _break;
     private static readonly Color Gold = new(0.95f, 0.80f, 0.40f);
-    private static readonly Color RingOff = new(0f, 0f, 0f, 0.55f);
-    private static readonly Color Outline = new(0.04f, 0.03f, 0.05f, 0.9f);
-
-    private readonly ImageTexture[] _wax = new ImageTexture[MaxSeals];
-    private ImageTexture _goldWax;
     private readonly float[] _progress = new float[MaxSeals];
     private readonly bool[] _completed = new bool[MaxSeals];
     private readonly bool[] _used = new bool[MaxSeals];
@@ -46,9 +37,12 @@ public partial class RunQuestSeals : Control
     {
         MouseFilter = MouseFilterEnum.Ignore;
         TextureFilter = TextureFilterEnum.Nearest;
+        const string folder = "res://assets/ui/hud/plan25/";
+        string[] colors = { "red", "green", "blue" };
         for (int i = 0; i < MaxSeals; i++)
-            _wax[i] = MakeWax(WaxColors[i]);
-        _goldWax = MakeWax(Gold);
+            _wax[i] = SpriteAtlas.Horizontal(folder + "quest_seal_" + colors[i] + ".png", SealSize, SealSize);
+        _goldWax = GD.Load<Texture2D>(folder + "quest_seal_complete.png");
+        _break = SpriteAtlas.Horizontal(folder + "quest_seal_break.png", SealSize, SealSize);
 
         _toast = new Label { MouseFilter = MouseFilterEnum.Ignore, HorizontalAlignment = HorizontalAlignment.Right, Modulate = Colors.Transparent };
         _toast.AddThemeFontSizeOverride("font_size", 10);
@@ -133,78 +127,16 @@ public partial class RunQuestSeals : Control
     private void DrawSeal(int index, Vector2 origin)
     {
         bool done = _completed[index];
-        float shatter = _shatter[index];
-        Vector2 center = origin + new Vector2(SealSize / 2f, SealSize / 2f);
-
-        // Anneau de huit crans, autour du sceau.
-        int lit = done ? RingSteps : Mathf.FloorToInt(_progress[index] * RingSteps + 0.0001f);
-        for (int k = 0; k < RingSteps; k++)
+        int step = done ? RingSteps : Mathf.Clamp(Mathf.FloorToInt(_progress[index] * RingSteps + 0.0001f), 0, RingSteps);
+        if (_shatter[index] > 0f)
         {
-            float angle = -Mathf.Pi / 2f + Mathf.Tau * k / RingSteps;
-            Vector2 p = center + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * (SealSize / 2f + 1f);
-            Rect2 notch = new(new Vector2(Mathf.Floor(p.X) - 1f, Mathf.Floor(p.Y) - 1f), new Vector2(2f, 2f));
-            DrawRect(notch.Grow(0.5f), Outline);
-            DrawRect(notch, k < lit ? (done ? Gold : WaxColors[index].Lightened(0.35f)) : RingOff);
-        }
-
-        // Pendant le bris, le sceau a disparu : seuls les éclats volent.
-        if (shatter > 0f)
-        {
-            float t = 1f - shatter / ShatterSec;
-            for (int s = 0; s < Shards; s++)
-            {
-                float angle = Mathf.Tau * s / Shards + index;
-                float distance = 2f + t * (10f + (s % 3) * 3f);
-                Vector2 p = center + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * distance + new Vector2(0f, t * t * 6f);
-                DrawRect(new Rect2(new Vector2(Mathf.Floor(p.X), Mathf.Floor(p.Y)), new Vector2(s % 2 == 0 ? 2f : 1f, 1f)),
-                    (s % 3 == 0 ? Colors.White : Gold) with { A = 1f - t });
-            }
-            if (t < 0.6f)
+            float t = 1f - _shatter[index] / ShatterSec;
+            int frame = Mathf.Min((int)(t * _break.Length), _break.Length - 1);
+            DrawTexture(_break[frame], origin);
+            if (t < 0.8f)
                 return;
         }
-
-        Color tint = _pulse[index] > 0f ? Colors.White.Lerp(new Color(1.6f, 1.6f, 1.6f), _pulse[index] / PulseSec) : Colors.White;
-        DrawTexture(done ? _goldWax : _wax[index], origin, tint);
-        if (done)
-        {
-            // Coche gravée dans la cire dorée.
-            Color mark = new(0.45f, 0.30f, 0.08f);
-            DrawRect(new Rect2(origin + new Vector2(5f, 8f), new Vector2(1f, 1f)), mark);
-            DrawRect(new Rect2(origin + new Vector2(6f, 9f), new Vector2(1f, 1f)), mark);
-            DrawRect(new Rect2(origin + new Vector2(7f, 8f), new Vector2(1f, 1f)), mark);
-            DrawRect(new Rect2(origin + new Vector2(8f, 7f), new Vector2(1f, 1f)), mark);
-            DrawRect(new Rect2(origin + new Vector2(9f, 6f), new Vector2(1f, 1f)), mark);
-            DrawRect(new Rect2(origin + new Vector2(10f, 5f), new Vector2(1f, 1f)), mark);
-        }
-    }
-
-    /// <summary>Sceau de cire 16 × 16 en pixels : disque à trois tons éclairé en haut à gauche, bavures, empreinte.</summary>
-    private static ImageTexture MakeWax(Color wax)
-    {
-        Image image = Image.CreateEmpty(SealSize, SealSize, false, Image.Format.Rgba8);
-        Color light = wax.Lightened(0.3f);
-        Color dark = wax.Darkened(0.35f);
-        Color edge = wax.Darkened(0.65f);
-        Vector2 center = new(7.5f, 7.5f);
-        for (int y = 0; y < SealSize; y++)
-        {
-            for (int x = 0; x < SealSize; x++)
-            {
-                Vector2 p = new(x, y);
-                float d = p.DistanceTo(center);
-                // Bavures : le bord ondule selon l'angle.
-                float angle = Mathf.Atan2(y - center.Y, x - center.X);
-                float radius = 6.2f + 0.8f * Mathf.Sin(angle * 5f + 0.7f);
-                if (d > radius + 0.5f)
-                    continue;
-                Color c = d > radius - 0.6f ? edge : (x + y < 12 ? light : (x + y > 18 ? dark : wax));
-                // Empreinte au centre : un anneau creux.
-                float inner = p.DistanceTo(center);
-                if (inner > 2.2f && inner < 3.4f)
-                    c = dark;
-                image.SetPixel(x, y, c);
-            }
-        }
-        return ImageTexture.CreateFromImage(image);
+        Color tint = _pulse[index] > 0f ? new Color(1f + _pulse[index] / PulseSec * 0.6f, 1f + _pulse[index] / PulseSec * 0.6f, 1f + _pulse[index] / PulseSec * 0.6f) : Colors.White;
+        DrawTexture(done ? _goldWax : _wax[index][step], origin, tint);
     }
 }
