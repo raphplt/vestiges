@@ -207,3 +207,16 @@ lors de la capture après mesure (pas de nouvelle image depuis 5 s) :
 **aucune conclusion de performance sur cette comparaison incomplète**.
 Le banc exploratoire précédent chevauchait une capture et n'est pas retenu.
 Les mesures brutes de nœuds/allocations restent disponibles dans les JSON.
+
+### S3 — planche proposée, 1er octobre 2026
+
+`python3 tools/generate_item_icons.py --lot s3` produit la
+[planche S3](planches/25-s3-objets.png) : seize objets de déclencheur et
+trois objets du monde, avec leurs identifiants du catalogue existant.
+Même pipeline SDF et rendu natif 32/16 px que S2. Les 34 identifiants S2+S3
+sont uniques ; régénération de S3 identique octet pour octet, planche
+inspectée à côté des armes. Build sans avertissement et smoke verts.
+
+**Planche soumise à validation ; les règles des objets du monde ne sont
+pas créées. `PerkIconResolver` reste présent tant que S2/S3 ne sont pas
+validés et branchés.** Suite : S6.

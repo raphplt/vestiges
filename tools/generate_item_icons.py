@@ -11,19 +11,26 @@ from PIL import Image
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from tools.sprites.items.icons import PROPERTY_ITEMS
+from tools.sprites.items.triggers import TRIGGER_ITEMS, WORLD_ITEMS, WORLD_NAMES
 from tools.sprites.ui.kit import board, export
 from tools.sprites.weapons.icons import render_icon
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--sheet", type=Path, default=Path("doc/plans/planches/25-s2-objets.png"))
+    parser.add_argument("--sheet", type=Path)
+    parser.add_argument("--lot", choices=("s2", "s3", "all"), default="s2")
     parser.add_argument("--export", action="store_true")
     parser.add_argument("--ids", nargs="*")
     args = parser.parse_args()
+    args.sheet = args.sheet or Path(f"doc/plans/planches/25-{args.lot}-objets.png")
     names = {entry["id"]: entry["name"] for entry in json.loads(Path("data/progression/passive_souvenirs.json").read_text())}
+    names.update(WORLD_NAMES)
+    factories = PROPERTY_ITEMS if args.lot == "s2" else TRIGGER_ITEMS + WORLD_ITEMS
+    if args.lot == "all":
+        factories = PROPERTY_ITEMS + TRIGGER_ITEMS + WORLD_ITEMS
     rows, images = [], {}
-    for factory in PROPERTY_ITEMS:
+    for factory in factories:
         item = factory()
         if args.ids and item.item_id not in args.ids:
             continue
