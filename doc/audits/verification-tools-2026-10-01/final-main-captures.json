@@ -1,0 +1,67 @@
+{
+  "commit": "b46ae1351b81a32327d886cdb3ac2fdfd283caf2",
+  "checkout": "/home/raphael/dev/perso/vestiges",
+  "command": "CAPTURE_EXTRA_ARGS='--capture-abilities --enemies hurleur,fading_spitter' VESTIGES_SCREEN=1 tools/capture_run.sh /tmp/vestiges-final-main-capture 10 0 1920x1080 221092026",
+  "screen": 1,
+  "position": [
+    3840,
+    0
+  ],
+  "actual_size": [
+    3840,
+    2160
+  ],
+  "seed": 221092026,
+  "captures": [
+    {
+      "path": "/tmp/vestiges-final-main-capture/abilities-00.png",
+      "sha256": "9cf2a0596492cd155b1088449b87f18679c9d67a04086ff3f7372d47f98078f0"
+    },
+    {
+      "path": "/tmp/vestiges-final-main-capture/abilities-01.png",
+      "sha256": "5ccb6375a3e6eea3a7813b0a320efe2b550c281a0d7f10b163a84daad9e677a6"
+    },
+    {
+      "path": "/tmp/vestiges-final-main-capture/abilities-02.png",
+      "sha256": "28e476b48c66291ab11a2fe3b597f4c3fbadbefd12ab78066fa3e7d8a3c9edf0"
+    },
+    {
+      "path": "/tmp/vestiges-final-main-capture/abilities-03.png",
+      "sha256": "fed9ecd002356c66f7dc248a30bcdbc92108ea8406419e14609522a52b31a6eb"
+    },
+    {
+      "path": "/tmp/vestiges-final-main-capture/abilities-04.png",
+      "sha256": "28ecc3bdf56346bd0af6a2aa65329743f5eeb3057096c4354944cb655c37e4d2"
+    },
+    {
+      "path": "/tmp/vestiges-final-main-capture/abilities-05.png",
+      "sha256": "0d2192ea937522c3ea49369086e6d20cb2e2294c3b6b1b65c76af1ce59447072"
+    },
+    {
+      "path": "/tmp/vestiges-final-main-capture/abilities-06.png",
+      "sha256": "a7d612be6e88687ae1f3053d5979ef0af1913dc65da8d51511fb5243dff80811"
+    },
+    {
+      "path": "/tmp/vestiges-final-main-capture/abilities-07.png",
+      "sha256": "9fcf8167b28332a57c7eb78f4518db736854b9f8b495a9254f0816b61c6270c5"
+    },
+    {
+      "path": "/tmp/vestiges-final-main-capture/abilities-08.png",
+      "sha256": "37a02bc80a58cbae1c2f4b0bcbe31010257a807ee932488ff1543878a94b0e51"
+    },
+    {
+      "path": "/tmp/vestiges-final-main-capture/abilities-09.png",
+      "sha256": "44bc3fb6dfa04ec5fd027f34d0649f236cac66125b3046c764fa591c1acb37b5"
+    },
+    {
+      "path": "/tmp/vestiges-final-main-capture/abilities-10.png",
+      "sha256": "d3174874c0c18eb0734b8e3c4f2d4adf37eeef7c751060a02fdcd6af150bd118"
+    },
+    {
+      "path": "/tmp/vestiges-final-main-capture/abilities-11.png",
+      "sha256": "8b46c87824c5e1c5a54423af4bca013bbdfa7dbc1881511d5a78046d638b3d4d"
+    }
+  ],
+  "inspection": "Planche des douze images et abilities-05.png ouverte séparément ; run visible après chargement, effets et HUD présents.",
+  "limits": "La copie de travail contient les modifications indépendantes de révélation Mémorial/Faille, conservées hors de nos commits. Cette capture ne valide pas leur interaction. Aucune conclusion FPS sous charge."
+}

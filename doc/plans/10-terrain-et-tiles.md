@@ -651,3 +651,11 @@ de captures refuse une erreur inattendue même en présence d'un `RESULT`.
 [Protocole et journaux](../audits/verification-tools-2026-10-01/README.md).
 Le défaut d'instrumentation signalé dans 5B1 est donc résolu ; les mesures à
 cache froid/chaud et les FPS sur machine calme restent ouvertes.
+
+
+**Intégration finale sur `main` vérifiée.** Les 24 contrôles de choix,
+26 contrôles d'intégration Main et le smoke de 600 frames passent ; zéro
+avertissement de build, douze captures des capacités inspectées sur ViewSonic.
+Les modifications indépendantes de révélation Mémorial/Faille sont préservées
+hors de ces commits ; leur nouveau shader devra rejoindre le catalogue lors
+de la clôture de leur lot ([journal final](../audits/verification-tools-2026-10-01/README.md#vérification-après-intégration-sur-main)).

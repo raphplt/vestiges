@@ -32,3 +32,32 @@ réels avec un exécutable témoin, sans lancer de fenêtre supplémentaire :
 Les exceptions documentées Steam/audio Dummy/ressources restent filtrées.
 Syntaxe des trois scripts shell vérifiée. Builds C# des deux références : zéro
 avertissement et erreur. Profils temporaires, aucune sauvegarde joueur touchée.
+
+
+## Vérification après intégration sur `main`
+
+Les trois lots de cette continuation sont réunis sur `main` :
+`fe46a0c8` (écrans de choix), `88f307a2` (préchauffage rendu),
+`b46ae135` (outils de recette). Vérification finale sur ce checkout :
+
+- écrans de choix : **24 contrôles, zéro échec** ;
+- Main réelle headless : **26 contrôles, zéro échec**, initialisation en
+  8 266 ms, sous la limite murale de 120 s ;
+- compilation : **zéro avertissement et erreur** ; smoke de **600 frames vert** ;
+- Main avec rendu : **12 captures** des capacités Hurleur/Cracheur, seed
+  221092026, inspectées en planche et une image ouverte séparément. Journal
+  sans erreur inattendue, préchauffage à **17 dessins pour 16 shaders**.
+  Fenêtre constatée sur ViewSonic, écran 1, position (3840, 0), taille réelle
+  3840 × 2160 malgré la demande de 1920 × 1080.
+
+Journaux finaux `final-main-*.log.gz` et empreintes des captures dans
+[final-main-captures.json](final-main-captures.json). Aucun chiffre de FPS
+retenu ; ni le cache pilote froid/chaud ni le ressenti humain ne sont validés.
+
+Les dix fichiers de travail indépendants sur la révélation Mémorial/Faille
+ont été préservés hors de ces commits (contrôle des empreintes, fusion des
+seuls hunks de `GameBootstrap`). Leur code présent pendant cette dernière
+recette ne constitue pas une livraison de ce lot. À sa clôture, son nouveau
+shader `landmark_reveal` devra rejoindre le catalogue de préchauffage et
+passer le contrôle de couverture ; les 16 shaders vérifiés ici correspondent
+au code déjà committé. Aucun fichier audio n'est modifié par cette continuation.
