@@ -21,6 +21,7 @@ public class AimedShotAbility : IEnemyAbility
     private int _appearanceFrame = -1;
 
     private float _windupSeconds;
+    private float _cooldownMultiplier;
     private float _laneLength;
     private float _laneWidth;
     private bool _showRange;
@@ -55,6 +56,7 @@ public class AimedShotAbility : IEnemyAbility
     public void Configure(EnemyAbilityData data)
     {
         _windupSeconds = Mathf.Max(0.05f, data.GetNumber("windup_seconds", 0.35f));
+        _cooldownMultiplier = Mathf.Max(0.1f, data.GetNumber("cooldown_multiplier", 1f));
         _laneLength = data.GetNumber("lane_length", 90f);
         _laneWidth = data.GetNumber("lane_width", 6f);
         _showRange = data.GetNumber("show_range", 0f) > 0f;
@@ -90,7 +92,7 @@ public class AimedShotAbility : IEnemyAbility
                 _lane.HideMarker();
                 _appearance.Visible = false;
                 owner.ShootProjectile(_direction);
-                _cooldownTimer = owner.RangedCooldown;
+                _cooldownTimer = owner.RangedCooldown * _cooldownMultiplier;
             }
             return true;
         }

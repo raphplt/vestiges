@@ -494,6 +494,26 @@ public partial class EnemyAbilityRegression : Node2D
         Check(pools.CreatedCount == created && impact != null && impact.Visible
             && impact.GlobalPosition == new Vector2(120f, 60f) && impact.Texture == impactSet.Get(0, 0),
             "Impact : même nœud recyclé, position et première frame réinitialisées");
+
+        // Une capacité réutilisée ne doit pas transmettre la cadence du Hurleur au Cracheur suivant.
+        Enemy recycled = await SpawnReady("hurleur", new Vector2(-150f, 0f));
+        recycled.Initialize(EnemyDataLoader.Get("fading_spitter"), 1000f, 1f);
+        recycled.SetPhysicsProcess(false);
+        var abilities = (Dictionary<string, IEnemyAbility>)typeof(Enemy)
+            .GetField("_abilityCache", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(recycled);
+        IEnemyAbility recycledShot = abilities["aimed_shot"];
+        ForceCooldown(recycled, "aimed_shot");
+        _player.AIInputOverride = Vector2.Zero;
+        int launches = 0;
+        for (int tick = 0; tick < 180; tick++)
+        {
+            bool aiming = recycledShot.IsActive;
+            await Step(1);
+            if (aiming && !recycledShot.IsActive)
+                launches++;
+        }
+        Check(launches == 2, $"Tir recyclé Hurleur → Cracheur : cadence d'origine retrouvée ({launches} tirs en 3 s)");
+        Despawn(recycled);
         pools.QueueFree();
         await Step(1);
     }

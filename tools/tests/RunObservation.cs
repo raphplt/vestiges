@@ -58,6 +58,7 @@ namespace Vestiges.Tests;
 /// micro-événements, Essence gagnée et dépensée).
 /// --scaling cle=valeur,… : surcharge des réglages d'apparition (spawn_flow.json) pendant la mesure de densité.
 /// --measure-projectiles [--projectile-lifetime secondes] : pression des tirs à 10 Hz ; durée surchargée dans le banc seul.
+/// --howler-cooldown multiplicateur : surcharge de la cadence du Hurleur pour comparaison sur le même build.
 /// --nomad : pendant la mesure, le bot garde un cap (tiré de la seed) au lieu d'errer autour du départ,
 /// et en change quand il bute sur le bord du monde.
 /// --visit : pendant la mesure, le bot ratisse : il se détourne vers les lieux vus, ouvre, ravive et dépense
@@ -203,6 +204,14 @@ public partial class RunObservation : Node
     private async Task LoadRun(ulong seed, string characterId)
     {
         GD.Seed(seed);
+        string howlerCooldown = Argument(OS.GetCmdlineUserArgs(), "--howler-cooldown", null);
+        if (howlerCooldown != null)
+        {
+            float multiplier = float.Parse(howlerCooldown, CultureInfo.InvariantCulture);
+            if (!float.IsFinite(multiplier) || multiplier <= 0f)
+                throw new ArgumentOutOfRangeException(nameof(howlerCooldown));
+            EnemyDataLoader.Get("hurleur").Abilities["aimed_shot"].Numbers["cooldown_multiplier"] = multiplier;
+        }
         GameManager manager = GetNode<GameManager>("/root/GameManager");
         manager.RunSeed = seed;
         manager.SelectedCharacterId = characterId;
@@ -268,7 +277,7 @@ public partial class RunObservation : Node
             string path = $"{_output}/abilities-{shot:00}.png";
             image.SavePng(path);
         }
-        GD.Print($"[RunObservation] Captures écrites dans {_output}");
+        GD.Print($"[RunObservation] RESULT abilities captures={shots} output={_output}");
     }
 
     private async Task CaptureBestiary()

@@ -591,3 +591,10 @@ Pendant ce travail : « évite de lancer le jeu ou alors fait le sur l'écran
 viewsonic […] pas sur l'écran msi ». Captures et fenêtres de test uniquement
 sur le ViewSonic (VX2758, DP-1 ; second écran dans la configuration constatée),
 avec `VESTIGES_SCREEN=1`. Les contrôles sans rendu restent headless.
+
+## 46. Continuation autonome hors audio — 1er octobre 2026
+
+Raphaël autorise à continuer en autonomie et à avancer autant que possible en
+conservant une qualité maximale. Il exclut explicitement l'audio de cette
+continuation. Les travaux audio déjà présents dans son checkout sont préservés.
+Le travail reste seul, par lots vérifiés ; les fenêtres restent sur ViewSonic.

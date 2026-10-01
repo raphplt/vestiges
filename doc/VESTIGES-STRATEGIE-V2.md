@@ -766,6 +766,8 @@ Le script de post-processing doit inclure une vérification/correction de l'angl
 
 ### Phase D — Lisibilité et UX (2-3 semaines)
 
+- [x] Pression des tirs, première correction ciblée : recharge du Hurleur ×2,5 en données, cri conservé ; banc fixe, quatre runs et captures vérifiés (plan 07 R3b). Ressenti humain encore ouvert.
+
 - [x] Barre d'XP fullwidth en bas de l'écran (déplacée le 24 septembre 2026 dans la plaque de vie du HUD refait, [plan 04](plans/04-interfaces-et-hub.md#retour-de-raphaël-et-hud-de-run--24-septembre-2026)).
 - [x] HUD de run lisible : plaques contrastées, jauge de PV sous le héros, police Saira Semi Condensed, boussole retirée ; captures 1080p/4K vérifiées (plan 04, 24 septembre 2026).
 - [x] Recette humaine du HUD refait et de la police : « HUD bien mieux » (Raphaël, 25 septembre 2026).

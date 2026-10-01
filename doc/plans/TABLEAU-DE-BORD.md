@@ -79,3 +79,6 @@ Le [registre](DECISIONS.md) garde les mots de Raphaël. Les plans gardent le dé
 ## 6. Plans sans action en attente
 
 00 (référence), 03, 10, 12, 16 : lots livrés, recettes à faire en jeu par Raphaël quand il le souhaite. Le plan 04 est rouvert pour la pause, les survols et la carte (DECISIONS §44).
+
+
+**Continuation hors audio (DECISIONS §46) :** R3b livré au plan 07 : cadence du Hurleur réglée, 61 contrôles et captures vérifiés, ressenti humain ouvert. Suite : préchargement à réparer, R6 carte, R5 trois personnages. Le chantier audio est exclu de cette continuation.

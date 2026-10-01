@@ -1,0 +1,50 @@
+[
+  {
+    "multiplier": 1.0,
+    "aggression": 1.0,
+    "seconds": 90.0,
+    "howler_shots": 354.0,
+    "spitter_shots": 126.0,
+    "cries": 60.0,
+    "mean": 18.561,
+    "peak": 23.0,
+    "occupied_pct": 99.56,
+    "hit_damage": 344.0
+  },
+  {
+    "multiplier": 2.5,
+    "aggression": 1.0,
+    "seconds": 90.0,
+    "howler_shots": 168.0,
+    "spitter_shots": 126.0,
+    "cries": 60.0,
+    "mean": 11.375,
+    "peak": 18.0,
+    "occupied_pct": 99.56,
+    "hit_damage": 236.0
+  },
+  {
+    "multiplier": 1.0,
+    "aggression": 1.6,
+    "seconds": 90.0,
+    "howler_shots": 480.0,
+    "spitter_shots": 179.0,
+    "cries": 60.0,
+    "mean": 25.37,
+    "peak": 31.0,
+    "occupied_pct": 99.56,
+    "hit_damage": 547.0
+  },
+  {
+    "multiplier": 2.5,
+    "aggression": 1.6,
+    "seconds": 90.0,
+    "howler_shots": 246.0,
+    "spitter_shots": 179.0,
+    "cries": 60.0,
+    "mean": 16.512,
+    "peak": 21.0,
+    "occupied_pct": 99.56,
+    "hit_damage": 367.0
+  }
+]

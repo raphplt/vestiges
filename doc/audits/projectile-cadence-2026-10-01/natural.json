@@ -1,0 +1,376 @@
+[
+  {
+    "directory": "/tmp/vestiges-r3b-before",
+    "runs": [
+      {
+        "seed": "1002",
+        "samples": 3200,
+        "duration_s": 319.9,
+        "enemy_visible_mean": 18.06,
+        "result": {
+          "view": "960x540",
+          "kills": "316",
+          "spawned": "1749",
+          "hit_per_min_0_240": "367",
+          "hit_per_min_240_310": "710",
+          "hit_by": "charognard:522,fading_spitter:431,void_brute:336,rodeur:304,presage:242,shade:171,treant_corrompu:102,hurleur:91,rampant:72,shadow_crawler:70,wailing_sentinel:38,",
+          "hit_gated": "fading_spitter:285,charognard:217,rodeur:168,presage:147,void_brute:142,shade:95,shadow_crawler:55,hurleur:51,treant_corrompu:41,rampant:36,wailing_sentinel:25,"
+        },
+        "last_density_sample": {
+          "t": "319",
+          "visible": "6",
+          "near600": "45",
+          "alive": "112",
+          "spawned": "1745",
+          "killed": "316",
+          "level": "11",
+          "hit_damage": "2349",
+          "memory": "0.77",
+          "erasure_global": "0.17",
+          "xp_gained": "2596",
+          "xp_orbs": "233",
+          "spawned_hp": "88098",
+          "damage_dealt": "18316",
+          "essence_gained": "340"
+        },
+        "phases": [
+          {
+            "phase": "Exploration",
+            "samples": 2400,
+            "from_s": 0.017,
+            "to_s": 239.9,
+            "visible_mean": 0.799,
+            "visible_p95": 4,
+            "visible_max": 9,
+            "time_with_shots_pct": 30.58,
+            "visible_age_over_2_pct": 11.42,
+            "visible_shooters_mean": 1.268,
+            "visible_source_pct": {
+              "spitter": 100.0,
+              "sentinel": 0.0,
+              "weaver": 0.0,
+              "howler": 0.0,
+              "other": 0.0
+            }
+          },
+          {
+            "phase": "Crisis",
+            "samples": 699,
+            "from_s": 240.0,
+            "to_s": 309.8,
+            "visible_mean": 2.835,
+            "visible_p95": 11,
+            "visible_max": 23,
+            "time_with_shots_pct": 67.81,
+            "visible_age_over_2_pct": 17.41,
+            "visible_shooters_mean": 5.219,
+            "visible_source_pct": {
+              "spitter": 10.85,
+              "sentinel": 4.09,
+              "weaver": 13.52,
+              "howler": 71.54,
+              "other": 0.0
+            }
+          },
+          {
+            "phase": "Exploration",
+            "samples": 101,
+            "from_s": 309.9,
+            "to_s": 319.9,
+            "visible_mean": 4.792,
+            "visible_p95": 10,
+            "visible_max": 10,
+            "time_with_shots_pct": 87.13,
+            "visible_age_over_2_pct": 12.19,
+            "visible_shooters_mean": 5.842,
+            "visible_source_pct": {
+              "spitter": 81.82,
+              "sentinel": 0.0,
+              "weaver": 0.0,
+              "howler": 18.18,
+              "other": 0.0
+            }
+          }
+        ]
+      },
+      {
+        "seed": "221092026",
+        "samples": 3200,
+        "duration_s": 319.9,
+        "enemy_visible_mean": 20.71,
+        "result": {
+          "view": "1003x564",
+          "kills": "374",
+          "spawned": "1902",
+          "hit_per_min_0_240": "405",
+          "hit_per_min_240_310": "1950",
+          "hit_by": "charognard:736,rodeur:731,shade:519,void_brute:504,shadow_crawler:390,presage:359,hurleur:284,rampant:211,fading_spitter:204,tisseuse:135,treant_corrompu:64,wailing_sentinel:60,",
+          "hit_gated": "rodeur:396,presage:194,charognard:177,shadow_crawler:157,shade:133,void_brute:132,rampant:105,hurleur:84,fading_spitter:71,treant_corrompu:64,wailing_sentinel:35,tisseuse:30,"
+        },
+        "last_density_sample": {
+          "t": "319",
+          "visible": "36",
+          "near600": "62",
+          "alive": "116",
+          "spawned": "1901",
+          "killed": "370",
+          "level": "14",
+          "hit_damage": "4123",
+          "memory": "0.79",
+          "erasure_global": "0.17",
+          "xp_gained": "4156",
+          "xp_orbs": "145",
+          "spawned_hp": "95496",
+          "damage_dealt": "20612",
+          "essence_gained": "426"
+        },
+        "phases": [
+          {
+            "phase": "Exploration",
+            "samples": 2400,
+            "from_s": 0.017,
+            "to_s": 239.9,
+            "visible_mean": 0.91,
+            "visible_p95": 5,
+            "visible_max": 13,
+            "time_with_shots_pct": 34.58,
+            "visible_age_over_2_pct": 7.97,
+            "visible_shooters_mean": 1.303,
+            "visible_source_pct": {
+              "spitter": 100.0,
+              "sentinel": 0.0,
+              "weaver": 0.0,
+              "howler": 0.0,
+              "other": 0.0
+            }
+          },
+          {
+            "phase": "Crisis",
+            "samples": 699,
+            "from_s": 240.0,
+            "to_s": 309.8,
+            "visible_mean": 8.468,
+            "visible_p95": 43,
+            "visible_max": 71,
+            "time_with_shots_pct": 84.69,
+            "visible_age_over_2_pct": 23.42,
+            "visible_shooters_mean": 9.668,
+            "visible_source_pct": {
+              "spitter": 0.51,
+              "sentinel": 2.13,
+              "weaver": 17.94,
+              "howler": 79.42,
+              "other": 0.0
+            }
+          },
+          {
+            "phase": "Exploration",
+            "samples": 101,
+            "from_s": 309.9,
+            "to_s": 319.9,
+            "visible_mean": 10.05,
+            "visible_p95": 22,
+            "visible_max": 24,
+            "time_with_shots_pct": 93.07,
+            "visible_age_over_2_pct": 18.72,
+            "visible_shooters_mean": 9.752,
+            "visible_source_pct": {
+              "spitter": 72.81,
+              "sentinel": 0.0,
+              "weaver": 1.08,
+              "howler": 26.11,
+              "other": 0.0
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "directory": "/tmp/vestiges-r3b-after",
+    "runs": [
+      {
+        "seed": "1002",
+        "samples": 3200,
+        "duration_s": 319.9,
+        "enemy_visible_mean": 19.3,
+        "result": {
+          "view": "960x540",
+          "kills": "265",
+          "spawned": "1849",
+          "hit_per_min_0_240": "1082",
+          "hit_per_min_240_310": "607",
+          "hit_by": "charognard:1363,rampant:1011,shadow_crawler:746,fading_spitter:630,rodeur:548,void_brute:324,presage:224,shade:204,treant_corrompu:62,hurleur:24,",
+          "hit_gated": "charognard:240,void_brute:197,fading_spitter:186,presage:183,shadow_crawler:157,rodeur:130,rampant:113,shade:96,treant_corrompu:41,hurleur:12,"
+        },
+        "last_density_sample": {
+          "t": "319",
+          "visible": "4",
+          "near600": "26",
+          "alive": "94",
+          "spawned": "1832",
+          "killed": "265",
+          "level": "9",
+          "hit_damage": "5136",
+          "memory": "0.77",
+          "erasure_global": "0.17",
+          "xp_gained": "1719",
+          "xp_orbs": "245",
+          "spawned_hp": "96514",
+          "damage_dealt": "15325",
+          "essence_gained": "296"
+        },
+        "phases": [
+          {
+            "phase": "Exploration",
+            "samples": 2400,
+            "from_s": 0.017,
+            "to_s": 239.9,
+            "visible_mean": 1.523,
+            "visible_p95": 8,
+            "visible_max": 14,
+            "time_with_shots_pct": 36.71,
+            "visible_age_over_2_pct": 15.54,
+            "visible_shooters_mean": 1.946,
+            "visible_source_pct": {
+              "spitter": 100.0,
+              "sentinel": 0.0,
+              "weaver": 0.0,
+              "howler": 0.0,
+              "other": 0.0
+            }
+          },
+          {
+            "phase": "Crisis",
+            "samples": 700,
+            "from_s": 240.0,
+            "to_s": 309.9,
+            "visible_mean": 2.906,
+            "visible_p95": 9,
+            "visible_max": 14,
+            "time_with_shots_pct": 67.86,
+            "visible_age_over_2_pct": 5.11,
+            "visible_shooters_mean": 6.61,
+            "visible_source_pct": {
+              "spitter": 28.02,
+              "sentinel": 7.87,
+              "weaver": 7.18,
+              "howler": 56.93,
+              "other": 0.0
+            }
+          },
+          {
+            "phase": "Exploration",
+            "samples": 100,
+            "from_s": 310.0,
+            "to_s": 319.9,
+            "visible_mean": 6.79,
+            "visible_p95": 16,
+            "visible_max": 18,
+            "time_with_shots_pct": 100.0,
+            "visible_age_over_2_pct": 8.98,
+            "visible_shooters_mean": 8.36,
+            "visible_source_pct": {
+              "spitter": 84.09,
+              "sentinel": 11.93,
+              "weaver": 0.0,
+              "howler": 3.98,
+              "other": 0.0
+            }
+          }
+        ]
+      },
+      {
+        "seed": "221092026",
+        "samples": 3200,
+        "duration_s": 319.9,
+        "enemy_visible_mean": 22.51,
+        "result": {
+          "view": "979x551",
+          "kills": "469",
+          "spawned": "1725",
+          "hit_per_min_0_240": "584",
+          "hit_per_min_240_310": "1157",
+          "hit_by": "charognard:1134,presage:570,rodeur:484,shadow_crawler:459,shade:323,wailing_sentinel:226,rampant:135,void_brute:129,fading_spitter:114,treant_corrompu:104,hurleur:71,",
+          "hit_gated": "presage:323,charognard:304,shadow_crawler:185,rodeur:185,shade:119,rampant:87,treant_corrompu:83,wailing_sentinel:59,void_brute:56,fading_spitter:27,hurleur:20,"
+        },
+        "last_density_sample": {
+          "t": "319",
+          "visible": "31",
+          "near600": "44",
+          "alive": "89",
+          "spawned": "1714",
+          "killed": "469",
+          "level": "15",
+          "hit_damage": "3749",
+          "memory": "0.79",
+          "erasure_global": "0.17",
+          "xp_gained": "5412",
+          "xp_orbs": "206",
+          "spawned_hp": "83696",
+          "damage_dealt": "23258",
+          "essence_gained": "514"
+        },
+        "phases": [
+          {
+            "phase": "Exploration",
+            "samples": 2400,
+            "from_s": 0.017,
+            "to_s": 239.9,
+            "visible_mean": 1.457,
+            "visible_p95": 7,
+            "visible_max": 14,
+            "time_with_shots_pct": 34.96,
+            "visible_age_over_2_pct": 19.02,
+            "visible_shooters_mean": 1.553,
+            "visible_source_pct": {
+              "spitter": 100.0,
+              "sentinel": 0.0,
+              "weaver": 0.0,
+              "howler": 0.0,
+              "other": 0.0
+            }
+          },
+          {
+            "phase": "Crisis",
+            "samples": 700,
+            "from_s": 240.0,
+            "to_s": 309.9,
+            "visible_mean": 5.02,
+            "visible_p95": 14,
+            "visible_max": 26,
+            "time_with_shots_pct": 84.57,
+            "visible_age_over_2_pct": 20.46,
+            "visible_shooters_mean": 10.266,
+            "visible_source_pct": {
+              "spitter": 10.93,
+              "sentinel": 26.69,
+              "weaver": 0.0,
+              "howler": 62.38,
+              "other": 0.0
+            }
+          },
+          {
+            "phase": "Exploration",
+            "samples": 100,
+            "from_s": 310.0,
+            "to_s": 319.9,
+            "visible_mean": 4.06,
+            "visible_p95": 11,
+            "visible_max": 13,
+            "time_with_shots_pct": 79.0,
+            "visible_age_over_2_pct": 12.81,
+            "visible_shooters_mean": 7.89,
+            "visible_source_pct": {
+              "spitter": 38.42,
+              "sentinel": 14.29,
+              "weaver": 0.0,
+              "howler": 47.29,
+              "other": 0.0
+            }
+          }
+        ]
+      }
+    ]
+  }
+]

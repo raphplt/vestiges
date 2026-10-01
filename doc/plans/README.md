@@ -323,3 +323,6 @@ Les réglages numériques proposés sont des points de départ expérimentaux, j
 ## 8. Nouveaux retours intégrés
 
 Dash commun validé ; casting d’au moins cinq à six personnages et refonte de tous les sprites avant 01 E : 06/08 ; mode dev tout débloqué : [guide](../DEV-MODE.md) ; mobilité expressive clavier/manette : 01/06 ; record uniquement au bilan et bilan majeur : 02/04 ; XP et menace initiale : 03 ; Hub peu textuel et Collection directe : 04 ; objets illimités et quêtes indépendantes du lore : 05/06 ; casting décalé cohérent : 06/08 ; nouveaux mobs et boss de famille : 07 ; terrain : 10 ; innovations : 11 ; fabrication du pixel art homogène : 08.
+
+
+**1er octobre, continuation hors audio — R3b :** cadence du Hurleur ×2,5, contrôles et captures vérifiés ; [rapport du banc fixe et des runs](../audits/projectile-cadence-2026-10-01/README.md). R6 carte et R5 personnages suivent, conformément à DECISIONS §46.

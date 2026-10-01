@@ -420,3 +420,35 @@ Inventaire et [rapport avec données archivées](../audits/projectile-pressure-2
 Quatre runs headless de 320 s, seeds 221092026/1002, même build, sonde à 10 Hz : en référence, 7,20–14,78 tirs visibles en moyenne pendant la première Résurgence, pics 35–60 ; présence pendant 93–94 % de la phase. Les Hurleurs représentent 63–73 % de l'occupation de projectiles. L'essai 4 → 2 s limité au banc donne des résultats opposés selon la seed et des compositions différentes : **non concluant**, aucun nerf livré.
 
 Sonde et synthèse réutilisables (`--measure-projectiles`, `--projectile-lifetime`, `tools/summarize_projectile_pressure.py`), build sans avertissement, 12 800 échantillons cohérents. Pas de fenêtre ouverte pour ces mesures. Prochaine expérience : composition fixe, espacement du tir du Hurleur seul en conservant cri, mêlée et annonces ; retour aux seeds puis vraie partie. Le ressenti et l'essai rendu restent ouverts, aucune case de gameplay/recette cochée.
+
+### R3b — cadence du Hurleur, lot engagé
+
+Continuation autonome hors audio (DECISIONS §46). Isoler le levier que R3 ne
+pouvait mesurer : un banc à tireurs fixes, trajectoire et premiers délais fixes,
+avec tir annoncé et cri réels. Comparer le cooldown courant à un multiplicateur
+propre au Hurleur, sans toucher aux autres tireurs, vitesse, durée de vie,
+annonce, cri ou tables d'apparition. Vérifier aussi l'agressivité tardive et le
+recyclage des capacités. Si l'essai ménage des interruptions nettes et conserve
+le rôle d'appel, adopter un réglage modéré en JSON, puis vérifier les régressions,
+les mêmes runs naturelles et des captures de vraie Main. Le plaisir et la
+recette humaine resteront explicitement distincts des mesures automatiques.
+
+### R3b — cadence ciblée livrée
+
+`abilities.aimed_shot.cooldown_multiplier = 2.5` pour le Hurleur seul, défaut 1
+pour les autres. Intervalle de base 1,50 → 3,15 s, annonce de 0,4 s intacte,
+cri/renforts et scaling d'agressivité conservés. Aucun changement de portée,
+durée de vie ou composition des pools.
+
+[Banc fixe, quatre runs et preuves](../audits/projectile-cadence-2026-10-01/README.md) :
+354 → 168 tirs sur 90 s à agressivité normale, mêmes 60 cris et 126 tirs de
+Cracheurs ; 38,7 % de projectiles actifs en moins. À agressivité 1,6 : baisse de
+34,9 %. Les pointes baissent sur les deux runs naturelles, sans baisse observée
+de la foule ; leurs builds divergent, donc ces runs restent des observations.
+
+Build sans avertissement, 61 régressions de capacités vertes (réemploi de la
+cadence compris), captures Main avant/après inspectées sur ViewSonic. Réglage
+techniquement livré, **ressenti à confirmer en partie humaine** ; les tirs
+restent continus dans le cas extrême du banc et le retour de Raphaël n'est pas
+considéré comme validé par un bot. Référence obsolète du préchargement repérée
+pendant les captures, à corriger dans le lot court suivant.
