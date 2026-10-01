@@ -241,7 +241,7 @@ Build sans avertissement, smoke vert, captures 1080p seed 1002 inspectées
 dans `/tmp/vestiges-plan25-s6-run/` (remplissage, éclat de niveau, aperçu
 des sceaux). Relecture locale des caches et chemins de textures. Nouvelle
 comparaison A/B des changements runtime S4+S6 dans
-`/tmp/vestiges-plan25-runtime-ab/` ; résultat à consigner à sa fin.
+`/tmp/vestiges-plan25-runtime-ab/` ; résultats consignés ci-dessous.
 
 ### Mesure S4 + S6 — 1er octobre 2026
 
@@ -297,3 +297,60 @@ de quatre poses agrandis ×4. Régénération des trois PNG identique octet
 pour octet. Build sans avertissement et smoke 600 frames verts.
 **Validation demandée avant tout export ou branchement au thème.**
 Suite : S8.
+
+### S8 — quatorze motifs proposés, 1er octobre 2026
+
+`python3 tools/generate_reminiscence_icons.py` produit la
+[planche S8](planches/25-s8-reminiscences.png) : quatorze fragments teintés
+par famille, en 32 et 16 px rendus directement par le pipeline SDF des
+armes, agrandissements ×4, fond sombre et cadre de carte réel. Neuf motifs
+reprennent les prototypes du plan 05 ; cinq complètent le catalogue du
+plan 21 §5. Aucun tirage aléatoire. Planche inspectée, couleur de Braise
+renforcée pour la distinguer du cristal rouge.
+
+**Écart de données :** `perk_specializations.json` ne définit que neuf
+Réminiscences. Les cinq autres modèles réservent les identifiants d'art
+`backlash` (Contrecoup), `ember_transfer` (Braise), `double_impact` (Mémoire
+vive), `erasure_edge` (Lisière) et `dead_weight` (Poids mort). Ils ne créent
+aucune règle de jeu. Leur futur branchement devra confirmer ces IDs.
+Le manifeste exportable signale ces cinq entrées par `proposed_id`.
+
+**Motifs soumis à Raphaël ; pas d'export dans `assets/` ni de champ `icon`
+ajouté avant validation.** Le générateur historique des neuf prototypes
+reste disponible et inchangé.
+
+Régénération identique octet pour octet : SHA-256
+`c33fe47463b03f6ee0a6959b8e8057f6280a593326562f864c6f829a63f8c60d`.
+Build : 0 avertissement, 0 erreur ; smoke final 600 frames vert. Les 34 IDs
+d'objets et les 14 IDs de Réminiscences sont uniques ; les neuf IDs de
+Réminiscences existantes correspondent exactement au fichier de données.
+
+### État de livraison et reprise
+
+Travail seul, dans l'ordre S1 → S2 → S4 → S3 → S6 → S5 → S7 → S8,
+sur `sprites-plan25`, créée depuis `origin/claude/dazzling-keller-f0ihk5`.
+Les cases roadmap cochées portent uniquement sur les parties branchées
+et vérifiées, ou explicitement sur la livraison des images.
+
+| Lot | Disponible | Travail restant |
+|---|---|---|
+| S1 | Générateur, cinq raretés, cadres et transitions, planche inspectée | Validation de la planche, export puis remplacement de `RarityGlyph` dans les écrans |
+| S2 | Quinze modèles d'objets, planche 32/16 px inspectée | Validation, export et champ `icon` |
+| S4 | Cinq familles, apparitions, ombres et impacts branchés ; capture, régressions et banc | Recette visuelle par Raphaël |
+| S3 | Dix-neuf modèles d'objets, planche 32/16 px inspectée | Validation, export, champs `icon` puis retrait de `PerkIconResolver` |
+| S6 | XP/crâne/minimap branchés ; textures et manifeste des sceaux livrés | Brancher les sceaux lorsque le panneau du plan 24 L4 existe, puis capturer une quête réelle |
+| S5 | Cinq bonus animés, lueurs et manifeste livrés ; aperçu dans Main | Raccorder aux IDs du plan 24 C4 et capturer un ramassage réel |
+| S7 | Fonds, neuf cadres/boutons, cinq sols ; trois planches inspectées | Validation, export puis branchement des écrans et du thème |
+| S8 | Quatorze modèles de Réminiscences, planche inspectée | Validation, export puis champ `icon` ; confirmer les cinq IDs absents des données |
+
+Les lots « planche à valider » restent à cette étape conformément au §0/§3.
+Aucune proposition n'est consignée comme une décision acquise dans
+`DECISIONS.md`. Les aperçus de bonus/sceaux sont des galeries dans la vraie
+scène Main ; ils ne prouvent pas les futures interactions du plan 24.
+
+Les commandes d'export sont déjà disponibles avec `--export` sur
+`generate_rarities.py`, `generate_item_icons.py --lot all`,
+`generate_screen_sprites.py` et `generate_reminiscence_icons.py`.
+Après chaque validation : exporter, ajouter les liens dans les données
+et les consommateurs, lancer le smoke pour les imports, puis capturer et
+inspecter les écrans réellement concernés avant de clôturer l'intégration.

@@ -1,6 +1,6 @@
 # VESTIGES — Dossier de plans à valider
 
-**1er octobre — [plan 25](25-sprites-et-design.md) :** planches S1 (raretés) et S2 (quinze objets) proposées, en attente de validation ; S4 (projectiles ennemis) branché, captures et régressions vérifiées. Comparaison de coût incomplète, voir le compte rendu.
+**1er octobre — [plan 25](25-sprites-et-design.md) :** huit lots parcourus dans l'ordre prévu sur `sprites-plan25`. Projectiles ennemis et habillage XP/crâne/minimap branchés, captures et régressions vérifiées ; banc A/B S4+S6 terminé à 720p/1080p, sans conclusion de gain sur une passe. Planches des raretés, 34 objets, menus et 14 Réminiscences soumises à validation avant branchement. Bonus et sceaux livrés avec manifestes et aperçus dans Main ; leurs interactions attendent les consommateurs du plan 24.
 
 **1er octobre :** retours de la partie du matin, diagnostic et lots au [plan 24](24-retours-du-1er-octobre.md) ([DECISIONS §39](DECISIONS.md)).
 
