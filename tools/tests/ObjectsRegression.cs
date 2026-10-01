@@ -53,6 +53,7 @@ public partial class ObjectsRegression : Node2D
             CheckDashTrail();
             CheckStances();
             CheckChestStatBonus();
+            CheckRefundQuest();
             GD.Print($"[ObjectsRegression] RESULT failures={_failures}");
             GetTree().Quit(_failures == 0 ? 0 : 1);
         }
@@ -878,6 +879,20 @@ public partial class ObjectsRegression : Node2D
         Check(Mathf.IsEqualApprox(afterCommon / before, 1.08f) && Mathf.IsEqualApprox(_player.AttackSpeedMultiplier / afterCommon, 1.24f)
               && Mathf.IsEqualApprox(_player.Armor - armor, 4f),
             $"Coffre : cadence ×1,08 (commun, « {common.Label} ») puis ×1,24 (épique), armure +4 (rare)");
+    }
+
+    /// <summary>Plan 23 R9 : l'Essence rendue par le Porte-monnaie ne compte pas pour « Accumuler de l'Essence ».</summary>
+    private void CheckRefundQuest()
+    {
+        QuestManager quests = new() { Name = "QuestManager" };
+        AddChild(quests);
+        EventBus events = GetNode<EventBus>("/root/EventBus");
+        events.EmitSignal(EventBus.SignalName.LootReceived, "essence", ObjectStances.EssenceRefundEffect, 50);
+        events.EmitSignal(EventBus.SignalName.LootReceived, "essence", "run_event", 10);
+        int counted = (int)typeof(QuestManager).GetField("_essenceCollectedTotal", Private).GetValue(quests);
+        RemoveChild(quests);
+        quests.QueueFree();
+        Check(counted == 10, $"Quête d'Essence : 10 gagnés comptés, 50 rendus par le Porte-monnaie ignorés ({counted})");
     }
 
     private void CheckStances()

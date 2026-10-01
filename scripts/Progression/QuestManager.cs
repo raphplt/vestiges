@@ -314,7 +314,8 @@ public partial class QuestManager : CanvasLayer
 
     private void OnLootReceived(string itemType, string itemId, int amount)
     {
-        if (itemType != "essence" || amount <= 0)
+        // L'Essence rendue par le Porte-monnaie est une remise sur une dépense, déjà comptée quand elle a été gagnée.
+        if (itemType != "essence" || amount <= 0 || itemId == ObjectStances.EssenceRefundEffect)
             return;
 
         _essenceCollectedTotal += amount;
