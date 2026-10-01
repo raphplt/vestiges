@@ -81,6 +81,20 @@ LANDMARK_RIFT,Faille,Rift
 PLACE_WELL_PROMPT,Boire,Drink
 PLACE_CRYSTAL_PROMPT,Briser,Break
 PLACE_SCARECROW_PROMPT,Secouer,Shake
+WAYMARK_FOUND,Repère : {0} · Chance {1},Waymark: {0} · Luck {1}
+WAYMARK_WELL,Puits,Well
+WAYMARK_CRYSTAL_VEIN,Veine de cristal,Crystal vein
+WAYMARK_SCARECROW,Épouvantail,Scarecrow
+WAYMARK_MAILBOX,Boîte aux lettres,Mailbox
+WAYMARK_MINE_CART,Wagonnet,Mine cart
+WAYMARK_CAR,Voiture abandonnée,Abandoned car
+WAYMARK_PHONE,Cabine téléphonique,Phone booth
+WAYMARK_BUS,Abribus,Bus shelter
+WAYMARK_PICNIC,Table de pique-nique,Picnic table
+WAYMARK_CHEST,Coffre,Chest
+WAYMARK_MEMORIAL,Mémorial,Memorial
+WAYMARK_RIFT,Faille,Rift
+STAT_WAYMARKS,Repères,Waymarks
 PLACE_MAILBOX_PROMPT,Lire le courrier,Read the mail
 PLACE_MINE_CART_PROMPT,Vider,Empty
 PLACE_CAR_PROMPT,Fouiller,Search

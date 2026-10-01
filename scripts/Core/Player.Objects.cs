@@ -36,6 +36,11 @@ public partial class Player
     public ObjectTriggers ObjectTriggers => _objectTriggers;
     /// <summary>Objets d'état portés (Tabouret, Gilet, Thermos, Médaille, Porte-monnaie) ; absent tant qu'aucun ne l'est.</summary>
     public ObjectStances ObjectStances => _objectStances;
+    /// <summary>Repères : types de lieux déjà utilisés dans la run, et la Chance qu'ils ont donnée.</summary>
+    public Waymarks Waymarks { get; private set; }
+
+    /// <summary>Texte flottant au-dessus du joueur (paliers, Repères).</summary>
+    internal void ShowPopup(string text, Color color) => SpawnLootPopup(text, color, GlobalPosition, 0);
 
     /// <summary>
     /// Ajoute un objet au niveau 1, ou le monte de <paramref name="cards"/> cartes de gain <paramref name="gain"/>

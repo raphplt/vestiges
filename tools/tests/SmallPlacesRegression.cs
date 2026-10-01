@@ -158,6 +158,19 @@ public partial class SmallPlacesRegression : Node2D
 			line ??= child as Label;
 		Check(player.CurrentHp > hp && line is { Visible: true } && line.Text.Length > 0 && !line.Text.StartsWith("PLACE_"),
 			$"Table de pique-nique : soin léger et une ligne de lore (« {line?.Text} »)");
+
+		// Repères (plan 23 R9) : un par type de lieu utilisé, jamais deux fois le même.
+		HashSet<string> usedTypes = new();
+		foreach (SmallPlace place in places)
+			if (place.Used)
+				usedTypes.Add(place.Data.Id);
+		float luckPerType = WaymarkDataLoader.Load().LuckPerType;
+		float luck = player.LuckBonus;
+		SmallPlace secondWell = places.Find(place => place.Data.Id == "well" && !place.Used);
+		secondWell.Interact(player);
+		Check(player.Waymarks.Found == usedTypes.Count && Mathf.IsEqualApprox(luck, usedTypes.Count * luckPerType)
+				&& Mathf.IsEqualApprox(player.LuckBonus, luck),
+			$"Repères : {player.Waymarks.Found} types utilisés, Chance +{luck * 100f:0} %, un deuxième puits n'ajoute rien");
 	}
 
 	private static bool Revealed(SmallPlace place)

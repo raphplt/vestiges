@@ -189,6 +189,7 @@ public partial class SmallPlaceDirector : Node
 	public void Reward(SmallPlace place, Player player)
 	{
 		SmallPlaceData data = place.Data;
+		_eventBus.EmitSignal(EventBus.SignalName.SmallPlaceUsed, data.Id, place.GlobalPosition);
 		switch (data.Reward)
 		{
 			case "heal":

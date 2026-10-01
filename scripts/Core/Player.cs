@@ -176,6 +176,8 @@ public partial class Player : CharacterBody2D
         _interaction = new WorldInteraction { Name = "WorldInteraction" };
         AddChild(_interaction);
         _interaction.Setup(this);
+        Waymarks = new Waymarks { Name = "Waymarks" };
+        AddChild(Waymarks);
         Mobility = new PlayerMobility(MobilityConfig.Load());
         _defense = new PlayerDefense(DefenseConfig.Load());
         _mobilityFeedback = new MobilityFeedback { Name = "MobilityFeedback" };

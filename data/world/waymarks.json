@@ -1,0 +1,19 @@
+{
+    "_doc": "Repères (plan 22 §3 B, plan 23 R9) : le premier usage de chaque type de lieu dans la run donne luck_per_type de Chance (meilleures raretés sur les améliorations). Récompense la variété, pas la répétition. 'types' : identifiant du lieu (petits lieux de small_places.json, et chest, memorial, rift) et clé de son nom.",
+    "enabled": true,
+    "luck_per_type": 0.02,
+    "types": [
+        { "id": "well", "name_key": "WAYMARK_WELL" },
+        { "id": "crystal_vein", "name_key": "WAYMARK_CRYSTAL_VEIN" },
+        { "id": "scarecrow", "name_key": "WAYMARK_SCARECROW" },
+        { "id": "mailbox", "name_key": "WAYMARK_MAILBOX" },
+        { "id": "mine_cart", "name_key": "WAYMARK_MINE_CART" },
+        { "id": "abandoned_car", "name_key": "WAYMARK_CAR" },
+        { "id": "phone_booth", "name_key": "WAYMARK_PHONE" },
+        { "id": "bus_shelter", "name_key": "WAYMARK_BUS" },
+        { "id": "picnic", "name_key": "WAYMARK_PICNIC" },
+        { "id": "chest", "name_key": "WAYMARK_CHEST" },
+        { "id": "memorial", "name_key": "WAYMARK_MEMORIAL" },
+        { "id": "rift", "name_key": "WAYMARK_RIFT" }
+    ]
+}

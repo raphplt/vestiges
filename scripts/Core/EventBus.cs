@@ -123,6 +123,10 @@ public partial class EventBus : Node
     // --- Failles (plan 17 lot 3C) ---
     [Signal] public delegate void RiftInteractedEventHandler(Node2D rift);
 
+    // --- Petits lieux (plan 22 C1 et C4) ---
+    /// <summary>Un petit lieu vient de servir (Repères, plan 23 R9).</summary>
+    [Signal] public delegate void SmallPlaceUsedEventHandler(string placeId, Vector2 position);
+
     // --- Essence (V2) ---
     [Signal] public delegate void EssenceChangedEventHandler(int newAmount);
     /// <summary>Essence gagnée à un endroit du monde (Vector2.Zero : sans lieu), pour son trajet vers le HUD.</summary>
