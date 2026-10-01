@@ -128,7 +128,7 @@ Un onglet de la Collection. Chaque type de lieu, puis chaque lieu remarquable, y
 | C1 | Trois petits lieux sur des décors déjà générés (Puits, Veine de cristal, Épouvantail) ; socle commun des petits lieux | **Livré le 30 septembre** ([§14](#14-compte-rendu-c1--trois-petits-lieux-30-septembre)) |
 | C2 | Atelier : niveau d'arme, Retrempe, Trempe | Banc, captures, mesure de l'Essence dépensée |
 | C3 | Reliquaire, avec les objets du plan 21 (lot G2) | Dépend du catalogue d'objets |
-| C4 | Les six autres petits lieux, Repères | **Six lieux livrés le 1er octobre** (plan 23 R7, [§15](#15-compte-rendu-c4-et-c6--six-petits-lieux-carte-agrandie-et-minimap-1er-octobre)) ; Repères en attente de la question 5 du §11 |
+| C4 | Les six autres petits lieux, Repères | **Six lieux livrés le 1er octobre** (plan 23 R7, [§15](#15-compte-rendu-c4-et-c6--six-petits-lieux-carte-agrandie-et-minimap-1er-octobre)) ; **Repères livrés le 1er octobre** (plan 23 R9) |
 | C5 | Traces des lieux effacés, Atlas | Captures, essai de Raphaël |
 | C6 | Carte agrandie en hauteur ; **minimap** (lieux découverts, front de l'Effacement) | **Livré le 1er octobre** (plan 23 R7, [§15](#15-compte-rendu-c4-et-c6--six-petits-lieux-carte-agrandie-et-minimap-1er-octobre)) |
 
@@ -301,6 +301,6 @@ Fait au plan 23, lot R7.
 **Reste :**
 - coût de la carte haute à mesurer sur une vraie carte graphique (voir Coût) ;
 - la minimap montre les coffres jusqu'à 12 cellules (environ 1 500 px) autour du chemin, plus loin que les flèches (1 200 px) : à juger en jeu ;
-- les Repères (C4) attendent la question 5 du §11 ;
+- Repères (C4) : livrés au plan 23 R9, +1 % de Chance par type de lieu ;
 - la carte reste centrée sur le départ : un joueur qui file droit vers le nord ou le sud a maintenant deux fois plus de chemin avant le bord.
 

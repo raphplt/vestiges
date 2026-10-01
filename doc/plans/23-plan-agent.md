@@ -421,3 +421,51 @@ Compte rendu détaillé au [plan 22 §15](22-carte-a-explorer.md#15-compte-rendu
 
 **Reste :** Repères (plan 22 §11, question 5) ; portée de la minimap à juger en jeu ; l'Essence n'est toujours jamais dépensée (Atelier, C2, en attente de Raphaël).
 
+
+### R8 : coffres, bonus d'une stat au hasard (révisé, DECISIONS §38)
+
+**Fait :**
+- le butin tiré ne change pas (Essence, XP, niveau d'objet, arme) ;
+- chaque coffre ouvert donne en plus **une stat du joueur tirée au hasard** parmi treize : cadence, vitesse, PV max, armure, régénération, chance et dégâts critiques, zone, portée, durée des statuts, aimant à XP, Chance, gain d'XP ;
+- la taille vaut un niveau d'objet commun de la stat pour un coffre commun, ×2 pour un rare ou un coffre de Mémoire, ×3 pour un épique (`data/chests/chest_stat_bonus.json`) ;
+- ni +dégâts universel (retiré des objets, plan 21 §4), ni projectiles ni perforation ;
+- l'écran de butin montre la ligne en doré (« Chance +3 % ») ; nouvelle capture `--capture-loot`.
+
+**Vérifié :**
+- banc d'objets, deux contrôles nouveaux : les treize stats sortent en 400 tirages, jamais de dégâts ; cadence ×1,08 (commun) puis ×1,24 (épique), armure +4 (rare) ;
+- capture regardée : « Essence ×10 · Arme : Craies · Chance +3 % ».
+
+### R9 : Porte-monnaie et Repères (choix de l'agent, DECISIONS §38)
+
+**Porte-monnaie :** l'Essence rendue est une remise, plus de l'Essence gagnée. Elle ne compte plus pour la quête « Accumuler de l'Essence ». L'Essence de la Photo de classe compte toujours. Contrôle nouveau au banc d'objets.
+
+**Repères :** le premier usage de chaque type de lieu dans la run donne **+1 % de Chance**. Douze types : les neuf petits lieux, coffre, Mémorial éveillé, et Faille dont on prend une offre (signal `RiftUsed`, pas à l'approche). Un texte apparaît au-dessus du joueur (« Repère : Coffre · Chance +1 % »), et la fiche de stats affiche « Repères n / 12 ». Le composant `Waymarks` est un enfant du joueur, réglé par `data/world/waymarks.json`.
+
+**Mesure** du bot qui ratisse (`--visit`, 5 graines × 10 min, mêmes graines) :
+
+| 6–9 min | Temps pour tuer | Éliminations | Niveau |
+|---|---|---|---|
+| Avant R8 | 0,38 s | 479 | 22,6 |
+| Bonus de coffre seul | 0,27 s | 714 | 26,6 |
+| + Repères à 0,5 % | 0,28 s | 608 | 26,6 |
+| + Repères à 2 % | 0,20 s | 861 | 29,4 |
+
+- Le bonus de coffre se sent nettement pour qui ratisse (une dizaine de coffres en 10 min). Le nomade qui file droit en ouvre trois.
+- La Chance pèse lourd : un point vaut dix crans de rareté. À 2 % par type, les Repères pesaient autant que le bonus de coffre ; à 0,5 %, ils ne se voyaient pas. Valeur retenue : **1 %**, entre les deux, non mesurée seule.
+
+**Vérifié :**
+- `dotnet build` : 0 avertissement ; smoke vert ;
+- bancs à `failures=0` : objets, petits lieux (un Repère par type, jamais deux fois, Chance comptée depuis le départ), déplacements, capacités ennemies, armes, mode dev ;
+- capture regardée : le texte du Repère, centré au-dessus du joueur et devant le coffre.
+
+**Relecture `godot-reviewer` :** corrigé :
+- le Repère de Faille venait à l'approche et non à l'acceptation ;
+- les textes flottants du joueur étaient décentrés et passaient sous les décors ;
+- le chargeur plantait sur une clé manquante ;
+- la ligne « 0 / 12 » restait affichée quand les Repères étaient désactivés.
+
+Gardé : les signaux de lieu ne disent pas quel joueur agit, à revoir pour le coop v2.
+
+**Reste :**
+- le ratisseur prend nettement de l'avance sur la courbe de R5, réglée pour le nomade : c'est voulu (« le joueur qui construit bien prend de l'avance »), mais à juger en jeu ;
+- valeur des Repères (1 %) à confirmer en jeu.

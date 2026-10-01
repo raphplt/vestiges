@@ -282,7 +282,9 @@ Quand une carte ne peut plus rien offrir (4 armes ascensionnées, 6 objets au ni
 | Affinités des personnages, Souverain à 25 % | À faire | G4 |
 | Sept Réminiscences restantes | À faire | G5 |
 | Surplus, déblocages | À faire | Plans 20, 22 |
-| Anciens Dons des coffres et leurs synergies | **Retirés** ; les coffres donnent des niveaux d'objet (un niveau = une carte commune, en attendant R8) | G2b, étape 1, plan 23 R3 |
+| Anciens Dons des coffres et leurs synergies | **Retirés** ; les coffres donnent des niveaux d'objet (un niveau = une carte commune) | G2b, étape 1, plan 23 R3 |
+| Bonus d'une stat au hasard à chaque coffre, en plus du butin (un niveau d'objet commun, ×2 rare, ×3 épique) | **En jeu** | Plan 23, R8 |
+| Repères : +1 % de Chance au premier usage de chaque type de lieu (douze types) | **En jeu** | Plan 23, R9 |
 
 ## 13. Ce que ce document remplace
 

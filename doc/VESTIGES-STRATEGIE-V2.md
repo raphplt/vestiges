@@ -804,7 +804,8 @@ Le script de post-processing doit inclure une vérification/correction de l'angl
 - [x] Plan 23 R5 : difficulté réglée sur la nouvelle puissance, mesurée.
 - [x] Plan 23 R6 : huit objets de déclencheur restants (G2c).
 - [x] Plan 23 R7 : six autres petits lieux, carte agrandie en hauteur et minimap (plan 22 C4, C6).
-- [ ] Plan 23 R8 : coffres à choix d'amélioration garantie (à confirmer).
+- [x] Plan 23 R8 (révisé, DECISIONS §38) : chaque coffre donne en plus du butin un bonus d'une stat au hasard.
+- [x] Plan 23 R9 : Essence rendue par le Porte-monnaie hors de la quête d'accumulation ; Repères (plan 22 §3 B), un peu de Chance au premier usage de chaque type de lieu.
 - [ ] Plan 21 lot G3, étape 2 : voies des 20 autres armes, proposées, à valider par Raphaël.
 - [ ] Délestage et Habitude, puis B4 : catalogue d'objets, récompense à choix, inventaire cumulable, migration des anciennes sources, intégration UI et validation en run ([prérequis](plans/05-perks-specialisations.md#14-compte-rendu-b3-partie-sans-objets--sillage-et-seconde-lecture-29-septembre-2026)).
 

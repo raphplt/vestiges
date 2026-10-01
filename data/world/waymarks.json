@@ -1,7 +1,7 @@
 {
     "_doc": "Repères (plan 22 §3 B, plan 23 R9) : le premier usage de chaque type de lieu dans la run donne luck_per_type de Chance (meilleures raretés sur les améliorations). Récompense la variété, pas la répétition. 'types' : identifiant du lieu (petits lieux de small_places.json, et chest, memorial, rift) et clé de son nom.",
     "enabled": true,
-    "luck_per_type": 0.02,
+    "luck_per_type": 0.01,
     "types": [
         { "id": "well", "name_key": "WAYMARK_WELL" },
         { "id": "crystal_vein", "name_key": "WAYMARK_CRYSTAL_VEIN" },
