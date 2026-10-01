@@ -730,3 +730,20 @@ smoke 600 frames vert. Le scénario de capture attend désormais la disparition
 réelle du chargement et la mise à jour physique de la pose.
 [Rapport et empreintes](../audits/characters-2026-10-01/README.md).
 La conformité technique ne vaut pas approbation artistique de Raphaël.
+
+### R5b — Vagabond, lot engagé
+
+Conserver le voyageur brun et son sac débordant. La référence perd son écharpe
+rouille dans le manteau ; faire porter l’accent orange de la charte par cette
+écharpe et une attache du sac, épaissir légèrement manteau/capuche et donner
+un volume latéral au sac. Garder le visage ombré, les proportions de squelette,
+le couchage, les outils, le pivot et le kit. Même recette que R5a : planches
+sur trois sols, cinq actions, cadres, double génération et captures Main.
+
+### R5b livré — Vagabond, 1er octobre 2026
+
+Écharpe orange, capuche/manteau plus pleins, poche latérale et attaches du sac
+lisibles de dos. 152 frames déterministes, 40 animations, aucun débordement ;
+planches sur trois sols et cinq actions inspectées. Avant/après Main sur
+ViewSonic, marche/dash/hurt/mort regardés, build sans warning et smoke vert.
+Format, pivot, squelette et kit conservés. [Preuves](../audits/characters-2026-10-01/README.md#vagabond--r5b).

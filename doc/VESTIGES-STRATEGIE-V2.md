@@ -815,6 +815,8 @@ Le script de post-processing doit inclure une vérification/correction de l'angl
 
 ### Phase E — Quêtes et personnages (2-3 semaines)
 
+- [x] Reprise visuelle du Vagabond : écharpe et sac identifiables, 152 frames déterministes et captures Main vérifiées (plan 08 R5b). Approbation artistique humaine encore ouverte.
+
 - [x] Reprise visuelle du Traqueur : 152 frames déterministes, silhouettes comparées sur trois sols et animations capturées dans Main (plan 08 R5a). Approbation artistique humaine encore ouverte.
 
 - [x] Implémenter QuestManager + QuestDataLoader.

@@ -29,3 +29,18 @@ ajoutées. L’image d’impact initiale précédait la pose hurt : attente de d
 frames physiques ajoutée, nouvelle capture vérifiée. Ce sont des corrections
 du protocole, pas des défauts masqués du jeu. Validation artistique par Raphaël
 encore ouverte ; pas de changement audio.
+
+## Vagabond — R5b
+
+Écharpe orange de charte, capuche/manteau légèrement étoffés, poche latérale et
+attaches orange sur le sac. Visage ombré, couchage et outils conservés.
+152/152 PNG changés et reproduits identiquement par une seconde génération
+séparée. Alpha/séquences/cadres vérifiés : les quatre frames de bord restent
+les mêmes, aucun débordement au rendu étendu. 40 animations chargées dans Main.
+
+Planches sur trois sols et cinq actions regardées dans
+`/tmp/vestiges-r5-vagabond-review/comparison.png` et `/tmp/vestiges-vagabond-complete.png`.
+Captures avant/après dans `/tmp/vestiges-r5-vagabond-reference` et `...-final` :
+marche, S_dash, SE_hurt et S_death inspectés. Build sans warning, smoke 600 vert.
+Pas de changement de contrat de texture ou de coût du code runtime ; recette
+artistique humaine toujours ouverte.
