@@ -9,7 +9,8 @@ trap 'rm -rf "$TEST_DIR"' EXIT
 isolate_godot_profile "$TEST_DIR"
 dotnet build --nologo
 "$GODOT" --headless --editor --import --path . >"$TEST_DIR/import.log" 2>&1
-"$GODOT" --headless --path . --fixed-fps 60 --quit-after 600 res://tools/tests/ChoiceScreenRegression.tscn >"$TEST_DIR/run.log" 2>&1 || {
+# Le réveil des lieux se compte en secondes réelles : borne en temps, pas en images (le headless en enchaîne des milliers par seconde).
+run_timeout 120 "$GODOT" --headless --path . --fixed-fps 60 res://tools/tests/ChoiceScreenRegression.tscn >"$TEST_DIR/run.log" 2>&1 || {
     cat "$TEST_DIR/run.log"
     exit 1
 }

@@ -159,12 +159,16 @@ public partial class GameBootstrap : Node
         ChoiceScreen choiceScreen = new() { Name = "ChoiceScreen" };
         sceneRoot.AddChild(choiceScreen);
 
+        LandmarkReveal landmarkReveal = new() { Name = "LandmarkReveal" };
+        landmarkReveal.Setup(player.GetNode<Camera2D>("Camera"));
+        sceneRoot.AddChild(landmarkReveal);
+
         MemorialDirector memorialDirector = new() { Name = "MemorialDirector" };
-        memorialDirector.Setup(choiceScreen, essenceTracker, erasureManager, perilManager);
+        memorialDirector.Setup(choiceScreen, landmarkReveal, essenceTracker, erasureManager, perilManager);
         sceneRoot.AddChild(memorialDirector);
 
         RiftDirector riftDirector = new() { Name = "RiftDirector" };
-        riftDirector.Setup(choiceScreen, perilManager, erasureManager);
+        riftDirector.Setup(choiceScreen, landmarkReveal, perilManager, erasureManager);
         sceneRoot.AddChild(riftDirector);
 
         // Petits lieux (plan 22, lot C1) : des décors déjà posés qui se souviennent.

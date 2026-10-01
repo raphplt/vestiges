@@ -29,6 +29,7 @@ public partial class ShaderWarmup : SubViewport
         ("res://assets/shaders/erasure_veil.gdshader", SampleKind.Rectangle),
         ("res://assets/shaders/crisis_omen.gdshader", SampleKind.Rectangle),
         ("res://assets/shaders/death_erasure.gdshader", SampleKind.Rectangle),
+        ("res://assets/shaders/landmark_reveal.gdshader", SampleKind.Rectangle),
         ("res://assets/shaders/colorblind.gdshader", SampleKind.Rectangle),
         ("res://assets/shaders/ui_dust_twinkle.gdshader", SampleKind.Sprite),
     };

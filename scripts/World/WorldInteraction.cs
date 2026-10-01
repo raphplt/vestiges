@@ -69,6 +69,8 @@ public partial class WorldInteraction : Node
 
         _target = nearest;
         _progress = 0f;
+        // Masquée avant une activation immédiate aussi : un lieu peut figer le monde aussitôt (réveil, écran).
+        _prompt.HidePrompt();
         if (nearest.HoldTime <= 0f)
         {
             Complete();
@@ -76,7 +78,6 @@ public partial class WorldInteraction : Node
         }
         _gauge.GlobalPosition = nearest.PromptPosition.Round() - new Vector2(0f, 6f);
         _gauge.Begin(nearest.GaugeColor);
-        _prompt.HidePrompt();
         return true;
     }
 

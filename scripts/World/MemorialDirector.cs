@@ -21,11 +21,15 @@ public partial class MemorialDirector : Node
     private const string ServiceHeal = "heal";
     private const string ServiceLift = "lift";
     private const string ServiceReroll = "reroll";
+    private const float RevivalSec = 0.8f;
+    // Point de la stèle où se fond la lumière, au-dessus de son pied.
+    private static readonly Vector2 RevivalFocus = new(0f, -24f);
 
     private readonly MemorialConfig _config = LandmarkDataLoader.Memorial;
     private readonly RandomNumberGenerator _rng = new();
     private readonly List<MemoryShard> _shards = new();
     private ChoiceScreen _choices;
+    private LandmarkReveal _reveal;
     private EssenceTracker _essence;
     private ErasureManager _erasure;
     private PerilManager _peril;
@@ -38,9 +42,10 @@ public partial class MemorialDirector : Node
     private float _lossTimer = LossCheckInterval;
     private int _collapsed;
 
-    public void Setup(ChoiceScreen choices, EssenceTracker essence, ErasureManager erasure, PerilManager peril)
+    public void Setup(ChoiceScreen choices, LandmarkReveal reveal, EssenceTracker essence, ErasureManager erasure, PerilManager peril)
     {
         _choices = choices;
+        _reveal = reveal;
         _essence = essence;
         _erasure = erasure;
         _peril = peril;
@@ -190,10 +195,37 @@ public partial class MemorialDirector : Node
             return;
         }
 
-        memorial.SetState(Memorial.MemorialState.Awake);
+        if (_reveal == null)
+        {
+            Awaken(memorial, true);
+            return;
+        }
+        Texture2D shardTexture = GD.Load<Texture2D>($"res://{_config.SpriteShard}");
+        int collected = _collected;
+        _reveal.Play(memorial.GlobalPosition + RevivalFocus, RarityPalette.Colors("memorial").Light, RevivalSec,
+            progress =>
+            {
+                if (memorial.ShowRevival(progress, collected, shardTexture) && memorial.State != Memorial.MemorialState.Awake)
+                {
+                    memorial.SetState(Memorial.MemorialState.Awake);
+                    AudioManager.PlayUI("sfx_souvenir_trouve");
+                }
+            },
+            skipped =>
+            {
+                memorial.EndRevival();
+                Awaken(memorial, !skipped);
+            });
+    }
+
+    /// <summary>Le Mémorial est ravivé : il le dit au monde et offre ses bénédictions.</summary>
+    private void Awaken(Memorial memorial, bool animate)
+    {
+        if (memorial.State != Memorial.MemorialState.Awake)
+            memorial.SetState(Memorial.MemorialState.Awake);
         EmitSparks(memorial.GlobalPosition + new Vector2(0f, -20f), 22);
         _eventBus.EmitSignal(EventBus.SignalName.MemorialAwakened, memorial.GlobalPosition);
-        OpenBlessings(memorial);
+        OpenBlessings(memorial, animate);
     }
 
     // ==============================

@@ -479,6 +479,42 @@ Chaque type de lieu donne, à son premier usage dans la run, le gain du tableau 
 
 **Relecture des lots L4 à L11 (sous-agent) traitée :** shader du fond préchauffé au chargement (pas d'à-coup à la première ouverture) ; la fin d'une couverture de survie rabat le bouclier au nouveau maximum sans entamer le bouclier de base ; la carte entière et le détail des quêtes, tenus au moment d'une pause, se replient au lieu de rester figés sous l'écran de choix ; une relance des bénédictions ne rejoue plus l'entrée ; restes de commentaires retirés. Bancs `test_field_bonuses`, `test_objects`, `test_small_places`, `test_movement` à zéro échec ; smoke vert.
 
+### L6b — Mémorial et Faille mis en scène dans le monde (livré le 1er octobre, soir)
+
+Reste de B2, validé en [DECISIONS §40](DECISIONS.md). Découpage, un seul lot :
+
+1. **Couche commune `LandmarkReveal`** (sous le HUD, au-dessus du monde et du voile d'Effacement) : le monde se fige
+   (pause, sons du monde assourdis), l'image se pixelise par paliers de pixels du monde puis revient, les bords se
+   désaturent par une trame autour du lieu, puis la trame recule jusqu'aux bords (l'oubli recule) avec un front à la
+   couleur du lieu. Temps réel ; un appui (validation, clic, bouton de manette) passe toute la séquence et ouvre l'écran
+   sans son entrée. Caméra amenée sur le lieu pendant la séquence, rendue au joueur à la fermeture de l'écran.
+2. **Mémorial (≈ 0,8 s) :** les éclats ramassés réapparaissent autour de la stèle, tournent en spirale, montent et se
+   fondent dans une colonne de lumière élargie ; à la fusion, la stèle passe à l'état ravivé avec son éclair, gerbe
+   d'étincelles. Puis l'écran des bénédictions (entrée existante).
+3. **Faille (≈ 0,45 s), à chaque ouverture de son offre :** même voile, front violet, sa colonne s'élargit et palpite.
+4. **Vérification :** captures de la séquence (`--capture-memorial`, `--capture-rift`) regardées sur ViewSonic ; build sans
+   avertissement, smoke vert ; coût nul hors séquence (couche invisible, aucun nœud par frame).
+
+Son : un seul repère existant à la fusion (`sfx_souvenir_trouve`), provisoire, à juger à l'écoute avec le plan 15.
+
+**Compte rendu.** `LandmarkReveal` (`scripts/UI/`, shader `landmark_reveal.gdshader`) est créé une fois par run, invisible
+hors séquence. Mémorial : 0,8 s, pixelisation à 2 puis 3 pixels du monde, trame grise autour d'un cercle de 72 px gardé
+en couleur, éclats en spirale (1,6 tour) fondus dans une colonne élargie, stèle ravivée à la fusion, puis le cercle
+s'ouvre jusqu'aux coins derrière un liseré cyan clairsemé. Faille : 0,45 s, colonne violette et fente qui bat par poses.
+Les directions ne passent pas la séquence (le joueur marchait en ramassant le dernier éclat). L'invite d'interaction
+est masquée avant toute activation immédiate. Shader ajouté au préchauffage.
+
+**Vérifications :** build sans avertissement, smoke vert, `test_movement` à zéro échec, `test_choice_screen`
+31 contrôles à zéro échec, dont 7 nouveaux sur le réveil (pause, direction ignorée, avancement, une seule fin,
+caméra sur le lieu puis rendue au joueur, passage d'un appui). Ce banc compte désormais en secondes, pas en images :
+le headless en enchaîne des milliers par seconde. `test_shader_warmup` valide. Captures `--capture-memorial` et
+`--capture-rift` sur ViewSonic, regardées : pixelisation, éclats en orbite, cercle qui s'ouvre, enchaînement sur
+l'écran, stèle ravivée et caméra revenue. Une première passe avait un front trop épais et trop vif ; il est
+maintenant un liseré.
+
+**Reste :** ressenti en partie réelle (durée totale avec l'entrée de l'écran, environ 2 s, passable dès le premier
+appui) et choix du son à la fusion, à l'écoute.
+
 ## 12. Retours de recette — 1er octobre 2026
 
 Source : [DECISIONS §44](DECISIONS.md), après intégration du plan 25 et correction du fond des coffres. **Reprise autorisée en DECISIONS §45 ; état des lots ci-dessous.** Le travail sur les sprites est globalement apprécié ; les nouveaux retours portent aussi sur des systèmes antérieurs.

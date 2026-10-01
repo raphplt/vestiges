@@ -7,7 +7,10 @@ using Vestiges.UI;
 
 namespace Vestiges.Tests;
 
-/// <summary>Entrée interrompue, relance et validation des écrans Mémorial/Faille, sans fenêtre.</summary>
+/// <summary>
+/// Entrée interrompue, relance et validation des écrans Mémorial/Faille, sans fenêtre ; réveil du lieu qui les précède
+/// (<see cref="LandmarkReveal"/>) : pause, avancement, passage d'un appui, caméra rendue au joueur.
+/// </summary>
 public partial class ChoiceScreenRegression : Node
 {
     private int _checks;
@@ -29,6 +32,7 @@ public partial class ChoiceScreenRegression : Node
             CheckReopen();
             CheckValidation();
             await CheckPause();
+            await CheckReveal();
             GD.Print($"[ChoiceScreenRegression] RESULT checks={_checks} failures={_failures}");
             GetTree().Paused = false;
             GetTree().Quit(_failures == 0 ? 0 : 1);
@@ -125,6 +129,58 @@ public partial class ChoiceScreenRegression : Node
             await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
         Check(world.Position.X > 0f && !GetTree().Paused, "le monde reprend après le choix");
         world.QueueFree();
+    }
+
+    private async Task CheckReveal()
+    {
+        Node2D holder = new() { ProcessMode = ProcessModeEnum.Pausable };
+        Camera2D camera = new();
+        holder.AddChild(camera);
+        AddChild(holder);
+        LandmarkReveal reveal = new();
+        reveal.Setup(camera);
+        AddChild(reveal);
+        await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+
+        List<float> progress = new();
+        List<bool> finished = new();
+        reveal.Play(new Vector2(300f, -120f), Colors.Cyan, 0.3f, progress.Add, finished.Add);
+        Check(reveal.IsPlaying && GetTree().Paused, "réveil : la run se fige dès le départ");
+        reveal._Input(new InputEventAction { Action = "ui_left", Pressed = true });
+        Check(reveal.IsPlaying && finished.Count == 0, "réveil : une direction ne le passe pas");
+        await RealSeconds(0.5f);
+        bool ordered = true;
+        for (int i = 1; i < progress.Count; i++)
+            ordered &= progress[i] >= progress[i - 1];
+        Check(finished.Count == 1 && !finished[0] && progress.Count > 2 && ordered && progress[^1] == 1f,
+            "réveil : avancement croissant jusqu'à 1, une seule fin, non passée");
+        Check(GetTree().Paused && camera.Offset.DistanceTo(new Vector2(300f, -120f)) < 1f,
+            "réveil : la caméra reste sur le lieu, run figée pour l'écran qui suit");
+
+        GetTree().Paused = false;
+        await RealSeconds(0.6f);
+        Check(camera.Offset == Vector2.Zero && camera.ProcessMode == ProcessModeEnum.Inherit,
+            "réveil : la caméra revient au joueur une fois la run relancée");
+
+        progress.Clear();
+        finished.Clear();
+        reveal.Play(new Vector2(-80f, 40f), Colors.Violet, 1f, progress.Add, finished.Add);
+        reveal._Input(new InputEventJoypadButton { ButtonIndex = JoyButton.A, Pressed = true });
+        Check(!reveal.IsPlaying && finished.Count == 1 && finished[0] && progress[^1] == 1f,
+            "réveil : un appui le passe, le lieu atteint son état final");
+        await RealSeconds(0.4f);
+        Check(finished.Count == 1 && GetTree().Paused, "réveil passé : aucune seconde fin, run toujours figée");
+        GetTree().Paused = false;
+        reveal.QueueFree();
+        holder.QueueFree();
+    }
+
+    /// <summary>Le réveil se compte en secondes réelles ; en --fixed-fps, les minuteries du moteur vont plus vite.</summary>
+    private async Task RealSeconds(float seconds)
+    {
+        ulong end = Time.GetTicksMsec() + (ulong)(seconds * 1000f);
+        while (Time.GetTicksMsec() < end)
+            await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
     }
 
     private T Field<T>(string name) => (T)typeof(ChoiceScreen).GetField(name, BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(_screen)!;

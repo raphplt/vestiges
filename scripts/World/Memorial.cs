@@ -14,6 +14,14 @@ public partial class Memorial : StaticBody2D, IInteractable
 {
     public enum MemorialState { Dormant, Gathering, Awake, Lost }
 
+    // Réveil (plan 24 B2) : les éclats tournent en spirale autour de la stèle, montent et se fondent dans sa colonne.
+    private const float OrbitStart = 0.1f;
+    private const float OrbitEnd = 0.62f;
+    private const float OrbitRadius = 46f;
+    private const float OrbitTurns = 1.6f;
+    private const float OrbitHeight = 22f;
+    private const float OrbitRise = 30f;
+
     private static readonly List<Memorial> _all = new();
     private static readonly RarityColors ColumnColors = RarityPalette.Colors("memorial");
 
@@ -21,6 +29,8 @@ public partial class Memorial : StaticBody2D, IInteractable
     private Sprite2D _sprite;
     private LightColumn _column;
     private Label _status;
+    private LightColumn _revivalColumn;
+    private readonly List<Sprite2D> _revivalShards = new();
     private EventBus _eventBus;
     private readonly Dictionary<string, int> _serviceUses = new();
 
@@ -112,7 +122,8 @@ public partial class Memorial : StaticBody2D, IInteractable
             case MemorialState.Awake:
                 ShowTexture(GD.Load<Texture2D>($"res://{_config.SpriteAwake}"));
                 _sprite.Modulate = new Color(2.5f, 2.5f, 2.5f);
-                CreateTween().TweenProperty(_sprite, "modulate", Colors.White, 0.6f);
+                // L'éclair se voit pendant le réveil, monde figé, et sous l'écran des bénédictions.
+                CreateTween().SetPauseMode(Tween.TweenPauseMode.Process).TweenProperty(_sprite, "modulate", Colors.White, 0.6f);
                 break;
             case MemorialState.Lost:
                 CreateTween().TweenProperty(_sprite, "modulate", new Color(0.35f, 0.3f, 0.45f, 0.5f), 1.2f);
@@ -121,6 +132,67 @@ public partial class Memorial : StaticBody2D, IInteractable
     }
 
     public void ShowStatus(string text) => _status.Text = text;
+
+    /// <summary>
+    /// Part du Mémorial dans son réveil, à l'avancement <paramref name="progress"/> (0 à 1) : une colonne élargie
+    /// monte, les <paramref name="shards"/> éclats ramassés tournent autour de la stèle et s'y fondent.
+    /// Rend vrai une fois les éclats fondus.
+    /// </summary>
+    public bool ShowRevival(float progress, int shards, Texture2D shardTexture)
+    {
+        if (_revivalColumn == null)
+            BeginRevival(shards, shardTexture);
+
+        _revivalColumn.Modulate = new Color(1f, 1f, 1f, Mathf.SmoothStep(0.05f, 0.35f, progress));
+        float orbit = Mathf.Clamp((progress - OrbitStart) / (OrbitEnd - OrbitStart), 0f, 1f);
+        // Lent au départ, de plus en plus serré : la spirale se referme sur la colonne.
+        float pull = orbit * orbit;
+        for (int i = 0; i < _revivalShards.Count; i++)
+        {
+            Sprite2D shard = _revivalShards[i];
+            shard.Visible = progress >= OrbitStart && orbit < 1f;
+            float angle = Mathf.Tau * (i / (float)_revivalShards.Count + OrbitTurns * pull);
+            float radius = OrbitRadius * (1f - pull);
+            // Orbite aplatie de moitié : elle est posée au sol, en vue iso.
+            shard.Position = new Vector2(Mathf.Cos(angle) * radius,
+                Mathf.Sin(angle) * radius * 0.5f - OrbitHeight - OrbitRise * pull).Round();
+            float appear = Mathf.Clamp((progress - OrbitStart) / 0.06f, 0f, 1f);
+            shard.Modulate = new Color(1f, 1f, 1f, appear * (1f - Mathf.SmoothStep(0.75f, 1f, orbit)));
+        }
+        return orbit >= 1f;
+    }
+
+    /// <summary>Fin du réveil : les éclats et la colonne élargie disparaissent sous l'écran des bénédictions.</summary>
+    public void EndRevival()
+    {
+        _revivalColumn?.QueueFree();
+        _revivalColumn = null;
+        foreach (Sprite2D shard in _revivalShards)
+            shard.QueueFree();
+        _revivalShards.Clear();
+    }
+
+    private void BeginRevival(int shards, Texture2D shardTexture)
+    {
+        _status.Visible = false;
+        _revivalColumn = new LightColumn { Name = "RevivalColumn" };
+        AddChild(_revivalColumn);
+        _revivalColumn.Configure(ColumnColors, 240f, 3f, 20f);
+        for (int i = 0; i < shards; i++)
+        {
+            Sprite2D shard = new()
+            {
+                Name = $"RevivalShard{i + 1}",
+                Texture = shardTexture,
+                TextureFilter = TextureFilterEnum.Nearest,
+                // Au-dessus de la stèle et des entités, quel que soit leur tri.
+                ZIndex = 1,
+                Visible = false,
+            };
+            AddChild(shard);
+            _revivalShards.Add(shard);
+        }
+    }
 
     /// <summary>Nombre d'usages d'un service à ce Mémorial : chaque usage en augmente le prix.</summary>
     public int ServiceUses(string service) => _serviceUses.GetValueOrDefault(service);

@@ -1,5 +1,7 @@
 # VESTIGES — Dossier de plans à valider
 
+**1er octobre (soir) — réveil des lieux dans le monde :** au dernier éclat, le monde se fige, se pixelise, les éclats tournent autour de la stèle et s'y fondent, puis l'oubli recule jusqu'aux bords avant l'écran ; même traitement, plus court, pour la Faille. Passable d'un appui ; 7 contrôles et captures ViewSonic vérifiés. [Plan 24 L6b](24-retours-du-1er-octobre.md#l6b--mémorial-et-faille-mis-en-scène-dans-le-monde-livré-le-1er-octobre-soir).
+
 **1er octobre — recette fiabilisée :** l’intégration Main atteint ses 26 assertions, au lieu d’expirer à 1 500 frames ; captures rejetées sur erreur moteur inattendue. [Vérifications](../audits/verification-tools-2026-10-01/README.md).
 
 **1er octobre — préchauffage rendu :** le chargement soumet réellement 16 shaders et les particules d’XP au GPU, puis libère son viewport ; 17 échantillons vérifiés et captures Main, [plan 10 5B1](10-terrain-et-tiles.md#5b1--soumettre-réellement-les-shaders-au-rendu--découpage-du-1er-octobre). Coût à froid/chaud encore à mesurer sur machine calme.

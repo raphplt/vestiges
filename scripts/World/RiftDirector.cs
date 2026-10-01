@@ -16,10 +16,13 @@ namespace Vestiges.World;
 public partial class RiftDirector : Node
 {
     private const uint PropCollisionLayer = 4;
+    private const float RevealSec = 0.45f;
+    private static readonly Vector2 RevealFocus = new(0f, -6f);
 
     private readonly RiftConfig _config = LandmarkDataLoader.Rift;
     private readonly RandomNumberGenerator _rng = new();
     private ChoiceScreen _choices;
+    private LandmarkReveal _reveal;
     private PerilManager _peril;
     private ErasureManager _erasure;
     private WorldSetup _world;
@@ -28,9 +31,10 @@ public partial class RiftDirector : Node
     private float _spawnCooldown;
     private int _spawned;
 
-    public void Setup(ChoiceScreen choices, PerilManager peril, ErasureManager erasure)
+    public void Setup(ChoiceScreen choices, LandmarkReveal reveal, PerilManager peril, ErasureManager erasure)
     {
         _choices = choices;
+        _reveal = reveal;
         _peril = peril;
         _erasure = erasure;
     }
@@ -101,6 +105,20 @@ public partial class RiftDirector : Node
             cards.Add(BuildCard(option, oubli));
         }
 
+        if (_reveal == null)
+        {
+            OpenOffers(rift, offers, cards, true);
+            return;
+        }
+        _reveal.Play(rift.GlobalPosition + RevealFocus, RarityPalette.Colors("rift").Light, RevealSec, rift.ShowReveal, skipped =>
+        {
+            rift.EndReveal();
+            OpenOffers(rift, offers, cards, !skipped);
+        });
+    }
+
+    private void OpenOffers(Rift rift, List<(FragmentOption Option, OubliData Oubli)> offers, List<ChoiceCard> cards, bool animate)
+    {
         _choices.Open(Tr("RIFT_TITLE"), Tr("RIFT_SUBTITLE"), cards, Tr("RIFT_REFUSE"), choice =>
         {
             if (choice < 0 || !CachePlayer() || !offers[choice].Option.ApplyTo(_player))
@@ -110,7 +128,7 @@ public partial class RiftDirector : Node
             rift.Close();
             _eventBus.EmitSignal(EventBus.SignalName.RiftUsed, rift.GlobalPosition);
             EmitSparks(rift.GlobalPosition);
-        }, PixelBackdrop.RiftTint);
+        }, PixelBackdrop.RiftTint, animate);
     }
 
     private ChoiceCard BuildCard(FragmentOption option, OubliData oubli)

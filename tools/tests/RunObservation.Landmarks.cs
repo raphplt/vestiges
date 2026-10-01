@@ -12,7 +12,7 @@ namespace Vestiges.Tests;
 /// --capture-rift : la Faille la plus proche, son offre, la fiche de pause (Péril, Oubli), puis l'Oubli levé au
 /// Mémorial le plus proche. RESULT : Failles placées, Péril et Oublis avant et après.
 /// --capture-memorial : le Mémorial le plus proche du départ, parcouru en entier. Endormi (invite), éclats à ramasser,
-/// bénédictions au réveil, services avant et après un achat, puis ravivé. Une ligne RESULT donne le nombre de
+/// réveil dans le monde (six instants), bénédictions, services avant et après un achat, puis ravivé. Une ligne RESULT donne le nombre de
 /// Mémoriaux, leur distance au départ en fraction du rayon et l'effet de la bénédiction prise.
 /// </summary>
 public partial class RunObservation
@@ -51,7 +51,7 @@ public partial class RunObservation
 
         float damageBefore = _player.DamageMultiplier;
         float hpBefore = _player.EffectiveMaxHp;
-        int shardCount = await AwakenMemorial(target, "memorial-2-gathering", "memorial-3-blessings");
+        int shardCount = await AwakenMemorial(target, "memorial-2-gathering", "memorial-3-blessings", "memorial-2r");
         ChoiceScreen choices = _world.GetNode<ChoiceScreen>("ChoiceScreen");
         bool blessingsShown = shardCount > 0;
 
@@ -74,7 +74,7 @@ public partial class RunObservation
     }
 
     /// <summary>Ravive un Mémorial comme un joueur : éclats ramassés, première bénédiction prise. Rend le nombre d'éclats.</summary>
-    private async Task<int> AwakenMemorial(Memorial memorial, string gatheringFrame, string blessingsFrame)
+    private async Task<int> AwakenMemorial(Memorial memorial, string gatheringFrame, string blessingsFrame, string revivalPrefix = null)
     {
         _player.GlobalPosition = memorial.GlobalPosition + new Vector2(-44f, 8f);
         memorial.Interact(_player);
@@ -88,10 +88,23 @@ public partial class RunObservation
         foreach (MemoryShard shard in shards)
         {
             _player.GlobalPosition = shard.GlobalPosition;
+            // La caméra suit le joueur comme s'il avait marché : le réveil part du cadre du dernier éclat.
+            _camera.ResetSmoothing();
             await Frames(4);
         }
-        await Frames(10);
+        // Le réveil dans le monde (LandmarkReveal) précède l'écran : instants pris en temps réel, monde figé.
+        if (revivalPrefix != null)
+        {
+            string[] moments = { "a", "b", "c", "d", "e", "f" };
+            foreach (string moment in moments)
+            {
+                await ToSignal(GetTree().CreateTimer(0.06, processAlways: true), SceneTreeTimer.SignalName.Timeout);
+                SaveFrame($"{revivalPrefix}-{moment}");
+            }
+        }
         ChoiceScreen choices = _world.GetNode<ChoiceScreen>("ChoiceScreen");
+        for (int wait = 0; wait < 30 && !choices.IsOpen; wait++)
+            await ToSignal(GetTree().CreateTimer(0.1, processAlways: true), SceneTreeTimer.SignalName.Timeout);
         if (!choices.IsOpen)
             return 0;
         if (blessingsFrame != null)
@@ -136,7 +149,9 @@ public partial class RunObservation
         float speedBefore = _player.SpeedMultiplier;
         float damageBefore = _player.DamageMultiplier;
         rift.Interact(_player);
-        await ToSignal(GetTree().CreateTimer(2.5, processAlways: true), SceneTreeTimer.SignalName.Timeout);
+        await ToSignal(GetTree().CreateTimer(0.2, processAlways: true), SceneTreeTimer.SignalName.Timeout);
+        SaveFrame("rift-1r-reveal");
+        await ToSignal(GetTree().CreateTimer(2.3, processAlways: true), SceneTreeTimer.SignalName.Timeout);
         bool offerShown = choices.IsOpen;
         SaveFrame("rift-2-offers");
         choices.Activate(0);

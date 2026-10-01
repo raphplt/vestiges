@@ -18,6 +18,7 @@ public partial class Rift : Node2D, IInteractable
     private RiftConfig _config;
     private Sprite2D _sprite;
     private LightColumn _column;
+    private LightColumn _revealColumn;
     private EventBus _eventBus;
     private float _time;
 
@@ -78,6 +79,33 @@ public partial class Rift : Node2D, IInteractable
     public void Interact(Player player)
     {
         _eventBus.EmitSignal(EventBus.SignalName.RiftInteracted, this);
+    }
+
+    /// <summary>
+    /// Part de la Faille dans son réveil, à l'avancement <paramref name="progress"/> (0 à 1) : sa colonne s'élargit,
+    /// la fente palpite vite et s'éclaire.
+    /// </summary>
+    public void ShowReveal(float progress)
+    {
+        if (_revealColumn == null)
+        {
+            _revealColumn = new LightColumn { Name = "RevealColumn" };
+            AddChild(_revealColumn);
+            _revealColumn.Configure(ColumnColors, 200f, 3f, 20f);
+        }
+        _revealColumn.Modulate = new Color(1f, 1f, 1f, Mathf.SmoothStep(0.05f, 0.4f, progress));
+        // Battements par poses, de plus en plus forts : la fente s'ouvre.
+        float beat = Mathf.Floor(progress * 6f) % 2f == 0f ? 1f : 0.6f;
+        float glow = 1f + 0.9f * beat * Mathf.SmoothStep(0f, 0.6f, progress);
+        _sprite.Modulate = new Color(glow, glow, glow);
+    }
+
+    /// <summary>Fin du réveil : la colonne élargie disparaît sous l'écran des offres.</summary>
+    public void EndReveal()
+    {
+        _revealColumn?.QueueFree();
+        _revealColumn = null;
+        _sprite.Modulate = Colors.White;
     }
 
     /// <summary>Offre acceptée : la Faille se referme.</summary>
