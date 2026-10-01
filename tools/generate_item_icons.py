@@ -1,4 +1,4 @@
-"""Plan 25 : modèles d'objets en 32/16 px ; --export après validation de la planche."""
+"""Plan 25 : modèles d'objets en 32/16 px ; --export écrit les ressources du jeu."""
 from __future__ import annotations
 
 import argparse

@@ -1,6 +1,6 @@
 # VESTIGES — Dossier de plans à valider
 
-**1er octobre — [plan 25](25-sprites-et-design.md) :** huit lots parcourus dans l'ordre prévu sur `sprites-plan25`. Projectiles ennemis et habillage XP/crâne/minimap branchés, captures et régressions vérifiées ; banc A/B S4+S6 terminé à 720p/1080p, sans conclusion de gain sur une passe. Planches des raretés, 34 objets, menus et 14 Réminiscences soumises à validation avant branchement. Bonus et sceaux livrés avec manifestes et aperçus dans Main ; leurs interactions attendent les consommateurs du plan 24.
+**1er octobre — [plan 25](25-sprites-et-design.md) intégré sur `main` :** à la demande de Raphaël ([DECISIONS §41](DECISIONS.md)), les huit lots sont raccordés aux écrans et systèmes du plan 24. Raretés et Chance, 34 objets, 14 motifs de Réminiscences, projectiles, cinq bonus, XP, sceaux, minimap, menus et chargement : captures inspectées, build sans avertissement, smoke vert. Les trois objets du monde et les Réminiscences sans effet actif restent « À venir » dans la Collection ; leurs images sont prêtes sans activer de nouvelles règles.
 
 **1er octobre :** retours de la partie du matin, diagnostic et lots au [plan 24](24-retours-du-1er-octobre.md) ([DECISIONS §39](DECISIONS.md)).
 

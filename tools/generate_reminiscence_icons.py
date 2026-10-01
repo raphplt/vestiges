@@ -1,4 +1,4 @@
-"""Plan 25 S8 : quatorze fragments teintés, planche 32/16 px ; --export après validation."""
+"""Plan 25 S8 : quatorze fragments teintés, planche 32/16 px ; --export écrit les ressources du jeu."""
 from __future__ import annotations
 
 import argparse

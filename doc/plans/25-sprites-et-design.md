@@ -331,35 +331,26 @@ Build : 0 avertissement, 0 erreur ; smoke final 600 frames vert. Les 34 IDs
 d'objets et les 14 IDs de Réminiscences sont uniques ; les neuf IDs de
 Réminiscences existantes correspondent exactement au fichier de données.
 
-### État de livraison et reprise
+### État après intégration sur main
 
-Travail seul, dans l'ordre S1 → S2 → S4 → S3 → S6 → S5 → S7 → S8,
-sur `sprites-plan25`, créée depuis `origin/claude/dazzling-keller-f0ihk5`.
-Les cases roadmap cochées portent uniquement sur les parties branchées
-et vérifiées, ou explicitement sur la livraison des images.
+Les lots ont été produits seul sur `sprites-plan25`, puis fusionnés.
+L'intégration I1–I5 sur `main` suit la demande explicite de Raphaël (§41).
+Les consommateurs du plan 24 ont été réunis par le merge `2788b208`.
 
-| Lot | Disponible | Travail restant |
-|---|---|---|
-| S1 | Générateur, cinq raretés, cadres et transitions, planche inspectée | Validation de la planche, export puis remplacement de `RarityGlyph` dans les écrans |
-| S2 | Quinze modèles d'objets, planche 32/16 px inspectée | Validation, export et champ `icon` |
-| S4 | Cinq familles, apparitions, ombres et impacts branchés ; capture, régressions et banc | Recette visuelle par Raphaël |
-| S3 | Dix-neuf modèles d'objets, planche 32/16 px inspectée | Validation, export, champs `icon` puis retrait de `PerkIconResolver` |
-| S6 | XP/crâne/minimap branchés ; textures et manifeste des sceaux livrés | Brancher les sceaux lorsque le panneau du plan 24 L4 existe, puis capturer une quête réelle |
-| S5 | Cinq bonus animés, lueurs et manifeste livrés ; aperçu dans Main | Raccorder aux IDs du plan 24 C4 et capturer un ramassage réel |
-| S7 | Fonds, neuf cadres/boutons, cinq sols ; trois planches inspectées | Validation, export puis branchement des écrans et du thème |
-| S8 | Quatorze modèles de Réminiscences, planche inspectée | Validation, export puis champ `icon` ; confirmer les cinq IDs absents des données |
+| Lot | Branchement livré |
+|---|---|
+| S1 | Éclats, cadres et reflets ; Chance avec transitions et trèfle ; tous les écrans de choix |
+| S2/S3 | 31 objets actifs dans les interfaces ; les trois objets du monde visibles « À venir » en Collection |
+| S4 | Cinq familles de projectiles/attaques, apparitions, ombres et impacts recyclés |
+| S5 | Cinq bonus du plan 24 : apparition au sol, flottement, lueur, ramassage et disparition |
+| S6 | XP, éliminations, minimap, progression et complétion des sceaux |
+| S7 | Quatre fonds animés, neuf habillages, cinq sols et personnage au chargement |
+| S8 | 14 motifs en Collection et neuf définitions liées aux écrans ; sept effets actifs inchangés |
 
-Les lots « planche à valider » restent à cette étape conformément au §0/§3.
-Aucune proposition n'est consignée comme une décision acquise dans
-`DECISIONS.md`. Les aperçus de bonus/sceaux sont des galeries dans la vraie
-scène Main ; ils ne prouvent pas les futures interactions du plan 24.
-
-Les commandes d'export sont déjà disponibles avec `--export` sur
-`generate_rarities.py`, `generate_item_icons.py --lot all`,
-`generate_screen_sprites.py` et `generate_reminiscence_icons.py`.
-Après chaque validation : exporter, ajouter les liens dans les données
-et les consommateurs, lancer le smoke pour les imports, puis capturer et
-inspecter les écrans réellement concernés avant de clôturer l'intégration.
+Les objets du monde attendent le Reliquaire. Délestage, Habitude et les cinq
+Réminiscences nouvelles ne deviennent pas des offres jouables par la seule
+présence d'une icône. Leurs règles relèvent des plans 05/22 ; aucune image
+n'attend désormais une validation pour être branchée à un écran existant.
 
 ### I1 — raretés branchées sur main, 1er octobre 2026
 
@@ -440,3 +431,40 @@ chargement), `…-final-memorial/`, `…-final-rift/`, `…-final-loot/`,
 `…-pause/` et `…-collection/`. Les écrans finaux montrent leurs cartes,
 boutons et icônes ; les petites facettes communes du coffre sont bien des
 textures, sans caractère décoratif dans les libellés.
+
+### I5 — vérification de l'intégration, 1er octobre 2026
+
+`test_ui_art.sh` : 122 assertions passent. Il charge les PNG par les vrais
+lecteurs de données, contrôle les deux tailles d'icône, les 34/14 entrées de
+Collection, les atlas, les cinq bonus et les neuf habillages. Il vérifie
+également le départ et l'arrivée d'une révélation de trois rangs de Chance,
+sans réduction des poses de 32 px. Aucun catalogue de gameplay n'est étendu.
+
+Régressions : contrats de perks (32 assertions), acquisition (22), objets
+(70), bonus (8), capacités ennemies (60) et six scénarios de profils dev
+verts. Nouvelle capture du level-up et de la Chance inspectée dans
+`/tmp/vestiges-plan25-i5-levelup/`. Régénération des cinq familles exportées
+(rarités, objets, Réminiscences, HUD, écrans) : **158 PNG inchangés octet pour
+octet**. Les `.import` et `.cs.uid` viennent de Godot.
+
+Travail et revue effectués seul conformément au §0 ; aucun agent parallèle.
+Les captures et journaux restent dans `/tmp`, les planches demandées et
+les générateurs sont versionnés. La recette de goût en jeu reste à Raphaël ;
+elle n'empêche plus les branchements demandés au §41.
+
+Banc dense A/B : base `2788b208` (mêmes règles du plan 24), seed 221092026,
+120 ennemis, 15 s après 5 s de chauffe, Godot 4.7.2 GL, Ryzen 7 5700X /
+RX 6950 XT. Une passe complète dans `/tmp/vestiges-plan25-integration-ab/` :
+
+| Résolution | FPS avant → après | p99 avant → après | Nœuds créés/s |
+|---|---:|---:|---:|
+| 720p | 192,2 → 156,6 | 11,2 → 15,8 ms | 1 → 1 |
+| 1080p | 190,5 → 180,2 | 10,6 → 11,5 ms | 1 → 1 |
+
+Écart défavorable observé, surtout à 720p ; une passe ne permet pas de
+l'attribuer au branchement. Les allocations et appels de dessin n'augmentent
+pas. Un autre processus utilisait fortement le CPU pendant cette série.
+La seconde comparaison a été interrompue pour livrer sans prolonger les
+vérifications supplémentaires, après le retour de Raphaël. Aucune conclusion
+de gain ni d'absence de régression n'est revendiquée. Build sans avertissement,
+smoke et vérifications fonctionnelles terminés ; arbre livré sur `main`.

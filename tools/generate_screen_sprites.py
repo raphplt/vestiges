@@ -1,4 +1,4 @@
-"""Plan 25 S7 : planches d'écrans et de chargement ; --export après validation."""
+"""Plan 25 S7 : planches d'écrans et de chargement ; --export écrit les ressources du jeu."""
 from __future__ import annotations
 
 import argparse

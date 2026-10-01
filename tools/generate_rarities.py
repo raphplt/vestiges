@@ -1,4 +1,4 @@
-"""Plan 25 S1 : planche par défaut ; --export seulement après validation."""
+"""Plan 25 S1 : planche par défaut ; --export écrit les ressources du jeu."""
 from __future__ import annotations
 
 import argparse

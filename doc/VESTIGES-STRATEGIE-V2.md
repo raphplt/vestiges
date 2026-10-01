@@ -827,8 +827,12 @@ Le script de post-processing doit inclure une vérification/correction de l'angl
 - [x] Sprites des Autels : Mémorial (endormi, ravivé), éclat et Faille, procéduraux (plan 17 lot 3B, 26 septembre 2026).
 - [ ] Sprites des Résurgents (ennemis de Résurgence).
 - [x] Plan 25 S4 : sprites des cinq familles de tirs ennemis, apparitions dans la visée existante, ombres 2:1 et impacts recyclés au sol ; œil du Présage sur sa frappe de zone, captures et régressions vérifiées. Coût S4+S6 mesuré avant/après à 720p/1080p, une passe par version (voir compte rendu).
-- [x] Plan 25 S6 : textures d'XP dorée, crâne d'éliminations et pictogrammes de minimap branchés ; sceaux de quêtes générés et inspectés en aperçu dans Main, branchement au panneau replié dépendant du plan 24 L4.
-- [x] Plan 25 S5, images : cinq bonus 16 px, flottement/reflet, disparition violette, lueur 2:1 et manifeste générés ; aperçu dans Main vérifié. Ramassage et branchement au plan 24 C4 en attente.
+- [x] Plan 25 S6 : XP dorée, crâne, minimap et sceaux de quêtes branchés ; progression, bris et complétion capturés dans une vraie quête.
+- [x] Plan 25 S5 : cinq bonus 16 px branchés au plan 24 C4, flottement, lueur 2:1 et disparition ; cinq ramassages capturés, effets et réutilisation du pool vérifiés.
+- [x] Plan 25 S1 : cinq raretés, cadres et reflets légendaires, sauts de Chance et trèfle branchés ; glyphes retirés, écrans de choix capturés.
+- [x] Plan 25 S2/S3 : 34 icônes d'objets natives 32/16 px ; 31 objets actifs raccordés aux écrans, HUD, pause et bilan, trois objets du monde visibles « À venir » en Collection. Résolveur d'anciennes icônes supprimé.
+- [x] Plan 25 S7 : quatre fonds animés natifs, neuf habillages de menus et cinq sols de chargement branchés ; rendu nearest vérifié par captures.
+- [x] Plan 25 S8 : 14 icônes de Réminiscences en Collection, neuf définitions raccordées aux interfaces ; les effets non implémentés restent « À venir ». Choix et inventaire capturés.
 - [x] Hub visuel (camp du Foyer vivant, validé par Raphaël le 26 septembre 2026, plan 04).
 - [ ] Musiques adaptatives (5-6 tracks).
 - [ ] Sound design complet.
