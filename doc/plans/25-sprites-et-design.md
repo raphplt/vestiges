@@ -151,3 +151,17 @@ Deux générations ont donné le même SHA-256 :
 Build : 0 avertissement, 0 erreur ; smoke 600 frames vert.
 **Validation visuelle demandée à Raphaël ; aucun branchement ni case roadmap
 cochée pour cette proposition.** Suite : S2, conformément au §3.
+
+### S2 — planche proposée, 1er octobre 2026
+
+`python3 tools/generate_item_icons.py` produit la [planche S2](planches/25-s2-objets.png) :
+quinze objets de propriété, modélisés en SDF dans `tools/sprites/items/`,
+rendus par le pipeline des armes. Chaque modèle est rendu directement en
+32 et 16 px (pas de réduction lissée). Armes de référence sur la même planche,
+tailles natives et ×4, fond sombre et cadre réel. Modèles sans tirage aléatoire.
+
+Planche inspectée. Deux générations identiques : SHA-256
+`807613692f6acae87be399e94d14a96fc294236a1b1f71c197ca2cf007a1e42d`.
+Build et import Godot verts lors de la préparation de la capture S4.
+**Vue de trois quarts soumise à Raphaël ; branchement en attente, aucune
+case roadmap cochée.** Suite : S4.
