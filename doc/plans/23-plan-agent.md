@@ -407,7 +407,7 @@ Compte rendu détaillé au [plan 22 §15](22-carte-a-explorer.md#15-compte-rendu
 - comptes de coffres, Mémoriaux, Failles et petits lieux relevés pour la surface doublée ;
 - minimap : chemin révélé teinté par la phase d'Effacement, lieux découverts, coffres, Mémoriaux, Failles.
 
-**Mesuré** (5 seeds × 10 min, bot nomade, mêmes seeds qu'en C1) : **un petit lieu en vue toutes les 26 s à lui seul** (80 s en C1), cible de 20 à 30 s atteinte ; coffres 10,2, Mémoriaux 1,2, Failles 1,8 croisés par run. Le bot qui ratisse visite 32,8 lieux (18,4 en C1). Génération du terrain 203 → 423 ms. Banc de combat A/B en attente d’une machine calme.
+**Mesuré** (5 seeds × 10 min, bot nomade, mêmes seeds qu'en C1) : **un petit lieu en vue toutes les 26 s à lui seul** (80 s en C1), cible de 20 à 30 s atteinte ; coffres 10,2, Mémoriaux 1,2, Failles 1,8 croisés par run. Le bot qui ratisse visite 32,8 lieux (18,4 en C1). Génération du terrain 203 → 423 ms. Banc de combat A/B en rendu logiciel : −7 à −11 % de FPS avec la carte haute, à refaire sur une vraie carte graphique.
 
 **Vérifié :** build sans avertissement, smoke vert, six bancs à `failures=0`, captures de la carte et de la minimap regardées, relecture `godot-reviewer` (corrections au plan 22 §15).
 

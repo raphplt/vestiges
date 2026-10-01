@@ -290,7 +290,7 @@ Fait au plan 23, lot R7.
 **Coût :**
 - Décors par carte : 10 694 → 21 505. Les décors restent hors de toute boucle par frame : index d'occlusion et tronçons comme avant.
 - Génération du terrain (`--capture-map`, 40 graines) : 203 → 423 ms par carte. Chargement complet en rendu logiciel, machine chargée : 21,6 → 26,8 s ; chiffre indicatif seulement.
-- Banc de combat dense A/B (carte de 6 400 contre 12 800 px de haut) : en attente d’une machine calme.
+- Banc de combat dense A/B, `tools/bench_ab.sh`, 2 passes, même commit, seule la hauteur change : 8,1 → 7,2 FPS en 720p et 4,4 → 4,1 en 1080p (−7 à −11 %), nœuds créés par seconde négligeables des deux côtés (1 à 7). Rendu logiciel du conteneur, sans carte graphique : l'écart dit qu'il y a un coût, pas sa taille sur la machine de Raphaël. **À refaire avec `/bench` sur une vraie carte graphique** ; si l'écart tient, la piste est le tri en Y du conteneur de décors, qui parcourt deux fois plus d'enfants.
 
 **Vérifications :**
 - `dotnet build` : zéro avertissement. Smoke vert.
@@ -299,6 +299,7 @@ Fait au plan 23, lot R7.
 - Relecture `godot-reviewer` : pas de bug bloquant, tous les restes de rayon unique corrigés. Corrigé ensuite : coffres masqués sous l'Oubli des repères sur la minimap, arme du Wagonnet tirée hors des armes portées et `LootReceived` émis au seul ramassage, petites allocations de la minimap, Boîte aux lettres signalée si la progression manque.
 
 **Reste :**
+- coût de la carte haute à mesurer sur une vraie carte graphique (voir Coût) ;
 - la minimap montre les coffres jusqu'à 12 cellules (environ 1 500 px) autour du chemin, plus loin que les flèches (1 200 px) : à juger en jeu ;
 - les Repères (C4) attendent la question 5 du §11 ;
 - la carte reste centrée sur le départ : un joueur qui file droit vers le nord ou le sud a maintenant deux fois plus de chemin avant le bord.
