@@ -1,5 +1,7 @@
 # VESTIGES — Dossier de plans à valider
 
+**1er octobre — préchauffage rendu :** le chargement soumet réellement 16 shaders et les particules d’XP au GPU, puis libère son viewport ; 17 échantillons vérifiés et captures Main, [plan 10 5B1](10-terrain-et-tiles.md#5b1--soumettre-réellement-les-shaders-au-rendu--découpage-du-1er-octobre). Coût à froid/chaud encore à mesurer sur machine calme.
+
 **1er octobre — robustesse des choix :** relances et entrées interrompues corrigées, 24 contrôles (12 échecs → zéro), captures Main vérifiées ; [plan 04 R7](04-interfaces-et-hub.md#r7--entrées-des-écrans-de-choix--lot-engagé-le-1er-octobre).
 
 **1er octobre (soir) — audio A0/A1 livrés :** enregistrement audible de référence (Movie Maker de Godot, mixage du moteur, trace et rapport), puis pilotage de la musique stabilisé : intention séparée de la phase, annonce tenue jusqu'au début, accalmie, endgame, première run enfin musicale, fondus à puissance constante ; 22 contrôles verts. Avant/après et planche A2 (points d'entrée des morceaux d'annonce et de crise) hors dépôt, **à écouter par Raphaël** : quatre questions au plan 15. Le rôle exploration/combat reste à choisir (foule permanente). [Plan 15](15-audio.md#a0-et-a1--livrés-le-1er-octobre-soir).

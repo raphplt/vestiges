@@ -1,0 +1,195 @@
+{
+	"freed": true,
+	"intervals": [
+		{
+			"draw_calls": 0,
+			"frame": 0,
+			"mode": "offscreen",
+			"objects": 0
+		},
+		{
+			"draw_calls": 0,
+			"frame": 1,
+			"mode": "offscreen",
+			"objects": 0
+		},
+		{
+			"draw_calls": 0,
+			"frame": 2,
+			"mode": "offscreen",
+			"objects": 0
+		},
+		{
+			"draw_calls": 0,
+			"frame": 3,
+			"mode": "offscreen",
+			"objects": 0
+		},
+		{
+			"draw_calls": 0,
+			"frame": 4,
+			"mode": "offscreen",
+			"objects": 0
+		},
+		{
+			"draw_calls": 9,
+			"frame": 0,
+			"mode": "visible",
+			"objects": 9
+		},
+		{
+			"draw_calls": 9,
+			"frame": 1,
+			"mode": "visible",
+			"objects": 9
+		},
+		{
+			"draw_calls": 9,
+			"frame": 2,
+			"mode": "visible",
+			"objects": 9
+		},
+		{
+			"draw_calls": 9,
+			"frame": 3,
+			"mode": "visible",
+			"objects": 9
+		},
+		{
+			"draw_calls": 9,
+			"frame": 4,
+			"mode": "visible",
+			"objects": 9
+		},
+		{
+			"draw_calls": 9,
+			"frame": 0,
+			"mode": "visible",
+			"objects": 9
+		},
+		{
+			"draw_calls": 9,
+			"frame": 1,
+			"mode": "visible",
+			"objects": 9
+		},
+		{
+			"draw_calls": 9,
+			"frame": 2,
+			"mode": "visible",
+			"objects": 9
+		},
+		{
+			"draw_calls": 9,
+			"frame": 3,
+			"mode": "visible",
+			"objects": 9
+		},
+		{
+			"draw_calls": 9,
+			"frame": 4,
+			"mode": "visible",
+			"objects": 9
+		},
+		{
+			"draw_calls": 0,
+			"frame": 0,
+			"mode": "offscreen",
+			"objects": 0
+		},
+		{
+			"draw_calls": 0,
+			"frame": 1,
+			"mode": "offscreen",
+			"objects": 0
+		},
+		{
+			"draw_calls": 0,
+			"frame": 2,
+			"mode": "offscreen",
+			"objects": 0
+		},
+		{
+			"draw_calls": 0,
+			"frame": 3,
+			"mode": "offscreen",
+			"objects": 0
+		},
+		{
+			"draw_calls": 0,
+			"frame": 4,
+			"mode": "offscreen",
+			"objects": 0
+		}
+	],
+	"legacy": true,
+	"paths": [
+		"res://assets/shaders/entity.gdshader",
+		"res://assets/shaders/sway.gdshader",
+		"res://assets/shaders/swamp_atmosphere.gdshader",
+		"res://assets/shaders/hit_flash.gdshader",
+		"res://assets/shaders/dissolve.gdshader",
+		"res://assets/shaders/outline.gdshader",
+		"res://assets/shaders/aberration_aura.gdshader",
+		"res://assets/shaders/colorblind.gdshader",
+		"res://assets/shaders/ui_dust_twinkle.gdshader"
+	],
+	"renderer": "gl_compatibility",
+	"samples": [
+		{
+			"draw_calls": 1,
+			"name": "@Sprite2D@5",
+			"objects": 1,
+			"shader": "res://assets/shaders/entity.gdshader"
+		},
+		{
+			"draw_calls": 1,
+			"name": "@Sprite2D@6",
+			"objects": 1,
+			"shader": "res://assets/shaders/sway.gdshader"
+		},
+		{
+			"draw_calls": 1,
+			"name": "@Sprite2D@7",
+			"objects": 1,
+			"shader": "res://assets/shaders/swamp_atmosphere.gdshader"
+		},
+		{
+			"draw_calls": 1,
+			"name": "@Sprite2D@8",
+			"objects": 1,
+			"shader": "res://assets/shaders/hit_flash.gdshader"
+		},
+		{
+			"draw_calls": 1,
+			"name": "@Sprite2D@9",
+			"objects": 1,
+			"shader": "res://assets/shaders/dissolve.gdshader"
+		},
+		{
+			"draw_calls": 1,
+			"name": "@Sprite2D@10",
+			"objects": 1,
+			"shader": "res://assets/shaders/outline.gdshader"
+		},
+		{
+			"draw_calls": 1,
+			"name": "@Sprite2D@11",
+			"objects": 1,
+			"shader": "res://assets/shaders/aberration_aura.gdshader"
+		},
+		{
+			"draw_calls": 1,
+			"name": "@Sprite2D@12",
+			"objects": 1,
+			"shader": "res://assets/shaders/colorblind.gdshader"
+		},
+		{
+			"draw_calls": 1,
+			"name": "@Sprite2D@13",
+			"objects": 1,
+			"shader": "res://assets/shaders/ui_dust_twinkle.gdshader"
+		}
+	],
+	"valid": true
+}

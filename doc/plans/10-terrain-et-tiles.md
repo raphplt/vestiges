@@ -588,3 +588,41 @@ Validation : même fixture et seed, avant/après 0/1/10/50/100 cibles, dégâts/
 **Attribution pendant l’exécution :** les demandes de feedback baissent de 12 000 à 2 000 sur 50 cibles, mais cela ne réduit pas à soi seul les allocations directes du banc. Le signal Godot `EntityDamaged` construit un tableau `params` par impact : utiliser sa surcharge `ReadOnlySpan<Variant>` garde les abonnés synchrones et supprime ce tableau, sans tampon partagé réentrant. Les entiers des chiffres sont déjà souvent internés par .NET ; ne pas leur attribuer un gain mémoire non mesuré.
 
 **Lot 6B livré le 28 septembre.** [Mesures et recette](../audits/performance-2026-09-28/lot-6b/README.md) : quatre passes alternées, 0/1/10/50/100 cibles. À 50 cibles sur 4 s : 12 000 impacts et mêmes dégâts, feedback 12 000 → 2 000 (−83 %), allocations directes 2 655 360 → 1 407 360 octets (−47 %, 104 octets évités par impact). 38 assertions vertes, régressions armes/capacités, smoke et captures du cône avec chaîne/homing vérifiés. La cadence des procs est conservée ; leur séquence exacte est comparée avec RNG cosmétique neutralisé. Pas de conclusion FPS ni de baisse mesurée des pauses GC ; la longue run avec renouvellement soutenu reste à observer. Prochain lot proposé : 5B, préchauffage rendu.
+
+### 5B1 — soumettre réellement les shaders au rendu : découpage du 1er octobre
+
+Suite autorisée de l'audit, hors audio, dans un checkout isolé. Le warmup
+courant pose neuf sprites à (−9 999, −9 999), hors champ, puis attend deux
+frames de logique. L'audit de septembre avait déjà mesuré zéro dessin.
+
+- Remplacer ce montage par un petit `SubViewport` rendu pendant le chargement,
+  sans afficher sa texture dans la fenêtre. Échantillons dans son champ,
+  processus actif pendant la pause ; attendre la fin du rendu avant de les
+  libérer. Ignorer cette étape en headless, où aucun GPU n'est utilisé.
+- Couvrir les shaders effectivement employés en run, dont formes de combat,
+  colonnes, Échos, Effacement, Résurgences, mort, sol, chemins et fond des
+  choix. Employer les commandes correspondant aux consommateurs (sprite,
+  rectangle, maillage de chemin) et la vraie fabrique de particules des orbes.
+  Garder les ressources Shader référencées après destruction du viewport.
+- Mesurer les commandes soumises avant/après avec le même audit, vérifier la
+  couverture, la suppression du viewport et plusieurs initialisations Main.
+  Capturer chargement et run sur ViewSonic, build/smoke et déplacements verts.
+
+Ce sous-lot prouve la soumission au rendu, pas l'absence générale de saccades.
+La comparaison du cache pilote froid/chaud et des premiers effets (5B2) reste
+à faire sur machine calme : charge 11,21 constatée pour 16 cœurs logiques,
+au-dessus du seuil de 4. Aucun chiffre de FPS exploitable dans ces conditions.
+
+
+**5B1 livré et vérifié — 1er octobre.** Le warmup rend ses échantillons dans
+un viewport séparé pendant trois images de chargement : **zéro dessin ancien
+hors champ → 17 dessins effectifs** (16 shaders de run et vraie lueur d'orbe).
+Le viewport est libéré avant la run ; les Shader restent référencés. Headless
+ignore cette attente GPU. Aucun traitement ajouté en combat.
+
+[Preuves, commandes et limites](../audits/shader-warmup-2026-10-01/README.md) :
+17 échantillons vérifiés individuellement, deux Main headless, chargement et
+premiers effets capturés sur ViewSonic, 158 contrôles de déplacement et smoke
+verts. Le banc d'intégration historique expire à 1 500 frames avant **et**
+après ; ce défaut du banc est consigné. Pas de mesure FPS valide sous la
+charge actuelle ; **5B2 reste ouvert** (cache froid/chaud, premiers effets).

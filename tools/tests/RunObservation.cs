@@ -246,6 +246,8 @@ public partial class RunObservation : Node
                 nextLoadingFrame = Time.GetTicksMsec() + 250;
             }
         }
+        if (_world.FindChild("ShaderWarmup", true, false) != null)
+            throw new InvalidOperationException("Viewport de préchauffage encore présent après le chargement.");
         _player = _world.GetNode<Player>("Player");
         _camera = _player.GetNode<Camera2D>("Camera");
         _player.IsGodMode = true;
@@ -258,8 +260,10 @@ public partial class RunObservation : Node
         foreach (Node node in GetTree().GetNodesInGroup("enemies"))
             if (node is Enemy existing && existing.IsActive)
                 _world.GetNode<EnemyPool>("EnemyPool").Return(existing);
-        // L'écran de chargement s'efface après l'initialisation du monde.
-        await Frames(90);
+        // Attendre le fondu réel : 90 frames peuvent ne durer qu'une demi-seconde sur une machine rapide.
+        while (_world.GetNodeOrNull("GameLoadingOverlay") != null)
+            await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+        await ToSignal(RenderingServer.Singleton, RenderingServer.SignalName.FramePostDraw);
 
         SpawnManager spawner = _world.GetNode<SpawnManager>("SpawnManager");
         Vector2 origin = _player.GlobalPosition;
