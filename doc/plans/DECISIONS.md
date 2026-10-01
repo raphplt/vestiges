@@ -523,3 +523,17 @@ Raphaël, après une partie jouée jusqu'un peu après la première Résurgence 
 - **Pas de synergies explicitées** par les objets.
 
 **Non acquis (propositions du [plan 24](24-retours-du-1er-octobre.md), questions Q1 à Q9) :** forme des quêtes repliées, score de distance au lieu du temps, liste et taux des bonus lâchés, gain des Repères, portées de mêlée et régénération chiffrées, ordre des lots.
+
+
+## 40. Plan 24 validé, score aux seules éliminations, ascensions de toutes les armes, barre d'XP en bas — 1er octobre 2026
+
+Raphaël, après le plan 24 : « je valide les recommendations. et pour le score il ne devrait etre compté qu'en kills. par besoin d'un autre score. Reperes : à toi de voir. Armes des ennemis : ne pas en garder le probleme étant qu'on obtient rapidement les 4 armes donc apres ca devient useless. Pour le reste des armes fait en sorte qu'elles aient toutes leur ascension stp. Ah et la barre d'XP doit prendre toute une largeur d'écran place la en bas de l'écran stp. et fais en sorte quelle soit vraiment plus joli. A part ca je valide toutes tes propositions. Prépare un prompt/plan global pour avancer sur les sprites (faire tous les objets, revoir certains projectiles ennemes pour les rendres plus joli/impactants; et les petits détails comme les raretés et les menus. »
+
+**Acquis :**
+- **Toutes les recommandations du plan 24 §8 et toutes ses propositions** sont validées : bonus lâchés (cinq bonus, élites à 35 %), une ligne d'aide la première fois de chaque micro-événement, surbrillance des synergies retirée, quêtes repliées par défaut, objets : icônes d'abord, ordre des lots du §7.
+- **Score : les éliminations seulement.** Ni temps, ni distance, ni lieux, ni coffres, ni Résurgences. Pas d'autre score.
+- **Repères :** laissés à l'agent. Choix retenu : un petit gain permanent lié au lieu (plan 24 §5 D3).
+- **Armes lâchées par les ennemis : supprimées**, élites comme Souverain. Les quatre emplacements se remplissent vite ; une arme au sol devient alors inutile.
+- **Ascensions : toutes les armes** en reçoivent une. Les voies proposées pour les 20 autres armes ([21-historique §28](21-historique.md)) sont validées par cette demande.
+- **Barre d'XP :** sur toute la largeur de l'écran, en bas, et beaucoup plus jolie.
+- **Sprites et design :** un plan global est demandé pour un agent (tous les objets, projectiles ennemis plus beaux et plus percutants, raretés, menus) : [plan 25](25-sprites-et-design.md). L'agent courant travaille sur le reste.

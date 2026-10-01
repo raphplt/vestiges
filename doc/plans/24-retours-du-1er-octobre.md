@@ -320,3 +320,16 @@ Ce qui manque pour dire « le système de jeu est fini » :
 4. les icônes d'objets et de Réminiscences ;
 5. les déblocages ;
 6. l'équilibrage de bout en bout, une fois tout cela en place.
+
+## 10. Réponses de Raphaël — 1er octobre ([DECISIONS §40](DECISIONS.md))
+
+Toutes les recommandations du §8 et toutes les propositions sont validées, avec ces changements :
+
+- **Score (Q4, A4) :** ni temps, ni distance. Le score compte **les éliminations seulement** ; les points de lieux, de coffres et de Résurgences disparaissent aussi.
+- **Repères (Q5) :** laissés à l'agent. Gain lié au lieu (D3).
+- **Armes des ennemis (Q7) :** supprimées pour les élites **et** le Souverain.
+- **Ascensions :** les 20 autres armes reçoivent leurs voies (proposition du [21-historique §28](21-historique.md)), en plus de ce plan. Lot **L12**.
+- **Barre d'XP :** sur toute la largeur de l'écran, en bas, beaucoup plus jolie. Ajoutée au lot L2.
+- **Sprites et design :** confiés au [plan 25](25-sprites-et-design.md). Ce plan code les écrans avec des replis dessinés ; les images du plan 25 s'y branchent ensuite.
+
+**Ordre de travail retenu :** L1 → L3 → L2 (avec la barre d'XP et le score aux éliminations) → L12 → L4 → L7 → L9 → L8 → L5/L6 (code) → L11.
