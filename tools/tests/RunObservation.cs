@@ -65,6 +65,7 @@ namespace Vestiges.Tests;
 /// --capture-every N : pendant la mesure, capture plein écran toutes les N secondes (HUD, événements).
 /// --event ID : force le micro-événement ID à 3 s de run (bancs de capture).
 /// --hold-map : pendant la mesure, maintient la touche de la carte entière (captures de la carte, plan 24 A6).
+/// --show-bonuses : pendant la mesure, pose les cinq bonus lâchés autour du joueur à 4 s (captures, plan 24 C4).
 /// </summary>
 public partial class RunObservation : Node
 {
@@ -438,6 +439,7 @@ public partial class RunObservation : Node
         _visitPlaces = Array.IndexOf(OS.GetCmdlineUserArgs(), "--visit") >= 0;
         if (Array.IndexOf(OS.GetCmdlineUserArgs(), "--hold-map") >= 0)
             Input.ActionPress("show_map");
+        bool showBonuses = Array.IndexOf(OS.GetCmdlineUserArgs(), "--show-bonuses") >= 0;
         EventBus.EssenceChangedEventHandler onEssence = places.OnEssence;
         EventBus.RunEventStartedEventHandler onEvent = (_, _, _, _) => places.Events++;
         eventBus.EssenceChanged += onEssence;
@@ -502,6 +504,15 @@ public partial class RunObservation : Node
                 for (int l = lastLevel + 1; l <= level; l++)
                     levelTimes[l] = t;
                 lastLevel = level;
+            }
+
+            if (showBonuses && t >= 4.0)
+            {
+                showBonuses = false;
+                FieldBonusDirector bonuses = _world.GetNode<FieldBonusDirector>("FieldBonusDirector");
+                FieldBonusConfig bonusConfig = FieldBonusDataLoader.Load();
+                for (int i = 0; i < 4; i++)
+                    bonuses.Spawn(bonusConfig.Bonuses[i], _player.GlobalPosition + new Vector2(-180f + i * 90f, -110f));
             }
 
             if (_forcedEvent != null && t >= 3.0)

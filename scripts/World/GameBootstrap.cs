@@ -173,6 +173,9 @@ public partial class GameBootstrap : Node
         sceneRoot.AddChild(smallPlaces);
         smallPlaces.PlacePlaces(GetNode("../PropContainer"), GetNode<Node2D>("../PoiContainer"));
 
+        // Bonus lâchés (plan 24 C4) : gourde, aimant, couverture, café, pétard.
+        sceneRoot.AddChild(new FieldBonusDirector { Name = "FieldBonusDirector" });
+
         QuestManager questManager = new() { Name = "QuestManager" };
         sceneRoot.AddChild(questManager);
 

@@ -445,3 +445,13 @@ Chaque type de lieu donne, à son premier usage dans la run, le gain du tableau 
 **Vérifications :** build sans avertissement, smoke vert ; captures en vraie run regardées : radar à 60 s (coffre, Mémorial, lieux, bord du brouillard) et carte entière à 90 s avec sa légende.
 
 **Non fait :** n'afficher un petit lieu qu'une fois vu à l'écran (aujourd'hui : dès que le brouillard est levé autour) ; le retrait des lieux servis suffit à désencombrer.
+
+### L8 — bonus lâchés (1er octobre)
+
+- **Cinq bonus** (`data/world/field_bonuses.json`) : gourde (soin de 20 % des PV max), fer à cheval aimanté (aimant d'XP ×25 pendant 3 s : toute l'XP de l'écran arrive), couverture de survie (bouclier de 30 % des PV max pendant 15 s), café froid (cadence +30 % pendant 10 s), pétard (onde de 160 px qui ôte 60 % de leurs PV aux créatures, le quart aux élites et Souverains, et les repousse).
+- **Sources :** élite 35 %, Souverain toujours, deux bonus près du joueur à la fin d'une Résurgence survécue (le premier est une gourde), 0,4 % sur toute autre élimination (gourde ou aimant).
+- **Règles :** au plus 4 au sol ; 20 s de vie, clignotement les 4 dernières ; ramassé à 26 px. Le nom du bonus s'affiche au ramassage, avec un son et des éclats. Pool de nœuds ; aucun parcours de décor.
+- **Dessin :** chaque bonus est généré en pixels depuis un motif (deux pixels par trait, contour sombre), au-dessus d'une lueur au sol de sa couleur ; il flotte. À remplacer par les sprites du plan 25 (S5).
+- Le butin qui disparaît avec sa zone (plan 16) ne s'applique pas encore aux bonus : leur durée de 20 s suffit.
+
+**Vérifications :** nouveau banc `tools/test_field_bonuses.sh` (6 contrôles, zéro échec) : données, limite au sol, soin au contact, effets à durée appliqués puis retirés, pétard qui touche la créature proche et pas la lointaine, effacement en fin de vie. Smoke vert. Capture en vraie run avec `--show-bonuses` regardée : gourde, aimant et café lisibles sur la route, couverture ramassée par le bot.

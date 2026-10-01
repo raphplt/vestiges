@@ -370,3 +370,8 @@ MAP_LEGEND_CHEST,Coffre (couleur de sa rareté),Chest (rarity colour)
 MAP_LEGEND_MEMORIAL,Mémorial,Memorial
 MAP_LEGEND_RIFT,Faille,Rift
 MAP_LEGEND_PLACE,Petit lieu à visiter,Place to visit
+BONUS_CANTEEN,Gourde · soin,Canteen · heal
+BONUS_MAGNET,Fer à cheval · aimant,Horseshoe · magnet
+BONUS_BLANKET,Couverture de survie · bouclier,Survival blanket · shield
+BONUS_COFFEE,Café froid · cadence,Cold coffee · attack rate
+BONUS_FIRECRACKER,Pétard,Firecracker
