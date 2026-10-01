@@ -396,3 +396,20 @@ Les deux premières tranches regroupent t4 et t5, identiques avant 6 min. Sur le
 - l'Essence rendue par le Porte-monnaie compte, comme celle de la Photo de classe, pour la quête « Accumuler de l'Essence » : à trancher ensemble ;
 - à pleine puissance, le Stylo fait repartir plus que le coup d'origine (180 % au niveau 30 en communes), conforme à la référence : à surveiller à l'équilibrage ;
 - les trois objets « monde » (Presse-papier, Calendrier, Médaillon) attendent le Reliquaire.
+
+### R7 : la carte fait moins vide (plan 22 C4 et C6)
+
+Compte rendu détaillé au [plan 22 §15](22-carte-a-explorer.md#15-compte-rendu-c4-et-c6--six-petits-lieux-carte-agrandie-et-minimap-1er-octobre).
+
+**Fait :**
+- six petits lieux sur des décors déjà générés : Boîte aux lettres, Wagonnet, Voiture abandonnée, Cabine téléphonique, Abribus (nouveau décor le long des trottoirs), Table de pique-nique ;
+- carte elliptique de 25 600 × 12 800 px (`map_radius_y` 400), décors 10 694 → 21 505 ;
+- comptes de coffres, Mémoriaux, Failles et petits lieux relevés pour la surface doublée ;
+- minimap : chemin révélé teinté par la phase d'Effacement, lieux découverts, coffres, Mémoriaux, Failles.
+
+**Mesuré** (5 seeds × 10 min, bot nomade, mêmes seeds qu'en C1) : **un petit lieu en vue toutes les 26 s à lui seul** (80 s en C1), cible de 20 à 30 s atteinte ; coffres 10,2, Mémoriaux 1,2, Failles 1,8 croisés par run. Le bot qui ratisse visite 32,8 lieux (18,4 en C1). Génération du terrain 203 → 423 ms. Banc de combat A/B en attente d’une machine calme.
+
+**Vérifié :** build sans avertissement, smoke vert, six bancs à `failures=0`, captures de la carte et de la minimap regardées, relecture `godot-reviewer` (corrections au plan 22 §15).
+
+**Reste :** Repères (plan 22 §11, question 5) ; portée de la minimap à juger en jeu ; l'Essence n'est toujours jamais dépensée (Atelier, C2, en attente de Raphaël).
+

@@ -128,9 +128,9 @@ Un onglet de la Collection. Chaque type de lieu, puis chaque lieu remarquable, y
 | C1 | Trois petits lieux sur des décors déjà générés (Puits, Veine de cristal, Épouvantail) ; socle commun des petits lieux | **Livré le 30 septembre** ([§14](#14-compte-rendu-c1--trois-petits-lieux-30-septembre)) |
 | C2 | Atelier : niveau d'arme, Retrempe, Trempe | Banc, captures, mesure de l'Essence dépensée |
 | C3 | Reliquaire, avec les objets du plan 21 (lot G2) | Dépend du catalogue d'objets |
-| C4 | Les six autres petits lieux, Repères | Mesure : types visités par run |
+| C4 | Les six autres petits lieux, Repères | **Six lieux livrés le 1er octobre** (plan 23 R7, [§15](#15-compte-rendu-c4-et-c6--six-petits-lieux-carte-agrandie-et-minimap-1er-octobre)) ; Repères en attente de la question 5 du §11 |
 | C5 | Traces des lieux effacés, Atlas | Captures, essai de Raphaël |
-| C6 | Carte agrandie en hauteur ; **minimap** (lieux découverts, front de l'Effacement) | Mesure du coût de génération, banc, captures |
+| C6 | Carte agrandie en hauteur ; **minimap** (lieux découverts, front de l'Effacement) | **Livré le 1er octobre** (plan 23 R7, [§15](#15-compte-rendu-c4-et-c6--six-petits-lieux-carte-agrandie-et-minimap-1er-octobre)) |
 
 ## 10. Idées reprises d'autres plans, à placer
 
@@ -251,3 +251,55 @@ Relecture par sous-agent. Corrigé :
 - sur l'herbe, la lueur de l'épouvantail se voit mal ;
 - la veine brisée garde son sprite intact ;
 - la perte au Néant n'est vérifiée que par lecture du code.
+
+## 15. Compte rendu C4 et C6 : six petits lieux, carte agrandie et minimap (1er octobre)
+
+Fait au plan 23, lot R7.
+
+**C4, six petits lieux** sur le socle de C1 (`SmallPlaceDirector`, `data/world/small_places.json`), tous sur des décors déjà générés :
+
+| Lieu | Décors reconnus | Effet | Action |
+|---|---|---|---|
+| Boîte aux lettres | `prop_mailbox` | la moitié de l'XP du niveau suivant | Lire le courrier |
+| Wagonnet | wagonnets de la carrière | une chance sur quatre d'une arme au sol, que le joueur ne porte pas ; sinon 8 à 14 Essence | Vider |
+| Voiture abandonnée | les huit voitures de la ville | 40 % de soin (12 % des PV max), sinon 6 à 11 Essence | Fouiller |
+| Cabine téléphonique | `prop_phone_booth` | les lieux encore utiles à 2 400 px reçoivent une flèche de bord d'écran, 45 s | Décrocher |
+| Abribus | `prop_bus_shelter` (**nouveau décor**, généré par `tools/sprites/props/urban.py`, posé le long des trottoirs) | vitesse +20 % pendant 20 s | Lire l'horaire |
+| Table de pique-nique | `prop_scene_picnic` | soin de 8 % et une ligne de lore parmi quatre | S'asseoir |
+
+**C6, carte agrandie en hauteur :** la carte devient une ellipse de 401 × 801 cellules, soit 25 600 × 12 800 px (`map_radius_y` dans `world_gen.json`). Tout ce qui supposait un disque passe par `WorldGenerator.EllipseDistance` ou par deux rayons (biomes, villes, champs, marais, chemins, décors, sites, son d'ambiance, shader du sol). Les comptes de lieux suivent la surface : coffres 23 → 39, Mémoriaux 5 → 9, Failles 3 → 6, plafonds des petits lieux relevés là où la carte porte assez de décors (de 55 à environ 110 lieux posés).
+
+**Minimap** (`scripts/UI/Minimap.cs`), coin bas droit du HUD : un pixel par cellule d'Effacement, révélé à 12 cellules autour du chemin et teinté par sa phase ; le front de l'Effacement avance aussi sur les cellules déjà vues (`ZonePhaseChanged`). Lieux découverts en points de leur couleur (grisés une fois servis), coffres à la couleur de leur rareté, Mémoriaux, Failles, joueur. Repeinte quatre fois par seconde, sans boucle sur les décors. Sous l'Oubli des repères, les coffres disparaissent de la carte comme les flèches.
+
+**Mesure**, 5 seeds × 10 min, mêmes seeds qu'au §14, bot nomade (`tools/measure_run.sh`) :
+
+| Par run de 10 min | C1 | C4 seul (carte d'avant) | C4 + C6, comptes d'avant | **C4 + C6, comptes réglés** |
+|---|---|---|---|---|
+| Petits lieux croisés | 7,2, un toutes les 80 s | 16,6, un toutes les 38 s | 15,2, un toutes les 40 s | **24,0, un toutes les 26 s (21–32)** |
+| Lieux croisés, tous types | 25,4 | 31,4 | 25,6 | 37,2 |
+| Coffres croisés | — | 11,6 | 9,4 | 10,2 |
+| Mémoriaux croisés | — | 2,0 | 0,6 | 1,2 |
+| Failles croisées | — | 1,2 | 0,4 | 1,8 |
+| Essence gagnée | 1 130 | 1 617 | 1 226 | 1 267 |
+
+- La cible du §2, **un petit lieu en vue toutes les 20 à 30 s à lui seul**, est atteinte : 26 s en moyenne.
+- Sans réglage, la carte deux fois plus grande diluait tout : un Mémorial croisé sur trois runs. Une première version des comptes doublés donnait un petit lieu toutes les 19 s et 15 coffres : coffres communs et lieux les plus fréquents ramenés en dessous.
+- Nomade qui ratisse (`--visit`), comptes réglés : 35,2 lieux croisés, **32,8 visités** (18,4 en C1), 1 571 Essence, toujours aucune dépensée.
+- Les colonnes C4 + C6 tournent avec la montée des PV de R5 (moins d'éliminations, d'où moins d'Essence).
+
+**Coût :**
+- Décors par carte : 10 694 → 21 505. Les décors restent hors de toute boucle par frame : index d'occlusion et tronçons comme avant.
+- Génération du terrain (`--capture-map`, 40 graines) : 203 → 423 ms par carte. Chargement complet en rendu logiciel, machine chargée : 21,6 → 26,8 s ; chiffre indicatif seulement.
+- Banc de combat dense A/B (carte de 6 400 contre 12 800 px de haut) : en attente d’une machine calme.
+
+**Vérifications :**
+- `dotnet build` : zéro avertissement. Smoke vert.
+- Bancs à `RESULT failures=0` : petits lieux (six contrôles C4 nouveaux, quota lu dans les données), déplacements, objets, capacités ennemies, armes, mode dev.
+- Captures regardées : `--capture-map` (ellipse de biomes, vues dézoomées) ; run nomade à 100 s avec la minimap (chemin révélé, lieux, coffres, Faille, joueur).
+- Relecture `godot-reviewer` : pas de bug bloquant, tous les restes de rayon unique corrigés. Corrigé ensuite : coffres masqués sous l'Oubli des repères sur la minimap, arme du Wagonnet tirée hors des armes portées et `LootReceived` émis au seul ramassage, petites allocations de la minimap, Boîte aux lettres signalée si la progression manque.
+
+**Reste :**
+- la minimap montre les coffres jusqu'à 12 cellules (environ 1 500 px) autour du chemin, plus loin que les flèches (1 200 px) : à juger en jeu ;
+- les Repères (C4) attendent la question 5 du §11 ;
+- la carte reste centrée sur le départ : un joueur qui file droit vers le nord ou le sud a maintenant deux fois plus de chemin avant le bord.
+
