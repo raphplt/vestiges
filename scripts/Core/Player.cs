@@ -331,7 +331,7 @@ public partial class Player : CharacterBody2D
 
         WeaponInstance removed = _weaponSlots[slotIndex];
         _weaponSlots.RemoveAt(slotIndex);
-        if (_isConeActive && removed.Base.SpecialEffect?.Type == "sustained_cone")
+        if (_isConeActive && removed.SpecialEffect?.Type == "sustained_cone")
             DeactivateSustainedCone();
         if (removed == _orbitalWeapon)
             ClearOrbitals();
@@ -805,7 +805,7 @@ public partial class Player : CharacterBody2D
         }
 
         // --- Weapon special effects ---
-        WeaponSpecialEffect se = source?.Base.SpecialEffect;
+        WeaponSpecialEffect se = source?.SpecialEffect;
         if (se != null)
             ProcessWeaponSpecialOnHit(se, enemy, damage, source, context);
     }
@@ -859,23 +859,27 @@ public partial class Player : CharacterBody2D
                 float echoDamage = damage * echoPct;
                 Vector2 echoPos = enemy.GlobalPosition;
                 float echoRadius = ZoneScale(se.Params.TryGetValue("echo_radius", out float er) ? er : 40f);
-                ulong enemyId = enemy.GetInstanceId();
-                GetTree().CreateTimer(delay).Timeout += () =>
+                // Enchaînement (ascension des Gants de boxe) : l'écho repart plusieurs fois, à intervalles égaux.
+                int echoCount = se.Params.TryGetValue("echo_count", out float ec) ? Mathf.Max(1, (int)ec) : 1;
+                for (int echo = 1; echo <= echoCount; echo++)
                 {
-                    // Réapplique les dégâts à la position d'origine (AoE fantôme)
-                    Godot.Collections.Array<Node> enemies = _groupCache.GetEnemies();
-                    foreach (Node node in enemies)
+                    GetTree().CreateTimer(delay * echo).Timeout += () =>
                     {
-                        if (node is Enemy e && IsInstanceValid(e) && !e.IsDying)
+                        // Réapplique les dégâts à la position d'origine (AoE fantôme)
+                        Godot.Collections.Array<Node> enemies = _groupCache.GetEnemies();
+                        foreach (Node node in enemies)
                         {
-                            if (e.GlobalPosition.DistanceTo(echoPos) < echoRadius)
-                                e.TakeDamage(echoDamage, source: context.As(DamageKind.SecondaryWeapon));
+                            if (node is Enemy e && IsInstanceValid(e) && !e.IsDying)
+                            {
+                                if (e.GlobalPosition.DistanceTo(echoPos) < echoRadius)
+                                    e.TakeDamage(echoDamage, source: context.As(DamageKind.SecondaryWeapon));
+                            }
                         }
-                    }
-                    SpawnEchoVisual(echoPos);
-                    if (_objectMilestones?.HasZoneEcho == true)
-                        _objectMilestones.QueueCircleEcho(echoPos, echoRadius, echoDamage, source, context);
-                };
+                        SpawnEchoVisual(echoPos);
+                        if (_objectMilestones?.HasZoneEcho == true)
+                            _objectMilestones.QueueCircleEcho(echoPos, echoRadius, echoDamage, source, context);
+                    };
+                }
                 break;
             }
             case "ground_fire":
@@ -888,15 +892,16 @@ public partial class Player : CharacterBody2D
                 float radius = ZoneScale(se.Params.TryGetValue("slow_radius", out float r) ? r : 80f);
                 float factor = se.Params.TryGetValue("slow_factor", out float f) ? f : 0.3f;
                 float duration = StatusDuration(se.Params.TryGetValue("slow_duration", out float dur) ? dur : 0.5f);
+                // Arrêt sur image (ascension du Chronomètre) : le champ fige au lieu de ralentir.
+                float freeze = se.Params.TryGetValue("freeze_seconds", out float fz) ? StatusDuration(fz) : 0f;
                 Vector2 impactPos = enemy.GlobalPosition;
+                // La cible frappée d'abord : elle est au centre du champ, même absente du cache des ennemis de la frame.
+                ApplyTimeField(enemy, freeze, factor, duration, context);
                 Godot.Collections.Array<Node> enemies = _groupCache.GetEnemies();
                 foreach (Node node in enemies)
                 {
-                    if (node is Enemy e && IsInstanceValid(e) && !e.IsDying)
-                    {
-                        if (e.GlobalPosition.DistanceTo(impactPos) < radius)
-                            e.ApplySlow(factor, duration, context);
-                    }
+                    if (node is Enemy e && e != enemy && IsInstanceValid(e) && !e.IsDying && e.GlobalPosition.DistanceTo(impactPos) < radius)
+                        ApplyTimeField(e, freeze, factor, duration, context);
                 }
                 SpawnTimeSlowVisual(impactPos, radius, duration);
                 break;
@@ -919,6 +924,15 @@ public partial class Player : CharacterBody2D
                 break;
             }
         }
+    }
+
+    /// <summary>Champ du Chronomètre sur une créature : fige (Arrêt sur image) ou ralentit.</summary>
+    private static void ApplyTimeField(Enemy enemy, float freeze, float factor, float duration, AttackContext context)
+    {
+        if (freeze > 0f)
+            enemy.Freeze(freeze);
+        else
+            enemy.ApplySlow(factor, duration, context);
     }
 
     private void SpawnEchoVisual(Vector2 position)
@@ -1659,7 +1673,7 @@ public partial class Player : CharacterBody2D
         string pattern = _equippedWeapon.AttackPattern?.ToLower() ?? "linear";
 
         // Sustained cone : effet spécial persistant (ex: last_broadcast)
-        WeaponSpecialEffect specialEffect = _equippedWeapon.Base.SpecialEffect;
+        WeaponSpecialEffect specialEffect = _equippedWeapon.SpecialEffect;
         if (specialEffect != null && specialEffect.Type == "sustained_cone")
         {
             if (!_isConeActive)
@@ -1731,9 +1745,9 @@ public partial class Player : CharacterBody2D
             Projectile proj = SpawnAimedProjectile(target, isHoming, homingStrength, baseDamage, projectileSpeed, range, totalPierce, offset);
 
             // Ground fire : configurer le projectile pour spawner une zone au sol à l'impact
-            if (proj != null && _equippedWeapon?.Base.SpecialEffect?.Type == "ground_fire")
+            if (proj != null && _equippedWeapon?.SpecialEffect?.Type == "ground_fire")
             {
-                WeaponSpecialEffect se = _equippedWeapon.Base.SpecialEffect;
+                WeaponSpecialEffect se = _equippedWeapon.SpecialEffect;
                 float gDmg = se.Params.TryGetValue("ground_damage", out float gd) ? gd : 5f;
                 float gDur = StatusDuration(se.Params.TryGetValue("ground_duration", out float gdur) ? gdur : 2f);
                 float gRad = ZoneScale(se.Params.TryGetValue("ground_radius", out float grad) ? grad : 30f);

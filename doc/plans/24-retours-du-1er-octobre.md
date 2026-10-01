@@ -381,3 +381,38 @@ Les dégâts reçus sont bruts (le bot est invincible, la régénération n'y es
 **Vérifications :** `dotnet build` sans avertissement ; `test_weapons`, `test_objects`, `test_small_places`, `test_perk_acquisition`, `test_perk_effects`, `test_perk_contracts`, `test_movement` (score immobile sans élimination, une élimination rapporte), `test_enemy_abilities`, `test_dev_mode` à zéro échec ; smoke vert. Captures en vraie run (1080p, 20 et 40 s) regardées : temps seul, plaque score-éliminations-Essence, barre d'XP lisible et tramée.
 
 **Reste du chantier A :** quêtes repliées (L4) et minimap radar (L7).
+
+**Relecture de L3 et L2 (sous-agent) traitée :** le record passe dans un nouveau fichier (`highscore_kills.save`), un ancien record fait avec les points de temps ne serait plus jamais battu ; ligne Portée de la fiche réduite au bonus gagné en run (la portée propre au personnage s'affichait comme un bonus) ; `seen_hints` normalisé au chargement ; tween de couleur du temps tué avant d'être relancé ; nom de biome qui ne clignote plus en franchissant deux frontières ; journal du level-up qui ne retire plus le palier ; le test du Wagonnet à quatre armes, sauté sans bruit faute de second wagonnet, rejoue maintenant la pose directement.
+
+### L12 — ascensions des 20 autres armes (1er octobre)
+
+Validées par la demande de Raphaël (DECISIONS §40), d'après la proposition du [21-historique §28](21-historique.md). Les 24 armes ont leurs deux voies.
+
+| Arme | Voie A | Voie B |
+|---|---|---|
+| Parcmètre | Séisme : cercle complet, cadence × 0,7 | Contravention : coup droit, dégâts × 1,8, recul × 2 |
+| Lance-billes | Grêle : billes × 2, dégâts × 0,7 | Bille d'acier : une bille, perforation 5, dégâts × 2,5 |
+| Parapluie | Rafale : cadence × 1,6, portée × 0,8 | Ouvert : arc de 120°, recul × 3 |
+| Cloueuse | Agrafeuse : salve de 3 (20°), dégâts × 0,5 | Clou de charpente : dégâts × 2, perforation illimitée, cadence × 0,7 |
+| Pelle à neige | Congère : ralentit 2 s (×0,5) | Déblayer : cercle complet, recul × 2 |
+| Rallonge | Court-circuit : désoriente 0,8 s | Enrouleur : portée × 1,5, cadence × 0,8 |
+| Assiettes | Service complet : assiettes × 2 | Vaisselle cassée : perforation 3 |
+| Râteau | Herse : Saignement de 8 s au lieu de 4 | Ratisser : cercle complet |
+| Scalpel | Suture : soin tous les 3 coups au lieu de 5 | Incision : fait saigner 3 s |
+| Lentille de phare | Balayage : trois rayons (30°), dégâts × 0,6 | Foyer : dégâts × 2, cadence × 0,6 |
+| Trousseau | Passe-partout : sauts × 2 | Clé unique : un saut, dégâts × 2,2 |
+| Boussole | Rose des vents : aiguilles × 3, dégâts × 0,5 | Nord : guidage maximal, perforation 3 |
+| Polaroïd | Rafale de flashs : cadence × 1,5 | Surexposition : désorientation de 3 s au lieu de 1,5 |
+| Baguette de sourcier | Fourche : tirs × 2 | Source : dégâts × 1,8 |
+| Gomme | Mie de pain : cercle complet | Encre : dégâts × 1,6, portée × 1,3 |
+| Lampe à pétrole | Nappe : feu au sol de 4 s, rayon 45 (2 s, 30) | Mèche courte : tirs × 2, feux de rayon 20 |
+| Gants de boxe | Enchaînement : deux échos | Crochet : dégâts × 1,7, recul × 2 |
+| Craies | Marelle : formes de rayon 80 (50) | Dessin appliqué : formes × 2 |
+| Transistor | Grandes ondes : cône de 25° à 100° (15° à 60°) | Fréquence pirate : le cône désoriente 0,6 s |
+| Chronomètre | Arrêt sur image : le champ fige 0,5 s au lieu de ralentir | Compte à rebours : cadence × 1,5 |
+
+**Levier ajouté :** `special_overrides`, réglages de l'effet spécial de l'arme remplacés par la voie (Suture, Nappe, Mèche courte, Enchaînement, Marelle, Arrêt sur image). L'effet est copié une fois au choix de la voie, l'arme de base reste intacte. L'écho des Gants lit `echo_count`, le champ du Chronomètre `freeze_seconds` ; la cible frappée subit le champ même si elle manque au cache des ennemis de la frame.
+
+**Vérifications :** `test_weapons` à zéro échec, dont trois contrôles nouveaux : les 24 armes ont deux voies dans un motif que leur famille sait jouer ; Suture soigne tous les 3 coups et Enchaînement fait deux échos sans toucher l'arme de base ; Arrêt sur image fige. `test_small_places`, `test_movement`, `test_enemy_abilities` à zéro échec. Galerie en vraie run (`--capture-weapons --ascensions`) regardée pour Séisme, Agrafeuse, Balayage et Ouvert : les coups touchent tout autour, en salve, en éventail et en arc.
+
+**Reste :** comme la Moisson de la Faucille, une voie en cercle (Séisme, Déblayer, Ratisser, Mie de pain) dessine encore l'effet de son arme d'origine ; l'effet visuel circulaire est à reprendre avec le plan 25. Chiffres de départ, à régler en jeu.

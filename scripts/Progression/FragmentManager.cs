@@ -21,6 +21,8 @@ public partial class FragmentManager : Node
     private EventBus _eventBus;
     private Player _player;
     private int _currentLevel = 1;
+    // Palier tiré pour la dernière offre, gardé pour le journal : le retirer referait un tirage.
+    private int _lastMaxTier = 1;
     private int _peril;
 
     // Level-up queue (multi-level-up support)
@@ -234,7 +236,7 @@ public partial class FragmentManager : Node
             _pendingChoices.Add(option.IsCarried ? option : RollUpgrade(option));
         _choosingActive = true;
 
-        GD.Print($"[FragmentManager] Level {level} (maxTier={GetMaxFragmentTier(level)}): offering {_pendingChoices.Count} fragments (pool had {options.Count})");
+        GD.Print($"[FragmentManager] Level {level} (maxTier={_lastMaxTier}): offering {_pendingChoices.Count} fragments (pool had {options.Count})");
 
         _eventBus.EmitSignal(EventBus.SignalName.FragmentChoicesReady, _pendingChoices.Count);
     }
@@ -333,6 +335,7 @@ public partial class FragmentManager : Node
 
         // Armes nouvelles (si slots dispo)
         int maxTier = GetMaxFragmentTier(_currentLevel);
+        _lastMaxTier = maxTier;
         if (!weaponSlotsFull)
         {
             HashSet<string> equippedIds = new();

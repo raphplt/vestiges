@@ -23,6 +23,8 @@ public sealed class WeaponAscensionData
 	public WeaponOnHitEffect OnHitEffect { get; init; }
 	/// <summary>Part des projectiles en plus du Papier carbone que l'arme reçoit (0 : aucun, 2 : le double).</summary>
 	public float BonusProjectileMultiplier { get; init; } = 1f;
+	/// <summary>Réglages de l'effet spécial de l'arme remplacés par la voie (Suture : soin tous les 3 coups).</summary>
+	public Dictionary<string, float> SpecialOverrides { get; init; } = new();
 	public HashSet<string> Flags { get; init; } = new();
 	public Dictionary<string, float> Parameters { get; init; } = new();
 

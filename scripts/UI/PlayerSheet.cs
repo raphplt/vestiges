@@ -36,9 +36,9 @@ public static class PlayerSheet
         // Valeurs plutôt que multiplicateurs (plan 24 D1) : un « — » se lisait comme une stat absente.
         AddLine(container, Tr("STAT_SPEED"), WithBonus($"{player.Speed * player.SpeedMultiplier:F0}", player.SpeedMultiplier), null, role);
         AddLine(container, Tr("STAT_CRIT"), $"{Percent(player.CritChance)}  ×{player.CritMultiplier.ToString("0.0", French)}", null, role);
-        // Les dégâts montent par arme (cartes d'arme) : les bonus globaux ne s'affichent que s'ils existent.
-        // Portée : celle du personnage (rapportée à 300) et ses bonus ; la portée de chaque arme est dans sa fiche.
-        AddBonusLine(container, Tr("STAT_RANGE"), player.EffectiveAttackRange / 300f, role);
+        // Les dégâts montent par arme (cartes d'arme) : les bonus globaux ne s'affichent que s'ils existent. La portée
+        // propre au personnage fait partie de ses armes ; seule la portée gagnée en run s'affiche ici.
+        AddBonusLine(container, Tr("STAT_RANGE"), player.AttackRangeMultiplier, role);
         AddBonusLine(container, Tr("STAT_DAMAGE"), player.DamageMultiplier, role);
         AddBonusLine(container, Tr("STAT_ATTACK_SPEED"), player.AttackSpeedMultiplier, role);
         AddBonusLine(container, Tr("STAT_AOE"), player.AoeMultiplier, role);
