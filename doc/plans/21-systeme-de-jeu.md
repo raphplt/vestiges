@@ -80,7 +80,7 @@ Il n'existe pas d'autre famille : ni traits, ni passifs, ni Dons de coffre.
 | Cloche d'école | **Glas** : ralentit deux fois plus longtemps, sans recul | **Tocsin** : repousse fort et désoriente |
 | Boîte à musique | **Ronde** : les orbes s'éloignent et reviennent | **Berceuse** : orbes proches, qui endorment un instant |
 
-Les deux voies de chacune des 24 armes s'écrivent au lot G3. Les quatre exemples ci-dessus sont en jeu. Les voies des 20 autres armes sont proposées dans [21-historique.md §28](21-historique.md#28-lot-g3--ascensions-darmes--découpage-et-proposition-pour-20-armes-30-septembre), à valider.
+Les deux voies de chacune des 24 armes sont en jeu (G3, étapes 1 et 2 ; DECISIONS §40). Celles des 20 autres armes sont celles du [21-historique.md §28](21-historique.md#28-lot-g3--ascensions-darmes--découpage-et-proposition-pour-20-armes-30-septembre), aux leviers détaillés au [plan 24 §11, L12](24-retours-du-1er-octobre.md).
 
 ## 4. Objets
 
@@ -262,6 +262,7 @@ Quand une carte ne peut plus rien offrir (4 armes ascensionnées, 6 objets au ni
 | Élément | État au 30 septembre | Lot |
 |---|---|---|
 | Armes : 4 emplacements, niveau 50, stats aléatoires à rareté | **En jeu** | — |
+| Offre de level-up : une arme nouvelle garantie sous 3 armes, composition en données | **En jeu** | Plan 24, L3 |
 | Relances limitées, bannissements gratuits puis Péril | **En jeu** | G1 |
 | Réminiscences après les Résurgences, 7 sur 14, libellées « Réminiscence » | **En jeu** | G1, G2a |
 | Objets : 6 emplacements, 30 niveaux, une carte = un niveau, gain du pas × 1 à × 3 selon la rareté, effets multiples | **En jeu** | Plan 23, R3 |
@@ -278,13 +279,13 @@ Quand une carte ne peut plus rien offrir (4 armes ascensionnées, 6 objets au ni
 | Reliquaire, objets « monde », remplacement | À faire | Plan 22, C3 |
 | Propriétés nommées sur les cartes d'armes et d'objets, armes concernées par un objet | **Retirées des cartes** ; les armes concernées s'allument dans l'inventaire au focus d'une carte d'objet, la règle reste pour les affinités | G0, plan 23 R2 |
 | Ascensions d'armes : mécanique et quatre armes (Arc, Faucille, Cloche, Boîte à musique) | **En jeu** | G3, étape 1 |
-| Ascensions des 20 autres armes | **Proposées, à valider par Raphaël** | G3, étape 2 |
+| Ascensions des 20 autres armes | **En jeu** (validées DECISIONS §40) | G3, étape 2, plan 24 L12 |
 | Affinités des personnages, Souverain à 25 % | À faire | G4 |
 | Sept Réminiscences restantes | À faire | G5 |
 | Surplus, déblocages | À faire | Plans 20, 22 |
 | Anciens Dons des coffres et leurs synergies | **Retirés** ; les coffres donnent des niveaux d'objet (un niveau = une carte commune) | G2b, étape 1, plan 23 R3 |
 | Bonus d'une stat au hasard à chaque coffre, en plus du butin (un niveau d'objet commun, ×2 rare, ×3 épique) | **En jeu** | Plan 23, R8 |
-| Repères : +1 % de Chance au premier usage de chaque type de lieu (douze types) | **En jeu** | Plan 23, R9 |
+| Repères : au premier usage de chaque type de lieu, un petit gain propre au lieu (stat, relance ou bannissement), douze types | **En jeu** | Plan 23 R9, plan 24 L9 |
 
 ## 13. Ce que ce document remplace
 

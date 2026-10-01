@@ -110,7 +110,7 @@ public partial class RiftDirector : Node
             rift.Close();
             _eventBus.EmitSignal(EventBus.SignalName.RiftUsed, rift.GlobalPosition);
             EmitSparks(rift.GlobalPosition);
-        });
+        }, PixelBackdrop.RiftTint);
     }
 
     private ChoiceCard BuildCard(FragmentOption option, OubliData oubli)

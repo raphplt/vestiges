@@ -31,16 +31,12 @@ public partial class LevelUpScreen : CanvasLayer
     private Tween _entranceTween;
     private static readonly Color BanishColor = new(0.85f, 0.25f, 0.2f);
 
-    private const int RayCount = 14;
-    private const float RaySpeed = 0.15f;
-    private static readonly Color RayColorA = new(0.83f, 0.66f, 0.26f, 0.08f);
-    private static readonly Color RayColorB = new(0.9f, 0.78f, 0.39f, 0.04f);
 
     private Texture2D _panelTex;
     private Texture2D _separatorTex;
 
     private ColorRect _overlay;
-    private LightRaysControl _rays;
+    private PixelBackdrop _rays;
     private HBoxContainer _layout;
     private PanelContainer _panel;
     private VBoxContainer _inventoryContainer;
@@ -114,11 +110,8 @@ public partial class LevelUpScreen : CanvasLayer
         _overlay.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
         AddChild(_overlay);
 
-        _rays = new LightRaysControl(RayCount, RaySpeed, RayColorA, RayColorB)
-        {
-            MouseFilter = Control.MouseFilterEnum.Ignore,
-            ProcessMode = ProcessModeEnum.Always,
-        };
+        // Fond en gros pixels, rayons tramés et poussière d'oubli (plan 24 B1).
+        _rays = new PixelBackdrop(PixelBackdrop.GoldTint);
         _rays.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
         AddChild(_rays);
 
@@ -317,7 +310,10 @@ public partial class LevelUpScreen : CanvasLayer
             : Tr(isWeapon ? "LEVELUP_KIND_WEAPON" : "LEVELUP_KIND_OBJECT");
         if (choice.IsCarried)
             tag = $"{tag}  ·  {Tr("LEVELUP_CARRIED")}";
-        header.AddChild(MakeLabel(tag, TextRole.Caption, frame, true));
+        Label tagLabel = MakeLabel(tag, TextRole.Caption, frame, true);
+        header.AddChild(tagLabel);
+        if (choice.RarityRaised && !choice.IsCarried)
+            ShowRarityRaise(header, tagLabel, choice, tag, frame, _cards.Count);
         header.AddChild(MakeLabel(LevelText(choice, player, isWeapon, isAscension, isPerk, isNew), TextRole.Caption,
             isNew && !isPerk ? GoldBright : TextColor, false, HorizontalAlignment.Right));
 
@@ -554,7 +550,7 @@ public partial class LevelUpScreen : CanvasLayer
     {
         _overlay.Visible = true;
         _rays.Visible = true;
-        _rays.ResetAngle();
+        _rays.FadeIn(0.3f);
         _layout.Visible = true;
         Visible = true;
         GetTree().Paused = true;
@@ -587,6 +583,34 @@ public partial class LevelUpScreen : CanvasLayer
             .SetTrans(Tween.TransitionType.Back).SetEase(Tween.EaseType.Out);
     }
 
+    /// <summary>
+    /// La Chance (ou l'oubli, le Péril) a monté la rareté : la carte montre d'abord la rareté tirée, puis elle saute au
+    /// rang gagné avec un trèfle et un son (plan 24 D2). Les cartes d'une offre sautent l'une après l'autre.
+    /// </summary>
+    private void ShowRarityRaise(HBoxContainer header, Label tagLabel, FragmentOption choice, string finalTag, Color finalColor, int cardIndex)
+    {
+        UpgradeRarity rolled = choice.RolledRarity;
+        tagLabel.Text = $"{ChoiceStyle.RarityGlyph(rolled.Rank)} {RarityPalette.DisplayName(rolled.Id).ToUpper()}".Trim();
+        tagLabel.AddThemeColorOverride("font_color", RarityPalette.Main(rolled.Id));
+        PixelIcon clover = PixelIcon.Clover(2f);
+        clover.Modulate = Colors.Transparent;
+        header.AddChild(clover);
+        header.MoveChild(clover, tagLabel.GetIndex() + 1);
+
+        Tween tween = tagLabel.CreateTween();
+        tween.TweenInterval(0.35f + 0.15f * cardIndex);
+        tween.TweenCallback(Callable.From(() =>
+        {
+            tagLabel.Text = finalTag;
+            tagLabel.AddThemeColorOverride("font_color", finalColor);
+            tagLabel.PivotOffset = tagLabel.Size / 2f;
+            tagLabel.Scale = new Vector2(1.5f, 1.5f);
+            clover.Modulate = Colors.White;
+            AudioManager.PlayUI("sfx_rare_fragment", 0.08f, -6f);
+        }));
+        tween.TweenProperty(tagLabel, "scale", Vector2.One, 0.25f).SetTrans(Tween.TransitionType.Back).SetEase(Tween.EaseType.Out);
+    }
+
     private void SetPanelScale(float scale)
     {
         // Les colonnes viennent d'être remplies et leur mise en page est différée : la taille minimale, calculée sur
@@ -606,55 +630,5 @@ public partial class LevelUpScreen : CanvasLayer
         Visible = false;
         AudioManager.StopLoop();
         AudioManager.PlayUI("sfx_level_up_after");
-    }
-
-    // ==============================
-    // Rayons de lumière (aussi utilisés par l'écran de butin)
-    // ==============================
-
-    internal partial class LightRaysControl : Control
-    {
-        private readonly int _rayCount;
-        private readonly float _speed;
-        private readonly Color _colorA;
-        private readonly Color _colorB;
-        private float _angle;
-
-        public LightRaysControl(int rayCount, float speed, Color colorA, Color colorB)
-        {
-            _rayCount = rayCount;
-            _speed = speed;
-            _colorA = colorA;
-            _colorB = colorB;
-        }
-
-        public void ResetAngle() => _angle = 0f;
-
-        public override void _Process(double delta)
-        {
-            _angle += _speed * (float)delta;
-            QueueRedraw();
-        }
-
-        public override void _Draw()
-        {
-            Vector2 center = Size / 2f;
-            float radius = center.Length() * 1.5f;
-            float sliceAngle = Mathf.Tau / _rayCount;
-
-            for (int i = 0; i < _rayCount; i++)
-            {
-                float startAngle = _angle + i * sliceAngle;
-                float endAngle = startAngle + sliceAngle * 0.5f;
-                float midAngle = (startAngle + endAngle) * 0.5f;
-                Color rayColor = i % 2 == 0 ? _colorA : _colorB;
-
-                Vector2 p1 = center + new Vector2(Mathf.Cos(startAngle), Mathf.Sin(startAngle)) * radius;
-                Vector2 p2 = center + new Vector2(Mathf.Cos(endAngle), Mathf.Sin(endAngle)) * radius;
-                Vector2 pMid = center + new Vector2(Mathf.Cos(midAngle), Mathf.Sin(midAngle)) * radius;
-                DrawColoredPolygon(new[] { center, p1, pMid }, rayColor);
-                DrawColoredPolygon(new[] { center, pMid, p2 }, rayColor);
-            }
-        }
     }
 }

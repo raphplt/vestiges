@@ -21,7 +21,9 @@ public partial class ScoreManager : Node
     private bool _endSettled;
     private bool _endedWithRecord;
     private int _previousBest;
-    private static string HighScorePath => DevelopmentMode.GetSavePath("highscore.save");
+    // Nouveau fichier depuis le score aux seules éliminations (DECISIONS §40) : un record fait avec les points de temps,
+    // de lieux et de coffres ne serait plus jamais battu.
+    private static string HighScorePath => DevelopmentMode.GetSavePath("highscore_kills.save");
 
     private int _combatScore;
     private int _totalKills;

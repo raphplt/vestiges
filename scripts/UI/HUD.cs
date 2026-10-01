@@ -62,6 +62,7 @@ public partial class HUD : CanvasLayer
     private Label _biomeLabel;
     private Label _timeLabel;
     private float _biomeAge = float.MaxValue;
+    private Tween _timeColorTween;
 
     // --- Score ---
     private Label _scoreLabel;
@@ -472,6 +473,9 @@ public partial class HUD : CanvasLayer
         _essenceLabel.Size = new Vector2(ScorePlateWidth - 78, 15);
         _essenceLabel.HorizontalAlignment = HorizontalAlignment.Right;
         content.AddChild(_essenceLabel);
+
+        // Quêtes de run repliées en sceaux, sous la plaque (plan 24 A2).
+        anchor.AddChild(new RunQuestSeals { Name = "QuestSeals", Position = new Vector2(-PlateMargin, PlateMargin + 46f) });
     }
 
     private void BuildWeaponBar()
@@ -706,7 +710,9 @@ public partial class HUD : CanvasLayer
             "Endgame" => PalGold,
             _ => PalWhiteOff
         };
-        CreateTween().TweenMethod(Callable.From<Color>(color => _timeLabel.AddThemeColorOverride("font_color", color)),
+        _timeColorTween?.Kill();
+        _timeColorTween = CreateTween();
+        _timeColorTween.TweenMethod(Callable.From<Color>(color => _timeLabel.AddThemeColorOverride("font_color", color)),
             _timeLabel.GetThemeColor("font_color"), timeColor, 0.8f);
 
         if (newPhase == "Death")
@@ -864,7 +870,9 @@ public partial class HUD : CanvasLayer
             return;
         _lastBiomeName = biomeName;
         _biomeLabel.Text = biomeName;
-        _biomeAge = biomeName.Length > 0 ? 0f : float.MaxValue;
+        // Déjà affiché (frontière franchie deux fois) : le nouveau nom reste plein, sans repartir du transparent.
+        bool showing = _biomeAge < BiomeFadeSec + BiomeShowSec;
+        _biomeAge = biomeName.Length == 0 ? float.MaxValue : showing ? BiomeFadeSec : 0f;
     }
 
     /// <summary>Le nom du biome apparaît, reste deux secondes puis s'efface.</summary>

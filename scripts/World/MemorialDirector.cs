@@ -238,7 +238,7 @@ public partial class MemorialDirector : Node
                 RerollBlessings(memorial, rerollCost);
             else if (choice >= 0 && CachePlayer())
                 modifiers[choice].ApplyTo(_player);
-        });
+        }, PixelBackdrop.MemorialTint);
     }
 
     private void RerollBlessings(Memorial memorial, int cost)
@@ -316,11 +316,12 @@ public partial class MemorialDirector : Node
         string subtitle = string.Format(Tr("MEMORIAL_ESSENCE"), essence);
         if (!string.IsNullOrEmpty(lastResult))
             subtitle = $"{lastResult}   ·   {subtitle}";
+        // Rouvert après chaque achat : l'entrée ne se joue qu'à la première ouverture.
         _choices.Open(Tr("MEMORIAL_SERVICES_TITLE"), subtitle, cards, Tr("MEMORIAL_LEAVE"), choice =>
         {
             if (choice >= 0 && CachePlayer())
                 actions[choice]();
-        });
+        }, PixelBackdrop.MemorialTint, string.IsNullOrEmpty(lastResult));
     }
 
     private void ReviveWeapon(Memorial memorial, WeaponInstance weapon, int cost)

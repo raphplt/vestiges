@@ -183,6 +183,7 @@ public partial class Enemy : CharacterBody2D
 	public bool IsActive { get; private set; }
 	public bool IsDying => _isDying;
 	public float HpRatio => _maxHp > 0 ? _currentHp / _maxHp : 0f;
+	public float MaxHp => _maxHp;
 	public EnemyModifiers Modifiers => _mods;
 	public string EnemyId => _enemyId;
 	/// <summary>Sprite animé de la créature, ou null si elle n'est dessinée que par son polygone de repli.</summary>

@@ -128,6 +128,10 @@ public partial class EventBus : Node
     // --- Petits lieux (plan 22 C1 et C4) ---
     /// <summary>Un petit lieu vient de servir (Repères, plan 23 R9).</summary>
     [Signal] public delegate void SmallPlaceUsedEventHandler(string placeId, Vector2 position);
+    /// <summary>Une quête de run a changé : rang, nom, part accomplie (0 à 1), remplie (plan 24 A2).</summary>
+    [Signal] public delegate void RunQuestUpdatedEventHandler(int index, string name, float progress, bool completed);
+    /// <summary>Relances et bannissements gratuits gagnés hors du level-up (Repère d'un Mémorial ou d'une Faille).</summary>
+    [Signal] public delegate void ChoiceTokensGrantedEventHandler(int rerolls, int banishes);
 
     // --- Essence (V2) ---
     [Signal] public delegate void EssenceChangedEventHandler(int newAmount);

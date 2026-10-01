@@ -26,6 +26,9 @@ public class WeaponInstance
 	public string AttackPattern => Ascension?.AttackPattern ?? Base.AttackPattern;
 	/// <summary>Effet à l'impact : celui de la voie d'ascension, sinon celui de l'arme.</summary>
 	public WeaponOnHitEffect OnHitEffect => Ascension?.OnHitEffect ?? Base.OnHitEffect;
+	/// <summary>Effet spécial : celui de l'arme, aux réglages remplacés par la voie d'ascension s'il y en a.</summary>
+	public WeaponSpecialEffect SpecialEffect => _specialEffect ?? Base.SpecialEffect;
+	private WeaponSpecialEffect _specialEffect;
 	/// <summary>Voie choisie au niveau maximal (plan 21 §3) ; null avant l'ascension.</summary>
 	public WeaponAscensionData Ascension { get; private set; }
 	/// <summary>L'arme est au niveau maximal, n'a pas encore choisi et a deux voies à proposer.</summary>
@@ -65,9 +68,21 @@ public class WeaponInstance
 			if (ascension.Id != ascensionId)
 				continue;
 			Ascension = ascension;
+			_specialEffect = WithOverrides(Base.SpecialEffect, ascension.SpecialOverrides);
 			return true;
 		}
 		return false;
+	}
+
+	/// <summary>Copie de l'effet spécial aux réglages remplacés ; null s'il n'y a rien à remplacer.</summary>
+	private static WeaponSpecialEffect WithOverrides(WeaponSpecialEffect effect, Dictionary<string, float> overrides)
+	{
+		if (effect == null || overrides.Count == 0)
+			return null;
+		WeaponSpecialEffect copy = new() { Type = effect.Type, Params = new Dictionary<string, float>(effect.Params), Shapes = effect.Shapes };
+		foreach ((string key, float value) in overrides)
+			copy.Params[key] = value;
+		return copy;
 	}
 
 	public bool HasFlag(string flag) => Ascension != null && Ascension.Flags.Contains(flag);

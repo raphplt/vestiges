@@ -381,3 +381,98 @@ Les dégâts reçus sont bruts (le bot est invincible, la régénération n'y es
 **Vérifications :** `dotnet build` sans avertissement ; `test_weapons`, `test_objects`, `test_small_places`, `test_perk_acquisition`, `test_perk_effects`, `test_perk_contracts`, `test_movement` (score immobile sans élimination, une élimination rapporte), `test_enemy_abilities`, `test_dev_mode` à zéro échec ; smoke vert. Captures en vraie run (1080p, 20 et 40 s) regardées : temps seul, plaque score-éliminations-Essence, barre d'XP lisible et tramée.
 
 **Reste du chantier A :** quêtes repliées (L4) et minimap radar (L7).
+
+**Relecture de L3 et L2 (sous-agent) traitée :** le record passe dans un nouveau fichier (`highscore_kills.save`), un ancien record fait avec les points de temps ne serait plus jamais battu ; ligne Portée de la fiche réduite au bonus gagné en run (la portée propre au personnage s'affichait comme un bonus) ; `seen_hints` normalisé au chargement ; tween de couleur du temps tué avant d'être relancé ; nom de biome qui ne clignote plus en franchissant deux frontières ; journal du level-up qui ne retire plus le palier ; le test du Wagonnet à quatre armes, sauté sans bruit faute de second wagonnet, rejoue maintenant la pose directement.
+
+### L12 — ascensions des 20 autres armes (1er octobre)
+
+Validées par la demande de Raphaël (DECISIONS §40), d'après la proposition du [21-historique §28](21-historique.md). Les 24 armes ont leurs deux voies.
+
+| Arme | Voie A | Voie B |
+|---|---|---|
+| Parcmètre | Séisme : cercle complet, cadence × 0,7 | Contravention : coup droit, dégâts × 1,8, recul × 2 |
+| Lance-billes | Grêle : billes × 2, dégâts × 0,7 | Bille d'acier : une bille, perforation 5, dégâts × 2,5 |
+| Parapluie | Rafale : cadence × 1,6, portée × 0,8 | Ouvert : arc de 120°, recul × 3 |
+| Cloueuse | Agrafeuse : salve de 3 (20°), dégâts × 0,5 | Clou de charpente : dégâts × 2, perforation illimitée, cadence × 0,7 |
+| Pelle à neige | Congère : ralentit 2 s (×0,5) | Déblayer : cercle complet, recul × 2 |
+| Rallonge | Court-circuit : désoriente 0,8 s | Enrouleur : portée × 1,5, cadence × 0,8 |
+| Assiettes | Service complet : assiettes × 2 | Vaisselle cassée : perforation 3 |
+| Râteau | Herse : Saignement de 8 s au lieu de 4 | Ratisser : cercle complet |
+| Scalpel | Suture : soin tous les 3 coups au lieu de 5 | Incision : fait saigner 3 s |
+| Lentille de phare | Balayage : trois rayons (30°), dégâts × 0,6 | Foyer : dégâts × 2, cadence × 0,6 |
+| Trousseau | Passe-partout : sauts × 2 | Clé unique : un saut, dégâts × 2,2 |
+| Boussole | Rose des vents : aiguilles × 3, dégâts × 0,5 | Nord : guidage maximal, perforation 3 |
+| Polaroïd | Rafale de flashs : cadence × 1,5 | Surexposition : désorientation de 3 s au lieu de 1,5 |
+| Baguette de sourcier | Fourche : tirs × 2 | Source : dégâts × 1,8 |
+| Gomme | Mie de pain : cercle complet | Encre : dégâts × 1,6, portée × 1,3 |
+| Lampe à pétrole | Nappe : feu au sol de 4 s, rayon 45 (2 s, 30) | Mèche courte : tirs × 2, feux de rayon 20 |
+| Gants de boxe | Enchaînement : deux échos | Crochet : dégâts × 1,7, recul × 2 |
+| Craies | Marelle : formes de rayon 80 (50) | Dessin appliqué : formes × 2 |
+| Transistor | Grandes ondes : cône de 25° à 100° (15° à 60°) | Fréquence pirate : le cône désoriente 0,6 s |
+| Chronomètre | Arrêt sur image : le champ fige 0,5 s au lieu de ralentir | Compte à rebours : cadence × 1,5 |
+
+**Levier ajouté :** `special_overrides`, réglages de l'effet spécial de l'arme remplacés par la voie (Suture, Nappe, Mèche courte, Enchaînement, Marelle, Arrêt sur image). L'effet est copié une fois au choix de la voie, l'arme de base reste intacte. L'écho des Gants lit `echo_count`, le champ du Chronomètre `freeze_seconds` ; la cible frappée subit le champ même si elle manque au cache des ennemis de la frame.
+
+**Vérifications :** `test_weapons` à zéro échec, dont trois contrôles nouveaux : les 24 armes ont deux voies dans un motif que leur famille sait jouer ; Suture soigne tous les 3 coups et Enchaînement fait deux échos sans toucher l'arme de base ; Arrêt sur image fige. `test_small_places`, `test_movement`, `test_enemy_abilities` à zéro échec. Galerie en vraie run (`--capture-weapons --ascensions`) regardée pour Séisme, Agrafeuse, Balayage et Ouvert : les coups touchent tout autour, en salve, en éventail et en arc.
+
+**Reste :** comme la Moisson de la Faucille, une voie en cercle (Séisme, Déblayer, Ratisser, Mie de pain) dessine encore l'effet de son arme d'origine ; l'effet visuel circulaire est à reprendre avec le plan 25. Chiffres de départ, à régler en jeu.
+
+### L9 — Repères (1er octobre)
+
+Chaque type de lieu donne, à son premier usage dans la run, le gain du tableau D3, de la taille d'une carte commune d'objet : puits PV max +10, veine de cristal Chance +5 %, épouvantail armure +2, boîte aux lettres XP +5 %, wagonnet aimant +15 %, voiture bouclier +5, cabine portée +5 %, abribus vitesse +4 %, pique-nique régénération +0,3 PV/s, coffre Chance +5 %, Mémorial une relance, Faille un bannissement gratuit. Le message flottant dit le gain (« Repère : Puits · PV max +10 »). Gains en données (`waymarks.json`) ; relances et bannissements passent par un signal (`ChoiceTokensGranted`), sans lien direct entre les Repères et le level-up.
+
+**Vérifications :** `test_small_places` à zéro échec avec un contrôle des douze gains ; trois contrôles anciens adaptés (le puits et l'abribus donnent maintenant aussi leur Repère, le bouclier de la voiture encaisse un coup entier). `test_objects`, `test_perk_acquisition` à zéro échec ; smoke vert.
+
+### L4 — quêtes repliées (1er octobre)
+
+- **Par défaut, des sceaux :** un sceau de cire en pixel art par quête, sous la plaque du score (`RunQuestSeals`). Un anneau de huit crans se remplit avec la progression ; chaque cran allumé fait pulser le sceau ; une quête remplie le brise en éclats dorés, il reste doré et coché, et « Quête accomplie : … » passe 2,6 s dessous. Les sceaux sont dessinés en code en attendant ceux du plan 25 (S6).
+- **Le détail** (nom, condition, progression, récompense) : en maintenant **Tab** (manette : LB), action `show_quests` déclarée et remappable. L'ancien panneau, resserré, passe à l'échelle du HUD.
+- **Réglage** Paramètres › Graphismes › « Quêtes de run » : Sceaux (défaut), Détaillées (le panneau en permanence), Masquées.
+- Une action `show_map` (M, manette : RB) est déclarée pour la carte entière du lot L7.
+- Les sceaux suivent les quêtes par un signal (`RunQuestUpdated`), sans lien direct entre le HUD et le gestionnaire de quêtes.
+
+**Vérifications :** build sans avertissement, smoke vert, `test_objects` et `test_dev_mode` à zéro échec. Capture en vraie run à 60 s regardée : trois sceaux colorés sous le score, anneaux en partie allumés.
+
+**Correctif :** `test_dev_mode` cherchait le record sous son ancien nom de fichier (`highscore.save`), renommé au lot L12 ; le banc et son script suivent le nouveau nom.
+
+### L7 — minimap radar (1er octobre)
+
+- **Radar :** 104 unités de côté, 26 cellules de 128 px (environ trois écrans), quatre unités par cellule ; la fenêtre suit le joueur, calée sur la grille d'une unité pour que les cellules glissent pixel par pixel. Le joueur au centre.
+- **Carte entière** en maintenant **M** (manette : RB), centrée à l'écran, un nombre entier d'unités par cellule, avec une **légende** à droite (toi, coffre à la couleur de sa rareté, Mémorial, Faille, petit lieu à visiter).
+- **Pictogrammes en pixels** au lieu des carrés : coffre, stèle, faille, point ; contour sombre d'un pixel. Un petit lieu servi disparaît de la carte au lieu de passer au gris.
+- Banc : `--hold-map` maintient la touche pendant une capture.
+
+**Vérifications :** build sans avertissement, smoke vert ; captures en vraie run regardées : radar à 60 s (coffre, Mémorial, lieux, bord du brouillard) et carte entière à 90 s avec sa légende.
+
+**Non fait :** n'afficher un petit lieu qu'une fois vu à l'écran (aujourd'hui : dès que le brouillard est levé autour) ; le retrait des lieux servis suffit à désencombrer.
+
+### L8 — bonus lâchés (1er octobre)
+
+- **Cinq bonus** (`data/world/field_bonuses.json`) : gourde (soin de 20 % des PV max), fer à cheval aimanté (aimant d'XP ×25 pendant 3 s : toute l'XP de l'écran arrive), couverture de survie (bouclier de 30 % des PV max pendant 15 s), café froid (cadence +30 % pendant 10 s), pétard (onde de 160 px qui ôte 60 % de leurs PV aux créatures, le quart aux élites et Souverains, et les repousse).
+- **Sources :** élite 35 %, Souverain toujours, deux bonus près du joueur à la fin d'une Résurgence survécue (le premier est une gourde), 0,4 % sur toute autre élimination (gourde ou aimant).
+- **Règles :** au plus 4 au sol ; 20 s de vie, clignotement les 4 dernières ; ramassé à 26 px. Le nom du bonus s'affiche au ramassage, avec un son et des éclats. Pool de nœuds ; aucun parcours de décor.
+- **Dessin :** chaque bonus est généré en pixels depuis un motif (deux pixels par trait, contour sombre), au-dessus d'une lueur au sol de sa couleur ; il flotte. À remplacer par les sprites du plan 25 (S5).
+- Le butin qui disparaît avec sa zone (plan 16) ne s'applique pas encore aux bonus : leur durée de 20 s suffit.
+
+**Vérifications :** nouveau banc `tools/test_field_bonuses.sh` (6 contrôles, zéro échec) : données, limite au sol, soin au contact, effets à durée appliqués puis retirés, pétard qui touche la créature proche et pas la lointaine, effacement en fin de vie. Smoke vert. Capture en vraie run avec `--show-bonuses` regardée : gourde, aimant et café lisibles sur la route, couverture ramassée par le bot.
+
+### L5 et L6, partie code — fond pixel, Mémorial mis en scène, Chance visible (1er octobre)
+
+- **Fond commun en vrai pixel art (B1) :** `assets/shaders/choice_backdrop.gdshader` et `PixelBackdrop`, derrière le level-up, l'écran du coffre, le Mémorial et la Faille. Dessiné en gros pixels sur la grille de l'écran (4 px à 1080p), trois tons tramés (Bayer 4 × 4) : rayons en bandes qui tournent, halo, poussière d'oubli en pixels, bords qui s'effilochent en violet. Une teinte par écran (or, cyan pour le Mémorial, violet pour la Faille) ; il monte en fondu à l'ouverture. Remplace `LightRaysControl` (triangles vectoriels à bords lisses), supprimé.
+- **Mémorial et Faille mis en scène (B2) :** éclair bref, le fond monte, le titre s'écrit lettre à lettre, puis les cartes tombent une à une avec un petit son chacune (environ 1 s). Un appui pendant l'entrée la termine sans choisir de carte. Les services du Mémorial, rouverts après chaque achat, ne rejouent pas l'entrée. « La zone se souvient » était déjà retiré (L1).
+- **Coffre (B3) :** même fond, en or ; la roulette est gardée. Ses cases textuelles attendent les icônes du plan 25.
+- **Chance visible (D2) :** quand la Chance, l'oubli de la zone ou le Péril montent la rareté d'une carte, elle montre d'abord la rareté tirée, puis saute au rang gagné avec un trèfle en pixels et un son ; les cartes d'une offre sautent l'une après l'autre. Dans la pause, une ligne sous « Chance » dit ce qu'elle fait.
+
+**Vérifications :** build sans avertissement, smoke vert, `test_objects`, `test_perk_acquisition`, `test_weapons` à zéro échec. Captures en vraie run regardées : bénédictions du Mémorial (fond cyan tramé, poussière, liseré violet allégé après une première capture trop chargée), level-up épique (fond or). Le saut de rareté n'a pas été capturé : il demande de la Chance au moment de l'offre.
+
+**Reste :** la mise en scène dans le monde avant l'écran (l'écran qui se pixelise, les éclats qui tournent autour de la stèle) ; les icônes de rareté, qui restent des glyphes absents de la police jusqu'au lot S1 du plan 25.
+
+### L11 — écran de chargement (1er octobre)
+
+- Le personnage choisi marche (ses vraies animations, ×3) sur une bande de sol en gros pixels (`LoadingWalkStrip`) : devant lui, le sol se dessine au rythme du chargement, sa dernière colonne scintille ; derrière, il s'efface en pixels violets. C'est la barre de progression, sans barre.
+- La progression vient des étapes réelles (`GameBootstrap`, `WorldSetup`) : chaque étape a sa part, et un « N % » dans son texte la place à l'intérieur. Les textes techniques ne s'affichent plus ; ils vont au journal (`[Chargement] …`).
+- Huit phrases réécrites, moins directes, traduites (`LOADING_LINE_1` à `8`) : « Quelqu'un a laissé la lumière allumée. », « Personne n'a fermé la barrière. »… À relire avec le plan 19.
+- Au fondu, la marche va au bout, puis la phrase et la bande s'effacent. Le noir de départ reste raccord avec la transition du Hub.
+- Banc : `tools/tests/LoadingCapture.tscn` joue l'overlay seul avec les vraies étapes et le photographie trois fois.
+
+**Vérifications :** build sans avertissement, smoke vert, capture regardée (bande à mi-chemin, personnage qui marche, lisière effacée, phrase au-dessus).

@@ -6,8 +6,9 @@ using Vestiges.Infrastructure;
 namespace Vestiges.Progression;
 
 /// <summary>
-/// Repères (plan 22 §3 B, plan 23 R9) : le premier usage de chaque type de lieu dans la run donne un peu de Chance.
-/// Douze types : les petits lieux, coffre, Mémorial éveillé, Faille dont on a pris une offre. Enfant du joueur, état de run.
+/// Repères (plan 22 §3 B, plan 23 R9, plan 24 D3) : le premier usage de chaque type de lieu dans la run donne un petit
+/// gain permanent propre au lieu (une stat, ou une relance, un bannissement gratuit). Douze types : les petits lieux,
+/// coffre, Mémorial éveillé, Faille dont on a pris une offre. Enfant du joueur, état de run.
 /// Les signaux ne disent pas quel joueur agit : à revoir pour le coop v2.
 /// </summary>
 public partial class Waymarks : Node
@@ -20,7 +21,7 @@ public partial class Waymarks : Node
     private Player _player;
 
     public int Found => _found.Count;
-    public int Total => _config is { Enabled: true } ? _config.NameKeys.Count : 0;
+    public int Total => _config is { Enabled: true } ? _config.Rewards.Count : 0;
 
     public override void _Ready()
     {
@@ -52,11 +53,23 @@ public partial class Waymarks : Node
 
     private void Mark(string type)
     {
-        if (_player == null || _player.IsDead || !_config.NameKeys.TryGetValue(type, out string nameKey) || !_found.Add(type))
+        if (_player == null || _player.IsDead || !_config.Rewards.TryGetValue(type, out WaymarkReward reward) || !_found.Add(type))
             return;
-        _player.ApplyPerkModifier("luck", _config.LuckPerType, "additive");
-        string text = string.Format(TranslationServer.Translate("WAYMARK_FOUND"), TranslationServer.Translate(nameKey),
-            StatCatalog.FormatBonus("luck", _config.LuckPerType, false));
-        _player.ShowPopup(text, WaymarkColor);
+        string gain;
+        if (reward.Stat != null)
+        {
+            bool multiplicative = reward.ModifierType == "multiplicative";
+            float value = multiplicative ? 1f + reward.Amount : reward.Amount;
+            _player.ApplyPerkModifier(reward.Stat, value, reward.ModifierType);
+            gain = $"{StatCatalog.Name(reward.Stat)} {StatCatalog.FormatBonus(reward.Stat, value, multiplicative)}";
+        }
+        else
+        {
+            _eventBus.EmitSignal(EventBus.SignalName.ChoiceTokensGranted, reward.Rerolls, reward.Banishes);
+            gain = reward.Rerolls > 0
+                ? string.Format(TranslationServer.Translate("WAYMARK_REROLLS"), reward.Rerolls)
+                : string.Format(TranslationServer.Translate("WAYMARK_BANISHES"), reward.Banishes);
+        }
+        _player.ShowPopup(string.Format(TranslationServer.Translate("WAYMARK_FOUND"), TranslationServer.Translate(reward.NameKey), gain), WaymarkColor);
     }
 }

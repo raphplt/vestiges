@@ -14,7 +14,7 @@ public static class WeaponProperties
         if (weapon == null || property == null)
             return false;
         string pattern = weapon.AttackPattern?.ToLowerInvariant();
-        string special = weapon.Base.SpecialEffect?.Type;
+        string special = weapon.SpecialEffect?.Type;
         bool continuous = special == "sustained_cone";
         bool strikes = pattern != "orbital" && !continuous;
         return property switch

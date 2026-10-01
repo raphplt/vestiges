@@ -36,15 +36,22 @@ public static class PlayerSheet
         // Valeurs plutôt que multiplicateurs (plan 24 D1) : un « — » se lisait comme une stat absente.
         AddLine(container, Tr("STAT_SPEED"), WithBonus($"{player.Speed * player.SpeedMultiplier:F0}", player.SpeedMultiplier), null, role);
         AddLine(container, Tr("STAT_CRIT"), $"{Percent(player.CritChance)}  ×{player.CritMultiplier.ToString("0.0", French)}", null, role);
-        // Les dégâts montent par arme (cartes d'arme) : les bonus globaux ne s'affichent que s'ils existent.
-        // Portée : celle du personnage (rapportée à 300) et ses bonus ; la portée de chaque arme est dans sa fiche.
-        AddBonusLine(container, Tr("STAT_RANGE"), player.EffectiveAttackRange / 300f, role);
+        // Les dégâts montent par arme (cartes d'arme) : les bonus globaux ne s'affichent que s'ils existent. La portée
+        // propre au personnage fait partie de ses armes ; seule la portée gagnée en run s'affiche ici.
+        AddBonusLine(container, Tr("STAT_RANGE"), player.AttackRangeMultiplier, role);
         AddBonusLine(container, Tr("STAT_DAMAGE"), player.DamageMultiplier, role);
         AddBonusLine(container, Tr("STAT_ATTACK_SPEED"), player.AttackSpeedMultiplier, role);
         AddBonusLine(container, Tr("STAT_AOE"), player.AoeMultiplier, role);
         AddBonusLine(container, Tr("STAT_STATUS_DURATION"), player.StatusDurationMultiplier, role);
         AddBonusLine(container, Tr("STAT_XP_RANGE"), player.XpMagnetMultiplier, role);
         AddLine(container, Tr("STAT_LUCK"), Percent(player.LuckBonus), null, role);
+        // Dans la pause (texte courant), ce que fait la Chance ; le level-up, plus serré, s'en passe (plan 24 D2).
+        if (role == TextRole.Body)
+        {
+            Label luckHelp = MakeLabel("  " + Tr("STAT_LUCK_HELP"), TextRole.Caption, UITheme.TextVeryDim);
+            luckHelp.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+            container.AddChild(luckHelp);
+        }
         if (player.Waymarks is { Total: > 0 } waymarks)
             AddLine(container, Tr("STAT_WAYMARKS"), $"{waymarks.Found} / {waymarks.Total}", null, role);
         if (player.BonusProjectiles > 0f)

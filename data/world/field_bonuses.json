@@ -1,0 +1,20 @@
+{
+    "_doc": "Bonus lâchés (plan 24 C4, validés DECISIONS §40) : des ramassables à effet immédiat, en objets du quotidien. Sources : 'variant_chance' par variante d'ennemi tuée (elite, champion = Souverain), 'kill_chance' pour toute autre élimination (seulement les bonus de 'kill_pool'), 'crisis_end' bonus posés près du joueur à la fin d'une Résurgence survécue, le premier étant 'crisis_first'. 'max_on_ground' au plus en même temps ; 'lifetime_s' avant de s'effacer, en clignotant les 'blink_s' dernières secondes ; ramassé à 'pickup_px' du joueur. Chaque bonus : 'weight' dans les tirages, 'effect' et ses réglages. heal : soin de 'ratio' des PV max ; magnet : aimant d'XP ×'multiplier' pendant 'duration_s' ; shield : bouclier de 'ratio' des PV max pendant 'duration_s' ; frenzy : cadence ×(1 + 'amount') pendant 'duration_s' ; blast : onde de 'radius_px' qui ôte 'hp_ratio' des PV max de chaque créature (le quart pour les variantes) et repousse de 'knockback_px'.",
+    "enabled": true,
+    "max_on_ground": 4,
+    "lifetime_s": 20,
+    "blink_s": 4,
+    "pickup_px": 26,
+    "variant_chance": { "elite": 0.35, "champion": 1.0 },
+    "kill_chance": 0.004,
+    "kill_pool": ["canteen", "magnet"],
+    "crisis_end": 2,
+    "crisis_first": "canteen",
+    "bonuses": [
+        { "id": "canteen", "name_key": "BONUS_CANTEEN", "weight": 3, "effect": "heal", "ratio": 0.2, "color": [0.45, 0.75, 0.55] },
+        { "id": "magnet", "name_key": "BONUS_MAGNET", "weight": 2, "effect": "magnet", "multiplier": 25, "duration_s": 3, "color": [0.85, 0.3, 0.3] },
+        { "id": "blanket", "name_key": "BONUS_BLANKET", "weight": 2, "effect": "shield", "ratio": 0.3, "duration_s": 15, "color": [0.95, 0.8, 0.4] },
+        { "id": "coffee", "name_key": "BONUS_COFFEE", "weight": 2, "effect": "frenzy", "amount": 0.3, "duration_s": 10, "color": [0.6, 0.42, 0.28] },
+        { "id": "firecracker", "name_key": "BONUS_FIRECRACKER", "weight": 1, "effect": "blast", "radius_px": 160, "hp_ratio": 0.6, "knockback_px": 70, "color": [0.9, 0.25, 0.2] }
+    ]
+}

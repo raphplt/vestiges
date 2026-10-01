@@ -182,6 +182,7 @@ public static class WeaponDataLoader
             StatOverrides = ParseFloats(dict, "stat_overrides"),
             OnHitEffect = dict.ContainsKey("on_hit_effect") ? ParseOnHit(dict["on_hit_effect"].AsGodotDictionary()) : null,
             BonusProjectileMultiplier = dict.ContainsKey("bonus_projectile_multiplier") ? (float)dict["bonus_projectile_multiplier"].AsDouble() : 1f,
+            SpecialOverrides = ParseFloats(dict, "special_overrides"),
             Flags = flags,
             Parameters = ParseFloats(dict, "params"),
         };

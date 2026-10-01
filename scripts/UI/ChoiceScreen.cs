@@ -16,6 +16,8 @@ public partial class ChoiceScreen : CanvasLayer
     private const float TextWidth = ChoiceStyle.CardWidth - 110f;
 
     private ColorRect _overlay;
+    private PixelBackdrop _backdrop;
+    private Tween _entrance;
     private PanelContainer _panel;
     private Label _title;
     private Label _subtitle;
@@ -42,9 +44,11 @@ public partial class ChoiceScreen : CanvasLayer
     /// Ouvre l'écran. <paramref name="onChosen"/> reçoit l'index de la carte choisie, ou -1 si le joueur sort
     /// (seulement si <paramref name="cancelText"/> est donné). L'écran est fermé quand il est appelé.
     /// </summary>
-    public void Open(string title, string subtitle, IReadOnlyList<ChoiceCard> cards, string cancelText, Action<int> onChosen)
+    public void Open(string title, string subtitle, IReadOnlyList<ChoiceCard> cards, string cancelText, Action<int> onChosen,
+        Color? tint = null, bool animate = true)
     {
         Clear();
+        _backdrop.SetTint(tint ?? PixelBackdrop.GoldTint);
         _title.Text = title;
         _subtitle.Text = subtitle ?? "";
         _subtitle.Visible = !string.IsNullOrEmpty(subtitle);
@@ -71,6 +75,62 @@ public partial class ChoiceScreen : CanvasLayer
         SetFocus(FirstEnabled());
         Visible = true;
         GetTree().Paused = true;
+        if (animate)
+            PlayEntrance();
+    }
+
+    /// <summary>
+    /// Entrée mise en scène (plan 24 B2) : éclair bref, le fond pixel monte, le titre s'écrit, puis les cartes tombent
+    /// une à une, chacune avec son petit son. Un appui pendant l'entrée la termine d'un coup.
+    /// </summary>
+    private void PlayEntrance()
+    {
+        _entrance?.Kill();
+        _overlay.Color = new Color(0.9f, 0.88f, 0.8f, 0.55f);
+        _backdrop.FadeIn(0.45f);
+        _title.VisibleRatio = 0f;
+        _subtitle.Modulate = Colors.Transparent;
+        foreach (PanelContainer card in _cardPanels)
+        {
+            card.Modulate = Colors.Transparent;
+            card.PivotOffset = new Vector2(ChoiceStyle.CardWidth / 2f, 32f);
+        }
+        _actions.Modulate = Colors.Transparent;
+
+        _entrance = CreateTween();
+        _entrance.TweenProperty(_overlay, "color", ChoiceStyle.OverlayColor, 0.25f);
+        _entrance.TweenProperty(_title, "visible_ratio", 1f, 0.3f);
+        _entrance.TweenProperty(_subtitle, "modulate", Colors.White, 0.15f);
+        foreach (PanelContainer card in _cardPanels)
+        {
+            PanelContainer target = card;
+            _entrance.TweenCallback(Callable.From(() =>
+            {
+                target.Scale = new Vector2(1.12f, 1.12f);
+                AudioManager.PlayUI("sfx_menu_survol", 0.06f, -4f);
+            }));
+            _entrance.TweenProperty(target, "modulate", Colors.White, 0.1f);
+            _entrance.Parallel().TweenProperty(target, "scale", Vector2.One, 0.18f).SetTrans(Tween.TransitionType.Back).SetEase(Tween.EaseType.Out);
+            _entrance.TweenInterval(0.04f);
+        }
+        _entrance.TweenProperty(_actions, "modulate", Colors.White, 0.15f);
+    }
+
+    /// <summary>Termine l'entrée d'un coup : tout est en place.</summary>
+    private void FinishEntrance()
+    {
+        if (_entrance == null || !_entrance.IsRunning())
+            return;
+        _entrance.Kill();
+        _overlay.Color = ChoiceStyle.OverlayColor;
+        _title.VisibleRatio = 1f;
+        _subtitle.Modulate = Colors.White;
+        foreach (PanelContainer card in _cardPanels)
+        {
+            card.Modulate = Colors.White;
+            card.Scale = Vector2.One;
+        }
+        _actions.Modulate = Colors.White;
     }
 
     private void BuildUI()
@@ -78,6 +138,11 @@ public partial class ChoiceScreen : CanvasLayer
         _overlay = new ColorRect { Color = ChoiceStyle.OverlayColor, MouseFilter = Control.MouseFilterEnum.Stop };
         _overlay.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
         AddChild(_overlay);
+
+        // Fond en gros pixels (plan 24 B1), teinté selon l'écran : cyan pour le Mémorial, violet pour la Faille.
+        _backdrop = new PixelBackdrop(PixelBackdrop.GoldTint);
+        _backdrop.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
+        AddChild(_backdrop);
 
         _panel = new PanelContainer { CustomMinimumSize = new Vector2(ChoiceStyle.CardWidth + 40f, 100) };
         _panel.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.Center);
@@ -179,6 +244,14 @@ public partial class ChoiceScreen : CanvasLayer
     {
         if (!Visible)
             return;
+        // Pendant l'entrée, une validation la termine sans choisir : pas de carte prise par un appui trop tôt.
+        if (_entrance != null && _entrance.IsRunning() && @event.IsPressed() && !@event.IsEcho()
+            && (@event.IsActionPressed("ui_accept") || @event is InputEventMouseButton))
+        {
+            FinishEntrance();
+            GetViewport().SetInputAsHandled();
+            return;
+        }
 
         int total = _cards.Count + (_cancelButton != null ? 1 : 0);
         if (@event.IsActionPressed("ui_down"))
@@ -236,6 +309,7 @@ public partial class ChoiceScreen : CanvasLayer
     {
         Action<int> callback = _onChosen;
         _onChosen = null;
+        _entrance?.Kill();
         Visible = false;
         GetTree().Paused = false;
         Clear();

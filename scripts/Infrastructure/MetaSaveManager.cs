@@ -340,6 +340,7 @@ public static class MetaSaveManager
         _data.UnlockedCharacters ??= new List<string>();
         _data.DiscoveredSouvenirs ??= new List<string>();
         _data.CompletedQuests ??= new List<string>();
+        _data.SeenHints ??= new List<string>();
 
         CharacterDataLoader.Load();
         HashSet<string> supportedCharacters = CharacterDataLoader.GetAll()

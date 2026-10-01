@@ -39,6 +39,7 @@ public partial class QuestManager : CanvasLayer
     private RunTracker _runTracker;
     private EssenceTracker _essenceTracker;
     private VBoxContainer _questList;
+    private Control _panelRoot;
     private Label _toastLabel;
     private float _refreshTimer;
     private float _toastTimer;
@@ -71,6 +72,8 @@ public partial class QuestManager : CanvasLayer
 
     public override void _ExitTree()
     {
+        if (GetViewport() != null)
+            GetViewport().SizeChanged -= ApplyHudScale;
         if (_eventBus == null)
             return;
 
@@ -85,6 +88,8 @@ public partial class QuestManager : CanvasLayer
 
     public override void _Process(double delta)
     {
+        // Panneau détaillé (plan 24 A2) : par réglage, ou en maintenant la touche ; sinon les sceaux du HUD.
+        _panelRoot.Visible = QuestDisplaySettings.Current == QuestDisplaySettings.Mode.Detailed || Input.IsActionPressed("show_quests");
         _refreshTimer += (float)delta;
         if (_refreshTimer >= RefreshInterval)
         {
@@ -154,6 +159,12 @@ public partial class QuestManager : CanvasLayer
 
     private void BuildUi()
     {
+        // Même échelle que le HUD (référence 960×540) : le panneau se place sous la plaque du score à toute résolution.
+        _panelRoot = new Control { Name = "QuestPanelRoot", MouseFilter = Control.MouseFilterEnum.Ignore };
+        AddChild(_panelRoot);
+        ApplyHudScale();
+        GetViewport().SizeChanged += ApplyHudScale;
+
         PanelContainer panel = new()
         {
             Name = "QuestPanel"
@@ -162,10 +173,10 @@ public partial class QuestManager : CanvasLayer
         panel.AnchorRight = 1f;
         panel.AnchorTop = 0f;
         panel.AnchorBottom = 0f;
-        panel.OffsetLeft = -312;
-        panel.OffsetRight = -16;
-        panel.OffsetTop = 104;
-        panel.OffsetBottom = 260;
+        panel.OffsetLeft = -158;
+        panel.OffsetRight = -8;
+        panel.OffsetTop = 54;
+        panel.OffsetBottom = 130;
 
         StyleBoxFlat style = new()
         {
@@ -175,17 +186,13 @@ public partial class QuestManager : CanvasLayer
             BorderWidthLeft = 2,
             BorderWidthRight = 2,
             BorderWidthTop = 2,
-            CornerRadiusBottomLeft = 6,
-            CornerRadiusBottomRight = 6,
-            CornerRadiusTopLeft = 6,
-            CornerRadiusTopRight = 6,
-            ContentMarginBottom = 10,
-            ContentMarginLeft = 12,
-            ContentMarginRight = 12,
-            ContentMarginTop = 10
+            ContentMarginBottom = 5,
+            ContentMarginLeft = 6,
+            ContentMarginRight = 6,
+            ContentMarginTop = 5
         };
         panel.AddThemeStyleboxOverride("panel", style);
-        AddChild(panel);
+        _panelRoot.AddChild(panel);
 
         VBoxContainer content = new();
         content.AddThemeConstantOverride("separation", 6);
@@ -193,14 +200,14 @@ public partial class QuestManager : CanvasLayer
 
         Label title = new()
         {
-            Text = "QUÊTES DE RUN"
+            Text = Tr("QUESTS_RUN_TITLE")
         };
-        UITheme.SetTextRole(title, TextRole.Body);
+        title.AddThemeFontSizeOverride("font_size", 9);
         title.AddThemeColorOverride("font_color", new Color(0.82f, 0.94f, 0.98f));
         content.AddChild(title);
 
         _questList = new VBoxContainer();
-        _questList.AddThemeConstantOverride("separation", 4);
+        _questList.AddThemeConstantOverride("separation", 2);
         content.AddChild(_questList);
 
         _toastLabel = new Label
@@ -208,9 +215,19 @@ public partial class QuestManager : CanvasLayer
             Visible = false,
             AutowrapMode = TextServer.AutowrapMode.WordSmart
         };
-        UITheme.SetTextRole(_toastLabel, TextRole.Caption);
+        _toastLabel.AddThemeFontSizeOverride("font_size", 7);
         _toastLabel.AddThemeColorOverride("font_color", new Color(0.98f, 0.88f, 0.54f));
         content.AddChild(_toastLabel);
+    }
+
+    /// <summary>Échelle du HUD : la référence 960×540 agrandie à l'écran, au moins ×1.</summary>
+    private void ApplyHudScale()
+    {
+        Vector2 viewport = GetViewport().GetVisibleRect().Size;
+        float scale = Mathf.Max(1f, Mathf.Min(viewport.X / 960f, viewport.Y / 540f));
+        _panelRoot.Position = Vector2.Zero;
+        _panelRoot.Size = viewport / scale;
+        _panelRoot.Scale = new Vector2(scale, scale);
     }
 
     private void SelectRunQuests()
@@ -248,10 +265,10 @@ public partial class QuestManager : CanvasLayer
         while (_questRows.Count < _activeRunQuests.Count)
         {
             Label name = new();
-            UITheme.SetTextRole(name, TextRole.Small);
+            name.AddThemeFontSizeOverride("font_size", 8);
             _questList.AddChild(name);
             Label details = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart };
-            UITheme.SetTextRole(details, TextRole.Caption);
+            details.AddThemeFontSizeOverride("font_size", 7);
             _questList.AddChild(details);
             _questRows.Add((name, details));
         }
@@ -267,10 +284,12 @@ public partial class QuestManager : CanvasLayer
         {
             ActiveRunQuest quest = _activeRunQuests[i];
             (Label name, Label details) = _questRows[i];
-            name.Text = $"{(quest.Completed ? "[OK]" : "[ ]")} {quest.Definition.Name}";
+            name.Text = quest.Definition.Name;
             name.AddThemeColorOverride("font_color", quest.Completed ? QuestDoneTitle : QuestTitle);
             details.Text = $"{quest.Definition.Description}\n{FormatProgress(quest.Definition, quest.Progress)}  |  {GetRewardSummary(quest.Definition)}";
             details.AddThemeColorOverride("font_color", quest.Completed ? QuestDoneDetails : QuestDetails);
+            float target = Mathf.Max(0.0001f, quest.Definition.Target);
+            _eventBus?.EmitSignal(EventBus.SignalName.RunQuestUpdated, i, quest.Definition.Name, quest.Progress / target, quest.Completed);
         }
     }
 

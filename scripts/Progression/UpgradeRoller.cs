@@ -63,7 +63,10 @@ public static class UpgradeRoller
 	/// trois crans d'oubli donnent trois chances, jamais plus d'un rang chacune. Un cran fractionnaire (Chance)
 	/// compte au prorata.
 	/// </summary>
-	public static UpgradeRarity RollRarity(float bumpSteps, RandomNumberGenerator rng)
+	public static UpgradeRarity RollRarity(float bumpSteps, RandomNumberGenerator rng) => RollRarity(bumpSteps, rng, out _);
+
+	/// <summary>Comme <see cref="RollRarity(float, RandomNumberGenerator)"/>, en rendant aussi la rareté tirée avant la montée.</summary>
+	public static UpgradeRarity RollRarity(float bumpSteps, RandomNumberGenerator rng, out UpgradeRarity rolled)
 	{
 		Load();
 		float total = 0f;
@@ -78,6 +81,7 @@ public static class UpgradeRoller
 				break;
 		}
 
+		rolled = _rarities[rank];
 		int fullSteps = Mathf.FloorToInt(bumpSteps);
 		int trials = fullSteps + (rng.Randf() < bumpSteps - fullSteps ? 1 : 0);
 		for (int i = 0; i < trials && rank < _rarities.Count - 1; i++)

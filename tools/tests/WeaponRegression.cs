@@ -339,13 +339,26 @@ public partial class WeaponRegression : Node2D
     /// </summary>
     private void CheckAscensions()
     {
-        int withPaths = 0;
+        // Toutes les armes ont leurs deux voies (DECISIONS §40), dans un motif que leur famille sait jouer.
+        int withPaths = 0, total = 0;
+        List<string> badPatterns = new();
         foreach (WeaponData data in WeaponDataLoader.GetAll())
+        {
+            total++;
             withPaths += data.Ascensions.Count == 2 ? 1 : 0;
-        Check(withPaths >= 4, $"Ascensions : {withPaths} armes ont leurs deux voies");
+            foreach (WeaponAscensionData path in data.Ascensions)
+            {
+                string pattern = path.AttackPattern ?? data.AttackPattern;
+                bool known = data.Type == "melee" ? pattern is "arc" or "linear" or "circular" or "chain" : pattern is "linear" or "burst" or "homing" or "orbital";
+                if (!known)
+                    badPatterns.Add($"{data.Id}:{path.Id}:{pattern}");
+            }
+        }
+        Check(withPaths == total && badPatterns.Count == 0,
+            $"Ascensions : {withPaths}/{total} armes ont leurs deux voies, motifs inconnus [{string.Join(" ", badPatterns)}]");
 
         WeaponInstance bow = MaxedWeapon("makeshift_bow");
-        bool ready = bow.CanAscend && !MaxedWeapon("heavy_hammer").CanAscend;
+        bool ready = bow.CanAscend && !new WeaponInstance(WeaponDataLoader.Get("heavy_hammer")).CanAscend;
         bool chosen = bow.Ascend("volley");
         Check(ready && chosen && !bow.Ascend("pierce_through") && bow.AttackPattern == "burst"
             && bow.GetStat("projectile_count", 1f) >= 2f && Mathf.IsEqualApprox(bow.GetStat("spread_angle", 20f), 40f) && Mathf.IsEqualApprox(bow.BonusProjectileMultiplier, 2f),
@@ -399,6 +412,30 @@ public partial class WeaponRegression : Node2D
         player.OnProjectileHit(enemy, 1f, false, box);
         float frozen = (float)typeof(Enemy).GetField("_freezeTimer", Private).GetValue(enemy);
         Check(lullaby && frozen > 0.5f, "Berceuse : une note fige un instant l'ennemi qu'elle touche");
+
+        // Réglages d'effet spécial remplacés par la voie, sans toucher à l'arme de base (G3 étape 2).
+        WeaponInstance suture = MaxedWeapon("surgeons_scalpel");
+        suture.Ascend("suture");
+        WeaponInstance combination = MaxedWeapon("echo_gauntlets");
+        combination.Ascend("combination");
+        Check(Mathf.IsEqualApprox(suture.SpecialEffect.Params["n"], 3f) && Mathf.IsEqualApprox(suture.Base.SpecialEffect.Params["n"], 5f)
+            && Mathf.IsEqualApprox(combination.SpecialEffect.Params["echo_count"], 2f),
+            "Suture soigne tous les 3 coups et Enchaînement fait deux échos ; le Scalpel de base reste à 5");
+
+        player.AddWeapon(WeaponDataLoader.Get("clock_hand"));
+        WeaponInstance clock = player.WeaponSlots[^1];
+        while (clock.CanLevelUp)
+            clock.ApplyUpgrade(Array.Empty<StatGain>());
+        player.AscendWeapon(clock.Id, "freeze_frame");
+        Enemy frozenTarget = EnemyScene.Instantiate<Enemy>();
+        AddChild(frozenTarget);
+        frozenTarget.Initialize(EnemyDataLoader.Get("rodeur"), 1f, 1f);
+        frozenTarget.SetPhysicsProcess(false);
+        frozenTarget.Position = new Vector2(6000f, 6000f);
+        player.OnProjectileHit(frozenTarget, 1f, false, clock);
+        float stopped = (float)typeof(Enemy).GetField("_freezeTimer", Private).GetValue(frozenTarget);
+        Check(stopped > 0.3f, $"Arrêt sur image : le champ du Chronomètre fige ({stopped:0.00} s)");
+        frozenTarget.QueueFree();
 
         WeaponInstance round = MaxedWeapon("music_box");
         round.Ascend("round");

@@ -82,7 +82,7 @@ public partial class DevelopmentModeRegression : Node
                     bus.EmitSignal(EventBus.SignalName.EnemyKilled, "melee", Vector2.Zero);
                 score.SaveEndOfRun();
                 Check(RunHistoryManager.GetHistory().Count == 1, "fin de run sauvegardée");
-                Check(FileAccess.FileExists(DevelopmentMode.GetSavePath("highscore.save")), "record sauvegardé");
+                Check(FileAccess.FileExists(DevelopmentMode.GetSavePath("highscore_kills.save")), "record sauvegardé");
                 Check(FileAccess.FileExists(DevelopmentMode.GetSavePath("analytics/aggregate.json")), "analytics sauvegardées");
             }
             else
