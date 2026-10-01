@@ -685,3 +685,11 @@ Les créatures à affixe avaient une ellipse lisse (`Polygon2D`), centrée sur l
 - Un composant par ennemi, réutilisé par le pool (caché au retour, à la mort et pendant une harde) ; dessin refait au seul changement de pose, formes mises en cache par rayon.
 - **Vérifié** : `--capture-bestiary --enemies shade,void_brute,charognard,wailing_sentinel --affix enraged` (nouvelle option `--affix`), images regardées ; smoke test.
 - **Reste** : l'aura des Aberrations (particules GPU à texture ronde lisse) et l'Indicible.
+
+## Reprise des trois personnages jouables — 1er octobre 2026
+
+[DECISIONS §44](DECISIONS.md) : les sprites du plan 25 sont globalement appréciés, mais Raphaël n'aime pas assez ceux du **Traqueur, du Vagabond et de la Forgeuse**. Nouvelle passe demandée, en commençant par le Traqueur. Il s'agit des trois personnages déjà jouables ; leur kit et le casting validé au plan 06 ne sont pas remis en chantier par ce retour.
+
+Lot **R5**, coordonné au [plan 24 §12](24-retours-du-1er-octobre.md#12-retours-de-recette--1er-octobre-2026) : partir des générateurs actuels, améliorer silhouette, volumes, visage/orientation et contraste, puis comparer ancien et nouveau à taille réelle sur plusieurs biomes. Les pistes précises viennent de l'inspection, pas d'un diagnostic présumé. Vérifier les animations et les directions en vraie run après la planche ; production déterministe et imports Godot selon la charte.
+
+Deux appuis graphiques sont également ouverts : **Résurgences** plus reconnaissables avec le plan 15 (sans masquer le combat), et **carte** moins grise et moins grossière avec le plan 04. Le mot « carte » reste à localiser entre radar, carte agrandie et terrain avant une refonte générale des sols.

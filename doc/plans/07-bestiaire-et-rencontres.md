@@ -395,3 +395,13 @@ Les amas qui suivaient le joueur disparaissent : sur la seed 777, le bot finissa
 | Dégâts reçus par minute, minutes 1–2 / 2–3 | 1 028 / 1 346 | 3 764 / 5 892 |
 
 Toujours **non concluante**, pour une autre raison que dans le conteneur : même à 60 FPS, le bot n'est pas reproductible. Ses morts s'inversent d'une seed à l'autre (198 → 28, 34 → 181), et ce sont elles qui font la densité : un bot qui tue peu s'entoure. Aucune baisse de pression n'apparaît. Seul un bot au comportement stable, ou le ressenti en jeu, tranchera.
+
+## Reprise de la pression des projectiles — 1er octobre 2026
+
+[DECISIONS §44](DECISIONS.md), [plan 24 §12, R3](24-retours-du-1er-octobre.md#12-retours-de-recette--1er-octobre-2026) : Raphaël ressent trop de tirs qui traversent l'écran ou la carte, issus de deux ou trois types d'ennemis selon son estimation. Ils imposent une esquive continue et gênent le combat contre la foule. Le souhait antérieur de davantage de menaces à distance ne justifie donc plus d'en augmenter la présence sans mesure.
+
+**À faire :** inventorier les attaques actives et les compositions réellement rencontrées. Distinguer projectile à longue portée, zone au sol, charge et onde locale ; ne pas déduire le comportement d'un ennemi du seul nom de son sprite. Comparer cadence, distance parcourue, durée de vie, tirs simultanés, visibilité du tireur et possibilités de réponse.
+
+**Pistes d'essai, non arbitrées :** limiter la part simultanée de tireurs, raccourcir certains tirs ou espacer leurs salves ; si nécessaire, transformer une attaque en menace locale télégraphiée. Choisir à partir du diagnostic, sans appliquer tous les leviers à la fois ni vider la foule. La direction demandée porte sur la place des tirs, pas seulement sur leurs dégâts ou leur beauté.
+
+Mesurer avant/après dans des conditions comparables (seeds, durée, build), puis jouer la séquence : le critère est de pouvoir combattre et maintenir une foule tout en gardant des esquives ponctuelles intéressantes. Aucun changement de gameplay n'est livré par cette note.

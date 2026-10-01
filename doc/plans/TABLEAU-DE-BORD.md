@@ -8,6 +8,8 @@ Le [registre](DECISIONS.md) garde les mots de Raphaël. Les plans gardent le dé
 
 | Chantier | Plan | Prochaine action |
 |---|---|---|
+| **Nouvelle recette après intégration des sprites** | [24 §12](24-retours-du-1er-octobre.md#12-retours-de-recette--1er-octobre-2026), [DECISIONS §44](DECISIONS.md) | Retours consignés, **travail à faire** : pause et survol, icônes du butin, pression des tirs ennemis, trois personnages jouables, rendu de la carte. Découpage et prompt de reprise au plan 24 ; aucun correctif livré par cette mise à jour documentaire. |
+| **Audio et identité des Résurgences** | [15](15-audio.md), 24 §12 | **Prochain gros chantier demandé** : écoute en vraie run, identité sonore des Résurgences et transitions, puis musique, ambiances et effets. Renforcer aussi les signes visuels sans encombrer le combat. |
 | **Retours du 1er octobre** (écran allégé, écrans de choix animés en pixel art, début de run plus tenable, coffres sans armes, minimap radar, bonus lâchés, icônes d'objets) | [24](24-retours-du-1er-octobre.md) | Validé ([DECISIONS §40](DECISIONS.md)) et **livré** : L1, L2 (avec la barre d'XP et le score aux éliminations), L3, L4, L7, L8, L9, L11, L12 (ascensions des 24 armes), L5/L6 côté code. Images du plan 25 intégrées sur `main`. Reste : la mise en scène du Mémorial dans le monde. À tester en jeu par Raphaël |
 | **Sprites et design** (34 icônes d'objets, raretés, projectiles ennemis, bonus lâchés, HUD, menus) | [25](25-sprites-et-design.md) | **Intégré sur `main`** à la demande de Raphaël (DECISIONS §41) : raretés, objets, Réminiscences, projectiles, bonus, HUD, menus et chargement. Captures inspectées. Les images des contenus futurs sont visibles dans la Collection avec « À venir » ; leurs règles restent aux plans 05/22. |
 | **Gains qui se sentent** (objets à 30 niveaux, projectiles fractionnaires, cartes à la Megabonk, défense, difficulté, objets manquants, carte moins vide) | [23, plan d'exécution](23-plan-agent.md) | Décidé le 30 septembre ([DECISIONS §36–37](DECISIONS.md)). R0 à R4 livrés (mesure de référence ; bouclier de départ retiré, invulnérabilité 0,25 s ; cartes à la Megabonk ; objets à 30 niveaux, projectiles en plus au lieu des copies, paliers à 15 ; stats entières fractionnaires, pas d'armes relevés) ; R5 livré (PV ×1,25 d'emblée, pente 1,04 puis 1,075 après 6 min : temps pour tuer de R0 à ±20 %) ; R6 livré (huit objets de déclencheur) ; R7 livré (six petits lieux, carte de 12 800 px de haut, minimap : un petit lieu toutes les 26 s). R8 révisé livré (bonus d'une stat au hasard à chaque coffre, DECISIONS §38) ; R9 livré (Porte-monnaie hors quête, Repères). Plan 23 terminé ; travail sur `main` |
@@ -23,11 +25,11 @@ Le [registre](DECISIONS.md) garde les mots de Raphaël. Les plans gardent le dé
 | Invulnérabilité après un coup | 23 R1 | 0,25 s proposé au lieu de 0,5 s : à confirmer en jeu |
 | Recette de la mort et du bilan | 02 | Durée de la séquence, densité de la page, échelle des distances |
 | Déplacements | 01 | Inertie, invulnérabilité du dash, recette manette |
-| Bestiaire | 07 | Tisseuse hors Marécages ; « mobs successifs » |
-| Direction artistique | 08 | Traqueur peu lisible, double contour |
+| Bestiaire | 07 | Tisseuse hors Marécages ; « mobs successifs ». Nouveau retour §44 : trop de tirs qui traversent l'écran, audit et ajustement à préparer par l'agent. |
+| Direction artistique | 08 | Nouvelle passe demandée pour le Traqueur, le Vagabond et la Forgeuse (§44) ; planches comparatives à produire. |
 | Anomalies | 14 | Trois décisions, jamais arbitrées |
 | Lore | 19 | Relecture du script v1.1 ; questions P1, P6 à P10 ; fin |
-| Audio | 15 | Écoute en run ; quatre sons à reprendre |
+| Audio | 15 | Écoute en run et choix restants ; chantier élargi à toute l'identité sonore, avec les Résurgences comme premier cas proposé (§44). |
 | Récompense et puissance | 20 | Reprise après la pause ; à réaligner sur le plan 21 |
 | Classement | 09 | Toutes les décisions, plus tard |
 | Points à vérifier en jeu | `A-VERIFIER.md` | 54 cases non cochées |
@@ -76,4 +78,4 @@ Le [registre](DECISIONS.md) garde les mots de Raphaël. Les plans gardent le dé
 
 ## 6. Plans sans action en attente
 
-00 (référence), 03, 04, 10, 12, 16 : lots livrés, recettes à faire en jeu par Raphaël quand il le souhaite.
+00 (référence), 03, 10, 12, 16 : lots livrés, recettes à faire en jeu par Raphaël quand il le souhaite. Le plan 04 est rouvert pour la pause, les survols et la carte (DECISIONS §44).

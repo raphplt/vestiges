@@ -241,3 +241,13 @@ Lot C2, décision de Raphaël : Collection directement accessible depuis le menu
 - **Non fait** : lien vers la quête qui débloque (les armes se débloquent encore par Souvenir, en attente du plan 05 lot A et du plan 06), filtre disponibles et non disponibles (inutile à 24 armes).
 - **Entrée depuis le bilan, 27 septembre au soir** : voir le [plan 02, lot D](02-juiciness-score.md).
 
+## Reprise de la pause, des boutons et de la carte — 1er octobre 2026
+
+Plan rouvert après recette ([DECISIONS §44](DECISIONS.md)). Lots coordonnés au [plan 24 §12](24-retours-du-1er-octobre.md#12-retours-de-recette--1er-octobre-2026), **non implémentés** :
+
+- **R1 :** retirer les descriptions des armes dans l'équipement, « HALTE DANS LE VIDE », le sous-titre « Le monde se fige, mais ta mémoire reste éveillée. » et l'explication sous Chance. Conserver les valeurs utiles au build. Reprendre la composition visuelle de la pause, pas seulement ses textes.
+- **R1 :** simplifier les contours superposés au survol des boutons ; vérifier aussi le focus clavier/manette et les écrans partageant ces styles.
+- **R2 :** montrer la nature de chaque récompense de coffre (Essence, PV, dégâts critiques, etc.) par une icône appropriée ; la rareté reste une information séparée. Produire les images manquantes avec le plan 25.
+- **R6 :** revoir le rendu gris et trop grossier de la carte. Examiner radar et carte agrandie avant de fixer le périmètre ; ne pas attribuer d'office le retour à tout le terrain du monde.
+
+Points d'entrée : `PauseMenu`, `PlayerSheet`, `UITheme`, `ChestLootScreen`, `Minimap`. Validation par captures à taille d'usage et navigation, sans cocher les lots sur une simple maquette.

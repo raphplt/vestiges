@@ -559,3 +559,22 @@ ce retour invalide la cadence et les sauts de rotation livrés au plan 25 I4.
 Raphaël : « non pas fixe ca doit tourner mais a une bonne vitesse c'est trop
 dur sérieux ». Le correctif I6 a mal interprété le retour : conserver une
 rotation fluide, à vitesse modérée, au lieu de figer les rayons.
+
+## 44. Recette après intégration des sprites : combat, interfaces et audio — 1er octobre 2026
+
+Raphaël juge le résultat global très bon, notamment le travail sur les sprites. Il demande de **mettre ses retours à l'écrit, mettre à jour les plans et préparer un court prompt de continuation**, sans lancer leur implémentation dans cette session.
+
+**Retours reformulés :**
+
+- **Personnages :** améliorer le sprite du Traqueur en priorité, ainsi que ceux des deux autres personnages déjà jouables, le Vagabond et la Forgeuse.
+- **Tirs ennemis :** trop d'ennemis semblent lancer des projectiles qui traversent l'écran ou la carte. Raphaël en perçoit deux ou trois types ; ce nombre n'est pas un inventaire vérifié. L'esquive permanente gêne le combat contre une foule et prend trop de place. L'esquive reste souhaitée, d'autres attaques la font déjà bien fonctionner.
+- **Pause :** retirer les descriptions des armes dans l'équipement, « Le monde se fige, mais ta mémoire reste éveillée. », « HALTE DANS LE VIDE » et l'explication sous Chance (« Monte la rareté des améliorations et des bénédictions. »). Revoir plus largement la présentation du menu, jugée insuffisamment travaillée.
+- **Survol des boutons :** les lignes et couches de contours superposées déplaisent ; revoir cet effet.
+- **Coffres :** les récompenses comme l'Essence, les dégâts critiques ou les PV supplémentaires semblent partager la même icône. Leur nature doit être identifiable par des icônes distinctes.
+- **Résurgences :** leur présence se comprend mal malgré les effets existants. Renforcer leur identité visuelle et/ou sonore, notamment par la bande-son.
+- **Audio :** effets sonores et musique demandent un travail important ; Raphaël y voit le prochain gros chantier.
+- **Carte :** jugée trop pixellisée, trop grise et peu soignée. Le retour ne distingue pas explicitement minimap, carte agrandie et terrain du monde ; ce périmètre reste à identifier avant une refonte du terrain.
+
+**Rattachement :** synthèse, lots proposés et prompt au [plan 24 §12](24-retours-du-1er-octobre.md#12-retours-de-recette--1er-octobre-2026) ; interfaces au plan 04, pression des ennemis au 07, personnages au 08, audio et Résurgences au 15, compléments graphiques au 25. Les solutions et l'ordre des lots sont des propositions de travail, pas des choix détaillés validés par ce retour.
+
+**Précisions sur les décisions antérieures :** la demande retire l'aide de Chance prévue au plan 24 D2 et validée en §40. Le souhait de menaces à distance variées du 23 septembre reste un historique, à rééquilibrer au vu de la saturation ressentie aujourd'hui. Le retour sur les Résurgences ne demande pas le rétablissement des annonces textuelles retirées au plan 24 A3. La rotation fluide des fonds (§43) reste acquise.

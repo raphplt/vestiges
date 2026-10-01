@@ -1,6 +1,6 @@
 # Plan 24 — Retours de la partie du 1er octobre : alléger, rendre vivant, tenir debout
 
-1er octobre 2026 · Retours de Raphaël après une partie jouée jusqu'un peu après la première Résurgence ([DECISIONS §39](DECISIONS.md)). Ce plan diagnostique chaque retour dans le code, propose une réponse et découpe le travail en lots. **Rien n'est codé.** Les chiffres sont des valeurs de départ. Ce plan ne redéfinit pas le système de build : ce qui touche aux armes, aux objets ou à la montée de niveau se reporte au [plan 21](21-systeme-de-jeu.md) une fois validé.
+1er octobre 2026 · Retours de Raphaël après une partie jouée jusqu'un peu après la première Résurgence ([DECISIONS §39](DECISIONS.md)). Le diagnostic initial et ses propositions sont conservés ci-dessous ; les lots livrés sont consignés au §11. **Nouvelle recette après intégration des sprites : §12, à traiter.** Les chiffres des propositions sont des valeurs de départ. Ce plan ne redéfinit pas le système de build : ce qui touche aux armes, aux objets ou à la montée de niveau se reporte au [plan 21](21-systeme-de-jeu.md) une fois validé.
 
 ## 0. Ce que Raphaël a dit, en bref
 
@@ -476,3 +476,39 @@ Chaque type de lieu donne, à son premier usage dans la run, le gain du tableau 
 - Banc : `tools/tests/LoadingCapture.tscn` joue l'overlay seul avec les vraies étapes et le photographie trois fois.
 
 **Vérifications :** build sans avertissement, smoke vert, capture regardée (bande à mi-chemin, personnage qui marche, lisière effacée, phrase au-dessus).
+
+## 12. Retours de recette — 1er octobre 2026
+
+Source : [DECISIONS §44](DECISIONS.md), après intégration du plan 25 et correction du fond des coffres. **Documentation uniquement : les actions ci-dessous restent à faire.** Le travail sur les sprites est globalement apprécié ; les nouveaux retours portent aussi sur des systèmes antérieurs.
+
+### Retours mis au propre
+
+| Sujet | Retour et résultat recherché | Plan responsable |
+|---|---|---|
+| Personnages | Le Traqueur déplaît particulièrement ; le Vagabond et la Forgeuse méritent également de meilleurs sprites. Reprendre les trois personnages actuellement jouables. | [08](08-direction-artistique.md), casting de référence au [06](06-personnages-quetes-defis.md) |
+| Projectiles ennemis | Trop de tirs traversent l'écran et obligent à esquiver continuellement, au détriment du combat contre la foule. Revoir la place de ces menaces en conservant les esquives intéressantes déjà présentes. | [07](07-bestiaire-et-rencontres.md) |
+| Pause | Retirer les descriptions des armes dans l'équipement, « Le monde se fige, mais ta mémoire reste éveillée. », « HALTE DANS LE VIDE » et l'aide sous Chance. Améliorer aussi la composition et le style du menu. | [04](04-interfaces-et-hub.md) |
+| Boutons | L'effet de survol par superposition de lignes et de contours ne plaît pas. Préparer un état plus simple, avec sélection clavier/manette toujours lisible. | 04, [25](25-sprites-et-design.md) |
+| Coffres | Essence, dégâts critiques, PV supplémentaires et autres gains doivent être reconnaissables par leur propre icône. Le badge de rareté ne suffit pas à identifier la récompense. | 04, 25 |
+| Résurgences | On ne perçoit pas assez clairement qu'une Résurgence est en cours. Renforcer les signes visuels et surtout explorer la musique et les effets sonores. | [15](15-audio.md), coordination 08 et 24 A3 |
+| Audio général | Musiques et effets sonores demandent une vraie passe d'ensemble : c'est le prochain gros chantier souhaité. | 15 |
+| Carte | Rendu jugé trop pixellisé, trop gris et peu soigné. Examiner la minimap et la carte agrandie ; identifier si le retour vise aussi le terrain avant d'étendre le chantier au [plan 10](10-terrain-et-tiles.md). | 04, 24 A6/L7, appui 08 |
+
+### Lots proposés pour la reprise
+
+Les demandes sont consignées ; **l'ordre suivant et les solutions précises restent des propositions**. Un lot terminé et vérifié avant le suivant. L'audio peut commencer dès les corrections courtes, sans attendre la production des personnages et de la carte.
+
+| Lot | Action bornée | Vérification attendue |
+|---|---|---|
+| **R1 — Pause et boutons** | Supprimer les quatre familles de textes citées, conserver les chiffres utiles à l'équipement, puis soigner hiérarchie, espaces et survol/focus. | Captures avant/après de la pause et des boutons concernés ; navigation clavier/manette. |
+| **R2 — Icônes du butin** | Inventorier les types de gains réellement proposés et leur associer des icônes de ressource/statistique. Garder une indication de rareté distincte. Réutiliser les sprites adaptés avant d'en produire. | Coffre montrant plusieurs gains différents ; icônes lisibles à leur taille réelle. |
+| **R3 — Pression des tirs** | Identifier les ennemis et compositions qui accumulent les tirs à longue portée. Mesurer portée, durée de vie, cadence et simultanéité, puis essayer un ajustement ciblé. | Comparaisons sur mêmes seeds, durée et build ; densité ennemie, tirs simultanés et dégâts, complétées par une partie jouée. Ne pas conclure au plaisir sur un bot invincible. |
+| **R4 — Audio et Résurgences** | Auditer à l'oreille une run, puis traiter un cycle complet : annonce sensorielle, début, phase active, retour au calme. En faire le premier lot du chantier audio détaillé au plan 15. | Séquence enregistrée avec son réel ; événement perceptible sans lire une annonce, combat encore lisible. |
+| **R5 — Trois personnages** | Améliorer d'abord le Traqueur, puis appliquer le niveau de qualité retenu au Vagabond et à la Forgeuse. Pipeline procédural existant et graines fixes. | Planches comparatives à taille réelle sur plusieurs sols, puis captures en mouvement ; silhouettes et directions lisibles. |
+| **R6 — Carte** | Comparer radar et carte agrandie, puis travailler finesse du dessin, palette et hiérarchie des repères. Le caractère gris et grossier doit disparaître sans sacrifier la lecture. | Captures à taille d'usage, repères et zones explorées distinguables. Si le terrain est concerné, borner un lot séparé au plan 10. |
+
+**Contraintes conservées :** pas de suppression générale de l'esquive ; les gains de statistiques des coffres ne sont pas les Réminiscences qualitatives ; ne pas réintroduire automatiquement les bandeaux d'annonce retirés ; garder le fond des coffres en rotation fluide (plan 25 I7). Aucun réglage de cadence, vitesse ou portée n'est validé par avance. Les choix audio déjà retenus restent la base de l'écoute, pas une liste à remplacer en bloc.
+
+### Prompt court de continuation
+
+> Travaille seul sur Vestiges. Lis AGENTS.md, CLAUDE.md, DECISIONS §44 et le plan 24 §12, puis les plans concernés (04, 07, 08, 15, 25). Traite ces retours un lot à la fois : commence par la pause et les survols, puis les icônes distinctes des récompenses de coffre. Examine ensuite la pression des tirs ennemis. Prépare l'audio comme prochain gros chantier, en commençant par la lisibilité des Résurgences. Garde aussi au programme les trois personnages jouables et la carte. Distingue constats, essais et résultats vérifiés ; conserve la rotation fluide des coffres. Capture les changements visibles, écoute les changements audio en vraie run, puis mets les plans à jour.

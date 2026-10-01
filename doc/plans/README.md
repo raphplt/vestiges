@@ -1,5 +1,7 @@
 # VESTIGES — Dossier de plans à valider
 
+**1er octobre — nouvelle recette après intégration :** appréciation globale positive des sprites ; retours sur les trois personnages jouables, la place des tirs ennemis, la pause, les survols, les icônes de récompense et le rendu de la carte. Les Résurgences doivent être mieux perceptibles ; **l'audio devient le prochain gros chantier demandé**. [Synthèse, lots proposés et prompt de reprise : plan 24 §12](24-retours-du-1er-octobre.md#12-retours-de-recette--1er-octobre-2026), [décision §44](DECISIONS.md). Retours documentés, correctifs à réaliser.
+
 **1er octobre — correctif du fond des coffres :** rotation continue des rayons à 8°/s, calculée à chaque rendu, avec scintillement des poussières ; ouverture réelle capturée et inspectée (plan 25 I7, remplace le fond fixe I6 refusé par Raphaël).
 
 **1er octobre — [plan 25](25-sprites-et-design.md) intégré sur `main` :** à la demande de Raphaël ([DECISIONS §41](DECISIONS.md)), les huit lots sont raccordés aux écrans et systèmes du plan 24. Raretés et Chance, 34 objets, 14 motifs de Réminiscences, projectiles, cinq bonus, XP, sceaux, minimap, menus et chargement : captures inspectées, build sans avertissement, smoke vert. Les trois objets du monde et les Réminiscences sans effet actif restent « À venir » dans la Collection ; leurs images sont prêtes sans activer de nouvelles règles.
@@ -46,7 +48,7 @@ La [Stratégie V2](../VESTIGES-STRATEGIE-V2.md) reste l'autorité gameplay/roadm
 | [12 — Micro-événements et variantes](12-micro-evenements.md) | P0 | Cadence, cinq événements, élites et Souverains (v1 livrée) | 03/07 |
 | [13 — Butin](13-butin.md) | P0 après recette 12 | Trois formes de butin (Vestige figé, Triptyque, Pacte d'oubli), raretés, sources lisibles | Objets 05, idée B 11 | **Absorbé par le plan 22.**
 | [14 — Anomalies du monde](14-anomalies-du-monde.md) | P1 | Anomalies rares liées au joueur et à l'oubli, jamais mortelles | 12, 13 |
-| [15 — Audio](15-audio.md) | Choix A2 consignés | Six candidats retenus, révélation du coffre actuelle conservée ; 3 refus à retravailler et 102 autres besoins à rechercher | [Retours A2](../audio/lot-a2/RETOURS.md) ; dissolution complète préparée, intégration à faire |
+| [15 — Audio](15-audio.md) | Prochain gros chantier (1er octobre) | 50 choix branchés ; nouvelle passe musique, ambiances, effets et mixage en run, avec identité des Résurgences | 24 §12, DECISIONS §44 ; inventaire restant à réauditer |
 | [16 — L'oubli rendu sensible](16-oubli-sensible.md) | P1 | Lots O1–O6 : sol qui oublie, choses qui se défont, frontière visible, coût et récompense de l'oubli | 10 (shader du sol), 02, 13, 15 |
 | [17 — Armes, coffres et modificateurs](17-armes-coffres-modificateurs.md) | P0 | Vagues 0–5 ; rareté sur les améliorations ; noms d'armes ; Mémoriaux et Failles | 05, 08, 13, 16, 18 |
 | [18 — Inventaire des restes V1](18-inventaire-restes-v1.md) | P0 | Éléments de lore et POI vectoriels, Colosses, identifiants Steam « nuits » | 17 (lots 0B/0C) |

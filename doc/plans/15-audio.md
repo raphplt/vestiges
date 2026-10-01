@@ -1,6 +1,6 @@
 # 15 — Audio
 
-Mis à jour le 26 septembre 2026.
+Mis à jour le 1er octobre 2026. **Nouvelle priorité : chantier audio d'ensemble et identité des Résurgences**, détaillés en fin de plan (DECISIONS §44).
 
 ## État
 
@@ -28,7 +28,9 @@ L’ancien catalogue compte encore **59 besoins sans choix final** : 53 sans pro
 
 Le contrôle statique ne trouve aucune nouvelle clé manquante. `sfx_rare_fragment` était déjà appelée sans fichier ni registre ; elle reste sans sélection, dans les besoins à rechercher.
 
-## Prochaine étape
+## Étapes identifiées le 26 septembre
+
+Ces besoins restent à reprendre dans le chantier élargi du 1er octobre, décrit en fin de plan.
 
 1. Écouter une run avec ces branchements et ajuster volumes/cadences avant de reprendre les recherches.
 2. Réauditer les 59 entrées restantes contre le gameplay courant et regrouper les sons partageables.
@@ -77,3 +79,16 @@ Raphaël fournit deux sons pour le bouclier du lot 8B (plan 03 §8) : `shield-bl
 - `sfx_shield_break` : le bouclier tombe à zéro. Coupé à 0,5 s, niveau d'origine (−1,4 dB).
 
 Déclenchés par `AudioManager` sur `PlayerShieldChanged` quand le bouclier baisse. La recharge reste muette, et un coup encaissé ne joue pas le son de blessure. **À écouter en jeu**, niveau compris.
+
+## Reprise audio et identité des Résurgences — 1er octobre 2026
+
+[DECISIONS §44](DECISIONS.md) : **l'audio est le prochain gros chantier souhaité**, musique comme effets sonores. Les Résurgences constituent un problème concret : on ne comprend pas assez qu'elles ont lieu, malgré les signes visuels existants. Le chantier dépasse les quelques sons encore à choisir. Coordination : [plan 24 §12, R4](24-retours-du-1er-octobre.md#12-retours-de-recette--1er-octobre-2026).
+
+**Ordre de travail proposé, à entreprendre :**
+
+1. **Écoute de référence en vraie run.** Enregistrer avec une sortie audio réelle l'exploration, le combat dense, une Résurgence complète et les interfaces. Relever ce qui manque, se masque, se répète ou intervient trop tard. Les captures avec le driver Dummy ne constituent pas une écoute.
+2. **Premier lot : un cycle de Résurgence.** Travailler les signes annonciateurs, le déclenchement, une identité sonore pendant la phase active et une transition sensible vers l'accalmie. Coordonner musique, ambiances et effets avec les signes visuels du plan 08. Ne pas réintroduire par défaut les bandeaux textuels retirés au plan 24 A3, ni augmenter indistinctement le volume de tout le mix.
+3. **Musique et ambiances.** Revoir leur identité, leurs transitions et leur place dans la run ; réauditer les besoins contre le gameplay courant avant de rechercher des pistes.
+4. **Effets et mixage.** Reprendre impact des coups, attaques ennemies, retours du joueur, récompenses et UI ; vérifier les priorités sonores, répétitions, volumes et sons simultanés en combat dense. Réintégrer les choix encore ouverts dans cet audit.
+
+Les 50 choix déjà branchés restent la base de travail ; le retour n'annule pas toutes les sélections antérieures. Pour chaque lot, livrer une séquence audible avant/après et décrire ce qui a changé. L'acceptation vise une Résurgence reconnaissable, un combat lisible à l'oreille et une écoute soutenable sur une run complète. Aucun fichier sonore ni réglage n'est modifié par cette mise à jour du plan.
