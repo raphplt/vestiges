@@ -33,14 +33,16 @@ public static class PlayerSheet
         if (player.MaxShield > 0f)
             AddLine(container, Tr("STAT_SHIELD"), $"{player.Shield:F0} / {player.MaxShield:F0}", null, role);
         AddLine(container, Tr("STAT_ARMOR"), $"{player.Armor:F0}  (−{Percent(player.ArmorReduction)})", null, role);
-        AddLine(container, Tr("STAT_SPEED"), Bonus(player.SpeedMultiplier), null, role);
-        AddLine(container, Tr("STAT_DAMAGE"), Bonus(player.DamageMultiplier), null, role);
-        AddLine(container, Tr("STAT_ATTACK_SPEED"), Bonus(player.AttackSpeedMultiplier), null, role);
+        // Valeurs plutôt que multiplicateurs (plan 24 D1) : un « — » se lisait comme une stat absente.
+        AddLine(container, Tr("STAT_SPEED"), WithBonus($"{player.Speed * player.SpeedMultiplier:F0}", player.SpeedMultiplier), null, role);
+        AddLine(container, Tr("STAT_RANGE"), WithBonus($"{player.EffectiveAttackRange:F0}", player.AttackRangeMultiplier), null, role);
         AddLine(container, Tr("STAT_CRIT"), $"{Percent(player.CritChance)}  ×{player.CritMultiplier.ToString("0.0", French)}", null, role);
-        AddLine(container, Tr("STAT_RANGE"), Bonus(player.AttackRangeMultiplier), null, role);
-        AddLine(container, Tr("STAT_AOE"), Bonus(player.AoeMultiplier), null, role);
-        AddLine(container, Tr("STAT_STATUS_DURATION"), Bonus(player.StatusDurationMultiplier), null, role);
-        AddLine(container, Tr("STAT_XP_RANGE"), Bonus(player.XpMagnetMultiplier), null, role);
+        // Les dégâts montent par arme (cartes d'arme) : les bonus globaux ne s'affichent que s'ils existent.
+        AddBonusLine(container, Tr("STAT_DAMAGE"), player.DamageMultiplier, role);
+        AddBonusLine(container, Tr("STAT_ATTACK_SPEED"), player.AttackSpeedMultiplier, role);
+        AddBonusLine(container, Tr("STAT_AOE"), player.AoeMultiplier, role);
+        AddBonusLine(container, Tr("STAT_STATUS_DURATION"), player.StatusDurationMultiplier, role);
+        AddBonusLine(container, Tr("STAT_XP_RANGE"), player.XpMagnetMultiplier, role);
         AddLine(container, Tr("STAT_LUCK"), Percent(player.LuckBonus), null, role);
         if (player.Waymarks is { Total: > 0 } waymarks)
             AddLine(container, Tr("STAT_WAYMARKS"), $"{waymarks.Found} / {waymarks.Total}", null, role);
@@ -64,6 +66,17 @@ public static class PlayerSheet
         }
     }
 
+    /// <summary>Ligne d'un bonus global en pourcentage, omise tant qu'il vaut 0.</summary>
+    private static void AddBonusLine(VBoxContainer container, string label, float multiplier, TextRole role)
+    {
+        if (Mathf.RoundToInt((multiplier - 1f) * 100f) != 0)
+            AddLine(container, label, Bonus(multiplier), null, role);
+    }
+
+    /// <summary>Valeur suivie de son bonus entre parenthèses, s'il y en a un.</summary>
+    private static string WithBonus(string value, float multiplier) =>
+        Mathf.RoundToInt((multiplier - 1f) * 100f) == 0 ? value : $"{value}  ({Bonus(multiplier)})";
+
     /// <summary>Péril : le niveau, puis ce qu'il coûte et ce qu'il rapporte.</summary>
     private static void AddPerilLines(VBoxContainer container, int peril, TextRole role)
     {
@@ -78,16 +91,15 @@ public static class PlayerSheet
 
     /// <summary>
     /// Inventaire compact : armes (niveau et voie), objets (niveau), Réminiscences, chaque section avec ses
-    /// emplacements occupés. Rend le libellé de chaque arme, pour que l'écran de choix puisse les mettre en avant.
+    /// emplacements occupés.
     /// </summary>
-    public static Dictionary<WeaponInstance, Label> AddCompactInventory(VBoxContainer container, Player player, int reminiscenceSlots)
+    public static void AddCompactInventory(VBoxContainer container, Player player, int reminiscenceSlots)
     {
-        Dictionary<WeaponInstance, Label> weaponLabels = new();
         AddSectionTitle(container, $"{Tr("INVENTORY_WEAPONS")}  {player.WeaponSlots.Count}/{Player.MaxWeaponSlots}");
         foreach (WeaponInstance weapon in player.WeaponSlots)
         {
             string name = weapon.Ascension != null ? $"{weapon.Name} · {weapon.Ascension.Name}" : weapon.Name;
-            weaponLabels[weapon] = AddCompactRow(container, weapon.Sprite, name, string.Format(Tr("INVENTORY_LEVEL"), weapon.Level));
+            AddCompactRow(container, weapon.Sprite, name, string.Format(Tr("INVENTORY_LEVEL"), weapon.Level));
         }
         AddSectionTitle(container, $"{Tr("INVENTORY_OBJECTS")}  {player.PassiveSlots.Count}/{Player.MaxPassiveSlots}");
         foreach (ActivePassiveSouvenir passive in player.PassiveSlots)
@@ -99,10 +111,9 @@ public static class PlayerSheet
             AddCompactRow(container, null, perk.Name, "");
         if (player.Specializations.Count == 0)
             container.AddChild(MakeLabel(Tr("INVENTORY_NONE"), TextRole.Small, UITheme.TextVeryDim));
-        return weaponLabels;
     }
 
-    private static Label AddCompactRow(VBoxContainer container, string iconPath, string name, string level)
+    private static void AddCompactRow(VBoxContainer container, string iconPath, string name, string level)
     {
         HBoxContainer row = new();
         row.AddThemeConstantOverride("separation", 8);
@@ -116,7 +127,6 @@ public static class PlayerSheet
         if (level.Length > 0)
             row.AddChild(MakeLabel(level, TextRole.Small, StatBonusColor, HorizontalAlignment.Right));
         container.AddChild(row);
-        return label;
     }
 
     public static void AddSectionTitle(VBoxContainer container, string text) =>

@@ -2,8 +2,8 @@ namespace Vestiges.Combat;
 
 /// <summary>
 /// Quelles propriétés de la grammaire commune (plan 21 §7) agissent sur une arme portée, selon son motif et son effet
-/// à l'impact après une éventuelle ascension : une seule règle, lue par les cartes d'objets (« Pour : … ») et, plus
-/// tard, par les affinités des personnages.
+/// à l'impact après une éventuelle ascension : une seule règle, que liront les affinités des personnages (plan 21 §6).
+/// Le jeu n'explicite pas les synergies au joueur (DECISIONS §39).
 /// </summary>
 public static class WeaponProperties
 {

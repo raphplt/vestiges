@@ -333,3 +333,19 @@ Toutes les recommandations du §8 et toutes les propositions sont validées, ave
 - **Sprites et design :** confiés au [plan 25](25-sprites-et-design.md). Ce plan code les écrans avec des replis dessinés ; les images du plan 25 s'y branchent ensuite.
 
 **Ordre de travail retenu :** L1 → L3 → L2 (avec la barre d'XP et le score aux éliminations) → L12 → L4 → L7 → L9 → L8 → L5/L6 (code) → L11.
+
+## 11. Comptes rendus
+
+### L1 — corrections nettes (1er octobre)
+
+- **Plus d'armes hors du level-up et du Wagonnet :**
+  - la ligne « arme » quitte les tables des coffres (commun, rare, épique) et des lieux (`poi_*`) ; son poids passe moitié aux niveaux d'objet, moitié à l'Essence ;
+  - les créatures ne lâchent plus d'armes : `TryDropWeapon` (1 % des ordinaires, élites, Souverain, mini-boss) et `weapon_drop_chance` retirés ;
+  - le Wagonnet ne pose une arme que si un emplacement est libre, sinon il donne de l'Essence : même raison (DECISIONS §40) ;
+  - la branche « arme » de `LootRewards` est retirée, ce qui fait disparaître le défaut de l'arme déjà portée tirée par un coffre.
+- **Flèches des coffres :** 700 px et 2 au plus (au lieu de 1 200 px et 3). 700 plutôt que 600 : l'écran couvre 480 px de part et d'autre du centre en largeur, à 600 la flèche n'aurait presque jamais servi sur les côtés.
+- **Stats :** Vitesse et Portée en valeur (« 240 », « 300 (+18 %) ») ; Dégâts, Cadence, Zone, Durée et Aimant n'apparaissent que s'ils ont un bonus. Plus de tiret.
+- **Mémorial :** sous-titre « Choisis une bénédiction. », sans « La zone se souvient ».
+- **Synergies :** la surbrillance des armes concernées au survol d'un objet est retirée (Q6), avec `UpgradeText.ConcernedWeapons`. `WeaponProperties` reste pour les affinités ; son commentaire « Pour : … » est corrigé.
+
+**Vérifications :** `dotnet build` sans avertissement ; `test_weapons`, `test_small_places` et `test_objects` à zéro échec ; smoke vert. `test_objects` doit tourner avec `LANG=fr_FR.UTF-8` : dans un conteneur en anglais, deux contrôles de texte de carte échouent déjà sur `main` (« and » au lieu de « et »).

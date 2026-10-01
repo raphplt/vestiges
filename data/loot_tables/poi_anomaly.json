@@ -1,9 +1,8 @@
 {
     "id": "poi_anomaly",
     "entries": [
-        { "type": "object_level", "item": "random_owned_object", "weight": 40, "min_amount": 1, "max_amount": 1, "fallback_essence": 6 },
+        { "type": "object_level", "item": "random_owned_object", "weight": 48, "min_amount": 1, "max_amount": 1, "fallback_essence": 6 },
         { "type": "xp", "item": "xp", "weight": 25, "min_amount": 40, "max_amount": 80 },
-        { "type": "essence", "item": "essence", "weight": 20, "min_amount": 10, "max_amount": 18 },
-        { "type": "weapon", "item": "random_weapon", "weight": 15, "min_amount": 1, "max_amount": 1 }
+        { "type": "essence", "item": "essence", "weight": 27, "min_amount": 10, "max_amount": 18 }
     ]
 }

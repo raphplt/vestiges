@@ -748,14 +748,9 @@ public partial class ObjectsRegression : Node2D
 
         Setup();
         FragmentOption washer = new("resonance", "passive_new", "Rondelle de cuivre", 1);
-        List<WeaponInstance> alone = UpgradeText.ConcernedWeapons(washer, _player);
-        _player.AddWeapon(WeaponDataLoader.Get("chipped_blade"));
-        List<WeaponInstance> withBlade = UpgradeText.ConcernedWeapons(washer, _player);
-        List<WeaponInstance> survival = UpgradeText.ConcernedWeapons(new FragmentOption("ancrage", "passive_new", "Bouton de manteau", 1), _player);
         string card = CardText(washer);
-        Check(alone is { Count: 0 } && withBlade is { Count: 1 } && withBlade[0].Id == "chipped_blade" && survival == null
-            && !card.Contains("Pour :") && !card.Contains("Aucune de tes armes") && !card.Contains("Taille ·"),
-            $"Carte d'objet : ni propriété ni armes sur la carte, armes concernées pour l'inventaire ({card})");
+        Check(!card.Contains("Pour :") && !card.Contains("Aucune de tes armes") && !card.Contains("Taille ·"),
+            $"Carte d'objet : ni propriété ni armes concernées, le jeu n'explicite pas les synergies ({card})");
 
         // Une amélioration d'arme à trois stats tient en deux lignes : la première en valeur, la seconde regroupe.
         Setup();
@@ -870,12 +865,12 @@ public partial class ObjectsRegression : Node2D
         EventBus events = GetNode<EventBus>("/root/EventBus");
         float before = _player.AttackSpeedMultiplier;
         ResolvedLoot common = Draw("common", "attack_speed");
-        LootRewards.Apply(common, _player, events, Vector2.Zero);
+        LootRewards.Apply(common, _player, events);
         float afterCommon = _player.AttackSpeedMultiplier;
         ResolvedLoot epic = Draw("epic", "attack_speed");
-        LootRewards.Apply(epic, _player, events, Vector2.Zero);
+        LootRewards.Apply(epic, _player, events);
         float armor = _player.Armor;
-        LootRewards.Apply(Draw("rare", "armor"), _player, events, Vector2.Zero);
+        LootRewards.Apply(Draw("rare", "armor"), _player, events);
         Check(Mathf.IsEqualApprox(afterCommon / before, 1.08f) && Mathf.IsEqualApprox(_player.AttackSpeedMultiplier / afterCommon, 1.24f)
               && Mathf.IsEqualApprox(_player.Armor - armor, 4f),
             $"Coffre : cadence ×1,08 (commun, « {common.Label} ») puis ×1,24 (épique), armure +4 (rare)");

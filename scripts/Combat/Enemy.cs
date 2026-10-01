@@ -1309,7 +1309,6 @@ public partial class Enemy : CharacterBody2D
 			_eventBus.EmitSignal(EventBus.SignalName.EventEnemyKilled, _mods.EventToken, GlobalPosition);
 
 		SpawnXpOrbs();
-		TryDropWeapon();
 
 		// Mini-boss : drop un coffre épique garanti
 		if (_tier == "miniboss")
@@ -1378,48 +1377,6 @@ public partial class Enemy : CharacterBody2D
 			GetTree().CurrentScene.AddChild(chest);
 			chest.Initialize(chestData);
 		}).CallDeferred();
-	}
-
-	/// <summary>Chance de lâcher une arme au sol à la mort.</summary>
-	private void TryDropWeapon()
-	{
-		// Drop chance basée sur le tier : normal 1%, aberration 4%, miniboss 15%
-		float dropChance = _tier switch
-		{
-			"miniboss" => 0.15f,
-			_ when _mods.IsVariant => _mods.Variant.WeaponDropChance,
-			_ => 0.01f
-		};
-
-		if (GD.Randf() >= dropChance)
-			return;
-
-		// Sélectionner une arme aléatoire (tier proportionnel au tier de l'ennemi)
-		int maxWeaponTier = _tier == "miniboss" ? 4 : (_mods.IsVariant ? 3 : 2);
-		System.Collections.Generic.List<WeaponData> candidates = new();
-		foreach (WeaponData weapon in WeaponDataLoader.GetAll())
-		{
-			if (!string.IsNullOrEmpty(weapon.DefaultFor))
-				continue;
-			if (weapon.Tier > maxWeaponTier || weapon.Tier >= 5)
-				continue;
-			candidates.Add(weapon);
-		}
-
-		if (candidates.Count == 0)
-			return;
-
-		WeaponData drop = candidates[(int)(GD.Randf() * candidates.Count)];
-		Vector2 spawnPos = GlobalPosition;
-
-		Callable.From(() =>
-		{
-			WeaponPickup pickup = new();
-			pickup.Initialize(drop, spawnPos);
-			GetTree().CurrentScene.AddChild(pickup);
-		}).CallDeferred();
-
-		GD.Print($"[Enemy] Weapon dropped: {drop.Name} (tier {drop.Tier})");
 	}
 
 	private void SpawnXpOrbs()

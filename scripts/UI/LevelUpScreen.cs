@@ -45,7 +45,6 @@ public partial class LevelUpScreen : CanvasLayer
     private PanelContainer _panel;
     private VBoxContainer _inventoryContainer;
     private VBoxContainer _statsContainer;
-    private Dictionary<WeaponInstance, Label> _inventoryWeapons = new();
     // Colonnes latérales : sans contrôle focalisable, elles défilent au stick droit ou à Page haut/bas, comme la pause.
     private readonly List<ScrollContainer> _sideScrolls = new();
     private const float SideScrollSpeed = 900f;
@@ -223,10 +222,9 @@ public partial class LevelUpScreen : CanvasLayer
             child.QueueFree();
         foreach (Node child in _statsContainer.GetChildren())
             child.QueueFree();
-        _inventoryWeapons.Clear();
         if (player == null)
             return;
-        _inventoryWeapons = PlayerSheet.AddCompactInventory(_inventoryContainer, player, _fragmentManager?.SpecializationCapacity ?? 0);
+        PlayerSheet.AddCompactInventory(_inventoryContainer, player, _fragmentManager?.SpecializationCapacity ?? 0);
         PlayerSheet.AddStatLines(_statsContainer, player, GetNodeOrNull<EssenceTracker>("/root/Main/EssenceTracker"),
             GetNodeOrNull<PerilManager>("/root/Main/PerilManager"), withOublis: false, TextRole.Small);
     }
@@ -465,22 +463,6 @@ public partial class LevelUpScreen : CanvasLayer
             StyleCard(i, i == index);
         for (int i = 0; i < _buttons.Count; i++)
             StyleButton(_buttons[i], _cards.Count + i == index);
-        HighlightConcernedWeapons(index < _cardOptions.Count ? _cardOptions[index] : null);
-    }
-
-    /// <summary>Un objet focalisé allume dans l'inventaire les armes qu'il renforce (plan 21 §11, règle des armes concernées).</summary>
-    private void HighlightConcernedWeapons(FragmentOption option)
-    {
-        List<WeaponInstance> concerned = option != null && GetTree().GetFirstNodeInGroup("player") is Player player
-            ? UpgradeText.ConcernedWeapons(option, player)
-            : null;
-        foreach ((WeaponInstance weapon, Label label) in _inventoryWeapons)
-        {
-            if (!IsInstanceValid(label))
-                continue;
-            bool lit = concerned != null && concerned.Contains(weapon);
-            label.AddThemeColorOverride("font_color", lit ? GoldBright : concerned != null ? TextDim : PlayerSheet.StatValueColor);
-        }
     }
 
     private void Activate(int index)

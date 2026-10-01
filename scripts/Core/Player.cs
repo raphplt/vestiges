@@ -1427,7 +1427,7 @@ public partial class Player : CharacterBody2D
         List<ResolvedLoot> loots = LootRewards.Resolve(LootResolver.Roll(poi.LootTableId, poi.LootRolls), this);
         for (int i = 0; i < loots.Count; i++)
         {
-            LootRewards.Apply(loots[i], this, _eventBus, poi.GlobalPosition);
+            LootRewards.Apply(loots[i], this, _eventBus);
             SpawnLootPopup(loots[i].Label, loots[i].Color, poi.GlobalPosition, i);
         }
     }

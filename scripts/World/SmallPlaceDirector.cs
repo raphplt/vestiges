@@ -243,11 +243,14 @@ public partial class SmallPlaceDirector : Node
 	}
 
 	/// <summary>
-	/// Wagonnet : une arme au hasard que le joueur ne porte pas, posée à côté, à ramasser comme celles des coffres.
-	/// Faux s'il n'y en a pas. Le ramassage émet LootReceived, pas la pose.
+	/// Wagonnet : une arme au hasard que le joueur ne porte pas, posée à côté. Faux s'il n'y en a pas, ou si ses
+	/// emplacements sont pleins : une arme qu'on ne peut pas équiper ne sert à rien (DECISIONS §40). Le ramassage
+	/// émet LootReceived, pas la pose.
 	/// </summary>
 	private bool DropWeapon(SmallPlace place, Player player)
 	{
+		if (player.WeaponSlots.Count >= Player.MaxWeaponSlots)
+			return false;
 		WeaponData data = LootRewards.PickRandomWeapon(player);
 		if (data == null)
 			return false;

@@ -9,7 +9,7 @@ using Vestiges.Progression;
 namespace Vestiges.World;
 
 /// <summary>
-/// Butin concret d'un coffre ou d'un POI. Les tirages « au hasard » (objet à monter, arme, Souvenir) sont résolus
+/// Butin concret d'un coffre ou d'un POI. Les tirages « au hasard » (objet à monter, Souvenir) sont résolus
 /// avant l'affichage, pour que l'écran de butin montre ce que le joueur reçoit vraiment, puis appliqués.
 /// </summary>
 public readonly struct ResolvedLoot
@@ -40,7 +40,6 @@ public static class LootRewards
     private static readonly Color EssenceColor = new("5EC4C4");
     private static readonly Color XpColor = new("8AB8C4");
     private static readonly Color ObjectColor = new("6ACA5A");
-    private static readonly Color WeaponColor = new("E8E0D4");
     private static readonly Color StatColor = new("E6C45A");
 
     /// <summary>
@@ -76,11 +75,6 @@ public static class LootRewards
                     resolved.Add(new ResolvedLoot("object_level", owned.Id, levels,
                         string.Format(TranslationServer.Translate("CHEST_LOOT_OBJECT_LEVEL"), owned.Data.Name, levels), ObjectColor));
                     break;
-                case "weapon":
-                    WeaponData weapon = PickWeapon(loot.ItemId);
-                    if (weapon != null)
-                        resolved.Add(new ResolvedLoot("weapon", weapon.Id, 1, Format("CHEST_LOOT_WEAPON", weapon.Name), WeaponColor));
-                    break;
                 case "souvenir":
                     string souvenirId = loot.ItemId == "random_souvenir" ? SouvenirManager.PickRandomUndiscovered() : loot.ItemId;
                     SouvenirData souvenir = souvenirId != null ? SouvenirDataLoader.Get(souvenirId) : null;
@@ -110,8 +104,8 @@ public static class LootRewards
         return new ResolvedLoot("stat", bonus.Stat, 1, label, StatColor, value, bonus.ModifierType);
     }
 
-    /// <summary>Applique un butin résolu. Une arme sans emplacement libre tombe au sol près de <paramref name="position"/>.</summary>
-    public static void Apply(in ResolvedLoot loot, Player player, EventBus eventBus, Vector2 position)
+    /// <summary>Applique un butin résolu. Les coffres et les lieux ne donnent pas d'armes (DECISIONS §40).</summary>
+    public static void Apply(in ResolvedLoot loot, Player player, EventBus eventBus)
     {
         switch (loot.Type)
         {
@@ -125,16 +119,6 @@ public static class LootRewards
             case "object_level":
                 player.AddOrUpgradePassive(loot.ItemId, loot.Amount);
                 eventBus.EmitSignal(EventBus.SignalName.LootReceived, loot.Type, loot.ItemId, loot.Amount);
-                break;
-            case "weapon":
-                WeaponData data = WeaponDataLoader.Get(loot.ItemId);
-                eventBus.EmitSignal(EventBus.SignalName.LootReceived, loot.Type, loot.ItemId, 1);
-                if (data == null || player.AddWeapon(data))
-                    break;
-                WeaponPickup pickup = new();
-                pickup.Initialize(new WeaponInstance(data),
-                    position + new Vector2((float)GD.RandRange(-18, 18), (float)GD.RandRange(-12, 12)));
-                player.GetTree().CurrentScene.CallDeferred(Node.MethodName.AddChild, pickup);
                 break;
             default:
                 eventBus.EmitSignal(EventBus.SignalName.LootReceived, loot.Type, loot.ItemId, loot.Amount);
@@ -160,11 +144,8 @@ public static class LootRewards
     private static ResolvedLoot Essence(int amount) =>
         new("essence", "essence", amount, Format("CHEST_LOOT_ESSENCE", amount), EssenceColor);
 
-    private static WeaponData PickWeapon(string itemId) =>
-        itemId != "random_weapon" ? WeaponDataLoader.Get(itemId) : PickRandomWeapon();
-
     /// <summary>
-    /// Une arme débloquée au hasard (coffres, Wagonnet), ou null s'il n'y en a aucune. Avec <paramref name="holder"/>,
+    /// Une arme débloquée au hasard (Wagonnet), ou null s'il n'y en a aucune. Avec <paramref name="holder"/>,
     /// les armes qu'il porte sont écartées : son ramassage les refuserait.
     /// </summary>
     public static WeaponData PickRandomWeapon(Player holder = null)

@@ -66,7 +66,7 @@ MEMORIAL_SERVICES_PROMPT,Honorer,Honor
 LANDMARK_MEMORIAL,Mémorial,Memorial
 MEMORIAL_GATHER_STATUS,Éclats {0}/{1} · {2} s,Shards {0}/{1} · {2} s
 MEMORIAL_AWAKE_TITLE,MÉMORIAL RAVIVÉ,MEMORIAL REKINDLED
-MEMORIAL_AWAKE_SUBTITLE,La zone se souvient. Choisis une bénédiction.,The area remembers. Choose a blessing.
+MEMORIAL_AWAKE_SUBTITLE,Choisis une bénédiction.,Choose a blessing.
 MEMORIAL_SERVICES_TITLE,MÉMORIAL,MEMORIAL
 MEMORIAL_WEAPON_TAG,Amélioration {0} au moins,{0} upgrade or better
 MEMORIAL_WEAPON_TITLE,Raviver : {0},Rekindle: {0}
@@ -150,7 +150,6 @@ BLESSING_CALL_OF_SHARDS,Appel des éclats,Call of Shards
 CHEST_LOOT_ESSENCE,Essence ×{0},Essence ×{0}
 CHEST_LOOT_XP,+{0} XP,+{0} XP
 CHEST_LOOT_SOUVENIR,Souvenir : {0},Memory: {0}
-CHEST_LOOT_WEAPON,Arme : {0},Weapon: {0}
 CHEST_LOOT_OBJECT_LEVEL,{0} +{1} niv.,{0} +{1} lv
 STAT_DAMAGE,Dégâts,Damage
 STAT_ATTACK_SPEED,Cadence,Attack rate

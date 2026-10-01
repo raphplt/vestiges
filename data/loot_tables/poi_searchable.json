@@ -1,10 +1,9 @@
 {
     "id": "poi_searchable",
     "entries": [
-        { "type": "essence", "item": "essence", "weight": 38, "min_amount": 3, "max_amount": 8 },
+        { "type": "essence", "item": "essence", "weight": 45, "min_amount": 3, "max_amount": 8 },
         { "type": "xp", "item": "xp", "weight": 20, "min_amount": 10, "max_amount": 25 },
-        { "type": "object_level", "item": "random_owned_object", "weight": 17, "min_amount": 1, "max_amount": 1, "fallback_essence": 6 },
-        { "type": "weapon", "item": "random_weapon", "weight": 15, "min_amount": 1, "max_amount": 1 },
+        { "type": "object_level", "item": "random_owned_object", "weight": 25, "min_amount": 1, "max_amount": 1, "fallback_essence": 6 },
         { "type": "souvenir", "item": "random_souvenir", "weight": 10, "min_amount": 1, "max_amount": 1 }
     ]
 }

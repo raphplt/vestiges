@@ -37,8 +37,8 @@ public class ChestPlacementData
     public PixelClearance Clearance = new(72f, 32f, 124f);
     public PixelClearance BuildingClearance = new(176f, 48f, 176f);
     /// <summary>Repères de bord d'écran : coffres fermés hors du cadre à moins de cette distance du centre.</summary>
-    public float PointerRangePx = 1100f;
-    public int PointerMax = 3;
+    public float PointerRangePx = 700f;
+    public int PointerMax = 2;
     public List<ChestPlacementGroup> Groups = new();
 }
 

@@ -119,31 +119,6 @@ public static class UpgradeText
         return false;
     }
 
-    /// <summary>
-    /// Armes portées qu'un objet de propriété renforce (plan 21 §11), pour les mettre en avant dans l'inventaire
-    /// pendant le choix. Null pour une carte qui n'est pas un objet ou un objet sans propriété d'arme (survie, Élan).
-    /// </summary>
-    public static List<WeaponInstance> ConcernedWeapons(FragmentOption choice, Player player)
-    {
-        if (player == null || choice.Type is not ("passive_new" or "passive_upgrade")
-            || PassiveSouvenirDataLoader.Get(choice.Id) is not { } data)
-            return null;
-        bool weaponProperty = false;
-        bool objectStatuses = player.ObjectTriggers is { } triggers && (triggers.BurnChance > 0f || triggers.ChillChance > 0f);
-        List<WeaponInstance> weapons = new();
-        foreach (PassiveEffectData effect in data.Effects)
-        {
-            string property = StatCatalog.Property(effect.Stat);
-            if (property is null or "momentum")
-                continue;
-            weaponProperty = true;
-            foreach (WeaponInstance weapon in player.WeaponSlots)
-                if (WeaponProperties.Concerns(weapon, property, objectStatuses) && !weapons.Contains(weapon))
-                    weapons.Add(weapon);
-        }
-        return weaponProperty ? weapons : null;
-    }
-
     private static void AddOthers(List<(string, Color)> lines, List<string> others)
     {
         if (others.Count > 0)

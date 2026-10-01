@@ -23,7 +23,6 @@ public class EnemyVariantData
     public float XpMult = 1f;
     public int AffixCount;
     public int BonusEssence;
-    public float WeaponDropChance;
     public string RewardChest;
     public float RewardChestChance;
     public Color OutlineColor;
@@ -165,7 +164,6 @@ public static class EnemyVariantDataLoader
             XpMult = Float(dict, "xp_mult", 1f),
             AffixCount = (int)Float(dict, "affix_count", 0f),
             BonusEssence = (int)Float(dict, "bonus_essence", 0f),
-            WeaponDropChance = Float(dict, "weapon_drop_chance", 0f),
             RewardChest = String(dict, "reward_chest"),
             RewardChestChance = Float(dict, "reward_chest_chance", 0f),
             OutlineColor = Color.FromHtml(String(dict, "outline_color", "#D4A843")),
