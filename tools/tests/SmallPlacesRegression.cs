@@ -68,12 +68,15 @@ public partial class SmallPlacesRegression : Node2D
 			SmallPlace well = new List<SmallPlace>(director.Places).Find(place => place.Data.Id == "well");
 			player.TakeDamage(40f);
 			float hp = player.CurrentHp;
+			float maxBefore = player.EffectiveMaxHp;
 			well.Interact(player);
-			bool healed = Mathf.IsEqualApprox(player.CurrentHp - hp, Mathf.Min(40f, player.EffectiveMaxHp * 0.15f));
+			// Le Repère du puits ajoute aussi des PV max, et autant de PV (plan 24 D3).
+			float waymarkHp = player.EffectiveMaxHp - maxBefore;
+			bool healed = waymarkHp > 0f && Mathf.IsEqualApprox(player.CurrentHp - hp - waymarkHp, Mathf.Min(40f, player.EffectiveMaxHp * 0.15f));
 			float after = player.CurrentHp;
 			well.Interact(player);
 			Check(healed && Mathf.IsEqualApprox(player.CurrentHp, after) && !well.CanInteract,
-				"Puits : soigne 15 % des PV max, une seule fois");
+				$"Puits : soigne 15 % des PV max, une seule fois ({hp:0.0} → {after:0.0}, PV max {maxBefore:0} → {player.EffectiveMaxHp:0})");
 
 			SmallPlace vein = new List<SmallPlace>(director.Places).Find(place => place.Data.Id == "crystal_vein");
 			int before = essence.CurrentEssence;
@@ -154,14 +157,18 @@ public partial class SmallPlacesRegression : Node2D
 		Check(revealed && !Revealed(Find("bus_shelter")),
 			"Cabine téléphonique : les lieux encore utiles à portée reçoivent une flèche, 45 s");
 
+		// Le Repère de l'abribus ajoute une vitesse permanente, qui reste après le bonus de 20 s (plan 24 D3).
 		float speed = player.SpeedMultiplier;
 		Find("bus_shelter").Interact(player);
-		bool faster = Mathf.IsEqualApprox(player.SpeedMultiplier / speed, 1.2f);
+		float waymarkSpeed = 1f + WaymarkDataLoader.Load().Rewards["bus_shelter"].Amount;
+		bool faster = Mathf.IsEqualApprox(player.SpeedMultiplier / speed, 1.2f * waymarkSpeed);
 		director._Process(21.0);
-		Check(faster && Mathf.IsEqualApprox(player.SpeedMultiplier, speed), "Abribus : vitesse +20 % pendant 20 s, puis retirée");
+		Check(faster && Mathf.IsEqualApprox(player.SpeedMultiplier, speed * waymarkSpeed), "Abribus : vitesse +20 % pendant 20 s, puis retirée");
 
 		// PV pleins d'abord : les coups des contrôles précédents laissent moins de 20 PV au Traqueur.
 		player.Heal(player.EffectiveMaxHp);
+		// Le bouclier du Repère de la voiture encaisse un coup entier : un second coup entame les PV.
+		player.TakeDamage(20f);
 		player.TakeDamage(20f);
 		hp = player.CurrentHp;
 		SmallPlace picnic = Find("picnic");
@@ -170,20 +177,30 @@ public partial class SmallPlacesRegression : Node2D
 		foreach (Node child in picnic.GetChildren())
 			line ??= child as Label;
 		Check(player.CurrentHp > hp && line is { Visible: true } && line.Text.Length > 0 && !line.Text.StartsWith("PLACE_"),
+			$"[{hp:0.0} → {player.CurrentHp:0.0} / {player.EffectiveMaxHp:0}] " +
 			$"Table de pique-nique : soin léger et une ligne de lore (« {line?.Text} »)");
 
-		// Repères (plan 23 R9) : un par type de lieu utilisé, jamais deux fois le même.
+		// Repères (plan 23 R9, plan 24 D3) : un gain par type de lieu utilisé, propre au lieu, jamais deux fois le même.
 		HashSet<string> usedTypes = new();
 		foreach (SmallPlace place in places)
 			if (place.Used)
 				usedTypes.Add(place.Data.Id);
-		float luckPerType = WaymarkDataLoader.Load().LuckPerType;
+		WaymarkConfig waymarks = WaymarkDataLoader.Load();
+		float expectedLuck = 0f;
+		foreach (string type in usedTypes)
+			if (waymarks.Rewards.TryGetValue(type, out WaymarkReward reward) && reward.Stat == "luck")
+				expectedLuck += reward.Amount;
 		float luck = player.LuckBonus;
+		float maxHp = player.EffectiveMaxHp;
 		SmallPlace secondWell = places.Find(place => place.Data.Id == "well" && !place.Used);
 		secondWell?.Interact(player);
-		Check(secondWell != null && player.Waymarks.Found == usedTypes.Count
-				&& Mathf.IsEqualApprox(luck - luckBefore, usedTypes.Count * luckPerType) && Mathf.IsEqualApprox(player.LuckBonus, luck),
-			$"Repères : {player.Waymarks.Found} types utilisés, Chance +{luck * 100f:0} %, un deuxième puits n'ajoute rien");
+		Check(secondWell != null && usedTypes.Contains("well") && player.Waymarks.Found == usedTypes.Count
+				&& Mathf.IsEqualApprox(luck - luckBefore, expectedLuck) && Mathf.IsEqualApprox(player.LuckBonus, luck)
+				&& Mathf.IsEqualApprox(player.EffectiveMaxHp, maxHp),
+			$"Repères : {player.Waymarks.Found} types utilisés, Chance +{(luck - luckBefore) * 100f:0} %, un deuxième puits n'ajoute rien");
+		Check(waymarks.Rewards.Count == 12 && waymarks.Rewards["well"].Stat == "max_hp" && waymarks.Rewards["memorial"].Rerolls == 1
+				&& waymarks.Rewards["rift"].Banishes == 1,
+			"Repères : douze gains, PV max au puits, une relance au Mémorial, un bannissement à la Faille");
 	}
 
 	private static bool Revealed(SmallPlace place)

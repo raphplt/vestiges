@@ -1,19 +1,86 @@
 {
-    "_doc": "Repères (plan 22 §3 B, plan 23 R9) : le premier usage de chaque type de lieu dans la run donne luck_per_type de Chance (meilleures raretés sur les améliorations). Récompense la variété, pas la répétition. 'types' : identifiant du lieu (petits lieux de small_places.json, et chest, memorial, rift) et clé de son nom.",
+    "_doc": "Repères (plan 22 §3 B, plan 23 R9, plan 24 D3) : le premier usage de chaque type de lieu dans la run donne un petit gain permanent, propre au lieu, de la taille d'une carte commune d'objet. Explorer la variété des lieux construit un petit build de départ. 'types' : identifiant du lieu (petits lieux de small_places.json, et chest, memorial, rift), clé de son nom, et gain : soit une stat ('stat', 'amount', 'modifier_type' : additive ajoute, multiplicative donne ×(1 + amount)), soit des jetons de choix ('rerolls' relances, 'banishes' bannissements gratuits).",
     "enabled": true,
-    "luck_per_type": 0.01,
     "types": [
-        { "id": "well", "name_key": "WAYMARK_WELL" },
-        { "id": "crystal_vein", "name_key": "WAYMARK_CRYSTAL_VEIN" },
-        { "id": "scarecrow", "name_key": "WAYMARK_SCARECROW" },
-        { "id": "mailbox", "name_key": "WAYMARK_MAILBOX" },
-        { "id": "mine_cart", "name_key": "WAYMARK_MINE_CART" },
-        { "id": "abandoned_car", "name_key": "WAYMARK_CAR" },
-        { "id": "phone_booth", "name_key": "WAYMARK_PHONE" },
-        { "id": "bus_shelter", "name_key": "WAYMARK_BUS" },
-        { "id": "picnic", "name_key": "WAYMARK_PICNIC" },
-        { "id": "chest", "name_key": "WAYMARK_CHEST" },
-        { "id": "memorial", "name_key": "WAYMARK_MEMORIAL" },
-        { "id": "rift", "name_key": "WAYMARK_RIFT" }
+        {
+            "id": "well",
+            "name_key": "WAYMARK_WELL",
+            "stat": "max_hp",
+            "amount": 10,
+            "modifier_type": "additive"
+        },
+        {
+            "id": "crystal_vein",
+            "name_key": "WAYMARK_CRYSTAL_VEIN",
+            "stat": "luck",
+            "amount": 0.05,
+            "modifier_type": "additive"
+        },
+        {
+            "id": "scarecrow",
+            "name_key": "WAYMARK_SCARECROW",
+            "stat": "armor",
+            "amount": 2,
+            "modifier_type": "additive"
+        },
+        {
+            "id": "mailbox",
+            "name_key": "WAYMARK_MAILBOX",
+            "stat": "xp_gain",
+            "amount": 0.05,
+            "modifier_type": "multiplicative"
+        },
+        {
+            "id": "mine_cart",
+            "name_key": "WAYMARK_MINE_CART",
+            "stat": "xp_magnet_radius",
+            "amount": 0.15,
+            "modifier_type": "multiplicative"
+        },
+        {
+            "id": "abandoned_car",
+            "name_key": "WAYMARK_CAR",
+            "stat": "shield",
+            "amount": 5,
+            "modifier_type": "additive"
+        },
+        {
+            "id": "phone_booth",
+            "name_key": "WAYMARK_PHONE",
+            "stat": "attack_range",
+            "amount": 0.05,
+            "modifier_type": "multiplicative"
+        },
+        {
+            "id": "bus_shelter",
+            "name_key": "WAYMARK_BUS",
+            "stat": "speed",
+            "amount": 0.04,
+            "modifier_type": "multiplicative"
+        },
+        {
+            "id": "picnic",
+            "name_key": "WAYMARK_PICNIC",
+            "stat": "regen_rate",
+            "amount": 0.3,
+            "modifier_type": "additive"
+        },
+        {
+            "id": "chest",
+            "name_key": "WAYMARK_CHEST",
+            "stat": "luck",
+            "amount": 0.05,
+            "modifier_type": "additive"
+        },
+        {
+            "id": "memorial",
+            "name_key": "WAYMARK_MEMORIAL",
+            "rerolls": 1
+        },
+        {
+            "id": "rift",
+            "name_key": "WAYMARK_RIFT",
+            "banishes": 1
+        }
     ]
 }

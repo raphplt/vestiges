@@ -97,6 +97,7 @@ public partial class FragmentManager : Node
         _eventBus.GameStateChanged += OnGameStateChanged;
         _eventBus.PerilChanged += OnPerilChanged;
         _eventBus.CrisisEnded += OnCrisisEnded;
+        _eventBus.ChoiceTokensGranted += OnChoiceTokensGranted;
     }
 
     public override void _ExitTree()
@@ -107,6 +108,7 @@ public partial class FragmentManager : Node
             _eventBus.GameStateChanged -= OnGameStateChanged;
             _eventBus.PerilChanged -= OnPerilChanged;
             _eventBus.CrisisEnded -= OnCrisisEnded;
+            _eventBus.ChoiceTokensGranted -= OnChoiceTokensGranted;
         }
     }
 
@@ -472,6 +474,12 @@ public partial class FragmentManager : Node
     }
 
     public void AddRerolls(int count) => _rerollsRemaining += count;
+
+    private void OnChoiceTokensGranted(int rerolls, int banishes)
+    {
+        AddRerolls(rerolls);
+        AddBanishes(banishes);
+    }
     public void AddBanishes(int count) => _banishesRemaining += count;
 
     public void SelectFragment(FragmentOption option)

@@ -91,7 +91,9 @@ PLACE_PICNIC_LORE_01,"Une nappe à carreaux, deux tasses. Quelqu'un comptait rev
 PLACE_PICNIC_LORE_02,"Des miettes de pain sec. Même les oiseaux ont oublié de venir.","Crumbs of stale bread. Even the birds forgot to come."
 PLACE_PICNIC_LORE_03,"Un prénom gravé dans le bois, à moitié effacé. On le lit quand même.","A name carved in the wood, half worn away. You read it anyway."
 PLACE_PICNIC_LORE_04,"Une radio à piles, muette. Le bouton est resté sur la station du dimanche.","A battery radio, silent. The dial still rests on the Sunday station."
-WAYMARK_FOUND,Repère : {0} · Chance {1},Waymark: {0} · Luck {1}
+WAYMARK_FOUND,Repère : {0} · {1},Waymark: {0} · {1}
+WAYMARK_REROLLS,+{0} relance,+{0} reroll
+WAYMARK_BANISHES,+{0} bannissement,+{0} banish
 WAYMARK_WELL,Puits,Well
 WAYMARK_CRYSTAL_VEIN,Veine de cristal,Crystal vein
 WAYMARK_SCARECROW,Épouvantail,Scarecrow

@@ -416,3 +416,9 @@ Validées par la demande de Raphaël (DECISIONS §40), d'après la proposition d
 **Vérifications :** `test_weapons` à zéro échec, dont trois contrôles nouveaux : les 24 armes ont deux voies dans un motif que leur famille sait jouer ; Suture soigne tous les 3 coups et Enchaînement fait deux échos sans toucher l'arme de base ; Arrêt sur image fige. `test_small_places`, `test_movement`, `test_enemy_abilities` à zéro échec. Galerie en vraie run (`--capture-weapons --ascensions`) regardée pour Séisme, Agrafeuse, Balayage et Ouvert : les coups touchent tout autour, en salve, en éventail et en arc.
 
 **Reste :** comme la Moisson de la Faucille, une voie en cercle (Séisme, Déblayer, Ratisser, Mie de pain) dessine encore l'effet de son arme d'origine ; l'effet visuel circulaire est à reprendre avec le plan 25. Chiffres de départ, à régler en jeu.
+
+### L9 — Repères (1er octobre)
+
+Chaque type de lieu donne, à son premier usage dans la run, le gain du tableau D3, de la taille d'une carte commune d'objet : puits PV max +10, veine de cristal Chance +5 %, épouvantail armure +2, boîte aux lettres XP +5 %, wagonnet aimant +15 %, voiture bouclier +5, cabine portée +5 %, abribus vitesse +4 %, pique-nique régénération +0,3 PV/s, coffre Chance +5 %, Mémorial une relance, Faille un bannissement gratuit. Le message flottant dit le gain (« Repère : Puits · PV max +10 »). Gains en données (`waymarks.json`) ; relances et bannissements passent par un signal (`ChoiceTokensGranted`), sans lien direct entre les Repères et le level-up.
+
+**Vérifications :** `test_small_places` à zéro échec avec un contrôle des douze gains ; trois contrôles anciens adaptés (le puits et l'abribus donnent maintenant aussi leur Repère, le bouclier de la voiture encaisse un coup entier). `test_objects`, `test_perk_acquisition` à zéro échec ; smoke vert.

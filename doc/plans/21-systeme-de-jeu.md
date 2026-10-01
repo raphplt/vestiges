@@ -285,7 +285,7 @@ Quand une carte ne peut plus rien offrir (4 armes ascensionnées, 6 objets au ni
 | Surplus, déblocages | À faire | Plans 20, 22 |
 | Anciens Dons des coffres et leurs synergies | **Retirés** ; les coffres donnent des niveaux d'objet (un niveau = une carte commune) | G2b, étape 1, plan 23 R3 |
 | Bonus d'une stat au hasard à chaque coffre, en plus du butin (un niveau d'objet commun, ×2 rare, ×3 épique) | **En jeu** | Plan 23, R8 |
-| Repères : +1 % de Chance au premier usage de chaque type de lieu (douze types) | **En jeu** | Plan 23, R9 |
+| Repères : au premier usage de chaque type de lieu, un petit gain propre au lieu (stat, relance ou bannissement), douze types | **En jeu** | Plan 23 R9, plan 24 L9 |
 
 ## 13. Ce que ce document remplace
 
