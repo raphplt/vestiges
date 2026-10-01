@@ -203,13 +203,13 @@ public partial class PerformanceAudit20260928 : Node
             roaming._Process(0.5);
             intervals[i] = Stopwatch.GetElapsedTime(start).TotalMilliseconds;
             Dictionary<Vector2I, float> memory = Get<Dictionary<Vector2I, float>>(roaming, "_zoneMemory");
-            visits += memory.Count;
+            visits += roaming.LastAdvancedCellCount;
             int zeros = memory.Values.Count(v => v == 0f);
             zeroVisits += zeros;
             if ((i + 1) % 600 == 0) checkpoints.Add(new { seconds = (i + 1) / 2, cells = memory.Count, zeros });
         }
         // Allocations de l'observation incluses ici : ne pas attribuer ce compteur à ErasureManager seul.
-        _results.Add(new { kind = "erasure_roaming", checkpoints, visits, zero_visits_after_update = zeroVisits,
+        _results.Add(new { kind = "erasure_roaming", checkpoints, visits, zero_cells_after_update = zeroVisits,
             intervals_ms = intervals, allocation_including_observer = GC.GetAllocatedBytesForCurrentThread() - allocated });
         roaming.Free();
         _player.GlobalPosition = Vector2.Zero;
@@ -218,7 +218,7 @@ public partial class PerformanceAudit20260928 : Node
         {
             ErasureManager erasure = NewErasure();
             Dictionary<Vector2I, float> memory = Get<Dictionary<Vector2I, float>>(erasure, "_zoneMemory");
-            for (int i = 0; i < cells; i++) memory[new Vector2I(i % 29 - 14, i / 29 - 14)] = 0;
+            for (int i = 0; i < cells; i++) erasure.OverrideMemory(new Vector2I(i % 29 - 14, i / 29 - 14), 0f);
             erasure._Process(0.5);
             double[] times = new double[100];
             long bytes = GC.GetAllocatedBytesForCurrentThread();

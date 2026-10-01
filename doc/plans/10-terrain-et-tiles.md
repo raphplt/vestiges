@@ -659,3 +659,55 @@ avertissement de build, douze captures des capacités inspectées sur ViewSonic.
 Les modifications indépendantes de révélation Mémorial/Faille sont préservées
 hors de ces commits ; leur nouveau shader devra rejoindre le catalogue lors
 de la clôture de leur lot ([journal final](../audits/verification-tools-2026-10-01/README.md#vérification-après-intégration-sur-main)).
+
+
+### 6C — cellules actives de l'Effacement : découpage du 1er octobre
+
+Continuation autonome hors audio (DECISIONS §47). L'audit de septembre mesure
+6 744 cellules nulles sur 6 753 en fin de parcours ; le gestionnaire recalcule
+encore chacune d'elles à chaque pas. Les lots 6A et 6B restent acquis.
+
+1. Conserver mémoire et phases des zones connues ; indexer séparément les
+   cellules encore actives, dans leur ordre historique. Une cellule arrivée
+   à zéro sort du calcul, une stabilisation ou surcharge positive la réactive.
+   Garder le même ordre de signaux, car les Failles en dépendent. Ne modifier
+   ni les coefficients JSON, ni les horloges, ni la publication de texture.
+2. Établir avant modification une référence rejouable : parcours de 30 minutes,
+   aller/retour, crises, Oubli du chemin, coffres et Mémoriaux, puis mémoire,
+   phases, signaux ordonnés et texture comparés à chaque pas. Ajouter les cas
+   de réactivation, coordonnées négatives, frontière de bloc et rappel pendant
+   un signal. Compter visites et allocations après chauffe, sans conclure aux
+   FPS sur machine chargée.
+3. Compléter par les horloges 6A et l'intégration Main, une run nomade réelle
+   prolongée avec événements et une capture des phases sur ViewSonic. Mettre
+   à jour les anciens bancs qui écrivent directement dans le dictionnaire de
+   mémoire, afin qu'ils passent par le point d'entrée de surcharge existant.
+
+L'index peut parcourir les blocs de 64 cellules pour garder l'ordre stable ;
+le travail résiduel sur ces blocs sera rapporté. La compression des états,
+le streaming physique et les changements de rendu sont hors de ce lot.
+
+
+**6C livré et vérifié — 1er octobre.** Sur le même parcours de
+30 minutes avec crises et stabilisations : 3 600 empreintes de mémoire/phases/
+texture identiques et 25 514 signaux de phase dans le même ordre. Recalculs de
+cellules : 21 195 630 → 16 152 536 (−23,8 %) ; dernier pas 6 753 → 174. Les zones
+à zéro restent mémorisées ; les stabilisations les réactivent. Aucun réglage
+d'équilibrage changé. L'index ajoute une table d'indices et parcourt encore
+les blocs de 64 bits : +157,5 Kio retenus pour les structures de 6 753 cellules
+dans le microbanc .NET isolé. Aucun gain de mémoire ou de FPS affirmé.
+
+20 contrôles ciblés, 26 contrôles temporels et 26 contrôles d'intégration Main
+passent ; compilation sans avertissement, smoke 600 frames vert. Huit captures
+avant/après inspectées sur ViewSonic, dont une zone ravivée depuis le Néant.
+[Preuves et protocole](../audits/erasure-active-2026-10-01/README.md).
+La run Main nomade invincible de 30 minutes se termine sans erreur moteur :
+32 coffres ouverts, six crises commencées/cinq terminées ; dernier relevé
+603 recalculs sur 17 087 cellules mémorisées (591 encore positives).
+Les Mémoriaux croisés n'ont pas été réveillés par le bot ; leur réactivation
+est vérifiée dans les régressions et la capture, sans prétendre à une recette
+humaine. L'intégration conserve le lot indépendant de révélation des lieux
+`36a318f3`.
+
+Observation de la run longue pour la suite : 19 782 orbes d'XP encore au sol,
+durée de vie en zone oubliée à auditer (plans 16/22), coût non attribué ici.

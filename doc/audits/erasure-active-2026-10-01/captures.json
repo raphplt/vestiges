@@ -1,0 +1,86 @@
+{
+  "seed": 221092026,
+  "screen": 1,
+  "captures": [
+    {
+      "version": "before",
+      "path": "/tmp/vestiges-erasure-active-capture-before/erasure-ancree.png",
+      "sha256": "510050edacbc250cdea36b8ca7f4d05739fefb9c505ba14f9570fbeeb3309cfb"
+    },
+    {
+      "version": "before",
+      "path": "/tmp/vestiges-erasure-active-capture-before/erasure-degrade.png",
+      "sha256": "3903162ca4584591d3f941259f968033a42a0d827134213df758d466b1dfb96e"
+    },
+    {
+      "version": "before",
+      "path": "/tmp/vestiges-erasure-active-capture-before/erasure-eclats.png",
+      "sha256": "43c401e4e7848be59da9d93a66698e634ddcb16afe073d4d90e810066210950f"
+    },
+    {
+      "version": "before",
+      "path": "/tmp/vestiges-erasure-active-capture-before/erasure-effacee.png",
+      "sha256": "9bc55bf484606b9dd77265cab80ddadb79d293bda80ae7fc4fe5c955284ce699"
+    },
+    {
+      "version": "before",
+      "path": "/tmp/vestiges-erasure-active-capture-before/erasure-effilochee.png",
+      "sha256": "0b1c9a13b3ed76b33a439aed2bbb783b07dcd6411d70836e2c7e3f74011111b8"
+    },
+    {
+      "version": "before",
+      "path": "/tmp/vestiges-erasure-active-capture-before/erasure-fragile.png",
+      "sha256": "7515f0bb4fd8c499c99185ffad9b754e2cb4d7a8f1c5becb39b8e754cba5efbc"
+    },
+    {
+      "version": "before",
+      "path": "/tmp/vestiges-erasure-active-capture-before/erasure-neant.png",
+      "sha256": "7946881907f540b5f8af0f167f6166d3b67556ce2d17a86146c4d1d18837d454"
+    },
+    {
+      "version": "before",
+      "path": "/tmp/vestiges-erasure-active-capture-before/erasure-ravivee.png",
+      "sha256": "d7a78317d40cd57889a9d39d1a21090ff17239104af866c13f0963987cf26719"
+    },
+    {
+      "version": "after",
+      "path": "/tmp/vestiges-erasure-active-capture-after/erasure-ancree.png",
+      "sha256": "8e1168fd4916e94160afc7c170b115bffef325ffa08b2c8e12e73f12ffce5dad"
+    },
+    {
+      "version": "after",
+      "path": "/tmp/vestiges-erasure-active-capture-after/erasure-degrade.png",
+      "sha256": "c7dac3d5349be9d9cef66ee334ac6d956a55e12067f81049885c6bc7b6249585"
+    },
+    {
+      "version": "after",
+      "path": "/tmp/vestiges-erasure-active-capture-after/erasure-eclats.png",
+      "sha256": "b334bd73e2832787003f4478730ba1fa61e19496dc71522ece9ae55d1ccfbcdb"
+    },
+    {
+      "version": "after",
+      "path": "/tmp/vestiges-erasure-active-capture-after/erasure-effacee.png",
+      "sha256": "8d9bcab4d5dbbc4a01448985b039094a6e24a3b36ba728e0eac3b7e32abbedcf"
+    },
+    {
+      "version": "after",
+      "path": "/tmp/vestiges-erasure-active-capture-after/erasure-effilochee.png",
+      "sha256": "e94cf561d8ce1981d34a01d700d780864b18a1d2fe0484d5fda881737d97b14c"
+    },
+    {
+      "version": "after",
+      "path": "/tmp/vestiges-erasure-active-capture-after/erasure-fragile.png",
+      "sha256": "339c5c218f81d7eb7650d69545a81f71cdd27f7b9fd29409d1a44a0cecf20301"
+    },
+    {
+      "version": "after",
+      "path": "/tmp/vestiges-erasure-active-capture-after/erasure-neant.png",
+      "sha256": "89e39d5e41f019d1f4882815b2f3c1c39f9697108c6a7ff9ff8d973b269b34a0"
+    },
+    {
+      "version": "after",
+      "path": "/tmp/vestiges-erasure-active-capture-after/erasure-ravivee.png",
+      "sha256": "bd381669f08300176622bfba23de805da618bbf9fc94dbb2ba2c9b903d08c9e1"
+    }
+  ]
+}

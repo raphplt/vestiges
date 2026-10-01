@@ -53,7 +53,7 @@ public partial class ErasureManager : Node
 
     private readonly Dictionary<Vector2I, float> _zoneMemory = new();
     private readonly Dictionary<Vector2I, ErasureZonePhase> _zonePhases = new();
-    private readonly List<Vector2I> _cellsToUpdate = new();
+    private readonly ErasureCellIndex _activeCells = new();
 
     // Fenêtre de mémoire autour du joueur, lue par le shader du sol (assets/shaders/ground.gdshader).
     private const int MemoryWindowCells = 32;
@@ -68,6 +68,12 @@ public partial class ErasureManager : Node
     public int CellSize => _cellSize;
     public float InitialMemory => _seededMemory;
     public float GlobalErasurePercent => _globalErasurePercent;
+    // Compteurs du travail logique pour les bancs : aucune énumération supplémentaire en run.
+    internal int LastAdvancedCellCount { get; private set; }
+    internal int ActiveCellCount => _activeCells.ActiveCount;
+    internal int TrackedCellCount => _zoneMemory.Count;
+    internal int ActiveWordCount => _activeCells.WordCount;
+
     public bool IsLateGame => _globalErasurePercent >= _lateGameThreshold;
 
     public override void _Ready()
@@ -142,10 +148,10 @@ public partial class ErasureManager : Node
         float decayAmount = decayPerMinute * (_updateIntervalSec / 60f) * (_crisisActive ? _crisisDecayMultiplier : 1f);
         float previousGlobal = _globalErasurePercent;
 
-        _cellsToUpdate.Clear();
-        _cellsToUpdate.AddRange(_zoneMemory.Keys);
-        foreach (Vector2I cell in _cellsToUpdate)
+        LastAdvancedCellCount = 0;
+        foreach (Vector2I cell in _activeCells)
         {
+            LastAdvancedCellCount++;
             Vector2 worldPos = CellCenterToWorld(cell);
             float playerDistCells = worldPos.DistanceTo(_player.GlobalPosition) / Mathf.Max(_cellSize, 1);
             float proximity = Mathf.Clamp(1f - (playerDistCells / Mathf.Max(_playerPresenceFalloffCells, 0.01f)), 0f, 1f);
@@ -156,6 +162,8 @@ public partial class ErasureManager : Node
 
             float next = Mathf.Clamp(_zoneMemory[cell] - localDecay, 0f, 1f);
             _zoneMemory[cell] = next;
+            if (next == 0f)
+                _activeCells.SetActive(cell, false);
 
             UpdateZonePhase(cell, next);
         }
@@ -215,8 +223,7 @@ public partial class ErasureManager : Node
     /// <summary>Impose la mémoire d'une zone (captures et tests de rendu de l'oubli).</summary>
     internal void OverrideMemory(Vector2I cell, float memory)
     {
-        _zoneMemory[cell] = Mathf.Clamp(memory, 0f, 1f);
-        UpdateZonePhase(cell, _zoneMemory[cell], true);
+        SetMemory(cell, Mathf.Clamp(memory, 0f, 1f), true);
     }
 
     /// <summary>Republie la mémoire et la phase du joueur sans faire avancer l'Effacement (captures).</summary>
@@ -268,8 +275,7 @@ public partial class ErasureManager : Node
 
                 float current = GetMemoryAtCell(cell);
                 float stabilized = Mathf.Max(current, _stabilizeMemoryFloor);
-                _zoneMemory[cell] = stabilized;
-                UpdateZonePhase(cell, stabilized);
+                SetMemory(cell, stabilized);
             }
         }
 
@@ -299,10 +305,16 @@ public partial class ErasureManager : Node
 
                 float dist = Mathf.Sqrt(dx * dx + dy * dy);
                 float seeded = Mathf.Clamp(_seededMemory - _globalErasurePercent * 0.85f - dist * _seedDistancePenalty, 0.08f, 1f);
-                _zoneMemory[cell] = seeded;
-                UpdateZonePhase(cell, seeded, true);
+                SetMemory(cell, seeded, true);
             }
         }
+    }
+
+    private void SetMemory(Vector2I cell, float memory, bool silent = false)
+    {
+        _zoneMemory[cell] = memory;
+        _activeCells.SetActive(cell, memory > 0f);
+        UpdateZonePhase(cell, memory, silent);
     }
 
     private float GetMemoryAtCell(Vector2I cell)

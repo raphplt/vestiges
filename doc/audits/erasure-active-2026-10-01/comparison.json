@@ -1,0 +1,55 @@
+{
+  "valid": true,
+  "seed": 221092026,
+  "steps_identical": 3600,
+  "ordered_events_identical": 25514,
+  "visits_before": 21195630,
+  "visits_after": 16152536,
+  "reduction_percent": 23.793,
+  "last_step_before": {
+    "step": 3599,
+    "tracked": 6753,
+    "active": 174,
+    "state_hash": "82de366f461e4794",
+    "visits": 6753
+  },
+  "last_step_after": {
+    "step": 3599,
+    "tracked": 6753,
+    "active": 174,
+    "state_hash": "82de366f461e4794",
+    "visits": 174
+  },
+  "zero_cells_before": [
+    {
+      "scenario": "zero_cells",
+      "cells": 841,
+      "updates": 100,
+      "visits_per_update": 841,
+      "allocated_bytes": 25600
+    },
+    {
+      "scenario": "zero_cells",
+      "cells": 6000,
+      "updates": 100,
+      "visits_per_update": 6000,
+      "allocated_bytes": 25600
+    }
+  ],
+  "zero_cells_after": [
+    {
+      "scenario": "zero_cells",
+      "cells": 841,
+      "updates": 100,
+      "visits_per_update": 0,
+      "allocated_bytes": 25600
+    },
+    {
+      "scenario": "zero_cells",
+      "cells": 6000,
+      "updates": 100,
+      "visits_per_update": 0,
+      "allocated_bytes": 25600
+    }
+  ]
+}

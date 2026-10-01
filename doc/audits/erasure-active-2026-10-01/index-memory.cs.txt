@@ -1,0 +1,64 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Text.Json;
+using Godot;
+using Vestiges.World;
+
+internal static class Program
+{
+    private static object _retained;
+    private static int[] _counts;
+    private static Vector2I[] _cells;
+
+    private static object Previous()
+    {
+        List<Vector2I> snapshot = new();
+        // AddRange après Clear appelle le même Grow/EnsureCapacity ; reproduire les tailles de la trace.
+        foreach (int count in _counts) snapshot.EnsureCapacity(count);
+        snapshot.AddRange(_cells);
+        return snapshot;
+    }
+
+    private static object Current()
+    {
+        ErasureCellIndex index = new();
+        foreach (Vector2I cell in _cells) index.SetActive(cell, true);
+        return index;
+    }
+
+    private static long Measure(Func<object> build)
+    {
+        _retained = null;
+        GC.Collect(); GC.WaitForPendingFinalizers(); GC.Collect();
+        long before = GC.GetTotalMemory(true);
+        _retained = build();
+        long after = GC.GetTotalMemory(true);
+        GC.KeepAlive(_retained);
+        return after - before;
+    }
+
+    private static void Main(string[] args)
+    {
+        using JsonDocument document = JsonDocument.Parse(File.ReadAllText(args[0]));
+        JsonElement trace = default;
+        foreach (JsonElement result in document.RootElement.GetProperty("results").EnumerateArray())
+            if (result.GetProperty("scenario").GetString() == "roaming") trace = result.GetProperty("trace");
+        _counts = new int[trace.GetArrayLength()];
+        for (int i = 0; i < _counts.Length; i++) _counts[i] = trace[i].GetProperty("tracked").GetInt32();
+        _cells = new Vector2I[_counts[^1]];
+        for (int i = 0; i < _cells.Length; i++) _cells[i] = new Vector2I(i % 100, i / 100);
+        // Chauffer JIT et structures génériques ; les deux dictionnaires métier sont communs, donc exclus.
+        Measure(Previous); Measure(Current);
+        long[] before = new long[4], after = new long[4];
+        for (int pass = 0; pass < 4; pass++)
+        {
+            if (pass % 2 == 0) { before[pass] = Measure(Previous); after[pass] = Measure(Current); }
+            else { after[pass] = Measure(Current); before[pass] = Measure(Previous); }
+        }
+        Console.WriteLine(JsonSerializer.Serialize(new {
+            cells = _cells.Length, scope = "managed retained bytes: index only, same growth counts, isolated .NET process",
+            before_bytes = before, after_bytes = after,
+        }, new JsonSerializerOptions { WriteIndented = true }));
+    }
+}

@@ -27,7 +27,8 @@ public partial class RunObservation
             fog.Visible = false;
         ErasureManager erasure = _world.GetNode<ErasureManager>("ErasureManager");
         erasure.ProcessMode = ProcessModeEnum.Disabled;
-        await Frames(90);
+        while (_world.GetNodeOrNull("GameLoadingOverlay") != null)
+            await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
         _player.AIInputOverride = Vector2.Zero;
         MoveToDensestProps();
         await Frames(20);
@@ -72,7 +73,18 @@ public partial class RunObservation
             motes.SavePng($"{_output}/erasure-eclats.png");
         _camera.Zoom = zoom;
 
-        GD.Print($"[RunObservation] oubli capturé autour de la zone {center.ToString()} ({ErasurePhases.Length.ToString(CultureInfo.InvariantCulture)} phases + dégradé)");
+        // Repartir du Néant puis raviver vérifie aussi la remise en activité des cellules.
+        for (int y = -radius; y <= radius; y++)
+            for (int x = -radius; x <= radius; x++)
+                erasure.OverrideMemory(center + new Vector2I(x, y), 0f);
+        erasure.StabilizeZone(_player.GlobalPosition);
+        erasure._Process(0.5);
+        erasure.RefreshGroundMemory();
+        await Frames(60);
+        using (Image revived = GetViewport().GetTexture().GetImage())
+            revived.SavePng($"{_output}/erasure-ravivee.png");
+
+        GD.Print($"[RunObservation] RESULT oubli capturé autour de la zone {center.ToString()} ({ErasurePhases.Length.ToString(CultureInfo.InvariantCulture)} phases + dégradé)");
     }
 
     /// <summary>Place le joueur là où les décors hauts sont les plus nombreux près du départ (forêt de préférence).</summary>

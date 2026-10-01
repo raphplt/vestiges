@@ -1,0 +1,16 @@
+{
+  "cells": 6753,
+  "scope": "managed retained bytes: index only, same growth counts, isolated .NET process",
+  "before_bytes": [
+    107680,
+    107680,
+    107680,
+    107680
+  ],
+  "after_bytes": [
+    268912,
+    268912,
+    268912,
+    268912
+  ]
+}

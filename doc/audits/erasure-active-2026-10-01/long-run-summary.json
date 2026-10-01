@@ -1,0 +1,90 @@
+{
+  "samples": 1800,
+  "first": {
+    "seconds": "0.017",
+    "x": "2.595",
+    "y": "24.420",
+    "tracked": "0",
+    "active": "0",
+    "index_words": "0",
+    "advanced_last_step": "0",
+    "global_memory_loss": "0"
+  },
+  "last": {
+    "seconds": "1799.017",
+    "x": "-1166.253",
+    "y": "-4259.299",
+    "tracked": "17087",
+    "active": "591",
+    "index_words": "267",
+    "advanced_last_step": "603",
+    "global_memory_loss": "1"
+  },
+  "events": {
+    "chest": 32,
+    "crisis_started": 6,
+    "crisis_ended": 5
+  },
+  "checkpoints": [
+    {
+      "seconds": "300.000",
+      "x": "-3935.079",
+      "y": "-1161.620",
+      "tracked": "7275",
+      "active": "7275",
+      "index_words": "114",
+      "advanced_last_step": "7275",
+      "global_memory_loss": "0.1582002"
+    },
+    {
+      "seconds": "600.017",
+      "x": "2045.422",
+      "y": "3569.731",
+      "tracked": "10869",
+      "active": "10869",
+      "index_words": "170",
+      "advanced_last_step": "10869",
+      "global_memory_loss": "0.3460148"
+    },
+    {
+      "seconds": "900.017",
+      "x": "1703.701",
+      "y": "5191.839",
+      "tracked": "12720",
+      "active": "12720",
+      "index_words": "199",
+      "advanced_last_step": "12720",
+      "global_memory_loss": "0.53960913"
+    },
+    {
+      "seconds": "1200.017",
+      "x": "-11329.308",
+      "y": "-223.715",
+      "tracked": "13147",
+      "active": "13147",
+      "index_words": "206",
+      "advanced_last_step": "13147",
+      "global_memory_loss": "0.78022087"
+    },
+    {
+      "seconds": "1500.017",
+      "x": "2345.439",
+      "y": "902.090",
+      "tracked": "13544",
+      "active": "13544",
+      "index_words": "212",
+      "advanced_last_step": "13544",
+      "global_memory_loss": "1"
+    },
+    {
+      "seconds": "1799.017",
+      "x": "-1166.253",
+      "y": "-4259.299",
+      "tracked": "17087",
+      "active": "591",
+      "index_words": "267",
+      "advanced_last_step": "603",
+      "global_memory_loss": "1"
+    }
+  ]
+}

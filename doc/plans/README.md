@@ -1,5 +1,7 @@
 # VESTIGES — Dossier de plans à valider
 
+**1er octobre — Effacement, cellules actives :** les zones au Néant gardent leur état sans être recalculées ; stabilisations et ordre des signaux préservés. Rejeu de 30 min identique, recalculs −23,8 %, 72 contrôles, captures et run Main de 30 min vérifiés. [Lot 10 6C et preuves](../audits/erasure-active-2026-10-01/README.md).
+
 **1er octobre (soir) — réveil des lieux dans le monde :** au dernier éclat, le monde se fige, se pixelise, les éclats tournent autour de la stèle et s'y fondent, puis l'oubli recule jusqu'aux bords avant l'écran ; même traitement, plus court, pour la Faille. Passable d'un appui ; 7 contrôles et captures ViewSonic vérifiés. [Plan 24 L6b](24-retours-du-1er-octobre.md#l6b--mémorial-et-faille-mis-en-scène-dans-le-monde-livré-le-1er-octobre-soir).
 
 **1er octobre — recette fiabilisée :** l’intégration Main atteint ses 26 assertions, au lieu d’expirer à 1 500 frames ; captures rejetées sur erreur moteur inattendue. [Vérifications](../audits/verification-tools-2026-10-01/README.md).

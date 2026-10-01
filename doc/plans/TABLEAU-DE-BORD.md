@@ -9,6 +9,7 @@ Le [registre](DECISIONS.md) garde les mots de Raphaël. Les plans gardent le dé
 | Chantier | Plan | Prochaine action |
 |---|---|---|
 | **Nouvelle recette après intégration des sprites** | [24 §12](24-retours-du-1er-octobre.md#12-retours-de-recette--1er-octobre-2026), [DECISIONS §44/47](DECISIONS.md) | **R1/R2, R3b, R5a–c et R6 livrés et vérifiés** : interfaces, cadence du Hurleur, trois personnages et carte par biome. Recette humaine du combat et du visuel à faire ; banc FPS de la carte sur machine calme. Rotation des coffres conservée. Suivi audio indépendant sur la ligne dédiée. |
+| **Effacement : cellules actives** | [10 6C](10-terrain-et-tiles.md) | **Livré et vérifié** : états et signaux identiques, recalculs −23,8 % sur le scénario de 30 min ; 72 contrôles, captures ViewSonic et run réelle de 30 min. Index +157,5 Kio pour 6 753 cellules. FPS à mesurer au calme. |
 | **Préchauffage rendu** | [10 5B1](10-terrain-et-tiles.md) | **Livré et vérifié** : 16 shaders + lueur d’XP soumis puis viewport libéré ; banc Main réparé, 26 contrôles verts. 5B2 : cache froid/chaud et premiers effets, machine calme requise. |
 | **Écrans de choix : relances et entrées** | [04 R7](04-interfaces-et-hub.md) | **Livré et vérifié** : titre/actions/fond restaurés à la réouverture, premier appui sans récompense ; 24 contrôles et captures Main sur ViewSonic. |
 | **Audio et identité des Résurgences** | [15](15-audio.md), 24 §12 | **A0 et A1 livrés**, banque inchangée : enregistrement de référence et rapport (`tools/record_run_audio.sh`), musique pilotée par intention (annonce tenue, accalmie, endgame, première run), fondus corrigés, `tools/test_music.sh` vert. **À écouter** : avant/après et planche A2 (points d'entrée des morceaux) hors dépôt. À décider : rôle exploration/combat avec une foule permanente. Puis A2 (identité) et A3 (mix : 12 sons/s, 64 voix coupées/min). |
@@ -48,7 +49,7 @@ Le [registre](DECISIONS.md) garde les mots de Raphaël. Les plans gardent le dé
 | Trois personnages à intégrer, leurs sprites, leurs armes de départ (Sacoche de lettres, Fusil-harpon) | 06, 08 |
 | Réécriture des textes de chargement, trop directs | 02, 19 |
 | Butin qui disparaît avec sa zone | 16, repris par 22 §6 |
-| Préchauffage des effets (5B) | 10 |
+| Coût à froid/chaud des effets (5B2), après la soumission au rendu livrée en 5B1 | 10 |
 | Essai XP, niveaux de surplus, réserve automatique | 20 |
 
 ## 4. Idées en suspens, rattachées pour ne pas les perdre
@@ -80,7 +81,7 @@ Le [registre](DECISIONS.md) garde les mots de Raphaël. Les plans gardent le dé
 
 ## 6. Plans sans action en attente
 
-00 (référence), 03, 10, 12, 16 : lots livrés, recettes à faire en jeu par Raphaël quand il le souhaite. Le plan 04 est rouvert pour la pause, les survols et la carte (DECISIONS §44).
+00 (référence), 03, 12 : lots livrés, recettes à faire en jeu par Raphaël quand il le souhaite. Les lots de reprise du plan 04 sont livrés ; recettes humaines et banc FPS de la carte restent ouverts. Le plan 10 garde ses suites mesurées de performance (5B2, 3B, 6D). Au plan 16, les effets du monde sont livrés ; la durée de vie du butin dans les zones oubliées reste au plan 22 §6 (19 782 orbes au sol dans la run de 30 min du lot 6C).
 
 
 **Continuation hors audio (DECISIONS §47) :** R3b livré au plan 07 : cadence du Hurleur réglée, 61 contrôles et captures vérifiés, ressenti humain ouvert. Suite : préchargement à réparer, R6 carte, R5 trois personnages. Le chantier audio est exclu de cette continuation.

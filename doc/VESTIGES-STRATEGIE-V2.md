@@ -723,6 +723,7 @@ Le script de post-processing doit inclure une vérification/correction de l'angl
 - [x] Implémenter ErasureManager (mémoire par zone, rythme global, phases visuelles en placeholder — même juste un changement de teinte sur les tiles).
 - [x] Fiabiliser les horloges : expiration des statuts des ennemis au loin, reste temporel et rattrapage borné de l’Effacement, phases et dégâts conservés ; 26 assertions automatisées (plan 10, lot 6A, 28 septembre 2026).
 - [x] Réduire le coût des impacts continus du Transistor sans modifier la cadence des dégâts/procs : feedback cadencé, signal sans tableau temporaire, chiffres mis à jour à valeur affichée changée ; avant/après et 38 assertions vérifiés (plan 10, lot 6B, 28 septembre 2026).
+- [x] Calcul de l’Effacement limité aux cellules actives, état du Néant conservé et réactivation par les lieux : ordre des phases identique, recalculs −23,8 % sur le rejeu de 30 min, régressions/captures et Main prolongée vérifiées (plan 10, lot 6C, 1er octobre 2026).
 - [x] Préchauffage réellement rendu pendant le chargement : 16 shaders de run et particules d’XP, viewport libéré, audits GPU et Main vérifiés, banc d’intégration fiabilisé (26 assertions) (plan 10 5B1, 1er octobre 2026). Compilation froide et à-coups restent à mesurer en 5B2.
 - [x] Implémenter CrisisManager (Résurgences toutes les 3-5 min, spawns en burst).
 - [x] Adapter SpawnManager (spawns liés à l'Effacement, plus proches, plus denses).
