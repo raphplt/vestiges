@@ -455,3 +455,14 @@ Chaque type de lieu donne, à son premier usage dans la run, le gain du tableau 
 - Le butin qui disparaît avec sa zone (plan 16) ne s'applique pas encore aux bonus : leur durée de 20 s suffit.
 
 **Vérifications :** nouveau banc `tools/test_field_bonuses.sh` (6 contrôles, zéro échec) : données, limite au sol, soin au contact, effets à durée appliqués puis retirés, pétard qui touche la créature proche et pas la lointaine, effacement en fin de vie. Smoke vert. Capture en vraie run avec `--show-bonuses` regardée : gourde, aimant et café lisibles sur la route, couverture ramassée par le bot.
+
+### L5 et L6, partie code — fond pixel, Mémorial mis en scène, Chance visible (1er octobre)
+
+- **Fond commun en vrai pixel art (B1) :** `assets/shaders/choice_backdrop.gdshader` et `PixelBackdrop`, derrière le level-up, l'écran du coffre, le Mémorial et la Faille. Dessiné en gros pixels sur la grille de l'écran (4 px à 1080p), trois tons tramés (Bayer 4 × 4) : rayons en bandes qui tournent, halo, poussière d'oubli en pixels, bords qui s'effilochent en violet. Une teinte par écran (or, cyan pour le Mémorial, violet pour la Faille) ; il monte en fondu à l'ouverture. Remplace `LightRaysControl` (triangles vectoriels à bords lisses), supprimé.
+- **Mémorial et Faille mis en scène (B2) :** éclair bref, le fond monte, le titre s'écrit lettre à lettre, puis les cartes tombent une à une avec un petit son chacune (environ 1 s). Un appui pendant l'entrée la termine sans choisir de carte. Les services du Mémorial, rouverts après chaque achat, ne rejouent pas l'entrée. « La zone se souvient » était déjà retiré (L1).
+- **Coffre (B3) :** même fond, en or ; la roulette est gardée. Ses cases textuelles attendent les icônes du plan 25.
+- **Chance visible (D2) :** quand la Chance, l'oubli de la zone ou le Péril montent la rareté d'une carte, elle montre d'abord la rareté tirée, puis saute au rang gagné avec un trèfle en pixels et un son ; les cartes d'une offre sautent l'une après l'autre. Dans la pause, une ligne sous « Chance » dit ce qu'elle fait.
+
+**Vérifications :** build sans avertissement, smoke vert, `test_objects`, `test_perk_acquisition`, `test_weapons` à zéro échec. Captures en vraie run regardées : bénédictions du Mémorial (fond cyan tramé, poussière, liseré violet allégé après une première capture trop chargée), level-up épique (fond or). Le saut de rareté n'a pas été capturé : il demande de la Chance au moment de l'offre.
+
+**Reste :** la mise en scène dans le monde avant l'écran (l'écran qui se pixelise, les éclats qui tournent autour de la stèle) ; les icônes de rareté, qui restent des glyphes absents de la police jusqu'au lot S1 du plan 25.

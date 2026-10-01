@@ -533,9 +533,9 @@ public partial class FragmentManager : Node
 
         ErasureManager.ErasureZonePhase phase = GetTree().CurrentScene?.GetNodeOrNull<ErasureManager>("ErasureManager")
             ?.GetZonePhaseAt(_player.GlobalPosition) ?? ErasureManager.ErasureZonePhase.Anchored;
-        UpgradeRarity rarity = UpgradeRoller.RollRarity(UpgradeRoller.BumpSteps(_player.LuckBonus, phase, _peril), _rng);
+        UpgradeRarity rarity = UpgradeRoller.RollRarity(UpgradeRoller.BumpSteps(_player.LuckBonus, phase, _peril), _rng, out UpgradeRarity rolled);
 
-        return UpgradeRoller.RollGains(option, _player, rarity, _rng);
+        return UpgradeRoller.RollGains(option, _player, rarity, _rng).WithRolledRarity(rolled);
     }
 
     /// <summary>
@@ -684,6 +684,10 @@ public class FragmentOption
     public IReadOnlyList<StatGain> WeaponGains { get; private init; } = System.Array.Empty<StatGain>();
     /// <summary>Amélioration d'objet : un niveau, dont le gain multiplie le pas de l'objet selon la rareté (plan 23 R3).</summary>
     public float PassiveGain { get; private init; } = 1f;
+    /// <summary>Rareté tirée avant que la Chance, l'oubli de la zone ou le Péril ne la montent ; null hors amélioration.</summary>
+    public UpgradeRarity RolledRarity { get; private init; }
+    /// <summary>La Chance (ou l'oubli, le Péril) a monté la rareté de cette carte : l'écran le montre (plan 24 D2).</summary>
+    public bool RarityRaised => RolledRarity != null && Rarity != null && RolledRarity.Rank < Rarity.Rank;
     /// <summary>Voie d'ascension proposée pour l'arme <see cref="Id"/>.</summary>
     public WeaponAscensionData Ascension { get; private init; }
 
@@ -706,6 +710,12 @@ public class FragmentOption
 
     public FragmentOption AsCarried() =>
         new(Id, Type, DisplayName, SortWeight) { Rarity = Rarity, WeaponGains = WeaponGains, PassiveGain = PassiveGain, IsCarried = true };
+
+    public FragmentOption WithRolledRarity(UpgradeRarity rolled) =>
+        new(Id, Type, DisplayName, SortWeight)
+        {
+            Rarity = Rarity, WeaponGains = WeaponGains, PassiveGain = PassiveGain, Ascension = Ascension, RolledRarity = rolled,
+        };
 
     public FragmentOption WithPassiveUpgrade(UpgradeRarity rarity) =>
         new(Id, Type, DisplayName, SortWeight) { Rarity = rarity, PassiveGain = rarity.PassiveGain };

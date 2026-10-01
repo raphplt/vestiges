@@ -34,12 +34,10 @@ public partial class ChestLootScreen : CanvasLayer
     private const float RevealMelodyDelay = 0.3f;
 
     // --- Rays config ---
-    private const int RayCount = 16;
-    private const float RaySpeed = 0.25f;
 
     // --- UI nodes ---
     private ColorRect _overlay;
-    private LevelUpScreen.LightRaysControl _rays;
+    private PixelBackdrop _rays;
     private PanelContainer _panel;
     private VBoxContainer _slotsContainer;
     private Label _title;
@@ -121,13 +119,9 @@ public partial class ChestLootScreen : CanvasLayer
         _overlay.MouseFilter = Control.MouseFilterEnum.Stop;
         AddChild(_overlay);
 
-        // Rays
-        Color rayA = new(0.83f, 0.66f, 0.26f, 0.1f);
-        Color rayB = new(0.9f, 0.78f, 0.39f, 0.05f);
-        _rays = new LevelUpScreen.LightRaysControl(RayCount, RaySpeed, rayA, rayB);
+        // Fond en gros pixels, rayons tramés et poussière d'oubli (plan 24 B1).
+        _rays = new PixelBackdrop(PixelBackdrop.GoldTint);
         _rays.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
-        _rays.MouseFilter = Control.MouseFilterEnum.Ignore;
-        _rays.ProcessMode = ProcessModeEnum.Always;
         AddChild(_rays);
 
         // Panel
@@ -474,7 +468,7 @@ public partial class ChestLootScreen : CanvasLayer
     {
         _overlay.Visible = true;
         _rays.Visible = true;
-        _rays.ResetAngle();
+        _rays.FadeIn(0.35f);
         _panel.Visible = true;
         Visible = true;
         GetTree().Paused = true;
