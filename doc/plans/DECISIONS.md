@@ -506,3 +506,20 @@ Raphaël, après le compte rendu des lots R0 à R7 du plan 23 : « Un coffre peu
 - Le travail des lots R0 à R7 va sur `main`.
 
 **Non acquis :** la taille du bonus de stat et la liste des stats tirées, valeurs de départ de l'agent.
+
+
+## 39. Partie du 1er octobre : écran trop chargé, début de run trop dur, écrans pas assez vivants, objets sans icônes — 1er octobre 2026
+
+Raphaël, après une partie jouée jusqu'un peu après la première Résurgence (retours dictés, extraits) : « les armes sont mieux présentées comme ça » ; « l'écran de chargement […] c'est juste un écran noir qui affiche des textes » ; « il commence à y avoir trop de choses sur l'écran » ; quêtes de run « toujours visibles […] soit ajouter une option pour les afficher ou les masquer […] ça fait pas vraiment jeu » ; barre du haut : « je ne pense pas qu'il y ait besoin de montrer une barre de progression globale. Par contre, afficher le temps, ça, c'est une bonne idée » ; « le score […] augmente en permanence, même si je ne tue personne […] il faudrait afficher le nombre de kills » ; « le jeu est peut-être devenu trop compliqué […] pas assez de régénération, en particulier pendant la première des résurgences […] j'avais une seule arme à peine […] les monstres étaient vraiment très puissants » ; « quand on monte de niveau, on n'obtient pas assez facilement d'autres armes » ; Mémorial : « c'est une bonne mécanique » mais l'écran « apparaît comme ça d'un coup […] il faut que ça soit vraiment beaucoup plus juicy », « la zone se souvient, je ne sais pas s'il faut le garder » ; « il faut qu'un peu tout suive la direction artistique du jeu […] pixelisé, un peu en mode oubli » ; le fond qui tourne à l'ouverture de coffre « n'est pas pixelisé » ; raretés : « c'est pas des vraies icônes dédiées, c'est des sortes de caractères ASCII » ; « les coffres, il faut pas qu'ils droppent des armes » ; flèches des coffres « visibles de trop loin » ; minimap : des carrés de couleurs « qui semblent correspondre à rien », « elle devrait être un zoom sur la map » ; Repères « pourraient être un peu plus intéressants » ; annonces de Résurgence, horde, micro-événements : « on pourrait peut-être s'en passer » ; Chance : « j'ai un peu de mal à voir si elle s'applique vraiment » ; stats au level-up : « juste un tiret […] pour la vitesse, pour les dégâts, pour la zone et pour la durée » ; armes de mêlée : « une portée un peu trop petite, surtout certaines » ; « on manque d'outils […] pour avoir des boucliers temporaires, soit avoir de la régénération […] les ennemis puissants ou certains petits loot pourraient donner des petits bonus : un bonus qui attire l'XP, un bonus qui redonne de la vie » ; « le design final des armes a été validé […] pour les objets, ils n'ont pas du tout été redesignés » ; « il faut pas que les objets indiquent d'eux-mêmes dans quelle synergie ils offrent avec quoi ». Demandé : un plan, et où en sont les mécaniques principales.
+
+**Acquis :**
+- **Coffres :** plus d'armes dans leur butin.
+- **Écran de jeu à alléger :** quêtes de run masquables ou plus discrètes, et dans une forme « de jeu » ; plus de barre de progression globale en haut ; **le temps reste affiché** ; annonces d'événements à supprimer ou presque.
+- **Kills affichés** en run.
+- **Écrans de choix** (Mémorial, coffre) plus animés et dans la DA pixel « oubli » ; **icônes de rareté dédiées**.
+- **Début de run plus tenable :** plus d'armes au level-up, plus de moyens de survie.
+- **Idée retenue sur le principe :** des bonus temporaires lâchés par les ennemis puissants ou de petits butins (aimant d'XP, soin…).
+- **Objets** à redessiner, comme les armes.
+- **Pas de synergies explicitées** par les objets.
+
+**Non acquis (propositions du [plan 24](24-retours-du-1er-octobre.md), questions Q1 à Q9) :** forme des quêtes repliées, score de distance au lieu du temps, liste et taux des bonus lâchés, gain des Repères, portées de mêlée et régénération chiffrées, ordre des lots.

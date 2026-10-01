@@ -1,6 +1,6 @@
 # Tableau de bord des plans
 
-30 septembre 2026 · **Une page pour ne rien perdre.** Établi par recensement des 23 plans, du README et du registre. Pour les plans 02, 04, 07, 08, 10 et 19, le recensement a lu les en-têtes, les lots et les comptes rendus, pas le texte entier. À tenir à jour à chaque clôture de lot et à chaque décision : une ligne change ici avant tout autre document.
+1er octobre 2026 · **Une page pour ne rien perdre.** Établi par recensement des 23 plans, du README et du registre. Pour les plans 02, 04, 07, 08, 10 et 19, le recensement a lu les en-têtes, les lots et les comptes rendus, pas le texte entier. À tenir à jour à chaque clôture de lot et à chaque décision : une ligne change ici avant tout autre document.
 
 Le [registre](DECISIONS.md) garde les mots de Raphaël. Les plans gardent le détail. Ce tableau dit seulement **où en est chaque chose et qui doit agir**.
 
@@ -8,6 +8,7 @@ Le [registre](DECISIONS.md) garde les mots de Raphaël. Les plans gardent le dé
 
 | Chantier | Plan | Prochaine action |
 |---|---|---|
+| **Retours du 1er octobre** (écran allégé, écrans de choix animés en pixel art, début de run plus tenable, coffres sans armes, minimap radar, bonus lâchés, icônes d'objets) | [24](24-retours-du-1er-octobre.md) | Diagnostic et 11 lots proposés ([DECISIONS §39](DECISIONS.md)). Attend l'accord de Raphaël sur l'ordre et les questions Q1 à Q9 ; L1 et L3 peuvent partir dès l'accord |
 | **Gains qui se sentent** (objets à 30 niveaux, projectiles fractionnaires, cartes à la Megabonk, défense, difficulté, objets manquants, carte moins vide) | [23, plan d'exécution](23-plan-agent.md) | Décidé le 30 septembre ([DECISIONS §36–37](DECISIONS.md)). R0 à R4 livrés (mesure de référence ; bouclier de départ retiré, invulnérabilité 0,25 s ; cartes à la Megabonk ; objets à 30 niveaux, projectiles en plus au lieu des copies, paliers à 15 ; stats entières fractionnaires, pas d'armes relevés) ; R5 livré (PV ×1,25 d'emblée, pente 1,04 puis 1,075 après 6 min : temps pour tuer de R0 à ±20 %) ; R6 livré (huit objets de déclencheur) ; R7 livré (six petits lieux, carte de 12 800 px de haut, minimap : un petit lieu toutes les 26 s). R8 révisé livré (bonus d'une stat au hasard à chaque coffre, DECISIONS §38) ; R9 livré (Porte-monnaie hors quête, Repères). Plan 23 terminé ; travail sur `main` |
 | Système de jeu | [21, référence unique](21-systeme-de-jeu.md) | G1, G2a et G2a-2 livrés, refaits au plan 23 R3 (30 niveaux, paliers à 15, 15 objets de propriété). G2b livré : anciens Dons retirés, Fragilité, coefficient, 8 objets de déclencheur. G2c livré au plan 23 R6 (8 de plus, 31 objets proposés) ; les 3 objets « monde » attendent le Reliquaire. G0 et G3 étape 1 livrés (ascensions de 4 armes) ; G3 étape 2 attend la validation des voies |
 | Carte à explorer | [22](22-carte-a-explorer.md) | C0, C1, C4 (six lieux) et C6 livrés : neuf petits lieux, un toutes les 26 s à eux seuls ; carte de 12 800 px de haut, minimap ; aucune Essence dépensée. Agent : C2 (Atelier), après confirmation de Raphaël (§11) |
@@ -17,6 +18,7 @@ Le [registre](DECISIONS.md) garde les mots de Raphaël. Les plans gardent le dé
 | Sujet | Plan | Question |
 |---|---|---|
 | Carte à explorer | 22 §11 | Atelier et Trempe, service « niveau d'arme » déplacé du Mémorial, Atlas : pas encore confirmés un par un (Repères livrés, DECISIONS §38) |
+| Retours du 1er octobre | 24 §8 | Bonus lâchés, score de distance, Repères, quêtes repliées, armes des élites, surbrillance des synergies, ordre des lots (Q1 à Q9) |
 | Catalogue d'objets | 21 §4 | 33 objets écrits avec effet par niveau et palier 25 : à relire, chiffres à régler en jeu. 22 sont en jeu |
 | Ascensions des 20 autres armes | 21-historique §28 | Deux voies par arme proposées (une « plus large », une « plus concentrée ») : à valider avant codage |
 | Invulnérabilité après un coup | 23 R1 | 0,25 s proposé au lieu de 0,5 s : à confirmer en jeu |
