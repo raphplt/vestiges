@@ -349,3 +349,35 @@ Toutes les recommandations du §8 et toutes les propositions sont validées, ave
 - **Synergies :** la surbrillance des armes concernées au survol d'un objet est retirée (Q6), avec `UpgradeText.ConcernedWeapons`. `WeaponProperties` reste pour les affinités ; son commentaire « Pour : … » est corrigé.
 
 **Vérifications :** `dotnet build` sans avertissement ; `test_weapons`, `test_small_places` et `test_objects` à zéro échec ; smoke vert. `test_objects` doit tourner avec `LANG=fr_FR.UTF-8` : dans un conteneur en anglais, deux contrôles de texte de carte échouent déjà sur `main` (« and » au lieu de « et »).
+
+### L3 — armes et survie (1er octobre)
+
+- **Offre de level-up :** tant que le joueur porte moins de 3 armes, chaque offre contient une carte « nouvelle arme » (si une arme est disponible) ; au-delà, une chance sur deux tant qu'un emplacement est libre. Elle compte comme la nouveauté garantie. Les poids de tirage, les paliers d'armes par niveau et la chance d'un palier de plus passent du code à `data/progression/level_up_offer.json` (`LevelUpOfferConfig`).
+- **Portées de mêlée :** Scalpel 35 → 55, Parapluie 45 → 65, Gants de boxe 45 → 60, Râteau 50 → 70, Gomme 50 → 65, Parcmètre 55 → 70, Trousseau 55 → 65, Faucille 60 → 70. La portée propre au personnage allonge la mêlée mais ne la raccourcit plus (Forgeuse ×0,83 auparavant).
+- **Régénération :** de base ×2 (Traqueur 0,6, Vagabond 1,0, Forgeuse 1,2 PV/s) ; Bobine de fil +0,4 → +0,6 PV/s par niveau ; bonus de coffre et bénédiction suivent (+0,6 et +0,3).
+- **Première Résurgence :** PV des créatures **inchangés**. La mesure ci-dessous montre que l'accès aux armes suffit ; à revoir en jeu.
+- **Outil :** `measure_run.sh` donne désormais les dégâts reçus par minute avant 4:00 et pendant la première Résurgence, et le nombre d'armes et le niveau à 4:00.
+
+**Mesure** (`measure_run.sh`, `--nomad`, 330 s, seeds 221092026, 1002, 7 ; avant = `870092a` avec le même outil). Le bot prend toujours la première carte : il prend donc toutes les armes offertes, ce qui majore le nombre d'armes par rapport à un joueur.
+
+| Seed | Armes à 4:00 | Niveau à 4:00 | Éliminations | Dégâts reçus /min avant 4:00 | Pendant la 1ʳᵉ Résurgence |
+|---|---|---|---|---|---|
+| 221092026 | 3 → 4 | 6 → 10 | 298 → 347 | 420 → 873 | 931 → 481 |
+| 1002 | 2 → 4 | 6 → 10 | 130 → 368 | 867 → 600 | 1 146 → 719 |
+| 7 | 1 → 4 | 3 → 11 | 69 → 389 | 4 922 → 770 | 4 963 → 590 |
+
+Les dégâts reçus sont bruts (le bot est invincible, la régénération n'y est pas déduite). Pendant la première Résurgence, ils baissent de 37 à 88 %.
+
+**Relecture de L1 (sous-agent) traitée ici :** test du Wagonnet à quatre armes portées (de l'Essence, aucune arme au sol) ; commentaire de `WeaponPickup` ; roadmap V2 annotée (armes des coffres retirées), parcours du premier coffre et perk « Pilleur » de la Stratégie V2 corrigés ; la ligne Portée de la fiche montre le bonus de portée du personnage (la portée de chaque arme est dans sa fiche). `WeaponProperties` reste sans appelant en jeu : il servira aux affinités des personnages (plan 21 G4).
+
+### L2 — écran allégé, score aux éliminations, barre d'XP (1er octobre)
+
+- **Haut au centre :** plus de plaque, de phase écrite, de barre ni de pourcentage d'Effacement. Le temps seul, plus grand ; il passe au violet pendant une Résurgence, à l'orange en fin de partie, à l'or au-delà. Le nom du biome apparaît sous le temps quand on y entre, deux secondes, puis s'efface.
+- **Annonces :** plus de « Résurgence dans 12 s », « Résurgence 1 », « ACCALMIE — ESSENCE ×2 ». Le présage (bords désaturés) et la couleur du temps suffisent ; pendant l'accalmie, le compteur d'Essence affiche « ×2 » et pulse. Micro-événements : plus de bandeau, de bilan ni de toast « Vaincu » ; le repère au sol (colonne, anneau qui se remplit) et la flèche de bord d'écran restent. La première fois qu'un profil croise un type d'événement, son objectif s'écrit 3,5 s sous le temps (`seen_hints` dans la sauvegarde méta). La réussite se fait entendre.
+- **Score :** les éliminations seulement, chacune selon la créature (`kill_points`, bonus en zone qui s'oublie), × personnage × mutateurs × Péril. Plus de points de temps, de Résurgences, de lieux, de coffres, de boss ni d'endgame ; le score n'est plus notifié à la seconde, seulement à une élimination ou à un changement de Péril. Le bilan affiche « N éliminations ». Les champs de détail du score disparaissent de l'historique (les anciennes runs se relisent, les clés en trop sont ignorées).
+- **Éliminations :** une tête de mort en pixel art et le compte, sous le score ; l'Essence à droite.
+- **Barre d'XP :** sur toute la largeur, au bas de l'écran (`XpBar`), dessinée en unités du HUD (deux pixels à 1080p) : liseré et embouts dorés, remplissage biseauté en trois tons dont le bas est tramé, crans aux dixièmes et repères aux quarts, reflet qui la parcourt, tête lumineuse et étincelles. Une orbe la fait briller, un niveau l'éclaire en blanc avant de repartir de zéro. La plaque de vie perd sa petite barre d'XP ; armes et objets remontent d'autant.
+
+**Vérifications :** `dotnet build` sans avertissement ; `test_weapons`, `test_objects`, `test_small_places`, `test_perk_acquisition`, `test_perk_effects`, `test_perk_contracts`, `test_movement` (score immobile sans élimination, une élimination rapporte), `test_enemy_abilities`, `test_dev_mode` à zéro échec ; smoke vert. Captures en vraie run (1080p, 20 et 40 s) regardées : temps seul, plaque score-éliminations-Essence, barre d'XP lisible et tramée.
+
+**Reste du chantier A :** quêtes repliées (L4) et minimap radar (L7).

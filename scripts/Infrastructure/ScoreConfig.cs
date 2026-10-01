@@ -4,25 +4,15 @@ using Godot;
 
 namespace Vestiges.Infrastructure;
 
-/// <summary>Barème du score, lu dans data/scaling/score.json (plan 02 lot A).</summary>
+/// <summary>Barème du score, lu dans data/scaling/score.json : les points de chaque élimination (DECISIONS §40).</summary>
 public sealed class ScoreConfig
 {
-    public int PointsPerSecond { get; init; }
-    public int PointsPerCrisis { get; init; }
-    public int PointsPerPoi { get; init; }
-    public int PointsBossDefeated { get; init; }
-    public int PointsEndgameReached { get; init; }
-
     private readonly Dictionary<string, int> _killPoints = new();
-    private readonly Dictionary<string, int> _chestPoints = new();
     private int _defaultKill;
-    private int _defaultChest;
 
     private static ScoreConfig _cached;
 
     public int KillPoints(string enemyId) => _killPoints.TryGetValue(enemyId, out int points) ? points : _defaultKill;
-
-    public int ChestPoints(string rarity) => _chestPoints.TryGetValue(rarity, out int points) ? points : _defaultChest;
 
     public static ScoreConfig Load()
     {
@@ -37,16 +27,8 @@ public sealed class ScoreConfig
             throw new InvalidOperationException("Barème du score invalide.");
         Godot.Collections.Dictionary data = json.Data.AsGodotDictionary();
 
-        ScoreConfig config = new()
-        {
-            PointsPerSecond = (int)data["points_per_second"].AsDouble(),
-            PointsPerCrisis = (int)data["points_per_crisis"].AsDouble(),
-            PointsPerPoi = (int)data["points_per_poi"].AsDouble(),
-            PointsBossDefeated = (int)data["points_boss_defeated"].AsDouble(),
-            PointsEndgameReached = (int)data["points_endgame_reached"].AsDouble(),
-        };
+        ScoreConfig config = new();
         config._defaultKill = ReadTable(data["kill_points"].AsGodotDictionary(), config._killPoints);
-        config._defaultChest = ReadTable(data["chest_points"].AsGodotDictionary(), config._chestPoints);
         _cached = config;
         return _cached;
     }

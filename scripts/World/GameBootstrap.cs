@@ -176,7 +176,6 @@ public partial class GameBootstrap : Node
         QuestManager questManager = new() { Name = "QuestManager" };
         sceneRoot.AddChild(questManager);
 
-        hud.SetErasureManager(erasureManager);
         hud.SetEssenceTracker(essenceTracker);
 
         InitializeCharacterAndRun(player, perkManager, scoreManager, runTracker);

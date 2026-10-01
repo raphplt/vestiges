@@ -25,6 +25,10 @@ public class MetaSaveData
 
     [JsonPropertyName("completed_quests")]
     public List<string> CompletedQuests { get; set; } = new();
+
+    /// <summary>Aides déjà montrées une fois au joueur (objectif d'un micro-événement, plan 24 A3).</summary>
+    [JsonPropertyName("seen_hints")]
+    public List<string> SeenHints { get; set; } = new();
 }
 
 public class MetaStats
@@ -290,6 +294,17 @@ public static class MetaSaveManager
         _data.CompletedQuests.Add(questId);
         Save();
         GD.Print($"[MetaSaveManager] Quest completed: {questId}");
+        return true;
+    }
+
+    /// <summary>Vrai la première fois que cette aide est demandée pour ce profil ; elle est alors retenue.</summary>
+    public static bool MarkHintSeen(string hintId)
+    {
+        Load();
+        if (string.IsNullOrWhiteSpace(hintId) || _data.SeenHints.Contains(hintId))
+            return false;
+        _data.SeenHints.Add(hintId);
+        Save();
         return true;
     }
 

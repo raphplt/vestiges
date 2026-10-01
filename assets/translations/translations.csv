@@ -210,7 +210,7 @@ UI_HUD_SCORE,SCORE,SCORE
 UI_HUD_KILL_STREAK,EN RAFALE,STREAK
 UI_END_NEW_RECORD,NOUVEAU RECORD,NEW RECORD
 UI_END_BEST,Meilleur : {0},Best: {0}
-UI_END_DETAIL,Combat {0}  ·  Survie {1}  ·  Crises {2}  ·  Exploration {3},Combat {0}  ·  Survival {1}  ·  Crises {2}  ·  Exploration {3}
+UI_END_DETAIL,{0} éliminations,{0} kills
 UI_END_WEAPONS,ARMES,WEAPONS
 UI_END_PASSIVES,SOUVENIRS,SOUVENIRS
 UI_END_KILLS,Éliminations,Kills
@@ -242,15 +242,6 @@ UI_END_CHESTS,Coffres ouverts,Chests opened
 UI_END_DAMAGE_TAKEN,Dégâts subis,Damage taken
 UI_END_TIMELINE,Distance au départ au fil de la run,Distance from the start over the run
 UI_HUD_ESSENCE,{0} Essence,{0} Essence
-UI_HUD_PHASE_EXPLORATION,EXPLORATION,EXPLORATION
-UI_HUD_PHASE_CRISIS,RÉSURGENCE,RESURGENCE
-UI_HUD_PHASE_LATE,EFFACEMENT AVANCÉ,DEEP ERASURE
-UI_HUD_PHASE_ENDGAME,AU-DELÀ,BEYOND
-UI_HUD_PHASE_DEATH,FIN,END
-UI_HUD_CRISIS_IN,Résurgence dans {0} s,Resurgence in {0} s
-UI_HUD_CRISIS,Résurgence {0},Resurgence {0}
-UI_HUD_CALM,ACCALMIE — ESSENCE ×{0},RESPITE — ESSENCE ×{0}
-UI_HUD_CRISIS_INTENSITY,Résurgence {0} — intensité {1},Resurgence {0} — intensity {1}
 EVENT_HUNT_TITLE,Un Souverain approche,A Sovereign approaches
 EVENT_HUNT_OBJECTIVE,Abattez le {0} avant son effacement,Slay the {0} before it fades
 EVENT_HUNT_OBJECTIVE_F,Abattez la {0} avant son effacement,Slay the {0} before it fades
@@ -264,8 +255,6 @@ EVENT_VIGIL_OBJECTIVE,Tenez le cercle de mémoire,Hold the circle of memory
 EVENT_SHARDS_TITLE,Averse d'éclats,Shard Rain
 EVENT_SHARDS_OBJECTIVE,Attirez les créatures sous les éclats — {0} fauchées,Lure creatures under the shards — {0} felled
 EVENT_SHARDS_SUMMARY,{0} créatures fauchées,{0} creatures felled
-EVENT_RESULT_SUCCESS,Réussi,Success
-EVENT_RESULT_FAIL,Échoué,Failed
 EVENT_REWARD_XP,Savoir,Knowledge
 EVENT_REWARD_ESSENCE,+{0} Essence,+{0} Essence
 EVENT_REWARD_CHEST,Coffre,Chest
@@ -274,7 +263,6 @@ EVENT_FAIL_FADED,Effacé avant d'être abattu,Faded before it fell
 EVENT_FAIL_ESCAPED,La harde est passée,The stampede got away
 EVENT_FAIL_RELIC,Le vestige s'est dissous,The relic dissolved
 EVENT_FAIL_VIGIL,La veille a été rompue,The vigil was broken
-EVENT_VARIANT_SLAIN,Vaincu : {0},Defeated: {0}
 ECHO_WHISPER_01,« Encore cinq minutes… »,“Just five more minutes…”
 ECHO_WHISPER_02,« Tu as fermé la porte ? »,“Did you lock the door?”
 ECHO_WHISPER_03,« Attends-moi au coin de la rue. »,“Wait for me at the corner.”

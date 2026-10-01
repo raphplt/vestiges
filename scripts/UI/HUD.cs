@@ -8,9 +8,10 @@ using Vestiges.World;
 namespace Vestiges.UI;
 
 /// <summary>
-/// HUD de run : trois plaques sombres à fort contraste lisibles sur tous les sols.
-/// Haut-gauche : niveau, PV, XP. Haut-centre : phase, biome, temps, Effacement et alertes.
-/// Haut-droite : score et Essence. Bas-centre : armes et passifs. Les PV sont doublés
+/// HUD de run, allégé (plan 24 L2) : l'écran montre la vie, le temps, le score et les éliminations, l'XP et la minimap.
+/// Haut-gauche : niveau et PV. Haut-centre : le temps seul, violet pendant une Résurgence, et le nom du biome quand on
+/// y entre. Haut-droite : score, éliminations, Essence. Bas : armes et objets, puis la barre d'XP sur toute la largeur.
+/// Aucune annonce écrite : les Résurgences se lisent par le présage et la couleur du temps. Les PV sont doublés
 /// par une jauge sous le héros (<see cref="PlayerHealthGauge"/>) pour rester visibles en combat.
 ///
 /// Tous les éléments sont enfants d'un Control racine mis à l'échelle (référence 960×540) :
@@ -37,8 +38,9 @@ public partial class HUD : CanvasLayer
     private const float PlateMargin = 8f;
     private const float VitalsWidth = 204f;
     private const float VitalsBarWidth = 156f;
-    private const float RunPlateWidth = 320f;
     private const float ScorePlateWidth = 150f;
+    private const float BiomeShowSec = 2f;
+    private const float BiomeFadeSec = 0.5f;
     private const float FpsUpdateInterval = 0.25f;
     private const float BiomeUpdateInterval = 0.5f;
     private const float ScoreTickInterval = 0.05f;
@@ -50,25 +52,24 @@ public partial class HUD : CanvasLayer
     private ColorRect _hpChip;
     private ColorRect _shieldFill;
     private Label _hpValueLabel;
-    private ColorRect _xpFill;
-    private float _xpPulse;
+    private XpBar _xpBar;
     private EssenceFlights _essenceFlights;
     private float _essencePulse;
     private static readonly Color EssencePulseModulate = new(1.8f, 1.8f, 1.8f, 1f);
-    private static readonly Color XpPulseModulate = new(1.9f, 1.9f, 1.9f, 1f);
     private PanelContainer _vitalsPlate;
 
-    // --- Run progress ---
-    private Label _phaseLabel;
+    // --- Temps ---
     private Label _biomeLabel;
     private Label _timeLabel;
-    private ColorRect _erasureFill;
-    private Label _erasureLabel;
-    private Label _alertLabel;
+    private float _biomeAge = float.MaxValue;
 
     // --- Score ---
     private Label _scoreLabel;
+    private Label _killsLabel;
+    private int _kills;
     private Label _essenceLabel;
+    private int _essence;
+    private float _essenceMultiplier = 1f;
     private Label _fpsLabel;
 
     // --- Bottom-center bars ---
@@ -88,12 +89,10 @@ public partial class HUD : CanvasLayer
     private GroupCache _groupCache;
     private GameManager _gameManager;
     private PlayerProgression _progression;
-    private ErasureManager _erasureManager;
     private EssenceTracker _essenceTracker;
     private Player _player;
     private WorldSetup _worldSetup;
     private string _lastBiomeName;
-    private string _phaseText = "";
     private float _fpsTimer;
     private float _biomeTimer;
     private float _scoreTimer;
@@ -112,7 +111,6 @@ public partial class HUD : CanvasLayer
     private float _hpRatio = 1f;
     private float _chipRatio = 1f;
     private float _lowHpPulse;
-    private float _warningCountdown;
 
     // Palette de la charte graphique
     private static readonly Color PalBlackDeep = new(0x1A / 255f, 0x1A / 255f, 0x2E / 255f);
@@ -124,7 +122,7 @@ public partial class HUD : CanvasLayer
     private static readonly Color PalOrangeFlame = new(0xE0 / 255f, 0x7B / 255f, 0x39 / 255f);
     private static readonly Color PalRedBlood = new(0xC4 / 255f, 0x43 / 255f, 0x2B / 255f);
     private static readonly Color PalCyanEssence = new(0x5E / 255f, 0xC4 / 255f, 0xC4 / 255f);
-    private static readonly Color PalVioletMist = new(0x4A / 255f, 0x30 / 255f, 0x66 / 255f);
+    private static readonly Color ResurgenceViolet = new(0.70f, 0.55f, 0.95f);
     private static readonly Color HealthyColor = new(0.42f, 0.74f, 0.36f);
     private static readonly Color ShieldColor = new(0.72f, 0.86f, 1f);
     // Réserve de Débordement prête : la case de l'arme s'éclaire en bleu pâle, comme le chiffre du coup renforcé.
@@ -147,10 +145,7 @@ public partial class HUD : CanvasLayer
         _eventBus.LevelUp += OnLevelUp;
         _eventBus.ScoreChanged += OnScoreChanged;
         _eventBus.RunPhaseChanged += OnRunPhaseChanged;
-        _eventBus.ErasureUpdated += OnErasureUpdated;
-        _eventBus.CrisisWarning += OnCrisisWarning;
-        _eventBus.CrisisStarted += OnCrisisStarted;
-        _eventBus.CrisisEnded += OnCrisisEnded;
+        _eventBus.EnemyKilled += OnEnemyKilled;
         _eventBus.EssenceMultiplierChanged += OnEssenceMultiplierChanged;
         _eventBus.EssenceChanged += OnEssenceChanged;
         _eventBus.WeaponInventoryChanged += OnWeaponInventoryChanged;
@@ -170,15 +165,17 @@ public partial class HUD : CanvasLayer
 
         BuildVitals();
         _hudRoot.AddChild(new HudLootFlight(WeaponSlotIconOf) { Name = "LootFlight" });
-        _hudRoot.AddChild(new KillStreakDisplay { Name = "KillStreak", Position = new Vector2(PlateMargin + 4f, PlateMargin + 46f) });
+        _hudRoot.AddChild(new KillStreakDisplay { Name = "KillStreak", Position = new Vector2(PlateMargin + 4f, PlateMargin + 36f) });
         _essenceFlights = new EssenceFlights { Name = "EssenceFlights" };
         _essenceFlights.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
         _essenceFlights.Setup(EssenceTarget, () => _essencePulse = 1f);
-        BuildRunProgress();
+        BuildRunClock();
         BuildScoreArea();
         _hudRoot.AddChild(_essenceFlights);
         BuildWeaponBar();
         BuildPassiveBar();
+        _xpBar = new XpBar { Name = "XpBar" };
+        _hudRoot.AddChild(_xpBar);
 
         _hudRoot.AddChild(new ChestPointers { Name = "ChestPointers" });
         _hudRoot.AddChild(new Minimap { Name = "Minimap" });
@@ -230,14 +227,7 @@ public partial class HUD : CanvasLayer
         {
             _shownSeconds = seconds;
             _timeLabel.Text = $"{seconds / 60:00}:{seconds % 60:00}";
-            if (_warningCountdown > 0f)
-                UpdateWarningText();
         }
-        if (_warningCountdown > 0f)
-            _warningCountdown -= dt;
-
-        if (_erasureManager != null)
-            SetBarRatio(_erasureFill, _erasureManager.GlobalErasurePercent);
 
         UpdateHpChip(dt);
         UpdateScoreCounter(dt);
@@ -247,11 +237,7 @@ public partial class HUD : CanvasLayer
             _essencePulse = Mathf.Max(0f, _essencePulse - dt * 6f);
             _essenceLabel.Modulate = Colors.White.Lerp(EssencePulseModulate, _essencePulse);
         }
-        if (_xpPulse > 0f)
-        {
-            _xpPulse = Mathf.Max(0f, _xpPulse - dt * 5f);
-            _xpFill.Modulate = Colors.White.Lerp(XpPulseModulate, Mathf.Min(_xpPulse, 1f));
-        }
+        UpdateBiomeFade(dt);
 
         _biomeTimer += dt;
         if (_biomeTimer >= BiomeUpdateInterval)
@@ -271,10 +257,7 @@ public partial class HUD : CanvasLayer
             _eventBus.LevelUp -= OnLevelUp;
             _eventBus.ScoreChanged -= OnScoreChanged;
             _eventBus.RunPhaseChanged -= OnRunPhaseChanged;
-            _eventBus.ErasureUpdated -= OnErasureUpdated;
-            _eventBus.CrisisWarning -= OnCrisisWarning;
-            _eventBus.CrisisStarted -= OnCrisisStarted;
-            _eventBus.CrisisEnded -= OnCrisisEnded;
+            _eventBus.EnemyKilled -= OnEnemyKilled;
             _eventBus.EssenceMultiplierChanged -= OnEssenceMultiplierChanged;
             _eventBus.EssenceChanged -= OnEssenceChanged;
             _eventBus.WeaponInventoryChanged -= OnWeaponInventoryChanged;
@@ -288,7 +271,6 @@ public partial class HUD : CanvasLayer
     }
 
     public void SetProgression(PlayerProgression progression) => _progression = progression;
-    public void SetErasureManager(ErasureManager manager) => _erasureManager = manager;
 
     public void SetEssenceTracker(EssenceTracker tracker)
     {
@@ -368,29 +350,29 @@ public partial class HUD : CanvasLayer
 
     private void BuildVitals()
     {
-        _vitalsPlate = MakePlate(PlateMargin, PlateMargin, VitalsWidth, 40f);
+        _vitalsPlate = MakePlate(PlateMargin, PlateMargin, VitalsWidth, 30f);
         _hudRoot.AddChild(_vitalsPlate);
         Control content = new() { MouseFilter = Control.MouseFilterEnum.Ignore };
         _vitalsPlate.AddChild(content);
 
         // Pastille de niveau : le chiffre prime, la légende reste discrète.
-        ColorRect badge = new() { Color = PalBlackBlue, Position = new Vector2(4, 4), Size = new Vector2(32, 32) };
+        ColorRect badge = new() { Color = PalBlackBlue, Position = new Vector2(4, 3), Size = new Vector2(32, 24) };
         content.AddChild(badge);
-        ColorRect badgeEdge = new() { Color = PalCyanEssence with { A = 0.7f }, Position = new Vector2(4, 35), Size = new Vector2(32, 1) };
+        ColorRect badgeEdge = new() { Color = PalCyanEssence with { A = 0.7f }, Position = new Vector2(4, 26), Size = new Vector2(32, 1) };
         content.AddChild(badgeEdge);
-        Label caption = MakeLabel(Tr("UI_HUD_LEVEL"), 7, PalGrayLight, 0);
-        caption.Position = new Vector2(4, 3);
-        caption.Size = new Vector2(32, 9);
+        Label caption = MakeLabel(Tr("UI_HUD_LEVEL"), 6, PalGrayLight, 0);
+        caption.Position = new Vector2(4, 2);
+        caption.Size = new Vector2(32, 8);
         caption.HorizontalAlignment = HorizontalAlignment.Center;
         content.AddChild(caption);
-        _levelLabel = MakeLabel("1", 17, PalCyanEssence);
-        _levelLabel.Position = new Vector2(4, 9);
-        _levelLabel.Size = new Vector2(32, 26);
+        _levelLabel = MakeLabel("1", 13, PalCyanEssence, 3);
+        _levelLabel.Position = new Vector2(4, 7);
+        _levelLabel.Size = new Vector2(32, 18);
         _levelLabel.HorizontalAlignment = HorizontalAlignment.Center;
         _levelLabel.VerticalAlignment = VerticalAlignment.Center;
         content.AddChild(_levelLabel);
 
-        Rect2 hpRect = new(42, 5, VitalsBarWidth, 17);
+        Rect2 hpRect = new(42, 6, VitalsBarWidth, 18);
         _hpFill = MakeBar(content, hpRect, HealthyColor, out ColorRect hpTrack);
         // Trace claire des PV perdus, rattrapée en douceur : le coup reçu se lit d'un coup d'œil.
         _hpChip = new ColorRect { Color = PalWhiteOff with { A = 0.75f } };
@@ -414,62 +396,36 @@ public partial class HUD : CanvasLayer
         _hpValueLabel.VerticalAlignment = VerticalAlignment.Center;
         hpTrack.AddChild(_hpValueLabel);
 
-        _xpFill = MakeBar(content, new Rect2(42, 26, VitalsBarWidth, 8), PalCyanEssence, out _);
-        SetBarRatio(_xpFill, 0f);
-
         _fpsLabel = MakeLabel("", 8, PalGrayWarm, 2);
         _fpsLabel.AnchorTop = 1f;
         _fpsLabel.AnchorBottom = 1f;
         _fpsLabel.OffsetLeft = 6;
-        _fpsLabel.OffsetTop = -14;
+        _fpsLabel.OffsetTop = -14 - XpBar.BarHeight;
         _fpsLabel.OffsetRight = 60;
-        _fpsLabel.OffsetBottom = -3;
+        _fpsLabel.OffsetBottom = -3 - XpBar.BarHeight;
         _hudRoot.AddChild(_fpsLabel);
     }
 
-    private void BuildRunProgress()
+    /// <summary>Le temps seul, en haut au centre, et le nom du biome qui passe dessous quand on y entre.</summary>
+    private void BuildRunClock()
     {
         Control anchor = new() { MouseFilter = Control.MouseFilterEnum.Ignore };
         anchor.AnchorLeft = 0.5f;
         anchor.AnchorRight = 0.5f;
         _hudRoot.AddChild(anchor);
 
-        PanelContainer plate = MakePlate(-RunPlateWidth / 2f, PlateMargin, RunPlateWidth, 30f);
-        anchor.AddChild(plate);
-        Control content = new() { MouseFilter = Control.MouseFilterEnum.Ignore };
-        plate.AddChild(content);
+        _timeLabel = MakeLabel("00:00", 18, PalWhiteOff, 4);
+        _timeLabel.Position = new Vector2(-60f, PlateMargin - 2f);
+        _timeLabel.Size = new Vector2(120f, 24f);
+        _timeLabel.HorizontalAlignment = HorizontalAlignment.Center;
+        anchor.AddChild(_timeLabel);
 
-        _phaseText = Tr("UI_HUD_PHASE_EXPLORATION");
-        _phaseLabel = MakeLabel(_phaseText, 11, PalWhiteOff);
-        _phaseLabel.Position = new Vector2(8, 1);
-        _phaseLabel.Size = new Vector2(110, 16);
-        content.AddChild(_phaseLabel);
-
-        _biomeLabel = MakeLabel("", 9, PalGrayLight, 2);
-        _biomeLabel.Position = new Vector2(100, 3);
-        _biomeLabel.Size = new Vector2(120, 14);
+        _biomeLabel = MakeLabel("", 10, PalGrayLight, 3);
+        _biomeLabel.Position = new Vector2(-120f, PlateMargin + 22f);
+        _biomeLabel.Size = new Vector2(240f, 14f);
         _biomeLabel.HorizontalAlignment = HorizontalAlignment.Center;
-        content.AddChild(_biomeLabel);
-
-        _timeLabel = MakeLabel("00:00", 11, PalWhiteOff);
-        _timeLabel.Position = new Vector2(RunPlateWidth - 68, 1);
-        _timeLabel.Size = new Vector2(60, 16);
-        _timeLabel.HorizontalAlignment = HorizontalAlignment.Right;
-        content.AddChild(_timeLabel);
-
-        _erasureFill = MakeBar(content, new Rect2(8, 19, RunPlateWidth - 52, 6), PalCyanEssence, out _);
-        SetBarRatio(_erasureFill, 0f);
-        _erasureLabel = MakeLabel("0 %", 8, PalGrayLight, 2);
-        _erasureLabel.Position = new Vector2(RunPlateWidth - 42, 14);
-        _erasureLabel.Size = new Vector2(34, 14);
-        _erasureLabel.HorizontalAlignment = HorizontalAlignment.Right;
-        content.AddChild(_erasureLabel);
-
-        _alertLabel = MakeLabel("", 13, PalOrangeFlame, 4);
-        _alertLabel.Position = new Vector2(-RunPlateWidth / 2f, PlateMargin + 32f);
-        _alertLabel.Size = new Vector2(RunPlateWidth, 20);
-        _alertLabel.HorizontalAlignment = HorizontalAlignment.Center;
-        anchor.AddChild(_alertLabel);
+        _biomeLabel.Modulate = Colors.Transparent;
+        anchor.AddChild(_biomeLabel);
     }
 
     private void BuildScoreArea()
@@ -503,9 +459,17 @@ public partial class HUD : CanvasLayer
         _gainLabel.Modulate = new Color(1f, 1f, 1f, 0f);
         anchor.AddChild(_gainLabel);
 
+        // Éliminations à gauche, Essence à droite, sous le score.
+        PixelSkull skull = new() { Position = new Vector2(7, 26) };
+        content.AddChild(skull);
+        _killsLabel = MakeLabel("0", 10, PalWhiteOff);
+        _killsLabel.Position = new Vector2(19, 22);
+        _killsLabel.Size = new Vector2(56, 15);
+        content.AddChild(_killsLabel);
+
         _essenceLabel = MakeLabel("", 10, PalCyanEssence);
-        _essenceLabel.Position = new Vector2(8, 22);
-        _essenceLabel.Size = new Vector2(ScorePlateWidth - 16, 15);
+        _essenceLabel.Position = new Vector2(70, 22);
+        _essenceLabel.Size = new Vector2(ScorePlateWidth - 78, 15);
         _essenceLabel.HorizontalAlignment = HorizontalAlignment.Right;
         content.AddChild(_essenceLabel);
     }
@@ -522,8 +486,8 @@ public partial class HUD : CanvasLayer
         float totalWidth = Player.MaxWeaponSlots * (slotSize + 3);
         bar.OffsetLeft = -totalWidth / 2;
         bar.OffsetRight = totalWidth / 2;
-        bar.OffsetTop = -26 - slotSize;
-        bar.OffsetBottom = -26;
+        bar.OffsetTop = -26 - XpBar.BarHeight - slotSize;
+        bar.OffsetBottom = -26 - XpBar.BarHeight;
         bar.AddThemeConstantOverride("separation", 3);
         bar.Alignment = BoxContainer.AlignmentMode.Center;
         _hudRoot.AddChild(bar);
@@ -572,8 +536,8 @@ public partial class HUD : CanvasLayer
         float totalWidth = Player.MaxPassiveSlots * (passiveSize + 3);
         bar.OffsetLeft = -totalWidth / 2;
         bar.OffsetRight = totalWidth / 2;
-        bar.OffsetTop = -23;
-        bar.OffsetBottom = -5;
+        bar.OffsetTop = -23 - XpBar.BarHeight;
+        bar.OffsetBottom = -5 - XpBar.BarHeight;
         bar.AddThemeConstantOverride("separation", 3);
         bar.Alignment = BoxContainer.AlignmentMode.Center;
         _hudRoot.AddChild(bar);
@@ -677,19 +641,17 @@ public partial class HUD : CanvasLayer
     {
         if (_progression == null)
             return;
-        // Chaque orbe qui arrive fait pulser la barre (plan 02 J3).
-        if (amount > 0f)
-            _xpPulse = 1f;
+        // Chaque orbe qui arrive fait briller la barre (plan 02 J3).
         float ratio = _progression.XpToNextLevel > 0 ? _progression.CurrentXp / _progression.XpToNextLevel : 0f;
-        SetBarRatio(_xpFill, ratio);
+        _xpBar.SetRatio(ratio, amount > 0f);
     }
 
     private void OnLevelUp(int newLevel)
     {
         _levelLabel.Text = $"{newLevel}";
+        // La barre éclate en blanc et repart de zéro (plan 02 J4).
+        _xpBar.Flash();
         OnXpChanged(0);
-        // La barre repart de zéro en éclatant (plan 02 J4) : pulse plus long que celui d'une orbe.
-        _xpPulse = 2f;
         _levelLabel.PivotOffset = _levelLabel.Size / 2f;
         Tween tween = CreateTween();
         tween.TweenProperty(_levelLabel, "scale", new Vector2(1.5f, 1.5f), 0.08f);
@@ -700,7 +662,7 @@ public partial class HUD : CanvasLayer
     {
         int gain = newScore - _targetScore;
         _targetScore = newScore;
-        // Les points de survie arrivent un à un : seuls les vrais gains (kill, coffre, lieu) s'affichent.
+        // Les petites créatures valent peu : seuls les gains notables s'affichent à côté de la plaque.
         if (gain < MinShownGain)
             return;
         _pendingGain = _gainAge < GainGroupSec ? _pendingGain + gain : gain;
@@ -734,84 +696,35 @@ public partial class HUD : CanvasLayer
         _scoreLabel.Text = ((int)_shownScore).ToString("N0");
     }
 
+    /// <summary>La phase ne s'écrit plus : seul le temps change de couleur (plan 24 A1, A3).</summary>
     private void OnRunPhaseChanged(string oldPhase, string newPhase)
     {
-        _phaseText = newPhase switch
+        Color timeColor = newPhase switch
         {
-            "Crisis" => Tr("UI_HUD_PHASE_CRISIS"),
-            "LateGame" => Tr("UI_HUD_PHASE_LATE"),
-            "Endgame" => Tr("UI_HUD_PHASE_ENDGAME"),
-            "Death" => Tr("UI_HUD_PHASE_DEATH"),
-            _ => Tr("UI_HUD_PHASE_EXPLORATION")
-        };
-        _phaseLabel.Text = _phaseText;
-
-        Color phaseColor = newPhase switch
-        {
-            "Crisis" => PalOrangeFlame,
-            "LateGame" => PalRedBlood,
+            "Crisis" => ResurgenceViolet,
+            "LateGame" => PalOrangeFlame,
             "Endgame" => PalGold,
             _ => PalWhiteOff
         };
-        _phaseLabel.AddThemeColorOverride("font_color", phaseColor);
-
-        Color barColor = newPhase switch
-        {
-            "Crisis" => PalOrangeFlame,
-            "LateGame" => PalRedBlood,
-            "Endgame" => PalGold,
-            _ => PalCyanEssence
-        };
-        CreateTween().TweenProperty(_erasureFill, "color", barColor, 1f);
+        CreateTween().TweenMethod(Callable.From<Color>(color => _timeLabel.AddThemeColorOverride("font_color", color)),
+            _timeLabel.GetThemeColor("font_color"), timeColor, 0.8f);
 
         if (newPhase == "Death")
             DeathSequence.FadeOutLayer(this);
     }
 
-    private void OnErasureUpdated(float globalErasurePercent)
+    private void OnEnemyKilled(string enemyId, Vector2 position)
     {
-        SetBarRatio(_erasureFill, globalErasurePercent);
-        _erasureLabel.Text = $"{Mathf.RoundToInt(globalErasurePercent * 100f)} %";
+        _kills++;
+        _killsLabel.Text = _kills.ToString("N0");
     }
 
-    private void OnCrisisWarning(int crisisNumber, float countdown)
-    {
-        _warningCountdown = countdown;
-        _alertLabel.AddThemeColorOverride("font_color", PalOrangeFlame);
-        UpdateWarningText();
-    }
-
-    private void UpdateWarningText()
-    {
-        _alertLabel.Text = string.Format(Tr("UI_HUD_CRISIS_IN"), Mathf.CeilToInt(Mathf.Max(0f, _warningCountdown)));
-    }
-
-    private void OnCrisisStarted(int crisisNumber, int intensity)
-    {
-        _warningCountdown = 0f;
-        _alertLabel.Text = intensity > 1
-            ? string.Format(Tr("UI_HUD_CRISIS_INTENSITY"), crisisNumber, intensity)
-            : string.Format(Tr("UI_HUD_CRISIS"), crisisNumber);
-        _alertLabel.AddThemeColorOverride("font_color", PalRedBlood.Lightened(0.2f));
-    }
-
-    private void OnCrisisEnded(int crisisNumber)
-    {
-        _alertLabel.Text = "";
-    }
-
-    /// <summary>Accalmie après une crise (plan 03 lot C) : l'annonce dure autant que le bonus d'Essence.</summary>
+    /// <summary>Accalmie après une Résurgence (plan 03 lot C) : le compteur d'Essence affiche le multiplicateur, sans annonce.</summary>
     private void OnEssenceMultiplierChanged(float multiplier, float seconds)
     {
-        if (multiplier > 1f)
-        {
-            _alertLabel.Text = string.Format(Tr("UI_HUD_CALM"), multiplier.ToString("0.#"));
-            _alertLabel.AddThemeColorOverride("font_color", PalCyanEssence);
-        }
-        else if (_warningCountdown <= 0f)
-        {
-            _alertLabel.Text = "";
-        }
+        _essenceMultiplier = multiplier;
+        OnEssenceChanged(_essence);
+        _essencePulse = 1f;
     }
 
     /// <summary>Arrivée des grains d'Essence : fin du compteur, dans le repère des vols.</summary>
@@ -823,8 +736,11 @@ public partial class HUD : CanvasLayer
 
     private void OnEssenceChanged(int amount)
     {
-        if (_essenceLabel != null)
-            _essenceLabel.Text = string.Format(Tr("UI_HUD_ESSENCE"), amount);
+        _essence = amount;
+        if (_essenceLabel == null)
+            return;
+        string text = string.Format(Tr("UI_HUD_ESSENCE"), amount);
+        _essenceLabel.Text = _essenceMultiplier > 1f ? $"×{_essenceMultiplier:0.#}  {text}" : text;
     }
 
     private void OnWeaponInventoryChanged()
@@ -944,10 +860,22 @@ public partial class HUD : CanvasLayer
             return;
 
         string biomeName = _worldSetup.GetBiomeAt(player.GlobalPosition)?.Name ?? "";
-        if (biomeName != _lastBiomeName)
-        {
-            _lastBiomeName = biomeName;
-            _biomeLabel.Text = biomeName;
-        }
+        if (biomeName == _lastBiomeName)
+            return;
+        _lastBiomeName = biomeName;
+        _biomeLabel.Text = biomeName;
+        _biomeAge = biomeName.Length > 0 ? 0f : float.MaxValue;
+    }
+
+    /// <summary>Le nom du biome apparaît, reste deux secondes puis s'efface.</summary>
+    private void UpdateBiomeFade(float dt)
+    {
+        if (_biomeAge > BiomeShowSec + BiomeFadeSec * 2f)
+            return;
+        _biomeAge += dt;
+        float alpha = _biomeAge < BiomeFadeSec
+            ? _biomeAge / BiomeFadeSec
+            : 1f - Mathf.Clamp((_biomeAge - BiomeFadeSec - BiomeShowSec) / BiomeFadeSec, 0f, 1f);
+        _biomeLabel.Modulate = new Color(1f, 1f, 1f, alpha);
     }
 }

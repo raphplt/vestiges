@@ -67,15 +67,6 @@ public class RunRecord
     [JsonPropertyName("combat_score")]
     public int CombatScoreDetail { get; set; }
 
-    [JsonPropertyName("survival_score")]
-    public int SurvivalScoreDetail { get; set; }
-
-    [JsonPropertyName("bonus_score")]
-    public int BonusScoreDetail { get; set; }
-
-    [JsonPropertyName("exploration_score")]
-    public int ExplorationScoreDetail { get; set; }
-
     [JsonPropertyName("total_spawned")]
     public int TotalSpawned { get; set; }
 

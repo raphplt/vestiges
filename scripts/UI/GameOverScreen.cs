@@ -297,9 +297,7 @@ public partial class GameOverScreen : CanvasLayer
     {
         if (_scoreManager == null)
             return "";
-        string detail = string.Format(Tr("UI_END_DETAIL"), _scoreManager.CombatScore.ToString("N0"),
-            _scoreManager.SurvivalScore.ToString("N0"), _scoreManager.BonusScore.ToString("N0"),
-            _scoreManager.ExplorationScore.ToString("N0"));
+        string detail = string.Format(Tr("UI_END_DETAIL"), _scoreManager.TotalKills.ToString("N0"));
         float multiplier = _scoreManager.CharacterMultiplier * _scoreManager.MutatorMultiplier * _scoreManager.PerilMultiplier;
         return multiplier > 1.001f ? $"{detail}  ·  ×{multiplier:0.00}" : detail;
     }

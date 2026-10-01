@@ -1,10 +1,5 @@
 {
-  "_doc": "Barème du score (plan 02 lot A), repris tel quel des constantes de ScoreManager. kill_points : par identifiant de créature, default pour les autres. chest_points : par rareté de coffre. Lu par Infrastructure/ScoreConfig.",
-  "points_per_second": 3,
-  "points_per_crisis": 175,
-  "points_per_poi": 50,
-  "points_boss_defeated": 2500,
-  "points_endgame_reached": 1000,
+  "_doc": "Barème du score : les éliminations seulement (DECISIONS §40), points par identifiant de créature, default pour les autres ; une élimination en zone qui s'oublie rapporte davantage (plan 16 O5). Ni temps, ni lieux, ni coffres, ni Résurgences. Lu par Infrastructure/ScoreConfig.",
   "kill_points": {
     "default": 10,
     "shadow_crawler": 10,
@@ -18,12 +13,5 @@
     "rampant": 15,
     "rodeur": 15,
     "indicible": 5000
-  },
-  "chest_points": {
-    "default": 25,
-    "common": 25,
-    "rare": 75,
-    "epic": 200,
-    "lore": 100
   }
 }

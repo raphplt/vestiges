@@ -95,21 +95,17 @@ public partial class MovementRegression
                 world.GetNode<Vestiges.Spawn.EnemyPool>("EnemyPool").Return(enemy);
     }
 
-    /// <summary>Plan 02 lot A : horloge de jeu actif, score notifié sans kill, verdict du record figé avant sauvegarde.</summary>
+    /// <summary>Plan 02 lot A : horloge de jeu actif, score immobile sans kill, verdict du record figé avant sauvegarde.</summary>
     private async Task CheckScoreClock(WorldSetup world)
     {
         Vestiges.Infrastructure.RunTracker tracker = world.GetNode<Vestiges.Infrastructure.RunTracker>("RunTracker");
         Vestiges.Score.ScoreManager score = world.GetNode<Vestiges.Score.ScoreManager>("ScoreManager");
         EventBus bus = GetNode<EventBus>("/root/EventBus");
         int notified = 0;
-        int lastNotified = -1;
-        void OnScore(int value)
-        {
-            notified++;
-            lastNotified = value;
-        }
+        void OnScore(int value) => notified++;
         bus.ScoreChanged += OnScore;
         float start = tracker.RunDurationSeconds;
+        int scoreBefore = score.CurrentScore;
         int frames = 0;
         while (tracker.RunDurationSeconds - start < 1.2f && frames < 2000)
         {
@@ -117,8 +113,9 @@ public partial class MovementRegression
             frames++;
         }
         bus.ScoreChanged -= OnScore;
-        Check(notified > 0 && lastNotified <= score.CurrentScore && score.SurvivalScore > 0,
-            $"Score : {notified} notification(s) sans kill en {tracker.RunDurationSeconds - start:0.0} s de jeu, survie {score.SurvivalScore}");
+        // Le score ne compte que les éliminations (DECISIONS §40) : sans kill, il ne bouge pas.
+        Check(notified == 0 && score.CurrentScore == scoreBefore,
+            $"Score : {notified} notification(s) sans kill en {tracker.RunDurationSeconds - start:0.0} s de jeu, score {score.CurrentScore}");
 
         float beforePause = tracker.RunDurationSeconds;
         GetTree().Paused = true;
@@ -127,6 +124,8 @@ public partial class MovementRegression
         GetTree().Paused = false;
         Check(Mathf.IsEqualApprox(tracker.RunDurationSeconds, beforePause), "Score : la pause n'avance pas l'horloge de la run");
 
+        bus.EmitSignal(EventBus.SignalName.EnemyKilled, "rodeur", _player.GlobalPosition);
+        Check(score.CurrentScore > scoreBefore, $"Score : une élimination rapporte ({scoreBefore} → {score.CurrentScore})");
         FieldInfo best = typeof(Vestiges.Score.ScoreManager).GetField("_bestScore", BindingFlags.Instance | BindingFlags.NonPublic);
         int previous = Math.Max(0, score.CurrentScore - 1);
         best.SetValue(score, previous);
