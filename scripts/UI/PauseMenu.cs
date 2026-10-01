@@ -15,10 +15,7 @@ namespace Vestiges.UI;
 /// </summary>
 public partial class PauseMenu : CanvasLayer
 {
-	private static readonly Color GoldColor = UITheme.GoldColor;
 	private static readonly Color GoldBright = UITheme.GoldBright;
-	private static readonly Color TextColor = UITheme.TextColor;
-	private static readonly Color TextDim = UITheme.TextDim;
 	private static readonly Color TextVeryDim = UITheme.TextVeryDim;
 	private static readonly Color StatLabelColor = PlayerSheet.StatLabelColor;
 	private static readonly Color StatValueColor = PlayerSheet.StatValueColor;
@@ -31,12 +28,10 @@ public partial class PauseMenu : CanvasLayer
 	private VBoxContainer _loadoutContainer;
 	private VBoxContainer _sheetContainer;
 	private Texture2D _panelTex;
-	private Texture2D _panelSelectedTex;
 	private Texture2D _btnNormalTex;
 	private Texture2D _btnHoverTex;
 	private Texture2D _btnPressedTex;
 	private Texture2D _btnDisabledTex;
-	private Texture2D _separatorTex;
 
 	public bool IsOpen => _isPaused;
 	private Button _resumeButton;
@@ -51,7 +46,7 @@ public partial class PauseMenu : CanvasLayer
 
 		LoadTextures();
 
-		_settingsScreen = new SettingsScreen();
+		_settingsScreen = new SettingsScreen { Name = "SettingsScreen" };
 		AddChild(_settingsScreen);
 
 		BuildUI();
@@ -147,79 +142,22 @@ public partial class PauseMenu : CanvasLayer
 		overlay.Color = new Color(0.02f, 0.025f, 0.05f, 0.84f);
 		_root.AddChild(overlay);
 
-		ColorRect glow = new();
-		glow.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
-		glow.Color = new Color(0.18f, 0.13f, 0.08f, 0.14f);
-		_root.AddChild(glow);
-
-		MarginContainer shell = new();
-		shell.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
-		shell.AddThemeConstantOverride("margin_left", 80);
-		shell.AddThemeConstantOverride("margin_top", 90);
-		shell.AddThemeConstantOverride("margin_right", 80);
-		shell.AddThemeConstantOverride("margin_bottom", 90);
-		_root.AddChild(shell);
-
+		// Une hauteur bornée laisse le monde visible ; l'équipement garde l'espace principal.
 		HBoxContainer hbox = new();
-		hbox.Alignment = BoxContainer.AlignmentMode.Center;
-		hbox.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
-		hbox.SizeFlagsVertical = Control.SizeFlags.ExpandFill;
-		hbox.AddThemeConstantOverride("separation", 26);
-		shell.AddChild(hbox);
+		hbox.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.Center);
+		hbox.OffsetLeft = -770;
+		hbox.OffsetRight = 770;
+		hbox.OffsetTop = -390;
+		hbox.OffsetBottom = 390;
+		hbox.AddThemeConstantOverride("separation", 30);
+		_root.AddChild(hbox);
 
-		// Armes et passifs à gauche, boutons au centre, fiche du personnage à droite (plan 17 lot 1C).
-		_loadoutContainer = BuildInfoPanel(hbox, "ÉQUIPEMENT", 560);
-
-		PanelContainer panel = new();
-		panel.CustomMinimumSize = new Vector2(360, 560);
-		ApplyPanelStyle(panel, true);
-		hbox.AddChild(panel);
-
-		MarginContainer margin = new();
-		margin.LayoutMode = 1;
-		margin.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
-		margin.AddThemeConstantOverride("margin_left", 34);
-		margin.AddThemeConstantOverride("margin_top", 28);
-		margin.AddThemeConstantOverride("margin_right", 34);
-		margin.AddThemeConstantOverride("margin_bottom", 28);
-		panel.AddChild(margin);
-
-		VBoxContainer vbox = new();
-		vbox.AddThemeConstantOverride("separation", 14);
-		vbox.LayoutMode = 1;
-		vbox.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
-		margin.AddChild(vbox);
-
-		Label eyebrow = new()
-		{
-			Text = "HALTE DANS LE VIDE",
-			HorizontalAlignment = HorizontalAlignment.Center
-		};
-		UITheme.SetTextRole(eyebrow, TextRole.Body);
-		eyebrow.AddThemeColorOverride("font_color", TextDim);
-		vbox.AddChild(eyebrow);
-
-		// Titre
-		Label title = new()
-		{
-			Text = "PAUSE",
-			HorizontalAlignment = HorizontalAlignment.Center
-		};
-		UITheme.SetTextRole(title, TextRole.Banner);
-		title.AddThemeColorOverride("font_color", GoldBright);
+		VBoxContainer vbox = new() { CustomMinimumSize = new Vector2(280, 0) };
+		vbox.AddThemeConstantOverride("separation", 12);
+		hbox.AddChild(vbox);
+		Label title = UITheme.MakeLabel("PAUSE", TextRole.Display, GoldBright, TextWeight.Bold);
 		vbox.AddChild(title);
-
-		Label subtitle = new()
-		{
-			Text = "Le monde se fige, mais ta mémoire reste éveillée.",
-			HorizontalAlignment = HorizontalAlignment.Center,
-			AutowrapMode = TextServer.AutowrapMode.WordSmart
-		};
-		UITheme.SetTextRole(subtitle, TextRole.Body);
-		subtitle.AddThemeColorOverride("font_color", TextColor);
-		vbox.AddChild(subtitle);
-
-		vbox.AddChild(CreateSeparator());
+		vbox.AddChild(new Control { CustomMinimumSize = new Vector2(0, 24) });
 
 		Button resumeBtn = CreateButton("Reprendre");
 		_resumeButton = resumeBtn;
@@ -244,20 +182,29 @@ public partial class PauseMenu : CanvasLayer
 		// Hint
 		Label hint = new()
 		{
-			Text = "[Échap] Reprendre la traversée",
-			HorizontalAlignment = HorizontalAlignment.Center
+			Text = "[Échap] Reprendre",
+			HorizontalAlignment = HorizontalAlignment.Left
 		};
 		UITheme.SetTextRole(hint, TextRole.Small);
 		hint.AddThemeColorOverride("font_color", TextVeryDim);
 		vbox.AddChild(hint);
 
-		_sheetContainer = BuildInfoPanel(hbox, "FICHE DU PASSEUR", 360);
+		_loadoutContainer = BuildInfoPanel(hbox, "ÉQUIPEMENT", 760);
+		_sheetContainer = BuildInfoPanel(hbox, "STATISTIQUES", 440);
+		// Boucle explicite : la géométrie des colonnes ne détourne pas la navigation.
+		Button[] buttons = { resumeBtn, settingsBtn, hubBtn, quitBtn };
+		for (int i = 0; i < buttons.Length; i++)
+		{
+			Button button = buttons[i];
+			button.FocusNeighborTop = button.GetPathTo(buttons[(i + buttons.Length - 1) % buttons.Length]);
+			button.FocusNeighborBottom = button.GetPathTo(buttons[(i + 1) % buttons.Length]);
+		}
 	}
 
 	private VBoxContainer BuildInfoPanel(HBoxContainer parent, string titleText, float width)
 	{
-		PanelContainer panel = new() { CustomMinimumSize = new Vector2(width, 560) };
-		ApplyPanelStyle(panel, false);
+		PanelContainer panel = new() { CustomMinimumSize = new Vector2(width, 0) };
+		ApplyPanelStyle(panel);
 		parent.AddChild(panel);
 
 		MarginContainer frame = new();
@@ -275,7 +222,12 @@ public partial class PauseMenu : CanvasLayer
 		UITheme.SetTextRole(title, TextRole.Subhead);
 		title.AddThemeColorOverride("font_color", GoldBright);
 		wrapper.AddChild(title);
-		wrapper.AddChild(CreateSeparator());
+		wrapper.AddChild(new ColorRect
+		{
+			Color = new Color(0.23f, 0.24f, 0.28f),
+			CustomMinimumSize = new Vector2(0, 1),
+			MouseFilter = Control.MouseFilterEnum.Ignore,
+		});
 
 		// Quatre armes, des passifs et un texte agrandi dépassent la hauteur de l'écran : la colonne défile.
 		ScrollContainer scroll = new()
@@ -290,7 +242,7 @@ public partial class PauseMenu : CanvasLayer
 		gutter.AddThemeConstantOverride("margin_right", 14);
 		scroll.AddChild(gutter);
 		VBoxContainer content = new();
-		content.AddThemeConstantOverride("separation", 6);
+		content.AddThemeConstantOverride("separation", 10);
 		gutter.AddChild(content);
 		return content;
 	}
@@ -335,7 +287,9 @@ public partial class PauseMenu : CanvasLayer
 		text.AddThemeConstantOverride("separation", 0);
 		row.AddChild(text);
 		string title = weapon.Ascension != null ? $"{weapon.Name} · {weapon.Ascension.Name}" : weapon.Name;
-		text.AddChild(PlayerSheet.MakeLabel($"{title}   Niv {weapon.Level}", TextRole.Body, StatValueColor));
+		Label name = PlayerSheet.MakeLabel($"{title}   Niv {weapon.Level}", TextRole.Body, StatValueColor);
+		name.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+		text.AddChild(name);
 
 		List<string> parts = new()
 		{
@@ -353,14 +307,9 @@ public partial class PauseMenu : CanvasLayer
 					parts.Add($"{StatCatalog.Name(stat)} {StatCatalog.Format(stat, value)}");
 			}
 		}
-		text.AddChild(PlayerSheet.MakeLabel(string.Join("  ·  ", parts), TextRole.Caption, StatLabelColor));
-		if (!string.IsNullOrEmpty(weapon.Base.LoreFlavor))
-		{
-			Label lore = PlayerSheet.MakeLabel(weapon.Base.LoreFlavor, TextRole.Caption, TextVeryDim);
-			lore.AutowrapMode = TextServer.AutowrapMode.WordSmart;
-			lore.CustomMinimumSize = new Vector2(320, 0);
-			text.AddChild(lore);
-		}
+		Label stats = PlayerSheet.MakeLabel(string.Join("  ·  ", parts), TextRole.Caption, StatLabelColor);
+		stats.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+		text.AddChild(stats);
 
 		VBoxContainer dealt = new() { SizeFlagsVertical = Control.SizeFlags.ShrinkCenter };
 		dealt.AddChild(PlayerSheet.MakeLabel(Mathf.RoundToInt(player.GetDamageDealt(weapon.Id)).ToString("N0", PlayerSheet.French), TextRole.Body, StatBonusColor, HorizontalAlignment.Right));
@@ -376,6 +325,7 @@ public partial class PauseMenu : CanvasLayer
 		row.AddChild(PlayerSheet.MakeIcon(passive.Data.Icon));
 		Label name = PlayerSheet.MakeLabel($"{passive.Data.Name}   Niv {passive.Level}/{passive.Data.MaxLevel}", TextRole.Body, StatValueColor);
 		name.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+		name.AutowrapMode = TextServer.AutowrapMode.WordSmart;
 		row.AddChild(name);
 		string effects = "";
 		for (int i = 0; i < passive.Data.Effects.Count; i++)
@@ -393,8 +343,10 @@ public partial class PauseMenu : CanvasLayer
 				continue;
 			MarginContainer indent = new();
 			indent.AddThemeConstantOverride("margin_left", 42);
-			indent.AddChild(PlayerSheet.MakeLabel(string.Format(Tr("LEVELUP_MILESTONE"), milestone.Level, milestone.Text), TextRole.Small,
-				passive.Reached(milestone) ? GoldBright : TextVeryDim));
+			Label detail = PlayerSheet.MakeLabel(string.Format(Tr("LEVELUP_MILESTONE"), milestone.Level, milestone.Text), TextRole.Small,
+				passive.Reached(milestone) ? GoldBright : TextVeryDim);
+			detail.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+			indent.AddChild(detail);
 			_loadoutContainer.AddChild(indent);
 		}
 	}
@@ -456,46 +408,16 @@ public partial class PauseMenu : CanvasLayer
 	private void LoadTextures()
 	{
 		_panelTex = UITheme.LoadTex(MenusPath + "ui_panel_frame.png");
-		_panelSelectedTex = UITheme.LoadTex(MenusPath + "ui_panel_frame_selected.png");
 		_btnNormalTex = UITheme.LoadTex(MenusPath + "ui_button_normal.png");
 		_btnHoverTex = UITheme.LoadTex(MenusPath + "ui_button_hover.png");
 		_btnPressedTex = UITheme.LoadTex(MenusPath + "ui_button_pressed.png");
 		_btnDisabledTex = UITheme.LoadTex(MenusPath + "ui_button_disabled.png");
-		_separatorTex = UITheme.LoadTex(MenusPath + "ui_separator_wide.png");
 	}
 
-	private void ApplyPanelStyle(PanelContainer panel, bool selected)
+	private void ApplyPanelStyle(PanelContainer panel)
 	{
-		Texture2D tex = selected ? (_panelSelectedTex ?? _panelTex) : _panelTex;
-		if (tex != null)
-		{
-			panel.AddThemeStyleboxOverride("panel", UITheme.CreateNinePatch(tex, 10, 10, 10, 10));
-			return;
-		}
-
-		StyleBoxFlat fallback = new();
-		fallback.BgColor = new Color(0.06f, 0.06f, 0.1f, 0.92f);
-		fallback.SetBorderWidthAll(1);
-		fallback.BorderColor = selected ? GoldColor : new Color(0.26f, 0.24f, 0.18f, 0.85f);
-		fallback.SetCornerRadiusAll(4);
-		panel.AddThemeStyleboxOverride("panel", fallback);
-	}
-
-	private Control CreateSeparator()
-	{
-		if (_separatorTex != null)
-		{
-			TextureRect sep = new()
-			{
-				Texture = _separatorTex,
-				StretchMode = TextureRect.StretchModeEnum.Scale,
-				CustomMinimumSize = new Vector2(0, 12)
-			};
-			return sep;
-		}
-
-		HSeparator sepFallback = new();
-		return sepFallback;
+		panel.TextureFilter = CanvasItem.TextureFilterEnum.Nearest;
+		panel.AddThemeStyleboxOverride("panel", UITheme.CreateNinePatch(_panelTex, 10, 10, 10, 10));
 	}
 
 	private Button CreateButton(string text)
@@ -503,12 +425,18 @@ public partial class PauseMenu : CanvasLayer
 		Button btn = new()
 		{
 			Text = text,
-			CustomMinimumSize = new Vector2(320, 48),
+			Alignment = HorizontalAlignment.Left,
+			CustomMinimumSize = new Vector2(280, 56),
 			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill
 		};
 		UITheme.SetTextRole(btn, TextRole.Subhead);
 		btn.AddThemeConstantOverride("h_separation", 6);
 		UITheme.ApplyButtonStyle(btn, _btnNormalTex, _btnHoverTex, _btnPressedTex, _btnDisabledTex);
+		foreach (string state in new[] { "normal", "hover", "pressed", "hover_pressed", "disabled" })
+		{
+			btn.GetThemeStylebox(state).ContentMarginLeft = 18;
+			btn.GetThemeStylebox(state).ContentMarginRight = 18;
+		}
 		return btn;
 	}
 }

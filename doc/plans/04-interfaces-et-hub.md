@@ -251,3 +251,39 @@ Plan rouvert après recette ([DECISIONS §44](DECISIONS.md)). Lots coordonnés a
 - **R6 :** revoir le rendu gris et trop grossier de la carte. Examiner radar et carte agrandie avant de fixer le périmètre ; ne pas attribuer d'office le retour à tout le terrain du monde.
 
 Points d'entrée : `PauseMenu`, `PlayerSheet`, `UITheme`, `ChestLootScreen`, `Minimap`. Validation par captures à taille d'usage et navigation, sans cocher les lots sur une simple maquette.
+
+### R1 — lot engagé le 1er octobre
+
+Travail seul, selon la demande de reprise. Capture de référence avant modification,
+puis pause moins haute : navigation à gauche, équipement au centre, statistiques à
+droite. Retrait des quatre familles de textes demandées ; noms, niveaux, valeurs
+effectives, dégâts infligés et effets des objets/Réminiscences restent consultables.
+Les colonnes conservent leur défilement et la taille du texte réglable.
+
+Boutons communs : aplats sobres et un seul repère latéral pour le survol/focus,
+sans superposer le cadre sélectionné d'un panneau au cadre d'un bouton. Vérifier
+la pause à 100/130 %, un aller-retour dans les paramètres au clavier/manette,
+et le survol avec le focus déjà présent. Les fonds de choix et leur rotation
+ne font pas partie de ce lot.
+
+
+**R1 livré et vérifié.** Navigation à gauche, équipement élargi au centre et
+statistiques à droite ; hauteur ramenée de 900 à 780 unités d'interface.
+Descriptions narratives d'armes et trois textes de pause retirés. Les valeurs
+et les paliers restent disponibles, avec retour à la ligne et défilement.
+Boutons : aplat, texte clair, repère cyan latéral unique au survol/focus ; aucun
+cadre supplémentaire. Les autres écrans utilisant `UITheme` reprennent ce style.
+
+La vérification a révélé l'absence des boutons A/B dans les actions natives
+`ui_accept`/`ui_cancel` de Godot 4.7.2 : mappings explicités dans `project.godot`,
+avec conservation d'Entrée, Entrée numérique, Espace et Échap. Le banc de capture
+injecte les événements clavier/manette dans le viewport, sans prendre la main
+sur le clavier de Raphaël : bas → Paramètres, A → ouverture, B → retour du focus,
+puis survol/focus simultanés et Page bas. Ces étapes sont contrôlées, pas seulement
+photographiées. La manette physique reste à recetter par Raphaël.
+
+Captures regardées : `/tmp/vestiges-r1-before`, `…-after` (texte 100 %),
+`/tmp/vestiges-r1-verified` (texte 130 %, navigation, survol et défilement).
+La sortie de rendu locale est en 3840 × 2160 malgré la résolution demandée par
+le script ; une réduction à 1280 × 720 a aussi été inspectée. Ce n'est pas un test
+d'une fenêtre native 720p. Build sans avertissement, smoke 600 frames vert.

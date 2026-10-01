@@ -134,6 +134,37 @@ public partial class RunObservation
         pause.GetType().GetMethod("Pause", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public).Invoke(pause, null);
         await Frames(10);
         SaveFrame("pause");
+        // Les vrais événements traversent le routage de Godot, y compris pendant la pause.
+        GetViewport().PushInput(new InputEventKey { Keycode = Key.Down, Pressed = true });
+        await Frames(2);
+        GetViewport().PushInput(new InputEventKey { Keycode = Key.Down, Pressed = false });
+        await Frames(5);
+        SaveFrame("pause-focus-settings");
+        if (GetViewport().GuiGetFocusOwner() is not Button { Text: "Paramètres" })
+            throw new System.InvalidOperationException("La touche bas doit sélectionner Paramètres dans la pause.");
+        GetViewport().PushInput(new InputEventJoypadButton { ButtonIndex = JoyButton.A, Pressed = true });
+        await Frames(2);
+        GetViewport().PushInput(new InputEventJoypadButton { ButtonIndex = JoyButton.A, Pressed = false });
+        await Frames(10);
+        SaveFrame("pause-settings");
+        if (!pause.GetNode<Vestiges.UI.SettingsScreen>("SettingsScreen").IsOpen)
+            throw new System.InvalidOperationException("Le bouton A doit ouvrir les paramètres.");
+        GetViewport().PushInput(new InputEventJoypadButton { ButtonIndex = JoyButton.B, Pressed = true });
+        await Frames(2);
+        GetViewport().PushInput(new InputEventJoypadButton { ButtonIndex = JoyButton.B, Pressed = false });
+        await Frames(10);
+        SaveFrame("pause-return-settings");
+        if (GetViewport().GuiGetFocusOwner() is not Button { Text: "Paramètres" })
+            throw new System.InvalidOperationException("Le bouton B doit rendre le focus à Paramètres.");
+        Control focus = GetViewport().GuiGetFocusOwner();
+        if (focus != null)
+        {
+            Vector2 point = focus.GetGlobalRect().GetCenter();
+            GetViewport().NotifyMouseEntered();
+            GetViewport().PushInput(new InputEventMouseMotion { Position = point, GlobalPosition = point }, true);
+            await Frames(5);
+            SaveFrame("pause-hover-focus");
+        }
         // Stick droit ou Page bas : les colonnes défilent sans souris.
         Input.ActionPress("scroll_down");
         await Frames(30);

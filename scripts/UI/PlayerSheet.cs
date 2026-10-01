@@ -45,13 +45,6 @@ public static class PlayerSheet
         AddBonusLine(container, Tr("STAT_STATUS_DURATION"), player.StatusDurationMultiplier, role);
         AddBonusLine(container, Tr("STAT_XP_RANGE"), player.XpMagnetMultiplier, role);
         AddLine(container, Tr("STAT_LUCK"), Percent(player.LuckBonus), null, role);
-        // Dans la pause (texte courant), ce que fait la Chance ; le level-up, plus serré, s'en passe (plan 24 D2).
-        if (role == TextRole.Body)
-        {
-            Label luckHelp = MakeLabel("  " + Tr("STAT_LUCK_HELP"), TextRole.Caption, UITheme.TextVeryDim);
-            luckHelp.AutowrapMode = TextServer.AutowrapMode.WordSmart;
-            container.AddChild(luckHelp);
-        }
         if (player.Waymarks is { Total: > 0 } waymarks)
             AddLine(container, Tr("STAT_WAYMARKS"), $"{waymarks.Found} / {waymarks.Total}", null, role);
         if (player.BonusProjectiles > 0f)

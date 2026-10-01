@@ -479,7 +479,7 @@ Chaque type de lieu donne, à son premier usage dans la run, le gain du tableau 
 
 ## 12. Retours de recette — 1er octobre 2026
 
-Source : [DECISIONS §44](DECISIONS.md), après intégration du plan 25 et correction du fond des coffres. **Documentation uniquement : les actions ci-dessous restent à faire.** Le travail sur les sprites est globalement apprécié ; les nouveaux retours portent aussi sur des systèmes antérieurs.
+Source : [DECISIONS §44](DECISIONS.md), après intégration du plan 25 et correction du fond des coffres. **Reprise autorisée en DECISIONS §45 ; état des lots ci-dessous.** Le travail sur les sprites est globalement apprécié ; les nouveaux retours portent aussi sur des systèmes antérieurs.
 
 ### Retours mis au propre
 
@@ -512,3 +512,12 @@ Les demandes sont consignées ; **l'ordre suivant et les solutions précises res
 ### Prompt court de continuation
 
 > Travaille seul sur Vestiges. Lis AGENTS.md, CLAUDE.md, DECISIONS §44 et le plan 24 §12, puis les plans concernés (04, 07, 08, 15, 25). Traite ces retours un lot à la fois : commence par la pause et les survols, puis les icônes distinctes des récompenses de coffre. Examine ensuite la pression des tirs ennemis. Prépare l'audio comme prochain gros chantier, en commençant par la lisibilité des Résurgences. Garde aussi au programme les trois personnages jouables et la carte. Distingue constats, essais et résultats vérifiés ; conserve la rotation fluide des coffres. Capture les changements visibles, écoute les changements audio en vraie run, puis mets les plans à jour.
+
+
+### R1 — pause et survols livrés
+
+Pause recomposée, textes demandés retirés, états de boutons simplifiés et
+navigation clavier/manette vérifiée par événements dans une vraie Main.
+Compte rendu et captures au [plan 04, R1](04-interfaces-et-hub.md#r1--lot-engagé-le-1er-octobre).
+Mappings A/B de validation/retour ajoutés après constat de leur absence ; build
+sans avertissement et smoke verts. La rotation des coffres n'est pas modifiée.

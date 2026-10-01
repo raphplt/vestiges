@@ -41,6 +41,15 @@ def background(tint: str, seconds: float = 0) -> Image.Image:
 def skin(name: str) -> Image.Image:
     image = Image.open(Path("assets/ui/menus") / f"{name}.png").convert("RGBA")
     w, h = image.size
+    if name.startswith("ui_button_"):
+        # Un aplat et un repère, sans hériter des multiples liserés du panneau.
+        state = name.removeprefix("ui_button_")
+        fill = {"normal": "#1A1A2E", "hover": "#26383E",
+                "pressed": "#16212B", "disabled": "#141420"}[state]
+        image = Image.new("RGBA", (w, h), fill)
+        if state in ("hover", "pressed"):
+            ImageDraw.Draw(image).rectangle((0, 0, 2, h - 1), fill="#5EC4C4")
+        return image
     focused = "selected" in name or "hover" in name
     light, dark = ("#7FD6CF", "#2A5A5E") if focused else ("#9E9494", "#3A3535")
     if "disabled" in name or "locked" in name:

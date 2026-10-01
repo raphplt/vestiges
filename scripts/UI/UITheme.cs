@@ -163,24 +163,32 @@ public static class UITheme
 		if (hoverTex != null)
 			btn.AddThemeStyleboxOverride("hover", CreateNinePatch(hoverTex, 4, 4, 4, 4));
 		if (pressedTex != null)
+		{
 			btn.AddThemeStyleboxOverride("pressed", CreateNinePatch(pressedTex, 4, 4, 4, 4));
+			btn.AddThemeStyleboxOverride("hover_pressed", CreateNinePatch(pressedTex, 4, 4, 4, 4));
+		}
 		if (disabledTex != null)
 			btn.AddThemeStyleboxOverride("disabled", CreateNinePatch(disabledTex, 4, 4, 4, 4));
 
-		btn.AddThemeColorOverride("font_color", GoldColor);
-		btn.AddThemeColorOverride("font_hover_color", GoldBright);
+		btn.AddThemeColorOverride("font_color", TextColor);
+		btn.AddThemeColorOverride("font_hover_color", TextLight);
+		btn.AddThemeColorOverride("font_focus_color", TextLight);
 		btn.AddThemeColorOverride("font_pressed_color", GoldBright);
+		btn.AddThemeColorOverride("font_hover_pressed_color", GoldBright);
 		btn.AddThemeColorOverride("font_disabled_color", TextVeryDim);
 		ApplyFocusStyle(btn);
 		WireButtonAudio(btn);
 	}
 
-	/// <summary>Cadre doré du contrôle qui a le focus clavier ou manette : on sait toujours où l'on est.</summary>
+	/// <summary>Un seul repère latéral, également lisible quand le survol et le focus se superposent.</summary>
 	public static void ApplyFocusStyle(Control control)
 	{
-		StyleBoxTexture focus = CreateNinePatch(LoadTex(MenusPath + "ui_panel_frame_selected.png"), 4, 4, 4, 4);
-		focus.DrawCenter = false;
-		focus.SetExpandMarginAll(2);
+		StyleBoxFlat focus = new()
+		{
+			DrawCenter = false,
+			BorderWidthLeft = 3,
+			BorderColor = CyanEssence,
+		};
 		control.AddThemeStyleboxOverride("focus", focus);
 	}
 

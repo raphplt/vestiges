@@ -517,3 +517,13 @@ Régénération des 21 PNG de textures/planches identique octet pour octet.
 - **R5 :** refonte des trois personnages jouables portée par le plan 08, distincte des lots d'objets déjà livrés.
 
 La pression des tirs relève du plan 07 ; leur embellissement S4 ne résout pas à lui seul le retour de gameplay. La rotation continue du fond des coffres (I7) reste à préserver. Cette note n'ajoute aucun asset et ne clôt aucun nouveau lot.
+
+
+### R1 — boutons sobres intégrés
+
+Le générateur `tools/sprites/ui/screens.py` produit désormais quatre états par
+aplats, avec un repère latéral cyan au survol/appui ; `UITheme` place le même
+repère au focus, sans cadre de panneau superposé. Planches de contrôle dans
+`/tmp/vestiges-r1-sheets`, captures pause/paramètres au plan 04 R1. Seuls les
+quatre PNG de boutons changent : textures des fonds, manifeste de rotation et
+shader I7 inchangés.

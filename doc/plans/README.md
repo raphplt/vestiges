@@ -1,6 +1,6 @@
 # VESTIGES — Dossier de plans à valider
 
-**1er octobre — nouvelle recette après intégration :** appréciation globale positive des sprites ; retours sur les trois personnages jouables, la place des tirs ennemis, la pause, les survols, les icônes de récompense et le rendu de la carte. Les Résurgences doivent être mieux perceptibles ; **l'audio devient le prochain gros chantier demandé**. [Synthèse, lots proposés et prompt de reprise : plan 24 §12](24-retours-du-1er-octobre.md#12-retours-de-recette--1er-octobre-2026), [décision §44](DECISIONS.md). Retours documentés, correctifs à réaliser.
+**1er octobre — nouvelle recette après intégration :** appréciation globale positive des sprites ; retours sur les trois personnages jouables, la place des tirs ennemis, la pause, les survols, les icônes de récompense et le rendu de la carte. Les Résurgences doivent être mieux perceptibles ; **l'audio devient le prochain gros chantier demandé**. [Synthèse, lots proposés et prompt de reprise : plan 24 §12](24-retours-du-1er-octobre.md#12-retours-de-recette--1er-octobre-2026), [décision §44](DECISIONS.md). R1 pause et survols livré, captures et navigation vérifiées ; icônes, diagnostic des tirs et préparation audio suivent.
 
 **1er octobre — correctif du fond des coffres :** rotation continue des rayons à 8°/s, calculée à chaque rendu, avec scintillement des poussières ; ouverture réelle capturée et inspectée (plan 25 I7, remplace le fond fixe I6 refusé par Raphaël).
 

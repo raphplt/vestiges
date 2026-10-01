@@ -578,3 +578,16 @@ Raphaël juge le résultat global très bon, notamment le travail sur les sprite
 **Rattachement :** synthèse, lots proposés et prompt au [plan 24 §12](24-retours-du-1er-octobre.md#12-retours-de-recette--1er-octobre-2026) ; interfaces au plan 04, pression des ennemis au 07, personnages au 08, audio et Résurgences au 15, compléments graphiques au 25. Les solutions et l'ordre des lots sont des propositions de travail, pas des choix détaillés validés par ce retour.
 
 **Précisions sur les décisions antérieures :** la demande retire l'aide de Chance prévue au plan 24 D2 et validée en §40. Le souhait de menaces à distance variées du 23 septembre reste un historique, à rééquilibrer au vu de la saturation ressentie aujourd'hui. Le retour sur les Résurgences ne demande pas le rétablissement des annonces textuelles retirées au plan 24 A3. La rotation fluide des fonds (§43) reste acquise.
+
+## 45. Reprise seul et écran des captures — 1er octobre 2026
+
+Raphaël demande d'exécuter seul les retours, un lot à la fois : pause et survols,
+puis icônes de coffre ; examiner ensuite les tirs ennemis et préparer l'audio,
+en commençant par les Résurgences. Les trois personnages jouables et la carte
+restent au programme. Préserver la rotation fluide, vérifier le visuel par
+captures et tout changement audio par écoute réelle, puis actualiser les plans.
+
+Pendant ce travail : « évite de lancer le jeu ou alors fait le sur l'écran
+viewsonic […] pas sur l'écran msi ». Captures et fenêtres de test uniquement
+sur le ViewSonic (VX2758, DP-1 ; second écran dans la configuration constatée),
+avec `VESTIGES_SCREEN=1`. Les contrôles sans rendu restent headless.
