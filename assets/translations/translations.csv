@@ -365,3 +365,8 @@ SETTINGS_QUESTS_DETAILED,Détaillées,Detailed
 SETTINGS_QUESTS_HIDDEN,Masquées,Hidden
 UI_SHOW_QUESTS,Détail des quêtes,Quest details
 UI_SHOW_MAP,Carte,Map
+MAP_LEGEND_YOU,Toi,You
+MAP_LEGEND_CHEST,Coffre (couleur de sa rareté),Chest (rarity colour)
+MAP_LEGEND_MEMORIAL,Mémorial,Memorial
+MAP_LEGEND_RIFT,Faille,Rift
+MAP_LEGEND_PLACE,Petit lieu à visiter,Place to visit

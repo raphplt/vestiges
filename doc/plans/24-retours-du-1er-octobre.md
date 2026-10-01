@@ -434,3 +434,14 @@ Chaque type de lieu donne, à son premier usage dans la run, le gain du tableau 
 **Vérifications :** build sans avertissement, smoke vert, `test_objects` et `test_dev_mode` à zéro échec. Capture en vraie run à 60 s regardée : trois sceaux colorés sous le score, anneaux en partie allumés.
 
 **Correctif :** `test_dev_mode` cherchait le record sous son ancien nom de fichier (`highscore.save`), renommé au lot L12 ; le banc et son script suivent le nouveau nom.
+
+### L7 — minimap radar (1er octobre)
+
+- **Radar :** 104 unités de côté, 26 cellules de 128 px (environ trois écrans), quatre unités par cellule ; la fenêtre suit le joueur, calée sur la grille d'une unité pour que les cellules glissent pixel par pixel. Le joueur au centre.
+- **Carte entière** en maintenant **M** (manette : RB), centrée à l'écran, un nombre entier d'unités par cellule, avec une **légende** à droite (toi, coffre à la couleur de sa rareté, Mémorial, Faille, petit lieu à visiter).
+- **Pictogrammes en pixels** au lieu des carrés : coffre, stèle, faille, point ; contour sombre d'un pixel. Un petit lieu servi disparaît de la carte au lieu de passer au gris.
+- Banc : `--hold-map` maintient la touche pendant une capture.
+
+**Vérifications :** build sans avertissement, smoke vert ; captures en vraie run regardées : radar à 60 s (coffre, Mémorial, lieux, bord du brouillard) et carte entière à 90 s avec sa légende.
+
+**Non fait :** n'afficher un petit lieu qu'une fois vu à l'écran (aujourd'hui : dès que le brouillard est levé autour) ; le retrait des lieux servis suffit à désencombrer.

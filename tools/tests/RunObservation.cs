@@ -64,6 +64,7 @@ namespace Vestiges.Tests;
 /// --peril N : pendant la mesure, la run commence avec N points de Péril (plan 17 lot 3A).
 /// --capture-every N : pendant la mesure, capture plein écran toutes les N secondes (HUD, événements).
 /// --event ID : force le micro-événement ID à 3 s de run (bancs de capture).
+/// --hold-map : pendant la mesure, maintient la touche de la carte entière (captures de la carte, plan 24 A6).
 /// </summary>
 public partial class RunObservation : Node
 {
@@ -435,6 +436,8 @@ public partial class RunObservation : Node
         PlaceTracker places = new(_world.GetNode<Vestiges.Progression.EssenceTracker>("EssenceTracker").CurrentEssence);
         _placeTracker = places;
         _visitPlaces = Array.IndexOf(OS.GetCmdlineUserArgs(), "--visit") >= 0;
+        if (Array.IndexOf(OS.GetCmdlineUserArgs(), "--hold-map") >= 0)
+            Input.ActionPress("show_map");
         EventBus.EssenceChangedEventHandler onEssence = places.OnEssence;
         EventBus.RunEventStartedEventHandler onEvent = (_, _, _, _) => places.Events++;
         eventBus.EssenceChanged += onEssence;
