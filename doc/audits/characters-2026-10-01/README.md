@@ -44,3 +44,18 @@ Captures avant/après dans `/tmp/vestiges-r5-vagabond-reference` et `...-final` 
 marche, S_dash, SE_hurt et S_death inspectés. Build sans warning, smoke 600 vert.
 Pas de changement de contrat de texture ou de coût du code runtime ; recette
 artistique humaine toujours ouverte.
+
+## Forgeuse — R5c
+
+Lunettes rouges renforcées, attaches et poche de tablier, manchettes de gants,
+masse légèrement plus lisible. Stature, palette acier, squelette et kit conservés.
+152/152 PNG changés ; deuxième génération séparée identique octet pour octet.
+Alpha/séquences/cadres vérifiés ; **15 poses de bord contre 14 auparavant**,
+dont E_death_04 nouvellement au bord. Le rendu étendu confirme qu’aucune n’est
+coupée. Format et pivot restent communs, 40 animations chargées dans Main.
+
+Planches regardées : `/tmp/vestiges-r5-forgeuse-review/comparison.png`,
+`/tmp/vestiges-forgeuse-complete.png`. Référence et finale en run :
+`/tmp/vestiges-r5-forgeuse-reference`, `...-final`. Marche, S_dash, S_hurt et
+S_death capturés sur ViewSonic. Build sans warning et smoke 600 frames verts.
+Pas de changement audio, validation artistique humaine encore ouverte.

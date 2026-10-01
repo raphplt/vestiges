@@ -44,21 +44,29 @@ def build(skeleton: Skeleton) -> list[Part]:
         Part(lambda p, c=torso_center: ellipsoid(p, c, (7.4, 8.4, 4.8), s.torso), SHIRT),
         # Tablier de cuir épais, du torse aux genoux.
         Part(lambda p: rounded_box(p, s.on_torso("pelvis", (0, 3.0, 4.2)), (5.6, 10.0, 0.9), 0.8, s.torso), APRON),
+        # Attaches rouges et poche de cuir : le tablier ne se confond plus avec un aplat sombre.
+        Part(lambda p: capsule(p, s.on_torso("neck", (-2.8, -1.8, 3.4)), s.on_torso("pelvis", (-4.0, 10.8, 5.3)), 0.9), LENS),
+        Part(lambda p: capsule(p, s.on_torso("neck", (2.8, -1.8, 3.4)), s.on_torso("pelvis", (4.0, 10.8, 5.3)), 0.9), LENS),
+        Part(lambda p: rounded_box(p, s.on_torso("pelvis", (1.2, 0.6, 5.4)), (2.8, 2.4, 0.6), 0.5, s.torso), HANDLE),
         Part(lambda p: capsule(p, s.on_torso("pelvis", (0, 1.0, 0)), s.on_torso("pelvis", (0, -4.0, 0)), 5.4, 5.8), LEGS),
         Part(lambda p: sphere(p, s.point("head"), DIMENSIONS.head_radius), SKIN),
         # Cheveux courts tirés en arrière, lunettes de soudure relevées sur le front.
         Part(lambda p: np.maximum(ellipsoid(p, s.on_head((0, 0.9, -0.8)), (4.8, 4.2, 4.6), s.head),
                                   -ellipsoid(p, s.on_head((0, -1.6, 3.6)), (4.0, 3.6, 2.6), s.head)), HAIR),
         Part(lambda p: capsule(p, s.on_head((-4.4, 1.9, 0.5)), s.on_head((4.4, 1.9, 0.5)), 0.8), GOGGLES),
-        Part(lambda p: sphere(p, s.on_head((1.7, 2.1, 3.7)), 1.35), LENS),
-        Part(lambda p: sphere(p, s.on_head((-1.7, 2.1, 3.7)), 1.35), LENS),
+        Part(lambda p: sphere(p, s.on_head((1.7, 2.1, 3.7)), 1.65), LENS),
+        Part(lambda p: sphere(p, s.on_head((-1.7, 2.1, 3.7)), 1.65), LENS),
         # Marteau trop gros porté sur l'épaule droite : manche et tête, avec une braise dans la masse.
         Part(lambda p: capsule(p, s.on_torso("chest", (-5.0, -8.0, 2.0)), s.on_torso("chest", (-6.5, 6.5 - 0.9 * d, -5.5)), 1.1), HANDLE),
-        Part(lambda p: rounded_box(p, s.on_torso("chest", (-6.7, 7.5 - 0.9 * d, -6.0)), (3.6, 2.8, 2.8), 0.6, s.torso), HAMMER),
+        Part(lambda p: rounded_box(p, s.on_torso("chest", (-6.7, 7.5 - 0.9 * d, -6.0)), (4.0, 3.1, 3.3), 0.6, s.torso), HAMMER),
         Part(lambda p: sphere(p, s.on_torso("chest", (-3.0, 7.5 - 0.9 * d, -6.0)), 0.9 + 0.5 * max(d, 0.0)), EMBER),
     ]
-    parts += limbs(s, LimbStyle(sleeve=SHIRT, hand=GLOVES, leg=LEGS, boot=BOOTS, arm_radius=2.5, hand_radius=2.2,
+    parts += limbs(s, LimbStyle(sleeve=SHIRT, hand=GLOVES, leg=LEGS, boot=BOOTS, arm_radius=2.5, hand_radius=2.5,
                                 leg_radius=2.9, boot_radius=2.8, boot_height=4.0, foot_radius=2.5))
+    for side in ("l", "r"):
+        elbow, hand = s.point(f"elbow_{side}"), s.point(f"hand_{side}")
+        start, end = elbow * 0.5 + hand * 0.5, elbow * 0.15 + hand * 0.85
+        parts.append(Part(lambda p, a=start, b=end: capsule(p, a, b, 2.6, 2.4), GLOVES))
     return parts
 
 

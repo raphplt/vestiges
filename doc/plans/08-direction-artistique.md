@@ -709,7 +709,7 @@ Aucun sprite de personnage n'est modifié par R1–R4 ; aucune case R5 cochée.
 
 La référence montre un corps très étroit, un visage presque perdu et peu de
 beige visible. Renforcer légèrement poitrine/épaules et capuche, rendre le
-col et les avant-bras clairs identifiables, garder l’arc/carquoi comme signe de
+col et les avant-bras clairs identifiables, garder l’arc/carquois comme signe de
 dos. Conserver hauteur, échelle 0,53, cadre 32×40, pivot (16,36), animations et
 kit. Prévisualiser huit directions et marche avant la production complète.
 Comparer sur vrais sols, contrôler cadres/transparence/séquences/déterminisme,
@@ -747,3 +747,24 @@ lisibles de dos. 152 frames déterministes, 40 animations, aucun débordement ;
 planches sur trois sols et cinq actions inspectées. Avant/après Main sur
 ViewSonic, marche/dash/hurt/mort regardés, build sans warning et smoke vert.
 Format, pivot, squelette et kit conservés. [Preuves](../audits/characters-2026-10-01/README.md#vagabond--r5b).
+
+### R5c — Forgeuse, lot engagé
+
+Conserver la silhouette trapue gris acier. Renforcer les lunettes rouges et
+les gants, dessiner les attaches et une poche du tablier ; préciser la masse
+portée sur l’épaule. Ne pas modifier stature, pivot, animations ou kit.
+La référence comporte 14 poses touchant le bord, mais aucune n’est coupée au
+contrôle par rendu étendu : vérifier ce point après retouche. Planches et
+reproductibilité des 152 frames, puis marche/dash/dégât/mort dans Main.
+
+### R5c livré — Forgeuse, 1er octobre 2026
+
+Lunettes rouges, attaches et poche du tablier, manchettes et masse plus lisibles.
+152 PNG déterministes, 40 animations ; 15 poses touchent le bord au lieu de 14,
+mais aucune n’est coupée au contrôle par rendu étendu. Format/pivot/kit conservés.
+Planches trois sols et cinq actions, puis Main marche/dash/hurt/mort inspectées
+sur ViewSonic. Build sans warning et smoke vert.
+
+**R5a–c livrés techniquement : 456 PNG, 120 animations.** La passe demandée des
+trois personnages est faite ; l’approbation artistique de Raphaël reste ouverte.
+[Rapport, empreintes et journaux](../audits/characters-2026-10-01/README.md).
