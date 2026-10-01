@@ -279,3 +279,21 @@ octet. Build sans avertissement, smoke vert, aperçu dans Main inspecté
 branche.** Le banc `--capture-pickup-art` est une galerie de sprites au sol,
 sans collecte ni effet ; le ramassage en run ne peut donc pas être déclaré
 vérifié. Aucun taux de loot ni bonus ajouté ici. Suite : S7.
+
+### S7 — trois planches proposées, 1er octobre 2026
+
+`python3 tools/generate_screen_sprites.py` prépare les [fonds de choix](planches/25-s7-ecrans.png),
+les [cadres et boutons](planches/25-s7-cadres.png) et les [sols de chargement](planches/25-s7-chargement.png).
+Quatre teintes, huit poses de poussière/rayons en pixels natifs 480 × 270,
+graine 2507 ; neuf habillages dérivés des textures réelles ; cinq bandes
+de sol 128 × 32 utilisant les tuiles de biome existantes. Personnage de
+référence sur la planche de chargement, animation existante à réutiliser.
+
+Planches inspectées ; les anciennes bordures dorées des boutons ont été
+remplacées par du métal patiné (cyan au focus), pour réserver le doré aux
+récompenses mémorielles. Bords effilochés violets, marges nine-patch 4 px.
+Cadres et sols montrés en natif et ×4 ; fonds entiers en natif avec détails
+de quatre poses agrandis ×4. Régénération des trois PNG identique octet
+pour octet. Build sans avertissement et smoke 600 frames verts.
+**Validation demandée avant tout export ou branchement au thème.**
+Suite : S8.
