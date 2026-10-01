@@ -26,7 +26,7 @@ for stage in seed dev normal toggle preference normal_after_toggle; do
     if [[ "$stage" == seed ]]; then
         cp -a "$(vestiges_user_dir)" "$TEST_DIR/normal-before"
     elif [[ "$stage" == dev || "$stage" == toggle ]]; then
-        for file in meta_save.json run_history.json highscore.save analytics/aggregate.json; do
+        for file in meta_save.json run_history.json highscore_kills.save analytics/aggregate.json; do
             cmp "$TEST_DIR/normal-before/$file" "$(vestiges_user_dir)/$file"
         done
     fi

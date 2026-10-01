@@ -23,6 +23,8 @@ public partial class InputRemapManager : Node
 		new ActionDef("interact", "UI_INTERACT", Key.E, JoyButton.A),
 		new ActionDef("mobility", "UI_MOBILITY", Key.Space, JoyButton.X),
 		new ActionDef("journal", "UI_JOURNAL", Key.J, JoyButton.Back),
+		new ActionDef("show_quests", "UI_SHOW_QUESTS", Key.Tab, JoyButton.LeftShoulder),
+		new ActionDef("show_map", "UI_SHOW_MAP", Key.M, JoyButton.RightShoulder),
 	};
 
 	/// <summary>true si une manette est connectée.</summary>

@@ -422,3 +422,15 @@ Validées par la demande de Raphaël (DECISIONS §40), d'après la proposition d
 Chaque type de lieu donne, à son premier usage dans la run, le gain du tableau D3, de la taille d'une carte commune d'objet : puits PV max +10, veine de cristal Chance +5 %, épouvantail armure +2, boîte aux lettres XP +5 %, wagonnet aimant +15 %, voiture bouclier +5, cabine portée +5 %, abribus vitesse +4 %, pique-nique régénération +0,3 PV/s, coffre Chance +5 %, Mémorial une relance, Faille un bannissement gratuit. Le message flottant dit le gain (« Repère : Puits · PV max +10 »). Gains en données (`waymarks.json`) ; relances et bannissements passent par un signal (`ChoiceTokensGranted`), sans lien direct entre les Repères et le level-up.
 
 **Vérifications :** `test_small_places` à zéro échec avec un contrôle des douze gains ; trois contrôles anciens adaptés (le puits et l'abribus donnent maintenant aussi leur Repère, le bouclier de la voiture encaisse un coup entier). `test_objects`, `test_perk_acquisition` à zéro échec ; smoke vert.
+
+### L4 — quêtes repliées (1er octobre)
+
+- **Par défaut, des sceaux :** un sceau de cire en pixel art par quête, sous la plaque du score (`RunQuestSeals`). Un anneau de huit crans se remplit avec la progression ; chaque cran allumé fait pulser le sceau ; une quête remplie le brise en éclats dorés, il reste doré et coché, et « Quête accomplie : … » passe 2,6 s dessous. Les sceaux sont dessinés en code en attendant ceux du plan 25 (S6).
+- **Le détail** (nom, condition, progression, récompense) : en maintenant **Tab** (manette : LB), action `show_quests` déclarée et remappable. L'ancien panneau, resserré, passe à l'échelle du HUD.
+- **Réglage** Paramètres › Graphismes › « Quêtes de run » : Sceaux (défaut), Détaillées (le panneau en permanence), Masquées.
+- Une action `show_map` (M, manette : RB) est déclarée pour la carte entière du lot L7.
+- Les sceaux suivent les quêtes par un signal (`RunQuestUpdated`), sans lien direct entre le HUD et le gestionnaire de quêtes.
+
+**Vérifications :** build sans avertissement, smoke vert, `test_objects` et `test_dev_mode` à zéro échec. Capture en vraie run à 60 s regardée : trois sceaux colorés sous le score, anneaux en partie allumés.
+
+**Correctif :** `test_dev_mode` cherchait le record sous son ancien nom de fichier (`highscore.save`), renommé au lot L12 ; le banc et son script suivent le nouveau nom.

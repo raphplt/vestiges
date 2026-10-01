@@ -555,6 +555,14 @@ public partial class SettingsScreen : CanvasLayer
 			UITheme.RefreshTextScale(GetTree().Root);
 		}));
 
+		// Quêtes de run : sceaux repliés, panneau détaillé ou rien (plan 24 A2).
+		vbox.AddChild(BuildCycleRow(Tr("SETTINGS_QUESTS"), QuestDisplaySettings.Label(QuestDisplaySettings.Current), (btn) =>
+		{
+			QuestDisplaySettings.Current = QuestDisplaySettings.Next(QuestDisplaySettings.Current);
+			QuestDisplaySettings.Save();
+			btn.Text = QuestDisplaySettings.Label(QuestDisplaySettings.Current);
+		}));
+
 		// Language
 		vbox.AddChild(BuildCycleRow("Langue",
 			LocaleManager.Instance != null

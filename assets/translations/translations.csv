@@ -357,3 +357,11 @@ STAT_CROWD_DAMAGE,Dégâts par ennemi proche,Damage per nearby enemy
 STAT_HIGH_HP_DAMAGE,Dégâts en pleine forme,Damage at high health
 STAT_LOW_HP_DAMAGE,Dégâts au bord de la chute,Damage at low health
 STAT_ESSENCE_DAMAGE_CAP,Plafond des dégâts d'Essence,Essence damage cap
+QUESTS_RUN_TITLE,QUÊTES DE RUN,RUN QUESTS
+QUEST_DONE_TOAST,Quête accomplie : {0},Quest complete: {0}
+SETTINGS_QUESTS,Quêtes de run,Run quests
+SETTINGS_QUESTS_FOLDED,Sceaux,Seals
+SETTINGS_QUESTS_DETAILED,Détaillées,Detailed
+SETTINGS_QUESTS_HIDDEN,Masquées,Hidden
+UI_SHOW_QUESTS,Détail des quêtes,Quest details
+UI_SHOW_MAP,Carte,Map
