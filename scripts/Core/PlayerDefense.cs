@@ -37,10 +37,14 @@ public sealed class PlayerDefense
         Shield = MaxShield;
     }
 
+    /// <summary>
+    /// Bouclier gagné, ou rendu (valeur négative, fin d'une couverture de survie) : un bouclier rendu ne fait que
+    /// rabattre la charge au nouveau maximum, sans entamer ce qui reste du bouclier de base.
+    /// </summary>
     public void AddShield(float value)
     {
         _bonusShield += value;
-        Shield = Mathf.Clamp(Shield + value, 0f, MaxShield);
+        Shield = value >= 0f ? Mathf.Clamp(Shield + value, 0f, MaxShield) : Mathf.Min(Shield, MaxShield);
     }
 
     /// <summary>Bancs de régression : sans bouclier ni invulnérabilité, chaque coup se lit sur les PV.</summary>

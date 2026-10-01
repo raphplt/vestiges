@@ -33,8 +33,6 @@ public partial class ChestLootScreen : CanvasLayer
     // Le clic d'ouverture frappe dans ses 0,3 premières secondes : la mélodie entre juste après, sur le défilement.
     private const float RevealMelodyDelay = 0.3f;
 
-    // --- Rays config ---
-
     // --- UI nodes ---
     private ColorRect _overlay;
     private PixelBackdrop _rays;

@@ -63,6 +63,13 @@ public partial class RunQuestSeals : Control
         _eventBus.RunQuestUpdated += OnQuestUpdated;
     }
 
+    /// <summary>Pause pendant que la touche du détail est tenue : les sceaux reviennent, le détail se replie.</summary>
+    public override void _Notification(int what)
+    {
+        if (what == NotificationPaused)
+            Visible = QuestDisplaySettings.Current == QuestDisplaySettings.Mode.Folded;
+    }
+
     public override void _ExitTree()
     {
         _eventBus.RunQuestUpdated -= OnQuestUpdated;

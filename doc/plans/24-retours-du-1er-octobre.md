@@ -476,3 +476,5 @@ Chaque type de lieu donne, à son premier usage dans la run, le gain du tableau 
 - Banc : `tools/tests/LoadingCapture.tscn` joue l'overlay seul avec les vraies étapes et le photographie trois fois.
 
 **Vérifications :** build sans avertissement, smoke vert, capture regardée (bande à mi-chemin, personnage qui marche, lisière effacée, phrase au-dessus).
+
+**Relecture des lots L4 à L11 (sous-agent) traitée :** shader du fond préchauffé au chargement (pas d'à-coup à la première ouverture) ; la fin d'une couverture de survie rabat le bouclier au nouveau maximum sans entamer le bouclier de base ; la carte entière et le détail des quêtes, tenus au moment d'une pause, se replient au lieu de rester figés sous l'écran de choix ; une relance des bénédictions ne rejoue plus l'entrée ; restes de commentaires retirés. Bancs `test_field_bonuses`, `test_objects`, `test_small_places`, `test_movement` à zéro échec ; smoke vert.
