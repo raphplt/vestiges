@@ -272,11 +272,6 @@
     "volume_db": 0,
     "min_interval_ms": 0
   },
-  "sfx_colosse_lointain": {
-    "path": "res://assets/audio/sfx/ambiance/sfx_colosse_lointain.wav",
-    "volume_db": 0,
-    "min_interval_ms": 0
-  },
   "sfx_dash_start": {
     "path": "res://assets/audio/sfx/selected/dash_start.wav",
     "volume_db": 0,

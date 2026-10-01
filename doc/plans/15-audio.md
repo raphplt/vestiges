@@ -147,4 +147,79 @@ Choix à l'oreille en contexte, par petits groupes de propositions comparables e
 
 Après le cycle : priorités des signaux de danger, voix simultanées en foule, répétitions d'armes/impacts, retours joueur, gains et UI. Préserver l'ordre sonore établi du coffre (clic, mélodie à +0,3 s, fondu à la fermeture), ainsi que sa rotation visuelle fluide. Refaire une run complète au mix final, puis réauditer les 59 besoins historiques avant de chercher de nouveaux fichiers.
 
-Recette : une Résurgence se reconnaît sans lire d'annonce, l'entrée et la sortie s'entendent, les attaques restent lisibles et la répétition est soutenable. Noter les limites d'écoute ; ne cocher les cases audio de la roadmap qu'après intégration **et** écoute réelle. **État au terme de R4 : préparation prête ; A0 à A3 non réalisés.**
+Recette : une Résurgence se reconnaît sans lire d'annonce, l'entrée et la sortie s'entendent, les attaques restent lisibles et la répétition est soutenable. Noter les limites d'écoute ; ne cocher les cases audio de la roadmap qu'après intégration **et** écoute réelle. **État au terme de R4 : préparation prête ; A0 à A3 non réalisés.** Suite : A0 et A1 livrés ci-dessous.
+
+### A0 et A1 — livrés le 1er octobre (soir)
+
+Travail mené seul sur demande de Raphaël (« avance le plus que tu peux sur la partie audio, en autonomie, en suivant les plans »). **Aucun son n'a été écouté par l'agent** : les constats ci-dessous viennent des enregistrements mesurés, de la trace et du code. L'écoute reste à faire par Raphaël, sur les fichiers indiqués.
+
+#### Outil d'enregistrement
+
+Plutôt qu'une sortie PulseAudio dédiée, `tools/record_run_audio.sh` utilise le **Movie Maker de Godot** : chaque image et le mixage du moteur sont écrits ensemble, à 30 i/s, sans passer par la sortie son du système ni enregistrer d'autre application. C'est exactement ce que le jeu envoie à la carte son ; la fenêtre s'ouvre sur le ViewSonic (`VESTIGES_SCREEN=1`, position vérifiée dans le log). Le rendu tourne plus lentement que le temps réel (≈ 0,45×), d'où deux ajustements :
+
+- `AudioManager.NowMsec` : les intervalles minimaux des sons et la chaîne de ramassage d'XP suivent les images rendues sous Movie Maker, sinon la limitation aurait été 2,2 fois trop faible dans l'enregistrement. Hors Movie Maker, l'horloge reste `Time.GetTicksMsec()`.
+- Le bot lit chaque écran qui fige la run pendant 2 s (`--choice-delay`) au lieu de choisir à l'image suivante, pour entendre l'entrée du level-up.
+
+Sorties hors dépôt : `run.mp4` (images + son), `audio.flac`, trace (`audio-events.csv` : signaux, phases, musiques, chaque son et son issue ; `audio-states.csv` : état par seconde ; `audio-sounds.csv` : bilan par clé) et `rapport.md` (`tools/audio_report.py` : sonie EBU R128, spectrogramme de chaque Résurgence, sons par moment). Options du banc : `--audio-trace`, `--choice-delay`, `--mute-buses` (passe d'une famille de sons), `--music-config` (variante de réglages), `--crisis-at` (cycle court). `tools/audio_planche.py` monte une planche d'écoute locale. Les mesures situent un moment et comparent deux fichiers ; elles ne jugent pas le son.
+
+Volumes consignés : profil neuf, bus Master 0 dB, Music −6 dB, SFX 0 dB, Ambiance −8 dB (valeurs par défaut, aucun réglage utilisateur).
+
+#### A0 — référence avant correction
+
+Dossier : `/home/raphael/.local/share/vestiges-audio/2026-10-01/a0-avant/`. Seed 221092026, Traqueur, 360 s de jeu (438 s d'enregistrement avec chargement et écrans), bot nomade qui visite les lieux. Annonce à 265,6 s d'enregistrement, début à 290,7 s, fin à 374,0 s.
+
+| Constat (trace et mesures) | Conséquence |
+|---|---|
+| **Aucune musique de 0 à 290 s.** À la première run d'une session, la phase vaut déjà `Exploration` : aucun `RunPhaseChanged`, donc ni musique d'exploration, ni ambiance de forêt, ni oiseaux. En jeu réel, la musique du Hub continue à sa place. | La première Résurgence arrive sans contraste musical possible. |
+| **Annonce muette** : `OnCrisisWarning` exigeait la phase `Exploration`, inconnue de l'AudioManager ; ni `mus_crepuscule` ni `sfx_danger_building`. | Rien ne prévient à l'oreille pendant les 20 s d'annonce. |
+| Début : `mus_nuit_vagues` démarre bien avec la crise. Fin : passage direct à `mus_jour_combat`. | Pas d'accalmie musicale. |
+| Compteur d'ennemis de l'AudioManager : jusqu'à **1 022** au-dessus des créatures actives (1 684 apparitions, 584 morts). | La musique de combat aurait été permanente dès que la phase était connue. |
+| Sonie court terme stable autour de −15/−20 LUFS du début à la fin, sans marche à l'annonce ni au début. | La Résurgence ne se distingue pas par le niveau ; les effets portent le mix. |
+
+Mesures A3 tirées de la même trace : **12,3 sons/s** en moyenne dans le pool de 12 voix, **64 voix coupées par minute**, 12 voix ou plus demandées 8 % du temps. Les plus fréquents : `sfx_hit_ennemi` 2,7/s (et 1 992 demandes limitées), lancer 1,6/s, `xp_gain` 1,2/s, arc 1,2/s, lame 1,0/s, tirs ennemis 0,7/s.
+
+Mesures des fichiers (sonie momentanée, avant le bus Music à −6 dB) :
+- `mus_crepuscule` frappe à 0–2 s (−11 LUFS) puis retombe vers −36/−38 LUFS de 9 à 18 s ; la frappe suivante tombe à 19–20 s, au moment où la crise remplace le morceau. L'annonce de 20 s fait donc surtout entendre une retombée vers le quasi-silence.
+- `mus_nuit_vagues` ouvre par une introduction avec un creux à −31/−39 LUFS entre 6 et 10 s ; le morceau ne devient dense (−10 à −20) qu'après ~18 s.
+- `mus_jour_exploration` commence par 5 s presque muettes (−63 à −41 LUFS).
+- Ancien fondu enchaîné : les décibels passaient linéairement de −80 à 0. À mi-parcours, les deux morceaux étaient vers −40 dB, d'où un creux au milieu de chaque transition.
+
+#### A1 — pilotage stabilisé, banque inchangée
+
+- `MusicDirector` (composant extrait de l'AudioManager) résout une **intention** : Hub, exploration, combat, accalmie, LateGame, endgame, annonce, Résurgence, mort, de la plus faible à la plus forte. Il lit l'état de `GameManager` et les signaux de crise, pas la phase seule. L'annonce garde la main jusqu'au début réel ; les signaux d'une même image (fin de crise, accalmie, nouvelle phase) ne donnent qu'une résolution, en fin d'image, donc un seul fondu.
+- Réglages dans `data/audio/music.json` : morceau, fondu et point d'entrée (`start_sec`, 0 partout) par intention ; seuils du combat.
+- Combat : créatures actives à moins de 600 px, relevées toutes les 0,5 s de **temps de jeu**, entrée à 4 tenues 1 s, sortie à 1 ou moins tenue 6 s. Un retrait au pool compte. Plus de rythme à 120 images ni de compteur d'apparitions et de morts.
+- Accalmie : nouveau signal `CrisisCalmChanged`, émis par `CrisisAftermath`, qui tient déjà sa durée (`calm_essence_seconds`, 30 s) et se fige avec la pause. Pendant l'accalmie, la musique d'exploration revient (fondu de 4 s) même en foule ; LateGame et endgame gardent leur fond.
+- Endgame : la musique sort désormais de la crise (elle restait sur `mus_nuit_vagues`, la phase ne changeant pas).
+- Première run : exploration, ambiance et oiseaux démarrent sans changement de phase ; `sfx_danger_building` sonne à chaque annonce, quelle que soit la phase.
+- Fondu enchaîné à puissance constante en amplitude (sinus/cosinus) ; un fondu interrompu repart du niveau atteint ; le ralenti de la mort n'étire plus le fondu.
+- Tirages aléatoires de l'audio (hauteur, oiseaux, dissolution) sur un générateur propre : ils ne consomment plus celui du gameplay. Contrôle : deux runs headless de même seed, l'une sans bus SFX, restent identiques 76 s ; la divergence qui suit vient d'ailleurs (minuteries en temps réel, physique), pas de l'audio.
+- Nettoyage : `PlayDeathStinger` (sans appelant) retiré. Plus aucun ennemi `colosse_*` dans `data/enemies` : branche d'ambiance et entrée `sfx_colosse_lointain` retirées de la banque ; le fichier reste dans `assets/audio/sfx/ambiance/` pour l'audit A3.
+
+Vérification : `tools/test_music.sh`, 22 contrôles verts. Ils couvrent le Hub au démarrage, la première run, l'entrée et la sortie du combat par présence (retrait au pool), l'annonce tenue 18 s à 30, 60 et 144 i/s en foule, les pauses pendant l'annonce et la crise, la fin vers l'accalmie, le retour du combat, une seconde crise, LateGame, endgame, la mort pendant une annonce, le Hub et une seconde run. Build sans avertissement, smoke vert. `AudioBankSmoke` : 77 effets OK. Ce contrôle était cassé depuis le 27 septembre, car l'appel GDScript n'avait pas suivi le paramètre `basePitch` de `PlaySfx` ; il est corrigé. Relecture `godot-reviewer` traitée : fondus, configuration tolérante aux clés manquantes, horloge. Banc : `--choice-delay` compte désormais des pas d'image ; en temps réel, un cycle headless accéléré restait figé sur l'écran de niveau.
+
+**Après**, même seed et même banc : `/home/raphael/.local/share/vestiges-audio/2026-10-01/a1-apres/`. Exploration à 0 s, combat à 9 s, annonce `mus_crepuscule` au signal (261,8 s) tenue jusqu'au début (287,0 s), `mus_nuit_vagues`, puis exploration en accalmie à la fin (371,2 s), et retour du combat 44 s plus tard. Les deux runs ont divergé en combat (812 contre 1 092 coups joués) : à ce moment, les tirages aléatoires de l'audio consommaient encore le générateur global du gameplay (corrigé depuis, voir ci-dessus).
+
+**Constat de design pour Raphaël.** Dans cette run, le bot a en médiane 31 créatures à moins de 600 px dès la première minute (jamais une ou moins après 60 s). La bascule exploration/combat au nombre d'ennemis donne donc la musique de combat presque toute la run : 9 s d'exploration avant la première Résurgence. L'ancien compteur aboutissait au même résultat. Rehausser le seuil ne ferait qu'alterner les deux morceaux au gré des vagues. Les seuils actuels ne sont pas une décision : il faut choisir le rôle de chaque morceau (fond de run unique, combat réservé aux pics, superposition de couches…) à l'écoute.
+
+#### A2 — premières propositions, à choisir à l'oreille
+
+Sans nouveau fichier ni choix artistique automatique, une seule dimension est proposée : **le point d'entrée** dans les morceaux d'annonce et de Résurgence (`start_sec` de `music.json`), d'après les mesures de A0. Trois cycles courts, même seed, crise avancée à 70 s de jeu (`--crisis-at 70`), seule la variante change (`--music-config`) :
+
+| Variante | Annonce (`mus_crepuscule`) | Crise (`mus_nuit_vagues`) | Intention |
+|---|---|---|---|
+| V0 | début du morceau | début du morceau | référence A1 |
+| V1 | 38 s : frappe à −12 LUFS, puis retombée plus courte | 18 s : entrée sur la montée vers −11 LUFS | rupture audible au début de crise |
+| V2 | 52 s : passage continu, −16 à −26 LUFS | 34 s : partie dense du morceau | annonce tenue sur 20 s, crise pleine dès l'entrée |
+
+Sonie du mix complet au début de crise (5 premières secondes) : −17,6 (V0), −16,4 (V1), −16,0 LUFS (V2). Les effets du combat dominent le mix, ces écarts ne départagent rien.
+
+**Planche à écouter** : `/home/raphael/.local/share/vestiges-audio/2026-10-01/planche-resurgence.html`, à ouvrir dans un navigateur. Elle donne cinq extraits avec images, de 30 s avant l'annonce à 30 s après la fin : A0, A1, V0, V1, V2. Rapports, sonie et spectrogrammes sont à côté, dans chaque dossier. **Production par défaut inchangée** (`start_sec` à 0) tant que Raphaël n'a pas choisi.
+
+Questions pour Raphaël, dans l'ordre :
+1. A1 contre A0 : l'annonce et le retour au calme se reconnaissent-ils désormais ? Les fondus sont-ils propres ?
+2. V0, V1 ou V2 : quelle entrée pour l'annonce et pour la crise, ou aucune ?
+3. Exploration et combat : quel rôle pour chaque morceau avec une foule quasi permanente (voir A1) ?
+4. Accent d'entrée au début de crise : faut-il un son dédié ? Il manque à la banque ; une recherche de candidats sourcés suivrait le [guide audio](../AUDIO-GUIDE.md) §4.
+
+Les morceaux actuels restent provisoires. Les nouvelles pistes (briefs C et D du guide) et le choix d'un accent restent à faire par Raphaël. A3 (mix) attend ces choix ; ses premiers chiffres sont donnés en A0.

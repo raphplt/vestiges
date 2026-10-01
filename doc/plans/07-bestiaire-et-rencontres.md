@@ -423,7 +423,7 @@ Sonde et synthèse réutilisables (`--measure-projectiles`, `--projectile-lifeti
 
 ### R3b — cadence du Hurleur, lot engagé
 
-Continuation autonome hors audio (DECISIONS §46). Isoler le levier que R3 ne
+Continuation autonome hors audio (DECISIONS §47). Isoler le levier que R3 ne
 pouvait mesurer : un banc à tireurs fixes, trajectoire et premiers délais fixes,
 avec tir annoncé et cri réels. Comparer le cooldown courant à un multiplicateur
 propre au Hurleur, sans toucher aux autres tireurs, vitesse, durée de vie,

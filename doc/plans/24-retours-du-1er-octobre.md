@@ -498,7 +498,7 @@ Source : [DECISIONS §44](DECISIONS.md), après intégration du plan 25 et corre
 
 ### Lots proposés pour la reprise
 
-**L’ordre est confirmé par la reprise en DECISIONS §45 ; les solutions non livrées restent des essais à vérifier.** Un lot terminé et vérifié avant le suivant. L'audio peut commencer dès les corrections courtes, sans attendre la production des personnages et de la carte.
+**Découpage initial confirmé en DECISIONS §45, puis continuation hors audio en §47.** Un lot terminé et vérifié avant le suivant ; les comptes rendus ci-dessous distinguent implémentation et recette humaine.
 
 | Lot | Action bornée | Vérification attendue |
 |---|---|---|
@@ -513,7 +513,7 @@ Source : [DECISIONS §44](DECISIONS.md), après intégration du plan 25 et corre
 
 ### Prompt court de continuation
 
-> Travaille seul sur Vestiges. Lis AGENTS.md, CLAUDE.md, DECISIONS §44 et le plan 24 §12, puis les plans concernés (04, 07, 08, 15, 25). Traite ces retours un lot à la fois : commence par la pause et les survols, puis les icônes distinctes des récompenses de coffre. Examine ensuite la pression des tirs ennemis. Prépare l'audio comme prochain gros chantier, en commençant par la lisibilité des Résurgences. Garde aussi au programme les trois personnages jouables et la carte. Distingue constats, essais et résultats vérifiés ; conserve la rotation fluide des coffres. Capture les changements visibles, écoute les changements audio en vraie run, puis mets les plans à jour.
+> Travaille seul sur Vestiges. Lis AGENTS.md, CLAUDE.md, DECISIONS §44/47 et le plan 24 §12, puis les plans concernés. R1/R2 (pause, survols, butin), R3b (cadence du Hurleur), R5a–c (trois personnages) et R6 (carte) sont implémentés et vérifiés. L’audio est hors du périmètre de cette continuation ; son suivi indépendant reste au plan 15. Les suites ouvertes sont la recette humaine du combat et du visuel, le banc de coût de la carte sur machine calme et un éventuel retour visant le terrain du monde. Ne pas les présenter comme déjà validés. Préserver la rotation des coffres à 8°/s, capturer sur ViewSonic uniquement et actualiser les plans après chaque lot.
 
 
 ### R1 — pause et survols livrés
@@ -554,17 +554,38 @@ d'accalmie musicale explicite. Ces constats de code restent à écouter en conte
 Aucun son ni gain changé ; **A0, l'enregistrement et l'écoute réels, est la
 prochaine action**, uniquement sur ViewSonic pour la fenêtre.
 
-R5 reste Traqueur → Vagabond → Forgeuse, avec planches puis animation en run
-(plan 08). R6 commence par radar/carte agrandie : résolution du dessin et palette
-(plan 04), sans étendre automatiquement au terrain. Le premier cycle audio
-reste prioritaire ; ces deux demandes ne sont ni closes ni perdues. Les lots
-visuels R1/R2 préservent la rotation du coffre à 8°/s et son ordre sonore.
+**Mise à jour du soir :** A0 enregistré (mixage du moteur), A1 livré (pilotage de
+la musique par intention, annonce tenue, accalmie) ; avant/après à écouter par
+Raphaël. [Plan 15](15-audio.md#a0-et-a1--livrés-le-1er-octobre-soir).
+
+R5 (Traqueur → Vagabond → Forgeuse) et R6 (radar/carte agrandie) ont depuis
+été livrés dans la continuation hors audio (§47), avec leurs vérifications
+aux plans 08 et 04. Tous ces lots préservent la rotation du coffre à 8°/s.
 
 ### Continuation hors audio et R6 livré — 1er octobre 2026
 
-DECISIONS §46 exclut l’audio de cette continuation autonome ; l’ancien prompt
-ci-dessus décrit la reprise initiale, pas sa nouvelle priorité. R3b est livré,
+DECISIONS §47 exclut l’audio de cette continuation autonome ; le prompt
+ci-dessus est actualisé pour tenir compte des lots livrés. R3b est livré,
 puis R6 : terrain de la carte détaillé par biome, routes/eau, danger et légende.
 17 contrôles, build/smoke, captures Main sur ViewSonic avec texte 130 % vérifiés
-([plan 04](04-interfaces-et-hub.md#r6-livré--1er-octobre-2026)). R5 suit. La rotation
+([plan 04](04-interfaces-et-hub.md#r6-livré--1er-octobre-2026)). R5a–c sont également livrés (ci-dessous). La rotation
 des coffres reste à 8°/s ; correction séparée du préchargement de son shader.
+
+### R5a–c livrés et état courant hors audio — 1er octobre 2026
+
+Traqueur (col, poignets, volumes), Vagabond (écharpe, sac), Forgeuse (lunettes,
+gants, tablier) repris dans le pipeline procédural. **456 PNG déterministes,
+120 animations**, cadres/pivots conservés et aucun débordement. Planches sur
+forêt/ruines/carrière, puis marche/dash/hurt/mort dans Main inspectés sur
+ViewSonic ; build sans warning et smoke verts. [Rapport R5](../audits/characters-2026-10-01/README.md).
+
+R1/R2, R3b, R5 et R6 sont livrés techniquement. Restent la recette humaine du
+ressenti de combat et du visuel, la mesure FPS de la carte sur machine calme,
+et la clarification du retour « carte » s’il visait aussi le terrain rendu.
+Le préchargement du shader actuel a aussi été réparé (plan 25) ; la rotation
+fluide à 8°/s est conservée. L’audio n’a pas été traité dans ces lots.
+
+**Intégration vérifiée :** travail audio indépendant conservé ; conflits de
+commentaires/numérotation résolus, continuation hors audio numérotée §47.
+Build 0 warning, 17 contrôles carte et 61 capacités, smoke 600 frames et Main
+headless 20 s verts. [Journal d’intégration](../audits/integration-hors-audio-2026-10-01/README.md).

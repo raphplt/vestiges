@@ -1,6 +1,8 @@
 # VESTIGES — Dossier de plans à valider
 
-**1er octobre — nouvelle recette après intégration :** appréciation globale positive des sprites ; retours sur les trois personnages jouables, la place des tirs ennemis, la pause, les survols, les icônes de récompense et le rendu de la carte. Les Résurgences doivent être mieux perceptibles ; **l'audio devient le prochain gros chantier demandé**. [Synthèse, lots proposés et prompt de reprise : plan 24 §12](24-retours-du-1er-octobre.md#12-retours-de-recette--1er-octobre-2026), [décision §44](DECISIONS.md). R1 pause/survols et R2 icônes de butin livrés, captures et navigation vérifiées ; R3 diagnostiqué et essai de durée mesuré sur quatre runs, sans changement de combat adopté ; R4 préparé (plan 15 A0–A3), avec écoute réelle du cycle de Résurgence comme prochaine action. R5 Traqueur/Vagabond/Forgeuse et R6 radar/carte restent au programme.
+**1er octobre (soir) — audio A0/A1 livrés :** enregistrement audible de référence (Movie Maker de Godot, mixage du moteur, trace et rapport), puis pilotage de la musique stabilisé : intention séparée de la phase, annonce tenue jusqu'au début, accalmie, endgame, première run enfin musicale, fondus à puissance constante ; 22 contrôles verts. Avant/après et planche A2 (points d'entrée des morceaux d'annonce et de crise) hors dépôt, **à écouter par Raphaël** : quatre questions au plan 15. Le rôle exploration/combat reste à choisir (foule permanente). [Plan 15](15-audio.md#a0-et-a1--livrés-le-1er-octobre-soir).
+
+**1er octobre — retours visuels et combat :** R1/R2 (pause, survols et icônes de butin), R3b (cadence du Hurleur), R5a–c (trois personnages, 456 PNG) et R6 (carte par biome) livrés et vérifiés. Rotation des coffres préservée. Restent le ressenti humain, l’approbation artistique et le banc FPS de la carte sur machine calme. [État courant au plan 24 §12](24-retours-du-1er-octobre.md#12-retours-de-recette--1er-octobre-2026). Cette continuation exclut l’audio (DECISIONS §47) ; son suivi indépendant reste au plan 15.
 
 **1er octobre — correctif du fond des coffres :** rotation continue des rayons à 8°/s, calculée à chaque rendu, avec scintillement des poussières ; ouverture réelle capturée et inspectée (plan 25 I7, remplace le fond fixe I6 refusé par Raphaël).
 
@@ -325,12 +327,12 @@ Les réglages numériques proposés sont des points de départ expérimentaux, j
 Dash commun validé ; casting d’au moins cinq à six personnages et refonte de tous les sprites avant 01 E : 06/08 ; mode dev tout débloqué : [guide](../DEV-MODE.md) ; mobilité expressive clavier/manette : 01/06 ; record uniquement au bilan et bilan majeur : 02/04 ; XP et menace initiale : 03 ; Hub peu textuel et Collection directe : 04 ; objets illimités et quêtes indépendantes du lore : 05/06 ; casting décalé cohérent : 06/08 ; nouveaux mobs et boss de famille : 07 ; terrain : 10 ; innovations : 11 ; fabrication du pixel art homogène : 08.
 
 
-**1er octobre, continuation hors audio — R3b :** cadence du Hurleur ×2,5, contrôles et captures vérifiés ; [rapport du banc fixe et des runs](../audits/projectile-cadence-2026-10-01/README.md). R6 carte et R5 personnages suivent, conformément à DECISIONS §46.
+**1er octobre, continuation hors audio — R3b :** cadence du Hurleur ×2,5, contrôles et captures vérifiés ; [rapport du banc fixe et des runs](../audits/projectile-cadence-2026-10-01/README.md). R6 carte et R5 personnages suivent, conformément à DECISIONS §47.
 
 **1er octobre, préchargement :** le boot Main charge désormais le shader actuel du fond de coffre ; référence supprimée retirée, smoke et ouverture réelle vérifiés (plan 25).
 
 **1er octobre, R6 livré :** radar/carte par biome, routes/eau, danger et légende ;
-17 contrôles, build/smoke et captures ViewSonic vérifiés ([plan 04](04-interfaces-et-hub.md#r6-livré--1er-octobre-2026)). R5 personnages suit hors audio (DECISIONS §46).
+17 contrôles, build/smoke et captures ViewSonic vérifiés ([plan 04](04-interfaces-et-hub.md#r6-livré--1er-octobre-2026)). R5 personnages suit hors audio (DECISIONS §47).
 
 **1er octobre, R5a livré :** Traqueur repris, 152 PNG déterministes, planches et animations Main vérifiées sur ViewSonic. Vagabond puis Forgeuse suivent (plan 08).
 

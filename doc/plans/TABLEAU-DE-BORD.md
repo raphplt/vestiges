@@ -8,8 +8,8 @@ Le [registre](DECISIONS.md) garde les mots de Raphaël. Les plans gardent le dé
 
 | Chantier | Plan | Prochaine action |
 |---|---|---|
-| **Nouvelle recette après intégration des sprites** | [24 §12](24-retours-du-1er-octobre.md#12-retours-de-recette--1er-octobre-2026), [DECISIONS §44](DECISIONS.md) | **R1/R2 livrés et vérifiés** : pause et survol/focus simplifiés, A/B rétablis, icônes distinctes du butin. R3 diagnostiqué sur 4 runs : saturation surtout liée aux Hurleurs ; essai 2 s non concluant, valeurs de production conservées. R4 préparé au plan 15 : écoute de référence puis priorité musicale des Résurgences. R5 trois personnages et R6 carte conservés. |
-| **Audio et identité des Résurgences** | [15](15-audio.md), 24 §12 | **Préparation R4 livrée**, sons inchangés. Commencer A0 (écoute enregistrée, sortie réelle, ViewSonic), puis A1 (annonce écrasée par la musique adaptative, comptage des ennemis, sortie de crise) avant les nouveaux choix musicaux. Protocole et lots A0–A3 au plan 15. |
+| **Nouvelle recette après intégration des sprites** | [24 §12](24-retours-du-1er-octobre.md#12-retours-de-recette--1er-octobre-2026), [DECISIONS §44/47](DECISIONS.md) | **R1/R2, R3b, R5a–c et R6 livrés et vérifiés** : interfaces, cadence du Hurleur, trois personnages et carte par biome. Recette humaine du combat et du visuel à faire ; banc FPS de la carte sur machine calme. Rotation des coffres conservée. Suivi audio indépendant sur la ligne dédiée. |
+| **Audio et identité des Résurgences** | [15](15-audio.md), 24 §12 | **A0 et A1 livrés**, banque inchangée : enregistrement de référence et rapport (`tools/record_run_audio.sh`), musique pilotée par intention (annonce tenue, accalmie, endgame, première run), fondus corrigés, `tools/test_music.sh` vert. **À écouter** : avant/après et planche A2 (points d'entrée des morceaux) hors dépôt. À décider : rôle exploration/combat avec une foule permanente. Puis A2 (identité) et A3 (mix : 12 sons/s, 64 voix coupées/min). |
 | **Retours du 1er octobre** (écran allégé, écrans de choix animés en pixel art, début de run plus tenable, coffres sans armes, minimap radar, bonus lâchés, icônes d'objets) | [24](24-retours-du-1er-octobre.md) | Validé ([DECISIONS §40](DECISIONS.md)) et **livré** : L1, L2 (avec la barre d'XP et le score aux éliminations), L3, L4, L7, L8, L9, L11, L12 (ascensions des 24 armes), L5/L6 côté code. Images du plan 25 intégrées sur `main`. Reste : la mise en scène du Mémorial dans le monde. À tester en jeu par Raphaël |
 | **Sprites et design** (34 icônes d'objets, raretés, projectiles ennemis, bonus lâchés, HUD, menus) | [25](25-sprites-et-design.md) | **Intégré sur `main`** à la demande de Raphaël (DECISIONS §41) : raretés, objets, Réminiscences, projectiles, bonus, HUD, menus et chargement. Captures inspectées. Les images des contenus futurs sont visibles dans la Collection avec « À venir » ; leurs règles restent aux plans 05/22. |
 | **Gains qui se sentent** (objets à 30 niveaux, projectiles fractionnaires, cartes à la Megabonk, défense, difficulté, objets manquants, carte moins vide) | [23, plan d'exécution](23-plan-agent.md) | Décidé le 30 septembre ([DECISIONS §36–37](DECISIONS.md)). R0 à R4 livrés (mesure de référence ; bouclier de départ retiré, invulnérabilité 0,25 s ; cartes à la Megabonk ; objets à 30 niveaux, projectiles en plus au lieu des copies, paliers à 15 ; stats entières fractionnaires, pas d'armes relevés) ; R5 livré (PV ×1,25 d'emblée, pente 1,04 puis 1,075 après 6 min : temps pour tuer de R0 à ±20 %) ; R6 livré (huit objets de déclencheur) ; R7 livré (six petits lieux, carte de 12 800 px de haut, minimap : un petit lieu toutes les 26 s). R8 révisé livré (bonus d'une stat au hasard à chaque coffre, DECISIONS §38) ; R9 livré (Porte-monnaie hors quête, Repères). Plan 23 terminé ; travail sur `main` |
@@ -25,8 +25,8 @@ Le [registre](DECISIONS.md) garde les mots de Raphaël. Les plans gardent le dé
 | Invulnérabilité après un coup | 23 R1 | 0,25 s proposé au lieu de 0,5 s : à confirmer en jeu |
 | Recette de la mort et du bilan | 02 | Durée de la séquence, densité de la page, échelle des distances |
 | Déplacements | 01 | Inertie, invulnérabilité du dash, recette manette |
-| Bestiaire | 07 | Tisseuse hors Marécages ; « mobs successifs ». Retour §44 : diagnostic R3 livré ; essai de durée non concluant. Prochaine expérience agent : composition fixe et cadence du Hurleur, puis recette jouée. |
-| Direction artistique | 08 | Nouvelle passe demandée pour le Traqueur, le Vagabond et la Forgeuse (§44) ; planches comparatives à produire. |
+| Bestiaire | 07 | Cadence du Hurleur corrigée, banc fixe et captures vérifiés ; recette humaine de la pression des tirs. Tisseuse hors Marécages et « mobs successifs » restent ouverts. |
+| Direction artistique | 08 | Traqueur, Vagabond et Forgeuse repris et vérifiés (R5a–c) ; appréciation artistique de Raphaël encore ouverte. |
 | Anomalies | 14 | Trois décisions, jamais arbitrées |
 | Lore | 19 | Relecture du script v1.1 ; questions P1, P6 à P10 ; fin |
 | Audio | 15 | Écoute en run et choix restants ; chantier élargi à toute l'identité sonore, avec les Résurgences comme premier cas proposé (§44). |
@@ -81,10 +81,10 @@ Le [registre](DECISIONS.md) garde les mots de Raphaël. Les plans gardent le dé
 00 (référence), 03, 10, 12, 16 : lots livrés, recettes à faire en jeu par Raphaël quand il le souhaite. Le plan 04 est rouvert pour la pause, les survols et la carte (DECISIONS §44).
 
 
-**Continuation hors audio (DECISIONS §46) :** R3b livré au plan 07 : cadence du Hurleur réglée, 61 contrôles et captures vérifiés, ressenti humain ouvert. Suite : préchargement à réparer, R6 carte, R5 trois personnages. Le chantier audio est exclu de cette continuation.
+**Continuation hors audio (DECISIONS §47) :** R3b livré au plan 07 : cadence du Hurleur réglée, 61 contrôles et captures vérifiés, ressenti humain ouvert. Suite : préchargement à réparer, R6 carte, R5 trois personnages. Le chantier audio est exclu de cette continuation.
 
 **1er octobre, R6 livré :** radar/carte par biome, routes/eau, danger et légende ;
-17 contrôles, build/smoke et captures ViewSonic vérifiés ([plan 04](04-interfaces-et-hub.md#r6-livré--1er-octobre-2026)). R5 personnages suit hors audio (DECISIONS §46).
+17 contrôles, build/smoke et captures ViewSonic vérifiés ([plan 04](04-interfaces-et-hub.md#r6-livré--1er-octobre-2026)). R5 personnages suit hors audio (DECISIONS §47).
 
 **1er octobre, R5a livré :** Traqueur repris, 152 PNG déterministes, planches et animations Main vérifiées sur ViewSonic. Vagabond puis Forgeuse suivent (plan 08).
 

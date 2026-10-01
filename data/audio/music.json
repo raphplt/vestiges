@@ -1,0 +1,23 @@
+{
+    "_doc": "Pilotage de la musique (plan 15, A1). Chaque intention désigne une clé de sounds.json et la durée de son fondu d'entrée. Priorité, de la plus forte à la plus faible : death, resurgence, warning, endgame, late_game, calm, combat, exploration. La durée de l'accalmie vient de data/scaling/crises.json (calm_essence_seconds), signalée par CrisisAftermath.",
+    "intents": {
+        "hub": { "music": "mus_hub", "fade_sec": 2.0 },
+        "exploration": { "music": "mus_jour_exploration", "fade_sec": 3.0 },
+        "combat": { "music": "mus_jour_combat", "fade_sec": 3.0 },
+        "calm": { "music": "mus_jour_exploration", "fade_sec": 4.0 },
+        "late_game": { "music": "mus_nuit_chaos", "fade_sec": 3.0 },
+        "endgame": { "music": "mus_nuit_chaos", "fade_sec": 3.0 },
+        "warning": { "music": "mus_crepuscule", "fade_sec": 2.0 },
+        "resurgence": { "music": "mus_nuit_vagues", "fade_sec": 2.0 },
+        "death": { "music": "mus_mort", "fade_sec": 2.0, "loop": false }
+    },
+    "_doc_combat": "Musique de combat en exploration : créatures actives à moins de radius_px du joueur, comptées toutes les sample_sec secondes de jeu. Elle entre à enter_enemies ou plus tenus enter_hold_sec, et sort à exit_enemies ou moins tenus exit_hold_sec.",
+    "combat": {
+        "radius_px": 600,
+        "sample_sec": 0.5,
+        "enter_enemies": 4,
+        "enter_hold_sec": 1.0,
+        "exit_enemies": 1,
+        "exit_hold_sec": 6.0
+    }
+}
