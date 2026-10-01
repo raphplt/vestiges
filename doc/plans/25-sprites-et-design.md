@@ -133,3 +133,21 @@ Générateur : étendre `tools/sprites/projectiles.py` et `tools/generate_projec
 1. Raretés : les éclats de verre à facettes conviennent-ils, ou préfère-t-il une autre forme (pierres, sceaux, étoiles dessinées) ?
 2. Objets : style « objet posé » de trois quarts comme les armes, ou à plat, de face ?
 3. Projectiles ennemis : quelle place pour le télégraphe (2 frames, environ 0,1 s) sans rendre les tireurs trop faciles ?
+
+## 6. Comptes rendus
+
+### S1 — planche proposée, 1er octobre 2026
+
+`python3 tools/generate_rarities.py` produit la [planche S1](planches/25-s1-raretes.png) :
+cinq éclats (12 et 24 px, 1 à 5 facettes), cadres dérivés de `ui_card_normal.png`
+(marges nine-patch 3 px), reflet légendaire en 4 frames, quatre transitions de
+6 frames et trèfle de 8 px. Palette lue dans `data/ui/rarities.json`.
+Les textures sont calculées à leur taille native dans `tools/sprites/ui/`.
+`--export` prépare les fichiers et leur manifeste après validation.
+
+Planche inspectée aux tailles natives et ×4, sur fond sombre et cadre réel.
+Deux générations ont donné le même SHA-256 :
+`e477393dca7ea999b0ee41799e7788d25dd172bb58afdd276470a95808a2985e`.
+Build : 0 avertissement, 0 erreur ; smoke 600 frames vert.
+**Validation visuelle demandée à Raphaël ; aucun branchement ni case roadmap
+cochée pour cette proposition.** Suite : S2, conformément au §3.
