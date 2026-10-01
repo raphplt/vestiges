@@ -1,0 +1,14 @@
+{
+    "_comment": "Cartographie R6 : sous-palettes de la charte, indépendantes de la grille logique d'Effacement.",
+    "road": "#B8A080",
+    "path": "#A68B6B",
+    "biomes": {
+        "forest_reclaimed": ["#4A8C3F", "#7A7A70", "#4A6A5E", "#2D5A27"],
+        "urban_ruins": ["#4A7A3A", "#8A5A42", "#8AB8C4", "#2D5A27"],
+        "wild_fields": ["#A8B458", "#8A7058", "#8AB0D0", "#3A6A30"],
+        "swamp": ["#8A9A4A", "#3A2E22", "#8AA89A", "#3A6A38"],
+        "collapsed_quarry": ["#8A7A6A", "#5A5050", "#4A6A5E", "#3A6A30"]
+    },
+    "phase_tints": ["#E8E0D4", "#9E9494", "#8B6BAE", "#C4D0D4", "#2D1B3D"],
+    "phase_blends": [0.0, 0.25, 0.55, 0.8, 1.0]
+}

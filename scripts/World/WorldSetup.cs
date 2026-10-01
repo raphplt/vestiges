@@ -36,6 +36,8 @@ public partial class WorldSetup : Node2D
 
     /// <summary>Référence publique au générateur pour les autres systèmes.</summary>
     public WorldGenerator Generator => _generator;
+    /// <summary>Emprise des chemins, réutilisée par la cartographie sans parcourir les décors.</summary>
+    public IReadOnlySet<Vector2I> PathCells => _pathNetwork?.Cells;
 
     /// <summary>Checks if a world position is impassable (water or erased void).</summary>
     public bool IsWaterAt(Vector2 worldPos)

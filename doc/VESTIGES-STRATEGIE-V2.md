@@ -766,6 +766,8 @@ Le script de post-processing doit inclure une vérification/correction de l'angl
 
 ### Phase D — Lisibilité et UX (2-3 semaines)
 
+- [x] Radar et carte : détails de terrain par biome, routes/eau, phases et légende ; 17 contrôles et captures Main vérifiés (plan 04 R6). Recette artistique humaine encore ouverte.
+
 - [x] Pression des tirs, première correction ciblée : recharge du Hurleur ×2,5 en données, cri conservé ; banc fixe, quatre runs et captures vérifiés (plan 07 R3b). Ressenti humain encore ouvert.
 
 - [x] Barre d'XP fullwidth en bas de l'écran (déplacée le 24 septembre 2026 dans la plaque de vie du HUD refait, [plan 04](plans/04-interfaces-et-hub.md#retour-de-raphaël-et-hud-de-run--24-septembre-2026)).

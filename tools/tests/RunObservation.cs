@@ -105,6 +105,8 @@ public partial class RunObservation : Node
 
             if (captureMap)
                 await CaptureWorldOverview();
+            else if (Array.IndexOf(args, "--capture-cartography") >= 0)
+                await CaptureCartography();
             else if (captureProps)
                 await CapturePropHotspots();
             else if (Array.IndexOf(args, "--capture-junctions") >= 0)

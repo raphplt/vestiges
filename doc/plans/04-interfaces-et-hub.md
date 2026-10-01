@@ -334,3 +334,34 @@ l'Effacement pour améliorer le dessin. Capturer radar et carte entière aux
 mêmes positions/seeds, avec et sans foule, à leur taille d'usage et avec grand
 texte. Étendre au terrain seulement si les images confirment ce périmètre,
 au plan 10. Aucun rendu de carte modifié dans cette reprise R1–R4.
+
+### R6 — cartographie, lot engagé
+
+Conserver le radar de proximité et la carte entière, mais dessiner le terrain
+à quatre échantillons par axe de cellule d'Effacement (32 px monde au lieu de
+128). Palette de charte par biome, eau et rues reconnaissables ; danger teinté
+par phase, avec légende. Rasteriser seulement les nouvelles cellules explorées,
+mettre en cache le fond et recolorer les cellules concernées par un changement
+de phase. Ni règles d'Effacement, ni génération du monde modifiées.
+
+Validation : référence avant/après aux mêmes positions, carte ouverte/fermée,
+limites, changement de phase, légende et grand texte. Contrôles de découverte,
+limites, cache et coût borné ; build/smoke, captures sur ViewSonic. Ne pas
+confondre une image de carte améliorée avec une validation du terrain du monde.
+
+### R6 livré — 1er octobre 2026
+
+Fond cartographique quatre fois plus fin par axe, couleurs par biome, eau,
+rues et chemins ; teintes de danger sur le cache, Néant connu hachuré. La
+légende et la carte partagent un fond sombre et restent centrées ensemble,
+y compris avec le texte à 130 %. Les petits repères ont un liseré de contraste.
+La génération du monde, la découverte et les règles d’Effacement sont conservées.
+
+**17 contrôles passent**, build sans warning et smoke 600 frames vert. Captures
+Main avant/après regardées sur ViewSonic (radar, carte, danger injecté, bord).
+[Protocole, logs et coût CPU](../audits/cartography-2026-10-01/README.md) :
+0,0191 → 1,2404 ms pour le premier disque dans le micro-banc ; cache géré 2,66 Mo.
+Machine chargée : comparaison FPS reportée, pas de garantie 60 FPS déduite.
+Sortie réelle 4K, réduction de lecture 720p inspectée, pas de test natif 720p.
+Le caractère gris et uniforme du fond est traité ; l’appréciation de Raphaël
+et une éventuelle reprise du terrain du monde restent ouvertes.

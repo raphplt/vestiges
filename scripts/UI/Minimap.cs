@@ -8,10 +8,9 @@ namespace Vestiges.UI;
 
 /// <summary>
 /// Minimap (plan 22 C6, plan 23 R7, plan 24 A6) : un radar zoomé autour du joueur, et la carte entière avec sa légende
-/// en maintenant « show_map ». Un pixel par cellule d'Effacement, teinté par sa phase (ancrée, fragile, effilochée,
-/// effacée, Néant), révélé au fil du chemin ; les lieux en pictogrammes de pixels (coffre, stèle, faille, point pour
-/// les petits lieux encore utiles). Repeint quatre fois par seconde, sans boucle sur les décors : seulement les cellules
-/// autour du joueur et les quelques dizaines de lieux.
+/// en maintenant « show_map ». Le terrain des biomes, routes et sentiers est échantillonné à la découverte,
+/// avec quatre pixels par axe de cellule d'Effacement ; le danger recolore ce fond sans refaire les relevés.
+/// Mise à jour quatre fois par seconde, sans parcours des décors ni du monde entier.
 /// </summary>
 public partial class Minimap : Control
 {
@@ -28,14 +27,6 @@ public partial class Minimap : Control
     private static readonly Color Frame = new(0.05f, 0.05f, 0.09f, 0.78f);
     private static readonly Color Border = new(0.55f, 0.47f, 0.28f, 0.85f);
     private static readonly Color Unknown = new(0.08f, 0.08f, 0.12f, 0.85f);
-    private static readonly Color[] PhaseColors =
-    {
-        new(0.46f, 0.52f, 0.40f, 0.9f),
-        new(0.52f, 0.50f, 0.42f, 0.9f),
-        new(0.45f, 0.38f, 0.40f, 0.9f),
-        new(0.30f, 0.22f, 0.34f, 0.9f),
-        new(0.02f, 0.01f, 0.04f, 0.95f),
-    };
     private static readonly Color PlayerColor = new(1f, 0.97f, 0.88f);
     private static readonly Color MemorialColor = new(0.95f, 0.82f, 0.45f);
     private static readonly Color RiftColor = new(0.7f, 0.35f, 0.85f);
@@ -48,19 +39,21 @@ public partial class Minimap : Control
     private Rect2 _bounds;
     private int _cellSize;
     private Vector2I _origin;
-    private Image _image;
+    private CartographyRaster _raster;
+    private TileMapLayer _ground;
+    private TileMapLayer _roads;
+    private MapPalette _palette;
     private ImageTexture _texture;
-    private bool[] _known;
     private int _width;
     private int _height;
     // Oubli des repères (plan 17 lot 3D) : comme les flèches, les coffres quittent la carte tant qu'il est porté.
     private bool _chestSignalsForgotten;
     private float _timer;
-    private bool _dirty;
     private bool _full;
     private Rect2 _view;
     private Vector2 _mapSize;
     private VBoxContainer _legend;
+    private int _legendTextStep = -1;
     private Vector2 _playerPosition;
     private Texture2D _placeIcon;
     private Texture2D _chestIcon;
@@ -93,7 +86,7 @@ public partial class Minimap : Control
     {
         if (what == NotificationPaused && _full)
             Visible = false;
-        else if (what == NotificationUnpaused && _image != null)
+        else if (what == NotificationUnpaused && _raster != null)
             Visible = true;
     }
 
@@ -104,6 +97,7 @@ public partial class Minimap : Control
             _eventBus.ZonePhaseChanged -= OnZonePhaseChanged;
             _eventBus.OubliEffectChanged -= OnOubliEffectChanged;
         }
+        _raster?.Dispose();
     }
 
     private void OnOubliEffectChanged(string effect, float total)
@@ -115,7 +109,7 @@ public partial class Minimap : Control
     /// <summary>La carte n'existe qu'une fois le monde généré : l'image se crée à la première mise à jour possible.</summary>
     private bool EnsureMap()
     {
-        if (_image != null)
+        if (_raster != null)
             return true;
         _world ??= GetNodeOrNull<WorldSetup>("/root/Main");
         _erasure ??= GetNodeOrNull<ErasureManager>("/root/Main/ErasureManager");
@@ -128,9 +122,11 @@ public partial class Minimap : Control
         _origin = new Vector2I(Mathf.FloorToInt(_bounds.Position.X / _cellSize), Mathf.FloorToInt(_bounds.Position.Y / _cellSize));
         _width = Mathf.CeilToInt(_bounds.Size.X / _cellSize) + 1;
         _height = Mathf.CeilToInt(_bounds.Size.Y / _cellSize) + 1;
-        _image = Image.CreateEmpty(_width, _height, false, Image.Format.Rgba8);
-        _texture = ImageTexture.CreateFromImage(_image);
-        _known = new bool[_width * _height];
+        _ground = _world.GetNode<TileMapLayer>("Ground");
+        _roads = _world.GetNodeOrNull<TileMapLayer>("RoadOverlay");
+        _palette = MapPalette.Load();
+        _raster = new CartographyRaster(_width, _height, _cellSize, _origin, SampleTerrain);
+        _texture = ImageTexture.CreateFromImage(_raster.Image);
         // Carte entière : un nombre entier d'unités par cellule, pour des pixels francs.
         int unit = Mathf.Max(1, Mathf.FloorToInt(Mathf.Min(FullMaxHeight / _height, FullMaxWidth / _width)));
         _mapSize = new Vector2(_width * unit, _height * unit);
@@ -139,7 +135,20 @@ public partial class Minimap : Control
         return true;
     }
 
-    /// <summary>Légende de la carte entière : un pictogramme et un mot par sorte de lieu.</summary>
+    private Color SampleTerrain(Vector2 world)
+    {
+        Vector2I cell = _ground.LocalToMap(_ground.ToLocal(world));
+        WorldGenerator generator = _world.Generator;
+        if (generator.IsErased(cell.X, cell.Y))
+            return Colors.Transparent;
+        if (_roads != null && _roads.GetCellSourceId(cell) >= 0)
+            return _palette.Road;
+        if (_world.PathCells?.Contains(cell) == true)
+            return _palette.Path;
+        return _palette.Terrain(generator.GetBiomeId(cell.X, cell.Y), generator.GetTerrain(cell.X, cell.Y));
+    }
+
+    /// <summary>Les mêmes pictogrammes et couleurs que sur la carte ; la légende partage son fond sombre.</summary>
     private void BuildLegend()
     {
         _legend = new VBoxContainer { MouseFilter = MouseFilterEnum.Ignore, Visible = false };
@@ -152,19 +161,36 @@ public partial class Minimap : Control
             (_memorialIcon, MemorialColor, "MAP_LEGEND_MEMORIAL"),
             (_riftIcon, RiftColor, "MAP_LEGEND_RIFT"),
             (_placeIcon, PlaceColor, "MAP_LEGEND_PLACE"),
+            (null, _palette.Terrain("forest_reclaimed", TerrainType.Forest), "MAP_BIOME_FOREST"),
+            (null, _palette.Terrain("urban_ruins", TerrainType.Concrete), "MAP_BIOME_URBAN"),
+            (null, _palette.Terrain("wild_fields", TerrainType.Grass), "MAP_BIOME_FIELDS"),
+            (null, _palette.Terrain("swamp", TerrainType.Grass), "MAP_BIOME_SWAMP"),
+            (null, _palette.Terrain("collapsed_quarry", TerrainType.Concrete), "MAP_BIOME_QUARRY"),
+            (null, _palette.Road, "MAP_LEGEND_PATHS"),
+            (null, _palette.Terrain("wild_fields", TerrainType.Water), "MAP_LEGEND_WATER"),
+            (null, _palette.PhaseColor(2), "MAP_LEGEND_ERASURE"),
+            (null, _palette.PhaseColor(4), "MAP_LEGEND_VOID"),
         })
         {
             HBoxContainer row = new() { MouseFilter = MouseFilterEnum.Ignore };
             row.AddThemeConstantOverride("separation", 4);
-            row.AddChild(new MapLegendIcon(icon, color));
+            row.AddChild(new MapLegendIcon(icon, color, key == "MAP_LEGEND_VOID"));
             Label label = new() { Text = Tr(key), MouseFilter = MouseFilterEnum.Ignore };
-            label.AddThemeFontSizeOverride("font_size", 8);
             label.AddThemeColorOverride("font_color", new Color(0.88f, 0.84f, 0.76f));
-            label.AddThemeColorOverride("font_outline_color", new Color(0f, 0f, 0f, 0.9f));
-            label.AddThemeConstantOverride("outline_size", 3);
             row.AddChild(label);
             _legend.AddChild(row);
         }
+        RefreshLegendText();
+    }
+
+    private void RefreshLegendText()
+    {
+        if (_legendTextStep == TextSettings.Step)
+            return;
+        _legendTextStep = TextSettings.Step;
+        int fontSize = Mathf.RoundToInt(8f * TextSettings.Scale);
+        for (int i = 0; i < _legend.GetChildCount(); i++)
+            _legend.GetChild(i).GetChild<Label>(1).AddThemeFontSizeOverride("font_size", fontSize);
     }
 
     public override void _Process(double delta)
@@ -181,8 +207,10 @@ public partial class Minimap : Control
         Control parent = GetParent<Control>();
         if (_full)
         {
+            RefreshLegendText();
             Size = _mapSize;
-            Position = ((parent.Size - Size) / 2f).Floor();
+            Vector2 fullSize = new(Size.X + 8f + _legend.GetCombinedMinimumSize().X, Size.Y);
+            Position = ((parent.Size - fullSize) / 2f).Floor();
             _legend.Visible = true;
             _legend.Position = new Vector2(Size.X + 8f, 0f);
         }
@@ -200,11 +228,8 @@ public partial class Minimap : Control
         Vector2 corner = ((_playerPosition - Vector2.One * worldSize / 2f) / step).Floor() * step;
         _view = _full ? new Rect2(_origin * _cellSize, new Vector2(_width, _height) * _cellSize) : new Rect2(corner, Vector2.One * worldSize);
         RevealAround(_playerPosition);
-        if (_dirty)
-        {
-            _texture.Update(_image);
-            _dirty = false;
-        }
+        if (_raster.Flush())
+            _texture.Update(_raster.Image);
         QueueRedraw();
     }
 
@@ -220,44 +245,18 @@ public partial class Minimap : Control
                 if (dx * dx + dy * dy > radiusSq)
                     continue;
                 Vector2I cell = new(center.X + dx, center.Y + dy);
-                int index = Index(cell);
-                if (index < 0 || _known[index])
-                    continue;
-                _known[index] = true;
-                Paint(cell, (int)_erasure.GetZonePhaseAt(_erasure.CellCenterToWorld(cell)));
+                if (!_raster.IsKnown(cell))
+                    _raster.Paint(cell, (int)_erasure.GetZonePhaseAt(_erasure.CellCenterToWorld(cell)), reveal: true);
             }
         }
     }
 
     /// <summary>Le front de l'Effacement avance aussi dans les cellules déjà vues.</summary>
-    private void OnZonePhaseChanged(int cellX, int cellY, int phase)
-    {
-        if (_image == null)
-            return;
-        Vector2I cell = new(cellX, cellY);
-        int index = Index(cell);
-        if (index >= 0 && _known[index])
-            Paint(cell, phase);
-    }
+    private void OnZonePhaseChanged(int cellX, int cellY, int phase) =>
+        _raster?.Paint(new Vector2I(cellX, cellY), phase);
 
-    private void Paint(Vector2I cell, int phase)
-    {
-        _image.SetPixel(cell.X - _origin.X, cell.Y - _origin.Y, PhaseColors[Mathf.Clamp(phase, 0, PhaseColors.Length - 1)]);
-        _dirty = true;
-    }
-
-    private int Index(Vector2I cell)
-    {
-        int x = cell.X - _origin.X;
-        int y = cell.Y - _origin.Y;
-        return x < 0 || y < 0 || x >= _width || y >= _height ? -1 : y * _width + x;
-    }
-
-    private bool Known(Vector2 world)
-    {
-        int index = Index(new Vector2I(Mathf.FloorToInt(world.X / _cellSize), Mathf.FloorToInt(world.Y / _cellSize)));
-        return index >= 0 && _known[index];
-    }
+    private bool Known(Vector2 world) =>
+        _raster.IsKnown(new Vector2I(Mathf.FloorToInt(world.X / _cellSize), Mathf.FloorToInt(world.Y / _cellSize)));
 
     private Vector2 ToMap(Vector2 world) => (world - _view.Position) / _view.Size * Size;
 
@@ -265,16 +264,18 @@ public partial class Minimap : Control
 
     public override void _Draw()
     {
-        if (_image == null)
+        if (_raster == null)
             return;
         Rect2 area = new(Vector2.Zero, Size);
+        if (_full)
+            DrawRect(new Rect2(Vector2.Zero, new Vector2(Size.X + 8f + _legend.Size.X, Mathf.Max(Size.Y, _legend.Size.Y))).Grow(6f), Frame with { A = 0.97f });
         DrawRect(area.Grow(2f), Frame);
         DrawRect(area, Unknown);
         // Partie de la carte dans la fenêtre : la région de l'image qui lui correspond, posée à sa place.
         Rect2 visible = _view.Intersection(new Rect2(_origin * _cellSize, new Vector2(_width, _height) * _cellSize));
         if (visible.Size.X > 0f && visible.Size.Y > 0f)
         {
-            Rect2 source = new((visible.Position - (Vector2)(_origin * _cellSize)) / _cellSize, visible.Size / _cellSize);
+            Rect2 source = new((visible.Position - (Vector2)(_origin * _cellSize)) / _cellSize * CartographyRaster.Detail, visible.Size / _cellSize * CartographyRaster.Detail);
             DrawTextureRectRegion(_texture, new Rect2(ToMap(visible.Position), visible.Size / _view.Size * Size), source);
         }
         DrawRect(area.Grow(2f), Border, false, 1f);
@@ -307,6 +308,14 @@ public partial class Minimap : Control
         DrawIcon(_playerPosition, _playerIcon, PlayerColor);
     }
 
-    private void DrawIcon(Vector2 world, Texture2D icon, Color color) =>
-        DrawTexture(icon, ToMap(world).Floor() - new Vector2(2, 2), color);
+    private void DrawIcon(Vector2 world, Texture2D icon, Color color)
+    {
+        Vector2 position = ToMap(world).Floor() - new Vector2(2, 2);
+        // Un liseré sépare les petits repères du terrain, notamment les coffres des rues claires.
+        DrawTexture(icon, position + Vector2.Left, Frame);
+        DrawTexture(icon, position + Vector2.Right, Frame);
+        DrawTexture(icon, position + Vector2.Up, Frame);
+        DrawTexture(icon, position + Vector2.Down, Frame);
+        DrawTexture(icon, position, color);
+    }
 }

@@ -532,15 +532,17 @@ leurs icônes ; éclat de rareté séparé. Ouverture réelle et galerie complè
 capturées et regardées à 100/130 %, build sans avertissement, smoke et 169
 contrôles UI verts. [Détail au plan 04](04-interfaces-et-hub.md#r2--lot-engagé--icônes-de-nature-du-butin).
 
-### R3 — diagnostic terminé, équilibre encore ouvert
+### R3 — diagnostic puis correction ciblée, ressenti encore ouvert
 
 Quatre tireurs identifiés ; le Présage attaque au sol. Mesures et essai isolé de
 4 → 2 s sur quatre runs de 320 s : les Hurleurs dominent les tirs des Résurgences,
 mais les variations de composition empêchent de valider la réduction de durée.
 [Rapport, protocole et chiffres](../audits/projectile-pressure-2026-10-01/README.md).
-Aucun réglage de combat changé en production. Suite au plan 07 : rencontre fixe,
-cadence du Hurleur comme seul levier, puis partie jouée. R3 reste ouvert pour la
-recette de gameplay ; son diagnostic demandé est livré.
+R3b livré ensuite : recharge du tir du Hurleur ×2,5, cri conservé. Banc fixe
+à 6 Hurleurs/2 Cracheurs : projectiles actifs moyens −38,7 % (agressivité 1)
+et −34,9 % (1,6), 60 cris dans chaque cas ; 61 régressions, quatre runs et
+captures vérifiés. [Rapport R3b](../audits/projectile-cadence-2026-10-01/README.md).
+La recette de plaisir et de difficulté en partie humaine reste ouverte.
 
 ### R4 — préparation audio livrée ; R5/R6 maintenus
 
@@ -557,3 +559,12 @@ R5 reste Traqueur → Vagabond → Forgeuse, avec planches puis animation en run
 (plan 04), sans étendre automatiquement au terrain. Le premier cycle audio
 reste prioritaire ; ces deux demandes ne sont ni closes ni perdues. Les lots
 visuels R1/R2 préservent la rotation du coffre à 8°/s et son ordre sonore.
+
+### Continuation hors audio et R6 livré — 1er octobre 2026
+
+DECISIONS §46 exclut l’audio de cette continuation autonome ; l’ancien prompt
+ci-dessus décrit la reprise initiale, pas sa nouvelle priorité. R3b est livré,
+puis R6 : terrain de la carte détaillé par biome, routes/eau, danger et légende.
+17 contrôles, build/smoke, captures Main sur ViewSonic avec texte 130 % vérifiés
+([plan 04](04-interfaces-et-hub.md#r6-livré--1er-octobre-2026)). R5 suit. La rotation
+des coffres reste à 8°/s ; correction séparée du préchargement de son shader.
