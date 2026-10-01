@@ -341,19 +341,44 @@ public partial class RunObservation : Node
     private async Task CaptureCharacter(string characterId)
     {
         _world.GetNode("SpawnManager").ProcessMode = ProcessModeEnum.Disabled;
+        _player.AIInputOverride = Vector2.Zero;
+        // Attendre la disparition réelle du chargement : un nombre de frames dépend du débit de rendu.
+        while (_world.GetNodeOrNull("GameLoadingOverlay") != null)
+            await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+        await ToSignal(RenderingServer.Singleton, RenderingServer.SignalName.FramePostDraw);
         SpawnManager spawner = _world.GetNode<SpawnManager>("SpawnManager");
         // Repères d'échelle : un petit et un grand ennemi à distance du joueur.
         spawner.ForceSpawnEnemy("shade", _player.GlobalPosition + new Vector2(-150f, 60f));
         spawner.ForceSpawnEnemy("rodeur", _player.GlobalPosition + new Vector2(160f, -50f));
-        Vector2[] directions = { Vector2.Zero, Vector2.Down, new(1, 1), Vector2.Right, new(1, -1), Vector2.Up, Vector2.Left };
+        Vector2[] directions = { Vector2.Zero, Vector2.Down, new(1, 1), Vector2.Right, new(1, -1), Vector2.Up, Vector2.Left, new(-1, 1), new(-1, -1) };
         for (int index = 0; index < directions.Length; index++)
         {
             _player.AIInputOverride = directions[index].Normalized();
-            await Frames(20);
-            using Image image = GetViewport().GetTexture().GetImage();
-            image.SavePng($"{_output}/{characterId}-{index:00}.png");
+            await Seconds(0.35);
+            SaveFrame($"{characterId}-{index:00}");
+            SaveCrop($"{characterId}-{index:00}-detail", _player.GlobalPosition, new Vector2(42, 44));
         }
-        GD.Print($"[RunObservation] Captures {characterId} écrites dans {_output}");
+        _player.AIInputOverride = Vector2.Down;
+        _player.Mobility.Request();
+        await ToSignal(GetTree(), SceneTree.SignalName.PhysicsFrame);
+        await ToSignal(GetTree(), SceneTree.SignalName.PhysicsFrame);
+        await ToSignal(RenderingServer.Singleton, RenderingServer.SignalName.FramePostDraw);
+        SaveFrame($"{characterId}-dash");
+        GD.Print($"[RunObservation] character dash animation={_player.GetNode<AnimatedSprite2D>("Sprite").Animation}");
+        await Seconds(0.8);
+        _player.IsGodMode = false;
+        _player.TakeErasureDamage(1f);
+        await ToSignal(GetTree(), SceneTree.SignalName.PhysicsFrame);
+        await ToSignal(GetTree(), SceneTree.SignalName.PhysicsFrame);
+        await ToSignal(RenderingServer.Singleton, RenderingServer.SignalName.FramePostDraw);
+        SaveFrame($"{characterId}-hurt");
+        GD.Print($"[RunObservation] character hurt animation={_player.GetNode<AnimatedSprite2D>("Sprite").Animation}");
+        await Seconds(0.8);
+        _player.TakeErasureDamage(100000f);
+        await Seconds(0.15);
+        SaveFrame($"{characterId}-death");
+        GD.Print($"[RunObservation] character death animation={_player.GetNode<AnimatedSprite2D>("Sprite").Animation}");
+        GD.Print($"[RunObservation] RESULT character={characterId} output={_output}");
     }
 
     private async Task MeasureDensity(double seconds, ulong seed)

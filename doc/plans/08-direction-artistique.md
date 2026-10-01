@@ -704,3 +704,29 @@ sans changer échelle globale, pivot des pieds ni gameplay par inadvertance.
 Après ce pilote, appliquer la qualité retenue au **Vagabond**, puis à la
 **Forgeuse**. Graines fixes, imports et captures en mouvement sur ViewSonic.
 Aucun sprite de personnage n'est modifié par R1–R4 ; aucune case R5 cochée.
+
+### R5a — Traqueur, lot engagé hors audio
+
+La référence montre un corps très étroit, un visage presque perdu et peu de
+beige visible. Renforcer légèrement poitrine/épaules et capuche, rendre le
+col et les avant-bras clairs identifiables, garder l’arc/carquoi comme signe de
+dos. Conserver hauteur, échelle 0,53, cadre 32×40, pivot (16,36), animations et
+kit. Prévisualiser huit directions et marche avant la production complète.
+Comparer sur vrais sols, contrôler cadres/transparence/séquences/déterminisme,
+puis capturer le personnage animé dans Main sur ViewSonic. La recette artistique
+reste distincte des contrôles techniques. Vagabond puis Forgeuse suivront dans
+leurs propres lots vérifiés ; aucune intervention audio.
+
+### R5a livré — Traqueur, 1er octobre 2026
+
+Torse, épaules et capuche plus lisibles, accents beiges du col, de la capuche et
+des poignets renforcés. 152 PNG / 40 animations, échelle et pivot conservés,
+sans changement de kit. Deux générations identiques ; séquences, alpha binaire
+et cadres vérifiés, aucune pose coupée au contrôle par rendu étendu.
+
+Planches comparatives forêt/ruines/carrière et cinq actions regardées ; Main
+avant/après sur ViewSonic, marche/dash/hurt/mort observés. Build sans warning,
+smoke 600 frames vert. Le scénario de capture attend désormais la disparition
+réelle du chargement et la mise à jour physique de la pose.
+[Rapport et empreintes](../audits/characters-2026-10-01/README.md).
+La conformité technique ne vaut pas approbation artistique de Raphaël.

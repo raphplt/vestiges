@@ -15,7 +15,7 @@ from ..rig import Proportions, Skeleton
 from ..sdf import capsule, ellipsoid, sphere
 
 CHARACTER_ID = "traqueur"
-DIMENSIONS = Proportions(shin=13.0, thigh=14.0, spine=14.5, head_radius=4.0, shoulder_half=5.8, hip_half=3.0,
+DIMENSIONS = Proportions(shin=13.0, thigh=14.0, spine=14.5, head_radius=4.4, shoulder_half=6.2, hip_half=3.0,
                          upper_arm=10.0, forearm=9.0)
 
 CLOAK, TUNIC, LEGS, BOOTS, FACE, BOW, STRING, QUIVER, FLETCH, WRAP, GLOVES = range(11)
@@ -40,16 +40,20 @@ def build(skeleton: Skeleton) -> list[Part]:
     d = s.drape
     torso_center = (s.point("pelvis") + s.point("chest")) * 0.5
     parts = [
-        Part(lambda p, c=torso_center: ellipsoid(p, c, (4.9, 8.6, 3.5), s.torso), TUNIC),
+        Part(lambda p, c=torso_center: ellipsoid(p, c, (5.6, 8.6, 4.0), s.torso), TUNIC),
         # Cape courte fendue : épaules couvertes, dos jusqu'aux reins.
-        Part(lambda p: ellipsoid(p, s.on_torso("chest", (0, -3.0, -0.8)), (6.0, 6.5, 4.4), s.torso), CLOAK),
+        Part(lambda p: ellipsoid(p, s.on_torso("chest", (0, -3.0, -0.8)), (6.8, 6.5, 4.8), s.torso), CLOAK),
         Part(lambda p: capsule(p, s.on_torso("pelvis", (0, 1.0, 0)), s.on_torso("pelvis", (0, -5.0, -0.2)), 4.2, 4.6), TUNIC),
         # Bandes de tissu clair : ceinture et avant-bras.
         Part(lambda p: ellipsoid(p, s.on_torso("pelvis", (0, 1.4, 0)), (4.8, 1.1, 3.8), s.torso), WRAP),
         Part(lambda p: sphere(p, s.on_head((0, -0.4, 0.3)), DIMENSIONS.head_radius - 0.5), FACE),
+        # Le col et le rebord clair donnent un avant lisible sans éclaircir toute la cape.
+        Part(lambda p: ellipsoid(p, s.on_torso("neck", (0, -0.5, 0.5)), (4.8, 1.6, 4.8), s.torso), WRAP),
+        Part(lambda p: capsule(p, s.on_torso("neck", (-1.7, -1.5, 4.0)), s.on_torso("chest", (1.6, -4.5, 4.7)), 1.0, 1.4), WRAP),
+        Part(lambda p: ellipsoid(p, s.on_head((0, 2.8, 3.7)), (3.6, 0.9, 1.1), s.head), WRAP),
         # Capuche pointue creusée à l'avant, pointe rejetée vers l'arrière.
-        Part(lambda p: np.maximum(ellipsoid(p, s.on_head((0, 0.6, -0.9)), (4.5, 5.0, 4.8), s.head),
-                                  -ellipsoid(p, s.on_head((0, -0.9, 4.0)), (3.0, 3.4, 2.6), s.head)), CLOAK),
+        Part(lambda p: np.maximum(ellipsoid(p, s.on_head((0, 0.6, -0.9)), (5.0, 5.2, 5.2), s.head),
+                                  -ellipsoid(p, s.on_head((0, -0.9, 4.0)), (3.3, 3.5, 2.8), s.head)), CLOAK),
         Part(lambda p: capsule(p, s.on_head((0, 3.0, -2.5)), s.on_head((2.2 * d, 7.5 - 0.6 * d, -6.5)), 2.6, 0.5), CLOAK),
         # Arc en diagonale : les deux branches dépassent nettement de la silhouette (tête et hanche).
         Part(lambda p: capsule(p, s.on_torso("chest", (-10.5, -13.0, -5.0)), s.on_torso("chest", (-2.0, 1.5, -6.4)), 1.0, 1.3), BOW),
@@ -59,8 +63,12 @@ def build(skeleton: Skeleton) -> list[Part]:
         Part(lambda p: capsule(p, s.on_torso("chest", (3.0, -6.0, -5.0)), s.on_torso("chest", (4.8, 3.5, -5.6)), 1.8, 2.0), QUIVER),
         Part(lambda p: ellipsoid(p, s.on_torso("chest", (5.0 + 0.9 * d, 5.2, -5.8)), (1.9, 1.6, 1.6), s.torso), FLETCH),
     ]
-    parts += limbs(s, LimbStyle(sleeve=TUNIC, hand=GLOVES, leg=LEGS, boot=BOOTS, arm_radius=1.7,
-                                leg_radius=2.1, boot_radius=2.1, boot_height=6.0, foot_radius=1.8))
+    parts += limbs(s, LimbStyle(sleeve=TUNIC, hand=GLOVES, leg=LEGS, boot=BOOTS, arm_radius=1.95,
+                                leg_radius=2.25, boot_radius=2.25, boot_height=6.0, foot_radius=1.8))
+    for side in ("l", "r"):
+        elbow, hand = s.point(f"elbow_{side}"), s.point(f"hand_{side}")
+        start, end = elbow * 0.48 + hand * 0.52, elbow * 0.2 + hand * 0.8
+        parts.append(Part(lambda p, a=start, b=end: capsule(p, a, b, 1.95, 1.8), WRAP))
     return parts
 
 
