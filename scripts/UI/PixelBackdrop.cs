@@ -1,9 +1,10 @@
 using Godot;
+using Vestiges.Infrastructure;
 
 namespace Vestiges.UI;
 
 /// <summary>
-/// Fond commun en 480 × 270 : rayons stables et scintillement continu des poussières natives.
+/// Fond commun en 480 × 270 : rotation continue des rayons et scintillement des poussières natives.
 /// Une teinte par écran ; <see cref="FadeIn"/> le fait monter à l'ouverture.
 /// </summary>
 public partial class PixelBackdrop : TextureRect
@@ -22,9 +23,9 @@ public partial class PixelBackdrop : TextureRect
 
     public PixelBackdrop(Color tint)
     {
-        SetTint(tint);
         _twinkleShader ??= GD.Load<Shader>("res://assets/shaders/ui_dust_twinkle.gdshader");
         Material = new ShaderMaterial { Shader = _twinkleShader };
+        SetTint(tint);
         TextureFilter = TextureFilterEnum.Nearest;
         ExpandMode = ExpandModeEnum.IgnoreSize;
         StretchMode = StretchModeEnum.Scale;
@@ -36,6 +37,10 @@ public partial class PixelBackdrop : TextureRect
     public void SetTint(Color tint)
     {
         Texture = ScreenArt.Background(tint == GoldTint ? 0 : tint == MemorialTint ? 1 : tint == RiftTint ? 2 : 3);
+        ShaderMaterial material = (ShaderMaterial)Material;
+        string palette = tint == GoldTint ? "legendary" : tint == MemorialTint ? "memorial" : tint == RiftTint ? "rift" : "common";
+        material.SetShaderParameter("ray_color", RarityPalette.Main(palette));
+        material.SetShaderParameter("rotation_degrees_per_second", ScreenArt.RotationDegreesPerSecond);
     }
 
     /// <summary>Le fond monte de rien à plein en <paramref name="seconds"/>.</summary>

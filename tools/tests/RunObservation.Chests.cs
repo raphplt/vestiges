@@ -148,12 +148,13 @@ public partial class RunObservation
         interaction.GetType().GetMethod("OpenChest", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(interaction, new object[] { nearest });
         if (System.Array.IndexOf(OS.GetCmdlineUserArgs(), "--capture-loot-motion") >= 0)
         {
-            // Après le fondu : le fond doit rester stable entre les images, seules les poussières scintillent.
+            // Après le fondu : vérifier le déplacement continu des rayons, horodaté au rendu.
             await ToSignal(GetTree().CreateTimer(0.7, processAlways: true), SceneTreeTimer.SignalName.Timeout);
             for (int sample = 0; sample < 32; sample++)
             {
                 await ToSignal(GetTree().CreateTimer(1.0 / 30, processAlways: true), SceneTreeTimer.SignalName.Timeout);
                 await ToSignal(RenderingServer.Singleton, RenderingServer.SignalName.FramePostDraw);
+                GD.Print($"[RunObservation] loot-motion frame={sample} t_ms={Time.GetTicksMsec()}");
                 using Image motion = GetViewport().GetTexture().GetImage();
                 motion.Resize(960, 540, Image.Interpolation.Nearest);
                 motion.SavePng($"{_output}/loot-motion-{sample:00}.png");

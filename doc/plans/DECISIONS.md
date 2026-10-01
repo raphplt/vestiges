@@ -553,3 +553,9 @@ pour brancher également bonus, sceaux, écrans animés et chargement.
 Raphaël : « l'animation quand un coffre s'ouvre en fond là elle est a 5 fps
 elle donne la gerbe c'est pas possible ». Corriger le mouvement du fond ;
 ce retour invalide la cadence et les sauts de rotation livrés au plan 25 I4.
+
+## 43. Garder la rotation du fond de coffre — 1er octobre 2026
+
+Raphaël : « non pas fixe ca doit tourner mais a une bonne vitesse c'est trop
+dur sérieux ». Le correctif I6 a mal interprété le retour : conserver une
+rotation fluide, à vitesse modérée, au lieu de figer les rayons.

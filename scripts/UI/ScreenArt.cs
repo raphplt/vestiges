@@ -8,6 +8,7 @@ public static class ScreenArt
     public const string Folder = "res://assets/ui/screens/plan25/";
     private static Texture2D[] _backgrounds;
     private static Texture2D[] _grounds;
+    public static float RotationDegreesPerSecond { get; private set; }
 
     private static void Load()
     {
@@ -16,6 +17,7 @@ public static class ScreenArt
         using FileAccess file = FileAccess.Open(Folder + "screens_manifest.json", FileAccess.ModeFlags.Read);
         Godot.Collections.Dictionary data = Json.ParseString(file.GetAsText()).AsGodotDictionary();
         Godot.Collections.Dictionary background = data["background"].AsGodotDictionary();
+        RotationDegreesPerSecond = (float)background["rotation_degrees_per_second"].AsDouble();
         Godot.Collections.Array tints = background["tints"].AsGodotArray();
         _backgrounds = new Texture2D[tints.Count];
         for (int i = 0; i < tints.Count; i++)

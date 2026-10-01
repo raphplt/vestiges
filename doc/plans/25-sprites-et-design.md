@@ -487,3 +487,23 @@ successives d'un vrai coffre inspectée (`/tmp/vestiges-plan25-i6-loot/`).
 Dans une zone du fond hors HUD/cartes, seuls 12 pixels sur 28 600 changent
 de luminosité entre les images : les rayons restent en place. Les 21 PNG
 réexportés (textures et planches) sont identiques lors d'une seconde génération.
+
+### Correctif I7 — rotation continue, DECISIONS §43
+
+I6 est corrigé : Raphaël veut conserver la rotation. Le shader calculera
+l'angle à chaque image rendue, à 8°/s, avec les couleurs et la grille native
+du générateur. Aucun défilement d'atlas à basse cadence. Vérifier les images
+successives d'un coffre, le build, le smoke et les contrats UI.
+
+Livré : angle piloté par `TIME` dans le shader, vitesse issue du manifeste,
+couleurs issues de la palette commune. À 60 images/s, l'avance est de 0,133°
+par image au lieu des anciens sauts de 5,625° à 3 images/s. La grille spatiale
+reste en 480 × 270 avec nearest, sans plafond de cadence de l'animation.
+
+Build : zéro avertissement ; smoke 600 frames et 122 contrôles UI verts.
+32 captures horodatées du coffre sur 2,039 s inspectées dans
+`/tmp/vestiges-plan25-i7-loot/` : les rayons se déplacent sur chacune des
+31 paires successives (928 à 1 336 pixels changés dans la zone observée),
+au lieu des seuls 12 pixels de poussières du fond fixe I6. Les captures ne
+mesurent pas les FPS du jeu ; la rotation est calculée à chaque rendu.
+Régénération des 21 PNG de textures/planches identique octet pour octet.

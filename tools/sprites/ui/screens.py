@@ -10,12 +10,13 @@ from PIL import Image, ImageDraw
 from .kit import BIOMES, ground_patch
 
 FRAMES = 1
+ROTATION_DEGREES_PER_SECOND = 8.0
 SIZE = (480, 270)
 COLORS = {p["id"]: p for p in json.loads(Path("data/ui/rarities.json").read_text())["rarities"]}
 TINTS = {"gold": "legendary", "cyan": "memorial", "violet": "rift", "neutral": "common"}
 
 
-def background(tint: str) -> Image.Image:
+def background(tint: str, seconds: float = 0) -> Image.Image:
     rgb = np.asarray(tuple(bytes.fromhex(COLORS[TINTS[tint]]["color"][1:])), dtype=float)
     # Quatre niveaux discrets pour toute l'image ; la faible valeur laisse les cartes au premier plan.
     palette = np.asarray([(12, 12, 21), tuple((rgb * .09 + 13).astype(int)),
@@ -23,8 +24,8 @@ def background(tint: str) -> Image.Image:
     yy, xx = np.mgrid[:SIZE[1], :SIZE[0]]
     x, y = xx - 240, yy - 144
     angle = np.arctan2(y, x)
-    # Les grands rayons restent fixes : leur rotation par poses faisait sauter tout l'écran.
-    ray = np.mod(angle / (np.pi / 4), 1)
+    # Même rotation continue que le shader ; l'export garde la pose initiale et les poussières.
+    ray = np.mod(angle / (np.pi / 4) + seconds * ROTATION_DEGREES_PER_SECOND / 45, 1)
     radius = np.hypot(x, y)
     indices = np.where(ray < .2, 2, np.where(ray < .28, 1, 0))
     indices[radius < 24] = 0

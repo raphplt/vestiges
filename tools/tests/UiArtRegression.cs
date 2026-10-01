@@ -43,7 +43,7 @@ public partial class UiArtRegression : Node
                     && art.Glow.GetWidth() == art.Glow.GetHeight() * 2, $"Bonus {bonus.Id} : animation et lueur 2:1");
             }
             for (int tint = 0; tint < 4; tint++)
-                Check(ScreenArt.Background(tint).GetSize() == new Vector2(480, 270), $"Fond natif stable {tint}");
+                Check(ScreenArt.Background(tint).GetSize() == new Vector2(480, 270), $"Texture native du fond {tint}");
             Check(Frames(ScreenArt.Grounds, 5, 128, 32), "Les cinq sols de chargement sont importés");
             foreach (string skin in new[] { "button_normal", "button_hover", "button_pressed", "button_disabled",
                 "card_normal", "card_selected", "card_locked", "panel_frame", "panel_frame_selected" })
@@ -64,8 +64,10 @@ public partial class UiArtRegression : Node
                 "Chance : trois rangs révélés, animation arrêtée au bon éclat");
             PixelBackdrop backdrop = new(PixelBackdrop.MemorialTint);
             AddChild(backdrop);
-            Check(backdrop.Material is ShaderMaterial && backdrop.TextureFilter == CanvasItem.TextureFilterEnum.Nearest,
-                "Le scintillement conserve les pixels natifs sans faire défiler des poses");
+            Check(backdrop.Material is ShaderMaterial material
+                && Mathf.IsEqualApprox(material.GetShaderParameter("rotation_degrees_per_second").AsSingle(), 8f)
+                && backdrop.TextureFilter == CanvasItem.TextureFilterEnum.Nearest,
+                "Rotation continue à 8 degrés/s, grille native et filtre nearest");
             GD.Print($"[UiArtRegression] RESULT failures={_failures}");
             GetTree().Quit(_failures == 0 ? 0 : 1);
         }

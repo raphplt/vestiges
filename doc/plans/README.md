@@ -1,6 +1,6 @@
 # VESTIGES — Dossier de plans à valider
 
-**1er octobre — correctif du fond des coffres :** rotation saccadée à 3 images/s remplacée par des rayons stables et un scintillement continu des poussières ; ouverture réelle capturée et inspectée (plan 25 I6).
+**1er octobre — correctif du fond des coffres :** rotation continue des rayons à 8°/s, calculée à chaque rendu, avec scintillement des poussières ; ouverture réelle capturée et inspectée (plan 25 I7, remplace le fond fixe I6 refusé par Raphaël).
 
 **1er octobre — [plan 25](25-sprites-et-design.md) intégré sur `main` :** à la demande de Raphaël ([DECISIONS §41](DECISIONS.md)), les huit lots sont raccordés aux écrans et systèmes du plan 24. Raretés et Chance, 34 objets, 14 motifs de Réminiscences, projectiles, cinq bonus, XP, sceaux, minimap, menus et chargement : captures inspectées, build sans avertissement, smoke vert. Les trois objets du monde et les Réminiscences sans effet actif restent « À venir » dans la Collection ; leurs images sont prêtes sans activer de nouvelles règles.
 

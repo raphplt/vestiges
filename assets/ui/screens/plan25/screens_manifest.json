@@ -5,7 +5,8 @@
       270
     ],
     "frames": 1,
-    "animation": "dust_twinkle",
+    "animation": "rotating_rays_and_dust",
+    "rotation_degrees_per_second": 8.0,
     "tints": [
       "gold",
       "cyan",
