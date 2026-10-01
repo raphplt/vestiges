@@ -260,3 +260,22 @@ Une seule passe par version : les écarts opposés selon la résolution ne
 permettent pas d'affirmer un gain de FPS. Le test de réutilisation d'impact
 prouve séparément l'absence de création d'un nouveau nœud au second usage.
 La première comparaison incomplète reste conservée pour diagnostic.
+
+### S5 — images livrées, branchement au plan 24 en attente, 1er octobre 2026
+
+`tools/generate_pickups.py` livre les cinq bonus dans `assets/vfx/pickups/` :
+quatre poses 16 × 16 de flottement/reflet, trois poses d'effilochage violet,
+une lueur 16 × 8 par bonus. Modèles SDF des objets, graines fixes 2505–2509.
+`pickups_manifest.json` donne les chemins, tailles, cadences et clés
+`heal`, `magnet`, `shield`, `haste`, `blast` à raccorder aux IDs du plan 24.
+
+[Planche S5](planches/25-s5-bonus.png) inspectée et corrigée : objets portés
+à 14 px d'emprise dans le cadre de 16 px, pli de couverture renforcé pour
+rester lisible. Régénération des PNG et du manifeste identique octet pour
+octet. Build sans avertissement, smoke vert, aperçu dans Main inspecté
+(`/tmp/vestiges-plan25-s5-run/`, quatre flottements et trois disparitions).
+
+**Le système de bonus lâchés (plan 24 C4) n'existe pas encore dans cette
+branche.** Le banc `--capture-pickup-art` est une galerie de sprites au sol,
+sans collecte ni effet ; le ramassage en run ne peut donc pas être déclaré
+vérifié. Aucun taux de loot ni bonus ajouté ici. Suite : S7.

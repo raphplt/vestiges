@@ -828,6 +828,7 @@ Le script de post-processing doit inclure une vérification/correction de l'angl
 - [ ] Sprites des Résurgents (ennemis de Résurgence).
 - [x] Plan 25 S4 : sprites des cinq familles de tirs ennemis, apparitions dans la visée existante, ombres 2:1 et impacts recyclés au sol ; œil du Présage sur sa frappe de zone, captures et régressions vérifiées. Coût S4+S6 mesuré avant/après à 720p/1080p, une passe par version (voir compte rendu).
 - [x] Plan 25 S6 : textures d'XP dorée, crâne d'éliminations et pictogrammes de minimap branchés ; sceaux de quêtes générés et inspectés en aperçu dans Main, branchement au panneau replié dépendant du plan 24 L4.
+- [x] Plan 25 S5, images : cinq bonus 16 px, flottement/reflet, disparition violette, lueur 2:1 et manifeste générés ; aperçu dans Main vérifié. Ramassage et branchement au plan 24 C4 en attente.
 - [x] Hub visuel (camp du Foyer vivant, validé par Raphaël le 26 septembre 2026, plan 04).
 - [ ] Musiques adaptatives (5-6 tracks).
 - [ ] Sound design complet.

@@ -134,6 +134,8 @@ public partial class RunObservation : Node
                 await CaptureAbilities();
             else if (Array.IndexOf(args, "--capture-hud-art") >= 0)
                 await CaptureHudArt();
+            else if (Array.IndexOf(args, "--capture-pickup-art") >= 0)
+                await CapturePickupArt();
             else if (Array.IndexOf(args, "--measure-props") >= 0)
                 await MeasurePropCost(double.Parse(Argument(args, "--measure-seconds", "8"), CultureInfo.InvariantCulture));
             else if (Array.IndexOf(args, "--capture-weapons") >= 0)

@@ -1,0 +1,53 @@
+{
+  "frame_size": [
+    16,
+    16
+  ],
+  "layout": "horizontal",
+  "idle_frames": 4,
+  "idle_fps": 6,
+  "disappear_frames": 3,
+  "disappear_fps": 12,
+  "glow_size": [
+    16,
+    8
+  ],
+  "glow_z_index": -1,
+  "pickups": {
+    "heal": {
+      "name": "Gourde",
+      "idle": "pickup_heal.png",
+      "disappear": "pickup_heal_disappear.png",
+      "glow": "pickup_heal_glow.png",
+      "color": "#7FCB89"
+    },
+    "magnet": {
+      "name": "Fer à cheval aimanté",
+      "idle": "pickup_magnet.png",
+      "disappear": "pickup_magnet_disappear.png",
+      "glow": "pickup_magnet_glow.png",
+      "color": "#67A6E8"
+    },
+    "shield": {
+      "name": "Couverture de survie",
+      "idle": "pickup_shield.png",
+      "disappear": "pickup_shield_disappear.png",
+      "glow": "pickup_shield_glow.png",
+      "color": "#F0C85C"
+    },
+    "haste": {
+      "name": "Café froid",
+      "idle": "pickup_haste.png",
+      "disappear": "pickup_haste_disappear.png",
+      "glow": "pickup_haste_glow.png",
+      "color": "#E8A868"
+    },
+    "blast": {
+      "name": "Pétard",
+      "idle": "pickup_blast.png",
+      "disappear": "pickup_blast_disappear.png",
+      "glow": "pickup_blast_glow.png",
+      "color": "#C4432B"
+    }
+  }
+}
