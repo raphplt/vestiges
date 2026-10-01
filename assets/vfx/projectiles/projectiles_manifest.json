@@ -19,12 +19,34 @@
   },
   "bile": {
     "frame": [
-      24,
+      32,
+      24
+    ],
+    "directions": 16,
+    "frames": 4,
+    "fps": 10,
+    "appearance": "bile_appear",
+    "impact": "bile_impact",
+    "shadow_width": 16,
+    "loop": true
+  },
+  "bile_appear": {
+    "frame": [
+      32,
+      24
+    ],
+    "directions": 16,
+    "frames": 2,
+    "fps": 20
+  },
+  "bile_impact": {
+    "frame": [
+      32,
       24
     ],
     "directions": 1,
     "frames": 4,
-    "fps": 10
+    "fps": 14
   },
   "bolt": {
     "frame": [
@@ -37,12 +59,34 @@
   },
   "howl": {
     "frame": [
-      24,
+      32,
+      24
+    ],
+    "directions": 16,
+    "frames": 4,
+    "fps": 8,
+    "appearance": "howl_appear",
+    "impact": "howl_impact",
+    "shadow_width": 16,
+    "loop": false
+  },
+  "howl_appear": {
+    "frame": [
+      32,
       24
     ],
     "directions": 16,
     "frames": 2,
-    "fps": 8
+    "fps": 20
+  },
+  "howl_impact": {
+    "frame": [
+      32,
+      24
+    ],
+    "directions": 1,
+    "frames": 4,
+    "fps": 14
   },
   "needle": {
     "frame": [
@@ -61,6 +105,37 @@
     "directions": 1,
     "frames": 2,
     "fps": 4
+  },
+  "omen": {
+    "frame": [
+      32,
+      24
+    ],
+    "directions": 1,
+    "frames": 4,
+    "fps": 12,
+    "appearance": "omen_appear",
+    "impact": "omen_impact",
+    "shadow_width": 16,
+    "loop": false
+  },
+  "omen_appear": {
+    "frame": [
+      32,
+      24
+    ],
+    "directions": 1,
+    "frames": 2,
+    "fps": 20
+  },
+  "omen_impact": {
+    "frame": [
+      32,
+      24
+    ],
+    "directions": 1,
+    "frames": 4,
+    "fps": 14
   },
   "orb_essence": {
     "frame": [
@@ -91,12 +166,34 @@
   },
   "spit": {
     "frame": [
-      24,
+      32,
+      24
+    ],
+    "directions": 16,
+    "frames": 4,
+    "fps": 10,
+    "appearance": "spit_appear",
+    "impact": "spit_impact",
+    "shadow_width": 16,
+    "loop": true
+  },
+  "spit_appear": {
+    "frame": [
+      32,
+      24
+    ],
+    "directions": 16,
+    "frames": 2,
+    "fps": 20
+  },
+  "spit_impact": {
+    "frame": [
+      32,
       24
     ],
     "directions": 1,
     "frames": 4,
-    "fps": 10
+    "fps": 14
   },
   "stone": {
     "frame": [
@@ -109,11 +206,33 @@
   },
   "web": {
     "frame": [
-      24,
+      32,
+      24
+    ],
+    "directions": 1,
+    "frames": 3,
+    "fps": 8,
+    "appearance": "web_appear",
+    "impact": "web_impact",
+    "shadow_width": 16,
+    "loop": false
+  },
+  "web_appear": {
+    "frame": [
+      32,
       24
     ],
     "directions": 1,
     "frames": 2,
-    "fps": 6
+    "fps": 20
+  },
+  "web_impact": {
+    "frame": [
+      32,
+      24
+    ],
+    "directions": 1,
+    "frames": 4,
+    "fps": 14
   }
 }

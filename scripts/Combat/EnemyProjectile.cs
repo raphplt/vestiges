@@ -20,9 +20,8 @@ public partial class EnemyProjectile : Area2D
 	private float _slowDuration;
 	private float _slowFactor = 1f;
 	private float _age;
-	/// <summary>Hauteur de vol au-dessus du sol : le départ, la traînée et l'impact se dessinent à cette hauteur.</summary>
-
 	private Sprite2D _visual;
+	private Sprite2D _shadow;
 	private ProjectileSprites.SpriteSet _spriteSet;
 	private int _spriteFrame = -1;
 	private int _spriteDirection;
@@ -42,7 +41,9 @@ public partial class EnemyProjectile : Area2D
 		_visual = GetNode<Sprite2D>("Visual");
 		_visual.Position = new Vector2(0f, -Iso.FlightHeight);
 		// Au sol sous le projectile : c'est l'écart entre l'ombre et le visuel qui dit qu'il vole.
-		AddChild(GroundShadow.Create(8f));
+		_visual.TextureFilter = TextureFilterEnum.Nearest;
+		_shadow = GroundShadow.Create(8f);
+		AddChild(_shadow);
 		_eventBus = GetNode<EventBus>("/root/EventBus");
 		BodyEntered += OnBodyEntered;
 	}
@@ -60,6 +61,8 @@ public partial class EnemyProjectile : Area2D
 		_isDespawning = false;
 		_family = family;
 		_spriteSet = ProjectileSprites.Get(spriteId) ?? ProjectileSprites.Get("spit");
+		_shadow.Texture = GroundShadow.TextureFor(GroundShadow.SnapWidth(_spriteSet?.ShadowWidth ?? 8f));
+		_trailFrame = Engine.GetPhysicsFrames();
 		_spriteFrame = -1;
 		// Planche prérendue en vue 30° : la colonne suit la direction du tir, jamais une rotation 2D.
 		_spriteDirection = _spriteSet?.DirectionIndex(_direction) ?? 0;
@@ -74,7 +77,7 @@ public partial class EnemyProjectile : Area2D
 	{
 		if (_spriteSet == null)
 			return;
-		int frame = (int)(_age * _spriteSet.Fps) % _spriteSet.Frames;
+		int frame = _spriteSet.FrameAt(_age);
 		if (frame == _spriteFrame)
 			return;
 		_spriteFrame = frame;
@@ -137,7 +140,10 @@ public partial class EnemyProjectile : Area2D
 	{
 		_isDespawning = true;
 		SetDeferred(Area2D.PropertyName.Monitoring, false);
-		CombatPools.Instance?.ShowEnemyImpact(GlobalPosition + new Vector2(0f, -Iso.FlightHeight), _direction, _family);
+		if (_spriteSet?.Impact != null)
+			CombatPools.Instance?.ShowProjectileImpact(GlobalPosition, _spriteSet.Impact);
+		else
+			CombatPools.Instance?.ShowEnemyImpact(GlobalPosition + new Vector2(0f, -Iso.FlightHeight), _direction, _family);
 		CallDeferred(MethodName.Release);
 	}
 

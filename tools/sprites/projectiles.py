@@ -26,6 +26,9 @@ class ProjectileModel:
     directions: int
     frames: int
     fps: float
+    outline: str | None = None
+    dissolve: bool = False
+    opacity: tuple[int, ...] = ()
 
 
 def _rotated(distance, rotation: np.ndarray):
@@ -145,38 +148,29 @@ def _note() -> ProjectileModel:
 
 
 def _spit() -> ProjectileModel:
-    """Crachat de créature : goutte vert-acide (Bible §6.2) qui ondule, perlée de fluide iridescent."""
-    materials = (make_emissive("acid", "#7FFF00"), make_material("fluid", "#5A3A7A", contrast=1.1))
-    wobble = ((5.4, 4.5), (4.8, 5.1), (5.8, 4.2), (5.0, 4.8))
-
+    """Boule de vide aplatie, cœur clair et trois fragments de traînée."""
+    materials = (make_material("void", "#6B4FA0"), make_emissive("core", "#EED4FA"))
     def parts(frame: int) -> Sequence[Part]:
-        rx, ry = wobble[frame]
-        return (
-            Part(lambda p: ellipsoid(p, (0, 0, 0), (rx, ry, rx)), 0),
-            Part(lambda p: sphere(p, (-rx * 0.9, -ry * 0.6, -0.8), 2.1), 1),
-            Part(lambda p: sphere(p, (rx * 0.7, -ry * 0.9, -0.4), 1.4), 1),
-        )
-
-    return ProjectileModel(materials, parts, (24, 24), 1, len(wobble), 10)
+        radius = (8.5, 9, 9.5, 9)[frame]
+        return [Part(lambda p: ellipsoid(p, (0, 0, 2), (radius, .9, radius)), 0),
+                Part(lambda p: ellipsoid(p, (-1, 1, 3), (4, 1, 4)), 1)] + [
+            Part(lambda p, i=i: ellipsoid(p, ((i % 2) - .5, 0, -9 - i * 2.5 - frame % 2), (1, .7, 1)), 0)
+            for i in range(3)]
+    return ProjectileModel(materials, parts, (32, 24), 16, 4, 10, "#C8B8E8")
 
 
 def _bile() -> ProjectileModel:
-    """Caillot du Cracheur Pâli : bile rouille qui tremble, écume pâle de sa chair effacée."""
-    # Cœur orangé qui luit : la bile rouille se confondait avec les sols bruns (retour du 28 septembre).
-    materials = (make_material("bile", "#C4602B", contrast=1.3), make_material("foam", "#E8E0D4", contrast=0.7),
-                 make_emissive("ember", "#FF9A3C"))
-    wobble = ((5.3, 4.3), (4.6, 5.0), (5.6, 4.0), (4.8, 4.6))
-
+    """Goutte verdâtre irrégulière ; l'écume pâle sépare le danger des sols verts."""
+    materials = (make_material("bile", "#8A9A4A"), make_emissive("foam", "#E8E0B0"))
     def parts(frame: int) -> Sequence[Part]:
-        rx, ry = wobble[frame]
+        rx, ry = ((7.5, 2.4), (6.5, 3), (8, 2), (7, 2.7))[frame]
         return (
-            Part(lambda p: ellipsoid(p, (0, 0, 0), (rx, ry, rx)), 0),
-            Part(lambda p: sphere(p, (0.3, 0.4, 1.6), rx * 0.5), 2),
-            Part(lambda p: sphere(p, (-rx * 0.45, ry * 0.55, 0.8), 2.0), 1),
-            Part(lambda p: sphere(p, (rx * 0.85, -ry * 0.7, -0.3), 1.4), 0),
+            Part(lambda p: ellipsoid(p, (0, 0, 2), (rx, ry, 8)), 0),
+            Part(lambda p: capsule(p, (0, 0, -9), (0, 0, 2), .7, 4), 0),
+            Part(lambda p: ellipsoid(p, (-2, 2, 3), (2.5, 1.5, 3)), 1),
+            Part(lambda p: sphere(p, (rx, 0, -5 + frame), 1.5), 0),
         )
-
-    return ProjectileModel(materials, parts, (24, 24), 1, len(wobble), 10)
+    return ProjectileModel(materials, parts, (32, 24), 16, 4, 10, "#D8E8AB")
 
 
 def _flat_arc(p: np.ndarray, center, major: float, minor: float, spread: float) -> np.ndarray:
@@ -192,32 +186,64 @@ def _flat_arc(p: np.ndarray, center, major: float, minor: float, spread: float) 
 def _howl() -> ProjectileModel:
     """Cri de la Sentinelle Hurlante : deux croissants d'onde pâles, couchés au ras du sol, qui vibrent vers l'avant."""
     materials = (make_material("wave", "#E8E0D4", contrast=0.9), make_material("wave_echo", "#9E9494"))
-    radii = ((4.6, 0.95), (5.2, 1.05))
+    radii = ((9, 1.4), (11, 1.4), (13, 1.3), (14, 1.1))
 
     def parts(frame: int) -> Sequence[Part]:
         major, minor = radii[frame]
         return (
-            Part(lambda p: _flat_arc(p, (0, 0, -2.0), major, minor, 1.05), 0),
-            Part(lambda p: _flat_arc(p, (0, 0, -4.8), major * 0.8, minor * 0.8, 1.0), 1),
+            Part(lambda p: _flat_arc(p, (0, 0, -5), major, minor, 1.25), 0),
+            Part(lambda p: _flat_arc(p, (0, 0, -9), major * 0.8, minor * 0.8, 1.2), 1),
         )
 
-    return ProjectileModel(materials, parts, (24, 24), 16, len(radii), 8)
+    return ProjectileModel(materials, parts, (32, 24), 16, len(radii), 8, "#F5F0EB", opacity=(255, 232, 216, 196))
 
 
 def _web() -> ProjectileModel:
-    """Pelote de la Tisseuse : fils pâles étalés à plat autour d'un œil de sève acide, qui tournent sur eux-mêmes."""
+    """Toile couchée : six rayons qui se déploient en trois poses."""
     materials = (make_material("silk", "#E8E0D4", contrast=0.8), make_emissive("sap", "#7FFF00"))
 
     def parts(frame: int) -> Sequence[Part]:
-        turn = rotation_y(frame * np.pi / 4)
-        return (
-            Part(_rotated(lambda p: capsule(p, (-5.6, 0, -1.6), (5.6, 0, 1.6), 1.2), turn), 0),
-            Part(_rotated(lambda p: capsule(p, (-1.6, 0, -5.6), (1.6, 0, 5.6), 1.2), turn), 0),
-            Part(lambda p: ellipsoid(p, (0, 0, 0), (3.6, 2.1, 3.6)), 0),
-            Part(lambda p: sphere(p, (0, 1.6, 0.6), 1.5), 1),
-        )
+        radius = (6, 10, 13)[frame]
+        points = [(np.cos(a) * radius, 0, np.sin(a) * radius) for a in np.linspace(0, np.pi * 2, 7)]
+        return [Part(lambda p, b=b: capsule(p, (0, 0, 0), b, .85), 0) for b in points[:-1]] + [
+            Part(lambda p, a=a, b=b: capsule(p, np.asarray(a) * .65, np.asarray(b) * .65, .75), 0)
+            for a, b in zip(points, points[1:])] + [Part(lambda p: sphere(p, (0, 1, 0), 1.8), 1)]
+    return ProjectileModel(materials, parts, (32, 24), 1, 3, 8, "#E8E0D4")
 
-    return ProjectileModel(materials, parts, (24, 24), 1, 2, 6)
+
+def _omen() -> ProjectileModel:
+    materials = (make_material("lid", "#6B4FA0"), make_emissive("eye", "#C9B8FF"), make_material("pupil", "#2D1B3D"))
+    def parts(frame: int) -> Sequence[Part]:
+        opening = (.7, 2, 4, 6)[frame]
+        return (Part(lambda p: ellipsoid(p, (0, 0, 0), (12, 1, opening)), 0),
+                Part(lambda p: ellipsoid(p, (0, 1, 0), (8, .6, max(.3, opening - 1))), 1),
+                Part(lambda p: ellipsoid(p, (0, 1.7, 0), (1.5, .5, max(.3, opening - 1.5))), 2))
+    return ProjectileModel(materials, parts, (32, 24), 1, 4, 12, "#EED4FA")
+
+
+ENEMY_IDS = ("spit", "bile", "web", "howl", "omen")
+
+
+def enemy_appearance(name: str) -> ProjectileModel:
+    base = MODELS[name]()
+    def parts(frame: int) -> Sequence[Part]:
+        factor = (.5, .85)[frame]
+        return [Part(lambda p, part=part: part.distance(p / factor) * factor, part.material) for part in base.parts(0)]
+    return ProjectileModel(base.materials, parts, base.frame_size, base.directions, 2, 20, base.outline)
+
+
+def enemy_impact(name: str) -> ProjectileModel:
+    base = MODELS[name]()
+    def parts(frame: int) -> Sequence[Part]:
+        radius = (4, 8, 12, 15)[frame]
+        points = [(np.cos(a) * radius, 0, np.sin(a) * radius) for a in np.linspace(0, np.pi * 2, 9)]
+        if name == "web":
+            return [Part(lambda p, a=a, b=b: capsule(p, a, b, .8), 0) for a, b in zip(points, points[1:])] + [
+                Part(lambda p, b=b: capsule(p, (0, 0, 0), b, .65), 0) for b in points[:-1]]
+        return [Part(lambda p: ellipsoid(p, (0, 0, 0), (max(1, 10 - frame * 2), .6, max(1, 10 - frame * 2))), 0)] + [
+            Part(lambda p, b=b: ellipsoid(p, b, (max(.6, 2 - frame * .3), .5, max(.6, 2 - frame * .3))), 0)
+            for b in points[:-1]]
+    return ProjectileModel(base.materials, parts, (32, 24), 1, 4, 14, base.outline, True)
 
 
 MODELS: dict[str, Callable[[], ProjectileModel]] = {
@@ -234,4 +260,9 @@ MODELS: dict[str, Callable[[], ProjectileModel]] = {
     "bile": _bile,
     "howl": _howl,
     "web": _web,
+    "omen": _omen,
 }
+
+for _name in ENEMY_IDS:
+    MODELS[f"{_name}_appear"] = lambda name=_name: enemy_appearance(name)
+    MODELS[f"{_name}_impact"] = lambda name=_name: enemy_impact(name)

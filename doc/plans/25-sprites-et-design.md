@@ -165,3 +165,45 @@ Planche inspectée. Deux générations identiques : SHA-256
 Build et import Godot verts lors de la préparation de la capture S4.
 **Vue de trois quarts soumise à Raphaël ; branchement en attente, aucune
 case roadmap cochée.** Suite : S4.
+
+### S4 — rendu branché et vérifié, 1er octobre 2026
+
+- `tools/generate_projectiles.py --enemies --biome-sheet doc/plans/planches/25-s4-projectiles.png` :
+  cinq familles, apparitions 2 frames à 20 i/s, impacts 4 frames à 14 i/s ;
+  spit/bile/howl en 16 directions. Contour clair, volumes couchés, toile en
+  3 poses, onde qui s'élargit et pâlit, impacts qui se défont en pixels.
+- Métadonnées du manifeste : liens `appearance`/`impact`, `shadow_width`,
+  `loop`. Atlas découpés au chargement, références mises en cache.
+- Apparition pendant les dernières 0,1 s de la **visée déjà existante** :
+  aucun délai de tir ajouté. Ombre au sol 2:1, largeur 16 px, z −1.
+- Impacts au sol par `NodePool<ProjectileImpact>` dans `CombatPools`,
+  quatre poses, réinitialisation à chaque usage ; aucune collision ajoutée.
+- **Écart à l'inventaire :** le Présage utilise déjà `OmenStrikeAbility`.
+  L'œil s'ouvre dans sa zone annoncée et éclate au terme du délai existant.
+  Le transformer en tireur changerait les règles : ce changement n'est pas fait.
+- La flaque de toile est uniquement le dessin de l'impact ; son effet reste
+  le ralentissement existant à la collision, sans nouvelle zone ralentissante.
+
+Vérifications : build 0 avertissement/0 erreur, smoke 600 frames vert,
+`test_enemy_abilities.sh` à zéro échec, dont cinq contrôles ajoutés sur
+l'apparition avant le départ et le recyclage des impacts. Relecture locale
+des changements C#/Godot (travail seul demandé au §0). PNG, manifeste et
+planche identiques après régénération. Planche sur les cinq sols inspectée.
+
+Captures seed 1002 inspectées : `/tmp/vestiges-plan25-s4-reference/`,
+`/tmp/vestiges-plan25-s4-after/` et `/tmp/vestiges-plan25-s4-final/` ; la
+dernière contient le pâlissement de l'onde. Le mode `--capture-abilities`
+écrit bien ses PNG mais le script retourne 1 car son `rg` final attend une
+ligne `RESULT` absente de ce mode. Pas d'exception de jeu dans ces captures.
+`--shot-frames` permet désormais de saisir les animations brèves.
+
+La première capture exploratoire utilisait deux identifiants erronés
+(`cracheur`, `sentinelle`) ; elle a été remplacée par la référence avec
+`fading_spitter`, `wailing_sentinel`, `tisseuse`, `hurleur`, `presage`.
+
+Coût : comparaison A/B lancée contre `a8858ff0` dans
+`/tmp/vestiges-plan25-s4-ab/`. La passe de base a rencontré un délai dépassé
+lors de la capture après mesure (pas de nouvelle image depuis 5 s) :
+**aucune conclusion de performance sur cette comparaison incomplète**.
+Le banc exploratoire précédent chevauchait une capture et n'est pas retenu.
+Les mesures brutes de nœuds/allocations restent disponibles dans les JSON.

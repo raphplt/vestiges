@@ -17,6 +17,7 @@ public partial class CombatPools : Node2D
     private NodePool<DamageNumber> _damageNumbers;
     private NodePool<PixelFx> _pixelFx;
     private NodePool<DeathFx> _deathFx;
+    private NodePool<ProjectileImpact> _projectileImpacts;
     private NodePool<XpOrb> _xpOrbs;
     // Orbes endormies loin du joueur : une ronde toutes les 0,25 s réveille celles dont il se rapproche.
     private const float WakeCheckInterval = 0.25f;
@@ -56,6 +57,7 @@ public partial class CombatPools : Node2D
         });
         _pixelFx = new NodePool<PixelFx>(this, () => PixelFx.Create(_pixelFx.Return));
         _deathFx = new NodePool<DeathFx>(this, () => DeathFx.Create(_deathFx.Return));
+        _projectileImpacts = new NodePool<ProjectileImpact>(this, () => ProjectileImpact.Create(_projectileImpacts.Return));
         PackedScene xpOrbScene = GD.Load<PackedScene>("res://scenes/combat/XpOrb.tscn");
         _xpOrbs = new NodePool<XpOrb>(this, () =>
         {
@@ -133,6 +135,12 @@ public partial class CombatPools : Node2D
     }
 
     public EnemyProjectile TakeEnemyProjectile() => _enemyProjectiles.Take();
+
+    public void ShowProjectileImpact(Vector2 position, ProjectileSprites.SpriteSet sprites)
+    {
+        if (sprites != null)
+            _projectileImpacts.Take().Play(position, sprites);
+    }
 
     public Projectile TakePlayerProjectile() => _playerProjectiles.Take();
 
@@ -360,5 +368,5 @@ public partial class CombatPools : Node2D
 
     /// <summary>Objets créés depuis le début de la run, tous pools confondus (bancs de mesure).</summary>
     public int CreatedCount => _enemyProjectiles.Created + _playerProjectiles.Created + _damageNumbers.Created + _pixelFx.Created
-        + _deathFx.Created + _xpOrbs.Created;
+        + _deathFx.Created + _xpOrbs.Created + _projectileImpacts.Created;
 }

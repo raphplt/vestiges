@@ -16,6 +16,9 @@ public class OmenStrikeAbility : IEnemyAbility
     private static int _activeMarks;
 
     private readonly GroundTelegraph _marker;
+    private readonly Sprite2D _eye;
+    private ProjectileSprites.SpriteSet _eyeSet;
+    private int _eyeFrame;
 
     private float _leadSeconds;
     private float _maxLeadDistance;
@@ -43,6 +46,12 @@ public class OmenStrikeAbility : IEnemyAbility
     {
         _marker = new GroundTelegraph { Name = "OmenMarker" };
         owner.AddChild(_marker);
+        _eye = new Sprite2D
+        {
+            Name = "OmenEye", TopLevel = true, ZAsRelative = false, ZIndex = -1,
+            TextureFilter = CanvasItem.TextureFilterEnum.Nearest, Visible = false,
+        };
+        owner.AddChild(_eye);
     }
 
     public void Configure(EnemyAbilityData data)
@@ -62,6 +71,7 @@ public class OmenStrikeAbility : IEnemyAbility
         _impactAudio = data.GetText("impact_audio", "");
 
         Cancel();
+        _eyeSet = ProjectileSprites.Get("omen");
         // Décalage initial pour que des Présages apparus ensemble ne frappent pas en rythme.
         _cooldownTimer = _cooldownSeconds * (float)GD.RandRange(0.4, 1.0);
     }
@@ -74,6 +84,15 @@ public class OmenStrikeAbility : IEnemyAbility
         {
             _castTimer -= delta;
             _marker.SetProgress(1f - _castTimer / _delaySeconds);
+            if (_eyeSet != null)
+            {
+                int frame = Mathf.Clamp(_eyeSet.Frames - 1 - (int)(_castTimer * _eyeSet.Fps), 0, _eyeSet.Frames - 1);
+                if (frame != _eyeFrame)
+                {
+                    _eyeFrame = frame;
+                    _eye.Texture = _eyeSet.Get(0, frame);
+                }
+            }
             if (_castTimer <= 0f)
                 Resolve(owner, player);
 
@@ -99,6 +118,7 @@ public class OmenStrikeAbility : IEnemyAbility
         _castTimer = 0f;
         _flashTimer = 0f;
         _marker.HideMarker();
+        _eye.Visible = false;
     }
 
     private void BeginCast(Enemy owner, Player player)
@@ -113,6 +133,14 @@ public class OmenStrikeAbility : IEnemyAbility
         _activeMarks++;
 
         _marker.ShowCircle(_impactCenter, _radius, _family);
+        if (_eyeSet != null)
+        {
+            _eye.GlobalPosition = _impactCenter;
+            _eye.Texture = _eyeSet.Get(0, 0);
+            _eyeFrame = 0;
+            _eye.Modulate = Colors.White with { A = CombatFxSettings.EnemyOpacity };
+            _eye.Visible = true;
+        }
         owner.PlayAttackAnim();
         if (_castAudio.Length > 0)
             AudioManager.Play(_castAudio, 0.08f, -6f);
@@ -126,6 +154,8 @@ public class OmenStrikeAbility : IEnemyAbility
         _flashTimer = _flashSeconds;
         _marker.SetProgress(1f);
         _marker.SetFlash(1f);
+        _eye.Visible = false;
+        CombatPools.Instance?.ShowProjectileImpact(_impactCenter, _eyeSet?.Impact);
 
         if (_impactAudio.Length > 0)
             AudioManager.Play(_impactAudio, 0.08f, -4f);

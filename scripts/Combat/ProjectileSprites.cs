@@ -19,12 +19,23 @@ public static class ProjectileSprites
         public int Directions { get; }
         public int Frames { get; }
         public float Fps { get; }
+        public bool Loop { get; }
+        public float ShadowWidth { get; }
+        public string AppearanceId { get; }
+        public string ImpactId { get; }
+        public SpriteSet Appearance { get; internal set; }
+        public SpriteSet Impact { get; internal set; }
 
-        public SpriteSet(Texture2D sheet, Vector2I frameSize, int directions, int frames, float fps)
+        public SpriteSet(Texture2D sheet, Vector2I frameSize, int directions, int frames, float fps,
+            bool loop = true, float shadowWidth = 8f, string appearanceId = null, string impactId = null)
         {
             Directions = directions;
             Frames = frames;
             Fps = fps;
+            Loop = loop;
+            ShadowWidth = shadowWidth;
+            AppearanceId = appearanceId;
+            ImpactId = impactId;
             _textures = new Texture2D[directions * frames];
             for (int frame = 0; frame < frames; frame++)
             {
@@ -49,6 +60,12 @@ public static class ProjectileSprites
         }
 
         public Texture2D Get(int direction, int frame) => _textures[(frame % Frames) * Directions + direction];
+
+        public int FrameAt(float age)
+        {
+            int frame = Mathf.Max(0, (int)(age * Fps));
+            return Loop ? frame % Frames : Mathf.Min(frame, Frames - 1);
+        }
     }
 
     private static Dictionary<string, SpriteSet> _sets;
@@ -92,7 +109,16 @@ public static class ProjectileSprites
                 new Vector2I(frame[0].AsInt32(), frame[1].AsInt32()),
                 entry["directions"].AsInt32(),
                 entry["frames"].AsInt32(),
-                (float)entry["fps"].AsDouble());
+                (float)entry["fps"].AsDouble(),
+                !entry.ContainsKey("loop") || entry["loop"].AsBool(),
+                entry.ContainsKey("shadow_width") ? (float)entry["shadow_width"].AsDouble() : 8f,
+                entry.ContainsKey("appearance") ? entry["appearance"].AsString() : null,
+                entry.ContainsKey("impact") ? entry["impact"].AsString() : null);
+        }
+        foreach (SpriteSet set in _sets.Values)
+        {
+            set.Appearance = set.AppearanceId != null ? _sets.GetValueOrDefault(set.AppearanceId) : null;
+            set.Impact = set.ImpactId != null ? _sets.GetValueOrDefault(set.ImpactId) : null;
         }
     }
 }

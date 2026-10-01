@@ -241,9 +241,10 @@ public partial class RunObservation : Node
         bool still = Array.IndexOf(OS.GetCmdlineUserArgs(), "--still") >= 0;
         _player.AIInputOverride = still ? Vector2.Zero : new Vector2(0.5f, 0f);
         int shots = int.Parse(Argument(OS.GetCmdlineUserArgs(), "--shots", "12"), CultureInfo.InvariantCulture);
+        int shotFrames = Math.Max(1, int.Parse(Argument(OS.GetCmdlineUserArgs(), "--shot-frames", "15"), CultureInfo.InvariantCulture));
         for (int shot = 0; shot < shots; shot++)
         {
-            await Frames(15);
+            await Frames(shotFrames);
             using Image image = GetViewport().GetTexture().GetImage();
             string path = $"{_output}/abilities-{shot:00}.png";
             image.SavePng(path);

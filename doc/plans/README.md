@@ -1,5 +1,7 @@
 # VESTIGES — Dossier de plans à valider
 
+**1er octobre — [plan 25](25-sprites-et-design.md) :** planches S1 (raretés) et S2 (quinze objets) proposées, en attente de validation ; S4 (projectiles ennemis) branché, captures et régressions vérifiées. Comparaison de coût incomplète, voir le compte rendu.
+
 **1er octobre :** retours de la partie du matin, diagnostic et lots au [plan 24](24-retours-du-1er-octobre.md) ([DECISIONS §39](DECISIONS.md)).
 
 **Où en est chaque chose : [tableau de bord](TABLEAU-DE-BORD.md)** (une page, tenue à jour à chaque lot et à chaque décision). Priorité du 30 septembre : le [système de jeu, référence unique](21-systeme-de-jeu.md) (4 armes, 6 objets à niveaux, 4 Réminiscences après les Résurgences) et la [carte à explorer](22-carte-a-explorer.md). Les paragraphes ci-dessous gardent l'historique ; là où ils parlent d'objets sans plafond, de traits ou de quatre passifs conservés, ils sont périmés ([DECISIONS §32 à §34](DECISIONS.md)).

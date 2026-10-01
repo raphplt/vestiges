@@ -826,6 +826,7 @@ Le script de post-processing doit inclure une vérification/correction de l'angl
 - [x] Tiles d'Effacement (phases visuelles des zones : Ancrée → Effacée) : shader du sol, plan 16 O1 (26 septembre 2026).
 - [x] Sprites des Autels : Mémorial (endormi, ravivé), éclat et Faille, procéduraux (plan 17 lot 3B, 26 septembre 2026).
 - [ ] Sprites des Résurgents (ennemis de Résurgence).
+- [x] Plan 25 S4 : sprites des cinq familles de tirs ennemis, apparitions dans la visée existante, ombres 2:1 et impacts recyclés au sol ; œil du Présage sur sa frappe de zone, captures et régressions vérifiées. Comparaison de coût A/B incomplète (délai de capture dépassé sur la base).
 - [x] Hub visuel (camp du Foyer vivant, validé par Raphaël le 26 septembre 2026, plan 04).
 - [ ] Musiques adaptatives (5-6 tracks).
 - [ ] Sound design complet.

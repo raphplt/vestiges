@@ -213,6 +213,7 @@ public partial class Enemy : CharacterBody2D
 
 	private string _projectileSprite = "spit";
 	private FxFamily _projectileFamily = FxFamily.Hostile;
+	internal string ProjectileSpriteId => _projectileSprite ?? "spit";
 
 	public void Initialize(EnemyData data, float hpScale, float dmgScale)
 	{

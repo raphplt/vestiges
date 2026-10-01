@@ -14,6 +14,11 @@ public class AimedShotAbility : IEnemyAbility
 {
     private readonly GroundTelegraph _lane;
     private readonly GroundTelegraph _ring;
+    private readonly Enemy _owner;
+    private readonly Sprite2D _appearance;
+    private ProjectileSprites.SpriteSet _appearanceSet;
+    private int _appearanceDirection;
+    private int _appearanceFrame = -1;
 
     private float _windupSeconds;
     private float _laneLength;
@@ -34,6 +39,13 @@ public class AimedShotAbility : IEnemyAbility
 
     public AimedShotAbility(Enemy owner)
     {
+        _owner = owner;
+        _appearance = new Sprite2D
+        {
+            Name = "ProjectileAppearance", TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
+            Position = new Vector2(0f, -Iso.FlightHeight), Visible = false,
+        };
+        owner.AddChild(_appearance);
         _lane = new GroundTelegraph { Name = "AimMarker" };
         owner.AddChild(_lane);
         _ring = new GroundTelegraph { Name = "RangeMarker" };
@@ -51,6 +63,7 @@ public class AimedShotAbility : IEnemyAbility
         _flash = PixelPalette.Ramp(_family).Light;
 
         Cancel();
+        _appearanceSet = ProjectileSprites.Get(_owner.ProjectileSpriteId)?.Appearance;
         _ringShown = false;
         _ring.HideMarker();
         // Décalage initial : des tireurs apparus ensemble ne tirent pas en rythme.
@@ -70,10 +83,12 @@ public class AimedShotAbility : IEnemyAbility
             _timer -= delta;
             owner.Velocity = Vector2.Zero;
             _lane.SetProgress(1f - _timer / _windupSeconds);
+            UpdateAppearance();
             if (_timer <= 0f)
             {
                 _aiming = false;
                 _lane.HideMarker();
+                _appearance.Visible = false;
                 owner.ShootProjectile(_direction);
                 _cooldownTimer = owner.RangedCooldown;
             }
@@ -87,6 +102,9 @@ public class AimedShotAbility : IEnemyAbility
         _aiming = true;
         _timer = _windupSeconds;
         _direction = (player.GlobalPosition - owner.GlobalPosition).Normalized();
+        _appearanceDirection = _appearanceSet?.DirectionIndex(_direction) ?? 0;
+        _appearanceFrame = -1;
+        _appearance.Modulate = Colors.White with { A = CombatFxSettings.EnemyOpacity };
         owner.Velocity = Vector2.Zero;
         owner.PlayAttackAnim();
         owner.FlashWarning(_flash, _windupSeconds);
@@ -100,6 +118,23 @@ public class AimedShotAbility : IEnemyAbility
         _aiming = false;
         _timer = 0f;
         _lane.HideMarker();
+        _appearance.Visible = false;
+    }
+
+    private void UpdateAppearance()
+    {
+        if (_appearanceSet == null || _appearanceSet.Fps <= 0f)
+            return;
+        // L'annonce occupe la fin de la visée existante, sans décaler le départ ni les collisions.
+        float elapsed = _appearanceSet.Frames / _appearanceSet.Fps - _timer;
+        if (elapsed < 0f)
+            return;
+        int frame = Mathf.Min((int)(elapsed * _appearanceSet.Fps), _appearanceSet.Frames - 1);
+        if (frame == _appearanceFrame)
+            return;
+        _appearanceFrame = frame;
+        _appearance.Texture = _appearanceSet.Get(_appearanceDirection, frame);
+        _appearance.Visible = true;
     }
 
     private void UpdateRing(Enemy owner, float reach)

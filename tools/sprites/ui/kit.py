@@ -10,6 +10,16 @@ from ..retouch import save_unless_locked
 CARD = Path("assets/ui/menus/ui_card_normal.png")
 FONT = "assets/fonts/saira/SairaSemiCondensed-SemiBold.ttf"
 DARK = (26, 26, 46, 255)
+BIOMES = ("foret", "ruines", "marecages", "carriere", "champs")
+
+
+def ground_patch(biome: str, size: tuple[int, int]) -> Image.Image:
+    tile = Image.open(f"assets/tiles/{biome}/tile_{biome}_sol_base.png").convert("RGBA")
+    result = Image.new("RGBA", size, DARK)
+    for row, y in enumerate(range(-tile.height, size[1] + tile.height, tile.height // 2)):
+        for x in range(-tile.width, size[0] + tile.width, tile.width):
+            result.alpha_composite(tile, (x + (row % 2) * tile.width // 2, y))
+    return result
 
 
 def nine_patch(source: Image.Image, size: tuple[int, int], margin: int = 3) -> Image.Image:
@@ -61,4 +71,3 @@ def board(rows: list[tuple[str, list[Image.Image]]], path: Path, *, columns: int
             x += image.width * 4 + 8
     path.parent.mkdir(parents=True, exist_ok=True)
     sheet.save(path)
-

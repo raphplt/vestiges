@@ -450,7 +450,11 @@ public partial class EnemyAbilityRegression : Node2D
         Check(lane.Visible && spitter.Velocity == Vector2.Zero && ActiveProjectiles(pools).Count == 0,
             "Tir annoncé : couloir de visée, tireur immobile, rien de tiré pendant l'annonce");
         _player.AIInputOverride = Vector2.Down;
-        await Step(windupTicks + 1);
+        await Step(windupTicks - 4);
+        Sprite2D appearance = spitter.GetNode<Sprite2D>("ProjectileAppearance");
+        Check(appearance.Visible && appearance.Texture != null && ActiveProjectiles(pools).Count == 0,
+            "Tir annoncé : apparition visible avant le départ, sans projectile anticipé");
+        await Step(5);
         _player.AIInputOverride = Vector2.Zero;
         var shots = ActiveProjectiles(pools);
         Vector2 heading = shots.Count > 0
@@ -458,6 +462,7 @@ public partial class EnemyAbilityRegression : Node2D
             : Vector2.Zero;
         Check(shots.Count == 1 && heading.IsEqualApprox(Vector2.Right) && !lane.Visible,
             $"Tir annoncé : un projectile dans la direction verrouillée ({heading}), pas vers le joueur qui s'est écarté");
+        Check(!appearance.Visible, "Tir annoncé : apparition effacée au départ");
         Despawn(spitter);
 
         float range = EnemyDataLoader.Get("wailing_sentinel").Stats.AttackRange;
@@ -472,6 +477,23 @@ public partial class EnemyAbilityRegression : Node2D
         Check(ring.Visible && sentinel.GetNode<GroundTelegraph>("AimMarker").Visible,
             "Sentinelle : portée montrée au sol et visée quand le joueur y entre");
         Despawn(sentinel);
+        ProjectileSprites.SpriteSet impactSet = ProjectileSprites.Get("web").Impact;
+        pools.ShowProjectileImpact(new Vector2(80f, 40f), impactSet);
+        ProjectileImpact impact = null;
+        foreach (Node child in pools.GetChildren())
+            if (child is ProjectileImpact found)
+                impact = found;
+        Check(impact != null && impact.Visible && impact.ZIndex == -1,
+            "Impact : effet visible au sol, sans collision");
+        // Le banc pilote les ticks ; on force ici le temps d'animation pour contrôler la réutilisation.
+        impact?._Process(1.0);
+        Check(impact != null && !impact.Visible && impact.ProcessMode == ProcessModeEnum.Disabled,
+            "Impact : effet terminé retiré du traitement");
+        int created = pools.CreatedCount;
+        pools.ShowProjectileImpact(new Vector2(120f, 60f), impactSet);
+        Check(pools.CreatedCount == created && impact != null && impact.Visible
+            && impact.GlobalPosition == new Vector2(120f, 60f) && impact.Texture == impactSet.Get(0, 0),
+            "Impact : même nœud recyclé, position et première frame réinitialisées");
         pools.QueueFree();
         await Step(1);
     }
