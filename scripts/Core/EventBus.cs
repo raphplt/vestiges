@@ -114,6 +114,8 @@ public partial class EventBus : Node
     [Signal] public delegate void CrisisWarningEventHandler(int crisisNumber, float countdown);
     [Signal] public delegate void CrisisStartedEventHandler(int crisisNumber, int intensity);
     [Signal] public delegate void CrisisEndedEventHandler(int crisisNumber);
+    /// <summary>Accalmie qui suit une Résurgence (CrisisAftermath) : ouverte à la fin de la crise, close au terme de sa durée ou par une nouvelle crise.</summary>
+    [Signal] public delegate void CrisisCalmChangedEventHandler(bool active);
 
     // --- Mémoriaux (plan 17 lot 3B) ---
     [Signal] public delegate void MemorialInteractedEventHandler(Node2D memorial);

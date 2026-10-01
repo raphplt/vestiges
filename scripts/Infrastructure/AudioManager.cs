@@ -25,12 +25,8 @@ public partial class AudioManager : Node
 	private static readonly string[] MuffledBuses = { BusSfx, BusAmbiance };
 	private readonly List<AudioEffectLowPassFilter> _muffles = new();
 
-	// --- Music players (cross-fade A/B) ---
-	private AudioStreamPlayer _musicPlayerA;
-	private AudioStreamPlayer _musicPlayerB;
-	private bool _usingA = true;
-	private string _currentMusicKey = "";
-	private Tween _musicFadeTween;
+	// --- Musique (intention et fondus, plan 15 A1) ---
+	private MusicDirector _music;
 
 	// --- SFX pool ---
 	private readonly List<AudioStreamPlayer> _sfxPool = new();
@@ -61,15 +57,21 @@ public partial class AudioManager : Node
 	private readonly Dictionary<string, ulong> _sfxMinIntervals = new();
 	private const ulong DefaultMinInterval = 0;
 
-	// --- Musique adaptative ---
-	private int _activeEnemyCount;
-	private const int CombatThreshold = 3;
+	// --- Horloge sonore sous Movie Maker (enregistrements d'écoute, plan 15 A0) ---
+	private static ulong _movieFps;
+	private double _movieStepSum;
+	private int _movieStepCount;
+	private const int MovieFpsSkippedFrames = 3;
+	private const int MovieFpsSampledFrames = 60;
+
 	private string _currentPhase = "";
+
+	// Tirages propres à l'audio : ils ne décalent pas ceux du gameplay (seed des bancs, avant/après d'écoute).
+	private readonly RandomNumberGenerator _rng = new();
 
 	// --- Ambiance oiseaux ---
 	private float _birdTimer;
 	private string _currentRandomEventId = "";
-	private int _activeColosseCount;
 	private Core.Player _player;
 	private World.ErasureManager _erasureManager;
 	private World.WorldSetup _worldSetup;
@@ -105,19 +107,54 @@ public partial class AudioManager : Node
 		}
 	}
 
+	/// <summary>Issue d'une demande de son, pour la trace d'écoute (tools/record_run_audio.sh).</summary>
+	public enum SoundOutcome { Played, Throttled, VoiceStolen, Interface }
+
+	/// <summary>Chaque demande de son et son issue ; sans abonné, ne coûte rien.</summary>
+	public event System.Action<string, SoundOutcome> SoundRequested;
+
+	public string CurrentMusicKey => _music?.CurrentKey ?? "";
+	public MusicIntent CurrentMusicIntent => _music?.CurrentIntent ?? MusicIntent.None;
+
+	/// <summary>
+	/// Horloge des intervalles sonores, en millisecondes. Le Movie Maker de Godot rend à cadence fixe, plus lentement
+	/// que le temps réel : l'horloge suit alors les images rendues, qui sont la durée du son enregistré.
+	/// </summary>
+	public static ulong NowMsec => _movieFps > 0 ? Engine.GetProcessFrames() * 1000UL / _movieFps : Time.GetTicksMsec();
+
+	/// <summary>
+	/// La cadence du Movie Maker se lit au pas d'image moyen : le pas varie d'une image à l'autre pour rester calé sur
+	/// la physique, mais vaut 1/cadence en moyenne, ralenti compris.
+	/// </summary>
+	private void ResolveMovieFps()
+	{
+		if (Engine.GetProcessFrames() < MovieFpsSkippedFrames)
+			return;
+		_movieStepSum += GetProcessDeltaTime() / Mathf.Max(Engine.TimeScale, 0.001);
+		if (++_movieStepCount < MovieFpsSampledFrames)
+			return;
+		_movieFps = (ulong)Mathf.RoundToInt(_movieStepCount / _movieStepSum);
+		GetTree().ProcessFrame -= ResolveMovieFps;
+		// Les instants notés sur l'horloge réelle ne se comparent pas à la nouvelle.
+		_sfxLastPlayTime.Clear();
+		GD.Print($"[AudioManager] Movie Maker : horloge sonore à {_movieFps} images/s");
+	}
+
 	public override void _Ready()
 	{
 		Instance = this;
+		_movieFps = 0;
+		if (OS.HasFeature("movie"))
+			GetTree().ProcessFrame += ResolveMovieFps;
 
 		EnsureAudioBuses();
 		LoadSettings();
 		LoadSoundBank();
 		PreloadStreams();
 
-		_musicPlayerA = new AudioStreamPlayer { Bus = BusMusic, Name = "MusicA", VolumeDb = -80f };
-		_musicPlayerB = new AudioStreamPlayer { Bus = BusMusic, Name = "MusicB", VolumeDb = -80f };
-		AddChild(_musicPlayerA);
-		AddChild(_musicPlayerB);
+		_music = new MusicDirector { Name = "Music" };
+		_music.Initialize(MusicConfig.Load(), key => _streams.GetValueOrDefault(key));
+		AddChild(_music);
 
 		_ambiancePlayer = new AudioStreamPlayer { Bus = BusAmbiance, Name = "Ambiance" };
 		AddChild(_ambiancePlayer);
@@ -149,7 +186,7 @@ public partial class AudioManager : Node
 		if (eventBus != null)
 			ConnectEventBus(eventBus);
 
-		_birdTimer = (float)GD.RandRange(15.0, 35.0);
+		_birdTimer = _rng.RandfRange(15f, 35f);
 
 	}
 
@@ -323,19 +360,22 @@ public partial class AudioManager : Node
 			return;
 
 		// Throttle: skip if same SFX was played too recently
-		ulong now = Time.GetTicksMsec();
+		ulong now = NowMsec;
 		ulong minInterval = _sfxMinIntervals.TryGetValue(key, out ulong interval) ? interval : DefaultMinInterval;
 		if (minInterval > 0 && _sfxLastPlayTime.TryGetValue(key, out ulong lastTime) && now - lastTime < minInterval)
+		{
+			SoundRequested?.Invoke(key, SoundOutcome.Throttled);
 			return;
+		}
 		_sfxLastPlayTime[key] = now;
 
 		AudioStreamPlayer player = GetFreePoolPlayer();
 		if (player == null)
 			return;
-
+		SoundRequested?.Invoke(key, player.Playing ? SoundOutcome.VoiceStolen : SoundOutcome.Played);
 
 		player.Stream = stream;
-		player.PitchScale = basePitch + (float)GD.RandRange(-pitchVariance, pitchVariance);
+		player.PitchScale = basePitch + _rng.RandfRange(-pitchVariance, pitchVariance);
 		player.VolumeDb = volumeDb + _soundVolumes.GetValueOrDefault(key);
 		player.Play();
 	}
@@ -353,9 +393,10 @@ public partial class AudioManager : Node
 		AudioStreamPlayer player = GetFreeUiPoolPlayer();
 		if (player == null)
 			return null;
+		SoundRequested?.Invoke(key, SoundOutcome.Interface);
 
 		player.Stream = stream;
-		player.PitchScale = 1f + (float)GD.RandRange(-pitchVariance, pitchVariance);
+		player.PitchScale = 1f + _rng.RandfRange(-pitchVariance, pitchVariance);
 		player.VolumeDb = volumeDb + _soundVolumes.GetValueOrDefault(key);
 		player.Play();
 		return player;
@@ -434,64 +475,8 @@ public partial class AudioManager : Node
 		_loopingSfxKey = "";
 	}
 
-	/// <summary>Démarre la musique du Hub.</summary>
-	public void PlayHubMusic()
-	{
-		PlayMusic("mus_hub", loop: true, fadeDuration: 2f);
-	}
-
-	/// <summary>Joue le stinger de mort et coupe la musique.</summary>
-	public void PlayDeathStinger()
-	{
-		FadeOutMusic(0.4f);
-		FadeOutAmbiance(0.3f);
-		PlaySfx("mus_mort", 0f);
-	}
-
-	// =========================================================
-	// MUSIQUE
-	// =========================================================
-
-	private void PlayMusic(string key, float fadeDuration = 2.5f, bool loop = true)
-	{
-		if (_currentMusicKey == key)
-			return;
-
-		if (!_streams.TryGetValue(key, out AudioStream stream))
-		{
-			GD.PushWarning($"[AudioManager] Musique introuvable : {key}");
-			return;
-		}
-
-		_currentMusicKey = key;
-
-		AudioStreamPlayer incoming = _usingA ? _musicPlayerA : _musicPlayerB;
-		AudioStreamPlayer outgoing = _usingA ? _musicPlayerB : _musicPlayerA;
-		_usingA = !_usingA;
-
-		if (stream is AudioStreamOggVorbis ogg)
-			ogg.Loop = loop;
-
-		incoming.Stream = stream;
-		incoming.VolumeDb = -80f;
-		incoming.Play();
-
-		_musicFadeTween?.Kill();
-		_musicFadeTween = CreateTween().SetParallel();
-		_musicFadeTween.TweenProperty(incoming, "volume_db", 0f, fadeDuration)
-			.SetTrans(Tween.TransitionType.Sine);
-		_musicFadeTween.TweenProperty(outgoing, "volume_db", -80f, fadeDuration)
-			.SetTrans(Tween.TransitionType.Sine);
-	}
-
-	private void FadeOutMusic(float duration = 1.5f)
-	{
-		_currentMusicKey = "";
-		_musicFadeTween?.Kill();
-		_musicFadeTween = CreateTween().SetParallel();
-		_musicFadeTween.TweenProperty(_musicPlayerA, "volume_db", -80f, duration);
-		_musicFadeTween.TweenProperty(_musicPlayerB, "volume_db", -80f, duration);
-	}
+	/// <summary>Relit l'intention musicale : à l'ouverture du jeu, aucun changement d'état n'annonce le Hub.</summary>
+	public void RefreshMusic() => _music.Refresh();
 
 	// =========================================================
 	// AMBIANCE
@@ -557,30 +542,19 @@ public partial class AudioManager : Node
 	{
 		float dt = (float)delta;
 
-		if (_currentPhase == "Exploration" && Engine.GetProcessFrames() % 120 == 0)
-			RefreshExplorationMusic();
-
 		if (_currentPhase == "Exploration")
 		{
 			_birdTimer -= dt;
 			if (_birdTimer <= 0f)
 			{
-				_birdTimer = (float)GD.RandRange(20.0, 45.0);
-				string birdKey = GD.Randi() % 2 == 0 ? "sfx_ambiance_oiseaux_1" : "sfx_ambiance_oiseaux_2";
+				_birdTimer = _rng.RandfRange(20f, 45f);
+				string birdKey = _rng.Randi() % 2 == 0 ? "sfx_ambiance_oiseaux_1" : "sfx_ambiance_oiseaux_2";
 				PlaySfx(birdKey, 0.05f, -4f);
 			}
 		}
 
 		UpdateContextAmbiance();
 		UpdatePlayerWarnings();
-	}
-
-	private void RefreshExplorationMusic()
-	{
-		string target = _activeEnemyCount >= CombatThreshold
-			? "mus_jour_combat"
-			: "mus_jour_exploration";
-		PlayMusic(target, fadeDuration: 3f);
 	}
 
 	// =========================================================
@@ -635,23 +609,16 @@ public partial class AudioManager : Node
 	{
 		_currentPhase = newPhase;
 
+		// La musique suit son propre pilotage (MusicDirector) ; la phase ne règle ici que l'ambiance.
 		switch (newPhase)
 		{
 			case "Exploration":
-				RefreshExplorationMusic();
 				PlayAmbiance("sfx_ambiance_foret");
-				_birdTimer = (float)GD.RandRange(5.0, 15.0);
+				_birdTimer = _rng.RandfRange(5f, 15f);
 				break;
 			case "Crisis":
-				PlayMusic("mus_nuit_vagues", fadeDuration: 3f);
-				FadeOutAmbiance(2f);
-				break;
 			case "LateGame":
-				PlayMusic("mus_nuit_chaos", fadeDuration: 3f);
 				FadeOutAmbiance(2f);
-				break;
-			case "Death":
-				PlayMusic("mus_mort", fadeDuration: 2f, loop: false);
 				break;
 		}
 
@@ -660,43 +627,28 @@ public partial class AudioManager : Node
 
 	private void OnCrisisWarning(int crisisNumber, float countdown)
 	{
-		if (_currentPhase != "Exploration")
-			return;
-
-		PlayMusic("mus_crepuscule", fadeDuration: 2f);
 		PlaySfx("sfx_danger_building", 0f, -5f);
 	}
 
 	private void OnCrisisStarted(int crisisNumber, int intensity)
 	{
 		_currentPhase = "Crisis";
-		PlayMusic("mus_nuit_vagues", fadeDuration: 2f);
 		FadeOutAmbiance(2f);
 	}
 
-	private void OnCrisisEnded(int crisisNumber)
-	{
-		GameManager gameManager = GetNodeOrNull<GameManager>("/root/GameManager");
-		string resolvedPhase = gameManager?.CurrentRunPhase.ToString() ?? "Exploration";
-		OnRunPhaseChanged("Crisis", resolvedPhase);
-	}
+	/// <summary>La fin de crise précède le retour de phase : celle-ci est relue en fin d'image (l'endgame n'en change pas).</summary>
+	private void OnCrisisEnded(int crisisNumber) => Callable.From(SyncRunPhase).CallDeferred();
 
 	private void OnEnemySpawned(string enemyId, float hpScale, float dmgScale)
 	{
-		_activeEnemyCount++;
-		if (enemyId.StartsWith("colosse_"))
-			_activeColosseCount++;
 		if (enemyId.StartsWith("colosse_") || enemyId == "indicible")
 			PlaySfx("sfx_danger_building", 0f, -4f);
 	}
 
 	private void OnEnemyKilled(string enemyId, Vector2 position)
 	{
-		_activeEnemyCount = Mathf.Max(0, _activeEnemyCount - 1);
-		if (enemyId.StartsWith("colosse_"))
-			_activeColosseCount = Mathf.Max(0, _activeColosseCount - 1);
 		// Son de dissolution discret — pas sur chaque kill pour éviter la saturation
-		if (GD.Randf() < 0.5f)
+		if (_rng.Randf() < 0.5f)
 			PlaySfx("sfx_monde_dissolution", 0.08f, -6f);
 	}
 
@@ -776,23 +728,27 @@ public partial class AudioManager : Node
 	{
 		if (newState == "Hub")
 		{
-			// Retour au hub : réinitialise et joue la musique hub
-			_currentMusicKey = "";
-			_activeEnemyCount = 0;
 			_currentPhase = "";
 			_currentRandomEventId = "";
-			_activeColosseCount = 0;
 			StopLoopOnPlayer(_ambianceOverlayPlayer, ref _ambianceOverlayKey);
 			StopLoopOnPlayer(_lowHealthLoopPlayer, ref _lowHealthLoopKey);
 			StopLoopOnPlayer(_borderWarningPlayer, ref _borderWarningKey);
-			PlayHubMusic();
 		}
 		else if (newState == "Run")
 		{
-			_activeEnemyCount = 0;
-			_activeColosseCount = 0;
+			_currentPhase = "";
 			_currentRandomEventId = "";
+			// La première run d'une session commence déjà en exploration : aucun changement de phase ne
+			// l'annonce. La phase réelle est relue en fin d'image, après celui qu'émet un retour de mort.
+			Callable.From(SyncRunPhase).CallDeferred();
 		}
+	}
+
+	private void SyncRunPhase()
+	{
+		string phase = GetNode<GameManager>("/root/GameManager").CurrentRunPhase.ToString();
+		if (phase != _currentPhase)
+			OnRunPhaseChanged(_currentPhase, phase);
 	}
 
 	private void UpdateContextAmbiance()
@@ -806,7 +762,6 @@ public partial class AudioManager : Node
 
 		float volumeDb = targetKey switch
 		{
-			"sfx_colosse_lointain" => -5f,
 			"sfx_orage_proche" => -6f,
 			"sfx_pluie_legere" => -9f,
 			"sfx_foret_rafales" => -8f,
@@ -820,9 +775,6 @@ public partial class AudioManager : Node
 
 	private string ResolveContextAmbianceKey()
 	{
-		if (_activeColosseCount > 0)
-			return "sfx_colosse_lointain";
-
 		return _currentRandomEventId switch
 		{
 			"thick_fog" => "sfx_brouillard",

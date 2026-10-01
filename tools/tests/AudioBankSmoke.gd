@@ -17,7 +17,7 @@ func verify_bank() -> void:
         if key.begins_with("mus_"):
             continue
         stop_pool(manager, "Sfx")
-        manager.call("PlaySfx", key, 0.0, -2.0)
+        manager.call("PlaySfx", key, 0.0, -2.0, 1.0)
         var player = manager.get_node("Sfx0")
         if player.stream != stream or not player.playing:
             fail("Lecture absente : " + key)
@@ -27,7 +27,7 @@ func verify_bank() -> void:
             return
         if entry.min_interval_ms > 0:
             stop_pool(manager, "Sfx")
-            manager.call("PlaySfx", key, 0.0, -2.0)
+            manager.call("PlaySfx", key, 0.0, -2.0, 1.0)
             if player.playing:
                 fail("Limitation absente : " + key)
                 return

@@ -64,6 +64,7 @@ public partial class CrisisAftermath : Node
         _calmRemaining = _essenceSeconds;
         SetProcess(true);
         _eventBus.EmitSignal(EventBus.SignalName.EssenceMultiplierChanged, _essenceMultiplier, _essenceSeconds);
+        _eventBus.EmitSignal(EventBus.SignalName.CrisisCalmChanged, true);
         PlaceChest();
     }
 
@@ -72,6 +73,7 @@ public partial class CrisisAftermath : Node
         _calmRemaining = 0f;
         SetProcess(false);
         _eventBus.EmitSignal(EventBus.SignalName.EssenceMultiplierChanged, 1f, 0f);
+        _eventBus.EmitSignal(EventBus.SignalName.CrisisCalmChanged, false);
     }
 
     /// <summary>Devant le joueur (sa direction de marche, sinon au hasard), à distance de marche, sur un sol qui tient.</summary>

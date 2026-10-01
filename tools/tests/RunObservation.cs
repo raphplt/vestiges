@@ -58,6 +58,11 @@ namespace Vestiges.Tests;
 /// micro-événements, Essence gagnée et dépensée).
 /// --scaling cle=valeur,… : surcharge des réglages d'apparition (spawn_flow.json) pendant la mesure de densité.
 /// --measure-projectiles [--projectile-lifetime secondes] : pression des tirs à 10 Hz ; durée surchargée dans le banc seul.
+/// --choice-delay S : pendant la mesure, le bot attend S secondes avant de choisir sur un écran qui fige la run.
+/// --music-config chemin : pendant la mesure, réglages de musique lus dans ce fichier (variantes d'écoute).
+/// --crisis-at S : pendant la mesure, première Résurgence à S secondes de jeu.
+/// --mute-buses A,B : pendant la mesure, bus audio coupés (Music, SFX, Ambiance), pour écouter le reste seul.
+/// --audio-trace : pendant la mesure, trace d'écoute (signaux, musique, sons) pour tools/record_run_audio.sh (AudioTraceProbe).
 /// --nomad : pendant la mesure, le bot garde un cap (tiré de la seed) au lieu d'errer autour du départ,
 /// et en change quand il bute sur le bord du monde.
 /// --visit : pendant la mesure, le bot ratisse : il se détourne vers les lieux vus, ouvre, ravive et dépense
@@ -352,6 +357,19 @@ public partial class RunObservation : Node
         using ProjectilePressureProbe projectiles = Array.IndexOf(args, "--measure-projectiles") >= 0
             ? new ProjectilePressureProbe(lifetime == null ? null : float.Parse(lifetime, CultureInfo.InvariantCulture))
             : null;
+        using AudioTraceProbe audioTrace = Array.IndexOf(args, "--audio-trace") >= 0 ? new AudioTraceProbe(_output, _world, _player) : null;
+        // --music-config chemin : variante de music.json à écouter, sans toucher aux données du jeu.
+        string musicConfig = Argument(args, "--music-config", null);
+        if (musicConfig != null)
+            AudioManager.Instance.GetNode<MusicDirector>("Music").Configure(MusicConfig.Load(musicConfig));
+        // --crisis-at S : première Résurgence à S secondes de jeu (annonce 20 s avant), pour écouter un cycle court.
+        string crisisAt = Argument(args, "--crisis-at", null);
+        if (crisisAt != null)
+            typeof(Vestiges.Events.CrisisManager).GetMethod("ScheduleNextCrisis", BindingFlags.NonPublic | BindingFlags.Instance)
+                .Invoke(_world.GetNode("CrisisManager"), new object[] { float.Parse(crisisAt, CultureInfo.InvariantCulture) });
+        // --mute-buses Music,SFX,Ambiance : passe d'écoute d'une seule famille de sons (plan 15 A0).
+        foreach (string bus in Argument(args, "--mute-buses", "").Split(',', StringSplitOptions.RemoveEmptyEntries))
+            AudioServer.SetBusMute(AudioServer.GetBusIndex(bus), true);
         RunTracker tracker = _world.GetNode<RunTracker>("RunTracker");
         int peril = int.Parse(Argument(OS.GetCmdlineUserArgs(), "--peril", "0"), CultureInfo.InvariantCulture);
         if (peril > 0)
@@ -385,6 +403,9 @@ public partial class RunObservation : Node
         // accéléré (--fixed-fps), où une seconde de jeu dure bien moins qu'une seconde d'horloge.
         double gameTime = 0;
         int pausedFrames = 0;
+        // Pas d'image cumulés, pas l'horloge réelle : en headless accéléré, 3 000 images passent en moins de 2 s.
+        double pausedTime = 0.0;
+        double choiceDelay = double.Parse(Argument(args, "--choice-delay", "0"), CultureInfo.InvariantCulture);
         // Part de chaque créature dans la pression subie, et XP réellement ramassée (retour du 28 septembre, plan 20).
         Dictionary<string, double> damageBySource = new();
         // Le bot est invincible et compte chaque coup ; « gated » ne garde que les coups qui passeraient
@@ -471,12 +492,16 @@ public partial class RunObservation : Node
         while (true)
         {
             await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+            audioTrace?.Sample(gameTime);
             if (GetTree().Paused)
             {
                 // L'écran de niveau fige la run : choisir la première offre ; ce temps ne compte pas.
-                AutoPickLevelUp();
+                // --choice-delay : le bot lit l'écran comme un joueur, pour entendre son entrée en entier.
+                pausedTime = pausedFrames == 0 ? 0.0 : pausedTime + GetProcessDeltaTime();
+                if (pausedTime >= choiceDelay)
+                    AutoPickLevelUp();
                 if (++pausedFrames > 3000)
-                    throw new InvalidOperationException("Run en pause depuis 3 000 frames : écran bloquant non géré par le banc.");
+                    throw new InvalidOperationException($"Run en pause depuis 3 000 frames : écran bloquant non géré par le banc ({VisibleScreens()}).");
                 continue;
             }
             pausedFrames = 0;
@@ -695,6 +720,28 @@ public partial class RunObservation : Node
                 return true;
         }
         return false;
+    }
+
+    /// <summary>Écrans de la run qui tournent malgré la pause et sont visibles, pour nommer celui qui bloque le banc.</summary>
+    private string VisibleScreens()
+    {
+        List<string> names = new();
+        foreach (Node child in _world.GetChildren())
+        {
+            bool visible = child switch
+            {
+                CanvasItem item => item.Visible,
+                CanvasLayer layer => layer.Visible,
+                _ => false,
+            };
+            if (visible && child.ProcessMode == ProcessModeEnum.Always)
+                names.Add(child.Name);
+        }
+        Node screen = _world.GetNode("LevelUpScreen");
+        if (screen.GetType().GetField("_fragmentManager", BindingFlags.NonPublic | BindingFlags.Instance)?.GetValue(screen)
+            is Vestiges.Progression.FragmentManager fragments)
+            names.Add($"choix actif={fragments.IsChoiceActive}, offres={fragments.PendingChoices.Count}");
+        return names.Count > 0 ? string.Join(", ", names) : "aucun écran visible";
     }
 
     private void AutoPickLevelUp()

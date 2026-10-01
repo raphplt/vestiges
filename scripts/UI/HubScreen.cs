@@ -69,7 +69,7 @@ public partial class HubScreen : Control
 			_selectedCharacterId = null;
 		EnsureDefaultCharacterSelection(gm);
 
-		AudioManager.Instance?.PlayHubMusic();
+		AudioManager.Instance?.RefreshMusic();
 
 		_bodyFont = UITheme.BodyFont;
 		_strongFont = UITheme.StrongFont;

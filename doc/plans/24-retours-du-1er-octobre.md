@@ -552,6 +552,10 @@ d'accalmie musicale explicite. Ces constats de code restent à écouter en conte
 Aucun son ni gain changé ; **A0, l'enregistrement et l'écoute réels, est la
 prochaine action**, uniquement sur ViewSonic pour la fenêtre.
 
+**Mise à jour du soir :** A0 enregistré (mixage du moteur), A1 livré (pilotage de
+la musique par intention, annonce tenue, accalmie) ; avant/après à écouter par
+Raphaël. [Plan 15](15-audio.md#a0-et-a1--livrés-le-1er-octobre-soir).
+
 R5 reste Traqueur → Vagabond → Forgeuse, avec planches puis animation en run
 (plan 08). R6 commence par radar/carte agrandie : résolution du dessin et palette
 (plan 04), sans étendre automatiquement au terrain. Le premier cycle audio

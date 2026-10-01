@@ -220,7 +220,7 @@ public partial class XpOrb : Area2D
 
             CombatPools.Instance?.ShowXpCollect(GlobalPosition);
 
-            ulong now = Time.GetTicksMsec();
+            ulong now = AudioManager.NowMsec;
             _chain = now - _lastCollectMs < ChainWindowMs ? Mathf.Min(_chain + 1, ChainMax) : 0;
             _lastCollectMs = now;
             AudioManager.Play("xp_gain", 0.01f, -1.5f, 1f + _chain * ChainPitchStep);

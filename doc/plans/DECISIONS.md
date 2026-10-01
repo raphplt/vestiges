@@ -591,3 +591,7 @@ Pendant ce travail : « évite de lancer le jeu ou alors fait le sur l'écran
 viewsonic […] pas sur l'écran msi ». Captures et fenêtres de test uniquement
 sur le ViewSonic (VX2758, DP-1 ; second écran dans la configuration constatée),
 avec `VESTIGES_SCREEN=1`. Les contrôles sans rendu restent headless.
+
+## 46. Avancer seul sur l'audio — 1er octobre 2026
+
+Raphaël : « Avance le plus que tu peux sur la partie audio du projet, en autonomie, en suivant les plans. » Travail mené sur le plan 15 : A0 (référence enregistrée), A1 (pilotage de la musique) et propositions A2 préparées. Aucun choix artistique n'est tranché par l'agent : points d'entrée des morceaux, rôle exploration/combat et accent de début de crise attendent l'écoute de Raphaël ([plan 15](15-audio.md#a2--premières-propositions-à-choisir-à-loreille)).
