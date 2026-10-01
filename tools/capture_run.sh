@@ -17,3 +17,9 @@ run_timeout 900 "$GODOT" --path . --windowed $SCREEN_ARGS --resolution "${4:-192
     res://tools/tests/RunObservation.tscn -- --dev --density --seconds "${2:-60}" --capture-every "${3:-10}" \
     --seed "${5:-221092026}" --output "$OUTPUT" ${CAPTURE_EXTRA_ARGS:-} >"$OUTPUT/run.log" 2>&1 || { tail -20 "$OUTPUT/run.log"; exit 1; }
 rg '\[RunObservation\] RESULT' "$OUTPUT/run.log"
+# Un RESULT n'annule pas une erreur de scénario (ex. identifiant d'ennemi inconnu).
+ERRORS=$(rg '^(ERROR|SCRIPT ERROR)|Unhandled exception|System\.[A-Za-z]+Exception' "$OUTPUT/run.log" | rg -v 'steam_api|MixRate mismatch|ObjectDB instances were leaked|resources still in use at exit' || true)
+if [[ -n "$ERRORS" ]]; then
+    echo "$ERRORS" >&2
+    exit 1
+fi

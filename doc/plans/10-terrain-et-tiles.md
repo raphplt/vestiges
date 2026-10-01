@@ -626,3 +626,28 @@ premiers effets capturés sur ViewSonic, 158 contrôles de déplacement et smoke
 verts. Le banc d'intégration historique expire à 1 500 frames avant **et**
 après ; ce défaut du banc est consigné. Pas de mesure FPS valide sous la
 charge actuelle ; **5B2 reste ouvert** (cache froid/chaud, premiers effets).
+
+### Recette après 5B1 — fiabilisation des bancs (découpage, 1er octobre)
+
+Deux défauts d'instrumentation constatés, à corriger sans toucher au gameplay :
+le banc de déplacement abandonne après 1 500 frames headless, parfois écoulées
+avant la génération sur son thread ; le lanceur de captures accepte un résultat
+même si Godot a signalé un ennemi inconnu.
+
+- Attendre Main avec un délai mural borné et laisser du CPU à sa génération ;
+  restaurer le débit précédent ensuite. Garder un timeout externe, ne pas
+  diluer les assertions sur la liaison au monde, le Néant ou l'eau.
+- Refuser les captures avec erreur moteur inattendue, tout en conservant les
+  exceptions documentées (Steam absent, audio factice, ressources à la sortie).
+- Rejouer le même banc d'intégration sur la référence et après 5B1 ; contrôler
+  le lanceur avec les journaux réels rejetés et valides de cette recette.
+
+
+**Fiabilisation des bancs livrée — 1er octobre.** L'intégration Main attend un
+délai mural de 120 s en cédant 1 ms par frame, sous timeout externe de 180 s ;
+le pas fixe et les assertions sont conservés. **26 contrôles passent avant et
+après 5B1**, en environ 7,2 s, au lieu d'abandonner à 1 500 frames. Le lanceur
+de captures refuse une erreur inattendue même en présence d'un `RESULT`.
+[Protocole et journaux](../audits/verification-tools-2026-10-01/README.md).
+Le défaut d'instrumentation signalé dans 5B1 est donc résolu ; les mesures à
+cache froid/chaud et les FPS sur machine calme restent ouvertes.

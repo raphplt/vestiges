@@ -174,13 +174,19 @@ public partial class MovementRegression
         GetTree().Root.AddChild(world);
         GetTree().CurrentScene = world;
         int waitingFrames = 0;
-        while ((!world.IsWorldReady || GetTree().Paused || _manager.CurrentState != GameManager.GameState.Run) && waitingFrames < 1500)
+        ulong start = Time.GetTicksMsec();
+        ulong deadline = start + 120000;
+        // Sans rendu, 1 500 frames peuvent finir avant le thread de génération. Le pas fixe ignore MaxFps :
+        // céder ici 1 ms laisse du CPU à ce thread sans changer les pas de simulation du banc.
+        while ((!world.IsWorldReady || GetTree().Paused || _manager.CurrentState != GameManager.GameState.Run)
+            && Time.GetTicksMsec() < deadline)
         {
+            OS.DelayMsec(1);
             await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
             waitingFrames++;
         }
         Check(world.IsWorldReady && !GetTree().Paused && _manager.CurrentState == GameManager.GameState.Run,
-            $"Main réelle : initialisation terminée en {waitingFrames} frames");
+            $"Main réelle : initialisation en {waitingFrames} frames, {Time.GetTicksMsec() - start} ms (limite 120 s)");
         if (!world.IsWorldReady || GetTree().Paused)
             return;
         _player = world.GetNode<Player>("Player");

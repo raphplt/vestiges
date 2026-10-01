@@ -59,3 +59,8 @@ Rejouer : `VESTIGES_SCREEN=1 tools/test_shader_warmup.sh /tmp/vestiges-shaders-n
 Pour la référence : ajouter `SHADER_AUDIT_ARGS="--legacy-source <chemin absolu
 vers reference-bootstrap.cs.txt>"`. Les captures se rejouent avec
 `--capture-loading --capture-abilities --enemies hurleur,fading_spitter`.
+
+
+Suite : la limite du banc d'intégration est corrigée dans le lot de
+[fiabilisation de la recette](../verification-tools-2026-10-01/README.md) ;
+ses 26 assertions passent sur les deux versions. Cela ne remplace pas 5B2.

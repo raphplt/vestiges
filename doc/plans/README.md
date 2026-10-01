@@ -1,5 +1,7 @@
 # VESTIGES — Dossier de plans à valider
 
+**1er octobre — recette fiabilisée :** l’intégration Main atteint ses 26 assertions, au lieu d’expirer à 1 500 frames ; captures rejetées sur erreur moteur inattendue. [Vérifications](../audits/verification-tools-2026-10-01/README.md).
+
 **1er octobre — préchauffage rendu :** le chargement soumet réellement 16 shaders et les particules d’XP au GPU, puis libère son viewport ; 17 échantillons vérifiés et captures Main, [plan 10 5B1](10-terrain-et-tiles.md#5b1--soumettre-réellement-les-shaders-au-rendu--découpage-du-1er-octobre). Coût à froid/chaud encore à mesurer sur machine calme.
 
 **1er octobre — robustesse des choix :** relances et entrées interrompues corrigées, 24 contrôles (12 échecs → zéro), captures Main vérifiées ; [plan 04 R7](04-interfaces-et-hub.md#r7--entrées-des-écrans-de-choix--lot-engagé-le-1er-octobre).
