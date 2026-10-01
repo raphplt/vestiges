@@ -521,3 +521,11 @@ navigation clavier/manette vérifiée par événements dans une vraie Main.
 Compte rendu et captures au [plan 04, R1](04-interfaces-et-hub.md#r1--lot-engagé-le-1er-octobre).
 Mappings A/B de validation/retour ajoutés après constat de leur absence ; build
 sans avertissement et smoke verts. La rotation des coffres n'est pas modifiée.
+
+
+### R2 — icônes de butin livrées
+
+Essence, XP, niveaux d'objet, Souvenirs et treize statistiques identifiés par
+leurs icônes ; éclat de rareté séparé. Ouverture réelle et galerie complète
+capturées et regardées à 100/130 %, build sans avertissement, smoke et 169
+contrôles UI verts. [Détail au plan 04](04-interfaces-et-hub.md#r2--lot-engagé--icônes-de-nature-du-butin).

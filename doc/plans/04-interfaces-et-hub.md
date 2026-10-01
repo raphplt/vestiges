@@ -287,3 +287,33 @@ Captures regardées : `/tmp/vestiges-r1-before`, `…-after` (texte 100 %),
 La sortie de rendu locale est en 3840 × 2160 malgré la résolution demandée par
 le script ; une réduction à 1280 × 720 a aussi été inspectée. Ce n'est pas un test
 d'une fenêtre native 720p. Build sans avertissement, smoke 600 frames vert.
+
+### R2 — lot engagé : icônes de nature du butin
+
+Inventaire du chemin `LootRewards.Resolve` et de `chest_stat_bonus.json` : Essence,
+XP, niveaux d'objet, Souvenir narratif, plus treize statistiques. Réutiliser les
+icônes natives de stats (16 px), les orbes et le sprite propre à l'objet ; le
+Souvenir emploie son signe mémoriel. Table visuelle en JSON, textures chargées
+avant le défilement. Icône de nature à gauche, texte au centre, petit éclat de
+rareté à droite ; les leurres changent de texte et d'icône ensemble.
+
+Vérifier une ouverture réelle et une galerie de tous les gains dans Main,
+dont Essence, PV et dégâts critiques côte à côte. Contrôle de couverture des
+treize stats, rareté indépendante, aucun réglage de récompense ou d'audio changé.
+
+
+**R2 livré et vérifié.** Les quatre familles de récompenses et les treize
+statistiques ont une icône de nature distincte de la rareté. Table dans
+`data/ui/loot_icons.json`, résolveur visuel partagé, sprite propre de chaque
+objet. Les PNG existants suffisent ; aucun nouvel asset ni règle de butin.
+Les icônes et libellés défilent ensemble ; résultat avec icône à gauche et
+éclat de rareté 12 px à droite. Chargement des textures hors animation.
+
+`test_ui_art.sh` : **169 contrôles passent**, dont couverture des treize stats,
+ressources et sprites des 31 objets. Build sans avertissement, smoke vert.
+Ouverture réelle puis galerie des treize stats, Essence, XP, objet et Souvenir
+regardées dans `/tmp/vestiges-r2-loot` (100 %) et `/tmp/vestiges-r2-verified`
+(130 %). La galerie emploie un Souvenir explicite, car le profil dev connaît
+tout et convertit un tirage aléatoire en Essence. Elle présente les récompenses
+sans les attribuer au joueur. Écran de rendu vérifié par le journal : X11,
+écran 1, position (3840, 0), donc ViewSonic. Rotation I7 et audio inchangés.

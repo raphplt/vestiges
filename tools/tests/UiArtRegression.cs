@@ -50,6 +50,18 @@ public partial class UiArtRegression : Node
                 Check(UITheme.LoadTex(UITheme.MenusPath + $"ui_{skin}.png").ResourcePath.StartsWith(ScreenArt.Folder, StringComparison.Ordinal),
                     $"Thème : {skin} emploie le nouvel habillage");
 
+            System.Collections.Generic.HashSet<string> statIcons = new();
+            foreach (ChestStatBonus stat in ChestDataLoader.LoadStatBonus().Stats)
+            {
+                Texture2D icon = LootIconResolver.Get("stat", stat.Stat);
+                Check(icon != null && statIcons.Add(icon.ResourcePath), $"Coffre : icône distincte pour {stat.Stat}");
+            }
+            foreach (string type in new[] { "essence", "xp", "souvenir" })
+                Check(LootIconResolver.Get(type) != null, $"Coffre : icône de {type}");
+            foreach (PassiveSouvenirData item in PassiveSouvenirDataLoader.GetAll())
+                Check(LootIconResolver.Get("object_level", item.Id)?.ResourcePath == item.Icon,
+                    $"Coffre : sprite propre de {item.Id}");
+
             RarityIcon reveal = new(3);
             AddChild(reveal);
             reveal.RevealFrom(0, 3, 0.35f);

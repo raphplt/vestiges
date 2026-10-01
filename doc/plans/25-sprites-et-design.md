@@ -527,3 +527,13 @@ repère au focus, sans cadre de panneau superposé. Planches de contrôle dans
 `/tmp/vestiges-r1-sheets`, captures pause/paramètres au plan 04 R1. Seuls les
 quatre PNG de boutons changent : textures des fonds, manifeste de rotation et
 shader I7 inchangés.
+
+
+### R2 — icônes de récompense intégrées
+
+Les icônes de statistiques natives 16 px, les orbes d'Essence/XP, le signe
+mémoriel et les sprites propres aux objets sont réutilisés. Rareté déplacée
+au bord droit des lignes ; nature du gain à gauche, pendant la roulette et
+après révélation. Table `data/ui/loot_icons.json`, 169 contrôles UI verts,
+captures de tous les gains à 100/130 % inspectées ; compte rendu au plan 04 R2.
+Le shader, la vitesse de rotation et les sons des coffres restent ceux d'I7.

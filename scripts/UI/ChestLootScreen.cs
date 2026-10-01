@@ -8,7 +8,7 @@ namespace Vestiges.UI;
 
 /// <summary>
 /// Écran roulette du butin d'un coffre : chaque case fait défiler des leurres puis s'arrête sur le butin
-/// déjà résolu (l'arme, les niveaux d'objet ou le Souvenir obtenus). Met le jeu en pause, joue le son d'ouverture.
+/// déjà résolu (Essence, XP, stat, niveaux d'objet ou Souvenir). Met le jeu en pause, joue le son d'ouverture.
 /// Couleurs de rareté : palette unique (RarityPalette).
 /// </summary>
 public partial class ChestLootScreen : CanvasLayer
@@ -54,22 +54,14 @@ public partial class ChestLootScreen : CanvasLayer
     private int _slotsRevealed;
 
     // Leurres de la roulette : ce que le coffre aurait pu donner.
-    private static readonly LootDisplayInfo[] FakeItems = new[]
-    {
-        new LootDisplayInfo("Essence ×6", new Color("5EC4C4")),
-        new LootDisplayInfo("Essence ×12", new Color("5EC4C4")),
-        new LootDisplayInfo("+25 XP", new Color("8AB8C4")),
-        new LootDisplayInfo("+40 XP", new Color("8AB8C4")),
-        new LootDisplayInfo("?", new Color("6ACA5A")),
-        new LootDisplayInfo("?", new Color("F0C85C")),
-        new LootDisplayInfo("?", new Color("E8A868")),
-    };
+    private LootDisplayInfo[] _fakeItems;
 
     private struct LootDisplayInfo
     {
         public string Text;
         public Color Color;
-        public LootDisplayInfo(string text, Color color) { Text = text; Color = color; }
+        public Texture2D Icon;
+        public LootDisplayInfo(string text, Color color, Texture2D icon) { Text = text; Color = color; Icon = icon; }
     }
 
     private class SlotState
@@ -77,7 +69,7 @@ public partial class ChestLootScreen : CanvasLayer
         public Label Label;
         public PanelContainer Card;
         public ColorRect Flash;
-        public Control Icon;
+        public TextureRect Icon;
         public LootDisplayInfo FinalItem;
         public float Timer;
         public float CurrentInterval;
@@ -90,6 +82,16 @@ public partial class ChestLootScreen : CanvasLayer
     public override void _Ready()
     {
         LoadTextures();
+        _fakeItems = new[]
+        {
+            new LootDisplayInfo("Essence ×6", UITheme.CyanEssence, LootIconResolver.Get("essence")),
+            new LootDisplayInfo("Essence ×12", UITheme.CyanEssence, LootIconResolver.Get("essence")),
+            new LootDisplayInfo("+25 XP", new Color("8AB8C4"), LootIconResolver.Get("xp")),
+            new LootDisplayInfo("+40 XP", new Color("8AB8C4"), LootIconResolver.Get("xp")),
+            new LootDisplayInfo($"{StatCatalog.Name("max_hp")} +15", GoldBright, LootIconResolver.Get("stat", "max_hp")),
+            new LootDisplayInfo($"{StatCatalog.Name("crit_multiplier")} +10 %", GoldBright, LootIconResolver.Get("stat", "crit_multiplier")),
+            new LootDisplayInfo($"{StatCatalog.Name("armor")} +2", GoldBright, LootIconResolver.Get("stat", "armor")),
+        };
         BuildUI();
         HideScreen();
     }
@@ -257,7 +259,8 @@ public partial class ChestLootScreen : CanvasLayer
         card.AddChild(margin);
 
         Label label = new();
-        label.HorizontalAlignment = HorizontalAlignment.Center;
+        label.HorizontalAlignment = HorizontalAlignment.Left;
+        label.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
         label.VerticalAlignment = VerticalAlignment.Center;
         UITheme.SetTextRole(label, TextRole.Lead);
         label.AddThemeColorOverride("font_color", TextDim);
@@ -265,22 +268,22 @@ public partial class ChestLootScreen : CanvasLayer
         HBoxContainer contents = new() { Alignment = BoxContainer.AlignmentMode.Center };
         contents.AddThemeConstantOverride("separation", 8);
         margin.AddChild(contents);
+        int fakeIndex = GD.RandRange(0, _fakeItems.Length - 1);
+        LootDisplayInfo initial = _fakeItems[fakeIndex];
+        TextureRect icon = (TextureRect)PlayerSheet.MakeIcon(null, 32);
+        icon.Texture = initial.Icon;
+        contents.AddChild(icon);
+        label.Text = initial.Text;
+        contents.AddChild(label);
+        // L'éclat reste un badge secondaire : il ne remplace jamais le signe du gain.
         int rarityRank = RarityArt.Rank(_rarity);
         if (rarityRank >= 0)
-            contents.AddChild(new RarityIcon(rarityRank));
-        Control icon = null;
-        if (loot.Type == "object_level")
-        {
-            icon = PlayerSheet.MakeIcon(PassiveSouvenirDataLoader.Get(loot.ItemId)?.Icon);
-            icon.Visible = false;
-            contents.AddChild(icon);
-        }
-        contents.AddChild(label);
+            contents.AddChild(new RarityIcon(rarityRank, 12));
 
         card.AddChild(flash);
         _slotsContainer.AddChild(card);
 
-        LootDisplayInfo finalItem = new(loot.Label, loot.Color);
+        LootDisplayInfo finalItem = new(loot.Label, loot.Color, LootIconResolver.Get(loot.Type, loot.ItemId));
 
         return new SlotState
         {
@@ -294,7 +297,7 @@ public partial class ChestLootScreen : CanvasLayer
             Elapsed = 0f,
             StopTime = RouletteDuration + index * 0.4f,
             Stopped = false,
-            FakeIndex = GD.RandRange(0, FakeItems.Length - 1)
+            FakeIndex = fakeIndex
         };
     }
 
@@ -329,8 +332,9 @@ public partial class ChestLootScreen : CanvasLayer
             {
                 slot.Timer = 0f;
                 // Cycle to next fake item
-                slot.FakeIndex = (slot.FakeIndex + 1) % FakeItems.Length;
-                LootDisplayInfo fakeItem = FakeItems[slot.FakeIndex];
+                slot.FakeIndex = (slot.FakeIndex + 1) % _fakeItems.Length;
+                LootDisplayInfo fakeItem = _fakeItems[slot.FakeIndex];
+                slot.Icon.Texture = fakeItem.Icon;
                 slot.Label.Text = fakeItem.Text;
                 slot.Label.AddThemeColorOverride("font_color", new Color(fakeItem.Color, 0.6f));
             }
@@ -352,8 +356,7 @@ public partial class ChestLootScreen : CanvasLayer
     private void RevealSlot(SlotState slot)
     {
         slot.Stopped = true;
-        if (slot.Icon != null)
-            slot.Icon.Visible = true;
+        slot.Icon.Texture = slot.FinalItem.Icon;
         _slotsRevealed++;
 
         // Set final item

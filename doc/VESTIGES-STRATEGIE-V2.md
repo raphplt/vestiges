@@ -771,6 +771,7 @@ Le script de post-processing doit inclure une vérification/correction de l'angl
 - [x] Recette humaine du HUD refait et de la police : « HUD bien mieux » (Raphaël, 25 septembre 2026).
 - [x] Armes dans le menu pause avec stats effectives et dégâts infligés, passifs et fiche du personnage (plan 17 lot 1C ; la rareté n'est plus portée par l'arme).
 - [x] Menu pause compact : navigation à gauche, équipement élargi, textes retirés et survol/focus simplifiés ; captures 100/130 %, navigation clavier et événements A/B vérifiés (plan 24 R1, plan 04, 1er octobre 2026).
+- [x] Icônes de nature du butin : Essence, XP, objets, Souvenirs et treize statistiques ; badge de rareté séparé, roulette et résultats capturés (plan 24 R2, plan 04, 1er octobre 2026).
 - [ ] Onboarding implicite (les 5 premières minutes doivent être auto-explicatives).
 - [x] Indicateurs visuels de l'Effacement (phases, transitions de couleur) : sol qui oublie et lisière de l'Effacé, plan 16 O1/O3 (26 septembre 2026) ; les décors suivront en O2.
 - [x] Signaux précurseurs des Résurgences.

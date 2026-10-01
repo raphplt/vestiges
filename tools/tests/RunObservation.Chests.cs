@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Reflection;
 using System.Threading.Tasks;
 using Godot;
+using Vestiges.Infrastructure;
 using Vestiges.World;
 
 namespace Vestiges.Tests;
@@ -172,7 +173,53 @@ public partial class RunObservation
         }
         await ToSignal(GetTree().CreateTimer(4, processAlways: true), SceneTreeTimer.SignalName.Timeout);
         SaveFrame("loot-revealed");
+        if (System.Array.IndexOf(OS.GetCmdlineUserArgs(), "--capture-loot-gallery") >= 0)
+        {
+            while (GetTree().Paused)
+                await Frames(1);
+            await CaptureLootGallery();
+        }
         GD.Print($"[RunObservation] RESULT loot-screen chest={nearest.ChestId} dossier={_output}");
+    }
+
+    /// <summary>Galerie de présentation : récompenses résolues, sans appliquer un butin supplémentaire au joueur.</summary>
+    private async Task CaptureLootGallery()
+    {
+        _player.AddOrUpgradePassive("oeil_critique");
+        List<ResolvedLoot> rewards = LootRewards.Resolve(new List<LootResolver.LootResult>
+        {
+            new() { Type = "essence", Amount = 12 },
+            new() { Type = "xp", Amount = 40 },
+            new() { Type = "object_level", Amount = 1, FallbackEssence = 8 },
+            // Le profil dev connaît déjà tous les Souvenirs : un tirage aléatoire deviendrait de l'Essence.
+            new() { Type = "souvenir", ItemId = "billet_de_train", Amount = 1 },
+        }, _player);
+        Dictionary<string, ResolvedLoot> stats = new();
+        int expected = ChestDataLoader.LoadStatBonus().Stats.Count;
+        for (int draw = 0; draw < 1000 && stats.Count < expected; draw++)
+            if (LootRewards.RollStatBonus("rare") is ResolvedLoot bonus)
+                stats.TryAdd(bonus.ItemId, bonus);
+        if (stats.Count != expected)
+            throw new System.InvalidOperationException("Galerie de bonus de coffre incomplète.");
+        // Les trois gains cités par Raphaël sont visibles sur la même capture.
+        rewards.Insert(1, stats["max_hp"]);
+        rewards.Insert(2, stats["crit_multiplier"]);
+        stats.Remove("max_hp");
+        stats.Remove("crit_multiplier");
+        rewards.AddRange(stats.Values);
+        Vestiges.UI.ChestLootScreen screen = _world.GetNode<Vestiges.UI.ChestLootScreen>("ChestLootScreen");
+        for (int start = 0; start < rewards.Count; start += 5)
+        {
+            bool complete = false;
+            List<ResolvedLoot> page = rewards.GetRange(start, System.Math.Min(5, rewards.Count - start));
+            screen.ShowLoot(page, "rare", () => complete = true);
+            await ToSignal(GetTree().CreateTimer(1, processAlways: true), SceneTreeTimer.SignalName.Timeout);
+            SaveFrame($"loot-gallery-{start / 5}-roulette");
+            await ToSignal(GetTree().CreateTimer(3.5, processAlways: true), SceneTreeTimer.SignalName.Timeout);
+            SaveFrame($"loot-gallery-{start / 5}-revealed");
+            while (!complete)
+                await Frames(1);
+        }
     }
 
     private void SaveFrame(string name)

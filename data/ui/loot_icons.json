@@ -1,0 +1,18 @@
+{
+    "essence": "res://assets/vfx/vfx_orb_essence_f1.png",
+    "xp": "res://assets/vfx/vfx_orb_xp_f2.png",
+    "souvenir": "res://assets/ui/icons/ui_icon_perk_memory_anchor.png",
+    "stat:attack_speed": "res://assets/ui/icons/ui_icon_perk_attack_speed_up.png",
+    "stat:speed": "res://assets/ui/icons/ui_icon_perk_speed_up.png",
+    "stat:max_hp": "res://assets/ui/icons/ui_icon_perk_hp_up.png",
+    "stat:armor": "res://assets/ui/icons/ui_icon_perk_armor_up.png",
+    "stat:regen_rate": "res://assets/ui/icons/ui_icon_perk_regen_up.png",
+    "stat:crit_chance": "res://assets/ui/icons/ui_icon_perk_crit_chance.png",
+    "stat:crit_multiplier": "res://assets/ui/icons/ui_icon_perk_crit_damage.png",
+    "stat:aoe_radius": "res://assets/ui/icons/ui_icon_perk_aoe_up.png",
+    "stat:attack_range": "res://assets/ui/icons/ui_icon_perk_range_up.png",
+    "stat:status_duration": "res://assets/ui/icons/ui_icon_perk_time_master.png",
+    "stat:xp_magnet_radius": "res://assets/ui/icons/ui_icon_perk_xp_magnet.png",
+    "stat:luck": "res://assets/ui/icons/ui_icon_perk_lucky.png",
+    "stat:xp_gain": "res://assets/ui/icons/ui_icon_perk_vagabond_adaptability.png"
+}
