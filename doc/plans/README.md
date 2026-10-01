@@ -326,3 +326,5 @@ Dash commun validé ; casting d’au moins cinq à six personnages et refonte de
 
 
 **1er octobre, continuation hors audio — R3b :** cadence du Hurleur ×2,5, contrôles et captures vérifiés ; [rapport du banc fixe et des runs](../audits/projectile-cadence-2026-10-01/README.md). R6 carte et R5 personnages suivent, conformément à DECISIONS §46.
+
+**1er octobre, préchargement :** le boot Main charge désormais le shader actuel du fond de coffre ; référence supprimée retirée, smoke et ouverture réelle vérifiés (plan 25).

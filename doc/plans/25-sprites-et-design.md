@@ -537,3 +537,16 @@ au bord droit des lignes ; nature du gain à gauche, pendant la roulette et
 après révélation. Table `data/ui/loot_icons.json`, 169 contrôles UI verts,
 captures de tous les gains à 100/130 % inspectées ; compte rendu au plan 04 R2.
 Le shader, la vitesse de rotation et les sons des coffres restent ceux d'I7.
+
+### Préchargement — référence obsolète repérée, correctif engagé
+
+Les captures R3b trouvent encore `choice_backdrop.gdshader` dans
+`GameBootstrap.WarmupShaders`, alors que l'intégration I4 l'a supprimé. Remplacer
+ce chemin par `ui_dust_twinkle.gdshader`, utilisé par `PixelBackdrop`, sans
+modifier le shader ni ses paramètres de rotation. Vérifier build, smoke et boot
+Main rendu ; ouvrir un coffre pour contrôler que le fond continue à tourner.
+
+Correctif livré : référence au shader actuel rétablie. Build sans avertissement,
+smoke Hub 600 frames vert, vraie Main puis ouverture de coffre sur ViewSonic
+(`/tmp/vestiges-warmup-loot`) sans erreur de chargement de shader. Captures du
+fond animé inspectées ; aucun code ni paramètre du shader de rotation modifié.
