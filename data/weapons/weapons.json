@@ -39,7 +39,7 @@
     "stats": {
       "damage": 10,
       "attack_speed": 1.0,
-      "range": 60,
+      "range": 70,
       "arc_angle": 90,
       "knockback": 10
     },
@@ -68,7 +68,7 @@
     "stats": {
       "damage": 16,
       "attack_speed": 0.65,
-      "range": 55,
+      "range": 70,
       "arc_angle": 120,
       "knockback": 40
     },
@@ -183,7 +183,7 @@
     "stats": {
       "damage": 7,
       "attack_speed": 1.5,
-      "range": 45,
+      "range": 65,
       "knockback": 5
     },
     "source": "world",
@@ -324,7 +324,7 @@
     "stats": {
       "damage": 25,
       "attack_speed": 0.5,
-      "range": 50,
+      "range": 70,
       "arc_angle": 100,
       "knockback": 45
     },
@@ -417,7 +417,7 @@
     "stats": {
       "damage": 6,
       "attack_speed": 2.5,
-      "range": 35,
+      "range": 55,
       "knockback": 0
     },
     "special_effect": {
@@ -531,7 +531,7 @@
     "stats": {
       "damage": 14,
       "attack_speed": 0.8,
-      "range": 55,
+      "range": 65,
       "chain_targets": 2,
       "chain_range": 100,
       "chain_damage_falloff": 0.8
@@ -650,7 +650,7 @@
     "stats": {
       "damage": 15,
       "attack_speed": 1.8,
-      "range": 50,
+      "range": 65,
       "arc_angle": 70,
       "knockback": 0
     },
@@ -717,7 +717,7 @@
     "stats": {
       "damage": 11,
       "attack_speed": 1.4,
-      "range": 45,
+      "range": 60,
       "arc_angle": 90,
       "knockback": 15,
       "essence_cost_per_attack": 0.2

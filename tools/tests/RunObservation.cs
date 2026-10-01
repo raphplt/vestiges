@@ -353,6 +353,9 @@ public partial class RunObservation : Node
         EventBus eventBus = GetNode<EventBus>("/root/EventBus");
         // Souffle du tout début de run (retour du 26 septembre) : premier coup reçu et dégâts cumulés à 10 et 30 s.
         double firstHit = -1, damage10 = 0, damage30 = 0;
+        // Plan 24 L3 : dégâts reçus avant et pendant la première Résurgence (4:00 à 5:10), armes portées à 4:00.
+        double damageBefore240 = 0, damageResurgence = 0;
+        int weaponsAt240 = -1, levelAt240 = -1;
         // Temps de jeu, pauses exclues : la mesure vaut la même chose en temps réel et en headless
         // accéléré (--fixed-fps), où une seconde de jeu dure bien moins qu'une seconde d'horloge.
         double gameTime = 0;
@@ -396,6 +399,10 @@ public partial class RunObservation : Node
                 damage10 += damage;
             if (at <= 30)
                 damage30 += damage;
+            if (at < 240)
+                damageBefore240 += damage;
+            else if (at < 310)
+                damageResurgence += damage;
         };
         eventBus.PlayerHitBy += onHit;
         List<int> visibleSamples = new();
@@ -482,6 +489,11 @@ public partial class RunObservation : Node
                 : Vector2.Zero;
 
             int level = progression.Level;
+            if (weaponsAt240 < 0 && t >= 240)
+            {
+                weaponsAt240 = _player.WeaponSlots.Count;
+                levelAt240 = level;
+            }
             if (level > lastLevel)
             {
                 for (int l = lastLevel + 1; l <= level; l++)
@@ -567,6 +579,8 @@ public partial class RunObservation : Node
         summary.Append(CultureInfo.InvariantCulture, $"seed={seed} seconds={seconds:F0} first_visible_s={firstVisible:F0}");
         summary.Append(CultureInfo.InvariantCulture, $" view={VisibleWorldRect().Size.X:F0}x{VisibleWorldRect().Size.Y:F0}");
         summary.Append(CultureInfo.InvariantCulture, $" first_hit_s={firstHit:F1} damage_10s={damage10:F0} damage_30s={damage30:F0}");
+        summary.Append(CultureInfo.InvariantCulture,
+            $" hit_per_min_0_240={damageBefore240 / 4.0:F0} hit_per_min_240_310={damageResurgence / (70.0 / 60.0):F0} weapons_240s={weaponsAt240} level_240s={levelAt240}");
         int openRifts = 0;
         foreach (Rift rift in Rift.All)
             if (rift.IsOpen)

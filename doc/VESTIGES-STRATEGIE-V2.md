@@ -395,7 +395,6 @@ Trois ressources au total. Pas d'inventaire de matériaux. Pas de gestion de sto
 **Perks à ajouter** (liés au nouveau flow) :
 - "Nomade" — +15% vitesse de déplacement. Simple mais crucial quand le monde s'efface.
 - "Mémoire vive" — L'Effacement ralentit de 20% dans un rayon autour du joueur. Le joueur "ancre" le monde un peu mieux.
-- "Pilleur" — Les coffres ont +30% de chance de contenir une arme de rareté supérieure.
 - "Résonance" — Les Autels offrent un choix de perk supplémentaire gratuit.
 - "Marcheur du vide" — Les débuffs de zone effacée sont réduits de 50%. Permet d'explorer les zones dangereuses.
 - "Second souffle" — Inchangé (revenir à 50% HP une fois par run).
@@ -472,7 +471,7 @@ Le monde entre dans un état de "mémoire résiduelle". Les biomes n'existent pl
 | 10-20 | L'auto-attaque existe | Son personnage tape les ennemis proches tout seul |
 | 20-40 | XP et Essence | Des orbes volent vers lui, une barre en bas se remplit |
 | 40-60 | Premier level-up | Choix 1 parmi 3, descriptions courtes et claires |
-| 1-2 min | Premier coffre | Coffre visible, ouverture, arme ou bonus |
+| 1-2 min | Premier coffre | Coffre visible, ouverture, Essence ou bonus |
 | 3-5 min | L'Effacement existe | Zone derrière lui qui se décolore visiblement |
 | 4-6 min | Premier Autel | L'Autel pulse quand le joueur approche, menu simple |
 | 4-5 min | Première Résurgence | Signal sonore + visuel 30 sec avant, vague intense |
@@ -751,7 +750,7 @@ Le script de post-processing doit inclure une vérification/correction de l'angl
 - [x] Implémenter AltarSystem (spawn, interaction, upgrades d'armes) ; refondu en Mémoriaux (plan 17 lot 3B, 26 septembre 2026).
 - [x] Raretés Commun → Légendaire, portées par les améliorations d'arme et de passif plutôt que par l'arme (décision 4.3 du [plan 17](plans/17-armes-coffres-modificateurs.md), vague 1, 26 septembre 2026).
 - [x] Risque choisi : Péril, Failles et Oublis, à la place de l'Appel du Vide et des malédictions ([plan 17](plans/17-armes-coffres-modificateurs.md) lots 3A et 3C, 26 septembre 2026).
-- [x] Rendre les armes lootables dans les coffres dès le début de run.
+- [x] ~~Rendre les armes lootables dans les coffres dès le début de run.~~ Retiré le 1er octobre 2026 : les armes viennent du level-up ([DECISIONS §40](plans/DECISIONS.md), plan 24 L1).
 - [x] Implémenter EssenceTracker (remplace l'inventaire).
 - [ ] Ajuster l'économie d'Essence (drop rates, coûts d'upgrade aux Autels).
 - [ ] Comparaison d'armes au loot.

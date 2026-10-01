@@ -5,7 +5,7 @@
 		{ "id": "blessing_sure_hand", "name_key": "BLESSING_SURE_HAND", "stat": "damage", "modifier_type": "multiplicative", "amount": 0.05 },
 		{ "id": "blessing_light_step", "name_key": "BLESSING_LIGHT_STEP", "stat": "speed", "modifier_type": "multiplicative", "amount": 0.04 },
 		{ "id": "blessing_old_rhythm", "name_key": "BLESSING_OLD_RHYTHM", "stat": "attack_speed", "modifier_type": "multiplicative", "amount": 0.05 },
-		{ "id": "blessing_mending", "name_key": "BLESSING_MENDING", "stat": "regen_rate", "modifier_type": "additive", "amount": 0.2 },
+		{ "id": "blessing_mending", "name_key": "BLESSING_MENDING", "stat": "regen_rate", "modifier_type": "additive", "amount": 0.3 },
 		{ "id": "blessing_bulwark", "name_key": "BLESSING_BULWARK", "stat": "armor", "modifier_type": "additive", "amount": 2 },
 		{ "id": "blessing_true_eye", "name_key": "BLESSING_TRUE_EYE", "stat": "crit_chance", "modifier_type": "additive", "amount": 0.025 },
 		{ "id": "blessing_wide_gesture", "name_key": "BLESSING_WIDE_GESTURE", "stat": "aoe_radius", "modifier_type": "multiplicative", "amount": 0.05 },

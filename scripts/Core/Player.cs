@@ -1988,7 +1988,17 @@ public partial class Player : CharacterBody2D
     private float GetEffectiveWeaponRange(WeaponInstance weapon)
     {
         float weaponRange = weapon?.GetStat("range", AttackRange) ?? AttackRange;
-        return weaponRange * (AttackRange / 300f) * _attackRangeMultiplier;
+        return weaponRange * PersonalRangeFactor(weapon) * _attackRangeMultiplier;
+    }
+
+    /// <summary>
+    /// Portée propre au personnage, rapportée à 300. Elle allonge la mêlée mais ne la raccourcit plus : à ×0,83, la
+    /// Forgeuse frappait à 46 px avec le Parcmètre, au contact des créatures (plan 24 lot L3).
+    /// </summary>
+    private float PersonalRangeFactor(WeaponInstance weapon)
+    {
+        float factor = AttackRange / 300f;
+        return weapon?.Base.Type == "melee" ? Mathf.Max(1f, factor) : factor;
     }
 
     /// <summary>Taille d'une zone d'effet (rayon, angle) après les bonus de zone du joueur.</summary>

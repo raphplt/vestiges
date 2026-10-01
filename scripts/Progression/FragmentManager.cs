@@ -288,28 +288,20 @@ public partial class FragmentManager : Node
     public bool IsChoiceActive => _choosingActive;
 
     /// <summary>
-    /// Tier max autorisé dans le pool de fragments selon le niveau du joueur.
-    /// Progression graduelle : Tier 1 tôt, Tier 3 mid-game, Tier 4-5 très tard.
-    /// Petite chance de voir un tier au-dessus du max normal (3% base + luck × 30%).
+    /// Palier d'arme maximal offert selon le niveau du joueur (data/progression/level_up_offer.json), avec une petite
+    /// chance, que la Chance relève, d'en voir un de plus.
     /// </summary>
     private int GetMaxFragmentTier(int playerLevel)
     {
-        int baseTier;
-        if (playerLevel < 5) baseTier = 1;
-        else if (playerLevel < 10) baseTier = 2;
-        else if (playerLevel < 15) baseTier = 3;
-        else if (playerLevel < 20) baseTier = 4;
-        else baseTier = 5;
-
-        if (baseTier < 5)
+        LevelUpOfferConfig offer = LevelUpOfferConfig.Load();
+        int baseTier = offer.BaseTier(playerLevel);
+        if (baseTier < offer.MaxTier)
         {
             CachePlayer();
             float luck = _player?.LuckBonus ?? 0f;
-            float tierBumpChance = 0.03f + luck * 0.30f;
-            if (GD.Randf() < tierBumpChance)
+            if (GD.Randf() < offer.TierBumpChance + luck * offer.TierBumpLuck)
                 baseTier++;
         }
-
         return baseTier;
     }
 
@@ -571,6 +563,7 @@ public partial class FragmentManager : Node
 
         // Séparer new vs upgrade pour garantir un mélange
         List<FragmentOption> newItems = new();
+        List<FragmentOption> newWeapons = new();
         List<FragmentOption> upgrades = new();
         foreach (FragmentOption o in pool)
         {
@@ -578,17 +571,36 @@ public partial class FragmentManager : Node
                 newItems.Add(o);
             else
                 upgrades.Add(o);
+            if (o.Type == "weapon_new")
+                newWeapons.Add(o);
         }
 
         List<FragmentOption> result = new();
         List<FragmentOption> remaining = new(pool);
 
-        // Garantir au moins 1 de chaque catégorie si possible
-        if (newItems.Count > 0 && upgrades.Count > 0 && count >= 2)
+        // Une arme nouvelle d'abord tant que l'arsenal est maigre (plan 24 lot L3) : elle se perdait parmi les objets.
+        LevelUpOfferConfig offer = LevelUpOfferConfig.Load();
+        bool hasNew = false;
+        if (newWeapons.Count > 0 && count >= 2
+            && (_player.WeaponSlots.Count < offer.WeaponGuaranteeBelow || GD.Randf() < offer.WeaponChanceAfter))
         {
-            FragmentOption picked = WeightedPick(newItems, luck);
-            result.Add(picked);
-            remaining.Remove(picked);
+            FragmentOption weapon = WeightedPick(newWeapons, luck);
+            result.Add(weapon);
+            remaining.Remove(weapon);
+            newItems.Remove(weapon);
+            hasNew = true;
+        }
+
+        // Garantir au moins 1 de chaque catégorie si possible
+        if (newItems.Count + (hasNew ? 1 : 0) > 0 && upgrades.Count > 0 && count >= 2)
+        {
+            FragmentOption picked;
+            if (!hasNew)
+            {
+                picked = WeightedPick(newItems, luck);
+                result.Add(picked);
+                remaining.Remove(picked);
+            }
 
             picked = WeightedPick(upgrades, luck);
             result.Add(picked);
@@ -628,13 +640,11 @@ public partial class FragmentManager : Node
 
     private static float GetFragmentWeight(FragmentOption opt, float luck)
     {
-        float weight = 1f;
-        // Tiers élevés sont plus rares, mais la luck les booste
-        if (opt.SortWeight >= 4) weight = 0.3f + luck * 1.5f;
-        else if (opt.SortWeight >= 3) weight = 0.5f + luck * 1.0f;
-        // Upgrades légèrement favorisées (aide à compléter les builds)
-        if (opt.Type.Contains("upgrade")) weight *= 1.15f;
-        return Mathf.Max(weight, 0.1f);
+        LevelUpOfferConfig offer = LevelUpOfferConfig.Load();
+        float weight = offer.TierWeight(opt.SortWeight, luck);
+        if (opt.Type.Contains("upgrade"))
+            weight *= offer.UpgradeWeight;
+        return Mathf.Max(weight, offer.MinWeight);
     }
 
     private void CachePlayer()

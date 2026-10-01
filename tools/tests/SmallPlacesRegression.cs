@@ -128,6 +128,26 @@ public partial class SmallPlacesRegression : Node2D
 		Check(weapon != null || essence.CurrentEssence - essenceBefore is >= 8 and <= 14,
 			$"Wagonnet : une arme au sol ({weapon ?? "non"}) ou 8 à 14 Essence ({essence.CurrentEssence - essenceBefore})");
 
+		// Emplacements d'armes pleins : même au tirage de l'arme, le Wagonnet donne de l'Essence (DECISIONS §40).
+		SmallPlace fullCart = places.Find(place => place.Data.Id == "mine_cart" && place.CanInteract);
+		if (fullCart != null)
+		{
+			foreach (WeaponData data in WeaponDataLoader.GetAll())
+				if (player.WeaponSlots.Count < Player.MaxWeaponSlots)
+					player.AddWeapon(data);
+			System.Reflection.PropertyInfo chance = typeof(SmallPlaceData).GetProperty(nameof(SmallPlaceData.Chance));
+			float oldChance = fullCart.Data.Chance;
+			chance.SetValue(fullCart.Data, 1f);
+			int pickupsBefore = CountPickups(fullCart.GetParent());
+			essenceBefore = essence.CurrentEssence;
+			fullCart.Interact(player);
+			await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+			chance.SetValue(fullCart.Data, oldChance);
+			Check(player.WeaponSlots.Count == Player.MaxWeaponSlots && CountPickups(fullCart.GetParent()) == pickupsBefore
+				&& essence.CurrentEssence - essenceBefore is >= 8 and <= 14,
+				$"Wagonnet, quatre armes portées : de l'Essence ({essence.CurrentEssence - essenceBefore}), aucune arme au sol");
+		}
+
 		player.TakeDamage(30f);
 		float hp = player.CurrentHp;
 		essenceBefore = essence.CurrentEssence;
@@ -208,5 +228,14 @@ public partial class SmallPlacesRegression : Node2D
 		if (!ok)
 			_failures++;
 		GD.Print($"[SmallPlacesRegression] {(ok ? "PASS" : "FAIL")} {label}");
+	}
+
+	private static int CountPickups(Node parent)
+	{
+		int count = 0;
+		foreach (Node child in parent.GetChildren())
+			if (child is WeaponPickup)
+				count++;
+		return count;
 	}
 }

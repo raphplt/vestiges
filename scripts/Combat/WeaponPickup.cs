@@ -7,7 +7,7 @@ using Vestiges.World;
 namespace Vestiges.Combat;
 
 /// <summary>
-/// Arme lâchée au sol par une créature, ou par un coffre quand les quatre emplacements sont pris. Ramassée d'elle-même
+/// Arme posée au sol par le Wagonnet, ou laissée par un échange d'arme. Ramassée d'elle-même
 /// si un emplacement est libre ; sinon c'est un lieu activable comme un coffre : l'invite commune propose de
 /// l'échanger contre l'arme équipée. Au ramassage, son icône vole jusqu'au HUD (plan 02 J3).
 /// </summary>
