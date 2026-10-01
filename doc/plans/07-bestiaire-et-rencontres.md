@@ -405,3 +405,18 @@ Toujours **non concluante**, pour une autre raison que dans le conteneur : même
 **Pistes d'essai, non arbitrées :** limiter la part simultanée de tireurs, raccourcir certains tirs ou espacer leurs salves ; si nécessaire, transformer une attaque en menace locale télégraphiée. Choisir à partir du diagnostic, sans appliquer tous les leviers à la fois ni vider la foule. La direction demandée porte sur la place des tirs, pas seulement sur leurs dégâts ou leur beauté.
 
 Mesurer avant/après dans des conditions comparables (seeds, durée, build), puis jouer la séquence : le critère est de pouvoir combattre et maintenir une foule tout en gardant des esquives ponctuelles intéressantes. Aucun changement de gameplay n'est livré par cette note.
+
+### R3 — diagnostic et essai engagés
+
+1. Relever les quatre tireurs, leurs télégraphes, cadences, portées et pools de biomes ; distinguer le Présage, frappe au sol.
+2. Ajouter au banc de densité une sonde optionnelle des projectiles présents/visibles, âgés de plus de deux secondes et répartis par tireur. Aucun coût ajouté aux runs normales.
+3. Mesurer deux seeds pendant 320 s, première Résurgence comprise. Comparer sur le même build les 4 s actuelles à une surcharge de 2 s **limitée au banc**, sans changer vitesse, cadence ni compositions.
+4. Archiver les chiffres avec densité, dégâts et limites de reproductibilité. Décider si l'essai mérite une partie jouée ; ne pas adopter un réglage de production sur le seul bot invincible.
+
+### R3 — diagnostic livré, réglage de production conservé
+
+Inventaire et [rapport avec données archivées](../audits/projectile-pressure-2026-10-01/README.md) : quatre tireurs, tous à 185 px/s pendant 4 s (740 px), contre 180–300 px de portée d'engagement. Le Présage est une frappe au sol. Le Hurleur figure dans tous les pools de Résurgence.
+
+Quatre runs headless de 320 s, seeds 221092026/1002, même build, sonde à 10 Hz : en référence, 7,20–14,78 tirs visibles en moyenne pendant la première Résurgence, pics 35–60 ; présence pendant 93–94 % de la phase. Les Hurleurs représentent 63–73 % de l'occupation de projectiles. L'essai 4 → 2 s limité au banc donne des résultats opposés selon la seed et des compositions différentes : **non concluant**, aucun nerf livré.
+
+Sonde et synthèse réutilisables (`--measure-projectiles`, `--projectile-lifetime`, `tools/summarize_projectile_pressure.py`), build sans avertissement, 12 800 échantillons cohérents. Pas de fenêtre ouverte pour ces mesures. Prochaine expérience : composition fixe, espacement du tir du Hurleur seul en conservant cri, mêlée et annonces ; retour aux seeds puis vraie partie. Le ressenti et l'essai rendu restent ouverts, aucune case de gameplay/recette cochée.

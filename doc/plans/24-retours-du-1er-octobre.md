@@ -529,3 +529,13 @@ Essence, XP, niveaux d'objet, Souvenirs et treize statistiques identifiés par
 leurs icônes ; éclat de rareté séparé. Ouverture réelle et galerie complète
 capturées et regardées à 100/130 %, build sans avertissement, smoke et 169
 contrôles UI verts. [Détail au plan 04](04-interfaces-et-hub.md#r2--lot-engagé--icônes-de-nature-du-butin).
+
+### R3 — diagnostic terminé, équilibre encore ouvert
+
+Quatre tireurs identifiés ; le Présage attaque au sol. Mesures et essai isolé de
+4 → 2 s sur quatre runs de 320 s : les Hurleurs dominent les tirs des Résurgences,
+mais les variations de composition empêchent de valider la réduction de durée.
+[Rapport, protocole et chiffres](../audits/projectile-pressure-2026-10-01/README.md).
+Aucun réglage de combat changé en production. Suite au plan 07 : rencontre fixe,
+cadence du Hurleur comme seul levier, puis partie jouée. R3 reste ouvert pour la
+recette de gameplay ; son diagnostic demandé est livré.

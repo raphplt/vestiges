@@ -57,6 +57,7 @@ namespace Vestiges.Tests;
 /// coffres entrés dans le cadre, et parmi eux ceux qu'aucun décor ne masquait ; lieux croisés et visités par minute,
 /// micro-événements, Essence gagnée et dépensée).
 /// --scaling cle=valeur,… : surcharge des réglages d'apparition (spawn_flow.json) pendant la mesure de densité.
+/// --measure-projectiles [--projectile-lifetime secondes] : pression des tirs à 10 Hz ; durée surchargée dans le banc seul.
 /// --nomad : pendant la mesure, le bot garde un cap (tiré de la seed) au lieu d'errer autour du départ,
 /// et en change quand il bute sur le bord du monde.
 /// --visit : pendant la mesure, le bot ratisse : il se détourne vers les lieux vus, ouvre, ravive et dépense
@@ -346,6 +347,11 @@ public partial class RunObservation : Node
 
     private async Task MeasureDensity(double seconds, ulong seed)
     {
+        string[] args = OS.GetCmdlineUserArgs();
+        string lifetime = Argument(args, "--projectile-lifetime", null);
+        using ProjectilePressureProbe projectiles = Array.IndexOf(args, "--measure-projectiles") >= 0
+            ? new ProjectilePressureProbe(lifetime == null ? null : float.Parse(lifetime, CultureInfo.InvariantCulture))
+            : null;
         RunTracker tracker = _world.GetNode<RunTracker>("RunTracker");
         int peril = int.Parse(Argument(OS.GetCmdlineUserArgs(), "--peril", "0"), CultureInfo.InvariantCulture);
         if (peril > 0)
@@ -478,6 +484,7 @@ public partial class RunObservation : Node
             double t = gameTime;
             if (t >= seconds)
                 break;
+            projectiles?.Sample(t, VisibleWorldRect());
 
             // Déplacement nomade déterministe : nouveau point de passage à 500–900 px dès l'arrivée,
             // ou si le joueur est bloqué (obstacle, Néant) depuis deux secondes.
@@ -603,6 +610,7 @@ public partial class RunObservation : Node
         eventBus.EntityDamaged -= onDamaged;
         eventBus.EssenceChanged -= onEssence;
         eventBus.RunEventStarted -= onEvent;
+        projectiles?.Save($"{_output}/projectiles-{seed}.csv");
         using (FileAccess csv = FileAccess.Open($"{_output}/density-{seed}.csv", FileAccess.ModeFlags.Write))
             csv.StoreString(string.Join("\n", rows) + "\n");
 

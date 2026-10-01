@@ -1,0 +1,14 @@
+{
+  "base_commit": "4c479025",
+  "build_sha256": "5f12686915ac48200dbfeebab4f766ab34582c23839bd2f87317da79257669ee",
+  "seconds": 320,
+  "seeds": [
+    221092026,
+    1002
+  ],
+  "fixed_fps": 60,
+  "sample_hz": 10,
+  "baseline_lifetime": 4,
+  "trial_lifetime": 2,
+  "validation": "4 runs complètes, 12800 échantillons ; 700 échantillons Crisis par run ; aucun projectile >2 s dans la variante ; aucune source inconnue."
+}
