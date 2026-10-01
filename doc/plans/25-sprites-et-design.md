@@ -242,3 +242,21 @@ dans `/tmp/vestiges-plan25-s6-run/` (remplissage, éclat de niveau, aperçu
 des sceaux). Relecture locale des caches et chemins de textures. Nouvelle
 comparaison A/B des changements runtime S4+S6 dans
 `/tmp/vestiges-plan25-runtime-ab/` ; résultat à consigner à sa fin.
+
+### Mesure S4 + S6 — 1er octobre 2026
+
+Seconde comparaison A/B terminée, toutes les passes valides :
+`BENCH_SECONDS=15 tools/bench_ab.sh a8858ff0 /tmp/vestiges-plan25-runtime-ab 1`.
+Même banc dense, 120 ennemis, versions alternées ; Ryzen 7 5700X,
+Radeon RX 6950 XT, Godot 4.7.2 GL. Charge en fin de mesure : 2,69/16 cœurs.
+Les générateurs et captures étaient arrêtés pendant la mesure.
+
+| Résolution | FPS avant → après | p99 avant → après | Nœuds/s avant → après (arrondis) |
+|---|---|---|---|
+| 1280 × 720 | 186,8 → 178,1 | 10,7 → 12,8 ms | 1 → 1 |
+| 1920 × 1080 | 177,4 → 191,5 | 11,7 → 10,5 ms | 2 → 1 |
+
+Une seule passe par version : les écarts opposés selon la résolution ne
+permettent pas d'affirmer un gain de FPS. Le test de réutilisation d'impact
+prouve séparément l'absence de création d'un nouveau nœud au second usage.
+La première comparaison incomplète reste conservée pour diagnostic.
