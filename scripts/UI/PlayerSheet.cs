@@ -111,12 +111,12 @@ public static class PlayerSheet
         }
         AddSectionTitle(container, $"{Tr("INVENTORY_OBJECTS")}  {player.PassiveSlots.Count}/{Player.MaxPassiveSlots}");
         foreach (ActivePassiveSouvenir passive in player.PassiveSlots)
-            AddCompactRow(container, PerkIconResolver.GetPassiveStatIconPath(passive.Data.Stat), passive.Data.Name,
+            AddCompactRow(container, passive.Data.IconSmall, passive.Data.Name,
                 string.Format(Tr("INVENTORY_LEVEL"), passive.Level));
         string slots = reminiscenceSlots > 0 ? $"  {player.Specializations.Count}/{reminiscenceSlots}" : "";
         AddSectionTitle(container, Tr("INVENTORY_REMINISCENCES") + slots);
         foreach (PerkSpecializationData perk in player.Specializations)
-            AddCompactRow(container, null, perk.Name, "");
+            AddCompactRow(container, perk.IconSmall, perk.Name, "");
         if (player.Specializations.Count == 0)
             container.AddChild(MakeLabel(Tr("INVENTORY_NONE"), TextRole.Small, UITheme.TextVeryDim));
     }

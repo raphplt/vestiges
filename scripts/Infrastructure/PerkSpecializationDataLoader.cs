@@ -23,6 +23,8 @@ public sealed class PerkSpecializationData
     public string Name { get; init; }
     public string Description { get; init; }
     public string Family { get; init; }
+    public string Icon { get; init; }
+    public string IconSmall { get; init; }
     public PerkSpecializationEligibility Eligibility { get; init; }
     public IReadOnlyDictionary<string, float> Parameters { get; init; }
 }
@@ -153,6 +155,8 @@ public static class PerkSpecializationDataLoader
                     Name = Text(data, "name"),
                     Description = Text(data, "description"),
                     Family = Text(data, "family"),
+                    Icon = data.ContainsKey("icon") ? Text(data, "icon") : "",
+                    IconSmall = data.ContainsKey("icon_small") ? Text(data, "icon_small") : "",
                     Eligibility = ParseEligibility(eligibility),
                     Parameters = new ReadOnlyDictionary<string, float>(parameters)
                 });

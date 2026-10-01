@@ -1,0 +1,116 @@
+{
+  "icons": [
+    {
+      "id": "priority_targeting",
+      "name": "Convergence",
+      "family": "combat",
+      "icon": "perk_icon_priority_targeting.png",
+      "icon_16": "perk_icon_priority_targeting_16.png",
+      "proposed_id": false
+    },
+    {
+      "id": "overflow",
+      "name": "Débordement",
+      "family": "combat",
+      "icon": "perk_icon_overflow.png",
+      "icon_16": "perk_icon_overflow_16.png",
+      "proposed_id": false
+    },
+    {
+      "id": "carry_control",
+      "name": "Propagation",
+      "family": "combat",
+      "icon": "perk_icon_carry_control.png",
+      "icon_16": "perk_icon_carry_control_16.png",
+      "proposed_id": false
+    },
+    {
+      "id": "overheal_reserve",
+      "name": "Prévoyance",
+      "family": "survival",
+      "icon": "perk_icon_overheal_reserve.png",
+      "icon_16": "perk_icon_overheal_reserve_16.png",
+      "proposed_id": false
+    },
+    {
+      "id": "rally",
+      "name": "Reprise",
+      "family": "survival",
+      "icon": "perk_icon_rally.png",
+      "icon_16": "perk_icon_rally_16.png",
+      "proposed_id": false
+    },
+    {
+      "id": "xp_trail",
+      "name": "Sillage",
+      "family": "collection",
+      "icon": "perk_icon_xp_trail.png",
+      "icon_16": "perk_icon_xp_trail_16.png",
+      "proposed_id": false
+    },
+    {
+      "id": "salvage_xp",
+      "name": "Délestage",
+      "family": "rewards",
+      "icon": "perk_icon_salvage_xp.png",
+      "icon_16": "perk_icon_salvage_xp_16.png",
+      "proposed_id": false
+    },
+    {
+      "id": "carried_choice",
+      "name": "Seconde lecture",
+      "family": "rewards",
+      "icon": "perk_icon_carried_choice.png",
+      "icon_16": "perk_icon_carried_choice_16.png",
+      "proposed_id": false
+    },
+    {
+      "id": "familiar_loot",
+      "name": "Habitude",
+      "family": "rewards",
+      "icon": "perk_icon_familiar_loot.png",
+      "icon_16": "perk_icon_familiar_loot_16.png",
+      "proposed_id": false
+    },
+    {
+      "id": "backlash",
+      "name": "Contrecoup",
+      "family": "combat",
+      "icon": "perk_icon_backlash.png",
+      "icon_16": "perk_icon_backlash_16.png",
+      "proposed_id": true
+    },
+    {
+      "id": "ember_transfer",
+      "name": "Braise",
+      "family": "combat",
+      "icon": "perk_icon_ember_transfer.png",
+      "icon_16": "perk_icon_ember_transfer_16.png",
+      "proposed_id": true
+    },
+    {
+      "id": "double_impact",
+      "name": "Mémoire vive",
+      "family": "combat",
+      "icon": "perk_icon_double_impact.png",
+      "icon_16": "perk_icon_double_impact_16.png",
+      "proposed_id": true
+    },
+    {
+      "id": "erasure_edge",
+      "name": "Lisière",
+      "family": "survival",
+      "icon": "perk_icon_erasure_edge.png",
+      "icon_16": "perk_icon_erasure_edge_16.png",
+      "proposed_id": true
+    },
+    {
+      "id": "dead_weight",
+      "name": "Poids mort",
+      "family": "combat",
+      "icon": "perk_icon_dead_weight.png",
+      "icon_16": "perk_icon_dead_weight_16.png",
+      "proposed_id": true
+    }
+  ]
+}

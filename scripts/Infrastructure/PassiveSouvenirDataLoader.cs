@@ -8,6 +8,8 @@ public class PassiveSouvenirData
 	public string Id;
 	public string Name;
 	public string Description;
+	public string Icon;
+	public string IconSmall;
 	public Color IconColor;
 	public int MaxLevel;
 	/// <summary>Stat et type du premier effet : icône et libellé principal de l'objet.</summary>
@@ -83,6 +85,8 @@ public static class PassiveSouvenirDataLoader
 			Id = dict["id"].AsString(),
 			Name = dict.ContainsKey("name") ? dict["name"].AsString() : dict["id"].AsString(),
 			Description = dict.ContainsKey("description") ? dict["description"].AsString() : "",
+			Icon = dict.ContainsKey("icon") ? dict["icon"].AsString() : "",
+			IconSmall = dict.ContainsKey("icon_small") ? dict["icon_small"].AsString() : "",
 			MaxLevel = dict.ContainsKey("max_level") ? (int)dict["max_level"].AsDouble() : 30,
 			Survival = dict.ContainsKey("survival") && dict["survival"].AsBool()
 		};

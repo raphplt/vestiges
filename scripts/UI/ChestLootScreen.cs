@@ -78,6 +78,7 @@ public partial class ChestLootScreen : CanvasLayer
         public Label Label;
         public PanelContainer Card;
         public ColorRect Flash;
+        public Control Icon;
         public LootDisplayInfo FinalItem;
         public float Timer;
         public float CurrentInterval;
@@ -268,6 +269,13 @@ public partial class ChestLootScreen : CanvasLayer
         int rarityRank = RarityArt.Rank(_rarity);
         if (rarityRank >= 0)
             contents.AddChild(new RarityIcon(rarityRank));
+        Control icon = null;
+        if (loot.Type == "object_level")
+        {
+            icon = PlayerSheet.MakeIcon(PassiveSouvenirDataLoader.Get(loot.ItemId)?.Icon);
+            icon.Visible = false;
+            contents.AddChild(icon);
+        }
         contents.AddChild(label);
 
         card.AddChild(flash);
@@ -280,6 +288,7 @@ public partial class ChestLootScreen : CanvasLayer
             Label = label,
             Card = card,
             Flash = flash,
+            Icon = icon,
             FinalItem = finalItem,
             Timer = 0f,
             CurrentInterval = RouletteMinInterval,
@@ -344,6 +353,8 @@ public partial class ChestLootScreen : CanvasLayer
     private void RevealSlot(SlotState slot)
     {
         slot.Stopped = true;
+        if (slot.Icon != null)
+            slot.Icon.Visible = true;
         _slotsRevealed++;
 
         // Set final item

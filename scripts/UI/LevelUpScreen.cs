@@ -281,7 +281,7 @@ public partial class LevelUpScreen : CanvasLayer
         row.AddThemeConstantOverride("separation", 14);
         margin.AddChild(row);
 
-        Texture2D icon = isPerk ? null : LoadIcon(choice, isWeapon);
+        Texture2D icon = LoadIcon(choice, isWeapon);
         if (icon != null)
         {
             row.AddChild(new TextureRect
@@ -370,9 +370,11 @@ public partial class LevelUpScreen : CanvasLayer
 
     private static Texture2D LoadIcon(FragmentOption choice, bool isWeapon)
     {
-        string path = isWeapon
+        string path = choice.Type == PerkSpecializationOffers.OptionType
+            ? PerkSpecializationDataLoader.Get(choice.Id)?.Icon
+            : isWeapon
             ? WeaponDataLoader.Get(choice.Id)?.Sprite
-            : PerkIconResolver.GetPassiveStatIconPath(PassiveSouvenirDataLoader.Get(choice.Id)?.Stat);
+            : PassiveSouvenirDataLoader.Get(choice.Id)?.Icon;
         if (string.IsNullOrEmpty(path))
             return null;
         string resPath = path.StartsWith("res://") ? path : $"res://{path}";

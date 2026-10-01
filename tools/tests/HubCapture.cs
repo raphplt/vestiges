@@ -1,5 +1,6 @@
 using System;
 using System.Globalization;
+using System.Reflection;
 using System.Threading.Tasks;
 using Godot;
 
@@ -35,6 +36,20 @@ public partial class HubCapture : Node
             GetTree().Root.AddChild(hub);
             GetTree().CurrentScene = hub;
             await Frames(150);
+            string tab = Argument(args, "--collection-tab", "");
+            if (tab.Length > 0)
+            {
+                typeof(Vestiges.UI.HubCollectionPanel).GetField("_tab", BindingFlags.NonPublic | BindingFlags.Static).SetValue(null, tab);
+                hub.GetType().GetMethod("OpenCollection", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(hub, null);
+                await Frames(30);
+                Vestiges.UI.HubCollectionPanel collection = (Vestiges.UI.HubCollectionPanel)hub.GetType()
+                    .GetField("_collectionPanel", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(hub);
+                GridContainer grid = (GridContainer)typeof(Vestiges.UI.HubCollectionPanel)
+                    .GetField("_grid", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(collection);
+                int index = int.Parse(Argument(args, "--collection-index", "0"), CultureInfo.InvariantCulture);
+                ((Control)grid.GetChild(Mathf.Clamp(index, 0, grid.GetChildCount() - 1))).GrabFocus();
+                await Frames(20);
+            }
             Capture("hub-00");
 
             string actions = Argument(args, "--actions", "");

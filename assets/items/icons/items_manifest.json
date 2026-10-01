@@ -1,0 +1,242 @@
+{
+  "icons": [
+    {
+      "id": "memoire_vive",
+      "name": "Ressort de sommier",
+      "icon": "item_memoire_vive.png",
+      "icon_16": "item_memoire_vive_16.png",
+      "world": false
+    },
+    {
+      "id": "souffle_du_neant",
+      "name": "Papier carbone",
+      "icon": "item_souffle_du_neant.png",
+      "icon_16": "item_souffle_du_neant_16.png",
+      "world": false
+    },
+    {
+      "id": "reflet_brise",
+      "name": "Reflet brisé",
+      "icon": "item_reflet_brise.png",
+      "icon_16": "item_reflet_brise_16.png",
+      "world": false
+    },
+    {
+      "id": "resonance",
+      "name": "Rondelle de cuivre",
+      "icon": "item_resonance.png",
+      "icon_16": "item_resonance_16.png",
+      "world": false
+    },
+    {
+      "id": "portee_etendue",
+      "name": "Mètre pliant",
+      "icon": "item_portee_etendue.png",
+      "icon_16": "item_portee_etendue_16.png",
+      "world": false
+    },
+    {
+      "id": "persistance",
+      "name": "Pince à linge",
+      "icon": "item_persistance.png",
+      "icon_16": "item_persistance_16.png",
+      "world": false
+    },
+    {
+      "id": "oeil_critique",
+      "name": "Lunettes de lecture",
+      "icon": "item_oeil_critique.png",
+      "icon_16": "item_oeil_critique_16.png",
+      "world": false
+    },
+    {
+      "id": "ancrage",
+      "name": "Bouton de manteau",
+      "icon": "item_ancrage.png",
+      "icon_16": "item_ancrage_16.png",
+      "world": false
+    },
+    {
+      "id": "regeneration",
+      "name": "Bobine de fil",
+      "icon": "item_regeneration.png",
+      "icon_16": "item_regeneration_16.png",
+      "world": false
+    },
+    {
+      "id": "peau_dure",
+      "name": "Genouillère",
+      "icon": "item_peau_dure.png",
+      "icon_16": "item_peau_dure_16.png",
+      "world": false
+    },
+    {
+      "id": "carapace",
+      "name": "Écusson de pompier",
+      "icon": "item_carapace.png",
+      "icon_16": "item_carapace_16.png",
+      "world": false
+    },
+    {
+      "id": "instinct",
+      "name": "Lacet rouge",
+      "icon": "item_instinct.png",
+      "icon_16": "item_instinct_16.png",
+      "world": false
+    },
+    {
+      "id": "siphon_essence",
+      "name": "Aimant de frigo",
+      "icon": "item_siphon_essence.png",
+      "icon_16": "item_siphon_essence_16.png",
+      "world": false
+    },
+    {
+      "id": "photo_de_classe",
+      "name": "Photo de classe",
+      "icon": "item_photo_de_classe.png",
+      "icon_16": "item_photo_de_classe_16.png",
+      "world": false
+    },
+    {
+      "id": "jeton_de_fete",
+      "name": "Jeton de fête foraine",
+      "icon": "item_jeton_de_fete.png",
+      "icon_16": "item_jeton_de_fete_16.png",
+      "world": false
+    },
+    {
+      "id": "allumette_humide",
+      "name": "Allumette humide",
+      "icon": "item_allumette_humide.png",
+      "icon_16": "item_allumette_humide_16.png",
+      "world": false
+    },
+    {
+      "id": "glacon",
+      "name": "Glaçon dans un mouchoir",
+      "icon": "item_glacon.png",
+      "icon_16": "item_glacon_16.png",
+      "world": false
+    },
+    {
+      "id": "thermometre",
+      "name": "Thermomètre",
+      "icon": "item_thermometre.png",
+      "icon_16": "item_thermometre_16.png",
+      "world": false
+    },
+    {
+      "id": "epingle_a_nourrice",
+      "name": "Épingle à nourrice",
+      "icon": "item_epingle_a_nourrice.png",
+      "icon_16": "item_epingle_a_nourrice_16.png",
+      "world": false
+    },
+    {
+      "id": "petard_mouille",
+      "name": "Pétard mouillé",
+      "icon": "item_petard_mouille.png",
+      "icon_16": "item_petard_mouille_16.png",
+      "world": false
+    },
+    {
+      "id": "de_a_coudre",
+      "name": "Dé à coudre",
+      "icon": "item_de_a_coudre.png",
+      "icon_16": "item_de_a_coudre_16.png",
+      "world": false
+    },
+    {
+      "id": "semelle_usee",
+      "name": "Semelle usée",
+      "icon": "item_semelle_usee.png",
+      "icon_16": "item_semelle_usee_16.png",
+      "world": false
+    },
+    {
+      "id": "boite_de_pansements",
+      "name": "Boîte de pansements",
+      "icon": "item_boite_de_pansements.png",
+      "icon_16": "item_boite_de_pansements_16.png",
+      "world": false
+    },
+    {
+      "id": "loupe_de_philateliste",
+      "name": "Loupe de philatéliste",
+      "icon": "item_loupe_de_philateliste.png",
+      "icon_16": "item_loupe_de_philateliste_16.png",
+      "world": false
+    },
+    {
+      "id": "stylo_quatre_couleurs",
+      "name": "Stylo à quatre couleurs",
+      "icon": "item_stylo_quatre_couleurs.png",
+      "icon_16": "item_stylo_quatre_couleurs_16.png",
+      "world": false
+    },
+    {
+      "id": "tabouret_de_camping",
+      "name": "Tabouret de camping",
+      "icon": "item_tabouret_de_camping.png",
+      "icon_16": "item_tabouret_de_camping_16.png",
+      "world": false
+    },
+    {
+      "id": "chewing_gum",
+      "name": "Chewing-gum",
+      "icon": "item_chewing_gum.png",
+      "icon_16": "item_chewing_gum_16.png",
+      "world": false
+    },
+    {
+      "id": "gilet_reflechissant",
+      "name": "Gilet réfléchissant",
+      "icon": "item_gilet_reflechissant.png",
+      "icon_16": "item_gilet_reflechissant_16.png",
+      "world": false
+    },
+    {
+      "id": "thermos",
+      "name": "Thermos",
+      "icon": "item_thermos.png",
+      "icon_16": "item_thermos_16.png",
+      "world": false
+    },
+    {
+      "id": "medaille_cabossee",
+      "name": "Médaille cabossée",
+      "icon": "item_medaille_cabossee.png",
+      "icon_16": "item_medaille_cabossee_16.png",
+      "world": false
+    },
+    {
+      "id": "porte_monnaie_use",
+      "name": "Porte-monnaie usé",
+      "icon": "item_porte_monnaie_use.png",
+      "icon_16": "item_porte_monnaie_use_16.png",
+      "world": false
+    },
+    {
+      "id": "glass_paperweight",
+      "name": "Presse-papier en verre (monde)",
+      "icon": "item_glass_paperweight.png",
+      "icon_16": "item_glass_paperweight_16.png",
+      "world": true
+    },
+    {
+      "id": "torn_calendar",
+      "name": "Calendrier arraché (monde)",
+      "icon": "item_torn_calendar.png",
+      "icon_16": "item_torn_calendar_16.png",
+      "world": true
+    },
+    {
+      "id": "opening_locket",
+      "name": "Médaillon ouvrant (monde)",
+      "icon": "item_opening_locket.png",
+      "icon_16": "item_opening_locket_16.png",
+      "world": true
+    }
+  ]
+}

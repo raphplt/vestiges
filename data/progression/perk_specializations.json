@@ -12,6 +12,8 @@
   "perks": [
     {
       "id": "priority_targeting",
+      "icon": "res://assets/perks/icons/perk_icon_priority_targeting.png",
+      "icon_small": "res://assets/perks/icons/perk_icon_priority_targeting_16.png",
       "effect": "priority_targeting",
       "name": "Convergence",
       "description": "Tes armes à ciblage privilégient les élites et les Souverains à portée.",
@@ -23,6 +25,8 @@
     },
     {
       "id": "overflow",
+      "icon": "res://assets/perks/icons/perk_icon_overflow.png",
+      "icon_small": "res://assets/perks/icons/perk_icon_overflow_16.png",
       "effect": "overflow",
       "name": "Débordement",
       "description": "Une partie des dégâts inutilisés d’un coup fatal renforce le prochain impact de cette arme.",
@@ -38,6 +42,8 @@
     },
     {
       "id": "carry_control",
+      "icon": "res://assets/perks/icons/perk_icon_carry_control.png",
+      "icon_small": "res://assets/perks/icons/perk_icon_carry_control_16.png",
       "effect": "carry_control",
       "name": "Propagation",
       "description": "À leur mort, les ennemis transmettent leur ralentissement et leur désorientation à un voisin.",
@@ -52,6 +58,8 @@
     },
     {
       "id": "overheal_reserve",
+      "icon": "res://assets/perks/icons/perk_icon_overheal_reserve.png",
+      "icon_small": "res://assets/perks/icons/perk_icon_overheal_reserve_16.png",
       "effect": "overheal_reserve",
       "name": "Prévoyance",
       "description": "Tes soins excédentaires sont conservés pour te rendre des PV après une blessure.",
@@ -64,6 +72,8 @@
     },
     {
       "id": "rally",
+      "icon": "res://assets/perks/icons/perk_icon_rally.png",
+      "icon_small": "res://assets/perks/icons/perk_icon_rally_16.png",
       "effect": "rally",
       "name": "Reprise",
       "description": "Après une blessure, tuer rapidement peut te rendre une partie des PV perdus.",
@@ -78,6 +88,8 @@
     },
     {
       "id": "xp_trail",
+      "icon": "res://assets/perks/icons/perk_icon_xp_trail.png",
+      "icon_small": "res://assets/perks/icons/perk_icon_xp_trail_16.png",
       "effect": "xp_trail",
       "name": "Sillage",
       "description": "Ton trajet récent continue de ramasser l’XP derrière toi.",
@@ -92,6 +104,8 @@
     },
     {
       "id": "salvage_xp",
+      "icon": "res://assets/perks/icons/perk_icon_salvage_xp.png",
+      "icon_small": "res://assets/perks/icons/perk_icon_salvage_xp_16.png",
       "effect": "salvage_xp",
       "name": "Délestage",
       "description": "Dans les récompenses à choix, tu peux abandonner un objet contre de l’XP.",
@@ -108,6 +122,8 @@
     },
     {
       "id": "carried_choice",
+      "icon": "res://assets/perks/icons/perk_icon_carried_choice.png",
+      "icon_small": "res://assets/perks/icons/perk_icon_carried_choice_16.png",
       "effect": "carried_choice",
       "name": "Seconde lecture",
       "description": "Une amélioration laissée de côté peut revenir au prochain choix de niveau.",
@@ -122,6 +138,8 @@
     },
     {
       "id": "familiar_loot",
+      "icon": "res://assets/perks/icons/perk_icon_familiar_loot.png",
+      "icon_small": "res://assets/perks/icons/perk_icon_familiar_loot_16.png",
       "effect": "familiar_loot",
       "name": "Habitude",
       "description": "Dans les récompenses à choix, tu peux préférer une copie d’un objet que tu possèdes déjà.",

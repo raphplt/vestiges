@@ -251,7 +251,7 @@ public partial class GameOverScreen : CanvasLayer
         BuildSnapshot build = new() { CharacterId = player.CharacterId };
         build.CharacterName = CharacterDataLoader.Get(player.CharacterId)?.Name ?? player.CharacterId;
         foreach (ActivePassiveSouvenir passive in player.PassiveSlots)
-            build.Passives.Add((PerkIconResolver.GetPassiveStatIconPath(passive.Data.Stat), passive.Level));
+            build.Passives.Add((passive.Data.Icon, passive.Level));
         return build;
     }
 

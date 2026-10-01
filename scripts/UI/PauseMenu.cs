@@ -373,7 +373,7 @@ public partial class PauseMenu : CanvasLayer
 	{
 		HBoxContainer row = new();
 		row.AddThemeConstantOverride("separation", 10);
-		row.AddChild(PlayerSheet.MakeIcon(PerkIconResolver.GetPassiveStatIconPath(passive.Data.Stat)));
+		row.AddChild(PlayerSheet.MakeIcon(passive.Data.Icon));
 		Label name = PlayerSheet.MakeLabel($"{passive.Data.Name}   Niv {passive.Level}/{passive.Data.MaxLevel}", TextRole.Body, StatValueColor);
 		name.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
 		row.AddChild(name);
@@ -402,7 +402,10 @@ public partial class PauseMenu : CanvasLayer
 	/// <summary>Perk : nom, règle, puis son état du moment (réserve, fenêtre, cible) ou son inactivité faute d'arme.</summary>
 	private void AddPerkRow(PerkSpecializationData perk, Player player)
 	{
-		VBoxContainer text = new();
+		HBoxContainer row = new();
+		row.AddChild(PlayerSheet.MakeIcon(perk.Icon));
+		VBoxContainer text = new() { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
+		row.AddChild(text);
 		text.AddThemeConstantOverride("separation", 0);
 		text.AddChild(PlayerSheet.MakeLabel(perk.Name, TextRole.Body, StatValueColor));
 		Label rule = PlayerSheet.MakeLabel(perk.Description, TextRole.Small, StatBonusColor);
@@ -412,7 +415,7 @@ public partial class PauseMenu : CanvasLayer
 		string state = active ? PerkState(perk, player) : Tr("PAUSE_PERK_INACTIVE");
 		if (state.Length > 0)
 			text.AddChild(PlayerSheet.MakeLabel(state, TextRole.Small, active ? StatValueColor : TextVeryDim));
-		_loadoutContainer.AddChild(text);
+		_loadoutContainer.AddChild(row);
 	}
 
 	private string PerkState(PerkSpecializationData perk, Player player)

@@ -374,3 +374,23 @@ Build sans avertissement, smoke 600 frames vert, capture des cinq raretés
 dans Main (`/tmp/vestiges-plan25-i1-levelup/`) inspectée. Le mode de capture
 historique retourne 1 faute de ligne `RESULT`, mais écrit toutes les images
 sans exception de jeu ; ce défaut de compte rendu sera corrigé avec I5.
+
+### I2 — objets et Réminiscences branchés, 1er octobre 2026
+
+31 objets actifs : champs `icon`/`icon_small` lus dans le JSON et employés
+dans le level-up, la Faille, le HUD, la pause, l'inventaire, le butin et le
+bilan. `PerkIconResolver` et son UID supprimés ; aucune teinte de stat
+n'altère les nouvelles images du HUD. Les neuf Réminiscences définies ont
+leurs chemins d'icônes, employés dans les choix, la pause et l'inventaire.
+
+Collection : 34 objets et 14 Réminiscences visibles, onglet Réminiscences
+ajouté. Les trois objets du monde et les Réminiscences sans effet actif
+portent « À venir » ; leur affichage lit les manifestes visuels et ne crée
+aucune offre inactive. Les règles du Reliquaire et des cinq Réminiscences
+absentes du catalogue ne sont pas inventées pour afficher une image.
+
+Build sans avertissement, smoke vert, tous les chemins 32/16 px vérifiés.
+Captures Main (`/tmp/vestiges-plan25-i2-final/`) et Collection
+(`/tmp/vestiges-plan25-i2-collection-perks/`, `…-items/`) inspectées.
+Le mode `--capture-levelup` couvre désormais les Réminiscences et retourne
+une ligne `RESULT`, corrigeant son ancien faux échec de script.

@@ -72,7 +72,19 @@ public partial class RunObservation
         SaveFrame("levelup-ascension");
         screen.GetType().GetMethod("Skip", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(screen, null);
         await Frames(4);
-        GD.Print($"[RunObservation] Captures du level-up écrites dans {_output}");
+        _player.AcquireSpecialization(PerkSpecializationDataLoader.Get("overheal_reserve"));
+        pending.Clear();
+        foreach (string id in new[] { "priority_targeting", "overflow", "rally" })
+        {
+            PerkSpecializationData perk = PerkSpecializationDataLoader.Get(id);
+            pending.Add(new FragmentOption(id, PerkSpecializationOffers.OptionType, perk.Name, 1));
+        }
+        active.SetValue(fragments, true);
+        eventBus.EmitSignal(EventBus.SignalName.FragmentChoicesReady, pending.Count);
+        await Frames(30);
+        SaveFrame("levelup-reminiscences");
+        screen.GetType().GetMethod("Skip", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(screen, null);
+        GD.Print($"[RunObservation] RESULT levelup_captured=True output={_output}");
     }
 
     private async Task CapturePause()

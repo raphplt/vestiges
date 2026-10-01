@@ -817,10 +817,10 @@ public partial class HUD : CanvasLayer
                 _passiveSlotFrames[i].Modulate = Colors.White;
                 _passiveSlotLabels[i].Text = passive.Level > 1 ? $"{passive.Level}" : "";
 
-                string iconPath = PerkIconResolver.GetPassiveStatIconPath(passive.Data.Stat);
-                Texture2D iconTex = GD.Load<Texture2D>($"res://{iconPath}");
+                string iconPath = passive.Data.IconSmall;
+                Texture2D iconTex = string.IsNullOrEmpty(iconPath) ? null : GD.Load<Texture2D>(iconPath);
                 _passiveSlotIcons[i].Texture = iconTex;
-                _passiveSlotIcons[i].Modulate = passive.Data.IconColor;
+                _passiveSlotIcons[i].Modulate = Colors.White;
                 _passiveSlotIcons[i].Visible = iconTex != null;
                 if (iconTex == null)
                     _passiveSlotFrames[i].Modulate = passive.Data.IconColor;

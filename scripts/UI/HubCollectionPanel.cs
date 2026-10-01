@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Godot;
 using Vestiges.Infrastructure;
+using Vestiges.Progression;
 
 namespace Vestiges.UI;
 
@@ -15,7 +16,7 @@ public partial class HubCollectionPanel : MarginContainer
 {
     private const int Columns = 6;
     private const float TileSize = 112f;
-    private const float IconSize = 80f;
+    private const float IconSize = 64f;
     private static readonly Color TileBg = new(0.07f, 0.06f, 0.1f, 0.92f);
     private static readonly Color LockedTint = new(0.13f, 0.12f, 0.17f, 1f);
 
@@ -42,9 +43,10 @@ public partial class HubCollectionPanel : MarginContainer
         public readonly string Description;
         public readonly string Stats;
         public readonly bool Unlocked;
+        public readonly bool Preview;
         public readonly string Condition;
 
-        public Entry(string id, string name, string icon, string description, string stats, bool unlocked, string condition)
+        public Entry(string id, string name, string icon, string description, string stats, bool unlocked, string condition, bool preview = false)
         {
             Id = id;
             Name = name;
@@ -52,6 +54,7 @@ public partial class HubCollectionPanel : MarginContainer
             Description = description;
             Stats = stats;
             Unlocked = unlocked;
+            Preview = preview;
             Condition = condition;
         }
     }
@@ -129,10 +132,13 @@ public partial class HubCollectionPanel : MarginContainer
         foreach (Node child in _tabs.GetChildren())
             child.QueueFree();
         Button weapons = AddTab("weapons", "Armes");
-        Button passives = AddTab("passives", "Souvenirs de run");
+        Button passives = AddTab("passives", "Objets");
+        Button perks = AddTab("perks", "Réminiscences");
         // Liens explicites : la recherche géométrique de Godot plongeait dans la grille au lieu de l'onglet voisin.
         weapons.FocusNeighborRight = passives.GetPath();
         passives.FocusNeighborLeft = weapons.GetPath();
+        passives.FocusNeighborRight = perks.GetPath();
+        perks.FocusNeighborLeft = passives.GetPath();
         return RebuildGrid(focusWeaponId);
     }
 
@@ -175,7 +181,7 @@ public partial class HubCollectionPanel : MarginContainer
     {
         foreach (Node child in _grid.GetChildren())
             child.QueueFree();
-        List<Entry> entries = _tab == "weapons" ? WeaponEntries() : PassiveEntries();
+        List<Entry> entries = _tab switch { "weapons" => WeaponEntries(), "perks" => PerkEntries(), _ => PassiveEntries() };
         int unlocked = 0;
         int index = 0;
         Control first = null;
@@ -241,7 +247,7 @@ public partial class HubCollectionPanel : MarginContainer
                 Position = new Vector2((TileSize - IconSize) / 2f, (TileSize - IconSize) / 2f),
                 Size = new Vector2(IconSize, IconSize),
                 // Verrouillée : silhouette sombre, sans badge.
-                SelfModulate = entry.Unlocked ? Colors.White : LockedTint,
+                SelfModulate = entry.Unlocked || entry.Preview ? Colors.White : LockedTint,
             };
             tile.AddChild(icon);
         }
@@ -253,9 +259,9 @@ public partial class HubCollectionPanel : MarginContainer
     private void ShowDetail(Entry entry)
     {
         _detailIcon.Texture = !string.IsNullOrEmpty(entry.Icon) && ResourceLoader.Exists(entry.Icon) ? GD.Load<Texture2D>(entry.Icon) : null;
-        _detailIcon.SelfModulate = entry.Unlocked ? Colors.White : LockedTint;
+        _detailIcon.SelfModulate = entry.Unlocked || entry.Preview ? Colors.White : LockedTint;
         _detailName.Text = entry.Name;
-        _detailState.Text = entry.Unlocked ? "Disponible en run" : "Pas encore disponible";
+        _detailState.Text = entry.Unlocked ? "Disponible en run" : entry.Preview ? "À venir" : "Pas encore disponible";
         _detailText.Text = entry.Description;
         _detailStats.Text = entry.Stats;
         _detailCondition.Text = entry.Unlocked ? "" : entry.Condition;
@@ -305,7 +311,24 @@ public partial class HubCollectionPanel : MarginContainer
         foreach (PassiveSouvenirData passive in PassiveSouvenirDataLoader.GetAll())
         {
             string stats = passive.MaxLevel > 1 ? $"Jusqu'au niveau {passive.MaxLevel}, cumulable en run" : "";
-            entries.Add(new Entry(passive.Id, passive.Name, PerkIconResolver.GetPassiveStatIconPath(passive.Stat), passive.Description, stats, true, ""));
+            entries.Add(new Entry(passive.Id, passive.Name, passive.Icon, passive.Description, stats, true, ""));
+        }
+        foreach (CollectionArtDataLoader.Entry art in CollectionArtDataLoader.Items)
+            if (art.World)
+                entries.Add(new Entry(art.Id, art.Name, art.Icon, "Objet du monde", "", false,
+                    "Cet objet attend le Reliquaire.", true));
+        return entries;
+    }
+
+    private static List<Entry> PerkEntries()
+    {
+        List<Entry> entries = new();
+        foreach (CollectionArtDataLoader.Entry art in CollectionArtDataLoader.Perks)
+        {
+            PerkSpecializationData data = PerkSpecializationDataLoader.Get(art.Id);
+            bool active = data != null && PerkSpecializationEffects.IsImplemented(data.Effect);
+            entries.Add(new Entry(art.Id, art.Name, data?.Icon ?? art.Icon, data?.Description ?? "Réminiscence",
+                "", active, "Cette Réminiscence n'est pas encore proposée en run.", !active));
         }
         return entries;
     }

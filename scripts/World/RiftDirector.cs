@@ -121,7 +121,7 @@ public partial class RiftDirector : Node
             Frame = RarityPalette.Main(option.Rarity.Id),
             Rank = option.Rarity.Rank,
             Title = option.DisplayName,
-            Icon = option.Type == "weapon_upgrade" ? LoadIcon(WeaponDataLoader.Get(option.Id)?.Sprite) : null,
+            Icon = LoadIcon(option.Type == "weapon_upgrade" ? WeaponDataLoader.Get(option.Id)?.Sprite : PassiveSouvenirDataLoader.Get(option.Id)?.Icon),
         };
         card.Lines.AddRange(UpgradeText.Describe(option, _player));
         string permanent = oubli.Permanent ? $"  ({Tr("OUBLI_PERMANENT")})" : "";

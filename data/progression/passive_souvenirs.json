@@ -2,6 +2,8 @@
     {
         "_comment": "Objets du joueur (plan 21 §4, référence unique ; plan 23 R3) : 6 emplacements, niveau 1 à 30. Chaque carte donne un niveau et ajoute à chaque effet son step multiplié par le gain de la rareté (passive_gain de upgrade_rarities.json : commune 1 à légendaire 3) ; un objet neuf vaut un step. La valeur d'un effet est la somme de ses gains : 1 + somme (multiplicative) ou somme (additive). params : réglages propres à l'objet (objets de déclencheur). milestones : paliers de l'objet (niveau, effet, texte montré au joueur, paramètres) ; un palier dont l'effet n'est pas codé n'est ni annoncé ni activé (ObjectMilestoneEffects). survival : objet de survie, garanti dans une offre tant que le joueur n'en a aucun. enabled false : identifiant gardé pour les sauvegardes, retiré des offres. Le nom du fichier et les identifiants viennent des anciens passifs.",
         "id": "memoire_vive",
+        "icon": "res://assets/items/icons/item_memoire_vive.png",
+        "icon_small": "res://assets/items/icons/item_memoire_vive_16.png",
         "name": "Ressort de sommier",
         "description": "Tes armes attaquent plus vite.",
         "icon_color": [
@@ -31,6 +33,8 @@
     },
     {
         "id": "resonance",
+        "icon": "res://assets/items/icons/item_resonance.png",
+        "icon_small": "res://assets/items/icons/item_resonance_16.png",
         "name": "Rondelle de cuivre",
         "description": "Tes zones, arcs et ondes sont plus grands.",
         "icon_color": [
@@ -60,6 +64,8 @@
     },
     {
         "id": "portee_etendue",
+        "icon": "res://assets/items/icons/item_portee_etendue.png",
+        "icon_small": "res://assets/items/icons/item_portee_etendue_16.png",
         "name": "Mètre pliant",
         "description": "Tes armes portent plus loin.",
         "icon_color": [
@@ -89,6 +95,8 @@
     },
     {
         "id": "oeil_critique",
+        "icon": "res://assets/items/icons/item_oeil_critique.png",
+        "icon_small": "res://assets/items/icons/item_oeil_critique_16.png",
         "name": "Lunettes de lecture",
         "description": "Tes coups critiques sont plus fréquents et plus forts.",
         "icon_color": [
@@ -122,6 +130,8 @@
     },
     {
         "id": "ancrage",
+        "icon": "res://assets/items/icons/item_ancrage.png",
+        "icon_small": "res://assets/items/icons/item_ancrage_16.png",
         "name": "Bouton de manteau",
         "description": "Tes PV maximum augmentent.",
         "icon_color": [
@@ -151,6 +161,8 @@
     },
     {
         "id": "regeneration",
+        "icon": "res://assets/items/icons/item_regeneration.png",
+        "icon_small": "res://assets/items/icons/item_regeneration_16.png",
         "name": "Bobine de fil",
         "description": "Tu récupères des PV en continu.",
         "icon_color": [
@@ -181,6 +193,8 @@
     },
     {
         "id": "peau_dure",
+        "icon": "res://assets/items/icons/item_peau_dure.png",
+        "icon_small": "res://assets/items/icons/item_peau_dure_16.png",
         "name": "Genouillère",
         "description": "Ton armure réduit les coups reçus.",
         "icon_color": [
@@ -211,6 +225,8 @@
     },
     {
         "id": "carapace",
+        "icon": "res://assets/items/icons/item_carapace.png",
+        "icon_small": "res://assets/items/icons/item_carapace_16.png",
         "name": "Écusson de pompier",
         "description": "Ton bouclier encaisse davantage.",
         "icon_color": [
@@ -241,6 +257,8 @@
     },
     {
         "id": "instinct",
+        "icon": "res://assets/items/icons/item_instinct.png",
+        "icon_small": "res://assets/items/icons/item_instinct_16.png",
         "name": "Lacet rouge",
         "description": "Tu te déplaces plus vite et ton dash se recharge plus vite.",
         "icon_color": [
@@ -274,6 +292,8 @@
     },
     {
         "id": "siphon_essence",
+        "icon": "res://assets/items/icons/item_siphon_essence.png",
+        "icon_small": "res://assets/items/icons/item_siphon_essence_16.png",
         "name": "Aimant de frigo",
         "description": "Tu attires l'XP de plus loin.",
         "icon_color": [
@@ -302,6 +322,8 @@
     },
     {
         "id": "photo_de_classe",
+        "icon": "res://assets/items/icons/item_photo_de_classe.png",
+        "icon_small": "res://assets/items/icons/item_photo_de_classe_16.png",
         "name": "Photo de classe",
         "description": "Tu gagnes plus d'XP.",
         "icon_color": [
@@ -330,6 +352,8 @@
     },
     {
         "id": "jeton_de_fete",
+        "icon": "res://assets/items/icons/item_jeton_de_fete.png",
+        "icon_small": "res://assets/items/icons/item_jeton_de_fete_16.png",
         "name": "Jeton de fête foraine",
         "description": "Ta Chance monte : les améliorations rares sortent plus souvent.",
         "icon_color": [
@@ -358,6 +382,8 @@
     },
     {
         "id": "souffle_du_neant",
+        "icon": "res://assets/items/icons/item_souffle_du_neant.png",
+        "icon_small": "res://assets/items/icons/item_souffle_du_neant_16.png",
         "name": "Papier carbone",
         "description": "Tes armes tirent plus de projectiles et frappent plus de fois, à pleins dégâts.",
         "icon_color": [
@@ -383,6 +409,8 @@
     },
     {
         "id": "persistance",
+        "icon": "res://assets/items/icons/item_persistance.png",
+        "icon_small": "res://assets/items/icons/item_persistance_16.png",
         "name": "Pince à linge",
         "description": "Tes statuts et tes zones au sol durent plus longtemps.",
         "icon_color": [
@@ -411,6 +439,8 @@
     },
     {
         "id": "allumette_humide",
+        "icon": "res://assets/items/icons/item_allumette_humide.png",
+        "icon_small": "res://assets/items/icons/item_allumette_humide_16.png",
         "name": "Allumette humide",
         "description": "Tes coups d'arme peuvent enflammer : la cible brûle quelques secondes.",
         "icon_color": [
@@ -443,6 +473,8 @@
     },
     {
         "id": "glacon",
+        "icon": "res://assets/items/icons/item_glacon.png",
+        "icon_small": "res://assets/items/icons/item_glacon_16.png",
         "name": "Glaçon dans un mouchoir",
         "description": "Tes coups d'arme peuvent ralentir la cible.",
         "icon_color": [
@@ -475,6 +507,8 @@
     },
     {
         "id": "thermometre",
+        "icon": "res://assets/items/icons/item_thermometre.png",
+        "icon_small": "res://assets/items/icons/item_thermometre_16.png",
         "name": "Thermomètre",
         "description": "Tu frappes plus fort les ennemis qui brûlent.",
         "icon_color": [
@@ -503,6 +537,8 @@
     },
     {
         "id": "epingle_a_nourrice",
+        "icon": "res://assets/items/icons/item_epingle_a_nourrice.png",
+        "icon_small": "res://assets/items/icons/item_epingle_a_nourrice_16.png",
         "name": "Épingle à nourrice",
         "description": "Tu frappes plus fort les ennemis ralentis.",
         "icon_color": [
@@ -533,6 +569,8 @@
     },
     {
         "id": "petard_mouille",
+        "icon": "res://assets/items/icons/item_petard_mouille.png",
+        "icon_small": "res://assets/items/icons/item_petard_mouille_16.png",
         "name": "Pétard mouillé",
         "description": "Un ennemi que tu tues avec une arme explose autour de lui.",
         "icon_color": [
@@ -564,6 +602,8 @@
     },
     {
         "id": "de_a_coudre",
+        "icon": "res://assets/items/icons/item_de_a_coudre.png",
+        "icon_small": "res://assets/items/icons/item_de_a_coudre_16.png",
         "name": "Dé à coudre",
         "description": "Chaque ennemi que tu tues avec une arme te rend un peu de vie.",
         "icon_color": [
@@ -593,6 +633,8 @@
     },
     {
         "id": "semelle_usee",
+        "icon": "res://assets/items/icons/item_semelle_usee.png",
+        "icon_small": "res://assets/items/icons/item_semelle_usee_16.png",
         "name": "Semelle usée",
         "description": "Après 2 s de marche sans t'arrêter, ta prochaine attaque frappe plus fort.",
         "icon_color": [
@@ -624,6 +666,8 @@
     },
     {
         "id": "boite_de_pansements",
+        "icon": "res://assets/items/icons/item_boite_de_pansements.png",
+        "icon_small": "res://assets/items/icons/item_boite_de_pansements_16.png",
         "name": "Boîte de pansements",
         "description": "Chaque niveau gagné te soigne.",
         "icon_color": [
@@ -654,6 +698,8 @@
     },
     {
         "id": "loupe_de_philateliste",
+        "icon": "res://assets/items/icons/item_loupe_de_philateliste.png",
+        "icon_small": "res://assets/items/icons/item_loupe_de_philateliste_16.png",
         "name": "Loupe de philatéliste",
         "description": "Un coup critique rend sa cible Fragile : elle encaisse davantage, un moment.",
         "icon_color": [
@@ -685,6 +731,8 @@
     },
     {
         "id": "stylo_quatre_couleurs",
+        "icon": "res://assets/items/icons/item_stylo_quatre_couleurs.png",
+        "icon_small": "res://assets/items/icons/item_stylo_quatre_couleurs_16.png",
         "name": "Stylo à quatre couleurs",
         "description": "Un coup critique repart sur une autre cible proche.",
         "icon_color": [
@@ -716,6 +764,8 @@
     },
     {
         "id": "tabouret_de_camping",
+        "icon": "res://assets/items/icons/item_tabouret_de_camping.png",
+        "icon_small": "res://assets/items/icons/item_tabouret_de_camping_16.png",
         "name": "Tabouret de camping",
         "description": "Immobile depuis une seconde, tu attaques plus vite.",
         "icon_color": [
@@ -747,6 +797,8 @@
     },
     {
         "id": "chewing_gum",
+        "icon": "res://assets/items/icons/item_chewing_gum.png",
+        "icon_small": "res://assets/items/icons/item_chewing_gum_16.png",
         "name": "Chewing-gum",
         "description": "Ton dash laisse une traînée collante qui ralentit.",
         "icon_color": [
@@ -781,6 +833,8 @@
     },
     {
         "id": "gilet_reflechissant",
+        "icon": "res://assets/items/icons/item_gilet_reflechissant.png",
+        "icon_small": "res://assets/items/icons/item_gilet_reflechissant_16.png",
         "name": "Gilet réfléchissant",
         "description": "Plus les ennemis sont proches, plus tes coups portent.",
         "icon_color": [
@@ -813,6 +867,8 @@
     },
     {
         "id": "thermos",
+        "icon": "res://assets/items/icons/item_thermos.png",
+        "icon_small": "res://assets/items/icons/item_thermos_16.png",
         "name": "Thermos",
         "description": "En pleine forme, tes coups portent davantage.",
         "icon_color": [
@@ -844,6 +900,8 @@
     },
     {
         "id": "medaille_cabossee",
+        "icon": "res://assets/items/icons/item_medaille_cabossee.png",
+        "icon_small": "res://assets/items/icons/item_medaille_cabossee_16.png",
         "name": "Médaille cabossée",
         "description": "Au bord de la chute, tes coups portent davantage.",
         "icon_color": [
@@ -875,6 +933,8 @@
     },
     {
         "id": "porte_monnaie_use",
+        "icon": "res://assets/items/icons/item_porte_monnaie_use.png",
+        "icon_small": "res://assets/items/icons/item_porte_monnaie_use_16.png",
         "name": "Porte-monnaie usé",
         "description": "L'Essence que tu gardes renforce tes coups.",
         "icon_color": [
@@ -927,6 +987,8 @@
     },
     {
         "id": "reflet_brise",
+        "icon": "res://assets/items/icons/item_reflet_brise.png",
+        "icon_small": "res://assets/items/icons/item_reflet_brise_16.png",
         "name": "Reflet brisé",
         "description": "Tes projectiles traversent plus d'ennemis.",
         "icon_color": [

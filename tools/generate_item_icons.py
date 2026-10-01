@@ -16,6 +16,19 @@ from tools.sprites.ui.kit import board, export
 from tools.sprites.weapons.icons import render_icon
 
 
+def write_manifest(output: Path) -> None:
+    """Catalogue visuel complet, y compris les trois objets du monde sans règle active."""
+    names = {entry["id"]: entry["name"] for entry in json.loads(Path("data/progression/passive_souvenirs.json").read_text())}
+    names.update(WORLD_NAMES)
+    entries = []
+    for factory in PROPERTY_ITEMS + TRIGGER_ITEMS + WORLD_ITEMS:
+        item = factory()
+        stem = item.model().stem
+        entries.append({"id": item.item_id, "name": names[item.item_id], "icon": stem + ".png",
+                        "icon_16": stem + "_16.png", "world": item.item_id in WORLD_NAMES})
+    (output / "items_manifest.json").write_text(json.dumps({"icons": entries}, ensure_ascii=False, indent=2) + "\n")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--sheet", type=Path)
@@ -48,6 +61,7 @@ def main() -> None:
     board(rows, args.sheet, columns=3)
     if args.export:
         export(images, Path("assets/items/icons"), "generate_item_icons")
+        write_manifest(Path("assets/items/icons"))
     print(f"[generate_item_icons] planche : {args.sheet}")
 
 
