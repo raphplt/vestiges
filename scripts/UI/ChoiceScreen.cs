@@ -148,9 +148,7 @@ public partial class ChoiceScreen : CanvasLayer
         _panel.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.Center);
         _panel.GrowHorizontal = Control.GrowDirection.Both;
         _panel.GrowVertical = Control.GrowDirection.Both;
-        Texture2D frame = ResourceLoader.Exists(UITheme.MenusPath + "ui_panel_frame.png")
-            ? GD.Load<Texture2D>(UITheme.MenusPath + "ui_panel_frame.png")
-            : null;
+        Texture2D frame = UITheme.LoadTex(UITheme.MenusPath + "ui_panel_frame.png");
         if (frame != null)
         {
             StyleBoxTexture style = UITheme.CreateNinePatch(frame, 6, 6, 6, 6);

@@ -1,0 +1,38 @@
+{
+  "background": {
+    "frame_size": [
+      480,
+      270
+    ],
+    "frames": 8,
+    "fps": 3,
+    "layout": "horizontal",
+    "tints": [
+      "gold",
+      "cyan",
+      "violet",
+      "neutral"
+    ]
+  },
+  "skin_margins": [
+    4,
+    4,
+    4,
+    4
+  ],
+  "loading_ground": {
+    "size": [
+      128,
+      32
+    ],
+    "repeat_axis": "x",
+    "biomes": [
+      "foret",
+      "ruines",
+      "marecages",
+      "carriere",
+      "champs"
+    ]
+  },
+  "filter": "nearest"
+}

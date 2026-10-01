@@ -22,7 +22,7 @@ public partial class RunObservation
     {
         _world.GetNode("SpawnManager").ProcessMode = ProcessModeEnum.Disabled;
         ProcessMode = ProcessModeEnum.Always;
-        await Frames(90);
+        await ToSignal(GetTree().CreateTimer(3.5, processAlways: true), SceneTreeTimer.SignalName.Timeout);
 
         FragmentManager fragments = _world.GetNode<FragmentManager>("FragmentManager");
         _player.AddOrUpgradePassive("souffle_du_neant");
@@ -84,6 +84,23 @@ public partial class RunObservation
         await Frames(30);
         SaveFrame("levelup-reminiscences");
         screen.GetType().GetMethod("Skip", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(screen, null);
+        await Frames(4);
+        // Trois rangs gagnés : état initial, éclatement intermédiaire puis icône finale sans débordement.
+        WeaponInstance raisedWeapon = _player.WeaponSlots[_player.WeaponSlots.Count - 1];
+        UpgradeRarity finalRarity = UpgradeRoller.Get("epic");
+        pending.Clear();
+        pending.Add(new FragmentOption(raisedWeapon.Id, "weapon_upgrade", raisedWeapon.Name, 1)
+            .WithWeaponUpgrade(finalRarity, UpgradeRoller.RollWeaponGains(raisedWeapon, finalRarity, rng))
+            .WithRolledRarity(UpgradeRoller.Get("common")));
+        active.SetValue(fragments, true);
+        eventBus.EmitSignal(EventBus.SignalName.FragmentChoicesReady, pending.Count);
+        await Frames(2);
+        SaveFrame("levelup-luck-start");
+        await ToSignal(GetTree().CreateTimer(0.75, processAlways: true), SceneTreeTimer.SignalName.Timeout);
+        SaveFrame("levelup-luck-break");
+        await ToSignal(GetTree().CreateTimer(1.5, processAlways: true), SceneTreeTimer.SignalName.Timeout);
+        SaveFrame("levelup-luck-end");
+        screen.GetType().GetMethod("Skip", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(screen, null);
         GD.Print($"[RunObservation] RESULT levelup_captured=True output={_output}");
     }
 
@@ -123,6 +140,6 @@ public partial class RunObservation
         Input.ActionRelease("scroll_down");
         await Frames(5);
         SaveFrame("pause-scrolled");
-        GD.Print($"[RunObservation] Capture de la pause écrite dans {_output}");
+        GD.Print($"[RunObservation] RESULT pause_captured=True output={_output}");
     }
 }

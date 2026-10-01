@@ -27,7 +27,7 @@ public static class ChoiceStyle
     public static void StyleCard(PanelContainer card, Color border, int rank, bool focused, bool enabled = true)
     {
         Texture2D[] frames = rank >= 0 ? RarityArt.Cards(rank)
-            : new[] { GD.Load<Texture2D>(UITheme.MenusPath + "ui_card_normal.png") };
+            : new[] { UITheme.LoadTex(UITheme.MenusPath + "ui_card_normal.png") };
         StyleBoxTexture style = UITheme.CreateNinePatch(frames[0], 3, 3, 3, 3);
         style.ModulateColor = focused ? new Color(1.25f, 1.25f, 1.25f) : Colors.White;
         card.TextureFilter = CanvasItem.TextureFilterEnum.Nearest;
@@ -44,17 +44,17 @@ public static class ChoiceStyle
 
     public static void StyleButton(Button button, bool focused)
     {
-        StyleBoxFlat style = new()
-        {
-            BgColor = focused ? new Color(0.16f, 0.15f, 0.22f, 0.95f) : new Color(0.1f, 0.1f, 0.15f, 0.9f),
-            BorderColor = focused ? GoldBright : GoldDim with { A = button.Disabled ? 0.3f : 1f },
-        };
-        style.SetBorderWidthAll(focused ? 2 : 1);
-        style.SetCornerRadiusAll(3);
-        style.ContentMarginLeft = 12;
-        style.ContentMarginRight = 12;
+        UITheme.ApplyButtonStyle(button,
+            UITheme.LoadTex(UITheme.MenusPath + (focused ? "ui_button_hover.png" : "ui_button_normal.png")),
+            UITheme.LoadTex(UITheme.MenusPath + "ui_button_hover.png"),
+            UITheme.LoadTex(UITheme.MenusPath + "ui_button_pressed.png"),
+            UITheme.LoadTex(UITheme.MenusPath + "ui_button_disabled.png"));
         foreach (string state in new[] { "normal", "hover", "pressed", "disabled" })
-            button.AddThemeStyleboxOverride(state, style);
+        {
+            StyleBox style = button.GetThemeStylebox(state);
+            style.ContentMarginLeft = 12;
+            style.ContentMarginRight = 12;
+        }
     }
 
     public static Label MakeLabel(string text, TextRole role, Color color, bool expand, HorizontalAlignment align = HorizontalAlignment.Left)

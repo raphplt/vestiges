@@ -17,7 +17,6 @@ public partial class HubCollectionPanel : MarginContainer
     private const int Columns = 6;
     private const float TileSize = 112f;
     private const float IconSize = 64f;
-    private static readonly Color TileBg = new(0.07f, 0.06f, 0.1f, 0.92f);
     private static readonly Color LockedTint = new(0.13f, 0.12f, 0.17f, 1f);
 
     private static string _tab = "weapons";
@@ -225,11 +224,10 @@ public partial class HubCollectionPanel : MarginContainer
     private Button MakeTile(Entry entry)
     {
         Button tile = new() { CustomMinimumSize = new Vector2(TileSize, TileSize), FocusMode = FocusModeEnum.All };
-        StyleBoxFlat normal = new() { BgColor = TileBg, BorderColor = new Color(UITheme.GoldDim, 0.35f) };
-        normal.SetBorderWidthAll(2);
-        StyleBoxFlat lit = (StyleBoxFlat)normal.Duplicate();
-        lit.BorderColor = UITheme.GoldBright;
-        lit.SetBorderWidthAll(4);
+        tile.TextureFilter = TextureFilterEnum.Nearest;
+        string skin = entry.Unlocked || entry.Preview ? "ui_card_normal.png" : "ui_card_locked.png";
+        StyleBoxTexture normal = UITheme.CreateNinePatch(UITheme.LoadTex(UITheme.MenusPath + skin), 4, 4, 4, 4);
+        StyleBoxTexture lit = UITheme.CreateNinePatch(UITheme.LoadTex(UITheme.MenusPath + "ui_card_selected.png"), 4, 4, 4, 4);
         tile.AddThemeStyleboxOverride("normal", normal);
         tile.AddThemeStyleboxOverride("pressed", normal);
         tile.AddThemeStyleboxOverride("hover", lit);

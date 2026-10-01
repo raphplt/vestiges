@@ -209,11 +209,20 @@ public partial class RunObservation : Node
         GetTree().Root.AddChild(_world);
         GetTree().CurrentScene = _world;
         ulong timeout = Time.GetTicksMsec() + 120000;
+        bool captureLoading = Array.IndexOf(OS.GetCmdlineUserArgs(), "--capture-loading") >= 0;
+        ulong nextLoadingFrame = 0;
+        int loadingFrame = 0;
         while (!_world.IsWorldReady || GetTree().Paused || manager.CurrentState != GameManager.GameState.Run)
         {
             if (Time.GetTicksMsec() > timeout)
                 throw new InvalidOperationException("Initialisation Main supérieure à 120 s.");
             await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+            if (captureLoading && Time.GetTicksMsec() >= nextLoadingFrame)
+            {
+                await ToSignal(RenderingServer.Singleton, RenderingServer.SignalName.FramePostDraw);
+                SaveFrame($"loading-{loadingFrame++:00}");
+                nextLoadingFrame = Time.GetTicksMsec() + 250;
+            }
         }
         _player = _world.GetNode<Player>("Player");
         _camera = _player.GetNode<Camera2D>("Camera");

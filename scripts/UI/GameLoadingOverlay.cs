@@ -6,16 +6,13 @@ namespace Vestiges.UI;
 /// <summary>
 /// Overlay de chargement affiché pendant l'initialisation async du monde (plan 24 B5). Démarre noir (raccord avec la
 /// VoidTransition du Hub) ; le personnage marche sur une bande de sol qui se dessine au rythme du chargement
-/// (<see cref="LoadingWalkStrip"/>), sous une phrase courte, et quelques poussières dorées montent. Les étapes
+/// (<see cref="LoadingWalkStrip"/>), sous une phrase courte, et les poussières natives du fond s'animent. Les étapes
 /// techniques ne s'affichent plus : elles vont au journal. Puis fondu vers la partie.
 /// </summary>
 public partial class GameLoadingOverlay : CanvasLayer
 {
 	private static readonly Color VoidBlack = new(0.02f, 0.02f, 0.05f);
 	private static readonly Color GoldFoyer = new(0.83f, 0.66f, 0.26f);
-	private static readonly Color GoldDim = new(0.63f, 0.47f, 0.16f);
-	private static readonly Color VioletBrume = new(0.29f, 0.19f, 0.4f);
-	private static readonly Color CyanEssence = new(0.37f, 0.77f, 0.77f);
 
 	// Phrases réécrites, moins directes (plan 19, plan 24 B5) : des choses vues, pas des explications.
 	private const int LoreCount = 8;
@@ -45,7 +42,6 @@ public partial class GameLoadingOverlay : CanvasLayer
 	private bool _isVisible = true;
 	private float _loreTimer;
 	private int _loreIndex;
-	private float _particleTimer;
 
 	public override void _Ready()
 	{
@@ -67,8 +63,8 @@ public partial class GameLoadingOverlay : CanvasLayer
 		_background.MouseFilter = Control.MouseFilterEnum.Ignore;
 		_root.AddChild(_background);
 
-		// Couche particules
-		_particleLayer = new Control();
+		// Fond natif partagé avec les écrans de choix.
+		_particleLayer = new PixelBackdrop(PixelBackdrop.NeutralTint) { Modulate = new Color(1f, 1f, 1f, 0.25f) };
 		_particleLayer.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
 		_particleLayer.MouseFilter = Control.MouseFilterEnum.Ignore;
 		_root.AddChild(_particleLayer);
@@ -94,7 +90,6 @@ public partial class GameLoadingOverlay : CanvasLayer
 
 		// Fade-in initial du texte de lore
 		FadeInLoreText();
-		SpawnAmbientParticles(12);
 	}
 
 	public override void _Process(double delta)
@@ -102,7 +97,6 @@ public partial class GameLoadingOverlay : CanvasLayer
 		if (!_isVisible) return;
 
 		_loreTimer += (float)delta;
-		_particleTimer += (float)delta;
 
 		// Changer la phrase toutes les 4 s
 		if (_loreTimer > 4f)
@@ -112,12 +106,6 @@ public partial class GameLoadingOverlay : CanvasLayer
 			TransitionLoreText(LoreLine(_loreIndex));
 		}
 
-		// Spawner des particules ambiantes régulièrement
-		if (_particleTimer > 0.4f)
-		{
-			_particleTimer = 0f;
-			SpawnAmbientParticles(2);
-		}
 	}
 
 	private static string LoreLine(int index) => TranslationServer.Translate($"LOADING_LINE_{index + 1}");
@@ -197,47 +185,4 @@ public partial class GameLoadingOverlay : CanvasLayer
 			.SetTrans(Tween.TransitionType.Sine);
 	}
 
-	private void SpawnAmbientParticles(int count)
-	{
-		Vector2 viewSize = GetViewport().GetVisibleRect().Size;
-
-		for (int i = 0; i < count; i++)
-		{
-			float x = _rng.RandfRange(0f, viewSize.X);
-			float y = _rng.RandfRange(0f, viewSize.Y);
-			float size = _rng.RandfRange(1.5f, 4f);
-			float duration = _rng.RandfRange(2f, 4f);
-
-			// Mélange or / violet / cyan
-			float roll = _rng.Randf();
-			Color color;
-			if (roll < 0.6f) color = GoldDim;
-			else if (roll < 0.85f) color = VioletBrume;
-			else color = CyanEssence;
-
-			ColorRect particle = new()
-			{
-				Size = new Vector2(size, size),
-				Position = new Vector2(x, y),
-				Color = new Color(color, 0f),
-				MouseFilter = Control.MouseFilterEnum.Ignore,
-			};
-			_particleLayer.AddChild(particle);
-
-			// Animation : apparition, flottement vers le haut, disparition
-			float drift = _rng.RandfRange(-30f, 30f);
-			float rise = _rng.RandfRange(20f, 60f);
-			Vector2 endPos = new(x + drift, y - rise);
-
-			Tween pt = CreateTween();
-			pt.TweenProperty(particle, "color:a", _rng.RandfRange(0.3f, 0.7f), duration * 0.3f)
-				.SetTrans(Tween.TransitionType.Sine);
-			pt.Parallel().TweenProperty(particle, "position", endPos, duration)
-				.SetTrans(Tween.TransitionType.Sine)
-				.SetEase(Tween.EaseType.Out);
-			pt.TweenProperty(particle, "color:a", 0f, duration * 0.4f)
-				.SetTrans(Tween.TransitionType.Sine);
-			pt.TweenCallback(Callable.From(() => particle.QueueFree()));
-		}
-	}
 }

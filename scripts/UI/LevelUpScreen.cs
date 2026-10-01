@@ -98,7 +98,7 @@ public partial class LevelUpScreen : CanvasLayer
 
     public void SetFragmentManager(FragmentManager fragmentManager) => _fragmentManager = fragmentManager;
 
-    private static Texture2D LoadTex(string path) => ResourceLoader.Exists(path) ? GD.Load<Texture2D>(path) : null;
+    private static Texture2D LoadTex(string path) => UITheme.LoadTex(path);
 
     // ==============================
     // Construction
@@ -555,6 +555,8 @@ public partial class LevelUpScreen : CanvasLayer
     {
         _overlay.Visible = true;
         _rays.Visible = true;
+        _rays.SetTint(_cardOptions.Count > 0 && _cardOptions[0].Type == PerkSpecializationOffers.OptionType
+            ? PixelBackdrop.NeutralTint : PixelBackdrop.GoldTint);
         _rays.FadeIn(0.3f);
         _layout.Visible = true;
         Visible = true;

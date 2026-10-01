@@ -131,7 +131,8 @@ public partial class RunObservation
     private async Task CaptureLootScreen()
     {
         _world.GetNode("SpawnManager").ProcessMode = ProcessModeEnum.Disabled;
-        await Frames(90);
+        ProcessMode = ProcessModeEnum.Always;
+        await ToSignal(GetTree().CreateTimer(3.5, processAlways: true), SceneTreeTimer.SignalName.Timeout);
         Chest nearest = null;
         foreach (Chest chest in Chest.Closed)
             if (nearest == null || chest.GlobalPosition.DistanceSquaredTo(_player.GlobalPosition) < nearest.GlobalPosition.DistanceSquaredTo(_player.GlobalPosition))
@@ -152,6 +153,8 @@ public partial class RunObservation
             elapsed = frame;
             SaveFrame($"loot-{frame}");
         }
+        await ToSignal(GetTree().CreateTimer(4, processAlways: true), SceneTreeTimer.SignalName.Timeout);
+        SaveFrame("loot-revealed");
         GD.Print($"[RunObservation] RESULT loot-screen chest={nearest.ChestId} dossier={_output}");
     }
 

@@ -19,7 +19,7 @@ public partial class RarityIcon : TextureRect
         Texture = _frames[0];
         CustomMinimumSize = Vector2.One * size;
         ExpandMode = ExpandModeEnum.IgnoreSize;
-        StretchMode = StretchModeEnum.KeepAspectCentered;
+        StretchMode = StretchModeEnum.KeepCentered;
         TextureFilter = TextureFilterEnum.Nearest;
         MouseFilter = MouseFilterEnum.Ignore;
         SizeFlagsVertical = SizeFlags.ShrinkCenter;
@@ -31,6 +31,8 @@ public partial class RarityIcon : TextureRect
         int count = finalRank - initialRank;
         if (count <= 0)
             return;
+        // L'éclatement fait 32 px : garder ses pixels natifs plutôt que le réduire à 24 px.
+        CustomMinimumSize = new Vector2(32, 32);
         _jumps = new Texture2D[count][];
         for (int i = 0; i < count; i++)
             _jumps[i] = RarityArt.Jump(initialRank + i);

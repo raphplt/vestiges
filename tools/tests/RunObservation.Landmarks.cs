@@ -25,7 +25,7 @@ public partial class RunObservation
                 _world.GetNode<Vestiges.Spawn.EnemyPool>("EnemyPool").Return(existing);
         _player.AIInputOverride = Vector2.Zero;
         ProcessMode = ProcessModeEnum.Always;
-        await Frames(90);
+        await ToSignal(GetTree().CreateTimer(3.5, processAlways: true), SceneTreeTimer.SignalName.Timeout);
 
         List<Memorial> memorials = new(Memorial.All);
         Vector2 spawn = _player.GlobalPosition;
@@ -58,11 +58,11 @@ public partial class RunObservation
         _world.GetNode<EssenceTracker>("EssenceTracker").AddEssence(120);
         _player.GlobalPosition = target.GlobalPosition + new Vector2(-44f, 8f);
         target.Interact(_player);
-        await Frames(10);
+        await ToSignal(GetTree().CreateTimer(2.5, processAlways: true), SceneTreeTimer.SignalName.Timeout);
         SaveFrame("memorial-4-services");
         int levelBefore = _player.EquippedWeapon.Level;
         choices.Activate(0);
-        await Frames(10);
+        await ToSignal(GetTree().CreateTimer(0.6, processAlways: true), SceneTreeTimer.SignalName.Timeout);
         SaveFrame("memorial-5-services-after");
         int levelAfter = _player.EquippedWeapon.Level;
         choices.Activate(int.MaxValue);
@@ -95,7 +95,10 @@ public partial class RunObservation
         if (!choices.IsOpen)
             return 0;
         if (blessingsFrame != null)
+        {
+            await ToSignal(GetTree().CreateTimer(2.5, processAlways: true), SceneTreeTimer.SignalName.Timeout);
             SaveFrame(blessingsFrame);
+        }
         choices.Activate(0);
         await Frames(10);
         return shards.Count;
@@ -109,7 +112,7 @@ public partial class RunObservation
                 _world.GetNode<Vestiges.Spawn.EnemyPool>("EnemyPool").Return(existing);
         _player.AIInputOverride = Vector2.Zero;
         ProcessMode = ProcessModeEnum.Always;
-        await Frames(90);
+        await ToSignal(GetTree().CreateTimer(3.5, processAlways: true), SceneTreeTimer.SignalName.Timeout);
 
         List<Rift> rifts = new(Rift.All);
         Vector2 spawn = _player.GlobalPosition;
@@ -131,7 +134,7 @@ public partial class RunObservation
         float speedBefore = _player.SpeedMultiplier;
         float damageBefore = _player.DamageMultiplier;
         rift.Interact(_player);
-        await Frames(10);
+        await ToSignal(GetTree().CreateTimer(2.5, processAlways: true), SceneTreeTimer.SignalName.Timeout);
         bool offerShown = choices.IsOpen;
         SaveFrame("rift-2-offers");
         choices.Activate(0);
@@ -154,7 +157,7 @@ public partial class RunObservation
         _world.GetNode<EssenceTracker>("EssenceTracker").AddEssence(200);
         _player.GlobalPosition = memorials[0].GlobalPosition + new Vector2(-44f, 8f);
         memorials[0].Interact(_player);
-        await Frames(10);
+        await ToSignal(GetTree().CreateTimer(2.5, processAlways: true), SceneTreeTimer.SignalName.Timeout);
         SaveFrame("rift-5-memorial-lift");
         // La levée d'Oubli est la dernière carte des services.
         choices.Activate(_player.WeaponSlots.Count + 1);

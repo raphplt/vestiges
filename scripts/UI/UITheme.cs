@@ -113,6 +113,12 @@ public static class UITheme
 	/// <summary>Charge une texture, retourne null si absente.</summary>
 	public static Texture2D LoadTex(string path)
 	{
+		if (path.StartsWith(MenusPath, System.StringComparison.Ordinal))
+		{
+			string skin = ScreenArt.Folder + path[MenusPath.Length..];
+			if (ResourceLoader.Exists(skin))
+				path = skin;
+		}
 		if (ResourceLoader.Exists(path))
 			return GD.Load<Texture2D>(path);
 		GD.PushWarning($"[UITheme] Missing texture: {path}");
@@ -151,6 +157,7 @@ public static class UITheme
 		Texture2D pressedTex,
 		Texture2D disabledTex)
 	{
+		btn.TextureFilter = CanvasItem.TextureFilterEnum.Nearest;
 		if (normalTex != null)
 			btn.AddThemeStyleboxOverride("normal", CreateNinePatch(normalTex, 4, 4, 4, 4));
 		if (hoverTex != null)
@@ -171,8 +178,8 @@ public static class UITheme
 	/// <summary>Cadre doré du contrôle qui a le focus clavier ou manette : on sait toujours où l'on est.</summary>
 	public static void ApplyFocusStyle(Control control)
 	{
-		StyleBoxFlat focus = new() { DrawCenter = false, BorderColor = GoldBright };
-		focus.SetBorderWidthAll(2);
+		StyleBoxTexture focus = CreateNinePatch(LoadTex(MenusPath + "ui_panel_frame_selected.png"), 4, 4, 4, 4);
+		focus.DrawCenter = false;
 		focus.SetExpandMarginAll(2);
 		control.AddThemeStyleboxOverride("focus", focus);
 	}

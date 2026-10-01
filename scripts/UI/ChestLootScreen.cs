@@ -33,8 +33,6 @@ public partial class ChestLootScreen : CanvasLayer
     // Le clic d'ouverture frappe dans ses 0,3 premières secondes : la mélodie entre juste après, sur le défilement.
     private const float RevealMelodyDelay = 0.3f;
 
-    // --- Rays config ---
-
     // --- UI nodes ---
     private ColorRect _overlay;
     private PixelBackdrop _rays;
@@ -43,6 +41,7 @@ public partial class ChestLootScreen : CanvasLayer
     private Label _title;
     private Texture2D _panelTex;
     private Texture2D _separatorTex;
+    private readonly Texture2D[] _revealFrames = new Texture2D[4];
 
     // --- State ---
     private List<ResolvedLoot> _pendingLoots;
@@ -99,13 +98,13 @@ public partial class ChestLootScreen : CanvasLayer
     {
         _panelTex = LoadTex(MenusPath + "ui_panel_frame.png");
         _separatorTex = LoadTex(MenusPath + "ui_separator_simple.png");
+        for (int i = 0; i < _revealFrames.Length; i++)
+            _revealFrames[i] = GD.Load<Texture2D>($"res://assets/ui/hud/plan25/xp_burst_{i:00}.png");
     }
 
     private static Texture2D LoadTex(string path)
     {
-        if (ResourceLoader.Exists(path))
-            return GD.Load<Texture2D>(path);
-        return null;
+        return UITheme.LoadTex(path);
     }
 
     // ==============================
@@ -402,47 +401,21 @@ public partial class ChestLootScreen : CanvasLayer
 
     private void SpawnRevealParticles(PanelContainer card)
     {
-        Vector2 center = card.GlobalPosition + card.Size / 2f;
-        int count = 8;
-
-        // We need to add particles to a Control parent on the same layer
-        for (int i = 0; i < count; i++)
+        // Même éclat natif que l'XP : quatre poses, agrandies exactement ×4.
+        TextureRect burst = new()
         {
-            ColorRect particle = new();
-            float size = (float)GD.RandRange(3f, 7f);
-            particle.CustomMinimumSize = new Vector2(size, size);
-            particle.Size = new Vector2(size, size);
-
-            float hue = (float)GD.RandRange(0.08f, 0.15f); // gold hue range
-            particle.Color = Color.FromHsv(hue, 0.8f, 1f);
-
-            // Position at card center
-            particle.GlobalPosition = center + new Vector2(
-                (float)GD.RandRange(-card.Size.X * 0.4f, card.Size.X * 0.4f),
-                (float)GD.RandRange(-card.Size.Y * 0.3f, card.Size.Y * 0.3f));
-
-            _overlay.AddChild(particle);
-
-            float angle = (float)GD.RandRange(0, Mathf.Tau);
-            float dist = (float)GD.RandRange(40f, 90f);
-            Vector2 target = particle.GlobalPosition + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * dist;
-
-            ColorRect p = particle;
-            Tween tween = CreateTween();
-            tween.SetProcessMode(Tween.TweenProcessMode.Physics);
-            tween.SetParallel();
-            tween.TweenProperty(p, "global_position", target, 0.5f)
-                .SetTrans(Tween.TransitionType.Quad)
-                .SetEase(Tween.EaseType.Out);
-            tween.TweenProperty(p, "modulate:a", 0f, 0.5f)
-                .SetDelay(0.2f);
-            tween.TweenProperty(p, "size", Vector2.One * 1f, 0.5f);
-            tween.Chain().TweenCallback(Callable.From(() =>
-            {
-                if (IsInstanceValid(p))
-                    p.QueueFree();
-            }));
-        }
+            Texture = _revealFrames[0],
+            ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
+            StretchMode = TextureRect.StretchModeEnum.Scale,
+            TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
+            MouseFilter = Control.MouseFilterEnum.Ignore,
+            Size = new Vector2(64, 64),
+        };
+        _overlay.AddChild(burst);
+        burst.GlobalPosition = (card.GlobalPosition + card.Size / 2f - burst.Size / 2f).Round();
+        Tween tween = burst.CreateTween();
+        tween.TweenMethod(Callable.From<float>(pose => burst.Texture = _revealFrames[Mathf.Min((int)pose, 3)]), 0f, 4f, 0.5f);
+        tween.TweenCallback(Callable.From(burst.QueueFree));
     }
 
     private void ScheduleClose()

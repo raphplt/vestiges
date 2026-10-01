@@ -413,3 +413,30 @@ dont dissolution et reprise du même nœud avec un autre bonus. Capture des
 cinq ramassages et d'une quête complétée par `QuestManager` dans Main,
 inspectée dans `/tmp/vestiges-plan25-i3-final/`. Le premier parcours était
 masqué par le level-up accordé en récompense ; le bot le résout désormais.
+
+### I4 — menus et chargement branchés, 1er octobre 2026
+
+Les quatre atlas 480 × 270 remplacent le shader de repli : or pour le
+level-up/coffre, cyan au Mémorial, violet à la Faille, neutre pour les
+Réminiscences et le chargement. Huit poses à 3 i/s, cache partagé et filtre
+nearest. Les neuf habillages passent par `UITheme` : boutons, panneaux,
+cartes neutres et tuiles de Collection, focus compris. Les fichiers source
+des anciens menus restent intacts pour préserver la génération déterministe.
+
+Le chargement déroule les cinq sols natifs avec le personnage choisi, à
+échelle entière. Les particules de repli du chargement sont remplacées par
+le fond natif ; l'éclat de révélation du coffre réutilise les quatre poses
+d'XP. Les textures de saut de rareté restent à leurs 32 px natifs pendant
+la révélation, au lieu d'être réduites à 24 px.
+
+Les premiers parcours Mémorial/Faille/coffre capturaient l'entrée avant
+l'apparition des cartes. Les délais des outils attendent maintenant la fin
+des animations. Le parcours level-up couvre aussi trois rangs de Chance
+gagnés successivement et capture le véritable chargement de Main.
+
+Build : zéro avertissement ; smoke 600 frames vert. Captures inspectées :
+`/tmp/vestiges-plan25-i4-levelup/` (cinq raretés, Réminiscences, Chance,
+chargement), `…-final-memorial/`, `…-final-rift/`, `…-final-loot/`,
+`…-pause/` et `…-collection/`. Les écrans finaux montrent leurs cartes,
+boutons et icônes ; les petites facettes communes du coffre sont bien des
+textures, sans caractère décoratif dans les libellés.
