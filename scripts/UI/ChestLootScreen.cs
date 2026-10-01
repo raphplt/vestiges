@@ -240,12 +240,7 @@ public partial class ChestLootScreen : CanvasLayer
         PanelContainer card = new();
         card.CustomMinimumSize = new Vector2(370, 60);
 
-        StyleBoxFlat cardStyle = new();
-        cardStyle.BgColor = new Color(0.08f, 0.08f, 0.12f);
-        cardStyle.SetBorderWidthAll(1);
-        cardStyle.BorderColor = new Color(0.25f, 0.24f, 0.2f, 0.6f);
-        cardStyle.SetCornerRadiusAll(3);
-        card.AddThemeStyleboxOverride("panel", cardStyle);
+        ChoiceStyle.StyleCard(card, ChoiceStyle.NeutralBorder, -1, false);
 
         // Flash overlay (hidden initially)
         ColorRect flash = new();
@@ -267,7 +262,13 @@ public partial class ChestLootScreen : CanvasLayer
         UITheme.SetTextRole(label, TextRole.Lead);
         label.AddThemeColorOverride("font_color", TextDim);
         label.Text = "???";
-        margin.AddChild(label);
+        HBoxContainer contents = new() { Alignment = BoxContainer.AlignmentMode.Center };
+        contents.AddThemeConstantOverride("separation", 8);
+        margin.AddChild(contents);
+        int rarityRank = RarityArt.Rank(_rarity);
+        if (rarityRank >= 0)
+            contents.AddChild(new RarityIcon(rarityRank));
+        contents.AddChild(label);
 
         card.AddChild(flash);
         _slotsContainer.AddChild(card);
@@ -351,12 +352,7 @@ public partial class ChestLootScreen : CanvasLayer
         UITheme.SetTextRole(slot.Label, TextRole.Subhead);
 
         // Card glow border
-        StyleBoxFlat revealStyle = new();
-        revealStyle.BgColor = new Color(0.1f, 0.1f, 0.16f);
-        revealStyle.SetBorderWidthAll(2);
-        revealStyle.BorderColor = RarityPalette.Main(_rarity);
-        revealStyle.SetCornerRadiusAll(3);
-        slot.Card.AddThemeStyleboxOverride("panel", revealStyle);
+        ChoiceStyle.StyleCard(slot.Card, RarityPalette.Main(_rarity), RarityArt.Rank(_rarity), false);
 
         // White flash
         slot.Flash.Color = new Color(1f, 1f, 1f, 0.5f);

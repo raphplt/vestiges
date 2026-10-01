@@ -221,6 +221,8 @@ public partial class ChoiceScreen : CanvasLayer
 
         HBoxContainer header = new();
         text.AddChild(header);
+        if (card.Rank >= 0)
+            header.AddChild(new RarityIcon(card.Rank));
         header.AddChild(ChoiceStyle.MakeLabel(card.Tag, TextRole.Caption, card.Frame, true));
         if (!string.IsNullOrEmpty(card.Price))
             header.AddChild(ChoiceStyle.MakeLabel(card.Price, TextRole.Caption, card.Enabled ? ChoiceStyle.GoldBright : ChoiceStyle.TextDim, false, HorizontalAlignment.Right));

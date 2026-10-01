@@ -304,16 +304,19 @@ public partial class LevelUpScreen : CanvasLayer
         HBoxContainer header = new();
         text.AddChild(header);
         string tag = choice.Rarity != null
-            ? $"{ChoiceStyle.RarityGlyph(choice.Rarity.Rank)} {RarityPalette.DisplayName(choice.Rarity.Id).ToUpper()}".Trim()
+            ? RarityPalette.DisplayName(choice.Rarity.Id).ToUpper()
             : isPerk ? PerkTag(choice.Id)
             : isAscension ? Tr("LEVELUP_ASCENSION")
             : Tr(isWeapon ? "LEVELUP_KIND_WEAPON" : "LEVELUP_KIND_OBJECT");
         if (choice.IsCarried)
             tag = $"{tag}  ·  {Tr("LEVELUP_CARRIED")}";
         Label tagLabel = MakeLabel(tag, TextRole.Caption, frame, true);
+        RarityIcon rarityIcon = choice.Rarity != null ? new RarityIcon(choice.Rarity.Rank) : null;
+        if (rarityIcon != null)
+            header.AddChild(rarityIcon);
         header.AddChild(tagLabel);
         if (choice.RarityRaised && !choice.IsCarried)
-            ShowRarityRaise(header, tagLabel, choice, tag, frame, _cards.Count);
+            ShowRarityRaise(header, tagLabel, rarityIcon, choice, tag, frame, _cards.Count);
         header.AddChild(MakeLabel(LevelText(choice, player, isWeapon, isAscension, isPerk, isNew), TextRole.Caption,
             isNew && !isPerk ? GoldBright : TextColor, false, HorizontalAlignment.Right));
 
@@ -380,7 +383,7 @@ public partial class LevelUpScreen : CanvasLayer
         ChoiceStyle.MakeLabel(text, role, color, expand, align);
 
     private void StyleCard(int index, bool focused) =>
-        ChoiceStyle.StyleCard(_cards[index], _banishMode ? BanishColor : _cardColors[index], _cardOptions[index].Rarity?.Rank ?? 0, focused);
+        ChoiceStyle.StyleCard(_cards[index], _banishMode ? BanishColor : _cardColors[index], _cardOptions[index].Rarity?.Rank ?? -1, focused);
 
     // ==============================
     // Actions et navigation
@@ -587,18 +590,26 @@ public partial class LevelUpScreen : CanvasLayer
     /// La Chance (ou l'oubli, le Péril) a monté la rareté : la carte montre d'abord la rareté tirée, puis elle saute au
     /// rang gagné avec un trèfle et un son (plan 24 D2). Les cartes d'une offre sautent l'une après l'autre.
     /// </summary>
-    private void ShowRarityRaise(HBoxContainer header, Label tagLabel, FragmentOption choice, string finalTag, Color finalColor, int cardIndex)
+    private void ShowRarityRaise(HBoxContainer header, Label tagLabel, RarityIcon rarityIcon, FragmentOption choice, string finalTag, Color finalColor, int cardIndex)
     {
         UpgradeRarity rolled = choice.RolledRarity;
-        tagLabel.Text = $"{ChoiceStyle.RarityGlyph(rolled.Rank)} {RarityPalette.DisplayName(rolled.Id).ToUpper()}".Trim();
+        tagLabel.Text = RarityPalette.DisplayName(rolled.Id).ToUpper();
         tagLabel.AddThemeColorOverride("font_color", RarityPalette.Main(rolled.Id));
-        PixelIcon clover = PixelIcon.Clover(2f);
+        float delay = 0.35f + 0.15f * cardIndex;
+        rarityIcon.RevealFrom(rolled.Rank, choice.Rarity.Rank, delay);
+        TextureRect clover = new()
+        {
+            Texture = GD.Load<Texture2D>("res://assets/ui/rarities/rarity_clover.png"),
+            CustomMinimumSize = new Vector2(16, 16), ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
+            StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
+            TextureFilter = CanvasItem.TextureFilterEnum.Nearest, SizeFlagsVertical = Control.SizeFlags.ShrinkCenter,
+        };
         clover.Modulate = Colors.Transparent;
         header.AddChild(clover);
         header.MoveChild(clover, tagLabel.GetIndex() + 1);
 
         Tween tween = tagLabel.CreateTween();
-        tween.TweenInterval(0.35f + 0.15f * cardIndex);
+        tween.TweenInterval(delay + (choice.Rarity.Rank - rolled.Rank) * 6f / RarityArt.Fps);
         tween.TweenCallback(Callable.From(() =>
         {
             tagLabel.Text = finalTag;

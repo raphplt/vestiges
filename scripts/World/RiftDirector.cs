@@ -117,7 +117,7 @@ public partial class RiftDirector : Node
     {
         ChoiceCard card = new()
         {
-            Tag = $"{ChoiceStyle.RarityGlyph(option.Rarity.Rank)} {RarityPalette.DisplayName(option.Rarity.Id).ToUpper()}".Trim(),
+            Tag = RarityPalette.DisplayName(option.Rarity.Id).ToUpper(),
             Frame = RarityPalette.Main(option.Rarity.Id),
             Rank = option.Rarity.Rank,
             Title = option.DisplayName,

@@ -1,0 +1,14 @@
+{
+  "layout": "horizontal",
+  "fps": 12,
+  "card_margin": 3,
+  "rarities": [
+    "common",
+    "uncommon",
+    "rare",
+    "epic",
+    "legendary"
+  ],
+  "legendary_frames": 4,
+  "jump_frames": 6
+}

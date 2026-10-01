@@ -269,6 +269,7 @@ public partial class MemorialDirector : Node
             {
                 Tag = string.Format(Tr("MEMORIAL_WEAPON_TAG"), RarityPalette.DisplayName(_config.WeaponMinRarity)).ToUpper(),
                 Frame = RarityPalette.Main(_config.WeaponMinRarity),
+                Rank = RarityArt.Rank(_config.WeaponMinRarity),
                 Title = string.Format(Tr("MEMORIAL_WEAPON_TITLE"), weapon.Name),
                 Price = string.Format(Tr("MEMORIAL_PRICE"), weaponCost),
                 Enabled = essence >= weaponCost && weapon.CanLevelUp,
@@ -336,7 +337,7 @@ public partial class MemorialDirector : Node
             return;
         }
         memorial.RecordServiceUse(ServiceWeapon);
-        OpenServices(memorial, $"{weapon.Name} : {ChoiceStyle.RarityGlyph(rarity.Rank)} {RarityPalette.DisplayName(rarity.Id)}".Replace("  ", " "));
+        OpenServices(memorial, $"{weapon.Name} : {RarityPalette.DisplayName(rarity.Id)}".Replace("  ", " "));
     }
 
     private void Heal(Memorial memorial, int cost)
@@ -426,7 +427,7 @@ public partial class MemorialDirector : Node
 
     private static ChoiceCard RarityCard(UpgradeRarity rarity, string title) => new()
     {
-        Tag = $"{ChoiceStyle.RarityGlyph(rarity.Rank)} {RarityPalette.DisplayName(rarity.Id).ToUpper()}".Trim(),
+        Tag = RarityPalette.DisplayName(rarity.Id).ToUpper(),
         Frame = RarityPalette.Main(rarity.Id),
         Rank = rarity.Rank,
         Title = title,

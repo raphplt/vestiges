@@ -9,7 +9,7 @@ public sealed class ChoiceCard
     public string Tag = "";
     public Color Frame = ChoiceStyle.NeutralBorder;
     /// <summary>Rang de rareté (0 Commun à 4 Légendaire) : épaisseur du cadre.</summary>
-    public int Rank;
+    public int Rank = -1;
     public string Title = "";
     public readonly List<(string Text, Color Color)> Lines = new();
     public Texture2D Icon;

@@ -1,5 +1,11 @@
 # Plan 25 — Sprites et design : objets, projectiles ennemis, raretés, menus
 
+**Reprise du 1er octobre — DECISIONS §41 :** Raphaël demande de tout brancher
+sur `main`. Les arrêts de validation ci-dessous sont levés. Lots d'intégration :
+I1 raretés et cadres ; I2 objets et Réminiscences ; I3 sceaux et bonus sur les
+consommateurs du plan 24 ; I4 fonds, thème et chargement ; I5 captures, régressions
+et clôture. Les anciens comptes rendus gardent l'état au moment de leur écriture.
+
 1er octobre 2026 · Demandé par Raphaël ([DECISIONS §40](DECISIONS.md)) : « un prompt/plan global pour avancer sur les sprites (faire tous les objets, revoir certains projectiles ennemis pour les rendre plus jolis/impactants ; et les petits détails comme les raretés et les menus) ». Ce plan est écrit pour **un agent qui travaille seul**. Le code de jeu (HUD, écrans, bonus lâchés) est fait en parallèle par un autre agent au [plan 24](24-retours-du-1er-octobre.md) : ce plan livre les **images** et les branche là où le code les attend.
 
 ## 0. Prompt à donner à l'agent
@@ -354,3 +360,17 @@ Les commandes d'export sont déjà disponibles avec `--export` sur
 Après chaque validation : exporter, ajouter les liens dans les données
 et les consommateurs, lancer le smoke pour les imports, puis capturer et
 inspecter les écrans réellement concernés avant de clôturer l'intégration.
+
+### I1 — raretés branchées sur main, 1er octobre 2026
+
+Éclats 12/24 px et cadres nine-patch exportés ; reflet légendaire et frise
+animés avec atlas mis en cache. Les rangs gagnés par la Chance se révèlent
+successivement avec les six poses et le trèfle. `RarityGlyph` supprimé :
+level-up, Mémorial, Faille et coffre utilisent les textures ; les services
+sans rareté gardent un cadre neutre. Pause et Collection n'attribuent pas
+de rareté aux objets/armes, conformément à la rareté portée par les améliorations.
+
+Build sans avertissement, smoke 600 frames vert, capture des cinq raretés
+dans Main (`/tmp/vestiges-plan25-i1-levelup/`) inspectée. Le mode de capture
+historique retourne 1 faute de ligne `RESULT`, mais écrit toutes les images
+sans exception de jeu ; ce défaut de compte rendu sera corrigé avec I5.

@@ -537,3 +537,13 @@ Raphaël, après le plan 24 : « je valide les recommendations. et pour le score
 - **Ascensions : toutes les armes** en reçoivent une. Les voies proposées pour les 20 autres armes ([21-historique §28](21-historique.md)) sont validées par cette demande.
 - **Barre d'XP :** sur toute la largeur de l'écran, en bas, et beaucoup plus jolie.
 - **Sprites et design :** un plan global est demandé pour un agent (tous les objets, projectiles ennemis plus beaux et plus percutants, raretés, menus) : [plan 25](25-sprites-et-design.md). L'agent courant travaille sur le reste.
+
+## 41. Brancher toutes les images et l'UI du plan 25 sur main — 1er octobre 2026
+
+Après fusion du plan 25 et explication des branchements encore en attente,
+Raphaël : « bah branche tout alors stp (retourne sur main et fais les changements pour tout brancher) ».
+
+**Acquis :** intégrer les planches proposées, les images et les éléments d'UI
+du plan 25 directement sur `main`, sans nouvel arrêt de validation graphique.
+Les composants du plan 24 maintenant disponibles sont réunis avec les sprites
+pour brancher également bonus, sceaux, écrans animés et chargement.

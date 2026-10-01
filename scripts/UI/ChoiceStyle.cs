@@ -23,28 +23,23 @@ public static class ChoiceStyle
     public static readonly Color CardBg = new(0.07f, 0.07f, 0.11f, 0.96f);
     public static readonly Color OverlayColor = new(0.0f, 0.0f, 0.02f, 0.75f);
 
-    /// <summary>La rareté se lit aussi à la forme : rien, ◆, ◆◆, ★, ★★ du Commun au Légendaire.</summary>
-    public static string RarityGlyph(int rank) => rank switch
-    {
-        1 => "◆",
-        2 => "◆◆",
-        3 => "★",
-        4 => "★★",
-        _ => "",
-    };
-
-    /// <summary>Cadre d'une carte ; les grandes raretés ont un cadre plus épais, visible aussi sans la couleur.</summary>
+    /// <summary>Cadre nine-patch natif ; la frise légendaire anime ses quatre poses sans recréer le style.</summary>
     public static void StyleCard(PanelContainer card, Color border, int rank, bool focused, bool enabled = true)
     {
-        StyleBoxFlat style = new()
-        {
-            BgColor = focused ? CardBg.Lightened(0.08f) : CardBg,
-            BorderColor = focused ? border.Lightened(0.25f) : border with { A = enabled ? 0.85f : 0.35f },
-        };
-        style.SetBorderWidthAll((focused ? 3 : 2) + (rank >= 3 ? 1 : 0));
-        style.SetCornerRadiusAll(3);
+        Texture2D[] frames = rank >= 0 ? RarityArt.Cards(rank)
+            : new[] { GD.Load<Texture2D>(UITheme.MenusPath + "ui_card_normal.png") };
+        StyleBoxTexture style = UITheme.CreateNinePatch(frames[0], 3, 3, 3, 3);
+        style.ModulateColor = focused ? new Color(1.25f, 1.25f, 1.25f) : Colors.White;
+        card.TextureFilter = CanvasItem.TextureFilterEnum.Nearest;
         card.AddThemeStyleboxOverride("panel", style);
         card.Modulate = enabled ? Colors.White : new Color(1f, 1f, 1f, 0.55f);
+        RarityFrame animation = card.GetNodeOrNull<RarityFrame>("RarityFrame");
+        if (animation == null)
+        {
+            animation = new RarityFrame { Name = "RarityFrame" };
+            card.AddChild(animation);
+        }
+        animation.Configure(card, style, frames);
     }
 
     public static void StyleButton(Button button, bool focused)
