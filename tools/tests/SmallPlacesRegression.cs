@@ -61,6 +61,7 @@ public partial class SmallPlacesRegression : Node2D
 			player.InitializeCharacter(CharacterDataLoader.Get("traqueur"));
 			player.SetPhysicsProcess(false);
 			player.DisableDefenseForTests();
+			float luckBefore = player.LuckBonus;
 			EssenceTracker essence = new() { Name = "EssenceTracker" };
 			AddChild(essence);
 
@@ -86,7 +87,7 @@ public partial class SmallPlacesRegression : Node2D
 			well.ShowSign(true);
 			Check(shown && !well.SignVisible, "Signe : visible sur un lieu encore utile, jamais sur un lieu déjà utilisé");
 
-			await CheckC4(director, player, essence);
+			await CheckC4(director, player, essence, luckBefore);
 
 			GD.Print($"[SmallPlacesRegression] RESULT failures={_failures}");
 			GetTree().Quit(_failures == 0 ? 0 : 1);
@@ -98,7 +99,7 @@ public partial class SmallPlacesRegression : Node2D
 		}
 	}
 
-	private async System.Threading.Tasks.Task CheckC4(SmallPlaceDirector director, Player player, EssenceTracker essence)
+	private async System.Threading.Tasks.Task CheckC4(SmallPlaceDirector director, Player player, EssenceTracker essence, float luckBefore)
 	{
 		List<SmallPlace> places = new(director.Places);
 		SmallPlace Find(string id) => places.Find(place => place.Data.Id == id);
@@ -167,9 +168,9 @@ public partial class SmallPlacesRegression : Node2D
 		float luckPerType = WaymarkDataLoader.Load().LuckPerType;
 		float luck = player.LuckBonus;
 		SmallPlace secondWell = places.Find(place => place.Data.Id == "well" && !place.Used);
-		secondWell.Interact(player);
-		Check(player.Waymarks.Found == usedTypes.Count && Mathf.IsEqualApprox(luck, usedTypes.Count * luckPerType)
-				&& Mathf.IsEqualApprox(player.LuckBonus, luck),
+		secondWell?.Interact(player);
+		Check(secondWell != null && player.Waymarks.Found == usedTypes.Count
+				&& Mathf.IsEqualApprox(luck - luckBefore, usedTypes.Count * luckPerType) && Mathf.IsEqualApprox(player.LuckBonus, luck),
 			$"Repères : {player.Waymarks.Found} types utilisés, Chance +{luck * 100f:0} %, un deuxième puits n'ajoute rien");
 	}
 

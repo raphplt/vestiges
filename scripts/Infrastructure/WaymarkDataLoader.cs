@@ -30,12 +30,22 @@ public static class WaymarkDataLoader
 			return _config;
 		}
 
+		// Clés manquantes : Repères désactivés plutôt qu'une run qui ne démarre pas (le joueur crée ce composant).
 		Godot.Collections.Dictionary root = json.Data.AsGodotDictionary();
+		if (!root.ContainsKey("types") || !root.ContainsKey("luck_per_type"))
+		{
+			GD.PushError("[WaymarkDataLoader] waymarks.json : 'types' et 'luck_per_type' sont requis");
+			_config = new WaymarkConfig();
+			return _config;
+		}
 		Dictionary<string, string> names = new();
 		foreach (Variant item in root["types"].AsGodotArray())
 		{
 			Godot.Collections.Dictionary type = item.AsGodotDictionary();
-			names[type["id"].AsString()] = type["name_key"].AsString();
+			if (type.ContainsKey("id") && type.ContainsKey("name_key"))
+				names[type["id"].AsString()] = type["name_key"].AsString();
+			else
+				GD.PushError("[WaymarkDataLoader] Type sans 'id' ou 'name_key' ignoré");
 		}
 		_config = new WaymarkConfig
 		{

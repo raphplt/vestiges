@@ -108,6 +108,7 @@ public partial class RiftDirector : Node
             _peril.AddOubli(offers[choice].Oubli);
             _peril.AddPeril(_config.PerilPerOffer);
             rift.Close();
+            _eventBus.EmitSignal(EventBus.SignalName.RiftUsed, rift.GlobalPosition);
             EmitSparks(rift.GlobalPosition);
         });
     }

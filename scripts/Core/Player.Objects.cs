@@ -39,8 +39,8 @@ public partial class Player
     /// <summary>Repères : types de lieux déjà utilisés dans la run, et la Chance qu'ils ont donnée.</summary>
     public Waymarks Waymarks { get; private set; }
 
-    /// <summary>Texte flottant au-dessus du joueur (paliers, Repères).</summary>
-    internal void ShowPopup(string text, Color color) => SpawnLootPopup(text, color, GlobalPosition, 0);
+    /// <summary>Texte flottant au-dessus du joueur, sans « + » (Repères).</summary>
+    internal void ShowPopup(string text, Color color) => SpawnLootPopup(text, color, GlobalPosition, 0, plusSign: false);
 
     /// <summary>
     /// Ajoute un objet au niveau 1, ou le monte de <paramref name="cards"/> cartes de gain <paramref name="gain"/>

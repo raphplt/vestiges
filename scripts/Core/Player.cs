@@ -1459,18 +1459,24 @@ public partial class Player : CharacterBody2D
     /// <summary>Écran de roulette des coffres.</summary>
     public void ConfigureLoot(UI.ChestLootScreen lootScreen) => _interaction.Configure(lootScreen);
 
-    /// <summary>Texte flottant montrant le loot obtenu, empilé verticalement.</summary>
-    private void SpawnLootPopup(string text, Color color, Vector2 worldPos, int stackIndex)
+    /// <summary>
+    /// Texte flottant montrant le loot obtenu, empilé verticalement, centré sur le point. Au-dessus des entités (couche
+    /// des chiffres de dégâts) : la scène est triée en Y, un décor ou un coffre le couvrirait.
+    /// </summary>
+    private void SpawnLootPopup(string text, Color color, Vector2 worldPos, int stackIndex, bool plusSign = true)
     {
+        const float width = 240f;
         Label label = new()
         {
-            Text = $"+ {text}",
+            Text = plusSign ? $"+ {text}" : text,
             HorizontalAlignment = HorizontalAlignment.Center,
-            GlobalPosition = worldPos + new Vector2(-40, -25 - stackIndex * 16)
+            GlobalPosition = worldPos + new Vector2(-width / 2f, -25 - stackIndex * 16),
+            ZIndex = 30,
+            MouseFilter = Control.MouseFilterEnum.Ignore,
         };
         label.AddThemeColorOverride("font_color", color);
         label.AddThemeFontSizeOverride("font_size", 12);
-        label.Size = new Vector2(80, 16);
+        label.Size = new Vector2(width, 16);
 
         GetTree().CurrentScene.CallDeferred(Node.MethodName.AddChild, label);
 

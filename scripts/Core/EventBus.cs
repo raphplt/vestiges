@@ -122,6 +122,8 @@ public partial class EventBus : Node
 
     // --- Failles (plan 17 lot 3C) ---
     [Signal] public delegate void RiftInteractedEventHandler(Node2D rift);
+    /// <summary>Une offre de Faille vient d'être acceptée : la Faille se referme (Repères, plan 23 R9).</summary>
+    [Signal] public delegate void RiftUsedEventHandler(Vector2 position);
 
     // --- Petits lieux (plan 22 C1 et C4) ---
     /// <summary>Un petit lieu vient de servir (Repères, plan 23 R9).</summary>
