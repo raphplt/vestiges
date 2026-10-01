@@ -70,6 +70,13 @@ public partial class QuestManager : CanvasLayer
         _eventBus.RunPhaseChanged += OnRunPhaseChanged;
     }
 
+    /// <summary>Ce nœud ne tourne pas en pause : le détail tenu au moment d'un level-up se replie au lieu de rester figé.</summary>
+    public override void _Notification(int what)
+    {
+        if (what == NotificationPaused && _panelRoot != null)
+            _panelRoot.Visible = QuestDisplaySettings.Current == QuestDisplaySettings.Mode.Detailed;
+    }
+
     public override void _ExitTree()
     {
         if (GetViewport() != null)

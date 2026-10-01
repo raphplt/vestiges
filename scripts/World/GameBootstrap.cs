@@ -264,6 +264,7 @@ public partial class GameBootstrap : Node
             "res://assets/shaders/outline.gdshader",
             "res://assets/shaders/aberration_aura.gdshader",
             "res://assets/shaders/colorblind.gdshader",
+            "res://assets/shaders/choice_backdrop.gdshader",
         };
 
         Node2D warmupContainer = new() { Name = "_ShaderWarmup" };

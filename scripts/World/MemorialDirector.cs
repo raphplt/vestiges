@@ -200,7 +200,7 @@ public partial class MemorialDirector : Node
     // Bénédictions
     // ==============================
 
-    private void OpenBlessings(Memorial memorial)
+    private void OpenBlessings(Memorial memorial, bool animate = true)
     {
         List<StatEffectData> pool = new(BlessingDataLoader.All);
         List<StatModifier> modifiers = new();
@@ -238,18 +238,19 @@ public partial class MemorialDirector : Node
                 RerollBlessings(memorial, rerollCost);
             else if (choice >= 0 && CachePlayer())
                 modifiers[choice].ApplyTo(_player);
-        }, PixelBackdrop.MemorialTint);
+        }, PixelBackdrop.MemorialTint, animate);
     }
 
+    /// <summary>Relance : les nouvelles bénédictions s'ouvrent sans rejouer l'entrée.</summary>
     private void RerollBlessings(Memorial memorial, int cost)
     {
         if (_essence == null || !_essence.TrySpend(cost))
         {
-            OpenBlessings(memorial);
+            OpenBlessings(memorial, false);
             return;
         }
         memorial.RecordServiceUse(ServiceReroll);
-        OpenBlessings(memorial);
+        OpenBlessings(memorial, false);
     }
 
     // ==============================

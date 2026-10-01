@@ -31,7 +31,6 @@ public partial class LevelUpScreen : CanvasLayer
     private Tween _entranceTween;
     private static readonly Color BanishColor = new(0.85f, 0.25f, 0.2f);
 
-
     private Texture2D _panelTex;
     private Texture2D _separatorTex;
 

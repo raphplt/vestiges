@@ -85,6 +85,18 @@ public partial class Minimap : Control
         Visible = false;
     }
 
+    /// <summary>
+    /// Ce nœud ne tourne pas pendant une pause (level-up, coffre, pause) : la carte entière ouverte à ce moment resterait
+    /// figée sous l'écran. Elle se cache le temps de la pause.
+    /// </summary>
+    public override void _Notification(int what)
+    {
+        if (what == NotificationPaused && _full)
+            Visible = false;
+        else if (what == NotificationUnpaused && _image != null)
+            Visible = true;
+    }
+
     public override void _ExitTree()
     {
         if (_eventBus != null)
