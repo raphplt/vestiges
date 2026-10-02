@@ -24,6 +24,7 @@ public partial class ShaderWarmup : SubViewport
         ("res://assets/shaders/echo.gdshader", SampleKind.Sprite),
         ("res://assets/shaders/light_column.gdshader", SampleKind.Sprite),
         ("res://assets/shaders/pixel_fx.gdshader", SampleKind.Sprite),
+        ("res://assets/shaders/player_projectile.gdshader", SampleKind.Sprite),
         ("res://assets/shaders/iridescent_fluid.gdshader", SampleKind.Sprite),
         ("res://assets/shaders/swamp_atmosphere.gdshader", SampleKind.Rectangle),
         ("res://assets/shaders/erasure_veil.gdshader", SampleKind.Rectangle),

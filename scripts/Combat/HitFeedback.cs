@@ -13,7 +13,7 @@ public sealed class HitFeedback
     private const float FlashSec = 0.15f;
     private const float SquashSec = 0.15f;
     private const float RecoilSec = 0.1f;
-    private const float RecoilPx = 3f;
+    private const float RecoilPx = 5f;
     private const float ShoveSec = 0.3f;
     private static readonly Vector2 SquashScale = new(1.25f, 0.75f);
     private static readonly Color FlashModulate = new(3f, 3f, 3f, 1f);

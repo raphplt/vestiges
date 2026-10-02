@@ -1,5 +1,11 @@
 {
-	"_doc": "Échelle visuelle des armes du joueur (plan 21 G6e). La stat de taille (aoe_radius, multiplicateur du joueur) grandit les projectiles, leur zone de contact, les notes de la Boîte à musique et l'allonge dessinée des coups de mêlée : échelle = 1 + (taille − 1) × size_response, bornée entre 1 et max_scale pour rester lisible dans la foule.",
+	"_doc": "Échelle visuelle des armes du joueur (plan 21 G6e). La stat de taille (aoe_radius, multiplicateur du joueur) grandit les projectiles, leur zone de contact, les notes de la Boîte à musique et l'allonge dessinée des coups de mêlée : échelle = 1 + (taille − 1) × size_response, bornée entre 1 et max_scale pour rester lisible dans la foule. projectile_base_scale : échelle de base des sprites de projectiles trop petits pour se lire en foule (notes, billes, orbes ; DECISIONS §53), multipliée par l'échelle de taille ; la zone de contact n'en dépend pas.",
 	"size_response": 1.0,
-	"max_scale": 2.0
+	"max_scale": 2.0,
+	"projectile_base_scale": {
+		"note": 2,
+		"stone": 2,
+		"orb_essence": 2,
+		"orb_fire": 2
+	}
 }

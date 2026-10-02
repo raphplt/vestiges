@@ -32,6 +32,10 @@ public sealed class PlayerAttackFx
 
     private static CombatPools Pools => CombatPools.Instance;
 
+    /// <summary>Liseré clair et halo des projectiles du joueur, partagé par tous (DECISIONS §53, plan 21 F5).</summary>
+    public static ShaderMaterial ProjectileMaterial { get; } =
+        new() { Shader = GD.Load<Shader>("res://assets/shaders/player_projectile.gdshader") };
+
     public static FxFamily FamilyOf(WeaponData weapon)
     {
         return PixelPalette.ParseFamily(weapon?.Fx.Family, PixelPalette.FamilyForDamageType(weapon?.DamageType));
@@ -137,7 +141,8 @@ public sealed class PlayerAttackFx
             Name = "Visual",
             Texture = set?.Get(0, 0),
             Position = new Vector2(0f, -TorsoHeight),
-            Scale = Vector2.One * sizeScale,
+            Scale = Vector2.One * sizeScale * WeaponVisualConfig.Load().ProjectileBaseScale("note"),
+            Material = ProjectileMaterial,
             Visible = set != null && CombatFxSettings.PlayerProjectiles,
             Modulate = new Color(1f, 1f, 1f, CombatFxSettings.PlayerOpacity),
         };
@@ -181,16 +186,21 @@ public sealed class PlayerAttackFx
         if (++_hitBurstsThisFrame > MaxHitBurstsPerFrame)
             return;
 
+        // Chaque coup se voit (DECISIONS §53, plan 21 F6) : éclat en étoile à la couleur de l'arme et gerbe ; un
+        // critique ajoute une gerbe large et un anneau au sol. Le budget d'effets (FxBudget) plafonne la foule.
         Vector2 direction = (enemyPosition - _owner.GlobalPosition).Normalized();
         Vector2 point = enemyPosition + new Vector2(0f, -TorsoHeight) - direction * 4f;
         if (isCrit)
         {
-            EmitSparks(point, direction, FxFamily.Crit, 9, 1.3f, 90f, 190f, 2);
-            PlayFlash(point, FxFamily.Crit, 7f);
+            EmitSparks(point, direction, FxFamily.Crit, 14, 1.5f, 100f, 220f, 2);
+            PlayFlash(point, FxFamily.Crit, 10f);
+            PlayGroundRing(enemyPosition, FxFamily.Crit, 16f, 2f, 0.2f);
         }
         else
         {
-            EmitSparks(point, direction, FamilyOf(weapon), 4, 1.0f, 70f, 150f, 1);
+            FxFamily family = FamilyOf(weapon);
+            EmitSparks(point, direction, family, 7, 1.15f, 80f, 180f, 1);
+            PlayFlash(point, family, 5f);
         }
     }
 

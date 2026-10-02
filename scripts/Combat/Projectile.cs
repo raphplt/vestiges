@@ -64,6 +64,7 @@ public partial class Projectile : Area2D
     public override void _Ready()
     {
         _sprite = GetNode<Sprite2D>("Visual");
+        _sprite.Material = PlayerAttackFx.ProjectileMaterial;
         _collision = GetNode<CollisionShape2D>("CollisionShape2D");
         _sprite.Position = new Vector2(0f, -Iso.FlightHeight);
         // Au sol sous le projectile : c'est l'écart entre l'ombre et le visuel qui dit qu'il vole.
@@ -77,8 +78,7 @@ public partial class Projectile : Area2D
                        float pierceDamageRamp = 0f, float sizeScale = 1f)
     {
         GlobalPosition = position;
-        // Taille du joueur (plan 21 G6e) : le visuel et la zone de contact grandissent ensemble, remis à chaque tir du pool.
-        _sprite.Scale = Vector2.One * sizeScale;
+        // Taille du joueur (plan 21 G6e) : la zone de contact grandit avec le visuel, remise à chaque tir du pool.
         _collision.Scale = Vector2.One * sizeScale;
         _direction = direction.Normalized();
         _damage = damage;
@@ -106,6 +106,8 @@ public partial class Projectile : Area2D
             spriteId = _family == FxFamily.Fire ? "orb_fire" : "orb_essence";
         _glowTrail = spriteId is "orb_fire" or "orb_essence" or "shard" or "note";
         _spriteSet = ProjectileSprites.Get(spriteId) ?? ProjectileSprites.Get("arrow");
+        // Les petits sprites (notes, billes, orbes) ont une échelle de base, sans toucher à la zone de contact (§53).
+        _sprite.Scale = Vector2.One * sizeScale * WeaponVisualConfig.Load().ProjectileBaseScale(spriteId);
         _spriteDirection = -1;
         _spriteFrame = -1;
         _sprite.Visible = CombatFxSettings.PlayerProjectiles && _spriteSet != null;
