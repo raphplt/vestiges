@@ -8,7 +8,7 @@
         "water": 0.10,
         "forest": 0.45
     },
-    "exploration_enemy_pool": ["presage", "rodeur", "rodeur", "void_brute", "rampant"],
+    "exploration_enemy_pool": ["presage", "rodeur", "rodeur", "void_brute", "rampant", "fading_spitter"],
     "resurgence_enemy_pool": ["presage", "shade", "shade", "void_brute", "void_brute", "wailing_sentinel", "rampant", "hurleur"],
     "danger_level": 3,
     "map_weight": 0.5,

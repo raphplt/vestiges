@@ -414,3 +414,18 @@ Ensuite : C2, l'Atelier ([plan 22](22-carte-a-explorer.md), validé §49).
 | Rares ou mieux, build Chance (Chance 0,26 à 0,37), 10–15 min | | | 40–52 % → 21–50 % |
 
 - Bancs armes, objets et petits lieux verts.
+
+### E4 — livré le 2 octobre
+
+- **PV des créatures :** ×1,07 par minute jusqu'à 6 min (au lieu de 1,04), ×1,17 ensuite (au lieu de 1,075), toujours ×1,25 d'emblée (`spawn_flow.json`).
+- **Tireurs :** le Cracheur (`fading_spitter`) rejoint l'exploration des Champs, de la Forêt et de la Carrière, qui n'avaient que le Présage.
+- **Mesure** (`--nomad --visit`, 3 seeds × **25 min**, après E2–E3) :
+
+| Tranche | 1–5 min | 5–10 | 10–15 | 15–20 | 20–25 |
+|---|---|---|---|---|---|
+| Temps pour tuer un ennemi moyen (E2–E3 → E4) | 0,45–0,57 → 0,55–0,73 s | 0,19–0,40 → 0,32–0,49 s | 0,12–0,26 → 0,22–0,50 s | → 0,15–0,54 s | → 0,18–0,62 s |
+| PV moyen d'un ennemi apparu | 51 | 85 | 180 | 430 | 950 |
+| Niveau atteint en fin de tranche | 10–11 | 19–20 | 26–27 | 30–37 | 33–43 |
+
+- Les tireurs font 31 à 34 % des apparitions (23 à 28 % avant).
+- **À juger en jeu par Raphaël :** les ennemis plus solides réduisent les éliminations, donc l'XP : 19–20 niveaux à 10 min pour le bot (Raphaël en avait 60 avant E2). Si c'est trop lent, `base_xp` 30 → 25 rend environ 15 % de niveaux. La pression en fin de partie (dégâts reçus ×4 à ×10 entre 10 et 25 min) n'est mesurée que sur un bot invincible : la survie se juge en jouant.
