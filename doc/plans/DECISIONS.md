@@ -616,3 +616,20 @@ Raphaël, après une partie : « globalement multiplier le nombre de projectiles
 - **Sprites d'armes :** ils doivent s'adapter quand la taille de l'arme ou son nombre de projectiles augmente.
 
 **Rattachement :** projectiles, vol de vie, level-up et builds XP/Chance au [plan 21](21-systeme-de-jeu.md), courbe d'XP en appui du [plan 20](20-recompense-et-puissance.md) ; sprites d'armes adaptatifs aux plans [08](08-direction-artistique.md) et [25](25-sprites-et-design.md). Rien n'est encore décidé sur les solutions : le prochain agent mesure, propose des lots et pose les questions du [tableau de bord §2](TABLEAU-DE-BORD.md#2-décisions-attendues-de-raphaël).
+
+## 49. Réponses aux questions de reprise — 2 octobre 2026
+
+Questions posées à la reprise (tableau de bord §2 et §48), avec les constats mesurés dans les données : seules 6 armes sur 24 peuvent tirer « projectiles » au niveau, à environ 6 % des tirages de stat ; un seul objet de Chance (Jeton de fête, +0,03), un seul d'XP (Photo de classe, +5 %) ; aucun vol de vie ; les 31 objets proposés ont tous le même poids d'offre.
+
+- **Projectiles :** les 24 armes peuvent gagner leur « nombre » au niveau (projectiles, frappes en mêlée, orbes, cibles de chaîne), à un poids relevé (environ 13 % des tirages), et le Papier carbone (`souffle_du_neant`) est favorisé dans les offres.
+- **Vol de vie :** un nouvel objet, et la stat entre au tirage des bonus de coffre. Soin plafonné par seconde pour éviter l'immortalité en foule.
+- **Builds XP/Chance :** renforcer les objets existants (pas plus forts), sans en ajouter.
+- **Level-up :** mesurer d'abord (temps entre deux niveaux, avec et sans build XP), puis proposer un réglage chiffré avant de toucher la courbe.
+- **Sprites d'armes adaptatifs :** les deux : la taille suit la stat de taille, et des variantes visuelles quand le nombre de projectiles monte.
+- **Réveil du Mémorial et de la Faille (24 L6b) :** durée gardée ; **son à changer** (`sfx_souvenir_trouve` provisoire), suivi au plan 15.
+- **Carte à explorer (22 §11) :** tout validé : Atelier et Trempe, service « niveau d'arme » déplacé du Mémorial vers l'Atelier, Atlas gardé. C2 suit les lots du §48.
+- **Catalogue d'objets (21 §4) :** validé en l'état, réglages au fil des retours.
+- **Recettes en jeu faites et validées :** invulnérabilité 0,25 s (23 R1), déplacements (01), bestiaire et cadence du Hurleur (07). La recette artistique des trois personnages (08) reste ouverte.
+- **Anomalies (plan 14) :** arbitrées : Écho de ta dernière run, Oubli de soi, Effondrement ; pénalité plafonnée à 25 % des PV max, rien de détruit ; une ligne de texte à l'écran.
+- **Le reste** (audio et son des Résurgences, mort et bilan 02, lore 19, récompense 20, classement 09) : en attente, **à reprendre juste après** les lots du §48.
+- **Ordre de travail :** lots du §48 (gameplay) puis C2 (Atelier) ; sprites adaptatifs ensuite.

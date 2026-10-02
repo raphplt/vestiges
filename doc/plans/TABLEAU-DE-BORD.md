@@ -1,6 +1,6 @@
 # Tableau de bord des plans
 
-1er octobre 2026 · **Une page pour ne rien perdre.** Établi par recensement des 23 plans, du README et du registre. Pour les plans 02, 04, 07, 08, 10 et 19, le recensement a lu les en-têtes, les lots et les comptes rendus, pas le texte entier. À tenir à jour à chaque clôture de lot et à chaque décision : une ligne change ici avant tout autre document.
+2 octobre 2026 · **Une page pour ne rien perdre.** Établi par recensement des 23 plans, du README et du registre. Pour les plans 02, 04, 07, 08, 10 et 19, le recensement a lu les en-têtes, les lots et les comptes rendus, pas le texte entier. À tenir à jour à chaque clôture de lot et à chaque décision : une ligne change ici avant tout autre document.
 
 Le [registre](DECISIONS.md) garde les mots de Raphaël. Les plans gardent le détail. Ce tableau dit seulement **où en est chaque chose et qui doit agir**.
 
@@ -8,7 +8,7 @@ Le [registre](DECISIONS.md) garde les mots de Raphaël. Les plans gardent le dé
 
 | Chantier | Plan | Prochaine action |
 |---|---|---|
-| **Retours du 1er octobre, soir** (projectiles trop rares, vol de vie, level-up rapide, builds XP/Chance, sprites d'armes adaptatifs) | [DECISIONS §48](DECISIONS.md), 21, 20, 08/25 | Consignés seulement. Agent : mesurer (fréquence des offres de projectiles, temps entre deux level-up avec et sans XP/Chance, objets Chance/XP du catalogue et leur apparition), puis proposer les lots au plan 21 après réponse aux questions §2 |
+| **Retours du 1er octobre, soir** (projectiles, vol de vie, level-up, XP/Chance, sprites d'armes adaptatifs) | [21 §14](21-systeme-de-jeu.md), [DECISIONS §48–49](DECISIONS.md) | Décidé le 2 octobre (§49). Lots G6a à G6f découpés au plan 21 §14 ; agent : G6a (le nombre pour toutes les armes) en cours, puis G6b, G6c, G6d (mesure, proposition sans toucher la courbe), G6e–f, puis C2 |
 | **Nouvelle recette après intégration des sprites** | [24 §12](24-retours-du-1er-octobre.md#12-retours-de-recette--1er-octobre-2026), [DECISIONS §44/47](DECISIONS.md) | **R1/R2, R3b, R5a–c et R6 livrés et vérifiés** : interfaces, cadence du Hurleur, trois personnages et carte par biome. Recette humaine du combat et du visuel à faire ; banc FPS de la carte sur machine calme. Rotation des coffres conservée. Suivi audio indépendant sur la ligne dédiée. |
 | **Effacement : cellules actives** | [10 6C](10-terrain-et-tiles.md) | **Livré et vérifié** : états et signaux identiques, recalculs −23,8 % sur le scénario de 30 min ; 72 contrôles, captures ViewSonic et run réelle de 30 min. Index +157,5 Kio pour 6 753 cellules. FPS à mesurer au calme. |
 | **Préchauffage rendu** | [10 5B1](10-terrain-et-tiles.md) | **Livré et vérifié** : 16 shaders + lueur d’XP soumis puis viewport libéré ; banc Main réparé, 26 contrôles verts. 5B2 : cache froid/chaud et premiers effets, machine calme requise. |
@@ -18,30 +18,22 @@ Le [registre](DECISIONS.md) garde les mots de Raphaël. Les plans gardent le dé
 | **Sprites et design** (34 icônes d'objets, raretés, projectiles ennemis, bonus lâchés, HUD, menus) | [25](25-sprites-et-design.md) | **Intégré sur `main`** à la demande de Raphaël (DECISIONS §41) : raretés, objets, Réminiscences, projectiles, bonus, HUD, menus et chargement. Captures inspectées. Les images des contenus futurs sont visibles dans la Collection avec « À venir » ; leurs règles restent aux plans 05/22. |
 | **Gains qui se sentent** (objets à 30 niveaux, projectiles fractionnaires, cartes à la Megabonk, défense, difficulté, objets manquants, carte moins vide) | [23, plan d'exécution](23-plan-agent.md) | Décidé le 30 septembre ([DECISIONS §36–37](DECISIONS.md)). R0 à R4 livrés (mesure de référence ; bouclier de départ retiré, invulnérabilité 0,25 s ; cartes à la Megabonk ; objets à 30 niveaux, projectiles en plus au lieu des copies, paliers à 15 ; stats entières fractionnaires, pas d'armes relevés) ; R5 livré (PV ×1,25 d'emblée, pente 1,04 puis 1,075 après 6 min : temps pour tuer de R0 à ±20 %) ; R6 livré (huit objets de déclencheur) ; R7 livré (six petits lieux, carte de 12 800 px de haut, minimap : un petit lieu toutes les 26 s). R8 révisé livré (bonus d'une stat au hasard à chaque coffre, DECISIONS §38) ; R9 livré (Porte-monnaie hors quête, Repères). Plan 23 terminé ; travail sur `main` |
 | Système de jeu | [21, référence unique](21-systeme-de-jeu.md) | G1, G2a et G2a-2 livrés, refaits au plan 23 R3 (30 niveaux, paliers à 15, 15 objets de propriété). G2b livré : anciens Dons retirés, Fragilité, coefficient, 8 objets de déclencheur. G2c livré au plan 23 R6 (8 de plus, 31 objets proposés) ; les 3 objets « monde » attendent le Reliquaire. G0 et G3 livrés : les 24 armes ont leurs deux voies d'ascension (étape 2 au plan 24 L12) |
-| Carte à explorer | [22](22-carte-a-explorer.md) | C0, C1, C4 (six lieux) et C6 livrés : neuf petits lieux, un toutes les 26 s à eux seuls ; carte de 12 800 px de haut, minimap ; aucune Essence dépensée. Agent : C2 (Atelier), après confirmation de Raphaël (§11) |
+| Carte à explorer | [22](22-carte-a-explorer.md) | C0, C1, C4 (six lieux) et C6 livrés : neuf petits lieux, un toutes les 26 s à eux seuls ; carte de 12 800 px de haut, minimap ; aucune Essence dépensée. Atelier, Trempe, niveau d'arme déplacé et Atlas validés (DECISIONS §49) : agent, C2 après les lots G6 |
 
 ## 2. Décisions attendues de Raphaël
 
 | Sujet | Plan | Question |
 |---|---|---|
-| Carte à explorer | 22 §11 | Atelier et Trempe, service « niveau d'arme » déplacé du Mémorial, Atlas : pas encore confirmés un par un (Repères livrés, DECISIONS §38) |
-| Catalogue d'objets | 21 §4 | 33 objets écrits avec effet par niveau et palier 25 : à relire, chiffres à régler en jeu. 22 sont en jeu |
-| Invulnérabilité après un coup | 23 R1 | 0,25 s proposé au lieu de 0,5 s : à confirmer en jeu |
 | Recette de la mort et du bilan | 02 | Durée de la séquence, densité de la page, échelle des distances |
-| Déplacements | 01 | Inertie, invulnérabilité du dash, recette manette |
-| Bestiaire | 07 | Cadence du Hurleur corrigée, banc fixe et captures vérifiés ; recette humaine de la pression des tirs. Tisseuse hors Marécages et « mobs successifs » restent ouverts. |
+| Bestiaire | 07 | Recette du Hurleur validée (§49). Tisseuse hors Marécages et « mobs successifs » restent ouverts. |
 | Direction artistique | 08 | Traqueur, Vagabond et Forgeuse repris et vérifiés (R5a–c) ; appréciation artistique de Raphaël encore ouverte. |
-| Anomalies | 14 | Trois décisions, jamais arbitrées |
 | Lore | 19 | Relecture du script v1.1 ; questions P1, P6 à P10 ; fin |
 | Audio | 15 | Écoute en run et choix restants ; chantier élargi à toute l'identité sonore, avec les Résurgences comme premier cas proposé (§44). |
 | Récompense et puissance | 20 | Reprise après la pause ; à réaligner sur le plan 21 |
-| Projectiles en plus | 21, §48 | Toutes les armes gagnent-elles des projectiles en montant de niveau, ou seulement une voie (palier, ascension) ? À quelle fréquence la stat et l'objet de projectiles doivent-ils apparaître ? |
-| Vol de vie | 21, §48 | Sous quelle forme : stat d'objet, bénédiction, gain de coffre, gain d'arme ? Quel ordre de grandeur, et un plafond ? |
-| Vitesse du level-up | 20/21, §48 | Après mesure : ralentir la courbe d'XP pour tous, ou seulement réduire l'XP sans build XP/Chance ? |
-| Builds XP/Chance | 21, §48 | Après inventaire du catalogue : ajouter des objets Chance/XP, ou faire apparaître plus souvent ceux qui existent ? |
-| Sprites d'armes adaptatifs | 08/25, §48 | Que doit changer à l'écran : taille du sprite avec la stat de taille, sprites distincts par nombre de projectiles, ou les deux ? Jusqu'où (lisibilité en foule) ? |
-| Réveil du Mémorial et de la Faille | 24 L6b | Durée totale (environ 2 s avec l'entrée de l'écran) et son de fusion provisoire (`sfx_souvenir_trouve`) : à garder ? |
+| Vitesse du level-up | 20/21, §49 | Mesure G6d d'abord, puis réglage chiffré à valider |
+| Réveil du Mémorial et de la Faille | 24 L6b, 15 | Durée gardée ; son à changer (§49), à traiter avec l'audio |
 | Classement | 09 | Toutes les décisions, plus tard |
+| Audio, mort, lore, récompense, classement | 15, 02, 19, 20, 09 | En attente, à reprendre juste après les lots G6 (§49) |
 | Points à vérifier en jeu | `A-VERIFIER.md` | 55 cases non cochées |
 
 ## 3. Validé, pas encore fait
@@ -58,6 +50,8 @@ Le [registre](DECISIONS.md) garde les mots de Raphaël. Les plans gardent le dé
 | Butin qui disparaît avec sa zone | 16, repris par 22 §6 |
 | Coût à froid/chaud des effets (5B2), après la soumission au rendu livrée en 5B1 | 10 |
 | Essai XP, niveaux de surplus, réserve automatique | 20 |
+| Anomalies : Écho de ta dernière run, Oubli de soi, Effondrement ; pénalité ≤ 25 % des PV max ; une ligne de texte (§49) | 14 |
+| Atelier et Trempe, niveau d'arme déplacé, Atlas (§49) | 22 C2 |
 
 ## 4. Idées en suspens, rattachées pour ne pas les perdre
 

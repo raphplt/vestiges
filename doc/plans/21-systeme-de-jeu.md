@@ -293,3 +293,20 @@ Quand une carte ne peut plus rien offrir (4 armes ascensionnées, 6 objets au ni
 - [05-perks-specialisations.md](05-perks-specialisations.md) : reste la fiche technique détaillée des sept effets livrés (cas limites, contrats). Son calendrier d'acquisition et ses lots B3–B4 sont périmés.
 - [05-objets-catalogue-v1.md](05-objets-catalogue-v1.md), [05-catalogue-objets-perks.md](05-catalogue-objets-perks.md), [05-armes-objets-builds.md](05-armes-objets-builds.md) : périmés pour tout ce qui concerne les objets, les passifs et les perks.
 - Plan 17, vague 4 et plafond d'armes ; plan 20, mentions d'un plafond à 70 : périmés.
+
+## 14. Lots G6 — retours du 1er octobre soir (DECISIONS §48, §49)
+
+Découpage du 2 octobre, après les réponses de Raphaël (§49). Un lot à la fois, un commit par lot.
+
+**Constats de départ (données au 2 octobre) :** 6 armes sur 24 ont `projectile_count` dans leur croissance, au poids 0,5 sur un total d'environ 9,5 (≈ 5 % des tirages de stat) ; la mêlée ne reçoit des frappes en plus que du Papier carbone ; la Boîte à musique (`orbital_count`) et la Chaîne de noms (`chain_targets`) ont leur nombre au même poids 0,5. Les 31 objets proposés pèsent tous 1 dans les offres. Chance : Jeton de fête seul (+0,03 par pas) ; XP : Photo de classe seule (+5 %) ; pas de vol de vie.
+
+| Lot | Contenu | Vérification |
+|---|---|---|
+| **G6a — Le nombre pour toutes les armes** | Les 24 armes peuvent monter leur nombre : `projectile_count` (tirs, ou frappes en éventail pour la mêlée, en plus de celles du Papier carbone), `orbital_count` pour la Boîte à musique, `chain_targets` pour la Chaîne de noms ; poids de tirage 0,5 → 1,5 (≈ 13 %). Les voies qui fixent le nombre (Transpercer, Bille d'acier, Agrafeuse, Balayage, Clé unique) gardent leur valeur. Poids d'offre par objet en données (`offer_weight`, 1 par défaut) ; Papier carbone à 2. Libellé « Frappes » au lieu de « Projectiles » sur les armes de mêlée. | Build, `tools/test_weapons.sh`, tirage simulé des stats, capture d'une arme de mêlée à 2 frappes |
+| **G6b — Vol de vie** | Nouvel objet de propriété « Paille tordue » (`paille_tordue`) : +0,5 % des dégâts infligés rendus en PV par pas ; soin plafonné à 2 % des PV max par seconde ; palier 15 : le soin au-delà des PV max remplit le bouclier, jusqu'à 10. Stat `lifesteal` au tirage des bonus de coffre. Icône produite par le pipeline des objets (plan 25). | Build, smoke, contrôle chiffré du plafond, capture de la carte et de la fiche |
+| **G6c — Chance et XP renforcés** | Pas relevés : Jeton de fête +0,03 → +0,05 de Chance, Photo de classe +5 % → +8 % d'XP, Aimant de frigo +15 % → +20 % ; bonus de coffre alignés (un niveau d'objet commun). | Build, chiffres des cartes |
+| **G6d — Rythme des niveaux mesuré** | `tools/measure_run.sh` sur trois seeds : intervalle entre deux niveaux par tranche de 5 min, sans et avec Photo de classe forcée. Proposition chiffrée de courbe à Raphaël, **sans toucher** `progression.json` avant sa réponse. | Rapport au plan 20 |
+| **G6e — Sprites d'armes : taille** | Les visuels d'attaque (arcs, projectiles, orbes) suivent la stat de taille et le nombre, avec un plafond de lisibilité en foule. | Captures avant/après |
+| **G6f — Sprites d'armes : variantes par nombre** | Variantes visuelles quand le nombre de projectiles franchit des seuils (planche à valider par Raphaël avant intégration, plans 08/25). | Planche, captures |
+
+Ensuite : C2, l'Atelier ([plan 22](22-carte-a-explorer.md), validé §49).
