@@ -304,3 +304,13 @@ Fait au plan 23, lot R7.
 - Repères (C4) : livrés au plan 23 R9, +1 % de Chance par type de lieu ;
 - la carte reste centrée sur le départ : un joueur qui file droit vers le nord ou le sud a maintenant deux fois plus de chemin avant le bord.
 
+
+## C2 — l'Atelier : découpage du 2 octobre (validé §11 par Raphaël, DECISIONS §49)
+
+Modèle : le Mémorial (`SitePlacer`, sprite dédié, directeur qui ouvre le `ChoiceScreen`), pas les petits lieux (usage unique, sans Essence, nombre lié aux décors présents).
+
+| Lot | Contenu | Vérification |
+|---|---|---|
+| **C2a — Trempe et Retrempe dans les armes** | `WeaponInstance` garde les gains et la rareté de sa dernière amélioration ; `Player.UpgradeWeapon` reçoit la rareté. Trempe : compteur du joueur (5 améliorations), +1 stat au tirage des gains (`UpgradeRoller`, borné par les stats montables), décompté à l'application seulement. Retrempe : retire les gains de la dernière amélioration et en retire de nouveaux à rareté égale ou supérieure. Aucun lieu encore. | `tools/test_weapons.sh` étendu |
+| **C2b — Le lieu** | Section `workshop` dans `data/world/landmarks.json` (4 par carte, placées après les Failles pour ne pas déplacer les lieux existants), sprite d'établi (`tools/sprites/props/landmarks.py`), `Workshop` et `WorkshopDirector` : niveau d'arme contre Essence (quitte le Mémorial, avec ses coûts), Retrempe (Essence), Trempe gratuite à la première visite. Stabilise sa zone comme le Mémorial. Icône et légende de la carte, Repère (13ᵉ type), bot `--visit`. Captures `--capture-memorial` et `--capture-rift` adaptées au départ du service. | Build, smoke, bancs Mémorial/Faille/petits lieux, captures du lieu et de ses services |
+| **C2c — Mesure** | `measure_run.sh` avec `--nomad --visit` : Essence dépensée, détours vers les Ateliers, à comparer à C0 (aucune Essence dépensée). | Rapport chiffré |
