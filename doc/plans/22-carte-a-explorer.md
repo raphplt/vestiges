@@ -333,3 +333,22 @@ Modèle : le Mémorial (`SitePlacer`, sprite dédié, directeur qui ouvre le `Ch
 - **Mémorial :** il ne garde que le soin et la levée d'Oubli. **Point pour Raphaël :** ses services deviennent maigres ; à juger en jeu (une idée : y déplacer la relance de bénédiction).
 - **Outils :** `--capture-workshop` (lieu, première visite, forge, Retrempe) ; bot `--visit` qui achète une fois par Atelier ; captures du Mémorial et de la Faille adaptées au départ du service d'arme.
 - **Vérification :** build sans avertissement, smoke vert ; bancs verts : armes 33/33, petits lieux (13 Repères), écrans de choix 31/31, effacement actif 20/20, carte 17/17, mouvement, mode dev. Captures inspectées : Atelier dans les champs avec sa colonne et son invite, écran de première visite (Trempe : 5), forge rare à 3 stats (Trempe 5 → 4), Retrempe rare au niveau inchangé, Essence 200 → 150 ; Mémorial réduit au soin ; Faille et levée d'Oubli inchangées.
+
+### C2c — mesure du 2 octobre
+
+`measure_run.sh`, `--nomad --visit`, 3 seeds × 15 min de jeu (le bot ratisse les lieux vus à moins de 700 px et achète un service par Atelier ou Mémorial).
+
+| Seed | Ateliers vus / visités | Mémoriaux vus / visités | Essence gagnée | Essence dépensée |
+|---|---|---|---|---|
+| 1002 | 0 / 0 | 2 / 2 | 5 359 | 0 |
+| 221092026 | 2 / 2 | 1 / 1 | 7 389 | 60 |
+| 42 | 1 / 1 | 2 / 2 | 4 814 | 30 |
+
+**Lecture :** l'Essence commence à se dépenser (C0 : jamais), mais c'est dérisoire.
+- **Les prix ne suivent pas les gains.** 30 Essence pour un niveau d'arme rare, contre 5 000 à 7 000 gagnés en 15 min : un joueur pourrait forger des dizaines de fois à chaque Atelier. Le bot n'achète qu'une fois par passage, donc il sous-estime la dépense possible.
+- **Les Ateliers se croisent peu :** 0 à 2 en 15 min de route nomade, avec 4 par carte.
+
+**Propositions à Raphaël** (rien n'est changé) :
+1. Prix qui suivent l'économie : forge à 150 Essence puis +50 % par achat, Retrempe à 100. Ou un prix indexé sur le niveau de l'arme.
+2. Plus d'Ateliers : 8 par carte au lieu de 4, en gardant 900 px d'écart.
+3. Garder tel quel et juger en jeu : un joueur humain achète sans doute plusieurs fois par visite.
