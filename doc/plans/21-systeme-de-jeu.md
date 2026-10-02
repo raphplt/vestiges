@@ -445,3 +445,14 @@ Trois réglages mesurés avec les ennemis d'E4 (`--nomad --visit`, 3 seeds × 25
 - L'XP par victime qui croît plus vite emballe la fin de partie : la croissance reste à +2 % par minute ; le plafond à 20 000 n'est atteint que vers le niveau 139.
 - **Revers :** plus de niveaux, plus de puissance : après 15 min, le temps pour tuer redescend à 0,08–0,2 s sur deux seeds sur trois (0,01–0,08 s avant E4). Si les ennemis paraissent de nouveau faibles en fin de partie, relever `late_hp_scaling_per_minute` (1,17) plutôt que ralentir les niveaux.
 - **À surveiller :** sur une seed, la Chance atteint 0,67 à 0,86 entre 15 et 25 min (Repères, bonus de coffre), soit 8 à 11 crans et la moitié des cartes rares ou mieux.
+
+## 16. Lots F — retours du 2 octobre après-midi (DECISIONS §53)
+
+| Lot | Contenu | Vérification |
+|---|---|---|
+| **F1 — Rythme et ennemis** | Niveaux un peu plus lents qu'E5 ; ennemis plus solides et plus dangereux (PV et dégâts dès l'apparition, montée des dégâts avec le temps). | Mesure 25 min, 3 seeds : niveaux, temps pour tuer, dégâts reçus |
+| **F2 — Raretés portées par la Chance** | Poids de départ plus bas pour épique et légendaire ; la chance de monter d'un rang baisse pour chaque rang (vers épique et légendaire surtout) ; l'oubli de la zone ajoute moins de crans. Sans Chance, épique et légendaire restent rares toute la partie ; elles montent nettement avec elle. | Table calculée par Chance, puis mesure |
+| **F3 — Textes des objets** | Chaque objet dit sa règle avec ses chiffres : seuil, chance, durée, rayon (« Sous 30 % de tes PV… »), au lieu d'une image (« Au bord de la chute »). Même chose pour les paliers. | Relecture des 32 cartes, captures |
+| **F4 — Retour des objets** | Un signe visible quand un objet se déclenche (explosion, soin, écho, Fragilité, traînée, seuils de PV) ; inventaire des déclencheurs sans retour. | Captures |
+| **F5 — Projectiles visibles** | Projectiles du joueur plus grands et lisibles (notes, billes, éclats) : liseré clair et taille de base relevée, sans masquer les tirs ennemis. | Captures en foule |
+| **F6 — Impacts** | Plus d'effets à l'impact : éclat, recul visuel de la cible, particules selon la famille de l'arme, dans le budget d'effets existant. | Captures, banc FPS |

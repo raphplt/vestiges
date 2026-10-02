@@ -660,3 +660,17 @@ Raphaël, après avoir surtout vu la Faucille et le Lance-billes : « retire les
 - **Paliers d'armes retirés** : plus d'ouverture par niveau du joueur (palier 2 au niveau 5, etc.), plus de chance d'un palier de plus, plus de poids des paliers hauts par la Chance. Toutes les armes débloquées pèsent pareil dès le niveau 1.
 - **Arme garantie retirée** : plus de carte « nouvelle arme » forcée sous 3 armes, ni une fois sur deux ensuite.
 - **Restent** : au moins une nouveauté et une amélioration par offre quand c'est possible, l'objet de survie proposé tant qu'on n'en a aucun, le poids des améliorations (×1,15) et celui du Papier carbone (×2), et les armes de palier 4 qui demandent un Souvenir découvert (déblocage méta, pas un palier).
+
+## 53. Encore trop rapide et trop facile, raretés hautes dès le début, objets flous, projectiles peu visibles — 2 octobre 2026
+
+Raphaël, après une partie sur les réglages E5 et §52 : « alors je trouve que le level up est encore un peu trop rapide et les ennemis trop faciles (au niveau de leurs HP/dégats). et la luck est trop favorable dès le début avec les améliorations épique / légendaire. ces niveaux là doivent etre rares et s'obtenir de plus en plus en fonction de notre niveau de chance. aussi un autre soucis que j'ai qui concerne les objets est que pour beaucoup leur effet n'est pas clair (par exemple les trucs avec le bord ect...) ou alors leur effet n'est pas ressenti (manque d'effets). d'ailleurs beaucoup des armes du joueur (en tout cas les projectiles sont trop peu visible comme les notes de musiques par exemple. et enfin de manière générale il serait bien d'avoir plus d'effets à l'impact »
+
+**Retours reformulés :**
+- **Niveaux :** encore un peu trop rapides (réglage E5).
+- **Ennemis :** trop faciles, en PV comme en dégâts.
+- **Raretés :** épique et légendaire trop fréquentes dès le début. Elles doivent être rares, et devenir plus fréquentes à mesure que la Chance monte.
+- **Objets :** beaucoup d'effets ne sont pas clairs (exemple : « Au bord de la chute » de la Médaille cabossée), ou ne se ressentent pas faute de retour visuel.
+- **Projectiles du joueur :** trop peu visibles (exemple : les notes de la Boîte à musique).
+- **Impacts :** plus d'effets au moment où un coup touche.
+
+**Suite :** lots F1 à F6 au [plan 21 §16](21-systeme-de-jeu.md).
