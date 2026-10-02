@@ -37,14 +37,17 @@ public sealed class PlayerAttackFx
         return PixelPalette.ParseFamily(weapon?.Fx.Family, PixelPalette.FamilyForDamageType(weapon?.DamageType));
     }
 
-    /// <summary>Coup de mêlée : une forme par frappe (les frappes supplémentaires appellent plusieurs fois).</summary>
-    public void PlayMelee(WeaponData weapon, Vector2 direction, float range, float arcAngle)
+    /// <summary>
+    /// Coup de mêlée : une forme par frappe (les frappes supplémentaires appellent plusieurs fois). La stat de taille
+    /// relève le plafond de l'allonge dessinée (<paramref name="sizeScale"/>, plan 21 G6e).
+    /// </summary>
+    public void PlayMelee(WeaponData weapon, Vector2 direction, float range, float arcAngle, float sizeScale = 1f)
     {
         if (Pools == null || !CombatFxSettings.PlayerAttackFx)
             return;
         FxFamily family = FamilyOf(weapon);
         Vector2 torso = _owner.GlobalPosition + new Vector2(0f, -TorsoHeight);
-        float radius = Mathf.Clamp(range * 0.7f, 22f, 64f);
+        float radius = Mathf.Clamp(range * 0.7f, 22f, 64f * sizeScale);
         float halfArc = Mathf.DegToRad(Mathf.Clamp(arcAngle, 40f, 200f) * 0.5f);
 
         switch (weapon?.Fx.Style)
@@ -58,7 +61,7 @@ public sealed class PlayerAttackFx
                 PlaySmashImpact(_owner.GlobalPosition + direction * radius * 0.75f, family, radius);
                 break;
             case "thrust":
-                PlayThrust(torso, direction, Mathf.Clamp(range * 0.95f, 26f, 80f), family);
+                PlayThrust(torso, direction, Mathf.Clamp(range * 0.95f, 26f, 80f * sizeScale), family);
                 break;
             case "whirl":
                 PlayArc(torso, direction, radius, radius * 0.3f, Mathf.Pi, family, 0.28f, squash: 1.6f);
@@ -126,7 +129,7 @@ public sealed class PlayerAttackFx
     }
 
     /// <summary>Visuel d'un orbe de la Boîte à Musique : note de laiton qui gravite à hauteur de buste.</summary>
-    public static Sprite2D CreateOrbitalVisual()
+    public static Sprite2D CreateOrbitalVisual(float sizeScale = 1f)
     {
         ProjectileSprites.SpriteSet set = ProjectileSprites.Get("note");
         return new Sprite2D
@@ -134,6 +137,7 @@ public sealed class PlayerAttackFx
             Name = "Visual",
             Texture = set?.Get(0, 0),
             Position = new Vector2(0f, -TorsoHeight),
+            Scale = Vector2.One * sizeScale,
             Visible = set != null && CombatFxSettings.PlayerProjectiles,
             Modulate = new Color(1f, 1f, 1f, CombatFxSettings.PlayerOpacity),
         };

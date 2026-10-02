@@ -29,6 +29,7 @@ public partial class Projectile : Area2D
     private Player _owner;
     private AttackContext _context;
     private Sprite2D _sprite;
+    private CollisionShape2D _collision;
     private ProjectileSprites.SpriteSet _spriteSet;
     private int _spriteDirection = -1;
     private int _spriteFrame = -1;
@@ -63,6 +64,7 @@ public partial class Projectile : Area2D
     public override void _Ready()
     {
         _sprite = GetNode<Sprite2D>("Visual");
+        _collision = GetNode<CollisionShape2D>("CollisionShape2D");
         _sprite.Position = new Vector2(0f, -Iso.FlightHeight);
         // Au sol sous le projectile : c'est l'écart entre l'ombre et le visuel qui dit qu'il vole.
         AddChild(GroundShadow.Create(8f));
@@ -72,9 +74,12 @@ public partial class Projectile : Area2D
 
     public void Launch(Vector2 position, Vector2 direction, float damage, float speed, float lifetime, int pierce,
                        bool isCrit, Player owner, WeaponData weapon, WeaponInstance source, AttackContext context = default,
-                       float pierceDamageRamp = 0f)
+                       float pierceDamageRamp = 0f, float sizeScale = 1f)
     {
         GlobalPosition = position;
+        // Taille du joueur (plan 21 G6e) : le visuel et la zone de contact grandissent ensemble, remis à chaque tir du pool.
+        _sprite.Scale = Vector2.One * sizeScale;
+        _collision.Scale = Vector2.One * sizeScale;
         _direction = direction.Normalized();
         _damage = damage;
         Speed = speed;

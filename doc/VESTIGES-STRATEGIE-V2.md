@@ -811,6 +811,7 @@ Le script de post-processing doit inclure une vérification/correction de l'angl
 - [x] Plan 21 G6a : les 24 armes montent leur nombre (tirs, frappes, ondes, orbes, cibles) à un poids franc ; Papier carbone favorisé dans les offres (2 octobre 2026).
 - [x] Plan 21 G6b : vol de vie, objet Paille tordue et bonus de coffre, soin plafonné par seconde (2 octobre 2026).
 - [x] Plan 21 G6c : objets de Chance, d'XP et d'aimant renforcés, coffres et Repères alignés (2 octobre 2026).
+- [x] Plan 21 G6e : projectiles, notes et coups de mêlée grandissent avec la stat de taille, plafond de lisibilité (2 octobre 2026).
 - [x] Plan 23 R4 : stats entières fractionnaires et pas d'armes relevés.
 - [x] Plan 23 R5 : difficulté réglée sur la nouvelle puissance, mesurée.
 - [x] Plan 23 R6 : huit objets de déclencheur restants (G2c).

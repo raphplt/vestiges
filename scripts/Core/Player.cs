@@ -98,6 +98,7 @@ public partial class Player : CharacterBody2D
 
     // Orbital weapon system
     private readonly System.Collections.Generic.List<Node2D> _orbitalProjectiles = new();
+    private float _orbitalSize = 1f;
     private WeaponInstance _orbitalWeapon;
     private float _orbitalAngle;
 
@@ -964,11 +965,13 @@ public partial class Player : CharacterBody2D
     {
         // Une orbe ne peut pas apparaître une attaque sur deux : seule la partie entière compte (plan 23 R4).
         int orbitalCount = Mathf.Max(1, Mathf.FloorToInt(weapon.GetStat("orbital_count", 3f)));
-        if (_orbitalWeapon == weapon && _orbitalProjectiles.Count == orbitalCount)
+        // Recréées aussi quand la taille change : contact et note suivent la stat de taille.
+        if (_orbitalWeapon == weapon && _orbitalProjectiles.Count == orbitalCount && Mathf.IsEqualApprox(_orbitalSize, _aoeMultiplier))
             return;
 
         ClearOrbitals();
         _orbitalWeapon = weapon;
+        _orbitalSize = _aoeMultiplier;
         for (int i = 0; i < orbitalCount; i++)
         {
             Area2D orb = new() { Name = $"OrbitalOrb_{i}" };
@@ -979,7 +982,7 @@ public partial class Player : CharacterBody2D
             CircleShape2D circle = new() { Radius = ZoneScale(8f) };
             shape.Shape = circle;
             orb.AddChild(shape);
-            orb.AddChild(PlayerAttackFx.CreateOrbitalVisual());
+            orb.AddChild(PlayerAttackFx.CreateOrbitalVisual(WeaponSizeScale));
 
             orb.BodyEntered += (Node2D body) =>
             {
@@ -1940,7 +1943,7 @@ public partial class Player : CharacterBody2D
         Projectile projectile = CombatPools.Instance?.TakePlayerProjectile();
         projectile?.Launch(GlobalPosition, direction, damage, speed, Mathf.Clamp(range / Mathf.Max(speed, 1f), 0.2f, 4f),
             pierce, isCrit, this, _equippedWeapon?.Base, _equippedWeapon, context: _launchContext with { ReferenceDamage = damage },
-            pierceDamageRamp: PierceDamageRamp);
+            pierceDamageRamp: PierceDamageRamp, sizeScale: WeaponSizeScale);
         return projectile;
     }
 
@@ -2052,6 +2055,9 @@ public partial class Player : CharacterBody2D
     /// <summary>Taille d'une zone d'effet (rayon, angle) après les bonus de zone du joueur.</summary>
     private float ZoneScale(float value) => value * _aoeMultiplier;
 
+    /// <summary>Échelle des visuels d'arme selon la stat de taille, plafonnée pour la lisibilité (plan 21 G6e).</summary>
+    private float WeaponSizeScale => WeaponVisualConfig.Load().ScaleFor(_aoeMultiplier);
+
     /// <summary>
     /// Valeur effective d'une stat d'arme, telle que le combat l'applique (arme × niveau × personnage × bonus) :
     /// c'est elle que montrent le level-up et la pause, jamais la base des données.
@@ -2112,7 +2118,7 @@ public partial class Player : CharacterBody2D
 
     private void SpawnSlashEffect(Vector2 direction, float range, float arcAngle)
     {
-        _attackFx.PlayMelee(_equippedWeapon?.Base, direction, range, arcAngle);
+        _attackFx.PlayMelee(_equippedWeapon?.Base, direction, range, arcAngle, WeaponSizeScale);
     }
 
     private void UpdateAttackSpeed()

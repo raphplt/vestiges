@@ -356,3 +356,12 @@ Ensuite : C2, l'Atelier ([plan 22](22-carte-a-explorer.md), validé §49).
 1. **Recommandé : ne rien changer à la courbe pour l'instant.** G6c creuse l'écart entre une run avec build XP et une run sans. Rejouer, puis trancher sur ton ressenti.
 2. Ralentir tout le monde un peu : `base_xp` 20 → 24 (chaque niveau coûte 20 % de plus jusqu'au plafond de 3 000 XP, environ 15 % de niveaux en moins à 15 min).
 3. Ralentir surtout sans build : XP des orbes −15 %, le build XP compense largement (+8 % par carte commune).
+
+### G6e — livré le 2 octobre
+
+- **Règle :** échelle visuelle = 1 + (taille − 1), bornée entre 1 et 2 (`data/weapons/weapon_visuals.json`, `WeaponVisualConfig`). La taille est la stat de zone du joueur (`aoe_radius` : Rondelle de cuivre, coffres, bénédictions).
+- **Projectiles :** sprite **et zone de contact** grandissent ensemble, remis à chaque tir sortant du pool. Changement de jeu assumé : un projectile qui paraît plus gros doit toucher plus large ; auparavant la taille ne jouait pas sur les projectiles. **À confirmer par Raphaël en jeu.**
+- **Mêlée :** l'allonge dessinée n'est plus bridée à 64 px (80 px pour l'estoc) : le plafond suit l'échelle. L'ouverture de l'arc suivait déjà la taille.
+- **Boîte à musique :** les notes grandissent avec la taille ; les orbes sont recréées quand la taille change (avant, leur contact restait celui de leur création).
+- **Hors lot :** l'arme tenue en main (option désactivée par défaut, grille de 16 px) ne change pas ; le cône du Transistor suivait déjà la portée et la taille. Le nombre (ondes, projectiles) relève de G6f.
+- **Vérification :** build sans avertissement, smoke vert, `tools/test_weapons.sh` 31/31 (contrôle d'échelle ajouté). Captures `--capture-weapons` sans et avec Rondelle de cuivre niveau 15 (taille ×2,2, échelle plafonnée à 2) inspectées : notes, flèches de l'arc, orbe du Bâton et arc de la Faucille nettement plus grands, lisibles. Pas de banc FPS : une échelle par tir, sans nœud ni allocation en plus.

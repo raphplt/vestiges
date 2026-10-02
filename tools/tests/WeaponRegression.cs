@@ -522,6 +522,11 @@ public partial class WeaponRegression : Node2D
         Check(Mathf.IsEqualApprox(PassiveSouvenirDataLoader.Get("souffle_du_neant").OfferWeight, 2f)
               && Mathf.IsEqualApprox(PassiveSouvenirDataLoader.Get("ancrage").OfferWeight, 1f),
             "Papier carbone pèse 2 dans les offres, les autres objets 1");
+
+        WeaponVisualConfig visuals = WeaponVisualConfig.Load();
+        Check(Mathf.IsEqualApprox(visuals.ScaleFor(1f), 1f) && Mathf.IsEqualApprox(visuals.ScaleFor(1.5f), 1.5f)
+              && Mathf.IsEqualApprox(visuals.ScaleFor(3f), visuals.MaxScale) && Mathf.IsEqualApprox(visuals.ScaleFor(0.6f), 1f),
+            $"Visuels d'arme (G6e) : taille ×1,5 → échelle {visuals.ScaleFor(1.5f):0.0#}, plafond {visuals.MaxScale:0.0#}, jamais sous 1");
     }
 
     private static WeaponInstance MaxedWeapon(string id)
