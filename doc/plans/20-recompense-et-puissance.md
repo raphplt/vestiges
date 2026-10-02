@@ -411,3 +411,7 @@ Réponses de Raphaël du 28 septembre (soir) : excellente run à 300–400 nivea
 Réponses du 28 septembre (nuit) consignées en §6.7 : paliers validés, réserve automatique, montée plus forte en endgame, XP et chance par perks et objets.
 
 Réponses du 28 septembre (fin de nuit) : niveaux de surplus **A et D**, **E** éventuellement, « mais ça ne doit pas devenir overkill » ; refonte des perks **en même temps** que les leviers d'XP (R1-A avec R1-E) ; R1-F **d'accord** (PV ×1,07 par minute après 22 min, mesure de 45 min avant/après). Mise en pause à la demande de Raphaël : rien n'est engagé.
+
+## 10. Rythme des niveaux mesuré — 2 octobre 2026
+
+Mesure et propositions au [plan 21, G6d](21-systeme-de-jeu.md#g6d--rythme-des-niveaux-mesuré-le-2-octobre-rien-de-changé) : les bots montent d'un niveau toutes les 20 à 35 s (28 à 45 niveaux à 15 min), loin de la cible du §6 ; le build XP accélère la fin quand il se forme. Courbe inchangée en attendant la décision de Raphaël.

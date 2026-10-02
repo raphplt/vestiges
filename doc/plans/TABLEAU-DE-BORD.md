@@ -8,7 +8,7 @@ Le [registre](DECISIONS.md) garde les mots de Raphaël. Les plans gardent le dé
 
 | Chantier | Plan | Prochaine action |
 |---|---|---|
-| **Retours du 1er octobre, soir** (projectiles, vol de vie, level-up, XP/Chance, sprites d'armes adaptatifs) | [21 §14](21-systeme-de-jeu.md), [DECISIONS §48–49](DECISIONS.md) | Décidé le 2 octobre (§49). Lots G6a à G6f découpés au plan 21 §14 ; G6a, G6b et G6c livrés (nombre pour les 24 armes, vol de vie, Chance et XP renforcés) ; agent : G6d (mesure du rythme des niveaux), G6c, G6d (mesure, proposition sans toucher la courbe), G6e–f, puis C2 |
+| **Retours du 1er octobre, soir** (projectiles, vol de vie, level-up, XP/Chance, sprites d'armes adaptatifs) | [21 §14](21-systeme-de-jeu.md), [DECISIONS §48–49](DECISIONS.md) | Décidé le 2 octobre (§49). Lots G6a à G6f découpés au plan 21 §14 ; G6a, G6b et G6c livrés (nombre pour les 24 armes, vol de vie, Chance et XP renforcés) ; G6d mesuré (courbe inchangée, trois options au plan 21) ; agent : G6e (taille des visuels d'arme), G6c, G6d (mesure, proposition sans toucher la courbe), G6e–f, puis C2 |
 | **Nouvelle recette après intégration des sprites** | [24 §12](24-retours-du-1er-octobre.md#12-retours-de-recette--1er-octobre-2026), [DECISIONS §44/47](DECISIONS.md) | **R1/R2, R3b, R5a–c et R6 livrés et vérifiés** : interfaces, cadence du Hurleur, trois personnages et carte par biome. Recette humaine du combat et du visuel à faire ; banc FPS de la carte sur machine calme. Rotation des coffres conservée. Suivi audio indépendant sur la ligne dédiée. |
 | **Effacement : cellules actives** | [10 6C](10-terrain-et-tiles.md) | **Livré et vérifié** : états et signaux identiques, recalculs −23,8 % sur le scénario de 30 min ; 72 contrôles, captures ViewSonic et run réelle de 30 min. Index +157,5 Kio pour 6 753 cellules. FPS à mesurer au calme. |
 | **Préchauffage rendu** | [10 5B1](10-terrain-et-tiles.md) | **Livré et vérifié** : 16 shaders + lueur d’XP soumis puis viewport libéré ; banc Main réparé, 26 contrôles verts. 5B2 : cache froid/chaud et premiers effets, machine calme requise. |
@@ -30,7 +30,7 @@ Le [registre](DECISIONS.md) garde les mots de Raphaël. Les plans gardent le dé
 | Lore | 19 | Relecture du script v1.1 ; questions P1, P6 à P10 ; fin |
 | Audio | 15 | Écoute en run et choix restants ; chantier élargi à toute l'identité sonore, avec les Résurgences comme premier cas proposé (§44). |
 | Récompense et puissance | 20 | Reprise après la pause ; à réaligner sur le plan 21 |
-| Vitesse du level-up | 20/21, §49 | Mesure G6d d'abord, puis réglage chiffré à valider |
+| Vitesse du level-up | 21 G6d, §49 | Mesuré : un niveau toutes les 20 à 35 s pour les bots. Garder la courbe (recommandé), `base_xp` 20 → 24, ou XP des orbes −15 % ? |
 | Réveil du Mémorial et de la Faille | 24 L6b, 15 | Durée gardée ; son à changer (§49), à traiter avec l'audio |
 | Classement | 09 | Toutes les décisions, plus tard |
 | Audio, mort, lore, récompense, classement | 15, 02, 19, 20, 09 | En attente, à reprendre juste après les lots G6 (§49) |

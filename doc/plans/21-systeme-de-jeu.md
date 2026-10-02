@@ -336,3 +336,23 @@ Ensuite : C2, l'Atelier ([plan 22](22-carte-a-explorer.md), validé §49).
 - **Pas relevés** (une carte commune) : Jeton de fête +0,03 → **+0,05** de Chance, Photo de classe +5 % → **+8 %** d'XP, Aimant de frigo +15 % → **+20 %** d'aimant. Au niveau 10 en communes, la Photo donne +80 % d'XP au lieu de +50 %.
 - **Alignés sur un niveau commun :** bonus de coffre (`chest_stat_bonus.json` : Chance 0,05, XP 0,08, aimant 0,2) et Repères de la Boîte aux lettres (XP 0,08) et du Wagonnet (aimant 0,2) ; ceux de Chance valaient déjà 0,05. Les bénédictions des Mémoriaux ne changent pas.
 - **Vérification :** `tools/test_objects.sh` 72/72 (Photo niveau 10 : +80 % ; Jeton : +0,05), `tools/test_small_places.sh` vert.
+
+### G6d — rythme des niveaux mesuré le 2 octobre (rien de changé)
+
+`tools/measure_run.sh`, 3 seeds (221092026, 1002, 42) × 15 min de jeu, après G6a–c. Le bot prend la première carte ; avec `--prefer photo_de_classe,jeton_de_fete,siphon_essence` (option ajoutée à RunObservation), il prend d'abord ces objets quand ils sont offerts.
+
+| Scénario | Niveau à 5 / 10 / 15 min | Un niveau toutes les… (1–5 / 5–10 / 10–15 min) | Orbes laissées au sol à 15 min |
+|---|---|---|---|
+| Bot sur place | 13–14 / 24–25 / 34–37 | 20–22 s / 27 s / 25–30 s | 430 à 860 |
+| Bot sur place, build XP | 12–14 / 24–31 / 35–53 | 20–24 s / 16–27 s / 14–27 s | 40 à 550 |
+| Bot nomade | 11–14 / 20–30 / 28–45 | 18–24 s / 19–33 s / 20–38 s | 640 à 1 100 |
+| Bot nomade, build XP | 12–16 / 23–31 / 31–58 | 16–22 s / 18–27 s / 11–38 s | 30 à 950 |
+
+**Lecture :**
+- Les bots montent d'un niveau toutes les 20 à 35 s, sans accélération en fin de quart d'heure. Ils sont loin de la cible du plan 20 (300 à 400 niveaux en 45 min pour une excellente run) et laissent des centaines d'orbes au sol : un joueur qui ramasse, comme Raphaël, monte nettement plus vite. **La mesure ne peut pas trancher son ressenti** ; elle situe seulement le plancher.
+- Quand le build XP se forme (seed 221092026 dans les deux modes), il accélère franchement la fin : 53 à 58 niveaux à 15 min au lieu de 37 et 28, et un niveau toutes les 11 à 14 s. Il ramasse aussi presque tout (aimant). Sans les objets offerts, il ne change rien. G6c (pas relevés) rend désormais ce build plus marqué.
+
+**Propositions à Raphaël** (aucune appliquée, `data/scaling/progression.json` inchangé) :
+1. **Recommandé : ne rien changer à la courbe pour l'instant.** G6c creuse l'écart entre une run avec build XP et une run sans. Rejouer, puis trancher sur ton ressenti.
+2. Ralentir tout le monde un peu : `base_xp` 20 → 24 (chaque niveau coûte 20 % de plus jusqu'au plafond de 3 000 XP, environ 15 % de niveaux en moins à 15 min).
+3. Ralentir surtout sans build : XP des orbes −15 %, le build XP compense largement (+8 % par carte commune).

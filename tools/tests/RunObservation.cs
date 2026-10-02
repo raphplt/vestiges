@@ -58,6 +58,7 @@ namespace Vestiges.Tests;
 /// --density : mesure de densité en spawn naturel (ennemis visibles, temps sans ennemi, débits, niveaux,
 /// coffres entrés dans le cadre, et parmi eux ceux qu'aucun décor ne masquait ; lieux croisés et visités par minute,
 /// micro-événements, Essence gagnée et dépensée).
+/// --prefer id,id,… : pendant la mesure, le bot prend d'abord une carte de ces armes ou objets (plan 21 G6d : build XP/Chance).
 /// --scaling cle=valeur,… : surcharge des réglages d'apparition (spawn_flow.json) pendant la mesure de densité.
 /// --measure-erasure : cellules suivies/actives et événements de stabilisation pendant la run.
 /// --measure-projectiles [--projectile-lifetime secondes] : pression des tirs à 10 Hz ; durée surchargée dans le banc seul.
@@ -398,6 +399,7 @@ public partial class RunObservation : Node
     private async Task MeasureDensity(double seconds, ulong seed)
     {
         string[] args = OS.GetCmdlineUserArgs();
+        _preferredCards = Argument(args, "--prefer", "").Split(',', StringSplitOptions.RemoveEmptyEntries);
         string lifetime = Argument(args, "--projectile-lifetime", null);
         using ProjectilePressureProbe projectiles = Array.IndexOf(args, "--measure-projectiles") >= 0
             ? new ProjectilePressureProbe(lifetime == null ? null : float.Parse(lifetime, CultureInfo.InvariantCulture))
@@ -813,9 +815,17 @@ public partial class RunObservation : Node
         if (manager is not Vestiges.Progression.FragmentManager fragments || !fragments.IsChoiceActive || fragments.PendingChoices.Count == 0)
             return;
         Vestiges.Progression.FragmentOption choice = fragments.PendingChoices[0];
+        foreach (Vestiges.Progression.FragmentOption option in fragments.PendingChoices)
+            if (Array.IndexOf(_preferredCards, option.Id) >= 0)
+            {
+                choice = option;
+                break;
+            }
         screen.GetType().GetMethod("OnCardChosen", BindingFlags.NonPublic | BindingFlags.Instance)
             .Invoke(screen, new object[] { choice });
     }
+
+    private string[] _preferredCards = Array.Empty<string>();
 
     private Rect2 VisibleWorldRect()
     {
