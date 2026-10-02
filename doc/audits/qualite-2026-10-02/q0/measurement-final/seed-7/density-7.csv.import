@@ -1,0 +1,19 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://dbysdpix01wsk"
+
+[deps]
+
+files=["res://doc/audits/qualite-2026-10-02/q0/measurement-final/seed-7/density-7.visible.translation", "res://doc/audits/qualite-2026-10-02/q0/measurement-final/seed-7/density-7.near600.translation", "res://doc/audits/qualite-2026-10-02/q0/measurement-final/seed-7/density-7.alive.translation", "res://doc/audits/qualite-2026-10-02/q0/measurement-final/seed-7/density-7.spawned.translation", "res://doc/audits/qualite-2026-10-02/q0/measurement-final/seed-7/density-7.killed.translation", "res://doc/audits/qualite-2026-10-02/q0/measurement-final/seed-7/density-7.level.translation", "res://doc/audits/qualite-2026-10-02/q0/measurement-final/seed-7/density-7.hit.translation", "res://doc/audits/qualite-2026-10-02/q0/measurement-final/seed-7/density-7.memory.translation", "res://doc/audits/qualite-2026-10-02/q0/measurement-final/seed-7/density-7.erasure.translation", "res://doc/audits/qualite-2026-10-02/q0/measurement-final/seed-7/density-7.xp.translation", "res://doc/audits/qualite-2026-10-02/q0/measurement-final/seed-7/density-7.xp.translation", "res://doc/audits/qualite-2026-10-02/q0/measurement-final/seed-7/density-7.spawned.translation", "res://doc/audits/qualite-2026-10-02/q0/measurement-final/seed-7/density-7.damage.translation", "res://doc/audits/qualite-2026-10-02/q0/measurement-final/seed-7/density-7.essence.translation"]
+
+source_file="res://doc/audits/qualite-2026-10-02/q0/measurement-final/seed-7/density-7.csv"
+dest_files=["res://doc/audits/qualite-2026-10-02/q0/measurement-final/seed-7/density-7.visible.translation", "res://doc/audits/qualite-2026-10-02/q0/measurement-final/seed-7/density-7.near600.translation", "res://doc/audits/qualite-2026-10-02/q0/measurement-final/seed-7/density-7.alive.translation", "res://doc/audits/qualite-2026-10-02/q0/measurement-final/seed-7/density-7.spawned.translation", "res://doc/audits/qualite-2026-10-02/q0/measurement-final/seed-7/density-7.killed.translation", "res://doc/audits/qualite-2026-10-02/q0/measurement-final/seed-7/density-7.level.translation", "res://doc/audits/qualite-2026-10-02/q0/measurement-final/seed-7/density-7.hit.translation", "res://doc/audits/qualite-2026-10-02/q0/measurement-final/seed-7/density-7.memory.translation", "res://doc/audits/qualite-2026-10-02/q0/measurement-final/seed-7/density-7.erasure.translation", "res://doc/audits/qualite-2026-10-02/q0/measurement-final/seed-7/density-7.xp.translation", "res://doc/audits/qualite-2026-10-02/q0/measurement-final/seed-7/density-7.xp.translation", "res://doc/audits/qualite-2026-10-02/q0/measurement-final/seed-7/density-7.spawned.translation", "res://doc/audits/qualite-2026-10-02/q0/measurement-final/seed-7/density-7.damage.translation", "res://doc/audits/qualite-2026-10-02/q0/measurement-final/seed-7/density-7.essence.translation"]
+
+[params]
+
+compress=1
+delimiter=0
+unescape_keys=false
+unescape_translations=true

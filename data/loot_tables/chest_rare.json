@@ -3,6 +3,6 @@
     "entries": [
         { "type": "essence", "item": "essence", "weight": 45, "min_amount": 8, "max_amount": 16 },
         { "type": "xp", "item": "xp", "weight": 18, "min_amount": 28, "max_amount": 60 },
-        { "type": "object_level", "item": "random_owned_object", "weight": 29, "min_amount": 1, "max_amount": 2, "fallback_essence": 10 }
+        { "type": "object_level", "item": "random_owned_object", "weight": 29, "min_amount": 1, "max_amount": 1, "fallback_essence": 10 }
     ]
 }

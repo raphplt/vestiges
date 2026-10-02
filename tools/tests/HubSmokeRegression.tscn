@@ -1,0 +1,9 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/Hub.tscn" id="1"]
+[ext_resource type="Script" path="res://tools/tests/HubSmokeRegression.cs" id="2"]
+
+[node name="Hub" instance=ExtResource("1")]
+
+[node name="SmokeProbe" type="Node" parent="."]
+script = ExtResource("2")

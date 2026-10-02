@@ -12,9 +12,9 @@ Le choix est mémorisé localement dans `user://development.cfg` et retrouvé au
 
 ## Exclusion des exports
 
-Le contrôle du Hub, la lecture de la préférence et l’activation sont compilés uniquement avec le symbole **TOOLS**. Le SDK Godot le définit pour la configuration locale `Debug`, mais pas pour `ExportDebug` ou `ExportRelease`.
+Le contrôle du Hub, la lecture de la préférence, l’activation et la création des panneaux F1/F4 sont compilés uniquement avec le symbole **TOOLS**. Le SDK Godot le définit pour la configuration locale `Debug`, mais pas pour `ExportDebug` ou `ExportRelease`.
 
-Dans les deux types d’export, le toggle est absent et le mode reste désactivé, même si `development.cfg` contient un choix actif ou si `--dev` est passé au programme. Le jeu distribué utilise donc toujours le profil normal. Aucun réglage du projet n’a besoin d’être changé avant l’export.
+Dans les deux types d’export, le toggle est absent et le mode reste désactivé, même si `development.cfg` contient un choix actif ou si `--dev` est passé au programme. Le jeu distribué utilise donc toujours le profil normal. Les panneaux vivent dans `tools/development/`. `Vestiges.csproj` exclut tous les C# de `tools/` hors configuration locale `Debug`, et `tools/.gdignore` exclut ce répertoire du scan de ressources Godot et des archives natives. Les scènes de jeu ne référencent plus de panneau. Les hooks d’invincibilité, de bot, de survie aux coups fatals, de spawn forcé et d’invulnérabilité d’essai sont également absents des assemblies distribuées. Aucun réglage du projet n’a besoin d’être changé avant l’export.
 
 ## Lancement en ligne de commande, facultatif
 
@@ -36,10 +36,16 @@ godot-mono --path . -- --dev
 
 - Tous les personnages présents dans le JSON sont disponibles, actuellement Traqueur, Vagabond et Forgeuse. Les personnages ajoutés ultérieurement à ces données seront inclus automatiquement.
 - Tous les Souvenirs du catalogue sont accessibles dans le Journal, ce qui ouvre également les quatre accès d’armes encore liés au lore dans le code actuel. Les armes et passifs déjà accessibles le restent.
-- Les quêtes ne sont pas marquées artificiellement terminées ; la monnaie, les objets équipés, les slots, les tables de loot et la difficulté ne sont pas remplacés. Le mode dev ne donne pas automatiquement l’invincibilité. F4 conserve les outils de test existants.
+- Les quêtes ne sont pas marquées artificiellement terminées ; la monnaie, les objets équipés, les slots, les tables de loot et la difficulté ne sont pas remplacés. Le mode dev ne donne pas automatiquement l’invincibilité. **F4** ouvre les actions (XP, Essence, soin, invincibilité, téléportation, spawn et amélioration), **F1** les statistiques et les essais de mobilité. Ces deux panneaux sont créés uniquement pour le profil dev ; leurs callbacks vérifient également ce profil. Une run normale locale ne reçoit aucun de ces contrôles.
 - Méta, quêtes, historique, meilleur score, archives de migration et analytics utilisent `user://dev/`. Le profil normal conserve ses chemins habituels. Les réglages audio, affichage, langue et commandes sont partagés.
 - Le SDK Steam est désactivé dans ce mode : aucun succès ou score Steam n’est soumis depuis une partie de test. Après une activation via toggle, Steam reste coupé pour cette session, y compris si l’on revient au profil normal ; un relancement normal le réinitialise.
 - Le bandeau **MODE DEV · Tout débloqué** reste visible dans le Hub et pendant la run, y compris en pause.
+
+## Scénarios automatisés
+
+Un lancement local depuis une scène ou un script de `tools/` est identifié avant les autoloads. Sans `--dev`, il utilise `user://tests/` ; avec `--dev`, il conserve `user://dev/`. Les réglages partagés restent communs. Les lanceurs isolent en plus les données utilisateur dans un dossier temporaire. Le répertoire d'outils n’apparaît plus dans le navigateur de fichiers Godot ; les scripts de `tools/` continuent de charger leurs scènes par chemin explicite.
+
+L'historique conserve la provenance `Normal`, `Development` ou `Test`. Les anciennes entrées sans champ de provenance sont lues comme normales. Steam n'est jamais initialisé pour un banc et les points d'envoi vérifient aussi l'éligibilité de la session. Une activation du profil dev reste disqualifiante pour Steam jusqu'au relancement, même après un retour au profil normal. Les hooks locaux refusent une utilisation hors profil dev ou banc ; la bascule de profil est refusée pendant la run.
 
 Les kits, anciens mutateurs et systèmes retirés par V2 ne sont pas réactivés. Le futur inventaire d’objets et les futurs droits de déblocage du plan 05/06 devront reprendre cette séparation lors de leur implémentation.
 

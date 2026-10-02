@@ -1,7 +1,7 @@
 {
-    "_doc": "Bonus d'une stat au hasard donné par chaque coffre ouvert, en plus du butin tiré (DECISIONS §38, plan 23 R8). Une stat tirée à poids égal dans 'stats' ; 'amount' vaut un niveau d'objet commun de la stat (passive_souvenirs.json), multiplié par 'rarity_multiplier' selon la rareté du coffre. 'modifier_type' multiplicative : le joueur gagne ×(1 + amount). Ni +dégâts universel (retiré des objets, plan 21 §4), ni projectiles ni perforation, trop forts pour un tirage.",
+    "_doc": "Bonus d'une stat au hasard donné par chaque coffre ouvert, en plus du butin tiré (DECISIONS §38, plan 23 R8). Une stat tirée à poids égal dans 'stats' ; 'amount' vaut un niveau d'objet commun de la stat (passive_souvenirs.json), multiplié par 'rarity_multiplier' selon la rareté du coffre ; 0 : cette rareté n'en donne pas (coffres communs, DECISIONS §54). 'modifier_type' multiplicative : le joueur gagne ×(1 + amount). Ni +dégâts universel (retiré des objets, plan 21 §4), ni projectiles ni perforation, trop forts pour un tirage.",
     "rarity_multiplier": {
-        "common": 1,
+        "common": 0,
         "rare": 2,
         "epic": 3,
         "lore": 2

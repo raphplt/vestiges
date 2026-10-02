@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using Godot;
 using Vestiges.Infrastructure;
 using Vestiges.UI;
@@ -14,14 +16,29 @@ public partial class UiArtRegression : Node
     {
         try
         {
+            HashSet<string> declaredItems = ReadIds(Json.ParseString(Godot.FileAccess.GetFileAsString(
+                "res://data/progression/passive_souvenirs.json")).AsGodotArray(), "enabled", false);
+            HashSet<string> declaredPerks = ReadIds(Json.ParseString(Godot.FileAccess.GetFileAsString(
+                "res://data/progression/perk_specializations.json")).AsGodotDictionary()["perks"].AsGodotArray());
             foreach (PassiveSouvenirData item in PassiveSouvenirDataLoader.GetAll())
                 Check(Icon(item.Icon, 32) && Icon(item.IconSmall, 16), $"Objet {item.Id} : deux tailles importées");
             foreach (PerkSpecializationData perk in PerkSpecializationDataLoader.GetAll())
                 Check(Icon(perk.Icon, 32) && Icon(perk.IconSmall, 16), $"Réminiscence {perk.Id} : deux tailles importées");
-            Check(PassiveSouvenirDataLoader.GetAll().Count == 31 && PerkSpecializationDataLoader.GetAll().Count == 9,
+            Check(declaredItems.SetEquals(PassiveSouvenirDataLoader.GetAll().Select(item => item.Id))
+                && declaredPerks.SetEquals(PerkSpecializationDataLoader.GetAll().Select(perk => perk.Id)),
                 "Les manifestes visuels n'ajoutent pas de règles aux catalogues de jeu");
-            Check(CollectionArtDataLoader.Items.Count == 34 && CollectionArtDataLoader.Perks.Count == 14,
-                "Collection : tous les objets et motifs futurs sont présents");
+            Godot.Collections.Array itemArt = Json.ParseString(Godot.FileAccess.GetFileAsString(
+                "res://assets/items/icons/items_manifest.json")).AsGodotDictionary()["icons"].AsGodotArray();
+            Godot.Collections.Array perkArt = Json.ParseString(Godot.FileAccess.GetFileAsString(
+                "res://assets/perks/icons/reminiscences_manifest.json")).AsGodotDictionary()["icons"].AsGodotArray();
+            HashSet<string> itemArtIds = ReadIds(itemArt);
+            HashSet<string> perkArtIds = ReadIds(perkArt);
+            Check(itemArtIds.SetEquals(CollectionArtDataLoader.Items.Select(entry => entry.Id))
+                && perkArtIds.SetEquals(CollectionArtDataLoader.Perks.Select(entry => entry.Id)),
+                "Collection : les ensembles d'identifiants des manifestes sont conservés");
+            Check(declaredItems.SetEquals(ReadIds(itemArt, "world", true))
+                && declaredPerks.SetEquals(ReadIds(perkArt, "proposed_id", true)),
+                "Collection : contenus de gameplay et images de contenus futurs restent distincts");
             foreach (CollectionArtDataLoader.Entry entry in CollectionArtDataLoader.Items)
                 Check(Icon(entry.Icon, 32), $"Collection objet {entry.Id}");
             foreach (CollectionArtDataLoader.Entry entry in CollectionArtDataLoader.Perks)
@@ -90,6 +107,20 @@ public partial class UiArtRegression : Node
         }
     }
 
+    private static HashSet<string> ReadIds(Godot.Collections.Array entries, string flag = null, bool excludedValue = false)
+    {
+        HashSet<string> ids = new(StringComparer.Ordinal);
+        foreach (Variant entry in entries)
+        {
+            Godot.Collections.Dictionary data = entry.AsGodotDictionary();
+            if (flag != null && data.ContainsKey(flag) && data[flag].AsBool() == excludedValue)
+                continue;
+            string id = data["id"].AsString();
+            if (string.IsNullOrWhiteSpace(id) || !ids.Add(id))
+                throw new InvalidOperationException($"Identifiant de catalogue vide ou dupliqué : {id}");
+        }
+        return ids;
+    }
     private static bool Icon(string path, int size) => !string.IsNullOrEmpty(path)
         && ResourceLoader.Exists(path) && GD.Load<Texture2D>(path).GetSize() == new Vector2(size, size);
 

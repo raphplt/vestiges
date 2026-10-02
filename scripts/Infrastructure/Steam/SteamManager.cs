@@ -19,6 +19,7 @@ public partial class SteamManager : Node
 
 	/// <summary>true si le SDK Steam est initialisé et fonctionnel.</summary>
 	public static bool IsActive { get; private set; }
+	public static bool CanSubmitResults => IsActive && DevelopmentMode.CanSubmitResults;
 
 	/// <summary>Une session ayant servi aux essais ne soumet plus de résultats avant relancement.</summary>
 	internal void DisableForDevelopmentSession()
@@ -65,9 +66,9 @@ public partial class SteamManager : Node
 
 	private void InitializeSteam()
 	{
-		if (DevelopmentMode.IsEnabled)
+		if (!DevelopmentMode.CanSubmitResults)
 		{
-			GD.Print("[SteamManager] Profil dev : succès et classements Steam désactivés.");
+			GD.Print("[SteamManager] Session dev/test : succès et classements Steam désactivés.");
 			return;
 		}
 

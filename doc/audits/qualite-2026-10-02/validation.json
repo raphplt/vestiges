@@ -1,0 +1,175 @@
+{
+  "date": "2026-10-02",
+  "head": "9374f05fa946b3741ea979918a1612773c9b4f43",
+  "runtime": "Godot 4.7.2 Mono ; .NET SDK 10.0.401 ; macOS ARM64",
+  "build": {
+    "errors": 0,
+    "warnings": 0
+  },
+  "production_files_checked": 389,
+  "results_from_launchers": [
+    {
+      "name": "perk_contracts",
+      "status": "0",
+      "seconds": "18"
+    },
+    {
+      "name": "perk_acquisition",
+      "status": "0",
+      "seconds": "9"
+    },
+    {
+      "name": "perk_effects",
+      "status": "0",
+      "seconds": "9"
+    },
+    {
+      "name": "objects",
+      "status": "0",
+      "seconds": "6"
+    },
+    {
+      "name": "weapons",
+      "status": "0",
+      "seconds": "5"
+    },
+    {
+      "name": "enemy_abilities",
+      "status": "0",
+      "seconds": "9"
+    },
+    {
+      "name": "small_places",
+      "status": "0",
+      "seconds": "7"
+    },
+    {
+      "name": "field_bonuses",
+      "status": "0",
+      "seconds": "9"
+    },
+    {
+      "name": "cone",
+      "status": "1",
+      "seconds": "5"
+    },
+    {
+      "name": "temporal",
+      "status": "0",
+      "seconds": "13"
+    },
+    {
+      "name": "erasure_active",
+      "status": "0",
+      "seconds": "13"
+    },
+    {
+      "name": "cartography",
+      "status": "0",
+      "seconds": "7"
+    },
+    {
+      "name": "choice_screen",
+      "status": "0",
+      "seconds": "8"
+    },
+    {
+      "name": "ui_art",
+      "status": "1",
+      "seconds": "6"
+    },
+    {
+      "name": "music",
+      "status": "0",
+      "seconds": "5"
+    },
+    {
+      "name": "movement",
+      "status": "0",
+      "seconds": "6"
+    },
+    {
+      "name": "dev_mode",
+      "status": "0",
+      "seconds": "9"
+    },
+    {
+      "name": "movement-integration",
+      "status": "0"
+    },
+    {
+      "name": "progression-model",
+      "status": "0"
+    },
+    {
+      "name": "cone-retry",
+      "status": "1"
+    },
+    {
+      "name": "dev-release",
+      "status": "0"
+    }
+  ],
+  "interpretation": {
+    "cone_first_attempt": "MSB4018 : conflit d’écriture sur Vestiges.runtimeconfig.json, scénario non exécuté",
+    "cone_retry": "NullReferenceException dans ConeRegression.Set appelé depuis Contracts ligne 133 : _igniteChance absent",
+    "ui_art": "2 assertions échouées : 31 objets actifs attendus contre 32 ; 34 entrées de Collection attendues contre 35",
+    "movement_integration_launcher": "status 0 trompeur ; QUIT_ARGS[@]: unbound variable ; aucun RESULT du moteur",
+    "movement_integration_direct": "code moteur 0 et RESULT failures=0 explicitement vérifiés",
+    "dev_release": "ExportDebug et ExportRelease : build 0 warning et protection DevelopmentMode PASS",
+    "progression_model": "6 tests Python, OK",
+    "smoke_real": "Hub exécuté, aucun message d’erreur inattendu détecté",
+    "smoke_failure_injection": "vrai build C#, moteur de substitution exit 42, lanceur retourne 0 et affiche OK",
+    "concurrent_changes": "Les 17 suites du premier train couvrent le manifeste initial. Les relances ciblées couvrent les changements concurrents présents pendant leur exécution ; aucun nouveau train complet n’est affirmé."
+  },
+  "limits": [
+    "Aucun export graphique complet",
+    "Steam désactivé sur ARM64, défauts Steam identifiés par lecture",
+    "Aucune mesure FPS nouvelle",
+    "Aucune recette visuelle, audible ou de plaisir de jeu",
+    "Revue approfondie des systèmes centraux et inventaire global, sans lecture ligne par ligne de tous les fichiers"
+  ],
+  "production_files_changed_at_end_of_initial_test_train": [],
+  "production_files_changed_during_review": [
+    "scripts/UI/PauseMenu.cs",
+    "scripts/UI/HubCollectionPanel.cs",
+    "scripts/UI/UpgradeText.cs",
+    "scripts/Progression/UpgradeRoller.cs",
+    "scripts/Infrastructure/PassiveSouvenirDataLoader.cs",
+    "data/scaling/spawn_flow.json",
+    "data/scaling/progression.json",
+    "data/progression/upgrade_rarities.json",
+    "data/progression/passive_souvenirs.json"
+  ],
+  "final_snapshot_utc": "2026-10-02T11:46:28.901879+00:00",
+  "final_head": "29ee2241381649182f7162801a33534584d5fc3a",
+  "final_build": {
+    "errors": 0,
+    "warnings": 0,
+    "log": "final-build.log"
+  },
+  "final_targeted_results": [
+    {
+      "name": "perk_acquisition",
+      "launcher_exit": 0,
+      "engine_result": "failures=0"
+    },
+    {
+      "name": "objects",
+      "launcher_exit": 0,
+      "engine_result": "failures=0",
+      "new_rule_text_check_passed": true
+    },
+    {
+      "name": "weapons",
+      "launcher_exit": 1,
+      "engine_result": "failures=1",
+      "detail": "Zone Effacée : 362 tirages Épiques/Légendaires contre 207 en Ancrée ; le test exige plus du double. Poids de base conformes."
+    },
+    {
+      "name": "progression_model",
+      "launcher_exit": 0,
+      "tests": 6
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://l6n4parcup81"
+
+[deps]
+
+files=["res://doc/audits/qualite-2026-10-02/q0/density-final/density-42.visible.translation", "res://doc/audits/qualite-2026-10-02/q0/density-final/density-42.near600.translation", "res://doc/audits/qualite-2026-10-02/q0/density-final/density-42.alive.translation", "res://doc/audits/qualite-2026-10-02/q0/density-final/density-42.spawned.translation", "res://doc/audits/qualite-2026-10-02/q0/density-final/density-42.killed.translation", "res://doc/audits/qualite-2026-10-02/q0/density-final/density-42.level.translation", "res://doc/audits/qualite-2026-10-02/q0/density-final/density-42.hit.translation", "res://doc/audits/qualite-2026-10-02/q0/density-final/density-42.memory.translation", "res://doc/audits/qualite-2026-10-02/q0/density-final/density-42.erasure.translation", "res://doc/audits/qualite-2026-10-02/q0/density-final/density-42.xp.translation", "res://doc/audits/qualite-2026-10-02/q0/density-final/density-42.xp.translation", "res://doc/audits/qualite-2026-10-02/q0/density-final/density-42.spawned.translation", "res://doc/audits/qualite-2026-10-02/q0/density-final/density-42.damage.translation", "res://doc/audits/qualite-2026-10-02/q0/density-final/density-42.essence.translation"]
+
+source_file="res://doc/audits/qualite-2026-10-02/q0/density-final/density-42.csv"
+dest_files=["res://doc/audits/qualite-2026-10-02/q0/density-final/density-42.visible.translation", "res://doc/audits/qualite-2026-10-02/q0/density-final/density-42.near600.translation", "res://doc/audits/qualite-2026-10-02/q0/density-final/density-42.alive.translation", "res://doc/audits/qualite-2026-10-02/q0/density-final/density-42.spawned.translation", "res://doc/audits/qualite-2026-10-02/q0/density-final/density-42.killed.translation", "res://doc/audits/qualite-2026-10-02/q0/density-final/density-42.level.translation", "res://doc/audits/qualite-2026-10-02/q0/density-final/density-42.hit.translation", "res://doc/audits/qualite-2026-10-02/q0/density-final/density-42.memory.translation", "res://doc/audits/qualite-2026-10-02/q0/density-final/density-42.erasure.translation", "res://doc/audits/qualite-2026-10-02/q0/density-final/density-42.xp.translation", "res://doc/audits/qualite-2026-10-02/q0/density-final/density-42.xp.translation", "res://doc/audits/qualite-2026-10-02/q0/density-final/density-42.spawned.translation", "res://doc/audits/qualite-2026-10-02/q0/density-final/density-42.damage.translation", "res://doc/audits/qualite-2026-10-02/q0/density-final/density-42.essence.translation"]
+
+[params]
+
+compress=1
+delimiter=0
+unescape_keys=false
+unescape_translations=true

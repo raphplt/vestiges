@@ -59,7 +59,7 @@ public partial class SteamLeaderboards : Node
 	/// </summary>
 	public void UploadScore(int score, int crisesSurvived, string characterId)
 	{
-		if (!SteamManager.IsActive)
+		if (!SteamManager.CanSubmitResults)
 			return;
 
 		// Score global
@@ -152,6 +152,8 @@ public partial class SteamLeaderboards : Node
 
 	private void DoUpload(SteamLeaderboard_t handle, int score)
 	{
+		if (!SteamManager.CanSubmitResults)
+			return;
 		SteamAPICall_t call = SteamUserStats.UploadLeaderboardScore(
 			handle,
 			ELeaderboardUploadScoreMethod.k_ELeaderboardUploadScoreMethodKeepBest,

@@ -231,8 +231,10 @@ public partial class GameBootstrap : Node
         GetNode("..").CallDeferred("add_child", new CrisisOmen { Name = "CrisisOmen" });
         GetNode("..").CallDeferred("add_child", new GrassTrample { Name = "GrassTrample" });
 
-        DebugActionPanel debugPanel = new DebugActionPanel { Name = "DebugActionPanel" };
-        GetNode("..").CallDeferred("add_child", debugPanel);
+#if TOOLS
+        if (DevelopmentMode.IsEnabled)
+            AddDevelopmentTools();
+#endif
 
         if (SteamManager.IsActive)
             AddSteamServices();
@@ -244,6 +246,14 @@ public partial class GameBootstrap : Node
         LoadProfiler.Mark("systèmes de la run");
         overlay.FadeOut();
     }
+
+#if TOOLS
+    private void AddDevelopmentTools()
+    {
+        GetNode("..").CallDeferred("add_child", new DebugOverlay { Name = "DebugOverlay" });
+        GetNode("..").CallDeferred("add_child", new DebugActionPanel { Name = "DebugActionPanel" });
+    }
+#endif
 
     // Hors méthode principale : ces types nomment Steamworks, dont l'assemblage ne se charge pas hors x86/x64.
     [MethodImpl(MethodImplOptions.NoInlining)]

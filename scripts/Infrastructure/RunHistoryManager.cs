@@ -7,6 +7,10 @@ namespace Vestiges.Infrastructure;
 
 public class RunRecord
 {
+    [JsonPropertyName("provenance")]
+    [JsonConverter(typeof(JsonStringEnumConverter<RunProvenance>))]
+    public RunProvenance Provenance { get; set; } = RunProvenance.Normal;
+
     [JsonPropertyName("version")]
     public int Version { get; set; } = RunHistoryManager.CurrentVersion;
 

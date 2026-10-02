@@ -1,7 +1,7 @@
 {
     "id": "chest_epic",
     "entries": [
-        { "type": "object_level", "item": "random_owned_object", "weight": 38, "min_amount": 2, "max_amount": 3, "fallback_essence": 15 },
+        { "type": "object_level", "item": "random_owned_object", "weight": 38, "min_amount": 1, "max_amount": 2, "fallback_essence": 15 },
         { "type": "essence", "item": "essence", "weight": 37, "min_amount": 14, "max_amount": 28 },
         { "type": "xp", "item": "xp", "weight": 10, "min_amount": 50, "max_amount": 100 }
     ]

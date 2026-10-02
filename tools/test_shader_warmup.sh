@@ -2,13 +2,15 @@
 # Dessins soumis au GPU, hors champ et dans le champ ; ne mesure pas les FPS.
 set -euo pipefail
 cd "$(dirname "$0")/.."
-source tools/lib/portable.sh
+source tools/lib/validation.sh
+validation_entry "$0" "$@"
 SCREEN_ARGS=$(godot_screen_args)
 GODOT="${GODOT_BIN:-godot-mono}"
 OUTPUT=$(abs_path "${1:?dossier de sortie requis}")
+if [[ -d "$OUTPUT" && -n "$(ls -A "$OUTPUT")" ]]; then echo "Choisir un dossier neuf : $OUTPUT" >&2; exit 1; fi
 mkdir -p "$OUTPUT"
 TEST_DIR=$(mktemp -d "${TMPDIR:-/tmp}/vestiges-shaders.XXXXXX")
-trap 'rm -rf "$TEST_DIR"' EXIT
+trap 'validation_cleanup "$TEST_DIR"' EXIT
 isolate_godot_profile "$TEST_DIR"
 python3 - "$OUTPUT" <<'PYCHECK'
 import hashlib, json, pathlib, re, sys
@@ -29,14 +31,14 @@ if warmup.exists():
     (pathlib.Path(sys.argv[1])/'coverage.json').write_text(json.dumps(report,indent=2)+'\n')
     if missing: raise SystemExit('Shaders de run sans préchauffage : '+', '.join(missing))
 PYCHECK
-dotnet build --nologo >"$OUTPUT/build.log"
-"$GODOT" --headless --editor --import --path . >"$OUTPUT/import.log" 2>&1
-run_timeout 120 "$GODOT" --path . --windowed $SCREEN_ARGS --resolution 1280x720 --audio-driver Dummy \
+validation_prepare "$OUTPUT"
+validation_run "${VALIDATION_RUN_TIMEOUT:-120}" "$OUTPUT/run.log" '^\[ShaderWarmupAudit\] RESULT valid=true .+$' "$GODOT" --path . --windowed $SCREEN_ARGS --resolution 1280x720 --audio-driver Dummy \
     --rendering-method gl_compatibility res://tools/tests/ShaderWarmupAudit.tscn \
-    -- --dev --output "$OUTPUT/shaders.json" ${SHADER_AUDIT_ARGS:-} >"$OUTPUT/run.log" 2>&1
-rg '\[ShaderWarmupAudit\] RESULT' "$OUTPUT/run.log"
-ERRORS=$(rg '^(ERROR|SCRIPT ERROR)|Unhandled exception|System\.[A-Za-z]+Exception' "$OUTPUT/run.log" | rg -v 'steam_api|MixRate mismatch|ObjectDB instances were leaked|resources still in use at exit' || true)
-if [[ -n "$ERRORS" ]]; then
-    echo "$ERRORS"
-    exit 1
-fi
+    -- --dev --output "$OUTPUT/shaders.json" ${SHADER_AUDIT_ARGS:-}
+python3 - "$OUTPUT/shaders.json" <<'PYCHECK'
+import json,sys
+with open(sys.argv[1]) as handle: report=json.load(handle)
+if report.get('valid') is not True or not report.get('samples'):
+    raise SystemExit('Préchauffage invalide ou sans échantillon.')
+PYCHECK
+rg '^\[ShaderWarmupAudit\]' "$OUTPUT/run.log"

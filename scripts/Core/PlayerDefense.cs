@@ -18,7 +18,9 @@ public sealed class PlayerDefense
     private float _bonusShield;
     private float _invulnerableTimer;
     private float _sinceLastHit;
+#if TOOLS
     private bool _disabled;
+#endif
 
     public PlayerDefense(DefenseConfig config)
     {
@@ -47,15 +49,18 @@ public sealed class PlayerDefense
         Shield = value >= 0f ? Mathf.Clamp(Shield + value, 0f, MaxShield) : Mathf.Min(Shield, MaxShield);
     }
 
+#if TOOLS
     /// <summary>Bancs de régression : sans bouclier ni invulnérabilité, chaque coup se lit sur les PV.</summary>
-    public void Disable()
+    internal void Disable()
     {
+        DevelopmentMode.RequireTestAccess();
         _baseShield = 0f;
         _bonusShield = 0f;
         Shield = 0f;
         _disabled = true;
         _invulnerableTimer = 0f;
     }
+#endif
 
     public float ArmorReduction(float armor) =>
         armor <= 0f ? 0f : Mathf.Min(Config.ArmorMaxReduction, armor / (armor + Config.ArmorHalfValue));
@@ -83,7 +88,11 @@ public sealed class PlayerDefense
     {
         float reduced = damage * (1f - ArmorReduction(armor));
         _sinceLastHit = 0f;
-        _invulnerableTimer = _disabled ? 0f : Config.HurtInvulnerabilitySeconds;
+        _invulnerableTimer = Config.HurtInvulnerabilitySeconds;
+#if TOOLS
+        if (_disabled)
+            _invulnerableTimer = 0f;
+#endif
 
         if (Shield > 0f)
         {

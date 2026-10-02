@@ -133,7 +133,7 @@ public partial class ScoreManager : Node
         // Analytics : enregistrer les métriques de la run
         AnalyticsManager.Instance?.RecordRunEnd(record);
 
-        if (SteamManager.IsActive)
+        if (record.Provenance == RunProvenance.Normal && SteamManager.CanSubmitResults)
             SubmitToSteam(gm.SelectedCharacterId);
     }
 
@@ -159,6 +159,7 @@ public partial class ScoreManager : Node
 
         RunRecord record = new()
         {
+            Provenance = DevelopmentMode.CurrentProvenance,
             CharacterId = characterId,
             CharacterName = charData?.Name ?? characterId,
             Score = CurrentScore,

@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
@@ -9,6 +8,7 @@ using Godot;
 using Vestiges.Combat;
 using Vestiges.Core;
 using Vestiges.Infrastructure;
+using Vestiges.Progression;
 
 namespace Vestiges.Tests;
 
@@ -16,9 +16,12 @@ namespace Vestiges.Tests;
 public partial class ConeRegression : Node2D
 {
     private const BindingFlags Private = BindingFlags.Instance | BindingFlags.NonPublic;
-    private static object Read(object obj, string field) => obj.GetType().GetField(field, Private)!.GetValue(obj);
-    private static void Set(object obj, string field, object value) => obj.GetType().GetField(field, Private)!.SetValue(obj, value);
-    private static T Method<T>(object obj, string method) where T : Delegate => obj.GetType().GetMethod(method, Private)!.CreateDelegate<T>(obj);
+    private static FieldInfo Field(object obj, string name) => obj.GetType().GetField(name, Private)
+        ?? throw new MissingFieldException(obj.GetType().FullName, name);
+    private static object Read(object obj, string field) => Field(obj, field).GetValue(obj);
+    private static void Set(object obj, string field, object value) => Field(obj, field).SetValue(obj, value);
+    private static T Method<T>(object obj, string method) where T : Delegate =>
+        (obj.GetType().GetMethod(method, Private) ?? throw new MissingMethodException(obj.GetType().FullName, method)).CreateDelegate<T>(obj);
     private readonly List<object> _results = new();
     private readonly Enemy[] _enemies = new Enemy[100];
     private Player _player;
@@ -52,10 +55,6 @@ public partial class ConeRegression : Node2D
             _player.SetProcess(false);
             foreach (Node child in _player.GetChildren()) if (child is Timer timer) timer.Stop();
             AddChild(new CombatPools());
-            // L'audio utilise le RNG global pour le pitch et un throttle mural : neutraliser ses tirages
-            // pour comparer exactement les procs. Les demandes audio traversent encore Play/PlaySfx.
-            IDictionary streams = (IDictionary)Read(GetNode<AudioManager>("/root/AudioManager"), "_streams");
-            streams.Remove("sfx_hit_ennemi"); streams.Remove("sfx_hit_critique");
             for (int i = 0; i < _enemies.Length; i++)
             {
                 Enemy enemy = GD.Load<PackedScene>("res://scenes/enemies/Enemy.tscn").Instantiate<Enemy>();
@@ -124,32 +123,45 @@ public partial class ConeRegression : Node2D
     }
     private async Task Contracts()
     {
-        // Les shaders consomment aussi le RNG global : couper le décoratif uniquement pour le contrat exact des procs.
+        // Isoler le contrat des impacts de leur présentation ; les objets ont leur propre RNG.
         CombatFxSettings.ParticleLevel = ParticleLevel.Off;
         CombatFxSettings.PlayerAttackFx = false;
         Place(1);
         Enemy enemy = _enemies[0];
         GD.Seed(221092026);
-        Set(_player, "_igniteChance", 0.25f);
-        Set(_player, "_igniteDamage", 3f);
-        Set(_player, "_igniteDuration", 2f);
-        Set(_player, "_vampirismPercent", 0.1f);
+        _player.AddOrUpgradePassive("allumette_humide", 30);
+        _player.ObjectTriggers.Rng.Seed = 11;
+        _player.ApplyPerkModifier("lifesteal", 0.1f, "additive");
+        Set(_player, "_lifestealPending", 0f);
+        Set(_player, "_lifestealTimer", 0f);
         Set(_player, "_currentHp", 50f);
         _activate(_weapon.Base.SpecialEffect);
         _hits = 0; _damage = 0;
-        string sequence = "";
+        int burns = 0;
         for (int tick = 0; tick < 120; tick++)
         {
             await Frame();
             Set(enemy, "_igniteTimer", 0f);
             _cone(1f / 60);
-            sequence += (float)Read(enemy, "_igniteTimer") > 0 ? "1" : "0";
+            if (enemy.IsBurning) burns++;
         }
-        _results.Add(new { scenario = "procs", hits = _hits, damage = _damage, hp = _player.CurrentHp, ignite_sequence = sequence });
-        Check(Math.Abs(_player.CurrentHp - 50 - _damage * 0.1) < 0.001, "vampirisme proportionnel aux mêmes dégâts");
-        Set(_player, "_igniteChance", 0f); Set(_player, "_vampirismPercent", 0f);
+        Check(_hits == 120 && burns > 0 && burns <= 25, $"Allumette : {burns} déclenchements aux impacts visibles, 120 ticks de dégâts");
+        Check(_player.CurrentHp == 50f, "vol de vie : dégâts accumulés sans soin par tick de cône");
+        DefenseConfig defense = DefenseConfig.Load();
+        float expectedHeal = Math.Min((float)_damage * _player.Lifesteal,
+            _player.EffectiveMaxHp * defense.LifestealMaxHpPerSecond * defense.LifestealTickSeconds);
+        Action<float> lifesteal = Method<Action<float>>(_player, "StepLifesteal");
+        lifesteal(defense.LifestealTickSeconds);
+        Check(Math.Abs(_player.CurrentHp - 50f - expectedHeal) < 0.001f, "vol de vie : un soin cadencé et plafonné sur les dégâts du cône");
+        float afterHeal = _player.CurrentHp;
+        lifesteal(defense.LifestealTickSeconds);
+        Check(_player.CurrentHp == afterHeal, "vol de vie : l'excédent n'est pas rendu au prochain intervalle");
+        _results.Add(new { scenario = "procs", hits = _hits, damage = _damage, burns, hp = _player.CurrentHp });
+        _player.ObjectTriggers.Add(ObjectTriggers.BurnChanceStat, -_player.ObjectTriggers.BurnChance);
+        _player.ApplyPerkModifier("lifesteal", -0.1f, "additive");
         // Les procs déterministes restent par impact, même quand le feedback est refusé.
         WeaponSpecialEffect originalSpecial = _weapon.Base.SpecialEffect;
+        WeaponOnHitEffect originalOnHit = _weapon.Base.OnHitEffect;
         _activate(originalSpecial);
         _weapon.Base.SpecialEffect = new WeaponSpecialEffect { Type = "heal_every_n_hits", Params = new() { ["n"] = 5f, ["heal_amount"] = 1f } };
         _weapon.Base.OnHitEffect = new WeaponOnHitEffect { Type = "slow", Value = 0.5f, Duration = 2f };
@@ -169,7 +181,7 @@ public partial class ConeRegression : Node2D
         Check(_player.GetDamageDealt(_weapon.Id) > sourceBefore && _player.GetDamageDealt(other.Id) == otherBefore,
             "changer l’arme courante conserve la source du cône");
         _weapon.Base.SpecialEffect = originalSpecial;
-        _weapon.Base.OnHitEffect = null;
+        _weapon.Base.OnHitEffect = originalOnHit;
         Set(_player, "_equippedWeapon", _weapon);
         // Émission imbriquée : les arguments du signal extérieur restent intacts (aucun tampon partagé).
         EventBus bus = GetNode<EventBus>("/root/EventBus");

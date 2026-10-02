@@ -1,8 +1,10 @@
 using Godot;
+using System;
 using Vestiges.Core;
 using Vestiges.Combat;
 using Vestiges.Progression;
 using Vestiges.Spawn;
+using Vestiges.Infrastructure;
 
 namespace Vestiges.UI;
 
@@ -22,6 +24,12 @@ public partial class DebugActionPanel : CanvasLayer
 
     public override void _Ready()
     {
+        if (!DevelopmentMode.IsEnabled)
+        {
+            ProcessMode = ProcessModeEnum.Disabled;
+            QueueFree();
+            return;
+        }
         ProcessMode = ProcessModeEnum.Always;
         Layer = 101;
 
@@ -34,6 +42,8 @@ public partial class DebugActionPanel : CanvasLayer
 
     public override void _Process(double delta)
     {
+        if (!DevelopmentMode.IsEnabled)
+            return;
         if (_player == null || !IsInstanceValid(_player))
             _player = GetTree().GetFirstNodeInGroup("player") as Player;
 
@@ -46,6 +56,8 @@ public partial class DebugActionPanel : CanvasLayer
 
     public override void _UnhandledInput(InputEvent @event)
     {
+        if (!DevelopmentMode.IsEnabled)
+            return;
         if (@event is InputEventKey keyEvent && keyEvent.Pressed && !keyEvent.Echo && keyEvent.Keycode == Key.F4)
         {
             _visible = !_visible;
@@ -91,46 +103,46 @@ public partial class DebugActionPanel : CanvasLayer
         _vbox.AddChild(title);
 
         Button xpBtn = new() { Text = "+ 1000 XP" };
-        xpBtn.Pressed += () => _eventBus.EmitSignal(EventBus.SignalName.XpGained, 1000f);
+        BindAction(xpBtn, () => _eventBus.EmitSignal(EventBus.SignalName.XpGained, 1000f));
         _vbox.AddChild(xpBtn);
 
         Button essenceBtn = new() { Text = "+ 100 Essence" };
-        essenceBtn.Pressed += () => _eventBus.EmitSignal(EventBus.SignalName.LootReceived, "essence", "debug_essence", 100);
+        BindAction(essenceBtn, () => _eventBus.EmitSignal(EventBus.SignalName.LootReceived, "essence", "debug_essence", 100));
         _vbox.AddChild(essenceBtn);
 
         _godModeButton = new Button { Text = "God Mode: OFF" };
-        _godModeButton.Pressed += () =>
+        BindAction(_godModeButton, () =>
         {
             if (_player != null)
                 _player.IsGodMode = !_player.IsGodMode;
-        };
+        });
         _vbox.AddChild(_godModeButton);
 
         _teleportButton = new Button { Text = "Teleport (Right Click): OFF" };
-        _teleportButton.Pressed += () =>
+        BindAction(_teleportButton, () =>
         {
             _teleportActive = !_teleportActive;
             _teleportButton.Text = $"Teleport (Right Click): {(_teleportActive ? "ON" : "OFF")}";
-        };
+        });
         _vbox.AddChild(_teleportButton);
 
         Button healBtn = new() { Text = "Full Heal" };
-        healBtn.Pressed += () => _player?.Heal(99999f);
+        BindAction(healBtn, () => _player?.Heal(99999f));
         _vbox.AddChild(healBtn);
 
         Button spawnEnemyBtn = new() { Text = "Spawn Test Enemy (Mouse)" };
-        spawnEnemyBtn.Pressed += () =>
+        BindAction(spawnEnemyBtn, () =>
         {
             if (_spawnManager != null)
             {
                 Vector2 spawnPos = _panel.GetGlobalMousePosition();
                 _spawnManager.ForceSpawnEnemy("shadow_crawler", spawnPos);
             }
-        };
+        });
         _vbox.AddChild(spawnEnemyBtn);
 
         Button upgradeWeaponBtn = new() { Text = "Upgrade Equipped Weapon" };
-        upgradeWeaponBtn.Pressed += () =>
+        BindAction(upgradeWeaponBtn, () =>
         {
             if (_player != null && _player.EquippedWeapon != null)
             {
@@ -138,9 +150,18 @@ public partial class DebugActionPanel : CanvasLayer
                 _player.UpgradeWeapon(weapon.Id, UpgradeRoller.RollWeaponGains(weapon, UpgradeRoller.Get("rare"), new RandomNumberGenerator()), "rare");
                 GD.Print($"[Debug] Upgraded weapon {_player.EquippedWeapon.Id}");
             }
-        };
+        });
         _vbox.AddChild(upgradeWeaponBtn);
 
         AddChild(_panel);
+    }
+
+    private static void BindAction(Button button, Action action)
+    {
+        button.Pressed += () =>
+        {
+            if (DevelopmentMode.IsEnabled)
+                action();
+        };
     }
 }

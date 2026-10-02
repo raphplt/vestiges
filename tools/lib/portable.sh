@@ -16,10 +16,11 @@ run_timeout() {
         gtimeout "$seconds" "$@"
     else
         perl -e '
+            use POSIX qw(setpgid);
             my $seconds = shift;
             my $pid = fork() // die "fork: $!";
-            if ($pid == 0) { exec @ARGV or die "exec: $!"; }
-            $SIG{ALRM} = sub { kill "TERM", $pid; sleep 2; kill "KILL", $pid; exit 124; };
+            if ($pid == 0) { setpgid(0, 0); exec @ARGV or die "exec: $!"; }
+            $SIG{ALRM} = sub { kill "TERM", -$pid; sleep 2; kill "KILL", -$pid; exit 124; };
             alarm $seconds;
             waitpid($pid, 0);
             exit(($? & 127) ? 128 + ($? & 127) : $? >> 8);
@@ -40,7 +41,9 @@ load_average() {
 # Linux suit XDG ; macOS l'ignore et écrit sous ~/Library, d'où la redirection de HOME.
 # Les caches .NET restent ceux de l'utilisateur pour ne pas tout retélécharger.
 isolate_godot_profile() {
-    local dir=$1
+    # TMPDIR se termine par « / » sur macOS ; un double slash casse la relativisation user:// de DirAccess.
+    local dir
+    dir=$(abs_path "$1") || return 1
     export XDG_DATA_HOME="$dir/data" XDG_CONFIG_HOME="$dir/config" XDG_CACHE_HOME="$dir/cache"
     if [[ $(uname) == Darwin ]]; then
         export NUGET_PACKAGES="${NUGET_PACKAGES:-$HOME/.nuget/packages}"

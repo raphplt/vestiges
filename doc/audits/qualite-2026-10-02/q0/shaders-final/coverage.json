@@ -1,0 +1,93 @@
+{
+  "catalog": [
+    "res://assets/shaders/colorblind.gdshader",
+    "res://assets/shaders/crisis_omen.gdshader",
+    "res://assets/shaders/death_erasure.gdshader",
+    "res://assets/shaders/echo.gdshader",
+    "res://assets/shaders/entity.gdshader",
+    "res://assets/shaders/erasure_veil.gdshader",
+    "res://assets/shaders/ground.gdshader",
+    "res://assets/shaders/iridescent_fluid.gdshader",
+    "res://assets/shaders/landmark_reveal.gdshader",
+    "res://assets/shaders/light_column.gdshader",
+    "res://assets/shaders/path.gdshader",
+    "res://assets/shaders/pixel_fx.gdshader",
+    "res://assets/shaders/player_projectile.gdshader",
+    "res://assets/shaders/prop_forget.gdshader",
+    "res://assets/shaders/prop_trample.gdshader",
+    "res://assets/shaders/swamp_atmosphere.gdshader",
+    "res://assets/shaders/sway.gdshader",
+    "res://assets/shaders/ui_dust_twinkle.gdshader"
+  ],
+  "consumers": {
+    "res://assets/shaders/crisis_omen.gdshader": [
+      "scripts/UI/CrisisOmen.cs"
+    ],
+    "res://assets/shaders/hub_forgotten.gdshader": [
+      "scripts/UI/HubCamp.cs"
+    ],
+    "res://assets/shaders/outline.gdshader": [
+      "scripts/UI/HubCamp.cs"
+    ],
+    "res://assets/shaders/erasure_veil.gdshader": [
+      "scripts/UI/ErasureVeil.cs"
+    ],
+    "res://assets/shaders/death_erasure.gdshader": [
+      "scripts/UI/DeathSequence.cs"
+    ],
+    "res://assets/shaders/ui_dust_twinkle.gdshader": [
+      "scripts/UI/PixelBackdrop.cs"
+    ],
+    "res://assets/shaders/landmark_reveal.gdshader": [
+      "scripts/UI/LandmarkReveal.cs"
+    ],
+    "res://assets/shaders/entity.gdshader": [
+      "scripts/Core/Player.cs",
+      "scripts/Combat/Enemy.cs"
+    ],
+    "res://assets/shaders/pixel_fx.gdshader": [
+      "scripts/Combat/PixelFx.cs"
+    ],
+    "res://assets/shaders/iridescent_fluid.gdshader": [
+      "scripts/Combat/DeathFx.cs",
+      "scripts/Combat/DeathFx.cs"
+    ],
+    "res://assets/shaders/player_projectile.gdshader": [
+      "scripts/Combat/PlayerAttackFx.cs"
+    ],
+    "res://assets/shaders/echo.gdshader": [
+      "scripts/World/ErasureEchoes.cs"
+    ],
+    "res://assets/shaders/path.gdshader": [
+      "scripts/World/PathMeshes.cs"
+    ],
+    "res://assets/shaders/sway.gdshader": [
+      "scripts/World/EnvironmentProp.cs",
+      "scripts/World/EnvironmentProp.cs"
+    ],
+    "res://assets/shaders/prop_forget.gdshader": [
+      "scripts/World/EnvironmentProp.cs"
+    ],
+    "res://assets/shaders/prop_trample.gdshader": [
+      "scripts/World/EnvironmentProp.cs"
+    ],
+    "res://assets/shaders/swamp_atmosphere.gdshader": [
+      "scripts/World/BiomeAtmosphere.cs"
+    ],
+    "res://assets/shaders/ground.gdshader": [
+      "scripts/World/GroundMaterial.cs"
+    ],
+    "res://assets/shaders/light_column.gdshader": [
+      "scripts/World/LightColumn.cs"
+    ],
+    "res://assets/shaders/colorblind.gdshader": [
+      "scripts/Infrastructure/ColorBlindFilter.cs"
+    ]
+  },
+  "hub_only": [
+    "res://assets/shaders/hub_forgotten.gdshader",
+    "res://assets/shaders/outline.gdshader"
+  ],
+  "missing": [],
+  "sha256": "f84b4576fc9a943877ab59c27a46efbfbfb6835f40979fd5838e3bbb9e5f0eeb"
+}

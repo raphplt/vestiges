@@ -1,0 +1,263 @@
+{
+	"freed": true,
+	"intervals": [
+		{
+			"draw_calls": 0,
+			"frame": 0,
+			"mode": "offscreen",
+			"objects": 0
+		},
+		{
+			"draw_calls": 0,
+			"frame": 1,
+			"mode": "offscreen",
+			"objects": 0
+		},
+		{
+			"draw_calls": 0,
+			"frame": 2,
+			"mode": "offscreen",
+			"objects": 0
+		},
+		{
+			"draw_calls": 0,
+			"frame": 3,
+			"mode": "offscreen",
+			"objects": 0
+		},
+		{
+			"draw_calls": 0,
+			"frame": 4,
+			"mode": "offscreen",
+			"objects": 0
+		},
+		{
+			"draw_calls": 19,
+			"frame": 0,
+			"mode": "visible",
+			"objects": 19
+		},
+		{
+			"draw_calls": 19,
+			"frame": 1,
+			"mode": "visible",
+			"objects": 19
+		},
+		{
+			"draw_calls": 19,
+			"frame": 2,
+			"mode": "visible",
+			"objects": 19
+		},
+		{
+			"draw_calls": 19,
+			"frame": 3,
+			"mode": "visible",
+			"objects": 19
+		},
+		{
+			"draw_calls": 19,
+			"frame": 4,
+			"mode": "visible",
+			"objects": 19
+		},
+		{
+			"draw_calls": 19,
+			"frame": 0,
+			"mode": "visible",
+			"objects": 19
+		},
+		{
+			"draw_calls": 19,
+			"frame": 1,
+			"mode": "visible",
+			"objects": 19
+		},
+		{
+			"draw_calls": 19,
+			"frame": 2,
+			"mode": "visible",
+			"objects": 19
+		},
+		{
+			"draw_calls": 19,
+			"frame": 3,
+			"mode": "visible",
+			"objects": 19
+		},
+		{
+			"draw_calls": 19,
+			"frame": 4,
+			"mode": "visible",
+			"objects": 19
+		},
+		{
+			"draw_calls": 0,
+			"frame": 0,
+			"mode": "offscreen",
+			"objects": 0
+		},
+		{
+			"draw_calls": 0,
+			"frame": 1,
+			"mode": "offscreen",
+			"objects": 0
+		},
+		{
+			"draw_calls": 0,
+			"frame": 2,
+			"mode": "offscreen",
+			"objects": 0
+		},
+		{
+			"draw_calls": 0,
+			"frame": 3,
+			"mode": "offscreen",
+			"objects": 0
+		},
+		{
+			"draw_calls": 0,
+			"frame": 4,
+			"mode": "offscreen",
+			"objects": 0
+		}
+	],
+	"legacy": false,
+	"paths": [
+		"res://assets/shaders/entity.gdshader",
+		"res://assets/shaders/sway.gdshader",
+		"res://assets/shaders/prop_forget.gdshader",
+		"res://assets/shaders/prop_trample.gdshader",
+		"res://assets/shaders/ground.gdshader",
+		"res://assets/shaders/path.gdshader",
+		"res://assets/shaders/echo.gdshader",
+		"res://assets/shaders/light_column.gdshader",
+		"res://assets/shaders/pixel_fx.gdshader",
+		"res://assets/shaders/player_projectile.gdshader",
+		"res://assets/shaders/iridescent_fluid.gdshader",
+		"res://assets/shaders/swamp_atmosphere.gdshader",
+		"res://assets/shaders/erasure_veil.gdshader",
+		"res://assets/shaders/crisis_omen.gdshader",
+		"res://assets/shaders/death_erasure.gdshader",
+		"res://assets/shaders/landmark_reveal.gdshader",
+		"res://assets/shaders/colorblind.gdshader",
+		"res://assets/shaders/ui_dust_twinkle.gdshader"
+	],
+	"renderer": "gl_compatibility",
+	"samples": [
+		{
+			"draw_calls": 1,
+			"name": "entity",
+			"objects": 1,
+			"shader": "res://assets/shaders/entity.gdshader"
+		},
+		{
+			"draw_calls": 1,
+			"name": "sway",
+			"objects": 1,
+			"shader": "res://assets/shaders/sway.gdshader"
+		},
+		{
+			"draw_calls": 1,
+			"name": "prop_forget",
+			"objects": 1,
+			"shader": "res://assets/shaders/prop_forget.gdshader"
+		},
+		{
+			"draw_calls": 1,
+			"name": "prop_trample",
+			"objects": 1,
+			"shader": "res://assets/shaders/prop_trample.gdshader"
+		},
+		{
+			"draw_calls": 1,
+			"name": "ground",
+			"objects": 1,
+			"shader": "res://assets/shaders/ground.gdshader"
+		},
+		{
+			"draw_calls": 1,
+			"name": "path",
+			"objects": 1,
+			"shader": "res://assets/shaders/path.gdshader"
+		},
+		{
+			"draw_calls": 1,
+			"name": "echo",
+			"objects": 1,
+			"shader": "res://assets/shaders/echo.gdshader"
+		},
+		{
+			"draw_calls": 1,
+			"name": "light_column",
+			"objects": 1,
+			"shader": "res://assets/shaders/light_column.gdshader"
+		},
+		{
+			"draw_calls": 1,
+			"name": "pixel_fx",
+			"objects": 1,
+			"shader": "res://assets/shaders/pixel_fx.gdshader"
+		},
+		{
+			"draw_calls": 1,
+			"name": "player_projectile",
+			"objects": 1,
+			"shader": "res://assets/shaders/player_projectile.gdshader"
+		},
+		{
+			"draw_calls": 1,
+			"name": "iridescent_fluid",
+			"objects": 1,
+			"shader": "res://assets/shaders/iridescent_fluid.gdshader"
+		},
+		{
+			"draw_calls": 1,
+			"name": "swamp_atmosphere",
+			"objects": 1,
+			"shader": "res://assets/shaders/swamp_atmosphere.gdshader"
+		},
+		{
+			"draw_calls": 1,
+			"name": "erasure_veil",
+			"objects": 1,
+			"shader": "res://assets/shaders/erasure_veil.gdshader"
+		},
+		{
+			"draw_calls": 1,
+			"name": "crisis_omen",
+			"objects": 1,
+			"shader": "res://assets/shaders/crisis_omen.gdshader"
+		},
+		{
+			"draw_calls": 1,
+			"name": "death_erasure",
+			"objects": 1,
+			"shader": "res://assets/shaders/death_erasure.gdshader"
+		},
+		{
+			"draw_calls": 1,
+			"name": "landmark_reveal",
+			"objects": 1,
+			"shader": "res://assets/shaders/landmark_reveal.gdshader"
+		},
+		{
+			"draw_calls": 1,
+			"name": "colorblind",
+			"objects": 1,
+			"shader": "res://assets/shaders/colorblind.gdshader"
+		},
+		{
+			"draw_calls": 1,
+			"name": "ui_dust_twinkle",
+			"objects": 1,
+			"shader": "res://assets/shaders/ui_dust_twinkle.gdshader"
+		},
+		{
+			"draw_calls": 1,
+			"name": "XpGlow",
+			"objects": 1
+		}
+	],
+	"valid": true
+}

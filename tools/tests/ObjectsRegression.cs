@@ -489,7 +489,7 @@ public partial class ObjectsRegression : Node2D
         Check(Near(_player.CurrentHp - hp, 0.2f), "Aimant de frigo palier 15 : une orbe ramassée rend 0,2 PV");
     }
 
-    /// <summary>Paille tordue (plan 21 G6b) : 0,5 % des dégâts rendus, plafond de 5 % des PV max par seconde, doublé sous la moitié des PV au palier.</summary>
+    /// <summary>Paille tordue (plan 21 G6b) : 0,5 % des dégâts rendus, plafond par seconde (defense.json), doublé sous la moitié des PV au palier.</summary>
     private void CheckLifesteal()
     {
         Setup();
@@ -509,15 +509,16 @@ public partial class ObjectsRegression : Node2D
         _player.OnProjectileHit(enemy, 5000f, false, _player.EquippedWeapon);
         step.Invoke(_player, new object[] { 0.25f });
         float capped = _player.CurrentHp - hp;
-        Check(Near(_player.Lifesteal, 0.005f) && Near(small, 0.1f) && Near(capped, maxHp * 0.05f * 0.25f),
-            $"Paille tordue : 20 dégâts rendent {small:0.00} PV ; 5 000 dégâts plafonnés à {capped:0.00} PV en 0,25 s (5 % des PV max par seconde)");
+        float capPerSecond = DefenseConfig.Load().LifestealMaxHpPerSecond;
+        Check(Near(_player.Lifesteal, 0.005f) && Near(small, 0.1f) && Near(capped, maxHp * capPerSecond * 0.25f),
+            $"Paille tordue : 20 dégâts rendent {small:0.00} PV ; 5 000 dégâts plafonnés à {capped:0.00} PV en 0,25 s ({capPerSecond:P0} des PV max par seconde)");
 
         Raise("paille_tordue", 14);
         hp = _player.CurrentHp;
         _player.OnProjectileHit(enemy, 5000f, false, _player.EquippedWeapon);
         step.Invoke(_player, new object[] { 0.25f });
         float low = _player.CurrentHp - hp;
-        Check(_player.CurrentHp < maxHp * 0.5f && Near(low, maxHp * 0.1f * 0.25f),
+        Check(_player.CurrentHp < maxHp * 0.5f && Near(low, maxHp * capPerSecond * 2f * 0.25f),
             $"Paille tordue palier 15 : sous la moitié des PV, plafond doublé ({low:0.00} PV en 0,25 s)");
         enemy.QueueFree();
     }
@@ -901,8 +902,8 @@ public partial class ObjectsRegression : Node2D
     }
 
     /// <summary>
-    /// Bonus de stat des coffres (DECISIONS §38, plan 23 R8) : tiré dans la table, jamais de +dégâts universel ;
-    /// un niveau d'objet commun pour un coffre commun, le triple pour un épique, appliqué une fois.
+    /// Bonus de stat des coffres (DECISIONS §38, plan 23 R8) : tiré dans la table, jamais de +dégâts universel ; aucun
+    /// pour un coffre commun (DECISIONS §54), deux niveaux d'objet communs pour un rare, le triple pour un épique.
     /// </summary>
     private void CheckChestStatBonus()
     {
@@ -915,7 +916,7 @@ public partial class ObjectsRegression : Node2D
         bool inTable = true;
         for (int i = 0; i < 400; i++)
         {
-            ResolvedLoot loot = LootRewards.RollStatBonus("common").Value;
+            ResolvedLoot loot = LootRewards.RollStatBonus("rare").Value;
             drawn.Add(loot.ItemId);
             inTable &= allowed.Contains(loot.ItemId) && loot.ItemId != "damage" && loot.Label.Length > 0;
         }
@@ -930,16 +931,16 @@ public partial class ObjectsRegression : Node2D
         }
         EventBus events = GetNode<EventBus>("/root/EventBus");
         float before = _player.AttackSpeedMultiplier;
-        ResolvedLoot common = Draw("common", "attack_speed");
-        LootRewards.Apply(common, _player, events);
-        float afterCommon = _player.AttackSpeedMultiplier;
+        ResolvedLoot rare = Draw("rare", "attack_speed");
+        LootRewards.Apply(rare, _player, events);
+        float afterRare = _player.AttackSpeedMultiplier;
         ResolvedLoot epic = Draw("epic", "attack_speed");
         LootRewards.Apply(epic, _player, events);
         float armor = _player.Armor;
         LootRewards.Apply(Draw("rare", "armor"), _player, events);
-        Check(Mathf.IsEqualApprox(afterCommon / before, 1.08f) && Mathf.IsEqualApprox(_player.AttackSpeedMultiplier / afterCommon, 1.24f)
-              && Mathf.IsEqualApprox(_player.Armor - armor, 4f),
-            $"Coffre : cadence ×1,08 (commun, « {common.Label} ») puis ×1,24 (épique), armure +4 (rare)");
+        Check(LootRewards.RollStatBonus("common") == null && Mathf.IsEqualApprox(afterRare / before, 1.16f)
+              && Mathf.IsEqualApprox(_player.AttackSpeedMultiplier / afterRare, 1.24f) && Mathf.IsEqualApprox(_player.Armor - armor, 4f),
+            $"Coffre : rien pour un commun, cadence ×1,16 (rare, « {rare.Label} ») puis ×1,24 (épique), armure +4 (rare)");
     }
 
     /// <summary>Plan 23 R9 : l'Essence rendue par le Porte-monnaie ne compte pas pour « Accumuler de l'Essence ».</summary>

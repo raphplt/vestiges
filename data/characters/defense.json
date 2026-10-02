@@ -5,6 +5,6 @@
     "shield_recharge_seconds": 2.0,
     "armor_half_value": 15,
     "armor_max_reduction": 0.75,
-    "lifesteal_max_hp_per_second": 0.05,
+    "lifesteal_max_hp_per_second": 0.03,
     "lifesteal_tick_seconds": 0.25
 }

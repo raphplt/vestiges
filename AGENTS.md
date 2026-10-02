@@ -27,7 +27,8 @@ Consulter la Stratégie V2 avant de proposer une feature ou un changement archit
 | Action | Commande |
 |--------|----------|
 | Build C# | `dotnet build` (0 warning exigé) |
-| Smoke test (build + import + boot headless ~10 s) | `tools/smoke_test.sh [frames]` |
+| Smoke test (build + import + Hub headless, 600 images par défaut) | `tools/smoke_test.sh [frames]` |
+| Validation globale (un build/import, suites séquentielles) | `tools/validate.sh <dossier neuf> [suites...]` ; [guide](doc/VALIDATION.md) |
 | Lancer le jeu | `godot-mono --path .` (la version doit correspondre à `Vestiges.csproj`) ; profil dev tout débloqué : `tools/run_dev.sh` |
 | Régressions | `tools/test_movement.sh`, `tools/test_enemy_abilities.sh`, `tools/test_cartography.sh`, `tools/test_choice_screen.sh`, `tools/test_erasure_active.sh`, `tools/test_weapons.sh`, `tools/test_dev_mode.sh`, `tools/test_music.sh` |
 | Captures en vraie run (1080p, bot invincible) | `tools/capture_run.sh <dossier> [secondes] [intervalle] [résolution] [seed]` ; modes via `CAPTURE_EXTRA_ARGS` : `--event <id>`, `--capture-map`, `--capture-cartography`, `--capture-character --character <id>`, `--capture-props [--hide-collisions]`, `--capture-bestiary`, `--capture-chests`, `--capture-memorial`, `--capture-rift` ; `--nomad` fait garder un cap au bot |

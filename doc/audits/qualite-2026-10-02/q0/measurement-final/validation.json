@@ -1,0 +1,15 @@
+{
+  "expected": 2,
+  "results": [
+    {
+      "seed": "7",
+      "valid": true,
+      "samples": 9
+    },
+    {
+      "seed": "42",
+      "valid": true,
+      "samples": 9
+    }
+  ]
+}

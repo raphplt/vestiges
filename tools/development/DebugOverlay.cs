@@ -34,6 +34,12 @@ public partial class DebugOverlay : CanvasLayer
 
     public override void _Ready()
     {
+        if (!DevelopmentMode.IsEnabled)
+        {
+            ProcessMode = ProcessModeEnum.Disabled;
+            QueueFree();
+            return;
+        }
         ProcessMode = ProcessModeEnum.Always;
         Layer = 100;
 
@@ -44,6 +50,8 @@ public partial class DebugOverlay : CanvasLayer
 
     public override void _UnhandledInput(InputEvent @event)
     {
+        if (!DevelopmentMode.IsEnabled)
+            return;
         if (@event is InputEventKey keyEvent && keyEvent.Pressed && !keyEvent.Echo && keyEvent.Keycode == Key.F1)
         {
             _visible = !_visible;
@@ -64,7 +72,7 @@ public partial class DebugOverlay : CanvasLayer
 
     public override void _Process(double delta)
     {
-        if (!_visible)
+        if (!DevelopmentMode.IsEnabled || !_visible)
             return;
 
         _updateTimer -= (float)delta;
@@ -114,7 +122,7 @@ public partial class DebugOverlay : CanvasLayer
         _movementResponse.AddItem("Réponse brève (JSON)");
         _movementResponse.ItemSelected += index =>
         {
-            if (_groupCache?.GetPlayer() is Player player)
+            if (DevelopmentMode.IsEnabled && _groupCache?.GetPlayer() is Player player)
             {
                 player.Mobility.Suspend();
                 player.Mobility.Response = index == 0 ? MovementResponse.Direct : MovementResponse.Brief;
@@ -124,7 +132,7 @@ public partial class DebugOverlay : CanvasLayer
         _mobilityInvulnerability = new CheckButton { Text = "Fenêtre d'invulnérabilité d'essai" };
         _mobilityInvulnerability.Toggled += enabled =>
         {
-            if (_groupCache?.GetPlayer() is Player player)
+            if (DevelopmentMode.IsEnabled && _groupCache?.GetPlayer() is Player player)
             {
                 player.Mobility.Suspend();
                 player.Mobility.UseInvulnerabilityTrial = enabled;

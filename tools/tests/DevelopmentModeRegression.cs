@@ -82,6 +82,8 @@ public partial class DevelopmentModeRegression : Node
                     bus.EmitSignal(EventBus.SignalName.EnemyKilled, "melee", Vector2.Zero);
                 score.SaveEndOfRun();
                 Check(RunHistoryManager.GetHistory().Count == 1, "fin de run sauvegardée");
+                Check(RunHistoryManager.GetHistory()[0].Provenance == (dev ? RunProvenance.Development : RunProvenance.Test), "provenance sauvegardée avec la run");
+                Check(!DevelopmentMode.CanSubmitResults && !SteamManager.CanSubmitResults, "session de test exclue de Steam");
                 Check(FileAccess.FileExists(DevelopmentMode.GetSavePath("highscore_kills.save")), "record sauvegardé");
                 Check(FileAccess.FileExists(DevelopmentMode.GetSavePath("analytics/aggregate.json")), "analytics sauvegardées");
             }

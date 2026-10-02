@@ -674,3 +674,38 @@ Raphaël, après une partie sur les réglages E5 et §52 : « alors je trouve qu
 - **Impacts :** plus d'effets au moment où un coup touche.
 
 **Suite :** lots F1 à F6 au [plan 21 §16](21-systeme-de-jeu.md).
+
+## 54. Préparer la consolidation de la qualité et retirer les règles en dur — 2 octobre 2026
+
+Après la revue de qualité, Raphaël demande : « ok prépare un plan pour améliorer ca. un autre truc que j'ai vu c'est que le code est pas propre il y a en dur le nom de certaines attaques ou autre ».
+
+**Demande consignée :** préparer un plan de remboursement de la dette et traiter explicitement les noms d'attaques et autres règles codées en dur. Le [plan 26](26-qualite-et-dette-technique.md) relie les 18 constats de la revue à des lots vérifiables et ajoute un inventaire de chaînes de mécanismes, paramètres de gameplay et relations de contenu présents dans le code.
+
+**Proposition technique :** clés et réglages dans les données, libellés traduits, mécanismes convertis en types C# au chargement, références et paramètres validés. Les algorithmes restent dans leurs modules. Ordre recommandé : validations, protection des acquis et de la distribution, nettoyage des contrats, corrections de run, extractions mesurées et préparation de livraison.
+
+**État :** plan préparé, implémentation non commencée. Aucun changement d'équilibrage ni de règle de butin n'est décidé par cette demande.
+
+## 55. Exécuter Q0 — 2 octobre 2026
+
+Raphaël : « go Q0 ».
+
+Le lot Q0 du [plan 26](26-qualite-et-dette-technique.md) est engagé : fiabiliser les validations, réparer les bancs obsolètes, contrôler les échecs moteur/import/timeout et fournir un lanceur global séquentiel avec build/import partagés. Les autres lots restent ouverts.
+
+**Résultat technique : Q0 livré et vérifié.** Global 21/21, build sans warning, huit tests de lanceurs/pannes, mesures réelles headless et GL, exports Debug/Release et préchauffage GPU verts. Le contrôle strict a exposé un diagnostic du shader des projectiles : calcul équivalent rendu compatible headless, images GL identiques avant/après. Le contrat de raretés 21 F2 reste intact. Une mesure concurrente occupant le checkout, la validation a utilisé un checkout isolé des changements de gameplay en cours. [Compte rendu](../audits/qualite-2026-10-02/q0/README.md), [guide](../VALIDATION.md). Aucun autre lot n'est implémenté par cette demande.
+
+## 54. Coffres trop généreux, jeu trop simple après le niveau 10 à 20 — 2 octobre 2026
+
+Raphaël : « les coffres sont trop op il faut diminuer le nb de recompenses. le jeu est trop simple une fois qu'on passe le level 10/20 cest impossible de mourir et meme de prendre des dégats. et j'ai meme pas particulirereent bien joué. j'ai juste build des projectiles et récupéré tous les coffres ect bref j'ai joué normalement et j'étais intuable fais des mesures stp »
+
+- **Coffres :** trop de récompenses par coffre.
+- **Difficulté :** après le niveau 10 à 20, on ne meurt plus et on ne prend presque plus de dégâts, avec un jeu normal (build projectiles, tous les coffres).
+- **Méthode :** mesurer d'abord. Mode `--mortal` ajouté à la mesure (bot non invincible, un coup fatal le remet à fond et se compte), relevé du butin des coffres par tranche.
+
+**Suite :** lots H au [plan 21 §17](21-systeme-de-jeu.md).
+
+
+## 56. Exécuter Q1 — 2 octobre 2026
+
+Raphaël : « fait q1 ».
+
+Le lot Q1 du [plan 26](26-qualite-et-dette-technique.md) est engagé : réserver F1/F4 au profil dev, retirer outils et hooks de test des exports, identifier les runs d’essai et protéger les envois Steam. Les contrôles locaux et la séparation des acquis doivent rester fonctionnels. Aucun changement d’équilibrage n’est inclus.

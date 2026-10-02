@@ -5,6 +5,10 @@
     <RootNamespace>Vestiges</RootNamespace>
   </PropertyGroup>
 
+  <ItemGroup Condition="'$(Configuration)' != 'Debug'">
+    <Compile Remove="tools/**/*.cs" />
+  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="Steamworks.NET" Version="2024.8.0" />
   </ItemGroup>

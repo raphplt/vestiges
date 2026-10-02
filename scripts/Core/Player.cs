@@ -18,12 +18,22 @@ public partial class Player : CharacterBody2D
     [Export] public float BaseRegenRate = 0.5f;
     [Export] public float InteractRange = 60f;
 
-    // Entrée de simulation dans les axes écran, amplitude analogique bornée à 1.
-    public bool IsAIControlled;
-    public Vector2 AIInputOverride;
-    
-    // Debug
-    public bool IsGodMode { get; set; } = false;
+#if TOOLS
+    private bool _isAIControlled;
+    private bool _isGodMode;
+    // Les entrées de banc ne font pas partie du contrôleur distribué.
+    public bool IsAIControlled
+    {
+        get => _isAIControlled;
+        set { DevelopmentMode.RequireTestAccess(); _isAIControlled = value; }
+    }
+    public Vector2 AIInputOverride { get; set; }
+    public bool IsGodMode
+    {
+        get => _isGodMode;
+        set { DevelopmentMode.RequireTestAccess(); _isGodMode = value; }
+    }
+#endif
 
     public PlayerMobility Mobility { get; private set; }
     private MobilityFeedback _mobilityFeedback;
@@ -466,9 +476,11 @@ public partial class Player : CharacterBody2D
 
         float dt = (float)delta;
         bool inputAllowed = _gameManager.CurrentState == GameManager.GameState.Run;
-        Vector2 inputDir = inputAllowed
-            ? (IsAIControlled ? AIInputOverride.LimitLength() : Input.GetVector("move_left", "move_right", "move_up", "move_down"))
-            : Vector2.Zero;
+        Vector2 inputDir = inputAllowed ? Input.GetVector("move_left", "move_right", "move_up", "move_down") : Vector2.Zero;
+#if TOOLS
+        if (inputAllowed && IsAIControlled)
+            inputDir = AIInputOverride.LimitLength();
+#endif
 
         if (_mobilityRequiresRelease && !Input.IsActionPressed("mobility"))
             _mobilityRequiresRelease = false;
@@ -537,7 +549,11 @@ public partial class Player : CharacterBody2D
 
         if (@event.IsActionPressed("mobility") && !@event.IsEcho())
         {
-            if (!_mobilityRequiresRelease && !IsAIControlled)
+            bool acceptsInput = !_mobilityRequiresRelease;
+#if TOOLS
+            acceptsInput &= !IsAIControlled;
+#endif
+            if (acceptsInput)
                 Mobility.Request();
             GetViewport().SetInputAsHandled();
             return;
@@ -644,11 +660,11 @@ public partial class Player : CharacterBody2D
         return lastValid;
     }
 
-    // --- AI Interaction ---
-
-    /// <summary>Programmatic interact trigger for AI simulation. Same logic as the interact input handler.</summary>
+#if TOOLS
+    /// <summary>Entrée de simulation ; reprend le comportement de l'action d'interaction.</summary>
     public void AITriggerInteract()
     {
+        DevelopmentMode.RequireTestAccess();
         if (_isDead || !IsAIControlled || Mobility.IsDashing || _gameManager.CurrentState != GameManager.GameState.Run || GetTree().Paused) return;
         if (_isExploringPoi || _interaction.IsActive)
         {
@@ -658,6 +674,7 @@ public partial class Player : CharacterBody2D
         else if (TryStartPoiExplore()) { }
         else if (_interaction.TryStart()) { }
     }
+#endif
 
     // --- Journal ---
 
@@ -1242,7 +1259,11 @@ public partial class Player : CharacterBody2D
 
     public PlayerDamageResult TakeDamage(float damage)
     {
-        if (_currentHp <= 0 || IsGodMode || Mobility.IsInvulnerable || _defense.IsInvulnerable)
+#if TOOLS
+        if (IsGodMode)
+            return default;
+#endif
+        if (_currentHp <= 0 || Mobility.IsInvulnerable || _defense.IsInvulnerable)
             return default;
 
         if (_objectMilestones != null && _objectMilestones.Ignores(damage, EffectiveMaxHp))
@@ -1271,7 +1292,11 @@ public partial class Player : CharacterBody2D
     /// <summary>Le Néant consume : ni bouclier, ni armure, ni invulnérabilité ne l'arrêtent.</summary>
     public PlayerDamageResult TakeErasureDamage(float damage)
     {
-        if (_currentHp <= 0 || IsGodMode)
+#if TOOLS
+        if (IsGodMode)
+            return default;
+#endif
+        if (_currentHp <= 0)
             return default;
         return LoseHp(damage, PlayerDamageKind.Erasure);
     }
@@ -1289,6 +1314,11 @@ public partial class Player : CharacterBody2D
 
         _eventBus.EmitSignal(EventBus.SignalName.PlayerDamaged, _currentHp, EffectiveMaxHp);
 
+#if TOOLS
+        if (result.Fatal && SurviveFatalHitsForTests)
+            _currentHp = EffectiveMaxHp;
+        else
+#endif
         if (result.Fatal)
         {
             _currentHp = 0;
@@ -1311,12 +1341,26 @@ public partial class Player : CharacterBody2D
         _sprite.Modulate = hidden ? new Color(1f, 1f, 1f, 0.4f) : Colors.White;
     }
 
+#if TOOLS
+    /// <summary>
+    /// Mesures de survie (RunObservation --mortal) : un coup fatal remet les PV au maximum au lieu de finir la run ; le
+    /// résultat publié reste fatal, pour être compté.
+    /// </summary>
+    private bool _surviveFatalHitsForTests;
+    internal bool SurviveFatalHitsForTests
+    {
+        get => _surviveFatalHitsForTests;
+        set { DevelopmentMode.RequireTestAccess(); _surviveFatalHitsForTests = value; }
+    }
+
     /// <summary>Bancs de régression : les coups reçus se mesurent sur les PV, sans bouclier ni invulnérabilité.</summary>
     internal void DisableDefenseForTests()
     {
+        DevelopmentMode.RequireTestAccess();
         _defense.Disable();
         EmitShield();
     }
+#endif
 
     private void EmitShield() =>
         _eventBus?.EmitSignal(EventBus.SignalName.PlayerShieldChanged, _defense.Shield, _defense.MaxShield);

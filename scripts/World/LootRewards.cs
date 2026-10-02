@@ -89,12 +89,12 @@ public static class LootRewards
 
     /// <summary>
     /// Bonus d'une stat au hasard, en plus du butin tiré (DECISIONS §38) : un niveau d'objet commun de la stat, multiplié
-    /// selon la rareté du coffre. Null si la table est vide.
+    /// selon la rareté du coffre. Null si la table est vide ou si cette rareté n'en donne pas (multiplicateur 0).
     /// </summary>
     public static ResolvedLoot? RollStatBonus(string chestRarity)
     {
         ChestStatBonusData data = ChestDataLoader.LoadStatBonus();
-        if (data.Stats.Count == 0)
+        if (data.Stats.Count == 0 || data.Multiplier(chestRarity) <= 0f)
             return null;
         ChestStatBonus bonus = data.Stats[(int)(GD.Randi() % data.Stats.Count)];
         float amount = bonus.Amount * data.Multiplier(chestRarity);

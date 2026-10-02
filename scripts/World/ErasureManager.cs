@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Godot;
+using Vestiges.Infrastructure;
 using Vestiges.Core;
 
 namespace Vestiges.World;
@@ -222,20 +223,24 @@ public partial class ErasureManager : Node
         RenderingServer.GlobalShaderParameterSet("erasure_far_memory", GetMemoryAtCell(origin - Vector2I.One));
     }
 
+#if TOOLS
     /// <summary>Impose la mémoire d'une zone (captures et tests de rendu de l'oubli).</summary>
     internal void OverrideMemory(Vector2I cell, float memory)
     {
+        DevelopmentMode.RequireTestAccess();
         SetMemory(cell, Mathf.Clamp(memory, 0f, 1f), true);
     }
 
     /// <summary>Republie la mémoire et la phase du joueur sans faire avancer l'Effacement (captures).</summary>
     internal void RefreshGroundMemory()
     {
+        DevelopmentMode.RequireTestAccess();
         CachePlayer();
         PublishGroundMemory();
         if (_player != null && IsInstanceValid(_player))
             PublishPlayerPhase();
     }
+#endif
 
     public float GetMemoryAt(Vector2 worldPos)
     {

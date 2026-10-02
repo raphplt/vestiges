@@ -1,4 +1,4 @@
-[gd_scene load_steps=24 format=3]
+[gd_scene load_steps=23 format=3]
 
 [ext_resource type="TileSet" path="res://assets/tiles/iso_tileset.tres" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/Player.tscn" id="2"]
@@ -18,7 +18,6 @@
 [ext_resource type="Script" path="res://scripts/UI/SouvenirPopup.cs" id="22"]
 [ext_resource type="Script" path="res://scripts/UI/JournalScreen.cs" id="23"]
 [ext_resource type="Script" path="res://scripts/Infrastructure/RunTracker.cs" id="24"]
-[ext_resource type="Script" path="res://scripts/UI/DebugOverlay.cs" id="25"]
 [ext_resource type="Script" path="res://scripts/UI/PauseMenu.cs" id="27"]
 
 [node name="Main" type="Node2D"]
@@ -85,9 +84,6 @@ script = ExtResource("23")
 
 [node name="RunTracker" type="Node" parent="."]
 script = ExtResource("24")
-
-[node name="DebugOverlay" type="CanvasLayer" parent="."]
-script = ExtResource("25")
 
 [node name="GameBootstrap" type="Node" parent="."]
 script = ExtResource("10")

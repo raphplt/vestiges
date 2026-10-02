@@ -549,12 +549,15 @@ public partial class SpawnManager : Node2D
 		return Mathf.Max(0.5f, multiplier);
 	}
 
+#if TOOLS
 	public void ForceSpawnEnemy(string enemyId, Vector2 spawnPos)
 	{
+		DevelopmentMode.RequireTestAccess();
 		if (SpawnEventEnemy(enemyId, spawnPos) == null)
 			return;
 		GD.Print($"[SpawnManager] Debug spawned: {enemyId} at {spawnPos}");
 	}
+#endif
 
 	private float ComputeEnemyAggressionMultiplier(EnemyData data, float elapsedMinutes)
 	{

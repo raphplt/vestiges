@@ -66,7 +66,7 @@ public partial class SteamAchievements : Node
 
 	public override void _Ready()
 	{
-		if (!SteamManager.IsActive)
+		if (!SteamManager.CanSubmitResults)
 			return;
 
 		_eventBus = GetNode<EventBus>("/root/EventBus");
@@ -108,7 +108,7 @@ public partial class SteamAchievements : Node
 	/// </summary>
 	public void OnRunEnd(int finalScore, int crisesSurvived, string characterId)
 	{
-		if (!SteamManager.IsActive)
+		if (!SteamManager.CanSubmitResults)
 			return;
 
 		// Mise à jour des stats cumulées Steam
@@ -147,7 +147,7 @@ public partial class SteamAchievements : Node
 	/// <summary>Signale un unlock de personnage (appelé par MetaSaveManager).</summary>
 	public void OnCharacterUnlocked(string characterId)
 	{
-		if (!SteamManager.IsActive)
+		if (!SteamManager.CanSubmitResults)
 			return;
 
 		switch (characterId)
@@ -207,7 +207,7 @@ public partial class SteamAchievements : Node
 
 	private static void TryUnlock(string achievementId)
 	{
-		if (!SteamManager.IsActive)
+		if (!SteamManager.CanSubmitResults)
 			return;
 
 		SteamUserStats.GetAchievement(achievementId, out bool alreadyUnlocked);
@@ -220,7 +220,7 @@ public partial class SteamAchievements : Node
 
 	private static void IncrementStat(string statId, int amount)
 	{
-		if (!SteamManager.IsActive || amount <= 0)
+		if (!SteamManager.CanSubmitResults || amount <= 0)
 			return;
 
 		SteamUserStats.GetStat(statId, out int current);
@@ -229,7 +229,7 @@ public partial class SteamAchievements : Node
 
 	private static void SetStatIfHigher(string statId, int value)
 	{
-		if (!SteamManager.IsActive)
+		if (!SteamManager.CanSubmitResults)
 			return;
 
 		SteamUserStats.GetStat(statId, out int current);
@@ -239,7 +239,7 @@ public partial class SteamAchievements : Node
 
 	private static int GetStat(string statId)
 	{
-		if (!SteamManager.IsActive)
+		if (!SteamManager.CanSubmitResults)
 			return 0;
 
 		SteamUserStats.GetStat(statId, out int value);

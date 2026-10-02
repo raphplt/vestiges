@@ -11,7 +11,14 @@ public sealed class PlayerMobility
 {
     public MobilityConfig Config { get; }
     public MovementResponse Response { get; set; }
-    public bool UseInvulnerabilityTrial { get; set; }
+#if TOOLS
+    private bool _useInvulnerabilityTrial;
+    public bool UseInvulnerabilityTrial
+    {
+        get => _useInvulnerabilityTrial;
+        set { DevelopmentMode.RequireTestAccess(); _useInvulnerabilityTrial = value; }
+    }
+#endif
     public MobilityState State { get; private set; }
     public float CooldownRemaining { get; private set; }
 
@@ -30,8 +37,19 @@ public sealed class PlayerMobility
     public bool StartedThisStep { get; private set; }
     public bool IsDashStep { get; private set; }
     public bool IsDashing => State == MobilityState.Mobility;
-    public bool IsInvulnerable => IsDashing && _dashElapsed < Mathf.Min(Config.DurationSeconds,
-        UseInvulnerabilityTrial ? Config.TrialInvulnerabilitySeconds : Config.InvulnerabilitySeconds);
+    public bool IsInvulnerable => IsDashing && _dashElapsed < Mathf.Min(Config.DurationSeconds, InvulnerabilitySeconds);
+
+    private float InvulnerabilitySeconds
+    {
+        get
+        {
+#if TOOLS
+            if (UseInvulnerabilityTrial)
+                return Config.TrialInvulnerabilitySeconds;
+#endif
+            return Config.InvulnerabilitySeconds;
+        }
+    }
 
     private Vector2 _lastDirection = Vector2.Right;
     private Vector2 _dashDirection;
