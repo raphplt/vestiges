@@ -24,6 +24,7 @@ public partial class Player
     private ObjectMilestones _objectMilestones;
     private ObjectTriggers _objectTriggers;
     private ObjectStances _objectStances;
+    private ObjectProcs _objectProcs;
 
     public IReadOnlyList<ActivePassiveSouvenir> PassiveSlots => _passiveSlots;
     /// <summary>Projectiles, ou frappes de mêlée, en plus à chaque attaque (Papier carbone), en fraction.</summary>
@@ -36,6 +37,8 @@ public partial class Player
     public ObjectTriggers ObjectTriggers => _objectTriggers;
     /// <summary>Objets d'état portés (Tabouret, Gilet, Thermos, Médaille, Porte-monnaie) ; absent tant qu'aucun ne l'est.</summary>
     public ObjectStances ObjectStances => _objectStances;
+    /// <summary>Icônes des objets qui agissent (plan 21 F4) ; créé avec le premier objet.</summary>
+    public ObjectProcs ObjectProcs => _objectProcs;
     /// <summary>Repères : types de lieux déjà utilisés dans la run, et la Chance qu'ils ont donnée.</summary>
     public Waymarks Waymarks { get; private set; }
 
@@ -51,6 +54,11 @@ public partial class Player
         PassiveSouvenirData data = PassiveSouvenirDataLoader.Get(passiveId);
         if (data == null)
             return false;
+        if (_objectProcs == null)
+        {
+            _objectProcs = new ObjectProcs { Name = "ObjectProcs" };
+            AddChild(_objectProcs);
+        }
 
         foreach (ActivePassiveSouvenir existing in _passiveSlots)
         {

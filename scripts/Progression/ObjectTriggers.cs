@@ -278,9 +278,15 @@ public partial class ObjectTriggers : Node
     {
         float bonus = 0f;
         if (_burningTargetDamage > 0f && enemy.IsBurning)
+        {
             bonus += _burningTargetDamage;
+            _player.ObjectProcs?.Show(BurningTargetDamageStat);
+        }
         if (_slowedTargetDamage > 0f && enemy.IsSlowed)
+        {
             bonus += _slowedTargetDamage;
+            _player.ObjectProcs?.Show(SlowedTargetDamageStat);
+        }
         return damage * (1f + bonus);
     }
 
@@ -313,6 +319,7 @@ public partial class ObjectTriggers : Node
         {
             enemy.ApplyFragile(_critFragile, _critFragileSeconds * _player.StatusDurationMultiplier, context);
             Spark(enemy, FxFamily.Glass);
+            _player.ObjectProcs?.Show(CritFragileStat);
         }
         if (_critEcho <= 0f || dealt <= 0f)
             return;
@@ -323,6 +330,8 @@ public partial class ObjectTriggers : Node
             target.TakeDamage(dealt * _critEcho, source: echo);
             _player.AttackFx.PlayBeam(enemy.GlobalPosition, target.GlobalPosition, FxFamily.Crit);
         }
+        if (_echoTargets.Count > 0)
+            _player.ObjectProcs?.Show(CritEchoStat);
     }
 
     private void LayPatch(Vector2 position)
@@ -331,6 +340,7 @@ public partial class ObjectTriggers : Node
         _trailPatches.Add(new TrailPatch { Position = position, Remaining = seconds });
         _lastPatch = position;
         _player.AttackFx.PlayTrail(position, _trailRadius, seconds);
+        _player.ObjectProcs?.Show(DashTrailStat);
     }
 
     /// <summary>Les <paramref name="count"/> ennemis actifs les plus proches de <paramref name="from"/>, à moins de <paramref name="radius"/>.</summary>
@@ -428,6 +438,7 @@ public partial class ObjectTriggers : Node
         enemy.ApplyIgnite(dps, seconds, context);
         SlowBurning(enemy, seconds, context);
         Spark(enemy, FxFamily.Fire);
+        _player.ObjectProcs?.Show(BurnChanceStat);
     }
 
     /// <summary>Thermomètre, palier 25 : les Brûlures du joueur ralentissent aussi, le temps qu'elles durent.</summary>
@@ -448,6 +459,7 @@ public partial class ObjectTriggers : Node
         else
             enemy.ApplySlow(Mathf.Pow(_chillFactor, strength), _chillSeconds * _player.StatusDurationMultiplier, context);
         Spark(enemy, FxFamily.Pale);
+        _player.ObjectProcs?.Show(ChillChanceStat);
     }
 
     /// <summary>
@@ -459,6 +471,7 @@ public partial class ObjectTriggers : Node
         if (_strideCharges <= 0)
             return 1f;
         _strideCharges--;
+        _player.ObjectProcs?.Show(StrideDamageStat);
         // La marche suivante repart de zéro : une charge se regagne, elle ne se reprend pas en continu.
         _strideElapsed = 0f;
         return 1f + _strideDamage;
@@ -499,6 +512,7 @@ public partial class ObjectTriggers : Node
         if (_levelHeal <= 0f || _player.IsDead)
             return;
         _player.Heal(_player.EffectiveMaxHp * _levelHeal);
+        _player.ObjectProcs?.Show(LevelHealStat);
         ulong frame = Engine.GetProcessFrames();
         _levelsThisFrame = frame == _levelFrame ? _levelsThisFrame + 1 : 1;
         _levelFrame = frame;
@@ -518,6 +532,7 @@ public partial class ObjectTriggers : Node
                 enemy.TakeDamage(damage, source: source);
         }
         _player.AttackFx.PlayBurst(position, FxFamily.Fire, radius);
+        _player.ObjectProcs?.Show(KillExplosionStat);
     }
 
     /// <summary>
@@ -572,7 +587,10 @@ public partial class ObjectTriggers : Node
             }
         }
         if (_killHeal > 0f)
+        {
             _player.Heal(_killHeal + (kill.Elite ? _player.EffectiveMaxHp * _eliteHealRatio : 0f));
+            _player.ObjectProcs?.Show(KillHealStat);
+        }
     }
 
     private static void Spark(Enemy enemy, FxFamily family)

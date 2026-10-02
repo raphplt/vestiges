@@ -1619,6 +1619,7 @@ public partial class Player : CharacterBody2D
         float cap = EffectiveMaxHp * _defense.Config.LifestealMaxHpPerSecond * capMultiplier * window;
         Heal(Mathf.Min(_lifestealPending, cap));
         _lifestealPending = 0f;
+        ObjectProcs?.Show("lifesteal");
     }
 
     private void ApplyRegen(float delta)

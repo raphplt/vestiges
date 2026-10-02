@@ -172,7 +172,10 @@ public partial class ObjectStances : Node
         _still = still;
         ApplyStill();
         if (still)
+        {
             Sparks(FxFamily.Brass, 6);
+            _player.ObjectProcs?.Show(StillAttackSpeedStat);
+        }
     }
 
     /// <summary>Accorde la cadence et l'armure de l'état immobile, ou les retire : seul l'écart est appliqué.</summary>
@@ -206,7 +209,10 @@ public partial class ObjectStances : Node
         }
         // Le gilet brille quand il atteint son plafond : on voit que la foule le sert.
         if (count >= _crowdMax && _crowdCount < _crowdMax)
+        {
             Sparks(FxFamily.Brass, 8);
+            _player.ObjectProcs?.Show(CrowdDamageStat);
+        }
         _crowdCount = count;
     }
 
@@ -217,7 +223,10 @@ public partial class ObjectStances : Node
             return;
         _highHp = high;
         if (high)
+        {
             Sparks(FxFamily.Pale, 6);
+            _player.ObjectProcs?.Show(HighHpDamageStat);
+        }
     }
 
     /// <summary>Médaille cabossée : sous le seuil, dégâts (et vitesse au palier) en plus.</summary>
@@ -228,7 +237,10 @@ public partial class ObjectStances : Node
         _lowHp = low;
         ApplyLowHpSpeed();
         if (low)
+        {
             Sparks(FxFamily.Blood, 8);
+            _player.ObjectProcs?.Show(LowHpDamageStat);
+        }
     }
 
     private void ApplyLowHpSpeed()
@@ -277,7 +289,10 @@ public partial class ObjectStances : Node
         float bonus = Mathf.Min(_essenceCap, Mathf.Floor(_essence / _essencePerStep) * _damagePerStep);
         // Une étincelle d'Essence chaque fois que le bonus franchit une tranche de 5 %.
         if (Mathf.FloorToInt(bonus * 20f) > Mathf.FloorToInt(_essenceBonus * 20f))
+        {
             Sparks(FxFamily.Essence, 5);
+            _player.ObjectProcs?.Show(EssenceDamageCapStat);
+        }
         _essenceBonus = bonus;
     }
 

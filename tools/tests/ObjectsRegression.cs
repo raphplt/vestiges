@@ -42,6 +42,7 @@ public partial class ObjectsRegression : Node2D
             CheckCombatMilestones();
             CheckSurvivalMilestones();
             CheckLifesteal();
+            CheckObjectProcs();
             CheckRewardMilestones();
             CheckImpactTriggers();
             CheckTargetBonuses();
@@ -519,6 +520,21 @@ public partial class ObjectsRegression : Node2D
         Check(_player.CurrentHp < maxHp * 0.5f && Near(low, maxHp * 0.1f * 0.25f),
             $"Paille tordue palier 15 : sous la moitié des PV, plafond doublé ({low:0.00} PV en 0,25 s)");
         enemy.QueueFree();
+    }
+
+    /// <summary>Plan 21 F4 : l'icône d'un objet porté s'élève quand il agit, une fois par seconde au plus ; jamais celle d'un objet absent.</summary>
+    private void CheckObjectProcs()
+    {
+        Setup();
+        Raise("petard_mouille", 1);
+        ObjectProcs procs = _player.ObjectProcs;
+        procs.Show("kill_explosion");
+        int first = procs.ActiveCount;
+        procs.Show("kill_explosion");
+        int repeated = procs.ActiveCount;
+        procs.Show("lifesteal");
+        Check(first == 1 && repeated == 1 && procs.ActiveCount == 1,
+            $"Icônes d'objets : Pétard affiché ({first}), pas répété dans la seconde ({repeated}), Paille absente ignorée ({procs.ActiveCount})");
     }
 
     private void CheckRewardMilestones()
