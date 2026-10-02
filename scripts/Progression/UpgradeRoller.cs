@@ -18,6 +18,8 @@ public class UpgradeRarity
 	public float IntegerGain;
 	/// <summary>Multiple du pas d'un objet pour une carte de cette rareté (plan 23 R3), et des bénédictions des Mémoriaux.</summary>
 	public float PassiveGain;
+	/// <summary>Chance, par cran de montée, de passer de cette rareté à la suivante (DECISIONS §53).</summary>
+	public float BumpChance;
 	public int Rank;
 }
 
@@ -29,7 +31,6 @@ public static class UpgradeRoller
 {
 	private static readonly List<UpgradeRarity> _rarities = new();
 	private static readonly Dictionary<ErasureManager.ErasureZonePhase, int> _zoneSteps = new();
-	private static float _bumpChancePerStep = 0.3f;
 	private static float _luckStepsPerPoint = 10f;
 	private static bool _loaded;
 
@@ -59,7 +60,8 @@ public static class UpgradeRoller
 	}
 
 	/// <summary>
-	/// Rareté tirée selon les poids, puis une chance de monter d'un rang par cran (<c>bump_chance_per_step</c>) :
+	/// Rareté tirée selon les poids, puis une chance de monter d'un rang par cran, propre au rang où l'on est
+	/// (<c>bump_chance</c>, de plus en plus faible vers épique et légendaire) :
 	/// trois crans d'oubli donnent trois chances, jamais plus d'un rang chacune. Un cran fractionnaire (Chance)
 	/// compte au prorata.
 	/// </summary>
@@ -86,7 +88,7 @@ public static class UpgradeRoller
 		int trials = fullSteps + (rng.Randf() < bumpSteps - fullSteps ? 1 : 0);
 		for (int i = 0; i < trials && rank < _rarities.Count - 1; i++)
 		{
-			if (rng.Randf() < _bumpChancePerStep)
+			if (rng.Randf() < _rarities[rank].BumpChance)
 				rank++;
 		}
 		return _rarities[rank];
@@ -181,11 +183,11 @@ public static class UpgradeRoller
 				WeaponGain = (float)dict["weapon_gain"].AsDouble(),
 				IntegerGain = (float)dict["integer_gain"].AsDouble(),
 				PassiveGain = (float)dict["passive_gain"].AsDouble(),
+				BumpChance = (float)dict["bump_chance"].AsDouble(),
 				Rank = rank++,
 			});
 		}
 
-		_bumpChancePerStep = (float)root["bump_chance_per_step"].AsDouble();
 		_luckStepsPerPoint = (float)root["luck_steps_per_point"].AsDouble();
 		Godot.Collections.Dictionary zones = root["zone_steps"].AsGodotDictionary();
 		_zoneSteps[ErasureManager.ErasureZonePhase.Fragile] = (int)zones["fragile"].AsDouble();

@@ -456,3 +456,18 @@ Trois réglages mesurés avec les ennemis d'E4 (`--nomad --visit`, 3 seeds × 25
 | **F4 — Retour des objets** | Un signe visible quand un objet se déclenche (explosion, soin, écho, Fragilité, traînée, seuils de PV) ; inventaire des déclencheurs sans retour. | Captures |
 | **F5 — Projectiles visibles** | Projectiles du joueur plus grands et lisibles (notes, billes, éclats) : liseré clair et taille de base relevée, sans masquer les tirs ennemis. | Captures en foule |
 | **F6 — Impacts** | Plus d'effets à l'impact : éclat, recul visuel de la cible, particules selon la famille de l'arme, dans le budget d'effets existant. | Captures, banc FPS |
+
+### F1 et F2 — livrés le 2 octobre
+
+- **F1 :** courbe d'XP `base_xp` 22, exposant 1,42 (au lieu de 20 / 1,4) ; créatures à ×1,5 PV (au lieu de 1,25) et ×1,3 dégâts dès l'apparition, dégâts +4,5 % par minute (au lieu de 3,5 %).
+- **F2 :** poids 62 / 27 / 9 / 1,7 / 0,3 ; chance de monter d'un rang par cran propre au rang de départ (`bump_chance` : 0,25 vers inhabituelle, 0,15 vers rare, 0,07 vers épique, 0,05 vers légendaire) ; crans d'oubli de zone 0 / 1 / 2 (au lieu de 1 / 2 / 3). Table calculée : sans Chance, 1,7 % d'épiques et 0,3 % de légendaires ; à 0,5 de Chance, environ 7 % et 1 % ; à 1,2, environ 25 % et 4 à 6 %.
+- **Mesure** (`--nomad --visit`, 3 seeds × 25 min) :
+
+| | 5 min | 10 min | 15 min | 20 min | 25 min |
+|---|---|---|---|---|---|
+| Niveau (E5 → F1) | → 14–15 | 24–37 → 23–29 | 33–52 → 31–35 | → 39–44 | 55–77 → 47–53 |
+| Temps pour tuer (tranche qui finit là) | 0,44–0,59 s | 0,24–0,39 s | 0,26–0,38 s | 0,26–0,38 s | 0,24–0,45 s |
+| Épiques et légendaires offertes | 0–15 % | 2–4 % | 0–6 % | 0–8 % | 0–10 % |
+
+- Les dégâts reçus (bot invincible) montent nettement : la survie se juge en jouant.
+- `tools/test_weapons.sh` vert.

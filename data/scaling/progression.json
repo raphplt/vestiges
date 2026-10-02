@@ -1,7 +1,7 @@
 {
   "_doc": "Courbe d'XP du joueur (plan 20 §6.6). XP pour passer du niveau n au suivant = base_xp × n^exponent. Les niveaux 1 à early_levels sont majorés d'un facteur qui va de early_multiplier_start à early_multiplier_end. Le coût d'un niveau ne dépasse jamais max_xp_per_level (atteint vers le niveau 139). Réglée le 2 octobre (DECISIONS §50-51, plan 21 E2 et E5) : avec 20 / 1,35 / 3 000, les niveaux s'enchaînaient après le niveau 41 (jusqu'à 219 à 15 min) ; 30 / 1,5 / 15 000 était trop lent (19 à 20 niveaux à 10 min) ; 20 / 1,4 / 20 000 donne 24 à 37 niveaux à 10 min et 55 à 77 à 25 min (bot nomade qui ramasse). tools/progression_model.py lit ce fichier.",
-  "base_xp": 20,
-  "exponent": 1.4,
+  "base_xp": 22,
+  "exponent": 1.42,
   "early_levels": 5,
   "early_multiplier_start": 1.65,
   "early_multiplier_end": 1.2,
