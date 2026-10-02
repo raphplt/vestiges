@@ -336,6 +336,13 @@ public partial class PauseMenu : CanvasLayer
 		}
 		row.AddChild(PlayerSheet.MakeLabel(effects, TextRole.Small, StatBonusColor, HorizontalAlignment.Right));
 		_loadoutContainer.AddChild(row);
+		// La règle de l'objet, chiffres compris (DECISIONS §53), puis ses paliers.
+		MarginContainer ruleIndent = new();
+		ruleIndent.AddThemeConstantOverride("margin_left", 42);
+		Label rule = PlayerSheet.MakeLabel(passive.Data.RuleText(), TextRole.Small, StatLabelColor);
+		rule.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+		ruleIndent.AddChild(rule);
+		_loadoutContainer.AddChild(ruleIndent);
 		// Paliers codés, sous l'objet : dorés une fois atteints, grisés avant.
 		foreach (ObjectMilestoneData milestone in passive.Data.Milestones)
 		{

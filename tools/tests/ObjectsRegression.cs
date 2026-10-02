@@ -82,6 +82,13 @@ public partial class ObjectsRegression : Node2D
         foreach (string id in new[] { "flamme_interieure", "fragment_deternite" })
             retired &= PassiveSouvenirDataLoader.Get(id) != null && !offered.Exists(data => data.Id == id);
         Check(retired, "Objets retirés : identifiants gardés, hors des offres");
+        List<string> unresolved = new();
+        foreach (PassiveSouvenirData data in offered)
+            if (data.RuleText().Contains('{'))
+                unresolved.Add(data.Id);
+        string medal = PassiveSouvenirDataLoader.Get("medaille_cabossee").RuleText();
+        Check(unresolved.Count == 0 && medal.Contains("35 %"),
+            $"Règles des objets : chiffres remplis ({medal}), paramètres manquants : {string.Join(", ", unresolved)}");
     }
 
     private void CheckSlots()
@@ -803,7 +810,7 @@ public partial class ObjectsRegression : Node2D
         List<(string, Color)> lines = UpgradeText.Describe(legendary, _player);
         bool fits = lines.Count <= 2;
         foreach (PassiveSouvenirData data in PassiveSouvenirDataLoader.GetAll())
-            fits &= UpgradeText.Describe(new FragmentOption(data.Id, "passive_new", data.Name), _player).Count <= 2;
+            fits &= UpgradeText.Describe(new FragmentOption(data.Id, "passive_new", data.Name), _player).Count <= 3;
         Check(fits && lines.Count == 2 && lines[1].Item1.StartsWith("et "),
             $"Cartes : deux lignes de gain au plus ({string.Join(" | ", lines.ConvertAll(line => line.Item1))})");
     }

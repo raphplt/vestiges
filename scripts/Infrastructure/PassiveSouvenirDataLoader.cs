@@ -24,6 +24,25 @@ public class PassiveSouvenirData
 	public bool Survival;
 	/// <summary>Poids de l'objet dans les offres de niveau, 1 par défaut (plan 21 G6a : Papier carbone favorisé).</summary>
 	public float OfferWeight = 1f;
+
+	private static readonly System.Text.RegularExpressions.Regex ParameterToken = new(@"\{(\w+)(%?)\}");
+	private static readonly System.Globalization.CultureInfo French = System.Globalization.CultureInfo.GetCultureInfo("fr-FR");
+
+	/// <summary>
+	/// Règle de l'objet, chiffres compris : {param} affiche un réglage de <see cref="Parameters"/>, {param%} le même en
+	/// pourcentage (DECISIONS §53). Le texte suit ainsi les réglages sans être réécrit.
+	/// </summary>
+	public string RuleText() => ParameterToken.Replace(Description, match =>
+	{
+		if (!Parameters.TryGetValue(match.Groups[1].Value, out float value))
+		{
+			GD.PushError($"[PassiveSouvenirData] Paramètre {match.Groups[1].Value} absent de {Id}.");
+			return match.Value;
+		}
+		return match.Groups[2].Value == "%"
+			? (value * 100f).ToString("0.#", French) + " %"
+			: value.ToString("0.##", French);
+	});
 }
 
 public static class PassiveSouvenirDataLoader

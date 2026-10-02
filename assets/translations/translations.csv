@@ -367,8 +367,8 @@ STAT_CRIT_ECHO,Critique qui repart,Crit echo
 STAT_STILL_ATTACK_SPEED,Cadence immobile,Attack rate when still
 STAT_DASH_TRAIL,Traînée de dash,Dash trail
 STAT_CROWD_DAMAGE,Dégâts par ennemi proche,Damage per nearby enemy
-STAT_HIGH_HP_DAMAGE,Dégâts en pleine forme,Damage at high health
-STAT_LOW_HP_DAMAGE,Dégâts au bord de la chute,Damage at low health
+STAT_HIGH_HP_DAMAGE,Dégâts à PV hauts,Damage at high health
+STAT_LOW_HP_DAMAGE,Dégâts à PV bas,Damage at low health
 STAT_ESSENCE_DAMAGE_CAP,Plafond des dégâts d'Essence,Essence damage cap
 QUESTS_RUN_TITLE,QUÊTES DE RUN,RUN QUESTS
 QUEST_DONE_TOAST,Quête accomplie : {0},Quest complete: {0}

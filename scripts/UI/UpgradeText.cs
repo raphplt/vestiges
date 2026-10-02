@@ -66,6 +66,8 @@ public static class UpgradeText
                         others.Add(line);
                 }
                 AddOthers(lines, others);
+                // La règle, chiffres compris : la ligne de stat seule ne dit pas quand l'objet agit (DECISIONS §53).
+                lines.Add((passive.RuleText(), ChoiceStyle.TextColor));
                 break;
             }
             case PerkSpecializationOffers.OptionType:

@@ -309,7 +309,7 @@ public partial class HubCollectionPanel : MarginContainer
         foreach (PassiveSouvenirData passive in PassiveSouvenirDataLoader.GetAll())
         {
             string stats = passive.MaxLevel > 1 ? $"Jusqu'au niveau {passive.MaxLevel}, cumulable en run" : "";
-            entries.Add(new Entry(passive.Id, passive.Name, passive.Icon, passive.Description, stats, true, ""));
+            entries.Add(new Entry(passive.Id, passive.Name, passive.Icon, passive.RuleText(), stats, true, ""));
         }
         foreach (CollectionArtDataLoader.Entry art in CollectionArtDataLoader.Items)
             if (art.World)

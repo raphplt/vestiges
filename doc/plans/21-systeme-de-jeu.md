@@ -471,3 +471,10 @@ Trois réglages mesurés avec les ennemis d'E4 (`--nomad --visit`, 3 seeds × 25
 
 - Les dégâts reçus (bot invincible) montent nettement : la survie se juge en jouant.
 - `tools/test_weapons.sh` vert.
+
+### F3 — livré le 2 octobre (textes des objets)
+
+- La carte d'un objet neuf montre maintenant sa **règle**, sous la ligne de stat ; la pause l'affiche sous chaque objet porté, et la Collection aussi. Avant, la carte ne disait que « Explosion +10 % » ou « Dégâts au bord de la chute +3 % ».
+- **Chiffres tirés des réglages :** `{param}` et `{param%}` dans la description sont remplis depuis `params` de l'objet (`PassiveSouvenirData.RuleText`) : le texte suit les réglages.
+- **20 règles réécrites** avec leur condition : seuils de PV (Thermos, Médaille : « Sous 35 % de tes PV… »), durées (Allumette, Glaçon, Loupe, Semelle, Tabouret), plafonds (Gilet, Porte-monnaie, Paille tordue), voisins touchés (Pétard), rattrapage du bouclier (Écusson). Palier du Mètre pliant précisé (« sans toucher »). Libellés « Dégâts au bord de la chute » et « Dégâts en pleine forme » renommés « Dégâts à PV bas » et « Dégâts à PV hauts ».
+- **Vérification :** build sans avertissement ; `tools/test_objects.sh` vert, dont un contrôle nouveau (aucun paramètre non rempli, Médaille à « 35 % ») et la limite des cartes relevée à trois lignes. **Capture non faite :** la fenêtre de capture restait figée sur l'écran de chargement le 2 octobre après-midi (fenêtre sans doute masquée pendant l'usage de la machine) ; à refaire.
