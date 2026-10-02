@@ -429,3 +429,19 @@ Ensuite : C2, l'Atelier ([plan 22](22-carte-a-explorer.md), validé §49).
 
 - Les tireurs font 31 à 34 % des apparitions (23 à 28 % avant).
 - **À juger en jeu par Raphaël :** les ennemis plus solides réduisent les éliminations, donc l'XP : 19–20 niveaux à 10 min pour le bot (Raphaël en avait 60 avant E2). Si c'est trop lent, `base_xp` 30 → 25 rend environ 15 % de niveaux. La pression en fin de partie (dégâts reçus ×4 à ×10 entre 10 et 25 min) n'est mesurée que sur un bot invincible : la survie se juge en jouant.
+
+### E5 — niveaux : un entre-deux (DECISIONS §51), livré le 2 octobre
+
+Trois réglages mesurés avec les ennemis d'E4 (`--nomad --visit`, 3 seeds × 25 min) :
+
+| Réglage (base / exposant / plafond, XP par victime) | Niveau à 10 min | 15 min | 25 min | Temps pour tuer, 15–25 min |
+|---|---|---|---|---|
+| E4 : 30 / 1,5 / 15 000, +2 %/min | 19–20 | 26–27 | 33–43 | 0,15–0,62 s |
+| 20 / 1,4 / 8 000, +5 %/min | 27–42 | 37–63 | 55–124 | 0,04–0,31 s |
+| 25 / 1,45 / 10 000, +3 %/min | 20–28 | 24–38 | 35–72 | 0,07–0,68 s |
+| **Retenu : 20 / 1,4 / 20 000, +2 %/min** | **24–37** | **33–52** | **55–77** | 0,08–0,20 s |
+
+- Avant tout l'équilibrage (E0) : 27 à 62 à 10 min, jusqu'à 239 à 15 min.
+- L'XP par victime qui croît plus vite emballe la fin de partie : la croissance reste à +2 % par minute ; le plafond à 20 000 n'est atteint que vers le niveau 139.
+- **Revers :** plus de niveaux, plus de puissance : après 15 min, le temps pour tuer redescend à 0,08–0,2 s sur deux seeds sur trois (0,01–0,08 s avant E4). Si les ennemis paraissent de nouveau faibles en fin de partie, relever `late_hp_scaling_per_minute` (1,17) plutôt que ralentir les niveaux.
+- **À surveiller :** sur une seed, la Chance atteint 0,67 à 0,86 entre 15 et 25 min (Repères, bonus de coffre), soit 8 à 11 crans et la moitié des cartes rares ou mieux.

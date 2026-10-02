@@ -647,3 +647,7 @@ Raphaël, après une partie sur les lots G6 et C2 : « l'xp scale trop vite. et 
 - **Méthode :** mesurer avant d'équilibrer.
 
 **Suite :** lots E0 à E5 au [plan 21 §15](21-systeme-de-jeu.md), mesures d'abord.
+
+## 51. Niveaux trop ralentis : un entre-deux — 2 octobre 2026
+
+Raphaël, après E2–E4 : « euh tu as trop nerfé les niveaux. essaie de trouver un entre deux stp ». Réglage mesuré et retenu au [plan 21, E5](21-systeme-de-jeu.md) : courbe 20 / 1,4 / plafond 20 000, XP par victime toujours +2 % par minute.

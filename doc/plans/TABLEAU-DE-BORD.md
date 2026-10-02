@@ -31,7 +31,7 @@ Le [registre](DECISIONS.md) garde les mots de Raphaël. Les plans gardent le dé
 | Lore | 19 | Relecture du script v1.1 ; questions P1, P6 à P10 ; fin |
 | Audio | 15 | Écoute en run et choix restants ; chantier élargi à toute l'identité sonore, avec les Résurgences comme premier cas proposé (§44). |
 | Récompense et puissance | 20 | Reprise après la pause ; à réaligner sur le plan 21 |
-| Vitesse du level-up | 21 E2/E4, §50 | Ralentie : bot à 19–20 niveaux à 10 min, 33–43 à 25 min. Trop lent ? (`base_xp` 30 → 25 rend environ 15 %) |
+| Vitesse du level-up | 21 E5, §51 | Entre-deux : bot à 24–37 niveaux à 10 min, 55–77 à 25 min. À rejouer |
 | Réveil du Mémorial et de la Faille | 24 L6b, 15 | Durée gardée ; son à changer (§49), à traiter avec l'audio |
 | Classement | 09 | Toutes les décisions, plus tard |
 | Sprites d'armes : variantes par nombre | 21 G6f | Planche `planches/21-g6f-variantes.png` : paliers 3 et 6, liseré puis rémanence. On intègre, ou autre idée ? |
