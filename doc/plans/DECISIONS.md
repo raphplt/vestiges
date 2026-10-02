@@ -633,3 +633,17 @@ Questions posées à la reprise (tableau de bord §2 et §48), avec les constats
 - **Anomalies (plan 14) :** arbitrées : Écho de ta dernière run, Oubli de soi, Effondrement ; pénalité plafonnée à 25 % des PV max, rien de détruit ; une ligne de texte à l'écran.
 - **Le reste** (audio et son des Résurgences, mort et bilan 02, lore 19, récompense 20, classement 09) : en attente, **à reprendre juste après** les lots du §48.
 - **Ordre de travail :** lots du §48 (gameplay) puis C2 (Atelier) ; sprites adaptatifs ensuite.
+
+## 50. XP trop rapide, raretés trop fréquentes et peu visibles, ennemis trop faibles — 2 octobre 2026
+
+Raphaël, après une partie sur les lots G6 et C2 : « l'xp scale trop vite. et les boost d'xp et de chance sont trop élevés. de plus les raretés ne sont pas du tout assez visible. il faut que les couleurs soient limites partout sur la card. j'étais niveau 60 en 10 minute avec que des améliorations légendaires/rare dans les drops […] et en plus il y a un bug visuel. Les ennemis sont un peu trop faible et il manque un peu de projectiles à distance. effectuer des mesures pour travailler l'équilibrage stp. »
+
+**Retours reformulés :**
+- **XP :** monte trop vite (niveau 60 à 10 min). Les bonus d'XP et de Chance, relevés en G6c, sont trop forts : à revenir en arrière.
+- **Raretés :** beaucoup trop de rares et de légendaires en milieu de partie.
+- **Lisibilité des raretés :** la couleur de rareté doit se voir partout sur la carte, pas seulement dans le petit bandeau.
+- **Bug visuel :** une ligne verticale en pointillés traverse les cartes de rareté (capture du 2 octobre, 11 h 11).
+- **Ennemis :** un peu trop faibles ; il manque des tirs ennemis à distance.
+- **Méthode :** mesurer avant d'équilibrer.
+
+**Suite :** lots E0 à E5 au [plan 21 §15](21-systeme-de-jeu.md), mesures d'abord.

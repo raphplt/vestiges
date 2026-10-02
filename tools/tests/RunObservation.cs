@@ -473,8 +473,12 @@ public partial class RunObservation : Node
         // Temps pour tuer (plan 20, R1-T) : PV des créatures apparues et dégâts infligés, cumulés ; le modèle en
         // déduit, par palier, le PV moyen d'une créature divisé par les dégâts infligés par seconde.
         double spawnedHp = 0, damageDealt = 0;
+        Dictionary<string, double> spawnedById = new();
         EventBus.EnemySpawnedEventHandler onSpawned = (enemyId, hpScale, _) =>
+        {
             spawnedHp += (EnemyDataLoader.Get(enemyId)?.Stats.Hp ?? 0f) * hpScale;
+            spawnedById[enemyId] = spawnedById.GetValueOrDefault(enemyId) + 1;
+        };
         EventBus.EntityDamagedEventHandler onDamaged = (_, amount) => damageDealt += amount;
         eventBus.EnemySpawned += onSpawned;
         eventBus.EntityDamaged += onDamaged;
@@ -558,6 +562,7 @@ public partial class RunObservation : Node
             }
             pausedFrames = 0;
             gameTime += GetProcessDeltaTime();
+            _balanceTime = gameTime;
             double t = gameTime;
             if (t >= seconds)
                 break;
@@ -704,11 +709,12 @@ public partial class RunObservation : Node
                 openRifts++;
         summary.Append(CultureInfo.InvariantCulture, $" rifts={Rift.All.Count} rifts_open={openRifts}");
         summary.Append(CultureInfo.InvariantCulture, $" peril={peril} kills={tracker.TotalKilled} spawned={tracker.TotalSpawned}");
-        summary.Append(CultureInfo.InvariantCulture, $" xp_gained={xpGained:F0}");
+        summary.Append(CultureInfo.InvariantCulture, $" xp_gained={xpGained:F0} xp_dropped={CombatPools.Instance?.XpDropped ?? 0:F0}");
         AppendBreakdown(summary, "hit_by", damageBySource);
         AppendBreakdown(summary, "hit_gated", gatedBySource);
         AppendBreakdown(summary, "near_by", exposureById);
         AppendBreakdown(summary, "kills_by", killsById);
+        AppendBreakdown(summary, "spawned_by", spawnedById);
         summary.Append(CultureInfo.InvariantCulture, $" xp_orbs_end={CombatPools.Instance?.XpOrbsOnGround ?? 0} xp_orbs_max={maxOrbs}");
         summary.Append(CultureInfo.InvariantCulture,
             $" chests_total={GetTree().GetNodesInGroup("chests").Count} chests_seen={seenChests.Count} chests_clear={clearChests.Count} chests_signaled={signaledChests.Count} first_chest_s={firstChestSeen:F0}");
@@ -729,6 +735,7 @@ public partial class RunObservation : Node
                 $" | {from}-{end}s visible_mean={sum / (end - from):F1} empty={100.0 * empty / (end - from):F0}%");
         }
         places.Append(summary, seconds);
+        AppendBalance(summary);
         foreach (KeyValuePair<int, double> entry in levelTimes)
             summary.Append(CultureInfo.InvariantCulture, $" L{entry.Key}={entry.Value:F0}s");
         GD.Print($"[RunObservation] RESULT {summary}");
@@ -817,6 +824,7 @@ public partial class RunObservation : Node
         object manager = screen.GetType().GetField("_fragmentManager", BindingFlags.NonPublic | BindingFlags.Instance)?.GetValue(screen);
         if (manager is not Vestiges.Progression.FragmentManager fragments || !fragments.IsChoiceActive || fragments.PendingChoices.Count == 0)
             return;
+        RecordOffer(fragments);
         Vestiges.Progression.FragmentOption choice = fragments.PendingChoices[0];
         foreach (Vestiges.Progression.FragmentOption option in fragments.PendingChoices)
             if (Array.IndexOf(_preferredCards, option.Id) >= 0)

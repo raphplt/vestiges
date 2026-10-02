@@ -369,3 +369,33 @@ Ensuite : C2, l'Atelier ([plan 22](22-carte-a-explorer.md), validé §49).
 ### G6f — planche proposée le 2 octobre, en attente de Raphaël
 
 [Planche](planches/21-g6f-variantes.png) : trois paliers lus sur le nombre de projectiles de l'arme (stat et Papier carbone). Palier I (1 à 2) inchangé ; palier II (3 à 5) liseré lumineux de la couleur de la famille ; palier III (6 et plus) liseré et rémanence de deux échos. Mêlée : second trait intérieur au-delà de 3 frappes, étincelles au bout de l'arc à 6 et plus. Transistor : une onde concentrique par onde en plus (4 au plus). Rien n'est intégré : seuils, liseré et rémanence sont à valider.
+
+## 15. Lots E — équilibrage après la partie du 2 octobre (DECISIONS §50)
+
+### E0 — mesure de référence (2 octobre, après G6 et C2)
+
+`tools/measure_run.sh`, `--nomad --visit` (le bot avance et ratisse les lieux vus, donc ramasse presque toute l'XP : 87 à 99 % de l'XP lâchée), 3 seeds × 15 min, sans et avec `--prefer` sur Photo, Jeton et Aimant. Relevés ajoutés à RunObservation : XP lâchée (`xp_dropped`), apparitions par espèce (`spawned_by`), et à chaque écran de niveau la Chance, les crans de montée et la rareté des cartes offertes, par tranche de 5 min.
+
+| | 5 min | 10 min | 15 min |
+|---|---|---|---|
+| Niveau, sans build | 15 à 26 | 27 à 62 | 54 à 219 |
+| Niveau, build XP/Chance | 20 | 38 à 63 | 62 à 239 |
+| Rares ou mieux parmi les améliorations offertes | 4 à 26 % | 27 à 50 % | 38 à 67 % (légendaires jusqu'à 15 %) |
+| Crans de montée moyens (Chance ×10, zone, Péril) | 0,5 à 1,3 | 1,7 à 3,7 | 2,3 à 4,6 |
+| PV moyen d'un ennemi apparu | 48 à 60 | 62 à 74 | 85 à 95 |
+| DPS du joueur | 78 à 184 | 227 à 1 025 | 1 181 à 9 165 |
+| Temps pour tuer un ennemi moyen | 0,26 à 0,65 s | 0,06 à 0,32 s | 0,01 à 0,08 s |
+
+- **XP :** les niveaux de Raphaël (60 à 10 min) sont reproduits. Après le plafond de 3 000 XP par niveau (niveau 41 environ), les niveaux s'enchaînent : jusqu'à 219 à 15 min.
+- **Raretés :** chaque cran donne 30 % de monter d'un rang ; avec 3 à 5 crans, la moitié des cartes sont rares ou mieux.
+- **Ennemis :** leurs PV font ×1,8 en 15 min quand le DPS du joueur fait ×10 à ×80 : ils fondent.
+- **Tirs ennemis :** les tireurs font 21 à 26 % des apparitions mais 36 à 82 % des dégâts reçus. En exploration, Champs, Forêt et Carrière n'ont que le Présage (demi-poids, après 3 min).
+
+### Découpage
+
+| Lot | Contenu | Vérification |
+|---|---|---|
+| **E1 — Cartes** | Ligne pointillée corrigée (tuiles ajustées du cadre) ; fond de carte teinté de la rareté, plus franc au survol ; titre à la couleur claire de la rareté. **Livré.** | Captures de level-up, rare et légendaire |
+| **E2 — XP** | G6c annulé (Jeton +0,03, Photo +5 %, Aimant +15 %, coffres et Repères alignés) ; courbe `base_xp` 20 → 30, exposant 1,35 → 1,5, plafond 3 000 → 15 000 XP par niveau. Modèle sur le revenu mesuré : 18 à 30 niveaux à 10 min, 34 à 48 à 15 min (avant multiplicateurs d'XP). | Mesure E0 refaite |
+| **E3 — Raretés** | Montée par cran 0,3 → 0,15 : aux crans mesurés, 25 à 37 % de rares ou mieux et 2 à 5 % de légendaires en fin de quart d'heure. | Même mesure |
+| **E4 — Ennemis** | Après E2–E3 (le joueur sera moins fort), relever la montée des PV pour viser un temps pour tuer de 0,3 à 0,5 s stable ; plus de tireurs en exploration (environ 35 % des apparitions) dans les biomes qui n'en ont presque pas. | Mesure, captures de combat |

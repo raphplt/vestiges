@@ -341,6 +341,7 @@ public partial class CombatPools : Node2D
     /// </summary>
     public void SpawnXpOrb(Vector2 position, float xpValue, Vector2? hopFrom = null)
     {
+        XpDropped += xpValue;
         Callable.From(() => _xpOrbs.Take().Launch(position, xpValue, hopFrom)).CallDeferred();
     }
 
@@ -365,6 +366,8 @@ public partial class CombatPools : Node2D
 
     /// <summary>Orbes d'XP au sol, pas encore ramassées (bancs de mesure).</summary>
     public int XpOrbsOnGround => _xpOrbs.InUse;
+    /// <summary>XP lâchée depuis le début de la run, ramassée ou non : la borne d'un joueur qui ramasse tout (mesures).</summary>
+    public double XpDropped { get; private set; }
 
     /// <summary>Objets créés depuis le début de la run, tous pools confondus (bancs de mesure).</summary>
     public int CreatedCount => _enemyProjectiles.Created + _playerProjectiles.Created + _damageNumbers.Created + _pixelFx.Created
