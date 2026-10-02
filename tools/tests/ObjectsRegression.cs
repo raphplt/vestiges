@@ -158,7 +158,7 @@ public partial class ObjectsRegression : Node2D
             Setup();
             float baseAoe = _player.AoeMultiplier;
             _player.AddOrUpgradePassive("resonance");
-            FragmentOption option = UpgradeRoller.RollGains(new FragmentOption("resonance", "passive_upgrade", "Rondelle de cuivre", 1), _player, rarity, rng);
+            FragmentOption option = UpgradeRoller.RollGains(new FragmentOption("resonance", "passive_upgrade", "Rondelle de cuivre"), _player, rarity, rng);
             option.ApplyTo(_player);
             oneLevel &= _player.GetPassiveLevel("resonance") == 2;
             values.Add(((_player.AoeMultiplier / baseAoe - 1f) * 100f).ToString("0.#", System.Globalization.CultureInfo.InvariantCulture));
@@ -184,6 +184,15 @@ public partial class ObjectsRegression : Node2D
         int fresh = pool.FindAll(option => option.Type == "passive_new").Count;
         bool noRetired = !pool.Exists(option => option.Id is "flamme_interieure" or "fragment_deternite");
         Check(fresh == 32 && noRetired, $"Offre de niveau : {fresh} objets neufs possibles, aucun objet retiré");
+
+        // Plus de paliers par niveau (DECISIONS §52) : dès le niveau 2, toutes les armes débloquées sont tirables.
+        typeof(FragmentManager).GetField("_currentLevel", Private).SetValue(fragments, 2);
+        pool = (List<FragmentOption>)typeof(FragmentManager).GetMethod("BuildFragmentPool", Private).Invoke(fragments, null);
+        HashSet<int> tiers = new();
+        foreach (FragmentOption option in pool)
+            if (option.Type == "weapon_new")
+                tiers.Add(WeaponDataLoader.Get(option.Id).Tier);
+        Check(tiers.Contains(1) && tiers.Contains(3) && tiers.Contains(5), $"Offre au niveau 2 : armes neuves des paliers {string.Join(", ", tiers)}");
 
         foreach (string id in new[] { "memoire_vive", "resonance", "portee_etendue", "oeil_critique", "ancrage", "regeneration" })
             _player.AddOrUpgradePassive(id);
@@ -238,14 +247,14 @@ public partial class ObjectsRegression : Node2D
         _player.AddOrUpgradePassive("souffle_du_neant");
         _player.AddOrUpgradePassive("souffle_du_neant", 12);
         // Niveau 13 : même une légendaire ne mène qu'au niveau 14, sans palier.
-        FragmentOption upcoming = new FragmentOption("souffle_du_neant", "passive_upgrade", "Papier carbone", 1)
+        FragmentOption upcoming = new FragmentOption("souffle_du_neant", "passive_upgrade", "Papier carbone")
             .WithPassiveUpgrade(UpgradeRoller.Get("legendary"));
         bool upcomingBadge = UpgradeText.ReachesMilestone(upcoming, _player);
         string upcomingText = CardText(upcoming);
         _player.AddOrUpgradePassive("souffle_du_neant");
-        FragmentOption crossing = new FragmentOption("souffle_du_neant", "passive_upgrade", "Papier carbone", 1)
+        FragmentOption crossing = new FragmentOption("souffle_du_neant", "passive_upgrade", "Papier carbone")
             .WithPassiveUpgrade(UpgradeRoller.Get("common"));
-        FragmentOption fresh = new("persistance", "passive_new", "Pince à linge", 1);
+        FragmentOption fresh = new("persistance", "passive_new", "Pince à linge");
         string freshText = CardText(fresh);
         Check(!upcomingBadge && UpgradeText.ReachesMilestone(crossing, _player)
             && !UpgradeText.ReachesMilestone(fresh, _player)
@@ -260,7 +269,7 @@ public partial class ObjectsRegression : Node2D
                     Setup();
                     _player.AddOrUpgradePassive(data.Id);
                     _player.AddOrUpgradePassive(data.Id, milestone.Level - 2);
-                    coded &= !UpgradeText.ReachesMilestone(new FragmentOption(data.Id, "passive_upgrade", data.Name, 1)
+                    coded &= !UpgradeText.ReachesMilestone(new FragmentOption(data.Id, "passive_upgrade", data.Name)
                         .WithPassiveUpgrade(UpgradeRoller.Get("common")), _player);
                 }
         Check(coded && !ObjectMilestoneEffects.IsImplemented("inconnu"), "Un palier non codé n'a pas de badge");
@@ -781,7 +790,7 @@ public partial class ObjectsRegression : Node2D
         Check(rules, "Armes concernées : Taille pour la mêlée en zone et le cône, Nombre pour tirs et frappes, rien d'autre que Portée et Force pour l'orbite");
 
         Setup();
-        FragmentOption washer = new("resonance", "passive_new", "Rondelle de cuivre", 1);
+        FragmentOption washer = new("resonance", "passive_new", "Rondelle de cuivre");
         string card = CardText(washer);
         Check(!card.Contains("Pour :") && !card.Contains("Aucune de tes armes") && !card.Contains("Taille ·"),
             $"Carte d'objet : ni propriété ni armes concernées, le jeu n'explicite pas les synergies ({card})");
@@ -789,12 +798,12 @@ public partial class ObjectsRegression : Node2D
         // Une amélioration d'arme à trois stats tient en deux lignes : la première en valeur, la seconde regroupe.
         Setup();
         WeaponInstance equipped = _player.EquippedWeapon;
-        FragmentOption legendary = new FragmentOption(equipped.Id, "weapon_upgrade", equipped.Name, 1)
+        FragmentOption legendary = new FragmentOption(equipped.Id, "weapon_upgrade", equipped.Name)
             .WithWeaponUpgrade(UpgradeRoller.Get("legendary"), UpgradeRoller.RollWeaponGains(equipped, UpgradeRoller.Get("legendary"), new RandomNumberGenerator { Seed = 5 }));
         List<(string, Color)> lines = UpgradeText.Describe(legendary, _player);
         bool fits = lines.Count <= 2;
         foreach (PassiveSouvenirData data in PassiveSouvenirDataLoader.GetAll())
-            fits &= UpgradeText.Describe(new FragmentOption(data.Id, "passive_new", data.Name, 1), _player).Count <= 2;
+            fits &= UpgradeText.Describe(new FragmentOption(data.Id, "passive_new", data.Name), _player).Count <= 2;
         Check(fits && lines.Count == 2 && lines[1].Item1.StartsWith("et "),
             $"Cartes : deux lignes de gain au plus ({string.Join(" | ", lines.ConvertAll(line => line.Item1))})");
     }

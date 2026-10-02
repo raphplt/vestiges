@@ -44,11 +44,11 @@ public partial class RunObservation
         {
             WeaponInstance weapon = _player.WeaponSlots[_player.WeaponSlots.Count - 1];
             pending.Clear();
-            pending.Add(new FragmentOption(weapon.Id, "weapon_upgrade", weapon.Name, 1)
+            pending.Add(new FragmentOption(weapon.Id, "weapon_upgrade", weapon.Name)
                 .WithWeaponUpgrade(rarity, UpgradeRoller.RollWeaponGains(weapon, rarity, rng)));
-            pending.Add(new FragmentOption("souffle_du_neant", "passive_upgrade", PassiveSouvenirDataLoader.Get("souffle_du_neant").Name, 1)
+            pending.Add(new FragmentOption("souffle_du_neant", "passive_upgrade", PassiveSouvenirDataLoader.Get("souffle_du_neant").Name)
                 .WithPassiveUpgrade(rarity));
-            pending.Add(new FragmentOption(newItem, "passive_new", PassiveSouvenirDataLoader.Get(newItem).Name, 1));
+            pending.Add(new FragmentOption(newItem, "passive_new", PassiveSouvenirDataLoader.Get(newItem).Name));
             active.SetValue(fragments, true);
             eventBus.EmitSignal(EventBus.SignalName.FragmentChoicesReady, pending.Count);
             await Frames(20);
@@ -81,7 +81,7 @@ public partial class RunObservation
         foreach (string id in new[] { "priority_targeting", "overflow", "rally" })
         {
             PerkSpecializationData perk = PerkSpecializationDataLoader.Get(id);
-            pending.Add(new FragmentOption(id, PerkSpecializationOffers.OptionType, perk.Name, 1));
+            pending.Add(new FragmentOption(id, PerkSpecializationOffers.OptionType, perk.Name));
         }
         active.SetValue(fragments, true);
         eventBus.EmitSignal(EventBus.SignalName.FragmentChoicesReady, pending.Count);
@@ -93,7 +93,7 @@ public partial class RunObservation
         WeaponInstance raisedWeapon = _player.WeaponSlots[_player.WeaponSlots.Count - 1];
         UpgradeRarity finalRarity = UpgradeRoller.Get("epic");
         pending.Clear();
-        pending.Add(new FragmentOption(raisedWeapon.Id, "weapon_upgrade", raisedWeapon.Name, 1)
+        pending.Add(new FragmentOption(raisedWeapon.Id, "weapon_upgrade", raisedWeapon.Name)
             .WithWeaponUpgrade(finalRarity, UpgradeRoller.RollWeaponGains(raisedWeapon, finalRarity, rng))
             .WithRolledRarity(UpgradeRoller.Get("common")));
         active.SetValue(fragments, true);

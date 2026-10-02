@@ -396,9 +396,9 @@ public partial class PerkEffectsRegression : Node2D
         List<FragmentOption> pending = (List<FragmentOption>)typeof(FragmentManager).GetField("_pendingChoices", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(fragments);
         CarriedChoice carried = (CarriedChoice)typeof(FragmentManager).GetField("_carriedChoice", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(fragments);
         RandomNumberGenerator rng = new() { Seed = 5 };
-        FragmentOption Upgrade(WeaponInstance weapon, string rarity) => new FragmentOption(weapon.Id, "weapon_upgrade", weapon.Name, 1)
+        FragmentOption Upgrade(WeaponInstance weapon, string rarity) => new FragmentOption(weapon.Id, "weapon_upgrade", weapon.Name)
             .WithWeaponUpgrade(UpgradeRoller.Get(rarity), UpgradeRoller.RollWeaponGains(weapon, UpgradeRoller.Get(rarity), rng));
-        FragmentOption Passive() => new("flamme_interieure", "passive_new", "Flamme", 1);
+        FragmentOption Passive() => new("flamme_interieure", "passive_new", "Flamme");
         void Offer(int level, params FragmentOption[] options)
         {
             fragments.TriggerLevelUp(level);

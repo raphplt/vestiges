@@ -1,14 +1,5 @@
 {
-	"_doc": "Composition d'une offre de level-up (plan 24 lot L3, auparavant en dur dans FragmentManager). Tant que le joueur porte moins de weapon_guarantee_below armes, chaque offre contient une carte « nouvelle arme » si une arme est disponible ; au-delà, avec weapon_chance_after de chance tant qu'un emplacement est libre. Cette carte compte comme la nouveauté garantie. tier_levels : niveau du joueur à partir duquel chaque palier d'arme suivant entre dans l'offre (palier 2 au niveau 5, etc.) ; tier_bump_chance + Chance × tier_bump_luck : chance de voir un palier de plus. tier_weights : poids d'une carte d'arme de ce palier ou plus, base + Chance × luck (les autres pèsent 1). upgrade_weight multiplie le poids d'une amélioration.",
-	"weapon_guarantee_below": 3,
-	"weapon_chance_after": 0.5,
-	"tier_levels": [5, 10, 15, 20],
-	"tier_bump_chance": 0.03,
-	"tier_bump_luck": 0.3,
-	"tier_weights": [
-		{ "min_tier": 4, "base": 0.3, "luck": 1.5 },
-		{ "min_tier": 3, "base": 0.5, "luck": 1.0 }
-	],
+	"_doc": "Poids des cartes d'une offre de level-up (plan 24 lot L3). Toutes les armes débloquées sont proposables dès le premier niveau, au même poids : ni paliers par niveau, ni arme garantie (DECISIONS §52). upgrade_weight multiplie le poids d'une amélioration ; offer_weight d'un objet (passive_souvenirs.json) multiplie le sien ; min_weight est le plancher.",
 	"upgrade_weight": 1.15,
 	"min_weight": 0.1
 }

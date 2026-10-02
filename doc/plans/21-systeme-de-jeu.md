@@ -36,7 +36,7 @@ Il n'existe pas d'autre famille : ni traits, ni passifs, ni Dons de coffre.
 ## 2. La montée de niveau
 
 - **Courbe :** 300 à 400 niveaux dans une excellente run de 45 min. Coût par niveau en données (`data/scaling/progression.json`), plafonné à 3 000 XP.
-- **Cascades :** en milieu et fin de partie, plusieurs niveaux se gagnent d'un coup. La réserve automatique retient l'écran quelques secondes quand les niveaux affluent ou que la foule est dense, puis enchaîne tous les choix dans un écran qui reste ouvert.
+- **Cascades :** en milieu et fin de partie, plusieurs niveaux se gagnent d'un coup : ils s'enchaînent dans un écran qui reste ouvert. L'écran s'ouvre toujours aussitôt, sans réserve (retirée le 2 octobre, DECISIONS §52).
 - **Un niveau = un choix de trois cartes.** Quatre types de cartes :
 
 | Carte | Quand elle peut apparaître | Effet |
@@ -46,7 +46,7 @@ Il n'existe pas d'autre famille : ni traits, ni passifs, ni Dons de coffre.
 | Nouvel objet | Un emplacement d'objet est libre | Ajoute l'objet au niveau 1 |
 | Amélioration d'objet | L'objet n'est pas au niveau 30 | +1 niveau, dont le gain dépend de la rareté (§4) |
 
-- **Composition :** si c'est possible, au moins une nouveauté et au moins une amélioration. Tant que le joueur n'a aucun objet de survie, une des trois cartes en propose un.
+- **Composition :** si c'est possible, au moins une nouveauté et au moins une amélioration. Tant que le joueur n'a aucun objet de survie, une des trois cartes en propose un. Toutes les armes débloquées sont tirables dès le premier niveau, au même poids : ni paliers d'armes par niveau, ni arme garantie (DECISIONS §52).
 - **Rareté d'une amélioration :** commune, inhabituelle, rare, épique, légendaire, de poids 60 / 25 / 11 / 3,5 / 0,5. La **Chance**, l'**oubli de la zone** où se tient le joueur et le **Péril** ajoutent des crans de montée.
 - **Gains francs :** une carte commune doit se sentir en jeu. Les totaux peuvent devenir très grands, façon Megabonk. La difficulté et la puissance des ennemis montent en conséquence (DECISIONS §37).
 - **Relancer :** 3 par run.

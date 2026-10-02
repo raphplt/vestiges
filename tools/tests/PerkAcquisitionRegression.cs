@@ -312,17 +312,8 @@ public partial class PerkAcquisitionRegression : Node2D
         AddChild(_fragments);
     }
 
-    /// <summary>Niveau gagné tel que le jeu l'émet ; une retenue de la réserve est levée aussitôt, comme à son expiration.</summary>
-    private void LevelUp(int level)
-    {
-        const System.Reflection.BindingFlags Private = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic;
-        _bus.EmitSignal(EventBus.SignalName.LevelUp, level);
-        Timer hold = (Timer)typeof(FragmentManager).GetField("_holdTimer", Private).GetValue(_fragments);
-        if (hold.IsStopped())
-            return;
-        hold.Stop();
-        typeof(FragmentManager).GetMethod("ProcessNextInQueue", Private).Invoke(_fragments, null);
-    }
+    /// <summary>Niveau gagné tel que le jeu l'émet : l'écran s'ouvre aussitôt, sans réserve (DECISIONS §52).</summary>
+    private void LevelUp(int level) => _bus.EmitSignal(EventBus.SignalName.LevelUp, level);
 
     private void Resurgence(int number) => _bus.EmitSignal(EventBus.SignalName.CrisisEnded, number);
 

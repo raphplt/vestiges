@@ -651,3 +651,12 @@ Raphaël, après une partie sur les lots G6 et C2 : « l'xp scale trop vite. et 
 ## 51. Niveaux trop ralentis : un entre-deux — 2 octobre 2026
 
 Raphaël, après E2–E4 : « euh tu as trop nerfé les niveaux. essaie de trouver un entre deux stp ». Réglage mesuré et retenu au [plan 21, E5](21-systeme-de-jeu.md) : courbe 20 / 1,4 / plafond 20 000, XP par victime toujours +2 % par minute.
+
+## 52. Offres de niveau : tout au hasard — 2 octobre 2026
+
+Raphaël, après avoir surtout vu la Faucille et le Lance-billes : « retire les points suivants : le truc qui rajoute un délai avant d'avoir la carte de level up qui s'ouvre. retire aussi le truc avec les paliers des armes et le fait qu'on ait une arme garantie. tout doit etre random ».
+
+- **Réserve de niveaux retirée** (plan 20 §6.7) : l'écran s'ouvre aussitôt ; plusieurs niveaux gagnés d'un coup s'enchaînent toujours dans le même écran.
+- **Paliers d'armes retirés** : plus d'ouverture par niveau du joueur (palier 2 au niveau 5, etc.), plus de chance d'un palier de plus, plus de poids des paliers hauts par la Chance. Toutes les armes débloquées pèsent pareil dès le niveau 1.
+- **Arme garantie retirée** : plus de carte « nouvelle arme » forcée sous 3 armes, ni une fois sur deux ensuite.
+- **Restent** : au moins une nouveauté et une amélioration par offre quand c'est possible, l'objet de survie proposé tant qu'on n'en a aucun, le poids des améliorations (×1,15) et celui du Papier carbone (×2), et les armes de palier 4 qui demandent un Souvenir découvert (déblocage méta, pas un palier).

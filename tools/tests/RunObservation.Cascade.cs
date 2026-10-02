@@ -8,9 +8,9 @@ using Vestiges.Progression;
 namespace Vestiges.Tests;
 
 /// <summary>
-/// --capture-cascade : réserve de niveaux (plan 20 §6.7, R1-G). Cinq niveaux gagnés d'un coup s'enchaînent dans un
-/// écran qui reste ouvert, avec le compteur ; un niveau reçu juste après la fermeture est retenu, un niveau isolé
-/// ouvre l'écran tout de suite. Une capture par choix, et une ligne PASS/FAIL par règle.
+/// --capture-cascade : file des niveaux (plan 20 §6.7). Cinq niveaux gagnés d'un coup s'enchaînent dans un écran qui
+/// reste ouvert, avec le compteur ; sans réserve (DECISIONS §52), un niveau reçu juste après la fermeture ouvre l'écran
+/// tout de suite. Une capture par choix, et une ligne PASS/FAIL par règle.
 /// </summary>
 public partial class RunObservation
 {
@@ -47,19 +47,11 @@ public partial class RunObservation
         }
         Check(!ScreenOpen() && !GetTree().Paused, "file vide : écran fermé, jeu repris");
 
+        // Plus de réserve (DECISIONS §52) : un niveau reçu juste après la fermeture ouvre l'écran aussitôt.
         eventBus.EmitSignal(EventBus.SignalName.XpGained, XpForLevels(progression, 1));
         await Frames(6);
-        Check(!ScreenOpen(), "niveau reçu juste après la fermeture : retenu");
-        LevelReserveConfig reserve = LevelReserveConfig.Load();
-        await Seconds(reserve.HoldSeconds + 0.3f);
-        Check(ScreenOpen(), "après la retenue : l'écran s'ouvre");
-        SaveFrame("cascade-held");
-        activate.Invoke(screen, new object[] { 0 });
-        await Seconds(reserve.WindowSeconds + 0.5f);
-
-        eventBus.EmitSignal(EventBus.SignalName.XpGained, XpForLevels(progression, 1));
-        await Frames(6);
-        Check(ScreenOpen(), "niveau isolé : l'écran s'ouvre tout de suite");
+        Check(ScreenOpen(), "niveau reçu juste après la fermeture : l'écran s'ouvre tout de suite");
+        SaveFrame("cascade-immediate");
         activate.Invoke(screen, new object[] { 0 });
         await Frames(6);
         GD.Print($"[Cascade] RESULT failures={failures} ; captures dans {_output}");

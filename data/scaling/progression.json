@@ -5,12 +5,5 @@
   "early_levels": 5,
   "early_multiplier_start": 1.65,
   "early_multiplier_end": 1.2,
-  "max_xp_per_level": 20000,
-  "level_reserve": {
-    "_doc": "Réserve de niveaux (plan 20 §6.7, R1-G) : l'écran de choix s'ouvre tout de suite pour un niveau isolé. Il est retenu hold_seconds quand un niveau arrive moins de window_seconds après le précédent ou après la fermeture de l'écran, ou quand plus de crowd créatures sont à moins de crowd_radius px du joueur. Les niveaux reçus s'empilent et s'enchaînent dans le même écran.",
-    "window_seconds": 3,
-    "hold_seconds": 3,
-    "crowd": 60,
-    "crowd_radius": 600
-  }
+  "max_xp_per_level": 20000
 }

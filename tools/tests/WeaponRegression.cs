@@ -539,7 +539,7 @@ public partial class WeaponRegression : Node2D
         WeaponInstance blade = FindSlot("chipped_blade") ?? AddAndFind("chipped_blade");
         RandomNumberGenerator rng = new() { Seed = 21 };
         UpgradeRarity common = UpgradeRoller.Get("common");
-        FragmentOption Offer() => UpgradeRoller.RollGains(new FragmentOption(blade.Id, "weapon_upgrade", blade.Name, 1), _player, common, rng);
+        FragmentOption Offer() => UpgradeRoller.RollGains(new FragmentOption(blade.Id, "weapon_upgrade", blade.Name), _player, common, rng);
 
         _player.GrantTemper(5);
         bool tempered = true;

@@ -266,8 +266,8 @@ public partial class RunObservation
         RandomNumberGenerator rng = new() { Seed = 7 };
         UpgradeRarity epic = UpgradeRoller.Get("epic");
         pending.Clear();
-        pending.Add(new FragmentOption("flamme_interieure", "passive_new", "Flamme intérieure", 1));
-        pending.Add(new FragmentOption(bell.Id, "weapon_upgrade", bell.Name, 1).WithWeaponUpgrade(epic, UpgradeRoller.RollWeaponGains(bell, epic, rng)));
+        pending.Add(new FragmentOption("flamme_interieure", "passive_new", "Flamme intérieure"));
+        pending.Add(new FragmentOption(bell.Id, "weapon_upgrade", bell.Name).WithWeaponUpgrade(epic, UpgradeRoller.RollWeaponGains(bell, epic, rng)));
         fragments.SelectFragment(pending[0]);
         await Frames(10);
         SaveFrame("perks-carried-offer");

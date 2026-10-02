@@ -22,20 +22,12 @@ public partial class FragmentManager : Node
     private Player _player;
     private int _currentLevel = 1;
     // Palier tiré pour la dernière offre, gardé pour le journal : le retirer referait un tirage.
-    private int _lastMaxTier = 1;
     private int _peril;
 
     // Level-up queue (multi-level-up support)
     private readonly Queue<int> _levelUpQueue = new();
     private bool _choosingActive;
 
-    // Réserve de niveaux : quand les niveaux affluent ou que la foule est dense, l'écran attend
-    // quelques secondes et enchaîne ensuite tous les choix, au lieu de s'ouvrir et se refermer en boucle.
-    private LevelReserveConfig _reserve;
-    private Timer _holdTimer;
-    private ulong _lastLevelUpMsec;
-    private ulong _lastCloseMsec;
-    private GroupCache _groupCache;
 
     // Reroll & Banish
     private int _rerollsRemaining = DefaultRerolls;
@@ -88,11 +80,6 @@ public partial class FragmentManager : Node
         _banishesRemaining = PerilDataLoader.BanishFree;
 
         _eventBus = GetNode<EventBus>("/root/EventBus");
-        _groupCache = GetNode<GroupCache>("/root/GroupCache");
-        _reserve = LevelReserveConfig.Load();
-        _holdTimer = new Timer { OneShot = true, WaitTime = _reserve.HoldSeconds };
-        _holdTimer.Timeout += ProcessNextInQueue;
-        AddChild(_holdTimer);
         _eventBus.LevelUp += OnLevelUp;
         _eventBus.GameStateChanged += OnGameStateChanged;
         _eventBus.PerilChanged += OnPerilChanged;
@@ -132,14 +119,11 @@ public partial class FragmentManager : Node
             AddRerolls(1);
         // Un fragment reporté retrouve une occasion à chaque niveau gagné.
         _specializations.Resume();
-        bool hold = !_choosingActive && _holdTimer.IsStopped() && ShouldHold();
-        _lastLevelUpMsec = Time.GetTicksMsec();
-        if (_choosingActive || !_holdTimer.IsStopped() || hold)
+        // Un niveau gagné pendant un choix attend son tour dans le même écran ; sinon l'écran s'ouvre aussitôt.
+        if (_choosingActive)
         {
             _levelUpQueue.Enqueue(newLevel);
-            if (hold)
-                _holdTimer.Start();
-            GD.Print($"[FragmentManager] Queued level {newLevel} ({_levelUpQueue.Count} in queue{(hold ? ", réserve" : "")})");
+            GD.Print($"[FragmentManager] Queued level {newLevel} ({_levelUpQueue.Count} in queue)");
             return;
         }
 
@@ -162,35 +146,15 @@ public partial class FragmentManager : Node
         if (_player == null || !_specializations.GrantMoment(_player))
             return;
         GD.Print($"[FragmentManager] Résurgence {crisisNumber} survécue : droit de fragment ({_specializations.PendingMoments} en attente)");
-        if (!_choosingActive && _holdTimer.IsStopped())
+        if (!_choosingActive)
             TryOfferSpecializations();
     }
 
-    /// <summary>Une run finie ne propose plus de choix : un niveau retenu ne doit pas s'ouvrir sur le bilan.</summary>
+    /// <summary>Une run finie ne propose plus de choix : un niveau en attente ne doit pas s'ouvrir sur le bilan.</summary>
     private void OnGameStateChanged(string oldState, string newState)
     {
-        if (newState != nameof(GameManager.GameState.Death))
-            return;
-        _holdTimer.Stop();
-        _levelUpQueue.Clear();
-    }
-
-    private bool ShouldHold()
-    {
-        ulong windowMsec = (ulong)(_reserve.WindowSeconds * 1000f);
-        ulong now = Time.GetTicksMsec();
-        if (now - _lastLevelUpMsec < windowMsec || now - _lastCloseMsec < windowMsec)
-            return true;
-
-        float radiusSq = _reserve.CrowdRadius * _reserve.CrowdRadius;
-        int near = 0;
-        foreach (Node node in _groupCache.GetEnemies())
-        {
-            if (node is Enemy { IsActive: true } enemy && enemy.GlobalPosition.DistanceSquaredTo(_player.GlobalPosition) <= radiusSq
-                && ++near > _reserve.Crowd)
-                return true;
-        }
-        return false;
+        if (newState == nameof(GameManager.GameState.Death))
+            _levelUpQueue.Clear();
     }
 
     /// <summary>
@@ -238,7 +202,7 @@ public partial class FragmentManager : Node
             _pendingChoices.Add(option.IsCarried ? option : RollUpgrade(option));
         _choosingActive = true;
 
-        GD.Print($"[FragmentManager] Level {level} (maxTier={_lastMaxTier}): offering {_pendingChoices.Count} fragments (pool had {options.Count})");
+        GD.Print($"[FragmentManager] Level {level}: offering {_pendingChoices.Count} fragments (pool had {options.Count})");
 
         _eventBus.EmitSignal(EventBus.SignalName.FragmentChoicesReady, _pendingChoices.Count);
     }
@@ -280,8 +244,6 @@ public partial class FragmentManager : Node
         }
         else
         {
-            if (_choosingActive)
-                _lastCloseMsec = Time.GetTicksMsec();
             _choosingActive = false;
             _specializationChoice = false;
             _pendingChoices.Clear();
@@ -290,24 +252,6 @@ public partial class FragmentManager : Node
 
     /// <summary>Indique si un choix de fragment est actuellement actif (inclut le choix en cours + queue).</summary>
     public bool IsChoiceActive => _choosingActive;
-
-    /// <summary>
-    /// Palier d'arme maximal offert selon le niveau du joueur (data/progression/level_up_offer.json), avec une petite
-    /// chance, que la Chance relève, d'en voir un de plus.
-    /// </summary>
-    private int GetMaxFragmentTier(int playerLevel)
-    {
-        LevelUpOfferConfig offer = LevelUpOfferConfig.Load();
-        int baseTier = offer.BaseTier(playerLevel);
-        if (baseTier < offer.MaxTier)
-        {
-            CachePlayer();
-            float luck = _player?.LuckBonus ?? 0f;
-            if (GD.Randf() < offer.TierBumpChance + luck * offer.TierBumpLuck)
-                baseTier++;
-        }
-        return baseTier;
-    }
 
     /// <summary>
     /// Ascension (plan 21 §3) : la première arme au niveau maximal qui n'a pas choisi montre ses deux voies, à chaque
@@ -335,9 +279,7 @@ public partial class FragmentManager : Node
         bool weaponSlotsFull = weaponCount >= Player.MaxWeaponSlots;
         bool passiveSlotsFull = passiveCount >= Player.MaxPassiveSlots;
 
-        // Armes nouvelles (si slots dispo)
-        int maxTier = GetMaxFragmentTier(_currentLevel);
-        _lastMaxTier = maxTier;
+        // Armes nouvelles (si slots dispo) : toutes celles qui sont débloquées, au même poids, dès le premier niveau.
         if (!weaponSlotsFull)
         {
             HashSet<string> equippedIds = new();
@@ -350,12 +292,10 @@ public partial class FragmentManager : Node
                     continue;
                 if (_banishedIds.Contains(weapon.Id))
                     continue;
-                if (weapon.Tier > maxTier)
-                    continue;
                 if (!MetaSaveManager.IsWeaponUnlocked(weapon))
                     continue;
 
-                pool.Add(new FragmentOption(weapon.Id, "weapon_new", weapon.Name, weapon.Tier));
+                pool.Add(new FragmentOption(weapon.Id, "weapon_new", weapon.Name));
             }
         }
 
@@ -367,7 +307,7 @@ public partial class FragmentManager : Node
                 continue;
             if (!_player.IsWeaponFragmentMaxed(w.Id))
             {
-                pool.Add(new FragmentOption(w.Id, "weapon_upgrade", w.Name, 1));
+                pool.Add(new FragmentOption(w.Id, "weapon_upgrade", w.Name));
             }
         }
 
@@ -384,7 +324,7 @@ public partial class FragmentManager : Node
                     continue;
                 if (_banishedIds.Contains(passive.Id))
                     continue;
-                pool.Add(new FragmentOption(passive.Id, "passive_new", passive.Name, 1));
+                pool.Add(new FragmentOption(passive.Id, "passive_new", passive.Name));
             }
         }
 
@@ -395,7 +335,7 @@ public partial class FragmentManager : Node
                 continue;
             if (!p.IsMaxLevel)
             {
-                pool.Add(new FragmentOption(p.Id, "passive_upgrade", p.Data.Name, 1));
+                pool.Add(new FragmentOption(p.Id, "passive_upgrade", p.Data.Name));
             }
         }
 
@@ -561,7 +501,7 @@ public partial class FragmentManager : Node
                 survival.Add(option);
         if (survival.Count == 0)
             return;
-        picked[picked.Count - 1] = WeightedPick(survival, _player.LuckBonus);
+        picked[picked.Count - 1] = WeightedPick(survival);
     }
 
     private static bool IsSurvival(FragmentOption option) =>
@@ -569,12 +509,8 @@ public partial class FragmentManager : Node
 
     private List<FragmentOption> PickRandom(List<FragmentOption> pool, int count)
     {
-        CachePlayer();
-        float luck = _player?.LuckBonus ?? 0f;
-
         // Séparer new vs upgrade pour garantir un mélange
         List<FragmentOption> newItems = new();
-        List<FragmentOption> newWeapons = new();
         List<FragmentOption> upgrades = new();
         foreach (FragmentOption o in pool)
         {
@@ -582,38 +518,19 @@ public partial class FragmentManager : Node
                 newItems.Add(o);
             else
                 upgrades.Add(o);
-            if (o.Type == "weapon_new")
-                newWeapons.Add(o);
         }
 
         List<FragmentOption> result = new();
         List<FragmentOption> remaining = new(pool);
 
-        // Une arme nouvelle d'abord tant que l'arsenal est maigre (plan 24 lot L3) : elle se perdait parmi les objets.
-        LevelUpOfferConfig offer = LevelUpOfferConfig.Load();
-        bool hasNew = false;
-        if (newWeapons.Count > 0 && count >= 2
-            && (_player.WeaponSlots.Count < offer.WeaponGuaranteeBelow || GD.Randf() < offer.WeaponChanceAfter))
-        {
-            FragmentOption weapon = WeightedPick(newWeapons, luck);
-            result.Add(weapon);
-            remaining.Remove(weapon);
-            newItems.Remove(weapon);
-            hasNew = true;
-        }
-
         // Garantir au moins 1 de chaque catégorie si possible
-        if (newItems.Count + (hasNew ? 1 : 0) > 0 && upgrades.Count > 0 && count >= 2)
+        if (newItems.Count > 0 && upgrades.Count > 0 && count >= 2)
         {
-            FragmentOption picked;
-            if (!hasNew)
-            {
-                picked = WeightedPick(newItems, luck);
-                result.Add(picked);
-                remaining.Remove(picked);
-            }
+            FragmentOption picked = WeightedPick(newItems);
+            result.Add(picked);
+            remaining.Remove(picked);
 
-            picked = WeightedPick(upgrades, luck);
+            picked = WeightedPick(upgrades);
             result.Add(picked);
             remaining.Remove(picked);
         }
@@ -621,7 +538,7 @@ public partial class FragmentManager : Node
         // Remplir le reste avec sélection pondérée
         while (result.Count < count && remaining.Count > 0)
         {
-            FragmentOption picked = WeightedPick(remaining, luck);
+            FragmentOption picked = WeightedPick(remaining);
             result.Add(picked);
             remaining.Remove(picked);
         }
@@ -629,30 +546,30 @@ public partial class FragmentManager : Node
         return result;
     }
 
-    private static FragmentOption WeightedPick(List<FragmentOption> options, float luck)
+    private static FragmentOption WeightedPick(List<FragmentOption> options)
     {
         if (options.Count == 1)
             return options[0];
 
         float totalWeight = 0f;
         foreach (FragmentOption opt in options)
-            totalWeight += GetFragmentWeight(opt, luck);
+            totalWeight += GetFragmentWeight(opt);
 
         float roll = GD.Randf() * totalWeight;
         float cumulative = 0f;
         foreach (FragmentOption opt in options)
         {
-            cumulative += GetFragmentWeight(opt, luck);
+            cumulative += GetFragmentWeight(opt);
             if (roll <= cumulative)
                 return opt;
         }
         return options[options.Count - 1];
     }
 
-    private static float GetFragmentWeight(FragmentOption opt, float luck)
+    private static float GetFragmentWeight(FragmentOption opt)
     {
         LevelUpOfferConfig offer = LevelUpOfferConfig.Load();
-        float weight = offer.TierWeight(opt.SortWeight, luck);
+        float weight = 1f;
         if (opt.Type.Contains("upgrade"))
             weight *= offer.UpgradeWeight;
         if (opt.Type is "passive_new" or "passive_upgrade")
@@ -678,8 +595,6 @@ public class FragmentOption
     public string Id { get; }
     public string Type { get; }
     public string DisplayName { get; }
-    /// <summary>Tier de l'arme nouvelle (pondère l'offre), 1 sinon.</summary>
-    public int SortWeight { get; }
     /// <summary>Rareté de l'amélioration ; null pour une arme ou un passif nouveaux.</summary>
     public UpgradeRarity Rarity { get; private init; }
     /// <summary>Gains d'une amélioration d'arme, tirés à l'offre.</summary>
@@ -694,33 +609,32 @@ public class FragmentOption
     public WeaponAscensionData Ascension { get; private init; }
 
     public static FragmentOption ForAscension(WeaponInstance weapon, WeaponAscensionData ascension) =>
-        new(weapon.Id, AscensionType, $"{weapon.Name} : {ascension.Name}", 1) { Ascension = ascension };
+        new(weapon.Id, AscensionType, $"{weapon.Name} : {ascension.Name}") { Ascension = ascension };
 
-    public FragmentOption(string id, string type, string displayName, int sortWeight)
+    public FragmentOption(string id, string type, string displayName)
     {
         Id = id;
         Type = type;
         DisplayName = displayName;
-        SortWeight = sortWeight;
     }
 
     public FragmentOption WithWeaponUpgrade(UpgradeRarity rarity, IReadOnlyList<StatGain> gains) =>
-        new(Id, Type, DisplayName, SortWeight) { Rarity = rarity, WeaponGains = gains };
+        new(Id, Type, DisplayName) { Rarity = rarity, WeaponGains = gains };
 
     /// <summary>Carte reportée par Seconde lecture : mêmes gains et même rareté, marquée pour l'écran.</summary>
     public bool IsCarried { get; private init; }
 
     public FragmentOption AsCarried() =>
-        new(Id, Type, DisplayName, SortWeight) { Rarity = Rarity, WeaponGains = WeaponGains, PassiveGain = PassiveGain, IsCarried = true };
+        new(Id, Type, DisplayName) { Rarity = Rarity, WeaponGains = WeaponGains, PassiveGain = PassiveGain, IsCarried = true };
 
     public FragmentOption WithRolledRarity(UpgradeRarity rolled) =>
-        new(Id, Type, DisplayName, SortWeight)
+        new(Id, Type, DisplayName)
         {
             Rarity = Rarity, WeaponGains = WeaponGains, PassiveGain = PassiveGain, Ascension = Ascension, RolledRarity = rolled,
         };
 
     public FragmentOption WithPassiveUpgrade(UpgradeRarity rarity) =>
-        new(Id, Type, DisplayName, SortWeight) { Rarity = rarity, PassiveGain = rarity.PassiveGain };
+        new(Id, Type, DisplayName) { Rarity = rarity, PassiveGain = rarity.PassiveGain };
 
     /// <summary>Donne le fragment au joueur ; faux si l'offre a vieilli (arme déjà là, emplacements pleins, maximum).</summary>
     public bool ApplyTo(Player player)

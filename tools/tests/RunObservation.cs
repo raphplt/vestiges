@@ -44,7 +44,7 @@ namespace Vestiges.Tests;
 /// --capture-loot : écran de butin du coffre le plus proche, bonus de stat compris (RunObservation.Chests.cs).
 /// --capture-places : un petit lieu de chaque type, joueur à côté (signe), puis juste après usage (RunObservation.Places.cs).
 /// --capture-levelup : l'écran de level-up, une capture par rareté (RunObservation.LevelUp.cs).
-/// --capture-cascade : réserve de niveaux, cinq niveaux enchaînés puis retenue (RunObservation.Cascade.cs).
+/// --capture-cascade : file de niveaux, cinq niveaux enchaînés puis un niveau ouvert aussitôt (RunObservation.Cascade.cs).
 /// --capture-perks [--perk-scene survival|overflow|priority|carry] : effets des perks en run (RunObservation.Perks.cs).
 /// --capture-oublis : les neuf Oublis de carte pris d'un coup, effets mesurés (RunObservation.Oublis.cs).
 /// --check-orb-sleep : orbe d'XP endormie loin du joueur, réveillée et ramassée à son retour (RunObservation.OrbSleep.cs).

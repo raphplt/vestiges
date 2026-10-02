@@ -64,7 +64,7 @@ public sealed class PerkSpecializationOffers
         foreach (PerkSpecializationData perk in PerkSpecializationDataLoader.GetAll())
         {
             if (IsAvailable(perk, player) && IsEligible(perk, player, banishedWeapons))
-                candidates.Add(new FragmentOption(perk.Id, OptionType, perk.Name, 1));
+                candidates.Add(new FragmentOption(perk.Id, OptionType, perk.Name));
         }
         return candidates;
     }
