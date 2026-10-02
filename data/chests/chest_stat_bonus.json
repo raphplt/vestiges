@@ -18,8 +18,8 @@
         { "stat": "aoe_radius", "modifier_type": "multiplicative", "amount": 0.08 },
         { "stat": "attack_range", "modifier_type": "multiplicative", "amount": 0.06 },
         { "stat": "status_duration", "modifier_type": "multiplicative", "amount": 0.08 },
-        { "stat": "xp_magnet_radius", "modifier_type": "multiplicative", "amount": 0.2 },
-        { "stat": "luck", "modifier_type": "additive", "amount": 0.05 },
-        { "stat": "xp_gain", "modifier_type": "multiplicative", "amount": 0.08 }
+        { "stat": "xp_magnet_radius", "modifier_type": "multiplicative", "amount": 0.15 },
+        { "stat": "luck", "modifier_type": "additive", "amount": 0.03 },
+        { "stat": "xp_gain", "modifier_type": "multiplicative", "amount": 0.05 }
     ]
 }

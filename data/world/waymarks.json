@@ -27,14 +27,14 @@
             "id": "mailbox",
             "name_key": "WAYMARK_MAILBOX",
             "stat": "xp_gain",
-            "amount": 0.08,
+            "amount": 0.05,
             "modifier_type": "multiplicative"
         },
         {
             "id": "mine_cart",
             "name_key": "WAYMARK_MINE_CART",
             "stat": "xp_magnet_radius",
-            "amount": 0.2,
+            "amount": 0.15,
             "modifier_type": "multiplicative"
         },
         {

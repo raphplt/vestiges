@@ -1,11 +1,11 @@
 {
-  "_doc": "Courbe d'XP du joueur (plan 20 §6.6). XP pour passer du niveau n au suivant = base_xp × n^exponent. Les niveaux 1 à early_levels sont majorés d'un facteur qui va de early_multiplier_start à early_multiplier_end. Le coût d'un niveau ne dépasse jamais max_xp_per_level (atteint vers le niveau 41) : c'est ce qui rend 300 à 400 niveaux accessibles à une excellente run en 45 min. tools/progression_model.py lit ce fichier.",
-  "base_xp": 20,
-  "exponent": 1.35,
+  "_doc": "Courbe d'XP du joueur (plan 20 §6.6). XP pour passer du niveau n au suivant = base_xp × n^exponent. Les niveaux 1 à early_levels sont majorés d'un facteur qui va de early_multiplier_start à early_multiplier_end. Le coût d'un niveau ne dépasse jamais max_xp_per_level (atteint vers le niveau 63). Ralentie le 2 octobre (DECISIONS §50, plan 21 E2) : avec 20 / 1,35 / 3 000, les niveaux s'enchaînaient après le niveau 41 (jusqu'à 219 à 15 min) ; cible mesurée environ 30 niveaux à 10 min et 45 à 15 min. tools/progression_model.py lit ce fichier.",
+  "base_xp": 30,
+  "exponent": 1.5,
   "early_levels": 5,
   "early_multiplier_start": 1.65,
   "early_multiplier_end": 1.2,
-  "max_xp_per_level": 3000,
+  "max_xp_per_level": 15000,
   "level_reserve": {
     "_doc": "Réserve de niveaux (plan 20 §6.7, R1-G) : l'écran de choix s'ouvre tout de suite pour un niveau isolé. Il est retenu hold_seconds quand un niveau arrive moins de window_seconds après le précédent ou après la fermeture de l'écran, ou quand plus de crowd créatures sont à moins de crowd_radius px du joueur. Les niveaux reçus s'empilent et s'enchaînent dans le même écran.",
     "window_seconds": 3,

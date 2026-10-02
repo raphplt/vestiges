@@ -117,9 +117,9 @@ Pas = gain d'une carte commune. Au niveau 30 en cartes communes seules, l'objet 
 | Genouillère | `peau_dure` | Armure +2 | L'armure compte double pendant le dash et 1 s après | V |
 | Écusson de pompier | `carapace` | Bouclier +5 | Quand le bouclier casse, une onde repousse les ennemis proches | V |
 | Lacet rouge | `instinct` | Vitesse +3 %, recharge du dash +5 % | Le dash va 30 % plus loin | D |
-| Aimant de frigo | `siphon_essence` | Aimant +20 % | Chaque orbe ramassée rend 0,2 PV | D |
-| Photo de classe | `photo_de_classe` | XP +8 % | Chaque niveau gagné donne 3 Essence | D |
-| Jeton de fête foraine | `jeton_de_fete` | Chance +5 % | +1 relance tous les 15 niveaux du joueur | D |
+| Aimant de frigo | `siphon_essence` | Aimant +15 % | Chaque orbe ramassée rend 0,2 PV | D |
+| Photo de classe | `photo_de_classe` | XP +5 % | Chaque niveau gagné donne 3 Essence | D |
+| Jeton de fête foraine | `jeton_de_fete` | Chance +3 % | +1 relance tous les 15 niveaux du joueur | D |
 | Paille tordue | `paille_tordue` | Vol de vie +0,5 % des dégâts (soin plafonné à 5 % des PV max par seconde) | Sous la moitié des PV, le plafond double | D |
 
 Les **copies d'attaque** (projectiles à dégâts réduits) sont supprimées (DECISIONS §37). Les projectiles en plus du Papier carbone sont pleins. Ils suivent la règle des stats fractionnaires (§3) : 2,5 projectiles en plus, c'est 2 projectiles et une chance sur deux d'un troisième, à chaque attaque. Une arme de mêlée les reçoit en frappes, en éventail. Sans le palier, les projectiles en plus partent en éventail vers la cible de l'arme ; au palier, chacun vise sa propre cible.
@@ -399,3 +399,18 @@ Ensuite : C2, l'Atelier ([plan 22](22-carte-a-explorer.md), validé §49).
 | **E2 — XP** | G6c annulé (Jeton +0,03, Photo +5 %, Aimant +15 %, coffres et Repères alignés) ; courbe `base_xp` 20 → 30, exposant 1,35 → 1,5, plafond 3 000 → 15 000 XP par niveau. Modèle sur le revenu mesuré : 18 à 30 niveaux à 10 min, 34 à 48 à 15 min (avant multiplicateurs d'XP). | Mesure E0 refaite |
 | **E3 — Raretés** | Montée par cran 0,3 → 0,15 : aux crans mesurés, 25 à 37 % de rares ou mieux et 2 à 5 % de légendaires en fin de quart d'heure. | Même mesure |
 | **E4 — Ennemis** | Après E2–E3 (le joueur sera moins fort), relever la montée des PV pour viser un temps pour tuer de 0,3 à 0,5 s stable ; plus de tireurs en exploration (environ 35 % des apparitions) dans les biomes qui n'en ont presque pas. | Mesure, captures de combat |
+
+### E2 et E3 — livrés le 2 octobre
+
+- **E2 :** G6c annulé (Jeton +0,03 de Chance, Photo +5 % d'XP, Aimant +15 %, coffres et Repères alignés) ; courbe d'XP `base_xp` 30, exposant 1,5, plafond 15 000 XP par niveau (atteint vers le niveau 63).
+- **E3 :** montée de rareté par cran 0,3 → 0,15.
+- **Mesure** (même protocole qu'E0) :
+
+| | 5 min | 10 min | 15 min |
+|---|---|---|---|
+| Niveau, sans build (E0 → E2) | 15–26 → 11–14 | 27–62 → 20–34 | 54–219 → 27–47 |
+| Niveau, build XP/Chance | 20 → 10–12 | 38–63 → 19–23 | 62–239 → 25–34 |
+| Rares ou mieux, sans build, 10–15 min | | | 38–67 % → 20–31 % (légendaires 0 à 3 %) |
+| Rares ou mieux, build Chance (Chance 0,26 à 0,37), 10–15 min | | | 40–52 % → 21–50 % |
+
+- Bancs armes, objets et petits lieux verts.
