@@ -80,6 +80,9 @@ public partial class Player : CharacterBody2D
     private float _aoeMultiplier = 1f;
     private float _attackRangeMultiplier = 1f;
     private float _bonusRegenRate;
+    private float _lifesteal;
+    private float _lifestealPending;
+    private float _lifestealTimer;
     private float _xpGainMultiplier = 1f;
     private float _armor;
     private PlayerDefense _defense;
@@ -149,6 +152,7 @@ public partial class Player : CharacterBody2D
     public float Shield => _defense?.Shield ?? 0f;
     public float MaxShield => _defense?.MaxShield ?? 0f;
     public float BonusRegenRate => _bonusRegenRate;
+    public float Lifesteal => _lifesteal;
     public float AoeMultiplier => _aoeMultiplier;
     public float LuckBonus => _luckBonus;
 
@@ -491,6 +495,7 @@ public partial class Player : CharacterBody2D
             _heldWeapon.Update(dt, EquippedWeapon?.Base, _facing.Current);
         ProcessFootsteps(dt, dashMovement ? 0f : movementRate);
         ApplyRegen(dt);
+        StepLifesteal(dt);
         StepDefense(dt);
         ProcessSlowDecay(dt);
         ProcessPoiExplore(dt);
@@ -701,6 +706,9 @@ public partial class Player : CharacterBody2D
             case "regen_rate":
                 if (modifierType == "additive") _bonusRegenRate += value;
                 break;
+            case "lifesteal":
+                if (modifierType == "additive") _lifesteal += value;
+                break;
             case "armor":
                 if (modifierType == "additive") _armor += value;
                 break;
@@ -764,6 +772,7 @@ public partial class Player : CharacterBody2D
             _attackFx.PlayHit(source?.Base, enemy.GlobalPosition, isCrit);
         if (source != null)
             _weaponLedger.AddDamage(source.Id, damage);
+        _lifestealPending += damage * _lifesteal;
         if (context.OwnerId == 0)
             context = BeginAttack(source, damage);
 
@@ -1563,6 +1572,25 @@ public partial class Player : CharacterBody2D
         // Repli Polygon2D
         _visual.Modulate = new Color(_visual.Modulate, Mathf.Lerp(1f, 0.3f, amount));
         Scale = Vector2.One * Mathf.Lerp(1f, 0.5f, amount);
+    }
+
+    /// <summary>
+    /// Vol de vie (plan 21 G6b) : la part des dégâts accumulée depuis le dernier intervalle revient en un seul soin,
+    /// plafonné en PV max par seconde ; l'excédent au-delà du plafond est perdu.
+    /// </summary>
+    private void StepLifesteal(float delta)
+    {
+        _lifestealTimer += delta;
+        if (_lifestealTimer < _defense.Config.LifestealTickSeconds)
+            return;
+        float window = _lifestealTimer;
+        _lifestealTimer = 0f;
+        if (_lifestealPending <= 0f)
+            return;
+        float capMultiplier = _objectMilestones?.LifestealCapMultiplier(_currentHp / EffectiveMaxHp) ?? 1f;
+        float cap = EffectiveMaxHp * _defense.Config.LifestealMaxHpPerSecond * capMultiplier * window;
+        Heal(Mathf.Min(_lifestealPending, cap));
+        _lifestealPending = 0f;
     }
 
     private void ApplyRegen(float delta)

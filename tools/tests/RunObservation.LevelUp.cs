@@ -28,7 +28,11 @@ public partial class RunObservation
         _player.AddOrUpgradePassive("souffle_du_neant");
         // Niveau 14 : l'amélioration d'objet fait atteindre le palier 15 (badge doré).
         _player.AddOrUpgradePassive("souffle_du_neant", 13);
-        _player.AddWeapon(WeaponDataLoader.Get("crossbow"));
+        // --levelup-weapon et --levelup-new : arme améliorée et objet neuf montrés (plan 21 G6 : frappes, Paille tordue).
+        string[] args = OS.GetCmdlineUserArgs();
+        string weaponId = Argument(args, "--levelup-weapon", "crossbow");
+        string newItem = Argument(args, "--levelup-new", "persistance");
+        _player.AddWeapon(WeaponDataLoader.Get(weaponId));
         List<FragmentOption> pending = (List<FragmentOption>)typeof(FragmentManager)
             .GetField("_pendingChoices", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(fragments);
         FieldInfo active = typeof(FragmentManager).GetField("_choosingActive", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -38,13 +42,13 @@ public partial class RunObservation
 
         foreach (UpgradeRarity rarity in UpgradeRoller.Rarities)
         {
-            WeaponInstance crossbow = _player.WeaponSlots[_player.WeaponSlots.Count - 1];
+            WeaponInstance weapon = _player.WeaponSlots[_player.WeaponSlots.Count - 1];
             pending.Clear();
-            pending.Add(new FragmentOption(crossbow.Id, "weapon_upgrade", crossbow.Name, 1)
-                .WithWeaponUpgrade(rarity, UpgradeRoller.RollWeaponGains(crossbow, rarity, rng)));
+            pending.Add(new FragmentOption(weapon.Id, "weapon_upgrade", weapon.Name, 1)
+                .WithWeaponUpgrade(rarity, UpgradeRoller.RollWeaponGains(weapon, rarity, rng)));
             pending.Add(new FragmentOption("souffle_du_neant", "passive_upgrade", PassiveSouvenirDataLoader.Get("souffle_du_neant").Name, 1)
                 .WithPassiveUpgrade(rarity));
-            pending.Add(new FragmentOption("persistance", "passive_new", PassiveSouvenirDataLoader.Get("persistance").Name, 1));
+            pending.Add(new FragmentOption(newItem, "passive_new", PassiveSouvenirDataLoader.Get(newItem).Name, 1));
             active.SetValue(fragments, true);
             eventBus.EmitSignal(EventBus.SignalName.FragmentChoicesReady, pending.Count);
             await Frames(20);

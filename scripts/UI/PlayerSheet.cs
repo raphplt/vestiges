@@ -29,6 +29,8 @@ public static class PlayerSheet
     {
         AddLine(container, Tr("STAT_MAX_HP"), $"{player.CurrentHp:F0} / {player.EffectiveMaxHp:F0}", null, role);
         AddLine(container, Tr("STAT_REGEN"), $"{(player.BaseRegenRate + player.BonusRegenRate).ToString("0.0", French)} PV/s", null, role);
+        if (player.Lifesteal > 0f)
+            AddLine(container, Tr("STAT_LIFESTEAL"), StatCatalog.FormatBonus("lifesteal", player.Lifesteal, false), null, role);
         // Plus de bouclier de départ (plan 23 R1) : la ligne n'apparaît qu'avec un objet qui en donne.
         if (player.MaxShield > 0f)
             AddLine(container, Tr("STAT_SHIELD"), $"{player.Shield:F0} / {player.MaxShield:F0}", null, role);

@@ -106,6 +106,13 @@
       "world": false
     },
     {
+      "id": "paille_tordue",
+      "name": "Paille tordue",
+      "icon": "item_paille_tordue.png",
+      "icon_16": "item_paille_tordue_16.png",
+      "world": false
+    },
+    {
       "id": "allumette_humide",
       "name": "Allumette humide",
       "icon": "item_allumette_humide.png",

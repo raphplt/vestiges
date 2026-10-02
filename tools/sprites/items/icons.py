@@ -163,4 +163,22 @@ def token() -> Item:
     return item
 
 
-PROPERTY_ITEMS = [spring, carbon, mirror, washer, ruler, peg, glasses, button, spool, kneepad, badge, lace, magnet, photo, token]
+def straw() -> Item:
+    """Paille coudée de goûter : tube blanc à rayures rouges, soufflet plissé au coude, goutte rouge au bec."""
+    item = Item("paille_tordue", .6)
+    radius = 2.3
+    bottom, elbow, top = np.array([-11., -15.]), np.array([3., 9.]), np.array([13., 13.])
+    item.add("light", line([(*bottom, 0), (*elbow, 0)], radius), line([(*elbow + (2.5, 2.5), 0), (*top, 0)], radius))
+    for start, end, stripes in ((bottom, elbow, (.15, .38, .61, .84)), (elbow + (2.5, 2.5), top, (.55,))):
+        axis = (end - start) / np.linalg.norm(end - start)
+        for t in stripes:
+            c = start + (end - start) * t
+            item.add("red", line([(*(c - axis * .55), 0), (*(c + axis * .55), 0)], radius + .12))
+    for k in range(3):
+        c = elbow + (.9 * k, .9 * k)
+        item.add("steel", disk((*c, 0), radius + .35, 1.4))
+    item.add("red", oval((*top + (1.2, .6), 1), (1.3, 1.3, 1.2)))
+    return item
+
+
+PROPERTY_ITEMS = [spring, carbon, mirror, washer, ruler, peg, glasses, button, spool, kneepad, badge, lace, magnet, photo, token, straw]

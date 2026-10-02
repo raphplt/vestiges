@@ -24,6 +24,7 @@
         { "id": "shield", "name_key": "STAT_SHIELD", "display": "count" },
         { "id": "crit_chance", "name_key": "STAT_CRIT", "display": "fraction", "property": "precision" },
         { "id": "regen_rate", "name_key": "STAT_REGEN", "display": "value", "unit": "PV/s" },
+        { "id": "lifesteal", "name_key": "STAT_LIFESTEAL", "display": "fraction" },
         { "id": "luck", "name_key": "STAT_LUCK", "display": "fraction" },
         { "id": "crit_multiplier", "name_key": "STAT_CRIT_DAMAGE", "display": "fraction", "property": "precision" },
         { "id": "xp_gain", "name_key": "STAT_XP_GAIN", "display": "percent" },

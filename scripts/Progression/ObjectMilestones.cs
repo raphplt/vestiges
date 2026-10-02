@@ -26,6 +26,7 @@ public partial class ObjectMilestones : Node
     public const string ShieldBreakWaveEffect = "shield_break_wave";
     public const string DashDistanceEffect = "dash_distance";
     public const string OrbHealEffect = "orb_heal";
+    public const string LowHpLifestealEffect = "low_hp_lifesteal";
     public const string LevelEssenceEffect = "level_essence";
     public const string LevelRerollEffect = "level_reroll";
 
@@ -71,6 +72,8 @@ public partial class ObjectMilestones : Node
     private float _waveRadius;
     private float _waveKnockback;
     private float _orbHeal;
+    private float _lowHpLifestealThreshold;
+    private float _lowHpLifestealMultiplier = 1f;
     private int _levelEssence;
     private int _rerollEveryLevels;
 
@@ -80,6 +83,9 @@ public partial class ObjectMilestones : Node
     public bool HasZoneEcho => _zoneEchoes != null;
     public bool HasRangeEndBurst => _burstRatio > 0f;
     public float RegenMultiplier => _woundRegenRemaining > 0f ? _woundRegenMultiplier : 1f;
+
+    /// <summary>Paille tordue au palier : sous le seuil de PV, le plafond du vol de vie est multiplié.</summary>
+    public float LifestealCapMultiplier(float hpRatio) => hpRatio < _lowHpLifestealThreshold ? _lowHpLifestealMultiplier : 1f;
 
     public void Initialize(Player player)
     {
@@ -157,6 +163,10 @@ public partial class ObjectMilestones : Node
                 break;
             case OrbHealEffect:
                 _orbHeal = milestone.Parameter("heal");
+                break;
+            case LowHpLifestealEffect:
+                _lowHpLifestealThreshold = milestone.Parameter("threshold");
+                _lowHpLifestealMultiplier = milestone.Parameter("multiplier");
                 break;
             case LevelEssenceEffect:
                 _levelEssence = Mathf.RoundToInt(milestone.Parameter("essence"));

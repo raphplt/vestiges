@@ -163,6 +163,7 @@ STAT_ARMOR,Armure,Armor
 STAT_SHIELD,Bouclier,Shield
 STAT_CRIT,Critique,Crit chance
 STAT_REGEN,Régénération,Regeneration
+STAT_LIFESTEAL,Vol de vie,Life steal
 STAT_RANGE,Portée,Range
 STAT_PROJECTILES,Projectiles,Projectiles
 STAT_STRIKES,Frappes,Strikes

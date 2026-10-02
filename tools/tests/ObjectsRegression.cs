@@ -41,6 +41,7 @@ public partial class ObjectsRegression : Node2D
             CheckStatusRenewal();
             CheckCombatMilestones();
             CheckSurvivalMilestones();
+            CheckLifesteal();
             CheckRewardMilestones();
             CheckImpactTriggers();
             CheckTargetBonuses();
@@ -76,7 +77,7 @@ public partial class ObjectsRegression : Node2D
             foreach (ObjectMilestoneData milestone in data.Milestones)
                 wellFormed &= milestone.Level == 15;
         }
-        Check(offered.Count == 31 && wellFormed && anySurvival, $"Catalogue : {offered.Count} objets proposés, niveau max 30, paliers au niveau 15, au moins un de survie");
+        Check(offered.Count == 32 && wellFormed && anySurvival, $"Catalogue : {offered.Count} objets proposés, niveau max 30, paliers au niveau 15, au moins un de survie");
         bool retired = true;
         foreach (string id in new[] { "flamme_interieure", "fragment_deternite" })
             retired &= PassiveSouvenirDataLoader.Get(id) != null && !offered.Exists(data => data.Id == id);
@@ -182,7 +183,7 @@ public partial class ObjectsRegression : Node2D
         List<FragmentOption> pool = (List<FragmentOption>)typeof(FragmentManager).GetMethod("BuildFragmentPool", Private).Invoke(fragments, null);
         int fresh = pool.FindAll(option => option.Type == "passive_new").Count;
         bool noRetired = !pool.Exists(option => option.Id is "flamme_interieure" or "fragment_deternite");
-        Check(fresh == 31 && noRetired, $"Offre de niveau : {fresh} objets neufs possibles, aucun objet retiré");
+        Check(fresh == 32 && noRetired, $"Offre de niveau : {fresh} objets neufs possibles, aucun objet retiré");
 
         foreach (string id in new[] { "memoire_vive", "resonance", "portee_etendue", "oeil_critique", "ancrage", "regeneration" })
             _player.AddOrUpgradePassive(id);
@@ -469,6 +470,39 @@ public partial class ObjectsRegression : Node2D
         hp = _player.CurrentHp;
         _player.OnXpOrbCollected();
         Check(Near(_player.CurrentHp - hp, 0.2f), "Aimant de frigo palier 15 : une orbe ramassée rend 0,2 PV");
+    }
+
+    /// <summary>Paille tordue (plan 21 G6b) : 0,5 % des dégâts rendus, plafond de 5 % des PV max par seconde, doublé sous la moitié des PV au palier.</summary>
+    private void CheckLifesteal()
+    {
+        Setup();
+        _player.DisableDefenseForTests();
+        Raise("paille_tordue", 1);
+        Enemy enemy = SpawnEnemy();
+        MethodInfo step = typeof(Player).GetMethod("StepLifesteal", BindingFlags.NonPublic | BindingFlags.Instance);
+        float maxHp = _player.EffectiveMaxHp;
+        _player.TakeDamage(maxHp * 0.6f);
+
+        float hp = _player.CurrentHp;
+        _player.OnProjectileHit(enemy, 20f, false, _player.EquippedWeapon);
+        step.Invoke(_player, new object[] { 0.25f });
+        float small = _player.CurrentHp - hp;
+
+        hp = _player.CurrentHp;
+        _player.OnProjectileHit(enemy, 5000f, false, _player.EquippedWeapon);
+        step.Invoke(_player, new object[] { 0.25f });
+        float capped = _player.CurrentHp - hp;
+        Check(Near(_player.Lifesteal, 0.005f) && Near(small, 0.1f) && Near(capped, maxHp * 0.05f * 0.25f),
+            $"Paille tordue : 20 dégâts rendent {small:0.00} PV ; 5 000 dégâts plafonnés à {capped:0.00} PV en 0,25 s (5 % des PV max par seconde)");
+
+        Raise("paille_tordue", 14);
+        hp = _player.CurrentHp;
+        _player.OnProjectileHit(enemy, 5000f, false, _player.EquippedWeapon);
+        step.Invoke(_player, new object[] { 0.25f });
+        float low = _player.CurrentHp - hp;
+        Check(_player.CurrentHp < maxHp * 0.5f && Near(low, maxHp * 0.1f * 0.25f),
+            $"Paille tordue palier 15 : sous la moitié des PV, plafond doublé ({low:0.00} PV en 0,25 s)");
+        enemy.QueueFree();
     }
 
     private void CheckRewardMilestones()

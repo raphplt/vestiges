@@ -409,6 +409,38 @@
         ]
     },
     {
+        "id": "paille_tordue",
+        "icon": "res://assets/items/icons/item_paille_tordue.png",
+        "icon_small": "res://assets/items/icons/item_paille_tordue_16.png",
+        "name": "Paille tordue",
+        "description": "Une part de tes dégâts te revient en PV.",
+        "icon_color": [
+            0.85,
+            0.3,
+            0.3
+        ],
+        "max_level": 30,
+        "survival": true,
+        "effects": [
+            {
+                "stat": "lifesteal",
+                "modifier_type": "additive",
+                "step": 0.005
+            }
+        ],
+        "milestones": [
+            {
+                "level": 15,
+                "effect": "low_hp_lifesteal",
+                "text": "Sous la moitié des PV, le vol de vie rend deux fois plus vite",
+                "params": {
+                    "threshold": 0.5,
+                    "multiplier": 2
+                }
+            }
+        ]
+    },
+    {
         "id": "persistance",
         "icon": "res://assets/items/icons/item_persistance.png",
         "icon_small": "res://assets/items/icons/item_persistance_16.png",

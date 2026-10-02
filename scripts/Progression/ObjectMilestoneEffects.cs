@@ -24,6 +24,7 @@ public static class ObjectMilestoneEffects
         ObjectMilestones.ShieldBreakWaveEffect,
         ObjectMilestones.DashDistanceEffect,
         ObjectMilestones.OrbHealEffect,
+        ObjectMilestones.LowHpLifestealEffect,
         ObjectMilestones.LevelEssenceEffect,
         ObjectMilestones.LevelRerollEffect,
         ObjectTriggers.BurnSpreadEffect,

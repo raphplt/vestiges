@@ -7,6 +7,7 @@
     "stat:max_hp": "res://assets/ui/icons/ui_icon_perk_hp_up.png",
     "stat:armor": "res://assets/ui/icons/ui_icon_perk_armor_up.png",
     "stat:regen_rate": "res://assets/ui/icons/ui_icon_perk_regen_up.png",
+    "stat:lifesteal": "res://assets/items/icons/item_paille_tordue.png",
     "stat:crit_chance": "res://assets/ui/icons/ui_icon_perk_crit_chance.png",
     "stat:crit_multiplier": "res://assets/ui/icons/ui_icon_perk_crit_damage.png",
     "stat:aoe_radius": "res://assets/ui/icons/ui_icon_perk_aoe_up.png",

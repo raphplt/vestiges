@@ -1,8 +1,10 @@
 {
-    "_doc": "Défense du joueur (plan 03 §8, lot 8B, 28 septembre). Le bouclier (base_stats.shield dans characters.json, 0 pour tous depuis le plan 23 R1 : il ne vient plus que des objets) encaisse un coup entier quelle que soit sa force, puis se recharge en shield_recharge_seconds après shield_recharge_delay_seconds sans être touché. Chaque coup accepté donne hurt_invulnerability_seconds d'invulnérabilité. Armure : réduction = armure / (armure + armor_half_value), plafonnée à armor_max_reduction. Le Néant traverse bouclier et invulnérabilité.",
+    "_doc": "Défense du joueur (plan 03 §8, lot 8B, 28 septembre). Le bouclier (base_stats.shield dans characters.json, 0 pour tous depuis le plan 23 R1 : il ne vient plus que des objets) encaisse un coup entier quelle que soit sa force, puis se recharge en shield_recharge_seconds après shield_recharge_delay_seconds sans être touché. Chaque coup accepté donne hurt_invulnerability_seconds d'invulnérabilité. Armure : réduction = armure / (armure + armor_half_value), plafonnée à armor_max_reduction. Le Néant traverse bouclier et invulnérabilité. Vol de vie (plan 21 G6b) : le soin s'accumule et se rend toutes les lifesteal_tick_seconds, plafonné à lifesteal_max_hp_per_second des PV max par seconde, pour qu'une foule ne rende pas immortel.",
     "hurt_invulnerability_seconds": 0.25,
     "shield_recharge_delay_seconds": 5.0,
     "shield_recharge_seconds": 2.0,
     "armor_half_value": 15,
-    "armor_max_reduction": 0.75
+    "armor_max_reduction": 0.75,
+    "lifesteal_max_hp_per_second": 0.05,
+    "lifesteal_tick_seconds": 0.25
 }

@@ -99,7 +99,7 @@ Les deux voies de chacune des 24 armes sont en jeu (G3, étapes 1 et 2 ; DECISIO
 - **Remplacer :** un Reliquaire peut proposer de remplacer un objet. Le nouveau démarre à la moitié du niveau de l'ancien.
 - **Accès :** D = disponible dès le départ ; Q = débloqué par une quête ; V = acheté en Vestiges ; M = monde seulement (Reliquaire).
 
-### Objets de propriété (15)
+### Objets de propriété (16)
 
 Pas = gain d'une carte commune. Au niveau 30 en cartes communes seules, l'objet vaut 30 pas. Valeurs de départ, à régler par mesure.
 
@@ -120,6 +120,7 @@ Pas = gain d'une carte commune. Au niveau 30 en cartes communes seules, l'objet 
 | Aimant de frigo | `siphon_essence` | Aimant +15 % | Chaque orbe ramassée rend 0,2 PV | D |
 | Photo de classe | `photo_de_classe` | XP +5 % | Chaque niveau gagné donne 3 Essence | D |
 | Jeton de fête foraine | `jeton_de_fete` | Chance +3 % | +1 relance tous les 15 niveaux du joueur | D |
+| Paille tordue | `paille_tordue` | Vol de vie +0,5 % des dégâts (soin plafonné à 5 % des PV max par seconde) | Sous la moitié des PV, le plafond double | D |
 
 Les **copies d'attaque** (projectiles à dégâts réduits) sont supprimées (DECISIONS §37). Les projectiles en plus du Papier carbone sont pleins. Ils suivent la règle des stats fractionnaires (§3) : 2,5 projectiles en plus, c'est 2 projectiles et une chance sur deux d'un troisième, à chaque attaque. Une arme de mêlée les reçoit en frappes, en éventail. Sans le palier, les projectiles en plus partent en éventail vers la cible de l'arme ; au palier, chacun vise sa propre cible.
 
@@ -320,3 +321,11 @@ Ensuite : C2, l'Atelier ([plan 22](22-carte-a-explorer.md), validé §49).
 - **Offres :** `offer_weight` par objet (`passive_souvenirs.json`, 1 par défaut), appliqué aux cartes « nouvel objet » et « amélioration d'objet » ; Papier carbone à 2.
 - **Vérification :** build sans avertissement, smoke vert, `tools/test_weapons.sh` 30/30, dont quatre contrôles nouveaux : toutes les armes ont leur nombre (part minimale 13 %), Lame ébréchée à 2 frappes (12 puis 24 dégâts, libellé « Frappes »), Transistor à 2 ondes (9,6 puis 19,2 de base), poids d'offre du Papier carbone. Pas de capture : le rendu des frappes multiples est le chemin existant du Papier carbone, inchangé.
 - **Relecture (`godot-reviewer`) :** deux constats sur les armes ascendées écartés : une arme ne s'ascende qu'au niveau 50 et ne reçoit plus d'amélioration ensuite (`CanAscend` exige `!CanLevelUp`). **À surveiller en jeu :** sur une onde circulaire (Fouet, Cloche, et les voies Moisson, Séisme, Déblayer, Ratisser, Mie de pain), chaque frappe en plus retouche tout le cercle : c'est un multiplicateur de dégâts pur, comme le Papier carbone l'était déjà sur ces armes.
+
+### G6b — livré le 2 octobre
+
+- **Paille tordue** (`paille_tordue`, objet de propriété, de survie) : +0,5 % des dégâts infligés rendus en PV par pas. Le soin s'accumule à chaque coup et revient en un seul soin toutes les 0,25 s, plafonné à **5 % des PV max par seconde** (`data/characters/defense.json`) ; l'excédent est perdu. Palier 15 : sous la moitié des PV, plafond doublé.
+- **Plafond relevé de 2 % à 5 % :** mesuré au banc, 2 % ne rendaient que 1,4 PV/s avec les 70 PV de départ, moins qu'un seul niveau de Bobine de fil (0,6 PV/s) après quelques cartes. À régler en jeu.
+- **Coffres :** `lifesteal` (+0,5 %, ×2 rare, ×3 épique) entre au tirage du bonus de stat ; icône de butin : celle de la Paille. Fiche du joueur : ligne « Vol de vie » dès qu'il existe.
+- **Icône :** paille coudée rayée, modèle SDF `straw` (`tools/sprites/items/icons.py`), exportée par `generate_item_icons.py --ids paille_tordue --export`.
+- **Vérification :** build sans avertissement, `tools/test_objects.sh` 72/72 (deux contrôles nouveaux : 20 dégâts rendent 0,1 PV, 5 000 dégâts plafonnés à 0,88 PV en 0,25 s, palier qui double à 1,75 PV ; catalogue et offre à 32 objets ; 14 stats de coffre), `tools/test_weapons.sh` 30/30. Capture du level-up (`--capture-levelup --levelup-weapon chipped_blade --levelup-new paille_tordue`, options ajoutées) inspectée : carte « Paille tordue · Vol de vie +0,5 % » et carte de Faucille « Frappes +3 ».

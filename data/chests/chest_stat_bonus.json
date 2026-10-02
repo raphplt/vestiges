@@ -12,6 +12,7 @@
         { "stat": "max_hp", "modifier_type": "additive", "amount": 15 },
         { "stat": "armor", "modifier_type": "additive", "amount": 2 },
         { "stat": "regen_rate", "modifier_type": "additive", "amount": 0.6 },
+        { "stat": "lifesteal", "modifier_type": "additive", "amount": 0.005 },
         { "stat": "crit_chance", "modifier_type": "additive", "amount": 0.02 },
         { "stat": "crit_multiplier", "modifier_type": "additive", "amount": 0.1 },
         { "stat": "aoe_radius", "modifier_type": "multiplicative", "amount": 0.08 },
