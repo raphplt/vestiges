@@ -117,9 +117,9 @@ Pas = gain d'une carte commune. Au niveau 30 en cartes communes seules, l'objet 
 | Genouillère | `peau_dure` | Armure +2 | L'armure compte double pendant le dash et 1 s après | V |
 | Écusson de pompier | `carapace` | Bouclier +5 | Quand le bouclier casse, une onde repousse les ennemis proches | V |
 | Lacet rouge | `instinct` | Vitesse +3 %, recharge du dash +5 % | Le dash va 30 % plus loin | D |
-| Aimant de frigo | `siphon_essence` | Aimant +15 % | Chaque orbe ramassée rend 0,2 PV | D |
-| Photo de classe | `photo_de_classe` | XP +5 % | Chaque niveau gagné donne 3 Essence | D |
-| Jeton de fête foraine | `jeton_de_fete` | Chance +3 % | +1 relance tous les 15 niveaux du joueur | D |
+| Aimant de frigo | `siphon_essence` | Aimant +20 % | Chaque orbe ramassée rend 0,2 PV | D |
+| Photo de classe | `photo_de_classe` | XP +8 % | Chaque niveau gagné donne 3 Essence | D |
+| Jeton de fête foraine | `jeton_de_fete` | Chance +5 % | +1 relance tous les 15 niveaux du joueur | D |
 | Paille tordue | `paille_tordue` | Vol de vie +0,5 % des dégâts (soin plafonné à 5 % des PV max par seconde) | Sous la moitié des PV, le plafond double | D |
 
 Les **copies d'attaque** (projectiles à dégâts réduits) sont supprimées (DECISIONS §37). Les projectiles en plus du Papier carbone sont pleins. Ils suivent la règle des stats fractionnaires (§3) : 2,5 projectiles en plus, c'est 2 projectiles et une chance sur deux d'un troisième, à chaque attaque. Une arme de mêlée les reçoit en frappes, en éventail. Sans le palier, les projectiles en plus partent en éventail vers la cible de l'arme ; au palier, chacun vise sa propre cible.
@@ -329,3 +329,9 @@ Ensuite : C2, l'Atelier ([plan 22](22-carte-a-explorer.md), validé §49).
 - **Coffres :** `lifesteal` (+0,5 %, ×2 rare, ×3 épique) entre au tirage du bonus de stat ; icône de butin : celle de la Paille. Fiche du joueur : ligne « Vol de vie » dès qu'il existe.
 - **Icône :** paille coudée rayée, modèle SDF `straw` (`tools/sprites/items/icons.py`), exportée par `generate_item_icons.py --ids paille_tordue --export`.
 - **Vérification :** build sans avertissement, `tools/test_objects.sh` 72/72 (deux contrôles nouveaux : 20 dégâts rendent 0,1 PV, 5 000 dégâts plafonnés à 0,88 PV en 0,25 s, palier qui double à 1,75 PV ; catalogue et offre à 32 objets ; 14 stats de coffre), `tools/test_weapons.sh` 30/30. Capture du level-up (`--capture-levelup --levelup-weapon chipped_blade --levelup-new paille_tordue`, options ajoutées) inspectée : carte « Paille tordue · Vol de vie +0,5 % » et carte de Faucille « Frappes +3 ».
+
+### G6c — livré le 2 octobre
+
+- **Pas relevés** (une carte commune) : Jeton de fête +0,03 → **+0,05** de Chance, Photo de classe +5 % → **+8 %** d'XP, Aimant de frigo +15 % → **+20 %** d'aimant. Au niveau 10 en communes, la Photo donne +80 % d'XP au lieu de +50 %.
+- **Alignés sur un niveau commun :** bonus de coffre (`chest_stat_bonus.json` : Chance 0,05, XP 0,08, aimant 0,2) et Repères de la Boîte aux lettres (XP 0,08) et du Wagonnet (aimant 0,2) ; ceux de Chance valaient déjà 0,05. Les bénédictions des Mémoriaux ne changent pas.
+- **Vérification :** `tools/test_objects.sh` 72/72 (Photo niveau 10 : +80 % ; Jeton : +0,05), `tools/test_small_places.sh` vert.

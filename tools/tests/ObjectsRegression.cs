@@ -136,7 +136,7 @@ public partial class ObjectsRegression : Node2D
         _player.AddOrUpgradePassive("photo_de_classe", 9);
         float before = progression.CurrentXp;
         GetNode<EventBus>("/root/EventBus").EmitSignal(EventBus.SignalName.XpGained, 1f);
-        Check(Near(progression.CurrentXp - before, 1.5f), "Photo de classe niveau 10 : +50 % d'XP, appliqué une fois au gain");
+        Check(Near(progression.CurrentXp - before, 1.8f), "Photo de classe niveau 10 : +80 % d'XP, appliqué une fois au gain");
 
         _player.AddOrUpgradePassive("instinct");
         _player.AddOrUpgradePassive("instinct", 9);
@@ -145,7 +145,7 @@ public partial class ObjectsRegression : Node2D
 
         float luck = _player.LuckBonus;
         _player.AddOrUpgradePassive("jeton_de_fete");
-        Check(Near(_player.LuckBonus, luck + 0.03f), "Jeton de fête foraine : +0,03 Chance par carte commune");
+        Check(Near(_player.LuckBonus, luck + 0.05f), "Jeton de fête foraine : +0,05 Chance par carte commune");
     }
 
     private void CheckRarityGains()
