@@ -322,7 +322,8 @@ public partial class LevelUpScreen : CanvasLayer
         HBoxContainer title = new();
         title.AddThemeConstantOverride("separation", 10);
         text.AddChild(title);
-        title.AddChild(MakeLabel(choice.DisplayName, TextRole.Body, TextLight, false));
+        Color titleColor = choice.Rarity != null ? RarityPalette.Colors(choice.Rarity.Id).Light : TextLight;
+        title.AddChild(MakeLabel(choice.DisplayName, TextRole.Body, titleColor, false));
         if (UpgradeText.ReachesMilestone(choice, player))
             title.AddChild(MilestoneBadge());
         foreach ((string line, Color color) in UpgradeText.Describe(choice, player))

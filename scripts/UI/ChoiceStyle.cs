@@ -29,6 +29,10 @@ public static class ChoiceStyle
         Texture2D[] frames = rank >= 0 ? RarityArt.Cards(rank)
             : new[] { UITheme.LoadTex(UITheme.MenusPath + "ui_card_normal.png") };
         StyleBoxTexture style = UITheme.CreateNinePatch(frames[0], 3, 3, 3, 3);
+        // Tuiles ajustées : une dernière tuile partielle échantillonnait la bordure en dents de scie du cadre et
+        // traçait une ligne pointillée au milieu des cartes de rareté (DECISIONS §50).
+        style.AxisStretchHorizontal = StyleBoxTexture.AxisStretchMode.TileFit;
+        style.AxisStretchVertical = StyleBoxTexture.AxisStretchMode.TileFit;
         style.ModulateColor = focused ? new Color(1.25f, 1.25f, 1.25f) : Colors.White;
         card.TextureFilter = CanvasItem.TextureFilterEnum.Nearest;
         card.AddThemeStyleboxOverride("panel", style);
@@ -40,6 +44,40 @@ public static class ChoiceStyle
             card.AddChild(animation);
         }
         animation.Configure(card, style, frames);
+        TintCard(card, border, rank >= 0, focused);
+    }
+
+    /// <summary>
+    /// Fond teinté de la couleur de rareté, plus franc à gauche et au survol : la rareté se lit sur toute la carte,
+    /// pas seulement au bandeau (DECISIONS §50). Les cartes sans rareté gardent leur fond.
+    /// </summary>
+    private static void TintCard(PanelContainer card, Color color, bool show, bool focused)
+    {
+        TextureRect tint = card.GetNodeOrNull<TextureRect>("RarityTint");
+        if (!show)
+        {
+            if (tint != null)
+                tint.Visible = false;
+            return;
+        }
+        if (tint == null)
+        {
+            tint = new TextureRect
+            {
+                Name = "RarityTint",
+                MouseFilter = Control.MouseFilterEnum.Ignore,
+                ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
+                StretchMode = TextureRect.StretchModeEnum.Scale,
+                Texture = new GradientTexture2D { Gradient = new Gradient(), Width = 64, Height = 1 },
+            };
+            card.AddChild(tint);
+            card.MoveChild(tint, 0);
+        }
+        tint.Visible = true;
+        Gradient gradient = ((GradientTexture2D)tint.Texture).Gradient;
+        float strength = focused ? 1.45f : 1f;
+        gradient.SetColor(0, color with { A = 0.26f * strength });
+        gradient.SetColor(1, color with { A = 0.07f * strength });
     }
 
     public static void StyleButton(Button button, bool focused)
