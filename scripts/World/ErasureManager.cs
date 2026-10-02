@@ -85,6 +85,7 @@ public partial class ErasureManager : Node
         _eventBus.PoiDiscovered += OnPoiDiscovered;
         _eventBus.ChestOpened += OnChestOpened;
         _eventBus.MemorialAwakened += OnMemorialAwakened;
+        _eventBus.WorkshopVisited += OnMemorialAwakened;
         _eventBus.OubliEffectChanged += OnOubliEffectChanged;
         _eventBus.CrisisStarted += OnCrisisStarted;
         _eventBus.CrisisEnded += OnCrisisEnded;
@@ -107,6 +108,7 @@ public partial class ErasureManager : Node
             _eventBus.PoiDiscovered -= OnPoiDiscovered;
             _eventBus.ChestOpened -= OnChestOpened;
             _eventBus.MemorialAwakened -= OnMemorialAwakened;
+            _eventBus.WorkshopVisited -= OnMemorialAwakened;
             _eventBus.OubliEffectChanged -= OnOubliEffectChanged;
             _eventBus.CrisisStarted -= OnCrisisStarted;
             _eventBus.CrisisEnded -= OnCrisisEnded;
@@ -385,6 +387,7 @@ public partial class ErasureManager : Node
 
     private void OnCrisisEnded(int crisisNumber) => _crisisActive = false;
 
+    /// <summary>Mémorial ravivé ou Atelier visité (plan 22 C2) : la zone autour se souvient.</summary>
     private void OnMemorialAwakened(Vector2 position)
     {
         StabilizeZone(position);

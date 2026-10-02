@@ -167,6 +167,10 @@ public partial class GameBootstrap : Node
         memorialDirector.Setup(choiceScreen, landmarkReveal, essenceTracker, erasureManager, perilManager);
         sceneRoot.AddChild(memorialDirector);
 
+        WorkshopDirector workshopDirector = new() { Name = "WorkshopDirector" };
+        workshopDirector.Setup(choiceScreen, essenceTracker, erasureManager, perilManager);
+        sceneRoot.AddChild(workshopDirector);
+
         RiftDirector riftDirector = new() { Name = "RiftDirector" };
         riftDirector.Setup(choiceScreen, landmarkReveal, perilManager, erasureManager);
         sceneRoot.AddChild(riftDirector);

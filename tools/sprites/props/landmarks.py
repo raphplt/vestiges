@@ -1,6 +1,6 @@
 """
 Lieux du plan 17, vague 3 : le Mémorial (stèle de mémoire, dormante puis éveillée), ses éclats, et la Faille
-(déchirure de l'Effacement dans le sol, ouverte puis refermée).
+(déchirure de l'Effacement dans le sol, ouverte puis refermée), et l'Atelier du plan 22.
 
 Même échelle que les décors (1 m ≈ 27,5 unités). La lumière de mémoire est dorée, celle de l'oubli violette :
 les deux lieux se lisent comme un miroir.
@@ -18,6 +18,8 @@ from ._kit import AXIS_Y_YAW, M, PropModel, Weathering, box_footprint
 # Un lieu à trouver se voit de loin : la stèle est plus grande que nature, comme les coffres.
 MEMORIAL_SCALE = 1.35
 SHARD_SCALE = 1.6
+# L'établi est bas : un peu plus grand que la stèle pour se voir d'aussi loin.
+WORKSHOP_SCALE = 1.6
 
 
 def _scaled(distance, factor: float):
@@ -126,6 +128,51 @@ def rift(stem: str, open_rift: bool, seed: int) -> PropModel:
     return PropModel(stem, parts, materials, AXIS_Y_YAW, canvas=(120, 80))
 
 
+def workshop(stem: str, seed: int) -> PropModel:
+    """Atelier (plan 22 C2) : établi de bois et son étau, enclume sur une souche, brasero aux braises encore vives."""
+    WOOD, DARK_WOOD, IRON, EMBER, STEEL = range(5)
+    materials = [
+        make_material("wood", "#9A7652"),
+        make_material("dark_wood", "#5E4630"),
+        make_material("iron", "#4A4A50", contrast=0.8),
+        make_emissive("ember", "#F07A2C"),
+        make_material("steel", "#A8A4A0", contrast=0.9),
+    ]
+
+    def parts() -> list[Part]:
+        return [Part(_scaled(part.distance, WORKSHOP_SCALE), part.material) for part in base_parts()]
+
+    def base_parts() -> list[Part]:
+        w = Weathering(seed)
+        legs = [(x * M, 0.38 * M, z * M) for x in (-0.62, 0.32) for z in (-0.24, 0.24)]
+        coals = [((0.98 + w.uniform(-0.08, 0.08)) * M, 0.5 * M, w.uniform(-0.12, 0.12) * M) for _ in range(5)]
+        return [
+            # Établi : plateau épais, quatre pieds, une traverse basse.
+            Part(lambda p: rounded_box(p, (-0.15 * M, 0.8 * M, 0), (0.62 * M, 0.06 * M, 0.32 * M), 0.02 * M), WOOD),
+            Part(lambda p: _union(*(rounded_box(p, c, (0.05 * M, 0.38 * M, 0.05 * M), 0.01 * M) for c in legs)), DARK_WOOD),
+            Part(lambda p: rounded_box(p, (-0.15 * M, 0.25 * M, 0), (0.5 * M, 0.04 * M, 0.04 * M), 0.01 * M), DARK_WOOD),
+            # Étau au bord gauche, marteau posé à plat.
+            Part(lambda p: _union(rounded_box(p, (-0.62 * M, 0.95 * M, 0.2 * M), (0.1 * M, 0.1 * M, 0.08 * M), 0.02 * M),
+                                  capsule(p, (-0.62 * M, 0.95 * M, 0.34 * M), (-0.62 * M, 0.95 * M, 0.5 * M), 0.025 * M)), IRON),
+            Part(lambda p: capsule(p, (-0.2 * M, 0.89 * M, -0.05 * M), (0.2 * M, 0.89 * M, 0.08 * M), 0.025 * M), DARK_WOOD),
+            Part(lambda p: rounded_box(p, (0.2 * M, 0.91 * M, 0.08 * M), (0.06 * M, 0.04 * M, 0.04 * M), 0.01 * M), STEEL),
+            # Enclume sur sa souche, devant l'établi.
+            Part(lambda p: cylinder(p, (0.2 * M, 0.2 * M, 0.55 * M), 0.2 * M, 0.2 * M, 0.02 * M), DARK_WOOD),
+            Part(lambda p: _union(rounded_box(p, (0.2 * M, 0.47 * M, 0.55 * M), (0.26 * M, 0.06 * M, 0.1 * M), 0.02 * M),
+                                  rounded_box(p, (0.2 * M, 0.4 * M, 0.55 * M), (0.1 * M, 0.06 * M, 0.08 * M), 0.01 * M),
+                                  capsule(p, (0.46 * M, 0.49 * M, 0.55 * M), (0.58 * M, 0.5 * M, 0.55 * M), 0.04 * M, 0.01 * M)), IRON),
+            # Brasero à droite : cuve de fer sur trois pieds, braises qui rougeoient.
+            Part(lambda p: _union(cylinder(p, (0.98 * M, 0.42 * M, 0), 0.24 * M, 0.08 * M, 0.02 * M),
+                                  *(capsule(p, (0.98 * M + 0.18 * M * np.cos(a), 0.36 * M, 0.18 * M * np.sin(a)),
+                                            (0.98 * M + 0.22 * M * np.cos(a), 0.0, 0.22 * M * np.sin(a)), 0.025 * M)
+                                    for a in (0.5, 2.6, 4.7))), IRON),
+            Part(lambda p: _union(*(sphere(p, c, 0.07 * M) for c in coals)), EMBER),
+        ]
+
+    return PropModel(stem, parts, materials, AXIS_Y_YAW, canvas=(150, 120),
+                     footprint=box_footprint(0.95 * M * WORKSHOP_SCALE, 0.55 * M * WORKSHOP_SCALE))
+
+
 def catalog() -> list[PropModel]:
     return [
         memorial("memorial_dormant", False, 7),
@@ -133,4 +180,5 @@ def catalog() -> list[PropModel]:
         memory_shard("memory_shard", 3),
         rift("rift_open", True, 13),
         rift("rift_closed", False, 13),
+        workshop("workshop", 17),
     ]

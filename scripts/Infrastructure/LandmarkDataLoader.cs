@@ -22,14 +22,25 @@ public class MemorialConfig
     public float ShardPickupPx = 30f;
     public int BlessingChoices = 3;
     public string BlessingMinRarity = "uncommon";
-    public int WeaponCost = 30;
-    public string WeaponMinRarity = "rare";
     public int HealCost = 20;
     public float HealPercent = 0.4f;
     public float CostGrowth = 0.5f;
     public int LiftOubliCost = 40;
     /// <summary>Relancer les trois bénédictions d'un Mémorial qu'on vient de raviver (plan 17, 4.5).</summary>
     public int BlessingRerollCost = 15;
+}
+
+/// <summary>Réglages des Ateliers (section <c>workshop</c> de data/world/landmarks.json, plan 22 C2).</summary>
+public class WorkshopConfig
+{
+    public string Sprite;
+    public List<LandmarkBand> Placement = new();
+    public float MinSpacingPx = 900f;
+    public int WeaponCost = 30;
+    public string WeaponMinRarity = "rare";
+    public int RetemperCost = 20;
+    public int TemperUpgrades = 5;
+    public float CostGrowth = 0.5f;
 }
 
 /// <summary>Réglages des Failles (section <c>rift</c> de data/world/landmarks.json).</summary>
@@ -55,6 +66,7 @@ public static class LandmarkDataLoader
 {
     private static MemorialConfig _memorial;
     private static RiftConfig _rift;
+    private static WorkshopConfig _workshop;
 
     public static MemorialConfig Memorial
     {
@@ -63,6 +75,16 @@ public static class LandmarkDataLoader
             if (_memorial == null)
                 Load();
             return _memorial;
+        }
+    }
+
+    public static WorkshopConfig Workshop
+    {
+        get
+        {
+            if (_workshop == null)
+                Load();
+            return _workshop;
         }
     }
 
@@ -80,6 +102,7 @@ public static class LandmarkDataLoader
     {
         _memorial = new MemorialConfig();
         _rift = new RiftConfig();
+        _workshop = new WorkshopConfig();
         using FileAccess file = FileAccess.Open("res://data/world/landmarks.json", FileAccess.ModeFlags.Read);
         Json json = new();
         if (file == null || json.Parse(file.GetAsText()) != Error.Ok)
@@ -109,8 +132,6 @@ public static class LandmarkDataLoader
         c.BlessingChoices = (int)Float(memorial, "blessing_choices", c.BlessingChoices);
         c.BlessingMinRarity = memorial.ContainsKey("blessing_min_rarity") ? memorial["blessing_min_rarity"].AsString() : c.BlessingMinRarity;
         Godot.Collections.Dictionary services = memorial.ContainsKey("services") ? memorial["services"].AsGodotDictionary() : new();
-        c.WeaponCost = (int)Float(services, "weapon_cost", c.WeaponCost);
-        c.WeaponMinRarity = services.ContainsKey("weapon_min_rarity") ? services["weapon_min_rarity"].AsString() : c.WeaponMinRarity;
         c.HealCost = (int)Float(services, "heal_cost", c.HealCost);
         c.HealPercent = Float(services, "heal_percent", c.HealPercent);
         c.CostGrowth = Float(services, "cost_growth", c.CostGrowth);
@@ -137,6 +158,21 @@ public static class LandmarkDataLoader
             r.SpawnDistanceMin = (float)distance[0].AsDouble();
             r.SpawnDistanceMax = (float)distance[1].AsDouble();
         }
+        ReadWorkshop(root["workshop"].AsGodotDictionary());
+    }
+
+    private static void ReadWorkshop(Godot.Collections.Dictionary workshop)
+    {
+        WorkshopConfig w = _workshop;
+        w.Sprite = workshop["sprite"].AsString();
+        w.Placement = ReadBands(workshop["placement"].AsGodotArray());
+        w.MinSpacingPx = Float(workshop, "min_spacing_px", w.MinSpacingPx);
+        Godot.Collections.Dictionary services = workshop.ContainsKey("services") ? workshop["services"].AsGodotDictionary() : new();
+        w.WeaponCost = (int)Float(services, "weapon_cost", w.WeaponCost);
+        w.WeaponMinRarity = services.ContainsKey("weapon_min_rarity") ? services["weapon_min_rarity"].AsString() : w.WeaponMinRarity;
+        w.RetemperCost = (int)Float(services, "retemper_cost", w.RetemperCost);
+        w.TemperUpgrades = (int)Float(services, "temper_upgrades", w.TemperUpgrades);
+        w.CostGrowth = Float(services, "cost_growth", w.CostGrowth);
     }
 
     /// <summary>Réglage optionnel : la valeur par défaut du modèle quand la clé manque.</summary>

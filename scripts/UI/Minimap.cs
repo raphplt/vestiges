@@ -30,6 +30,7 @@ public partial class Minimap : Control
     private static readonly Color PlayerColor = new(1f, 0.97f, 0.88f);
     private static readonly Color MemorialColor = new(0.95f, 0.82f, 0.45f);
     private static readonly Color RiftColor = new(0.7f, 0.35f, 0.85f);
+    private static readonly Color WorkshopColor = new(0.91f, 0.52f, 0.24f);
     private static readonly Color PlaceColor = new(0.78f, 0.86f, 0.92f);
     private ErasureManager _erasure;
     private WorldSetup _world;
@@ -59,6 +60,7 @@ public partial class Minimap : Control
     private Texture2D _chestIcon;
     private Texture2D _memorialIcon;
     private Texture2D _riftIcon;
+    private Texture2D _workshopIcon;
     private Texture2D _playerIcon;
 
     public override void _Ready()
@@ -70,6 +72,7 @@ public partial class Minimap : Control
         _chestIcon = GD.Load<Texture2D>(iconFolder + "minimap_chest.png");
         _memorialIcon = GD.Load<Texture2D>(iconFolder + "minimap_memorial.png");
         _riftIcon = GD.Load<Texture2D>(iconFolder + "minimap_rift.png");
+        _workshopIcon = GD.Load<Texture2D>(iconFolder + "minimap_workshop.png");
         _playerIcon = GD.Load<Texture2D>(iconFolder + "minimap_player.png");
         _groups = GetNode<GroupCache>("/root/GroupCache");
         _eventBus = GetNode<EventBus>("/root/EventBus");
@@ -160,6 +163,7 @@ public partial class Minimap : Control
             (_chestIcon, RarityPalette.Main("rare"), "MAP_LEGEND_CHEST"),
             (_memorialIcon, MemorialColor, "MAP_LEGEND_MEMORIAL"),
             (_riftIcon, RiftColor, "MAP_LEGEND_RIFT"),
+            (_workshopIcon, WorkshopColor, "MAP_LEGEND_WORKSHOP"),
             (_placeIcon, PlaceColor, "MAP_LEGEND_PLACE"),
             (null, _palette.Terrain("forest_reclaimed", TerrainType.Forest), "MAP_BIOME_FOREST"),
             (null, _palette.Terrain("urban_ruins", TerrainType.Concrete), "MAP_BIOME_URBAN"),
@@ -305,6 +309,9 @@ public partial class Minimap : Control
         for (int i = 0; i < Rift.All.Count; i++)
             if (InView(Rift.All[i].GlobalPosition) && Known(Rift.All[i].GlobalPosition))
                 DrawIcon(Rift.All[i].GlobalPosition, _riftIcon, RiftColor);
+        for (int i = 0; i < Workshop.All.Count; i++)
+            if (!Workshop.All[i].IsLost && InView(Workshop.All[i].GlobalPosition) && Known(Workshop.All[i].GlobalPosition))
+                DrawIcon(Workshop.All[i].GlobalPosition, _workshopIcon, WorkshopColor);
         DrawIcon(_playerPosition, _playerIcon, PlayerColor);
     }
 

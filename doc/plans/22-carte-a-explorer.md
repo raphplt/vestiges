@@ -320,3 +320,16 @@ Modèle : le Mémorial (`SitePlacer`, sprite dédié, directeur qui ouvre le `Ch
 - `WeaponInstance` garde les gains et la rareté de sa dernière amélioration (`LastGains`, `LastRarityId`) ; `Retemper` les retire et applique les nouveaux, sans changer le niveau. `Player.UpgradeWeapon` reçoit la rareté (level-up, Faille, Mémorial, panneau de debug).
 - **Trempe :** `Player.GrantTemper(n)` donne n charges. Tant qu'il en reste, chaque tirage de gains d'arme (`UpgradeRoller.RollGains`, donc level-up et Faille ; et le service du Mémorial) touche une stat de plus. Une charge n'est consommée que si l'amélioration appliquée a réellement plus de stats que sa rareté : une carte tirée avant la Trempe ne la consomme pas.
 - **Vérification :** build sans avertissement ; `tools/test_weapons.sh` 33/33 (5 améliorations communes à 2 stats puis retour à 1 ; Retrempe égale à l'arme qui aurait reçu les nouveaux gains, niveau inchangé) ; `tools/test_choice_screen.sh` 31/31.
+
+### C2b — livré le 2 octobre
+
+- **Le lieu :** 4 Ateliers par carte (couronne 0,15 à 0,9, 900 px d'écart), placés après les Failles : les positions des coffres, Mémoriaux et Failles d'une seed ne bougent pas. Sprite d'établi avec étau, enclume sur souche et brasero aux braises vives (`workshop`, `tools/sprites/props/landmarks.py`, ×1,6) ; colonne de lumière couleur braise (`workshop` dans `data/ui/rarities.json`) ; invite « Travailler ». Englouti par le Néant, il s'éteint et ne sert plus.
+- **Services** (`WorkshopDirector`, section `workshop` de `landmarks.json`) :
+  - **Trempe** offerte à la première visite de chaque Atelier : 5 améliorations d'arme à une stat de plus (cumulable d'un Atelier à l'autre). Le reste s'affiche dans le sous-titre.
+  - **Forger** : niveau d'arme, rare au moins, 30 Essence (prix et rareté repris du Mémorial, qui perd ce service).
+  - **Retremper** : refait la dernière amélioration d'une arme, à rareté égale ou supérieure et au même nombre de stats, 20 Essence. Proposé seulement si la dernière amélioration est connue.
+  - Prix +50 % à chaque usage, par Atelier, comme au Mémorial.
+- **Monde :** première visite = zone stabilisée (comme un Mémorial ravivé) et 13ᵉ Repère (cadence +8 %). Minimap : pictogramme d'enclume, couleur braise, ligne de légende.
+- **Mémorial :** il ne garde que le soin et la levée d'Oubli. **Point pour Raphaël :** ses services deviennent maigres ; à juger en jeu (une idée : y déplacer la relance de bénédiction).
+- **Outils :** `--capture-workshop` (lieu, première visite, forge, Retrempe) ; bot `--visit` qui achète une fois par Atelier ; captures du Mémorial et de la Faille adaptées au départ du service d'arme.
+- **Vérification :** build sans avertissement, smoke vert ; bancs verts : armes 33/33, petits lieux (13 Repères), écrans de choix 31/31, effacement actif 20/20, carte 17/17, mouvement, mode dev. Captures inspectées : Atelier dans les champs avec sa colonne et son invite, écran de première visite (Trempe : 5), forge rare à 3 stats (Trempe 5 → 4), Retrempe rare au niveau inchangé, Essence 200 → 150 ; Mémorial réduit au soin ; Faille et levée d'Oubli inchangées.

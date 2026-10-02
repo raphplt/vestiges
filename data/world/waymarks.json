@@ -81,6 +81,13 @@
             "id": "rift",
             "name_key": "WAYMARK_RIFT",
             "banishes": 1
+        },
+        {
+            "id": "workshop",
+            "name_key": "WAYMARK_WORKSHOP",
+            "stat": "attack_speed",
+            "amount": 0.08,
+            "modifier_type": "multiplicative"
         }
     ]
 }

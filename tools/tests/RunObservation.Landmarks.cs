@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Threading.Tasks;
 using Godot;
+using Vestiges.Combat;
 using Vestiges.Progression;
 using Vestiges.UI;
 using Vestiges.World;
@@ -59,18 +60,14 @@ public partial class RunObservation
         _player.GlobalPosition = target.GlobalPosition + new Vector2(-44f, 8f);
         target.Interact(_player);
         await ToSignal(GetTree().CreateTimer(2.5, processAlways: true), SceneTreeTimer.SignalName.Timeout);
+        // Le niveau d'arme est parti à l'Atelier (plan 22 C2) : restent le soin et la levée d'Oubli.
         SaveFrame("memorial-4-services");
-        int levelBefore = _player.EquippedWeapon.Level;
-        choices.Activate(0);
-        await ToSignal(GetTree().CreateTimer(0.6, processAlways: true), SceneTreeTimer.SignalName.Timeout);
-        SaveFrame("memorial-5-services-after");
-        int levelAfter = _player.EquippedWeapon.Level;
         choices.Activate(int.MaxValue);
         await Frames(40);
         SaveCrop("memorial-6-awake", target.GlobalPosition + new Vector2(0f, -50f), new Vector2(240f, 135f));
 
         GD.Print(string.Create(CultureInfo.InvariantCulture,
-            $"[RunObservation] RESULT memorial count={memorials.Count} bands={string.Join(",", bands)} shards={shardCount} state={target.State} blessings_shown={blessingsShown} damage={damageBefore:F2}->{_player.DamageMultiplier:F2} max_hp={hpBefore:F0}->{_player.EffectiveMaxHp:F0} weapon_level={levelBefore}->{levelAfter}"));
+            $"[RunObservation] RESULT memorial count={memorials.Count} bands={string.Join(",", bands)} shards={shardCount} state={target.State} blessings_shown={blessingsShown} damage={damageBefore:F2}->{_player.DamageMultiplier:F2} max_hp={hpBefore:F0}->{_player.EffectiveMaxHp:F0}"));
     }
 
     /// <summary>Ravive un Mémorial comme un joueur : éclats ramassés, première bénédiction prise. Rend le nombre d'éclats.</summary>
@@ -176,8 +173,8 @@ public partial class RunObservation
         memorials[0].Interact(_player);
         await ToSignal(GetTree().CreateTimer(2.5, processAlways: true), SceneTreeTimer.SignalName.Timeout);
         SaveFrame("rift-5-memorial-lift");
-        // La levée d'Oubli est la dernière carte des services.
-        choices.Activate(_player.WeaponSlots.Count + 1);
+        // Services du Mémorial : le soin, puis la levée d'Oubli.
+        choices.Activate(1);
         await Frames(10);
         SaveFrame("rift-6-lifted");
         choices.Activate(int.MaxValue);
@@ -185,5 +182,58 @@ public partial class RunObservation
 
         GD.Print(string.Create(CultureInfo.InvariantCulture,
             $"[RunObservation] RESULT rift count={rifts.Count} offer_shown={offerShown} peril=0->{perilAfter} oublis=0->{oublisAfter}->{peril.Oublis.Count} oubli={oubli} speed={speedBefore:F2}->{_player.SpeedMultiplier:F2} damage={damageBefore:F2}->{_player.DamageMultiplier:F2}"));
+    }
+
+    /// <summary>
+    /// Atelier (plan 22 C2) : vue du lieu, première visite (Trempe offerte), niveau d'arme puis Retrempe contre de
+    /// l'Essence, et la carte avec son pictogramme.
+    /// </summary>
+    private async Task CaptureWorkshop()
+    {
+        _world.GetNode("SpawnManager").ProcessMode = ProcessModeEnum.Disabled;
+        foreach (Node node in GetTree().GetNodesInGroup("enemies"))
+            if (node is Vestiges.Combat.Enemy existing && existing.IsActive)
+                _world.GetNode<Vestiges.Spawn.EnemyPool>("EnemyPool").Return(existing);
+        _player.AIInputOverride = Vector2.Zero;
+        ProcessMode = ProcessModeEnum.Always;
+        await ToSignal(GetTree().CreateTimer(3.5, processAlways: true), SceneTreeTimer.SignalName.Timeout);
+
+        List<Workshop> workshops = new(Workshop.All);
+        if (workshops.Count == 0)
+        {
+            GD.PushError("[RunObservation] Aucun Atelier placé");
+            return;
+        }
+        Vector2 spawn = _player.GlobalPosition;
+        workshops.Sort((a, b) => a.GlobalPosition.DistanceSquaredTo(spawn).CompareTo(b.GlobalPosition.DistanceSquaredTo(spawn)));
+        Workshop target = workshops[0];
+        _player.GlobalPosition = target.GlobalPosition + new Vector2(-52f, 10f);
+        _camera.ResetSmoothing();
+        await Frames(25);
+        SaveCrop("workshop-1-place", target.GlobalPosition + new Vector2(0f, -40f), new Vector2(240f, 135f));
+        SaveFrame("workshop-2-world");
+
+        ChoiceScreen choices = _world.GetNode<ChoiceScreen>("ChoiceScreen");
+        _world.GetNode<EssenceTracker>("EssenceTracker").AddEssence(200);
+        target.Interact(_player);
+        await ToSignal(GetTree().CreateTimer(2.5, processAlways: true), SceneTreeTimer.SignalName.Timeout);
+        SaveFrame("workshop-3-services");
+        int temper = _player.TemperCharges;
+        WeaponInstance weapon = _player.WeaponSlots[0];
+        int levelBefore = weapon.Level;
+        choices.Activate(0);
+        await ToSignal(GetTree().CreateTimer(0.6, processAlways: true), SceneTreeTimer.SignalName.Timeout);
+        SaveFrame("workshop-4-forged");
+        int levelAfter = weapon.Level;
+        int gainsForged = weapon.LastGains.Count;
+        // Les cartes de Retrempe suivent celles des armes ; l'arme qu'on vient de forger a la première.
+        choices.Activate(_player.WeaponSlots.Count);
+        await ToSignal(GetTree().CreateTimer(0.6, processAlways: true), SceneTreeTimer.SignalName.Timeout);
+        SaveFrame("workshop-5-retempered");
+        choices.Activate(int.MaxValue);
+        await Frames(10);
+
+        GD.Print(string.Create(CultureInfo.InvariantCulture,
+            $"[RunObservation] RESULT workshop count={workshops.Count} visited={target.Visited} temper={temper}->{_player.TemperCharges} weapon_level={levelBefore}->{levelAfter} forged_stats={gainsForged} retempered_rarity={weapon.LastRarityId} level_kept={weapon.Level == levelAfter} essence_left={_world.GetNode<EssenceTracker>("EssenceTracker").CurrentEssence}"));
     }
 }

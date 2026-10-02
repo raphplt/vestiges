@@ -17,7 +17,6 @@ public partial class MemorialDirector : Node
     private const float LossCheckInterval = 1f;
     private const float ShardSpacingPx = 90f;
     private const uint PropCollisionLayer = 4;
-    private const string ServiceWeapon = "weapon";
     private const string ServiceHeal = "heal";
     private const string ServiceLift = "lift";
     private const string ServiceReroll = "reroll";
@@ -295,25 +294,6 @@ public partial class MemorialDirector : Node
         List<System.Action> actions = new();
         int essence = _essence?.CurrentEssence ?? 0;
 
-        int weaponCost = Price(_config.WeaponCost, memorial.ServiceUses(ServiceWeapon));
-        foreach (WeaponInstance weapon in _player.WeaponSlots)
-        {
-            ChoiceCard card = new()
-            {
-                Tag = string.Format(Tr("MEMORIAL_WEAPON_TAG"), RarityPalette.DisplayName(_config.WeaponMinRarity)).ToUpper(),
-                Frame = RarityPalette.Main(_config.WeaponMinRarity),
-                Rank = RarityArt.Rank(_config.WeaponMinRarity),
-                Title = string.Format(Tr("MEMORIAL_WEAPON_TITLE"), weapon.Name),
-                Price = string.Format(Tr("MEMORIAL_PRICE"), weaponCost),
-                Enabled = essence >= weaponCost && weapon.CanLevelUp,
-                Icon = LoadIcon(weapon.Base.Sprite),
-            };
-            card.Lines.Add((string.Format(Tr("LEVELUP_LEVEL"), weapon.Level, weapon.Level + 1), ChoiceStyle.TextColor));
-            cards.Add(card);
-            WeaponInstance target = weapon;
-            actions.Add(() => ReviveWeapon(memorial, target, weaponCost));
-        }
-
         int healCost = Price(_config.HealCost, memorial.ServiceUses(ServiceHeal));
         ChoiceCard heal = new()
         {
@@ -356,21 +336,6 @@ public partial class MemorialDirector : Node
             if (choice >= 0 && CachePlayer())
                 actions[choice]();
         }, PixelBackdrop.MemorialTint, string.IsNullOrEmpty(lastResult));
-    }
-
-    private void ReviveWeapon(Memorial memorial, WeaponInstance weapon, int cost)
-    {
-        if (!_essence.TrySpend(cost))
-            return;
-        UpgradeRarity rarity = UpgradeRoller.RollRarityAtLeast(BumpSteps(memorial.GlobalPosition), _config.WeaponMinRarity, _rng);
-        if (!_player.UpgradeWeapon(weapon.Id, UpgradeRoller.RollWeaponGains(weapon, rarity, _rng, _player.TemperCharges > 0 ? 1 : 0), rarity.Id))
-        {
-            _essence.AddEssence(cost);
-            OpenServices(memorial, null);
-            return;
-        }
-        memorial.RecordServiceUse(ServiceWeapon);
-        OpenServices(memorial, $"{weapon.Name} : {RarityPalette.DisplayName(rarity.Id)}".Replace("  ", " "));
     }
 
     private void Heal(Memorial memorial, int cost)

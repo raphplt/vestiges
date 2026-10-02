@@ -13,7 +13,7 @@ namespace Vestiges.Tests;
 /// et visités (atteints), micro-événements lancés, Essence gagnée et dépensée.
 /// Avec --visit, le bot fait comme un joueur qui ratisse : il se détourne vers le lieu vu le plus proche (700 px), ouvre
 /// les coffres, ravive les Mémoriaux puis, s'il en recroise un éveillé, y achète le premier service qu'il peut payer
-/// (un achat par passage) ; il n'ouvre pas les Failles, qui changeraient le Péril de la mesure.
+/// (un achat par passage), et fait de même à chaque Atelier (plan 22 C2) ; il n'ouvre pas les Failles, qui changeraient le Péril de la mesure.
 /// « Visité » : un lieu encore utile atteint à portée d'interaction, qu'il soit utilisé ou non.
 /// </summary>
 public partial class RunObservation
@@ -102,7 +102,7 @@ public partial class RunObservation
             _frameDelta = 0;
         }
 
-        /// <summary>--visit : un seul achat par Mémorial visité ; les écrans de services suivants se referment.</summary>
+        /// <summary>--visit : un seul achat par Mémorial ou Atelier visité ; les écrans de services suivants se referment.</summary>
         public bool TakePurchase()
         {
             bool allowed = _purchaseAllowed;
@@ -112,7 +112,7 @@ public partial class RunObservation
 
         private static readonly string[] PlaceKinds =
         {
-            "chest", "memorial", "rift", "well", "crystal_vein", "scarecrow",
+            "chest", "memorial", "rift", "workshop", "well", "crystal_vein", "scarecrow",
             "mailbox", "mine_cart", "abandoned_car", "phone_booth", "bus_shelter", "picnic",
         };
 
@@ -131,6 +131,8 @@ public partial class RunObservation
                 _places.Add((memorial, "memorial"));
             foreach (Rift rift in Rift.All)
                 _places.Add((rift, "rift"));
+            foreach (Workshop workshop in Workshop.All)
+                _places.Add((workshop, "workshop"));
 
             foreach ((Node2D node, string kind) in _places)
             {
@@ -195,7 +197,7 @@ public partial class RunObservation
                 player.AIInputOverride = Vector2.Zero;
                 player.AITriggerInteract();
                 _holdUntil = t + PlaceHoldSeconds;
-                _purchaseAllowed = _targetKind == "memorial" && !wakeFirst;
+                _purchaseAllowed = (_targetKind == "memorial" && !wakeFirst) || _targetKind == "workshop";
             }
             _interactions[id] = _interactions.GetValueOrDefault(id) + 1;
             if (!wakeFirst || _interactions[id] >= 2)
@@ -227,6 +229,7 @@ public partial class RunObservation
             Chest chest => !chest.IsOpened,
             Memorial memorial => memorial.CanInteract,
             Rift rift => rift.IsOpen,
+            Workshop workshop => workshop.CanInteract,
             SmallPlace place => place.CanInteract,
             _ => false,
         };
@@ -248,7 +251,7 @@ public partial class RunObservation
             // Petits lieux seuls, tous types confondus : la cible du plan 22 §2 (un toutes les 20 à 30 s de marche).
             int small = 0;
             foreach ((string kind, int count) in _seenByKind)
-                if (kind is not ("chest" or "memorial" or "rift"))
+                if (kind is not ("chest" or "memorial" or "rift" or "workshop"))
                     small += count;
             summary.Append(CultureInfo.InvariantCulture,
                 $" small_places_seen={small} small_place_every_s={(small > 0 ? seconds / small : 0):F0}");

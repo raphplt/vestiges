@@ -4,7 +4,7 @@ using Vestiges.Infrastructure;
 namespace Vestiges.World;
 
 /// <summary>
-/// Place les Mémoriaux et les Failles du départ (data/world/landmarks.json), après les coffres et par le même
+/// Place les Mémoriaux, les Failles et les Ateliers du départ (data/world/landmarks.json), après les coffres et par le même
 /// <see cref="SitePlacer"/> : ils s'écartent des coffres et réservent leur dégagement avant les décors.
 /// </summary>
 public static class LandmarkSpawner
@@ -46,5 +46,24 @@ public static class LandmarkSpawner
             }
         }
         GD.Print($"[LandmarkSpawner] Spawned {rifts} rifts");
+
+        // Ateliers (plan 22 C2) : placés en dernier, pour que les tirages des lieux plus anciens ne bougent pas.
+        WorkshopConfig workshop = LandmarkDataLoader.Workshop;
+        int workshops = 0;
+        foreach (LandmarkBand band in workshop.Placement)
+        {
+            for (int i = 0; i < band.Count; i++)
+            {
+                if (!placer.TryPlace(band.Min, band.Max, workshop.MinSpacingPx, out Vector2 position))
+                {
+                    GD.PushWarning($"[LandmarkSpawner] No room for a workshop in band {band.Min}-{band.Max}");
+                    continue;
+                }
+                Workshop node = new() { Name = $"Workshop{++workshops}", GlobalPosition = position };
+                node.Initialize(workshop);
+                container.AddChild(node);
+            }
+        }
+        GD.Print($"[LandmarkSpawner] Spawned {workshops} workshops");
     }
 }

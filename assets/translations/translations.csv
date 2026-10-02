@@ -68,8 +68,6 @@ MEMORIAL_GATHER_STATUS,Éclats {0}/{1} · {2} s,Shards {0}/{1} · {2} s
 MEMORIAL_AWAKE_TITLE,MÉMORIAL RAVIVÉ,MEMORIAL REKINDLED
 MEMORIAL_AWAKE_SUBTITLE,Choisis une bénédiction.,Choose a blessing.
 MEMORIAL_SERVICES_TITLE,MÉMORIAL,MEMORIAL
-MEMORIAL_WEAPON_TAG,Amélioration {0} au moins,{0} upgrade or better
-MEMORIAL_WEAPON_TITLE,Raviver : {0},Rekindle: {0}
 MEMORIAL_PRICE,{0} Essence,{0} Essence
 MEMORIAL_HEAL_TAG,Soin,Healing
 MEMORIAL_HEAL_TITLE,Se recueillir,Rest a while
@@ -106,6 +104,18 @@ WAYMARK_PICNIC,Table de pique-nique,Picnic table
 WAYMARK_CHEST,Coffre,Chest
 WAYMARK_MEMORIAL,Mémorial,Memorial
 WAYMARK_RIFT,Faille,Rift
+LANDMARK_WORKSHOP,Atelier,Workshop
+WORKSHOP_PROMPT,Travailler,Work
+WORKSHOP_TITLE,ATELIER,WORKSHOP
+WORKSHOP_WEAPON_TAG,Amélioration {0} au moins,{0} upgrade or better
+WORKSHOP_WEAPON_TITLE,Forger : {0},Forge: {0}
+WORKSHOP_RETEMPER_TAG,Retrempe · {0} au moins,Retemper · {0} or better
+WORKSHOP_RETEMPER_TITLE,Retremper : {0},Retemper: {0}
+WORKSHOP_RETEMPER_LINE,Refait sa dernière amélioration,Redoes its last upgrade
+WORKSHOP_RETEMPERED,Retrempe de {0} : {1},{0} retempered: {1}
+WORKSHOP_TEMPERED,Trempe : tes {0} prochaines améliorations d'arme touchent une stat de plus,Temper: your next {0} weapon upgrades raise one more stat
+WORKSHOP_TEMPER_LEFT,Trempe : {0},Temper: {0}
+WAYMARK_WORKSHOP,Atelier,Workshop
 STAT_WAYMARKS,Repères,Waymarks
 RIFT_PROMPT,Sonder,Reach in
 WEAPON_SWAP_PROMPT,Échanger : {0},Swap: {0}
@@ -372,6 +382,7 @@ MAP_LEGEND_YOU,Toi,You
 MAP_LEGEND_CHEST,Coffre (couleur de sa rareté),Chest (rarity colour)
 MAP_LEGEND_MEMORIAL,Mémorial,Memorial
 MAP_LEGEND_RIFT,Faille,Rift
+MAP_LEGEND_WORKSHOP,Atelier,Workshop
 MAP_LEGEND_PLACE,Petit lieu à visiter,Place to visit
 BONUS_CANTEEN,Gourde · soin,Canteen · heal
 BONUS_MAGNET,Fer à cheval · aimant,Horseshoe · magnet

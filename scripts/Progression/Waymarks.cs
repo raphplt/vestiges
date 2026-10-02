@@ -7,8 +7,8 @@ namespace Vestiges.Progression;
 
 /// <summary>
 /// Repères (plan 22 §3 B, plan 23 R9, plan 24 D3) : le premier usage de chaque type de lieu dans la run donne un petit
-/// gain permanent propre au lieu (une stat, ou une relance, un bannissement gratuit). Douze types : les petits lieux,
-/// coffre, Mémorial éveillé, Faille dont on a pris une offre. Enfant du joueur, état de run.
+/// gain permanent propre au lieu (une stat, ou une relance, un bannissement gratuit). Treize types : les petits lieux,
+/// coffre, Mémorial éveillé, Faille dont on a pris une offre, Atelier visité. Enfant du joueur, état de run.
 /// Les signaux ne disent pas quel joueur agit : à revoir pour le coop v2.
 /// </summary>
 public partial class Waymarks : Node
@@ -34,6 +34,7 @@ public partial class Waymarks : Node
         _eventBus.ChestOpened += OnChestOpened;
         _eventBus.MemorialAwakened += OnMemorialAwakened;
         _eventBus.RiftUsed += OnRiftUsed;
+        _eventBus.WorkshopVisited += OnWorkshopVisited;
     }
 
     public override void _ExitTree()
@@ -44,12 +45,14 @@ public partial class Waymarks : Node
         _eventBus.ChestOpened -= OnChestOpened;
         _eventBus.MemorialAwakened -= OnMemorialAwakened;
         _eventBus.RiftUsed -= OnRiftUsed;
+        _eventBus.WorkshopVisited -= OnWorkshopVisited;
     }
 
     private void OnSmallPlaceUsed(string placeId, Vector2 position) => Mark(placeId);
     private void OnChestOpened(string chestId, string rarity, Vector2 position) => Mark("chest");
     private void OnMemorialAwakened(Vector2 position) => Mark("memorial");
     private void OnRiftUsed(Vector2 position) => Mark("rift");
+    private void OnWorkshopVisited(Vector2 position) => Mark("workshop");
 
     private void Mark(string type)
     {

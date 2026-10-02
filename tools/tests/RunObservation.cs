@@ -53,6 +53,7 @@ namespace Vestiges.Tests;
 /// --close-window : quitte par la demande de fermeture de la fenêtre au lieu de GameExit.
 /// --capture-rift : offre d'une Faille, Péril et Oubli dans la pause, Oubli levé au Mémorial (RunObservation.Landmarks.cs).
 /// --capture-memorial : parcours complet d'un Mémorial, du réveil aux services (RunObservation.Landmarks.cs).
+/// --capture-workshop : Atelier, première visite (Trempe), niveau d'arme et Retrempe (RunObservation.Landmarks.cs).
 /// --loot-draws N : tirages de butin de chaque coffre, sans les appliquer (RunObservation.Chests.cs).
 /// --capture-bestiary : gros plans des créatures du pilote de sprites procéduraux, autour du joueur immobile.
 /// --density : mesure de densité en spawn naturel (ennemis visibles, temps sans ennemi, débits, niveaux,
@@ -176,6 +177,8 @@ public partial class RunObservation : Node
                 await CaptureChoiceReopen();
             else if (Array.IndexOf(args, "--capture-memorial") >= 0)
                 await CaptureMemorial();
+            else if (Array.IndexOf(args, "--capture-workshop") >= 0)
+                await CaptureWorkshop();
             else if (Array.IndexOf(args, "--capture-rift") >= 0)
                 await CaptureRift();
             else if (Array.IndexOf(args, "--capture-oublis") >= 0)

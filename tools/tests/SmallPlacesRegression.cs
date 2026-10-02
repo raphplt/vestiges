@@ -198,9 +198,10 @@ public partial class SmallPlacesRegression : Node2D
 				&& Mathf.IsEqualApprox(luck - luckBefore, expectedLuck) && Mathf.IsEqualApprox(player.LuckBonus, luck)
 				&& Mathf.IsEqualApprox(player.EffectiveMaxHp, maxHp),
 			$"Repères : {player.Waymarks.Found} types utilisés, Chance +{(luck - luckBefore) * 100f:0} %, un deuxième puits n'ajoute rien");
-		Check(waymarks.Rewards.Count == 12 && waymarks.Rewards["well"].Stat == "max_hp" && waymarks.Rewards["memorial"].Rerolls == 1
+		Check(waymarks.Rewards.Count == 13 && waymarks.Rewards["well"].Stat == "max_hp" && waymarks.Rewards["memorial"].Rerolls == 1
+				&& waymarks.Rewards["workshop"].Stat == "attack_speed"
 				&& waymarks.Rewards["rift"].Banishes == 1,
-			"Repères : douze gains, PV max au puits, une relance au Mémorial, un bannissement à la Faille");
+			"Repères : treize gains, PV max au puits, une relance au Mémorial, un bannissement à la Faille, cadence à l'Atelier");
 	}
 
 	private static bool Revealed(SmallPlace place)
