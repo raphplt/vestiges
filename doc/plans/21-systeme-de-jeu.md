@@ -365,3 +365,7 @@ Ensuite : C2, l'Atelier ([plan 22](22-carte-a-explorer.md), validé §49).
 - **Boîte à musique :** les notes grandissent avec la taille ; les orbes sont recréées quand la taille change (avant, leur contact restait celui de leur création).
 - **Hors lot :** l'arme tenue en main (option désactivée par défaut, grille de 16 px) ne change pas ; le cône du Transistor suivait déjà la portée et la taille. Le nombre (ondes, projectiles) relève de G6f.
 - **Vérification :** build sans avertissement, smoke vert, `tools/test_weapons.sh` 31/31 (contrôle d'échelle ajouté). Captures `--capture-weapons` sans et avec Rondelle de cuivre niveau 15 (taille ×2,2, échelle plafonnée à 2) inspectées : notes, flèches de l'arc, orbe du Bâton et arc de la Faucille nettement plus grands, lisibles. Pas de banc FPS : une échelle par tir, sans nœud ni allocation en plus.
+
+### G6f — planche proposée le 2 octobre, en attente de Raphaël
+
+[Planche](planches/21-g6f-variantes.png) : trois paliers lus sur le nombre de projectiles de l'arme (stat et Papier carbone). Palier I (1 à 2) inchangé ; palier II (3 à 5) liseré lumineux de la couleur de la famille ; palier III (6 et plus) liseré et rémanence de deux échos. Mêlée : second trait intérieur au-delà de 3 frappes, étincelles au bout de l'arc à 6 et plus. Transistor : une onde concentrique par onde en plus (4 au plus). Rien n'est intégré : seuils, liseré et rémanence sont à valider.
