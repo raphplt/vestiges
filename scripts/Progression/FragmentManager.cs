@@ -731,7 +731,7 @@ public class FragmentOption
                 WeaponData weaponData = WeaponDataLoader.Get(Id);
                 return weaponData != null && player.AddWeapon(weaponData);
             case "weapon_upgrade":
-                return player.UpgradeWeapon(Id, WeaponGains);
+                return player.UpgradeWeapon(Id, WeaponGains, Rarity?.Id);
             case AscensionType:
                 return player.AscendWeapon(Id, Ascension.Id);
             case "passive_new":

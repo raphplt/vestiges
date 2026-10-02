@@ -135,7 +135,7 @@ public partial class DebugActionPanel : CanvasLayer
             if (_player != null && _player.EquippedWeapon != null)
             {
                 WeaponInstance weapon = _player.EquippedWeapon;
-                _player.UpgradeWeapon(weapon.Id, UpgradeRoller.RollWeaponGains(weapon, UpgradeRoller.Get("rare"), new RandomNumberGenerator()));
+                _player.UpgradeWeapon(weapon.Id, UpgradeRoller.RollWeaponGains(weapon, UpgradeRoller.Get("rare"), new RandomNumberGenerator()), "rare");
                 GD.Print($"[Debug] Upgraded weapon {_player.EquippedWeapon.Id}");
             }
         };

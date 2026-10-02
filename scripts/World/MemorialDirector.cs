@@ -363,7 +363,7 @@ public partial class MemorialDirector : Node
         if (!_essence.TrySpend(cost))
             return;
         UpgradeRarity rarity = UpgradeRoller.RollRarityAtLeast(BumpSteps(memorial.GlobalPosition), _config.WeaponMinRarity, _rng);
-        if (!_player.UpgradeWeapon(weapon.Id, UpgradeRoller.RollWeaponGains(weapon, rarity, _rng)))
+        if (!_player.UpgradeWeapon(weapon.Id, UpgradeRoller.RollWeaponGains(weapon, rarity, _rng, _player.TemperCharges > 0 ? 1 : 0), rarity.Id))
         {
             _essence.AddEssence(cost);
             OpenServices(memorial, null);

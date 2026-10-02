@@ -14,7 +14,13 @@ public class WeaponInstance
 {
 	public WeaponData Base { get; }
 	private readonly Dictionary<string, float> _bonuses = new();
+	private readonly List<StatGain> _lastGains = new();
 	private int _level = 1;
+
+	/// <summary>Gains de la dernière amélioration, que la Retrempe de l'Atelier peut retirer (plan 22 C2).</summary>
+	public IReadOnlyList<StatGain> LastGains => _lastGains;
+	/// <summary>Rareté de la dernière amélioration ; null si elle n'est pas connue (arme neuve, amélioration de banc).</summary>
+	public string LastRarityId { get; private set; }
 
 	public string Id => Base.Id;
 	public string Name => Base.Name;
@@ -48,14 +54,39 @@ public class WeaponInstance
 	}
 
 	/// <summary>Applique une amélioration : ses gains s'ajoutent, l'arme monte d'un niveau.</summary>
-	public bool ApplyUpgrade(IReadOnlyList<StatGain> gains)
+	public bool ApplyUpgrade(IReadOnlyList<StatGain> gains, string rarityId = null)
 	{
 		if (!CanLevelUp)
 			return false;
-		foreach (StatGain gain in gains)
-			_bonuses[gain.Stat] = _bonuses.GetValueOrDefault(gain.Stat) + gain.Amount;
+		AddGains(gains, 1f);
+		RememberLast(gains, rarityId);
 		_level++;
 		return true;
+	}
+
+	/// <summary>Retrempe (plan 22 C2) : les gains de la dernière amélioration sont remplacés, le niveau ne bouge pas.</summary>
+	public bool Retemper(IReadOnlyList<StatGain> gains, string rarityId)
+	{
+		if (_lastGains.Count == 0)
+			return false;
+		AddGains(_lastGains, -1f);
+		AddGains(gains, 1f);
+		RememberLast(gains, rarityId);
+		return true;
+	}
+
+	private void AddGains(IReadOnlyList<StatGain> gains, float sign)
+	{
+		foreach (StatGain gain in gains)
+			_bonuses[gain.Stat] = _bonuses.GetValueOrDefault(gain.Stat) + gain.Amount * sign;
+	}
+
+	private void RememberLast(IReadOnlyList<StatGain> gains, string rarityId)
+	{
+		// Copie : la liste reçue peut être celle d'une carte encore affichée.
+		_lastGains.Clear();
+		_lastGains.AddRange(gains);
+		LastRarityId = rarityId;
 	}
 
 	/// <summary>Choisit une voie d'ascension, pour de bon ; faux si l'arme ne peut pas encore ou plus choisir.</summary>

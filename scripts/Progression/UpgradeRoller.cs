@@ -103,13 +103,14 @@ public static class UpgradeRoller
 	/// <summary>
 	/// Gains d'une amélioration d'arme : stats montables tirées selon leur poids (sans répétition). Une stat de pas
 	/// gagne son pas au gain de la rareté ; une stat entière (projectile, perforation, saut, orbe) gagne la part
-	/// entière de la rareté, en fraction (plan 23 R4).
+	/// entière de la rareté, en fraction (plan 23 R4). <paramref name="extraStats"/> : stats en plus de la rareté
+	/// (Trempe de l'Atelier, plan 22 C2), dans la limite des stats que l'arme peut monter.
 	/// </summary>
-	public static List<StatGain> RollWeaponGains(WeaponInstance weapon, UpgradeRarity rarity, RandomNumberGenerator rng)
+	public static List<StatGain> RollWeaponGains(WeaponInstance weapon, UpgradeRarity rarity, RandomNumberGenerator rng, int extraStats = 0)
 	{
 		List<StatGain> gains = new();
 		Dictionary<string, float> pool = new(weapon.Base.Growth);
-		for (int i = 0; i < rarity.WeaponStats && pool.Count > 0; i++)
+		for (int i = 0; i < rarity.WeaponStats + extraStats && pool.Count > 0; i++)
 		{
 			string stat = WeightedPick(pool, rng);
 			pool.Remove(stat);
@@ -129,7 +130,7 @@ public static class UpgradeRoller
 		{
 			foreach (WeaponInstance weapon in player.WeaponSlots)
 				if (weapon.Id == option.Id)
-					return option.WithWeaponUpgrade(rarity, RollWeaponGains(weapon, rarity, rng));
+					return option.WithWeaponUpgrade(rarity, RollWeaponGains(weapon, rarity, rng, player.TemperCharges > 0 ? 1 : 0));
 			return option;
 		}
 

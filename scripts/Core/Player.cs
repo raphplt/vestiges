@@ -83,6 +83,7 @@ public partial class Player : CharacterBody2D
     private float _lifesteal;
     private float _lifestealPending;
     private float _lifestealTimer;
+    private int _temperCharges;
     private float _xpGainMultiplier = 1f;
     private float _armor;
     private PlayerDefense _defense;
@@ -394,13 +395,18 @@ public partial class Player : CharacterBody2D
 
     // --- Weapon Fragment Levels (level-up re-selection) ---
 
-    /// <summary>Applique une amélioration tirée au level-up, au Mémorial ou à la Faille : ses gains, et un niveau de plus.</summary>
-    public bool UpgradeWeapon(string weaponId, IReadOnlyList<StatGain> gains)
+    /// <summary>
+    /// Applique une amélioration tirée au level-up, à l'Atelier ou à la Faille : ses gains, et un niveau de plus. Une
+    /// amélioration trempée (plus de stats que sa rareté n'en donne) consomme une charge de Trempe.
+    /// </summary>
+    public bool UpgradeWeapon(string weaponId, IReadOnlyList<StatGain> gains, string rarityId = null)
     {
-        // Le niveau n'existe qu'à un endroit, l'instance d'arme : level-up, Mémorial et badge le lisent tous.
+        // Le niveau n'existe qu'à un endroit, l'instance d'arme : level-up, Atelier et badge le lisent tous.
         WeaponInstance weapon = FindWeaponSlot(weaponId, out int slot);
-        if (weapon == null || !weapon.ApplyUpgrade(gains))
+        if (weapon == null || !weapon.ApplyUpgrade(gains, rarityId))
             return false;
+        if (_temperCharges > 0 && rarityId != null && gains.Count > UpgradeRoller.Get(rarityId).WeaponStats)
+            _temperCharges--;
 
         RefreshAttackSpeed();
         if (weapon == _orbitalWeapon)
@@ -408,6 +414,25 @@ public partial class Player : CharacterBody2D
         _eventBus?.EmitSignal(EventBus.SignalName.WeaponUpgraded, weaponId, slot, "all", weapon.Level);
         _eventBus?.EmitSignal(EventBus.SignalName.WeaponInventoryChanged);
         GD.Print($"[Player] Weapon level: {weaponId} → {weapon.Level}/{weapon.MaxLevel}");
+        return true;
+    }
+
+    /// <summary>Améliorations d'armes à venir qui toucheront une stat de plus (Trempe de l'Atelier, plan 22 C2).</summary>
+    public int TemperCharges => _temperCharges;
+
+    public void GrantTemper(int upgrades) => _temperCharges += upgrades;
+
+    /// <summary>Retrempe : remplace les gains de la dernière amélioration de l'arme, sans changer son niveau.</summary>
+    public bool RetemperWeapon(string weaponId, IReadOnlyList<StatGain> gains, string rarityId)
+    {
+        WeaponInstance weapon = FindWeaponSlot(weaponId, out int slot);
+        if (weapon == null || !weapon.Retemper(gains, rarityId))
+            return false;
+        RefreshAttackSpeed();
+        if (weapon == _orbitalWeapon)
+            SetupOrbitalWeapon(weapon);
+        _eventBus?.EmitSignal(EventBus.SignalName.WeaponUpgraded, weaponId, slot, "all", weapon.Level);
+        _eventBus?.EmitSignal(EventBus.SignalName.WeaponInventoryChanged);
         return true;
     }
 

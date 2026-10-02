@@ -47,6 +47,7 @@ public partial class WeaponRegression : Node2D
             await CheckGroundFireOnGround();
             CheckAscensions();
             await CheckCountForAllWeapons();
+            CheckTemper();
 
             GD.Print($"[WeaponRegression] RESULT failures={_failures}");
             GetTree().Quit(_failures == 0 ? 0 : 1);
@@ -527,6 +528,42 @@ public partial class WeaponRegression : Node2D
         Check(Mathf.IsEqualApprox(visuals.ScaleFor(1f), 1f) && Mathf.IsEqualApprox(visuals.ScaleFor(1.5f), 1.5f)
               && Mathf.IsEqualApprox(visuals.ScaleFor(3f), visuals.MaxScale) && Mathf.IsEqualApprox(visuals.ScaleFor(0.6f), 1f),
             $"Visuels d'arme (G6e) : taille ×1,5 → échelle {visuals.ScaleFor(1.5f):0.0#}, plafond {visuals.MaxScale:0.0#}, jamais sous 1");
+    }
+
+    /// <summary>
+    /// Plan 22 C2a : la Trempe ajoute une stat aux 5 améliorations suivantes, décomptée à l'application ; la Retrempe
+    /// remplace les gains de la dernière amélioration sans changer le niveau.
+    /// </summary>
+    private void CheckTemper()
+    {
+        WeaponInstance blade = FindSlot("chipped_blade") ?? AddAndFind("chipped_blade");
+        RandomNumberGenerator rng = new() { Seed = 21 };
+        UpgradeRarity common = UpgradeRoller.Get("common");
+        FragmentOption Offer() => UpgradeRoller.RollGains(new FragmentOption(blade.Id, "weapon_upgrade", blade.Name, 1), _player, common, rng);
+
+        _player.GrantTemper(5);
+        bool tempered = true;
+        for (int i = 0; i < 5; i++)
+        {
+            FragmentOption option = Offer();
+            tempered &= option.WeaponGains.Count == 2 && option.ApplyTo(_player);
+        }
+        FragmentOption plain = Offer();
+        Check(tempered && _player.TemperCharges == 0 && plain.WeaponGains.Count == 1,
+            $"Trempe : 5 améliorations communes à 2 stats, charges {_player.TemperCharges}, puis {plain.WeaponGains.Count} stat");
+
+        // Amélioration U1, puis Retrempe en U2 : l'arme doit valoir celle qui aurait reçu U2 à la place de U1.
+        List<StatGain> first = UpgradeRoller.RollWeaponGains(blade, common, rng);
+        List<StatGain> second = UpgradeRoller.RollWeaponGains(blade, UpgradeRoller.Get("rare"), rng);
+        WeaponInstance expected = blade.PreviewWith(second);
+        _player.UpgradeWeapon(blade.Id, first, "common");
+        int level = blade.Level;
+        bool retempered = _player.RetemperWeapon(blade.Id, second, "rare");
+        bool same = true;
+        foreach (string stat in blade.Base.Growth.Keys)
+            same &= Mathf.IsEqualApprox(blade.GetStat(stat, 1f), expected.GetStat(stat, 1f));
+        Check(retempered && same && blade.Level == level && blade.LastRarityId == "rare" && blade.LastGains.Count == second.Count,
+            $"Retrempe : gains de la dernière amélioration remplacés ({first.Count} → {second.Count} stats, rare), niveau {level} inchangé");
     }
 
     private static WeaponInstance MaxedWeapon(string id)
