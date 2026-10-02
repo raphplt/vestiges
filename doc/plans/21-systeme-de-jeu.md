@@ -310,3 +310,13 @@ Découpage du 2 octobre, après les réponses de Raphaël (§49). Un lot à la f
 | **G6f — Sprites d'armes : variantes par nombre** | Variantes visuelles quand le nombre de projectiles franchit des seuils (planche à valider par Raphaël avant intégration, plans 08/25). | Planche, captures |
 
 Ensuite : C2, l'Atelier ([plan 22](22-carte-a-explorer.md), validé §49).
+
+### G6a — livré le 2 octobre
+
+- **Données :** les 24 armes ont leur nombre dans `growth`, au poids 1,25 (13 à 16 % des tirages de stat selon l'arme, contre environ 5 % pour 6 armes auparavant) : `projectile_count` pour les tirs, les frappes de mêlée et les ondes du Transistor, `orbital_count` pour la Boîte à musique, `chain_targets` pour la Chaîne de noms. Les armes de mêlée portent `"projectile_count": 1` explicite. `count_name_key` nomme ce nombre « Frappes » (11 armes de mêlée) ou « Ondes » (Transistor) sur les cartes et dans la pause.
+- **Mêlée :** une frappe en plus part en éventail, à pleins dégâts, comme celles du Papier carbone, qui s'y ajoutent. Sur une onde circulaire (Fouet, Cloche), chaque frappe touche à nouveau tout le cercle.
+- **Transistor :** le cône ignorait tout nombre. Chaque onde en plus (stat de l'arme ou Papier carbone) repasse à pleins dégâts : les dégâts de base du cône sont multipliés par le nombre d'ondes tiré à l'activation. Le visuel reste celui d'un cône ; les variantes viennent avec G6e–f.
+- **Voies d'ascension :** celles qui fixent le nombre (Transpercer, Bille d'acier, Agrafeuse, Balayage, Clé unique) gardent leur valeur ; Volée et les autres multiplicateurs s'appliquent au nombre monté.
+- **Offres :** `offer_weight` par objet (`passive_souvenirs.json`, 1 par défaut), appliqué aux cartes « nouvel objet » et « amélioration d'objet » ; Papier carbone à 2.
+- **Vérification :** build sans avertissement, smoke vert, `tools/test_weapons.sh` 30/30, dont quatre contrôles nouveaux : toutes les armes ont leur nombre (part minimale 13 %), Lame ébréchée à 2 frappes (12 puis 24 dégâts, libellé « Frappes »), Transistor à 2 ondes (9,6 puis 19,2 de base), poids d'offre du Papier carbone. Pas de capture : le rendu des frappes multiples est le chemin existant du Papier carbone, inchangé.
+- **Relecture (`godot-reviewer`) :** deux constats sur les armes ascendées écartés : une arme ne s'ascende qu'au niveau 50 et ne reçoit plus d'amélioration ensuite (`CanAscend` exige `!CanLevelUp`). **À surveiller en jeu :** sur une onde circulaire (Fouet, Cloche, et les voies Moisson, Séisme, Déblayer, Ratisser, Mie de pain), chaque frappe en plus retouche tout le cercle : c'est un multiplicateur de dégâts pur, comme le Papier carbone l'était déjà sur ces armes.

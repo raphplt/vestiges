@@ -1,6 +1,6 @@
 [
     {
-        "_comment": "Objets du joueur (plan 21 §4, référence unique ; plan 23 R3) : 6 emplacements, niveau 1 à 30. Chaque carte donne un niveau et ajoute à chaque effet son step multiplié par le gain de la rareté (passive_gain de upgrade_rarities.json : commune 1 à légendaire 3) ; un objet neuf vaut un step. La valeur d'un effet est la somme de ses gains : 1 + somme (multiplicative) ou somme (additive). params : réglages propres à l'objet (objets de déclencheur). milestones : paliers de l'objet (niveau, effet, texte montré au joueur, paramètres) ; un palier dont l'effet n'est pas codé n'est ni annoncé ni activé (ObjectMilestoneEffects). survival : objet de survie, garanti dans une offre tant que le joueur n'en a aucun. enabled false : identifiant gardé pour les sauvegardes, retiré des offres. Le nom du fichier et les identifiants viennent des anciens passifs.",
+        "_comment": "Objets du joueur (plan 21 §4, référence unique ; plan 23 R3) : 6 emplacements, niveau 1 à 30. Chaque carte donne un niveau et ajoute à chaque effet son step multiplié par le gain de la rareté (passive_gain de upgrade_rarities.json : commune 1 à légendaire 3) ; un objet neuf vaut un step. La valeur d'un effet est la somme de ses gains : 1 + somme (multiplicative) ou somme (additive). params : réglages propres à l'objet (objets de déclencheur). milestones : paliers de l'objet (niveau, effet, texte montré au joueur, paramètres) ; un palier dont l'effet n'est pas codé n'est ni annoncé ni activé (ObjectMilestoneEffects). survival : objet de survie, garanti dans une offre tant que le joueur n'en a aucun. enabled false : identifiant gardé pour les sauvegardes, retiré des offres. offer_weight : poids de l'objet dans les offres de niveau, 1 par défaut (plan 21 G6a). Le nom du fichier et les identifiants viennent des anciens passifs.",
         "id": "memoire_vive",
         "icon": "res://assets/items/icons/item_memoire_vive.png",
         "icon_small": "res://assets/items/icons/item_memoire_vive_16.png",
@@ -392,6 +392,7 @@
             0.9
         ],
         "max_level": 30,
+        "offer_weight": 2,
         "effects": [
             {
                 "stat": "projectile_bonus",

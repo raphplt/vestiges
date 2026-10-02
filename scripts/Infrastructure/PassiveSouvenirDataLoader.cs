@@ -22,6 +22,8 @@ public class PassiveSouvenirData
 	public List<ObjectMilestoneData> Milestones = new();
 	/// <summary>Passif de survie (PV, régénération, armure, bouclier) : garanti au tirage tant que le joueur n'en a aucun.</summary>
 	public bool Survival;
+	/// <summary>Poids de l'objet dans les offres de niveau, 1 par défaut (plan 21 G6a : Papier carbone favorisé).</summary>
+	public float OfferWeight = 1f;
 }
 
 public static class PassiveSouvenirDataLoader
@@ -88,7 +90,8 @@ public static class PassiveSouvenirDataLoader
 			Icon = dict.ContainsKey("icon") ? dict["icon"].AsString() : "",
 			IconSmall = dict.ContainsKey("icon_small") ? dict["icon_small"].AsString() : "",
 			MaxLevel = dict.ContainsKey("max_level") ? (int)dict["max_level"].AsDouble() : 30,
-			Survival = dict.ContainsKey("survival") && dict["survival"].AsBool()
+			Survival = dict.ContainsKey("survival") && dict["survival"].AsBool(),
+			OfferWeight = dict.ContainsKey("offer_weight") ? (float)dict["offer_weight"].AsDouble() : 1f
 		};
 
 		if (dict.ContainsKey("icon_color"))

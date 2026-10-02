@@ -304,7 +304,7 @@ public partial class PauseMenu : CanvasLayer
 				float value = player.GetWeaponStatForDisplay(weapon, stat);
 				// Un seul projectile, aucun perçage : rien à signaler.
 				if (value > (stat == "projectile_count" ? 1f : 0f))
-					parts.Add($"{StatCatalog.Name(stat)} {StatCatalog.Format(stat, value)}");
+					parts.Add($"{StatCatalog.Name(stat, weapon.Base)} {StatCatalog.Format(stat, value)}");
 			}
 		}
 		Label stats = PlayerSheet.MakeLabel(string.Join("  ·  ", parts), TextRole.Caption, StatLabelColor);

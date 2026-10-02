@@ -1035,7 +1035,8 @@ public partial class Player : CharacterBody2D
         _coneAngleStart = Mathf.Min(180f, ZoneScale(GetWeaponStat("cone_angle_start", 15f)));
         _coneAngleEnd = Mathf.Min(180f, ZoneScale(GetWeaponStat("cone_angle_end", 60f)));
         _coneRange = GetEffectiveWeaponRange();
-        _coneBaseDamage = ComputeBaseAttackDamage();
+        // Chaque onde en plus repasse à pleins dégâts, comme les frappes d'une onde circulaire en mêlée.
+        _coneBaseDamage = ComputeBaseAttackDamage() * (RollOwnCount() + RollBonusProjectiles(_equippedWeapon));
         _coneWeapon = _equippedWeapon;
         _coneContext = BeginAttack(_coneWeapon, _coneBaseDamage * _coneDuration * (1f + _coneDamageRampPerSec * _coneDuration * 0.5f));
 
@@ -1704,10 +1705,15 @@ public partial class Player : CharacterBody2D
             PerformRangedAttack(pattern);
     }
 
+    /// <summary>
+    /// Nombre propre de l'arme active : tirs, frappes de mêlée ou ondes du cône (plan 21 G6a). Stat entière fractionnaire
+    /// (plan 23 R4) : 1,5, c'est un coup et une chance sur deux d'un second.
+    /// </summary>
+    private int RollOwnCount() => Mathf.Max(1, FractionalCount.Roll(GetWeaponStat("projectile_count", 1f), GD.Randf()));
+
     private void PerformRangedAttack(string pattern)
     {
-        // Stats entières fractionnaires (plan 23 R4) : 1,5 projectile, c'est un tir et une chance sur deux d'un second.
-        int ownCount = Mathf.Max(1, FractionalCount.Roll(GetWeaponStat("projectile_count", 1f), GD.Randf()));
+        int ownCount = RollOwnCount();
         int extraCount = RollBonusProjectiles(_equippedWeapon);
         int totalProjectiles = ownCount + extraCount;
         bool spreadExtras = ExtraProjectilesSpread;
@@ -1798,7 +1804,7 @@ public partial class Player : CharacterBody2D
 
         float baseDamage = ComputeBaseAttackDamage();
         AttackContext context = BeginAttack(_equippedWeapon, baseDamage);
-        int strikeCount = 1 + RollBonusProjectiles(_equippedWeapon);
+        int strikeCount = RollOwnCount() + RollBonusProjectiles(_equippedWeapon);
         float spreadAngle = strikeCount > 1
             ? Mathf.Clamp(GetWeaponStat("spread_angle", 20f), 0f, 120f)
             : 0f;

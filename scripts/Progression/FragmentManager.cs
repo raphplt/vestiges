@@ -655,6 +655,8 @@ public partial class FragmentManager : Node
         float weight = offer.TierWeight(opt.SortWeight, luck);
         if (opt.Type.Contains("upgrade"))
             weight *= offer.UpgradeWeight;
+        if (opt.Type is "passive_new" or "passive_upgrade")
+            weight *= PassiveSouvenirDataLoader.Get(opt.Id)?.OfferWeight ?? 1f;
         return Mathf.Max(weight, offer.MinWeight);
     }
 

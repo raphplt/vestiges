@@ -165,6 +165,8 @@ STAT_CRIT,Critique,Crit chance
 STAT_REGEN,Régénération,Regeneration
 STAT_RANGE,Portée,Range
 STAT_PROJECTILES,Projectiles,Projectiles
+STAT_STRIKES,Frappes,Strikes
+STAT_WAVES,Ondes,Waves
 STAT_CDR,Réduction de recharge,Cooldown reduction
 STAT_PIERCE,Perçage,Pierce
 STAT_LUCK,Chance,Luck

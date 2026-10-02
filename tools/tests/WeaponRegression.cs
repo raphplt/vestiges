@@ -46,6 +46,7 @@ public partial class WeaponRegression : Node2D
             CheckRangeAndZone();
             await CheckGroundFireOnGround();
             CheckAscensions();
+            await CheckCountForAllWeapons();
 
             GD.Print($"[WeaponRegression] RESULT failures={_failures}");
             GetTree().Quit(_failures == 0 ? 0 : 1);
@@ -451,6 +452,76 @@ public partial class WeaponRegression : Node2D
         enemy.QueueFree();
         fragments.QueueFree();
         player.QueueFree();
+    }
+
+    /// <summary>
+    /// Plan 21 G6a : les 24 armes montent leur nombre (tirs, frappes, ondes, orbes, cibles de chaîne) à un poids franc ;
+    /// une frappe de mêlée en plus touche à pleins dégâts ; une onde de plus double le cône ; Papier carbone favorisé.
+    /// </summary>
+    private async Task CheckCountForAllWeapons()
+    {
+        int missing = 0;
+        float lowestShare = 1f;
+        foreach (WeaponData data in WeaponDataLoader.GetAll())
+        {
+            string count = data.AttackPattern switch { "orbital" => "orbital_count", "chain" => "chain_targets", _ => "projectile_count" };
+            float total = 0f;
+            foreach (float weight in data.Growth.Values)
+                total += weight;
+            if (!data.Growth.TryGetValue(count, out float own))
+            {
+                missing++;
+                continue;
+            }
+            lowestShare = Mathf.Min(lowestShare, own / total);
+        }
+        Check(missing == 0 && lowestShare >= 0.12f,
+            $"Nombre pour toutes les armes : {missing} sans, part la plus faible {lowestShare:P0} des tirages de stat");
+
+        FieldInfo equipped = typeof(Player).GetField("_equippedWeapon", Private);
+        FieldInfo crit = typeof(Player).GetField("_critChance", Private);
+        float critBefore = (float)crit.GetValue(_player);
+        crit.SetValue(_player, 0f);
+        WeaponInstance blade = new(WeaponDataLoader.Get("chipped_blade"));
+        equipped.SetValue(_player, blade);
+        Enemy enemy = EnemyScene.Instantiate<Enemy>();
+        AddChild(enemy);
+        enemy.Initialize(EnemyDataLoader.Get("rodeur"), 100000f, 1f);
+        enemy.SetPhysicsProcess(false);
+        enemy.Position = _player.Position + new Vector2(40f, 0f);
+        await ToSignal(GetTree(), SceneTree.SignalName.PhysicsFrame);
+
+        MethodInfo melee = typeof(Player).GetMethod("PerformMeleeAttack", Private);
+        melee.Invoke(_player, new object[] { "arc" });
+        float single = _player.GetDamageDealt("chipped_blade");
+        blade.ApplyUpgrade(new[] { new StatGain("projectile_count", 1f) });
+        melee.Invoke(_player, new object[] { "arc" });
+        float twice = _player.GetDamageDealt("chipped_blade") - single;
+        Check(single > 0f && twice > single * 1.8f && twice < single * 2.2f
+              && StatCatalog.Name("projectile_count", blade.Base) != StatCatalog.Name("projectile_count"),
+            $"Lame ébréchée à 2 frappes : {single:0.#} puis {twice:0.#} dégâts, libellé « {StatCatalog.Name("projectile_count", blade.Base)} »");
+        enemy.QueueFree();
+
+        WeaponInstance radio = new(WeaponDataLoader.Get("last_broadcast"));
+        equipped.SetValue(_player, radio);
+        MethodInfo activate = typeof(Player).GetMethod("ActivateSustainedCone", Private);
+        MethodInfo deactivate = typeof(Player).GetMethod("DeactivateSustainedCone", Private);
+        FieldInfo coneDamage = typeof(Player).GetField("_coneBaseDamage", Private);
+        activate.Invoke(_player, new object[] { radio.SpecialEffect });
+        float oneWave = (float)coneDamage.GetValue(_player);
+        deactivate.Invoke(_player, null);
+        radio.ApplyUpgrade(new[] { new StatGain("projectile_count", 1f) });
+        equipped.SetValue(_player, radio);
+        activate.Invoke(_player, new object[] { radio.SpecialEffect });
+        float twoWaves = (float)coneDamage.GetValue(_player);
+        deactivate.Invoke(_player, null);
+        Check(oneWave > 0f && Mathf.IsEqualApprox(twoWaves, oneWave * 2f),
+            $"Transistor à 2 ondes : cône de {oneWave:0.#} à {twoWaves:0.#} dégâts de base");
+        crit.SetValue(_player, critBefore);
+
+        Check(Mathf.IsEqualApprox(PassiveSouvenirDataLoader.Get("souffle_du_neant").OfferWeight, 2f)
+              && Mathf.IsEqualApprox(PassiveSouvenirDataLoader.Get("ancrage").OfferWeight, 1f),
+            "Papier carbone pèse 2 dans les offres, les autres objets 1");
     }
 
     private static WeaponInstance MaxedWeapon(string id)

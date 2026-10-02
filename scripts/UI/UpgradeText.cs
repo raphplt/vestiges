@@ -40,9 +40,9 @@ public static class UpgradeText
                     float before = player.GetWeaponStatForDisplay(weapon, stat);
                     float next = player.GetWeaponStatForDisplay(after, stat);
                     if (i == 0)
-                        lines.Add((FullGain(stat, before, next), ChoiceStyle.GainColor));
+                        lines.Add((FullGain(stat, weapon.Base, before, next), ChoiceStyle.GainColor));
                     else
-                        others.Add(ShortGain(stat, before, next));
+                        others.Add(ShortGain(stat, weapon.Base, before, next));
                 }
                 AddOthers(lines, others);
                 break;
@@ -126,14 +126,14 @@ public static class UpgradeText
     }
 
     /// <summary>« Dégâts  14,2 → 16,8 » ; « Portée  +6 % » pour une stat qui ne se lit qu'en pourcentage.</summary>
-    private static string FullGain(string stat, float before, float after) => StatCatalog.Display(stat) == StatDisplay.Percent
-        ? $"{StatCatalog.Name(stat)}  {StatCatalog.FormatGain(before, after)}"
-        : $"{StatCatalog.Name(stat)}  {StatCatalog.Format(stat, before)} → {StatCatalog.Format(stat, after)}";
+    private static string FullGain(string stat, WeaponData weapon, float before, float after) => StatCatalog.Display(stat) == StatDisplay.Percent
+        ? $"{StatCatalog.Name(stat, weapon)}  {StatCatalog.FormatGain(before, after)}"
+        : $"{StatCatalog.Name(stat, weapon)}  {StatCatalog.Format(stat, before)} → {StatCatalog.Format(stat, after)}";
 
     /// <summary>Gain seul, pour la ligne qui regroupe : « Cadence +10 % », « Perforation +1 ».</summary>
-    private static string ShortGain(string stat, float before, float after) => StatCatalog.Display(stat) == StatDisplay.Count
-        ? $"{StatCatalog.Name(stat)} {StatCatalog.FormatBonus(stat, after - before, false)}"
-        : $"{StatCatalog.Name(stat)} {StatCatalog.FormatGain(before, after)}";
+    private static string ShortGain(string stat, WeaponData weapon, float before, float after) => StatCatalog.Display(stat) == StatDisplay.Count
+        ? $"{StatCatalog.Name(stat, weapon)} {StatCatalog.FormatBonus(stat, after - before, false)}"
+        : $"{StatCatalog.Name(stat, weapon)} {StatCatalog.FormatGain(before, after)}";
 
     private static WeaponInstance FindWeapon(Player player, string id)
     {

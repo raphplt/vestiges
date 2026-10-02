@@ -33,6 +33,12 @@ public static class StatCatalog
 
     public static string Name(string stat) => TranslationServer.Translate(Entry(stat).NameKey);
 
+    /// <summary>Libellé d'une stat d'arme : le nombre d'une arme de mêlée se lit en frappes, celui d'un cône en ondes.</summary>
+    public static string Name(string stat, WeaponData weapon) =>
+        stat == "projectile_count" && !string.IsNullOrEmpty(weapon?.CountNameKey)
+            ? TranslationServer.Translate(weapon.CountNameKey)
+            : Name(stat);
+
     public static StatDisplay Display(string stat) => Entry(stat).Display;
 
     /// <summary>Propriété de la grammaire commune que la stat monte (plan 21 §7) ; null pour la survie ou la collecte.</summary>

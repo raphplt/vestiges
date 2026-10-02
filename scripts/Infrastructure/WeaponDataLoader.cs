@@ -53,6 +53,8 @@ public class WeaponData
 	public string Summary { get; set; }
 	/// <summary>Une ligne sur l'ancien propriétaire de l'objet (pause, Collection).</summary>
 	public string LoreFlavor { get; set; }
+	/// <summary>Libellé du nombre de l'arme quand ce ne sont pas des projectiles : frappes, ondes (plan 21 G6a).</summary>
+	public string CountNameKey { get; set; }
 	public Dictionary<string, float> Stats { get; set; } = new();
 	/// <summary>Stats qui peuvent monter à chaque amélioration, avec leur poids dans le tirage.</summary>
 	public Dictionary<string, float> Growth { get; set; } = new();
@@ -207,7 +209,8 @@ public static class WeaponDataLoader
             Source = dict.ContainsKey("source") ? dict["source"].AsString() : null,
             RequiresSouvenir = dict.ContainsKey("requires_souvenir") ? dict["requires_souvenir"].AsString() : null,
             Summary = dict.ContainsKey("summary") ? dict["summary"].AsString() : "",
-            LoreFlavor = dict.ContainsKey("lore_flavor") ? dict["lore_flavor"].AsString() : ""
+            LoreFlavor = dict.ContainsKey("lore_flavor") ? dict["lore_flavor"].AsString() : "",
+            CountNameKey = dict.ContainsKey("count_name_key") ? dict["count_name_key"].AsString() : null
         };
 
         if (dict.ContainsKey("growth"))
