@@ -203,13 +203,18 @@ public partial class WeaponRegression : Node2D
         peril.QueueFree();
     }
 
-    /// <summary>10 000 tirages : les poids de base sont respectés, et l'oubli de la zone fait monter les raretés.</summary>
+    /// <summary>
+    /// 10 000 tirages : les poids de base sont respectés ; l'oubli de la zone fait un peu monter les raretés hautes, la
+    /// Chance beaucoup (DECISIONS §53).
+    /// </summary>
     private void CheckRarityDistribution()
     {
         RandomNumberGenerator rng = new() { Seed = 17 };
         const int draws = 10000;
         Dictionary<string, int> anchored = new();
         Dictionary<string, int> erased = new();
+        Dictionary<string, int> lucky = new();
+        float luckySteps = UpgradeRoller.BumpSteps(1f, Vestiges.World.ErasureManager.ErasureZonePhase.Anchored, 0);
         float erasedSteps = UpgradeRoller.BumpSteps(0f, Vestiges.World.ErasureManager.ErasureZonePhase.Erased, 0);
         float perilSteps = UpgradeRoller.BumpSteps(0f, Vestiges.World.ErasureManager.ErasureZonePhase.Anchored, 4)
             - UpgradeRoller.BumpSteps(0f, Vestiges.World.ErasureManager.ErasureZonePhase.Anchored, 0);
@@ -221,6 +226,8 @@ public partial class WeaponRegression : Node2D
             anchored[a] = anchored.GetValueOrDefault(a) + 1;
             string e = UpgradeRoller.RollRarity(erasedSteps, rng).Id;
             erased[e] = erased.GetValueOrDefault(e) + 1;
+            string l = UpgradeRoller.RollRarity(luckySteps, rng).Id;
+            lucky[l] = lucky.GetValueOrDefault(l) + 1;
         }
 
         float totalWeight = 0f;
@@ -239,7 +246,9 @@ public partial class WeaponRegression : Node2D
         int highErased = erased.GetValueOrDefault("epic") + erased.GetValueOrDefault("legendary");
         GD.Print($"[WeaponRegression] raretés sur {draws} tirages : {string.Join(" ; ", shares)}");
         Check(matches, "raretés : poids de base respectés à 1,5 point près");
-        Check(highErased > highAnchored * 2, $"raretés : zone Effacée, Épique et Légendaire plus fréquents ({highAnchored} → {highErased})");
+        int highLucky = lucky.GetValueOrDefault("epic") + lucky.GetValueOrDefault("legendary");
+        Check(highErased > highAnchored * 1.3f && highLucky > highAnchored * 5,
+            $"raretés : Épique et Légendaire sur {draws} tirages, {highAnchored} sans rien, {highErased} en zone Effacée, {highLucky} avec 1 de Chance");
     }
 
     /// <summary>
