@@ -20,6 +20,9 @@ public partial class Projectile : Area2D
     private float _damage;
     private float _lifetime;
     private float _age;
+    // Rafale (plan 21 G6g) : le tir attend, caché et sans contact, avant de partir de la position du joueur.
+    private float _launchDelay;
+    private Node2D _departureTarget;
     private int _pierceRemaining;
     // Reflet brisé, palier 15 : chaque ennemi traversé ajoute cette part des dégâts de départ.
     private float _pierceDamageRamp;
@@ -75,9 +78,11 @@ public partial class Projectile : Area2D
 
     public void Launch(Vector2 position, Vector2 direction, float damage, float speed, float lifetime, int pierce,
                        bool isCrit, Player owner, WeaponData weapon, WeaponInstance source, AttackContext context = default,
-                       float pierceDamageRamp = 0f, float sizeScale = 1f)
+                       float pierceDamageRamp = 0f, float sizeScale = 1f, float launchDelay = 0f)
     {
         GlobalPosition = position;
+        _launchDelay = launchDelay;
+        _departureTarget = null;
         // Taille du joueur (plan 21 G6e) : la zone de contact grandit avec le visuel, remise à chaque tir du pool.
         _collision.Scale = Vector2.One * sizeScale;
         _direction = direction.Normalized();
@@ -114,8 +119,31 @@ public partial class Projectile : Area2D
         _sprite.Modulate = new Color(1f, 1f, 1f, CombatFxSettings.PlayerOpacity);
         UpdateSprite();
 
-        Visible = true;
+        Visible = _launchDelay <= 0f;
         ProcessMode = ProcessModeEnum.Inherit;
+        SetDeferred(Area2D.PropertyName.Monitoring, _launchDelay <= 0f);
+    }
+
+    /// <summary>Tir de rafale : au départ, il vise de nouveau cette cible si elle vit encore, comme un tir neuf.</summary>
+    public void AimAtDeparture(Node2D target) => _departureTarget = target;
+
+    /// <summary>Fin de l'attente d'une rafale : le tir part du joueur, là où il se trouve maintenant.</summary>
+    private void Depart()
+    {
+        if (_owner != null && IsInstanceValid(_owner))
+            GlobalPosition = _owner.GlobalPosition;
+        if (_departureTarget != null)
+        {
+            // Cible tombée pendant l'attente : la plus proche, comme le ferait un tir neuf.
+            Node2D target = _departureTarget is Enemy enemy && IsInstanceValid(enemy) && enemy.IsActive && !enemy.IsDying
+                ? enemy
+                : FindNearestEnemy();
+            Vector2 toTarget = target != null ? target.GlobalPosition - GlobalPosition : Vector2.Zero;
+            if (toTarget.LengthSquared() > 0.0001f)
+                _direction = toTarget.Normalized();
+        }
+        _departureTarget = null;
+        Visible = true;
         SetDeferred(Area2D.PropertyName.Monitoring, true);
     }
 
@@ -139,6 +167,13 @@ public partial class Projectile : Area2D
             return;
 
         float dt = (float)delta;
+        if (_launchDelay > 0f)
+        {
+            _launchDelay -= dt;
+            if (_launchDelay > 0f)
+                return;
+            Depart();
+        }
         _age += dt;
         if (_age >= _lifetime)
         {
@@ -272,7 +307,8 @@ public partial class Projectile : Area2D
     public bool TryAbsorb(out float damage)
     {
         damage = _damage;
-        if (_isDespawning)
+        // Un tir de rafale qui attend sur le joueur reste détectable par les zones : il ne touche rien avant de partir.
+        if (_isDespawning || _launchDelay > 0f)
             return false;
         _isDespawning = true;
         CallDeferred(MethodName.Release);
@@ -287,6 +323,7 @@ public partial class Projectile : Area2D
         // Hors traitement : retiré de la physique (DisableMode Remove) jusqu'au prochain Launch.
         SetDeferred(Node.PropertyName.ProcessMode, (int)ProcessModeEnum.Disabled);
         _homingTarget = null;
+        _departureTarget = null;
         _owner = null;
         _context = default;
         SourceInstance = null;

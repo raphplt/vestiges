@@ -48,6 +48,7 @@ public partial class WeaponRegression : Node2D
             CheckAscensions();
             CheckGrammarRejectsUnknownKeys();
             await CheckCountForAllWeapons();
+            await CheckVolleyOnSingleTarget();
             CheckTemper();
 
             GD.Print($"[WeaponRegression] RESULT failures={_failures}");
@@ -498,6 +499,76 @@ public partial class WeaponRegression : Node2D
             && pathError.Contains("voie_test") && pathError.Contains("spiral");
         Check(valid && badPattern && badCategory && badPath,
             $"Grammaire : clés connues lues en types, motif/famille/voie inconnus refusés [{patternError} | {categoryError} | {pathError}]");
+    }
+
+    /// <summary>
+    /// Rafale (plan 21 G6g, DECISIONS §59) : trois flèches sur un ennemi seul ne se superposent plus, deux attendent
+    /// avant de partir, et toutes touchent leur cible.
+    /// </summary>
+    private async Task CheckVolleyOnSingleTarget()
+    {
+        CombatPools pools = new() { Name = "CombatPools" };
+        AddChild(pools);
+        // Un joueur neuf : celui du banc porte les effets des contrôles précédents (échos, déclencheurs). Leurs
+        // minuteurs d'arme sont suspendus pour que seuls les tirs commandés comptent.
+        Player player = GD.Load<PackedScene>("res://scenes/Player.tscn").Instantiate<Player>();
+        AddChild(player);
+        player.InitializeCharacter(CharacterDataLoader.Get("traqueur"));
+        player.SetPhysicsProcess(false);
+        player.IsAIControlled = true;
+        player.ProcessMode = ProcessModeEnum.Disabled;
+        _player.ProcessMode = ProcessModeEnum.Disabled;
+        typeof(Player).GetField("_critChance", Private).SetValue(player, 0f);
+        FieldInfo equipped = typeof(Player).GetField("_equippedWeapon", Private);
+        MethodInfo ranged = typeof(Player).GetMethod("PerformRangedAttack", Private);
+        Enemy enemy = EnemyScene.Instantiate<Enemy>();
+        AddChild(enemy);
+        enemy.Initialize(EnemyDataLoader.Get("rodeur"), 100000f, 1f);
+        enemy.SetPhysicsProcess(false);
+        enemy.Position = player.Position + new Vector2(90f, 0f);
+        int hits = 0;
+        EventBus bus = GetNode<EventBus>("/root/EventBus");
+        EventBus.EntityDamagedEventHandler onDamaged = (target, _) => hits += target == enemy ? 1 : 0;
+        bus.EntityDamaged += onDamaged;
+        try
+        {
+            await ToSignal(GetTree(), SceneTree.SignalName.PhysicsFrame);
+
+            async Task<(int Hits, int Flying, int Waiting)> Fire(int count)
+            {
+                WeaponInstance bow = new(WeaponDataLoader.Get("makeshift_bow"));
+                if (count > 1)
+                    bow.ApplyUpgrade(new[] { new StatGain("projectile_count", count - 1f) });
+                equipped.SetValue(player, bow);
+                hits = 0;
+                ranged.Invoke(player, new object[] { AttackPatternKind.Linear });
+                int flying = 0, waiting = 0;
+                foreach (Node child in pools.GetChildren())
+                {
+                    if (child is not Projectile shot || shot.ProcessMode == ProcessModeEnum.Disabled)
+                        continue;
+                    flying += shot.Visible ? 1 : 0;
+                    waiting += shot.Visible ? 0 : 1;
+                }
+                for (int frame = 0; frame < 90; frame++)
+                    await ToSignal(GetTree(), SceneTree.SignalName.PhysicsFrame);
+                return (hits, flying, waiting);
+            }
+
+            (int singleHits, _, _) = await Fire(1);
+            (int volleyHits, int flying, int waiting) = await Fire(3);
+            Check(singleHits > 0 && flying == 1 && waiting == 2 && volleyHits == 3 * singleHits,
+                $"Rafale : 3 flèches sur un ennemi seul, {flying} part, {waiting} attendent leur tour ; {volleyHits} impacts pour {singleHits} avec une flèche");
+        }
+        finally
+        {
+            bus.EntityDamaged -= onDamaged;
+            enemy.QueueFree();
+            player.QueueFree();
+            pools.QueueFree();
+            _player.ProcessMode = ProcessModeEnum.Inherit;
+        }
+        await ToSignal(GetTree(), SceneTree.SignalName.PhysicsFrame);
     }
 
     /// <summary>

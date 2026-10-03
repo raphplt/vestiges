@@ -728,3 +728,15 @@ Le lot Q1 du [plan 26](26-qualite-et-dette-technique.md) est engagé : réserver
 - **Q1 :** Raphaël demande de vérifier et de clore. Fait (plan 26).
 - **Chantier de la session :** « Décidés + Q5 » : Ateliers à prix ×5 et 8 par carte, Tisseuse hors des Marécages avec un poids faible (§57), puis Q5 (motifs d'attaque typés, plan 26).
 - **Planche G6f :** pas encore regardée ; Raphaël demande où la voir : `doc/plans/planches/21-g6f-variantes.png`. Question maintenue.
+
+## 59. Le nombre de projectiles doit se voir, pas de paliers — 3 octobre 2026
+
+Raphaël, après avoir vu la planche G6f : « je comprends pas pour pour le nombre de projectiles pourquoi tu mets pas pls de projectiles sur l'écran ?? je comprends pas ta logique de paliers là jaime pas trop meme si visuellement cest réussi ».
+
+- **Paliers G6f abandonnés** (liseré, rémanence) : un projectile décoré selon le nombre ne dit rien de plus que le nombre de projectiles visibles.
+- **Règle : un projectile de plus = un projectile de plus à l'écran.** Constat dans le code : ce n'est pas toujours le cas. Les tirs visés partent vers des cibles distinctes, mais quand il y a moins d'ennemis à portée que de projectiles, ils partent ensemble sur la même ligne et se superposent ; les frappes d'une onde circulaire (Fouet, Cloche, voies en cercle) redessinent le même cercle ; les ondes en plus du Transistor ne font que multiplier les dégâts du cône.
+- **Tirs visés : rafale.** Les projectiles qui partagent une cible partent l'un après l'autre, quelques centièmes de seconde d'écart, sur la même trajectoire ; dégâts inchangés. Préférée à l'éventail (qui change le jeu) et au côte à côte.
+- **Ondes en cercle et Transistor : ondes successives**, une par frappe ou par onde, sans changer les dégâts.
+
+**Suite :** lot G6g au [plan 21](21-systeme-de-jeu.md).
+

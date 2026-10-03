@@ -121,6 +121,7 @@ public partial class Player : CharacterBody2D
     private float _coneAngleEnd;
     private float _coneRange;
     private float _coneBaseDamage;
+    private int _coneWaves;
     private WeaponInstance _coneWeapon;
     private bool _isConeActive;
 
@@ -475,6 +476,7 @@ public partial class Player : CharacterBody2D
             return;
 
         float dt = (float)delta;
+        _attackFx.Tick(dt);
         bool inputAllowed = _gameManager.CurrentState == GameManager.GameState.Run;
         Vector2 inputDir = inputAllowed ? Input.GetVector("move_left", "move_right", "move_up", "move_down") : Vector2.Zero;
 #if TOOLS
@@ -1090,7 +1092,8 @@ public partial class Player : CharacterBody2D
         _coneAngleEnd = Mathf.Min(180f, ZoneScale(GetWeaponStat("cone_angle_end", 60f)));
         _coneRange = GetEffectiveWeaponRange();
         // Chaque onde en plus repasse à pleins dégâts, comme les frappes d'une onde circulaire en mêlée.
-        _coneBaseDamage = ComputeBaseAttackDamage() * (RollOwnCount() + RollBonusProjectiles(_equippedWeapon));
+        _coneWaves = RollOwnCount() + RollBonusProjectiles(_equippedWeapon);
+        _coneBaseDamage = ComputeBaseAttackDamage() * _coneWaves;
         _coneWeapon = _equippedWeapon;
         _coneContext = BeginAttack(_coneWeapon, _coneBaseDamage * _coneDuration * (1f + _coneDamageRampPerSec * _coneDuration * 0.5f));
 
@@ -1153,7 +1156,7 @@ public partial class Player : CharacterBody2D
     {
         float progress = Mathf.Clamp(elapsed / _coneDuration, 0f, 1f);
         float currentAngleDeg = Mathf.Lerp(_coneAngleStart, _coneAngleEnd, progress);
-        _attackFx.UpdateCone(_coneWeapon?.Base, _facingDirection, _coneRange, Mathf.DegToRad(currentAngleDeg * 0.5f));
+        _attackFx.UpdateCone(_coneWeapon?.Base, _facingDirection, _coneRange, Mathf.DegToRad(currentAngleDeg * 0.5f), _coneWaves);
     }
 
     private void DeactivateSustainedCone()
@@ -1836,19 +1839,23 @@ public partial class Player : CharacterBody2D
             SpawnBurstProjectiles(spreadExtras ? ownCount : totalProjectiles, spreadAngle, baseDirection, baseDamage, projectileSpeed, totalPierce);
             if (spreadExtras)
                 for (int i = 0; i < extraCount; i++)
-                    SpawnAimedProjectile(targets[(ownCount + i) % targets.Count], false, 0f, baseDamage, projectileSpeed, range, totalPierce);
+                    SpawnAimedProjectile(targets[(ownCount + i) % targets.Count], false, 0f, baseDamage, projectileSpeed, range, totalPierce,
+                        launchDelay: VolleyDelay(ownCount + i, targets.Count, totalProjectiles));
             return;
         }
 
         float homingStrength = GetWeaponStat("homing_strength", 0f);
         bool isHoming = pattern == AttackPatternKind.Homing || homingStrength > 0f;
+        int aimedCount = spreadExtras ? totalProjectiles : ownCount;
         for (int i = 0; i < totalProjectiles; i++)
         {
-            bool extra = i >= ownCount;
+            bool fanned = i >= ownCount && !spreadExtras;
             // Sans le palier du Papier carbone, un projectile en plus part en éventail autour du tir principal.
-            float offset = extra && !spreadExtras ? ExtraFanOffset(i - ownCount, extraCount, spreadAngle) : 0f;
-            Node2D target = extra && !spreadExtras ? targets[0] : targets[i % targets.Count];
-            Projectile proj = SpawnAimedProjectile(target, isHoming, homingStrength, baseDamage, projectileSpeed, range, totalPierce, offset);
+            float offset = fanned ? ExtraFanOffset(i - ownCount, extraCount, spreadAngle) : 0f;
+            Node2D target = fanned ? targets[0] : targets[i % targets.Count];
+            float launchDelay = fanned ? 0f : VolleyDelay(i, targets.Count, aimedCount);
+            Projectile proj = SpawnAimedProjectile(target, isHoming, homingStrength, baseDamage, projectileSpeed, range, totalPierce, offset,
+                launchDelay);
 
             // Ground fire : configurer le projectile pour spawner une zone au sol à l'impact
             if (proj != null && _equippedWeapon?.SpecialEffect?.Type == "ground_fire")
@@ -1864,14 +1871,30 @@ public partial class Player : CharacterBody2D
 
     /// <summary>Un tir vers <paramref name="target"/>, dévié de <paramref name="offsetDegrees"/>, guidé si l'arme l'est.</summary>
     private Projectile SpawnAimedProjectile(Node2D target, bool isHoming, float homingStrength, float baseDamage, float speed,
-        float range, int pierce, float offsetDegrees = 0f)
+        float range, int pierce, float offsetDegrees = 0f, float launchDelay = 0f)
     {
         Vector2 direction = (target.GlobalPosition - GlobalPosition).Normalized().Rotated(Mathf.DegToRad(offsetDegrees));
         bool isCrit = _critChance > 0f && GD.Randf() < _critChance;
-        Projectile proj = SpawnProjectile(direction, ProjectileDamage(baseDamage, isCrit), speed, range, pierce, isCrit);
+        Projectile proj = SpawnProjectile(direction, ProjectileDamage(baseDamage, isCrit), speed, range, pierce, isCrit, launchDelay);
+        if (proj != null && launchDelay > 0f && offsetDegrees == 0f)
+            proj.AimAtDeparture(target);
         if (proj != null && isHoming)
             proj.SetHoming(homingStrength > 0f ? homingStrength : 0.8f, target);
         return proj;
+    }
+
+    /// <summary>
+    /// Rafale (plan 21 G6g, DECISIONS §59) : les tirs visés se répartissent sur les cibles ; celui qui retombe sur une
+    /// cible déjà visée part un écart plus tard à chaque tour, pour que chaque projectile se voie au lieu de se superposer.
+    /// </summary>
+    private static float VolleyDelay(int shotIndex, int targetCount, int shotCount)
+    {
+        int round = shotIndex / Mathf.Max(1, targetCount);
+        if (round == 0)
+            return 0f;
+        int lastRound = (shotCount - 1) / Mathf.Max(1, targetCount);
+        WeaponVisualConfig config = WeaponVisualConfig.Load();
+        return round * Mathf.Min(config.VolleyInterval, config.VolleyMaxSpan / lastRound);
     }
 
     /// <summary>
@@ -1980,6 +2003,15 @@ public partial class Player : CharacterBody2D
     {
         const int maxSlashVisuals = 7;
         int visualCount = Mathf.Min(strikeCount, maxSlashVisuals);
+        // Onde en cercle (plan 21 G6g) : tourner l'onde ne la distingue pas ; chaque frappe en plus repart un peu après.
+        if (arcAngle >= 359f)
+        {
+            SpawnSlashEffect(baseDirection, range, arcAngle);
+            float interval = WeaponVisualConfig.Load().WaveInterval;
+            for (int visualIndex = 1; visualIndex < visualCount; visualIndex++)
+                _attackFx.PlayMeleeLater(_equippedWeapon?.Base, baseDirection, range, arcAngle, WeaponSizeScale, visualIndex * interval);
+            return;
+        }
         float visualStart = visualCount == 1 ? 0f : -spreadAngle * 0.5f;
         float visualStep = visualCount == 1 ? 0f : spreadAngle / (visualCount - 1);
 
@@ -2007,12 +2039,13 @@ public partial class Player : CharacterBody2D
 
     private float ProjectileDamage(float baseDamage, bool isCrit) => isCrit ? baseDamage * _critMultiplier : baseDamage;
 
-    private Projectile SpawnProjectile(Vector2 direction, float damage, float speed, float range, int pierce, bool isCrit)
+    private Projectile SpawnProjectile(Vector2 direction, float damage, float speed, float range, int pierce, bool isCrit,
+        float launchDelay = 0f)
     {
         Projectile projectile = CombatPools.Instance?.TakePlayerProjectile();
         projectile?.Launch(GlobalPosition, direction, damage, speed, Mathf.Clamp(range / Mathf.Max(speed, 1f), 0.2f, 4f),
             pierce, isCrit, this, _equippedWeapon?.Base, _equippedWeapon, context: _launchContext with { ReferenceDamage = damage },
-            pierceDamageRamp: PierceDamageRamp, sizeScale: WeaponSizeScale);
+            pierceDamageRamp: PierceDamageRamp, sizeScale: WeaponSizeScale, launchDelay: launchDelay);
         return projectile;
     }
 

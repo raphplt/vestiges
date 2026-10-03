@@ -120,10 +120,21 @@ float cone_tone(vec2 p) {
 	float edge = min(radius - r, (arc_half - a) * r);
 	if (edge < 1.0)
 		return 0.5;
+	// Ondes en plus (plan 21 G6g) : pour le cône, thickness compte des fronts qui parcourent la portée à chaque
+	// cycle ; un front est un trait clair épais bordé de sombre, et les bandes passent alors au ton sombre pour
+	// qu'on compte les fronts.
+	int fronts = int(thickness);
+	for (int k = 0; k < fronts; k++) {
+		float gap = abs(r - fract(progress + float(k) / float(fronts)) * radius);
+		if (gap < 2.5)
+			return 1.0;
+		if (gap < 4.0)
+			return 0.0;
+	}
 	// Bandes qui s'éloignent de la source.
 	float band = fract(r / 10.0 - progress * 3.0);
 	if (band < 0.22)
-		return 1.0;
+		return fronts > 0 ? 0.0 : 1.0;
 	return bayer4(p) < fill_density * (1.0 - r / radius * 0.6) ? 0.0 : -1.0;
 }
 

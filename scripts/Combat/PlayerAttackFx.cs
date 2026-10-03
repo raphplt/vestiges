@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Godot;
 using Vestiges.Core;
 using Vestiges.Infrastructure;
@@ -23,6 +24,18 @@ public sealed class PlayerAttackFx
     private int _hitBurstsThisFrame;
     private ulong _timeFieldFrame;
     private PixelFx _cone;
+    // Ondes en attente d'une frappe circulaire répétée (plan 21 G6g) : liste réutilisée, aucune allocation par coup.
+    private readonly List<PendingMelee> _pendingMelee = new();
+
+    private struct PendingMelee
+    {
+        public WeaponData Weapon;
+        public Vector2 Direction;
+        public float Range;
+        public float ArcAngle;
+        public float SizeScale;
+        public float Delay;
+    }
 
     public PlayerAttackFx(Node2D owner, AnimatedSprite2D sprite)
     {
@@ -39,6 +52,37 @@ public sealed class PlayerAttackFx
     public static FxFamily FamilyOf(WeaponData weapon)
     {
         return PixelPalette.ParseFamily(weapon?.Fx.Family, PixelPalette.FamilyForDamageType(weapon?.DamageType));
+    }
+
+    /// <summary>Coup de mêlée rejoué après <paramref name="delay"/> secondes : ondes successives d'une frappe en cercle.</summary>
+    public void PlayMeleeLater(WeaponData weapon, Vector2 direction, float range, float arcAngle, float sizeScale, float delay)
+    {
+        _pendingMelee.Add(new PendingMelee
+        {
+            Weapon = weapon,
+            Direction = direction,
+            Range = range,
+            ArcAngle = arcAngle,
+            SizeScale = sizeScale,
+            Delay = delay,
+        });
+    }
+
+    /// <summary>Avance les coups en attente ; à appeler à chaque frame physique du joueur.</summary>
+    public void Tick(float delta)
+    {
+        for (int i = _pendingMelee.Count - 1; i >= 0; i--)
+        {
+            PendingMelee pending = _pendingMelee[i];
+            pending.Delay -= delta;
+            if (pending.Delay > 0f)
+            {
+                _pendingMelee[i] = pending;
+                continue;
+            }
+            _pendingMelee.RemoveAt(i);
+            PlayMelee(pending.Weapon, pending.Direction, pending.Range, pending.ArcAngle, pending.SizeScale);
+        }
     }
 
     /// <summary>
@@ -103,8 +147,11 @@ public sealed class PlayerAttackFx
         EmitSparks(origin + direction * 8f, direction, family, 2, 0.8f, 60f, 110f, 1);
     }
 
-    /// <summary>Cône entretenu de la Dernière Émission : bandes d'onde qui s'éloignent, ouverture croissante.</summary>
-    public void UpdateCone(WeaponData weapon, Vector2 direction, float range, float halfAngle)
+    /// <summary>
+    /// Cône entretenu de la Dernière Émission : bandes d'onde qui s'éloignent, ouverture croissante ; chaque onde en plus
+    /// ajoute un front qui le parcourt (<paramref name="waves"/>, plafonné par <see cref="WeaponVisualConfig.ConeMaxFronts"/>).
+    /// </summary>
+    public void UpdateCone(WeaponData weapon, Vector2 direction, float range, float halfAngle, int waves)
     {
         if (Pools == null)
             return;
@@ -116,6 +163,7 @@ public sealed class PlayerAttackFx
             spec.Squash = Iso.GroundSquash;
             spec.ArcHalf = halfAngle;
             spec.FillDensity = 0.25f;
+            spec.Thickness = Mathf.Clamp(waves - 1, 0, WeaponVisualConfig.Load().ConeMaxFronts);
             spec.Steps = 8;
             spec.FadeTail = 0f;
             spec.Loop = true;

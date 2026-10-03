@@ -11,12 +11,12 @@ using Vestiges.Spawn;
 namespace Vestiges.Tests;
 
 /// <summary>
-/// --capture-weapons [--weapons id1,id2] [--lethal] [--objects id:niveau,…] [--ascensions arme:voie,…] [--integer-gains N] [--dash] : galerie des
+/// --capture-weapons [--weapons id1,id2] [--lethal] [--objects id:niveau,…] [--ascensions arme:voie,…] [--integer-gains N] [--dash] [--targets N] : galerie des
 /// attaques du joueur. Chaque arme est équipée seule. Avec id1+id2, plusieurs armes sont équipées ensemble pour vérifier
 /// leurs interactions. Avec --objects, les objets donnés sont portés au niveau voulu avant la galerie (projectiles en plus, paliers) ;
 /// avec --ascensions, une arme de la galerie est montée au niveau 50 et prend la voie donnée ; avec --integer-gains,
 /// chaque stat entière de l'arme (projectile, perforation, saut, orbe) gagne N fois +0,5 ; avec --dash, le joueur
-/// dashe vers la droite au moment de l'attaque.
+/// dashe vers la droite au moment de l'attaque ; --targets fixe le nombre de cibles (5 par défaut, 1 pour voir une rafale).
 /// Chaque configuration est déclenchée sur un cercle d'ennemis immobiles, et capturée en gros plan à plusieurs instants de l'attaque.
 /// </summary>
 public partial class RunObservation
@@ -88,15 +88,18 @@ public partial class RunObservation
             }
             // --integer-gains N : N améliorations communes de +0,5 sur chaque stat entière de l'arme (plan 23 R4).
             int integerGains = int.Parse(Argument(OS.GetCmdlineUserArgs(), "--integer-gains", "0"), System.Globalization.CultureInfo.InvariantCulture);
+            int targets = int.Parse(Argument(OS.GetCmdlineUserArgs(), "--targets", "5"), System.Globalization.CultureInfo.InvariantCulture);
             foreach (WeaponInstance held in _player.WeaponSlots)
                 foreach (string stat in held.Base.Growth.Keys)
                     if (WeaponUpgradeDataLoader.GetStatConfig(stat) is { Integer: true })
                         for (int gain = 0; gain < integerGains && held.CanLevelUp; gain++)
                             _player.UpgradeWeapon(held.Id, new[] { new StatGain(stat, UpgradeRoller.Get("common").IntegerGain) });
             Vector2 origin = _player.GlobalPosition;
-            for (int index = 0; index < 5; index++)
+            for (int index = 0; index < targets; index++)
             {
-                Vector2 offset = Vector2.FromAngle(-0.9f + index * 0.45f) * (55f + index % 2 * 25f);
+                // Une cible seule se place à droite, en terrain dégagé, pour qu'une rafale ou un cône au sol se voie.
+                Vector2 offset = targets == 1 ? new Vector2(70f, 0f)
+                    : Vector2.FromAngle(-0.9f + index * 0.45f) * (55f + index % 2 * 25f);
                 spawner.ForceSpawnEnemy("rodeur", origin + offset);
             }
             await Frames(2);

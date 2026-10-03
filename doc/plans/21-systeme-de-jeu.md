@@ -366,9 +366,31 @@ Ensuite : C2, l'Atelier ([plan 22](22-carte-a-explorer.md), validé §49).
 - **Hors lot :** l'arme tenue en main (option désactivée par défaut, grille de 16 px) ne change pas ; le cône du Transistor suivait déjà la portée et la taille. Le nombre (ondes, projectiles) relève de G6f.
 - **Vérification :** build sans avertissement, smoke vert, `tools/test_weapons.sh` 31/31 (contrôle d'échelle ajouté). Captures `--capture-weapons` sans et avec Rondelle de cuivre niveau 15 (taille ×2,2, échelle plafonnée à 2) inspectées : notes, flèches de l'arc, orbe du Bâton et arc de la Faucille nettement plus grands, lisibles. Pas de banc FPS : une échelle par tir, sans nœud ni allocation en plus.
 
-### G6f — planche proposée le 2 octobre, en attente de Raphaël
+### G6f — planche proposée le 2 octobre, refusée le 3 octobre (DECISIONS §59)
 
 [Planche](planches/21-g6f-variantes.png) : trois paliers lus sur le nombre de projectiles de l'arme (stat et Papier carbone). Palier I (1 à 2) inchangé ; palier II (3 à 5) liseré lumineux de la couleur de la famille ; palier III (6 et plus) liseré et rémanence de deux échos. Mêlée : second trait intérieur au-delà de 3 frappes, étincelles au bout de l'arc à 6 et plus. Transistor : une onde concentrique par onde en plus (4 au plus). Rien n'est intégré : seuils, liseré et rémanence sont à valider.
+
+**Refusée le 3 octobre (§59) :** Raphaël veut voir plus de projectiles à l'écran, pas des paliers. Remplacée par G6g.
+
+### G6g — un projectile de plus se voit (DECISIONS §59)
+
+| Étape | Contenu | Vérification |
+|---|---|---|
+| **Rafale** | Tirs visés (ligne, guidage, et projectiles en plus envoyés chacun vers une cible) : le k-ième projectile qui retombe sur une cible déjà visée part après k écarts (`volley_interval_s`, total plafonné par `volley_max_s`, `weapon_visuals.json`). Il est calculé au tir (dégâts, critique, contexte) et attend caché, sans zone de contact, puis part de la position du joueur. | Banc : 3 projectiles sur un ennemi seul partent à des instants distincts, mêmes dégâts totaux ; captures |
+| **Ondes en cercle** | Frappe en plus d'une onde circulaire : visuel rejoué après k écarts (`wave_interval_s`), dégâts inchangés et immédiats. | Captures Cloche et Fouet à 1 et 3 frappes |
+| **Transistor** | Une onde en plus = un front d'onde de plus qui parcourt le cône à chaque cycle (`cone_max_fronts` au plus). | Capture à 1 et 3 ondes |
+
+Aucun nœud créé : la rafale réutilise le projectile du pool, les ondes la file d'effets existante.
+
+**Livré le 3 octobre.**
+- **Rafale :** un tir visé qui retombe sur une cible déjà visée part 0,06 s plus tard à chaque tour (rafale entière en 0,3 s au plus). Le projectile est tiré du pool au moment du tir avec ses dégâts, son critique et son contexte ; il attend caché, sans zone de contact et sans vieillir, puis part de la position actuelle du joueur et revise sa cible si elle vit encore. Concerne la ligne, le guidage, la voie de la salve qui envoie ses projectiles en plus chacun vers une cible, et tous les tirs visés à partir du palier du Papier carbone. L'éventail des projectiles en plus (avant le palier) ne change pas.
+- **Ondes en cercle :** chaque frappe en plus d'une onde circulaire (Cloche, Fouet, voies en cercle, arc élargi à 360°) rejoue son onde 0,09 s après la précédente, 7 au plus ; les dégâts restent immédiats, comme avant.
+- **Transistor :** chaque onde en plus ajoute un front clair et épais qui parcourt le cône (4 au plus) ; les bandes passent alors au ton sombre pour qu'on compte les fronts. Avec une seule onde, le cône est inchangé.
+- **Réglages :** `volley_interval_s`, `volley_max_s`, `wave_interval_s`, `cone_max_fronts` dans `weapon_visuals.json`.
+- **Vérification :** build sans avertissement ; contrôle de banc ajouté (3 flèches sur un ennemi seul : 1 part, 2 attendent, chacune touche) ; 10/10 suites (smoke, armes, cône, objets, perks, mouvement, intégration Main, choix, UI) ; préchauffage GPU valide. Dégâts : 48 avec ou sans écart sur le même scénario, la rafale ne change que le moment du départ. Captures avec une cible seule, 1 puis 3 projectiles (option `--targets` ajoutée à `--capture-weapons`), inspectées : [planche](../audits/g6g-2026-10-03/rafale-et-ondes.png). Pas de banc FPS : aucun nœud ni allocation en plus, une liste parcourue seulement quand une onde attend.
+- **À juger en jeu par Raphaël :** l'écart de la rafale, et le Transistor, dont les ondes en plus restent discrètes dans un cône étroit.
+- **Relecture (`godot-reviewer`) :** quatre remarques corrigées. Un tir en attente pouvait être absorbé par l'Indicible avant de partir (sa zone le détecte encore) : il est désormais ignoré tant qu'il attend. Si la cible meurt pendant l'attente, le tir vise l'ennemi le plus proche au lieu de partir dans l'ancienne direction. Deux résumés de doc mal placés, restauration du banc en `finally`. Bancs relancés : 5/5.
+- **Piège de banc relevé :** dans `WeaponRegression`, les minuteurs d'arme des joueurs continuent de tirer pendant un contrôle, et un premier impact peut emporter la réserve de débordement d'un tir antérieur. Le contrôle de rafale prend donc un joueur neuf, suspend les minuteurs et compare des impacts, pas des dégâts.
 
 ## 15. Lots E — équilibrage après la partie du 2 octobre (DECISIONS §50)
 
