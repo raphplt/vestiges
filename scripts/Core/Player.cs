@@ -327,7 +327,7 @@ public partial class Player : CharacterBody2D
 
         // Une orbitale n'attend pas le premier tic de son minuteur (20 s pour la Boîte à musique) : ses orbes
         // apparaissent dès qu'elle est portée.
-        if (instance.AttackPattern?.ToLower() == "orbital")
+        if (instance.AttackPattern == AttackPatternKind.Orbital)
             SetupOrbitalWeapon(instance);
 
         _eventBus?.EmitSignal(EventBus.SignalName.WeaponEquipped, instance.Id, capturedIndex);
@@ -1771,8 +1771,7 @@ public partial class Player : CharacterBody2D
 
         _equippedWeapon = _weaponSlots[slotIndex];
 
-        string type = _equippedWeapon.Type?.ToLower() ?? "ranged";
-        string pattern = _equippedWeapon.AttackPattern?.ToLower() ?? "linear";
+        AttackPatternKind pattern = _equippedWeapon.AttackPattern;
 
         // Sustained cone : effet spécial persistant (ex: last_broadcast)
         WeaponSpecialEffect specialEffect = _equippedWeapon.SpecialEffect;
@@ -1784,23 +1783,23 @@ public partial class Player : CharacterBody2D
         }
 
         // Orbital : pas d'attaque par timer, géré dans _PhysicsProcess
-        if (pattern == "orbital")
+        if (pattern == AttackPatternKind.Orbital)
         {
             SetupOrbitalWeapon(_equippedWeapon);
             return;
         }
 
-        PerformDiscreteAttack(type, pattern);
+        PerformDiscreteAttack(_equippedWeapon.Category, pattern);
         _objectMilestones?.CountAttack(_equippedWeapon);
     }
 
     /// <summary>Attaque ponctuelle de l'arme active : chaîne, mêlée ou tir (ni cône continu ni orbite).</summary>
-    private void PerformDiscreteAttack(string type, string pattern)
+    private void PerformDiscreteAttack(WeaponCategory category, AttackPatternKind pattern)
     {
         // Chain melee : attaque spéciale avec rebond
-        if (pattern == "chain")
+        if (pattern == AttackPatternKind.Chain)
             PerformChainAttack();
-        else if (type == "melee")
+        else if (category == WeaponCategory.Melee)
             PerformMeleeAttack(pattern);
         else
             PerformRangedAttack(pattern);
@@ -1812,7 +1811,7 @@ public partial class Player : CharacterBody2D
     /// </summary>
     private int RollOwnCount() => Mathf.Max(1, FractionalCount.Roll(GetWeaponStat("projectile_count", 1f), GD.Randf()));
 
-    private void PerformRangedAttack(string pattern)
+    private void PerformRangedAttack(AttackPatternKind pattern)
     {
         int ownCount = RollOwnCount();
         int extraCount = RollBonusProjectiles(_equippedWeapon);
@@ -1831,7 +1830,7 @@ public partial class Player : CharacterBody2D
         PlayAttackFeedback(isMelee: false, baseDirection);
         float spreadAngle = GetWeaponStat("spread_angle", 20f);
 
-        if (pattern == "burst")
+        if (pattern == AttackPatternKind.Burst)
         {
             // Salve : les projectiles en plus élargissent l'éventail, ou partent chacun vers leur cible au palier.
             SpawnBurstProjectiles(spreadExtras ? ownCount : totalProjectiles, spreadAngle, baseDirection, baseDamage, projectileSpeed, totalPierce);
@@ -1842,7 +1841,7 @@ public partial class Player : CharacterBody2D
         }
 
         float homingStrength = GetWeaponStat("homing_strength", 0f);
-        bool isHoming = pattern == "homing" || homingStrength > 0f;
+        bool isHoming = pattern == AttackPatternKind.Homing || homingStrength > 0f;
         for (int i = 0; i < totalProjectiles; i++)
         {
             bool extra = i >= ownCount;
@@ -1885,14 +1884,14 @@ public partial class Player : CharacterBody2D
         return step * (index / 2 + 1) * (index % 2 == 0 ? 1f : -1f);
     }
 
-    private void PerformMeleeAttack(string pattern)
+    private void PerformMeleeAttack(AttackPatternKind pattern)
     {
         // Onde circulaire : son rayon est une zone. Arc : la portée donne l'allonge, la zone l'ouverture.
-        float range = pattern == "circular" ? ZoneScale(GetEffectiveWeaponRange()) : GetEffectiveWeaponRange();
+        float range = pattern == AttackPatternKind.Circular ? ZoneScale(GetEffectiveWeaponRange()) : GetEffectiveWeaponRange();
         float arcAngle = pattern switch
         {
-            "circular" => 360f,
-            "linear" => 60f,
+            AttackPatternKind.Circular => 360f,
+            AttackPatternKind.Linear => 60f,
             _ => Mathf.Min(360f, ZoneScale(GetWeaponStat("arc_angle", 120f)))
         };
 
@@ -2119,7 +2118,7 @@ public partial class Player : CharacterBody2D
     private float PersonalRangeFactor(WeaponInstance weapon)
     {
         float factor = AttackRange / 300f;
-        return weapon?.Base.Type == "melee" ? Mathf.Max(1f, factor) : factor;
+        return weapon?.Category == WeaponCategory.Melee ? Mathf.Max(1f, factor) : factor;
     }
 
     /// <summary>Taille d'une zone d'effet (rayon, angle) après les bonus de zone du joueur.</summary>
@@ -2136,7 +2135,7 @@ public partial class Player : CharacterBody2D
     {
         "damage" => ComputeBaseAttackDamage(weapon),
         "attack_speed" => AttackSpeed * weapon.GetStat("attack_speed", 1f) * _attackSpeedMultiplier,
-        "range" => weapon.AttackPattern == "circular" ? ZoneScale(GetEffectiveWeaponRange(weapon)) : GetEffectiveWeaponRange(weapon),
+        "range" => weapon.AttackPattern == AttackPatternKind.Circular ? ZoneScale(GetEffectiveWeaponRange(weapon)) : GetEffectiveWeaponRange(weapon),
         "arc_angle" => Mathf.Min(360f, ZoneScale(weapon.GetStat("arc_angle", 120f))),
         "cone_angle_end" => Mathf.Min(180f, ZoneScale(weapon.GetStat("cone_angle_end", 60f))),
         "projectile_pierce" => weapon.GetStat("projectile_pierce", 0f) + _projectilePierce,

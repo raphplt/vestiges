@@ -1,0 +1,39 @@
+{
+  "results": [
+    {
+      "name": "smoke",
+      "exit_code": 0
+    },
+    {
+      "name": "weapons",
+      "exit_code": 0
+    },
+    {
+      "name": "objects",
+      "exit_code": 0
+    },
+    {
+      "name": "choice_screen",
+      "exit_code": 0
+    },
+    {
+      "name": "small_places",
+      "exit_code": 0
+    },
+    {
+      "name": "cartography",
+      "exit_code": 0
+    },
+    {
+      "name": "ui_art",
+      "exit_code": 0
+    },
+    {
+      "name": "cone",
+      "exit_code": 0
+    }
+  ],
+  "passed": 8,
+  "expected": 8,
+  "source_changes": []
+}

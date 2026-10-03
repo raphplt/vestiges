@@ -286,17 +286,8 @@ public partial class HubCollectionPanel : MarginContainer
 
     private static string WeaponStats(WeaponData weapon)
     {
-        string pattern = weapon.AttackPattern switch
-        {
-            "arc" => "Arc",
-            "linear" => "Ligne",
-            "circular" => "Cercle",
-            "orbital" => "Orbital",
-            "chain" => "Chaîne",
-            "homing" => "Tête chercheuse",
-            _ => weapon.AttackPattern,
-        };
-        string kind = weapon.Type == "melee" ? "Mêlée" : weapon.Type == "ranged" ? "Distance" : "Spéciale";
+        string pattern = TranslationServer.Translate(WeaponGrammar.LabelKey(weapon.AttackPattern));
+        string kind = TranslationServer.Translate(WeaponGrammar.LabelKey(weapon.Category));
         weapon.Stats.TryGetValue("damage", out float damage);
         weapon.Stats.TryGetValue("attack_speed", out float speed);
         weapon.Stats.TryGetValue("range", out float range);

@@ -46,6 +46,7 @@ public partial class WeaponRegression : Node2D
             CheckRangeAndZone();
             await CheckGroundFireOnGround();
             CheckAscensions();
+            CheckGrammarRejectsUnknownKeys();
             await CheckCountForAllWeapons();
             CheckTemper();
 
@@ -359,8 +360,10 @@ public partial class WeaponRegression : Node2D
             withPaths += data.Ascensions.Count == 2 ? 1 : 0;
             foreach (WeaponAscensionData path in data.Ascensions)
             {
-                string pattern = path.AttackPattern ?? data.AttackPattern;
-                bool known = data.Type == "melee" ? pattern is "arc" or "linear" or "circular" or "chain" : pattern is "linear" or "burst" or "homing" or "orbital";
+                AttackPatternKind pattern = path.AttackPattern ?? data.AttackPattern;
+                bool known = data.Category == WeaponCategory.Melee
+                    ? pattern is AttackPatternKind.Arc or AttackPatternKind.Linear or AttackPatternKind.Circular or AttackPatternKind.Chain
+                    : pattern is AttackPatternKind.Linear or AttackPatternKind.Burst or AttackPatternKind.Homing or AttackPatternKind.Orbital;
                 if (!known)
                     badPatterns.Add($"{data.Id}:{path.Id}:{pattern}");
             }
@@ -371,7 +374,7 @@ public partial class WeaponRegression : Node2D
         WeaponInstance bow = MaxedWeapon("makeshift_bow");
         bool ready = bow.CanAscend && !new WeaponInstance(WeaponDataLoader.Get("heavy_hammer")).CanAscend;
         bool chosen = bow.Ascend("volley");
-        Check(ready && chosen && !bow.Ascend("pierce_through") && bow.AttackPattern == "burst"
+        Check(ready && chosen && !bow.Ascend("pierce_through") && bow.AttackPattern == AttackPatternKind.Burst
             && bow.GetStat("projectile_count", 1f) >= 2f && Mathf.IsEqualApprox(bow.GetStat("spread_angle", 20f), 40f) && Mathf.IsEqualApprox(bow.BonusProjectileMultiplier, 2f),
             "Volée : éventail, deux fois plus de flèches et de projectiles en plus ; la voie est définitive");
         WeaponInstance piercing = MaxedWeapon("makeshift_bow");
@@ -465,6 +468,39 @@ public partial class WeaponRegression : Node2D
     }
 
     /// <summary>
+    /// Grammaire d'attaque (plan 26 Q5) : une faute de clé écarte l'arme avec un diagnostic qui nomme l'arme, la voie
+    /// et le champ, au lieu de la jouer avec le motif ou la famille par défaut.
+    /// </summary>
+    private void CheckGrammarRejectsUnknownKeys()
+    {
+        Godot.Collections.Dictionary Weapon(string type, string pattern, string pathPattern)
+        {
+            Godot.Collections.Dictionary path = new() { ["id"] = "voie_test" };
+            if (pathPattern != null)
+                path["attack_pattern"] = pathPattern;
+            return new Godot.Collections.Dictionary
+            {
+                ["id"] = "arme_test",
+                ["type"] = type,
+                ["attack_pattern"] = pattern,
+                ["ascensions"] = new Godot.Collections.Array { path, new Godot.Collections.Dictionary { ["id"] = "autre_voie" } },
+            };
+        }
+
+        bool valid = WeaponDataLoader.TryParseWeapon(Weapon("melee", "circular", "chain"), out WeaponData parsed, out _)
+            && parsed.Category == WeaponCategory.Melee && parsed.AttackPattern == AttackPatternKind.Circular
+            && parsed.Ascensions[0].AttackPattern == AttackPatternKind.Chain && parsed.Ascensions[1].AttackPattern == null;
+        bool badPattern = !WeaponDataLoader.TryParseWeapon(Weapon("ranged", "homming", null), out WeaponData rejected, out string patternError)
+            && rejected == null && patternError.Contains("arme_test") && patternError.Contains("attack_pattern") && patternError.Contains("homming");
+        bool badCategory = !WeaponDataLoader.TryParseWeapon(Weapon("Melee", "arc", null), out _, out string categoryError)
+            && categoryError.Contains("arme_test") && categoryError.Contains("type") && categoryError.Contains("Melee");
+        bool badPath = !WeaponDataLoader.TryParseWeapon(Weapon("melee", "arc", "spiral"), out _, out string pathError)
+            && pathError.Contains("voie_test") && pathError.Contains("spiral");
+        Check(valid && badPattern && badCategory && badPath,
+            $"Grammaire : clés connues lues en types, motif/famille/voie inconnus refusés [{patternError} | {categoryError} | {pathError}]");
+    }
+
+    /// <summary>
     /// Plan 21 G6a : les 24 armes montent leur nombre (tirs, frappes, ondes, orbes, cibles de chaîne) à un poids franc ;
     /// une frappe de mêlée en plus touche à pleins dégâts ; une onde de plus double le cône ; Papier carbone favorisé.
     /// </summary>
@@ -474,7 +510,12 @@ public partial class WeaponRegression : Node2D
         float lowestShare = 1f;
         foreach (WeaponData data in WeaponDataLoader.GetAll())
         {
-            string count = data.AttackPattern switch { "orbital" => "orbital_count", "chain" => "chain_targets", _ => "projectile_count" };
+            string count = data.AttackPattern switch
+            {
+                AttackPatternKind.Orbital => "orbital_count",
+                AttackPatternKind.Chain => "chain_targets",
+                _ => "projectile_count",
+            };
             float total = 0f;
             foreach (float weight in data.Growth.Values)
                 total += weight;
@@ -502,10 +543,10 @@ public partial class WeaponRegression : Node2D
         await ToSignal(GetTree(), SceneTree.SignalName.PhysicsFrame);
 
         MethodInfo melee = typeof(Player).GetMethod("PerformMeleeAttack", Private);
-        melee.Invoke(_player, new object[] { "arc" });
+        melee.Invoke(_player, new object[] { AttackPatternKind.Arc });
         float single = _player.GetDamageDealt("chipped_blade");
         blade.ApplyUpgrade(new[] { new StatGain("projectile_count", 1f) });
-        melee.Invoke(_player, new object[] { "arc" });
+        melee.Invoke(_player, new object[] { AttackPatternKind.Arc });
         float twice = _player.GetDamageDealt("chipped_blade") - single;
         Check(single > 0f && twice > single * 1.8f && twice < single * 2.2f
               && StatCatalog.Name("projectile_count", blade.Base) != StatCatalog.Name("projectile_count"),

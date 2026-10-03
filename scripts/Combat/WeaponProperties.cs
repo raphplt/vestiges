@@ -1,3 +1,5 @@
+using Vestiges.Infrastructure;
+
 namespace Vestiges.Combat;
 
 /// <summary>
@@ -13,17 +15,17 @@ public static class WeaponProperties
     {
         if (weapon == null || property == null)
             return false;
-        string pattern = weapon.AttackPattern?.ToLowerInvariant();
+        AttackPatternKind pattern = weapon.AttackPattern;
         string special = weapon.SpecialEffect?.Type;
         bool continuous = special == "sustained_cone";
-        bool strikes = pattern != "orbital" && !continuous;
+        bool strikes = pattern != AttackPatternKind.Orbital && !continuous;
         return property switch
         {
             "force" or "range" => true,
             "frequency" or "precision" => strikes,
-            "count" => strikes && pattern != "chain",
-            "size" => continuous || pattern == "orbital"
-                || (weapon.Type?.ToLowerInvariant() == "melee" && pattern is "arc" or "circular")
+            "count" => strikes && pattern != AttackPatternKind.Chain,
+            "size" => continuous || pattern == AttackPatternKind.Orbital
+                || (weapon.Category == WeaponCategory.Melee && pattern is AttackPatternKind.Arc or AttackPatternKind.Circular)
                 || special is "delayed_echo" or "random_shape" or "local_time_slow" or "ground_fire",
             "duration" => weapon.OnHitEffect != null || special is "ground_fire" or "local_time_slow" || objectStatuses,
             _ => false,

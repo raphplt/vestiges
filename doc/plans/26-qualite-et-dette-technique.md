@@ -1,6 +1,6 @@
 # Plan 26 — Qualité du code et remboursement de la dette technique
 
-2 octobre 2026 · Plan préparé à la demande de Raphaël ([DECISIONS §54](DECISIONS.md)). **Q0 et Q1 livrés et vérifiés (§55, §56, §58) ; Q5 engagé (§58), autres lots non commencés.** Référence de diagnostic : [revue du 2 octobre](../audits/qualite-2026-10-02/README.md), ses manifestes et ses journaux.
+2 octobre 2026 · Plan préparé à la demande de Raphaël ([DECISIONS §54](DECISIONS.md)). **Q0, Q1 et Q5 livrés et vérifiés (§55, §56, §58) ; autres lots non commencés.** Référence de diagnostic : [revue du 2 octobre](../audits/qualite-2026-10-02/README.md), ses manifestes et ses journaux.
 
 Objectif : protéger les acquis des joueurs, rendre les validations fiables et permettre de faire évoluer une arme, une créature ou un réglage sans chercher des règles dupliquées dans plusieurs classes. Le travail conserve la direction V2 et les décisions de gameplay actuelles ; il procède par modules et vérifications ciblées.
 
@@ -133,6 +133,12 @@ Commencer par le motif d'attaque et la catégorie mêlée/distance : types ferm�
 
 **Hors Q5 :** effets à l'impact et spéciaux (`slow`, `sustained_cone`…) au Q6a ; type des créatures (`Enemy`, `SpawnManager`) au Q6c/Q7.
 
+**Q5 livré et vérifié, 3 octobre.**
+- **Code :** `WeaponGrammar` (types, table des clés, clés de libellé) ; `WeaponDataLoader.TryParseWeapon` lit `type` et `attack_pattern` de l'arme et de ses voies, et renvoie un diagnostic (`arme X, voie Y, attack_pattern « Z » inconnu (liste)`) ; l'arme fautive est écartée avec une erreur au chargement. Une voie sans motif, ou à `null`, garde celui de l'arme. `WeaponData.Category` remplace `Type`. Plus aucune comparaison de motif ou de famille d'arme par chaîne, ni de `ToLower`, dans `Player`, `WeaponProperties`, `WeaponTraits`, l'interface et les bancs.
+- **Visible :** la Collection lit ses libellés par traduction (FR/EN) et nomme enfin la salve (« Salve ») ; la carte « Nouvelle » des deux armes `special` (Boîte à musique, Craies) dit « Spéciale » au lieu de « Distance ».
+- **Vérification :** build sans avertissement ; fixture négative (motif, famille et motif de voie inconnus refusés, messages précis, aucune erreur moteur) ; worktree 12/12 suites (smoke, armes, objets, trois suites de perks, choix, cône, mouvement, intégration Main, UI, mode dev), puis `main` fusionné 8/8 (avec petits lieux et carte). Relecture `godot-reviewer` : branches équivalentes, aucun consommateur oublié ; ses deux remarques de code corrigées (doc de banc déplacée, motif `null`). Captures avant/après sur 8 armes (orbite, chaîne, guidage, cône, arc, onde, salve, ligne) : mêmes attaques, mêmes dégâts. Pas de banc FPS : les chemins chauds comparent des énumérations au lieu d'appeler `ToLower`. [Preuves](../audits/qualite-2026-10-02/q5/).
+- **Piège évité :** `WeaponRegression` appelait `PerformMeleeAttack("arc")` par réflexion, sans erreur de compilation ; corrigé.
+
 ### Q6a — Expliciter les contrats et paramètres des effets d'armes
 
 Constats : retour §54, F12. Dépend de Q5. Plans associés : 05, 17 et 21.
@@ -250,7 +256,7 @@ Pour clore un lot :
 - [ ] Q2b — Finalisation persistante sans double attribution.
 - [ ] Q3 — Opérations Steam et contexte weekly.
 - [ ] Q4 — Chargement observé et récupérable.
-- [ ] Q5 — Motifs d'attaque typés.
+- [x] Q5 — Motifs d'attaque typés.
 - [ ] Q6a — Effets et paramètres des armes explicites.
 - [ ] Q6b — Réglages du boss dans les données.
 - [ ] Q6c — Relations et capacités ennemies validées.
@@ -269,4 +275,4 @@ Pour clore un lot :
 - [ ] Q13 — Provenance du son de level-up résolue.
 - [ ] Q14 — Documentation active et restes V1 repris.
 
-**Lot en cours : Q5**, choisi par Raphaël le 3 octobre (§58) avant Q2–Q4 : le nettoyage demandé des noms et règles de combat commence par les motifs d'attaque.
+**Prochain lot recommandé : Q6a** (effets à l'impact et spéciaux des armes, suite directe de Q5), ou Q2a/Q2b (sauvegardes) si Raphaël préfère protéger les acquis d'abord.

@@ -26,10 +26,10 @@ public class WeaponInstance
 	public string Name => Base.Name;
 	public string Description => Base.Description;
 	public int Tier => Base.Tier;
-	public string Type => Base.Type;
+	public WeaponCategory Category => Base.Category;
 	public string DamageType => Base.DamageType;
 	/// <summary>Motif d'attaque : celui de la voie d'ascension choisie, sinon celui de l'arme.</summary>
-	public string AttackPattern => Ascension?.AttackPattern ?? Base.AttackPattern;
+	public AttackPatternKind AttackPattern => Ascension?.AttackPattern ?? Base.AttackPattern;
 	/// <summary>Effet à l'impact : celui de la voie d'ascension, sinon celui de l'arme.</summary>
 	public WeaponOnHitEffect OnHitEffect => Ascension?.OnHitEffect ?? Base.OnHitEffect;
 	/// <summary>Effet spécial : celui de l'arme, aux réglages remplacés par la voie d'ascension s'il y en a.</summary>

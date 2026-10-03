@@ -37,9 +37,9 @@ public class WeaponData
 	public string Name { get; set; }
 	public string Description { get; set; }
 	public int Tier { get; set; }
-	public string Type { get; set; }
+	public WeaponCategory Category { get; set; }
 	public string DamageType { get; set; }
-	public string AttackPattern { get; set; }
+	public AttackPatternKind AttackPattern { get; set; }
 	/// <summary>Poids d'un impact pour les objets à déclencheur (plan 21 §7) : moins pour une arme rapide ou multiple.</summary>
 	public float TriggerCoefficient { get; set; } = 1f;
 	public string AttackAudio { get; set; }
@@ -104,8 +104,12 @@ public static class WeaponDataLoader
             if (!dict.ContainsKey("id"))
                 continue;
 
-            WeaponData weapon = ParseWeapon(dict);
-            if (weapon == null || string.IsNullOrEmpty(weapon.Id))
+            if (!TryParseWeapon(dict, out WeaponData weapon, out string error))
+            {
+                GD.PushError($"[WeaponDataLoader] weapons.json : {error}");
+                continue;
+            }
+            if (string.IsNullOrEmpty(weapon.Id))
                 continue;
 
             _allWeapons.Add(weapon);
@@ -168,18 +172,39 @@ public static class WeaponDataLoader
         return values;
     }
 
-    private static WeaponAscensionData ParseAscension(string weaponId, Godot.Collections.Dictionary dict)
+    /// <summary>
+    /// Lit une arme et ses voies. Faux, avec un diagnostic qui nomme l'arme, la voie et le champ, si une clé de la
+    /// grammaire d'attaque est inconnue : l'arme est alors écartée plutôt que jouée avec un autre motif.
+    /// </summary>
+    public static bool TryParseWeapon(Godot.Collections.Dictionary dict, out WeaponData weapon, out string error)
     {
+        weapon = ParseWeapon(dict, out error);
+        return error == null;
+    }
+
+    private static WeaponAscensionData ParseAscension(string weaponId, Godot.Collections.Dictionary dict, out string error)
+    {
+        error = null;
+        string id = dict.ContainsKey("id") ? dict["id"].AsString() : weaponId;
+        AttackPatternKind? pattern = null;
+        if (dict.ContainsKey("attack_pattern") && dict["attack_pattern"].VariantType != Variant.Type.Nil)
+        {
+            string key = dict["attack_pattern"].AsString();
+            if (WeaponGrammar.TryParsePattern(key, out AttackPatternKind parsed))
+                pattern = parsed;
+            else
+                error = $"arme {weaponId}, voie {id}, attack_pattern « {key} » inconnu ({WeaponGrammar.PatternKeys})";
+        }
         HashSet<string> flags = new();
         if (dict.ContainsKey("flags"))
             foreach (Variant flag in dict["flags"].AsGodotArray())
                 flags.Add(flag.AsString());
         return new WeaponAscensionData
         {
-            Id = dict.ContainsKey("id") ? dict["id"].AsString() : weaponId,
+            Id = id,
             Name = dict.ContainsKey("name") ? dict["name"].AsString() : weaponId,
             Description = dict.ContainsKey("description") ? dict["description"].AsString() : "",
-            AttackPattern = dict.ContainsKey("attack_pattern") ? dict["attack_pattern"].AsString() : null,
+            AttackPattern = pattern,
             StatMultipliers = ParseFloats(dict, "stat_multipliers"),
             StatOverrides = ParseFloats(dict, "stat_overrides"),
             OnHitEffect = dict.ContainsKey("on_hit_effect") ? ParseOnHit(dict["on_hit_effect"].AsGodotDictionary()) : null,
@@ -190,18 +215,33 @@ public static class WeaponDataLoader
         };
     }
 
-    private static WeaponData ParseWeapon(Godot.Collections.Dictionary dict)
+    private static WeaponData ParseWeapon(Godot.Collections.Dictionary dict, out string error)
     {
+        error = null;
+        string id = dict["id"].AsString();
+        string categoryKey = dict.ContainsKey("type") ? dict["type"].AsString() : "ranged";
+        string patternKey = dict.ContainsKey("attack_pattern") ? dict["attack_pattern"].AsString() : "linear";
+        if (!WeaponGrammar.TryParseCategory(categoryKey, out WeaponCategory category))
+        {
+            error = $"arme {id}, type « {categoryKey} » inconnu ({WeaponGrammar.CategoryKeys})";
+            return null;
+        }
+        if (!WeaponGrammar.TryParsePattern(patternKey, out AttackPatternKind pattern))
+        {
+            error = $"arme {id}, attack_pattern « {patternKey} » inconnu ({WeaponGrammar.PatternKeys})";
+            return null;
+        }
+
         WeaponData weapon = new()
         {
-            Id = dict["id"].AsString(),
+            Id = id,
             Name = dict.ContainsKey("name") ? dict["name"].AsString() : "",
             Description = dict.ContainsKey("description") ? dict["description"].AsString() : "",
             Tier = dict.ContainsKey("tier") ? (int)dict["tier"].AsDouble() : 1,
-            Type = dict.ContainsKey("type") ? dict["type"].AsString() : "ranged",
+            Category = category,
             DamageType = dict.ContainsKey("damage_type") ? dict["damage_type"].AsString() : "physical",
             AttackAudio = dict.ContainsKey("attack_audio") ? dict["attack_audio"].AsString() : null,
-            AttackPattern = dict.ContainsKey("attack_pattern") ? dict["attack_pattern"].AsString() : "linear",
+            AttackPattern = pattern,
             TriggerCoefficient = dict.ContainsKey("trigger_coefficient") ? (float)dict["trigger_coefficient"].AsDouble() : 1f,
             DefaultFor = dict.ContainsKey("default_for") ? dict["default_for"].AsString() : null,
             Sprite = dict.ContainsKey("sprite") ? dict["sprite"].AsString() : null,
@@ -251,7 +291,11 @@ public static class WeaponDataLoader
             weapon.OnHitEffect = ParseOnHit(dict["on_hit_effect"].AsGodotDictionary());
         if (dict.ContainsKey("ascensions"))
             foreach (Variant entry in dict["ascensions"].AsGodotArray())
-                weapon.Ascensions.Add(ParseAscension(weapon.Id, entry.AsGodotDictionary()));
+            {
+                weapon.Ascensions.Add(ParseAscension(weapon.Id, entry.AsGodotDictionary(), out error));
+                if (error != null)
+                    return null;
+            }
         if (weapon.Ascensions.Count is not (0 or 2))
             GD.PushError($"[WeaponDataLoader] {weapon.Id} : {weapon.Ascensions.Count} voies d'ascension, il en faut deux");
 

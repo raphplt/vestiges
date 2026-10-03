@@ -12,7 +12,7 @@ public static class WeaponTraits
 {
     /// <summary>L'arme choisit une cible ; l'onde circulaire, l'orbite et le cône orienté par le regard n'en cherchent pas.</summary>
     public static bool SearchesTarget(WeaponInstance weapon) =>
-        weapon.AttackPattern?.ToLowerInvariant() is not ("circular" or "orbital") && weapon.SpecialEffect?.Type != "sustained_cone";
+        weapon.AttackPattern is not (AttackPatternKind.Circular or AttackPatternKind.Orbital) && weapon.SpecialEffect?.Type != "sustained_cone";
 
     /// <summary>L'arme inflige des impacts directs attribués au joueur.</summary>
     public static bool DealsDirectHits(WeaponInstance weapon) => weapon.GetStat("damage", 0f) > 0f;

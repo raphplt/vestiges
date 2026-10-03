@@ -226,7 +226,7 @@ public partial class Player
         if (_isDead || !_weaponSlots.Contains(weapon))
             return;
         _equippedWeapon = weapon;
-        PerformDiscreteAttack(weapon.Type?.ToLower() ?? "ranged", weapon.AttackPattern?.ToLower() ?? "linear");
+        PerformDiscreteAttack(weapon.Category, weapon.AttackPattern);
     }
 
     /// <summary>

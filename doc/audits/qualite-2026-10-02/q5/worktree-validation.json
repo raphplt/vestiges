@@ -1,0 +1,55 @@
+{
+  "results": [
+    {
+      "name": "smoke",
+      "exit_code": 0
+    },
+    {
+      "name": "weapons",
+      "exit_code": 0
+    },
+    {
+      "name": "objects",
+      "exit_code": 0
+    },
+    {
+      "name": "perk_contracts",
+      "exit_code": 0
+    },
+    {
+      "name": "perk_acquisition",
+      "exit_code": 0
+    },
+    {
+      "name": "perk_effects",
+      "exit_code": 0
+    },
+    {
+      "name": "choice_screen",
+      "exit_code": 0
+    },
+    {
+      "name": "cone",
+      "exit_code": 0
+    },
+    {
+      "name": "movement",
+      "exit_code": 0
+    },
+    {
+      "name": "movement-integration",
+      "exit_code": 0
+    },
+    {
+      "name": "ui_art",
+      "exit_code": 0
+    },
+    {
+      "name": "dev_mode",
+      "exit_code": 0
+    }
+  ],
+  "passed": 12,
+  "expected": 12,
+  "source_changes": []
+}

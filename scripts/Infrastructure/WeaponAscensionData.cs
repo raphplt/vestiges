@@ -16,7 +16,7 @@ public sealed class WeaponAscensionData
 	public string Name { get; init; }
 	public string Description { get; init; }
 	/// <summary>Motif d'attaque remplacé ; null pour garder celui de l'arme.</summary>
-	public string AttackPattern { get; init; }
+	public AttackPatternKind? AttackPattern { get; init; }
 	public Dictionary<string, float> StatMultipliers { get; init; } = new();
 	public Dictionary<string, float> StatOverrides { get; init; } = new();
 	/// <summary>Effet à l'impact remplacé ; null pour garder celui de l'arme.</summary>

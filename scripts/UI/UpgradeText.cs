@@ -23,7 +23,7 @@ public static class UpgradeText
             case "weapon_new":
             {
                 WeaponData weapon = WeaponDataLoader.Get(choice.Id);
-                string family = TranslationServer.Translate(weapon?.Type == "melee" ? "LEVELUP_MELEE" : "LEVELUP_RANGED");
+                string family = weapon == null ? "" : TranslationServer.Translate(WeaponGrammar.LabelKey(weapon.Category));
                 lines.Add(($"{weapon?.Summary}   ▸ {family}", ChoiceStyle.TextColor));
                 break;
             }
