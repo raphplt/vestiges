@@ -721,3 +721,10 @@ Le lot Q1 du [plan 26](26-qualite-et-dette-technique.md) est engagé : réserver
 - **Après H et Q1 :** reprendre l'audio (plan 15).
 - **Bestiaire :** la Tisseuse apparaît hors des Marécages, avec un poids faible. Les « mobs successifs » restent ouverts.
 - **Plan 20 :** ses idées restantes (essai d'XP, niveaux de surplus, réserve automatique) sont absorbées par le plan 21 ; le plan 20 est marqué remplacé.
+
+## 58. Questions de reprise du soir — 3 octobre 2026
+
+- **H3 :** pas encore joué ; l'équilibrage reste tel quel.
+- **Q1 :** Raphaël demande de vérifier et de clore. Fait (plan 26).
+- **Chantier de la session :** « Décidés + Q5 » : Ateliers à prix ×5 et 8 par carte, Tisseuse hors des Marécages avec un poids faible (§57), puis Q5 (motifs d'attaque typés, plan 26).
+- **Planche G6f :** pas encore regardée ; Raphaël demande où la voir : `doc/plans/planches/21-g6f-variantes.png`. Question maintenue.

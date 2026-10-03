@@ -1,6 +1,6 @@
 # Plan 26 — Qualité du code et remboursement de la dette technique
 
-2 octobre 2026 · Plan préparé à la demande de Raphaël ([DECISIONS §54](DECISIONS.md)). **Q0 livré et vérifié (§55) ; Q1 engagé à sa demande (§56), autres lots non commencés.** Référence de diagnostic : [revue du 2 octobre](../audits/qualite-2026-10-02/README.md), ses manifestes et ses journaux.
+2 octobre 2026 · Plan préparé à la demande de Raphaël ([DECISIONS §54](DECISIONS.md)). **Q0 et Q1 livrés et vérifiés (§55, §56, §58) ; Q5 engagé (§58), autres lots non commencés.** Référence de diagnostic : [revue du 2 octobre](../audits/qualite-2026-10-02/README.md), ses manifestes et ses journaux.
 
 Objectif : protéger les acquis des joueurs, rendre les validations fiables et permettre de faire évoluer une arme, une créature ou un réglage sans chercher des règles dupliquées dans plusieurs classes. Le travail conserve la direction V2 et les décisions de gameplay actuelles ; il procède par modules et vérifications ciblées.
 
@@ -80,6 +80,8 @@ Inventorier tous les points d'entrée de debug, capturer/tester leur usage local
 **Sortie :** ces actions restent utilisables dans le profil dev ; elles sont inaccessibles dans les deux configurations d'export. Le profil normal conserve ses acquis, et aucune run d'essai altérée n'envoie de score normal à Steam. Vérifier en assembly puis dans le paquet jouable de Q12.
 
 **Découpage d’exécution Q1, 2 octobre :** relever les accès F1/F4 et les commandes des bancs ; retirer les panneaux de la scène partagée et compiler leurs créations/contrôles seulement en local, avec accès réservé au profil dev ; exclure les sources de `tools/` des assemblies distribuées et leurs ressources par l’exclusion native du répertoire `tools/` (`.gdignore`), avec les panneaux déplacés dans ce répertoire ; retirer les hooks d’invincibilité, d’essai et de simulation des exports ; identifier les sessions de banc avant l’initialisation Steam et enregistrer la provenance dans l’historique ; tester les profils, les vrais panneaux et les deux assemblies. Validation sur un instantané isolé pour préserver les mesures d’équilibrage en cours ; aucune valeur de gameplay modifiée. Le paquet jouable multi-OS reste la recette Q12.
+
+**Q1 livré et vérifié, 3 octobre.** Le code est entré avec le commit c5fac34e (panneaux F1/F4 déplacés dans `tools/development/`, exclus par `tools/.gdignore`, provenance Normal/Test/Development résolue avant les autoloads, hooks de banc refusés hors profil dev ou banc, envois Steam coupés hors run normale). Vérification sur `main` au commit 70f523c6, sans modification locale : `tools/validate.sh` sur les suites smoke, dev_mode, development_tools, dev_release et launchers, **5/5**, sources inchangées. Outils dev : 16 contrôles en lancement normal, 11 en essai, 19 en profil dev ; sauvegardes normales (méta, historique, record, analytics) identiques après les essais. Exports Debug et Release : outils, bancs et hooks absents des assemblies, arguments dev/test sans effet ; archive de ressources sans aucune ressource de développement (7 246 fichiers). [Preuves](../audits/qualite-2026-10-02/q1/). **Reste à Q12 :** le paquet jouable multi-OS ; le fonctionnement réel de Steam n'est pas prouvé en headless.
 
 ### Q2a — Protéger les fichiers de sauvegarde
 
@@ -235,7 +237,7 @@ Pour clore un lot :
 ### Checklist de réalisation
 
 - [x] Q0 — Lanceurs et bancs fiables.
-- [ ] Q1 — Outils de modification exclus des runs normales distribuées.
+- [x] Q1 — Outils de modification exclus des runs normales distribuées.
 - [ ] Q2a — Écriture et récupération des sauvegardes.
 - [ ] Q2b — Finalisation persistante sans double attribution.
 - [ ] Q3 — Opérations Steam et contexte weekly.
@@ -259,4 +261,4 @@ Pour clore un lot :
 - [ ] Q13 — Provenance du son de level-up résolue.
 - [ ] Q14 — Documentation active et restes V1 repris.
 
-**Prochain lot recommandé : Q1.** Q0 fournit les validations pour les corrections suivantes. Le nettoyage demandé des noms et règles de combat commence avec Q5, après la protection des acquis et le traitement des erreurs de chargement.
+**Lot en cours : Q5**, choisi par Raphaël le 3 octobre (§58) avant Q2–Q4 : le nettoyage demandé des noms et règles de combat commence par les motifs d'attaque.

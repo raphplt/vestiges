@@ -1,0 +1,27 @@
+{
+  "results": [
+    {
+      "name": "smoke",
+      "exit_code": 0
+    },
+    {
+      "name": "dev_mode",
+      "exit_code": 0
+    },
+    {
+      "name": "development_tools",
+      "exit_code": 0
+    },
+    {
+      "name": "dev_release",
+      "exit_code": 0
+    },
+    {
+      "name": "launchers",
+      "exit_code": 0
+    }
+  ],
+  "passed": 5,
+  "expected": 5,
+  "source_changes": []
+}

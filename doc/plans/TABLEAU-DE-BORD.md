@@ -1,6 +1,6 @@
 # Tableau de bord des plans
 
-3 octobre 2026 · **Une page pour ne rien perdre.** Établi par recensement des 23 plans, du README et du registre. Pour les plans 02, 04, 07, 08, 10 et 19, le recensement a lu les en-têtes, les lots et les comptes rendus, pas le texte entier. À tenir à jour à chaque clôture de lot et à chaque décision : une ligne change ici avant tout autre document.
+3 octobre 2026 (soir) · **Une page pour ne rien perdre.** Établi par recensement des 23 plans, du README et du registre. Pour les plans 02, 04, 07, 08, 10 et 19, le recensement a lu les en-têtes, les lots et les comptes rendus, pas le texte entier. À tenir à jour à chaque clôture de lot et à chaque décision : une ligne change ici avant tout autre document.
 
 Le [registre](DECISIONS.md) garde les mots de Raphaël. Les plans gardent le détail. Ce tableau dit seulement **où en est chaque chose et qui doit agir**.
 
@@ -9,7 +9,7 @@ Le [registre](DECISIONS.md) garde les mots de Raphaël. Les plans gardent le dé
 | Chantier | Plan | Prochaine action |
 |---|---|---|
 | **Difficulté : les ennemis ne suivent pas** (intuable dès 10–15 min en ratissant, run d'avant H1-H2) | [21 §17](21-systeme-de-jeu.md), [DECISIONS §54, §57](DECISIONS.md) | Mesuré (H0) : avant H, le temps pour tuer tombe de 0,69 s à 0,22 s après 5 min ; H2 rendait le début deux fois plus dur. **H3 livré, à jouer par Raphaël :** début d'avant H, PV +33 %/min de 4 à 8 min puis ×2 par rapport à avant H, à vie ; coffres H1 gardés. Si c'est encore trop facile après 8 min : jouer sur le nombre d'ennemis qui arrivent au contact, pas sur les PV. |
-| **Qualité du code et dette technique** | [26](26-qualite-et-dette-technique.md), [DECISIONS §54–56](DECISIONS.md) | **Q0 livré et vérifié** : lanceurs stricts, bancs cône/UI réparés, global 21/21, 8 tests de pannes, exports et contrôles GL. [Preuves](../audits/qualite-2026-10-02/q0/README.md). **Q1 en validation** : F1/F4 réservés au dev, outils et hooks exclus des exports, profils de banc et provenance explicites. Noms/règles en dur aux Q5–Q7. Autres lots non commencés. |
+| **Qualité du code et dette technique** | [26](26-qualite-et-dette-technique.md), [DECISIONS §54–56, §58](DECISIONS.md) | **Q0 et Q1 livrés et vérifiés** : lanceurs stricts, bancs réparés ; F1/F4 réservés au dev, outils et hooks absents des exports Debug/Release, provenance des essais (5/5 suites, [preuves Q1](../audits/qualite-2026-10-02/q1/)). **Q5 en cours** (motifs d'attaque typés), choisi le 3 octobre. Noms/règles en dur ensuite aux Q6–Q7. |
 | **Retours du 2 octobre après-midi** (rythme, ennemis, raretés, objets, projectiles, impacts) | [21 §16](21-systeme-de-jeu.md), [DECISIONS §53](DECISIONS.md) | F1–F6 livrés : niveaux un peu ralentis, ennemis plus solides, raretés hautes liées à la Chance, règles chiffrées des objets, icônes des objets qui agissent, projectiles lisérés et agrandis, impacts plus marqués. **Captures à refaire écran allumé** (F3 à F6) et banc FPS en foule |
 | **Équilibrage du 2 octobre** (XP trop rapide, raretés, cartes, ennemis) | [21 §15](21-systeme-de-jeu.md), [DECISIONS §50](DECISIONS.md) | E0 à E4 livrés et mesurés : bug de carte corrigé et rareté teintée sur toute la carte ; XP ralentie et G6c annulé ; raretés hautes divisées par deux ; PV des ennemis relevés (temps pour tuer stable vers 0,45 s jusqu'à 25 min) et tireurs à un tiers. **À jouer par Raphaël** |
 | **Retours du 1er octobre, soir** (projectiles, vol de vie, level-up, XP/Chance, sprites d'armes adaptatifs) | [21 §14](21-systeme-de-jeu.md), [DECISIONS §48–49](DECISIONS.md) | Décidé le 2 octobre (§49). Lots G6a à G6f découpés au plan 21 §14 ; G6a, G6b et G6c livrés (nombre pour les 24 armes, vol de vie, Chance et XP renforcés) ; G6d mesuré (courbe inchangée, trois options au plan 21) ; G6e livré (visuels à la taille) ; G6f : planche proposée, **à valider par Raphaël** (§2), G6c, G6d (mesure, proposition sans toucher la courbe), G6e–f, puis C2 |
@@ -35,7 +35,7 @@ Le [registre](DECISIONS.md) garde les mots de Raphaël. Les plans gardent le dé
 | Audio | 15 | Écoute en run et choix restants ; chantier élargi à toute l'identité sonore, avec les Résurgences comme premier cas proposé (§44). |
 | Réveil du Mémorial et de la Faille | 24 L6b, 15 | Durée gardée ; son à changer (§49), à traiter avec l'audio |
 | Classement | 09 | Toutes les décisions, plus tard |
-| Sprites d'armes : variantes par nombre | 21 G6f | Planche `planches/21-g6f-variantes.png` : paliers 3 et 6, liseré puis rémanence. Raphaël la regarde d'abord (§57). |
+| Sprites d'armes : variantes par nombre | 21 G6f | Planche `doc/plans/planches/21-g6f-variantes.png` : paliers 3 et 6, liseré puis rémanence. Pas encore regardée (§57, §58). |
 | Mémorial réduit au soin | 22 C2c | À juger en jeu (§57). Ateliers : prix ×5 et 8 par carte décidés, à faire. |
 | Audio, mort, lore, classement | 15, 02, 19, 09 | L'audio reprend après H et Q1 (§57) ; les autres ensuite |
 | Points à vérifier en jeu | `A-VERIFIER.md` | 55 cases non cochées |
