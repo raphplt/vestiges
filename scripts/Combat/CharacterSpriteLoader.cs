@@ -17,13 +17,15 @@ public static class CharacterSpriteLoader
 	private static readonly StringName[] CardinalIdle = { "E_idle", "S_idle", "W_idle", "N_idle" };
 	private static readonly string[] Actions = { "idle", "walk", "dash", "hurt", "death" };
 
-	private static readonly Dictionary<string, float> AnimSpeeds = new()
+	// Durée d'un cycle, en secondes : la cadence suit le nombre d'images, pour que les personnages joués (8 images
+	// de marche, plan 25 S3) et les habitants des échos (4) gardent le même rythme.
+	private static readonly Dictionary<string, float> AnimDurations = new()
 	{
-		{ "idle", 5f },
-		{ "walk", 8f },
-		{ "dash", 12f },
-		{ "hurt", 10f },
-		{ "death", 8f }
+		{ "idle", 1.2f },
+		{ "walk", 0.5f },
+		{ "dash", 0.25f },
+		{ "hurt", 0.2f },
+		{ "death", 0.5f }
 	};
 
 	private static readonly HashSet<string> LoopingAnims = new() { "idle", "walk" };
@@ -52,7 +54,7 @@ public static class CharacterSpriteLoader
 
 				string animName = $"{dir}_{action}";
 				frames.AddAnimation(animName);
-				frames.SetAnimationSpeed(animName, AnimSpeeds[action]);
+				frames.SetAnimationSpeed(animName, textures.Count / AnimDurations[action]);
 				frames.SetAnimationLoopMode(animName, LoopingAnims.Contains(action) ? SpriteFrames.LoopMode.Linear : SpriteFrames.LoopMode.None);
 
 				foreach (Texture2D tex in textures)

@@ -588,3 +588,22 @@ Le générateur porte le design B (`tools/sprites/characters/traqueur.py`, cadre
 Planche validée par Raphaël (DECISIONS §61). PNG régénérés (`tools/generate_projectiles.py`) : flèche, carreau, aiguille, éclat, bille, comète d'essence, flamme ; **nouveaux** `proj_flash.png` (Flash photo) et `proj_chalk.png` (Craies) avec leur `.import`. Haches et notes régénérées identiques octet pour octet. `weapons.json` : le Flash photo tire `flash`, les Craies `chalk`. Traînée lumineuse ajoutée au flash. Échelles de base (`weapon_visuals.json`) : la première capture montrait une bille énorme et une comète et une flamme lourdes à ×2 ; bille, comète et flamme passent à ×1,4, flash et craie à ×1,3, notes inchangées à ×2.
 
 **Vérification :** build sans avertissement, smoke vert, suites armes, UI, objets vertes (4/4). Captures en run des 11 armes à distance inspectées ([première passe](../audits/sprites-2026-10-03/s1b-projectiles-premiere-passe.png), [après réglage des échelles](../audits/sprites-2026-10-03/s1b-projectiles-en-jeu.png)) : chaque arme se reconnaît à son projectile. L'éclat de phare reste petit en vol, à juger en jeu.
+
+### S2 à S4 — personnages joués repris et intégrés, 3 octobre
+
+Direction retenue par Raphaël entre « stylisé » et « grosse tête » (DECISIONS §61). [Planche avant/après](planches/25-s9-personnages.png), [animations](planches/25-s9-animations.png).
+
+- **Proportions communes :** tête ×1,15 par rapport à « stylisé », corps raccourci d'un dixième ; capuche, chapeau, lunettes et visage suivent la taille de la tête.
+- **Trois coiffes, trois silhouettes :**
+  - Traqueur : capuche pointue où brillent deux yeux pâles, arc plus haut que lui en travers du dos, écharpe beige qui flotte, pans de cape.
+  - Vagabond : visage découvert et barbe courte sous un chapeau de route à bord relevé, sac énorme qui dépasse de la tête (couchage, piquets, carte, gamelle qui se balance), longue écharpe orange, pièces recousues.
+  - Forgeuse : tête nue, chignon, bandana et lunettes de soudure aux verres rouges sur le front, épaules massives, jambes courtes, gants épais, marteau démesuré sur l'épaule avec sa braise.
+- **Cadres :** 40×42 (Traqueur), 40×44 (Vagabond), 44×44 (Forgeuse), pieds au même endroit ; `sprite_feet_offset` passe à 17 et 18 (`characters.json`).
+- **Animations (S3)**, propres aux personnages joués (`playable_animations`) ; les habitants des échos et les créatures gardent les leurs :
+  - marche : 8 images au lieu de 4 (rebond au passage, contre-balancier des épaules, transfert du poids, tissus en retard) ;
+  - dash : 4 images au lieu de 3 (anticipation, étirement, groupé, réception) ;
+  - coup reçu : 3 images au lieu de 2 ;
+  - mort : 6 images au lieu de 4.
+- **Cadence :** `CharacterSpriteLoader` fixe désormais une durée de cycle par action (idle 1,2 s, marche 0,5 s, dash 0,25 s, coup 0,2 s, mort 0,5 s) au lieu d'une cadence fixe ; les personnages joués et les habitants des échos (4 images de marche) gardent le rythme d'avant.
+- **Vérification :** build sans avertissement, smoke vert (192 nouveaux PNG importés, aucun supprimé), suites smoke, mouvement, intégration Main, UI, effacement actif et mode dev vertes (6/6). Captures en run des trois personnages ([en jeu](../audits/sprites-2026-10-03/s4-personnages-en-jeu.png)) et du Hub ([camp](../audits/sprites-2026-10-03/s4-hub.png)) inspectées : silhouettes distinctes, pieds calés sur la barre de vie.
+- **À juger par Raphaël en jeu :** l'ensemble ; de face, le visage du Vagabond se lit encore comme une bande sous le bord du chapeau.

@@ -10,7 +10,7 @@ import numpy as np
 
 from ._body import LimbStyle, limbs
 from ..palette import make_emissive, make_material
-from ..poses import Gait, character_animations
+from ..poses import Gait, playable_animations
 from ..render import Part
 from ..rig import Proportions, Skeleton
 from ..sdf import capsule, ellipsoid, sphere
@@ -18,8 +18,9 @@ from ..sdf import capsule, ellipsoid, sphere
 CHARACTER_ID = "traqueur"
 FRAME_SIZE = (40, 42)
 FRAME_PIVOT = (20.0, 38.0)
-DIMENSIONS = Proportions(ankle=2.6, shin=10.0, thigh=10.5, spine=12.0, neck=1.4, head_radius=6.2, shoulder_half=6.0,
-                         hip_half=2.8, upper_arm=8.5, forearm=7.5)
+# Entre « stylisé » et « grosse tête » (DECISIONS §61) : tête ×1,15, corps raccourci d'un dixième.
+DIMENSIONS = Proportions(ankle=2.6, shin=9.1, thigh=9.6, spine=11.0, neck=1.3, head_radius=7.1, shoulder_half=6.0,
+                         hip_half=2.8, upper_arm=7.8, forearm=6.9)
 
 CLOAK, TUNIC, LEGS, BOOTS, FACE, BOW, STRING, QUIVER, FLETCH, WRAP, GLOVES, EYES, CLOAK_LINING = range(13)
 MATERIALS = [
@@ -89,4 +90,4 @@ def build(skeleton: Skeleton) -> list[Part]:
     return parts
 
 
-ANIMATIONS = character_animations(Gait(lean=0.2, arm_out=0.22, stride=1.15, arm_swing=1.1))
+ANIMATIONS = playable_animations(Gait(lean=0.2, arm_out=0.22, stride=1.15, arm_swing=1.1))
