@@ -709,3 +709,15 @@ Raphaël : « les coffres sont trop op il faut diminuer le nb de recompenses. le
 Raphaël : « fait q1 ».
 
 Le lot Q1 du [plan 26](26-qualite-et-dette-technique.md) est engagé : réserver F1/F4 au profil dev, retirer outils et hooks de test des exports, identifier les runs d’essai et protéger les envois Steam. Les contrôles locaux et la séparation des acquis doivent rester fonctionnels. Aucun changement d’équilibrage n’est inclus.
+
+## 57. Réponses aux questions de reprise — 3 octobre 2026
+
+- **Difficulté (précise §54) :** Raphaël : « le jeu est encore trop simple […] j'ai fait une run de 25 min. je n'ai meme pas cherché à optimiser au max j'ai juste ratissé la map comme le ferai un joueur normal, level up au fur et à mesure. au bout de 5 minutes je ne me sentais plus trop en danger et a partir de 10-15 minutes jétais littéralement intuable. […] j'avais certes l'objet xp et celui de luck mais ca ne justifie pas ca et c'est pas non plus pour ca quil faut les nerfs ». Puis : « enfait le pb c'est pas trop de projectiles et dégats c'est ennemis qui suivent pas ». Cette run date d'**avant** les réglages H1-H2 du commit c5fac34e, encore jamais joués.
+  - **Décision :** mesurer H1-H2 contre l'état précédent (bot mortel qui ratisse, 25 min), puis régler la menace des ennemis pour qu'elle suive la puissance du joueur. Ne pas affaiblir les objets d'XP et de Chance, ni d'abord la puissance du joueur. Suite au plan 21 §17.
+- **Q1 :** vérifier et clore.
+- **Sprites d'armes G6f :** Raphaël regarde d'abord la planche ; question maintenue.
+- **Ateliers (C2c) :** prix ×5 (forge 150, Trempe 100) et 8 Ateliers par carte.
+- **Mémorial réduit au soin :** à juger en jeu.
+- **Après H et Q1 :** reprendre l'audio (plan 15).
+- **Bestiaire :** la Tisseuse apparaît hors des Marécages, avec un poids faible. Les « mobs successifs » restent ouverts.
+- **Plan 20 :** ses idées restantes (essai d'XP, niveaux de surplus, réserve automatique) sont absorbées par le plan 21 ; le plan 20 est marqué remplacé.

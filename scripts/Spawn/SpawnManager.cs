@@ -18,9 +18,9 @@ public partial class SpawnManager : Node2D
 	private float _baseSpawnInterval;
 	private float _minSpawnInterval;
 	private float _spawnIntervalDecay;
-	private float _hpScalingPerMinute;
-	private float _lateHpScalingPerMinute;
-	private float _lateHpScalingFromMinute = float.MaxValue;
+	// Croissance des PV par segments (minute de début, facteur par minute), triés par minute de début.
+	private readonly List<float> _hpSegmentFromMinute = new();
+	private readonly List<float> _hpSegmentPerMinute = new();
 	private float _dmgScalingPerMinute;
 	private float _rangedDamageGrowthShare = 1f;
 	private float _xpGrowthPerMinute;
@@ -221,11 +221,16 @@ public partial class SpawnManager : Node2D
 
 	private void ComputeScaling(EnemyData data, float elapsedMinutes, out float hpScale, out float dmgScale)
 	{
-		// Deux pentes, quelle que soit la phase : le joueur accélère une fois son build lancé, les PV suivent plus vite
-		// passé late_hp_scaling_from_minute (plan 20 §6.8, recalé au plan 23 R5).
-		float lateMinutes = Mathf.Max(0f, elapsedMinutes - _lateHpScalingFromMinute);
-		hpScale = Mathf.Pow(_hpScalingPerMinute, elapsedMinutes - lateMinutes)
-			* Mathf.Pow(_lateHpScalingPerMinute, lateMinutes) * _flatHpMultiplier;
+		// Une pente par segment, quelle que soit la phase : la puissance du joueur décolle par à-coups (plan 21 H3).
+		hpScale = _flatHpMultiplier;
+		for (int i = 0; i < _hpSegmentFromMinute.Count; i++)
+		{
+			float end = i + 1 < _hpSegmentFromMinute.Count ? _hpSegmentFromMinute[i + 1] : float.MaxValue;
+			float minutes = Mathf.Min(elapsedMinutes, end) - _hpSegmentFromMinute[i];
+			if (minutes <= 0f)
+				break;
+			hpScale *= Mathf.Pow(_hpSegmentPerMinute[i], minutes);
+		}
 		// Les tirs et les zones touchent de loin, en nombre, et leurs créatures meurent peu : leurs dégâts ne suivent
 		// qu'une part de la croissance commune (plan 20 §7.1).
 		float damageGrowthMinutes = data.Type == "ranged" ? elapsedMinutes * _rangedDamageGrowthShare : elapsedMinutes;
@@ -783,9 +788,21 @@ public partial class SpawnManager : Node2D
 		_baseSpawnInterval = (float)dict["base_spawn_interval"].AsDouble();
 		_minSpawnInterval = (float)dict["min_spawn_interval"].AsDouble();
 		_spawnIntervalDecay = (float)dict["spawn_interval_decay_per_minute"].AsDouble();
-		_hpScalingPerMinute = (float)dict["hp_scaling_per_minute"].AsDouble();
-		_lateHpScalingPerMinute = dict.ContainsKey("late_hp_scaling_per_minute") ? (float)dict["late_hp_scaling_per_minute"].AsDouble() : _hpScalingPerMinute;
-		_lateHpScalingFromMinute = dict.ContainsKey("late_hp_scaling_from_minute") ? (float)dict["late_hp_scaling_from_minute"].AsDouble() : float.MaxValue;
+		_hpSegmentFromMinute.Clear();
+		_hpSegmentPerMinute.Clear();
+		foreach (Variant segment in dict["hp_scaling_segments"].AsGodotArray())
+		{
+			Godot.Collections.Dictionary entry = segment.AsGodotDictionary();
+			_hpSegmentFromMinute.Add((float)entry["from_minute"].AsDouble());
+			_hpSegmentPerMinute.Add((float)entry["per_minute"].AsDouble());
+		}
+		if (_hpSegmentFromMinute.Count == 0)
+		{
+			GD.PushWarning("[SpawnManager] hp_scaling_segments vide : PV constants après flat_hp_multiplier");
+			_hpSegmentFromMinute.Add(0f);
+			_hpSegmentPerMinute.Add(1f);
+		}
+		SortHpSegments();
 		_flatHpMultiplier = dict.ContainsKey("flat_hp_multiplier") ? (float)dict["flat_hp_multiplier"].AsDouble() : 1f;
 		_dmgScalingPerMinute = (float)dict["damage_scaling_per_minute"].AsDouble();
 		_flatDmgMultiplier = dict.ContainsKey("flat_dmg_multiplier") ? (float)dict["flat_dmg_multiplier"].AsDouble() : 1f;
@@ -837,7 +854,10 @@ public partial class SpawnManager : Node2D
 		_baseSpawnInterval = 2.0f;
 		_minSpawnInterval = 0.3f;
 		_spawnIntervalDecay = 0.05f;
-		_hpScalingPerMinute = 1.06f;
+		_hpSegmentFromMinute.Clear();
+		_hpSegmentPerMinute.Clear();
+		_hpSegmentFromMinute.Add(0f);
+		_hpSegmentPerMinute.Add(1.06f);
 		_dmgScalingPerMinute = 1.04f;
 		_maxEnemies = 120;
 		_maxEnemiesGrowthPerMinute = 4f;
@@ -881,9 +901,6 @@ public partial class SpawnManager : Node2D
 				case "base_spawn_interval": _baseSpawnInterval = kv.Value; break;
 				case "min_spawn_interval": _minSpawnInterval = kv.Value; break;
 				case "spawn_interval_decay_per_minute": _spawnIntervalDecay = kv.Value; break;
-				case "hp_scaling_per_minute": _hpScalingPerMinute = kv.Value; break;
-				case "late_hp_scaling_per_minute": _lateHpScalingPerMinute = kv.Value; break;
-				case "late_hp_scaling_from_minute": _lateHpScalingFromMinute = kv.Value; break;
 				case "xp_growth_per_minute": _xpGrowthPerMinute = kv.Value; break;
 				case "xp_oblivion_bonus": _xpOblivionBonus = kv.Value; break;
 				case "xp_crisis_multiplier": _xpCrisisMultiplier = kv.Value; break;
@@ -913,9 +930,44 @@ public partial class SpawnManager : Node2D
 				case "same_type_cluster_spacing_max": _sameTypeClusterSpacingMax = kv.Value; break;
 				case "flat_hp_multiplier": _flatHpMultiplier = kv.Value; break;
 				case "flat_dmg_multiplier": _flatDmgMultiplier = kv.Value; break;
+				default:
+					if (!TryOverrideHpSegment(kv.Key, kv.Value))
+						GD.PushWarning($"[SpawnManager] Unknown scaling override '{kv.Key}'");
+					break;
 			}
 		}
+		SortHpSegments();
 		GD.Print($"[SpawnManager] Applied {overrides.Count} scaling override(s)");
+	}
+
+	/// <summary>hp_segment_N_per_minute ou hp_segment_N_from_minute : segment existant de hp_scaling_segments.</summary>
+	private bool TryOverrideHpSegment(string key, float value)
+	{
+		const string prefix = "hp_segment_";
+		if (!key.StartsWith(prefix, System.StringComparison.Ordinal))
+			return false;
+		string[] parts = key[prefix.Length..].Split('_', 2);
+		if (parts.Length != 2 || !int.TryParse(parts[0], out int index) || index < 0 || index >= _hpSegmentFromMinute.Count)
+			return false;
+		switch (parts[1])
+		{
+			case "per_minute": _hpSegmentPerMinute[index] = value; return true;
+			case "from_minute": _hpSegmentFromMinute[index] = value; return true;
+			default: return false;
+		}
+	}
+
+	/// <summary>ComputeScaling parcourt les segments dans l'ordre : un JSON ou une surcharge en désordre est retrié.</summary>
+	private void SortHpSegments()
+	{
+		for (int i = 1; i < _hpSegmentFromMinute.Count; i++)
+		{
+			for (int j = i; j > 0 && _hpSegmentFromMinute[j] < _hpSegmentFromMinute[j - 1]; j--)
+			{
+				(_hpSegmentFromMinute[j], _hpSegmentFromMinute[j - 1]) = (_hpSegmentFromMinute[j - 1], _hpSegmentFromMinute[j]);
+				(_hpSegmentPerMinute[j], _hpSegmentPerMinute[j - 1]) = (_hpSegmentPerMinute[j - 1], _hpSegmentPerMinute[j]);
+			}
+		}
 	}
 
 	private void CachePlayer()

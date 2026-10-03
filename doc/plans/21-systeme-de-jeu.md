@@ -485,3 +485,37 @@ Trois réglages mesurés avec les ennemis d'E4 (`--nomad --visit`, 3 seeds × 25
 - **F6 — impacts :** chaque coup d'arme montre un éclat en étoile à la couleur de l'arme et une gerbe de 7 étincelles (4 avant) ; un critique, une gerbe de 14, un éclat plus large et un anneau au sol ; recul visuel de la cible 3 → 5 px. Le plafond de gerbes par frame et le budget d'effets (`fx_budget.json`) tiennent la foule.
 - **F4 — retour des objets :** quand un objet agit, sa petite icône s'élève 0,7 s au-dessus du personnage (`ObjectProcs`, six sprites recyclés, au plus une fois par seconde et par objet, seulement pour un objet porté). Branché sur Allumette, Glaçon, Thermomètre, Épingle, Pétard, Dé à coudre, Semelle, Boîte de pansements, Loupe, Stylo, Chewing-gum, Tabouret, Gilet, Thermos, Médaille, Porte-monnaie et Paille tordue.
 - **Vérification :** build sans avertissement, smoke vert, bancs objets (contrôle des icônes : affichée, pas répétée dans la seconde, objet absent ignoré), armes et capacités ennemies verts. **Captures non faites :** l'écran du Mac s'éteignait pendant la séance (fenêtre de capture figée sur le chargement, la partie avançant derrière) ; à refaire écran allumé, avec `--capture-weapons --weapons essence_staff,music_box,sling,chipped_blade --objects allumette_humide:20,petard_mouille:20 --lethal`. Banc FPS en foule à faire machine calme (plus d'effets par coup, aucun nœud créé).
+
+## 17. Lots H — coffres trop généreux, ennemis qui ne suivent pas (DECISIONS §54, §57)
+
+Raphaël, 2 octobre : trop de récompenses par coffre, et plus aucun danger après le niveau 10 à 20 avec un jeu normal (build projectiles, tous les coffres). Le 3 octobre, il précise : run de 25 min en ratissant la carte, plus en danger après 5 min, intuable dès 10–15 min. Ce n'est pas trop de projectiles ni de dégâts, mais **les ennemis qui ne suivent pas**. Ne pas affaiblir les objets d'XP et de Chance.
+
+### H1 et H2 — intégrés le 2 octobre (commit c5fac34e, sans compte rendu, « trop forts, à affiner »)
+
+- **H1, coffres :** un tirage par coffre commun, rare et de lore (deux avant), deux pour l'épique (trois avant) ; niveaux d'objet de l'épique 1–2 (2–3 avant), du rare 1 (1–2 avant) ; plus de bonus de stat sur les coffres communs (`chest_stat_bonus.json`) ; vol de vie plafonné à 3 % des PV max par seconde (5 % avant).
+- **H2, ennemis :** PV ×1,8 d'emblée (1,5 avant), +9 %/min jusqu'à 6 min puis +22 %/min (7 % et 17 % avant).
+- **Outil :** `--mortal` dans `tools/measure_run.sh` (bot non invincible, un coup fatal le remet à fond et se compte) et butin des coffres par tranche.
+
+### H0 — mesure du 3 octobre
+
+Protocole : `MEASURE_EXTRA_ARGS="--nomad --visit --mortal --prefer souffle_du_neant,reflet_brise,memoire_vive,photo_de_classe,jeton_de_fete,oeil_critique"`, seeds 42, 1002 et 7, 25 min. Le bot ratisse les lieux vus et prend d'abord projectiles, perforation, cadence, XP, Chance et critique, comme le build de Raphaël. « Avant H » : même code, données d'avant H1-H2 dans un checkout séparé. Résumés et CSV dans [`doc/audits/difficulte-2026-10-03`](../audits/difficulte-2026-10-03/) ; tranches de 5 min par `tools/summarize_power.py --minutes 25 --step 5`.
+
+| Temps pour tuer un ennemi moyen (moyenne, étendue sur 3 seeds) | 0–5 min | 5–10 | 10–15 | 15–20 | 20–25 |
+|---|---|---|---|---|---|
+| Avant H (la run de Raphaël) | 0,69 s (0,51–0,80) | 0,22 (0,19–0,29) | 0,23 (0,11–0,34) | 0,24 (0,09–0,41) | 0,40 (0,09–0,75) |
+| H1-H2 | 1,36 s (0,76–2,32) | 0,52 (0,21–1,07) | 0,43 (0,17–0,94) | 0,49 (0,18–1,08) | 0,92 (0,24–2,20) |
+| Niveau en fin de tranche, avant H → H1-H2 | 14 → 11 | 28 → 22 | 40 → 32 | 49 → 40 | 56 → 45 |
+
+- **Le ressenti de Raphaël est reproduit :** avant H, entre 5 et 10 min, le DPS du joueur fait ×4,8 quand les PV des ennemis font ×1,6 ; ils meurent trois fois plus vite qu'au début, jusqu'à 20 min.
+- **H1-H2 décalent tout sans changer la forme :** le début devient deux fois plus long à tuer que celui que Raphaël trouvait juste, et le milieu reste 2,5 fois plus facile que le début.
+- **Les dégâts suivent :** un coup ennemi moyen, après armure, coûte la même part des PV max toute la run (5 à 10 coups pour mourir selon la seed, relevé `hits_to_die`). Le décrochage vient des PV des ennemis, pas de leurs dégâts.
+- **Survie du bot : non représentative.** Le bot mortel n'esquive rien et « meurt » 10 à 100 fois par tranche selon la seed. Un bot qui esquive simplement (s'écarter des créatures, des tirs, dasher) a été essayé puis retiré : il encaisse **plus** (29 morts au lieu de 14 en 5 min), car en ralentissant pour esquiver il reste dans la foule. On mesure donc la menace par des rapports indépendants de l'habileté : temps pour tuer et coups pour mourir.
+- **Revers d'outil relevé :** un checkout neuf échoue à son premier import strict (thème chargé avant sa police) ; un second import passe. À traiter au plan 26 Q12.
+
+### H3 — PV par segments, à jouer (3 octobre)
+
+- **Code :** la croissance des PV passe de deux pentes à des segments déclarés dans `spawn_flow.json` (`hp_scaling_segments`, minute de début et facteur par minute), surchargeables par `--scaling hp_segment_N_per_minute=…` pour comparer sans toucher aux données.
+- **Réglage :** début d'avant H (×1,5 d'emblée, +7 %/min), **+33 %/min de 4 à 8 min**, quand la puissance du joueur décolle, puis +17 %/min comme avant H. Les PV valent ainsi ×2 ceux d'avant H à partir de 8 min, à vie. Par rapport à H2 : début plus doux (×0,83), 8 à 15 min plus durs, au-delà de 20 min moins durs (×0,8 à 25 min). H1 (coffres, vol de vie) inchangé.
+- **Deux essais mesurés avant ce réglage** (même protocole qu'H0) : ×1,33 puis ×1,10 après 18 min, et ×1,38 puis ×1,10. Résultat : **la mesure ne départage plus.** Les éliminations et les niveaux ne baissent pas avec des ennemis deux fois plus solides au milieu de partie (temps pour tuer 0,1 à 0,26 s) : des cibles qui vivent plus longtemps absorbent des tirs (perforation, zones) qui partaient dans le vide. Et deux réglages presque identiques donnent 56 et 83 niveaux à 25 min : l'écart entre runs (cartes offertes, carte du monde) dépasse l'effet d'un réglage de PV à ±20 % sur 3 seeds. Seul H2 (×2,4 à ×3 en fin de partie) fait basculer certaines runs, où le bot est submergé.
+- **Conséquence :** les PV seuls sont un levier faible tant que le build tient, puis brutal. Si la partie de Raphaël reste trop facile après 8 min, le levier suivant est le nombre d'ennemis qui atteignent le joueur (densité locale, vitesse, part de tireurs), pas une pente de PV plus raide.
+- **Vérification :** build sans avertissement, smoke vert, `tools/test_weapons.sh` vert. **À jouer par Raphaël.**

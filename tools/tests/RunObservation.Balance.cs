@@ -19,6 +19,7 @@ public partial class RunObservation
     private readonly Dictionary<int, Dictionary<string, int>> _offeredRarities = new();
     private readonly Dictionary<int, (double HpLost, double Healed, int Hits, int Fatal, int Shielded)> _survival = new();
     private readonly Dictionary<int, Dictionary<string, int>> _loot = new();
+    private readonly Dictionary<int, (float MaxHp, float ArmorReduction)> _defenseAtBand = new();
     private bool _mortal;
 
     /// <summary>
@@ -46,6 +47,7 @@ public partial class RunObservation
             (double lost, double healed, int hits, int fatal, int shielded) = _survival.GetValueOrDefault(band);
             _survival[band] = (lost + result.HpLost, healed, hits + (result.HpLost > 0f ? 1 : 0), fatal + (result.Fatal ? 1 : 0),
                 shielded + (result.ShieldAbsorbed ? 1 : 0));
+            _defenseAtBand[band] = (_player.EffectiveMaxHp, _player.ArmorReduction);
         };
         bus.PlayerHealingResolved += result =>
         {
@@ -84,8 +86,15 @@ public partial class RunObservation
             if (!_mortal)
                 continue;
             (double lost, double healed, int hits, int fatal, int shielded) = _survival.GetValueOrDefault(band);
+            // Tranche sans coup reçu : la défense du moment plutôt qu'un zéro trompeur.
+            (float maxHp, float armorReduction) = _defenseAtBand.TryGetValue(band, out (float, float) defense)
+                ? defense
+                : (_player.EffectiveMaxHp, _player.ArmorReduction);
+            // Coup moyen après armure, et nombre de ces coups pour vider les PV max : la menace d'un coup, quelle que
+            // soit l'habileté du bot à les éviter.
+            double meanHit = hits > 0 ? lost / hits : 0.0;
             summary.Append(CultureInfo.InvariantCulture,
-                $" hp_lost_per_min={lost / 5.0:F0} healed_per_min={healed / 5.0:F0} hits={hits} shielded={shielded} deaths={fatal} max_hp={_player.EffectiveMaxHp:F0}");
+                $" hp_lost_per_min={lost / 5.0:F0} healed_per_min={healed / 5.0:F0} hits={hits} shielded={shielded} deaths={fatal} max_hp={maxHp:F0} armor_reduction={armorReduction:F2} mean_hit={meanHit:F1} hits_to_die={(meanHit > 0 ? maxHp / meanHit : 0):F1}");
         }
         List<int> bands = new(_offeredRarities.Keys);
         bands.Sort();

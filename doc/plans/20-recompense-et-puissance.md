@@ -1,5 +1,7 @@
 # Plan 20 — Récompense, montée en puissance et points de dépense
 
+> **Remplacé le 3 octobre 2026 (DECISIONS §57).** Les idées restantes (essai d'XP, niveaux de surplus, réserve automatique) sont rattachées au [plan 21](21-systeme-de-jeu.md), qui fait référence ; ce document garde l'historique.
+
 Version 0.4 · 28 septembre 2026 · Statut : **paliers de 300 à 400 niveaux validés (§6.6–§6.7) ; lots D1 (§7.2), R1-0 et R1-T (§6.8) livrés ; R1-F proposé ; autres lots à valider**. Les faits de §2 ont été vérifiés dans le code le jour même.
 
 > **Coordination objets/perks :** Raphaël a choisi B, quatre perks qualitatifs sans niveaux. [Le nouveau catalogue](05-perks-specialisations.md) compare plafonds d'armes 50/70/99, coût de sélection et courbes ; le niveau 70 est recommandé mais non validé. Les budgets historiques fondés sur quatre passifs à cinq niveaux et le bonus d'XP d'un perk chiffré ne sont plus la cible. Attention à la provenance des mesures dans le modèle : ne pas réappliquer R1-A à une XP qui le contient déjà. Aucun réglage de ce plan n'est changé par cette étude.
