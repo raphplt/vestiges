@@ -352,3 +352,19 @@ Modèle : le Mémorial (`SitePlacer`, sprite dédié, directeur qui ouvre le `Ch
 1. Prix qui suivent l'économie : forge à 150 Essence puis +50 % par achat, Retrempe à 100. Ou un prix indexé sur le niveau de l'arme.
 2. Plus d'Ateliers : 8 par carte au lieu de 4, en gardant 900 px d'écart.
 3. Garder tel quel et juger en jeu : un joueur humain achète sans doute plusieurs fois par visite.
+
+### C2c suite — prix ×5 et 8 Ateliers, 3 octobre
+
+Décidé par Raphaël (DECISIONS §57) : propositions 1 et 2. `landmarks.json` : 8 Ateliers par carte (même couronne, même écart), forge 150 Essence, Retrempe 100, toujours +50 % par usage et par Atelier. Les lieux plus anciens ne bougent pas (Ateliers placés en dernier).
+
+- **Placement :** les 8 Ateliers trouvent leur place (capture `--capture-workshop`, seed par défaut : `count=8`).
+- **Capture inspectée :** forge à 150, puis 225 au second achat ; Retrempe à 100 ; Essence 300 → 150 → 50. Le scénario de capture donne désormais 300 Essence au lieu de 200 pour enchaîner forge et Retrempe.
+- **Mesure, même protocole que le 2 octobre** (`--nomad --visit`, 15 min, [résumé](../audits/ateliers-2026-10-03/summary.txt)) :
+
+| Seed | Ateliers vus / visités (2 oct. → 3 oct.) | Essence gagnée | Essence dépensée (2 oct. → 3 oct.) |
+|---|---|---|---|
+| 1002 | 0 / 0 → 3 / 3 | 3 604 | 0 → 450 |
+| 221092026 | 2 / 2 → 3 / 3 | 1 476 | 60 → 150 |
+| 42 | 1 / 1 → 1 / 0 | 3 177 | 30 → 0 |
+
+**Lecture :** on croise 1 à 3 Ateliers en 15 min (0 à 2 avant). L'Essence gagnée a beaucoup baissé depuis le 2 octobre (1 500 à 3 600 contre 5 000 à 7 400) : ce sont les lots E, F et H (XP, ennemis), pas ce changement. Une forge coûte maintenant entre 40 s et 1 min 30 de gains, contre 1 s avant. Le bot n'achète qu'une fois par visite : il ne dit rien de la tentation d'en acheter plusieurs. **À juger en jeu par Raphaël.**

@@ -223,7 +223,7 @@ Constats :
 
 Propositions :
 - **Colosses : appliquée ensuite, provisoire, puis retirée** (voir ci-dessous) ;
-- Tisseuse : l'ajouter aux crises de la Forêt et des Champs, pour qu'elle existe hors des Marécages. **Non appliquée.**
+- Tisseuse : l'ajouter aux crises de la Forêt et des Champs, pour qu'elle existe hors des Marécages. **Appliquée le 3 octobre** (DECISIONS §57, poids faible) : une entrée sur un groupe doublé, soit 1 sur 12 de poids en Résurgence dans la Forêt et les Champs (8 %), contre 13 % dans les Marécages ; les proportions des autres créatures ne changent pas. Mesure `--nomad --visit` de 15 min : 71 à 133 Tisseuses apparues par run, soit 1,8 à 2 % des créatures, toutes zones confondues.
 
 **Lot C, Colosse de crise — 27 septembre 2026 (session cloud, choix provisoire) — retiré à la fusion de main le même jour** : le plan 17 (lot 0C) a supprimé les Colosses (données, sprites, comportement), la décision prime. Seul le correctif de la vague d'ouverture reste. Pour mémoire, ce qui avait été livré : à partir de la deuxième crise, le Colosse du biome où se trouve le joueur se lève hors écran (`SpawnManager.TrySpawnCrisisMiniboss`). Il répond à l'étape 4 du lot C : donner une identité aux Résurgences sans seulement augmenter les PV.
 - Données : `crisis_miniboss_from` (2) dans `spawn_flow.json`, et `crisis_miniboss` dans chaque biome. Forêt et Champs ont le Colosse Sylvestre, Ruines et Carrière le Colosse de Béton, Marécages le Colosse des Profondeurs. Mettre `crisis_miniboss_from` à 0 désactive le tout.

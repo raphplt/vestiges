@@ -22,21 +22,21 @@ Le [registre](DECISIONS.md) garde les mots de Raphaël. Les plans gardent le dé
 | **Sprites et design** (34 icônes d'objets, raretés, projectiles ennemis, bonus lâchés, HUD, menus) | [25](25-sprites-et-design.md) | **Intégré sur `main`** à la demande de Raphaël (DECISIONS §41) : raretés, objets, Réminiscences, projectiles, bonus, HUD, menus et chargement. Captures inspectées. Les images des contenus futurs sont visibles dans la Collection avec « À venir » ; leurs règles restent aux plans 05/22. |
 | **Gains qui se sentent** (objets à 30 niveaux, projectiles fractionnaires, cartes à la Megabonk, défense, difficulté, objets manquants, carte moins vide) | [23, plan d'exécution](23-plan-agent.md) | Décidé le 30 septembre ([DECISIONS §36–37](DECISIONS.md)). R0 à R4 livrés (mesure de référence ; bouclier de départ retiré, invulnérabilité 0,25 s ; cartes à la Megabonk ; objets à 30 niveaux, projectiles en plus au lieu des copies, paliers à 15 ; stats entières fractionnaires, pas d'armes relevés) ; R5 livré (PV ×1,25 d'emblée, pente 1,04 puis 1,075 après 6 min : temps pour tuer de R0 à ±20 %) ; R6 livré (huit objets de déclencheur) ; R7 livré (six petits lieux, carte de 12 800 px de haut, minimap : un petit lieu toutes les 26 s). R8 révisé livré (bonus d'une stat au hasard à chaque coffre, DECISIONS §38) ; R9 livré (Porte-monnaie hors quête, Repères). Plan 23 terminé ; travail sur `main` |
 | Système de jeu | [21, référence unique](21-systeme-de-jeu.md) | G1, G2a et G2a-2 livrés, refaits au plan 23 R3 (30 niveaux, paliers à 15, 15 objets de propriété). G2b livré : anciens Dons retirés, Fragilité, coefficient, 8 objets de déclencheur. G2c livré au plan 23 R6 (8 de plus, 31 objets proposés) ; les 3 objets « monde » attendent le Reliquaire. G0 et G3 livrés : les 24 armes ont leurs deux voies d'ascension (étape 2 au plan 24 L12) |
-| Carte à explorer | [22](22-carte-a-explorer.md) | C0, C1, C4, C6 livrés ; **C2a–b livrés le 2 octobre** : Atelier (4 par carte), Trempe, forge d'arme, Retrempe. C2c mesuré : Essence dépensée 0 à 60 sur 5 000 à 7 400 gagnées, 0 à 2 Ateliers croisés en 15 min. Le Mémorial ne garde que soin et levée d'Oubli : à juger en jeu |
+| Carte à explorer | [22](22-carte-a-explorer.md) | C0, C1, C4, C6 livrés ; **C2a–b livrés le 2 octobre** : Atelier (4 par carte), Trempe, forge d'arme, Retrempe. C2c mesuré puis réglé le 3 octobre : 8 Ateliers, forge 150, Retrempe 100 ; 1 à 3 Ateliers croisés en 15 min, 0 à 450 Essence dépensée sur 1 500 à 3 600. Le Mémorial ne garde que soin et levée d'Oubli : à juger en jeu |
 
 ## 2. Décisions attendues de Raphaël
 
 | Sujet | Plan | Question |
 |---|---|---|
 | Recette de la mort et du bilan | 02 | Durée de la séquence, densité de la page, échelle des distances |
-| Bestiaire | 07 | Recette du Hurleur validée (§49). Tisseuse hors Marécages, rare : décidé (§57), à faire. « Mobs successifs » ouvert. |
+| Bestiaire | 07 | Recette du Hurleur validée (§49). Tisseuse hors Marécages, rare : livrée le 3 octobre (Forêt et Champs, 8 % des Résurgences). « Mobs successifs » ouvert. |
 | Direction artistique | 08 | Traqueur, Vagabond et Forgeuse repris et vérifiés (R5a–c) ; appréciation artistique de Raphaël encore ouverte. |
 | Lore | 19 | Relecture du script v1.1 ; questions P1, P6 à P10 ; fin |
 | Audio | 15 | Écoute en run et choix restants ; chantier élargi à toute l'identité sonore, avec les Résurgences comme premier cas proposé (§44). |
 | Réveil du Mémorial et de la Faille | 24 L6b, 15 | Durée gardée ; son à changer (§49), à traiter avec l'audio |
 | Classement | 09 | Toutes les décisions, plus tard |
 | Sprites d'armes : variantes par nombre | 21 G6f | Planche `doc/plans/planches/21-g6f-variantes.png` : paliers 3 et 6, liseré puis rémanence. Pas encore regardée (§57, §58). |
-| Mémorial réduit au soin | 22 C2c | À juger en jeu (§57). Ateliers : prix ×5 et 8 par carte décidés, à faire. |
+| Mémorial réduit au soin | 22 C2c | À juger en jeu (§57). Ateliers à prix ×5 et 8 par carte livrés le 3 octobre (1 à 3 croisés en 15 min) : à juger en jeu aussi. |
 | Audio, mort, lore, classement | 15, 02, 19, 09 | L'audio reprend après H et Q1 (§57) ; les autres ensuite |
 | Points à vérifier en jeu | `A-VERIFIER.md` | 55 cases non cochées |
 

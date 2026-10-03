@@ -214,7 +214,7 @@ public partial class RunObservation
         SaveFrame("workshop-2-world");
 
         ChoiceScreen choices = _world.GetNode<ChoiceScreen>("ChoiceScreen");
-        _world.GetNode<EssenceTracker>("EssenceTracker").AddEssence(200);
+        _world.GetNode<EssenceTracker>("EssenceTracker").AddEssence(300);
         target.Interact(_player);
         await ToSignal(GetTree().CreateTimer(2.5, processAlways: true), SceneTreeTimer.SignalName.Timeout);
         SaveFrame("workshop-3-services");

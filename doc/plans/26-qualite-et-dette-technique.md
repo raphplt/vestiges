@@ -125,6 +125,14 @@ Commencer par le motif d'attaque et la catégorie mêlée/distance : types ferm�
 
 **Sortie :** aucune sélection du motif d'attaque par string dans les consommateurs migrés ; motif inconnu rejeté précisément. Toutes les armes et ascensions se chargent. Les dégâts, cibles, cadences, nombres et portée restent identiques aux scénarios de référence ; armes, objets, spécialisations et choix passent. Captures pour orbite, chaîne, homing, cône et mêlée. Mesurer les chemins fréquents si leur coût est modifié.
 
+**Découpage d'exécution Q5, 3 octobre** (choisi par Raphaël, §58). Relevé : 24 armes, 7 motifs (`linear`, `arc`, `burst`, `chain`, `circular`, `homing`, `orbital`), 3 catégories (`melee`, `ranged`, `special`), 11 voies d'ascension qui changent de motif. Les chaînes circulent dans `Player` (choix de l'attaque, orbite, mêlée, salve, guidage, portée affichée, allonge du personnage), `WeaponProperties`, `WeaponTraits`, `UpgradeText`, `HubCollectionPanel` et trois bancs, avec des `ToLower` répétés.
+
+1. **Types et lecture :** `AttackPatternKind` et `WeaponCategory` dans `Infrastructure/WeaponGrammar.cs`, avec la table clé JSON ↔ type et les clés de libellé. `WeaponDataLoader` convertit `type` et `attack_pattern` de l'arme et de ses voies une seule fois ; valeurs par défaut inchangées (`ranged`, `linear`). Une clé inconnue écarte l'arme avec un diagnostic qui nomme l'arme, la voie et le champ, et la liste des valeurs admises.
+2. **Consommateurs :** `WeaponData`, `WeaponInstance`, `WeaponAscensionData`, `Player`, `WeaponProperties`, `WeaponTraits`, `UpgradeText`, `HubCollectionPanel` lisent le type ; plus aucune comparaison de motif ni de catégorie par chaîne. Les libellés de la Collection passent par des clés de traduction (le motif `burst` n'y avait pas de nom).
+3. **Vérification :** fixture négative (motif, catégorie et motif de voie inconnus rejetés, message précis, sans erreur moteur), bancs armes, objets, perks, choix, cône et mouvement verts ; captures orbite, chaîne, guidage, cône et mêlée. Aucun chemin fréquent n'alloue : le coût ne peut que baisser (comparaison d'énumérations au lieu de `ToLower`), pas de banc FPS.
+
+**Hors Q5 :** effets à l'impact et spéciaux (`slow`, `sustained_cone`…) au Q6a ; type des créatures (`Enemy`, `SpawnManager`) au Q6c/Q7.
+
 ### Q6a — Expliciter les contrats et paramètres des effets d'armes
 
 Constats : retour §54, F12. Dépend de Q5. Plans associés : 05, 17 et 21.

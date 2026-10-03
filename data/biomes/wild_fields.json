@@ -8,7 +8,7 @@
         "forest": 0.25
     },
     "exploration_enemy_pool": ["presage", "charognard", "charognard", "rodeur", "fading_spitter"],
-    "resurgence_enemy_pool": ["presage", "shade", "shade", "charognard", "void_brute", "hurleur"],
+    "resurgence_enemy_pool": ["presage", "presage", "shade", "shade", "shade", "shade", "charognard", "charognard", "void_brute", "void_brute", "hurleur", "hurleur", "tisseuse"],
     "danger_level": 1,
     "map_weight": 1.4,
     "poi_pool": {

@@ -45,13 +45,13 @@
 	"workshop": {
 		"sprite": "assets/landmarks/workshop.png",
 		"placement": [
-			{ "count": 4, "band": [0.15, 0.9] }
+			{ "count": 8, "band": [0.15, 0.9] }
 		],
 		"min_spacing_px": 900,
 		"services": {
-			"weapon_cost": 30,
+			"weapon_cost": 150,
 			"weapon_min_rarity": "rare",
-			"retemper_cost": 20,
+			"retemper_cost": 100,
 			"temper_upgrades": 5,
 			"cost_growth": 0.5
 		}

@@ -1,0 +1,20 @@
+{
+  "expected": 3,
+  "results": [
+    {
+      "seed": "1002",
+      "valid": true,
+      "samples": 899
+    },
+    {
+      "seed": "221092026",
+      "valid": true,
+      "samples": 899
+    },
+    {
+      "seed": "42",
+      "valid": true,
+      "samples": 899
+    }
+  ]
+}
