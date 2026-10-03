@@ -740,3 +740,18 @@ Raphaël, après avoir vu la planche G6f : « je comprends pas pour pour le nomb
 
 **Suite :** lot G6g au [plan 21](21-systeme-de-jeu.md).
 
+## 60. Réglages validés en jeu, sprites un cran en dessous — 3 octobre 2026
+
+Raphaël, après une partie : « la difficulté est mieux réglée maintenant. les coffres cest mieux aussi. la rareté cest mieux assi. l'cran c'est mieux également et idem pour les projectiles. objets ok mieux aussi . mes retours maintenant ca va etre sur les sprites j'aime pas trop ceux des persos et les sprites des projetiles des alliés ils se ressemblent trop pour certains , et de manière générals ils ne sont pas au niveau je trouve , ils sont un cran en dessous en terme de design ».
+
+- **Validés en jeu :** difficulté (H3 : PV d'avant H au début, ×2 dès 8 min), coffres (H1), raretés liées à la Chance (F2), écran de niveau (sans délai, cartes teintées), projectiles (lisérés, nombre visible), objets (règle chiffrée, icône quand ils agissent).
+- **Sprites des personnages :** Raphaël ne les aime pas, malgré la reprise R5 du 1er octobre.
+- **Projectiles du joueur :** certains se ressemblent trop. Constat : l'arc, l'arbalète, la Boussole et l'Éclat de phare sont quatre bâtonnets horizontaux de même forme ; l'Éclat de phare et le Flash photo partagent un sprite, comme le Bâton d'essence et les Craies.
+- **En général :** les sprites sont « un cran en dessous » en design.
+
+**Réponses aux questions de méthode :**
+- **Périmètre :** « c'est les personnages joués qui sont un cran en dessous du reste (et leurs animations d'ailleurs) ». Ennemis, décors, icônes et effets ne sont pas visés.
+- **Personnages : pousser le générateur procédural** (plutôt qu'un pixel artiste, une retouche Aseprite ou l'IA). Ce qui gêne : **la silhouette et le design lui-même** (tenue, allure), pas d'abord les couleurs ou la taille. Les animations sont à reprendre aussi.
+- **Projectiles du joueur : planche d'abord**, un sprite propre à chaque arme, silhouettes différentes, un peu plus grands ; intégration après validation.
+
+**Suite :** lots S au [plan 25](25-sprites-et-design.md).

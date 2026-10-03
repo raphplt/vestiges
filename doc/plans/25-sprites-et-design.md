@@ -550,3 +550,23 @@ Correctif livré : référence au shader actuel rétablie. Build sans avertissem
 smoke Hub 600 frames vert, vraie Main puis ouverture de coffre sur ViewSonic
 (`/tmp/vestiges-warmup-loot`) sans erreur de chargement de shader. Captures du
 fond animé inspectées ; aucun code ni paramètre du shader de rotation modifié.
+
+## 8. Personnages joués et projectiles du joueur — 3 octobre 2026 (DECISIONS §60)
+
+Raphaël valide les réglages de jeu, puis vise les sprites : les **personnages joués** et **leurs animations** sont « un cran en dessous du reste » ; certains **projectiles du joueur** se ressemblent trop. Ennemis, décors, icônes et effets ne sont pas visés. Méthode choisie : **pousser le générateur procédural**. Ce qui gêne sur les personnages : **la silhouette et le design lui-même**.
+
+**Diagnostic.**
+- Projectiles : l'arc, l'arbalète, la Boussole et l'Éclat de phare sont quatre bâtonnets horizontaux de même forme ; l'Éclat de phare et le Flash photo partagent un sprite, comme le Bâton d'essence et les Craies.
+- Personnages : 14 à 18 px de large pour 28 à 34 px de haut, la taille d'un Rôdeur ; proportions réalistes (tête petite, jambes longues), postures droites et semblables. Les signatures des fiches (plan 06) se perdent : le sac du Vagabond ne dépasse pas de sa tête, la Forgeuse n'est pas la plus large, l'arc du Traqueur se lit mal.
+
+| Lot | Contenu | Vérification |
+|---|---|---|
+| **S1 — Projectiles, planche** | Un sprite propre à chaque arme à distance, silhouette distincte, un peu plus grand. | Planche validée par Raphaël |
+| **S1b — Projectiles, intégration** | Régénérer les PNG, nouveaux identifiants (`flash`, `chalk`), traînées lumineuses, échelle de base. | Captures en run, banc des armes |
+| **S2 — Personnages, designs** | Proportions stylisées (tête plus grosse, jambes plus courtes, épaules marquées), signature surdimensionnée de chaque fiche (arc et capuche du Traqueur, sac du Vagabond, marteau et carrure de la Forgeuse), poses de repos qui ont une attitude. Planche avant/après en quatre vues et à l'échelle du jeu, à côté d'un Rôdeur. | Planche validée par Raphaël |
+| **S3 — Personnages, animations** | Marche avec rebond et contre-balancier, anticipation et étirement du dash, coup reçu et mort plus lisibles, éléments souples (capuche, sac, tablier). | Planche animée, captures en run |
+| **S4 — Intégration** | Régénérer les 3 personnages, vérifier le point de pied, l'ombre, l'arme tenue et les captures Main. | Smoke, captures |
+
+### S1 — planche proposée, 3 octobre
+
+[Planche](planches/25-s7-projectiles-joueur.png) : arc (flèche longue, pointe en losange, empennage rouge et blanc), arbalète (carreau trapu, tête carrée en fer, ailettes de laiton), Boussole (aiguille plate en losange, nord rouge, sud blanc, pivot doré), Éclat de phare (prisme taillé à lumière chaude et courte traînée), **Flash photo** (étoile de lumière qui palpite, nouveau), lance-billes (bille de verre bleue à spirale jaune et reflet), **Craies** (craie rose qui tournoie, nouveau), Bâton d'essence (orbe cyan à queue de comète), **Lanterne** (flamme qui lèche vers le haut, au lieu de l'orbe rouge identique à celui du Bâton). Haches et notes inchangées. Le générateur (`tools/sprites/projectiles.py`) porte déjà ces modèles ; **les PNG du jeu ne sont pas régénérés** tant que la planche n'est pas validée.
