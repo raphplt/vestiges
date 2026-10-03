@@ -1,7 +1,7 @@
 {
   "arrow": {
     "frame": [
-      24,
+      32,
       24
     ],
     "directions": 16,
@@ -57,6 +57,24 @@
     "frames": 1,
     "fps": 0
   },
+  "chalk": {
+    "frame": [
+      24,
+      24
+    ],
+    "directions": 16,
+    "frames": 4,
+    "fps": 14
+  },
+  "flash": {
+    "frame": [
+      24,
+      24
+    ],
+    "directions": 1,
+    "frames": 4,
+    "fps": 14
+  },
   "howl": {
     "frame": [
       32,
@@ -90,7 +108,7 @@
   },
   "needle": {
     "frame": [
-      24,
+      32,
       24
     ],
     "directions": 16,
@@ -139,25 +157,25 @@
   },
   "orb_essence": {
     "frame": [
-      24,
+      32,
       24
     ],
-    "directions": 1,
+    "directions": 16,
     "frames": 4,
     "fps": 10
   },
   "orb_fire": {
     "frame": [
       24,
-      24
+      32
     ],
     "directions": 1,
     "frames": 4,
-    "fps": 10
+    "fps": 12
   },
   "shard": {
     "frame": [
-      24,
+      32,
       24
     ],
     "directions": 16,

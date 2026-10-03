@@ -755,3 +755,11 @@ Raphaël, après une partie : « la difficulté est mieux réglée maintenant. l
 - **Projectiles du joueur : planche d'abord**, un sprite propre à chaque arme, silhouettes différentes, un peu plus grands ; intégration après validation.
 
 **Suite :** lots S au [plan 25](25-sprites-et-design.md).
+
+## 61. Planches S1 et S2 — 3 octobre 2026
+
+Raphaël : « stylisé ou grosse tete j'aime bcp il y a qq chose à faire. pour les projectiles les nouvelles versions proposées sont bcp mieux pour les quelques projectilmes refait. tu peux avancer ».
+
+- **Personnages :** direction retenue entre B (stylisé) et C (grosse tête) de la [planche du Traqueur](planches/25-s8-traqueur-directions.png) ; à appliquer au Vagabond et à la Forgeuse, puis aux animations.
+- **Projectiles du joueur :** planche S1 validée ; intégration en jeu (S1b).
+

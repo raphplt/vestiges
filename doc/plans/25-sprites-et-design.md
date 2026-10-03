@@ -582,3 +582,9 @@ Avant de reprendre les trois personnages, une planche de directions sur le Traqu
 - **D, élancé :** tête plus petite, jambes longues, plus proche de l'actuel.
 
 Le générateur porte le design B (`tools/sprites/characters/traqueur.py`, cadre 40×42, pieds à la même hauteur) ; **les PNG du jeu ne sont pas régénérés.** Une fois la direction choisie, elle s'applique au Vagabond (sac qui dépasse de la tête, écharpe orange) et à la Forgeuse (la plus large, marteau trop gros sur l'épaule, lunettes de soudure), puis viennent les animations (S3).
+
+### S1b — projectiles intégrés, 3 octobre
+
+Planche validée par Raphaël (DECISIONS §61). PNG régénérés (`tools/generate_projectiles.py`) : flèche, carreau, aiguille, éclat, bille, comète d'essence, flamme ; **nouveaux** `proj_flash.png` (Flash photo) et `proj_chalk.png` (Craies) avec leur `.import`. Haches et notes régénérées identiques octet pour octet. `weapons.json` : le Flash photo tire `flash`, les Craies `chalk`. Traînée lumineuse ajoutée au flash. Échelles de base (`weapon_visuals.json`) : la première capture montrait une bille énorme et une comète et une flamme lourdes à ×2 ; bille, comète et flamme passent à ×1,4, flash et craie à ×1,3, notes inchangées à ×2.
+
+**Vérification :** build sans avertissement, smoke vert, suites armes, UI, objets vertes (4/4). Captures en run des 11 armes à distance inspectées ([première passe](../audits/sprites-2026-10-03/s1b-projectiles-premiere-passe.png), [après réglage des échelles](../audits/sprites-2026-10-03/s1b-projectiles-en-jeu.png)) : chaque arme se reconnaît à son projectile. L'éclat de phare reste petit en vol, à juger en jeu.

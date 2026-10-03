@@ -852,7 +852,7 @@
     "attack_pattern": "burst",
     "trigger_coefficient": 0.65,
     "fx": {
-      "projectile": "shard",
+      "projectile": "flash",
       "family": "pale"
     },
     "summary": "Éblouit et désoriente.",
@@ -1114,7 +1114,7 @@
     "attack_pattern": "homing",
     "trigger_coefficient": 0.9,
     "fx": {
-      "projectile": "orb"
+      "projectile": "chalk"
     },
     "summary": "Des formes imprévisibles.",
     "growth": { "damage": 3, "attack_speed": 2, "projectile_speed": 1, "range": 1, "homing_strength": 0.5, "projectile_count": 1.25 },

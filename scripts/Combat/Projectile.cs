@@ -109,7 +109,7 @@ public partial class Projectile : Area2D
         string spriteId = weapon?.Fx.Projectile ?? "arrow";
         if (spriteId == "orb")
             spriteId = _family == FxFamily.Fire ? "orb_fire" : "orb_essence";
-        _glowTrail = spriteId is "orb_fire" or "orb_essence" or "shard" or "note";
+        _glowTrail = spriteId is "orb_fire" or "orb_essence" or "shard" or "note" or "flash";
         _spriteSet = ProjectileSprites.Get(spriteId) ?? ProjectileSprites.Get("arrow");
         // Les petits sprites (notes, billes, orbes) ont une échelle de base, sans toucher à la zone de contact (§53).
         _sprite.Scale = Vector2.One * sizeScale * WeaponVisualConfig.Load().ProjectileBaseScale(spriteId);
