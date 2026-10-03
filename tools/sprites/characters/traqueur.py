@@ -1,75 +1,92 @@
 """
 Le Traqueur — « L'auteur des empreintes n'existe plus. Je les suis quand même. »
-La silhouette la plus verticale : capuche pointue, arc plus haut que lui dans le dos, posture penchée en avant.
-Vert forêt dominant, beige clair en accent (charte §4).
+La silhouette la plus verticale : capuche très pointue rejetée en arrière, deux pans de cape effilés, arc plus haut que
+lui dans le dos, posture penchée en avant. Proportions stylisées (plan 25 S2) : tête et mains plus grosses, jambes
+fines, pour qu'il se lise à 30 px. Sous la capuche, deux yeux pâles. Vert forêt dominant, beige clair en accent.
 """
 from __future__ import annotations
 
 import numpy as np
 
 from ._body import LimbStyle, limbs
-from ..palette import make_material
+from ..palette import make_emissive, make_material
 from ..poses import Gait, character_animations
 from ..render import Part
 from ..rig import Proportions, Skeleton
 from ..sdf import capsule, ellipsoid, sphere
 
 CHARACTER_ID = "traqueur"
-DIMENSIONS = Proportions(shin=13.0, thigh=14.0, spine=14.5, head_radius=4.4, shoulder_half=6.2, hip_half=3.0,
-                         upper_arm=10.0, forearm=9.0)
+FRAME_SIZE = (40, 42)
+FRAME_PIVOT = (20.0, 38.0)
+DIMENSIONS = Proportions(ankle=2.6, shin=10.0, thigh=10.5, spine=12.0, neck=1.4, head_radius=6.2, shoulder_half=6.0,
+                         hip_half=2.8, upper_arm=8.5, forearm=7.5)
 
-CLOAK, TUNIC, LEGS, BOOTS, FACE, BOW, STRING, QUIVER, FLETCH, WRAP, GLOVES = range(11)
+CLOAK, TUNIC, LEGS, BOOTS, FACE, BOW, STRING, QUIVER, FLETCH, WRAP, GLOVES, EYES, CLOAK_LINING = range(13)
 MATERIALS = [
-    make_material("cloak", "#3A5A30"),
-    make_material("tunic", "#4B6A3A"),
-    make_material("legs", "#46443A"),
-    make_material("boots", "#3A2E26"),
-    make_material("face", "#2E2A28", contrast=0.5),
-    make_material("bow", "#8A6A42"),
-    make_material("string", "#C4B490", contrast=0.4),
-    make_material("quiver", "#6A4E34"),
-    make_material("fletch", "#C4B490"),
-    make_material("wrap", "#C4B490"),
-    make_material("gloves", "#4E3E2E"),
+    make_material("cloak", "#3E6432", contrast=1.15),
+    make_material("tunic", "#6A8A48"),
+    make_material("legs", "#3E3C34"),
+    make_material("boots", "#4A3424", contrast=1.1),
+    make_material("face", "#221E1E", contrast=0.4),
+    make_material("bow", "#B88A48", contrast=1.2),
+    make_material("string", "#E0D4B0", contrast=0.4),
+    make_material("quiver", "#7A5634"),
+    make_material("fletch", "#D84A30", contrast=0.9),
+    make_material("wrap", "#D6C69C", contrast=0.9),
+    make_material("gloves", "#5A4430"),
+    make_emissive("eyes", "#F2E6B0"),
+    make_material("lining", "#2A4224"),
 ]
 
 
 def build(skeleton: Skeleton) -> list[Part]:
     s = skeleton
-    # Éléments souples : pointe de capuche et empennages oscillent en retard sur le corps.
     d = s.drape
+    # Capuche, visage et yeux suivent la taille de la tête : changer les proportions ne demande pas de les redessiner.
+    k = DIMENSIONS.head_radius / 6.2
+
+    def h(x: float, y: float, z: float) -> np.ndarray:
+        return s.on_head((x * k, y * k, z * k))
     torso_center = (s.point("pelvis") + s.point("chest")) * 0.5
     parts = [
-        Part(lambda p, c=torso_center: ellipsoid(p, c, (5.6, 8.6, 4.0), s.torso), TUNIC),
-        # Cape courte fendue : épaules couvertes, dos jusqu'aux reins.
-        Part(lambda p: ellipsoid(p, s.on_torso("chest", (0, -3.0, -0.8)), (6.8, 6.5, 4.8), s.torso), CLOAK),
-        Part(lambda p: capsule(p, s.on_torso("pelvis", (0, 1.0, 0)), s.on_torso("pelvis", (0, -5.0, -0.2)), 4.2, 4.6), TUNIC),
-        # Bandes de tissu clair : ceinture et avant-bras.
-        Part(lambda p: ellipsoid(p, s.on_torso("pelvis", (0, 1.4, 0)), (4.8, 1.1, 3.8), s.torso), WRAP),
-        Part(lambda p: sphere(p, s.on_head((0, -0.4, 0.3)), DIMENSIONS.head_radius - 0.5), FACE),
-        # Le col et le rebord clair donnent un avant lisible sans éclaircir toute la cape.
-        Part(lambda p: ellipsoid(p, s.on_torso("neck", (0, -0.5, 0.5)), (4.8, 1.6, 4.8), s.torso), WRAP),
-        Part(lambda p: capsule(p, s.on_torso("neck", (-1.7, -1.5, 4.0)), s.on_torso("chest", (1.6, -4.5, 4.7)), 1.0, 1.4), WRAP),
-        Part(lambda p: ellipsoid(p, s.on_head((0, 2.8, 3.7)), (3.6, 0.9, 1.1), s.head), WRAP),
-        # Capuche pointue creusée à l'avant, pointe rejetée vers l'arrière.
-        Part(lambda p: np.maximum(ellipsoid(p, s.on_head((0, 0.6, -0.9)), (5.0, 5.2, 5.2), s.head),
-                                  -ellipsoid(p, s.on_head((0, -0.9, 4.0)), (3.3, 3.5, 2.8), s.head)), CLOAK),
-        Part(lambda p: capsule(p, s.on_head((0, 3.0, -2.5)), s.on_head((2.2 * d, 7.5 - 0.6 * d, -6.5)), 2.6, 0.5), CLOAK),
-        # Arc en diagonale : les deux branches dépassent nettement de la silhouette (tête et hanche).
-        Part(lambda p: capsule(p, s.on_torso("chest", (-10.5, -13.0, -5.0)), s.on_torso("chest", (-2.0, 1.5, -6.4)), 1.0, 1.3), BOW),
-        Part(lambda p: capsule(p, s.on_torso("chest", (-2.0, 1.5, -6.4)), s.on_torso("chest", (6.5, 17.5, -5.0)), 1.3, 0.9), BOW),
-        Part(lambda p: capsule(p, s.on_torso("chest", (-10.0, -12.6, -4.4)), s.on_torso("chest", (6.2, 17.0, -4.4)), 0.4), STRING),
-        # Carquois et empennages.
-        Part(lambda p: capsule(p, s.on_torso("chest", (3.0, -6.0, -5.0)), s.on_torso("chest", (4.8, 3.5, -5.6)), 1.8, 2.0), QUIVER),
-        Part(lambda p: ellipsoid(p, s.on_torso("chest", (5.0 + 0.9 * d, 5.2, -5.8)), (1.9, 1.6, 1.6), s.torso), FLETCH),
+        Part(lambda p, c=torso_center: ellipsoid(p, c, (4.6, 7.2, 3.4), s.torso), TUNIC),
+        Part(lambda p: capsule(p, s.on_torso("pelvis", (0, 1.0, 0)), s.on_torso("pelvis", (0, -4.0, -0.2)), 3.4, 3.8), TUNIC),
+        # Ceinture et bandoulière claires : elles dessinent le buste de face comme de dos.
+        Part(lambda p: ellipsoid(p, s.on_torso("pelvis", (0, 1.4, 0)), (4.0, 1.0, 3.2), s.torso), WRAP),
+        Part(lambda p: capsule(p, s.on_torso("neck", (-3.5, -1.0, 3.0)), s.on_torso("pelvis", (3.8, 2.0, 3.2)), 0.9), WRAP),
+        # Mantelet qui couvre les épaules, puis deux pans effilés qui battent en retard derrière les jambes.
+        Part(lambda p: ellipsoid(p, s.on_torso("chest", (0, -1.6, -0.6)), (7.0, 5.0, 5.0), s.torso), CLOAK),
+        Part(lambda p: capsule(p, s.on_torso("chest", (-2.6, -2.0, -3.6)), s.on_torso("pelvis", (-4.2 - 1.2 * d, -9.0, -6.5 - 1.6 * d)), 3.0, 0.5), CLOAK),
+        Part(lambda p: capsule(p, s.on_torso("chest", (2.6, -2.0, -3.6)), s.on_torso("pelvis", (4.0 + 1.0 * d, -10.5, -6.0 - 2.0 * d)), 3.0, 0.5), CLOAK),
+        # Capuche : volume plus gros que la tête, creusée à l'avant (ombre où brillent les yeux), pointe longue.
+        Part(lambda p: np.maximum(ellipsoid(p, h(0, 0.8, -0.6), (7.0 * k, 7.2 * k, 7.0 * k), s.head),
+                                  -ellipsoid(p, h(0, -0.6, 5.2), (4.6 * k, 4.6 * k, 3.6 * k), s.head)), CLOAK),
+        Part(lambda p: sphere(p, h(0, -0.6, 0.0), 5.0 * k), FACE),
+        Part(lambda p: capsule(p, h(0, 4.0, -3.0), h(2.6 * d, 10.5 - 0.8 * d, -9.5), 3.6 * k, 0.4), CLOAK),
+        # Doublure plus sombre au bord de la capuche, puis écharpe claire qui sépare la tête du buste.
+        Part(lambda p: np.maximum(ellipsoid(p, h(0, 0.6, 3.6), (5.6 * k, 5.8 * k, 1.4 * k), s.head),
+                                  -ellipsoid(p, h(0, -0.6, 5.0), (4.4 * k, 4.4 * k, 3.0 * k), s.head)), CLOAK_LINING),
+        Part(lambda p: ellipsoid(p, s.on_torso("neck", (0, -0.4, 0.8)), (5.6, 2.2, 5.0), s.torso), WRAP),
+        Part(lambda p: sphere(p, h(-2.0, -0.3, 4.6), 1.0 * k), EYES),
+        Part(lambda p: sphere(p, h(2.0, -0.3, 4.6), 1.0 * k), EYES),
+        # Arc plus haut que lui, très en travers du dos : la branche basse sort à côté de la hanche, la haute au-dessus de
+        # l'épaule opposée, la corde tendue à part ; il se lit de face comme de dos.
+        Part(lambda p: capsule(p, s.on_torso("chest", (-13.0, -17.0, -5.0)), s.on_torso("chest", (-3.0, -1.0, -7.4)), 1.2, 1.8), BOW),
+        Part(lambda p: capsule(p, s.on_torso("chest", (-3.0, -1.0, -7.4)), s.on_torso("chest", (9.5, 19.5, -5.0)), 1.8, 1.1), BOW),
+        Part(lambda p: capsule(p, s.on_torso("chest", (-12.4, -16.6, -4.0)), s.on_torso("chest", (9.0, 19.0, -4.0)), 0.5), STRING),
+        # Longue écharpe claire nouée au cou, dont le bout flotte derrière l'épaule.
+        Part(lambda p: capsule(p, s.on_torso("neck", (2.5, -1.0, -2.0)), s.on_torso("chest", (7.5 + 1.5 * d, -6.5, -6.0 - 1.5 * d)), 1.8, 0.8), WRAP),
+        # Carquois et empennages rouges qui dépassent de l'épaule.
+        Part(lambda p: capsule(p, s.on_torso("chest", (3.2, -6.0, -5.0)), s.on_torso("chest", (4.6, 3.5, -5.6)), 1.8, 2.0), QUIVER),
+        Part(lambda p: ellipsoid(p, s.on_torso("chest", (4.8 + 0.9 * d, 5.6, -5.8)), (2.2, 1.8, 1.8), s.torso), FLETCH),
     ]
-    parts += limbs(s, LimbStyle(sleeve=TUNIC, hand=GLOVES, leg=LEGS, boot=BOOTS, arm_radius=1.95,
-                                leg_radius=2.25, boot_radius=2.25, boot_height=6.0, foot_radius=1.8))
+    parts += limbs(s, LimbStyle(sleeve=TUNIC, hand=GLOVES, leg=LEGS, boot=BOOTS, arm_radius=1.8, hand_radius=2.1,
+                                leg_radius=1.9, boot_radius=2.3, boot_height=5.0, foot_radius=2.1))
     for side in ("l", "r"):
         elbow, hand = s.point(f"elbow_{side}"), s.point(f"hand_{side}")
-        start, end = elbow * 0.48 + hand * 0.52, elbow * 0.2 + hand * 0.8
-        parts.append(Part(lambda p, a=start, b=end: capsule(p, a, b, 1.95, 1.8), WRAP))
+        start, end = elbow * 0.45 + hand * 0.55, elbow * 0.15 + hand * 0.85
+        parts.append(Part(lambda p, a=start, b=end: capsule(p, a, b, 1.9, 1.8), WRAP))
     return parts
 
 
-ANIMATIONS = character_animations(Gait(lean=0.14, arm_out=0.2, stride=1.15, arm_swing=1.1))
+ANIMATIONS = character_animations(Gait(lean=0.2, arm_out=0.22, stride=1.15, arm_swing=1.1))

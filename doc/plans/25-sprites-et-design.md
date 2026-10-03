@@ -570,3 +570,15 @@ Raphaël valide les réglages de jeu, puis vise les sprites : les **personnages 
 ### S1 — planche proposée, 3 octobre
 
 [Planche](planches/25-s7-projectiles-joueur.png) : arc (flèche longue, pointe en losange, empennage rouge et blanc), arbalète (carreau trapu, tête carrée en fer, ailettes de laiton), Boussole (aiguille plate en losange, nord rouge, sud blanc, pivot doré), Éclat de phare (prisme taillé à lumière chaude et courte traînée), **Flash photo** (étoile de lumière qui palpite, nouveau), lance-billes (bille de verre bleue à spirale jaune et reflet), **Craies** (craie rose qui tournoie, nouveau), Bâton d'essence (orbe cyan à queue de comète), **Lanterne** (flamme qui lèche vers le haut, au lieu de l'orbe rouge identique à celui du Bâton). Haches et notes inchangées. Le générateur (`tools/sprites/projectiles.py`) porte déjà ces modèles ; **les PNG du jeu ne sont pas régénérés** tant que la planche n'est pas validée.
+
+### S2 — directions proposées sur le Traqueur, 3 octobre
+
+Avant de reprendre les trois personnages, une planche de directions sur le Traqueur : [planche](planches/25-s8-traqueur-directions.png), quatre vues et échelle de jeu à côté d'un Rôdeur.
+
+- **Design commun aux propositions B à D :** capuche plus grosse et très pointue, creusée d'une ombre où brillent deux yeux pâles ; doublure sombre au bord ; arc plus haut que lui, très en travers du dos, branches et corde qui dépassent de face comme de dos ; longue écharpe beige dont le bout flotte ; deux pans de cape effilés ; tunique plus claire que la cape pour détacher le buste ; empennages rouges au carquois.
+- **A :** sprites actuels (proportions réalistes).
+- **B, stylisé :** tête un peu plus grosse, jambes plus courtes.
+- **C, grosse tête :** tête ×1,3 par rapport à B, corps plus court. Se lit le mieux à l'échelle du jeu ; c'est la recommandation.
+- **D, élancé :** tête plus petite, jambes longues, plus proche de l'actuel.
+
+Le générateur porte le design B (`tools/sprites/characters/traqueur.py`, cadre 40×42, pieds à la même hauteur) ; **les PNG du jeu ne sont pas régénérés.** Une fois la direction choisie, elle s'applique au Vagabond (sac qui dépasse de la tête, écharpe orange) et à la Forgeuse (la plus large, marteau trop gros sur l'épaule, lunettes de soudure), puis viennent les animations (S3).

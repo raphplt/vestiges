@@ -35,7 +35,10 @@ class SpriteModel:
 
 def character(character_id: str) -> SpriteModel:
     module = importlib.import_module(f"tools.sprites.characters.{character_id}")
-    return SpriteModel(character_id, CHARACTER_FRAME_SIZE, CHARACTER_FRAME_PIVOT, CHARACTER_MODEL_SCALE,
+    # Un personnage dont la signature déborde (arc, marteau, sac) peut élargir son cadre ; ses pieds restent à la même
+    # hauteur, donc le décalage de pied du jeu ne change pas.
+    return SpriteModel(character_id, getattr(module, "FRAME_SIZE", CHARACTER_FRAME_SIZE),
+                       getattr(module, "FRAME_PIVOT", CHARACTER_FRAME_PIVOT), CHARACTER_MODEL_SCALE,
                        module.MATERIALS, module.ANIMATIONS,
                        lambda pose: module.build(build_skeleton(pose, module.DIMENSIONS)))
 
