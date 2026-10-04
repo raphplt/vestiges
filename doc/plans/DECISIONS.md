@@ -810,3 +810,12 @@ Raphaël, sur la liste des points en attente :
 - **Ornières du tracteur embourbé :** laissées au choix de Claude, gardées telles quelles.
 - **Steam :** Raphaël demande la marche à suivre pour obtenir l'App ID et faire le test réel.
 - **Audio :** la commande d'ouverture de la planche avait pris le point final de la phrase ; la planche existe bien.
+
+## 66. Retours audio — 4 octobre 2026, soir
+
+Raphaël, après la planche de la Résurgence : « pour l'audio j'ai du mal à distinguer. mais par contre clairement il y a de gros problèmes de mixage ».
+- **Cri du Hurleur :** « une horreur absolue, retire-le immédiatement ». Son retiré (`cry_audio` ôté de la fiche) ; le cri reste une capacité (annonce et renforts), désormais muet.
+- **Sons des tirs du joueur :** « plutôt les retirer, ou alors les baisser un peu en volume et trouver de la diversité (en avoir un par arme) ». Premier pas : les treize sons d'attaque des armes baissés de 6 dB (−8 → −14). Un son propre à chaque arme reste à produire (plan 15).
+- **Musiques, ambiance, sons manquants :** « à revoir plus tard » ; des sons sont à améliorer ou à ajouter.
+- **Résurgence :** peu de différence perçue entre les extraits ; Raphaël demande les sons bruts. Copiés dans `~/Téléchargements/vestiges-resurgence-sons-bruts/` (annonce `mus_crepuscule`, Résurgence `mus_nuit_vagues`, signal de danger, et pour comparer exploration et combat).
+- **Synergies (suite du §65) :** forme **C** retenue, des synergies de règles (des règles qui se répondent, sans effet ajouté ni annonce). Planche de combinaisons à proposer avant code.

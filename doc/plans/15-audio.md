@@ -223,3 +223,11 @@ Questions pour Raphaël, dans l'ordre :
 4. Accent d'entrée au début de crise : faut-il un son dédié ? Il manque à la banque ; une recherche de candidats sourcés suivrait le [guide audio](../AUDIO-GUIDE.md) §4.
 
 Les morceaux actuels restent provisoires. Les nouvelles pistes (briefs C et D du guide) et le choix d'un accent restent à faire par Raphaël. A3 (mix) attend ces choix ; ses premiers chiffres sont donnés en A0.
+
+## Retours du 4 octobre (soir)
+
+Voir [DECISIONS §66](DECISIONS.md). Faits : cri du Hurleur retiré ; sons d'attaque des armes baissés de 6 dB (13 clés, −8 → −14 dB). À faire, dans l'ordre proposé :
+1. **Un son par arme**, plus discret que l'impact. Aujourd'hui, 24 armes se partagent 13 sons et 6 sont muettes. Dans le genre, le tir reste bas et court, ce sont l'impact et la mort qui portent le retour ; une arme très rapide joue un son sur deux ou plus bas.
+2. **Mixage** (A3) : 12 sons par seconde et 64 voix coupées par minute relevés en A0. Priorités entre familles (joueur, créatures, monde, interface).
+3. **Sons manquants** : relevé par écoute d'une run enregistrée (`tools/record_run_audio.sh`).
+4. **Musiques et ambiance** : plus tard, à la demande de Raphaël.

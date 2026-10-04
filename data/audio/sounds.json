@@ -328,79 +328,79 @@
   },
   "sfx_blade_swing": {
     "path": "res://assets/audio/sfx/selected/blade_swing.wav",
-    "volume_db": -8,
+    "volume_db": -14,
     "min_interval_ms": 180,
     "effect_id": "blade_swing"
   },
   "sfx_heavy_swing": {
     "path": "res://assets/audio/sfx/selected/heavy_swing.wav",
-    "volume_db": -8,
+    "volume_db": -14,
     "min_interval_ms": 180,
     "effect_id": "heavy_swing"
   },
   "sfx_bow_release": {
     "path": "res://assets/audio/sfx/selected/bow_release.wav",
-    "volume_db": -8,
+    "volume_db": -14,
     "min_interval_ms": 180,
     "effect_id": "bow_release"
   },
   "sfx_crossbow_release": {
     "path": "res://assets/audio/sfx/selected/crossbow_release.wav",
-    "volume_db": -8,
+    "volume_db": -14,
     "min_interval_ms": 180,
     "effect_id": "crossbow_release"
   },
   "sfx_throw_release": {
     "path": "res://assets/audio/sfx/selected/throw_release.wav",
-    "volume_db": -8,
+    "volume_db": -14,
     "min_interval_ms": 180,
     "effect_id": "throw_release"
   },
   "sfx_whip_snap": {
     "path": "res://assets/audio/sfx/selected/whip_snap.wav",
-    "volume_db": -8,
+    "volume_db": -14,
     "min_interval_ms": 180,
     "effect_id": "whip_snap"
   },
   "sfx_bell_pulse": {
     "path": "res://assets/audio/sfx/selected/bell_pulse.wav",
-    "volume_db": -8,
+    "volume_db": -14,
     "min_interval_ms": 180,
     "effect_id": "bell_pulse"
   },
   "sfx_light_shot": {
     "path": "res://assets/audio/sfx/selected/light_shot.wav",
-    "volume_db": -8,
+    "volume_db": -14,
     "min_interval_ms": 180,
     "effect_id": "light_shot"
   },
   "sfx_chain_jump": {
     "path": "res://assets/audio/sfx/selected/chain_jump.wav",
-    "volume_db": -8,
+    "volume_db": -14,
     "min_interval_ms": 180,
     "effect_id": "chain_jump"
   },
   "sfx_needle_shot": {
     "path": "res://assets/audio/sfx/selected/needle_shot.wav",
-    "volume_db": -8,
+    "volume_db": -14,
     "min_interval_ms": 180,
     "effect_id": "needle_shot"
   },
   "sfx_void_slash": {
     "path": "res://assets/audio/sfx/selected/void_slash.wav",
-    "volume_db": -8,
+    "volume_db": -14,
     "min_interval_ms": 180,
     "effect_id": "void_slash"
   },
   "sfx_lantern_fire": {
     "path": "res://assets/audio/sfx/selected/lantern_fire.wav",
-    "volume_db": -8,
+    "volume_db": -14,
     "min_interval_ms": 180,
     "effect_id": "lantern_fire"
   },
   "sfx_clock_strike": {
     "path": "res://assets/audio/sfx/selected/clock_strike.wav",
-    "volume_db": -8,
+    "volume_db": -14,
     "min_interval_ms": 180,
     "effect_id": "clock_strike"
   },
