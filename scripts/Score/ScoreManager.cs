@@ -146,7 +146,7 @@ public partial class ScoreManager : Node
     {
         int crisesSurvived = _runTracker?.CrisesSurvived ?? 0;
         GetNodeOrNull<SteamAchievements>("../SteamAchievements")?.OnRunEnd(CurrentScore, crisesSurvived, characterId);
-        GetNodeOrNull<SteamLeaderboards>("../SteamLeaderboards")?.UploadScore(CurrentScore, crisesSurvived, characterId);
+        SteamManager.SubmitRunScores(CurrentScore, crisesSurvived, characterId);
     }
 
     /// <summary>Construit un RunRecord enrichi depuis l'état courant + RunTracker.</summary>

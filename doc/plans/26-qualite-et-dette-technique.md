@@ -1,6 +1,6 @@
 # Plan 26 — Qualité du code et remboursement de la dette technique
 
-2 octobre 2026 · Plan préparé à la demande de Raphaël ([DECISIONS §54](DECISIONS.md)). **Q0, Q1 et Q5 livrés et vérifiés (§55, §56, §58) ; autres lots non commencés.** Référence de diagnostic : [revue du 2 octobre](../audits/qualite-2026-10-02/README.md), ses manifestes et ses journaux.
+2 octobre 2026 · Plan préparé à la demande de Raphaël ([DECISIONS §54](DECISIONS.md)). **Q0, Q1, Q2a, Q2b, Q3, Q5, Q6a et Q6b livrés et vérifiés ; autres lots non commencés.** Référence de diagnostic : [revue du 2 octobre](../audits/qualite-2026-10-02/README.md), ses manifestes et ses journaux.
 
 Objectif : protéger les acquis des joueurs, rendre les validations fiables et permettre de faire évoluer une arme, une créature ou un réglage sans chercher des règles dupliquées dans plusieurs classes. Le travail conserve la direction V2 et les décisions de gameplay actuelles ; il procède par modules et vérifications ciblées.
 
@@ -132,6 +132,39 @@ Constats : F03, F11. Plan associé : 09.
 Associer chaque recherche, upload et download à son contexte ; sérialiser les opérations ou maintenir un état indépendant par requête. Réserver le weekly à un contexte explicite de défi, s'il existe ; suspendre cet upload tant que son parcours n'est pas livré. Préserver les clés externes Steam existantes.
 
 **Sortie :** quatre destinations suivies correctement à cache froid/chaud, chevauchement d'un download, erreurs et retries maîtrisés. Vérification avec un substitut du service, puis une session Steam sur une plateforme compatible ; l'absence de cette session reste signalée.
+
+**Découpage d'exécution Q3, 4 octobre ([DECISIONS §64](DECISIONS.md)).** Relevé dans `SteamLeaderboards` (nœud ajouté à `Main` par `GameBootstrap`) :
+- **F03 :** un seul emplacement d'attente (`_pendingUploadBoard`, `_pendingUploadScore`) et un seul `CallResult` par sorte d'appel. Les quatre envois de fin de run le réaffectent à la suite ; dans Steamworks.NET, `CallResult.Set` abandonne l'appel précédent. À cache froid, seule la dernière recherche (Weekly) aboutit, avec le dernier score en attente ; à cache chaud, les quatre envois partent mais un seul résultat revient. Une lecture lancée pendant ce temps partage la même recherche.
+- **Pause :** à la mort, `SaveEndOfRun` envoie les scores, puis `DeathSequence` met l'arbre en pause jusqu'au retour au camp. `SteamManager` hérite de la pause et ne pompe plus les rappels Steam : les réponses n'arrivent qu'au camp, quand le nœud de `Main` qui les attendait est détruit.
+- **F11 :** `Vestiges_Weekly` reçoit toutes les runs et rien ne prouve que Steam le remette à zéro (le code le suppose). Décision §64 : toutes les runs, un tableau par semaine.
+- **Hors lot :** aucun écran ne lit les classements (la lecture n'a pas d'appelant) ; les succès gardent des restes V1 (`ACH_PLACE_50_STRUCTURES`, à Q14).
+
+1. **Destinations :** `RunLeaderboards` (C# pur) calcule les envois d'une run : Global et Weekly reçoivent le score, Crises le nombre de crises, un tableau par personnage le score (aucun si l'identifiant est vide). Weekly = `Vestiges_Weekly_<année ISO>-W<semaine>`, à partir de la date UTC de la fin de run. Les noms Steam restent dans le code (clés de protocole externe, §2).
+2. **File d'opérations :** `LeaderboardQueue` (C# pur, sans type Steamworks, donc chargeable hors x86/x64) traite **une opération à la fois** : recherche du tableau si son identifiant n'est pas en cache, puis envoi ou lecture. Chaque opération a son jeton ; un rappel tardif ou d'une autre opération est ignoré. Délai de réponse de 15 s, puis nouvelle tentative ; 3 tentatives au plus, puis échec signalé et opération suivante. File bornée (64), refus explicite au-delà. Résultat par opération (tableau, score, réussite, rang), journalisé.
+3. **Service Steam :** `ILeaderboardBackend` sépare la file de Steamworks ; `SteamLeaderboardBackend` fait les trois appels (`FindOrCreateLeaderboard`, `UploadLeaderboardScore` en gardant le meilleur, `DownloadLeaderboardEntries`). Une seule opération en vol, donc un `CallResult` par sorte d'appel suffit.
+4. **Propriétaire unique :** `SteamManager` (autoload) possède la file, qui survit au changement de scène ; il pompe les rappels et avance les délais **même en pause** (`ProcessMode` toujours). `SteamLeaderboards` et sa création dans `GameBootstrap` disparaissent ; `ScoreManager` appelle `SteamManager.SubmitRunScores`. La file est vidée à l'arrêt de Steam et quand une session devient une session d'essai.
+5. **Vérification :** scène `LeaderboardQueueRegression` avec un faux service piloté à la main, `tools/test_steam_leaderboards.sh`, suite `steam_leaderboards` de `tools/validate.sh`. Cas : cache froid (une recherche par tableau, chaque score sur son tableau), cache chaud (aucune recherche), lecture en même temps que les envois, recherche et envoi en échec puis réussite, trois échecs puis passage à la suite, délai dépassé puis réponse tardive ignorée (pas de double envoi), arrêt avec opérations en attente, file pleine, semaines ISO aux changements d'année, personnage absent. **Non prouvé :** le service Steam réel (bibliothèque native absente, App ID 480) ; à vérifier avec l'App ID du jeu, au plus tard à Q12.
+
+**Q3 livré et vérifié, 4 octobre.**
+- **Code :** `RunLeaderboards` calcule les envois d'une run (Global, personnage, Crises, `Vestiges_Weekly_<année ISO>-W<semaine>`). `LeaderboardQueue` traite les opérations une à une, avec un jeton par tentative, un délai de 15 s, 3 tentatives espacées de 2 s, une file de 64 au plus et un résultat par opération. `ILeaderboardBackend` la sépare de Steamworks ; `SteamLeaderboardBackend` fait les trois appels. `SteamManager` possède la file, pompe les rappels en pause (`ProcessMode` toujours) et avance les délais en temps réel. `SteamLeaderboards.cs` et sa création dans `GameBootstrap` sont supprimés ; `ScoreManager` appelle `SteamManager.SubmitRunScores`.
+- **Écarts au découpage, issus de la relecture :**
+  - L'opération suivante ne démarre jamais depuis un rappel du service, mais à l'image suivante. Selon le dispatcher de Steamworks.NET, réarmer un `CallResult` pendant son propre rappel pourrait faire perdre la réponse suivante.
+  - Une exception du service compte comme une tentative en échec ; celle d'un abonné est journalisée sans bloquer la file.
+  - Les délais se comptent en temps réel : la séquence de mort ralentit `Engine.TimeScale` à 0,03 juste après l'envoi.
+- **Vérifié :** `tools/test_steam_leaderboards.sh` (suite `steam_leaderboards`), 56 contrôles avec un faux service :
+  - semaines ISO aux changements d'année, envois d'une run ;
+  - cache froid (une recherche par tableau, chaque score sur son tableau) et cache chaud (aucune recherche) ;
+  - lecture mêlée aux envois ;
+  - échecs relancés puis réussis, abandon après 3 tentatives, lecture en échec, refus immédiat sans boucle, exception du service ;
+  - délai dépassé : réponse tardive ignorée pendant l'attente et pendant la relance, ancienne recherche tardive ignorée ;
+  - suite démarrée à l'image suivante, abonné qui ajoute un envoi, arrêt avec opérations en cours ou en attente, file pleine.
+
+  Trois erreurs injectées dans la file (jeton ignoré, deux opérations en vol, suite lancée dans le rappel) font chacune échouer le test. Le jeton ignoré n'était d'abord pas détecté : le cas « réponse tardive pendant la relance » a été ajouté. `tools/validate.sh` sur smoke, steam_leaderboards, saves, dev_mode, development_tools, dev_release, movement-integration et launchers : **8/8**. Build sans avertissement.
+- **Relecture `godot-reviewer` :** aucun bloquant, aucun score sur le mauvais tableau, aucun type Steamworks nommé hors des chemins atteints quand Steam est actif. Corrigés : délais en temps réel, suite hors du rappel, exceptions, cas de test manquants, liens des plans 00 et 09. Justifié : le test de `tools/tests` n'a pas de `.cs.uid`, car `tools/` est exclu de l'import (comme `IndicibleRegression`).
+- **Non prouvé :** le service Steam réel (bibliothèque native absente du dépôt, App ID 480). En particulier, le comportement réel de `CallResult` ; la création des tableaux par `FindOrCreateLeaderboard` ; les noms des joueurs hors amis (`GetFriendPersonaName` sans `RequestUserInformation`), à traiter le jour où un écran lira les classements. À vérifier avec l'App ID du jeu, au plus tard à Q12.
+- **Limites :**
+  - Pire cas d'une panne réseau : environ 30 s par tentative, donc plusieurs minutes de file bloquée pour quatre tableaux, puis abandon. Un score abandonné n'est pas rejoué à la session suivante (pas de persistance).
+  - Les succès Steam gardent des restes V1 (`ACH_PLACE_50_STRUCTURES`), à Q14.
 
 ## 4. Lots de propreté et de données
 
@@ -315,7 +348,7 @@ Pour clore un lot :
 - [x] Q1 — Outils de modification exclus des runs normales distribuées.
 - [x] Q2a — Écriture et récupération des sauvegardes.
 - [x] Q2b — Finalisation persistante sans double attribution.
-- [ ] Q3 — Opérations Steam et contexte weekly.
+- [x] Q3 — Opérations Steam et contexte weekly.
 - [ ] Q4 — Chargement observé et récupérable.
 - [x] Q5 — Motifs d'attaque typés.
 - [x] Q6a — Effets et paramètres des armes explicites.
@@ -336,4 +369,4 @@ Pour clore un lot :
 - [ ] Q13 — Provenance du son de level-up résolue.
 - [ ] Q14 — Documentation active et restes V1 repris.
 
-**Prochain lot recommandé : Q6c** (relations de contenu et capacités ennemies) ou Q3 (Steam) ; Q2a, Q2b, Q6a et Q6b sont livrés le 4 octobre.
+**Prochain lot : Q6c** (relations de contenu et capacités ennemies), validé (§63) ; Q2a, Q2b, Q3, Q6a et Q6b sont livrés le 4 octobre.

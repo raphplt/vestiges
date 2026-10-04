@@ -63,8 +63,8 @@ Instructions appliquées : AGENTS.md et RTK retrouvé dans `/home/raphael/.claud
 | Cartes personnages textuelles, navigation souris dominante | HubScreen.cs 779–899 | 04 |
 | Résolution charte/projet/HUD non unifiée | Charte §1 ; project.godot 33 ; HUD 43 | 08/04 |
 | Police HUD effective non identifiée ; PixelOperator seulement prouvée pour logo généré | generate_hub_title.py 25, recherche code/scènes | 04, diagnostic préalable |
-| Weekly fixe, pas de période autonome démontrée | SteamLeaderboards.cs 21/74 | 09 |
-| État asynchrone Steam partagé entre opérations successives | SteamLeaderboards.cs 60/134/185 | 09, risque à reproduire |
+| Weekly fixe, pas de période autonome démontrée | SteamLeaderboards.cs 21/74 (supprimé, plan 26 Q3 : un tableau par semaine) | 09 |
+| État asynchrone Steam partagé entre opérations successives | SteamLeaderboards.cs 60/134/185 (supprimé, plan 26 Q3 : file d'opérations) | 09 |
 
 Présence de mots « nuit », « recipe » ou « Foyer » ne prouve pas qu'un système retiré est encore actif. Distinguer alias de compatibilité, description obsolète, branche active et donnée inutilisée.
 
@@ -88,7 +88,7 @@ Les symboles suivants ont été trouvés ; leurs détails doivent être relus av
 | Sprites | LoadOrGet(string charId, string folder), cache SpriteFrames | [CharacterSpriteLoader](../../scripts/Combat/CharacterSpriteLoader.cs) |
 | Lore | DiscoverSouvenir(string), SouvenirDiscovered | [SouvenirManager](../../scripts/Meta/SouvenirManager.cs) |
 | Spawn | Enemy.Initialize(EnemyData, float, float), EnemyPool | [Enemy](../../scripts/Combat/Enemy.cs), [EnemyPool](../../scripts/Spawn/EnemyPool.cs) |
-| Steam | UploadScore, LoadEntries, EntriesLoaded, ScoreUploaded | [SteamLeaderboards](../../scripts/Infrastructure/Steam/SteamLeaderboards.cs) |
+| Steam | SubmitRunScores, RequestEntries, UploadFinished, DownloadFinished | [LeaderboardQueue](../../scripts/Infrastructure/Steam/LeaderboardQueue.cs) (plan 26 Q3) |
 
 ## 6. Vérification des futurs lots
 

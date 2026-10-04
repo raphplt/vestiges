@@ -261,9 +261,6 @@ public partial class GameBootstrap : Node
     {
         SteamAchievements steamAchievements = new() { Name = "SteamAchievements" };
         GetNode("..").CallDeferred("add_child", steamAchievements);
-
-        SteamLeaderboards steamLeaderboards = new() { Name = "SteamLeaderboards" };
-        GetNode("..").CallDeferred("add_child", steamLeaderboards);
     }
 
     private void InitializeCharacterAndRun(Player player, PerkManager perkManager,

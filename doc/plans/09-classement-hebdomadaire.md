@@ -11,13 +11,9 @@ Aucune création de classement distant, remise à zéro, soumission de score ou 
 
 ## 2. Phase 0 — Existant et documentation
 
-[SteamLeaderboards.cs](../../scripts/Infrastructure/Steam/SteamLeaderboards.cs) expose :
-- `UploadScore(int score, int crisesSurvived, string characterId)`.
-- `LoadEntries(string boardName, LeaderboardRange range, int count = 10)`.
-- `LoadGlobalTop`, `LoadFriendsTop`, `LoadAroundPlayer`.
-- Signaux `ScoreUploaded(bool success)`, `EntriesLoaded(int count)`, état `IsLoading` et `LastEntries`.
+**Depuis le 4 octobre (plan 26 Q3) :** `SteamLeaderboards.cs` est remplacé par une file unique possédée par `SteamManager` ([LeaderboardQueue](../../scripts/Infrastructure/Steam/LeaderboardQueue.cs), [RunLeaderboards](../../scripts/Infrastructure/Steam/RunLeaderboards.cs)) : `SteamManager.SubmitRunScores` envoie le score d'une run normale sur Global, le tableau du personnage, Crises et `Vestiges_Weekly_<année ISO>-W<semaine>` ; `LeaderboardQueue.RequestEntries` lit un tableau (aucun appelant encore). Opérations une à une, délais, relances et réponses tardives vérifiés avec un faux service ; service Steam réel non vérifié.
 
-Le nom hebdomadaire est fixe, `Vestiges_Weekly` ; le commentaire suppose un reset par l'administration, mais aucun cycle hebdomadaire n'est démontré. Quatre envois successifs partagent des callbacks/champs d'attente : risque de collision d'opérations à tester. Le Hub présente l'historique local, pas ces téléchargements.
+Le Weekly reçoit **toutes les runs**, un tableau par semaine (DECISIONS §64) ; un défi à seed fixée aurait son propre classement. Le Hub présente l'historique local, pas ces téléchargements.
 
 [SteamManager.cs](../../scripts/Infrastructure/Steam/SteamManager.cs) utilise un AppId de test et se désactive sans SDK natif. La disponibilité d'un AppId de production et de sa configuration devra être vérifiée au démarrage de ce chantier.
 
