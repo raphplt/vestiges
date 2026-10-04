@@ -33,6 +33,8 @@ Ce document n'est pas un document de game design. C'est le **livre saint de l'un
 
 # PARTIE I — L'UNIVERS
 
+> **Remplacée le 4 octobre 2026** par le [script du lore v1.1](VESTIGES-LORE.md), validé comme base par Raphaël ([DECISIONS §62](plans/DECISIONS.md)). En cas de conflit, le script fait foi ; cette partie reste pour l'historique.
+
 ## 1. LA THÈSE FONDATRICE
 
 ### Le monde n'a pas été détruit. Il a été OUBLIÉ.

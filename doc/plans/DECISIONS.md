@@ -763,3 +763,21 @@ Raphaël : « stylisé ou grosse tete j'aime bcp il y a qq chose à faire. pour 
 - **Personnages :** direction retenue entre B (stylisé) et C (grosse tête) de la [planche du Traqueur](planches/25-s8-traqueur-directions.png) ; à appliquer au Vagabond et à la Forgeuse, puis aux animations.
 - **Projectiles du joueur :** planche S1 validée ; intégration en jeu (S1b).
 
+
+## 62. Questions de reprise — 4 octobre 2026
+
+- **Personnages joués (plan 25 S2–S4) :** « je valide pour l'instant mais pas définitif. c'est mieux maintenant on va dire ». Validés provisoirement ; des retouches restent possibles.
+- **G6g (rafale, ondes successives) :** validé en jeu.
+- **Mémorial réduit au soin et à la levée d'Oubli, Ateliers à prix ×5 et 8 par carte (C2c) :** validés en jeu.
+- **Mort et bilan (plan 02) :** « validé pour l'instant il y aura peut-être des retouches plus tard pour peaufiner l'affichage ».
+- **Audio :** la planche de la Résurgence n'est pas encore écoutée (Raphaël demandait comment l'ouvrir : `xdg-open ~/.local/share/vestiges-audio/2026-10-01/planche-resurgence.html`). Questions du plan 15 maintenues.
+- **Bestiaire, « les mobs avancent successivement » :** plus d'actualité, sujet fermé.
+- **Lore, à traiter en priorité :**
+  - Le script v1.1 ([VESTIGES-LORE.md](../VESTIGES-LORE.md)) est **validé comme base** : il devient la référence du lore et remplace la partie I de la Bible.
+  - Les quatre personnages ajoutés (le Sonneur, l'Écolière, la Photographe, la Veilleuse cachée) et l'Enfant du Bas-Port sont **gardés**.
+  - Fin personnelle : **à la prochaine mort**, comme le dit la v1.1 (le personnage nommé peut finir ; sa prochaine mort clôt son histoire, écran de mort d'une ligne).
+  - **Objets du lore gardés tous les deux :** la Clé verte (vraie fin) et un objet par fin personnelle.
+  - **La Montée** existe dans chaque carte, discrète : une rue en pente, pavée, une barrière au bout, jamais signalée.
+  - **La Barrière**, boss intermédiaire, est gardée, à concevoir (plan 07).
+  - **Failles (P7) :** le profil compte les Failles acceptées et quelques détails changent (une ligne de document, un murmure). Jamais punitif, sans effet sur les fins.
+- **Chantier de la session :** Q2a puis Q2b (sauvegardes protégées, fin de run attribuée une seule fois), plan 26.

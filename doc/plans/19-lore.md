@@ -577,3 +577,19 @@ Retour de Raphaël sur §12 : la correction « l'oubli ne marche qu'à plusieurs
 - les règles d'écriture, ce qui reste ouvert, les conséquences pour le jeu, les trente et un noms.
 
 Les choix d'auteur non validés y sont marqués « à valider ».
+
+## 14. Script v1.1 validé comme base — 4 octobre
+
+Réponses de Raphaël ([DECISIONS §62](DECISIONS.md)) :
+
+| Point | Décision |
+|---|---|
+| Script v1.1 | **Validé comme base** ; il remplace la partie I de la Bible |
+| Personnages ajoutés | Les quatre (Sonneur, Écolière, Photographe, Veilleuse cachée) et l'Enfant du Bas-Port sont gardés |
+| Fin personnelle | À la prochaine mort, comme écrit en §9.1 du script |
+| Objets du lore | Clé verte et un objet par fin personnelle, gardés |
+| La Montée | Tracé discret dans chaque carte (rue en pente, pavée, barrière au bout), à produire au plan 22 |
+| La Barrière | Boss intermédiaire gardé, à concevoir au plan 07 |
+| P7, Failles | Le profil compte les Failles acceptées ; quelques détails changent (ligne de document, murmure), sans punition ni effet sur les fins |
+
+**Restent ouverts :** le nom de Vaulme (provisoire), les trente et un noms, la mécanique de déclenchement des fins personnelles côté jeu (§9.1 du script). La production (documents, scènes, objets, Montée) n'est pas engagée : elle passera par des lots à proposer.

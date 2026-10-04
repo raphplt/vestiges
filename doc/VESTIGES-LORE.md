@@ -1,10 +1,10 @@
 # VESTIGES — Le lore
 
-Version 1.1 · 29 septembre 2026 · Statut : **à relire par Raphaël**. La 1.1 intègre ses retours sur la 1.0 : la carte qui change à chaque run est justifiée par l'histoire, toute convention de run est vérifiée (§7 bis), un objet est débloqué par la vraie fin, et les scènes sont déplacées en fin de run.
+Version 1.1 · 29 septembre 2026 · Statut : **validé comme base par Raphaël le 4 octobre 2026** ([DECISIONS §62](plans/DECISIONS.md)) ; c'est la référence du lore. La 1.1 intègre ses retours sur la 1.0 : la carte qui change à chaque run est justifiée par l'histoire, toute convention de run est vérifiée (§7 bis), un objet est débloqué par la vraie fin, et les scènes sont déplacées en fin de run.
 
 Ce document est le script caché du jeu : ce qui s'est vraiment passé, qui sont les personnages, comment le joueur le découvre. Il est réservé à l'équipe. Le joueur n'en lira jamais une ligne telle quelle ; il en reconstituera une partie, à sa mesure.
 
-Une fois validé, il remplace la partie I de la [Bible](VESTIGES-BIBLE.md) (thèse, cosmologie, fragments). Le travail qui y mène est consigné dans le [plan 19](plans/19-lore.md). Les choix faits en tant qu'auteur, sans validation préalable, sont marqués **(à valider)**.
+Il remplace la partie I de la [Bible](VESTIGES-BIBLE.md) (thèse, cosmologie, fragments). Le travail qui y mène est consigné dans le [plan 19](plans/19-lore.md). Les choix d'auteur encore sans validation sont marqués **(à valider)** ; ceux tranchés le 4 octobre portent « validé ».
 
 ---
 
@@ -109,7 +109,7 @@ Ce que chacun a fait cette nuit-là décide de ce qu'il est devenu.
 
 ## 5. Les personnages jouables
 
-**Dix personnages**, dont un caché et une version alternative. Les six du casting validé (plan 06) sont repris avec leurs silhouettes, leurs armes et leurs mécaniques ; ce document leur donne une histoire. Quatre sont ajoutés **(à valider)**.
+**Dix personnages**, dont un caché et une version alternative. Les six du casting validé (plan 06) sont repris avec leurs silhouettes, leurs armes et leurs mécaniques ; ce document leur donne une histoire. Quatre sont ajoutés (validé le 4 octobre).
 
 Principes :
 - **En jeu, aucun n'a de nom** : seulement une fonction (« le Facteur »). Leur nom est ce qu'ils cherchent. On le découvre à leur fin personnelle.
@@ -177,7 +177,7 @@ Principes :
 - **Croisement** : le Sonneur, l'autre qu'on a empêché d'alerter.
 - **Fin personnelle** : elle passe l'appel, et c'est le Sonneur qui décroche au clocher. Ils se nomment.
 
-### Le Sonneur — Baptiste Roux *(ajout, à valider)*
+### Le Sonneur — Baptiste Roux *(ajout)*
 
 - **Cette nuit-là** : empêché de sonner le tocsin.
 - **Pourquoi oublié** : pendant des années, il a sonné le tocsin chaque 14 novembre. On a fini par oublier l'homme, puis la cloche.
@@ -187,7 +187,7 @@ Principes :
 - **Croisement** : l'Éveillée.
 - **Fin personnelle** : il sonne enfin à 23 h 10. Dans le Néant, au loin, des silhouettes relèvent la tête.
 
-### L'Écolière — Lise Garnier *(ajout, à valider)*
+### L'Écolière — Lise Garnier *(ajout)*
 
 - **Cette nuit-là** : neuf ans, elle attendait à l'école. Ses parents ne sont pas venus.
 - **Pourquoi oubliée** : enfant du Bas-Port, elle a été oubliée avec lui. L'instituteur est le dernier à l'avoir appelée par son nom.
@@ -197,7 +197,7 @@ Principes :
 - **Croisement** : le Facteur passait devant l'école chaque soir, et la saluait.
 - **Fin personnelle** : quelqu'un vient la chercher. Le Facteur, sur sa tournée, s'arrête et dit : « Lise, c'est l'heure. »
 
-### La Photographe — Claire Morel *(ajout, à valider)*
+### La Photographe — Claire Morel *(ajout)*
 
 - **Cette nuit-là** : dans le clocher avec le Sonneur, elle a pris trois photos.
 - **Pourquoi oubliée** : la ville lui a demandé de détruire les négatifs. Elle ne l'a pas fait. On l'a oubliée, et ses photos avec elle.
@@ -207,7 +207,7 @@ Principes :
 - **Croisement** : ses trois photos montrent la barrière fermée, une porte verte entrouverte, et un homme qui tient une lanterne. Elles servent aux fins du Traqueur, de la Veilleuse et du Vagabond.
 - **Fin personnelle** : la troisième photo, développée, révèle le visage de celui qui a crié « ils viennent piller ». C'est Lucien Vasseur (voir §6). Elle le nomme, et il cesse d'être un écho.
 
-### La Veilleuse — Jeanne Oriol *(personnage caché, à valider)*
+### La Veilleuse — Jeanne Oriol *(personnage caché)*
 
 - **Cette nuit-là** : elle a ouvert sa porte.
 - **Pourquoi oubliée** : elle a raconté ce qu'elle avait vu. Registre de la commune : « Oriol Jeanne — trouble à l'ordre — 5 signatures ».
@@ -216,7 +216,7 @@ Principes :
 - **Débloquée par** la fin personnelle du Vagabond.
 - **Fin personnelle** : voir la vraie fin (§9).
 
-### L'Enfant du Bas-Port — version alternative du Vagabond *(à valider)*
+### L'Enfant du Bas-Port — version alternative du Vagabond
 
 - Élie à six ans, la nuit même. Une run dans laquelle la carte est la nuit du 14 : il pleut, il fait noir, la mer est là.
 - Débloquée après la vraie fin. C'est la seule run qui montre la mer.
@@ -256,7 +256,7 @@ Chaque système du jeu a un sens dans l'histoire. Aucun n'est expliqué ; tous t
 | **Les Oublis** (malus de carte) | Ce qu'on perd quand on accepte d'oublier : les repères, les visages, le chemin | Des malus | Le prix de la tranquillité |
 | **Les échos** | Les habitants qui ont oublié, et qui s'effacent à leur tour | Des fantômes | Les fantômes, ce sont eux ; les vivants, c'est nous |
 | **Les armes** | Des objets de la vie de Vaulme, qui tiennent parce qu'un geste s'en souvient (la faucille, le parapluie, la pelle à neige) | Des armes de fortune | Chacune appartient à quelqu'un de l'histoire |
-| **Le boss intermédiaire : La Barrière** *(proposition, à valider)* | La barrière de la Montée, devenue chose : chaînes, grilles, poings qui frappent de l'autre côté. Sa difficulté monte avec les Mémoriaux ravivés : **plus on se souvient, plus elle résiste, et plus elle rend en tombant** | Un boss | Chaque Mémorial ravivé est quelqu'un de plus qui frappe à la barrière |
+| **Le boss intermédiaire : La Barrière** *(gardé, à concevoir au plan 07)* | La barrière de la Montée, devenue chose : chaînes, grilles, poings qui frappent de l'autre côté. Sa difficulté monte avec les Mémoriaux ravivés : **plus on se souvient, plus elle résiste, et plus elle rend en tombant** | Un boss | Chaque Mémorial ravivé est quelqu'un de plus qui frappe à la barrière |
 | **L'Indicible** (boss final) | **La nuit du 14 elle-même**, ce qu'on ne peut pas dire. Trop grand pour l'écran : une tempête, une mer, des mains | Un monstre géant | La quête « Nommer l'Indicible » est littérale : son nom est la chose que personne ne dit |
 | **La boucle** | Une mort sans témoin qui n'a pas lieu | La règle d'un roguelite | Les oubliés ne peuvent pas finir tant que personne ne les nomme |
 | **L'XP et le level-up** | Rien, dans la fiction. Un simple système de jeu (décision de Raphaël) | — | — |
@@ -281,7 +281,7 @@ Aucune convention de jeu ne reste sans raison dans l'histoire. Tout découle des
 - des chemins qui s'interrompent, des rues qui ne mènent nulle part ;
 - le rapport du cadastre (§3), trouvable tôt, qui constatait le phénomène bien avant le jeu : ce n'est pas une règle de jeu, c'est ce que l'Effacement faisait déjà.
 
-**Ce qui ne bouge jamais :** les lieux eux-mêmes (la porte verte est toujours verte, le clocher toujours le même) et **la Montée**, le seul chemin dont tout Vaulme se souvient, justement parce qu'elle a voulu l'oublier. **(à valider côté jeu : la Montée comme tracé présent dans chaque carte)**
+**Ce qui ne bouge jamais :** les lieux eux-mêmes (la porte verte est toujours verte, le clocher toujours le même) et **la Montée**, le seul chemin dont tout Vaulme se souvient, justement parce qu'elle a voulu l'oublier. **(validé : la Montée est un tracé discret présent dans chaque carte, rue en pente pavée avec une barrière au bout, jamais signalée ; à produire au plan 22)**
 
 **Au bord de la carte**, le Néant : au-delà de ce dont quelqu'un se souvient encore.
 
@@ -342,7 +342,7 @@ L'histoire se lit à plusieurs niveaux. Un joueur qui ne cherche pas en aura ass
 
 Chaque personnage a sa fin, déclenchée quand son fil est complet et que le personnage qui le croise l'a déjà été, ou le peut dans la même run **(mécanique à définir côté jeu)**. Elles tiennent en une courte scène sans texte, suivie d'une ligne : le personnage est nommé.
 
-Une fois nommé, un personnage **peut finir** : sa prochaine mort en run sera la dernière de son histoire. On peut continuer à le jouer ensuite, mais son fil est clos, et l'écran de mort change (une seule ligne : son nom, et « Il a été nommé. »). **(à valider)**
+Une fois nommé, un personnage **peut finir** : sa prochaine mort en run sera la dernière de son histoire. On peut continuer à le jouer ensuite, mais son fil est clos, et l'écran de mort change (une seule ligne : son nom, et « Il a été nommé. »). (validé le 4 octobre)
 
 ### 9.2 La vraie fin
 
@@ -359,8 +359,8 @@ Conditions : la fin du Vagabond (Jeanne est débloquée), les trente et un noms 
 - **Il pleut désormais dans les runs**, par moments. Le parapluie s'ouvre.
 - Au bord de la carte, là où il y avait le Néant, il y a par endroits **la mer**.
 - L'Enfant du Bas-Port est débloqué.
-- **Un objet est débloqué : la Clé verte** *(à valider)*, la clé de la porte de Jeanne. Une fois par run, quand un coup devrait être fatal, une porte s'ouvre : le personnage est tiré à l'abri, avec un peu de vie. C'est le seul objet du jeu qui sauve, et il vient de la seule porte qui s'est ouverte.
-- Dans la même logique, **chaque fin personnelle débloque un objet lié à son histoire** *(à valider, dépend du système d'objets du plan 05)* : la lettre de Marc, la lanterne de Julien, la chaîne brisée d'Odette, la fiche de standard de Mireille, la corde de la cloche, la marelle de Lise, la troisième photo de Claire. Les objets se découvrent ainsi petit à petit, en même temps que l'histoire.
+- **Un objet est débloqué : la Clé verte** (validé), la clé de la porte de Jeanne. Une fois par run, quand un coup devrait être fatal, une porte s'ouvre : le personnage est tiré à l'abri, avec un peu de vie. C'est le seul objet du jeu qui sauve, et il vient de la seule porte qui s'est ouverte.
+- Dans la même logique, **chaque fin personnelle débloque un objet lié à son histoire** (validé ; à caser dans les six emplacements du plan 21) : la lettre de Marc, la lanterne de Julien, la chaîne brisée d'Odette, la fiche de standard de Mireille, la corde de la cloche, la marelle de Lise, la troisième photo de Claire. Les objets se découvrent ainsi petit à petit, en même temps que l'histoire.
 - Rien d'autre ne change : le jeu continue. Les créatures sont toujours là, parce que la peur ne disparaît pas d'avoir été comprise.
 
 ---
@@ -399,7 +399,7 @@ Conditions : la fin du Vagabond (Jeanne est débloquée), les trente et un noms 
 - **Les trouvailles importantes** (un premier faire-part, un nom qui revient) peuvent se relire au bilan, dans une ligne « Retrouvé » discrète, sans commentaire.
 - **La vraie fin** est la seule exception : elle est elle-même la fin d'une run.
 
-À valider en jouant : une scène jouée en fin de run peut perdre de sa force si le joueur est mort bêtement juste avant. Si c'est le cas, la fin personnelle peut **terminer la run au moment où elle se remplit**, comme une victoire, plutôt qu'attendre la mort.
+Tranché le 4 octobre : la fin personnelle attend la **prochaine mort**, elle ne termine pas la run au moment où elle se remplit. Si une scène perd sa force après une mort bête, on y reviendra en jouant.
 
 ---
 
@@ -410,7 +410,7 @@ Une vérité au centre, des bords ouverts (Q1 B) :
 - **Au-delà de la vallée** : le Néant cache-t-il un monde entier oublié, ou rien ? On ne sait pas.
 - **Pourquoi l'oubli collectif marche** : c'est une loi de ce monde, jamais expliquée (Q2 D).
 - **Qui a raison** : la ville avait peur, la rumeur était fausse, le maire croyait bien faire. Le jeu ne condamne personne en toutes lettres.
-- **Les Failles acceptées** : le jeu s'en souvient, mais ne dit jamais si c'était mal.
+- **Les Failles acceptées** : le jeu s'en souvient, mais ne dit jamais si c'était mal. Le profil compte les Failles acceptées et quelques détails changent (une ligne de document, un murmure), sans rien de punitif ni d'effet sur les fins (validé le 4 octobre).
 
 ---
 

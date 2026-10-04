@@ -157,6 +157,8 @@ Ces noms et comportements sont des propositions à valider. Prototyper successiv
 
 L’idée « une version boss de chaque type » est à examiner comme une gamme, pas comme quinze sprites agrandis. Recommandation : un boss par famille mécanique retenue à terme, en commençant par deux. Les Colosses et l’Indicible restent des rencontres distinctes à réconcilier avec le calendrier 03.
 
+**La Barrière, boss intermédiaire gardé le 4 octobre** ([DECISIONS §62](DECISIONS.md), [script du lore](../VESTIGES-LORE.md) §6) : la barrière de la Montée devenue chose, chaînes, grilles, poings qui frappent de l'autre côté. Sa résistance et ce qu'elle rend en tombant montent avec le nombre de Mémoriaux ravivés. À concevoir (fiche, motifs d'attaque, place dans le calendrier) avant toute production.
+
 | Famille | Transformation candidate | Fenêtre de réponse |
 |---|---|---|
 | Chargeurs | Brute : deux charges annoncées avec changement d’angle, puis fatigue | Esquive et punition après la seconde |
@@ -172,7 +174,7 @@ L’idée « une version boss de chaque type » est à examiner comme une gamme,
 
 ### « Les mobs avancent successivement » : deux sujets séparés
 
-Clarification demandée et encore en attente au moment de rédaction. Ne pas présenter une des interprétations comme déjà validée.
+**Fermé le 4 octobre 2026** : Raphaël juge le sujet plus d'actualité ([DECISIONS §62](DECISIONS.md)). Les deux pistes ci-dessous restent pour mémoire, sans lot.
 
 - **Si le problème est une arrivée en file :** ProcessMelee poursuit directement le joueur ; le masque actuel ne fait pas collision entre ennemis. Filmer les trajectoires avant d’accuser les collisions. Prototyper une interception légère sur certains rôles, une séparation locale bornée et des approches par côtés, sans encercler instantanément le spawn. Mesurer coût avec cache spatial et 100+ ennemis.
 - **Si la demande est une introduction progressive des types :** PickEnemyForPosition sélectionne selon biome/phase, pas selon une chronologie fine des familles. Ajouter une table données temps actif/phase → rôles admissibles/poids/maximum simultané. Exemple à tester : poursuivant et menace simple dès le début ; charge/tir tôt ; contrôle/soutien ensuite ; Résurgent à la crise. Le début doit déjà obliger à agir, conformément à 03.
