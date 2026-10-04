@@ -1,0 +1,167 @@
+using System;
+using System.Text.Json;
+using Godot;
+
+namespace Vestiges.Infrastructure;
+
+/// <summary>
+/// Réglages de l'Indicible (plan 26 Q6b), lus depuis <c>data/scaling/indicible.json</c> et contrôlés en entier :
+/// une configuration invalide est refusée avec un message qui nomme le champ, plutôt que jouée avec un secours.
+/// Le rythme, le couloir et les bords changent le combat ; la section <c>decor</c> ne change que l'image.
+/// </summary>
+public sealed class IndicibleConfig
+{
+	private const string ConfigPath = "res://data/scaling/indicible.json";
+	private static IndicibleConfig _cached;
+
+	public float EnrageHpRatio { get; private init; }
+	public float TentacleInterval { get; private init; }
+	public float FirstAttackRatio { get; private init; }
+	public float EnragedIntervalRatio { get; private init; }
+	public int TentacleCount { get; private init; }
+	public int EnragedTentacleCount { get; private init; }
+	public float WarningDuration { get; private init; }
+	public float TentacleWidth { get; private init; }
+	public float TentacleLength { get; private init; }
+	public float TargetJitter { get; private init; }
+	public float EdgeSpread { get; private init; }
+	public float EdgeHalfLength { get; private init; }
+	public float EdgeHalfThickness { get; private init; }
+	public int EyeCount { get; private init; }
+	public float EyeSpread { get; private init; }
+	public float EyeOffset { get; private init; }
+	public float EyeFirstShift { get; private init; }
+	public float EyeShiftInterval { get; private init; }
+	public float EyeShiftDuration { get; private init; }
+	public float StrikeVisualDuration { get; private init; }
+
+	/// <summary>
+	/// Configuration du jeu, lue une fois. Faux, avec la raison, si elle est absente ou invalide : le boss n'apparaît
+	/// alors pas (<c>EndgameManager</c> le signale au début de la run) plutôt que de jouer avec des valeurs inventées.
+	/// </summary>
+	public static bool TryLoad(out IndicibleConfig config, out string error)
+	{
+		if (_cached != null)
+		{
+			config = _cached;
+			error = null;
+			return true;
+		}
+		using FileAccess file = FileAccess.Open(ConfigPath, FileAccess.ModeFlags.Read);
+		if (file == null)
+		{
+			config = null;
+			error = $"{ConfigPath} absent";
+			return false;
+		}
+		if (!TryParse(file.GetAsText(), out config, out string parseError))
+		{
+			error = $"{ConfigPath} : {parseError}";
+			return false;
+		}
+		_cached = config;
+		error = null;
+		return true;
+	}
+
+	public static bool TryParse(string json, out IndicibleConfig config, out string error)
+	{
+		config = null;
+		try
+		{
+			using JsonDocument document = JsonDocument.Parse(json);
+			Reader reader = new(document.RootElement);
+			JsonElement tentacles = reader.Section("tentacles");
+			JsonElement edges = reader.Section("edges");
+			JsonElement decor = reader.Section("decor");
+			IndicibleConfig parsed = new()
+			{
+				EnrageHpRatio = reader.Ratio(document.RootElement, "enrage_hp_ratio"),
+				TentacleInterval = reader.Positive(tentacles, "interval_sec"),
+				FirstAttackRatio = reader.Ratio(tentacles, "first_attack_ratio"),
+				EnragedIntervalRatio = reader.Ratio(tentacles, "enraged_interval_ratio"),
+				TentacleCount = reader.Count(tentacles, "count"),
+				EnragedTentacleCount = reader.Count(tentacles, "enraged_count"),
+				WarningDuration = reader.Positive(tentacles, "warning_sec"),
+				TentacleWidth = reader.Positive(tentacles, "width"),
+				TentacleLength = reader.Positive(tentacles, "length"),
+				TargetJitter = reader.NonNegative(tentacles, "target_jitter"),
+				EdgeSpread = reader.Positive(edges, "spread"),
+				EdgeHalfLength = reader.Positive(edges, "half_length"),
+				EdgeHalfThickness = reader.Positive(edges, "half_thickness"),
+				EyeCount = reader.Count(decor, "eye_count"),
+				EyeSpread = reader.Positive(decor, "eye_spread"),
+				EyeOffset = reader.NonNegative(decor, "eye_offset"),
+				EyeFirstShift = reader.Positive(decor, "eye_first_shift_sec"),
+				EyeShiftInterval = reader.Positive(decor, "eye_shift_interval_sec"),
+				EyeShiftDuration = reader.Positive(decor, "eye_shift_sec"),
+				StrikeVisualDuration = reader.Positive(decor, "strike_visual_sec"),
+			};
+			error = reader.Error;
+			config = error == null ? parsed : null;
+			return error == null;
+		}
+		catch (JsonException ex)
+		{
+			error = $"JSON illisible : {ex.Message}";
+			return false;
+		}
+	}
+
+	/// <summary>Lecture qui retient la première erreur ; les lectures suivantes rendent 0 sans la masquer.</summary>
+	private sealed class Reader
+	{
+		private const int MaxCount = 32;
+		private readonly JsonElement _root;
+		public string Error { get; private set; }
+
+		public Reader(JsonElement root)
+		{
+			_root = root;
+			if (root.ValueKind != JsonValueKind.Object)
+				Error = "objet attendu à la racine";
+		}
+
+		public JsonElement Section(string name)
+		{
+			if (Error == null && (!_root.TryGetProperty(name, out JsonElement section) || section.ValueKind != JsonValueKind.Object))
+				Error = $"section {name} absente";
+			return Error == null ? _root.GetProperty(name) : default;
+		}
+
+		public float Positive(JsonElement owner, string key) => Number(owner, key, value => value > 0f, "strictement positif attendu");
+		public float NonNegative(JsonElement owner, string key) => Number(owner, key, value => value >= 0f, "positif ou nul attendu");
+		public float Ratio(JsonElement owner, string key) => Number(owner, key, value => value > 0f && value <= 1f, "part dans ]0 ; 1] attendue");
+
+		/// <summary>Nombre de tentacules ou d'yeux : entier de 1 à <see cref="MaxCount"/>, au-delà la boucle d'attaque s'emballerait.</summary>
+		public int Count(JsonElement owner, string key)
+		{
+			float value = Number(owner, key, number => number >= 1f && number <= MaxCount && number == Mathf.Floor(number),
+				$"entier de 1 à {MaxCount} attendu");
+			return (int)value;
+		}
+
+		private float Number(JsonElement owner, string key, Func<float, bool> valid, string expectation)
+		{
+			if (Error != null)
+				return 0f;
+			if (owner.ValueKind != JsonValueKind.Object || !owner.TryGetProperty(key, out JsonElement element))
+			{
+				Error = $"{key} absent";
+				return 0f;
+			}
+			if (element.ValueKind != JsonValueKind.Number || !element.TryGetDouble(out double number) || !double.IsFinite(number))
+			{
+				Error = $"{key} : nombre fini attendu";
+				return 0f;
+			}
+			float value = (float)number;
+			if (!valid(value))
+			{
+				Error = $"{key} : {value} ({expectation})";
+				return 0f;
+			}
+			return value;
+		}
+	}
+}

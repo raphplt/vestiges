@@ -1,0 +1,31 @@
+{
+  "_doc": "Réglages de l'Indicible (plan 26 Q6b), lus par Infrastructure/IndicibleConfig. PV et dégâts d'un tentacule : data/enemies/indicible.json ; apparition et multiplicateurs : crises.json ; récompense : score.json. « tentacles » et « edges » changent le combat (zones de touche) ; « decor » ne change que l'image.",
+  "enrage_hp_ratio": 0.5,
+  "tentacles": {
+    "_doc": "Cadence en secondes ; la première attaque et la cadence enragée sont des parts de la cadence. Le couloir est mesuré au sol : on est touché à moins de « width » de son axe, long de « length ».",
+    "interval_sec": 2.5,
+    "first_attack_ratio": 0.3,
+    "enraged_interval_ratio": 0.6,
+    "count": 2,
+    "enraged_count": 3,
+    "warning_sec": 0.8,
+    "width": 30,
+    "length": 120,
+    "target_jitter": 60
+  },
+  "edges": {
+    "_doc": "Quatre bords autour du point d'apparition, qui reçoivent les projectiles du joueur.",
+    "spread": 350,
+    "half_length": 200,
+    "half_thickness": 40
+  },
+  "decor": {
+    "eye_count": 5,
+    "eye_spread": 330,
+    "eye_offset": 150,
+    "eye_first_shift_sec": 1,
+    "eye_shift_interval_sec": 3,
+    "eye_shift_sec": 1.2,
+    "strike_visual_sec": 0.4
+  }
+}

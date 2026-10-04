@@ -12,20 +12,10 @@ namespace Vestiges.Combat;
 /// </summary>
 public partial class Indicible : Node2D
 {
-	private const float TentacleInterval = 2.5f;
-	private const float TentacleWarningDuration = 0.8f;
-	private const float TentacleDamage = 15f;
-	private const float TentacleWidth = 30f;
-	private const float EyeShiftInterval = 3f;
-	private const float EdgeOffset = 40f;
-	private const int MaxTentacles = 3;
-	private const int EyeCount = 5;
-	private const int ScoreReward = 5000;
-
+	private IndicibleConfig _config;
+	private float _tentacleDamage;
 	private float _maxHp;
 	private float _currentHp;
-	private float _hpScale;
-	private float _dmgScale;
 	private float _tentacleTimer;
 	private float _eyeShiftTimer;
 	private bool _isDying;
@@ -48,20 +38,27 @@ public partial class Indicible : Node2D
 		AddToGroup("indicible");
 	}
 
-	public void Initialize(float hpScale, float dmgScale, Vector2 arenaAnchor)
+	/// <summary>Faux si la configuration ou la fiche manquent : le boss se retire aussitôt, sans entrer en jeu.</summary>
+	public bool Initialize(float hpScale, float dmgScale, Vector2 arenaAnchor)
 	{
-		_hpScale = hpScale;
-		_dmgScale = dmgScale;
 		_arenaAnchor = arenaAnchor;
 
+		// Réglages et fiche contrôlés au début de la run (EndgameManager) : ici, ils sont lus sans secours.
 		EnemyData data = EnemyDataLoader.Get("indicible");
-		_maxHp = (data?.Stats.Hp ?? 2000f) * hpScale;
+		if (!IndicibleConfig.TryLoad(out _config, out string error) || data == null)
+		{
+			GD.PushError($"[Indicible] Le boss n'apparaît pas : {error ?? "fiche data/enemies/indicible.json absente"}.");
+			QueueFree();
+			return false;
+		}
+		_maxHp = data.Stats.Hp * hpScale;
+		_tentacleDamage = data.Stats.Damage * dmgScale;
 		_currentHp = _maxHp;
 		_isActive = true;
 		_isDying = false;
 		_phase = 1;
-		_tentacleTimer = TentacleInterval * 0.3f;
-		_eyeShiftTimer = 1f;
+		_tentacleTimer = _config.TentacleInterval * _config.FirstAttackRatio;
+		_eyeShiftTimer = _config.EyeFirstShift;
 
 		GlobalPosition = arenaAnchor;
 
@@ -70,6 +67,7 @@ public partial class Indicible : Node2D
 
 		_eventBus.EmitSignal(EventBus.SignalName.EnemySpawned, "indicible", hpScale, dmgScale);
 		GD.Print($"[Indicible] L'Indicible émerge... (HP: {_maxHp:F0})");
+		return true;
 	}
 
 	public override void _Process(double delta)
@@ -84,7 +82,7 @@ public partial class Indicible : Node2D
 		float dt = (float)delta;
 
 		// Phase enragée à 50% HP
-		if (_phase == 1 && _currentHp <= _maxHp * 0.5f)
+		if (_phase == 1 && _currentHp <= _maxHp * _config.EnrageHpRatio)
 		{
 			_phase = 2;
 			EnterEnragedPhase();
@@ -93,17 +91,17 @@ public partial class Indicible : Node2D
 		_tentacleTimer -= dt;
 		if (_tentacleTimer <= 0f)
 		{
-			int tentacleCount = _phase == 2 ? MaxTentacles : 2;
+			int tentacleCount = _phase == 2 ? _config.EnragedTentacleCount : _config.TentacleCount;
 			for (int i = 0; i < tentacleCount; i++)
 				SpawnTentacleAttack();
-			_tentacleTimer = _phase == 2 ? TentacleInterval * 0.6f : TentacleInterval;
+			_tentacleTimer = _phase == 2 ? _config.TentacleInterval * _config.EnragedIntervalRatio : _config.TentacleInterval;
 		}
 
 		_eyeShiftTimer -= dt;
 		if (_eyeShiftTimer <= 0f)
 		{
 			ShiftEyes();
-			_eyeShiftTimer = EyeShiftInterval;
+			_eyeShiftTimer = _config.EyeShiftInterval;
 		}
 
 		PulseEdgePresence(dt);
@@ -126,7 +124,6 @@ public partial class Indicible : Node2D
 	private void BuildEdgePresence()
 	{
 		Color darkColor = new(0.1f, 0.04f, 0.18f, 0.7f);
-		float segmentLength = 200f;
 
 		// 4 segments de bord (haut, bas, gauche, droite)
 		for (int edge = 0; edge < 4; edge++)
@@ -134,8 +131,8 @@ public partial class Indicible : Node2D
 			Node2D segment = new();
 			Polygon2D body = new();
 
-			float w = edge < 2 ? segmentLength : EdgeOffset;
-			float h = edge < 2 ? EdgeOffset : segmentLength;
+			float w = edge < 2 ? _config.EdgeHalfLength : _config.EdgeHalfThickness;
+			float h = edge < 2 ? _config.EdgeHalfThickness : _config.EdgeHalfLength;
 
 			body.Polygon = new Vector2[]
 			{
@@ -192,7 +189,7 @@ public partial class Indicible : Node2D
 			return;
 
 		// Position relative au centre de l'arène (sera ajusté par la caméra)
-		float spread = 350f;
+		float spread = _config.EdgeSpread;
 		_edgeSegments[0].Position = new Vector2(0, -spread); // haut
 		_edgeSegments[1].Position = new Vector2(0, spread);  // bas
 		_edgeSegments[2].Position = new Vector2(-spread, 0); // gauche
@@ -202,7 +199,7 @@ public partial class Indicible : Node2D
 	/// <summary>Spawn des yeux sur les bords qui bougent périodiquement.</summary>
 	private void SpawnEyes()
 	{
-		for (int i = 0; i < EyeCount; i++)
+		for (int i = 0; i < _config.EyeCount; i++)
 		{
 			Polygon2D eye = new();
 			float eyeSize = (float)GD.RandRange(4f, 8f);
@@ -240,9 +237,9 @@ public partial class Indicible : Node2D
 
 	private void PlaceEyeOnEdge(Polygon2D eye)
 	{
-		float spread = 330f;
+		float spread = _config.EyeSpread;
 		int edge = (int)(GD.Randi() % 4);
-		float offset = (float)GD.RandRange(-150f, 150f);
+		float offset = (float)GD.RandRange(-_config.EyeOffset, _config.EyeOffset);
 
 		eye.Position = edge switch
 		{
@@ -266,7 +263,7 @@ public partial class Indicible : Node2D
 			eye.Position = newPos;
 
 			Tween tween = eye.CreateTween();
-			tween.TweenProperty(eye, "position", target, 1.2f)
+			tween.TweenProperty(eye, "position", target, _config.EyeShiftDuration)
 				.SetTrans(Tween.TransitionType.Sine).SetEase(Tween.EaseType.InOut);
 		}
 	}
@@ -279,37 +276,37 @@ public partial class Indicible : Node2D
 
 		// Cible : position du joueur + léger décalage, tiré au sol puis projeté
 		Vector2 targetPos = _player.GlobalPosition + Iso.ToScreen(new Vector2(
-			(float)GD.RandRange(-60f, 60f),
-			(float)GD.RandRange(-60f, 60f)
+			(float)GD.RandRange(-_config.TargetJitter, _config.TargetJitter),
+			(float)GD.RandRange(-_config.TargetJitter, _config.TargetJitter)
 		));
 
 		// Direction au sol depuis un bord aléatoire : le tentacule est couché, sa longueur est une longueur au sol
 		float angle = (float)GD.RandRange(0, Mathf.Tau);
-		float tentacleLength = 120f;
+		float tentacleLength = _config.TentacleLength;
 		Vector2 groundDir = new(Mathf.Cos(angle), Mathf.Sin(angle));
 		Vector2 startPos = targetPos + Iso.ToScreen(groundDir * tentacleLength * 0.5f);
 		Vector2 endPos = targetPos - Iso.ToScreen(groundDir * tentacleLength * 0.5f);
 
 		// Phase 1 : couloir annoncé, qui se remplit jusqu'à la frappe
 		Vector2 dir = -groundDir;
-		PlayTentacleLane(startPos, dir, tentacleLength, FxFamily.Blood, TentacleWarningDuration, 0.2f, 0f);
+		PlayTentacleLane(startPos, dir, tentacleLength, FxFamily.Blood, _config.WarningDuration, 0.2f, 0f);
 
 		// Phase 2 : Après le warning, la tentacule frappe
-		float damage = TentacleDamage * _dmgScale;
-		GetTree().CreateTimer(TentacleWarningDuration).Timeout += () =>
+		float damage = _tentacleDamage;
+		GetTree().CreateTimer(_config.WarningDuration).Timeout += () =>
 		{
 			if (_isDying || !_isActive)
 				return;
 
 			// Tentacule : couloir plein d'iridescent qui se défait en trame
-			PlayTentacleLane(startPos, dir, tentacleLength, FxFamily.Void, 0.4f, 1f, 0.5f);
+			PlayTentacleLane(startPos, dir, tentacleLength, FxFamily.Void, _config.StrikeVisualDuration, 1f, 0.5f);
 			Infrastructure.AudioManager.Play("sfx_boss_tentacle", 0.04f, -5f);
 
 			// Dégâts au joueur s'il est dans la zone
 			if (IsInstanceValid(_player))
 			{
 				float distToLine = Iso.GroundDistanceToSegment(_player.GlobalPosition, startPos, endPos);
-				if (distToLine < TentacleWidth)
+				if (distToLine < _config.TentacleWidth)
 				{
 					_eventBus.EmitSignal(EventBus.SignalName.PlayerHitBy, "indicible", damage);
 					_player.TakeDamage(damage);
@@ -320,12 +317,12 @@ public partial class Indicible : Node2D
 	}
 
 	/// <summary>Couloir couché au sol : <paramref name="groundDirection"/> et <paramref name="length"/> sont mesurés au sol.</summary>
-	private static void PlayTentacleLane(Vector2 start, Vector2 groundDirection, float length, FxFamily family,
-										 float duration, float fillDensity, float fadeTail)
+	private void PlayTentacleLane(Vector2 start, Vector2 groundDirection, float length, FxFamily family,
+								  float duration, float fillDensity, float fadeTail)
 	{
 		if (CombatPools.Instance == null)
 			return;
-		PixelFxSpec spec = PixelFxSpec.Of(PixelFxShape.Lane, family, length, TentacleWidth, duration);
+		PixelFxSpec spec = PixelFxSpec.Of(PixelFxShape.Lane, family, length, _config.TentacleWidth, duration);
 		spec.Angle = groundDirection.Angle();
 		spec.Squash = Iso.GroundSquash;
 		spec.FillDensity = fillDensity;
@@ -387,7 +384,7 @@ public partial class Indicible : Node2D
 
 		_eventBus.EmitSignal(EventBus.SignalName.EnemyKilled, "indicible", GlobalPosition);
 
-		GD.Print($"[Indicible] L'Indicible est vaincu ! Score: +{ScoreReward}");
+		GD.Print("[Indicible] L'Indicible est vaincu !");
 
 		// Désintégration des bords et des yeux
 		foreach (Polygon2D eye in _eyes)

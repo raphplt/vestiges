@@ -1,6 +1,7 @@
 using Godot;
 using Vestiges.Combat;
 using Vestiges.Core;
+using Vestiges.Infrastructure;
 using Vestiges.World;
 
 namespace Vestiges.Events;
@@ -30,6 +31,8 @@ public partial class EndgameManager : Node
 	private bool _bossSpawned;
 	private bool _bossDefeated;
 	private bool _endgameReached;
+	/// <summary>Raison pour laquelle le boss ne peut pas apparaître (réglages ou fiche invalides) ; null s'il le peut.</summary>
+	private string _bossUnavailable;
 	private Indicible _indicible;
 
 	public bool IsLateGameReached => _lateGameReached;
@@ -48,6 +51,15 @@ public partial class EndgameManager : Node
 
 		_eventBus.EnemyKilled += OnEnemyKilled;
 		_eventBus.CrisisStarted += OnCrisisStarted;
+
+		// Contrôlés dès le début de la run : une faute de réglage du boss se voit au chargement, pas à 22 minutes.
+		// Le reste de la run se joue ; seuls le boss et la fin de partie qu'il ouvre sont retirés.
+		if (!IndicibleConfig.TryLoad(out _, out string error))
+			_bossUnavailable = error;
+		else if (EnemyDataLoader.Get("indicible") == null)
+			_bossUnavailable = "fiche data/enemies/indicible.json absente";
+		if (_bossUnavailable != null)
+			GD.PushError($"[EndgameManager] L'Indicible n'apparaîtra pas pendant cette run : {_bossUnavailable}.");
 	}
 
 	public override void _ExitTree()
@@ -68,7 +80,7 @@ public partial class EndgameManager : Node
 		CachePlayer();
 		UpdateLateGameState();
 
-		if (!_bossSpawned && !_bossDefeated && ShouldForceBoss())
+		if (!_bossSpawned && !_bossDefeated && _bossUnavailable == null && ShouldForceBoss())
 			SpawnIndicible();
 	}
 
@@ -107,7 +119,11 @@ public partial class EndgameManager : Node
 
 		_indicible = new Indicible { Name = "IndicibleBoss" };
 		GetParent().AddChild(_indicible);
-		_indicible.Initialize(_bossHpScale, _bossDmgScale, _player.GlobalPosition);
+		if (!_indicible.Initialize(_bossHpScale, _bossDmgScale, _player.GlobalPosition))
+		{
+			_bossUnavailable = "initialisation refusée";
+			return;
+		}
 
 		_bossSpawned = true;
 		_lateGameReached = true;

@@ -198,6 +198,24 @@ Migrer les cadences, dégâts, dimensions de zones dangereuses, seuils de phase 
 
 **Sortie :** la configuration initiale donne exactement les valeurs actuelles ; réglages invalides rejetés ; séquences, dégâts et récompense vérifiés dans un scénario de boss, puis capture en run. Le lot ne redessine pas le boss ni ne change ses phases.
 
+**Découpage d'exécution Q6b, 4 octobre.** Relevé dans `Combat/Indicible.cs` :
+- **Constantes de combat :** cadence des tentacules 2,5 s, première attaque à 30 % de la cadence, cadence enragée à 60 % ; 2 tentacules par attaque, 3 enragé ; annonce 0,8 s ; largeur 30 et longueur 120 du couloir, qui servent aussi au test de touche ; cible tirée à ±60 autour du joueur ; enragé à 50 % des PV ; dégâts 15.
+- **Constantes de position :** les bords (demi-longueur 200, demi-épaisseur 40, à 350 du centre) sont à la fois le décor et les zones qui reçoivent les projectiles.
+- **Constantes décoratives :** yeux (5, à 330 du centre, ±150, déplacés toutes les 3 s en 1,2 s), excroissances, couleurs, durée du couloir qui frappe (0,4 s), fondus de mort.
+- **Doublons :** `data/enemies/indicible.json` déclare déjà 15 de dégâts sans que personne ne les lise ; les PV en ont un secours de 2 000 écrit dans le code ; `ScoreReward` (5 000) ne sert qu'au message de journal, la vraie récompense étant dans `score.json`.
+
+1. **Configuration :** `data/scaling/indicible.json` porte le rythme, les nombres, le seuil d'enrage, le couloir (dimensions de touche), les bords (dimensions des zones touchables) et, à part, les réglages décoratifs. `IndicibleConfig` la lit et la contrôle (bornes, entiers, sections), et refuse une configuration invalide avec un message précis, dès le début de la run (`EndgameManager._Ready`).
+2. **Une source par valeur :** les PV et les dégâts viennent de la fiche `indicible.json`, sans secours ; la récompense reste dans `score.json`, et le journal la lit là.
+3. **Ni algorithme, ni mise en scène, ni phases ne changent.**
+4. **Vérification :** scène `IndicibleRegression` avec configuration lue égale aux constantes actuelles, configurations invalides refusées, scénario de boss (première attaque, rythme normal puis enragé, nombre de tentacules, dégâts reçus, récompense de 5 000 points à la mort), puis capture `--capture-endgame` regardée.
+
+**Q6b livré et vérifié, 4 octobre.**
+- **Code :** `data/scaling/indicible.json` et `IndicibleConfig` portent le rythme, les nombres de tentacules, l'enrage, le couloir et les bords (ce qui touche) et, à part, le décor. `Indicible.cs` n'a plus de constante de combat. Les PV et les dégâts viennent de la fiche `indicible.json`, sans secours ; `ScoreReward`, qui ne servait qu'au journal, est retiré (la récompense reste dans `score.json`). Algorithmes, mise en scène et phases inchangés.
+- **Configuration invalide :** refusée avec le champ en cause (section ou réglage absent, valeur nulle, négative, non finie, non entière, part hors de ]0 ; 1], nombre au-delà de 32). Elle est détectée au début de la run par `EndgameManager`, qui le dit et retire seulement le boss ; le reste de la run se joue.
+- **Vérifié :** `tools/test_indicible.sh` (suite `indicible`), 47 contrôles. Configuration lue égale aux 20 constantes d'avant ; 8 configurations invalides refusées ; combat scripté : première attaque à 0,75 s, puis 2,5 s, enragé 1,5 s ; 2 puis 3 tentacules par attaque ; dégâts 15 × multiplicateur ; +5 000 points à la mort. `tools/validate.sh` sur smoke, indicible, movement-integration, music, choice_screen et launchers, **6/6**. Capture `--capture-endgame` avant/après au même seed : même résultat (6 400 PV, boss vaincu, endgame), même image au cadrage près ([avant/après](../audits/qualite-2026-10-02/q6b/avant-apres-endgame.png)).
+- **Relecture `godot-reviewer` :** valeurs identiques à l'ancien code, ligne à ligne. Corrigés : l'exception au chargement rendait la fin de partie inerte en silence, remplacée par un refus explicite ; état « boss apparu » faux si la fiche manque ; plafond des nombres ; chargement du barème retiré du journal de mort.
+- **Constat hors lot, à trancher :** dans la capture, en 40 s de combat, l'Indicible ne perd aucun PV et ne touche jamais le joueur. Cause probable, non mesurée : les tirs visent son centre, là où il n'y a rien à toucher, puisque ses zones touchables sont les quatre bords à 350 px. Son apparence se résume à des rectangles sombres. Q6b ne le redessine pas ; question ouverte au tableau de bord.
+
 ### Q6c — Déclarer les relations de contenu et les capacités ennemies
 
 Constats : retour §54, F12. Plan associé : 07.
@@ -301,7 +319,7 @@ Pour clore un lot :
 - [ ] Q4 — Chargement observé et récupérable.
 - [x] Q5 — Motifs d'attaque typés.
 - [x] Q6a — Effets et paramètres des armes explicites.
-- [ ] Q6b — Réglages du boss dans les données.
+- [x] Q6b — Réglages du boss dans les données.
 - [ ] Q6c — Relations et capacités ennemies validées.
 - [ ] Q7 — Autres catalogues validés, compte rendu par famille.
 - [ ] Q8a — Verrouillage sur une vie d'ennemi.
@@ -318,4 +336,4 @@ Pour clore un lot :
 - [ ] Q13 — Provenance du son de level-up résolue.
 - [ ] Q14 — Documentation active et restes V1 repris.
 
-**Prochain lot recommandé : Q6b** (réglages du boss dans les données) ou Q3 (Steam) ; Q2a, Q2b et Q6a sont livrés le 4 octobre.
+**Prochain lot recommandé : Q6c** (relations de contenu et capacités ennemies) ou Q3 (Steam) ; Q2a, Q2b, Q6a et Q6b sont livrés le 4 octobre.
