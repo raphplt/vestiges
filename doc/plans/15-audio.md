@@ -231,3 +231,10 @@ Voir [DECISIONS §66](DECISIONS.md). Faits : cri du Hurleur retiré ; sons d'att
 2. **Mixage** (A3) : 12 sons par seconde et 64 voix coupées par minute relevés en A0. Priorités entre familles (joueur, créatures, monde, interface).
 3. **Sons manquants** : relevé par écoute d'une run enregistrée (`tools/record_run_audio.sh`).
 4. **Musiques et ambiance** : plus tard, à la demande de Raphaël.
+
+**Cri du Hurleur, essai de synthèse (4 octobre, soir).** `tools/generate_hurleur_cry.py <dossier>` produit trois variantes, sans rien brancher dans le jeu. Toutes sont une voix synthétique (voyelle « ou » vers « o », vibrato, souffle, réverbération), filtrées sous 3,5 kHz, crête à −6 dBFS :
+- A, plainte : 2,5 s, −12,8 LUFS ;
+- B, appel en deux élans : 2,5 s, −14,7 LUFS ;
+- C, chœur grave désaccordé : 2,9 s, −15,6 LUFS.
+
+Les fichiers sont dans `~/Téléchargements/vestiges-hurleur-cri/`. Spectres vérifiés (rien d'aigu), aucune écoute faite par Claude. Si Raphaël en retient une : la copier dans `assets/audio/sfx/creatures/`, l'ajouter à la banque avec un volume bas, la remettre dans `cry_audio` du Hurleur, puis l'écouter en run.
