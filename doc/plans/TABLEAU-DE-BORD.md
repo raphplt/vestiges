@@ -31,13 +31,14 @@ Le [registre](DECISIONS.md) garde les mots de Raphaël. Les plans gardent le dé
 |---|---|---|
 | Bestiaire | 07 | « Mobs successifs » fermé (§62). La Barrière, boss intermédiaire, gardée : fiche à concevoir **avec la reprise de l'Indicible** (§64). |
 | Direction artistique | 08, 25 | Personnages joués validés provisoirement (§62) ; retouches possibles plus tard. |
-| Lore | 19 | Script v1.1 **validé comme base** (§62), ajouts, fins, objets, Montée, Barrière et Failles tranchés. Restent : nom de Vaulme, les trente et un noms, déclenchement des fins personnelles côté jeu ; **lots de production proposés** au [plan 19 §15](19-lore.md#15-lots-de-production-proposés--4-octobre-à-valider) (L1 ton des textes, L2 documents, L3 première fin avec le Vagabond, puis L4–L7), avec ces trois points en options : Vaulme gardé, liste des trente et un validée, fin déclenchée par un fil et un geste (recommandés). À valider. |
+| Lore | 19 | **Lots L1 à L7 validés (§65)**, avec Vaulme, la liste des trente et un et la fin déclenchée par un fil et un geste. Prochain : L1 (ton des textes existants). |
 | Audio | 15 | Planche de la Résurgence **pas encore écoutée** (`xdg-open ~/.local/share/vestiges-audio/2026-10-01/planche-resurgence.html`) ; écoute en run et choix restants ; chantier élargi à toute l'identité sonore, avec les Résurgences comme premier cas proposé (§44). |
 | Réveil du Mémorial et de la Faille | 24 L6b, 15 | Durée gardée ; son à changer (§49), à traiter avec l'audio |
 | Classement | 09 | Toutes les décisions, plus tard. Weekly gardé pour toutes les runs, un tableau par semaine (§64, livré par Q3). Steam réel : App ID du jeu à obtenir par Raphaël quand il le souhaite |
 | Audio, classement | 15, 09 | L'audio reprend après l'écoute de la planche ; mort et bilan validés pour l'instant (§62), retouches d'affichage possibles |
-| L'Indicible ne se combat pas vraiment | 07, [mesure](../audits/indicible-2026-10-04/README.md) | **Mesuré le 4 octobre** : il ne peut pas être blessé. Ses bords touchables sont à 310–390 px du centre, les armes portent à 120–180 px et visent son centre ; mêlée, orbite et cône ne le voient pas. Ses tentacules touchent un joueur immobile, jamais un joueur qui bouge. Reprise à concevoir avec la Barrière (§64) : bords ciblables (A), un cœur touchable (B) ou refonte complète (C) ? |
-| Bonus de dégâts de la meute | 26 Q6c | `pack_bonus_damage` (0,15 au Charognard) n'a jamais été appliqué : la meute ne fait qu'accélérer. Le brancher (dégâts +15 % par voisin, jusqu'à 5), ou le retirer ? |
+| L'Indicible | 07, [mesure](../audits/indicible-2026-10-04/README.md) | **Décidé (§65) : le refaire entièrement**, avec la Barrière. Fiche commune à concevoir au plan 07 (silhouette, phases, zones touchables que les armes voient, attaques qui punissent aussi le joueur qui bouge). |
+| Synergies | 05, 21 | « Les implémenter » (§65), après réexplication : les six anciennes synergies venaient des Dons retirés (G2b). Ce qui est envisagé reste à lui présenter. |
+| Steam | 26 Q3, Q12 | App ID du jeu à obtenir (marche à suivre donnée le 4 octobre) ; test réel des classements ensuite. |
 | Points à vérifier en jeu | `A-VERIFIER.md` | 55 cases non cochées ; Raphaël les coche en jouant (§64) |
 
 ## 3. Validé, pas encore fait

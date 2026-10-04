@@ -796,3 +796,17 @@ Après Q2a, Q2b, Q6a et Q6b, Raphaël : « oui ca me va Q3 et Q6 ». Lots suivan
 - **Audio :** reste ouvert, Raphaël écoute la planche de la Résurgence quand il veut.
 - **Lore :** après Q6c, proposer au plan 19 les lots de production (textes, objets, fins, Montée) avec le nom de Vaulme, les trente et un noms et le déclenchement des fins personnelles en options.
 - **A-VERIFIER.md :** Raphaël coche les points en jouant.
+
+## 65. Décisions du soir — 4 octobre 2026
+
+Raphaël, sur la liste des points en attente :
+- **L'Indicible :** « le refaire entièrement » (piste C de la mesure, plan 07), à concevoir avec la Barrière.
+- **Bonus de dégâts de la meute** (`pack_bonus_damage`, jamais appliqué) : **retiré**.
+- **Lore :** les lots L1 à L7 du plan 19 §15 sont **validés**, ainsi que les trois points ouverts tels que recommandés : **Vaulme gardé**, **liste des trente et un validée**, **fin personnelle déclenchée par un fil complet et un geste en run** (option A).
+- **Synergies de perks :** « les implémenter », mais **après réexplication** de ce dont il s'agit et de ce qui est envisagé. Point de départ : les six synergies d'origine appartenaient aux anciens Dons, retirés au plan 21 G2b ; DECISIONS §39 demande que les objets n'annoncent pas leurs synergies. À reformuler avant tout code.
+- **Arme en main** (option d'essai des Graphismes) : **abandonnée**.
+- **Barème des points d'intérêt** (`pois.json`, 25 à 300 points selon le type, 50 partout en jeu) : **à brancher**.
+- **Taille du texte** (115 et 130 %) : **retirée**.
+- **Ornières du tracteur embourbé :** laissées au choix de Claude, gardées telles quelles.
+- **Steam :** Raphaël demande la marche à suivre pour obtenir l'App ID et faire le test réel.
+- **Audio :** la commande d'ouverture de la planche avait pris le point final de la phrase ; la planche existe bien.
