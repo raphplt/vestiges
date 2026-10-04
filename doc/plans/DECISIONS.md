@@ -781,3 +781,7 @@ Raphaël : « stylisé ou grosse tete j'aime bcp il y a qq chose à faire. pour 
   - **La Barrière**, boss intermédiaire, est gardée, à concevoir (plan 07).
   - **Failles (P7) :** le profil compte les Failles acceptées et quelques détails changent (une ligne de document, un murmure). Jamais punitif, sans effet sur les fins.
 - **Chantier de la session :** Q2a puis Q2b (sauvegardes protégées, fin de run attribuée une seule fois), plan 26.
+
+## 63. Suite du plan 26 — 4 octobre 2026
+
+Après Q2a, Q2b, Q6a et Q6b, Raphaël : « oui ca me va Q3 et Q6 ». Lots suivants validés : **Q3** (opérations Steam) et **Q6c** (relations de contenu et capacités ennemies), à mener dans une nouvelle conversation. Les questions de l'Indicible (« ne se combat pas vraiment ») et de `essence_cost_per_attack` restent ouvertes au tableau de bord.
