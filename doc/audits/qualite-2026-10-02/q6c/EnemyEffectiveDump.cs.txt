@@ -1,0 +1,92 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using Godot;
+using Vestiges.Combat;
+using Vestiges.Infrastructure;
+using Vestiges.Spawn;
+
+namespace Vestiges.Tests;
+
+/// <summary>
+/// Plan 26 Q6c, relevé temporaire : valeurs que le combat lit pour chaque ennemi, secours compris (champs de Enemy et de
+/// ses capacités après Initialize). Les minuteurs tirés au hasard sont exclus. Sortie : fichier désigné par DUMP_PATH.
+/// </summary>
+public partial class EnemyEffectiveDump : Node
+{
+	private const BindingFlags Fields = BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public;
+	private static readonly string[] EnemyFields =
+	{
+		"_enemyType", "_behavior", "_tier", "_packBonusDamage", "_packBonusSpeed", "_packRadius", "_packFamily",
+		"_baseHp", "_baseSpeed", "_damage", "_attackRange", "_xpReward", "_abilityReplacesAttack",
+	};
+
+	public override void _Ready()
+	{
+		List<string> lines = new();
+		PackedScene scene = GD.Load<PackedScene>("res://scenes/enemies/Enemy.tscn");
+		List<string> ids = EnemyDataLoader.GetAllIds();
+		ids.Sort(StringComparer.Ordinal);
+		foreach (string id in ids)
+		{
+			EnemyData data = EnemyDataLoader.Get(id);
+			if (id == "indicible")
+			{
+				lines.Add($"{id} type={Norm(data.CombatType)} behavior={Norm(data.Behavior)} tier={Norm(data.Tier)}");
+				continue;
+			}
+			Enemy enemy = scene.Instantiate<Enemy>();
+			AddChild(enemy);
+			enemy.Initialize(data, 1f, 1f);
+			foreach (string name in EnemyFields)
+			{
+				FieldInfo field = typeof(Enemy).GetField(name, Fields);
+				if (field != null)
+					lines.Add($"{id} {name}={Norm(field.GetValue(enemy))}");
+			}
+			IList abilities = (IList)typeof(Enemy).GetField("_abilities", Fields).GetValue(enemy);
+			foreach (object ability in abilities)
+			{
+				foreach (FieldInfo field in ability.GetType().GetFields(Fields).OrderBy(f => f.Name, StringComparer.Ordinal))
+				{
+					if (field.Name.EndsWith("Timer", StringComparison.Ordinal) || field.Name is "_phase" or "_owner" or "_target")
+						continue;
+					object value = field.GetValue(ability);
+					if (value is null or string or bool or int or float or double or Enum or Color)
+						lines.Add($"{id} {ability.GetType().Name}.{field.Name}={Norm(value)}");
+				}
+			}
+			enemy.QueueFree();
+		}
+		foreach (string name in new[] { "FallbackExplorationPool", "FallbackResurgencePool" })
+		{
+			FieldInfo pool = typeof(SpawnManager).GetField(name, BindingFlags.Static | BindingFlags.NonPublic);
+			if (pool != null)
+				lines.Add($"spawn {name}={string.Join(",", (IEnumerable<string>)pool.GetValue(null))}");
+		}
+		// Après Q6c, les groupes de secours sont dans spawn_flow.json.
+		using (FileAccess flow = FileAccess.Open("res://data/scaling/spawn_flow.json", FileAccess.ModeFlags.Read))
+		{
+			System.Text.Json.JsonElement root = System.Text.Json.JsonDocument.Parse(flow.GetAsText()).RootElement;
+			foreach ((string key, string name) in new[] { ("fallback_exploration_pool", "FallbackExplorationPool"), ("fallback_resurgence_pool", "FallbackResurgencePool") })
+			{
+				if (root.TryGetProperty(key, out System.Text.Json.JsonElement values))
+					lines.Add($"spawn {name}={string.Join(",", values.EnumerateArray().Select(v => v.GetString()))}");
+			}
+		}
+		using FileAccess file = FileAccess.Open(OS.GetEnvironment("DUMP_PATH"), FileAccess.ModeFlags.Write);
+		file.StoreString(string.Join("\n", lines) + "\n");
+		GD.Print($"[EnemyEffectiveDump] RESULT lines={lines.Count}");
+		GetTree().Quit();
+	}
+
+	private static string Norm(object value) => value switch
+	{
+		null => "null",
+		float f => f.ToString("R", System.Globalization.CultureInfo.InvariantCulture),
+		Color c => c.ToHtml(),
+		_ => value.ToString().ToLowerInvariant(),
+	};
+}

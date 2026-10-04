@@ -1,16 +1,21 @@
+using Vestiges.Infrastructure;
+
 namespace Vestiges.Combat.Abilities;
 
+/// <summary>
+/// Registre des capacités composées : une sorte, une classe. Les sortes viennent de <see cref="EnemyGrammar"/> ; une clé
+/// inconnue est refusée au chargement de la fiche, jamais ici.
+/// </summary>
 public static class EnemyAbilityFactory
 {
-    /// <summary>Crée la capacité correspondant à une clé du bloc "abilities", ou null si elle est inconnue.</summary>
-    public static IEnemyAbility Create(string id, Enemy owner) => id switch
+    public static IEnemyAbility Create(EnemyAbilityKind kind, Enemy owner) => kind switch
     {
-        "omen_strike" => new OmenStrikeAbility(owner),
-        "pounce" => new PounceAbility(owner, "PounceMarker"),
-        "charge" => new PounceAbility(owner, "ChargeMarker"),
-        "burrow" => new BurrowAbility(owner),
-        "cry" => new CryAbility(owner),
-        "aimed_shot" => new AimedShotAbility(owner),
-        _ => null
+        EnemyAbilityKind.OmenStrike => new OmenStrikeAbility(owner),
+        EnemyAbilityKind.Pounce => new PounceAbility(owner, "PounceMarker"),
+        EnemyAbilityKind.Charge => new PounceAbility(owner, "ChargeMarker"),
+        EnemyAbilityKind.Burrow => new BurrowAbility(owner),
+        EnemyAbilityKind.Cry => new CryAbility(owner),
+        EnemyAbilityKind.AimedShot => new AimedShotAbility(owner),
+        _ => throw new System.ArgumentOutOfRangeException(nameof(kind), kind, "capacité sans classe"),
     };
 }

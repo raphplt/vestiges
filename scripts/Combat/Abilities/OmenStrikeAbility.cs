@@ -56,19 +56,19 @@ public class OmenStrikeAbility : IEnemyAbility
 
     public void Configure(EnemyAbilityData data)
     {
-        _leadSeconds = data.GetNumber("lead_seconds", 1f);
-        _maxLeadDistance = data.GetNumber("max_lead_distance", 240f);
-        _delaySeconds = Mathf.Max(0.1f, data.GetNumber("delay_seconds", 1f));
-        _radius = data.GetNumber("radius", 42f);
-        _hitMargin = data.GetNumber("player_hit_margin", 8f);
-        _cooldownSeconds = data.GetNumber("cooldown_seconds", 2.8f);
-        _castRange = data.GetNumber("cast_range", 320f);
-        _maxSimultaneous = Mathf.Max(1, Mathf.RoundToInt(data.GetNumber("max_simultaneous", 3f)));
-        _damageMultiplier = data.GetNumber("damage_multiplier", 1f);
-        _flashSeconds = data.GetNumber("impact_flash_seconds", 0.15f);
-        _family = PixelPalette.ParseFamily(data.GetText("fx_family", "hostile"), FxFamily.Hostile);
-        _castAudio = data.GetText("cast_audio", "");
-        _impactAudio = data.GetText("impact_audio", "");
+        _leadSeconds = data.Number("lead_seconds");
+        _maxLeadDistance = data.Number("max_lead_distance");
+        _delaySeconds = data.Number("delay_seconds");
+        _radius = data.Number("radius");
+        _hitMargin = data.Number("player_hit_margin");
+        _cooldownSeconds = data.Number("cooldown_seconds");
+        _castRange = data.Number("cast_range");
+        _maxSimultaneous = (int)data.Number("max_simultaneous");
+        _damageMultiplier = data.Number("damage_multiplier");
+        _flashSeconds = data.Number("impact_flash_seconds");
+        _family = PixelPalette.ParseFamily(data.Text("fx_family"), FxFamily.Hostile);
+        _castAudio = data.Text("cast_audio");
+        _impactAudio = data.Text("impact_audio");
 
         Cancel();
         _eyeSet = ProjectileSprites.Get("omen");

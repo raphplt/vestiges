@@ -63,8 +63,8 @@ public partial class EssenceTracker : Node
         EnemyData data = EnemyDataLoader.Get(enemyId);
         int amount = data?.Tier switch
         {
-            "boss" => 8,
-            "elite" => 4,
+            EnemyTier.Boss => 8,
+            EnemyTier.Elite => 4,
             _ => 1
         };
         if (GD.Randf() < ErasureEffectAt(position).EssenceChance)

@@ -12,7 +12,8 @@ using Vestiges.Spawn;
 namespace Vestiges.Tests;
 
 /// <summary>
-/// Banc isolé des capacités ennemies (Présage, bond du Charognard, charge, surgissement, cri) et du retour de coup : vrais Player et Enemy,
+/// Banc isolé des capacités ennemies (Présage, bond du Charognard, charge, surgissement, cri), de la meute, du contrat des fiches
+/// (fichier .Contract.cs) et du retour de coup : vrais Player et Enemy,
 /// ticks pilotés par le banc, recharges forcées pour des scénarios déterministes.
 /// </summary>
 public partial class EnemyAbilityRegression : Node2D
@@ -41,6 +42,8 @@ public partial class EnemyAbilityRegression : Node2D
                     weaponTimer.Stop();
             await ToSignal(GetTree(), SceneTree.SignalName.PhysicsFrame);
 
+            RunContractChecks();
+            await RunPackChecks();
             await RunOmenChecks();
             await RunPounceChecks();
             await RunHitFeedbackChecks();
@@ -66,7 +69,7 @@ public partial class EnemyAbilityRegression : Node2D
         // Fuite en ligne droite : la marque attend le joueur une seconde plus loin.
         Enemy omen = await SpawnReady("presage", new Vector2(-150f, 0f));
         await Flee(Vector2.Right, 10);
-        ForceCooldown(omen, "omen_strike");
+        ForceCooldown(omen, EnemyAbilityKind.OmenStrike);
         Vector2 expected = _player.Position + Vector2.Right * _player.Speed * 1f;
         await Step(1);
         GroundTelegraph marker = omen.GetNode<GroundTelegraph>("OmenMarker");
@@ -82,7 +85,7 @@ public partial class EnemyAbilityRegression : Node2D
         omen = await SpawnReady("presage", new Vector2(-150f, 0f));
         await Flee(Vector2.Right, 10);
         await WaitHurtRecovery();
-        ForceCooldown(omen, "omen_strike");
+        ForceCooldown(omen, EnemyAbilityKind.OmenStrike);
         await Step(20);
         _player.AIInputOverride = Vector2.Down;
         hp = _player.CurrentHp;
@@ -95,7 +98,7 @@ public partial class EnemyAbilityRegression : Node2D
         _player.AIInputOverride = Vector2.Zero;
         await Step(10);
         await WaitHurtRecovery();
-        ForceCooldown(omen, "omen_strike");
+        ForceCooldown(omen, EnemyAbilityKind.OmenStrike);
         hp = _player.CurrentHp;
         await Step(65);
         Check(_player.CurrentHp < hp, "Présage : joueur immobile touché");
@@ -112,12 +115,12 @@ public partial class EnemyAbilityRegression : Node2D
         Despawn(omen);
 
         // Plafond partagé, lu dans les données : deux Présages prêts de plus que le plafond.
-        int cap = Mathf.RoundToInt(EnemyDataLoader.Get("presage").Abilities["omen_strike"].GetNumber("max_simultaneous", 3f));
+        int cap = Mathf.RoundToInt(EnemyDataLoader.Get("presage").Abilities[EnemyAbilityKind.OmenStrike].Number("max_simultaneous"));
         Enemy[] casters = new Enemy[cap + 2];
         for (int i = 0; i < casters.Length; i++)
             casters[i] = await SpawnReady("presage", new Vector2(-150f, -60f + 40f * i));
         foreach (Enemy caster in casters)
-            ForceCooldown(caster, "omen_strike");
+            ForceCooldown(caster, EnemyAbilityKind.OmenStrike);
         await Step(1);
         int visible = 0;
         foreach (Enemy caster in casters)
@@ -146,7 +149,7 @@ public partial class EnemyAbilityRegression : Node2D
 
         // Joueur immobile : l'annonce montre la trajectoire, puis le bond le rattrape.
         Enemy pouncer = await SpawnReady("charognard", new Vector2(-100f, 0f));
-        ForceCooldown(pouncer, "pounce");
+        ForceCooldown(pouncer, EnemyAbilityKind.Pounce);
         Vector2 start = pouncer.Position;
         await Step(1);
         GroundTelegraph marker = pouncer.GetNode<GroundTelegraph>("PounceMarker");
@@ -170,7 +173,7 @@ public partial class EnemyAbilityRegression : Node2D
         _player.Position = Vector2.Zero;
         await WaitHurtRecovery();
         pouncer = await SpawnReady("charognard", new Vector2(-100f, 0f));
-        ForceCooldown(pouncer, "pounce");
+        ForceCooldown(pouncer, EnemyAbilityKind.Pounce);
         await Step(1);
         _player.AIInputOverride = Vector2.Down;
         hp = _player.CurrentHp;
@@ -306,20 +309,20 @@ public partial class EnemyAbilityRegression : Node2D
         _player.AIInputOverride = Vector2.Zero;
         _player.Position = Vector2.Zero;
         await WaitHurtRecovery();
-        EnemyAbilityData charge = EnemyDataLoader.Get("void_brute").Abilities["charge"];
-        float range = charge.GetNumber("trigger_range", 0f);
-        float windupTicks = charge.GetNumber("windup_seconds", 0f) / Dt;
-        float leapTicks = charge.GetNumber("leap_seconds", 0f) / Dt;
-        float expectedSpeed = charge.GetNumber("distance", 0f) / charge.GetNumber("leap_seconds", 1f);
+        EnemyAbilityData charge = EnemyDataLoader.Get("void_brute").Abilities[EnemyAbilityKind.Charge];
+        float range = charge.Number("trigger_range");
+        float windupTicks = charge.Number("windup_seconds") / Dt;
+        float leapTicks = charge.Number("leap_seconds") / Dt;
+        float expectedSpeed = charge.Number("distance") / charge.Number("leap_seconds");
 
         Enemy brute = await SpawnReady("void_brute", new Vector2(range + 150f, 0f));
         GroundTelegraph marker = brute.GetNode<GroundTelegraph>("ChargeMarker");
-        ForceCooldown(brute, "charge");
+        ForceCooldown(brute, EnemyAbilityKind.Charge);
         await Step(2);
         Check(!marker.Visible, $"Charge : hors de portée ({range + 150f:F0} px > {range:F0}), pas d'annonce");
 
         brute.Position = _player.Position + new Vector2(-range * 0.6f, 0f);
-        ForceCooldown(brute, "charge");
+        ForceCooldown(brute, EnemyAbilityKind.Charge);
         await Step(1);
         Check(marker.Visible && brute.Velocity == Vector2.Zero, "Charge : annonce au sol, Brute immobile");
         float hp = _player.CurrentHp;
@@ -338,7 +341,7 @@ public partial class EnemyAbilityRegression : Node2D
         _player.Position = Vector2.Zero;
         await WaitHurtRecovery();
         brute = await SpawnReady("void_brute", new Vector2(-range * 0.6f, 0f));
-        ForceCooldown(brute, "charge");
+        ForceCooldown(brute, EnemyAbilityKind.Charge);
         await Step(1);
         _player.AIInputOverride = Vector2.Down;
         hp = _player.CurrentHp;
@@ -357,13 +360,13 @@ public partial class EnemyAbilityRegression : Node2D
         _player.AIInputOverride = Vector2.Zero;
         _player.Position = Vector2.Zero;
         await WaitHurtRecovery();
-        EnemyAbilityData burrow = EnemyDataLoader.Get("rampant").Abilities["burrow"];
-        int burrowTicks = Mathf.CeilToInt(burrow.GetNumber("burrow_seconds", 0f) / Dt);
-        int warningTicks = Mathf.CeilToInt(burrow.GetNumber("warning_seconds", 0f) / Dt);
+        EnemyAbilityData burrow = EnemyDataLoader.Get("rampant").Abilities[EnemyAbilityKind.Burrow];
+        int burrowTicks = Mathf.CeilToInt(burrow.Number("burrow_seconds") / Dt);
+        int warningTicks = Mathf.CeilToInt(burrow.Number("warning_seconds") / Dt);
 
         Enemy rampant = await SpawnReady("rampant", new Vector2(-20f, 0f));
         GroundTelegraph marker = rampant.GetNode<GroundTelegraph>("BurrowMarker");
-        ForceTimer(rampant, "burrow", "_timer");
+        ForceTimer(rampant, EnemyAbilityKind.Burrow, "_timer");
         await Step(1);
         float hp = _player.CurrentHp;
         float enemyHp = rampant.HpRatio;
@@ -381,7 +384,7 @@ public partial class EnemyAbilityRegression : Node2D
         _player.Position = Vector2.Zero;
         await WaitHurtRecovery();
         rampant = await SpawnReady("rampant", new Vector2(-20f, 0f));
-        ForceTimer(rampant, "burrow", "_timer");
+        ForceTimer(rampant, EnemyAbilityKind.Burrow, "_timer");
         await Step(burrowTicks + 1);
         _player.AIInputOverride = Vector2.Right;
         hp = _player.CurrentHp;
@@ -399,15 +402,15 @@ public partial class EnemyAbilityRegression : Node2D
     {
         EnemyPool pool = new() { Name = "EnemyPool", InitialSize = 0 };
         AddChild(pool);
-        EnemyAbilityData cry = EnemyDataLoader.Get("hurleur").Abilities["cry"];
-        int windupTicks = Mathf.CeilToInt(cry.GetNumber("windup_seconds", 0f) / Dt);
-        int expected = Mathf.RoundToInt(cry.GetNumber("reinforcements", 0f));
+        EnemyAbilityData cry = EnemyDataLoader.Get("hurleur").Abilities[EnemyAbilityKind.Cry];
+        int windupTicks = Mathf.CeilToInt(cry.Number("windup_seconds") / Dt);
+        int expected = Mathf.RoundToInt(cry.Number("reinforcements"));
         _player.Position = Vector2.Zero;
 
         Enemy hurleur = await SpawnReady("hurleur", new Vector2(-150f, 0f));
         GroundTelegraph marker = hurleur.GetNode<GroundTelegraph>("CryMarker");
         int before = CountEnemies();
-        ForceCooldown(hurleur, "cry");
+        ForceCooldown(hurleur, EnemyAbilityKind.Cry);
         await Step(1);
         Check(marker.Visible && hurleur.Velocity == Vector2.Zero, "Hurleur : cri annoncé au sol, créature immobile");
         hurleur.TakeDamage(float.MaxValue);
@@ -419,7 +422,7 @@ public partial class EnemyAbilityRegression : Node2D
 
         hurleur = await SpawnReady("hurleur", new Vector2(-150f, 0f));
         before = CountEnemies();
-        ForceCooldown(hurleur, "cry");
+        ForceCooldown(hurleur, EnemyAbilityKind.Cry);
         await Step(windupTicks + 2);
         int spawned = CountEnemies() - before;
         Check(spawned == expected, $"Hurleur : {spawned} renforts au terme du cri (fiche : {expected})");
@@ -441,11 +444,11 @@ public partial class EnemyAbilityRegression : Node2D
         _player.AIInputOverride = Vector2.Zero;
         _player.Position = Vector2.Zero;
         await WaitHurtRecovery();
-        int windupTicks = Mathf.CeilToInt(EnemyDataLoader.Get("fading_spitter").Abilities["aimed_shot"].GetNumber("windup_seconds", 0f) / Dt);
+        int windupTicks = Mathf.CeilToInt(EnemyDataLoader.Get("fading_spitter").Abilities[EnemyAbilityKind.AimedShot].Number("windup_seconds") / Dt);
 
         Enemy spitter = await SpawnReady("fading_spitter", new Vector2(-150f, 0f));
         GroundTelegraph lane = spitter.GetNode<GroundTelegraph>("AimMarker");
-        ForceCooldown(spitter, "aimed_shot");
+        ForceCooldown(spitter, EnemyAbilityKind.AimedShot);
         await Step(1);
         Check(lane.Visible && spitter.Velocity == Vector2.Zero && ActiveProjectiles(pools).Count == 0,
             "Tir annoncé : couloir de visée, tireur immobile, rien de tiré pendant l'annonce");
@@ -468,7 +471,7 @@ public partial class EnemyAbilityRegression : Node2D
         float range = EnemyDataLoader.Get("wailing_sentinel").Stats.AttackRange;
         Enemy sentinel = await SpawnReady("wailing_sentinel", new Vector2(0f, -range * 0.8f));
         GroundTelegraph ring = sentinel.GetNode<GroundTelegraph>("RangeMarker");
-        ForceCooldown(sentinel, "aimed_shot");
+        ForceCooldown(sentinel, EnemyAbilityKind.AimedShot);
         await Step(2);
         Check(!sentinel.GetNode<GroundTelegraph>("AimMarker").Visible && !ring.Visible,
             $"Sentinelle : à {range * 0.8f:F0} px au nord (soit {range * 1.6f:F0} px au sol), ni visée ni cercle");
@@ -499,10 +502,10 @@ public partial class EnemyAbilityRegression : Node2D
         Enemy recycled = await SpawnReady("hurleur", new Vector2(-150f, 0f));
         recycled.Initialize(EnemyDataLoader.Get("fading_spitter"), 1000f, 1f);
         recycled.SetPhysicsProcess(false);
-        var abilities = (Dictionary<string, IEnemyAbility>)typeof(Enemy)
+        var abilities = (Dictionary<EnemyAbilityKind, IEnemyAbility>)typeof(Enemy)
             .GetField("_abilityCache", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(recycled);
-        IEnemyAbility recycledShot = abilities["aimed_shot"];
-        ForceCooldown(recycled, "aimed_shot");
+        IEnemyAbility recycledShot = abilities[EnemyAbilityKind.AimedShot];
+        ForceCooldown(recycled, EnemyAbilityKind.AimedShot);
         _player.AIInputOverride = Vector2.Zero;
         int launches = 0;
         for (int tick = 0; tick < 180; tick++)
@@ -597,11 +600,11 @@ public partial class EnemyAbilityRegression : Node2D
             enemy.QueueFree();
     }
 
-    private static void ForceCooldown(Enemy enemy, string abilityId) => ForceTimer(enemy, abilityId, "_cooldownTimer");
+    private static void ForceCooldown(Enemy enemy, EnemyAbilityKind abilityId) => ForceTimer(enemy, abilityId, "_cooldownTimer");
 
-    private static void ForceTimer(Enemy enemy, string abilityId, string field)
+    private static void ForceTimer(Enemy enemy, EnemyAbilityKind abilityId, string field)
     {
-        var cache = (Dictionary<string, IEnemyAbility>)typeof(Enemy)
+        var cache = (Dictionary<EnemyAbilityKind, IEnemyAbility>)typeof(Enemy)
             .GetField("_abilityCache", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(enemy);
         IEnemyAbility ability = cache[abilityId];
         ability.GetType().GetField(field, BindingFlags.NonPublic | BindingFlags.Instance).SetValue(ability, 0f);

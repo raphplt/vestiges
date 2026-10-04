@@ -72,6 +72,15 @@ public static class BiomeDataLoader
         }
         dir.ListDirEnd();
 
+        // Groupes d'apparition contrôlés une fois : une créature écartée n'est pas cherchée à chaque tirage.
+        foreach (BiomeData biome in _allBiomes)
+        {
+            foreach (string error in EnemyPools.KeepKnown(biome.ExplorationEnemyPool, $"biome {biome.Id}, exploration_enemy_pool"))
+                GD.PushError($"[BiomeDataLoader] {error}");
+            foreach (string error in EnemyPools.KeepKnown(biome.ResurgenceEnemyPool, $"biome {biome.Id}, resurgence_enemy_pool"))
+                GD.PushError($"[BiomeDataLoader] {error}");
+        }
+
         _loaded = true;
         GD.Print($"[BiomeDataLoader] Loaded {_allBiomes.Count} biomes");
     }

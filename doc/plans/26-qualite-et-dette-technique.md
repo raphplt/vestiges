@@ -1,6 +1,6 @@
 # Plan 26 — Qualité du code et remboursement de la dette technique
 
-2 octobre 2026 · Plan préparé à la demande de Raphaël ([DECISIONS §54](DECISIONS.md)). **Q0, Q1, Q2a, Q2b, Q3, Q5, Q6a et Q6b livrés et vérifiés ; autres lots non commencés.** Référence de diagnostic : [revue du 2 octobre](../audits/qualite-2026-10-02/README.md), ses manifestes et ses journaux.
+2 octobre 2026 · Plan préparé à la demande de Raphaël ([DECISIONS §54](DECISIONS.md)). **Q0 à Q3, Q5 et Q6a à Q6c livrés et vérifiés ; autres lots non commencés.** Référence de diagnostic : [revue du 2 octobre](../audits/qualite-2026-10-02/README.md), ses manifestes et ses journaux.
 
 Objectif : protéger les acquis des joueurs, rendre les validations fiables et permettre de faire évoluer une arme, une créature ou un réglage sans chercher des règles dupliquées dans plusieurs classes. Le travail conserve la direction V2 et les décisions de gameplay actuelles ; il procède par modules et vérifications ciblées.
 
@@ -257,6 +257,85 @@ Rendre explicite l'appartenance à une meute dans les données ; conserver l'ens
 
 **Sortie :** la meute ne dépend plus d'un nom recopié dans son calcul ; une créature configurée avec une capacité existante n'exige pas une nouvelle branche par son ID. Les capacités et le bonus de meute actuels passent leur régression. Les références uniques conservées sont localisées et validées.
 
+**Découpage d'exécution Q6c, 4 octobre.** Relevé sur 13 créatures (`data/enemies/*.json`) :
+- **Meute :** `Enemy.ProcessPackBonus` compte les voisins dont l'identifiant vaut `"charognard"`. Seul le Charognard a le comportement `pack`. `pack_bonus_damage` (0,15) est lu mais jamais appliqué : seule la vitesse change. Les secours sont écrits à l'appel (0,15, 0,10, 120).
+- **Capacités :** `EnemyAbilityFactory` rend `null` pour une clé inconnue, et l'ennemi la perd avec un simple avertissement. Six clés (`omen_strike`, `pounce`, `charge`, `burrow`, `cry`, `aimed_shot`) lisent 59 réglages, chacun avec un secours écrit à l'appel. Le Hurleur appelle des renforts `shade` par défaut. `fx_family` inconnu retombe en silence sur une famille par défaut. Les sons ne sont pas contrôlés.
+- **Grammaire :** `type` (`melee`, `ranged`, `boss`), `behavior` (`default`, `pack`, `sentinel`, `weaver`, `indicible`) et `tier` (`normal`, `elite`, `miniboss`, `boss`) circulent en chaînes dans `Enemy`, `EssenceTracker`, `QuestManager` et `RunTracker`. Une faute de frappe passe sans erreur. Le lecteur parcourt les dictionnaires Godot et n'a aucun contrôle de clé ni de borne.
+- **Identifiants en dur :**
+  - `"indicible"` dans six fichiers : boss final unique, référence légitime.
+  - `"colosse_"` dans `AudioManager` : reste V1, aucune créature ne porte ce préfixe.
+  - Deux listes de secours d'apparition dans `SpawnManager` : six identifiants en dur, quand un biome n'a pas de liste.
+  - Les variantes (`elite`, `champion`, `aberration`) sont nommées dans `Enemy`, `SpawnManager` et `RunTracker` : relève du catalogue des variantes, donc de Q7.
+
+1. **Types :** `EnemyGrammar` (Infrastructure) déclare `EnemyCombatType`, `EnemyBehavior`, `EnemyTier` et `EnemyAbilityKind`, avec la table clé JSON ↔ type. Les consommateurs comparent des types, plus aucune chaîne. Valeurs par défaut inchangées (`default`, `normal`).
+2. **Contrat en données :** `data/enemies/_contract.json` (le préfixe `_` l'exclut des fiches). Il déclare :
+   - les stats (obligatoires ou avec secours, bornes) ;
+   - chaque capacité, avec ses réglages numériques (secours actuel, bornes, entier ou non ; `first_delay` facultatif sans secours, calculé par le code) et ses réglages textuels (famille, son, créature) ;
+   - les valeurs admises de `impact_shake`.
+
+   `EnemyContract` le lit en `System.Text.Json` et refuse un contrat qui ne couvre pas exactement les capacités du code.
+3. **Réglages résolus au chargement :** `EnemyAbilityData` reçoit chaque réglage, secours compris ; les capacités lisent `Number(clé)` sans secours écrit à l'appel. `reinforcement_id` devient obligatoire (le Hurleur déclare déjà `shade`).
+4. **Meute en données :** `"pack_family": "charognard"` sur le Charognard ; `Enemy` compte les voisins de la même famille. Un comportement `pack` sans famille est refusé. Les réglages de meute passent par le contrat ; `pack_bonus_damage` reste déclaré « non lu », question pour Raphaël.
+5. **Diagnostics au chargement :** `EnemyDataValidator` lit chaque fiche en `System.Text.Json`, avant toute conversion. Cas refusés :
+   - champ, stat ou visuel inconnu ;
+   - stat obligatoire absente, non numérique, non finie ou hors bornes ;
+   - type, comportement ou rang inconnu ;
+   - capacité inconnue, réglage inconnu, hors bornes ou non entier ;
+   - famille, son ou créature de renfort introuvable ;
+   - meute sans famille ;
+   - identifiant en double.
+
+   La fiche fautive est écartée avec un message qui nomme le fichier, la créature et le champ. Les renforts sont contrôlés une fois toutes les fiches lues.
+6. **Identifiants :**
+   - `EnemyGrammar.FinalBossId` remplace les six `"indicible"`. `AudioManager` perd le préfixe `colosse_` (aucune créature).
+   - Les listes de secours d'apparition passent dans `spawn_flow.json` ; leurs créatures sont contrôlées au chargement.
+   - Variantes : à Q7.
+7. **Vérification :**
+   - relevé des valeurs effectives de chaque créature et de ses capacités, secours compris, au commit de base et après : identique ;
+   - fixture négative par diagnostic ;
+   - régression de meute (voisins de même famille comptés, autres ignorés) ;
+   - suites enemy_abilities, small_places, indicible, movement, movement-integration, smoke, music et launchers.
+
+**Q6c livré et vérifié, 4 octobre.**
+- **Code :**
+  - `EnemyGrammar` type le combat (`melee`, `ranged`, `boss`), le comportement, le rang et les six capacités. `Enemy`, `SpawnManager`, `RunTracker`, `EssenceTracker` et `QuestManager` comparent des types, plus aucune chaîne.
+  - `data/enemies/_contract.json` et `EnemyContract` déclarent les stats, formes, secousses et familles, et pour chaque capacité ses réglages (secours, bornes, entiers, facultatifs) et ses textes (famille, son, créature, secousse).
+  - `EnemyDataValidator` contrôle chaque fiche en `System.Text.Json` ; `EnemyDataLoader` est réécrit sans dictionnaire Godot. Fiche fautive, identifiant en double, renfort absent ou renforts en boucle : la fiche est écartée, avec un message qui nomme la créature et le champ.
+  - Les capacités lisent leurs réglages résolus (`Number`, `Text`), sans secours écrit à l'appel. Les planchers du code sont devenus les minimums du contrat. `EnemyAbilityFactory` crée une capacité par sorte typée.
+- **Relations de contenu :**
+  - La meute compte les voisins de la même `pack_family` (le Charognard déclare `charognard`) ; un comportement `pack` sans famille est refusé.
+  - Les renforts du Hurleur sont obligatoires et contrôlés une fois toutes les fiches lues.
+  - Les groupes d'apparition des biomes et les deux groupes de secours, sortis de `SpawnManager` vers `spawn_flow.json`, sont contrôlés au chargement (`EnemyPools`) : une créature absente est retirée et signalée une fois, au lieu d'une erreur à chaque tirage.
+  - `EnemyGrammar.FinalBossId` remplace les `"indicible"` de six fichiers. `AudioManager` perd le préfixe V1 `colosse_`.
+  - Le ralentissement de la Tisseuse (0,4 pendant 2 s, en dur) passe au contrat.
+  - Les variantes (`elite`, `champion`, `aberration`) restent à Q7.
+- **Mêmes valeurs :** relevé des valeurs effectives de chaque créature et de ses capacités, secours compris, au commit de base et après ([preuves](../audits/qualite-2026-10-02/q6c/)). 263 lignes identiques, groupes de secours compris. Les seuls écarts : `_packFamily` ajouté, `_packBonusDamage` retiré (champ jamais appliqué). Une consommation de hasard reste identique : `aimed_shot` tirait son premier délai même quand la fiche le fixait. Aucune fiche ne le fixe, donc rien ne change ; à savoir si l'on en ajoute un.
+- **Vérifié :** `tools/test_enemy_abilities.sh`, 163 contrôles. Ils couvrent :
+  - le catalogue complet ;
+  - 47 fiches fautives refusées avec leur message (dont racine non objet et JSON illisible), plus un son vide explicite accepté ;
+  - 7 contrats candidats refusés ;
+  - groupes de biome et de secours ;
+  - renfort absent en chaîne, doublon, fichier illisible, renforts en boucle (soi, A↔B) ;
+  - familles égales à celles du rendu ;
+  - ordre des capacités ;
+  - meute : un Rôdeur d'une autre famille ne compte pas, un membre d'une autre fiche de la même famille compte.
+
+  Les capacités existantes passent toujours. Build sans avertissement. `tools/validate.sh` sur smoke, enemy_abilities, weapons, small_places, indicible, cartography, movement, movement-integration, music et launchers : **10/10**, sources inchangées.
+- **Relecture `godot-reviewer` :** aucun bloquant. Elle a comparé un à un les 59 secours et planchers, et vérifié les chemins de chargement et les bancs par réflexion. Corrigés :
+  - fixtures manquantes, dont le contrat contrôlé à part (`EnemyContract.Check`) ;
+  - groupes de biome contrôlés au chargement ;
+  - champ mort `_packBonusDamage` retiré ;
+  - garde enum ↔ table des capacités ;
+  - renforts en boucle refusés ;
+  - test des familles et de l'ordre des capacités ;
+  - nombre de fiches lu sur le disque.
+
+  Restent : le réglage numérique obligatoire d'une capacité est une garde sans cas aujourd'hui (tout réglage a un secours ou est facultatif).
+- **Piège évité :** trois bancs (`EnemyAbilityRegression`, `ProjectileCadenceBenchmark`, `RunObservation`) lisaient le cache des capacités par réflexion avec des clés texte : migrés vers les clés typées. Sans cela, ils auraient cassé sans erreur de compilation.
+- **Partagé avec les armes :** `DataValueRule` (règle de valeur) et `DataKeySets` (banque audio, manifeste) servent aux deux validateurs ; les messages de bornes écrivent les nombres comme dans le JSON, quelle que soit la langue du système.
+- **Question pour Raphaël :** `pack_bonus_damage` (0,15 au Charognard) n'a jamais été appliqué : la meute n'accélère que. À brancher (dégâts +15 % par voisin), ou à retirer ?
+- **Hors lot, relevé :** l'Essence par rang (1, 4, 8) est écrite deux fois, dans `EssenceTracker` et `QuestManager` (à Q7).
+
 ### Q7 — Valider et publier les autres catalogues
 
 Constat : F12. Dépend de Q4. Plans associés : ceux de chaque catalogue.
@@ -353,7 +432,7 @@ Pour clore un lot :
 - [x] Q5 — Motifs d'attaque typés.
 - [x] Q6a — Effets et paramètres des armes explicites.
 - [x] Q6b — Réglages du boss dans les données.
-- [ ] Q6c — Relations et capacités ennemies validées.
+- [x] Q6c — Relations et capacités ennemies validées.
 - [ ] Q7 — Autres catalogues validés, compte rendu par famille.
 - [ ] Q8a — Verrouillage sur une vie d'ennemi.
 - [ ] Q8b — Remapping sans pertes.
@@ -369,4 +448,4 @@ Pour clore un lot :
 - [ ] Q13 — Provenance du son de level-up résolue.
 - [ ] Q14 — Documentation active et restes V1 repris.
 
-**Prochain lot : Q6c** (relations de contenu et capacités ennemies), validé (§63) ; Q2a, Q2b, Q3, Q6a et Q6b sont livrés le 4 octobre.
+**Suite (§64) :** mesurer l'Indicible, puis proposer les lots de production du lore (plan 19). Prochain lot qualité à choisir avec Raphaël : Q4 (chargement récupérable) recommandé, puisqu'il précède Q7. Q2a, Q2b, Q3, Q6a, Q6b et Q6c sont livrés le 4 octobre.

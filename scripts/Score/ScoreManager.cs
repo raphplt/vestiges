@@ -235,7 +235,7 @@ public partial class ScoreManager : Node
         points = Mathf.RoundToInt(points * (1f + ErasureEffectAt(position).ScoreBonus));
         _combatScore += points;
 
-        if (enemyId == "indicible")
+        if (enemyId == EnemyGrammar.FinalBossId)
             _bossDefeated = true;
 
         NotifyScore();

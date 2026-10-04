@@ -55,13 +55,13 @@ public class AimedShotAbility : IEnemyAbility
 
     public void Configure(EnemyAbilityData data)
     {
-        _windupSeconds = Mathf.Max(0.05f, data.GetNumber("windup_seconds", 0.35f));
-        _cooldownMultiplier = Mathf.Max(0.1f, data.GetNumber("cooldown_multiplier", 1f));
-        _laneLength = data.GetNumber("lane_length", 90f);
-        _laneWidth = data.GetNumber("lane_width", 6f);
-        _showRange = data.GetNumber("show_range", 0f) > 0f;
-        _ringMargin = data.GetNumber("range_reveal_margin", 90f);
-        _family = PixelPalette.ParseFamily(data.GetText("fx_family", "hostile"), FxFamily.Hostile);
+        _windupSeconds = data.Number("windup_seconds");
+        _cooldownMultiplier = data.Number("cooldown_multiplier");
+        _laneLength = data.Number("lane_length");
+        _laneWidth = data.Number("lane_width");
+        _showRange = data.Number("show_range") > 0f;
+        _ringMargin = data.Number("range_reveal_margin");
+        _family = PixelPalette.ParseFamily(data.Text("fx_family"), FxFamily.Hostile);
         _flash = PixelPalette.Ramp(_family).Light;
 
         Cancel();
@@ -69,7 +69,7 @@ public class AimedShotAbility : IEnemyAbility
         _ringShown = false;
         _ring.HideMarker();
         // Décalage initial : des tireurs apparus ensemble ne tirent pas en rythme.
-        _cooldownTimer = data.GetNumber("first_delay", (float)GD.RandRange(0.3, 1.0));
+        _cooldownTimer = data.TryGetNumber("first_delay", out float firstDelay) ? firstDelay : (float)GD.RandRange(0.3, 1.0);
     }
 
     public bool Process(Enemy owner, Player player, float distToPlayer, float delta)

@@ -44,18 +44,18 @@ public class BurrowAbility : IEnemyAbility
 
     public void Configure(EnemyAbilityData data)
     {
-        _surfaceSeconds = Mathf.Max(0.1f, data.GetNumber("surface_seconds", 5f));
-        _burrowSeconds = Mathf.Max(0.1f, data.GetNumber("burrow_seconds", 2f));
-        _warningSeconds = Mathf.Max(0.1f, data.GetNumber("warning_seconds", 0.6f));
-        _recoverySeconds = data.GetNumber("recovery_seconds", 0.4f);
-        _burrowSpeedMultiplier = data.GetNumber("burrow_speed_multiplier", 1.3f);
-        _emergeRadius = data.GetNumber("emerge_radius", 34f);
-        _hitMargin = data.GetNumber("player_hit_margin", 6f);
-        _damageMultiplier = data.GetNumber("damage_multiplier", 1.2f);
-        _flashSeconds = data.GetNumber("impact_flash_seconds", 0.15f);
-        _family = PixelPalette.ParseFamily(data.GetText("fx_family", "rust"), FxFamily.Rust);
-        _burrowAudio = data.GetText("burrow_audio", "");
-        _emergeAudio = data.GetText("emerge_audio", "");
+        _surfaceSeconds = data.Number("surface_seconds");
+        _burrowSeconds = data.Number("burrow_seconds");
+        _warningSeconds = data.Number("warning_seconds");
+        _recoverySeconds = data.Number("recovery_seconds");
+        _burrowSpeedMultiplier = data.Number("burrow_speed_multiplier");
+        _emergeRadius = data.Number("emerge_radius");
+        _hitMargin = data.Number("player_hit_margin");
+        _damageMultiplier = data.Number("damage_multiplier");
+        _flashSeconds = data.Number("impact_flash_seconds");
+        _family = PixelPalette.ParseFamily(data.Text("fx_family"), FxFamily.Rust);
+        _burrowAudio = data.Text("burrow_audio");
+        _emergeAudio = data.Text("emerge_audio");
 
         Cancel();
     }

@@ -227,7 +227,7 @@ public partial class RunObservation : Node
             float multiplier = float.Parse(howlerCooldown, CultureInfo.InvariantCulture);
             if (!float.IsFinite(multiplier) || multiplier <= 0f)
                 throw new ArgumentOutOfRangeException(nameof(howlerCooldown));
-            EnemyDataLoader.Get("hurleur").Abilities["aimed_shot"].Numbers["cooldown_multiplier"] = multiplier;
+            EnemyDataLoader.Get("hurleur").Abilities[EnemyAbilityKind.AimedShot].Numbers["cooldown_multiplier"] = multiplier;
         }
         GameManager manager = GetNode<GameManager>("/root/GameManager");
         manager.RunSeed = seed;
@@ -848,7 +848,7 @@ public partial class RunObservation : Node
 
     private static void ResetAbilityCooldowns(Enemy enemy)
     {
-        var cache = (Dictionary<string, IEnemyAbility>)typeof(Enemy)
+        var cache = (Dictionary<EnemyAbilityKind, IEnemyAbility>)typeof(Enemy)
             .GetField("_abilityCache", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(enemy);
         foreach (IEnemyAbility ability in cache.Values)
         {

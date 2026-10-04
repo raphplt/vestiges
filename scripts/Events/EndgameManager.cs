@@ -56,8 +56,8 @@ public partial class EndgameManager : Node
 		// Le reste de la run se joue ; seuls le boss et la fin de partie qu'il ouvre sont retirés.
 		if (!IndicibleConfig.TryLoad(out _, out string error))
 			_bossUnavailable = error;
-		else if (EnemyDataLoader.Get("indicible") == null)
-			_bossUnavailable = "fiche data/enemies/indicible.json absente";
+		else if (!EnemyDataLoader.Exists(EnemyGrammar.FinalBossId))
+			_bossUnavailable = "fiche data/enemies/indicible.json absente ou écartée";
 		if (_bossUnavailable != null)
 			GD.PushError($"[EndgameManager] L'Indicible n'apparaîtra pas pendant cette run : {_bossUnavailable}.");
 	}
@@ -144,7 +144,7 @@ public partial class EndgameManager : Node
 
 	private void OnEnemyKilled(string enemyId, Vector2 position)
 	{
-		if (enemyId != "indicible")
+		if (enemyId != EnemyGrammar.FinalBossId)
 			return;
 
 		_bossDefeated = true;

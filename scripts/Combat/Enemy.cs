@@ -47,10 +47,10 @@ public partial class Enemy : CharacterBody2D
 	private float _damage;
 	private float _attackRange;
 	private float _xpReward;
-	private string _enemyType;
+	private EnemyCombatType _enemyType;
 	private string _enemyId;
 	private string _attackAudio;
-	private string _behavior = "default";
+	private EnemyBehavior _behavior = EnemyBehavior.Default;
 	private bool _isDying;
 	private float _attackTimer;
 	private float _meleeAttackCooldown;
@@ -66,12 +66,14 @@ public partial class Enemy : CharacterBody2D
 	// Rampant enfoui (BurrowAbility) : invulnérable, ne bloque personne, estompé.
 	private bool _isBurrowed;
 
-	private string _tier = "normal";
+	private EnemyTier _tier = EnemyTier.Normal;
 
-	// Pack (Charognard) : bonus groupé
-	private float _packBonusDamage;
+	// Meute : bonus groupé entre créatures de la même famille (pack_family de la fiche)
+	private string _packFamily;
 	private float _packBonusSpeed;
-	private float _packRadius = 120f;
+	private float _packRadius;
+	private float _webSlowMultiplier;
+	private float _webSlowSeconds;
 
 	// Performance caches
 	private Core.GroupCache _groupCache;
@@ -174,7 +176,7 @@ public partial class Enemy : CharacterBody2D
 
 	// Capacités composées décrites par le bloc "abilities" du JSON, réutilisées d'un spawn à l'autre
 	private readonly List<IEnemyAbility> _abilities = new();
-	private readonly Dictionary<string, IEnemyAbility> _abilityCache = new();
+	private readonly Dictionary<EnemyAbilityKind, IEnemyAbility> _abilityCache = new();
 	private bool _abilityReplacesAttack;
 
 	/// <summary>Tempo des animations de toutes les créatures : le présage d'une Résurgence les agite (plan 03 lot C).</summary>
@@ -225,14 +227,15 @@ public partial class Enemy : CharacterBody2D
 		_lastHitDirection = Vector2.Zero;
 
 		_enemyId = data.Id;
-		_enemyType = data.Type;
+		_enemyType = data.CombatType;
 		HpScale = hpScale;
 		DamageScale = dmgScale;
 		_attackAudio = data.AttackAudio;
 		_projectileSprite = data.Visual.ProjectileSprite;
 		_projectileFamily = PixelPalette.ParseFamily(data.Visual.ProjectileFamily, FxFamily.Hostile);
-		_behavior = data.Behavior ?? "default";
-		_tier = data.Tier ?? "normal";
+		_behavior = data.Behavior;
+		_tier = data.Tier;
+		_packFamily = data.PackFamily;
 		_baseHp = data.Stats.Hp;
 		_maxHp = data.Stats.Hp * hpScale;
 		_currentHp = _maxHp;
@@ -241,7 +244,7 @@ public partial class Enemy : CharacterBody2D
 		_damage = data.Stats.Damage * dmgScale;
 		_attackRange = data.Stats.AttackRange;
 		_xpReward = data.Stats.XpReward;
-		_tracking.Configure(data.ExtraStats.GetValueOrDefault("perception"), data.ExtraStats.GetValueOrDefault("leash"));
+		_tracking.Configure(data.GetStat("perception"), data.GetStat("leash"));
 		_isDying = false;
 		_killed = false;
 		_killCredited = false;
@@ -265,9 +268,10 @@ public partial class Enemy : CharacterBody2D
 		_disorientTimer = 0f;
 		_knockVelocity = Vector2.Zero;
 		_isBurrowed = false;
-		_packBonusDamage = data.ExtraStats.TryGetValue("pack_bonus_damage", out float pbd) ? pbd : 0.15f;
-		_packBonusSpeed = data.ExtraStats.TryGetValue("pack_bonus_speed", out float pbs) ? pbs : 0.10f;
-		_packRadius = data.ExtraStats.TryGetValue("pack_radius", out float pr) ? pr : 120f;
+		_packBonusSpeed = data.GetStat("pack_bonus_speed");
+		_packRadius = data.GetStat("pack_radius");
+		_webSlowMultiplier = data.GetStat("web_slow_multiplier");
+		_webSlowSeconds = data.GetStat("web_slow_seconds");
 		_displayName = data.Name;
 		_isFeminine = data.IsFeminine;
 		_packBonusTimer = (float)GD.RandRange(0.0, PackBonusInterval);
@@ -480,8 +484,9 @@ public partial class Enemy : CharacterBody2D
 		_guardTarget = null;
 		_tracking.Reset();
 		_isBurrowed = false;
-		_tier = "normal";
-		_behavior = "default";
+		_tier = EnemyTier.Normal;
+		_behavior = EnemyBehavior.Default;
+		_packFamily = null;
 		_currentHp = 0;
 		_igniteSource = _bleedSource = _slowSource = _disorientSource = _fragileSource = default;
 		_slowOrigin = _disorientOrigin = ControlOrigin.Unknown;
@@ -496,7 +501,6 @@ public partial class Enemy : CharacterBody2D
 		_slowTimer = 0f;
 		_disorientTimer = 0f;
 		_mods.Reset();
-		_packBonusDamage = 0f;
 		_packBonusSpeed = 0f;
 		_packBonusTimer = 0f;
 		Node auraNode = GetNodeOrNull("AberrationAura");
@@ -631,15 +635,15 @@ public partial class Enemy : CharacterBody2D
 		{
 			ProcessGuardBehavior(distToPlayer, dt);
 		}
-		else if (_behavior == "sentinel")
+		else if (_behavior == EnemyBehavior.Sentinel)
 		{
 			ProcessSentinel(distToPlayer, dt);
 		}
-		else if (_enemyType == "melee")
+		else if (_enemyType == EnemyCombatType.Melee)
 		{
 			ProcessMelee(distToPlayer, dt);
 		}
-		else if (_enemyType == "ranged")
+		else if (_enemyType == EnemyCombatType.Ranged)
 		{
 			ProcessRanged(distToPlayer, dt);
 		}
@@ -674,7 +678,7 @@ public partial class Enemy : CharacterBody2D
 	/// <summary>Bonus de meute à proximité : les actions annoncées passent par les capacités composées.</summary>
 	private void ProcessBehaviorAbilities(float delta)
 	{
-		if (_behavior == "pack")
+		if (_behavior == EnemyBehavior.Pack)
 			ProcessPackBonus(delta);
 	}
 
@@ -698,7 +702,7 @@ public partial class Enemy : CharacterBody2D
 		}
 	}
 
-	/// <summary>Charognard (meute) : bonus de dégâts et vitesse quand d'autres charognards sont proches.</summary>
+	/// <summary>Meute : bonus de vitesse quand d'autres créatures de la même famille sont proches.</summary>
 	private void ProcessPackBonus(float delta)
 	{
 		_packBonusTimer -= delta;
@@ -711,7 +715,7 @@ public partial class Enemy : CharacterBody2D
 		foreach (Node node in enemies)
 		{
 			if (node is Enemy other && other != this && IsInstanceValid(other) && !other.IsDying
-				&& other._enemyId == "charognard"
+				&& other._packFamily == _packFamily
 				&& GlobalPosition.DistanceSquaredTo(other.GlobalPosition) < _packRadiusSq)
 			{
 				packCount++;
@@ -777,7 +781,7 @@ public partial class Enemy : CharacterBody2D
 		if (distToPlayer < GuardPatrolRadius)
 		{
 			// Joueur dans la zone : comportement d'attaque normal
-			if (_enemyType == "melee")
+			if (_enemyType == EnemyCombatType.Melee)
 			{
 				Vector2 direction = (_player.GlobalPosition - GlobalPosition).Normalized();
 				Velocity = direction * _speed;
@@ -788,7 +792,7 @@ public partial class Enemy : CharacterBody2D
 					_attackTimer = _meleeAttackCooldown;
 				}
 			}
-			else if (_enemyType == "ranged")
+			else if (_enemyType == EnemyCombatType.Ranged)
 			{
 				if (distToPlayer > _attackRange)
 				{
@@ -880,10 +884,10 @@ public partial class Enemy : CharacterBody2D
 		PlayRangedAttackVfx(direction);
 		PlayNearbyAudio(_attackAudio ?? "sfx_enemy_ranged_shot");
 		// Tisseuse : les projectiles ralentissent le joueur
-		bool slows = _behavior == "weaver";
+		bool slows = _behavior == EnemyBehavior.Weaver;
 		CombatPools.Instance?.TakeEnemyProjectile()
 			.Launch(GlobalPosition, direction, _damage, _enemyId, _projectileSprite, _projectileFamily,
-				slows ? 0.4f : 1f, slows ? 2f : 0f);
+				slows ? _webSlowMultiplier : 1f, slows ? _webSlowSeconds : 0f);
 	}
 
 	private void PlayRangedAttackVfx(Vector2 direction)
@@ -1018,7 +1022,7 @@ public partial class Enemy : CharacterBody2D
 	/// </summary>
 	public void ApplyKnockback(Vector2 direction, float distance)
 	{
-		if (_isDying || _tier is "miniboss" or "boss" || direction == Vector2.Zero)
+		if (_isDying || _tier is EnemyTier.Miniboss or EnemyTier.Boss || direction == Vector2.Zero)
 			return;
 		_knockVelocity += direction.Normalized() * (distance * KnockbackDecay / Mathf.Max(1f, Scale.X));
 		_knockVelocity = _knockVelocity.LimitLength(MaxKnockbackDistance * KnockbackDecay);
@@ -1232,7 +1236,7 @@ public partial class Enemy : CharacterBody2D
 		// Capturer les contrôles avant leur nettoyage et avant les explosions de mort en cascade.
 		_eventBus.PublishEnemyKill(new EnemyKillResult(Life, _enemyId, GlobalPosition, damage, SlowControl, DisorientationControl,
 			new ControlState(_igniteDps, Mathf.Max(0f, _igniteTimer), _igniteSource, ControlOrigin.Unknown),
-			IsPriorityTarget || _tier is "elite" or "miniboss" or "boss"));
+			IsPriorityTarget || _tier is EnemyTier.Elite or EnemyTier.Miniboss or EnemyTier.Boss));
 		_killed = true;
 		_killedFrame = Engine.GetProcessFrames();
 		// Le corps se dissout : son contact avec le sol disparaît avec lui.
@@ -1244,7 +1248,7 @@ public partial class Enemy : CharacterBody2D
 		Velocity = Vector2.Zero;
 
 		// Screen shake à la mort (plus fort pour les mini-boss/aberrations)
-		if (_tier == "miniboss")
+		if (_tier == EnemyTier.Miniboss)
 		{
 			ScreenShake.Instance?.ShakeHeavy();
 			ScreenShake.Instance?.Hitstop(0.07f);
@@ -1313,13 +1317,13 @@ public partial class Enemy : CharacterBody2D
 		SpawnXpOrbs();
 
 		// Mini-boss : drop un coffre épique garanti
-		if (_tier == "miniboss")
+		if (_tier == EnemyTier.Miniboss)
 			SpawnRewardChest("chest_epic");
 		if (_mods.IsVariant)
 			GrantVariantRewards();
 
 		// Retour au néant : éclats sombres, nuage de dissolution et flaque irisée, recyclés (plan 02 J0).
-		bool miniboss = _tier == "miniboss";
+		bool miniboss = _tier == EnemyTier.Miniboss;
 		CombatPools.Instance?.ShowDeath(GlobalPosition, miniboss ? 20 : (_mods.IsVariant ? 14 : 8), Mathf.Tau,
 			miniboss ? 2.5f : (_mods.IsVariant ? 1.5f : 1.0f), miniboss || _mods.IsVariant, _lastHitDirection);
 
@@ -1547,16 +1551,11 @@ public partial class Enemy : CharacterBody2D
 		_abilities.Clear();
 		_abilityReplacesAttack = false;
 
-		foreach (KeyValuePair<string, EnemyAbilityData> entry in data.Abilities)
+		foreach (KeyValuePair<EnemyAbilityKind, EnemyAbilityData> entry in data.Abilities)
 		{
 			if (!_abilityCache.TryGetValue(entry.Key, out IEnemyAbility ability))
 			{
 				ability = EnemyAbilityFactory.Create(entry.Key, this);
-				if (ability == null)
-				{
-					GD.PushWarning($"[Enemy] Capacité inconnue '{entry.Key}' pour {data.Id}");
-					continue;
-				}
 				_abilityCache[entry.Key] = ability;
 			}
 

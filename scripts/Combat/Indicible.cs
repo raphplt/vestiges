@@ -44,7 +44,7 @@ public partial class Indicible : Node2D
 		_arenaAnchor = arenaAnchor;
 
 		// Réglages et fiche contrôlés au début de la run (EndgameManager) : ici, ils sont lus sans secours.
-		EnemyData data = EnemyDataLoader.Get("indicible");
+		EnemyData data = EnemyDataLoader.Get(EnemyGrammar.FinalBossId);
 		if (!IndicibleConfig.TryLoad(out _config, out string error) || data == null)
 		{
 			GD.PushError($"[Indicible] Le boss n'apparaît pas : {error ?? "fiche data/enemies/indicible.json absente"}.");
@@ -65,7 +65,7 @@ public partial class Indicible : Node2D
 		BuildEdgePresence();
 		SpawnEyes();
 
-		_eventBus.EmitSignal(EventBus.SignalName.EnemySpawned, "indicible", hpScale, dmgScale);
+		_eventBus.EmitSignal(EventBus.SignalName.EnemySpawned, EnemyGrammar.FinalBossId, hpScale, dmgScale);
 		GD.Print($"[Indicible] L'Indicible émerge... (HP: {_maxHp:F0})");
 		return true;
 	}
@@ -308,7 +308,7 @@ public partial class Indicible : Node2D
 				float distToLine = Iso.GroundDistanceToSegment(_player.GlobalPosition, startPos, endPos);
 				if (distToLine < _config.TentacleWidth)
 				{
-					_eventBus.EmitSignal(EventBus.SignalName.PlayerHitBy, "indicible", damage);
+					_eventBus.EmitSignal(EventBus.SignalName.PlayerHitBy, EnemyGrammar.FinalBossId, damage);
 					_player.TakeDamage(damage);
 				}
 			}
@@ -382,7 +382,7 @@ public partial class Indicible : Node2D
 		if (IsInGroup("enemies"))
 			RemoveFromGroup("enemies");
 
-		_eventBus.EmitSignal(EventBus.SignalName.EnemyKilled, "indicible", GlobalPosition);
+		_eventBus.EmitSignal(EventBus.SignalName.EnemyKilled, EnemyGrammar.FinalBossId, GlobalPosition);
 
 		GD.Print("[Indicible] L'Indicible est vaincu !");
 

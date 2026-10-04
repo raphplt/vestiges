@@ -28,9 +28,6 @@ public static class WeaponDataValidator
 
 	private static readonly HashSet<string> FxKeys = new() { "style", "family", "projectile" };
 
-	private static HashSet<string> _soundKeys;
-	private static HashSet<string> _projectileKeys;
-
 	/// <summary>Raison du refus de l'arme, ou null si elle respecte le contrat.</summary>
 	public static string Validate(Godot.Collections.Dictionary weapon)
 	{
@@ -70,7 +67,7 @@ public static class WeaponDataValidator
 		{
 			foreach (JsonProperty stat in stats.EnumerateObject())
 			{
-				if (!WeaponContract.TryGetStat(stat.Name, out WeaponContract.ValueRule rule))
+				if (!WeaponContract.TryGetStat(stat.Name, out DataValueRule rule))
 					return $"{where}, stats : stat « {stat.Name} » inconnue du contrat";
 				string error = CheckNumber(stat.Value, rule, $"{where}, stats.{stat.Name}");
 				if (error != null)
@@ -95,7 +92,7 @@ public static class WeaponDataValidator
 				return $"{where}, growth : stat « {entry.Name} » inconnue du contrat";
 			if (WeaponUpgradeDataLoader.GetStatConfig(entry.Name) == null)
 				return $"{where}, growth : {entry.Name} n'a pas de réglage d'amélioration (weapon_upgrades.json)";
-			string error = CheckNumber(entry.Value, WeaponContract.ValueRule.Positive, $"{where}, growth.{entry.Name}");
+			string error = CheckNumber(entry.Value, DataValueRule.Positive, $"{where}, growth.{entry.Name}");
 			if (error != null)
 				return error;
 		}
@@ -147,7 +144,7 @@ public static class WeaponDataValidator
 				return error;
 			if (ascension.TryGetProperty("bonus_projectile_multiplier", out JsonElement bonus))
 			{
-				error = CheckNumber(bonus, WeaponContract.ValueRule.NonNegative, $"{where}, bonus_projectile_multiplier");
+				error = CheckNumber(bonus, DataValueRule.NonNegative, $"{where}, bonus_projectile_multiplier");
 				if (error != null)
 					return error;
 			}
@@ -161,10 +158,10 @@ public static class WeaponDataValidator
 			return null;
 		foreach (JsonProperty entry in table.EnumerateObject())
 		{
-			if (!WeaponContract.TryGetStat(entry.Name, out WeaponContract.ValueRule rule))
+			if (!WeaponContract.TryGetStat(entry.Name, out DataValueRule rule))
 				return $"{where}, {field} : stat « {entry.Name} » inconnue du contrat";
 			// Un multiplicateur est un facteur positif ; une valeur fixée suit les bornes de la stat.
-			string error = CheckNumber(entry.Value, multiplier ? WeaponContract.ValueRule.Positive : rule, $"{where}, {field}.{entry.Name}");
+			string error = CheckNumber(entry.Value, multiplier ? DataValueRule.Positive : rule, $"{where}, {field}.{entry.Name}");
 			if (error != null)
 				return error;
 		}
@@ -177,10 +174,10 @@ public static class WeaponDataValidator
 			return null;
 		if (special == null)
 			return $"{where}, special_overrides : l'arme n'a pas d'effet spécial";
-		IReadOnlyDictionary<string, WeaponContract.ValueRule> rules = WeaponContract.SpecialRules(special.Value);
+		IReadOnlyDictionary<string, DataValueRule> rules = WeaponContract.SpecialRules(special.Value);
 		foreach (JsonProperty entry in overrides.EnumerateObject())
 		{
-			if (!rules.TryGetValue(entry.Name, out WeaponContract.ValueRule rule))
+			if (!rules.TryGetValue(entry.Name, out DataValueRule rule))
 				return $"{where}, special_overrides : réglage « {entry.Name} » inconnu de l'effet ({string.Join(", ", rules.Keys)})";
 			string error = CheckNumber(entry.Value, rule, $"{where}, special_overrides.{entry.Name}");
 			if (error != null)
@@ -191,21 +188,21 @@ public static class WeaponDataValidator
 
 	private static string CheckFlags(JsonElement ascension, string where)
 	{
-		Dictionary<string, WeaponContract.ValueRule> allowed = new();
+		Dictionary<string, DataValueRule> allowed = new();
 		if (ascension.TryGetProperty("flags", out JsonElement flags) && flags.ValueKind == JsonValueKind.Array)
 		{
 			foreach (JsonElement entry in flags.EnumerateArray())
 			{
 				string flag = entry.ValueKind == JsonValueKind.String ? entry.GetString() : entry.GetRawText();
-				if (!WeaponContract.TryGetFlagRules(flag, out IReadOnlyDictionary<string, WeaponContract.ValueRule> rules))
+				if (!WeaponContract.TryGetFlagRules(flag, out IReadOnlyDictionary<string, DataValueRule> rules))
 					return $"{where}, flags : drapeau « {flag} » inconnu du contrat";
-				foreach ((string name, WeaponContract.ValueRule rule) in rules)
+				foreach ((string name, DataValueRule rule) in rules)
 					allowed[name] = rule;
 			}
 		}
 		if (TryObject(ascension, "params", out JsonElement parameters))
 			return CheckParameters(parameters, allowed, $"{where}, params", _ => false);
-		foreach ((string name, WeaponContract.ValueRule rule) in allowed)
+		foreach ((string name, DataValueRule rule) in allowed)
 		{
 			if (rule.Required)
 				return $"{where}, params : réglage {name} obligatoire";
@@ -214,20 +211,20 @@ public static class WeaponDataValidator
 	}
 
 	/// <summary>Chaque clé est un réglage connu (ou admise par <paramref name="skip"/>) ; chaque réglage requis est présent.</summary>
-	private static string CheckParameters(JsonElement values, IReadOnlyDictionary<string, WeaponContract.ValueRule> rules, string where,
+	private static string CheckParameters(JsonElement values, IReadOnlyDictionary<string, DataValueRule> rules, string where,
 		System.Func<string, bool> skip)
 	{
 		foreach (JsonProperty entry in values.EnumerateObject())
 		{
 			if (skip(entry.Name))
 				continue;
-			if (!rules.TryGetValue(entry.Name, out WeaponContract.ValueRule rule))
+			if (!rules.TryGetValue(entry.Name, out DataValueRule rule))
 				return $"{where} : réglage « {entry.Name} » inconnu ({string.Join(", ", rules.Keys)})";
 			string error = CheckNumber(entry.Value, rule, $"{where}.{entry.Name}");
 			if (error != null)
 				return error;
 		}
-		foreach ((string name, WeaponContract.ValueRule rule) in rules)
+		foreach ((string name, DataValueRule rule) in rules)
 		{
 			if (rule.Required && !values.TryGetProperty(name, out _))
 				return $"{where} : réglage {name} obligatoire";
@@ -238,7 +235,7 @@ public static class WeaponDataValidator
 	private static string CheckReferences(JsonElement weapon, string where)
 	{
 		string sound = Text(weapon, "attack_audio");
-		if (sound != null && !LoadKeys(ref _soundKeys, AudioManager.SoundBankPath).Contains(sound))
+		if (sound != null && !DataKeySets.TopLevelKeys(AudioManager.SoundBankPath).Contains(sound))
 			return $"{where}, attack_audio : son « {sound} » absent de la banque";
 		foreach (string field in new[] { "sprite", "held_sprite" })
 		{
@@ -259,12 +256,12 @@ public static class WeaponDataValidator
 			return $"{where}, fx.family : famille « {family} » inconnue du contrat";
 		string projectile = Text(fx, "projectile");
 		if (projectile != null && !WeaponContract.IsProjectileAlias(projectile)
-			&& !LoadKeys(ref _projectileKeys, WeaponVisualConfig.ProjectileManifestPath).Contains(projectile))
+			&& !DataKeySets.TopLevelKeys(WeaponVisualConfig.ProjectileManifestPath).Contains(projectile))
 			return $"{where}, fx.projectile : projectile « {projectile} » absent du manifeste";
 		return null;
 	}
 
-	private static string CheckNumber(JsonElement value, WeaponContract.ValueRule rule, string where)
+	private static string CheckNumber(JsonElement value, DataValueRule rule, string where)
 	{
 		if (value.ValueKind != JsonValueKind.Number || !value.TryGetDouble(out double number))
 			return $"{where} : nombre attendu";
@@ -291,30 +288,5 @@ public static class WeaponDataValidator
 	{
 		value = default;
 		return owner.ValueKind == JsonValueKind.Object && owner.TryGetProperty(key, out value) && value.ValueKind == JsonValueKind.Object;
-	}
-
-	/// <summary>Clés de premier niveau d'un fichier JSON (banque audio, manifeste), lues une fois, sans charger les ressources.</summary>
-	private static HashSet<string> LoadKeys(ref HashSet<string> cache, string path)
-	{
-		if (cache != null)
-			return cache;
-		cache = new HashSet<string>();
-		using FileAccess file = FileAccess.Open(path, FileAccess.ModeFlags.Read);
-		if (file == null)
-		{
-			GD.PushError($"[WeaponDataValidator] {path} introuvable");
-			return cache;
-		}
-		try
-		{
-			using JsonDocument document = JsonDocument.Parse(file.GetAsText());
-			foreach (JsonProperty entry in document.RootElement.EnumerateObject())
-				cache.Add(entry.Name);
-		}
-		catch (JsonException ex)
-		{
-			GD.PushError($"[WeaponDataValidator] {path} illisible : {ex.Message}");
-		}
-		return cache;
 	}
 }

@@ -318,14 +318,14 @@ public partial class QuestManager : CanvasLayer
         EnemyData data = EnemyDataLoader.Get(enemyId);
         int essenceGain = data?.Tier switch
         {
-            "boss" => 8,
-            "elite" => 4,
+            EnemyTier.Boss => 8,
+            EnemyTier.Elite => 4,
             _ => 1
         };
         _essenceCollectedTotal += essenceGain;
         SetAbsoluteProgress("collect_essence", _essenceCollectedTotal);
 
-        if (enemyId == "indicible")
+        if (enemyId == EnemyGrammar.FinalBossId)
             SetAbsoluteProgress("defeat_boss", 1f);
     }
 

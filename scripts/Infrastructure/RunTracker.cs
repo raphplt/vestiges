@@ -286,8 +286,8 @@ public partial class RunTracker : Node
         float now = _runTime;
         _killTimestamps.Add(now);
 
-        string tier = EnemyDataLoader.Get(enemyId)?.Tier;
-        if (tier is "boss" or "miniboss")
+        EnemyTier? tier = EnemyDataLoader.Get(enemyId)?.Tier;
+        if (tier is EnemyTier.Boss or EnemyTier.Miniboss)
         {
             _bossesKilled++;
             _journey.Mark(_runTime, RunMarkerKind.Boss);

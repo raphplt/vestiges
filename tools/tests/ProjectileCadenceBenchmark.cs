@@ -62,7 +62,7 @@ public partial class ProjectileCadenceBenchmark : Node2D
                 _projectiles.Add(projectile);
         };
         PackedScene enemyScene = GD.Load<PackedScene>("res://scenes/enemies/Enemy.tscn");
-        EnemyDataLoader.Get("hurleur").Abilities["aimed_shot"].Numbers["cooldown_multiplier"] = multiplier;
+        EnemyDataLoader.Get("hurleur").Abilities[EnemyAbilityKind.AimedShot].Numbers["cooldown_multiplier"] = multiplier;
         for (int i = 0; i < 8; i++)
         {
             Enemy enemy = enemyScene.Instantiate<Enemy>();
@@ -71,10 +71,10 @@ public partial class ProjectileCadenceBenchmark : Node2D
             enemy.ApplySpawnTuning(1f, aggression);
             enemy.SetPhysicsProcess(false);
             enemy.GlobalPosition = Vector2.FromAngle(Mathf.Tau * i / 8f) * 170f;
-            Dictionary<string, IEnemyAbility> abilities = (Dictionary<string, IEnemyAbility>)AbilityCache.GetValue(enemy);
-            IEnemyAbility shot = abilities["aimed_shot"];
+            Dictionary<EnemyAbilityKind, IEnemyAbility> abilities = (Dictionary<EnemyAbilityKind, IEnemyAbility>)AbilityCache.GetValue(enemy);
+            IEnemyAbility shot = abilities[EnemyAbilityKind.AimedShot];
             Cooldown.SetValue(shot, 0.11f * i);
-            _shooters.Add((enemy, shot, abilities.GetValueOrDefault("cry")));
+            _shooters.Add((enemy, shot, abilities.GetValueOrDefault(EnemyAbilityKind.Cry)));
         }
         int howlerShots = 0, spitterShots = 0, cries = 0, occupiedTicks = 0, peak = 0;
         double sum = 0, damage = 0;

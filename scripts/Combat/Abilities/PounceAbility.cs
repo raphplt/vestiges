@@ -50,29 +50,28 @@ public class PounceAbility : IEnemyAbility
 
     public void Configure(EnemyAbilityData data)
     {
-        _triggerRange = data.GetNumber("trigger_range", 150f);
-        _minRange = data.GetNumber("min_range", 50f);
-        _windupSeconds = Mathf.Max(0.05f, data.GetNumber("windup_seconds", 0.4f));
-        _distance = data.GetNumber("distance", 120f);
-        _leapSeconds = Mathf.Max(0.05f, data.GetNumber("leap_seconds", 0.18f));
-        _recoverySeconds = data.GetNumber("recovery_seconds", 0.35f);
-        _cooldownSeconds = data.GetNumber("cooldown_seconds", 3.5f);
-        _hitRange = data.GetNumber("hit_range", 30f);
-        _damageMultiplier = data.GetNumber("damage_multiplier", 1.2f);
-        _markerWidth = data.GetNumber("marker_width", 10f);
-        _family = PixelPalette.ParseFamily(data.GetText("fx_family", "hostile"), FxFamily.Hostile);
-        _windupAudio = data.GetText("windup_audio", "");
-        _leapAudio = data.GetText("leap_audio", "");
-        string flash = data.GetText("windup_flash", "");
+        _triggerRange = data.Number("trigger_range");
+        _minRange = data.Number("min_range");
+        _windupSeconds = data.Number("windup_seconds");
+        _distance = data.Number("distance");
+        _leapSeconds = data.Number("leap_seconds");
+        _recoverySeconds = data.Number("recovery_seconds");
+        _cooldownSeconds = data.Number("cooldown_seconds");
+        _hitRange = data.Number("hit_range");
+        _damageMultiplier = data.Number("damage_multiplier");
+        _markerWidth = data.Number("marker_width");
+        _family = PixelPalette.ParseFamily(data.Text("fx_family"), FxFamily.Hostile);
+        _windupAudio = data.Text("windup_audio");
+        _leapAudio = data.Text("leap_audio");
+        string flash = data.Text("windup_flash");
         _hasWindupFlash = flash.Length > 0;
         _windupFlash = PixelPalette.Ramp(PixelPalette.ParseFamily(flash, _family)).Light;
-        _impactShake = data.GetText("impact_shake", "");
+        _impactShake = data.Text("impact_shake");
 
         _phase = Phase.Ready;
         _marker.HideMarker();
         // Sans délai fixé, un décalage aléatoire évite que des ennemis apparus ensemble frappent en rythme.
-        float firstDelay = data.GetNumber("first_delay", -1f);
-        _cooldownTimer = firstDelay >= 0f ? firstDelay : _cooldownSeconds * (float)GD.RandRange(0.3, 1.0);
+        _cooldownTimer = data.TryGetNumber("first_delay", out float firstDelay) ? firstDelay : _cooldownSeconds * (float)GD.RandRange(0.3, 1.0);
     }
 
     public bool Process(Enemy owner, Player player, float distToPlayer, float delta)

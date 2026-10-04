@@ -1,0 +1,116 @@
+{
+  "_doc": "Contrat des fiches de créatures (plan 26 Q6c). Une règle sans « default » est obligatoire. Les minimums égalent les planchers que le code imposait. Textes : family (famille d'effets), sound (banque audio), enemy (fiche de créature), shake (secousse d'écran). Le préfixe _ exclut ce fichier des fiches.",
+  "stats": {
+    "hp": { "min": 1 },
+    "speed": { "min": 0 },
+    "damage": { "min": 0 },
+    "xp_reward": { "min": 0 },
+    "attack_range": { "default": 0, "min": 0 },
+    "perception": { "default": 0, "min": 0, "_comment": "0 : portée de détection commune (EnemyTracking)." },
+    "leash": { "default": 0, "min": 0, "_comment": "0 : laisse commune (EnemyTracking)." },
+    "spawn_weight": { "default": 1, "min": 0 },
+    "spawn_from_minute": { "default": 0, "min": 0 },
+    "pack_bonus_speed": { "default": 0.1, "min": 0 },
+    "pack_radius": { "default": 120, "min": 0 },
+    "pack_bonus_damage": { "default": 0.15, "min": 0, "_comment": "Déclaré, lu par aucun mécanisme : la meute ne change que la vitesse (question au tableau de bord)." },
+    "web_slow_multiplier": { "default": 0.4, "min": 0, "max": 1, "_comment": "Comportement weaver : vitesse du joueur touché par un projectile." },
+    "web_slow_seconds": { "default": 2, "min": 0, "_comment": "Comportement weaver : durée du ralentissement." }
+  },
+  "shapes": ["triangle", "square", "diamond", "boss"],
+  "shakes": ["light", "medium", "heavy"],
+  "families": ["physical", "heavy", "essence", "hybrid", "void", "fire", "hostile", "crit", "blood", "stone", "rust", "pale", "silk", "brass", "glass", "verdigris"],
+  "abilities": {
+    "omen_strike": {
+      "numbers": {
+        "lead_seconds": { "default": 1, "min": 0 },
+        "max_lead_distance": { "default": 240, "min": 0 },
+        "delay_seconds": { "default": 1, "min": 0.1 },
+        "radius": { "default": 42, "min": 0 },
+        "player_hit_margin": { "default": 8, "min": 0 },
+        "cooldown_seconds": { "default": 2.8, "min": 0 },
+        "cast_range": { "default": 320, "min": 0 },
+        "max_simultaneous": { "default": 3, "min": 1, "max": 32, "integer": true },
+        "damage_multiplier": { "default": 1, "min": 0 },
+        "impact_flash_seconds": { "default": 0.15, "min": 0 }
+      },
+      "texts": {
+        "fx_family": { "kind": "family", "default": "hostile" },
+        "cast_audio": { "kind": "sound", "default": "" },
+        "impact_audio": { "kind": "sound", "default": "" }
+      }
+    },
+    "pounce": {
+      "numbers": {
+        "trigger_range": { "default": 150, "min": 0 },
+        "min_range": { "default": 50, "min": 0 },
+        "windup_seconds": { "default": 0.4, "min": 0.05 },
+        "distance": { "default": 120, "min": 0 },
+        "leap_seconds": { "default": 0.18, "min": 0.05 },
+        "recovery_seconds": { "default": 0.35, "min": 0 },
+        "cooldown_seconds": { "default": 3.5, "min": 0 },
+        "hit_range": { "default": 30, "min": 0 },
+        "damage_multiplier": { "default": 1.2, "min": 0 },
+        "marker_width": { "default": 10, "min": 0 },
+        "first_delay": { "optional": true, "min": 0, "_comment": "Absent : délai tiré entre 30 et 100 % de la recharge." }
+      },
+      "texts": {
+        "fx_family": { "kind": "family", "default": "hostile" },
+        "windup_flash": { "kind": "family", "default": "", "_comment": "Vide : pas d'éclair d'annonce." },
+        "impact_shake": { "kind": "shake", "default": "" },
+        "windup_audio": { "kind": "sound", "default": "" },
+        "leap_audio": { "kind": "sound", "default": "" }
+      }
+    },
+    "charge": {
+      "same_as": "pounce"
+    },
+    "burrow": {
+      "numbers": {
+        "surface_seconds": { "default": 5, "min": 0.1 },
+        "burrow_seconds": { "default": 2, "min": 0.1 },
+        "warning_seconds": { "default": 0.6, "min": 0.1 },
+        "recovery_seconds": { "default": 0.4, "min": 0 },
+        "burrow_speed_multiplier": { "default": 1.3, "min": 0 },
+        "emerge_radius": { "default": 34, "min": 0 },
+        "player_hit_margin": { "default": 6, "min": 0 },
+        "damage_multiplier": { "default": 1.2, "min": 0 },
+        "impact_flash_seconds": { "default": 0.15, "min": 0 }
+      },
+      "texts": {
+        "fx_family": { "kind": "family", "default": "rust" },
+        "burrow_audio": { "kind": "sound", "default": "" },
+        "emerge_audio": { "kind": "sound", "default": "" }
+      }
+    },
+    "cry": {
+      "numbers": {
+        "cooldown_seconds": { "default": 8, "min": 0 },
+        "range": { "default": 250, "min": 0 },
+        "windup_seconds": { "default": 0.8, "min": 0.1 },
+        "reinforcements": { "default": 2, "min": 0, "max": 32, "integer": true },
+        "spawn_radius": { "default": 40, "min": 0 },
+        "impact_flash_seconds": { "default": 0.2, "min": 0 },
+        "first_delay": { "optional": true, "min": 0, "_comment": "Absent : la moitié de la recharge." }
+      },
+      "texts": {
+        "reinforcement_id": { "kind": "enemy" },
+        "fx_family": { "kind": "family", "default": "hostile" },
+        "cry_audio": { "kind": "sound", "default": "" }
+      }
+    },
+    "aimed_shot": {
+      "numbers": {
+        "windup_seconds": { "default": 0.35, "min": 0.05 },
+        "cooldown_multiplier": { "default": 1, "min": 0.1 },
+        "lane_length": { "default": 90, "min": 0 },
+        "lane_width": { "default": 6, "min": 0 },
+        "show_range": { "default": 0, "min": 0, "max": 1, "integer": true, "_comment": "1 : l'anneau de portée apparaît à l'approche." },
+        "range_reveal_margin": { "default": 90, "min": 0 },
+        "first_delay": { "optional": true, "min": 0, "_comment": "Absent : délai tiré entre 0,3 et 1 s." }
+      },
+      "texts": {
+        "fx_family": { "kind": "family", "default": "hostile" }
+      }
+    }
+  }
+}

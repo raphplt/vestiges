@@ -643,7 +643,7 @@ public partial class AudioManager : Node
 
 	private void OnEnemySpawned(string enemyId, float hpScale, float dmgScale)
 	{
-		if (enemyId.StartsWith("colosse_") || enemyId == "indicible")
+		if (enemyId == EnemyGrammar.FinalBossId)
 			PlaySfx("sfx_danger_building", 0f, -4f);
 	}
 

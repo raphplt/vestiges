@@ -96,16 +96,15 @@ public partial class SpawnManager : Node2D
 	private EnemyPool _pool;
 	private Player _player;
 	private WorldSetup _worldSetup;
-	private List<string> _enemyIds;
 	private Node _enemyContainer;
 	private EventBus _eventBus;
 	private GroupCache _groupCache;
 	private ErasureManager _erasureManager;
 	private CrisisManager _crisisManager;
 
-	// Fallback quand aucun biome n'est disponible
-	private static readonly List<string> FallbackExplorationPool = new() { "shadow_crawler", "fading_spitter" };
-	private static readonly List<string> FallbackResurgencePool = new() { "shadow_crawler", "shade", "shade", "fading_spitter", "void_brute", "wailing_sentinel" };
+	// Groupes de secours (spawn_flow.json) quand la position n'a pas de biome ou que son groupe est vide.
+	private readonly List<string> _fallbackExplorationPool = new();
+	private readonly List<string> _fallbackResurgencePool = new();
 
 	public override void _Ready()
 	{
@@ -114,8 +113,6 @@ public partial class SpawnManager : Node2D
 		EnemyVariantDataLoader.Load();
 		LoadScalingConfig();
 		_nextEliteAtSec = EnemyVariantDataLoader.NaturalElites.StartSec;
-
-		_enemyIds = EnemyDataLoader.GetAllIds();
 
 		_pool = GetNode<EnemyPool>("../EnemyPool");
 		_enemyContainer = GetNode("../EnemyContainer");
@@ -233,7 +230,7 @@ public partial class SpawnManager : Node2D
 		}
 		// Les tirs et les zones touchent de loin, en nombre, et leurs créatures meurent peu : leurs dégâts ne suivent
 		// qu'une part de la croissance commune (plan 20 §7.1).
-		float damageGrowthMinutes = data.Type == "ranged" ? elapsedMinutes * _rangedDamageGrowthShare : elapsedMinutes;
+		float damageGrowthMinutes = data.CombatType == EnemyCombatType.Ranged ? elapsedMinutes * _rangedDamageGrowthShare : elapsedMinutes;
 		dmgScale = Mathf.Pow(_dmgScalingPerMinute, damageGrowthMinutes) * _flatDmgMultiplier;
 
 		if (_currentRunPhase == GameManager.RunPhase.Crisis)
@@ -259,7 +256,7 @@ public partial class SpawnManager : Node2D
 
 	private void ApplyRunPhaseModifiers(Enemy enemy, EnemyData data)
 	{
-		if (data.Tier != "normal" || (_currentRunPhase == GameManager.RunPhase.Exploration && _affixChanceBonus <= 0f))
+		if (data.Tier != EnemyTier.Normal || (_currentRunPhase == GameManager.RunPhase.Exploration && _affixChanceBonus <= 0f))
 			return;
 
 		PhaseModifierConfig config = EnemyVariantDataLoader.PhaseModifiers;
@@ -317,7 +314,9 @@ public partial class SpawnManager : Node2D
 		CacheWorldSetup();
 		List<string> pool = _worldSetup?.GetBiomeAt(worldPos)?.ExplorationEnemyPool;
 		if (pool == null || pool.Count == 0)
-			pool = FallbackExplorationPool;
+			pool = _fallbackExplorationPool;
+		if (pool.Count == 0)
+			return null;
 
 		if (preferred != null)
 		{
@@ -331,7 +330,7 @@ public partial class SpawnManager : Node2D
 		for (int attempt = 0; attempt < 8; attempt++)
 		{
 			string id = PickWeighted(pool, _elapsedTime / 60f);
-			if (EnemyDataLoader.Get(id)?.Tier == "normal")
+			if (EnemyDataLoader.Get(id)?.Tier == EnemyTier.Normal)
 				return id;
 		}
 		return pool[0];
@@ -539,12 +538,12 @@ public partial class SpawnManager : Node2D
 	{
 		float multiplier = _enemySpeedBaseMultiplier + _enemySpeedGrowthPerMinute * elapsedMinutes;
 
-		if (data.Type == "melee")
+		if (data.CombatType == EnemyCombatType.Melee)
 			multiplier *= _enemySpeedMeleeBonus;
-		else if (data.Type == "ranged")
+		else if (data.CombatType == EnemyCombatType.Ranged)
 			multiplier *= _enemySpeedRangedBonus;
 
-		if (data.Tier != "normal")
+		if (data.Tier != EnemyTier.Normal)
 			multiplier *= _enemySpeedEliteBonus;
 
 		// Enemies in faded zones are faster
@@ -568,12 +567,12 @@ public partial class SpawnManager : Node2D
 	{
 		float multiplier = _enemyAggressionBaseMultiplier + _enemyAggressionGrowthPerMinute * elapsedMinutes;
 
-		if (data.Type == "melee")
+		if (data.CombatType == EnemyCombatType.Melee)
 			multiplier *= _enemyAggressionMeleeBonus;
-		else if (data.Type == "ranged")
+		else if (data.CombatType == EnemyCombatType.Ranged)
 			multiplier *= _enemyAggressionRangedBonus;
 
-		if (data.Tier != "normal")
+		if (data.Tier != EnemyTier.Normal)
 			multiplier *= _enemyAggressionEliteBonus;
 
 		return Mathf.Clamp(multiplier, 0.7f, 3f);
@@ -601,12 +600,14 @@ public partial class SpawnManager : Node2D
 		{
 			pool = isResurgence ? biome.ResurgenceEnemyPool : biome.ExplorationEnemyPool;
 			if (pool == null || pool.Count == 0)
-				pool = isResurgence ? FallbackResurgencePool : FallbackExplorationPool;
+				pool = isResurgence ? _fallbackResurgencePool : _fallbackExplorationPool;
 		}
 		else
 		{
-			pool = isResurgence ? FallbackResurgencePool : FallbackExplorationPool;
+			pool = isResurgence ? _fallbackResurgencePool : _fallbackExplorationPool;
 		}
+		if (pool.Count == 0)
+			return null;
 
 		if (_clusterRemaining > 0 && !string.IsNullOrEmpty(_clusterEnemyId))
 		{
@@ -665,9 +666,9 @@ public partial class SpawnManager : Node2D
 	private static float SpawnWeight(string enemyId, float elapsedMinutes)
 	{
 		EnemyData data = EnemyDataLoader.Get(enemyId);
-		if (data == null || elapsedMinutes < data.GetStat("spawn_from_minute", 0f))
+		if (data == null || elapsedMinutes < data.GetStat("spawn_from_minute"))
 			return 0f;
-		return data.GetStat("spawn_weight", 1f);
+		return data.GetStat("spawn_weight");
 	}
 
 	private Vector2 ApplyClusterSpawnOffset(Vector2 spawnPos, string enemyId)
@@ -785,6 +786,10 @@ public partial class SpawnManager : Node2D
 		}
 
 		Godot.Collections.Dictionary dict = json.Data.AsGodotDictionary();
+		foreach (string error in ReadFallbackPool(dict, "fallback_exploration_pool", _fallbackExplorationPool))
+			GD.PushError($"[SpawnManager] {error}");
+		foreach (string error in ReadFallbackPool(dict, "fallback_resurgence_pool", _fallbackResurgencePool))
+			GD.PushError($"[SpawnManager] {error}");
 		_baseSpawnInterval = (float)dict["base_spawn_interval"].AsDouble();
 		_minSpawnInterval = (float)dict["min_spawn_interval"].AsDouble();
 		_spawnIntervalDecay = (float)dict["spawn_interval_decay_per_minute"].AsDouble();
@@ -847,6 +852,17 @@ public partial class SpawnManager : Node2D
 		_positionPicker.ForwardArcDegrees = dict.ContainsKey("spawn_forward_arc_degrees") ? (float)dict["spawn_forward_arc_degrees"].AsDouble() : _positionPicker.ForwardArcDegrees;
 
 		GD.Print($"[SpawnManager] Config loaded — interval: {_baseSpawnInterval}s, max: {_maxEnemies}, crisis x{_crisisSpawnMultiplier:F2}");
+	}
+
+	/// <summary>Groupe de secours : chaque créature doit exister ; renvoie un message par absence (clé ou créature).</summary>
+	internal static List<string> ReadFallbackPool(Godot.Collections.Dictionary dict, string key, List<string> pool)
+	{
+		pool.Clear();
+		if (!dict.ContainsKey(key))
+			return new List<string> { $"spawn_flow.json : {key} absent, aucun secours hors biome" };
+		foreach (Variant entry in dict[key].AsGodotArray())
+			pool.Add(entry.AsString());
+		return EnemyPools.KeepKnown(pool, $"spawn_flow.json, {key}");
 	}
 
 	private void SetDefaults()

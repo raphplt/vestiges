@@ -11,37 +11,9 @@ namespace Vestiges.Infrastructure;
 /// </summary>
 public static class WeaponContract
 {
-	/// <summary>Une valeur admise : bornes, entière ou non, secours (sans secours, elle est obligatoire).</summary>
-	public readonly record struct ValueRule(float? Default, float Min, float Max, bool Integer)
-	{
-		/// <summary>Un facteur ou un poids : toute valeur strictement positive.</summary>
-		public static readonly ValueRule Positive = new(null, float.Epsilon, float.MaxValue, false);
-		public static readonly ValueRule NonNegative = new(null, 0f, float.MaxValue, false);
-
-		public bool Required => Default == null;
-
-		/// <summary>Raison du refus, ou null si la valeur convient.</summary>
-		public string Reject(float value)
-		{
-			if (!float.IsFinite(value))
-				return "valeur non finie";
-			if (value < Min || value > Max)
-			{
-				if (Min == float.Epsilon)
-					return $"{value} : strictement positif attendu";
-				if (Max == float.MaxValue)
-					return $"{value} inférieur au minimum {Min}";
-				return $"{value} hors de [{Min} ; {Max}]";
-			}
-			if (Integer && value != Mathf.Floor(value))
-				return $"{value} n'est pas entier";
-			return null;
-		}
-	}
-
 	private const string ContractPath = "res://data/weapons/weapon_contract.json";
 	private static readonly string[] Sections = { "stats", "on_hit_effects", "special_effects", "ascension_flags", "special_effect_annotations", "fx" };
-	private static readonly Dictionary<string, ValueRule> NoRules = new();
+	private static readonly Dictionary<string, DataValueRule> NoRules = new();
 
 	private static readonly (string Key, OnHitEffectKind Kind)[] OnHitKinds =
 	{
@@ -57,10 +29,10 @@ public static class WeaponContract
 		("sustained_cone", SpecialEffectKind.SustainedCone),
 	};
 
-	private static readonly Dictionary<string, ValueRule> _stats = new();
-	private static readonly Dictionary<OnHitEffectKind, Dictionary<string, ValueRule>> _onHit = new();
-	private static readonly Dictionary<SpecialEffectKind, Dictionary<string, ValueRule>> _special = new();
-	private static readonly Dictionary<string, Dictionary<string, ValueRule>> _flags = new();
+	private static readonly Dictionary<string, DataValueRule> _stats = new();
+	private static readonly Dictionary<OnHitEffectKind, Dictionary<string, DataValueRule>> _onHit = new();
+	private static readonly Dictionary<SpecialEffectKind, Dictionary<string, DataValueRule>> _special = new();
+	private static readonly Dictionary<string, Dictionary<string, DataValueRule>> _flags = new();
 	private static readonly HashSet<string> _annotations = new();
 	private static readonly HashSet<string> _styles = new();
 	private static readonly HashSet<string> _projectileAliases = new();
@@ -81,7 +53,7 @@ public static class WeaponContract
 	public static string OnHitKeys => string.Join(", ", OnHitKinds.Select(entry => entry.Key));
 	public static string SpecialKeys => string.Join(", ", SpecialKinds.Select(entry => entry.Key));
 
-	public static bool TryGetStat(string key, out ValueRule rule)
+	public static bool TryGetStat(string key, out DataValueRule rule)
 	{
 		Load();
 		return _stats.TryGetValue(key, out rule);
@@ -91,7 +63,7 @@ public static class WeaponContract
 	public static float StatDefault(string key)
 	{
 		Load();
-		return _stats.TryGetValue(key, out ValueRule rule) ? rule.Default ?? 0f : 0f;
+		return _stats.TryGetValue(key, out DataValueRule rule) ? rule.Default ?? 0f : 0f;
 	}
 
 	public static IEnumerable<string> RequiredStats()
@@ -126,23 +98,23 @@ public static class WeaponContract
 		return false;
 	}
 
-	public static IReadOnlyDictionary<string, ValueRule> OnHitRules(OnHitEffectKind kind)
+	public static IReadOnlyDictionary<string, DataValueRule> OnHitRules(OnHitEffectKind kind)
 	{
 		Load();
-		return _onHit.TryGetValue(kind, out Dictionary<string, ValueRule> rules) ? rules : NoRules;
+		return _onHit.TryGetValue(kind, out Dictionary<string, DataValueRule> rules) ? rules : NoRules;
 	}
 
-	public static IReadOnlyDictionary<string, ValueRule> SpecialRules(SpecialEffectKind kind)
+	public static IReadOnlyDictionary<string, DataValueRule> SpecialRules(SpecialEffectKind kind)
 	{
 		Load();
-		return _special.TryGetValue(kind, out Dictionary<string, ValueRule> rules) ? rules : NoRules;
+		return _special.TryGetValue(kind, out Dictionary<string, DataValueRule> rules) ? rules : NoRules;
 	}
 
 	/// <summary>Réglages d'un drapeau de voie ; faux pour un drapeau inconnu.</summary>
-	public static bool TryGetFlagRules(string flag, out IReadOnlyDictionary<string, ValueRule> rules)
+	public static bool TryGetFlagRules(string flag, out IReadOnlyDictionary<string, DataValueRule> rules)
 	{
 		Load();
-		bool known = _flags.TryGetValue(flag, out Dictionary<string, ValueRule> found);
+		bool known = _flags.TryGetValue(flag, out Dictionary<string, DataValueRule> found);
 		rules = found;
 		return known;
 	}
@@ -201,7 +173,7 @@ public static class WeaponContract
 		foreach ((Variant key, Variant value) in root["on_hit_effects"].AsGodotDictionary())
 		{
 			if (TryParseOnHit(key.AsString(), out OnHitEffectKind kind))
-				ReadRules(value.AsGodotDictionary(), _onHit[kind] = new Dictionary<string, ValueRule>());
+				ReadRules(value.AsGodotDictionary(), _onHit[kind] = new Dictionary<string, DataValueRule>());
 			else
 				GD.PushError($"[WeaponContract] effet à l'impact « {key} » inconnu du code ({OnHitKeys})");
 		}
@@ -214,7 +186,7 @@ public static class WeaponContract
 		foreach ((Variant key, Variant value) in root["special_effects"].AsGodotDictionary())
 		{
 			if (TryParseSpecial(key.AsString(), out SpecialEffectKind kind))
-				ReadRules(value.AsGodotDictionary(), _special[kind] = new Dictionary<string, ValueRule>());
+				ReadRules(value.AsGodotDictionary(), _special[kind] = new Dictionary<string, DataValueRule>());
 			else
 				GD.PushError($"[WeaponContract] effet spécial « {key} » inconnu du code ({SpecialKeys})");
 		}
@@ -225,7 +197,7 @@ public static class WeaponContract
 		}
 
 		foreach ((Variant key, Variant value) in root["ascension_flags"].AsGodotDictionary())
-			ReadRules(value.AsGodotDictionary(), _flags[key.AsString()] = new Dictionary<string, ValueRule>());
+			ReadRules(value.AsGodotDictionary(), _flags[key.AsString()] = new Dictionary<string, DataValueRule>());
 		foreach (Variant key in root["special_effect_annotations"].AsGodotArray())
 			_annotations.Add(key.AsString());
 		Godot.Collections.Dictionary fx = root["fx"].AsGodotDictionary();
@@ -237,7 +209,7 @@ public static class WeaponContract
 			_families.Add(family.AsString());
 	}
 
-	private static void ReadRules(Godot.Collections.Dictionary entries, Dictionary<string, ValueRule> target)
+	private static void ReadRules(Godot.Collections.Dictionary entries, Dictionary<string, DataValueRule> target)
 	{
 		foreach ((Variant key, Variant value) in entries)
 		{
@@ -245,7 +217,7 @@ public static class WeaponContract
 			if (name.StartsWith('_'))
 				continue;
 			Godot.Collections.Dictionary rule = value.AsGodotDictionary();
-			target[name] = new ValueRule(
+			target[name] = new DataValueRule(
 				rule.ContainsKey("default") ? (float)rule["default"].AsDouble() : null,
 				rule.ContainsKey("min") ? (float)rule["min"].AsDouble() : float.MinValue,
 				rule.ContainsKey("max") ? (float)rule["max"].AsDouble() : float.MaxValue,

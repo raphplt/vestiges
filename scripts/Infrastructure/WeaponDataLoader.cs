@@ -154,7 +154,7 @@ public static class WeaponDataLoader
     {
         WeaponContract.TryParseSpecial(se["type"].AsString(), out SpecialEffectKind kind);
         Dictionary<string, float> values = new();
-        foreach ((string name, WeaponContract.ValueRule rule) in WeaponContract.SpecialRules(kind))
+        foreach ((string name, DataValueRule rule) in WeaponContract.SpecialRules(kind))
             values[name] = se.ContainsKey(name) ? (float)se[name].AsDouble() : rule.Default ?? 0f;
         return new WeaponSpecialEffect { Kind = kind, Params = values };
     }

@@ -40,19 +40,19 @@ public class CryAbility : IEnemyAbility
 
     public void Configure(EnemyAbilityData data)
     {
-        _cooldownSeconds = data.GetNumber("cooldown_seconds", 8f);
-        _range = data.GetNumber("range", 250f);
-        _windupSeconds = Mathf.Max(0.1f, data.GetNumber("windup_seconds", 0.8f));
-        _reinforcements = Mathf.Max(0, Mathf.RoundToInt(data.GetNumber("reinforcements", 2f)));
-        _reinforcementId = data.GetText("reinforcement_id", "shade");
-        _spawnRadius = data.GetNumber("spawn_radius", 40f);
-        _flashSeconds = data.GetNumber("impact_flash_seconds", 0.2f);
-        _family = PixelPalette.ParseFamily(data.GetText("fx_family", "hostile"), FxFamily.Hostile);
+        _cooldownSeconds = data.Number("cooldown_seconds");
+        _range = data.Number("range");
+        _windupSeconds = data.Number("windup_seconds");
+        _reinforcements = (int)data.Number("reinforcements");
+        _reinforcementId = data.Text("reinforcement_id");
+        _spawnRadius = data.Number("spawn_radius");
+        _flashSeconds = data.Number("impact_flash_seconds");
+        _family = PixelPalette.ParseFamily(data.Text("fx_family"), FxFamily.Hostile);
         _flashColor = PixelPalette.Ramp(_family).Light;
-        _cryAudio = data.GetText("cry_audio", "");
+        _cryAudio = data.Text("cry_audio");
 
         Cancel();
-        _cooldownTimer = data.GetNumber("first_delay", _cooldownSeconds * 0.5f);
+        _cooldownTimer = data.TryGetNumber("first_delay", out float firstDelay) ? firstDelay : _cooldownSeconds * 0.5f;
     }
 
     public bool Process(Enemy owner, Player player, float distToPlayer, float delta)

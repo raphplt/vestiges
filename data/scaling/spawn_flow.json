@@ -1,4 +1,7 @@
 {
+    "_doc_fallback_pools": "Créatures tirées quand la position n'a pas de biome ou que son groupe est vide (plan 26 Q6c) ; un identifiant répété compte autant de fois.",
+    "fallback_exploration_pool": ["shadow_crawler", "fading_spitter"],
+    "fallback_resurgence_pool": ["shadow_crawler", "shade", "shade", "fading_spitter", "void_brute", "wailing_sentinel"],
     "base_spawn_interval": 1.9,
     "min_spawn_interval": 0.35,
     "spawn_interval_decay_per_minute": 0.045,

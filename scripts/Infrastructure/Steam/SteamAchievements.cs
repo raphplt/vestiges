@@ -165,7 +165,7 @@ public partial class SteamAchievements : Node
 	{
 		_sessionKills++;
 
-		if (enemyId == "indicible") TryUnlock(KillIndicible);
+		if (enemyId == EnemyGrammar.FinalBossId) TryUnlock(KillIndicible);
 	}
 
 	private void OnPoiExplored(string poiId, string poiType)
