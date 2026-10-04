@@ -821,3 +821,11 @@ Raphaël, après la planche de la Résurgence : « pour l'audio j'ai du mal à d
 - **Synergies (suite du §65) :** forme **C** retenue, des synergies de règles (des règles qui se répondent, sans effet ajouté ni annonce). Planche de combinaisons à proposer avant code.
 
 - **Cri du Hurleur, suite :** Raphaël retient la variante **C** (chœur grave désaccordé). Elle remplace l'ancien fichier, au volume −6 dB dans la banque (−7 dB de plus quand la créature est proche, par `PlayNearbyAudio`), et `cry_audio` est rétabli. À écouter en run.
+
+## 67. Questions de reprise — 4 octobre 2026, nuit
+
+- **Cri du Hurleur :** variante **C** gardée (déjà branchée au §66).
+- **Lore L1 :** **planche d'abord**. Tous les textes réécrits (FR et EN) sont soumis à Raphaël dans une page à relire ; rien n'entre dans le jeu avant son accord.
+- **Plan 26 Q4 :** gardé en cinquième position, après la fiche commune de l'Indicible et de la Barrière.
+- **Steam :** pas encore d'App ID ; Raphaël redemande la marche à suivre, écrite cette fois dans [STEAM-MISE-EN-PLACE.md](../STEAM-MISE-EN-PLACE.md).
+- **Ordre de travail confirmé :** nettoyage (§65), puis lore L1, planche des synergies de règles, fiche Indicible et Barrière, puis Q4.
