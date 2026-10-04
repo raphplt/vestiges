@@ -176,6 +176,22 @@ Observer la tâche de chargement, formaliser réussite/échec/annulation, proté
 
 **Sortie :** fichier invalide, exception injectée et fermeture pendant génération ne laissent ni arbre bloqué en pause, ni tâche utilisant une scène détruite. Chargement normal et Hub passent ; capture du parcours d'erreur si l'UI change.
 
+**Découpage d'exécution Q4, 4 octobre** (validé en cinquième position, §67). Relevé : `GameBootstrap._Ready` lance `SetupNormalGameAsync` sans l'observer (`_ = …`), après avoir lu sept catalogues hors de toute protection ; l'arbre est mis en pause dès la première ligne et n'est rendu qu'à la dernière. Une seule reprise après `await` vérifie que la scène existe encore (après les shaders). `WorldSetup.InitializeWorldAsync` attend la génération lancée sur un thread (`Task.Run`), puis cède la main une dizaine de fois sans contrôle ; une sortie de scène pendant la pose des décors laisse `PropStaging`, des milliers de nœuds hors de l'arbre, sans propriétaire. `EnemyPool.PrewarmAsync` crée des créatures après une attente sans vérifier son pool.
+1. **États du chargement :** `GameBootstrap` exécute tout le chargement, lecture des catalogues comprise, dans une méthode observée. Trois issues explicites : réussite (dépause, fondu), **échec** (journal avec l'étape en cours, le type et le message de l'exception, pile complète ; écran d'erreur ; l'arbre reste en pause derrière lui, pour que la run à moitié construite ne s'anime pas, et le bouton le libère), **abandon** (la scène a été quittée : aucune suite, aucune erreur). Chaque reprise après `await` vérifie que la scène est encore là, dans le bootstrap, `WorldSetup` et le préchauffage du pool.
+2. **Ressources :** à la sortie de scène pendant le chargement, l'arbre est dépausé, `PropStaging` est libéré, et une génération encore en cours est observée (son exception éventuelle va au journal au lieu de rester sans témoin).
+3. **Écran d'erreur :** l'écran de chargement s'arrête et affiche une phrase, l'étape et le message, et un bouton « Retour au camp » focalisé (manette et clavier), qui ramène au Hub. Textes FR et EN.
+4. **Pannes injectées, réservées aux bancs :** une étape nommée peut lever une exception, sur le fil principal ou dans le thread de génération. Le crochet n'existe que dans les assemblies de développement et n'agit qu'en session de banc (même garde que Q1).
+5. **Vérification :** scène `LoadingRecoveryRegression`, `tools/test_loading.sh`, suite `loading` de `tools/validate.sh`. Cas : chargement normal ; exception à l'étape des décors ; exception dans le thread de génération ; scène quittée pendant la génération ; scène quittée pendant la pose des décors (nœuds orphelins revenus au niveau d'avant) ; fermeture du jeu pendant le chargement (sortie propre). Puis suites smoke, movement-integration, dev_mode, dev_release ; capture de l'écran d'erreur, regardée.
+
+**Limite écrite :** `tools/validate.sh` refuse qu'un banc modifie les sources. Le cas « fichier invalide » est donc représenté par une exception à l'étape des catalogues ; les lecteurs qui refusent un fichier faux au lieu de continuer viennent avec Q7.
+
+**Q4 livré et vérifié, 4 octobre.**
+- **Code :** `GameBootstrap.RunLoadAsync` est la seule entrée du chargement ; aucune exception n'en sort. L'étape en cours est nommée (`Step`) pour le journal et l'écran. `LoadGuard.EnsureAlive` suit chaque attente dans `GameBootstrap` et `WorldSetup` (dont `YieldFrame`, devenu une tâche qui vérifie la scène) ; `EnemyPool.PrewarmAsync` s'arrête si son pool a quitté l'arbre. À la sortie de scène en plein chargement : dépause (`GameBootstrap._ExitTree`), `PropStaging` libéré, génération en cours observée (`WorldSetup._ExitTree`) ; `decalStaging` est libéré même si la construction échoue. Les lecteurs de catalogues restent exécutés dans `_Ready`, dans le même ordre, mais sous protection.
+- **Visible :** en cas d'échec, l'écran de chargement s'arrête sur « Le chargement a échoué. », l'étape et le message, et un bouton « Retour au camp » focalisé ; l'arbre reste en pause derrière lui, le bouton le libère et ramène au Hub. Si l'écran ne peut pas se construire, retour direct au camp. Textes FR et EN.
+- **Pannes injectées :** `LoadGuard.InjectFault` (catalogues, génération dans son thread, décors), `[Conditional("TOOLS")]`, champ de réglage sous `#if TOOLS`, actif seulement en session de banc.
+- **Vérification :** build sans avertissement ; `tools/test_loading.sh`, 7 scénarios en lancements séparés (normal ; panne aux catalogues, dans le thread de génération, aux décors ; scène quittée pendant la génération, pendant la pose des décors ; fermeture pendant le chargement), 20 contrôles. Contre-épreuves par mutation, code restauré ensuite : sans libération de `PropStaging`, sans dépause à la sortie, sans écran d'erreur, le banc échoue chaque fois sur le contrôle attendu. `tools/validate.sh` 7/7 (smoke, loading, movement-integration, dev_mode, development_tools, dev_release, saves), puis 4/4 après les corrections de relecture. Capture de l'écran d'erreur en 1080p, regardée. Relecture `godot-reviewer` : aucun bug bloquant ; trois constats corrigés (`decalStaging`, repli si l'écran d'erreur échoue, `using` sous `#if TOOLS`). Le quatrième (le fondu est lancé avant le marqueur de réussite) est laissé : `FadeOut` ne fait que créer une interpolation.
+- **Reste :** le cas « fichier invalide » est représenté par une panne aux catalogues ; les lecteurs qui refusent un fichier faux viennent avec Q7. Le nom d'étape affiché est en français dans les deux langues (libellé technique, aussi écrit au journal).
+
 ### Q5 — Typer la grammaire des attaques
 
 Constats : retour §54, F12, F14. Plans associés : 05, 17 et 21.
@@ -447,7 +463,7 @@ Pour clore un lot :
 - [x] Q2a — Écriture et récupération des sauvegardes.
 - [x] Q2b — Finalisation persistante sans double attribution.
 - [x] Q3 — Opérations Steam et contexte weekly.
-- [ ] Q4 — Chargement observé et récupérable.
+- [x] Q4 — Chargement observé et récupérable.
 - [x] Q5 — Motifs d'attaque typés.
 - [x] Q6a — Effets et paramètres des armes explicites.
 - [x] Q6b — Réglages du boss dans les données.

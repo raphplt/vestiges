@@ -7,7 +7,8 @@ namespace Vestiges.UI;
 /// Overlay de chargement affiché pendant l'initialisation async du monde (plan 24 B5). Démarre noir (raccord avec la
 /// VoidTransition du Hub) ; le personnage marche sur une bande de sol qui se dessine au rythme du chargement
 /// (<see cref="LoadingWalkStrip"/>), sous une phrase courte, et les poussières natives du fond s'animent. Les étapes
-/// techniques ne s'affichent plus : elles vont au journal. Puis fondu vers la partie.
+/// techniques ne s'affichent plus : elles vont au journal. Puis fondu vers la partie. En cas d'échec (plan 26 Q4),
+/// l'écran s'arrête sur l'erreur et un bouton de retour au camp, utilisable pendant la pause.
 /// </summary>
 public partial class GameLoadingOverlay : CanvasLayer
 {
@@ -42,6 +43,7 @@ public partial class GameLoadingOverlay : CanvasLayer
 	private bool _isVisible = true;
 	private float _loreTimer;
 	private int _loreIndex;
+	private (string Step, string Message, Action OnReturn)? _pendingFailure;
 
 	public override void _Ready()
 	{
@@ -90,6 +92,51 @@ public partial class GameLoadingOverlay : CanvasLayer
 
 		// Fade-in initial du texte de lore
 		FadeInLoreText();
+
+		if (_pendingFailure is { } failure)
+			ShowFailure(failure.Step, failure.Message, failure.OnReturn);
+	}
+
+	/// <summary>
+	/// Arrête l'écran sur l'échec du chargement : une phrase, l'étape et le message, un bouton focalisé qui rend la main.
+	/// Appelé avant l'entrée dans l'arbre (échec à la lecture des catalogues), il s'affiche dès que l'écran est prêt.
+	/// </summary>
+	public void ShowFailure(string step, string message, Action onReturn)
+	{
+		if (!IsNodeReady())
+		{
+			_pendingFailure = (step, message, onReturn);
+			return;
+		}
+		_pendingFailure = null;
+		_isVisible = false;
+		_strip.Visible = false;
+		_loreLabel.Visible = false;
+
+		CenterContainer center = new() { MouseFilter = Control.MouseFilterEnum.Ignore };
+		center.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
+		_root.AddChild(center);
+		VBoxContainer box = new() { Name = "LoadingFailure" };
+		box.AddThemeConstantOverride("separation", 24);
+		center.AddChild(box);
+
+		box.AddChild(UITheme.MakeLabel(Tr("LOADING_FAILED_TITLE"), TextRole.Title, UITheme.GoldColor, TextWeight.Strong,
+			HorizontalAlignment.Center));
+		Label detail = UITheme.MakeLabel(string.Format(Tr("LOADING_FAILED_DETAIL"), step, message), TextRole.Body,
+			UITheme.TextDim, align: HorizontalAlignment.Center);
+		detail.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+		detail.CustomMinimumSize = new Vector2(720f, 0f);
+		box.AddChild(detail);
+
+		Button back = new() { Name = "ReturnToCamp", Text = Tr("UI_END_HUB"), CustomMinimumSize = new Vector2(320f, 56f),
+			SizeFlagsHorizontal = Control.SizeFlags.ShrinkCenter };
+		UITheme.SetTextRole(back, TextRole.Lead);
+		UITheme.ApplyButtonStyle(back, UITheme.LoadTex(UITheme.MenusPath + "ui_button_normal.png"),
+			UITheme.LoadTex(UITheme.MenusPath + "ui_button_hover.png"), UITheme.LoadTex(UITheme.MenusPath + "ui_button_pressed.png"),
+			null);
+		back.Pressed += () => onReturn?.Invoke();
+		box.AddChild(back);
+		back.CallDeferred(Control.MethodName.GrabFocus);
 	}
 
 	public override void _Process(double delta)

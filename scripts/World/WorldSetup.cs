@@ -145,6 +145,7 @@ public partial class WorldSetup : Node2D
     /// </summary>
     private void GenerateWorld()
     {
+        LoadGuard.InjectFault("génération");
         ulong step = Time.GetTicksUsec();
         _generator = new WorldGenerator(
             _config.MapRadius,
@@ -238,6 +239,7 @@ public partial class WorldSetup : Node2D
         CreateVoidBackground();
 
         await _generation;
+        LoadGuard.EnsureAlive(this);
         PrepareTiles();
         LoadProfiler.Mark("génération attendue, tuiles préparées");
         await ApplyTerrainAsync(_terrain, _urbanLayout, onProgress);
@@ -263,6 +265,7 @@ public partial class WorldSetup : Node2D
 
         onProgress?.Invoke("Décors...");
         SpawnEnvironmentProps(_urbanLayout, _swampLayout);
+        LoadGuard.InjectFault("décors");
         LoadProfiler.Mark("décors des biomes");
         await YieldFrame();
 
@@ -335,9 +338,25 @@ public partial class WorldSetup : Node2D
         GD.Print($"[WorldSetup] World generated with seed {Seed} (sync)");
     }
 
-    private SignalAwaiter YieldFrame()
+    /// <summary>Rend la main au moteur pour une image, puis s'arrête si la scène a été quittée entre-temps.</summary>
+    private async Task YieldFrame()
     {
-        return ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+        await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+        LoadGuard.EnsureAlive(this);
+    }
+
+    public override void _ExitTree()
+    {
+        if (IsWorldReady)
+            return;
+        // Scène quittée pendant le chargement (plan 26 Q4) : les décors en attente sont hors de l'arbre, sa destruction
+        // ne les atteint pas ; une génération encore en cours voit son éventuelle exception consignée.
+        if (IsInstanceValid(_propStaging))
+            _propStaging.Free();
+        _propStaging = null;
+        if (_generation != null && !_generation.IsCompleted)
+            _generation.ContinueWith(task => GD.PushWarning($"[WorldSetup] Génération finie après la sortie de scène : {task.Exception?.GetBaseException().Message}"),
+                TaskContinuationOptions.OnlyOnFaulted);
     }
 
     // Les boucles longues du chargement rendent la main au moteur quand leur tranche de temps est épuisée, et non
@@ -566,22 +585,29 @@ public partial class WorldSetup : Node2D
         Node2D propContainer = GetNode<Node2D>("PropContainer");
         Node2D decals = new() { Name = "GroundDecals", ZIndex = -1 };
         AddChild(decals);
+        // Hors de l'arbre comme PropStaging : libéré même si la construction échoue (plan 26 Q4).
         Node2D decalStaging = new();
-        SeparateGroundDecals(_propStaging, decalStaging);
-        LoadProfiler.Mark("décalques séparés");
-        Node2D player = GetNodeOrNull<Node2D>("Player");
-        PropOcclusion occlusion = new() { Name = "PropOcclusion" };
-        AddChild(occlusion);
-        occlusion.Build(_propStaging, player);
-        LoadProfiler.Mark("index d'occlusion construit");
+        try
+        {
+            SeparateGroundDecals(_propStaging, decalStaging);
+            LoadProfiler.Mark("décalques séparés");
+            Node2D player = GetNodeOrNull<Node2D>("Player");
+            PropOcclusion occlusion = new() { Name = "PropOcclusion" };
+            AddChild(occlusion);
+            occlusion.Build(_propStaging, player);
+            LoadProfiler.Mark("index d'occlusion construit");
 
-        // En dernier : les décors, rangés en tronçons hors de l'arbre, y entrent d'un bloc (voir PropChunks).
-        PropChunks chunks = new() { Name = "PropChunks" };
-        AddChild(chunks);
-        chunks.Build(player?.GetNodeOrNull<Camera2D>("Camera"), (_propStaging, propContainer), (decalStaging, decals));
-        _propStaging.Free();
-        _propStaging = null;
-        decalStaging.Free();
+            // En dernier : les décors, rangés en tronçons hors de l'arbre, y entrent d'un bloc (voir PropChunks).
+            PropChunks chunks = new() { Name = "PropChunks" };
+            AddChild(chunks);
+            chunks.Build(player?.GetNodeOrNull<Camera2D>("Camera"), (_propStaging, propContainer), (decalStaging, decals));
+            _propStaging.Free();
+            _propStaging = null;
+        }
+        finally
+        {
+            decalStaging.Free();
+        }
     }
 
     /// <summary>

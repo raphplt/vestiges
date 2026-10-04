@@ -86,7 +86,12 @@ public partial class EnemyPool : Node
 			_available.Enqueue(enemy);
 
 			if ((i + 1) % perFrame == 0)
+			{
 				await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+				// Scène quittée pendant le chargement : la réserve a déjà été libérée par _ExitTree.
+				if (!World.LoadGuard.IsAlive(this))
+					return;
+			}
 		}
 
 		GD.Print($"[EnemyPool] Prewarmed {InitialSize} enemies (async)");

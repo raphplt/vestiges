@@ -413,6 +413,8 @@ LOADING_LINE_5,Les noms tiennent plus longtemps que les visages.,Names last long
 LOADING_LINE_6,Une radio grésille quelque part.,A radio crackles somewhere.
 LOADING_LINE_7,Le linge sèche encore sur le fil.,The laundry is still drying on the line.
 LOADING_LINE_8,Personne n'a fermé la barrière.,Nobody closed the gate.
+LOADING_FAILED_TITLE,Le chargement a échoué.,Loading failed.
+LOADING_FAILED_DETAIL,Étape « {0} » : {1},Step “{0}”: {1}
 MAP_BIOME_FOREST,Forêt reconquise,Reclaimed forest
 MAP_BIOME_URBAN,Ruines urbaines,Urban ruins
 MAP_BIOME_FIELDS,Champs sauvages,Wild fields

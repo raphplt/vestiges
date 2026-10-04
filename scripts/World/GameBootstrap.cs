@@ -1,3 +1,4 @@
+using System;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Godot;
@@ -17,17 +18,97 @@ namespace Vestiges.World;
 /// Wire les systèmes entre eux au démarrage de la scène.
 /// Exécuté après tous les _Ready (grâce à l'ordre des enfants dans Main).
 /// Lit le personnage sélectionné depuis GameManager (choisi dans le Hub).
+/// Le chargement a trois issues (plan 26 Q4) : réussite, échec affiché avec un retour au camp, ou abandon quand la
+/// scène est quittée en route.
 /// </summary>
 public partial class GameBootstrap : Node
 {
     private const string FallbackCharacterId = "vagabond";
 
+    private const string HubScenePath = "res://scenes/Hub.tscn";
+
+    private enum LoadState { Running, Succeeded, Failed, Abandoned }
+
     private EventBus _eventBus;
     private Player _levelUpPlayer;
     private GroupCache _groupCache;
+    private LoadState _loadState = LoadState.Running;
+    private string _loadStep = "";
+    private GameLoadingOverlay _overlay;
 
     public override void _Ready()
     {
+        // L'écran de chargement entre dans l'arbre avant le premier rendu de la scène : sans lui, la toute première
+        // frame montrait le HUD et un monde vide.
+        _overlay = new GameLoadingOverlay { Name = "GameLoadingOverlay", ProcessMode = ProcessModeEnum.Always };
+        GetParent().CallDeferred(Node.MethodName.AddChild, _overlay);
+        _ = RunLoadAsync();
+    }
+
+    /// <summary>Seule entrée du chargement : aucune exception n'en sort, chaque issue est réglée ici.</summary>
+    private async Task RunLoadAsync()
+    {
+        try
+        {
+            await SetupNormalGameAsync();
+            _loadState = LoadState.Succeeded;
+        }
+        catch (Exception exception) when (exception is LoadAbandonedException || !LoadGuard.IsAlive(this))
+        {
+            _loadState = LoadState.Abandoned;
+            GD.Print($"[GameBootstrap] Chargement abandonné à l'étape « {_loadStep} » : la scène a été quittée.");
+        }
+        catch (Exception exception)
+        {
+            _loadState = LoadState.Failed;
+            GD.PushError($"[GameBootstrap] Chargement en échec à l'étape « {_loadStep} » : {exception.GetType().Name} : {exception.Message}\n{exception}");
+            // L'arbre reste en pause derrière l'écran d'erreur, qui fonctionne en pause : la run à moitié construite
+            // ne s'anime pas, et le bouton rend la main.
+            ShowFailureOrLeave(exception.Message);
+        }
+    }
+
+    /// <summary>Écran d'erreur ; s'il ne peut pas se construire, retour direct au camp plutôt qu'une pause sans issue.</summary>
+    private void ShowFailureOrLeave(string message)
+    {
+        try
+        {
+            if (IsInstanceValid(_overlay))
+            {
+                _overlay.ShowFailure(_loadStep, message, ReturnToHub);
+                return;
+            }
+        }
+        catch (Exception exception)
+        {
+            GD.PushError($"[GameBootstrap] Écran d'erreur impossible, retour au camp : {exception.Message}");
+        }
+        ReturnToHub();
+    }
+
+    private void ReturnToHub()
+    {
+        if (!LoadGuard.IsAlive(this))
+            return;
+        GetTree().Paused = false;
+        GetTree().ChangeSceneToFile(HubScenePath);
+    }
+
+    /// <summary>Nomme l'étape en cours pour le journal et l'écran d'erreur, et fait avancer l'écran de chargement.</summary>
+    private void Step(string text)
+    {
+        _loadStep = text.TrimEnd('.');
+        if (IsInstanceValid(_overlay))
+            _overlay.SetProgress(text);
+    }
+
+    private async Task SetupNormalGameAsync()
+    {
+        // Le parent termine ses _Ready avant de recevoir les nœuds de warmup ; l'overlay s'anime pendant la pause.
+        GetTree().Paused = true;
+
+        Step("Catalogues");
+        LoadGuard.InjectFault("catalogues");
         CharacterDataLoader.Load();
         WeaponDataLoader.Load();
         WeaponUpgradeDataLoader.Load();
@@ -52,75 +133,31 @@ public partial class GameBootstrap : Node
         RunTracker runTracker = GetNode<RunTracker>("../RunTracker");
         Player player = GetNode<Player>("../Player");
 
-        // L'écran de chargement entre dans l'arbre avant le premier rendu de la scène : sans lui, la toute première
-        // frame montrait le HUD et un monde vide.
-        GameLoadingOverlay overlay = new() { Name = "GameLoadingOverlay", ProcessMode = ProcessModeEnum.Always };
-        GetParent().CallDeferred(Node.MethodName.AddChild, overlay);
-
-        _ = SetupNormalGameAsync(player, perkManager, scoreManager, runTracker,
-            progression, fragmentManager, overlay);
-    }
-
-    /// <summary>
-    /// Animations de toutes les espèces chargées sous l'écran de chargement, une par image : chargées à la première
-    /// apparition, elles coûtaient 16 à 25 ms chacune, une image sautée à chaque nouvelle espèce en pleine partie.
-    /// </summary>
-    private async Task PreloadEnemySprites()
-    {
-        foreach (string id in EnemyDataLoader.GetAllIds())
-        {
-            EnemyData data = EnemyDataLoader.Get(id);
-            if (string.IsNullOrEmpty(data?.Visual.SpriteFolder))
-                continue;
-            Combat.EnemySpriteLoader.LoadOrGet(id, data.Visual.SpriteFolder);
-            await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
-        }
-    }
-
-    public override void _ExitTree()
-    {
-        // L'EventBus survit à la run : sans désabonnement, chaque run laisserait un rappel de plus.
-        if (_eventBus != null)
-            _eventBus.LevelUp -= OnLevelUp;
-    }
-
-    private void OnLevelUp(int newLevel)
-    {
-        if (!IsInstanceValid(_levelUpPlayer))
-            return;
-        Combat.LevelUpFx.Play(_levelUpPlayer, _groupCache);
-        Combat.ScreenShake.Instance?.ShakeMedium();
-    }
-
-    private async Task SetupNormalGameAsync(Player player, PerkManager perkManager,
-        ScoreManager scoreManager, RunTracker runTracker,
-        PlayerProgression progression, FragmentManager fragmentManager, GameLoadingOverlay overlay)
-    {
-        // Le parent termine ses _Ready avant de recevoir les nœuds de warmup ; l'overlay s'anime pendant la pause.
-        GetTree().Paused = true;
         await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+        LoadGuard.EnsureAlive(this);
 
         // Le viewport de préchauffage rend réellement ses échantillons, sous l'écran de chargement.
-        overlay.SetProgress("Préparation des shaders...");
+        Step("Préparation des shaders...");
         await ShaderWarmup.RenderAsync(this);
-        if (!IsInsideTree() || IsQueuedForDeletion())
-            return;
+        LoadGuard.EnsureAlive(this);
         LoadProfiler.Mark("shaders");
 
         // --- Initialisation du monde (étalée sur plusieurs frames) ---
         WorldSetup worldSetup = GetNode<WorldSetup>("..");
-        await worldSetup.InitializeWorldAsync(step => overlay.SetProgress(step));
+        await worldSetup.InitializeWorldAsync(Step);
+        LoadGuard.EnsureAlive(this);
 
         // --- Prewarm EnemyPool (étalé) ---
-        overlay.SetProgress("Préparation des créatures...");
+        Step("Préparation des créatures...");
         EnemyPool enemyPool = GetNode<EnemyPool>("../EnemyPool");
         await enemyPool.PrewarmAsync(4);
+        LoadGuard.EnsureAlive(this);
         LoadProfiler.Mark("créatures du pool");
         await PreloadEnemySprites();
         LoadProfiler.Mark("animations des créatures");
 
         // --- Wire des systèmes (rapide, synchrone) ---
-        overlay.SetProgress("Initialisation...");
+        Step("Initialisation...");
 
         HUD hud = GetNode<HUD>("../HUD");
         LevelUpScreen levelUpScreen = GetNode<LevelUpScreen>("../LevelUpScreen");
@@ -244,7 +281,43 @@ public partial class GameBootstrap : Node
         // --- Dépause et fade-out de l'overlay ---
         GetTree().Paused = false;
         LoadProfiler.Mark("systèmes de la run");
-        overlay.FadeOut();
+        _overlay.FadeOut();
+    }
+
+    /// <summary>
+    /// Animations de toutes les espèces chargées sous l'écran de chargement, une par image : chargées à la première
+    /// apparition, elles coûtaient 16 à 25 ms chacune, une image sautée à chaque nouvelle espèce en pleine partie.
+    /// </summary>
+    private async Task PreloadEnemySprites()
+    {
+        foreach (string id in EnemyDataLoader.GetAllIds())
+        {
+            EnemyData data = EnemyDataLoader.Get(id);
+            if (string.IsNullOrEmpty(data?.Visual.SpriteFolder))
+                continue;
+            Combat.EnemySpriteLoader.LoadOrGet(id, data.Visual.SpriteFolder);
+            await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+            LoadGuard.EnsureAlive(this);
+        }
+    }
+
+    public override void _ExitTree()
+    {
+        // Scène quittée en plein chargement (retour au Hub, fermeture) : la pause posée par le chargement ne doit pas
+        // geler la scène suivante.
+        if (_loadState == LoadState.Running)
+            GetTree().Paused = false;
+        // L'EventBus survit à la run : sans désabonnement, chaque run laisserait un rappel de plus.
+        if (_eventBus != null)
+            _eventBus.LevelUp -= OnLevelUp;
+    }
+
+    private void OnLevelUp(int newLevel)
+    {
+        if (!IsInstanceValid(_levelUpPlayer))
+            return;
+        Combat.LevelUpFx.Play(_levelUpPlayer, _groupCache);
+        Combat.ScreenShake.Instance?.ShakeMedium();
     }
 
 #if TOOLS
