@@ -48,6 +48,7 @@ namespace Vestiges.Tests;
 /// --capture-perks [--perk-scene survival|overflow|priority|carry] : effets des perks en run (RunObservation.Perks.cs).
 /// --capture-oublis : les neuf Oublis de carte pris d'un coup, effets mesurés (RunObservation.Oublis.cs).
 /// --check-orb-sleep : orbe d'XP endormie loin du joueur, réveillée et ramassée à son retour (RunObservation.OrbSleep.cs).
+/// --measure-indicible : Indicible forcé, trois postures de bot mesurées sans image (RunObservation.IndicibleMeasure.cs).
 /// --capture-endgame : Indicible forcé, combat, mort et passage en endgame (RunObservation.Endgame.cs).
 /// --capture-weapon-pickup : arme au sol ramassée (vol vers le HUD) puis échangée (RunObservation.WeaponPickup.cs).
 /// --close-window : quitte par la demande de fermeture de la fenêtre au lieu de GameExit.
@@ -188,6 +189,8 @@ public partial class RunObservation : Node
                 await CheckOrbSleep();
             else if (Array.IndexOf(args, "--capture-weapon-pickup") >= 0)
                 await CaptureWeaponPickup();
+            else if (Array.IndexOf(args, "--measure-indicible") >= 0)
+                await MeasureIndicible(double.Parse(Argument(args, "--seconds", "20"), CultureInfo.InvariantCulture));
             else if (Array.IndexOf(args, "--capture-endgame") >= 0)
                 await CaptureEndgame(double.Parse(Argument(args, "--seconds", "40"), CultureInfo.InvariantCulture));
             else if (Array.IndexOf(args, "--loot-draws") >= 0)

@@ -1,0 +1,4 @@
+[IndicibleMeasure] arène centre=(0, 0) bords à 350 (demi-longueur 200, demi-épaisseur 40) ; tentacule largeur 30, longueur 120, annonce 0.8 s, décalage ±60
+[IndicibleMeasure] posture=cercle secondes=20 pv_boss=6400->6400 tirs=51 vers_centre=6 passent_a_40px_du_centre=8 atteignent_un_bord=0 attaques=8 coups_recus=0 distance_centre_moy=355 min=0 max=543 dans_l_anneau=52%
+[IndicibleMeasure] posture=centre secondes=20 pv_boss=6400->6400 tirs=249 vers_centre=10 passent_a_40px_du_centre=10 atteignent_un_bord=0 attaques=8 coups_recus=8 distance_centre_moy=0 min=0 max=0 dans_l_anneau=100%
+[IndicibleMeasure] posture=dehors secondes=20 pv_boss=6400->6400 tirs=9 vers_centre=9 passent_a_40px_du_centre=9 atteignent_un_bord=0 attaques=8 coups_recus=11 distance_centre_moy=540 min=540 max=540 dans_l_anneau=0%

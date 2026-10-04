@@ -36,7 +36,7 @@ Le [registre](DECISIONS.md) garde les mots de Raphaël. Les plans gardent le dé
 | Réveil du Mémorial et de la Faille | 24 L6b, 15 | Durée gardée ; son à changer (§49), à traiter avec l'audio |
 | Classement | 09 | Toutes les décisions, plus tard. Weekly gardé pour toutes les runs, un tableau par semaine (§64, livré par Q3). Steam réel : App ID du jeu à obtenir par Raphaël quand il le souhaite |
 | Audio, classement | 15, 09 | L'audio reprend après l'écoute de la planche ; mort et bilan validés pour l'instant (§62), retouches d'affichage possibles |
-| L'Indicible ne se combat pas vraiment | 07, 26 Q6b | **Décidé (§64)** : mesurer après Q6c (tirs, touches, coups portés), puis reprendre son design avec la fiche de la Barrière. |
+| L'Indicible ne se combat pas vraiment | 07, [mesure](../audits/indicible-2026-10-04/README.md) | **Mesuré le 4 octobre** : il ne peut pas être blessé. Ses bords touchables sont à 310–390 px du centre, les armes portent à 120–180 px et visent son centre ; mêlée, orbite et cône ne le voient pas. Ses tentacules touchent un joueur immobile, jamais un joueur qui bouge. Reprise à concevoir avec la Barrière (§64) : bords ciblables (A), un cœur touchable (B) ou refonte complète (C) ? |
 | Bonus de dégâts de la meute | 26 Q6c | `pack_bonus_damage` (0,15 au Charognard) n'a jamais été appliqué : la meute ne fait qu'accélérer. Le brancher (dégâts +15 % par voisin, jusqu'à 5), ou le retirer ? |
 | Points à vérifier en jeu | `A-VERIFIER.md` | 55 cases non cochées ; Raphaël les coche en jouant (§64) |
 

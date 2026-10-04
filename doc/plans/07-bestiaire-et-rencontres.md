@@ -454,3 +454,17 @@ techniquement livré, **ressenti à confirmer en partie humaine** ; les tirs
 restent continus dans le cas extrême du banc et le retour de Raphaël n'est pas
 considéré comme validé par un bot. Référence obsolète du préchargement repérée
 pendant les captures, à corriger dans le lot court suivant.
+
+## L'Indicible mesuré — 4 octobre 2026
+
+Mesure demandée au §64 ([compte rendu et journaux](../audits/indicible-2026-10-04/README.md), mode `--measure-indicible` de `RunObservation`). Sur deux seeds et trois postures de bot (en cercle, immobile au centre, posté hors de l'anneau), 20 s chacune :
+- **Le boss ne perd aucun PV** : aucun tir n'atteint un bord.
+  - Ses zones touchables sont les quatre bords, à 310–390 px de son centre. Les armes du build portent à 120–180 px.
+  - Le ciblage vise son centre, où il n'y a rien à toucher. Hors de l'anneau, le centre est hors de portée et le joueur cesse de tirer.
+  - Mêlée, orbite, cône et chaîne ne le voient pas du tout : ils ne retiennent que les `Enemy`.
+- **Ses tentacules touchent un joueur immobile** (environ un coup par vague), **jamais un joueur qui bouge sans cesse** (annonce de 0,8 s, couloir de 30 px).
+
+L'Indicible n'est donc pas combattable en l'état : c'est un défaut de conception (géométrie et ciblage), pas un réglage. Pistes pour la reprise, à concevoir avec la Barrière (§64) :
+- **A. Bords ciblables :** chaque bord devient une cible que les armes voient (projectiles, mêlée, orbite, cône), et l'arène se resserre à la portée des armes, ou la suit.
+- **B. Un cœur :** une partie centrale touchable, les bords restent un décor menaçant.
+- **C. Refonte complète** avec la fiche de la Barrière : silhouette, phases, et attaques qui punissent aussi le joueur qui bouge.
