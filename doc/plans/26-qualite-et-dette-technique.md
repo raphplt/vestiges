@@ -173,6 +173,23 @@ Définir les mécanismes d'effets et leurs paramètres utiles avec types, unité
 
 **Sortie :** typo de mécanisme/stat, paramètre requis absent, valeur non finie ou référence absente produit un diagnostic précis avant la run. Les réglages migrés reproduisent exactement les valeurs effectives antérieures, ascensions comprises. Une arme supplémentaire utilisant un mécanisme existant fonctionne sans ajout de branche par son ID dans `Player`.
 
+**Découpage d'exécution Q6a, 4 octobre.** Relevé : 24 armes, 4 effets à l'impact (`dot`, `slow`, `disorient`, `freeze`) dont 9 remplacés par des voies, 7 effets spéciaux (`heal_every_n_hits`, `instant_disintegrate`, `delayed_echo`, `ground_fire`, `local_time_slow`, `random_shape`, `sustained_cone`), 6 voies à `special_overrides`, une à `flags`/`params` (`orbit_pulse`). 18 stats d'armes dans les données ; `Player` et `WeaponInstance` lisent chaque stat avec un secours écrit à l'appel (14 valeurs, divergentes pour `damage`, `range`, `attack_speed`, présentes dans les 24 armes donc jamais utilisées). Les effets spéciaux lisent leurs réglages avec 17 secours dans `Player`, dont trois absents des données (`echo_radius` 40, `echo_count` 1, `freeze_seconds` 0) et un en dur (l'onde du Dessin d'enfant fait 0,5 × les dégâts). `essence_cost_per_attack` (3 armes) n'est lu nulle part.
+
+1. **Contrat en données :** `data/weapons/weapon_contract.json` déclare chaque stat d'arme (secours actuel, bornes, obligatoire ou non), chaque effet à l'impact et spécial (réglages, bornes, entier ou non, secours pour les seuls réglages facultatifs), les drapeaux de voie et leurs réglages, les styles et projectiles d'effet admis. `WeaponContract` le lit et refuse un contrat qui ne couvre pas exactement les types du code.
+2. **Types :** `OnHitEffectKind` et `SpecialEffectKind` remplacent les chaînes ; `Player` et `WeaponTraits` comparent des types. Les réglages d'un effet sont résolus au chargement, secours compris : plus aucun `TryGetValue(…) ? … : secours` dans `Player`. L'onde du Dessin d'enfant reçoit un réglage `shape_damage_ratio` (0,5).
+3. **Stats :** `WeaponInstance.GetStat(clé)` prend le secours du contrat ; les secours écrits à l'appel disparaissent.
+4. **Diagnostics au chargement :** clé de stat, de croissance, de multiplicateur ou de remplacement inconnue ; croissance sans réglage d'amélioration ; valeur non finie ou hors bornes ; type d'effet inconnu ; réglage requis absent, inconnu ou hors bornes ; `special_overrides` sans effet spécial ou hors de ses réglages ; drapeau inconnu ou réglage manquant ; son, style, famille ou projectile introuvable. L'arme fautive est écartée avec un message qui nomme l'arme, la voie et le champ, comme en Q5.
+5. **Vérification :** relevé des valeurs effectives (stats, effet, réglages) de chaque arme et de chaque voie au commit de base et après, identiques ; fixture négative par catégorie de diagnostic ; suites armes, objets, perks, choix, cône, mouvement, intégration Main. `essence_cost_per_attack` reste déclaré « non lu », question pour Raphaël.
+
+**Q6a livré et vérifié, 4 octobre.**
+- **Code :** `data/weapons/weapon_contract.json` et `WeaponContract` déclarent 18 stats d'armes, 4 effets à l'impact, 7 effets spéciaux et leurs réglages, le drapeau `orbit_pulse`, les styles, familles et alias de projectiles. `OnHitEffectKind` et `SpecialEffectKind` remplacent les chaînes dans `Player`, `WeaponTraits` et `WeaponProperties`. Les réglages des effets sont résolus au chargement : `Player` lit `se.Get(SpecialEffectParam.…)`, sans aucun secours écrit à l'appel. `WeaponInstance.GetStat(clé)` prend le secours du contrat : plus aucun secours écrit à l'appel dans `Player`, `WeaponInstance`, `WeaponTraits`, la pause et les bancs. L'onde du Dessin d'enfant lit `shape_damage_ratio` (0,5) au lieu d'une constante. `WeaponDataValidator` refuse une arme fautive avant toute conversion ; la propriété `Shapes`, jamais lue, est retirée.
+- **Diagnostics :** 27 cas refusés par la fixture négative du banc des armes, chacun avec un message qui nomme l'arme, la voie et le champ (stat inconnue, non numérique, non finie, hors bornes, obligatoire absente ; croissance inconnue ou sans réglage d'amélioration ; effet inconnu ; réglage absent, inconnu, non entier ; champ d'arme ou de voie inconnu ; multiplicateur nul ; remplacement hors effet ou sans effet ; drapeau inconnu ou réglage manquant ; son, image, style, famille ou projectile introuvable).
+- **Mêmes valeurs :** relevé de 1 259 valeurs effectives (chaque arme sans voie puis avec ses deux voies), identique au commit de base ([preuves](../audits/qualite-2026-10-02/q6a/)). Le contrôle a d'abord refusé deux armes réelles : mes bornes étaient fausses (cadence 0 de la Boîte à musique, vitesse 0 du cône), corrigées dans le contrat.
+- **Fuite à la fermeture :** une première version du validateur parcourait les dictionnaires Godot. Le banc de mouvement échouait alors 14 fois sur 15, toutes tentatives de correction comprises : une forme physique ou un `ConfigFile` signalé en fuite à la fermeture du moteur. Le commit de base passait 8 fois sur 8. Mesures : sans validation, 3 sur 3 propres ; avec un passage forcé du ramasse-miettes, 3 sur 3 propres. Les centaines d'enveloppes natives jetées retardaient la finalisation d'autres objets. Le validateur lit désormais l'arme en `System.Text.Json` : 4 sur 4 propres, puis vert dans la validation.
+- **Vérifié :** `tools/validate.sh` sur smoke, weapons, objects, les trois suites de perks, choice_screen, cone, movement, movement-integration, ui_art, dev_mode et saves, **13/13**. Build sans avertissement. Relecture `godot-reviewer` : aucun comportement de combat changé, aucune arme réelle refusée. Corrigés : contrat incomplet signalé au lieu d'échouer en silence, familles déclarées dans le contrat (plus de dépendance vers `Combat`), bornes « strictement positif » nommées, dictionnaire vide partagé.
+- **Pas de banc FPS :** sur les chemins chauds, une recherche de dictionnaire remplace une autre, et la variable `out` disparaît.
+- **Question pour Raphaël :** `essence_cost_per_attack` (Bâton d'essence 0,5, Lanterne 0,3, Gants de boxe 0,2) n'est lu par aucun mécanisme. Il reste déclaré dans le contrat comme « non lu ». À brancher sur un coût en Essence, ou à retirer ?
+
 ### Q6b — Sortir les réglages du boss du code
 
 Constat : retour §54. Plans associés : 07 et late game V2.
@@ -283,7 +300,7 @@ Pour clore un lot :
 - [ ] Q3 — Opérations Steam et contexte weekly.
 - [ ] Q4 — Chargement observé et récupérable.
 - [x] Q5 — Motifs d'attaque typés.
-- [ ] Q6a — Effets et paramètres des armes explicites.
+- [x] Q6a — Effets et paramètres des armes explicites.
 - [ ] Q6b — Réglages du boss dans les données.
 - [ ] Q6c — Relations et capacités ennemies validées.
 - [ ] Q7 — Autres catalogues validés, compte rendu par famille.
@@ -301,4 +318,4 @@ Pour clore un lot :
 - [ ] Q13 — Provenance du son de level-up résolue.
 - [ ] Q14 — Documentation active et restes V1 repris.
 
-**Prochain lot recommandé : Q6a** (effets à l'impact et spéciaux des armes, suite directe de Q5) ; Q2a et Q2b sont livrés le 4 octobre.
+**Prochain lot recommandé : Q6b** (réglages du boss dans les données) ou Q3 (Steam) ; Q2a, Q2b et Q6a sont livrés le 4 octobre.

@@ -1,0 +1,70 @@
+using System.Collections.Generic;
+using System.Globalization;
+using System.Text;
+using Godot;
+using Vestiges.Combat;
+using Vestiges.Infrastructure;
+
+namespace Vestiges.Tests;
+
+/// <summary>Relevé de référence (commit de base) : valeurs effectives lues par le combat, secours compris.</summary>
+public partial class WeaponEffectiveDump : Node
+{
+    private static readonly (string Key, float Fallback)[] StatKeys =
+    {
+        ("damage", 1f), ("attack_speed", 1f), ("range", 60f), ("arc_angle", 120f), ("cone_angle_start", 15f),
+        ("cone_angle_end", 60f), ("knockback", 0f), ("projectile_speed", 400f), ("spread_angle", 20f),
+        ("homing_strength", 0f), ("projectile_count", 1f), ("projectile_pierce", 0f), ("orbital_count", 3f),
+        ("orbital_speed", 180f), ("chain_targets", 2f), ("chain_range", 100f), ("chain_damage_falloff", 0.8f),
+    };
+
+    public override void _Ready()
+    {
+        StringBuilder text = new();
+        foreach (WeaponData weapon in WeaponDataLoader.GetAll())
+        {
+            Dump(text, weapon, null);
+            foreach (WeaponAscensionData ascension in weapon.Ascensions)
+                Dump(text, weapon, ascension.Id);
+        }
+        using FileAccess file = FileAccess.Open(OS.GetCmdlineUserArgs()[0], FileAccess.ModeFlags.Write);
+        file.StoreString(text.ToString());
+        GD.Print("[WeaponEffectiveDump] DONE");
+        GetTree().Quit();
+    }
+
+    private static string F(float v) => v.ToString("0.#####", CultureInfo.InvariantCulture);
+
+    private static float P(WeaponSpecialEffect se, string key, float fallback) => se.Params.TryGetValue(key, out float v) ? v : fallback;
+
+    private static void Dump(StringBuilder text, WeaponData data, string ascensionId)
+    {
+        WeaponInstance weapon = new(data);
+        if (ascensionId != null)
+        {
+            while (weapon.CanLevelUp)
+                weapon.ApplyUpgrade(new List<StatGain>());
+            weapon.Ascend(ascensionId);
+        }
+        string head = $"{data.Id}/{ascensionId ?? "-"}";
+        foreach ((string key, float fallback) in StatKeys)
+            text.AppendLine($"{head} stat {key}={F(weapon.GetStat(key, fallback))}");
+        WeaponOnHitEffect ohe = weapon.OnHitEffect;
+        if (ohe != null)
+            text.AppendLine($"{head} onhit {ohe.Type} value={F(ohe.Value)} damage={F(ohe.Damage)} duration={F(ohe.Duration)}");
+        WeaponSpecialEffect se = weapon.SpecialEffect;
+        if (se == null)
+            return;
+        string values = se.Type switch
+        {
+            "heal_every_n_hits" => $"n={Mathf.Max(1, (int)P(se, "n", 5f))} heal_amount={F(P(se, "heal_amount", 4f))}",
+            "delayed_echo" => $"echo_count={Mathf.Max(1, (int)P(se, "echo_count", 1f))} echo_damage_percent={F(P(se, "echo_damage_percent", 0.6f))} echo_delay={F(P(se, "echo_delay", 0.3f))} echo_radius={F(P(se, "echo_radius", 40f))}",
+            "ground_fire" => $"ground_damage={F(P(se, "ground_damage", 5f))} ground_duration={F(P(se, "ground_duration", 2f))} ground_radius={F(P(se, "ground_radius", 30f))}",
+            "local_time_slow" => $"freeze_seconds={F(P(se, "freeze_seconds", 0f))} slow_duration={F(P(se, "slow_duration", 0.5f))} slow_factor={F(P(se, "slow_factor", 0.3f))} slow_radius={F(P(se, "slow_radius", 80f))}",
+            "random_shape" => $"shape_aoe_on_impact={F(P(se, "shape_aoe_on_impact", 50f))} shape_damage_ratio=0.5",
+            "sustained_cone" => $"damage_ramp_per_sec={F(P(se, "damage_ramp_per_sec", 1.5f))} duration={F(P(se, "duration", 2f))}",
+            _ => "",
+        };
+        text.AppendLine($"{head} special {se.Type} {values}".TrimEnd());
+    }
+}

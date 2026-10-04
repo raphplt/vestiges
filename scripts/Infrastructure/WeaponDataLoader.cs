@@ -3,23 +3,6 @@ using Godot;
 
 namespace Vestiges.Infrastructure;
 
-/// <summary>Effet on-hit d'une arme (saignement, slow, désorientation).</summary>
-public class WeaponOnHitEffect
-{
-	public string Type { get; set; }
-	public float Value { get; set; }
-	public float Damage { get; set; }
-	public float Duration { get; set; }
-}
-
-/// <summary>Effet spécial d'une arme (heal every N hits, delayed echo, ground fire, etc.).</summary>
-public class WeaponSpecialEffect
-{
-	public string Type { get; set; }
-	public Dictionary<string, float> Params { get; set; } = new();
-	public List<string> Shapes { get; set; }
-}
-
 /// <summary>
 /// Présentation d'une arme en combat (plan 08, effets d'attaque) : style du coup de mêlée,
 /// famille de couleurs (sinon déduite du type de dégâts) et forme du projectile.
@@ -153,13 +136,28 @@ public static class WeaponDataLoader
         return _allWeapons;
     }
 
-    private static WeaponOnHitEffect ParseOnHit(Godot.Collections.Dictionary ohe) => new()
+    /// <summary>Effet à l'impact déjà validé par <see cref="WeaponDataValidator"/> : type connu, réglages présents.</summary>
+    private static WeaponOnHitEffect ParseOnHit(Godot.Collections.Dictionary ohe)
     {
-        Type = ohe.ContainsKey("type") ? ohe["type"].AsString() : "",
-        Value = ohe.ContainsKey("value") ? (float)ohe["value"].AsDouble() : 0f,
-        Damage = ohe.ContainsKey("damage") ? (float)ohe["damage"].AsDouble() : 0f,
-        Duration = ohe.ContainsKey("duration") ? (float)ohe["duration"].AsDouble() : 0f
-    };
+        WeaponContract.TryParseOnHit(ohe["type"].AsString(), out OnHitEffectKind kind);
+        return new WeaponOnHitEffect
+        {
+            Kind = kind,
+            Value = ohe.ContainsKey("value") ? (float)ohe["value"].AsDouble() : 0f,
+            Damage = ohe.ContainsKey("damage") ? (float)ohe["damage"].AsDouble() : 0f,
+            Duration = ohe.ContainsKey("duration") ? (float)ohe["duration"].AsDouble() : 0f
+        };
+    }
+
+    /// <summary>Effet spécial validé, réglages résolus : ceux de l'arme, sinon le secours du contrat.</summary>
+    private static WeaponSpecialEffect ParseSpecial(Godot.Collections.Dictionary se)
+    {
+        WeaponContract.TryParseSpecial(se["type"].AsString(), out SpecialEffectKind kind);
+        Dictionary<string, float> values = new();
+        foreach ((string name, WeaponContract.ValueRule rule) in WeaponContract.SpecialRules(kind))
+            values[name] = se.ContainsKey(name) ? (float)se[name].AsDouble() : rule.Default ?? 0f;
+        return new WeaponSpecialEffect { Kind = kind, Params = values };
+    }
 
     private static Dictionary<string, float> ParseFloats(Godot.Collections.Dictionary dict, string key)
     {
@@ -178,7 +176,9 @@ public static class WeaponDataLoader
     /// </summary>
     public static bool TryParseWeapon(Godot.Collections.Dictionary dict, out WeaponData weapon, out string error)
     {
-        weapon = ParseWeapon(dict, out error);
+        // Le contrat d'abord (plan 26 Q6a) : la conversion ne voit que des armes aux clés, bornes et références connues.
+        error = WeaponDataValidator.Validate(dict);
+        weapon = error == null ? ParseWeapon(dict, out error) : null;
         return error == null;
     }
 
@@ -270,9 +270,7 @@ public static class WeaponDataLoader
             foreach (Variant key in statsDict.Keys)
             {
                 string statKey = key.AsString();
-                Variant value = statsDict[key];
-                if (value.VariantType is Variant.Type.Int or Variant.Type.Float)
-                    weapon.Stats[statKey] = (float)value.AsDouble();
+                weapon.Stats[statKey] = (float)statsDict[key].AsDouble();
             }
         }
 
@@ -300,30 +298,7 @@ public static class WeaponDataLoader
             GD.PushError($"[WeaponDataLoader] {weapon.Id} : {weapon.Ascensions.Count} voies d'ascension, il en faut deux");
 
         if (dict.ContainsKey("special_effect"))
-        {
-            Godot.Collections.Dictionary se = dict["special_effect"].AsGodotDictionary();
-            WeaponSpecialEffect effect = new()
-            {
-                Type = se.ContainsKey("type") ? se["type"].AsString() : ""
-            };
-            foreach (Variant key in se.Keys)
-            {
-                string k = key.AsString();
-                if (k == "type" || k == "description" || k == "visual")
-                    continue;
-                if (k == "shapes" && se[key].VariantType == Variant.Type.Array)
-                {
-                    effect.Shapes = new List<string>();
-                    foreach (Variant shape in se[key].AsGodotArray())
-                        effect.Shapes.Add(shape.AsString());
-                    continue;
-                }
-                Variant val = se[key];
-                if (val.VariantType is Variant.Type.Int or Variant.Type.Float)
-                    effect.Params[k] = (float)val.AsDouble();
-            }
-            weapon.SpecialEffect = effect;
-        }
+            weapon.SpecialEffect = ParseSpecial(dict["special_effect"].AsGodotDictionary());
 
         return weapon;
     }

@@ -47,6 +47,7 @@ public partial class WeaponRegression : Node2D
             await CheckGroundFireOnGround();
             CheckAscensions();
             CheckGrammarRejectsUnknownKeys();
+            CheckContractRejectsBadData();
             await CheckCountForAllWeapons();
             await CheckVolleyOnSingleTarget();
             CheckTemper();
@@ -269,24 +270,24 @@ public partial class WeaponRegression : Node2D
             WeaponUpgradeStatConfig config = WeaponUpgradeDataLoader.GetStatConfig(gain.Stat);
             amounts &= config.Integer ? Mathf.IsEqualApprox(gain.Amount, 3f) : Mathf.IsEqualApprox(gain.Amount, config.Step * 2f);
         }
-        float damageBefore = crossbow.GetStat("damage", 0f);
+        float damageBefore = crossbow.GetStat("damage");
         crossbow.ApplyUpgrade(gains);
         StatGain damageGain = gains.Find(g => g.Stat == "damage");
         float expectedDamage = damageGain.Stat == null ? damageBefore : damageBefore * (1f + damageGain.Amount);
-        Check(amounts && Mathf.IsEqualApprox(crossbow.GetStat("damage", 0f), expectedDamage) && crossbow.Level == 2
+        Check(amounts && Mathf.IsEqualApprox(crossbow.GetStat("damage"), expectedDamage) && crossbow.Level == 2
               && Mathf.IsEqualApprox(WeaponUpgradeDataLoader.GetStatConfig("damage").Step, 0.18f),
             $"Légendaire sur la Cloueuse : {gains.Count} stats au double du pas (dégâts +18 % par commune), +3 pour une stat entière");
 
         // Une commune finit par tirer la perforation, stat entière de la Cloueuse : +0,5.
         WeaponInstance nailer = new(WeaponDataLoader.Get("crossbow"));
-        float pierceBefore = nailer.GetStat("projectile_pierce", 0f);
+        float pierceBefore = nailer.GetStat("projectile_pierce");
         StatGain pierce = default;
         for (int i = 0; i < 200 && pierce.Stat == null; i++)
             pierce = UpgradeRoller.RollWeaponGains(nailer, UpgradeRoller.Get("common"), rng).Find(g => g.Stat == "projectile_pierce");
         nailer.ApplyUpgrade(new[] { pierce });
-        Check(pierce.Stat != null && Mathf.IsEqualApprox(nailer.GetStat("projectile_pierce", 0f), pierceBefore + 0.5f)
-              && StatCatalog.Format("projectile_pierce", nailer.GetStat("projectile_pierce", 0f)) == "3,5",
-            $"Commune sur la Cloueuse : perforation {pierceBefore} → {StatCatalog.Format("projectile_pierce", nailer.GetStat("projectile_pierce", 0f))}");
+        Check(pierce.Stat != null && Mathf.IsEqualApprox(nailer.GetStat("projectile_pierce"), pierceBefore + 0.5f)
+              && StatCatalog.Format("projectile_pierce", nailer.GetStat("projectile_pierce")) == "3,5",
+            $"Commune sur la Cloueuse : perforation {pierceBefore} → {StatCatalog.Format("projectile_pierce", nailer.GetStat("projectile_pierce"))}");
 
         // Lance-billes à 3,5 projectiles : 3 ou 4 par salve, la moitié du temps chacun, sur 1 000 attaques.
         WeaponInstance sling = new(WeaponDataLoader.Get("sling"));
@@ -295,7 +296,7 @@ public partial class WeaponRegression : Node2D
         int total = 0, low = int.MaxValue, high = 0;
         for (int i = 0; i < 1000; i++)
         {
-            int count = FractionalCount.Roll(sling.GetStat("projectile_count", 1f), attacks.Randf());
+            int count = FractionalCount.Roll(sling.GetStat("projectile_count"), attacks.Randf());
             total += count;
             low = Mathf.Min(low, count);
             high = Mathf.Max(high, count);
@@ -376,10 +377,10 @@ public partial class WeaponRegression : Node2D
         bool ready = bow.CanAscend && !new WeaponInstance(WeaponDataLoader.Get("heavy_hammer")).CanAscend;
         bool chosen = bow.Ascend("volley");
         Check(ready && chosen && !bow.Ascend("pierce_through") && bow.AttackPattern == AttackPatternKind.Burst
-            && bow.GetStat("projectile_count", 1f) >= 2f && Mathf.IsEqualApprox(bow.GetStat("spread_angle", 20f), 40f) && Mathf.IsEqualApprox(bow.BonusProjectileMultiplier, 2f),
+            && bow.GetStat("projectile_count") >= 2f && Mathf.IsEqualApprox(bow.GetStat("spread_angle"), 40f) && Mathf.IsEqualApprox(bow.BonusProjectileMultiplier, 2f),
             "Volée : éventail, deux fois plus de flèches et de projectiles en plus ; la voie est définitive");
         WeaponInstance piercing = MaxedWeapon("makeshift_bow");
-        float before = piercing.GetStat("damage", 1f);
+        float before = piercing.GetStat("damage");
         piercing.Ascend("pierce_through");
         WeaponInstance thrust = MaxedWeapon("chipped_blade");
         thrust.Ascend("thrust");
@@ -388,8 +389,8 @@ public partial class WeaponRegression : Node2D
         Check(!WeaponProperties.Concerns(thrust, "size") && WeaponProperties.Concerns(harvest, "size") && !WeaponTraits.SearchesTarget(harvest)
             && StatCatalog.Format("projectile_pierce", 999f) == "∞",
             "La voie choisie compte partout : Estoc ne grandit plus par la Taille, Moisson ne cherche plus de cible ; perforation « ∞ »");
-        Check(Mathf.IsEqualApprox(piercing.GetStat("damage", 1f), before * 1.5f) && piercing.GetStat("projectile_pierce", 0f) >= 999f
-            && Mathf.IsEqualApprox(piercing.GetStat("projectile_count", 1f), 1f) && piercing.BonusProjectileMultiplier == 0f,
+        Check(Mathf.IsEqualApprox(piercing.GetStat("damage"), before * 1.5f) && piercing.GetStat("projectile_pierce") >= 999f
+            && Mathf.IsEqualApprox(piercing.GetStat("projectile_count"), 1f) && piercing.BonusProjectileMultiplier == 0f,
             "Transpercer : une flèche, dégâts × 1,5, perforation illimitée, aucun projectile en plus");
 
         Player player = GD.Load<PackedScene>("res://scenes/Player.tscn").Instantiate<Player>();
@@ -433,8 +434,8 @@ public partial class WeaponRegression : Node2D
         suture.Ascend("suture");
         WeaponInstance combination = MaxedWeapon("echo_gauntlets");
         combination.Ascend("combination");
-        Check(Mathf.IsEqualApprox(suture.SpecialEffect.Params["n"], 3f) && Mathf.IsEqualApprox(suture.Base.SpecialEffect.Params["n"], 5f)
-            && Mathf.IsEqualApprox(combination.SpecialEffect.Params["echo_count"], 2f),
+        Check(Mathf.IsEqualApprox(suture.SpecialEffect.Get(SpecialEffectParam.HitsPerHeal), 3f) && Mathf.IsEqualApprox(suture.Base.SpecialEffect.Get(SpecialEffectParam.HitsPerHeal), 5f)
+            && Mathf.IsEqualApprox(combination.SpecialEffect.Get(SpecialEffectParam.EchoCount), 2f),
             "Suture soigne tous les 3 coups et Enchaînement fait deux échos ; le Scalpel de base reste à 5");
 
         player.AddWeapon(WeaponDataLoader.Get("clock_hand"));
@@ -484,6 +485,7 @@ public partial class WeaponRegression : Node2D
                 ["id"] = "arme_test",
                 ["type"] = type,
                 ["attack_pattern"] = pattern,
+                ["stats"] = new Godot.Collections.Dictionary { ["damage"] = 10, ["attack_speed"] = 1, ["range"] = 70 },
                 ["ascensions"] = new Godot.Collections.Array { path, new Godot.Collections.Dictionary { ["id"] = "autre_voie" } },
             };
         }
@@ -499,6 +501,75 @@ public partial class WeaponRegression : Node2D
             && pathError.Contains("voie_test") && pathError.Contains("spiral");
         Check(valid && badPattern && badCategory && badPath,
             $"Grammaire : clés connues lues en types, motif/famille/voie inconnus refusés [{patternError} | {categoryError} | {pathError}]");
+    }
+
+    /// <summary>
+    /// Contrat des armes (plan 26 Q6a) : chaque faute de données écarte l'arme avec un message qui nomme l'arme, la voie
+    /// et le champ ; une arme conforme reçoit les secours du contrat pour les réglages qu'elle ne déclare pas.
+    /// </summary>
+    private void CheckContractRejectsBadData()
+    {
+        Godot.Collections.Dictionary Valid() => new()
+        {
+            ["id"] = "arme_test",
+            ["type"] = "ranged",
+            ["attack_pattern"] = "linear",
+            ["stats"] = new Godot.Collections.Dictionary { ["damage"] = 10, ["attack_speed"] = 1, ["range"] = 200 },
+            ["growth"] = new Godot.Collections.Dictionary { ["damage"] = 3 },
+            ["special_effect"] = new Godot.Collections.Dictionary { ["type"] = "delayed_echo", ["echo_delay"] = 0.3, ["echo_damage_percent"] = 0.6 },
+            ["ascensions"] = new Godot.Collections.Array
+            {
+                new Godot.Collections.Dictionary { ["id"] = "voie_test" },
+                new Godot.Collections.Dictionary { ["id"] = "autre_voie" },
+            },
+        };
+        Godot.Collections.Dictionary Path(Godot.Collections.Dictionary weapon) => weapon["ascensions"].AsGodotArray()[0].AsGodotDictionary();
+        Godot.Collections.Dictionary Table(Godot.Collections.Dictionary owner, string key) => owner[key].AsGodotDictionary();
+
+        bool valid = WeaponDataLoader.TryParseWeapon(Valid(), out WeaponData parsed, out string validError)
+            && Mathf.IsEqualApprox(parsed.SpecialEffect.Get(SpecialEffectParam.EchoRadius), 40f)
+            && Mathf.IsEqualApprox(parsed.SpecialEffect.Get(SpecialEffectParam.EchoCount), 1f);
+        Check(valid, $"Contrat : arme conforme acceptée, secours du contrat résolus (écho 40 px, 1 répétition) {validError}");
+
+        (string Label, System.Action<Godot.Collections.Dictionary> Mutate, string Expected)[] cases =
+        {
+            ("stat inconnue", w => Table(w, "stats")["damge"] = 5, "damge"),
+            ("stat non numérique", w => Table(w, "stats")["damage"] = "dix", "nombre attendu"),
+            ("stat non finie", w => Table(w, "stats")["damage"] = float.PositiveInfinity, "non finie"),
+            ("stat nulle (NaN écrit en null)", w => Table(w, "stats")["damage"] = float.NaN, "nombre attendu"),
+            ("stat hors bornes", w => Table(w, "stats")["arc_angle"] = 400, "hors de"),
+            ("stat obligatoire absente", w => Table(w, "stats").Remove("range"), "range obligatoire"),
+            ("croissance inconnue", w => Table(w, "growth")["rang"] = 1, "rang"),
+            ("croissance sans réglage d'amélioration", w => Table(w, "growth")["spread_angle"] = 1, "réglage d'amélioration"),
+            ("effet à l'impact inconnu", w => w["on_hit_effect"] = new Godot.Collections.Dictionary { ["type"] = "bleed", ["duration"] = 1 }, "bleed"),
+            ("réglage d'impact absent", w => w["on_hit_effect"] = new Godot.Collections.Dictionary { ["type"] = "slow", ["duration"] = 1 }, "value obligatoire"),
+            ("réglage d'impact inconnu", w => w["on_hit_effect"] = new Godot.Collections.Dictionary { ["type"] = "slow", ["value"] = 0.5, ["duration"] = 1, ["valeur"] = 1 }, "valeur"),
+            ("effet spécial inconnu", w => Table(w, "special_effect")["type"] = "delayed_ecco", "delayed_ecco"),
+            ("réglage spécial absent", w => Table(w, "special_effect").Remove("echo_delay"), "echo_delay obligatoire"),
+            ("réglage spécial non entier", w => Table(w, "special_effect")["echo_count"] = 1.5, "pas entier"),
+            ("champ d'arme inconnu", w => w["dammage_type"] = "physical", "dammage_type"),
+            ("champ de voie inconnu", w => Path(w)["stat_multiplier"] = new Godot.Collections.Dictionary(), "stat_multiplier"),
+            ("multiplicateur nul", w => Path(w)["stat_multipliers"] = new Godot.Collections.Dictionary { ["damage"] = 0 }, "stat_multipliers.damage"),
+            ("remplacement de stat inconnue", w => Path(w)["stat_overrides"] = new Godot.Collections.Dictionary { ["piercing"] = 1 }, "piercing"),
+            ("réglage de voie hors de l'effet", w => Path(w)["special_overrides"] = new Godot.Collections.Dictionary { ["echo_radiuss"] = 1 }, "echo_radiuss"),
+            ("réglage de voie sans effet spécial", w => { w.Remove("special_effect"); Path(w)["special_overrides"] = new Godot.Collections.Dictionary { ["n"] = 3 }; }, "pas d'effet spécial"),
+            ("drapeau inconnu", w => Path(w)["flags"] = new Godot.Collections.Array { "orbit_pluse" }, "orbit_pluse"),
+            ("réglage de drapeau absent", w => { Path(w)["flags"] = new Godot.Collections.Array { "orbit_pulse" }; Path(w)["params"] = new Godot.Collections.Dictionary { ["pulse_min"] = 0.6, ["pulse_max"] = 1.6 }; }, "pulse_period obligatoire"),
+            ("son introuvable", w => w["attack_audio"] = "sfx_inexistant", "sfx_inexistant"),
+            ("image introuvable", w => w["sprite"] = "assets/weapons/icons/inexistant.png", "inexistant.png"),
+            ("style inconnu", w => w["fx"] = new Godot.Collections.Dictionary { ["style"] = "spin" }, "spin"),
+            ("famille inconnue", w => w["fx"] = new Godot.Collections.Dictionary { ["family"] = "gold" }, "gold"),
+            ("projectile introuvable", w => w["fx"] = new Godot.Collections.Dictionary { ["projectile"] = "comet" }, "comet"),
+        };
+        foreach ((string label, System.Action<Godot.Collections.Dictionary> mutate, string expected) in cases)
+        {
+            Godot.Collections.Dictionary weapon = Valid();
+            mutate(weapon);
+            bool rejected = !WeaponDataLoader.TryParseWeapon(weapon, out WeaponData result, out string error);
+            Check(rejected && result == null && error.Contains("arme_test") && error.Contains(expected)
+                && (!label.Contains("voie") || error.Contains("voie_test")),
+                $"Contrat : {label} refusé [{error}]");
+        }
     }
 
     /// <summary>
@@ -682,7 +753,7 @@ public partial class WeaponRegression : Node2D
         bool retempered = _player.RetemperWeapon(blade.Id, second, "rare");
         bool same = true;
         foreach (string stat in blade.Base.Growth.Keys)
-            same &= Mathf.IsEqualApprox(blade.GetStat(stat, 1f), expected.GetStat(stat, 1f));
+            same &= Mathf.IsEqualApprox(blade.GetStat(stat), expected.GetStat(stat));
         Check(retempered && same && blade.Level == level && blade.LastRarityId == "rare" && blade.LastGains.Count == second.Count,
             $"Retrempe : gains de la dernière amélioration remplacés ({first.Count} → {second.Count} stats, rare), niveau {level} inchangé");
     }

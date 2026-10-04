@@ -295,7 +295,7 @@ public partial class PauseMenu : CanvasLayer
 		{
 			$"{StatCatalog.Name("damage")} {StatCatalog.Format("damage", player.GetWeaponStatForDisplay(weapon, "damage"))}",
 		};
-		if (weapon.GetStat("attack_speed", 0f) > 0f)
+		if (weapon.GetStat("attack_speed") > 0f)
 			parts.Add($"{StatCatalog.Name("attack_speed")} {StatCatalog.Format("attack_speed", player.GetWeaponStatForDisplay(weapon, "attack_speed"))}");
 		foreach (string stat in new[] { "projectile_count", "projectile_pierce", "chain_targets", "orbital_count" })
 		{

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Godot;
+using Vestiges.Infrastructure;
 
 namespace Vestiges.Combat;
 
@@ -80,7 +81,7 @@ public static class ProjectileSprites
     private static void Load()
     {
         _sets = new Dictionary<string, SpriteSet>();
-        using FileAccess file = FileAccess.Open(Folder + "projectiles_manifest.json", FileAccess.ModeFlags.Read);
+        using FileAccess file = FileAccess.Open(WeaponVisualConfig.ProjectileManifestPath, FileAccess.ModeFlags.Read);
         if (file == null)
         {
             GD.PushError("[ProjectileSprites] projectiles_manifest.json introuvable");

@@ -10,6 +10,9 @@ namespace Vestiges.Infrastructure;
 /// </summary>
 public sealed class WeaponVisualConfig
 {
+    /// <summary>Manifeste des sprites de projectiles, lu par le combat et par le contrôle des armes.</summary>
+    public const string ProjectileManifestPath = "res://assets/vfx/projectiles/projectiles_manifest.json";
+
     private static WeaponVisualConfig _cached;
 
     public float SizeResponse { get; private init; }

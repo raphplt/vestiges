@@ -163,8 +163,12 @@ public partial class ConeRegression : Node2D
         WeaponSpecialEffect originalSpecial = _weapon.Base.SpecialEffect;
         WeaponOnHitEffect originalOnHit = _weapon.Base.OnHitEffect;
         _activate(originalSpecial);
-        _weapon.Base.SpecialEffect = new WeaponSpecialEffect { Type = "heal_every_n_hits", Params = new() { ["n"] = 5f, ["heal_amount"] = 1f } };
-        _weapon.Base.OnHitEffect = new WeaponOnHitEffect { Type = "slow", Value = 0.5f, Duration = 2f };
+        _weapon.Base.SpecialEffect = new WeaponSpecialEffect
+        {
+            Kind = SpecialEffectKind.HealEveryNHits,
+            Params = new System.Collections.Generic.Dictionary<string, float> { [SpecialEffectParam.HitsPerHeal] = 5f, [SpecialEffectParam.HealAmount] = 1f },
+        };
+        _weapon.Base.OnHitEffect = new WeaponOnHitEffect { Kind = OnHitEffectKind.Slow, Value = 0.5f, Duration = 2f };
         Set(_player, "_currentHp", 50f);
         WeaponInstance other = new(WeaponDataLoader.Get("makeshift_bow"));
         Set(_player, "_equippedWeapon", other);

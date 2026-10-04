@@ -319,7 +319,7 @@ public partial class Player : CharacterBody2D
 
         int capturedIndex = _weaponSlots.Count - 1;
         Timer timer = new();
-        float weaponAtkSpd = instance.GetStat("attack_speed", 1f);
+        float weaponAtkSpd = instance.GetStat("attack_speed");
         timer.WaitTime = 1.0f / Mathf.Max(0.05f, AttackSpeed * weaponAtkSpd * _attackSpeedMultiplier);
         timer.Autostart = true;
         timer.Timeout += () => OnWeaponAttackTimeout(capturedIndex);
@@ -348,7 +348,7 @@ public partial class Player : CharacterBody2D
 
         WeaponInstance removed = _weaponSlots[slotIndex];
         _weaponSlots.RemoveAt(slotIndex);
-        if (_isConeActive && removed.SpecialEffect?.Type == "sustained_cone")
+        if (_isConeActive && removed.SpecialEffect?.Kind == SpecialEffectKind.SustainedCone)
             DeactivateSustainedCone();
         if (removed == _orbitalWeapon)
             ClearOrbitals();
@@ -828,18 +828,18 @@ public partial class Player : CharacterBody2D
         WeaponOnHitEffect ohe = source?.OnHitEffect;
         if (ohe != null)
         {
-            switch (ohe.Type)
+            switch (ohe.Kind)
             {
-                case "dot":
+                case OnHitEffectKind.Bleed:
                     enemy.ApplyBleed(ohe.Damage, StatusDuration(ohe.Duration), context);
                     break;
-                case "slow":
+                case OnHitEffectKind.Slow:
                     enemy.ApplySlow(ohe.Value, StatusDuration(ohe.Duration), context);
                     break;
-                case "disorient":
+                case OnHitEffectKind.Disorient:
                     enemy.ApplyDisorient(StatusDuration(ohe.Duration), context);
                     break;
-                case "freeze":
+                case OnHitEffectKind.Freeze:
                     enemy.Freeze(StatusDuration(ohe.Duration));
                     break;
             }
@@ -851,7 +851,7 @@ public partial class Player : CharacterBody2D
             _objectTriggers.OnWeaponImpact(enemy, ComputeBaseAttackDamage(source), source, triggerCount, context, isCrit, damage);
 
         // --- Weapon knockback ---
-        float knockback = source?.GetStat("knockback", 0f) ?? 0f;
+        float knockback = source?.GetStat("knockback") ?? 0f;
         if (knockback > 0f)
         {
             Vector2 knockDir = (enemy.GlobalPosition - GlobalPosition).Normalized();
@@ -879,24 +879,22 @@ public partial class Player : CharacterBody2D
 
     private void ProcessWeaponSpecialOnHit(WeaponSpecialEffect se, Enemy enemy, float damage, WeaponInstance source, AttackContext context)
     {
-        switch (se.Type)
+        switch (se.Kind)
         {
-            case "heal_every_n_hits":
+            case SpecialEffectKind.HealEveryNHits:
             {
                 string weaponId = source.Id;
                 _weaponHitCounters.TryGetValue(weaponId, out int count);
                 count++;
-                int n = se.Params.TryGetValue("n", out float nVal) ? Mathf.Max(1, (int)nVal) : 5;
-                if (count >= n)
+                if (count >= (int)se.Get(SpecialEffectParam.HitsPerHeal))
                 {
-                    float healAmount = se.Params.TryGetValue("heal_amount", out float h) ? h : 4f;
-                    Heal(healAmount);
+                    Heal(se.Get(SpecialEffectParam.HealAmount));
                     count = 0;
                 }
                 _weaponHitCounters[weaponId] = count;
                 break;
             }
-            case "instant_disintegrate":
+            case SpecialEffectKind.InstantDisintegrate:
             {
                 if (enemy.IsDying)
                 {
@@ -906,15 +904,14 @@ public partial class Player : CharacterBody2D
                 }
                 break;
             }
-            case "delayed_echo":
+            case SpecialEffectKind.DelayedEcho:
             {
-                float delay = se.Params.TryGetValue("echo_delay", out float d) ? d : 0.3f;
-                float echoPct = se.Params.TryGetValue("echo_damage_percent", out float p) ? p : 0.6f;
-                float echoDamage = damage * echoPct;
+                float delay = se.Get(SpecialEffectParam.EchoDelay);
+                float echoDamage = damage * se.Get(SpecialEffectParam.EchoDamagePercent);
                 Vector2 echoPos = enemy.GlobalPosition;
-                float echoRadius = ZoneScale(se.Params.TryGetValue("echo_radius", out float er) ? er : 40f);
+                float echoRadius = ZoneScale(se.Get(SpecialEffectParam.EchoRadius));
                 // Enchaînement (ascension des Gants de boxe) : l'écho repart plusieurs fois, à intervalles égaux.
-                int echoCount = se.Params.TryGetValue("echo_count", out float ec) ? Mathf.Max(1, (int)ec) : 1;
+                int echoCount = (int)se.Get(SpecialEffectParam.EchoCount);
                 for (int echo = 1; echo <= echoCount; echo++)
                 {
                     GetTree().CreateTimer(delay * echo).Timeout += () =>
@@ -936,18 +933,18 @@ public partial class Player : CharacterBody2D
                 }
                 break;
             }
-            case "ground_fire":
+            case SpecialEffectKind.GroundFire:
             {
                 // Géré au moment de l'impact du projectile, pas ici
                 break;
             }
-            case "local_time_slow":
+            case SpecialEffectKind.LocalTimeSlow:
             {
-                float radius = ZoneScale(se.Params.TryGetValue("slow_radius", out float r) ? r : 80f);
-                float factor = se.Params.TryGetValue("slow_factor", out float f) ? f : 0.3f;
-                float duration = StatusDuration(se.Params.TryGetValue("slow_duration", out float dur) ? dur : 0.5f);
+                float radius = ZoneScale(se.Get(SpecialEffectParam.SlowRadius));
+                float factor = se.Get(SpecialEffectParam.SlowFactor);
+                float duration = StatusDuration(se.Get(SpecialEffectParam.SlowDuration));
                 // Arrêt sur image (ascension du Chronomètre) : le champ fige au lieu de ralentir.
-                float freeze = se.Params.TryGetValue("freeze_seconds", out float fz) ? StatusDuration(fz) : 0f;
+                float freeze = StatusDuration(se.Get(SpecialEffectParam.FreezeSeconds));
                 Vector2 impactPos = enemy.GlobalPosition;
                 // La cible frappée d'abord : elle est au centre du champ, même absente du cache des ennemis de la frame.
                 ApplyTimeField(enemy, freeze, factor, duration, context);
@@ -960,9 +957,10 @@ public partial class Player : CharacterBody2D
                 SpawnTimeSlowVisual(impactPos, radius, duration);
                 break;
             }
-            case "random_shape":
+            case SpecialEffectKind.RandomShape:
             {
-                float aoeRadius = ZoneScale(se.Params.TryGetValue("shape_aoe_on_impact", out float aoe) ? aoe : 50f);
+                float aoeRadius = ZoneScale(se.Get(SpecialEffectParam.ShapeRadius));
+                float shapeDamage = damage * se.Get(SpecialEffectParam.ShapeDamageRatio);
                 Vector2 impactPos = enemy.GlobalPosition;
                 Godot.Collections.Array<Node> enemies = _groupCache.GetEnemies();
                 foreach (Node node in enemies)
@@ -970,11 +968,11 @@ public partial class Player : CharacterBody2D
                     if (node is Enemy e && IsInstanceValid(e) && !e.IsDying && e != enemy)
                     {
                         if (e.GlobalPosition.DistanceTo(impactPos) < aoeRadius)
-                            e.TakeDamage(damage * 0.5f, source: context.As(DamageKind.SecondaryWeapon));
+                            e.TakeDamage(shapeDamage, source: context.As(DamageKind.SecondaryWeapon));
                     }
                 }
                 if (_objectMilestones?.HasZoneEcho == true)
-                    _objectMilestones.QueueCircleEcho(impactPos, aoeRadius, damage * 0.5f, source, context);
+                    _objectMilestones.QueueCircleEcho(impactPos, aoeRadius, shapeDamage, source, context);
                 break;
             }
         }
@@ -1008,7 +1006,7 @@ public partial class Player : CharacterBody2D
     private void SetupOrbitalWeapon(WeaponInstance weapon)
     {
         // Une orbe ne peut pas apparaître une attaque sur deux : seule la partie entière compte (plan 23 R4).
-        int orbitalCount = Mathf.Max(1, Mathf.FloorToInt(weapon.GetStat("orbital_count", 3f)));
+        int orbitalCount = Mathf.Max(1, Mathf.FloorToInt(weapon.GetStat("orbital_count")));
         // Recréées aussi quand la taille change : contact et note suivent la stat de taille.
         if (_orbitalWeapon == weapon && _orbitalProjectiles.Count == orbitalCount && Mathf.IsEqualApprox(_orbitalSize, _aoeMultiplier))
             return;
@@ -1060,7 +1058,7 @@ public partial class Player : CharacterBody2D
         if (_orbitalProjectiles.Count == 0 || _orbitalWeapon == null)
             return;
 
-        float orbitalSpeed = _orbitalWeapon.GetStat("orbital_speed", 180f);
+        float orbitalSpeed = _orbitalWeapon.GetStat("orbital_speed");
         // Le rayon d'orbite est une portée : il suit les bonus de portée, comme l'allonge des coups.
         float orbitalRadius = GetEffectiveWeaponRange(_orbitalWeapon) * OrbitPulse(_orbitalWeapon, delta);
         _orbitalAngle += Mathf.DegToRad(orbitalSpeed) * delta;
@@ -1085,11 +1083,11 @@ public partial class Player : CharacterBody2D
     private void ActivateSustainedCone(WeaponSpecialEffect effect)
     {
         _isConeActive = true;
-        _coneDuration = effect.Params.TryGetValue("duration", out float dur) ? dur : 2f;
+        _coneDuration = effect.Get(SpecialEffectParam.ConeDuration);
         _coneAttackTimer = _coneDuration;
-        _coneDamageRampPerSec = effect.Params.TryGetValue("damage_ramp_per_sec", out float ramp) ? ramp : 1.5f;
-        _coneAngleStart = Mathf.Min(180f, ZoneScale(GetWeaponStat("cone_angle_start", 15f)));
-        _coneAngleEnd = Mathf.Min(180f, ZoneScale(GetWeaponStat("cone_angle_end", 60f)));
+        _coneDamageRampPerSec = effect.Get(SpecialEffectParam.ConeDamageRamp);
+        _coneAngleStart = Mathf.Min(180f, ZoneScale(GetWeaponStat("cone_angle_start")));
+        _coneAngleEnd = Mathf.Min(180f, ZoneScale(GetWeaponStat("cone_angle_end")));
         _coneRange = GetEffectiveWeaponRange();
         // Chaque onde en plus repasse à pleins dégâts, comme les frappes d'une onde circulaire en mêlée.
         _coneWaves = RollOwnCount() + RollBonusProjectiles(_equippedWeapon);
@@ -1176,9 +1174,9 @@ public partial class Player : CharacterBody2D
     {
         float range = GetEffectiveWeaponRange();
         // Stat entière fractionnaire (plan 23 R4) : la décimale est une chance, à chaque attaque, d'un saut de plus.
-        int chainTargets = Mathf.Max(1, FractionalCount.Roll(GetWeaponStat("chain_targets", 2f), GD.Randf()));
-        float chainRange = GetWeaponStat("chain_range", 100f);
-        float chainFalloff = GetWeaponStat("chain_damage_falloff", 0.8f);
+        int chainTargets = Mathf.Max(1, FractionalCount.Roll(GetWeaponStat("chain_targets"), GD.Randf()));
+        float chainRange = GetWeaponStat("chain_range");
+        float chainFalloff = GetWeaponStat("chain_damage_falloff");
 
         // Premier hit : ennemi le plus proche (melee)
         System.Collections.Generic.List<Enemy> enemies = FindEnemiesInArc(range, 360f);
@@ -1778,7 +1776,7 @@ public partial class Player : CharacterBody2D
 
         // Sustained cone : effet spécial persistant (ex: last_broadcast)
         WeaponSpecialEffect specialEffect = _equippedWeapon.SpecialEffect;
-        if (specialEffect != null && specialEffect.Type == "sustained_cone")
+        if (specialEffect?.Kind == SpecialEffectKind.SustainedCone)
         {
             if (!_isConeActive)
                 ActivateSustainedCone(specialEffect);
@@ -1812,7 +1810,7 @@ public partial class Player : CharacterBody2D
     /// Nombre propre de l'arme active : tirs, frappes de mêlée ou ondes du cône (plan 21 G6a). Stat entière fractionnaire
     /// (plan 23 R4) : 1,5, c'est un coup et une chance sur deux d'un second.
     /// </summary>
-    private int RollOwnCount() => Mathf.Max(1, FractionalCount.Roll(GetWeaponStat("projectile_count", 1f), GD.Randf()));
+    private int RollOwnCount() => Mathf.Max(1, FractionalCount.Roll(GetWeaponStat("projectile_count"), GD.Randf()));
 
     private void PerformRangedAttack(AttackPatternKind pattern)
     {
@@ -1827,11 +1825,11 @@ public partial class Player : CharacterBody2D
 
         float baseDamage = ComputeBaseAttackDamage();
         _launchContext = BeginAttack(_equippedWeapon, baseDamage);
-        float projectileSpeed = GetWeaponStat("projectile_speed", 400f);
-        int totalPierce = FractionalCount.Roll(GetWeaponStat("projectile_pierce", 0f) + _projectilePierce, GD.Randf());
+        float projectileSpeed = GetWeaponStat("projectile_speed");
+        int totalPierce = FractionalCount.Roll(GetWeaponStat("projectile_pierce") + _projectilePierce, GD.Randf());
         Vector2 baseDirection = (targets[0].GlobalPosition - GlobalPosition).Normalized();
         PlayAttackFeedback(isMelee: false, baseDirection);
-        float spreadAngle = GetWeaponStat("spread_angle", 20f);
+        float spreadAngle = GetWeaponStat("spread_angle");
 
         if (pattern == AttackPatternKind.Burst)
         {
@@ -1844,7 +1842,7 @@ public partial class Player : CharacterBody2D
             return;
         }
 
-        float homingStrength = GetWeaponStat("homing_strength", 0f);
+        float homingStrength = GetWeaponStat("homing_strength");
         bool isHoming = pattern == AttackPatternKind.Homing || homingStrength > 0f;
         int aimedCount = spreadExtras ? totalProjectiles : ownCount;
         for (int i = 0; i < totalProjectiles; i++)
@@ -1858,14 +1856,10 @@ public partial class Player : CharacterBody2D
                 launchDelay);
 
             // Ground fire : configurer le projectile pour spawner une zone au sol à l'impact
-            if (proj != null && _equippedWeapon?.SpecialEffect?.Type == "ground_fire")
-            {
-                WeaponSpecialEffect se = _equippedWeapon.SpecialEffect;
-                float gDmg = se.Params.TryGetValue("ground_damage", out float gd) ? gd : 5f;
-                float gDur = StatusDuration(se.Params.TryGetValue("ground_duration", out float gdur) ? gdur : 2f);
-                float gRad = ZoneScale(se.Params.TryGetValue("ground_radius", out float grad) ? grad : 30f);
-                proj.SetGroundFire(gDmg, gDur, gRad);
-            }
+            WeaponSpecialEffect se = _equippedWeapon?.SpecialEffect;
+            if (proj != null && se?.Kind == SpecialEffectKind.GroundFire)
+                proj.SetGroundFire(se.Get(SpecialEffectParam.GroundDamage), StatusDuration(se.Get(SpecialEffectParam.GroundDuration)),
+                    ZoneScale(se.Get(SpecialEffectParam.GroundRadius)));
         }
     }
 
@@ -1915,7 +1909,7 @@ public partial class Player : CharacterBody2D
         {
             AttackPatternKind.Circular => 360f,
             AttackPatternKind.Linear => 60f,
-            _ => Mathf.Min(360f, ZoneScale(GetWeaponStat("arc_angle", 120f)))
+            _ => Mathf.Min(360f, ZoneScale(GetWeaponStat("arc_angle")))
         };
 
         System.Collections.Generic.List<Enemy> enemies = FindEnemiesInArc(range, arcAngle);
@@ -1929,7 +1923,7 @@ public partial class Player : CharacterBody2D
         AttackContext context = BeginAttack(_equippedWeapon, baseDamage);
         int strikeCount = RollOwnCount() + RollBonusProjectiles(_equippedWeapon);
         float spreadAngle = strikeCount > 1
-            ? Mathf.Clamp(GetWeaponStat("spread_angle", 20f), 0f, 120f)
+            ? Mathf.Clamp(GetWeaponStat("spread_angle"), 0f, 120f)
             : 0f;
         float startOffset = strikeCount == 1 ? 0f : -spreadAngle * 0.5f;
         float step = strikeCount <= 1 || spreadAngle <= 0.001f ? 0f : spreadAngle / (strikeCount - 1);
@@ -2126,7 +2120,7 @@ public partial class Player : CharacterBody2D
 
     private float ComputeBaseAttackDamage(WeaponInstance weapon)
     {
-        float weaponDamage = weapon?.GetStat("damage", AttackDamage) ?? AttackDamage;
+        float weaponDamage = weapon?.GetStat("damage") ?? AttackDamage;
         float characterDamageFactor = AttackDamage / 10f;
         float damage = weaponDamage * characterDamageFactor * _damageMultiplier * _erasurePenalty.Damage;
         return damage;
@@ -2140,7 +2134,7 @@ public partial class Player : CharacterBody2D
     /// </summary>
     private float GetEffectiveWeaponRange(WeaponInstance weapon)
     {
-        float weaponRange = weapon?.GetStat("range", AttackRange) ?? AttackRange;
+        float weaponRange = weapon?.GetStat("range") ?? AttackRange;
         return weaponRange * PersonalRangeFactor(weapon) * _attackRangeMultiplier;
     }
 
@@ -2167,21 +2161,15 @@ public partial class Player : CharacterBody2D
     public float GetWeaponStatForDisplay(WeaponInstance weapon, string key) => key switch
     {
         "damage" => ComputeBaseAttackDamage(weapon),
-        "attack_speed" => AttackSpeed * weapon.GetStat("attack_speed", 1f) * _attackSpeedMultiplier,
+        "attack_speed" => AttackSpeed * weapon.GetStat("attack_speed") * _attackSpeedMultiplier,
         "range" => weapon.AttackPattern == AttackPatternKind.Circular ? ZoneScale(GetEffectiveWeaponRange(weapon)) : GetEffectiveWeaponRange(weapon),
-        "arc_angle" => Mathf.Min(360f, ZoneScale(weapon.GetStat("arc_angle", 120f))),
-        "cone_angle_end" => Mathf.Min(180f, ZoneScale(weapon.GetStat("cone_angle_end", 60f))),
-        "projectile_pierce" => weapon.GetStat("projectile_pierce", 0f) + _projectilePierce,
-        _ => weapon.GetStat(key, 0f),
+        "arc_angle" => Mathf.Min(360f, ZoneScale(weapon.GetStat("arc_angle"))),
+        "cone_angle_end" => Mathf.Min(180f, ZoneScale(weapon.GetStat("cone_angle_end"))),
+        "projectile_pierce" => weapon.GetStat("projectile_pierce") + _projectilePierce,
+        _ => weapon.GetStat(key),
     };
 
-    private float GetWeaponStat(string key, float fallback)
-    {
-        if (_equippedWeapon == null)
-            return fallback;
-
-        return _equippedWeapon.GetStat(key, fallback);
-    }
+    private float GetWeaponStat(string key) => _equippedWeapon?.GetStat(key) ?? WeaponContract.StatDefault(key);
 
     private void PlayAttackFeedback(bool isMelee, Vector2 direction)
     {
@@ -2229,7 +2217,7 @@ public partial class Player : CharacterBody2D
         for (int i = 0; i < _weaponSlots.Count && i < _weaponTimers.Count; i++)
         {
             WeaponInstance weapon = _weaponSlots[i];
-            float weaponAtkSpd = weapon.GetStat("attack_speed", 1f);
+            float weaponAtkSpd = weapon.GetStat("attack_speed");
             float attacksPerSecond = AttackSpeed * weaponAtkSpd * mult;
             _weaponTimers[i].WaitTime = 1.0f / Mathf.Max(0.05f, attacksPerSecond);
         }

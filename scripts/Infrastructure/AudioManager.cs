@@ -89,9 +89,11 @@ public partial class AudioManager : Node
 	private readonly Dictionary<string, string> _paths = new();
 	private readonly Dictionary<string, float> _soundVolumes = new();
 
+	public const string SoundBankPath = "res://data/audio/sounds.json";
+
 	private void LoadSoundBank()
 	{
-		using FileAccess file = FileAccess.Open("res://data/audio/sounds.json", FileAccess.ModeFlags.Read);
+		using FileAccess file = FileAccess.Open(SoundBankPath, FileAccess.ModeFlags.Read);
 		if (file == null)
 			throw new System.InvalidOperationException("Banque audio introuvable.");
 		using Json json = new();

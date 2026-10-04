@@ -16,8 +16,8 @@ public static class WeaponProperties
         if (weapon == null || property == null)
             return false;
         AttackPatternKind pattern = weapon.AttackPattern;
-        string special = weapon.SpecialEffect?.Type;
-        bool continuous = special == "sustained_cone";
+        SpecialEffectKind? special = weapon.SpecialEffect?.Kind;
+        bool continuous = special == SpecialEffectKind.SustainedCone;
         bool strikes = pattern != AttackPatternKind.Orbital && !continuous;
         return property switch
         {
@@ -26,8 +26,10 @@ public static class WeaponProperties
             "count" => strikes && pattern != AttackPatternKind.Chain,
             "size" => continuous || pattern == AttackPatternKind.Orbital
                 || (weapon.Category == WeaponCategory.Melee && pattern is AttackPatternKind.Arc or AttackPatternKind.Circular)
-                || special is "delayed_echo" or "random_shape" or "local_time_slow" or "ground_fire",
-            "duration" => weapon.OnHitEffect != null || special is "ground_fire" or "local_time_slow" || objectStatuses,
+                || special is SpecialEffectKind.DelayedEcho or SpecialEffectKind.RandomShape or SpecialEffectKind.LocalTimeSlow
+                    or SpecialEffectKind.GroundFire,
+            "duration" => weapon.OnHitEffect != null || special is SpecialEffectKind.GroundFire or SpecialEffectKind.LocalTimeSlow
+                || objectStatuses,
             _ => false,
         };
     }

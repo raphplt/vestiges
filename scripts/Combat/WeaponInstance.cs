@@ -99,21 +99,12 @@ public class WeaponInstance
 			if (ascension.Id != ascensionId)
 				continue;
 			Ascension = ascension;
-			_specialEffect = WithOverrides(Base.SpecialEffect, ascension.SpecialOverrides);
+			_specialEffect = Base.SpecialEffect != null && ascension.SpecialOverrides.Count > 0
+				? Base.SpecialEffect.With(ascension.SpecialOverrides)
+				: null;
 			return true;
 		}
 		return false;
-	}
-
-	/// <summary>Copie de l'effet spécial aux réglages remplacés ; null s'il n'y a rien à remplacer.</summary>
-	private static WeaponSpecialEffect WithOverrides(WeaponSpecialEffect effect, Dictionary<string, float> overrides)
-	{
-		if (effect == null || overrides.Count == 0)
-			return null;
-		WeaponSpecialEffect copy = new() { Type = effect.Type, Params = new Dictionary<string, float>(effect.Params), Shapes = effect.Shapes };
-		foreach ((string key, float value) in overrides)
-			copy.Params[key] = value;
-		return copy;
 	}
 
 	public bool HasFlag(string flag) => Ascension != null && Ascension.Flags.Contains(flag);
@@ -129,21 +120,21 @@ public class WeaponInstance
 	}
 
 	/// <summary>
-	/// Stat de l'arme : base des données, plus les gains accumulés (en pourcentage de la base, ou ajoutés), puis la voie
-	/// d'ascension (valeur fixée, ou multipliée).
+	/// Stat de l'arme : base des données (sinon le secours du contrat des armes), plus les gains accumulés (en pourcentage
+	/// de la base, ou ajoutés), puis la voie d'ascension (valeur fixée, ou multipliée).
 	/// </summary>
-	public float GetStat(string key, float fallback)
+	public float GetStat(string key)
 	{
 		if (Ascension != null && Ascension.StatOverrides.TryGetValue(key, out float overridden))
 			return overridden;
-		float value = LeveledStat(key, fallback);
+		float value = LeveledStat(key);
 		return Ascension != null && Ascension.StatMultipliers.TryGetValue(key, out float multiplier) ? value * multiplier : value;
 	}
 
 	/// <summary>Stat avant l'ascension : base des données et gains de niveau, plafonnée selon sa configuration.</summary>
-	private float LeveledStat(string key, float fallback)
+	private float LeveledStat(string key)
 	{
-		float baseValue = Base.Stats.TryGetValue(key, out float v) ? v : fallback;
+		float baseValue = Base.Stats.TryGetValue(key, out float v) ? v : WeaponContract.StatDefault(key);
 		if (!_bonuses.TryGetValue(key, out float bonus))
 			return baseValue;
 
@@ -154,13 +145,13 @@ public class WeaponInstance
 
 	public float GetComparisonScore()
 	{
-		float damage = GetStat("damage", 1f);
-		float attackSpeed = GetStat("attack_speed", 1f);
-		float range = Godot.Mathf.Max(24f, GetStat("range", 60f));
+		float damage = GetStat("damage");
+		float attackSpeed = GetStat("attack_speed");
+		float range = Godot.Mathf.Max(24f, GetStat("range"));
 		return damage * attackSpeed * Godot.Mathf.Sqrt(range / 60f);
 	}
 
-	public float GetDamageValue() => GetStat("damage", 1f);
-	public float GetAttackSpeedValue() => GetStat("attack_speed", 1f);
-	public float GetRangeValue() => GetStat("range", 60f);
+	public float GetDamageValue() => GetStat("damage");
+	public float GetAttackSpeedValue() => GetStat("attack_speed");
+	public float GetRangeValue() => GetStat("range");
 }

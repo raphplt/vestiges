@@ -12,12 +12,13 @@ public static class WeaponTraits
 {
     /// <summary>L'arme choisit une cible ; l'onde circulaire, l'orbite et le cône orienté par le regard n'en cherchent pas.</summary>
     public static bool SearchesTarget(WeaponInstance weapon) =>
-        weapon.AttackPattern is not (AttackPatternKind.Circular or AttackPatternKind.Orbital) && weapon.SpecialEffect?.Type != "sustained_cone";
+        weapon.AttackPattern is not (AttackPatternKind.Circular or AttackPatternKind.Orbital) && weapon.SpecialEffect?.Kind != SpecialEffectKind.SustainedCone;
 
     /// <summary>L'arme inflige des impacts directs attribués au joueur.</summary>
-    public static bool DealsDirectHits(WeaponInstance weapon) => weapon.GetStat("damage", 0f) > 0f;
+    public static bool DealsDirectHits(WeaponInstance weapon) => weapon.GetStat("damage") > 0f;
 
     /// <summary>L'arme applique elle-même un ralentissement ou une désorientation.</summary>
     public static bool AppliesNativeControl(WeaponInstance weapon) =>
-        weapon.OnHitEffect?.Type is "slow" or "disorient" || weapon.SpecialEffect?.Type == "local_time_slow";
+        weapon.OnHitEffect?.Kind is OnHitEffectKind.Slow or OnHitEffectKind.Disorient
+        || weapon.SpecialEffect?.Kind == SpecialEffectKind.LocalTimeSlow;
 }

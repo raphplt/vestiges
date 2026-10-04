@@ -1,0 +1,57 @@
+{
+  "_comment": "Contrat des armes (plan 26 Q6a), lu par WeaponContract. Chaque stat, effet et réglage que le combat sait lire, avec ses bornes. « default » est la valeur prise quand une arme ne déclare pas la stat ou le réglage ; sans « default », il est obligatoire. Une clé absente d'ici est refusée au chargement de weapons.json. Les types d'effets doivent correspondre exactement à ceux du code.",
+  "stats": {
+    "damage": { "min": 0 },
+    "attack_speed": { "min": 0, "_comment": "0 : arme sans cadence (orbite)." },
+    "range": { "min": 0 },
+    "arc_angle": { "default": 120, "min": 0, "max": 360 },
+    "cone_angle_start": { "default": 15, "min": 0, "max": 180 },
+    "cone_angle_end": { "default": 60, "min": 0, "max": 180 },
+    "knockback": { "default": 0, "min": 0 },
+    "projectile_speed": { "default": 400, "min": 0, "_comment": "0 : pas de projectile (cône)." },
+    "spread_angle": { "default": 20, "min": 0, "max": 360 },
+    "homing_strength": { "default": 0, "min": 0 },
+    "projectile_count": { "default": 1, "min": 0 },
+    "projectile_pierce": { "default": 0, "min": 0 },
+    "orbital_count": { "default": 3, "min": 1 },
+    "orbital_speed": { "default": 180, "min": 0 },
+    "chain_targets": { "default": 2, "min": 1 },
+    "chain_range": { "default": 100, "min": 0 },
+    "chain_damage_falloff": { "default": 0.8, "min": 0, "max": 1 },
+    "essence_cost_per_attack": { "default": 0, "min": 0, "_comment": "Déclaré par trois armes, lu par aucun mécanisme (coût en Essence non implémenté)." }
+  },
+  "on_hit_effects": {
+    "dot": { "damage": { "min": 0 }, "duration": { "min": 0 } },
+    "slow": { "value": { "min": 0, "max": 1 }, "duration": { "min": 0 } },
+    "disorient": { "duration": { "min": 0 } },
+    "freeze": { "duration": { "min": 0 } }
+  },
+  "special_effects": {
+    "heal_every_n_hits": { "n": { "min": 1, "integer": true }, "heal_amount": { "min": 0 } },
+    "instant_disintegrate": {},
+    "delayed_echo": {
+      "echo_delay": { "min": 0 },
+      "echo_damage_percent": { "min": 0 },
+      "echo_radius": { "default": 40, "min": 0 },
+      "echo_count": { "default": 1, "min": 1, "integer": true }
+    },
+    "ground_fire": { "ground_damage": { "min": 0 }, "ground_duration": { "min": 0 }, "ground_radius": { "min": 0 } },
+    "local_time_slow": {
+      "slow_radius": { "min": 0 },
+      "slow_factor": { "min": 0, "max": 1 },
+      "slow_duration": { "min": 0 },
+      "freeze_seconds": { "default": 0, "min": 0 }
+    },
+    "random_shape": { "shape_aoe_on_impact": { "min": 0 }, "shape_damage_ratio": { "default": 0.5, "min": 0 } },
+    "sustained_cone": { "duration": { "min": 0.01 }, "damage_ramp_per_sec": { "min": 0 } }
+  },
+  "special_effect_annotations": ["description", "visual", "shape_visual", "shapes"],
+  "ascension_flags": {
+    "orbit_pulse": { "pulse_min": { "min": 0 }, "pulse_max": { "min": 0 }, "pulse_period": { "min": 0.1 } }
+  },
+  "fx": {
+    "styles": ["slash", "cleave", "smash", "thrust", "whirl", "bell", "clock", "void", "chain", "cone"],
+    "families": ["physical", "heavy", "essence", "hybrid", "void", "fire", "hostile", "crit", "blood", "stone", "rust", "pale", "silk", "brass", "glass", "verdigris"],
+    "projectile_aliases": ["orb"]
+  }
+}
