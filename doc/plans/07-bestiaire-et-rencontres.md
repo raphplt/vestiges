@@ -468,3 +468,69 @@ L'Indicible n'est donc pas combattable en l'état : c'est un défaut de concepti
 - **A. Bords ciblables :** chaque bord devient une cible que les armes voient (projectiles, mêlée, orbite, cône), et l'arène se resserre à la portée des armes, ou la suit.
 - **B. Un cœur :** une partie centrale touchable, les bords restent un décor menaçant.
 - **C. Refonte complète** avec la fiche de la Barrière : silhouette, phases, et attaques qui punissent aussi le joueur qui bouge.
+
+## Fiche commune : la Barrière et l'Indicible — 4 octobre 2026 (proposition)
+
+Demandée aux §64 et §65 : l'Indicible est **à refaire entièrement**, conçu avec la Barrière. **Rien n'est codé avant validation.** Sources : la [mesure](../audits/indicible-2026-10-04/README.md), le [script du lore](../VESTIGES-LORE.md) (§4, §7, §9), la recette commune des boss de famille (§4 ci-dessus).
+
+### 1. Ce que la mesure impose aux deux boss
+
+| Constat du 4 octobre | Règle de conception |
+|---|---|
+| Les zones touchables étaient à 310–390 px ; les armes portent à 120–180 px | **Tout ce qui se frappe arrive à portée d'arme** : 60–150 px du joueur au moment où il doit frapper, ou le joueur peut s'en approcher sans traverser une zone mortelle |
+| Le ciblage visait le centre du nœud, vide | **Chaque partie touchable est une cible comme une créature** : mêlée, orbite, cône, chaîne, guidage et projectiles la voient par le même chemin que les `Enemy`, et le ciblage vise la partie, pas le centre du boss |
+| Les tentacules ne touchaient jamais un joueur qui bouge | **Chaque phase mêle deux menaces** : une qui punit l'immobilité (frappe sur la position, annoncée) et une qui punit le mouvement mécanique (balayage, ligne qui avance, frappe sur la position anticipée) |
+| L'Indicible ne perdait aucun PV, sans que rien ne le montre | **Mesure d'acceptation chiffrée** avec le mode `--measure-indicible` étendu aux deux boss (§5) |
+
+Système commun, construit une fois : une **partie de boss** (cible, PV propres ou part d'une réserve commune, annonce, état vulnérable), les annonces existantes du lot B (cercle rouille, couloir de visée) et une barre de vie de boss. Les réglages vivent en données, contrôlés au chargement comme ceux de Q6b.
+
+### 2. La Barrière — boss intermédiaire
+
+**Ce qu'elle est (script §7) :** la barrière de la Montée devenue chose, chaînes, grilles, poings qui frappent de l'autre côté. Le joueur est du côté de ceux qui montaient. Plus on a ravivé de Mémoriaux, plus elle résiste, et plus elle rend en tombant.
+
+**Forme :** une grille en travers du chemin, perpendiculaire à la direction où avance le joueur, sur environ 700 px. Elle ne bouge pas : c'est le joueur qui vient à elle, et l'Effacement le pousse par derrière. Elle se compose de **battants cadenassés** : **un, plus un par Mémorial ravivé dans la run, jusqu'à cinq**. Chaque battant est une partie touchable (environ 100 px de large, à hauteur de la grille), avec ses PV.
+
+**Attaques**, chacune annoncée :
+- **Les poings** (punit l'immobilité) : des poings passent entre les barreaux et frappent la position du joueur, 0,7 s après l'annonce, à moins de 200 px de la grille.
+- **La chaîne** (punit le mouvement mécanique) : une chaîne balaie un arc devant un battant, de gauche à droite ou l'inverse. Il faut sortir de l'arc vers l'arrière ou franchir la chaîne au dash.
+- **Le verrou** : quand un battant tombe, les autres se resserrent. Les poings frappent alors deux fois, sur la position présente puis sur la position anticipée.
+
+**Récompense :** chaque battant brisé rend une récompense (forme à fixer avec la politique de butin, plan 13, non arbitrée). Elle grandit donc avec les Mémoriaux, comme le veut le script. La grille ouverte laisse passer : la run continue derrière.
+
+**Fin personnelle de la Forgeuse :** briser la chaîne de la barrière de ses mains (script §5). La Barrière en est le lieu naturel (lot L4 du plan 19) : la scène se déclenche quand la Forgeuse porte le coup final, si son fil est complet.
+
+### 3. L'Indicible — boss de fin de la partie classique
+
+**Ce qu'il est (script §7) :** la nuit du 14 elle-même, ce qu'on ne peut pas dire. Trop grand pour l'écran : une tempête, une mer, des mains. Pas de corps à viser. Il se combat **par ses mains**, et il **se découvre** quand on a tenu.
+
+**Trois phases**, dans l'ordre de la nuit (script §4) :
+1. **La tempête.** L'écran s'assombrit, le vent pousse légèrement le joueur dans une direction qui change. Des éclairs frappent sa position (punit l'immobilité). Des **mains** sortent du sol à 80–150 px du joueur : ce sont les parties touchables. Chacune vit quelques secondes, puis agrippe la position du joueur.
+2. **La marée.** L'eau monte depuis un bord de l'écran, par bandes. L'eau profonde ralentit et blesse. Les mains sortent de l'eau, plus nombreuses. Le joueur doit garder du sec sans fuir les mains (punit le mouvement mécanique : la bande avance).
+3. **La seconde vague.** Une vague traverse tout l'écran, avec une ou deux brèches. Il faut y être (punit l'immobilité et la fuite au hasard). Après chaque vague, l'Indicible **se découvre** quelques secondes : une grande cible, au plus près du joueur, qui prend des dégâts accrus. C'est là qu'on le fait vraiment reculer.
+
+**PV :** une réserve commune. Les dégâts aux mains l'entament ; la fenêtre découverte l'entame davantage. Les seuils de phase sont des fractions de la réserve.
+
+**Ce que cette forme garde pour la suite du lore :** la vraie fin (L7) ouvre une dernière Faille face à lui. Si le joueur refuse, la Veilleuse lève sa lampe et l'Indicible se laisse voir en entier : la Montée, de nuit, sous la pluie. La phase 3 prépare cette image (une vague, puis la Montée découverte un instant).
+
+**Déclenchement, inchangé :** cinquième Résurgence ou 22 minutes (`EndgameManager`). Après sa mort, l'endgame commence comme aujourd'hui.
+
+### 4. Questions pour Raphaël
+
+| # | Question | Options | Recommandation |
+|---|---|---|---|
+| 1 | **Quand vient la Barrière ?** | A. À un moment de la run (après la troisième Résurgence, vers 12 min), elle se lève devant le joueur, en travers de sa route. B. C'est un lieu de la carte, au bout de la Montée (plan 22) ; le joueur décide quand il l'affronte. C. Elle remplace la troisième Résurgence. | **A** : elle tombe au milieu de la run, quand les Mémoriaux comptent. Le joueur ne l'évite pas, mais il a pu s'y préparer en ravivant des Mémoriaux. B reviendra naturellement quand la Montée existera. |
+| 2 | **Que changent les Mémoriaux ravivés ?** | A. Le nombre de battants (PV et récompenses), comme ci-dessus. B. Aussi une attaque de plus par paire de Mémoriaux. | **A** : la règle du script, lisible d'un coup d'œil ; la difficulté monte par la longueur du combat, pas par la complexité. |
+| 3 | **Comment se frappe l'Indicible ?** | A. Les mains près du joueur, puis la fenêtre découverte après chaque vague. B. Un cœur unique qui se déplace dans l'écran. C. Des bords ciblables qui se resserrent (piste A de la mesure). | **A** : toutes les armes servent, la mêlée comprise, et la fenêtre récompense celui qui a tenu. B ressemble à un boss ordinaire ; C garde le défaut de portée. |
+| 4 | **Combien de phases ?** | A. Trois (tempête, marée, vague). B. Une seule, de plus en plus dense. | **A** : chaque phase apprend une menace, et l'ensemble raconte la nuit sans un mot. |
+| 5 | **Durée visée avec un build de référence** | A. Barrière 60–90 s, Indicible 2–3 min. B. Plus court. C. Plus long. | **A**, réglé par la mesure (§5), puis en jouant. |
+
+### 5. Lots proposés, après validation
+
+| Lot | Contenu | Vérification |
+|---|---|---|
+| **B1 — Parties de boss** | Cible commune que toutes les armes voient, réserve de PV, annonces, barre de boss, réglages en données contrôlés au chargement. Mannequin de test. | Banc : chacune des 24 armes touche un mannequin à partie unique (mêlée, orbite, cône, chaîne, guidage, ligne) ; fixture négative de réglages |
+| **B2 — La Barrière** | Grille, battants selon les Mémoriaux, poings, chaîne, verrou, récompense par battant (selon le plan 13), apparition selon la question 1. Sprites au pipeline (planche d'abord). | Mesure en trois postures : PV perdus dans chacune, coups reçus immobile **et** en mouvement, durée de combat ; captures |
+| **B3 — L'Indicible** | Remplace l'actuel : trois phases, mains, marée, vague, fenêtre découverte. Visuel sans corps (assombrissement, eau, mains). | Même mesure ; captures de chaque phase ; coût au banc si l'eau et la vague coûtent |
+| **B4 — Réglage** | Durées et dégâts sur les deux mesures, puis partie de Raphaël. | Durées dans la fenêtre de la question 5 |
+
+L'ancien `Indicible.cs` et ses réglages (`data/scaling/indicible.json`, plan 26 Q6b) sont remplacés en B3, pas conservés à côté.

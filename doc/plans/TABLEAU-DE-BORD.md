@@ -36,7 +36,7 @@ Le [registre](DECISIONS.md) garde les mots de Raphaël. Les plans gardent le dé
 | Réveil du Mémorial et de la Faille | 24 L6b, 15 | Durée gardée ; son à changer (§49), à traiter avec l'audio |
 | Classement | 09 | Toutes les décisions, plus tard. Weekly gardé pour toutes les runs, un tableau par semaine (§64, livré par Q3). Steam réel : App ID du jeu à obtenir par Raphaël quand il le souhaite |
 | Audio, classement | 15, 09 | L'audio reprend après l'écoute de la planche ; mort et bilan validés pour l'instant (§62), retouches d'affichage possibles |
-| L'Indicible | 07, [mesure](../audits/indicible-2026-10-04/README.md) | **Décidé (§65) : le refaire entièrement**, avec la Barrière. Fiche commune à concevoir au plan 07 (silhouette, phases, zones touchables que les armes voient, attaques qui punissent aussi le joueur qui bouge). |
+| L'Indicible | 07, [mesure](../audits/indicible-2026-10-04/README.md) | **Décidé (§65) : le refaire entièrement**, avec la Barrière. **Fiche commune proposée** ([plan 07](07-bestiaire-et-rencontres.md#fiche-commune--la-barrière-et-lindicible--4-octobre-2026-proposition)) : Barrière à battants selon les Mémoriaux, Indicible en trois phases frappé par ses mains ; 5 questions, puis lots B1–B4. Rien de codé. |
 | Synergies | 05, 21 | Forme **C** retenue (§66) : synergies de règles, sans effet ajouté ni annonce. Planche de combinaisons à proposer avant code. |
 | Steam | 26 Q3, Q12 | App ID du jeu à obtenir ([marche à suivre](../STEAM-MISE-EN-PLACE.md), §67) ; test réel des classements ensuite. |
 | Points à vérifier en jeu | `A-VERIFIER.md` | 51 cases non cochées ; Raphaël les coche en jouant (§64) ; quatre points tranchés retirés par N1 |
