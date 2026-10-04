@@ -17,8 +17,7 @@
     "orbital_speed": { "default": 180, "min": 0 },
     "chain_targets": { "default": 2, "min": 1 },
     "chain_range": { "default": 100, "min": 0 },
-    "chain_damage_falloff": { "default": 0.8, "min": 0, "max": 1 },
-    "essence_cost_per_attack": { "default": 0, "min": 0, "_comment": "Déclaré par trois armes, lu par aucun mécanisme (coût en Essence non implémenté)." }
+    "chain_damage_falloff": { "default": 0.8, "min": 0, "max": 1 }
   },
   "on_hit_effects": {
     "dot": { "damage": { "min": 0 }, "duration": { "min": 0 } },

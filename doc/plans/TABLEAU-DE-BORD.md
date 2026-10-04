@@ -29,16 +29,15 @@ Le [registre](DECISIONS.md) garde les mots de Raphaël. Les plans gardent le dé
 
 | Sujet | Plan | Question |
 |---|---|---|
-| Bestiaire | 07 | « Mobs successifs » fermé (§62). La Barrière, boss intermédiaire, gardée : fiche à concevoir et à valider. |
+| Bestiaire | 07 | « Mobs successifs » fermé (§62). La Barrière, boss intermédiaire, gardée : fiche à concevoir **avec la reprise de l'Indicible** (§64). |
 | Direction artistique | 08, 25 | Personnages joués validés provisoirement (§62) ; retouches possibles plus tard. |
-| Lore | 19 | Script v1.1 **validé comme base** (§62), ajouts, fins, objets, Montée, Barrière et Failles tranchés. Restent : nom de Vaulme, les trente et un noms, déclenchement des fins personnelles côté jeu ; lots de production à proposer. |
+| Lore | 19 | Script v1.1 **validé comme base** (§62), ajouts, fins, objets, Montée, Barrière et Failles tranchés. Restent : nom de Vaulme, les trente et un noms, déclenchement des fins personnelles côté jeu ; **lots de production proposés au plan 19 après Q6c** (§64), ces trois points en options. |
 | Audio | 15 | Planche de la Résurgence **pas encore écoutée** (`xdg-open ~/.local/share/vestiges-audio/2026-10-01/planche-resurgence.html`) ; écoute en run et choix restants ; chantier élargi à toute l'identité sonore, avec les Résurgences comme premier cas proposé (§44). |
 | Réveil du Mémorial et de la Faille | 24 L6b, 15 | Durée gardée ; son à changer (§49), à traiter avec l'audio |
-| Classement | 09 | Toutes les décisions, plus tard |
+| Classement | 09 | Toutes les décisions, plus tard. Weekly gardé pour toutes les runs, un tableau par semaine (§64, livré par Q3). Steam réel : App ID du jeu à obtenir par Raphaël quand il le souhaite |
 | Audio, classement | 15, 09 | L'audio reprend après l'écoute de la planche ; mort et bilan validés pour l'instant (§62), retouches d'affichage possibles |
-| L'Indicible ne se combat pas vraiment | 07, 26 Q6b | Capture du 4 octobre : 40 s de combat, 0 PV perdu, 0 coup porté au joueur ; les tirs visent probablement son centre, alors que ses zones touchables sont aux bords ; visuel de rectangles sombres. Le reprendre (lisibilité, ciblage, design) maintenant, ou plus tard ? |
-| Coût en Essence des armes | 26 Q6a | `essence_cost_per_attack` (3 armes) n'est lu nulle part : le brancher sur l'Essence, ou le retirer ? |
-| Points à vérifier en jeu | `A-VERIFIER.md` | 55 cases non cochées |
+| L'Indicible ne se combat pas vraiment | 07, 26 Q6b | **Décidé (§64)** : mesurer après Q6c (tirs, touches, coups portés), puis reprendre son design avec la fiche de la Barrière. |
+| Points à vérifier en jeu | `A-VERIFIER.md` | 55 cases non cochées ; Raphaël les coche en jouant (§64) |
 
 ## 3. Validé, pas encore fait
 

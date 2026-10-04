@@ -194,5 +194,5 @@ Roadmap B/E/G et validation de puissance de A/C. Acceptation : chaque choix du l
 
 Recherche outillée des clés de `data/` jamais lues par le code, après deux mécaniques mortes trouvées dans le plan 07 (charge de la Brute, recul des armes, corrigés). Restent, **à arbitrer** (implémenter ou retirer) :
 - **Synergies de perks** : les six synergies de `perks.json` (Rage Sanguinaire, Maîtrise Fatale, Tempête d'Essence, Kamikaze, Rebond Mortel, Bourreau) s'activent quand leurs deux perks sont réunis et s'annoncent à l'écran, mais aucun de leurs effets n'est appliqué (`effect.action` n'est lu par aucun système). Le joueur voit « activée » sans rien obtenir. Recommandation : les retirer avec la vague 4 (objets), ou ne plus les annoncer d'ici là.
-- **`essence_cost_per_attack`** (Baguette de sourcier 0,5 ; Lampe à pétrole 0,3 ; Gants de boxe 0,2) : jamais lu. Aucune description ne l'annonce, donc sans effet visible ; à retirer ou à concevoir.
+- **`essence_cost_per_attack`** (Baguette de sourcier 0,5 ; Lampe à pétrole 0,3 ; Gants de boxe 0,2) : jamais lu ; **retiré le 4 octobre** ([DECISIONS §64](DECISIONS.md)).
 - `drop_condition` (trois armes) et `shape_visual` (Craies) : textes et intentions non branchés, sans conséquence.

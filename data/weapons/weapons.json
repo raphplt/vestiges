@@ -931,8 +931,7 @@
       "range": 200,
       "projectile_speed": 250,
       "projectile_count": 1,
-      "homing_strength": 0.85,
-      "essence_cost_per_attack": 0.5
+      "homing_strength": 0.85
     },
     "source": "world",
     "requires_souvenir": "memory_flame",
@@ -1035,8 +1034,7 @@
       "attack_speed": 0.6,
       "range": 170,
       "projectile_speed": 180,
-      "projectile_count": 1,
-      "essence_cost_per_attack": 0.3
+      "projectile_count": 1
     },
     "special_effect": {
       "type": "ground_fire",
@@ -1090,8 +1088,7 @@
       "attack_speed": 1.4,
       "range": 60,
       "arc_angle": 90,
-      "knockback": 15,
-      "essence_cost_per_attack": 0.2
+      "knockback": 15
     },
     "special_effect": {
       "type": "delayed_echo",

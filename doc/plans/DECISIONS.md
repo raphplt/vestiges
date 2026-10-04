@@ -785,3 +785,14 @@ Raphaël : « stylisé ou grosse tete j'aime bcp il y a qq chose à faire. pour 
 ## 63. Suite du plan 26 — 4 octobre 2026
 
 Après Q2a, Q2b, Q6a et Q6b, Raphaël : « oui ca me va Q3 et Q6 ». Lots suivants validés : **Q3** (opérations Steam) et **Q6c** (relations de contenu et capacités ennemies), à mener dans une nouvelle conversation. Les questions de l'Indicible (« ne se combat pas vraiment ») et de `essence_cost_per_attack` restent ouvertes au tableau de bord.
+
+## 64. Questions de reprise — 4 octobre 2026, après-midi
+
+- **L'Indicible ne se combat pas vraiment :** à **mesurer après Q6c** (où vont les tirs, combien touchent, pourquoi il ne frappe pas) ; la reprise de son design vient ensuite, sur ces chiffres.
+- **La Barrière :** fiche à concevoir **avec la reprise de l'Indicible**, au plan 07.
+- **`essence_cost_per_attack` :** **retiré** des trois armes et du contrat ; il n'était lu par aucun mécanisme, rien ne change en jeu. Une idée de coût en Essence reviendrait par le plan 21.
+- **Classement Weekly (Q3) :** **gardé pour toutes les runs**, sans seed fixée ; un tableau par semaine (`Vestiges_Weekly_<année>-W<semaine ISO>`), créé par le jeu au premier envoi, au lieu d'un tableau unique qu'on supposait remis à zéro par Steam. Un futur défi à seed fixée aurait son propre classement (plan 09).
+- **Steam réel :** Q3 est prouvé par un faux Steam, limite écrite ; la session réelle se fera avec l'App ID du jeu (ou le 480) quand la bibliothèque native sera posée, au plus tard à Q12. Raphaël demande s'il peut déjà mettre le jeu sur Steam : réponse donnée (compte Steamworks, Steam Direct, App ID attribué au paiement, page « Bientôt disponible »). Démarche à son initiative ; le changement d'App ID tient en une constante et `steam_appid.txt`.
+- **Audio :** reste ouvert, Raphaël écoute la planche de la Résurgence quand il veut.
+- **Lore :** après Q6c, proposer au plan 19 les lots de production (textes, objets, fins, Montée) avec le nom de Vaulme, les trente et un noms et le déclenchement des fins personnelles en options.
+- **A-VERIFIER.md :** Raphaël coche les points en jouant.
