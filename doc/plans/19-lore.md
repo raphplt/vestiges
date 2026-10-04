@@ -593,3 +593,36 @@ Réponses de Raphaël ([DECISIONS §62](DECISIONS.md)) :
 | P7, Failles | Le profil compte les Failles acceptées ; quelques détails changent (ligne de document, murmure), sans punition ni effet sur les fins |
 
 **Restent ouverts :** le nom de Vaulme (provisoire), les trente et un noms, la mécanique de déclenchement des fins personnelles côté jeu (§9.1 du script). La production (documents, scènes, objets, Montée) n'est pas engagée : elle passera par des lots à proposer.
+
+## 15. Lots de production proposés — 4 octobre (à valider)
+
+Demandé au §64 : proposer les lots qui font passer le script v1.1 dans le jeu, avec les trois points restés ouverts en options. Rien n'est engagé.
+
+**Ce qui existe aujourd'hui :**
+- 19 Souvenirs (`data/souvenirs/souvenirs.json`) et 6 constellations ;
+- 12 murmures d'écho ;
+- 11 éléments de lore dans le monde (`scripts/World/Lore` : porte sans mur, pas interrompus, horloge folle…), dont plusieurs désactivés ;
+- des coffres de lore (`chest_lore.json`) et un journal ;
+- trois personnages jouables (Vagabond, Forgeuse, Traqueur) ; le Facteur, la Scaphandrière et les autres ne sont pas encore intégrés.
+
+### 15.1 Les trois points ouverts
+
+| Point | Options | Recommandation |
+|---|---|---|
+| **Nom de Vaulme** | A. Garder Vaulme. B. Un autre nom court, sans pays marqué (à proposer en planche de cinq). C. Ne jamais nommer la ville, seulement ses quartiers (Haute-Ville, Bas-Port). | **A** : déjà dans tout le script ; sonne vrai sans dire le pays. C reste possible plus tard sans rien casser. |
+| **Les trente et un noms** | A. Valider la liste de l'annexe telle quelle. B. Tu retouches certains noms. C. Je propose une variante. | **A**, en gardant le droit de retoucher un nom quand son document est écrit. |
+| **Déclenchement d'une fin personnelle** | A. **Un fil et un geste** : le profil compte les pièces du fil du personnage (documents, objets, lieux), et la fin s'arme quand le fil est complet et qu'en run le personnage atteint son lieu (porte, barrière, quai). La scène joue à la prochaine mort, comme validé. B. **Collection seule** : le fil complet suffit, sans geste en run. C. **Quête** : une quête par personnage dans le système existant (`QuestManager`), avec étapes visibles. | **A** : la fin se mérite en jouant, sans afficher de liste à cocher. B est plus simple, mais la fin tombe hors de toute action ; C montre trop le fil, contre la règle « on peut la manquer ». |
+
+### 15.2 Lots
+
+| Lot | Contenu | Dépend de | Vérification |
+|---|---|---|---|
+| **L1 — Ton des textes existants** | Réécrire selon §10 du script, sans changer de mécanique : les 19 Souvenirs, les descriptions d'armes qui énoncent la règle (Cloche, Scalpel, Lampe, Polaroïd, Transistor), les deux murmures sur l'oubli, les textes d'interface listés au §12 du script ; retirer les constellations et les restes V1 (Foyer, laboratoire, Mémoria). FR et EN. | Rien | Clés de traduction complètes ; captures Collection, journal, choix, bilan regardées |
+| **L2 — Documents** | Un catalogue de documents (`data/lore/documents.json` : type, texte FR/EN, personnages liés, biome ou lieu de dépôt, palier). Dépôt en run par les coffres de lore et les petits lieux existants. Le journal se range par personne, avec la case « sans nom ». Ligne « Retrouvé » discrète au bilan. Premier contenu : les documents du fil du Vagabond. | L1 pour le ton | Fixtures de catalogue ; un document trouvé en run, rangé, relu au bilan (captures) |
+| **L3 — Première fin personnelle : le Vagabond** | Tranche verticale avec un personnage jouable. Son fil : le bonnet trop petit, la photo aux deux mains d'enfant, la porte verte sans mur (élément de lore existant), avec le geste de l'option A. Puis la scène sans texte au bilan, la ligne « Élie », et l'écran de mort en une ligne après la nomination. La Veilleuse est débloquée comme personnage à venir, sans être jouable. | L2, réponse au point « déclenchement » | Profil de test qui arme la fin ; capture de la scène et de l'écran de mort ; aucune fin armée par erreur |
+| **L4 — Fins du Traqueur et de la Forgeuse** | Mêmes outils que L3. Traqueur : les pas interrompus, la lanterne. Forgeuse : la chaîne brisée. Les deux se croisent (Élie nomme Julien, Julien nomme Odette). Les objets de fin rejoignent le système d'objets (plan 21), un par fin. | L3 ; la Barrière (plan 07) pour la Forgeuse | Idem L3, et ordre des fins respecté |
+| **L5 — Le monde qui raconte** | Réactiver les éléments de lore éteints dans cette lecture. Ajouter la Montée, tracé discret dans chaque carte (plan 22), et les quais du marais. Les signes pendant la run restent sans arrêt ni écran (son de Faille, silhouette). | L2 | Captures de carte et de run ; coût mesuré si des décors s'ajoutent |
+| **L6 — Personnages ajoutés** | Fiches au plan 06 pour le Sonneur, l'Écolière, la Photographe, la Veilleuse et l'Enfant du Bas-Port ; sprites au plan 25. Leurs fils et leurs fins suivent le modèle de L3. | Casting et sprites | Selon les plans 06 et 25 |
+| **L7 — Vraie fin et après-fin** | La dernière Faille face à l'Indicible, les trente et un noms, la porte verte sur la Montée, la pluie ; puis la pluie et la mer dans les runs, l'Enfant du Bas-Port et la Clé verte. | L3 à L6, l'Indicible repris (plan 07) | Profil de test complet ; captures ; écoute de la pluie |
+
+**Ordre recommandé : L1, puis L2 et L3 ensemble** (une première fin complète, jouable avec un personnage déjà en jeu), puis L4 et L5. L6 et L7 viennent avec le casting et la reprise de l'Indicible.
