@@ -61,7 +61,8 @@ public partial class HubScreen : Control
 		SouvenirDataLoader.Load();
 		RunHistoryManager.Load();
 		MetaSaveManager.Load();
-		QuestManager.ResolvePendingProgressionQuests();
+		string repairError = RunSettlement.RepairPendingHistory();
+		QuestManager.ResolvePendingProgressionQuests(null, out SaveFile.WriteResult questsSaved);
 
 		GameManager gm = GetNode<GameManager>("/root/GameManager");
 		_selectedCharacterId = gm.SelectedCharacterId;
@@ -78,6 +79,7 @@ public partial class HubScreen : Control
 		DevelopmentBadge.AttachTo(this);
 
 		UpdateVestigesDisplay();
+		ShowSaveNotice(repairError.Length > 0 || !questsSaved.Succeeded);
 		SetState(HubState.MainMenu);
 		PlayIntro();
 
@@ -619,6 +621,8 @@ public partial class HubScreen : Control
 		manager.LastRunData = null;
 		manager.LastUnlocks = null;
 		manager.LastQuestCompletions = null;
+		manager.LastRunSaveError = "";
+		manager.LastRunHistoryPending = false;
 		manager.LastVestigesEarned = 0;
 		manager.ActiveMutators.Clear();
 		manager.ChangeState(GameManager.GameState.Hub);
@@ -649,6 +653,48 @@ public partial class HubScreen : Control
 		}
 
 		GD.PushWarning("[Hub] No unlocked character.");
+	}
+
+	/// <summary>Prévient sous les Vestiges quand le profil n'a pas été lu ou écrit normalement (plan 26 Q2b).</summary>
+	private void ShowSaveNotice(bool writeFailed)
+	{
+		string key = WorstLoadStatus() switch
+		{
+			SaveFile.ReadStatus.FutureVersion => "UI_SAVE_NOTICE_FUTURE",
+			SaveFile.ReadStatus.Inaccessible => "UI_SAVE_NOTICE_LOCKED",
+			SaveFile.ReadStatus.Unreadable => "UI_SAVE_NOTICE_RESET",
+			SaveFile.ReadStatus.Recovered => "UI_SAVE_NOTICE_RECOVERED",
+			_ => writeFailed ? "UI_SAVE_NOTICE_WRITE" : ""
+		};
+		if (key.Length == 0)
+			return;
+
+		Label notice = CreateLabel(Tr(key), TextRole.Small, UITheme.GoldBright, false);
+		notice.Name = "SaveNotice";
+		notice.AddThemeConstantOverride("outline_size", 6);
+		notice.AddThemeColorOverride("font_outline_color", UITheme.OutlineColor);
+		notice.SetAnchorsAndOffsetsPreset(LayoutPreset.TopRight);
+		notice.OffsetLeft = -900f;
+		notice.OffsetRight = -64f;
+		notice.OffsetTop = 112f;
+		notice.OffsetBottom = 140f;
+		notice.HorizontalAlignment = HorizontalAlignment.Right;
+		_mainMenuLayer.AddChild(notice);
+	}
+
+	private static SaveFile.ReadStatus WorstLoadStatus()
+	{
+		SaveFile.ReadStatus[] order =
+		{
+			SaveFile.ReadStatus.FutureVersion, SaveFile.ReadStatus.Inaccessible,
+			SaveFile.ReadStatus.Unreadable, SaveFile.ReadStatus.Recovered
+		};
+		foreach (SaveFile.ReadStatus status in order)
+		{
+			if (MetaSaveManager.LoadStatus == status || RunHistoryManager.LoadStatus == status)
+				return status;
+		}
+		return SaveFile.ReadStatus.Loaded;
 	}
 
 	private void UpdateVestigesDisplay()

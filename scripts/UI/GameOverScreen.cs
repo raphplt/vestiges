@@ -237,7 +237,9 @@ public partial class GameOverScreen : CanvasLayer
         GameManager gameManager = GetNode<GameManager>("/root/GameManager");
         gameManager.ChangeState(GameManager.GameState.Death);
         _scoreManager?.SaveEndOfRun();
-        gameManager.LastQuestCompletions = QuestManager.ResolvePendingProgressionQuests(gameManager.LastRunData);
+        gameManager.LastQuestCompletions = QuestManager.ResolvePendingProgressionQuests(gameManager.LastRunData, out SaveFile.WriteResult questsSaved);
+        if (!questsSaved.Succeeded && string.IsNullOrEmpty(gameManager.LastRunSaveError))
+            gameManager.LastRunSaveError = questsSaved.Error;
         _newWeapons.Clear();
         foreach (WeaponData weapon in WeaponDataLoader.GetAll())
         {
@@ -274,6 +276,11 @@ public partial class GameOverScreen : CanvasLayer
         _record.AddThemeColorOverride("font_color", _isRecord ? UITheme.GoldBright : UITheme.TextDim);
         _detail.Text = FormatDetail();
         _seed.Text = gm.RunSeed > 0 ? string.Format(Tr("UI_END_SEED"), gm.RunSeed) : "";
+        string saveNotice = !string.IsNullOrEmpty(gm.LastRunSaveError) ? Tr("UI_END_SAVE_FAILED")
+            : gm.LastRunHistoryPending ? Tr("UI_END_HISTORY_PENDING") : "";
+        if (saveNotice.Length > 0)
+            _seed.Text = _seed.Text.Length > 0 ? $"{saveNotice}  ·  {_seed.Text}" : saveNotice;
+        _seed.AddThemeColorOverride("font_color", saveNotice.Length > 0 ? UITheme.GoldBright : UITheme.TextVeryDim);
 
         BuildMiddle(record);
         BuildTimeline();

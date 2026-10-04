@@ -113,7 +113,8 @@ public partial class QuestManager : CanvasLayer
             _toastLabel.Visible = false;
     }
 
-    public static List<string> ResolvePendingProgressionQuests(RunRecord latestRecord = null)
+    /// <summary>Récompense et validation de chaque quête partent dans une seule écriture, issue rendue par <paramref name="saved"/>.</summary>
+    public static List<string> ResolvePendingProgressionQuests(RunRecord latestRecord, out SaveFile.WriteResult saved)
     {
         QuestDataLoader.Load();
         SouvenirDataLoader.Load();
@@ -122,19 +123,29 @@ public partial class QuestManager : CanvasLayer
         RunHistoryManager.Load();
 
         List<string> completions = new();
-        foreach (QuestDefinition definition in QuestDataLoader.GetByCategory("progression"))
+        MetaSaveManager.BeginBatch();
+        try
         {
-            if (MetaSaveManager.HasCompletedQuest(definition.Id))
-                continue;
+            foreach (QuestDefinition definition in QuestDataLoader.GetByCategory("progression"))
+            {
+                if (MetaSaveManager.HasCompletedQuest(definition.Id))
+                    continue;
 
-            QuestProgressSnapshot snapshot = EvaluateProgressionQuest(definition, latestRecord);
-            if (!snapshot.IsComplete)
-                continue;
+                QuestProgressSnapshot snapshot = EvaluateProgressionQuest(definition, latestRecord);
+                if (!snapshot.IsComplete)
+                    continue;
 
-            ApplyProgressionReward(definition);
-            MetaSaveManager.CompleteQuest(definition.Id);
-            completions.Add($"{definition.Name} — {GetRewardSummary(definition)}");
+                ApplyProgressionReward(definition);
+                MetaSaveManager.CompleteQuest(definition.Id);
+                completions.Add($"{definition.Name} — {GetRewardSummary(definition)}");
+            }
         }
+        finally
+        {
+            saved = MetaSaveManager.EndBatch();
+        }
+        if (!saved.Succeeded)
+            GD.PushError($"[QuestManager] Quêtes de progression non enregistrées : {saved.Error}");
 
         return completions;
     }

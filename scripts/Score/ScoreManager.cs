@@ -103,9 +103,15 @@ public partial class ScoreManager : Node
         GD.Print($"[ScoreManager] Mutator multiplier set to x{multiplier:F2}");
     }
 
-    /// <summary>Sauvegarde le score, enregistre la run, calcule les Vestiges, vérifie les déblocages.</summary>
+    /// <summary>
+    /// Règle la run une seule fois : record, acquis méta et historique (plan 26 Q2b), puis analytics et Steam.
+    /// Un second appel ne fait rien ; un échec d'écriture est remis au bilan par <see cref="GameManager.LastRunSaveError"/>.
+    /// </summary>
     public void SaveEndOfRun()
     {
+        if (_endSettled)
+            return;
+
         _previousBest = _bestScore;
         _endedWithRecord = CurrentScore > _bestScore;
         _endSettled = true;
@@ -116,20 +122,16 @@ public partial class ScoreManager : Node
         }
 
         RunRecord record = BuildRunRecord();
-        RunHistoryManager.SaveRun(record);
-
-        // Vestiges = score / 10
+        record.RunId = System.Guid.NewGuid().ToString("N");
         VestigesEarned = CurrentScore / 10;
-        MetaSaveManager.AddVestiges(VestigesEarned);
-
-        // Update meta stats and check unlocks
-        MetaSaveManager.UpdateStats(record);
-        System.Collections.Generic.List<string> newUnlocks = MetaSaveManager.CheckUnlocks();
+        RunSettlement.Outcome outcome = RunSettlement.Settle(record, VestigesEarned);
 
         GameManager gm = GetNode<GameManager>("/root/GameManager");
         gm.LastRunData = record;
         gm.LastVestigesEarned = VestigesEarned;
-        gm.LastUnlocks = newUnlocks;
+        gm.LastUnlocks = outcome.Unlocks;
+        gm.LastRunSaveError = outcome.Saved ? "" : outcome.Error;
+        gm.LastRunHistoryPending = outcome.HistoryPending;
 
         // Analytics : enregistrer les métriques de la run
         AnalyticsManager.Instance?.RecordRunEnd(record);

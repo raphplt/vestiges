@@ -23,6 +23,7 @@ public partial class SaveFileRegression : Node
             RunSaveFileChecks();
             RunMetaChecks();
             RunHistoryChecks();
+            RunSettlementChecks();
             RunHighScoreChecks();
         }
         catch (Exception ex)
@@ -180,7 +181,7 @@ public partial class SaveFileRegression : Node
         RunHistoryManager.ForceReload();
         Check(RunHistoryManager.GetHistory().Count == 2 && !RunHistoryManager.CanWrite, "historique : version future lue sans écriture");
         Check(!RunHistoryManager.SaveRun(new RunRecord { Score = 30 }).Succeeded, "historique : ajout refusé sur version future");
-        Check(File.ReadAllText(target) == future, "historique : version future intacte");
+        Check(File.ReadAllText(target) == future && RunHistoryManager.GetHistory().Count == 2, "historique : version future intacte, ajout refusé absent de la mémoire");
 
         Reset(target);
         File.WriteAllText(target, "[{\"version\":3,\"score\":10}]");
@@ -191,6 +192,88 @@ public partial class SaveFileRegression : Node
         Reset(target);
         RunHistoryManager.ForceReload();
     }
+
+    /// <summary>Plan 26 Q2b : une run réglée une fois, méta en une écriture, historique réparable, échecs remontés.</summary>
+    private void RunSettlementChecks()
+    {
+        string meta = Abs(DevelopmentMode.GetSavePath("meta_save.json"));
+        string history = Abs(DevelopmentMode.GetSavePath("run_history.json"));
+        Reset(meta);
+        Reset(history);
+        MetaSaveManager.ReloadProfile();
+        RunHistoryManager.ForceReload();
+        MetaSaveManager.Load();
+
+        // Écritures regroupées : rien sur disque avant la fin du lot.
+        string before = File.ReadAllText(meta);
+        MetaSaveManager.BeginBatch();
+        MetaSaveManager.AddVestiges(1);
+        MetaSaveManager.CompleteQuest("batch_fixture");
+        Check(File.ReadAllText(meta) == before, "lot : aucune écriture intermédiaire");
+        Check(MetaSaveManager.EndBatch().Succeeded && File.ReadAllText(meta).Contains("batch_fixture"), "lot : une écriture à la fin");
+
+        int vestiges = MetaSaveManager.GetVestiges();
+        int runs = MetaSaveManager.GetStats().TotalRuns;
+        RunRecord first = Record("a", 100);
+        RunSettlement.Outcome outcome = RunSettlement.Settle(first, 10);
+        Check(outcome.Saved && !outcome.AlreadySettled, "règlement enregistré");
+        Check(MetaSaveManager.GetVestiges() == vestiges + 10 && MetaSaveManager.GetStats().TotalRuns == runs + 1, "acquis comptés une fois");
+        Check(RunHistoryManager.Contains("a") && MetaSaveManager.GetPendingHistory().Count == 0, "historique écrit, rien en attente");
+
+        outcome = RunSettlement.Settle(Record("a", 100), 10);
+        Check(outcome.AlreadySettled && MetaSaveManager.GetVestiges() == vestiges + 10, "même run réglée deux fois : rien de plus");
+        Check(RunHistoryManager.GetHistory().Count == 1, "même run inscrite une fois");
+
+        // Interruption entre la méta et l'historique : la méta seule est engagée, puis le jeu redémarre.
+        MetaSaveManager.SettleRun(Record("b", 50), 5);
+        MetaSaveManager.ReloadProfile();
+        RunHistoryManager.ForceReload();
+        Check(PendingIds() == "b" && !RunHistoryManager.Contains("b"), "interruption : relevé en attente retrouvé");
+        Check(RunSettlement.RepairPendingHistory().Length == 0 && RunHistoryManager.Contains("b"), "interruption : historique complété");
+        Check(MetaSaveManager.GetVestiges() == vestiges + 15 && PendingIds() == "", "interruption : Vestiges non réattribués");
+        Check(RunSettlement.Settle(Record("b", 50), 5).AlreadySettled, "interruption : run déjà réglée");
+
+        // Historique impossible à écrire deux runs de suite : acquis engagés, relevés gardés, réparation ensuite.
+        Directory.CreateDirectory(history + ".tmp");
+        outcome = RunSettlement.Settle(Record("c", 30), 3);
+        RunSettlement.Outcome second = RunSettlement.Settle(Record("e", 40), 4);
+        Directory.Delete(history + ".tmp");
+        Check(outcome.Saved && outcome.HistoryPending && outcome.Error.Length > 0, "historique en échec : acquis sûrs, relevé signalé en attente");
+        Check(second.HistoryPending && PendingIds() == "c,e" && MetaSaveManager.GetVestiges() == vestiges + 22, "historique en échec : deux relevés gardés");
+        Check(RunSettlement.RepairPendingHistory().Length == 0 && RunHistoryManager.Contains("c") && RunHistoryManager.Contains("e"), "historique en échec : réparé ensuite");
+        Check(PendingIds() == "", "historique réparé : plus rien en attente");
+
+        // Méta impossible à écrire : rien d'engagé sur disque, échec remonté, historique non touché.
+        string committed = File.ReadAllText(meta);
+        Directory.CreateDirectory(meta + ".tmp");
+        outcome = RunSettlement.Settle(Record("d", 20), 2);
+        Directory.Delete(meta + ".tmp");
+        Check(!outcome.Saved && !outcome.HistoryPending && outcome.Error.Length > 0, "méta en échec : signalé");
+        Check(File.ReadAllText(meta) == committed && !RunHistoryManager.Contains("d"), "méta en échec : disque inchangé, historique non écrit");
+
+        // Fin de run réelle appelée deux fois.
+        Reset(meta);
+        Reset(history);
+        MetaSaveManager.ReloadProfile();
+        RunHistoryManager.ForceReload();
+        ScoreManager score = new();
+        AddChild(score);
+        score.SaveEndOfRun();
+        score.SaveEndOfRun();
+        Check(RunHistoryManager.GetHistory().Count == 1 && MetaSaveManager.GetStats().TotalRuns == 1, "fin de run appelée deux fois : réglée une fois");
+        Vestiges.Core.GameManager gameManager = GetNode<Vestiges.Core.GameManager>("/root/GameManager");
+        Check(string.IsNullOrEmpty(gameManager.LastRunSaveError) && !gameManager.LastRunHistoryPending, "fin de run : aucun échec annoncé");
+        score.QueueFree();
+
+        Reset(meta);
+        Reset(history);
+        MetaSaveManager.ReloadProfile();
+        RunHistoryManager.ForceReload();
+    }
+
+    private static string PendingIds() => string.Join(",", MetaSaveManager.GetPendingHistory().ConvertAll(run => run.RunId));
+
+    private static RunRecord Record(string runId, int score) => new() { RunId = runId, Score = score, CharacterId = "vagabond" };
 
     private void RunHighScoreChecks()
     {

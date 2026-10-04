@@ -234,6 +234,13 @@ UI_END_FELL_TO,Dernier coup,Last hit
 UI_END_VESTIGES,+{0} Vestiges,+{0} Vestiges
 UI_END_UNLOCK,Revient au camp : {0},Returns to camp: {0}
 UI_END_SEED,Graine {0},Seed {0}
+UI_END_SAVE_FAILED,"Progression non enregistrée : la sauvegarde a échoué","Progress not saved: saving failed"
+UI_END_HISTORY_PENDING,"Progression enregistrée ; la run rejoindra les Chroniques au camp","Progress saved; the run will join the Chronicles at camp"
+UI_SAVE_NOTICE_FUTURE,"Sauvegarde d'une version plus récente du jeu : rien ne sera enregistré","Save from a newer version of the game: nothing will be saved"
+UI_SAVE_NOTICE_LOCKED,"Sauvegarde inaccessible : rien ne sera enregistré","Save file inaccessible: nothing will be saved"
+UI_SAVE_NOTICE_RESET,"Sauvegarde illisible, mise de côté : nouveau profil","Unreadable save set aside: new profile"
+UI_SAVE_NOTICE_RECOVERED,"Sauvegarde abîmée : reprise sur la copie précédente","Damaged save: restored from the previous copy"
+UI_SAVE_NOTICE_WRITE,"La dernière sauvegarde a échoué","The last save failed"
 UI_END_REPLAY,Rejouer,Play again
 UI_END_HUB,Retour au camp,Back to camp
 UI_END_NEW_WEAPON,Arme retrouvée : {0},Weapon found: {0}

@@ -119,6 +119,12 @@ Donner une identité à la finalisation, calculer ses récompenses une fois et m
 - **Échec visible :** le bilan dit que la progression n'a pas été enregistrée quand l'engagement méta ou l'historique échoue.
 - **Vérification :** double appel, échec de la méta, échec de l'historique puis réparation, interruption entre méta et historique, quêtes ; suites `saves`, `dev_mode`, `development_tools`, `movement-integration`.
 
+**Q2b livré et vérifié, 4 octobre.** Chaque fin de run porte un `run_id`. `SaveEndOfRun` ne fait rien au second appel. `MetaSaveManager.SettleRun` engage en **une** écriture (au lieu de trois) les Vestiges, les statistiques, les déblocages, l'identité de la run (20 dernières retenues) et son relevé en attente d'historique. Une run déjà réglée ne rapporte rien. `RunSettlement` écrit la méta, puis l'historique, puis retire le relevé ; le camp complète au lancement les relevés restés en attente, sans réattribuer. Les quêtes de progression écrivent récompense et validation ensemble. Les lots d'écritures se ferment toujours, même sur exception.
+- **Échec visible :** au bilan, « Progression non enregistrée » si la méta échoue, « la run rejoindra les Chroniques au camp » si seul l'historique est en attente. Au camp, sous les Vestiges : sauvegarde illisible, reprise sur la copie, version plus récente, fichier inaccessible ou dernière écriture en échec. Avis du camp capturés (profil illisible, version future) et regardés ; la ligne du bilan n'apparaît qu'en cas d'échec, non capturée.
+- **Vérifié :** `tools/test_saves.sh`, 58 contrôles (19 de plus) : lot sans écriture intermédiaire, double règlement, double appel de la vraie fin de run, interruption entre méta et historique puis redémarrage, historique en échec sur deux runs de suite puis réparation, méta en échec (disque inchangé, historique non touché). `tools/validate.sh` sur smoke, dev_mode, development_tools, saves, movement-integration et launchers, **6/6**. Build sans avertissement.
+- **Relecture `godot-reviewer` :** pas de double attribution. Corrigés : lots fermés par `try/finally` (une exception aurait sinon bloqué toutes les écritures suivantes en silence), plusieurs relevés en attente au lieu d'un seul emplacement, bilan qui distingue acquis perdus et historique en attente. Le test a révélé en plus qu'un ajout d'historique en échec restait en mémoire et trompait la réparation : la mémoire est maintenant remise à l'état du disque.
+- **Limites :** après un échec de la méta, les acquis restent en mémoire et partent à la prochaine écriture réussie de la session, sans doublon (la run est déjà marquée réglée). Le record (`highscore_kills.save`) reste un fichier à part, sans risque de doublon (maximum). Envois Steam et analytics protégés par le seul garde du second appel ; leur coordination reste à Q3.
+
 ### Q3 — Coordonner les opérations Steam
 
 Constats : F03, F11. Plan associé : 09.
@@ -273,7 +279,7 @@ Pour clore un lot :
 - [x] Q0 — Lanceurs et bancs fiables.
 - [x] Q1 — Outils de modification exclus des runs normales distribuées.
 - [x] Q2a — Écriture et récupération des sauvegardes.
-- [ ] Q2b — Finalisation persistante sans double attribution.
+- [x] Q2b — Finalisation persistante sans double attribution.
 - [ ] Q3 — Opérations Steam et contexte weekly.
 - [ ] Q4 — Chargement observé et récupérable.
 - [x] Q5 — Motifs d'attaque typés.
@@ -295,4 +301,4 @@ Pour clore un lot :
 - [ ] Q13 — Provenance du son de level-up résolue.
 - [ ] Q14 — Documentation active et restes V1 repris.
 
-**Prochain lot recommandé : Q6a** (effets à l'impact et spéciaux des armes, suite directe de Q5), ou Q2a/Q2b (sauvegardes) si Raphaël préfère protéger les acquis d'abord.
+**Prochain lot recommandé : Q6a** (effets à l'impact et spéciaux des armes, suite directe de Q5) ; Q2a et Q2b sont livrés le 4 octobre.

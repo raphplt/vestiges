@@ -49,6 +49,12 @@ public partial class GameManager : Node
     /// <summary>Quêtes de progression validées lors de la dernière run.</summary>
     public List<string> LastQuestCompletions { get; set; }
 
+    /// <summary>Vide si la dernière fin de run est enregistrée ; sinon la raison, montrée au bilan.</summary>
+    public string LastRunSaveError { get; set; } = "";
+
+    /// <summary>Acquis enregistrés mais relevé pas encore inscrit dans l'historique (complété au camp).</summary>
+    public bool LastRunHistoryPending { get; set; }
+
     /// <summary>Arme à montrer dans la Collection à l'arrivée au camp (bilan : « Voir dans la Collection »), ou nul.</summary>
     public string CollectionFocusWeaponId { get; set; }
 

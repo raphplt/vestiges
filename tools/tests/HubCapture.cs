@@ -12,6 +12,7 @@ namespace Vestiges.Tests;
 /// --record N : après la dernière action, enregistre N frames d'affilée en vignettes (départ en run, chargement),
 /// avec le temps écoulé et la scène courante de chaque frame.
 /// --collection-focus ID : arrivée depuis le bilan, « Voir dans la Collection » sur l'arme ID.
+/// --meta-fixture TEXTE : contenu déposé dans la sauvegarde méta avant l'accueil (avis de sauvegarde, plan 26 Q2b).
 /// </summary>
 public partial class HubCapture : Node
 {
@@ -30,6 +31,13 @@ public partial class HubCapture : Node
             string focus = Argument(args, "--collection-focus", "");
             if (focus.Length > 0)
                 GetNode<Vestiges.Core.GameManager>("/root/GameManager").CollectionFocusWeaponId = focus;
+
+            string fixture = Argument(args, "--meta-fixture", "");
+            if (fixture.Length > 0)
+            {
+                System.IO.File.WriteAllText(ProjectSettings.GlobalizePath(Vestiges.Infrastructure.DevelopmentMode.GetSavePath("meta_save.json")), fixture);
+                Vestiges.Infrastructure.MetaSaveManager.ReloadProfile();
+            }
 
             GetTree().CurrentScene = null;
             Node hub = GD.Load<PackedScene>("res://scenes/Hub.tscn").Instantiate();

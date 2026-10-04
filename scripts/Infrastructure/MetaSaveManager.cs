@@ -30,6 +30,14 @@ public class MetaSaveData
     /// <summary>Aides déjà montrées une fois au joueur (objectif d'un micro-événement, plan 24 A3).</summary>
     [JsonPropertyName("seen_hints")]
     public List<string> SeenHints { get; set; } = new();
+
+    /// <summary>Dernières runs dont les acquis sont engagés : une même run ne se règle jamais deux fois (plan 26 Q2b).</summary>
+    [JsonPropertyName("settled_runs")]
+    public List<string> SettledRuns { get; set; } = new();
+
+    /// <summary>Relevés de runs réglées dont l'historique n'est pas encore écrit ; chacun est retiré une fois inscrit.</summary>
+    [JsonPropertyName("pending_history")]
+    public List<RunRecord> PendingHistory { get; set; } = new();
 }
 
 public class MetaStats
@@ -73,12 +81,21 @@ public static class MetaSaveManager
 
     private readonly record struct ParsedMetaSave(MetaSaveData Data, string LegacyJson);
 
+    /// <summary>Résultat du règlement d'une run : déjà réglée, déblocages obtenus, issue de l'unique écriture.</summary>
+    public readonly record struct Settlement(bool AlreadySettled, List<string> Unlocks, SaveFile.WriteResult Write);
+
+    private const int SettledRunMemory = 20;
+    private static int _batchDepth;
+    private static bool _batchDirty;
+
     internal static void ReloadProfile()
     {
         _data = new MetaSaveData();
         _loaded = false;
         _writeBlockReason = "";
         LoadStatus = SaveFile.ReadStatus.Missing;
+        _batchDepth = 0;
+        _batchDirty = false;
     }
 
     public static void Load()
@@ -123,10 +140,19 @@ public static class MetaSaveManager
         GD.Print($"[MetaSaveManager] Loaded — {_data.Vestiges} Vestiges, {_data.UnlockedCharacters.Count} characters unlocked");
     }
 
+    /// <summary>
+    /// Écriture du profil. Entre <see cref="BeginBatch"/> et <see cref="EndBatch"/>, elle est seulement notée :
+    /// l'écriture réelle et son issue viennent de <see cref="EndBatch"/>.
+    /// </summary>
     public static SaveFile.WriteResult Save()
     {
         Load();
         NormalizeData();
+        if (_batchDepth > 0)
+        {
+            _batchDirty = true;
+            return SaveFile.WriteResult.Ok;
+        }
         if (!CanWrite)
         {
             GD.PushWarning($"[MetaSaveManager] Écriture refusée : {_writeBlockReason}");
@@ -142,6 +168,73 @@ public static class MetaSaveManager
         if (!result.Succeeded)
             GD.PushError($"[MetaSaveManager] Cannot save meta data: {result.Error}");
         return result;
+    }
+
+    /// <summary>Regroupe les changements d'une même attribution en une seule écriture.</summary>
+    public static void BeginBatch()
+    {
+        Load();
+        _batchDepth++;
+    }
+
+    /// <summary>Ferme un lot ; seul le lot le plus extérieur écrit, et lui seul rend l'issue réelle de l'écriture.</summary>
+    public static SaveFile.WriteResult EndBatch()
+    {
+        if (_batchDepth == 0)
+            return SaveFile.WriteResult.Ok;
+        _batchDepth--;
+        if (_batchDepth > 0 || !_batchDirty)
+            return SaveFile.WriteResult.Ok;
+        _batchDirty = false;
+        return Save();
+    }
+
+    /// <summary>
+    /// Engage les acquis d'une run en une écriture : Vestiges, statistiques, déblocages, identité de la run et relevé
+    /// en attente d'historique. Une run déjà réglée ne rapporte rien de plus.
+    /// </summary>
+    public static Settlement SettleRun(RunRecord record, int vestiges)
+    {
+        Load();
+        if (string.IsNullOrEmpty(record.RunId))
+            return new Settlement(false, new List<string>(), SaveFile.WriteResult.Failed("run sans identité"));
+        if (_data.SettledRuns.Contains(record.RunId))
+            return new Settlement(true, new List<string>(), SaveFile.WriteResult.Ok);
+
+        List<string> unlocks;
+        SaveFile.WriteResult write;
+        BeginBatch();
+        try
+        {
+            _data.Vestiges += vestiges;
+            UpdateStats(record);
+            unlocks = CheckUnlocks();
+            _data.SettledRuns.Add(record.RunId);
+            if (_data.SettledRuns.Count > SettledRunMemory)
+                _data.SettledRuns.RemoveRange(0, _data.SettledRuns.Count - SettledRunMemory);
+            _data.PendingHistory.Add(record);
+            _batchDirty = true;
+        }
+        finally
+        {
+            write = EndBatch();
+        }
+        GD.Print($"[MetaSaveManager] Run {record.RunId} settled: +{vestiges} Vestiges (total: {_data.Vestiges})");
+        return new Settlement(false, unlocks, write);
+    }
+
+    public static List<RunRecord> GetPendingHistory()
+    {
+        Load();
+        return new List<RunRecord>(_data.PendingHistory);
+    }
+
+    public static SaveFile.WriteResult ClearPendingHistory(string runId)
+    {
+        Load();
+        if (_data.PendingHistory.RemoveAll(run => run.RunId == runId) == 0)
+            return SaveFile.WriteResult.Ok;
+        return Save();
     }
 
     /// <summary>Contrôle la forme avant toute désérialisation ; une version future n'est jamais ramenée à l'actuelle.</summary>
@@ -387,6 +480,9 @@ public static class MetaSaveManager
         _data.DiscoveredSouvenirs ??= new List<string>();
         _data.CompletedQuests ??= new List<string>();
         _data.SeenHints ??= new List<string>();
+        _data.SettledRuns ??= new List<string>();
+        _data.PendingHistory ??= new List<RunRecord>();
+        _data.PendingHistory.RemoveAll(run => run == null || string.IsNullOrEmpty(run.RunId));
 
         CharacterDataLoader.Load();
         HashSet<string> supportedCharacters = CharacterDataLoader.GetAll()

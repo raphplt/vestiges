@@ -15,6 +15,10 @@ public class RunRecord
     [JsonPropertyName("version")]
     public int Version { get; set; } = RunHistoryManager.CurrentVersion;
 
+    /// <summary>Identité de la fin de run, pour ne jamais la régler ni l'inscrire deux fois (absente avant Q2b).</summary>
+    [JsonPropertyName("run_id")]
+    public string RunId { get; set; }
+
     [JsonPropertyName("character_id")]
     public string CharacterId { get; set; }
 
@@ -219,15 +223,34 @@ public static class RunHistoryManager
         Load();
 
         record.Version = CurrentVersion;
+        List<RunRecord> previous = new(_history);
         _history.Insert(0, record);
 
         if (_history.Count > MaxEntries)
             _history.RemoveRange(MaxEntries, _history.Count - MaxEntries);
 
         SaveFile.WriteResult result = Save();
-        if (result.Succeeded)
-            GD.Print($"[RunHistoryManager] Saved run: {record.CharacterName} — Score {record.Score}, {record.RunDurationSec:F0}s, {record.CrisesSurvived} crises");
+        if (!result.Succeeded)
+        {
+            // La mémoire reste fidèle au disque : une run non écrite n'est pas « déjà inscrite » pour la réparation.
+            _history = previous;
+            return result;
+        }
+        GD.Print($"[RunHistoryManager] Saved run: {record.CharacterName} — Score {record.Score}, {record.RunDurationSec:F0}s, {record.CrisesSurvived} crises");
         return result;
+    }
+
+    public static bool Contains(string runId)
+    {
+        Load();
+        if (string.IsNullOrEmpty(runId))
+            return false;
+        foreach (RunRecord run in _history)
+        {
+            if (run.RunId == runId)
+                return true;
+        }
+        return false;
     }
 
     public static List<RunRecord> GetHistory()
