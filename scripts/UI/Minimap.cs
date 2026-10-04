@@ -22,6 +22,7 @@ public partial class Minimap : Control
     private const float FullMaxWidth = 700f;
     private const float Margin = 10f;
     private const float BottomMargin = 64f;
+    private const int LegendFontSize = 8;
     private const int RevealRadiusCells = 12;
 
     private static readonly Color Frame = new(0.05f, 0.05f, 0.09f, 0.78f);
@@ -54,7 +55,6 @@ public partial class Minimap : Control
     private Rect2 _view;
     private Vector2 _mapSize;
     private VBoxContainer _legend;
-    private int _legendTextStep = -1;
     private Vector2 _playerPosition;
     private Texture2D _placeIcon;
     private Texture2D _chestIcon;
@@ -181,20 +181,10 @@ public partial class Minimap : Control
             row.AddChild(new MapLegendIcon(icon, color, key == "MAP_LEGEND_VOID"));
             Label label = new() { Text = Tr(key), MouseFilter = MouseFilterEnum.Ignore };
             label.AddThemeColorOverride("font_color", new Color(0.88f, 0.84f, 0.76f));
+            label.AddThemeFontSizeOverride("font_size", LegendFontSize);
             row.AddChild(label);
             _legend.AddChild(row);
         }
-        RefreshLegendText();
-    }
-
-    private void RefreshLegendText()
-    {
-        if (_legendTextStep == TextSettings.Step)
-            return;
-        _legendTextStep = TextSettings.Step;
-        int fontSize = Mathf.RoundToInt(8f * TextSettings.Scale);
-        for (int i = 0; i < _legend.GetChildCount(); i++)
-            _legend.GetChild(i).GetChild<Label>(1).AddThemeFontSizeOverride("font_size", fontSize);
     }
 
     public override void _Process(double delta)
@@ -211,7 +201,6 @@ public partial class Minimap : Control
         Control parent = GetParent<Control>();
         if (_full)
         {
-            RefreshLegendText();
             Size = _mapSize;
             Vector2 fullSize = new(Size.X + 8f + _legend.GetCombinedMinimumSize().X, Size.Y);
             Position = ((parent.Size - fullSize) / 2f).Floor();

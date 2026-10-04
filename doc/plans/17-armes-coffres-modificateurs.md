@@ -488,6 +488,8 @@ Décision 4.3 prise : la rareté vit sur les améliorations, plus sur l'arme. Ch
 - **Limites :** une seule prise par sprite (manche en bas à gauche) ; les objets posés (Boîte à musique, Polaroïd, Transistor) se tiennent comme une valise, sans pose propre. La main ne suit pas le balancement de la marche. Les personnages qui portent déjà une arme dessinée (le Traqueur et son arc dans le dos) en montrent deux.
 - À juger en jeu par Raphaël : garder, régler la taille ou la hauteur de la main, ou abandonner.
 
+**2C abandonné (4 octobre, [DECISIONS §65](DECISIONS.md)).** Option, `HeldWeapon`, champ `held_sprite`, 24 sprites `assets/weapons/held/`, rendu `render_held` et capture `--capture-held` retirés (plan 26 N1).
+
 ### Vague 3 — Modificateurs de run
 
 | Lot | Contenu | Vérification |

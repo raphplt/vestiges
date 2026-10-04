@@ -16,7 +16,6 @@ public class ChestData
     public float OpenTime;
     public string LootTableId;
     public int LootRolls;
-    public int ScorePoints;
     /// <summary>Coffre d'un rang de rareté en dessous (Oubli du trésor), ou rien.</summary>
     public string DowngradeTo;
 }
@@ -102,8 +101,7 @@ public static class ChestDataLoader
                 DowngradeTo = dict.ContainsKey("downgrade_to") ? dict["downgrade_to"].AsString() : null,
                 OpenTime = dict.ContainsKey("open_time") ? (float)dict["open_time"].AsDouble() : 0.5f,
                 LootTableId = dict.ContainsKey("loot_table_id") ? dict["loot_table_id"].AsString() : "",
-                LootRolls = dict.ContainsKey("loot_rolls") ? (int)dict["loot_rolls"].AsDouble() : 1,
-                ScorePoints = dict.ContainsKey("score_points") ? (int)dict["score_points"].AsDouble() : 25
+                LootRolls = dict.ContainsKey("loot_rolls") ? (int)dict["loot_rolls"].AsDouble() : 1
             };
             _cache[data.Id] = data;
         }

@@ -116,6 +116,7 @@ L'étirement `canvas_items` en mode `keep` garde la même mise en page à toutes
   - les onglets des paramètres défilent ;
   - le score du bilan chevauchait « Nouveau record » à 130 % : il reste à sa taille ;
   - level-up, quêtes de run, Chroniques et Collection tiennent sans retouche.
+- **B3 retiré (4 octobre, [DECISIONS §65](DECISIONS.md)).** Le réglage « Taille du texte », `TextSettings`, `UITheme.RefreshTextScale` et l'option `--text-step` des captures sont retirés (plan 26 N1). L'échelle par rôle et les mises en page souples de B4 restent.
 - **Vérifié :**
   - build sans avertissement, smoke test ;
   - captures de l'accueil, de la Collection, des Chroniques, des paramètres, de la pause, du level-up, des coffres et du bilan, à 100 et 130 %, réduites en 1280×720 et regardées.

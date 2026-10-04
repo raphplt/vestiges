@@ -548,6 +548,7 @@ public partial class WeaponRegression : Node2D
             ("réglage spécial absent", w => Table(w, "special_effect").Remove("echo_delay"), "echo_delay obligatoire"),
             ("réglage spécial non entier", w => Table(w, "special_effect")["echo_count"] = 1.5, "pas entier"),
             ("champ d'arme inconnu", w => w["dammage_type"] = "physical", "dammage_type"),
+            ("arme en main retirée (§65)", w => w["held_sprite"] = "assets/weapons/held/weapon_held_sickle.png", "held_sprite"),
             ("champ de voie inconnu", w => Path(w)["stat_multiplier"] = new Godot.Collections.Dictionary(), "stat_multiplier"),
             ("multiplicateur nul", w => Path(w)["stat_multipliers"] = new Godot.Collections.Dictionary { ["damage"] = 0 }, "stat_multipliers.damage"),
             ("remplacement de stat inconnue", w => Path(w)["stat_overrides"] = new Godot.Collections.Dictionary { ["piercing"] = 1 }, "piercing"),

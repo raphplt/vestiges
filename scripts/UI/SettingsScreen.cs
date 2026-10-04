@@ -546,15 +546,6 @@ public partial class SettingsScreen : CanvasLayer
 				btn.Text = ColorBlindFilter.ModeLabel(newMode);
 			}));
 
-		// Taille du texte : réappliquée sur-le-champ à tout ce qui est affiché (plan 04 lot B).
-		vbox.AddChild(BuildCycleRow("Taille du texte", TextScaleLabel(TextSettings.Step), (btn) =>
-		{
-			TextSettings.Step = (TextSettings.Step + 1) % TextSettings.Steps.Length;
-			TextSettings.Save();
-			btn.Text = TextScaleLabel(TextSettings.Step);
-			UITheme.RefreshTextScale(GetTree().Root);
-		}));
-
 		// Quêtes de run : sceaux repliés, panneau détaillé ou rien (plan 24 A2).
 		vbox.AddChild(BuildCycleRow(Tr("SETTINGS_QUESTS"), QuestDisplaySettings.Label(QuestDisplaySettings.Current), (btn) =>
 		{
@@ -577,8 +568,6 @@ public partial class SettingsScreen : CanvasLayer
 
 		return margin;
 	}
-
-	private static string TextScaleLabel(int step) => $"{Mathf.RoundToInt(TextSettings.Steps[step] * 100f)} %";
 
 	// ================================================================
 	// EFFECTS TAB
@@ -635,8 +624,6 @@ public partial class SettingsScreen : CanvasLayer
 			CombatFxSettings.PlayerAttackFx, toggled => CombatFxSettings.PlayerAttackFx = toggled));
 		vbox.AddChild(BuildToggleRow("Projectiles visibles",
 			CombatFxSettings.PlayerProjectiles, toggled => CombatFxSettings.PlayerProjectiles = toggled));
-		vbox.AddChild(BuildToggleRow("Arme en main (essai)",
-			CombatFxSettings.HeldWeapon, toggled => CombatFxSettings.HeldWeapon = toggled));
 		vbox.AddChild(BuildPercentSlider("Opacité des attaques",
 			CombatFxSettings.MinPlayerOpacity, CombatFxSettings.PlayerOpacity, value => CombatFxSettings.PlayerOpacity = value));
 		vbox.AddChild(BuildPercentSlider("Opacité des attaques ennemies",

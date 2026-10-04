@@ -22,7 +22,6 @@ public static class CombatFxSettings
     private static float _playerOpacity = 1f;
     private static float _enemyOpacity = 1f;
     private static float _screenShake = 1f;
-    private static bool _heldWeapon;
 
     public static ParticleLevel ParticleLevel
     {
@@ -63,13 +62,6 @@ public static class CombatFxSettings
         set { EnsureLoaded(); _screenShake = Mathf.Clamp(value, 0f, 1f); }
     }
 
-    /// <summary>Première arme portée en main (plan 17 lot 2C) : un essai, désactivé par défaut.</summary>
-    public static bool HeldWeapon
-    {
-        get { EnsureLoaded(); return _heldWeapon; }
-        set { EnsureLoaded(); _heldWeapon = value; }
-    }
-
     public static void Load()
     {
         _loaded = true;
@@ -82,7 +74,6 @@ public static class CombatFxSettings
         _playerOpacity = Mathf.Clamp(cfg.GetValue(Section, "player_fx_opacity", 1f).AsSingle(), MinPlayerOpacity, 1f);
         _enemyOpacity = Mathf.Clamp(cfg.GetValue(Section, "enemy_fx_opacity", 1f).AsSingle(), MinEnemyOpacity, 1f);
         _screenShake = Mathf.Clamp(cfg.GetValue(Section, "screen_shake", 1f).AsSingle(), 0f, 1f);
-        _heldWeapon = cfg.GetValue(Section, "held_weapon", false).AsBool();
     }
 
     public static void Save()
@@ -96,7 +87,6 @@ public static class CombatFxSettings
         cfg.SetValue(Section, "player_fx_opacity", _playerOpacity);
         cfg.SetValue(Section, "enemy_fx_opacity", _enemyOpacity);
         cfg.SetValue(Section, "screen_shake", _screenShake);
-        cfg.SetValue(Section, "held_weapon", _heldWeapon);
         cfg.Save(SettingsPath);
     }
 

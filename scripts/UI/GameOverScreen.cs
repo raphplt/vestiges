@@ -142,7 +142,7 @@ public partial class GameOverScreen : CanvasLayer
 
         // Trois chiffres en tête : jusqu'où, le score (le héros du bilan, hors échelle), la durée.
         _score = MakeLabel("0", _boldFont, TextRole.Display, UITheme.GoldBright, HorizontalAlignment.Center, 10);
-        UITheme.SetFixedTextSize(_score, ScoreFontSize);
+        _score.AddThemeFontSizeOverride("font_size", ScoreFontSize);
         Place(_score, 660f, 70f, 600f, 132f);
         _distance = MakeLabel("", _boldFont, TextRole.Display, UITheme.TextLight, HorizontalAlignment.Center, 8);
         Place(_distance, 180f, 96f, 480f, 64f);

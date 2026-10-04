@@ -54,7 +54,6 @@ Fichier temporaire. Il liste ce qu'une session cloud a livré sans pouvoir le v�
 ## Plan 08 P4b-4 — tracteur embourbé
 
 - [ ] **Collision** : la scène bloque selon l'emprise du tracteur non incliné. Vérifier avec `--capture-props` qu'elle couvre la carrosserie sans déborder sur la mare.
-- [ ] **Ornières** : elles se lisent comme une traînée sombre derrière le tracteur. Garder, allonger, ou retirer ?
 
 ## Plan 08 P2 — église et pylône
 
@@ -88,7 +87,6 @@ Fichier temporaire. Il liste ce qu'une session cloud a livré sans pouvoir le v�
 ## Plan 02 lot A — score
 
 - [ ] **Scores comparés** : l'horloge n'avance plus pendant les pauses. Une run d'aujourd'hui marque donc un peu moins de points de survie qu'avant à durée murale égale, et les records anciens restent légèrement avantagés.
-- [ ] **Barème des points d'intérêt** : `pois.json` prévoit 25 à 300 points selon le type, mais le jeu en donne 50 partout. Faut-il brancher les valeurs des données ?
 
 ## Plan 02 lot D — bilan de fin de run
 
@@ -126,10 +124,8 @@ Captures en vraie run regardées : bilan, level-up (cartes et effet), coffre, pa
 - [ ] **Rampant et Hurleur** (07 lot B étape 1) : surgissement annoncé par un cercle rouille (0,6 s), plus de dégâts enfoui ; cri du Hurleur annoncé 0,8 s, interrompu si on le tue. Lisible en pleine mêlée ?
 - [ ] **Recul des armes** : Parcmètre, Cloche, Râteau, Chronomètre repoussent vraiment (valeur `knockback` = pixels). Plaisant, ou le début de run devient-il trop facile ?
 - [ ] **Couleurs signature des armes** (plan 17 lot 2B) : chaque arme a la couleur de son icône dans ses effets.
-- [ ] **Arme en main** (plan 17 lot 2C) : Paramètres › Graphismes › « Arme en main (essai) », désactivée par défaut. Garder, régler ou abandonner ?
 - [ ] **Marais et carrière refaits** (plan 08 P5, P6) : échelle, lisibilité, densité ; les grandes machines de la carrière restent rares.
-- [ ] **Synergies de perks** annoncées sans effet (plan 05, fin) : les retirer ou les implémenter ?
-- [ ] **Typographie de l'interface** (04 lot B) : tailles légèrement relevées (lore de la pause 12 → 14 px, corps 15 → 16…). Plus lisible en 720p ; trop gros en 1080p ? Réglage « Taille du texte » à 115 et 130 % : utile, ou à retirer ?
+- [ ] **Typographie de l'interface** (04 lot B) : tailles légèrement relevées (lore de la pause 12 → 14 px, corps 15 → 16…). Plus lisible en 720p ; trop gros en 1080p ?
 - [ ] **Chantiers de la carrière** (08 P6b) : un par région (6 sur la seed de capture). Se lisent-ils comme une mine abandonnée ? Trop vides au sud, trop répétitifs ? Captures : `CAPTURE_EXTRA_ARGS="--capture-quarries" tools/capture_run.sh <dossier>`.
 - [ ] **Tirs annoncés** (07 lot B) : couloir de visée avant chaque tir du Cracheur, de la Sentinelle et de la Tisseuse ; contour de portée de la Sentinelle. Trop d'indications à l'écran en pleine vague ? Tireurs devenus trop faciles ?
 - [ ] **Présage des Résurgences** (03 lot C) : bords ternis en trame pendant l'avertissement et la crise, créatures agitées. Assez fort, trop fort ? Coût de la passe plein écran en combat dense de crise à mesurer (`/bench`).

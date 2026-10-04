@@ -28,8 +28,6 @@ public class WeaponData
 	public string AttackAudio { get; set; }
 	public string DefaultFor { get; set; }
 	public string Sprite { get; set; }
-	/// <summary>Version 16×16 portée en main (plan 17 lot 2C, option désactivée par défaut).</summary>
-	public string HeldSprite { get; set; }
 	public string Source { get; set; }
 	public string RequiresSouvenir { get; set; }
 	/// <summary>Ce que fait l'arme, en une phrase, sans chiffre (carte « Nouvelle » du level-up).</summary>
@@ -245,7 +243,6 @@ public static class WeaponDataLoader
             TriggerCoefficient = dict.ContainsKey("trigger_coefficient") ? (float)dict["trigger_coefficient"].AsDouble() : 1f,
             DefaultFor = dict.ContainsKey("default_for") ? dict["default_for"].AsString() : null,
             Sprite = dict.ContainsKey("sprite") ? dict["sprite"].AsString() : null,
-            HeldSprite = dict.ContainsKey("held_sprite") ? dict["held_sprite"].AsString() : null,
             Source = dict.ContainsKey("source") ? dict["source"].AsString() : null,
             RequiresSouvenir = dict.ContainsKey("requires_souvenir") ? dict["requires_souvenir"].AsString() : null,
             Summary = dict.ContainsKey("summary") ? dict["summary"].AsString() : "",

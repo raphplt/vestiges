@@ -336,6 +336,25 @@ Rendre explicite l'appartenance à une meute dans les données ; conserver l'ens
 - **Question pour Raphaël :** `pack_bonus_damage` (0,15 au Charognard) n'a jamais été appliqué : la meute n'accélère que. À brancher (dégâts +15 % par voisin), ou à retirer ?
 - **Hors lot, relevé :** l'Essence par rang (1, 4, 8) est écrite deux fois, dans `EssenceTracker` et `QuestManager` (à Q7).
 
+### N1 — Nettoyage des décisions du soir (§65, §67)
+
+Quatre retraits décidés par Raphaël, sans valeur de jeu changée. Les ornières du tracteur restent telles quelles.
+
+**Découpage, 4 octobre :**
+1. **Bonus de dégâts de la meute :** retirer `pack_bonus_damage` de `charognard.json` et du contrat des créatures. La meute garde son bonus de vitesse. Fixture négative : une créature qui déclare encore `pack_bonus_damage` est refusée (stat inconnue du contrat).
+2. **Arme en main (plan 17 lot 2C) :** retirer `HeldWeapon` et son appel dans `Player`, l'option de Paramètres › Graphismes et sa clé `held_weapon`, le champ `held_sprite` (24 armes, lecteur, validateur), les 24 sprites `assets/weapons/held/` que rien d'autre ne référence, leur rendu dans `tools/generate_weapon_icons.py` et `tools/sprites/weapons/icons.py`, et la capture `--capture-held`. Fixture négative : une arme qui déclare encore `held_sprite` est refusée (champ inconnu).
+3. **Taille du texte (plan 04 lot B3) :** retirer le réglage et `TextSettings`. L'échelle typographique par rôle reste ; disparaissent l'agrandissement, la taille retenue en méta pour le réappliquer, `UITheme.RefreshTextScale` et l'option `--text-step` des captures. La légende de la minicarte garde sa taille de base (8 px). Les mises en page souples du lot B4 (défilements, retours à la ligne) restent.
+4. **Barème des lieux et des coffres :** le score ne compte que les éliminations (§40) et aucun code ne lisait plus `score_points`. Retirer le champ de `pois.json` et de `chests.json`, ainsi que les propriétés `ScorePoints` des lecteurs, de `Chest` et de `PointOfInterest`.
+5. **Fichiers de suivi :** retirer de `A-VERIFIER.md` les points tranchés (ornières, barème, arme en main, synergies, taille du texte), mettre à jour les plans 02, 04 et 17.
+
+**Vérification :** aucun lecteur restant (recherche dans `scripts/` et dans tout `tools/tests`, réflexion comprise) ; relevé avant/après au même commit de base des valeurs effectives des armes et des créatures (suites armes et capacités ennemies) ; `tools/validate.sh` sur smoke, weapons, enemy_abilities, choice_screen, small_places, ui_art et dev_mode ; capture des Paramètres et du Hub (le réglage a disparu, rien ne déborde). Relecture `godot-reviewer`.
+
+**N1 livré et vérifié, 4 octobre.**
+- **Retiré :** `pack_bonus_damage` (contrat et Charognard) ; l'arme en main (`HeldWeapon`, option, clé `held_weapon`, `held_sprite` des 24 armes, 24 sprites et leurs `.import`, `render_held`, `--capture-held`) ; le réglage « Taille du texte » (`TextSettings`, `RefreshTextScale`, `Scaled`, `SetTextSize`, `SetFixedTextSize`, `--text-step`) ; `score_points` des 6 lieux et des 4 coffres, et les propriétés `ScorePoints`. `UITheme.SetTextRole` pose désormais la taille du rôle directement.
+- **Valeurs inchangées :** au palier 100 %, l'ancien calcul rendait la taille de base ; la légende de la minicarte reste à 8 px et le score du bilan à sa taille. Les journaux des suites armes et capacités ennemies sont identiques au relevé du commit de base e5488a5c, à deux lignes près : les deux nouvelles fixtures négatives (`held_sprite` refusé comme champ d'arme inconnu, `pack_bonus_damage` refusé comme stat inconnue du contrat).
+- **Vérification :** build sans avertissement ; `tools/validate.sh` 7/7 (smoke, weapons, enemy_abilities, choice_screen, small_places, ui_art, dev_mode), sources inchangées pendant les tests ; captures des onglets Graphismes et Effets regardées (les deux lignes ont disparu, rien ne déborde) ; générateur d'icônes relancé, icônes identiques. Relecture `godot-reviewer` : aucun lecteur oublié ni taille changée ; ses deux remarques corrigées (commentaire orphelin dans `WeaponDataLoader`, paramètre `size` inutile dans `write_sheet`).
+- **Relevé hors lot :** `tools/generate_weapon_icons.py` ne reproduit pas exactement l'icône des Craies versionnée, déjà au commit de base (retouche à la main probable). Non touché.
+
 ### Q7 — Valider et publier les autres catalogues
 
 Constat : F12. Dépend de Q4. Plans associés : ceux de chaque catalogue.
@@ -447,5 +466,6 @@ Pour clore un lot :
 - [ ] Q12 — Paquet distribué reproductible et vérifié.
 - [ ] Q13 — Provenance du son de level-up résolue.
 - [ ] Q14 — Documentation active et restes V1 repris.
+- [x] N1 — Nettoyage des décisions du soir (§65, §67).
 
 **Suite (§64) :** mesurer l'Indicible, puis proposer les lots de production du lore (plan 19). Prochain lot qualité à choisir avec Raphaël : Q4 (chargement récupérable) recommandé, puisqu'il précède Q7. Q2a, Q2b, Q3, Q6a, Q6b et Q6c sont livrés le 4 octobre.

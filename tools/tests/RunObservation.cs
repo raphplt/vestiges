@@ -39,7 +39,6 @@ namespace Vestiges.Tests;
 /// --capture-erasure : une capture par phase de l'oubli, puis un dégradé de toutes les phases.
 /// --measure-props [--measure-seconds 8] : coût de rendu des décors par biome (RunObservation.PropCost.cs).
 /// --capture-weapons [--weapons a,b] [--lethal] [--objects id:niveau,…] : galerie des attaques du joueur, cibles qui meurent au premier coup avec --lethal, objets portés avec --objects (RunObservation.Weapons.cs).
-/// --capture-held [--weapons a,b] : arme en main dans les huit directions et pendant un coup (RunObservation.HeldWeapon.cs).
 /// --capture-chests : chaque coffre cadré, avec et sans décors (RunObservation.Chests.cs).
 /// --capture-loot : écran de butin du coffre le plus proche, bonus de stat compris (RunObservation.Chests.cs).
 /// --capture-places : un petit lieu de chaque type, joueur à côté (signe), puis juste après usage (RunObservation.Places.cs).
@@ -101,8 +100,6 @@ public partial class RunObservation : Node
             string[] args = OS.GetCmdlineUserArgs();
             GD.Print($"[RunObservation] display={DisplayServer.GetName()} screen={DisplayServer.WindowGetCurrentScreen()} position={DisplayServer.WindowGetPosition()} size={DisplayServer.WindowGetSize()}");
             _output = Argument(args, "--output", "/tmp/vestiges-observation");
-            // Taille du texte des paramètres (0 normal, 1 grand, 2 très grand), pour vérifier les débordements.
-            Vestiges.UI.TextSettings.Step = int.Parse(Argument(args, "--text-step", "0"), CultureInfo.InvariantCulture);
             DirAccess.MakeDirRecursiveAbsolute(_output);
             ulong seed = ulong.Parse(Argument(args, "--seed", Seed.ToString(CultureInfo.InvariantCulture)), CultureInfo.InvariantCulture);
             bool captureMap = Array.IndexOf(args, "--capture-map") >= 0;
@@ -197,8 +194,6 @@ public partial class RunObservation : Node
                 MeasureLootDraws(int.Parse(Argument(args, "--loot-draws", "1000"), CultureInfo.InvariantCulture));
             else if (Array.IndexOf(args, "--capture-bestiary") >= 0)
                 await CaptureBestiary();
-            else if (Array.IndexOf(args, "--capture-held") >= 0)
-                await CaptureHeldWeapons(Argument(args, "--weapons", null));
             else if (Array.IndexOf(args, "--capture-character") >= 0)
                 await CaptureCharacter(Argument(args, "--character", "traqueur"));
             else

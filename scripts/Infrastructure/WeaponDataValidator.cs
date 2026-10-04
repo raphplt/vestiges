@@ -15,7 +15,7 @@ public static class WeaponDataValidator
 {
 	private static readonly HashSet<string> WeaponKeys = new()
 	{
-		"id", "name", "description", "sprite", "held_sprite", "tier", "type", "damage_type", "attack_pattern",
+		"id", "name", "description", "sprite", "tier", "type", "damage_type", "attack_pattern",
 		"trigger_coefficient", "fx", "summary", "growth", "ascensions", "stats", "source", "lore_flavor", "attack_audio",
 		"count_name_key", "special_effect", "requires_souvenir", "default_for", "on_hit_effect", "drop_condition",
 	};
@@ -237,12 +237,9 @@ public static class WeaponDataValidator
 		string sound = Text(weapon, "attack_audio");
 		if (sound != null && !DataKeySets.TopLevelKeys(AudioManager.SoundBankPath).Contains(sound))
 			return $"{where}, attack_audio : son « {sound} » absent de la banque";
-		foreach (string field in new[] { "sprite", "held_sprite" })
-		{
-			string path = Text(weapon, field);
-			if (path != null && !ResourceLoader.Exists("res://" + path))
-				return $"{where}, {field} : image « {path} » introuvable";
-		}
+		string sprite = Text(weapon, "sprite");
+		if (sprite != null && !ResourceLoader.Exists("res://" + sprite))
+			return $"{where}, sprite : image « {sprite} » introuvable";
 		if (!TryObject(weapon, "fx", out JsonElement fx))
 			return null;
 		string error = UnknownKey(fx, FxKeys, $"{where}, fx");

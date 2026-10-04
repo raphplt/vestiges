@@ -18,7 +18,6 @@ public static class UITheme
 	// --- Typographie ---
 	// Échelle « confort » en base 1080p : rien sous 14 px, soit environ 9 px physiques en 1280×720.
 	private static readonly int[] RoleSizes = { 14, 15, 16, 18, 20, 24, 30, 36, 46 };
-	private static readonly StringName TextBaseMeta = "ui_text_base";
 	private static Font _bodyFont;
 	private static Font _strongFont;
 	private static Font _boldFont;
@@ -34,45 +33,12 @@ public static class UITheme
 		_ => BodyFont,
 	};
 
-	/// <summary>Taille d'un rôle en base 1080p, taille du texte du joueur comprise.</summary>
-	public static int FontSize(TextRole role) => Scaled(RoleSizes[(int)role]);
+	/// <summary>Taille d'un rôle en base 1080p.</summary>
+	public static int FontSize(TextRole role) => RoleSizes[(int)role];
 
-	/// <summary>Taille hors échelle (score géant du bilan, compteurs animés), agrandie comme le reste.</summary>
-	public static int Scaled(int basePixels) => Mathf.RoundToInt(basePixels * TextSettings.Scale);
-
-	/// <summary>Donne à un contrôle la taille d'un rôle, retenue pour suivre un changement de taille du texte.</summary>
-	public static void SetTextRole(Control control, TextRole role) => SetTextSize(control, RoleSizes[(int)role]);
-
-	/// <summary>Comme <see cref="SetTextRole"/> pour une taille hors échelle.</summary>
-	public static void SetTextSize(Control control, int basePixels)
-	{
-		control.SetMeta(TextBaseMeta, basePixels);
-		control.AddThemeFontSizeOverride("font_size", Scaled(basePixels));
-	}
-
-	/// <summary>Taille figée, insensible à la taille du texte : réservée aux textes placés au pixel près.</summary>
-	public static void SetFixedTextSize(Control control, int pixels)
-	{
-		if (control.HasMeta(TextBaseMeta))
-			control.RemoveMeta(TextBaseMeta);
-		control.AddThemeFontSizeOverride("font_size", pixels);
-	}
-
-	/// <summary>
-	/// Réapplique la taille du texte à l'interface déjà construite sous <paramref name="root"/>. Ne descend pas dans
-	/// le monde : sous un Node2D, seuls les CanvasLayer sont visités, jamais les milliers de décors et de créatures.
-	/// </summary>
-	public static void RefreshTextScale(Node root)
-	{
-		if (root is Control control && control.HasMeta(TextBaseMeta))
-			control.AddThemeFontSizeOverride("font_size", Scaled(control.GetMeta(TextBaseMeta).AsInt32()));
-		bool world = root is Node2D;
-		foreach (Node child in root.GetChildren())
-		{
-			if (!world || child is CanvasLayer)
-				RefreshTextScale(child);
-		}
-	}
+	/// <summary>Donne à un contrôle la taille d'un rôle.</summary>
+	public static void SetTextRole(Control control, TextRole role) =>
+		control.AddThemeFontSizeOverride("font_size", FontSize(role));
 
 	/// <summary>Libellé d'interface : rôle, couleur, graisse, contour facultatif pour les textes posés sur le décor.</summary>
 	public static Label MakeLabel(string text, TextRole role, Color color, TextWeight weight = TextWeight.Regular,

@@ -75,6 +75,7 @@ public partial class EnemyAbilityRegression
             ("stats absentes", "rodeur", e => e.Remove("stats"), "objet stats obligatoire"),
             ("stat obligatoire absente", "rodeur", e => e["stats"].AsObject().Remove("hp"), "stat hp obligatoire"),
             ("stat inconnue", "rodeur", e => e["stats"]["armor"] = 3, "stat « armor » inconnue"),
+            ("bonus de dégâts de meute retiré (§65)", "charognard", e => e["stats"]["pack_bonus_damage"] = 0.15, "stat « pack_bonus_damage » inconnue"),
             ("stat non numérique", "rodeur", e => e["stats"]["speed"] = "vite", "stats.speed : nombre attendu"),
             ("stat hors bornes", "rodeur", e => e["stats"]["hp"] = 0, "stats.hp : 0 inférieur au minimum 1"),
             ("ralentissement hors bornes", "tisseuse", e => e["stats"]["web_slow_multiplier"] = 1.5, "stats.web_slow_multiplier : 1.5 hors de [0 ; 1]"),

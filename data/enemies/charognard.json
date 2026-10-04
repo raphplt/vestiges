@@ -12,7 +12,6 @@
         "xp_reward": 8,
         "perception": 520,
         "leash": 950,
-        "pack_bonus_damage": 0.15,
         "pack_bonus_speed": 0.1,
         "pack_radius": 120
     },

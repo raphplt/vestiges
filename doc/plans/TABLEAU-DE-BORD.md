@@ -39,7 +39,7 @@ Le [registre](DECISIONS.md) garde les mots de Raphaël. Les plans gardent le dé
 | L'Indicible | 07, [mesure](../audits/indicible-2026-10-04/README.md) | **Décidé (§65) : le refaire entièrement**, avec la Barrière. Fiche commune à concevoir au plan 07 (silhouette, phases, zones touchables que les armes voient, attaques qui punissent aussi le joueur qui bouge). |
 | Synergies | 05, 21 | Forme **C** retenue (§66) : synergies de règles, sans effet ajouté ni annonce. Planche de combinaisons à proposer avant code. |
 | Steam | 26 Q3, Q12 | App ID du jeu à obtenir ([marche à suivre](../STEAM-MISE-EN-PLACE.md), §67) ; test réel des classements ensuite. |
-| Points à vérifier en jeu | `A-VERIFIER.md` | 55 cases non cochées ; Raphaël les coche en jouant (§64) |
+| Points à vérifier en jeu | `A-VERIFIER.md` | 51 cases non cochées ; Raphaël les coche en jouant (§64) ; quatre points tranchés retirés par N1 |
 
 ## 3. Validé, pas encore fait
 

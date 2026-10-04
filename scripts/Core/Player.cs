@@ -64,7 +64,6 @@ public partial class Player : CharacterBody2D
     // Sprite animé (remplace Polygon2D quand sprite_folder est défini)
     private AnimatedSprite2D _sprite;
     private PlayerAttackFx _attackFx;
-    private HeldWeapon _heldWeapon;
     private bool _hasSprite;
     private enum SpriteAction { Idle, Walk, Hurt, Death, Dash }
     private static readonly string[] SpriteActionNames = { "idle", "walk", "hurt", "death", "dash" };
@@ -180,7 +179,6 @@ public partial class Player : CharacterBody2D
         _visual = GetNode<Polygon2D>("Visual");
         _sprite = GetNode<AnimatedSprite2D>("Sprite");
         _attackFx = new PlayerAttackFx(this, _sprite);
-        _heldWeapon = new HeldWeapon(_sprite);
         AddChild(GroundShadow.Create(ShadowWidth));
         _originalColor = _visual.Color;
 
@@ -531,8 +529,6 @@ public partial class Player : CharacterBody2D
         float movementSpeed = movementVelocity.Length();
         float movementRate = movementSpeed > MovementSpeedEpsilon && Speed > 0f ? movementSpeed / Speed : 0f;
         UpdateSpriteAnimation(dt, movementVelocity, movementRate);
-        if (_hasSprite)
-            _heldWeapon.Update(dt, EquippedWeapon?.Base, _facing.Current);
         ProcessFootsteps(dt, dashMovement ? 0f : movementRate);
         ApplyRegen(dt);
         StepLifesteal(dt);
@@ -1622,7 +1618,6 @@ public partial class Player : CharacterBody2D
         {
             _sprite.SpeedScale = 1f;
             PlaySpriteAnim(SpriteAnimations[(int)_facing.Current, (int)SpriteAction.Death]);
-            _heldWeapon.Hide();
         }
 
         _eventBus.EmitSignal(EventBus.SignalName.EntityDied, this);
@@ -2181,7 +2176,6 @@ public partial class Player : CharacterBody2D
 
         _facingDirection = direction.Normalized();
         _attackFx.PlayRecoil(isMelee);
-        _heldWeapon.OnAttack(_equippedWeapon?.Base, direction);
         if (!isMelee)
             SpawnMuzzleFlash(direction);
         // Personnage sans sprite : le polygone de repli garde sa réaction propre.

@@ -828,4 +828,5 @@ Raphaël, après la planche de la Résurgence : « pour l'audio j'ai du mal à d
 - **Lore L1 :** **planche d'abord**. Tous les textes réécrits (FR et EN) sont soumis à Raphaël dans une page à relire ; rien n'entre dans le jeu avant son accord.
 - **Plan 26 Q4 :** gardé en cinquième position, après la fiche commune de l'Indicible et de la Barrière.
 - **Steam :** pas encore d'App ID ; Raphaël redemande la marche à suivre, écrite cette fois dans [STEAM-MISE-EN-PLACE.md](../STEAM-MISE-EN-PLACE.md).
+- **Barème des lieux :** la question de `A-VERIFIER.md` était périmée (score aux seules éliminations depuis le §40, lieux désactivés, `score_points` lu par aucun code). Raphaël choisit de **retirer** `score_points` des lieux et des coffres.
 - **Ordre de travail confirmé :** nettoyage (§65), puis lore L1, planche des synergies de règles, fiche Indicible et Barrière, puis Q4.

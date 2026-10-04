@@ -9,8 +9,7 @@
         "fx_family": "silk",
         "open_time": 0.5,
         "loot_table_id": "chest_common",
-        "loot_rolls": 1,
-        "score_points": 25
+        "loot_rolls": 1
     },
     {
         "id": "chest_rare",
@@ -23,8 +22,7 @@
         "fx_family": "hybrid",
         "open_time": 0.8,
         "loot_table_id": "chest_rare",
-        "loot_rolls": 1,
-        "score_points": 75
+        "loot_rolls": 1
     },
     {
         "id": "chest_epic",
@@ -37,8 +35,7 @@
         "fx_family": "void",
         "open_time": 1.2,
         "loot_table_id": "chest_epic",
-        "loot_rolls": 2,
-        "score_points": 200
+        "loot_rolls": 2
     },
     {
         "id": "chest_lore",
@@ -50,7 +47,6 @@
         "fx_family": "crit",
         "open_time": 1.0,
         "loot_table_id": "chest_lore",
-        "loot_rolls": 1,
-        "score_points": 100
+        "loot_rolls": 1
     }
 ]

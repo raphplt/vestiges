@@ -44,7 +44,6 @@ public partial class Chest : StaticBody2D, IInteractable
     public string Rarity => _chestData?.Rarity ?? "common";
     public string LootTableId => _chestData?.LootTableId ?? "";
     public int LootRolls => _chestData?.LootRolls ?? 1;
-    public int ScorePoints => _chestData?.ScorePoints ?? 25;
     public float ColumnHeight => _chestData?.ColumnHeight ?? 0f;
 
     public bool CanOpen => !_isOpened && _chestData != null;
