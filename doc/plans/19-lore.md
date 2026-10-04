@@ -626,3 +626,11 @@ Demandé au §64 : proposer les lots qui font passer le script v1.1 dans le jeu,
 | **L7 — Vraie fin et après-fin** | La dernière Faille face à l'Indicible, les trente et un noms, la porte verte sur la Montée, la pluie ; puis la pluie et la mer dans les runs, l'Enfant du Bas-Port et la Clé verte. | L3 à L6, l'Indicible repris (plan 07) | Profil de test complet ; captures ; écoute de la pluie |
 
 **Ordre recommandé : L1, puis L2 et L3 ensemble** (une première fin complète, jouable avec un personnage déjà en jeu), puis L4 et L5. L6 et L7 viennent avec le casting et la reprise de l'Indicible.
+
+## 16. L1 — découpage, 4 octobre
+
+Validé au §65 ; la méthode choisie au §67 demande une **planche avant toute intégration**.
+
+1. **Planche** ([19-planche-L1.md](19-planche-L1.md)) : chaque texte actuel en regard de sa réécriture, FR et EN, selon le §10 du script. Périmètre : les 19 Souvenirs (identifiants inchangés, pour les sauvegardes), les cinq armes listées, les deux murmures, les textes d'interface du §12 et ceux du relevé §2.4, les restes V1 (Foyer, laboratoire, Mémoria, Ancrage, Passeur, constellations). Les questions d'intégration sont posées en fin de planche, avec options et recommandation.
+2. **Intégration, après accord de Raphaël :** textes FR et EN branchés selon la réponse sur le stockage, constellations retirées (données, journal, fenêtre de découverte, succès Steam prévu), champs de déblocage morts des Souvenirs nettoyés.
+3. **Vérification :** clés de traduction complètes (FR et EN, contrôle automatique), suites concernées, captures de la Collection, du journal, de la pause, d'une Faille et d'un Mémorial, regardées.

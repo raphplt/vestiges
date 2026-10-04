@@ -31,7 +31,7 @@ Le [registre](DECISIONS.md) garde les mots de Raphaël. Les plans gardent le dé
 |---|---|---|
 | Bestiaire | 07 | « Mobs successifs » fermé (§62). La Barrière, boss intermédiaire, gardée : fiche à concevoir **avec la reprise de l'Indicible** (§64). |
 | Direction artistique | 08, 25 | Personnages joués validés provisoirement (§62) ; retouches possibles plus tard. |
-| Lore | 19 | **Lots L1 à L7 validés (§65)**, avec Vaulme, la liste des trente et un et la fin déclenchée par un fil et un geste. Prochain : L1 (ton des textes existants), **soumis en planche avant intégration** (§67). |
+| Lore | 19 | **Lots L1 à L7 validés (§65)**, avec Vaulme, la liste des trente et un et la fin déclenchée par un fil et un geste. **Planche L1 à relire** ([19-planche-L1.md](19-planche-L1.md)) : 19 Souvenirs, 5 armes, 2 murmures, interface, constellations ; 4 questions d'intégration en fin de planche. Rien n'est branché. |
 | Audio | 15 | Planche écoutée (§66) : mixage à reprendre. Cri du Hurleur : variante C gardée (§67) ; tirs du joueur baissés de 6 dB. À venir : un son par arme, mixage A3, sons manquants ; musiques et ambiance plus tard. |
 | Réveil du Mémorial et de la Faille | 24 L6b, 15 | Durée gardée ; son à changer (§49), à traiter avec l'audio |
 | Classement | 09 | Toutes les décisions, plus tard. Weekly gardé pour toutes les runs, un tableau par semaine (§64, livré par Q3). Steam réel : App ID du jeu à obtenir par Raphaël quand il le souhaite |
