@@ -33,6 +33,7 @@ public partial class AnalyticsManager : Node
 	private readonly List<float> _runDurations = new();
 	private readonly List<CustomEvent> _events = new();
 	private int _totalRuns;
+	private bool _aggregateWritable = true;
 
 	private EventBus _eventBus;
 
@@ -178,35 +179,27 @@ public partial class AnalyticsManager : Node
 			["run_durations"] = ToGodotArrayF(_runDurations),
 		};
 
-		string json = Json.Stringify(data, "\t");
-		FileAccess file = FileAccess.Open(AggregateFile, FileAccess.ModeFlags.Write);
-		if (file != null)
-		{
-			file.StoreString(json);
-			file.Close();
-		}
+		if (!_aggregateWritable)
+			return;
+		SaveFile.WriteResult result = SaveFile.Write(AggregateFile, Json.Stringify(data, "\t"));
+		if (!result.Succeeded)
+			GD.PushWarning($"[AnalyticsManager] Cannot save aggregate: {result.Error}");
 	}
 
 	private void LoadAggregate()
 	{
-		if (!FileAccess.FileExists(AggregateFile))
+		SaveFile.ReadResult<Godot.Collections.Dictionary> read = SaveFile.Read<Godot.Collections.Dictionary>(AggregateFile, json =>
+		{
+			Json parser = new();
+			return parser.Parse(json) == Error.Ok && parser.Data.VariantType == Variant.Type.Dictionary
+				? SaveFile.Parse<Godot.Collections.Dictionary>.Valid(parser.Data.AsGodotDictionary())
+				: SaveFile.Parse<Godot.Collections.Dictionary>.Invalid("agrégat non objet");
+		});
+		_aggregateWritable = !read.BlocksWrites;
+		if (read.Value == null)
 			return;
 
-		FileAccess file = FileAccess.Open(AggregateFile, FileAccess.ModeFlags.Read);
-		if (file == null)
-			return;
-
-		string json = file.GetAsText();
-		file.Close();
-
-		Json parser = new();
-		if (parser.Parse(json) != Error.Ok)
-			return;
-
-		if (parser.Data.VariantType != Variant.Type.Dictionary)
-			return;
-
-		var data = parser.Data.AsGodotDictionary();
+		Godot.Collections.Dictionary data = read.Value;
 		_totalRuns = data.TryGetValue("total_runs", out Variant tr) ? tr.AsInt32() : 0;
 		LoadDict(_perkPicks, data, "perk_picks");
 		LoadDict(_deathCauses, data, "death_causes");

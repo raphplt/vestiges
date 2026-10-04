@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
@@ -62,11 +63,22 @@ public static class MetaSaveManager
 
     private static MetaSaveData _data = new();
     private static bool _loaded;
+    private static string _writeBlockReason = "";
+
+    /// <summary>Provenance du profil chargé (neuf, lu, repris sur la copie de secours, illisible, futur).</summary>
+    public static SaveFile.ReadStatus LoadStatus { get; private set; } = SaveFile.ReadStatus.Missing;
+
+    /// <summary>Faux quand le fichier vient d'une version plus récente ou n'a pas pu être lu : on ne le réécrit pas.</summary>
+    public static bool CanWrite => _writeBlockReason.Length == 0;
+
+    private readonly record struct ParsedMetaSave(MetaSaveData Data, string LegacyJson);
 
     internal static void ReloadProfile()
     {
         _data = new MetaSaveData();
         _loaded = false;
+        _writeBlockReason = "";
+        LoadStatus = SaveFile.ReadStatus.Missing;
     }
 
     public static void Load()
@@ -75,63 +87,50 @@ public static class MetaSaveManager
             return;
 
         _loaded = true;
+        _writeBlockReason = "";
 
-        if (!FileAccess.FileExists(SavePath))
+        SaveFile.ReadResult<ParsedMetaSave> read = SaveFile.Read<ParsedMetaSave>(SavePath, ParseSave);
+        LoadStatus = read.Status;
+        switch (read.Status)
         {
-            _data = new MetaSaveData();
-            NormalizeData();
-            Save();
-            GD.Print("[MetaSaveManager] Created new V2 meta save");
-            return;
+            case SaveFile.ReadStatus.Missing:
+                _data = new MetaSaveData();
+                NormalizeData();
+                Save();
+                GD.Print("[MetaSaveManager] Created new V2 meta save");
+                return;
+            case SaveFile.ReadStatus.Unreadable:
+                GD.PushError($"[MetaSaveManager] Sauvegarde illisible, mise de côté ; profil vide ({read.Detail})");
+                _data = new MetaSaveData();
+                NormalizeData();
+                return;
+            case SaveFile.ReadStatus.FutureVersion:
+            case SaveFile.ReadStatus.Inaccessible:
+                _writeBlockReason = read.Detail;
+                GD.PushError($"[MetaSaveManager] Sauvegarde laissée intacte, aucune écriture pendant cette session ({read.Detail})");
+                _data = read.Value.Data ?? new MetaSaveData();
+                NormalizeData();
+                return;
         }
 
-        FileAccess file = FileAccess.Open(SavePath, FileAccess.ModeFlags.Read);
-        if (file == null)
-        {
-            _data = new MetaSaveData();
-            NormalizeData();
-            return;
-        }
-
-        string json = file.GetAsText();
-        file.Close();
-
-        bool migrated = false;
-        try
-        {
-            using JsonDocument doc = JsonDocument.Parse(json);
-            JsonElement root = doc.RootElement;
-            int version = root.TryGetProperty("version", out JsonElement versionElement)
-                && versionElement.ValueKind == JsonValueKind.Number
-                ? versionElement.GetInt32()
-                : 0;
-
-            _data = version >= CurrentVersion
-                ? JsonSerializer.Deserialize<MetaSaveData>(json) ?? new MetaSaveData()
-                : MigrateLegacySave(root, json);
-            migrated = version < CurrentVersion;
-        }
-        catch (JsonException ex)
-        {
-            GD.PushWarning($"[MetaSaveManager] Failed to parse save: {ex.Message}");
-            _data = new MetaSaveData();
-        }
-
+        _data = read.Value.Data;
+        bool migrated = read.Value.LegacyJson != null;
+        if (migrated && !ArchiveLegacyJson(read.Value.LegacyJson))
+            _writeBlockReason = "archive de la sauvegarde V1 impossible";
         NormalizeData();
         if (migrated)
             Save();
         GD.Print($"[MetaSaveManager] Loaded — {_data.Vestiges} Vestiges, {_data.UnlockedCharacters.Count} characters unlocked");
     }
 
-    public static void Save()
+    public static SaveFile.WriteResult Save()
     {
+        Load();
         NormalizeData();
-
-        FileAccess file = FileAccess.Open(SavePath, FileAccess.ModeFlags.Write);
-        if (file == null)
+        if (!CanWrite)
         {
-            GD.PushError("[MetaSaveManager] Cannot save meta data");
-            return;
+            GD.PushWarning($"[MetaSaveManager] Écriture refusée : {_writeBlockReason}");
+            return SaveFile.WriteResult.Failed(_writeBlockReason);
         }
 
         JsonSerializerOptions options = new()
@@ -139,9 +138,56 @@ public static class MetaSaveManager
             WriteIndented = true,
             DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault
         };
-        string json = JsonSerializer.Serialize(_data, options);
-        file.StoreString(json);
-        file.Close();
+        SaveFile.WriteResult result = SaveFile.Write(SavePath, JsonSerializer.Serialize(_data, options));
+        if (!result.Succeeded)
+            GD.PushError($"[MetaSaveManager] Cannot save meta data: {result.Error}");
+        return result;
+    }
+
+    /// <summary>Contrôle la forme avant toute désérialisation ; une version future n'est jamais ramenée à l'actuelle.</summary>
+    private static SaveFile.Parse<ParsedMetaSave> ParseSave(string json)
+    {
+        try
+        {
+            using JsonDocument doc = JsonDocument.Parse(json);
+            JsonElement root = doc.RootElement;
+            if (root.ValueKind != JsonValueKind.Object)
+                return SaveFile.Parse<ParsedMetaSave>.Invalid($"racine {root.ValueKind}, objet attendu");
+
+            int version = 0;
+            if (root.TryGetProperty("version", out JsonElement versionElement)
+                && (versionElement.ValueKind != JsonValueKind.Number || !versionElement.TryGetInt32(out version) || version < 0))
+                return SaveFile.Parse<ParsedMetaSave>.Invalid($"version invalide : {versionElement.GetRawText()}");
+
+            if (version > CurrentVersion)
+                return SaveFile.Parse<ParsedMetaSave>.Future(new ParsedMetaSave(TryDeserializeFuture(json), null),
+                    $"version {version} plus récente que {CurrentVersion}");
+
+            if (version < CurrentVersion)
+                return SaveFile.Parse<ParsedMetaSave>.Valid(new ParsedMetaSave(MigrateLegacySave(root), json));
+
+            MetaSaveData data = JsonSerializer.Deserialize<MetaSaveData>(json);
+            return data == null
+                ? SaveFile.Parse<ParsedMetaSave>.Invalid("contenu nul")
+                : SaveFile.Parse<ParsedMetaSave>.Valid(new ParsedMetaSave(data, null));
+        }
+        catch (Exception ex) when (ex is JsonException or InvalidOperationException or FormatException or NotSupportedException)
+        {
+            return SaveFile.Parse<ParsedMetaSave>.Invalid(ex.Message);
+        }
+    }
+
+    /// <summary>Lecture au mieux d'un profil plus récent, pour l'afficher sans jamais le réécrire.</summary>
+    private static MetaSaveData TryDeserializeFuture(string json)
+    {
+        try
+        {
+            return JsonSerializer.Deserialize<MetaSaveData>(json) ?? new MetaSaveData();
+        }
+        catch (Exception ex) when (ex is JsonException or InvalidOperationException or FormatException or NotSupportedException)
+        {
+            return new MetaSaveData();
+        }
     }
 
     public static int GetVestiges()
@@ -377,7 +423,7 @@ public static class MetaSaveManager
             .ToList();
     }
 
-    private static MetaSaveData MigrateLegacySave(JsonElement root, string rawJson)
+    private static MetaSaveData MigrateLegacySave(JsonElement root)
     {
         MetaSaveData migrated = new()
         {
@@ -399,22 +445,17 @@ public static class MetaSaveManager
                 legacyMaxNights * 240f);
         }
 
-        ArchiveLegacyJson(rawJson);
-        GD.Print("[MetaSaveManager] Legacy V1 meta save archived and migrated to V2");
         return migrated;
     }
 
-    private static void ArchiveLegacyJson(string rawJson)
+    private static bool ArchiveLegacyJson(string rawJson)
     {
-        FileAccess archive = FileAccess.Open(LegacyArchivePath, FileAccess.ModeFlags.Write);
-        if (archive == null)
-        {
-            GD.PushWarning($"[MetaSaveManager] Failed to archive legacy save to {LegacyArchivePath}");
-            return;
-        }
-
-        archive.StoreString(rawJson);
-        archive.Close();
+        SaveFile.WriteResult archived = SaveFile.Write(LegacyArchivePath, rawJson);
+        if (archived.Succeeded)
+            GD.Print("[MetaSaveManager] Legacy V1 meta save archived and migrated to V2");
+        else
+            GD.PushError($"[MetaSaveManager] Failed to archive legacy save to {LegacyArchivePath}: {archived.Error}");
+        return archived.Succeeded;
     }
 
     private static List<string> ReadStringList(JsonElement root, string propertyName)

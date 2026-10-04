@@ -1,5 +1,7 @@
 # VESTIGES — Dossier de plans à valider
 
+**4 octobre — sauvegardes protégées (plan 26 Q2a) :** méta, historique, record et analytics écrits par temporaire vérifié avec copie de secours ; fichier illisible mis de côté et repris sur la copie ; version future jamais réécrite. 39 contrôles, 6/6 suites. Questions de reprise consignées ([DECISIONS §62](DECISIONS.md)) : lore v1.1 validé comme base, personnages, G6g, Ateliers, Mémorial, mort et bilan validés. [Plan 26](26-qualite-et-dette-technique.md).
+
 **2 octobre — qualité du code et dette technique :** le [plan 26](26-qualite-et-dette-technique.md) couvre les 18 constats et les noms/règles en dur. **Q0 livré et vérifié** : lanceurs stricts, bancs réparés, validation globale 21/21 ; [preuves](../audits/qualite-2026-10-02/q0/README.md) et [commande commune](../VALIDATION.md). Prochain lot recommandé : Q1 ; nettoyage du combat aux Q5–Q7. [DECISIONS §54–55](DECISIONS.md).
 
 **1er octobre — Effacement, cellules actives :** les zones au Néant gardent leur état sans être recalculées ; stabilisations et ordre des signaux préservés. Rejeu de 30 min identique, recalculs −23,8 %, 72 contrôles, captures et run Main de 30 min vérifiés. [Lot 10 6C et preuves](../audits/erasure-active-2026-10-01/README.md).

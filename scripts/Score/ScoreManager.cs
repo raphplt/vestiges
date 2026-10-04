@@ -28,6 +28,7 @@ public partial class ScoreManager : Node
     private int _combatScore;
     private int _totalKills;
     private int _bestScore;
+    private bool _bestScoreWritable = true;
     private float _scoreMultiplier = 1f;
     private float _mutatorMultiplier = 1f;
     private float _perilMultiplier = 1f;
@@ -256,37 +257,30 @@ public partial class ScoreManager : Node
 
     private void LoadBestScore()
     {
-        if (!FileAccess.FileExists(HighScorePath))
-        {
-            _bestScore = 0;
-            return;
-        }
-
-        FileAccess file = FileAccess.Open(HighScorePath, FileAccess.ModeFlags.Read);
-        if (file == null)
-        {
-            _bestScore = 0;
-            return;
-        }
-
-        string content = file.GetAsText().StripEdges();
-        file.Close();
-
-        if (int.TryParse(content, out int score))
-            _bestScore = score;
+        SaveFile.ReadResult<int> read = SaveFile.Read<int>(HighScorePath, content =>
+            int.TryParse(content.StripEdges(), out int score) && score >= 0
+                ? SaveFile.Parse<int>.Valid(score)
+                : SaveFile.Parse<int>.Invalid("record non entier"));
+        _bestScore = read.Value;
+        _bestScoreWritable = !read.BlocksWrites;
+        if (read.Status is SaveFile.ReadStatus.Unreadable or SaveFile.ReadStatus.Inaccessible)
+            GD.PushError($"[ScoreManager] Record illisible ({read.Detail})");
     }
 
     private void SaveBestScore()
     {
-        FileAccess file = FileAccess.Open(HighScorePath, FileAccess.ModeFlags.Write);
-        if (file == null)
+        if (!_bestScoreWritable)
         {
-            GD.PushError("[ScoreManager] Cannot save high score");
+            GD.PushWarning("[ScoreManager] Record laissé intact : fichier illisible pendant cette session");
             return;
         }
 
-        file.StoreString(_bestScore.ToString());
-        file.Close();
+        SaveFile.WriteResult result = SaveFile.Write(HighScorePath, _bestScore.ToString());
+        if (!result.Succeeded)
+        {
+            GD.PushError($"[ScoreManager] Cannot save high score: {result.Error}");
+            return;
+        }
         GD.Print($"[ScoreManager] New record saved: {_bestScore}");
     }
 }

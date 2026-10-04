@@ -91,6 +91,12 @@ Sérialiser avant toute ouverture de la destination ; écrire et vérifier un te
 
 **Sortie :** interruption aux étapes d'écriture/remplacement, racine `[]`, fichier tronqué, version invalide ou future et erreur d'accès ne détruisent pas la dernière sauvegarde valide. Les migrations existantes et la séparation normal/dev passent avec des profils temporaires. Qualifier les limites de remplacement de fichier selon les plateformes livrées.
 
+**Découpage d'exécution Q2a, 4 octobre ([DECISIONS §62](DECISIONS.md)) :** un utilitaire commun `SaveFile` pour les quatre fichiers d'acquis (méta, historique, record, agrégat analytics) ; les réglages `.cfg` restent hors du lot (préférences, pas des acquis).
+- **Écriture :** contenu sérialisé en mémoire d'abord ; écrit dans `<fichier>.tmp`, vidé sur disque, relu et comparé ; remplacement de la destination par renommage, la version précédente devient `<fichier>.bak`. Tout échec renvoie un `SaveWriteResult` explicite et laisse la destination intacte.
+- **Lecture :** chaque fichier a son contrôle de forme (racine, type et valeur de version, désérialisation complète). Un `.tmp` resté d'une écriture interrompue est ignoré. Un fichier illisible est déplacé en `<nom>.corrupt-<date>` puis la lecture reprend sur `.bak` ; une destination absente avec un `.bak` valide est restaurée.
+- **Version future ou fichier inaccessible :** lecture au mieux, écritures refusées pour la session, fichier jamais réécrit.
+- **Vérification :** scène `SaveFileRegression` et `tools/test_saves.sh` (suite `saves` de `tools/validate.sh`) : interruption avant et pendant le remplacement, racine `[]`, fichier tronqué, version invalide et future, erreur d'écriture, migration V1 inchangée, profils normal/dev (`test_dev_mode.sh`).
+
 ### Q2b — Finaliser une run une seule fois
 
 Constat : F02. Dépend de Q2a. Plan associé : 02, score et bilan.
@@ -98,6 +104,20 @@ Constat : F02. Dépend de Q2a. Plan associé : 02, score et bilan.
 Donner une identité à la finalisation, calculer ses récompenses une fois et mémoriser son état validé dans la persistance. Séparer calcul, engagement des acquis et affichage du bilan. Éviter les sauvegardes méta intermédiaires au milieu d'une même attribution. Définir la reprise entre méta et historique : un historique manquant se répare sans réattribuer les Vestiges, et un échec reste visible.
 
 **Sortie :** double appel et reprise après interruption ne doublent ni monnaie, ni statistiques, ni déblocages ; une fin de run ne s'annonce pas sauvegardée après un échec. Vérifier l'interruption entre chaque étape persistante, sans prétendre qu'un remplacement atomique d'un seul fichier rend plusieurs fichiers transactionnels.
+
+**Q2a livré et vérifié, 4 octobre.** `SaveFile` écrit méta, historique, record et agrégat analytics par temporaire relu puis renommage, la version précédente en `.bak`. Chaque lecture contrôle la forme : racine, version entière, désérialisation complète. Un fichier illisible part en `.corrupt-<date>` et la lecture reprend sur `.bak` ; une destination absente se restaure depuis `.bak`, ou depuis un `.tmp` sain si le remplacement s'est arrêté entre ses deux renommages. Version future, fichier inaccessible ou archivage V1 impossible : lecture au mieux, écritures refusées pour la session, fichier intact. `Save()` et `SaveRun()` renvoient un `WriteResult`.
+- **Vérifié :** `tools/test_saves.sh`, 39 contrôles ; `tools/validate.sh` sur smoke, dev_mode, development_tools, saves, movement-integration et launchers, **6/6**, sources inchangées. Build sans avertissement.
+- **Relecture `godot-reviewer` :** aucun écrasement d'une sauvegarde valide. Corrigés : `.tmp` sain promu quand la destination manque, journal « Saved run » seulement après une écriture réussie, statut de chargement remis à zéro au changement de profil, `var` retiré.
+- **Outil :** `tools/check_validation_log.py` admet des erreurs attendues par `VALIDATION_EXPECTED_ERRORS` (expression régulière), réservé aux scénarios qui corrompent exprès une sauvegarde.
+- **Reste pour Q2b :** prévenir le joueur (aucun écran n'affiche encore un profil illisible, futur ou une écriture refusée) ; résultats d'écriture encore ignorés par la fin de run. **Limites :** réglages `.cfg` hors lot ; sous Windows, `File.Replace` est atomique, sous Linux et macOS il passe par un lien puis un renommage (cas couvert par la promotion du `.tmp`) ; non vérifié sur Windows ni macOS. Une corruption juste après une migration V1 reprend sur le V1 et refait la migration.
+
+**Découpage d'exécution Q2b, 4 octobre :**
+- **Identité :** chaque fin de run reçoit un `run_id`, porté par son relevé dans l'historique.
+- **Une seule attribution :** `SaveEndOfRun` ne fait rien la seconde fois ; la méta retient les dernières runs réglées et refuse d'en régler une deux fois.
+- **Un seul engagement méta :** Vestiges, statistiques, déblocages, identité de la run et relevé en attente d'historique partent dans **une** écriture (sauvegardes regroupées), au lieu de trois. Les quêtes de progression appliquent récompense et validation dans une même écriture.
+- **Ordre et reprise :** méta d'abord, historique ensuite, puis le relevé en attente est retiré. Un historique manquant se répare au lancement suivant (Hub) depuis ce relevé, sans réattribuer les Vestiges.
+- **Échec visible :** le bilan dit que la progression n'a pas été enregistrée quand l'engagement méta ou l'historique échoue.
+- **Vérification :** double appel, échec de la méta, échec de l'historique puis réparation, interruption entre méta et historique, quêtes ; suites `saves`, `dev_mode`, `development_tools`, `movement-integration`.
 
 ### Q3 — Coordonner les opérations Steam
 
@@ -252,7 +272,7 @@ Pour clore un lot :
 
 - [x] Q0 — Lanceurs et bancs fiables.
 - [x] Q1 — Outils de modification exclus des runs normales distribuées.
-- [ ] Q2a — Écriture et récupération des sauvegardes.
+- [x] Q2a — Écriture et récupération des sauvegardes.
 - [ ] Q2b — Finalisation persistante sans double attribution.
 - [ ] Q3 — Opérations Steam et contexte weekly.
 - [ ] Q4 — Chargement observé et récupérable.

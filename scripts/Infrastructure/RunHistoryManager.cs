@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -168,6 +169,12 @@ public static class RunHistoryManager
 
     private static List<RunRecord> _history = new();
     private static bool _loaded;
+    private static string _writeBlockReason = "";
+
+    public static SaveFile.ReadStatus LoadStatus { get; private set; } = SaveFile.ReadStatus.Missing;
+    public static bool CanWrite => _writeBlockReason.Length == 0;
+
+    private readonly record struct ParsedHistory(List<RunRecord> Runs, string LegacyJson);
 
     public static void Load()
     {
@@ -175,47 +182,39 @@ public static class RunHistoryManager
             return;
 
         _loaded = true;
+        _writeBlockReason = "";
 
-        if (!FileAccess.FileExists(HistoryPath))
+        SaveFile.ReadResult<ParsedHistory> read = SaveFile.Read<ParsedHistory>(HistoryPath, ParseHistory);
+        LoadStatus = read.Status;
+        _history = read.Value.Runs ?? new List<RunRecord>();
+        switch (read.Status)
         {
-            _history = new List<RunRecord>();
-            return;
+            case SaveFile.ReadStatus.Unreadable:
+                GD.PushError($"[RunHistoryManager] Historique illisible, mis de côté ; historique vide ({read.Detail})");
+                return;
+            case SaveFile.ReadStatus.FutureVersion:
+            case SaveFile.ReadStatus.Inaccessible:
+                _writeBlockReason = read.Detail;
+                GD.PushError($"[RunHistoryManager] Historique laissé intact, aucune écriture pendant cette session ({read.Detail})");
+                return;
         }
 
-        FileAccess file = FileAccess.Open(HistoryPath, FileAccess.ModeFlags.Read);
-        if (file == null)
+        if (read.Value.LegacyJson != null)
         {
-            _history = new List<RunRecord>();
-            return;
-        }
-
-        string json = file.GetAsText();
-        file.Close();
-
-        try
-        {
-            using JsonDocument doc = JsonDocument.Parse(json);
-            if (IsLegacyHistory(doc.RootElement))
+            if (!ArchiveLegacyHistory(read.Value.LegacyJson))
             {
-                ArchiveLegacyHistory(json);
-                _history = new List<RunRecord>();
-                Save();
-                GD.Print("[RunHistoryManager] Legacy V1 history archived; V2 history reset");
+                _writeBlockReason = "archive de l'historique V1 impossible";
                 return;
             }
-
-            _history = JsonSerializer.Deserialize<List<RunRecord>>(json) ?? new List<RunRecord>();
-        }
-        catch (JsonException ex)
-        {
-            GD.PushWarning($"[RunHistoryManager] Failed to parse history: {ex.Message}");
-            _history = new List<RunRecord>();
+            Save();
+            GD.Print("[RunHistoryManager] Legacy V1 history archived; V2 history reset");
+            return;
         }
 
         GD.Print($"[RunHistoryManager] Loaded {_history.Count} run(s)");
     }
 
-    public static void SaveRun(RunRecord record)
+    public static SaveFile.WriteResult SaveRun(RunRecord record)
     {
         Load();
 
@@ -225,8 +224,10 @@ public static class RunHistoryManager
         if (_history.Count > MaxEntries)
             _history.RemoveRange(MaxEntries, _history.Count - MaxEntries);
 
-        Save();
-        GD.Print($"[RunHistoryManager] Saved run: {record.CharacterName} — Score {record.Score}, {record.RunDurationSec:F0}s, {record.CrisesSurvived} crises");
+        SaveFile.WriteResult result = Save();
+        if (result.Succeeded)
+            GD.Print($"[RunHistoryManager] Saved run: {record.CharacterName} — Score {record.Score}, {record.RunDurationSec:F0}s, {record.CrisesSurvived} crises");
+        return result;
     }
 
     public static List<RunRecord> GetHistory()
@@ -306,15 +307,16 @@ public static class RunHistoryManager
     public static void ForceReload()
     {
         _loaded = false;
+        _writeBlockReason = "";
+        LoadStatus = SaveFile.ReadStatus.Missing;
     }
 
-    private static void Save()
+    private static SaveFile.WriteResult Save()
     {
-        FileAccess file = FileAccess.Open(HistoryPath, FileAccess.ModeFlags.Write);
-        if (file == null)
+        if (!CanWrite)
         {
-            GD.PushError("[RunHistoryManager] Cannot save history");
-            return;
+            GD.PushWarning($"[RunHistoryManager] Écriture refusée : {_writeBlockReason}");
+            return SaveFile.WriteResult.Failed(_writeBlockReason);
         }
 
         JsonSerializerOptions options = new()
@@ -322,38 +324,76 @@ public static class RunHistoryManager
             WriteIndented = true,
             DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault
         };
-        string json = JsonSerializer.Serialize(_history, options);
-        file.StoreString(json);
-        file.Close();
+        SaveFile.WriteResult result = SaveFile.Write(HistoryPath, JsonSerializer.Serialize(_history, options));
+        if (!result.Succeeded)
+            GD.PushError($"[RunHistoryManager] Cannot save history: {result.Error}");
+        return result;
     }
 
-    private static bool IsLegacyHistory(JsonElement root)
+    /// <summary>
+    /// Racine tableau d'objets versionnés. Une entrée sans version ou sous la V2 désigne un historique V1, à archiver ;
+    /// une entrée plus récente que le jeu protège tout le fichier.
+    /// </summary>
+    private static SaveFile.Parse<ParsedHistory> ParseHistory(string json)
     {
-        if (root.ValueKind != JsonValueKind.Array)
-            return true;
-
-        foreach (JsonElement item in root.EnumerateArray())
+        try
         {
-            if (!item.TryGetProperty("version", out JsonElement versionElement))
-                return true;
+            using JsonDocument doc = JsonDocument.Parse(json);
+            JsonElement root = doc.RootElement;
+            if (root.ValueKind != JsonValueKind.Array)
+                return SaveFile.Parse<ParsedHistory>.Invalid($"racine {root.ValueKind}, tableau attendu");
 
-            if (versionElement.ValueKind != JsonValueKind.Number || versionElement.GetInt32() < FirstV2Version)
-                return true;
+            bool legacy = false;
+            int newest = 0;
+            foreach (JsonElement item in root.EnumerateArray())
+            {
+                if (item.ValueKind != JsonValueKind.Object)
+                    return SaveFile.Parse<ParsedHistory>.Invalid($"entrée {item.ValueKind}, objet attendu");
+                if (!item.TryGetProperty("version", out JsonElement versionElement))
+                {
+                    legacy = true;
+                    continue;
+                }
+                if (versionElement.ValueKind != JsonValueKind.Number || !versionElement.TryGetInt32(out int version))
+                    return SaveFile.Parse<ParsedHistory>.Invalid($"version invalide : {versionElement.GetRawText()}");
+                legacy |= version < FirstV2Version;
+                newest = Math.Max(newest, version);
+            }
+
+            if (newest > CurrentVersion)
+                return SaveFile.Parse<ParsedHistory>.Future(new ParsedHistory(TryDeserialize(json), null),
+                    $"version {newest} plus récente que {CurrentVersion}");
+            if (legacy)
+                return SaveFile.Parse<ParsedHistory>.Valid(new ParsedHistory(new List<RunRecord>(), json));
+
+            List<RunRecord> runs = JsonSerializer.Deserialize<List<RunRecord>>(json);
+            return runs == null
+                ? SaveFile.Parse<ParsedHistory>.Invalid("contenu nul")
+                : SaveFile.Parse<ParsedHistory>.Valid(new ParsedHistory(runs, null));
         }
-
-        return false;
+        catch (Exception ex) when (ex is JsonException or InvalidOperationException or FormatException or NotSupportedException)
+        {
+            return SaveFile.Parse<ParsedHistory>.Invalid(ex.Message);
+        }
     }
 
-    private static void ArchiveLegacyHistory(string rawJson)
+    private static List<RunRecord> TryDeserialize(string json)
     {
-        FileAccess archive = FileAccess.Open(LegacyHistoryPath, FileAccess.ModeFlags.Write);
-        if (archive == null)
+        try
         {
-            GD.PushWarning($"[RunHistoryManager] Failed to archive legacy history to {LegacyHistoryPath}");
-            return;
+            return JsonSerializer.Deserialize<List<RunRecord>>(json) ?? new List<RunRecord>();
         }
+        catch (Exception ex) when (ex is JsonException or InvalidOperationException or FormatException or NotSupportedException)
+        {
+            return new List<RunRecord>();
+        }
+    }
 
-        archive.StoreString(rawJson);
-        archive.Close();
+    private static bool ArchiveLegacyHistory(string rawJson)
+    {
+        SaveFile.WriteResult archived = SaveFile.Write(LegacyHistoryPath, rawJson);
+        if (!archived.Succeeded)
+            GD.PushError($"[RunHistoryManager] Failed to archive legacy history to {LegacyHistoryPath}: {archived.Error}");
+        return archived.Succeeded;
     }
 }
