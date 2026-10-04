@@ -25,7 +25,8 @@
             "reinforcement_id": "shade",
             "spawn_radius": 40,
             "impact_flash_seconds": 0.2,
-            "fx_family": "hostile"
+            "fx_family": "hostile",
+            "cry_audio": "sfx_hurleur_cri"
         }
     },
     "visual": {

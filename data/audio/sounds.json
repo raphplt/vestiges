@@ -184,7 +184,7 @@
   },
   "sfx_hurleur_cri": {
     "path": "res://assets/audio/sfx/creatures/sfx_hurleur_cri.wav",
-    "volume_db": 0,
+    "volume_db": -6,
     "min_interval_ms": 90
   },
   "sfx_sentinelle_tir": {

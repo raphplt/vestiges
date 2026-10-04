@@ -819,3 +819,5 @@ Raphaël, après la planche de la Résurgence : « pour l'audio j'ai du mal à d
 - **Musiques, ambiance, sons manquants :** « à revoir plus tard » ; des sons sont à améliorer ou à ajouter.
 - **Résurgence :** peu de différence perçue entre les extraits ; Raphaël demande les sons bruts. Copiés dans `~/Téléchargements/vestiges-resurgence-sons-bruts/` (annonce `mus_crepuscule`, Résurgence `mus_nuit_vagues`, signal de danger, et pour comparer exploration et combat).
 - **Synergies (suite du §65) :** forme **C** retenue, des synergies de règles (des règles qui se répondent, sans effet ajouté ni annonce). Planche de combinaisons à proposer avant code.
+
+- **Cri du Hurleur, suite :** Raphaël retient la variante **C** (chœur grave désaccordé). Elle remplace l'ancien fichier, au volume −6 dB dans la banque (−7 dB de plus quand la créature est proche, par `PlayNearbyAudio`), et `cry_audio` est rétabli. À écouter en run.

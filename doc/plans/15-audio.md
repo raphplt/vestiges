@@ -238,3 +238,5 @@ Voir [DECISIONS §66](DECISIONS.md). Faits : cri du Hurleur retiré ; sons d'att
 - C, chœur grave désaccordé : 2,9 s, −15,6 LUFS.
 
 Les fichiers sont dans `~/Téléchargements/vestiges-hurleur-cri/`. Spectres vérifiés (rien d'aigu), aucune écoute faite par Claude. Si Raphaël en retient une : la copier dans `assets/audio/sfx/creatures/`, l'ajouter à la banque avec un volume bas, la remettre dans `cry_audio` du Hurleur, puis l'écouter en run.
+
+**Retenu : C** (DECISIONS §66). `sfx_hurleur_cri.wav` remplacé par la variante C, banque à −6 dB, cri rétabli sur la fiche du Hurleur. Smoke, capacités ennemies et musique verts ; écoute en run à faire par Raphaël.
