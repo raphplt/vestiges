@@ -405,6 +405,10 @@ Ces lots sont indépendants entre eux après Q0 ; chacun est livré séparément
 4. **Réinitialisation :** toutes les liaisons par défaut reviennent, secondaires comprises, et le fichier est supprimé.
 5. **Vérification :** scène `InputRemapRegression` en plusieurs lancements (un redémarrage réel entre deux), `tools/test_input_remap.sh`, suite `input_remap`. Cas : changer seulement l'interaction, redémarrer, retrouver WASD, flèches, croix et stick ; fichier inchangé par la lecture ; ancien fichier écrit par le défaut ; ancien fichier avec un vrai choix (déjà couvert par le banc de mouvement) ; réinitialisation complète. Contre-épreuve sur l'ancien enregistrement. Suites movement et dev_mode.
 
+**Q8b livré et vérifié, 5 octobre.** `InputRemapManager` relève les liaisons par défaut au démarrage (après les boutons et le stick ajoutés pour la manette, avant toute lecture). Remapper remplace la première touche ou le premier bouton, à sa place ; flèches, stick et autres boutons restent. La lecture applique sans écrire ; la sauvegarde ne garde, en format version 2, que ce qui diffère des défauts, et signale un échec d'écriture. Un ancien fichier (sans version) dont la touche est une secondaire par défaut est lu comme non modifié ; tout autre choix devient la touche principale. La réinitialisation remet toutes les liaisons par défaut et supprime le fichier.
+- **Vérification :** `tools/test_input_remap.sh`, 5 lancements dans un profil temporaire avec un vrai redémarrage entre eux, 22 contrôles ; le lanceur vérifie que la lecture laisse le fichier intact (empreinte avant/après). Contre-épreuve avec l'ancien code : l'ancien fichier donne `move_up : Up` seulement, WASD perdu. `tools/validate.sh` 5/5 (smoke, input_remap, movement, dev_mode, ui_art), puis la suite rejouée après les retouches de relecture. Relecture `godot-reviewer` : aucun bug ; retouches de forme appliquées. Son constat « `.cs.uid` du banc absent » ne s'applique pas : `tools/.gdignore` exclut les bancs de l'import.
+- **Limite écrite :** un joueur qui, avant ce lot, avait volontairement remappé un déplacement sur sa propre flèche voit ce choix ignoré une fois ; l'ancien fichier ne permet pas de le distinguer du défaut.
+
 ## 6. Lots d'architecture et de performance
 
 ### Q9 — Extraire progressivement le combat de Player
@@ -485,7 +489,7 @@ Pour clore un lot :
 - [x] Q6c — Relations et capacités ennemies validées.
 - [ ] Q7 — Autres catalogues validés, compte rendu par famille.
 - [x] Q8a — Verrouillage sur une vie d'ennemi.
-- [ ] Q8b — Remapping sans pertes.
+- [x] Q8b — Remapping sans pertes.
 - [ ] Q8c — Seed effective et tirages contrôlés.
 - [ ] Q8d — Transitions globales cohérentes.
 - [ ] Q9a — Ciblage extrait et mesuré.
