@@ -9,7 +9,7 @@ trap 'validation_cleanup "$TEST_DIR"' EXIT
 isolate_godot_profile "$TEST_DIR"
 validation_prepare "$TEST_DIR"
 GODOT="${GODOT_BIN:-godot-mono}"
-for scenario in normal fault-catalogues fault-generation fault-decors leave-generation leave-decors quit; do
+for scenario in normal random-seed fault-catalogues fault-generation fault-decors leave-generation leave-decors quit; do
     expected=''
     # Une panne injectée est journalisée comme un vrai échec de chargement : seules ces lignes-là sont admises.
     if [[ $scenario == fault-* ]]; then

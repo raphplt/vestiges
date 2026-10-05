@@ -9,7 +9,7 @@ namespace Vestiges.Tests;
 
 /// <summary>
 /// Chargement récupérable (plan 26 Q4), sur la vraie Main : un scénario par lancement (--scenario).
-/// normal : la run démarre. fault-catalogues, fault-generation, fault-decors : une panne injectée affiche l'écran
+/// normal : la run démarre. random-seed : la seed tirée au lancement est publiée. fault-catalogues, fault-generation, fault-decors : une panne injectée affiche l'écran
 /// d'erreur, l'arbre reste en pause derrière lui et le bouton ramène au Hub. leave-generation, leave-decors : la
 /// scène quittée en route ne laisse ni pause, ni décors orphelins, ni exception. quit : fermeture pendant le chargement.
 /// </summary>
@@ -40,6 +40,7 @@ public partial class LoadingRecoveryRegression : Node
             switch (_scenario)
             {
                 case "normal": await NormalLoad(manager); break;
+                case "random-seed": await RandomSeedLoad(manager); break;
                 case "fault-catalogues": await FaultedLoad("catalogues", "Catalogues"); break;
                 case "fault-generation": await FaultedLoad("génération", "Création du monde"); break;
                 case "fault-decors": await FaultedLoad("décors", "Décors"); break;
@@ -64,6 +65,20 @@ public partial class LoadingRecoveryRegression : Node
         await Until(() => world.IsWorldReady && !GetTree().Paused && manager.CurrentState == GameManager.GameState.Run,
             "Main n'a pas terminé son chargement");
         Check(Find<Control>(world, "LoadingFailure") == null, "chargement normal : run démarrée, aucun écran d'erreur");
+    }
+
+    /// <summary>Q8c : une run sans seed imposée publie la seed tirée au lancement, et le record la garde.</summary>
+    private async Task RandomSeedLoad(GameManager manager)
+    {
+        manager.RunSeed = 0;
+        manager.EffectiveSeed = 0;
+        WorldSetup world = StartMain();
+        await Until(() => world.IsWorldReady && !GetTree().Paused && manager.CurrentState == GameManager.GameState.Run,
+            "Main n'a pas terminé son chargement");
+        Check(manager.RunSeed == 0 && manager.EffectiveSeed != 0 && manager.EffectiveSeed == world.Seed,
+            $"seed aléatoire publiée ({manager.EffectiveSeed}), demande du Hub laissée à 0");
+        ulong recorded = world.GetNode<Vestiges.Score.ScoreManager>("ScoreManager").BuildRunRecord().Seed;
+        Check(recorded == world.Seed, $"le record garde la seed effective ({recorded})");
     }
 
     private async Task FaultedLoad(string step, string shownStep)

@@ -127,8 +127,11 @@ public partial class WorldSetup : Node2D
         GameManager gm = GetNodeOrNull<GameManager>("/root/GameManager");
         if (gm != null && gm.RunSeed != 0)
             Seed = gm.RunSeed;
-        if (Seed == 0)
+        while (Seed == 0)
             Seed = GD.Randi();
+        // Publiée tout de suite : le record, l'historique et le bilan gardent la carte d'une run aléatoire.
+        if (gm != null)
+            gm.EffectiveSeed = Seed;
 
         // Génération du monde (calcul pur) sur un thread : l'écran de chargement s'affiche et s'anime pendant ce temps.
         // Ses résultats ne sont lus qu'après l'attente, au début d'InitializeWorldAsync.

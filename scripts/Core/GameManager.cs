@@ -40,6 +40,9 @@ public partial class GameManager : Node
     /// <summary>Seed de la run. 0 = aléatoire au lancement.</summary>
     public ulong RunSeed { get; set; }
 
+    /// <summary>Seed réellement utilisée par la run en cours : celle du Hub, ou celle tirée au lancement (plan 26 Q8c).</summary>
+    public ulong EffectiveSeed { get; set; }
+
     /// <summary>Vestiges gagnés lors de la dernière run.</summary>
     public int LastVestigesEarned { get; set; }
 

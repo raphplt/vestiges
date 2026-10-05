@@ -275,7 +275,7 @@ public partial class GameOverScreen : CanvasLayer
         _record.Text = _isRecord ? Tr("UI_END_NEW_RECORD") : string.Format(Tr("UI_END_BEST"), (_scoreManager?.BestScore ?? 0).ToString("N0"));
         _record.AddThemeColorOverride("font_color", _isRecord ? UITheme.GoldBright : UITheme.TextDim);
         _detail.Text = FormatDetail();
-        _seed.Text = gm.RunSeed > 0 ? string.Format(Tr("UI_END_SEED"), gm.RunSeed) : "";
+        _seed.Text = gm.EffectiveSeed > 0 ? string.Format(Tr("UI_END_SEED"), gm.EffectiveSeed) : "";
         string saveNotice = !string.IsNullOrEmpty(gm.LastRunSaveError) ? Tr("UI_END_SAVE_FAILED")
             : gm.LastRunHistoryPending ? Tr("UI_END_HISTORY_PENDING") : "";
         if (saveNotice.Length > 0)

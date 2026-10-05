@@ -171,7 +171,7 @@ public partial class ScoreManager : Node
             Date = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm"),
             WeaponId = weaponId == "unknown" ? null : weaponId,
             CombatScoreDetail = _combatScore,
-            Seed = gm.RunSeed,
+            Seed = gm.EffectiveSeed,
             ActiveMutators = gm.ActiveMutators != null && gm.ActiveMutators.Count > 0
                 ? new List<string>(gm.ActiveMutators)
                 : null,
