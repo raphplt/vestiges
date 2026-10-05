@@ -50,7 +50,7 @@ public partial class LoadingRecoveryRegression : Node
                 default: throw new InvalidOperationException($"scénario inconnu : {_scenario}");
             }
             GD.Print($"[LoadingRecoveryRegression] RESULT failures=0 checks={_checks} scenario={_scenario}");
-            GetTree().Quit(0);
+            await GameExit.QuitAsync(GetTree(), 0);
         }
         catch (Exception exception)
         {
@@ -134,7 +134,8 @@ public partial class LoadingRecoveryRegression : Node
         WorldSetup world = StartMain();
         await Until(() => ReadField<Node2D>(world, "_propStaging") != null, "pose des décors jamais atteinte");
         GD.Print("[LoadingRecoveryRegression] RESULT failures=0 checks=0 scenario=quit");
-        GetTree().Quit(0);
+        // Le chemin du jeu quand on ferme la fenêtre pendant le chargement.
+        await GameExit.QuitAsync(GetTree(), 0);
     }
 
     private WorldSetup StartMain()

@@ -63,7 +63,7 @@ public partial class RunTraceRegression : Node
             for (int i = 0; i < 5; i++)
                 GD.Print($"[RunTraceRegression] {_trace[i]}");
             GD.Print($"[RunTraceRegression] RESULT seed={seed} spawns={_trace.Count} hash={Hash(joined)}");
-            GetTree().Quit(0);
+            await GameExit.QuitAsync(GetTree(), 0);
         }
         catch (Exception exception)
         {

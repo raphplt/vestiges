@@ -50,92 +50,80 @@ public static class PassiveSouvenirDataLoader
 	/// <summary>Effets au plus par objet (tampon du joueur pour appliquer une carte sans allouer).</summary>
 	public const int MaxEffects = 8;
 	/// <summary>Gain d'une carte légendaire, le plus fort (upgrade_rarities.json) : borne de la vérification des facteurs.</summary>
-	private const float MaxRarityGain = 3f;
+	public const float MaxRarityGain = 3f;
 	private static readonly Dictionary<string, PassiveSouvenirData> _cache = new();
 	private static readonly List<PassiveSouvenirData> _all = new();
+	private const string CatalogPath = "res://data/progression/passive_souvenirs.json";
 	private static bool _loaded;
+	private static string _loadError;
+
+	/// <summary>Catalogue lu et contrôlé ; faux, avec la raison, s'il a été refusé (le chargement de la run s'arrête alors).</summary>
+	public static bool TryLoad(out string error)
+	{
+		Load();
+		error = _loadError;
+		return error == null;
+	}
 
 	public static void Load()
 	{
 		if (_loaded)
 			return;
+		_loaded = true;
 
-		FileAccess file = FileAccess.Open("res://data/progression/passive_souvenirs.json", FileAccess.ModeFlags.Read);
-		if (file == null)
+		string jsonText = FileAccess.FileExists(CatalogPath) ? FileAccess.GetFileAsString(CatalogPath) : null;
+		string contractText = FileAccess.FileExists(ObjectDataValidator.ContractPath) ? FileAccess.GetFileAsString(ObjectDataValidator.ContractPath) : null;
+		// Contrôle complet avant toute publication (plan 26 Q7b) : un catalogue refusé ne publie aucun objet.
+		if (jsonText == null)
+			_loadError = $"{CatalogPath} absent";
+		else if (contractText == null)
+			_loadError = $"{ObjectDataValidator.ContractPath} absent";
+		else if (!ObjectDataValidator.TryParseContract(contractText, out ObjectDataValidator.Contract contract, out string contractError))
+			_loadError = contractError;
+		else if (ObjectDataValidator.Validate(jsonText, contract, path => ResourceLoader.Exists(path)) is string invalid)
+			_loadError = $"{CatalogPath} : {invalid}";
+		if (_loadError != null)
 		{
-			GD.PushError("[PassiveSouvenirDataLoader] Cannot open passive_souvenirs.json");
-			_loaded = true;
+			GD.PushError($"[PassiveSouvenirDataLoader] {_loadError}");
 			return;
 		}
-
-		string jsonText = file.GetAsText();
-		file.Close();
 
 		Json json = new();
-		if (json.Parse(jsonText) != Error.Ok)
-		{
-			GD.PushError($"[PassiveSouvenirDataLoader] Parse error: {json.GetErrorMessage()}");
-			_loaded = true;
-			return;
-		}
+		json.Parse(jsonText);
 
 		Godot.Collections.Array array = json.Data.AsGodotArray();
 		foreach (Variant item in array)
 		{
 			Godot.Collections.Dictionary dict = item.AsGodotDictionary();
 			PassiveSouvenirData data = ParseEntry(dict);
-			if (data == null)
-				continue;
 			_cache[data.Id] = data;
 			// Passif sans effet branché : gardé pour les sauvegardes, retiré des tirages (plan 18).
 			if (!dict.ContainsKey("enabled") || dict["enabled"].AsBool())
 				_all.Add(data);
 		}
 
-		_loaded = true;
 		GD.Print($"[PassiveSouvenirDataLoader] Loaded {_cache.Count} passive souvenirs");
 	}
 
+	/// <summary>Entrée déjà contrôlée par <see cref="ObjectDataValidator"/> : seuls les champs facultatifs ont un secours.</summary>
 	private static PassiveSouvenirData ParseEntry(Godot.Collections.Dictionary dict)
 	{
-		if (!dict.ContainsKey("id"))
-			return null;
-
+		Godot.Collections.Array color = dict["icon_color"].AsGodotArray();
 		PassiveSouvenirData data = new()
 		{
 			Id = dict["id"].AsString(),
-			Name = dict.ContainsKey("name") ? dict["name"].AsString() : dict["id"].AsString(),
-			Description = dict.ContainsKey("description") ? dict["description"].AsString() : "",
+			Name = dict["name"].AsString(),
+			Description = dict["description"].AsString(),
 			Icon = dict.ContainsKey("icon") ? dict["icon"].AsString() : "",
 			IconSmall = dict.ContainsKey("icon_small") ? dict["icon_small"].AsString() : "",
-			MaxLevel = dict.ContainsKey("max_level") ? (int)dict["max_level"].AsDouble() : 30,
+			IconColor = new Color((float)color[0].AsDouble(), (float)color[1].AsDouble(), (float)color[2].AsDouble()),
+			MaxLevel = (int)dict["max_level"].AsDouble(),
 			Survival = dict.ContainsKey("survival") && dict["survival"].AsBool(),
-			OfferWeight = dict.ContainsKey("offer_weight") ? (float)dict["offer_weight"].AsDouble() : 1f
+			OfferWeight = dict.ContainsKey("offer_weight") ? (float)dict["offer_weight"].AsDouble() : 1f,
 		};
-
-		if (dict.ContainsKey("icon_color"))
-		{
-			Godot.Collections.Array colorArr = dict["icon_color"].AsGodotArray();
-			data.IconColor = new Color(
-				(float)colorArr[0].AsDouble(),
-				(float)colorArr[1].AsDouble(),
-				(float)colorArr[2].AsDouble()
-			);
-		}
-
-		if (!dict.ContainsKey("effects"))
-		{
-			GD.PushError($"[PassiveSouvenirDataLoader] {data.Id} : aucun effet défini");
-			return null;
-		}
 		foreach (Variant entry in dict["effects"].AsGodotArray())
 		{
 			Godot.Collections.Dictionary effect = entry.AsGodotDictionary();
-			if (!effect.ContainsKey("step"))
-			{
-				GD.PushError($"[PassiveSouvenirDataLoader] {data.Id} : effet {effect["stat"]} sans step");
-				return null;
-			}
 			data.Effects.Add(new PassiveEffectData
 			{
 				Stat = effect["stat"].AsString(),
@@ -143,68 +131,35 @@ public static class PassiveSouvenirDataLoader
 				Step = (float)effect["step"].AsDouble(),
 			});
 		}
-		if (data.Effects.Count == 0 || data.Effects.Count > MaxEffects)
-		{
-			GD.PushError($"[PassiveSouvenirDataLoader] {data.Id} : {data.Effects.Count} effets, entre 1 et {MaxEffects} attendus");
-			return null;
-		}
-		foreach (PassiveEffectData effect in data.Effects)
-		{
-			// Un facteur nul ou négatif ferait diviser par zéro au passage d'un niveau à l'autre : on le vérifie
-			// au pire cas, toutes les cartes au gain maximal de rareté.
-			if (effect.Multiplicative && 1f + effect.Step * data.MaxLevel * MaxRarityGain <= 0f)
-			{
-				GD.PushError($"[PassiveSouvenirDataLoader] {data.Id} : {effect.Stat} s'annule avant le niveau {data.MaxLevel}");
-				return null;
-			}
-		}
 		if (dict.ContainsKey("params"))
+			ReadParameters(dict["params"].AsGodotDictionary(), data.Parameters);
+		if (dict.ContainsKey("milestones"))
 		{
-			Godot.Collections.Dictionary values = dict["params"].AsGodotDictionary();
-			foreach (Variant key in values.Keys)
-				data.Parameters[key.AsString()] = (float)values[key].AsDouble();
+			foreach (Variant entry in dict["milestones"].AsGodotArray())
+			{
+				Godot.Collections.Dictionary milestone = entry.AsGodotDictionary();
+				Dictionary<string, float> parameters = new();
+				if (milestone.ContainsKey("params"))
+					ReadParameters(milestone["params"].AsGodotDictionary(), parameters);
+				data.Milestones.Add(new ObjectMilestoneData
+				{
+					Level = (int)milestone["level"].AsDouble(),
+					Effect = milestone["effect"].AsString(),
+					Text = milestone["text"].AsString(),
+					Parameters = parameters,
+				});
+			}
+			data.Milestones.Sort((a, b) => a.Level.CompareTo(b.Level));
 		}
-		if (dict.ContainsKey("milestones") && !ParseMilestones(data, dict["milestones"].AsGodotArray()))
-			return null;
 		data.Stat = data.Effects[0].Stat;
 		data.ModifierType = data.Effects[0].ModifierType;
-
 		return data;
 	}
 
-	private static bool ParseMilestones(PassiveSouvenirData data, Godot.Collections.Array entries)
+	private static void ReadParameters(Godot.Collections.Dictionary values, Dictionary<string, float> target)
 	{
-		foreach (Variant entry in entries)
-		{
-			Godot.Collections.Dictionary milestone = entry.AsGodotDictionary();
-			if (!milestone.ContainsKey("level") || !milestone.ContainsKey("effect") || !milestone.ContainsKey("text"))
-			{
-				GD.PushError($"[PassiveSouvenirDataLoader] {data.Id} : palier sans niveau, effet ou texte");
-				return false;
-			}
-			Dictionary<string, float> parameters = new();
-			if (milestone.ContainsKey("params"))
-			{
-				Godot.Collections.Dictionary values = milestone["params"].AsGodotDictionary();
-				foreach (Variant key in values.Keys)
-					parameters[key.AsString()] = (float)values[key].AsDouble();
-			}
-			int level = (int)milestone["level"].AsDouble();
-			if (level < 2 || level > data.MaxLevel)
-			{
-				GD.PushError($"[PassiveSouvenirDataLoader] {data.Id} : palier au niveau {level}, hors de 2 à {data.MaxLevel}");
-				return false;
-			}
-			data.Milestones.Add(new ObjectMilestoneData
-			{
-				Level = level,
-				Effect = milestone["effect"].AsString(),
-				Text = milestone["text"].AsString(),
-				Parameters = parameters,
-			});
-		}
-		data.Milestones.Sort((a, b) => a.Level.CompareTo(b.Level));
-		return true;
+		foreach (Variant key in values.Keys)
+			target[key.AsString()] = (float)values[key].AsDouble();
 	}
 
 	public static PassiveSouvenirData Get(string id)

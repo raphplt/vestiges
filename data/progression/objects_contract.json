@@ -1,0 +1,355 @@
+{
+  "_doc": "Contrat des objets (plan 26 Q7b), lu par ObjectDataValidator avant toute publication de passive_souvenirs.json. stats : statistiques qu'un effet d'objet peut porter, avec les types de modificateur admis et les réglages (params) que l'objet doit fournir quand cette statistique est la première de ses effets. inactive_stats : statistiques admises seulement sur un objet désactivé (gardé pour les sauvegardes). milestones : effets de palier et réglages obligatoires. Une statistique ou un effet ajouté ici doit avoir son lecteur dans le code.",
+  "stats": {
+    "attack_speed": {
+      "modifiers": [
+        "multiplicative"
+      ],
+      "params": []
+    },
+    "aoe_radius": {
+      "modifiers": [
+        "multiplicative"
+      ],
+      "params": []
+    },
+    "attack_range": {
+      "modifiers": [
+        "multiplicative"
+      ],
+      "params": []
+    },
+    "crit_chance": {
+      "modifiers": [
+        "additive"
+      ],
+      "params": []
+    },
+    "crit_multiplier": {
+      "modifiers": [
+        "additive"
+      ],
+      "params": []
+    },
+    "max_hp": {
+      "modifiers": [
+        "additive"
+      ],
+      "params": []
+    },
+    "regen_rate": {
+      "modifiers": [
+        "additive"
+      ],
+      "params": []
+    },
+    "armor": {
+      "modifiers": [
+        "additive"
+      ],
+      "params": []
+    },
+    "shield": {
+      "modifiers": [
+        "additive"
+      ],
+      "params": []
+    },
+    "speed": {
+      "modifiers": [
+        "multiplicative"
+      ],
+      "params": []
+    },
+    "dash_recharge": {
+      "modifiers": [
+        "multiplicative"
+      ],
+      "params": []
+    },
+    "xp_magnet_radius": {
+      "modifiers": [
+        "multiplicative"
+      ],
+      "params": []
+    },
+    "xp_gain": {
+      "modifiers": [
+        "multiplicative"
+      ],
+      "params": []
+    },
+    "luck": {
+      "modifiers": [
+        "additive"
+      ],
+      "params": []
+    },
+    "projectile_bonus": {
+      "modifiers": [
+        "additive"
+      ],
+      "params": []
+    },
+    "lifesteal": {
+      "modifiers": [
+        "additive"
+      ],
+      "params": []
+    },
+    "status_duration": {
+      "modifiers": [
+        "multiplicative"
+      ],
+      "params": []
+    },
+    "burn_chance": {
+      "modifiers": [
+        "additive"
+      ],
+      "params": [
+        "burn_damage_ratio",
+        "burn_seconds"
+      ]
+    },
+    "chill_chance": {
+      "modifiers": [
+        "additive"
+      ],
+      "params": [
+        "slow_factor",
+        "slow_seconds"
+      ]
+    },
+    "burning_target_damage": {
+      "modifiers": [
+        "additive"
+      ],
+      "params": []
+    },
+    "slowed_target_damage": {
+      "modifiers": [
+        "additive"
+      ],
+      "params": []
+    },
+    "kill_explosion": {
+      "modifiers": [
+        "additive"
+      ],
+      "params": [
+        "radius"
+      ]
+    },
+    "kill_heal": {
+      "modifiers": [
+        "additive"
+      ],
+      "params": []
+    },
+    "stride_damage": {
+      "modifiers": [
+        "additive"
+      ],
+      "params": [
+        "move_seconds"
+      ]
+    },
+    "level_heal": {
+      "modifiers": [
+        "additive"
+      ],
+      "params": []
+    },
+    "crit_fragile": {
+      "modifiers": [
+        "additive"
+      ],
+      "params": [
+        "fragile_seconds"
+      ]
+    },
+    "crit_echo": {
+      "modifiers": [
+        "additive"
+      ],
+      "params": [
+        "radius"
+      ]
+    },
+    "still_attack_speed": {
+      "modifiers": [
+        "additive"
+      ],
+      "params": [
+        "still_seconds"
+      ]
+    },
+    "dash_trail": {
+      "modifiers": [
+        "additive"
+      ],
+      "params": [
+        "base_seconds",
+        "radius",
+        "slow_factor",
+        "spacing"
+      ]
+    },
+    "crowd_damage": {
+      "modifiers": [
+        "additive"
+      ],
+      "params": [
+        "max_enemies",
+        "radius"
+      ]
+    },
+    "high_hp_damage": {
+      "modifiers": [
+        "additive"
+      ],
+      "params": [
+        "threshold"
+      ]
+    },
+    "low_hp_damage": {
+      "modifiers": [
+        "additive"
+      ],
+      "params": [
+        "threshold"
+      ]
+    },
+    "essence_damage_cap": {
+      "modifiers": [
+        "additive"
+      ],
+      "params": [
+        "damage_per_step",
+        "essence_per_step"
+      ]
+    },
+    "damage": {
+      "modifiers": [
+        "multiplicative"
+      ],
+      "params": []
+    },
+    "projectile_pierce": {
+      "modifiers": [
+        "additive"
+      ],
+      "params": []
+    }
+  },
+  "inactive_stats": [
+    "cooldown_reduction"
+  ],
+  "milestones": {
+    "burn_slows": [
+      "slow_factor"
+    ],
+    "burn_spread": [
+      "radius"
+    ],
+    "cascade_invulnerability": [
+      "levels",
+      "seconds"
+    ],
+    "crowd_cap": [
+      "max_enemies"
+    ],
+    "dash_armor": [
+      "multiplier",
+      "seconds_after"
+    ],
+    "dash_distance": [
+      "bonus"
+    ],
+    "double_crit_echo": [
+      "targets"
+    ],
+    "double_explosion": [
+      "delay_seconds"
+    ],
+    "double_slow_freeze": [
+      "freeze_seconds"
+    ],
+    "double_stride": [
+      "charges"
+    ],
+    "elite_kill_heal": [
+      "max_hp_ratio"
+    ],
+    "essence_refund": [
+      "ratio"
+    ],
+    "full_hp_crit": [
+      "multiplier"
+    ],
+    "ignore_small_hits": [
+      "max_hp_ratio"
+    ],
+    "level_essence": [
+      "essence"
+    ],
+    "level_reroll": [
+      "every_levels"
+    ],
+    "long_fragile": [
+      "seconds"
+    ],
+    "low_hp_lifesteal": [
+      "multiplier",
+      "threshold"
+    ],
+    "low_hp_speed": [
+      "speed"
+    ],
+    "orb_heal": [
+      "heal"
+    ],
+    "pierce_damage_ramp": [
+      "per_enemy"
+    ],
+    "range_end_burst": [
+      "damage_ratio",
+      "radius"
+    ],
+    "repeat_attack": [
+      "delay_seconds",
+      "every"
+    ],
+    "shield_break_wave": [
+      "knockback",
+      "radius"
+    ],
+    "slow_kill_extends": [
+      "max_remaining_seconds",
+      "radius",
+      "seconds"
+    ],
+    "spread_targets": [],
+    "status_renew": [
+      "chance"
+    ],
+    "sticky_fragile": [
+      "bonus"
+    ],
+    "still_armor": [
+      "armor"
+    ],
+    "thermos_threshold": [
+      "threshold"
+    ],
+    "wound_regen": [
+      "multiplier",
+      "seconds"
+    ],
+    "zone_echo": [
+      "delay_seconds",
+      "ratio"
+    ]
+  }
+}

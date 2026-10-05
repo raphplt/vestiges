@@ -108,14 +108,14 @@ public static class PerilDataLoader
             error = $"{ConfigPath} absent";
             return false;
         }
-        error = Parse(file.GetAsText());
+        error = Apply(file.GetAsText());
         if (error != null)
             error = $"{ConfigPath} : {error}";
         return error == null;
     }
 
     /// <summary>Contrôle un texte de réglages ; ne publie les valeurs que s'il est entièrement valide. Rend l'erreur, ou null.</summary>
-    public static string Parse(string json)
+    public static string Apply(string json)
     {
         try
         {

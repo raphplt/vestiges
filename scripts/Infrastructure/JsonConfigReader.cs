@@ -35,6 +35,9 @@ public sealed class JsonConfigReader
         return Error == null ? owner.GetProperty(name) : default;
     }
 
+    /// <summary>Tout nombre fini.</summary>
+    public float Number(JsonElement owner, string key) => Number(owner, key, _ => true, "");
+
     public float Positive(JsonElement owner, string key) => Number(owner, key, value => value > 0f, "strictement positif attendu");
     public float NonNegative(JsonElement owner, string key) => Number(owner, key, value => value >= 0f, "positif ou nul attendu");
     public float Ratio(JsonElement owner, string key) => Number(owner, key, value => value > 0f && value <= 1f, "part dans ]0 ; 1] attendue");

@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Text.Json;
 using Godot;
 using Vestiges.Combat;
 using Vestiges.Core;
@@ -156,43 +158,97 @@ public static class UpgradeRoller
 		return last;
 	}
 
+	private const string ConfigPath = "res://data/progression/upgrade_rarities.json";
+
 	private static void Load()
 	{
 		if (_loaded)
 			return;
+		if (!TryLoad(out string error))
+			GD.PushError($"[UpgradeRoller] {error}");
+	}
+
+	/// <summary>Lit et contrôle tout le fichier (plan 26 Q7b) ; rien n'est publié s'il est invalide.</summary>
+	public static bool TryLoad(out string error)
+	{
 		_loaded = true;
-
-		using FileAccess file = FileAccess.Open("res://data/progression/upgrade_rarities.json", FileAccess.ModeFlags.Read);
-		Json json = new();
-		if (file == null || json.Parse(file.GetAsText()) != Error.Ok)
+		if (_rarities.Count > 0)
 		{
-			GD.PushError("[UpgradeRoller] Cannot read data/progression/upgrade_rarities.json");
-			return;
+			error = null;
+			return true;
 		}
+		error = FileAccess.FileExists(ConfigPath) ? Apply(FileAccess.GetFileAsString(ConfigPath)) : "absent";
+		if (error != null)
+			error = $"{ConfigPath} : {error}";
+		return error == null;
+	}
 
-		Godot.Collections.Dictionary root = json.Data.AsGodotDictionary();
-		int rank = 0;
-		foreach (Variant item in root["rarities"].AsGodotArray())
+	/// <summary>Contrôle un texte de raretés et ne le publie que s'il est entièrement valide. Rend l'erreur, ou null.</summary>
+	public static string Apply(string json)
+	{
+		try
 		{
-			Godot.Collections.Dictionary dict = item.AsGodotDictionary();
-			_rarities.Add(new UpgradeRarity
+			using JsonDocument document = JsonDocument.Parse(json);
+			JsonConfigReader reader = new(document.RootElement);
+			JsonElement root = reader.Root;
+			reader.AllowOnly(root, "raretés", "rarities", "luck_steps_per_point", "zone_steps");
+			if (reader.Error != null)
+				return reader.Error;
+			if (!root.TryGetProperty("rarities", out JsonElement list) || list.ValueKind != JsonValueKind.Array || list.GetArrayLength() == 0)
+				return "rarities : liste non vide attendue";
+			List<UpgradeRarity> rarities = new();
+			HashSet<string> ids = new();
+			foreach (JsonElement entry in list.EnumerateArray())
 			{
-				Id = dict["id"].AsString(),
-				Weight = (float)dict["weight"].AsDouble(),
-				WeaponStats = (int)dict["weapon_stats"].AsDouble(),
-				WeaponGain = (float)dict["weapon_gain"].AsDouble(),
-				IntegerGain = (float)dict["integer_gain"].AsDouble(),
-				PassiveGain = (float)dict["passive_gain"].AsDouble(),
-				BumpChance = (float)dict["bump_chance"].AsDouble(),
-				Rank = rank++,
-			});
+				JsonConfigReader item = new(entry);
+				string id = entry.ValueKind == JsonValueKind.Object && entry.TryGetProperty("id", out JsonElement idValue)
+					&& idValue.ValueKind == JsonValueKind.String ? idValue.GetString() : null;
+				string where = $"rareté {id ?? "?"}";
+				if (string.IsNullOrEmpty(id))
+					return $"rareté n°{rarities.Count} : id absent";
+				if (!ids.Add(id))
+					return $"{where} : identifiant en double";
+				item.AllowOnly(entry, "clés", "id", "weight", "bump_chance", "weapon_stats", "weapon_gain", "integer_gain", "passive_gain");
+				UpgradeRarity rarity = new()
+				{
+					Id = id,
+					Weight = item.Positive(entry, "weight"),
+					BumpChance = item.NonNegative(entry, "bump_chance"),
+					WeaponStats = item.Integer(entry, "weapon_stats", 1, 8),
+					WeaponGain = item.Positive(entry, "weapon_gain"),
+					IntegerGain = item.Positive(entry, "integer_gain"),
+					PassiveGain = item.Positive(entry, "passive_gain"),
+					Rank = rarities.Count,
+				};
+				if (item.Error == null && rarity.BumpChance > 1f)
+					item.Fail(FormattableString.Invariant($"bump_chance : {rarity.BumpChance} (part dans [0 ; 1] attendue)"));
+				// Les objets vérifient qu'un facteur ne s'annule pas au gain le plus fort qu'ils supposent.
+				if (item.Error == null && rarity.PassiveGain > PassiveSouvenirDataLoader.MaxRarityGain)
+					item.Fail(FormattableString.Invariant($"passive_gain : {rarity.PassiveGain} (au plus {PassiveSouvenirDataLoader.MaxRarityGain}, borne des objets)"));
+				if (item.Error != null)
+					return $"{where}, {item.Error}";
+				rarities.Add(rarity);
+			}
+			float luckSteps = reader.NonNegative(root, "luck_steps_per_point");
+			JsonElement zones = reader.Section("zone_steps");
+			reader.AllowOnly(zones, "zone_steps", "fragile", "frayed", "erased");
+			int fragile = reader.Integer(zones, "fragile", 0, 10);
+			int frayed = reader.Integer(zones, "frayed", 0, 10);
+			int erased = reader.Integer(zones, "erased", 0, 10);
+			if (reader.Error != null)
+				return reader.Error;
+			_rarities.Clear();
+			_rarities.AddRange(rarities);
+			_luckStepsPerPoint = luckSteps;
+			_zoneSteps[ErasureManager.ErasureZonePhase.Fragile] = fragile;
+			_zoneSteps[ErasureManager.ErasureZonePhase.Frayed] = frayed;
+			_zoneSteps[ErasureManager.ErasureZonePhase.Erased] = erased;
+			_zoneSteps[ErasureManager.ErasureZonePhase.Void] = erased;
+			return null;
 		}
-
-		_luckStepsPerPoint = (float)root["luck_steps_per_point"].AsDouble();
-		Godot.Collections.Dictionary zones = root["zone_steps"].AsGodotDictionary();
-		_zoneSteps[ErasureManager.ErasureZonePhase.Fragile] = (int)zones["fragile"].AsDouble();
-		_zoneSteps[ErasureManager.ErasureZonePhase.Frayed] = (int)zones["frayed"].AsDouble();
-		_zoneSteps[ErasureManager.ErasureZonePhase.Erased] = (int)zones["erased"].AsDouble();
-		_zoneSteps[ErasureManager.ErasureZonePhase.Void] = (int)zones["erased"].AsDouble();
+		catch (JsonException ex)
+		{
+			return $"JSON illisible : {ex.Message}";
+		}
 	}
 }
