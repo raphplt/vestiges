@@ -1,5 +1,5 @@
 {
-  "_doc": "Contrat des objets (plan 26 Q7b), lu par ObjectDataValidator avant toute publication de passive_souvenirs.json. stats : statistiques qu'un effet d'objet peut porter, avec les types de modificateur admis et les réglages (params) que l'objet doit fournir quand cette statistique est la première de ses effets. inactive_stats : statistiques admises seulement sur un objet désactivé (gardé pour les sauvegardes). milestones : effets de palier et réglages obligatoires. Une statistique ou un effet ajouté ici doit avoir son lecteur dans le code.",
+  "_doc": "Contrat des objets (plan 26 Q7b), lu par ObjectDataValidator avant toute publication de passive_souvenirs.json. stats : statistiques qu'un effet d'objet peut porter, avec les types de modificateur admis et les réglages (params) que l'objet doit fournir quand cette statistique est la première de ses effets. inactive_stats : statistiques admises seulement sur un objet désactivé (gardé pour les sauvegardes). milestones : effets de palier et réglages obligatoires. Une statistique ou un effet ajouté ici doit avoir son lecteur dans le code. player_stats : statistiques que le joueur applique lui-même (Player.ApplyPerkModifier), seules admises pour une bénédiction de Mémorial.",
   "stats": {
     "attack_speed": {
       "modifiers": [
@@ -351,5 +351,26 @@
       "delay_seconds",
       "ratio"
     ]
-  }
+  },
+  "player_stats": [
+    "damage",
+    "speed",
+    "max_hp",
+    "attack_speed",
+    "aoe_radius",
+    "attack_range",
+    "regen_rate",
+    "lifesteal",
+    "armor",
+    "shield",
+    "crit_chance",
+    "crit_multiplier",
+    "projectile_pierce",
+    "xp_magnet_radius",
+    "luck",
+    "xp_gain",
+    "dash_recharge",
+    "projectile_bonus",
+    "status_duration"
+  ]
 }

@@ -53,6 +53,105 @@ public sealed class JsonConfigReader
         return (int)value;
     }
 
+    /// <summary>Texte obligatoire et non vide.</summary>
+    public string Text(JsonElement owner, string key)
+    {
+        if (Error != null)
+            return null;
+        if (owner.ValueKind != JsonValueKind.Object || !owner.TryGetProperty(key, out JsonElement element))
+        {
+            Error = $"{key} absent";
+            return null;
+        }
+        if (element.ValueKind != JsonValueKind.String || string.IsNullOrEmpty(element.GetString()))
+        {
+            Error = $"{key} : texte non vide attendu";
+            return null;
+        }
+        return element.GetString();
+    }
+
+    /// <summary>Texte obligatoire pris dans <paramref name="allowed"/> (identifiant d'un autre catalogue).</summary>
+    public string OneOf(JsonElement owner, string key, IReadOnlyCollection<string> allowed)
+    {
+        string value = Text(owner, key);
+        if (value != null && !Contains(allowed, value))
+            Error = $"{key} : « {value} » inconnu ({string.Join(", ", allowed)})";
+        return Error == null ? value : null;
+    }
+
+    /// <summary>Chemin d'une ressource du projet (sans « res:// ») qui doit exister.</summary>
+    public string Resource(JsonElement owner, string key, Func<string, bool> exists)
+    {
+        string path = Text(owner, key);
+        if (path != null && !exists("res://" + path))
+            Error = $"{key} : image « {path} » introuvable";
+        return Error == null ? path : null;
+    }
+
+    /// <summary>Booléen facultatif, faux par défaut.</summary>
+    public bool Flag(JsonElement owner, string key)
+    {
+        if (Error != null || owner.ValueKind != JsonValueKind.Object || !owner.TryGetProperty(key, out JsonElement element))
+            return false;
+        if (element.ValueKind is not (JsonValueKind.True or JsonValueKind.False))
+        {
+            Error = $"{key} : booléen attendu";
+            return false;
+        }
+        return element.GetBoolean();
+    }
+
+    /// <summary>Intervalle [min ; max] écrit comme un tableau de deux nombres, chacun au moins <paramref name="floor"/>.</summary>
+    public (float Min, float Max) Range(JsonElement owner, string key, float floor, float ceiling = float.MaxValue)
+    {
+        if (Error != null)
+            return (0f, 0f);
+        if (owner.ValueKind != JsonValueKind.Object || !owner.TryGetProperty(key, out JsonElement element)
+            || element.ValueKind != JsonValueKind.Array || element.GetArrayLength() != 2)
+        {
+            Error = $"{key} : intervalle [min, max] attendu";
+            return (0f, 0f);
+        }
+        float min = (float)(element[0].ValueKind == JsonValueKind.Number ? element[0].GetDouble() : double.NaN);
+        float max = (float)(element[1].ValueKind == JsonValueKind.Number ? element[1].GetDouble() : double.NaN);
+        if (!float.IsFinite(min) || !float.IsFinite(max) || min < floor || max > ceiling || min > max)
+        {
+            Error = ceiling == float.MaxValue
+                ? FormattableString.Invariant($"{key} : [{min}, {max}] (intervalle croissant, au moins {floor}, attendu)")
+                : FormattableString.Invariant($"{key} : [{min}, {max}] (intervalle croissant dans [{floor} ; {ceiling}] attendu)");
+            return (0f, 0f);
+        }
+        return (min, max);
+    }
+
+    /// <summary>Tableau obligatoire d'au moins <paramref name="minCount"/> éléments.</summary>
+    public List<JsonElement> List(JsonElement owner, string key, int minCount)
+    {
+        List<JsonElement> items = new();
+        if (Error != null)
+            return items;
+        if (owner.ValueKind != JsonValueKind.Object || !owner.TryGetProperty(key, out JsonElement element)
+            || element.ValueKind != JsonValueKind.Array || element.GetArrayLength() < minCount)
+        {
+            Error = $"{key} : liste d'au moins {minCount} élément(s) attendue";
+            return items;
+        }
+        foreach (JsonElement item in element.EnumerateArray())
+            items.Add(item);
+        return items;
+    }
+
+    private static bool Contains(IReadOnlyCollection<string> values, string value)
+    {
+        foreach (string candidate in values)
+        {
+            if (candidate == value)
+                return true;
+        }
+        return false;
+    }
+
     /// <summary>Refuse une clé inconnue et une clé en double dans <paramref name="owner"/>.</summary>
     public void AllowOnly(JsonElement owner, string where, params string[] keys)
     {

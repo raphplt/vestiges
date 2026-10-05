@@ -37,4 +37,37 @@ public static class DataKeySets
 		}
 		return keys;
 	}
+
+	/// <summary>Identifiants (« id ») des entrées d'une liste <paramref name="arrayKey"/> d'un fichier de référence.</summary>
+	public static HashSet<string> ListIds(string path, string arrayKey)
+	{
+		string cacheKey = path + "#" + arrayKey;
+		if (_cache.TryGetValue(cacheKey, out HashSet<string> ids))
+			return ids;
+
+		ids = new HashSet<string>();
+		_cache[cacheKey] = ids;
+		if (!FileAccess.FileExists(path))
+		{
+			GD.PushError($"[DataKeySets] {path} introuvable");
+			return ids;
+		}
+		try
+		{
+			using JsonDocument document = JsonDocument.Parse(FileAccess.GetFileAsString(path));
+			if (document.RootElement.TryGetProperty(arrayKey, out JsonElement list) && list.ValueKind == JsonValueKind.Array)
+			{
+				foreach (JsonElement entry in list.EnumerateArray())
+				{
+					if (entry.ValueKind == JsonValueKind.Object && entry.TryGetProperty("id", out JsonElement id) && id.ValueKind == JsonValueKind.String)
+						ids.Add(id.GetString());
+				}
+			}
+		}
+		catch (JsonException ex)
+		{
+			GD.PushError($"[DataKeySets] {path} illisible : {ex.Message}");
+		}
+		return ids;
+	}
 }

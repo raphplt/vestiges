@@ -26,6 +26,9 @@ public partial class CatalogContractRegression : Node
             CheckObjects();
             CheckRarities();
             CheckOffer();
+            CheckLandmarks();
+            CheckBlessings();
+            CheckOublis();
             GD.Print($"[CatalogContractRegression] RESULT failures=0 checks={_checks}");
             GetTree().Quit(0);
         }
@@ -195,6 +198,83 @@ public partial class CatalogContractRegression : Node
             Check(rejected && config == null && message.Contains(expected, StringComparison.Ordinal), $"offre de niveau refusée ({label}) : {message}");
         }
     }
+
+    private void CheckLandmarks()
+    {
+        string valid = FileAccess.GetFileAsString("res://data/world/landmarks.json");
+        Func<string, bool> exists = path => ResourceLoader.Exists(path);
+        string[] rarities = { "common", "uncommon", "rare", "epic", "legendary" };
+        Check(LandmarkDataLoader.Apply(valid, exists, rarities) == null, "lieux du dépôt acceptés");
+        int shards = LandmarkDataLoader.Memorial.Shards;
+        (string, Action<JsonObject>, string)[] cases =
+        {
+            ("section absente", root => root.Remove("workshop"), "section workshop absente"),
+            ("réglage absent", root => root["memorial"]!.AsObject().Remove("hold_time"), "hold_time absent"),
+            ("rareté inconnue", root => root["rift"]!["offer_min_rarity"] = "mythique", "offer_min_rarity : « mythique » inconnu"),
+            ("image introuvable", root => root["workshop"]!["sprite"] = "assets/landmarks/absent.png", "sprite : image « assets/landmarks/absent.png » introuvable"),
+            ("intervalle décroissant", root => root["memorial"]!["shard_distance_px"] = new JsonArray(380, 200), "shard_distance_px : [380, 200]"),
+            ("couronne hors de la carte", root => root["rift"]!["placement"]![0]!["band"] = new JsonArray(0.5, 1.5), "band : [0.5, 1.5]"),
+            ("placement vide", root => root["workshop"]!["placement"] = new JsonArray(), "placement : liste d'au moins 1 élément(s) attendue"),
+            ("prix fractionnaire", root => root["memorial"]!["services"]!["heal_cost"] = 20.5, "heal_cost : 20.5"),
+            ("part de soin nulle", root => root["memorial"]!["services"]!["heal_percent"] = 0, "heal_percent : 0"),
+            ("chance au-delà de 1", root => root["rift"]!["erased_spawn"]!["chance"] = 1.5, "chance : 1.5 (part dans [0 ; 1] attendue)"),
+            ("clé inconnue", root => root["memorial"]!["shard_count"] = 3, "clé « shard_count » inconnue"),
+        };
+        foreach ((string label, Action<JsonObject> mutate, string expected) in cases)
+        {
+            JsonObject root = JsonNode.Parse(valid)!.AsObject();
+            root["memorial"]!["shards"] = 9;
+            mutate(root);
+            string message = LandmarkDataLoader.Apply(root.ToJsonString(), exists, rarities);
+            Check(message != null && message.Contains(expected, StringComparison.Ordinal), $"lieux refusés ({label}) : {message}");
+        }
+        Check(LandmarkDataLoader.Memorial.Shards == shards, "lieux : aucun refus n'a publié de valeur");
+    }
+
+    private void CheckBlessings()
+    {
+        string valid = FileAccess.GetFileAsString("res://data/progression/blessings.json");
+        Check(BlessingDataLoader.Apply(valid) == null, "bénédictions du dépôt acceptées");
+        int count = BlessingDataLoader.All.Count;
+        (string, Action<JsonObject>, string)[] cases =
+        {
+            ("statistique d'objet", root => Entry(root, "blessings", 0)["stat"] = "burn_chance", "« burn_chance » n'est pas une statistique du joueur"),
+            ("statistique inconnue", root => Entry(root, "blessings", 0)["stat"] = "max_hpp", "« max_hpp » n'est pas une statistique du joueur"),
+            ("modificateur non admis", root => Entry(root, "blessings", 0)["modifier_type"] = "multiplicative", "modifier_type : « multiplicative » non admis pour max_hp"),
+            ("valeur nulle", root => Entry(root, "blessings", 1)["amount"] = 0, "amount : 0"),
+            ("clé de traduction absente", root => Entry(root, "blessings", 0)["name_key"] = "BLESSING_ABSENTE", "clé « BLESSING_ABSENTE » absente des traductions"),
+            ("identifiant en double", root => Entry(root, "blessings", 1)["id"] = "blessing_breath", "identifiant en double"),
+            ("champ inconnu", root => Entry(root, "blessings", 0)["rarete"] = "rare", "clé « rarete » inconnue"),
+        };
+        foreach ((string label, Action<JsonObject> mutate, string expected) in cases)
+        {
+            string message = BlessingDataLoader.Apply(Mutated(valid, mutate));
+            Check(message != null && message.Contains(expected, StringComparison.Ordinal), $"bénédictions refusées ({label}) : {message}");
+        }
+        Check(BlessingDataLoader.All.Count == count, "bénédictions : aucun refus n'a publié de liste");
+    }
+
+    private void CheckOublis()
+    {
+        string valid = FileAccess.GetFileAsString("res://data/progression/oublis.json");
+        Func<string, bool> translated = key => TranslationServer.Translate(key) != key;
+        Check(OubliDataLoader.Apply(valid, translated) == null, "Oublis du dépôt acceptés");
+        (string, Action<JsonObject>, string)[] cases =
+        {
+            ("effet inconnu", root => Entry(root, "oublis", 0)["effect"] = "extra_boss", "effect : « extra_boss » inconnu"),
+            ("valeur nulle", root => Entry(root, "oublis", 1)["amount"] = 0, "amount : 0 (strictement positif attendu)"),
+            ("définitif non booléen", root => Entry(root, "oublis", 5)["permanent"] = "oui", "permanent : booléen attendu"),
+            ("description non traduite", root => Entry(root, "oublis", 0)["description_key"] = "OUBLI_ABSENT_DESC", "clé « OUBLI_ABSENT_DESC » absente des traductions"),
+            ("identifiant en double", root => Entry(root, "oublis", 1)["id"] = "oubli_fear", "identifiant en double"),
+        };
+        foreach ((string label, Action<JsonObject> mutate, string expected) in cases)
+        {
+            string message = OubliDataLoader.Apply(Mutated(valid, mutate), translated);
+            Check(message != null && message.Contains(expected, StringComparison.Ordinal), $"Oublis refusés ({label}) : {message}");
+        }
+    }
+
+    private static JsonObject Entry(JsonObject root, string list, int index) => root[list]![index]!.AsObject();
 
     private static JsonObject Item(JsonArray items, string id)
     {

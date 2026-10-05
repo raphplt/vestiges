@@ -58,11 +58,25 @@ public partial class CatalogValuesProbe : Node
             lines.Add(Invariant($"rarity steps {phase} luck1={UpgradeRoller.BumpSteps(1f, phase, 0):R} peril3={UpgradeRoller.BumpSteps(0f, phase, 3):R}"));
         LevelUpOfferConfig offer = LevelUpOfferConfig.Load();
         lines.Add(Invariant($"offer upgrade={offer.UpgradeWeight:R} min={offer.MinWeight:R}"));
+        // Q7c-1 : Mémoriaux, Ateliers, Failles, bénédictions, Oublis.
+        MemorialConfig memorial = LandmarkDataLoader.Memorial;
+        lines.Add(Invariant($"memorial {memorial.SpriteDormant} {memorial.SpriteAwake} {memorial.SpriteShard} {Bands(memorial.Placement)} spacing={memorial.MinSpacingPx:R} hold={memorial.HoldTime:R} shards={memorial.Shards} dist={memorial.ShardDistanceMin:R}-{memorial.ShardDistanceMax:R} time={memorial.ShardTime:R} pickup={memorial.ShardPickupPx:R} choices={memorial.BlessingChoices} min={memorial.BlessingMinRarity} heal={memorial.HealCost}/{memorial.HealPercent:R} growth={memorial.CostGrowth:R} lift={memorial.LiftOubliCost} reroll={memorial.BlessingRerollCost}"));
+        WorkshopConfig workshop = LandmarkDataLoader.Workshop;
+        lines.Add(Invariant($"workshop {workshop.Sprite} {Bands(workshop.Placement)} spacing={workshop.MinSpacingPx:R} weapon={workshop.WeaponCost} min={workshop.WeaponMinRarity} retemper={workshop.RetemperCost} temper={workshop.TemperUpgrades} growth={workshop.CostGrowth:R}"));
+        RiftConfig rift = LandmarkDataLoader.Rift;
+        lines.Add(Invariant($"rift {rift.SpriteOpen} {rift.SpriteClosed} {Bands(rift.Placement)} spacing={rift.MinSpacingPx:R} hold={rift.HoldTime:R} offers={rift.Offers} min={rift.OfferMinRarity} peril={rift.PerilPerOffer} open={rift.MaxOpen} chance={rift.SpawnChance:R} cooldown={rift.SpawnCooldown:R} dist={rift.SpawnDistanceMin:R}-{rift.SpawnDistanceMax:R}"));
+        foreach (StatEffectData blessing in BlessingDataLoader.All)
+            lines.Add(Invariant($"blessing {blessing.Id} {blessing.NameKey} {blessing.Stat} {blessing.ModifierType} {blessing.Amount:R}"));
+        foreach (OubliData oubli in OubliDataLoader.All)
+            lines.Add(Invariant($"oubli {oubli.Id} {oubli.NameKey} {oubli.DescriptionKey} {oubli.Effect} {oubli.Amount:R} permanent={oubli.Permanent}"));
         foreach (string line in lines)
             GD.Print($"[CatalogValuesProbe] {line}");
         GD.Print($"[CatalogValuesProbe] RESULT lines={lines.Count}");
         GetTree().Quit(0);
     }
+
+    private static string Bands(List<LandmarkBand> bands) =>
+        string.Join(";", bands.ConvertAll(band => Invariant($"{band.Count}@{band.Min:R}-{band.Max:R}")));
 
     private static string Invariant(FormattableString text) => text.ToString(CultureInfo.InvariantCulture);
 }

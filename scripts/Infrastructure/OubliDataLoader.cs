@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Text.Json;
 using Godot;
 
 namespace Vestiges.Infrastructure;
@@ -19,45 +21,105 @@ public class OubliData
         string.Format(TranslationServer.Translate(DescriptionKey), Mathf.RoundToInt(Mathf.Abs(Amount) < 1f ? Amount * 100f : Amount));
 }
 
-/// <summary>Oublis des Failles (data/progression/oublis.json).</summary>
+/// <summary>
+/// Oublis des Failles (data/progression/oublis.json), contrôlés en entier (plan 26 Q7c) : identifiant unique, clés
+/// traduites, effet connu, valeur strictement positive.
+/// </summary>
 public static class OubliDataLoader
 {
+    private const string ConfigPath = "res://data/progression/oublis.json";
+
+    /// <summary>
+    /// Effets qu'un Oubli peut nourrir, chacun avec son lecteur : apparitions (extra_elite, affix_chance,
+    /// enemy_detection), Effacement (erasure_speed), Résurgences (resurgence_interval), coffres et carte
+    /// (chest_signals, chest_rarity_down), brouillard (fog_reveal), Mémoriaux (collapse_memorial).
+    /// </summary>
+    public static readonly IReadOnlyList<string> KnownEffects = new[]
+    {
+        "extra_elite", "erasure_speed", "resurgence_interval", "chest_signals", "fog_reveal", "collapse_memorial",
+        "affix_chance", "chest_rarity_down", "enemy_detection",
+    };
+
     private static readonly List<OubliData> _oublis = new();
     private static bool _loaded;
+    private static string _loadError;
 
     public static IReadOnlyList<OubliData> All
     {
         get
         {
-            if (!_loaded)
-                Load();
+            Load();
             return _oublis;
         }
     }
 
+    /// <summary>Liste lue et contrôlée ; faux, avec la raison, si elle a été refusée (le chargement de la run s'arrête).</summary>
+    public static bool TryLoad(out string error)
+    {
+        Load();
+        error = _loadError;
+        return error == null;
+    }
+
     private static void Load()
     {
-        _loaded = true;
-        using FileAccess file = FileAccess.Open("res://data/progression/oublis.json", FileAccess.ModeFlags.Read);
-        Json json = new();
-        if (file == null || json.Parse(file.GetAsText()) != Error.Ok)
-        {
-            GD.PushError("[OubliDataLoader] Cannot read data/progression/oublis.json");
+        if (_loaded)
             return;
-        }
-
-        foreach (Variant item in json.Data.AsGodotDictionary()["oublis"].AsGodotArray())
+        _loaded = true;
+        string error = FileAccess.FileExists(ConfigPath)
+            ? Apply(FileAccess.GetFileAsString(ConfigPath), key => TranslationServer.Translate(key) != key)
+            : "absent";
+        if (error != null)
         {
-            Godot.Collections.Dictionary dict = item.AsGodotDictionary();
-            _oublis.Add(new OubliData
+            _loadError = $"{ConfigPath} : {error}";
+            GD.PushError($"[OubliDataLoader] {_loadError}");
+        }
+    }
+
+    /// <summary>Contrôle un texte d'Oublis et ne le publie que s'il est entièrement valide. Rend l'erreur, ou null.</summary>
+    public static string Apply(string json, Func<string, bool> translated)
+    {
+        try
+        {
+            using JsonDocument document = JsonDocument.Parse(json);
+            JsonConfigReader reader = new(document.RootElement);
+            reader.AllowOnly(reader.Root, "Oublis", "oublis");
+            List<OubliData> oublis = new();
+            HashSet<string> ids = new();
+            foreach (JsonElement entry in reader.List(reader.Root, "oublis", 1))
             {
-                Id = dict["id"].AsString(),
-                NameKey = dict["name_key"].AsString(),
-                DescriptionKey = dict["description_key"].AsString(),
-                Effect = dict["effect"].AsString(),
-                Amount = (float)dict["amount"].AsDouble(),
-                Permanent = dict.ContainsKey("permanent") && dict["permanent"].AsBool(),
-            });
+                JsonConfigReader item = new(entry);
+                string id = item.Text(entry, "id");
+                item.AllowOnly(entry, "clés", "id", "name_key", "description_key", "effect", "amount", "permanent");
+                OubliData oubli = new()
+                {
+                    Id = id,
+                    NameKey = item.Text(entry, "name_key"),
+                    DescriptionKey = item.Text(entry, "description_key"),
+                    Effect = item.OneOf(entry, "effect", KnownEffects),
+                    Amount = item.Positive(entry, "amount"),
+                    Permanent = item.Flag(entry, "permanent"),
+                };
+                if (item.Error == null && !ids.Add(id))
+                    item.Fail("identifiant en double");
+                foreach (string key in new[] { oubli.NameKey, oubli.DescriptionKey })
+                {
+                    if (item.Error == null && !translated(key))
+                        item.Fail($"clé « {key} » absente des traductions");
+                }
+                if (item.Error != null)
+                    return $"Oubli {id ?? "?"} : {item.Error}";
+                oublis.Add(oubli);
+            }
+            if (reader.Error != null)
+                return reader.Error;
+            _oublis.Clear();
+            _oublis.AddRange(oublis);
+            return null;
+        }
+        catch (JsonException ex)
+        {
+            return $"JSON illisible : {ex.Message}";
         }
     }
 }

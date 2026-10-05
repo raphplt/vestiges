@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Text.Json;
 using Godot;
 
 namespace Vestiges.Infrastructure;
@@ -13,21 +15,21 @@ public class MemorialConfig
     public string SpriteAwake;
     public string SpriteShard;
     public List<LandmarkBand> Placement = new();
-    public float MinSpacingPx = 900f;
-    public float HoldTime = 0.6f;
-    public int Shards = 3;
-    public float ShardDistanceMin = 200f;
-    public float ShardDistanceMax = 380f;
-    public float ShardTime = 20f;
-    public float ShardPickupPx = 30f;
-    public int BlessingChoices = 3;
-    public string BlessingMinRarity = "uncommon";
-    public int HealCost = 20;
-    public float HealPercent = 0.4f;
-    public float CostGrowth = 0.5f;
-    public int LiftOubliCost = 40;
+    public float MinSpacingPx;
+    public float HoldTime;
+    public int Shards;
+    public float ShardDistanceMin;
+    public float ShardDistanceMax;
+    public float ShardTime;
+    public float ShardPickupPx;
+    public int BlessingChoices;
+    public string BlessingMinRarity;
+    public int HealCost;
+    public float HealPercent;
+    public float CostGrowth;
+    public int LiftOubliCost;
     /// <summary>Relancer les trois bénédictions d'un Mémorial qu'on vient de raviver (plan 17, 4.5).</summary>
-    public int BlessingRerollCost = 15;
+    public int BlessingRerollCost;
 }
 
 /// <summary>Réglages des Ateliers (section <c>workshop</c> de data/world/landmarks.json, plan 22 C2).</summary>
@@ -35,12 +37,12 @@ public class WorkshopConfig
 {
     public string Sprite;
     public List<LandmarkBand> Placement = new();
-    public float MinSpacingPx = 900f;
-    public int WeaponCost = 30;
-    public string WeaponMinRarity = "rare";
-    public int RetemperCost = 20;
-    public int TemperUpgrades = 5;
-    public float CostGrowth = 0.5f;
+    public float MinSpacingPx;
+    public int WeaponCost;
+    public string WeaponMinRarity;
+    public int RetemperCost;
+    public int TemperUpgrades;
+    public float CostGrowth;
 }
 
 /// <summary>Réglages des Failles (section <c>rift</c> de data/world/landmarks.json).</summary>
@@ -49,31 +51,35 @@ public class RiftConfig
     public string SpriteOpen;
     public string SpriteClosed;
     public List<LandmarkBand> Placement = new();
-    public float MinSpacingPx = 700f;
-    public float HoldTime = 0.8f;
-    public int Offers = 3;
-    public string OfferMinRarity = "epic";
-    public int PerilPerOffer = 1;
-    public int MaxOpen = 6;
-    public float SpawnChance = 0.08f;
-    public float SpawnCooldown = 45f;
-    public float SpawnDistanceMin = 500f;
-    public float SpawnDistanceMax = 1400f;
+    public float MinSpacingPx;
+    public float HoldTime;
+    public int Offers;
+    public string OfferMinRarity;
+    public int PerilPerOffer;
+    public int MaxOpen;
+    public float SpawnChance;
+    public float SpawnCooldown;
+    public float SpawnDistanceMin;
+    public float SpawnDistanceMax;
 }
 
-/// <summary>Lieux du monde à trouver hors coffres : Mémoriaux et Failles (data/world/landmarks.json).</summary>
+/// <summary>
+/// Lieux du monde à trouver hors coffres : Mémoriaux, Ateliers et Failles (data/world/landmarks.json), contrôlés en
+/// entier (plan 26 Q7c) : tous les champs sont obligatoires, les raretés minimales existent, les images aussi.
+/// </summary>
 public static class LandmarkDataLoader
 {
+    private const string ConfigPath = "res://data/world/landmarks.json";
     private static MemorialConfig _memorial;
     private static RiftConfig _rift;
     private static WorkshopConfig _workshop;
+    private static string _loadError;
 
     public static MemorialConfig Memorial
     {
         get
         {
-            if (_memorial == null)
-                Load();
+            Load();
             return _memorial;
         }
     }
@@ -82,8 +88,7 @@ public static class LandmarkDataLoader
     {
         get
         {
-            if (_workshop == null)
-                Load();
+            Load();
             return _workshop;
         }
     }
@@ -92,101 +97,142 @@ public static class LandmarkDataLoader
     {
         get
         {
-            if (_rift == null)
-                Load();
+            Load();
             return _rift;
         }
     }
 
+    /// <summary>Réglages lus et contrôlés ; faux, avec la raison, s'ils ont été refusés (le chargement de la run s'arrête).</summary>
+    public static bool TryLoad(out string error)
+    {
+        Load();
+        error = _loadError;
+        return error == null;
+    }
+
     private static void Load()
     {
+        if (_memorial != null)
+            return;
+        // Refusés, les réglages restent vides : la run ne démarre pas (GameBootstrap).
         _memorial = new MemorialConfig();
         _rift = new RiftConfig();
         _workshop = new WorkshopConfig();
-        using FileAccess file = FileAccess.Open("res://data/world/landmarks.json", FileAccess.ModeFlags.Read);
-        Json json = new();
-        if (file == null || json.Parse(file.GetAsText()) != Error.Ok)
+        string error = FileAccess.FileExists(ConfigPath)
+            ? Apply(FileAccess.GetFileAsString(ConfigPath), path => ResourceLoader.Exists(path), RarityIds())
+            : "absent";
+        if (error != null)
         {
-            GD.PushError("[LandmarkDataLoader] Cannot read data/world/landmarks.json");
-            return;
+            _loadError = $"{ConfigPath} : {error}";
+            GD.PushError($"[LandmarkDataLoader] {_loadError}");
         }
-
-        Godot.Collections.Dictionary root = json.Data.AsGodotDictionary();
-        Godot.Collections.Dictionary memorial = root["memorial"].AsGodotDictionary();
-        MemorialConfig c = _memorial;
-        c.SpriteDormant = memorial["sprite_dormant"].AsString();
-        c.SpriteAwake = memorial["sprite_awake"].AsString();
-        c.SpriteShard = memorial["sprite_shard"].AsString();
-        c.Placement = ReadBands(memorial["placement"].AsGodotArray());
-        c.MinSpacingPx = Float(memorial, "min_spacing_px", c.MinSpacingPx);
-        c.HoldTime = Float(memorial, "hold_time", c.HoldTime);
-        c.Shards = (int)Float(memorial, "shards", c.Shards);
-        if (memorial.ContainsKey("shard_distance_px"))
-        {
-            Godot.Collections.Array shardDistance = memorial["shard_distance_px"].AsGodotArray();
-            c.ShardDistanceMin = (float)shardDistance[0].AsDouble();
-            c.ShardDistanceMax = (float)shardDistance[1].AsDouble();
-        }
-        c.ShardTime = Float(memorial, "shard_time", c.ShardTime);
-        c.ShardPickupPx = Float(memorial, "shard_pickup_px", c.ShardPickupPx);
-        c.BlessingChoices = (int)Float(memorial, "blessing_choices", c.BlessingChoices);
-        c.BlessingMinRarity = memorial.ContainsKey("blessing_min_rarity") ? memorial["blessing_min_rarity"].AsString() : c.BlessingMinRarity;
-        Godot.Collections.Dictionary services = memorial.ContainsKey("services") ? memorial["services"].AsGodotDictionary() : new();
-        c.HealCost = (int)Float(services, "heal_cost", c.HealCost);
-        c.HealPercent = Float(services, "heal_percent", c.HealPercent);
-        c.CostGrowth = Float(services, "cost_growth", c.CostGrowth);
-        c.LiftOubliCost = (int)Float(services, "lift_oubli_cost", c.LiftOubliCost);
-        c.BlessingRerollCost = (int)Float(services, "blessing_reroll_cost", c.BlessingRerollCost);
-
-        Godot.Collections.Dictionary rift = root["rift"].AsGodotDictionary();
-        RiftConfig r = _rift;
-        r.SpriteOpen = rift["sprite_open"].AsString();
-        r.SpriteClosed = rift["sprite_closed"].AsString();
-        r.Placement = ReadBands(rift["placement"].AsGodotArray());
-        r.MinSpacingPx = Float(rift, "min_spacing_px", r.MinSpacingPx);
-        r.HoldTime = Float(rift, "hold_time", r.HoldTime);
-        r.Offers = (int)Float(rift, "offers", r.Offers);
-        r.OfferMinRarity = rift.ContainsKey("offer_min_rarity") ? rift["offer_min_rarity"].AsString() : r.OfferMinRarity;
-        r.PerilPerOffer = (int)Float(rift, "peril_per_offer", r.PerilPerOffer);
-        Godot.Collections.Dictionary spawn = rift.ContainsKey("erased_spawn") ? rift["erased_spawn"].AsGodotDictionary() : new();
-        r.MaxOpen = (int)Float(spawn, "max_open", r.MaxOpen);
-        r.SpawnChance = Float(spawn, "chance", r.SpawnChance);
-        r.SpawnCooldown = Float(spawn, "cooldown_s", r.SpawnCooldown);
-        if (spawn.ContainsKey("distance_px"))
-        {
-            Godot.Collections.Array distance = spawn["distance_px"].AsGodotArray();
-            r.SpawnDistanceMin = (float)distance[0].AsDouble();
-            r.SpawnDistanceMax = (float)distance[1].AsDouble();
-        }
-        ReadWorkshop(root["workshop"].AsGodotDictionary());
     }
 
-    private static void ReadWorkshop(Godot.Collections.Dictionary workshop)
+    /// <summary>Raretés d'amélioration connues : les raretés minimales des lieux en font partie.</summary>
+    private static HashSet<string> RarityIds() => DataKeySets.ListIds("res://data/progression/upgrade_rarities.json", "rarities");
+
+    /// <summary>Contrôle un texte de réglages ; ne le publie que s'il est entièrement valide. Rend l'erreur, ou null.</summary>
+    public static string Apply(string json, Func<string, bool> exists, IReadOnlyCollection<string> rarityIds)
     {
-        WorkshopConfig w = _workshop;
-        w.Sprite = workshop["sprite"].AsString();
-        w.Placement = ReadBands(workshop["placement"].AsGodotArray());
-        w.MinSpacingPx = Float(workshop, "min_spacing_px", w.MinSpacingPx);
-        Godot.Collections.Dictionary services = workshop.ContainsKey("services") ? workshop["services"].AsGodotDictionary() : new();
-        w.WeaponCost = (int)Float(services, "weapon_cost", w.WeaponCost);
-        w.WeaponMinRarity = services.ContainsKey("weapon_min_rarity") ? services["weapon_min_rarity"].AsString() : w.WeaponMinRarity;
-        w.RetemperCost = (int)Float(services, "retemper_cost", w.RetemperCost);
-        w.TemperUpgrades = (int)Float(services, "temper_upgrades", w.TemperUpgrades);
-        w.CostGrowth = Float(services, "cost_growth", w.CostGrowth);
+        try
+        {
+            using JsonDocument document = JsonDocument.Parse(json);
+            JsonConfigReader reader = new(document.RootElement);
+            reader.AllowOnly(reader.Root, "lieux", "memorial", "rift", "workshop");
+
+            JsonElement m = reader.Section("memorial");
+            reader.AllowOnly(m, "memorial", "sprite_dormant", "sprite_awake", "sprite_shard", "placement", "min_spacing_px",
+                "hold_time", "shards", "shard_distance_px", "shard_time", "shard_pickup_px", "blessing_choices",
+                "blessing_min_rarity", "services");
+            JsonElement ms = reader.Section(m, "services");
+            reader.AllowOnly(ms, "memorial.services", "heal_cost", "heal_percent", "cost_growth", "lift_oubli_cost", "blessing_reroll_cost");
+            (float shardMin, float shardMax) = reader.Range(m, "shard_distance_px", 0f);
+            MemorialConfig memorial = new()
+            {
+                SpriteDormant = reader.Resource(m, "sprite_dormant", exists),
+                SpriteAwake = reader.Resource(m, "sprite_awake", exists),
+                SpriteShard = reader.Resource(m, "sprite_shard", exists),
+                Placement = Bands(reader, m),
+                MinSpacingPx = reader.Positive(m, "min_spacing_px"),
+                HoldTime = reader.Positive(m, "hold_time"),
+                Shards = reader.Count(m, "shards", 12),
+                ShardDistanceMin = shardMin,
+                ShardDistanceMax = shardMax,
+                ShardTime = reader.Positive(m, "shard_time"),
+                ShardPickupPx = reader.Positive(m, "shard_pickup_px"),
+                BlessingChoices = reader.Count(m, "blessing_choices", 6),
+                BlessingMinRarity = reader.OneOf(m, "blessing_min_rarity", rarityIds),
+                HealCost = reader.Integer(ms, "heal_cost", 0, 100_000),
+                HealPercent = reader.Ratio(ms, "heal_percent"),
+                CostGrowth = reader.NonNegative(ms, "cost_growth"),
+                LiftOubliCost = reader.Integer(ms, "lift_oubli_cost", 0, 100_000),
+                BlessingRerollCost = reader.Integer(ms, "blessing_reroll_cost", 0, 100_000),
+            };
+
+            JsonElement r = reader.Section("rift");
+            reader.AllowOnly(r, "rift", "sprite_open", "sprite_closed", "placement", "min_spacing_px", "hold_time", "offers",
+                "offer_min_rarity", "peril_per_offer", "erased_spawn");
+            JsonElement spawn = reader.Section(r, "erased_spawn");
+            reader.AllowOnly(spawn, "rift.erased_spawn", "max_open", "chance", "cooldown_s", "distance_px");
+            (float spawnMin, float spawnMax) = reader.Range(spawn, "distance_px", 0f);
+            RiftConfig rift = new()
+            {
+                SpriteOpen = reader.Resource(r, "sprite_open", exists),
+                SpriteClosed = reader.Resource(r, "sprite_closed", exists),
+                Placement = Bands(reader, r),
+                MinSpacingPx = reader.Positive(r, "min_spacing_px"),
+                HoldTime = reader.Positive(r, "hold_time"),
+                Offers = reader.Count(r, "offers", 6),
+                OfferMinRarity = reader.OneOf(r, "offer_min_rarity", rarityIds),
+                PerilPerOffer = reader.Integer(r, "peril_per_offer", 0, 100),
+                MaxOpen = reader.Integer(spawn, "max_open", 0, 100),
+                SpawnChance = reader.NonNegative(spawn, "chance"),
+                SpawnCooldown = reader.NonNegative(spawn, "cooldown_s"),
+                SpawnDistanceMin = spawnMin,
+                SpawnDistanceMax = spawnMax,
+            };
+            if (reader.Error == null && rift.SpawnChance > 1f)
+                reader.Fail(FormattableString.Invariant($"chance : {rift.SpawnChance} (part dans [0 ; 1] attendue)"));
+
+            JsonElement w = reader.Section("workshop");
+            reader.AllowOnly(w, "workshop", "sprite", "placement", "min_spacing_px", "services");
+            JsonElement ws = reader.Section(w, "services");
+            reader.AllowOnly(ws, "workshop.services", "weapon_cost", "weapon_min_rarity", "retemper_cost", "temper_upgrades", "cost_growth");
+            WorkshopConfig workshop = new()
+            {
+                Sprite = reader.Resource(w, "sprite", exists),
+                Placement = Bands(reader, w),
+                MinSpacingPx = reader.Positive(w, "min_spacing_px"),
+                WeaponCost = reader.Integer(ws, "weapon_cost", 0, 100_000),
+                WeaponMinRarity = reader.OneOf(ws, "weapon_min_rarity", rarityIds),
+                RetemperCost = reader.Integer(ws, "retemper_cost", 0, 100_000),
+                TemperUpgrades = reader.Integer(ws, "temper_upgrades", 0, 100),
+                CostGrowth = reader.NonNegative(ws, "cost_growth"),
+            };
+            if (reader.Error != null)
+                return reader.Error;
+            _memorial = memorial;
+            _rift = rift;
+            _workshop = workshop;
+            _loadError = null;
+            return null;
+        }
+        catch (JsonException ex)
+        {
+            return $"JSON illisible : {ex.Message}";
+        }
     }
 
-    /// <summary>Réglage optionnel : la valeur par défaut du modèle quand la clé manque.</summary>
-    private static float Float(Godot.Collections.Dictionary dict, string key, float fallback) =>
-        dict.ContainsKey(key) ? (float)dict[key].AsDouble() : fallback;
-
-    private static List<LandmarkBand> ReadBands(Godot.Collections.Array groups)
+    /// <summary>Groupes de placement : combien, et dans quelle couronne (fraction du rayon de carte, de 0 à 1).</summary>
+    private static List<LandmarkBand> Bands(JsonConfigReader reader, JsonElement owner)
     {
         List<LandmarkBand> bands = new();
-        foreach (Variant item in groups)
+        foreach (JsonElement group in reader.List(owner, "placement", 1))
         {
-            Godot.Collections.Dictionary group = item.AsGodotDictionary();
-            Godot.Collections.Array band = group["band"].AsGodotArray();
-            bands.Add(new LandmarkBand((int)group["count"].AsDouble(), (float)band[0].AsDouble(), (float)band[1].AsDouble()));
+            reader.AllowOnly(group, "placement", "count", "band");
+            int count = reader.Integer(group, "count", 0, 1000);
+            (float min, float max) = reader.Range(group, "band", 0f, 1f);
+            bands.Add(new LandmarkBand(count, min, max));
         }
         return bands;
     }

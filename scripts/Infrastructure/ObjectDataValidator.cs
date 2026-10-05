@@ -28,6 +28,8 @@ public static class ObjectDataValidator
     {
         public readonly Dictionary<string, (HashSet<string> Modifiers, string[] Params)> Stats = new();
         public readonly HashSet<string> InactiveStats = new();
+        /// <summary>Statistiques que le joueur applique lui-même : seules admises pour une bénédiction.</summary>
+        public readonly HashSet<string> PlayerStats = new();
         public readonly Dictionary<string, string[]> Milestones = new();
     }
 
@@ -47,6 +49,13 @@ public static class ObjectDataValidator
             }
             foreach (JsonElement stat in root.GetProperty("inactive_stats").EnumerateArray())
                 contract.InactiveStats.Add(stat.GetString());
+            foreach (JsonElement stat in root.GetProperty("player_stats").EnumerateArray())
+            {
+                // Une statistique du joueur doit aussi dire ses modificateurs : les bénédictions les y lisent.
+                if (!contract.Stats.ContainsKey(stat.GetString()))
+                    throw new InvalidOperationException($"player_stats : « {stat.GetString()} » absente de stats");
+                contract.PlayerStats.Add(stat.GetString());
+            }
             foreach (JsonProperty milestone in root.GetProperty("milestones").EnumerateObject())
                 contract.Milestones[milestone.Name] = Strings(milestone.Value);
             error = null;
