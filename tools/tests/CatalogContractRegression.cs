@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Text.Json.Nodes;
 using Godot;
 using Vestiges.Infrastructure;
@@ -29,6 +30,8 @@ public partial class CatalogContractRegression : Node
             CheckLandmarks();
             CheckBlessings();
             CheckOublis();
+            CheckChests();
+            CheckFieldBonuses();
             GD.Print($"[CatalogContractRegression] RESULT failures=0 checks={_checks}");
             GetTree().Quit(0);
         }
@@ -217,7 +220,7 @@ public partial class CatalogContractRegression : Node
             ("placement vide", root => root["workshop"]!["placement"] = new JsonArray(), "placement : liste d'au moins 1 élément(s) attendue"),
             ("prix fractionnaire", root => root["memorial"]!["services"]!["heal_cost"] = 20.5, "heal_cost : 20.5"),
             ("part de soin nulle", root => root["memorial"]!["services"]!["heal_percent"] = 0, "heal_percent : 0"),
-            ("chance au-delà de 1", root => root["rift"]!["erased_spawn"]!["chance"] = 1.5, "chance : 1.5 (part dans [0 ; 1] attendue)"),
+            ("chance au-delà de 1", root => root["rift"]!["erased_spawn"]!["chance"] = 1.5, "chance : 1.5 (chance dans [0 ; 1] attendue)"),
             ("clé inconnue", root => root["memorial"]!["shard_count"] = 3, "clé « shard_count » inconnue"),
         };
         foreach ((string label, Action<JsonObject> mutate, string expected) in cases)
@@ -271,6 +274,90 @@ public partial class CatalogContractRegression : Node
         {
             string message = OubliDataLoader.Apply(Mutated(valid, mutate), translated);
             Check(message != null && message.Contains(expected, StringComparison.Ordinal), $"Oublis refusés ({label}) : {message}");
+        }
+    }
+
+    private void CheckChests()
+    {
+        string chests = FileAccess.GetFileAsString("res://data/chests/chests.json");
+        string placement = FileAccess.GetFileAsString("res://data/chests/chest_placement.json");
+        string statBonus = FileAccess.GetFileAsString("res://data/chests/chest_stat_bonus.json");
+        ObjectDataValidator.TryParseContract(FileAccess.GetFileAsString(ObjectDataValidator.ContractPath), out ObjectDataValidator.Contract contract, out _);
+        ChestDataLoader.References refs = new(path => ResourceLoader.Exists(path),
+            DataKeySets.ListIds("res://data/ui/rarities.json", "rarities"),
+            DataKeySets.StringList("res://data/enemies/_contract.json", "families"), LootTableLoader.Exists, contract);
+        Check(ChestDataLoader.Apply(chests, placement, statBonus, refs) == null, "coffres du dépôt acceptés (trois fichiers)");
+        int groups = ChestDataLoader.LoadPlacement().Groups.Count;
+        (string, Action<JsonArray>, string)[] chestCases =
+        {
+            ("rareté inconnue", list => list[0]!["rarity"] = "mythique", "rarity : « mythique » inconnu"),
+            ("famille d'effets inconnue", list => list[0]!["fx_family"] = "soie", "fx_family : « soie » inconnu"),
+            ("table de butin inconnue", list => list[1]!["loot_table_id"] = "chest_rarissime", "table « chest_rarissime » inconnue"),
+            ("image introuvable", list => list[0]!["sprite_open"] = "assets/chests/absent.png", "sprite_open : image"),
+            ("rétrogradation inconnue", list => list[1]!["downgrade_to"] = "chest_bois", "downgrade_to : coffre « chest_bois » inconnu"),
+            ("tirages nuls", list => list[2]!["loot_rolls"] = 0, "loot_rolls : 0"),
+            ("identifiant en double", list => list[1]!["id"] = "chest_common", "identifiant en double"),
+            ("élément qui n'est pas un objet", list => list.Add(1), "chaque coffre doit être un objet"),
+        };
+        foreach ((string label, Action<JsonArray> mutate, string expected) in chestCases)
+        {
+            JsonArray list = JsonNode.Parse(chests)!.AsArray();
+            mutate(list);
+            string message = ChestDataLoader.Apply(list.ToJsonString(), placement, statBonus, refs);
+            Check(message != null && message.Contains(expected, StringComparison.Ordinal), $"coffres refusés ({label}) : {message}");
+        }
+        (string, Action<JsonObject>, string)[] placementCases =
+        {
+            ("coffre de groupe inconnu", root => root["groups"]![0]!["chest"] = "chest_bois", "chest : « chest_bois » inconnu"),
+            ("dégagement absent", root => root["clearance_px"]!.AsObject().Remove("south"), "south absent"),
+            ("couronne hors de la carte", root => root["groups"]![1]!["band"] = new JsonArray(0.4, 1.2), "band : [0.4, 1.2]"),
+        };
+        foreach ((string label, Action<JsonObject> mutate, string expected) in placementCases)
+        {
+            string message = ChestDataLoader.Apply(chests, Mutated(placement, mutate), statBonus, refs);
+            Check(message != null && message.Contains(expected, StringComparison.Ordinal), $"placement refusé ({label}) : {message}");
+        }
+        (string, Action<JsonObject>, string)[] bonusCases =
+        {
+            ("rareté de coffre sans multiplicateur", root => root["rarity_multiplier"]!.AsObject().Remove("lore"), "rareté « lore » du coffre chest_lore absente"),
+            ("statistique d'objet", root => root["stats"]![0]!["stat"] = "burn_chance", "« burn_chance » n'est pas une statistique du joueur"),
+            ("modificateur non admis", root => root["stats"]![2]!["modifier_type"] = "multiplicative", "modificateur « multiplicative » non admis pour max_hp"),
+            ("valeur nulle", root => root["stats"]![0]!["amount"] = 0, "amount : 0"),
+        };
+        foreach ((string label, Action<JsonObject> mutate, string expected) in bonusCases)
+        {
+            JsonObject root = JsonNode.Parse(placement)!.AsObject();
+            root["groups"]!.AsArray().RemoveAt(0);
+            string message = ChestDataLoader.Apply(chests, root.ToJsonString(), Mutated(statBonus, mutate), refs);
+            Check(message != null && message.Contains(expected, StringComparison.Ordinal), $"bonus de coffre refusé ({label}) : {message}");
+        }
+        Check(ChestDataLoader.LoadPlacement().Groups.Count == groups, "coffres : aucun refus n'a publié de valeur");
+    }
+
+    private void CheckFieldBonuses()
+    {
+        string valid = FileAccess.GetFileAsString("res://data/world/field_bonuses.json");
+        IReadOnlyCollection<string> sprites = DataKeySets.SectionKeys("res://assets/vfx/pickups/pickups_manifest.json", "pickups");
+        IReadOnlyCollection<string> variants = DataKeySets.SectionKeys("res://data/enemies/_variants.json", "variants");
+        Func<string, bool> translated = key => TranslationServer.Translate(key) != key;
+        Check(FieldBonusDataLoader.Apply(valid, sprites, variants, translated) == null, "bonus lâchés du dépôt acceptés");
+        (string, Action<JsonObject>, string)[] cases =
+        {
+            ("effet inconnu", root => Entry(root, "bonuses", 0)["effect"] = "teleport", "effect : « teleport » inconnu"),
+            ("réglage absent", root => Entry(root, "bonuses", 1).Remove("duration_s"), "duration_s absent"),
+            ("réglage d'un autre effet", root => Entry(root, "bonuses", 0)["radius_px"] = 100, "clé « radius_px » inconnue"),
+            ("image hors du manifeste", root => Entry(root, "bonuses", 0)["sprite"] = "potion", "sprite : « potion » inconnu"),
+            ("nom non traduit", root => Entry(root, "bonuses", 0)["name_key"] = "BONUS_ABSENT", "clé « BONUS_ABSENT » absente des traductions"),
+            ("variante inconnue", root => root["variant_chance"]!["boss"] = 1.0, "variante « boss » inconnue"),
+            ("chance au-delà de 1", root => root["variant_chance"]!["elite"] = 1.5, "elite : 1.5"),
+            ("bonus de mort inconnu", root => root["kill_pool"] = new JsonArray("canteen", "potion"), "kill_pool : bonus « potion » inconnu"),
+            ("premier bonus de Résurgence inconnu", root => root["crisis_first"] = "potion", "crisis_first : « potion » inconnu"),
+            ("couleur invalide", root => Entry(root, "bonuses", 0)["color"] = new JsonArray(0.4, 2, 0.5), "color : trois composantes"),
+        };
+        foreach ((string label, Action<JsonObject> mutate, string expected) in cases)
+        {
+            string message = FieldBonusDataLoader.Apply(Mutated(valid, mutate), sprites, variants, translated);
+            Check(message != null && message.Contains(expected, StringComparison.Ordinal), $"bonus lâchés refusés ({label}) : {message}");
         }
     }
 

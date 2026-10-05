@@ -70,4 +70,51 @@ public static class DataKeySets
 		}
 		return ids;
 	}
+
+	/// <summary>Textes d'une liste <paramref name="arrayKey"/> d'un fichier de référence (familles d'effets…).</summary>
+	public static HashSet<string> StringList(string path, string arrayKey) => Read(path, "[]" + arrayKey, (root, into) =>
+	{
+		if (root.TryGetProperty(arrayKey, out JsonElement list) && list.ValueKind == JsonValueKind.Array)
+		{
+			foreach (JsonElement value in list.EnumerateArray())
+			{
+				if (value.ValueKind == JsonValueKind.String)
+					into.Add(value.GetString());
+			}
+		}
+	});
+
+	/// <summary>Clés de l'objet <paramref name="section"/> d'un fichier de référence (variantes, manifestes…).</summary>
+	public static HashSet<string> SectionKeys(string path, string section) => Read(path, "{}" + section, (root, into) =>
+	{
+		if (root.TryGetProperty(section, out JsonElement table) && table.ValueKind == JsonValueKind.Object)
+		{
+			foreach (JsonProperty entry in table.EnumerateObject())
+				into.Add(entry.Name);
+		}
+	});
+
+	private static HashSet<string> Read(string path, string variant, System.Action<JsonElement, HashSet<string>> collect)
+	{
+		string cacheKey = path + "#" + variant;
+		if (_cache.TryGetValue(cacheKey, out HashSet<string> values))
+			return values;
+		values = new HashSet<string>();
+		_cache[cacheKey] = values;
+		if (!FileAccess.FileExists(path))
+		{
+			GD.PushError($"[DataKeySets] {path} introuvable");
+			return values;
+		}
+		try
+		{
+			using JsonDocument document = JsonDocument.Parse(FileAccess.GetFileAsString(path));
+			collect(document.RootElement, values);
+		}
+		catch (JsonException ex)
+		{
+			GD.PushError($"[DataKeySets] {path} illisible : {ex.Message}");
+		}
+		return values;
+	}
 }

@@ -40,6 +40,9 @@ public sealed class JsonConfigReader
 
     public float Positive(JsonElement owner, string key) => Number(owner, key, value => value > 0f, "strictement positif attendu");
     public float NonNegative(JsonElement owner, string key) => Number(owner, key, value => value >= 0f, "positif ou nul attendu");
+    /// <summary>Une chance : de 0 (jamais) à 1 (toujours).</summary>
+    public float Chance(JsonElement owner, string key) => Number(owner, key, value => value >= 0f && value <= 1f, "chance dans [0 ; 1] attendue");
+
     public float Ratio(JsonElement owner, string key) => Number(owner, key, value => value > 0f && value <= 1f, "part dans ]0 ; 1] attendue");
 
     /// <summary>Un compte : entier de 1 à <paramref name="max"/>.</summary>
@@ -142,7 +145,8 @@ public sealed class JsonConfigReader
         return items;
     }
 
-    private static bool Contains(IReadOnlyCollection<string> values, string value)
+    /// <summary>La valeur figure dans la collection (identifiants d'un autre catalogue).</summary>
+    public static bool Contains(IReadOnlyCollection<string> values, string value)
     {
         foreach (string candidate in values)
         {

@@ -186,13 +186,11 @@ public static class LandmarkDataLoader
                 OfferMinRarity = reader.OneOf(r, "offer_min_rarity", rarityIds),
                 PerilPerOffer = reader.Integer(r, "peril_per_offer", 0, 100),
                 MaxOpen = reader.Integer(spawn, "max_open", 0, 100),
-                SpawnChance = reader.NonNegative(spawn, "chance"),
+                SpawnChance = reader.Chance(spawn, "chance"),
                 SpawnCooldown = reader.NonNegative(spawn, "cooldown_s"),
                 SpawnDistanceMin = spawnMin,
                 SpawnDistanceMax = spawnMax,
             };
-            if (reader.Error == null && rift.SpawnChance > 1f)
-                reader.Fail(FormattableString.Invariant($"chance : {rift.SpawnChance} (part dans [0 ; 1] attendue)"));
 
             JsonElement w = reader.Section("workshop");
             reader.AllowOnly(w, "workshop", "sprite", "placement", "min_spacing_px", "services");

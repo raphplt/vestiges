@@ -128,13 +128,13 @@ public partial class FieldBonusDirector : Node
                 player.Heal(player.EffectiveMaxHp * data.Param("ratio"));
                 break;
             case "magnet":
-                AddTimed(player, "xp_magnet_radius", data.Param("multiplier", 10f), "multiplicative", data.Param("duration_s", 3f));
+                AddTimed(player, "xp_magnet_radius", data.Param("multiplier"), "multiplicative", data.Param("duration_s"));
                 break;
             case "shield":
-                AddTimed(player, "shield", player.EffectiveMaxHp * data.Param("ratio"), "additive", data.Param("duration_s", 10f));
+                AddTimed(player, "shield", player.EffectiveMaxHp * data.Param("ratio"), "additive", data.Param("duration_s"));
                 break;
             case "frenzy":
-                AddTimed(player, "attack_speed", 1f + data.Param("amount"), "multiplicative", data.Param("duration_s", 10f));
+                AddTimed(player, "attack_speed", 1f + data.Param("amount"), "multiplicative", data.Param("duration_s"));
                 break;
             case "blast":
                 Blast(player, data);
@@ -161,9 +161,9 @@ public partial class FieldBonusDirector : Node
     /// <summary>Pétard : onde autour du joueur ; les variantes n'en perdent que le quart, pour que le pétard ne remplace pas le combat.</summary>
     private void Blast(Player player, FieldBonusData data)
     {
-        float radius = data.Param("radius_px", 150f);
-        float ratio = data.Param("hp_ratio", 0.5f);
-        float knockback = data.Param("knockback_px", 60f);
+        float radius = data.Param("radius_px");
+        float ratio = data.Param("hp_ratio");
+        float knockback = data.Param("knockback_px");
         AttackContext context = new(player.GetInstanceId(), null, 0, DamageKind.Passive);
         Godot.Collections.Array<Node> enemies = _groups.GetEnemies();
         foreach (Node node in enemies)

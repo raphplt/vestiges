@@ -132,6 +132,8 @@ public partial class GameBootstrap : Node
         RequireCatalog(LandmarkDataLoader.TryLoad(out string landmarksError), landmarksError);
         RequireCatalog(BlessingDataLoader.TryLoad(out string blessingsError), blessingsError);
         RequireCatalog(OubliDataLoader.TryLoad(out string oublisError), oublisError);
+        RequireCatalog(ChestDataLoader.TryLoad(out string chestsError), chestsError);
+        RequireCatalog(FieldBonusDataLoader.TryLoad(out string bonusesError), bonusesError);
 
         // FragmentManager DOIT exister avant tout LevelUp —
         // certains nodes émettent XpGained/LevelUp pendant leur _Ready(),

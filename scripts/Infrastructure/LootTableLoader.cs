@@ -53,6 +53,14 @@ public static class LootTableLoader
         GD.Print($"[LootTableLoader] Loaded {_cache.Count} loot tables");
     }
 
+    /// <summary>Une table de butin de ce nom existe (référence d'un coffre, plan 26 Q7c).</summary>
+    public static bool Exists(string id)
+    {
+        if (!_loaded)
+            Load();
+        return _cache.ContainsKey(id);
+    }
+
     public static LootTableData Get(string id)
     {
         if (!_loaded)

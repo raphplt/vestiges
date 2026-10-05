@@ -69,6 +69,30 @@ public partial class CatalogValuesProbe : Node
             lines.Add(Invariant($"blessing {blessing.Id} {blessing.NameKey} {blessing.Stat} {blessing.ModifierType} {blessing.Amount:R}"));
         foreach (OubliData oubli in OubliDataLoader.All)
             lines.Add(Invariant($"oubli {oubli.Id} {oubli.NameKey} {oubli.DescriptionKey} {oubli.Effect} {oubli.Amount:R} permanent={oubli.Permanent}"));
+        // Q7c-2 : coffres, placement, bonus de stat, bonus lâchés.
+        List<ChestData> chests = ChestDataLoader.GetAll();
+        chests.Sort((a, b) => string.CompareOrdinal(a.Id, b.Id));
+        foreach (ChestData chest in chests)
+            lines.Add(Invariant($"chest {chest.Id} {chest.Rarity} {chest.SpriteClosed} {chest.SpriteOpen} col={chest.ColumnHeight:R}/{chest.ColumnCore:R} fx={chest.FxFamily} open={chest.OpenTime:R} loot={chest.LootTableId}x{chest.LootRolls} down={chest.DowngradeTo ?? "-"}"));
+        ChestPlacementData placement = ChestDataLoader.LoadPlacement();
+        lines.Add(Invariant($"chest placement spacing={placement.MinSpacingPx:R} candidates={placement.CandidatesPerChest} attempts={placement.AttemptsPerChest} path={placement.PathBonus:R} clear={placement.Clearance} building={placement.BuildingClearance} pointer={placement.PointerRangePx:R}/{placement.PointerMax}"));
+        foreach (ChestPlacementGroup group in placement.Groups)
+            lines.Add(Invariant($"chest group {group}"));
+        ChestStatBonusData statBonus = ChestDataLoader.LoadStatBonus();
+        foreach (string rarity in new[] { "common", "rare", "epic", "lore", "legendary" })
+            lines.Add(Invariant($"chest bonus multiplier {rarity} {statBonus.Multiplier(rarity):R}"));
+        foreach (ChestStatBonus bonus in statBonus.Stats)
+            lines.Add(Invariant($"chest bonus {bonus}"));
+        FieldBonusConfig field = FieldBonusDataLoader.Load();
+        List<string> variants = new(field.VariantChance.Keys);
+        variants.Sort(StringComparer.Ordinal);
+        lines.Add(Invariant($"field enabled={field.Enabled} max={field.MaxOnGround} life={field.LifetimeSeconds:R} blink={field.BlinkSeconds:R} pickup={field.PickupPx:R} kill={field.KillChance:R} pool={string.Join(",", field.KillPool)} crisis={field.CrisisEnd}/{field.CrisisFirst} variants={string.Join(",", variants.ConvertAll(v => Invariant($"{v}:{field.VariantChance[v]:R}")))}"));
+        foreach (FieldBonusData bonus in field.Bonuses)
+        {
+            List<string> names = new(bonus.Params.Keys);
+            names.Sort(StringComparer.Ordinal);
+            lines.Add(Invariant($"field bonus {bonus.Id} {bonus.Sprite} {bonus.NameKey} {bonus.Weight:R} {bonus.Effect} {bonus.Color} {string.Join(",", names.ConvertAll(n => Invariant($"{n}={bonus.Params[n]:R}")))}"));
+        }
         foreach (string line in lines)
             GD.Print($"[CatalogValuesProbe] {line}");
         GD.Print($"[CatalogValuesProbe] RESULT lines={lines.Count}");
