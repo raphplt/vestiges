@@ -83,6 +83,15 @@ public partial class CatalogValuesProbe : Node
             lines.Add(Invariant($"chest bonus multiplier {rarity} {statBonus.Multiplier(rarity):R}"));
         foreach (ChestStatBonus bonus in statBonus.Stats)
             lines.Add(Invariant($"chest bonus {bonus}"));
+        // Q7c-3 : petits lieux et repères.
+        SmallPlaceConfig places = SmallPlaceDataLoader.Load();
+        lines.Add(Invariant($"places enabled={places.Enabled} spacing={places.MinSpacingPx:R} sign={places.SignRangePx:R}"));
+        foreach (SmallPlaceData place in places.Places)
+            lines.Add(Invariant($"place {place.Id} [{string.Join(",", place.Sprites)}] {place.PromptKey} hold={place.HoldSeconds:R} {place.Reward} amount={place.Amount:R} range={place.AmountMin}-{place.AmountMax} enemies={place.Enemies} ambush={place.AmbushRadiusPx:R}/{place.AmbushTimeoutSeconds:R} max={place.MaxPerMap} chance={place.Chance:R} duration={place.DurationSeconds:R} radius={place.RadiusPx:R} lore=[{string.Join(",", place.Lore)}] {place.Color} {place.Family}"));
+        WaymarkConfig waymarks = WaymarkDataLoader.Load();
+        lines.Add($"waymarks enabled={waymarks.Enabled}");
+        foreach ((string type, WaymarkReward reward) in waymarks.Rewards)
+            lines.Add(Invariant($"waymark {type} {reward.NameKey} {reward.Stat ?? "-"} {reward.Amount:R} {reward.ModifierType} rerolls={reward.Rerolls} banishes={reward.Banishes}"));
         FieldBonusConfig field = FieldBonusDataLoader.Load();
         List<string> variants = new(field.VariantChance.Keys);
         variants.Sort(StringComparer.Ordinal);

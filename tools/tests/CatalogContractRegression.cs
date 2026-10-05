@@ -32,6 +32,8 @@ public partial class CatalogContractRegression : Node
             CheckOublis();
             CheckChests();
             CheckFieldBonuses();
+            CheckSmallPlaces();
+            CheckWaymarks();
             GD.Print($"[CatalogContractRegression] RESULT failures=0 checks={_checks}");
             GetTree().Quit(0);
         }
@@ -358,6 +360,59 @@ public partial class CatalogContractRegression : Node
         {
             string message = FieldBonusDataLoader.Apply(Mutated(valid, mutate), sprites, variants, translated);
             Check(message != null && message.Contains(expected, StringComparison.Ordinal), $"bonus lâchés refusés ({label}) : {message}");
+        }
+    }
+
+    private void CheckSmallPlaces()
+    {
+        string valid = FileAccess.GetFileAsString("res://data/world/small_places.json");
+        HashSet<string> props = new();
+        foreach (string folder in new[] { "urban_ruins", "forest", "swamp", "wild_fields", "collapsed_quarry" })
+            props.UnionWith(DataKeySets.TopLevelKeys($"res://assets/props/{folder}/props_manifest.json"));
+        IReadOnlyCollection<string> families = DataKeySets.StringList("res://data/enemies/_contract.json", "families");
+        Func<string, bool> translated = key => TranslationServer.Translate(key) != key;
+        Check(SmallPlaceDataLoader.Apply(valid, props, families, translated) == null, "petits lieux du dépôt acceptés");
+        (string, Action<JsonObject>, string)[] cases =
+        {
+            ("récompense inconnue", root => Entry(root, "places", 0)["reward"] = "treasure", "reward : « treasure » inconnu"),
+            ("réglage exigé absent", root => Entry(root, "places", 1).Remove("amount_max"), "amount_max absent"),
+            ("réglage d'une autre récompense", root => Entry(root, "places", 0)["duration_s"] = 5, "clé « duration_s » inconnue"),
+            ("fourchette inversée", root => { Entry(root, "places", 1)["amount_min"] = 12; Entry(root, "places", 1)["amount_max"] = 6; }, "amount_max : 6 inférieur à amount_min 12"),
+            ("décor inconnu", root => Entry(root, "places", 0)["sprites"] = new JsonArray("prop_puits_magique"), "décor « prop_puits_magique » inconnu des manifestes"),
+            ("famille inconnue", root => Entry(root, "places", 0)["family"] = "eau", "family : « eau » inconnu"),
+            ("invite non traduite", root => Entry(root, "places", 0)["prompt"] = "PLACE_ABSENT_PROMPT", "clé « PLACE_ABSENT_PROMPT » absente des traductions"),
+            ("ligne de lore non traduite", root => Entry(root, "places", 8)["lore"] = new JsonArray("PLACE_PICNIC_LORE_99"), "clé « PLACE_PICNIC_LORE_99 » absente des traductions"),
+            ("chance au-delà de 1", root => Entry(root, "places", 4)["chance"] = 1.5, "chance : 1.5"),
+            ("identifiant en double", root => Entry(root, "places", 1)["id"] = "well", "identifiant en double"),
+        };
+        foreach ((string label, Action<JsonObject> mutate, string expected) in cases)
+        {
+            string message = SmallPlaceDataLoader.Apply(Mutated(valid, mutate), props, families, translated);
+            Check(message != null && message.Contains(expected, StringComparison.Ordinal), $"petits lieux refusés ({label}) : {message}");
+        }
+    }
+
+    private void CheckWaymarks()
+    {
+        string valid = FileAccess.GetFileAsString("res://data/world/waymarks.json");
+        ObjectDataValidator.TryParseContract(FileAccess.GetFileAsString(ObjectDataValidator.ContractPath), out ObjectDataValidator.Contract contract, out _);
+        List<string> types = new(SmallPlaceDataLoader.PlaceIds()) { "chest", "memorial", "rift", "workshop" };
+        Func<string, bool> translated = key => TranslationServer.Translate(key) != key;
+        Check(WaymarkDataLoader.Apply(valid, types, contract, translated) == null, "Repères du dépôt acceptés");
+        (string, Action<JsonObject>, string)[] cases =
+        {
+            ("type de lieu inconnu", root => Entry(root, "types", 0)["id"] = "fontaine", "id : « fontaine » inconnu"),
+            ("deux gains", root => Entry(root, "types", 10)["banishes"] = 1, "un seul gain attendu"),
+            ("aucun gain", root => Entry(root, "types", 11).Remove("banishes"), "un seul gain attendu"),
+            ("statistique d'objet", root => Entry(root, "types", 0)["stat"] = "kill_heal", "« kill_heal » n'est pas une statistique du joueur"),
+            ("modificateur non admis", root => Entry(root, "types", 0)["modifier_type"] = "multiplicative", "« multiplicative » non admis pour max_hp"),
+            ("montant sans statistique", root => Entry(root, "types", 10)["amount"] = 1, "amount et modifier_type ne vont qu'avec stat"),
+            ("type en double", root => Entry(root, "types", 1)["id"] = "well", "type en double"),
+        };
+        foreach ((string label, Action<JsonObject> mutate, string expected) in cases)
+        {
+            string message = WaymarkDataLoader.Apply(Mutated(valid, mutate), types, contract, translated);
+            Check(message != null && message.Contains(expected, StringComparison.Ordinal), $"Repères refusés ({label}) : {message}");
         }
     }
 

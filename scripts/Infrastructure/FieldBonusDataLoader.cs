@@ -119,7 +119,7 @@ public static class FieldBonusDataLoader
 					NameKey = item.Text(entry, "name_key"),
 					Weight = item.Positive(entry, "weight"),
 					Effect = effect,
-					Color = Color(item, entry),
+					Color = item.Rgb(entry, "color"),
 					Params = parameters,
 				};
 				if (item.Error == null && !ids.Add(id))
@@ -172,28 +172,6 @@ public static class FieldBonusDataLoader
 		{
 			return $"JSON illisible : {ex.Message}";
 		}
-	}
-
-	private static Color Color(JsonConfigReader reader, JsonElement entry)
-	{
-		if (reader.Error != null)
-			return default;
-		if (!entry.TryGetProperty("color", out JsonElement rgb) || rgb.ValueKind != JsonValueKind.Array || rgb.GetArrayLength() != 3)
-		{
-			reader.Fail("color : trois composantes de 0 à 1 attendues");
-			return default;
-		}
-		float[] values = new float[3];
-		for (int i = 0; i < 3; i++)
-		{
-			if (rgb[i].ValueKind != JsonValueKind.Number || rgb[i].GetDouble() < 0.0 || rgb[i].GetDouble() > 1.0)
-			{
-				reader.Fail("color : trois composantes de 0 à 1 attendues");
-				return default;
-			}
-			values[i] = (float)rgb[i].GetDouble();
-		}
-		return new Color(values[0], values[1], values[2]);
 	}
 
 }

@@ -92,6 +92,30 @@ public sealed class JsonConfigReader
         return Error == null ? path : null;
     }
 
+    /// <summary>Couleur écrite [r, g, b], chaque composante de 0 à 1.</summary>
+    public Color Rgb(JsonElement owner, string key)
+    {
+        if (Error != null)
+            return default;
+        if (owner.ValueKind != JsonValueKind.Object || !owner.TryGetProperty(key, out JsonElement rgb)
+            || rgb.ValueKind != JsonValueKind.Array || rgb.GetArrayLength() != 3)
+        {
+            Error = $"{key} : trois composantes de 0 à 1 attendues";
+            return default;
+        }
+        float[] values = new float[3];
+        for (int i = 0; i < 3; i++)
+        {
+            if (rgb[i].ValueKind != JsonValueKind.Number || rgb[i].GetDouble() < 0.0 || rgb[i].GetDouble() > 1.0)
+            {
+                Error = $"{key} : trois composantes de 0 à 1 attendues";
+                return default;
+            }
+            values[i] = (float)rgb[i].GetDouble();
+        }
+        return new Color(values[0], values[1], values[2]);
+    }
+
     /// <summary>Booléen facultatif, faux par défaut.</summary>
     public bool Flag(JsonElement owner, string key)
     {
