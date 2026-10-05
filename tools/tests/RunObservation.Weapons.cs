@@ -31,7 +31,10 @@ public partial class RunObservation
         _world.GetNode("SpawnManager").ProcessMode = ProcessModeEnum.Disabled;
         EnemyPool pool = _world.GetNode<EnemyPool>("EnemyPool");
         SpawnManager spawner = _world.GetNode<SpawnManager>("SpawnManager");
-        await Frames(90);
+        // La première arme était capturée pendant le fondu de l'écran de chargement (1,6 s, plus long que l'attente).
+        for (int frame = 0; frame < 600 && _world.FindChild("GameLoadingOverlay", true, false) != null; frame++)
+            await Frames(1);
+        await Frames(30);
         _player.AIInputOverride = Vector2.Zero;
         foreach (string entry in Argument(OS.GetCmdlineUserArgs(), "--objects", "").Split(',', System.StringSplitOptions.RemoveEmptyEntries))
         {
