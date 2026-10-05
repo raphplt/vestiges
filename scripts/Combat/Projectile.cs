@@ -22,7 +22,7 @@ public partial class Projectile : Area2D
     private float _age;
     // Rafale (plan 21 G6g) : le tir attend, caché et sans contact, avant de partir de la position du joueur.
     private float _launchDelay;
-    private Node2D _departureTarget;
+    private TargetLock _departureTarget;
     private int _pierceRemaining;
     // Reflet brisé, palier 15 : chaque ennemi traversé ajoute cette part des dégâts de départ.
     private float _pierceDamageRamp;
@@ -44,7 +44,7 @@ public partial class Projectile : Area2D
 
     // Homing
     private float _homingStrength;
-    private Node2D _homingTarget;
+    private TargetLock _homingTarget;
 
     // Ground fire (weapon special_effect)
     private bool _spawnsGroundFire;
@@ -82,7 +82,7 @@ public partial class Projectile : Area2D
     {
         GlobalPosition = position;
         _launchDelay = launchDelay;
-        _departureTarget = null;
+        _departureTarget = default;
         // Taille du joueur (plan 21 G6e) : la zone de contact grandit avec le visuel, remise à chaque tir du pool.
         _collision.Scale = Vector2.One * sizeScale;
         _direction = direction.Normalized();
@@ -102,7 +102,7 @@ public partial class Projectile : Area2D
         _isDespawning = false;
         _hitEnemies.Clear();
         _homingStrength = 0f;
-        _homingTarget = null;
+        _homingTarget = default;
         _spawnsGroundFire = false;
 
         _family = isCrit ? FxFamily.Crit : PlayerAttackFx.FamilyOf(weapon);
@@ -125,24 +125,22 @@ public partial class Projectile : Area2D
     }
 
     /// <summary>Tir de rafale : au départ, il vise de nouveau cette cible si elle vit encore, comme un tir neuf.</summary>
-    public void AimAtDeparture(Node2D target) => _departureTarget = target;
+    public void AimAtDeparture(Node2D target) => _departureTarget = TargetLock.On(target);
 
     /// <summary>Fin de l'attente d'une rafale : le tir part du joueur, là où il se trouve maintenant.</summary>
     private void Depart()
     {
         if (_owner != null && IsInstanceValid(_owner))
             GlobalPosition = _owner.GlobalPosition;
-        if (_departureTarget != null)
+        if (_departureTarget.IsSet)
         {
-            // Cible tombée pendant l'attente : la plus proche, comme le ferait un tir neuf.
-            Node2D target = _departureTarget is Enemy enemy && IsInstanceValid(enemy) && enemy.IsActive && !enemy.IsDying
-                ? enemy
-                : FindNearestEnemy();
+            // Cible tombée ou revenue du pool pendant l'attente : la plus proche, comme le ferait un tir neuf.
+            Node2D target = _departureTarget.TryGet(out Node2D locked) ? locked : FindNearestEnemy();
             Vector2 toTarget = target != null ? target.GlobalPosition - GlobalPosition : Vector2.Zero;
             if (toTarget.LengthSquared() > 0.0001f)
                 _direction = toTarget.Normalized();
         }
-        _departureTarget = null;
+        _departureTarget = default;
         Visible = true;
         SetDeferred(Area2D.PropertyName.Monitoring, true);
     }
@@ -150,7 +148,7 @@ public partial class Projectile : Area2D
     public void SetHoming(float strength, Node2D target)
     {
         _homingStrength = strength;
-        _homingTarget = target;
+        _homingTarget = TargetLock.On(target);
     }
 
     public void SetGroundFire(float damage, float duration, float radius)
@@ -186,14 +184,14 @@ public partial class Projectile : Area2D
             return;
         }
 
-        if (_homingStrength > 0f && _homingTarget != null && IsInstanceValid(_homingTarget))
+        if (_homingStrength > 0f && _homingTarget.TryGet(out Node2D homingTarget))
         {
-            Vector2 toTarget = (_homingTarget.GlobalPosition - GlobalPosition).Normalized();
+            Vector2 toTarget = (homingTarget.GlobalPosition - GlobalPosition).Normalized();
             _direction = _direction.Lerp(toTarget, _homingStrength * dt * 5f).Normalized();
         }
         else if (_homingStrength > 0f)
         {
-            _homingTarget = FindNearestEnemy();
+            _homingTarget = TargetLock.On(FindNearestEnemy());
         }
 
         Position += _direction * Speed * dt;
@@ -246,14 +244,14 @@ public partial class Projectile : Area2D
 
         foreach (Node node in enemies)
         {
-            if (node is Node2D candidate && !candidate.IsQueuedForDeletion())
+            // Le groupe est figé pour l'image : une créature morte ou rendue au pool peut y figurer encore.
+            if (node is not Node2D candidate || candidate.IsQueuedForDeletion() || candidate is Enemy { IsActive: false } or Enemy { IsDying: true })
+                continue;
+            float distSq = GlobalPosition.DistanceSquaredTo(candidate.GlobalPosition);
+            if (distSq < nearestDistSq)
             {
-                float distSq = GlobalPosition.DistanceSquaredTo(candidate.GlobalPosition);
-                if (distSq < nearestDistSq)
-                {
-                    nearest = candidate;
-                    nearestDistSq = distSq;
-                }
+                nearest = candidate;
+                nearestDistSq = distSq;
             }
         }
         return nearest;
@@ -322,8 +320,8 @@ public partial class Projectile : Area2D
         SetDeferred(Area2D.PropertyName.Monitoring, false);
         // Hors traitement : retiré de la physique (DisableMode Remove) jusqu'au prochain Launch.
         SetDeferred(Node.PropertyName.ProcessMode, (int)ProcessModeEnum.Disabled);
-        _homingTarget = null;
-        _departureTarget = null;
+        _homingTarget = default;
+        _departureTarget = default;
         _owner = null;
         _context = default;
         SourceInstance = null;

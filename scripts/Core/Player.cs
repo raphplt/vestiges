@@ -916,7 +916,7 @@ public partial class Player : CharacterBody2D
                         Godot.Collections.Array<Node> enemies = _groupCache.GetEnemies();
                         foreach (Node node in enemies)
                         {
-                            if (node is Enemy e && IsInstanceValid(e) && !e.IsDying)
+                            if (node is Enemy { IsActive: true, IsDying: false } e && IsInstanceValid(e))
                             {
                                 if (e.GlobalPosition.DistanceTo(echoPos) < echoRadius)
                                     e.TakeDamage(echoDamage, source: context.As(DamageKind.SecondaryWeapon));
@@ -947,7 +947,7 @@ public partial class Player : CharacterBody2D
                 Godot.Collections.Array<Node> enemies = _groupCache.GetEnemies();
                 foreach (Node node in enemies)
                 {
-                    if (node is Enemy e && e != enemy && IsInstanceValid(e) && !e.IsDying && e.GlobalPosition.DistanceTo(impactPos) < radius)
+                    if (node is Enemy { IsActive: true, IsDying: false } e && e != enemy && IsInstanceValid(e) && e.GlobalPosition.DistanceTo(impactPos) < radius)
                         ApplyTimeField(e, freeze, factor, duration, context);
                 }
                 SpawnTimeSlowVisual(impactPos, radius, duration);
@@ -961,7 +961,7 @@ public partial class Player : CharacterBody2D
                 Godot.Collections.Array<Node> enemies = _groupCache.GetEnemies();
                 foreach (Node node in enemies)
                 {
-                    if (node is Enemy e && IsInstanceValid(e) && !e.IsDying && e != enemy)
+                    if (node is Enemy { IsActive: true, IsDying: false } e && IsInstanceValid(e) && e != enemy)
                     {
                         if (e.GlobalPosition.DistanceTo(impactPos) < aoeRadius)
                             e.TakeDamage(shapeDamage, source: context.As(DamageKind.SecondaryWeapon));
@@ -1219,7 +1219,7 @@ public partial class Player : CharacterBody2D
 
         foreach (Node node in enemies)
         {
-            if (node is Enemy enemy && IsInstanceValid(enemy) && !enemy.IsDying)
+            if (node is Enemy { IsActive: true, IsDying: false } enemy && IsInstanceValid(enemy))
             {
                 if (excludeIds.Contains(enemy.GetInstanceId()))
                     continue;
@@ -2045,12 +2045,12 @@ public partial class Player : CharacterBody2D
 
         foreach (Node node in enemies)
         {
-            if (node is Node2D enemy)
-            {
-                float dist = GlobalPosition.DistanceTo(enemy.GlobalPosition);
-                if (dist < maxRange)
-                    inRange.Add((enemy, dist));
-            }
+            // Le groupe est figé pour l'image ; une cible qui n'est pas une créature (l'Indicible) reste admise.
+            if (node is not Node2D enemy || enemy is Enemy { IsActive: false } or Enemy { IsDying: true })
+                continue;
+            float dist = GlobalPosition.DistanceTo(enemy.GlobalPosition);
+            if (dist < maxRange)
+                inRange.Add((enemy, dist));
         }
 
         inRange.Sort((a, b) => a.dist.CompareTo(b.dist));
@@ -2071,7 +2071,7 @@ public partial class Player : CharacterBody2D
 
         foreach (Node node in enemies)
         {
-            if (node is not Enemy enemy || enemy.IsDying)
+            if (node is not Enemy { IsActive: true, IsDying: false } enemy)
                 continue;
 
             Vector2 toEnemy = enemy.GlobalPosition - GlobalPosition;

@@ -830,3 +830,9 @@ Raphaël, après la planche de la Résurgence : « pour l'audio j'ai du mal à d
 - **Steam :** pas encore d'App ID ; Raphaël redemande la marche à suivre, écrite cette fois dans [STEAM-MISE-EN-PLACE.md](../STEAM-MISE-EN-PLACE.md).
 - **Barème des lieux :** la question de `A-VERIFIER.md` était périmée (score aux seules éliminations depuis le §40, lieux désactivés, `score_points` lu par aucun code). Raphaël choisit de **retirer** `score_points` des lieux et des coffres.
 - **Ordre de travail confirmé :** nettoyage (§65), puis lore L1, planche des synergies de règles, fiche Indicible et Barrière, puis Q4.
+
+## 68. Avancer sans validation — 5 octobre 2026
+
+Raphaël, après les planches L1, synergies et Barrière/Indicible : « continue d'avancer stp sur d'autres sujets je peux pas valider là car jai pas le temps ».
+- Les trois planches restent en attente de sa relecture ; rien n'en est codé.
+- Claude enchaîne les lots **sans décision de design** : corrections de run et validations de catalogues du plan 26 (Q8, Q7), qui ne changent ni règle ni équilibrage. Chaque lot reste découpé dans le plan, vérifié et clos par un commit.

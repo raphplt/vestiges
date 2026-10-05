@@ -714,7 +714,7 @@ public partial class Enemy : CharacterBody2D
 		Godot.Collections.Array<Node> enemies = _groupCache.GetEnemies();
 		foreach (Node node in enemies)
 		{
-			if (node is Enemy other && other != this && IsInstanceValid(other) && !other.IsDying
+			if (node is Enemy { IsActive: true, IsDying: false } other && other != this && IsInstanceValid(other)
 				&& other._packFamily == _packFamily
 				&& GlobalPosition.DistanceSquaredTo(other.GlobalPosition) < _packRadiusSq)
 			{
@@ -1293,7 +1293,7 @@ public partial class Enemy : CharacterBody2D
 			Godot.Collections.Array<Node> enemies = _groupCache.GetEnemies();
 			foreach (Node node in enemies)
 			{
-				if (node is Enemy e && e != this && IsInstanceValid(e) && !e.IsDying)
+				if (node is Enemy { IsActive: true, IsDying: false } e && e != this && IsInstanceValid(e))
 				{
 					if (Iso.GroundDistanceSquared(GlobalPosition, e.GlobalPosition) < explosionRadiusSq)
 						e.TakeDamage(explosionDamage * 0.5f, source: new AttackContext(0, null, 0, DamageKind.EnemyExplosion));

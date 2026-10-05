@@ -37,6 +37,7 @@ public partial class WeaponRegression : Node2D
 
             CheckOrbitalOnEquip();
             await CheckOrbitalHits();
+            await CheckTargetLockOneLife();
             await CheckHitEffectsFollowSource();
             CheckSingleLevel();
             CheckBanishUpgrade();
@@ -98,6 +99,74 @@ public partial class WeaponRegression : Node2D
         List<Node2D> orbs = (List<Node2D>)typeof(Player).GetField("_orbitalProjectiles", Private).GetValue(_player);
         Check(orbs.Count > 0, $"Boîte à musique : {orbs.Count} notes dès l'équipement, sans attendre le minuteur");
     }
+
+    /// <summary>
+    /// Q8a (plan 26) : un tir guidé ou un tir de rafale en attente verrouillé sur une créature qui meurt puis revient du
+    /// pool, ailleurs, ne suit pas sa nouvelle vie ; il se tourne vers la créature restante. Contre-épreuve : sans mort,
+    /// le verrou tient.
+    /// </summary>
+    private async Task CheckTargetLockOneLife()
+    {
+        PackedScene projectileScene = GD.Load<PackedScene>("res://scenes/combat/Projectile.tscn");
+        WeaponData compass = WeaponDataLoader.Get("compass_needle");
+        Enemy locked = SpawnStill(new Vector2(120f, 0f));
+        Enemy other = SpawnStill(new Vector2(0f, 150f));
+        await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+
+        Projectile homing = projectileScene.Instantiate<Projectile>();
+        AddChild(homing);
+        homing.SetPhysicsProcess(false);
+        homing.Launch(Vector2.Zero, Vector2.Right, 1f, 100f, 10f, 0, false, _player, compass, null);
+        homing.SetHoming(1f, locked);
+        homing._PhysicsProcess(1f / 60f);
+        Check(LockedTarget(homing, "_homingTarget") == locked, "Verrou : tir guidé sur sa cible tant qu'elle vit");
+
+        Recycle(locked, new Vector2(5000f, 5000f));
+        await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+        homing._PhysicsProcess(1f / 60f);
+        Check(LockedTarget(homing, "_homingTarget") == other,
+            "Verrou : la cible morte puis revenue du pool n'est plus suivie, le tir guidé prend la créature restante");
+
+        Projectile burst = projectileScene.Instantiate<Projectile>();
+        AddChild(burst);
+        burst.SetPhysicsProcess(false);
+        burst.Launch(Vector2.Zero, Vector2.Right, 1f, 100f, 10f, 0, false, _player, compass, null, launchDelay: 0.05f);
+        burst.AimAtDeparture(locked);
+        Recycle(locked, new Vector2(-5000f, 5000f));
+        await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+        burst._PhysicsProcess(0.1f);
+        Vector2 direction = (Vector2)typeof(Projectile).GetField("_direction", Private).GetValue(burst);
+        Vector2 toOther = (other.GlobalPosition - _player.GlobalPosition).Normalized();
+        Check(direction.Dot(toOther) > 0.99f,
+            $"Verrou : le tir de rafale dont la cible est revenue du pool part vers la créature restante ({direction})");
+
+        homing.QueueFree();
+        burst.QueueFree();
+        locked.QueueFree();
+        other.QueueFree();
+    }
+
+    private Enemy SpawnStill(Vector2 offset)
+    {
+        Enemy enemy = EnemyScene.Instantiate<Enemy>();
+        AddChild(enemy);
+        enemy.Initialize(EnemyDataLoader.Get("rodeur"), 1000f, 1f);
+        enemy.SetPhysicsProcess(false);
+        enemy.GlobalPosition = _player.GlobalPosition + offset;
+        return enemy;
+    }
+
+    /// <summary>La créature meurt et revient du pool comme une autre vie, loin d'ici.</summary>
+    private void Recycle(Enemy enemy, Vector2 offset)
+    {
+        enemy.Reset();
+        enemy.Initialize(EnemyDataLoader.Get("rodeur"), 1000f, 1f);
+        enemy.SetPhysicsProcess(false);
+        enemy.GlobalPosition = _player.GlobalPosition + offset;
+    }
+
+    private static Node2D LockedTarget(Projectile projectile, string field) =>
+        ((TargetLock)typeof(Projectile).GetField(field, Private).GetValue(projectile)).TryGet(out Node2D target) ? target : null;
 
     /// <summary>Un ennemi posé sur l'orbite est touché par les notes : leurs dégâts comptent pour la Boîte à musique.</summary>
     private async Task CheckOrbitalHits()

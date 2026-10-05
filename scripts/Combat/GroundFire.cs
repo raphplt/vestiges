@@ -75,7 +75,7 @@ public sealed class GroundFire
     {
         foreach (Node node in _groupCache.GetEnemies())
         {
-            if (node is Enemy enemy && GodotObject.IsInstanceValid(enemy) && !enemy.IsDying
+            if (node is Enemy { IsActive: true, IsDying: false } enemy && GodotObject.IsInstanceValid(enemy)
                 && Iso.GroundDistanceSquared(enemy.GlobalPosition, flame.Position) < flame.RadiusSq)
                 enemy.TakeDamage(flame.Damage, source: flame.Source);
         }
