@@ -26,11 +26,11 @@ public partial class PlayerProgression : Node
     public override void _Ready()
     {
         _eventBus = GetNode<EventBus>("/root/EventBus");
-        _curve = XpCurveConfig.Load();
         _player = GetParent() as Player;
         _eventBus.XpGained += OnXpGained;
         _eventBus.DifficultyModifierChanged += OnDifficultyModifierChanged;
-        _xpToNextLevel = _curve.CostOf(_currentLevel);
+        // Courbe refusée : le chargement de la run s'arrête sur son message (GameBootstrap) ; aucun niveau ne s'atteint.
+        _xpToNextLevel = XpCurveConfig.TryLoad(out _curve, out _) ? _curve.CostOf(_currentLevel) : float.PositiveInfinity;
     }
 
     public override void _ExitTree()

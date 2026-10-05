@@ -86,6 +86,12 @@ public partial class GameBootstrap : Node
         ReturnToHub();
     }
 
+    private static void RequireCatalog(bool valid, string error)
+    {
+        if (!valid)
+            throw new InvalidOperationException($"catalogue refusé, {error}");
+    }
+
     private void ReturnToHub()
     {
         if (!LoadGuard.IsAlive(this))
@@ -116,6 +122,10 @@ public partial class GameBootstrap : Node
         PassiveSouvenirDataLoader.Load();
         MetaSaveManager.Load();
         SouvenirDataLoader.Load();
+        // Catalogues contrôlés en entier (plan 26 Q7) : un refus arrête le chargement sur l'écran d'erreur, avec son message.
+        RequireCatalog(XpCurveConfig.TryLoad(out _, out string xpError), xpError);
+        RequireCatalog(ScoreConfig.TryLoad(out _, out string scoreError), scoreError);
+        RequireCatalog(PerilDataLoader.TryLoad(out string perilError), perilError);
 
         // FragmentManager DOIT exister avant tout LevelUp —
         // certains nodes émettent XpGained/LevelUp pendant leur _Ready(),

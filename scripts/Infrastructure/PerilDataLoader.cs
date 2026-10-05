@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Godot;
 
 namespace Vestiges.Infrastructure;
@@ -8,6 +9,7 @@ namespace Vestiges.Infrastructure;
 /// </summary>
 public static class PerilDataLoader
 {
+    private const string ConfigPath = "res://data/scaling/peril.json";
     private static int _max = 10;
     private static float _enemyCount;
     private static float _enemyHp;
@@ -89,37 +91,66 @@ public static class PerilDataLoader
     {
         if (_loaded)
             return;
+        if (!TryLoad(out string error))
+            GD.PushError($"[PerilDataLoader] {error}");
+    }
+
+    /// <summary>
+    /// Lit et contrôle tout le fichier (plan 26 Q7a) ; rien n'est publié s'il est invalide. Un fichier invalide arrête
+    /// le chargement de la run (GameBootstrap).
+    /// </summary>
+    public static bool TryLoad(out string error)
+    {
         _loaded = true;
+        using FileAccess file = FileAccess.Open(ConfigPath, FileAccess.ModeFlags.Read);
+        if (file == null)
+        {
+            error = $"{ConfigPath} absent";
+            return false;
+        }
+        error = Parse(file.GetAsText());
+        if (error != null)
+            error = $"{ConfigPath} : {error}";
+        return error == null;
+    }
 
-        using FileAccess file = FileAccess.Open("res://data/scaling/peril.json", FileAccess.ModeFlags.Read);
-        Json json = new();
-        if (file == null || json.Parse(file.GetAsText()) != Error.Ok)
+    /// <summary>Contrôle un texte de réglages ; ne publie les valeurs que s'il est entièrement valide. Rend l'erreur, ou null.</summary>
+    public static string Parse(string json)
+    {
+        try
         {
-            GD.PushError("[PerilDataLoader] Cannot read data/scaling/peril.json");
-            return;
+            using JsonDocument document = JsonDocument.Parse(json);
+            JsonConfigReader reader = new(document.RootElement);
+            reader.AllowOnly(reader.Root, "Péril", "max", "banish", "per_point");
+            int max = reader.Integer(reader.Root, "max", 0, 1000);
+            JsonElement banish = reader.Section("banish");
+            reader.AllowOnly(banish, "banish", "free", "peril_divisor");
+            int free = reader.Integer(banish, "free", 0, 1000);
+            int divisor = reader.Integer(banish, "peril_divisor", 1, 1000);
+            JsonElement perPoint = reader.Section("per_point");
+            reader.AllowOnly(perPoint, "per_point", "enemy_count", "enemy_hp", "enemy_damage", "xp", "score", "rarity_steps");
+            float enemyCount = reader.NonNegative(perPoint, "enemy_count");
+            float enemyHp = reader.NonNegative(perPoint, "enemy_hp");
+            float enemyDamage = reader.NonNegative(perPoint, "enemy_damage");
+            float xp = reader.NonNegative(perPoint, "xp");
+            float score = reader.NonNegative(perPoint, "score");
+            float raritySteps = reader.NonNegative(perPoint, "rarity_steps");
+            if (reader.Error != null)
+                return reader.Error;
+            _max = max;
+            _banishFree = free;
+            _banishPerilDivisor = divisor;
+            _enemyCount = enemyCount;
+            _enemyHp = enemyHp;
+            _enemyDamage = enemyDamage;
+            _xp = xp;
+            _score = score;
+            _raritySteps = raritySteps;
+            return null;
         }
-
-        Godot.Collections.Dictionary root = json.Data.AsGodotDictionary();
-        _max = (int)root["max"].AsDouble();
-        Godot.Collections.Dictionary perPoint = root["per_point"].AsGodotDictionary();
-        _enemyCount = (float)perPoint["enemy_count"].AsDouble();
-        _enemyHp = (float)perPoint["enemy_hp"].AsDouble();
-        _enemyDamage = (float)perPoint["enemy_damage"].AsDouble();
-        _xp = (float)perPoint["xp"].AsDouble();
-        _score = (float)perPoint["score"].AsDouble();
-        _raritySteps = (float)perPoint["rarity_steps"].AsDouble();
-        if (!root.ContainsKey("banish") || root["banish"].VariantType != Variant.Type.Dictionary)
+        catch (JsonException ex)
         {
-            GD.PushError("[PerilDataLoader] Bloc banish absent : 3 bannissements gratuits, puis un tiers de Péril de plus à chacun");
-            return;
+            return $"JSON illisible : {ex.Message}";
         }
-        Godot.Collections.Dictionary banish = root["banish"].AsGodotDictionary();
-        if (!banish.ContainsKey("free") || !banish.ContainsKey("peril_divisor"))
-        {
-            GD.PushError("[PerilDataLoader] banish doit définir free et peril_divisor");
-            return;
-        }
-        _banishFree = Mathf.Max(0, (int)banish["free"].AsDouble());
-        _banishPerilDivisor = Mathf.Max(1, (int)banish["peril_divisor"].AsDouble());
     }
 }

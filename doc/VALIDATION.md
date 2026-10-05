@@ -6,7 +6,7 @@ La commande commune construit avec les warnings traités comme des erreurs, vér
 tools/validate.sh /tmp/vestiges-validation-mon-lot
 ```
 
-Choisir un dossier neuf. Les 30 suites par défaut couvrent le Hub, les déplacements et l'intégration de Main, les armes et raretés, les objets, les perks, les capacités ennemies, les petits lieux, les bonus, le cône, les effets temporels, l'Effacement, la carte, les choix, les assets UI, les intentions musicales, le mode dev, ses actions et l’exclusion des exports, les sauvegardes, le chargement récupérable, le remapping des touches, la reproductibilité des tirages, les phases de la run, l'Indicible, la file des classements Steam (faux service), ainsi que les modèles de progression et de lanceurs.
+Choisir un dossier neuf. Les 31 suites par défaut couvrent le Hub, les déplacements et l'intégration de Main, les armes et raretés, les objets, les perks, les capacités ennemies, les petits lieux, les bonus, le cône, les effets temporels, l'Effacement, la carte, les choix, les assets UI, les intentions musicales, le mode dev, ses actions et l’exclusion des exports, les sauvegardes, le chargement récupérable, le remapping des touches, la reproductibilité des tirages, les phases de la run, les contrats des catalogues de réglages, l'Indicible, la file des classements Steam (faux service), ainsi que les modèles de progression et de lanceurs.
 
 Pour une vérification ciblée, donner les noms après le dossier :
 

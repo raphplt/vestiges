@@ -52,7 +52,8 @@ public partial class ScoreManager : Node
 
     public override void _Ready()
     {
-        _config = ScoreConfig.Load();
+        // Barème refusé : le chargement de la run s'arrête sur son message (GameBootstrap).
+        ScoreConfig.TryLoad(out _config, out _);
         _eventBus = GetNode<EventBus>("/root/EventBus");
         _eventBus.EnemyKilled += OnEnemyKilled;
         _eventBus.RunPhaseChanged += OnRunPhaseChanged;
@@ -230,7 +231,7 @@ public partial class ScoreManager : Node
     {
         _totalKills++;
 
-        int points = _config.KillPoints(enemyId);
+        int points = _config?.KillPoints(enemyId) ?? 0;
         // Combattre là où le monde s'oublie rapporte davantage.
         points = Mathf.RoundToInt(points * (1f + ErasureEffectAt(position).ScoreBonus));
         _combatScore += points;

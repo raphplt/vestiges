@@ -12,6 +12,8 @@ namespace Vestiges.Infrastructure;
 public sealed class IndicibleConfig
 {
 	private const string ConfigPath = "res://data/scaling/indicible.json";
+	/// <summary>Tentacules ou yeux : au-delà, la boucle d'attaque s'emballerait.</summary>
+	private const int MaxCount = 32;
 	private static IndicibleConfig _cached;
 
 	public float EnrageHpRatio { get; private init; }
@@ -70,7 +72,7 @@ public sealed class IndicibleConfig
 		try
 		{
 			using JsonDocument document = JsonDocument.Parse(json);
-			Reader reader = new(document.RootElement);
+			JsonConfigReader reader = new(document.RootElement);
 			JsonElement tentacles = reader.Section("tentacles");
 			JsonElement edges = reader.Section("edges");
 			JsonElement decor = reader.Section("decor");
@@ -80,8 +82,8 @@ public sealed class IndicibleConfig
 				TentacleInterval = reader.Positive(tentacles, "interval_sec"),
 				FirstAttackRatio = reader.Ratio(tentacles, "first_attack_ratio"),
 				EnragedIntervalRatio = reader.Ratio(tentacles, "enraged_interval_ratio"),
-				TentacleCount = reader.Count(tentacles, "count"),
-				EnragedTentacleCount = reader.Count(tentacles, "enraged_count"),
+				TentacleCount = reader.Count(tentacles, "count", MaxCount),
+				EnragedTentacleCount = reader.Count(tentacles, "enraged_count", MaxCount),
 				WarningDuration = reader.Positive(tentacles, "warning_sec"),
 				TentacleWidth = reader.Positive(tentacles, "width"),
 				TentacleLength = reader.Positive(tentacles, "length"),
@@ -89,7 +91,7 @@ public sealed class IndicibleConfig
 				EdgeSpread = reader.Positive(edges, "spread"),
 				EdgeHalfLength = reader.Positive(edges, "half_length"),
 				EdgeHalfThickness = reader.Positive(edges, "half_thickness"),
-				EyeCount = reader.Count(decor, "eye_count"),
+				EyeCount = reader.Count(decor, "eye_count", MaxCount),
 				EyeSpread = reader.Positive(decor, "eye_spread"),
 				EyeOffset = reader.NonNegative(decor, "eye_offset"),
 				EyeFirstShift = reader.Positive(decor, "eye_first_shift_sec"),
@@ -105,63 +107,6 @@ public sealed class IndicibleConfig
 		{
 			error = $"JSON illisible : {ex.Message}";
 			return false;
-		}
-	}
-
-	/// <summary>Lecture qui retient la première erreur ; les lectures suivantes rendent 0 sans la masquer.</summary>
-	private sealed class Reader
-	{
-		private const int MaxCount = 32;
-		private readonly JsonElement _root;
-		public string Error { get; private set; }
-
-		public Reader(JsonElement root)
-		{
-			_root = root;
-			if (root.ValueKind != JsonValueKind.Object)
-				Error = "objet attendu à la racine";
-		}
-
-		public JsonElement Section(string name)
-		{
-			if (Error == null && (!_root.TryGetProperty(name, out JsonElement section) || section.ValueKind != JsonValueKind.Object))
-				Error = $"section {name} absente";
-			return Error == null ? _root.GetProperty(name) : default;
-		}
-
-		public float Positive(JsonElement owner, string key) => Number(owner, key, value => value > 0f, "strictement positif attendu");
-		public float NonNegative(JsonElement owner, string key) => Number(owner, key, value => value >= 0f, "positif ou nul attendu");
-		public float Ratio(JsonElement owner, string key) => Number(owner, key, value => value > 0f && value <= 1f, "part dans ]0 ; 1] attendue");
-
-		/// <summary>Nombre de tentacules ou d'yeux : entier de 1 à <see cref="MaxCount"/>, au-delà la boucle d'attaque s'emballerait.</summary>
-		public int Count(JsonElement owner, string key)
-		{
-			float value = Number(owner, key, number => number >= 1f && number <= MaxCount && number == Mathf.Floor(number),
-				$"entier de 1 à {MaxCount} attendu");
-			return (int)value;
-		}
-
-		private float Number(JsonElement owner, string key, Func<float, bool> valid, string expectation)
-		{
-			if (Error != null)
-				return 0f;
-			if (owner.ValueKind != JsonValueKind.Object || !owner.TryGetProperty(key, out JsonElement element))
-			{
-				Error = $"{key} absent";
-				return 0f;
-			}
-			if (element.ValueKind != JsonValueKind.Number || !element.TryGetDouble(out double number) || !double.IsFinite(number))
-			{
-				Error = $"{key} : nombre fini attendu";
-				return 0f;
-			}
-			float value = (float)number;
-			if (!valid(value))
-			{
-				Error = $"{key} : {value} ({expectation})";
-				return 0f;
-			}
-			return value;
 		}
 	}
 }
