@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Godot;
+using Vestiges.Core;
 using Vestiges.Infrastructure;
 
 namespace Vestiges.World;
@@ -39,7 +40,7 @@ public static class LootResolver
             if (entry == null)
                 continue;
 
-            int amount = (int)GD.RandRange(entry.MinAmount, entry.MaxAmount + 1);
+            int amount = RunRandom.Loot.RandiRange(entry.MinAmount, entry.MaxAmount + 1);
             results.Add(new LootResult
             {
                 Type = entry.Type,
@@ -61,7 +62,7 @@ public static class LootResolver
         if (totalWeight <= 0f)
             return null;
 
-        float roll = (float)GD.Randf() * totalWeight;
+        float roll = RunRandom.Loot.Randf() * totalWeight;
         float cumulative = 0f;
 
         foreach (LootEntry entry in entries)

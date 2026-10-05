@@ -29,7 +29,7 @@ public partial class CrisisAftermath : Node
     public override void _Ready()
     {
         LoadConfig();
-        _rng.Randomize();
+        _rng.Seed = RunRandom.SeedFor("crisis_aftermath");
         _chestScene = GD.Load<PackedScene>(ChestScenePath);
         _groups = GetNode<GroupCache>("/root/GroupCache");
         _eventBus = GetNode<EventBus>("/root/EventBus");

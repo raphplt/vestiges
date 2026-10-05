@@ -41,7 +41,7 @@ public partial class RiftDirector : Node
 
     public override void _Ready()
     {
-        _rng.Randomize();
+        _rng.Seed = RunRandom.SeedFor("rifts");
         _world = GetParent<WorldSetup>();
         _eventBus = GetNode<EventBus>("/root/EventBus");
         _eventBus.RiftInteracted += OnRiftInteracted;

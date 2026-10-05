@@ -52,7 +52,7 @@ public partial class FragmentManager : Node
     /// <summary>Même coût en points de Péril, pour les mesures.</summary>
     public float NextBanishPerilCost => NextBanishPerilFractions / (float)PerilDataLoader.BanishPerilDivisor;
 
-    private readonly RandomNumberGenerator _rng = new();
+    private readonly RandomNumberGenerator _rng = RunRandom.Create("level_up_offers");
 
     // Choix en attente — l'UI lit PendingChoices après le signal
     private readonly List<FragmentOption> _pendingChoices = new();
@@ -546,7 +546,7 @@ public partial class FragmentManager : Node
         return result;
     }
 
-    private static FragmentOption WeightedPick(List<FragmentOption> options)
+    private FragmentOption WeightedPick(List<FragmentOption> options)
     {
         if (options.Count == 1)
             return options[0];
@@ -555,7 +555,7 @@ public partial class FragmentManager : Node
         foreach (FragmentOption opt in options)
             totalWeight += GetFragmentWeight(opt);
 
-        float roll = GD.Randf() * totalWeight;
+        float roll = _rng.Randf() * totalWeight;
         float cumulative = 0f;
         foreach (FragmentOption opt in options)
         {

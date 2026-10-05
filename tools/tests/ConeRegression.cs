@@ -89,6 +89,7 @@ public partial class ConeRegression : Node2D
     {
         Place(count);
         GD.Seed(221092026);
+        Vestiges.Core.RunRandom.Begin(221092026);
         double[] intervals = new double[240];
         long bytes = 0;
         int feedback = 0;
@@ -129,6 +130,7 @@ public partial class ConeRegression : Node2D
         Place(1);
         Enemy enemy = _enemies[0];
         GD.Seed(221092026);
+        Vestiges.Core.RunRandom.Begin(221092026);
         _player.AddOrUpgradePassive("allumette_humide", 30);
         _player.ObjectTriggers.Rng.Seed = 11;
         _player.ApplyPerkModifier("lifesteal", 0.1f, "additive");

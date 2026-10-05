@@ -218,7 +218,6 @@ public partial class RunObservation : Node
 
     private async Task LoadRun(ulong seed, string characterId)
     {
-        GD.Seed(seed);
         string howlerCooldown = Argument(OS.GetCmdlineUserArgs(), "--howler-cooldown", null);
         if (howlerCooldown != null)
         {

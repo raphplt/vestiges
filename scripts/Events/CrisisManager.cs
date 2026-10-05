@@ -53,7 +53,7 @@ public partial class CrisisManager : Node
         _gameManager = GetNode<GameManager>("/root/GameManager");
         _erasureManager = GetParent().GetNodeOrNull<ErasureManager>("ErasureManager");
 
-        _rng.Randomize();
+        _rng.Seed = RunRandom.SeedFor("crises");
         ScheduleNextCrisis(_firstCrisisDelaySec);
         _eventBus.OubliEffectChanged += OnOubliEffectChanged;
     }

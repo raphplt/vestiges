@@ -71,7 +71,7 @@ public class PounceAbility : IEnemyAbility
         _phase = Phase.Ready;
         _marker.HideMarker();
         // Sans délai fixé, un décalage aléatoire évite que des ennemis apparus ensemble frappent en rythme.
-        _cooldownTimer = data.TryGetNumber("first_delay", out float firstDelay) ? firstDelay : _cooldownSeconds * (float)GD.RandRange(0.3, 1.0);
+        _cooldownTimer = data.TryGetNumber("first_delay", out float firstDelay) ? firstDelay : _cooldownSeconds * RunRandom.Behavior.RandfRange(0.3f, 1.0f);
     }
 
     public bool Process(Enemy owner, Player player, float distToPlayer, float delta)

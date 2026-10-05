@@ -139,7 +139,7 @@ public partial class ObjectTriggers : Node
     {
         _player = player;
         _playerId = player.GetInstanceId();
-        Rng.Randomize();
+        Rng.Seed = RunRandom.SeedFor("object_triggers");
     }
 
     public override void _Ready()

@@ -31,7 +31,7 @@ public sealed class RunEventContext
         EventBus = eventBus;
         Groups = groups;
         Progression = player.GetNodeOrNull<PlayerProgression>("PlayerProgression");
-        Rng.Randomize();
+        Rng.Seed = RunRandom.SeedFor("run_events");
         _chestScene ??= GD.Load<PackedScene>("res://scenes/world/Chest.tscn");
     }
 

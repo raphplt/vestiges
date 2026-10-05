@@ -105,7 +105,7 @@ public class CryAbility : IEnemyAbility
         if (pool == null || container == null || data == null)
             return;
 
-        float startAngle = (float)GD.RandRange(0, Mathf.Pi);
+        float startAngle = RunRandom.Spawn.RandfRange(0f, Mathf.Pi);
         for (int i = 0; i < _reinforcements; i++)
         {
             float angle = startAngle + Mathf.Tau * i / _reinforcements;

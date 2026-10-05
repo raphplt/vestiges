@@ -1,4 +1,5 @@
 using Godot;
+using Vestiges.Core;
 
 namespace Vestiges.Spawn;
 
@@ -19,19 +20,19 @@ public sealed class SpawnPositionPicker
     public Vector2 Pick(Vector2 center, Vector2 viewHalfExtents, Vector2 moveDirection, float marginScale)
     {
         float angle;
-        if (moveDirection.LengthSquared() > 0.01f && GD.Randf() < ForwardBias)
+        if (moveDirection.LengthSquared() > 0.01f && RunRandom.Spawn.Randf() < ForwardBias)
         {
             float halfArc = Mathf.DegToRad(ForwardArcDegrees) * 0.5f;
-            angle = moveDirection.Angle() + (float)GD.RandRange(-halfArc, halfArc);
+            angle = moveDirection.Angle() + RunRandom.Spawn.RandfRange(-halfArc, halfArc);
         }
         else
         {
-            angle = (float)GD.RandRange(0, Mathf.Tau);
+            angle = RunRandom.Spawn.RandfRange(0f, Mathf.Tau);
         }
 
         Vector2 direction = Vector2.FromAngle(angle);
         float edge = DistanceToRectEdge(direction, viewHalfExtents);
-        float margin = (float)GD.RandRange(MarginMin, MarginMax) * marginScale;
+        float margin = RunRandom.Spawn.RandfRange(MarginMin, MarginMax) * marginScale;
         return center + direction * (edge + margin);
     }
 

@@ -67,7 +67,7 @@ public partial class EssenceTracker : Node
             EnemyTier.Elite => 4,
             _ => 1
         };
-        if (GD.Randf() < ErasureEffectAt(position).EssenceChance)
+        if (RunRandom.Loot.Randf() < ErasureEffectAt(position).EssenceChance)
             amount++;
         // Accalmie après une crise : l'Essence des morts rapporte davantage (arrondi au supérieur).
         amount = Mathf.CeilToInt(amount * _multiplier);

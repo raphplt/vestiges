@@ -36,6 +36,7 @@ public partial class TemporalRegression : Node
         {
             ProcessMode = ProcessModeEnum.Always;
             GD.Seed(221092026);
+            Vestiges.Core.RunRandom.Begin(221092026);
             _bus = GetNode<EventBus>("/root/EventBus");
             GetNode<GameManager>("/root/GameManager").ChangeState(GameManager.GameState.Run);
             _player = GD.Load<PackedScene>("res://scenes/Player.tscn").Instantiate<Player>();

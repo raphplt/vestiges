@@ -69,7 +69,7 @@ public class AimedShotAbility : IEnemyAbility
         _ringShown = false;
         _ring.HideMarker();
         // Décalage initial : des tireurs apparus ensemble ne tirent pas en rythme.
-        _cooldownTimer = data.TryGetNumber("first_delay", out float firstDelay) ? firstDelay : (float)GD.RandRange(0.3, 1.0);
+        _cooldownTimer = data.TryGetNumber("first_delay", out float firstDelay) ? firstDelay : RunRandom.Behavior.RandfRange(0.3f, 1.0f);
     }
 
     public bool Process(Enemy owner, Player player, float distToPlayer, float delta)

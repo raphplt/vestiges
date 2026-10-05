@@ -96,7 +96,7 @@ public static class LootRewards
         ChestStatBonusData data = ChestDataLoader.LoadStatBonus();
         if (data.Stats.Count == 0 || data.Multiplier(chestRarity) <= 0f)
             return null;
-        ChestStatBonus bonus = data.Stats[(int)(GD.Randi() % data.Stats.Count)];
+        ChestStatBonus bonus = data.Stats[(int)(RunRandom.Loot.Randi() % data.Stats.Count)];
         float amount = bonus.Amount * data.Multiplier(chestRarity);
         bool multiplicative = bonus.ModifierType == "multiplicative";
         float value = multiplicative ? 1f + amount : amount;
@@ -138,7 +138,7 @@ public static class LootRewards
         foreach (ActivePassiveSouvenir passive in player.PassiveSlots)
             if (passive.Level + reserved.GetValueOrDefault(passive.Id) < passive.Data.MaxLevel)
                 candidates.Add(passive);
-        return candidates.Count > 0 ? candidates[(int)(GD.Randi() % candidates.Count)] : null;
+        return candidates.Count > 0 ? candidates[(int)(RunRandom.Loot.Randi() % candidates.Count)] : null;
     }
 
     private static ResolvedLoot Essence(int amount) =>
@@ -156,7 +156,7 @@ public static class LootRewards
             if (MetaSaveManager.IsWeaponUnlocked(weapon) && !Holds(holder, weapon.Id))
                 candidates.Add(weapon);
         }
-        return candidates.Count > 0 ? candidates[(int)(GD.Randi() % candidates.Count)] : null;
+        return candidates.Count > 0 ? candidates[(int)(RunRandom.Loot.Randi() % candidates.Count)] : null;
     }
 
     private static bool Holds(Player holder, string weaponId)

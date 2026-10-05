@@ -73,7 +73,7 @@ public class OmenStrikeAbility : IEnemyAbility
         Cancel();
         _eyeSet = ProjectileSprites.Get("omen");
         // Décalage initial pour que des Présages apparus ensemble ne frappent pas en rythme.
-        _cooldownTimer = _cooldownSeconds * (float)GD.RandRange(0.4, 1.0);
+        _cooldownTimer = _cooldownSeconds * RunRandom.Behavior.RandfRange(0.4f, 1.0f);
     }
 
     public bool Process(Enemy owner, Player player, float distToPlayer, float delta)

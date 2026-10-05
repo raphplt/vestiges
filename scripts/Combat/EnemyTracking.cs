@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Godot;
+using Vestiges.Core;
 
 namespace Vestiges.Combat;
 
@@ -89,7 +90,7 @@ public sealed class EnemyTracking
             if (_wanderTimer <= 0f)
             {
                 _wanderTimer = _wanderTurnSeconds;
-                float angle = GD.Randf() * Mathf.Tau;
+                float angle = RunRandom.Behavior.Randf() * Mathf.Tau;
                 _wanderDirection = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle) * 0.5f).Normalized();
             }
         }

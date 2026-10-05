@@ -28,7 +28,7 @@ public partial class WorldSetup : Node2D
     private WorldGenConfig _config;
     private BiomeTileMapper _tileMapper;
 
-    /// <summary>Seed de la run, injectée par GameBootstrap.</summary>
+    /// <summary>Seed de la run : celle du Hub, ou tirée à l'entrée dans l'arbre (voir <see cref="_EnterTree"/>).</summary>
     public ulong Seed { get; set; }
 
     /// <summary>Si true, aucun POI n'est généré (mutateur "Isolement"). Les coffres restent.</summary>
@@ -108,6 +108,24 @@ public partial class WorldSetup : Node2D
         }
     }
 
+    /// <summary>
+    /// La seed est fixée à l'entrée dans l'arbre, avant le _Ready des enfants (le joueur, ses objets) : tous les flux de
+    /// tirage de la run en dérivent (plan 26 Q8c).
+    /// </summary>
+    public override void _EnterTree()
+    {
+        // Seed du Hub, ou 0 = aléatoire.
+        GameManager gm = GetNodeOrNull<GameManager>("/root/GameManager");
+        if (gm != null && gm.RunSeed != 0)
+            Seed = gm.RunSeed;
+        while (Seed == 0)
+            Seed = GD.Randi();
+        // Publiée tout de suite : le record, l'historique et le bilan gardent la carte d'une run aléatoire.
+        if (gm != null)
+            gm.EffectiveSeed = Seed;
+        RunRandom.Begin(Seed);
+    }
+
     public override void _Ready()
     {
         LoadProfiler.Begin();
@@ -123,15 +141,6 @@ public partial class WorldSetup : Node2D
         _config = WorldGenConfig.Load();
         PropRules.Current = _config.PropRules;
 
-        // Read seed from GameManager (set in Hub or 0 = random)
-        GameManager gm = GetNodeOrNull<GameManager>("/root/GameManager");
-        if (gm != null && gm.RunSeed != 0)
-            Seed = gm.RunSeed;
-        while (Seed == 0)
-            Seed = GD.Randi();
-        // Publiée tout de suite : le record, l'historique et le bilan gardent la carte d'une run aléatoire.
-        if (gm != null)
-            gm.EffectiveSeed = Seed;
 
         // Génération du monde (calcul pur) sur un thread : l'écran de chargement s'affiche et s'anime pendant ce temps.
         // Ses résultats ne sont lus qu'après l'attente, au début d'InitializeWorldAsync.
@@ -139,6 +148,7 @@ public partial class WorldSetup : Node2D
     }
 
     private Task _generation;
+    private RandomNumberGenerator _loreRng;
     // Décors en attente, hors de l'arbre, entre les placeurs et le découpage en tronçons.
     private Node2D _propStaging;
 
@@ -350,6 +360,7 @@ public partial class WorldSetup : Node2D
 
     public override void _ExitTree()
     {
+        RunRandom.End();
         if (IsWorldReady)
             return;
         // Scène quittée pendant le chargement (plan 26 Q4) : les décors en attente sont hors de l'arbre, sa destruction
@@ -771,6 +782,8 @@ public partial class WorldSetup : Node2D
     /// </summary>
     private void SpawnLoreElements()
     {
+        // Placement tiré de la seed, comme le reste de la carte (plan 26 Q8c).
+        _loreRng = RunRandom.Create("lore_elements");
         Node2D loreContainer = new() { Name = "LoreContainer" };
         AddChild(loreContainer);
 
@@ -782,7 +795,7 @@ public partial class WorldSetup : Node2D
         int loreCount = 0;
 
         // --- Pas Interrompus : 2-4 par map, tous biomes ---
-        int footstepCount = (int)GD.RandRange(2, 5);
+        int footstepCount = _loreRng.RandiRange(2, 5);
         for (int i = 0; i < footstepCount; i++)
         {
             Vector2I cell = PickLoreCell(10);
@@ -795,7 +808,7 @@ public partial class WorldSetup : Node2D
         }
 
         // --- Étagères Vides : 2-3, uniquement en zone urbaine ---
-        int shelfCount = (int)GD.RandRange(2, 4);
+        int shelfCount = _loreRng.RandiRange(2, 4);
         for (int i = 0; i < shelfCount; i++)
         {
             Vector2I cell = PickLoreCellInBiome("urban_ruins", 8);
@@ -808,7 +821,7 @@ public partial class WorldSetup : Node2D
         }
 
         // --- Balançoire Fantôme : 0-1, rare, en forêt ---
-        if (GD.Randf() < 0.6f)
+        if (_loreRng.Randf() < 0.6f)
         {
             Vector2I cell = PickLoreCellInBiome("forest_reclaimed", 15);
             if (cell.X != int.MinValue)
@@ -821,7 +834,7 @@ public partial class WorldSetup : Node2D
         }
 
         // --- Racines-Lettres : 3-5, en forêt ou bordure forêt/urbain ---
-        int rootCount = (int)GD.RandRange(3, 6);
+        int rootCount = _loreRng.RandiRange(3, 6);
         for (int i = 0; i < rootCount; i++)
         {
             Vector2I cell = PickLoreCellInBiome("forest_reclaimed", 8);
@@ -834,7 +847,7 @@ public partial class WorldSetup : Node2D
         }
 
         // --- Panneaux Avalés : 2-3, tous biomes sauf marais ---
-        int signCount = (int)GD.RandRange(2, 4);
+        int signCount = _loreRng.RandiRange(2, 4);
         for (int i = 0; i < signCount; i++)
         {
             Vector2I cell = PickLoreCell(10);
@@ -852,15 +865,15 @@ public partial class WorldSetup : Node2D
         }
 
         // --- Carillons Fantômes : 2-3, en cluster (proches les uns des autres) ---
-        int chimeCount = (int)GD.RandRange(2, 4);
+        int chimeCount = _loreRng.RandiRange(2, 4);
         Vector2I chimeCenter = PickLoreCell(15);
         if (chimeCenter.X != int.MinValue)
         {
             for (int i = 0; i < chimeCount; i++)
             {
                 // Cluster : chaque carillon à 3-6 tiles du centre
-                int offsetX = (int)GD.RandRange(-5, 6);
-                int offsetY = (int)GD.RandRange(-5, 6);
+                int offsetX = _loreRng.RandiRange(-5, 6);
+                int offsetY = _loreRng.RandiRange(-5, 6);
                 Vector2I cell = new(chimeCenter.X + offsetX, chimeCenter.Y + offsetY);
 
                 if (!IsValidLoreCell(cell))
@@ -874,7 +887,7 @@ public partial class WorldSetup : Node2D
         }
 
         // --- Champignons Bioluminescents : 3-5, en forêt (sous-bois/ombre) ---
-        int shroomCount = (int)GD.RandRange(3, 6);
+        int shroomCount = _loreRng.RandiRange(3, 6);
         for (int i = 0; i < shroomCount; i++)
         {
             Vector2I cell = PickLoreCellInBiome("forest_reclaimed", 8);
@@ -887,7 +900,7 @@ public partial class WorldSetup : Node2D
         }
 
         // --- Graffiti Survivant : 3-5, en zone urbaine ---
-        int graffitiCount = (int)GD.RandRange(3, 6);
+        int graffitiCount = _loreRng.RandiRange(3, 6);
         for (int i = 0; i < graffitiCount; i++)
         {
             Vector2I cell = PickLoreCellInBiome("urban_ruins", 8);
@@ -912,7 +925,7 @@ public partial class WorldSetup : Node2D
         }
 
         // --- Porte Sans Mur : 1-2, tous biomes sauf eau/marais ---
-        int doorCount = (int)GD.RandRange(1, 3);
+        int doorCount = _loreRng.RandiRange(1, 3);
         for (int i = 0; i < doorCount; i++)
         {
             Vector2I cell = PickLoreCell(10);
@@ -929,7 +942,7 @@ public partial class WorldSetup : Node2D
         }
 
         // --- Miroir d'Eau : 1-2, en marais ---
-        int mirrorCount = (int)GD.RandRange(1, 3);
+        int mirrorCount = _loreRng.RandiRange(1, 3);
         for (int i = 0; i < mirrorCount; i++)
         {
             Vector2I cell = PickLoreCellInBiome("swamp", 10);
@@ -957,8 +970,8 @@ public partial class WorldSetup : Node2D
 
         for (int attempt = 0; attempt < 40; attempt++)
         {
-            int x = (int)GD.RandRange(-safeRadius + 1, safeRadius);
-            int y = (int)GD.RandRange(-safeRadiusY + 1, safeRadiusY);
+            int x = _loreRng.RandiRange(-safeRadius + 1, safeRadius);
+            int y = _loreRng.RandiRange(-safeRadiusY + 1, safeRadiusY);
             Vector2I cell = new(x, y);
 
             if (!IsValidLoreCell(cell))
@@ -979,8 +992,8 @@ public partial class WorldSetup : Node2D
 
         for (int attempt = 0; attempt < 60; attempt++)
         {
-            int x = (int)GD.RandRange(-safeRadius + 1, safeRadius);
-            int y = (int)GD.RandRange(-safeRadiusY + 1, safeRadiusY);
+            int x = _loreRng.RandiRange(-safeRadius + 1, safeRadius);
+            int y = _loreRng.RandiRange(-safeRadiusY + 1, safeRadiusY);
             Vector2I cell = new(x, y);
 
             if (!IsValidLoreCell(cell))

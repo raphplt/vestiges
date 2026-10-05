@@ -91,7 +91,7 @@ public partial class ObjectMilestones : Node
     {
         _player = player;
         _playerId = player.GetInstanceId();
-        Rng.Randomize();
+        Rng.Seed = RunRandom.SeedFor("object_milestones");
     }
 
     public override void _Ready()

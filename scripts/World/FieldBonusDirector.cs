@@ -52,15 +52,15 @@ public partial class FieldBonusDirector : Node
 
     private void OnVariantKilled(string displayName, string variantId, Vector2 position)
     {
-        if (_config.VariantChance.TryGetValue(variantId, out float chance) && GD.Randf() < chance)
+        if (_config.VariantChance.TryGetValue(variantId, out float chance) && RunRandom.Loot.Randf() < chance)
             Spawn(PickWeighted(), position);
     }
 
     private void OnEnemyKilled(string enemyId, Vector2 position)
     {
-        if (_config.KillPool.Count == 0 || GD.Randf() >= _config.KillChance)
+        if (_config.KillPool.Count == 0 || RunRandom.Loot.Randf() >= _config.KillChance)
             return;
-        Spawn(_config.Get(_config.KillPool[(int)(GD.Randi() % _config.KillPool.Count)]), position);
+        Spawn(_config.Get(_config.KillPool[(int)(RunRandom.Loot.Randi() % _config.KillPool.Count)]), position);
     }
 
     /// <summary>Fin d'une Résurgence survécue : des bonus près du joueur, dont un soin.</summary>
@@ -71,7 +71,7 @@ public partial class FieldBonusDirector : Node
         for (int i = 0; i < _config.CrisisEnd; i++)
         {
             FieldBonusData data = i == 0 ? _config.Get(_config.CrisisFirst) : PickWeighted();
-            Vector2 offset = Vector2.FromAngle(GD.Randf() * Mathf.Tau) * (float)GD.RandRange(70.0, 130.0);
+            Vector2 offset = Vector2.FromAngle(RunRandom.Loot.Randf() * Mathf.Tau) * RunRandom.Loot.RandfRange(70f, 130f);
             Spawn(data, player.GlobalPosition + Iso.ToScreen(offset));
         }
     }
@@ -215,7 +215,7 @@ public partial class FieldBonusDirector : Node
 
     private FieldBonusData PickWeighted()
     {
-        float roll = GD.Randf() * _totalWeight;
+        float roll = RunRandom.Loot.Randf() * _totalWeight;
         foreach (FieldBonusData bonus in _config.Bonuses)
         {
             roll -= bonus.Weight;

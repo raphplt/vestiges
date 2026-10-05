@@ -274,7 +274,7 @@ public partial class Enemy : CharacterBody2D
 		_webSlowSeconds = data.GetStat("web_slow_seconds");
 		_displayName = data.Name;
 		_isFeminine = data.IsFeminine;
-		_packBonusTimer = (float)GD.RandRange(0.0, PackBonusInterval);
+		_packBonusTimer = RunRandom.Behavior.RandfRange(0f, PackBonusInterval);
 		IsActive = true;
 
 		_meleeRangeSq = MeleeRange * MeleeRange;
@@ -1010,7 +1010,7 @@ public partial class Enemy : CharacterBody2D
 		else
 			_disorientTimer = Mathf.Max(duration, _propagatedDisorientationRemaining);
 		_disorientDuration = _disorientTimer;
-		float angle = (float)GD.RandRange(0, Mathf.Tau);
+		float angle = RunRandom.Behavior.RandfRange(0f, Mathf.Tau);
 		_disorientDirection = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle));
 		_visual.Color = new Color(1f, 1f, 0.4f);
 	}
@@ -1107,9 +1107,9 @@ public partial class Enemy : CharacterBody2D
 
 		_disorientTimer = Mathf.Max(0f, _disorientTimer - delta);
 		// Hors de l'IA complète, seule l'expiration compte : aucun tirage aléatoire ni choix de direction.
-		if (updateDirection && GD.Randf() < delta * 2f)
+		if (updateDirection && RunRandom.Behavior.Randf() < delta * 2f)
 		{
-			float angle = (float)GD.RandRange(0, Mathf.Tau);
+			float angle = RunRandom.Behavior.RandfRange(0f, Mathf.Tau);
 			_disorientDirection = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle));
 		}
 		if (_disorientTimer <= 0f)
@@ -1358,7 +1358,7 @@ public partial class Enemy : CharacterBody2D
 		if (variant.BonusEssence > 0)
 			_eventBus.EmitSignal(EventBus.SignalName.LootReceived, "essence", _enemyId, variant.BonusEssence);
 
-		if (!string.IsNullOrEmpty(variant.RewardChest) && GD.Randf() < variant.RewardChestChance)
+		if (!string.IsNullOrEmpty(variant.RewardChest) && RunRandom.Loot.Randf() < variant.RewardChestChance)
 			SpawnRewardChest(variant.RewardChest);
 
 		if (variant.Nameplate)

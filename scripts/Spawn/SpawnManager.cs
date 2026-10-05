@@ -264,7 +264,7 @@ public partial class SpawnManager : Node2D
 		{
 			float chance = config.CrisisAberrationChance
 				+ config.CrisisAberrationChancePerIntensity * Mathf.Max(0, (_crisisManager?.CurrentIntensity ?? 1) - 1);
-			if (GD.Randf() < chance)
+			if (RunRandom.Spawn.Randf() < chance)
 				enemy.ApplyVariant(EnemyVariantDataLoader.GetVariant("aberration"), System.Array.Empty<EnemyAffixData>());
 		}
 
@@ -275,9 +275,9 @@ public partial class SpawnManager : Node2D
 			GameManager.RunPhase.Crisis => config.AffixChanceCrisis,
 			_ => 0f
 		} + _affixChanceBonus;
-		if (config.AffixPool.Count > 0 && GD.Randf() < affixChance)
+		if (config.AffixPool.Count > 0 && RunRandom.Spawn.Randf() < affixChance)
 		{
-			EnemyAffixData affix = EnemyVariantDataLoader.GetAffix(config.AffixPool[(int)(GD.Randi() % config.AffixPool.Count)]);
+			EnemyAffixData affix = EnemyVariantDataLoader.GetAffix(config.AffixPool[(int)(RunRandom.Spawn.Randi() % config.AffixPool.Count)]);
 			if (affix != null)
 				enemy.ApplyAffix(affix);
 		}
@@ -299,7 +299,7 @@ public partial class SpawnManager : Node2D
 		_affixPick.Clear();
 		for (int i = 0; i < variant.AffixCount && _affixScratch.Count > 0; i++)
 		{
-			int index = (int)(GD.Randi() % _affixScratch.Count);
+			int index = (int)(RunRandom.Spawn.Randi() % _affixScratch.Count);
 			EnemyAffixData affix = EnemyVariantDataLoader.GetAffix(_affixScratch[index]);
 			_affixScratch.RemoveAt(index);
 			if (affix != null)
@@ -357,7 +357,7 @@ public partial class SpawnManager : Node2D
 	private void TrySpawnNaturalElite(float elapsedMinutes)
 	{
 		NaturalEliteConfig config = EnemyVariantDataLoader.NaturalElites;
-		_nextEliteAtSec = _elapsedTime + (float)GD.RandRange(config.IntervalMinSec, config.IntervalMaxSec);
+		_nextEliteAtSec = _elapsedTime + RunRandom.Spawn.RandfRange((float)config.IntervalMinSec, (float)config.IntervalMaxSec);
 
 		for (int i = _naturalElites.Count - 1; i >= 0; i--)
 		{
@@ -617,9 +617,9 @@ public partial class SpawnManager : Node2D
 
 		string picked = PickWeighted(pool, _elapsedTime / 60f);
 
-		if (GD.Randf() < _sameTypeClusterChance)
+		if (RunRandom.Spawn.Randf() < _sameTypeClusterChance)
 		{
-			int clusterSize = (int)GD.RandRange(_sameTypeClusterMin, _sameTypeClusterMax + 1);
+			int clusterSize = RunRandom.Spawn.RandiRange(_sameTypeClusterMin, _sameTypeClusterMax + 1);
 			_clusterEnemyId = picked;
 			_clusterRemaining = Mathf.Max(0, clusterSize - 1);
 			_clusterAnchor = worldPos;
@@ -645,10 +645,10 @@ public partial class SpawnManager : Node2D
 		if (total <= 0f)
 		{
 			GD.PushWarning($"[SpawnManager] Aucune créature éligible à {elapsedMinutes:F1} min dans un groupe de {pool.Count} : tirage uniforme");
-			return pool[(int)(GD.Randi() % pool.Count)];
+			return pool[(int)(RunRandom.Spawn.Randi() % pool.Count)];
 		}
 
-		float roll = GD.Randf() * total;
+		float roll = RunRandom.Spawn.Randf() * total;
 		string picked = null;
 		foreach (string id in pool)
 		{
@@ -676,8 +676,8 @@ public partial class SpawnManager : Node2D
 		if (string.IsNullOrEmpty(_clusterEnemyId) || enemyId != _clusterEnemyId)
 			return spawnPos;
 
-		float angle = (float)GD.RandRange(0, Mathf.Tau);
-		float radius = (float)GD.RandRange(_sameTypeClusterSpacingMin, _sameTypeClusterSpacingMax);
+		float angle = RunRandom.Spawn.RandfRange(0f, Mathf.Tau);
+		float radius = RunRandom.Spawn.RandfRange(_sameTypeClusterSpacingMin, _sameTypeClusterSpacingMax);
 		Vector2 candidate = _clusterAnchor + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * radius;
 
 		if (!IsValidDaySpawnPosition(candidate))

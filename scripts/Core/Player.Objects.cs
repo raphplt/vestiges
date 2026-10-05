@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Godot;
+using Vestiges.Core;
 using Vestiges.Combat;
 using Vestiges.Infrastructure;
 using Vestiges.Progression;
@@ -262,7 +263,7 @@ public partial class Player
     /// l'arme peut les doubler (Volée) ou les refuser (Transpercer).
     /// </summary>
     private int RollBonusProjectiles(WeaponInstance weapon) =>
-        FractionalCount.Roll(_bonusProjectiles * (weapon?.BonusProjectileMultiplier ?? 1f), GD.Randf());
+        FractionalCount.Roll(_bonusProjectiles * (weapon?.BonusProjectileMultiplier ?? 1f), RunRandom.Combat.Randf());
 
     /// <summary>Papier carbone, palier 15 : les projectiles en plus visent chacun leur propre cible.</summary>
     private bool ExtraProjectilesSpread => _objectMilestones?.SpreadsExtraProjectiles == true;

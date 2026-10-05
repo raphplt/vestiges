@@ -52,7 +52,7 @@ public partial class SmallPlaceDirector : Node
 		_spawner = spawner;
 		_erasure = erasure;
 		_placementRng = new RandomNumberGenerator { Seed = seed ^ 0x5A11_91ACEUL };
-		_rng.Randomize();
+		_rng.Seed = RunRandom.SeedFor("small_places");
 	}
 
 	public override void _Ready()

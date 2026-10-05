@@ -1170,7 +1170,7 @@ public partial class Player : CharacterBody2D
     {
         float range = GetEffectiveWeaponRange();
         // Stat entière fractionnaire (plan 23 R4) : la décimale est une chance, à chaque attaque, d'un saut de plus.
-        int chainTargets = Mathf.Max(1, FractionalCount.Roll(GetWeaponStat("chain_targets"), GD.Randf()));
+        int chainTargets = Mathf.Max(1, FractionalCount.Roll(GetWeaponStat("chain_targets"), RunRandom.Combat.Randf()));
         float chainRange = GetWeaponStat("chain_range");
         float chainFalloff = GetWeaponStat("chain_damage_falloff");
 
@@ -1184,7 +1184,7 @@ public partial class Player : CharacterBody2D
         Vector2 attackDir = (firstTarget.GlobalPosition - GlobalPosition).Normalized();
         PlayAttackFeedback(isMelee: true, attackDir);
 
-        bool isCrit = _critChance > 0f && GD.Randf() < _critChance;
+        bool isCrit = _critChance > 0f && RunRandom.Combat.Randf() < _critChance;
         float currentDamage = isCrit ? baseDamage * _critMultiplier : baseDamage;
         AttackContext context = BeginAttack(_equippedWeapon, currentDamage);
         float firstDamage = ResolveHitDamage(firstTarget, currentDamage, isCrit);
@@ -1805,7 +1805,7 @@ public partial class Player : CharacterBody2D
     /// Nombre propre de l'arme active : tirs, frappes de mêlée ou ondes du cône (plan 21 G6a). Stat entière fractionnaire
     /// (plan 23 R4) : 1,5, c'est un coup et une chance sur deux d'un second.
     /// </summary>
-    private int RollOwnCount() => Mathf.Max(1, FractionalCount.Roll(GetWeaponStat("projectile_count"), GD.Randf()));
+    private int RollOwnCount() => Mathf.Max(1, FractionalCount.Roll(GetWeaponStat("projectile_count"), RunRandom.Combat.Randf()));
 
     private void PerformRangedAttack(AttackPatternKind pattern)
     {
@@ -1821,7 +1821,7 @@ public partial class Player : CharacterBody2D
         float baseDamage = ComputeBaseAttackDamage();
         _launchContext = BeginAttack(_equippedWeapon, baseDamage);
         float projectileSpeed = GetWeaponStat("projectile_speed");
-        int totalPierce = FractionalCount.Roll(GetWeaponStat("projectile_pierce") + _projectilePierce, GD.Randf());
+        int totalPierce = FractionalCount.Roll(GetWeaponStat("projectile_pierce") + _projectilePierce, RunRandom.Combat.Randf());
         Vector2 baseDirection = (targets[0].GlobalPosition - GlobalPosition).Normalized();
         PlayAttackFeedback(isMelee: false, baseDirection);
         float spreadAngle = GetWeaponStat("spread_angle");
@@ -1863,7 +1863,7 @@ public partial class Player : CharacterBody2D
         float range, int pierce, float offsetDegrees = 0f, float launchDelay = 0f)
     {
         Vector2 direction = (target.GlobalPosition - GlobalPosition).Normalized().Rotated(Mathf.DegToRad(offsetDegrees));
-        bool isCrit = _critChance > 0f && GD.Randf() < _critChance;
+        bool isCrit = _critChance > 0f && RunRandom.Combat.Randf() < _critChance;
         Projectile proj = SpawnProjectile(direction, ProjectileDamage(baseDamage, isCrit), speed, range, pierce, isCrit, launchDelay);
         if (proj != null && launchDelay > 0f && offsetDegrees == 0f)
             proj.AimAtDeparture(target);
@@ -1978,7 +1978,7 @@ public partial class Player : CharacterBody2D
             if (hitCount <= 0)
                 continue;
 
-            bool hasCrit = clampedCritChance > 0f && GD.Randf() < GetCombinedProcChance(clampedCritChance, hitCount);
+            bool hasCrit = clampedCritChance > 0f && RunRandom.Combat.Randf() < GetCombinedProcChance(clampedCritChance, hitCount);
             float totalDamage = ResolveHitDamage(enemy, baseDamage * hitCount * critDamageFactor, hasCrit);
             AttackContext hitContext = context with { ReferenceDamage = totalDamage };
             enemy.TakeDamage(totalDamage, hasCrit, source: hitContext);
@@ -2021,7 +2021,7 @@ public partial class Player : CharacterBody2D
         for (int i = 0; i < count; i++)
         {
             Vector2 direction = baseDirection.Rotated(Mathf.DegToRad(start + step * i)).Normalized();
-            bool isCrit = _critChance > 0f && GD.Randf() < _critChance;
+            bool isCrit = _critChance > 0f && RunRandom.Combat.Randf() < _critChance;
             SpawnProjectile(direction, ProjectileDamage(baseDamage, isCrit), projectileSpeed, range, pierce, isCrit);
         }
     }

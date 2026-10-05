@@ -254,8 +254,7 @@ public partial class QuestManager : CanvasLayer
         if (pool.Count == 0)
             return;
 
-        RandomNumberGenerator rng = new();
-        rng.Randomize();
+        RandomNumberGenerator rng = RunRandom.Create("quests");
 
         for (int i = pool.Count - 1; i > 0; i--)
         {

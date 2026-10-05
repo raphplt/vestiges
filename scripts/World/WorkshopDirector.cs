@@ -38,7 +38,7 @@ public partial class WorkshopDirector : Node
 
     public override void _Ready()
     {
-        _rng.Randomize();
+        _rng.Seed = RunRandom.SeedFor("workshops");
         _eventBus = GetNode<EventBus>("/root/EventBus");
         _eventBus.WorkshopInteracted += OnWorkshopInteracted;
     }

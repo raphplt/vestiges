@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Godot;
+using Vestiges.Core;
 using Vestiges.Combat;
 using Vestiges.Infrastructure;
 using Vestiges.Spawn;
@@ -74,12 +75,16 @@ public partial class PoiManager : Node
         GD.Print($"[PoiManager] Spawned {totalSpawned} POIs across {activeBiomes.Count} biomes");
     }
 
+    // Placement tiré de la seed, comme le reste de la carte (plan 26 Q8c).
+    private RandomNumberGenerator _rng;
+    private RandomNumberGenerator Rng => _rng ??= RunRandom.Create("pois");
+
     private int SpawnPoisForBiome(BiomeData biome, Node2D container)
     {
         if (biome.PoiPool.Count == 0)
             return 0;
 
-        int targetCount = (int)GD.RandRange(biome.PoiCountMin, biome.PoiCountMax + 1);
+        int targetCount = Rng.RandiRange(biome.PoiCountMin, biome.PoiCountMax + 1);
         int spawned = 0;
 
         for (int i = 0; i < targetCount; i++)
@@ -121,7 +126,7 @@ public partial class PoiManager : Node
         if (totalWeight <= 0f)
             return null;
 
-        float roll = (float)GD.Randf() * totalWeight;
+        float roll = Rng.Randf() * totalWeight;
         float cumulative = 0f;
 
         foreach (KeyValuePair<string, float> kv in biome.PoiPool)
@@ -151,8 +156,8 @@ public partial class PoiManager : Node
 
         for (int attempt = 0; attempt < 50; attempt++)
         {
-            int x = (int)GD.RandRange(-safeRadius + 1, safeRadius);
-            int y = (int)GD.RandRange(-safeRadiusY + 1, safeRadiusY);
+            int x = Rng.RandiRange(-safeRadius + 1, safeRadius);
+            int y = Rng.RandiRange(-safeRadiusY + 1, safeRadiusY);
 
             float distFromCenter = _generator.EllipseDistance(x, y);
 
