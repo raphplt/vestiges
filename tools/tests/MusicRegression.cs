@@ -77,7 +77,7 @@ public partial class MusicRegression : Node2D
             GetTree().Paused = false;
 
             // Début : phase et signal dans la même image, une seule intention.
-            _manager.SetRunPhase(GameManager.RunPhase.Crisis);
+            _manager.ReportCrisis(true);
             _bus.EmitSignal(EventBus.SignalName.CrisisStarted, 1, 1);
             await Frames(2);
             Check(_music.CurrentIntent == MusicIntent.Resurgence && _music.CurrentKey == "mus_nuit_vagues", "Début de crise : mus_nuit_vagues");
@@ -87,7 +87,7 @@ public partial class MusicRegression : Node2D
             Check(_music.CurrentIntent == MusicIntent.Resurgence, "Pause pendant la crise : la crise reste");
 
             // Fin : CrisisEnded (et l'accalmie qu'il ouvre) précède le retour de phase, dans la même image.
-            EndCrisis(1, GameManager.RunPhase.Exploration);
+            EndCrisis(1);
             await Frames(2);
             await Simulate(3f, 1f / 60f);
             Check(_music.CurrentIntent == MusicIntent.Calm && _music.CurrentKey == "mus_jour_exploration",
@@ -104,35 +104,36 @@ public partial class MusicRegression : Node2D
             _bus.EmitSignal(EventBus.SignalName.CrisisWarning, 2, 20f);
             await Frames(2);
             Check(_music.CurrentIntent == MusicIntent.Warning, "Seconde annonce");
-            _manager.SetRunPhase(GameManager.RunPhase.Crisis);
+            _manager.ReportCrisis(true);
             _bus.EmitSignal(EventBus.SignalName.CrisisStarted, 2, 1);
             await Frames(2);
-            EndCrisis(2, GameManager.RunPhase.Exploration);
+            EndCrisis(2);
             await Frames(2);
             Check(_music.CurrentIntent == MusicIntent.Calm, "Seconde crise terminée : accalmie");
             _bus.EmitSignal(EventBus.SignalName.CrisisCalmChanged, false);
 
             // Fin de partie avancée : l'annonce et la crise gardent leur identité, puis retour au fond tardif.
-            _manager.SetRunPhase(GameManager.RunPhase.LateGame);
+            _manager.ReportLateGame();
             await Frames(2);
             Check(_music.CurrentIntent == MusicIntent.LateGame && _music.CurrentKey == "mus_nuit_chaos", "LateGame : mus_nuit_chaos");
             _bus.EmitSignal(EventBus.SignalName.CrisisWarning, 3, 20f);
             await Frames(2);
             Check(_music.CurrentIntent == MusicIntent.Warning, "Annonce en LateGame");
-            _manager.SetRunPhase(GameManager.RunPhase.Crisis);
+            _manager.ReportCrisis(true);
             _bus.EmitSignal(EventBus.SignalName.CrisisStarted, 3, 2);
             await Frames(2);
-            EndCrisis(3, GameManager.RunPhase.LateGame);
+            EndCrisis(3);
             await Frames(2);
             Check(_music.CurrentIntent == MusicIntent.LateGame, "Crise tardive terminée : retour à mus_nuit_chaos, pas d'accalmie d'exploration");
             _bus.EmitSignal(EventBus.SignalName.CrisisCalmChanged, false);
 
             // Endgame : la phase ne change pas pendant la crise, la musique en sort quand même.
-            _manager.SetRunPhase(GameManager.RunPhase.Endgame);
+            _manager.ReportEndgame();
+            _manager.ReportCrisis(true);
             _bus.EmitSignal(EventBus.SignalName.CrisisStarted, 4, 2);
             await Frames(2);
             Check(_music.CurrentIntent == MusicIntent.Resurgence, "Crise en endgame");
-            EndCrisis(4, GameManager.RunPhase.Endgame);
+            EndCrisis(4);
             await Frames(2);
             Check(_music.CurrentIntent == MusicIntent.Endgame && _music.CurrentKey == "mus_nuit_chaos",
                 $"Crise d'endgame terminée : la musique en sort ({_music.CurrentKey})");
@@ -162,12 +163,13 @@ public partial class MusicRegression : Node2D
         }
     }
 
-    /// <summary>Ordre de CrisisManager.EndCrisis : fin, accalmie ouverte par CrisisAftermath, puis nouvelle phase.</summary>
-    private void EndCrisis(int number, GameManager.RunPhase phase)
+    /// <summary>Ordre de CrisisManager.EndCrisis : fin, accalmie ouverte par CrisisAftermath, puis fin de crise signalée,
+    /// d'où GameManager déduit la nouvelle phase (plan 26 Q8d).</summary>
+    private void EndCrisis(int number)
     {
         _bus.EmitSignal(EventBus.SignalName.CrisisEnded, number);
         _bus.EmitSignal(EventBus.SignalName.CrisisCalmChanged, true);
-        _manager.SetRunPhase(phase);
+        _manager.ReportCrisis(false);
     }
 
     private string AmbiancePhase() =>

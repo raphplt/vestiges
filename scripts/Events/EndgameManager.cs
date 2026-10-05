@@ -94,10 +94,7 @@ public partial class EndgameManager : Node
 		if (!erasureReached && !crisisReached)
 			return;
 
-		_lateGameReached = true;
-		if (_gameManager.CurrentRunPhase == GameManager.RunPhase.Exploration)
-			_gameManager.SetRunPhase(GameManager.RunPhase.LateGame);
-
+		ReachLateGame();
 		GD.Print("[EndgameManager] Late game reached");
 	}
 
@@ -126,9 +123,7 @@ public partial class EndgameManager : Node
 		}
 
 		_bossSpawned = true;
-		_lateGameReached = true;
-		if (_gameManager.CurrentRunPhase != GameManager.RunPhase.Endgame)
-			_gameManager.SetRunPhase(GameManager.RunPhase.LateGame);
+		ReachLateGame();
 
 		GD.Print("[EndgameManager] Indicible spawned");
 	}
@@ -139,7 +134,17 @@ public partial class EndgameManager : Node
 			return;
 
 		if (crisisNumber >= _lateGameCrisisThreshold)
-			_lateGameReached = true;
+			ReachLateGame();
+	}
+
+	/// <summary>
+	/// Late game atteint, pour toute la suite de la run : la phase revient en late game à la fin de la Résurgence en
+	/// cours, même si l'Effacement est sous son seuil (plan 26 Q8d, constat F08).
+	/// </summary>
+	private void ReachLateGame()
+	{
+		_lateGameReached = true;
+		_gameManager?.ReportLateGame();
 	}
 
 	private void OnEnemyKilled(string enemyId, Vector2 position)
@@ -150,7 +155,7 @@ public partial class EndgameManager : Node
 		_bossDefeated = true;
 		_bossSpawned = false;
 		_endgameReached = true;
-		_gameManager?.SetRunPhase(GameManager.RunPhase.Endgame);
+		_gameManager?.ReportEndgame();
 		_crisisManager?.EnableEndgameTempo();
 		GD.Print("[EndgameManager] Indicible defeated, endgame reached");
 	}

@@ -425,6 +425,9 @@ Ces lots sont indépendants entre eux après Q0 ; chacun est livré séparément
 2. **Les autres rapportent :** `CrisisManager` signale le début et la fin d'une crise (la phase change avant le signal de début, comme aujourd'hui) et ne lit plus l'Effacement. `EndgameManager` signale le late game (Effacement, quatrième crise, boss) et l'endgame. `SetRunPhase` n'est plus public.
 3. **Vérification :** scène `RunPhaseRegression` avec les vrais `CrisisManager` et `EndgameManager` : quatrième Résurgence sous 0,68 puis fin de crise (late game gardé, aussi aux images suivantes), crise pendant le late game, seuil d'Effacement, boss puis endgame (une crise garde l'endgame), mort ; contre-épreuve sur l'ancien code. Suites movement-integration, erasure_active, music, indicible, dev_mode ; consommateurs de `RunPhaseChanged` (musique, HUD, apparitions, historique) relus.
 
+**Q8d livré et vérifié, 5 octobre.** `GameManager` résout seul la phase (`ApplyRunPhase`) à partir de `ReportCrisis`, `ReportLateGame` et `ReportEndgame` ; faits remis à zéro au passage à `Run` ; `SetRunPhase` privé. `CrisisManager` ne lit plus l'Effacement (son double du seuil 0,68 est retiré ; `EndgameManager` le lit). La phase change toujours avant `CrisisStarted` et après `CrisisEnded`.
+- **Vérification :** `tools/test_run_phase.sh`, vrais `CrisisManager` et `EndgameManager` pilotés image par image, 19 contrôles (quatrième Résurgence sous le seuil : late game gardé à la fin, et 30 images plus tard ; crise en late game ; endgame gardé pendant et après une crise ; mort non écrasée ; nouvelle run remise à zéro). Contre-épreuve : en remettant le seul marquage local de `EndgameManager` (le chemin du constat F08), le banc échoue sur « late game atteint ». `MusicRegression` adaptée aux signalements, verte. `tools/validate.sh` 9/9 (smoke, run_phase, music, movement-integration, erasure_active, indicible, dev_mode, loading, run_trace). Relecture `godot-reviewer` : aucun consommateur de `RunPhaseChanged` changé (ils lisent la nouvelle phase ; la musique la résout en différé) ; une mort n'est plus écrasée par une fin de crise ou la mort du boss. L'Effacement global ne baisse jamais (`ErasureManager`) : rendre le late game irréversible ne change rien en jeu, hors le cas F08.
+
 ## 6. Lots d'architecture et de performance
 
 ### Q9 — Extraire progressivement le combat de Player
@@ -507,7 +510,7 @@ Pour clore un lot :
 - [x] Q8a — Verrouillage sur une vie d'ennemi.
 - [x] Q8b — Remapping sans pertes.
 - [x] Q8c — Seed effective et tirages contrôlés.
-- [ ] Q8d — Transitions globales cohérentes.
+- [x] Q8d — Transitions globales cohérentes.
 - [ ] Q9a — Ciblage extrait et mesuré.
 - [ ] Q9b — Exécution par contexte d'attaque.
 - [ ] Q9c — Arsenal isolé.

@@ -29,6 +29,10 @@ public partial class GameManager : Node
 
     private GameState _currentState = GameState.Hub;
     private RunPhase _currentRunPhase = RunPhase.Exploration;
+    // Faits de la run d'où se déduit la phase (plan 26 Q8d) ; le late game et l'endgame ne reviennent jamais en arrière.
+    private bool _crisisActive;
+    private bool _lateGameReached;
+    private bool _endgameReached;
     private EventBus _eventBus;
 
     /// <summary>Personnage sélectionné dans le Hub. Persiste entre scènes.</summary>
@@ -92,12 +96,55 @@ public partial class GameManager : Node
         _eventBus.EmitSignal(EventBus.SignalName.GameStateChanged, oldState.ToString(), newState.ToString());
 
         if (newState == GameState.Run)
-            SetRunPhase(RunPhase.Exploration);
+        {
+            _crisisActive = false;
+            _lateGameReached = false;
+            _endgameReached = false;
+            ApplyRunPhase();
+        }
         else if (newState == GameState.Death)
-            SetRunPhase(RunPhase.Death);
+        {
+            ApplyRunPhase();
+        }
     }
 
-    public void SetRunPhase(RunPhase newPhase)
+    /// <summary>Le late game a-t-il été atteint pendant cette run (seuil d'Effacement, Résurgences ou boss) ?</summary>
+    public bool LateGameReached => _lateGameReached;
+
+    /// <summary>Une Résurgence commence ou finit : la phase change avant le signal de début, comme avant.</summary>
+    public void ReportCrisis(bool active)
+    {
+        _crisisActive = active;
+        ApplyRunPhase();
+    }
+
+    /// <summary>Le late game est atteint : il le reste jusqu'à la fin de la run, crises comprises.</summary>
+    public void ReportLateGame()
+    {
+        _lateGameReached = true;
+        ApplyRunPhase();
+    }
+
+    /// <summary>Le boss est vaincu : l'endgame commence et ne s'arrête plus.</summary>
+    public void ReportEndgame()
+    {
+        _endgameReached = true;
+        _lateGameReached = true;
+        ApplyRunPhase();
+    }
+
+    /// <summary>Seul endroit qui décide de la phase : mort, endgame, Résurgence, late game, puis exploration.</summary>
+    private void ApplyRunPhase()
+    {
+        RunPhase phase = _currentState == GameState.Death ? RunPhase.Death
+            : _endgameReached ? RunPhase.Endgame
+            : _crisisActive ? RunPhase.Crisis
+            : _lateGameReached ? RunPhase.LateGame
+            : RunPhase.Exploration;
+        SetRunPhase(phase);
+    }
+
+    private void SetRunPhase(RunPhase newPhase)
     {
         if (_currentRunPhase == newPhase)
             return;

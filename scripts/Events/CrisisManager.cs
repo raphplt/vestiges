@@ -14,13 +14,11 @@ public partial class CrisisManager : Node
     private float _intervalVarianceSec = 45f;
     private float _warningDurationSec = 20f;
     private float _crisisDurationSec = 70f;
-    private float _lateGameErasureThreshold = 0.68f;
     private float _endgameIntervalMultiplier = 0.7f;
     private float _endgameDurationMultiplier = 1.15f;
 
     private EventBus _eventBus;
     private GameManager _gameManager;
-    private ErasureManager _erasureManager;
     private RandomNumberGenerator _rng = new();
 
     private float _elapsed;
@@ -51,7 +49,6 @@ public partial class CrisisManager : Node
 
         _eventBus = GetNode<EventBus>("/root/EventBus");
         _gameManager = GetNode<GameManager>("/root/GameManager");
-        _erasureManager = GetParent().GetNodeOrNull<ErasureManager>("ErasureManager");
 
         _rng.Seed = RunRandom.SeedFor("crises");
         ScheduleNextCrisis(_firstCrisisDelaySec);
@@ -83,8 +80,6 @@ public partial class CrisisManager : Node
         float dt = (float)delta;
         _elapsed += dt;
 
-        bool isEndgamePhase = _gameManager.CurrentRunPhase == GameManager.RunPhase.Endgame;
-
         if (_isCrisisActive)
         {
             _crisisTimeRemaining -= dt;
@@ -102,12 +97,6 @@ public partial class CrisisManager : Node
 
         if (_elapsed >= _nextCrisisAtSec)
             StartCrisis();
-        else if (isEndgamePhase)
-            return;
-        else if (_erasureManager != null && _erasureManager.GlobalErasurePercent >= _lateGameErasureThreshold)
-            _gameManager.SetRunPhase(GameManager.RunPhase.LateGame);
-        else
-            _gameManager.SetRunPhase(GameManager.RunPhase.Exploration);
     }
 
     private void StartCrisis()
@@ -118,8 +107,8 @@ public partial class CrisisManager : Node
         _currentIntensity = 1 + (_crisisNumber - 1) / 2;
         _crisisTimeRemaining = _crisisDurationSec * (_endgameMode ? _endgameDurationMultiplier : 1f);
 
-        if (_gameManager?.CurrentRunPhase != GameManager.RunPhase.Endgame)
-            _gameManager?.SetRunPhase(GameManager.RunPhase.Crisis);
+        // La phase est décidée par GameManager (plan 26 Q8d) ; elle change avant le signal de début.
+        _gameManager?.ReportCrisis(true);
         _eventBus?.EmitSignal(EventBus.SignalName.CrisisStarted, _crisisNumber, _currentIntensity);
     }
 
@@ -127,17 +116,13 @@ public partial class CrisisManager : Node
     {
         _isCrisisActive = false;
         _eventBus?.EmitSignal(EventBus.SignalName.CrisisEnded, _crisisNumber);
+        _gameManager?.ReportCrisis(false);
 
         if (_gameManager?.CurrentRunPhase == GameManager.RunPhase.Endgame)
         {
             ScheduleNextCrisis(_intervalSec * _endgameIntervalMultiplier);
             return;
         }
-
-        if (_erasureManager != null && _erasureManager.GlobalErasurePercent >= _lateGameErasureThreshold)
-            _gameManager?.SetRunPhase(GameManager.RunPhase.LateGame);
-        else
-            _gameManager?.SetRunPhase(GameManager.RunPhase.Exploration);
 
         float baseDelay = (_intervalSec + _rng.RandfRange(-_intervalVarianceSec, _intervalVarianceSec)) * _intervalFactor;
         if (_endgameMode)
@@ -169,7 +154,6 @@ public partial class CrisisManager : Node
         _intervalVarianceSec = dict.ContainsKey("interval_variance_sec") ? (float)dict["interval_variance_sec"].AsDouble() : _intervalVarianceSec;
         _warningDurationSec = dict.ContainsKey("warning_duration_sec") ? (float)dict["warning_duration_sec"].AsDouble() : _warningDurationSec;
         _crisisDurationSec = dict.ContainsKey("crisis_duration_sec") ? (float)dict["crisis_duration_sec"].AsDouble() : _crisisDurationSec;
-        _lateGameErasureThreshold = dict.ContainsKey("late_game_erasure_threshold") ? (float)dict["late_game_erasure_threshold"].AsDouble() : _lateGameErasureThreshold;
         _endgameIntervalMultiplier = dict.ContainsKey("endgame_interval_multiplier") ? (float)dict["endgame_interval_multiplier"].AsDouble() : _endgameIntervalMultiplier;
         _endgameDurationMultiplier = dict.ContainsKey("endgame_duration_multiplier") ? (float)dict["endgame_duration_multiplier"].AsDouble() : _endgameDurationMultiplier;
     }
