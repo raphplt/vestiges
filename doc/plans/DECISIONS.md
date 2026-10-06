@@ -880,3 +880,8 @@ Raphaël, après le lot V0 du plan 27 (« jai rien à redire ») : « le jeu est
 - **Direction :** ne pas (trop) baisser les stats du joueur ; renforcer surtout les ennemis.
 - **Levier principal :** une stat dédiée que le joueur augmente concrètement pour durcir sa run : plus d'ennemis, plus de dégâts, plus de résistance. Nom à trouver, plutôt lié à l'oubli qu'à « difficulté ». La difficulté devient un choix et une compétence du joueur. À examiner au moment du plan : le Péril existant (0 à 10, Failles et bannissements, plan 21 §8) va déjà dans ce sens.
 - **En plus :** ennemis plus forts, plus résistants et plus nombreux au fil de la run (curseurs existants relevés) ; Résurgences plus dures.
+
+Précision de Raphaël, même soir : « pour le péril il faut par exemple un objet dédié au péril, et des sortes de totems ou moyens de l'augmenter dispersés sur la map. il faut aussi que ca donne plus d'essence par exemple en contrepartie »
+- **Le Péril est le levier retenu** pour la stat de difficulté choisie par le joueur.
+- **Sources à ajouter :** un objet dédié au Péril ; des totems (ou autres moyens) dispersés sur la carte pour l'augmenter.
+- **Contrepartie :** plus d'Essence, entre autres (s'ajoute à l'XP, au score et aux raretés que le Péril majore déjà).
