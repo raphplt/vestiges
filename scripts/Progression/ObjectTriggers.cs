@@ -10,7 +10,8 @@ namespace Vestiges.Progression;
 /// touchée par un statut, à l'élimination, après une marche, au niveau gagné. Créé au premier objet de ce type ; il ne
 /// tourne par frame que pour la Semelle usée ou une explosion en attente. Règles communes (§7) :
 /// <list type="bullet">
-/// <item>seul un coup direct d'arme déclenche, jamais un effet déjà déclenché ;</item>
+/// <item>seul ce qu'une arme a fait déclenche (coup direct, écho, forme, effet sur la durée qu'elle a posé), jamais
+/// ce qu'un objet a produit (DECISIONS §70) ;</item>
 /// <item>une chance est multipliée par le coefficient de déclenchement de l'arme ;</item>
 /// <item>une chance plafonne à 100 %, l'excédent renforce l'effet.</item>
 /// </list>
@@ -291,8 +292,8 @@ public partial class ObjectTriggers : Node
     }
 
     /// <summary>
-    /// Impact direct d'une arme : Allumette humide et Glaçon tirent leur chance, pondérée par l'arme et par le
-    /// nombre de frappes qui ont touché ensemble. <paramref name="hitDamage"/> est le coup de base de l'arme : un
+    /// Impact d'une arme, direct ou secondaire : Allumette humide et Glaçon tirent leur chance, pondérée par l'arme et
+    /// par le nombre de frappes qui ont touché ensemble. <paramref name="hitDamage"/> est le coup de base de l'arme : un
     /// cône continu, qui touche par fractions de frame, brûle comme les autres armes.
     /// </summary>
     public void OnWeaponImpact(Enemy enemy, float hitDamage, WeaponInstance weapon, int hits, AttackContext context,
@@ -432,11 +433,13 @@ public partial class ObjectTriggers : Node
         return Rng.Randf() < combined;
     }
 
+    /// <summary>Allumette humide : la Brûlure est celle d'un objet ; ce qu'elle fait ne déclenche aucun objet.</summary>
     private void Burn(Enemy enemy, float dps, AttackContext context)
     {
         float seconds = _burnSeconds * _player.StatusDurationMultiplier;
-        enemy.ApplyIgnite(dps, seconds, context);
-        SlowBurning(enemy, seconds, context);
+        AttackContext burn = context.As(DamageKind.Passive);
+        enemy.ApplyIgnite(dps, seconds, burn);
+        SlowBurning(enemy, seconds, burn);
         Spark(enemy, FxFamily.Fire);
         _player.ObjectProcs?.Show(BurnChanceStat);
     }
@@ -536,15 +539,15 @@ public partial class ObjectTriggers : Node
     }
 
     /// <summary>
-    /// Élimination par un coup direct d'arme : Pétard mouillé, Dé à coudre. Paliers 25 de l'Allumette et de
-    /// l'Épingle : ce que la victime transmet à ses voisins, quel que soit le coup qui l'a tuée.
+    /// Élimination par ce qu'une arme a fait : Pétard mouillé, Dé à coudre. Paliers de l'Allumette et de l'Épingle :
+    /// ce que la victime transmet à ses voisins, quel que soit le coup qui l'a tuée.
     /// </summary>
     private void OnEnemyKill(EnemyKillResult kill)
     {
         if (kill.Damage.Source.OwnerId != _playerId)
             return;
-        if (kill.Damage.Source.Kind == DamageKind.DirectWeapon)
-            RewardDirectKill(kill);
+        if (kill.Damage.Source.IsWeaponWork)
+            RewardWeaponKill(kill);
         bool spreadBurn = _burnSpreadRadius > 0f && kill.Burn.Remaining > 0f && kill.Burn.Source.OwnerId == _playerId;
         bool extendSlows = _slowKillRadius > 0f && kill.Slow.Remaining > 0f;
         if (!spreadBurn && !extendSlows)
@@ -573,11 +576,11 @@ public partial class ObjectTriggers : Node
         Spark(nearest, FxFamily.Fire);
     }
 
-    private void RewardDirectKill(in EnemyKillResult kill)
+    private void RewardWeaponKill(in EnemyKillResult kill)
     {
         if (_killExplosion > 0f)
         {
-            float damage = kill.Damage.NativeDamage * _killExplosion;
+            float damage = FatalBlow(kill.Damage) * _killExplosion;
             AttackContext source = kill.Damage.Source.As(DamageKind.Passive);
             Explode(kill.Position, damage, source);
             if (_secondExplosionDelay >= 0f)
@@ -592,6 +595,15 @@ public partial class ObjectTriggers : Node
             _player.ObjectProcs?.Show(KillHealStat);
         }
     }
+
+    /// <summary>
+    /// Coup fatal lu par le Pétard. Une mort par saignement ou dans le feu vient du coup d'arme qui a posé l'effet :
+    /// le dernier tic, de quelques dixièmes de PV, n'en est qu'une fraction.
+    /// </summary>
+    private static float FatalBlow(in DamageResult damage) =>
+        damage.Source.Kind == DamageKind.DamageOverTime
+            ? Mathf.Max(damage.NativeDamage, damage.Source.ReferenceDamage)
+            : damage.NativeDamage;
 
     private static void Spark(Enemy enemy, FxFamily family)
     {

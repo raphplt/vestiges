@@ -49,6 +49,8 @@ public partial class ObjectsRegression : Node2D
             CheckKillTransmissions();
             CheckFragility();
             CheckKillRewards();
+            CheckSecondaryHits();
+            CheckWeaponKills();
             CheckStrideAndLevels();
             CheckNamedProperties();
             CheckCritTriggers();

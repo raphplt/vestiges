@@ -1,6 +1,6 @@
 # Planche des synergies de règles (forme C)
 
-4 octobre 2026 · Demandée aux §65 et §66 · **Proposition, rien n'est codé.**
+4 octobre 2026 · Demandée aux §65 et §66 · **Validée en bloc le 6 octobre ([DECISIONS §70](DECISIONS.md))** : réponses A, A, A, A, A. Lot S1 découpé au §8.
 
 ## Ce qu'est la forme C
 
@@ -104,3 +104,38 @@ C'est là que les synergies de règles auraient le plus de sens : un pouvoir de 
 - Fixtures : un objet ne déclenche jamais un objet ; une explosion de Pétard ne réexplose pas.
 - Suites objets, armes, perks et choix vertes ; captures du feu, du gel et du flash.
 - Mesure au banc dense : R5 et R6 ajoutent des déclenchements.
+
+## 8. Découpage de S1 — 6 octobre 2026
+
+Trois sous-lots, livrés séparément, dans cet ordre : la règle commune d'abord, parce que R1 (morts dans le feu) et les combinaisons du §3 en dépendent.
+
+**Relevé avant code.** Le saut de chaîne de la Rallonge passe déjà par l'impact direct : il déclenche les objets aujourd'hui. Les trous de R5 sont l'**écho des Gants** et la **forme des Craies**, qui frappent en `SecondaryWeapon` sans passer par l'impact. Côté éliminations, seul `DirectWeapon` récompense. La Brûlure de l'Allumette, posée par un objet, prend aujourd'hui la même source qu'un saignement d'arme (`DamageOverTime` + arme) : on ne peut pas les distinguer.
+
+### S1a — Règle commune (R5, R6)
+
+- **Ce qu'une arme a fait** : un coup ou une élimination dont la source appartient au joueur, porte une arme et est un coup direct, un coup secondaire de l'arme (écho, forme, saut) ou un dégât sur la durée posé par l'arme (saignement d'arme, feu au sol de la Lampe). Une seule propriété de `AttackContext` le dit, lue par les objets de déclencheur.
+- **Ce qu'un objet a fait reste inerte** : la Brûlure de l'Allumette (et sa transmission), l'explosion du Pétard, le rebond du Stylo, l'écho de la Rondelle, l'éclat du Mètre et la traînée du Chewing-gum gardent une source `Passive` et ne déclenchent rien, ni à l'impact ni à l'élimination.
+- **R5, coups secondaires** : chaque cible de l'écho des Gants et de la forme des Craies est un coup de l'arme : ses dégâts se résolvent sur cette cible (Thermomètre, Épingle, état du joueur), à partir du coup brut de l'arme et non plus du coup déjà résolu sur la cible principale ; ils comptent pour le vol de vie et le relevé de l'arme ; l'Allumette et le Glaçon y tirent leur chance avec le coefficient de l'arme. Jamais critiques, comme aujourd'hui.
+- **R6, éliminations** : Pétard mouillé et Dé à coudre répondent à toute élimination par ce qu'une arme a fait. Pour une mort par saignement ou par le feu, le « coup fatal » du Pétard est le coup de l'arme qui a posé l'effet (sa référence), pas le dernier tic de quelques dixièmes de PV.
+- **Inchangé** : le Débordement et la provenance des contrôles transmis par la Propagation restent liés au coup direct ; un ralentissement du Glaçon posé par un écho ne devient pas transmissible.
+- **Vérification** : fixtures sur un vrai joueur avec contre-épreuve sans l'objet lecteur. L'écho et la forme enflamment avec le coefficient de l'arme ; une élimination par un écho, un saignement ou le feu soigne (Dé à coudre) et fait exploser (Pétard) ; une élimination par la Brûlure de l'Allumette, l'explosion du Pétard ou le rebond du Stylo ne déclenche rien ; une explosion ne réexplose pas. Suites objets, armes, effets des perks et choix ; banc dense avant/après (nœuds créés/s, la machine étant chargée ou non).
+
+**S1a livré et vérifié, 6 octobre.** `AttackContext.IsWeaponWork` dit ce qu'une arme a fait ; un dégât sur la durée posé par un objet garde la source `Passive` (`Enemy.OverTime`), la Brûlure de l'Allumette comprise. `Player.SecondaryHit` traite chaque cible de l'écho des Gants et de la forme des Craies comme un coup de l'arme, résolu sur cette cible à partir du coup brut, qui arrive désormais jusqu'à l'effet spécial. Pétard mouillé et Dé à coudre répondent aux éliminations par ce qu'une arme a fait ; pour une mort par saignement ou par le feu, le Pétard lit le coup qui a posé l'effet.
+- **Vérification :** 7 contrôles ajoutés au banc des objets (`ObjectsRegression.WeaponWork.cs`), avec contre-épreuves : forme résolue sur sa cible (5,20 ralentie avec l'Épingle, 5,00 quand seule la cible principale l'est) ; vol de vie nourri par la forme ; Allumette sur la forme 80 % (90 % × 0,9) avec une Brûlure d'objet ; écho, saignement et feu : soin et explosion ; Brûlure de l'Allumette : ni soin ni explosion ; mort par l'explosion : pas de réexplosion. `tools/validate.sh` 10/10 (smoke, objets, armes, effets et contrats des perks, choix, cône, capacités ennemies, trace de run, temporel), puis 5/5 après relecture ; build sans avertissement.
+- **Relecture `godot-reviewer` :** pas de défaut bloquant. Appliqué : un écho ne frappe plus après la mort du joueur ; la référence d'un saignement d'arme est le coup qui le pose (un cône à saignement aurait sinon donné au Pétard le total du cône, cas absent des données).
+- **Choix assumés :** un saignement d'arme renouvelé par la Pince à linge reste à l'arme (l'effet est celui de l'arme, la Pince le prolonge). Le montant de l'écho de la Rondelle est inchangé (coup résolu sur la cible principale). Le Débordement et la transmission des contrôles restent liés au coup direct.
+- **Limites :** une élimination par saignement ou par le feu ne s'ajoute pas encore au relevé de l'arme (bilan) ; le banc dense n'équipe aucun de ces objets, aucun coût n'est mesuré ni revendiqué. Ressenti en jeu à faire par Raphaël.
+
+### S1b — Statuts (R1 à R4)
+
+- **R1** : une créature dans le feu de la Lampe **brûle** : le feu pose le statut ordinaire au lieu de frapper par tics, même dégâts par seconde tant qu'elle y reste ; la durée après la sortie est réglée en données dans le contrat d'arme et chiffrée avant/après.
+- **R2** : la Fragilité s'applique aux tics de Brûlure et de saignement posés par le joueur.
+- **R3** : l'Épingle à nourrice lit les **entravés** (ralentis, figés, désorientés) ; texte de l'objet mis à jour en français et en anglais.
+- **R4** : une créature **figée** ne se déplace pas, n'attaque pas et ne lance pas de capacité pour la durée.
+- **Correction** : le palier de l'Épingle agit aussi sur un voisin seulement figé, plafonné comme aujourd'hui.
+
+### S1c — Offre de Propagation et corrections (R7, §4)
+
+- **R7** : l'offre de la Propagation suit ce que l'équipement produit (Glaçon compté ; Arrêt sur image, qui ne fait que figer, non).
+- **§4** : rythme du soin de la Paille sur le cône du Transistor (à mesurer d'abord : le vol de vie est proportionnel et plafonné par seconde, le défaut peut ne pas exister), errance des désorientés sous Fréquence pirate, compteur du Scalpel remis à zéro quand l'arme part.
+- Captures du feu, du gel et du flash en fin de S1.

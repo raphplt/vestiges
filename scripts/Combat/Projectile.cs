@@ -277,7 +277,7 @@ public partial class Projectile : Area2D
 
             // Notify owner for perk effects (vampirism, ignite, execution, ricochet)
             if (ownerValid)
-                _owner.OnProjectileHit(enemy, damage, _isCrit, SourceInstance, _context);
+                _owner.OnProjectileHit(enemy, damage, _isCrit, SourceInstance, _context, _damage);
 
             if (_spawnsGroundFire)
             {

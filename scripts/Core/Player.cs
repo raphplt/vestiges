@@ -791,17 +791,23 @@ public partial class Player : CharacterBody2D
         }
     }
 
-    /// <summary>Appelé par les projectiles à l'impact : effets du coup.</summary>
-    public void OnProjectileHit(Enemy enemy, float damage, bool isCrit, WeaponInstance source, AttackContext context = default)
+    /// <summary>
+    /// Appelé par les projectiles à l'impact : effets du coup. <paramref name="rawDamage"/> est le coup avant sa
+    /// résolution sur la cible ; à défaut, le coup résolu en tient lieu.
+    /// </summary>
+    public void OnProjectileHit(Enemy enemy, float damage, bool isCrit, WeaponInstance source, AttackContext context = default,
+        float? rawDamage = null)
     {
-        OnAttackHit(enemy, damage, isCrit, source, context: context);
+        OnAttackHit(enemy, damage, rawDamage ?? damage, isCrit, source, context: context);
     }
 
     /// <summary>
     /// Effets d'un coup porté par <paramref name="source"/> : ceux de l'arme (effet au contact, recul, effet spécial)
-    /// restent ceux de l'arme qui a frappé.
+    /// restent ceux de l'arme qui a frappé. <paramref name="damage"/> est le coup résolu sur cette cible,
+    /// <paramref name="rawDamage"/> le coup d'avant, dont partent les coups secondaires de l'arme.
     /// </summary>
-    private void OnAttackHit(Enemy enemy, float damage, bool isCrit, WeaponInstance source, int triggerCount = 1, bool showImpact = true, AttackContext context = default)
+    private void OnAttackHit(Enemy enemy, float damage, float rawDamage, bool isCrit, WeaponInstance source, int triggerCount = 1,
+        bool showImpact = true, AttackContext context = default)
     {
         if (_isDead)
             return;
@@ -827,7 +833,8 @@ public partial class Player : CharacterBody2D
             switch (ohe.Kind)
             {
                 case OnHitEffectKind.Bleed:
-                    enemy.ApplyBleed(ohe.Damage, StatusDuration(ohe.Duration), context);
+                    // La référence du saignement est le coup qui le pose : celle d'un cône couvre toute sa durée.
+                    enemy.ApplyBleed(ohe.Damage, StatusDuration(ohe.Duration), context with { ReferenceDamage = damage });
                     break;
                 case OnHitEffectKind.Slow:
                     enemy.ApplySlow(ohe.Value, StatusDuration(ohe.Duration), context);
@@ -857,7 +864,29 @@ public partial class Player : CharacterBody2D
         // --- Weapon special effects ---
         WeaponSpecialEffect se = source?.SpecialEffect;
         if (se != null)
-            ProcessWeaponSpecialOnHit(se, enemy, damage, source, context);
+            ProcessWeaponSpecialOnHit(se, enemy, damage, rawDamage, source, context);
+    }
+
+    /// <summary>
+    /// Coup secondaire d'une arme (écho des Gants, forme des Craies) : un coup de cette arme sur sa propre cible
+    /// (DECISIONS §70). Résolu sur cette cible, il compte pour le vol de vie, le relevé de l'arme et les objets à
+    /// l'impact ; jamais critique, il ne relance ni l'effet au contact ni l'effet spécial de l'arme.
+    /// </summary>
+    private void SecondaryHit(Enemy enemy, float rawDamage, WeaponInstance source, AttackContext context)
+    {
+        if (_isDead)
+            return;
+        float damage = ResolveHitDamage(enemy, rawDamage, false);
+        AttackContext secondary = context.As(DamageKind.SecondaryWeapon);
+        enemy.TakeDamage(damage, source: secondary);
+        if (source != null)
+        {
+            _weaponLedger.AddDamage(source.Id, damage);
+            if (enemy.ClaimKillCredit())
+                _weaponLedger.AddKill(source.Id);
+        }
+        _lifestealPending += damage * _lifesteal;
+        _objectTriggers?.OnWeaponImpact(enemy, ComputeBaseAttackDamage(source), source, 1, secondary, dealt: damage);
     }
 
     private float GetCombinedProcChance(float perHitChance, int triggerCount)
@@ -873,7 +902,8 @@ public partial class Player : CharacterBody2D
 
     // --- Weapon Special Effects ---
 
-    private void ProcessWeaponSpecialOnHit(WeaponSpecialEffect se, Enemy enemy, float damage, WeaponInstance source, AttackContext context)
+    private void ProcessWeaponSpecialOnHit(WeaponSpecialEffect se, Enemy enemy, float damage, float rawDamage, WeaponInstance source,
+        AttackContext context)
     {
         switch (se.Kind)
         {
@@ -903,7 +933,9 @@ public partial class Player : CharacterBody2D
             case SpecialEffectKind.DelayedEcho:
             {
                 float delay = se.Get(SpecialEffectParam.EchoDelay);
-                float echoDamage = damage * se.Get(SpecialEffectParam.EchoDamagePercent);
+                float echoRatio = se.Get(SpecialEffectParam.EchoDamagePercent);
+                float echoDamage = damage * echoRatio;
+                float echoRaw = rawDamage * echoRatio;
                 Vector2 echoPos = enemy.GlobalPosition;
                 float echoRadius = ZoneScale(se.Get(SpecialEffectParam.EchoRadius));
                 // Enchaînement (ascension des Gants de boxe) : l'écho repart plusieurs fois, à intervalles égaux.
@@ -919,7 +951,7 @@ public partial class Player : CharacterBody2D
                             if (node is Enemy { IsActive: true, IsDying: false } e && IsInstanceValid(e))
                             {
                                 if (e.GlobalPosition.DistanceTo(echoPos) < echoRadius)
-                                    e.TakeDamage(echoDamage, source: context.As(DamageKind.SecondaryWeapon));
+                                    SecondaryHit(e, echoRaw, source, context);
                             }
                         }
                         SpawnEchoVisual(echoPos);
@@ -956,7 +988,9 @@ public partial class Player : CharacterBody2D
             case SpecialEffectKind.RandomShape:
             {
                 float aoeRadius = ZoneScale(se.Get(SpecialEffectParam.ShapeRadius));
-                float shapeDamage = damage * se.Get(SpecialEffectParam.ShapeDamageRatio);
+                float shapeRatio = se.Get(SpecialEffectParam.ShapeDamageRatio);
+                float shapeDamage = damage * shapeRatio;
+                float shapeRaw = rawDamage * shapeRatio;
                 Vector2 impactPos = enemy.GlobalPosition;
                 Godot.Collections.Array<Node> enemies = _groupCache.GetEnemies();
                 foreach (Node node in enemies)
@@ -964,7 +998,7 @@ public partial class Player : CharacterBody2D
                     if (node is Enemy { IsActive: true, IsDying: false } e && IsInstanceValid(e) && e != enemy)
                     {
                         if (e.GlobalPosition.DistanceTo(impactPos) < aoeRadius)
-                            e.TakeDamage(shapeDamage, source: context.As(DamageKind.SecondaryWeapon));
+                            SecondaryHit(e, shapeRaw, source, context);
                     }
                 }
                 if (_objectMilestones?.HasZoneEcho == true)
@@ -1026,10 +1060,11 @@ public partial class Player : CharacterBody2D
             {
                 if (body is Enemy enemy && !enemy.IsDying && IsInstanceValid(enemy) && _orbitalWeapon != null)
                 {
-                    float damage = ResolveHitDamage(enemy, ComputeBaseAttackDamage(_orbitalWeapon), false);
+                    float rawDamage = ComputeBaseAttackDamage(_orbitalWeapon);
+                    float damage = ResolveHitDamage(enemy, rawDamage, false);
                     AttackContext context = BeginAttack(_orbitalWeapon, damage);
                     enemy.TakeDamage(damage, source: context);
-                    OnAttackHit(enemy, damage, false, _orbitalWeapon, context: context);
+                    OnAttackHit(enemy, damage, rawDamage, false, _orbitalWeapon, context: context);
                 }
             };
 
@@ -1142,7 +1177,7 @@ public partial class Player : CharacterBody2D
 
             float hitDamage = ResolveHitDamage(enemy, damage, false);
             bool showImpact = enemy.TakeContinuousDamage(hitDamage, delta, _coneContext);
-            OnAttackHit(enemy, hitDamage, false, _coneWeapon, showImpact: showImpact, context: _coneContext);
+            OnAttackHit(enemy, hitDamage, damage, false, _coneWeapon, showImpact: showImpact, context: _coneContext);
         }
     }
 
@@ -1189,7 +1224,7 @@ public partial class Player : CharacterBody2D
         AttackContext context = BeginAttack(_equippedWeapon, currentDamage);
         float firstDamage = ResolveHitDamage(firstTarget, currentDamage, isCrit);
         firstTarget.TakeDamage(firstDamage, isCrit, source: context);
-        OnAttackHit(firstTarget, firstDamage, isCrit, _equippedWeapon, context: context);
+        OnAttackHit(firstTarget, firstDamage, currentDamage, isCrit, _equippedWeapon, context: context);
 
         // Chain vers les ennemis adjacents
         HashSet<ulong> hitIds = new() { firstTarget.GetInstanceId() };
@@ -1206,7 +1241,7 @@ public partial class Player : CharacterBody2D
             SpawnChainVisual(current.GlobalPosition, nextTarget.GlobalPosition);
             float linkDamage = ResolveHitDamage(nextTarget, currentDamage, false);
             nextTarget.TakeDamage(linkDamage, source: context);
-            OnAttackHit(nextTarget, linkDamage, false, _equippedWeapon, context: context);
+            OnAttackHit(nextTarget, linkDamage, currentDamage, false, _equippedWeapon, context: context);
             current = nextTarget;
         }
     }
@@ -1979,10 +2014,11 @@ public partial class Player : CharacterBody2D
                 continue;
 
             bool hasCrit = clampedCritChance > 0f && RunRandom.Combat.Randf() < GetCombinedProcChance(clampedCritChance, hitCount);
-            float totalDamage = ResolveHitDamage(enemy, baseDamage * hitCount * critDamageFactor, hasCrit);
+            float rawDamage = baseDamage * hitCount * critDamageFactor;
+            float totalDamage = ResolveHitDamage(enemy, rawDamage, hasCrit);
             AttackContext hitContext = context with { ReferenceDamage = totalDamage };
             enemy.TakeDamage(totalDamage, hasCrit, source: hitContext);
-            OnAttackHit(enemy, totalDamage, hasCrit, _equippedWeapon, triggerCount: hitCount, context: hitContext);
+            OnAttackHit(enemy, totalDamage, rawDamage, hasCrit, _equippedWeapon, triggerCount: hitCount, context: hitContext);
         }
         if (_objectMilestones?.HasZoneEcho == true)
             QueueMeleeEchoes(attackDirection, range, arcAngle, strikeCount, startOffset, step, baseDamage * critDamageFactor, context);

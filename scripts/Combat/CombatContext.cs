@@ -14,6 +14,12 @@ public readonly record struct AttackContext(ulong OwnerId, WeaponInstance Weapon
 {
     public bool IsPlayerOwned => OwnerId != 0;
     public bool IsDirectWeapon => IsPlayerOwned && Weapon != null && Kind == DamageKind.DirectWeapon;
+    /// <summary>
+    /// Ce qu'une arme a fait (DECISIONS §70) : son coup, un coup secondaire (écho, forme) ou un dégât sur la durée
+    /// qu'elle a posé. Ce qu'un objet produit porte <see cref="DamageKind.Passive"/> et n'en fait jamais partie.
+    /// </summary>
+    public bool IsWeaponWork => IsPlayerOwned && Weapon != null
+        && Kind is DamageKind.DirectWeapon or DamageKind.SecondaryWeapon or DamageKind.DamageOverTime;
     public AttackContext As(DamageKind kind) => this with { Kind = kind };
 }
 

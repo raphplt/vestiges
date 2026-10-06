@@ -958,7 +958,7 @@ public partial class Enemy : CharacterBody2D
 	/// <summary>Brûlure (plan 21 §7) : une nouvelle application rafraîchit la durée et garde la plus forte intensité.</summary>
 	public void ApplyIgnite(float dps, float duration, AttackContext source = default)
 	{
-		_igniteSource = source.As(DamageKind.DamageOverTime);
+		_igniteSource = OverTime(source);
 		_igniteDps = _igniteTimer > 0f ? Mathf.Max(_igniteDps, dps) : dps;
 		_igniteTimer = _igniteDuration = Mathf.Max(_igniteTimer, duration);
 		_visual.Color = new Color(1f, 0.5f, 0.1f);
@@ -967,11 +967,15 @@ public partial class Enemy : CharacterBody2D
 	/// <summary>Saignement (effet à l'impact des armes) : même règle de cumul que la Brûlure.</summary>
 	public void ApplyBleed(float dps, float duration, AttackContext source = default)
 	{
-		_bleedSource = source.As(DamageKind.DamageOverTime);
+		_bleedSource = OverTime(source);
 		_bleedDps = _bleedTimer > 0f ? Mathf.Max(_bleedDps, dps) : dps;
 		_bleedTimer = _bleedDuration = Mathf.Max(_bleedTimer, duration);
 		_visual.Color = new Color(0.8f, 0.15f, 0.15f);
 	}
+
+	/// <summary>Un effet posé par un objet reste celui d'un objet ; posé par une arme, il devient son dégât sur la durée.</summary>
+	private static AttackContext OverTime(AttackContext source) =>
+		source.Kind == DamageKind.Passive ? source : source.As(DamageKind.DamageOverTime);
 
 	/// <summary>Ralentit l'ennemi pendant une durée. Facteur 0.5 = 50% de vitesse.</summary>
 	public void ApplySlow(float factor, float duration, AttackContext source = default, ControlOrigin origin = ControlOrigin.NativeWeapon)
