@@ -1025,6 +1025,7 @@ public partial class Enemy : CharacterBody2D
 	/// <summary>Désorientation : l'ennemi erre aléatoirement pendant la durée.</summary>
 	public void ApplyDisorient(float duration, AttackContext source = default, ControlOrigin origin = ControlOrigin.NativeWeapon)
 	{
+		bool wasDisoriented = _disorientTimer > 0f;
 		_disorientSource = source;
 		_disorientOrigin = origin == ControlOrigin.Propagated ? origin
 			: source.IsDirectWeapon ? origin : ControlOrigin.Unknown;
@@ -1041,8 +1042,13 @@ public partial class Enemy : CharacterBody2D
 		else
 			_disorientTimer = Mathf.Max(duration, _propagatedDisorientationRemaining);
 		_disorientDuration = _disorientTimer;
-		float angle = RunRandom.Behavior.RandfRange(0f, Mathf.Tau);
-		_disorientDirection = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle));
+		// Une créature déjà désorientée garde son cap : un cône qui la désoriente à chaque image la ferait trembler sur
+		// place au lieu d'errer.
+		if (!wasDisoriented)
+		{
+			float angle = RunRandom.Behavior.RandfRange(0f, Mathf.Tau);
+			_disorientDirection = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle));
+		}
 		_visual.Color = new Color(1f, 1f, 0.4f);
 	}
 

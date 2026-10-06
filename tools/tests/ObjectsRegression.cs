@@ -58,6 +58,9 @@ public partial class ObjectsRegression : Node2D
             CheckBurnStacking();
             CheckDamageOverTimeRules();
             CheckFrozenMiniboss();
+            CheckPropagationOffer();
+            CheckScalpelCounterReset();
+            CheckSteadyDisorientation();
             CheckStrideAndLevels();
             CheckNamedProperties();
             CheckCritTriggers();

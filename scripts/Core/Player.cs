@@ -346,6 +346,8 @@ public partial class Player : CharacterBody2D
 
         WeaponInstance removed = _weaponSlots[slotIndex];
         _weaponSlots.RemoveAt(slotIndex);
+        // Le Scalpel repris plus tard repart de zéro coup.
+        _weaponHitCounters.Remove(removed.Id);
         if (_isConeActive && removed.SpecialEffect?.Kind == SpecialEffectKind.SustainedCone)
             DeactivateSustainedCone();
         if (removed == _orbitalWeapon)

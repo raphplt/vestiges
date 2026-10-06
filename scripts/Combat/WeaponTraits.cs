@@ -17,8 +17,12 @@ public static class WeaponTraits
     /// <summary>L'arme inflige des impacts directs attribués au joueur.</summary>
     public static bool DealsDirectHits(WeaponInstance weapon) => weapon.GetStat("damage") > 0f;
 
-    /// <summary>L'arme applique elle-même un ralentissement ou une désorientation.</summary>
+    /// <summary>
+    /// L'arme applique elle-même un ralentissement ou une désorientation. Le champ du Chronomètre en Arrêt sur image
+    /// fige au lieu de ralentir : rien que la Propagation transmette (planche 05, R7).
+    /// </summary>
     public static bool AppliesNativeControl(WeaponInstance weapon) =>
         weapon.OnHitEffect?.Kind is OnHitEffectKind.Slow or OnHitEffectKind.Disorient
-        || weapon.SpecialEffect?.Kind == SpecialEffectKind.LocalTimeSlow;
+        || (weapon.SpecialEffect?.Kind == SpecialEffectKind.LocalTimeSlow
+            && weapon.SpecialEffect.Get(SpecialEffectParam.FreezeSeconds) <= 0f);
 }

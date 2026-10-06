@@ -150,3 +150,13 @@ Trois sous-lots, livrés séparément, dans cet ordre : la règle commune d'abor
 - **R7** : l'offre de la Propagation suit ce que l'équipement produit (Glaçon compté ; Arrêt sur image, qui ne fait que figer, non).
 - **§4** : rythme du soin de la Paille sur le cône du Transistor (à mesurer d'abord : le vol de vie est proportionnel et plafonné par seconde, le défaut peut ne pas exister), errance des désorientés sous Fréquence pirate, compteur du Scalpel remis à zéro quand l'arme part.
 - Captures du feu, du gel et du flash en fin de S1.
+
+**S1c livré et vérifié, 6 octobre. Lot S1 terminé.**
+- **R7** : la Propagation est offerte et reste active quand l'équipement ralentit ou désoriente vraiment : le Glaçon compte (il ralentit au compte de l'arme qui frappe), le Chronomètre en Arrêt sur image non (il fige). Limite acceptée : un Glaçon déclenché par un écho ne se transmet pas (S1a), la condition d'offre reste celle de l'objet porté.
+- **Fréquence pirate** : une créature déjà désorientée garde son cap quand le cône la redésoriente à chaque image ; une nouvelle désorientation, après la fin, tire un nouveau cap comme avant. Le flux `RunRandom.Behavior` est donc moins consommé sous un cône : séquence d'IA décalée, trace d'apparitions inchangée (flux distinct).
+- **Scalpel** : son compteur de coups est effacé quand l'arme quitte l'inventaire.
+- **Paille sur le cône : pas de défaut.** Le vol de vie est proportionnel aux dégâts et plafonné par intervalle ; l'accumuler par image ou par impact donne le même soin. `ConeRegression` le vérifie déjà (soin = dégâts du cône × taux, plafonné). Rien changé.
+- **Vérification :** 3 contrôles ajoutés (`ObjectsRegression.Corrections.cs`) ; `tools/validate.sh` 10/10 (smoke, objets, armes, effets des perks, acquisition, choix, cône, capacités ennemies, trace de run, déplacements), deux fois. Relecture `godot-reviewer` : un défaut réel corrigé (la durée de la désorientation n'était plus enregistrée, la Pince l'aurait renouvelée pour 0 s), contrôle ajouté.
+- **Captures** (galerie d'armes, seed 1002, Glaçon 30 et Thermomètre 15 portés) : flaque de la Lampe et créature qui y brûle, notes de la Berceuse, flash du Polaroïd. Observation hors lot : deux paliers atteints au même instant écrivent leurs bandeaux l'un sur l'autre.
+- **À faire par Raphaël :** jouer les combinaisons du §3 ; la suite validée est le lot des pouvoirs des personnages (plan 06, Forgeuse d'abord), puis les lots B de la Barrière et de l'Indicible.
+

@@ -120,16 +120,23 @@ public sealed class PerkSpecializationOffers
 
     /// <summary>Conditions d'offre de la fiche, évaluées sur l'arsenal courant (armes bannies non améliorables).</summary>
     public static bool IsEligible(PerkSpecializationData perk, Player player, IReadOnlySet<string> banishedWeapons) =>
-        IsEligible(perk, player.WeaponSlots, banishedWeapons, true);
+        IsEligible(perk, player.WeaponSlots, ObjectsApplyControl(player), banishedWeapons, true);
 
     /// <summary>
     /// Un perk acquis reste sans effet tant que l'arsenal ne remplit plus sa condition (arme support échangée). Le
     /// nombre d'armes améliorables ne compte que pour l'offre : des armes au maximum ne rendent rien inactif.
     /// </summary>
-    public static bool IsActive(PerkSpecializationData perk, Player player) => IsActive(perk, player.WeaponSlots);
+    public static bool IsActive(PerkSpecializationData perk, Player player) =>
+        IsActive(perk, player.WeaponSlots, ObjectsApplyControl(player));
 
-    private static bool IsActive(PerkSpecializationData perk, IReadOnlyList<WeaponInstance> weapons) =>
-        IsEligible(perk, weapons, NoBanishedWeapons, false);
+    private static bool IsActive(PerkSpecializationData perk, IReadOnlyList<WeaponInstance> weapons, bool objectControl) =>
+        IsEligible(perk, weapons, objectControl, NoBanishedWeapons, false);
+
+    /// <summary>
+    /// Le Glaçon ralentit au compte de l'arme qui frappe : son ralentissement se transmet comme celui d'une arme
+    /// (planche 05, R7).
+    /// </summary>
+    private static bool ObjectsApplyControl(Player player) => player.ObjectTriggers?.ChillChance > 0f;
 
     /// <summary>
     /// Perks aujourd'hui actifs qu'un échange de l'arme du premier emplacement contre <paramref name="incoming"/>
@@ -144,16 +151,17 @@ public sealed class PerkSpecializationOffers
             SwapPreview.Add(player.WeaponSlots[i]);
         SwapPreview.Add(incoming);
         string names = "";
+        bool objectControl = ObjectsApplyControl(player);
         foreach (PerkSpecializationData perk in player.Specializations)
         {
-            if (IsActive(perk, player) && !IsActive(perk, SwapPreview))
+            if (IsActive(perk, player) && !IsActive(perk, SwapPreview, objectControl))
                 names = names.Length == 0 ? perk.Name : $"{names}, {perk.Name}";
         }
         return names;
     }
 
-    private static bool IsEligible(PerkSpecializationData perk, IReadOnlyList<WeaponInstance> weapons, IReadOnlySet<string> banishedWeapons,
-        bool countUpgradeable)
+    private static bool IsEligible(PerkSpecializationData perk, IReadOnlyList<WeaponInstance> weapons, bool objectControl,
+        IReadOnlySet<string> banishedWeapons, bool countUpgradeable)
     {
         PerkSpecializationEligibility conditions = perk.Eligibility;
         // Aucune récompense d'objets à choix n'existe en run avant le catalogue d'objets (B4).
@@ -162,7 +170,7 @@ public sealed class PerkSpecializationOffers
 
         bool targeting = false;
         bool directHits = false;
-        bool nativeControl = false;
+        bool nativeControl = objectControl;
         int upgradeable = 0;
         foreach (WeaponInstance weapon in weapons)
         {
