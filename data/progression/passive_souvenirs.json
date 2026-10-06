@@ -573,7 +573,7 @@
         "icon": "res://assets/items/icons/item_epingle_a_nourrice.png",
         "icon_small": "res://assets/items/icons/item_epingle_a_nourrice_16.png",
         "name": "Épingle à nourrice",
-        "description": "Tes coups font plus de dégâts aux ennemis ralentis.",
+        "description": "Tes coups font plus de dégâts aux ennemis entravés.",
         "icon_color": [
             0.75,
             0.8,

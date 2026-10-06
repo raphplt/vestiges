@@ -606,6 +606,18 @@ public partial class Enemy : CharacterBody2D
 
 		float distToPlayer = Mathf.Sqrt(distToPlayerSq);
 
+		// Figée (Berceuse, Arrêt sur image, Glaçon) : ni pas, ni attaque, ni capacité, et l'annonce en cours tombe ; le
+		// recul la pousse encore. Mini-boss et boss, que le recul ne pousse pas, gardent leurs coups : sinon une arme
+		// qui fige en continu les tiendrait sans fin.
+		if (_freezeTimer > 0f && _tier is not (EnemyTier.Miniboss or EnemyTier.Boss))
+		{
+			CancelAbilities();
+			Velocity = Vector2.Zero;
+			UpdateSpriteAnimation(dt);
+			MoveWithKnockback(dt);
+			return;
+		}
+
 		if (lostTrack)
 		{
 			Velocity = _tracking.WanderDirection * _speed * _tracking.WanderSpeedFactor * MoveFactor;
@@ -955,12 +967,27 @@ public partial class Enemy : CharacterBody2D
 		return result;
 	}
 
-	/// <summary>Brûlure (plan 21 §7) : une nouvelle application rafraîchit la durée et garde la plus forte intensité.</summary>
+	/// <summary>
+	/// Brûlure (plan 21 §7, planche 05 R1) : l'intensité la plus forte et la réserve de dégâts la plus grande. Une
+	/// Brûlure n'apporte jamais plus qu'elle-même : le feu de la Lampe et l'Allumette ne se prêtent ni intensité ni
+	/// durée ; une même Brûlure renouvelée repart pour sa durée. La source suit la Brûlure la plus forte.
+	/// </summary>
 	public void ApplyIgnite(float dps, float duration, AttackContext source = default)
 	{
-		_igniteSource = OverTime(source);
-		_igniteDps = _igniteTimer > 0f ? Mathf.Max(_igniteDps, dps) : dps;
-		_igniteTimer = _igniteDuration = Mathf.Max(_igniteTimer, duration);
+		if (_igniteTimer <= 0f || dps >= _igniteDps)
+			_igniteSource = OverTime(source);
+		if (_igniteTimer > 0f)
+		{
+			float strongest = Mathf.Max(_igniteDps, dps);
+			float reserve = Mathf.Max(_igniteDps * _igniteTimer, dps * duration);
+			_igniteDps = strongest;
+			_igniteTimer = _igniteDuration = strongest > 0f ? reserve / strongest : Mathf.Max(_igniteTimer, duration);
+		}
+		else
+		{
+			_igniteDps = dps;
+			_igniteTimer = _igniteDuration = duration;
+		}
 		_visual.Color = new Color(1f, 0.5f, 0.1f);
 	}
 
@@ -1039,7 +1066,7 @@ public partial class Enemy : CharacterBody2D
 
 		_igniteTimer -= delta;
 		EmitBurnEmbers(delta);
-		float igniteDamage = _igniteDps * delta;
+		float igniteDamage = _igniteDps * delta * DamageOverTimeFactor(_igniteSource);
 		DamageResult result = DamageResult.Resolve(Life, _igniteSource, _currentHp, igniteDamage, 0f);
 		_currentHp -= igniteDamage;
 		_eventBus.EmitSignal(EventBus.SignalName.EntityDamaged, this, igniteDamage);
@@ -1064,7 +1091,7 @@ public partial class Enemy : CharacterBody2D
 			return;
 
 		_bleedTimer -= delta;
-		float bleedDamage = _bleedDps * delta;
+		float bleedDamage = _bleedDps * delta * DamageOverTimeFactor(_bleedSource);
 		DamageResult result = DamageResult.Resolve(Life, _bleedSource, _currentHp, bleedDamage, 0f);
 		_currentHp -= bleedDamage;
 		_eventBus.EmitSignal(EventBus.SignalName.EntityDamaged, this, bleedDamage);
@@ -1124,8 +1151,23 @@ public partial class Enemy : CharacterBody2D
 		}
 	}
 
+	/// <summary>
+	/// Un tic suit la règle d'un coup : rien sur une créature terrée, réduction des affixes, et Fragile (planche 05,
+	/// R2) pour les Brûlures et saignements posés par le joueur.
+	/// </summary>
+	private float DamageOverTimeFactor(AttackContext source)
+	{
+		if (_isBurrowed)
+			return 0f;
+		float fragile = _fragileTimer > 0f && source.IsPlayerOwned ? 1f + _fragileBonus : 1f;
+		return _mods.DamageTakenMultiplier * fragile;
+	}
+
 	public bool IsBurning => _igniteTimer > 0f;
 	public bool IsSlowed => _slowTimer > 0f || _freezeTimer > 0f;
+	public bool IsFrozen => _freezeTimer > 0f;
+	/// <summary>Entravé (planche 05, R3) : ralenti, figé ou désorienté.</summary>
+	public bool IsHindered => IsSlowed || _disorientTimer > 0f;
 	private float MoveFactor => _freezeTimer > 0f ? 0f : _slowFactor;
 
 	/// <summary>Fige la créature <paramref name="seconds"/> secondes, sans toucher au ralentissement en cours.</summary>
@@ -1150,6 +1192,9 @@ public partial class Enemy : CharacterBody2D
 	{
 		if (_slowTimer > 0f)
 			_slowTimer = Mathf.Max(_slowTimer, Mathf.Min(_slowTimer + seconds, maxRemaining));
+		// Une créature seulement figée est ralentie à l'arrêt : c'est sa pause qui se prolonge.
+		else if (_freezeTimer > 0f)
+			_freezeTimer = Mathf.Max(_freezeTimer, Mathf.Min(_freezeTimer + seconds, maxRemaining));
 	}
 
 	private void ProcessFragility(float delta)

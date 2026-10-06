@@ -51,6 +51,7 @@ public partial class Projectile : Area2D
     private float _groundDamage;
     private float _groundDuration;
     private float _groundRadius;
+    private float _groundBurnSeconds;
 
     private GroupCache _groupCache;
 
@@ -151,12 +152,13 @@ public partial class Projectile : Area2D
         _homingTarget = TargetLock.On(target);
     }
 
-    public void SetGroundFire(float damage, float duration, float radius)
+    public void SetGroundFire(float damage, float duration, float radius, float burnSeconds)
     {
         _spawnsGroundFire = true;
         _groundDamage = damage;
         _groundDuration = duration;
         _groundRadius = radius;
+        _groundBurnSeconds = burnSeconds;
     }
 
     public override void _PhysicsProcess(double delta)
@@ -281,7 +283,8 @@ public partial class Projectile : Area2D
 
             if (_spawnsGroundFire)
             {
-                GroundFire.Spawn(enemy.GlobalPosition, _groundDamage, _groundDuration, _groundRadius, _context.As(DamageKind.DamageOverTime));
+                GroundFire.Spawn(enemy.GlobalPosition, _groundDamage, _groundDuration, _groundRadius, _groundBurnSeconds,
+                    _context.As(DamageKind.DamageOverTime));
                 _spawnsGroundFire = false;
             }
 

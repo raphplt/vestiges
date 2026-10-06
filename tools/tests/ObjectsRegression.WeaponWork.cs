@@ -122,8 +122,12 @@ public partial class ObjectsRegression
             $"Élimination par un saignement d'arme : soin ({bleed.heal:0.00}) et explosion à 150 % du coup d'arme qui l'a posé, pas du dernier tic ({bleed.blast:0.0})");
 
         GroundFire fire = new(GetNode<GroupCache>("/root/GroupCache"));
-        fire.Add(victims[2].GlobalPosition, 5f, 2f, 10f, hit.As(DamageKind.DamageOverTime));
-        (float heal, float blast) flame = Kill(2, () => fire.Process(0.5f));
+        fire.Add(victims[2].GlobalPosition, 5f, 2f, 10f, 0.5f, hit.As(DamageKind.DamageOverTime));
+        (float heal, float blast) flame = Kill(2, () =>
+        {
+            fire.Process(0.5f);
+            typeof(Enemy).GetMethod("ProcessIgnite", Private).Invoke(victims[2], new object[] { 0.2f });
+        });
         Check(victims[2].IsDying && Near(flame.heal, 1.5f) && Near(flame.blast, 30f),
             $"Élimination dans le feu de la Lampe : une élimination par l'arme ({flame.heal:0.00} PV, explosion {flame.blast:0.0})");
 

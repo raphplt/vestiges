@@ -34,7 +34,12 @@
       "echo_radius": { "default": 40, "min": 0 },
       "echo_count": { "default": 1, "min": 1, "integer": true }
     },
-    "ground_fire": { "ground_damage": { "min": 0 }, "ground_duration": { "min": 0 }, "ground_radius": { "min": 0 } },
+    "ground_fire": {
+      "ground_damage": { "min": 0 },
+      "ground_duration": { "min": 0 },
+      "ground_radius": { "min": 0 },
+      "burn_seconds": { "default": 0.6, "min": 0.01, "_comment": "Brûlure posée par le feu, qui dure encore ce temps après le dernier passage (planche 05 R1). Un peu plus d'un tic (0,5 s) : la Brûlure ne s'éteint pas entre deux tics." }
+    },
     "local_time_slow": {
       "slow_radius": { "min": 0 },
       "slow_factor": { "min": 0, "max": 1 },

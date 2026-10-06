@@ -82,9 +82,9 @@ public partial class CombatPools : Node2D
     }
 
     /// <summary>Flaque de feu : dégâts au sol pendant <paramref name="duration"/> secondes, zone tramée qui la montre.</summary>
-    public void AddGroundFire(Vector2 position, float damage, float duration, float radius, AttackContext source = default)
+    public void AddGroundFire(Vector2 position, float damage, float duration, float radius, float burnSeconds, AttackContext source = default)
     {
-        _groundFire.Add(position, damage, duration, radius, source);
+        _groundFire.Add(position, damage, duration, radius, burnSeconds, source);
         PixelFxSpec spec = PixelFxSpec.Of(PixelFxShape.Zone, FxFamily.Fire, radius, 1f, duration);
         spec.Squash = Iso.GroundSquash;
         spec.FillDensity = 0.3f;

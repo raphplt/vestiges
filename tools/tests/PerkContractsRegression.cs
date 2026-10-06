@@ -156,8 +156,10 @@ public partial class PerkContractsRegression : Node2D
         DamageResult groundHit = default;
         void OnDamage(DamageResult result) { if (result.Target == groundTarget.Life) groundHit = result; }
         _events.EnemyDamageResolved += OnDamage;
-        fire.Add(groundTarget.GlobalPosition, 1f, 1f, 20f, groundSource);
+        fire.Add(groundTarget.GlobalPosition, 1f, 1f, 20f, 0.5f, groundSource);
         fire.Process(0.6f);
+        // Le feu pose une Brûlure (planche 05, R1) : le dégât arrive au tic de la créature.
+        typeof(Enemy).GetMethod("ProcessIgnite", Private).Invoke(groundTarget, new object[] { 0.1f });
         _events.EnemyDamageResolved -= OnDamage;
         Check(groundHit.Applied && groundHit.Source == groundSource, "La flaque garde le propriétaire du projectile qui l'a créée");
         groundTarget.QueueFree();

@@ -72,6 +72,7 @@ public static class SpecialEffectParam
 	public const string GroundDamage = "ground_damage";
 	public const string GroundDuration = "ground_duration";
 	public const string GroundRadius = "ground_radius";
+	public const string GroundBurnSeconds = "burn_seconds";
 	public const string SlowRadius = "slow_radius";
 	public const string SlowFactor = "slow_factor";
 	public const string SlowDuration = "slow_duration";

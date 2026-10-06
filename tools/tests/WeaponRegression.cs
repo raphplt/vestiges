@@ -64,7 +64,7 @@ public partial class WeaponRegression : Node2D
     }
 
     /// <summary>
-    /// Flaque de feu de la Lanterne : dégâts mesurés au sol, comme l'ellipse dessinée. À 0,8 rayon à l'horizontale une
+    /// Flaque de feu de la Lanterne : portée mesurée au sol, comme l'ellipse dessinée. À 0,8 rayon à l'horizontale une
     /// créature brûle ; à 0,8 rayon à la verticale de l'écran (1,6 au sol), elle est hors de la flaque.
     /// </summary>
     private async Task CheckGroundFireOnGround()
@@ -82,13 +82,11 @@ public partial class WeaponRegression : Node2D
         beside.Position = center + new Vector2(radius * 0.8f, 0f);
         below.Position = center + new Vector2(0f, radius * 0.8f);
         await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
-        float besideBefore = beside.HpRatio;
-        float belowBefore = below.HpRatio;
         GroundFire fire = new(GetNode<GroupCache>("/root/GroupCache"));
-        fire.Add(center, 50f, 1f, radius);
+        fire.Add(center, 50f, 1f, radius, 0.5f);
         fire.Process(0.6f);
-        Check(beside.HpRatio < besideBefore && Mathf.IsEqualApprox(below.HpRatio, belowBefore),
-            $"Flaque de feu mesurée au sol : à côté {besideBefore:0.00} → {beside.HpRatio:0.00}, en dessous {belowBefore:0.00} → {below.HpRatio:0.00}");
+        Check(beside.IsBurning && !below.IsBurning,
+            $"Flaque de feu mesurée au sol : à côté {(beside.IsBurning ? "brûle" : "intacte")}, en dessous {(below.IsBurning ? "brûle" : "intacte")}");
         beside.QueueFree();
         below.QueueFree();
     }

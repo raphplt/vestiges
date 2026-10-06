@@ -1889,7 +1889,7 @@ public partial class Player : CharacterBody2D
             WeaponSpecialEffect se = _equippedWeapon?.SpecialEffect;
             if (proj != null && se?.Kind == SpecialEffectKind.GroundFire)
                 proj.SetGroundFire(se.Get(SpecialEffectParam.GroundDamage), StatusDuration(se.Get(SpecialEffectParam.GroundDuration)),
-                    ZoneScale(se.Get(SpecialEffectParam.GroundRadius)));
+                    ZoneScale(se.Get(SpecialEffectParam.GroundRadius)), StatusDuration(se.Get(SpecialEffectParam.GroundBurnSeconds)));
         }
     }
 

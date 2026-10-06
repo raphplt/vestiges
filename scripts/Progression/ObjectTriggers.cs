@@ -274,7 +274,7 @@ public partial class ObjectTriggers : Node
         }
     }
 
-    /// <summary>Thermomètre, Épingle à nourrice : dégâts d'un coup d'arme contre une cible brûlée ou ralentie.</summary>
+    /// <summary>Thermomètre, Épingle à nourrice : dégâts d'un coup d'arme contre une cible brûlée ou entravée.</summary>
     public float AgainstTarget(Enemy enemy, float damage)
     {
         float bonus = 0f;
@@ -283,7 +283,7 @@ public partial class ObjectTriggers : Node
             bonus += _burningTargetDamage;
             _player.ObjectProcs?.Show(BurningTargetDamageStat);
         }
-        if (_slowedTargetDamage > 0f && enemy.IsSlowed)
+        if (_slowedTargetDamage > 0f && enemy.IsHindered)
         {
             bonus += _slowedTargetDamage;
             _player.ObjectProcs?.Show(SlowedTargetDamageStat);

@@ -51,6 +51,13 @@ public partial class ObjectsRegression : Node2D
             CheckKillRewards();
             CheckSecondaryHits();
             CheckWeaponKills();
+            CheckGroundFireBurns();
+            CheckFragileDamageOverTime();
+            CheckHinderedTargets();
+            CheckFrozenCreatures();
+            CheckBurnStacking();
+            CheckDamageOverTimeRules();
+            CheckFrozenMiniboss();
             CheckStrideAndLevels();
             CheckNamedProperties();
             CheckCritTriggers();

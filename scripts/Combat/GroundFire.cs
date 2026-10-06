@@ -5,8 +5,9 @@ using Vestiges.Core;
 namespace Vestiges.Combat;
 
 /// <summary>
-/// Flaques de feu laissées par la Lanterne Mémorielle (effet spécial `ground_fire`) : dégâts toutes les demi-secondes
-/// dans le rayon, mesuré au sol comme la zone tramée orange qui les montre. Des données tenues par CombatPools,
+/// Flaques de feu laissées par la Lanterne Mémorielle (effet spécial `ground_fire`) : toutes les demi-secondes, une
+/// créature dans le rayon, mesuré au sol comme la zone tramée orange qui les montre, **brûle** (planche 05, R1) : le
+/// statut ordinaire, aux mêmes dégâts par seconde, qui dure encore <c>burn_seconds</c> après le dernier passage. Des données tenues par CombatPools,
 /// sans nœud par flaque (audit de performances §11).
 /// </summary>
 public sealed class GroundFire
@@ -16,7 +17,8 @@ public sealed class GroundFire
     private struct Flame
     {
         public Vector2 Position;
-        public float Damage;
+        public float Dps;
+        public float BurnSeconds;
         public float RadiusSq;
         public float Remaining;
         public float Tick;
@@ -31,18 +33,20 @@ public sealed class GroundFire
         _groupCache = groupCache;
     }
 
-    public static void Spawn(Vector2 position, float damage, float duration, float radius, AttackContext source = default)
+    public static void Spawn(Vector2 position, float damage, float duration, float radius, float burnSeconds, AttackContext source = default)
     {
-        CombatPools.Instance?.AddGroundFire(position, damage, duration, radius, source);
+        CombatPools.Instance?.AddGroundFire(position, damage, duration, radius, burnSeconds, source);
     }
 
-    public void Add(Vector2 position, float damage, float duration, float radius, AttackContext source = default)
+    /// <summary><paramref name="damage"/> est ce qu'une demi-seconde de feu inflige.</summary>
+    public void Add(Vector2 position, float damage, float duration, float radius, float burnSeconds, AttackContext source = default)
     {
         _flames.Add(new Flame
         {
             Source = source,
             Position = position,
-            Damage = damage,
+            Dps = damage / TickSeconds,
+            BurnSeconds = burnSeconds,
             RadiusSq = radius * radius,
             Remaining = duration,
             Tick = TickSeconds,
@@ -77,7 +81,7 @@ public sealed class GroundFire
         {
             if (node is Enemy { IsActive: true, IsDying: false } enemy && GodotObject.IsInstanceValid(enemy)
                 && Iso.GroundDistanceSquared(enemy.GlobalPosition, flame.Position) < flame.RadiusSq)
-                enemy.TakeDamage(flame.Damage, source: flame.Source);
+                enemy.ApplyIgnite(flame.Dps, flame.BurnSeconds, flame.Source);
         }
     }
 }
