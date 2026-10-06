@@ -836,3 +836,9 @@ Raphaël, après la planche de la Résurgence : « pour l'audio j'ai du mal à d
 Raphaël, après les planches L1, synergies et Barrière/Indicible : « continue d'avancer stp sur d'autres sujets je peux pas valider là car jai pas le temps ».
 - Les trois planches restent en attente de sa relecture ; rien n'en est codé.
 - Claude enchaîne les lots **sans décision de design** : corrections de run et validations de catalogues du plan 26 (Q8, Q7), qui ne changent ni règle ni équilibrage. Chaque lot reste découpé dans le plan, vérifié et clos par un commit.
+
+## 69. Reprise sur une priorité au choix — 6 octobre 2026
+
+Raphaël : « Reprend le projet sur le sujet de ton choix parmi les plus importants à faire qui sont décrits dans les docs ».
+- Lot choisi : **plan 26 Q7c-4a, biomes**, suite des validations des catalogues du monde. Découpage écrit avant implémentation, lot livré et vérifié ; les paramètres du monde, fermes et carrières restent aux sous-lots suivants.
+- Cette reprise ne tranche pas les planches de lore, de synergies ou de boss en attente ; aucune nouvelle règle de gameplay n'est activée.

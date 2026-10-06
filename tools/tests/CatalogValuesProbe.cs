@@ -102,6 +102,22 @@ public partial class CatalogValuesProbe : Node
             names.Sort(StringComparer.Ordinal);
             lines.Add(Invariant($"field bonus {bonus.Id} {bonus.Sprite} {bonus.NameKey} {bonus.Weight:R} {bonus.Effect} {bonus.Color} {string.Join(",", names.ConvertAll(n => Invariant($"{n}={bonus.Params[n]:R}")))}"));
         }
+        // Q7c-4a : biomes, ordre des groupes et des répétitions compris (ils pondèrent les tirages).
+        List<BiomeData> biomes = BiomeDataLoader.GetAll();
+        lines.Add($"biomes order {string.Join(",", biomes.ConvertAll(biome => biome.Id))}");
+        foreach (BiomeData biome in biomes)
+        {
+            lines.Add(Invariant($"biome {biome.Id} {biome.Name} audio={biome.FootstepAudio ?? "-"} danger={biome.DangerLevel} map={biome.MapWeight:R} poi={biome.PoiCountMin}-{biome.PoiCountMax} blend={biome.BlendTerrains}"));
+            lines.Add($"biome {biome.Id} exploration={string.Join(",", biome.ExplorationEnemyPool)} resurgence={string.Join(",", biome.ResurgenceEnemyPool)} wang={string.Join(",", biome.WangTileGroups)}");
+            foreach ((string terrain, float weight) in biome.TerrainWeights)
+                lines.Add(Invariant($"biome {biome.Id} terrain {terrain} {weight:R}"));
+            foreach ((string poi, float weight) in biome.PoiPool)
+                lines.Add(Invariant($"biome {biome.Id} poi {poi} {weight:R}"));
+            foreach (string terrain in biome.TileSources.Keys)
+                lines.Add($"biome {biome.Id} tiles {terrain} {string.Join(",", biome.TileSources[terrain])}");
+            if (biome.PathStyle is PathStyle style)
+                lines.Add(Invariant($"biome {biome.Id} path {style.Tone} ruts={style.Ruts:R} width={style.WidthPx:R}"));
+        }
         foreach (string line in lines)
             GD.Print($"[CatalogValuesProbe] {line}");
         GD.Print($"[CatalogValuesProbe] RESULT lines={lines.Count}");

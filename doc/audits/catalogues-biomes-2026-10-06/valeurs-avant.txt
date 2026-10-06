@@ -1,0 +1,591 @@
+[CatalogValuesProbe] xp 1 36.3
+[CatalogValuesProbe] xp 2 90.510796
+[CatalogValuesProbe] xp 3 149.19342
+[CatalogValuesProbe] xp 4 206.75078
+[CatalogValuesProbe] xp 5 259.50238
+[CatalogValuesProbe] xp 6 280.1544
+[CatalogValuesProbe] xp 7 348.70795
+[CatalogValuesProbe] xp 8 421.51248
+[CatalogValuesProbe] xp 9 498.24963
+[CatalogValuesProbe] xp 10 578.6589
+[CatalogValuesProbe] xp 11 662.5219
+[CatalogValuesProbe] xp 12 749.6525
+[CatalogValuesProbe] xp 13 839.8896
+[CatalogValuesProbe] xp 14 933.0919
+[CatalogValuesProbe] xp 15 1029.1348
+[CatalogValuesProbe] xp 16 1127.9062
+[CatalogValuesProbe] xp 17 1229.3063
+[CatalogValuesProbe] xp 18 1333.2439
+[CatalogValuesProbe] xp 19 1439.6361
+[CatalogValuesProbe] xp 20 1548.4072
+[CatalogValuesProbe] xp 21 1659.4877
+[CatalogValuesProbe] xp 22 1772.8126
+[CatalogValuesProbe] xp 23 1888.3225
+[CatalogValuesProbe] xp 24 2005.9615
+[CatalogValuesProbe] xp 25 2125.6777
+[CatalogValuesProbe] xp 26 2247.4229
+[CatalogValuesProbe] xp 27 2371.1506
+[CatalogValuesProbe] xp 28 2496.8188
+[CatalogValuesProbe] xp 29 2624.3865
+[CatalogValuesProbe] xp 30 2753.8154
+[CatalogValuesProbe] xp 31 2885.0693
+[CatalogValuesProbe] xp 32 3018.1135
+[CatalogValuesProbe] xp 33 3152.916
+[CatalogValuesProbe] xp 34 3289.4456
+[CatalogValuesProbe] xp 35 3427.6719
+[CatalogValuesProbe] xp 36 3567.5671
+[CatalogValuesProbe] xp 37 3709.1045
+[CatalogValuesProbe] xp 38 3852.2576
+[CatalogValuesProbe] xp 39 3997.0017
+[CatalogValuesProbe] xp 40 4143.3135
+[CatalogValuesProbe] xp 41 4291.1694
+[CatalogValuesProbe] xp 42 4440.5483
+[CatalogValuesProbe] xp 43 4591.4287
+[CatalogValuesProbe] xp 44 4743.7896
+[CatalogValuesProbe] xp 45 4897.612
+[CatalogValuesProbe] xp 46 5052.877
+[CatalogValuesProbe] xp 47 5209.5664
+[CatalogValuesProbe] xp 48 5367.662
+[CatalogValuesProbe] xp 49 5527.147
+[CatalogValuesProbe] xp 50 5688.006
+[CatalogValuesProbe] xp 51 5850.2207
+[CatalogValuesProbe] xp 52 6013.7773
+[CatalogValuesProbe] xp 53 6178.6606
+[CatalogValuesProbe] xp 54 6344.8555
+[CatalogValuesProbe] xp 55 6512.3486
+[CatalogValuesProbe] xp 56 6681.125
+[CatalogValuesProbe] xp 57 6851.1724
+[CatalogValuesProbe] xp 58 7022.4775
+[CatalogValuesProbe] xp 59 7195.0273
+[CatalogValuesProbe] xp 60 7368.8105
+[CatalogValuesProbe] xp 61 7543.814
+[CatalogValuesProbe] xp 62 7720.027
+[CatalogValuesProbe] xp 63 7897.4375
+[CatalogValuesProbe] xp 64 8076.034
+[CatalogValuesProbe] xp 65 8255.808
+[CatalogValuesProbe] xp 66 8436.746
+[CatalogValuesProbe] xp 67 8618.841
+[CatalogValuesProbe] xp 68 8802.078
+[CatalogValuesProbe] xp 69 8986.453
+[CatalogValuesProbe] xp 70 9171.953
+[CatalogValuesProbe] xp 71 9358.569
+[CatalogValuesProbe] xp 72 9546.293
+[CatalogValuesProbe] xp 73 9735.114
+[CatalogValuesProbe] xp 74 9925.026
+[CatalogValuesProbe] xp 75 10116.018
+[CatalogValuesProbe] xp 76 10308.083
+[CatalogValuesProbe] xp 77 10501.212
+[CatalogValuesProbe] xp 78 10695.397
+[CatalogValuesProbe] xp 79 10890.632
+[CatalogValuesProbe] xp 80 11086.906
+[CatalogValuesProbe] xp 81 11284.214
+[CatalogValuesProbe] xp 82 11482.549
+[CatalogValuesProbe] xp 83 11681.9
+[CatalogValuesProbe] xp 84 11882.264
+[CatalogValuesProbe] xp 85 12083.632
+[CatalogValuesProbe] xp 86 12285.997
+[CatalogValuesProbe] xp 87 12489.354
+[CatalogValuesProbe] xp 88 12693.692
+[CatalogValuesProbe] xp 89 12899.011
+[CatalogValuesProbe] xp 90 13105.3
+[CatalogValuesProbe] xp 91 13312.554
+[CatalogValuesProbe] xp 92 13520.768
+[CatalogValuesProbe] xp 93 13729.933
+[CatalogValuesProbe] xp 94 13940.044
+[CatalogValuesProbe] xp 95 14151.098
+[CatalogValuesProbe] xp 96 14363.086
+[CatalogValuesProbe] xp 97 14576.003
+[CatalogValuesProbe] xp 98 14789.845
+[CatalogValuesProbe] xp 99 15004.605
+[CatalogValuesProbe] xp 100 15220.277
+[CatalogValuesProbe] xp 101 15436.859
+[CatalogValuesProbe] xp 102 15654.343
+[CatalogValuesProbe] xp 103 15872.724
+[CatalogValuesProbe] xp 104 16091.997
+[CatalogValuesProbe] xp 105 16312.156
+[CatalogValuesProbe] xp 106 16533.2
+[CatalogValuesProbe] xp 107 16755.121
+[CatalogValuesProbe] xp 108 16977.914
+[CatalogValuesProbe] xp 109 17201.574
+[CatalogValuesProbe] xp 110 17426.1
+[CatalogValuesProbe] xp 111 17651.484
+[CatalogValuesProbe] xp 112 17877.723
+[CatalogValuesProbe] xp 113 18104.81
+[CatalogValuesProbe] xp 114 18332.744
+[CatalogValuesProbe] xp 115 18561.52
+[CatalogValuesProbe] xp 116 18791.13
+[CatalogValuesProbe] xp 117 19021.576
+[CatalogValuesProbe] xp 118 19252.852
+[CatalogValuesProbe] xp 119 19484.95
+[CatalogValuesProbe] xp 120 19717.867
+[CatalogValuesProbe] xp 121 19951.605
+[CatalogValuesProbe] xp 122 20000
+[CatalogValuesProbe] xp 123 20000
+[CatalogValuesProbe] xp 124 20000
+[CatalogValuesProbe] xp 125 20000
+[CatalogValuesProbe] xp 126 20000
+[CatalogValuesProbe] xp 127 20000
+[CatalogValuesProbe] xp 128 20000
+[CatalogValuesProbe] xp 129 20000
+[CatalogValuesProbe] xp 130 20000
+[CatalogValuesProbe] xp 131 20000
+[CatalogValuesProbe] xp 132 20000
+[CatalogValuesProbe] xp 133 20000
+[CatalogValuesProbe] xp 134 20000
+[CatalogValuesProbe] xp 135 20000
+[CatalogValuesProbe] xp 136 20000
+[CatalogValuesProbe] xp 137 20000
+[CatalogValuesProbe] xp 138 20000
+[CatalogValuesProbe] xp 139 20000
+[CatalogValuesProbe] xp 140 20000
+[CatalogValuesProbe] xp 141 20000
+[CatalogValuesProbe] xp 142 20000
+[CatalogValuesProbe] xp 143 20000
+[CatalogValuesProbe] xp 144 20000
+[CatalogValuesProbe] xp 145 20000
+[CatalogValuesProbe] xp 146 20000
+[CatalogValuesProbe] xp 147 20000
+[CatalogValuesProbe] xp 148 20000
+[CatalogValuesProbe] xp 149 20000
+[CatalogValuesProbe] xp 150 20000
+[CatalogValuesProbe] xp 151 20000
+[CatalogValuesProbe] xp 152 20000
+[CatalogValuesProbe] xp 153 20000
+[CatalogValuesProbe] xp 154 20000
+[CatalogValuesProbe] xp 155 20000
+[CatalogValuesProbe] xp 156 20000
+[CatalogValuesProbe] xp 157 20000
+[CatalogValuesProbe] xp 158 20000
+[CatalogValuesProbe] xp 159 20000
+[CatalogValuesProbe] xp 160 20000
+[CatalogValuesProbe] xp 161 20000
+[CatalogValuesProbe] xp 162 20000
+[CatalogValuesProbe] xp 163 20000
+[CatalogValuesProbe] xp 164 20000
+[CatalogValuesProbe] xp 165 20000
+[CatalogValuesProbe] xp 166 20000
+[CatalogValuesProbe] xp 167 20000
+[CatalogValuesProbe] xp 168 20000
+[CatalogValuesProbe] xp 169 20000
+[CatalogValuesProbe] xp 170 20000
+[CatalogValuesProbe] xp 171 20000
+[CatalogValuesProbe] xp 172 20000
+[CatalogValuesProbe] xp 173 20000
+[CatalogValuesProbe] xp 174 20000
+[CatalogValuesProbe] xp 175 20000
+[CatalogValuesProbe] xp 176 20000
+[CatalogValuesProbe] xp 177 20000
+[CatalogValuesProbe] xp 178 20000
+[CatalogValuesProbe] xp 179 20000
+[CatalogValuesProbe] xp 180 20000
+[CatalogValuesProbe] xp 181 20000
+[CatalogValuesProbe] xp 182 20000
+[CatalogValuesProbe] xp 183 20000
+[CatalogValuesProbe] xp 184 20000
+[CatalogValuesProbe] xp 185 20000
+[CatalogValuesProbe] xp 186 20000
+[CatalogValuesProbe] xp 187 20000
+[CatalogValuesProbe] xp 188 20000
+[CatalogValuesProbe] xp 189 20000
+[CatalogValuesProbe] xp 190 20000
+[CatalogValuesProbe] xp 191 20000
+[CatalogValuesProbe] xp 192 20000
+[CatalogValuesProbe] xp 193 20000
+[CatalogValuesProbe] xp 194 20000
+[CatalogValuesProbe] xp 195 20000
+[CatalogValuesProbe] xp 196 20000
+[CatalogValuesProbe] xp 197 20000
+[CatalogValuesProbe] xp 198 20000
+[CatalogValuesProbe] xp 199 20000
+[CatalogValuesProbe] xp 200 20000
+[CatalogValuesProbe] xp 201 20000
+[CatalogValuesProbe] xp 202 20000
+[CatalogValuesProbe] xp 203 20000
+[CatalogValuesProbe] xp 204 20000
+[CatalogValuesProbe] xp 205 20000
+[CatalogValuesProbe] xp 206 20000
+[CatalogValuesProbe] xp 207 20000
+[CatalogValuesProbe] xp 208 20000
+[CatalogValuesProbe] xp 209 20000
+[CatalogValuesProbe] xp 210 20000
+[CatalogValuesProbe] xp 211 20000
+[CatalogValuesProbe] xp 212 20000
+[CatalogValuesProbe] xp 213 20000
+[CatalogValuesProbe] xp 214 20000
+[CatalogValuesProbe] xp 215 20000
+[CatalogValuesProbe] xp 216 20000
+[CatalogValuesProbe] xp 217 20000
+[CatalogValuesProbe] xp 218 20000
+[CatalogValuesProbe] xp 219 20000
+[CatalogValuesProbe] xp 220 20000
+[CatalogValuesProbe] xp 221 20000
+[CatalogValuesProbe] xp 222 20000
+[CatalogValuesProbe] xp 223 20000
+[CatalogValuesProbe] xp 224 20000
+[CatalogValuesProbe] xp 225 20000
+[CatalogValuesProbe] xp 226 20000
+[CatalogValuesProbe] xp 227 20000
+[CatalogValuesProbe] xp 228 20000
+[CatalogValuesProbe] xp 229 20000
+[CatalogValuesProbe] xp 230 20000
+[CatalogValuesProbe] xp 231 20000
+[CatalogValuesProbe] xp 232 20000
+[CatalogValuesProbe] xp 233 20000
+[CatalogValuesProbe] xp 234 20000
+[CatalogValuesProbe] xp 235 20000
+[CatalogValuesProbe] xp 236 20000
+[CatalogValuesProbe] xp 237 20000
+[CatalogValuesProbe] xp 238 20000
+[CatalogValuesProbe] xp 239 20000
+[CatalogValuesProbe] xp 240 20000
+[CatalogValuesProbe] xp 241 20000
+[CatalogValuesProbe] xp 242 20000
+[CatalogValuesProbe] xp 243 20000
+[CatalogValuesProbe] xp 244 20000
+[CatalogValuesProbe] xp 245 20000
+[CatalogValuesProbe] xp 246 20000
+[CatalogValuesProbe] xp 247 20000
+[CatalogValuesProbe] xp 248 20000
+[CatalogValuesProbe] xp 249 20000
+[CatalogValuesProbe] xp 250 20000
+[CatalogValuesProbe] score charognard 10
+[CatalogValuesProbe] score fading_spitter 15
+[CatalogValuesProbe] score hurleur 30
+[CatalogValuesProbe] score inconnu 10
+[CatalogValuesProbe] score indicible 5000
+[CatalogValuesProbe] score presage 15
+[CatalogValuesProbe] score rampant 15
+[CatalogValuesProbe] score rodeur 15
+[CatalogValuesProbe] score shade 5
+[CatalogValuesProbe] score shadow_crawler 10
+[CatalogValuesProbe] score tisseuse 20
+[CatalogValuesProbe] score treant_corrompu 10
+[CatalogValuesProbe] score void_brute 30
+[CatalogValuesProbe] score wailing_sentinel 25
+[CatalogValuesProbe] peril 0 1 1 1 1 1 0
+[CatalogValuesProbe] peril 1 1.06 1.1 1.06 1.12 1.12 0.5
+[CatalogValuesProbe] peril 2 1.12 1.2 1.12 1.24 1.24 1
+[CatalogValuesProbe] peril 3 1.18 1.3 1.18 1.36 1.36 1.5
+[CatalogValuesProbe] peril 4 1.24 1.4 1.24 1.48 1.48 2
+[CatalogValuesProbe] peril 5 1.3 1.5 1.3 1.5999999 1.5999999 2.5
+[CatalogValuesProbe] peril 6 1.36 1.6 1.36 1.72 1.72 3
+[CatalogValuesProbe] peril 7 1.42 1.7 1.42 1.8399999 1.8399999 3.5
+[CatalogValuesProbe] peril 8 1.48 1.8 1.48 1.96 1.96 4
+[CatalogValuesProbe] peril 9 1.54 1.9000001 1.54 2.08 2.08 4.5
+[CatalogValuesProbe] peril 10 1.5999999 2 1.5999999 2.1999998 2.1999998 5
+[CatalogValuesProbe] peril max 10 banish 3 3
+[CatalogValuesProbe] object allumette_humide Allumette humide | Chaque coup d'arme a une chance d'enflammer la cible : elle brûle {burn_seconds} s. | res://assets/items/icons/item_allumette_humide.png res://assets/items/icons/item_allumette_humide_16.png (1, 0.55, 0.2, 1) max=30 survival=False weight=1 offered=True
+[CatalogValuesProbe] object allumette_humide effect burn_chance additive 0.03
+[CatalogValuesProbe] object allumette_humide param burn_damage_ratio 0.25
+[CatalogValuesProbe] object allumette_humide param burn_seconds 3
+[CatalogValuesProbe] object allumette_humide milestone 15 burn_spread radius=120 | La Brûlure passe au voisin quand la cible meurt
+[CatalogValuesProbe] object ancrage Bouton de manteau | Tes PV maximum augmentent. | res://assets/items/icons/item_ancrage.png res://assets/items/icons/item_ancrage_16.png (0.3, 0.8, 0.4, 1) max=30 survival=True weight=1 offered=True
+[CatalogValuesProbe] object ancrage effect max_hp additive 15
+[CatalogValuesProbe] object ancrage milestone 15 ignore_small_hits max_hp_ratio=0.03 | Les coups inférieurs à 3 % des PV max sont ignorés
+[CatalogValuesProbe] object boite_de_pansements Boîte de pansements | Chaque niveau gagné te soigne d'une part de tes PV max. | res://assets/items/icons/item_boite_de_pansements.png res://assets/items/icons/item_boite_de_pansements_16.png (0.95, 0.9, 0.85, 1) max=30 survival=True weight=1 offered=True
+[CatalogValuesProbe] object boite_de_pansements effect level_heal additive 0.003
+[CatalogValuesProbe] object boite_de_pansements milestone 15 cascade_invulnerability levels=3,seconds=1 | Une cascade de 3 niveaux ou plus donne 1 s d'invulnérabilité
+[CatalogValuesProbe] object carapace Écusson de pompier | Ton bouclier encaisse un coup entier, puis se recharge quand on ne te touche plus. | res://assets/items/icons/item_carapace.png res://assets/items/icons/item_carapace_16.png (0.4, 0.6, 0.9, 1) max=30 survival=True weight=1 offered=True
+[CatalogValuesProbe] object carapace effect shield additive 5
+[CatalogValuesProbe] object carapace milestone 15 shield_break_wave knockback=90,radius=110 | Quand le bouclier casse, une onde repousse les ennemis proches
+[CatalogValuesProbe] object chewing_gum Chewing-gum | Ton dash laisse une traînée collante : les ennemis qui la traversent sont ralentis. | res://assets/items/icons/item_chewing_gum.png res://assets/items/icons/item_chewing_gum_16.png (0.95, 0.55, 0.75, 1) max=30 survival=False weight=1 offered=True
+[CatalogValuesProbe] object chewing_gum effect dash_trail additive 0.1
+[CatalogValuesProbe] object chewing_gum param base_seconds 1
+[CatalogValuesProbe] object chewing_gum param radius 30
+[CatalogValuesProbe] object chewing_gum param slow_factor 0.6
+[CatalogValuesProbe] object chewing_gum param spacing 22
+[CatalogValuesProbe] object chewing_gum milestone 15 sticky_fragile bonus=0.2 | La traînée rend aussi Fragile
+[CatalogValuesProbe] object de_a_coudre Dé à coudre | Chaque ennemi tué par une arme te rend des PV. | res://assets/items/icons/item_de_a_coudre.png res://assets/items/icons/item_de_a_coudre_16.png (0.8, 0.8, 0.75, 1) max=30 survival=True weight=1 offered=True
+[CatalogValuesProbe] object de_a_coudre effect kill_heal additive 0.1
+[CatalogValuesProbe] object de_a_coudre milestone 15 elite_kill_heal max_hp_ratio=0.05 | Une élite tuée rend 5 % des PV max
+[CatalogValuesProbe] object epingle_a_nourrice Épingle à nourrice | Tes coups font plus de dégâts aux ennemis ralentis. | res://assets/items/icons/item_epingle_a_nourrice.png res://assets/items/icons/item_epingle_a_nourrice_16.png (0.75, 0.8, 0.85, 1) max=30 survival=False weight=1 offered=True
+[CatalogValuesProbe] object epingle_a_nourrice effect slowed_target_damage additive 0.04
+[CatalogValuesProbe] object epingle_a_nourrice milestone 15 slow_kill_extends max_remaining_seconds=4,radius=120,seconds=1 | Un ennemi ralenti tué prolonge de 1 s le ralentissement de ses voisins
+[CatalogValuesProbe] object flamme_interieure Flamme Intérieure |  |   (1, 0.5, 0.2, 1) max=30 survival=False weight=1 offered=False
+[CatalogValuesProbe] object flamme_interieure effect damage multiplicative 0
+[CatalogValuesProbe] object fragment_deternite Fragment d'Éternité |  |   (0.9, 0.7, 1, 1) max=30 survival=False weight=1 offered=False
+[CatalogValuesProbe] object fragment_deternite effect cooldown_reduction multiplicative 0
+[CatalogValuesProbe] object gilet_reflechissant Gilet réfléchissant | Chaque ennemi tout près de toi augmente tes dégâts, jusqu'à {max_enemies} ennemis. | res://assets/items/icons/item_gilet_reflechissant.png res://assets/items/icons/item_gilet_reflechissant_16.png (0.95, 0.85, 0.2, 1) max=30 survival=False weight=1 offered=True
+[CatalogValuesProbe] object gilet_reflechissant effect crowd_damage additive 0.002
+[CatalogValuesProbe] object gilet_reflechissant param max_enemies 10
+[CatalogValuesProbe] object gilet_reflechissant param radius 120
+[CatalogValuesProbe] object gilet_reflechissant milestone 15 crowd_cap max_enemies=20 | Compte jusqu'à 20 ennemis
+[CatalogValuesProbe] object glacon Glaçon dans un mouchoir | Chaque coup d'arme a une chance de ralentir la cible pendant {slow_seconds} s. | res://assets/items/icons/item_glacon.png res://assets/items/icons/item_glacon_16.png (0.6, 0.85, 1, 1) max=30 survival=False weight=1 offered=True
+[CatalogValuesProbe] object glacon effect chill_chance additive 0.03
+[CatalogValuesProbe] object glacon param slow_factor 0.6
+[CatalogValuesProbe] object glacon param slow_seconds 1.5
+[CatalogValuesProbe] object glacon milestone 15 double_slow_freeze freeze_seconds=0.5 | Un ennemi ralenti deux fois est figé 0,5 s
+[CatalogValuesProbe] object instinct Lacet rouge | Tu te déplaces plus vite et ton dash se recharge plus vite. | res://assets/items/icons/item_instinct.png res://assets/items/icons/item_instinct_16.png (0.3, 0.7, 1, 1) max=30 survival=False weight=1 offered=True
+[CatalogValuesProbe] object instinct effect speed multiplicative 0.03
+[CatalogValuesProbe] object instinct effect dash_recharge multiplicative 0.05
+[CatalogValuesProbe] object instinct milestone 15 dash_distance bonus=0.3 | Le dash va 30 % plus loin
+[CatalogValuesProbe] object jeton_de_fete Jeton de fête foraine | Ta Chance monte : les améliorations rares sortent plus souvent. | res://assets/items/icons/item_jeton_de_fete.png res://assets/items/icons/item_jeton_de_fete_16.png (1, 0.75, 0.2, 1) max=30 survival=False weight=1 offered=True
+[CatalogValuesProbe] object jeton_de_fete effect luck additive 0.03
+[CatalogValuesProbe] object jeton_de_fete milestone 15 level_reroll every_levels=15 | +1 relance tous les 15 niveaux du joueur
+[CatalogValuesProbe] object loupe_de_philateliste Loupe de philatéliste | Un coup critique rend sa cible Fragile pendant {fragile_seconds} s : elle subit plus de dégâts de toutes tes armes. | res://assets/items/icons/item_loupe_de_philateliste.png res://assets/items/icons/item_loupe_de_philateliste_16.png (0.85, 0.8, 0.5, 1) max=30 survival=False weight=1 offered=True
+[CatalogValuesProbe] object loupe_de_philateliste effect crit_fragile additive 0.05
+[CatalogValuesProbe] object loupe_de_philateliste param fragile_seconds 2
+[CatalogValuesProbe] object loupe_de_philateliste milestone 15 long_fragile seconds=4 | Fragile dure 4 s
+[CatalogValuesProbe] object medaille_cabossee Médaille cabossée | Sous {threshold%} de tes PV, tes coups font plus de dégâts. | res://assets/items/icons/item_medaille_cabossee.png res://assets/items/icons/item_medaille_cabossee_16.png (0.8, 0.6, 0.3, 1) max=30 survival=False weight=1 offered=True
+[CatalogValuesProbe] object medaille_cabossee effect low_hp_damage additive 0.03
+[CatalogValuesProbe] object medaille_cabossee param threshold 0.35
+[CatalogValuesProbe] object medaille_cabossee milestone 15 low_hp_speed speed=0.15 | Sous le seuil de PV, tu cours aussi 15 % plus vite
+[CatalogValuesProbe] object memoire_vive Ressort de sommier | Tes armes attaquent plus vite. | res://assets/items/icons/item_memoire_vive.png res://assets/items/icons/item_memoire_vive_16.png (0.9, 0.9, 0.3, 1) max=30 survival=False weight=1 offered=True
+[CatalogValuesProbe] object memoire_vive effect attack_speed multiplicative 0.08
+[CatalogValuesProbe] object memoire_vive milestone 15 repeat_attack delay_seconds=0.12,every=10 | Chaque 10ᵉ attaque d'une arme part deux fois
+[CatalogValuesProbe] object oeil_critique Lunettes de lecture | Tes coups critiques sont plus fréquents et plus forts. | res://assets/items/icons/item_oeil_critique.png res://assets/items/icons/item_oeil_critique_16.png (1, 0.3, 0.3, 1) max=30 survival=False weight=1 offered=True
+[CatalogValuesProbe] object oeil_critique effect crit_chance additive 0.02
+[CatalogValuesProbe] object oeil_critique effect crit_multiplier additive 0.1
+[CatalogValuesProbe] object oeil_critique milestone 15 full_hp_crit multiplier=2 | Un critique sur une cible à PV pleins compte double
+[CatalogValuesProbe] object paille_tordue Paille tordue | Une part des dégâts de tes armes te revient en PV, dans la limite d'un soin par seconde. | res://assets/items/icons/item_paille_tordue.png res://assets/items/icons/item_paille_tordue_16.png (0.85, 0.3, 0.3, 1) max=30 survival=True weight=1 offered=True
+[CatalogValuesProbe] object paille_tordue effect lifesteal additive 0.005
+[CatalogValuesProbe] object paille_tordue milestone 15 low_hp_lifesteal multiplier=2,threshold=0.5 | Sous la moitié des PV, le vol de vie rend deux fois plus vite
+[CatalogValuesProbe] object peau_dure Genouillère | Ton armure réduit les coups reçus. | res://assets/items/icons/item_peau_dure.png res://assets/items/icons/item_peau_dure_16.png (0.6, 0.5, 0.4, 1) max=30 survival=True weight=1 offered=True
+[CatalogValuesProbe] object peau_dure effect armor additive 2
+[CatalogValuesProbe] object peau_dure milestone 15 dash_armor multiplier=2,seconds_after=1 | L'armure compte double pendant le dash et 1 s après
+[CatalogValuesProbe] object persistance Pince à linge | Tes statuts et tes zones au sol durent plus longtemps. | res://assets/items/icons/item_persistance.png res://assets/items/icons/item_persistance_16.png (0.85, 0.75, 0.55, 1) max=30 survival=False weight=1 offered=True
+[CatalogValuesProbe] object persistance effect status_duration multiplicative 0.08
+[CatalogValuesProbe] object persistance milestone 15 status_renew chance=0.25 | Un statut qui expire a 25 % de chance de se renouveler
+[CatalogValuesProbe] object petard_mouille Pétard mouillé | Un ennemi tué par une arme explose : ses voisins proches subissent une part du coup fatal. | res://assets/items/icons/item_petard_mouille.png res://assets/items/icons/item_petard_mouille_16.png (0.95, 0.45, 0.3, 1) max=30 survival=False weight=1 offered=True
+[CatalogValuesProbe] object petard_mouille effect kill_explosion additive 0.1
+[CatalogValuesProbe] object petard_mouille param radius 50
+[CatalogValuesProbe] object petard_mouille milestone 15 double_explosion delay_seconds=0.25 | L'explosion se produit deux fois
+[CatalogValuesProbe] object photo_de_classe Photo de classe | Tu gagnes plus d'XP. | res://assets/items/icons/item_photo_de_classe.png res://assets/items/icons/item_photo_de_classe_16.png (0.95, 0.85, 0.6, 1) max=30 survival=False weight=1 offered=True
+[CatalogValuesProbe] object photo_de_classe effect xp_gain multiplicative 0.05
+[CatalogValuesProbe] object photo_de_classe milestone 15 level_essence essence=3 | Chaque niveau gagné donne 3 Essence
+[CatalogValuesProbe] object porte_monnaie_use Porte-monnaie usé | Chaque tranche de {essence_per_step} Essence que tu gardes augmente tes dégâts, jusqu'au plafond indiqué. | res://assets/items/icons/item_porte_monnaie_use.png res://assets/items/icons/item_porte_monnaie_use_16.png (0.45, 0.8, 0.75, 1) max=30 survival=False weight=1 offered=True
+[CatalogValuesProbe] object porte_monnaie_use effect essence_damage_cap additive 0.03
+[CatalogValuesProbe] object porte_monnaie_use param damage_per_step 0.01
+[CatalogValuesProbe] object porte_monnaie_use param essence_per_step 10
+[CatalogValuesProbe] object porte_monnaie_use milestone 15 essence_refund ratio=0.2 | 20 % de l'Essence dépensée est rendue
+[CatalogValuesProbe] object portee_etendue Mètre pliant | Tes armes portent plus loin. | res://assets/items/icons/item_portee_etendue.png res://assets/items/icons/item_portee_etendue_16.png (0.5, 0.8, 0.9, 1) max=30 survival=False weight=1 offered=True
+[CatalogValuesProbe] object portee_etendue effect attack_range multiplicative 0.06
+[CatalogValuesProbe] object portee_etendue milestone 15 range_end_burst damage_ratio=0.5,radius=36 | Un projectile qui va au bout de sa portée sans toucher éclate en petite zone
+[CatalogValuesProbe] object reflet_brise Reflet brisé | Tes projectiles traversent plus d'ennemis. | res://assets/items/icons/item_reflet_brise.png res://assets/items/icons/item_reflet_brise_16.png (0.8, 0.8, 1, 1) max=30 survival=False weight=1 offered=True
+[CatalogValuesProbe] object reflet_brise effect projectile_pierce additive 0.5
+[CatalogValuesProbe] object reflet_brise milestone 15 pierce_damage_ramp per_enemy=0.1 | Un projectile qui perfore gagne +10 % de dégâts par ennemi traversé
+[CatalogValuesProbe] object regeneration Bobine de fil | Tu récupères des PV en continu. | res://assets/items/icons/item_regeneration.png res://assets/items/icons/item_regeneration_16.png (0.4, 1, 0.5, 1) max=30 survival=True weight=1 offered=True
+[CatalogValuesProbe] object regeneration effect regen_rate additive 0.6
+[CatalogValuesProbe] object regeneration milestone 15 wound_regen multiplier=2,seconds=3 | La régénération double pendant 3 s après une blessure
+[CatalogValuesProbe] object resonance Rondelle de cuivre | Tes zones, arcs et ondes sont plus grands. | res://assets/items/icons/item_resonance.png res://assets/items/icons/item_resonance_16.png (0.6, 0.4, 1, 1) max=30 survival=False weight=1 offered=True
+[CatalogValuesProbe] object resonance effect aoe_radius multiplicative 0.08
+[CatalogValuesProbe] object resonance milestone 15 zone_echo delay_seconds=0.25,ratio=0.3 | Les zones frappent une seconde fois, à 30 %
+[CatalogValuesProbe] object semelle_usee Semelle usée | Après {move_seconds} s de marche sans t'arrêter, ta prochaine attaque fait plus de dégâts. | res://assets/items/icons/item_semelle_usee.png res://assets/items/icons/item_semelle_usee_16.png (0.6, 0.45, 0.3, 1) max=30 survival=False weight=1 offered=True
+[CatalogValuesProbe] object semelle_usee effect stride_damage additive 0.06
+[CatalogValuesProbe] object semelle_usee param move_seconds 2
+[CatalogValuesProbe] object semelle_usee milestone 15 double_stride charges=2 | Vaut pour les deux prochaines attaques
+[CatalogValuesProbe] object siphon_essence Aimant de frigo | Tu attires l'XP de plus loin. | res://assets/items/icons/item_siphon_essence.png res://assets/items/icons/item_siphon_essence_16.png (0.3, 0.9, 0.9, 1) max=30 survival=False weight=1 offered=True
+[CatalogValuesProbe] object siphon_essence effect xp_magnet_radius multiplicative 0.15
+[CatalogValuesProbe] object siphon_essence milestone 15 orb_heal heal=0.2 | Chaque orbe ramassée rend 0,2 PV
+[CatalogValuesProbe] object souffle_du_neant Papier carbone | Tes armes tirent plus de projectiles et frappent plus de fois, à pleins dégâts. Une fraction est une chance d'en avoir un de plus. | res://assets/items/icons/item_souffle_du_neant.png res://assets/items/icons/item_souffle_du_neant_16.png (0.7, 0.3, 0.9, 1) max=30 survival=False weight=2 offered=True
+[CatalogValuesProbe] object souffle_du_neant effect projectile_bonus additive 0.5
+[CatalogValuesProbe] object souffle_du_neant milestone 15 spread_targets  | Les projectiles en plus visent chacun une cible différente
+[CatalogValuesProbe] object stylo_quatre_couleurs Stylo à quatre couleurs | Un coup critique repart sur une autre cible proche, avec une part de ses dégâts. | res://assets/items/icons/item_stylo_quatre_couleurs.png res://assets/items/icons/item_stylo_quatre_couleurs_16.png (0.4, 0.55, 0.95, 1) max=30 survival=False weight=1 offered=True
+[CatalogValuesProbe] object stylo_quatre_couleurs effect crit_echo additive 0.06
+[CatalogValuesProbe] object stylo_quatre_couleurs param radius 180
+[CatalogValuesProbe] object stylo_quatre_couleurs milestone 15 double_crit_echo targets=2 | Le coup repart sur deux cibles
+[CatalogValuesProbe] object tabouret_de_camping Tabouret de camping | Immobile depuis {still_seconds} s, tu attaques plus vite. | res://assets/items/icons/item_tabouret_de_camping.png res://assets/items/icons/item_tabouret_de_camping_16.png (0.6, 0.45, 0.3, 1) max=30 survival=False weight=1 offered=True
+[CatalogValuesProbe] object tabouret_de_camping effect still_attack_speed additive 0.03
+[CatalogValuesProbe] object tabouret_de_camping param still_seconds 1
+[CatalogValuesProbe] object tabouret_de_camping milestone 15 still_armor armor=10 | Immobile, tu gagnes aussi 10 d'armure
+[CatalogValuesProbe] object thermometre Thermomètre | Tes coups font plus de dégâts aux ennemis qui brûlent. | res://assets/items/icons/item_thermometre.png res://assets/items/icons/item_thermometre_16.png (0.95, 0.35, 0.3, 1) max=30 survival=False weight=1 offered=True
+[CatalogValuesProbe] object thermometre effect burning_target_damage additive 0.04
+[CatalogValuesProbe] object thermometre milestone 15 burn_slows slow_factor=0.85 | Tes Brûlures ralentissent aussi de 15 %
+[CatalogValuesProbe] object thermos Thermos | Tant que tu as plus de {threshold%} de tes PV, tes coups font plus de dégâts. | res://assets/items/icons/item_thermos.png res://assets/items/icons/item_thermos_16.png (0.6, 0.7, 0.75, 1) max=30 survival=False weight=1 offered=True
+[CatalogValuesProbe] object thermos effect high_hp_damage additive 0.02
+[CatalogValuesProbe] object thermos param threshold 0.9
+[CatalogValuesProbe] object thermos milestone 15 thermos_threshold threshold=0.75 | Le seuil descend à 75 % des PV
+[CatalogValuesProbe] rarity common rank=0 weight=62 stats=1 gain=1 integer=0.5 passive=1 bump=0.25
+[CatalogValuesProbe] rarity uncommon rank=1 weight=27 stats=1 gain=1.5 integer=0.75 passive=1.5 bump=0.15
+[CatalogValuesProbe] rarity rare rank=2 weight=9 stats=2 gain=1.25 integer=1 passive=2 bump=0.07
+[CatalogValuesProbe] rarity epic rank=3 weight=1.7 stats=1 gain=1.75 integer=2 passive=2.5 bump=0.05
+[CatalogValuesProbe] rarity legendary rank=4 weight=0.3 stats=3 gain=2 integer=3 passive=3 bump=0
+[CatalogValuesProbe] rarity steps Anchored luck1=10 peril3=1.5
+[CatalogValuesProbe] rarity steps Fragile luck1=10 peril3=1.5
+[CatalogValuesProbe] rarity steps Frayed luck1=11 peril3=2.5
+[CatalogValuesProbe] rarity steps Erased luck1=12 peril3=3.5
+[CatalogValuesProbe] rarity steps Void luck1=12 peril3=3.5
+[CatalogValuesProbe] offer upgrade=1.15 min=0.1
+[CatalogValuesProbe] memorial assets/landmarks/memorial_dormant.png assets/landmarks/memorial_awake.png assets/landmarks/memory_shard.png 1@0.08-0.14;8@0.2-0.9 spacing=900 hold=0.6 shards=3 dist=200-380 time=20 pickup=30 choices=3 min=uncommon heal=20/0.4 growth=0.5 lift=40 reroll=15
+[CatalogValuesProbe] workshop assets/landmarks/workshop.png 8@0.15-0.9 spacing=900 weapon=150 min=rare retemper=100 temper=5 growth=0.5
+[CatalogValuesProbe] rift assets/landmarks/rift_open.png assets/landmarks/rift_closed.png 6@0.25-0.9 spacing=700 hold=0.8 offers=3 min=epic peril=1 open=6 chance=0.08 cooldown=45 dist=500-1400
+[CatalogValuesProbe] blessing blessing_breath BLESSING_BREATH max_hp additive 10
+[CatalogValuesProbe] blessing blessing_sure_hand BLESSING_SURE_HAND damage multiplicative 0.05
+[CatalogValuesProbe] blessing blessing_light_step BLESSING_LIGHT_STEP speed multiplicative 0.04
+[CatalogValuesProbe] blessing blessing_old_rhythm BLESSING_OLD_RHYTHM attack_speed multiplicative 0.05
+[CatalogValuesProbe] blessing blessing_mending BLESSING_MENDING regen_rate additive 0.3
+[CatalogValuesProbe] blessing blessing_bulwark BLESSING_BULWARK armor additive 2
+[CatalogValuesProbe] blessing blessing_true_eye BLESSING_TRUE_EYE crit_chance additive 0.025
+[CatalogValuesProbe] blessing blessing_wide_gesture BLESSING_WIDE_GESTURE aoe_radius multiplicative 0.05
+[CatalogValuesProbe] blessing blessing_good_star BLESSING_GOOD_STAR luck additive 0.03
+[CatalogValuesProbe] blessing blessing_call_of_shards BLESSING_CALL_OF_SHARDS xp_magnet_radius multiplicative 0.1
+[CatalogValuesProbe] oubli oubli_fear OUBLI_FEAR OUBLI_FEAR_DESC extra_elite 1 permanent=False
+[CatalogValuesProbe] oubli oubli_path OUBLI_PATH OUBLI_PATH_DESC erasure_speed 0.2 permanent=False
+[CatalogValuesProbe] oubli oubli_respite OUBLI_RESPITE OUBLI_RESPITE_DESC resurgence_interval 0.2 permanent=False
+[CatalogValuesProbe] oubli oubli_landmarks OUBLI_LANDMARKS OUBLI_LANDMARKS_DESC chest_signals 0.5 permanent=False
+[CatalogValuesProbe] oubli oubli_gaze OUBLI_GAZE OUBLI_GAZE_DESC fog_reveal 0.25 permanent=False
+[CatalogValuesProbe] oubli oubli_places OUBLI_PLACES OUBLI_PLACES_DESC collapse_memorial 1 permanent=True
+[CatalogValuesProbe] oubli oubli_faces OUBLI_FACES OUBLI_FACES_DESC affix_chance 0.12 permanent=False
+[CatalogValuesProbe] oubli oubli_treasure OUBLI_TREASURE OUBLI_TREASURE_DESC chest_rarity_down 1 permanent=True
+[CatalogValuesProbe] oubli oubli_traces OUBLI_TRACES OUBLI_TRACES_DESC enemy_detection 0.3 permanent=False
+[CatalogValuesProbe] chest chest_common common assets/chests/chest_common_closed.png assets/chests/chest_common_open.png col=110/1.5 fx=silk open=0.5 loot=chest_commonx1 down=-
+[CatalogValuesProbe] chest chest_epic epic assets/chests/chest_epic_closed.png assets/chests/chest_epic_open.png col=160/3 fx=void open=1.2 loot=chest_epicx2 down=chest_rare
+[CatalogValuesProbe] chest chest_lore lore assets/chests/chest_lore_closed.png assets/chests/chest_lore_open.png col=136/2.5 fx=crit open=1 loot=chest_lorex1 down=-
+[CatalogValuesProbe] chest chest_rare rare assets/chests/chest_rare_closed.png assets/chests/chest_rare_open.png col=124/2 fx=hybrid open=0.8 loot=chest_rarex1 down=chest_common
+[CatalogValuesProbe] chest placement spacing=720 candidates=10 attempts=80 path=0.6 clear=PixelClearance { Side = 72, North = 32, South = 124 } building=PixelClearance { Side = 176, North = 48, South = 176 } pointer=700/2
+[CatalogValuesProbe] chest group ChestPlacementGroup { ChestId = chest_common, Count = 1, BandMin = 0.05, BandMax = 0.09 }
+[CatalogValuesProbe] chest group ChestPlacementGroup { ChestId = chest_epic, Count = 4, BandMin = 0.45, BandMax = 0.95 }
+[CatalogValuesProbe] chest group ChestPlacementGroup { ChestId = chest_lore, Count = 6, BandMin = 0.25, BandMax = 0.9 }
+[CatalogValuesProbe] chest group ChestPlacementGroup { ChestId = chest_rare, Count = 12, BandMin = 0.2, BandMax = 0.9 }
+[CatalogValuesProbe] chest group ChestPlacementGroup { ChestId = chest_common, Count = 16, BandMin = 0.12, BandMax = 0.9 }
+[CatalogValuesProbe] chest bonus multiplier common 0
+[CatalogValuesProbe] chest bonus multiplier rare 2
+[CatalogValuesProbe] chest bonus multiplier epic 3
+[CatalogValuesProbe] chest bonus multiplier lore 2
+[CatalogValuesProbe] chest bonus multiplier legendary 1
+[CatalogValuesProbe] chest bonus ChestStatBonus { Stat = attack_speed, ModifierType = multiplicative, Amount = 0.08 }
+[CatalogValuesProbe] chest bonus ChestStatBonus { Stat = speed, ModifierType = multiplicative, Amount = 0.03 }
+[CatalogValuesProbe] chest bonus ChestStatBonus { Stat = max_hp, ModifierType = additive, Amount = 15 }
+[CatalogValuesProbe] chest bonus ChestStatBonus { Stat = armor, ModifierType = additive, Amount = 2 }
+[CatalogValuesProbe] chest bonus ChestStatBonus { Stat = regen_rate, ModifierType = additive, Amount = 0.6 }
+[CatalogValuesProbe] chest bonus ChestStatBonus { Stat = lifesteal, ModifierType = additive, Amount = 0.005 }
+[CatalogValuesProbe] chest bonus ChestStatBonus { Stat = crit_chance, ModifierType = additive, Amount = 0.02 }
+[CatalogValuesProbe] chest bonus ChestStatBonus { Stat = crit_multiplier, ModifierType = additive, Amount = 0.1 }
+[CatalogValuesProbe] chest bonus ChestStatBonus { Stat = aoe_radius, ModifierType = multiplicative, Amount = 0.08 }
+[CatalogValuesProbe] chest bonus ChestStatBonus { Stat = attack_range, ModifierType = multiplicative, Amount = 0.06 }
+[CatalogValuesProbe] chest bonus ChestStatBonus { Stat = status_duration, ModifierType = multiplicative, Amount = 0.08 }
+[CatalogValuesProbe] chest bonus ChestStatBonus { Stat = xp_magnet_radius, ModifierType = multiplicative, Amount = 0.15 }
+[CatalogValuesProbe] chest bonus ChestStatBonus { Stat = luck, ModifierType = additive, Amount = 0.03 }
+[CatalogValuesProbe] chest bonus ChestStatBonus { Stat = xp_gain, ModifierType = multiplicative, Amount = 0.05 }
+[CatalogValuesProbe] places enabled=True spacing=600 sign=400
+[CatalogValuesProbe] place well [prop_abandoned_well] PLACE_WELL_PROMPT hold=0.6 heal amount=0.15 range=0-0 enemies=0 ambush=0/0 max=10 chance=0 duration=0 radius=0 lore=[] (0.45, 0.75, 0.95, 1) pale
+[CatalogValuesProbe] place crystal_vein [prop_crystal_vein] PLACE_CRYSTAL_PROMPT hold=1 essence amount=0 range=6-10 enemies=0 ambush=0/0 max=16 chance=0 duration=0 radius=0 lore=[] (0.37, 0.77, 0.77, 1) essence
+[CatalogValuesProbe] place scarecrow [prop_scarecrow_broken,prop_scene_crow_scarecrow] PLACE_SCARECROW_PROMPT hold=0.5 ambush amount=15 range=0-0 enemies=3 ambush=140/20 max=6 chance=0 duration=0 radius=0 lore=[] (0.85, 0.7, 0.4, 1) brass
+[CatalogValuesProbe] place mailbox [prop_mailbox] PLACE_MAILBOX_PROMPT hold=0.6 xp amount=0.5 range=0-0 enemies=0 ambush=0/0 max=30 chance=0 duration=0 radius=0 lore=[] (0.95, 0.8, 0.35, 1) brass
+[CatalogValuesProbe] place mine_cart [prop_mine_cart,prop_quarry_wagon_ore,prop_quarry_wagon_crystal] PLACE_MINE_CART_PROMPT hold=0.8 essence_or_weapon amount=0 range=8-14 enemies=0 ambush=0/0 max=14 chance=0.25 duration=0 radius=0 lore=[] (0.7, 0.6, 0.5, 1) rust
+[CatalogValuesProbe] place abandoned_car [prop_urban_car,prop_urban_car_red_x,prop_urban_car_red_y,prop_urban_car_teal_x,prop_urban_car_teal_y,prop_urban_car_cream_x,prop_urban_car_cream_y,prop_car_overgrown] PLACE_CAR_PROMPT hold=0.8 search amount=0.12 range=6-11 enemies=0 ambush=0/0 max=20 chance=0.4 duration=0 radius=0 lore=[] (0.8, 0.75, 0.6, 1) pale
+[CatalogValuesProbe] place phone_booth [prop_phone_booth] PLACE_PHONE_PROMPT hold=0.6 reveal amount=0 range=0-0 enemies=0 ambush=0/0 max=12 chance=0 duration=45 radius=2400 lore=[] (0.55, 0.8, 0.9, 1) glass
+[CatalogValuesProbe] place bus_shelter [prop_bus_shelter] PLACE_BUS_PROMPT hold=0.5 speed amount=0.2 range=0-0 enemies=0 ambush=0/0 max=14 chance=0 duration=20 radius=0 lore=[] (0.6, 0.85, 0.55, 1) verdigris
+[CatalogValuesProbe] place picnic [prop_scene_picnic] PLACE_PICNIC_PROMPT hold=0.6 lore_heal amount=0.08 range=0-0 enemies=0 ambush=0/0 max=10 chance=0 duration=0 radius=0 lore=[PLACE_PICNIC_LORE_01,PLACE_PICNIC_LORE_02,PLACE_PICNIC_LORE_03,PLACE_PICNIC_LORE_04] (0.95, 0.7, 0.6, 1) silk
+[CatalogValuesProbe] waymarks enabled=True
+[CatalogValuesProbe] waymark well WAYMARK_WELL max_hp 10 additive rerolls=0 banishes=0
+[CatalogValuesProbe] waymark crystal_vein WAYMARK_CRYSTAL_VEIN luck 0.05 additive rerolls=0 banishes=0
+[CatalogValuesProbe] waymark scarecrow WAYMARK_SCARECROW armor 2 additive rerolls=0 banishes=0
+[CatalogValuesProbe] waymark mailbox WAYMARK_MAILBOX xp_gain 0.05 multiplicative rerolls=0 banishes=0
+[CatalogValuesProbe] waymark mine_cart WAYMARK_MINE_CART xp_magnet_radius 0.15 multiplicative rerolls=0 banishes=0
+[CatalogValuesProbe] waymark abandoned_car WAYMARK_CAR shield 5 additive rerolls=0 banishes=0
+[CatalogValuesProbe] waymark phone_booth WAYMARK_PHONE attack_range 0.05 multiplicative rerolls=0 banishes=0
+[CatalogValuesProbe] waymark bus_shelter WAYMARK_BUS speed 0.04 multiplicative rerolls=0 banishes=0
+[CatalogValuesProbe] waymark picnic WAYMARK_PICNIC regen_rate 0.3 additive rerolls=0 banishes=0
+[CatalogValuesProbe] waymark chest WAYMARK_CHEST luck 0.05 additive rerolls=0 banishes=0
+[CatalogValuesProbe] waymark memorial WAYMARK_MEMORIAL - 0 additive rerolls=1 banishes=0
+[CatalogValuesProbe] waymark rift WAYMARK_RIFT - 0 additive rerolls=0 banishes=1
+[CatalogValuesProbe] waymark workshop WAYMARK_WORKSHOP attack_speed 0.08 multiplicative rerolls=0 banishes=0
+[CatalogValuesProbe] field enabled=True max=4 life=20 blink=4 pickup=26 kill=0.004 pool=canteen,magnet crisis=2/canteen variants=champion:1,elite:0.35
+[CatalogValuesProbe] field bonus canteen heal BONUS_CANTEEN 3 heal (0.45, 0.75, 0.55, 1) ratio=0.2
+[CatalogValuesProbe] field bonus magnet magnet BONUS_MAGNET 2 magnet (0.85, 0.3, 0.3, 1) duration_s=3,multiplier=25
+[CatalogValuesProbe] field bonus blanket shield BONUS_BLANKET 2 shield (0.95, 0.8, 0.4, 1) duration_s=15,ratio=0.3
+[CatalogValuesProbe] field bonus coffee haste BONUS_COFFEE 2 frenzy (0.6, 0.42, 0.28, 1) amount=0.3,duration_s=10
+[CatalogValuesProbe] field bonus firecracker blast BONUS_FIRECRACKER 1 blast (0.9, 0.25, 0.2, 1) hp_ratio=0.6,knockback_px=70,radius_px=160
+[CatalogValuesProbe] biomes order swamp,wild_fields,urban_ruins,collapsed_quarry,forest_reclaimed
+[CatalogValuesProbe] biome swamp Marécages audio=- danger=3 map=1 poi=2-3 blend=True
+[CatalogValuesProbe] biome swamp exploration=presage,shadow_crawler,fading_spitter,rampant resurgence=presage,shade,shade,shade,void_brute,wailing_sentinel,tisseuse,hurleur wang=grass,forest,water
+[CatalogValuesProbe] biome swamp terrain grass 0.25
+[CatalogValuesProbe] biome swamp terrain concrete 0.05
+[CatalogValuesProbe] biome swamp terrain water 0.2
+[CatalogValuesProbe] biome swamp terrain forest 0.5
+[CatalogValuesProbe] biome swamp poi searchable_building 0.5
+[CatalogValuesProbe] biome swamp poi resource_cache 0.8
+[CatalogValuesProbe] biome swamp poi guarded_chest 1
+[CatalogValuesProbe] biome swamp poi lore_ruin 1.5
+[CatalogValuesProbe] biome swamp poi anomaly 1.5
+[CatalogValuesProbe] biome swamp poi sanctuary 0.15
+[CatalogValuesProbe] biome swamp tiles grass marecages/tile_marecages_sol_w00,marecages/tile_marecages_sol_w01,marecages/tile_marecages_sol_w02,marecages/tile_marecages_sol_w03,marecages/tile_marecages_sol_w04,marecages/tile_marecages_sol_w05,marecages/tile_marecages_sol_w06,marecages/tile_marecages_sol_w07,marecages/tile_marecages_sol_w08,marecages/tile_marecages_sol_w09,marecages/tile_marecages_sol_w10,marecages/tile_marecages_sol_w11,marecages/tile_marecages_sol_w12,marecages/tile_marecages_sol_w13,marecages/tile_marecages_sol_w14,marecages/tile_marecages_sol_w15,marecages/tile_marecages_vase_w00,marecages/tile_marecages_vase_w01,marecages/tile_marecages_vase_w02,marecages/tile_marecages_vase_w03,marecages/tile_marecages_vase_w04,marecages/tile_marecages_vase_w05,marecages/tile_marecages_vase_w06,marecages/tile_marecages_vase_w07,marecages/tile_marecages_vase_w08,marecages/tile_marecages_vase_w09,marecages/tile_marecages_vase_w10,marecages/tile_marecages_vase_w11,marecages/tile_marecages_vase_w12,marecages/tile_marecages_vase_w13,marecages/tile_marecages_vase_w14,marecages/tile_marecages_vase_w15
+[CatalogValuesProbe] biome swamp tiles forest marecages/tile_marecages_sol_w00,marecages/tile_marecages_sol_w01,marecages/tile_marecages_sol_w02,marecages/tile_marecages_sol_w03,marecages/tile_marecages_sol_w04,marecages/tile_marecages_sol_w05,marecages/tile_marecages_sol_w06,marecages/tile_marecages_sol_w07,marecages/tile_marecages_sol_w08,marecages/tile_marecages_sol_w09,marecages/tile_marecages_sol_w10,marecages/tile_marecages_sol_w11,marecages/tile_marecages_sol_w12,marecages/tile_marecages_sol_w13,marecages/tile_marecages_sol_w14,marecages/tile_marecages_sol_w15,marecages/tile_marecages_vase_w00,marecages/tile_marecages_vase_w01,marecages/tile_marecages_vase_w02,marecages/tile_marecages_vase_w03,marecages/tile_marecages_vase_w04,marecages/tile_marecages_vase_w05,marecages/tile_marecages_vase_w06,marecages/tile_marecages_vase_w07,marecages/tile_marecages_vase_w08,marecages/tile_marecages_vase_w09,marecages/tile_marecages_vase_w10,marecages/tile_marecages_vase_w11,marecages/tile_marecages_vase_w12,marecages/tile_marecages_vase_w13,marecages/tile_marecages_vase_w14,marecages/tile_marecages_vase_w15
+[CatalogValuesProbe] biome swamp tiles water marecages/tile_marecages_eau_w00,marecages/tile_marecages_eau_w01,marecages/tile_marecages_eau_w02,marecages/tile_marecages_eau_w03,marecages/tile_marecages_eau_w04,marecages/tile_marecages_eau_w05,marecages/tile_marecages_eau_w06,marecages/tile_marecages_eau_w07,marecages/tile_marecages_eau_w08,marecages/tile_marecages_eau_w09,marecages/tile_marecages_eau_w10,marecages/tile_marecages_eau_w11,marecages/tile_marecages_eau_w12,marecages/tile_marecages_eau_w13,marecages/tile_marecages_eau_w14,marecages/tile_marecages_eau_w15
+[CatalogValuesProbe] biome swamp tiles wet_mid_ground marecages/tile_marecages_wet_mid_ground
+[CatalogValuesProbe] biome swamp tiles mud_transition marecages/tile_marecages_mud_transition
+[CatalogValuesProbe] biome swamp tiles bank_dirty marecages/tile_marecages_bank_dirty
+[CatalogValuesProbe] biome swamp tiles sludge_dark marecages/tile_marecages_sludge_dark
+[CatalogValuesProbe] biome swamp tiles bank_edge_nw marecages/tile_marecages_bank_edge_nw
+[CatalogValuesProbe] biome swamp tiles bank_edge_ne marecages/tile_marecages_bank_edge_ne
+[CatalogValuesProbe] biome swamp tiles bank_edge_se marecages/tile_marecages_bank_edge_se
+[CatalogValuesProbe] biome swamp tiles bank_edge_sw marecages/tile_marecages_bank_edge_sw
+[CatalogValuesProbe] biome swamp tiles bank_inner_corner_nw marecages/tile_marecages_bank_inner_corner_nw
+[CatalogValuesProbe] biome swamp tiles bank_inner_corner_ne marecages/tile_marecages_bank_inner_corner_ne
+[CatalogValuesProbe] biome swamp tiles bank_inner_corner_se marecages/tile_marecages_bank_inner_corner_se
+[CatalogValuesProbe] biome swamp tiles bank_inner_corner_sw marecages/tile_marecages_bank_inner_corner_sw
+[CatalogValuesProbe] biome swamp tiles bank_outer_corner_nw marecages/tile_marecages_bank_outer_corner_nw
+[CatalogValuesProbe] biome swamp tiles bank_outer_corner_ne marecages/tile_marecages_bank_outer_corner_ne
+[CatalogValuesProbe] biome swamp tiles bank_outer_corner_se marecages/tile_marecages_bank_outer_corner_se
+[CatalogValuesProbe] biome swamp tiles bank_outer_corner_sw marecages/tile_marecages_bank_outer_corner_sw
+[CatalogValuesProbe] biome swamp path (0.24313726, 0.24705882, 0.1882353, 1) ruts=0 width=26
+[CatalogValuesProbe] biome wild_fields Champs Sauvages audio=- danger=1 map=1.4 poi=2-4 blend=True
+[CatalogValuesProbe] biome wild_fields exploration=presage,charognard,charognard,rodeur,fading_spitter resurgence=presage,presage,shade,shade,shade,shade,charognard,charognard,void_brute,void_brute,hurleur,hurleur,tisseuse wang=grass,concrete,forest
+[CatalogValuesProbe] biome wild_fields terrain grass 0.65
+[CatalogValuesProbe] biome wild_fields terrain concrete 0.05
+[CatalogValuesProbe] biome wild_fields terrain water 0.05
+[CatalogValuesProbe] biome wild_fields terrain forest 0.25
+[CatalogValuesProbe] biome wild_fields poi searchable_building 0.6
+[CatalogValuesProbe] biome wild_fields poi resource_cache 1.2
+[CatalogValuesProbe] biome wild_fields poi guarded_chest 0.8
+[CatalogValuesProbe] biome wild_fields poi lore_ruin 0.8
+[CatalogValuesProbe] biome wild_fields poi anomaly 0.6
+[CatalogValuesProbe] biome wild_fields poi sanctuary 0.15
+[CatalogValuesProbe] biome wild_fields tiles grass champs/tile_champs_sol_w00,champs/tile_champs_sol_w01,champs/tile_champs_sol_w02,champs/tile_champs_sol_w03,champs/tile_champs_sol_w04,champs/tile_champs_sol_w05,champs/tile_champs_sol_w06,champs/tile_champs_sol_w07,champs/tile_champs_sol_w08,champs/tile_champs_sol_w09,champs/tile_champs_sol_w10,champs/tile_champs_sol_w11,champs/tile_champs_sol_w12,champs/tile_champs_sol_w13,champs/tile_champs_sol_w14,champs/tile_champs_sol_w15,champs/tile_champs_herbe_w00,champs/tile_champs_herbe_w01,champs/tile_champs_herbe_w02,champs/tile_champs_herbe_w03,champs/tile_champs_herbe_w04,champs/tile_champs_herbe_w05,champs/tile_champs_herbe_w06,champs/tile_champs_herbe_w07,champs/tile_champs_herbe_w08,champs/tile_champs_herbe_w09,champs/tile_champs_herbe_w10,champs/tile_champs_herbe_w11,champs/tile_champs_herbe_w12,champs/tile_champs_herbe_w13,champs/tile_champs_herbe_w14,champs/tile_champs_herbe_w15,champs/tile_champs_ble_w00,champs/tile_champs_ble_w01,champs/tile_champs_ble_w02,champs/tile_champs_ble_w03,champs/tile_champs_ble_w04,champs/tile_champs_ble_w05,champs/tile_champs_ble_w06,champs/tile_champs_ble_w07,champs/tile_champs_ble_w08,champs/tile_champs_ble_w09,champs/tile_champs_ble_w10,champs/tile_champs_ble_w11,champs/tile_champs_ble_w12,champs/tile_champs_ble_w13,champs/tile_champs_ble_w14,champs/tile_champs_ble_w15,champs/tile_champs_chaume_w00,champs/tile_champs_chaume_w01,champs/tile_champs_chaume_w02,champs/tile_champs_chaume_w03,champs/tile_champs_chaume_w04,champs/tile_champs_chaume_w05,champs/tile_champs_chaume_w06,champs/tile_champs_chaume_w07,champs/tile_champs_chaume_w08,champs/tile_champs_chaume_w09,champs/tile_champs_chaume_w10,champs/tile_champs_chaume_w11,champs/tile_champs_chaume_w12,champs/tile_champs_chaume_w13,champs/tile_champs_chaume_w14,champs/tile_champs_chaume_w15,champs/tile_champs_fleurs_w00,champs/tile_champs_fleurs_w01,champs/tile_champs_fleurs_w02,champs/tile_champs_fleurs_w03,champs/tile_champs_fleurs_w04,champs/tile_champs_fleurs_w05,champs/tile_champs_fleurs_w06,champs/tile_champs_fleurs_w07,champs/tile_champs_fleurs_w08,champs/tile_champs_fleurs_w09,champs/tile_champs_fleurs_w10,champs/tile_champs_fleurs_w11,champs/tile_champs_fleurs_w12,champs/tile_champs_fleurs_w13,champs/tile_champs_fleurs_w14,champs/tile_champs_fleurs_w15,champs/tile_champs_ble_dense_w00,champs/tile_champs_ble_dense_w01,champs/tile_champs_ble_dense_w02,champs/tile_champs_ble_dense_w03,champs/tile_champs_ble_dense_w04,champs/tile_champs_ble_dense_w05,champs/tile_champs_ble_dense_w06,champs/tile_champs_ble_dense_w07,champs/tile_champs_ble_dense_w08,champs/tile_champs_ble_dense_w09,champs/tile_champs_ble_dense_w10,champs/tile_champs_ble_dense_w11,champs/tile_champs_ble_dense_w12,champs/tile_champs_ble_dense_w13,champs/tile_champs_ble_dense_w14,champs/tile_champs_ble_dense_w15
+[CatalogValuesProbe] biome wild_fields tiles concrete champs/tile_champs_chemin_w00,champs/tile_champs_chemin_w01,champs/tile_champs_chemin_w02,champs/tile_champs_chemin_w03,champs/tile_champs_chemin_w04,champs/tile_champs_chemin_w05,champs/tile_champs_chemin_w06,champs/tile_champs_chemin_w07,champs/tile_champs_chemin_w08,champs/tile_champs_chemin_w09,champs/tile_champs_chemin_w10,champs/tile_champs_chemin_w11,champs/tile_champs_chemin_w12,champs/tile_champs_chemin_w13,champs/tile_champs_chemin_w14,champs/tile_champs_chemin_w15
+[CatalogValuesProbe] biome wild_fields tiles forest champs/tile_champs_bosquet_w00,champs/tile_champs_bosquet_w01,champs/tile_champs_bosquet_w02,champs/tile_champs_bosquet_w03,champs/tile_champs_bosquet_w04,champs/tile_champs_bosquet_w05,champs/tile_champs_bosquet_w06,champs/tile_champs_bosquet_w07,champs/tile_champs_bosquet_w08,champs/tile_champs_bosquet_w09,champs/tile_champs_bosquet_w10,champs/tile_champs_bosquet_w11,champs/tile_champs_bosquet_w12,champs/tile_champs_bosquet_w13,champs/tile_champs_bosquet_w14,champs/tile_champs_bosquet_w15
+[CatalogValuesProbe] biome wild_fields path (0.47843137, 0.4, 0.3137255, 1) ruts=1 width=46
+[CatalogValuesProbe] biome urban_ruins Ruines Urbaines audio=- danger=2 map=1 poi=2-4 blend=True
+[CatalogValuesProbe] biome urban_ruins exploration=presage,shadow_crawler,shadow_crawler,fading_spitter,rodeur resurgence=presage,shadow_crawler,shade,fading_spitter,void_brute,wailing_sentinel,rampant,hurleur wang=concrete,grass,sidewalk,building_interior,building_edge,plaza
+[CatalogValuesProbe] biome urban_ruins terrain grass 0.15
+[CatalogValuesProbe] biome urban_ruins terrain concrete 0.55
+[CatalogValuesProbe] biome urban_ruins terrain water 0.05
+[CatalogValuesProbe] biome urban_ruins terrain forest 0.25
+[CatalogValuesProbe] biome urban_ruins poi searchable_building 1.5
+[CatalogValuesProbe] biome urban_ruins poi resource_cache 1
+[CatalogValuesProbe] biome urban_ruins poi guarded_chest 1.2
+[CatalogValuesProbe] biome urban_ruins poi lore_ruin 1
+[CatalogValuesProbe] biome urban_ruins poi anomaly 0.8
+[CatalogValuesProbe] biome urban_ruins poi sanctuary 0.15
+[CatalogValuesProbe] biome urban_ruins tiles concrete ruines/tile_ruines_sol_w00,ruines/tile_ruines_sol_w01,ruines/tile_ruines_sol_w02,ruines/tile_ruines_sol_w03,ruines/tile_ruines_sol_w04,ruines/tile_ruines_sol_w05,ruines/tile_ruines_sol_w06,ruines/tile_ruines_sol_w07,ruines/tile_ruines_sol_w08,ruines/tile_ruines_sol_w09,ruines/tile_ruines_sol_w10,ruines/tile_ruines_sol_w11,ruines/tile_ruines_sol_w12,ruines/tile_ruines_sol_w13,ruines/tile_ruines_sol_w14,ruines/tile_ruines_sol_w15
+[CatalogValuesProbe] biome urban_ruins tiles grass ruines/tile_ruines_trottoir_w00,ruines/tile_ruines_trottoir_w01,ruines/tile_ruines_trottoir_w02,ruines/tile_ruines_trottoir_w03,ruines/tile_ruines_trottoir_w04,ruines/tile_ruines_trottoir_w05,ruines/tile_ruines_trottoir_w06,ruines/tile_ruines_trottoir_w07,ruines/tile_ruines_trottoir_w08,ruines/tile_ruines_trottoir_w09,ruines/tile_ruines_trottoir_w10,ruines/tile_ruines_trottoir_w11,ruines/tile_ruines_trottoir_w12,ruines/tile_ruines_trottoir_w13,ruines/tile_ruines_trottoir_w14,ruines/tile_ruines_trottoir_w15
+[CatalogValuesProbe] biome urban_ruins tiles sidewalk ruines/tile_ruines_trottoir_w00,ruines/tile_ruines_trottoir_w01,ruines/tile_ruines_trottoir_w02,ruines/tile_ruines_trottoir_w03,ruines/tile_ruines_trottoir_w04,ruines/tile_ruines_trottoir_w05,ruines/tile_ruines_trottoir_w06,ruines/tile_ruines_trottoir_w07,ruines/tile_ruines_trottoir_w08,ruines/tile_ruines_trottoir_w09,ruines/tile_ruines_trottoir_w10,ruines/tile_ruines_trottoir_w11,ruines/tile_ruines_trottoir_w12,ruines/tile_ruines_trottoir_w13,ruines/tile_ruines_trottoir_w14,ruines/tile_ruines_trottoir_w15
+[CatalogValuesProbe] biome urban_ruins tiles building_interior ruines/tile_ruines_carrelage_w00,ruines/tile_ruines_carrelage_w01,ruines/tile_ruines_carrelage_w02,ruines/tile_ruines_carrelage_w03,ruines/tile_ruines_carrelage_w04,ruines/tile_ruines_carrelage_w05,ruines/tile_ruines_carrelage_w06,ruines/tile_ruines_carrelage_w07,ruines/tile_ruines_carrelage_w08,ruines/tile_ruines_carrelage_w09,ruines/tile_ruines_carrelage_w10,ruines/tile_ruines_carrelage_w11,ruines/tile_ruines_carrelage_w12,ruines/tile_ruines_carrelage_w13,ruines/tile_ruines_carrelage_w14,ruines/tile_ruines_carrelage_w15
+[CatalogValuesProbe] biome urban_ruins tiles building_edge ruines/tile_ruines_sol_w00,ruines/tile_ruines_sol_w01,ruines/tile_ruines_sol_w02,ruines/tile_ruines_sol_w03,ruines/tile_ruines_sol_w04,ruines/tile_ruines_sol_w05,ruines/tile_ruines_sol_w06,ruines/tile_ruines_sol_w07,ruines/tile_ruines_sol_w08,ruines/tile_ruines_sol_w09,ruines/tile_ruines_sol_w10,ruines/tile_ruines_sol_w11,ruines/tile_ruines_sol_w12,ruines/tile_ruines_sol_w13,ruines/tile_ruines_sol_w14,ruines/tile_ruines_sol_w15
+[CatalogValuesProbe] biome urban_ruins tiles plaza ruines/tile_ruines_place_w00,ruines/tile_ruines_place_w01,ruines/tile_ruines_place_w02,ruines/tile_ruines_place_w03,ruines/tile_ruines_place_w04,ruines/tile_ruines_place_w05,ruines/tile_ruines_place_w06,ruines/tile_ruines_place_w07,ruines/tile_ruines_place_w08,ruines/tile_ruines_place_w09,ruines/tile_ruines_place_w10,ruines/tile_ruines_place_w11,ruines/tile_ruines_place_w12,ruines/tile_ruines_place_w13,ruines/tile_ruines_place_w14,ruines/tile_ruines_place_w15,ruines/tile_ruines_carrelage_w00,ruines/tile_ruines_carrelage_w01,ruines/tile_ruines_carrelage_w02,ruines/tile_ruines_carrelage_w03,ruines/tile_ruines_carrelage_w04,ruines/tile_ruines_carrelage_w05,ruines/tile_ruines_carrelage_w06,ruines/tile_ruines_carrelage_w07,ruines/tile_ruines_carrelage_w08,ruines/tile_ruines_carrelage_w09,ruines/tile_ruines_carrelage_w10,ruines/tile_ruines_carrelage_w11,ruines/tile_ruines_carrelage_w12,ruines/tile_ruines_carrelage_w13,ruines/tile_ruines_carrelage_w14,ruines/tile_ruines_carrelage_w15
+[CatalogValuesProbe] biome urban_ruins path (0.3529412, 0.3529412, 0.33333334, 1) ruts=0 width=30
+[CatalogValuesProbe] biome collapsed_quarry Carrière Effondrée audio=sfx_pas_gravier danger=3 map=0.5 poi=2-3 blend=True
+[CatalogValuesProbe] biome collapsed_quarry exploration=presage,rodeur,rodeur,void_brute,rampant,fading_spitter resurgence=presage,shade,shade,void_brute,void_brute,wailing_sentinel,rampant,hurleur wang=grass,concrete,forest
+[CatalogValuesProbe] biome collapsed_quarry terrain grass 0.05
+[CatalogValuesProbe] biome collapsed_quarry terrain concrete 0.4
+[CatalogValuesProbe] biome collapsed_quarry terrain water 0.1
+[CatalogValuesProbe] biome collapsed_quarry terrain forest 0.45
+[CatalogValuesProbe] biome collapsed_quarry poi searchable_building 0.6
+[CatalogValuesProbe] biome collapsed_quarry poi resource_cache 1.5
+[CatalogValuesProbe] biome collapsed_quarry poi guarded_chest 1.2
+[CatalogValuesProbe] biome collapsed_quarry poi lore_ruin 1
+[CatalogValuesProbe] biome collapsed_quarry poi anomaly 1.2
+[CatalogValuesProbe] biome collapsed_quarry poi sanctuary 0.15
+[CatalogValuesProbe] biome collapsed_quarry tiles grass carriere/tile_carriere_sol_w00,carriere/tile_carriere_sol_w01,carriere/tile_carriere_sol_w02,carriere/tile_carriere_sol_w03,carriere/tile_carriere_sol_w04,carriere/tile_carriere_sol_w05,carriere/tile_carriere_sol_w06,carriere/tile_carriere_sol_w07,carriere/tile_carriere_sol_w08,carriere/tile_carriere_sol_w09,carriere/tile_carriere_sol_w10,carriere/tile_carriere_sol_w11,carriere/tile_carriere_sol_w12,carriere/tile_carriere_sol_w13,carriere/tile_carriere_sol_w14,carriere/tile_carriere_sol_w15
+[CatalogValuesProbe] biome collapsed_quarry tiles concrete carriere/tile_carriere_roche_w00,carriere/tile_carriere_roche_w01,carriere/tile_carriere_roche_w02,carriere/tile_carriere_roche_w03,carriere/tile_carriere_roche_w04,carriere/tile_carriere_roche_w05,carriere/tile_carriere_roche_w06,carriere/tile_carriere_roche_w07,carriere/tile_carriere_roche_w08,carriere/tile_carriere_roche_w09,carriere/tile_carriere_roche_w10,carriere/tile_carriere_roche_w11,carriere/tile_carriere_roche_w12,carriere/tile_carriere_roche_w13,carriere/tile_carriere_roche_w14,carriere/tile_carriere_roche_w15,carriere/tile_carriere_industriel_w00,carriere/tile_carriere_industriel_w01,carriere/tile_carriere_industriel_w02,carriere/tile_carriere_industriel_w03,carriere/tile_carriere_industriel_w04,carriere/tile_carriere_industriel_w05,carriere/tile_carriere_industriel_w06,carriere/tile_carriere_industriel_w07,carriere/tile_carriere_industriel_w08,carriere/tile_carriere_industriel_w09,carriere/tile_carriere_industriel_w10,carriere/tile_carriere_industriel_w11,carriere/tile_carriere_industriel_w12,carriere/tile_carriere_industriel_w13,carriere/tile_carriere_industriel_w14,carriere/tile_carriere_industriel_w15
+[CatalogValuesProbe] biome collapsed_quarry tiles forest carriere/tile_carriere_cristal_w00,carriere/tile_carriere_cristal_w01,carriere/tile_carriere_cristal_w02,carriere/tile_carriere_cristal_w03,carriere/tile_carriere_cristal_w04,carriere/tile_carriere_cristal_w05,carriere/tile_carriere_cristal_w06,carriere/tile_carriere_cristal_w07,carriere/tile_carriere_cristal_w08,carriere/tile_carriere_cristal_w09,carriere/tile_carriere_cristal_w10,carriere/tile_carriere_cristal_w11,carriere/tile_carriere_cristal_w12,carriere/tile_carriere_cristal_w13,carriere/tile_carriere_cristal_w14,carriere/tile_carriere_cristal_w15
+[CatalogValuesProbe] biome collapsed_quarry tiles water commun/tile_eau_peu_profonde_base,commun/tile_eau_peu_profonde_v2
+[CatalogValuesProbe] biome collapsed_quarry path (0.3529412, 0.3137255, 0.3137255, 1) ruts=0.6 width=36
+[CatalogValuesProbe] biome forest_reclaimed Forêt Reconquise audio=- danger=1 map=1 poi=2-4 blend=True
+[CatalogValuesProbe] biome forest_reclaimed exploration=presage,charognard,charognard,treant_corrompu,rodeur,fading_spitter resurgence=presage,presage,shade,shade,shade,shade,charognard,charognard,void_brute,void_brute,hurleur,hurleur,tisseuse wang=grass,forest
+[CatalogValuesProbe] biome forest_reclaimed terrain grass 0.3
+[CatalogValuesProbe] biome forest_reclaimed terrain concrete 0.05
+[CatalogValuesProbe] biome forest_reclaimed terrain water 0.05
+[CatalogValuesProbe] biome forest_reclaimed terrain forest 0.6
+[CatalogValuesProbe] biome forest_reclaimed poi searchable_building 1
+[CatalogValuesProbe] biome forest_reclaimed poi resource_cache 1.2
+[CatalogValuesProbe] biome forest_reclaimed poi guarded_chest 0.8
+[CatalogValuesProbe] biome forest_reclaimed poi lore_ruin 1
+[CatalogValuesProbe] biome forest_reclaimed poi anomaly 0.5
+[CatalogValuesProbe] biome forest_reclaimed poi sanctuary 0.15
+[CatalogValuesProbe] biome forest_reclaimed tiles grass foret/tile_foret_sol_w00,foret/tile_foret_sol_w01,foret/tile_foret_sol_w02,foret/tile_foret_sol_w03,foret/tile_foret_sol_w04,foret/tile_foret_sol_w05,foret/tile_foret_sol_w06,foret/tile_foret_sol_w07,foret/tile_foret_sol_w08,foret/tile_foret_sol_w09,foret/tile_foret_sol_w10,foret/tile_foret_sol_w11,foret/tile_foret_sol_w12,foret/tile_foret_sol_w13,foret/tile_foret_sol_w14,foret/tile_foret_sol_w15
+[CatalogValuesProbe] biome forest_reclaimed tiles forest foret/tile_foret_terre_w00,foret/tile_foret_terre_w01,foret/tile_foret_terre_w02,foret/tile_foret_terre_w03,foret/tile_foret_terre_w04,foret/tile_foret_terre_w05,foret/tile_foret_terre_w06,foret/tile_foret_terre_w07,foret/tile_foret_terre_w08,foret/tile_foret_terre_w09,foret/tile_foret_terre_w10,foret/tile_foret_terre_w11,foret/tile_foret_terre_w12,foret/tile_foret_terre_w13,foret/tile_foret_terre_w14,foret/tile_foret_terre_w15,foret/tile_foret_sousbois_w00,foret/tile_foret_sousbois_w01,foret/tile_foret_sousbois_w02,foret/tile_foret_sousbois_w03,foret/tile_foret_sousbois_w04,foret/tile_foret_sousbois_w05,foret/tile_foret_sousbois_w06,foret/tile_foret_sousbois_w07,foret/tile_foret_sousbois_w08,foret/tile_foret_sousbois_w09,foret/tile_foret_sousbois_w10,foret/tile_foret_sousbois_w11,foret/tile_foret_sousbois_w12,foret/tile_foret_sousbois_w13,foret/tile_foret_sousbois_w14,foret/tile_foret_sousbois_w15
+[CatalogValuesProbe] biome forest_reclaimed tiles concrete foret/tile_foret_fondation_base,foret/tile_foret_fondation_v2,foret/tile_foret_autoroute_droit,foret/tile_foret_autoroute_effondre,foret/tile_foret_autoroute_fissure,foret/tile_foret_autoroute_herbe
+[CatalogValuesProbe] biome forest_reclaimed path (0.30588236, 0.22745098, 0.16470589, 1) ruts=0 width=26
+[CatalogValuesProbe] RESULT lines=590

@@ -861,6 +861,7 @@ Le script de post-processing doit inclure une vérification/correction de l'angl
 
 - [x] Mode dev explicite : toggle mémorisé dans le Hub au lancement F5, contenu existant débloqué, profil/progression/records/analytics séparés, Steam désactivé ; bascules normal ↔ dev testées et activation exclue des exports Debug/Release ([guide](DEV-MODE.md)).
 - [x] Plan 26 Q0 : validations strictes et profils isolés, bancs cône/UI remis à jour, global séquentiel 21/21 avec build/import partagés et verrou de checkout ; pannes injectées, mesures réelles et contrôles GL vérifiés ([preuves](audits/qualite-2026-10-02/q0/README.md), [guide](VALIDATION.md)).
+- [x] Plan 26 Q7c-4a : catalogue des cinq biomes validé en entier avant publication, définitions en lecture seule, refus récupérable sans génération partielle ; 590 valeurs avant/après identiques, 190 contrôles de catalogues, validations 9/9 puis 5/5 et vraie fiche invalide vérifiés ([preuves](audits/catalogues-biomes-2026-10-06/README.md), 6 octobre 2026). Les autres catalogues de génération restent ouverts.
 
 - [ ] Scope final : 3-4 biomes, 4+ personnages, 8+ types d'ennemis, 30+ perks, 10+ armes, 15+ Souvenirs, quêtes.
 - [ ] Bug fix et performance (60 FPS, 100+ ennemis en endgame).

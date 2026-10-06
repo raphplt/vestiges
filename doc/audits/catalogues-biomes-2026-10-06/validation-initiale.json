@@ -1,0 +1,43 @@
+{
+  "results": [
+    {
+      "name": "smoke",
+      "exit_code": 0
+    },
+    {
+      "name": "catalogs",
+      "exit_code": 0
+    },
+    {
+      "name": "loading",
+      "exit_code": 0
+    },
+    {
+      "name": "run_trace",
+      "exit_code": 0
+    },
+    {
+      "name": "cartography",
+      "exit_code": 0
+    },
+    {
+      "name": "movement-integration",
+      "exit_code": 0
+    },
+    {
+      "name": "enemy_abilities",
+      "exit_code": 0
+    },
+    {
+      "name": "objects",
+      "exit_code": 0
+    },
+    {
+      "name": "small_places",
+      "exit_code": 0
+    }
+  ],
+  "passed": 9,
+  "expected": 9,
+  "source_changes": []
+}

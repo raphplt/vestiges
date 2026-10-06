@@ -42,6 +42,8 @@ public partial class LoadingRecoveryRegression : Node
                 case "normal": await NormalLoad(manager); break;
                 case "random-seed": await RandomSeedLoad(manager); break;
                 case "fault-catalogues": await FaultedLoad("catalogues", "Catalogues"); break;
+                // À lancer dans une copie isolée dont un biome porte map_weight = 0, jamais dans le dépôt courant.
+                case "invalid-biome": await FaultedLoad("biome", "Catalogues", "map_weight", false); break;
                 case "fault-generation": await FaultedLoad("génération", "Création du monde"); break;
                 case "fault-decors": await FaultedLoad("décors", "Décors"); break;
                 case "leave-generation": await LeaveDuringGeneration(); break;
@@ -81,9 +83,10 @@ public partial class LoadingRecoveryRegression : Node
         Check(recorded == world.Seed, $"le record garde la seed effective ({recorded})");
     }
 
-    private async Task FaultedLoad(string step, string shownStep)
+    private async Task FaultedLoad(string step, string shownStep, string expectedMessage = "panne injectée", bool injectFault = true)
     {
-        LoadGuard.FaultStep = step;
+        if (injectFault)
+            LoadGuard.FaultStep = step;
         WorldSetup world = StartMain();
         Control failure = null;
         await Until(() => (failure = Find<Control>(world, "LoadingFailure")) != null, "écran d'erreur absent");
@@ -91,9 +94,12 @@ public partial class LoadingRecoveryRegression : Node
         Check(GetTree().Paused, $"panne « {step} » : la run à moitié construite reste en pause derrière l'écran");
         Button back = Find<Button>(failure, "ReturnToCamp");
         Check(back != null && GetViewport().GuiGetFocusOwner() == back, "bouton de retour présent et focalisé (manette, clavier)");
-        string detail = FindDetail(failure);
-        Check(detail.Contains(shownStep, StringComparison.Ordinal) && detail.Contains("panne injectée", StringComparison.Ordinal),
+        string detail = FindDetail(failure, expectedMessage);
+        Check(detail.Contains(shownStep, StringComparison.Ordinal) && detail.Contains(expectedMessage, StringComparison.Ordinal),
             $"diagnostic affiché : étape et message ({detail})");
+        if (!injectFault)
+            Check(ReadField<Task>(world, "_generation") == null && !world.IsWorldReady,
+                "catalogue de biomes refusé : aucune génération lancée");
         await Capture($"echec-{step}");
         Node2D staging = ReadField<Node2D>(world, "_propStaging");
         back.EmitSignal(Button.SignalName.Pressed);
@@ -164,11 +170,11 @@ public partial class LoadingRecoveryRegression : Node
             ? target.GetType().GetField(name, BindingFlags.Instance | BindingFlags.NonPublic)?.GetValue(target) as T
             : null;
 
-    private static string FindDetail(Node failure)
+    private static string FindDetail(Node failure, string expectedMessage)
     {
         foreach (Node child in failure.GetChildren())
         {
-            if (child is Label label && label.Text.Contains("panne", StringComparison.Ordinal))
+            if (child is Label label && label.Text.Contains(expectedMessage, StringComparison.Ordinal))
                 return label.Text;
         }
         return "";

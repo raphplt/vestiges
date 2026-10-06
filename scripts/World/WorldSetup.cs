@@ -130,7 +130,9 @@ public partial class WorldSetup : Node2D
     {
         LoadProfiler.Begin();
         EnemyDataLoader.Load();
-        BiomeDataLoader.Load();
+        // Le bootstrap affiche le diagnostic ; ne pas lancer de génération sur un catalogue refusé.
+        if (!BiomeDataLoader.TryLoad(out _))
+            return;
         PoiDataLoader.Load();
         LootTableLoader.Load();
         ChestDataLoader.Load();

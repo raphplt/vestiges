@@ -312,7 +312,7 @@ public partial class SpawnManager : Node2D
 	public string PickLocalEnemyId(Vector2 worldPos, IReadOnlyList<string> preferred = null)
 	{
 		CacheWorldSetup();
-		List<string> pool = _worldSetup?.GetBiomeAt(worldPos)?.ExplorationEnemyPool;
+		IReadOnlyList<string> pool = _worldSetup?.GetBiomeAt(worldPos)?.ExplorationEnemyPool;
 		if (pool == null || pool.Count == 0)
 			pool = _fallbackExplorationPool;
 		if (pool.Count == 0)
@@ -322,7 +322,7 @@ public partial class SpawnManager : Node2D
 		{
 			foreach (string id in preferred)
 			{
-				if (pool.Contains(id))
+				if (JsonConfigReader.Contains(pool, id))
 					return id;
 			}
 		}
@@ -595,7 +595,7 @@ public partial class SpawnManager : Node2D
 		CacheWorldSetup();
 		BiomeData biome = _worldSetup?.GetBiomeAt(worldPos);
 
-		List<string> pool;
+		IReadOnlyList<string> pool;
 		if (biome != null)
 		{
 			pool = isResurgence ? biome.ResurgenceEnemyPool : biome.ExplorationEnemyPool;
@@ -637,7 +637,7 @@ public partial class SpawnManager : Node2D
 	/// Tirage dans un groupe de biome, pondéré par les fiches (stats <c>spawn_weight</c>, 1 par défaut, et
 	/// <c>spawn_from_minute</c>, 0 par défaut). Un identifiant répété dans le groupe compte autant de fois.
 	/// </summary>
-	private static string PickWeighted(List<string> pool, float elapsedMinutes)
+	private static string PickWeighted(IReadOnlyList<string> pool, float elapsedMinutes)
 	{
 		float total = 0f;
 		foreach (string id in pool)

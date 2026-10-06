@@ -240,6 +240,11 @@ public sealed class JsonConfigReader
             return 0f;
         }
         float value = (float)number;
+        if (!float.IsFinite(value))
+        {
+            Error = $"{key} : nombre fini attendu";
+            return 0f;
+        }
         if (!valid(value))
         {
             Error = FormattableString.Invariant($"{key} : {value} ({expectation})");

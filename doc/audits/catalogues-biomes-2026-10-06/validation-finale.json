@@ -1,0 +1,27 @@
+{
+  "results": [
+    {
+      "name": "smoke",
+      "exit_code": 0
+    },
+    {
+      "name": "catalogs",
+      "exit_code": 0
+    },
+    {
+      "name": "loading",
+      "exit_code": 0
+    },
+    {
+      "name": "run_trace",
+      "exit_code": 0
+    },
+    {
+      "name": "dev_release",
+      "exit_code": 0
+    }
+  ],
+  "passed": 5,
+  "expected": 5,
+  "source_changes": []
+}

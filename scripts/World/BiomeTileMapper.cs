@@ -153,7 +153,7 @@ public class BiomeTileMapper
 			Dictionary<string, int[]> specialMap = new();
 			int nextMaterial = 0;
 
-			foreach (KeyValuePair<string, List<string>> kv in biome.TileSources)
+			foreach (KeyValuePair<string, IReadOnlyList<string>> kv in biome.TileSources)
 			{
 				int[] sources = LoadTileGroup(kv.Value);
 				if (sources.Length == 0)
@@ -353,7 +353,7 @@ public class BiomeTileMapper
 		return _tileTextures.Count - 1;
 	}
 
-	private int[] LoadTileGroup(List<string> relativePaths)
+	private int[] LoadTileGroup(IReadOnlyList<string> relativePaths)
 	{
 		List<int> ids = new();
 

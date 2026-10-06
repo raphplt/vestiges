@@ -34,6 +34,7 @@ public partial class CatalogContractRegression : Node
             CheckFieldBonuses();
             CheckSmallPlaces();
             CheckWaymarks();
+            CheckBiomes();
             GD.Print($"[CatalogContractRegression] RESULT failures=0 checks={_checks}");
             GetTree().Quit(0);
         }
@@ -414,6 +415,114 @@ public partial class CatalogContractRegression : Node
             string message = WaymarkDataLoader.Apply(Mutated(valid, mutate), types, contract, translated);
             Check(message != null && message.Contains(expected, StringComparison.Ordinal), $"Repères refusés ({label}) : {message}");
         }
+    }
+
+    private void CheckBiomes()
+    {
+        Func<string, bool> enemyExists = EnemyDataLoader.Exists;
+        HashSet<string> pois = new();
+        foreach (PoiData poi in PoiDataLoader.GetAll())
+            pois.Add(poi.Id);
+        Func<string, bool> audioExists = DataKeySets.TopLevelKeys(AudioManager.SoundBankPath).Contains;
+        Func<string, bool> resourceExists = path => ResourceLoader.Exists(path);
+        Check(BiomeDataLoader.TryLoad(out string loadError), $"biomes du dépôt acceptés {loadError}");
+        List<BiomeData> original = BiomeDataLoader.GetAll();
+        Check(original.Count == 5, "les cinq biomes sont publiés ensemble");
+        BiomeData forest = BiomeDataLoader.Get("forest_reclaimed");
+        string valid = FileAccess.GetFileAsString("res://data/biomes/forest_reclaimed.json");
+        (string, Action<JsonObject>, string)[] cases =
+        {
+            ("id absent", root => root.Remove("id"), "id absent"),
+            ("id non textuel", root => root["id"] = 12, "id : texte non vide"),
+            ("champ inconnu", root => root["danger_levell"] = 1, "danger_levell"),
+            ("poids absents", root => root.Remove("terrain_weights"), "terrain_weights absente"),
+            ("poids non objet", root => root["terrain_weights"] = 1, "terrain_weights absente"),
+            ("terrain inconnu", root => root["terrain_weights"]!["lava"] = 1, "terrain_weights.lava"),
+            ("poids négatif", root => root["terrain_weights"]!["grass"] = -1, "grass : -1"),
+            ("poids non numérique", root => root["terrain_weights"]!["grass"] = "beaucoup", "grass : nombre fini"),
+            ("total nul", root => root["terrain_weights"] = new JsonObject { ["grass"] = 0 }, "total fini strictement positif"),
+            ("poids trop grand", root => root["terrain_weights"]!["grass"] = 1e300, "grass : nombre fini"),
+            ("somme trop grande", root => root["terrain_weights"] = new JsonObject { ["grass"] = 3e38, ["forest"] = 3e38 }, "total fini strictement positif"),
+            ("pool absent", root => root.Remove("exploration_enemy_pool"), "exploration_enemy_pool"),
+            ("pool vide", root => root["resurgence_enemy_pool"] = new JsonArray(), "resurgence_enemy_pool"),
+            ("pool non liste", root => root["exploration_enemy_pool"] = "rodeur", "exploration_enemy_pool"),
+            ("créature inconnue", root => root["exploration_enemy_pool"]![0] = "rodeurr", "exploration_enemy_pool[0]"),
+            ("créature non textuelle", root => root["resurgence_enemy_pool"]![0] = 1, "resurgence_enemy_pool[0]"),
+            ("danger fractionnaire", root => root["danger_level"] = 1.5, "danger_level"),
+            ("compte négatif", root => root["poi_count_min"] = -1, "poi_count_min"),
+            ("compte au-delà d'int32", root => root["poi_count_max"] = 2147483648L, "poi_count_max"),
+            ("intervalle inversé", root => root["poi_count_max"] = 1, "intervalle croissant"),
+            ("lieu inconnu", root => root["poi_pool"]!["fontaine"] = 1, "poi_pool.fontaine"),
+            ("poids de lieu négatif", root => root["poi_pool"]!["anomaly"] = -1, "anomaly : -1"),
+            ("poids de carte nul", root => root["map_weight"] = 0, "map_weight : 0"),
+            ("poids de carte trop grand", root => root["map_weight"] = 1e300, "map_weight : nombre fini"),
+            ("son inconnu", root => root["footstep_audio"] = "sfx_inconnu", "footstep_audio"),
+            ("sources absentes", root => root.Remove("tile_sources"), "tile_sources"),
+            ("sources vides", root => root["tile_sources"] = new JsonObject(), "au moins un groupe"),
+            ("groupe inconnu", root => root["tile_sources"]!["gras"] = new JsonArray("foret/tile_foret_sol_w00"), "tile_sources.gras"),
+            ("liste de tuiles vide", root => root["tile_sources"]!["grass"] = new JsonArray(), "grass : liste"),
+            ("tuile introuvable", root => root["tile_sources"]!["grass"]![0] = "foret/inconnue", "tuile « foret/inconnue »"),
+            ("tuile non textuelle", root => root["tile_sources"]!["grass"]![0] = false, "grass[0]"),
+            ("chemin hors tuiles", root => root["tile_sources"]!["grass"]![0] = "../../assets/tiles/foret/tile_foret_sol_w00", "grass[0]"),
+            ("Wang sans groupe", root => root["wang_tile_groups"]![0] = "water", "wang_tile_groups[0]"),
+            ("Wang en double", root => root["wang_tile_groups"]!.AsArray().Add("grass"), "groupe « grass » en double"),
+            ("Wang incomplet", root => root["tile_sources"]!["grass"]!.AsArray().RemoveAt(0), "multiple de 16"),
+            ("fusion non booléenne", root => root["blend_terrains"] = 1, "blend_terrains"),
+            ("style non objet", root => root["path_style"] = 1, "path_style"),
+            ("couleur invalide", root => root["path_style"]!["tone"] = "bleu", "path_style.tone"),
+            ("ornières hors borne", root => root["path_style"]!["ruts"] = 1.1, "ruts"),
+            ("largeur nulle", root => root["path_style"]!["width_px"] = 0, "width_px"),
+            ("champ de style inconnu", root => root["path_style"]!["width"] = 28, "clé « width » inconnue"),
+        };
+        foreach ((string label, Action<JsonObject> mutate, string expected) in cases)
+        {
+            string first = Mutated(valid, root => { root["id"] = "biome_candidat"; root["map_weight"] = 9; });
+            Dictionary<string, string> candidates = new()
+            {
+                ["res://data/biomes/candidat.json"] = first,
+                ["res://data/biomes/invalide.json"] = Mutated(valid, mutate)
+            };
+            string message = BiomeDataLoader.Apply(candidates, enemyExists, pois.Contains, audioExists, resourceExists);
+            Check(message != null && message.Contains("invalide.json", StringComparison.Ordinal)
+                && message.Contains(expected, StringComparison.Ordinal) && BiomeDataLoader.Get("biome_candidat") == null
+                && ReferenceEquals(BiomeDataLoader.Get("forest_reclaimed"), forest) && BiomeDataLoader.GetAll().Count == original.Count,
+                $"biome refusé sans publication ({label}) : {message}");
+        }
+        foreach ((string text, string expected) in new[]
+        {
+            ("[]", "objet attendu"), ("null", "objet attendu"), ("{", "JSON illisible"),
+            (valid.Replace("\"id\":", "\"id\": \"doublon\", \"id\":", StringComparison.Ordinal), "clé « id » en double"),
+            (valid.Replace("\"grass\": 0.30", "\"grass\": 0.30, \"grass\": 1", StringComparison.Ordinal), "clé « grass » en double")
+        })
+        {
+            bool refused = !BiomeDataLoader.TryParse(text, enemyExists, pois.Contains, audioExists, resourceExists, out BiomeData biome, out string error);
+            Check(refused && biome == null && error.Contains(expected, StringComparison.Ordinal), $"fiche de biome refusée ({expected}) : {error}");
+        }
+        Dictionary<string, string> duplicate = new() { ["a.json"] = valid, ["b.json"] = valid };
+        Check(BiomeDataLoader.Apply(duplicate, enemyExists, pois.Contains, audioExists, resourceExists)?.Contains("id en double", StringComparison.Ordinal) == true
+            && ReferenceEquals(BiomeDataLoader.Get("forest_reclaimed"), forest), "identifiant de biome en double refusé sans publication");
+        Check(BiomeDataLoader.Apply(new Dictionary<string, string>(), enemyExists, pois.Contains, audioExists, resourceExists) != null,
+            "catalogue de biomes vide refusé");
+        string optional = Mutated(valid, root =>
+        {
+            foreach (string key in new[] { "name", "danger_level", "poi_pool", "poi_count_min", "poi_count_max", "path_style", "wang_tile_groups", "blend_terrains" })
+                root.Remove(key);
+        });
+        Check(BiomeDataLoader.TryParse(optional, enemyExists, pois.Contains, audioExists, resourceExists, out BiomeData defaults, out _)
+            && defaults.Name == "" && defaults.DangerLevel == 1 && defaults.MapWeight == 1f && defaults.PoiCountMin == 3
+            && defaults.PoiCountMax == 5 && defaults.PoiPool.Count == 0 && defaults.PathStyle == null
+            && defaults.WangTileGroups.Count == 0 && !defaults.BlendTerrains, "secours des champs facultatifs conservés");
+        Check(BiomeDataLoader.TryParse(Mutated(valid, root => root["path_style"] = new JsonObject()), enemyExists, pois.Contains, audioExists, resourceExists,
+            out BiomeData styleDefaults, out _) && styleDefaults.PathStyle?.WidthPx == PathStyle.Default.WidthPx,
+            "style de chemin facultatif : secours conservés");
+        Check(forest.ExplorationEnemyPool.Count == 6 && forest.ExplorationEnemyPool[1] == forest.ExplorationEnemyPool[2]
+            && forest.TileSources["forest"].Count == 32, "répétitions des créatures et matières de Wang conservées");
+        original.Clear();
+        Check(BiomeDataLoader.GetAll().Count == 5, "modifier la liste reçue ne modifie pas le catalogue");
+        Check(((IDictionary<string, float>)forest.TerrainWeights).IsReadOnly && ((IList<string>)forest.ExplorationEnemyPool).IsReadOnly
+            && ((IDictionary<string, IReadOnlyList<string>>)forest.TileSources).IsReadOnly
+            && ((IList<string>)forest.TileSources["forest"]).IsReadOnly && ((ISet<string>)forest.WangTileGroups).IsReadOnly,
+            "définitions et collections imbriquées publiées en lecture seule");
     }
 
     private static JsonObject Entry(JsonObject root, string list, int index) => root[list]![index]!.AsObject();
