@@ -857,3 +857,12 @@ Après le lot S1, Raphaël demande si les effets se voient en jeu et si les spri
 Raphaël : « bon bah ca sera ton prochain chantier de faire en sorte que tout se voit. prépare un plan pour qu'on puisse voir concretement en jeu tous les impacts bien comme il faut et les effets sur les ennemis (et sur le joueur quand on se fait attaquer, s'il y a des effets en particulier) ».
 - **Prochain chantier de Claude :** la lisibilité des impacts et des effets, sur les ennemis et sur le joueur ([plan 27](27-tout-se-voit.md)). Il passe avant les pouvoirs des personnages (plan 06) et les lots B.
 - Le plan part d'un inventaire du code, puis propose les lots ; une planche de captures avant/après précède chaque intégration visible.
+
+## 72. Plan 27, questions tranchées — 6 octobre 2026, nuit
+
+Raphaël, sur les cinq questions du [plan 27](27-tout-se-voit.md#4-questions-pour-raphaël) : « 1 oui / 2 oui comme tu dis / 3 oui il faut un chiffre je crois / 4 laisse coupé / 5 l'ordre que tu viens de dire ».
+- **Statuts avec « Effets d'attaque » coupé :** leur marque minimale (teinte, animation, étoiles) **reste visible** ; seules les fioritures suivent le réglage et le budget.
+- **Tics de brûlure et de saignement :** un **petit chiffre regroupé toutes les 0,5 s** par créature, à la couleur du statut.
+- **Dégâts reçus par le joueur :** **un chiffre s'affiche** au-dessus du joueur (en plus de l'éclair rouge et de la vignette), à intégrer au lot V3.
+- **Gel d'image (hitstop) :** **reste coupé**.
+- **Ordre :** V0 → V1 → V2 → V3 → V4 ; V5 (sons d'impact) après la reprise audio du plan 15.

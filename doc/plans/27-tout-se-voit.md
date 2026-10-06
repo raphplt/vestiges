@@ -1,6 +1,6 @@
 # Plan 27 — Tout se voit : impacts, statuts, coups reçus
 
-6 octobre 2026 · Demandé par Raphaël ([DECISIONS §71](DECISIONS.md)) · **Proposition : lots à valider, rien n'est codé.**
+6 octobre 2026 · Demandé par Raphaël ([DECISIONS §71](DECISIONS.md)) · **Validé le 6 octobre ([DECISIONS §72](DECISIONS.md)) : ordre V0 → V4, questions tranchées au §4.** Rien n'est codé.
 
 > « fais en sorte que tout se voit. […] qu'on puisse voir concrètement en jeu tous les impacts bien comme il faut et les effets sur les ennemis (et sur le joueur quand on se fait attaquer) »
 
@@ -111,7 +111,7 @@ Un composant dédié (`EnemyStatusVisual`, hors de `Enemy.cs`, qui ne doit plus 
 
 - **Forme des Craies dessinée** : étoile, cercle, maison, soleil (les formes déjà nommées dans les données), au trait crayonné, à la taille réelle de la zone.
 - **Écho des Gants à sa vraie taille**, avec zone et gerbe ; **coups secondaires et dégâts d'objets** avec `PlayHit` à la couleur de l'arme (ou de l'objet).
-- **Tics de dégâts sur la durée** : petit chiffre agrégé toutes les 0,5 s par créature, à la couleur du statut (voir question 2) ; le feu de la Lampe retrouve un retour à chaque tic.
+- **Tics de dégâts sur la durée** : petit chiffre regroupé toutes les 0,5 s par créature, à la couleur du statut (§72) ; le feu de la Lampe retrouve un retour à chaque tic.
 - **Champ du Chronomètre** rempli en trame pendant sa durée ; **trait du Trousseau** vers sa première cible ; **éclat de fin de course** des projectiles (pool `ProjectileImpact`).
 - **Icônes d'objets manquantes** (Rondelle, Mètre, Écusson, Pince à linge, paliers de l'Allumette et de l'Épingle) et **trait de Brûlure transmise** d'une créature à l'autre.
 - **Recul** : petite poussière au sol au départ du recul.
@@ -119,7 +119,7 @@ Un composant dédié (`EnemyStatusVisual`, hors de `Enemy.cs`, qui ne doit plus 
 
 ### V3 — Le joueur sent les coups
 
-- **Blessure** : éclair rouge propre au joueur (distinct du blanc des ennemis), vignette rouge tramée aux bords, plus marquée du côté d'où vient le coup ; secousse lisible (réglée en données, toujours sous le réglage de secousse du joueur).
+- **Blessure** : éclair rouge propre au joueur (distinct du blanc des ennemis), vignette rouge tramée aux bords, plus marquée du côté d'où vient le coup, **chiffre des dégâts reçus** au-dessus du joueur (§72) ; secousse lisible (réglée en données, toujours sous le réglage de secousse du joueur). Pas de gel d'image (§72).
 - **Toile** : la créature-joueur porte des fils (trame Silk) et ralentit son animation ; icône de statut près de la jauge sous les pieds ; **correction de règle** : la toile ne s'applique plus si le coup est annulé.
 - **Bouclier** : la casse fait voler des éclats de verre, distincts d'un blocage ; un tintement court et un éclat quand il est de nouveau plein.
 - **Armure, coup ignoré** : petit éclat « paré » quand l'armure réduit un coup notable.
@@ -141,6 +141,8 @@ Un son d'impact par famille de matière (lame, choc, verre, feu, papier, électr
 ---
 
 ## 4. Questions pour Raphaël
+
+**Tranchées le 6 octobre ([DECISIONS §72](DECISIONS.md)) :** 1 A (marque minimale toujours visible), 2 B (chiffre regroupé toutes les 0,5 s), 3 **B** (chiffre des dégâts reçus, contre la recommandation), 4 A (gel d'image coupé), 5 A (V0 → V4).
 
 | # | Question | Options | Recommandation |
 |---|---|---|---|
