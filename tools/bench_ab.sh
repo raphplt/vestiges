@@ -35,6 +35,10 @@ mkdir -p "$WORKTREE/tools/lib"
 cp tools/lib/portable.sh tools/lib/validation.sh "$WORKTREE/tools/lib/"
 cp tools/check_validation_log.py tools/with_validation_lock.py "$WORKTREE/tools/"
 
+# Le premier import d'un worktree neuf échoue sur des fichiers importés pas encore écrits (polices du thème) : la
+# première passe de base était toujours invalide. Un import de préchauffage les écrit avant toute mesure.
+(cd "$WORKTREE" && dotnet build --nologo >/dev/null && "${GODOT_BIN:-godot-mono}" --headless --editor --import --path . >"$OUTPUT/base-warmup-import.log" 2>&1) || true
+
 export BENCH_REPEATS=1 BENCH_SECONDS="${BENCH_SECONDS:-15}"
 failed=0
 for ((pass = 1; pass <= PASSES; pass++)); do

@@ -5,6 +5,14 @@ shader_type canvas_item;
 uniform vec4 rim_color : source_color = vec4(0.96, 0.92, 0.84, 0.9);
 uniform vec4 halo_color : source_color = vec4(0.96, 0.92, 0.84, 0.28);
 
+// Modulate seul (opacité réglée par le joueur). En fragment, COLOR vaut déjà texture × Modulate : le liseré, posé
+// sur des pixels transparents, y serait multiplié par un alpha nul.
+varying vec4 modulate;
+
+void vertex() {
+	modulate = COLOR;
+}
+
 void fragment() {
 	vec4 tex = texture(TEXTURE, UV);
 	vec4 result = tex;
@@ -28,5 +36,5 @@ void fragment() {
 			}
 		}
 	}
-	COLOR = result * COLOR;
+	COLOR = result * modulate;
 }

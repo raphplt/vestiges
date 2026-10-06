@@ -866,3 +866,8 @@ Raphaël, sur les cinq questions du [plan 27](27-tout-se-voit.md#4-questions-pou
 - **Dégâts reçus par le joueur :** **un chiffre s'affiche** au-dessus du joueur (en plus de l'éclair rouge et de la vignette), à intégrer au lot V3.
 - **Gel d'image (hitstop) :** **reste coupé**.
 - **Ordre :** V0 → V1 → V2 → V3 → V4 ; V5 (sons d'impact) après la reprise audio du plan 15.
+
+## 73. Projectiles du joueur réparés — 6 octobre 2026, nuit
+
+Pendant le lot V0 du [plan 27](27-tout-se-voit.md#6-v0-livré--6-octobre-2026), le shader des projectiles du joueur montre le même défaut que celui des créatures : depuis le lot F5 (§53), le liseré et le halo ne s'affichaient pas et les sprites étaient assombris. Raphaël les avait validés en jeu dans cet état le 3 octobre. Question posée avec la planche avant/après ; réponse : « Réparer tout ».
+- **Projectiles du joueur :** couleurs d'origine, liseré et halo visibles, comme décidé au §53.

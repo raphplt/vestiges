@@ -154,17 +154,5 @@ public partial class RunObservation
         GD.Print($"[RunObservation] RESULT galerie armes={ids.Count} lethal={lethal} dossier={_output}");
     }
 
-    /// <summary>Gros plan centré sur le joueur, en pixels physiques de la capture (écrans à haute densité compris).</summary>
-    private void SavePlayerCloseUp(string path, Vector2 half)
-    {
-        using Image image = GetViewport().GetTexture().GetImage();
-        float pixelRatio = image.GetWidth() / GetViewport().GetVisibleRect().Size.X;
-        Vector2 center = GetViewport().GetCanvasTransform() * _player.GlobalPosition;
-        Vector2 zoom = _camera.Zoom;
-        Vector2 size = half * 2f * zoom * pixelRatio;
-        Vector2 corner = (center - half * zoom) * pixelRatio;
-        Rect2I region = new Rect2I((Vector2I)corner, (Vector2I)size).Intersection(new Rect2I(0, 0, image.GetWidth(), image.GetHeight()));
-        using Image crop = image.GetRegion(region);
-        crop.SavePng(path);
-    }
+    private void SavePlayerCloseUp(string path, Vector2 half) => SaveCloseUp(path, _player.GlobalPosition, half);
 }

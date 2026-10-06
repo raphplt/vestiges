@@ -34,6 +34,7 @@ Les plans 13 (butin) et 14 (anomalies) ne sont pas arbitrés : ne pas les implé
 - **Tri en Y de `Main`** : tout Node2D ajouté à la racine se trie avec les entités. Un effet au sol prend `ZIndex = -1`, un texte à lire `ZIndex` ≥ 20 (couches dans `AGENTS.md`).
 - **Décors** : ~10 000 `EnvironmentProp` par carte. Aucune boucle par frame sur tous les décors : passer par un index spatial (voir `PropOcclusion`).
 - **Sprites générés** : ne jamais supprimer un `.import` existant (son uid est référencé) ; Godot réimporte seul un PNG modifié. Les nouveaux PNG reçoivent leur `.import` au prochain `tools/smoke_test.sh` : les committer ensemble.
+- **Shaders `canvas_item` et Modulate** : dans `fragment()`, `COLOR` vaut déjà texture × Modulate. Multiplier une texture lue par `COLOR` l'élève au carré ; l'ignorer perd Modulate. Capter `COLOR` dans `vertex()` (Modulate seul) par un `varying` (voir `entity.gdshader`).
 - **Primitives SDF orientées** (`tools/sprites/sdf.py`) : `local = (p − centre) @ rotation`, donc un point local se place en monde par `rotation @ local`.
 - **Scènes de banc** (`tools/tests/`) : elles accèdent parfois à des champs privés par réflexion ; renommer un champ privé peut casser un banc sans erreur de compilation.
 

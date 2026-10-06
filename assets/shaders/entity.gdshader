@@ -23,6 +23,10 @@ uniform vec2 dissolve_direction = vec2(0.0);
 uniform float aberration_amount : hint_range(0.0, 1.0) = 0.0;
 uniform vec4 aberration_color : source_color = vec4(0.4, 0.15, 0.5, 1.0);
 
+// Modulate et SelfModulate seuls. En fragment, COLOR vaut déjà texture × Modulate : le multiplier par la texture
+// l'élèverait au carré (sprites assombris), l'ignorer perd le flash des coups, les fondus et les teintes d'annonce.
+varying vec4 modulate;
+
 // Hash noise pour la dissolution
 float hash(vec2 p) {
 	vec3 p3 = fract(vec3(p.xyx) * 0.1031);
@@ -39,6 +43,10 @@ float noise(vec2 p) {
 		mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), f.x),
 		f.y
 	);
+}
+
+void vertex() {
+	modulate = COLOR;
 }
 
 void fragment() {
@@ -89,8 +97,9 @@ void fragment() {
 		if (aberration_amount > 0.0) {
 			result = mix(result, aberration_color.rgb, aberration_amount * 0.3);
 		}
+		result = mix(result, flash_color.rgb, flash_amount);
 		final_color = vec4(result, tex.a);
 	}
 
-	COLOR = final_color;
+	COLOR = final_color * modulate;
 }

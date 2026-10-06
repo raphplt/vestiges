@@ -1,6 +1,6 @@
 # Plan 27 — Tout se voit : impacts, statuts, coups reçus
 
-6 octobre 2026 · Demandé par Raphaël ([DECISIONS §71](DECISIONS.md)) · **Validé le 6 octobre ([DECISIONS §72](DECISIONS.md)) : ordre V0 → V4, questions tranchées au §4.** Rien n'est codé.
+6 octobre 2026 · Demandé par Raphaël ([DECISIONS §71](DECISIONS.md)) · **Validé le 6 octobre ([DECISIONS §72](DECISIONS.md)) : ordre V0 → V4, questions tranchées au §4.** **V0 livré le 6 octobre** ([§6](#6-v0-livré--6-octobre-2026)) ; prochain : V1.
 
 > « fais en sorte que tout se voit. […] qu'on puisse voir concrètement en jeu tous les impacts bien comme il faut et les effets sur les ennemis (et sur le joueur quand on se fait attaquer) »
 
@@ -157,3 +157,23 @@ Un son d'impact par famille de matière (lame, choc, verre, feu, papier, électr
 - Les sons à produire (soin, annonces, impacts par matière) : listés ici, produits au plan 15.
 - Le gel d'image et l'arme en main (abandonnée, §65) : pas réintroduits.
 - Les décors et le terrain : hors sujet.
+
+## 6. V0 livré — 6 octobre 2026
+
+**Cause mesurée.** Une sonde de rendu (Godot 4.7.2, GL Compatibility) montre que, dans `fragment()`, `COLOR` vaut déjà texture × Modulate : un gris 0,5 rendu par `COLOR` seul donne 0,498, et texture × `COLOR` donne 0,247. L'ancien shader des entités multipliait donc la texture par elle-même (sprites assombris) ; le commit 6a30b79c a retiré la multiplication, et Modulate avec elle. `COLOR` lu dans `vertex()` porte Modulate seul (0,498 × modulate rouge = 0,498, 0, 0).
+
+**Fait.**
+- `entity.gdshader` : Modulate capté dans `vertex()` par un `varying`, appliqué à toutes les passes (contour, dissolution, rendu) ; `flash_amount`/`flash_color` relus. Reviennent : flash des coups, teinte d'annonce, estompage du Rampant terré, fondu de disparition, éclair du joueur, et le **clignotement d'invulnérabilité du joueur** (`Player.cs:1375`), perdu lui aussi et absent de l'inventaire.
+- `player_projectile.gdshader`, **même défaut, hors inventaire** : le liseré et le halo du lot F5 (§53), posés sur des pixels transparents, étaient multipliés par un alpha nul et ne se sont jamais affichés ; les sprites de projectiles étaient assombris. Réparé à la demande de Raphaël ([DECISIONS §73](DECISIONS.md)).
+- `--capture-statuses [--status-enemy id]` : dix créatures sur deux lignes (saine, coup répété, annonce, brûlure, saignement, ralenti, figé, désorienté, Fragile, Rampant terré), étiquetées, six instants de 1 à 90 images. `--capture-player-hit` : repos, blessure, bouclier qui encaisse puis casse, toile en marche, soin, et une vue plein écran pour les barres. Les deux cherchent d'abord un terrain sans décor haut dans le cadre (rectangle visible des décors, rangés par tronçons) : sinon la rangée passait derrière un immeuble.
+- `tools/bench_ab.sh` : import de préchauffage du worktree de base. La première passe de base échouait à chaque fois (police du thème pas encore importée), ce qui laissait la base à 1/2 passe valide.
+
+**Vérifié.**
+- Planches avant/après sur le ViewSonic, regardées : avant, les dix créatures ne se distinguent que par leur pose et le joueur ne change pas quand il est touché ; après, flash du coup, annonce verte, Rampant estompé, éclair de blessure, éclair bleu pâle du bouclier, clignotement d'invulnérabilité. Projectiles (arc, aiguille) plus clairs et lisérés. Brûlure, saignement, ralenti, figé, désorienté, Fragile, toile et soin restent invisibles : c'est V1 et V3.
+- `dotnet build` 0 avertissement ; smoke vert ; `test_enemy_abilities` (remise à neutre du pool : Modulate, SelfModulate, `flash_amount`), `test_movement`, `test_weapons`, `test_dev_mode` : 0 échec.
+- Banc A/B contre `0bb4d122`, 2 passes valides de chaque côté, charge 2,1 à 2,3 sur 16 fils : 720p 188,6 → 189,1 FPS, 1080p 178,8 → 175,3 FPS, p99 10,6 et 10,9 ms identiques, 2 nœuds créés/s des deux côtés. Pas de coût mesurable.
+
+**Points ouverts.**
+- Le flash des coups (SelfModulate ×3) blanchit les tons clairs et donne un ton chair sur les bruns : lisible, mais pas une silhouette blanche. À juger en jeu ; V1 peut passer par `flash_amount` si Raphaël veut un blanc franc.
+- Le Rampant terré à 35 % d'opacité se perd presque sur l'asphalte ; à reprendre avec les marques de V1.
+- L'éclair de blessure du joueur est presque blanc, comme celui des ennemis : V3 le passe au rouge.
