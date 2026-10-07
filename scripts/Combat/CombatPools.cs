@@ -16,6 +16,10 @@ public partial class CombatPools : Node2D
     private static ChalkShapeConfig _chalkConfig;
     private static bool _chalkConfigTried;
 
+    private const int MaxKnockbackDustPerFrame = 6;
+    private ulong _dustFrame;
+    private int _dustThisFrame;
+
     private NodePool<EnemyProjectile> _enemyProjectiles;
     private NodePool<Projectile> _playerProjectiles;
     private NodePool<DamageNumber> _damageNumbers;
@@ -179,6 +183,36 @@ public partial class CombatPools : Node2D
             return;
         (string shape, FxFamily family) = _chalkConfig.Shapes[(int)(GD.Randi() % (uint)_chalkConfig.Shapes.Count)];
         _chalkDrawings.Take().Play(center, radius, shape, family, _chalkConfig, CombatFxSettings.PlayerOpacity);
+    }
+
+    /// <summary>
+    /// Recul d'une créature (plan 27 V2d) : un peu de poussière part du sol, à l'opposé du coup. Fioriture d'attaque du
+    /// joueur, au budget des étincelles.
+    /// </summary>
+    public void EmitKnockbackDust(Vector2 feet, Vector2 direction)
+    {
+        // Une onde repousse toute une foule d'un coup : quelques nuages suffisent, le budget reste aux gerbes d'impact.
+        ulong frame = Engine.GetProcessFrames();
+        if (frame != _dustFrame)
+        {
+            _dustFrame = frame;
+            _dustThisFrame = 0;
+        }
+        if (++_dustThisFrame > MaxKnockbackDustPerFrame)
+            return;
+        Sparks.Emit(feet, new SparkBurst
+        {
+            Family = FxFamily.Stone,
+            Owner = FxOwner.Player,
+            Count = 3,
+            Direction = -direction,
+            Spread = 1.2f,
+            SpeedMin = 15f,
+            SpeedMax = 35f,
+            LifeMin = 0.2f,
+            LifeMax = 0.35f,
+            Size = 1,
+        });
     }
 
     /// <summary>Chiffre d'un tic de brûlure ou de saignement (plan 27 V2a), au budget des chiffres.</summary>

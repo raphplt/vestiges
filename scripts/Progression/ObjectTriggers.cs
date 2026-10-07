@@ -558,6 +558,7 @@ public partial class ObjectTriggers : Node
             return;
 
         Enemy nearest = null;
+        bool extended = false;
         float nearestSq = _burnSpreadRadius * _burnSpreadRadius;
         float slowRadiusSq = _slowKillRadius * _slowKillRadius;
         foreach (Node node in _groupCache.GetEnemies())
@@ -566,18 +567,27 @@ public partial class ObjectTriggers : Node
                 continue;
             float distanceSq = Iso.GroundDistanceSquared(enemy.GlobalPosition, kill.Position);
             if (extendSlows && distanceSq <= slowRadiusSq && enemy.IsSlowed)
+            {
                 enemy.ExtendSlow(_slowKillSeconds, _slowKillMaxSeconds);
+                extended = true;
+            }
             if (spreadBurn && distanceSq <= nearestSq)
             {
                 nearestSq = distanceSq;
                 nearest = enemy;
             }
         }
+        // Paliers de l'Épingle et de l'Allumette : leur icône s'élève quand ils agissent (plan 27 V2d).
+        if (extended)
+            _player.ObjectProcs?.Show(SlowedTargetDamageStat);
         if (nearest == null)
             return;
         nearest.ApplyIgnite(kill.Burn.Strength, kill.Burn.Remaining, kill.Burn.Source);
         SlowBurning(nearest, kill.Burn.Remaining, kill.Burn.Source);
         Spark(nearest, FxFamily.Fire);
+        // La brûlure passe de la victime à sa voisine : un trait de feu le montre.
+        _player.AttackFx.PlayBeam(kill.Position, nearest.GlobalPosition, FxFamily.Fire);
+        _player.ObjectProcs?.Show(BurnChanceStat);
     }
 
     private void RewardWeaponKill(in EnemyKillResult kill)

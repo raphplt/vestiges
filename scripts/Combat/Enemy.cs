@@ -1080,6 +1080,7 @@ public partial class Enemy : CharacterBody2D
 			return;
 		_knockVelocity += direction.Normalized() * (distance * KnockbackDecay / Mathf.Max(1f, Scale.X));
 		_knockVelocity = _knockVelocity.LimitLength(MaxKnockbackDistance * KnockbackDecay);
+		CombatPools.Instance?.EmitKnockbackDust(GlobalPosition, direction.Normalized());
 	}
 
 	private void ProcessIgnite(float delta)

@@ -12,6 +12,8 @@ namespace Vestiges.Progression;
 /// </summary>
 public sealed class ZoneEchoes
 {
+    private const string AoeStat = "aoe_radius";
+
     private struct Echo
     {
         public bool AroundPlayer;
@@ -108,6 +110,8 @@ public sealed class ZoneEchoes
             enemy.TakeDamage(echo.Damage, source: echo.Source);
             _player.AttackFx.PlayHit(PlayerAttackFx.FamilyOf(echo.Weapon?.Base), enemy.GlobalPosition, false, center);
         }
+        // Rondelle de cuivre, palier 15 : son icône s'élève quand la zone refrappe (plan 27 V2d).
+        _player.ObjectProcs?.Show(AoeStat);
         if (echo.AroundPlayer)
             _player.AttackFx.PlayMelee(echo.Weapon?.Base, echo.Direction, echo.Radius, echo.ArcAngle);
         else

@@ -16,6 +16,10 @@ public partial class ObjectMilestones : Node
     public const string SpreadTargetsEffect = "spread_targets";
     public const string PierceDamageRampEffect = "pierce_damage_ramp";
     public const string StatusRenewEffect = "status_renew";
+    // Stats principales des objets dont un palier agit : leur icône s'élève quand il agit (plan 27 V2d).
+    private const string RangeStat = "attack_range";
+    private const string ShieldStat = "shield";
+    private const string StatusDurationStat = "status_duration";
     public const string RepeatAttackEffect = "repeat_attack";
     public const string ZoneEchoEffect = "zone_echo";
     public const string RangeEndBurstEffect = "range_end_burst";
@@ -268,6 +272,7 @@ public partial class ObjectMilestones : Node
         }
         if (++_burstFxThisFrame <= MaxBurstFxPerFrame)
             _player.AttackFx.PlayBurst(position, PlayerAttackFx.FamilyOf(source.Weapon?.Base), radius);
+        _player.ObjectProcs?.Show(RangeStat);
     }
 
     /// <summary>Lunettes de lecture : un critique sur une cible encore intacte compte davantage.</summary>
@@ -298,6 +303,7 @@ public partial class ObjectMilestones : Node
         }
         _player.AttackFx.PlayObjectRing(origin, FxFamily.Brass, _waveRadius);
         _player.AttackFx.PlayObjectRing(origin, FxFamily.Brass, _waveRadius * 0.6f);
+        _player.ObjectProcs?.Show(ShieldStat);
     }
 
     /// <summary>Aimant de frigo : une orbe ramassée soigne un peu.</summary>
@@ -387,6 +393,7 @@ public partial class ObjectMilestones : Node
                 family = FxFamily.Brass;
                 break;
         }
+        _player.ObjectProcs?.Show(StatusDurationStat);
         CombatPools.Instance?.EmitSparks(target.GlobalPosition + new Vector2(0f, -SparkHeight), new SparkBurst
         {
             Family = family,

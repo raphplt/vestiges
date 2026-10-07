@@ -43,6 +43,7 @@ public partial class ObjectsRegression : Node2D
             CheckSurvivalMilestones();
             CheckLifesteal();
             CheckObjectProcs();
+            CheckMilestoneProcIcons();
             CheckRewardMilestones();
             CheckImpactTriggers();
             CheckTargetBonuses();
@@ -548,6 +549,21 @@ public partial class ObjectsRegression : Node2D
         procs.Show("lifesteal");
         Check(first == 1 && repeated == 1 && procs.ActiveCount == 1,
             $"Icônes d'objets : Pétard affiché ({first}), pas répété dans la seconde ({repeated}), Paille absente ignorée ({procs.ActiveCount})");
+    }
+
+    /// <summary>Plan 27 V2d : les paliers du Mètre pliant et de l'Écusson font s'élever leur icône quand ils agissent.</summary>
+    private void CheckMilestoneProcIcons()
+    {
+        Setup();
+        Raise("portee_etendue", 15);
+        Raise("carapace", 15);
+        ObjectProcs procs = _player.ObjectProcs;
+        int before = procs.ActiveCount;
+        _player.OnProjectileSpent(_player.GlobalPosition + new Vector2(200f, 0f), 10f, default, FxFamily.Physical, Vector2.Right);
+        int afterBurst = procs.ActiveCount;
+        _player.ObjectMilestones.OnShieldBroken();
+        Check(afterBurst == before + 1 && procs.ActiveCount == before + 2,
+            $"Icônes des paliers : Mètre ({afterBurst - before}) puis Écusson ({procs.ActiveCount - afterBurst})");
     }
 
     private void CheckRewardMilestones()

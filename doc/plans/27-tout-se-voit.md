@@ -1,6 +1,6 @@
 # Plan 27 — Tout se voit : impacts, statuts, coups reçus
 
-6 octobre 2026 · Demandé par Raphaël ([DECISIONS §71](DECISIONS.md)) · **Validé le 6 octobre ([DECISIONS §72](DECISIONS.md)) : ordre V0 → V4, questions tranchées au §4.** **V0 livré le 6 octobre** ([§6](#6-v0-livré--6-octobre-2026)) ; V1 en cours, découpé au [§7](#7-v1-découpage--7-octobre-2026) ; **V1a livré** ([§8](#8-v1a-livré--7-octobre-2026)), **V1b livré** ([§9](#9-v1b-livré--7-octobre-2026)), **V1c livré** ([§10](#10-v1c-livré--7-octobre-2026)) : V1 terminé ; V2 en cours, découpé au [§11](#11-v2-découpage--7-octobre-2026) ; **V2a livré** ([§12](#12-v2a-livré--7-octobre-2026)), **V2b livré** ([§13](#13-v2b-livré--7-octobre-2026)), **V2c livré** ([§14](#14-v2c-livré--7-octobre-2026)).
+6 octobre 2026 · Demandé par Raphaël ([DECISIONS §71](DECISIONS.md)) · **Validé le 6 octobre ([DECISIONS §72](DECISIONS.md)) : ordre V0 → V4, questions tranchées au §4.** **V0 livré le 6 octobre** ([§6](#6-v0-livré--6-octobre-2026)) ; V1 en cours, découpé au [§7](#7-v1-découpage--7-octobre-2026) ; **V1a livré** ([§8](#8-v1a-livré--7-octobre-2026)), **V1b livré** ([§9](#9-v1b-livré--7-octobre-2026)), **V1c livré** ([§10](#10-v1c-livré--7-octobre-2026)) : V1 terminé ; V2 en cours, découpé au [§11](#11-v2-découpage--7-octobre-2026) ; **V2a livré** ([§12](#12-v2a-livré--7-octobre-2026)), **V2b livré** ([§13](#13-v2b-livré--7-octobre-2026)), **V2c livré** ([§14](#14-v2c-livré--7-octobre-2026)), **V2d livré** ([§15](#15-v2d-livré--7-octobre-2026)) : V2 terminé, prochain : V3.
 
 > « fais en sorte que tout se voit. […] qu'on puisse voir concrètement en jeu tous les impacts bien comme il faut et les effets sur les ennemis (et sur le joueur quand on se fait attaquer) »
 
@@ -283,3 +283,17 @@ V2 se livre en quatre sous-lots, chacun avec sa planche (galerie `--capture-weap
 - Banc A/B avec Chronomètre, Trousseau et Fronde contre `94e0d57b`, 3 passes valides, charge 1,9 puis 3,2 : 720p 196,0 → 210,5 FPS, 1080p 156,9 → 191,6 (base bruitée : 120,6 à 188,5) ; GPU 0,40 → 0,39 et 0,70 → 0,68 ms ; appels de dessin 291 → 291 et 354 → 356 ; nœuds créés/s 5 à 6. Pas de coût mesurable.
 
 **Point ouvert.** Le champ ne dure que 0,5 s (`slow_duration`) et sa trame reste pâle sur la ville ; à juger en jeu, la densité est un réglage.
+
+## 15. V2d livré — 7 octobre 2026
+
+**Fait.**
+- **Icônes des paliers** : l'icône de l'objet s'élève quand son palier 15 agit : Rondelle (zone qui refrappe), Mètre (éclat en bout de course), Écusson (onde du bouclier cassé), Pince à linge (statut renouvelé), Épingle (ralentis prolongés à une élimination), Allumette (brûlure transmise). Chaque stat visée n'appartient qu'à un objet (vérifié dans le catalogue).
+- **Brûlure transmise** : un trait de feu va de la victime à la voisine qui reçoit la brûlure.
+- **Recul** : un peu de poussière (famille Stone) part du sol à l'opposé du coup, au budget des étincelles et au réglage « Effets d'attaque », plafonnée à 6 créatures par image.
+
+**Vérifié.**
+- Galerie Lampe + Cloche, six objets au palier 15, `--lethal` sur le ViewSonic : icônes au-dessus du joueur, anneaux de la Rondelle, zone de feu. Le trait de brûlure transmise ne se distingue pas sur la planche (foule en dissolution au ralenti).
+- `ObjectsRegression` : contrôle ajouté (icônes du Mètre puis de l'Écusson à leur action), 0 échec ; `test_enemy_abilities`, `test_weapons`, `test_movement`, smoke : verts.
+- Banc A/B avec Cloche, Marteau et Lampe contre `910efe6a`, 3 passes, charge 2,3 puis 3,85 : 720p 213,9 → 214,7 FPS ; 1080p base 196,6 et 192,8 (une passe invalide), courant 198,7 ; GPU 0,41 → 0,42 et 0,72 → 0,69 ms ; appels de dessin inchangés. Mais la poussière, sans plafond, faisait écarter 664 étincelles par passe (0 avant) : plafonnée à 6 par image, une passe de contrôle redonne 0 étincelle écartée.
+
+**Point ouvert.** Le trait de brûlure transmise n'a été vu que dans le code ; à regarder en jeu.
