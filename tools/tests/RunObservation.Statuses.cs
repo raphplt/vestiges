@@ -4,6 +4,8 @@ using System.Threading.Tasks;
 using Godot;
 using Vestiges.Combat;
 using Vestiges.Core;
+using Vestiges.Infrastructure;
+using Vestiges.Progression;
 using Vestiges.Spawn;
 using Vestiges.World;
 
@@ -13,6 +15,8 @@ namespace Vestiges.Tests;
 /// Planches du plan 27 (tout se voit).
 /// --capture-statuses [--status-enemy id] : une rangée de créatures, chacune sous un état posé directement, en gros
 /// plan à plusieurs instants. Le joueur n'a plus d'arme, pour que rien d'autre ne touche la rangée.
+/// --capture-status-crowd : soixante créatures autour du joueur armé de la Cloche et de la Berceuse (statuts en foule).
+/// --status-biome id : ces planches se tiennent sur un terrain dégagé de ce biome (sols différents).
 /// --capture-player-hit : le joueur blessé, bouclier qui encaisse puis casse, coup ignoré, toile, soin.
 /// </summary>
 public partial class RunObservation
@@ -33,7 +37,7 @@ public partial class RunObservation
     private async Task CaptureStatuses()
     {
         await PrepareCloseUpScene();
-        await MoveToOpenGround(StatusFrame);
+        await MoveToOpenGround(StatusFrame, Argument(OS.GetCmdlineUserArgs(), "--status-biome", null));
         SpawnManager spawner = _world.GetNode<SpawnManager>("SpawnManager");
         string enemyId = Argument(OS.GetCmdlineUserArgs(), "--status-enemy", "rodeur");
         // Deux lignes au-dessus du joueur : les créatures avancent vers lui, la planche reste lisible le temps des captures.
@@ -129,6 +133,42 @@ public partial class RunObservation
         _world.AddChild(label);
     }
 
+    private static readonly int[] CrowdCaptureFrames = { 30, 60, 120, 180, 300 };
+
+    private async Task CaptureStatusCrowd()
+    {
+        Vector2 half = new(160f, 95f);
+        await PrepareCloseUpScene();
+        await MoveToOpenGround(half, Argument(OS.GetCmdlineUserArgs(), "--status-biome", null));
+        SpawnManager spawner = _world.GetNode<SpawnManager>("SpawnManager");
+        Vector2 origin = _player.GlobalPosition;
+        for (int index = 0; index < 60; index++)
+            spawner.ForceSpawnEnemy("rodeur", origin + Vector2.FromAngle(index * 2.4f) * (45f + index * 1.8f));
+        await Frames(2);
+        FieldInfo hp = typeof(Enemy).GetField("_currentHp", BindingFlags.NonPublic | BindingFlags.Instance);
+        foreach (Node node in GetTree().GetNodesInGroup("enemies"))
+            if (node is Enemy { IsActive: true } enemy)
+                hp.SetValue(enemy, 100000f);
+        _player.AddWeapon(WeaponDataLoader.Get("teachers_bell"));
+        _player.AddWeapon(WeaponDataLoader.Get("music_box"));
+        foreach (WeaponInstance held in _player.WeaponSlots)
+        {
+            if (held.Id != "music_box")
+                continue;
+            while (held.CanLevelUp)
+                held.ApplyUpgrade(System.Array.Empty<StatGain>());
+            _player.AscendWeapon(held.Id, "lullaby");
+        }
+        int elapsed = 0;
+        for (int shot = 0; shot < CrowdCaptureFrames.Length; shot++)
+        {
+            await Frames(CrowdCaptureFrames[shot] - elapsed);
+            elapsed = CrowdCaptureFrames[shot];
+            SaveCloseUp($"{_output}/crowd-statuses-{shot}.png", _player.GlobalPosition, half);
+        }
+        GD.Print($"[RunObservation] RESULT status-crowd créatures=60 dossier={_output}");
+    }
+
     private async Task CapturePlayerHit()
     {
         await PrepareCloseUpScene();
@@ -201,7 +241,7 @@ public partial class RunObservation
     /// Place le joueur sur le terrain dégagé le plus proche : aucun décor haut dessiné dans le cadre <paramref name="half"/>,
     /// étendu vers le haut où se tiennent les créatures, pour qu'aucune ne passe derrière un immeuble.
     /// </summary>
-    private async Task MoveToOpenGround(Vector2 half)
+    private async Task MoveToOpenGround(Vector2 half, string biomeId = null)
     {
         List<Rect2> props = new();
         // Les décors sont rangés par tronçons (PropChunks), à l'origine : leur rectangle visible est en coordonnées monde.
@@ -213,23 +253,27 @@ public partial class RunObservation
         Rect2 frame = new(-half.X - 30f, -half.Y * 2f - 30f, half.X * 2f + 60f, half.Y * 3f + 60f);
         if (props.Count == 0)
             throw new System.InvalidOperationException("Aucun décor haut trouvé sous PropContainer.");
-        for (float radius = 0f; radius < 3000f; radius += 64f)
+        // Un biome précis peut se trouver loin du départ : la carte fait 12 800 px de haut.
+        float reach = biomeId == null ? 3000f : 12000f;
+        for (float radius = 0f; radius < reach; radius += 64f)
         {
             int steps = radius <= 0f ? 1 : Mathf.CeilToInt(Mathf.Tau * radius / 64f);
             for (int step = 0; step < steps; step++)
             {
                 Vector2 candidate = origin + Vector2.FromAngle(step * Mathf.Tau / steps) * radius;
+                if (biomeId != null && _world.GetBiomeAt(candidate)?.Id != biomeId)
+                    continue;
                 Rect2 area = new(candidate + frame.Position, frame.Size);
                 if (props.Exists(prop => area.Intersects(prop)))
                     continue;
-                GD.Print($"[RunObservation] terrain dégagé à {candidate} ({props.Count} décors hauts vérifiés)");
+                GD.Print($"[RunObservation] terrain dégagé à {candidate}, biome {_world.GetBiomeAt(candidate)?.Id} ({props.Count} décors hauts vérifiés)");
                 _player.GlobalPosition = candidate;
                 _camera.ResetSmoothing();
                 await Frames(20);
                 return;
             }
         }
-        throw new System.InvalidOperationException("Aucun terrain dégagé à moins de 3 000 px du départ.");
+        throw new System.InvalidOperationException($"Aucun terrain dégagé {(biomeId == null ? "" : $"du biome {biomeId} ")}à moins de {reach} px du départ.");
     }
 
     /// <summary>Gros plan centré sur un point du monde, en pixels physiques de la capture.</summary>

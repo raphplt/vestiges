@@ -6,17 +6,15 @@ namespace Vestiges.Combat;
 
 /// <summary>
 /// Marques des statuts autour du sprite d'une créature (plan 27 V1b) : étoiles qui tournent au-dessus de la tête
-/// (désorientée), gouttes qui tombent (saignement), braises qui montent (brûlure), stries derrière elle quand elle
-/// avance ralentie. Information de jeu : jamais coupées par le réglage « Effets d'attaque » ni par le budget.
+/// (désorientée), gouttes qui tombent (saignement), braises qui montent (brûlure). Le ralenti n'a pas de marque :
+/// sa teinte et ses pas ralentis suffisent, et chaque créature marquée coûte un appel de dessin. Information de jeu : jamais coupées par le réglage « Effets d'attaque » ni par le budget.
 /// Dessinées en poses clés à cadence fixe, sans interpolation ; le dessin n'est refait qu'au changement de pose ou
 /// d'état. Nœud enfant de la créature, contre-mis à l'échelle pour rester au pixel sur une variante agrandie.
 /// </summary>
 public partial class EnemyStatusMarks : Node2D
 {
-    private const StatusMarks DrawnMarks = StatusMarks.Disoriented | StatusMarks.Bleeding | StatusMarks.Burning | StatusMarks.Slowed;
+    private const StatusMarks DrawnMarks = StatusMarks.Disoriented | StatusMarks.Bleeding | StatusMarks.Burning;
     private const int PoseCycle = 24;
-    /// <summary>Au-dessous, une créature ralentie est considérée à l'arrêt : pas de stries.</summary>
-    private const float MovingSpeedSq = 4f;
 
     private static readonly Dictionary<string, Rect2?> BodyById = new();
     /// <summary>Corps de repli d'une pose sans image lisible.</summary>
@@ -27,8 +25,6 @@ public partial class EnemyStatusMarks : Node2D
     private float _clock;
     private int _pose = -1;
     private StatusMarks _marks;
-    private bool _moving;
-    private Vector2 _trailDirection;
     private int _emberCount;
     private int _seed;
 
@@ -53,13 +49,12 @@ public partial class EnemyStatusMarks : Node2D
     }
 
     /// <param name="burnShare">Part des PV max brûlée chaque seconde : nombre de braises.</param>
-    public void Tick(float delta, StatusMarks marks, Vector2 velocity, float burnShare)
+    public void Tick(float delta, StatusMarks marks, float burnShare)
     {
         StatusVisualConfig config = EnemyStatusVisual.Config();
         StatusMarks allMarks = marks;
         marks &= DrawnMarks;
-        bool moving = (marks & StatusMarks.Slowed) != 0 && velocity.LengthSquared() > MovingSpeedSq;
-        if (config == null || (marks & ~StatusMarks.Slowed) == 0 && !moving)
+        if (config == null || marks == StatusMarks.None)
         {
             if (Visible)
                 Clear();
@@ -73,13 +68,10 @@ public partial class EnemyStatusMarks : Node2D
         if ((allMarks & StatusMarks.Frozen) == 0)
             _clock += delta;
         int pose = (int)(_clock * config.MarkPoseFps) % PoseCycle;
-        if (moving)
-            _trailDirection = -velocity.Normalized();
-        if (pose == _pose && marks == _marks && moving == _moving && embers == _emberCount)
+        if (pose == _pose && marks == _marks && embers == _emberCount)
             return;
         _pose = pose;
         _marks = marks;
-        _moving = moving;
         _emberCount = embers;
         Scale = Vector2.One / _creature.Scale;
         Visible = true;
@@ -94,8 +86,6 @@ public partial class EnemyStatusMarks : Node2D
         // Corps à l'échelle de la créature, dessiné au pixel dans le repère contre-mis à l'échelle.
         Vector2 scale = _creature.Scale;
         Rect2 body = new(_body.Position * scale, _body.Size * scale);
-        if (_moving)
-            DrawSlowTrail(body, config.SlowTrailRamp);
         if ((_marks & StatusMarks.Burning) != 0)
             DrawEmbers(body, config.EmberRamp, _emberCount);
         if ((_marks & StatusMarks.Bleeding) != 0)
@@ -162,20 +152,6 @@ public partial class EnemyStatusMarks : Node2D
             }
             DrawRect(new Rect2(at, new Vector2(2f, 2f)), ramp.Mid);
             DrawPixel(at, ramp.Light);
-        }
-    }
-
-    /// <summary>Deux stries derrière la créature, qui reculent d'un pixel par pose.</summary>
-    private void DrawSlowTrail(Rect2 body, FxRamp ramp)
-    {
-        Vector2 back = _trailDirection;
-        Vector2 side = new(-back.Y, back.X);
-        float start = body.Size.X * 0.5f + 2f + _pose % 3;
-        for (int line = -1; line <= 1; line += 2)
-        {
-            Vector2 origin = body.GetCenter() + back * start + side * (line * 3f);
-            for (int length = 0; length < 4; length++)
-                DrawPixel((origin + back * length).Floor(), length == 0 ? ramp.Light : ramp.Mid);
         }
     }
 

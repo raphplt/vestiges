@@ -1,6 +1,6 @@
 # Plan 27 — Tout se voit : impacts, statuts, coups reçus
 
-6 octobre 2026 · Demandé par Raphaël ([DECISIONS §71](DECISIONS.md)) · **Validé le 6 octobre ([DECISIONS §72](DECISIONS.md)) : ordre V0 → V4, questions tranchées au §4.** **V0 livré le 6 octobre** ([§6](#6-v0-livré--6-octobre-2026)) ; V1 en cours, découpé au [§7](#7-v1-découpage--7-octobre-2026) ; **V1a livré** ([§8](#8-v1a-livré--7-octobre-2026)), **V1b livré** ([§9](#9-v1b-livré--7-octobre-2026)), prochain : V1c.
+6 octobre 2026 · Demandé par Raphaël ([DECISIONS §71](DECISIONS.md)) · **Validé le 6 octobre ([DECISIONS §72](DECISIONS.md)) : ordre V0 → V4, questions tranchées au §4.** **V0 livré le 6 octobre** ([§6](#6-v0-livré--6-octobre-2026)) ; V1 en cours, découpé au [§7](#7-v1-découpage--7-octobre-2026) ; **V1a livré** ([§8](#8-v1a-livré--7-octobre-2026)), **V1b livré** ([§9](#9-v1b-livré--7-octobre-2026)), **V1c livré** ([§10](#10-v1c-livré--7-octobre-2026)) : V1 terminé, prochain : V2.
 
 > « fais en sorte que tout se voit. […] qu'on puisse voir concrètement en jeu tous les impacts bien comme il faut et les effets sur les ennemis (et sur le joueur quand on se fait attaquer) »
 
@@ -206,7 +206,7 @@ V1 se livre en trois sous-lots, chacun avec sa planche `--capture-statuses` avan
 ## 9. V1b livré — 7 octobre 2026
 
 **Fait.**
-- `EnemyStatusMarks`, nœud enfant de chaque créature à sprite : étoiles en croix qui tournent sur une ellipse au-dessus de la tête (désorienté, famille Crit), larmes de sang qui tombent du milieu du corps aux pieds puis éclaboussent (saignement, Blood), braises 2×2 qui montent au-dessus de la tête (brûlure, Fire ; 2 à 4 selon la part des PV max brûlée par seconde), deux stries derrière une créature ralentie qui marche (Glass). Poses clés à 8 par seconde, redessin au changement de pose ou d'état seulement, mise à jour dans la portée de traitement complet (600 px) seulement ; figée, la créature garde aussi ses marques sur leur pose.
+- `EnemyStatusMarks`, nœud enfant de chaque créature à sprite : étoiles en croix qui tournent sur une ellipse au-dessus de la tête (désorienté, famille Crit), larmes de sang qui tombent du milieu du corps aux pieds puis éclaboussent (saignement, Blood), braises 2×2 qui montent au-dessus de la tête (brûlure, Fire ; 2 à 4 selon la part des PV max brûlée par seconde). Des stries derrière une créature ralentie qui marche ont été livrées ici puis retirées en V1c (coût). Poses clés à 8 par seconde, redessin au changement de pose ou d'état seulement, mise à jour dans la portée de traitement complet (600 px) seulement ; figée, la créature garde aussi ses marques sur leur pose.
 - Hauteur réelle : corps mesuré une fois par espèce sur la pose de repos, mesure désormais partagée avec l'ombre (`SpriteFeetY`, même valeur qu'avant) ; contre-mis à l'échelle, le nœud reste au pixel sur une élite.
 - Information de jeu : jamais coupées par « Effets d'attaque » ni par le budget. Les étincelles de brûlure existantes restent la fioriture, soumise aux deux, et partent maintenant du milieu du corps au lieu de 12 px fixes.
 - Réglages dans la section `marks` de `data/fx/status_visuals.json`, contrôlés (cadence de 2 à 24, comptes de 1 à 6, minimum ≤ maximum).
@@ -214,3 +214,21 @@ V1 se livre en trois sous-lots, chacun avec sa planche `--capture-statuses` avan
 **Écarts.** Première planche : braises et gouttes d'un pixel, perdues sur le sol ; agrandies (braise 2×2, larme 2×3). Pas d'éclats de glace à la pose du figé : le givre de V1a suffit à la planche, à rediscuter si le figé se lit mal en jeu. Relecture `godot-reviewer` : créature sans sprite réutilisant un nœud de pool (marques de l'ancienne espèce) corrigé, marques figées avec la créature, double décodage de l'image supprimé.
 
 **Vérifié.** Planche `--capture-statuses` sur le ViewSonic, agrandie et regardée sur trois instants : étoiles, larmes, braises et stries visibles et distinctes. 6 contrôles ajoutés (marques avec effets d'attaque coupés, éteintes à leur terme, stries seulement en marche, éteintes à la mort et au pool) ; `test_enemy_abilities`, `test_movement`, `test_weapons` et smoke verts. Coût : le banc dense n'a pas de créature sous statut, mesure en V1c.
+
+## 10. V1c livré — 7 octobre 2026
+
+**Fait.**
+- `--status-biome id` : les planches de statuts se tiennent sur un terrain dégagé du biome demandé (recherche jusqu'à 12 000 px, biome testé avant les décors).
+- `--capture-status-crowd` : soixante Rôdeurs autour du joueur armé de la Cloche et de la Berceuse.
+- Banc dense : `--ascend arme:ascension` (Berceuse), pour mesurer une foule réellement sous statut.
+- **Stries du ralenti retirées.** Avec la Cloche, presque toute la foule est ralentie en permanence : chaque créature marquée coûtait un appel de dessin (+87 appels, +706 objets rendus, GPU +0,11 ms à 720p ; −7,6 % de FPS à 720p et −5,3 % à 1080p, contre `9b8c6b7e`, 3 passes). Le ralenti se lit déjà par sa teinte et ses pas ralentis (V1a). Les marques restent pour désorienté, saignement et brûlure, qui n'ont pas d'autre signe.
+
+**Vérifié.**
+- Planches regardées sur le ViewSonic : forêt, ville, carrière (mêmes lectures ; figé ressort mieux sur les sols sombres) ; foule à 0,5, 1, 2, 3 et 5 s : créatures saines, ralenties (teinte froide) et figées (plus pâles, givrées) se distinguent.
+- Banc A/B avec Cloche, Lampe, Berceuse et Polaroïd contre `9b8c6b7e` (avant V1a), 3 passes valides de chaque côté, charge 2,3 au départ et 2,75 à la fin : 720p 193,3 → 202,2 FPS, p99 9,7 → 9,1 ms ; 1080p 192,5 → 188,1 FPS, p99 9,0 → 10,6 ms ; appels de dessin 348 → 351 et 422 → 424, GPU 0,42 → 0,43 et 0,70 → 0,71 ms, nœuds créés/s 3 à 4 des deux côtés. Les FPS restent dans le bruit ; le p99 à 1080p n'est corroboré ni par le GPU ni par les appels de dessin.
+- `test_enemy_abilities` (contrôle « ralenti sans marque » remplaçant celui des stries), `test_movement`, `test_weapons`, smoke : verts.
+
+**Points ouverts.**
+- **Flash collectif :** une impulsion de la Cloche touche toute la foule ; pendant 0,2 s, soixante créatures sont des silhouettes blanches (flash ×3 rendu en V0, plus la pâleur du figé). C'est un éclair, pas un état, mais il couvre la foule entière. À juger en jeu ; si c'est trop, plafonner le flash sur une créature figée ou baisser son intensité quand beaucoup de coups tombent dans la même image.
+- Rampant terré presque invisible sur l'asphalte et la forêt (déjà noté en V0).
+- `tools/bench_ab.sh` : malgré le préchauffage, un import de la base peut encore échouer sur la police du thème (une passe sur neuf) ; la passe est écartée, pas faussée.

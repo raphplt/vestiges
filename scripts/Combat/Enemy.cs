@@ -578,7 +578,7 @@ public partial class Enemy : CharacterBody2D
 		_statusVisual.Update(marks, MoveFactor, _tier is EnemyTier.Miniboss or EnemyTier.Boss);
 		// Hors de la portée complète (au-delà de l'écran), les marques ne se redessinent pas.
 		if (fullProcessing && _hasSprite)
-			_statusMarks?.Tick(dt, marks, Velocity, _igniteDps / Mathf.Max(_maxHp, 1f));
+			_statusMarks?.Tick(dt, marks, _igniteDps / Mathf.Max(_maxHp, 1f));
 		else if (_statusMarks is { Visible: true })
 			_statusMarks.Clear();
 		float regen = _mods.TickRegen(dt, _maxHp);

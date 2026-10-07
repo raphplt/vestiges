@@ -164,6 +164,19 @@ public partial class MovementDenseBenchmark : Node
             // --weapons a,b : armes ajoutées au personnage (builds à effets de zone, morts en rafale avec --churn).
             foreach (string weapon in Argument(args, "--weapons", "").Split(',', StringSplitOptions.RemoveEmptyEntries))
                 _player.AddWeapon(WeaponDataLoader.Get(weapon));
+            // --ascend arme:ascension,… : arme portée au niveau max puis montée (statuts d'ascension, plan 27 V1c).
+            foreach (string entry in Argument(args, "--ascend", "").Split(',', StringSplitOptions.RemoveEmptyEntries))
+            {
+                string[] parts = entry.Split(':');
+                foreach (WeaponInstance held in _player.WeaponSlots)
+                {
+                    if (held.Id != parts[0])
+                        continue;
+                    while (held.CanLevelUp)
+                        held.ApplyUpgrade(Array.Empty<StatGain>());
+                    _player.AscendWeapon(held.Id, parts[1]);
+                }
+            }
             GD.Seed(Seed);
             for (int i = 0; i < _enemyCount; i++)
             {

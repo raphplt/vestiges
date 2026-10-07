@@ -91,8 +91,7 @@ public partial class EnemyAbilityRegression
         Check(!marks.Visible, "Désorienté et saignant : marques éteintes à leur terme");
         enemy.ApplySlow(0.4f, ShortStatus);
         await Step(2);
-        bool walking = enemy.Velocity.LengthSquared() > 4f;
-        Check(marks.Visible == walking, $"Ralenti : stries seulement en marche (marche {walking}, stries {marks.Visible})");
+        Check(!marks.Visible, "Ralenti : aucune marque autour du sprite (teinte et pas suffisent)");
         await Step(ExpireTicks);
 
         enemy.Freeze(10f);

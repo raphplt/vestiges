@@ -38,9 +38,6 @@
       "min_count": 2,
       "max_count": 4,
       "max_hp_share_per_extra": 0.03
-    },
-    "slow_trail": {
-      "family": "glass"
     }
   }
 }

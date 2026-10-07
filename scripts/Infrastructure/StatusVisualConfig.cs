@@ -41,7 +41,6 @@ public sealed class StatusVisualConfig
     public int EmberMinCount { get; private init; }
     public int EmberMaxCount { get; private init; }
     public float EmberMaxHpSharePerExtra { get; private init; }
-    public FxRamp SlowTrailRamp { get; private init; }
 
     public static bool TryLoad(out StatusVisualConfig config, out string error)
     {
@@ -76,7 +75,6 @@ public sealed class StatusVisualConfig
             JsonElement stars = reader.Section(marks, "stars");
             JsonElement drops = reader.Section(marks, "drops");
             JsonElement embers = reader.Section(marks, "embers");
-            JsonElement slowTrail = reader.Section(marks, "slow_trail");
             StatusVisualConfig parsed = new()
             {
                 FrozenTint = Tint(reader, frozen),
@@ -99,7 +97,6 @@ public sealed class StatusVisualConfig
                 EmberMinCount = reader.Count(embers, "min_count", MaxMarkCount),
                 EmberMaxCount = reader.Count(embers, "max_count", MaxMarkCount),
                 EmberMaxHpSharePerExtra = reader.Ratio(embers, "max_hp_share_per_extra"),
-                SlowTrailRamp = Family(reader, slowTrail, "family"),
             };
             if (parsed.MarkPoseFps is < 2f or > 24f)
                 reader.Fail("pose_fps : de 2 à 24 attendu");

@@ -56,6 +56,8 @@ namespace Vestiges.Tests;
 /// --capture-workshop : Atelier, première visite (Trempe), niveau d'arme et Retrempe (RunObservation.Landmarks.cs).
 /// --loot-draws N : tirages de butin de chaque coffre, sans les appliquer (RunObservation.Chests.cs).
 /// --capture-statuses [--status-enemy id] : rangée de créatures, chacune sous un état (RunObservation.Statuses.cs).
+/// --capture-status-crowd : soixante créatures sous Cloche et Berceuse (RunObservation.Statuses.cs).
+/// --status-biome id : planches de statuts sur un terrain dégagé de ce biome.
 /// --capture-player-hit : joueur blessé, bouclier, toile, soin (RunObservation.Statuses.cs).
 /// --capture-bestiary : gros plans des créatures du pilote de sprites procéduraux, autour du joueur immobile.
 /// --density : mesure de densité en spawn naturel (ennemis visibles, temps sans ennemi, débits, niveaux,
@@ -196,6 +198,8 @@ public partial class RunObservation : Node
                 MeasureLootDraws(int.Parse(Argument(args, "--loot-draws", "1000"), CultureInfo.InvariantCulture));
             else if (Array.IndexOf(args, "--capture-statuses") >= 0)
                 await CaptureStatuses();
+            else if (Array.IndexOf(args, "--capture-status-crowd") >= 0)
+                await CaptureStatusCrowd();
             else if (Array.IndexOf(args, "--capture-player-hit") >= 0)
                 await CapturePlayerHit();
             else if (Array.IndexOf(args, "--capture-bestiary") >= 0)
