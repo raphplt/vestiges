@@ -6,19 +6,22 @@ namespace Vestiges.UI;
 
 /// <summary>
 /// Vignette de blessure (plan 27 V3a) : un coup de combat qui retire des PV teinte les bords de l'écran d'un damier
-/// rouge, plus épais du côté d'où vient le coup, qui s'efface en quelques dixièmes de seconde. Le Néant a son propre
-/// retour (V3d). Calque plein écran sous le HUD, à l'écoute de l'EventBus ; inactif hors effacement.
+/// rouge, plus épais du côté d'où vient le coup, qui s'efface en quelques dixièmes de seconde. Une tranche du Néant le
+/// fait pulser en pâle, sur tous les bords (V3d). Calque plein écran sous le HUD, à l'écoute de l'EventBus ; inactif
+/// hors effacement.
 /// </summary>
 public partial class HurtVignette : ColorRect
 {
     private static readonly StringName IntensityParam = "intensity";
     private static readonly StringName SideParam = "side";
+    private static readonly StringName TintParam = "tint";
 
     private EventBus _eventBus;
     private ShaderMaterial _material;
     private PlayerFeedbackConfig _config;
     private float _remaining;
     private float _shownIntensity;
+    private bool _voidShown;
 
     public override void _Ready()
     {
@@ -48,10 +51,16 @@ public partial class HurtVignette : ColorRect
 
     private void OnPlayerDamage(PlayerDamageResult result)
     {
-        if (_config == null || result.Kind != PlayerDamageKind.Combat || result.HpLost <= 0f)
+        if (_config == null || result.HpLost <= 0f)
             return;
+        bool voidTick = result.Kind == PlayerDamageKind.Erasure;
+        // Une blessure en cours garde sa vignette rouge : la tranche du Néant ne l'écrase pas.
+        if (voidTick && _remaining > 0f && !_voidShown)
+            return;
+        _voidShown = voidTick;
         _remaining = _config.VignetteSeconds;
-        _material.SetShaderParameter(SideParam, result.FromDirection);
+        _material.SetShaderParameter(TintParam, voidTick ? _config.VoidVignetteColor : _config.VignetteColor with { A = _config.VignetteMaxOpacity });
+        _material.SetShaderParameter(SideParam, voidTick ? Vector2.Zero : result.FromDirection);
         _material.SetShaderParameter(IntensityParam, 1f);
         _shownIntensity = 1f;
         Visible = true;

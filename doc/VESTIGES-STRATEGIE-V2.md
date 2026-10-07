@@ -873,6 +873,7 @@ Le script de post-processing doit inclure une vérification/correction de l'angl
 - [x] Plan 27 V3a : éclair rouge du joueur blessé, vignette tournée vers le coup, chiffre des dégâts reçus, secousse lisible réglée en données ; planche et 2 contrôles vérifiés (7 octobre 2026).
 - [x] Plan 27 V3b : toile annulée avec le coup, toile visible sur le joueur et près de sa jauge, joueur pâli quand l'Effacement le ralentit ; planche, 3 contrôles et contre-épreuve vérifiés (7 octobre 2026).
 - [x] Plan 27 V3c : bouclier qui casse ou revient plein, armure qui pare, coup ignoré, soins visibles, icône de vol de vie seulement quand des PV sont rendus ; planche, contrôle et contre-épreuve vérifiés (7 octobre 2026).
+- [x] Plan 27 V3d : le Néant consume sans le paquet d'une blessure (vignette pâle, pas de secousse ni de son de coup, dash libre) ; planche et contrôle vérifiés (7 octobre 2026).
 
 - [ ] Scope final : 3-4 biomes, 4+ personnages, 8+ types d'ennemis, 30+ perks, 10+ armes, 15+ Souvenirs, quêtes.
 - [ ] Bug fix et performance (60 FPS, 100+ ennemis en endgame).

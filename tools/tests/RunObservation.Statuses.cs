@@ -214,6 +214,15 @@ public partial class RunObservation
         penalty.SetValue(_player, before);
         await Seconds(1.0);
 
+        // Néant : trois tranches, vignette pâle qui pulse, sans le paquet d'une blessure (plan 27 V3d).
+        for (int tick = 0; tick < 3; tick++)
+        {
+            _player.TakeErasureDamage(2f);
+            await Frames(3);
+            Save($"player-7-neant-{tick}.png");
+            await Seconds(0.5);
+        }
+
         // Soin.
         _player.TakeDamage(40f);
         await Seconds(1.0);

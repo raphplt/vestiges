@@ -44,6 +44,15 @@ public partial class EnemyAbilityRegression
 
         _player.WebbedChanged -= OnWebbed;
         await WaitHurtRecovery();
+
+        // Plan 27 V3d : une tranche du Néant consume sans le paquet d'une blessure (ni état blessé, ni chiffre).
+        int numbers = VisibleNumbers(pools, out _);
+        float hp = _player.CurrentHp;
+        PlayerDamageResult tick = _player.TakeErasureDamage(2f);
+        Check(tick.Applied && _player.CurrentHp < hp && _player.Mobility.State != MobilityState.Hurt
+              && VisibleNumbers(pools, out _) == numbers,
+            $"Néant : PV consumés ({hp - _player.CurrentHp:0.0}), sans état blessé ({_player.Mobility.State}) ni chiffre");
+        await WaitHurtRecovery();
         pools.QueueFree();
     }
 }

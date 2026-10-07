@@ -1352,10 +1352,15 @@ public partial class Player : CharacterBody2D
         _currentHp -= damage;
         PlayerDamageResult result = new(GetInstanceId(), kind, before,
             Mathf.Clamp(damage, 0f, before), _currentHp <= 0f, false, true) { FromDirection = fromDirection };
-        Mobility.Hurt(Mobility.Config.HurtRecoverySeconds);
-        ShowHurt(result.HpLost);
-        if (_hasSprite)
-            _hurtAnimTimer = Mobility.Config.HurtRecoverySeconds;
+        // Le Néant consume par tranches (toutes les 0,5 s) : son retour est la vignette pâle (HurtVignette), pas le
+        // paquet d'une blessure, qui secouait l'écran deux fois par seconde et bloquait le dash (plan 27 V3d).
+        if (kind != PlayerDamageKind.Erasure)
+        {
+            Mobility.Hurt(Mobility.Config.HurtRecoverySeconds);
+            ShowHurt(result.HpLost);
+            if (_hasSprite)
+                _hurtAnimTimer = Mobility.Config.HurtRecoverySeconds;
+        }
 
         _eventBus.EmitSignal(EventBus.SignalName.PlayerDamaged, _currentHp, EffectiveMaxHp);
 

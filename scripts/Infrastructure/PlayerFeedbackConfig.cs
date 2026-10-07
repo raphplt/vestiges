@@ -38,6 +38,8 @@ public sealed class PlayerFeedbackConfig
     public float ParryMinHp { get; private init; }
     public FxFamily HealFamily { get; private init; }
     public float HealMinInterval { get; private init; }
+    /// <summary>Néant (V3d) : couleur de la vignette qui pulse à chaque tranche, force dans l'alpha.</summary>
+    public Color VoidVignetteColor { get; private init; }
     public float ErasureInterval { get; private init; }
 
     /// <summary>Réglages lus une fois ; null s'ils sont refusés (signalé une fois).</summary>
@@ -67,6 +69,7 @@ public sealed class PlayerFeedbackConfig
             JsonElement web = reader.Section("web");
             JsonElement erasure = reader.Section("erasure");
             JsonElement defense = reader.Section("defense");
+            JsonElement voidSection = reader.Section("void");
             PlayerFeedbackConfig parsed = new()
             {
                 HurtFlashColor = Family(reader, hurt, "flash_family"),
@@ -91,6 +94,7 @@ public sealed class PlayerFeedbackConfig
                 ParryMinHp = reader.NonNegative(defense, "parry_min_hp"),
                 HealFamily = ParseFamily(reader, defense, "heal_family"),
                 HealMinInterval = reader.NonNegative(defense, "heal_min_interval_sec"),
+                VoidVignetteColor = Ramp(reader, voidSection, "family").Light with { A = reader.Chance(voidSection, "max_opacity") },
             };
             error = reader.Error;
             config = error == null ? parsed : null;

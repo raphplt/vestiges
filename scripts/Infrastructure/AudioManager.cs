@@ -572,6 +572,7 @@ public partial class AudioManager : Node
 		eb.EnemySpawned       += OnEnemySpawned;
 		eb.EnemyKilled        += OnEnemyKilled;
 		eb.PlayerDamaged      += OnPlayerDamaged;
+		eb.PlayerHitBy        += OnPlayerHitBy;
 		eb.PlayerShieldChanged += OnPlayerShieldChanged;
 		eb.SouvenirDiscovered += OnSouvenirDiscovered;
 		eb.ZoneDiscovered     += OnZoneDiscovered;
@@ -594,6 +595,7 @@ public partial class AudioManager : Node
 		eb.EnemySpawned       -= OnEnemySpawned;
 		eb.EnemyKilled        -= OnEnemyKilled;
 		eb.PlayerDamaged      -= OnPlayerDamaged;
+		eb.PlayerHitBy        -= OnPlayerHitBy;
 		eb.PlayerShieldChanged -= OnPlayerShieldChanged;
 		eb.SouvenirDiscovered -= OnSouvenirDiscovered;
 		eb.ZoneDiscovered     -= OnZoneDiscovered;
@@ -655,6 +657,8 @@ public partial class AudioManager : Node
 	}
 
 	private float _lastKnownHp = -1f;
+	/// <summary>Image de la dernière tranche du Néant : ses PV perdus ne rejouent pas le son d'un coup (plan 27 V3d).</summary>
+	private ulong _voidTickFrame = ulong.MaxValue;
 	private float _lastKnownShield = -1f;
 
 	/// <summary>Le bouclier qui baisse a encaissé un coup : parade s'il tient, bris s'il tombe à zéro. Sa recharge reste muette.</summary>
@@ -667,11 +671,23 @@ public partial class AudioManager : Node
 	}
 
 
+	private void OnPlayerHitBy(string enemyId, float damage)
+	{
+		if (enemyId == "void")
+			_voidTickFrame = Engine.GetProcessFrames();
+	}
+
 	private void OnPlayerDamaged(float currentHp, float maxHp)
 	{
 		float damageTaken = _lastKnownHp >= 0f ? _lastKnownHp - currentHp : 0f;
 		bool isDamage = damageTaken > 0.01f;
 		_lastKnownHp = currentHp;
+		// Le Néant consume deux fois par seconde : son de brûlure à produire (plan 15), pas le son d'un coup en boucle.
+		if (isDamage && _voidTickFrame == Engine.GetProcessFrames())
+		{
+			UpdatePlayerWarnings();
+			return;
+		}
 		if (isDamage)
 			PlaySfx("sfx_hit_joueur");
 		if (damageTaken >= Mathf.Max(12f, maxHp * CriticalDamageThresholdRatio))

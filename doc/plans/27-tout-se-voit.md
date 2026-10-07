@@ -1,6 +1,6 @@
 # Plan 27 — Tout se voit : impacts, statuts, coups reçus
 
-6 octobre 2026 · Demandé par Raphaël ([DECISIONS §71](DECISIONS.md)) · **Validé le 6 octobre ([DECISIONS §72](DECISIONS.md)) : ordre V0 → V4, questions tranchées au §4.** **V0 livré le 6 octobre** ([§6](#6-v0-livré--6-octobre-2026)) ; V1 en cours, découpé au [§7](#7-v1-découpage--7-octobre-2026) ; **V1a livré** ([§8](#8-v1a-livré--7-octobre-2026)), **V1b livré** ([§9](#9-v1b-livré--7-octobre-2026)), **V1c livré** ([§10](#10-v1c-livré--7-octobre-2026)) : V1 terminé ; V2 en cours, découpé au [§11](#11-v2-découpage--7-octobre-2026) ; **V2a livré** ([§12](#12-v2a-livré--7-octobre-2026)), **V2b livré** ([§13](#13-v2b-livré--7-octobre-2026)), **V2c livré** ([§14](#14-v2c-livré--7-octobre-2026)), **V2d livré** ([§15](#15-v2d-livré--7-octobre-2026)) : V2 terminé ; V3 en cours, découpé au [§16](#16-v3-découpage--7-octobre-2026) ; **V3a livré** ([§17](#17-v3a-livré--7-octobre-2026)), **V3b livré** ([§18](#18-v3b-livré--7-octobre-2026)), **V3c livré** ([§19](#19-v3c-livré--7-octobre-2026)).
+6 octobre 2026 · Demandé par Raphaël ([DECISIONS §71](DECISIONS.md)) · **Validé le 6 octobre ([DECISIONS §72](DECISIONS.md)) : ordre V0 → V4, questions tranchées au §4.** **V0 livré le 6 octobre** ([§6](#6-v0-livré--6-octobre-2026)) ; V1 en cours, découpé au [§7](#7-v1-découpage--7-octobre-2026) ; **V1a livré** ([§8](#8-v1a-livré--7-octobre-2026)), **V1b livré** ([§9](#9-v1b-livré--7-octobre-2026)), **V1c livré** ([§10](#10-v1c-livré--7-octobre-2026)) : V1 terminé ; V2 en cours, découpé au [§11](#11-v2-découpage--7-octobre-2026) ; **V2a livré** ([§12](#12-v2a-livré--7-octobre-2026)), **V2b livré** ([§13](#13-v2b-livré--7-octobre-2026)), **V2c livré** ([§14](#14-v2c-livré--7-octobre-2026)), **V2d livré** ([§15](#15-v2d-livré--7-octobre-2026)) : V2 terminé ; V3 en cours, découpé au [§16](#16-v3-découpage--7-octobre-2026) ; **V3a livré** ([§17](#17-v3a-livré--7-octobre-2026)), **V3b livré** ([§18](#18-v3b-livré--7-octobre-2026)), **V3c livré** ([§19](#19-v3c-livré--7-octobre-2026)), **V3d livré** ([§20](#20-v3d-livré--7-octobre-2026)) : V3 terminé côté code, recette en jeu de Raphaël attendue ; prochain : V4.
 
 > « fais en sorte que tout se voit. […] qu'on puisse voir concrètement en jeu tous les impacts bien comme il faut et les effets sur les ennemis (et sur le joueur quand on se fait attaquer) »
 
@@ -356,3 +356,16 @@ Chaque sous-lot : planche `--capture-player-hit` avant/après, contrôles ; rece
 - `ObjectsRegression` : contrôle « à vie pleine, pas d'icône » ; contre-épreuve : sans la correction, il échoue (une icône). `test_movement`, `test_enemy_abilities`, `test_weapons`, `test_objects`, smoke : verts.
 
 **À juger en jeu.** Couleur des soins (Verdigris, sombre) : une famille plus claire si Raphaël ne les voit pas.
+
+## 20. V3d livré — 7 octobre 2026
+
+**Fait.**
+- Une tranche du Néant (toutes les 0,5 s) ne rejoue plus le paquet d'une blessure : ni éclair rouge, ni secousse, ni chiffre, ni animation de blessure, ni état « blessé » de la mobilité. **Le dash n'est plus bloqué** par ces tranches. Les PV baissent, la barre et les perks qui lisent la blessure (résultat publié) restent informés.
+- La vignette (`HurtVignette`) pulse en pâle (famille Pale, opacité 0,4) sur tous les bords à chaque tranche ; une blessure de combat en cours garde sa vignette rouge.
+- Le son d'un coup ne se rejoue plus deux fois par seconde : `AudioManager` reconnaît la tranche du Néant (signal `PlayerHitBy` « void » de la même image). Le son de brûlure du Néant reste à produire (plan 15) ; en attendant, la tranche est muette.
+
+**Vérifié.**
+- `--capture-player-hit` (trois tranches, plein écran) sur le ViewSonic, regardée : liseré pâle aux bords, joueur sans éclair.
+- Contrôle (`EnemyAbilityRegression.PlayerStatus`) : PV consumés, mobilité hors de l'état blessé, aucun chiffre. `test_movement`, `test_enemy_abilities`, `test_weapons`, `test_erasure_active`, `test_objects`, `test_music`, smoke : verts.
+
+**V3 terminé côté code.** Recette en jeu de Raphaël attendue sur l'ensemble (blessure, toile, défense, soins, Néant), comme prévu au plan.

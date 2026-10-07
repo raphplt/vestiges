@@ -1,5 +1,5 @@
 {
-  "_doc": "Ce que le joueur ressent quand il est touché (plan 27 V3). hurt : éclair à la couleur moyenne de sa famille, durée en secondes ; secousse en trauma (0 à 1, multiplié par le réglage du joueur ; la secousse vaut trauma² × 6 px), plus une part des PV max perdus. vignette : bords tramés à l'opacité maximale, épaisseur en part de l'écran, part tournée vers le côté du coup. number : chiffre des dégâts reçus (§72). Lu par Infrastructure/PlayerFeedbackConfig. web (V3b) : toile de la Tisseuse sur le sprite, teinte et fils à la manière des fêlures (espacement en pixels). erasure (V3b) : le joueur que l'Effacement ralentit pâlit (teinte, la toile reste prioritaire) et laisse une poussière pâle toutes les interval_sec. defense (V3c) : familles des éclats du bouclier, de l'armure qui pare (à partir d'une part de coup retirée et d'un nombre de PV) et des soins (au plus un toutes les heal_min_interval_sec).",
+  "_doc": "Ce que le joueur ressent quand il est touché (plan 27 V3). hurt : éclair à la couleur moyenne de sa famille, durée en secondes ; secousse en trauma (0 à 1, multiplié par le réglage du joueur ; la secousse vaut trauma² × 6 px), plus une part des PV max perdus. vignette : bords tramés à l'opacité maximale, épaisseur en part de l'écran, part tournée vers le côté du coup. number : chiffre des dégâts reçus (§72). Lu par Infrastructure/PlayerFeedbackConfig. web (V3b) : toile de la Tisseuse sur le sprite, teinte et fils à la manière des fêlures (espacement en pixels). erasure (V3b) : le joueur que l'Effacement ralentit pâlit (teinte, la toile reste prioritaire) et laisse une poussière pâle toutes les interval_sec. defense (V3c) : familles des éclats du bouclier, de l'armure qui pare (à partir d'une part de coup retirée et d'un nombre de PV) et des soins (au plus un toutes les heal_min_interval_sec). void (V3d) : la vignette pulse à chaque tranche du Néant, à la couleur claire de sa famille, à l'opacité donnée.",
   "hurt": {
     "flash_family": "blood",
     "flash_seconds": 0.22,
@@ -34,5 +34,9 @@
     "parry_min_hp": 1,
     "heal_family": "verdigris",
     "heal_min_interval_sec": 0.5
+  },
+  "void": {
+    "family": "pale",
+    "max_opacity": 0.4
   }
 }
