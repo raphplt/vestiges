@@ -866,6 +866,7 @@ Le script de post-processing doit inclure une vérification/correction de l'angl
 - [x] Plan 27 V1a : figé, ralenti, brûlure et Fragile lisibles sur le sprite des créatures (teinte de priorité, givre, fêlures, bord chaud, animation figée ou ralentie), réglages en données contrôlés ; planche, 13 contrôles et banc A/B vérifiés (7 octobre 2026).
 - [x] Plan 27 V1b : étoiles, larmes et braises autour des créatures désorientées, saignantes ou brûlantes, à la hauteur réelle du sprite, jamais coupées par les réglages d'effets ; planche et 6 contrôles vérifiés (7 octobre 2026).
 - [x] Plan 27 V1c : statuts vérifiés sur trois sols, en foule de soixante et au banc A/B avec armes à statut (Cloche, Lampe, Berceuse, Polaroïd) ; stries du ralenti retirées pour leur coût (7 octobre 2026).
+- [x] Plan 27 V2a : chiffres des brûlures et saignements regroupés toutes les 0,5 s par créature, à la couleur du statut, reliquat à la mort ; galerie, 6 contrôles et banc A/B vérifiés (7 octobre 2026).
 
 - [ ] Scope final : 3-4 biomes, 4+ personnages, 8+ types d'ennemis, 30+ perks, 10+ armes, 15+ Souvenirs, quêtes.
 - [ ] Bug fix et performance (60 FPS, 100+ ennemis en endgame).

@@ -42,6 +42,11 @@ public sealed class StatusVisualConfig
     public int EmberMaxCount { get; private init; }
     public float EmberMaxHpSharePerExtra { get; private init; }
 
+    /// <summary>Chiffres des dégâts sur la durée (V2a) : intervalle d'affichage et couleurs.</summary>
+    public float DotNumberInterval { get; private init; }
+    public Color BurnNumberColor { get; private init; }
+    public Color BleedNumberColor { get; private init; }
+
     public static bool TryLoad(out StatusVisualConfig config, out string error)
     {
         using FileAccess file = FileAccess.Open(ConfigPath, FileAccess.ModeFlags.Read);
@@ -75,6 +80,7 @@ public sealed class StatusVisualConfig
             JsonElement stars = reader.Section(marks, "stars");
             JsonElement drops = reader.Section(marks, "drops");
             JsonElement embers = reader.Section(marks, "embers");
+            JsonElement numbers = reader.Section("numbers");
             StatusVisualConfig parsed = new()
             {
                 FrozenTint = Tint(reader, frozen),
@@ -97,9 +103,14 @@ public sealed class StatusVisualConfig
                 EmberMinCount = reader.Count(embers, "min_count", MaxMarkCount),
                 EmberMaxCount = reader.Count(embers, "max_count", MaxMarkCount),
                 EmberMaxHpSharePerExtra = reader.Ratio(embers, "max_hp_share_per_extra"),
+                DotNumberInterval = reader.Positive(numbers, "interval_sec"),
+                BurnNumberColor = Family(reader, numbers, "burn_family").Mid,
+                BleedNumberColor = Family(reader, numbers, "bleed_family").Mid,
             };
             if (parsed.MarkPoseFps is < 2f or > 24f)
                 reader.Fail("pose_fps : de 2 à 24 attendu");
+            if (parsed.DotNumberInterval is > 0f and (< 0.1f or > 2f))
+                reader.Fail("interval_sec : de 0,1 à 2 s attendu");
             if (parsed.EmberMaxCount < parsed.EmberMinCount)
                 reader.Fail("embers : max_count inférieur à min_count");
             error = reader.Error;

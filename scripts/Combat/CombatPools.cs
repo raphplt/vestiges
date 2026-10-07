@@ -157,6 +157,14 @@ public partial class CombatPools : Node2D
         return number;
     }
 
+    /// <summary>Chiffre d'un tic de brûlure ou de saignement (plan 27 V2a), au budget des chiffres.</summary>
+    public void ShowTickNumber(Vector2 position, float damage, StatusKind kind)
+    {
+        if (!FxBudget.TryTake(FxBudgetKind.Numbers))
+            return;
+        _damageNumbers.Take().PlayTick(position, damage, kind);
+    }
+
     /// <summary>Étoile d'impact au point touché, en trois poses.</summary>
     public void ShowHitFlash(Vector2 position)
     {

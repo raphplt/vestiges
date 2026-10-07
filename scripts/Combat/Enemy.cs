@@ -122,6 +122,7 @@ public partial class Enemy : CharacterBody2D
 	// Disorientation (mouvement aléatoire)
 	private float _disorientTimer;
 
+	private static readonly Vector2 DamageNumberOffset = new(0f, -20f);
 	private const float BurnEmberInterval = 0.3f;
 	private const float BurnEmberHeight = 12f;
 	private float _burnEmberTimer;
@@ -170,6 +171,7 @@ public partial class Enemy : CharacterBody2D
 	private readonly HitFeedback _hitFeedback = new();
 	private readonly EnemyStatusVisual _statusVisual = new();
 	private EnemyStatusMarks _statusMarks;
+	private readonly DamageOverTimeNumbers _dotNumbers = new();
 	private ContinuousImpactCadence _continuousImpact;
 	private DamageNumber _damageNumber;
 	// Sens du dernier coup reçu (du joueur vers la créature) : oriente la mort (plan 02 J2).
@@ -226,6 +228,7 @@ public partial class Enemy : CharacterBody2D
 		_hitFeedback.RestScale = Vector2.One;
 		_hitFeedback.Stop();
 		_statusVisual.Attach(null);
+		_dotNumbers.Clear();
 		_continuousImpact = default;
 		_lastHitDirection = Vector2.Zero;
 
@@ -571,6 +574,7 @@ public partial class Enemy : CharacterBody2D
 		if (_isDying) return;
 		ProcessBleed(dt);
 		if (_isDying) return;
+		_dotNumbers.Tick(dt, GlobalPosition + DamageNumberOffset);
 		ProcessSlowDecay(dt);
 		ProcessDisorient(dt, fullProcessing);
 		ProcessFragility(dt);
@@ -1088,6 +1092,7 @@ public partial class Enemy : CharacterBody2D
 		float igniteDamage = _igniteDps * delta * DamageOverTimeFactor(_igniteSource);
 		DamageResult result = DamageResult.Resolve(Life, _igniteSource, _currentHp, igniteDamage, 0f);
 		_currentHp -= igniteDamage;
+		_dotNumbers.Add(StatusKind.Burn, igniteDamage);
 		_eventBus.EmitSignal(EventBus.SignalName.EntityDamaged, this, igniteDamage);
 		_eventBus.PublishEnemyDamage(result);
 
@@ -1113,6 +1118,7 @@ public partial class Enemy : CharacterBody2D
 		float bleedDamage = _bleedDps * delta * DamageOverTimeFactor(_bleedSource);
 		DamageResult result = DamageResult.Resolve(Life, _bleedSource, _currentHp, bleedDamage, 0f);
 		_currentHp -= bleedDamage;
+		_dotNumbers.Add(StatusKind.Bleed, bleedDamage);
 		_eventBus.EmitSignal(EventBus.SignalName.EntityDamaged, this, bleedDamage);
 		_eventBus.PublishEnemyDamage(result);
 
@@ -1295,7 +1301,7 @@ public partial class Enemy : CharacterBody2D
 		bool pops = isCrit || isCarried;
 		if (!pops && IsInstanceValid(_damageNumber) && _damageNumber.TryMerge(_damageNumberSerial, damage))
 			return;
-		DamageNumber number = CombatPools.Instance.ShowDamageNumber(GlobalPosition + new Vector2(0, -20), damage, isCrit, isCarried);
+		DamageNumber number = CombatPools.Instance.ShowDamageNumber(GlobalPosition + DamageNumberOffset, damage, isCrit, isCarried);
 		if (pops || number == null)
 			return;
 		_damageNumber = number;
@@ -1307,6 +1313,8 @@ public partial class Enemy : CharacterBody2D
 		if (_isDying)
 			return;
 		_isDying = true;
+		// Le tic fatal et le reliquat de brûlure ou de saignement s'affichent avec la mort.
+		_dotNumbers.Flush(GlobalPosition + DamageNumberOffset);
 		// Capturer les contrôles avant leur nettoyage et avant les explosions de mort en cascade.
 		_eventBus.PublishEnemyKill(new EnemyKillResult(Life, _enemyId, GlobalPosition, damage, SlowControl, DisorientationControl,
 			new ControlState(_igniteDps, Mathf.Max(0f, _igniteTimer), _igniteSource, ControlOrigin.Unknown),

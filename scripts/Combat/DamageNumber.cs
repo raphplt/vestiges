@@ -1,5 +1,6 @@
 using System;
 using Godot;
+using Vestiges.Infrastructure;
 
 namespace Vestiges.Combat;
 
@@ -8,6 +9,7 @@ namespace Vestiges.Combat;
 /// Les coups normaux rapprochés sur une même cible s'additionnent dans un seul chiffre qui reste en place et
 /// pulse à chaque ajout, puis s'envole ; le critique ne se fond jamais : plus gros, doré, suffixé « ! », il jaillit.
 /// Un coup renforcé par Débordement jaillit de même, en bleu pâle et préfixé « » », sans se confondre avec un critique.
+/// Les dégâts sur la durée (plan 27 V2a) ont leur chiffre, plus petit, à la couleur du statut, qui monte sans se fondre.
 /// Animé dans _Process, sans tween.
 /// </summary>
 public partial class DamageNumber : Node2D
@@ -21,6 +23,7 @@ public partial class DamageNumber : Node2D
 	private const float FloatSec = 0.5f;
 	private const float NormalRisePx = 30f;
 	private const float CritRisePx = 50f;
+	private const float TickRisePx = 16f;
 	private const float NormalPopScale = 1.35f;
 	private static readonly Vector2 CritPopScale = new(1.8f, 0.7f);
 	private static readonly Vector2 CritRestScale = new(1.1f, 1.1f);
@@ -31,6 +34,8 @@ public partial class DamageNumber : Node2D
 	private static LabelSettings _large;
 	private static LabelSettings _crit;
 	private static LabelSettings _carried;
+	private static LabelSettings _burn;
+	private static LabelSettings _bleed;
 
 	private Label _label;
 	private Action<DamageNumber> _release;
@@ -40,6 +45,7 @@ public partial class DamageNumber : Node2D
 	private float _sinceHit;
 	private bool _isCrit;
 	private bool _isCarried;
+	private StatusKind? _tick;
 	private bool Pops => _isCrit || _isCarried;
 
 	/// <summary>Numéro de lancement : un détenteur vérifie que le chiffre n'a pas été recyclé pour une autre cible.</summary>
@@ -66,6 +72,9 @@ public partial class DamageNumber : Node2D
 			_large = Settings(bold, 19, new Color(1f, 0.9f, 0.45f), outline);
 			_crit = Settings(bold, 24, new Color(1f, 0.74f, 0.12f), new Color(0.35f, 0.05f, 0.02f));
 			_carried = Settings(bold, 22, new Color(0.66f, 0.9f, 1f), new Color(0.04f, 0.1f, 0.24f));
+			StatusVisualConfig config = EnemyStatusVisual.Config();
+			_burn = Settings(semiBold, 12, config?.BurnNumberColor ?? normal, outline);
+			_bleed = Settings(semiBold, 12, config?.BleedNumberColor ?? normal, outline);
 		}
 		SetProcess(false);
 	}
@@ -78,6 +87,7 @@ public partial class DamageNumber : Node2D
 		GlobalPosition = _origin;
 		_isCrit = isCrit;
 		_isCarried = isCarried && !isCrit;
+		_tick = null;
 		_total = 0f;
 		_shown = -1;
 		_elapsed = 0f;
@@ -87,13 +97,21 @@ public partial class DamageNumber : Node2D
 		Add(damage);
 	}
 
+	/// <summary>Tic de brûlure ou de saignement : chiffre à part, jamais fondu avec ceux des coups.</summary>
+	public void PlayTick(Vector2 position, float damage, StatusKind kind)
+	{
+		Play(position, 0f, false);
+		_tick = kind;
+		Add(damage);
+	}
+
 	/// <summary>
 	/// Ajoute un coup normal au chiffre s'il appartient encore à cette cible (<paramref name="serial"/>)
 	/// et qu'il n'a pas commencé à s'envoler. Faux : le détenteur en lance un nouveau.
 	/// </summary>
 	public bool TryMerge(int serial, float damage)
 	{
-		if (serial != Serial || !Visible || Pops || _sinceHit > MergeWindowSec || _elapsed > MaxHoldSec)
+		if (serial != Serial || !Visible || Pops || _tick != null || _sinceHit > MergeWindowSec || _elapsed > MaxHoldSec)
 			return false;
 		Add(damage);
 		return true;
@@ -112,12 +130,12 @@ public partial class DamageNumber : Node2D
 			: Vector2.One * Mathf.Lerp(NormalPopScale, 1f, pop);
 
 		// Tenu en place tant que les coups s'enchaînent, puis s'envole et s'efface.
-		float hold = Pops ? PopSec : MergeWindowSec;
+		float hold = Pops || _tick != null ? PopSec : MergeWindowSec;
 		if (_sinceHit < hold)
 			return;
 		float flight = Mathf.Clamp((_sinceHit - hold) / FloatSec, 0f, 1f);
 		float rise = 1f - (1f - flight) * (1f - flight);
-		GlobalPosition = _origin + new Vector2(0f, -(Pops ? CritRisePx : NormalRisePx) * rise);
+		GlobalPosition = _origin + new Vector2(0f, -(Pops ? CritRisePx : _tick != null ? TickRisePx : NormalRisePx) * rise);
 		Modulate = new Color(1f, 1f, 1f, 1f - Mathf.Clamp((flight - 0.3f) / 0.7f, 0f, 1f));
 		if (flight >= 1f)
 			Finish();
@@ -134,7 +152,8 @@ public partial class DamageNumber : Node2D
 			_shown = shown;
 			_label.Text = _isCrit ? $"{shown}!" : _isCarried ? $"»{shown}" : shown.ToString();
 		}
-		LabelSettings settings = _isCrit ? _crit : _isCarried ? _carried : _total > 30f ? _large : _total > 15f ? _medium : _small;
+		LabelSettings settings = _tick == StatusKind.Burn ? _burn : _tick == StatusKind.Bleed ? _bleed
+			: _isCrit ? _crit : _isCarried ? _carried : _total > 30f ? _large : _total > 15f ? _medium : _small;
 		if (settings != _currentSettings)
 		{
 			_currentSettings = settings;

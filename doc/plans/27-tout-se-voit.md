@@ -1,6 +1,6 @@
 # Plan 27 — Tout se voit : impacts, statuts, coups reçus
 
-6 octobre 2026 · Demandé par Raphaël ([DECISIONS §71](DECISIONS.md)) · **Validé le 6 octobre ([DECISIONS §72](DECISIONS.md)) : ordre V0 → V4, questions tranchées au §4.** **V0 livré le 6 octobre** ([§6](#6-v0-livré--6-octobre-2026)) ; V1 en cours, découpé au [§7](#7-v1-découpage--7-octobre-2026) ; **V1a livré** ([§8](#8-v1a-livré--7-octobre-2026)), **V1b livré** ([§9](#9-v1b-livré--7-octobre-2026)), **V1c livré** ([§10](#10-v1c-livré--7-octobre-2026)) : V1 terminé, prochain : V2.
+6 octobre 2026 · Demandé par Raphaël ([DECISIONS §71](DECISIONS.md)) · **Validé le 6 octobre ([DECISIONS §72](DECISIONS.md)) : ordre V0 → V4, questions tranchées au §4.** **V0 livré le 6 octobre** ([§6](#6-v0-livré--6-octobre-2026)) ; V1 en cours, découpé au [§7](#7-v1-découpage--7-octobre-2026) ; **V1a livré** ([§8](#8-v1a-livré--7-octobre-2026)), **V1b livré** ([§9](#9-v1b-livré--7-octobre-2026)), **V1c livré** ([§10](#10-v1c-livré--7-octobre-2026)) : V1 terminé ; V2 en cours, découpé au [§11](#11-v2-découpage--7-octobre-2026) ; **V2a livré** ([§12](#12-v2a-livré--7-octobre-2026)).
 
 > « fais en sorte que tout se voit. […] qu'on puisse voir concrètement en jeu tous les impacts bien comme il faut et les effets sur les ennemis (et sur le joueur quand on se fait attaquer) »
 
@@ -232,3 +232,23 @@ V1 se livre en trois sous-lots, chacun avec sa planche `--capture-statuses` avan
 - **Flash collectif :** une impulsion de la Cloche touche toute la foule ; pendant 0,2 s, soixante créatures sont des silhouettes blanches (flash ×3 rendu en V0, plus la pâleur du figé). C'est un éclair, pas un état, mais il couvre la foule entière. À juger en jeu ; si c'est trop, plafonner le flash sur une créature figée ou baisser son intensité quand beaucoup de coups tombent dans la même image.
 - Rampant terré presque invisible sur l'asphalte et la forêt (déjà noté en V0).
 - `tools/bench_ab.sh` : malgré le préchauffage, un import de la base peut encore échouer sur la police du thème (une passe sur neuf) ; la passe est écartée, pas faussée.
+
+## 11. V2, découpage — 7 octobre 2026
+
+V2 se livre en quatre sous-lots, chacun avec sa planche (galerie `--capture-weapons` sur les armes concernées) et, quand il touche le combat dense, son banc.
+
+- **V2a — dégâts sur la durée.** Par créature, brûlure et saignement s'additionnent et sortent en un petit chiffre toutes les 0,5 s (§72), à la couleur du statut, sans se fondre dans les chiffres des coups ; le dernier reliquat sort à la mort. Le feu de la Lampe, qui pose une brûlure, retrouve ainsi un retour à chaque tic. Réglages dans `data/fx/status_visuals.json`.
+- **V2b — formes d'armes.** Formes des Craies dessinées à la taille réelle de la zone (étoile, cercle, maison, soleil) ; écho des Gants à sa vraie taille ; coups secondaires (écho, forme) et dégâts d'objets avec le retour aux couleurs de l'arme ou de l'objet.
+- **V2c — trajectoires.** Champ du Chronomètre rempli en trame ; trait du Trousseau vers sa première cible ; éclat de fin de course des projectiles du joueur, par pool.
+- **V2d — objets et recul.** Icônes manquantes (Rondelle, Mètre, Écusson, Pince à linge, paliers de l'Allumette et de l'Épingle), trait de la brûlure transmise, poussière au départ d'un recul.
+
+## 12. V2a livré — 7 octobre 2026
+
+**Fait.** `DamageOverTimeNumbers`, classe possédée par chaque créature : brûlure et saignement s'additionnent et sortent en un chiffre par statut toutes les 0,5 s (§72), plus petit (12 contre 14), à la couleur moyenne de la famille (brûlure orange flamme, saignement rouge sang), tenu 0,08 s puis monté de 16 px ; jamais fondu avec les chiffres des coups. La part fractionnaire attend le chiffre suivant (tolérance d'arrondi : trente tics de 1/6 font 5) ; le reliquat sort à la mort, tic fatal compris. Chiffres au budget des chiffres de dégâts, comme les autres. Le feu de la Lampe, qui pose une brûlure depuis S1b, a ainsi un chiffre à chaque intervalle. Intervalle et couleurs dans la section `numbers` de `data/fx/status_visuals.json`.
+
+**Vérifié.**
+- Galerie Lampe + Râteau (`--capture-weapons --weapons memory_lantern+nail_mace`) sur le ViewSonic, regardée : petits chiffres orange et rouges au-dessus des créatures, distincts des chiffres de coups (30, 12) ; couleurs mesurées au pixel (E07B39 et C4432B).
+- 6 contrôles ajoutés (`EnemyAbilityRegression.DotNumbers`) : rien avant l'intervalle, 6 après 0,5 s à 12/s, chiffre du coup à part, demi-unité reportée, 1 après 1 s à 1/s, reliquat à la mort. 0 échec ; `test_weapons` et smoke verts.
+- Banc A/B avec Cloche, Lampe, Berceuse, Polaroïd et Râteau contre `5057912d`, charge 2,3 : passes valides 720p base 174 et 191 FPS, courant 201 à 212 ; 1080p base 172 et 191, courant 154 à 188 ; appels de dessin +13 et +11 (les libellés), GPU 0,44 → 0,43 et 0,71 → 0,72 ms ; le budget écarte environ 990 chiffres des deux côtés. Pas de coût mesurable. Une passe de base s'est déclarée invalide (399 FPS, autre défaut intermittent de l'outil que l'import de police).
+
+**Point ouvert.** Orange et rouge sont proches ; les braises et les larmes autour du sprite disent lequel. À juger en jeu.

@@ -49,6 +49,7 @@ public partial class EnemyAbilityRegression : Node2D
             await RunHitFeedbackChecks();
             await RunPoolReuseChecks();
             await RunStatusVisualChecks();
+            await RunDotNumberChecks();
             await RunChargeChecks();
             await RunBurrowChecks();
             await RunCryChecks();
