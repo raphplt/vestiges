@@ -885,3 +885,9 @@ Précision de Raphaël, même soir : « pour le péril il faut par exemple un ob
 - **Le Péril est le levier retenu** pour la stat de difficulté choisie par le joueur.
 - **Sources à ajouter :** un objet dédié au Péril ; des totems (ou autres moyens) dispersés sur la carte pour l'augmenter.
 - **Contrepartie :** plus d'Essence, entre autres (s'ajoute à l'XP, au score et aux raretés que le Péril majore déjà).
+
+## 75. Liseré des projectiles du joueur allégé — 7 octobre 2026
+
+Raphaël : « diminuer le halo/contours autours des projectiles du heros je le trouve trop prononcé ca ne me plait pas ».
+- **Liseré** crème d'un pixel ramené de 0,9 à 0,45 d'opacité, **halo** de 0,28 à 0,1 (`player_projectile.gdshader`). Les projectiles restent lisibles sur sols gris, sable et herbe (rendu comparé hors jeu sur les neuf planches du héros) et se distinguent toujours des tirs ennemis.
+- **Fenêtres de test** sur le second écran par défaut sous Linux (`godot_screen_args`, `tools/lib/portable.sh`), à sa demande : « lance toujours le jeu sur lecran viewsonic stp ».

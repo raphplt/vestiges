@@ -63,12 +63,14 @@ vestiges_user_dir() {
     fi
 }
 
-# Écran des fenêtres de test : jamais l'écran intégré du Mac quand un écran externe est branché
-# (Godot numérote d'abord l'écran principal). VESTIGES_SCREEN=<n> impose un écran.
+# Écran des fenêtres de test : jamais l'écran principal quand un second écran est branché (Godot numérote
+# d'abord l'écran principal) ; il reste au joueur. VESTIGES_SCREEN=<n> impose un écran.
 godot_screen_args() {
     if [[ -n "${VESTIGES_SCREEN:-}" ]]; then
         echo "--screen $VESTIGES_SCREEN"
     elif [[ $(uname) == Darwin ]] && (( $(system_profiler SPDisplaysDataType 2>/dev/null | grep -c "Online: Yes") > 1 )); then
+        echo "--screen 1"
+    elif command -v xrandr >/dev/null 2>&1 && [[ $(xrandr --listmonitors 2>/dev/null | head -1) =~ Monitors:\ ([0-9]+) ]] && (( BASH_REMATCH[1] > 1 )); then
         echo "--screen 1"
     fi
 }
