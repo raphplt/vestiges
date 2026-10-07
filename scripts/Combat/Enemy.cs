@@ -172,6 +172,7 @@ public partial class Enemy : CharacterBody2D
 	private readonly EnemyStatusVisual _statusVisual = new();
 	private EnemyStatusMarks _statusMarks;
 	private readonly DamageOverTimeNumbers _dotNumbers = new();
+	private readonly EnemyExplosionWarning _explosionWarning = new();
 	private ContinuousImpactCadence _continuousImpact;
 	private DamageNumber _damageNumber;
 	// Sens du dernier coup reçu (du joueur vers la créature) : oriente la mort (plan 02 J2).
@@ -229,6 +230,7 @@ public partial class Enemy : CharacterBody2D
 		_hitFeedback.Stop();
 		_statusVisual.Attach(null);
 		_dotNumbers.Clear();
+		_explosionWarning.Hide();
 		_continuousImpact = default;
 		_lastHitDirection = Vector2.Zero;
 
@@ -585,6 +587,10 @@ public partial class Enemy : CharacterBody2D
 			_statusMarks?.Tick(dt, marks, _igniteDps / Mathf.Max(_maxHp, 1f));
 		else if (_statusMarks is { Visible: true })
 			_statusMarks.Clear();
+		if (fullProcessing)
+			_explosionWarning.Tick(this, _mods.DeathExplosionRadius, HpRatio);
+		else
+			_explosionWarning.Hide();
 		float regen = _mods.TickRegen(dt, _maxHp);
 		if (regen > 0f)
 			_currentHp = Mathf.Min(_currentHp + regen, _maxHp);
@@ -1316,6 +1322,7 @@ public partial class Enemy : CharacterBody2D
 		_isDying = true;
 		// Le tic fatal et le reliquat de brûlure ou de saignement s'affichent avec la mort.
 		_dotNumbers.Flush(GlobalPosition + DamageNumberOffset);
+		_explosionWarning.Hide();
 		// Capturer les contrôles avant leur nettoyage et avant les explosions de mort en cascade.
 		_eventBus.PublishEnemyKill(new EnemyKillResult(Life, _enemyId, GlobalPosition, damage, SlowControl, DisorientationControl,
 			new ControlState(_igniteDps, Mathf.Max(0f, _igniteTimer), _igniteSource, ControlOrigin.Unknown),
@@ -1374,6 +1381,8 @@ public partial class Enemy : CharacterBody2D
 				if (distToPlayerSq < explosionRadiusSq)
 				{
 					float distToPlayer = Mathf.Sqrt(distToPlayerSq);
+					// La cause de mort est la créature qui explose, pas le dernier coup reçu avant (plan 27 V4).
+					_eventBus.EmitSignal(EventBus.SignalName.PlayerHitBy, _enemyId, explosionDamage);
 					_player.TakeDamage(explosionDamage * (1f - distToPlayer / explosionRadius), GlobalPosition);
 				}
 			}

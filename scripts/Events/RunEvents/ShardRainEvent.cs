@@ -122,7 +122,7 @@ public sealed class ShardRainEvent : RunEvent
         Infrastructure.AudioManager.Play("sfx_shard_strike", 0.04f, -4f);
         Vector2 position = _strikes[slot].GlobalPosition;
         _kills += Context.DamageEnemiesInRadius(position, _radius, _enemyDamage);
-        Context.DamagePlayerIfInside(position, _radius, Data.Number("player_damage_ratio", 0.12f));
+        Context.DamagePlayerIfInside(position, _radius, Data.Number("player_damage_ratio", 0.12f), Data);
         _strikes[slot].SetFlash(1f);
         _flashTimers[slot] = 0.25f;
         ScreenShake.Instance?.ShakeLight();

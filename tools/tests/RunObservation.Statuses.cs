@@ -30,7 +30,7 @@ public partial class RunObservation
 
     /// <summary>Ordre de la rangée, de gauche à droite ; le Rampant porte l'état terré, qui lui est propre.</summary>
     private static readonly string[] StatusRow =
-        { "sain", "coup", "annonce", "brulure", "saignement", "ralenti", "fige", "desoriente", "fragile", "terre" };
+        { "sain", "coup", "annonce", "brulure", "saignement", "ralenti", "fige", "desoriente", "fragile", "terre", "instable" };
 
     private static readonly int[] StatusCaptureFrames = { 1, 4, 8, 20, 45, 90 };
 
@@ -105,6 +105,11 @@ public partial class RunObservation
                 break;
             case "terre":
                 enemy.SetBurrowed(true);
+                break;
+            case "instable":
+                // Blessé sous le seuil : le rayon de sa détonation s'affiche au sol (plan 27 V4).
+                enemy.ApplyAffix(EnemyVariantDataLoader.GetAffix("explosive"));
+                typeof(Enemy).GetField("_currentHp", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(enemy, enemy.MaxHp * 0.25f);
                 break;
         }
     }

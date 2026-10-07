@@ -75,7 +75,7 @@ public sealed class FallenRelicEvent : RunEvent
         Infrastructure.AudioManager.Play("sfx_relic_fall", 0.05f, -2f);
 
         Context.DamageEnemiesInRadius(_position, radius, Data.Number("impact_enemy_damage", 60f));
-        Context.DamagePlayerIfInside(_position, radius, Data.Number("impact_player_damage_ratio", 0.2f));
+        Context.DamagePlayerIfInside(_position, radius, Data.Number("impact_player_damage_ratio", 0.2f), Data);
 
         int guardians = Mathf.Min((int)Data.Number("guardians_max", 12f),
             (int)(Data.Number("guardians_base", 5f) + Data.Number("guardians_per_minute", 0.5f) * Context.ElapsedMinutes));

@@ -1,6 +1,6 @@
 # Plan 27 — Tout se voit : impacts, statuts, coups reçus
 
-6 octobre 2026 · Demandé par Raphaël ([DECISIONS §71](DECISIONS.md)) · **Validé le 6 octobre ([DECISIONS §72](DECISIONS.md)) : ordre V0 → V4, questions tranchées au §4.** **V0 livré le 6 octobre** ([§6](#6-v0-livré--6-octobre-2026)) ; V1 en cours, découpé au [§7](#7-v1-découpage--7-octobre-2026) ; **V1a livré** ([§8](#8-v1a-livré--7-octobre-2026)), **V1b livré** ([§9](#9-v1b-livré--7-octobre-2026)), **V1c livré** ([§10](#10-v1c-livré--7-octobre-2026)) : V1 terminé ; V2 en cours, découpé au [§11](#11-v2-découpage--7-octobre-2026) ; **V2a livré** ([§12](#12-v2a-livré--7-octobre-2026)), **V2b livré** ([§13](#13-v2b-livré--7-octobre-2026)), **V2c livré** ([§14](#14-v2c-livré--7-octobre-2026)), **V2d livré** ([§15](#15-v2d-livré--7-octobre-2026)) : V2 terminé ; V3 en cours, découpé au [§16](#16-v3-découpage--7-octobre-2026) ; **V3a livré** ([§17](#17-v3a-livré--7-octobre-2026)), **V3b livré** ([§18](#18-v3b-livré--7-octobre-2026)), **V3c livré** ([§19](#19-v3c-livré--7-octobre-2026)), **V3d livré** ([§20](#20-v3d-livré--7-octobre-2026)) : V3 terminé côté code, recette en jeu de Raphaël attendue ; prochain : V4.
+6 octobre 2026 · Demandé par Raphaël ([DECISIONS §71](DECISIONS.md)) · **Validé le 6 octobre ([DECISIONS §72](DECISIONS.md)) : ordre V0 → V4, questions tranchées au §4.** **V0 livré le 6 octobre** ([§6](#6-v0-livré--6-octobre-2026)) ; V1 en cours, découpé au [§7](#7-v1-découpage--7-octobre-2026) ; **V1a livré** ([§8](#8-v1a-livré--7-octobre-2026)), **V1b livré** ([§9](#9-v1b-livré--7-octobre-2026)), **V1c livré** ([§10](#10-v1c-livré--7-octobre-2026)) : V1 terminé ; V2 en cours, découpé au [§11](#11-v2-découpage--7-octobre-2026) ; **V2a livré** ([§12](#12-v2a-livré--7-octobre-2026)), **V2b livré** ([§13](#13-v2b-livré--7-octobre-2026)), **V2c livré** ([§14](#14-v2c-livré--7-octobre-2026)), **V2d livré** ([§15](#15-v2d-livré--7-octobre-2026)) : V2 terminé ; V3 en cours, découpé au [§16](#16-v3-découpage--7-octobre-2026) ; **V3a livré** ([§17](#17-v3a-livré--7-octobre-2026)), **V3b livré** ([§18](#18-v3b-livré--7-octobre-2026)), **V3c livré** ([§19](#19-v3c-livré--7-octobre-2026)), **V3d livré** ([§20](#20-v3d-livré--7-octobre-2026)) : V3 terminé côté code, recette en jeu de Raphaël attendue. **V4 livré** ([§21](#21-v4-livré--7-octobre-2026)). **Plan 27 terminé côté code (V0 à V4)** ; V5 attend la reprise audio.
 
 > « fais en sorte que tout se voit. […] qu'on puisse voir concrètement en jeu tous les impacts bien comme il faut et les effets sur les ennemis (et sur le joueur quand on se fait attaquer) »
 
@@ -369,3 +369,26 @@ Chaque sous-lot : planche `--capture-player-hit` avant/après, contrôles ; rece
 - Contrôle (`EnemyAbilityRegression.PlayerStatus`) : PV consumés, mobilité hors de l'état blessé, aucun chiffre. `test_movement`, `test_enemy_abilities`, `test_weapons`, `test_erasure_active`, `test_objects`, `test_music`, smoke : verts.
 
 **V3 terminé côté code.** Recette en jeu de Raphaël attendue sur l'ensemble (blessure, toile, défense, soins, Néant), comme prévu au plan.
+
+## 21. V4 livré — 7 octobre 2026
+
+**Fait.**
+- **Instable** (`EnemyExplosionWarning`) : sous 50 % de ses PV, le rayon exact de sa détonation s'affiche au sol (mesuré au sol comme ses dégâts, famille Hostile, toujours affiché) et se remplit à mesure que ses PV baissent ; effacé à sa mort, au retour au pool et hors de la portée de traitement. Seuil et famille dans la section `explosion_warning` de `data/fx/status_visuals.json`.
+- **Cause de mort** : l'explosion d'un Instable est retenue comme cause (`PlayerHitBy`), au lieu du dernier coup reçu avant. Les deux événements qui blessent (Averse d'éclats, Relique tombée) passent par `DamagePlayerIfInside(…, source)` et deviennent la cause `event:<id>`, que l'écran de mort affiche sous le nom traduit de l'événement.
+- **Couloirs de tir** allongés et épaissis (purement visuels) : Hurleur 90 → 140 px et 6 → 9, Cracheur et Tisseuse 80 → 120 et 6 → 9, Sentinelle 120 → 170 et 8 → 11. Avant, le couloir du Hurleur s'arrêtait à mi-chemin du joueur.
+- Les dégâts au joueur d'un Instable et des événements sont désormais situés (vignette tournée vers eux).
+
+**Non fait, à produire au plan 15.** Son d'explosion propre de l'Instable ; sons courts du tir visé, du surgissement du Rampant et du tentacule de l'Indicible.
+
+**Vérifié.**
+- Planches sur le ViewSonic, regardées : Instable blessé (anneau acide tramé à ses pieds, dans `--capture-statuses`), tir visé du Hurleur avant/après (le couloir atteint le joueur).
+- 4 contrôles (`EnemyAbilityRegression.Warnings`) : pas d'anneau intact ; anneau blessé ; anneau effacé et explosion retenue comme cause ; événement nommé à l'écran de mort. `test_enemy_abilities`, `test_movement`, `test_weapons`, `test_objects`, smoke : verts.
+
+## 22. Bilan du plan 27 — 7 octobre 2026
+
+V0 à V4 livrés côté code, chacun avec planche regardée, contrôles et, pour ce qui touche le combat dense, banc A/B. Restent :
+- la **recette en jeu de Raphaël**, en particulier V3 (blessure, toile, défense, soins, Néant) ;
+- les points à juger listés dans chaque compte rendu : flash collectif d'une foule touchée d'un coup (V1c), Rampant terré peu visible, orange et rouge des chiffres de tics (V2a), champ du Chronomètre pâle (V2c), couleur des soins (V3c) ;
+- **V5** et les sons manquants (soin, tintement du bouclier, brûlure du Néant, explosion de l'Instable, annonces muettes), au plan 15.
+
+Chantier suivant (§74) : la difficulté et le Péril.

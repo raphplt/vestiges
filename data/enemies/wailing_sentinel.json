@@ -15,8 +15,8 @@
     "abilities": {
         "aimed_shot": {
             "windup_seconds": 0.45,
-            "lane_length": 120,
-            "lane_width": 8,
+            "lane_length": 170,
+            "lane_width": 11,
             "fx_family": "pale",
             "show_range": 1,
             "range_reveal_margin": 90

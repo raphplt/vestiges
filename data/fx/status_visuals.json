@@ -1,5 +1,5 @@
 {
-  "_doc": "Lecture des statuts sur le sprite des créatures (plan 27 V1a). Teinte de priorité : figé > Fragile > brûlure > ralenti. Familles de PixelPalette : couleur moyenne de la rampe pour les teintes et la chaleur, claire pour le givre et les fêlures. Profondeurs et espacements en pixels du sprite ; 0 coupe le motif. Lu par Infrastructure/StatusVisualConfig. Section marks (V1b) : marques dessinées autour du sprite, poses clés à pose_fps ; braises : une de plus par max_hp_share_per_extra des PV max brûlés chaque seconde. Section numbers (V2a) : brûlure et saignement additionnés par créature et affichés toutes les interval_sec, à la couleur moyenne de leur famille.",
+  "_doc": "Lecture des statuts sur le sprite des créatures (plan 27 V1a). Teinte de priorité : figé > Fragile > brûlure > ralenti. Familles de PixelPalette : couleur moyenne de la rampe pour les teintes et la chaleur, claire pour le givre et les fêlures. Profondeurs et espacements en pixels du sprite ; 0 coupe le motif. Lu par Infrastructure/StatusVisualConfig. Section marks (V1b) : marques dessinées autour du sprite, poses clés à pose_fps ; braises : une de plus par max_hp_share_per_extra des PV max brûlés chaque seconde. Section numbers (V2a) : brûlure et saignement additionnés par créature et affichés toutes les interval_sec, à la couleur moyenne de leur famille. Section explosion_warning (V4) : sous hp_ratio de ses PV, une créature qui explose à sa mort montre au sol le rayon de sa détonation, rempli à mesure que ses PV baissent.",
   "frozen": {
     "tint_family": "glass",
     "tint_strength": 0.35,
@@ -44,5 +44,9 @@
     "interval_sec": 0.5,
     "burn_family": "fire",
     "bleed_family": "blood"
+  },
+  "explosion_warning": {
+    "hp_ratio": 0.5,
+    "family": "hostile"
   }
 }

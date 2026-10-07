@@ -12,8 +12,8 @@
     "abilities": {
         "aimed_shot": {
             "windup_seconds": 0.3,
-            "lane_length": 80,
-            "lane_width": 6,
+            "lane_length": 120,
+            "lane_width": 9,
             "fx_family": "rust"
         }
     },

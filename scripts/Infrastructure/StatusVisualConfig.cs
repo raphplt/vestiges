@@ -47,6 +47,10 @@ public sealed class StatusVisualConfig
     public Color BurnNumberColor { get; private init; }
     public Color BleedNumberColor { get; private init; }
 
+    /// <summary>Annonce d'une créature qui explose à sa mort (V4) : seuil de PV et famille de l'anneau.</summary>
+    public float ExplosionWarningHpRatio { get; private init; }
+    public FxFamily ExplosionWarningFamily { get; private init; }
+
     public static bool TryLoad(out StatusVisualConfig config, out string error)
     {
         using FileAccess file = FileAccess.Open(ConfigPath, FileAccess.ModeFlags.Read);
@@ -81,6 +85,7 @@ public sealed class StatusVisualConfig
             JsonElement drops = reader.Section(marks, "drops");
             JsonElement embers = reader.Section(marks, "embers");
             JsonElement numbers = reader.Section("numbers");
+            JsonElement explosion = reader.Section("explosion_warning");
             StatusVisualConfig parsed = new()
             {
                 FrozenTint = Tint(reader, frozen),
@@ -106,6 +111,8 @@ public sealed class StatusVisualConfig
                 DotNumberInterval = reader.Positive(numbers, "interval_sec"),
                 BurnNumberColor = Family(reader, numbers, "burn_family").Mid,
                 BleedNumberColor = Family(reader, numbers, "bleed_family").Mid,
+                ExplosionWarningHpRatio = reader.Ratio(explosion, "hp_ratio"),
+                ExplosionWarningFamily = FamilyId(reader, explosion, "family"),
             };
             if (parsed.MarkPoseFps is < 2f or > 24f)
                 reader.Fail("pose_fps : de 2 à 24 attendu");
@@ -132,6 +139,15 @@ public sealed class StatusVisualConfig
     {
         Color mid = Family(reader, section, "tint_family").Mid;
         return mid with { A = reader.Chance(section, "tint_strength") };
+    }
+
+    private static FxFamily FamilyId(JsonConfigReader reader, JsonElement section, string key)
+    {
+        string name = reader.Text(section, key);
+        FxFamily family = PixelPalette.ParseFamily(name ?? "", (FxFamily)(-1));
+        if (name != null && (int)family < 0)
+            reader.Fail($"{key} : famille « {name} » inconnue");
+        return (int)family < 0 ? FxFamily.Hostile : family;
     }
 
     private static FxRamp Family(JsonConfigReader reader, JsonElement section, string key)

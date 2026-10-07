@@ -13,8 +13,8 @@
         "aimed_shot": {
             "cooldown_multiplier": 2.5,
             "windup_seconds": 0.4,
-            "lane_length": 90,
-            "lane_width": 6,
+            "lane_length": 140,
+            "lane_width": 9,
             "fx_family": "hostile"
         },
         "cry": {

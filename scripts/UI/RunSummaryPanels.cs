@@ -144,7 +144,11 @@ public static class RunSummaryPanels
         if (string.IsNullOrEmpty(enemyId) || enemyId == "unknown")
             return null;
         bool erasure = enemyId == "void";
-        EnemyData data = erasure ? null : EnemyDataLoader.Get(enemyId);
+        // Un événement (pluie d'éclats, relique qui tombe) porte son nom traduit, sans portrait (plan 27 V4).
+        RunEventData runEvent = enemyId.StartsWith(Events.RunEvents.RunEventContext.DeathCausePrefix)
+            ? RunEventOf(enemyId[Events.RunEvents.RunEventContext.DeathCausePrefix.Length..])
+            : null;
+        EnemyData data = erasure || runEvent != null ? null : EnemyDataLoader.Get(enemyId);
 
         PanelContainer card = new() { MouseFilter = Control.MouseFilterEnum.Ignore };
         card.AddThemeStyleboxOverride("panel", new StyleBoxFlat
@@ -179,11 +183,21 @@ public static class RunSummaryPanels
         }
         VBoxContainer text = new() { MouseFilter = Control.MouseFilterEnum.Ignore, Alignment = BoxContainer.AlignmentMode.Center };
         text.AddChild(Text(TranslationServer.Translate("UI_END_FELL_TO"), TextRole.Small, UITheme.TextDim));
-        string name = erasure ? TranslationServer.Translate("UI_END_KILLER_ERASURE") : data?.Name ?? enemyId;
+        string name = erasure ? TranslationServer.Translate("UI_END_KILLER_ERASURE")
+            : runEvent != null ? TranslationServer.Translate(runEvent.TitleKey)
+            : data?.Name ?? enemyId;
         text.AddChild(Text(name, TextRole.Heading, UITheme.TextLight, weight: TextWeight.Strong));
         text.AddChild(Text(string.Format(TranslationServer.Translate("UI_END_AT_TIME"), FormatDuration(atSeconds)), TextRole.Small, UITheme.TextDim));
         row.AddChild(text);
         return card;
+    }
+
+    private static RunEventData RunEventOf(string id)
+    {
+        foreach (RunEventData runEvent in RunEventDataLoader.Events)
+            if (runEvent.Id == id)
+                return runEvent;
+        return null;
     }
 
     /// <summary>Première image de face, rognée à ses pixels visibles : la créature remplit la carte.</summary>

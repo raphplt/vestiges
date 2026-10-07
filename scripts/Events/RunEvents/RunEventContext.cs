@@ -1,4 +1,5 @@
 using Godot;
+using Vestiges.Infrastructure;
 using Vestiges.Combat;
 using Vestiges.Core;
 using Vestiges.Progression;
@@ -117,11 +118,20 @@ public sealed class RunEventContext
         return kills;
     }
 
-    /// <summary>Zone posée au sol : le rayon est mesuré au sol, comme l'ellipse annoncée.</summary>
-    public void DamagePlayerIfInside(Vector2 center, float radius, float maxHpRatio)
+    /// <summary>Préfixe de la cause de mort d'un événement (écran de mort, plan 27 V4).</summary>
+    public const string DeathCausePrefix = "event:";
+
+    /// <summary>
+    /// Zone posée au sol : le rayon est mesuré au sol, comme l'ellipse annoncée. L'événement <paramref name="source"/>
+    /// devient la cause de mort si le coup est fatal.
+    /// </summary>
+    public void DamagePlayerIfInside(Vector2 center, float radius, float maxHpRatio, RunEventData source)
     {
-        if (Iso.GroundDistanceSquared(Player.GlobalPosition, center) <= radius * radius)
-            Player.TakeDamage(Player.EffectiveMaxHp * maxHpRatio);
+        if (Iso.GroundDistanceSquared(Player.GlobalPosition, center) > radius * radius)
+            return;
+        float damage = Player.EffectiveMaxHp * maxHpRatio;
+        EventBus.EmitSignal(EventBus.SignalName.PlayerHitBy, DeathCausePrefix + source.Id, damage);
+        Player.TakeDamage(damage, center);
     }
 
     public static string Tr(string key) => TranslationServer.Translate(key);
