@@ -1,5 +1,5 @@
 {
-  "_comment": "Péril (plan 17 lot 3A, recentré au plan 28 P1, DECISIONS §78) : stat de run que le joueur monte pour durcir sa run, sans plafond. Il vient des Failles (un point par amélioration acceptée), des bannissements payants, des stèles et de l'objet du Péril. Il ne paie pas directement : sa contrepartie est d'avoir plus d'ennemis, donc plus d'XP et d'Essence par les éliminations ; seul le score est multiplié. Chaque point ajoute linéairement per_point à chaque multiplicateur (1 + valeur × Péril). enemy_count monte la densité locale visée et le plafond de créatures actives de la run ; son bonus est borné à enemy_count_bonus_max, et le plafond relevé ne dépasse jamais active_enemies_ceiling (coût du rendu, plan 28 P1) : au-delà, les points ne pèsent plus que sur les PV et les dégâts.",
+  "_comment": "Péril (plan 17 lot 3A, recentré au plan 28 P1, DECISIONS §78) : stat de run que le joueur monte pour durcir sa run, sans plafond. Il vient des Failles (un point par amélioration acceptée), des bannissements payants, des stèles et de l'objet du Péril. Il ne paie pas directement : sa contrepartie est d'avoir plus d'ennemis, donc plus d'XP et d'Essence par les éliminations ; seul le score est multiplié. Chaque point ajoute linéairement per_point à chaque multiplicateur (1 + valeur × Péril). enemy_count monte la densité locale visée et le plafond de créatures actives de la run ; son bonus est borné à enemy_count_bonus_max (atteint à 15 points), et le plafond relevé ne dépasse jamais active_enemies_ceiling (coût du rendu, plan 28 P1) : au-delà, les points ne pèsent plus que sur les PV et les dégâts. Réglage du plan 28 (mesure à Péril 10) : le nombre pèse plus que les PV, pour que la pression monte sans couper XP et Essence ; PV +10 %/point divisait par deux éliminations et Essence.",
   "enemy_count_bonus_max": 1.5,
   "active_enemies_ceiling": 240,
   "banish": {
@@ -8,9 +8,9 @@
     "peril_divisor": 3
   },
   "per_point": {
-    "enemy_count": 0.06,
-    "enemy_hp": 0.1,
-    "enemy_damage": 0.06,
+    "enemy_count": 0.1,
+    "enemy_hp": 0.05,
+    "enemy_damage": 0.05,
     "score": 0.12
   }
 }

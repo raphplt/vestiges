@@ -51,9 +51,24 @@ Protocole du plan 21 H0 : `MEASURE_EXTRA_ARGS="--nomad --visit --mortal --prefer
 - Vérification : contrôles du chargeur, mesure P0 rejouée à Péril 0, 10 et 20, banc A/B au plafond de coût.
 
 
-**Livré le 7 octobre.** Le Péril n'a plus de maximum (`PerilManager` borne seulement à 0). `peril.json` : `enemy_count_bonus_max` 1,5 (le nombre de créatures cesse de monter vers 25 points), `active_enemies_ceiling` 240 (provisoire, à fixer au banc de coût, machine calme), par point +6 % de créatures, +10 % de PV, +6 % de dégâts, +12 % de score. Le multiplicateur d'XP disparaît du signal `DifficultyModifierChanged` et de `PlayerProgression` ; `UpgradeRoller.BumpSteps` ne prend plus le Péril. `SpawnManager` relève le plafond de créatures actives avec le Péril, sans dépasser le plafond de coût ni descendre sous celui de la run. HUD : « Péril N » en rouge à droite du chrono, dès 1, qui s'éclaire à chaque point. Fiche de pause : créatures, PV, dégâts, puis score seul. Contrôles du chargeur réécrits (plafond, bonus de nombre, clé `xp` refusée) : 191 contrôles verts.
+**Livré le 7 octobre.** Le Péril n'a plus de maximum (`PerilManager` borne seulement à 0). `peril.json` : `enemy_count_bonus_max` 1,5 (le nombre de créatures cesse de monter à 15 points), `active_enemies_ceiling` 240 (provisoire, à fixer au banc de coût, machine calme), par point +10 % de créatures, +5 % de PV, +5 % de dégâts, +12 % de score (réglage mesuré ci-dessous ; d'abord +6 / +10 / +6 %). Le multiplicateur d'XP disparaît du signal `DifficultyModifierChanged` et de `PlayerProgression` ; `UpgradeRoller.BumpSteps` ne prend plus le Péril. `SpawnManager` relève le plafond de créatures actives avec le Péril, sans dépasser le plafond de coût ni descendre sous celui de la run. HUD : « Péril N » en rouge à droite du chrono, dès 1, qui s'éclaire à chaque point. Fiche de pause : créatures, PV, dégâts, puis score seul. Contrôles du chargeur réécrits (plafond, bonus de nombre, clé `xp` refusée) : 191 contrôles verts.
 
 Point ouvert : le plafond de base atteint 210 créatures à 25 min, donc à 240 le Péril n'en ajoute plus qu'une trentaine en fin de run et pèse alors surtout sur la densité locale, les PV et les dégâts. Le plafond se fixe au banc (`/bench` avec `--peril`), machine calme.
+
+**Mesuré le 7 octobre au soir** (même protocole que P0, Péril imposé dès la première seconde, copies isolées du dépôt ; ancien code `a02b890e`, nouveau `09a2bc4a`) :
+
+| Péril | Temps pour tuer 10–15 / 20–25 min | Niveau à 25 min | Éliminations | Essence | Dégâts reçus 15–20 min |
+|---|---|---|---|---|---|
+| 0, référence | 0,35 / 0,31 s | 47 | 3 950 | 6 100 | 75 000 |
+| 10, ancien (XP +120 %) | 0,60 / 0,64 s | 53 | 2 800 | 4 350 | 138 000 |
+| 10, PV +10 %/point | 1,37 / 1,78 s | 31 | 2 330 | 3 650 | 474 000 |
+| 20, PV +10 %/point | 1,09 / 4,31 s | 27 | 1 400 | 2 350 | 708 000 |
+| **10, créatures +10 %, PV et dégâts +5 %/point (retenu)** | **0,42 / 0,60 s** | **45** | **3 720** | **5 670** | **703 000** |
+
+- L'ancien Péril se compensait presque tout seul : son bonus d'XP faisait finir plus haut qu'à Péril 0.
+- Peser sur les PV durcit, mais appauvrit : le joueur tue deux fois moins, donc gagne deux fois moins d'XP et d'Essence, et l'écart se creuse (contraire au §78).
+- **Retenu** : le nombre pèse plus que les PV. À Péril 10, les dégâts reçus sont multipliés par 5 à 10, les créatures meurent deux fois moins vite, et le joueur tue presque autant qu'à Péril 0 (XP et Essence à −7 %). Le nombre de créatures cesse de monter à 15 points (`enemy_count_bonus_max` 1,5).
+- La mesure impose le Péril dès le départ ; en jeu, il monte stèle après stèle, donc le début reste celui de Péril 0. Le bot croise 1 à 5 stèles par run sans les viser.
 
 ### P2 — Stèles du Péril
 
