@@ -330,6 +330,7 @@ public partial class ObjectTriggers : Node
         {
             target.TakeDamage(dealt * _critEcho, source: echo);
             _player.AttackFx.PlayBeam(enemy.GlobalPosition, target.GlobalPosition, FxFamily.Crit);
+            _player.AttackFx.PlayHit(FxFamily.Crit, target.GlobalPosition, false, enemy.GlobalPosition);
         }
         if (_echoTargets.Count > 0)
             _player.ObjectProcs?.Show(CritEchoStat);
@@ -532,7 +533,10 @@ public partial class ObjectTriggers : Node
         {
             if (node is Enemy { IsActive: true, IsDying: false } enemy
                 && Iso.GroundDistanceSquared(enemy.GlobalPosition, position) <= radiusSq)
+            {
                 enemy.TakeDamage(damage, source: source);
+                _player.AttackFx.PlayHit(FxFamily.Fire, enemy.GlobalPosition, false, position);
+            }
         }
         _player.AttackFx.PlayBurst(position, FxFamily.Fire, radius);
         _player.ObjectProcs?.Show(KillExplosionStat);

@@ -106,6 +106,7 @@ public sealed class ZoneEchoes
             if (distanceSq > radiusSq || (!fullCircle && (distanceSq <= 0.0001f || echo.Direction.Dot(toEnemy.Normalized()) < dotThreshold)))
                 continue;
             enemy.TakeDamage(echo.Damage, source: echo.Source);
+            _player.AttackFx.PlayHit(PlayerAttackFx.FamilyOf(echo.Weapon?.Base), enemy.GlobalPosition, false, center);
         }
         if (echo.AroundPlayer)
             _player.AttackFx.PlayMelee(echo.Weapon?.Base, echo.Direction, echo.Radius, echo.ArcAngle);

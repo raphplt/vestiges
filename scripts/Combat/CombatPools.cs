@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Godot;
 using Vestiges.Core;
+using Vestiges.Infrastructure;
 
 namespace Vestiges.Combat;
 
@@ -12,6 +13,9 @@ public partial class CombatPools : Node2D
 {
     public static CombatPools Instance { get; private set; }
 
+    private static ChalkShapeConfig _chalkConfig;
+    private static bool _chalkConfigTried;
+
     private NodePool<EnemyProjectile> _enemyProjectiles;
     private NodePool<Projectile> _playerProjectiles;
     private NodePool<DamageNumber> _damageNumbers;
@@ -19,6 +23,7 @@ public partial class CombatPools : Node2D
     private NodePool<DeathFx> _deathFx;
     private NodePool<ProjectileImpact> _projectileImpacts;
     private NodePool<XpOrb> _xpOrbs;
+    private NodePool<ChalkDrawing> _chalkDrawings;
     // Orbes endormies loin du joueur : une ronde toutes les 0,25 s réveille celles dont il se rapproche.
     private const float WakeCheckInterval = 0.25f;
     private const float WakeHysteresis = 100f;
@@ -58,6 +63,7 @@ public partial class CombatPools : Node2D
         _pixelFx = new NodePool<PixelFx>(this, () => PixelFx.Create(_pixelFx.Return));
         _deathFx = new NodePool<DeathFx>(this, () => DeathFx.Create(_deathFx.Return));
         _projectileImpacts = new NodePool<ProjectileImpact>(this, () => ProjectileImpact.Create(_projectileImpacts.Return));
+        _chalkDrawings = new NodePool<ChalkDrawing>(this, () => ChalkDrawing.Create(_chalkDrawings.Return));
         PackedScene xpOrbScene = GD.Load<PackedScene>("res://scenes/combat/XpOrb.tscn");
         _xpOrbs = new NodePool<XpOrb>(this, () =>
         {
@@ -155,6 +161,24 @@ public partial class CombatPools : Node2D
         DamageNumber number = _damageNumbers.Take();
         number.Play(position, damage, isCrit, isCarried);
         return number;
+    }
+
+    /// <summary>
+    /// Forme des Craies tirée au hasard parmi celles des réglages, à la taille réelle de la zone. Effet d'attaque du
+    /// joueur : suit son réglage et le budget des formes.
+    /// </summary>
+    public void ShowChalkShape(Vector2 center, float radius)
+    {
+        if (!_chalkConfigTried)
+        {
+            _chalkConfigTried = true;
+            if (!ChalkShapeConfig.TryLoad(out _chalkConfig, out string error))
+                GD.PushError($"[CombatPools] {error}");
+        }
+        if (_chalkConfig == null || !CombatFxSettings.PlayerAttackFx || !FxBudget.TryTake(FxBudgetKind.Shapes))
+            return;
+        (string shape, FxFamily family) = _chalkConfig.Shapes[(int)(GD.Randi() % (uint)_chalkConfig.Shapes.Count)];
+        _chalkDrawings.Take().Play(center, radius, shape, family, _chalkConfig, CombatFxSettings.PlayerOpacity);
     }
 
     /// <summary>Chiffre d'un tic de brûlure ou de saignement (plan 27 V2a), au budget des chiffres.</summary>

@@ -1,6 +1,6 @@
 # Plan 27 — Tout se voit : impacts, statuts, coups reçus
 
-6 octobre 2026 · Demandé par Raphaël ([DECISIONS §71](DECISIONS.md)) · **Validé le 6 octobre ([DECISIONS §72](DECISIONS.md)) : ordre V0 → V4, questions tranchées au §4.** **V0 livré le 6 octobre** ([§6](#6-v0-livré--6-octobre-2026)) ; V1 en cours, découpé au [§7](#7-v1-découpage--7-octobre-2026) ; **V1a livré** ([§8](#8-v1a-livré--7-octobre-2026)), **V1b livré** ([§9](#9-v1b-livré--7-octobre-2026)), **V1c livré** ([§10](#10-v1c-livré--7-octobre-2026)) : V1 terminé ; V2 en cours, découpé au [§11](#11-v2-découpage--7-octobre-2026) ; **V2a livré** ([§12](#12-v2a-livré--7-octobre-2026)).
+6 octobre 2026 · Demandé par Raphaël ([DECISIONS §71](DECISIONS.md)) · **Validé le 6 octobre ([DECISIONS §72](DECISIONS.md)) : ordre V0 → V4, questions tranchées au §4.** **V0 livré le 6 octobre** ([§6](#6-v0-livré--6-octobre-2026)) ; V1 en cours, découpé au [§7](#7-v1-découpage--7-octobre-2026) ; **V1a livré** ([§8](#8-v1a-livré--7-octobre-2026)), **V1b livré** ([§9](#9-v1b-livré--7-octobre-2026)), **V1c livré** ([§10](#10-v1c-livré--7-octobre-2026)) : V1 terminé ; V2 en cours, découpé au [§11](#11-v2-découpage--7-octobre-2026) ; **V2a livré** ([§12](#12-v2a-livré--7-octobre-2026)), **V2b livré** ([§13](#13-v2b-livré--7-octobre-2026)).
 
 > « fais en sorte que tout se voit. […] qu'on puisse voir concrètement en jeu tous les impacts bien comme il faut et les effets sur les ennemis (et sur le joueur quand on se fait attaquer) »
 
@@ -252,3 +252,19 @@ V2 se livre en quatre sous-lots, chacun avec sa planche (galerie `--capture-weap
 - Banc A/B avec Cloche, Lampe, Berceuse, Polaroïd et Râteau contre `5057912d`, charge 2,3 : passes valides 720p base 174 et 191 FPS, courant 201 à 212 ; 1080p base 172 et 191, courant 154 à 188 ; appels de dessin +13 et +11 (les libellés), GPU 0,44 → 0,43 et 0,71 → 0,72 ms ; le budget écarte environ 990 chiffres des deux côtés. Pas de coût mesurable. Une passe de base s'est déclarée invalide (399 FPS, autre défaut intermittent de l'outil que l'import de police).
 
 **Point ouvert.** Orange et rouge sont proches ; les braises et les larmes autour du sprite disent lequel. À juger en jeu.
+
+## 13. V2b livré — 7 octobre 2026
+
+**Fait.**
+- **Formes des Craies** (`ChalkDrawing`, recyclé par `CombatPools`) : étoile, cercle, maison ou soleil tiré au hasard, tracé au pixel avec des trous de craie (15 %), en trois poses sur 0,12 s, tenu 0,4 s, effacé en deux poses de tramage. Taille réelle : la zone des Craies se contrôle en cercle à l'écran (`DistanceTo`), la forme est donc dessinée sans écrasement au sol. Familles par forme (étoile Brass, cercle Glass, maison Rust, soleil Fire) et rythme dans `data/fx/chalk_shapes.json`, lu par `ChalkShapeConfig` (forme sans tracé ou famille inconnue refusées). La liste `shapes` de la fiche d'arme reste une annotation : les noms sont les mêmes.
+- **Écho des Gants** : l'anneau fixe de 18 px devient zone tramée, anneau et gerbe au rayon réel de l'écho (cercle à l'écran, comme son contrôle), à la couleur de l'arme.
+- **Coups secondaires** (écho, forme) et **dégâts d'objets** (Mètre, Pétard, Rondelle, écho critique du Stylo) : chaque cible reçoit la gerbe et l'éclat à la couleur de l'arme ou de l'objet, partie du centre de la zone. Mêmes plafonds que les coups directs (rafales par image, budget, réglage « Effets d'attaque »).
+
+**Vérifié.**
+- Galeries sur le ViewSonic, regardées : Craies + Fronde (étoile dorée et cercle tracés à la craie autour des cibles touchées), Craies + Gants (zones d'écho bleu-vert au rayon réel, formes à la craie, gerbes sur les cibles secondaires).
+- `test_enemy_abilities`, `test_weapons`, `test_movement`, smoke : verts.
+- Banc A/B avec Craies, Gants et Cloche contre `c50d0931`, 3 passes valides, charge 2,2 puis 1,6 : 720p 213,0 → 211,1 FPS, p99 9,0 → 9,2 ms ; 1080p 199,2 → 200,0 FPS, p99 9,1 → 9,1 ms ; GPU identique (0,42 et 0,70 ms), appels de dessin +10 et +6, nœuds créés/s 2,9 → 2,2 et 1,9 → 1,5. Pas de coût mesurable. Le banc n'équipe pas d'objet : les gerbes d'objets n'y sont pas mesurées, elles passent par les mêmes plafonds.
+
+**Relecture `godot-reviewer`, corrigé avant livraison.** Pixels tracés plafonnés à 600 par forme (un sur deux ou trois au-delà, zone très agrandie) ; segments du cercle selon le rayon (un tous les 4 px) au lieu de 32 fixes ; dernier pixel des tracés ouverts ; plafond de gerbes à part pour les coups secondaires et objets (10 par image), pour qu'une explosion en foule ne prive pas le coup direct de la sienne, et rien compté quand les effets d'attaque sont coupés ; réglages des Craies chargés avant de consommer le budget.
+
+**Point ouvert.** Les zones de l'écho et des Craies sont des cercles à l'écran alors que les objets (Mètre, Pétard) mesurent sur le sol écrasé : deux géométries de zone coexistent dans le code, chacune dessinée comme elle touche. À unifier un jour, hors de ce plan.

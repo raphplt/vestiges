@@ -1,0 +1,14 @@
+{
+  "_doc": "Formes des Craies dessinées à la taille réelle de leur zone (plan 27 V2b). Tracé en draw_poses poses sur draw_seconds, tenu hold_seconds, effacé en tramage sur fade_seconds. gap_chance : part des pixels laissés blancs, comme un trait de craie. Les noms des formes sont ceux de la fiche des Craies (data/weapons/weapons.json, shapes). Lu par Infrastructure/ChalkShapeConfig.",
+  "draw_seconds": 0.12,
+  "draw_poses": 3,
+  "hold_seconds": 0.4,
+  "fade_seconds": 0.16,
+  "gap_chance": 0.15,
+  "shapes": {
+    "star": "brass",
+    "circle": "glass",
+    "house": "rust",
+    "sun": "fire"
+  }
+}

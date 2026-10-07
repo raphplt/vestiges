@@ -249,11 +249,15 @@ public partial class ObjectMilestones : Node
         float radiusSq = radius * radius;
         float damage = projectileDamage * _burstRatio;
         AttackContext burst = source.As(DamageKind.Passive);
+        FxFamily family = PlayerAttackFx.FamilyOf(source.Weapon?.Base);
         foreach (Node node in _groupCache.GetEnemies())
         {
             if (node is Enemy { IsActive: true, IsDying: false } enemy
                 && Iso.GroundDistanceSquared(enemy.GlobalPosition, position) <= radiusSq)
+            {
                 enemy.TakeDamage(damage, source: burst);
+                _player.AttackFx.PlayHit(family, enemy.GlobalPosition, false, position);
+            }
         }
         // Une salve de projectiles peut éclater d'un coup : quelques éclats dessinés par frame suffisent à le lire.
         ulong frame = Engine.GetProcessFrames();

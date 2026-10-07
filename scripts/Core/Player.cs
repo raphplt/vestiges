@@ -874,13 +874,15 @@ public partial class Player : CharacterBody2D
     /// (DECISIONS §70). Résolu sur cette cible, il compte pour le vol de vie, le relevé de l'arme et les objets à
     /// l'impact ; jamais critique, il ne relance ni l'effet au contact ni l'effet spécial de l'arme.
     /// </summary>
-    private void SecondaryHit(Enemy enemy, float rawDamage, WeaponInstance source, AttackContext context)
+    /// <param name="origin">Centre de l'écho ou de la forme : la gerbe à la couleur de l'arme en part (plan 27 V2b).</param>
+    private void SecondaryHit(Enemy enemy, float rawDamage, WeaponInstance source, AttackContext context, Vector2 origin)
     {
         if (_isDead)
             return;
         float damage = ResolveHitDamage(enemy, rawDamage, false);
         AttackContext secondary = context.As(DamageKind.SecondaryWeapon);
         enemy.TakeDamage(damage, source: secondary);
+        _attackFx.PlayHit(PlayerAttackFx.FamilyOf(source?.Base), enemy.GlobalPosition, false, origin);
         if (source != null)
         {
             _weaponLedger.AddDamage(source.Id, damage);
@@ -953,10 +955,10 @@ public partial class Player : CharacterBody2D
                             if (node is Enemy { IsActive: true, IsDying: false } e && IsInstanceValid(e))
                             {
                                 if (e.GlobalPosition.DistanceTo(echoPos) < echoRadius)
-                                    SecondaryHit(e, echoRaw, source, context);
+                                    SecondaryHit(e, echoRaw, source, context, echoPos);
                             }
                         }
-                        SpawnEchoVisual(echoPos);
+                        _attackFx.PlayEcho(source?.Base, echoPos, echoRadius);
                         if (_objectMilestones?.HasZoneEcho == true)
                             _objectMilestones.QueueCircleEcho(echoPos, echoRadius, echoDamage, source, context);
                     };
@@ -1000,9 +1002,10 @@ public partial class Player : CharacterBody2D
                     if (node is Enemy { IsActive: true, IsDying: false } e && IsInstanceValid(e) && e != enemy)
                     {
                         if (e.GlobalPosition.DistanceTo(impactPos) < aoeRadius)
-                            SecondaryHit(e, shapeRaw, source, context);
+                            SecondaryHit(e, shapeRaw, source, context, impactPos);
                     }
                 }
+                Combat.CombatPools.Instance?.ShowChalkShape(impactPos, aoeRadius);
                 if (_objectMilestones?.HasZoneEcho == true)
                     _objectMilestones.QueueCircleEcho(impactPos, aoeRadius, shapeDamage, source, context);
                 break;
@@ -1017,11 +1020,6 @@ public partial class Player : CharacterBody2D
             enemy.Freeze(freeze);
         else
             enemy.ApplySlow(factor, duration, context);
-    }
-
-    private void SpawnEchoVisual(Vector2 position)
-    {
-        _attackFx.PlayEcho(position);
     }
 
     private void SpawnTimeSlowVisual(Vector2 position, float radius, float duration)

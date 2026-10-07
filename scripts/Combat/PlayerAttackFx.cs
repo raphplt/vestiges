@@ -16,12 +16,15 @@ public sealed class PlayerAttackFx
     private const float TorsoHeight = 11f;
     /// <summary>Plafond de gerbes d'impact par frame : une zone qui touche 80 ennemis n'en dessine que quelques-unes.</summary>
     private const int MaxHitBurstsPerFrame = 10;
+    /// <summary>Gerbes des coups secondaires et des objets : plafond à part, pour ne pas priver un coup direct de la sienne.</summary>
+    private const int MaxSecondaryBurstsPerFrame = 10;
 
     private readonly Node2D _owner;
     private readonly AnimatedSprite2D _sprite;
     private Tween _squashTween;
     private ulong _hitFrame;
     private int _hitBurstsThisFrame;
+    private int _secondaryBurstsThisFrame;
     private ulong _timeFieldFrame;
     private PixelFx _cone;
     // Ondes en attente d'une frappe circulaire répétée (plan 21 G6g) : liste réutilisée, aucune allocation par coup.
@@ -221,22 +224,35 @@ public sealed class PlayerAttackFx
     }
 
     /// <summary>Gerbe d'impact dans le sens du coup, dorée et plus fournie au critique.</summary>
-    public void PlayHit(WeaponData weapon, Vector2 enemyPosition, bool isCrit)
+    public void PlayHit(WeaponData weapon, Vector2 enemyPosition, bool isCrit) =>
+        PlayHit(FamilyOf(weapon), enemyPosition, isCrit, _owner.GlobalPosition, false);
+
+    /// <summary>
+    /// Gerbe d'impact à la couleur d'une arme ou d'un objet, partie de <paramref name="from"/> : le joueur pour un coup,
+    /// le centre de la zone pour un écho, une forme ou une explosion (plan 27 V2b).
+    /// </summary>
+    public void PlayHit(FxFamily family, Vector2 enemyPosition, bool isCrit, Vector2 from) =>
+        PlayHit(family, enemyPosition, isCrit, from, true);
+
+    private void PlayHit(FxFamily family, Vector2 enemyPosition, bool isCrit, Vector2 from, bool secondary)
     {
-        if (Pools == null)
+        if (Pools == null || !CombatFxSettings.PlayerAttackFx)
             return;
         ulong frame = Engine.GetProcessFrames();
         if (frame != _hitFrame)
         {
             _hitFrame = frame;
             _hitBurstsThisFrame = 0;
+            _secondaryBurstsThisFrame = 0;
         }
-        if (++_hitBurstsThisFrame > MaxHitBurstsPerFrame)
+        if (secondary ? ++_secondaryBurstsThisFrame > MaxSecondaryBurstsPerFrame : ++_hitBurstsThisFrame > MaxHitBurstsPerFrame)
             return;
 
         // Chaque coup se voit (DECISIONS §53, plan 21 F6) : éclat en étoile à la couleur de l'arme et gerbe ; un
         // critique ajoute une gerbe large et un anneau au sol. Le budget d'effets (FxBudget) plafonne la foule.
-        Vector2 direction = (enemyPosition - _owner.GlobalPosition).Normalized();
+        Vector2 direction = (enemyPosition - from).Normalized();
+        if (direction == Vector2.Zero)
+            direction = Vector2.Up;
         Vector2 point = enemyPosition + new Vector2(0f, -TorsoHeight) - direction * 4f;
         if (isCrit)
         {
@@ -246,16 +262,18 @@ public sealed class PlayerAttackFx
         }
         else
         {
-            FxFamily family = FamilyOf(weapon);
             EmitSparks(point, direction, family, 7, 1.15f, 80f, 180f, 1);
             PlayFlash(point, family, 5f);
         }
     }
 
-    /// <summary>Écho des Gantelets : anneau bref à l'endroit de la frappe répétée.</summary>
-    public void PlayEcho(Vector2 position)
+    /// <summary>
+    /// Écho des Gants : zone tramée, anneau et gerbe à l'endroit de la frappe répétée, au rayon réel du contrôle des
+    /// dégâts (un cercle à l'écran, sans écrasement au sol), à la couleur de l'arme.
+    /// </summary>
+    public void PlayEcho(WeaponData weapon, Vector2 position, float radius)
     {
-        PlayGroundRing(position, FxFamily.Hybrid, 18f, 2f, 0.25f);
+        PlayBurst(position, FamilyOf(weapon), radius, 1f);
     }
 
     /// <summary>Anneau au sol d'un palier d'objet : zone qui refrappe, onde du bouclier cassé.</summary>
@@ -264,20 +282,23 @@ public sealed class PlayerAttackFx
         PlayGroundRing(ground, family, radius, 2f, 0.3f);
     }
 
-    /// <summary>Éclat d'un projectile en bout de course (Mètre pliant) : zone tramée du rayon réel, anneau, étincelles.</summary>
-    public void PlayBurst(Vector2 ground, FxFamily family, float radius)
+    /// <summary>
+    /// Éclat d'un projectile en bout de course (Mètre pliant) : zone tramée du rayon réel, anneau, étincelles.
+    /// <paramref name="squash"/> : écrasement au sol de la zone, 1 pour une zone contrôlée en cercle à l'écran.
+    /// </summary>
+    public void PlayBurst(Vector2 ground, FxFamily family, float radius, float squash = Iso.GroundSquash)
     {
         if (Pools == null)
             return;
         PixelFxSpec zone = PixelFxSpec.Of(PixelFxShape.Zone, family, radius, 1f, 0.25f);
-        zone.Squash = Iso.GroundSquash;
+        zone.Squash = squash;
         zone.ProgressFill = false;
         zone.FillDensity = 0.4f;
         zone.Steps = 4;
         zone.FadeTail = 0.5f;
         zone.ZIndex = -1;
         Pools.PlayFx(ground, zone, FxOwner.Player);
-        PlayGroundRing(ground, family, radius, 2f, 0.22f);
+        PlayGroundRing(ground, family, radius, 2f, 0.22f, squash);
         EmitSparks(ground + new Vector2(0f, -TorsoHeight * 0.5f), Vector2.Zero, family, 5, 0f, 40f, 90f, 1);
     }
 
@@ -367,12 +388,13 @@ public sealed class PlayerAttackFx
         EmitSparks(ground + new Vector2(0f, -TorsoHeight), Vector2.Zero, family, 8, 0f, 50f, 110f, 1);
     }
 
-    private static void PlayGroundRing(Vector2 ground, FxFamily family, float radius, float thickness, float duration)
+    private static void PlayGroundRing(Vector2 ground, FxFamily family, float radius, float thickness, float duration,
+        float squash = Iso.GroundSquash)
     {
         if (Pools == null)
             return;
         PixelFxSpec spec = PixelFxSpec.Of(PixelFxShape.Ring, family, radius, thickness, duration);
-        spec.Squash = 2f;
+        spec.Squash = squash;
         spec.Steps = 6;
         spec.FadeTail = 0.35f;
         spec.ZIndex = -1;
