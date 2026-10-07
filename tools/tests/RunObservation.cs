@@ -60,6 +60,7 @@ namespace Vestiges.Tests;
 /// --capture-status-crowd : soixante créatures sous Cloche et Berceuse (RunObservation.Statuses.cs).
 /// --status-biome id : planches de statuts sur un terrain dégagé de ce biome.
 /// --capture-player-hit : joueur blessé, bouclier, toile, soin (RunObservation.Statuses.cs).
+/// --capture-vitals : plaque PV/niveau, états limites et effets de survie (présentation seule).
 /// --capture-bestiary : gros plans des créatures du pilote de sprites procéduraux, autour du joueur immobile.
 /// --density : mesure de densité en spawn naturel (ennemis visibles, temps sans ennemi, débits, niveaux,
 /// coffres entrés dans le cadre, et parmi eux ceux qu'aucun décor ne masquait ; lieux croisés et visités par minute,
@@ -153,6 +154,8 @@ public partial class RunObservation : Node
                 await CaptureErasure();
             else if (Array.IndexOf(args, "--capture-abilities") >= 0)
                 await CaptureAbilities();
+            else if (Array.IndexOf(args, "--capture-vitals") >= 0)
+                await CaptureVitals();
             else if (Array.IndexOf(args, "--capture-hud-art") >= 0)
                 await CaptureHudArt();
             else if (Array.IndexOf(args, "--capture-pickup-art") >= 0)

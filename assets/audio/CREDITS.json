@@ -598,5 +598,1145 @@
     "source_url": "https://opengameart.org/content/80-cc0-rpg-sfx",
     "attribution": "rubberduck — 80 CC0 RPG SFX — https://opengameart.org/content/80-cc0-rpg-sfx — CC0-1.0 (https://creativecommons.org/publicdomain/zero/1.0/). Adaptation : WAV PCM16 44,1 kHz. Traitement ffmpeg : aresample=44100,asetrate=28665,aresample=44100,lowpass=f=3000,volume=-6.60dB. Atténuation intentionnelle après équilibrage : 0 dB.",
     "processing": "WAV PCM16 44,1 kHz. Traitement ffmpeg : aresample=44100,asetrate=28665,aresample=44100,lowpass=f=3000,volume=-6.60dB. Atténuation intentionnelle après équilibrage : 0 dB."
+  },
+  {
+    "effect_id": "weapon_chipped_blade",
+    "candidate_id": "weapon_20261007_chipped_blade_B",
+    "file": "assets/audio/sfx/weapons/chipped_blade.wav",
+    "sha256": "4ae0991055737bad8dc7860d99f9fce5ae23a490c6d3c2f44b717d375261af38",
+    "author": "artisticdude",
+    "license": "CC0-1.0",
+    "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source_url": "https://opengameart.org/content/swishes-sound-pack",
+    "attribution": "artisticdude — Swishes Sound Pack — https://opengameart.org/content/swishes-sound-pack — CC0-1.0. Durée et hauteur originales. Gain constant -7.00 dB ; WAV PCM16 44,1 kHz. Aucune coupe.",
+    "processing": {
+      "description": "Balayage de lame court",
+      "variant": "B · matière",
+      "layers": [
+        [
+          "blade_swing",
+          1.0,
+          1
+        ]
+      ],
+      "normalization": "RMS actif −23 dBFS, crête plafonnée à −8 dBFS"
+    },
+    "sources": [
+      {
+        "effect_id": "blade_swing",
+        "candidate_id": "blade_swing_b1_c",
+        "file": "assets/audio/sfx/selected/blade_swing.wav",
+        "sha256": "1ee3d119a6cd63414eb3a9cfd5117f8c0ca0a490a5c19924f22dec952f6f6dc3",
+        "author": "artisticdude",
+        "license": "CC0-1.0",
+        "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+        "source_url": "https://opengameart.org/content/swishes-sound-pack",
+        "attribution": "artisticdude — Swishes Sound Pack — https://opengameart.org/content/swishes-sound-pack — CC0-1.0. Durée et hauteur originales. Gain constant -7.00 dB ; WAV PCM16 44,1 kHz. Aucune coupe.",
+        "processing": "Durée et hauteur originales. Gain constant -7.00 dB ; WAV PCM16 44,1 kHz. Aucune coupe."
+      }
+    ],
+    "selection_date": "2026-10-07"
+  },
+  {
+    "effect_id": "weapon_heavy_hammer",
+    "candidate_id": "weapon_20261007_heavy_hammer_A",
+    "file": "assets/audio/sfx/weapons/heavy_hammer.wav",
+    "sha256": "c93a401d255b443d52a3d8b9b6e98f7fc737777c370e60e7f2d0b0ec725d0f49",
+    "author": "artisticdude ; rubberduck",
+    "license": "CC0-1.0",
+    "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source_url": "https://opengameart.org/content/swishes-sound-pack",
+    "attribution": "artisticdude — Swishes Sound Pack — https://opengameart.org/content/swishes-sound-pack — CC0-1.0. Hauteur abaissée et durée allongée (lecture à 75 %), aigus filtrés. Gain constant -7.30 dB ; WAV PCM16 44,1 kHz. Aucune coupe.\nrubberduck — 80 CC0 RPG SFX — https://opengameart.org/content/80-cc0-rpg-sfx — CC0-1.0. Hauteur abaissée, durée allongée et aigus filtrés. Gain constant +1.50 dB ; WAV PCM16 44,1 kHz. Aucune coupe.",
+    "processing": {
+      "description": "Masse creuse, ressort métallique",
+      "variant": "A · court",
+      "layers": [
+        [
+          "heavy_swing",
+          0.72,
+          1
+        ],
+        [
+          "clock_strike",
+          0.8,
+          0.22
+        ]
+      ],
+      "normalization": "RMS actif −23 dBFS, crête plafonnée à −8 dBFS"
+    },
+    "sources": [
+      {
+        "effect_id": "heavy_swing",
+        "candidate_id": "heavy_swing_b1_b",
+        "file": "assets/audio/sfx/selected/heavy_swing.wav",
+        "sha256": "237b9a6953c759d614aa64e4deeecf963dd56dbb63fc1ffe32d445d86449405b",
+        "author": "artisticdude",
+        "license": "CC0-1.0",
+        "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+        "source_url": "https://opengameart.org/content/swishes-sound-pack",
+        "attribution": "artisticdude — Swishes Sound Pack — https://opengameart.org/content/swishes-sound-pack — CC0-1.0. Hauteur abaissée et durée allongée (lecture à 75 %), aigus filtrés. Gain constant -7.30 dB ; WAV PCM16 44,1 kHz. Aucune coupe.",
+        "processing": "Hauteur abaissée et durée allongée (lecture à 75 %), aigus filtrés. Gain constant -7.30 dB ; WAV PCM16 44,1 kHz. Aucune coupe."
+      },
+      {
+        "effect_id": "clock_strike",
+        "candidate_id": "clock_strike_b3_c",
+        "file": "assets/audio/sfx/selected/clock_strike.wav",
+        "sha256": "6c845d86c7f038d07e9eeb7516cc370b9f6a18417132b3998de7142b77b22eb1",
+        "author": "rubberduck",
+        "license": "CC0-1.0",
+        "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+        "source_url": "https://opengameart.org/content/80-cc0-rpg-sfx",
+        "attribution": "rubberduck — 80 CC0 RPG SFX — https://opengameart.org/content/80-cc0-rpg-sfx — CC0-1.0. Hauteur abaissée, durée allongée et aigus filtrés. Gain constant +1.50 dB ; WAV PCM16 44,1 kHz. Aucune coupe.",
+        "processing": "Hauteur abaissée, durée allongée et aigus filtrés. Gain constant +1.50 dB ; WAV PCM16 44,1 kHz. Aucune coupe."
+      }
+    ],
+    "selection_date": "2026-10-07"
+  },
+  {
+    "effect_id": "weapon_makeshift_bow",
+    "candidate_id": "weapon_20261007_makeshift_bow_B",
+    "file": "assets/audio/sfx/weapons/makeshift_bow.wav",
+    "sha256": "46d21d60bf0650883ee4d54287a4b752bdf01564d4f77b3f59b9e32cf8d5f5be",
+    "author": "Ben Jaszczak & Brian Nelson",
+    "license": "CC0-1.0",
+    "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source_url": "https://opengameart.org/content/medieval-sound-effects-weapon-textures",
+    "attribution": "Ben Jaszczak & Brian Nelson — Medieval Weapon Textures — https://opengameart.org/content/medieval-sound-effects-weapon-textures — CC0-1.0. Filtre FFmpeg : aresample=44100,silenceremove=start_periods=1:start_duration=0.003:start_threshold=-42dB:stop_periods=1:stop_duration=0.22:stop_threshold=-42dB,volume=-0.20dB. Source originale conservée. Premier geste isolé avec suppression des silences ; écouter la fin de phrase.",
+    "processing": {
+      "description": "Corde sèche",
+      "variant": "B · matière",
+      "layers": [
+        [
+          "bow_release",
+          1,
+          1
+        ]
+      ],
+      "normalization": "RMS actif −23 dBFS, crête plafonnée à −8 dBFS"
+    },
+    "sources": [
+      {
+        "effect_id": "bow_release",
+        "candidate_id": "bow_release_b4_b",
+        "file": "assets/audio/sfx/selected/bow_release.wav",
+        "sha256": "86e87076accede780e6f9b447576b8ce92a8f464a4fa5c8da4ec28da156dae14",
+        "author": "Ben Jaszczak & Brian Nelson",
+        "license": "CC0-1.0",
+        "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+        "source_url": "https://opengameart.org/content/medieval-sound-effects-weapon-textures",
+        "attribution": "Ben Jaszczak & Brian Nelson — Medieval Weapon Textures — https://opengameart.org/content/medieval-sound-effects-weapon-textures — CC0-1.0. Filtre FFmpeg : aresample=44100,silenceremove=start_periods=1:start_duration=0.003:start_threshold=-42dB:stop_periods=1:stop_duration=0.22:stop_threshold=-42dB,volume=-0.20dB. Source originale conservée. Premier geste isolé avec suppression des silences ; écouter la fin de phrase.",
+        "processing": "Filtre FFmpeg : aresample=44100,silenceremove=start_periods=1:start_duration=0.003:start_threshold=-42dB:stop_periods=1:stop_duration=0.22:stop_threshold=-42dB,volume=-0.20dB. Source originale conservée. Premier geste isolé avec suppression des silences ; écouter la fin de phrase."
+      }
+    ],
+    "selection_date": "2026-10-07"
+  },
+  {
+    "effect_id": "weapon_crossbow",
+    "candidate_id": "weapon_20261007_crossbow_C",
+    "file": "assets/audio/sfx/weapons/crossbow.wav",
+    "sha256": "0f6a2ab3f87eb790742e21a2b560201ed3db8fdd4121788f0bbfeb0ec9759270",
+    "author": "Ben Jaszczak & Brian Nelson",
+    "license": "CC0-1.0",
+    "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source_url": "https://opengameart.org/content/medieval-sound-effects-weapon-textures",
+    "attribution": "Ben Jaszczak & Brian Nelson — Medieval Weapon Textures — https://opengameart.org/content/medieval-sound-effects-weapon-textures — CC0-1.0. Filtre FFmpeg : aresample=44100,silenceremove=start_periods=1:start_duration=0.003:start_threshold=-42dB:stop_periods=1:stop_duration=0.22:stop_threshold=-42dB,asetrate=39690,aresample=44100,volume=-3.40dB. Source originale conservée. Premier geste isolé avec suppression des silences ; écouter la fin de phrase.",
+    "processing": {
+      "description": "Percuteur court",
+      "variant": "C · feutré",
+      "layers": [
+        [
+          "crossbow_release",
+          1.1,
+          1
+        ]
+      ],
+      "normalization": "RMS actif −23 dBFS, crête plafonnée à −8 dBFS"
+    },
+    "sources": [
+      {
+        "effect_id": "crossbow_release",
+        "candidate_id": "crossbow_release_b4_b",
+        "file": "assets/audio/sfx/selected/crossbow_release.wav",
+        "sha256": "76c69b28b0464b58612416848bbaed5170357ef017a1fafdbabca0d768da907a",
+        "author": "Ben Jaszczak & Brian Nelson",
+        "license": "CC0-1.0",
+        "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+        "source_url": "https://opengameart.org/content/medieval-sound-effects-weapon-textures",
+        "attribution": "Ben Jaszczak & Brian Nelson — Medieval Weapon Textures — https://opengameart.org/content/medieval-sound-effects-weapon-textures — CC0-1.0. Filtre FFmpeg : aresample=44100,silenceremove=start_periods=1:start_duration=0.003:start_threshold=-42dB:stop_periods=1:stop_duration=0.22:stop_threshold=-42dB,asetrate=39690,aresample=44100,volume=-3.40dB. Source originale conservée. Premier geste isolé avec suppression des silences ; écouter la fin de phrase.",
+        "processing": "Filtre FFmpeg : aresample=44100,silenceremove=start_periods=1:start_duration=0.003:start_threshold=-42dB:stop_periods=1:stop_duration=0.22:stop_threshold=-42dB,asetrate=39690,aresample=44100,volume=-3.40dB. Source originale conservée. Premier geste isolé avec suppression des silences ; écouter la fin de phrase."
+      }
+    ],
+    "selection_date": "2026-10-07"
+  },
+  {
+    "effect_id": "weapon_surgeons_scalpel",
+    "candidate_id": "weapon_20261007_surgeons_scalpel_C",
+    "file": "assets/audio/sfx/weapons/surgeons_scalpel.wav",
+    "sha256": "3dccc0953d939231618bf94551e0d60fbac6d3daadd65c7d928c8f208b6b076c",
+    "author": "artisticdude",
+    "license": "CC0-1.0",
+    "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source_url": "https://opengameart.org/content/swishes-sound-pack",
+    "attribution": "artisticdude — Swishes Sound Pack — https://opengameart.org/content/swishes-sound-pack — CC0-1.0. Durée et hauteur originales. Gain constant -7.00 dB ; WAV PCM16 44,1 kHz. Aucune coupe.",
+    "processing": {
+      "description": "Petit trait de lame",
+      "variant": "C · feutré",
+      "layers": [
+        [
+          "blade_swing",
+          1.8,
+          1
+        ]
+      ],
+      "normalization": "RMS actif −23 dBFS, crête plafonnée à −8 dBFS"
+    },
+    "sources": [
+      {
+        "effect_id": "blade_swing",
+        "candidate_id": "blade_swing_b1_c",
+        "file": "assets/audio/sfx/selected/blade_swing.wav",
+        "sha256": "1ee3d119a6cd63414eb3a9cfd5117f8c0ca0a490a5c19924f22dec952f6f6dc3",
+        "author": "artisticdude",
+        "license": "CC0-1.0",
+        "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+        "source_url": "https://opengameart.org/content/swishes-sound-pack",
+        "attribution": "artisticdude — Swishes Sound Pack — https://opengameart.org/content/swishes-sound-pack — CC0-1.0. Durée et hauteur originales. Gain constant -7.00 dB ; WAV PCM16 44,1 kHz. Aucune coupe.",
+        "processing": "Durée et hauteur originales. Gain constant -7.00 dB ; WAV PCM16 44,1 kHz. Aucune coupe."
+      }
+    ],
+    "selection_date": "2026-10-07"
+  },
+  {
+    "effect_id": "weapon_chain_of_names",
+    "candidate_id": "weapon_20261007_chain_of_names_C",
+    "file": "assets/audio/sfx/weapons/chain_of_names.wav",
+    "sha256": "121bd9b737996ff81e42c4383d4f29e81fd450359ee9dda889259e6a0c8c2e19",
+    "author": "rubberduck",
+    "license": "CC0-1.0",
+    "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source_url": "https://opengameart.org/content/80-cc0-rpg-sfx",
+    "attribution": "rubberduck — 80 CC0 RPG SFX — https://opengameart.org/content/80-cc0-rpg-sfx — CC0-1.0. Durée et hauteur originales. Gain constant -3.60 dB ; WAV PCM16 44,1 kHz. Aucune coupe.",
+    "processing": {
+      "description": "Trousseau qui s'entrechoque",
+      "variant": "C · feutré",
+      "layers": [
+        [
+          "chain_jump",
+          1.2,
+          1
+        ]
+      ],
+      "normalization": "RMS actif −23 dBFS, crête plafonnée à −8 dBFS"
+    },
+    "sources": [
+      {
+        "effect_id": "chain_jump",
+        "candidate_id": "chain_jump_b3_a",
+        "file": "assets/audio/sfx/selected/chain_jump.wav",
+        "sha256": "28be1b3676f16c6ae2a3ee01fd949dafdf0ff0474112e65dd3fbba4fe0277e37",
+        "author": "rubberduck",
+        "license": "CC0-1.0",
+        "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+        "source_url": "https://opengameart.org/content/80-cc0-rpg-sfx",
+        "attribution": "rubberduck — 80 CC0 RPG SFX — https://opengameart.org/content/80-cc0-rpg-sfx — CC0-1.0. Durée et hauteur originales. Gain constant -3.60 dB ; WAV PCM16 44,1 kHz. Aucune coupe.",
+        "processing": "Durée et hauteur originales. Gain constant -3.60 dB ; WAV PCM16 44,1 kHz. Aucune coupe."
+      }
+    ],
+    "selection_date": "2026-10-07"
+  },
+  {
+    "effect_id": "weapon_compass_needle",
+    "candidate_id": "weapon_20261007_compass_needle_B",
+    "file": "assets/audio/sfx/weapons/compass_needle.wav",
+    "sha256": "8cfb835bcad6f398f4ea874438b41c2b03ed0ac9027f1faa009f93dc97334688",
+    "author": "Ben Jaszczak & Brian Nelson ; Kenney",
+    "license": "CC0-1.0",
+    "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source_url": "https://opengameart.org/content/medieval-sound-effects-weapon-textures",
+    "attribution": "Ben Jaszczak & Brian Nelson — Medieval Weapon Textures — https://opengameart.org/content/medieval-sound-effects-weapon-textures — CC0-1.0. Filtre FFmpeg : aresample=44100,silenceremove=start_periods=1:start_duration=0.003:start_threshold=-42dB:stop_periods=1:stop_duration=0.22:stop_threshold=-42dB,volume=12.00dB. Source originale conservée. Premier geste isolé avec suppression des silences ; écouter la fin de phrase.\nKenney — Interface Sounds — https://kenney.nl/assets/interface-sounds — CC0-1.0. Durée et hauteur originales. Gain constant -2.10 dB ; WAV PCM16 44,1 kHz. Aucune coupe.",
+    "processing": {
+      "description": "Petit ressort et vibration d'aiguille",
+      "variant": "B · matière",
+      "layers": [
+        [
+          "needle_shot",
+          0.85,
+          1
+        ],
+        [
+          "ui_click",
+          1.6,
+          0.2
+        ]
+      ],
+      "normalization": "RMS actif −23 dBFS, crête plafonnée à −8 dBFS"
+    },
+    "sources": [
+      {
+        "effect_id": "needle_shot",
+        "candidate_id": "needle_shot_b4_b",
+        "file": "assets/audio/sfx/selected/needle_shot.wav",
+        "sha256": "ba4b6e9002815173d732d566e188276deb5fefb77be2836345926d58fea7422b",
+        "author": "Ben Jaszczak & Brian Nelson",
+        "license": "CC0-1.0",
+        "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+        "source_url": "https://opengameart.org/content/medieval-sound-effects-weapon-textures",
+        "attribution": "Ben Jaszczak & Brian Nelson — Medieval Weapon Textures — https://opengameart.org/content/medieval-sound-effects-weapon-textures — CC0-1.0. Filtre FFmpeg : aresample=44100,silenceremove=start_periods=1:start_duration=0.003:start_threshold=-42dB:stop_periods=1:stop_duration=0.22:stop_threshold=-42dB,volume=12.00dB. Source originale conservée. Premier geste isolé avec suppression des silences ; écouter la fin de phrase.",
+        "processing": "Filtre FFmpeg : aresample=44100,silenceremove=start_periods=1:start_duration=0.003:start_threshold=-42dB:stop_periods=1:stop_duration=0.22:stop_threshold=-42dB,volume=12.00dB. Source originale conservée. Premier geste isolé avec suppression des silences ; écouter la fin de phrase."
+      },
+      {
+        "effect_id": "ui_click",
+        "candidate_id": "ui_click_b2_a",
+        "file": "assets/audio/sfx/selected/ui_click.wav",
+        "sha256": "3dd24164df4f4fb6803e5d0cc3ad3f24c36136ceaa12fa7825862d2e709f23c2",
+        "author": "Kenney",
+        "license": "CC0-1.0",
+        "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+        "source_url": "https://kenney.nl/assets/interface-sounds",
+        "attribution": "Kenney — Interface Sounds — https://kenney.nl/assets/interface-sounds — CC0-1.0. Durée et hauteur originales. Gain constant -2.10 dB ; WAV PCM16 44,1 kHz. Aucune coupe.",
+        "processing": "Durée et hauteur originales. Gain constant -2.10 dB ; WAV PCM16 44,1 kHz. Aucune coupe."
+      }
+    ],
+    "selection_date": "2026-10-07"
+  },
+  {
+    "effect_id": "weapon_memory_lantern",
+    "candidate_id": "weapon_20261007_memory_lantern_C",
+    "file": "assets/audio/sfx/weapons/memory_lantern.wav",
+    "sha256": "ea9eadbbee7960254d106c47fe4262cb2b8878baeab68e4be583f13a5c3f20c1",
+    "author": "rubberduck",
+    "license": "CC0-1.0",
+    "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source_url": "https://opengameart.org/content/80-cc0-rpg-sfx",
+    "attribution": "rubberduck — 80 CC0 RPG SFX — https://opengameart.org/content/80-cc0-rpg-sfx — CC0-1.0. Aigus atténués par filtrage. Gain constant +12.00 dB ; WAV PCM16 44,1 kHz. Aucune coupe.",
+    "processing": {
+      "description": "Souffle bref de flamme",
+      "variant": "C · feutré",
+      "layers": [
+        [
+          "lantern_fire",
+          1.15,
+          1
+        ]
+      ],
+      "normalization": "RMS actif −23 dBFS, crête plafonnée à −8 dBFS"
+    },
+    "sources": [
+      {
+        "effect_id": "lantern_fire",
+        "candidate_id": "lantern_fire_b3_b",
+        "file": "assets/audio/sfx/selected/lantern_fire.wav",
+        "sha256": "cf8e902af766e6dd0bcbff543dfe157e1a7a1b13263e7d80ffa748a8001988ce",
+        "author": "rubberduck",
+        "license": "CC0-1.0",
+        "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+        "source_url": "https://opengameart.org/content/80-cc0-rpg-sfx",
+        "attribution": "rubberduck — 80 CC0 RPG SFX — https://opengameart.org/content/80-cc0-rpg-sfx — CC0-1.0. Aigus atténués par filtrage. Gain constant +12.00 dB ; WAV PCM16 44,1 kHz. Aucune coupe.",
+        "processing": "Aigus atténués par filtrage. Gain constant +12.00 dB ; WAV PCM16 44,1 kHz. Aucune coupe."
+      }
+    ],
+    "selection_date": "2026-10-07"
+  },
+  {
+    "effect_id": "weapon_echo_gauntlets",
+    "candidate_id": "weapon_20261007_echo_gauntlets_A",
+    "file": "assets/audio/sfx/weapons/echo_gauntlets.wav",
+    "sha256": "78d4e21c21481779006b54c98796943938caeff901811cb0e8542113e970c08b",
+    "author": "artisticdude ; rubberduck",
+    "license": "CC0-1.0",
+    "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source_url": "https://opengameart.org/content/swishes-sound-pack",
+    "attribution": "artisticdude — Swishes Sound Pack — https://opengameart.org/content/swishes-sound-pack — CC0-1.0. Hauteur abaissée et durée allongée (lecture à 75 %), aigus filtrés. Gain constant -7.30 dB ; WAV PCM16 44,1 kHz. Aucune coupe.\nrubberduck — 80 CC0 RPG SFX — https://opengameart.org/content/80-cc0-rpg-sfx — CC0-1.0 (https://creativecommons.org/publicdomain/zero/1.0/). Adaptation : WAV PCM16 44,1 kHz. Traitement ffmpeg : aresample=44100,anull,volume=-3.30dB. Atténuation intentionnelle après équilibrage : 0 dB.",
+    "processing": {
+      "description": "Souffle mat et cuir",
+      "variant": "A · court",
+      "layers": [
+        [
+          "heavy_swing",
+          0.85,
+          1
+        ],
+        [
+          "whip_snap",
+          0.7,
+          0.15
+        ]
+      ],
+      "normalization": "RMS actif −23 dBFS, crête plafonnée à −8 dBFS"
+    },
+    "sources": [
+      {
+        "effect_id": "heavy_swing",
+        "candidate_id": "heavy_swing_b1_b",
+        "file": "assets/audio/sfx/selected/heavy_swing.wav",
+        "sha256": "237b9a6953c759d614aa64e4deeecf963dd56dbb63fc1ffe32d445d86449405b",
+        "author": "artisticdude",
+        "license": "CC0-1.0",
+        "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+        "source_url": "https://opengameart.org/content/swishes-sound-pack",
+        "attribution": "artisticdude — Swishes Sound Pack — https://opengameart.org/content/swishes-sound-pack — CC0-1.0. Hauteur abaissée et durée allongée (lecture à 75 %), aigus filtrés. Gain constant -7.30 dB ; WAV PCM16 44,1 kHz. Aucune coupe.",
+        "processing": "Hauteur abaissée et durée allongée (lecture à 75 %), aigus filtrés. Gain constant -7.30 dB ; WAV PCM16 44,1 kHz. Aucune coupe."
+      },
+      {
+        "effect_id": "whip_snap",
+        "candidate_id": "whip_snap_b6_a",
+        "file": "assets/audio/sfx/selected/whip_snap.wav",
+        "sha256": "72cf627d455c9354bbc614e2df439b00a64b676c72490e9f334922ae69bf8522",
+        "author": "rubberduck",
+        "license": "CC0-1.0",
+        "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+        "source_url": "https://opengameart.org/content/80-cc0-rpg-sfx",
+        "attribution": "rubberduck — 80 CC0 RPG SFX — https://opengameart.org/content/80-cc0-rpg-sfx — CC0-1.0 (https://creativecommons.org/publicdomain/zero/1.0/). Adaptation : WAV PCM16 44,1 kHz. Traitement ffmpeg : aresample=44100,anull,volume=-3.30dB. Atténuation intentionnelle après équilibrage : 0 dB.",
+        "processing": "WAV PCM16 44,1 kHz. Traitement ffmpeg : aresample=44100,anull,volume=-3.30dB. Atténuation intentionnelle après équilibrage : 0 dB."
+      }
+    ],
+    "selection_date": "2026-10-07"
+  },
+  {
+    "effect_id": "weapon_sling",
+    "candidate_id": "weapon_20261007_r2_sling_B",
+    "file": "assets/audio/sfx/weapons/sling.wav",
+    "sha256": "6776eafb3af496d577ea987a136be218c6b208390c3793b1ba9b7f5c750cf0a5",
+    "author": "Joseph SARDIN",
+    "license": "CC0-1.0",
+    "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source_url": "https://bigsoundbank.com/electric-switch-s0026.html",
+    "attribution": "Joseph SARDIN — electric-switch — https://bigsoundbank.com/electric-switch-s0026.html — CC0-1.0\nJoseph SARDIN — glass-ball-bounce-2 — https://bigsoundbank.com/glass-ball-bounce-2-s2241.html — CC0-1.0",
+    "processing": {
+      "layers": [
+        {
+          "source": "0026",
+          "start_s": 0.2,
+          "duration_s": 0.13,
+          "offset_s": 0,
+          "weight": 0.6
+        },
+        {
+          "source": "2241",
+          "start_s": 0.035,
+          "duration_s": 0.15,
+          "offset_s": 0.075,
+          "weight": 1
+        }
+      ],
+      "highpass_hz": 80,
+      "attack_ms": 2,
+      "release_ms": 40,
+      "normalization": "RMS actif −23 dBFS, crête au plus −8 dBFS"
+    },
+    "sources": [
+      {
+        "id": "0026",
+        "title": "electric-switch",
+        "author": "Joseph SARDIN",
+        "license": "CC0-1.0",
+        "url": "https://bigsoundbank.com/electric-switch-s0026.html",
+        "download_url": "https://bigsoundbank.com/UPLOAD/bwf-en/0026.wav",
+        "sha256": "836d737af5128b7f4a975062e7360df5f777871070d1dac6d8686bb5e5b37ef8"
+      },
+      {
+        "id": "2241",
+        "title": "glass-ball-bounce-2",
+        "author": "Joseph SARDIN",
+        "license": "CC0-1.0",
+        "url": "https://bigsoundbank.com/glass-ball-bounce-2-s2241.html",
+        "download_url": "https://bigsoundbank.com/UPLOAD/bwf-en/2241.wav",
+        "sha256": "d33f6bdab7519f170721a047d2529ed9af0a7816bb89ad3eaf8b5da36d05ab20"
+      }
+    ],
+    "selection_date": "2026-10-07"
+  },
+  {
+    "effect_id": "weapon_sharpened_pipe",
+    "candidate_id": "weapon_20261007_r2_sharpened_pipe_C",
+    "file": "assets/audio/sfx/weapons/sharpened_pipe.wav",
+    "sha256": "d20291bfb6a8cdda25782750850c70918ebbb7976d1fd1f4731c6cc3c1ea3e5c",
+    "author": "ValentinPetiteau",
+    "license": "CC0-1.0",
+    "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source_url": "https://freesound.org/people/ValentinPetiteau/sounds/628658/",
+    "attribution": "ValentinPetiteau — umbrella — https://freesound.org/people/ValentinPetiteau/sounds/628658/ — CC0-1.0 — Aperçu public MP3 haute qualité ; pas le WAV original.",
+    "processing": {
+      "layers": [
+        {
+          "source": "628658",
+          "start_s": 12.96,
+          "duration_s": 0.54,
+          "offset_s": 0,
+          "weight": 1
+        }
+      ],
+      "highpass_hz": 80,
+      "attack_ms": 2,
+      "release_ms": 40,
+      "normalization": "RMS actif −23 dBFS, crête au plus −8 dBFS"
+    },
+    "sources": [
+      {
+        "id": "628658",
+        "title": "umbrella",
+        "author": "ValentinPetiteau",
+        "license": "CC0-1.0",
+        "url": "https://freesound.org/people/ValentinPetiteau/sounds/628658/",
+        "download_url": "https://cdn.freesound.org/previews/628/628658_10443988-hq.mp3",
+        "sha256": "082a45e57e0e9404472d359c495680e7a4523a12800f9a51fc525f697ff7941a",
+        "format_note": "Aperçu public MP3 haute qualité ; pas le WAV original."
+      }
+    ],
+    "selection_date": "2026-10-07"
+  },
+  {
+    "effect_id": "weapon_cleaver",
+    "candidate_id": "weapon_20261007_r2_cleaver_A",
+    "file": "assets/audio/sfx/weapons/cleaver.wav",
+    "sha256": "bd187e34d08728ecf32c473efebbd2f3d5e0d8849753a4937d0c38dfa0975567",
+    "author": "Joseph SARDIN",
+    "license": "CC0-1.0",
+    "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source_url": "https://bigsoundbank.com/shot-shovel-s1084.html",
+    "attribution": "Joseph SARDIN — shot-shovel — https://bigsoundbank.com/shot-shovel-s1084.html — CC0-1.0",
+    "processing": {
+      "layers": [
+        {
+          "source": "1084",
+          "start_s": 3.16,
+          "duration_s": 0.32,
+          "offset_s": 0,
+          "weight": 1
+        }
+      ],
+      "highpass_hz": 80,
+      "attack_ms": 2,
+      "release_ms": 40,
+      "normalization": "RMS actif −23 dBFS, crête au plus −8 dBFS"
+    },
+    "sources": [
+      {
+        "id": "1084",
+        "title": "shot-shovel",
+        "author": "Joseph SARDIN",
+        "license": "CC0-1.0",
+        "url": "https://bigsoundbank.com/shot-shovel-s1084.html",
+        "download_url": "https://bigsoundbank.com/UPLOAD/bwf-en/1084.wav",
+        "sha256": "635f9f57e8224e937863d04fff586003b61e05b2b76d577ec48c355784bd189f"
+      }
+    ],
+    "selection_date": "2026-10-07"
+  },
+  {
+    "effect_id": "weapon_whip",
+    "candidate_id": "weapon_20261007_r2_whip_B",
+    "file": "assets/audio/sfx/weapons/whip.wav",
+    "sha256": "4a3797166f82e819cb9cc897cb7c14884ad6a46fd4d1f52dc47de411829cd22c",
+    "author": "Xemptful",
+    "license": "CC0-1.0",
+    "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source_url": "https://freesound.org/people/Xemptful/sounds/660389/",
+    "attribution": "Xemptful — cable — https://freesound.org/people/Xemptful/sounds/660389/ — CC0-1.0 — Aperçu public MP3 haute qualité ; pas le WAV original.",
+    "processing": {
+      "layers": [
+        {
+          "source": "660389",
+          "start_s": 1.91,
+          "duration_s": 0.2,
+          "offset_s": 0,
+          "weight": 1
+        }
+      ],
+      "highpass_hz": 80,
+      "attack_ms": 2,
+      "release_ms": 40,
+      "normalization": "RMS actif −23 dBFS, crête au plus −8 dBFS"
+    },
+    "sources": [
+      {
+        "id": "660389",
+        "title": "cable",
+        "author": "Xemptful",
+        "license": "CC0-1.0",
+        "url": "https://freesound.org/people/Xemptful/sounds/660389/",
+        "download_url": "https://cdn.freesound.org/previews/660/660389_3531538-hq.mp3",
+        "sha256": "7fc0fe3bbb8818be3d2bcc21413bb3d1fe889e55fff571b3ec7979a93cb29f23",
+        "format_note": "Aperçu public MP3 haute qualité ; pas le WAV original."
+      }
+    ],
+    "selection_date": "2026-10-07"
+  },
+  {
+    "effect_id": "weapon_throwing_axes",
+    "candidate_id": "weapon_20261007_r2_throwing_axes_A",
+    "file": "assets/audio/sfx/weapons/throwing_axes.wav",
+    "sha256": "8b3b7fe667e766db2d210c6ea3764169499feb252c511f869a509bbfc7fc174c",
+    "author": "Joseph SARDIN",
+    "license": "CC0-1.0",
+    "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source_url": "https://bigsoundbank.com/large-plate-set-on-table-s1189.html",
+    "attribution": "Joseph SARDIN — large-plate-set-on-table — https://bigsoundbank.com/large-plate-set-on-table-s1189.html — CC0-1.0",
+    "processing": {
+      "layers": [
+        {
+          "source": "1189",
+          "start_s": 0.45,
+          "duration_s": 0.32,
+          "offset_s": 0,
+          "weight": 1
+        }
+      ],
+      "highpass_hz": 80,
+      "attack_ms": 2,
+      "release_ms": 40,
+      "normalization": "RMS actif −23 dBFS, crête au plus −8 dBFS"
+    },
+    "sources": [
+      {
+        "id": "1189",
+        "title": "large-plate-set-on-table",
+        "author": "Joseph SARDIN",
+        "license": "CC0-1.0",
+        "url": "https://bigsoundbank.com/large-plate-set-on-table-s1189.html",
+        "download_url": "https://bigsoundbank.com/UPLOAD/bwf-en/1189.wav",
+        "sha256": "3ab52dbcdf11b5faba0e489c2decf5544a87b8213d7bfa956742182620664d2b"
+      }
+    ],
+    "selection_date": "2026-10-07"
+  },
+  {
+    "effect_id": "weapon_nail_mace",
+    "candidate_id": "weapon_20261007_r2_nail_mace_A",
+    "file": "assets/audio/sfx/weapons/nail_mace.wav",
+    "sha256": "0380823017426414768c397cee6bc8aa2f53f3914527c96953373c713fe03c35",
+    "author": "RavenWolfProds",
+    "license": "CC0-1.0",
+    "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source_url": "https://freesound.org/people/RavenWolfProds/sounds/503669/",
+    "attribution": "RavenWolfProds — Scraping Rake on Cement — https://freesound.org/people/RavenWolfProds/sounds/503669/ — CC0-1.0 — Aperçu public MP3 haute qualité ; pas le WAV original.",
+    "processing": {
+      "layers": [
+        {
+          "source": "503669",
+          "start_s": 0.1,
+          "duration_s": 0.3,
+          "offset_s": 0,
+          "weight": 1
+        }
+      ],
+      "highpass_hz": 80,
+      "attack_ms": 2,
+      "release_ms": 40,
+      "normalization": "RMS actif −23 dBFS, crête au plus −8 dBFS"
+    },
+    "sources": [
+      {
+        "id": "503669",
+        "title": "Scraping Rake on Cement",
+        "author": "RavenWolfProds",
+        "license": "CC0-1.0",
+        "url": "https://freesound.org/people/RavenWolfProds/sounds/503669/",
+        "download_url": "https://cdn.freesound.org/previews/503/503669_9619518-hq.mp3",
+        "sha256": "22c33f798464e627b0457890d73156ac446334d2ed71f8bb5b271fa8eee8e5aa",
+        "format_note": "Aperçu public MP3 haute qualité ; pas le WAV original."
+      }
+    ],
+    "selection_date": "2026-10-07"
+  },
+  {
+    "effect_id": "weapon_lighthouse_shard",
+    "candidate_id": "weapon_20261007_r2_lighthouse_shard_C",
+    "file": "assets/audio/sfx/weapons/lighthouse_shard.wav",
+    "sha256": "49843ae0203c23d9e2a168c489fbd892febbf0bf4ad32bf6c0c358ec1751072f",
+    "author": "Joseph SARDIN",
+    "license": "CC0-1.0",
+    "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source_url": "https://bigsoundbank.com/cheers-big-red-wine-glass-1-s1332.html",
+    "attribution": "Joseph SARDIN — cheers-big-red-wine-glass-1 — https://bigsoundbank.com/cheers-big-red-wine-glass-1-s1332.html — CC0-1.0",
+    "processing": {
+      "layers": [
+        {
+          "source": "1332",
+          "start_s": 0,
+          "duration_s": 0.5,
+          "offset_s": 0,
+          "weight": 1
+        }
+      ],
+      "highpass_hz": 80,
+      "attack_ms": 2,
+      "release_ms": 40,
+      "normalization": "RMS actif −23 dBFS, crête au plus −8 dBFS"
+    },
+    "sources": [
+      {
+        "id": "1332",
+        "title": "cheers-big-red-wine-glass-1",
+        "author": "Joseph SARDIN",
+        "license": "CC0-1.0",
+        "url": "https://bigsoundbank.com/cheers-big-red-wine-glass-1-s1332.html",
+        "download_url": "https://bigsoundbank.com/UPLOAD/bwf-en/1332.wav",
+        "sha256": "8e38aff975ad5dcea85b1591450595be15a194d4a743325c04b9a1f743bf406b"
+      }
+    ],
+    "selection_date": "2026-10-07"
+  },
+  {
+    "effect_id": "weapon_photographers_flash",
+    "candidate_id": "weapon_20261007_r2_photographers_flash_C",
+    "file": "assets/audio/sfx/weapons/photographers_flash.wav",
+    "sha256": "08bd2ff63eb4fd279a98e65631df305aff849b024c73e487eb6d113b67fa2932",
+    "author": "Joseph SARDIN",
+    "license": "CC0-1.0",
+    "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source_url": "https://bigsoundbank.com/trigger-of-camera-1-s2394.html",
+    "attribution": "Joseph SARDIN — trigger-of-camera-1 — https://bigsoundbank.com/trigger-of-camera-1-s2394.html — CC0-1.0",
+    "processing": {
+      "layers": [
+        {
+          "source": "2394",
+          "start_s": 0,
+          "duration_s": 0.36,
+          "offset_s": 0,
+          "weight": 1
+        }
+      ],
+      "highpass_hz": 80,
+      "attack_ms": 2,
+      "release_ms": 40,
+      "normalization": "RMS actif −23 dBFS, crête au plus −8 dBFS"
+    },
+    "sources": [
+      {
+        "id": "2394",
+        "title": "trigger-of-camera-1",
+        "author": "Joseph SARDIN",
+        "license": "CC0-1.0",
+        "url": "https://bigsoundbank.com/trigger-of-camera-1-s2394.html",
+        "download_url": "https://bigsoundbank.com/UPLOAD/bwf-en/2394.wav",
+        "sha256": "13f7bce2d10803faa07a7e32e49bf5870fd9de41b492ec488ce6b07b224bca03"
+      }
+    ],
+    "selection_date": "2026-10-07"
+  },
+  {
+    "effect_id": "weapon_essence_staff",
+    "candidate_id": "weapon_20261007_r2_essence_staff_A",
+    "file": "assets/audio/sfx/weapons/essence_staff.wav",
+    "sha256": "1d099ae6aa30e9428f31f25bd8a08653e87d2ba7d43dc1f9ea03019beaf9cad9",
+    "author": "Joseph SARDIN",
+    "license": "CC0-1.0",
+    "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source_url": "https://bigsoundbank.com/drumsticks-1-s1488.html",
+    "attribution": "Joseph SARDIN — drumsticks-1 — https://bigsoundbank.com/drumsticks-1-s1488.html — CC0-1.0",
+    "processing": {
+      "layers": [
+        {
+          "source": "1488",
+          "start_s": 0.44,
+          "duration_s": 0.24,
+          "offset_s": 0,
+          "weight": 1
+        }
+      ],
+      "highpass_hz": 80,
+      "attack_ms": 2,
+      "release_ms": 40,
+      "normalization": "RMS actif −23 dBFS, crête au plus −8 dBFS"
+    },
+    "sources": [
+      {
+        "id": "1488",
+        "title": "drumsticks-1",
+        "author": "Joseph SARDIN",
+        "license": "CC0-1.0",
+        "url": "https://bigsoundbank.com/drumsticks-1-s1488.html",
+        "download_url": "https://bigsoundbank.com/UPLOAD/bwf-en/1488.wav",
+        "sha256": "404f639cb1555478e289212ab34763a3f24d7fa76cfabb8e77eaa5e60626b26a"
+      }
+    ],
+    "selection_date": "2026-10-07"
+  },
+  {
+    "effect_id": "weapon_void_edge",
+    "candidate_id": "weapon_20261007_r2_void_edge_C",
+    "file": "assets/audio/sfx/weapons/void_edge.wav",
+    "sha256": "63bc15c15e570df6707b07edde48ecd8ea1e93fded443c33b61ea3b3f33e37d1",
+    "author": "sseletskyy",
+    "license": "CC0-1.0",
+    "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source_url": "https://freesound.org/people/sseletskyy/sounds/180436/",
+    "attribution": "sseletskyy — STE-001_eraser — https://freesound.org/people/sseletskyy/sounds/180436/ — CC0-1.0 — Aperçu public MP3 haute qualité ; pas le WAV original.",
+    "processing": {
+      "layers": [
+        {
+          "source": "180436",
+          "start_s": 7.42,
+          "duration_s": 0.34,
+          "offset_s": 0,
+          "weight": 1
+        }
+      ],
+      "highpass_hz": 80,
+      "attack_ms": 2,
+      "release_ms": 40,
+      "normalization": "RMS actif −23 dBFS, crête au plus −8 dBFS"
+    },
+    "sources": [
+      {
+        "id": "180436",
+        "title": "STE-001_eraser",
+        "author": "sseletskyy",
+        "license": "CC0-1.0",
+        "url": "https://freesound.org/people/sseletskyy/sounds/180436/",
+        "download_url": "https://cdn.freesound.org/previews/180/180436_1114340-hq.mp3",
+        "sha256": "b07dbb934943b533a4cd07384d827b90e4b954bdae8e6167e9e828c48f683b98",
+        "format_note": "Aperçu public MP3 haute qualité ; pas le WAV original."
+      }
+    ],
+    "selection_date": "2026-10-07"
+  },
+  {
+    "effect_id": "weapon_childs_drawing",
+    "candidate_id": "weapon_20261007_r2_childs_drawing_B",
+    "file": "assets/audio/sfx/weapons/childs_drawing.wav",
+    "sha256": "ad609385580df8adbbe57108d1719557fb0d4d9451fced0caa0c71e6d067c332",
+    "author": "Joseph SARDIN",
+    "license": "CC0-1.0",
+    "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source_url": "https://bigsoundbank.com/chalk-on-bitumen-s3223.html",
+    "attribution": "Joseph SARDIN — chalk-on-bitumen — https://bigsoundbank.com/chalk-on-bitumen-s3223.html — CC0-1.0",
+    "processing": {
+      "layers": [
+        {
+          "source": "3223",
+          "start_s": 0.87,
+          "duration_s": 0.35,
+          "offset_s": 0,
+          "weight": 1
+        }
+      ],
+      "highpass_hz": 80,
+      "attack_ms": 2,
+      "release_ms": 40,
+      "normalization": "RMS actif −23 dBFS, crête au plus −8 dBFS"
+    },
+    "sources": [
+      {
+        "id": "3223",
+        "title": "chalk-on-bitumen",
+        "author": "Joseph SARDIN",
+        "license": "CC0-1.0",
+        "url": "https://bigsoundbank.com/chalk-on-bitumen-s3223.html",
+        "download_url": "https://bigsoundbank.com/UPLOAD/bwf-en/3223.wav",
+        "sha256": "4969d0b00fae1461b46d42858cc52df12b469356155923669e1cebfb76f50f87"
+      }
+    ],
+    "selection_date": "2026-10-07"
+  },
+  {
+    "effect_id": "weapon_last_broadcast",
+    "candidate_id": "weapon_20261007_r2_last_broadcast_A",
+    "file": "assets/audio/sfx/weapons/last_broadcast.wav",
+    "sha256": "993bd3ec049ee190eb9489e0b3f6abaee0cc5626cf02628a03f965599ee7a783",
+    "author": "Joseph SARDIN",
+    "license": "CC0-1.0",
+    "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source_url": "https://bigsoundbank.com/old-switch-s0540.html",
+    "attribution": "Joseph SARDIN — old-switch — https://bigsoundbank.com/old-switch-s0540.html — CC0-1.0\nJoseph SARDIN — crackling-radio-1 — https://bigsoundbank.com/crackling-radio-1-s0312.html — CC0-1.0",
+    "processing": {
+      "layers": [
+        {
+          "source": "0540",
+          "start_s": 0.13,
+          "duration_s": 0.14,
+          "offset_s": 0,
+          "weight": 0.5
+        },
+        {
+          "source": "0312",
+          "start_s": 0.25,
+          "duration_s": 0.22,
+          "offset_s": 0.05,
+          "weight": 1
+        }
+      ],
+      "highpass_hz": 80,
+      "attack_ms": 2,
+      "release_ms": 40,
+      "normalization": "RMS actif −23 dBFS, crête au plus −8 dBFS"
+    },
+    "sources": [
+      {
+        "id": "0540",
+        "title": "old-switch",
+        "author": "Joseph SARDIN",
+        "license": "CC0-1.0",
+        "url": "https://bigsoundbank.com/old-switch-s0540.html",
+        "download_url": "https://bigsoundbank.com/UPLOAD/bwf-en/0540.wav",
+        "sha256": "cc3e8616f03787e463e14c112c02d02aa3dc8c733bf9a0cdab3369a472049ae8"
+      },
+      {
+        "id": "0312",
+        "title": "crackling-radio-1",
+        "author": "Joseph SARDIN",
+        "license": "CC0-1.0",
+        "url": "https://bigsoundbank.com/crackling-radio-1-s0312.html",
+        "download_url": "https://bigsoundbank.com/UPLOAD/bwf-en/0312.wav",
+        "sha256": "e53ec91815d493e8046e2a05059ceb7fd179130584befb8b891fd54437e42f8d"
+      }
+    ],
+    "selection_date": "2026-10-07"
+  },
+  {
+    "effect_id": "weapon_clock_hand",
+    "candidate_id": "weapon_20261007_r2_clock_hand_C",
+    "file": "assets/audio/sfx/weapons/clock_hand.wav",
+    "sha256": "9ba8010d8f5230c0ebc61aa9da136b0542d7a5f4dea06047245d7b0dd68a32f1",
+    "author": "Joseph SARDIN",
+    "license": "CC0-1.0",
+    "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source_url": "https://bigsoundbank.com/tic-tac-mechanical-alarm-clock-s1372.html",
+    "attribution": "Joseph SARDIN — tic-tac-mechanical-alarm-clock — https://bigsoundbank.com/tic-tac-mechanical-alarm-clock-s1372.html — CC0-1.0",
+    "processing": {
+      "layers": [
+        {
+          "source": "1372",
+          "start_s": 0.9,
+          "duration_s": 0.43,
+          "offset_s": 0,
+          "weight": 1
+        }
+      ],
+      "highpass_hz": 80,
+      "attack_ms": 2,
+      "release_ms": 40,
+      "normalization": "RMS actif −23 dBFS, crête au plus −8 dBFS"
+    },
+    "sources": [
+      {
+        "id": "1372",
+        "title": "tic-tac-mechanical-alarm-clock",
+        "author": "Joseph SARDIN",
+        "license": "CC0-1.0",
+        "url": "https://bigsoundbank.com/tic-tac-mechanical-alarm-clock-s1372.html",
+        "download_url": "https://bigsoundbank.com/UPLOAD/bwf-en/1372.wav",
+        "sha256": "a8bd1b1f7a58002b2a80ad1320679748f62416444ec2691aa00b5b29f6bf248b"
+      }
+    ],
+    "selection_date": "2026-10-07"
+  },
+  {
+    "effect_id": "weapon_teachers_bell",
+    "candidate_id": "weapon_20261007_r3_teachers_bell_B",
+    "file": "assets/audio/sfx/weapons/teachers_bell.wav",
+    "sha256": "d5cec39e23a8bb318ce06f450d6de1a390914d45a5f085ca49fdddafeb63a863",
+    "author": "VESTIGES",
+    "license": "Original",
+    "source_url": "Synthèse originale VESTIGES — audition R3",
+    "attribution": "Synthèse originale VESTIGES ; choix explicite de Raphaël : B",
+    "processing": {
+      "synthesis": "Sinus 660 Hz + harmonique octave à 12 %, décroissance 7/s, 300 ms",
+      "normalization": "RMS actif −23 dBFS, crête au plus −8 dBFS, fondus de bord 2/40 ms"
+    },
+    "note": null,
+    "semitones": null,
+    "selection_date": "2026-10-07"
+  },
+  {
+    "effect_id": "weapon_music_box",
+    "candidate_id": "weapon_20261007_r3_music_box_C_0",
+    "file": "assets/audio/sfx/weapons/music_box_0.wav",
+    "sha256": "f6af7e3afad313825c13606ba8a5b8a0b90ade09b20ff03f829ee1d10aa7ea31",
+    "author": "VESTIGES",
+    "license": "Original",
+    "source_url": "Synthèse originale VESTIGES — audition R3",
+    "attribution": "Synthèse originale VESTIGES ; choix explicite de Raphaël : C",
+    "processing": {
+      "notes_semitones": [
+        0,
+        2,
+        4,
+        7,
+        9
+      ],
+      "selection": "Uniforme parmi les quatre autres notes après chaque déclenchement ; pas de répétition immédiate",
+      "example_seed": 221092026,
+      "example_indices": [
+        2,
+        3,
+        1,
+        3,
+        4,
+        2,
+        1,
+        0,
+        4,
+        2
+      ],
+      "source": "Synthèse originale VESTIGES",
+      "duration_s": 0.25,
+      "synthesis": "Fondamentale do5, sinus décroissance 10/s + harmonique 3 à 18 %, décroissance 25/s",
+      "normalization": "RMS actif −23 dBFS, crête au plus −8 dBFS, fondus de bord 2/40 ms"
+    },
+    "note": "do",
+    "semitones": 0,
+    "selection_date": "2026-10-07"
+  },
+  {
+    "effect_id": "weapon_music_box_2",
+    "candidate_id": "weapon_20261007_r3_music_box_C_2",
+    "file": "assets/audio/sfx/weapons/music_box_2.wav",
+    "sha256": "c3cb2402f7fef48709cbd916de30ad8d8a64aa40de48e4fe0a3f64d6cee105c0",
+    "author": "VESTIGES",
+    "license": "Original",
+    "source_url": "Synthèse originale VESTIGES — audition R3",
+    "attribution": "Synthèse originale VESTIGES ; choix explicite de Raphaël : C",
+    "processing": {
+      "notes_semitones": [
+        0,
+        2,
+        4,
+        7,
+        9
+      ],
+      "selection": "Uniforme parmi les quatre autres notes après chaque déclenchement ; pas de répétition immédiate",
+      "example_seed": 221092026,
+      "example_indices": [
+        2,
+        3,
+        1,
+        3,
+        4,
+        2,
+        1,
+        0,
+        4,
+        2
+      ],
+      "source": "Synthèse originale VESTIGES",
+      "duration_s": 0.25,
+      "synthesis": "Fondamentale do5, sinus décroissance 10/s + harmonique 3 à 18 %, décroissance 25/s",
+      "normalization": "RMS actif −23 dBFS, crête au plus −8 dBFS, fondus de bord 2/40 ms"
+    },
+    "note": "ré",
+    "semitones": 2,
+    "selection_date": "2026-10-07"
+  },
+  {
+    "effect_id": "weapon_music_box_4",
+    "candidate_id": "weapon_20261007_r3_music_box_C_4",
+    "file": "assets/audio/sfx/weapons/music_box_4.wav",
+    "sha256": "50e78c94b41757d741c98a6ea02103edadf9633942510f50e9403e6d5571079b",
+    "author": "VESTIGES",
+    "license": "Original",
+    "source_url": "Synthèse originale VESTIGES — audition R3",
+    "attribution": "Synthèse originale VESTIGES ; choix explicite de Raphaël : C",
+    "processing": {
+      "notes_semitones": [
+        0,
+        2,
+        4,
+        7,
+        9
+      ],
+      "selection": "Uniforme parmi les quatre autres notes après chaque déclenchement ; pas de répétition immédiate",
+      "example_seed": 221092026,
+      "example_indices": [
+        2,
+        3,
+        1,
+        3,
+        4,
+        2,
+        1,
+        0,
+        4,
+        2
+      ],
+      "source": "Synthèse originale VESTIGES",
+      "duration_s": 0.25,
+      "synthesis": "Fondamentale do5, sinus décroissance 10/s + harmonique 3 à 18 %, décroissance 25/s",
+      "normalization": "RMS actif −23 dBFS, crête au plus −8 dBFS, fondus de bord 2/40 ms"
+    },
+    "note": "mi",
+    "semitones": 4,
+    "selection_date": "2026-10-07"
+  },
+  {
+    "effect_id": "weapon_music_box_7",
+    "candidate_id": "weapon_20261007_r3_music_box_C_7",
+    "file": "assets/audio/sfx/weapons/music_box_7.wav",
+    "sha256": "f6dd222601c61fc12707dfbcb764cb492822d8f14e03c778716e56dce9777c37",
+    "author": "VESTIGES",
+    "license": "Original",
+    "source_url": "Synthèse originale VESTIGES — audition R3",
+    "attribution": "Synthèse originale VESTIGES ; choix explicite de Raphaël : C",
+    "processing": {
+      "notes_semitones": [
+        0,
+        2,
+        4,
+        7,
+        9
+      ],
+      "selection": "Uniforme parmi les quatre autres notes après chaque déclenchement ; pas de répétition immédiate",
+      "example_seed": 221092026,
+      "example_indices": [
+        2,
+        3,
+        1,
+        3,
+        4,
+        2,
+        1,
+        0,
+        4,
+        2
+      ],
+      "source": "Synthèse originale VESTIGES",
+      "duration_s": 0.25,
+      "synthesis": "Fondamentale do5, sinus décroissance 10/s + harmonique 3 à 18 %, décroissance 25/s",
+      "normalization": "RMS actif −23 dBFS, crête au plus −8 dBFS, fondus de bord 2/40 ms"
+    },
+    "note": "sol",
+    "semitones": 7,
+    "selection_date": "2026-10-07"
+  },
+  {
+    "effect_id": "weapon_music_box_9",
+    "candidate_id": "weapon_20261007_r3_music_box_C_9",
+    "file": "assets/audio/sfx/weapons/music_box_9.wav",
+    "sha256": "dcffe4ea77a3e3d43e155da636d253c79ebb2639a77389d64d4e168108ea14f2",
+    "author": "VESTIGES",
+    "license": "Original",
+    "source_url": "Synthèse originale VESTIGES — audition R3",
+    "attribution": "Synthèse originale VESTIGES ; choix explicite de Raphaël : C",
+    "processing": {
+      "notes_semitones": [
+        0,
+        2,
+        4,
+        7,
+        9
+      ],
+      "selection": "Uniforme parmi les quatre autres notes après chaque déclenchement ; pas de répétition immédiate",
+      "example_seed": 221092026,
+      "example_indices": [
+        2,
+        3,
+        1,
+        3,
+        4,
+        2,
+        1,
+        0,
+        4,
+        2
+      ],
+      "source": "Synthèse originale VESTIGES",
+      "duration_s": 0.25,
+      "synthesis": "Fondamentale do5, sinus décroissance 10/s + harmonique 3 à 18 %, décroissance 25/s",
+      "normalization": "RMS actif −23 dBFS, crête au plus −8 dBFS, fondus de bord 2/40 ms"
+    },
+    "note": "la",
+    "semitones": 9,
+    "selection_date": "2026-10-07"
   }
 ]

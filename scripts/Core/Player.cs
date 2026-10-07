@@ -1067,6 +1067,7 @@ public partial class Player : CharacterBody2D
             {
                 if (body is Enemy enemy && !enemy.IsDying && IsInstanceValid(enemy) && _orbitalWeapon != null)
                 {
+                    PlayWeaponSound(_orbitalWeapon);
                     float rawDamage = ComputeBaseAttackDamage(_orbitalWeapon);
                     float damage = ResolveHitDamage(enemy, rawDamage, false);
                     AttackContext context = BeginAttack(_orbitalWeapon, damage);
@@ -1133,6 +1134,8 @@ public partial class Player : CharacterBody2D
         _coneWeapon = _equippedWeapon;
         _coneContext = BeginAttack(_coneWeapon, _coneBaseDamage * _coneDuration * (1f + _coneDamageRampPerSec * _coneDuration * 0.5f));
 
+        // Un contact radio au départ : le maintien du cône ne doit pas créer un fond continu.
+        PlayAttackSound();
         UpdateConeVisual(0f);
 
         GD.Print("[Player] Sustained cone activé");
@@ -2255,11 +2258,21 @@ public partial class Player : CharacterBody2D
 
     private float GetWeaponStat(string key) => _equippedWeapon?.GetStat(key) ?? WeaponContract.StatDefault(key);
 
-    private void PlayAttackFeedback(bool isMelee, Vector2 direction)
+    private void PlayAttackSound()
     {
-        string attackAudio = _equippedWeapon?.Base.AttackAudio;
+        PlayWeaponSound(_equippedWeapon);
+    }
+
+    private static void PlayWeaponSound(WeaponInstance weapon)
+    {
+        string attackAudio = weapon?.Base.AttackAudio;
         if (!string.IsNullOrEmpty(attackAudio))
             Infrastructure.AudioManager.Play(attackAudio, 0.04f);
+    }
+
+    private void PlayAttackFeedback(bool isMelee, Vector2 direction)
+    {
+        PlayAttackSound();
         if (_visual == null)
             return;
 

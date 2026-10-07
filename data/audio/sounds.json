@@ -624,5 +624,204 @@
     "min_interval_ms": 0,
     "priority": 60,
     "max_voices": 2
+  },
+  "sfx_weapon_chipped_blade": {
+    "path": "res://assets/audio/sfx/weapons/chipped_blade.wav",
+    "volume_db": -14,
+    "min_interval_ms": 180,
+    "effect_id": "weapon_chipped_blade",
+    "priority": 10,
+    "max_voices": 1
+  },
+  "sfx_weapon_heavy_hammer": {
+    "path": "res://assets/audio/sfx/weapons/heavy_hammer.wav",
+    "volume_db": -14,
+    "min_interval_ms": 180,
+    "effect_id": "weapon_heavy_hammer",
+    "priority": 10,
+    "max_voices": 1
+  },
+  "sfx_weapon_makeshift_bow": {
+    "path": "res://assets/audio/sfx/weapons/makeshift_bow.wav",
+    "volume_db": -14,
+    "min_interval_ms": 180,
+    "effect_id": "weapon_makeshift_bow",
+    "priority": 10,
+    "max_voices": 1
+  },
+  "sfx_weapon_crossbow": {
+    "path": "res://assets/audio/sfx/weapons/crossbow.wav",
+    "volume_db": -14,
+    "min_interval_ms": 180,
+    "effect_id": "weapon_crossbow",
+    "priority": 10,
+    "max_voices": 1
+  },
+  "sfx_weapon_surgeons_scalpel": {
+    "path": "res://assets/audio/sfx/weapons/surgeons_scalpel.wav",
+    "volume_db": -14,
+    "min_interval_ms": 180,
+    "effect_id": "weapon_surgeons_scalpel",
+    "priority": 10,
+    "max_voices": 1
+  },
+  "sfx_weapon_chain_of_names": {
+    "path": "res://assets/audio/sfx/weapons/chain_of_names.wav",
+    "volume_db": -14,
+    "min_interval_ms": 180,
+    "effect_id": "weapon_chain_of_names",
+    "priority": 10,
+    "max_voices": 1
+  },
+  "sfx_weapon_compass_needle": {
+    "path": "res://assets/audio/sfx/weapons/compass_needle.wav",
+    "volume_db": -14,
+    "min_interval_ms": 180,
+    "effect_id": "weapon_compass_needle",
+    "priority": 10,
+    "max_voices": 1
+  },
+  "sfx_weapon_memory_lantern": {
+    "path": "res://assets/audio/sfx/weapons/memory_lantern.wav",
+    "volume_db": -14,
+    "min_interval_ms": 180,
+    "effect_id": "weapon_memory_lantern",
+    "priority": 10,
+    "max_voices": 1
+  },
+  "sfx_weapon_echo_gauntlets": {
+    "path": "res://assets/audio/sfx/weapons/echo_gauntlets.wav",
+    "volume_db": -14,
+    "min_interval_ms": 180,
+    "effect_id": "weapon_echo_gauntlets",
+    "priority": 10,
+    "max_voices": 1
+  },
+  "sfx_weapon_sling": {
+    "path": "res://assets/audio/sfx/weapons/sling.wav",
+    "volume_db": -14,
+    "min_interval_ms": 180,
+    "effect_id": "weapon_sling",
+    "priority": 10,
+    "max_voices": 1
+  },
+  "sfx_weapon_sharpened_pipe": {
+    "path": "res://assets/audio/sfx/weapons/sharpened_pipe.wav",
+    "volume_db": -14,
+    "min_interval_ms": 180,
+    "effect_id": "weapon_sharpened_pipe",
+    "priority": 10,
+    "max_voices": 1
+  },
+  "sfx_weapon_cleaver": {
+    "path": "res://assets/audio/sfx/weapons/cleaver.wav",
+    "volume_db": -14,
+    "min_interval_ms": 180,
+    "effect_id": "weapon_cleaver",
+    "priority": 10,
+    "max_voices": 1
+  },
+  "sfx_weapon_whip": {
+    "path": "res://assets/audio/sfx/weapons/whip.wav",
+    "volume_db": -14,
+    "min_interval_ms": 180,
+    "effect_id": "weapon_whip",
+    "priority": 10,
+    "max_voices": 1
+  },
+  "sfx_weapon_throwing_axes": {
+    "path": "res://assets/audio/sfx/weapons/throwing_axes.wav",
+    "volume_db": -14,
+    "min_interval_ms": 180,
+    "effect_id": "weapon_throwing_axes",
+    "priority": 10,
+    "max_voices": 1
+  },
+  "sfx_weapon_nail_mace": {
+    "path": "res://assets/audio/sfx/weapons/nail_mace.wav",
+    "volume_db": -14,
+    "min_interval_ms": 180,
+    "effect_id": "weapon_nail_mace",
+    "priority": 10,
+    "max_voices": 1
+  },
+  "sfx_weapon_lighthouse_shard": {
+    "path": "res://assets/audio/sfx/weapons/lighthouse_shard.wav",
+    "volume_db": -14,
+    "min_interval_ms": 180,
+    "effect_id": "weapon_lighthouse_shard",
+    "priority": 10,
+    "max_voices": 1
+  },
+  "sfx_weapon_photographers_flash": {
+    "path": "res://assets/audio/sfx/weapons/photographers_flash.wav",
+    "volume_db": -14,
+    "min_interval_ms": 180,
+    "effect_id": "weapon_photographers_flash",
+    "priority": 10,
+    "max_voices": 1
+  },
+  "sfx_weapon_essence_staff": {
+    "path": "res://assets/audio/sfx/weapons/essence_staff.wav",
+    "volume_db": -14,
+    "min_interval_ms": 180,
+    "effect_id": "weapon_essence_staff",
+    "priority": 10,
+    "max_voices": 1
+  },
+  "sfx_weapon_void_edge": {
+    "path": "res://assets/audio/sfx/weapons/void_edge.wav",
+    "volume_db": -14,
+    "min_interval_ms": 180,
+    "effect_id": "weapon_void_edge",
+    "priority": 10,
+    "max_voices": 1
+  },
+  "sfx_weapon_childs_drawing": {
+    "path": "res://assets/audio/sfx/weapons/childs_drawing.wav",
+    "volume_db": -14,
+    "min_interval_ms": 180,
+    "effect_id": "weapon_childs_drawing",
+    "priority": 10,
+    "max_voices": 1
+  },
+  "sfx_weapon_last_broadcast": {
+    "path": "res://assets/audio/sfx/weapons/last_broadcast.wav",
+    "volume_db": -14,
+    "min_interval_ms": 180,
+    "effect_id": "weapon_last_broadcast",
+    "priority": 10,
+    "max_voices": 1
+  },
+  "sfx_weapon_clock_hand": {
+    "path": "res://assets/audio/sfx/weapons/clock_hand.wav",
+    "volume_db": -14,
+    "min_interval_ms": 180,
+    "effect_id": "weapon_clock_hand",
+    "priority": 10,
+    "max_voices": 1
+  },
+  "sfx_weapon_teachers_bell": {
+    "path": "res://assets/audio/sfx/weapons/teachers_bell.wav",
+    "volume_db": -14,
+    "min_interval_ms": 180,
+    "effect_id": "weapon_teachers_bell",
+    "priority": 10,
+    "max_voices": 1
+  },
+  "sfx_weapon_music_box": {
+    "path": "res://assets/audio/sfx/weapons/music_box_0.wav",
+    "volume_db": -14,
+    "min_interval_ms": 180,
+    "effect_id": "weapon_music_box",
+    "priority": 10,
+    "max_voices": 1,
+    "variants": [
+      "res://assets/audio/sfx/weapons/music_box_0.wav",
+      "res://assets/audio/sfx/weapons/music_box_2.wav",
+      "res://assets/audio/sfx/weapons/music_box_4.wav",
+      "res://assets/audio/sfx/weapons/music_box_7.wav",
+      "res://assets/audio/sfx/weapons/music_box_9.wav"
+    ]
   }
 }

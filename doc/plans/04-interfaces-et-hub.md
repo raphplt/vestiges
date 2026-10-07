@@ -397,3 +397,55 @@ Le fondu termine aussi quand on passe l'animation. Rotation à 8°/s conservée.
 warning, smoke 600 frames vert. Quatre captures Main regardées sur ViewSonic.
 Prix, récompenses et audio inchangés. Test clavier/manette par événements
 injectés ; appréciation en jeu toujours distincte de ces vérifications.
+
+### R8 — plaque PV et niveau : lot du 7 octobre 2026
+
+Demande de Raphaël : embellir le bloc PV/niveau montré en capture et corriger
+ses décalages, dans la direction artistique du jeu.
+
+1. Recomposer la plaque : badge cyan du niveau, métal sombre patiné et accents
+   d'or discrets ; valeur de PV sur une ligne dédiée, jauge verte en relief.
+   Utiliser les métriques réelles de la police et des conteneurs pour éviter
+   que les chiffres débordent ou descendent sous leur cadre.
+2. Conserver les états de combat : trace des dégâts, seuils orange/rouge,
+   bouclier, Prévoyance et Reprise. Borner les remplissages, y compris à zéro.
+3. Vérifier par captures de Main (PV pleins/bas/nuls, grands nombres, montée
+   de niveau et bouclier), en 1080p et 720p ; build sans warning et smoke.
+
+Lot unique, limité à la présentation de ce bloc et au placement de la rafale
+sous celui-ci. Aucun changement des statistiques ou règles de combat.
+
+**R8 livré et vérifié — 7 octobre 2026.** `VitalsDisplay` porte la présentation
+PV/niveau : double filet sombre, coins coupés, accents d'or patiné, badge cyan,
+signe de soin crème, rail vert avec lumière haute, ombre basse et graduations.
+Les PV sont au-dessus du rail ; hauteur calculée depuis les métriques de Saira
+(plaque 214 × 49 unités), chiffre de niveau sans contour épais. L'éclat de
+niveau remplace le grossissement qui pouvait déborder ; les éclats successifs
+interrompent proprement le précédent. La rafale d'éliminations suit la hauteur
+de la plaque. Les seuils de couleur, la trace des dégâts et les jauges de
+survie sont conservés ; à zéro, aucun remplissage résiduel après la trace.
+
+Build **0 warning, 0 erreur**, smoke **600 frames vert**
+(`/tmp/vestiges-smoke.SgDDfb`). Huit états capturés dans Main, seed 221092026,
+aux tailles de fichier vérifiées **1920 × 1080** et **1280 × 720** : PV pleins,
+trace de coup, blessure, danger, zéro, éclat au niveau 100, valeurs 1234/5678,
+bouclier + Prévoyance + Reprise. Captures inspectées dans
+`/tmp/vestiges-vitals-final-1080` et `/tmp/vestiges-vitals-final-720` ; contrôle
+automatique des limites et de la séparation des lignes passé. Le scénario
+`--capture-vitals [--vitals-resolution 1280x720]` injecte seulement des états
+visuels, sans changer les statistiques du joueur. Une première série a aussi
+été rendue en 4K avant les derniers détails de métal. Recette esthétique par
+Raphaël encore ouverte.
+
+**Retour de Raphaël — R8 compact, 7 octobre 2026.** « mieux mais ptet pas
+besoin den faire un cadre aussi gros ? ». Resserrer le même dessin : largeur,
+hauteur et marges du badge réduites, ligne des PV à la même taille de police,
+rail légèrement aminci. Vérifier les huit états en 1080p/720p avant de clore.
+
+**R8 compact vérifié.** Plaque ramenée de **214 × 49 à 190 × 38** unités
+(−31 % de surface), badge resserré et rail de 9 unités au lieu de 11. Chiffres
+des PV toujours à 11, niveau à 13 ; ombre plus courte et graduations plus fines.
+Les huit états passent sans débordement aux tailles réelles 1920 × 1080 et
+1280 × 720, même seed : `/tmp/vestiges-vitals-compact-1080` et
+`/tmp/vestiges-vitals-compact-720`. Build sans warning.
+Smoke 600 frames vert : `/tmp/vestiges-smoke.sJ507s`.

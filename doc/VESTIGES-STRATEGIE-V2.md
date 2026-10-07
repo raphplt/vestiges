@@ -778,6 +778,7 @@ Le script de post-processing doit inclure une vérification/correction de l'angl
 
 - [x] Barre d'XP fullwidth en bas de l'écran (déplacée le 24 septembre 2026 dans la plaque de vie du HUD refait, [plan 04](plans/04-interfaces-et-hub.md#retour-de-raphaël-et-hud-de-run--24-septembre-2026)).
 - [x] HUD de run lisible : plaques contrastées, jauge de PV sous le héros, police Saira Semi Condensed, boussole retirée ; captures 1080p/4K vérifiées (plan 04, 24 septembre 2026).
+- [x] Plaque PV/niveau retravaillée et compactée après retour de Raphaël (190 × 38) : cadre de métal patiné, jauge en relief, métriques de police et alignements corrigés ; huit états capturés en 1080p/720p, build sans warning et smoke verts (plan 04 R8, 7 octobre 2026).
 - [x] Recette humaine du HUD refait et de la police : « HUD bien mieux » (Raphaël, 25 septembre 2026).
 - [x] Armes dans le menu pause avec stats effectives et dégâts infligés, passifs et fiche du personnage (plan 17 lot 1C ; la rareté n'est plus portée par l'arme).
 - [x] Menu pause compact : navigation à gauche, équipement élargi, textes retirés et survol/focus simplifiés ; captures 100/130 %, navigation clavier et événements A/B vérifiés (plan 24 R1, plan 04, 1er octobre 2026).
@@ -787,6 +788,9 @@ Le script de post-processing doit inclure une vérification/correction de l'angl
 - [x] Signaux précurseurs des Résurgences.
 - [ ] Sound design cleanup (retirer sons répétitifs, ajuster XP, musique adaptative).
 - [x] Intégration des 50 choix audio A–B6 applicables et nettoyage des fichiers inutilisés ; banque JSON, crédits et archives d’écoute hors dépôt (plan 15).
+- [x] Neuf sons d'armes choisis le 7 octobre intégrés à l'identique, gains et cadence bornés, salves et galerie moteur vérifiées ; quinze timbres en deuxième écoute (plan 15, A3b1).
+- [x] Treize choix d'armes R2 intégrés à l'identique, son du Transistor au départ du cône, tests et galerie moteur vérifiés ; 22 timbres retenus, Cloche et Boîte à musique en reprise ciblée (plan 15, A3b3).
+- [x] Cloche B et Boîte à musique C intégrées : 24 armes sonorisées, notes aléatoires au contact orbital sans répétition immédiate, cadence et voix communes ; régressions et galerie moteur vérifiées (plan 15, A3b4).
 - [x] Plan 15 A3a : priorités/plafonds des voix en JSON, limitation UI en pause, fondus sûrs, arrêt des ambiances au Hub et gains de boucle/musique ; banque, régressions, smoke et enregistrements avant/après vérifiés (7 octobre 2026). Recette artistique du mix encore ouverte.
 - [x] Écran de mort reworké (transition visuelle + score détaillé + stats) : bilan en trois zones, première passe du plan 02 lot D (27 septembre 2026) ; séquence de mort dans le monde, lot M1 ; distance, éliminations par arme et frise relevées, lot M2 ; bilan en une page dense, lot M3 ; gains animés, lot M4 (28 septembre 2026). Recette en jeu de Raphaël attendue.
 

@@ -896,6 +896,14 @@ Raphaël : « diminuer le halo/contours autours des projectiles du heros je le t
 
 Raphaël demande de reprendre « le sujet audio (mixage, un son par armes, armes d'ambiances, sons des menus, musiques) » et d'avancer en autonomie ; questions et validations possibles au fil du travail. « Armes d'ambiances » est interprété comme les ambiances sonores, dans la continuité du plan 15. Le report des musiques et ambiances du 4 octobre prend donc fin. Lots A3a à A3c proposés dans le [plan 15](15-audio.md). Aucune dépense demandée.
 
+## 77. Plaque PV et niveau — 7 octobre 2026
+
+Raphaël demande, capture à l'appui, de rendre le bloc de PV et de niveau
+« plus jolie travaillée » et de corriger les soucis de positionnement en
+restant dans la direction artistique du jeu. Reprise ciblée au plan 04, R8 :
+plaque sombre, métal patiné, niveau cyan, jauge verte et textes correctement
+alignés. Les règles de vie, de progression et de bouclier restent inchangées.
+
 ## 78. Péril : sans plafond, stèles, objet ; planche lore L1 validée — 7 octobre 2026
 
 Réponses de Raphaël au début du chantier difficulté (§74).
@@ -906,3 +914,20 @@ Réponses de Raphaël au début du chantier difficulté (§74).
 - **Objet du Péril** : « monte le péril, ne paie pas mieux imo. et en fait je pense que les bénéfices pour le joueur du péril c'est juste plus d'ennemis donc plus d'xp et d'essences car plus de morts ». L'objet ne donne que du Péril ; il occupe un emplacement.
 - **Principe qui en découle** : le Péril ne paie pas directement. Sa seule contrepartie est d'avoir plus d'ennemis, donc plus d'XP et d'Essence par les éliminations. Les bonus directs d'XP et de rareté par point sont retirés, la stèle ne donne pas d'Essence. Le multiplicateur de score est gardé : il ne rend pas le joueur plus fort et il départage les runs au classement (à revoir si Raphaël le refuse).
 - « je te demande de faire le chantier dédié au péril ok ?? » : pas d'autre question avant de livrer ; les choix restants suivent les recommandations du [plan 28](28-peril-et-difficulte.md).
+
+## 79. Choix des sons d'armes — 7 octobre 2026
+
+Raphaël transmet `choix-armes-2026-10-07.json` et demande « voici mes choix. au boulot ». Neuf choix explicites : Faucille B, Parcmètre A, Arc du gymnase B, Cloueuse C, Scalpel C, Trousseau C, Boussole B, Lampe à pétrole C, Gants de boxe A. Quinze refus (`aucun`) : rechercher des sons nouveaux et propres à chaque arme, plutôt que d'autres déclinaisons du même son. Lance-billes : « aucun n'est un son de déclic / bille ». Boîte à musique : « genre des notes de musiques ». Export original, y compris toutes les notes, archivé hors dépôt ; intégration et reprise de recherche au plan 15 A3b.
+
+## 80. Sons d’armes, deuxième sélection — 7 octobre 2026
+
+Export R2 de Raphaël : Lance-billes B, Parapluie C, Pelle à neige A, Rallonge B, Assiettes A, Râteau A, Lentille de phare C, Polaroïd C, Baguette de sourcier A, Gomme C, Craies B, Transistor A, Chronomètre C. Cloche refusée : « aucune il faut un son plus simple ». Boîte à musique refusée : « enfait jaime pas... ptettre mettre une note au hasard à chaque fois ? ». Préparer l’essai de notes aléatoires et une Cloche simplifiée ; ces commentaires ne valident pas un fichier précis. Export complet conservé hors dépôt, suite au plan 15 A3b3.
+
+## 81. Plaque PV/niveau plus compacte — 7 octobre 2026
+
+Raphaël trouve la reprise meilleure, mais le cadre trop gros. Conserver son
+style et réduire son encombrement, surtout les marges et la hauteur (plan 04 R8).
+
+## 82. Cloche B et Boîte à musique C — 7 octobre 2026
+
+Raphaël valide explicitement « cloche b et boite a musique c » dans la série R3. Cloche B : frappe ronde synthétique de 300 ms. Boîte C : notes pincées de 250 ms, do/ré/mi/sol/la, une note aléatoire à chaque contact audible, sans répétition immédiate. Les deux timbres sont désormais choisis ; terminer leur intégration et leur vérification au plan 15 A3b4.

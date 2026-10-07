@@ -51,6 +51,8 @@ public partial class WeaponRegression : Node2D
             CheckContractRejectsBadData();
             await CheckCountForAllWeapons();
             await CheckVolleyOnSingleTarget();
+            CheckSustainedConeSound();
+            CheckOrbitalSound();
             CheckTemper();
 
             GD.Print($"[WeaponRegression] RESULT failures={_failures}");
@@ -637,6 +639,99 @@ public partial class WeaponRegression : Node2D
     }
 
     /// <summary>
+    /// La Boîte joue au contact, avec sa propre clé, et cesse de sonner après son retrait.
+    /// </summary>
+    private void CheckOrbitalSound()
+    {
+        Player player = GD.Load<PackedScene>("res://scenes/Player.tscn").Instantiate<Player>();
+        AddChild(player);
+        player.InitializeCharacter(CharacterDataLoader.Get("traqueur"));
+        player.ProcessMode = ProcessModeEnum.Disabled;
+        while (player.WeaponSlots.Count > 0)
+            player.RemoveWeapon(0);
+        WeaponData musicBox = WeaponDataLoader.Get("music_box");
+        int requests = 0;
+        void OnSound(string key, AudioManager.SoundOutcome outcome)
+        {
+            if (key == musicBox.AttackAudio)
+                requests++;
+        }
+        AudioManager.Instance.SoundRequested += OnSound;
+        Enemy enemy = EnemyScene.Instantiate<Enemy>();
+        AddChild(enemy);
+        enemy.Initialize(EnemyDataLoader.Get("rodeur"), 100000f, 1f);
+        enemy.ProcessMode = ProcessModeEnum.Disabled;
+        try
+        {
+            player.AddWeapon(musicBox);
+            typeof(Player).GetMethod("OnWeaponAttackTimeout", Private).Invoke(player, new object[] { 0 });
+            Check(requests == 0, "Boîte : silencieuse à l'équipement et au minuteur sans contact");
+            // Une autre arme devient courante avant le contact de la note.
+            player.AddWeapon(WeaponDataLoader.Get("makeshift_bow"));
+            List<Node2D> orbs = (List<Node2D>)typeof(Player).GetField("_orbitalProjectiles", Private).GetValue(player);
+            Area2D orb = (Area2D)orbs[0];
+            orb.EmitSignal(Area2D.SignalName.BodyEntered, enemy);
+            Check(requests == 1 && player.GetDamageDealt("music_box") > 0f,
+                "Boîte : son de l'arme orbitale au contact malgré une autre arme courante");
+            player.RemoveWeapon(0);
+            orb.EmitSignal(Area2D.SignalName.BodyEntered, enemy);
+            Check(requests == 1, "Boîte : aucun son d'une ancienne orbe après retrait");
+        }
+        finally
+        {
+            AudioManager.Instance.SoundRequested -= OnSound;
+            enemy.QueueFree();
+            player.QueueFree();
+        }
+    }
+
+    /// <summary>Le Transistor émet au départ, jamais pendant le maintien ni après retrait.</summary>
+    private void CheckSustainedConeSound()
+    {
+        Player player = GD.Load<PackedScene>("res://scenes/Player.tscn").Instantiate<Player>();
+        AddChild(player);
+        player.InitializeCharacter(CharacterDataLoader.Get("traqueur"));
+        player.ProcessMode = ProcessModeEnum.Disabled;
+        while (player.WeaponSlots.Count > 0)
+            player.RemoveWeapon(0);
+        WeaponData radio = WeaponDataLoader.Get("last_broadcast");
+        player.AddWeapon(radio);
+        int requests = 0;
+        void OnSound(string key, AudioManager.SoundOutcome outcome)
+        {
+            if (key == radio.AttackAudio)
+                requests++;
+        }
+        AudioManager.Instance.SoundRequested += OnSound;
+        MethodInfo attack = typeof(Player).GetMethod("OnWeaponAttackTimeout", Private);
+        MethodInfo process = typeof(Player).GetMethod("ProcessSustainedCone", Private);
+        FieldInfo active = typeof(Player).GetField("_isConeActive", Private);
+        try
+        {
+            attack.Invoke(player, new object[] { 0 });
+            Check(!string.IsNullOrEmpty(radio.AttackAudio) && requests == 1 && (bool)active.GetValue(player),
+                "Transistor : un son au départ du cône");
+            for (int frame = 0; frame < 20; frame++)
+            {
+                process.Invoke(player, new object[] { 0.01f });
+                attack.Invoke(player, new object[] { 0 });
+            }
+            Check(requests == 1, "Transistor : aucun son supplémentaire pendant le maintien");
+            process.Invoke(player, new object[] { 100f });
+            attack.Invoke(player, new object[] { 0 });
+            Check(requests == 2, "Transistor : un nouveau son à la reprise");
+            player.RemoveWeapon(0);
+            process.Invoke(player, new object[] { 0.1f });
+            Check(requests == 2 && !(bool)active.GetValue(player), "Transistor : retrait sans son ni cône résiduel");
+        }
+        finally
+        {
+            AudioManager.Instance.SoundRequested -= OnSound;
+            player.QueueFree();
+        }
+    }
+
+    /// <summary>
     /// Rafale (plan 21 G6g, DECISIONS §59) : trois flèches sur un ennemi seul ne se superposent plus, deux attendent
     /// avant de partir, et toutes touchent leur cible.
     /// </summary>
@@ -662,6 +757,14 @@ public partial class WeaponRegression : Node2D
         enemy.SetPhysicsProcess(false);
         enemy.Position = player.Position + new Vector2(90f, 0f);
         int hits = 0;
+        int attackSounds = 0;
+        string soundKey = WeaponDataLoader.Get("makeshift_bow").AttackAudio;
+        void OnSound(string key, AudioManager.SoundOutcome outcome)
+        {
+            if (key == soundKey)
+                attackSounds++;
+        }
+        AudioManager.Instance.SoundRequested += OnSound;
         EventBus bus = GetNode<EventBus>("/root/EventBus");
         EventBus.EntityDamagedEventHandler onDamaged = (target, _) => hits += target == enemy ? 1 : 0;
         bus.EntityDamaged += onDamaged;
@@ -676,6 +779,7 @@ public partial class WeaponRegression : Node2D
                     bow.ApplyUpgrade(new[] { new StatGain("projectile_count", count - 1f) });
                 equipped.SetValue(player, bow);
                 hits = 0;
+                attackSounds = 0;
                 ranged.Invoke(player, new object[] { AttackPatternKind.Linear });
                 int flying = 0, waiting = 0;
                 foreach (Node child in pools.GetChildren())
@@ -687,6 +791,7 @@ public partial class WeaponRegression : Node2D
                 }
                 for (int frame = 0; frame < 90; frame++)
                     await ToSignal(GetTree(), SceneTree.SignalName.PhysicsFrame);
+                Check(attackSounds == 1, $"Arc à {count} projectiles : un seul départ sonore ({attackSounds} demandes)");
                 return (hits, flying, waiting);
             }
 
@@ -697,6 +802,7 @@ public partial class WeaponRegression : Node2D
         }
         finally
         {
+            AudioManager.Instance.SoundRequested -= OnSound;
             bus.EntityDamaged -= onDamaged;
             enemy.QueueFree();
             player.QueueFree();

@@ -53,6 +53,12 @@ public partial class AudioManager : Node
 
 	// --- Stream cache ---
 	private readonly Dictionary<string, AudioStream> _streams = new();
+	private sealed class SoundVariants
+	{
+		public AudioStream[] Streams;
+		public int LastIndex = -1;
+	}
+	private readonly Dictionary<string, SoundVariants> _soundVariants = new();
 
 	// --- SFX throttle (prevents spam of the same sound) ---
 	private readonly Dictionary<string, ulong> _sfxLastPlayTime = new();
@@ -115,6 +121,21 @@ public partial class AudioManager : Node
 			_soundPriorities[key] = settings.ContainsKey("priority") ? settings["priority"].AsInt32() : 20;
 			_soundMaxVoices[key] = settings.ContainsKey("max_voices") ? Mathf.Max(1, settings["max_voices"].AsInt32()) : 2;
 			_soundBuses[key] = settings.ContainsKey("bus") ? settings["bus"].AsString() : BusSfx;
+			if (settings.ContainsKey("variants"))
+			{
+				Godot.Collections.Array paths = settings["variants"].AsGodotArray();
+				if (paths.Count < 2)
+					throw new System.InvalidOperationException($"{key} : au moins deux variantes nécessaires.");
+				AudioStream[] variants = new AudioStream[paths.Count];
+				for (int i = 0; i < paths.Count; i++)
+				{
+					variants[i] = GD.Load<AudioStream>(paths[i].AsString())
+						?? throw new System.InvalidOperationException($"{key} : variante absente {paths[i]}.");
+					if (variants[i] is AudioStreamWav wav)
+						wav.LoopMode = AudioStreamWav.LoopModeEnum.Disabled;
+				}
+				_soundVariants[key] = new SoundVariants { Streams = variants };
+			}
 		}
 	}
 
@@ -378,8 +399,8 @@ public partial class AudioManager : Node
 		SoundRequested?.Invoke(key, stolen ? SoundOutcome.VoiceStolen : SoundOutcome.Played);
 
 		player.Bus = _soundBuses[key];
-		player.Stream = stream;
-		player.PitchScale = basePitch + _rng.RandfRange(-pitchVariance, pitchVariance);
+		player.Stream = SelectVariant(key, stream);
+		player.PitchScale = _soundVariants.ContainsKey(key) ? 1f : basePitch + _rng.RandfRange(-pitchVariance, pitchVariance);
 		player.VolumeDb = volumeDb + _soundVolumes.GetValueOrDefault(key);
 		player.Play();
 	}
@@ -410,11 +431,23 @@ public partial class AudioManager : Node
 		SoundRequested?.Invoke(key, SoundOutcome.Interface);
 
 		player.Bus = BusSfx;
-		player.Stream = stream;
-		player.PitchScale = 1f + _rng.RandfRange(-pitchVariance, pitchVariance);
+		player.Stream = SelectVariant(key, stream);
+		player.PitchScale = _soundVariants.ContainsKey(key) ? 1f : 1f + _rng.RandfRange(-pitchVariance, pitchVariance);
 		player.VolumeDb = volumeDb + _soundVolumes.GetValueOrDefault(key);
 		player.Play();
 		return player;
+	}
+
+	/// <summary>Le tirage ne progresse qu'après admission par la cadence et le pool, parmi les autres notes.</summary>
+	private AudioStream SelectVariant(string key, AudioStream fallback)
+	{
+		if (!_soundVariants.TryGetValue(key, out SoundVariants variants))
+			return fallback;
+		int index = _rng.RandiRange(0, variants.Streams.Length - (variants.LastIndex < 0 ? 1 : 2));
+		if (variants.LastIndex >= 0 && index >= variants.LastIndex)
+			index++;
+		variants.LastIndex = index;
+		return variants.Streams[index];
 	}
 
 	/// <summary>
@@ -424,7 +457,9 @@ public partial class AudioManager : Node
 	public static void FadeOutUI(AudioStreamPlayer player, string key, float duration)
 	{
 		if (Instance == null || player == null || !GodotObject.IsInstanceValid(player) || !player.Playing
-			|| !Instance._streams.TryGetValue(key, out AudioStream stream) || player.Stream != stream)
+			|| !Instance._streams.TryGetValue(key, out AudioStream stream)
+			|| (player.Stream != stream && (!Instance._soundVariants.TryGetValue(key, out SoundVariants variants)
+				|| System.Array.IndexOf(variants.Streams, player.Stream) < 0)))
 			return;
 		Instance._uiSfxPool.FadeOut(player, key, duration);
 	}

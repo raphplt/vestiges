@@ -28,6 +28,15 @@ public partial class RunObservation
 
     private async Task CaptureWeapons(string weaponList, bool lethal)
     {
+        string[] args = OS.GetCmdlineUserArgs();
+        using AudioTraceProbe audioTrace = System.Array.IndexOf(args, "--audio-trace") >= 0
+            ? new AudioTraceProbe(_output, _world, _player) : null;
+        foreach (string bus in Argument(args, "--mute-buses", "").Split(',', System.StringSplitOptions.RemoveEmptyEntries))
+        {
+            int index = AudioServer.GetBusIndex(bus);
+            if (index >= 0)
+                AudioServer.SetBusMute(index, true);
+        }
         _world.GetNode("SpawnManager").ProcessMode = ProcessModeEnum.Disabled;
         EnemyPool pool = _world.GetNode<EnemyPool>("EnemyPool");
         SpawnManager spawner = _world.GetNode<SpawnManager>("SpawnManager");
@@ -125,6 +134,8 @@ public partial class RunObservation
                 Engine.TimeScale = 0.25;
             try
             {
+                GD.Print(System.FormattableString.Invariant($"[WeaponAudio] {id} audio_s={AudioManager.NowMsec / 1000.0:F2}"));
+                audioTrace?.Sample(0);
                 for (int slot = 0; slot < _player.WeaponSlots.Count; slot++)
                     attack.Invoke(_player, new object[] { slot });
                 // --dash : un dash vers la droite au moment de l'attaque (traînée du Chewing-gum, plan 23 R6).
@@ -144,6 +155,7 @@ public partial class RunObservation
                 {
                     await Frames(frames[shot] - elapsed);
                     elapsed = frames[shot];
+                    audioTrace?.Sample(0);
                     SavePlayerCloseUp($"{_output}/weapon-{id}-{shot}.png", new Vector2(150f, 95f));
                     if (dash && shot == 0)
                         _player.AIInputOverride = Vector2.Zero;

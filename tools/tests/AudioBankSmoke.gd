@@ -14,12 +14,21 @@ func verify_bank() -> void:
         if stream == null:
             fail("Fichier absent : " + entry.path)
             return
+        var streams := [stream]
+        if entry.has("variants"):
+            streams.clear()
+            for variant_path in entry.variants:
+                var variant = load(variant_path)
+                if variant == null:
+                    fail("Variante absente : " + variant_path)
+                    return
+                streams.append(variant)
         if key.begins_with("mus_"):
             continue
         stop_pool(manager, "Sfx")
         manager.call("PlaySfx", key, 0.0, -2.0, 1.0)
         var player = manager.get_node("Sfx0")
-        if player.stream != stream or not player.playing:
+        if player.stream not in streams or not player.playing:
             fail("Lecture absente : " + key)
             return
         if not is_equal_approx(player.volume_db, float(entry.volume_db) - 2.0):
@@ -35,7 +44,7 @@ func verify_bank() -> void:
         paused = true
         manager.call("PlayUiSfx", key, 0.0, -3.0)
         var ui = manager.get_node("UiSfx0")
-        if ui.stream != stream or not ui.playing or ui.process_mode != Node.PROCESS_MODE_ALWAYS:
+        if ui.stream not in streams or not ui.playing or ui.process_mode != Node.PROCESS_MODE_ALWAYS:
             fail("Lecture UI en pause absente : " + key)
             return
         if not is_equal_approx(ui.volume_db, float(entry.volume_db) - 3.0):

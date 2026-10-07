@@ -36,27 +36,19 @@ public partial class HUD : CanvasLayer
     private static readonly Vector2 ReferenceResolution = new(960, 540);
 
     private const float PlateMargin = 8f;
-    private const float VitalsWidth = 204f;
-    private const float VitalsBarWidth = 156f;
     private const float ScorePlateWidth = 150f;
     private const float BiomeShowSec = 2f;
     private const float BiomeFadeSec = 0.5f;
     private const float FpsUpdateInterval = 0.25f;
     private const float BiomeUpdateInterval = 0.5f;
     private const float ScoreTickInterval = 0.05f;
-    private const float LowHpRatio = 0.3f;
 
     // --- Vitals ---
-    private Label _levelLabel;
-    private ColorRect _hpFill;
-    private ColorRect _hpChip;
-    private ColorRect _shieldFill;
-    private Label _hpValueLabel;
+    private VitalsDisplay _vitals;
     private XpBar _xpBar;
     private EssenceFlights _essenceFlights;
     private float _essencePulse;
     private static readonly Color EssencePulseModulate = new(1.8f, 1.8f, 1.8f, 1f);
-    private PanelContainer _vitalsPlate;
 
     // --- Temps ---
     private Label _biomeLabel;
@@ -111,29 +103,20 @@ public partial class HUD : CanvasLayer
     private const float GainShowSec = 0.9f;
     private const float GainFadeSec = 0.4f;
     private float _shownScore;
-    private float _hpRatio = 1f;
-    private float _chipRatio = 1f;
-    private float _lowHpPulse;
 
     // Palette de la charte graphique
-    private static readonly Color PalBlackDeep = new(0x1A / 255f, 0x1A / 255f, 0x2E / 255f);
-    private static readonly Color PalBlackBlue = new(0x16 / 255f, 0x21 / 255f, 0x3E / 255f);
     private static readonly Color PalGrayWarm = new(0x6B / 255f, 0x61 / 255f, 0x61 / 255f);
     private static readonly Color PalGrayLight = new(0x9E / 255f, 0x94 / 255f, 0x94 / 255f);
     private static readonly Color PalWhiteOff = new(0xE8 / 255f, 0xE0 / 255f, 0xD4 / 255f);
     private static readonly Color PalGold = new(0xD4 / 255f, 0xA8 / 255f, 0x43 / 255f);
     private static readonly Color PalOrangeFlame = new(0xE0 / 255f, 0x7B / 255f, 0x39 / 255f);
-    private static readonly Color PalRedBlood = new(0xC4 / 255f, 0x43 / 255f, 0x2B / 255f);
     private static readonly Color PalCyanEssence = new(0x5E / 255f, 0xC4 / 255f, 0xC4 / 255f);
     private static readonly Color ResurgenceViolet = new(0.70f, 0.55f, 0.95f);
-    private static readonly Color HealthyColor = new(0.42f, 0.74f, 0.36f);
-    private static readonly Color ShieldColor = new(0.72f, 0.86f, 1f);
     // Réserve de Débordement prête : la case de l'arme s'éclaire en bleu pâle, comme le chiffre du coup renforcé.
     private static readonly Color OverflowSlotTint = new(0.75f, 1.05f, 1.45f);
     private readonly System.Collections.Generic.HashSet<string> _overflowReady = new();
     private static readonly Color PlateColor = new(0.04f, 0.045f, 0.08f, 0.82f);
     private static readonly Color PlateBorder = new(0.83f, 0.66f, 0.26f, 0.35f);
-    private static readonly Color BarTrack = new(0.02f, 0.02f, 0.04f, 0.9f);
 
     public override void _Ready()
     {
@@ -171,7 +154,7 @@ public partial class HUD : CanvasLayer
 
         BuildVitals();
         _hudRoot.AddChild(new HudLootFlight(WeaponSlotIconOf) { Name = "LootFlight" });
-        _hudRoot.AddChild(new KillStreakDisplay { Name = "KillStreak", Position = new Vector2(PlateMargin + 4f, PlateMargin + 36f) });
+        _hudRoot.AddChild(new KillStreakDisplay { Name = "KillStreak", Position = new Vector2(PlateMargin + 4f, PlateMargin + _vitals.Size.Y + 6f) });
         _essenceFlights = new EssenceFlights { Name = "EssenceFlights" };
         _essenceFlights.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
         _essenceFlights.Setup(EssenceTarget, () => _essencePulse = 1f);
@@ -235,7 +218,6 @@ public partial class HUD : CanvasLayer
             _timeLabel.Text = $"{seconds / 60:00}:{seconds % 60:00}";
         }
 
-        UpdateHpChip(dt);
         UpdateScoreCounter(dt);
         UpdateGainLabel(dt);
         if (_perilPulse > 0f)
@@ -338,75 +320,10 @@ public partial class HUD : CanvasLayer
         return plate;
     }
 
-    /// <summary>Barre à fond sombre ; le remplissage est redimensionné par ancre droite.</summary>
-    private static ColorRect MakeBar(Control parent, Rect2 rect, Color fillColor, out ColorRect track)
-    {
-        track = new ColorRect { Color = BarTrack, Position = rect.Position, Size = rect.Size, MouseFilter = Control.MouseFilterEnum.Ignore };
-        parent.AddChild(track);
-        ColorRect fill = new() { Color = fillColor, MouseFilter = Control.MouseFilterEnum.Ignore };
-        fill.AnchorBottom = 1f;
-        fill.AnchorRight = 1f;
-        fill.OffsetLeft = 1f;
-        fill.OffsetTop = 1f;
-        fill.OffsetRight = -1f;
-        fill.OffsetBottom = -1f;
-        track.AddChild(fill);
-        return fill;
-    }
-
-    private static void SetBarRatio(ColorRect fill, float ratio)
-    {
-        fill.AnchorRight = Mathf.Clamp(ratio, 0f, 1f);
-        fill.OffsetRight = ratio >= 1f ? -1f : 0f;
-    }
-
     private void BuildVitals()
     {
-        _vitalsPlate = MakePlate(PlateMargin, PlateMargin, VitalsWidth, 30f);
-        _hudRoot.AddChild(_vitalsPlate);
-        Control content = new() { MouseFilter = Control.MouseFilterEnum.Ignore };
-        _vitalsPlate.AddChild(content);
-
-        // Pastille de niveau : le chiffre prime, la légende reste discrète.
-        ColorRect badge = new() { Color = PalBlackBlue, Position = new Vector2(4, 3), Size = new Vector2(32, 24) };
-        content.AddChild(badge);
-        ColorRect badgeEdge = new() { Color = PalCyanEssence with { A = 0.7f }, Position = new Vector2(4, 26), Size = new Vector2(32, 1) };
-        content.AddChild(badgeEdge);
-        Label caption = MakeLabel(Tr("UI_HUD_LEVEL"), 6, PalGrayLight, 0);
-        caption.Position = new Vector2(4, 2);
-        caption.Size = new Vector2(32, 8);
-        caption.HorizontalAlignment = HorizontalAlignment.Center;
-        content.AddChild(caption);
-        _levelLabel = MakeLabel("1", 13, PalCyanEssence, 3);
-        _levelLabel.Position = new Vector2(4, 7);
-        _levelLabel.Size = new Vector2(32, 18);
-        _levelLabel.HorizontalAlignment = HorizontalAlignment.Center;
-        _levelLabel.VerticalAlignment = VerticalAlignment.Center;
-        content.AddChild(_levelLabel);
-
-        Rect2 hpRect = new(42, 6, VitalsBarWidth, 18);
-        _hpFill = MakeBar(content, hpRect, HealthyColor, out ColorRect hpTrack);
-        // Trace claire des PV perdus, rattrapée en douceur : le coup reçu se lit d'un coup d'œil.
-        _hpChip = new ColorRect { Color = PalWhiteOff with { A = 0.75f } };
-        _hpChip.AnchorBottom = 1f;
-        _hpChip.OffsetTop = 1f;
-        _hpChip.OffsetBottom = -1f;
-        hpTrack.AddChild(_hpChip);
-        hpTrack.MoveChild(_hpChip, 0);
-        // Bouclier : un liseré bleu pâle en haut de la barre de PV, plein quand il est chargé.
-        _shieldFill = new ColorRect { Color = ShieldColor, MouseFilter = Control.MouseFilterEnum.Ignore };
-        _shieldFill.OffsetLeft = 1f;
-        _shieldFill.OffsetTop = 1f;
-        _shieldFill.OffsetBottom = 5f;
-        hpTrack.AddChild(_shieldFill);
-        // Perks de survie : réserve de Prévoyance et part récupérable de Reprise, sous le chiffre des PV.
-        hpTrack.AddChild(new VitalsPerkOverlay());
-        _hpValueLabel = MakeLabel("100 / 100", 11, PalWhiteOff);
-        _hpValueLabel.Position = Vector2.Zero;
-        _hpValueLabel.Size = hpRect.Size;
-        _hpValueLabel.HorizontalAlignment = HorizontalAlignment.Center;
-        _hpValueLabel.VerticalAlignment = VerticalAlignment.Center;
-        hpTrack.AddChild(_hpValueLabel);
+        _vitals = new VitalsDisplay { Name = "Vitals", Position = new Vector2(PlateMargin, PlateMargin) };
+        _hudRoot.AddChild(_vitals);
 
         _fpsLabel = MakeLabel("", 8, PalGrayWarm, 2);
         _fpsLabel.AnchorTop = 1f;
@@ -625,48 +542,9 @@ public partial class HUD : CanvasLayer
 
     private void OnPlayerDamaged(float currentHp, float maxHp) => UpdateHpDisplay(currentHp, maxHp);
 
-    private void OnShieldChanged(float shield, float maxShield)
-    {
-        if (_shieldFill == null)
-            return;
-        _shieldFill.Visible = maxShield > 0f && shield > 0f;
-        _shieldFill.AnchorRight = maxShield > 0f ? Mathf.Clamp(shield / maxShield, 0f, 1f) : 0f;
-        _shieldFill.OffsetRight = _shieldFill.AnchorRight >= 1f ? -1f : 0f;
-    }
+    private void OnShieldChanged(float shield, float maxShield) => _vitals?.SetShield(shield, maxShield);
 
-    private void UpdateHpDisplay(float currentHp, float maxHp)
-    {
-        float clampedMax = Mathf.Max(1f, maxHp);
-        float clampedHp = Mathf.Clamp(currentHp, 0f, clampedMax);
-        float previous = _hpRatio;
-        _hpRatio = clampedHp / clampedMax;
-        if (_hpRatio > previous)
-            _chipRatio = _hpRatio;
-
-        SetBarRatio(_hpFill, _hpRatio);
-        _hpFill.Color = _hpRatio < LowHpRatio ? PalRedBlood : (_hpRatio < 0.55f ? PalOrangeFlame : HealthyColor);
-        _hpValueLabel.Text = $"{Mathf.RoundToInt(clampedHp)} / {Mathf.RoundToInt(clampedMax)}";
-    }
-
-    private void UpdateHpChip(float dt)
-    {
-        if (_chipRatio > _hpRatio)
-            _chipRatio = Mathf.Max(_hpRatio, _chipRatio - dt * 0.6f);
-        _hpChip.AnchorRight = _chipRatio;
-
-        // Bord de la plaque qui bat quand la vie est basse.
-        if (_hpRatio < LowHpRatio && _hpRatio > 0f)
-        {
-            _lowHpPulse += dt * 5f;
-            float pulse = 0.5f + 0.5f * Mathf.Sin(_lowHpPulse);
-            _vitalsPlate.SelfModulate = Colors.White.Lerp(new Color(1.6f, 0.7f, 0.6f), pulse);
-        }
-        else if (_lowHpPulse != 0f)
-        {
-            _lowHpPulse = 0f;
-            _vitalsPlate.SelfModulate = Colors.White;
-        }
-    }
+    private void UpdateHpDisplay(float currentHp, float maxHp) => _vitals.SetHealth(currentHp, maxHp);
 
     private void OnXpChanged(float amount)
     {
@@ -679,14 +557,11 @@ public partial class HUD : CanvasLayer
 
     private void OnLevelUp(int newLevel)
     {
-        _levelLabel.Text = $"{newLevel}";
+        _vitals.SetLevel(newLevel);
         // La barre éclate en blanc et repart de zéro (plan 02 J4).
         _xpBar.Flash();
         OnXpChanged(0);
-        _levelLabel.PivotOffset = _levelLabel.Size / 2f;
-        Tween tween = CreateTween();
-        tween.TweenProperty(_levelLabel, "scale", new Vector2(1.5f, 1.5f), 0.08f);
-        tween.TweenProperty(_levelLabel, "scale", Vector2.One, 0.25f).SetTrans(Tween.TransitionType.Back).SetEase(Tween.EaseType.Out);
+
     }
 
     private void OnScoreChanged(int newScore)

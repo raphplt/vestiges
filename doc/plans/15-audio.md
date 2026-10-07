@@ -285,3 +285,65 @@ Six armes restent muettes en production : Boîte à musique, Polaroïd, Baguette
 ### Retour d’écoute — frottement dans le mix après
 
 Raphaël signale « une sorte de bruit de fond constant comme un frottement » dans `mix-apres`. Source non identifiée : horodatage demandé, fonds et bruitages isolés dans `~/.local/share/vestiges-audio/2026-10-07/frottement/index.html`. Les mesures et les tests techniques ne permettent pas de conclure à sa place. Ne pas considérer le mix comme recetté ; aucun son supprimé ou atténué au hasard.
+
+## A3b — choix des armes et deuxième recherche, 7 octobre
+
+Export de Raphaël conservé octet pour octet hors dépôt : `~/.local/share/vestiges-audio/2026-10-07/retours/choix-armes-2026-10-07.json`.
+
+Lots proposés avant modification :
+1. **A3b1 : intégrer les neuf choix explicites**, avec clés propres aux armes, fichiers identiques aux candidats écoutés, gain proposé de −14 dB, une voix et intervalle de 180 ms ; conserver leurs sources/crédits. Contrôler les attaques ponctuelles et les salves, puis enregistrer une galerie audible des neuf armes.
+2. **A3b2 : nouvelle recherche pour les quinze refus.** Les variations des mêmes anciens sons ne suffisent pas. Chercher des matières nouvelles adaptées aux objets (déclic/bille, armature de parapluie, pelle, câble, vaisselle, dents de râteau, cloche, obturateur) ; notes distinctes pour la Boîte à musique et signatures propres aux effets abstraits. Préparer de petits lots d'écoute, sans intégrer les candidats refusés ni transformer « aucun » en demande de silence.
+
+Choix retenus : Faucille B, Parcmètre A, Arc du gymnase B, Cloueuse C, Scalpel C, Trousseau C, Boussole B, Lampe à pétrole C, Gants de boxe A. Les Gants de boxe obtiennent ainsi leur premier son ; les cinq autres armes muettes attendent une sélection.
+
+Le frottement signalé dans le mix reste à identifier ; ce lot ne prétend pas le corriger.
+
+### Livré — choix intégrés et deuxième écoute
+
+**A3b1 terminé.** Les neuf WAV sélectionnés sont copiés sans transformation dans `assets/audio/sfx/weapons/`, avec neuf clés propres et leurs crédits : égalité octet pour octet avec l'audition approuvée. Banque à −14 dB, priorité 10, une voix par son, intervalle minimal de 180 ms. Les quinze refus conservent leur état de production antérieur ; cinq armes restent sans son d'attaque.
+
+Validation : `tools/validate.sh /tmp/vestiges-audio-selections-20261007 smoke audio weapons music`, 4/4 suites vertes, sources stables, build sans avertissement ni erreur. La régression de l'Arc vérifie une seule demande sonore pour une attaque à un projectile comme à trois projectiles. La galerie `selection-integree/run.mp4` enregistre les neuf armes dans le moteur, seed 221092026, avec musique et ambiance coupées ; les neuf nouvelles clés sont jouées et aucune de leurs voix n'est interrompue ou refusée. `RunObservation.Weapons` accepte désormais la trace audio et les bus muets, avec repères de début de chaque arme. Les impacts et les créatures restent audibles : cette galerie n'isole pas le seul départ d'attaque. Pas de validation artistique supplémentaire par l'agent.
+
+**A3b2 prêt à écouter.** `~/.local/share/vestiges-audio/2026-10-07/armes-2/index.html` : 45 nouveaux candidats, trois lots de cinq armes, choix persistants dans le navigateur et export `choix-armes-2026-10-07-r2.json` identifié par sa série. La page principale donne aussi accès à la galerie intégrée et à l'identification du frottement. La première audition et l'export de Raphaël restent archivés.
+
+Nouvelles matières : billes de verre et interrupteurs, mécanisme de parapluie, pelle et tôle, câble fouetté, assiettes, râteau et dents pincées, cloches, verre, notes réelles de boîte à musique (do, do–sol, do–fa–sol), obturateurs, baguettes de bois, gomme, craie, contacts radio brefs et chronomètre. Les trois candidats d'une arme sont des prises, gestes ou assemblages différents ; ils ne sont plus des changements de hauteur d'un ancien bruitage. Les matières analogues sont explicites dans les sources (par exemple peigne pour certaines dents du Râteau). Pas de boucle radio ni de fond permanent ajouté.
+
+Provenance : sources CC0 de Joseph SARDIN / BigSoundBank, ValentinPetiteau, Xemptful, RavenWolfProds, sechavez3499 et sseletskyy / Freesound. Pages de licence, originaux téléchargés, empreintes et découpes archivés dans `recherche-2/` ; liens et auteurs détaillés par candidat dans la page et `manifest.json`. Les cinq sources Freesound sont leurs aperçus publics MP3 HQ, indiqués comme tels ; convertir ces aperçus en WAV ne restaure pas la qualité du WAV original. Aucun candidat de cette deuxième série n'est intégré au jeu.
+
+Reproduction : `python3 ~/.local/share/vestiges-audio/2026-10-07/recherche-2/prepare_round2.py` (NumPy et FFmpeg), avec `sources.json` et les sources archivées. Contrôles : 45 empreintes distinctes, PCM mono 48 kHz/16 bits, crêtes au plus −8 dBFS, extrémités à zéro, références locales valides ; page vérifiée dans Chromium. Les répétitions sont illustratives et espacées pour conserver les queues des cloches et notes ; elles ne simulent pas toutes les cadences ni la concurrence des voix du moteur. **À valider : les timbres à l'écoute, puis les cinq chemins encore muets après sélection.**
+
+## A3b3 — deuxième sélection et deux reprises ciblées
+
+Export `choix-armes-2026-10-07-r2.json` reçu et archivé dans `retours/`. Lots avant code :
+1. Intégrer les treize choix R2 octet pour octet, avec provenance et mêmes protections de banque ; brancher le Transistor au début effectif du cône seulement. Vérifier le déclenchement unique, le maintien, la reprise et le retrait de l’arme, puis galerie moteur des treize sons.
+2. Cloche : proposer des frappes beaucoup plus simples et courtes. Boîte à musique : essai hors jeu d’une note aléatoire par déclenchement, avec petites gammes cohérentes, sans phrase imposée. Ces deux choix `aucun` ne valident aucun candidat R2 ; garder leur état de production jusqu’au retour d’écoute.
+
+Le lot vise 22 armes choisies sur 24 ; le frottement du mix reste un sujet distinct non résolu.
+
+### Intégration et essais R3
+
+Les treize WAV R2 sont intégrés sans modification sous `assets/audio/sfx/weapons/`, avec clés propres, crédits des sources et recettes conservés, banque à −14 dB, intervalle 180 ms, priorité 10 et plafond d’une voix. Les 22 choix R1/R2 sont vérifiés octet pour octet par rapport aux auditions. Polaroïd, Baguette de sourcier, Craies et Transistor obtiennent leur premier son ; seule la Boîte à musique reste muette. La Cloche conserve son son antérieur, pas un candidat refusé.
+
+Le cône du Transistor appelle le retour sonore commun à son activation ; il ne joue rien de plus pendant le maintien, les dégâts continus ou le retrait. Les attaques ponctuelles gardent le même retour sonore, sans ajout de recul ou de flash au Transistor. Régression dédiée : départ, vingt mises à jour et demandes d’attaque pendant le maintien, expiration/reprise, retrait. Les quatre contrôles passent, comme les salves de l’Arc.
+
+Validation : `tools/validate.sh /tmp/vestiges-audio-r2-integration-20261007 smoke audio weapons music` : 4/4 suites, sources stables, build zéro avertissement/erreur. Banque : 99 effets chargés, gains et limitation vérifiés. Les modifications concurrentes du Péril et du HUD ne sont pas retouchées par ce lot.
+
+**R3 hors jeu :** `~/.local/share/vestiges-audio/2026-10-07/armes-3/index.html`. Cloche : A sinus bref de 180 ms, B fondamentale et octave douce de 300 ms, C frappe réelle raccourcie à 190 ms. Boîte : A lamelles réelles, B notes synthétiques rondes, C notes synthétiques pincées ; chaque timbre propose do/ré/mi/sol/la, tirage uniforme sans répétition immédiate. Un clic = une note ; les séquences enregistrées sont des exemples au gain proposé, pas des phrases à jouer automatiquement. Le choix porte sur le timbre ; la suggestion de hasard n’est pas interprétée comme une sélection d’un fichier R2 refusé.
+
+Rendus, script `prepare.py`, empreintes, recette de synthèse et provenance sont archivés dans `armes-3/`. Les matières enregistrées viennent des sources CC0 de Joseph SARDIN déjà archivées en R2 ; les autres sons sont des synthèses originales. Contrôles : 18 fichiers de timbre distincts, WAV mono 48 kHz, absence d’écrêtage et fondus aux extrémités ; Chromium vérifie 60 tirages sans répétition immédiate, décodage audio, export JSON R3 avec remarques et persistance après rechargement. Ce contrôle ne constitue pas une écoute artistique. Export attendu : `choix-armes-2026-10-07-r3.json`.
+
+**Galerie R2 enregistrée :** `selection-r2-integree/index.html` et `run.mp4`, même dossier d’écoute, seed 221092026, treize armes équipées une par une, musique et ambiance coupées. La trace confirme les treize nouvelles clés jouées, dont deux départs du Transistor. Les accès directs de la page utilisent les repères réels du moteur. Les ennemis et impacts restent présents. Les pages principales et R2 renvoient maintenant vers les deux reprises R3.
+
+## A3b4 — derniers choix : Cloche B et Boîte C
+
+Raphaël valide « cloche b et boite a musique c ». Lot avant code : copier les six WAV R3 à l’identique (Cloche B et cinq notes C) avec leur recette de synthèse ; intégrer à la banque un groupe de variantes préchargées, tirage sonore indépendant du gameplay sans répétition immédiate après une lecture admise. Une seule clé partage intervalle et plafond entre toutes les notes ; aucun désaccordage de la gamme. Au contact d’une orbe vivante, utiliser la clé de l’arme orbitale, même si une autre arme vient de tirer ; pas de son au minuteur, à l’équipement ou après retrait. Régressions des contacts, du choix des notes et de la saturation, build/smoke et galerie audible avant de cocher 24/24.
+
+**Intégration.** Cloche : `sfx_weapon_teachers_bell`, WAV B de 300 ms. Boîte : `sfx_weapon_music_box`, cinq WAV C de 250 ms. Fichiers identiques aux six rendus sélectionnés, recettes et empreintes dans les crédits ; synthèses originales VESTIGES. Les 24 armes disposent désormais d’une clé propre et aucune n’est muette.
+
+La banque accepte une liste optionnelle `variants` de chemins, préchargée à l’initialisation. Après admission par l’intervalle et le pool, `AudioManager` choisit uniformément parmi les autres variantes avec son RNG audio ; une demande refusée ne change pas la dernière note ni le tirage. Les groupes de variantes gardent une hauteur de lecture exacte (1), un gain de −14 dB, un intervalle commun de 180 ms et une seule voix commune. Pas d’allocation ou de chargement à chaque note. Le fondu UI reconnaît également les variantes.
+
+Le contact de l’orbe demande le son de l’arme orbitale ; l’arme courante peut être différente. Les contrôles couvrent l’absence de note à l’équipement et au minuteur, le contact avec une autre arme courante, le retrait, quarante lectures admises couvrant les cinq notes sans répétition immédiate, la hauteur exacte, les refus par cadence et plafond sans changement du RNG, et le fondu UI. Les contrôles moteur existants des dégâts orbitaux, des salves et du Transistor restent verts.
+
+**Validation :** `tools/validate.sh /tmp/vestiges-audio-r3-integration-20261007 smoke audio weapons music`, 4/4 suites, sources stables ; build zéro avertissement/erreur. Banque : 101 entrées d’effets, toutes leurs variantes chargeables. Les pages d’écoute indiquent les choix R3 retenus, archivés depuis le message de Raphaël dans `retours/choix-armes-2026-10-07-r3.json`.
+
+**Galerie finale :** `selection-r3-integree/index.html` et `run.mp4`, seed 221092026, musique et ambiance coupées, impacts et ennemis conservés. Trace : quatre frappes de Cloche et neuf notes de Boîte effectivement jouées. Les six WAV correspondent exactement aux empreintes R3 sélectionnées. Les 24 armes et leurs 24 clés propres sont vérifiées. Le lot « un son par arme » est intégré ; le frottement signalé dans le mix global et la suite musique/ambiances restent à traiter séparément.

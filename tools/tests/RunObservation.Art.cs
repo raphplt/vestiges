@@ -6,6 +6,64 @@ namespace Vestiges.Tests;
 
 public partial class RunObservation
 {
+    /// <summary>États visuels injectés dans la vraie Main ; aucune statistique de combat n'est modifiée.</summary>
+    private async Task CaptureVitals()
+    {
+        await PrepareCloseUpScene();
+        // Fixer la taille après le chargement : certains bureaux maximisent la fenêtre à l'ouverture.
+        string resolution = Argument(OS.GetCmdlineUserArgs(), "--vitals-resolution", "1920x1080");
+        string[] dimensions = resolution.Split('x');
+        DisplayServer.WindowSetMode(DisplayServer.WindowMode.Windowed);
+        DisplayServer.WindowSetSize(new Vector2I(int.Parse(dimensions[0]), int.Parse(dimensions[1])));
+        await Frames(10);
+        VitalsDisplay vitals = _world.GetNode<VitalsDisplay>("HUD/HudRoot/Vitals");
+        Vestiges.Core.EventBus bus = GetNode<Vestiges.Core.EventBus>("/root/EventBus");
+        vitals.SetLevel(4);
+        vitals.SetHealth(80f, 80f);
+        await Seconds(0.5);
+        SaveFrame("vitals-01-full");
+        vitals.SetHealth(36f, 80f);
+        await Frames(2);
+        SaveFrame("vitals-02-damage-trail");
+        await Seconds(1);
+        SaveFrame("vitals-03-wounded");
+        vitals.SetHealth(16f, 80f);
+        await Seconds(1);
+        SaveFrame("vitals-04-critical");
+        vitals.SetHealth(0f, 80f);
+        await Seconds(1);
+        SaveFrame("vitals-05-empty");
+        vitals.SetLevel(99);
+        vitals.SetLevel(100);
+        vitals.SetHealth(1234f, 5678f);
+        await Frames(3);
+        SaveFrame("vitals-06-large-level-flash");
+        await Seconds(0.5);
+        SaveFrame("vitals-07-large-values");
+        vitals.SetLevel(12);
+        vitals.SetHealth(60f, 80f);
+        vitals.SetShield(15f, 20f);
+        bus.EmitSignal(Vestiges.Core.EventBus.SignalName.PlayerDamaged, 60f, 80f);
+        bus.PublishSpecializationGauge(new Vestiges.Core.SpecializationGauge(_player.GetInstanceId(),
+            Vestiges.Progression.SpecializationRuntime.OverhealReserveEffect, "", 12f, 20f));
+        bus.PublishSpecializationGauge(new Vestiges.Core.SpecializationGauge(_player.GetInstanceId(),
+            Vestiges.Progression.SpecializationRuntime.RallyEffect, "", 10f, 80f, 3f, 4f));
+        await Seconds(0.5);
+        SaveFrame("vitals-08-shield-perks");
+
+        Label level = vitals.GetNode<Label>("Level");
+        Label caption = vitals.GetNode<Label>("LevelCaption");
+        Label health = vitals.GetNode<Label>("HealthValue");
+        Control perks = vitals.GetNode<Control>("SurvivalPerks");
+        Rect2 bounds = new(Vector2.Zero, vitals.Size);
+        if (!bounds.Encloses(level.GetRect()) || !bounds.Encloses(caption.GetRect()) ||
+            !bounds.Encloses(health.GetRect()) || caption.GetRect().End.Y > level.Position.Y ||
+            health.GetRect().End.Y > perks.Position.Y)
+            throw new System.InvalidOperationException("Les textes de la plaque PV/niveau débordent.");
+        using Image screenshot = GetViewport().GetTexture().GetImage();
+        GD.Print($"[RunObservation] RESULT vitals=True image={screenshot.GetSize()} plate={vitals.Size} level={level.GetRect()} health={health.GetRect()}");
+    }
+
     /// <summary>Galerie de sprites au sol dans Main : aucun ramassage ou bonus simulé.</summary>
     private async Task CapturePickupArt()
     {

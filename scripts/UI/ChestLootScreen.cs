@@ -9,6 +9,7 @@ namespace Vestiges.UI;
 /// <summary>
 /// Écran roulette du butin d'un coffre : chaque case fait défiler des leurres puis s'arrête sur le butin
 /// déjà résolu (Essence, XP, stat, niveaux d'objet ou Souvenir). Met le jeu en pause, joue le son d'ouverture.
+/// Un appui révèle d'un coup les cases encore en défilement, un second ferme l'écran sans attendre.
 /// Couleurs de rareté : palette unique (RarityPalette).
 /// </summary>
 public partial class ChestLootScreen : CanvasLayer
@@ -51,6 +52,7 @@ public partial class ChestLootScreen : CanvasLayer
     private bool _isRevealing;
     private AudioStreamPlayer _revealAudio;
     private int _openingSerial;
+    private int _closeSerial;
     private int _slotsRevealed;
 
     // Leurres de la roulette : ce que le coffre aurait pu donner.
@@ -353,7 +355,39 @@ public partial class ChestLootScreen : CanvasLayer
         }
     }
 
-    private void RevealSlot(SlotState slot)
+    public override void _Input(InputEvent @event)
+    {
+        if (!Visible || !@event.IsPressed() || @event.IsEcho())
+            return;
+        // Les directions ne passent rien : le joueur se déplaçait encore en ouvrant le coffre.
+        bool skip = @event is InputEventMouseButton { ButtonIndex: MouseButton.Left or MouseButton.Right }
+            || @event.IsActionPressed("ui_accept") || @event.IsActionPressed("ui_cancel")
+            || @event.IsActionPressed("interact");
+        if (!skip)
+            return;
+        GetViewport().SetInputAsHandled();
+        if (_isRevealing)
+            RevealRemaining();
+        else
+            Close();
+    }
+
+    private void RevealRemaining()
+    {
+        _isRevealing = false;
+        bool playSound = true;
+        foreach (SlotState slot in _slots)
+        {
+            if (slot.Stopped)
+                continue;
+            // Un seul son pour toutes les cases révélées ensemble : empilés, ils saturent.
+            RevealSlot(slot, playSound);
+            playSound = false;
+        }
+        ScheduleClose();
+    }
+
+    private void RevealSlot(SlotState slot, bool playSound = true)
     {
         slot.Stopped = true;
         slot.Icon.Texture = slot.FinalItem.Icon;
@@ -394,8 +428,8 @@ public partial class ChestLootScreen : CanvasLayer
         // Spawn particles around the card
         SpawnRevealParticles(slot.Card);
 
-        // Sound — perk_choix for each reveal
-        AudioManager.PlayUI("sfx_perk_choix", 0.05f);
+        if (playSound)
+            AudioManager.PlayUI("sfx_perk_choix", 0.05f);
 
         // Screen shake on last reveal
         if (_slotsRevealed >= _slots.Count)
@@ -423,17 +457,26 @@ public partial class ChestLootScreen : CanvasLayer
 
     private void ScheduleClose()
     {
-        SceneTreeTimer timer = GetTree().CreateTimer(PostRevealDelay, processAlways: true);
-        // Le lecteur de cette ouverture-ci : un minuteur en retard n'éteint jamais la mélodie d'un coffre suivant.
-        AudioStreamPlayer revealAudio = _revealAudio;
-        _revealAudio = null;
-        timer.Timeout += () =>
+        // Un minuteur dépassé par une fermeture anticipée ne ferme jamais l'écran d'un coffre suivant.
+        int serial = ++_closeSerial;
+        GetTree().CreateTimer(PostRevealDelay, processAlways: true).Timeout += () =>
         {
-            // Elle s'éteint avec l'écran au lieu de déborder sur la reprise du jeu.
-            AudioManager.FadeOutUI(revealAudio, RevealSound, RevealFadeSeconds);
-            HideScreen();
-            _onComplete?.Invoke();
+            if (serial == _closeSerial)
+                Close();
         };
+    }
+
+    private void Close()
+    {
+        _closeSerial++;
+        // La mélodie s'éteint avec l'écran au lieu de déborder sur la reprise du jeu.
+        AudioManager.FadeOutUI(_revealAudio, RevealSound, RevealFadeSeconds);
+        _revealAudio = null;
+        HideScreen();
+        // Le butin ne s'applique qu'une fois, même si un appui et le minuteur arrivent ensemble.
+        Action onComplete = _onComplete;
+        _onComplete = null;
+        onComplete?.Invoke();
     }
 
     // ==============================

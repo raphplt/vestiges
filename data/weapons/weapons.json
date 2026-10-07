@@ -1,7 +1,7 @@
 [
   {
     "id": "chipped_blade",
-    "attack_audio": "sfx_blade_swing",
+    "attack_audio": "sfx_weapon_chipped_blade",
     "name": "Faucille",
     "description": "Une faucille de jardin au manche poli par les mains.",
     "sprite": "assets/weapons/icons/weapon_icon_sickle.png",
@@ -50,7 +50,7 @@
   },
   {
     "id": "heavy_hammer",
-    "attack_audio": "sfx_heavy_swing",
+    "attack_audio": "sfx_weapon_heavy_hammer",
     "name": "Parcmètre",
     "description": "Un parcmètre arraché au trottoir, pied de béton compris.",
     "sprite": "assets/weapons/icons/weapon_icon_parking_meter.png",
@@ -101,7 +101,7 @@
   },
   {
     "id": "makeshift_bow",
-    "attack_audio": "sfx_bow_release",
+    "attack_audio": "sfx_weapon_makeshift_bow",
     "name": "Arc du gymnase",
     "description": "Un arc d'initiation au numéro d'inventaire d'un collège.",
     "sprite": "assets/weapons/icons/weapon_icon_gym_bow.png",
@@ -157,7 +157,7 @@
   },
   {
     "id": "sling",
-    "attack_audio": "sfx_throw_release",
+    "attack_audio": "sfx_weapon_sling",
     "name": "Lance-billes",
     "description": "Un lance-pierre d'enfant et une poche de billes.",
     "sprite": "assets/weapons/icons/weapon_icon_slingshot.png",
@@ -208,7 +208,7 @@
   },
   {
     "id": "sharpened_pipe",
-    "attack_audio": "sfx_blade_swing",
+    "attack_audio": "sfx_weapon_sharpened_pipe",
     "name": "Parapluie",
     "description": "Un grand parapluie noir à la pointe ferrée.",
     "sprite": "assets/weapons/icons/weapon_icon_umbrella.png",
@@ -259,7 +259,7 @@
   },
   {
     "id": "crossbow",
-    "attack_audio": "sfx_crossbow_release",
+    "attack_audio": "sfx_weapon_crossbow",
     "name": "Cloueuse",
     "description": "Une cloueuse de chantier, chargée pour de bon.",
     "sprite": "assets/weapons/icons/weapon_icon_nail_gun.png",
@@ -314,7 +314,7 @@
   },
   {
     "id": "cleaver",
-    "attack_audio": "sfx_heavy_swing",
+    "attack_audio": "sfx_weapon_cleaver",
     "name": "Pelle à neige",
     "description": "Une large pelle à neige à la lame cabossée.",
     "sprite": "assets/weapons/icons/weapon_icon_snow_shovel.png",
@@ -364,7 +364,7 @@
   },
   {
     "id": "whip",
-    "attack_audio": "sfx_whip_snap",
+    "attack_audio": "sfx_weapon_whip",
     "name": "Rallonge",
     "description": "Une rallonge électrique de vingt mètres.",
     "sprite": "assets/weapons/icons/weapon_icon_extension_cord.png",
@@ -413,7 +413,7 @@
   },
   {
     "id": "throwing_axes",
-    "attack_audio": "sfx_throw_release",
+    "attack_audio": "sfx_weapon_throwing_axes",
     "name": "Assiettes",
     "description": "Une pile d'assiettes du service du dimanche.",
     "sprite": "assets/weapons/icons/weapon_icon_plates.png",
@@ -459,7 +459,7 @@
   },
   {
     "id": "nail_mace",
-    "attack_audio": "sfx_heavy_swing",
+    "attack_audio": "sfx_weapon_nail_mace",
     "name": "Râteau",
     "description": "Un râteau de jardin aux dents rouillées.",
     "sprite": "assets/weapons/icons/weapon_icon_leaf_rake.png",
@@ -511,7 +511,7 @@
   },
   {
     "id": "teachers_bell",
-    "attack_audio": "sfx_bell_pulse",
+    "attack_audio": "sfx_weapon_teachers_bell",
     "name": "Cloche d'école",
     "description": "La cloche de la récréation, au manche de bois.",
     "sprite": "assets/weapons/icons/weapon_icon_school_bell.png",
@@ -572,7 +572,7 @@
   },
   {
     "id": "surgeons_scalpel",
-    "attack_audio": "sfx_blade_swing",
+    "attack_audio": "sfx_weapon_surgeons_scalpel",
     "name": "Scalpel",
     "description": "Un scalpel d'hôpital, toujours stérile.",
     "sprite": "assets/weapons/icons/weapon_icon_scalpel.png",
@@ -625,7 +625,7 @@
   },
   {
     "id": "lighthouse_shard",
-    "attack_audio": "sfx_light_shot",
+    "attack_audio": "sfx_weapon_lighthouse_shard",
     "name": "Lentille de phare",
     "description": "Un fragment de la lentille d'un phare.",
     "sprite": "assets/weapons/icons/weapon_icon_lighthouse_lens.png",
@@ -676,6 +676,7 @@
   },
   {
     "id": "music_box",
+    "attack_audio": "sfx_weapon_music_box",
     "name": "Boîte à musique",
     "description": "Une boîte à musique et sa danseuse.",
     "sprite": "assets/weapons/icons/weapon_icon_music_box.png",
@@ -729,7 +730,7 @@
   },
   {
     "id": "chain_of_names",
-    "attack_audio": "sfx_chain_jump",
+    "attack_audio": "sfx_weapon_chain_of_names",
     "name": "Trousseau",
     "description": "Les clés de toutes les portes d'un immeuble.",
     "sprite": "assets/weapons/icons/weapon_icon_keyring.png",
@@ -778,7 +779,7 @@
   },
   {
     "id": "compass_needle",
-    "attack_audio": "sfx_needle_shot",
+    "attack_audio": "sfx_weapon_compass_needle",
     "name": "Boussole",
     "description": "Une boussole de randonnée au verre fêlé.",
     "sprite": "assets/weapons/icons/weapon_icon_compass.png",
@@ -826,6 +827,7 @@
   },
   {
     "id": "photographers_flash",
+    "attack_audio": "sfx_weapon_photographers_flash",
     "name": "Polaroïd",
     "description": "Un appareil instantané et son flash.",
     "sprite": "assets/weapons/icons/weapon_icon_instant_camera.png",
@@ -876,6 +878,7 @@
   },
   {
     "id": "essence_staff",
+    "attack_audio": "sfx_weapon_essence_staff",
     "name": "Baguette de sourcier",
     "description": "Une baguette de noisetier fourchue.",
     "sprite": "assets/weapons/icons/weapon_icon_dowsing_rod.png",
@@ -921,7 +924,7 @@
   },
   {
     "id": "void_edge",
-    "attack_audio": "sfx_void_slash",
+    "attack_audio": "sfx_weapon_void_edge",
     "name": "Gomme",
     "description": "Une gomme d'écolier, à moitié usée.",
     "sprite": "assets/weapons/icons/weapon_icon_eraser.png",
@@ -972,7 +975,7 @@
   },
   {
     "id": "memory_lantern",
-    "attack_audio": "sfx_lantern_fire",
+    "attack_audio": "sfx_weapon_memory_lantern",
     "name": "Lampe à pétrole",
     "description": "Une lampe à pétrole de cabane.",
     "sprite": "assets/weapons/icons/weapon_icon_oil_lamp.png",
@@ -1028,6 +1031,7 @@
   },
   {
     "id": "echo_gauntlets",
+    "attack_audio": "sfx_weapon_echo_gauntlets",
     "name": "Gants de boxe",
     "description": "Une paire de gants de boxe au cuir fendu.",
     "sprite": "assets/weapons/icons/weapon_icon_boxing_gloves.png",
@@ -1080,6 +1084,7 @@
   },
   {
     "id": "childs_drawing",
+    "attack_audio": "sfx_weapon_childs_drawing",
     "name": "Craies",
     "description": "Une boîte de craies de couleur.",
     "sprite": "assets/weapons/icons/weapon_icon_chalks.png",
@@ -1136,6 +1141,7 @@
   },
   {
     "id": "last_broadcast",
+    "attack_audio": "sfx_weapon_last_broadcast",
     "name": "Transistor",
     "description": "Un poste de radio à piles.",
     "sprite": "assets/weapons/icons/weapon_icon_transistor.png",
@@ -1192,7 +1198,7 @@
   },
   {
     "id": "clock_hand",
-    "attack_audio": "sfx_clock_strike",
+    "attack_audio": "sfx_weapon_clock_hand",
     "name": "Chronomètre",
     "description": "Un chronomètre d'entraîneur au bout de son cordon.",
     "sprite": "assets/weapons/icons/weapon_icon_stopwatch.png",
