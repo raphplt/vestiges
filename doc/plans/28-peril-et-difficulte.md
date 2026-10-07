@@ -96,6 +96,9 @@ Point ouvert : le plafond de base atteint 210 créatures à 25 min, donc à 240 
 - Cible mesurée au protocole P0, à Péril 0 : le temps pour tuer entre 5 et 25 min ne descend plus sous celui de 0–5 min ; les coups pour mourir restent dans l'étendue actuelle (5 à 10).
 - Vérification : mesure avant/après, banc de coût.
 
+**En cours (7 octobre, nuit).** Code en place, sans effet de jeu pour l'instant : `SpawnManager` additionne le Péril du joueur et un **Péril du temps** (`time_peril_from_minute`, `time_peril_per_minute` dans `spawn_flow.json`, à 0), aux mêmes effets par point ; les PV et dégâts de phase (Résurgence, fin de partie, endgame) sortent du code vers `spawn_flow.json`, valeurs inchangées ; le signal `DifficultyModifierChanged` disparaît (`SpawnManager` écoute `PerilChanged`). Surcharges de mesure ajoutées (`--scaling time_peril_per_minute=…,crisis_spawn_multiplier=…,crisis_hp_multiplier=…`).
+Prochaine étape : mesurer à Péril 0, contre la référence, deux variantes déjà préparées puis interrompues : Péril du temps 0,5 et 0,8 point par minute dès 8 min, avec Résurgences à ×2 apparitions, rafales 12 + 6 par intensité, PV ×1,3. Garder celle où les dégâts reçus après 10 min montent nettement sans faire chuter éliminations et Essence ; banc de coût du plafond de créatures (120, 240, 320) machine calme.
+
 ### P5 — À jouer
 
 Raphaël joue une run avec le build de §74, en montant le Péril aux stèles. Ses retours vont au registre.

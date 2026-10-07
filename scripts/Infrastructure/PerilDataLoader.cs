@@ -21,7 +21,7 @@ public static class PerilDataLoader
     private static bool _loaded;
 
     /// <summary>Densité et plafond de créatures ; bonus borné à <c>enemy_count_bonus_max</c>, au-delà les points ne pèsent plus que sur PV et dégâts.</summary>
-    public static float EnemyCountMultiplier(int peril)
+    public static float EnemyCountMultiplier(float peril)
     {
         Load();
         return 1f + Mathf.Min(_enemyCount * peril, _enemyCountBonusMax);
@@ -37,13 +37,13 @@ public static class PerilDataLoader
         }
     }
 
-    public static float EnemyHpMultiplier(int peril)
+    public static float EnemyHpMultiplier(float peril)
     {
         Load();
         return 1f + _enemyHp * peril;
     }
 
-    public static float EnemyDamageMultiplier(int peril)
+    public static float EnemyDamageMultiplier(float peril)
     {
         Load();
         return 1f + _enemyDamage * peril;

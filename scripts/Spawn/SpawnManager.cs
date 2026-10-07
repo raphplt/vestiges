@@ -68,9 +68,17 @@ public partial class SpawnManager : Node2D
 	private float _flatDmgMultiplier = 1f;
 
 	// Péril (PerilManager)
-	private float _diffEnemyCountMult = 1f;
-	private float _diffEnemyHpMult = 1f;
-	private float _diffEnemyDmgMult = 1f;
+	// Péril (plan 28) : celui que le joueur a pris, plus celui que le temps ajoute (P4), aux mêmes effets par point.
+	private int _playerPeril;
+	private float _timePerilFromMinute;
+	private float _timePerilPerMinute;
+	// PV et dégâts des créatures apparues pendant une Résurgence, en fin de partie et en endgame.
+	private float _crisisHpMultiplier = 1.18f;
+	private float _crisisDamageMultiplier = 1.12f;
+	private float _lateGameHpMultiplier = 1.35f;
+	private float _lateGameDamageMultiplier = 1.22f;
+	private float _endgameHpMultiplier = 1.55f;
+	private float _endgameDamageMultiplier = 1.32f;
 
 	private float _elapsedTime;
 	private float _spawnTimer;
@@ -120,7 +128,7 @@ public partial class SpawnManager : Node2D
 		_eventBus = GetNode<EventBus>("/root/EventBus");
 		_eventBus.RunPhaseChanged += OnRunPhaseChanged;
 		_eventBus.CrisisStarted += OnCrisisStarted;
-		_eventBus.DifficultyModifierChanged += OnDifficultyModifierChanged;
+		_eventBus.PerilChanged += OnPerilChanged;
 		_eventBus.OubliEffectChanged += OnOubliEffectChanged;
 		EnemyTracking.SetDetectionScale(1f);
 		_groupCache = GetNode<GroupCache>("/root/GroupCache");
@@ -132,7 +140,7 @@ public partial class SpawnManager : Node2D
 		{
 			_eventBus.RunPhaseChanged -= OnRunPhaseChanged;
 			_eventBus.CrisisStarted -= OnCrisisStarted;
-			_eventBus.DifficultyModifierChanged -= OnDifficultyModifierChanged;
+			_eventBus.PerilChanged -= OnPerilChanged;
 			_eventBus.OubliEffectChanged -= OnOubliEffectChanged;
 		}
 	}
@@ -157,13 +165,18 @@ public partial class SpawnManager : Node2D
 		}
 	}
 
-	private void OnDifficultyModifierChanged(float enemyCountMult, float enemyHpMult, float enemyDmgMult)
+	private void OnPerilChanged(int peril)
 	{
-		_diffEnemyCountMult = enemyCountMult;
-		_diffEnemyHpMult = enemyHpMult;
-		_diffEnemyDmgMult = enemyDmgMult;
-		GD.Print($"[SpawnManager] Péril : nombre x{enemyCountMult:F2}, PV x{enemyHpMult:F2}, dégâts x{enemyDmgMult:F2}");
+		_playerPeril = peril;
+		GD.Print($"[SpawnManager] Péril {peril} : nombre x{PerilDataLoader.EnemyCountMultiplier(peril):F2}, PV x{PerilDataLoader.EnemyHpMultiplier(peril):F2}, dégâts x{PerilDataLoader.EnemyDamageMultiplier(peril):F2}");
 	}
+
+	/// <summary>
+	/// Points de Péril en vigueur : ceux du joueur, plus ceux que le temps ajoute après <c>time_peril_from_minute</c>
+	/// (plan 28 P4 : la run se durcit d'elle-même par le nombre de créatures plutôt que par leurs seuls PV).
+	/// </summary>
+	private float PerilPoints(float elapsedMinutes) =>
+		_playerPeril + Mathf.Max(0f, elapsedMinutes - _timePerilFromMinute) * _timePerilPerMinute;
 
 	public override void _Process(double delta)
 	{
@@ -235,23 +248,23 @@ public partial class SpawnManager : Node2D
 
 		if (_currentRunPhase == GameManager.RunPhase.Crisis)
 		{
-			hpScale *= 1.18f;
-			dmgScale *= 1.12f;
+			hpScale *= _crisisHpMultiplier;
+			dmgScale *= _crisisDamageMultiplier;
 		}
 		else if (_currentRunPhase == GameManager.RunPhase.LateGame)
 		{
-			hpScale *= 1.35f;
-			dmgScale *= 1.22f;
+			hpScale *= _lateGameHpMultiplier;
+			dmgScale *= _lateGameDamageMultiplier;
 		}
 		else if (_currentRunPhase == GameManager.RunPhase.Endgame)
 		{
-			hpScale *= 1.55f;
-			dmgScale *= 1.32f;
+			hpScale *= _endgameHpMultiplier;
+			dmgScale *= _endgameDamageMultiplier;
 		}
 
-		// Péril
-		hpScale *= _diffEnemyHpMult;
-		dmgScale *= _diffEnemyDmgMult;
+		float peril = PerilPoints(elapsedMinutes);
+		hpScale *= PerilDataLoader.EnemyHpMultiplier(peril);
+		dmgScale *= PerilDataLoader.EnemyDamageMultiplier(peril);
 	}
 
 	private void ApplyRunPhaseModifiers(Enemy enemy, EnemyData data)
@@ -395,7 +408,7 @@ public partial class SpawnManager : Node2D
 		};
 		float fullTarget = _dayLocalEnemyTargetBase + _dayLocalEnemyTargetGrowthPerMinute * elapsedMinutes;
 		float openingTarget = Mathf.Lerp(Mathf.Min(_openingLocalTargetStart, fullTarget), fullTarget, OpeningProgress);
-		int target = Mathf.RoundToInt(openingTarget * _diffEnemyCountMult * zoneMemoryMult);
+		int target = Mathf.RoundToInt(openingTarget * PerilDataLoader.EnemyCountMultiplier(PerilPoints(elapsedMinutes)) * zoneMemoryMult);
 		target = Mathf.RoundToInt(target * phaseMult);
 
 		int nearCount = CountActiveEnemiesNear(_player.GlobalPosition, _dayLocalEnemyRadius);
@@ -582,8 +595,9 @@ public partial class SpawnManager : Node2D
 	private int GetCurrentMaxEnemies(float elapsedMinutes)
 	{
 		float scaled = _maxEnemies + _maxEnemiesGrowthPerMinute * elapsedMinutes;
-		if (_diffEnemyCountMult > 1f)
-			scaled = Mathf.Max(scaled, Mathf.Min(scaled * _diffEnemyCountMult, PerilDataLoader.ActiveEnemiesCeiling));
+		float countMultiplier = PerilDataLoader.EnemyCountMultiplier(PerilPoints(elapsedMinutes));
+		if (countMultiplier > 1f)
+			scaled = Mathf.Max(scaled, Mathf.Min(scaled * countMultiplier, PerilDataLoader.ActiveEnemiesCeiling));
 		return Mathf.Max(1, Mathf.RoundToInt(scaled));
 	}
 
@@ -849,6 +863,14 @@ public partial class SpawnManager : Node2D
 		_crisisBurstPerIntensity = dict.ContainsKey("crisis_burst_per_intensity") ? (int)dict["crisis_burst_per_intensity"].AsDouble() : _crisisBurstPerIntensity;
 		_lateGameSpawnMultiplier = dict.ContainsKey("late_game_spawn_multiplier") ? (float)dict["late_game_spawn_multiplier"].AsDouble() : _lateGameSpawnMultiplier;
 		_endgameSpawnMultiplier = dict.ContainsKey("endgame_spawn_multiplier") ? (float)dict["endgame_spawn_multiplier"].AsDouble() : _endgameSpawnMultiplier;
+		_crisisHpMultiplier = dict.ContainsKey("crisis_hp_multiplier") ? (float)dict["crisis_hp_multiplier"].AsDouble() : _crisisHpMultiplier;
+		_crisisDamageMultiplier = dict.ContainsKey("crisis_damage_multiplier") ? (float)dict["crisis_damage_multiplier"].AsDouble() : _crisisDamageMultiplier;
+		_lateGameHpMultiplier = dict.ContainsKey("late_game_hp_multiplier") ? (float)dict["late_game_hp_multiplier"].AsDouble() : _lateGameHpMultiplier;
+		_lateGameDamageMultiplier = dict.ContainsKey("late_game_damage_multiplier") ? (float)dict["late_game_damage_multiplier"].AsDouble() : _lateGameDamageMultiplier;
+		_endgameHpMultiplier = dict.ContainsKey("endgame_hp_multiplier") ? (float)dict["endgame_hp_multiplier"].AsDouble() : _endgameHpMultiplier;
+		_endgameDamageMultiplier = dict.ContainsKey("endgame_damage_multiplier") ? (float)dict["endgame_damage_multiplier"].AsDouble() : _endgameDamageMultiplier;
+		_timePerilFromMinute = dict.ContainsKey("time_peril_from_minute") ? (float)dict["time_peril_from_minute"].AsDouble() : 0f;
+		_timePerilPerMinute = dict.ContainsKey("time_peril_per_minute") ? (float)dict["time_peril_per_minute"].AsDouble() : 0f;
 		_positionPicker.MarginMin = dict.ContainsKey("spawn_screen_margin_min") ? (float)dict["spawn_screen_margin_min"].AsDouble() : _positionPicker.MarginMin;
 		_positionPicker.MarginMax = dict.ContainsKey("spawn_screen_margin_max") ? (float)dict["spawn_screen_margin_max"].AsDouble() : _positionPicker.MarginMax;
 		_positionPicker.ForwardBias = dict.ContainsKey("spawn_forward_bias") ? (float)dict["spawn_forward_bias"].AsDouble() : _positionPicker.ForwardBias;
@@ -949,6 +971,13 @@ public partial class SpawnManager : Node2D
 				case "same_type_cluster_spacing_max": _sameTypeClusterSpacingMax = kv.Value; break;
 				case "flat_hp_multiplier": _flatHpMultiplier = kv.Value; break;
 				case "flat_dmg_multiplier": _flatDmgMultiplier = kv.Value; break;
+				case "crisis_spawn_multiplier": _crisisSpawnMultiplier = kv.Value; break;
+				case "crisis_burst_base": _crisisBurstBase = (int)kv.Value; break;
+				case "crisis_burst_per_intensity": _crisisBurstPerIntensity = (int)kv.Value; break;
+				case "crisis_hp_multiplier": _crisisHpMultiplier = kv.Value; break;
+				case "crisis_damage_multiplier": _crisisDamageMultiplier = kv.Value; break;
+				case "time_peril_from_minute": _timePerilFromMinute = kv.Value; break;
+				case "time_peril_per_minute": _timePerilPerMinute = kv.Value; break;
 				default:
 					if (!TryOverrideHpSegment(kv.Key, kv.Value))
 						GD.PushWarning($"[SpawnManager] Unknown scaling override '{kv.Key}'");
