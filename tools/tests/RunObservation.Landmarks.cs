@@ -10,6 +10,8 @@ using Vestiges.World;
 namespace Vestiges.Tests;
 
 /// <summary>
+/// --capture-steles : la stèle du Péril la plus proche, allumée puis éveillée (texte, HUD), une seconde stèle, la fiche
+/// de pause. RESULT : stèles placées, distance au départ en fraction du rayon, Péril après chaque stèle.
 /// --capture-rift : la Faille la plus proche, son offre, la fiche de pause (Péril, Oubli), puis l'Oubli levé au
 /// Mémorial le plus proche. RESULT : Failles placées, Péril et Oublis avant et après.
 /// --capture-memorial : le Mémorial le plus proche du départ, parcouru en entier. Endormi (invite), éclats à ramasser,
@@ -114,6 +116,65 @@ public partial class RunObservation
         choices.Activate(0);
         await Frames(10);
         return shards.Count;
+    }
+
+    private async Task CaptureSteles()
+    {
+        _world.GetNode("SpawnManager").ProcessMode = ProcessModeEnum.Disabled;
+        foreach (Node node in GetTree().GetNodesInGroup("enemies"))
+            if (node is Vestiges.Combat.Enemy existing && existing.IsActive)
+                _world.GetNode<Vestiges.Spawn.EnemyPool>("EnemyPool").Return(existing);
+        _player.AIInputOverride = Vector2.Zero;
+        ProcessMode = ProcessModeEnum.Always;
+        await ToSignal(GetTree().CreateTimer(3.5, processAlways: true), SceneTreeTimer.SignalName.Timeout);
+
+        List<PerilStele> steles = new(PerilStele.All);
+        Vector2 spawn = _player.GlobalPosition;
+        steles.Sort((a, b) => a.GlobalPosition.DistanceSquaredTo(spawn).CompareTo(b.GlobalPosition.DistanceSquaredTo(spawn)));
+        if (steles.Count < 2)
+        {
+            GD.PushError($"[RunObservation] {steles.Count} stèle(s) du Péril placée(s), deux attendues au moins");
+            return;
+        }
+        TileMapLayer ground = _world.GetNode<TileMapLayer>("Ground");
+        List<string> bands = new();
+        foreach (PerilStele stele in steles)
+        {
+            Vector2I cell = ground.LocalToMap(ground.ToLocal(stele.GlobalPosition));
+            bands.Add((_world.Generator.EllipseDistance(cell.X, cell.Y) / _world.Generator.MapRadiusX).ToString("F2", CultureInfo.InvariantCulture));
+        }
+
+        PerilManager peril = _world.GetNode<PerilManager>("PerilManager");
+        PerilStele first = steles[0];
+        _player.GlobalPosition = first.GlobalPosition + new Vector2(-40f, 10f);
+        _camera.ResetSmoothing();
+        await Frames(25);
+        SaveCrop("stele-1-lit", first.GlobalPosition + new Vector2(0f, -30f), new Vector2(240f, 135f));
+        SaveFrame("stele-1-hud-before");
+        first.Interact(_player);
+        await ToSignal(GetTree().CreateTimer(0.5, processAlways: true), SceneTreeTimer.SignalName.Timeout);
+        SaveCrop("stele-2-awakened", first.GlobalPosition + new Vector2(0f, -30f), new Vector2(240f, 135f));
+        SaveFrame("stele-2-hud-after");
+        int perilFirst = peril.Peril;
+        bool spentRefused = !first.CanInteract;
+
+        PerilStele second = steles[1];
+        _player.GlobalPosition = second.GlobalPosition + new Vector2(-40f, 10f);
+        _camera.ResetSmoothing();
+        await Frames(10);
+        second.Interact(_player);
+        await ToSignal(GetTree().CreateTimer(2.8, processAlways: true), SceneTreeTimer.SignalName.Timeout);
+        SaveCrop("stele-3-spent", second.GlobalPosition + new Vector2(0f, -30f), new Vector2(240f, 135f));
+        int perilSecond = peril.Peril;
+
+        Node pause = _world.GetNode("PauseMenu");
+        pause.GetType().GetMethod("Pause", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).Invoke(pause, null);
+        await Frames(10);
+        SaveFrame("stele-4-pause");
+        pause.GetType().GetMethod("Resume", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).Invoke(pause, null);
+        await Frames(5);
+
+        GD.Print($"[RunObservation] RESULT steles={steles.Count} bands={string.Join(",", bands)} peril_first={perilFirst} peril_second={perilSecond} spent_closed={spentRefused}");
     }
 
     private async Task CaptureRift()

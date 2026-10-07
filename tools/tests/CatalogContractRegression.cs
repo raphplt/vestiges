@@ -93,28 +93,29 @@ public partial class CatalogContractRegression : Node
     {
         string valid = FileAccess.GetFileAsString("res://data/scaling/peril.json");
         Check(PerilDataLoader.Apply(valid) == null, "Péril du dépôt accepté");
-        int max = PerilDataLoader.Max;
-        float xp = PerilDataLoader.XpMultiplier(10);
+        int ceiling = PerilDataLoader.ActiveEnemiesCeiling;
+        float count = PerilDataLoader.EnemyCountMultiplier(100);
         (string, Action<JsonObject>, string)[] cases =
         {
             ("bloc absent", root => root.Remove("banish"), "section banish absente"),
             ("diviseur nul", root => root["banish"]!["peril_divisor"] = 0, "peril_divisor : 0 (entier de 1 à 1000 attendu)"),
-            ("valeur négative", root => root["per_point"]!["xp"] = -0.1, "xp : -0.1 (positif ou nul attendu)"),
-            ("valeur absente", root => root["per_point"]!.AsObject().Remove("rarity_steps"), "rarity_steps absent"),
-            ("clé inconnue", root => root["per_point"]!["luck"] = 0.1, "clé « luck » inconnue"),
-            ("maximum non entier", root => root["max"] = 9.5, "max : 9.5"),
+            ("valeur négative", root => root["per_point"]!["enemy_hp"] = -0.1, "enemy_hp : -0.1 (positif ou nul attendu)"),
+            ("valeur absente", root => root["per_point"]!.AsObject().Remove("score"), "score absent"),
+            ("clé inconnue", root => root["per_point"]!["xp"] = 0.1, "clé « xp » inconnue"),
+            ("plafond de coût non entier", root => root["active_enemies_ceiling"] = 9.5, "active_enemies_ceiling : 9.5"),
+            ("bonus de nombre négatif", root => root["enemy_count_bonus_max"] = -1, "enemy_count_bonus_max : -1"),
         };
         foreach ((string label, Action<JsonObject> mutate, string expected) in cases)
         {
             JsonObject root = JsonNode.Parse(valid)!.AsObject();
             mutate(root);
             // Une valeur valide changée en même temps prouve qu'un refus ne publie rien, même partiellement.
-            if (root["max"] is JsonValue value && value.TryGetValue(out int _))
-                root["max"] = 7;
+            if (root["active_enemies_ceiling"] is JsonValue value && value.TryGetValue(out int _))
+                root["active_enemies_ceiling"] = 7;
             string message = PerilDataLoader.Apply(root.ToJsonString());
             Check(message != null && message.Contains(expected, StringComparison.Ordinal), $"Péril refusé ({label}) : {message}");
         }
-        Check(PerilDataLoader.Max == max && Mathf.IsEqualApprox(PerilDataLoader.XpMultiplier(10), xp),
+        Check(PerilDataLoader.ActiveEnemiesCeiling == ceiling && Mathf.IsEqualApprox(PerilDataLoader.EnemyCountMultiplier(100), count),
             "Péril : aucun refus n'a publié de valeur");
     }
 

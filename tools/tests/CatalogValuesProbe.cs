@@ -25,9 +25,9 @@ public partial class CatalogValuesProbe : Node
         ids.Sort(StringComparer.Ordinal);
         foreach (string id in ids)
             lines.Add($"score {id} {score.KillPoints(id)}");
-        for (int peril = 0; peril <= 10; peril++)
-            lines.Add(Invariant($"peril {peril} {PerilDataLoader.EnemyCountMultiplier(peril):R} {PerilDataLoader.EnemyHpMultiplier(peril):R} {PerilDataLoader.EnemyDamageMultiplier(peril):R} {PerilDataLoader.XpMultiplier(peril):R} {PerilDataLoader.ScoreMultiplier(peril):R} {PerilDataLoader.RaritySteps(peril):R}"));
-        lines.Add($"peril max {PerilDataLoader.Max} banish {PerilDataLoader.BanishFree} {PerilDataLoader.BanishPerilDivisor}");
+        foreach (int peril in new[] { 0, 1, 5, 10, 20, 40 })
+            lines.Add(Invariant($"peril {peril} {PerilDataLoader.EnemyCountMultiplier(peril):R} {PerilDataLoader.EnemyHpMultiplier(peril):R} {PerilDataLoader.EnemyDamageMultiplier(peril):R} {PerilDataLoader.ScoreMultiplier(peril):R}"));
+        lines.Add($"peril ceiling {PerilDataLoader.ActiveEnemiesCeiling} banish {PerilDataLoader.BanishFree} {PerilDataLoader.BanishPerilDivisor}");
         // Q7b : objets (tous, désactivés compris), raretés d'amélioration, offre de niveau.
         List<string> objectIds = new() { "flamme_interieure", "fragment_deternite" };
         foreach (PassiveSouvenirData item in PassiveSouvenirDataLoader.GetAll())
@@ -55,7 +55,7 @@ public partial class CatalogValuesProbe : Node
         foreach (UpgradeRarity rarity in UpgradeRoller.Rarities)
             lines.Add(Invariant($"rarity {rarity.Id} rank={rarity.Rank} weight={rarity.Weight:R} stats={rarity.WeaponStats} gain={rarity.WeaponGain:R} integer={rarity.IntegerGain:R} passive={rarity.PassiveGain:R} bump={rarity.BumpChance:R}"));
         foreach (Vestiges.World.ErasureManager.ErasureZonePhase phase in Enum.GetValues<Vestiges.World.ErasureManager.ErasureZonePhase>())
-            lines.Add(Invariant($"rarity steps {phase} luck1={UpgradeRoller.BumpSteps(1f, phase, 0):R} peril3={UpgradeRoller.BumpSteps(0f, phase, 3):R}"));
+            lines.Add(Invariant($"rarity steps {phase} luck1={UpgradeRoller.BumpSteps(1f, phase):R} luck0={UpgradeRoller.BumpSteps(0f, phase):R}"));
         LevelUpOfferConfig offer = LevelUpOfferConfig.Load();
         lines.Add(Invariant($"offer upgrade={offer.UpgradeWeight:R} min={offer.MinWeight:R}"));
         // Q7c-1 : Mémoriaux, Ateliers, Failles, bénédictions, Oublis.

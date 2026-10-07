@@ -32,6 +32,7 @@ public partial class ObjectsRegression : Node2D
             CheckLevels();
             CheckMultipleEffects();
             CheckNewStats();
+            CheckPerilObject();
             CheckRarityGains();
             CheckOffers();
             CheckMilestoneActivation();
@@ -91,7 +92,7 @@ public partial class ObjectsRegression : Node2D
             foreach (ObjectMilestoneData milestone in data.Milestones)
                 wellFormed &= milestone.Level == 15;
         }
-        Check(offered.Count == 32 && wellFormed && anySurvival, $"Catalogue : {offered.Count} objets proposés, niveau max 30, paliers au niveau 15, au moins un de survie");
+        Check(offered.Count == 33 && wellFormed && anySurvival, $"Catalogue : {offered.Count} objets proposés, niveau max 30, paliers au niveau 15, au moins un de survie");
         bool retired = true;
         foreach (string id in new[] { "flamme_interieure", "fragment_deternite" })
             retired &= PassiveSouvenirDataLoader.Get(id) != null && !offered.Exists(data => data.Id == id);
@@ -169,6 +170,26 @@ public partial class ObjectsRegression : Node2D
         Check(Near(_player.LuckBonus, luck + 0.03f), "Jeton de fête foraine : +0,03 Chance par carte commune");
     }
 
+    /// <summary>Sifflet d'arbitre (plan 28 P3) : un point de Péril par niveau, les fractions des cartes rares cumulées.</summary>
+    private void CheckPerilObject()
+    {
+        Setup();
+        PerilManager peril = new() { Name = "PerilManager" };
+        AddChild(peril);
+        _player.AddOrUpgradePassive("sifflet_d_arbitre");
+        int first = peril.Peril;
+        _player.AddOrUpgradePassive("sifflet_d_arbitre", 2);
+        int third = peril.Peril;
+        _player.AddOrUpgradePassive("sifflet_d_arbitre", 1, 1.5f);
+        int half = peril.Peril;
+        _player.AddOrUpgradePassive("sifflet_d_arbitre", 1, 1.5f);
+        int whole = peril.Peril;
+        Check(first == 1 && third == 3 && half == 4 && whole == 6,
+            $"Sifflet d'arbitre : Péril {first}, {third} au niveau 3, {half} puis {whole} après deux cartes à × 1,5");
+        RemoveChild(peril);
+        peril.QueueFree();
+    }
+
     private void CheckRarityGains()
     {
         RandomNumberGenerator rng = new() { Seed = 4 };
@@ -204,7 +225,7 @@ public partial class ObjectsRegression : Node2D
         List<FragmentOption> pool = (List<FragmentOption>)typeof(FragmentManager).GetMethod("BuildFragmentPool", Private).Invoke(fragments, null);
         int fresh = pool.FindAll(option => option.Type == "passive_new").Count;
         bool noRetired = !pool.Exists(option => option.Id is "flamme_interieure" or "fragment_deternite");
-        Check(fresh == 32 && noRetired, $"Offre de niveau : {fresh} objets neufs possibles, aucun objet retiré");
+        Check(fresh == 33 && noRetired, $"Offre de niveau : {fresh} objets neufs possibles, aucun objet retiré");
 
         // Plus de paliers par niveau (DECISIONS §52) : dès le niveau 2, toutes les armes débloquées sont tirables.
         typeof(FragmentManager).GetField("_currentLevel", Private).SetValue(fragments, 2);
@@ -598,7 +619,7 @@ public partial class ObjectsRegression : Node2D
         foreach (PassiveSouvenirData data in PassiveSouvenirDataLoader.GetAll())
             foreach (ObjectMilestoneData milestone in data.Milestones)
                 allCoded &= ObjectMilestoneEffects.IsImplemented(milestone.Effect);
-        Check(allCoded, "Les paliers des 31 objets proposés sont tous codés");
+        Check(allCoded, "Les paliers des 32 objets proposés sont tous codés");
     }
 
     private static readonly FieldInfo IgniteTimer = typeof(Enemy).GetField("_igniteTimer", Private);

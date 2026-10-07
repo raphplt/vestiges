@@ -35,7 +35,7 @@ def main() -> None:
         export(images, output, "generate_hud_sprites")
         manifest = {"xp": {"frame": "xp_frame.png", "margins": [4, 2, 4, 1], "fill_size": [16, 6], "frames": 4, "fps": 8},
                     "kills": {"file": "kill_skull.png", "size": [10, 10]},
-                    "minimap": {"size": [5, 5], "ids": ["chest", "memorial", "rift", "place", "player"]},
+                    "minimap": {"size": [5, 5], "ids": ["chest", "memorial", "rift", "place", "player", "workshop", "peril_stele"]},
                     "quest_seals": {"colors": ["red", "green", "blue"], "frame_size": [16, 16], "layout": "horizontal", "progress_frames": 9, "break_frames": 5, "break_fps": 12, "complete": "quest_seal_complete.png"}}
         (output / "hud_manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n")
     print(f"[generate_hud_sprites] {len(images)} textures ; planche : {args.sheet}")

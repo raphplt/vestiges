@@ -98,6 +98,7 @@ def assets() -> dict[str, Image.Image]:
                 "rift": ("  l s", " sll ", " ll  ", " lls ", "s l  "),
                 "place": ("  l  ", " sss ", "lsosl", " sss ", "  l  "),
                 "workshop": ("lllls", " lll ", "  l  ", " lll ", "sssss"),
+                "peril_stele": ("  l  ", " lll ", " lsl ", "llsll", "lllll"),
                 "player": ("  l  ", " lll ", "lllll", "  l  ", "  l  ")}
     for name, rows in patterns.items():
         images[f"minimap_{name}"] = pattern(rows, {"s": "#6B6161", "l": "#F5F0EB", "o": "#C8C2B6"})

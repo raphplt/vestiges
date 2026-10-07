@@ -26,6 +26,7 @@ public partial class Player
     private ObjectTriggers _objectTriggers;
     private ObjectStances _objectStances;
     private ObjectProcs _objectProcs;
+    private float _objectPerilFraction;
 
     public IReadOnlyList<ActivePassiveSouvenir> PassiveSlots => _passiveSlots;
     /// <summary>Projectiles, ou frappes de mêlée, en plus à chaque attaque (Papier carbone), en fraction.</summary>
@@ -175,6 +176,20 @@ public partial class Player
             SpawnLootPopup(string.Format(Tr("OBJECT_MILESTONE_REACHED"), passive.Data.Name, milestone.Level), MilestoneColor, GlobalPosition, reached++);
             GD.Print($"[Player] Milestone reached: {passive.Data.Name} level {milestone.Level} ({milestone.Effect})");
         }
+    }
+
+    /// <summary>
+    /// Sifflet d'arbitre (plan 28 P3) : chaque niveau monte le Péril de la run. Une carte rare en donne une fraction de
+    /// plus ; les fractions se cumulent et seuls les points entiers passent au Péril.
+    /// </summary>
+    private void AddObjectPeril(float points)
+    {
+        _objectPerilFraction += points;
+        int whole = Mathf.FloorToInt(_objectPerilFraction + 0.0001f);
+        if (whole <= 0)
+            return;
+        _objectPerilFraction -= whole;
+        PerilManager.Current?.AddPeril(whole);
     }
 
     /// <summary>Durée d'un statut ou d'une zone au sol posés par le joueur, Pince à linge comprise.</summary>

@@ -157,7 +157,7 @@ public partial class SpawnManager : Node2D
 		}
 	}
 
-	private void OnDifficultyModifierChanged(float enemyCountMult, float enemyHpMult, float enemyDmgMult, float xpMult)
+	private void OnDifficultyModifierChanged(float enemyCountMult, float enemyHpMult, float enemyDmgMult)
 	{
 		_diffEnemyCountMult = enemyCountMult;
 		_diffEnemyHpMult = enemyHpMult;
@@ -578,9 +578,12 @@ public partial class SpawnManager : Node2D
 		return Mathf.Clamp(multiplier, 0.7f, 3f);
 	}
 
+	/// <summary>Plafond de créatures actives : celui de la run, relevé par le Péril sans dépasser le plafond de coût (plan 28).</summary>
 	private int GetCurrentMaxEnemies(float elapsedMinutes)
 	{
 		float scaled = _maxEnemies + _maxEnemiesGrowthPerMinute * elapsedMinutes;
+		if (_diffEnemyCountMult > 1f)
+			scaled = Mathf.Max(scaled, Mathf.Min(scaled * _diffEnemyCountMult, PerilDataLoader.ActiveEnemiesCeiling));
 		return Mathf.Max(1, Mathf.RoundToInt(scaled));
 	}
 

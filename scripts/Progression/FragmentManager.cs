@@ -21,8 +21,6 @@ public partial class FragmentManager : Node
     private EventBus _eventBus;
     private Player _player;
     private int _currentLevel = 1;
-    // Palier tiré pour la dernière offre, gardé pour le journal : le retirer referait un tirage.
-    private int _peril;
 
     // Level-up queue (multi-level-up support)
     private readonly Queue<int> _levelUpQueue = new();
@@ -82,7 +80,6 @@ public partial class FragmentManager : Node
         _eventBus = GetNode<EventBus>("/root/EventBus");
         _eventBus.LevelUp += OnLevelUp;
         _eventBus.GameStateChanged += OnGameStateChanged;
-        _eventBus.PerilChanged += OnPerilChanged;
         _eventBus.CrisisEnded += OnCrisisEnded;
         _eventBus.ChoiceTokensGranted += OnChoiceTokensGranted;
     }
@@ -93,15 +90,9 @@ public partial class FragmentManager : Node
         {
             _eventBus.LevelUp -= OnLevelUp;
             _eventBus.GameStateChanged -= OnGameStateChanged;
-            _eventBus.PerilChanged -= OnPerilChanged;
             _eventBus.CrisisEnded -= OnCrisisEnded;
             _eventBus.ChoiceTokensGranted -= OnChoiceTokensGranted;
         }
-    }
-
-    private void OnPerilChanged(int peril)
-    {
-        _peril = peril;
     }
 
     private void OnLevelUp(int newLevel)
@@ -473,7 +464,7 @@ public partial class FragmentManager : Node
 
         ErasureManager.ErasureZonePhase phase = GetTree().CurrentScene?.GetNodeOrNull<ErasureManager>("ErasureManager")
             ?.GetZonePhaseAt(_player.GlobalPosition) ?? ErasureManager.ErasureZonePhase.Anchored;
-        UpgradeRarity rarity = UpgradeRoller.RollRarity(UpgradeRoller.BumpSteps(_player.LuckBonus, phase, _peril), _rng, out UpgradeRarity rolled);
+        UpgradeRarity rarity = UpgradeRoller.RollRarity(UpgradeRoller.BumpSteps(_player.LuckBonus, phase), _rng, out UpgradeRarity rolled);
 
         return UpgradeRoller.RollGains(option, _player, rarity, _rng).WithRolledRarity(rolled);
     }

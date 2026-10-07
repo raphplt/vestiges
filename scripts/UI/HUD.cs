@@ -61,6 +61,8 @@ public partial class HUD : CanvasLayer
     // --- Temps ---
     private Label _biomeLabel;
     private Label _timeLabel;
+    private Label _perilLabel;
+    private float _perilPulse;
     private float _biomeAge = float.MaxValue;
     private Tween _timeColorTween;
 
@@ -145,6 +147,7 @@ public partial class HUD : CanvasLayer
         _eventBus.XpGained += OnXpChanged;
         _eventBus.LevelUp += OnLevelUp;
         _eventBus.ScoreChanged += OnScoreChanged;
+        _eventBus.PerilChanged += OnPerilChanged;
         _eventBus.RunPhaseChanged += OnRunPhaseChanged;
         _eventBus.EnemyKilled += OnEnemyKilled;
         _eventBus.EssenceMultiplierChanged += OnEssenceMultiplierChanged;
@@ -235,6 +238,11 @@ public partial class HUD : CanvasLayer
         UpdateHpChip(dt);
         UpdateScoreCounter(dt);
         UpdateGainLabel(dt);
+        if (_perilPulse > 0f)
+        {
+            _perilPulse = Mathf.Max(0f, _perilPulse - dt * 2f);
+            _perilLabel.Modulate = Colors.White.Lerp(EssencePulseModulate, _perilPulse);
+        }
         if (_essencePulse > 0f)
         {
             _essencePulse = Mathf.Max(0f, _essencePulse - dt * 6f);
@@ -259,6 +267,7 @@ public partial class HUD : CanvasLayer
             _eventBus.XpGained -= OnXpChanged;
             _eventBus.LevelUp -= OnLevelUp;
             _eventBus.ScoreChanged -= OnScoreChanged;
+            _eventBus.PerilChanged -= OnPerilChanged;
             _eventBus.RunPhaseChanged -= OnRunPhaseChanged;
             _eventBus.EnemyKilled -= OnEnemyKilled;
             _eventBus.EssenceMultiplierChanged -= OnEssenceMultiplierChanged;
@@ -409,7 +418,10 @@ public partial class HUD : CanvasLayer
         _hudRoot.AddChild(_fpsLabel);
     }
 
-    /// <summary>Le temps seul, en haut au centre, et le nom du biome qui passe dessous quand on y entre.</summary>
+    /// <summary>
+    /// Le temps en haut au centre, le Péril à sa droite dès qu'il dépasse 0 (plan 28 : le joueur le monte lui-même), et
+    /// le nom du biome qui passe dessous quand on y entre.
+    /// </summary>
     private void BuildRunClock()
     {
         Control anchor = new() { MouseFilter = Control.MouseFilterEnum.Ignore };
@@ -423,12 +435,25 @@ public partial class HUD : CanvasLayer
         _timeLabel.HorizontalAlignment = HorizontalAlignment.Center;
         anchor.AddChild(_timeLabel);
 
+        _perilLabel = MakeLabel("", 10, PlayerSheet.PerilColor, 3);
+        _perilLabel.Position = new Vector2(36f, PlateMargin + 4f);
+        _perilLabel.Size = new Vector2(90f, 14f);
+        _perilLabel.Visible = false;
+        anchor.AddChild(_perilLabel);
+
         _biomeLabel = MakeLabel("", 10, PalGrayLight, 3);
         _biomeLabel.Position = new Vector2(-120f, PlateMargin + 22f);
         _biomeLabel.Size = new Vector2(240f, 14f);
         _biomeLabel.HorizontalAlignment = HorizontalAlignment.Center;
         _biomeLabel.Modulate = Colors.Transparent;
         anchor.AddChild(_biomeLabel);
+    }
+
+    private void OnPerilChanged(int peril)
+    {
+        _perilLabel.Visible = peril > 0;
+        _perilLabel.Text = string.Format(Tr("UI_HUD_PERIL"), peril);
+        _perilPulse = 1f;
     }
 
     private void BuildScoreArea()

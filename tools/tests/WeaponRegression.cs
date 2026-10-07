@@ -284,12 +284,8 @@ public partial class WeaponRegression : Node2D
         Dictionary<string, int> anchored = new();
         Dictionary<string, int> erased = new();
         Dictionary<string, int> lucky = new();
-        float luckySteps = UpgradeRoller.BumpSteps(1f, Vestiges.World.ErasureManager.ErasureZonePhase.Anchored, 0);
-        float erasedSteps = UpgradeRoller.BumpSteps(0f, Vestiges.World.ErasureManager.ErasureZonePhase.Erased, 0);
-        float perilSteps = UpgradeRoller.BumpSteps(0f, Vestiges.World.ErasureManager.ErasureZonePhase.Anchored, 4)
-            - UpgradeRoller.BumpSteps(0f, Vestiges.World.ErasureManager.ErasureZonePhase.Anchored, 0);
-        Check(Mathf.IsEqualApprox(perilSteps, PerilDataLoader.RaritySteps(4)) && perilSteps > 0f,
-            $"raretés : 4 points de Péril ajoutent {perilSteps:0.##} crans de montée");
+        float luckySteps = UpgradeRoller.BumpSteps(1f, Vestiges.World.ErasureManager.ErasureZonePhase.Anchored);
+        float erasedSteps = UpgradeRoller.BumpSteps(0f, Vestiges.World.ErasureManager.ErasureZonePhase.Erased);
         for (int i = 0; i < draws; i++)
         {
             string a = UpgradeRoller.RollRarity(0f, rng).Id;

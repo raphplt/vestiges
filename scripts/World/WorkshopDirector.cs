@@ -23,17 +23,15 @@ public partial class WorkshopDirector : Node
     private ChoiceScreen _choices;
     private EssenceTracker _essence;
     private ErasureManager _erasure;
-    private PerilManager _peril;
     private EventBus _eventBus;
     private Player _player;
     private float _lossTimer = LossCheckInterval;
 
-    public void Setup(ChoiceScreen choices, EssenceTracker essence, ErasureManager erasure, PerilManager peril)
+    public void Setup(ChoiceScreen choices, EssenceTracker essence, ErasureManager erasure)
     {
         _choices = choices;
         _essence = essence;
         _erasure = erasure;
-        _peril = peril;
     }
 
     public override void _Ready()
@@ -184,7 +182,7 @@ public partial class WorkshopDirector : Node
     private float BumpSteps(Vector2 position)
     {
         ErasureManager.ErasureZonePhase phase = _erasure?.GetZonePhaseAt(position) ?? ErasureManager.ErasureZonePhase.Anchored;
-        return UpgradeRoller.BumpSteps(_player.LuckBonus, phase, _peril?.Peril ?? 0);
+        return UpgradeRoller.BumpSteps(_player.LuckBonus, phase);
     }
 
     private static Texture2D LoadIcon(string path)

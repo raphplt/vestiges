@@ -1,6 +1,7 @@
 {
-  "_comment": "Péril (plan 17 lot 3A) : stat de run qui échange difficulté contre récompense. Il vient des Failles (un point par amélioration acceptée). Chaque point ajoute linéairement per_point à chaque multiplicateur (1 + valeur × Péril) ; rarity_steps ajoute des crans de montée de rareté (voir upgrade_rarities.json). max borne le Péril d'une run.",
-  "max": 10,
+  "_comment": "Péril (plan 17 lot 3A, recentré au plan 28 P1, DECISIONS §78) : stat de run que le joueur monte pour durcir sa run, sans plafond. Il vient des Failles (un point par amélioration acceptée), des bannissements payants, des stèles et de l'objet du Péril. Il ne paie pas directement : sa contrepartie est d'avoir plus d'ennemis, donc plus d'XP et d'Essence par les éliminations ; seul le score est multiplié. Chaque point ajoute linéairement per_point à chaque multiplicateur (1 + valeur × Péril). enemy_count monte la densité locale visée et le plafond de créatures actives de la run ; son bonus est borné à enemy_count_bonus_max, et le plafond relevé ne dépasse jamais active_enemies_ceiling (coût du rendu, plan 28 P1) : au-delà, les points ne pèsent plus que sur les PV et les dégâts.",
+  "enemy_count_bonus_max": 1.5,
+  "active_enemies_ceiling": 240,
   "banish": {
     "_comment": "Bannir, c'est oublier (plan 21 §16) : free bannissements gratuits par run, puis le n-ième payant coûte n / peril_divisor de Péril, cumulé en fractions exactes et réglé par points entiers.",
     "free": 3,
@@ -10,8 +11,6 @@
     "enemy_count": 0.06,
     "enemy_hp": 0.1,
     "enemy_damage": 0.06,
-    "xp": 0.12,
-    "score": 0.12,
-    "rarity_steps": 0.5
+    "score": 0.12
   }
 }

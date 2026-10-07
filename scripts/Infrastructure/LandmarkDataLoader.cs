@@ -63,8 +63,19 @@ public class RiftConfig
     public float SpawnDistanceMax;
 }
 
+/// <summary>Réglages des stèles du Péril (section <c>peril_stele</c> de data/world/landmarks.json, plan 28 P2).</summary>
+public class PerilSteleConfig
+{
+    public string SpriteLit;
+    public string SpriteSpent;
+    public List<LandmarkBand> Placement = new();
+    public float MinSpacingPx;
+    public float HoldTime;
+    public int Peril;
+}
+
 /// <summary>
-/// Lieux du monde à trouver hors coffres : Mémoriaux, Ateliers et Failles (data/world/landmarks.json), contrôlés en
+/// Lieux du monde à trouver hors coffres : Mémoriaux, Ateliers, Failles et stèles du Péril (data/world/landmarks.json), contrôlés en
 /// entier (plan 26 Q7c) : tous les champs sont obligatoires, les raretés minimales existent, les images aussi.
 /// </summary>
 public static class LandmarkDataLoader
@@ -73,6 +84,7 @@ public static class LandmarkDataLoader
     private static MemorialConfig _memorial;
     private static RiftConfig _rift;
     private static WorkshopConfig _workshop;
+    private static PerilSteleConfig _perilStele;
     private static string _loadError;
 
     public static MemorialConfig Memorial
@@ -102,6 +114,15 @@ public static class LandmarkDataLoader
         }
     }
 
+    public static PerilSteleConfig PerilStele
+    {
+        get
+        {
+            Load();
+            return _perilStele;
+        }
+    }
+
     /// <summary>Réglages lus et contrôlés ; faux, avec la raison, s'ils ont été refusés (le chargement de la run s'arrête).</summary>
     public static bool TryLoad(out string error)
     {
@@ -118,6 +139,7 @@ public static class LandmarkDataLoader
         _memorial = new MemorialConfig();
         _rift = new RiftConfig();
         _workshop = new WorkshopConfig();
+        _perilStele = new PerilSteleConfig();
         string error = FileAccess.FileExists(ConfigPath)
             ? Apply(FileAccess.GetFileAsString(ConfigPath), path => ResourceLoader.Exists(path), RarityIds())
             : "absent";
@@ -138,7 +160,7 @@ public static class LandmarkDataLoader
         {
             using JsonDocument document = JsonDocument.Parse(json);
             JsonConfigReader reader = new(document.RootElement);
-            reader.AllowOnly(reader.Root, "lieux", "memorial", "rift", "workshop");
+            reader.AllowOnly(reader.Root, "lieux", "memorial", "rift", "workshop", "peril_stele");
 
             JsonElement m = reader.Section("memorial");
             reader.AllowOnly(m, "memorial", "sprite_dormant", "sprite_awake", "sprite_shard", "placement", "min_spacing_px",
@@ -207,11 +229,23 @@ public static class LandmarkDataLoader
                 TemperUpgrades = reader.Integer(ws, "temper_upgrades", 0, 100),
                 CostGrowth = reader.NonNegative(ws, "cost_growth"),
             };
+            JsonElement st = reader.Section("peril_stele");
+            reader.AllowOnly(st, "peril_stele", "sprite_lit", "sprite_spent", "placement", "min_spacing_px", "hold_time", "peril");
+            PerilSteleConfig perilStele = new()
+            {
+                SpriteLit = reader.Resource(st, "sprite_lit", exists),
+                SpriteSpent = reader.Resource(st, "sprite_spent", exists),
+                Placement = Bands(reader, st),
+                MinSpacingPx = reader.Positive(st, "min_spacing_px"),
+                HoldTime = reader.Positive(st, "hold_time"),
+                Peril = reader.Integer(st, "peril", 1, 100),
+            };
             if (reader.Error != null)
                 return reader.Error;
             _memorial = memorial;
             _rift = rift;
             _workshop = workshop;
+            _perilStele = perilStele;
             _loadError = null;
             return null;
         }

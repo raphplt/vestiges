@@ -60,6 +60,7 @@ public partial class Minimap : Control
     private Texture2D _chestIcon;
     private Texture2D _memorialIcon;
     private Texture2D _riftIcon;
+    private Texture2D _steleIcon;
     private Texture2D _workshopIcon;
     private Texture2D _playerIcon;
 
@@ -72,6 +73,7 @@ public partial class Minimap : Control
         _chestIcon = GD.Load<Texture2D>(iconFolder + "minimap_chest.png");
         _memorialIcon = GD.Load<Texture2D>(iconFolder + "minimap_memorial.png");
         _riftIcon = GD.Load<Texture2D>(iconFolder + "minimap_rift.png");
+        _steleIcon = GD.Load<Texture2D>(iconFolder + "minimap_peril_stele.png");
         _workshopIcon = GD.Load<Texture2D>(iconFolder + "minimap_workshop.png");
         _playerIcon = GD.Load<Texture2D>(iconFolder + "minimap_player.png");
         _groups = GetNode<GroupCache>("/root/GroupCache");
@@ -163,6 +165,7 @@ public partial class Minimap : Control
             (_chestIcon, RarityPalette.Main("rare"), "MAP_LEGEND_CHEST"),
             (_memorialIcon, MemorialColor, "MAP_LEGEND_MEMORIAL"),
             (_riftIcon, RiftColor, "MAP_LEGEND_RIFT"),
+            (_steleIcon, PlayerSheet.PerilColor, "MAP_LEGEND_PERIL_STELE"),
             (_workshopIcon, WorkshopColor, "MAP_LEGEND_WORKSHOP"),
             (_placeIcon, PlaceColor, "MAP_LEGEND_PLACE"),
             (null, _palette.Terrain("forest_reclaimed", TerrainType.Forest), "MAP_BIOME_FOREST"),
@@ -298,6 +301,12 @@ public partial class Minimap : Control
         for (int i = 0; i < Rift.All.Count; i++)
             if (InView(Rift.All[i].GlobalPosition) && Known(Rift.All[i].GlobalPosition))
                 DrawIcon(Rift.All[i].GlobalPosition, _riftIcon, RiftColor);
+        for (int i = 0; i < PerilStele.All.Count; i++)
+        {
+            PerilStele stele = PerilStele.All[i];
+            if (stele.IsLit && InView(stele.GlobalPosition) && Known(stele.GlobalPosition))
+                DrawIcon(stele.GlobalPosition, _steleIcon, PlayerSheet.PerilColor);
+        }
         for (int i = 0; i < Workshop.All.Count; i++)
             if (!Workshop.All[i].IsLost && InView(Workshop.All[i].GlobalPosition) && Known(Workshop.All[i].GlobalPosition))
                 DrawIcon(Workshop.All[i].GlobalPosition, _workshopIcon, WorkshopColor);

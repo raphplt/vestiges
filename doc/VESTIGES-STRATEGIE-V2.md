@@ -340,6 +340,8 @@ Le prototype V1 avait des ennemis trop passifs et trop loin. En V2 :
 ## 11. Les Autels d'Essence
 
 > **Amendement du 26 septembre 2026 (plan 17, vague 3, direction validée par Raphaël)** : l'Autel devient le **Mémorial**. On le ravive en rassemblant ses trois éclats (20 s) ; il stabilise sa zone et offre une bénédiction à rareté, puis des services contre de l'Essence (raviver une arme au choix, Rare au moins ; soin ; lever un Oubli). Son miroir est la **Faille** : une amélioration Épique ou Légendaire contre un **Oubli** (malus durable) et un point de **Péril** (créatures plus fortes, score, XP et raretés majorés), toujours refusable. L'Appel du Vide et les malédictions disparaissent. Écart avec le paragraphe « Interaction » ci-dessous, validé par Raphaël : le choix se fait sur un écran de trois cartes qui fige la run, comme le level-up.
+>
+> **Amendement du 7 octobre 2026 (plan 28, DECISIONS §78)** : le Péril n'a plus de plafond et ne paie plus directement. Il renforce les créatures (nombre, PV, dégâts) et multiplie le score ; XP et Essence viennent seulement des éliminations en plus. Il monte aussi aux stèles du Péril (une dizaine par carte) et avec le Sifflet d'arbitre (+1 par niveau).
 
 ### Concept
 
@@ -795,6 +797,7 @@ Le script de post-processing doit inclure une vérification/correction de l'angl
 - [x] B2 : Prévoyance, Reprise, Débordement, Convergence et Propagation actifs en run avec leurs retours visuels (barre de PV, case d'arme, chiffre renforcé, repère, trait), état inactif, pause chiffrée et avertissement d'échange ; banc d'effets, captures et banc dense A/B vérifiés ([compte rendu](plans/05-perks-specialisations.md#13-compte-rendu-b2--effets-de-combat-et-de-survie-livrés-le-29-septembre-2026)).
 - [x] B3 (partie sans objets) : Sillage (couloir de collecte, orbes endormies rappelées) et Seconde lecture (carte reportée) actifs en run, bancs et captures vérifiés ([compte rendu](plans/05-perks-specialisations.md#14-compte-rendu-b3-partie-sans-objets--sillage-et-seconde-lecture-29-septembre-2026)).
 - [x] Plan 21 lot G1 : fragments offerts après chaque Résurgence survécue (fin des paliers de niveau) ; bannissements gratuits puis coût croissant en Péril ([compte rendu](plans/21-historique.md#17-compte-rendu-g1--fragments-après-les-résurgences-bannir-coûte-du-péril)).
+- [x] Plan 28 P1–P3 : Péril sans plafond et recentré sur les créatures, affiché au HUD ; stèles du Péril sur la carte ; Sifflet d'arbitre ([plan 28](plans/28-peril-et-difficulte.md), 7 octobre 2026).
 - [x] Plan 21 lot G2a : les passifs deviennent des objets (6 emplacements, 50 niveaux par formule, effets multiples, 1 à 5 niveaux selon la rareté, 12 objets de propriété) ([compte rendu](plans/21-historique.md)).
 - [x] Plan 21 lot G2a-2, étape 1 : paliers d'objets (données, activation au franchissement, annoncés seulement s'ils sont codés, cartes et pause), Papier carbone (copies d'attaque à dégâts réduits, +1 copie aux niveaux 25 et 50) et Pince à linge (Durée des statuts, renouvellement au palier 25) ([compte rendu](plans/21-historique.md#21-compte-rendu-g2a-2-étape-1--socle-des-paliers-papier-carbone-pince-à-linge)).
 - [x] Plan 21 lot G2a-2, étape 2 : paliers du niveau 25 des douze autres objets de propriété, chacun avec son retour en jeu ([compte rendu](plans/21-historique.md#22-compte-rendu-g2a-2-étape-2--les-douze-paliers)).

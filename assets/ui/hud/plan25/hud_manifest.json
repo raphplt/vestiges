@@ -31,7 +31,9 @@
       "memorial",
       "rift",
       "place",
-      "player"
+      "player",
+      "workshop",
+      "peril_stele"
     ]
   },
   "quest_seals": {

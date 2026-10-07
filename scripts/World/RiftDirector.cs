@@ -84,7 +84,7 @@ public partial class RiftDirector : Node
             return;
 
         ErasureManager.ErasureZonePhase phase = _erasure?.GetZonePhaseAt(rift.GlobalPosition) ?? ErasureManager.ErasureZonePhase.Anchored;
-        float bump = UpgradeRoller.BumpSteps(_player.LuckBonus, phase, _peril.Peril);
+        float bump = UpgradeRoller.BumpSteps(_player.LuckBonus, phase);
         List<OubliData> oubliPool = new(OubliDataLoader.All);
         List<(FragmentOption Option, OubliData Oubli)> offers = new();
         List<ChoiceCard> cards = new();

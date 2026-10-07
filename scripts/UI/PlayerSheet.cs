@@ -80,16 +80,16 @@ public static class PlayerSheet
     private static string WithBonus(string value, float multiplier) =>
         Mathf.RoundToInt((multiplier - 1f) * 100f) == 0 ? value : $"{value}  ({Bonus(multiplier)})";
 
-    /// <summary>Péril : le niveau, puis ce qu'il coûte et ce qu'il rapporte.</summary>
+    /// <summary>Péril : le niveau, puis ce qu'il coûte et ce qu'il rapporte (le score seul : le reste vient des éliminations).</summary>
     private static void AddPerilLines(VBoxContainer container, int peril, TextRole role)
     {
         AddLine(container, Tr("STAT_PERIL"), peril.ToString(), peril > 0 ? PerilColor : null, role);
         if (peril == 0)
             return;
         AddLine(container, "  " + Tr("PERIL_CREATURES"),
-            $"{Bonus(PerilDataLoader.EnemyCountMultiplier(peril))} · PV {Bonus(PerilDataLoader.EnemyHpMultiplier(peril))}", UITheme.TextDim, role);
-        AddLine(container, "  " + Tr("PERIL_REWARDS"),
-            $"XP {Bonus(PerilDataLoader.XpMultiplier(peril))} · score {Bonus(PerilDataLoader.ScoreMultiplier(peril))}", UITheme.TextDim, role);
+            $"{Bonus(PerilDataLoader.EnemyCountMultiplier(peril))} · PV {Bonus(PerilDataLoader.EnemyHpMultiplier(peril))} · {Tr("PERIL_DAMAGE")} {Bonus(PerilDataLoader.EnemyDamageMultiplier(peril))}",
+            UITheme.TextDim, role);
+        AddLine(container, "  " + Tr("PERIL_REWARDS"), $"score {Bonus(PerilDataLoader.ScoreMultiplier(peril))}", UITheme.TextDim, role);
     }
 
     /// <summary>

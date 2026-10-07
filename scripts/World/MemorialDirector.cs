@@ -420,7 +420,7 @@ public partial class MemorialDirector : Node
     private float BumpSteps(Vector2 position)
     {
         ErasureManager.ErasureZonePhase phase = _erasure?.GetZonePhaseAt(position) ?? ErasureManager.ErasureZonePhase.Anchored;
-        return UpgradeRoller.BumpSteps(_player.LuckBonus, phase, _peril.Peril);
+        return UpgradeRoller.BumpSteps(_player.LuckBonus, phase);
     }
 
     private static ChoiceCard RarityCard(UpgradeRarity rarity, string title) => new()

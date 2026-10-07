@@ -70,8 +70,7 @@ public partial class RunObservation
 
         ErasureManager erasure = _world.GetNodeOrNull<ErasureManager>("ErasureManager");
         ErasureManager.ErasureZonePhase phase = erasure?.GetZonePhaseAt(_player.GlobalPosition) ?? ErasureManager.ErasureZonePhase.Anchored;
-        int peril = _world.GetNodeOrNull<PerilManager>("PerilManager")?.Peril ?? 0;
-        float steps = UpgradeRoller.BumpSteps(_player.LuckBonus, phase, peril);
+        float steps = UpgradeRoller.BumpSteps(_player.LuckBonus, phase);
         (double luck, double total, int count) = _offerContext.GetValueOrDefault(band);
         _offerContext[band] = (luck + _player.LuckBonus, total + steps, count + 1);
     }

@@ -1,6 +1,6 @@
 """
 Lieux du plan 17, vague 3 : le Mémorial (stèle de mémoire, dormante puis éveillée), ses éclats, et la Faille
-(déchirure de l'Effacement dans le sol, ouverte puis refermée), et l'Atelier du plan 22.
+(déchirure de l'Effacement dans le sol, ouverte puis refermée), l'Atelier du plan 22 et la stèle du Péril du plan 28.
 
 Même échelle que les décors (1 m ≈ 27,5 unités). La lumière de mémoire est dorée, celle de l'oubli violette :
 les deux lieux se lisent comme un miroir.
@@ -20,6 +20,8 @@ MEMORIAL_SCALE = 1.35
 SHARD_SCALE = 1.6
 # L'établi est bas : un peu plus grand que la stèle pour se voir d'aussi loin.
 WORKSHOP_SCALE = 1.6
+# Stèle du Péril : haute et étroite, elle se distingue du Mémorial par sa silhouette avant sa couleur.
+PERIL_STELE_SCALE = 1.5
 
 
 def _scaled(distance, factor: float):
@@ -173,6 +175,38 @@ def workshop(stem: str, seed: int) -> PropModel:
                      footprint=box_footprint(0.95 * M * WORKSHOP_SCALE, 0.55 * M * WORKSHOP_SCALE))
 
 
+def peril_stele(stem: str, lit: bool, seed: int) -> PropModel:
+    """Obélisque sombre et penché sur un socle brut, fendu d'une lueur rouge ; éteint, la fente n'est plus que grise."""
+    STONE, BASE, CRACK, PEBBLE = range(4)
+    materials = [
+        make_material("obsidian", "#3E3842", contrast=0.9),
+        make_material("base", "#5E5852"),
+        make_emissive("crack", "#E0505A") if lit else make_material("crack", "#6A6266", contrast=0.5),
+        make_material("pebble", "#4A4448"),
+    ]
+
+    def parts() -> list[Part]:
+        return [Part(_scaled(part.distance, PERIL_STELE_SCALE), part.material) for part in base_parts()]
+
+    def base_parts() -> list[Part]:
+        w = Weathering(seed)
+        lean = rotation_z(w.uniform(0.06, 0.1))
+        # Fente en zigzag sur la face avant, du pied vers la pointe.
+        crack = [(0.04 * M * (-1) ** i, (0.5 + 0.2 * i) * M, (0.09 + 0.02 * (i % 2)) * M) for i in range(5)]
+        pebbles = [(x * M, 0.05 * M, z * M) for x, z in ((-0.5, 0.25), (0.45, 0.3), (0.3, -0.35))]
+        return [
+            Part(lambda p: rounded_box(p, (0, 0.1 * M, 0), (0.45 * M, 0.1 * M, 0.38 * M), 0.05 * M), BASE),
+            Part(lambda p: rounded_box(p @ lean, (0, 0.85 * M, 0), (0.2 * M, 0.68 * M, 0.13 * M), 0.05 * M), STONE),
+            Part(lambda p: ellipsoid(p @ lean, (0, 1.55 * M, 0), (0.16 * M, 0.2 * M, 0.11 * M)), STONE),
+            Part(lambda p: _union(*(rounded_box(p @ lean, (x, y, 0.125 * M), (0.025 * M, h, 0.02 * M), 0.008 * M)
+                                    for x, y, h in crack)), CRACK),
+            Part(lambda p: _union(*(sphere(p, c, 0.07 * M) for c in pebbles)), PEBBLE),
+        ]
+
+    return PropModel(stem, parts, materials, AXIS_Y_YAW, canvas=(72, 130),
+                     footprint=box_footprint(0.45 * M * PERIL_STELE_SCALE, 0.38 * M * PERIL_STELE_SCALE))
+
+
 def catalog() -> list[PropModel]:
     return [
         memorial("memorial_dormant", False, 7),
@@ -181,4 +215,6 @@ def catalog() -> list[PropModel]:
         rift("rift_open", True, 13),
         rift("rift_closed", False, 13),
         workshop("workshop", 17),
+        peril_stele("peril_stele_lit", True, 23),
+        peril_stele("peril_stele_spent", False, 23),
     ]

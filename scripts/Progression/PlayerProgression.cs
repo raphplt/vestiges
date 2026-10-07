@@ -13,7 +13,6 @@ public partial class PlayerProgression : Node
     private float _currentXp;
     private int _currentLevel = 1;
     private float _xpToNextLevel;
-    private float _xpMultiplier = 1f;
     private EventBus _eventBus;
     private XpCurveConfig _curve;
     private Player _player;
@@ -28,7 +27,6 @@ public partial class PlayerProgression : Node
         _eventBus = GetNode<EventBus>("/root/EventBus");
         _player = GetParent() as Player;
         _eventBus.XpGained += OnXpGained;
-        _eventBus.DifficultyModifierChanged += OnDifficultyModifierChanged;
         // Courbe refusée : le chargement de la run s'arrête sur son message (GameBootstrap) ; aucun niveau ne s'atteint.
         _xpToNextLevel = XpCurveConfig.TryLoad(out _curve, out _) ? _curve.CostOf(_currentLevel) : float.PositiveInfinity;
     }
@@ -36,20 +34,12 @@ public partial class PlayerProgression : Node
     public override void _ExitTree()
     {
         if (_eventBus != null)
-        {
             _eventBus.XpGained -= OnXpGained;
-            _eventBus.DifficultyModifierChanged -= OnDifficultyModifierChanged;
-        }
-    }
-
-    private void OnDifficultyModifierChanged(float enemyCountMult, float enemyHpMult, float enemyDmgMult, float xpMult)
-    {
-        _xpMultiplier = xpMult;
     }
 
     private void OnXpGained(float amount)
     {
-        _currentXp += amount * _xpMultiplier * (_player?.XpGainMultiplier ?? 1f);
+        _currentXp += amount * (_player?.XpGainMultiplier ?? 1f);
 
         while (_currentXp >= _xpToNextLevel)
         {

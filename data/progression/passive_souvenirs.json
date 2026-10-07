@@ -1049,6 +1049,27 @@
         ]
     },
     {
+        "id": "sifflet_d_arbitre",
+        "icon": "res://assets/items/icons/item_sifflet_d_arbitre.png",
+        "icon_small": "res://assets/items/icons/item_sifflet_d_arbitre_16.png",
+        "name": "Sifflet d'arbitre",
+        "description": "Les créatures t'entendent de loin : chaque niveau monte le Péril d'un point. Plus d'ennemis, plus forts, plus d'XP et d'Essence à prendre.",
+        "icon_color": [
+            0.85,
+            0.38,
+            0.42
+        ],
+        "max_level": 30,
+        "effects": [
+            {
+                "stat": "peril",
+                "modifier_type": "additive",
+                "step": 1
+            }
+        ],
+        "milestones": []
+    },
+    {
         "id": "fragment_deternite",
         "name": "Fragment d'Éternité",
         "description": "",

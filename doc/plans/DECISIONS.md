@@ -895,3 +895,14 @@ Raphaël : « diminuer le halo/contours autours des projectiles du heros je le t
 ## 76. Reprise autonome du chantier audio — 7 octobre 2026
 
 Raphaël demande de reprendre « le sujet audio (mixage, un son par armes, armes d'ambiances, sons des menus, musiques) » et d'avancer en autonomie ; questions et validations possibles au fil du travail. « Armes d'ambiances » est interprété comme les ambiances sonores, dans la continuité du plan 15. Le report des musiques et ambiances du 4 octobre prend donc fin. Lots A3a à A3c proposés dans le [plan 15](15-audio.md). Aucune dépense demandée.
+
+## 78. Péril : sans plafond, stèles, objet ; planche lore L1 validée — 7 octobre 2026
+
+Réponses de Raphaël au début du chantier difficulté (§74).
+- **Planche lore L1** : « valide les textes de la planche de lore ». Textes validés tels quels ; intégration à planifier au plan 19.
+- **Steam** : il demande comment obtenir l'App ID ; marche à suivre redonnée ([STEAM-MISE-EN-PLACE](../STEAM-MISE-EN-PLACE.md) §1). Reste à faire de son côté.
+- **Échelle** : « Sans plafond ». Le Péril n'a plus de maximum.
+- **Totems** : stèle à activer (maintenir la touche comme à une Faille) pour +1 Péril définitif, une dizaine par carte.
+- **Objet du Péril** : « monte le péril, ne paie pas mieux imo. et en fait je pense que les bénéfices pour le joueur du péril c'est juste plus d'ennemis donc plus d'xp et d'essences car plus de morts ». L'objet ne donne que du Péril ; il occupe un emplacement.
+- **Principe qui en découle** : le Péril ne paie pas directement. Sa seule contrepartie est d'avoir plus d'ennemis, donc plus d'XP et d'Essence par les éliminations. Les bonus directs d'XP et de rareté par point sont retirés, la stèle ne donne pas d'Essence. Le multiplicateur de score est gardé : il ne rend pas le joueur plus fort et il départage les runs au classement (à revoir si Raphaël le refuse).
+- « je te demande de faire le chantier dédié au péril ok ?? » : pas d'autre question avant de livrer ; les choix restants suivent les recommandations du [plan 28](28-peril-et-difficulte.md).

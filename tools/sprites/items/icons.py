@@ -181,4 +181,18 @@ def straw() -> Item:
     return item
 
 
-PROPERTY_ITEMS = [spring, carbon, mirror, washer, ruler, peg, glasses, button, spool, kneepad, badge, lace, magnet, photo, token, straw]
+def whistle() -> Item:
+    """Sifflet d'arbitre (plan 28 P3) : chambre ronde en laiton percée sur le flanc, embout plat à gauche, fente dessus, cordon rouge qui pend."""
+    item = Item("sifflet_d_arbitre", .25)
+    item.add("yellow", oval((3, -1, 0), (9, 7.5, 5)))
+    item.add("yellow", box((-8.5, 3, 0), (6, 2.6, 3)))
+    item.add("dark", box((-1.5, 6.2, 1), (3.5, 1.1, 2.4)))
+    item.add("dark", disk((-14, 3, 0), 1.2, 2))
+    item.add("dark", disk((4, -2, 4.6), 3, .8))
+    item.add("light", oval((8, 2.5, 4), (2.2, 1.6, .6)))
+    item.add("steel", ring((11.5, -6, 0), 2.8, .9))
+    item.add("red", line([(12.5, -9, 0), (11, -13.5, 0), (5, -14.5, 0), (-2, -13.5, 0), (-7, -14.5, 0)], 1.2))
+    return item
+
+
+PROPERTY_ITEMS = [spring, carbon, mirror, washer, ruler, peg, glasses, button, spool, kneepad, badge, lace, magnet, photo, token, straw, whistle]

@@ -1,5 +1,5 @@
 {
-	"_comment": "Mémoriaux (plan 17 lot 3B) et Failles (lot 3C). placement : groupes par couronne (comptes doublés avec la carte agrandie en hauteur, plan 23 R7) de distance au départ (fraction du rayon de carte), placés après les coffres et à min_spacing_px de tout autre lieu. Activation : trois éclats apparaissent entre shard_distance_px, à ramasser en shard_time secondes, sinon ils s'éteignent et on peut réessayer. Récompense : blessing_choices bénédictions, rareté au moins blessing_min_rarity, montée par la Chance, l'oubli de la zone et le Péril. Services ensuite, contre de l'Essence ; chaque usage d'un service au même Mémorial augmente son prix de cost_growth (fraction du prix de base). Un Mémorial englouti par le Néant est perdu ; lift_oubli_cost : prix de base pour lever un Oubli. Ateliers (plan 22 C2) : placés après les Failles, pour ne pas déplacer les lieux existants ; niveau d'arme contre weapon_cost Essence (rareté au moins weapon_min_rarity), Retrempe contre retemper_cost (relance la dernière amélioration d'une arme, rareté égale ou supérieure), Trempe gratuite à la première visite (les temper_upgrades prochaines améliorations d'arme touchent une stat de plus) ; prix qui montent de cost_growth à chaque usage, par Atelier. Failles : placement au départ comme les Mémoriaux ; offers améliorations, rareté au moins offer_min_rarity, chacune avec un Oubli et peril_per_offer point de Péril. erased_spawn : quand une zone devient Effacée à distance_px du joueur, une Faille s'y ouvre avec la probabilité chance, au plus une par cooldown_s et max_open ouvertes à la fois.",
+	"_comment": "Mémoriaux (plan 17 lot 3B) et Failles (lot 3C). placement : groupes par couronne (comptes doublés avec la carte agrandie en hauteur, plan 23 R7) de distance au départ (fraction du rayon de carte), placés après les coffres et à min_spacing_px de tout autre lieu. Activation : trois éclats apparaissent entre shard_distance_px, à ramasser en shard_time secondes, sinon ils s'éteignent et on peut réessayer. Récompense : blessing_choices bénédictions, rareté au moins blessing_min_rarity, montée par la Chance et l'oubli de la zone (le Péril ne paie pas, plan 28). Services ensuite, contre de l'Essence ; chaque usage d'un service au même Mémorial augmente son prix de cost_growth (fraction du prix de base). Un Mémorial englouti par le Néant est perdu ; lift_oubli_cost : prix de base pour lever un Oubli. Ateliers (plan 22 C2) : placés après les Failles, pour ne pas déplacer les lieux existants ; niveau d'arme contre weapon_cost Essence (rareté au moins weapon_min_rarity), Retrempe contre retemper_cost (relance la dernière amélioration d'une arme, rareté égale ou supérieure), Trempe gratuite à la première visite (les temper_upgrades prochaines améliorations d'arme touchent une stat de plus) ; prix qui montent de cost_growth à chaque usage, par Atelier. Stèles du Péril (plan 28 P2) : placées après les Ateliers ; maintenir la touche hold_time secondes donne peril points de Péril, définitifs, et éteint la stèle ; rien d'autre (le Péril ne paie que par plus d'ennemis, DECISIONS §78). Failles : placement au départ comme les Mémoriaux ; offers améliorations, rareté au moins offer_min_rarity, chacune avec un Oubli et peril_per_offer point de Péril. erased_spawn : quand une zone devient Effacée à distance_px du joueur, une Faille s'y ouvre avec la probabilité chance, au plus une par cooldown_s et max_open ouvertes à la fois.",
 	"memorial": {
 		"sprite_dormant": "assets/landmarks/memorial_dormant.png",
 		"sprite_awake": "assets/landmarks/memorial_awake.png",
@@ -55,5 +55,16 @@
 			"temper_upgrades": 5,
 			"cost_growth": 0.5
 		}
+	},
+	"peril_stele": {
+		"sprite_lit": "assets/landmarks/peril_stele_lit.png",
+		"sprite_spent": "assets/landmarks/peril_stele_spent.png",
+		"placement": [
+			{ "count": 1, "band": [0.08, 0.16] },
+			{ "count": 9, "band": [0.2, 0.92] }
+		],
+		"min_spacing_px": 700,
+		"hold_time": 0.8,
+		"peril": 1
 	}
 }

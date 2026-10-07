@@ -113,7 +113,7 @@ public partial class RunObservation
         private static readonly string[] PlaceKinds =
         {
             "chest", "memorial", "rift", "workshop", "well", "crystal_vein", "scarecrow",
-            "mailbox", "mine_cart", "abandoned_car", "phone_booth", "bus_shelter", "picnic",
+            "mailbox", "mine_cart", "abandoned_car", "phone_booth", "bus_shelter", "picnic", "peril_stele",
         };
 
         /// <summary>Lieux entrés dans le cadre ; <paramref name="chests"/> est le groupe déjà lu par la mesure des coffres.</summary>
@@ -133,6 +133,10 @@ public partial class RunObservation
                 _places.Add((rift, "rift"));
             foreach (Workshop workshop in Workshop.All)
                 _places.Add((workshop, "workshop"));
+            // Stèles du Péril (plan 28) : comptées quand elles entrent dans le cadre, jamais visées, pour que le Péril
+            // de la mesure reste celui qu'elle impose (--peril) et que le trajet du bot ne change pas.
+            foreach (PerilStele stele in PerilStele.All)
+                _places.Add((stele, "peril_stele"));
 
             foreach ((Node2D node, string kind) in _places)
             {
@@ -251,7 +255,7 @@ public partial class RunObservation
             // Petits lieux seuls, tous types confondus : la cible du plan 22 §2 (un toutes les 20 à 30 s de marche).
             int small = 0;
             foreach ((string kind, int count) in _seenByKind)
-                if (kind is not ("chest" or "memorial" or "rift" or "workshop"))
+                if (kind is not ("chest" or "memorial" or "rift" or "workshop" or "peril_stele"))
                     small += count;
             summary.Append(CultureInfo.InvariantCulture,
                 $" small_places_seen={small} small_place_every_s={(small > 0 ? seconds / small : 0):F0}");

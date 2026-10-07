@@ -6,7 +6,7 @@ using Vestiges.Infrastructure;
 namespace Vestiges.Progression;
 
 /// <summary>
-/// Péril de la run (plan 17 lot 3A) : chaque point renforce les créatures et majore XP, score et rareté des tirages
+/// Péril de la run (plan 17 lot 3A, plan 28) : sans plafond, chaque point renforce les créatures et majore le score
 /// (valeurs dans data/scaling/peril.json). Seul émetteur de <c>DifficultyModifierChanged</c>. Tient aussi les Oublis
 /// (lots 3C et 3D), malus de carte pris aux Failles : <c>OubliEffectChanged</c> publie le total de chaque effet, que le
 /// système concerné applique (apparition, Effacement, Résurgences, brouillard, coffres, Mémoriaux).
@@ -40,14 +40,14 @@ public partial class PerilManager : Node
 
     public void AddPeril(int amount)
     {
-        int peril = Mathf.Clamp(Peril + amount, 0, PerilDataLoader.Max);
+        int peril = Mathf.Max(Peril + amount, 0);
         if (peril == Peril)
             return;
 
         Peril = peril;
         _eventBus.EmitSignal(EventBus.SignalName.DifficultyModifierChanged,
             PerilDataLoader.EnemyCountMultiplier(peril), PerilDataLoader.EnemyHpMultiplier(peril),
-            PerilDataLoader.EnemyDamageMultiplier(peril), PerilDataLoader.XpMultiplier(peril));
+            PerilDataLoader.EnemyDamageMultiplier(peril));
         _eventBus.EmitSignal(EventBus.SignalName.PerilChanged, peril);
         GD.Print($"[PerilManager] Péril {peril}");
     }

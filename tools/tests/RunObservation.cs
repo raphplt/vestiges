@@ -52,6 +52,7 @@ namespace Vestiges.Tests;
 /// --capture-weapon-pickup : arme au sol ramassée (vol vers le HUD) puis échangée (RunObservation.WeaponPickup.cs).
 /// --close-window : quitte par la demande de fermeture de la fenêtre au lieu de GameExit.
 /// --capture-rift : offre d'une Faille, Péril et Oubli dans la pause, Oubli levé au Mémorial (RunObservation.Landmarks.cs).
+/// --capture-steles : stèles du Péril, allumée puis éveillée, HUD et fiche de pause (RunObservation.Landmarks.cs).
 /// --capture-memorial : parcours complet d'un Mémorial, du réveil aux services (RunObservation.Landmarks.cs).
 /// --capture-workshop : Atelier, première visite (Trempe), niveau d'arme et Retrempe (RunObservation.Landmarks.cs).
 /// --loot-draws N : tirages de butin de chaque coffre, sans les appliquer (RunObservation.Chests.cs).
@@ -184,6 +185,8 @@ public partial class RunObservation : Node
                 await CaptureWorkshop();
             else if (Array.IndexOf(args, "--capture-rift") >= 0)
                 await CaptureRift();
+            else if (Array.IndexOf(args, "--capture-steles") >= 0)
+                await CaptureSteles();
             else if (Array.IndexOf(args, "--capture-oublis") >= 0)
                 await CaptureOublis();
             else if (Array.IndexOf(args, "--check-orb-sleep") >= 0)
@@ -834,7 +837,15 @@ public partial class RunObservation : Node
         if (manager is not Vestiges.Progression.FragmentManager fragments || !fragments.IsChoiceActive || fragments.PendingChoices.Count == 0)
             return;
         RecordOffer(fragments);
+        // Le Sifflet d'arbitre monte le Péril (plan 28) : le bot ne le prend que si --prefer le demande, pour que le
+        // Péril d'une mesure reste celui qu'elle impose.
         Vestiges.Progression.FragmentOption choice = fragments.PendingChoices[0];
+        foreach (Vestiges.Progression.FragmentOption option in fragments.PendingChoices)
+            if (option.Id != PerilObjectId)
+            {
+                choice = option;
+                break;
+            }
         foreach (Vestiges.Progression.FragmentOption option in fragments.PendingChoices)
             if (Array.IndexOf(_preferredCards, option.Id) >= 0)
             {
@@ -846,6 +857,7 @@ public partial class RunObservation : Node
     }
 
     private string[] _preferredCards = Array.Empty<string>();
+    private const string PerilObjectId = "sifflet_d_arbitre";
 
     private Rect2 VisibleWorldRect()
     {

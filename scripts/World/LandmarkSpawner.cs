@@ -4,7 +4,7 @@ using Vestiges.Infrastructure;
 namespace Vestiges.World;
 
 /// <summary>
-/// Place les Mémoriaux, les Failles et les Ateliers du départ (data/world/landmarks.json), après les coffres et par le même
+/// Place les Mémoriaux, les Failles, les Ateliers et les stèles du Péril du départ (data/world/landmarks.json), après les coffres et par le même
 /// <see cref="SitePlacer"/> : ils s'écartent des coffres et réservent leur dégagement avant les décors.
 /// </summary>
 public static class LandmarkSpawner
@@ -65,5 +65,24 @@ public static class LandmarkSpawner
             }
         }
         GD.Print($"[LandmarkSpawner] Spawned {workshops} workshops");
+
+        // Stèles du Péril (plan 28 P2) : après les Ateliers, pour la même raison.
+        PerilSteleConfig stele = LandmarkDataLoader.PerilStele;
+        int steles = 0;
+        foreach (LandmarkBand band in stele.Placement)
+        {
+            for (int i = 0; i < band.Count; i++)
+            {
+                if (!placer.TryPlace(band.Min, band.Max, stele.MinSpacingPx, out Vector2 position))
+                {
+                    GD.PushWarning($"[LandmarkSpawner] No room for a peril stele in band {band.Min}-{band.Max}");
+                    continue;
+                }
+                PerilStele node = new() { Name = $"PerilStele{++steles}", GlobalPosition = position };
+                node.Initialize(stele);
+                container.AddChild(node);
+            }
+        }
+        GD.Print($"[LandmarkSpawner] Spawned {steles} peril steles");
     }
 }

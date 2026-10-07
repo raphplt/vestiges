@@ -79,6 +79,12 @@
       ],
       "params": []
     },
+    "peril": {
+      "modifiers": [
+        "additive"
+      ],
+      "params": []
+    },
     "luck": {
       "modifiers": [
         "additive"

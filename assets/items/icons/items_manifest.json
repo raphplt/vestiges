@@ -113,6 +113,13 @@
       "world": false
     },
     {
+      "id": "sifflet_d_arbitre",
+      "name": "Sifflet d'arbitre",
+      "icon": "item_sifflet_d_arbitre.png",
+      "icon_16": "item_sifflet_d_arbitre_16.png",
+      "world": false
+    },
+    {
       "id": "allumette_humide",
       "name": "Allumette humide",
       "icon": "item_allumette_humide.png",

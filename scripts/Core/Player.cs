@@ -794,6 +794,9 @@ public partial class Player : CharacterBody2D
             case "status_duration":
                 if (modifierType == "multiplicative") _statusDurationMultiplier *= value;
                 break;
+            case "peril":
+                if (modifierType == "additive") AddObjectPeril(value);
+                break;
         }
     }
 

@@ -5,35 +5,36 @@ namespace Vestiges.Infrastructure;
 
 /// <summary>
 /// Règles du Péril (data/scaling/peril.json) : ce que vaut chaque point. Un multiplicateur vaut
-/// 1 + valeur par point × Péril.
+/// 1 + valeur par point × Péril ; le Péril n'a pas de plafond, seul le nombre de créatures en a un (coût du rendu).
 /// </summary>
 public static class PerilDataLoader
 {
     private const string ConfigPath = "res://data/scaling/peril.json";
-    private static int _max = 10;
     private static float _enemyCount;
+    private static float _enemyCountBonusMax;
+    private static int _activeEnemiesCeiling;
     private static float _enemyHp;
     private static float _enemyDamage;
-    private static float _xp;
     private static float _score;
-    private static float _raritySteps;
     private static int _banishFree = 3;
     private static int _banishPerilDivisor = 3;
     private static bool _loaded;
 
-    public static int Max
+    /// <summary>Densité et plafond de créatures ; bonus borné à <c>enemy_count_bonus_max</c>, au-delà les points ne pèsent plus que sur PV et dégâts.</summary>
+    public static float EnemyCountMultiplier(int peril)
+    {
+        Load();
+        return 1f + Mathf.Min(_enemyCount * peril, _enemyCountBonusMax);
+    }
+
+    /// <summary>Créatures actives que le Péril ne fait jamais dépasser : il ne relève le plafond de la run que jusque-là.</summary>
+    public static int ActiveEnemiesCeiling
     {
         get
         {
             Load();
-            return _max;
+            return _activeEnemiesCeiling;
         }
-    }
-
-    public static float EnemyCountMultiplier(int peril)
-    {
-        Load();
-        return 1f + _enemyCount * peril;
     }
 
     public static float EnemyHpMultiplier(int peril)
@@ -48,23 +49,10 @@ public static class PerilDataLoader
         return 1f + _enemyDamage * peril;
     }
 
-    public static float XpMultiplier(int peril)
-    {
-        Load();
-        return 1f + _xp * peril;
-    }
-
     public static float ScoreMultiplier(int peril)
     {
         Load();
         return 1f + _score * peril;
-    }
-
-    /// <summary>Crans de montée de rareté dus au Péril (voir <c>UpgradeRoller.BumpSteps</c>).</summary>
-    public static float RaritySteps(int peril)
-    {
-        Load();
-        return _raritySteps * peril;
     }
 
     /// <summary>Bannissements gratuits par run avant qu'ils ne coûtent du Péril.</summary>
@@ -121,31 +109,29 @@ public static class PerilDataLoader
         {
             using JsonDocument document = JsonDocument.Parse(json);
             JsonConfigReader reader = new(document.RootElement);
-            reader.AllowOnly(reader.Root, "Péril", "max", "banish", "per_point");
-            int max = reader.Integer(reader.Root, "max", 0, 1000);
+            reader.AllowOnly(reader.Root, "Péril", "enemy_count_bonus_max", "active_enemies_ceiling", "banish", "per_point");
+            float enemyCountBonusMax = reader.NonNegative(reader.Root, "enemy_count_bonus_max");
+            int ceiling = reader.Integer(reader.Root, "active_enemies_ceiling", 1, 2000);
             JsonElement banish = reader.Section("banish");
             reader.AllowOnly(banish, "banish", "free", "peril_divisor");
             int free = reader.Integer(banish, "free", 0, 1000);
             int divisor = reader.Integer(banish, "peril_divisor", 1, 1000);
             JsonElement perPoint = reader.Section("per_point");
-            reader.AllowOnly(perPoint, "per_point", "enemy_count", "enemy_hp", "enemy_damage", "xp", "score", "rarity_steps");
+            reader.AllowOnly(perPoint, "per_point", "enemy_count", "enemy_hp", "enemy_damage", "score");
             float enemyCount = reader.NonNegative(perPoint, "enemy_count");
             float enemyHp = reader.NonNegative(perPoint, "enemy_hp");
             float enemyDamage = reader.NonNegative(perPoint, "enemy_damage");
-            float xp = reader.NonNegative(perPoint, "xp");
             float score = reader.NonNegative(perPoint, "score");
-            float raritySteps = reader.NonNegative(perPoint, "rarity_steps");
             if (reader.Error != null)
                 return reader.Error;
-            _max = max;
+            _enemyCountBonusMax = enemyCountBonusMax;
+            _activeEnemiesCeiling = ceiling;
             _banishFree = free;
             _banishPerilDivisor = divisor;
             _enemyCount = enemyCount;
             _enemyHp = enemyHp;
             _enemyDamage = enemyDamage;
-            _xp = xp;
             _score = score;
-            _raritySteps = raritySteps;
             return null;
         }
         catch (JsonException ex)

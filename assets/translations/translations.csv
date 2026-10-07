@@ -118,6 +118,8 @@ WORKSHOP_TEMPER_LEFT,Trempe : {0},Temper: {0}
 WAYMARK_WORKSHOP,Atelier,Workshop
 STAT_WAYMARKS,Repères,Waymarks
 RIFT_PROMPT,Sonder,Reach in
+PERIL_STELE_PROMPT,Réveiller le Péril,Awaken the Peril
+PERIL_LINE,Péril +{0},Peril +{0}
 WEAPON_SWAP_PROMPT,Échanger : {0},Swap: {0}
 RIFT_TITLE,FAILLE,RIFT
 RIFT_SUBTITLE,L'Effacement rend ce qu'il a pris. Pas pour rien.,The Erasure gives back what it took. At a price.
@@ -184,6 +186,7 @@ STAT_LUCK,Chance,Luck
 STAT_PERIL,Péril,Peril
 PERIL_CREATURES,Créatures,Creatures
 PERIL_REWARDS,Gains,Rewards
+PERIL_DAMAGE,dégâts,damage
 WEAPON_BOW,Arc,Bow
 WEAPON_LINE,Ligne,Line
 WEAPON_CIRCLE,Cercle,Circle
@@ -222,6 +225,7 @@ UI_DEV_TOGGLE,Dev : tout débloqué,Dev: unlock everything
 UI_DEV_TOGGLE_HINT,Profil séparé. Recharge le Hub et mémorise le choix pour F5.,Separate profile. Reloads the Hub and remembers the choice for F5.
 UI_HUD_LEVEL,NIV.,LVL
 UI_HUD_SCORE,SCORE,SCORE
+UI_HUD_PERIL,Péril {0},Peril {0}
 UI_HUD_KILL_STREAK,EN RAFALE,STREAK
 UI_END_NEW_RECORD,NOUVEAU RECORD,NEW RECORD
 UI_END_BEST,Meilleur : {0},Best: {0}
@@ -397,6 +401,7 @@ MAP_LEGEND_YOU,Toi,You
 MAP_LEGEND_CHEST,Coffre (couleur de sa rareté),Chest (rarity colour)
 MAP_LEGEND_MEMORIAL,Mémorial,Memorial
 MAP_LEGEND_RIFT,Faille,Rift
+MAP_LEGEND_PERIL_STELE,Stèle du Péril,Peril stele
 MAP_LEGEND_WORKSHOP,Atelier,Workshop
 MAP_LEGEND_PLACE,Petit lieu à visiter,Place to visit
 BONUS_CANTEEN,Gourde · soin,Canteen · heal
