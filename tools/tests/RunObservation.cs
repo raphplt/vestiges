@@ -38,7 +38,7 @@ namespace Vestiges.Tests;
 /// --capture-echoes : échos de l'oubli forcés en zone Fragile, apparition, dissolution, murmure (RunObservation.Echoes.cs).
 /// --capture-erasure : une capture par phase de l'oubli, puis un dégradé de toutes les phases.
 /// --measure-props [--measure-seconds 8] : coût de rendu des décors par biome (RunObservation.PropCost.cs).
-/// --capture-weapons [--weapons a,b] [--lethal] [--objects id:niveau,…] : galerie des attaques du joueur, cibles qui meurent au premier coup avec --lethal, objets portés avec --objects (RunObservation.Weapons.cs).
+/// --capture-weapons [--weapons a,b] [--lethal] [--objects id:niveau,…] [--weapon-frames a,b,…] : galerie des attaques du joueur, cibles qui meurent au premier coup avec --lethal, objets portés avec --objects (RunObservation.Weapons.cs).
 /// --capture-chests : chaque coffre cadré, avec et sans décors (RunObservation.Chests.cs).
 /// --capture-loot : écran de butin du coffre le plus proche, bonus de stat compris (RunObservation.Chests.cs).
 /// --capture-places : un petit lieu de chaque type, joueur à côté (signe), puis juste après usage (RunObservation.Places.cs).

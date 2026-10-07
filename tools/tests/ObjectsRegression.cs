@@ -445,7 +445,7 @@ public partial class ObjectsRegression : Node2D
             $"Rondelle de cuivre palier 15 : la zone refrappe après 0,25 s, à 30 % ({hpBefore - Hp(echoed):0.0} PV)");
 
         hpBefore = Hp(burst);
-        _player.OnProjectileSpent(burst.GlobalPosition, 10f, _player.BeginAttack(bow, 10f));
+        _player.OnProjectileSpent(burst.GlobalPosition, 10f, _player.BeginAttack(bow, 10f), FxFamily.Physical, Vector2.Right);
         Check(Near(hpBefore - Hp(burst), fullLoss * 0.5f), $"Mètre pliant palier 15 : un projectile en bout de course éclate à 50 % ({hpBefore - Hp(burst):0.0} PV)");
 
         bool fullDouble = Near(_player.ResolveHitDamage(pushed, 10f, true), 20f);

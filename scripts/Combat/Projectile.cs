@@ -178,7 +178,7 @@ public partial class Projectile : Area2D
         if (_age >= _lifetime)
         {
             if (_owner != null && IsInstanceValid(_owner))
-                _owner.OnProjectileSpent(GlobalPosition, _damage, _context);
+                _owner.OnProjectileSpent(GlobalPosition, _damage, _context, _family, _direction);
             // Différé comme à l'impact : le retour au pool et la désactivation doivent passer ensemble,
             // sinon une relance dans la même frame serait désactivée après coup.
             _isDespawning = true;

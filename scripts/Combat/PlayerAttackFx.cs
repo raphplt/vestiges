@@ -302,6 +302,15 @@ public sealed class PlayerAttackFx
         EmitSparks(ground + new Vector2(0f, -TorsoHeight * 0.5f), Vector2.Zero, family, 5, 0f, 40f, 90f, 1);
     }
 
+    /// <summary>Projectile en bout de course : petite étoile et quatre étincelles qui poursuivent sa route.</summary>
+    public void PlayFizzle(Vector2 position, FxFamily family, Vector2 direction)
+    {
+        if (Pools == null)
+            return;
+        PlayFlash(position, family, 3f);
+        EmitSparks(position, direction, family, 4, 0.9f, 20f, 50f, 1);
+    }
+
     /// <summary>Tache collante du Chewing-gum, tramée au sol le temps qu'elle ralentit.</summary>
     public void PlayTrail(Vector2 position, float radius, float duration)
     {
@@ -325,9 +334,10 @@ public sealed class PlayerAttackFx
         if (Pools == null || frame == _timeFieldFrame)
             return;
         _timeFieldFrame = frame;
+        // Rempli en trame (plan 27 V2c) et rond à l'écran : le champ se contrôle en cercle (DistanceTo), pas au sol.
         PixelFxSpec spec = PixelFxSpec.Of(PixelFxShape.Zone, FxFamily.Hybrid, radius, 1f, duration);
-        spec.Squash = 2f;
-        spec.FillDensity = 0f;
+        spec.Squash = 1f;
+        spec.FillDensity = 0.3f;
         spec.ProgressFill = false;
         spec.Steps = 8;
         spec.ZIndex = -1;

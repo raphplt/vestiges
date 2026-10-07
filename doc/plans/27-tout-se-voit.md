@@ -1,6 +1,6 @@
 # Plan 27 — Tout se voit : impacts, statuts, coups reçus
 
-6 octobre 2026 · Demandé par Raphaël ([DECISIONS §71](DECISIONS.md)) · **Validé le 6 octobre ([DECISIONS §72](DECISIONS.md)) : ordre V0 → V4, questions tranchées au §4.** **V0 livré le 6 octobre** ([§6](#6-v0-livré--6-octobre-2026)) ; V1 en cours, découpé au [§7](#7-v1-découpage--7-octobre-2026) ; **V1a livré** ([§8](#8-v1a-livré--7-octobre-2026)), **V1b livré** ([§9](#9-v1b-livré--7-octobre-2026)), **V1c livré** ([§10](#10-v1c-livré--7-octobre-2026)) : V1 terminé ; V2 en cours, découpé au [§11](#11-v2-découpage--7-octobre-2026) ; **V2a livré** ([§12](#12-v2a-livré--7-octobre-2026)), **V2b livré** ([§13](#13-v2b-livré--7-octobre-2026)).
+6 octobre 2026 · Demandé par Raphaël ([DECISIONS §71](DECISIONS.md)) · **Validé le 6 octobre ([DECISIONS §72](DECISIONS.md)) : ordre V0 → V4, questions tranchées au §4.** **V0 livré le 6 octobre** ([§6](#6-v0-livré--6-octobre-2026)) ; V1 en cours, découpé au [§7](#7-v1-découpage--7-octobre-2026) ; **V1a livré** ([§8](#8-v1a-livré--7-octobre-2026)), **V1b livré** ([§9](#9-v1b-livré--7-octobre-2026)), **V1c livré** ([§10](#10-v1c-livré--7-octobre-2026)) : V1 terminé ; V2 en cours, découpé au [§11](#11-v2-découpage--7-octobre-2026) ; **V2a livré** ([§12](#12-v2a-livré--7-octobre-2026)), **V2b livré** ([§13](#13-v2b-livré--7-octobre-2026)), **V2c livré** ([§14](#14-v2c-livré--7-octobre-2026)).
 
 > « fais en sorte que tout se voit. […] qu'on puisse voir concrètement en jeu tous les impacts bien comme il faut et les effets sur les ennemis (et sur le joueur quand on se fait attaquer) »
 
@@ -268,3 +268,18 @@ V2 se livre en quatre sous-lots, chacun avec sa planche (galerie `--capture-weap
 **Relecture `godot-reviewer`, corrigé avant livraison.** Pixels tracés plafonnés à 600 par forme (un sur deux ou trois au-delà, zone très agrandie) ; segments du cercle selon le rayon (un tous les 4 px) au lieu de 32 fixes ; dernier pixel des tracés ouverts ; plafond de gerbes à part pour les coups secondaires et objets (10 par image), pour qu'une explosion en foule ne prive pas le coup direct de la sienne, et rien compté quand les effets d'attaque sont coupés ; réglages des Craies chargés avant de consommer le budget.
 
 **Point ouvert.** Les zones de l'écho et des Craies sont des cercles à l'écran alors que les objets (Mètre, Pétard) mesurent sur le sol écrasé : deux géométries de zone coexistent dans le code, chacune dessinée comme elle touche. À unifier un jour, hors de ce plan.
+
+## 14. V2c livré — 7 octobre 2026
+
+**Fait.**
+- **Champ du Chronomètre** rempli en trame (densité 0,3) au lieu d'un simple contour, et rond à l'écran : il se contrôle en cercle (`DistanceTo`), il était dessiné écrasé au sol.
+- **Trousseau** : le premier maillon part du joueur vers la première cible ; les rebonds suivants étaient déjà tracés.
+- **Fin de course** : un projectile du joueur arrêté par sa portée joue une petite étoile et quatre étincelles à sa couleur, qui poursuivent sa route (`PlayerAttackFx.PlayFizzle`), sauf quand le Mètre pliant le fait déjà éclater. Effet d'attaque : suit le réglage et le budget. Écart au plan : pas le pool `ProjectileImpact`, dont les poses sont celles des tirs ennemis ; les pools de formes et d'étincelles suffisent.
+- Galerie : `--weapon-frames a,b,…` choisit les images capturées après l'attaque.
+
+**Vérifié.**
+- Galeries sur le ViewSonic, regardées : Chronomètre + Trousseau (champ tramé autour des cibles, maillon du joueur à la première cible). La fin de course ne s'est pas laissé capturer (les trois pierres de la Fronde touchent leur cible, `--lethal` ajoute une élite qui explose) : 2 contrôles la vérifient (`EnemyAbilityRegression.ImpactFx` : un effet joué, aucun avec les effets d'attaque coupés).
+- `test_enemy_abilities`, `test_weapons`, `test_movement`, `ObjectsRegression` (appel du Mètre mis à jour), smoke : verts.
+- Banc A/B avec Chronomètre, Trousseau et Fronde contre `94e0d57b`, 3 passes valides, charge 1,9 puis 3,2 : 720p 196,0 → 210,5 FPS, 1080p 156,9 → 191,6 (base bruitée : 120,6 à 188,5) ; GPU 0,40 → 0,39 et 0,70 → 0,68 ms ; appels de dessin 291 → 291 et 354 → 356 ; nœuds créés/s 5 à 6. Pas de coût mesurable.
+
+**Point ouvert.** Le champ ne dure que 0,5 s (`slow_duration`) et sa trame reste pâle sur la ville ; à juger en jeu, la densité est un réglage.

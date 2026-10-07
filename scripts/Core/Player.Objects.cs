@@ -271,11 +271,16 @@ public partial class Player
     /// <summary>Reflet brisé, palier 15 : gain de dégâts d'un projectile par ennemi traversé (0 sans le palier).</summary>
     private float PierceDamageRamp => _objectMilestones?.PierceDamageRamp ?? 0f;
 
-    /// <summary>Un projectile d'arme arrive en bout de course sans avoir été arrêté (Mètre pliant, palier 25).</summary>
-    internal void OnProjectileSpent(Vector2 position, float damage, AttackContext context)
+    /// <summary>
+    /// Un projectile d'arme arrive en bout de course sans avoir été arrêté : éclat du Mètre pliant (palier 25), sinon
+    /// un petit éclat à sa couleur (plan 27 V2c), pour qu'il ne disparaisse pas d'un coup.
+    /// </summary>
+    internal void OnProjectileSpent(Vector2 position, float damage, AttackContext context, FxFamily family, Vector2 direction)
     {
         if (!_isDead && _objectMilestones?.HasRangeEndBurst == true)
             _objectMilestones.BurstAtRangeEnd(position, damage, context);
+        else
+            _attackFx.PlayFizzle(position, family, direction);
     }
 
     /// <summary>Orbe d'XP ramassée par ce joueur (Aimant de frigo, palier 25).</summary>

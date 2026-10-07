@@ -1225,6 +1225,8 @@ public partial class Player : CharacterBody2D
         float firstDamage = ResolveHitDamage(firstTarget, currentDamage, isCrit);
         firstTarget.TakeDamage(firstDamage, isCrit, source: context);
         OnAttackHit(firstTarget, firstDamage, currentDamage, isCrit, _equippedWeapon, context: context);
+        // Le premier maillon part du joueur (plan 27 V2c) : on voit d'où vient la chaîne.
+        SpawnChainVisual(GlobalPosition, firstTarget.GlobalPosition);
 
         // Chain vers les ennemis adjacents
         HashSet<ulong> hitIds = new() { firstTarget.GetInstanceId() };

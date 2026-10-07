@@ -134,7 +134,11 @@ public partial class RunObservation
                     _player.Mobility.Request();
                 }
                 int elapsed = 0;
-                int[] frames = lethal ? LethalCaptureFrames : equippedIds.Length > 1
+                // --weapon-frames a,b,… : images capturées après l'attaque (fin de course d'un projectile, plan 27 V2c).
+                string customFrames = Argument(OS.GetCmdlineUserArgs(), "--weapon-frames", null);
+                int[] frames = customFrames != null
+                    ? System.Array.ConvertAll(customFrames.Split(','), frame => int.Parse(frame, System.Globalization.CultureInfo.InvariantCulture))
+                    : lethal ? LethalCaptureFrames : equippedIds.Length > 1
                     ? new[] { 2, 9, 30, 60, 120, 180 } : WeaponCaptureFrames;
                 for (int shot = 0; shot < frames.Length; shot++)
                 {
