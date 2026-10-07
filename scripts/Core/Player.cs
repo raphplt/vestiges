@@ -269,6 +269,7 @@ public partial class Player : CharacterBody2D
                 _spriteMaterial.SetShaderParameter("outline_color",
                     new Color(oc.R * 0.3f + 0.05f, oc.G * 0.3f + 0.05f, oc.B * 0.3f + 0.05f, 0.9f));
                 _sprite.Material = _spriteMaterial;
+                _statusVisual.Attach(_spriteMaterial, webbed => WebbedChanged?.Invoke(webbed));
 
                 PlaySpriteAnim("SE_idle");
             }
@@ -538,6 +539,7 @@ public partial class Player : CharacterBody2D
         StepLifesteal(dt);
         StepDefense(dt);
         ProcessSlowDecay(dt);
+        _statusVisual.Update(dt, _slowTimer > 0f, _erasurePenalty.Speed < 1f, Velocity.LengthSquared() > 4f, GlobalPosition);
         ProcessPoiExplore(dt);
         _interaction.Step(dt, !_isExploringPoi && !Mobility.IsDashing);
         ProcessOrbitalWeapons(dt);
@@ -1407,6 +1409,10 @@ public partial class Player : CharacterBody2D
 
     private float _slowTimer;
     private float _slowFactor = 1f;
+    private readonly PlayerStatusVisual _statusVisual = new();
+
+    /// <summary>La toile de la Tisseuse ralentit le joueur, ou cesse de le ralentir (icône de la jauge, plan 27 V3b).</summary>
+    public event System.Action<bool> WebbedChanged;
 
     public void ApplySlow(float factor, float duration)
     {

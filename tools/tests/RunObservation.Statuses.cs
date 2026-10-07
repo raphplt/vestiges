@@ -204,6 +204,16 @@ public partial class RunObservation
         _player.AIInputOverride = Vector2.Zero;
         await Seconds(2.0);
 
+        // Effacement qui ralentit : poussière pâle laissée en marchant (plan 27 V3b).
+        FieldInfo penalty = typeof(Player).GetField("_erasurePenalty", BindingFlags.NonPublic | BindingFlags.Instance);
+        object before = penalty.GetValue(_player);
+        penalty.SetValue(_player, new Vestiges.World.ErasureEffects.Effect(0.6f, 1f, 0f, 0f, 0f));
+        _player.AIInputOverride = Vector2.Left;
+        await SavePlayerSequence("6-effacement", half, new[] { 20, 40, 60 });
+        _player.AIInputOverride = Vector2.Zero;
+        penalty.SetValue(_player, before);
+        await Seconds(1.0);
+
         // Soin.
         _player.TakeDamage(40f);
         await Seconds(1.0);

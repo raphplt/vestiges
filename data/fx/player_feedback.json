@@ -1,5 +1,5 @@
 {
-  "_doc": "Ce que le joueur ressent quand il est touché (plan 27 V3). hurt : éclair à la couleur moyenne de sa famille, durée en secondes ; secousse en trauma (0 à 1, multiplié par le réglage du joueur ; la secousse vaut trauma² × 6 px), plus une part des PV max perdus. vignette : bords tramés à l'opacité maximale, épaisseur en part de l'écran, part tournée vers le côté du coup. number : chiffre des dégâts reçus (§72). Lu par Infrastructure/PlayerFeedbackConfig.",
+  "_doc": "Ce que le joueur ressent quand il est touché (plan 27 V3). hurt : éclair à la couleur moyenne de sa famille, durée en secondes ; secousse en trauma (0 à 1, multiplié par le réglage du joueur ; la secousse vaut trauma² × 6 px), plus une part des PV max perdus. vignette : bords tramés à l'opacité maximale, épaisseur en part de l'écran, part tournée vers le côté du coup. number : chiffre des dégâts reçus (§72). Lu par Infrastructure/PlayerFeedbackConfig. web (V3b) : toile de la Tisseuse sur le sprite, teinte et fils à la manière des fêlures (espacement en pixels). erasure (V3b) : le joueur que l'Effacement ralentit pâlit (teinte, la toile reste prioritaire) et laisse une poussière pâle toutes les interval_sec.",
   "hurt": {
     "flash_family": "blood",
     "flash_seconds": 0.22,
@@ -15,5 +15,16 @@
   },
   "number": {
     "family": "blood"
+  },
+  "web": {
+    "tint_family": "silk",
+    "tint_strength": 0.3,
+    "thread_family": "silk",
+    "thread_spacing_px": 5
+  },
+  "erasure": {
+    "family": "pale",
+    "interval_sec": 0.1,
+    "tint_strength": 0.35
   }
 }

@@ -130,8 +130,9 @@ public partial class EnemyProjectile : Area2D
 			return;
 
 		_eventBus.EmitSignal(EventBus.SignalName.PlayerHitBy, _sourceEnemyId, _damage);
-		player.TakeDamage(_damage, GlobalPosition - _direction * 8f);
-		if (_slowDuration > 0f)
+		PlayerDamageResult hit = player.TakeDamage(_damage, GlobalPosition - _direction * 8f);
+		// La toile ne colle qu'à un coup qui porte : ni bouclier, ni invulnérabilité, ni dash (plan 27 V3b).
+		if (_slowDuration > 0f && hit.Applied && !hit.ShieldAbsorbed)
 			player.ApplySlow(_slowFactor, _slowDuration);
 		StartDespawn();
 	}

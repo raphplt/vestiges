@@ -24,6 +24,12 @@ public partial class PlayerHealthGauge : Node2D
     private static readonly Color CriticalColor = new(0.77f, 0.26f, 0.17f);
     private static readonly Color ChipColor = new(0.91f, 0.88f, 0.83f);
     private static readonly Color ShieldColor = new(0.72f, 0.86f, 1f);
+    /// <summary>Icône de toile (plan 27 V3b) : rayons et anneau d'une toile de 5 px, à droite de la jauge.</summary>
+    private static readonly Vector2I[] WebIcon =
+    {
+        new(0, 0), new(4, 0), new(2, 0), new(1, 1), new(3, 1), new(0, 2), new(1, 2), new(2, 2), new(3, 2), new(4, 2),
+        new(1, 3), new(3, 3), new(0, 4), new(2, 4), new(4, 4),
+    };
 
     private EventBus _eventBus;
     private float _ratio = 1f;
@@ -31,6 +37,8 @@ public partial class PlayerHealthGauge : Node2D
     private float _emphasis;
     private float _pulse;
     private float _shieldRatio;
+    private bool _webbed;
+    private Player _player;
 
     public override void _Ready()
     {
@@ -39,7 +47,11 @@ public partial class PlayerHealthGauge : Node2D
         _eventBus.PlayerDamaged += OnPlayerDamaged;
         _eventBus.PlayerShieldChanged += OnShieldChanged;
         if (GetParent() is Player player)
+        {
             OnShieldChanged(player.Shield, player.MaxShield);
+            _player = player;
+            _player.WebbedChanged += SetWebbed;
+        }
     }
 
     public override void _ExitTree()
@@ -49,6 +61,8 @@ public partial class PlayerHealthGauge : Node2D
             _eventBus.PlayerDamaged -= OnPlayerDamaged;
             _eventBus.PlayerShieldChanged -= OnShieldChanged;
         }
+        if (_player != null)
+            _player.WebbedChanged -= SetWebbed;
     }
 
     private void OnPlayerDamaged(float currentHp, float maxHp)
@@ -60,6 +74,15 @@ public partial class PlayerHealthGauge : Node2D
             _chipRatio = ratio;
         _ratio = ratio;
         _emphasis = EmphasisDuration;
+        QueueRedraw();
+    }
+
+    /// <summary>La toile ralentit le joueur : petite icône à droite de la jauge, toujours visible.</summary>
+    public void SetWebbed(bool webbed)
+    {
+        if (webbed == _webbed)
+            return;
+        _webbed = webbed;
         QueueRedraw();
     }
 
@@ -117,5 +140,12 @@ public partial class PlayerHealthGauge : Node2D
         // Bouclier : un trait bleu pâle au-dessus de la vie, qui se vide au coup encaissé.
         if (_shieldRatio > 0f)
             DrawRect(new Rect2(-Width / 2f, OffsetY - 2f, inner * _shieldRatio, 1f), ShieldColor with { A = alpha });
+        if (_webbed)
+        {
+            Vector2 corner = new(Width / 2f + 3f, OffsetY - 1f);
+            DrawRect(new Rect2(corner - Vector2.One, new Vector2(7f, 7f)), TrackColor);
+            foreach (Vector2I pixel in WebIcon)
+                DrawRect(new Rect2(corner + pixel, Vector2.One), ChipColor);
+        }
     }
 }

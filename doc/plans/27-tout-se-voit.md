@@ -1,6 +1,6 @@
 # Plan 27 — Tout se voit : impacts, statuts, coups reçus
 
-6 octobre 2026 · Demandé par Raphaël ([DECISIONS §71](DECISIONS.md)) · **Validé le 6 octobre ([DECISIONS §72](DECISIONS.md)) : ordre V0 → V4, questions tranchées au §4.** **V0 livré le 6 octobre** ([§6](#6-v0-livré--6-octobre-2026)) ; V1 en cours, découpé au [§7](#7-v1-découpage--7-octobre-2026) ; **V1a livré** ([§8](#8-v1a-livré--7-octobre-2026)), **V1b livré** ([§9](#9-v1b-livré--7-octobre-2026)), **V1c livré** ([§10](#10-v1c-livré--7-octobre-2026)) : V1 terminé ; V2 en cours, découpé au [§11](#11-v2-découpage--7-octobre-2026) ; **V2a livré** ([§12](#12-v2a-livré--7-octobre-2026)), **V2b livré** ([§13](#13-v2b-livré--7-octobre-2026)), **V2c livré** ([§14](#14-v2c-livré--7-octobre-2026)), **V2d livré** ([§15](#15-v2d-livré--7-octobre-2026)) : V2 terminé ; V3 en cours, découpé au [§16](#16-v3-découpage--7-octobre-2026) ; **V3a livré** ([§17](#17-v3a-livré--7-octobre-2026)).
+6 octobre 2026 · Demandé par Raphaël ([DECISIONS §71](DECISIONS.md)) · **Validé le 6 octobre ([DECISIONS §72](DECISIONS.md)) : ordre V0 → V4, questions tranchées au §4.** **V0 livré le 6 octobre** ([§6](#6-v0-livré--6-octobre-2026)) ; V1 en cours, découpé au [§7](#7-v1-découpage--7-octobre-2026) ; **V1a livré** ([§8](#8-v1a-livré--7-octobre-2026)), **V1b livré** ([§9](#9-v1b-livré--7-octobre-2026)), **V1c livré** ([§10](#10-v1c-livré--7-octobre-2026)) : V1 terminé ; V2 en cours, découpé au [§11](#11-v2-découpage--7-octobre-2026) ; **V2a livré** ([§12](#12-v2a-livré--7-octobre-2026)), **V2b livré** ([§13](#13-v2b-livré--7-octobre-2026)), **V2c livré** ([§14](#14-v2c-livré--7-octobre-2026)), **V2d livré** ([§15](#15-v2d-livré--7-octobre-2026)) : V2 terminé ; V3 en cours, découpé au [§16](#16-v3-découpage--7-octobre-2026) ; **V3a livré** ([§17](#17-v3a-livré--7-octobre-2026)), **V3b livré** ([§18](#18-v3b-livré--7-octobre-2026)).
 
 > « fais en sorte que tout se voit. […] qu'on puisse voir concrètement en jeu tous les impacts bien comme il faut et les effets sur les ennemis (et sur le joueur quand on se fait attaquer) »
 
@@ -325,3 +325,17 @@ Chaque sous-lot : planche `--capture-player-hit` avant/après, contrôles ; rece
 - Pas de banc : le joueur du banc dense est invincible, aucun de ces effets n'y joue ; ils ne coûtent qu'au moment d'un coup reçu.
 
 **À juger en jeu.** Force de la secousse et du liseré ; Raphaël fera la recette de V3 en entier.
+
+## 18. V3b livré — 7 octobre 2026
+
+**Fait.**
+- **Correction de règle (toile)** : la toile de la Tisseuse ne s'applique plus qu'à un coup qui porte ; bouclier qui encaisse, invulnérabilité, dash ou coup ignoré l'annulent avec le coup. Seul changement de règle du plan, prévu au §3 et validé (§72).
+- **Toile visible** (`PlayerStatusVisual`, classe possédée par le joueur) : fils clairs sur le sprite (canal des fêlures, famille Silk, tous les 5 px) et teinte Silk ; icône de toile 5 × 5 à droite de la jauge sous les pieds (`PlayerHealthGauge`, par l'événement `Player.WebbedChanged`). Le personnage ralenti marchait déjà plus lentement (cadence de marche liée à sa vitesse).
+- **Pénalité de l'Effacement** : le joueur ralenti par l'Effacement pâlit (teinte Pale 0,35 ; la toile reste prioritaire) et laisse une poussière pâle en marchant (famille Pale, soumise au seul réglage « Particules »).
+- Matériau et jauge écrits au changement d'état seulement ; réglages `web` et `erasure` dans `data/fx/player_feedback.json`.
+
+**Écart.** La poussière seule ne se lisait pas (gris clair sur gris) ; la teinte du sprite porte l'information, la poussière l'accompagne.
+
+**Vérifié.**
+- `--capture-player-hit` (toile en marche, Effacement posé directement) sur le ViewSonic, regardée : fils et icône, joueur pâli et poussière.
+- 3 contrôles (`EnemyAbilityRegression.PlayerStatus`) : rien pendant l'invulnérabilité ; coup qui porte, joueur ralenti, fils et icône allumés ; éteints à son terme. Contre-épreuve : sans la correction, le premier échoue. `test_movement`, `test_enemy_abilities`, `test_weapons`, `test_erasure_active`, smoke : verts.
