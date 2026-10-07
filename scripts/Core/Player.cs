@@ -1292,6 +1292,7 @@ public partial class Player : CharacterBody2D
         _currentHp += result.HpRestored;
         _eventBus.EmitSignal(EventBus.SignalName.PlayerDamaged, _currentHp, EffectiveMaxHp);
         _eventBus.PublishPlayerHealing(result);
+        _defenseFeedback.Healed(GlobalPosition, result.HpRestored);
         return result;
     }
 
@@ -1313,19 +1314,23 @@ public partial class Player : CharacterBody2D
 
         float armor = _armor * (_objectMilestones?.ArmorMultiplier(Mobility) ?? 1f);
         PlayerDefense.Outcome outcome = _defense.Absorb(damage, armor);
+        Vector2 direction = from is Vector2 source && source != GlobalPosition ? (source - GlobalPosition).Normalized() : Vector2.Zero;
+        _defenseFeedback.ArmorAbsorbed(GlobalPosition, damage, outcome.Reduced, direction);
 
         if (outcome.ShieldAbsorbed)
         {
             EmitShield();
             Flash(ShieldFlashColor, outcome.ShieldBroke);
             if (outcome.ShieldBroke)
+            {
+                _defenseFeedback.ShieldBroken(GlobalPosition);
                 _objectMilestones?.OnShieldBroken();
+            }
             PlayerDamageResult shieldResult = new(GetInstanceId(), PlayerDamageKind.Combat, _currentHp, 0f, false, true, true);
             _eventBus.PublishPlayerDamage(shieldResult);
             return shieldResult;
         }
 
-        Vector2 direction = from is Vector2 source && source != GlobalPosition ? (source - GlobalPosition).Normalized() : Vector2.Zero;
         return LoseHp(outcome.HpDamage, PlayerDamageKind.Combat, direction);
     }
 
@@ -1372,6 +1377,11 @@ public partial class Player : CharacterBody2D
     {
         if (_defense.Step(dt))
             EmitShield();
+        // Bouclier de nouveau plein : un éclat bref le dit (plan 27 V3c).
+        bool shieldFull = _defense.MaxShield > 0f && _defense.Shield >= _defense.MaxShield;
+        if (shieldFull && !_shieldWasFull)
+            _defenseFeedback.ShieldFull(GlobalPosition);
+        _shieldWasFull = shieldFull;
 
         // Clignotement pendant l'invulnérabilité qui suit un coup : la fenêtre se lit sans interface.
         bool hidden = _defense.IsInvulnerable && Mathf.PosMod(_defense.InvulnerableTimer, 0.12f) < 0.06f;
@@ -1410,6 +1420,8 @@ public partial class Player : CharacterBody2D
     private float _slowTimer;
     private float _slowFactor = 1f;
     private readonly PlayerStatusVisual _statusVisual = new();
+    private readonly PlayerDefenseFeedback _defenseFeedback = new();
+    private bool _shieldWasFull = true;
 
     /// <summary>La toile de la Tisseuse ralentit le joueur, ou cesse de le ralentir (icône de la jauge, plan 27 V3b).</summary>
     public event System.Action<bool> WebbedChanged;
@@ -1704,9 +1716,11 @@ public partial class Player : CharacterBody2D
             return;
         float capMultiplier = _objectMilestones?.LifestealCapMultiplier(_currentHp / EffectiveMaxHp) ?? 1f;
         float cap = EffectiveMaxHp * _defense.Config.LifestealMaxHpPerSecond * capMultiplier * window;
-        Heal(Mathf.Min(_lifestealPending, cap));
+        HealingResult healed = Heal(Mathf.Min(_lifestealPending, cap));
         _lifestealPending = 0f;
-        ObjectProcs?.Show("lifesteal");
+        // À vie pleine, rien n'est rendu : l'icône de la Paille ne s'élève pas pour rien (plan 27 V3c).
+        if (healed.HpRestored > 0f)
+            ObjectProcs?.Show("lifesteal");
     }
 
     private void ApplyRegen(float delta)

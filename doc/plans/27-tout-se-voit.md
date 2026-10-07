@@ -1,6 +1,6 @@
 # Plan 27 — Tout se voit : impacts, statuts, coups reçus
 
-6 octobre 2026 · Demandé par Raphaël ([DECISIONS §71](DECISIONS.md)) · **Validé le 6 octobre ([DECISIONS §72](DECISIONS.md)) : ordre V0 → V4, questions tranchées au §4.** **V0 livré le 6 octobre** ([§6](#6-v0-livré--6-octobre-2026)) ; V1 en cours, découpé au [§7](#7-v1-découpage--7-octobre-2026) ; **V1a livré** ([§8](#8-v1a-livré--7-octobre-2026)), **V1b livré** ([§9](#9-v1b-livré--7-octobre-2026)), **V1c livré** ([§10](#10-v1c-livré--7-octobre-2026)) : V1 terminé ; V2 en cours, découpé au [§11](#11-v2-découpage--7-octobre-2026) ; **V2a livré** ([§12](#12-v2a-livré--7-octobre-2026)), **V2b livré** ([§13](#13-v2b-livré--7-octobre-2026)), **V2c livré** ([§14](#14-v2c-livré--7-octobre-2026)), **V2d livré** ([§15](#15-v2d-livré--7-octobre-2026)) : V2 terminé ; V3 en cours, découpé au [§16](#16-v3-découpage--7-octobre-2026) ; **V3a livré** ([§17](#17-v3a-livré--7-octobre-2026)), **V3b livré** ([§18](#18-v3b-livré--7-octobre-2026)).
+6 octobre 2026 · Demandé par Raphaël ([DECISIONS §71](DECISIONS.md)) · **Validé le 6 octobre ([DECISIONS §72](DECISIONS.md)) : ordre V0 → V4, questions tranchées au §4.** **V0 livré le 6 octobre** ([§6](#6-v0-livré--6-octobre-2026)) ; V1 en cours, découpé au [§7](#7-v1-découpage--7-octobre-2026) ; **V1a livré** ([§8](#8-v1a-livré--7-octobre-2026)), **V1b livré** ([§9](#9-v1b-livré--7-octobre-2026)), **V1c livré** ([§10](#10-v1c-livré--7-octobre-2026)) : V1 terminé ; V2 en cours, découpé au [§11](#11-v2-découpage--7-octobre-2026) ; **V2a livré** ([§12](#12-v2a-livré--7-octobre-2026)), **V2b livré** ([§13](#13-v2b-livré--7-octobre-2026)), **V2c livré** ([§14](#14-v2c-livré--7-octobre-2026)), **V2d livré** ([§15](#15-v2d-livré--7-octobre-2026)) : V2 terminé ; V3 en cours, découpé au [§16](#16-v3-découpage--7-octobre-2026) ; **V3a livré** ([§17](#17-v3a-livré--7-octobre-2026)), **V3b livré** ([§18](#18-v3b-livré--7-octobre-2026)), **V3c livré** ([§19](#19-v3c-livré--7-octobre-2026)).
 
 > « fais en sorte que tout se voit. […] qu'on puisse voir concrètement en jeu tous les impacts bien comme il faut et les effets sur les ennemis (et sur le joueur quand on se fait attaquer) »
 
@@ -339,3 +339,20 @@ Chaque sous-lot : planche `--capture-player-hit` avant/après, contrôles ; rece
 **Vérifié.**
 - `--capture-player-hit` (toile en marche, Effacement posé directement) sur le ViewSonic, regardée : fils et icône, joueur pâli et poussière.
 - 3 contrôles (`EnemyAbilityRegression.PlayerStatus`) : rien pendant l'invulnérabilité ; coup qui porte, joueur ralenti, fils et icône allumés ; éteints à son terme. Contre-épreuve : sans la correction, le premier échoue. `test_movement`, `test_enemy_abilities`, `test_weapons`, `test_erasure_active`, smoke : verts.
+
+## 19. V3c livré — 7 octobre 2026
+
+**Fait** (`PlayerDefenseFeedback`, classe possédée par le joueur ; famille « monde », soumise au seul réglage « Particules ») :
+- **Bouclier qui casse** : éclats de verre projetés et anneau au sol, en plus de l'éclair bleu ; un coup seulement bloqué garde l'éclair seul.
+- **Bouclier de nouveau plein** : étoile et étincelles montantes, une fois au retour au plein.
+- **Armure qui pare** : étoile et gerbe dorées du côté du coup, quand l'armure retire au moins 25 % d'un coup et 1 PV.
+- **Coup ignoré** (Bouton de manteau) : quelques éclats déviés, en plus de l'éclair gris.
+- **Soins** : étincelles montantes (au plus une gerbe toutes les 0,5 s, le vol de vie soignant quatre fois par seconde) ; la jauge sous les pieds s'entoure d'un liseré clair 0,35 s après un soin net (pas la régénération continue).
+- **Vol de vie** : l'icône de la Paille ne s'élève plus quand rien n'est rendu (vie pleine).
+- Réglages dans la section `defense` de `data/fx/player_feedback.json`. Les sons (tintement du bouclier, soin) restent à produire au plan 15.
+
+**Vérifié.**
+- `--capture-player-hit` sur le ViewSonic, regardée : bouclier rechargé (étoile), casse (anneau et éclats, distincte du blocage), liseré de la jauge au soin. Les étincelles de soin (Verdigris) se voient peu ; l'éclat « paré » n'est pas sur la planche (personnage sans armure).
+- `ObjectsRegression` : contrôle « à vie pleine, pas d'icône » ; contre-épreuve : sans la correction, il échoue (une icône). `test_movement`, `test_enemy_abilities`, `test_weapons`, `test_objects`, smoke : verts.
+
+**À juger en jeu.** Couleur des soins (Verdigris, sombre) : une famille plus claire si Raphaël ne les voit pas.

@@ -294,5 +294,6 @@ public partial class Player
             return;
         _lastIgnoredHitFlashMsec = now;
         Flash(IgnoredHitColor, false);
+        _defenseFeedback.Ignored(GlobalPosition);
     }
 }

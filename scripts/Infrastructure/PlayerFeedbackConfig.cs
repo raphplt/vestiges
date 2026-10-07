@@ -31,6 +31,13 @@ public sealed class PlayerFeedbackConfig
     /// <summary>Effacement qui ralentit le joueur (V3b) : famille de la poussière pâle et son intervalle.</summary>
     public FxFamily ErasureFamily { get; private init; }
     public Color ErasureTint { get; private init; }
+    /// <summary>Défense et soins (V3c).</summary>
+    public FxFamily ShieldFamily { get; private init; }
+    public FxFamily ParryFamily { get; private init; }
+    public float ParryMinShare { get; private init; }
+    public float ParryMinHp { get; private init; }
+    public FxFamily HealFamily { get; private init; }
+    public float HealMinInterval { get; private init; }
     public float ErasureInterval { get; private init; }
 
     /// <summary>Réglages lus une fois ; null s'ils sont refusés (signalé une fois).</summary>
@@ -59,6 +66,7 @@ public sealed class PlayerFeedbackConfig
             JsonElement number = reader.Section("number");
             JsonElement web = reader.Section("web");
             JsonElement erasure = reader.Section("erasure");
+            JsonElement defense = reader.Section("defense");
             PlayerFeedbackConfig parsed = new()
             {
                 HurtFlashColor = Family(reader, hurt, "flash_family"),
@@ -77,6 +85,12 @@ public sealed class PlayerFeedbackConfig
                 ErasureFamily = ParseFamily(reader, erasure, "family"),
                 ErasureInterval = reader.Positive(erasure, "interval_sec"),
                 ErasureTint = Family(reader, erasure, "family") with { A = reader.Chance(erasure, "tint_strength") },
+                ShieldFamily = ParseFamily(reader, defense, "shield_family"),
+                ParryFamily = ParseFamily(reader, defense, "parry_family"),
+                ParryMinShare = reader.Ratio(defense, "parry_min_share"),
+                ParryMinHp = reader.NonNegative(defense, "parry_min_hp"),
+                HealFamily = ParseFamily(reader, defense, "heal_family"),
+                HealMinInterval = reader.NonNegative(defense, "heal_min_interval_sec"),
             };
             error = reader.Error;
             config = error == null ? parsed : null;

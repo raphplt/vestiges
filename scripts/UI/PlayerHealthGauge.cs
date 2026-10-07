@@ -38,6 +38,10 @@ public partial class PlayerHealthGauge : Node2D
     private float _pulse;
     private float _shieldRatio;
     private bool _webbed;
+    /// <summary>Surbrillance de la barre après un soin (plan 27 V3c), en secondes restantes.</summary>
+    private float _healGlow;
+    private const float HealGlowSeconds = 0.35f;
+    private static readonly Color HealGlowColor = new(0.72f, 0.95f, 0.62f);
     private Player _player;
 
     public override void _Ready()
@@ -46,6 +50,7 @@ public partial class PlayerHealthGauge : Node2D
         _eventBus = GetNode<EventBus>("/root/EventBus");
         _eventBus.PlayerDamaged += OnPlayerDamaged;
         _eventBus.PlayerShieldChanged += OnShieldChanged;
+        _eventBus.PlayerHealingResolved += OnHealed;
         if (GetParent() is Player player)
         {
             OnShieldChanged(player.Shield, player.MaxShield);
@@ -60,6 +65,7 @@ public partial class PlayerHealthGauge : Node2D
         {
             _eventBus.PlayerDamaged -= OnPlayerDamaged;
             _eventBus.PlayerShieldChanged -= OnShieldChanged;
+            _eventBus.PlayerHealingResolved -= OnHealed;
         }
         if (_player != null)
             _player.WebbedChanged -= SetWebbed;
@@ -74,6 +80,15 @@ public partial class PlayerHealthGauge : Node2D
             _chipRatio = ratio;
         _ratio = ratio;
         _emphasis = EmphasisDuration;
+        QueueRedraw();
+    }
+
+    private void OnHealed(HealingResult result)
+    {
+        // Un soin net (ni la régénération continue) : la barre s'éclaire brièvement.
+        if (result.HpRestored <= 0f || result.Kind == HealingKind.Regeneration)
+            return;
+        _healGlow = HealGlowSeconds;
         QueueRedraw();
     }
 
@@ -111,6 +126,11 @@ public partial class PlayerHealthGauge : Node2D
             _emphasis -= dt;
             changed = true;
         }
+        if (_healGlow > 0f)
+        {
+            _healGlow -= dt;
+            changed = true;
+        }
         if (_ratio < LowHpRatio && _ratio > 0f)
         {
             _pulse += dt * 6f;
@@ -126,6 +146,8 @@ public partial class PlayerHealthGauge : Node2D
         float alpha = critical || _emphasis > 0f || _ratio < 1f ? 1f : IdleAlpha;
         Rect2 outer = new(-Width / 2f - 1f, OffsetY - 1f, Width + 2f, Height + 2f);
         DrawRect(outer, TrackColor with { A = TrackColor.A * alpha });
+        if (_healGlow > 0f)
+            DrawRect(outer.Grow(1f), HealGlowColor with { A = 0.8f }, false);
 
         float inner = Width;
         if (_chipRatio > _ratio)

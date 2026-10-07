@@ -533,6 +533,17 @@ public partial class ObjectsRegression : Node2D
         float low = _player.CurrentHp - hp;
         Check(_player.CurrentHp < maxHp * 0.5f && Near(low, maxHp * capPerSecond * 2f * 0.25f),
             $"Paille tordue palier 15 : sous la moitié des PV, plafond doublé ({low:0.00} PV en 0,25 s)");
+
+        // Plan 27 V3c : à vie pleine, rien n'est rendu, l'icône ne s'élève pas.
+        _player.Heal(maxHp);
+        ObjectProcs procs = _player.ObjectProcs;
+        int icons = procs.ActiveCount;
+        // Délai d'une seconde par objet levé : sans lui, l'icône pourrait se taire pour une autre raison.
+        ((System.Collections.IDictionary)typeof(ObjectProcs).GetField("_nextAllowedMsec", BindingFlags.NonPublic | BindingFlags.Instance)
+            .GetValue(procs)).Clear();
+        _player.OnProjectileHit(enemy, 20f, false, _player.EquippedWeapon);
+        step.Invoke(_player, new object[] { 0.25f });
+        Check(procs.ActiveCount == icons, $"Paille tordue : à vie pleine, pas d'icône ({procs.ActiveCount - icons})");
         enemy.QueueFree();
     }
 
