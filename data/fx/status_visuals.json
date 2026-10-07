@@ -1,0 +1,26 @@
+{
+  "_doc": "Lecture des statuts sur le sprite des créatures (plan 27 V1a). Teinte de priorité : figé > Fragile > brûlure > ralenti. Familles de PixelPalette : couleur moyenne de la rampe pour les teintes et la chaleur, claire pour le givre et les fêlures. Profondeurs et espacements en pixels du sprite ; 0 coupe le motif. Lu par Infrastructure/StatusVisualConfig.",
+  "frozen": {
+    "tint_family": "glass",
+    "tint_strength": 0.35,
+    "frost_family": "glass",
+    "frost_depth_px": 3
+  },
+  "fragile": {
+    "tint_family": "pale",
+    "tint_strength": 0.12,
+    "crack_family": "glass",
+    "crack_spacing_px": 7
+  },
+  "burn": {
+    "tint_family": "fire",
+    "tint_strength": 0.15,
+    "heat_family": "fire",
+    "heat_depth_px": 2
+  },
+  "slow": {
+    "tint_family": "glass",
+    "tint_strength": 0.22,
+    "min_animation_tempo": 0.25
+  }
+}

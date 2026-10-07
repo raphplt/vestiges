@@ -1,6 +1,6 @@
 # Plan 27 — Tout se voit : impacts, statuts, coups reçus
 
-6 octobre 2026 · Demandé par Raphaël ([DECISIONS §71](DECISIONS.md)) · **Validé le 6 octobre ([DECISIONS §72](DECISIONS.md)) : ordre V0 → V4, questions tranchées au §4.** **V0 livré le 6 octobre** ([§6](#6-v0-livré--6-octobre-2026)) ; prochain : V1.
+6 octobre 2026 · Demandé par Raphaël ([DECISIONS §71](DECISIONS.md)) · **Validé le 6 octobre ([DECISIONS §72](DECISIONS.md)) : ordre V0 → V4, questions tranchées au §4.** **V0 livré le 6 octobre** ([§6](#6-v0-livré--6-octobre-2026)) ; V1 en cours, découpé au [§7](#7-v1-découpage--7-octobre-2026) ; **V1a livré** ([§8](#8-v1a-livré--7-octobre-2026)), prochain : V1b.
 
 > « fais en sorte que tout se voit. […] qu'on puisse voir concrètement en jeu tous les impacts bien comme il faut et les effets sur les ennemis (et sur le joueur quand on se fait attaquer) »
 
@@ -177,3 +177,28 @@ Un son d'impact par famille de matière (lame, choc, verre, feu, papier, électr
 - Le flash des coups (SelfModulate ×3) blanchit les tons clairs et donne un ton chair sur les bruns : lisible, mais pas une silhouette blanche. À juger en jeu ; V1 peut passer par `flash_amount` si Raphaël veut un blanc franc.
 - Le Rampant terré à 35 % d'opacité se perd presque sur l'asphalte ; à reprendre avec les marques de V1.
 - L'éclair de blessure du joueur est presque blanc, comme celui des ennemis : V3 le passe au rouge.
+
+## 7. V1, découpage — 7 octobre 2026
+
+V1 se livre en trois sous-lots, chacun avec sa planche `--capture-statuses` avant/après.
+
+- **V1a — le sprite lui-même.** Un composant `EnemyStatusVisual` (classe simple possédée par `Enemy`, comme `HitFeedback`) compare à chaque tick un masque d'états (quelques comparaisons, aucune écriture) et n'écrit le matériau qu'au changement. Canaux : teinte de priorité (figé > Fragile > brûlure > ralenti) ; givre tramé sur les bords hauts (figé) ; fêlures claires (Fragile) ; bord chaud tramé sur les bords bas (brûlure) ; yeux `#7FFF00` jamais recouverts. Animation : arrêtée sur la pose en cours si figée (mini-boss et boss exceptés, ils agissent encore), ralentie au facteur de marche si ralentie. Réglages dans `data/fx/status_visuals.json`, contrôlés au chargement.
+- **V1b — les marques autour.** Étoiles qui tournent au-dessus de la tête (désorienté), gouttes (saignement), braises (brûlure) à la hauteur réelle du sprite, élites comprises. Dessinées par un nœud enfant de la créature, poses clés à cadence fixe, redessin au changement de pose seulement ; marque minimale hors réglage « Effets d'attaque », fioritures au budget.
+- **V1c — vérification d'ensemble.** Planche sur trois sols (forêt, ville, carrière) et en foule (60 créatures sous Cloche et Berceuse) ; contrôles : chaque état allume puis éteint son canal, une créature rendue au pool revient neutre ; banc A/B avec Cloche, Lampe, Berceuse, Polaroïd.
+
+## 8. V1a livré — 7 octobre 2026
+
+**Fait.**
+- `EnemyStatusVisual` (classe possédée par `Enemy`, +12 lignes dans `Enemy.cs`) : masque d'états comparé à chaque tick, matériau écrit au changement seulement, et seulement pour les états qui le touchent (figé, ralenti, brûlure, Fragile). Teinte de priorité figé > Fragile > brûlure > ralenti, couleur moyenne de la rampe (la claire tire au blanc et se confondait avec le flash d'un coup, constaté sur la première planche).
+- `entity.gdshader` : givre clair sur les bords hauts (1er pixel plein, suivants en damier), fêlures diagonales claires, bord chaud tramé sur les bords bas ; yeux `#7FFF00` épargnés ; tout le bloc est gardé par des uniformes, une créature sans statut ne le paie pas.
+- Animation : figée sur la pose en cours (mini-boss et boss exceptés), ralentie au facteur de marche (plancher 0,25). Une créature tuée figée meurt à cadence normale ; givre et chaleur se dissolvent avec elle.
+- `data/fx/status_visuals.json`, lu par `StatusVisualConfig` (familles, forces, profondeurs, espacement), contrôlé en entier ; refusé, il est signalé une fois et les créatures restent sans marque.
+
+**Écarts.** Les stries derrière une créature ralentie sont reportées à V1b (marques autour du sprite). La relecture (`godot-reviewer`) a trouvé deux défauts corrigés avant livraison : animation de mort arrêtée sur une créature tuée figée, cadence non remise à 1 au retour au pool.
+
+**Vérifié.**
+- Planche `--capture-statuses` sur le ViewSonic, regardée : figé (pose tenue sur les six instants, bleu verre, givre), ralenti (teinte froide, pas plus lents), brûlure (orange, bords bas chauds), Fragile (fêlures). Saignement et désorienté restent sans marque : V1b.
+- `EnemyAbilityRegression` : 13 contrôles ajoutés (réglages lus, famille inconnue et fêlures trop serrées refusées ; chaque canal allumé puis éteint à son terme ; priorité ; pose tenue ; matériau non réécrit sans changement ; mort à cadence normale ; pool neutre et cadence remise dès le retour). Contre-épreuve : sans la correction de la mort, le contrôle échoue (cadence 0, image figée). 0 échec ; `test_movement`, `test_weapons`, smoke verts.
+- **Coût.** Première version : 1080p −4,9 à −7 % de FPS sur deux bancs, écart qui croissait avec la résolution. Cause : boucles de bord bornées à 16, déroulées par le compilateur. Borne ramenée à 4 (`MaxEdgeDepthPx`) : banc A/B contre `9b8c6b7e`, 3 passes valides de chaque côté, charge 2,5 au départ et 4,3 à la fin : 720p 195,9 → 201,5 FPS, 1080p 183,2 → 184,6, p99 10,2/10,4 et 10,7/10,7 ms, 2 nœuds créés/s. Pas de coût mesurable. Le banc n'a pas de créature sous statut : le coût d'une foule marquée se mesure en V1c.
+
+**Points ouverts.** Ralenti et figé partagent la famille Glass : ils se distinguent par la force de la teinte, le givre et l'animation ; à juger en jeu. Les cavités internes (entre les jambes) prennent aussi givre et chaleur.

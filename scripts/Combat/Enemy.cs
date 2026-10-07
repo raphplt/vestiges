@@ -168,6 +168,7 @@ public partial class Enemy : CharacterBody2D
 	private static Shader _entityShader;
 	private ShaderMaterial _spriteMaterial;
 	private readonly HitFeedback _hitFeedback = new();
+	private readonly EnemyStatusVisual _statusVisual = new();
 	private ContinuousImpactCadence _continuousImpact;
 	private DamageNumber _damageNumber;
 	// Sens du dernier coup reçu (du joueur vers la créature) : oriente la mort (plan 02 J2).
@@ -223,6 +224,7 @@ public partial class Enemy : CharacterBody2D
 		_lifeGeneration++;
 		_hitFeedback.RestScale = Vector2.One;
 		_hitFeedback.Stop();
+		_statusVisual.Attach(null);
 		_continuousImpact = default;
 		_lastHitDirection = Vector2.Zero;
 
@@ -527,7 +529,9 @@ public partial class Enemy : CharacterBody2D
 			_sprite.Visible = false;
 			_sprite.Stop();
 			_sprite.SelfModulate = Colors.White;
+			_sprite.SpeedScale = 1f;
 			_sprite.Scale = Vector2.One;
+			_statusVisual.Attach(null);
 			_sprite.Material = null;
 			_spriteMaterial = null;
 			_visual.Visible = true;
@@ -568,6 +572,7 @@ public partial class Enemy : CharacterBody2D
 		ProcessSlowDecay(dt);
 		ProcessDisorient(dt, fullProcessing);
 		ProcessFragility(dt);
+		_statusVisual.Update(CurrentStatusMarks, MoveFactor, _tier is EnemyTier.Miniboss or EnemyTier.Boss);
 		float regen = _mods.TickRegen(dt, _maxHp);
 		if (regen > 0f)
 			_currentHp = Mathf.Min(_currentHp + regen, _maxHp);
@@ -1176,6 +1181,11 @@ public partial class Enemy : CharacterBody2D
 	public bool IsHindered => IsSlowed || _disorientTimer > 0f;
 	private float MoveFactor => _freezeTimer > 0f ? 0f : _slowFactor;
 
+	private StatusMarks CurrentStatusMarks =>
+		(_freezeTimer > 0f ? StatusMarks.Frozen : 0) | (_slowTimer > 0f ? StatusMarks.Slowed : 0)
+		| (_igniteTimer > 0f ? StatusMarks.Burning : 0) | (_bleedTimer > 0f ? StatusMarks.Bleeding : 0)
+		| (_disorientTimer > 0f ? StatusMarks.Disoriented : 0) | (_fragileTimer > 0f ? StatusMarks.Fragile : 0);
+
 	/// <summary>Fige la créature <paramref name="seconds"/> secondes, sans toucher au ralentissement en cours.</summary>
 	public void Freeze(float seconds) => _freezeTimer = Mathf.Max(_freezeTimer, seconds);
 
@@ -1323,7 +1333,12 @@ public partial class Enemy : CharacterBody2D
 
 		// Lancer l'animation de mort sur le sprite
 		if (_hasSprite)
+		{
 			PlaySpriteAnim(SpriteAnimations[(int)_facing.Current, (int)SpriteAction.Death]);
+			// Une créature tuée figée ou ralentie meurt à cadence normale ; givre et chaleur se dissolvent avec elle.
+			_statusVisual.ReleaseTempo();
+			_sprite.SpeedScale = AnimationTempo;
+		}
 
 		// Explosive : AoE de dégâts à la mort
 		if (_mods.DeathExplosionRadius > 0f)
@@ -1536,6 +1551,7 @@ public partial class Enemy : CharacterBody2D
 				_spriteMaterial.SetShaderParameter("outline_enabled", true);
 				_spriteMaterial.SetShaderParameter("outline_color", GetOutlineColor(data));
 				_sprite.Material = _spriteMaterial;
+				_statusVisual.Attach(_spriteMaterial);
 
 				PlaySpriteAnim(SpriteAnimations[(int)_facing.Current, (int)SpriteAction.Idle]);
 			}
@@ -1572,8 +1588,10 @@ public partial class Enemy : CharacterBody2D
 		else
 			action = SpriteAction.Idle;
 
-		PlaySpriteAnim(SpriteAnimations[(int)_facing.Current, (int)action]);
-		float tempo = _isDying ? 1f : AnimationTempo;
+		float tempo = _isDying ? 1f : AnimationTempo * _statusVisual.AnimationTempo;
+		// Figée : l'animation s'arrête sur la pose en cours, sans repasser à l'attente.
+		if (tempo > 0f)
+			PlaySpriteAnim(SpriteAnimations[(int)_facing.Current, (int)action]);
 		if (_sprite.SpeedScale != tempo)
 			_sprite.SpeedScale = tempo;
 	}
