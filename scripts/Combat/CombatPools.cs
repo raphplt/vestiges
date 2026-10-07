@@ -215,6 +215,12 @@ public partial class CombatPools : Node2D
         });
     }
 
+    /// <summary>Dégâts reçus par le joueur (plan 27 V3a) : information, jamais écartée par le budget.</summary>
+    public void ShowReceivedNumber(Vector2 position, float damage, Color color)
+    {
+        _damageNumbers.Take().PlayReceived(position, damage, color);
+    }
+
     /// <summary>Chiffre d'un tic de brûlure ou de saignement (plan 27 V2a), au budget des chiffres.</summary>
     public void ShowTickNumber(Vector2 position, float damage, StatusKind kind)
     {

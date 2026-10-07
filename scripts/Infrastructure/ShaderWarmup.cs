@@ -32,6 +32,7 @@ public partial class ShaderWarmup : SubViewport
         ("res://assets/shaders/death_erasure.gdshader", SampleKind.Rectangle),
         ("res://assets/shaders/landmark_reveal.gdshader", SampleKind.Rectangle),
         ("res://assets/shaders/colorblind.gdshader", SampleKind.Rectangle),
+        ("res://assets/shaders/hurt_vignette.gdshader", SampleKind.Rectangle),
         ("res://assets/shaders/ui_dust_twinkle.gdshader", SampleKind.Sprite),
     };
     private static readonly Dictionary<string, Shader> Shaders = new();

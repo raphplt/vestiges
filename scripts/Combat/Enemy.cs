@@ -1374,7 +1374,7 @@ public partial class Enemy : CharacterBody2D
 				if (distToPlayerSq < explosionRadiusSq)
 				{
 					float distToPlayer = Mathf.Sqrt(distToPlayerSq);
-					_player.TakeDamage(explosionDamage * (1f - distToPlayer / explosionRadius));
+					_player.TakeDamage(explosionDamage * (1f - distToPlayer / explosionRadius), GlobalPosition);
 				}
 			}
 
@@ -1680,7 +1680,7 @@ public partial class Enemy : CharacterBody2D
 	internal void HitPlayer(Player player, float damage)
 	{
 		_eventBus.EmitSignal(EventBus.SignalName.PlayerHitBy, _enemyId, damage);
-		player.TakeDamage(damage);
+		player.TakeDamage(damage, GlobalPosition);
 		TriggerAttackAnim();
 	}
 

@@ -179,8 +179,11 @@ public partial class RunObservation
         await MoveToOpenGround(half);
         SaveCloseUp($"{_output}/player-0-repos.png", _player.GlobalPosition, half);
 
-        // Blessure : éclair, animation de blessure, puis clignotement d'invulnérabilité.
-        _player.TakeDamage(12f);
+        // Blessure : éclair, animation de blessure, puis clignotement d'invulnérabilité. Le coup vient de la droite :
+        // la vignette s'épaissit de ce côté (plein écran).
+        _player.TakeDamage(12f, _player.GlobalPosition + new Vector2(60f, 0f));
+        await Frames(2);
+        Save("player-1-blessure-ecran.png");
         await SavePlayerSequence("1-blessure", half, new[] { 1, 3, 6, 10, 16 });
         await Seconds(1.0);
 

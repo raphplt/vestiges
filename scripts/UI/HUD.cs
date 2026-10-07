@@ -159,6 +159,8 @@ public partial class HUD : CanvasLayer
         _passiveEmptyTex = GD.Load<Texture2D>("res://assets/ui/hud/hud_slot_passive.png");
         _passiveFilledTex = GD.Load<Texture2D>("res://assets/ui/hud/hud_slot_passive_filled.png");
 
+        // Sous tout le HUD : la vignette de blessure ne couvre jamais une jauge ni un texte.
+        AddChild(new HurtVignette { Name = "HurtVignette" });
         _hudRoot = new Control { Name = "HudRoot", MouseFilter = Control.MouseFilterEnum.Ignore };
         AddChild(_hudRoot);
         ApplyScale();

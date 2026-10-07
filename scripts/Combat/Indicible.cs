@@ -309,7 +309,7 @@ public partial class Indicible : Node2D
 				if (distToLine < _config.TentacleWidth)
 				{
 					_eventBus.EmitSignal(EventBus.SignalName.PlayerHitBy, EnemyGrammar.FinalBossId, damage);
-					_player.TakeDamage(damage);
+					_player.TakeDamage(damage, startPos);
 				}
 			}
 

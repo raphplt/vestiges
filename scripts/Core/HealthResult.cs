@@ -22,4 +22,7 @@ public readonly record struct PlayerDamageResult(ulong PlayerId, PlayerDamageKin
     float HpLost, bool Fatal, bool ShieldAbsorbed, bool Applied)
 {
     public bool CanRecover => Applied && HpLost > 0f && !Fatal && Kind == PlayerDamageKind.Combat;
+
+    /// <summary>Direction du joueur vers ce qui l'a frappé, normalisée ; nulle quand la source n'est pas située.</summary>
+    public Vector2 FromDirection { get; init; }
 }

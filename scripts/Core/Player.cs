@@ -171,6 +171,8 @@ public partial class Player : CharacterBody2D
     private const float ShadowWidth = 22f;
     // Blessure : éclair blanc chaud ; coup encaissé par le bouclier : éclair bleu pâle, sans secousse tant qu'il tient.
     private static readonly Color HurtFlashColor = new(1f, 0.92f, 0.88f);
+    /// <summary>Chiffre des dégâts reçus : au-dessus de la tête du personnage.</summary>
+    private static readonly Vector2 ReceivedNumberOffset = new(0f, -34f);
     private static readonly Color ShieldFlashColor = new(0.7f, 0.85f, 1f);
 
     public override void _Ready()
@@ -1291,7 +1293,8 @@ public partial class Player : CharacterBody2D
         return result;
     }
 
-    public PlayerDamageResult TakeDamage(float damage)
+    /// <param name="from">Position de ce qui frappe, quand elle est connue : la vignette de blessure se tourne vers elle.</param>
+    public PlayerDamageResult TakeDamage(float damage, Vector2? from = null)
     {
 #if TOOLS
         if (IsGodMode)
@@ -1320,7 +1323,8 @@ public partial class Player : CharacterBody2D
             return shieldResult;
         }
 
-        return LoseHp(outcome.HpDamage, PlayerDamageKind.Combat);
+        Vector2 direction = from is Vector2 source && source != GlobalPosition ? (source - GlobalPosition).Normalized() : Vector2.Zero;
+        return LoseHp(outcome.HpDamage, PlayerDamageKind.Combat, direction);
     }
 
     /// <summary>Le Néant consume : ni bouclier, ni armure, ni invulnérabilité ne l'arrêtent.</summary>
@@ -1335,14 +1339,14 @@ public partial class Player : CharacterBody2D
         return LoseHp(damage, PlayerDamageKind.Erasure);
     }
 
-    private PlayerDamageResult LoseHp(float damage, PlayerDamageKind kind)
+    private PlayerDamageResult LoseHp(float damage, PlayerDamageKind kind, Vector2 fromDirection = default)
     {
         float before = _currentHp;
         _currentHp -= damage;
         PlayerDamageResult result = new(GetInstanceId(), kind, before,
-            Mathf.Clamp(damage, 0f, before), _currentHp <= 0f, false, true);
+            Mathf.Clamp(damage, 0f, before), _currentHp <= 0f, false, true) { FromDirection = fromDirection };
         Mobility.Hurt(Mobility.Config.HurtRecoverySeconds);
-        Flash(HurtFlashColor, true);
+        ShowHurt(result.HpLost);
         if (_hasSprite)
             _hurtAnimTimer = Mobility.Config.HurtRecoverySeconds;
 
@@ -1712,7 +1716,26 @@ public partial class Player : CharacterBody2D
         _eventBus.PublishPlayerHealing(result);
     }
 
-    private void Flash(Color color, bool shake)
+    /// <summary>
+    /// Blessure (plan 27 V3a) : éclair rouge propre au joueur, secousse qui grandit avec la part des PV perdus, chiffre
+    /// des dégâts reçus (§72). Réglages refusés : éclair clair et secousse moyenne d'avant.
+    /// </summary>
+    private void ShowHurt(float lost)
+    {
+        PlayerFeedbackConfig feedback = PlayerFeedbackConfig.Get();
+        if (feedback == null)
+        {
+            Flash(HurtFlashColor, true);
+            return;
+        }
+        Flash(feedback.HurtFlashColor, false, feedback.HurtFlashSeconds);
+        float share = lost / Mathf.Max(EffectiveMaxHp, 1f);
+        Combat.ScreenShake.Instance?.AddTrauma(Mathf.Min(1f, feedback.HurtShakeTrauma + feedback.HurtShakeTraumaPerMaxHp * share));
+        if (lost >= 0.5f)
+            Combat.CombatPools.Instance?.ShowReceivedNumber(GlobalPosition + ReceivedNumberOffset, lost, feedback.NumberColor);
+    }
+
+    private void Flash(Color color, bool shake, float seconds = 0.2f)
     {
         _visual.Color = color;
         Tween tween = CreateTween();
@@ -1725,7 +1748,7 @@ public partial class Player : CharacterBody2D
             _spriteMaterial.SetShaderParameter("flash_amount", 1.0f);
             tween.Parallel().TweenMethod(
                 Callable.From((float v) => _spriteMaterial.SetShaderParameter("flash_amount", v)),
-                1.0f, 0.0f, 0.2f
+                1.0f, 0.0f, seconds
             ).SetDelay(0.05f);
         }
 

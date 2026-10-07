@@ -36,6 +36,8 @@ public partial class DamageNumber : Node2D
 	private static LabelSettings _carried;
 	private static LabelSettings _burn;
 	private static LabelSettings _bleed;
+	private static LabelSettings _received;
+	private static Color _receivedColor;
 
 	private Label _label;
 	private Action<DamageNumber> _release;
@@ -46,7 +48,8 @@ public partial class DamageNumber : Node2D
 	private bool _isCrit;
 	private bool _isCarried;
 	private StatusKind? _tick;
-	private bool Pops => _isCrit || _isCarried;
+	private bool _isReceived;
+	private bool Pops => _isCrit || _isCarried || _isReceived;
 
 	/// <summary>Numéro de lancement : un détenteur vérifie que le chiffre n'a pas été recyclé pour une autre cible.</summary>
 	public int Serial { get; private set; }
@@ -88,12 +91,30 @@ public partial class DamageNumber : Node2D
 		_isCrit = isCrit;
 		_isCarried = isCarried && !isCrit;
 		_tick = null;
+		_isReceived = false;
 		_total = 0f;
 		_shown = -1;
 		_elapsed = 0f;
 		Modulate = Colors.White;
 		Visible = true;
 		SetProcess(true);
+		Add(damage);
+	}
+
+	/// <summary>
+	/// Dégâts reçus par le joueur (plan 27 V3a, §72) : rouge, préfixé « − », jaillit comme un critique et ne se fond
+	/// jamais avec d'autres chiffres.
+	/// </summary>
+	public void PlayReceived(Vector2 position, float damage, Color color)
+	{
+		Play(position, 0f, false);
+		_isReceived = true;
+		if (_received == null || color != _receivedColor)
+		{
+			_receivedColor = color;
+			_received = Settings(GD.Load<Font>("res://assets/fonts/saira/SairaSemiCondensed-Bold.ttf"), 18, color, new Color(0.08f, 0.02f, 0.04f));
+		}
+		_total = 0f;
 		Add(damage);
 	}
 
@@ -150,9 +171,9 @@ public partial class DamageNumber : Node2D
 		if (shown != _shown)
 		{
 			_shown = shown;
-			_label.Text = _isCrit ? $"{shown}!" : _isCarried ? $"»{shown}" : shown.ToString();
+			_label.Text = _isCrit ? $"{shown}!" : _isCarried ? $"»{shown}" : _isReceived ? $"−{shown}" : shown.ToString();
 		}
-		LabelSettings settings = _tick == StatusKind.Burn ? _burn : _tick == StatusKind.Bleed ? _bleed
+		LabelSettings settings = _isReceived ? _received : _tick == StatusKind.Burn ? _burn : _tick == StatusKind.Bleed ? _bleed
 			: _isCrit ? _crit : _isCarried ? _carried : _total > 30f ? _large : _total > 15f ? _medium : _small;
 		if (settings != _currentSettings)
 		{

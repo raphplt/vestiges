@@ -130,7 +130,7 @@ public partial class EnemyProjectile : Area2D
 			return;
 
 		_eventBus.EmitSignal(EventBus.SignalName.PlayerHitBy, _sourceEnemyId, _damage);
-		player.TakeDamage(_damage);
+		player.TakeDamage(_damage, GlobalPosition - _direction * 8f);
 		if (_slowDuration > 0f)
 			player.ApplySlow(_slowFactor, _slowDuration);
 		StartDespawn();

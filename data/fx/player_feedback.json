@@ -1,0 +1,19 @@
+{
+  "_doc": "Ce que le joueur ressent quand il est touché (plan 27 V3). hurt : éclair à la couleur moyenne de sa famille, durée en secondes ; secousse en trauma (0 à 1, multiplié par le réglage du joueur ; la secousse vaut trauma² × 6 px), plus une part des PV max perdus. vignette : bords tramés à l'opacité maximale, épaisseur en part de l'écran, part tournée vers le côté du coup. number : chiffre des dégâts reçus (§72). Lu par Infrastructure/PlayerFeedbackConfig.",
+  "hurt": {
+    "flash_family": "blood",
+    "flash_seconds": 0.22,
+    "shake_trauma": 0.45,
+    "shake_trauma_per_max_hp": 1.5
+  },
+  "vignette": {
+    "family": "blood",
+    "max_opacity": 0.45,
+    "seconds": 0.45,
+    "thickness": 0.06,
+    "side_bias": 0.65
+  },
+  "number": {
+    "family": "blood"
+  }
+}

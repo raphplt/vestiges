@@ -1,6 +1,6 @@
 # Plan 27 — Tout se voit : impacts, statuts, coups reçus
 
-6 octobre 2026 · Demandé par Raphaël ([DECISIONS §71](DECISIONS.md)) · **Validé le 6 octobre ([DECISIONS §72](DECISIONS.md)) : ordre V0 → V4, questions tranchées au §4.** **V0 livré le 6 octobre** ([§6](#6-v0-livré--6-octobre-2026)) ; V1 en cours, découpé au [§7](#7-v1-découpage--7-octobre-2026) ; **V1a livré** ([§8](#8-v1a-livré--7-octobre-2026)), **V1b livré** ([§9](#9-v1b-livré--7-octobre-2026)), **V1c livré** ([§10](#10-v1c-livré--7-octobre-2026)) : V1 terminé ; V2 en cours, découpé au [§11](#11-v2-découpage--7-octobre-2026) ; **V2a livré** ([§12](#12-v2a-livré--7-octobre-2026)), **V2b livré** ([§13](#13-v2b-livré--7-octobre-2026)), **V2c livré** ([§14](#14-v2c-livré--7-octobre-2026)), **V2d livré** ([§15](#15-v2d-livré--7-octobre-2026)) : V2 terminé, prochain : V3.
+6 octobre 2026 · Demandé par Raphaël ([DECISIONS §71](DECISIONS.md)) · **Validé le 6 octobre ([DECISIONS §72](DECISIONS.md)) : ordre V0 → V4, questions tranchées au §4.** **V0 livré le 6 octobre** ([§6](#6-v0-livré--6-octobre-2026)) ; V1 en cours, découpé au [§7](#7-v1-découpage--7-octobre-2026) ; **V1a livré** ([§8](#8-v1a-livré--7-octobre-2026)), **V1b livré** ([§9](#9-v1b-livré--7-octobre-2026)), **V1c livré** ([§10](#10-v1c-livré--7-octobre-2026)) : V1 terminé ; V2 en cours, découpé au [§11](#11-v2-découpage--7-octobre-2026) ; **V2a livré** ([§12](#12-v2a-livré--7-octobre-2026)), **V2b livré** ([§13](#13-v2b-livré--7-octobre-2026)), **V2c livré** ([§14](#14-v2c-livré--7-octobre-2026)), **V2d livré** ([§15](#15-v2d-livré--7-octobre-2026)) : V2 terminé ; V3 en cours, découpé au [§16](#16-v3-découpage--7-octobre-2026) ; **V3a livré** ([§17](#17-v3a-livré--7-octobre-2026)).
 
 > « fais en sorte que tout se voit. […] qu'on puisse voir concrètement en jeu tous les impacts bien comme il faut et les effets sur les ennemis (et sur le joueur quand on se fait attaquer) »
 
@@ -297,3 +297,31 @@ V2 se livre en quatre sous-lots, chacun avec sa planche (galerie `--capture-weap
 - Banc A/B avec Cloche, Marteau et Lampe contre `910efe6a`, 3 passes, charge 2,3 puis 3,85 : 720p 213,9 → 214,7 FPS ; 1080p base 196,6 et 192,8 (une passe invalide), courant 198,7 ; GPU 0,41 → 0,42 et 0,72 → 0,69 ms ; appels de dessin inchangés. Mais la poussière, sans plafond, faisait écarter 664 étincelles par passe (0 avant) : plafonnée à 6 par image, une passe de contrôle redonne 0 étincelle écartée.
 
 **Point ouvert.** Le trait de brûlure transmise n'a été vu que dans le code ; à regarder en jeu.
+
+## 16. V3, découpage — 7 octobre 2026
+
+- **V3a — la blessure.** Éclair rouge propre au joueur ; vignette rouge tramée aux bords, plus marquée du côté d'où vient le coup ; chiffre des dégâts reçus au-dessus du joueur (§72) ; secousse lisible réglée en données, toujours sous le réglage du joueur ; pas de gel d'image (§72).
+- **V3b — ce qui ralentit le joueur.** Toile : fils tramés (Silk) sur le sprite, animation ralentie, icône près de la jauge ; **correction de règle** : la toile ne s'applique plus si le coup est annulé (bouclier, invulnérabilité, dash). Pénalité de l'Effacement : traînée pâle quand elle ralentit le joueur.
+- **V3c — défense et soins.** Bouclier qui casse (éclats de verre, distincts d'un blocage), recharge pleine (éclat bref ; tintement à produire au plan 15) ; armure qui réduit un coup notable (éclat « paré ») ; coup ignoré ; soins (étincelles vertes, surbrillance de la barre ; son à produire) ; plus d'icône de vol de vie sans PV rendu.
+- **V3d — le Néant.** Retour propre à l'Effacement (vignette blanche qui pulse avec les tranches) au lieu du paquet blessure toutes les 0,5 s ; le dash n'est plus bloqué par ces tranches.
+
+Chaque sous-lot : planche `--capture-player-hit` avant/après, contrôles ; recette en jeu par Raphaël à la fin de V3.
+
+## 17. V3a livré — 7 octobre 2026
+
+**Fait.**
+- **Éclair rouge** propre au joueur (famille Blood, 0,22 s), distinct du blanc des créatures.
+- **Chiffre des dégâts reçus** (§72) : « −12 » en rouge au-dessus du joueur, plus gros qu'un chiffre de coup ; jamais écarté par le budget.
+- **Vignette** (`HurtVignette`, calque plein écran sous le HUD, shader `hurt_vignette`) : liseré rouge tramé sur trois niveaux aux bords de l'écran, plus épais du côté du coup, effacé en trois paliers en 0,45 s ; seulement pour un coup de combat qui retire des PV (le Néant aura le sien en V3d). Matériau écrit à chaque palier seulement ; shader préchauffé au chargement.
+- **Provenance du coup** : `Player.TakeDamage(damage, from)` et `PlayerDamageResult.FromDirection`, renseignés par les quatre sources (corps à corps et capacités via `Enemy.HitPlayer`, projectiles ennemis, explosion d'un Instable, tentacule de l'Indicible) ; les dégâts d'événement restent sans direction.
+- **Secousse** : trauma 0,45 plus 1,5 fois la part des PV max perdus, toujours multiplié par le réglage du joueur. Avant : 0,3, soit environ 0,5 px de décalage de caméra ; un coup de 12 sur 70 PV donne maintenant environ 3 px.
+- Réglages dans `data/fx/player_feedback.json` (`PlayerFeedbackConfig`), contrôlés ; refusés, le jeu garde l'éclair clair et la secousse d'avant.
+
+**Écart.** La première vignette (épaisseur 0,16, opacité 0,55) couvrait près d'un tiers de l'écran du côté du coup : ramenée à 0,06 et 0,45 sur la planche.
+
+**Vérifié.**
+- `--capture-player-hit` sur le ViewSonic, avec une vue plein écran du coup (venu de la droite), regardée : liseré plus épais à droite, silhouette rouge, « −12 », puis clignotement d'invulnérabilité.
+- 2 contrôles (`EnemyAbilityRegression.ImpactFx` : direction du coup, chiffre « −5 ») ; `test_movement`, `test_weapons`, `test_enemy_abilities`, `test_objects`, `test_dev_mode`, smoke : verts.
+- Pas de banc : le joueur du banc dense est invincible, aucun de ces effets n'y joue ; ils ne coûtent qu'au moment d'un coup reçu.
+
+**À juger en jeu.** Force de la secousse et du liseré ; Raphaël fera la recette de V3 en entier.
