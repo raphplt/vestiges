@@ -78,9 +78,28 @@ public partial class EnemyAbilityRegression
         Check(Depth("frost_depth") == 0 && Depth("heat_depth") == 0 && Tint() == 0f && sprite.SpeedScale == 1f,
             "Figé : givre éteint, animation repartie");
 
+        // Marques autour du sprite (V1b) : information de jeu, gardée avec les effets d'attaque coupés.
+        EnemyStatusMarks marks = enemy.GetNode<EnemyStatusMarks>("StatusMarks");
+        bool attackFx = CombatFxSettings.PlayerAttackFx;
+        CombatFxSettings.PlayerAttackFx = false;
+        enemy.ApplyDisorient(ShortStatus);
+        enemy.ApplyBleed(1f, ShortStatus);
+        await Step(1);
+        Check(marks.Visible, "Désorienté et saignant : marques affichées, effets d'attaque coupés");
+        CombatFxSettings.PlayerAttackFx = attackFx;
+        await Step(ExpireTicks);
+        Check(!marks.Visible, "Désorienté et saignant : marques éteintes à leur terme");
+        enemy.ApplySlow(0.4f, ShortStatus);
+        await Step(2);
+        bool walking = enemy.Velocity.LengthSquared() > 4f;
+        Check(marks.Visible == walking, $"Ralenti : stries seulement en marche (marche {walking}, stries {marks.Visible})");
+        await Step(ExpireTicks);
+
         enemy.Freeze(10f);
+        enemy.ApplyDisorient(10f);
         await Step(2);
         enemy.TakeDamage(1000000f);
+        Check(!marks.Visible, "Mort : marques éteintes");
         int deathFrame = sprite.Frame;
         await Step(12);
         Check(sprite.SpeedScale > 0f && sprite.Frame != deathFrame,
@@ -109,6 +128,7 @@ public partial class EnemyAbilityRegression
         dirty.Freeze(10f);
         dirty.ApplyFragile(0.2f, 10f);
         dirty.ApplyIgnite(1f, 10f);
+        dirty.ApplyDisorient(10f);
         await ToSignal(GetTree(), SceneTree.SignalName.PhysicsFrame);
         dirty._PhysicsProcess(Dt);
         pool.Return(dirty);
@@ -130,6 +150,7 @@ public partial class EnemyAbilityRegression
             && material.GetShaderParameter("heat_depth").AsInt32() == 0;
         Check(reused == dirty && neutral && sprite.SpeedScale == 1f,
             $"Pool : créature figée, Fragile et brûlante rendue neutre (même créature {reused == dirty}, matériau neutre {neutral}, cadence {sprite.SpeedScale})");
+        Check(!reused.GetNode<EnemyStatusMarks>("StatusMarks").Visible, "Pool : marques éteintes à la réutilisation");
         reused.QueueFree();
         pool.QueueFree();
     }

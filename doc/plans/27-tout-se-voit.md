@@ -1,6 +1,6 @@
 # Plan 27 — Tout se voit : impacts, statuts, coups reçus
 
-6 octobre 2026 · Demandé par Raphaël ([DECISIONS §71](DECISIONS.md)) · **Validé le 6 octobre ([DECISIONS §72](DECISIONS.md)) : ordre V0 → V4, questions tranchées au §4.** **V0 livré le 6 octobre** ([§6](#6-v0-livré--6-octobre-2026)) ; V1 en cours, découpé au [§7](#7-v1-découpage--7-octobre-2026) ; **V1a livré** ([§8](#8-v1a-livré--7-octobre-2026)), prochain : V1b.
+6 octobre 2026 · Demandé par Raphaël ([DECISIONS §71](DECISIONS.md)) · **Validé le 6 octobre ([DECISIONS §72](DECISIONS.md)) : ordre V0 → V4, questions tranchées au §4.** **V0 livré le 6 octobre** ([§6](#6-v0-livré--6-octobre-2026)) ; V1 en cours, découpé au [§7](#7-v1-découpage--7-octobre-2026) ; **V1a livré** ([§8](#8-v1a-livré--7-octobre-2026)), **V1b livré** ([§9](#9-v1b-livré--7-octobre-2026)), prochain : V1c.
 
 > « fais en sorte que tout se voit. […] qu'on puisse voir concrètement en jeu tous les impacts bien comme il faut et les effets sur les ennemis (et sur le joueur quand on se fait attaquer) »
 
@@ -202,3 +202,15 @@ V1 se livre en trois sous-lots, chacun avec sa planche `--capture-statuses` avan
 - **Coût.** Première version : 1080p −4,9 à −7 % de FPS sur deux bancs, écart qui croissait avec la résolution. Cause : boucles de bord bornées à 16, déroulées par le compilateur. Borne ramenée à 4 (`MaxEdgeDepthPx`) : banc A/B contre `9b8c6b7e`, 3 passes valides de chaque côté, charge 2,5 au départ et 4,3 à la fin : 720p 195,9 → 201,5 FPS, 1080p 183,2 → 184,6, p99 10,2/10,4 et 10,7/10,7 ms, 2 nœuds créés/s. Pas de coût mesurable. Le banc n'a pas de créature sous statut : le coût d'une foule marquée se mesure en V1c.
 
 **Points ouverts.** Ralenti et figé partagent la famille Glass : ils se distinguent par la force de la teinte, le givre et l'animation ; à juger en jeu. Les cavités internes (entre les jambes) prennent aussi givre et chaleur.
+
+## 9. V1b livré — 7 octobre 2026
+
+**Fait.**
+- `EnemyStatusMarks`, nœud enfant de chaque créature à sprite : étoiles en croix qui tournent sur une ellipse au-dessus de la tête (désorienté, famille Crit), larmes de sang qui tombent du milieu du corps aux pieds puis éclaboussent (saignement, Blood), braises 2×2 qui montent au-dessus de la tête (brûlure, Fire ; 2 à 4 selon la part des PV max brûlée par seconde), deux stries derrière une créature ralentie qui marche (Glass). Poses clés à 8 par seconde, redessin au changement de pose ou d'état seulement, mise à jour dans la portée de traitement complet (600 px) seulement ; figée, la créature garde aussi ses marques sur leur pose.
+- Hauteur réelle : corps mesuré une fois par espèce sur la pose de repos, mesure désormais partagée avec l'ombre (`SpriteFeetY`, même valeur qu'avant) ; contre-mis à l'échelle, le nœud reste au pixel sur une élite.
+- Information de jeu : jamais coupées par « Effets d'attaque » ni par le budget. Les étincelles de brûlure existantes restent la fioriture, soumise aux deux, et partent maintenant du milieu du corps au lieu de 12 px fixes.
+- Réglages dans la section `marks` de `data/fx/status_visuals.json`, contrôlés (cadence de 2 à 24, comptes de 1 à 6, minimum ≤ maximum).
+
+**Écarts.** Première planche : braises et gouttes d'un pixel, perdues sur le sol ; agrandies (braise 2×2, larme 2×3). Pas d'éclats de glace à la pose du figé : le givre de V1a suffit à la planche, à rediscuter si le figé se lit mal en jeu. Relecture `godot-reviewer` : créature sans sprite réutilisant un nœud de pool (marques de l'ancienne espèce) corrigé, marques figées avec la créature, double décodage de l'image supprimé.
+
+**Vérifié.** Planche `--capture-statuses` sur le ViewSonic, agrandie et regardée sur trois instants : étoiles, larmes, braises et stries visibles et distinctes. 6 contrôles ajoutés (marques avec effets d'attaque coupés, éteintes à leur terme, stries seulement en marche, éteintes à la mort et au pool) ; `test_enemy_abilities`, `test_movement`, `test_weapons` et smoke verts. Coût : le banc dense n'a pas de créature sous statut, mesure en V1c.

@@ -14,6 +14,8 @@ public sealed class StatusVisualConfig
     private const string ConfigPath = "res://data/fx/status_visuals.json";
     /// <summary>Profondeur du givre et de la chaleur : borne des boucles déroulées d'entity.gdshader (MAX_EDGE_DEPTH).</summary>
     private const int MaxEdgeDepthPx = 4;
+    /// <summary>Étoiles, gouttes ou braises d'une créature : au-delà, une foule marquée devient illisible.</summary>
+    private const int MaxMarkCount = 6;
     /// <summary>Au-delà, les fêlures ne se liraient plus comme telles.</summary>
     private const int MaxCrackSpacingPx = 16;
 
@@ -28,6 +30,18 @@ public sealed class StatusVisualConfig
     public int HeatDepthPx { get; private init; }
     public Color SlowTint { get; private init; }
     public float MinAnimationTempo { get; private init; }
+
+    /// <summary>Marques autour du sprite (V1b) : poses clés par seconde.</summary>
+    public float MarkPoseFps { get; private init; }
+    public FxRamp StarRamp { get; private init; }
+    public int StarCount { get; private init; }
+    public FxRamp DropRamp { get; private init; }
+    public int DropCount { get; private init; }
+    public FxRamp EmberRamp { get; private init; }
+    public int EmberMinCount { get; private init; }
+    public int EmberMaxCount { get; private init; }
+    public float EmberMaxHpSharePerExtra { get; private init; }
+    public FxRamp SlowTrailRamp { get; private init; }
 
     public static bool TryLoad(out StatusVisualConfig config, out string error)
     {
@@ -58,6 +72,11 @@ public sealed class StatusVisualConfig
             JsonElement fragile = reader.Section("fragile");
             JsonElement burn = reader.Section("burn");
             JsonElement slow = reader.Section("slow");
+            JsonElement marks = reader.Section("marks");
+            JsonElement stars = reader.Section(marks, "stars");
+            JsonElement drops = reader.Section(marks, "drops");
+            JsonElement embers = reader.Section(marks, "embers");
+            JsonElement slowTrail = reader.Section(marks, "slow_trail");
             StatusVisualConfig parsed = new()
             {
                 FrozenTint = Tint(reader, frozen),
@@ -71,7 +90,21 @@ public sealed class StatusVisualConfig
                 HeatDepthPx = reader.Integer(burn, "heat_depth_px", 0, MaxEdgeDepthPx),
                 SlowTint = Tint(reader, slow),
                 MinAnimationTempo = reader.Ratio(slow, "min_animation_tempo"),
+                MarkPoseFps = reader.Positive(marks, "pose_fps"),
+                StarRamp = Family(reader, stars, "family"),
+                StarCount = reader.Count(stars, "count", MaxMarkCount),
+                DropRamp = Family(reader, drops, "family"),
+                DropCount = reader.Count(drops, "count", MaxMarkCount),
+                EmberRamp = Family(reader, embers, "family"),
+                EmberMinCount = reader.Count(embers, "min_count", MaxMarkCount),
+                EmberMaxCount = reader.Count(embers, "max_count", MaxMarkCount),
+                EmberMaxHpSharePerExtra = reader.Ratio(embers, "max_hp_share_per_extra"),
+                SlowTrailRamp = Family(reader, slowTrail, "family"),
             };
+            if (parsed.MarkPoseFps is < 2f or > 24f)
+                reader.Fail("pose_fps : de 2 à 24 attendu");
+            if (parsed.EmberMaxCount < parsed.EmberMinCount)
+                reader.Fail("embers : max_count inférieur à min_count");
             error = reader.Error;
             config = error == null ? parsed : null;
             return error == null;

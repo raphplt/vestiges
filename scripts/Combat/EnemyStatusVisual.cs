@@ -95,7 +95,7 @@ public sealed class EnemyStatusVisual
     }
 
     /// <summary>Réglages lus une fois ; refusés, ils sont signalés une fois et les créatures restent sans marque.</summary>
-    private static StatusVisualConfig Config()
+    internal static StatusVisualConfig Config()
     {
         if (_configTried)
             return _config;

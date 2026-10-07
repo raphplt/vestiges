@@ -169,6 +169,7 @@ public partial class Enemy : CharacterBody2D
 	private ShaderMaterial _spriteMaterial;
 	private readonly HitFeedback _hitFeedback = new();
 	private readonly EnemyStatusVisual _statusVisual = new();
+	private EnemyStatusMarks _statusMarks;
 	private ContinuousImpactCadence _continuousImpact;
 	private DamageNumber _damageNumber;
 	// Sens du dernier coup reçu (du joueur vers la créature) : oriente la mort (plan 02 J2).
@@ -532,6 +533,7 @@ public partial class Enemy : CharacterBody2D
 			_sprite.SpeedScale = 1f;
 			_sprite.Scale = Vector2.One;
 			_statusVisual.Attach(null);
+			_statusMarks?.Clear();
 			_sprite.Material = null;
 			_spriteMaterial = null;
 			_visual.Visible = true;
@@ -572,7 +574,13 @@ public partial class Enemy : CharacterBody2D
 		ProcessSlowDecay(dt);
 		ProcessDisorient(dt, fullProcessing);
 		ProcessFragility(dt);
-		_statusVisual.Update(CurrentStatusMarks, MoveFactor, _tier is EnemyTier.Miniboss or EnemyTier.Boss);
+		StatusMarks marks = CurrentStatusMarks;
+		_statusVisual.Update(marks, MoveFactor, _tier is EnemyTier.Miniboss or EnemyTier.Boss);
+		// Hors de la portée complète (au-delà de l'écran), les marques ne se redessinent pas.
+		if (fullProcessing && _hasSprite)
+			_statusMarks?.Tick(dt, marks, Velocity, _igniteDps / Mathf.Max(_maxHp, 1f));
+		else if (_statusMarks is { Visible: true })
+			_statusMarks.Clear();
 		float regen = _mods.TickRegen(dt, _maxHp);
 		if (regen > 0f)
 			_currentHp = Mathf.Min(_currentHp + regen, _maxHp);
@@ -1227,8 +1235,8 @@ public partial class Enemy : CharacterBody2D
 	}
 
 	/// <summary>
-	/// Une créature qui brûle le montre : sur un sprite, la teinte du polygone de repli ne se voit pas. Deux braises
-	/// toutes les 0,3 s, par le pool d'étincelles.
+	/// Fioriture de la brûlure : deux étincelles toutes les 0,3 s depuis le milieu du corps, par le pool d'étincelles,
+	/// soumises au budget et au réglage « Effets d'attaque ». La marque qui reste toujours est EnemyStatusMarks.
 	/// </summary>
 	private void EmitBurnEmbers(float delta)
 	{
@@ -1236,7 +1244,8 @@ public partial class Enemy : CharacterBody2D
 		if (_burnEmberTimer > 0f || CombatPools.Instance == null)
 			return;
 		_burnEmberTimer = BurnEmberInterval;
-		CombatPools.Instance.EmitSparks(GlobalPosition + new Vector2(0f, -BurnEmberHeight), new SparkBurst
+		Vector2 body = _hasSprite && _statusMarks != null ? _statusMarks.BodyCenter : new Vector2(0f, -BurnEmberHeight);
+		CombatPools.Instance.EmitSparks(GlobalPosition + body, new SparkBurst
 		{
 			Family = FxFamily.Fire,
 			Owner = FxOwner.Player,
@@ -1338,6 +1347,7 @@ public partial class Enemy : CharacterBody2D
 			// Une créature tuée figée ou ralentie meurt à cadence normale ; givre et chaleur se dissolvent avec elle.
 			_statusVisual.ReleaseTempo();
 			_sprite.SpeedScale = AnimationTempo;
+			_statusMarks?.Clear();
 		}
 
 		// Explosive : AoE de dégâts à la mort
@@ -1480,29 +1490,12 @@ public partial class Enemy : CharacterBody2D
 			QueueFree();
 	}
 
-	private static readonly Dictionary<string, float> FeetYById = new();
-
 	/// <summary>
 	/// Bas visible du sprite (dernière ligne opaque de la pose de repos), relatif au nœud : l'ombre s'y pose,
-	/// sinon une créature dont les pieds ne sont pas à l'origine a l'air de flotter. Calculé une fois par créature.
+	/// sinon une créature dont les pieds ne sont pas à l'origine a l'air de flotter. Mesure partagée avec les marques.
 	/// </summary>
-	private float SpriteFeetY(string enemyId, SpriteFrames frames)
-	{
-		if (FeetYById.TryGetValue(enemyId, out float cached))
-			return cached;
-		float feet = 0f;
-		string animation = frames.HasAnimation("SE_idle") ? "SE_idle" : _sprite.Animation;
-		Texture2D texture = frames.GetFrameCount(animation) > 0 ? frames.GetFrameTexture(animation, 0) : null;
-		using Image image = texture?.GetImage();
-		if (image != null)
-		{
-			int bottom = image.GetUsedRect().End.Y;
-			// Centré par défaut : le bas de l'image est à +hauteur/2 du centre, décalé de l'offset du sprite.
-			feet = _sprite.Offset.Y + bottom - image.GetHeight() * 0.5f - 2f;
-		}
-		FeetYById[enemyId] = feet;
-		return feet;
-	}
+	private float SpriteFeetY(string enemyId) =>
+		EnemyStatusMarks.MeasureBody(enemyId, _sprite) is Rect2 body ? body.End.Y - 2f : 0f;
 
 	private void ConfigureVisual(EnemyData data)
 	{
@@ -1541,7 +1534,7 @@ public partial class Enemy : CharacterBody2D
 					_sprite.Offset = new Vector2(0f, -frames.GetFrameTexture("SE_idle", 0).GetHeight() * 0.35f);
 				_visual.Visible = false;
 				_hasSprite = true;
-				_shadow.Position = new Vector2(0f, SpriteFeetY(data.Id, frames));
+				_shadow.Position = new Vector2(0f, SpriteFeetY(data.Id));
 				_facing.Reset(EnemySpriteLoader.HasEightDirections(frames));
 				_currentAnimName = null;
 				_attackAnimTimer = 0f;
@@ -1552,6 +1545,12 @@ public partial class Enemy : CharacterBody2D
 				_spriteMaterial.SetShaderParameter("outline_color", GetOutlineColor(data));
 				_sprite.Material = _spriteMaterial;
 				_statusVisual.Attach(_spriteMaterial);
+				if (_statusMarks == null)
+				{
+					_statusMarks = new EnemyStatusMarks { Name = "StatusMarks" };
+					AddChild(_statusMarks);
+				}
+				_statusMarks.Configure(data.Id, _sprite);
 
 				PlaySpriteAnim(SpriteAnimations[(int)_facing.Current, (int)SpriteAction.Idle]);
 			}

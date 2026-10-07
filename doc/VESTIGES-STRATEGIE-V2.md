@@ -864,6 +864,7 @@ Le script de post-processing doit inclure une vérification/correction de l'angl
 - [x] Plan 26 Q7c-4a : catalogue des cinq biomes validé en entier avant publication, définitions en lecture seule, refus récupérable sans génération partielle ; 590 valeurs avant/après identiques, 190 contrôles de catalogues, validations 9/9 puis 5/5 et vraie fiche invalide vérifiés ([preuves](audits/catalogues-biomes-2026-10-06/README.md), 6 octobre 2026). Les autres catalogues de génération restent ouverts.
 - [x] Plan 27 V0 : shader des entités et des projectiles du joueur appliquant de nouveau Modulate (flash des coups, annonces, Rampant terré, éclair et clignotement du joueur, liseré des projectiles), modes `--capture-statuses` et `--capture-player-hit` ; planches avant/après et banc A/B vérifiés (6 octobre 2026).
 - [x] Plan 27 V1a : figé, ralenti, brûlure et Fragile lisibles sur le sprite des créatures (teinte de priorité, givre, fêlures, bord chaud, animation figée ou ralentie), réglages en données contrôlés ; planche, 13 contrôles et banc A/B vérifiés (7 octobre 2026).
+- [x] Plan 27 V1b : étoiles, larmes, braises et stries autour des créatures désorientées, saignantes, brûlantes ou ralenties, à la hauteur réelle du sprite, jamais coupées par les réglages d'effets ; planche et 6 contrôles vérifiés (7 octobre 2026).
 
 - [ ] Scope final : 3-4 biomes, 4+ personnages, 8+ types d'ennemis, 30+ perks, 10+ armes, 15+ Souvenirs, quêtes.
 - [ ] Bug fix et performance (60 FPS, 100+ ennemis en endgame).
