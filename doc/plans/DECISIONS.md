@@ -891,3 +891,7 @@ Précision de Raphaël, même soir : « pour le péril il faut par exemple un ob
 Raphaël : « diminuer le halo/contours autours des projectiles du heros je le trouve trop prononcé ca ne me plait pas ».
 - **Liseré** crème d'un pixel ramené de 0,9 à 0,45 d'opacité, **halo** de 0,28 à 0,1 (`player_projectile.gdshader`). Les projectiles restent lisibles sur sols gris, sable et herbe (rendu comparé hors jeu sur les neuf planches du héros) et se distinguent toujours des tirs ennemis.
 - **Fenêtres de test** sur le second écran par défaut sous Linux (`godot_screen_args`, `tools/lib/portable.sh`), à sa demande : « lance toujours le jeu sur lecran viewsonic stp ».
+
+## 76. Reprise autonome du chantier audio — 7 octobre 2026
+
+Raphaël demande de reprendre « le sujet audio (mixage, un son par armes, armes d'ambiances, sons des menus, musiques) » et d'avancer en autonomie ; questions et validations possibles au fil du travail. « Armes d'ambiances » est interprété comme les ambiances sonores, dans la continuité du plan 15. Le report des musiques et ambiances du 4 octobre prend donc fin. Lots A3a à A3c proposés dans le [plan 15](15-audio.md). Aucune dépense demandée.

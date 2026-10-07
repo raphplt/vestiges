@@ -16,6 +16,8 @@ public partial class MusicDirector : Node
     private const float SilentDb = -80f;
     private MusicConfig _config;
     private Func<string, AudioStream> _streams;
+    private Func<string, float> _volumes;
+    private float _incomingGain = 1f;
     private AudioStreamPlayer _playerA;
     private AudioStreamPlayer _playerB;
     private bool _usingA = true;
@@ -39,10 +41,11 @@ public partial class MusicDirector : Node
     public string CurrentKey { get; private set; } = "";
     public MusicIntent CurrentIntent { get; private set; } = MusicIntent.None;
 
-    public void Initialize(MusicConfig config, Func<string, AudioStream> streams)
+    public void Initialize(MusicConfig config, Func<string, AudioStream> streams, Func<string, float> volumes = null)
     {
         _config = config;
         _streams = streams;
+        _volumes = volumes;
     }
 
     /// <summary>Remplace les réglages ; le morceau en cours change à la prochaine intention.</summary>
@@ -223,6 +226,7 @@ public partial class MusicDirector : Node
         if (stream is AudioStreamOggVorbis ogg)
             ogg.Loop = cue.Loop;
 
+        _incomingGain = Mathf.DbToLinear(_volumes?.Invoke(cue.Key) ?? 0f);
         _incoming.Stream = stream;
         _incoming.VolumeDb = SilentDb;
         _incoming.Play(cue.StartSeconds);
@@ -242,7 +246,7 @@ public partial class MusicDirector : Node
     private void SetCrossfade(float progress)
     {
         float angle = progress * Mathf.Pi * 0.5f;
-        _incoming.VolumeDb = ToDb(Mathf.Sin(angle));
+        _incoming.VolumeDb = ToDb(_incomingGain * Mathf.Sin(angle));
         _outgoing.VolumeDb = ToDb(_outgoingFrom * Mathf.Cos(angle));
     }
 

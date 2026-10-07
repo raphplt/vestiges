@@ -1,6 +1,6 @@
 # 15 — Audio
 
-Mis à jour le 1er octobre 2026. **Nouvelle priorité : chantier audio d'ensemble et identité des Résurgences**, détaillés en fin de plan (DECISIONS §44).
+Mis à jour le 7 octobre 2026. **Reprise autonome : mixage, identité des 24 armes, ambiances, menus et musique**, détaillée en fin de plan.
 
 ## État
 
@@ -240,3 +240,48 @@ Voir [DECISIONS §66](DECISIONS.md). Faits : cri du Hurleur retiré ; sons d'att
 Les fichiers sont dans `~/Téléchargements/vestiges-hurleur-cri/`. Spectres vérifiés (rien d'aigu), aucune écoute faite par Claude. Si Raphaël en retient une : la copier dans `assets/audio/sfx/creatures/`, l'ajouter à la banque avec un volume bas, la remettre dans `cry_audio` du Hurleur, puis l'écouter en run.
 
 **Retenu : C** (DECISIONS §66). `sfx_hurleur_cri.wav` remplacé par la variante C, banque à −6 dB, cri rétabli sur la fiche du Hurleur. Smoke, capacités ennemies et musique verts ; écoute en run à faire par Raphaël.
+
+## Reprise du 7 octobre — lots proposés avant implémentation
+
+Demande : reprendre en autonomie mixage, un son par arme, ambiances, menus et musiques (DECISIONS §76). Les choix déjà retenus restent la matière de départ. Les médias d'écoute vont dans `~/.local/share/vestiges-audio/2026-10-07/`. Le fichier `ChestLootScreen.cs` comporte une modification préexistante : la préserver.
+
+1. **A3a — mixage et continuité.** Référence audible de 125 s, seed 221092026, Traqueur, crise avancée à 45 s. Limiter les voix simultanées par son, protéger les alertes et blessures par priorité configurée en JSON ; appliquer la limitation aussi aux menus, annuler un ancien fondu avant réemploi d'un lecteur UI. Corriger les ambiances qui persistent au Hub, les fondus concurrents et les gains ignorés par les boucles/la musique. Régressions ciblées, build, smoke, musique, puis même enregistrement après.
+2. **A3b — une identité par arme.** Réauditer les 24 armes actuelles (18 sonorisées par 13 clés, six muettes). Préparer des variantes courtes et discrètes à partir des sources existantes, avec provenance et comparaison hors dépôt. Intégration des nouveaux timbres selon la préférence demandée à Raphaël ; aucune dépense. Vérifier un déclenchement par geste, y compris les armes spéciales.
+3. **A3c — menus, ambiance et musique.** Étendre le retour de navigation au clavier/manette ; tester le coffre sans modifier sa séquence. Préparer une écoute séparée des fonds musicaux et ambiances, puis en contexte avec le mix corrigé. Conserver les points d'entrée actuels des musiques en l'absence d'un choix d'écoute, et distinguer les corrections techniques de la sélection artistique.
+
+Un lot est vérifié avant le suivant. Les mesures ne valent pas écoute : le bilan précise ce qui reste à écouter et ne coche pas les objectifs artistiques sur la seule base des tests.
+
+### Livré — 7 octobre
+
+**A3a, protections techniques intégrées.** `AudioVoicePool` conserve les 12 voix monde et les trois voix UI préallouées. `sounds.json` définit `priority` et `max_voices` : une demande ne coupe qu'une voix moins prioritaire ; à égalité elle attend, et le plafond par son empêche l'empilement. Les blessures, boucliers et annonces importantes sont prioritaires. Les demandes refusées sont distinguées des demandes limitées par intervalle dans la trace et le rapport.
+
+- UI : l'intervalle minimal fonctionne également en pause, avec un historique de déclenchement indépendant des demandes monde. Un lecteur réutilisé annule son ancien fondu, qui ne peut plus l'arrêter après coup.
+- Ambiance : oiseaux sur le bus Ambiance ; arrêt des fonds et alertes de run au Hub ; annulation d'un fondu d'ambiance lors du retour à l'exploration ; gain de banque appliqué aux boucles. L'ambiance ne redémarre plus sur une fin de crise différée après sortie de run.
+- Musique : le gain de chaque piste de `sounds.json` est désormais respecté pendant le fondu. Aucun morceau, point d'entrée ou gain musical n'a été changé.
+- Menus (A3c, partie technique) : les boutons communs sonnent aussi au focus clavier/manette ; les onglets des paramètres sont branchés. Survol et focus simultanés sont limités par la même cadence. La séquence du coffre et les modifications préexistantes de son écran sont préservées.
+
+**Mesure avant/après.** `mix-avant/` et `mix-apres/` dans le dossier d'écoute : même outil `record_run_audio.sh`, seed 221092026, Traqueur, 125 s de jeu, `--crisis-at 45`, profil neuf et volumes par défaut. Le Movie Maker enregistre le mix moteur, indépendamment de la charge de la machine. La référence a été lancée avant les modifications ; l'après utilise un checkout isolé de la même base (`0eefb459`) avec les seuls changements audio, pour ne pas embarquer le chantier Péril mené en parallèle.
+
+| Mesure | Avant | Après |
+|---|---:|---:|
+| Durée enregistrée, pauses comprises | 146,6 s | 153,2 s |
+| Interruptions de voix monde | 27 | 4 |
+| Demandes refusées par le plafond/priorité | 0 | 209 |
+| Sons joués, UI comprise | 1 188 | 1 070 |
+| Sonie moyenne mesurée | −16,7 LUFS | −16,6 LUFS |
+
+Les combats et choix du bot divergent (Boussole avant, Faucille après) : ces valeurs sont une observation de deux runs comparables, **pas une mesure causale de gain en pourcentage**. Parmi les 209 refus : 102 pas d'herbe, 34 XP, 29 attaques d'Ombre, 26 dissolutions. Le niveau global reste proche : ce lot protège les voix, il ne constitue pas une validation du mix à l'oreille. Les tests déterministes prouvent séparément priorité, plafond et absence de coupure tardive.
+
+**Vérification.** `tools/validate.sh /tmp/vestiges-audio-validation-complete-20261007 smoke music audio` passe dans le dossier principal : 3/3 suites, sources stables, build à zéro avertissement/erreur. Suite `audio` ajoutée au lanceur global : 77 effets chargés, puis 13 contrôles de mix (saturation, priorité, plafond, fondu UI, pause, gains, retour au Hub). Les régressions musicales existantes passent. Huit tests des lanceurs passent aussi. Un premier build avait rencontré la migration concurrente de `PerilDataLoader` ; l'isolation a permis d'avancer, puis la validation du dossier partagé est devenue verte. Aucun changement de gameplay du chantier Péril n'a été retouché pour l'audio.
+
+**A3b, préparation artistique achevée ; intégration en attente d'écoute.** `tools/prepare_weapon_audio.py <dossier hors dépôt>` produit 72 candidats (A court, B matière, C feutré), trois par arme, avec aperçu à cadence répétée au gain proposé de −14 dB, référence actuelle ajustée au même niveau d'écoute et export JSON des choix. Quatre petits lots de six armes. Chaque candidat conserve les crédits CC0 des sources déjà retenues, leurs empreintes, la recette et l'empreinte du résultat ; les lamelles de Boîte à musique et de Baguette ajoutent une synthèse originale. Contrôles : 72 empreintes distinctes, WAV mono 48 kHz, absence d'écrêtage et extrémités fondues. Cela ne constitue pas une écoute artistique.
+
+Six armes restent muettes en production : Boîte à musique, Polaroïd, Baguette de sourcier, Gants de boxe, Craies, Transistor. À leur intégration, la Boîte doit sonner au contact d'une orbite (cadence bornée) et le Transistor au départ du cône ; ces deux chemins ne passent pas par `PlayAttackFeedback`. Les 22 autres passent par le retour d'attaque ponctuel. Ne pas ajouter un son par projectile d'une salve ni une boucle permanente.
+
+**Page unique d'écoute :** `~/.local/share/vestiges-audio/2026-10-07/index.html` : deux vidéos de mix, planches des armes, puis 20 extraits de musique/ambiance séparés (avec les points d'entrée déjà proposés pour la Résurgence). Aucune nouvelle musique composée, aucun nouveau timbre branché. La question du degré d'autonomie artistique a été posée ; en l'absence de réponse, maintien des choix à l'écoute prévus au guide audio. Aucun son n'a été écouté par l'agent.
+
+**Suite :** retour d'écoute du mix, choix des timbres par petits lots et branchement des six armes manquantes ; puis choix du rôle de la musique d'exploration/combat et remplacement des fonds provisoires. Le signal de fragment rare (`sfx_rare_fragment`) reste un besoin sans fichier : ne pas le compter comme couvert.
+
+### Retour d’écoute — frottement dans le mix après
+
+Raphaël signale « une sorte de bruit de fond constant comme un frottement » dans `mix-apres`. Source non identifiée : horodatage demandé, fonds et bruitages isolés dans `~/.local/share/vestiges-audio/2026-10-07/frottement/index.html`. Les mesures et les tests techniques ne permettent pas de conclure à sa place. Ne pas considérer le mix comme recetté ; aucun son supprimé ou atténué au hasard.

@@ -8,12 +8,12 @@ validation_entry "$0" "$@"
 OUTPUT=$(abs_path "${1:-/tmp/vestiges-validation-$(date +%Y%m%d-%H%M%S)}")
 if [[ $# -gt 0 ]]; then shift; fi
 tests=(smoke perk_contracts perk_acquisition perk_effects objects weapons enemy_abilities small_places
-    field_bonuses cone temporal erasure_active cartography choice_screen ui_art music movement
+    field_bonuses cone temporal erasure_active cartography choice_screen ui_art music audio movement
     movement-integration dev_mode development_tools dev_release saves loading input_remap run_trace run_phase catalogs indicible steam_leaderboards progression-model launchers)
 if [[ $# -gt 0 ]]; then tests=("$@"); fi
 for name in "${tests[@]}"; do
     case "$name" in
-        smoke|perk_contracts|perk_acquisition|perk_effects|objects|weapons|enemy_abilities|small_places|field_bonuses|cone|temporal|erasure_active|cartography|choice_screen|ui_art|music|movement|movement-integration|dev_mode|development_tools|dev_release|saves|loading|input_remap|run_trace|run_phase|catalogs|indicible|steam_leaderboards|progression-model|launchers) ;;
+        smoke|perk_contracts|perk_acquisition|perk_effects|objects|weapons|enemy_abilities|small_places|field_bonuses|cone|temporal|erasure_active|cartography|choice_screen|ui_art|music|audio|movement|movement-integration|dev_mode|development_tools|dev_release|saves|loading|input_remap|run_trace|run_phase|catalogs|indicible|steam_leaderboards|progression-model|launchers) ;;
         *) echo "Suite inconnue : $name" >&2; exit 1 ;;
     esac
 done
@@ -58,7 +58,7 @@ for name in "${tests[@]}"; do
         development_tools) command_args=(tools/test_development_tools.sh) ;;
         progression-model) command_args=(python3 tools/tests/test_progression_model.py) ;;
         launchers) command_args=(python3 tools/tests/test_validation_launchers.py) ;;
-        cone|temporal|erasure_active|field_bonuses|music) command_args=("tools/test_$name.sh" "$OUTPUT/$name") ;;
+        cone|temporal|erasure_active|field_bonuses|music|audio) command_args=("tools/test_$name.sh" "$OUTPUT/$name") ;;
         *) command_args=("tools/test_$name.sh") ;;
     esac
     exit_code=0

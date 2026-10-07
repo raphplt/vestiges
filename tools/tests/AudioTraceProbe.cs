@@ -57,7 +57,7 @@ internal sealed class AudioTraceProbe : IDisposable
     private void OnSound(string key, AudioManager.SoundOutcome outcome)
     {
         if (!_sounds.TryGetValue(key, out int[] counts))
-            _sounds[key] = counts = new int[4];
+            _sounds[key] = counts = new int[5];
         counts[(int)outcome]++;
         if (outcome != AudioManager.SoundOutcome.Throttled)
             Add("sound", $"{key}:{outcome}");
@@ -118,9 +118,9 @@ internal sealed class AudioTraceProbe : IDisposable
         _eventBus.RandomEventTriggered -= OnRandomEvent;
         _eventBus.RunEventStarted -= OnRunEvent;
 
-        List<string> sounds = new() { "key,played,throttled,voice_stolen,interface" };
+        List<string> sounds = new() { "key,played,throttled,voice_stolen,interface,voice_limited" };
         foreach (KeyValuePair<string, int[]> entry in _sounds)
-            sounds.Add($"{entry.Key},{entry.Value[0]},{entry.Value[1]},{entry.Value[2]},{entry.Value[3]}");
+            sounds.Add($"{entry.Key},{entry.Value[0]},{entry.Value[1]},{entry.Value[2]},{entry.Value[3]},{entry.Value[4]}");
         Write("audio-events.csv", _events);
         Write("audio-states.csv", _states);
         Write("audio-sounds.csv", sounds);

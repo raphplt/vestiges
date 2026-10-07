@@ -299,6 +299,7 @@ public partial class SettingsScreen : CanvasLayer
 			Flat = true
 		};
 		UITheme.SetTextRole(btn, TextRole.Body);
+		UITheme.WireButtonAudio(btn);
 
 		btn.Pressed += () => ShowTab(id);
 		// Au clavier et à la manette, parcourir les onglets suffit à les ouvrir.

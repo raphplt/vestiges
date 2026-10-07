@@ -785,6 +785,7 @@ Le script de post-processing doit inclure une vérification/correction de l'angl
 - [x] Signaux précurseurs des Résurgences.
 - [ ] Sound design cleanup (retirer sons répétitifs, ajuster XP, musique adaptative).
 - [x] Intégration des 50 choix audio A–B6 applicables et nettoyage des fichiers inutilisés ; banque JSON, crédits et archives d’écoute hors dépôt (plan 15).
+- [x] Plan 15 A3a : priorités/plafonds des voix en JSON, limitation UI en pause, fondus sûrs, arrêt des ambiances au Hub et gains de boucle/musique ; banque, régressions, smoke et enregistrements avant/après vérifiés (7 octobre 2026). Recette artistique du mix encore ouverte.
 - [x] Écran de mort reworké (transition visuelle + score détaillé + stats) : bilan en trois zones, première passe du plan 02 lot D (27 septembre 2026) ; séquence de mort dans le monde, lot M1 ; distance, éliminations par arme et frise relevées, lot M2 ; bilan en une page dense, lot M3 ; gains animés, lot M4 (28 septembre 2026). Recette en jeu de Raphaël attendue.
 
 ### Refonte objets et spécialisations — plan 05, 28 septembre 2026

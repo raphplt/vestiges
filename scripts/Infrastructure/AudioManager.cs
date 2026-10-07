@@ -29,11 +29,13 @@ public partial class AudioManager : Node
 	private MusicDirector _music;
 
 	// --- SFX pool ---
-	private readonly List<AudioStreamPlayer> _sfxPool = new();
+	private AudioVoicePool _sfxPool;
 	private const int SfxPoolSize = 12;
 
 	// --- Ambiance player ---
 	private AudioStreamPlayer _ambiancePlayer;
+	private Tween _ambianceFade;
+	private string _ambianceKey = "";
 	private AudioStreamPlayer _ambianceOverlayPlayer;
 	private string _ambianceOverlayKey = "";
 
@@ -46,7 +48,7 @@ public partial class AudioManager : Node
 	private string _borderWarningKey = "";
 
 	// --- UI SFX pool (plays even when paused) ---
-	private readonly List<AudioStreamPlayer> _uiSfxPool = new();
+	private AudioVoicePool _uiSfxPool;
 	private const int UiSfxPoolSize = 3;
 
 	// --- Stream cache ---
@@ -56,6 +58,10 @@ public partial class AudioManager : Node
 	private readonly Dictionary<string, ulong> _sfxLastPlayTime = new();
 	private readonly Dictionary<string, ulong> _sfxMinIntervals = new();
 	private const ulong DefaultMinInterval = 0;
+	private readonly Dictionary<string, ulong> _uiLastPlayTime = new();
+	private readonly Dictionary<string, int> _soundPriorities = new();
+	private readonly Dictionary<string, int> _soundMaxVoices = new();
+	private readonly Dictionary<string, string> _soundBuses = new();
 
 	// --- Horloge sonore sous Movie Maker (enregistrements d'écoute, plan 15 A0) ---
 	private static ulong _movieFps;
@@ -106,11 +112,14 @@ public partial class AudioManager : Node
 			_paths[key] = settings["path"].AsString();
 			_soundVolumes[key] = (float)settings["volume_db"].AsDouble();
 			_sfxMinIntervals[key] = (ulong)settings["min_interval_ms"].AsInt64();
+			_soundPriorities[key] = settings.ContainsKey("priority") ? settings["priority"].AsInt32() : 20;
+			_soundMaxVoices[key] = settings.ContainsKey("max_voices") ? Mathf.Max(1, settings["max_voices"].AsInt32()) : 2;
+			_soundBuses[key] = settings.ContainsKey("bus") ? settings["bus"].AsString() : BusSfx;
 		}
 	}
 
 	/// <summary>Issue d'une demande de son, pour la trace d'écoute (tools/record_run_audio.sh).</summary>
-	public enum SoundOutcome { Played, Throttled, VoiceStolen, Interface }
+	public enum SoundOutcome { Played, Throttled, VoiceStolen, Interface, VoiceLimited }
 
 	/// <summary>Chaque demande de son et son issue ; sans abonné, ne coûte rien.</summary>
 	public event System.Action<string, SoundOutcome> SoundRequested;
@@ -139,6 +148,7 @@ public partial class AudioManager : Node
 		GetTree().ProcessFrame -= ResolveMovieFps;
 		// Les instants notés sur l'horloge réelle ne se comparent pas à la nouvelle.
 		_sfxLastPlayTime.Clear();
+		_uiLastPlayTime.Clear();
 		GD.Print($"[AudioManager] Movie Maker : horloge sonore à {_movieFps} images/s");
 	}
 
@@ -155,7 +165,7 @@ public partial class AudioManager : Node
 		PreloadStreams();
 
 		_music = new MusicDirector { Name = "Music" };
-		_music.Initialize(MusicConfig.Load(), key => _streams.GetValueOrDefault(key));
+		_music.Initialize(MusicConfig.Load(), key => _streams.GetValueOrDefault(key), key => _soundVolumes.GetValueOrDefault(key));
 		AddChild(_music);
 
 		_ambiancePlayer = new AudioStreamPlayer { Bus = BusAmbiance, Name = "Ambiance" };
@@ -170,19 +180,8 @@ public partial class AudioManager : Node
 		_borderWarningPlayer = new AudioStreamPlayer { Bus = BusSfx, Name = "BorderWarningLoop", ProcessMode = ProcessModeEnum.Always, VolumeDb = -12f };
 		AddChild(_borderWarningPlayer);
 
-		for (int i = 0; i < UiSfxPoolSize; i++)
-		{
-			AudioStreamPlayer uiP = new() { Bus = BusSfx, Name = $"UiSfx{i}", ProcessMode = ProcessModeEnum.Always };
-			_uiSfxPool.Add(uiP);
-			AddChild(uiP);
-		}
-
-		for (int i = 0; i < SfxPoolSize; i++)
-		{
-			AudioStreamPlayer p = new() { Bus = BusSfx, Name = $"Sfx{i}" };
-			_sfxPool.Add(p);
-			AddChild(p);
-		}
+		_uiSfxPool = new AudioVoicePool(this, "UiSfx", UiSfxPoolSize, ProcessModeEnum.Always);
+		_sfxPool = new AudioVoicePool(this, "Sfx", SfxPoolSize, ProcessModeEnum.Inherit);
 
 		Core.EventBus eventBus = GetNodeOrNull<Core.EventBus>("/root/EventBus");
 		if (eventBus != null)
@@ -369,13 +368,16 @@ public partial class AudioManager : Node
 			SoundRequested?.Invoke(key, SoundOutcome.Throttled);
 			return;
 		}
-		_sfxLastPlayTime[key] = now;
-
-		AudioStreamPlayer player = GetFreePoolPlayer();
+		AudioStreamPlayer player = _sfxPool.Acquire(key, _soundPriorities[key], _soundMaxVoices[key], out bool stolen);
 		if (player == null)
+		{
+			SoundRequested?.Invoke(key, SoundOutcome.VoiceLimited);
 			return;
-		SoundRequested?.Invoke(key, player.Playing ? SoundOutcome.VoiceStolen : SoundOutcome.Played);
+		}
+		_sfxLastPlayTime[key] = now;
+		SoundRequested?.Invoke(key, stolen ? SoundOutcome.VoiceStolen : SoundOutcome.Played);
 
+		player.Bus = _soundBuses[key];
 		player.Stream = stream;
 		player.PitchScale = basePitch + _rng.RandfRange(-pitchVariance, pitchVariance);
 		player.VolumeDb = volumeDb + _soundVolumes.GetValueOrDefault(key);
@@ -392,11 +394,22 @@ public partial class AudioManager : Node
 		if (!_streams.TryGetValue(key, out AudioStream stream))
 			return null;
 
-		AudioStreamPlayer player = GetFreeUiPoolPlayer();
-		if (player == null)
+		ulong now = NowMsec;
+		if (_uiLastPlayTime.TryGetValue(key, out ulong lastTime) && now - lastTime < _sfxMinIntervals[key])
+		{
+			SoundRequested?.Invoke(key, SoundOutcome.Throttled);
 			return null;
+		}
+		AudioStreamPlayer player = _uiSfxPool.Acquire(key, _soundPriorities[key], _soundMaxVoices[key], out _);
+		if (player == null)
+		{
+			SoundRequested?.Invoke(key, SoundOutcome.VoiceLimited);
+			return null;
+		}
+		_uiLastPlayTime[key] = now;
 		SoundRequested?.Invoke(key, SoundOutcome.Interface);
 
+		player.Bus = BusSfx;
 		player.Stream = stream;
 		player.PitchScale = 1f + _rng.RandfRange(-pitchVariance, pitchVariance);
 		player.VolumeDb = volumeDb + _soundVolumes.GetValueOrDefault(key);
@@ -413,20 +426,7 @@ public partial class AudioManager : Node
 		if (Instance == null || player == null || !GodotObject.IsInstanceValid(player) || !player.Playing
 			|| !Instance._streams.TryGetValue(key, out AudioStream stream) || player.Stream != stream)
 			return;
-		Tween fade = player.CreateTween();
-		fade.SetPauseMode(Tween.TweenPauseMode.Process);
-		fade.TweenProperty(player, "volume_db", -40f, duration);
-		fade.TweenCallback(Callable.From(player.Stop));
-	}
-
-	private AudioStreamPlayer GetFreeUiPoolPlayer()
-	{
-		foreach (AudioStreamPlayer p in _uiSfxPool)
-		{
-			if (!p.Playing)
-				return p;
-		}
-		return _uiSfxPool.Count > 0 ? _uiSfxPool[0] : null;
+		Instance._uiSfxPool.FadeOut(player, key, duration);
 	}
 
 	/// <summary>Joue un SFX en boucle (ex : ambiance UI). Un seul loop SFX à la fois.</summary>
@@ -443,24 +443,8 @@ public partial class AudioManager : Node
 		if (!_streams.TryGetValue(key, out AudioStream stream))
 			return;
 
-		AudioStreamWav clone = null;
-		if (stream is AudioStreamWav wav)
-		{
-			clone = (AudioStreamWav)wav.Duplicate();
-			clone.LoopMode = AudioStreamWav.LoopModeEnum.Forward;
-			clone.LoopBegin = 0;
-			int bytesPerFrame = clone.Format switch
-			{
-				AudioStreamWav.FormatEnum.Format8Bits => clone.Stereo ? 2 : 1,
-				AudioStreamWav.FormatEnum.Format16Bits => clone.Stereo ? 4 : 2,
-				_ => clone.Stereo ? 4 : 2
-			};
-			if (clone.Data != null && clone.Data.Length > 0)
-				clone.LoopEnd = clone.Data.Length / bytesPerFrame;
-		}
-
-		_loopingSfxPlayer.Stream = clone ?? stream;
-		_loopingSfxPlayer.VolumeDb = volumeDb;
+		_loopingSfxPlayer.Stream = CreateLoopableStream(stream);
+		_loopingSfxPlayer.VolumeDb = volumeDb + _soundVolumes.GetValueOrDefault(key);
 		_loopingSfxPlayer.Play();
 		_loopingSfxKey = key;
 	}
@@ -489,51 +473,22 @@ public partial class AudioManager : Node
 		if (!_streams.TryGetValue(key, out AudioStream stream))
 			return;
 
-		// Dupliquer le stream pour ne pas muter l'objet partagé en cache
-		if (stream is AudioStreamWav wav)
+		_ambianceFade?.Kill();
+		if (_ambianceKey != key || !_ambiancePlayer.Playing)
 		{
-			AudioStreamWav clone = (AudioStreamWav)wav.Duplicate();
-			clone.LoopMode = AudioStreamWav.LoopModeEnum.Forward;
-			stream = clone;
+			_ambiancePlayer.Stream = CreateLoopableStream(stream);
+			_ambiancePlayer.Play();
 		}
-
-		_ambiancePlayer.Stream = stream;
-		_ambiancePlayer.VolumeDb = 0f;
-		_ambiancePlayer.Play();
+		_ambianceKey = key;
+		_ambiancePlayer.VolumeDb = _soundVolumes.GetValueOrDefault(key);
 	}
 
 	private void FadeOutAmbiance(float duration = 2f)
 	{
-		Tween tween = CreateTween();
-		tween.TweenProperty(_ambiancePlayer, "volume_db", -80f, duration);
-		tween.TweenCallback(Callable.From(_ambiancePlayer.Stop));
-	}
-
-	// =========================================================
-	// POOL SFX
-	// =========================================================
-
-	private AudioStreamPlayer GetFreePoolPlayer()
-	{
-		foreach (AudioStreamPlayer p in _sfxPool)
-		{
-			if (!p.Playing)
-				return p;
-		}
-		// Toutes les voix sonnent (combat dense, plan 02 J5) : on coupe celle qui joue depuis le plus longtemps,
-		// plutôt que toujours la première.
-		AudioStreamPlayer oldest = null;
-		float longest = -1f;
-		foreach (AudioStreamPlayer p in _sfxPool)
-		{
-			float position = p.GetPlaybackPosition();
-			if (position > longest)
-			{
-				longest = position;
-				oldest = p;
-			}
-		}
-		return oldest;
+		_ambianceFade?.Kill();
+		_ambianceFade = CreateTween();
+		_ambianceFade.TweenProperty(_ambiancePlayer, "volume_db", -60f, duration);
+		_ambianceFade.TweenCallback(Callable.From(_ambiancePlayer.Stop));
 	}
 
 	// =========================================================
@@ -542,6 +497,8 @@ public partial class AudioManager : Node
 
 	public override void _Process(double delta)
 	{
+		if (string.IsNullOrEmpty(_currentPhase))
+			return;
 		float dt = (float)delta;
 
 		if (_currentPhase == "Exploration")
@@ -748,12 +705,20 @@ public partial class AudioManager : Node
 		{
 			_currentPhase = "";
 			_currentRandomEventId = "";
+			_ambianceFade?.Kill();
+			_ambiancePlayer.Stop();
+			_ambianceKey = "";
+			_sfxPool.Stop();
+			StopLoopingSfx();
 			StopLoopOnPlayer(_ambianceOverlayPlayer, ref _ambianceOverlayKey);
 			StopLoopOnPlayer(_lowHealthLoopPlayer, ref _lowHealthLoopKey);
 			StopLoopOnPlayer(_borderWarningPlayer, ref _borderWarningKey);
 		}
 		else if (newState == "Run")
 		{
+			_lastKnownHp = -1f;
+			_lastKnownShield = -1f;
+			_voidTickFrame = ulong.MaxValue;
 			_currentPhase = "";
 			_currentRandomEventId = "";
 			// La première run d'une session commence déjà en exploration : aucun changement de phase ne
@@ -764,7 +729,10 @@ public partial class AudioManager : Node
 
 	private void SyncRunPhase()
 	{
-		string phase = GetNode<GameManager>("/root/GameManager").CurrentRunPhase.ToString();
+		GameManager manager = GetNode<GameManager>("/root/GameManager");
+		if (manager.CurrentState != GameManager.GameState.Run)
+			return;
+		string phase = manager.CurrentRunPhase.ToString();
 		if (phase != _currentPhase)
 			OnRunPhaseChanged(_currentPhase, phase);
 	}

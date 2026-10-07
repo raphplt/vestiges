@@ -108,6 +108,8 @@ def sounds_between(events, start, end):
         if row["kind"] != "sound" or not start <= at < end:
             continue
         key, outcome = row["detail"].rsplit(":", 1)
+        if outcome not in ("Played", "VoiceStolen", "Interface"):
+            continue
         played[key] += 1
         if outcome == "VoiceStolen":
             stolen += 1
@@ -236,10 +238,10 @@ def main():
 
     lines.append("## Sons sur toute la run")
     lines.append("")
-    lines.append("| Clé | Joués | Limités | Voix coupées | Interface |")
-    lines.append("|---|---|---|---|---|")
+    lines.append("| Clé | Joués | Intervalle limité | Voix coupées | Interface | Voix refusées |")
+    lines.append("|---|---|---|---|---|---|")
     for row in sorted(sounds, key=lambda r: -(int(r["played"]) + int(r["voice_stolen"]) + int(r["interface"]))):
-        lines.append(f"| {row['key']} | {row['played']} | {row['throttled']} | {row['voice_stolen']} | {row['interface']} |")
+        lines.append(f"| {row['key']} | {row['played']} | {row['throttled']} | {row['voice_stolen']} | {row['interface']} | {row.get('voice_limited', '0')} |")
     lines.append("")
 
     # Traces d'avant le plan 15 A1 : compteur d'ennemis que tenait l'AudioManager pour choisir la musique de combat.

@@ -188,12 +188,15 @@ public static class UITheme
 
 		btn.SetMeta("ui_sfx_wired", true);
 
-		btn.MouseEntered += () =>
+		void PlayFocusSound()
 		{
 			if (hoverOnlyIfEnabled && btn.Disabled)
 				return;
 			AudioManager.PlayUI("sfx_menu_survol");
-		};
+		}
+		btn.MouseEntered += PlayFocusSound;
+		// Même repère au clavier/manette ; la limitation UI absorbe un survol et un focus simultanés.
+		btn.FocusEntered += PlayFocusSound;
 
 		btn.ButtonDown += () =>
 		{
