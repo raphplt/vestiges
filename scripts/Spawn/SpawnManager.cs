@@ -591,14 +591,15 @@ public partial class SpawnManager : Node2D
 		return Mathf.Clamp(multiplier, 0.7f, 3f);
 	}
 
-	/// <summary>Plafond de créatures actives : celui de la run, relevé par le Péril sans dépasser le plafond de coût (plan 28).</summary>
+	/// <summary>
+	/// Plafond de créatures actives : celui de la run, relevé par le Péril, jamais au-delà du plafond de coût (plan 28 :
+	/// au banc, 160 créatures serrées tiennent 100 FPS, 240 tombent à 54).
+	/// </summary>
 	private int GetCurrentMaxEnemies(float elapsedMinutes)
 	{
-		float scaled = _maxEnemies + _maxEnemiesGrowthPerMinute * elapsedMinutes;
-		float countMultiplier = PerilDataLoader.EnemyCountMultiplier(PerilPoints(elapsedMinutes));
-		if (countMultiplier > 1f)
-			scaled = Mathf.Max(scaled, Mathf.Min(scaled * countMultiplier, PerilDataLoader.ActiveEnemiesCeiling));
-		return Mathf.Max(1, Mathf.RoundToInt(scaled));
+		float scaled = (_maxEnemies + _maxEnemiesGrowthPerMinute * elapsedMinutes)
+			* PerilDataLoader.EnemyCountMultiplier(PerilPoints(elapsedMinutes));
+		return Mathf.Clamp(Mathf.RoundToInt(scaled), 1, PerilDataLoader.ActiveEnemiesCeiling);
 	}
 
 	/// <summary>
