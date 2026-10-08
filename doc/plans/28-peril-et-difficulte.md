@@ -99,6 +99,20 @@ Point ouvert : le plafond de base atteint 210 créatures à 25 min, donc à 240 
 **En cours (7 octobre, nuit).** Code en place, sans effet de jeu pour l'instant : `SpawnManager` additionne le Péril du joueur et un **Péril du temps** (`time_peril_from_minute`, `time_peril_per_minute` dans `spawn_flow.json`, à 0), aux mêmes effets par point ; les PV et dégâts de phase (Résurgence, fin de partie, endgame) sortent du code vers `spawn_flow.json`, valeurs inchangées ; le signal `DifficultyModifierChanged` disparaît (`SpawnManager` écoute `PerilChanged`). Surcharges de mesure ajoutées (`--scaling time_peril_per_minute=…,crisis_spawn_multiplier=…,crisis_hp_multiplier=…`).
 Prochaine étape : mesurer à Péril 0, contre la référence, deux variantes déjà préparées puis interrompues : Péril du temps 0,5 et 0,8 point par minute dès 8 min, avec Résurgences à ×2 apparitions, rafales 12 + 6 par intensité, PV ×1,3. Garder celle où les dégâts reçus après 10 min montent nettement sans faire chuter éliminations et Essence ; banc de coût du plafond de créatures (120, 240, 320) machine calme.
 
+**Plafond de créatures mesuré (8 octobre).** Banc de combat dense, 1080p, créatures serrées dans 600 px : 120 → 160 FPS, 160 → 103 (p99 16,4 ms), 200 → 73 (24 % d'images au-delà de 16,7 ms), 240 → 54, 320 → 19. Le coût monte bien plus vite que le nombre : `active_enemies_ceiling` passe à 200 et borne désormais toutes les créatures actives (commit `862122e5`). Le Péril du temps ne peut donc presque plus ajouter de créatures en fin de run ; il y pèse par la densité locale, les PV et les dégâts. Ce coût mérite un chantier de performance à part.
+
+**Mesures P4 interrompues (8 octobre, nuit).** La session de Claude Code est limitée à 2 cœurs (`cpu.max`) : neuf runs en parallèle avancent à 0,37 × le temps réel. Prochaine fois, lancer hors session (16 cœurs), depuis le dépôt à jour, pour la référence puis chaque variante :
+
+```
+P="--nomad --visit --mortal --prefer souffle_du_neant,reflet_brise,memoire_vive,photo_de_classe,jeton_de_fete,oeil_critique"
+C="crisis_spawn_multiplier=2,crisis_burst_base=12,crisis_burst_per_intensity=6,crisis_hp_multiplier=1.3,time_peril_from_minute=8"
+MEASURE_JOBS=3 MEASURE_EXTRA_ARGS="$P" tools/measure_run.sh ~/.cache/p4-base 1500 "42 1002 7"
+MEASURE_JOBS=3 MEASURE_EXTRA_ARGS="$P --scaling $C,time_peril_per_minute=0.5" tools/measure_run.sh ~/.cache/p4-a 1500 "42 1002 7"
+MEASURE_JOBS=3 MEASURE_EXTRA_ARGS="$P --scaling $C,time_peril_per_minute=0.8" tools/measure_run.sh ~/.cache/p4-b 1500 "42 1002 7"
+```
+
+Puis `python3 tools/summarize_power.py --minutes 25 --step 5 <dossier>` sur chacun.
+
 ### P5 — À jouer
 
 Raphaël joue une run avec le build de §74, en montant le Péril aux stèles. Ses retours vont au registre.
