@@ -37,6 +37,8 @@ public partial class Projectile : Area2D, ITicked
     private AttackContext _context;
     private Sprite2D _sprite;
     private CollisionShape2D _collision;
+    // Ombre au sol dessinée en lot par GroundShadowLayer (plan 29 C2) ; seulement une fois parti, comme le tir.
+    private readonly ShadowCaster _shadow;
     // Rayon de touche des créatures, taille comprise : elles n'ont plus de corps physique (plan 29 B).
     private float _baseHitRadius;
     private float _hitRadius;
@@ -66,6 +68,11 @@ public partial class Projectile : Area2D, ITicked
     /// <summary>Arme portée qui a tiré : ses effets au contact et son recul s'appliquent, pas ceux de la dernière arme.</summary>
     public WeaponInstance SourceInstance { get; private set; }
 
+    public Projectile()
+    {
+        _shadow = new ShadowCaster(this) { Width = GroundShadow.SnapWidth(8f) };
+    }
+
     public void SetRelease(Action<Projectile> release)
     {
         _release = release;
@@ -78,7 +85,6 @@ public partial class Projectile : Area2D, ITicked
         _collision = GetNode<CollisionShape2D>("CollisionShape2D");
         _sprite.Position = new Vector2(0f, -Iso.FlightHeight);
         // Au sol sous le projectile : c'est l'écart entre l'ombre et le visuel qui dit qu'il vole.
-        AddChild(GroundShadow.Create(8f));
         _baseHitRadius = ((CircleShape2D)_collision.Shape).Radius;
     }
 
@@ -127,6 +133,8 @@ public partial class Projectile : Area2D, ITicked
         UpdateSprite();
 
         Visible = _launchDelay <= 0f;
+        if (Visible)
+            GroundShadowLayer.Add(_shadow);
         ProcessMode = ProcessModeEnum.Inherit;
         Roster.Add(this);
     }
@@ -149,6 +157,7 @@ public partial class Projectile : Area2D, ITicked
         }
         _departureTarget = default;
         Visible = true;
+        GroundShadowLayer.Add(_shadow);
     }
 
     /// <summary>Retire le projectile de la boucle : un test le fait alors avancer lui-même.</summary>
@@ -172,6 +181,7 @@ public partial class Projectile : Area2D, ITicked
     public override void _ExitTree()
     {
         Roster.Remove(this);
+        GroundShadowLayer.Remove(_shadow);
     }
 
     /// <summary>Un tick du projectile, appelé par la boucle des projectiles (ou directement par un test).</summary>
@@ -365,6 +375,7 @@ public partial class Projectile : Area2D, ITicked
     private void Release()
     {
         Roster.Remove(this);
+        GroundShadowLayer.Remove(_shadow);
         _isDespawning = true;
         Visible = false;
         // Hors traitement : retiré de la physique (DisableMode Remove) jusqu'au prochain Launch.

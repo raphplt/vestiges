@@ -25,7 +25,8 @@ public partial class EnemyProjectile : Area2D, ITicked
 	private float _slowFactor = 1f;
 	private float _age;
 	private Sprite2D _visual;
-	private Sprite2D _shadow;
+	// Ombre dessinée en lot par GroundShadowLayer : des centaines de tirs en vol en foule dense (plan 29 C2).
+	private readonly ShadowCaster _shadow;
 	private ProjectileSprites.SpriteSet _spriteSet;
 	private int _spriteFrame = -1;
 	private int _spriteDirection;
@@ -34,6 +35,11 @@ public partial class EnemyProjectile : Area2D, ITicked
 	private bool _isDespawning;
 	private Action<EnemyProjectile> _release;
 	private EventBus _eventBus;
+
+	public EnemyProjectile()
+	{
+		_shadow = new ShadowCaster(this);
+	}
 
 	public void SetRelease(Action<EnemyProjectile> release)
 	{
@@ -46,8 +52,6 @@ public partial class EnemyProjectile : Area2D, ITicked
 		_visual.Position = new Vector2(0f, -Iso.FlightHeight);
 		// Au sol sous le projectile : c'est l'écart entre l'ombre et le visuel qui dit qu'il vole.
 		_visual.TextureFilter = TextureFilterEnum.Nearest;
-		_shadow = GroundShadow.Create(8f);
-		AddChild(_shadow);
 		_eventBus = GetNode<EventBus>("/root/EventBus");
 		BodyEntered += OnBodyEntered;
 	}
@@ -65,7 +69,8 @@ public partial class EnemyProjectile : Area2D, ITicked
 		_isDespawning = false;
 		_family = family;
 		_spriteSet = ProjectileSprites.Get(spriteId) ?? ProjectileSprites.Get("spit");
-		_shadow.Texture = GroundShadow.TextureFor(GroundShadow.SnapWidth(_spriteSet?.ShadowWidth ?? 8f));
+		_shadow.Width = GroundShadow.SnapWidth(_spriteSet?.ShadowWidth ?? 8f);
+		GroundShadowLayer.Add(_shadow);
 		_trailFrame = Engine.GetPhysicsFrames();
 		_spriteFrame = -1;
 		// Planche prérendue en vue 30° : la colonne suit la direction du tir, jamais une rotation 2D.
@@ -114,6 +119,7 @@ public partial class EnemyProjectile : Area2D, ITicked
 	public override void _ExitTree()
 	{
 		Roster.Remove(this);
+		GroundShadowLayer.Remove(_shadow);
 	}
 
 	/// <summary>Un tick du projectile, appelé par la boucle des projectiles (ou directement par un test).</summary>
@@ -162,6 +168,7 @@ public partial class EnemyProjectile : Area2D, ITicked
 	private void Release()
 	{
 		Roster.Remove(this);
+		GroundShadowLayer.Remove(_shadow);
 		_isDespawning = true;
 		Visible = false;
 		SetDeferred(Area2D.PropertyName.Monitoring, false);
