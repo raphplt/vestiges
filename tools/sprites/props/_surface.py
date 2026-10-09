@@ -125,3 +125,35 @@ def waterline(shape: Distance, level: float, reach: float = 0.16 * M, seed: int 
 
     return field
 
+
+def bricks(course: float, length: float, joint: float, frame: Callable[[np.ndarray], np.ndarray] | None = None) -> Distance:
+    """
+    Joints d'un appareil de briques ou de pierres en quinconce : négatif sur le mortier. La coordonnée le long du mur
+    est x + z, valable sur une face avant (z constant) comme sur un flanc (x constant).
+    """
+
+    def mask(p: np.ndarray) -> np.ndarray:
+        local = frame(p) if frame is not None else p
+        row = np.floor(local[:, 1] / course)
+        along = local[:, 0] + local[:, 2] + np.mod(row, 2.0) * length * 0.5
+        dy = np.mod(local[:, 1], course)
+        dx = np.mod(along, length)
+        horizontal = np.minimum(dy, course - dy)
+        vertical = np.minimum(dx, length - dx)
+        return np.minimum(horizontal, vertical) - joint * 0.5
+
+    return mask
+
+
+def cracks(period: float, seed: int, width: float, reach: float = 0.5) -> Distance:
+    """
+    Fissures : les lignes de niveau d'un bruit forment des tracés sinueux d'un pixel ; un second bruit n'en garde
+    qu'une part (`reach`), pour des fissures isolées plutôt qu'un réseau.
+    """
+
+    def mask(p: np.ndarray) -> np.ndarray:
+        lines = np.abs(value_noise(p, period, seed) - 0.5) * period - width * 0.5
+        keep = (value_noise(p, period * 2.5, seed + 1) - (1.0 - reach * 0.6)) * -period
+        return np.maximum(lines, keep)
+
+    return mask

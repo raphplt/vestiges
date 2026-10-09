@@ -43,6 +43,9 @@ Distance = Callable[[np.ndarray], np.ndarray]
 class Part:
     distance: Distance
     material: int
+    # False pour un détail peint plus fin qu'un pixel (gravier, crépi) : ses marches casseraient les normales et
+    # assombriraient toute la surface ; il colore sans compter dans l'éclairage.
+    relief: bool = True
 
 
 def screen_direction_to_yaw(dx: float, dy: float) -> float:
@@ -94,8 +97,12 @@ def flatten(layers: Sequence[Image.Image]) -> Image.Image:
 def render_layers(parts: Sequence[Part], materials: Sequence[Material], yaw: float,
                   size: tuple[int, int], pivot: tuple[float, float],
                   scale: float = MODEL_SCALE, supersample: int = 4, ray_range: float = RAY_RANGE,
-                  bounds: tuple[Sequence[float], Sequence[float]] | None = None) -> list[Image.Image]:
-    """Rendu en calques séparés (LAYER_NAMES), pour une retouche dans Aseprite sans perdre la structure."""
+                  bounds: tuple[Sequence[float], Sequence[float]] | None = None,
+                  smooth_slopes: bool = False) -> list[Image.Image]:
+    """
+    Rendu en calques séparés (LAYER_NAMES), pour une retouche dans Aseprite sans perdre la structure.
+    `smooth_slopes` : pas de ligne interne sur une pente régulière (voir _compose) ; activé pour les décors.
+    """
     width, height = size
     ss = supersample
     # Rayons exprimés dans l'espace du modèle : la lumière reste fixe à l'écran quelle que soit l'orientation.
@@ -144,7 +151,7 @@ def render_layers(parts: Sequence[Part], materials: Sequence[Material], yaw: flo
     if len(hit_index):
         points = origins[hit_index] + view * t[hit_index, None]
         _, material[hit_index] = _evaluate(parts, points)
-        normal = _normals(parts, points)
+        normal = _normals([part for part in parts if part.relief], points)
         diffuse = np.clip(normal @ light, 0.0, 1.0)
         shade = 0.2 + 0.8 * diffuse
         # Les faces tournées vers le sol restent dans l'ombre portée du volume.
@@ -179,7 +186,7 @@ def render_layers(parts: Sequence[Part], materials: Sequence[Material], yaw: flo
 
     shade_index = np.digitize(pixel_value, SHADE_THRESHOLDS)
     shade_index = _clean_orphans(shade_index, pixel_material, covered)
-    return _compose(materials, covered, pixel_material, shade_index, pixel_depth)
+    return _compose(materials, covered, pixel_material, shade_index, pixel_depth, smooth_slopes)
 
 
 def _clean_orphans(shade: np.ndarray, material: np.ndarray, covered: np.ndarray) -> np.ndarray:
@@ -198,7 +205,7 @@ def _clean_orphans(shade: np.ndarray, material: np.ndarray, covered: np.ndarray)
 
 
 def _compose(materials: Sequence[Material], covered: np.ndarray, material: np.ndarray,
-             shade: np.ndarray, depth: np.ndarray) -> list[Image.Image]:
+             shade: np.ndarray, depth: np.ndarray, smooth_slopes: bool = False) -> list[Image.Image]:
     height, width = covered.shape
     fill = np.zeros((height, width, 4), dtype=np.uint8)
     inner = np.zeros_like(fill)
@@ -210,10 +217,20 @@ def _compose(materials: Sequence[Material], covered: np.ndarray, material: np.nd
             continue
         # Ligne interne : ce pixel est nettement derrière un voisin (bras devant le torse, sac derrière).
         for ny, nx in ((y - 1, x), (y + 1, x), (y, x - 1), (y, x + 1)):
-            if 0 <= ny < height and 0 <= nx < width and covered[ny, nx] and depth[y, x] - depth[ny, nx] > DEPTH_JUMP:
-                inner[y, x, :3] = mat.inner_line
-                inner[y, x, 3] = 255
-                break
+            if not (0 <= ny < height and 0 <= nx < width and covered[ny, nx]):
+                continue
+            jump = depth[y, x] - depth[ny, nx]
+            if jump <= DEPTH_JUMP:
+                continue
+            # Une surface horizontale vue à 30° s'éloigne de 2,8 unités par pixel : sans ce test, chaque pixel d'un
+            # toit ou d'un plateau devenait une ligne interne. On ne trace que si l'écart rompt la pente du pixel opposé.
+            oy, ox = 2 * y - ny, 2 * x - nx
+            if (smooth_slopes and 0 <= oy < height and 0 <= ox < width and covered[oy, ox]
+                    and material[oy, ox] == material[y, x] and jump - (depth[oy, ox] - depth[y, x]) < DEPTH_JUMP * 0.6):
+                continue
+            inner[y, x, :3] = mat.inner_line
+            inner[y, x, 3] = 255
+            break
 
     # Contour sel-out extérieur : teinté du matériau adjacent, plus clair côté lumière (haut-gauche).
     outline = np.zeros_like(fill)

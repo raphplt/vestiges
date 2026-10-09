@@ -13,6 +13,7 @@ from ..palette import make_material
 from ..render import Part
 from ..sdf import capsule, cylinder, ellipsoid, rounded_box, rotation_x, rotation_y, rotation_z, sphere
 from ._kit import AXIS_X_YAW, AXIS_Y_YAW, M, PropModel, Weathering, box_footprint
+from ._surface import bands, both, noise_mask, painted, value_noise
 
 ROT_WHEEL = rotation_z(np.pi / 2)
 # Convention des primitives orientées : local = (p − centre) @ rotation, donc un point local va en monde par rotation @ local.
@@ -47,7 +48,7 @@ CAR_PAINTS = {"red": "#94503F", "teal": "#3F7379", "cream": "#BDB08A"}
 
 
 def car(stem: str, paint: str, yaw: float, seed: int) -> PropModel:
-    PAINT, GLASS, TYRE, METAL, RUST, MOSS, LAMP, TAIL = range(8)
+    PAINT, GLASS, TYRE, METAL, RUST, MOSS, LAMP, TAIL, GLINT, SEAM, MOSS_LIGHT = range(11)
     materials = [
         make_material("paint", CAR_PAINTS[paint]),
         make_material("glass", "#2A3644", contrast=0.6),
@@ -57,6 +58,9 @@ def car(stem: str, paint: str, yaw: float, seed: int) -> PropModel:
         make_material("moss", "#5C7A3A"),
         make_material("lamp", "#D8D0A8", contrast=0.4),
         make_material("tail", "#8E2F2A", contrast=0.6),
+        make_material("glint", "#8EA4B0", contrast=0.4),
+        make_material("seam", "#3A3236", contrast=0.5),
+        make_material("moss_light", "#7E9A48", contrast=0.8),
     ]
 
     def parts() -> list[Part]:
@@ -75,10 +79,24 @@ def car(stem: str, paint: str, yaw: float, seed: int) -> PropModel:
             Part(lambda p: _union(*(sphere(p, (x * 0.55 * M, 0.7 * M, 2.04 * M), 0.11 * M) for x in (-1, 1))), LAMP),
             Part(lambda p: _union(*(sphere(p, (x * 0.6 * M, 0.72 * M, -2.04 * M), 0.1 * M) for x in (-1, 1))), TAIL),
         ]
-        result.append(Part(_patches(w.surface_points(body_c, body_h, 10), 0.18 * M, 0.3 * M, w), RUST))
-        moss = w.points_on_box((0, 1.47 * M, -0.32 * M), (0.55 * M, 0.0, 0.6 * M), 1, top_only=True)
-        moss += w.points_on_box((0, 0.96 * M, 1.45 * M), (0.55 * M, 0.0, 0.4 * M), 1, top_only=True)
-        result.append(Part(lambda p: _union(*(ellipsoid(p, c, (0.24 * M, 0.06 * M, 0.22 * M)) for c in moss)), MOSS))
+        body = lambda p: rounded_box(p, body_c, body_h, 0.22 * M, sag)
+        roof = lambda p: rounded_box(p, (0, 1.4 * M, -0.32 * M), (0.75 * M, 0.07 * M, 0.82 * M), 0.06 * M, sag)
+        cabin = lambda p: rounded_box(p, (0, 1.12 * M, -0.25 * M), (0.78 * M, 0.3 * M, 1.05 * M), 0.28 * M, sag)
+        shell = lambda p: np.minimum(body(p), roof(p))
+        # Rouille peinte en coulures qui partent du bas de caisse ; mousse posée sur le toit et le capot, pas en boules.
+        rust = both(noise_mask(0.22 * M, seed + 1, 0.35), lambda p: p[:, 1] - 0.85 * M)
+        moss = both(noise_mask(0.35 * M, seed + 2, 0.4), lambda p: 0.9 * M - p[:, 1])
+        doors = both(bands(2, 1.05 * M, 0.035 * M, offset=0.35 * M), lambda p: np.abs(p[:, 1] - 0.65 * M) - 0.25 * M)
+        glint = lambda p: np.abs(p[:, 2] * 0.8 + p[:, 1] - 1.0 * M) - 0.08 * M
+        result += [
+            Part(painted(body, doors, 0.012 * M), SEAM),
+            Part(painted(shell, rust, 0.015 * M), RUST),
+            Part(painted(shell, moss, 0.02 * M), MOSS, relief=False),
+            Part(painted(shell, both(moss, noise_mask(0.15 * M, seed + 3, 0.4)), 0.024 * M), MOSS_LIGHT, relief=False),
+            Part(painted(cabin, glint, 0.012 * M), GLINT, relief=False),
+            Part(lambda p: _union(*(cylinder(p, (x * 0.94 * M, 0.32 * M, z * 1.3 * M), 0.14 * M, 0.02 * M, 0.01 * M, ROT_WHEEL)
+                                    for x in (-1, 1) for z in (-1, 1))), METAL),
+        ]
         return result
 
     return PropModel(stem, parts, materials, yaw, canvas=(110, 96), footprint=box_footprint(0.9 * M, 2.12 * M))
@@ -303,31 +321,123 @@ def torn_billboard(stem: str, seed: int) -> PropModel:
 # Gravats
 # ---------------------------------------------------------------------------------------------------------------------
 
-def concrete_debris(stem: str, seed: int) -> PropModel:
-    CONCRETE, DARK, REBAR = range(3)
+def _broken_slab(center, half, rotation, seed: int):
+    """Dalle de béton cassée : une boîte dont un bout est rongé par un bruit, bord déchiqueté au lieu d'une coupe nette."""
+    center = np.asarray(center, dtype=np.float64)
+
+    def field(p: np.ndarray) -> np.ndarray:
+        q = (p - center) @ rotation
+        slab = rounded_box(q, (0, 0, 0), half, 0.015 * M)
+        edge = (value_noise(q, 0.18 * M, seed) - 0.5) * half[0] * 0.9
+        return np.maximum(slab, (q[:, 0] - half[0] * 0.55 - edge) * 0.7)
+
+    return field
+
+
+def concrete_debris(stem: str, seed: int, kind: int) -> PropModel:
+    """
+    Gravats de béton, trois variantes : 0 deux pans de dalle cassés appuyés l'un sur l'autre, fers à béton tordus ;
+    1 tas de briques et de moellons avec un morceau d'enduit peint ; 2 tronçon de poteau couché, cage d'armature à nu.
+    Grain de gravillons peint, poussière claire au sol pour asseoir le tas.
+    """
+    CONCRETE, DARK, REBAR, AGGREGATE, BRICK, PLASTER, DUST = range(7)
     materials = [
         make_material("concrete", "#9A958A"),
-        make_material("dark", "#6B665E"),
-        make_material("rebar", "#7C4526"),
+        make_material("dark", "#76716A"),
+        make_material("rebar", "#8A4A2A"),
+        make_material("aggregate", "#6B665E", contrast=0.6),
+        make_material("brick", "#8E5644"),
+        make_material("plaster", "#B9AE96"),
+        make_material("dust", "#8C877C", contrast=0.5),
     ]
 
     def parts() -> list[Part]:
         w = Weathering(seed)
-        chunks = []
-        for index in range(4):
-            center = (w.uniform(-0.5, 0.5) * M, w.uniform(0.1, 0.25) * M, w.uniform(-0.5, 0.5) * M)
-            half = (w.uniform(0.18, 0.4) * M, w.uniform(0.1, 0.22) * M, w.uniform(0.16, 0.36) * M)
-            rot = rotation_y(w.uniform(0, np.pi)) @ rotation_z(w.uniform(-0.4, 0.4))
-            chunks.append((center, half, rot, index % 2))
-        bars = [((w.uniform(-0.3, 0.3) * M, 0.2 * M, w.uniform(-0.3, 0.3) * M),
-                 (w.uniform(-0.6, 0.6) * M, w.uniform(0.4, 0.7) * M, w.uniform(-0.6, 0.6) * M)) for _ in range(2)]
+        light, dark, bricks, rebar = [], [], [], []
+        if kind == 0:
+            light.append(_broken_slab((-0.15 * M, 0.32 * M, 0.0), (0.62 * M, 0.08 * M, 0.42 * M), rotation_z(0.45) @ rotation_y(0.2), seed))
+            dark.append(_broken_slab((0.35 * M, 0.18 * M, 0.1 * M), (0.5 * M, 0.08 * M, 0.38 * M), rotation_y(2.9) @ rotation_z(-0.25), seed + 1))
+            rebar += [((0.3 * M, 0.55 * M, -0.2 * M), (0.55 * M, 0.85 * M, -0.3 * M), (0.75 * M, 0.82 * M, -0.1 * M)),
+                      ((0.22 * M, 0.6 * M, 0.15 * M), (0.42 * M, 0.95 * M, 0.2 * M), (0.5 * M, 1.05 * M, 0.42 * M)),
+                      ((-0.2 * M, 0.25 * M, 0.35 * M), (-0.35 * M, 0.3 * M, 0.6 * M), (-0.3 * M, 0.15 * M, 0.75 * M))]
+        elif kind == 1:
+            for index in range(9):
+                angle = index * 2.39996
+                r = 0.55 * np.sqrt((index + 0.5) / 9)
+                c = (np.cos(angle) * r * M, (0.32 - r * 0.35) * M, np.sin(angle) * r * 0.75 * M)
+                rot = rotation_y(w.uniform(0, np.pi)) @ rotation_z(w.uniform(-0.4, 0.4))
+                if index % 3 == 0:
+                    bricks.append((c, (0.13 * M, 0.06 * M, 0.07 * M), rot))
+                else:
+                    (light if index % 2 else dark).append(
+                        lambda p, c=c, rot=rot, h=(w.uniform(0.12, 0.22) * M, w.uniform(0.08, 0.14) * M, w.uniform(0.1, 0.18) * M):
+                        rounded_box(p, c, h, 0.04 * M, rot))
+            for _ in range(5):
+                c = (w.uniform(-0.75, 0.75) * M, 0.05 * M, w.uniform(-0.5, 0.5) * M)
+                bricks.append((c, (0.13 * M, 0.06 * M, 0.07 * M), rotation_y(w.uniform(0, np.pi))))
+        else:
+            axis = rotation_z(np.pi / 2) @ rotation_x(0.0)
+            light.append(lambda p: np.maximum(cylinder((p - np.array([-0.1 * M, 0.26 * M, 0.0])) @ rotation_y(0.35) @ axis, (0, 0, 0), 0.24 * M,
+                                                       0.65 * M, 0.03 * M),
+                                              -sphere(p, (0.55 * M, 0.3 * M, 0.25 * M), 0.32 * M)))
+            for k in range(4):
+                t = k / 3
+                rebar.append(((0.25 * M + np.cos(t * 6.2) * 0.04 * M, 0.26 * M + np.sin(t * 6.2) * 0.16 * M, 0.12 * M),
+                              (0.55 * M, 0.35 * M + np.sin(t * 6.2) * 0.2 * M, 0.25 * M + np.cos(t * 6.2) * 0.1 * M),
+                              (0.7 * M, 0.25 * M + k * 0.08 * M, 0.45 * M)))
+            dark += [lambda p, c=c: rounded_box(p, c, (0.14 * M, 0.09 * M, 0.12 * M), 0.04 * M, rotation_y(0.7))
+                     for c in ((0.7 * M, 0.08 * M, -0.2 * M), (-0.7 * M, 0.08 * M, 0.35 * M))]
+        concrete = lambda p: _union(*(f(p) for f in light + dark)) if light or dark else np.full(len(p), np.inf)
+        result = [
+            Part(lambda p: _union(*(f(p) for f in light)) if light else np.full(len(p), np.inf), CONCRETE),
+            Part(lambda p: _union(*(f(p) for f in dark)) if dark else np.full(len(p), np.inf), DARK),
+            Part(painted(concrete, noise_mask(0.06 * M, seed + 4, 0.2), 0.01 * M), AGGREGATE, relief=False),
+            Part(lambda p: np.maximum(ellipsoid(p, (0.0, 0.0, 0.05 * M), (0.95 * M, 0.03 * M, 0.6 * M)),
+                                      noise_mask(0.25 * M, seed + 5, 0.7)(p)), DUST),
+        ]
+        if rebar:
+            result.append(Part(lambda p: _union(*(np.minimum(capsule(p, a, b, 0.028 * M), capsule(p, b, c, 0.028 * M)) for a, b, c in rebar)), REBAR))
+        if bricks:
+            result.append(Part(lambda p: _union(*(rounded_box(p, c, h, 0.015 * M, r) for c, h, r in bricks)), BRICK))
+        if kind == 1:
+            result.append(Part(lambda p: rounded_box(p, (-0.2 * M, 0.42 * M, -0.15 * M), (0.3 * M, 0.025 * M, 0.22 * M), 0.01 * M,
+                                                     rotation_z(0.6) @ rotation_y(0.4)), PLASTER))
+        return result
+
+    return PropModel(stem, parts, materials, AXIS_X_YAW, canvas=(72, 56))
+
+
+def overturned_desk(stem: str, seed: int) -> PropModel:
+    """Bureau d'école renversé sur le flanc : plateau dressé, pieds de tube, tiroir tombé devant, feuilles éparpillées."""
+    WOOD, WOOD_DARK, TUBE, DRAWER, PAPER, PAPER_SHADE = range(6)
+    materials = [
+        make_material("wood", "#9A7450"), make_material("wood_dark", "#6E4E34", contrast=0.8),
+        make_material("tube", "#6E726E"), make_material("drawer", "#86603E"),
+        make_material("paper", "#D8D2C0", contrast=0.5), make_material("paper_shade", "#B4AC98", contrast=0.5),
+    ]
+
+    def parts() -> list[Part]:
+        w = Weathering(seed)
+        # Plateau dressé à la verticale, tourné vers la caméra ; caisson dessous, pieds pointés vers l'arrière.
+        top = lambda p: rounded_box(p, (0.0, 0.42 * M, 0.0), (0.62 * M, 0.4 * M, 0.035 * M), 0.015 * M, rotation_x(-0.12))
+        caisson = lambda p: rounded_box(p, (0.25 * M, 0.25 * M, -0.28 * M), (0.3 * M, 0.2 * M, 0.25 * M), 0.02 * M)
+        legs = [((x * 0.55 * M, y * M, -0.05 * M), (x * 0.55 * M, y * M, -0.62 * M)) for x in (-1, 1) for y in (0.12, 0.68)]
+        drawer_c = (0.55 * M, 0.08 * M, 0.42 * M)
+        drawer = lambda p: np.maximum(rounded_box(p, drawer_c, (0.25 * M, 0.08 * M, 0.2 * M), 0.015 * M, rotation_y(0.5)),
+                                      -rounded_box(p, (drawer_c[0], drawer_c[1] + 0.05 * M, drawer_c[2]), (0.21 * M, 0.08 * M, 0.16 * M), 0.0, rotation_y(0.5)))
+        sheets = [((w.uniform(-0.75, 0.2) * M, 0.012 * M, w.uniform(0.25, 0.7) * M), w.uniform(0, np.pi), k % 2) for k in range(5)]
         return [
-            Part(lambda p: _union(*(rounded_box(p, c, h, 0.05 * M, r) for c, h, r, k in chunks if k == 0)), CONCRETE),
-            Part(lambda p: _union(*(rounded_box(p, c, h, 0.05 * M, r) for c, h, r, k in chunks if k == 1)), DARK),
-            Part(lambda p: _union(*(capsule(p, a, b, 0.03 * M) for a, b in bars)), REBAR),
+            Part(top, WOOD),
+            Part(painted(top, bands(0, 0.3 * M, 0.02 * M), 0.01 * M), WOOD_DARK),
+            Part(caisson, WOOD_DARK),
+            Part(lambda p: _union(*(capsule(p, a, b, 0.03 * M) for a, b in legs)), TUBE),
+            Part(drawer, DRAWER),
+            Part(lambda p: _union(*(rounded_box(p, c, (0.11 * M, 0.006 * M, 0.08 * M), 0.002 * M, rotation_y(a)) for c, a, k in sheets if k == 0)), PAPER),
+            Part(lambda p: _union(*(rounded_box(p, c, (0.11 * M, 0.006 * M, 0.08 * M), 0.002 * M, rotation_y(a) @ rotation_x(0.2))
+                                    for c, a, k in sheets if k == 1)), PAPER_SHADE),
         ]
 
-    return PropModel(stem, parts, materials, AXIS_X_YAW, canvas=(64, 48))
+    return PropModel(stem, parts, materials, float(np.radians(20.0)), canvas=(64, 52), footprint=box_footprint(0.62 * M, 0.35 * M))
 
 
 def steel_beam(stem: str, diagonal: bool, seed: int) -> PropModel:
@@ -351,8 +461,8 @@ def steel_beam(stem: str, diagonal: bool, seed: int) -> PropModel:
             bottom = rounded_box(p, np.asarray(center) - rot @ np.array([0, 0.18 * M, 0]), (0.14 * M, 0.025 * M, length), 0.01 * M, rot)
             return _union(web, top, bottom)
 
-        spots = [np.asarray(center) + rot @ np.array([0, w.uniform(-0.15, 0.2) * M, w.uniform(-1.3, 1.3) * M]) for _ in range(5)]
-        result = [Part(beam, STEEL), Part(_spots(spots, 0.07 * M, 0.13 * M, w), RUST)]
+        rust = noise_mask(0.2 * M, seed + 1, 0.4, (1.0, 1.0, 3.0), frame=lambda q: (q - np.asarray(center)) @ rot)
+        result = [Part(beam, STEEL), Part(painted(beam, rust, 0.012 * M), RUST)]
         if diagonal:
             result.append(Part(lambda p: rounded_box(p, (0, 0.33 * M, 1.3 * M), (0.45 * M, 0.33 * M, 0.35 * M), 0.06 * M,
                                                       rotation_y(0.3)), CONCRETE))
@@ -379,9 +489,10 @@ def catalog() -> list[PropModel]:
         bus_shelter("prop_bus_shelter", 75),
         chain_link_fence("prop_chain_link_fence", 81),
         torn_billboard("prop_torn_billboard", 91),
-        concrete_debris("prop_concrete_debris", 101),
-        concrete_debris("prop_concrete_debris_v2", 102),
-        concrete_debris("prop_concrete_debris_v3", 103),
+        concrete_debris("prop_concrete_debris", 101, 0),
+        concrete_debris("prop_concrete_debris_v2", 102, 1),
+        concrete_debris("prop_concrete_debris_v3", 103, 2),
+        overturned_desk("prop_overturned_desk", 121),
         steel_beam("prop_steel_beam", False, 111),
         steel_beam("prop_steel_beam_diagonal", True, 112),
     ]
