@@ -22,6 +22,7 @@ public partial class Indicible : Node2D, ICrowdMember
 	private bool _isActive;
 	/// <summary>Rang dans <see cref="CrowdIndex"/>, −1 hors de l'index ; tenu par l'index.</summary>
 	public int CrowdSlot { get; set; } = -1;
+	public Vector2 CrowdPush { get; set; }
 	private int _phase; // 0 = idle, 1 = active (HP > 50%), 2 = enraged (HP <= 50%)
 
 	private Player _player;

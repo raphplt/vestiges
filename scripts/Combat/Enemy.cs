@@ -207,6 +207,7 @@ public partial class Enemy : Node2D, ICrowdMember
 	internal int TickSlot { get; set; } = -1;
 	/// <summary>Rang dans <see cref="CrowdIndex"/>, −1 quand la créature n'est plus une cible ; tenu par l'index.</summary>
 	public int CrowdSlot { get; set; } = -1;
+	public Vector2 CrowdPush { get; set; }
 	private bool _ticking;
 	public bool IsDying => _isDying;
 	public float HpRatio => _maxHp > 0 ? _currentHp / _maxHp : 0f;
@@ -743,7 +744,7 @@ public partial class Enemy : Node2D, ICrowdMember
 		// poussent sans être poussés ; une créature figée ne fait pas de pas.
 		if (separate && _speed > 0f && _tier is not (EnemyTier.Miniboss or EnemyTier.Boss))
 		{
-			Vector2 push = CrowdIndex.SeparationPush(this, GlobalPosition, CrowdDataLoader.SeparationRadius)
+			Vector2 push = CrowdSeparation.PushFor(this, CrowdDataLoader.SeparationRadius)
 				.LimitLength(CrowdDataLoader.SeparationMaxPush);
 			Velocity += push * (_speed * MoveFactor * CrowdDataLoader.SeparationStrength);
 		}

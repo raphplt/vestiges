@@ -144,3 +144,20 @@ Créatures de la horde sans nœud : dessin direct par le `RenderingServer` dans 
 **Vérifications** : build sans avertissement ; validation complète 32/32 après correction de deux tests qui simulaient l'ancienne physique (`OnBodyEntered` par réflexion, orbes en `Area2D`) ; suite `weapons` avec les six nouveaux contrôles ; relecture `godot-reviewer` : décors d'une run précédente, reconstruction complète de la grille à chaque ajout, polygones dégénérés, frappe d'une créature tuée entre la collecte et le coup, constante en double ; tous corrigés.
 
 **Pas fait** : le banc de coût (FPS, découpage) et les captures de foule contre un décor, reportés : la machine faisait tourner un jeu pendant toute la fin de session. À faire avant de relever le plafond.
+
+### Mesure après B et séparation par lot — 9 octobre 2026
+
+Banc hors quota, machine calme (charge 1,4 à 2,5), une passe, début de session (`067844ba`) contre le code courant :
+
+| Créatures | FPS avant → après | p99 avant → après |
+|---|---|---|
+| 400 | 49 → 96 | 35 → 15 ms |
+| 600 | 7 → 62 | 321 → 23 ms |
+| 1 000 | 3,7 → 27 | 444 → 59 ms |
+| 1 500 | — → 8 | — → 330 ms |
+
+Le lot B a fait tomber le pas du moteur physique (à 1 000 : 74 → 12 ms par image), mais 1 000 créatures restaient à 6 FPS. Sondes temporaires : le déplacement ne coûte qu'1 µs par créature (lecture de position 0,09, obstacles 0,46, écriture 0,45) ; c'est la **séparation** qui prenait 12,8 ms par tick à 1 000, chaque créature parcourant des centaines de voisines dans 9 cases de 64 px. Le profileur .NET l'attribuait à tort au déplacement : il impute au code managé le temps natif qui précède l'échantillon suivant.
+
+Correction : `CrowdSeparation` calcule toutes les poussées en une passe par tick, sur une grille dont la case vaut le rayon de séparation, triée par case en mémoire contiguë ; chaque paire n'est examinée qu'une fois et pousse les deux créatures. Même règle de poussée qu'avant.
+
+Reste à 1 000, par image : scripts physiques 15,5 ms (2,2 ticks par image, 7 ms par tick), `_Process` 11,7 ms, rendu 5,5 ms, pas du moteur 3,7 ms. Suite : lot C.
