@@ -93,6 +93,8 @@ public partial class Enemy : CharacterBody2D, ICrowdMember
 	// Plusieurs coups rapprochés se cumulent sans dépasser ce recul total (px) : la créature recule, elle ne s'envole pas.
 	private const float MaxKnockbackDistance = 80f;
 	private Vector2 _knockVelocity;
+	// Créature de mêlée arrêtée contre le joueur : elle reste tournée vers lui et garde son pas (plan 29 F2).
+	private bool _pressingPlayer;
 
 	// V2: structures retirees — FindNearestStructure retourne toujours null
 
@@ -658,6 +660,7 @@ public partial class Enemy : CharacterBody2D, ICrowdMember
 		}
 
 		float distToPlayer = Mathf.Sqrt(distToPlayerSq);
+		_pressingPlayer = false;
 
 		// Figée (Berceuse, Arrêt sur image, Glaçon) : ni pas, ni attaque, ni capacité, et l'annonce en cours tombe ; le
 		// recul la pousse encore. Mini-boss et boss, que le recul ne pousse pas, gardent leurs coups : sinon une arme
@@ -667,7 +670,7 @@ public partial class Enemy : CharacterBody2D, ICrowdMember
 			CancelAbilities();
 			Velocity = Vector2.Zero;
 			UpdateSpriteAnimation(dt);
-			MoveWithKnockback(dt);
+			MoveWithKnockback(dt, separate: false);
 			return;
 		}
 
@@ -721,8 +724,16 @@ public partial class Enemy : CharacterBody2D, ICrowdMember
 	/// Déplacement du tick, recul compris. Le recul s'ajoute à la vitesse choisie par le comportement au lieu d'être
 	/// écrasé par elle ; il décroît de façon exponentielle et parcourt au total la distance demandée.
 	/// </summary>
-	private void MoveWithKnockback(float delta)
+	private void MoveWithKnockback(float delta, bool separate = true)
 	{
+		// Séparation (plan 29 F2) : la créature s'écarte de ses voisines au lieu de s'empiler. Mini-boss et boss
+		// poussent sans être poussés ; une créature figée ne fait pas de pas.
+		if (separate && _speed > 0f && _tier is not (EnemyTier.Miniboss or EnemyTier.Boss))
+		{
+			Vector2 push = CrowdIndex.SeparationPush(this, GlobalPosition, CrowdDataLoader.SeparationRadius)
+				.LimitLength(CrowdDataLoader.SeparationMaxPush);
+			Velocity += push * (_speed * MoveFactor * CrowdDataLoader.SeparationStrength);
+		}
 		if (_knockVelocity != Vector2.Zero)
 		{
 			Velocity += _knockVelocity;
@@ -897,7 +908,9 @@ public partial class Enemy : CharacterBody2D, ICrowdMember
 			return;
 		}
 		Vector2 direction = (_player.GlobalPosition - GlobalPosition).Normalized();
-		Velocity = direction * _speed * MoveFactor;
+		// Au contact, elle pousse contre le joueur au lieu de viser son centre : la foule fait front (plan 29 F2).
+		_pressingPlayer = distToPlayer < CrowdDataLoader.ContactDistance;
+		Velocity = _pressingPlayer ? Vector2.Zero : direction * _speed * MoveFactor;
 
 		_attackTimer -= delta;
 		if (!_abilityReplacesAttack && distToPlayer < MeleeRange && _attackTimer <= 0f)
@@ -1620,7 +1633,7 @@ public partial class Enemy : CharacterBody2D, ICrowdMember
 		bool moving = Velocity.LengthSquared() > 1f;
 		if (moving)
 			_facing.Update(Velocity);
-		else if (_attackAnimTimer > 0f && _player != null && IsInstanceValid(_player))
+		else if ((_attackAnimTimer > 0f || _pressingPlayer) && _player != null && IsInstanceValid(_player))
 		{
 			Vector2 toPlayer = _player.GlobalPosition - GlobalPosition;
 			if (toPlayer.LengthSquared() > 1f)
@@ -1632,7 +1645,7 @@ public partial class Enemy : CharacterBody2D, ICrowdMember
 			action = SpriteAction.Death;
 		else if (_attackAnimTimer > 0f)
 			action = SpriteAction.Attack;
-		else if (moving)
+		else if (moving || _pressingPlayer)
 			action = SpriteAction.Walk;
 		else
 			action = SpriteAction.Idle;

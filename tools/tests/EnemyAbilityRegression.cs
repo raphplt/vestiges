@@ -226,6 +226,7 @@ public partial class EnemyAbilityRegression : Node2D
         await Step(30);
         enemy.Position = _player.Position + new Vector2(60f, 0f);
         body = enemy.Position;
+        CrowdIndex.MarkMoved();
         LevelUpFx.Play(_player);
         bool pushed = shown.Position.X > 1f && enemy.Position == body;
         bool noFlash = !(sprite.Visible && sprite.Material is ShaderMaterial shoveMaterial)

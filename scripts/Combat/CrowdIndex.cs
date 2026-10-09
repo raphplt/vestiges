@@ -118,6 +118,44 @@ public static class CrowdIndex
 		}
 	}
 
+	/// <summary>
+	/// Poussée qui écarte <paramref name="self"/> des cibles à moins de <paramref name="radius"/> : somme des directions
+	/// opposées, pondérées de 1 au contact à 0 au bord (plan 29 F2). Lit les positions de la grille, sans interop.
+	/// </summary>
+	public static Vector2 SeparationPush(Node2D self, Vector2 position, float radius)
+	{
+		Refresh();
+		float radiusSq = radius * radius;
+		int cx = Cell(position.X), cy = Cell(position.Y);
+		int reach = Mathf.CeilToInt(radius / CellSize);
+		Vector2 push = Vector2.Zero;
+		for (int x = cx - reach; x <= cx + reach; x++)
+		{
+			for (int y = cy - reach; y <= cy + reach; y++)
+			{
+				Vector2I cell = new(x, y);
+				for (int i = Heads[Hash(x, y)]; i >= 0; i = _next[i])
+				{
+					if (_cells[i] != cell || _grid[i] == self)
+						continue;
+					Vector2 away = position - _positions[i];
+					float distanceSq = away.LengthSquared();
+					if (distanceSq >= radiusSq)
+						continue;
+					// Deux créatures confondues : une direction propre à chacune, stable d'un tick à l'autre.
+					if (distanceSq < 0.0001f)
+					{
+						push += Vector2.FromAngle(i * 2.3999632f);
+						continue;
+					}
+					float distance = Mathf.Sqrt(distanceSq);
+					push += away / distance * (1f - distance / radius);
+				}
+			}
+		}
+		return push;
+	}
+
 	private static void Accept(int index, Vector2 center, float reachSq, List<Node2D> into)
 	{
 		Node2D target = _grid[index];

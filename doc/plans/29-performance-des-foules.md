@@ -75,7 +75,7 @@ Cible : 1 000 créatures à 60 FPS au banc dense (16,7 ms par image), puis 2 000
 
 Registre C# des créatures ciblables, positions relevées une fois par tick, grille de hachage. Il remplace les 30 parcours de `GroupCache.GetEnemies()` (ciblage de chaque arme, tête chercheuse de chaque projectile, objets, auras, herbe foulée, bonus de meute, apparitions, musique), qui reconstruisent un tableau Godot de toutes les créatures et le relisent élément par élément à travers l'interop. Coût actuel : armes × créatures, projectiles × créatures, créatures × créatures pour la meute. Invisible.
 
-### F2 — Séparation et arrêt au contact (validé avec planche, §83)
+### F2 — Séparation et arrêt au contact (livré et gardé le 9 octobre, §83)
 
 Sur la grille de A : chaque créature est poussée hors de ses voisines et s'arrête au contact du joueur au lieu de viser son centre. La horde forme un front au lieu d'une pile. Prototype : `MoveAndSlide` contre un mur ÷ 2,5. Captures avant/après à montrer avant de garder.
 
@@ -120,3 +120,14 @@ Créatures de la horde sans nœud : dessin direct par le `RenderingServer` dans 
 **Mesure** : sans effet visible sur ce banc. Base F1 contre A, hors quota, 1080p : 400 créatures 57,9 → 57,8 FPS avec Boussole, Chaîne des noms, Cloche et Gants d'écho ; 600 créatures 33 → 34 FPS, dans le bruit. Le banc reste dominé par la physique ; le lot A retire les coûts armes × créatures et projectiles × créatures qui pèseront à plusieurs milliers, et donne à F2 et B leur grille. Le bloc mesuré sans build est écarté : un autre jeu (Graffwall) tournait à 211 % CPU pendant la mesure.
 
 **Vérifications** : build sans avertissement ; `tools/validate.sh` 32/32 (une première passe à 31/32 : `ObjectsRegression` forçait par réflexion le cache de groupe supprimé, remplacé par `CrowdIndex.MarkMoved()`) ; relecture `godot-reviewer` : rayons des 30 sites vérifiés un par un, remarques de propreté traitées (un type public par fichier, code mort, commentaires).
+
+### F2 livré — 9 octobre 2026
+
+- **Séparation** : chaque créature (hors mini-boss et boss, qui poussent sans être poussés, et hors créature figée) s'écarte des cibles à moins de 26 px, d'une poussée calculée par `CrowdIndex.SeparationPush` sur les positions de la grille, sans interop. La poussée, plafonnée, pèse jusqu'à 90 % de sa vitesse.
+- **Arrêt au contact** : une créature de mêlée s'arrête à 22 px du joueur au lieu de viser son centre ; elle reste tournée vers lui et garde son pas. La portée de ses coups (38 px) ne change pas.
+- **Réglages** en données : `data/scaling/crowd.json` (`separation_radius_px`, `separation_strength`, `separation_max_push`, `contact_distance_px`), lus par `CrowdDataLoader`.
+- **Planche** : [29-f2-separation.png](planches/29-f2-separation.png), banc dense à 240 et 400 créatures. Avant, les 333 Ombres s'empilent en un point sous le joueur et sont invisibles ; après, elles forment un disque autour de lui, les Cracheurs un anneau à distance.
+- **En run** (`measure_run.sh`, 5 min, bot invincible, graines 42 et 1002, avant → après) : coups reçus par minute de 0 à 4 min 1 375 → 1 437 et 781 → 1 118, de 4 à 5 min 1 822 → 1 511 et 1 747 → 2 066 ; éliminations 344 → 402 et 319 → 377 (+17 %, la foule étalée offre plus de cibles aux tirs et aux zones).
+- **Coût** non mesuré : la machine était chargée (Unity, Graffwall) pendant cette session. À mesurer avec le lot B.
+
+**Vérifications** : build sans avertissement ; validation complète 31/32 puis les dix suites de combat 10/10 après correction d'un test qui téléportait une créature sans prévenir l'index (`CrowdIndex.MarkMoved()`).

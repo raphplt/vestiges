@@ -939,3 +939,4 @@ Raphaël valide explicitement « cloche b et boite a musique c » dans la série
 - Mesure hors quota : Raphaël choisit que l'agent lance les bancs par `systemd-run --user --scope` (scope sans quota), sans toucher à la configuration de Zed.
 - Après F1, sur le plafond : « alors enfait c'est bien d'avoir corrigé le banc mais ca ne règle pas le probleme. le jeu ne devrait pas galérer à afficher des centaines de créatures (potentiellemnt des milliers). je me répète mais tous les autres jeux du genre bullet heaven y arrivent tres bien... » Objectif du plan 29 relevé : des milliers de créatures, pas un plafond grappillé. Le plafond reste à 200 tant que l'architecture n'a pas changé.
 - F2 (séparation, arrêt au contact) : « Oui, avec planche ». À implémenter, mesurer, puis montrer des captures avant/après avant de garder.
+- Planche F2 (séparation, arrêt au contact) : « Garder tel quel ». Gardé avec les réglages de `data/scaling/crowd.json`.

@@ -1,0 +1,6 @@
+{
+    "separation_radius_px": 26,
+    "separation_strength": 0.9,
+    "separation_max_push": 1.5,
+    "contact_distance_px": 22
+}
