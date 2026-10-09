@@ -261,7 +261,7 @@ public partial class EnemyAbilityRegression : Node2D
         Enemy dirty = pool.Get();
         AddChild(dirty);
         dirty.Initialize(EnemyDataLoader.Get("void_brute"), 1f, 1f);
-        dirty.SetPhysicsProcess(false);
+        dirty.SetTicking(false);
         dirty.ApplyVariant(EnemyVariantDataLoader.GetVariant("aberration"),
             new List<EnemyAffixData> { EnemyVariantDataLoader.GetAffix("swift") });
         dirty.ApplyIgnite(5f, 10f);
@@ -282,7 +282,7 @@ public partial class EnemyAbilityRegression : Node2D
         AddChild(reused);
         EnemyData rodeur = EnemyDataLoader.Get("rodeur");
         reused.Initialize(rodeur, 1f, 1f);
-        reused.SetPhysicsProcess(false);
+        reused.SetTicking(false);
         await ToSignal(GetTree(), SceneTree.SignalName.PhysicsFrame);
 
         Check(!reused.Modifiers.IsVariant && reused.Modifiers.Affixes.Count == 0 && !reused.Modifiers.IsTraveling,
@@ -506,7 +506,7 @@ public partial class EnemyAbilityRegression : Node2D
         // Une capacité réutilisée ne doit pas transmettre la cadence du Hurleur au Cracheur suivant.
         Enemy recycled = await SpawnReady("hurleur", new Vector2(-150f, 0f));
         recycled.Initialize(EnemyDataLoader.Get("fading_spitter"), 1000f, 1f);
-        recycled.SetPhysicsProcess(false);
+        recycled.SetTicking(false);
         var abilities = (Dictionary<EnemyAbilityKind, IEnemyAbility>)typeof(Enemy)
             .GetField("_abilityCache", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(recycled);
         IEnemyAbility recycledShot = abilities[EnemyAbilityKind.AimedShot];
@@ -591,7 +591,7 @@ public partial class EnemyAbilityRegression : Node2D
         Enemy enemy = EnemyScene.Instantiate<Enemy>();
         AddChild(enemy);
         enemy.Initialize(EnemyDataLoader.Get(id), hpScale, 1f);
-        enemy.SetPhysicsProcess(false);
+        enemy.SetTicking(false);
         enemy.Position = _player.Position + offsetFromPlayer;
         _enemies.Add(enemy);
         await ToSignal(GetTree(), SceneTree.SignalName.PhysicsFrame);
@@ -637,7 +637,7 @@ public partial class EnemyAbilityRegression : Node2D
             _player._PhysicsProcess(Dt);
             foreach (Enemy enemy in _enemies)
                 if (IsInstanceValid(enemy) && enemy.IsActive)
-                    enemy._PhysicsProcess(Dt);
+                    enemy.PhysicsTick(Dt);
         }
     }
 

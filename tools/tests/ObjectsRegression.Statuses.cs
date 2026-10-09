@@ -126,10 +126,9 @@ public partial class ObjectsRegression
         Enemy shooter = GD.Load<PackedScene>("res://scenes/enemies/Enemy.tscn").Instantiate<Enemy>();
         AddChild(shooter);
         shooter.Initialize(EnemyDataLoader.Get("fading_spitter"), 1f, 1f);
-        shooter.SetPhysicsProcess(false);
+        shooter.SetTicking(false);
         shooter.Position = _player.Position + new Vector2(450f, 0f);
         FieldInfo player = typeof(Enemy).GetField("_player", Private);
-        MethodInfo physics = typeof(Enemy).GetMethod("_PhysicsProcess");
         foreach (Enemy enemy in new[] { melee, shooter })
         {
             player.SetValue(enemy, _player);
@@ -138,8 +137,8 @@ public partial class ObjectsRegression
         float hp = _player.CurrentHp;
         for (int frame = 0; frame < 120; frame++)
         {
-            physics.Invoke(melee, new object[] { 1.0 / 60.0 });
-            physics.Invoke(shooter, new object[] { 1.0 / 60.0 });
+            melee.PhysicsTick(1.0 / 60.0);
+            shooter.PhysicsTick(1.0 / 60.0);
         }
         float frozenLoss = hp - _player.CurrentHp;
         // Hors d'une image physique du moteur, MoveAndSlide ne déplace pas le corps : on lit la vitesse choisie par l'IA.
@@ -149,8 +148,8 @@ public partial class ObjectsRegression
         hp = _player.CurrentHp;
         for (int frame = 0; frame < 120; frame++)
         {
-            physics.Invoke(melee, new object[] { 1.0 / 60.0 });
-            physics.Invoke(shooter, new object[] { 1.0 / 60.0 });
+            melee.PhysicsTick(1.0 / 60.0);
+            shooter.PhysicsTick(1.0 / 60.0);
         }
         float freeLoss = hp - _player.CurrentHp;
         float freeWalk = shooter.Velocity.Length();
@@ -226,9 +225,8 @@ public partial class ObjectsRegression
         typeof(Enemy).GetField("_player", Private).SetValue(boss, _player);
         boss.Freeze(2.5f);
         float hp = _player.CurrentHp;
-        MethodInfo physics = typeof(Enemy).GetMethod("_PhysicsProcess");
         for (int frame = 0; frame < 120; frame++)
-            physics.Invoke(boss, new object[] { 1.0 / 60.0 });
+            boss.PhysicsTick(1.0 / 60.0);
         Check(hp - _player.CurrentHp > 0f, $"Mini-boss figé : il frappe encore ({hp - _player.CurrentHp:0.0} PV en 2 s)");
         boss.QueueFree();
     }

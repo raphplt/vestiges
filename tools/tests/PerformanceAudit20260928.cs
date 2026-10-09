@@ -244,6 +244,7 @@ public partial class PerformanceAudit20260928 : Node
             Enemy enemy = pool.Get(); container.AddChild(enemy);
             enemy.Initialize(EnemyDataLoader.Get("shade"), 100000f, 1f);
             enemy.DisableMode = CollisionObject2D.DisableModeEnum.KeepActive;
+            enemy.SetTicking(false);
             enemy.ProcessMode = ProcessModeEnum.Disabled;
             enemy.Position = new Vector2(80 + i % 20, (i % 3 - 1) * 2);
             enemies[i] = enemy;
@@ -277,7 +278,7 @@ public partial class PerformanceAudit20260928 : Node
                             case "animation": animations[i](1f / 60); break;
                             case "move": moves[i](1f / 60); break;
                             case "behavior": ai[i](1f / 60); break;
-                            case "physics_total": enemy._PhysicsProcess(1.0 / 60); break;
+                            case "physics_total": enemy.PhysicsTick(1.0 / 60); break;
                         }
                     }
                     times[sample] = Stopwatch.GetElapsedTime(start).TotalMilliseconds;
@@ -294,7 +295,7 @@ public partial class PerformanceAudit20260928 : Node
             for (int tick = 0; tick < 600; tick++)
             {
                 enemy.GlobalPosition = new Vector2(radius, 0);
-                enemy._PhysicsProcess(1.0 / 60);
+                enemy.PhysicsTick(1.0 / 60);
             }
             _results.Add(new { kind = "far_status", radius, simulated_seconds = 10,
                 slow_remaining = Get<float>(enemy, "_slowTimer"), slow_factor = Get<float>(enemy, "_slowFactor"),

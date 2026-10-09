@@ -1096,7 +1096,7 @@ public partial class ObjectsRegression : Node2D
         Enemy enemy = GD.Load<PackedScene>("res://scenes/enemies/Enemy.tscn").Instantiate<Enemy>();
         AddChild(enemy);
         enemy.Initialize(EnemyDataLoader.Get("rodeur"), 1f, 1f);
-        enemy.SetPhysicsProcess(false);
+        enemy.SetTicking(false);
         enemy.Position = new Vector2(1000f, 1000f);
         return enemy;
     }

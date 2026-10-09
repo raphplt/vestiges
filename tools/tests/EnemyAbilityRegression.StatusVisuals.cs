@@ -122,14 +122,14 @@ public partial class EnemyAbilityRegression
         Enemy dirty = pool.Get();
         AddChild(dirty);
         dirty.Initialize(EnemyDataLoader.Get("rodeur"), 1000f, 1f);
-        dirty.SetPhysicsProcess(false);
+        dirty.SetTicking(false);
         dirty.Position = _player.Position + new Vector2(140f, 0f);
         dirty.Freeze(10f);
         dirty.ApplyFragile(0.2f, 10f);
         dirty.ApplyIgnite(1f, 10f);
         dirty.ApplyDisorient(10f);
         await ToSignal(GetTree(), SceneTree.SignalName.PhysicsFrame);
-        dirty._PhysicsProcess(Dt);
+        dirty.PhysicsTick(Dt);
         pool.Return(dirty);
         await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
         Check(dirty.GetNode<AnimatedSprite2D>("Sprite").SpeedScale == 1f, "Pool : cadence remise à 1 dès le retour, avant tout tick");
@@ -137,10 +137,10 @@ public partial class EnemyAbilityRegression
         Enemy reused = pool.Get();
         AddChild(reused);
         reused.Initialize(EnemyDataLoader.Get("rodeur"), 1000f, 1f);
-        reused.SetPhysicsProcess(false);
+        reused.SetTicking(false);
         reused.Position = dirty.Position;
         await ToSignal(GetTree(), SceneTree.SignalName.PhysicsFrame);
-        reused._PhysicsProcess(Dt);
+        reused.PhysicsTick(Dt);
         AnimatedSprite2D sprite = reused.GetNode<AnimatedSprite2D>("Sprite");
         bool neutral = sprite.Material is ShaderMaterial material
             && TintAlpha(material) == 0f

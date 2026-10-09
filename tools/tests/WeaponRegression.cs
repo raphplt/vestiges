@@ -79,7 +79,7 @@ public partial class WeaponRegression : Node2D
         {
             AddChild(enemy);
             enemy.Initialize(EnemyDataLoader.Get("rodeur"), 1000f, 1f);
-            enemy.SetPhysicsProcess(false);
+            enemy.SetTicking(false);
         }
         beside.Position = center + new Vector2(radius * 0.8f, 0f);
         below.Position = center + new Vector2(0f, radius * 0.8f);
@@ -151,7 +151,7 @@ public partial class WeaponRegression : Node2D
         Enemy enemy = EnemyScene.Instantiate<Enemy>();
         AddChild(enemy);
         enemy.Initialize(EnemyDataLoader.Get("rodeur"), 1000f, 1f);
-        enemy.SetPhysicsProcess(false);
+        enemy.SetTicking(false);
         enemy.GlobalPosition = _player.GlobalPosition + offset;
         return enemy;
     }
@@ -161,7 +161,7 @@ public partial class WeaponRegression : Node2D
     {
         enemy.Reset();
         enemy.Initialize(EnemyDataLoader.Get("rodeur"), 1000f, 1f);
-        enemy.SetPhysicsProcess(false);
+        enemy.SetTicking(false);
         enemy.GlobalPosition = _player.GlobalPosition + offset;
     }
 
@@ -174,7 +174,7 @@ public partial class WeaponRegression : Node2D
         Enemy enemy = EnemyScene.Instantiate<Enemy>();
         AddChild(enemy);
         enemy.Initialize(EnemyDataLoader.Get("rodeur"), 1000f, 1f);
-        enemy.SetPhysicsProcess(false);
+        enemy.SetTicking(false);
         float orbit = _player.GetWeaponStatForDisplay(FindSlot("music_box"), "range");
         enemy.Position = _player.Position + Iso.ToScreen(new Vector2(orbit, 0f));
         for (int frame = 0; frame < 180 && _player.GetDamageDealt("music_box") <= 0f; frame++)
@@ -197,7 +197,7 @@ public partial class WeaponRegression : Node2D
         Enemy enemy = EnemyScene.Instantiate<Enemy>();
         AddChild(enemy);
         enemy.Initialize(EnemyDataLoader.Get("rodeur"), 1000f, 1f);
-        enemy.SetPhysicsProcess(false);
+        enemy.SetTicking(false);
         enemy.Position = _player.Position + new Vector2(80f, 0f);
         await ToSignal(GetTree(), SceneTree.SignalName.PhysicsFrame);
 
@@ -488,7 +488,7 @@ public partial class WeaponRegression : Node2D
         Enemy enemy = EnemyScene.Instantiate<Enemy>();
         AddChild(enemy);
         enemy.Initialize(EnemyDataLoader.Get("rodeur"), 1f, 1f);
-        enemy.SetPhysicsProcess(false);
+        enemy.SetTicking(false);
         enemy.Position = new Vector2(4000f, 4000f);
         player.OnProjectileHit(enemy, 1f, false, box);
         float frozen = (float)typeof(Enemy).GetField("_freezeTimer", Private).GetValue(enemy);
@@ -511,7 +511,7 @@ public partial class WeaponRegression : Node2D
         Enemy frozenTarget = EnemyScene.Instantiate<Enemy>();
         AddChild(frozenTarget);
         frozenTarget.Initialize(EnemyDataLoader.Get("rodeur"), 1f, 1f);
-        frozenTarget.SetPhysicsProcess(false);
+        frozenTarget.SetTicking(false);
         frozenTarget.Position = new Vector2(6000f, 6000f);
         player.OnProjectileHit(frozenTarget, 1f, false, clock);
         float stopped = (float)typeof(Enemy).GetField("_freezeTimer", Private).GetValue(frozenTarget);
@@ -660,6 +660,7 @@ public partial class WeaponRegression : Node2D
         Enemy enemy = EnemyScene.Instantiate<Enemy>();
         AddChild(enemy);
         enemy.Initialize(EnemyDataLoader.Get("rodeur"), 100000f, 1f);
+        enemy.SetTicking(false);
         enemy.ProcessMode = ProcessModeEnum.Disabled;
         try
         {
@@ -754,7 +755,7 @@ public partial class WeaponRegression : Node2D
         Enemy enemy = EnemyScene.Instantiate<Enemy>();
         AddChild(enemy);
         enemy.Initialize(EnemyDataLoader.Get("rodeur"), 100000f, 1f);
-        enemy.SetPhysicsProcess(false);
+        enemy.SetTicking(false);
         enemy.Position = player.Position + new Vector2(90f, 0f);
         int hits = 0;
         int attackSounds = 0;
@@ -850,7 +851,7 @@ public partial class WeaponRegression : Node2D
         Enemy enemy = EnemyScene.Instantiate<Enemy>();
         AddChild(enemy);
         enemy.Initialize(EnemyDataLoader.Get("rodeur"), 100000f, 1f);
-        enemy.SetPhysicsProcess(false);
+        enemy.SetTicking(false);
         enemy.Position = _player.Position + new Vector2(40f, 0f);
         await ToSignal(GetTree(), SceneTree.SignalName.PhysicsFrame);
 

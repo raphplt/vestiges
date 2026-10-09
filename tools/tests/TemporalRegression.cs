@@ -65,7 +65,7 @@ public partial class TemporalRegression : Node
         AddChild(enemy);
         enemy.Initialize(EnemyDataLoader.Get("shade"), 1000f, 1f);
         enemy.ProcessMode = ProcessModeEnum.Pausable;
-        enemy.SetPhysicsProcess(false);
+        enemy.SetTicking(false);
         enemy.SetProcess(false);
         enemy.Position = new Vector2(radius, 0);
         await Frame();
@@ -87,7 +87,7 @@ public partial class TemporalRegression : Node
             for (int tick = 0; tick < 600; tick++)
             {
                 enemy.Position = new Vector2(radius, 0);
-                enemy._PhysicsProcess(1.0 / 60);
+                enemy.PhysicsTick(1.0 / 60);
             }
             float hp = Number(enemy, "_currentHp");
             _results.Add(new { scenario = "enemy", radius, seconds = 10, slow = Number(enemy, "_slowTimer"), disorient = Number(enemy, "_disorientTimer"), hp });
@@ -96,18 +96,18 @@ public partial class TemporalRegression : Node
             Check((Vector2)Field(enemy, "_knockVelocity") == Vector2.Zero, $"recul expiré à {radius} px");
             if (nearHp.HasValue) Check(Mathf.IsEqualApprox(hp, nearHp.Value), "régénération proche/loin identique"); else nearHp = hp;
             enemy.Position = new Vector2(100, 0);
-            enemy._PhysicsProcess(1.0 / 60);
+            enemy.PhysicsTick(1.0 / 60);
             Check(Number(enemy, "_slowFactor") == 1, "retour proche sans ancien slow");
             enemy.ApplySlow(0.5f, 2);
-            enemy.SetPhysicsProcess(true);
+            enemy.SetTicking(true);
             GetTree().Paused = true;
             await Frame(); await Frame();
             Check(Number(enemy, "_slowTimer") == 2, "pause conserve la durée des statuts");
-            enemy.SetPhysicsProcess(false);
+            enemy.SetTicking(false);
             GetTree().Paused = false;
             enemy.Reset();
             enemy.Initialize(EnemyDataLoader.Get("shade"), 1000f, 1f);
-            enemy.SetPhysicsProcess(false);
+            enemy.SetTicking(false);
             Check(Number(enemy, "_slowTimer") == 0 && Number(enemy, "_disorientTimer") == 0 && (Vector2)Field(enemy, "_knockVelocity") == Vector2.Zero, "réutilisation nettoie les états");
             // Deux DOT létaux : le second ne doit pas retravailler ni déplacer un corps déjà mort.
             enemy.Position = new Vector2(radius, 0);
@@ -118,7 +118,7 @@ public partial class TemporalRegression : Node
             void Damaged(Node target, float amount) { if (target == enemy) damageSignals++; }
             _bus.EntityDamaged += Damaged;
             Vector2 origin = enemy.Position;
-            enemy._PhysicsProcess(1.0 / 60);
+            enemy.PhysicsTick(1.0 / 60);
             _bus.EntityDamaged -= Damaged;
             Check(enemy.IsDying && damageSignals == 1 && enemy.Position == origin, "mort par DOT arrête le tick");
             enemy.QueueFree(); await Frame();

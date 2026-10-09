@@ -60,7 +60,7 @@ public partial class ConeRegression : Node2D
                 Enemy enemy = GD.Load<PackedScene>("res://scenes/enemies/Enemy.tscn").Instantiate<Enemy>();
                 AddChild(enemy);
                 enemy.Initialize(EnemyDataLoader.Get("shade"), 100000f, 1f);
-                enemy.SetPhysicsProcess(false); enemy.SetProcess(false);
+                enemy.SetTicking(false); enemy.SetProcess(false);
                 _enemies[i] = enemy;
             }
             _weapon = new(WeaponDataLoader.Get("last_broadcast"));
@@ -214,7 +214,7 @@ public partial class ConeRegression : Node2D
         _cone(1f / 60);
         Check(_hits == fatalHits, "aucun dégât sur un ennemi rendu au pool");
         enemy.Initialize(EnemyDataLoader.Get("shade"), 100000f, 1f);
-        enemy.SetPhysicsProcess(false); enemy.SetProcess(false);
+        enemy.SetTicking(false); enemy.SetProcess(false);
         enemy.Position = new Vector2(80, 0);
         await Frame();
         _cone(1f / 60);

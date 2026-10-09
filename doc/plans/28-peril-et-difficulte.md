@@ -101,6 +101,8 @@ Prochaine étape : mesurer à Péril 0, contre la référence, deux variantes d�
 
 **Plafond de créatures mesuré (8 octobre).** Banc de combat dense, 1080p, créatures serrées dans 600 px : 120 → 160 FPS, 160 → 103 (p99 16,4 ms), 200 → 73 (24 % d'images au-delà de 16,7 ms), 240 → 54, 320 → 19. Le coût monte bien plus vite que le nombre : `active_enemies_ceiling` passe à 200 et borne désormais toutes les créatures actives (commit `862122e5`). Le Péril du temps ne peut donc presque plus ajouter de créatures en fin de run ; il y pèse par la densité locale, les PV et les dégâts. Ce coût mérite un chantier de performance à part.
 
+**Mesure corrigée (9 octobre, [plan 29](29-performance-des-foules.md)).** Depuis la carte agrandie du 30 septembre, le banc posait le joueur dans un immeuble : les 240 créatures forçaient contre un mur. Sur terrain dégagé, au même commit : 240 → 101 FPS, 320 → 60. Après le lot F1 du plan 29 : 240 → 113, 320 → 77, 400 → 57. Le plafond de 200 peut remonter ; valeur à choisir par Raphaël.
+
 **Mesures P4 interrompues (8 octobre, nuit).** La session de Claude Code est limitée à 2 cœurs (`cpu.max`) : neuf runs en parallèle avancent à 0,37 × le temps réel. Prochaine fois, lancer hors session (16 cœurs), depuis le dépôt à jour, pour la référence puis chaque variante :
 
 ```

@@ -102,7 +102,7 @@ public partial class FieldBonusRegression : Node2D
 		Enemy enemy = EnemyScene.Instantiate<Enemy>();
 		AddChild(enemy);
 		enemy.Initialize(EnemyDataLoader.Get("rodeur"), 1f, 1f);
-		enemy.SetPhysicsProcess(false);
+		enemy.SetTicking(false);
 		enemy.GlobalPosition = position;
 		return enemy;
 	}

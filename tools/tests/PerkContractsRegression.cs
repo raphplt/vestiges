@@ -86,7 +86,7 @@ public partial class PerkContractsRegression : Node2D
         Enemy enemy = GD.Load<PackedScene>("res://scenes/enemies/Enemy.tscn").Instantiate<Enemy>();
         AddChild(enemy);
         enemy.Initialize(EnemyDataLoader.Get("rodeur"), 1f, 1f);
-        enemy.SetPhysicsProcess(false);
+        enemy.SetTicking(false);
         enemy.Position = new Vector2(1000f, 1000f);
         return enemy;
     }
@@ -105,7 +105,7 @@ public partial class PerkContractsRegression : Node2D
         EnemyLife life = enemy.Life;
         enemy.Reset();
         enemy.Initialize(EnemyDataLoader.Get("rodeur"), 1f, 1f);
-        enemy.SetPhysicsProcess(false);
+        enemy.SetTicking(false);
         Check(enemy.Life.InstanceId == life.InstanceId && enemy.Life.Generation != life.Generation,
             "Le pool garde le nœud, pas l'identité de sa vie");
         enemy.ApplyDisorient(3f, attack);

@@ -69,7 +69,7 @@ public partial class ProjectileCadenceBenchmark : Node2D
             AddChild(enemy);
             enemy.Initialize(EnemyDataLoader.Get(i < 6 ? "hurleur" : "fading_spitter"), 1000f, 1f);
             enemy.ApplySpawnTuning(1f, aggression);
-            enemy.SetPhysicsProcess(false);
+            enemy.SetTicking(false);
             enemy.GlobalPosition = Vector2.FromAngle(Mathf.Tau * i / 8f) * 170f;
             Dictionary<EnemyAbilityKind, IEnemyAbility> abilities = (Dictionary<EnemyAbilityKind, IEnemyAbility>)AbilityCache.GetValue(enemy);
             IEnemyAbility shot = abilities[EnemyAbilityKind.AimedShot];

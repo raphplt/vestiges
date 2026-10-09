@@ -28,6 +28,9 @@ public partial class MovementDenseBenchmark : Node
     private readonly double[] _frames = new double[200000];
     private readonly double[] _activationFrames = new double[200000];
     private Player _player;
+    // Centre du combat : un terrain sans décor bloquant, pour que la carte générée ne change pas ce qui est mesuré.
+    private Vector2 _arena;
+    private FrameSplit _split;
     private WorldSetup _world;
     private bool _ready;
     private bool _finished;
@@ -146,7 +149,8 @@ public partial class MovementDenseBenchmark : Node
             _player = _world.GetNode<Player>("Player");
             _player.IsGodMode = true;
             _player.IsAIControlled = true;
-            _player.GlobalPosition = Vector2.Zero;
+            _arena = Argument(args, "--arena", "open") == "origin" ? Vector2.Zero : FindOpenArena();
+            _player.GlobalPosition = _arena;
             // Expérience d'attribution : décors masqués (rendu seul, la physique des décors reste en place).
             if (Array.IndexOf(OS.GetCmdlineUserArgs(), "--hide-props") >= 0)
             {
@@ -160,7 +164,7 @@ public partial class MovementDenseBenchmark : Node
             // --orbs N : orbes d'XP semées loin du joueur, hors de portée d'attraction (butin laissé derrière soi en nomade).
             int orbs = int.Parse(Argument(args, "--orbs", "0"), CultureInfo.InvariantCulture);
             for (int i = 0; i < orbs; i++)
-                CombatPools.Instance.SpawnXpOrb(Vector2.FromAngle(i * 2.3999632f) * (1200f + 1800f * ((i * 0.618034f) % 1f)), 1f);
+                CombatPools.Instance.SpawnXpOrb(_arena + Vector2.FromAngle(i * 2.3999632f) * (1200f + 1800f * ((i * 0.618034f) % 1f)), 1f);
             // --weapons a,b : armes ajoutées au personnage (builds à effets de zone, morts en rafale avec --churn).
             foreach (string weapon in Argument(args, "--weapons", "").Split(',', StringSplitOptions.RemoveEmptyEntries))
                 _player.AddWeapon(WeaponDataLoader.Get(weapon));
@@ -183,7 +187,7 @@ public partial class MovementDenseBenchmark : Node
                 Enemy enemy = pool.Get();
                 float angle = i * 2.3999632f;
                 float radius = 40f + 100f * Mathf.Sqrt((i + 1f) / _enemyCount);
-                enemy.Position = Vector2.FromAngle(angle) * radius;
+                enemy.Position = _arena + Vector2.FromAngle(angle) * radius;
                 container.AddChild(enemy);
                 // Les HP renforcés conservent les 120 IA, attaques, collisions et impacts pendant l'essai.
                 // Même proportion qu'à 120 : cinq Ombres pour un Cracheur.
@@ -204,6 +208,7 @@ public partial class MovementDenseBenchmark : Node
                 _renderSize = initial.GetSize();
             _start = _previous = Time.GetTicksUsec();
             _ready = true;
+            _split = FrameSplit.Attach(GetTree().Root);
             GD.Print($"[MovementDenseBenchmark] Chauffe puis mesure ; image {_renderSize}.");
         }
         catch (Exception ex)
@@ -227,7 +232,7 @@ public partial class MovementDenseBenchmark : Node
                 _dashDistance += distance;
         }
         // Même cible orbitale et vitesse de base ; le dash modifie réellement le trajet et les contacts.
-        Vector2 target = Vector2.FromAngle((float)(_physicsTime * 0.8)) * 70f;
+        Vector2 target = _arena + Vector2.FromAngle((float)(_physicsTime * 0.8)) * 70f;
         _player.AIInputOverride = ((target - _player.GlobalPosition) / 20f).LimitLength();
         if (_player.Mobility.StartedThisStep)
         {
@@ -262,6 +267,7 @@ public partial class MovementDenseBenchmark : Node
         }
         if (_samples == 0)
         {
+            _split.Reset();
             _managedStart = GC.GetTotalMemory(false);
             _allocatedStart = GC.GetTotalAllocatedBytes();
             // Nœuds déjà existants au début de la mesure, arbre et réserve détachée du pool comprises.
@@ -387,6 +393,30 @@ public partial class MovementDenseBenchmark : Node
         }
     }
 
+    /// <summary>
+    /// Premier point, en spirale depuis l'origine, sans décor bloquant dans le rayon de la foule. Depuis la carte agrandie
+    /// du 30 septembre, l'origine tombe dans un immeuble : les créatures y forçaient contre un mur (plan 29 §1.1).
+    /// </summary>
+    private Vector2 FindOpenArena()
+    {
+        const uint PropLayer = 4;
+        PhysicsDirectSpaceState2D space = _player.GetWorld2D().DirectSpaceState;
+        using CircleShape2D circle = new() { Radius = 420f };
+        using PhysicsShapeQueryParameters2D query = new() { Shape = circle, CollisionMask = PropLayer, CollideWithAreas = false };
+        for (int ring = 0; ring <= 40; ring++)
+        {
+            int steps = Math.Max(1, ring * 6);
+            for (int step = 0; step < steps; step++)
+            {
+                Vector2 candidate = Vector2.FromAngle(Mathf.Tau * step / steps) * ring * 256f;
+                query.Transform = new Transform2D(0f, candidate);
+                if (space.IntersectShape(query, 1).Count == 0)
+                    return candidate;
+            }
+        }
+        throw new InvalidOperationException("Aucun terrain dégagé près de l'origine.");
+    }
+
     /// <summary>Les morts font monter de niveau : la première carte est prise aussitôt, la run ne reste pas en pause.</summary>
     private void PickLevelUp()
     {
@@ -429,6 +459,8 @@ public partial class MovementDenseBenchmark : Node
                 cpu = OS.GetProcessorName(), cpu_threads = OS.GetProcessorCount(),
                 gpu = RenderingServer.GetVideoAdapterName(), vendor = RenderingServer.GetVideoAdapterVendor(),
                 engine = Engine.GetVersionInfo()["string"].AsString(),
+                arena = new[] { _arena.X, _arena.Y },
+                frame_split_ms = _split.Summary(),
                 living_min = _minLiving, living_max = _maxLiving, full_ai_range_min = _minFullAi,
                 activations = _activations, frames = Stats(_frames, _samples), dash_window_frames = Stats(_activationFrames, _activationSamples),
                 traveled_pixels = _distance, dash_traveled_pixels = _dashDistance,
@@ -452,7 +484,7 @@ public partial class MovementDenseBenchmark : Node
                 },
                 native_start_bytes = _nativeStart, native_end_bytes = nativeEnd,
                 rss_start_bytes = _rssStart, rss_end_bytes = rssEnd, rss_process_peak_bytes = rssPeak,
-                fixture = "Main réelle ; profil dev temporaire sans souvenir équipé, Steam désactivé ; Ombres et Cracheurs à 5 pour 1 (120 par défaut, --enemies), HP x10000 ; traqueur invincible, arme initiale active ; spawn naturel, Effacement et crises figés ; cible orbitale commune, trajectoires réelles différentes avec dash ; code courant dans les deux cas."
+                fixture = "Main réelle ; profil dev temporaire sans souvenir équipé, Steam désactivé ; combat centré sur le premier terrain sans décor bloquant dans 420 px (arena ; --arena origin pour l'ancien point (0,0)) ; Ombres et Cracheurs à 5 pour 1 (120 par défaut, --enemies), HP x10000 ; traqueur invincible, arme initiale active ; spawn naturel, Effacement et crises figés ; cible orbitale commune, trajectoires réelles différentes avec dash ; code courant dans les deux cas."
             };
             Directory.CreateDirectory(Path.GetDirectoryName(_output)!);
             File.WriteAllText(_output + ".json", JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented = true }));

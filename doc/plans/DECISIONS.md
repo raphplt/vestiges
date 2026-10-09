@@ -931,3 +931,9 @@ style et réduire son encombrement, surtout les marges et la hauteur (plan 04 R8
 ## 82. Cloche B et Boîte à musique C — 7 octobre 2026
 
 Raphaël valide explicitement « cloche b et boite a musique c » dans la série R3. Cloche B : frappe ronde synthétique de 300 ms. Boîte C : notes pincées de 250 ms, do/ré/mi/sol/la, une note aléatoire à chaque contact audible, sans répétition immédiate. Les deux timbres sont désormais choisis ; terminer leur intégration et leur vérification au plan 15 A3b4.
+
+## 83. Performance des foules — 9 octobre 2026
+
+- Demande : « met toi sur le chantier Performance des foules, essaie de comprendre ce qui fait qu'on est si limité sur la taille de la foule […] alors que tous les autres jeux (megabonk, vampire survivor) le gèrent tres bien. le but sera de comprendre les failles de notre approche et les corriger. » Chantier ouvert au [plan 29](29-performance-des-foules.md).
+- En cours de route : « à vérifier si les problemes de fps relevés ne sont pas dû au fait que tu test avec un environnement limité ». Vérifié : Claude Code hérite du quota CPU de Zed (2 cœurs), mais Godot n'en utilise qu'un ; mêmes FPS hors quota.
+- Mesure hors quota : Raphaël choisit que l'agent lance les bancs par `systemd-run --user --scope` (scope sans quota), sans toucher à la configuration de Zed.

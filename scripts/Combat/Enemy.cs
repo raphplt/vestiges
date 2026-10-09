@@ -150,6 +150,9 @@ public partial class Enemy : CharacterBody2D
 
 	// Sprite animé (remplace Polygon2D quand sprite_folder est défini)
 	private AnimatedSprite2D _sprite;
+	// Copies côté C# de l'état du sprite lu à chaque tick : chaque lecture d'une propriété Godot traverse l'interop.
+	private SpriteFrames _spriteFrames;
+	private float _spriteTempo = 1f;
 	private bool _hasSprite;
 	// Image de la mort par un coup (pas d'une évanescence) : l'arme qui achève la créature réclame l'élimination
 	// dans la foulée de son coup, une seule fois (bilan, plan 02 M2). Brûlure ou explosion : personne ne la réclame.
@@ -188,6 +191,9 @@ public partial class Enemy : CharacterBody2D
 	public static float AnimationTempo = 1f;
 
 	public bool IsActive { get; private set; }
+	/// <summary>Rang dans la boucle d'<see cref="EnemyTicker"/>, −1 hors de la boucle ; tenu par elle seule.</summary>
+	internal int TickSlot { get; set; } = -1;
+	private bool _ticking;
 	public bool IsDying => _isDying;
 	public float HpRatio => _maxHp > 0 ? _currentHp / _maxHp : 0f;
 	public float MaxHp => _maxHp;
@@ -217,6 +223,12 @@ public partial class Enemy : CharacterBody2D
 		_eventBus ??= GetNode<EventBus>("/root/EventBus");
 		_shadow = GroundShadow.Create(24f);
 		AddChild(_shadow);
+	}
+
+	public override void _EnterTree()
+	{
+		if (_ticking)
+			EnemyTicker.Register(this);
 	}
 
 	private string _projectileSprite = "spit";
@@ -295,7 +307,7 @@ public partial class Enemy : CharacterBody2D
 		ConfigureAbilities(data);
 
 		Visible = true;
-		SetPhysicsProcess(true);
+		SetTicking(true);
 		SetProcess(true);
 		Modulate = Colors.White;
 		Scale = Vector2.One;
@@ -526,7 +538,7 @@ public partial class Enemy : CharacterBody2D
 		_knockVelocity = Vector2.Zero;
 		Visible = false;
 		Scale = Vector2.One;
-		SetPhysicsProcess(false);
+		SetTicking(false);
 		SetProcess(false);
 
 		// Reset sprite et shaders
@@ -535,7 +547,7 @@ public partial class Enemy : CharacterBody2D
 			_sprite.Visible = false;
 			_sprite.Stop();
 			_sprite.SelfModulate = Colors.White;
-			_sprite.SpeedScale = 1f;
+			SetSpriteTempo(1f);
 			_sprite.Scale = Vector2.One;
 			_statusVisual.Attach(null);
 			_statusMarks?.Clear();
@@ -556,7 +568,21 @@ public partial class Enemy : CharacterBody2D
 			RemoveFromGroup("enemies");
 	}
 
-	public override void _PhysicsProcess(double delta)
+	/// <summary>
+	/// Avance la créature d'un tick ou l'arrête. Remplace <c>SetPhysicsProcess</c> : Godot n'appelle plus les créatures,
+	/// c'est <see cref="EnemyTicker"/> qui le fait (plan 29).
+	/// </summary>
+	public void SetTicking(bool enabled)
+	{
+		_ticking = enabled;
+		if (enabled && IsInsideTree())
+			EnemyTicker.Register(this);
+		else
+			EnemyTicker.Unregister(this);
+	}
+
+	/// <summary>Un tick physique de la créature, appelé par <see cref="EnemyTicker"/> (ou directement par un test).</summary>
+	public void PhysicsTick(double delta)
 	{
 		// Avant le retour anticipé : un coup fatal finit son flash pendant l'animation de mort.
 		if (_hitFeedback.IsActive)
@@ -1362,7 +1388,7 @@ public partial class Enemy : CharacterBody2D
 			PlaySpriteAnim(SpriteAnimations[(int)_facing.Current, (int)SpriteAction.Death]);
 			// Une créature tuée figée ou ralentie meurt à cadence normale ; givre et chaleur se dissolvent avec elle.
 			_statusVisual.ReleaseTempo();
-			_sprite.SpeedScale = AnimationTempo;
+			SetSpriteTempo(AnimationTempo);
 			_statusMarks?.Clear();
 		}
 
@@ -1542,6 +1568,7 @@ public partial class Enemy : CharacterBody2D
 			if (frames != null)
 			{
 				_sprite.SpriteFrames = frames;
+				_spriteFrames = frames;
 				_sprite.Visible = true;
 				_sprite.SelfModulate = Colors.White;
 				
@@ -1609,8 +1636,14 @@ public partial class Enemy : CharacterBody2D
 		// Figée : l'animation s'arrête sur la pose en cours, sans repasser à l'attente.
 		if (tempo > 0f)
 			PlaySpriteAnim(SpriteAnimations[(int)_facing.Current, (int)action]);
-		if (_sprite.SpeedScale != tempo)
-			_sprite.SpeedScale = tempo;
+		if (_spriteTempo != tempo)
+			SetSpriteTempo(tempo);
+	}
+
+	private void SetSpriteTempo(float tempo)
+	{
+		_spriteTempo = tempo;
+		_sprite.SpeedScale = tempo;
 	}
 
 	private static StringName[,] BuildSpriteAnimations()
@@ -1629,7 +1662,7 @@ public partial class Enemy : CharacterBody2D
 		if (animName == _currentAnimName)
 			return;
 
-		if (_sprite.SpriteFrames != null && _sprite.SpriteFrames.HasAnimation(animName))
+		if (_spriteFrames != null && _spriteFrames.HasAnimation(animName))
 		{
 			_sprite.Play(animName);
 			_currentAnimName = animName;
@@ -1683,6 +1716,7 @@ public partial class Enemy : CharacterBody2D
 
 	public override void _ExitTree()
 	{
+		EnemyTicker.Unregister(this);
 		CancelAbilities();
 	}
 

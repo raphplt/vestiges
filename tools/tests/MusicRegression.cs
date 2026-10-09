@@ -182,7 +182,7 @@ public partial class MusicRegression : Node2D
             Enemy enemy = EnemyScene.Instantiate<Enemy>();
             AddChild(enemy);
             enemy.Initialize(EnemyDataLoader.Get("rodeur"), 1f, 1f);
-            enemy.SetPhysicsProcess(false);
+            enemy.SetTicking(false);
             enemy.GlobalPosition = Vector2.FromAngle(Mathf.Tau * i / count) * distance;
             _enemies.Add(enemy);
         }
