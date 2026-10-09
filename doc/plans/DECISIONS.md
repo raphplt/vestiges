@@ -954,3 +954,4 @@ Raphaël valide explicitement « cloche b et boite a musique c » dans la série
 - **Souverains : deux rendez-vous fixes**, vers 2:45 et 7:00, entre les Résurgences ; annoncés, nommés, barre de PV, combat de 20 à 40 s avec le build de référence, coffre rare. Retirés du tirage des micro-événements.
 - **Barrière : à 10 min, à l'heure, en priorité.** Déclenchée vers 10:00 (après la deuxième Résurgence et son accalmie), et non plus après la troisième Résurgence (qui commence en fait entre 13:36 et 14:50). Remplace le déclenchement du §70. Les lots B1–B2 du plan 07 passent avant les pouvoirs des personnages.
 - **Nuées sans objectif (D) et respiration par minute (E) : après A, B et C**, si la run manque encore de contraste une fois ceux-ci joués.
+- Après l'étude : « ok ca me va go ». Lots engagés dans l'ordre proposé : T1 (Résurgence), T2 (Souverains), puis B1–B2 (Barrière).

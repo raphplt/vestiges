@@ -46,6 +46,8 @@
     "same_type_cluster_spacing_min": 18,
     "same_type_cluster_spacing_max": 44,
     "crisis_spawn_multiplier": 1.65,
+    "_doc_crisis_cap": "Plafond de run multiplié pendant une Résurgence (plan 30 T1, DECISIONS §84) : sans lui, la population atteint le plafond dès 5 min et la crise remplace des créatures au lieu d'en ajouter (2e crise : +2 % de foule proche). 1,4 mesuré : 2e crise ×1,57, 216 à 253 créatures au plus sur 15 min ; 1,6 ne monte pas plus haut le pic. À la fin de la crise, aucun retrait : la foule en trop s'use d'elle-même.",
+    "crisis_cap_multiplier": 1.4,
     "crisis_burst_base": 8,
     "crisis_burst_per_intensity": 4,
     "late_game_spawn_multiplier": 1.4,

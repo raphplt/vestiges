@@ -8,5 +8,6 @@ Données du [plan 30](../../plans/30-temps-forts.md). Code `d7789e9f` plus la so
 | `nomad/` | `--nomad --visit` | 900 s |
 | `wander/` | aucun argument (bot qui erre autour du départ) | 900 s |
 | `cap300/` | comme `build/`, plus `--scaling max_enemies_on_screen=300` (surcharge de mesure, `data/` inchangé) | 660 s |
+| `t1-build/`, `t1-nomad/`, `t1-wander/` | mêmes profils après le lot T1 (`crisis_cap_multiplier` 1,4 dans les données) ; seulement `timeline`, `summary.txt` et `chronologie.md` | 900 s |
 
 Par graine : `density-<graine>.csv` (par seconde : visibles, proches à 600 px, en vie, apparues, tuées, niveau, dégâts reçus, Essence…), `beats-<graine>.csv` (par seconde : phase, Résurgence, événement en cours, élites et Souverains, créatures à 300 px, PV autour du joueur), `timeline-<graine>.csv` (heure de chaque temps fort). `summary.txt` : lignes `RESULT` de la mesure. `chronologie.md` : sortie de `python3 tools/summarize_timeline.py <dossier>` (tranches de 30 s, temps forts par graine, creux, contrastes avant/pendant/après).

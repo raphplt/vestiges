@@ -124,9 +124,9 @@ Capture en temps réel (graine 42, bot nomade sans build, une image toutes les 1
 
 ![Quatre moments de la capture](planches/30-captures.png)
 
-- **Résurgence 1 (4:15)** : elle se voit. Sol assombri, paquet compact d'aberrations violettes sur le joueur (84 aberrations apparues pendant les 70 s, d'après la sonde). Le début de la première crise est un vrai moment, même si la foule moyenne monte peu.
+- **Résurgence 1 (4:15)** : elle se voit, par un paquet compact d'aberrations violettes sur le joueur (84 aberrations apparues pendant les 70 s, d'après la sonde). Le sol sombre est celui de la carrière, pas un effet de crise : la Résurgence ne fait que ternir les bords de l'écran (`CrisisOmen`), ce qui se remarque peu en jeu.
 - **Après la crise (5:30)** : le joueur est reparti, les restes de la crise le suivent en haut à droite de l'écran. Pas d'accalmie visible, pas de reflux.
-- **Résurgence 2 (10:00)** : une trentaine de créatures éparses, pas d'assombrissement marqué ; rien ne la distingue d'une minute ordinaire. Elle fait pourtant apparaître 140 aberrations : sous le plafond, elles **remplacent** des créatures ordinaires au lieu de s'y ajouter. La crise change la composition, pas le nombre.
+- **Résurgence 2 (10:00)** : une trentaine de créatures éparses ; rien ne la distingue d'une minute ordinaire. Elle fait pourtant apparaître 140 aberrations : sous le plafond, elles **remplacent** des créatures ordinaires au lieu de s'y ajouter. La crise change la composition, pas le nombre.
 - **Harde (1:30)** : la bande qui traverse l'écran a déjà la forme d'une nuée de Vampire Survivors.
 
 ### Le reste
@@ -231,6 +231,38 @@ Questions posées avec `AskUserQuestion`, réponses au [§84](DECISIONS.md) :
 | **B1, B2 — Barrière (plan 07)** | Selon la fiche du §70 ; déclenchement à ~600 s (après l'accalmie si une Résurgence est en cours), réglage en données. | Celle du plan 07 (trois postures, durée 60–90 s), plus la chronologie : un pic net à 10–11 min. |
 
 Ordre proposé : T1 (petit, mesuré d'avance), T2, puis B1–B2. D et E restent en attente du jeu.
+
+## T1 livré — 9 octobre 2026
+
+**Fait.** `spawn_flow.json` : `crisis_cap_multiplier` 1,4. `SpawnManager.GetCurrentMaxEnemies` multiplie le plafond de run par ce facteur pendant la phase de crise, toujours borné par le plafond de coût (500). À la fin de la crise, le plafond redescend sans retirer personne (§84). Clé surchargeable par `--scaling` pour les mesures. Rien d'autre ne change (rafale, densité visée, PV, XP de crise).
+
+**Réglage choisi par la mesure** (build de référence, 4 graines, 15 min, surcharge `--scaling`) : 1,4 donne la 2e Résurgence à 63 → 99 créatures proches (×1,57), la foule redescend à 73 après, 216 à 253 en vie au plus. 1,6 ne monte pas plus haut le pic (69 → 108, ×1,57) : la densité visée de la crise (×1,65) devient la limite ; la foule reste à 88 après, 236 à 292 en vie.
+
+**Vérifié avec les données** (3 profils × 4 graines × 15 min, sonde `--timeline`, [chronologies](../audits/temps-forts-2026-10-09/)) :
+
+| Profil | Résurgence 2 : proches avant / pendant / après | Dégâts reçus /min avant / pendant | En vie au plus |
+|---|---|---|---|
+| Build, avant | 66 / 67 / 78 | 4 620 / 1 870 | 169–191 |
+| **Build, T1** | **63 / 95 / 86** (×1,51) | **4 310 / 7 030** | 207–263 |
+| Nomade, avant | 68 / 65 / 76 | 5 800 / 2 760 | 170–175 |
+| **Nomade, T1** | **69 / 100 / 86** (×1,45) | **5 830 / 10 860** | 209–277 |
+| Errant, avant | 74 / 90 / 91 | 7 690 / 3 740 | 171–193 |
+| **Errant, T1** | **81 / 133 / 86** (×1,64) | 11 460 / 8 120 | 238–299 |
+
+- Résurgence 1 : ×1,5 à ×1,9 de foule proche (avant : ×1,4 à ×1,7), créatures rapprochées ×1,5 à ×1,9.
+- La Résurgence est désormais le moment le plus chargé de sa fenêtre, dans les trois profils. Les dégâts reçus pendant la crise montent pour le build (×1,6) et le nomade (×1,9) ; pour l'errant ils baissent encore (11 460 → 8 120), dans une minute d'avant déjà très chargée.
+- Sans reflux, la minute qui suit reste haute (86 proches dans les trois profils) : c'est le choix du §84.
+- Progression : deux passes au même réglage (1,4 par surcharge, puis par les données) donnent, pour le build, niveau à 15 min 32,3 et 35,0, éliminations 1 791 et 2 626 : les runs headless ne sont pas déterministes et l'écart avant/après sur les niveaux (31 → 35) est dans ce bruit.
+
+**Coût** (capture temps réel 1080p, graine 42, bot nomade, `--frame-stats`, charge machine 5 au lancement) : pendant la 2e Résurgence, 212 à 224 créatures en vie, 133 à 139 FPS, p99 10,8 à 14,5 ms (avant la crise : 138 FPS, p99 10,3 à 11,8 ms). Les pics à ~300 ms de chaque tranche sont les sauvegardes d'image de la capture. Le banc dense (120 créatures fixes) n'est pas touché par ce changement ; le plan 29 a mesuré 400 créatures à 209 FPS.
+
+**Images** ([avant/après](planches/30-t1-avant-apres.png), [chronologie](planches/30-t1-chronologie-build.png)) : la capture confirme les chiffres (2e Résurgence : 55 → 83 proches, contre 69 → 62 avant T1), mais à un instant donné l'écran n'est pas spectaculaire. Les créatures arrivent dispersées depuis les bords et le joueur avance ; la crise n'a pour signature visuelle que les bords ternis (`CrisisOmen`).
+
+**Régressions :** `dotnet build` 0 avertissement ; `tools/test_movement.sh` et `tools/test_enemy_abilities.sh` : 0 échec. Diff de dix lignes, sans relecture par sous-agent.
+
+**Points ouverts.**
+- La crise se mesure mais se voit peu. Pistes, non engagées : une vague qui arrive en anneau dans les premières secondes (rafale d'ouverture plus grosse, posée tout autour de l'écran), une signature visuelle plus forte que les bords ternis. À juger en jouant.
+- À jouer par Raphaël : la Résurgence 1 face à un build faible (4:00, niveau 8 à 10).
 
 ## 7. Reproduire
 
