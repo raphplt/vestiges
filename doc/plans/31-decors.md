@@ -28,9 +28,9 @@ Notes : marais 4/10, immeubles 5/10, forêt et petits décors urbains 6/10, cham
 | **M0** | Kit commun : détails de surface (`tools/sprites/props/_surface.py` : bruit de valeur reproductible, fibres, taches, assises, liseré d'eau) ; `generate_props.py --jobs` (rendu parallèle, résultat identique) | Livré |
 | **M1** | Marais : les 25 modèles repris un par un (26 PNG), planches regardées à ×2 et ×5 sur les trois sols du biome | Livré, voir §3 |
 | **M2** | Marais en jeu : galerie de captures en vraie run, corrections | Livré, voir §4 |
-| U1 | Immeubles urbains : matières des façades (enduit, brique, salissures, coulures, fissures), toits lisibles (gravier, édicules, bacs), lierre et mousse refaits en vrai feuillage | À faire |
-| U2 | Ruines : effondrements remplis de gravats et de planchers éventrés, variantes endommagées vraiment différentes | À faire |
-| U3 | Petits décors urbains : murs, débris, bureau renversé, poutres ; taille minimale et contraste sur le sol des ruines | À faire |
+| **U1** | Immeubles urbains : matières des façades (enduit, brique, salissures, coulures, fissures), toits lisibles (gravier, édicules, bacs), lierre et mousse refaits en vrai feuillage | Livré, voir §5 |
+| **U2** | Ruines : effondrements remplis de gravats et de planchers éventrés, variantes endommagées vraiment différentes | Livré, voir §5 |
+| **U3** | Petits décors urbains : murs, débris, bureau renversé, poutres ; taille minimale et contraste sur le sol des ruines | Livré, voir §5 |
 | U4 | Orphelins urbains : proposition à Raphaël avant toute suppression | À faire |
 
 Forêt, champs (haies, troncs, maisons de ferme) et carrière ne sont pas commandés ; ils profiteront du kit et des façades.
@@ -85,3 +85,21 @@ Forêt, champs (haies, troncs, maisons de ferme) et carrière ne sont pas comman
 - **Seuils du jeu.** Nénuphars à 12 px de haut, toujours un décalque au sol (seuil `ground_decal_max_height`) ; roseaux à 28 px, toujours plient au passage (≤ 40) ; manifeste régénéré (pivots, emprises).
 - **Reproductibilité.** Régénération complète du biome comparée octet par octet à la précédente : identique (PNG et manifeste). `dotnet build` sans avertissement.
 - **Planche avant/après** (hors dépôt) : ancien sprite de `HEAD` et nouveau côte à côte, sur le sol du marais.
+
+## 5. Compte rendu U1–U3 — urbain
+
+**Deux défauts du pipeline commun, trouvés en regardant les toits.**
+
+- *Toits noirs.* Sur un plan horizontal vu à 30°, deux pixels voisins diffèrent de 2,8 unités de profondeur, plus que le seuil de ligne interne (2,6) : chaque pixel d'un toit plat ou d'un plateau était dessiné comme une ligne interne sombre. C'est ce qui faisait les « toits sombres » de l'audit. `PropModel(smooth_slopes=True)` ne trace plus une ligne que si l'écart rompt la pente du pixel opposé. Désactivé par défaut : les sprites validés des autres biomes ne changent pas tant qu'ils ne sont pas repris ; sur le marais, l'écart est négligeable (vérifié), il n'est donc pas régénéré.
+- *Détails plus fins qu'un pixel.* Les petites marches d'un gravier peint faussaient les normales : `Part(relief=False)` colore sans compter dans l'éclairage.
+- Le parapet des toits plats avait un fond plein qui cachait la membrane : gravier, mousse et flaques étaient peints dessous.
+
+**Immeubles (U1).** Façades : enduit taché en grandes plages, coulures sous la corniche, pied sali par l'humidité, briques à nu là où l'enduit est tombé (plus il y a de dégâts, plus il y en a), fissures, soubassement de pierre appareillée. Fenêtres : vitres sombres avec reflet en diagonale, vitres brisées, fenêtres condamnées, encadrements, linteaux, volets à lames sur les maisons et quelques immeubles, balcons à garde-corps sur les étages. Toits plats : membrane gravillonnée, mousse et flaques, édicule d'escalier avec sa porte, souches de cheminée en brique, ventilations, antenne ; toits de tuiles en rangs, cheminée. Descente d'eau en zinc, seuil et encadrement de porte. Boutiques : vitrine vitrée, rideau de fer à moitié baissé, enseigne aux lettres illisibles. Le lierre grimpe en deux ou trois tiges en zigzag chargées de petites grappes, au lieu de bâtons verts ; l'arbuste du toit pousse en touffe. Église : appareil de pierre de taille, pied sali, ardoises, même lierre.
+
+**Ruines (U2).** L'effondrement est rongé par un bruit qui ne fait qu'agrandir la coupe : murs et planchers s'arrêtent en dents irrégulières, l'intérieur montre ses papiers peints rayés, un pan de plancher pend à son bord avec ses fers à béton, un tas de gravats en blocs comble le bas. Les gravats au pied des façades sont des tas bosselés couverts de moellons, plus des cubes isolés. Corniches et toiture reculent un peu plus que les murs, pour ne pas laisser d'éclats suspendus. Coût : mémoire de la coupe et bornes rapides du lierre et des gravats, une ruine passe d'environ 17 à 2–3 minutes de rendu.
+
+**Petits décors (U3).** Gravats en trois variantes franches (dalle cassée et fers tordus, tas de démolition en briques, tronçon de poteau et son armature), grain de gravillons, poussière au sol. Bureau renversé désormais procédural (il était hors manifeste). Voitures : rouille en coulures, mousse posée sur le toit et le capot au lieu de boules, joints de portières, reflet sur les vitres, enjoliveurs. Poutres : rouille peinte le long de l'âme.
+
+**Vérifications U1–U3.** Planches de génération ×2 sur le sol des ruines, rendus rapides ×3–×5 de chaque famille, galerie en jeu (`--capture-prop-gallery urban_ruins`, seed 1002, 38 sprites cadrés) regardée : façades, toits et ruines se lisent à l'échelle réelle, la transparence derrière les immeubles (`PropOcclusion`) est intacte. Hauteurs des modules inchangées à ±2 px (172–190 px, sous la limite d'un îlot) ; manifeste régénéré, le bureau renversé y entre. Régénération complète (immeubles et mobilier) comparée octet par octet : identique ; smoke test vert.
+
+**U4 — question à Raphaël.** `prop_brick_wall`, `prop_concrete_wall` et `prop_concrete_wall_v3` ne sont référencés par aucun JSON ni placeur, et n'ont pas de modèle procédural. Proposition : les supprimer avec leurs `.import`. Rien n'est supprimé sans son accord.

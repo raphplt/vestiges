@@ -85,7 +85,7 @@ def car(stem: str, paint: str, yaw: float, seed: int) -> PropModel:
         shell = lambda p: np.minimum(body(p), roof(p))
         # Rouille peinte en coulures qui partent du bas de caisse ; mousse posée sur le toit et le capot, pas en boules.
         rust = both(noise_mask(0.22 * M, seed + 1, 0.35), lambda p: p[:, 1] - 0.85 * M)
-        moss = both(noise_mask(0.35 * M, seed + 2, 0.4), lambda p: 0.9 * M - p[:, 1])
+        moss = both(noise_mask(0.35 * M, seed + 2, 0.28), lambda p: 0.9 * M - p[:, 1])
         doors = both(bands(2, 1.05 * M, 0.035 * M, offset=0.35 * M), lambda p: np.abs(p[:, 1] - 0.65 * M) - 0.25 * M)
         glint = lambda p: np.abs(p[:, 2] * 0.8 + p[:, 1] - 1.0 * M) - 0.08 * M
         result += [
@@ -361,20 +361,23 @@ def concrete_debris(stem: str, seed: int, kind: int) -> PropModel:
                       ((0.22 * M, 0.6 * M, 0.15 * M), (0.42 * M, 0.95 * M, 0.2 * M), (0.5 * M, 1.05 * M, 0.42 * M)),
                       ((-0.2 * M, 0.25 * M, 0.35 * M), (-0.35 * M, 0.3 * M, 0.6 * M), (-0.3 * M, 0.15 * M, 0.75 * M))]
         elif kind == 1:
-            for index in range(9):
+            # Tas de démolition : une butte sombre couverte de briques rouges et de quelques moellons clairs.
+            mound = lambda p: ellipsoid(p, (0.0, 0.0, 0.0), (0.6 * M, 0.42 * M, 0.45 * M)) \
+                + (value_noise(p, 0.18 * M, seed + 6) - 0.5) * 0.12 * M
+            dark.append(mound)
+            for index in range(14):
                 angle = index * 2.39996
-                r = 0.55 * np.sqrt((index + 0.5) / 9)
-                c = (np.cos(angle) * r * M, (0.32 - r * 0.35) * M, np.sin(angle) * r * 0.75 * M)
-                rot = rotation_y(w.uniform(0, np.pi)) @ rotation_z(w.uniform(-0.4, 0.4))
-                if index % 3 == 0:
-                    bricks.append((c, (0.13 * M, 0.06 * M, 0.07 * M), rot))
+                r = 0.85 * np.sqrt((index + 0.5) / 14)
+                x, z = np.cos(angle) * r * 0.62 * M, np.sin(angle) * r * 0.45 * M
+                y = 0.42 * M * np.sqrt(max(0.0, 1.0 - r * r)) + 0.03 * M
+                rot = rotation_y(w.uniform(0, np.pi)) @ rotation_z(w.uniform(-0.5, 0.5)) @ rotation_x(w.uniform(-0.4, 0.4))
+                if index % 4 == 3:
+                    light.append(lambda p, c=(x, y, z), rot=rot: rounded_box(p, c, (0.15 * M, 0.08 * M, 0.12 * M), 0.03 * M, rot))
                 else:
-                    (light if index % 2 else dark).append(
-                        lambda p, c=c, rot=rot, h=(w.uniform(0.12, 0.22) * M, w.uniform(0.08, 0.14) * M, w.uniform(0.1, 0.18) * M):
-                        rounded_box(p, c, h, 0.04 * M, rot))
-            for _ in range(5):
-                c = (w.uniform(-0.75, 0.75) * M, 0.05 * M, w.uniform(-0.5, 0.5) * M)
-                bricks.append((c, (0.13 * M, 0.06 * M, 0.07 * M), rotation_y(w.uniform(0, np.pi))))
+                    bricks.append(((x, y, z), (0.16 * M, 0.06 * M, 0.08 * M), rot))
+            for _ in range(4):
+                c = (w.uniform(-0.85, 0.85) * M, 0.04 * M, w.uniform(-0.55, 0.55) * M)
+                bricks.append((c, (0.16 * M, 0.05 * M, 0.08 * M), rotation_y(w.uniform(0, np.pi))))
         else:
             axis = rotation_z(np.pi / 2) @ rotation_x(0.0)
             light.append(lambda p: np.maximum(cylinder((p - np.array([-0.1 * M, 0.26 * M, 0.0])) @ rotation_y(0.35) @ axis, (0, 0, 0), 0.24 * M,
@@ -400,8 +403,8 @@ def concrete_debris(stem: str, seed: int, kind: int) -> PropModel:
         if bricks:
             result.append(Part(lambda p: _union(*(rounded_box(p, c, h, 0.015 * M, r) for c, h, r in bricks)), BRICK))
         if kind == 1:
-            result.append(Part(lambda p: rounded_box(p, (-0.2 * M, 0.42 * M, -0.15 * M), (0.3 * M, 0.025 * M, 0.22 * M), 0.01 * M,
-                                                     rotation_z(0.6) @ rotation_y(0.4)), PLASTER))
+            result.append(Part(painted(lambda p: _union(*(rounded_box(p, c, h, 0.015 * M, r) for c, h, r in bricks)),
+                                       noise_mask(0.1 * M, seed + 7, 0.25), 0.01 * M), PLASTER, relief=False))
         return result
 
     return PropModel(stem, parts, materials, AXIS_X_YAW, canvas=(72, 56))

@@ -148,6 +148,22 @@ class Facades:
         return merged
 
 
+def _ivy(w: Weathering, x0: float, face_z: float, climb: float) -> list[tuple[np.ndarray, np.ndarray]]:
+    """
+    Lierre : deux ou trois tiges qui grimpent en zigzag depuis le pied du mur et s'écartent en montant, chargées de
+    petites grappes de feuilles plaquées au mur ; une tache ajourée et irrégulière, pas une colonne.
+    """
+    leaves = []
+    for _ in range(int(w.uniform(2, 3.99))):
+        x, y = x0 + w.uniform(-0.2, 0.2) * M, 0.1 * M
+        while y < climb:
+            size = w.uniform(0.16, 0.26) * M * (1.0 - 0.35 * y / climb)
+            leaves.append((np.array([x, y, face_z + 0.04 * M]), np.array([size, size * 0.85, 0.07 * M])))
+            x += w.uniform(-0.32, 0.32) * M
+            y += w.uniform(0.18, 0.3) * M
+    return leaves
+
+
 def _letters(center: np.ndarray, half_width: float, height: float, seed: int):
     """Enseigne illisible : une rangée de pavés de lettres d'un ou deux pixels, quelques-uns tombés."""
 
@@ -187,7 +203,7 @@ def building(spec: BuildingSpec) -> PropModel:
         make_material("pane", "#34424E", contrast=0.5),
         make_material("glint", "#9CB0BA", contrast=0.4),
         make_material("roof", roof_hex),
-        make_material("gravel", _shade(roof_hex, 1.25), contrast=0.8),
+        make_material("gravel", _shade(roof_hex, 1.13), contrast=0.8),
         make_material("door", "#3A2E28", contrast=0.6),
         make_material("awning", awning_hex),
         make_material("moss", "#5A7A38"),
@@ -247,6 +263,18 @@ def building(spec: BuildingSpec) -> PropModel:
     if collapse:
         heaps.append((np.array([corner[0] - np.sign(corner[0]) * 0.25 * half_w, 0.0, half_d * 0.55]),
                       np.array([0.32 * half_w, 0.22 * height, half_d * 0.75])))
+    # Pans de plancher qui pendent dans l'effondrement, armatures à nu au bout.
+    hanging, rebars = [], []
+    if collapse:
+        side = np.sign(corner[0])
+        edge = corner[0] - side * 0.42 * half_w
+        for k in range(1, spec.storeys):
+            tilt = rotation_z(side * -0.65) @ rotation_y(w.uniform(-0.15, 0.15))
+            center = np.array([edge + side * 0.55 * M, k * STOREY - 0.45 * M, w.uniform(-0.2, 0.2) * half_d])
+            hanging.append((center, np.array([0.65 * M, 0.1 * M, half_d * 0.55]), tilt))
+            tip = center + tilt @ np.array([0.62 * M, 0.0, 0.0])
+            for z in np.linspace(-0.4, 0.4, 4) * half_d:
+                rebars.append((tip + np.array([0.0, 0.0, z]), tip + np.array([side * w.uniform(0.2, 0.45) * M, -w.uniform(0.15, 0.5) * M, z])))
     chunks = []
     for center, radii in heaps:
         for _ in range(5 if radii[1] < 1.0 * M else 16):
@@ -271,19 +299,9 @@ def building(spec: BuildingSpec) -> PropModel:
         lean = np.array([w.uniform(-0.3, 0.3) * M, 0.0, w.uniform(-0.2, 0.2) * M])
         crown = sapling + np.array([0.0, 1.0 * M, 0.0]) + lean
         sapling_crown = [crown + np.array([w.uniform(-0.55, 0.55) * M, w.uniform(-0.35, 0.3) * M, w.uniform(-0.35, 0.35) * M]) for _ in range(7)]
-    # Lierre : deux ou trois tiges qui grimpent en zigzag depuis le pied du mur et s'écartent en montant, chargées de
-    # petites grappes de feuilles plaquées au mur ; une tache ajourée et irrégulière, pas une colonne.
     ivy = []
     for _ in range(1 + int(spec.damage * 3)):
-        x0 = w.uniform(-0.85, 0.85) * half_w
-        climb = w.uniform(0.4, 0.75) * height
-        for _ in range(int(w.uniform(2, 3.99))):
-            x, y = x0 + w.uniform(-0.2, 0.2) * M, 0.1 * M
-            while y < climb:
-                size = w.uniform(0.16, 0.26) * M * (1.0 - 0.35 * y / climb)
-                ivy.append((np.array([x, y, half_d + 0.04 * M]), np.array([size, size * 0.85, 0.07 * M])))
-                x += w.uniform(-0.32, 0.32) * M
-                y += w.uniform(0.18, 0.3) * M
+        ivy += _ivy(w, w.uniform(-0.85, 0.85) * half_w, half_d, w.uniform(0.4, 0.75) * height)
     pipe_x = (half_w - 0.25 * M) * w.choice([-1.0, 1.0])
 
     def masonry(p: np.ndarray) -> np.ndarray:
@@ -292,10 +310,31 @@ def building(spec: BuildingSpec) -> PropModel:
         cell = np.floor(p / np.array([0.5 * M, 0.3 * M, 0.5 * M]))
         return (_hash(cell[:, 0], cell[:, 1], cell[:, 2] + spec.seed) - 0.5) * 0.6 * M
 
+    cut_memo: dict[float, tuple[np.ndarray, np.ndarray]] = {}
+
     def collapse_cut(p: np.ndarray, shrink: float = 1.0) -> np.ndarray:
+        """
+        Volume emporté par l'effondrement. Ses faces sont rongées par un bruit lisse d'un demi-mètre : murs et
+        planchers s'arrêtent en dents irrégulières au lieu de plans nets (lus comme une aile plus basse). Mémorisé
+        pour le tableau de points en cours : une quinzaine de pièces l'interrogent à chaque pas.
+        """
         if not collapse:
             return np.full(len(p), np.inf)
-        return _union(*(rounded_box(p, c, h * shrink, 0.0, r) for c, h, r in collapse))
+        memo = cut_memo.get(shrink)
+        if memo is not None and memo[0] is p:
+            return memo[1]
+        d = _union(*(rounded_box(p, c, h * shrink, 0.0, r) for c, h, r in collapse))
+        near = d < 0.8 * M
+        if near.any():
+            # Le bruit ne fait qu'agrandir la coupe : en la rétrécissant, il laissait des fragments de toit flotter en l'air.
+            d[near] = (d[near] - value_noise(p[near], 0.7 * M, spec.seed + 12) * 0.8 * M) * 0.5
+        cut_memo[shrink] = (p, d)
+        return d
+
+    def cut_wide(p: np.ndarray) -> np.ndarray:
+        # Corniches, toiture et mobilier de toit reculent un peu plus que les murs : coupés au même endroit, leurs
+        # éclats restaient suspendus au-dessus d'un mur emporté.
+        return collapse_cut(p) - 0.2 * M
 
     def shop_front(p: np.ndarray) -> np.ndarray:
         return _box(p, (0, 1.2 * M, half_d), (half_w * 0.8, 0.95 * M, 0.2 * M))
@@ -327,10 +366,14 @@ def building(spec: BuildingSpec) -> PropModel:
         return np.maximum(inner, -collapse_cut(p))
 
     def floors(p: np.ndarray) -> np.ndarray:
-        # Planchers visibles dans les brèches, un peu moins rongés que les murs.
+        # Planchers visibles dans les brèches, un peu moins rongés que les murs ; dans l'effondrement, un pan de
+        # plancher cassé pend encore à son bord, incliné vers la rue.
         slabs = _union(*(_box(p, (0, k * STOREY, 0), (half_w - 0.05 * M, 0.12 * M, half_d - 0.05 * M))
                          for k in range(1, spec.storeys)))
-        return np.maximum(slabs, -collapse_cut(p, 0.8))
+        result = np.maximum(slabs, -collapse_cut(p, 0.85))
+        if hanging:
+            result = np.minimum(result, _union(*(rounded_box(p, c, h, 0.02 * M, r) for c, h, r in hanging)))
+        return result
 
     def trim(p: np.ndarray) -> np.ndarray:
         bands = [_box(p, (0, k * STOREY, 0), (half_w + 0.06 * M, 0.08 * M, half_d + 0.06 * M)) for k in range(1, spec.storeys)]
@@ -340,7 +383,7 @@ def building(spec: BuildingSpec) -> PropModel:
         pieces = [cornice, parts["sills"], parts["lintels"], *bands]
         if spec.style in ("apartment", "shop"):
             pieces.append(parts["frames"])
-        return np.maximum(_union(*pieces), -collapse_cut(p))
+        return np.maximum(_union(*pieces), -cut_wide(p))
 
     def boards(p: np.ndarray) -> np.ndarray:
         return np.maximum(facades.parts(p)["boards"], -collapse_cut(p))
@@ -367,16 +410,17 @@ def building(spec: BuildingSpec) -> PropModel:
         return np.maximum(np.maximum(slope, -local[:, 1]), np.abs(local[:, 0]) - (half_w + 0.25 * M))
 
     def membrane(p: np.ndarray) -> np.ndarray:
-        return np.maximum(_box(p, (0, height + 0.04 * M, 0), (half_w - 0.18 * M, 0.05 * M, half_d - 0.18 * M)), -collapse_cut(p))
+        return np.maximum(_box(p, (0, height + 0.04 * M, 0), (half_w - 0.18 * M, 0.05 * M, half_d - 0.18 * M)), -cut_wide(p))
 
     def roof(p: np.ndarray) -> np.ndarray:
         if house:
             d = pitched(p)
         else:
             parapet = _box(p, (0, height + 0.35 * M, 0), (half_w, 0.25 * M, half_d))
-            well = _box(p, (0, height + 0.5 * M, 0), (half_w - 0.3 * M, 0.3 * M, half_d - 0.3 * M))
+            # Le creux descend jusqu'à la membrane : un fond plein de parapet la recouvrait, gravier et mousse compris.
+            well = _box(p, (0, height + 0.43 * M, 0), (half_w - 0.3 * M, 0.37 * M, half_d - 0.3 * M))
             d = np.minimum(np.maximum(parapet, -well), membrane(p))
-        return np.maximum(d, -collapse_cut(p))
+        return np.maximum(d, -cut_wide(p))
 
     def roof_surface(p: np.ndarray) -> np.ndarray:
         return pitched(p) if house else membrane(p)
@@ -384,31 +428,31 @@ def building(spec: BuildingSpec) -> PropModel:
     def stair_house(p: np.ndarray) -> np.ndarray:
         if stair is None:
             return np.full(len(p), np.inf)
-        return np.maximum(_box(p, stair + np.array([0.0, height + 0.72 * M, 0.0]), (0.8 * M, 0.72 * M, 0.65 * M)), -collapse_cut(p))
+        return np.maximum(_box(p, stair + np.array([0.0, height + 0.72 * M, 0.0]), (0.8 * M, 0.72 * M, 0.65 * M)), -cut_wide(p))
 
     def stair_top(p: np.ndarray) -> np.ndarray:
         if stair is None:
             return np.full(len(p), np.inf)
-        return np.maximum(_box(p, stair + np.array([0.0, height + 1.5 * M, 0.0]), (0.9 * M, 0.06 * M, 0.75 * M)), -collapse_cut(p))
+        return np.maximum(_box(p, stair + np.array([0.0, height + 1.5 * M, 0.0]), (0.9 * M, 0.06 * M, 0.75 * M)), -cut_wide(p))
 
     def stair_door(p: np.ndarray) -> np.ndarray:
         if stair is None:
             return np.full(len(p), np.inf)
-        return np.maximum(_box(p, stair + np.array([0.2 * M, height + 0.6 * M, 0.65 * M]), (0.28 * M, 0.5 * M, 0.04 * M)), -collapse_cut(p))
+        return np.maximum(_box(p, stair + np.array([0.2 * M, height + 0.6 * M, 0.65 * M]), (0.28 * M, 0.5 * M, 0.04 * M)), -cut_wide(p))
 
     def chimney(p: np.ndarray) -> np.ndarray:
         if house:
             stacks = [_box(p, (0.45 * half_w, roof_y + 1.4 * M, -0.25 * half_d), (0.28 * M, 0.85 * M, 0.28 * M))]
         else:
             stacks = [_box(p, c + np.array([0.0, height + 0.5 * M, 0.0]), (0.24 * M, 0.5 * M, 0.24 * M)) for c in chimneys]
-        return np.maximum(_union(*stacks), -collapse_cut(p))
+        return np.maximum(_union(*stacks), -cut_wide(p))
 
     def chimney_caps(p: np.ndarray) -> np.ndarray:
         if house:
             caps = [_box(p, (0.45 * half_w, roof_y + 2.27 * M, -0.25 * half_d), (0.34 * M, 0.05 * M, 0.34 * M))]
         else:
             caps = [_box(p, c + np.array([0.0, height + 1.02 * M, 0.0]), (0.3 * M, 0.05 * M, 0.3 * M)) for c in chimneys]
-        return np.maximum(_union(*caps), -collapse_cut(p))
+        return np.maximum(_union(*caps), -cut_wide(p))
 
     def metalwork(p: np.ndarray) -> np.ndarray:
         # Ventilations et descente d'eau en zinc.
@@ -418,7 +462,7 @@ def building(spec: BuildingSpec) -> PropModel:
             pieces.append(_box(p, (pipe_x, height - 0.05 * M, half_d + 0.1 * M), (0.12 * M, 0.1 * M, 0.08 * M)))
         if shop:
             pieces.append(rolling_shutter(p))
-        return np.maximum(_union(*pieces), -collapse_cut(p))
+        return np.maximum(_union(*pieces), -cut_wide(p))
 
     def rolling_shutter(p: np.ndarray) -> np.ndarray:
         # Rideau de fer à moitié baissé sur la vitrine.
@@ -431,7 +475,7 @@ def building(spec: BuildingSpec) -> PropModel:
         return np.maximum(_union(capsule(p, base, base + np.array([0.0, 1.5 * M, 0.0]), 0.03 * M),
                                  capsule(p, base + np.array([-0.35 * M, 1.25 * M, 0.0]), base + np.array([0.35 * M, 1.25 * M, 0.0]), 0.025 * M),
                                  capsule(p, base + np.array([-0.25 * M, 1.0 * M, 0.0]), base + np.array([0.25 * M, 1.0 * M, 0.0]), 0.025 * M)),
-                          -collapse_cut(p))
+                          -cut_wide(p))
 
     ivy_leaves = _clumps([c for c, _ in ivy], [tuple(r) for _, r in ivy], 0.035 * M, 0.2 * M) if ivy else None
 
@@ -509,7 +553,7 @@ def building(spec: BuildingSpec) -> PropModel:
     near_collapse = lambda p: np.abs(collapse_cut(p)) - 0.35 * M
     roof_moss = noise_mask(0.45 * M, spec.seed + 6, (0.05 if house else 0.12) + 0.25 * spec.damage)
     # Flaques sur le toit plat : l'eau stagne là où la membrane s'est affaissée.
-    puddles = noise_mask(0.7 * M, spec.seed + 10, 0.0 if house else 0.06)
+    puddles = noise_mask(0.7 * M, spec.seed + 10, 0.04)
 
     def parts() -> list[Part]:
         result = [
@@ -527,10 +571,10 @@ def building(spec: BuildingSpec) -> PropModel:
             Part(shutters, SHUTTER), Part(painted(shutters, bands(1, 0.1 * M, 0.03 * M), 0.012 * M), IRON),
             Part(balconies, TRIM), Part(railings, IRON),
             Part(roof, ROOF),
-            Part(painted(roof_surface, noise_mask(0.07 * M, spec.seed + 4, 0.4), 0.01 * M), GRAVEL, relief=False),
+            Part(painted(roof_surface, noise_mask(0.11 * M, spec.seed + 4, 0.35), 0.01 * M), GRAVEL, relief=False),
             Part(painted(roof_surface, roof_moss, 0.02 * M), MOSS, relief=False),
             Part(painted(roof_surface, both(roof_moss, noise_mask(0.18 * M, spec.seed + 7, 0.4)), 0.024 * M), MOSS_LIGHT, relief=False),
-            Part(painted(roof_surface, puddles, 0.022 * M), WATER, relief=False),
+
             Part(stair_house, WALL), Part(stair_top, TRIM), Part(stair_door, DOOR),
             Part(chimney, BRICK), Part(painted(chimney, bricks(0.18 * M, 0.42 * M, 0.04 * M), 0.012 * M), MORTAR),
             Part(chimney_caps, TRIM), Part(metalwork, ZINC), Part(antenna_part, IRON),
@@ -540,7 +584,10 @@ def building(spec: BuildingSpec) -> PropModel:
                                                       + noise_mask(0.2 * M, spec.seed + 9, 0.5)(p), 0.02 * M), FOLIAGE_LIGHT),
             Part(bark_part, BARK),
             Part(heaps_part, RUBBLE_DARK), Part(chunks_part, RUBBLE),
+            Part(lambda p: _union(*(capsule(p, a, b, 0.025 * M) for a, b in rebars)) if rebars else np.full(len(p), np.inf), BARK),
         ]
+        if not house:
+            result.append(Part(painted(membrane, puddles, 0.022 * M), WATER, relief=False))
         if house:
             result.append(Part(painted(pitched, bricks(0.24 * M, 0.36 * M, 0.045 * M, frame=lambda q: np.stack(
                 [q[:, 0], q[:, 1], np.zeros(len(q))], axis=1)), 0.012 * M), TILE_DARK))
@@ -598,11 +645,7 @@ def church(stem: str, seed: int, mirrored: bool) -> PropModel:
     rubble = [(np.array([w.uniform(-1.0, 1.0) * half_w, 0.15 * M, half_d + w.uniform(0.1, 1.0) * M]),
                np.array([w.uniform(0.2, 0.45), w.uniform(0.15, 0.3), w.uniform(0.2, 0.4)]) * M, w.uniform(0, np.pi))
               for _ in range(6)]
-    # Lierre : grappes de feuillage qui grimpent le long du mur, du pied vers les baies.
-    ivy = []
-    for _ in range(2):
-        x = w.uniform(0.0, 0.85) * half_w
-        ivy += [np.array([x + w.uniform(-0.35, 0.35) * M, (0.15 + k * 0.3) * M, nave_d + 0.05 * M]) for k in range(9)]
+    ivy = _ivy(w, w.uniform(0.1, 0.4) * half_w, nave_d, 2.6 * M) + _ivy(w, w.uniform(0.55, 0.85) * half_w, nave_d, 1.8 * M)
 
     def ogive(p: np.ndarray, x: float, y0: float, height: float, half_width: float, z: float, depth: float) -> np.ndarray:
         # Baie en ogive : fente droite coiffée d'un arc (deux sphères qui se recoupent donnent la pointe).
@@ -686,8 +729,14 @@ def church(stem: str, seed: int, mirrored: bool) -> PropModel:
     def door(p: np.ndarray) -> np.ndarray:
         return ogive(p, tower_x, 0.0, 2.0 * M, 0.5 * M, tower - 0.1 * M, 0.08 * M)
 
+    leaves = _clumps([c for c, _ in ivy], [tuple(r) for _, r in ivy], 0.035 * M, 0.2 * M)
+
     def moss(p: np.ndarray) -> np.ndarray:
-        return _union(*(sphere(p, c, 0.2 * M) for c in ivy))
+        d = np.abs(p[:, 2] - (nave_d + 0.04 * M)) - 0.4 * M
+        near = d < 0.2 * M
+        if near.any():
+            d[near] = leaves(p[near])
+        return d
 
     def rubble_part(p: np.ndarray) -> np.ndarray:
         return _union(*(rounded_box(p, c, h, 0.05 * M, rotation_y(a)) for c, h, a in rubble))

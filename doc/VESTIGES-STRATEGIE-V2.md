@@ -869,6 +869,7 @@ Le script de post-processing doit inclure une vérification/correction de l'angl
 - [x] Plan 25 S8 : 14 icônes de Réminiscences en Collection, neuf définitions raccordées aux interfaces ; les effets non implémentés restent « À venir ». Choix et inventaire capturés.
 - [x] Hub visuel (camp du Foyer vivant, validé par Raphaël le 26 septembre 2026, plan 04).
 - [x] Plan 31 M0–M1 : les 25 décors du Marais repris (bois blanchi rainuré, pied mouillé, liseré d'eau, barbes de lichen, objets noyés lisibles), kit de détails de surface et générateur parallèle ; planches ×2/×5 sur les trois sols, galerie en jeu (`--capture-prop-gallery`) et régénération identique octet pour octet vérifiées (9 octobre 2026).
+- [x] Plan 31 U1–U3 : immeubles, église, ruines éventrées et petits décors des Ruines Urbaines repris (façades, fenêtres, toits, lierre, gravats, bureau renversé procédural) ; lignes internes des surfaces planes et détails sub-pixel corrigés dans le pipeline ; planches, galerie en jeu et régénération reproductible vérifiées (9 octobre 2026).
 - [ ] Musiques adaptatives (5-6 tracks).
 - [ ] Sound design complet.
 
