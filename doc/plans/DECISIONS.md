@@ -946,3 +946,11 @@ Raphaël valide explicitement « cloche b et boite a musique c » dans la série
 - Lot D : « je pense que on va passer en noeudless car de ce que tu me dis ca a vraiment l'air meilleur ». Décidé ; repris par un autre agent sur le [brief du lot D](29-lot-D-brief.md). Guide d'export demandé : [EXPORT.md](../EXPORT.md).
 - Lot D revu : « avec ce que tu me dit on va garder les noeuds pour l'instant ». Lot D reporté ; le brief reste prêt si le besoin revient (entrée de gamme, foule plus grande). « on s'arrete là pour les optis je pense c'est déjà du bon travail » : chantier performance des foules clos pour l'instant.
 - Temps forts : « vampire survivor a plus de temps fort que nous (j'y joue en ce moment). megabonk aussi avec sur les premieres 10 minutes 2 mini boss qui spawnent, 2 vagues d'ennemis intenses, un boss au bout des 10 min, et des "élites" (qu'on a aussi pour le coup). donc ptet concretement que sur le jeu on pourrait étudier des pistes pour dynamiser un peu plus notre jeu. » Piste à étudier, rien de décidé.
+
+## 84. Temps forts : réponses à l'étude — 9 octobre 2026
+
+Étude livrée au [plan 30](30-temps-forts.md) (chronologie mesurée des 15 premières minutes). Réponses de Raphaël aux quatre questions :
+- **Résurgence : « Pic sans reflux ».** Pendant la crise, le plafond de run monte (≈ ×1,6) pour que la vague s'ajoute à la foule au lieu de la remplacer ; à la fin, pas de retrait forcé : le plafond redescend et la foule en trop s'use d'elle-même (éliminations, créatures semées). La crise devient une marche plus haute, voulue.
+- **Souverains : deux rendez-vous fixes**, vers 2:45 et 7:00, entre les Résurgences ; annoncés, nommés, barre de PV, combat de 20 à 40 s avec le build de référence, coffre rare. Retirés du tirage des micro-événements.
+- **Barrière : à 10 min, à l'heure, en priorité.** Déclenchée vers 10:00 (après la deuxième Résurgence et son accalmie), et non plus après la troisième Résurgence (qui commence en fait entre 13:36 et 14:50). Remplace le déclenchement du §70. Les lots B1–B2 du plan 07 passent avant les pouvoirs des personnages.
+- **Nuées sans objectif (D) et respiration par minute (E) : après A, B et C**, si la run manque encore de contraste une fois ceux-ci joués.
