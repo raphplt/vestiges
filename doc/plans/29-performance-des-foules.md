@@ -181,3 +181,5 @@ Banc hors quota, machine calme, une passe :
 Reste à 1 000, par image : rendu 5,2 ms (2 055 appels de dessin, deux par créature), scripts physiques 5,1 ms (≈ 6 µs par créature et par tick), `_Process` 2,3 ms, pas du moteur 1,5 ms (projectiles ennemis en `Area2D`).
 
 **Vérifications** : build sans avertissement, `tools/validate.sh` 32/32.
+
+**Foule contre un décor** (9 octobre, après C1) : banc à l'ancien point (`--arena origin`, joueur posé dans un immeuble), 240 créatures. Les Ombres épousent les faces ouest et sud de l'immeuble sans entrer dans son emprise ; 199 FPS, p99 8,5 ms (57 FPS ce matin au même point). Run de 150 s en nomade (`capture_run.sh`) : rien d'anormal sur les captures.

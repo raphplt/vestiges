@@ -36,6 +36,8 @@ Les plans 13 (butin) et 14 (anomalies) ne sont pas arbitrés : ne pas les implé
 - **Sprites générés** : ne jamais supprimer un `.import` existant (son uid est référencé) ; Godot réimporte seul un PNG modifié. Les nouveaux PNG reçoivent leur `.import` au prochain `tools/smoke_test.sh` : les committer ensemble.
 - **Shaders `canvas_item` et Modulate** : dans `fragment()`, `COLOR` vaut déjà texture × Modulate. Multiplier une texture lue par `COLOR` l'élève au carré ; l'ignorer perd Modulate. Capter `COLOR` dans `vertex()` (Modulate seul) par un `varying` (voir `entity.gdshader`).
 - **Primitives SDF orientées** (`tools/sprites/sdf.py`) : `local = (p − centre) @ rotation`, donc un point local se place en monde par `rotation @ local`.
+- **Rappels C# par nœud** : Godot appelle le pont C# pour chaque nœud traité (`_Process`, `_PhysicsProcess`), ≈ 3 à 9 µs par appel, **même si la classe n'a pas la méthode** (`SetProcess(true)` sans `_Process`). Une entité nombreuse (créature, projectile) passe par un `TickRoster` (plan 29), jamais par son propre rappel.
+- **Profileur .NET** (`dotnet-trace`) : il impute au code managé le temps natif qui précède l'échantillon suivant. Pour attribuer un coût, chronométrer (`Stopwatch`) ou retirer par expérience ; le champ `frame_split_ms` du banc dense découpe l'image.
 - **Scènes de banc** (`tools/tests/`) : elles accèdent parfois à des champs privés par réflexion ; renommer un champ privé peut casser un banc sans erreur de compilation.
 
 ## Outillage Claude du projet
