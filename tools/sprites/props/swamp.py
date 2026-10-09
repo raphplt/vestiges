@@ -19,9 +19,9 @@ import numpy as np
 from ..palette import make_emissive, make_material
 from ..render import Part
 from ..sdf import capsule, cylinder, ellipsoid, rotation_x, rotation_y, rotation_z, rounded_box, sphere
+from ._flora import _align_y, _branch_chain, _clumps, _gnarled, _grooves, _sag, _shelves, _union
 from ._kit import AXIS_X_YAW, AXIS_Y_YAW, M, PropModel, Weathering, box_footprint
 from ._surface import bands, both, noise_mask, painted, value_noise, waterline
-from .forest import _clumps, _union
 
 # Palette Marécages (charte §3).
 WATER_DARK = "#4A6A5E"
@@ -65,41 +65,6 @@ def _sunk(distance: Callable[[np.ndarray], np.ndarray], level: float) -> Callabl
     return lambda p: np.maximum(distance(p), level - p[:, 1])
 
 
-def _branch_chain(points: list[np.ndarray], r0: float, r1: float):
-    """Branche torse : capsules enchaînées dont le rayon décroît de r0 à r1."""
-    radii = np.linspace(r0, r1, len(points))
-    return lambda p: _union(*(capsule(p, a, b, ra, rb) for a, b, ra, rb in zip(points, points[1:], radii, radii[1:])))
-
-
-def _gnarled(w: Weathering, start: np.ndarray, direction: np.ndarray, length: float, segments: int,
-             wobble: float = 0.35) -> list[np.ndarray]:
-    """Points d'une branche qui se tord un peu à chaque segment ; un fût se tord moins qu'une branche."""
-    points = [start]
-    heading = direction / np.linalg.norm(direction)
-    step = length / segments
-    for _ in range(segments):
-        heading = heading + np.array([w.uniform(-wobble, wobble), w.uniform(-0.1, 0.25) * wobble / 0.35, w.uniform(-wobble, wobble)])
-        heading /= np.linalg.norm(heading)
-        points.append(points[-1] + heading * step)
-    return points
-
-
-def _align_y(direction: np.ndarray, roll: float = 0.0) -> np.ndarray:
-    """Rotation qui porte l'axe Y local sur `direction` (local = p @ rotation), tournée de `roll` autour de lui."""
-    y = direction / np.linalg.norm(direction)
-    helper = np.array([0.0, 0.0, 1.0]) if abs(y[2]) < 0.9 else np.array([1.0, 0.0, 0.0])
-    x = np.cross(y, helper)
-    x /= np.linalg.norm(x)
-    z = np.cross(x, y)
-    x, z = x * np.cos(roll) + z * np.sin(roll), z * np.cos(roll) - x * np.sin(roll)
-    return np.stack([x, y, z], axis=1)
-
-
-def _sag(a: np.ndarray, b: np.ndarray, droop: float, steps: int = 6) -> list[np.ndarray]:
-    """Points d'un câble ou d'une liane tendus entre deux attaches, avec une flèche au milieu."""
-    return [a + (b - a) * t - np.array([0.0, droop * 4 * t * (1 - t), 0.0]) for t in np.linspace(0, 1, steps)]
-
-
 def _beards(w: Weathering, anchors: list[np.ndarray], length: tuple[float, float], strands: int = 5,
             spread: float = 0.1 * M, radius: float = 0.034 * M) -> Callable[[np.ndarray], np.ndarray]:
     """
@@ -124,14 +89,6 @@ def _beards(w: Weathering, anchors: list[np.ndarray], length: tuple[float, float
                             *(np.minimum(capsule(p, t, m, r, r * 0.85), capsule(p, m, b, r * 0.85, r * 0.45)) for t, m, b, r in pieces))
 
 
-def _grooves(shape, seed: int, axis: int = 1, period: float = 0.13 * M, coverage: float = 0.3,
-             frame: Callable[[np.ndarray], np.ndarray] | None = None):
-    """Fibres d'écorce ou de bois : un bruit étiré le long de l'axe du bois, peint en rainures sombres."""
-    stretch = [1.0, 1.0, 1.0]
-    stretch[axis] = 7.0
-    return painted(shape, noise_mask(period, seed, coverage, tuple(stretch), frame))
-
-
 def _wet_foot(shape, seed: int, height: float = 0.32 * M):
     """Pied mouillé : la vase et l'eau assombrissent le bas du bois sur une hauteur irrégulière."""
     def mask(p: np.ndarray) -> np.ndarray:
@@ -139,11 +96,6 @@ def _wet_foot(shape, seed: int, height: float = 0.32 * M):
         return p[:, 1] - height + wobble * 0.8
 
     return painted(shape, mask)
-
-
-def _shelves(anchors: list[tuple[np.ndarray, float, float]]):
-    """Polypores en console : demi-disques plats accrochés au bois, (point, rayon, orientation)."""
-    return lambda p: _union(*(ellipsoid(p, c, (r, r * 0.32, r * 0.75), rotation_y(a)) for c, r, a in anchors))
 
 
 # ---------------------------------------------------------------------------------------------------------------------

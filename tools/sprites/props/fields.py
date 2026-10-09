@@ -12,8 +12,9 @@ import numpy as np
 from ..palette import make_material
 from ..render import Part
 from ..sdf import capsule, cylinder, ellipsoid, rotation_x, rotation_y, rotation_z, rounded_box, sphere
+from ._flora import _clumps, _union
 from ._kit import AXIS_X_YAW, AXIS_Y_YAW, M, PropModel, Weathering, box_footprint
-from .forest import _clumps, _union, tree
+from .forest import tree
 
 GRASS_DARK = "#3A6A30"
 GRASS = "#5AA848"

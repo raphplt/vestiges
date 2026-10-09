@@ -32,8 +32,11 @@ Notes : marais 4/10, immeubles 5/10, forêt et petits décors urbains 6/10, cham
 | **U2** | Ruines : effondrements remplis de gravats et de planchers éventrés, variantes endommagées vraiment différentes | Livré, voir §5 |
 | **U3** | Petits décors urbains : murs, débris, bureau renversé, poutres ; taille minimale et contraste sur le sol des ruines | Livré, voir §5 |
 | U4 | Orphelins urbains : proposition à Raphaël avant toute suppression | À faire |
+| **F1** | Forêt : les 18 modèles repris (23 PNG), arbres partagés avec les champs et la ferme ; galerie en jeu | Livré, voir §6 |
+| C1 | Champs et ferme : maisons de ferme (façades du kit urbain), grange endommagée vraiment différente, haies, verger | À faire |
+| Q1 | Carrière : panneau de danger, cristaux, petits décors lisibles | À faire |
 
-Forêt, champs (haies, troncs, maisons de ferme) et carrière ne sont pas commandés ; ils profiteront du kit et des façades.
+Forêt, champs et carrière ont été demandés après les lots urbains ([DECISIONS §84](DECISIONS.md)) : « je crois que sur les autres il y a moins de choses à revoir », d'où une reprise plus légère, un lot par biome.
 
 ## 3. Compte rendu M0–M1 — marais
 
@@ -103,3 +106,33 @@ Forêt, champs (haies, troncs, maisons de ferme) et carrière ne sont pas comman
 **Vérifications U1–U3.** Planches de génération ×2 sur le sol des ruines, rendus rapides ×3–×5 de chaque famille, galerie en jeu (`--capture-prop-gallery urban_ruins`, seed 1002, 38 sprites cadrés) regardée : façades, toits et ruines se lisent à l'échelle réelle, la transparence derrière les immeubles (`PropOcclusion`) est intacte. Hauteurs des modules inchangées à ±2 px (172–190 px, sous la limite d'un îlot) ; manifeste régénéré, le bureau renversé y entre. Régénération complète (immeubles et mobilier) comparée octet par octet : identique ; smoke test vert.
 
 **U4 — question à Raphaël.** `prop_brick_wall`, `prop_concrete_wall` et `prop_concrete_wall_v3` ne sont référencés par aucun JSON ni placeur, et n'ont pas de modèle procédural. Proposition : les supprimer avec leurs `.import`. Rien n'est supprimé sans son accord.
+
+## 6. Compte rendu F1 — forêt
+
+**Kit commun.** Les formes végétales et le bois du marais (branches torses, rainures, polypores) passent dans `tools/sprites/props/_flora.py`, avec les touffes de la forêt : marais, forêt, champs, ferme, carrière et immeubles les importent de là au lieu de s'importer entre biomes (rendus inchangés, vérifié octet par octet). Trois ajouts :
+
+- *Feuillage en grappes* (`_leaf_mass`) : chaque touffe est un cœur hérissé de petites boules ; chaque grappe prend sa lumière et se détache de ses voisines par une ligne interne, un bruit fin les froisse pour qu'aucune ne se lise en bulle. Il remplace les bosses sinusoïdales régulières, qui faisaient des chou-fleurs.
+- *Peau du dessus* (`_top_skin`) : masque des faces tournées vers le ciel, pour poser la mousse sur le dessus d'un mur ou d'une carrosserie sans la placer à la main.
+- *Borne rapide* (`_bounded`) : la règle du lierre urbain (distance à l'enveloppe loin d'elle, vraie forme près du bord), réutilisable.
+
+**Arbres (tronc + canopée).** Le fût se tord un peu, s'évase en cinq contreforts et se divise en trois maîtresses branches et une flèche ; des rameaux vont chercher les touffes de la couronne. Les branches se voient sous la canopée et par ses trouées quand elle devient transparente. Écorce rainurée, mousse côté ombre au pied des grands chênes. Le bouleau garde sa flèche, son écorce blanche est barrée de lenticelles noires et son pied noirci ; sa couronne est haute et légère. Les arbres sont composés de face (`FRONT`) : la mousse et l'ombre tombent du bon côté. L'arbre isolé des champs et les deux arbres du verger viennent du même code : ils gagnent fourche et branches (défaut « troncs en poteaux » de l'audit) et sont régénérés avec ce lot ; leurs couleurs restent à revoir au lot C1.
+
+**Décor par décor :**
+
+| Décor | Avant | Après |
+|---|---|---|
+| Chênes (×2), jeune arbre, bouleau | poteau planté dans un chou-fleur | fourche, branches, contreforts, écorce rainurée ; feuillage en grappes en trois étages (ombre, cœur, lumière) |
+| Arbre étranglé | poteau gris, boules vertes en spirale | fût étêté en échardes, branches mortes, trois tiges de lierre en hélice chargées de feuilles plaquées, pans qui pendent des branches |
+| Buissons (×2) | boules vertes | pied de tiges sombres, grappes ombrées par-dessous ; la variante fleurie porte des grappes violettes à pointe pâle |
+| Fougère | étoile plate | onze frondes en arc, peignes de folioles qui s'affinent, frondes du fond à l'ombre, deux crosses |
+| Fleurs (×2) | taches | rosette de feuilles, tiges inégales, corolles tournées vers la caméra avec leur cœur, boutons |
+| Champignons | une boule ocre | trois cèpes et deux girolles de tailles franches sur un lit de mousse et de feuilles mortes |
+| Souche | cylindre brun | plateau scié à cernes et gerce, contreforts, écorce rainurée, mousse côté ombre, polypores, une pousse |
+| Rochers moussus (×2) | cubes gris, galette verte | blocs bosselés et fendus, lichen, calotte de mousse qui coule sur les flancs, pied humide, herbe |
+| Tronc couché | capsule brune, boules vertes | écorce rainurée, bois nu vers le bout cassé, bout scié à cernes, mousse épaisse, moignons, polypores |
+| Mur en ruine | dalle brune, taches vert sombre | redans de briques à joints, enduit resté par plaques, soubassement de pierre, mousse sur les redans, lierre en tiges, briques tombées, herbe |
+| Réverbère | perche et une boule | candélabre de fonte vert sombre, socle mouluré, crosse, lanterne à vitres dont une brisée, coulures de rouille, lierre jusqu'à mi-fût |
+| Panneau rouillé | losange jaune de profil | triangle de danger face à la caméra : bord rouge, fond blanc passé, pictogramme, rouille en plaques et coulures, herbe au pied |
+| Voiture envahie | boules vertes, sucette | mousse peinte sur le toit et le capot, lierre en chapelets le long des portières, herbes aux roues, jeune arbre en grappes qui perce le toit |
+
+**Vérifications F1.** Aperçus ×2 sur les trois sols de la forêt (sol, sous-bois, terre) et ×5 isolés, quatre passes ; galerie en jeu (`--capture-prop-gallery forest_reclaimed`, seed 1002, 32 sprites cadrés) regardée : arbres à fourche et bouleaux se détachent du sous-bois, petits décors lisibles à côté du personnage. Réverbère, panneau, mur et voiture ne se posent que sur le béton de la forêt, absent des seeds 1002, 7 et 42 : vus en planche seulement. Tailles gardées dans leurs catégories (fleurs et champignons au-dessus du seuil de décalque comme avant, buisson et fougère sous le seuil de piétinement, souche toujours bloquante). Régénération de la forêt comparée octet par octet : identique ; marais régénéré après le passage de ses aides dans `_flora.py` : aucun fichier modifié.

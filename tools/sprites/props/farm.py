@@ -15,10 +15,11 @@ import numpy as np
 from ..palette import make_material
 from ..render import Part
 from ..sdf import capsule, cylinder, ellipsoid, rotation_x, rotation_y, rotation_z, rounded_box, sphere
+from ._flora import _clumps, _union
 from ._kit import AXIS_X_YAW, AXIS_Y_YAW, M, PropModel, Weathering, box_footprint
 from .buildings import BUILDING_YAW, CELL_WIDTH, DEPTH_ROWS, ROW_DEPTH, BuildingSpec, building
 from .fields import FENCE, GRASS, GRASS_DARK, RUST, STRAW, stone_wall, tractor, wooden_fence
-from .forest import _clumps, _union, tree
+from .forest import tree
 
 BARN_RED = "#7E4032"
 BARN_GREY = "#7A6E62"

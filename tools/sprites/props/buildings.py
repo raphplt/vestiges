@@ -15,9 +15,9 @@ import numpy as np
 from ..palette import make_material
 from ..render import Part
 from ..sdf import capsule, cylinder, ellipsoid, rotation_x, rotation_y, rotation_z, rounded_box, sphere
+from ._flora import _clumps
 from ._kit import AXIS_X_YAW, M, PropModel, Weathering, box_footprint
 from ._surface import bands, both, bricks, cracks, noise_mask, painted, value_noise
-from .forest import _clumps
 
 CELL_WIDTH = 103.0   # 64 px à MODEL_SCALE
 ROW_DEPTH = 51.6     # 16 px de rang, compressés par l'inclinaison

@@ -20,3 +20,4 @@ paths:
 - Grandes surfaces planes (toits, plateaux) : `PropModel(smooth_slopes=True)`, sinon chaque pixel d'un plan horizontal vu à 30° devient une ligne interne sombre. Désactivé par défaut pour ne pas changer en silence les sprites déjà validés.
 - Borne rapide d'une pièce coûteuse (lierre, gravats) : renvoyer la distance à la borne seulement loin d'elle ; près du bord, évaluer la vraie forme, sinon la borne nulle sur son bord crée une fausse surface.
 - Aperçu en jeu par décor : `CAPTURE_EXTRA_ARGS="--capture-prop-gallery <biome>" tools/capture_run.sh <dossier> …` (sous `xvfb-run` sans écran).
+- Formes végétales et bois communs (`tools/sprites/props/_flora.py`) : feuillage en grappes (`_leaf_mass`) plutôt que des boules lisses, branches torses, rainures, polypores, lierre en feuilles plaquées ; un biome n'importe pas les aides d'un autre biome. `tree` (forêt) sert aussi aux champs et à la ferme : le modifier oblige à régénérer leurs arbres.
