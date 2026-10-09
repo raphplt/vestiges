@@ -197,3 +197,21 @@ Reste à 1 000, par image : rendu 5,2 ms (2 055 appels de dessin, deux par créa
 **Logique par créature restante** à 1 000 (assembly optimisée) : 5,1 µs par tick, dont séparation 2,5 (avant le passage à un tick sur deux), déplacement 1,0, statuts 0,6, animation 0,2.
 
 **Mesure de temps reportée** : la machine était chargée (charge 13 à 29 : Graffwall, une VM, Java) pendant toute cette partie. **Vérifications** : build sans avertissement, `tools/validate.sh` 32/32.
+
+### C3 — 9 octobre 2026 : tirs ennemis hors du moteur physique, orbes en registre
+
+- **Ombres des projectiles** (ennemis et du joueur) dans la couche d'ombres en lots ; le tir de rafale n'a d'ombre qu'à son départ.
+- **Tirs ennemis** : un test de distance au joueur dans leur tick remplace la zone physique (rayon du tir + `Player.BodyRadius`, lu sur la forme du joueur) ; le tir est un `Node2D`. À 1 000 créatures, ≈ 426 zones mobiles de moins dans le moteur.
+- **Orbes d'XP éveillées** avancées par un `TickRoster` ; elles gardent leur zone de ramassage (une orbe endormie se ramasse en marchant dessus).
+- Les registres et la couche d'ombres naissent dans l'arbre principal (`Engine.GetMainLoop()`), même pour un nœud du pool pas encore entré dans l'arbre.
+
+A/B en passes alternées, base C1 (`1764bc2c`), même charge (≈ 4, une VM tournait) :
+
+| Créatures | FPS C1 → C3 | p99 | Pas du moteur (ms/img) | Rendu (ms/img) |
+|---|---|---|---|---|
+| 1 000 | 60 → 87 | 27,8 → 20,2 ms | 2,0 → 0,3 | 6,0 → 4,7 |
+| 1 500 | 25 → 46 | 84 → 46 ms | 6,3 → 0,7 | 7,9 → 6,1 |
+
+**Vérifications** : build sans avertissement, 32/32 (un test appelait encore `OnBodyEntered` par réflexion, pointé vers `HitPlayer`).
+
+Reste à 1 500, par image : scripts physiques 9,6 ms (1,2 tick ; ≈ 5 µs par créature et par tick, dont séparation et déplacement), rendu 6,1 ms, `_Process` 4 ms.
