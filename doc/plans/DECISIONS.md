@@ -942,3 +942,5 @@ Raphaël valide explicitement « cloche b et boite a musique c » dans la série
 - Planche F2 (séparation, arrêt au contact) : « Garder tel quel ». Gardé avec les réglages de `data/scaling/crowd.json`.
 - Plafond : « releve le plafond. pour l'instant met le à 500 en gardant à l'esprit qu'on voudra l'augmenter à plusieurs milliers dès que possible. » `active_enemies_ceiling` passe à 500 (la cible de run reste 110 + 4 par minute, Péril compris).
 - « il faut essayer de penser que ça fonctionne même sur l'entrée de gamme » ; tester en export Release ; tester en run réelle avec un plafond au-delà de 1 000.
+- Cible de foule : « on va se calquer sur vampire survivor imo. et donc ne pas aller au delà pour l'instant » (≈ 300 avant l'arrêt de l'apparition normale, 500 au plus selon les wikis communautaires). Plafond gardé à 500.
+- Lot D : « je pense que on va passer en noeudless car de ce que tu me dis ca a vraiment l'air meilleur ». Décidé ; repris par un autre agent sur le [brief du lot D](29-lot-D-brief.md). Guide d'export demandé : [EXPORT.md](../EXPORT.md).

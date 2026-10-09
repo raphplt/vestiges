@@ -87,7 +87,10 @@ Collision avec les décors par une grille statique construite à la génération
 
 Trouver les ≈ 19 µs par créature et par image de `_Process` ; réduire les ≈ 9 nœuds par créature (ombre, marques, plaques créées à la demande) ; matériau partagé pour regrouper le rendu.
 
-### D — Si C ne suffit pas pour 2 000
+### D — Créatures de la horde sans nœuds (décidé le 9 octobre, §83 ; [brief de reprise](29-lot-D-brief.md))
+
+Cible révisée : tenir 500 créatures (plafond calqué sur Vampire Survivors) avec de la marge sur l'entrée de gamme, ≤ 8 ms par image sur la machine de Raphaël. Le texte ci-dessous est l'idée d'origine.
+
 
 Créatures de la horde sans nœud : dessin direct par le `RenderingServer` dans le tri en Y, la créature n'étant plus qu'une entrée de tableau. Les créatures à capacités (élites, mini-boss, boss) restent des nœuds.
 
