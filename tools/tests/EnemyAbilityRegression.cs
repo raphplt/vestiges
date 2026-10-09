@@ -271,7 +271,6 @@ public partial class EnemyAbilityRegression : Node2D
         dirty.ApplyDisorient(10f);
         dirty.StartTravel(Vector2.Right, 2f, 10f);
         typeof(Enemy).GetField("_isBurrowed", flags).SetValue(dirty, true);
-        dirty.CollisionLayer = 0;
         dirty.Modulate = new Color(1f, 1f, 1f, 0.35f);
         dirty.TakeDamage(3f);
         await ToSignal(GetTree(), SceneTree.SignalName.PhysicsFrame);
@@ -292,8 +291,8 @@ public partial class EnemyAbilityRegression : Node2D
               && Field(reused, "_disorientTimer") == 0f, "Pool : brûlure, saignement, ralentissement et désorientation effacés");
         Check(Field(reused, "_speed") == rodeur.Stats.Speed && reused.HpRatio == 1f,
             $"Pool : vitesse et PV de la nouvelle fiche ({Field(reused, "_speed")} pour {rodeur.Stats.Speed})");
-        Check(reused.Scale == Vector2.One && reused.Modulate == Colors.White && reused.CollisionLayer == 2,
-            $"Pool : taille, opacité et collisions d'origine (échelle {reused.Scale}, alpha {reused.Modulate.A}, couche {reused.CollisionLayer})");
+        Check(reused.Scale == Vector2.One && reused.Modulate == Colors.White && !reused.IsBurrowed && reused.BodyRadius == 14f,
+            $"Pool : taille, opacité et corps d'origine (échelle {reused.Scale}, alpha {reused.Modulate.A}, rayon {reused.BodyRadius}, enfouie {reused.IsBurrowed})");
         Check(reused.GetNodeOrNull("AberrationAura") == null && reused.GetNodeOrNull("Nameplate") == null,
             "Pool : ni aura d'Aberration ni plaque de nom restées accrochées");
         AnimatedSprite2D sprite = reused.GetNode<AnimatedSprite2D>("Sprite");
@@ -378,13 +377,13 @@ public partial class EnemyAbilityRegression : Node2D
         float enemyHp = rampant.HpRatio;
         rampant.TakeDamage(50f);
         await Step(burrowTicks - 4);
-        Check(rampant.HpRatio == enemyHp && rampant.CollisionLayer == 0, "Rampant : enfoui, ni dégâts reçus ni collision");
+        Check(rampant.HpRatio == enemyHp && rampant.IsBurrowed, "Rampant : enfoui, ni dégâts reçus ni touche");
         Check(_player.CurrentHp >= hp - 0.001f, "Rampant : enfoui, aucun coup au contact");
         Check(!marker.Visible, "Rampant : pas d'annonce avant la fin de l'enfouissement");
         await Step(5);
         Check(marker.Visible && rampant.Velocity == Vector2.Zero, "Rampant : surgissement annoncé au sol, créature immobile");
         await Step(warningTicks + 1);
-        Check(_player.CurrentHp < hp && rampant.CollisionLayer == 2, $"Rampant : surgissement sur le joueur resté dans la zone (PV {hp} → {_player.CurrentHp})");
+        Check(_player.CurrentHp < hp && !rampant.IsBurrowed, $"Rampant : surgissement sur le joueur resté dans la zone (PV {hp} → {_player.CurrentHp})");
         Despawn(rampant);
 
         _player.Position = Vector2.Zero;

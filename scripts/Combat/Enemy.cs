@@ -8,7 +8,7 @@ using Vestiges.World;
 
 namespace Vestiges.Combat;
 
-public partial class Enemy : CharacterBody2D, ICrowdMember
+public partial class Enemy : Node2D, ICrowdMember
 {
 	private const float MeleeRange = 38f;
 	private const float MeleeAttackCooldown = 0.75f;
@@ -93,6 +93,11 @@ public partial class Enemy : CharacterBody2D, ICrowdMember
 	// Plusieurs coups rapprochés se cumulent sans dépasser ce recul total (px) : la créature recule, elle ne s'envole pas.
 	private const float MaxKnockbackDistance = 80f;
 	private Vector2 _knockVelocity;
+	// Rayon du corps au sol, échelle comprise : contours des décors et touches des projectiles (plan 29 B).
+	private const float BaseBodyRadius = 14f;
+	private float _bodyRadius = BaseBodyRadius;
+	/// <summary>Plus grand rayon de corps atteint (variantes comprises) : marge des requêtes de touche.</summary>
+	public static float LargestBodyRadius { get; private set; } = BaseBodyRadius;
 	// Créature de mêlée arrêtée contre le joueur : elle reste tournée vers lui et garde son pas (plan 29 F2).
 	private bool _pressingPlayer;
 
@@ -192,6 +197,12 @@ public partial class Enemy : CharacterBody2D, ICrowdMember
 	public static float AnimationTempo = 1f;
 
 	public bool IsActive { get; private set; }
+	/// <summary>Vitesse voulue pour le tick, en pixels par seconde ; le déplacement contourne les décors.</summary>
+	public Vector2 Velocity { get; set; }
+	/// <summary>Rayon de touche : un projectile ou une orbe qui l'atteint frappe la créature.</summary>
+	public float BodyRadius => _bodyRadius;
+	/// <summary>Enfouie (Rampant) : les projectiles et les orbes la traversent.</summary>
+	public bool IsBurrowed => _isBurrowed;
 	/// <summary>Rang dans la boucle d'<see cref="EnemyTicker"/>, −1 hors de la boucle ; tenu par elle seule.</summary>
 	internal int TickSlot { get; set; } = -1;
 	/// <summary>Rang dans <see cref="CrowdIndex"/>, −1 quand la créature n'est plus une cible ; tenu par l'index.</summary>
@@ -314,6 +325,7 @@ public partial class Enemy : CharacterBody2D, ICrowdMember
 		SetProcess(true);
 		Modulate = Colors.White;
 		Scale = Vector2.One;
+		_bodyRadius = BaseBodyRadius;
 		if (_visual != null) _visual.Scale = Vector2.One;
 		if (_sprite != null) _sprite.Scale = Vector2.One;
 
@@ -369,6 +381,8 @@ public partial class Enemy : CharacterBody2D, ICrowdMember
 		ScaleStats(hpMult, damageMult, speedMult);
 		_xpReward *= variant.XpMult;
 		Scale = Vector2.One * variant.Scale;
+		_bodyRadius = BaseBodyRadius * variant.Scale;
+		LargestBodyRadius = Mathf.Max(LargestBodyRadius, _bodyRadius);
 		_displayName = _mods.BuildDisplayName(_displayName, _isFeminine);
 
 		if (_hasSprite && _spriteMaterial != null)
@@ -537,12 +551,11 @@ public partial class Enemy : CharacterBody2D, ICrowdMember
 			_nameplate = null;
 		}
 		_modifierAura?.HideAura();
-		CollisionLayer = 2;
-		CollisionMask = 4;
 		Velocity = Vector2.Zero;
 		_knockVelocity = Vector2.Zero;
 		Visible = false;
 		Scale = Vector2.One;
+		_bodyRadius = BaseBodyRadius;
 		SetTicking(false);
 		SetProcess(false);
 
@@ -739,7 +752,15 @@ public partial class Enemy : CharacterBody2D, ICrowdMember
 			Velocity += _knockVelocity;
 			DecayKnockback(delta);
 		}
-		MoveAndSlide();
+		MoveBody(delta);
+	}
+
+	/// <summary>Avance de la vitesse du tick, puis sort des décors bloquants en les longeant (plan 29 B).</summary>
+	private void MoveBody(float delta)
+	{
+		Vector2 next = GlobalPosition + Velocity * delta;
+		World.ObstacleField.Resolve(ref next, _bodyRadius);
+		GlobalPosition = next;
 	}
 
 	private void DecayKnockback(float delta)
@@ -1767,7 +1788,6 @@ public partial class Enemy : CharacterBody2D, ICrowdMember
 	internal void SetBurrowed(bool burrowed)
 	{
 		_isBurrowed = burrowed;
-		CollisionLayer = burrowed ? 0u : 2u;
 		Modulate = burrowed ? new Color(1f, 1f, 1f, 0.35f) : Colors.White;
 	}
 

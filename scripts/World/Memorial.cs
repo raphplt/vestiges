@@ -62,6 +62,7 @@ public partial class Memorial : StaticBody2D, IInteractable
         if (PropManifest.TryGet(dormant, out PropManifest.Entry entry) && entry.Footprint.Length >= 3)
         {
             AddChild(new CollisionShape2D { Shape = new ConvexPolygonShape2D { Points = entry.Footprint } });
+            ObstacleField.Add(this, entry.Footprint);
             Sprite2D shadow = PropShadow.Create(entry.Footprint);
             AddChild(shadow);
             MoveChild(shadow, 0);

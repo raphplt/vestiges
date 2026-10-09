@@ -79,7 +79,7 @@ Registre C# des créatures ciblables, positions relevées une fois par tick, gri
 
 Sur la grille de A : chaque créature est poussée hors de ses voisines et s'arrête au contact du joueur au lieu de viser son centre. La horde forme un front au lieu d'une pile. Prototype : `MoveAndSlide` contre un mur ÷ 2,5. Captures avant/après à montrer avant de garder.
 
-### B — Créatures hors du moteur physique
+### B — Créatures hors du moteur physique (livré le 9 octobre, coût à mesurer)
 
 Collision avec les décors par une grille statique construite à la génération (les décors ne bougent pas) ; touches des projectiles du joueur par l'index de A au lieu des `Area2D` ; plus de `CharacterBody2D` ni de `MoveAndSlide` par créature. Supprime le pas du moteur lié aux créatures (11,5 ms par tick à 1 000).
 
@@ -131,3 +131,16 @@ Créatures de la horde sans nœud : dessin direct par le `RenderingServer` dans 
 - **Coût** non mesuré : la machine était chargée (Unity, Graffwall) pendant cette session. À mesurer avec le lot B.
 
 **Vérifications** : build sans avertissement ; validation complète 31/32 puis les dix suites de combat 10/10 après correction d'un test qui téléportait une créature sans prévenir l'index (`CrowdIndex.MarkMoved()`).
+
+### B livré — 9 octobre 2026
+
+- **`Enemy` est un `Node2D`** : plus de `CharacterBody2D`, de forme de collision ni de `MoveAndSlide`. Propriété `Velocity` propre ; `MoveBody` avance de la vitesse du tick puis sort des décors bloquants. Rayon du corps 14 px × échelle de variante (`BodyRadius`, plus grand rayon atteint dans `Enemy.LargestBodyRadius`). Enfouissement du Rampant par `IsBurrowed`, au lieu de la couche de collision.
+- **`ObstacleField`** (`scripts/World/`) : les décors bloquants (`EnvironmentProp`, Mémorial, Atelier) inscrivent leur emprise ; enveloppe convexe comme `ConvexPolygonShape2D`, emprise sans surface ignorée ; passage en coordonnées monde au premier tick où le décor est dans l'arbre ; grille de 64 px ; disque contre polygone par la plus courte sortie, deux passes. Vidé au début de chaque run (`WorldSetup`).
+- **Touches** : un projectile du joueur interroge l'index de la foule le long du segment parcouru pendant le tick, et frappe dans l'ordre de passage (perforation) ; il ne surveille plus de corps (`collision_mask = 0`) mais reste détectable par les zones de l'Indicible. Les orbes en orbite sont des `Node2D` dont `OrbitContacts` rend les créatures entrées dans leur disque.
+- **Contrôles ajoutés** (`WeaponRegression.Crowd.cs`) : disque loin d'un décor, disque qui mord une arête, centre dans le décor, pas en biais qui glisse le long du mur, emprise plate ignorée, tir à 60 px par tick qui touche la créature sur son trajet.
+
+**En run** (`measure_run.sh`, 5 min, bot invincible, six graines, F2 → B) : coups reçus par minute de 0 à 4 min 1 253 → 2 954 (graine 42, run divergente : niveau 10 au lieu de 8), 901 → 936, 1 030 → 863, 1 017 → 799, 1 586 → 1 724, 617 → 665 ; éliminations 393 → 373, 322 → 380, 416 → 389, 243 → 298, 267 → 290, 60 → 69. Pas de régression hors de la variance d'une run.
+
+**Vérifications** : build sans avertissement ; validation complète 32/32 après correction de deux tests qui simulaient l'ancienne physique (`OnBodyEntered` par réflexion, orbes en `Area2D`) ; suite `weapons` avec les six nouveaux contrôles ; relecture `godot-reviewer` : décors d'une run précédente, reconstruction complète de la grille à chaque ajout, polygones dégénérés, frappe d'une créature tuée entre la collecte et le coup, constante en double ; tous corrigés.
+
+**Pas fait** : le banc de coût (FPS, découpage) et les captures de foule contre un décor, reportés : la machine faisait tourner un jeu pendant toute la fin de session. À faire avant de relever le plafond.

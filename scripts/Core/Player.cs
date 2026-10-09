@@ -107,6 +107,9 @@ public partial class Player : CharacterBody2D
 
     // Orbital weapon system
     private readonly System.Collections.Generic.List<Node2D> _orbitalProjectiles = new();
+    private readonly System.Collections.Generic.List<OrbitContacts> _orbitalContacts = new();
+    private readonly System.Collections.Generic.List<Enemy> _orbitalEntered = new();
+    private const float OrbitalHitRadius = 8f;
     private float _orbitalSize = 1f;
     private WeaponInstance _orbitalWeapon;
     private float _orbitalAngle;
@@ -1051,31 +1054,11 @@ public partial class Player : CharacterBody2D
         _orbitalSize = _aoeMultiplier;
         for (int i = 0; i < orbitalCount; i++)
         {
-            Area2D orb = new() { Name = $"OrbitalOrb_{i}" };
-            orb.CollisionLayer = 0;
-            orb.CollisionMask = 2;
-
-            CollisionShape2D shape = new();
-            CircleShape2D circle = new() { Radius = ZoneScale(8f) };
-            shape.Shape = circle;
-            orb.AddChild(shape);
+            Node2D orb = new() { Name = $"OrbitalOrb_{i}" };
             orb.AddChild(PlayerAttackFx.CreateOrbitalVisual(WeaponSizeScale));
-
-            orb.BodyEntered += (Node2D body) =>
-            {
-                if (body is Enemy enemy && !enemy.IsDying && IsInstanceValid(enemy) && _orbitalWeapon != null)
-                {
-                    PlayWeaponSound(_orbitalWeapon);
-                    float rawDamage = ComputeBaseAttackDamage(_orbitalWeapon);
-                    float damage = ResolveHitDamage(enemy, rawDamage, false);
-                    AttackContext context = BeginAttack(_orbitalWeapon, damage);
-                    enemy.TakeDamage(damage, source: context);
-                    OnAttackHit(enemy, damage, rawDamage, false, _orbitalWeapon, context: context);
-                }
-            };
-
             AddChild(orb);
             _orbitalProjectiles.Add(orb);
+            _orbitalContacts.Add(new OrbitContacts());
         }
     }
 
@@ -1087,6 +1070,7 @@ public partial class Player : CharacterBody2D
                 old.QueueFree();
         }
         _orbitalProjectiles.Clear();
+        _orbitalContacts.Clear();
         _orbitalWeapon = null;
     }
 
@@ -1111,8 +1095,25 @@ public partial class Player : CharacterBody2D
             float angle = _orbitalAngle + (Mathf.Tau * i / _orbitalProjectiles.Count);
             // Orbite couchée au sol : une ellipse deux fois plus large que haute à l'écran.
             orb.Position = Iso.ToScreen(new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * orbitalRadius);
-            PlayerAttackFx.AnimateOrbitalVisual(orb.GetChild<Sprite2D>(1), _orbitalAngle, i);
+            PlayerAttackFx.AnimateOrbitalVisual(orb.GetChild<Sprite2D>(0), _orbitalAngle, i);
+            // Les créatures n'ont plus de corps : l'orbe frappe celles qui entrent dans son disque (plan 29 B).
+            _orbitalContacts[i].Step(GlobalPosition + orb.Position, ZoneScale(OrbitalHitRadius), _orbitalEntered);
+            foreach (Enemy enemy in _orbitalEntered)
+                OrbitalHit(enemy);
         }
+    }
+
+    private void OrbitalHit(Enemy enemy)
+    {
+        // Une frappe précédente du même tick a pu tuer la créature ou retirer l'arme.
+        if (_orbitalWeapon == null || !enemy.IsActive || enemy.IsDying || enemy.IsBurrowed)
+            return;
+        PlayWeaponSound(_orbitalWeapon);
+        float rawDamage = ComputeBaseAttackDamage(_orbitalWeapon);
+        float damage = ResolveHitDamage(enemy, rawDamage, false);
+        AttackContext context = BeginAttack(_orbitalWeapon, damage);
+        enemy.TakeDamage(damage, source: context);
+        OnAttackHit(enemy, damage, rawDamage, false, _orbitalWeapon, context: context);
     }
 
     // --- Sustained Cone Attack ---

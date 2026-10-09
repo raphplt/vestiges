@@ -94,6 +94,8 @@ public partial class EnvironmentProp : StaticBody2D
 		{
 			AddChild(new CollisionShape2D { Shape = new ConvexPolygonShape2D { Points = ground } });
 			CollisionLayer = 4;
+			// Les créatures n'ont plus de corps physique : elles lisent les emprises dans ObstacleField (plan 29 B).
+			ObstacleField.Add(this, ground);
 		}
 		else
 		{

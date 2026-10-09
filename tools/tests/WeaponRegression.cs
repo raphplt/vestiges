@@ -54,6 +54,8 @@ public partial class WeaponRegression : Node2D
             CheckSustainedConeSound();
             CheckOrbitalSound();
             CheckTemper();
+            await CheckObstacleField();
+            await CheckFastShotHits();
 
             GD.Print($"[WeaponRegression] RESULT failures={_failures}");
             GetTree().Quit(_failures == 0 ? 0 : 1);
@@ -669,13 +671,13 @@ public partial class WeaponRegression : Node2D
             Check(requests == 0, "Boîte : silencieuse à l'équipement et au minuteur sans contact");
             // Une autre arme devient courante avant le contact de la note.
             player.AddWeapon(WeaponDataLoader.Get("makeshift_bow"));
-            List<Node2D> orbs = (List<Node2D>)typeof(Player).GetField("_orbitalProjectiles", Private).GetValue(player);
-            Area2D orb = (Area2D)orbs[0];
-            orb.EmitSignal(Area2D.SignalName.BodyEntered, enemy);
+            // Contact d'une orbe : ce qu'appelle ProcessOrbitalWeapons quand une créature entre dans son disque.
+            MethodInfo orbitalHit = typeof(Player).GetMethod("OrbitalHit", Private);
+            orbitalHit.Invoke(player, new object[] { enemy });
             Check(requests == 1 && player.GetDamageDealt("music_box") > 0f,
                 "Boîte : son de l'arme orbitale au contact malgré une autre arme courante");
             player.RemoveWeapon(0);
-            orb.EmitSignal(Area2D.SignalName.BodyEntered, enemy);
+            orbitalHit.Invoke(player, new object[] { enemy });
             Check(requests == 1, "Boîte : aucun son d'une ancienne orbe après retrait");
         }
         finally

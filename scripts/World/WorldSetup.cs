@@ -129,6 +129,8 @@ public partial class WorldSetup : Node2D
     public override void _Ready()
     {
         LoadProfiler.Begin();
+        // Les décors de la run précédente ne bloquent plus les créatures ; ceux de celle-ci vont s'inscrire.
+        ObstacleField.Clear();
         EnemyDataLoader.Load();
         // Le bootstrap affiche le diagnostic ; ne pas lancer de génération sur un catalogue refusé.
         if (!BiomeDataLoader.TryLoad(out _))

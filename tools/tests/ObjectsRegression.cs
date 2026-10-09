@@ -267,14 +267,14 @@ public partial class ObjectsRegression : Node2D
         WeaponInstance bow = _player.WeaponSlots[0];
         shot.Launch(new Vector2(7000f, 7000f), Vector2.Right, 10f, 400f, 1f, 5, false, _player, bow.Base, bow,
             _player.BeginAttack(bow, 10f), pierceDamageRamp: 0.1f);
-        MethodInfo enter = typeof(Projectile).GetMethod("OnBodyEntered", Private);
+        MethodInfo hit = typeof(Projectile).GetMethod("Hit", Private);
         List<float> losses = new();
         for (int i = 0; i < 3; i++)
         {
             Enemy target = SpawnEnemy();
             target.Position = new Vector2(7000f + i * 40f, 7000f);
             float hp = Hp(target);
-            enter.Invoke(shot, new object[] { target });
+            hit.Invoke(shot, new object[] { target });
             losses.Add(hp - Hp(target));
             target.QueueFree();
         }

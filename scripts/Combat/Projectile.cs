@@ -33,6 +33,10 @@ public partial class Projectile : Area2D
     private AttackContext _context;
     private Sprite2D _sprite;
     private CollisionShape2D _collision;
+    // Rayon de touche des créatures, taille comprise : elles n'ont plus de corps physique (plan 29 B).
+    private float _baseHitRadius;
+    private float _hitRadius;
+    private readonly List<(float along, Enemy enemy)> _crossed = new();
     private ProjectileSprites.SpriteSet _spriteSet;
     private int _spriteDirection = -1;
     private int _spriteFrame = -1;
@@ -71,7 +75,7 @@ public partial class Projectile : Area2D
         _sprite.Position = new Vector2(0f, -Iso.FlightHeight);
         // Au sol sous le projectile : c'est l'écart entre l'ombre et le visuel qui dit qu'il vole.
         AddChild(GroundShadow.Create(8f));
-        BodyEntered += OnBodyEntered;
+        _baseHitRadius = ((CircleShape2D)_collision.Shape).Radius;
     }
 
     public void Launch(Vector2 position, Vector2 direction, float damage, float speed, float lifetime, int pierce,
@@ -83,6 +87,7 @@ public partial class Projectile : Area2D
         _departureTarget = default;
         // Taille du joueur (plan 21 G6e) : la zone de contact grandit avec le visuel, remise à chaque tir du pool.
         _collision.Scale = Vector2.One * sizeScale;
+        _hitRadius = _baseHitRadius * sizeScale;
         _direction = direction.Normalized();
         _damage = damage;
         Speed = speed;
@@ -119,7 +124,6 @@ public partial class Projectile : Area2D
 
         Visible = _launchDelay <= 0f;
         ProcessMode = ProcessModeEnum.Inherit;
-        SetDeferred(Area2D.PropertyName.Monitoring, _launchDelay <= 0f);
     }
 
     /// <summary>Tir de rafale : au départ, il vise de nouveau cette cible si elle vit encore, comme un tir neuf.</summary>
@@ -140,7 +144,6 @@ public partial class Projectile : Area2D
         }
         _departureTarget = default;
         Visible = true;
-        SetDeferred(Area2D.PropertyName.Monitoring, true);
     }
 
     public void SetHoming(float strength, Node2D target)
@@ -193,7 +196,11 @@ public partial class Projectile : Area2D
             _homingTarget = TargetLock.On(FindNearestEnemy());
         }
 
+        Vector2 from = GlobalPosition;
         Position += _direction * Speed * dt;
+        HitAlong(from, GlobalPosition);
+        if (_isDespawning)
+            return;
         UpdateSprite();
         EmitTrail();
     }
@@ -256,45 +263,73 @@ public partial class Projectile : Area2D
         return nearest;
     }
 
-    private void OnBodyEntered(Node2D body)
+    /// <summary>
+    /// Créatures touchées sur le trajet du tick, dans l'ordre où le projectile les croise : un segment plutôt qu'un
+    /// point, pour qu'un tir rapide ne traverse pas une créature entre deux ticks. Remplace la zone physique, les
+    /// créatures n'ayant plus de corps (plan 29 B).
+    /// </summary>
+    private void HitAlong(Vector2 from, Vector2 to)
     {
-        // monitoring n'est coupé qu'en différé : sans cette garde, tous les corps déjà superposés
-        // au point de tir recevraient l'impact dans le même flush, perforation ou non.
-        if (_isDespawning)
+        Vector2 path = to - from;
+        float length = path.Length();
+        Vector2 middle = (from + to) * 0.5f;
+        using CrowdQuery crowd = CrowdIndex.Near(middle, length * 0.5f + _hitRadius + Enemy.LargestBodyRadius);
+        _crossed.Clear();
+        foreach (Node2D node in crowd.Targets)
+        {
+            if (node is not Enemy enemy || !enemy.IsActive || enemy.IsDying || enemy.IsBurrowed)
+                continue;
+            Vector2 center = enemy.GlobalPosition;
+            float reach = _hitRadius + enemy.BodyRadius;
+            if (Geometry2D.GetClosestPointToSegment(center, from, to).DistanceSquaredTo(center) > reach * reach)
+                continue;
+            float along = length > 0.0001f ? (center - from).Dot(path) / length : 0f;
+            _crossed.Add((along, enemy));
+        }
+        if (_crossed.Count > 1)
+            _crossed.Sort(static (a, b) => a.along.CompareTo(b.along));
+        foreach ((float _, Enemy enemy) in _crossed)
+        {
+            if (_isDespawning)
+                break;
+            Hit(enemy);
+        }
+    }
+
+    private void Hit(Enemy enemy)
+    {
+        // Un impact précédent du même tick a pu la tuer ou la rendre au pool (ricochet, explosion, chaîne).
+        if (!enemy.IsActive || enemy.IsDying || enemy.IsBurrowed)
+            return;
+        ulong id = enemy.GetInstanceId();
+        if (_hitEnemies.Contains(id))
             return;
 
-        if (body is Enemy enemy && !enemy.IsQueuedForDeletion())
+        _hitEnemies.Add(id);
+        bool ownerValid = _owner != null && IsInstanceValid(_owner);
+        float damage = ownerValid ? _owner.ResolveHitDamage(enemy, _damage, _isCrit) : _damage;
+        enemy.TakeDamage(damage, _isCrit, source: _context);
+
+        // Notify owner for perk effects (vampirism, ignite, execution, ricochet)
+        if (ownerValid)
+            _owner.OnProjectileHit(enemy, damage, _isCrit, SourceInstance, _context, _damage);
+
+        if (_spawnsGroundFire)
         {
-            ulong id = enemy.GetInstanceId();
-            if (_hitEnemies.Contains(id))
-                return;
+            GroundFire.Spawn(enemy.GlobalPosition, _groundDamage, _groundDuration, _groundRadius, _groundBurnSeconds,
+                _context.As(DamageKind.DamageOverTime));
+            _spawnsGroundFire = false;
+        }
 
-            _hitEnemies.Add(id);
-            bool ownerValid = _owner != null && IsInstanceValid(_owner);
-            float damage = ownerValid ? _owner.ResolveHitDamage(enemy, _damage, _isCrit) : _damage;
-            enemy.TakeDamage(damage, _isCrit, source: _context);
-
-            // Notify owner for perk effects (vampirism, ignite, execution, ricochet)
-            if (ownerValid)
-                _owner.OnProjectileHit(enemy, damage, _isCrit, SourceInstance, _context, _damage);
-
-            if (_spawnsGroundFire)
-            {
-                GroundFire.Spawn(enemy.GlobalPosition, _groundDamage, _groundDuration, _groundRadius, _groundBurnSeconds,
-                    _context.As(DamageKind.DamageOverTime));
-                _spawnsGroundFire = false;
-            }
-
-            if (_pierceRemaining <= 0)
-            {
-                _isDespawning = true;
-                CallDeferred(MethodName.Release);
-            }
-            else
-            {
-                _pierceRemaining--;
-                _damage += _launchDamage * _pierceDamageRamp;
-            }
+        if (_pierceRemaining <= 0)
+        {
+            _isDespawning = true;
+            CallDeferred(MethodName.Release);
+        }
+        else
+        {
+            _pierceRemaining--;
+            _damage += _launchDamage * _pierceDamageRamp;
         }
     }
 
@@ -317,7 +352,6 @@ public partial class Projectile : Area2D
     {
         _isDespawning = true;
         Visible = false;
-        SetDeferred(Area2D.PropertyName.Monitoring, false);
         // Hors traitement : retiré de la physique (DisableMode Remove) jusqu'au prochain Launch.
         SetDeferred(Node.PropertyName.ProcessMode, (int)ProcessModeEnum.Disabled);
         _homingTarget = default;

@@ -243,7 +243,6 @@ public partial class PerformanceAudit20260928 : Node
         {
             Enemy enemy = pool.Get(); container.AddChild(enemy);
             enemy.Initialize(EnemyDataLoader.Get("shade"), 100000f, 1f);
-            enemy.DisableMode = CollisionObject2D.DisableModeEnum.KeepActive;
             enemy.SetTicking(false);
             enemy.ProcessMode = ProcessModeEnum.Disabled;
             enemy.Position = new Vector2(80 + i % 20, (i % 3 - 1) * 2);
