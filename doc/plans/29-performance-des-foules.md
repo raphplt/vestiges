@@ -87,7 +87,7 @@ Collision avec les décors par une grille statique construite à la génération
 
 Trouver les ≈ 19 µs par créature et par image de `_Process` ; réduire les ≈ 9 nœuds par créature (ombre, marques, plaques créées à la demande) ; matériau partagé pour regrouper le rendu.
 
-### D — Créatures de la horde sans nœuds (décidé le 9 octobre, §83 ; [brief de reprise](29-lot-D-brief.md))
+### D — Créatures de la horde sans nœuds (reporté le 9 octobre, §83 ; [brief de reprise](29-lot-D-brief.md))
 
 Cible révisée : tenir 500 créatures (plafond calqué sur Vampire Survivors) avec de la marge sur l'entrée de gamme, ≤ 8 ms par image sur la machine de Raphaël. Le texte ci-dessous est l'idée d'origine.
 
@@ -234,3 +234,7 @@ Reste à 1 500, par image : scripts physiques 9,6 ms (1,2 tick ; ≈ 5 µs par c
 | 120–180 s | 1 200 | 45–48 | 41–43 ms | 64–78 ms |
 
 En régime établi, 1 200 créatures en vraie run tiennent ≈ 46 FPS, cohérent avec le banc. Les à-coups de la montée (jusqu'à 360 ms) disparaissent une fois la horde complète : le pool n'est préchauffé qu'à 20 créatures, toute créature au-delà est fabriquée en pleine partie, par dizaines quand les apparitions arrivent en paquets. À traiter.
+
+### Clôture — 9 octobre 2026
+
+Raphaël arrête le chantier ici (§83) : plafond à 500, calqué sur Vampire Survivors ; les nœuds sont gardés, le lot D est reporté avec son brief. Bilan au banc dense (1080p, Ryzen 7 5700X), du début à la fin de la journée : 400 créatures 49 → 209 FPS, 1 000 créatures 3,7 → 87 FPS, 1 500 créatures → 46 FPS. Restent ouverts, sans urgence : les à-coups d'apparition quand la foule grossit vite (pool préchauffé à 20), la mesure en export ([EXPORT.md](../EXPORT.md)), un banc dédié aux projectiles du joueur si un build en fait voler des centaines.

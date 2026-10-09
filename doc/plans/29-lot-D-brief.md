@@ -2,6 +2,8 @@
 
 À donner tel quel à l'agent qui reprend le chantier. Écrit le 9 octobre 2026 à la fin du lot C.
 
+**Reporté le 9 octobre (DECISIONS §83) : Raphaël garde les nœuds pour l'instant.** Ce brief reste prêt si le besoin revient (entrée de gamme, foule plus grande).
+
 ---
 
 Tu reprends le chantier **performance des foules** de Vestiges (plan 29). Les coûts aberrants sont retirés ; il reste à faire des créatures de la horde des **données** plutôt que des nœuds Godot. Raphaël l'a décidé le 9 octobre (DECISIONS §83) : « je pense que on va passer en noeudless ».
