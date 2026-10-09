@@ -534,3 +534,48 @@ Système commun, construit une fois : une **partie de boss** (cible, PV propres 
 | **B4 — Réglage** | Durées et dégâts sur les deux mesures, puis partie de Raphaël. | Durées dans la fenêtre de la question 5 |
 
 L'ancien `Indicible.cs` et ses réglages (`data/scaling/indicible.json`, plan 26 Q6b) sont remplacés en B3, pas conservés à côté.
+
+## Reprise de la Barrière — 9 octobre 2026
+
+Ordre fixé au [§84](DECISIONS.md) : la Barrière vient **à 10 min, à l'heure**, avant les pouvoirs des personnages, juste après les lots T1–T2 du [plan 30](30-temps-forts.md). Questions de reprise tranchées au [§85](DECISIONS.md). La fiche (§2 ci-dessus) change sur ces points :
+
+| Point | Fiche du 4 octobre | Désormais |
+|---|---|---|
+| Déclenchement | Après la 3e Résurgence (~12 min, en fait 14–15 min) | `barrier_at_sec` 600 ; si une Résurgence, son annonce ou l'accalmie est en cours, à leur fin (même règle que les rendez-vous de Souverains, plan 30 T2) |
+| Contournement | Non traité (700 px se contournent) | **Ailes de chaînes** tendues entre des poteaux, intouchables, au-delà de l'écran de part et d'autre ; on ne passe qu'en brisant un battant |
+| Orientation | « Perpendiculaire à la direction du joueur » | **Selon le cap** : horizontale à l'écran si le joueur va vers le haut ou le bas, verticale sinon ; les deux trois-quarts des décors (`AXIS_X_YAW` 62°, `AXIS_Y_YAW` 22°) |
+| Récompense | Selon le plan 13 | **Un coffre par battant**, le dernier rare |
+| Barre de vie | « Barre de boss » | **En haut de l'écran**, nom et PV, un cran par battant ; sert aussi à l'Indicible et aux deux Souverains |
+| Créatures | Non traité | Densité visée **×0,5** pendant le combat, en données |
+
+### Lot B1 — Parties de boss : découpage proposé
+
+Constat du code (9 octobre) : toutes les armes et tous les objets trouvent leurs cibles par `CrowdIndex`, puis gardent `node is Enemy { IsActive: true, IsDying: false }` (19 fichiers, une trentaine de chemins : projectiles, orbite, mêlée, cône, chaîne, guidage, échos, feu au sol, déclencheurs d'objets, propagation des contrôles). L'Indicible actuel n'est vu que par les projectiles et le guidage, par trois exceptions écrites à la main (`Projectile` l. 361, `Player` l. 2144, `TargetLock`).
+
+**Choix d'architecture : une partie de boss est une `Enemy`.** Configurée par un comportement `boss_part`, immobile, sans attaque de contact, sans XP, sans recul ni gel ni séparation (règles déjà vraies pour le rang `boss`), elle est vue par les trente chemins sans en toucher un seul, statuts compris (brûlure, saignement, Fragile comptent sur un battant). L'autre voie, une interface de cible commune à `Enemy` et à une classe de partie, réécrirait les trente chemins pour le même résultat ; elle reste possible plus tard si les parties s'écartent trop des créatures. Le visuel d'une partie appartient au boss (la grille dessine ses battants) : la partie ne porte qu'une silhouette de touche et son flash.
+
+| Sous-lot | Contenu | Vérification |
+|---|---|---|
+| **B1a — La partie** | Comportement `boss_part` dans `EnemyGrammar` et une fiche `data/enemies/boss_part.json` (sprite vide, PV et dégâts nuls, rayon de touche) ; `Enemy` : immobile, pas de contact, pas d'orbe, mort sans `EnemyKilled` (la mort du boss entier l'émet une fois, pour le score, les quêtes et les succès) ; signal `BossPartBroken`. Rayon de touche jusqu'à 50 px (`LargestBodyRadius` : la marge des requêtes de tous les tirs grandit, à mesurer). **Réserve commune** `BossHealth` : une partie garde ses PV (battant) ou reporte ses dégâts sur la réserve (mains de l'Indicible), avec des seuils (phases). Réglages communs en données (`data/scaling/boss_parts.json`), contrôlés au chargement comme Q6b : boss absent avec un message clair si invalides. | Contrôles unitaires dans un banc (réserve, seuils, report, mort unique) ; fixture négative de réglages ; `test_enemy_abilities.sh` et `test_weapons.sh` verts |
+| **B1b — Barre de boss** | Barre en haut de l'écran : nom, PV, crans (un par partie à PV propres), apparition et disparition. Signaux `BossEncounterStarted`, `BossHealthChanged`, `BossEncounterEnded` par l'`EventBus`. Branchée sur les deux Souverains de la chasse (§85). | Captures `--event souverain` à 1080p (barre lisible, ne masque ni le HUD ni l'annonce) ; écran de pause et de niveau par-dessus |
+| **B1c — Mannequin et banc** | Mode de mesure `--measure-boss-dummy` (extension de `RunObservation.IndicibleMeasure`) : un mannequin à une partie à 120 px du joueur, puis à trois parties en réserve commune ; chacune des 24 armes équipée seule pendant 10 s. | Chacune des 24 armes fait perdre des PV au mannequin (mêlée, orbite, cône, chaîne, guidage, ligne, zones) ; banc dense A/B (`/bench`) avec une partie de 50 px en jeu : pas de perte mesurable |
+
+Ce que B1 ne fait pas : rien de visible en run hors de la barre des Souverains. Les exceptions de l'Indicible actuel restent jusqu'à B3, qui le remplace.
+
+### Lot B2 — La Barrière : découpage proposé
+
+| Sous-lot | Contenu | Vérification |
+|---|---|---|
+| **B2a — Planche des sprites** | Au pipeline des décors (`tools/sprites/props/`), deux orientations : travée de grille, battant cadenassé (intact, entamé, brisé ouvert), poteau et aile de chaîne répétable, poing (annonce, frappe), chaîne qui balaie. Planche sur sol réel avec un personnage de référence. | **Validation de Raphaël avant toute intégration** |
+| **B2b — La grille en jeu** | Pose à 600 s devant le joueur selon son cap, à ~350 px ; battants = 1 + Mémoriaux ravivés, au plus 5 ; ailes infranchissables ; densité ×0,5 ; un coffre par battant, le dernier rare ; la grille ouverte laisse passer. | Captures dans les deux orientations ; le joueur ne passe pas sans briser ; chronologie : un pic net à 10–11 min |
+| **B2c — Attaques** | Poings (immobilité, 0,7 s d'annonce, < 200 px), chaîne (mouvement mécanique, arc devant un battant), verrou (double frappe après chaque battant tombé). | Mesure en trois postures : PV perdus dans chacune, coups reçus immobile **et** en mouvement, durée 60–90 s avec le build de référence |
+
+### B2a — planche proposée — 9 octobre 2026
+
+[Planche](planches/07-b2a-barriere.png), modèle `tools/sprites/props/barrier.py` (pas encore branché à `generate_props.py`, rien d'écrit dans `assets/`). Grille municipale en fer forgé entre des piliers de pierre, chaîne de la Forgeuse, cadenas de laiton dont le trou de serrure porte la lumière vert-acide des créatures : c'est le point à frapper. Un battant fait 104 × 66 px (2,2 fois la hauteur d'un personnage), un pilier 20 × 87 px.
+- **Horizontale** (lacet 0, face à la caméra) : se lit bien ; le battant brisé pend ouvert vers le joueur, chaîne rompue et cadenas au sol.
+- **Verticale** (lacet 72°) : la grille part en diagonale (≈ 35° de la verticale), comme les grillages des rues verticales ; de profil exact (90°), les barreaux se fondaient en un trait. À même longueur au sol, il faut environ deux fois plus de travées qu'à l'horizontale. Cadenas plus petits de profil.
+- **Poing**, deux variantes à choisir : gantelet de fer riveté, ou main grise de noyé ; chaîne au poignet, phalanges vers le joueur. Le cercle d'annonce est dessiné par le jeu.
+- **Ailes** : bornes de fer et chaîne lourde, module répétable ; **maillons** à plat et de chant pour la chaîne qui balaie.
+
+À valider par Raphaël avant B2b : silhouette générale, hauteur, gantelet ou main, orientation verticale en diagonale.

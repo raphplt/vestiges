@@ -955,3 +955,13 @@ Raphaël valide explicitement « cloche b et boite a musique c » dans la série
 - **Barrière : à 10 min, à l'heure, en priorité.** Déclenchée vers 10:00 (après la deuxième Résurgence et son accalmie), et non plus après la troisième Résurgence (qui commence en fait entre 13:36 et 14:50). Remplace le déclenchement du §70. Les lots B1–B2 du plan 07 passent avant les pouvoirs des personnages.
 - **Nuées sans objectif (D) et respiration par minute (E) : après A, B et C**, si la run manque encore de contraste une fois ceux-ci joués.
 - Après l'étude : « ok ca me va go ». Lots engagés dans l'ordre proposé : T1 (Résurgence), T2 (Souverains), puis B1–B2 (Barrière).
+
+## 85. Barrière : questions de reprise — 9 octobre 2026, nuit
+
+Reprise des lots B1–B2 du plan 07 (§84). Réponses de Raphaël, toutes conformes à la recommandation :
+- **Contournement : ailes de chaînes.** Deux ailes de chaînes tendues, intouchables, prolongent la grille bien au-delà de l'écran ; on ne passe qu'en brisant un battant. L'Effacement continue d'avancer derrière : rester bloqué coûte.
+- **Orientation : selon le cap.** Horizontale à l'écran si le joueur va vers le haut ou le bas, verticale s'il va à gauche ou à droite (les deux trois-quarts des décors). Deux jeux de sprites.
+- **Récompense : un coffre par battant**, le dernier rare (comme le Souverain). Choix propre à la Barrière ; le plan 13 reste non arbitré.
+- **Barre de boss en haut de l'écran**, avec le nom, pour la Barrière, l'Indicible et aussi les deux Souverains ; un cran par battant pour la Barrière.
+- **Flux de créatures pendant le combat : densité visée ×0,5**, réglage en données.
+- **Tableau de bord §2 :** App ID Steam pas encore obtenu ; l'audio est « à faire bientôt » (à reprendre après B2). Le reste inchangé.
