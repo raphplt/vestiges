@@ -63,17 +63,33 @@ Vampire Survivors et Megabonk traitent une créature comme une donnée : un tabl
 - État du sprite lu à chaque tick (`SpeedScale`, `SpriteFrames`) gardé côté C#.
 - Mesure avant/après hors quota, puis plafond `active_enemies_ceiling` refixé au banc corrigé.
 
-### F2 — Séparation et arrêt au contact (à valider par Raphaël : changement visible)
+### Objectif relevé après F1 (§83)
 
-Grille de hachage reconstruite une fois par tick ; chaque créature est poussée hors de ses voisines et s'arrête au contact du joueur au lieu de viser son centre. La horde forme un front au lieu d'une pile. Prototype mesuré : `MoveAndSlide` contre un mur ÷ 2,5 (5,6 → 2,2 ms par tick à 320), neutre en terrain dégagé. À juger sur captures et en jeu (lecture de la foule, difficulté à traverser).
+Raphaël : le jeu doit tenir **des centaines, potentiellement des milliers** de créatures, comme les autres bullet heavens. Corriger le banc et grappiller 50 % ne règle pas le problème ; le plafond reste à 200 tant que l'architecture n'a pas changé.
 
-### F3 — Déplacement sans `MoveAndSlide`
+Mesure de départ après F1 : 600 créatures → 22 FPS, 1 000 → 4 FPS (8 ticks physiques par image, le maximum de Godot). À 1 000, par tick : 14,7 ms de scripts physiques et 11,5 ms de pas du moteur ; par image : 19 ms de scripts `_Process`, 6 ms de rendu seulement. **Ce n'est pas l'affichage qui coince, c'est la simulation** : corps physiques et parcours de listes.
 
-Déplacement direct ; collision avec les décors par une grille statique construite à la génération (les décors ne bougent pas). Le corps physique ne sert plus qu'aux touches des projectiles, puis F3b : touches par la grille, plus de corps physique par créature. Le plus gros gain attendu sur le pas du moteur et `MoveAndSlide` ; refonte à découper.
+Cible : 1 000 créatures à 60 FPS au banc dense (16,7 ms par image), puis 2 000. Chemin : la créature devient une donnée indexée, sort du moteur physique, puis s'allège en nœuds.
 
-### F4 — Rendu groupé
+### A — Index de la foule
 
-Matériau partagé entre créatures, paramètres par créature passés autrement (couleur de sommet, `instance` si disponible) ; mesurer le gain avant d'engager.
+Registre C# des créatures ciblables, positions relevées une fois par tick, grille de hachage. Il remplace les 30 parcours de `GroupCache.GetEnemies()` (ciblage de chaque arme, tête chercheuse de chaque projectile, objets, auras, herbe foulée, bonus de meute, apparitions, musique), qui reconstruisent un tableau Godot de toutes les créatures et le relisent élément par élément à travers l'interop. Coût actuel : armes × créatures, projectiles × créatures, créatures × créatures pour la meute. Invisible.
+
+### F2 — Séparation et arrêt au contact (validé avec planche, §83)
+
+Sur la grille de A : chaque créature est poussée hors de ses voisines et s'arrête au contact du joueur au lieu de viser son centre. La horde forme un front au lieu d'une pile. Prototype : `MoveAndSlide` contre un mur ÷ 2,5. Captures avant/après à montrer avant de garder.
+
+### B — Créatures hors du moteur physique
+
+Collision avec les décors par une grille statique construite à la génération (les décors ne bougent pas) ; touches des projectiles du joueur par l'index de A au lieu des `Area2D` ; plus de `CharacterBody2D` ni de `MoveAndSlide` par créature. Supprime le pas du moteur lié aux créatures (11,5 ms par tick à 1 000).
+
+### C — Créature légère
+
+Trouver les ≈ 19 µs par créature et par image de `_Process` ; réduire les ≈ 9 nœuds par créature (ombre, marques, plaques créées à la demande) ; matériau partagé pour regrouper le rendu.
+
+### D — Si C ne suffit pas pour 2 000
+
+Créatures de la horde sans nœud : dessin direct par le `RenderingServer` dans le tri en Y, la créature n'étant plus qu'une entrée de tableau. Les créatures à capacités (élites, mini-boss, boss) restent des nœuds.
 
 ## 4. Comptes rendus
 
