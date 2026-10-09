@@ -22,6 +22,7 @@ namespace Vestiges.Tests;
 /// --capture-cartography : parcours fixe, radar/carte entière, phases et bord du monde (RunObservation.Cartography.cs).
 /// --capture-character --character ID : personnage en marche, dash, dégât et mort dans Main.
 /// --capture-props : zone la plus chargée en décors de chaque biome, collisions affichées (sauf --hide-collisions).
+/// --capture-prop-gallery BIOME : un cadrage par décor distinct du biome, joueur à côté (RunObservation.PropGallery.cs).
 /// --capture-junctions : frontières entre biomes les plus proches du départ, avec et sans décors.
 /// --capture-paths : chemins de terre par biome, raccord à une rue, vue dézoomée du départ (RunObservation.Paths.cs).
 /// --capture-farms : fermes des Champs Sauvages les plus proches du départ, normal et dézoomé (RunObservation.Farms.cs).
@@ -124,6 +125,8 @@ public partial class RunObservation : Node
                 await CaptureCartography();
             else if (captureProps)
                 await CapturePropHotspots();
+            else if (Array.IndexOf(args, "--capture-prop-gallery") >= 0)
+                await CapturePropGallery(Argument(args, "--capture-prop-gallery", "swamp"));
             else if (Array.IndexOf(args, "--capture-junctions") >= 0)
                 await CaptureJunctions();
             else if (Array.IndexOf(args, "--check-connectivity") >= 0)

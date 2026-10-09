@@ -868,6 +868,7 @@ Le script de post-processing doit inclure une vérification/correction de l'angl
 - [x] Plan 25 S7 : quatre fonds animés natifs, neuf habillages de menus et cinq sols de chargement branchés ; rendu nearest vérifié par captures. Correctif I7 : rotation continue des rayons à 8°/s, poussières scintillantes ; fond fixe I6 remplacé conformément à DECISIONS §43.
 - [x] Plan 25 S8 : 14 icônes de Réminiscences en Collection, neuf définitions raccordées aux interfaces ; les effets non implémentés restent « À venir ». Choix et inventaire capturés.
 - [x] Hub visuel (camp du Foyer vivant, validé par Raphaël le 26 septembre 2026, plan 04).
+- [x] Plan 31 M0–M1 : les 25 décors du Marais repris (bois blanchi rainuré, pied mouillé, liseré d'eau, barbes de lichen, objets noyés lisibles), kit de détails de surface et générateur parallèle ; planches ×2/×5 sur les trois sols, galerie en jeu (`--capture-prop-gallery`) et régénération identique octet pour octet vérifiées (9 octobre 2026).
 - [ ] Musiques adaptatives (5-6 tracks).
 - [ ] Sound design complet.
 

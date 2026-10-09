@@ -304,5 +304,7 @@ public partial class RunObservation
             using Image behind = GetViewport().GetTexture().GetImage();
             behind.SavePng($"{_output}/props-{biome}-behind.png");
         }
+        // capture_run.sh attend une ligne RESULT : sans elle, une capture réussie sortait en échec.
+        GD.Print($"[RunObservation] RESULT props output={_output}");
     }
 }
