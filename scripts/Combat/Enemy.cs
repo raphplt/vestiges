@@ -8,7 +8,7 @@ using Vestiges.World;
 
 namespace Vestiges.Combat;
 
-public partial class Enemy : Node2D, ICrowdMember
+public partial class Enemy : Node2D, ICrowdMember, ITicked
 {
 	private const float MeleeRange = 38f;
 	private const float MeleeAttackCooldown = 0.75f;
@@ -203,8 +203,9 @@ public partial class Enemy : Node2D, ICrowdMember
 	public float BodyRadius => _bodyRadius;
 	/// <summary>Enfouie (Rampant) : les projectiles et les orbes la traversent.</summary>
 	public bool IsBurrowed => _isBurrowed;
-	/// <summary>Rang dans la boucle d'<see cref="EnemyTicker"/>, −1 hors de la boucle ; tenu par elle seule.</summary>
-	internal int TickSlot { get; set; } = -1;
+	// Godot n'appelle plus les créatures : une seule boucle C# les avance toutes (plan 29).
+	private static readonly TickRoster<Enemy> Roster = new("EnemyTicker");
+	public int TickSlot { get; set; } = -1;
 	/// <summary>Rang dans <see cref="CrowdIndex"/>, −1 quand la créature n'est plus une cible ; tenu par l'index.</summary>
 	public int CrowdSlot { get; set; } = -1;
 	public Vector2 CrowdPush { get; set; }
@@ -243,7 +244,7 @@ public partial class Enemy : Node2D, ICrowdMember
 	public override void _EnterTree()
 	{
 		if (_ticking)
-			EnemyTicker.Register(this);
+			Roster.Add(this);
 		if (IsInGroup("enemies"))
 			CrowdIndex.Register(this);
 	}
@@ -323,7 +324,6 @@ public partial class Enemy : Node2D, ICrowdMember
 
 		Visible = true;
 		SetTicking(true);
-		SetProcess(true);
 		Modulate = Colors.White;
 		Scale = Vector2.One;
 		_bodyRadius = BaseBodyRadius;
@@ -558,7 +558,6 @@ public partial class Enemy : Node2D, ICrowdMember
 		Scale = Vector2.One;
 		_bodyRadius = BaseBodyRadius;
 		SetTicking(false);
-		SetProcess(false);
 
 		// Reset sprite et shaders
 		if (_hasSprite)
@@ -590,18 +589,18 @@ public partial class Enemy : Node2D, ICrowdMember
 
 	/// <summary>
 	/// Avance la créature d'un tick ou l'arrête. Remplace <c>SetPhysicsProcess</c> : Godot n'appelle plus les créatures,
-	/// c'est <see cref="EnemyTicker"/> qui le fait (plan 29).
+	/// c'est une boucle unique qui le fait (plan 29).
 	/// </summary>
 	public void SetTicking(bool enabled)
 	{
 		_ticking = enabled;
 		if (enabled && IsInsideTree())
-			EnemyTicker.Register(this);
+			Roster.Add(this);
 		else
-			EnemyTicker.Unregister(this);
+			Roster.Remove(this);
 	}
 
-	/// <summary>Un tick physique de la créature, appelé par <see cref="EnemyTicker"/> (ou directement par un test).</summary>
+	/// <summary>Un tick physique de la créature, appelé par la boucle des créatures (ou directement par un test).</summary>
 	public void PhysicsTick(double delta)
 	{
 		// Avant le retour anticipé : un coup fatal finit son flash pendant l'animation de mort.
@@ -1756,7 +1755,7 @@ public partial class Enemy : Node2D, ICrowdMember
 
 	public override void _ExitTree()
 	{
-		EnemyTicker.Unregister(this);
+		Roster.Remove(this);
 		CrowdIndex.Unregister(this);
 		CancelAbilities();
 	}

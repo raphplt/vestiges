@@ -9,8 +9,12 @@ namespace Vestiges.Combat;
 /// Sprite et couleurs propres à chaque créature (bloc visual.projectile du JSON), à hauteur de buste,
 /// jamais masqué : c'est un danger.
 /// </summary>
-public partial class EnemyProjectile : Area2D
+public partial class EnemyProjectile : Area2D, ITicked
 {
+	// Godot n'appelle plus les projectiles un par un : une seule boucle C# les avance tous (plan 29).
+	private static readonly TickRoster<EnemyProjectile> Roster = new("EnemyProjectiles");
+	public int TickSlot { get; set; } = -1;
+
 	[Export] public float Speed = 185f;
 	[Export] public float MaxLifetime = 4f;
 
@@ -70,6 +74,7 @@ public partial class EnemyProjectile : Area2D
 		UpdateSprite();
 		Visible = true;
 		ProcessMode = ProcessModeEnum.Inherit;
+		Roster.Add(this);
 		SetDeferred(Area2D.PropertyName.Monitoring, true);
 	}
 
@@ -106,7 +111,13 @@ public partial class EnemyProjectile : Area2D
 		});
 	}
 
-	public override void _PhysicsProcess(double delta)
+	public override void _ExitTree()
+	{
+		Roster.Remove(this);
+	}
+
+	/// <summary>Un tick du projectile, appelé par la boucle des projectiles (ou directement par un test).</summary>
+	public void PhysicsTick(double delta)
 	{
 		if (_isDespawning)
 			return;
@@ -150,6 +161,7 @@ public partial class EnemyProjectile : Area2D
 
 	private void Release()
 	{
+		Roster.Remove(this);
 		_isDespawning = true;
 		Visible = false;
 		SetDeferred(Area2D.PropertyName.Monitoring, false);

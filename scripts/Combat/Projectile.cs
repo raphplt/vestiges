@@ -11,8 +11,12 @@ namespace Vestiges.Combat;
 /// Le sprite est prérendu dans la direction de vol (jamais tourné) et vole à hauteur de buste ;
 /// la collision reste au sol, là où sont les corps.
 /// </summary>
-public partial class Projectile : Area2D
+public partial class Projectile : Area2D, ITicked
 {
+    // Godot n'appelle plus les projectiles un par un : une seule boucle C# les avance tous (plan 29).
+    private static readonly TickRoster<Projectile> Roster = new("PlayerProjectiles");
+    public int TickSlot { get; set; } = -1;
+
 
     public float Speed { get; private set; } = 400f;
 
@@ -124,6 +128,7 @@ public partial class Projectile : Area2D
 
         Visible = _launchDelay <= 0f;
         ProcessMode = ProcessModeEnum.Inherit;
+        Roster.Add(this);
     }
 
     /// <summary>Tir de rafale : au départ, il vise de nouveau cette cible si elle vit encore, comme un tir neuf.</summary>
@@ -146,6 +151,9 @@ public partial class Projectile : Area2D
         Visible = true;
     }
 
+    /// <summary>Retire le projectile de la boucle : un test le fait alors avancer lui-même.</summary>
+    public void StopTicking() => Roster.Remove(this);
+
     public void SetHoming(float strength, Node2D target)
     {
         _homingStrength = strength;
@@ -161,7 +169,13 @@ public partial class Projectile : Area2D
         _groundBurnSeconds = burnSeconds;
     }
 
-    public override void _PhysicsProcess(double delta)
+    public override void _ExitTree()
+    {
+        Roster.Remove(this);
+    }
+
+    /// <summary>Un tick du projectile, appelé par la boucle des projectiles (ou directement par un test).</summary>
+    public void PhysicsTick(double delta)
     {
         if (_isDespawning)
             return;
@@ -350,6 +364,7 @@ public partial class Projectile : Area2D
 
     private void Release()
     {
+        Roster.Remove(this);
         _isDespawning = true;
         Visible = false;
         // Hors traitement : retiré de la physique (DisableMode Remove) jusqu'au prochain Launch.

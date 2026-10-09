@@ -83,7 +83,7 @@ Sur la grille de A : chaque créature est poussée hors de ses voisines et s'arr
 
 Collision avec les décors par une grille statique construite à la génération (les décors ne bougent pas) ; touches des projectiles du joueur par l'index de A au lieu des `Area2D` ; plus de `CharacterBody2D` ni de `MoveAndSlide` par créature. Supprime le pas du moteur lié aux créatures (11,5 ms par tick à 1 000).
 
-### C — Créature légère
+### C — Créature légère (C1 livré le 9 octobre)
 
 Trouver les ≈ 19 µs par créature et par image de `_Process` ; réduire les ≈ 9 nœuds par créature (ombre, marques, plaques créées à la demande) ; matériau partagé pour regrouper le rendu.
 
@@ -161,3 +161,23 @@ Le lot B a fait tomber le pas du moteur physique (à 1 000 : 74 → 12 ms par im
 Correction : `CrowdSeparation` calcule toutes les poussées en une passe par tick, sur une grille dont la case vaut le rayon de séparation, triée par case en mémoire contiguë ; chaque paire n'est examinée qu'une fois et pousse les deux créatures. Même règle de poussée qu'avant.
 
 Reste à 1 000, par image : scripts physiques 15,5 ms (2,2 ticks par image, 7 ms par tick), `_Process` 11,7 ms, rendu 5,5 ms, pas du moteur 3,7 ms. Suite : lot C.
+
+### C1 livré — 9 octobre 2026 : plus aucun rappel moteur par entité
+
+Décompte des nœuds C# traités à 1 000 créatures : les 1 000 `Enemy` avaient le traitement par image activé (`SetProcess(true)` à l'initialisation) **sans avoir de `_Process`**, et 426 projectiles ennemis avaient chacun leur `_PhysicsProcess`. Godot appelle le pont C# pour chaque nœud traité, que la méthode existe ou non.
+
+- `Enemy` n'active plus de traitement par image : à 1 000 créatures, `_Process` 12,5 → 3 ms par image, 25 → 52 FPS, pour une ligne retirée.
+- **`TickRoster<T>`** (`ITicked`, `TickRosterDriver`) généralise la boucle de F1 : un registre, un seul rappel moteur par tick, un instantané contre les retraits en cours de tick, une exception isolée par nœud. Il remplace `EnemyTicker` et avance aussi les projectiles ennemis et ceux du joueur (`PhysicsTick` ; `Projectile.StopTicking()` pour un test qui les fait avancer lui-même).
+
+Banc hors quota, machine calme, une passe :
+
+| Créatures | FPS ce matin (`067844ba`) | après séparation par lot | après C1 | p99 après C1 |
+|---|---|---|---|---|
+| 400 | 49 | 96 | 209 | 8,6 ms |
+| 600 | 7 | 62 | 130 | 17,5 ms |
+| 1 000 | 3,7 | 27 | 71 | 19,2 ms |
+| 1 500 | — | 8 | 30 | 62 ms |
+
+Reste à 1 000, par image : rendu 5,2 ms (2 055 appels de dessin, deux par créature), scripts physiques 5,1 ms (≈ 6 µs par créature et par tick), `_Process` 2,3 ms, pas du moteur 1,5 ms (projectiles ennemis en `Area2D`).
+
+**Vérifications** : build sans avertissement, `tools/validate.sh` 32/32.

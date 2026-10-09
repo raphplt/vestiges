@@ -117,26 +117,26 @@ public partial class WeaponRegression : Node2D
 
         Projectile homing = projectileScene.Instantiate<Projectile>();
         AddChild(homing);
-        homing.SetPhysicsProcess(false);
         homing.Launch(Vector2.Zero, Vector2.Right, 1f, 100f, 10f, 0, false, _player, compass, null);
+        homing.StopTicking();
         homing.SetHoming(1f, locked);
-        homing._PhysicsProcess(1f / 60f);
+        homing.PhysicsTick(1f / 60f);
         Check(LockedTarget(homing, "_homingTarget") == locked, "Verrou : tir guidé sur sa cible tant qu'elle vit");
 
         Recycle(locked, new Vector2(5000f, 5000f));
         await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
-        homing._PhysicsProcess(1f / 60f);
+        homing.PhysicsTick(1f / 60f);
         Check(LockedTarget(homing, "_homingTarget") == other,
             "Verrou : la cible morte puis revenue du pool n'est plus suivie, le tir guidé prend la créature restante");
 
         Projectile burst = projectileScene.Instantiate<Projectile>();
         AddChild(burst);
-        burst.SetPhysicsProcess(false);
         burst.Launch(Vector2.Zero, Vector2.Right, 1f, 100f, 10f, 0, false, _player, compass, null, launchDelay: 0.05f);
+        burst.StopTicking();
         burst.AimAtDeparture(locked);
         Recycle(locked, new Vector2(-5000f, 5000f));
         await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
-        burst._PhysicsProcess(0.1f);
+        burst.PhysicsTick(0.1f);
         Vector2 direction = (Vector2)typeof(Projectile).GetField("_direction", Private).GetValue(burst);
         Vector2 toOther = (other.GlobalPosition - _player.GlobalPosition).Normalized();
         Check(direction.Dot(toOther) > 0.99f,
