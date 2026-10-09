@@ -8,7 +8,12 @@
         "after_crisis_calm_sec": 40,
         "recent_memory": 2,
         "recent_weight_factor": 0.35,
-        "progress_emit_interval_sec": 0.1
+        "progress_emit_interval_sec": 0.1,
+        "_doc_fixed_events": "Rendez-vous fixes (plan 30 T2, DECISIONS §84) : chaque entrée part à at_sec, ou dès que la run le permet (pas pendant une Résurgence, son annonce ni l'accalmie) ; le tirage ne lance rien qui les chevaucherait. Deux Souverains entre les Résurgences, comme les mini-boss de Megabonk (3:00 et 8:00). Un événement de poids 0 ne sort plus qu'à ses rendez-vous.",
+        "fixed_events": [
+            { "id": "hunt", "at_sec": 150 },
+            { "id": "hunt", "at_sec": 420 }
+        ]
     },
     "events": [
         {
@@ -17,8 +22,8 @@
             "title_key": "EVENT_HUNT_TITLE",
             "objective_key": "EVENT_HUNT_OBJECTIVE",
             "min_sec": 120,
-            "weight": 1.2,
-            "duration_sec": 70,
+            "weight": 0,
+            "duration_sec": 60,
             "spawn_distance_min": 380,
             "spawn_distance_max": 520,
             "escort_base": 3,

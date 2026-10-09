@@ -10,7 +10,9 @@ namespace Vestiges.Events;
 /// <summary>
 /// Orchestre les micro-événements entre les Résurgences : un temps fort toutes les deux à trois minutes,
 /// jamais pendant une Résurgence, son annonce ou l'accalmie qui la suit. Tirage pondéré, sans répétition
-/// immédiate, avec des événements débloqués au fil de la run. Relaie objectif et progression au HUD.
+/// immédiate, avec des événements débloqués au fil de la run ; un poids nul sort un événement du tirage.
+/// Les rendez-vous fixes (Souverains, plan 30 T2) partent à leur heure, ou dès que la run le permet, et le
+/// tirage ne lance rien qui les chevaucherait. Relaie objectif et progression au HUD.
 /// </summary>
 public partial class RunEventDirector : Node
 {
@@ -31,6 +33,8 @@ public partial class RunEventDirector : Node
     private float _calmUntil;
     private float _progressTimer;
     private int _nextToken = 1;
+    private int _nextFixed;
+    private float _fixedRetryAt;
 
     public bool IsEventActive => _active != null;
 
@@ -87,6 +91,9 @@ public partial class RunEventDirector : Node
             return;
         }
 
+        if (TryStartFixedEvent())
+            return;
+
         if (_elapsed < _nextEventAt)
             return;
 
@@ -123,8 +130,49 @@ public partial class RunEventDirector : Node
         return _crisisManager != null && (_crisisManager.IsCrisisActive || _crisisManager.IsWarningActive);
     }
 
-    /// <summary>Temps disponible avant la prochaine Résurgence : seuls les événements qui s'y terminent sont tirés.</summary>
-    private float AvailableWindow() => _crisisManager == null
+    /// <summary>Rendez-vous fixe échu : il part dès que ni une Résurgence ni son accalmie ne l'en empêchent.</summary>
+    private bool TryStartFixedEvent()
+    {
+        if (_nextFixed >= _schedule.FixedEvents.Count || _elapsed < _fixedRetryAt)
+            return false;
+        FixedRunEvent next = _schedule.FixedEvents[_nextFixed];
+        if (_elapsed < next.AtSec || IsBlockedByCrisis())
+            return false;
+        RunEventData data = RunEventDataLoader.Find(next.EventId);
+        if (data == null)
+        {
+            _nextFixed++;
+            return false;
+        }
+        // Un rendez-vous retardé (accalmie, Oubli du répit) ne déborde pas sur la Résurgence suivante : il l'attend.
+        if (data.DurationSec > CrisisWindow())
+            return false;
+        StartEvent(data);
+        if (_active == null)
+        {
+            // Mise en place impossible ici : le rendez-vous reste dû, nouvel essai un peu plus loin.
+            _fixedRetryAt = _elapsed + BlockedRetrySec;
+            return false;
+        }
+        _nextFixed++;
+        return true;
+    }
+
+    /// <summary>
+    /// Temps disponible avant la prochaine Résurgence et le prochain rendez-vous fixe : seuls les événements qui s'y
+    /// terminent sont tirés.
+    /// </summary>
+    private float AvailableWindow()
+    {
+        float window = CrisisWindow();
+        // Seul un rendez-vous à venir réserve sa place : échu mais retenu (ou impossible à poser), il n'empêche pas le tirage.
+        if (_nextFixed < _schedule.FixedEvents.Count && _schedule.FixedEvents[_nextFixed].AtSec > _elapsed)
+            window = Mathf.Min(window, _schedule.FixedEvents[_nextFixed].AtSec - _elapsed - _schedule.CrisisMarginSec);
+        return window;
+    }
+
+    /// <summary>Temps avant l'annonce de la prochaine Résurgence, marge comprise.</summary>
+    private float CrisisWindow() => _crisisManager == null
         ? float.MaxValue
         : _crisisManager.TimeUntilNextCrisis - _crisisManager.WarningDurationSec - _schedule.CrisisMarginSec;
 
@@ -135,7 +183,7 @@ public partial class RunEventDirector : Node
         float total = 0f;
         foreach (RunEventData data in RunEventDataLoader.Events)
         {
-            if (_elapsed < data.MinSec || data.DurationSec > window || (_recent.Count > 0 && _recent[^1] == data.Id))
+            if (data.Weight <= 0f || _elapsed < data.MinSec || data.DurationSec > window || (_recent.Count > 0 && _recent[^1] == data.Id))
                 continue;
             _candidates.Add(data);
             total += Weight(data);

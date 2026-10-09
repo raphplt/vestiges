@@ -6,6 +6,7 @@ using Godot;
 using Vestiges.Combat;
 using Vestiges.Core;
 using Vestiges.Events;
+using Vestiges.Infrastructure;
 
 namespace Vestiges.Tests;
 
@@ -29,7 +30,7 @@ internal sealed class RunTimelineProbe : IDisposable
     private readonly GameManager _game;
     private readonly CrisisManager _crisis;
     private readonly List<string> _events = new() { "t,kind,id,detail" };
-    private readonly List<string> _beats = new() { "t,phase,crisis,event,elites,elites_near,champions,champions_near,aberrations,close300,near_hp,near_variant_hp" };
+    private readonly List<string> _beats = new() { "t,phase,crisis,event,elites,elites_near,champions,champions_near,aberrations,close300,near_hp,near_variant_hp,x,y" };
     private readonly Dictionary<ulong, string> _variants = new();
     private readonly HashSet<ulong> _seen = new();
     private string _activeEvent = "";
@@ -93,7 +94,11 @@ internal sealed class RunTimelineProbe : IDisposable
             if (_variants.TryGetValue(id, out string known) && known == variant)
                 continue;
             _variants[id] = variant;
-            Add(variant, enemy.EnemyId, string.Create(CultureInfo.InvariantCulture, $"distance={enemy.GlobalPosition.DistanceTo(origin):F0}"));
+            string affixes = "";
+            foreach (EnemyAffixData affix in enemy.Modifiers.Affixes)
+                affixes += (affixes.Length > 0 ? "+" : "") + affix.Id;
+            Add(variant, enemy.EnemyId, string.Create(CultureInfo.InvariantCulture,
+                $"distance={enemy.GlobalPosition.DistanceTo(origin):F0} hp={enemy.MaxHp:F0} affixes={affixes}"));
         }
         List<ulong> gone = null;
         foreach (ulong id in _variants.Keys)
@@ -137,7 +142,7 @@ internal sealed class RunTimelineProbe : IDisposable
         }
         string crisis = _crisis.IsCrisisActive ? "active" : _crisis.IsWarningActive ? "warning" : _calm ? "calm" : "";
         _beats.Add(string.Create(CultureInfo.InvariantCulture,
-            $"{time:F0},{_game.CurrentRunPhase},{crisis},{_activeEvent},{elites},{elitesNear},{champions},{championsNear},{aberrations},{close},{nearHp:F0},{nearVariantHp:F0}"));
+            $"{time:F0},{_game.CurrentRunPhase},{crisis},{_activeEvent},{elites},{elitesNear},{champions},{championsNear},{aberrations},{close},{nearHp:F0},{nearVariantHp:F0},{origin.X:F0},{origin.Y:F0}"));
     }
 
     private void Add(string kind, string id, string detail) => _events.Add(string.Create(CultureInfo.InvariantCulture,

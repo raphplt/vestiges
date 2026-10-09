@@ -308,7 +308,7 @@ public partial class SpawnManager : Node2D
 			return;
 
 		_affixScratch.Clear();
-		_affixScratch.AddRange(EnemyVariantDataLoader.NaturalElites.AffixPool);
+		_affixScratch.AddRange(variant.AffixPool.Count > 0 ? variant.AffixPool : EnemyVariantDataLoader.NaturalElites.AffixPool);
 		_affixPick.Clear();
 		for (int i = 0; i < variant.AffixCount && _affixScratch.Count > 0; i++)
 		{

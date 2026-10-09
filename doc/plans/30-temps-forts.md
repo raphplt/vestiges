@@ -264,6 +264,41 @@ Ordre proposé : T1 (petit, mesuré d'avance), T2, puis B1–B2. D et E restent 
 - La crise se mesure mais se voit peu. Pistes, non engagées : une vague qui arrive en anneau dans les premières secondes (rafale d'ouverture plus grosse, posée tout autour de l'écran), une signature visuelle plus forte que les bords ternis. À juger en jouant.
 - À jouer par Raphaël : la Résurgence 1 face à un build faible (4:00, niveau 8 à 10).
 
+## T2 livré — 9 octobre 2026
+
+**Fait.**
+- `run_events.json` : `schedule.fixed_events`, deux rendez-vous de chasse à 150 s et 420 s (2:30 et 7:00, entre les Résurgences, comme les mini-boss de Megabonk à 3:00 et 8:00). La chasse passe à un poids 0 : elle ne sort plus du tirage. Délai de la chasse 70 → 60 s, pour finir avant l'annonce de la première Résurgence (3:40).
+- `RunEventDirector` : un rendez-vous part à son heure, ou dès que la run le permet (pas pendant une Résurgence, son annonce ni l'accalmie) ; s'il ne peut pas se mettre en place (aucun sol praticable), il reste dû et réessaie 5 s plus tard. Le tirage ne lance aucun événement qui déborderait sur le prochain rendez-vous. Un événement de poids 0 sort du tirage.
+- `_variants.json`, Souverain : PV ×4 (cible 300 → 1 200, bornes 2,5–12 → 10–48, pour que toutes les créatures soient multipliées pareil) ; liste d'affixes propre (`affix_pool`, lue par `EnemyVariantDataLoader`, utilisée par `SpawnManager.MakeVariant`) sans Tenace : 3 % de PV rendus par seconde annulent un combat de 30 s.
+- Pas de bandeau ni de barre de boss au HUD : les annonces restent dans le monde (plan 24 A3). Le Souverain a déjà sa plaque (nom, affixes, PV) ; la flèche de bord, le son et la ligne d'aide de première fois sont ceux de la chasse. La barre de boss commune viendra avec B1.
+
+**Calendrier mesuré** (8 runs, 4 graines × 2 bots) : micro-événement vers 1:15, Souverain à 2:29, Résurgence 1 à 4:00, micro-événement à 5:49, Souverain à 6:59, micro-événement vers 8:20–8:40, Résurgence 2. Aucun chevauchement.
+
+**Durée des combats** (mesure de 9 min, [chronologies](../audits/temps-forts-2026-10-09/)) :
+
+| | Avant T2 (PV ×1, Tenace possible) | Après T2 |
+|---|---|---|
+| Build de référence | 4 à 7 s (tirage, 1 Souverain sur 4 avant 10 min) | 5 réussies sur 8 : 11, 11, 15, 22, 37 s |
+| Bot sans build | 4 à 57 s | 5 réussies sur 8 : 14, 14, 32, 38, 43 s |
+
+- Les échecs (3 sur 8 dans chaque profil, toujours les mêmes graines) viennent du bot, pas du réglage : il s'arrête sur le Souverain, sa cible, la foule l'encercle (60 à 95 créatures à moins de 300 px) et il ne bouge plus de 55 s ; il n'esquive pas et ne court pas. Avec les PV d'avant, ces mêmes graines échouaient déjà parfois. Sans eux, la durée médiane est de 15 s (build) et 32 s (sans build).
+- **Outil de mesure corrigé :** bloqué loin de la cible d'un événement (bord du monde, Néant, eau), le bot fait maintenant un détour de 3 s avant de reprendre la cible ; avant, suivre la cible annulait sa règle « bloqué 2 s, changer de cap » et il poussait contre le bord jusqu'à la fin. Un essai où le bot tournait autour du Souverain a été abandonné : il le touchait moins (6 échecs sur 8). La sonde relève aussi les PV max, les affixes et la position du joueur.
+
+**Images** ([planche](planches/30-t2-souverain.png), graine 7, bot sans build) : à 2:30 la ligne d'aide « Abattez le Rampant Souverain avant son effacement » ; à 2:40 le Souverain arrive avec sa meute, plaque et gros chiffres de dégâts. Ce Rampant Cuirassé et Enragé s'enterre par moments ; il tombe de 2 132 à ~500 PV en 55 s, et le temps s'écoule juste avant la fin. À l'écran, le Souverain reste petit (×1,6) : il se lit surtout par sa plaque.
+
+**Relecture** (sous-agent `godot-reviewer`), deux corrections :
+- un rendez-vous retardé par une accalmie pouvait partir à moins de 60 s de la Résurgence suivante et la chevaucher : il attend désormais une fenêtre assez longue (même règle que le tirage) ;
+- un rendez-vous échu qui échouait en boucle à se poser bloquait tout le tirage : seul un rendez-vous à venir réserve sa place.
+Remarque écartée : les PV ×4 valent pour tout Souverain, mais seule la chasse en crée.
+
+Mesure après corrections (build de référence, 4 graines, 10 min) : même calendrier ; 6 chasses réussies sur 8, en 5, 22, 24, 25, 27 et 58 s (médiane 24,5 s).
+
+**Régressions :** `dotnet build` 0 avertissement ; `tools/test_movement.sh` et `tools/test_enemy_abilities.sh` : 0 échec.
+
+**Points ouverts.**
+- À jouer par Raphaël : la durée réelle du combat (cible 20–40 s), surtout le premier Souverain avec un build de niveau 4 à 6. Repli possible : PV ×3 (cible 900).
+- Le Souverain se lit peu à l'écran (taille ×1,6, plaque petite) ; la barre de boss de B1 y répondra en partie.
+
 ## 7. Reproduire
 
 ```bash

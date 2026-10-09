@@ -565,6 +565,7 @@ public partial class RunObservation : Node
             Input.ActionPress("show_map");
         bool showBonuses = Array.IndexOf(OS.GetCmdlineUserArgs(), "--show-bonuses") >= 0;
         EventBus.EssenceChangedEventHandler onEssence = places.OnEssence;
+        double eventDetourUntil = 0;
         EventBus.RunEventStartedEventHandler onEvent = (_, _, _, _) => places.Events++;
         eventBus.EssenceChanged += onEssence;
         eventBus.RunEventStarted += onEvent;
@@ -602,6 +603,11 @@ public partial class RunObservation : Node
             // ou si le joueur est bloqué (obstacle, Néant) depuis deux secondes.
             if (t - lastProgressTime > 2.0)
             {
+                // Bloqué loin de la cible d'un événement (bord du monde, Néant, eau) : un joueur contourne ; le bot
+                // fait un détour de quelques secondes avant de reprendre la cible (plan 30 T2). Rester dans le cercle
+                // d'une Veille n'est pas un blocage : le point de passage est atteint.
+                if (director.IsEventActive && _player.GlobalPosition.DistanceTo(waypoint) > 40f)
+                    eventDetourUntil = t + EventDetourSeconds;
                 waypoint = _player.GlobalPosition;
                 lastProgressTime = t;
                 if (nomad)
@@ -612,13 +618,13 @@ public partial class RunObservation : Node
                 lastProgressPosition = _player.GlobalPosition;
                 lastProgressTime = t;
             }
-            if (_player.GlobalPosition.DistanceTo(waypoint) < 40f && !director.IsEventActive)
+            if (_player.GlobalPosition.DistanceTo(waypoint) < 40f && (!director.IsEventActive || t < eventDetourUntil))
             {
                 float angle = nomad ? heading + rng.RandfRange(-0.6f, 0.6f) : rng.RandfRange(0f, Mathf.Tau);
                 waypoint = _player.GlobalPosition + Vector2.FromAngle(angle) * rng.RandfRange(500f, 900f);
             }
             // Comme un joueur, le bot suit la cible d'un micro-événement en cours (vestige, veille, Souverain).
-            if (director.TryGetActiveTarget(out Vector2 eventTarget))
+            if (t >= eventDetourUntil && director.TryGetActiveTarget(out Vector2 eventTarget))
                 waypoint = eventTarget;
             bool holding = _visitPlaces && !director.IsEventActive && places.Steer(t, _player, ref waypoint);
             // Tenir une interaction n'est pas un blocage : le cap et le point de passage restent ceux d'avant.
@@ -875,6 +881,7 @@ public partial class RunObservation : Node
     }
 
     private string[] _preferredCards = Array.Empty<string>();
+    private const double EventDetourSeconds = 3.0;
     private const string PerilObjectId = "sifflet_d_arbitre";
 
     private Rect2 VisibleWorldRect()

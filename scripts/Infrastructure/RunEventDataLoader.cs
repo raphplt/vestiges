@@ -15,7 +15,12 @@ public class RunEventSchedule
     public int RecentMemory = 2;
     public float RecentWeightFactor = 0.35f;
     public float ProgressEmitIntervalSec = 0.1f;
+    /// <summary>Rendez-vous fixes (plan 30 T2), triés par heure : l'événement part à son heure, hors tirage.</summary>
+    public readonly List<FixedRunEvent> FixedEvents = new();
 }
+
+/// <summary>Un micro-événement à heure fixe : il part dès que la run le permet après <see cref="AtSec"/>.</summary>
+public readonly record struct FixedRunEvent(float AtSec, string EventId);
 
 /// <summary>
 /// Définition d'un micro-événement. Les champs communs sont typés ; les réglages propres
@@ -91,11 +96,32 @@ public static class RunEventDataLoader
             RecentWeightFactor = Float(schedule, "recent_weight_factor", 0.35f),
             ProgressEmitIntervalSec = Float(schedule, "progress_emit_interval_sec", 0.1f)
         };
+        if (schedule.ContainsKey("fixed_events"))
+        {
+            foreach (Variant item in schedule["fixed_events"].AsGodotArray())
+            {
+                Godot.Collections.Dictionary entry = item.AsGodotDictionary();
+                Schedule.FixedEvents.Add(new FixedRunEvent(Float(entry, "at_sec", 0f), entry.ContainsKey("id") ? entry["id"].AsString() : ""));
+            }
+            Schedule.FixedEvents.Sort((a, b) => a.AtSec.CompareTo(b.AtSec));
+        }
 
         foreach (Variant item in root["events"].AsGodotArray())
             _events.Add(ParseEvent(item.AsGodotDictionary()));
 
-        GD.Print($"[RunEventDataLoader] Loaded {_events.Count} run events");
+        foreach (FixedRunEvent fixedEvent in Schedule.FixedEvents)
+            if (Find(fixedEvent.EventId) == null)
+                GD.PushError($"[RunEventDataLoader] Rendez-vous fixe inconnu : {fixedEvent.EventId}");
+
+        GD.Print($"[RunEventDataLoader] Loaded {_events.Count} run events, {Schedule.FixedEvents.Count} fixed");
+    }
+
+    public static RunEventData Find(string eventId)
+    {
+        foreach (RunEventData data in Events)
+            if (data.Id == eventId)
+                return data;
+        return null;
     }
 
     private static RunEventData ParseEvent(Godot.Collections.Dictionary dict)

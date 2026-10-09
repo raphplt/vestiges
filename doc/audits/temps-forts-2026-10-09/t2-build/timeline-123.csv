@@ -1,0 +1,213 @@
+t,kind,id,detail
+15.6,small_place,scarecrow,
+22.6,small_place,well,
+28.8,small_place,bus_shelter,
+62.1,small_place,abandoned_car,
+72.8,level,2,
+74.8,event_start,fallen_relic,duration=42
+81.3,event_end,fallen_relic,success
+81.8,level,3,
+82.7,chest,chest_common,common
+90.0,elite,rampant,distance=408 hp=199 affixes=enraged
+95.9,small_place,abandoned_car,
+115.6,chest,chest_lore,lore
+118.8,small_place,crystal_vein,
+119.2,level,4,
+135.8,elite,fading_spitter,distance=438 hp=131 affixes=regenerant
+147.0,small_place,mailbox,
+147.0,level,5,
+149.9,event_start,hunt,duration=60
+150.0,champion,charognard,distance=449 hp=1228 affixes=swift+explosive
+164.0,level,6,
+165.4,variant_killed,champion,
+165.4,event_end,hunt,success
+166.3,chest,chest_rare,rare
+167.3,level,7,
+172.0,elite,charognard,distance=552 hp=164 affixes=armored
+178.4,chest,chest_common,common
+191.6,level,8,
+207.2,level,9,
+214.0,elite,shadow_crawler,distance=613 hp=183 affixes=swift
+219.9,crisis_warning,1,countdown=20
+231.8,level,10,
+239.8,phase,Crisis,Exploration
+239.8,crisis_start,1,intensity=1
+240.0,aberration,shade,distance=323 hp=37 affixes=
+241.3,aberration,void_brute,distance=351 hp=299 affixes=
+242.0,aberration,wailing_sentinel,distance=296 hp=94 affixes=
+242.0,aberration,hurleur,distance=594 hp=131 affixes=
+242.3,aberration,shade,distance=578 hp=38 affixes=
+242.5,aberration,hurleur,distance=319 hp=131 affixes=
+242.8,aberration,hurleur,distance=296 hp=132 affixes=
+242.8,aberration,hurleur,distance=305 hp=132 affixes=
+243.5,aberration,shade,distance=323 hp=38 affixes=explosive
+247.3,aberration,shade,distance=587 hp=38 affixes=explosive
+247.3,level,11,
+249.0,aberration,presage,distance=263 hp=85 affixes=
+249.3,aberration,hurleur,distance=425 hp=136 affixes=
+249.8,aberration,hurleur,distance=361 hp=136 affixes=
+250.6,chest,chest_common,common
+253.0,aberration,wailing_sentinel,distance=422 hp=99 affixes=
+253.0,aberration,wailing_sentinel,distance=426 hp=99 affixes=regenerant
+253.3,aberration,void_brute,distance=495 hp=316 affixes=regenerant
+253.8,aberration,presage,distance=565 hp=87 affixes=
+253.8,aberration,presage,distance=422 hp=87 affixes=
+254.0,aberration,void_brute,distance=285 hp=317 affixes=
+255.5,aberration,wailing_sentinel,distance=327 hp=100 affixes=
+256.0,aberration,wailing_sentinel,distance=321 hp=100 affixes=
+256.1,small_place,abandoned_car,
+258.5,aberration,hurleur,distance=508 hp=142 affixes=
+259.0,level,12,
+259.0,aberration,presage,distance=535 hp=89 affixes=
+259.0,aberration,presage,distance=474 hp=89 affixes=
+259.5,aberration,rampant,distance=376 hp=102 affixes=
+260.3,aberration,hurleur,distance=286 hp=143 affixes=
+260.5,aberration,charognard,distance=323 hp=74 affixes=regenerant
+261.3,aberration,hurleur,distance=383 hp=144 affixes=
+261.8,aberration,tisseuse,distance=611 hp=82 affixes=
+262.0,aberration,shade,distance=438 hp=41 affixes=
+262.0,aberration,tisseuse,distance=443 hp=82 affixes=
+262.3,aberration,tisseuse,distance=536 hp=83 affixes=
+262.5,aberration,shade,distance=430 hp=41 affixes=
+262.5,aberration,shade,distance=450 hp=41 affixes=
+262.8,aberration,presage,distance=389 hp=91 affixes=enraged
+263.4,chest,chest_common,common
+265.8,elite,rampant,distance=364 hp=315 affixes=armored
+267.0,aberration,wailing_sentinel,distance=522 hp=105 affixes=
+267.3,aberration,shade,distance=367 hp=42 affixes=
+267.3,aberration,void_brute,distance=412 hp=338 affixes=
+267.8,aberration,void_brute,distance=492 hp=339 affixes=
+268.3,aberration,void_brute,distance=259 hp=340 affixes=
+268.3,aberration,wailing_sentinel,distance=489 hp=106 affixes=
+269.0,aberration,wailing_sentinel,distance=326 hp=107 affixes=enraged
+269.3,aberration,shade,distance=516 hp=43 affixes=regenerant
+269.8,aberration,hurleur,distance=489 hp=150 affixes=
+270.0,aberration,shade,distance=218 hp=43 affixes=
+270.0,aberration,void_brute,distance=290 hp=343 affixes=explosive
+270.3,aberration,void_brute,distance=308 hp=343 affixes=
+270.8,aberration,shade,distance=403 hp=43 affixes=
+271.0,aberration,charognard,distance=366 hp=77 affixes=
+272.0,aberration,shade,distance=486 hp=43 affixes=enraged
+272.3,level,13,
+272.8,aberration,shade,distance=266 hp=43 affixes=explosive
+273.0,aberration,void_brute,distance=426 hp=348 affixes=
+273.5,aberration,shade,distance=503 hp=44 affixes=
+275.0,aberration,void_brute,distance=627 hp=351 affixes=
+277.4,level,14,
+278.3,aberration,wailing_sentinel,distance=160 hp=111 affixes=
+281.3,aberration,shade,distance=454 hp=45 affixes=
+281.8,aberration,tisseuse,distance=392 hp=91 affixes=
+282.0,aberration,presage,distance=393 hp=100 affixes=
+283.0,aberration,hurleur,distance=318 hp=160 affixes=
+283.5,aberration,shade,distance=339 hp=46 affixes=
+283.5,aberration,shade,distance=330 hp=46 affixes=
+283.5,aberration,shade,distance=326 hp=46 affixes=explosive
+283.8,aberration,shade,distance=555 hp=46 affixes=
+283.8,aberration,shade,distance=589 hp=46 affixes=
+284.3,aberration,void_brute,distance=352 hp=367 affixes=
+284.3,aberration,hurleur,distance=503 hp=160 affixes=
+284.5,aberration,shade,distance=581 hp=46 affixes=
+284.8,aberration,hurleur,distance=361 hp=161 affixes=
+285.5,aberration,void_brute,distance=401 hp=369 affixes=
+285.8,aberration,shade,distance=422 hp=46 affixes=
+286.0,aberration,void_brute,distance=588 hp=370 affixes=regenerant
+286.3,aberration,void_brute,distance=433 hp=370 affixes=
+286.8,aberration,charognard,distance=498 hp=84 affixes=
+287.5,aberration,shade,distance=365 hp=47 affixes=
+287.5,aberration,void_brute,distance=541 hp=373 affixes=enraged
+287.8,aberration,void_brute,distance=534 hp=373 affixes=
+289.3,aberration,shade,distance=566 hp=47 affixes=
+289.5,aberration,charognard,distance=539 hp=85 affixes=
+289.5,aberration,charognard,distance=518 hp=85 affixes=
+289.5,aberration,charognard,distance=550 hp=85 affixes=
+289.8,aberration,shade,distance=525 hp=47 affixes=
+290.3,aberration,void_brute,distance=331 hp=377 affixes=
+290.5,aberration,shade,distance=253 hp=47 affixes=
+290.7,small_place,picnic,
+290.8,aberration,void_brute,distance=587 hp=378 affixes=
+292.5,aberration,void_brute,distance=390 hp=381 affixes=explosive
+292.5,aberration,void_brute,distance=411 hp=382 affixes=
+293.0,level,15,
+293.5,aberration,shade,distance=612 hp=48 affixes=regenerant
+294.5,aberration,void_brute,distance=374 hp=385 affixes=
+294.8,aberration,shade,distance=357 hp=48 affixes=
+294.8,aberration,shade,distance=340 hp=48 affixes=
+295.0,aberration,presage,distance=295 hp=106 affixes=
+295.3,aberration,shade,distance=399 hp=48 affixes=
+295.5,aberration,presage,distance=404 hp=106 affixes=
+295.8,aberration,wailing_sentinel,distance=380 hp=121 affixes=
+296.3,aberration,shadow_crawler,distance=369 hp=146 affixes=
+296.5,aberration,void_brute,distance=572 hp=389 affixes=
+296.8,aberration,shade,distance=340 hp=49 affixes=
+296.8,aberration,shade,distance=367 hp=49 affixes=
+300.5,aberration,void_brute,distance=617 hp=396 affixes=
+300.5,aberration,hurleur,distance=635 hp=173 affixes=
+301.5,aberration,charognard,distance=310 hp=90 affixes=regenerant
+302.0,aberration,charognard,distance=409 hp=90 affixes=
+302.3,aberration,charognard,distance=268 hp=90 affixes=
+303.0,aberration,hurleur,distance=382 hp=175 affixes=
+303.3,elite,presage,distance=310 hp=345 affixes=regenerant
+303.3,aberration,wailing_sentinel,distance=413 hp=125 affixes=
+303.5,aberration,wailing_sentinel,distance=342 hp=126 affixes=
+303.8,aberration,hurleur,distance=560 hp=176 affixes=
+304.0,aberration,tisseuse,distance=585 hp=101 affixes=explosive
+304.3,aberration,tisseuse,distance=629 hp=101 affixes=
+304.8,aberration,shade,distance=352 hp=51 affixes=
+305.3,aberration,charognard,distance=655 hp=91 affixes=regenerant
+305.5,aberration,shade,distance=554 hp=51 affixes=
+305.8,aberration,shade,distance=326 hp=51 affixes=
+306.0,aberration,shade,distance=305 hp=51 affixes=
+306.8,aberration,shade,distance=570 hp=51 affixes=
+307.0,aberration,tisseuse,distance=334 hp=102 affixes=
+307.3,aberration,fading_spitter,distance=547 hp=77 affixes=
+307.5,aberration,charognard,distance=351 hp=92 affixes=
+307.8,aberration,charognard,distance=449 hp=92 affixes=
+308.5,aberration,shade,distance=337 hp=51 affixes=
+308.8,aberration,charognard,distance=352 hp=93 affixes=
+308.8,aberration,charognard,distance=386 hp=93 affixes=
+309.3,aberration,shade,distance=523 hp=52 affixes=
+309.8,aberration,hurleur,distance=458 hp=181 affixes=
+309.8,calm_start,,
+309.8,crisis_end,1,
+309.8,phase,Exploration,Crisis
+310.8,level,16,
+311.8,chest,chest_rare,rare
+328.5,small_place,mailbox,
+328.5,level,17,
+339.7,calm_end,,
+341.5,elite,rodeur,distance=621 hp=383 affixes=armored
+348.4,level,18,
+349.7,event_start,shard_rain,duration=18
+367.7,event_end,shard_rain,success
+368.0,level,19,
+372.1,small_place,phone_booth,
+376.6,workshop,,
+381.7,small_place,mailbox,
+382.5,level,20,
+389.3,elite,rodeur,distance=613 hp=480 affixes=regenerant
+409.1,small_place,abandoned_car,
+409.3,level,21,
+419.7,event_start,hunt,duration=60
+419.8,champion,presage,distance=446 hp=4885 affixes=explosive+enraged
+430.5,elite,rampant,distance=594 hp=467 affixes=swift
+431.1,variant_killed,champion,
+431.1,event_end,hunt,success
+432.5,small_place,crystal_vein,
+435.0,chest,chest_rare,rare
+440.0,small_place,mine_cart,
+445.4,small_place,mine_cart,
+451.7,level,22,
+457.0,small_place,abandoned_car,
+470.3,level,23,
+477.8,elite,charognard,distance=660 hp=549 affixes=regenerant
+483.5,variant_killed,elite,
+485.3,small_place,bus_shelter,
+494.2,small_place,mailbox,
+494.2,level,24,
+495.6,event_start,stampede,duration=26
+506.9,level,25,
+521.6,event_end,stampede,success
+525.5,elite,presage,distance=412 hp=763 affixes=armored
+529.8,small_place,mailbox,
+529.8,level,26,
+534.8,crisis_warning,2,countdown=20
