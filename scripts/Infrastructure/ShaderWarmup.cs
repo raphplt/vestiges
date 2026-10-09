@@ -87,6 +87,23 @@ public partial class ShaderWarmup : SubViewport
         glow.Position = new Vector2(128, Size.Y - 12);
         glow.Preprocess = 0.5;
         content.AddChild(glow);
+        // Particules de la run, avec les matériaux partagés qu'elles garderont : leur shader est compilé ici, pas à la
+        // première Résurgence (plan 29). Opaques le temps du préchauffage : une brume transparente n'est pas dessinée.
+        GpuParticles2D[] runParticles =
+        {
+            World.AmbientParticles.CreateDayParticles(false), World.AmbientParticles.CreateNightParticles(false),
+            Combat.AberrationAura.Create(10),
+        };
+        for (int index = 0; index < runParticles.Length; index++)
+        {
+            GpuParticles2D sample = runParticles[index];
+            sample.Name = $"RunParticles{index}";
+            sample.Modulate = Colors.White;
+            sample.ZIndex = 0;
+            sample.Position = new Vector2(32 + index * 60, Size.Y - 12);
+            sample.Preprocess = 0.5;
+            content.AddChild(sample);
+        }
     }
 
     public static async Task RenderAsync(Node owner)

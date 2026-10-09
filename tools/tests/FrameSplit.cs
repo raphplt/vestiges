@@ -27,6 +27,13 @@ public sealed partial class FrameSplit
         _physicsScripts = _physicsStep = _process = _render = _frames = _ticks = 0;
     }
 
+    /// <summary>Cumuls bruts, en millisecondes : scripts physiques, pas physique, scripts _Process, rendu et reste.</summary>
+    public (double PhysicsScripts, double PhysicsStep, double Process, double Render) Totals()
+    {
+        double ms = Stopwatch.Frequency / 1000.0;
+        return (_physicsScripts / ms, _physicsStep / ms, _process / ms, _render / ms);
+    }
+
     public object Summary()
     {
         double perFrame = Stopwatch.Frequency / 1000.0 * System.Math.Max(1, _frames);

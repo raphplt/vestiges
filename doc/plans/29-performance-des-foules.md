@@ -238,3 +238,24 @@ En régime établi, 1 200 créatures en vraie run tiennent ≈ 46 FPS, cohérent
 ### Clôture — 9 octobre 2026
 
 Raphaël arrête le chantier ici (§83) : plafond à 500, calqué sur Vampire Survivors ; les nœuds sont gardés, le lot D est reporté avec son brief. Bilan au banc dense (1080p, Ryzen 7 5700X), du début à la fin de la journée : 400 créatures 49 → 209 FPS, 1 000 créatures 3,7 → 87 FPS, 1 500 créatures → 46 FPS. Restent ouverts, sans urgence : les à-coups d'apparition quand la foule grossit vite (pool préchauffé à 20), la mesure en export ([EXPORT.md](../EXPORT.md)), un banc dédié aux projectiles du joueur si un build en fait voler des centaines.
+
+### À-coups en run — 9 octobre 2026
+
+Demande de Raphaël après la clôture : « corrige les a coups ». Mesuré en vraie run (`capture_run.sh`, `--frame-stats --nomad`, graine par défaut, cible normale), images de plus de 50 ms relevées une à une (`frames-<seed>-spikes.csv` : heure, durée, créatures, éliminations, apparitions, collectes, découpage scripts / physique / `_Process` / rendu, heure d'horloge) et chaque collecte du GC (`frames-<seed>-gc.csv`). Trois causes, toutes indépendantes de la foule :
+
+- **Chargement paresseux** : sprites des habitants (échos), projectile « arrow », effet de mort et quelques scripts étaient chargés à leur première apparition. `GameBootstrap.PreloadRunAssets` les charge pendant l'écran de chargement (+108 ms de chargement).
+- **Shaders de particules compilés à la première Résurgence** (60 ms à 240 s) : Godot génère un shader par configuration de `ParticleProcessMaterial` et le libère quand plus aucun matériau ne l'utilise. La brume des Résurgences (`AmbientParticles`) et l'aura des aberrations (`AberrationAura`, sortie d'`Enemy.cs`) gardent désormais un matériau partagé, dessiné une fois par `ShaderWarmup` pendant le chargement. Bissection : sans ces deux effets, le pic disparaissait.
+- **Pauses du GC .NET** : le budget de la jeune génération suit le cache du processeur (des dizaines de Mo). Une collecte toutes les une à deux minutes promeut 10 à 20 Mo et fige l'image : 23 à 52 ms en gen1 compactante, 65 ms en gen2. Le réglage natif (`GCgen0size`) n'est lu que dans une variable d'environnement (`System.GC.Gen0Size` et `GCgen0size` essayés dans le runtimeconfig : ignorés) ; `GCLatencyMode.SustainedLowLatency` ne change rien aux collectes gen1. `GcPacer` (nœud de la run) déclenche donc une collecte gen0 tous les 4 Mo alloués : collectes deux fois plus nombreuses, temps total de GC égal, chaque pause courte.
+
+| Mesure | Avant | Après |
+|---|---|---|
+| Pire pause GC, 400 s sans rendu (graine 42) | 52,5 ms (7 collectes, 97 ms au total) | 14,8 ms (17 collectes, 116 ms au total) |
+| Pause GC en vraie run de 5 min | 51,4 ms (gen1), 64,6 ms (gen2) | 14,3 ms au pire |
+| Début de la première Résurgence | 60,6 ms | 14,6 ms au pire dans la tranche |
+| Pire image hors démarrage, vraie run de 3 à 5 min | 60–68 ms | 16–22 ms |
+| Pire pause GC, 600 s sans rendu, horde forcée à 500 (graine 42) | 35,9 ms (12 collectes, 5 pauses > 29 ms, 216 ms au total) | 16,4 ms (35 collectes, 300 ms au total) |
+
+Le prix : 40 % de temps de GC en plus avec une horde de 500, soit 0,05 % du temps de jeu.
+
+Reste : la tranche 0–30 s garde une image de 30 à 41 ms (premières apparitions). Un pic isolé de 70 ms à 152 s dans une run ne s'est pas reproduit dans la suivante, à la même graine : rendu en attente de l'affichage (CPU 1,2 ms, GPU 2 ms), machine chargée à ce moment ; extérieur au jeu. Les à-coups d'apparition au-delà de 20 créatures fabriquées d'un coup (horde forcée à 1 200) restent ouverts. `BiomeAtmosphere` (brume et particules du marais) et `BioluminescentMushrooms` gardent un `ParticleProcessMaterial` par instance, non préchauffé : l'entrée dans le marais, mesurée en vraie run, ne fait pas de pic (même configuration que la brume déjà affichée), mais une nouvelle configuration de particules ajoutée au jeu devra passer par `ShaderWarmup`.
+

@@ -479,42 +479,7 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 	{
 		if (VfxFactory.CurrentParticleLevel == ParticleLevel.Off)
 			return;
-
-		int auraAmount = VfxFactory.CurrentParticleLevel == ParticleLevel.Reduced ? 5 : 10;
-		var aura = new GpuParticles2D
-		{
-			Amount = auraAmount,
-			Lifetime = 1.2f,
-			SpeedScale = 0.6f,
-			Explosiveness = 0f,
-			ZIndex = -1,
-			Texture = VfxFactory.CircleTexture,
-			TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
-		};
-
-		var gradient = new GradientTexture1D();
-		var g = new Gradient();
-		g.SetColor(0, new Color(0.15f, 0.05f, 0.2f, 0f));
-		g.AddPoint(0.3f, new Color(0.25f, 0.08f, 0.35f, 0.35f));
-		g.SetColor(g.GetPointCount() - 1, new Color(0.15f, 0.05f, 0.2f, 0f));
-		gradient.Gradient = g;
-
-		var mat = new ParticleProcessMaterial
-		{
-			EmissionShape = ParticleProcessMaterial.EmissionShapeEnum.Box,
-			EmissionBoxExtents = new Vector3(14, 8, 0),
-			Direction = new Vector3(0, -0.3f, 0),
-			Spread = 180f,
-			InitialVelocityMin = 3f,
-			InitialVelocityMax = 8f,
-			Gravity = new Vector3(0, -5, 0),
-			ScaleMin = 0.6f,
-			ScaleMax = 1.4f,
-			ColorRamp = gradient,
-		};
-		aura.ProcessMaterial = mat;
-		aura.Name = "AberrationAura";
-		AddChild(aura);
+		AddChild(AberrationAura.Create(VfxFactory.CurrentParticleLevel == ParticleLevel.Reduced ? 5 : 10));
 	}
 
 	public void Reset()
@@ -554,7 +519,7 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 		_mods.Reset();
 		_packBonusSpeed = 0f;
 		_packBonusTimer = 0f;
-		Node auraNode = GetNodeOrNull("AberrationAura");
+		Node auraNode = GetNodeOrNull(AberrationAura.NodeName);
 		if (auraNode != null)
 			auraNode.QueueFree();
 		if (_nameplate != null)

@@ -175,6 +175,8 @@ public partial class GameBootstrap : Node
         LoadProfiler.Mark("créatures du pool");
         await PreloadEnemySprites();
         LoadProfiler.Mark("animations des créatures");
+        await PreloadRunAssets();
+        LoadProfiler.Mark("effets et scripts de la run");
 
         // --- Wire des systèmes (rapide, synchrone) ---
         Step("Initialisation...");
@@ -240,6 +242,9 @@ public partial class GameBootstrap : Node
 
         // Bonus lâchés (plan 24 C4) : gourde, aimant, couverture, café, pétard.
         sceneRoot.AddChild(new FieldBonusDirector { Name = "FieldBonusDirector" });
+
+        // Collectes de la jeune génération rapprochées : pas de pause GC visible (plan 29).
+        sceneRoot.AddChild(new GcPacer { Name = "GcPacer" });
 
         QuestManager questManager = new() { Name = "QuestManager" };
         sceneRoot.AddChild(questManager);
@@ -318,6 +323,46 @@ public partial class GameBootstrap : Node
             await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
             LoadGuard.EnsureAlive(this);
         }
+    }
+
+    /// <summary>
+    /// Ce que la run chargeait sinon à son premier usage, en pleine partie (plan 29) : habitants des échos de
+    /// l'Effacement (jusqu'à 130 ms dans les premières secondes), planches des projectiles, effet de mort, et scripts C#
+    /// des effets nés en cours de run (≈ 50 ms pour l'anneau d'affixe au début de la première Résurgence). Une ressource
+    /// par image, comme les créatures.
+    /// </summary>
+    private async Task PreloadRunAssets()
+    {
+        EchoConfig echoes = EchoConfig.Load();
+        if (echoes.Enabled)
+        {
+            foreach (string id in echoes.Inhabitants)
+            {
+                Combat.CharacterSpriteLoader.LoadOrGet(id, id);
+                await NextLoadingFrame();
+            }
+        }
+        Combat.ProjectileSprites.Get("arrow");
+        await NextLoadingFrame();
+        Combat.DeathFx.Create(null).Free();
+        await NextLoadingFrame();
+        // Charger le script et compiler son constructeur : un nœud créé puis libéré, jamais ajouté à l'arbre.
+        Func<Node>[] scripts =
+        {
+            () => new Combat.PixelGroundRing(), () => new Combat.EnemyStatusMarks(), () => new Combat.Abilities.GroundTelegraph(),
+            () => new Combat.PixelFx(), () => new Combat.TickRosterDriver(), () => new GroundShadowLayer(), () => new MapLegendIcon(),
+        };
+        foreach (Func<Node> create in scripts)
+        {
+            create().Free();
+            await NextLoadingFrame();
+        }
+    }
+
+    private async Task NextLoadingFrame()
+    {
+        await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+        LoadGuard.EnsureAlive(this);
     }
 
     public override void _ExitTree()

@@ -483,7 +483,12 @@ public partial class RunObservation : Node
         // Exposition : secondes × créatures à moins de 600 px, par espèce ; et morts par espèce.
         Dictionary<string, double> exposureById = new();
         Dictionary<string, double> killsById = new();
-        EventBus.EnemyKilledEventHandler onKill = (enemyId, _) => killsById[enemyId] = killsById.GetValueOrDefault(enemyId) + 1;
+        RunFrameStats frameStats = Array.IndexOf(args, "--frame-stats") >= 0 ? new RunFrameStats(30.0) : null;
+        EventBus.EnemyKilledEventHandler onKill = (enemyId, _) =>
+        {
+            killsById[enemyId] = killsById.GetValueOrDefault(enemyId) + 1;
+            frameStats?.CountKill();
+        };
         eventBus.EnemyKilled += onKill;
         // Temps pour tuer (plan 20, R1-T) : PV des créatures apparues et dégâts infligés, cumulés ; le modèle en
         // déduit, par palier, le PV moyen d'une créature divisé par les dégâts infligés par seconde.
@@ -493,6 +498,7 @@ public partial class RunObservation : Node
         {
             spawnedHp += (EnemyDataLoader.Get(enemyId)?.Stats.Hp ?? 0f) * hpScale;
             spawnedById[enemyId] = spawnedById.GetValueOrDefault(enemyId) + 1;
+            frameStats?.CountSpawn();
         };
         EventBus.EntityDamagedEventHandler onDamaged = (_, amount) => damageDealt += amount;
         eventBus.EnemySpawned += onSpawned;
@@ -560,8 +566,8 @@ public partial class RunObservation : Node
         eventBus.EssenceChanged += onEssence;
         eventBus.RunEventStarted += onEvent;
 
-        // --frame-stats : durées d'image par tranche de 30 s (plan 29), en temps réel seulement.
-        RunFrameStats frameStats = Array.IndexOf(args, "--frame-stats") >= 0 ? new RunFrameStats(30.0) : null;
+        // --frame-stats (déclaré plus haut) : durées d'image par tranche de 30 s (plan 29), en temps réel seulement.
+        frameStats?.Attach(GetTree().Root);
         while (true)
         {
             await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);

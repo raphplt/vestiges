@@ -89,7 +89,13 @@ public partial class AmbientParticles : Node2D
 			.SetTrans(Tween.TransitionType.Sine);
 	}
 
-	private static GpuParticles2D CreateDayParticles(bool reduced)
+	// Matériaux partagés et gardés : leurs shaders sont compilés au chargement (ShaderWarmup) et le restent. La brume,
+	// transparente jusqu'à la première Résurgence, n'était sinon compilée qu'à ce moment-là (≈ 50 ms, plan 29).
+	private static ParticleProcessMaterial _dayMaterial;
+	private static ParticleProcessMaterial _nightMaterial;
+
+	/// <summary>Poussière dorée de l'exploration.</summary>
+	internal static GpuParticles2D CreateDayParticles(bool reduced)
 	{
 		var particles = new GpuParticles2D
 		{
@@ -101,7 +107,7 @@ public partial class AmbientParticles : Node2D
 			TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
 		};
 
-		var mat = new ParticleProcessMaterial
+		_dayMaterial ??= new ParticleProcessMaterial
 		{
 			EmissionShape = ParticleProcessMaterial.EmissionShapeEnum.Box,
 			EmissionBoxExtents = new Vector3(200, 120, 0),
@@ -114,12 +120,13 @@ public partial class AmbientParticles : Node2D
 			ScaleMax = 0.5f,
 			Color = new Color(0.83f, 0.66f, 0.26f, 0.4f),
 		};
-		particles.ProcessMaterial = mat;
+		particles.ProcessMaterial = _dayMaterial;
 
 		return particles;
 	}
 
-	private static GpuParticles2D CreateNightParticles(bool reduced)
+	/// <summary>Brume violette des Résurgences et du late game, transparente au départ.</summary>
+	internal static GpuParticles2D CreateNightParticles(bool reduced)
 	{
 		var particles = new GpuParticles2D
 		{
@@ -132,27 +139,27 @@ public partial class AmbientParticles : Node2D
 			TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
 		};
 
-		var gradient = new GradientTexture1D();
-		var g = new Gradient();
-		g.SetColor(0, new Color(0.29f, 0.19f, 0.4f, 0f));    // Violet brume fade in
-		g.AddPoint(0.3f, new Color(0.29f, 0.19f, 0.4f, 0.35f));
-		g.SetColor(g.GetPointCount() - 1, new Color(0.29f, 0.19f, 0.4f, 0f)); // Fade out
-		gradient.Gradient = g;
-
-		var mat = new ParticleProcessMaterial
+		if (_nightMaterial == null)
 		{
-			EmissionShape = ParticleProcessMaterial.EmissionShapeEnum.Box,
-			EmissionBoxExtents = new Vector3(220, 140, 0),
-			Direction = new Vector3(-0.2f, 0.1f, 0),
-			Spread = 90f,
-			InitialVelocityMin = 2f,
-			InitialVelocityMax = 6f,
-			Gravity = Vector3.Zero,
-			ScaleMin = 0.8f,
-			ScaleMax = 1.8f,
-			ColorRamp = gradient,
-		};
-		particles.ProcessMaterial = mat;
+			Gradient gradient = new();
+			gradient.SetColor(0, new Color(0.29f, 0.19f, 0.4f, 0f));
+			gradient.AddPoint(0.3f, new Color(0.29f, 0.19f, 0.4f, 0.35f));
+			gradient.SetColor(gradient.GetPointCount() - 1, new Color(0.29f, 0.19f, 0.4f, 0f));
+			_nightMaterial = new ParticleProcessMaterial
+			{
+				EmissionShape = ParticleProcessMaterial.EmissionShapeEnum.Box,
+				EmissionBoxExtents = new Vector3(220, 140, 0),
+				Direction = new Vector3(-0.2f, 0.1f, 0),
+				Spread = 90f,
+				InitialVelocityMin = 2f,
+				InitialVelocityMax = 6f,
+				Gravity = Vector3.Zero,
+				ScaleMin = 0.8f,
+				ScaleMax = 1.8f,
+				ColorRamp = new GradientTexture1D { Gradient = gradient },
+			};
+		}
+		particles.ProcessMaterial = _nightMaterial;
 
 		return particles;
 	}
