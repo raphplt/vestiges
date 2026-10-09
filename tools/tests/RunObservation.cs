@@ -560,12 +560,15 @@ public partial class RunObservation : Node
         eventBus.EssenceChanged += onEssence;
         eventBus.RunEventStarted += onEvent;
 
+        // --frame-stats : durées d'image par tranche de 30 s (plan 29), en temps réel seulement.
+        RunFrameStats frameStats = Array.IndexOf(args, "--frame-stats") >= 0 ? new RunFrameStats(30.0) : null;
         while (true)
         {
             await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
             audioTrace?.Sample(gameTime);
             if (GetTree().Paused)
             {
+                frameStats?.Pause();
                 // L'écran de niveau fige la run : choisir la première offre ; ce temps ne compte pas.
                 // --choice-delay : le bot lit l'écran comme un joueur, pour entendre son entrée en entier.
                 pausedTime = pausedFrames == 0 ? 0.0 : pausedTime + GetProcessDeltaTime();
@@ -581,6 +584,7 @@ public partial class RunObservation : Node
             double t = gameTime;
             if (t >= seconds)
                 break;
+            frameStats?.Sample(t);
             projectiles?.Sample(t, VisibleWorldRect());
             erasureProbe?.Sample(t);
 
@@ -709,6 +713,7 @@ public partial class RunObservation : Node
         eventBus.EssenceChanged -= onEssence;
         eventBus.RunEventStarted -= onEvent;
         projectiles?.Save($"{_output}/projectiles-{seed}.csv");
+        frameStats?.Write(ProjectSettings.GlobalizePath($"{_output}/frames-{seed}.csv"), gameTime);
         using (FileAccess csv = FileAccess.Open($"{_output}/density-{seed}.csv", FileAccess.ModeFlags.Write))
             csv.StoreString(string.Join("\n", rows) + "\n");
 

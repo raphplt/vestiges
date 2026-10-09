@@ -215,3 +215,19 @@ A/B en passes alternées, base C1 (`1764bc2c`), même charge (≈ 4, une VM tour
 **Vérifications** : build sans avertissement, 32/32 (un test appelait encore `OnBodyEntered` par réflexion, pointé vers `HitPlayer`).
 
 Reste à 1 500, par image : scripts physiques 9,6 ms (1,2 tick ; ≈ 5 µs par créature et par tick, dont séparation et déplacement), rendu 6,1 ms, `_Process` 4 ms.
+
+### Plafond à 500 et première run réelle forcée au-delà de 1 000 — 9 octobre 2026
+
+- `active_enemies_ceiling` 200 → 500 (§83). La cible de run (`max_enemies_on_screen` 110 + 4 par minute, multipliée par le Péril) ne change pas : le plafond ne joue qu'à Péril élevé ou en fin de longue run. Le chargeur borne le plafond à 2 000 : à relever pour viser plusieurs milliers.
+- `RunObservation --frame-stats` (`RunFrameStats`) : FPS moyen, p99, pire image et créatures en vie par tranche de 30 s de jeu, en temps réel (`capture_run.sh`), pauses exclues ; fichier `frames-<seed>.csv`. `--scaling active_enemies_ceiling=N` surcharge le plafond de coût pour une mesure.
+- Run réelle de 3 min, bot nomade invincible, cible forcée à 1 200 (`--scaling max_enemies_on_screen=1200,active_enemies_ceiling=1500,base_spawn_interval=0.1,min_spawn_interval=0.05,day_local_enemy_target_base=1200,day_local_spawn_burst_max=40,day_local_enemy_radius=1400`), machine calme :
+
+| Temps | Créatures max | FPS | p99 | Pire image |
+|---|---|---|---|---|
+| 0–30 s | 416 | 143 | 9 ms | 131 ms |
+| 30–60 s | 983 | 112 | 20 ms | 359 ms |
+| 60–90 s | 1 200 | 64 | 34 ms | 266 ms |
+| 90–120 s | 1 200 | 52 | 36 ms | 359 ms |
+| 120–180 s | 1 200 | 45–48 | 41–43 ms | 64–78 ms |
+
+En régime établi, 1 200 créatures en vraie run tiennent ≈ 46 FPS, cohérent avec le banc. Les à-coups de la montée (jusqu'à 360 ms) disparaissent une fois la horde complète : le pool n'est préchauffé qu'à 20 créatures, toute créature au-delà est fabriquée en pleine partie, par dizaines quand les apparitions arrivent en paquets. À traiter.

@@ -589,15 +589,17 @@ public partial class SpawnManager : Node2D
 		return Mathf.Clamp(multiplier, 0.7f, 3f);
 	}
 
+	private int _activeEnemiesCeilingOverride;
+
 	/// <summary>
-	/// Plafond de créatures actives : celui de la run, relevé par le Péril, jamais au-delà du plafond de coût (plan 28 :
-	/// au banc, 160 créatures serrées tiennent 100 FPS, 240 tombent à 54).
+	/// Plafond de créatures actives : celui de la run, relevé par le Péril, jamais au-delà du plafond de coût fixé au
+	/// banc (data/scaling/peril.json, plan 29).
 	/// </summary>
 	private int GetCurrentMaxEnemies(float elapsedMinutes)
 	{
 		float scaled = (_maxEnemies + _maxEnemiesGrowthPerMinute * elapsedMinutes)
 			* PerilDataLoader.EnemyCountMultiplier(PerilPoints(elapsedMinutes));
-		return Mathf.Clamp(Mathf.RoundToInt(scaled), 1, PerilDataLoader.ActiveEnemiesCeiling);
+		return Mathf.Clamp(Mathf.RoundToInt(scaled), 1, _activeEnemiesCeilingOverride > 0 ? _activeEnemiesCeilingOverride : PerilDataLoader.ActiveEnemiesCeiling);
 	}
 
 	/// <summary>
@@ -947,6 +949,8 @@ public partial class SpawnManager : Node2D
 				case "damage_scaling_per_minute": _dmgScalingPerMinute = kv.Value; break;
 				case "ranged_damage_growth_share": _rangedDamageGrowthShare = kv.Value; break;
 				case "max_enemies_on_screen": _maxEnemies = (int)kv.Value; break;
+				// Mesure au-delà du plafond de coût (plan 29) : sans elle, le plafond de peril.json borne l'essai.
+				case "active_enemies_ceiling": _activeEnemiesCeilingOverride = (int)kv.Value; break;
 				case "max_enemies_growth_per_minute": _maxEnemiesGrowthPerMinute = kv.Value; break;
 				case "enemy_speed_base_multiplier": _enemySpeedBaseMultiplier = kv.Value; break;
 				case "enemy_speed_growth_per_minute": _enemySpeedGrowthPerMinute = kv.Value; break;
