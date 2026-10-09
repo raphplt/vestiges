@@ -183,3 +183,17 @@ Reste à 1 000, par image : rendu 5,2 ms (2 055 appels de dessin, deux par créa
 **Vérifications** : build sans avertissement, `tools/validate.sh` 32/32.
 
 **Foule contre un décor** (9 octobre, après C1) : banc à l'ancien point (`--arena origin`, joueur posé dans un immeuble), 240 créatures. Les Ombres épousent les faces ouest et sud de l'immeuble sans entrer dans son emprise ; 199 FPS, p99 8,5 ms (57 FPS ce matin au même point). Run de 150 s en nomade (`capture_run.sh`) : rien d'anormal sur les captures.
+
+### C2 — 9 octobre 2026 : ombres en lots, séparation un tick sur deux, et ce que mesure le banc
+
+**Rendu, ce qu'on peut gagner.** Expériences à 1 000 créatures : sans matériau de shader, 2 043 → 1 997 appels de dessin (le matériau propre à chaque créature ne casse presque pas les lots) ; toutes les créatures sur une seule texture figée, rendu CPU 5,5 → 4,5 ms ; ombres masquées, 5,5 → 4,7 ms et −517 appels. Le rendu coûte surtout par élément affiché, pas par appel : un atlas des sprites rapporterait ≈ 1 ms pour un gros chantier, écarté. Les ombres, elles, peuvent devenir un seul élément.
+
+- **`GroundShadowLayer`** (`scripts/Core/`) : les ombres au sol des créatures sont dessinées par un `MultiMeshInstance2D` par largeur d'ombre, rempli en un seul appel par image (tampon de flottants, sans allocation). Chaque créature tient un `ShadowCaster` (largeur, décalage des pieds, échelle de variante, opacité d'enfouissement) au lieu d'un `Sprite2D` enfant ; même calque z −1. À 1 000 créatures : 1 000 nœuds et ≈ 510 appels de dessin de moins.
+- **Séparation recalculée un tick sur deux** : une créature avance de quelques pixels par tick, la poussée précédente reste juste ; coût divisé par deux.
+- Vérifié à l'œil : ombres agrandies et teintées pour les localiser (banc, bestiaire), puis rendu normal comparé au bestiaire d'avant.
+
+**Le banc mesure une assembly non optimisée.** `dotnet build` compile en configuration Debug : l'optimiseur JIT est désactivé (`DebuggableAttribute`), alors que le jeu exporté est compilé en Release. Sur le code C# pur, l'écart est net : séparation 3,0 → 2,1 ms par tick et logique par créature 6,7 → 5,1 µs à 1 000 avec `-p:Optimize=true` (et `--no-incremental` : sans lui, la DLL n'est pas recompilée et le réglage n'a aucun effet). Les chiffres du banc surestiment donc le coût C# du jeu livré d'environ un quart ; les coûts natifs (pont, rendu) ne bougent pas.
+
+**Logique par créature restante** à 1 000 (assembly optimisée) : 5,1 µs par tick, dont séparation 2,5 (avant le passage à un tick sur deux), déplacement 1,0, statuts 0,6, animation 0,2.
+
+**Mesure de temps reportée** : la machine était chargée (charge 13 à 29 : Graffwall, une VM, Java) pendant toute cette partie. **Vérifications** : build sans avertissement, `tools/validate.sh` 32/32.

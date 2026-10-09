@@ -106,7 +106,8 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 	// Variante (élite, Souverain, Aberration), affixes, harde et micro-événements
 	private readonly EnemyModifiers _mods = new();
 	private readonly EnemyTracking _tracking = new();
-	private Sprite2D _shadow;
+	// Ombre au sol dessinée en lot par GroundShadowLayer, pas par un nœud enfant (plan 29 C).
+	private readonly ShadowCaster _shadow;
 	private PixelGroundRing _modifierAura;
 	private readonly List<Color> _affixColors = new();
 	private EnemyNameplate _nameplate;
@@ -229,6 +230,12 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 	internal float RangedCooldown => _rangedAttackCooldown;
 	internal bool IsDisoriented => _disorientTimer > 0f;
 
+	public Enemy()
+	{
+		// Le pool réinitialise une créature avant son entrée dans l'arbre : l'ombre doit exister dès la construction.
+		_shadow = new ShadowCaster(this);
+	}
+
 	public override void _Ready()
 	{
 		_visual = GetNode<Polygon2D>("Visual");
@@ -237,8 +244,6 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 		_chestScene ??= GD.Load<PackedScene>("res://scenes/world/Chest.tscn");
 		_entityShader ??= GD.Load<Shader>("res://assets/shaders/entity.gdshader");
 		_eventBus ??= GetNode<EventBus>("/root/EventBus");
-		_shadow = GroundShadow.Create(24f);
-		AddChild(_shadow);
 	}
 
 	public override void _EnterTree()
@@ -246,7 +251,10 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 		if (_ticking)
 			Roster.Add(this);
 		if (IsInGroup("enemies"))
+		{
 			CrowdIndex.Register(this);
+			GroundShadowLayer.Add(_shadow);
+		}
 	}
 
 	private string _projectileSprite = "spit";
@@ -326,6 +334,8 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 		SetTicking(true);
 		Modulate = Colors.White;
 		Scale = Vector2.One;
+		_shadow.Scale = 1f;
+		_shadow.Alpha = 1f;
 		_bodyRadius = BaseBodyRadius;
 		if (_visual != null) _visual.Scale = Vector2.One;
 		if (_sprite != null) _sprite.Scale = Vector2.One;
@@ -382,6 +392,7 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 		ScaleStats(hpMult, damageMult, speedMult);
 		_xpReward *= variant.XpMult;
 		Scale = Vector2.One * variant.Scale;
+		_shadow.Scale = variant.Scale;
 		_bodyRadius = BaseBodyRadius * variant.Scale;
 		LargestBodyRadius = Mathf.Max(LargestBodyRadius, _bodyRadius);
 		_displayName = _mods.BuildDisplayName(_displayName, _isFeminine);
@@ -443,7 +454,7 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 		if (_isDying || !IsActive)
 			return;
 		_isDying = true;
-		_shadow.Visible = false;
+		GroundShadowLayer.Remove(_shadow);
 		CancelAbilities();
 		Velocity = Vector2.Zero;
 		if (IsInGroup("enemies"))
@@ -558,6 +569,7 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 		Scale = Vector2.One;
 		_bodyRadius = BaseBodyRadius;
 		SetTicking(false);
+		GroundShadowLayer.Remove(_shadow);
 
 		// Reset sprite et shaders
 		if (_hasSprite)
@@ -856,7 +868,7 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 		foreach (EnemyAffixData affix in _mods.Affixes)
 			_affixColors.Add(affix.Color);
 		// Sous les pieds, comme l'ombre de contact, et non au centre du corps.
-		_modifierAura.Position = _shadow.Position;
+		_modifierAura.Position = _shadow.Offset;
 		_modifierAura.Show(_affixColors, AuraRadius());
 	}
 
@@ -1394,7 +1406,7 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 		_killed = true;
 		_killedFrame = Engine.GetProcessFrames();
 		// Le corps se dissout : son contact avec le sol disparaît avec lui.
-		_shadow.Visible = false;
+		GroundShadowLayer.Remove(_shadow);
 		CancelAbilities();
 		_modifierAura?.HideAura();
 		_igniteDps = 0f;
@@ -1583,9 +1595,9 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 	private void ConfigureVisual(EnemyData data)
 	{
 		// Ombre proportionnelle à la créature : la variante (élite, Souverain) l'agrandit avec le reste du corps.
-		_shadow.Texture = GroundShadow.TextureFor(GroundShadow.SnapWidth(Mathf.Clamp(data.Visual.Size * 2f, 12f, 72f)));
-		_shadow.Position = Vector2.Zero;
-		_shadow.Visible = true;
+		_shadow.Width = GroundShadow.SnapWidth(Mathf.Clamp(data.Visual.Size * 2f, 12f, 72f));
+		_shadow.Offset = Vector2.Zero;
+		GroundShadowLayer.Add(_shadow);
 		_visual.Color = data.Visual.Color;
 		_originalColor = data.Visual.Color;
 
@@ -1618,7 +1630,7 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 					_sprite.Offset = new Vector2(0f, -frames.GetFrameTexture("SE_idle", 0).GetHeight() * 0.35f);
 				_visual.Visible = false;
 				_hasSprite = true;
-				_shadow.Position = new Vector2(0f, SpriteFeetY(data.Id));
+				_shadow.Offset = new Vector2(0f, SpriteFeetY(data.Id));
 				_facing.Reset(EnemySpriteLoader.HasEightDirections(frames));
 				_currentAnimName = null;
 				_attackAnimTimer = 0f;
@@ -1756,6 +1768,7 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 	public override void _ExitTree()
 	{
 		Roster.Remove(this);
+		GroundShadowLayer.Remove(_shadow);
 		CrowdIndex.Unregister(this);
 		CancelAbilities();
 	}
@@ -1789,6 +1802,7 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 	{
 		_isBurrowed = burrowed;
 		Modulate = burrowed ? new Color(1f, 1f, 1f, 0.35f) : Colors.White;
+		_shadow.Alpha = Modulate.A;
 	}
 
 	/// <summary>Annonce une apparition hors du SpawnManager (renforts), pour le suivi de run et l'audio.</summary>

@@ -18,17 +18,21 @@ public static class CrowdSeparation
 	private static int[] _order = new int[512];
 	private static Vector2[] _sorted = new Vector2[512];
 	private static Vector2[] _push = new Vector2[512];
+	// Une créature avance de quelques pixels par tick : la poussée calculée au tick précédent reste juste, et la
+	// recalculer un tick sur deux divise son coût par deux.
+	private const ulong RefreshTicks = 2;
 	private static ulong _tick = ulong.MaxValue;
 	private static float _radius;
 
 	/// <summary>
 	/// Somme des directions qui écartent <paramref name="self"/> de ses voisines à moins de <paramref name="radius"/>,
-	/// pondérées de 1 au contact à 0 au bord. Nulle pour une créature inscrite depuis le calcul du tick.
+	/// pondérées de 1 au contact à 0 au bord, calculée au plus deux ticks plus tôt. Nulle pour une créature inscrite
+	/// depuis ce calcul.
 	/// </summary>
 	public static Vector2 PushFor(Enemy self, float radius)
 	{
 		ulong tick = Engine.GetPhysicsFrames();
-		if (tick != _tick || radius != _radius)
+		if (tick - _tick >= RefreshTicks || tick < _tick || radius != _radius)
 		{
 			_tick = tick;
 			_radius = radius;
