@@ -32,7 +32,7 @@ public partial class GroundShadowLayer : Node2D
 			return;
 		caster.Slot = Casters.Count;
 		Casters.Add(caster);
-		EnsureLayer(caster.Owner);
+		EnsureLayer();
 	}
 
 	public static void Remove(ShadowCaster caster)
@@ -49,12 +49,14 @@ public partial class GroundShadowLayer : Node2D
 	}
 
 	/// <summary>La couche naît avec la première ombre, dans la scène courante : bancs et tests compris.</summary>
-	private static void EnsureLayer(Node2D owner)
+	private static void EnsureLayer()
 	{
 		// Pas IsInsideTree : la couche n'entre dans l'arbre qu'en différé, les inscriptions de la même image la partagent.
 		if (_layer != null && IsInstanceValid(_layer))
 			return;
-		Node scene = owner.GetTree().CurrentScene ?? owner.GetTree().Root;
+		// L'arbre principal plutôt que celui de l'entité : une entité du pool s'inscrit parfois avant d'y entrer.
+		SceneTree tree = (SceneTree)Engine.GetMainLoop();
+		Node scene = tree.CurrentScene ?? tree.Root;
 		_layer = new GroundShadowLayer { Name = nameof(GroundShadowLayer), ZIndex = -1 };
 		scene.CallDeferred(Node.MethodName.AddChild, _layer);
 	}

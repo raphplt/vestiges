@@ -9,7 +9,7 @@ namespace Vestiges.Combat;
 /// Sprite et couleurs propres à chaque créature (bloc visual.projectile du JSON), à hauteur de buste,
 /// jamais masqué : c'est un danger.
 /// </summary>
-public partial class EnemyProjectile : Area2D, ITicked
+public partial class EnemyProjectile : Node2D, ITicked
 {
 	// Godot n'appelle plus les projectiles un par un : une seule boucle C# les avance tous (plan 29).
 	private static readonly TickRoster<EnemyProjectile> Roster = new("EnemyProjectiles");
@@ -17,6 +17,8 @@ public partial class EnemyProjectile : Area2D, ITicked
 
 	[Export] public float Speed = 185f;
 	[Export] public float MaxLifetime = 4f;
+	/// <summary>Rayon du tir : il touche le joueur dont le corps est à cette distance, sans zone physique (plan 29).</summary>
+	[Export] public float HitRadius = 5f;
 
 	private Vector2 _direction;
 	private float _damage;
@@ -35,6 +37,7 @@ public partial class EnemyProjectile : Area2D, ITicked
 	private bool _isDespawning;
 	private Action<EnemyProjectile> _release;
 	private EventBus _eventBus;
+	private GroupCache _groups;
 
 	public EnemyProjectile()
 	{
@@ -53,7 +56,7 @@ public partial class EnemyProjectile : Area2D, ITicked
 		// Au sol sous le projectile : c'est l'écart entre l'ombre et le visuel qui dit qu'il vole.
 		_visual.TextureFilter = TextureFilterEnum.Nearest;
 		_eventBus = GetNode<EventBus>("/root/EventBus");
-		BodyEntered += OnBodyEntered;
+		_groups = GetNode<GroupCache>("/root/GroupCache");
 	}
 
 	public void Launch(Vector2 position, Vector2 direction, float damage, string sourceEnemyId, string spriteId, FxFamily family,
@@ -78,9 +81,7 @@ public partial class EnemyProjectile : Area2D, ITicked
 		_visual.Modulate = new Color(1f, 1f, 1f, CombatFxSettings.EnemyOpacity);
 		UpdateSprite();
 		Visible = true;
-		ProcessMode = ProcessModeEnum.Inherit;
 		Roster.Add(this);
-		SetDeferred(Area2D.PropertyName.Monitoring, true);
 	}
 
 	private void UpdateSprite()
@@ -137,15 +138,23 @@ public partial class EnemyProjectile : Area2D, ITicked
 			return;
 		}
 		Position += _direction * Speed * (float)delta;
+		if (_groups.GetPlayer() is Player player)
+		{
+			float reach = HitRadius + player.BodyRadius;
+			if (GlobalPosition.DistanceSquaredTo(player.GlobalPosition) <= reach * reach)
+			{
+				HitPlayer(player);
+				return;
+			}
+		}
 		UpdateSprite();
 		EmitTrail();
 	}
 
-	private void OnBodyEntered(Node2D body)
+	private void HitPlayer(Player player)
 	{
-		if (_isDespawning || body is not Player player)
+		if (_isDespawning)
 			return;
-
 		_eventBus.EmitSignal(EventBus.SignalName.PlayerHitBy, _sourceEnemyId, _damage);
 		PlayerDamageResult hit = player.TakeDamage(_damage, GlobalPosition - _direction * 8f);
 		// La toile ne colle qu'à un coup qui porte : ni bouclier, ni invulnérabilité, ni dash (plan 27 V3b).
@@ -157,7 +166,6 @@ public partial class EnemyProjectile : Area2D, ITicked
 	private void StartDespawn()
 	{
 		_isDespawning = true;
-		SetDeferred(Area2D.PropertyName.Monitoring, false);
 		if (_spriteSet?.Impact != null)
 			CombatPools.Instance?.ShowProjectileImpact(GlobalPosition, _spriteSet.Impact);
 		else
@@ -171,9 +179,6 @@ public partial class EnemyProjectile : Area2D, ITicked
 		GroundShadowLayer.Remove(_shadow);
 		_isDespawning = true;
 		Visible = false;
-		SetDeferred(Area2D.PropertyName.Monitoring, false);
-		// Hors traitement : retiré de la physique (DisableMode Remove) jusqu'au prochain Launch.
-		SetDeferred(Node.PropertyName.ProcessMode, (int)ProcessModeEnum.Disabled);
 		if (_release != null)
 			_release(this);
 		else

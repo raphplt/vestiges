@@ -5,8 +5,12 @@ using Vestiges.Infrastructure;
 
 namespace Vestiges.Combat;
 
-public partial class XpOrb : Area2D
+public partial class XpOrb : Area2D, ITicked
 {
+    // Les orbes éveillées sont avancées par une seule boucle C#, pas par un rappel moteur chacune (plan 29).
+    private static readonly TickRoster<XpOrb> Roster = new("XpOrbs");
+    public int TickSlot { get; set; } = -1;
+
     private const float BaseAttractionRadius = 150f;
     private const float BaseDriftRadius = 250f;
     private const float MaxSpeed = 500f;
@@ -135,12 +139,18 @@ public partial class XpOrb : Area2D
         _glow.Visible = glow;
         _glow.Emitting = glow;
         Visible = true;
-        SetPhysicsProcess(true);
+        Roster.Add(this);
         // Pendant le saut, pas de ramassage : la détection s'allume à l'atterrissage (et signale alors un joueur déjà là).
         SetDeferred(Area2D.PropertyName.Monitoring, !origin.HasValue);
     }
 
-    public override void _PhysicsProcess(double delta)
+    public override void _ExitTree()
+    {
+        Roster.Remove(this);
+    }
+
+    /// <summary>Un tick de l'orbe éveillée, appelé par la boucle des orbes.</summary>
+    public void PhysicsTick(double delta)
     {
         if (_collected)
             return;
@@ -233,7 +243,7 @@ public partial class XpOrb : Area2D
             Visible = false;
             _sprite.Stop();
             _glow.Emitting = false;
-            SetPhysicsProcess(false);
+            Roster.Remove(this);
             SetDeferred(Area2D.PropertyName.Monitoring, false);
             _release(this);
         }
@@ -270,7 +280,7 @@ public partial class XpOrb : Area2D
     {
         IsAsleep = true;
         SleepToken++;
-        SetPhysicsProcess(false);
+        Roster.Remove(this);
         _sprite.Pause();
         _glow.Emitting = false;
         CombatPools.Instance?.AddSleepingOrb(this);
@@ -285,7 +295,7 @@ public partial class XpOrb : Area2D
         // Le réglage des particules a pu changer pendant le sommeil.
         _glow.Visible = VfxFactory.CurrentParticleLevel != ParticleLevel.Off;
         _glow.Emitting = _glow.Visible;
-        SetPhysicsProcess(true);
+        Roster.Add(this);
     }
 
     private void CachePlayer()

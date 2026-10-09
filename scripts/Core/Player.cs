@@ -177,9 +177,13 @@ public partial class Player : CharacterBody2D
     private static readonly Vector2 ReceivedNumberOffset = new(0f, -34f);
     private static readonly Color ShieldFlashColor = new(0.7f, 0.85f, 1f);
 
+    /// <summary>Rayon du corps au sol : les tirs ennemis, qui n'ont plus de zone physique, le testent (plan 29).</summary>
+    public float BodyRadius { get; private set; } = 12f;
+
     public override void _Ready()
     {
         _currentHp = MaxHp;
+        BodyRadius = GetNode<CollisionShape2D>("CollisionShape2D").Shape is CircleShape2D body ? body.Radius : BodyRadius;
         _visual = GetNode<Polygon2D>("Visual");
         _sprite = GetNode<AnimatedSprite2D>("Sprite");
         _attackFx = new PlayerAttackFx(this, _sprite);

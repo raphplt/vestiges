@@ -30,7 +30,7 @@ public sealed class TickRoster<T> where T : Node, ITicked
 			return;
 		item.TickSlot = _items.Count;
 		_items.Add(item);
-		EnsureDriver(item);
+		EnsureDriver();
 	}
 
 	public void Remove(T item)
@@ -47,12 +47,13 @@ public sealed class TickRoster<T> where T : Node, ITicked
 	}
 
 	/// <summary>Le moteur de la boucle naît avec le premier nœud, à la racine : bancs et tests sans Main compris.</summary>
-	private void EnsureDriver(T item)
+	private void EnsureDriver()
 	{
 		if (_driver != null && GodotObject.IsInstanceValid(_driver))
 			return;
 		_driver = new TickRosterDriver { Name = _name, Tick = TickAll };
-		item.GetTree().Root.CallDeferred(Node.MethodName.AddChild, _driver);
+		// L'arbre principal plutôt que celui du nœud : un nœud du pool s'inscrit parfois avant d'y entrer.
+		((SceneTree)Engine.GetMainLoop()).Root.CallDeferred(Node.MethodName.AddChild, _driver);
 	}
 
 	private void TickAll(double delta)

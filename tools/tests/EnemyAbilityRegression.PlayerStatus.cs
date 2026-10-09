@@ -18,7 +18,7 @@ public partial class EnemyAbilityRegression
         AddChild(pools);
         BindingFlags flags = BindingFlags.NonPublic | BindingFlags.Instance;
         FieldInfo slowTimer = typeof(Player).GetField("_slowTimer", flags);
-        MethodInfo onBody = typeof(EnemyProjectile).GetMethod("OnBodyEntered", flags);
+        MethodInfo onBody = typeof(EnemyProjectile).GetMethod("HitPlayer", flags);
         bool lastWebbed = false;
         void OnWebbed(bool webbed) => lastWebbed = webbed;
         _player.WebbedChanged += OnWebbed;
