@@ -107,7 +107,8 @@ public partial class MusicDirector : Node
         Vector2 center = player.GlobalPosition;
         float radiusSq = _config.CombatRadiusPx * _config.CombatRadiusPx;
         int near = 0;
-        foreach (Node node in _groups.GetEnemies())
+        using CrowdQuery crowd = CrowdIndex.Near(center, _config.CombatRadiusPx);
+        foreach (Node node in crowd.Targets)
         {
             if (node is Enemy { IsActive: true, IsDying: false } enemy && enemy.GlobalPosition.DistanceSquaredTo(center) <= radiusSq)
                 near++;

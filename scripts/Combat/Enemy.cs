@@ -8,7 +8,7 @@ using Vestiges.World;
 
 namespace Vestiges.Combat;
 
-public partial class Enemy : CharacterBody2D
+public partial class Enemy : CharacterBody2D, ICrowdMember
 {
 	private const float MeleeRange = 38f;
 	private const float MeleeAttackCooldown = 0.75f;
@@ -76,7 +76,6 @@ public partial class Enemy : CharacterBody2D
 	private float _webSlowSeconds;
 
 	// Performance caches
-	private Core.GroupCache _groupCache;
 	private EventBus _eventBus;
 	private float _meleeRangeSq;
 	private float _attackRangeSq;
@@ -193,6 +192,8 @@ public partial class Enemy : CharacterBody2D
 	public bool IsActive { get; private set; }
 	/// <summary>Rang dans la boucle d'<see cref="EnemyTicker"/>, −1 hors de la boucle ; tenu par elle seule.</summary>
 	internal int TickSlot { get; set; } = -1;
+	/// <summary>Rang dans <see cref="CrowdIndex"/>, −1 quand la créature n'est plus une cible ; tenu par l'index.</summary>
+	public int CrowdSlot { get; set; } = -1;
 	private bool _ticking;
 	public bool IsDying => _isDying;
 	public float HpRatio => _maxHp > 0 ? _currentHp / _maxHp : 0f;
@@ -229,6 +230,8 @@ public partial class Enemy : CharacterBody2D
 	{
 		if (_ticking)
 			EnemyTicker.Register(this);
+		if (IsInGroup("enemies"))
+			CrowdIndex.Register(this);
 	}
 
 	private string _projectileSprite = "spit";
@@ -301,8 +304,6 @@ public partial class Enemy : CharacterBody2D
 		_attackRangeSq = _attackRange * _attackRange;
 		_packRadiusSq = _packRadius * _packRadius;
 
-		_groupCache ??= GetNode<Core.GroupCache>("/root/GroupCache");
-
 		ConfigureVisual(data);
 		ConfigureAbilities(data);
 
@@ -316,6 +317,7 @@ public partial class Enemy : CharacterBody2D
 
 		if (!IsInGroup("enemies"))
 			AddToGroup("enemies");
+		CrowdIndex.Register(this);
 	}
 
 	public void ApplySpawnTuning(float speedMultiplier, float aggressionMultiplier)
@@ -429,6 +431,7 @@ public partial class Enemy : CharacterBody2D
 		Velocity = Vector2.Zero;
 		if (IsInGroup("enemies"))
 			RemoveFromGroup("enemies");
+		CrowdIndex.Unregister(this);
 		CombatPools.Instance?.ShowDeath(GlobalPosition, 0, 0f, 0f);
 		Tween tween = CreateTween();
 		tween.TweenProperty(this, "modulate:a", 0f, DissolveDuration);
@@ -566,6 +569,7 @@ public partial class Enemy : CharacterBody2D
 
 		if (IsInGroup("enemies"))
 			RemoveFromGroup("enemies");
+		CrowdIndex.Unregister(this);
 	}
 
 	/// <summary>
@@ -772,8 +776,8 @@ public partial class Enemy : CharacterBody2D
 		_packBonusTimer = PackBonusInterval;
 
 		int packCount = 0;
-		Godot.Collections.Array<Node> enemies = _groupCache.GetEnemies();
-		foreach (Node node in enemies)
+		using CrowdQuery crowd = CrowdIndex.Near(GlobalPosition, _packRadius);
+		foreach (Node node in crowd.Targets)
 		{
 			if (node is Enemy { IsActive: true, IsDying: false } other && other != this && IsInstanceValid(other)
 				&& other._packFamily == _packFamily
@@ -1414,8 +1418,8 @@ public partial class Enemy : CharacterBody2D
 			}
 
 			// Dégâts aux ennemis proches
-			Godot.Collections.Array<Node> enemies = _groupCache.GetEnemies();
-			foreach (Node node in enemies)
+			using CrowdQuery crowd = CrowdIndex.Near(GlobalPosition, explosionRadius);
+			foreach (Node node in crowd.Targets)
 			{
 				if (node is Enemy { IsActive: true, IsDying: false } e && e != this && IsInstanceValid(e))
 				{
@@ -1429,6 +1433,7 @@ public partial class Enemy : CharacterBody2D
 
 		if (IsInGroup("enemies"))
 			RemoveFromGroup("enemies");
+		CrowdIndex.Unregister(this);
 
 		// Notifier le POI gardé si c'est un garde
 		if (_guardTarget != null && IsInstanceValid(_guardTarget))
@@ -1717,6 +1722,7 @@ public partial class Enemy : CharacterBody2D
 	public override void _ExitTree()
 	{
 		EnemyTicker.Unregister(this);
+		CrowdIndex.Unregister(this);
 		CancelAbilities();
 	}
 

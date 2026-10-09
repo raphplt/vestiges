@@ -17,7 +17,7 @@ public partial class ObjectsRegression
     private static readonly FieldInfo IgniteSource = typeof(Enemy).GetField("_igniteSource", Private);
 
     private void RefreshEnemyCache() =>
-        typeof(GroupCache).GetField("_enemiesFrame", Private).SetValue(GetNode<GroupCache>("/root/GroupCache"), ulong.MaxValue);
+        CrowdIndex.MarkMoved();
 
     private Enemy SpawnEnemyAt(Vector2 position)
     {
@@ -121,7 +121,7 @@ public partial class ObjectsRegression
         Check(victims[1].IsDying && Near(bleed.heal, 1.5f) && Near(bleed.blast, 30f),
             $"Élimination par un saignement d'arme : soin ({bleed.heal:0.00}) et explosion à 150 % du coup d'arme qui l'a posé, pas du dernier tic ({bleed.blast:0.0})");
 
-        GroundFire fire = new(GetNode<GroupCache>("/root/GroupCache"));
+        GroundFire fire = new();
         fire.Add(victims[2].GlobalPosition, 5f, 2f, 10f, 0.5f, hit.As(DamageKind.DamageOverTime));
         (float heal, float blast) flame = Kill(2, () =>
         {

@@ -28,15 +28,13 @@ public sealed class ZoneEchoes
     }
 
     private readonly Player _player;
-    private readonly GroupCache _groupCache;
     private readonly float _ratio;
     private readonly float _delay;
     private readonly List<Echo> _pending = new();
 
-    public ZoneEchoes(Player player, GroupCache groupCache, float ratio, float delay)
+    public ZoneEchoes(Player player, float ratio, float delay)
     {
         _player = player;
-        _groupCache = groupCache;
         _ratio = ratio;
         _delay = delay;
     }
@@ -99,7 +97,8 @@ public sealed class ZoneEchoes
         bool fullCircle = echo.ArcAngle >= 359f;
         float dotThreshold = fullCircle ? -1f : Mathf.Cos(Mathf.DegToRad(echo.ArcAngle * 0.5f));
         float radiusSq = echo.Radius * echo.Radius;
-        foreach (Node node in _groupCache.GetEnemies())
+        using CrowdQuery crowd = CrowdIndex.Near(center, echo.Radius);
+        foreach (Node node in crowd.Targets)
         {
             if (node is not Enemy { IsActive: true, IsDying: false } enemy)
                 continue;

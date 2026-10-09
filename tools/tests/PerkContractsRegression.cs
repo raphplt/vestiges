@@ -149,9 +149,8 @@ public partial class PerkContractsRegression : Node2D
         ulong spawnFrame = Engine.GetProcessFrames();
         do { await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame); }
         while (Engine.GetProcessFrames() <= spawnFrame);
-        GroupCache groups = GetNode<GroupCache>("/root/GroupCache");
-        Check(groups.GetEnemies().Contains(groundTarget), "La fixture de flaque est présente dans le cache de la nouvelle frame");
-        GroundFire fire = new(groups);
+        Check(groundTarget.CrowdSlot >= 0, "La fixture de flaque est recensée par l'index de la foule");
+        GroundFire fire = new();
         AttackContext groundSource = attack.As(DamageKind.DamageOverTime);
         DamageResult groundHit = default;
         void OnDamage(DamageResult result) { if (result.Target == groundTarget.Life) groundHit = result; }

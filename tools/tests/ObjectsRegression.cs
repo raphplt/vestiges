@@ -432,8 +432,8 @@ public partial class ObjectsRegression : Node2D
         burst.Position = new Vector2(-500f, 0f);
         Enemy pushed = SpawnEnemy();
         pushed.Position = new Vector2(40f, 0f);
-        // GroupCache garde sa liste pour la frame, et tout le banc tient dans la première : on la fait relire.
-        typeof(GroupCache).GetField("_enemiesFrame", Private).SetValue(GetNode<GroupCache>("/root/GroupCache"), ulong.MaxValue);
+        // Les créatures viennent d'être placées hors de leur tick : l'index doit relire leurs positions.
+        CrowdIndex.MarkMoved();
         float hpBefore = Hp(control);
         control.TakeDamage(10f);
         float fullLoss = hpBefore - Hp(control);
@@ -725,7 +725,7 @@ public partial class ObjectsRegression : Node2D
         neighbour.Position = victim.Position + new Vector2(40f, 0f);
         Enemy slowedNeighbour = SpawnEnemy();
         slowedNeighbour.Position = victim.Position + new Vector2(0f, 30f);
-        typeof(GroupCache).GetField("_enemiesFrame", Private).SetValue(GetNode<GroupCache>("/root/GroupCache"), ulong.MaxValue);
+        CrowdIndex.MarkMoved();
         Raise("allumette_humide", 15);
         Raise("epingle_a_nourrice", 15);
         _player.AddWeapon(WeaponDataLoader.Get("heavy_hammer"));
@@ -778,7 +778,7 @@ public partial class ObjectsRegression : Node2D
         Enemy elite = SpawnEnemy();
         elite.Position = new Vector2(-5000f, 5000f);
         elite.ApplyVariant(EnemyVariantDataLoader.GetVariant("elite"), System.Array.Empty<EnemyAffixData>());
-        typeof(GroupCache).GetField("_enemiesFrame", Private).SetValue(GetNode<GroupCache>("/root/GroupCache"), ulong.MaxValue);
+        CrowdIndex.MarkMoved();
         Raise("petard_mouille", 15);
         Raise("de_a_coudre", 15);
         _player.DisableDefenseForTests();
@@ -897,7 +897,7 @@ public partial class ObjectsRegression : Node2D
     {
         Enemy enemy = SpawnEnemy();
         enemy.Position = position;
-        typeof(GroupCache).GetField("_enemiesFrame", Private).SetValue(GetNode<GroupCache>("/root/GroupCache"), ulong.MaxValue);
+        CrowdIndex.MarkMoved();
         return enemy;
     }
 

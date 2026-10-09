@@ -10,7 +10,7 @@ namespace Vestiges.Combat;
 /// Reste aux bords, projette des tentacules et des yeux mouvants.
 /// Encercle la zone de confrontation au lieu de charger un point fixe du monde.
 /// </summary>
-public partial class Indicible : Node2D
+public partial class Indicible : Node2D, ICrowdMember
 {
 	private IndicibleConfig _config;
 	private float _tentacleDamage;
@@ -20,6 +20,8 @@ public partial class Indicible : Node2D
 	private float _eyeShiftTimer;
 	private bool _isDying;
 	private bool _isActive;
+	/// <summary>Rang dans <see cref="CrowdIndex"/>, −1 hors de l'index ; tenu par l'index.</summary>
+	public int CrowdSlot { get; set; } = -1;
 	private int _phase; // 0 = idle, 1 = active (HP > 50%), 2 = enraged (HP <= 50%)
 
 	private Player _player;
@@ -36,6 +38,12 @@ public partial class Indicible : Node2D
 		_eventBus = GetNode<EventBus>("/root/EventBus");
 		AddToGroup("enemies");
 		AddToGroup("indicible");
+		CrowdIndex.Register(this);
+	}
+
+	public override void _ExitTree()
+	{
+		CrowdIndex.Unregister(this);
 	}
 
 	/// <summary>Faux si la configuration ou la fiche manquent : le boss se retire aussitôt, sans entrer en jeu.</summary>
@@ -381,6 +389,7 @@ public partial class Indicible : Node2D
 
 		if (IsInGroup("enemies"))
 			RemoveFromGroup("enemies");
+		CrowdIndex.Unregister(this);
 
 		_eventBus.EmitSignal(EventBus.SignalName.EnemyKilled, EnemyGrammar.FinalBossId, GlobalPosition);
 

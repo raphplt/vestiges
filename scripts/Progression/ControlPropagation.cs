@@ -17,14 +17,12 @@ public sealed class ControlPropagation
 
     private readonly ulong _ownerId;
     private readonly float _radiusSq;
-    private readonly GroupCache _groupCache;
 
-    public ControlPropagation(ulong ownerId, PerkSpecializationData perk, GroupCache groupCache)
+    public ControlPropagation(ulong ownerId, PerkSpecializationData perk)
     {
         _ownerId = ownerId;
         float radius = SpecializationRuntime.Parameter(perk, "radius_pixels");
         _radiusSq = radius * radius;
-        _groupCache = groupCache;
     }
 
     /// <summary>Receveur des contrôles, ou null si la victime n'en portait aucun de transmissible ou n'a pas de voisin.</summary>
@@ -49,7 +47,8 @@ public sealed class ControlPropagation
     {
         Enemy nearest = null;
         float best = _radiusSq;
-        foreach (Node node in _groupCache.GetEnemies())
+        using CrowdQuery crowd = CrowdIndex.Near(position, Mathf.Sqrt(_radiusSq));
+        foreach (Node node in crowd.Targets)
         {
             if (node is not Enemy { IsActive: true, IsDying: false } enemy || enemy.Life == victim)
                 continue;

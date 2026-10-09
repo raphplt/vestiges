@@ -31,7 +31,6 @@ public partial class GameBootstrap : Node
 
     private EventBus _eventBus;
     private Player _levelUpPlayer;
-    private GroupCache _groupCache;
     private LoadState _loadState = LoadState.Running;
     private string _loadStep = "";
     private GameLoadingOverlay _overlay;
@@ -282,7 +281,6 @@ public partial class GameBootstrap : Node
 
         _eventBus = GetNode<EventBus>("/root/EventBus");
         _levelUpPlayer = player;
-        _groupCache = GetNode<GroupCache>("/root/GroupCache");
         _eventBus.LevelUp += OnLevelUp;
 
         GetNode("..").CallDeferred("add_child", new ErasureVeil { Name = "ErasureVeil" });
@@ -337,7 +335,7 @@ public partial class GameBootstrap : Node
     {
         if (!IsInstanceValid(_levelUpPlayer))
             return;
-        Combat.LevelUpFx.Play(_levelUpPlayer, _groupCache);
+        Combat.LevelUpFx.Play(_levelUpPlayer);
         Combat.ScreenShake.Instance?.ShakeMedium();
     }
 

@@ -41,7 +41,6 @@ public partial class Player : CharacterBody2D
     private ErasureManager _erasureManager;
 
     private GameManager _gameManager;
-    private GroupCache _groupCache;
 
     private string _characterId;
     private float _currentHp;
@@ -205,7 +204,6 @@ public partial class Player : CharacterBody2D
         _eventBus.GameStateChanged += OnMovementGameStateChanged;
         _eventBus.PlayerErasurePhaseChanged += OnErasurePhaseChanged;
         _gameManager = GetNode<GameManager>("/root/GameManager");
-        _groupCache = GetNode<GroupCache>("/root/GroupCache");
     }
 
     public override void _ExitTree()
@@ -956,8 +954,8 @@ public partial class Player : CharacterBody2D
                     GetTree().CreateTimer(delay * echo).Timeout += () =>
                     {
                         // Réapplique les dégâts à la position d'origine (AoE fantôme)
-                        Godot.Collections.Array<Node> enemies = _groupCache.GetEnemies();
-                        foreach (Node node in enemies)
+                        using CrowdQuery crowd = CrowdIndex.Near(echoPos, echoRadius);
+                        foreach (Node node in crowd.Targets)
                         {
                             if (node is Enemy { IsActive: true, IsDying: false } e && IsInstanceValid(e))
                             {
@@ -985,10 +983,10 @@ public partial class Player : CharacterBody2D
                 // Arrêt sur image (ascension du Chronomètre) : le champ fige au lieu de ralentir.
                 float freeze = StatusDuration(se.Get(SpecialEffectParam.FreezeSeconds));
                 Vector2 impactPos = enemy.GlobalPosition;
-                // La cible frappée d'abord : elle est au centre du champ, même absente du cache des ennemis de la frame.
+                // La cible frappée d'abord : elle est au centre du champ, qu'elle soit encore recensée ou non.
                 ApplyTimeField(enemy, freeze, factor, duration, context);
-                Godot.Collections.Array<Node> enemies = _groupCache.GetEnemies();
-                foreach (Node node in enemies)
+                using CrowdQuery crowd = CrowdIndex.Near(impactPos, radius);
+                foreach (Node node in crowd.Targets)
                 {
                     if (node is Enemy { IsActive: true, IsDying: false } e && e != enemy && IsInstanceValid(e) && e.GlobalPosition.DistanceTo(impactPos) < radius)
                         ApplyTimeField(e, freeze, factor, duration, context);
@@ -1003,8 +1001,8 @@ public partial class Player : CharacterBody2D
                 float shapeDamage = damage * shapeRatio;
                 float shapeRaw = rawDamage * shapeRatio;
                 Vector2 impactPos = enemy.GlobalPosition;
-                Godot.Collections.Array<Node> enemies = _groupCache.GetEnemies();
-                foreach (Node node in enemies)
+                using CrowdQuery crowd = CrowdIndex.Near(impactPos, aoeRadius);
+                foreach (Node node in crowd.Targets)
                 {
                     if (node is Enemy { IsActive: true, IsDying: false } e && IsInstanceValid(e) && e != enemy)
                     {
@@ -1169,8 +1167,9 @@ public partial class Player : CharacterBody2D
 
         // Application des dégâts aux ennemis dans le cône (uniquement visibles)
         Vector2 groundFacing = Iso.ToGround(_facingDirection).Normalized();
-        Godot.Collections.Array<Node> enemies = _groupCache.GetEnemies();
-        foreach (Node node in enemies)
+        // Rayon écran = portée au sol : la distance au sol n'est jamais plus courte (Iso.ToGround).
+        using CrowdQuery crowd = CrowdIndex.Near(GlobalPosition, _coneRange);
+        foreach (Node node in crowd.Targets)
         {
             if (node is not Enemy enemy || !IsInstanceValid(enemy) || !enemy.IsActive || enemy.IsDying)
                 continue;
@@ -1260,11 +1259,11 @@ public partial class Player : CharacterBody2D
 
     private Enemy FindNearestEnemyExcluding(Vector2 from, float maxRange, HashSet<ulong> excludeIds)
     {
-        Godot.Collections.Array<Node> enemies = _groupCache.GetEnemies();
+        using CrowdQuery crowd = CrowdIndex.Near(from, maxRange);
         Enemy nearest = null;
         float nearestDist = maxRange;
 
-        foreach (Node node in enemies)
+        foreach (Node node in crowd.Targets)
         {
             if (node is Enemy { IsActive: true, IsDying: false } enemy && IsInstanceValid(enemy))
             {
@@ -2132,12 +2131,12 @@ public partial class Player : CharacterBody2D
 
     private System.Collections.Generic.List<Node2D> FindNearestEnemies(int count, float maxRange)
     {
-        Godot.Collections.Array<Node> enemies = _groupCache.GetEnemies();
+        using CrowdQuery crowd = CrowdIndex.Near(GlobalPosition, maxRange);
         System.Collections.Generic.List<(Node2D enemy, float dist)> inRange = new();
 
-        foreach (Node node in enemies)
+        foreach (Node node in crowd.Targets)
         {
-            // Le groupe est figé pour l'image ; une cible qui n'est pas une créature (l'Indicible) reste admise.
+            // Une cible qui n'est pas une créature (l'Indicible) reste admise.
             if (node is not Node2D enemy || enemy is Enemy { IsActive: false } or Enemy { IsDying: true })
                 continue;
             float dist = GlobalPosition.DistanceTo(enemy.GlobalPosition);
@@ -2158,10 +2157,10 @@ public partial class Player : CharacterBody2D
 
     private System.Collections.Generic.List<Enemy> FindEnemiesInArc(float maxRange, float arcAngle, Vector2? forwardOverride = null)
     {
-        Godot.Collections.Array<Node> enemies = _groupCache.GetEnemies();
+        using CrowdQuery crowd = CrowdIndex.Near(GlobalPosition, maxRange);
         System.Collections.Generic.List<(Enemy enemy, float dist, Vector2 dir)> candidates = new();
 
-        foreach (Node node in enemies)
+        foreach (Node node in crowd.Targets)
         {
             if (node is not Enemy { IsActive: true, IsDying: false } enemy)
                 continue;

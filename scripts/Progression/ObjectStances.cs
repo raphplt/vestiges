@@ -31,7 +31,6 @@ public partial class ObjectStances : Node
 
     private Player _player;
     private EventBus _eventBus;
-    private GroupCache _groupCache;
     private float _clock;
 
     private float _stillAttackSpeed;
@@ -83,7 +82,6 @@ public partial class ObjectStances : Node
     public override void _Ready()
     {
         _eventBus = GetNode<EventBus>("/root/EventBus");
-        _groupCache = GetNode<GroupCache>("/root/GroupCache");
         _eventBus.EssenceChanged += OnEssenceChanged;
         if (GetNodeOrNull<EssenceTracker>("/root/Main/EssenceTracker") is { } tracker)
             _essence = tracker.CurrentEssence;
@@ -200,7 +198,8 @@ public partial class ObjectStances : Node
     {
         int count = 0;
         float radiusSq = _crowdRadius * _crowdRadius;
-        foreach (Node node in _groupCache.GetEnemies())
+        using CrowdQuery crowd = CrowdIndex.Near(_player.GlobalPosition, _crowdRadius);
+        foreach (Node node in crowd.Targets)
         {
             if (node is Enemy { IsActive: true, IsDying: false } enemy
                 && Iso.GroundDistanceSquared(enemy.GlobalPosition, _player.GlobalPosition) <= radiusSq

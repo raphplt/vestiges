@@ -94,7 +94,7 @@ public partial class SpecializationRuntime : Node
                 _priorityTargeting = new PriorityTargeting(marker);
                 break;
             case CarryControlEffect:
-                _propagation = new ControlPropagation(_playerId, perk, GetNode<GroupCache>("/root/GroupCache"));
+                _propagation = new ControlPropagation(_playerId, perk);
                 break;
             case XpTrailEffect:
                 _trail = new XpTrail(_player, Parameter(perk, "duration_seconds"), Parameter(perk, "sample_seconds"),

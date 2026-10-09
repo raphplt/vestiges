@@ -63,7 +63,6 @@ public partial class ObjectTriggers : Node
     private Player _player;
     private ulong _playerId;
     private EventBus _eventBus;
-    private GroupCache _groupCache;
 
     private float _burnChance;
     private float _burnDamageRatio;
@@ -146,7 +145,6 @@ public partial class ObjectTriggers : Node
     public override void _Ready()
     {
         _eventBus = GetNode<EventBus>("/root/EventBus");
-        _groupCache = GetNode<GroupCache>("/root/GroupCache");
         _eventBus.EnemyKillResolved += OnEnemyKill;
         _eventBus.LevelUp += OnLevelUp;
         SetProcess(NeedsClock);
@@ -350,7 +348,8 @@ public partial class ObjectTriggers : Node
     {
         result.Clear();
         float radiusSq = radius * radius;
-        foreach (Node node in _groupCache.GetEnemies())
+        using CrowdQuery crowd = CrowdIndex.Near(from.GlobalPosition, radius);
+        foreach (Node node in crowd.Targets)
         {
             if (node is not Enemy { IsActive: true, IsDying: false } enemy || enemy == from)
                 continue;
@@ -411,7 +410,8 @@ public partial class ObjectTriggers : Node
             _trailPatches[i] = patch;
             if (!tick)
                 continue;
-            foreach (Node node in _groupCache.GetEnemies())
+            using CrowdQuery crowd = CrowdIndex.Near(patch.Position, _trailRadius);
+            foreach (Node node in crowd.Targets)
             {
                 if (node is not Enemy { IsActive: true, IsDying: false } enemy
                     || Iso.GroundDistanceSquared(enemy.GlobalPosition, patch.Position) > radiusSq)
@@ -529,7 +529,8 @@ public partial class ObjectTriggers : Node
     {
         float radius = _explosionRadius * _player.AoeMultiplier;
         float radiusSq = radius * radius;
-        foreach (Node node in _groupCache.GetEnemies())
+        using CrowdQuery crowd = CrowdIndex.Near(position, radius);
+        foreach (Node node in crowd.Targets)
         {
             if (node is Enemy { IsActive: true, IsDying: false } enemy
                 && Iso.GroundDistanceSquared(enemy.GlobalPosition, position) <= radiusSq)
@@ -561,7 +562,8 @@ public partial class ObjectTriggers : Node
         bool extended = false;
         float nearestSq = _burnSpreadRadius * _burnSpreadRadius;
         float slowRadiusSq = _slowKillRadius * _slowKillRadius;
-        foreach (Node node in _groupCache.GetEnemies())
+        using CrowdQuery crowd = CrowdIndex.Near(kill.Position, Mathf.Max(_burnSpreadRadius, _slowKillRadius));
+        foreach (Node node in crowd.Targets)
         {
             if (node is not Enemy { IsActive: true, IsDying: false } enemy || enemy.Life == kill.Target)
                 continue;

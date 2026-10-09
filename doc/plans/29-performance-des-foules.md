@@ -71,7 +71,7 @@ Mesure de départ après F1 : 600 créatures → 22 FPS, 1 000 → 4 FPS (8 tick
 
 Cible : 1 000 créatures à 60 FPS au banc dense (16,7 ms par image), puis 2 000. Chemin : la créature devient une donnée indexée, sort du moteur physique, puis s'allège en nœuds.
 
-### A — Index de la foule
+### A — Index de la foule (livré le 9 octobre)
 
 Registre C# des créatures ciblables, positions relevées une fois par tick, grille de hachage. Il remplace les 30 parcours de `GroupCache.GetEnemies()` (ciblage de chaque arme, tête chercheuse de chaque projectile, objets, auras, herbe foulée, bonus de meute, apparitions, musique), qui reconstruisent un tableau Godot de toutes les créatures et le relisent élément par élément à travers l'interop. Coût actuel : armes × créatures, projectiles × créatures, créatures × créatures pour la meute. Invisible.
 
@@ -110,3 +110,13 @@ Créatures de la horde sans nœud : dessin direct par le `RenderingServer` dans 
 **Vérifications** : build sans avertissement ; `tools/validate.sh` 32/32 suites, sources inchangées ; run réelle de 75 s (`capture_run.sh`) : 84 créatures apparues, 565 coups portés au joueur, 7 éliminations, aucune erreur ; relecture `godot-reviewer`, remarques traitées (appels réflexifs, exception isolée, `ProcessMode` documenté).
 
 **Pas fait** : le plafond `active_enemies_ceiling` reste à 200, la valeur dépend d'un choix de Raphaël (question au tableau de bord). Contre un mur, le coût de `MoveAndSlide` reste élevé (F2, F3). Le pas du moteur (3,5 ms à 400) et les scripts `_Process` (6 ms à 400) sont intacts.
+
+### A livré — 9 octobre 2026
+
+- **`CrowdIndex`** (`scripts/Combat/`) : registre C# des cibles hostiles vivantes (`Enemy`, Indicible, interface `ICrowdMember`), grille de hachage de 64 px relue au plus une fois par tick physique et par image, ou après une inscription. `CrowdIndex.Near(centre, rayon)` prête une liste de candidats (rayon + 48 px de marge de déplacement) rendue par `using` : une requête faite pendant le parcours d'une autre reçoit sa propre liste. `CrowdIndex.All()` copie toutes les cibles. `MarkMoved()` après un déplacement hors tick (bancs, tests).
+- **Les 30 parcours** de `GroupCache.GetEnemies()` passent par l'index ; chaque site garde son test exact (distance au sol, écran, cône, rectangle). `GetEnemies()` et les champs `_groupCache` devenus inutiles sont supprimés, ainsi que les paramètres correspondants (`ZoneEchoes`, `ControlPropagation`, `GroundFire`, `LevelUpFx.Play`, `RunEventContext`). Le groupe `enemies` reste (outils d'observation, comptages ponctuels).
+- **Écart** : l'index voit une créature dès son inscription et l'oublie dès sa mort, là où l'ancien groupe était figé pour l'image.
+
+**Mesure** : sans effet visible sur ce banc. Base F1 contre A, hors quota, 1080p : 400 créatures 57,9 → 57,8 FPS avec Boussole, Chaîne des noms, Cloche et Gants d'écho ; 600 créatures 33 → 34 FPS, dans le bruit. Le banc reste dominé par la physique ; le lot A retire les coûts armes × créatures et projectiles × créatures qui pèseront à plusieurs milliers, et donne à F2 et B leur grille. Le bloc mesuré sans build est écarté : un autre jeu (Graffwall) tournait à 211 % CPU pendant la mesure.
+
+**Vérifications** : build sans avertissement ; `tools/validate.sh` 32/32 (une première passe à 31/32 : `ObjectsRegression` forçait par réflexion le cache de groupe supprimé, remplacé par `CrowdIndex.MarkMoved()`) ; relecture `godot-reviewer` : rayons des 30 sites vérifiés un par un, remarques de propreté traitées (un type public par fichier, code mort, commentaires).

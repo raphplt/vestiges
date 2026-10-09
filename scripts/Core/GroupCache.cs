@@ -5,32 +5,19 @@ namespace Vestiges.Core;
 
 /// <summary>
 /// Cache centralisé pour GetNodesInGroup(). Appelle une seule fois par frame
-/// et partage le résultat avec tous les consommateurs (ennemis, tourelles, projectiles).
+/// et partage le résultat avec ses consommateurs. Les cibles hostiles passent par CrowdIndex (plan 29).
 /// Autoload — jamais instancié manuellement.
 /// </summary>
 public partial class GroupCache : Node
 {
-	private Array<Node> _enemies = new();
 	private Array<Node> _structures = new();
 	private Array<Node> _resources = new();
 	private Array<Node> _pois = new();
 	private Node _player;
-	private ulong _enemiesFrame;
 	private ulong _structuresFrame;
 	private ulong _resourcesFrame;
 	private ulong _poisFrame;
 	private ulong _playerFrame;
-
-	public Array<Node> GetEnemies()
-	{
-		ulong frame = Engine.GetProcessFrames();
-		if (frame != _enemiesFrame)
-		{
-			_enemies = GetTree().GetNodesInGroup("enemies");
-			_enemiesFrame = frame;
-		}
-		return _enemies;
-	}
 
 	public Array<Node> GetStructures()
 	{

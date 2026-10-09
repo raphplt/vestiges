@@ -53,8 +53,6 @@ public partial class Projectile : Area2D
     private float _groundRadius;
     private float _groundBurnSeconds;
 
-    private GroupCache _groupCache;
-
     /// <summary>Arme d'origine : effets à l'impact et apparence.</summary>
     public WeaponData SourceWeapon { get; private set; }
     /// <summary>Arme portée qui a tiré : ses effets au contact et son recul s'appliquent, pas ceux de la dernière arme.</summary>
@@ -73,7 +71,6 @@ public partial class Projectile : Area2D
         _sprite.Position = new Vector2(0f, -Iso.FlightHeight);
         // Au sol sous le projectile : c'est l'écart entre l'ombre et le visuel qui dit qu'il vole.
         AddChild(GroundShadow.Create(8f));
-        _groupCache = GetNode<GroupCache>("/root/GroupCache");
         BodyEntered += OnBodyEntered;
     }
 
@@ -240,13 +237,13 @@ public partial class Projectile : Area2D
 
     private Node2D FindNearestEnemy()
     {
-        Godot.Collections.Array<Node> enemies = _groupCache.GetEnemies();
+        using CrowdQuery crowd = CrowdIndex.Near(GlobalPosition, 500f);
         Node2D nearest = null;
         float nearestDistSq = 500f * 500f;
 
-        foreach (Node node in enemies)
+        foreach (Node node in crowd.Targets)
         {
-            // Le groupe est figé pour l'image : une créature morte ou rendue au pool peut y figurer encore.
+            // Garde de sûreté : une créature libérée ou mourante n'est jamais une cible.
             if (node is not Node2D candidate || candidate.IsQueuedForDeletion() || candidate is Enemy { IsActive: false } or Enemy { IsDying: true })
                 continue;
             float distSq = GlobalPosition.DistanceSquaredTo(candidate.GlobalPosition);

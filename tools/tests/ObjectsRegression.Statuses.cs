@@ -32,7 +32,7 @@ public partial class ObjectsRegression
         CurrentHp.SetValue(stays, 1000f);
         CurrentHp.SetValue(leaves, 1000f);
         RefreshEnemyCache();
-        GroundFire fire = new(GetNode<GroupCache>("/root/GroupCache"));
+        GroundFire fire = new();
         float burnSeconds = WeaponDataLoader.Get("memory_lantern").SpecialEffect.Get(SpecialEffectParam.GroundBurnSeconds);
         fire.Add(stays.GlobalPosition, 5f, 2.1f, 10f, burnSeconds, lamp);
         fire.Add(leaves.GlobalPosition, 5f, 2.1f, 10f, burnSeconds, lamp);

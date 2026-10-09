@@ -14,7 +14,7 @@ public static class LevelUpFx
     private const float ShoveRadius = 150f;
     private const float ShovePx = 10f;
 
-    public static void Play(Player player, GroupCache groups)
+    public static void Play(Player player)
     {
         CombatPools pools = CombatPools.Instance;
         if (pools == null || player == null)
@@ -51,10 +51,9 @@ public static class LevelUpFx
             Decorative = true,
         });
 
-        if (groups == null)
-            return;
         float radiusSq = ShoveRadius * ShoveRadius;
-        foreach (Node node in groups.GetEnemies())
+        using CrowdQuery crowd = CrowdIndex.Near(feet, ShoveRadius);
+        foreach (Node node in crowd.Targets)
         {
             if (node is not Enemy enemy || !enemy.IsActive || enemy.IsDying)
                 continue;

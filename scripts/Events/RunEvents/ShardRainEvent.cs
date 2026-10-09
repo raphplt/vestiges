@@ -99,7 +99,8 @@ public sealed class ShardRainEvent : RunEvent
             Enemy chosen = null;
             int seen = 0;
             float rangeSq = range * range;
-            foreach (Node node in Context.Groups.GetEnemies())
+            using CrowdQuery crowd = CrowdIndex.Near(player, range);
+            foreach (Node node in crowd.Targets)
             {
                 if (node is not Enemy enemy || !enemy.IsActive || enemy.IsDying)
                     continue;

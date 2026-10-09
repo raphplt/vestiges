@@ -20,17 +20,15 @@ public sealed class RunEventContext
     public SpawnManager Spawner { get; }
     public Node2D WorldRoot { get; }
     public EventBus EventBus { get; }
-    public GroupCache Groups { get; }
     public PlayerProgression Progression { get; }
     public RandomNumberGenerator Rng { get; } = new();
 
-    public RunEventContext(Player player, SpawnManager spawner, Node2D worldRoot, EventBus eventBus, GroupCache groups)
+    public RunEventContext(Player player, SpawnManager spawner, Node2D worldRoot, EventBus eventBus)
     {
         Player = player;
         Spawner = spawner;
         WorldRoot = worldRoot;
         EventBus = eventBus;
-        Groups = groups;
         Progression = player.GetNodeOrNull<PlayerProgression>("PlayerProgression");
         Rng.Seed = RunRandom.SeedFor("run_events");
         _chestScene ??= GD.Load<PackedScene>("res://scenes/world/Chest.tscn");
@@ -105,7 +103,8 @@ public sealed class RunEventContext
     {
         float radiusSq = radius * radius;
         int kills = 0;
-        foreach (Node node in Groups.GetEnemies())
+        using CrowdQuery crowd = CrowdIndex.Near(center, radius);
+        foreach (Node node in crowd.Targets)
         {
             if (node is not Enemy enemy || !enemy.IsActive || enemy.IsDying)
                 continue;

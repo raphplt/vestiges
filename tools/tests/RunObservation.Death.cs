@@ -115,7 +115,7 @@ public partial class RunObservation
     {
         Enemy nearest = null;
         float best = float.MaxValue;
-        foreach (Node node in GetNode<GroupCache>("/root/GroupCache").GetEnemies())
+        foreach (Node node in GetTree().GetNodesInGroup("enemies"))
         {
             if (node is not Enemy enemy || !enemy.IsActive || enemy.IsDying)
                 continue;

@@ -26,12 +26,6 @@ public sealed class GroundFire
     }
 
     private readonly List<Flame> _flames = new();
-    private readonly GroupCache _groupCache;
-
-    public GroundFire(GroupCache groupCache)
-    {
-        _groupCache = groupCache;
-    }
 
     public static void Spawn(Vector2 position, float damage, float duration, float radius, float burnSeconds, AttackContext source = default)
     {
@@ -77,7 +71,8 @@ public sealed class GroundFire
 
     private void Burn(in Flame flame)
     {
-        foreach (Node node in _groupCache.GetEnemies())
+        using CrowdQuery crowd = CrowdIndex.Near(flame.Position, Mathf.Sqrt(flame.RadiusSq));
+        foreach (Node node in crowd.Targets)
         {
             if (node is Enemy { IsActive: true, IsDying: false } enemy && GodotObject.IsInstanceValid(enemy)
                 && Iso.GroundDistanceSquared(enemy.GlobalPosition, flame.Position) < flame.RadiusSq)

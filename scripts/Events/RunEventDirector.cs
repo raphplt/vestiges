@@ -54,8 +54,7 @@ public partial class RunEventDirector : Node
             world.GetNode<Player>("Player"),
             world.GetNode<SpawnManager>("SpawnManager"),
             world,
-            _eventBus,
-            GetNode<GroupCache>("/root/GroupCache"));
+            _eventBus);
 
         _nextEventAt = _context.Rng.RandfRange(_schedule.FirstEventMinSec, _schedule.FirstEventMaxSec);
         _eventBus.CrisisEnded += OnCrisisEnded;

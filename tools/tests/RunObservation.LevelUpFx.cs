@@ -29,7 +29,7 @@ public partial class RunObservation
         Engine.TimeScale = 0.25;
         try
         {
-            LevelUpFx.Play(_player, GetNode<GroupCache>("/root/GroupCache"));
+            LevelUpFx.Play(_player);
             int elapsed = 0;
             for (int shot = 0; shot < LevelUpFxCaptureFrames.Length; shot++)
             {

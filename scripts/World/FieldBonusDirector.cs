@@ -165,8 +165,8 @@ public partial class FieldBonusDirector : Node
         float ratio = data.Param("hp_ratio");
         float knockback = data.Param("knockback_px");
         AttackContext context = new(player.GetInstanceId(), null, 0, DamageKind.Passive);
-        Godot.Collections.Array<Node> enemies = _groups.GetEnemies();
-        foreach (Node node in enemies)
+        using CrowdQuery crowd = CrowdIndex.Near(player.GlobalPosition, radius);
+        foreach (Node node in crowd.Targets)
         {
             if (node is not Enemy enemy || !enemy.IsActive || enemy.IsDying)
                 continue;

@@ -50,7 +50,6 @@ public partial class DeathSequence : CanvasLayer
     private static readonly Color KillerOutline = new(0.96f, 0.94f, 0.92f);
 
     private EventBus _eventBus;
-    private GroupCache _groups;
     private Camera2D _camera;
     private Node[] _cameraDrivers = System.Array.Empty<Node>();
     private ColorRect _overlay;
@@ -82,7 +81,6 @@ public partial class DeathSequence : CanvasLayer
         Layer = 45;
         ProcessMode = ProcessModeEnum.Always;
         _eventBus = GetNode<EventBus>("/root/EventBus");
-        _groups = GetNode<GroupCache>("/root/GroupCache");
         _eventBus.EntityDied += OnEntityDied;
         _eventBus.PlayerHitBy += OnPlayerHitBy;
         _rng.Randomize();
@@ -158,7 +156,8 @@ public partial class DeathSequence : CanvasLayer
             return null;
         Enemy nearest = null;
         float best = KillerSearchPx * KillerSearchPx;
-        foreach (Node node in _groups.GetEnemies())
+        using CrowdQuery crowd = CrowdIndex.Near(around, KillerSearchPx);
+        foreach (Node node in crowd.Targets)
         {
             if (node is not Enemy enemy || !enemy.IsActive || enemy.IsDying || enemy.EnemyId != _lastHitBy)
                 continue;

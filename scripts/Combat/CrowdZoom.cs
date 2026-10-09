@@ -5,7 +5,7 @@ namespace Vestiges.Combat;
 
 /// <summary>
 /// Léger recul de caméra quand l'écran se remplit (plan 02 J5) : au-delà d'un seuil de créatures visibles, le zoom
-/// recule doucement jusqu'à 8 %, puis revient quand la vague se vide. Comptage quatre fois par seconde via GroupCache,
+/// recule doucement jusqu'à 8 %, puis revient quand la vague se vide. Comptage quatre fois par seconde par l'index de la foule,
 /// zoom lissé à chaque frame. Le zoom de base est celui de la caméra au démarrage.
 /// </summary>
 public partial class CrowdZoom : Node
@@ -17,7 +17,6 @@ public partial class CrowdZoom : Node
     private const float Smoothing = 1.5f;
 
     private Camera2D _camera;
-    private GroupCache _groups;
     private Vector2 _baseZoom;
     private float _timer;
     private float _target;
@@ -27,11 +26,6 @@ public partial class CrowdZoom : Node
     {
         _camera = camera;
         _baseZoom = camera.Zoom;
-    }
-
-    public override void _Ready()
-    {
-        _groups = GetNode<GroupCache>("/root/GroupCache");
     }
 
     public override void _Process(double delta)
@@ -57,7 +51,8 @@ public partial class CrowdZoom : Node
         Vector2 center = _camera.GetScreenCenterPosition();
         Vector2 half = GetViewport().GetVisibleRect().Size / (2f * _camera.Zoom);
         int count = 0;
-        foreach (Node node in _groups.GetEnemies())
+        using CrowdQuery crowd = CrowdIndex.Near(center, half.Length());
+        foreach (Node node in crowd.Targets)
         {
             if (node is not Enemy enemy || !enemy.IsActive || enemy.IsDying)
                 continue;

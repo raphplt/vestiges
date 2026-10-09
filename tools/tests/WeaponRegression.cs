@@ -84,7 +84,7 @@ public partial class WeaponRegression : Node2D
         beside.Position = center + new Vector2(radius * 0.8f, 0f);
         below.Position = center + new Vector2(0f, radius * 0.8f);
         await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
-        GroundFire fire = new(GetNode<GroupCache>("/root/GroupCache"));
+        GroundFire fire = new();
         fire.Add(center, 50f, 1f, radius, 0.5f);
         fire.Process(0.6f);
         Check(beside.IsBurning && !below.IsBurning,

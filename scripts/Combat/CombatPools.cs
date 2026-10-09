@@ -75,7 +75,7 @@ public partial class CombatPools : Node2D
             orb.SetRelease(_xpOrbs.Return);
             return orb;
         });
-        _groundFire = new GroundFire(GetNode<GroupCache>("/root/GroupCache"));
+        _groundFire = new GroundFire();
         Sparks = new PixelSparks { Name = "PixelSparks" };
         AddChild(Sparks);
     }

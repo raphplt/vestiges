@@ -51,7 +51,6 @@ public partial class ObjectMilestones : Node
     private Player _player;
     private ulong _playerId;
     private EventBus _eventBus;
-    private GroupCache _groupCache;
 
     private float _renewChance;
     private bool _spreadExtraProjectiles;
@@ -101,7 +100,6 @@ public partial class ObjectMilestones : Node
     public override void _Ready()
     {
         _eventBus = GetNode<EventBus>("/root/EventBus");
-        _groupCache = GetNode<GroupCache>("/root/GroupCache");
         _eventBus.EnemyStatusExpired += OnStatusExpired;
         _eventBus.PlayerDamageResolved += OnPlayerDamage;
         _eventBus.LevelUp += OnLevelUp;
@@ -138,7 +136,7 @@ public partial class ObjectMilestones : Node
                 _repeatDelay = milestone.Parameter("delay_seconds");
                 break;
             case ZoneEchoEffect:
-                _zoneEchoes = new ZoneEchoes(_player, _groupCache, milestone.Parameter("ratio"), milestone.Parameter("delay_seconds"));
+                _zoneEchoes = new ZoneEchoes(_player, milestone.Parameter("ratio"), milestone.Parameter("delay_seconds"));
                 break;
             case RangeEndBurstEffect:
                 _burstRatio = milestone.Parameter("damage_ratio");
@@ -254,7 +252,8 @@ public partial class ObjectMilestones : Node
         float damage = projectileDamage * _burstRatio;
         AttackContext burst = source.As(DamageKind.Passive);
         FxFamily family = PlayerAttackFx.FamilyOf(source.Weapon?.Base);
-        foreach (Node node in _groupCache.GetEnemies())
+        using CrowdQuery crowd = CrowdIndex.Near(position, radius);
+        foreach (Node node in crowd.Targets)
         {
             if (node is Enemy { IsActive: true, IsDying: false } enemy
                 && Iso.GroundDistanceSquared(enemy.GlobalPosition, position) <= radiusSq)
@@ -293,7 +292,8 @@ public partial class ObjectMilestones : Node
             return;
         Vector2 origin = _player.GlobalPosition;
         float radiusSq = _waveRadius * _waveRadius;
-        foreach (Node node in _groupCache.GetEnemies())
+        using CrowdQuery crowd = CrowdIndex.Near(origin, _waveRadius);
+        foreach (Node node in crowd.Targets)
         {
             if (node is not Enemy { IsActive: true, IsDying: false } enemy
                 || Iso.GroundDistanceSquared(enemy.GlobalPosition, origin) > radiusSq)

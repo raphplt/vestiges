@@ -50,8 +50,8 @@ public partial class GrassTrample : Node
             _nearest[i] = FarPoint;
             _nearestDistSq[i] = CreatureRangeSq;
         }
-        Array<Node> enemies = _groups.GetEnemies();
-        foreach (Node node in enemies)
+        using CrowdQuery crowd = CrowdIndex.Near(center, Mathf.Sqrt(CreatureRangeSq));
+        foreach (Node node in crowd.Targets)
         {
             if (node is not Enemy enemy || !enemy.IsActive || enemy.IsDying)
                 continue;

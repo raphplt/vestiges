@@ -106,7 +106,6 @@ public partial class SpawnManager : Node2D
 	private WorldSetup _worldSetup;
 	private Node _enemyContainer;
 	private EventBus _eventBus;
-	private GroupCache _groupCache;
 	private ErasureManager _erasureManager;
 	private CrisisManager _crisisManager;
 
@@ -131,7 +130,6 @@ public partial class SpawnManager : Node2D
 		_eventBus.PerilChanged += OnPerilChanged;
 		_eventBus.OubliEffectChanged += OnOubliEffectChanged;
 		EnemyTracking.SetDetectionScale(1f);
-		_groupCache = GetNode<GroupCache>("/root/GroupCache");
 	}
 
 	public override void _ExitTree()
@@ -428,8 +426,8 @@ public partial class SpawnManager : Node2D
 
 		float radiusSq = radius * radius;
 		int count = 0;
-		Godot.Collections.Array<Node> enemies = _groupCache.GetEnemies();
-		foreach (Node node in enemies)
+		using CrowdQuery crowd = CrowdIndex.Near(center, radius);
+		foreach (Node node in crowd.Targets)
 		{
 			if (node is not Enemy enemy || !enemy.IsActive || enemy.IsDying)
 				continue;
@@ -477,14 +475,14 @@ public partial class SpawnManager : Node2D
 		if (_player == null || !IsInstanceValid(_player))
 			return;
 
-		Godot.Collections.Array<Node> enemies = _groupCache.GetEnemies();
-		if (enemies.Count == 0)
+		if (CrowdIndex.Count == 0)
 			return;
 
+		using CrowdQuery crowd = CrowdIndex.All();
 		List<Enemy> toDespawn = new();
 		float maxDist = _dayEnemyDespawnDistance;
 
-		foreach (Node node in enemies)
+		foreach (Node node in crowd.Targets)
 		{
 			if (node is not Enemy enemy)
 				continue;
