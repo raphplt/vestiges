@@ -1,6 +1,6 @@
 # Plan 33 — Équilibrage de l'ouverture, personnage de mêlée
 
-10 octobre 2026, soir. Retour de Raphaël après des parties au Vagabond (Faucille), consigné au [§101](DECISIONS.md). **Diagnostic seulement : aucune donnée de jeu n'est modifiée.** Leviers tranchés le soir même (§6).
+10 octobre 2026, soir. Retour de Raphaël après des parties au Vagabond (Faucille), consigné au [§101](DECISIONS.md). Diagnostic, leviers tranchés le soir même (§6), **lot Q1 livré et mesuré** (§7). À juger en jouant.
 
 ## 0. En bref
 
@@ -171,3 +171,54 @@ Raphaël juge la sensation en jouant après Q1 : ce lot est conçu pour être an
 ## 6. Décisions du 10 octobre au soir
 
 Réponses de Raphaël ([§101](DECISIONS.md)) : **A1 puis A2** pour le Cracheur, **B1 + B2** pour les créatures solides, **D1 + D2** pour l'XP (ouverture et courbe entière : `base_xp` 22 → 19), **E1** pour le tempo. C3 et F restent en attente de la mesure. Lot Q1 prêt à engager, en données seules : `fading_spitter.json`, les trois biomes, `rodeur.json`, `void_brute.json`, `treant_corrompu.json`, `progression.json`, `_variants.json` (élites naturelles) et `spawn_flow.json` (ouverture). Il sera mesuré avec le protocole du §1.
+
+## 7. Q1 livré — 10 octobre 2026, soir
+
+Raphaël : « ça me va que tu fasses les modifications dont on a parlé […] Si tu vois d'autres choses, n'hésite pas à les implémenter aussi », avec une cible d'XP : « plus viser à peu près le niveau 30 […] si on fait une plutôt bonne run. Voire […] un peu plus si on fait une excellente run » ([§103](DECISIONS.md)). Tout a été fait d'un bloc, puis mesuré une fois.
+
+**Ce qui change :**
+- **Cracheur (A1 + A2).** Il apparaît dès 3 min, avec un poids de 0,5, et sort des pools d'exploration de la forêt, des champs et de la carrière. Il ne tire plus : sa capacité `bile_lob` ([`BileLobAbility`](../../scripts/Combat/Abilities/BileLobAbility.cs), contrat dans `_contract.json`) fonctionne ainsi :
+  - le Cracheur s'arrête 0,35 s ;
+  - une goutte vole 0,9 s en cloche vers la place du joueur au moment du geste, avec un cercle au sol qui se remplit ;
+  - qui est resté dessus est touché ;
+  - une flaque reste 3 s et ralentit à ×0,65 ;
+  - au plus 4 crachats en vol à la fois, toutes créatures confondues ;
+  - la flaque disparaît avec le Cracheur, et un crachat en vol tombe si le Cracheur perd la trace du joueur.
+- **Créatures solides (B1 + B2).** Rôdeur dès 1:30, ramené à 45 PV et 11 dégâts. Brute dès 3:00, Tréant dès 4:00. Pour que l'ouverture reste variée, les pools d'exploration gagnent l'Ombre (forêt, champs, carrière) et le Rampant d'Ombre (carrière).
+- **XP (D1 + D2).** Courbe 15 × n^1,4 au lieu de 22 × n^1,42, sans majoration des cinq premiers niveaux. Le niveau 2 coûte 15 XP (36 avant) et le 5 en coûte 229 (483 avant).
+- **Tempo (E1).** Élites naturelles dès 2:30, une toutes les 50 à 75 s. Montée d'ouverture sur 120 s au lieu de 75.
+- **En plus (« d'autres choses ») :**
+  - la pente des PV de 4 à 8 min passe de ×1,33 à ×1,27 par minute (B4), car elle suivait le build à distance ;
+  - la cadence des tirs ennemis passe en données (`ranged_cooldown`, 1,5 s au lieu de 1,1 s en dur) : Tisseuse, Sentinelle et Hurleur tirent environ un quart moins souvent ;
+  - un tir ennemi s'éteint à sa portée + 120 px (`projectile_reach_margin`) au lieu de voler 4 s, environ 740 px (A3).
+
+**Mesure** (protocole du §1, mêmes graines ; la fusion du Facteur, arrivée pendant le lot, ne touche ni le Vagabond ni le Traqueur) :
+
+| | Vagabond avant | Vagabond après | Traqueur avant | Traqueur après |
+|---|---:|---:|---:|---:|
+| Niveau à 10 min (4 graines) | 15–22, moy. 17,5 | **23–28, moy. 25,3** | 17–24, moy. 21,5 | **24–36, moy. 28,3** |
+| Niveau à 5 min | 8–13 | 13–19 | 7–15 | 16–23 |
+| Niveau 5 atteint | 2:37–2:48 | 1:21–2:09 | 1:39–3:58 | 1:16–1:48 |
+| Éliminations en 10 min, moyenne | 524 | **926** | 764 | 1 208 |
+| Cracheur, part des dégâts reçus | 14 % | **2 %** | 19 % | 3 % |
+| Rôdeur, part des dégâts reçus | 30 % | **18 %** | 26 % | 19 % |
+| « Morts » du bot de 0 à 5 min (il n'esquive pas) | 26–41 | 15–37 | 20–52 | 18–31 |
+
+Le Vagabond fait 77 % des éliminations du Traqueur (69 % avant). Le bot prend ses cartes au hasard et ne s'écarte de rien : une bonne run humaine devrait se placer au-dessus de lui, vers 30 à 10 min, comme demandé. Le Présage devient la première source de dégâts à distance (12 à 13 %) ; c'est une frappe au sol annoncée, déjà dans l'esprit du genre.
+
+**Vérifications.**
+- Build sans avertissement.
+- Validation globale : 32 suites sur 34 au premier passage, puis les deux restantes repassées.
+  - `perk_effects` échouait parce que la fusion de la PR du Facteur a changé ce test pendant la validation.
+  - `run_trace` attend 10 apparitions : avec l'ouverture plus lente et le niveau 2 plus tôt, l'écran de niveau mettait la partie en pause avant. Le test retire désormais l'arme du joueur et observe 120 s.
+- 11 contrôles du crachat et du contrat ajoutés à `EnemyAbilityRegression` : arrêt, goutte sans projectile, touche sur place, flaque qui ralentit puis s'efface, esquive en avançant, annulation quand le joueur est perdu, disparition avec l'auteur. Les tests du tir annoncé passent à la Tisseuse.
+- Relecture `godot-reviewer` : le crachat restait figé quand le Cracheur perdait la trace du joueur ; c'est corrigé et testé.
+- Capture `CAPTURE_EXTRA_ARGS="--capture-bile" tools/capture_run.sh <dossier>` regardée. Les gouttes se voient en vol au-dessus des corps, le cercle se remplit sous le joueur, puis restent une flaque rouille tramée et le joueur grisé par le ralentissement.
+
+**Reste à juger en jouant :**
+- la lisibilité du crachat et de la flaque en pleine foule ;
+- l'impact muet (aucun son d'éclaboussure dans la banque ; à chercher au plan 15) ;
+- le rythme des niveaux, qui pourrait s'emballer après 15 min : la courbe d'ensemble descend d'environ un tiers ;
+- le Souverain de 2:45, désormais affronté avec plus de niveaux.
+
+C2 et C3 (avantage propre à la mêlée) restent en attente : l'écart avec le Traqueur est passé sous le seuil de 30 % fixé au §4.

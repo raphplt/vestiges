@@ -1138,3 +1138,9 @@ Raphaël : « Rajoute-les dans characters.json, rajoute-leur un passif raccord a
 **À juger en jouant :** valeurs d'essai (stats du Facteur, 2 rebonds à −15 %, élan +25 %/+15 % en 4 s, glissade 0,4 s à ×1,5 et 3 s de recharge) ; son provisoire de la Sacoche à auditionner.
 
 **Intégration du 10 octobre :** Raphaël demande de débloquer la PR #4, dont GitHub laisse la vérification de fusion affichée. Trois conflits confirmés par API (traductions générées et décisions) ; lot de synchronisation P2e, sans nouvel arbitrage de gameplay.
+
+## 103. Équilibrage de l'ouverture : tout appliquer, viser le niveau 30 — 10 octobre 2026, soir
+
+Raphaël : « ça me va que tu fasses les modifications dont on a parlé. Que ce soit pour le crasher, pour la solidité des ennemis, pour l'XP, pour le rythme. Si tu vois d'autres choses, d'ailleurs, n'hésite pas à les implémenter aussi » ; XP : « être au niveau 15-20 à 10 minutes, c'est légèrement bas. Faudrait plus viser à peu près le niveau 30 […] si on fait une plutôt bonne run. Voire potentiellement même un peu plus si on fait une excellente run. Avec un bon build » ; méthode : « essaye de tout faire d'un bloc […] Fais tous les changements et lance éventuellement des tests à la fin ».
+
+**Appliqué, à valider en jouant :** lot Q1 du [plan 33](33-equilibrage-ouverture.md#7-q1-livré--10-octobre-2026-soir), avec trois ajouts de l'agent : pente des PV de 4 à 8 min adoucie, cadence des tirs ennemis en données et ralentie, portée de vol des tirs bornée. Cible d'XP retenue : environ 30 à 10 min pour une bonne run, davantage pour une excellente.

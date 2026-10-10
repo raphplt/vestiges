@@ -17,7 +17,8 @@ namespace Vestiges.Tests;
 public partial class RunTraceRegression : Node
 {
     private const int TracedSpawns = 10;
-    private const int MaxFrames = 60 * 90;
+    // Deux minutes : la montée d'ouverture dure 120 s depuis le plan 33, dix apparitions viennent plus tard.
+    private const int MaxFrames = 60 * 120;
 
     private readonly List<string> _trace = new();
     private Node _enemies;
@@ -50,6 +51,9 @@ public partial class RunTraceRegression : Node
             Player player = world.GetNode<Player>("Player");
             player.IsGodMode = true;
             player.SetPhysicsProcess(false);
+            // Sans arme, aucune victime ni écran de niveau ne vient mettre le jeu en pause pendant le tirage.
+            while (player.WeaponSlots.Count > 0)
+                player.RemoveWeapon(0);
             _enemies = world.GetNode("EnemyContainer");
             ulong start = Engine.GetPhysicsFrames();
             EventBus bus = GetNode<EventBus>("/root/EventBus");

@@ -752,6 +752,7 @@ Le script de post-processing doit inclure une vérification/correction de l'angl
 - [x] Micro-événements v1 (plan 12) : directeur calé autour des Résurgences, cinq événements (Souverain, Harde, Vestige tombé, Veille, Averse d'éclats), repères au sol, bandeau et flèche de bord, données JSON ; captures en vraie run (24 septembre 2026).
 - [x] Variantes renforcées data-driven (plan 12) : élites naturelles à affixe, Souverains, Aberrations et affixes de phase dans `_variants.json`.
 - [x] Recette humaine des micro-événements et des élites : cadence validée en l'état, élites bien dosées, événements appréciés (Raphaël, 25 septembre 2026). Détails à revoir plus tard ; le soin, peut-être trop rare, est reporté aux plans 13/03 (plan 12 §7).
+- [x] Ouverture rééquilibrée pour la mêlée (plan 33, 10 octobre 2026) : Cracheur en crachat en cloche avec flaque, raréfié et repoussé à 3 min ; Rôdeur, Brute et Tréant échelonnés ; courbe d'XP 15 / 1,4 ; élites dès 2:30. Mesuré au Vagabond en profil neuf : niveau 25 à 10 min (17,5 avant), éliminations +77 %, Cracheur 2 % des dégâts reçus (14 % avant).
 - [ ] Ajuster le tempo : runs de 15-25 min en gameplay normal.
 - [ ] **PLAYTEST : est-ce que c'est fun ? Est-ce que l'Effacement crée de la tension ? Est-ce que le mouvement permanent fonctionne ?**
 
