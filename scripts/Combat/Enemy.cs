@@ -33,6 +33,9 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 	private float _propagatedDisorientationRemaining;
 	public EnemyLife Life => new(GetInstanceId(), _lifeGeneration);
 	public bool IsPriorityTarget => _mods.IsVariant && _mods.Variant.Id is "elite" or "champion";
+	/// <summary>Identifiant de la variante (elite, champion pour les Souverains, aberration), vide sans variante.</summary>
+	public string VariantId => _mods.IsVariant ? _mods.Variant.Id : "";
+	public EnemyTier Tier => _tier;
 	/// <summary>Contribution native transmissible, sinon provenance du contrôle actif non transmissible.</summary>
 	public ControlState SlowControl => _nativeSlow.Remaining > 0f ? _nativeSlow
 		: new(_slowFactor, Mathf.Max(0f, _slowTimer), _slowSource, ControlOrigin.Propagated == _slowOrigin ? _slowOrigin : ControlOrigin.Unknown);

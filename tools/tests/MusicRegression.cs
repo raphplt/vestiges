@@ -49,8 +49,32 @@ public partial class MusicRegression : Node2D
                 $"Première run : exploration sans changement de phase ({_music.CurrentKey})");
             Check(AmbiancePhase() == "Exploration", $"Première run : ambiance d'exploration ({AmbiancePhase()})");
 
-            // Combat par présence réelle, entrée tenue puis sortie après un retrait au pool.
-            SpawnEnemies(config.CombatEnterEnemies + 2, 150f);
+            // Combat aux pics (§86) : une foule moyenne et une élite ne le déclenchent pas.
+            int between = (config.CombatEnterEnemies + config.CombatExitEnemies) / 2;
+            SpawnEnemies(between, 150f);
+            _enemies[0].ApplyVariant(EnemyVariantDataLoader.GetVariant("elite"), Array.Empty<EnemyAffixData>());
+            await Simulate(config.CombatEnterHoldSeconds + 4f * config.CombatSampleSeconds, 1f / 60f);
+            Check(_music.CurrentIntent == MusicIntent.Exploration, $"Foule moyenne ({between}) et une élite : exploration ({_music.CurrentIntent})");
+
+            // Un Souverain seul fait un pic ; il part, la foule moyenne reste : le combat ne retombe qu'avec elle.
+            foreach (Enemy enemy in _enemies)
+                enemy.Reset();
+            SpawnEnemies(1, 200f);
+            _enemies[^1].ApplyVariant(EnemyVariantDataLoader.GetVariant("champion"), Array.Empty<EnemyAffixData>());
+            await Simulate(config.CombatEnterHoldSeconds + 2f * config.CombatSampleSeconds, 1f / 60f);
+            Check(_music.CurrentIntent == MusicIntent.Combat, $"Souverain proche : combat ({_music.CurrentIntent})");
+            _enemies[^1].Reset();
+            ActivateEnemies(between);
+            await Simulate(config.CombatExitHoldSeconds + 4f * config.CombatSampleSeconds, 1f / 60f);
+            Check(_music.CurrentIntent == MusicIntent.Combat, "Souverain parti, foule moyenne : le combat tient");
+            foreach (Enemy enemy in _enemies)
+                enemy.Reset();
+            await Simulate(config.CombatExitHoldSeconds + 4f * config.CombatSampleSeconds, 1f / 60f);
+            Check(_music.CurrentIntent == MusicIntent.Exploration, "Foule partie : retour à l'exploration");
+
+            // Foule très dense : combat par le nombre, entrée tenue puis sortie après un retrait au pool.
+            SpawnEnemies(config.CombatEnterEnemies + 2 - _enemies.Count, 150f);
+            ActivateEnemies(_enemies.Count);
             await Simulate(config.CombatEnterHoldSeconds + 2f * config.CombatSampleSeconds, 1f / 60f);
             Check(_music.CurrentIntent == MusicIntent.Combat, $"Combat : {_enemies.Count} créatures proches ({_music.CurrentIntent})");
             foreach (Enemy enemy in _enemies)
@@ -69,6 +93,9 @@ public partial class MusicRegression : Node2D
                 await Simulate(6f, 1f / fps);
             Check(_music.CurrentIntent == MusicIntent.Warning && _music.CurrentKey == "mus_crepuscule",
                 $"Annonce tenue 18 s à 30/60/144 i/s, créatures proches ({_music.CurrentKey})");
+            Check(Mathf.IsEqualApprox(config.Cues[MusicIntent.Warning].StartSeconds, 52f)
+                && Mathf.IsEqualApprox(config.Cues[MusicIntent.Resurgence].StartSeconds, 34f),
+                "Points d'entrée V2 : annonce à 52 s, Résurgence à 34 s (§86)");
 
             // Pause pendant l'annonce : les images passent, l'annonce reste.
             GetTree().Paused = true;
@@ -174,6 +201,13 @@ public partial class MusicRegression : Node2D
 
     private string AmbiancePhase() =>
         (string)typeof(AudioManager).GetField("_currentPhase", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(_audio);
+
+    /// <summary>Remet en jeu les <paramref name="count"/> premières créatures retirées, à leur place.</summary>
+    private void ActivateEnemies(int count)
+    {
+        for (int i = 0; i < count && i < _enemies.Count; i++)
+            _enemies[i].Initialize(EnemyDataLoader.Get("rodeur"), 1f, 1f);
+    }
 
     private void SpawnEnemies(int count, float distance)
     {

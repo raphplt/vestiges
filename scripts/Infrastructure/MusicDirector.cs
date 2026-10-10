@@ -97,7 +97,9 @@ public partial class MusicDirector : Node
 
     /// <summary>
     /// Créatures actives près du joueur, relevées à fréquence bornée. Un retrait lointain au pool compte comme
-    /// un départ, ce que ne faisait pas un compteur tenu par les apparitions et les morts.
+    /// un départ, ce que ne faisait pas un compteur tenu par les apparitions et les morts. Le combat est réservé aux
+    /// pics (§86) : une foule moyenne et des élites entourent le joueur presque toute la run ; seul un Souverain, un boss
+    /// ou une foule très dense le déclenche, et il ne retombe qu'une fois ce pic parti et la foule redescendue.
     /// </summary>
     private void SampleEnemies()
     {
@@ -107,14 +109,20 @@ public partial class MusicDirector : Node
         Vector2 center = player.GlobalPosition;
         float radiusSq = _config.CombatRadiusPx * _config.CombatRadiusPx;
         int near = 0;
+        int peaks = 0;
         using CrowdQuery crowd = CrowdIndex.Near(center, _config.CombatRadiusPx);
         foreach (Node node in crowd.Targets)
         {
-            if (node is Enemy { IsActive: true, IsDying: false } enemy && enemy.GlobalPosition.DistanceSquaredTo(center) <= radiusSq)
-                near++;
+            if (node is not Enemy { IsActive: true, IsDying: false } enemy || enemy.GlobalPosition.DistanceSquaredTo(center) > radiusSq)
+                continue;
+            near++;
+            if (enemy.Tier is EnemyTier.Miniboss or EnemyTier.Boss || _config.CombatPeakVariants.Contains(enemy.VariantId))
+                peaks++;
         }
 
-        bool holding = _inCombat ? near <= _config.CombatExitEnemies : near >= _config.CombatEnterEnemies;
+        bool holding = _inCombat
+            ? peaks == 0 && near <= _config.CombatExitEnemies
+            : peaks > 0 || near >= _config.CombatEnterEnemies;
         _combatHold = holding ? _combatHold + _config.CombatSampleSeconds : 0f;
         float hold = _inCombat ? _config.CombatExitHoldSeconds : _config.CombatEnterHoldSeconds;
         if (_combatHold + 0.001f < hold)

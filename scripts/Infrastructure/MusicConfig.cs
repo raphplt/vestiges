@@ -26,6 +26,8 @@ public sealed class MusicConfig
     public float CombatRadiusPx { get; private init; } = 600f;
     public float CombatSampleSeconds { get; private init; } = 0.5f;
     public int CombatEnterEnemies { get; private init; } = 4;
+    /// <summary>Variantes qui font à elles seules un pic de combat ; mini-boss et boss en font toujours un.</summary>
+    public IReadOnlySet<string> CombatPeakVariants { get; private init; } = new HashSet<string> { "champion" };
     public float CombatEnterHoldSeconds { get; private init; } = 1f;
     public int CombatExitEnemies { get; private init; } = 1;
     public float CombatExitHoldSeconds { get; private init; } = 6f;
@@ -75,6 +77,9 @@ public sealed class MusicConfig
             CombatRadiusPx = Read(combat, "radius_px", defaults.CombatRadiusPx),
             CombatSampleSeconds = Mathf.Max(0.05f, Read(combat, "sample_sec", defaults.CombatSampleSeconds)),
             CombatEnterEnemies = (int)Read(combat, "enter_enemies", defaults.CombatEnterEnemies),
+            CombatPeakVariants = combat.ContainsKey("peak_variants")
+                ? new HashSet<string>(combat["peak_variants"].AsStringArray())
+                : defaults.CombatPeakVariants,
             CombatEnterHoldSeconds = Read(combat, "enter_hold_sec", defaults.CombatEnterHoldSeconds),
             CombatExitEnemies = (int)Read(combat, "exit_enemies", defaults.CombatExitEnemies),
             CombatExitHoldSeconds = Read(combat, "exit_hold_sec", defaults.CombatExitHoldSeconds),

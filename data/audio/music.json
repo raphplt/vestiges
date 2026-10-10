@@ -7,17 +7,19 @@
         "calm": { "music": "mus_jour_exploration", "fade_sec": 4.0 },
         "late_game": { "music": "mus_nuit_chaos", "fade_sec": 3.0 },
         "endgame": { "music": "mus_nuit_chaos", "fade_sec": 3.0 },
-        "warning": { "music": "mus_crepuscule", "fade_sec": 2.0 },
-        "resurgence": { "music": "mus_nuit_vagues", "fade_sec": 2.0 },
+        "warning": { "music": "mus_crepuscule", "fade_sec": 2.0, "start_sec": 52.0 },
+        "resurgence": { "music": "mus_nuit_vagues", "fade_sec": 2.0, "start_sec": 34.0 },
         "death": { "music": "mus_mort", "fade_sec": 2.0, "loop": false }
     },
-    "_doc_combat": "Musique de combat en exploration : créatures actives à moins de radius_px du joueur, comptées toutes les sample_sec secondes de jeu. Elle entre à enter_enemies ou plus tenus enter_hold_sec, et sort à exit_enemies ou moins tenus exit_hold_sec.",
+    "_doc_start": "Points d'entrée de l'annonce et de la Résurgence (variante V2, DECISIONS §86) : passage continu de mus_crepuscule, partie dense de mus_nuit_vagues.",
+    "_doc_combat": "Musique de combat réservée aux pics (DECISIONS §86) : l'exploration est le fond de la run. Créatures actives à moins de radius_px du joueur, comptées toutes les sample_sec secondes de jeu. Le combat entre sur une créature d'une variante de peak_variants (champion = Souverain), un mini-boss ou un boss, ou sur enter_enemies créatures ou plus, tenus enter_hold_sec ; il sort sans pic et à exit_enemies ou moins, tenus exit_hold_sec. Mesure du 10 octobre (3 seeds, 420 s, bot nomade) : médiane 36 à 46 créatures proches, 90e centile 68 à 83, élite proche 33 à 43 % du temps (exclue), Souverain 15 à 17 % ; combat 21 à 37 % du temps d'exploration.",
     "combat": {
         "radius_px": 600,
         "sample_sec": 0.5,
-        "enter_enemies": 4,
+        "peak_variants": ["champion"],
+        "enter_enemies": 85,
         "enter_hold_sec": 1.0,
-        "exit_enemies": 1,
+        "exit_enemies": 60,
         "exit_hold_sec": 6.0
     }
 }

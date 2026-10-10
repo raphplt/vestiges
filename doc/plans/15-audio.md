@@ -347,3 +347,30 @@ Le contact de l’orbe demande le son de l’arme orbitale ; l’arme courante p
 **Validation :** `tools/validate.sh /tmp/vestiges-audio-r3-integration-20261007 smoke audio weapons music`, 4/4 suites, sources stables ; build zéro avertissement/erreur. Banque : 101 entrées d’effets, toutes leurs variantes chargeables. Les pages d’écoute indiquent les choix R3 retenus, archivés depuis le message de Raphaël dans `retours/choix-armes-2026-10-07-r3.json`.
 
 **Galerie finale :** `selection-r3-integree/index.html` et `run.mp4`, seed 221092026, musique et ambiance coupées, impacts et ennemis conservés. Trace : quatre frappes de Cloche et neuf notes de Boîte effectivement jouées. Les six WAV correspondent exactement aux empreintes R3 sélectionnées. Les 24 armes et leurs 24 clés propres sont vérifiées. Le lot « un son par arme » est intégré ; le frottement signalé dans le mix global et la suite musique/ambiances restent à traiter séparément.
+
+## Reprise du 10 octobre — mix, sons manquants, puis musique
+
+Réponses de Raphaël au [DECISIONS §86](DECISIONS.md) : combat aux pics, Résurgence V2 et accent d'entrée, page d'isolement du frottement, ordre mix → sons manquants → musique. Le travail se fait désormais sur le Mac : les dossiers d'écoute Linux (`/home/raphael/.local/share/vestiges-audio/`) n'y sont pas, les nouvelles écoutes vont dans `~/.local/share/vestiges-audio/2026-10-10/` (hors dépôt).
+
+Lots, un à la fois, commit par lot :
+1. **M1 — musique aux pics et entrée de la Résurgence.** La musique d'exploration devient le fond de la run. Le combat entre sur une créature notable proche (variante : élite, champion, Souverain, Aberration ; ou rang élite, mini-boss, boss) ou sur une foule très dense, et sort quand il n'y a plus de notable et que la foule redescend sous un second seuil (hystérésis), tenu quelques secondes. Seuils dans `music.json`, fixés d'après la distribution mesurée des créatures proches. Points d'entrée V2 : annonce à 52 s, crise à 34 s. Mesure avant/après de la part du temps en combat sur les mêmes seeds ; `test_music` étendu (foule moyenne sans notable : exploration ; notable : combat ; sortie).
+2. **M2 — page d'isolement du frottement.** Run de référence enregistrée après M1, puis la même run avec un seul bus audible à la fois (musique, ambiance, effets), et chaque boucle d'ambiance seule. Analyse spectrale pour désigner les suspects (bruit large bande constant), sans rien atténuer avant le choix de Raphaël.
+3. **M3 — planche des sons manquants.** Accent d'entrée de la Résurgence, soin, bouclier, brûlure du Néant, explosion de l'Instable, réveil du Mémorial et de la Faille (`sfx_souvenir_trouve` provisoire, §49), fragment rare, Barrière et Souverains, et les impacts par matière (plan 27 V5 : lame, choc, verre, feu, papier, électrique). Trois candidats par besoin, sources CC0 ou synthèse originale, provenance archivée, page d'écoute avec export des choix. Rien n'est intégré avant le choix.
+4. **M4 — intégration des choix de M3**, à son retour.
+5. **Musiques** : recherche de nouvelles pistes (exploration, combat, annonce, Résurgence, Hub), plus tard.
+
+### M1 livré — 10 octobre
+
+- **Combat aux pics.** `MusicDirector` ne déclenche plus le combat sur 4 créatures proches mais sur un pic : une créature d'une variante listée dans `peak_variants` (`champion`, les Souverains), un mini-boss ou un boss, ou 85 créatures ou plus dans 600 px, tenus 1 s. Il retombe sans pic et sous 60 créatures, tenus 6 s. Les élites sont exclues : l'une d'elles est à moins de 600 px 33 à 43 % du temps d'exploration. `Enemy` expose `VariantId` et `Tier` pour cette lecture, à 2 Hz.
+- **Points d'entrée V2** : annonce à 52 s de `mus_crepuscule`, Résurgence à 34 s de `mus_nuit_vagues`. L'accent d'entrée viendra de la planche M3.
+- **Trace d'écoute** : `audio-states.csv` compte les élites, Souverains, aberrations et boss proches, et relève une ligne par seconde de jeu même en temps accéléré.
+
+Mesure, même outil des deux côtés (`tools/measure_run.sh`, `--nomad --visit --audio-trace`, 420 s, seeds 221092026, 1002, 42 ; bot invincible, profil dev). Distribution en exploration : médiane 36 à 46 créatures à moins de 600 px, 90e centile 68 à 83, Souverain proche 15 à 17 % du temps.
+
+| Part du temps d'exploration | Avant | Après |
+|---|---:|---:|
+| Musique de combat | 83 % (les trois seeds) | 22 à 33 % |
+| Musique d'exploration | 2 % | 52 à 63 % |
+| Changements de musique sur la run | 6 | 9 à 12 |
+
+Les seuils sont fixés sur ce bot, qui ne joue pas comme un humain. **À écouter en jeu** : un combat qui part trop rarement ou trop souvent se règle dans `music.json`. `test_music` passe 27 contrôles (foule moyenne avec une élite : exploration ; Souverain : combat ; hystérésis après son départ ; points d'entrée). `validate.sh smoke audio music` vert, build sans avertissement.

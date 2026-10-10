@@ -21,12 +21,13 @@ internal sealed class AudioTraceProbe : IDisposable
     private readonly Node _world;
     private readonly Player _player;
     private readonly List<string> _events = new() { "audio_s,game_s,kind,detail" };
-    private readonly List<string> _states = new() { "audio_s,game_s,phase,music,intent,alive,near600" };
+    private readonly List<string> _states = new() { "audio_s,game_s,phase,music,intent,alive,near600,elite600,champion600,aberration600,boss600" };
     private readonly Dictionary<string, int[]> _sounds = new();
     private string _phase = "";
     private string _music = "";
     private double _gameTime;
     private double _nextState;
+    private double _nextGameState;
 
     internal AudioTraceProbe(string output, Node world, Player player)
     {
@@ -88,20 +89,31 @@ internal sealed class AudioTraceProbe : IDisposable
             _music = _audio.CurrentMusicKey;
             Add("music", _music.Length > 0 ? _music : "-");
         }
-        if (AudioSeconds < _nextState)
+        // Une ligne par seconde de son, ou de jeu quand le temps est accéléré (mesure headless sans Movie Maker).
+        if (AudioSeconds < _nextState && gameTime < _nextGameState)
             return;
         _nextState = Math.Floor(AudioSeconds) + 1.0;
-        int alive = 0, near = 0;
+        _nextGameState = Math.Floor(gameTime) + 1.0;
+        int alive = 0, near = 0, elite = 0, champion = 0, aberration = 0, boss = 0;
         foreach (Node node in _world.GetTree().GetNodesInGroup("enemies"))
         {
             if (node is not Enemy enemy || !enemy.IsActive || enemy.IsDying)
                 continue;
             alive++;
-            if (enemy.GlobalPosition.DistanceTo(_player.GlobalPosition) <= 600f)
-                near++;
+            if (enemy.GlobalPosition.DistanceTo(_player.GlobalPosition) > 600f)
+                continue;
+            near++;
+            switch (enemy.VariantId)
+            {
+                case "elite": elite++; break;
+                case "champion": champion++; break;
+                case "aberration": aberration++; break;
+            }
+            if (enemy.Tier is EnemyTier.Miniboss or EnemyTier.Boss)
+                boss++;
         }
         _states.Add(string.Create(CultureInfo.InvariantCulture,
-            $"{AudioSeconds:F2},{_gameTime:F2},{_phase},{(_music.Length > 0 ? _music : "-")},{_audio.CurrentMusicIntent},{alive},{near}"));
+            $"{AudioSeconds:F2},{_gameTime:F2},{_phase},{(_music.Length > 0 ? _music : "-")},{_audio.CurrentMusicIntent},{alive},{near},{elite},{champion},{aberration},{boss}"));
     }
 
     public void Dispose()

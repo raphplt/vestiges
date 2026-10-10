@@ -965,3 +965,12 @@ Reprise des lots B1–B2 du plan 07 (§84). Réponses de Raphaël, toutes confor
 - **Barre de boss en haut de l'écran**, avec le nom, pour la Barrière, l'Indicible et aussi les deux Souverains ; un cran par battant pour la Barrière.
 - **Flux de créatures pendant le combat : densité visée ×0,5**, réglage en données.
 - **Tableau de bord §2 :** App ID Steam pas encore obtenu ; l'audio est « à faire bientôt » (à reprendre après B2). Le reste inchangé.
+
+## 86. Reprise du chantier audio — 10 octobre 2026
+
+Raphaël : « je voudrais continuer le chantier audio ; go ». L'audio passe donc avant B2 (le §85 le plaçait après). Réponses aux questions de reprise, toutes conformes à la recommandation :
+- **Frottement du mix :** refaire une page d'isolement. Nouvelle run de référence sur le Mac, puis musique, ambiance, effets et chaque boucle écoutés séparément ; Raphaël désigne celui qui frotte.
+- **Rôle exploration/combat : fond unique, combat aux pics.** La musique d'exploration est le fond de la run ; celle de combat ne part que sur un vrai pic (élite, mini-boss ou boss proche, foule très dense), seuils en données.
+- **Résurgence : V2 et accent d'entrée.** Annonce prise à 52 s de `mus_crepuscule`, crise à 34 s de `mus_nuit_vagues` ; un son d'accent court au début réel de la crise, à choisir sur planche.
+- **Ordre : mix → sons manquants → musique.** Le mix et les réglages de musique d'abord, puis les sons manquants et les impacts par matière (plan 27 V5) sur planches, enfin la recherche de nouvelles musiques.
+- **Tableau de bord §2 :** inchangé depuis le §85, pas reposé.
