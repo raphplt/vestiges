@@ -268,7 +268,7 @@ Ordre décidé (DECISIONS §90) : quêtes d'abord, personnages ensuite.
 |---|---|---|
 | **Q1 — Déblocages et données** | Fichier des 36 quêtes (récompense typée, portée run/cumul, difficulté) ; réserve de départ en données ; sauvegarde méta : personnages, armes et objets débloqués, quêtes accomplies, meilleure valeur atteinte par quête de run, compteurs cumulés. Une seule règle d'accès lue par le loot, les offres de niveau, les Ateliers, la Collection et l'accueil. Retraits : quêtes de run et leur panneau, `requires_souvenir`, conditions de personnages en dur, récompenses Souvenir/Vestiges. Mode dev : tout ouvert. | Profil neuf : seule la réserve sort en 3 runs mesurées ; profil dev inchangé ; sauvegarde rechargée identique ; build, smoke, suites existantes |
 | **Q2 — Suivi en run et notification** | Suivi des 36 conditions sur l'EventBus ; compteurs manquants (§9.7) ; quête accomplie enregistrée aussitôt ; bandeau de notification en file. | Scène de régression qui rejoue les événements de chaque condition (seuil −1, seuil, après) ; capture du bandeau en vraie run |
-| **Q3 — Menus du Hub et bilan** | **Page Quêtes dédiée** : les 36 quêtes, leur récompense, leur progression (cumul, ou meilleure valeur atteinte en une run), accomplies à part. **Page Personnages** : liste des six, fiche détaillée (passif, mobilité, arme de départ, stats, quête s'il est verrouillé) et **sprite agrandi** (images plus soignées fournies par Raphaël ; d'ici là, le sprite du jeu agrandi). **Revue des menus devenus inutiles** : sous-onglet Quêtes des Chroniques, réglage d'affichage des quêtes de run (Paramètres › Graphismes, `QuestDisplaySettings`), sceaux de quêtes du HUD (`RunQuestSeals`), touche `show_quests`, panneau de quêtes du bilan ; le reste des Chroniques et de la Collection relu avec Raphaël. Collection : chaque pièce verrouillée renvoie à sa quête. Bilan : quêtes accomplies pendant la run. | Captures du Hub (profil neuf, profil avancé) et du bilan |
+| **Q3 — Menus du Hub et bilan** | **Page Quêtes dédiée** : les 36 quêtes, leur récompense, leur progression (cumul, ou meilleure valeur atteinte en une run), grille commune et filtres de statut (Q3b). **Page Personnages** : liste des six, fiche détaillée (passif, mobilité, arme de départ, stats, quête s'il est verrouillé) et **sprite agrandi** (images plus soignées fournies par Raphaël ; d'ici là, le sprite du jeu agrandi). **Revue des menus devenus inutiles** : sous-onglet Quêtes des Chroniques, réglage d'affichage des quêtes de run (Paramètres › Graphismes, `QuestDisplaySettings`), sceaux de quêtes du HUD (`RunQuestSeals`), touche `show_quests`, panneau de quêtes du bilan ; le reste des Chroniques et de la Collection relu avec Raphaël. Collection : chaque pièce verrouillée renvoie à sa quête. Bilan : quêtes accomplies pendant la run. | Captures du Hub (profil neuf, profil avancé) et du bilan |
 | **Q4 — Seuils mesurés** | `tools/measure_run.sh` sur plusieurs seeds : runs avant chaque ★, ajustement des seuils en données. | Tableau avant/après |
 | **P1 à P3 — Éveillée, Facteur, Scaphandrière** | Un personnage complet par lot (fiche du casting) : branchement des sprites, stats, passif, mobilité propre (plan 01 E), arme de départ (Sacoche de lettres et Fusil-harpon à créer), sons, quête. | Captures en run, suites de mouvement et d'armes |
 
@@ -303,7 +303,47 @@ Travail fait dans un worktree séparé (`../vestiges-quetes`, branche `quetes-de
 - **Menus revus :** sous-onglet Quêtes des Chroniques retiré (les Chroniques gardent Global, Personnages, Endurance) ; réglage, touche et sceaux des quêtes de run déjà retirés en Q1. La Collection renvoie chaque pièce verrouillée à sa quête (Q1). Le bilan montre une carte par quête accomplie pendant la run (Q2).
 - **Vérifié :** captures du Hub en vraie fenêtre (`tools/capture_hub.sh`), profil neuf et profil avancé (5 quêtes accomplies, avancées posées) : menu, page Personnages (Forgeuse verrouillée, Traqueur jouable, Éveillée débloquée à venir), page Quêtes (jauge d'Encaisser à 640/1000, onglet Accomplies). Validation complète 34/34.
 - **Non vérifié à l'image :** la carte de quête du bilan. La capture de mort (`--capture-death`) ne montre plus le bilan, déjà au commit de base `3792cc42` (même essai, même seed) : outil à réparer, pas une régression de ces lots.
-- **À relire avec Raphaël :** le reste des Chroniques (Global, Personnages, Endurance) et de la Collection ; la carte « Arme retrouvée » du bilan doublonne désormais la carte de quête qui débloque la même arme.
+- **Suite :** les Chroniques (Global, Personnages, Endurance) sont retirées en Q3c à la demande de Raphaël. La Collection reste à relire ; la carte « Arme retrouvée » du bilan doublonne désormais la carte de quête qui débloque la même arme.
+
+### Q3b — Grille de quêtes et lecture allégée — 10 octobre 2026
+
+Retours de Raphaël consignés dans [DECISIONS §97](DECISIONS.md#97-écran-des-quêtes--10-octobre-2026). Un seul lot, limité à la page Quêtes du Hub :
+
+1. Remplacer la liste verticale par une grille de quatre cartes par rangée, avec défilement et détail au survol/focus. Conserver les cadres pixel art et les rôles typographiques du Hub.
+2. Afficher toutes les quêtes ensemble par défaut ; les filtres « Toutes », « En cours » et « Accomplies » agissent sur cette même grille. Distinguer une quête accomplie par une coche, son libellé et sa jauge dorée, sans dépendre de la couleur seule.
+3. Garder un ordre stable : personnages, armes, objets, puis difficulté. Montrer le type de récompense sur les cartes pour rendre les personnages repérables dès l'ouverture.
+4. Supprimer le compteur global, les commentaires à côté des étoiles, la ligne générique de portée et « Meilleure run ». La description garde les restrictions réelles (même run, cumul, délai) ; la progression chiffrée reste visible lorsqu'il y a une quantité à suivre.
+5. Vérifier le profil neuf, un profil mêlant quêtes accomplies et en cours, les trois filtres, les états vides et la navigation clavier/manette. Captures en 1080p et 720p ; build sans warning et smoke du Hub.
+
+**Livré et vérifié :** grille commune à quatre colonnes, filtres de statut, ordre stable par récompense et difficulté, coche et jauge dorée des cartes accomplies. La hauteur des cartes suit leur contenu : les titres longs ne chevauchent plus les récompenses ; les jauges s'alignent en bas. Le détail garde la description, les étoiles seules et les quantités à suivre ; aucune ligne générique de portée, aucun « Meilleure run », aucun compteur global. Les conditions, seuils et droits de déblocage restent ceux de Q1–Q4.
+
+**Vérification :** profil neuf (filtre Accomplies vide), profil avec cinq quêtes accomplies et des progressions partielles, profil avec les 36 quêtes accomplies (filtre En cours vide) ; les trois filtres, le défilement par focus, la dernière rangée incomplète et le retour au menu sont capturés. Fenêtres et PNG réellement en 1920×1080 et 1280×720, après correction de `HubCapture` : sous macOS, `--resolution` seul laissait la fenêtre en 3840×2160 ; `--capture-size` impose désormais la taille après le démarrage et la consigne dans le log. Preuves hors dépôt : `/tmp/vestiges-quests-grid-window-1080`, `/tmp/vestiges-quests-grid-window-720`, `/tmp/vestiges-quests-grid-complete-1080`, `/tmp/vestiges-quests-grid-new-1080`. Build sans warning, smoke du Hub vert (600 images), `git diff --check` et syntaxe du script de capture vérifiés.
+
+### Q3c — Retrait des Chroniques et icône de complétion — 10 octobre 2026
+
+Retours de Raphaël : [DECISIONS §99 bis](DECISIONS.md#99-bis-chroniques-retirées-et-icône-de-complétion--10-octobre-2026). Un seul lot sur le Hub :
+
+1. Retirer l'entrée, l'état et la page Chroniques ; supprimer `HubChroniquesPanel.cs` et son UID. Corriger le texte de sauvegarde du bilan qui renvoie encore à cette page.
+2. Remplacer la coche typographique des quêtes par un sceau de laiton usé à braise centrale, dessiné en pixel art natif 16×16 dans le générateur d'habillage existant. Partager cette texture entre cartes et détail, en nearest à ×2 ; garder le mot « Accomplie ».
+3. Capturer l'accueil simplifié et une quête accomplie en 1080p et 720p ; vérifier le retour clavier/manette, le build sans warning et le smoke du Hub.
+
+**Livré :** page Chroniques, entrée de menu, état de navigation, constructeur et rafraîchissement retirés ; script et UID supprimés. Le bilan n'annonce plus un retour vers cette page. Le menu comporte désormais Partir, Personnages, Quêtes, Collection, Paramètres, Quitter.
+
+**Première icône, remplacée en Q3d :** `assets/ui/screens/plan25/ui_quest_complete.png`, sceau natif 16×16 en sept couleurs opaques de la Charte, braise centrale et bord inférieur effiloché. Générateur déterministe dans `tools/sprites/ui/screens.py` ; export isolé via `tools/generate_screen_sprites.py --only ui_quest_complete --export`. Texture partagée, affichage nearest à 32×32 ; aucune coche typographique dans l'interface du jeu.
+
+**Vérifié :** captures réelles 1920×1080 et 1280×720 du menu, de la grille mixte, du filtre Accomplies, du détail et de la dernière rangée ; retour au menu et accès à la Collection rejoués. Preuves : `/tmp/vestiges-hub-no-chronicles-1080`, `/tmp/vestiges-hub-no-chronicles-720`. Build sans warning ; validation `smoke` (600 images) et `ui_art` verte, 2/2, dans `/tmp/vestiges-hub-chronicles-validation` ; export de l'icône rejoué ; `git diff --check` vert. Les historiques de runs restent enregistrés pour le bilan, le score et la réparation des sauvegardes.
+
+### Q3d — Lisibilité de l'icône de complétion — 10 octobre 2026
+
+Raphaël juge le premier sceau peu joli et peu lisible ([DECISIONS §100](DECISIONS.md#100-icône-de-complétion-à-simplifier--10-octobre-2026)). Révision limitée à l'icône :
+
+1. Remplacer le cercle usé et sa petite braise par une médaille dorée à deux rubans, avec une silhouette franche, des aplats larges et peu de couleurs de la Charte. Garder le pixel art natif 16×16 et le libellé « Accomplie ».
+2. Exporter uniquement la texture de complétion depuis le générateur existant ; la même ressource reste partagée par les cartes et le détail.
+3. Examiner l'icône à sa taille réelle dans la grille et le détail, en 1080p et 720p ; vérifier le build sans warning et les suites Hub/UI art, puis recueillir le retour esthétique de Raphaël.
+
+**Livré :** médaille à deux rubans, surface dorée pleine et reflet ivoire large ; anneau, braise et micro-détails retirés. Quatre couleurs opaques de la Charte, alpha binaire, natif 16×16 affiché en nearest à 32×32. Source `completion_medal()` dans `tools/sprites/ui/screens.py` ; export isolé et conformité des pixels au générateur vérifiés. Aucun changement de disposition ni de progression des quêtes.
+
+**Vérifié :** captures réelles 1920×1080 et 1280×720, profil mêlant quêtes accomplies et en cours ; icône visible sur les cartes accomplies et leur détail, absente du détail d'une quête en cours. Preuves : `/tmp/vestiges-quest-medal-1080`, `/tmp/vestiges-quest-medal-720`. Build : zéro warning, zéro erreur ; suites `smoke` et `ui_art` vertes, 2/2, dans `/tmp/vestiges-quest-medal-validation`. `git diff --check` vert. Nouvelle médaille validée par Raphaël (« top »), avec demande de push sur `main`.
 
 ### Q4 livré — seuils mesurés
 
@@ -355,3 +395,14 @@ Aucune arme existante ne porte le geste du Facteur (la seule chaîne, le Trousse
 - **P2d :** **Glissade sur patins** livrée, et avec elle les **profils de mobilité** du plan 01 E : `data/movement/mobility.json` garde le dash commun et porte des `profiles` qui ne réécrivent que leurs valeurs ; un personnage nomme le sien (`"mobility": "glide"` dans `characters.json`), le dash commun sinon. Glissade : 0,4 s, ×1,5 la vitesse (144 px à vitesse 240, contre 86 pour le dash), recharge 3 s, virage borné à 180°/s (elle tourne large), elle longe un mur au lieu de s'y arrêter (seul un choc de face, moins d'un quart du trajet parcouru, l'arrête), sortie aussitôt contrôlable ; même bouton, mêmes sons que le dash pour l'instant. La fiche du Hub affiche désormais la mobilité de chaque personnage (« Dash » pour les trois premiers). **Vérifié :** suite de mouvement (distance et durée à 30/60/120 Hz, virage 45° en 0,25 s puis 69°, sortie, eau, dash commun sans virage, profil inconnu refusé ; en jeu sur un Facteur : arrêt de face contre un mur, glissade qui longe un mur de biais), intégration au monde, outils de développement, armes, effets, capacités ennemies, quêtes ; captures du personnage (directions, glissade, coup reçu) et de la page Personnages du Hub (portrait, passif, arme, mobilité, quête).
 
 **Reste à faire pour le Facteur :** sons propres (roulement des patins, papier, sonnette déformée ; le son de la Sacoche est provisoire), animation de glissade propre (le dash est étiré sur 0,4 s), équilibrage en jouant (stats, rebonds, élan, glissade). Les quatre autres héros du plan 32 suivent le même chemin, un par lot.
+
+### P2e — Synchronisation de la PR #4 avec main — 10 octobre 2026
+
+Raphaël signale que GitHub reste sur la vérification de fusion. L'API indique trois conflits, dans les traductions binaires et le journal des décisions. Lot d'intégration :
+
+1. Conserver les décisions du Hub et du Facteur ; distinguer la décision de mêlée §102 de celle du Facteur (§102 bis), sans réécrire leurs arbitrages.
+2. Régénérer les deux traductions depuis le CSV fusionné par l'importeur Godot, pour conserver la Sacoche et les textes du Hub.
+3. Vérifier le build sans warning, le smoke du Hub et les suites de mouvement, armes, effets de perks, quêtes, catalogues et UI art.
+4. Pousser le commit de synchronisation sur `perso-facteur`, puis vérifier l'état de fusion annoncé par GitHub.
+
+**Résolu et vérifié :** décisions du Hub et du Facteur conservées, références de mêlée §102 restaurées, décision du Facteur distinguée en §102 bis. Traductions françaises et anglaises régénérées par Godot depuis le CSV commun ; les 854 messages chargés correspondent aux cellules du CSV, retours à la ligne interprétés compris. Build sans warning ni erreur ; huit suites vertes (`smoke`, `movement`, `movement-integration`, `weapons`, `perk_effects`, `quests`, `catalogs`, `ui_art`), sources inchangées pendant la validation. Preuves : `/tmp/vestiges-pr4-sync-validation-ready` et `/tmp/vestiges-pr4-translations-check.log`. Le premier import du checkout neuf a échoué sur la police du thème encore absente du cache ; après création des imports, le second est vert, sans ignorer l'erreur initiale.

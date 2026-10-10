@@ -85,8 +85,30 @@ def loading_ground(biome: str) -> Image.Image:
     return image
 
 
+def completion_medal() -> Image.Image:
+    """Deux rubans et un relief clair : une silhouette lisible même en 720p."""
+    image = Image.new("RGBA", (16, 16))
+    draw = ImageDraw.Draw(image)
+    # Les rubans dépassent largement du médaillon ; aucun micro-détail d'usure.
+    draw.polygon([(4, 7), (7, 8), (7, 15), (5, 13), (2, 14)], fill="#1A1A2E")
+    draw.polygon([(8, 8), (11, 7), (13, 14), (10, 13), (8, 15)], fill="#1A1A2E")
+    draw.polygon([(4, 9), (6, 9), (6, 13), (5, 12), (3, 13)], fill="#D4A843")
+    draw.polygon([(9, 9), (11, 9), (12, 13), (10, 12), (9, 13)], fill="#D4A843")
+    draw.polygon([(5, 0), (10, 0), (10, 1), (12, 1), (12, 3), (13, 3), (13, 7),
+                  (12, 7), (12, 9), (10, 9), (10, 10), (5, 10), (5, 9), (3, 9),
+                  (3, 7), (2, 7), (2, 3), (3, 3), (3, 1), (5, 1)], fill="#1A1A2E")
+    draw.polygon([(5, 1), (10, 1), (10, 2), (11, 2), (11, 4), (12, 4), (12, 6),
+                  (11, 6), (11, 8), (9, 8), (9, 9), (6, 9), (6, 8), (4, 8),
+                  (4, 6), (3, 6), (3, 4), (4, 4), (4, 2), (5, 2)], fill="#D4A843")
+    draw.polygon([(5, 2), (9, 2), (9, 3), (7, 3), (7, 4), (6, 4), (6, 5),
+                  (5, 5), (5, 6), (4, 6), (4, 3), (5, 3)], fill="#E8E0D4")
+    draw.line([(6, 8), (10, 8), (10, 7), (11, 7)], fill="#6B6161")
+    return image
+
+
 def assets() -> dict[str, Image.Image]:
     result = {f"choice_dust_{tint}": background(tint) for tint in TINTS}
+    result["ui_quest_complete"] = completion_medal()
     for path in sorted(Path("assets/ui/menus").glob("*.png")):
         if path.stem.startswith(("ui_button_", "ui_card_", "ui_panel_frame")):
             result[path.stem] = skin(path.stem)

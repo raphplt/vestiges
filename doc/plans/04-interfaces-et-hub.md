@@ -3,6 +3,8 @@
 Statut : **clarté, sobriété et Collection validées ; maquettes proposées** · Priorité : P1 · Dépendances : cadrage 08, catégories 05/06.
 Références : V2 §15–18 ; Bible §9 ; [dossier](README.md).
 
+**Menus du Hub, 10 octobre 2026 :** la page Chroniques et son entrée sont supprimées à la demande de Raphaël. Menu actuel : Partir, Personnages, Quêtes, Collection, Paramètres, Quitter. Les quêtes accomplies utilisent une médaille pixel art originale ; le premier sceau est remplacé après le retour de Raphaël sur sa lisibilité, au [plan 06 Q3d](06-personnages-quetes-defis.md#q3d--lisibilité-de-licône-de-complétion--10-octobre-2026), décision §100.
+
 ## 1. Résultat attendu
 
 Le joueur comprend où commencer, qui il incarne, ce qu'il peut débloquer, ce qu'il gagne et pourquoi il meurt. Le texte est net et confortable. **Less is more : portraits, icônes, espaces et états clairs ; une phrase utile plutôt que des paragraphes sur chaque carte.** Le Hub donne envie de choisir un personnage et une intention de run.
