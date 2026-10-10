@@ -338,7 +338,7 @@ public partial class HUD : CanvasLayer
     }
 
     /// <summary>
-    /// Le temps en haut au centre, le Péril à sa droite dès qu'il dépasse 0 (plan 28 : le joueur le monte lui-même), et
+    /// Le temps en haut au centre, le Péril toujours à sa droite, 0 compris (plan 34 G0 : il se lit sans pause), et
     /// le nom du biome qui passe dessous quand on y entre.
     /// </summary>
     private void BuildRunClock()
@@ -354,10 +354,9 @@ public partial class HUD : CanvasLayer
         _timeLabel.HorizontalAlignment = HorizontalAlignment.Center;
         anchor.AddChild(_timeLabel);
 
-        _perilLabel = MakeLabel("", 10, PlayerSheet.PerilColor, 3);
-        _perilLabel.Position = new Vector2(36f, PlateMargin + 4f);
-        _perilLabel.Size = new Vector2(90f, 14f);
-        _perilLabel.Visible = false;
+        _perilLabel = MakeLabel(string.Format(Tr("UI_HUD_PERIL"), 0), 12, PlayerSheet.PerilColor, 3);
+        _perilLabel.Position = new Vector2(40f, PlateMargin + 2f);
+        _perilLabel.Size = new Vector2(110f, 18f);
         anchor.AddChild(_perilLabel);
 
         _biomeLabel = MakeLabel("", 10, PalGrayLight, 3);
@@ -370,7 +369,6 @@ public partial class HUD : CanvasLayer
 
     private void OnPerilChanged(int peril)
     {
-        _perilLabel.Visible = peril > 0;
         _perilLabel.Text = string.Format(Tr("UI_HUD_PERIL"), peril);
         _perilPulse = 1f;
     }
