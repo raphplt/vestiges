@@ -31,7 +31,7 @@ Notes : marais 4/10, immeubles 5/10, forêt et petits décors urbains 6/10, cham
 | **U1** | Immeubles urbains : matières des façades (enduit, brique, salissures, coulures, fissures), toits lisibles (gravier, édicules, bacs), lierre et mousse refaits en vrai feuillage | Livré, voir §5 |
 | **U2** | Ruines : effondrements remplis de gravats et de planchers éventrés, variantes endommagées vraiment différentes | Livré, voir §5 |
 | **U3** | Petits décors urbains : murs, débris, bureau renversé, poutres ; taille minimale et contraste sur le sol des ruines | Livré, voir §5 |
-| U4 | Orphelins urbains : proposition à Raphaël avant toute suppression | À faire |
+| **U4** | Orphelins urbains : les trois murs supprimés avec leurs `.import`, accord de Raphaël | Livré |
 | **F1** | Forêt : les 18 modèles repris (23 PNG), arbres partagés avec les champs et la ferme ; galerie en jeu | Livré, voir §6 |
 | C1 | Champs et ferme : maisons de ferme (façades du kit urbain), grange endommagée vraiment différente, haies, verger | À faire |
 | Q1 | Carrière : panneau de danger, cristaux, petits décors lisibles | À faire |
@@ -105,7 +105,7 @@ Forêt, champs et carrière ont été demandés après les lots urbains ([DECISI
 
 **Vérifications U1–U3.** Planches de génération ×2 sur le sol des ruines, rendus rapides ×3–×5 de chaque famille, galerie en jeu (`--capture-prop-gallery urban_ruins`, seed 1002, 38 sprites cadrés) regardée : façades, toits et ruines se lisent à l'échelle réelle, la transparence derrière les immeubles (`PropOcclusion`) est intacte. Hauteurs des modules inchangées à ±2 px (172–190 px, sous la limite d'un îlot) ; manifeste régénéré, le bureau renversé y entre. Régénération complète (immeubles et mobilier) comparée octet par octet : identique ; smoke test vert.
 
-**U4 — question à Raphaël.** `prop_brick_wall`, `prop_concrete_wall` et `prop_concrete_wall_v3` ne sont référencés par aucun JSON ni placeur, et n'ont pas de modèle procédural. Proposition : les supprimer avec leurs `.import`. Rien n'est supprimé sans son accord.
+**U4 — question à Raphaël.** `prop_brick_wall`, `prop_concrete_wall` et `prop_concrete_wall_v3` ne sont référencés par aucun JSON ni placeur, et n'ont pas de modèle procédural. Proposition : les supprimer avec leurs `.import`. Accord de Raphaël le 10 octobre (« oui supprime les ») : supprimés, après avoir revérifié qu'aucune scène, aucun JSON ni aucun code ne cite leur nom ou leur uid.
 
 ## 6. Compte rendu F1 — forêt
 
