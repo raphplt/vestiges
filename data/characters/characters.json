@@ -87,5 +87,28 @@
         "sprite_folder": "facteur",
         "sprite_feet_offset": 18,
         "mobility": "glide"
+    },
+    {
+        "id": "eveillee",
+        "name": "L'Éveillée",
+        "description": "Distante et fragile : ce qu'elle laisse derrière elle répète ses tirs.",
+        "starting_weapon": "essence_staff",
+        "base_stats": {
+            "speed": 205,
+            "attack_damage": 9,
+            "attack_speed": 1.0,
+            "attack_range": 320,
+            "max_hp": 80,
+            "regen_rate": 0.9,
+            "shield": 0,
+            "interact_range": 60
+        },
+        "passive_perk": "eveillee_double",
+        "exclusive_perks": [],
+        "score_multiplier": 1.05,
+        "visual_color": [0.37, 0.77, 0.77, 1.0],
+        "sprite_folder": "eveillee",
+        "sprite_feet_offset": 18,
+        "mobility": "phase"
     }
 ]

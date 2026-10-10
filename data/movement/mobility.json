@@ -17,6 +17,10 @@
   "start_audio": "sfx_dash_start",
   "end_audio": "sfx_dash_end",
   "profiles": {
+    "phase": {
+      "name": "Déphasage",
+      "description": "Un pas hors du temps, aussi court que le dash ; ce qu'elle quitte reste un instant."
+    },
     "glide": {
       "name": "Glissade sur patins",
       "description": "Longue glissade qu'on oriente en route ; elle tourne large et longe les murs.",
