@@ -764,3 +764,40 @@ Pendant la levée, les battants sont enfouis : ni cibles ni vulnérables, les ti
 Suites : smoke, boss_parts, indicible, audio, weapons, enemy_abilities, movement-integration, catalogs, launchers : 9/9.
 
 **Mémoriaux jamais comptés (signalé par la session des personnages, corrigé le même soir)** : la Barrière écoutait `MemorialActivated`, que rien n'émet (déjà relevé au plan 18) ; elle avait donc toujours un seul battant en vraie run. Elle écoute maintenant `MemorialAwakened`, émis par `MemorialDirector`, et le signal mort est retiré de l'`EventBus`. Vérifié en vraie run (`--capture-memorial`) : un Mémorial ravivé, un Mémorial compté par la Barrière (0 auparavant).
+
+## Lot B5 — L'Indicible au niveau du jeu : découpage proposé (10 octobre 2026, soir)
+
+Raphaël : « mais au delà des sons, le design, les animations, c'est fini ? c'est au niveau du jeu ? », puis, sur le constat ci-dessous et la proposition d'un lot : « ouais ok ca me va. go planche ».
+
+**Constat** (captures B3a à B3c revues) : les mécaniques sont finies et mesurées, le rendu reste une maquette.
+- **On ne voit jamais l'Indicible.** La fenêtre découverte montre la même main de noyé, agrandie et teintée de violet.
+- **L'arrivée est un non-événement** : l'écran s'assombrit en 2,5 s. Sur une capture `--capture-endgame --phase 3`, la nuit est visible à 4 s puis absente aux images suivantes, alors que seul l'Indicible touche au `CanvasModulate` et ne le relève qu'à sa mort : **à diagnostiquer en B5b**.
+- **Tempête** : ni pluie, ni vent visible, ni éclair à l'écran ; l'annonce d'éclair est une ellipse plate.
+- **Marée** : un rectangle bleu translucide à bord droit, les décors visibles à travers comme sous un calque.
+- **Vague** : une bande sombre verticale, avec une colonne claire pour la brèche.
+- **Mains** : pas d'animation de sortie (sol qui se fend, gerbe d'eau) ; **mort** sans mise en scène vérifiée ; **sons** empruntés.
+
+| Sous-lot | Contenu | Vérification |
+|---|---|---|
+| **B5a — Planche de la forme découverte** | Trois pistes de ce qu'on voit quand l'Indicible se découvre. **Livrée, à valider** (ci-dessous). | Planche dans une vraie capture de nuit |
+| **B5b — Arrivée et tempête** | Nuit franche et durable (diagnostic ci-dessus) ; arrivée mise en scène (le ciel se ferme, la pluie et le vent arrivent) ; pluie et traînées de vent à l'écran, poolées ; éclairs visibles (annonce au sol retravaillée, trait, flash) ; sortie animée des mains (sol qui se fend, terre, retour sous terre) | Captures image par image ; banc dense (coût de la pluie) |
+| **B5c — Marée** | Eau dessinée : bord d'écume irrégulier qui avance, vaguelettes, reflets, décors à moitié immergés ; bande d'annonce qui se lit ; gerbes quand une main sort de l'eau | Captures ; banc (coût de l'eau) |
+| **B5d — Vague, forme découverte, mort** | Mur d'eau en volume (crête, embruns) ; brèches en lumière chaude ; forme retenue en B5a, avec apparition et retrait animés ; mise en scène de la mort (la mer se retire, la nuit se lève) | Captures ; suite `indicible` |
+| **B5e — Sons** | Dix sons propres, comme pour la Barrière, avec page d'écoute | Mesure (niveaux, écrêtage) ; écoute par Raphaël |
+
+B5b, B5c et B5e n'attendent pas la validation de la planche ; dans B5d, seule la forme découverte l'attend.
+
+### B5a — planche proposée — 10 octobre 2026
+
+[Planche](planches/07-b5a-indicible.png), modèles `tools/sprites/props/indicible_forms.py` (pas branchés à `generate_props.py`, rien d'écrit dans `assets/`). Chaque forme est posée dans une capture de run de nuit (teinte du `CanvasModulate`), à 110 px du joueur comme la fenêtre actuelle, à l'échelle du jeu.
+
+Le lore (§7) donne la règle : au premier regard un monstre géant, au fond la nuit du 14 qu'on ne dit pas. Les trois pistes gardent les mains de noyé des phases 1 et 2 et la lanterne en reflet.
+- **A. La grappe des trente et un** (220 × 158 px) : une grappe de bras de noyés se dresse d'un remous noir et se tend vers le haut. Monstre à tentacules ; au fond, les noyés de la Montée qui tendent encore les mains vers la barrière. La plus lisible en jeu ; la moins « trop grande pour l'écran ».
+- **B. La tête** (546 × 191 px) : une tête colossale sort de l'eau jusqu'aux yeux, cheveux étalés comme des algues, deux mains immenses agrippées au sol ; yeux vides de noyé où brille la lanterne. La plus démesurée ; mais un visage risque la lecture comique (premier essai aux yeux ronds : franchement comique) ou de désigner l'un des trente et un.
+- **C. L'œil** (296 × 174 px) : un œil immense s'ouvre dans le sol inondé, ses cils sont des bras de noyés, la lanterne brille en reflet dans l'iris. L'œil du monstre, point faible classique ; au fond, ce que la ville a refusé de voir, et qui la regarde. La plus forte en silhouette ; la cible (l'iris) est évidente.
+
+Piste écartée en cours de route : **la mer debout**, une vague dressée avec la lanterne au creux. Vue d'en haut à 30°, une vague sculptée ne montre que son dos lisse : quatre essais, quatre nuages ou dalles.
+
+**Constat commun** : la nuit les éteint. À l'intégration, la forme portera sa propre lumière (reflet de la lanterne, contour clair) pour se détacher du fond.
+
+**Question pour Raphaël** : quelle forme ? **Recommandation : C, l'œil.** C'est la seule qui se lit d'un coup d'œil comme un point à frapper, sans risquer le comique. Elle reprend les bras de A et dit le mieux ce qu'est l'Indicible : la chose que Vaulme a refusé de regarder.
