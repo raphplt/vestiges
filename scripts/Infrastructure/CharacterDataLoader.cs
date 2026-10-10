@@ -29,6 +29,8 @@ public class CharacterData
     public string SpriteFolder { get; set; }
     /// <summary>Distance en pixels du centre de la frame aux pieds : ancre le sprite sur la position au sol.</summary>
     public float SpriteFeetOffset { get; set; }
+    /// <summary>Profil de mobilité de data/movement/mobility.json ; null : le dash commun.</summary>
+    public string MobilityProfile { get; set; }
 }
 
 public static class CharacterDataLoader
@@ -100,7 +102,8 @@ public static class CharacterDataLoader
                     (float)colorArr[3].AsDouble()
                 ),
                 SpriteFolder = dict.ContainsKey("sprite_folder") ? dict["sprite_folder"].AsString() : null,
-                SpriteFeetOffset = dict.ContainsKey("sprite_feet_offset") ? (float)dict["sprite_feet_offset"].AsDouble() : 0f
+                SpriteFeetOffset = dict.ContainsKey("sprite_feet_offset") ? (float)dict["sprite_feet_offset"].AsDouble() : 0f,
+                MobilityProfile = dict.ContainsKey("mobility") ? dict["mobility"].AsString() : null
             };
 
             _allCharacters.Add(character);

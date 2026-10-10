@@ -14,6 +14,7 @@ public partial class MovementRegression
     private async Task RunMobilityChecks()
     {
         CheckMobilityModuleBoundaries();
+        CheckGlideModule();
         await ReadyMobility();
         Check(InputMap.HasAction("mobility"), "mobilité : action déclarée");
         float dashDistance = _player.Speed * 2.4f * 0.15f;
@@ -77,6 +78,7 @@ public partial class MovementRegression
         await CheckMobilityPause();
         await CheckMobilityInteractions();
         await CheckMobilityCollisions();
+        await CheckGlideOnSkates();
         await CheckMobilityErasure();
         await CheckMobilityDamageAndResponse();
         await ReadyMobility();
@@ -454,6 +456,127 @@ public partial class MovementRegression
         Check(invulnerable.IsInvulnerable, "iframe courte : protection encore présente à 59 ms");
         invulnerable.Step(0.002f, Vector2.Zero, 240f, 1f, true);
         Check(!invulnerable.IsInvulnerable, "iframe courte : protection terminée à 61 ms");
+    }
+
+    /// <summary>
+    /// Glissade sur patins du Facteur (plan 06 P2d) : 0,4 s à toutes les cadences, distance tenue, virage borné à
+    /// 180°/s (elle tourne large), terrain lent, sortie contrôlable ; le dash commun, lui, ne tourne pas. Un profil
+    /// inconnu est refusé.
+    /// </summary>
+    private void CheckGlideModule()
+    {
+        MobilityConfig glide = MobilityConfig.Load("glide");
+        foreach (int rate in new[] { 30, 60, 120 })
+        {
+            PlayerMobility mobility = new(glide);
+            mobility.Request();
+            Vector2 displacement = Vector2.Zero;
+            float active = 0f;
+            for (int tick = 0; tick < rate; tick++)
+            {
+                Vector2 velocity = mobility.Step(1f / rate, Vector2.Zero, 240f, 1f, true);
+                if (mobility.IsDashStep)
+                {
+                    displacement += velocity / rate;
+                    active += 1f / rate;
+                }
+            }
+            Check(Math.Abs(displacement.Length() - 144f) < 0.01f && Math.Abs(active - 0.4f) < 0.5f / rate + 0.001f,
+                $"glissade à {rate} Hz : distance={displacement.Length():F3}, durée={active:F3} s");
+        }
+
+        PlayerMobility turning = new(glide);
+        turning.Request();
+        // Le pas de départ fixe la direction ; ensuite l'entrée tire vers le haut, 3° par tick au plus.
+        Vector2 heading = turning.Step(1f / 60f, Vector2.Right, 240f, 1f, true);
+        for (int tick = 0; tick < 15; tick++)
+            heading = turning.Step(1f / 60f, Vector2.Up, 240f, 1f, true);
+        float turned = Mathf.RadToDeg(Vector2.Right.AngleTo(heading));
+        Check(Math.Abs(turned + 45f) < 0.5f, $"glissade : virage borné, 45° en 0,25 s vers le haut ({turned:F1}°)");
+        for (int tick = 0; tick < 8; tick++)
+            heading = turning.Step(1f / 60f, Vector2.Up, 240f, 1f, true);
+        turned = Mathf.RadToDeg(Vector2.Right.AngleTo(heading));
+        Check(turning.IsDashing && Math.Abs(turned + 69f) < 0.5f, $"glissade : elle tourne large, 69° au bout de 0,4 s ({turned:F1}°)");
+        Vector2 exit = turning.Step(1f / 60f, Vector2.Left, 240f, 1f, true);
+        Check(!turning.IsDashing && exit.IsEqualApprox(Vector2.Left * 240f), $"glissade : sortie contrôlable aussitôt ({exit})");
+
+        PlayerMobility slow = new(glide);
+        slow.Request();
+        Vector2 slowDisplacement = Vector2.Zero;
+        for (int tick = 0; tick < 60; tick++)
+            slowDisplacement += slow.Step(1f / 60f, Vector2.Zero, 240f, 0.5f, true) / 60f;
+        Check(Math.Abs(slowDisplacement.Length() - 72f) < 0.01f, $"glissade dans l'eau : distance moitié ({slowDisplacement.Length():F3})");
+
+        PlayerMobility dash = new(MobilityConfig.Load());
+        dash.Request();
+        dash.Step(1f / 60f, Vector2.Right, 240f, 1f, true);
+        Vector2 dashHeading = dash.Step(1f / 60f, Vector2.Up, 240f, 1f, true);
+        Check(dashHeading.Normalized().IsEqualApprox(Vector2.Right), "dash commun : direction figée au départ, il ne tourne pas");
+
+        bool refused = false;
+        try
+        {
+            MobilityConfig.Load("jetpack");
+        }
+        catch (InvalidOperationException)
+        {
+            refused = true;
+        }
+        Check(refused, "profil de mobilité inconnu refusé");
+    }
+
+    /// <summary>
+    /// Glissade en jeu, sur un Facteur : de face, un mur l'arrête comme le dash ; de biais, elle le longe et continue.
+    /// La Tournée et l'arme ne jouent pas ici : un second joueur, le temps du scénario.
+    /// </summary>
+    private async Task CheckGlideOnSkates()
+    {
+        Player traqueur = _player;
+        RemoveChild(traqueur);
+        _player = GD.Load<PackedScene>("res://scenes/Player.tscn").Instantiate<Player>();
+        AddChild(_player);
+        _player.InitializeCharacter(CharacterDataLoader.Get("facteur"));
+        _player.DisableDefenseForTests();
+        _player.SetPhysicsProcess(false);
+        Check(_player.Mobility.Config == MobilityConfig.Load("glide"), "Facteur : sa mobilité est la glissade");
+        StaticBody2D wall = new() { Position = new Vector2(60, 0), CollisionLayer = 4 };
+        wall.AddChild(new CollisionShape2D { Shape = new RectangleShape2D { Size = new Vector2(20, 4000) } });
+        AddChild(wall);
+        try
+        {
+            await ReadyMobility();
+            SetActions(Vector2.Right);
+            _player.Position = Vector2.Zero;
+            PressMobility();
+            await Step(1);
+            ReleaseMobility();
+            await Step(12);
+            Check(_player.Position.X < 39f && !_player.Mobility.IsDashing,
+                $"glissade de face : le mur l'arrête ({_player.Position})");
+
+            // La glissade se recharge en 3 s, plus que l'attente commune avant un scénario.
+            await Step(60);
+            await ReadyMobility();
+            SetActions(new Vector2(1, 1));
+            _player.Position = Vector2.Zero;
+            PressMobility();
+            await Step(1);
+            ReleaseMobility();
+            await Step(10);
+            bool stillGliding = _player.Mobility.IsDashing;
+            await Step(14);
+            Check(stillGliding && _player.Position.X < 39f && _player.Position.Y > 90f,
+                $"glissade de biais : elle longe le mur et continue ({_player.Position})");
+        }
+        finally
+        {
+            SetActions(Vector2.Zero);
+            wall.QueueFree();
+            RemoveChild(_player);
+            _player.QueueFree();
+            _player = traqueur;
+            AddChild(_player);
+        }
     }
 
     private async Task ReadyMobility()

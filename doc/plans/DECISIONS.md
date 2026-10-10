@@ -1124,3 +1124,17 @@ Raphaël, après des parties au Vagabond (retour dicté, extraits) : « avec le 
 Raphaël, après §99 (portée de la mêlée) : « test la larguer dcp » (traiter aussi la largeur du coup). Appliqué sans autre arbitrage, dans l'esprit de §99 : la largeur de touche est celle du dessin. La forme suit l'attaque (trait pour l'attaque droite, traînée pour l'arc et l'onde), l'ouverture se mesure sur l'ellipse et se dessine jusqu'à 360°, l'estoc touche ce que son trait recouvre.
 
 **Acquis :** détail au [plan 24 C2d](24-retours-du-1er-octobre.md#c2d-largeur-du-coup--10-octobre-2026). Conséquence à juger en jouant : les estocs touchent en ligne, plus en cône de 60°.
+
+## 102 bis. Les héros un par un, le Facteur d'abord — 10 octobre 2026
+
+Raphaël : « Rajoute-les dans characters.json, rajoute-leur un passif raccord avec leur lore / type de caractère (tous doivent avoir un passif unique) et pareil une arme de départ (prends des armes qui existent quand c'est possible sinon il faudra créer celles qui manquent). Le moyen de les débloquer se fera principalement par des quêtes. La mobilité propre : oui bien sûr. Donc pour ne pas rusher on va les faire un par un en mode vertical. Commence par le Facteur. »
+
+**Acquis :**
+- Chaque héros du plan 32 entre en jeu par un lot vertical complet : fiche, portrait, passif unique, arme de départ, quête, mobilité propre, tests et captures ([plan 06 §11](06-personnages-quetes-defis.md#11-lot-p2--le-facteur-personnage-complet--10-octobre-2026)).
+- Le Facteur est livré (P2a à P2d). Portrait retenu : l'illustration « solitaire » (moustache grise, manteau usé), plus proche du sprite que celle à roulettes, qui reste disponible (point laissé ouvert au §96).
+- Aucune arme existante ne portait le geste du Facteur : la Sacoche de lettres est créée, avec un nouveau motif d'attaque (rebond vers l'ennemi le plus éloigné).
+- Les mobilités propres passent par des profils en données (plan 01 E) ; la glissade du Facteur est le premier.
+
+**À juger en jouant :** valeurs d'essai (stats du Facteur, 2 rebonds à −15 %, élan +25 %/+15 % en 4 s, glissade 0,4 s à ×1,5 et 3 s de recharge) ; son provisoire de la Sacoche à auditionner.
+
+**Intégration du 10 octobre :** Raphaël demande de débloquer la PR #4, dont GitHub laisse la vérification de fusion affichée. Trois conflits confirmés par API (traductions générées et décisions) ; lot de synchronisation P2e, sans nouvel arbitrage de gameplay.

@@ -124,6 +124,12 @@ public sealed class PlayerMobility
             float activeDelta = Mathf.Min(delta, _dashRemaining);
             _dashRemaining = Mathf.Max(0f, _dashRemaining - activeDelta);
             _dashElapsed += activeDelta;
+            if (Config.TurnRateDegrees > 0f && input != Vector2.Zero)
+            {
+                // Glissade : la direction suit l'entrée, à vitesse angulaire bornée (elle tourne large).
+                float turn = Mathf.DegToRad(Config.TurnRateDegrees) * activeDelta;
+                _dashDirection = _dashDirection.Rotated(Mathf.Clamp(_dashDirection.AngleTo(input), -turn, turn));
+            }
             // La dernière fraction de tick conserve la distance prévue, même hors 60 Hz.
             return _dashDirection * (speed * terrainFactor * Config.SpeedMultiplier * DistanceMultiplier * activeDelta / delta);
         }

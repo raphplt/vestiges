@@ -10,6 +10,8 @@ public enum AttackPatternKind
 	Circular,
 	Homing,
 	Orbital,
+	/// <summary>Projectile qui rebondit d'ennemi en ennemi vers le plus éloigné (Sacoche de lettres).</summary>
+	Bounce,
 }
 
 /// <summary>Famille d'une arme, lue une fois depuis <c>type</c> : la mêlée frappe sans projectile.</summary>
@@ -26,7 +28,7 @@ public enum WeaponCategory
 /// </summary>
 public static class WeaponGrammar
 {
-	public const string PatternKeys = "linear, arc, burst, chain, circular, homing, orbital";
+	public const string PatternKeys = "linear, arc, burst, chain, circular, homing, orbital, bounce";
 	public const string CategoryKeys = "melee, ranged, special";
 
 	public static bool TryParsePattern(string key, out AttackPatternKind pattern)
@@ -40,6 +42,7 @@ public static class WeaponGrammar
 			"circular" => (true, AttackPatternKind.Circular),
 			"homing" => (true, AttackPatternKind.Homing),
 			"orbital" => (true, AttackPatternKind.Orbital),
+			"bounce" => (true, AttackPatternKind.Bounce),
 			_ => (false, AttackPatternKind.Linear),
 		};
 		return known;
@@ -66,6 +69,7 @@ public static class WeaponGrammar
 		AttackPatternKind.Circular => "WEAPON_PATTERN_CIRCULAR",
 		AttackPatternKind.Homing => "WEAPON_PATTERN_HOMING",
 		AttackPatternKind.Orbital => "WEAPON_PATTERN_ORBITAL",
+		AttackPatternKind.Bounce => "WEAPON_PATTERN_BOUNCE",
 		_ => "WEAPON_PATTERN_LINEAR",
 	};
 

@@ -93,8 +93,11 @@
             "unlocks": [
                 {
                     "type": "character",
-                    "id": "facteur",
-                    "name": "Le Facteur"
+                    "id": "facteur"
+                },
+                {
+                    "type": "weapon",
+                    "id": "letter_satchel"
                 }
             ]
         },

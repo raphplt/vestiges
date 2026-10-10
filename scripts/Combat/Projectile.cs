@@ -56,6 +56,14 @@ public partial class Projectile : Area2D, ITicked
     private float _homingStrength;
     private TargetLock _homingTarget;
 
+    // Rebond (Sacoche de lettres) : la lettre « cherche une adresse » en repartant vers l'ennemi le plus éloigné à
+    // portée, mesurée au sol. En route, elle ne touche que sa destination.
+    private int _bouncesRemaining;
+    private float _bounceRange;
+    private float _bounceFalloff;
+    private TargetLock _bounceTarget;
+    private Enemy _bounceEnemy;
+
     // Ground fire (weapon special_effect)
     private bool _spawnsGroundFire;
     private float _groundDamage;
@@ -116,6 +124,8 @@ public partial class Projectile : Area2D, ITicked
         _hitEnemies.Clear();
         _homingStrength = 0f;
         _homingTarget = default;
+        _bouncesRemaining = 0;
+        ClearBounceTarget();
         _spawnsGroundFire = false;
 
         _family = isCrit ? FxFamily.Crit : PlayerAttackFx.FamilyOf(weapon);
@@ -169,6 +179,14 @@ public partial class Projectile : Area2D, ITicked
         _homingTarget = TargetLock.On(target);
     }
 
+    /// <summary>Rebondit <paramref name="count"/> fois, à <paramref name="range"/> au sol, dégâts × <paramref name="falloff"/> à chaque rebond.</summary>
+    public void SetBounce(int count, float range, float falloff)
+    {
+        _bouncesRemaining = count;
+        _bounceRange = range;
+        _bounceFalloff = falloff;
+    }
+
     public void SetGroundFire(float damage, float duration, float radius, float burnSeconds)
     {
         _spawnsGroundFire = true;
@@ -210,7 +228,9 @@ public partial class Projectile : Area2D, ITicked
             return;
         }
 
-        if (_homingStrength > 0f && _homingTarget.TryGet(out Node2D homingTarget))
+        if (_bounceTarget.IsSet)
+            SteerToBounceTarget();
+        else if (_homingStrength > 0f && _homingTarget.TryGet(out Node2D homingTarget))
         {
             Vector2 toTarget = (homingTarget.GlobalPosition - GlobalPosition).Normalized();
             _direction = _direction.Lerp(toTarget, _homingStrength * dt * 5f).Normalized();
@@ -329,7 +349,11 @@ public partial class Projectile : Area2D, ITicked
         if (_hitEnemies.Contains(id))
             return;
 
+        // En route vers son adresse, la lettre passe au-dessus des autres créatures.
+        if (_bounceTarget.IsSet && enemy != _bounceEnemy)
+            return;
         _hitEnemies.Add(id);
+        ClearBounceTarget();
         bool ownerValid = _owner != null && IsInstanceValid(_owner);
         float damage = ownerValid ? _owner.ResolveHitDamage(enemy, _damage, _isCrit) : _damage;
         enemy.TakeDamage(damage, _isCrit, source: _context);
@@ -347,6 +371,8 @@ public partial class Projectile : Area2D, ITicked
 
         if (_pierceRemaining <= 0)
         {
+            if (_bouncesRemaining > 0 && TryBounce(enemy.GlobalPosition))
+                return;
             _isDespawning = true;
             CallDeferred(MethodName.Release);
         }
@@ -355,6 +381,71 @@ public partial class Projectile : Area2D, ITicked
             _pierceRemaining--;
             _damage += _launchDamage * _pierceDamageRamp;
         }
+    }
+
+    /// <summary>Repart vers l'ennemi le plus éloigné à portée, jamais un déjà touché ; faux s'il n'y en a aucun.</summary>
+    private bool TryBounce(Vector2 from)
+    {
+        Enemy target = FindFarthestUnhit(from);
+        if (target == null)
+            return false;
+        _bouncesRemaining--;
+        _damage *= _bounceFalloff;
+        _bounceEnemy = target;
+        _bounceTarget = TargetLock.On(target);
+        Vector2 toTarget = target.GlobalPosition - GlobalPosition;
+        if (toTarget.LengthSquared() > 0.0001f)
+            _direction = toTarget.Normalized();
+        // Le temps d'arriver, avec une marge si la cible s'éloigne : la course repart de zéro à chaque rebond.
+        _age = 0f;
+        _lifetime = Mathf.Clamp(toTarget.Length() / Mathf.Max(Speed, 1f) * 1.6f + 0.15f, 0.2f, 2f);
+        return true;
+    }
+
+    /// <summary>Cible perdue en route (morte, rendue au pool) : nouvelle adresse depuis ici, sinon vol droit.</summary>
+    private void SteerToBounceTarget()
+    {
+        if (!_bounceTarget.TryGet(out Node2D target))
+        {
+            Enemy next = FindFarthestUnhit(GlobalPosition);
+            ClearBounceTarget();
+            if (next == null)
+                return;
+            _bounceEnemy = next;
+            _bounceTarget = TargetLock.On(next);
+            target = next;
+        }
+        Vector2 toTarget = target.GlobalPosition - GlobalPosition;
+        if (toTarget.LengthSquared() > 0.0001f)
+            _direction = toTarget.Normalized();
+    }
+
+    private Enemy FindFarthestUnhit(Vector2 from)
+    {
+        // Le cercle écran de rayon _bounceRange contient l'ellipse au sol de même rayon.
+        using CrowdQuery crowd = CrowdIndex.Near(from, _bounceRange);
+        Enemy farthest = null;
+        float farthestSq = -1f;
+        float rangeSq = _bounceRange * _bounceRange;
+        foreach (Node2D node in crowd.Targets)
+        {
+            if (node is not Enemy enemy || !enemy.IsActive || enemy.IsDying || enemy.IsBurrowed
+                || _hitEnemies.Contains(enemy.GetInstanceId()))
+                continue;
+            float distanceSq = Iso.GroundDistanceSquared(from, enemy.GlobalPosition);
+            if (distanceSq <= rangeSq && distanceSq > farthestSq)
+            {
+                farthest = enemy;
+                farthestSq = distanceSq;
+            }
+        }
+        return farthest;
+    }
+
+    private void ClearBounceTarget()
+    {
+        _bounceTarget = default;
+        _bounceEnemy = null;
     }
 
     private void Release()
@@ -367,6 +458,8 @@ public partial class Projectile : Area2D, ITicked
         SetDeferred(Node.PropertyName.ProcessMode, (int)ProcessModeEnum.Disabled);
         _homingTarget = default;
         _departureTarget = default;
+        _bouncesRemaining = 0;
+        ClearBounceTarget();
         _owner = null;
         _context = default;
         SourceInstance = null;

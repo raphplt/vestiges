@@ -27,6 +27,7 @@ public partial class HubCharactersPanel : MarginContainer
     private Label _description;
     private Label _passive;
     private Label _weapon;
+    private Label _mobility;
     private Label _stats;
     private Label _quest;
     private readonly Texture2D[] _idle = new Texture2D[CharacterPortrait.IdleFrames];
@@ -87,6 +88,7 @@ public partial class HubCharactersPanel : MarginContainer
         _description = AddLabel(sheet, _bodyFont, TextRole.Heading, UITheme.TextLight);
         _passive = AddLabel(sheet, _bodyFont, TextRole.Heading, UITheme.TextColor);
         _weapon = AddLabel(sheet, _bodyFont, TextRole.Heading, UITheme.TextColor);
+        _mobility = AddLabel(sheet, _bodyFont, TextRole.Heading, UITheme.TextColor);
         _stats = AddLabel(sheet, _bodyFont, TextRole.Heading, UITheme.TextDim);
         _quest = AddLabel(sheet, _strongFont, TextRole.Heading, UITheme.CyanEssence);
     }
@@ -194,6 +196,8 @@ public partial class HubCharactersPanel : MarginContainer
         _passive.Text = passive == null ? "" : $"Passif — {passive.Name} : {passive.Description}";
         WeaponData weapon = WeaponDataLoader.Get(character.StartingWeaponId);
         _weapon.Text = weapon == null ? "" : $"Arme de départ — {weapon.Name} : {weapon.Summary}";
+        MobilityConfig mobility = MobilityConfig.Load(character.MobilityProfile);
+        _mobility.Text = $"Mobilité — {mobility.Name} : {mobility.Description}";
         CharacterStats stats = character.BaseStats;
         _stats.Text = $"PV {stats.MaxHp:0} · vitesse {stats.Speed:0} · dégâts {stats.AttackDamage:0} · cadence ×{stats.AttackSpeed:0.0} · "
             + $"portée {stats.AttackRange:0} · régénération {stats.RegenRate:0.0}/s";
