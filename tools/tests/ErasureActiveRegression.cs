@@ -154,7 +154,8 @@ public partial class ErasureActiveRegression : Node
         _bus.PlayerErasurePhaseChanged += PlayerPhase;
         List<object> trace = new();
         long totalVisits = 0;
-        for (_step = 0; _step < 3600; _step++)
+        // 45 min : depuis le calendrier de 30 min (plan 33 §8), l'Effacement va 1,36 fois moins vite et ne finit plus en 30 min.
+        for (_step = 0; _step < 5400; _step++)
         {
             float time = _step * 0.5f;
             _player.Position = new Vector2(5000f * Mathf.Sin(time / 50f), 2200f * Mathf.Sin(time / 91f));
@@ -184,8 +185,8 @@ public partial class ErasureActiveRegression : Node
         }
         _bus.ZonePhaseChanged -= Zone;
         _bus.PlayerErasurePhaseChanged -= PlayerPhase;
-        Check(_events.Count > 1000 && erasure.GlobalErasurePercent == 1f, "parcours 30 min : nombreuses transitions, Effacement global complet");
-        _results.Add(new { scenario = "roaming", seconds = 1800, visits = totalVisits, trace });
+        Check(_events.Count > 1000 && erasure.GlobalErasurePercent == 1f, "parcours 45 min : nombreuses transitions, Effacement global complet");
+        _results.Add(new { scenario = "roaming", seconds = 2700, visits = totalVisits, trace });
         erasure.Free();
     }
 

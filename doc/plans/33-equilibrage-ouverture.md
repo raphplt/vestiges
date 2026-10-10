@@ -268,5 +268,18 @@ Raphaël, après Q1 : « remettre 50 hp de base pour le rodeur et 12 dégâts. a
 L'Effacement suit l'étirement voulu : sol Fragile vers 10 min, Effiloché vers 20, Effacé vers 27 (au lieu de 7, 14–15 et 20).
 
 **Boss :**
-- **Barrière à 15 min.** Avec l'ancienne réserve (5 000 + 15 000 par battant, réglée à 10 min), le battant tenait **2 à 9 min** au Vagabond (127, 183, 426 et 538 s) et 27 à 315 s au build. À 15 min, 70 à 200 créatures entourent le bot devant la grille, et la plupart des coups vont à la foule : environ 90 dégâts par seconde médians sur le battant. Réserve ramenée à **2 000 + 6 000 par battant** : 8 000 PV pour un battant, 20 000 pour trois, 32 000 pour cinq.
+- **Barrière à 15 min.** Avec l'ancienne réserve (5 000 + 15 000 par battant, réglée à 10 min), le battant tenait **2 à 9 min** au Vagabond (127, 183, 426 et 538 s) et 27 à 315 s au build. À 15 min, 70 à 200 créatures entourent le bot devant la grille, et la plupart des coups vont à la foule : environ 90 dégâts par seconde médians sur le battant. Réserve ramenée à **2 000 + 6 000 par battant** : 8 000 PV pour un battant, 20 000 pour trois, 32 000 pour cinq. Remesuré au Vagabond (20 min, mêmes graines) : battant brisé en **67, 68, 75 et 116 s**.
 - **Indicible à 30 min**, réserve inchangée (288 000 PV) : vaincu en 13 s et en 140 s dans deux graines du build ; dans les deux autres, il n'a pas perdu un tiers de sa réserve en 5 min. À 22 min, on mesurait 22, 56, 141 et plus de 240 s. Le bot ne va pas chercher les mains : la mesure ne départage pas, et le réglage se fera à la partie de Raphaël.
+
+**Vérifications.**
+- Build sans avertissement.
+- Suites relancées après le calendrier : smoke, boss_parts, indicible, quests, run_phase, catalogs, erasure_active, run_trace et enemy_abilities, toutes vertes.
+- Deux tests suivaient l'ancien rythme :
+  - le parcours d'`ErasureActiveRegression` passe de 30 à 45 min, la durée où l'Effacement redevient complet ;
+  - le scénario de date limite de `QuestRegression` simule le niveau 30.
+
+**À juger en jouant :**
+- la place des Souverains et de la Barrière dans la partie ;
+- la tenue du milieu de partie, de 15 à 30 min ;
+- la longueur du combat contre l'Indicible à 30 min ;
+- le rythme des niveaux sur 30 min (au bot : 41 à 60 au Vagabond, 56 à 181 avec le build de référence).
