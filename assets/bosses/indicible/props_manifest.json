@@ -1,4 +1,7 @@
 {
+  "indicible_eye_closed": {"pivot": [148.0, 93.2]},
+  "indicible_eye_half": {"pivot": [148.0, 106.2]},
+  "indicible_eye_open": {"pivot": [148.0, 124.2]},
   "indicible_hand_grab": {"pivot": [17.0, 37.4]},
   "indicible_hand_open": {"pivot": [17.0, 53.4]}
 }

@@ -12,15 +12,32 @@ namespace Vestiges.Combat;
 /// deux brèches où se tenir. Elle blesse ce qu'elle franchit hors des brèches : elle punit l'immobilité loin d'une
 /// brèche comme la fuite au hasard. Après chaque vague, l'Indicible se découvre quelques secondes près du joueur : une
 /// grande cible fragile, qui entame la réserve commune plus vite que les mains.
+/// Rendu (B5d) : la vague et ses brèches sont dessinées par <c>indicible_wave.gdshader</c> (crête d'écume qui roule,
+/// embruns, masse d'eau qui traîne, couloirs de lumière chaude). Ce qui se découvre est l'œil (planche B5a, DECISIONS
+/// §95) : il sort de l'eau en s'ouvrant, respire, se referme et replonge ; il porte sa propre lumière contre la nuit.
 /// </summary>
 public partial class IndicibleWave : Node2D
 {
 	private const float CrossExtent = 1600f;
-	private const float FoamThickness = 40f;
-	// La vague porte une masse d'eau derrière son écume : on la voit venir de loin.
-	private const float TrailLength = 160f;
+	// Devant la crête, la place des embruns ; derrière, la masse d'eau qui traîne.
+	private const float AheadLength = 40f;
+	private const float TrailLength = 170f;
 	private const float WarningPulseHz = 3f;
-	private const float WindowScale = 2.2f;
+	private const float SprayInterval = 0.06f;
+	private const float SpraySpread = 320f;
+	private const float WaveGlow = 1.35f;
+	private const float BreachGlow = 2f;
+	// L'œil : s'ouvrir, se refermer, sa respiration, sa lumière propre (au-delà de 1 : la nuit l'assombrit ensuite).
+	private const float EyeOpenSec = 0.45f;
+	private const float EyeCloseSec = 0.45f;
+	private const float EyeOvershoot = 0.12f;
+	private const float EyeBreathHz = 0.6f;
+	private const float EyeBreath = 0.015f;
+	private const float EyeLight = 1.7f;
+	private const float EyeHitFlashSec = 0.12f;
+	private static readonly NodePath SelfModulateProperty = "self_modulate";
+	private static readonly StringName OriginParam = "origin";
+	private static readonly StringName FadeParam = "fade";
 
 	private enum WaveState { Idle, Warning, Rolling, Window }
 
@@ -29,20 +46,32 @@ public partial class IndicibleWave : Node2D
 	private IndicibleConfig _config;
 	private BossHealth _health;
 	private SpawnManager _spawner;
-	private Texture2D _windowTexture;
-	private Node2D _front;
-	private readonly List<Polygon2D> _foam = new();
-	private readonly List<Polygon2D> _trail = new();
-	private readonly List<Polygon2D> _breachStrips = new();
+	private Texture2D[] _eyeFrames;
+	private Vector2[] _eyePivots;
+	private Polygon2D _front;
+	private Polygon2D _corridors;
+	private ShaderMaterial _frontMaterial;
+	private ShaderMaterial _corridorMaterial;
+	private readonly Vector2[] _frontQuad = new Vector2[4];
+	private readonly Vector2[] _corridorQuad = new Vector2[4];
 	private readonly List<float> _breaches = new();
 	private GroundTelegraph _windowRing;
-	private Sprite2D _windowSprite;
+	private Sprite2D _eye;
+	private Tween _eyeFlash;
 	private Enemy _windowPart;
+	private RandomNumberGenerator _visualRng;
 	private WaveState _state = WaveState.Idle;
 	private Vector2 _anchor;
 	private Vector2 _direction;
 	private float _position;
 	private float _timer;
+	private float _sprayTimer;
+	private float _eyeAge;
+	private float _eyeClosing = -1f;
+	// L'œil est là (en train de sortir, ouvert ou de replonger), même quand son sprite est encore sous l'eau.
+	private bool _eyeShown;
+	private float _eyeSunk = 1f;
+	private int _eyeFrame = -1;
 	private bool _hitThisWave;
 
 	public int Waves { get; private set; }
@@ -50,23 +79,37 @@ public partial class IndicibleWave : Node2D
 	/// <summary>PV pris à la réserve pendant les fenêtres découvertes (mesure).</summary>
 	public float WindowDamage { get; private set; }
 	public bool IsActive => _state != WaveState.Idle;
+	/// <summary>Où l'œil est ouvert, s'il l'est.</summary>
+	public Vector2? EyePosition => _eyeShown ? _eye.Position : null;
 	/// <summary>La partie découverte, tant que la fenêtre est ouverte.</summary>
 	public Enemy WindowPart => _windowPart;
 
-	public void Setup(IndicibleConfig config, BossHealth health, SpawnManager spawner, Texture2D windowTexture)
+	/// <summary><paramref name="eyeFrames"/> : l'œil fermé, mi-ouvert, ouvert.</summary>
+	public void Setup(IndicibleConfig config, BossHealth health, SpawnManager spawner, Texture2D[] eyeFrames)
 	{
 		_config = config;
 		_health = health;
 		_spawner = spawner;
-		_windowTexture = windowTexture;
-		_front = new Node2D { Name = "Front", Visible = false, ZAsRelative = false, ZIndex = -4 };
+		_eyeFrames = eyeFrames;
+		_eyePivots = new Vector2[eyeFrames.Length];
+		for (int i = 0; i < eyeFrames.Length; i++)
+			_eyePivots[i] = World.PropManifest.TryGet(eyeFrames[i], out World.PropManifest.Entry entry)
+				? entry.Pivot : eyeFrames[i].GetSize() * new Vector2(0.5f, 1f);
+		// Flux à part : les embruns ne décalent aucun tirage du jeu.
+		_visualRng = RunRandom.Create("indicible_wave");
+		Shader shader = GD.Load<Shader>("res://assets/shaders/indicible_wave.gdshader");
+		_frontMaterial = MakeMaterial(shader, false, WaveGlow);
+		_corridorMaterial = MakeMaterial(shader, true, BreachGlow);
+		// Couloirs puis front, posés au sol au-dessus de la marée (−5) : ajoutés dans cet ordre, le front les recouvre.
+		_corridors = new Polygon2D { Name = "Breaches", Visible = false, ZAsRelative = false, ZIndex = -4, Material = _corridorMaterial };
+		AddChild(_corridors);
+		_front = new Polygon2D { Name = "Front", Visible = false, ZAsRelative = false, ZIndex = -4, Material = _frontMaterial };
 		AddChild(_front);
 		_windowRing = new GroundTelegraph { Name = "WindowRing" };
 		AddChild(_windowRing);
-		_windowSprite = new Sprite2D { Centered = false, Visible = false, Texture = windowTexture, Scale = Vector2.One * WindowScale };
-		if (World.PropManifest.TryGet(windowTexture, out World.PropManifest.Entry entry))
-			_windowSprite.Offset = -entry.Pivot;
-		AddChild(_windowSprite);
+		_eye = new Sprite2D { Name = "Eye", Centered = false, Visible = false };
+		AddChild(_eye);
+		ApplyColors();
 		_health.PartHit += OnPartHit;
 	}
 
@@ -80,9 +123,27 @@ public partial class IndicibleWave : Node2D
 	{
 		_state = WaveState.Idle;
 		_front.Visible = false;
-		foreach (Polygon2D strip in _breachStrips)
-			strip.Visible = false;
+		_corridors.Visible = false;
 		CloseWindow();
+	}
+
+	/// <summary>
+	/// Le boss est vaincu : la vague retombe et l'œil se referme puis replonge, au lieu de disparaître d'un coup.
+	/// Vrai tant que ce retrait se joue (l'appelant continue de l'animer).
+	/// </summary>
+	public bool Recede(float delta)
+	{
+		if (_state is WaveState.Warning or WaveState.Rolling)
+		{
+			_front.Visible = false;
+			_corridors.Visible = false;
+		}
+		_state = WaveState.Idle;
+		ReleaseWindowPart();
+		if (!_eyeShown)
+			return false;
+		BeginClosing();
+		return AnimateEye(delta);
 	}
 
 	/// <summary>Un tick ; vrai si la vague vient de franchir le joueur hors d'une brèche.</summary>
@@ -94,6 +155,10 @@ public partial class IndicibleWave : Node2D
 		switch (_state)
 		{
 			case WaveState.Window:
+				// La fenêtre se referme avant la fin : l'œil se ferme et replonge pendant ses dernières secondes.
+				if (_eyeShown && _timer <= EyeCloseSec)
+					BeginClosing();
+				AnimateEye(delta);
 				if (_timer <= 0f)
 				{
 					CloseWindow();
@@ -102,13 +167,13 @@ public partial class IndicibleWave : Node2D
 				return false;
 			case WaveState.Warning:
 				float pulse = 0.45f + 0.35f * Mathf.Sin(_timer * Mathf.Tau * WarningPulseHz);
-				foreach (Polygon2D strip in _breachStrips)
-					strip.Modulate = Colors.White with { A = pulse + 0.2f };
-				_front.Modulate = Colors.White with { A = pulse };
+				_corridorMaterial.SetShaderParameter(FadeParam, pulse + 0.2f);
+				_frontMaterial.SetShaderParameter(FadeParam, pulse);
 				if (_timer <= 0f)
 				{
 					_state = WaveState.Rolling;
-					_front.Modulate = Colors.White;
+					_frontMaterial.SetShaderParameter(FadeParam, 1f);
+					_corridorMaterial.SetShaderParameter(FadeParam, 1f);
 					AudioManager.Play(_config.WaveCrashAudio, 0.04f, -2f);
 				}
 				return false;
@@ -129,6 +194,7 @@ public partial class IndicibleWave : Node2D
 		BuildShapes();
 		PlaceFront();
 		_front.Visible = true;
+		_corridors.Visible = true;
 		Waves++;
 		AudioManager.Play(_config.WaveWarningAudio, 0.04f, -3f);
 	}
@@ -146,14 +212,33 @@ public partial class IndicibleWave : Node2D
 			_hitThisWave = true;
 			hit = true;
 		}
+		Spray(local.Dot(_direction.Orthogonal()), delta);
 		if (_position >= _config.WaveHalfLength)
 		{
 			_front.Visible = false;
-			foreach (Polygon2D strip in _breachStrips)
-				strip.Visible = false;
+			_corridors.Visible = false;
 			OpenWindow(player.GlobalPosition);
 		}
 		return hit;
+	}
+
+	/// <summary>Embruns à la crête, autour du joueur seulement : le reste du front est hors de l'écran.</summary>
+	private void Spray(float playerAcross, float delta)
+	{
+		_sprayTimer -= delta;
+		if (_sprayTimer > 0f)
+			return;
+		_sprayTimer = SprayInterval;
+		float across = playerAcross + _visualRng.RandfRange(-SpraySpread, SpraySpread);
+		if (InBreach(across))
+			return;
+		Vector2 at = _anchor + _direction * _position + _direction.Orthogonal() * across;
+		CombatPools.Instance?.EmitSparks(at, new SparkBurst
+		{
+			Family = FxFamily.Glass, Owner = FxOwner.World, Count = 4, Direction = Vector2.Up,
+			Spread = 1.6f, SpeedMin = 60f, SpeedMax = 150f, LifeMin = 0.25f, LifeMax = 0.5f, Ballistic = true, Size = 1,
+			Decorative = true,
+		});
 	}
 
 	/// <summary>
@@ -204,89 +289,76 @@ public partial class IndicibleWave : Node2D
 		_breaches.Sort();
 	}
 
-	/// <summary>Écume du front entre les brèches, et couloirs des brèches sur toute la traversée.</summary>
+	/// <summary>
+	/// Surfaces de la vague : le front (crête, embruns devant, masse d'eau derrière), qui suit sa position, et les
+	/// couloirs des brèches sur toute la traversée. Le shader y dessine les brèches qu'on lui donne.
+	/// </summary>
 	private void BuildShapes()
 	{
 		Vector2 across = _direction.Orthogonal();
-		float half = _config.WaveBreachWidth * 0.5f;
-		int segment = 0;
-		float start = -CrossExtent;
-		for (int i = 0; i <= _breaches.Count; i++)
+		Vector4 breaches = Vector4.Zero;
+		for (int i = 0; i < _breaches.Count && i < 4; i++)
+			breaches[i] = _breaches[i];
+		foreach (ShaderMaterial material in new[] { _frontMaterial, _corridorMaterial })
 		{
-			float end = i < _breaches.Count ? _breaches[i] - half : CrossExtent;
-			if (end > start)
-			{
-				Vector2 back = -_direction * FoamThickness * 0.5f;
-				SetQuad(Trail(segment), across * start + back, across * end + back, -_direction * TrailLength);
-				SetQuad(Foam(segment++), across * start + back, across * end + back, _direction * FoamThickness);
-			}
-			if (i < _breaches.Count)
-				start = _breaches[i] + half;
+			material.SetShaderParameter("direction", _direction);
+			material.SetShaderParameter("breaches", breaches);
+			material.SetShaderParameter("breach_count", Mathf.Min(_breaches.Count, 4));
 		}
-		for (int i = segment; i < _foam.Count; i++)
-			_foam[i].Visible = false;
-		for (int i = segment; i < _trail.Count; i++)
-			_trail[i].Visible = false;
-		for (int i = 0; i < _breaches.Count; i++)
-		{
-			Vector2 from = _anchor + across * (_breaches[i] - half) - _direction * _config.WaveHalfLength;
-			SetQuad(Strip(i), from, from + across * _config.WaveBreachWidth, _direction * _config.WaveHalfLength * 2f);
-		}
-		for (int i = _breaches.Count; i < _breachStrips.Count; i++)
-			_breachStrips[i].Visible = false;
+		_corridorMaterial.SetShaderParameter(OriginParam, _anchor);
+		// Le front est posé dans le repère du monde : son quadrilatère suit sa position à chaque pas.
+		SetQuad(_frontQuad, across * -CrossExtent, across * CrossExtent, -_direction * TrailLength, _direction * AheadLength);
+		_front.Polygon = _frontQuad;
+		float reach = _config.WaveBreachSpread + _config.WaveBreachWidth;
+		SetQuad(_corridorQuad, _anchor + across * -reach, _anchor + across * reach,
+			-_direction * _config.WaveHalfLength, _direction * _config.WaveHalfLength);
+		_corridors.Polygon = _corridorQuad;
 	}
 
-	private void PlaceFront() => _front.Position = _anchor + _direction * _position;
-
-	/// <summary>Quadrilatère bordé par le segment [<paramref name="a"/>, <paramref name="b"/>] et épais de <paramref name="thickness"/>.</summary>
-	private static void SetQuad(Polygon2D quad, Vector2 a, Vector2 b, Vector2 thickness)
+	private void PlaceFront()
 	{
-		quad.Polygon = new[] { a, b, b + thickness, a + thickness };
-		quad.Visible = true;
+		Vector2 origin = _anchor + _direction * _position;
+		_front.Position = origin;
+		_frontMaterial.SetShaderParameter(OriginParam, origin);
 	}
 
-	private Polygon2D Foam(int index)
+	/// <summary>Quadrilatère du segment [<paramref name="a"/>, <paramref name="b"/>], de <paramref name="back"/> à <paramref name="ahead"/>.</summary>
+	private static void SetQuad(Vector2[] quad, Vector2 a, Vector2 b, Vector2 back, Vector2 ahead)
 	{
-		while (_foam.Count <= index)
-		{
-			Polygon2D foam = new() { Color = _config.WaveFoamColor with { A = 0.9f } };
-			_front.AddChild(foam);
-			_foam.Add(foam);
-		}
-		return _foam[index];
+		quad[0] = a + back;
+		quad[1] = b + back;
+		quad[2] = b + ahead;
+		quad[3] = a + ahead;
 	}
 
-	private Polygon2D Trail(int index)
+	private static ShaderMaterial MakeMaterial(Shader shader, bool breachLight, float glow)
 	{
-		while (_trail.Count <= index)
-		{
-			// Sous l'écume : ajoutée avant elle dans le front.
-			Polygon2D trail = new() { Color = _config.TideDeepColor with { A = 0.6f } };
-			_front.AddChild(trail);
-			_front.MoveChild(trail, 0);
-			_trail.Add(trail);
-		}
-		return _trail[index];
+		ShaderMaterial material = new() { Shader = shader };
+		material.SetShaderParameter("breach_light", breachLight ? 1f : 0f);
+		material.SetShaderParameter("glow", glow);
+		return material;
 	}
 
-	private Polygon2D Strip(int index)
+	private void ApplyColors()
 	{
-		while (_breachStrips.Count <= index)
+		foreach (ShaderMaterial material in new[] { _frontMaterial, _corridorMaterial })
 		{
-			Polygon2D strip = new() { Color = _config.WaveBreachColor with { A = 0.6f }, ZAsRelative = false, ZIndex = -4 };
-			AddChild(strip);
-			_breachStrips.Add(strip);
+			material.SetShaderParameter("breach_width", _config.WaveBreachWidth);
+			material.SetShaderParameter("foam_color", _config.WaveFoamColor);
+			material.SetShaderParameter("water_color", _config.TideDeepColor);
+			material.SetShaderParameter("light_color", _config.WaveBreachColor);
+			material.SetShaderParameter("trail_length", TrailLength);
 		}
-		return _breachStrips[index];
 	}
 
-	// --- Fenêtre découverte ---
+	// --- Fenêtre découverte : l'œil ---
 
 	private void OpenWindow(Vector2 playerPosition)
 	{
 		_state = WaveState.Window;
 		_timer = _config.WindowSec;
-		float angle = RunRandom.Behavior.RandfRange(0f, Mathf.Tau);
+		// Devant le joueur, plutôt vers le haut de l'écran : il voit l'œil s'ouvrir face à lui.
+		float angle = RunRandom.Behavior.RandfRange(-Mathf.Pi + 0.6f, -0.6f);
 		Vector2 position = playerPosition + Iso.ToScreen(Vector2.FromAngle(angle) * _config.WindowDistance);
 		Enemy part = _spawner.SpawnEventEnemy(EnemyGrammar.BossPartId, position);
 		if (part == null)
@@ -295,17 +367,91 @@ public partial class IndicibleWave : Node2D
 		// Découvert, l'Indicible est fragile : la fenêtre entame la réserve plus vite que les mains.
 		part.ApplyFragile(_config.WindowBonus, _config.WindowSec);
 		_windowPart = part;
-		_windowSprite.Position = position;
-		_windowSprite.Visible = true;
-		_windowSprite.Modulate = new Color(0.85f, 0.75f, 1.2f);
+		_eye.Position = position;
+		_eye.Modulate = new Color(EyeLight, EyeLight, EyeLight);
+		_eyeFlash?.Kill();
+		_eye.SelfModulate = Colors.White;
+		_eyeShown = true;
+		_eyeFrame = -1;
+		_eyeAge = 0f;
+		_eyeClosing = -1f;
+		AnimateEye(0f);
 		_windowRing.ShowRing(position, _config.WindowRadius * 1.6f, FxFamily.Void);
 		AudioManager.Play(_config.WindowOpenAudio, 0.02f, -2f);
+		ScreenShake.Instance?.ShakeMedium();
+		CombatPools.Instance?.EmitSparks(position, new SparkBurst
+		{
+			Family = FxFamily.Glass, Owner = FxOwner.World, Count = 24, Direction = Vector2.Up, Spread = 2.8f,
+			SpeedMin = 50f, SpeedMax = 170f, LifeMin = 0.35f, LifeMax = 0.7f, Ballistic = true, Size = 2, Decorative = true,
+		});
+	}
+
+	/// <summary>
+	/// L'œil sort de l'eau en s'ouvrant (fermé, mi-ouvert, ouvert), respire, puis se referme et replonge. Vrai tant
+	/// qu'il est visible.
+	/// </summary>
+	private bool AnimateEye(float delta)
+	{
+		if (!_eyeShown)
+			return false;
+		_eyeAge += delta;
+		float sunk;
+		int frame;
+		if (_eyeClosing >= 0f)
+		{
+			_eyeClosing += delta;
+			float progress = Mathf.Clamp(_eyeClosing / EyeCloseSec, 0f, 1f);
+			frame = progress < 0.3f ? 2 : progress < 0.55f ? 1 : 0;
+			sunk = Mathf.Clamp((progress - 0.35f) / 0.65f, 0f, 1f);
+			sunk *= sunk;
+			if (progress >= 1f)
+			{
+				_eyeShown = false;
+				_eye.Visible = false;
+				_windowRing.HideMarker();
+				return false;
+			}
+		}
+		else
+		{
+			float progress = Mathf.Clamp(_eyeAge / EyeOpenSec, 0f, 1f);
+			frame = progress < 0.45f ? 0 : progress < 0.75f ? 1 : 2;
+			sunk = 1f - GroundReveal.EaseOutBack(Mathf.Clamp(progress / 0.6f, 0f, 1f), EyeOvershoot);
+		}
+		if (frame != _eyeFrame)
+		{
+			_eyeFrame = frame;
+			_eye.Texture = _eyeFrames[frame];
+		}
+		_eyeSunk = sunk;
+		GroundReveal.Show(_eye, _eyeFrames[frame].GetSize(), _eyePivots[frame], sunk);
+		_eye.Scale = new Vector2(1f, 1f + EyeBreath * Mathf.Sin(_eyeAge * EyeBreathHz * Mathf.Tau));
+		return true;
+	}
+
+	/// <summary>
+	/// L'œil commence à se refermer, une seule fois : s'il sortait encore de l'eau, la fermeture reprend à son
+	/// enfoncement présent, sans le faire sauter.
+	/// </summary>
+	private void BeginClosing()
+	{
+		if (!_eyeShown || _eyeClosing >= 0f)
+			return;
+		// Inverse de l'enfoncement de la fermeture : sunk = ((p − 0,35) / 0,65)².
+		float progress = 0.35f + 0.65f * Mathf.Sqrt(Mathf.Clamp(_eyeSunk, 0f, 1f));
+		_eyeClosing = _eyeSunk > 0f ? progress * EyeCloseSec : 0f;
 	}
 
 	private void CloseWindow()
 	{
-		_windowSprite.Visible = false;
+		_eyeShown = false;
+		_eye.Visible = false;
 		_windowRing.HideMarker();
+		ReleaseWindowPart();
+	}
+
+	private void ReleaseWindowPart()
+	{
 		if (_windowPart != null && IsInstanceValid(_windowPart) && _windowPart.IsActive && !_windowPart.IsDying
 			&& _windowPart.Boss == _health)
 			_windowPart.Vanish();
@@ -314,8 +460,13 @@ public partial class IndicibleWave : Node2D
 
 	private void OnPartHit(Enemy part, float lost)
 	{
-		if (part == _windowPart)
-			WindowDamage += lost;
+		if (part != _windowPart)
+			return;
+		WindowDamage += lost;
+		_eyeFlash?.Kill();
+		_eye.SelfModulate = new Color(1.6f, 1.6f, 1.6f);
+		_eyeFlash = CreateTween();
+		_eyeFlash.TweenProperty(_eye, SelfModulateProperty, Colors.White, EyeHitFlashSec);
 	}
 
 	public override void _ExitTree()

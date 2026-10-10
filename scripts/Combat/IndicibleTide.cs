@@ -42,6 +42,8 @@ public partial class IndicibleTide : Node2D
 	private ShaderMaterial _material;
 	private readonly Vector2[] _quad = new Vector2[4];
 	private float _visualFront;
+	// Retraite finale (boss vaincu) : l'eau recule et ne revient plus.
+	private bool _final;
 	private TideState _state = TideState.Idle;
 	private Vector2 _anchor;
 	private Vector2 _direction;
@@ -87,6 +89,17 @@ public partial class IndicibleTide : Node2D
 		Visible = false;
 	}
 
+	/// <summary>Le boss est vaincu : la mer se retire en s'effaçant, sans revenir (l'appelant continue d'appeler Tick).</summary>
+	public void Retreat()
+	{
+		_final = true;
+		if (_state != TideState.Rising)
+			return;
+		_state = TideState.Receding;
+		_timer = RecedeSec;
+		_front += RetreatDistance;
+	}
+
 	/// <summary>Un tick : avance le front et ralentit le joueur dans l'eau ; vrai quand l'eau profonde le blesse.</summary>
 	public bool Tick(Player player, float delta)
 	{
@@ -102,6 +115,11 @@ public partial class IndicibleTide : Node2D
 			_material.SetShaderParameter(FadeParam, Mathf.Clamp(_timer / RecedeSec, 0f, 1f));
 			_material.SetShaderParameter(WarningParam, 0f);
 			_material.SetShaderParameter(WaderWetParam, 0f);
+			if (_final && _timer <= 0f)
+			{
+				Stop();
+				return false;
+			}
 			if (_timer <= -_config.TideTurnPauseSec)
 			{
 				_directionIndex = (_directionIndex + RunRandom.Behavior.RandiRange(1, Directions.Length - 1)) % Directions.Length;

@@ -66,10 +66,12 @@ public partial class IndicibleStorm : Node
 
 	public void SetWind(Vector2 wind) => _rain.SetWind(wind);
 
-	/// <summary>Le jour revient (boss vaincu) : la nuit se lève, la pluie cesse.</summary>
+	/// <summary>Le jour revient (boss vaincu) : un dernier éclair, la nuit se lève, la pluie cesse.</summary>
 	public void End()
 	{
 		_ending = true;
+		// Un dernier éclair, puis la nuit se lève.
+		Flash(1f);
 		_darknessTarget = 0f;
 		_rain.SetCoverage(0f, _config.DarkFadeSec);
 	}

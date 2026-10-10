@@ -13,6 +13,7 @@ from ..palette import make_material
 from ..render import Part
 from ..sdf import capsule, ellipsoid, rounded_box, sphere
 from ._kit import M, PropModel, Weathering
+from .indicible_forms import oeil
 
 FLESH, NAIL, MUD, WEED = range(4)
 K = 1.5 * M
@@ -76,4 +77,6 @@ def hand(stem: str, closed: bool, seed: int) -> PropModel:
 
 
 def catalog() -> list[PropModel]:
-    return [hand("indicible_hand_open", False, 801), hand("indicible_hand_grab", True, 801)]
+    # L'œil découvert (planche B5a, DECISIONS §95) : trois ouvertures pour qu'il s'ouvre et se referme.
+    return [hand("indicible_hand_open", False, 801), hand("indicible_hand_grab", True, 801),
+            oeil("indicible_eye_open", 1.0), oeil("indicible_eye_half", 0.45), oeil("indicible_eye_closed", 0.06)]

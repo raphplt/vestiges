@@ -105,7 +105,8 @@ public partial class Indicible : Node2D
 		}
 		_openTexture = LoadTexture("indicible_hand_open");
 		_grabTexture = LoadTexture("indicible_hand_grab");
-		if (_openTexture == null || _grabTexture == null)
+		Texture2D[] eyeFrames = { LoadTexture("indicible_eye_closed"), LoadTexture("indicible_eye_half"), LoadTexture("indicible_eye_open") };
+		if (_openTexture == null || _grabTexture == null || System.Array.IndexOf(eyeFrames, null) >= 0)
 			return false;
 		_openPivot = PivotOf(_openTexture);
 		_visualRng = RunRandom.Create("indicible_hands");
@@ -130,7 +131,7 @@ public partial class Indicible : Node2D
 		_tide.Setup(_config);
 		_wave = new IndicibleWave { Name = "Wave" };
 		AddChild(_wave);
-		_wave.Setup(_config, _health, spawner, _openTexture);
+		_wave.Setup(_config, _health, spawner, eyeFrames);
 		_storm = new IndicibleStorm { Name = "Storm" };
 		AddChild(_storm);
 		_storm.Setup(_config, GetParent());
@@ -149,8 +150,15 @@ public partial class Indicible : Node2D
 
 	public override void _PhysicsProcess(double delta)
 	{
-		if (_defeated || _player == null || !IsInstanceValid(_player))
+		if (_player == null || !IsInstanceValid(_player))
 			return;
+		// Vaincu : la mer se retire et l'œil se referme, le temps que le jour revienne.
+		if (_defeated)
+		{
+			_tide.Tick(_player, (float)delta);
+			_wave.Recede((float)delta);
+			return;
+		}
 		// Écran de choix, mort : le boss attend, comme le joueur.
 		if (_gameManager != null && _gameManager.CurrentState != GameManager.GameState.Run)
 			return;
@@ -468,8 +476,11 @@ public partial class Indicible : Node2D
 	{
 		_defeated = true;
 		_player.ExternalDrift = Vector2.Zero;
-		_tide.Stop();
-		_wave.Stop();
+		// Les trente et un montent de l'eau, là où l'œil s'est ouvert, sinon devant le joueur.
+		IndicibleRelease release = new() { Name = "IndicibleRelease" };
+		release.Position = _wave.EyePosition ?? _player.GlobalPosition + new Vector2(0f, -60f);
+		GetParent().AddChild(release);
+		_tide.Retreat();
 		_lightningMarker.HideMarker();
 		for (int i = _hands.Count - 1; i >= 0; i--)
 			Retire(_hands[i], i);

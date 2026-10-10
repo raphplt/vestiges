@@ -291,7 +291,8 @@ def tete() -> PropModel:
 
 # --- Piste C : l'œil -------------------------------------------------------------------------------------------------
 
-def oeil() -> PropModel:
+def oeil(stem: str = "indicible_form_oeil", openness: float = 1.0) -> PropModel:
+    """L'œil, ouvert de <openness> (1 = grand ouvert ; près de 0, les paupières se rejoignent)."""
     WHITE, IRIS, PUPIL, LID, FLESH, NAIL, WATER, LANTERN, VEIN, RIPPLE = range(10)
     materials = _materials(("sclera", "#A4AC9F", 0.7, False), ("iris", "#2E6070", 0.85, False),
                            ("pupil", "#0C1118", 0.5, False), ("lid", "#5A545A", 0.8, False),
@@ -304,7 +305,7 @@ def oeil() -> PropModel:
     def almond(x: np.ndarray) -> np.ndarray:
         """Demi-ouverture de l'œil (en z) le long de son grand axe : nulle aux coins, pleine au centre."""
         t = np.clip(np.abs(x) / half_length, 0.0, 1.0)
-        return half_depth * (1.0 - t * t) ** 0.7
+        return half_depth * openness * (1.0 - t * t) ** 0.7
 
     def parts() -> list[Part]:
         w = Weathering(3411)
@@ -354,11 +355,13 @@ def oeil() -> PropModel:
         ripples = _foam(w, 34, (0, 0.05 * M, 0.4 * M), (7.4 * M, 0.05 * M, 3.8 * M), (0.3 * M, 0.55 * M), 0.2 * M, flat=0.15)
         return [Part(lambda p: np.maximum(ball(p), inside(p)), WHITE), Part(vein, VEIN),
                 Part(lambda p: np.maximum(iris(p), inside(p)), IRIS), Part(lambda p: np.maximum(pupil(p), inside(p)), PUPIL),
-                Part(glint, LANTERN), Part(upper, LID), Part(lower, LID), Part(_group(lashes), FLESH),
+                # Le reflet de la lanterne, seulement sur un œil assez ouvert : émissif, il percerait les paupières.
+                Part(lambda p: np.maximum(glint(p), inside(p)) if openness > 0.3 else np.full(len(p), np.inf), LANTERN),
+                Part(upper, LID), Part(lower, LID), Part(_group(lashes), FLESH),
                 Part(_group(nails), NAIL), Part(flood, WATER), Part(ripples, RIPPLE)]
 
     bounds = ((-9.0 * M, -1.2 * M, -5.4 * M), (9.0 * M, 6.0 * M, 5.4 * M))
-    return PropModel("indicible_form_oeil", parts, materials, 0.0, ray_range=440.0, canvas=(340, 210),
+    return PropModel(stem, parts, materials, 0.0, ray_range=440.0, canvas=(340, 210),
                      bounds=bounds, supersample=3)
 
 

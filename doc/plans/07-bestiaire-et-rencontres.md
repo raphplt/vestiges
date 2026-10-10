@@ -831,3 +831,17 @@ Relecture `godot-reviewer` :
 Signalé à tort par la relecture : la pluie passerait au-dessus du HUD (il est en couche 10).
 
 Suites : smoke, indicible, boss_parts : 3/3. Pas de banc : le banc dense ne fait pas venir l'Indicible, et la pluie coûte un seul nœud qui dessine.
+
+### B5d livré — 10 octobre 2026, soir (vague, œil, mort)
+
+- **Vague** : un shader (`assets/shaders/indicible_wave.gdshader`) remplace les aplats. Il dessine une crête d'écume déchirée qui roule, des embruns devant, et une masse d'eau sombre qui traîne derrière en s'effaçant en trame. Les brèches sont des trous dans le mur, bordés d'écume qui s'enroule, et des couloirs de lumière chaude qui vacillent comme une lanterne, avec une lueur propre contre la nuit. Des embruns jaillissent de la crête autour du joueur. Shader préchauffé au chargement (21 shaders).
+- **L'œil** (planche B5a, §95) : trois images générées (`indicible_eye_closed`, `_half`, `_open`, `tools/generate_props.py indicible`). Après chaque vague, il sort de l'eau en s'ouvrant (0,45 s, avec un dépassement), dans une gerbe d'eau et un tremblement d'écran. Il respire, éclaire quand on le frappe, puis se referme et replonge pendant ses dernières 0,45 s. Il porte sa propre lumière (×1,7 contre la nuit) et s'ouvre devant le joueur, vers le haut de l'écran. La partie à frapper est son iris, au rayon de la fenêtre (46 px).
+- **Mort** : un dernier éclair ouvre la nuit, qui se lève ; la mer se retire en s'effaçant sans revenir ; l'œil ouvert se referme et replonge. Trente et une lueurs montent de l'eau à l'endroit de l'œil et s'éteignent (`Combat/IndicibleRelease`).
+- **Défaut trouvé à la capture** : l'œil ne sortait jamais. Posé entièrement enfoui à sa première image, il était rendu invisible, et son animation s'arrêtait sur cette invisibilité. Sa présence est désormais un état à part.
+- **Défaut trouvé à la capture** : les brèches dessinées étaient en miroir de celles du jeu, le shader prenant la perpendiculaire inverse de `Vector2.Orthogonal()`. Corrigé.
+- Relecture `godot-reviewer`, quatre points corrigés :
+  - embruns sans direction pour une vague qui descend ;
+  - l'œil reprend sa fermeture à son enfoncement présent ;
+  - flash de coup coupé à l'ouverture suivante ;
+  - texture réassignée seulement quand l'image change.
+- Captures : [vague et brèches](../audits/boss-2026-10-10/b5/vague-breches.jpg), [l'œil découvert, de nuit](../audits/boss-2026-10-10/b5/oeil-decouvert.jpg). Suites : smoke, indicible : 2/2.
