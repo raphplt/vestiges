@@ -39,6 +39,7 @@ Aucun de ces héros n'est dans `characters.json` : les sprites sont préparés, 
 | **H1** | Éveillée, Facteur, Scaphandrière : reprise des prototypes au niveau des trois joués | Livré, à valider |
 | **H2** | Sonneur, Écolière, Photographe : nouveaux modèles | Livré, à valider |
 | **H3** | Veilleuse, Enfant du Bas-Port : nouveaux modèles | Livré, à valider |
+| **H4** | Trois joués (Vagabond, Traqueur, Forgeuse) : yeux lisibles et retouches, demandé le 10 octobre | Livré |
 
 Chaque lot : modèles, aperçus quatre vues et animations, planche avant/après à l'échelle du jeu à côté des trois joués et d'un Rôdeur, aplats noirs, puis sprites écrits dans `assets/characters/<id>/` (8 directions, idle, marche, dash, coup, mort) avec leurs `.import`.
 
@@ -85,4 +86,18 @@ Chaque lot : modèles, aperçus quatre vues et animations, planche avant/après 
 - Sprites écrits : 216 PNG par héros (8 directions × 27 images), 1 728 au total ; smoke test vert, 1 728 `.import` créés, aucun fichier supprimé.
 - Régénération de l'Écolière et du Facteur comparée octet par octet : identique.
 - Non vérifié en jeu : aucun de ces héros n'est jouable. Au branchement : `sprite_feet_offset` = pivot moins la demi-hauteur du cadre (18 pour les cadres de 44, 19 pour le Sonneur, 17 pour la Veilleuse, 16 pour l'Écolière, 15 pour l'Enfant), captures en run.
+
+## 10. Compte rendu H4 — les trois joués repris (10 octobre)
+
+Demande : « oui stp reprend les 3 jouables et améliore les si tu peux pendant que tu y es » (DECISIONS §85). [Planche avant/après](planches/32-h4-joues.png), [captures en jeu](planches/32-h4-en-jeu.png) (une ligne avant, une ligne après, par personnage).
+
+| Personnage | Avant | Repris |
+|---|---|---|
+| **Vagabond** | visage en bande rose sans yeux entre le chapeau et la barbe | yeux en amande sous le bord du chapeau ; barbe raccourcie sous les pommettes, le haut du visage reste nu |
+| **Traqueur** | deux yeux ronds lumineux fondus en une barre claire, comme une visière | deux yeux en amande bien écartés, lumineux, dans l'ombre de la capuche |
+| **Forgeuse** | verres rouges des lunettes sur le front lus comme deux yeux rouges, vrais yeux invisibles ; marteau du même gris que la chemise de dos | yeux en amande ; lunettes remontées sur le haut du crâne, verres tournés vers le ciel, monture de laiton qui se détache des cheveux ; tête de marteau d'acier plus sombre |
+
+Silhouettes, proportions et animations inchangées : seuls les visages, les lunettes et la teinte du marteau changent.
+
+**Vérifications.** Aperçus ×10 en quatre vues ; planche avant/après à l'échelle du jeu ; sprites régénérés (648 PNG, mêmes noms, aucun ajouté ni retiré, `.import` inchangés) ; captures en vraie run des trois (`--capture-character`, seed 1002) avant et après, regardées : la Forgeuse n'a plus les yeux rouges, pieds toujours calés sur la barre de vie.
 
