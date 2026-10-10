@@ -167,7 +167,7 @@ Forêt, champs et carrière ont été demandés après les lots urbains ([DECISI
 
 **Vérifications C1.** Aperçus ×2 sur trois sols des champs (herbe, blé, chaume) et ×5 isolés, plusieurs passes par famille ; planches de génération regardées ; galerie en jeu (`--capture-prop-gallery wild_fields`, seed 1002, 63 sprites cadrés, dont les fermes entières) : granges, maisons et hangars se lisent comme une ferme, la grange endommagée se distingue au premier coup d'œil, haies et petits décors se détachent de l'herbe. Décors inchangés (flaques, remorque, portails, poteau, linge, épouvantail aux corbeaux, arbres de verger en feuilles) : rendus identiques. Forêt : seuls le mur en ruine et la voiture changent (`_top_skin`), les arbres restent identiques. Régénération des champs et de la ferme comparée octet par octet : identique.
 
-**Question à Raphaël.** `assets/props/wild_fields/_wild_fields_hero_props.png` est la planche d'un ancien générateur (`scripts/generate_wild_fields_props.py`), importée par Godot mais chargée nulle part. La supprimer avec son `.import` ? Rien n'est supprimé sans son accord.
+**Question à Raphaël.** `assets/props/wild_fields/_wild_fields_hero_props.png` est la planche d'un ancien générateur (`scripts/generate_wild_fields_props.py`), importée par Godot mais chargée nulle part. La supprimer avec son `.import` ? Rien n'est supprimé sans son accord. **Réponse le 10 octobre :** « Oui supprime la planche orpheline stp » ; supprimée. L'ancien générateur reste : relancé, il réécrirait sept décors de C1 (question au tableau de bord).
 
 ## 8. Compte rendu Q1 — carrière
 
