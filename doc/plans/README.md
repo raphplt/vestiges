@@ -1,5 +1,7 @@
 # VESTIGES — Dossier de plans à valider
 
+**11 octobre — le Campement (plan 36, M0–M3) :** progression permanente au Hub, payée en Vestiges. 13 améliorations en trois rayons (emplacements d'armes de 2 à 4, relances, bannissements, neuf stats, Essence de départ), remboursement libre, cadenas sur les cases d'armes fermées. Prix du §110 gardés : 41 runs moyennes pour tout acheter. Profil neuf à deux armes : 78 % des éliminations d'un départ à quatre armes à 10 min. Questions au plan 36 §13 ; points à vérifier dans `A-VERIFIER.md`.
+
 **10 octobre — menus intérieurs, étude réorientée (plan 04 §7) :** premières esquisses rejetées pour leur rendu trop web. Accueil actuel conservé ; Paramètres et Quitter regroupés en bas appréciés. Recherche Pierre et Effacement, ancrée dans le lore et le pixel art, pour Personnages, Quêtes, Collection, Paramètres et Pause. [Nouvelle planche Personnages](planches/04-menus-personnages-pierre-v2.png) et lots M0–M5 révisés, à examiner ; les détails UX restent proposés, aucun menu refait ([DECISIONS §106](DECISIONS.md)).
 
 **10 octobre — quêtes de déblocage (plan 06 §10, lots Q1–Q4) :** une seule famille de 36 quêtes qui débloquent personnages, armes et objets pour de bon ; profil neuf réduit à la réserve de départ (Vagabond, 8 armes, 15 objets). Suivi en run sans affichage, bandeau dès qu'une quête est accomplie, pages Quêtes et Personnages au Hub, seuils mesurés sur 7 runs (9 ajustés). À trancher : quêtes de critique et Recopier.

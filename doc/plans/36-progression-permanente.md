@@ -123,19 +123,19 @@ Dans tout ce plan, « l'Établi » se lit désormais « le Campement ».
 | Capacités | Râtelier | +1 emplacement d'arme (2 → 4) | 2 | 400 / 2 500 | 2 900 |
 | Capacités | Jeu de cartes | +1 relance par run | 3 | 300 / 800 / 2 000 | 3 100 |
 | Capacités | Boîte d'allumettes | +1 bannissement gratuit par run | 3 | 300 / 800 / 2 000 | 3 100 |
-| Stats | Couverture de laine | PV max +5 % | 5 | 250 / 600 / 1 200 / 2 400 / 4 000 | 8 450 |
+| Stats | Sac de couchage | PV max +5 % | 5 | 250 / 600 / 1 200 / 2 400 / 4 000 | 8 450 |
 | Stats | Pierre à aiguiser | dégâts +4 % | 5 | idem | 8 450 |
 | Stats | Métronome | cadence +3 % | 5 | idem | 8 450 |
 | Stats | Bonnes chaussures | vitesse +2 % | 5 | idem | 8 450 |
-| Stats | Gourde de bouillon | régénération +0,1 PV/s | 5 | idem | 8 450 |
+| Stats | Marmite | régénération +0,1 PV/s | 5 | idem | 8 450 |
 | Stats | Rembourrage | armure +1 | 5 | idem | 8 450 |
-| Stats | Aimant de frigo | attraction de l'XP +10 % | 5 | idem | 8 450 |
+| Stats | Filet à papillons | attraction de l'XP +10 % | 5 | idem | 8 450 |
 | Stats | Carnet de notes | XP +4 % | 5 | idem | 8 450 |
-| Stats | Fer à cheval | Chance +3 % | 5 | idem | 8 450 |
+| Stats | Patte de lapin | Chance +3 % | 5 | idem | 8 450 |
 | Confort | Bocal d'Essence | +20 Essence au départ | 5 | 150 / 350 / 700 / 1 200 / 2 000 | 4 400 |
 | | **Campement plein** | | | | **89 550** |
 
-Les noms sont des objets du camp, dans l'esprit des Écussons (§110) : à valider. Un rang multiplicatif vaut 1 + pas × rang, sans composer. Au maximum : PV ×1,25, dégâts ×1,2, cadence ×1,15, vitesse ×1,1.
+Les noms sont des objets du camp, dans l'esprit des Écussons (§110) : à valider. Quatre ont été changés en M3 (Sac de couchage, Marmite, Filet à papillons, Patte de lapin) : les premiers recoupaient l'objet « Aimant de frigo » et les bonus lâchés « Fer à cheval », « Gourde » et « Couverture de survie ». Un rang multiplicatif vaut 1 + pas × rang, sans composer. Au maximum : PV ×1,25, dégâts ×1,2, cadence ×1,15, vitesse ×1,1.
 
 **Ce que rapporte une run, mesuré.**
 - Méthode : Vagabond en profil neuf, bot mortel qui va vers les lieux (`--nomad --visit --mortal`), 4 graines (42, 1002, 7, 123), 30 min.
@@ -234,3 +234,36 @@ Si le catalogue est refusé, la ligne d'état le dit. En mode dev, elle rappelle
 - `objects` échoue dans un conteneur en anglais : deux contrôles lisent des textes de cartes en français. La suite passe avec `LANG=fr_FR.UTF-8`. Rien n'est changé.
 
 **Une quête dépend maintenant du Campement.** « Quatre airs » (`four_tunes` : quatre armes au niveau 3) débloque la Boîte à musique. Avec deux emplacements au départ, elle demande les deux rangs du Râtelier (2 900 Vestiges, soit 2 runs moyennes, ou 6 de débutant en économisant). Question à Raphaël au §13.
+
+## 12. Lot M3 livré : mesure à deux profils — 11 octobre 2026
+
+**Protocole.** `MEASURE_PROFILE=normal MEASURE_JOBS=2 MEASURE_EXTRA_ARGS="--nomad --visit --mortal --character vagabond" tools/measure_run.sh <dossier> 600 "42 1002 7 123"`. Trois profils, au même commit pour les deux derniers :
+
+| | 4 armes, rien d'acheté (avant M1) | **Profil neuf** (2 armes) | **Campement plein** (`--camp-full`) |
+|---|---:|---:|---:|
+| Éliminations à 5 min, moyenne | 267 | 202 (76 %) | 377 (141 %) |
+| Éliminations à 10 min, moyenne | 867 | **672 (78 %)** | 1 198 (138 %) |
+| Graines (10 min) | 682–1 058 | 490–802 | 940–1 337 |
+| Niveau à 10 min, moyenne | 23,2 | 21,5 | 30,2 |
+| « Morts » du bot de 0 à 10 min (remis à fond) | 45 | 57,5 (+28 %) | 16,8 (−63 %) |
+| Dégâts reçus cumulés à 10 min (bot qui n'esquive pas) | 45 500 | 80 800 | 27 300 |
+| Vestiges gagnés à 10 min | 792 | 587 | 1 100 |
+
+Les éliminations du plan 33 §7 (926 à 10 min) venaient d'autres graines. Rapporté à elles, le profil neuf en fait 73 %.
+
+**Lecture.**
+- **Le profil neuf reste au-dessus du seuil.** À 10 min, il fait 78 % des éliminations d'un départ à quatre armes, pour un seuil d'alerte fixé à 60 %. Le début est plus dur, sans être cassé. Le bot reçoit 78 % de dégâts en plus et « meurt » 28 % plus souvent : c'est là que la différence se sent.
+- **Le Campement plein ne rend pas le début trivial,** mais il le rend nettement plus confortable : le bot y atteint le niveau 30 à 10 min, la cible du §103 pour une bonne run humaine. Les « morts » chutent des deux tiers. Ce n'est pas l'emplacement d'arme qui pèse le plus, mais la défense : armure +5 (réduction des dégâts de 12 à 32 % dès le départ), PV ×1,25 et régénération +0,5/s.
+- **Gains d'un débutant à deux armes** : 386 Vestiges par run courte (185 à 5 min, 587 à 10 min). La 3ᵉ arme s'achète après la 2ᵉ run, la 4ᵉ après la 8ᵉ, s'il économise pour elles (`tools/camp_economy.py`).
+
+**Rien n'est appliqué.** Le profil neuf ne passe pas sous les 60 %. Deux pistes si le début paraît trop dur en jouant, ou le profil plein trop sûr :
+1. **Profil neuf** : 3ᵉ emplacement à 250 au lieu de 400, pour qu'il tombe dès la première run courte ; ou bien, en run, le deuxième emplacement s'ouvre au niveau 5 au lieu d'être là dès le départ, ce qui laisse le joueur apprendre une arme d'abord.
+2. **Profil plein** : armure +0,5 par rang (2,5 au maximum, au lieu de 5), qui reste la stat la plus forte du rayon ; ou laisser faire le Péril, que le joueur relève lui-même (§4).
+
+## 13. Questions pour Raphaël (Campement)
+
+1. **Noms des améliorations** (§9) : Râtelier, Jeu de cartes, Boîte d'allumettes, Sac de couchage, Pierre à aiguiser, Métronome, Bonnes chaussures, Marmite, Rembourrage, Filet à papillons, Carnet de notes, Patte de lapin, Bocal d'Essence. Te vont-ils ?
+2. **La quête « Quatre airs »** (★, quatre armes au niveau 3, débloque la Boîte à musique) demande maintenant d'avoir acheté les deux rangs du Râtelier. On la garde ainsi (elle devient une quête de milieu de progression, à passer en ★★), ou on la ramène à trois armes ?
+3. **Début à deux armes** : à juger en jouant. Faut-il une des pistes du §12 ?
+4. **Armure** : +1 par rang est la stat la plus forte du Campement plein. On la garde, ou on la passe à +0,5 ?
+5. **4ᵉ emplacement à 2 500** : bien placé ? Un joueur qui achète au moins cher l'aura vers la 25ᵉ run moyenne.
