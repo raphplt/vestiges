@@ -1150,3 +1150,31 @@ Raphaël : « ça me va que tu fasses les modifications dont on a parlé. Que ce
 Raphaël : « il y a un bug chiant quand la partie est fini (mort) les sons ne s'arretent pas il faudrait les stopper tous (surtout ceux des ennemis/armes) ».
 
 **Appliqué et vérifié :** arrêt immédiat des sons de la run et blocage de leur relance pendant la mort et le bilan, puis réactivation à la prochaine run ; lot M7 du [plan 15](15-audio.md). L'audio dédié à la séquence de mort et à l'interface de bilan reste disponible. Régression avant/après, smoke/audio/musique et mort réelle après combat verts.
+
+## 105. Menus : organisation et direction visuelle à reprendre — 10 octobre 2026
+
+Raphaël demande de réfléchir à une amélioration globale des menus : possibles doublons, moins d'allers-retours, rôles clairs et séparés, finition d'un jeu professionnel. Il juge plusieurs écrans trop basiques et trop proches d'interfaces web, avec des fonds semi-transparents ou flous ; il souhaite davantage de profondeur et de direction visuelle dans les boutons, les encadrés et les effets. Il demande d'examiner aussi le fond du menu principal et inclut explicitement le menu pause.
+
+**Acquis :** préparer le diagnostic et un plan de correction UX/UI et artistique. Le retrait des Chroniques (§99 bis), la page Quêtes et la page Personnages dédiées (§90/97) restent le cadre courant.
+
+**Propositions de l'agent, à examiner :** navigation directe entre Personnages, Quêtes et Collection ; choix confirmé et départ depuis la fiche de héros ; liens ciblés entre récompense et quête ; pause avec build compact et détail sélectionné ; matière de métal patiné, comparée à une piste pierre/Effacement. Fond actuel conservé dans la première piste ; monnaie sans dépense et graine sortiraient de la hiérarchie principale. Diagnostic rendu, contrats de parcours et lots M0–M5 au [plan 04 §7](04-interfaces-et-hub.md#7-refonte-des-menus--étude-du-10-octobre-2026).
+
+**Non acquis :** une piste graphique retenue, le remplacement du fond, la suppression du solde/graine, les détails des nouveaux parcours et leur implémentation. Cette demande de conception ne coche aucune case de roadmap.
+
+## 106. Menus intérieurs : esquisses rejetées, accueil conservé — 10 octobre 2026
+
+Raphaël préfère, entre les deux pistes, « le truc avec la pierre et l'effacement », mais rejette nettement **les deux esquisses** : « ça fait beaucoup trop web ». Il demande de retrouver les codes visuels des menus de jeux, une patte forte, le pixel art et le thème de l'oubli ; il invite à relire le lore. Il précise ne pas avoir lu tout le plan proposé.
+
+**Acquis :** conserver pour l'instant le premier menu au lancement, qu'il apprécie ; réorienter la recherche vers l'intérieur de Personnages, Quêtes, Collection et Paramètres. La pause reste incluse par sa demande précédente. Regrouper Paramètres à côté de Quitter en bas lui plaît, à distance des entrées principales.
+
+**Préférence, sans validation du rendu :** explorer Pierre et Effacement. Le métal patiné n'est plus la recommandation. Aucune des anciennes esquisses ne devient une référence approuvée ; aucun accord global sur les parcours ou le découpage précédent ne se déduit de ce retour.
+
+**Étude révisée :** [plan 04 §7](04-interfaces-et-hub.md#7-refonte-des-menus--étude-du-10-octobre-2026), lecture du lore v1.1 validé, références de menus de jeux et [nouvelle planche Personnages](planches/04-menus-personnages-pierre-v2.png). Pierre de la ville, contours effacés, illustration dominante et contrôles dessinés ; lots centrés sur un écran intérieur de référence avant déclinaison. Le déplacement de la graine, le retrait du solde, le changement du fond et la refonte du bilan/Journal/choix sont sortis de cette passe. Cette planche et les propositions UX restent à examiner ; aucun code de jeu modifié ni item de roadmap coché.
+
+## 107. Carte blanche pour la refonte des menus sur une branche séparée — 10 octobre 2026
+
+Raphaël autorise l'implémentation : « refais tous les menus comme tu l'entends », sur une branche autre que main. La nouvelle image est jugée « pas mal » ; il préfère un nom de personnage discret et moins de statistiques d'armes et de mobilité. Il propose, sans l'imposer, Partir / Recommencer → choix du personnage → lancement ; le camp pourrait montrer les héros débloqués, ce qui évite d'y sélectionner un casting de dix personnages. Il demande à l'agent de garder son jugement et de travailler.
+
+Choix de l'agent dans ce mandat : adopter cette étape de sélection, conserver l'écran titre et son camp d'ambiance, privilégier portrait / style de jeu / départ, et réserver les règles détaillées à une fiche facultative. Production en lots P1–P3 au plan 04 §8 dans un worktree local, branche `codex/refonte-menus`. Le transfert de cette conversation vers le cloud n'est pas disponible via l'outil de transfert ; aucun travail parallèle cloud créé.
+
+**Livraison de ce mandat :** lots P1–P3 implémentés et vérifiés sur cette branche, sans fusion : nouveaux menus intérieurs, liens de consultation, pause et paramètres ; build sans warning, suites 7/7 puis 2/2, captures 720p/1080p et relance réelle avec changement de héros. Compte rendu et limites au [plan 04 §8.2](04-interfaces-et-hub.md#82-validation-et-captures--p1p3-livrés). La livraison ne vaut pas approbation artistique de Raphaël.

@@ -11,6 +11,9 @@ namespace Vestiges.UI;
 /// </summary>
 public partial class HubQuestsPanel : MarginContainer
 {
+    [Signal] public delegate void RewardRequestedEventHandler(int kind, string id);
+    public string ExaminedQuestId { get; private set; }
+    private bool _needsRefresh = true;
     private enum QuestFilter { All, Open, Done }
 
     private const int Columns = 4;
@@ -85,8 +88,13 @@ public partial class HubQuestsPanel : MarginContainer
 
         _detail = new VBoxContainer { SizeFlagsHorizontal = SizeFlags.ExpandFill };
         _detail.AddThemeConstantOverride("separation", 14);
-        body.AddChild(_detail);
-        _detailName = AddLabel(_detail, "", TextRole.Banner, UITheme.GoldBright, TextWeight.Strong);
+        PanelContainer detailPanel = new() { SizeFlagsHorizontal = SizeFlags.ExpandFill };
+        detailPanel.AddThemeStyleboxOverride("panel", MenuSkin.Panel());
+        body.AddChild(detailPanel);
+        ScrollContainer detailScroll = new() { HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled, FollowFocus = true };
+        detailPanel.AddChild(detailScroll);
+        detailScroll.AddChild(_detail);
+        _detailName = AddLabel(_detail, "", TextRole.Title, UITheme.TextLight, TextWeight.Strong);
         _detailStars = AddLabel(_detail, "", TextRole.Heading, UITheme.GoldColor, TextWeight.Strong);
         _detailText = AddLabel(_detail, "", TextRole.Heading, UITheme.TextLight);
         _detailProgressRow = new HBoxContainer();
@@ -108,7 +116,7 @@ public partial class HubQuestsPanel : MarginContainer
     {
         Label label = UITheme.MakeLabel(text, role, color, weight, outline: 4);
         label.AutowrapMode = TextServer.AutowrapMode.WordSmart;
-        label.CustomMinimumSize = new Vector2(420f, 0f);
+        label.CustomMinimumSize = new Vector2(360f, 0f);
         parent.AddChild(label);
         return label;
     }
@@ -124,6 +132,7 @@ public partial class HubQuestsPanel : MarginContainer
             if (_filter == filter)
                 return;
             _filter = filter;
+            _needsRefresh = true;
             Refresh();
             // Le filtre garde le focus : on peut parcourir les trois états sans remonter depuis une carte.
             button.GrabFocus();
@@ -133,8 +142,21 @@ public partial class HubQuestsPanel : MarginContainer
     }
 
     /// <summary>Actualise la même grille à l'ouverture ou au changement de filtre ; renvoie la première carte.</summary>
-    public Control Refresh()
+    public Control Refresh(string focusId = null)
     {
+        if (focusId != null && !_cards.Exists(card => card.Name == focusId))
+        {
+            _filter = QuestFilter.All;
+            _needsRefresh = true;
+        }
+        if (!_needsRefresh && _cards.Count > 0)
+        {
+            Button current = _cards.Find(card => card.Name == (focusId ?? ExaminedQuestId)) ?? _cards[0];
+            if (focusId != null)
+                ShowDetail(QuestDataLoader.Get(focusId));
+            return current;
+        }
+        _needsRefresh = false;
         UpdateFilters();
         ClearChildren(_grid);
         _cards.Clear();
@@ -169,8 +191,9 @@ public partial class HubQuestsPanel : MarginContainer
             _empty.Text = _filter == QuestFilter.Done ? "Aucune quête accomplie pour le moment." : "Toutes les quêtes sont accomplies.";
             return _activeFilter;
         }
-        ShowDetail(shown[0]);
-        return _cards[0];
+        int selected = Mathf.Max(0, shown.FindIndex(quest => quest.Id == (focusId ?? ExaminedQuestId)));
+        ShowDetail(shown[selected]);
+        return _cards[selected];
     }
 
     private void UpdateFilters()
@@ -299,7 +322,7 @@ public partial class HubQuestsPanel : MarginContainer
             Mathf.Max(CardHeight, inset.GetCombinedMinimumSize().Y));
         card.FocusEntered += () => ShowDetail(quest);
         card.MouseEntered += () => ShowDetail(quest);
-        card.Pressed += () => ShowDetail(quest);
+        card.Pressed += () => { ShowDetail(quest); if (_detailRewards.GetChildCount() > 1) (_detailRewards.GetChild(1) as Control)?.GrabFocus(); };
         UITheme.WireButtonAudio(card);
         return card;
     }
@@ -326,6 +349,8 @@ public partial class HubQuestsPanel : MarginContainer
 
     private void ShowDetail(QuestDefinition quest)
     {
+        if (quest == null) return;
+        ExaminedQuestId = quest.Id;
         bool done = MetaSaveManager.HasCompletedQuest(quest.Id);
         _detailName.Text = quest.Name;
         _detailStars.Text = Stars(quest.Difficulty);
@@ -339,25 +364,15 @@ public partial class HubQuestsPanel : MarginContainer
         AddLabel(_detailRewards, done ? "Récompense débloquée" : "Récompense", TextRole.Subhead, UITheme.TextDim);
         foreach (QuestUnlock unlock in quest.Unlocks)
         {
-            HBoxContainer line = new();
-            line.AddThemeConstantOverride("separation", 12);
-            Texture2D icon = UnlockIcon(unlock);
-            if (icon != null)
-                line.AddChild(new TextureRect
-                {
-                    Texture = icon,
-                    CustomMinimumSize = new Vector2(48f, 48f),
-                    ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
-                    StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
-                    TextureFilter = TextureFilterEnum.Nearest,
-                    MouseFilter = MouseFilterEnum.Ignore,
-                });
-            Label label = UITheme.MakeLabel(QuestBook.UnlockName(unlock), TextRole.Heading, UITheme.TextLight, TextWeight.Strong, outline: 4);
-            label.AutowrapMode = TextServer.AutowrapMode.WordSmart;
-            label.SizeFlagsHorizontal = SizeFlags.ExpandFill;
-            label.SizeFlagsVertical = SizeFlags.ShrinkCenter;
-            line.AddChild(label);
-            _detailRewards.AddChild(line);
+            Button reward = MenuSkin.Button(QuestBook.UnlockName(unlock) + "  →");
+            reward.Alignment = HorizontalAlignment.Left;
+            reward.Disabled = unlock.Kind == UnlockKind.Character && CharacterDataLoader.Get(unlock.Id) == null;
+            if (reward.Disabled) reward.Text = QuestBook.UnlockName(unlock) + " · À venir";
+            reward.Icon = UnlockIcon(unlock);
+            reward.ExpandIcon = true;
+            reward.AddThemeConstantOverride("icon_max_width", 48);
+            reward.Pressed += () => EmitSignal(SignalName.RewardRequested, (int)unlock.Kind, unlock.Id);
+            _detailRewards.AddChild(reward);
         }
     }
 

@@ -19,6 +19,7 @@ namespace Vestiges.Tests;
 /// Observation de la vraie scène de run, rendue.
 /// --capture-abilities [--enemies a,b] [--shots n] [--still] : captures des attaques d'ennemis choisis (Présage et Charognard par défaut) ;
 ///     --still garde le joueur immobile, pour les attaques qui visent sa position (surgissement).
+/// --capture-size WxH : force la taille réelle de fenêtre après le démarrage de Main.
 /// --capture-map : répartition des biomes autour du spawn (plusieurs seeds) et vues dézoomées.
 /// --capture-cartography : parcours fixe, radar/carte entière, phases et bord du monde (RunObservation.Cartography.cs).
 /// --capture-character --character ID : personnage en marche, dash, dégât et mort dans Main.
@@ -122,6 +123,17 @@ public partial class RunObservation : Node
             if (captureMap)
                 MeasureBiomeLayout(seed, int.Parse(Argument(args, "--map-seeds", "40"), CultureInfo.InvariantCulture), 4);
             await LoadRun(seed, Argument(args, "--character", "traqueur"));
+
+            string captureSize = Argument(args, "--capture-size", "");
+            if (captureSize.Length > 0)
+            {
+                string[] dimensions = captureSize.Split('x');
+                GetWindow().Mode = Window.ModeEnum.Windowed;
+                await Frames(15);
+                GetWindow().Size = new Vector2I(int.Parse(dimensions[0], CultureInfo.InvariantCulture),
+                    int.Parse(dimensions[1], CultureInfo.InvariantCulture));
+                await Frames(30);
+            }
 
             if (captureMap)
                 await CaptureWorldOverview();

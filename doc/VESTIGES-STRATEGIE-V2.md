@@ -867,6 +867,10 @@ Le script de post-processing doit inclure une vérification/correction de l'angl
 
 ### Phase F — Art et polish (4+ semaines)
 
+- [x] Plan 04 P1 : Partir/Recommencer → sélection du personnage → run ; camp d’ambiance, nom discret et fiche détaillée facultative. Profils neuf/dev, verrouillage et relance avec changement de héros vérifiés (10 octobre 2026, branche `codex/refonte-menus`).
+- [x] Plan 04 P2 : menus intérieurs Pierre et Effacement, textures partagées, portrait découpé en pixels, liens ciblés Quêtes/Collection/Personnages et retour au contexte ; captures 720p/1080p et régressions vertes (même branche, sans fusion).
+- [x] Plan 04 P3 : pause avec équipement compact et détail sélectionnable, défilement des Oublis, abandon confirmé, paramètres opaques et focus restitué ; vrais scénarios de pause, build sans warning et suites concernées vérifiés. Recette artistique humaine ouverte ([compte rendu](plans/04-interfaces-et-hub.md#82-validation-et-captures--p1p3-livrés)).
+
 - [ ] Mettre en place le pipeline d'assets (IA + post-processing + Aseprite).
 - [ ] Remplacer les Polygon2D priorité 1 (Player, ennemis principaux, projectiles).
 - [x] Remplacer les Polygon2D priorité 2 (coffres, armes, orbes).

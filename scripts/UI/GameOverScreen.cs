@@ -533,7 +533,8 @@ public partial class GameOverScreen : CanvasLayer
     {
         AudioManager.PlayUI("sfx_menu_confirmer");
         GetTree().Paused = false;
-        GetTree().ReloadCurrentScene();
+        GetNode<GameManager>("/root/GameManager").OpenCharacterSelection = true;
+        GetTree().ChangeSceneToFile("res://scenes/Hub.tscn");
     }
 
     private void OnCollectionPressed()

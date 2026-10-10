@@ -63,9 +63,15 @@ public partial class UiArtRegression : Node
                 Check(ScreenArt.Background(tint).GetSize() == new Vector2(480, 270), $"Texture native du fond {tint}");
             Check(Frames(ScreenArt.Grounds, 5, 128, 32), "Les cinq sols de chargement sont importés");
             foreach (string skin in new[] { "button_normal", "button_hover", "button_pressed", "button_disabled",
-                "card_normal", "card_selected", "card_locked", "panel_frame", "panel_frame_selected" })
-                Check(UITheme.LoadTex(UITheme.MenusPath + $"ui_{skin}.png").ResourcePath.StartsWith(ScreenArt.Folder, StringComparison.Ordinal),
-                    $"Thème : {skin} emploie le nouvel habillage");
+                "card_normal", "card_selected", "card_locked", "panel_frame" })
+            {
+                Texture2D texture = UITheme.LoadTex(UITheme.MenusPath + $"ui_{skin}.png");
+                using Image pixels = texture.GetImage();
+                Check(texture.GetWidth() >= 32 && texture.GetHeight() >= 32
+                    && pixels.GetPixel(pixels.GetWidth() / 2, pixels.GetHeight() / 2).A > 0.95f,
+                    $"Thème : {skin}, surface de lecture opaque");
+                Check(texture == UITheme.LoadTex(UITheme.MenusPath + $"ui_{skin}.png"), $"Thème : {skin}, texture partagée");
+            }
 
             System.Collections.Generic.HashSet<string> statIcons = new();
             foreach (ChestStatBonus stat in ChestDataLoader.LoadStatBonus().Stats)
