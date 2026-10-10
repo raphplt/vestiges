@@ -1200,3 +1200,14 @@ Raphaël, après le plan 34 (retour dicté, extraits) :
 - Progression permanente à ajouter, prioritaire : elle contredit le GDD §5 (« jamais de puissance brute »), que ce choix remplace.
 
 **Proposé, à trancher :** [plan 35](35-inventaire-du-joueur.md) (Habitudes, sac, sources des objets) et [plan 36](36-progression-permanente.md) (l'Établi, ses rayons, son économie).
+
+## 110. Écussons, sac de 10, Campement, armes de 2 à 4 — 11 octobre 2026
+
+Réponses de Raphaël aux questions des plans 35 et 36 :
+- Nom de la deuxième étagère : Habitudes, Gestes, Ancrages, Cicatrices refusés, « tes premiers concepts sont trop flous il faudrait plus des objets concrets ». Retenu parmi quatre familles concrètes : **les Écussons**, cousus sur la veste, un par stat (« Écusson du boxeur » ×7 pour les dégâts…).
+- Montée des Écussons : **au level-up et par l'usage** (option H2).
+- Objets à effet unique : **trouvés dans le monde** (coffres, élites, Souverains, Ateliers, Marées), plus au level-up ; **sac de 10**, agrandissable ; doublons permis ; sac plein, on en oublie un.
+- Emplacements d'armes : « commencer à 2 et pouvoir monter jusqu'à 4 », achetés en progression permanente.
+- Remboursement des achats permanents : **libre et gratuit**.
+- Nom de l'écran : « établi est aussi un truc in game donc ça va pas trop » ; retenu **le Campement** parmi quatre.
+- Ordre : « péril visible, établi puis refonte de l'inventaire » : Péril toujours visible (plan 34 G0), puis le Campement (plan 36), puis l'inventaire (plan 35).

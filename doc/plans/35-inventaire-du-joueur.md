@@ -1,6 +1,6 @@
 # Plan 35 — L'inventaire du joueur, repensé une dernière fois
 
-11 octobre 2026. Demande de Raphaël au [§109](DECISIONS.md), partie du retour sur le late game ([plan 34](34-late-game.md)) : « qu'on repense encore une dernière fois à l'inventaire du joueur et à ce qu'il a », « de manière assez prioritaire ». **Étude et proposition : rien n'est implémenté.** La progression permanente (améliorations au Hub) est traitée à part, au [plan 36](36-progression-permanente.md).
+11 octobre 2026. Demande de Raphaël au [§109](DECISIONS.md), partie du retour sur le late game ([plan 34](34-late-game.md)) : « qu'on repense encore une dernière fois à l'inventaire du joueur et à ce qu'il a », « de manière assez prioritaire ». **Étude et proposition : rien n'est implémenté.** Questions tranchées le 11 octobre (§8) : la deuxième étagère, ce sont **les Écussons**. La progression permanente (améliorations au Hub) est traitée à part, au [plan 36](36-progression-permanente.md).
 
 ## 0. En bref
 
@@ -157,3 +157,12 @@ Ces couches se recouvrent avec les deux nouvelles étagères (stats et effets) :
 2. **Montée** des Habitudes : H1 (level-up seul), H2 (level-up et usage), H3 (usage seul) ?
 3. **Objets hors du level-up**, trouvés seulement dans le monde : d'accord ?
 4. **Sac** : 10 places au départ, jusqu'à 20 ou 25 par la progression permanente ; doublons permis ; oubli libre quand il est plein ?
+
+## 8. Décisions du 11 octobre ([§110](DECISIONS.md))
+
+- **Nom** : les **Écussons**, cousus sur la veste, une famille d'objets concrets (Raphaël a refusé les concepts « Habitudes », « Gestes »… comme trop flous). Un Écusson par stat, au nom d'un métier ou d'une figure : Écusson du boxeur (dégâts), du coureur (vitesse), du pompier (bouclier, déjà dans le jeu), du veilleur (PV max)… La table des 17 noms est à proposer en I0.
+- **Montée** : au level-up **et** par l'usage (H2). Ce qui « s'use » est l'Écusson : il gagne un peu à chaque fois que le joueur fait ce que l'Écusson représente.
+- **Objets** : trouvés dans le monde seulement, sac de 10 agrandissable par le Campement (plan 36), doublons permis, oubli quand le sac est plein.
+- **Ordre** : après le Péril visible (plan 34 G0) et le Campement (plan 36).
+
+Dans tout ce plan, « Habitudes » se lit désormais « Écussons ».

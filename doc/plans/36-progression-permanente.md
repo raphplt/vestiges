@@ -1,6 +1,6 @@
 # Plan 36 — La progression permanente : des améliorations au Hub
 
-11 octobre 2026. Parenthèse de Raphaël au [§109](DECISIONS.md) : « il y a des améliorations globales que tu peux faire, par exemple j'améliore le nombre d'armes que je peux porter, j'améliore des statistiques […] là ça manque et ça serait crucial de rajouter ça rapidement ». **Étude et proposition : rien n'est implémenté.**
+11 octobre 2026. Parenthèse de Raphaël au [§109](DECISIONS.md) : « il y a des améliorations globales que tu peux faire, par exemple j'améliore le nombre d'armes que je peux porter, j'améliore des statistiques […] là ça manque et ça serait crucial de rajouter ça rapidement ». **Étude et proposition, tranchées le 11 octobre (§8) : l'écran s'appelle le Campement.**
 
 ## 0. En bref
 
@@ -104,3 +104,12 @@ Au maximum, le profil plein a environ +25 % de PV, +20 % de dégâts et +15 % de
 2. **Remboursement** libre et gratuit : d'accord ?
 3. **Nom** : l'Établi (nom du GDD), un autre ?
 4. **Ordre** : l'Établi avant la refonte de l'inventaire (M1–M2 d'abord, rapide), ou après ?
+
+## 8. Décisions du 11 octobre ([§110](DECISIONS.md))
+
+- **Nom** : **le Campement**. « Établi » est déjà pris en jeu.
+- **Emplacements d'armes** : un profil neuf commence à **2**, le Campement monte jusqu'à **4** (deux rangs). Le début de run d'un profil neuf devient donc plus dur qu'au plan 33 : à remesurer en M3, à deux profils.
+- **Remboursement** libre et gratuit.
+- **Ordre** : juste après le Péril visible (plan 34 G0), avant la refonte de l'inventaire. Les Poches (sac d'objets) arrivent avec le plan 35.
+
+Dans tout ce plan, « l'Établi » se lit désormais « le Campement ».
