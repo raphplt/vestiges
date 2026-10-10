@@ -39,13 +39,13 @@
     "effect_id": "dissolution",
     "candidate_id": "dissolution_a2_b",
     "file": "assets/audio/sfx/selected/dissolution.wav",
-    "sha256": "ce2322b7222aa0666c7a7db62e232129f2437cf851fbbc13c22b778b4a5d2ec2",
+    "sha256": "d26926f01daa65007ca60d7b3f5995fdc7f8e59d2b712a04b1e6f9ca40dbe8c5",
     "author": "Ogrebane",
     "license": "CC0-1.0",
     "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
     "source_url": "https://opengameart.org/content/dark-ambiences",
     "attribution": "Ogrebane — Dark Ambiences — https://opengameart.org/content/dark-ambiences — CC0-1.0 (https://creativecommons.org/publicdomain/zero/1.0/). Modifications : Extrait de 0.052 s à 0.902 s ; fondus 3 ms / 40 ms. Aperçu WAV PCM16 / 44,1 kHz ; gain constant -11.00 dB après traitement. Crête finale vérifiée à -11.1 dBFS ; original inchangé.",
-    "processing": "Original complet, sans coupe ni fondu ajouté ; gain constant -11 dB ; PCM16, 44,1 kHz."
+    "processing": "Original complet, sans coupe ni fondu ajouté ; gain constant -11 dB ; PCM16, 44,1 kHz. Revue de mix du 10 octobre 2026 : silence de tête retiré (49 ms)."
   },
   {
     "effect_id": "level_up",
@@ -87,13 +87,13 @@
     "effect_id": "dash_start",
     "candidate_id": "dash_start_a",
     "file": "assets/audio/sfx/selected/dash_start.wav",
-    "sha256": "143bd6b1c6eea644c9cd320366d52832651891c831c2b25392f1a68f7155e9a3",
+    "sha256": "46e5628746a8678919c4a008ffedf55948a5356c9da336c7c9e6fe5612145d0d",
     "author": "artisticdude",
     "license": "CC0-1.0",
     "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
     "source_url": "https://opengameart.org/content/swishes-sound-pack",
     "attribution": "artisticdude — Swishes Sound Pack — https://opengameart.org/content/swishes-sound-pack (CC0-1.0 ; crédit de courtoisie)",
-    "processing": "Aperçu WAV PCM 16 bits / 44,1 kHz, gain constant -6.70 dB, sans montage, égalisation ni compression ; original inchangé."
+    "processing": "Aperçu WAV PCM 16 bits / 44,1 kHz, gain constant -6.70 dB, sans montage, égalisation ni compression ; original inchangé. Revue de mix du 10 octobre 2026 : silence de tête retiré (29 ms)."
   },
   {
     "effect_id": "danger_warning",
@@ -147,13 +147,13 @@
     "effect_id": "weapon_drop",
     "candidate_id": "weapon_drop_b1_c",
     "file": "assets/audio/sfx/selected/weapon_drop.wav",
-    "sha256": "f4d0da89e760dbf64bde9ef1ee480d69a86340a621d4c1885d53757e3317d1c8",
+    "sha256": "8b5d0a1d71dbc6542ba1beed39ded28c9e363c0ac9b6dac03381ae57c0d49bab",
     "author": "Kenney",
     "license": "CC0-1.0",
     "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
     "source_url": "https://kenney.nl/assets/rpg-audio",
     "attribution": "Kenney — RPG Audio — https://kenney.nl/assets/rpg-audio — CC0-1.0. Durée et hauteur originales. Gain constant -3.40 dB ; WAV PCM16 44,1 kHz. Aucune coupe.",
-    "processing": "Durée et hauteur originales. Gain constant -3.40 dB ; WAV PCM16 44,1 kHz. Aucune coupe."
+    "processing": "Durée et hauteur originales. Gain constant -3.40 dB ; WAV PCM16 44,1 kHz. Aucune coupe. Revue de mix du 10 octobre 2026 : polarité du canal droit inversée (compatibilité mono)."
   },
   {
     "effect_id": "interaction_unavailable",
@@ -291,37 +291,37 @@
     "effect_id": "step_concrete",
     "candidate_id": "step_concrete_b1_b",
     "file": "assets/audio/sfx/selected/step_concrete.wav",
-    "sha256": "dffd4dd449ca0d4f6d8f3b80f3fa1828e37203399f02eb871c8d3abb38231257",
+    "sha256": "53d5157eb2e9537eba5943f61c188dd1fa5edcbf5bf0b062d4788010de18526f",
     "author": "Kenney",
     "license": "CC0-1.0",
     "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
     "source_url": "https://kenney.nl/assets/impact-sounds",
     "attribution": "Kenney — Impact Sounds — https://kenney.nl/assets/impact-sounds — CC0-1.0. Durée et hauteur originales. Gain constant -2.30 dB ; WAV PCM16 44,1 kHz. Aucune coupe.",
-    "processing": "Durée et hauteur originales. Gain constant -2.30 dB ; WAV PCM16 44,1 kHz. Aucune coupe."
+    "processing": "Durée et hauteur originales. Gain constant -2.30 dB ; WAV PCM16 44,1 kHz. Aucune coupe. Revue de mix du 10 octobre 2026 : silence de queue retiré (0 ms)."
   },
   {
     "effect_id": "step_gravel",
     "candidate_id": "step_gravel_b2_c",
     "file": "assets/audio/sfx/selected/step_gravel.wav",
-    "sha256": "39c041f148f96ec8474b41ff545cd852c01fead838da8215d9e2947e4896e97a",
+    "sha256": "5c26aa09773ef4e427ffca963763d99860b203554ee398d2455eee4a43b9d45f",
     "author": "TinyWorlds",
     "license": "CC0-1.0",
     "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
     "source_url": "https://opengameart.org/content/different-steps-on-wood-stone-leaves-gravel-and-mud",
     "attribution": "TinyWorlds — Different steps on wood, stone, leaves, gravel and mud — https://opengameart.org/content/different-steps-on-wood-stone-leaves-gravel-and-mud — CC0-1.0. Variante filtrée du même gravier que A/B. Gain constant +12.00 dB ; WAV PCM16 44,1 kHz. Aucune coupe.",
-    "processing": "Variante filtrée du même gravier que A/B. Gain constant +12.00 dB ; WAV PCM16 44,1 kHz. Aucune coupe."
+    "processing": "Variante filtrée du même gravier que A/B. Gain constant +12.00 dB ; WAV PCM16 44,1 kHz. Aucune coupe. Revue de mix du 10 octobre 2026 : silence de queue retiré (6 ms)."
   },
   {
     "effect_id": "step_wood",
     "candidate_id": "step_wood_b2_b",
     "file": "assets/audio/sfx/selected/step_wood.wav",
-    "sha256": "662c3ce0cc7e5402fdf6a1ed9f4afd7df39aec286c10780c684d7a7d04f93add",
+    "sha256": "b64dcd7332b064d2a038ec5a536ac97ed18a4a8f5453e01a796c5c41afe00f07",
     "author": "TinyWorlds",
     "license": "CC0-1.0",
     "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
     "source_url": "https://opengameart.org/content/different-steps-on-wood-stone-leaves-gravel-and-mud",
     "attribution": "TinyWorlds — Different steps on wood, stone, leaves, gravel and mud — https://opengameart.org/content/different-steps-on-wood-stone-leaves-gravel-and-mud — CC0-1.0. Durée et hauteur originales. Gain constant +12.00 dB ; WAV PCM16 44,1 kHz. Aucune coupe.",
-    "processing": "Durée et hauteur originales. Gain constant +12.00 dB ; WAV PCM16 44,1 kHz. Aucune coupe."
+    "processing": "Durée et hauteur originales. Gain constant +12.00 dB ; WAV PCM16 44,1 kHz. Aucune coupe. Revue de mix du 10 octobre 2026 : gain de fichier +6 dB, crête -11.9 dBFS. Revue de mix du 10 octobre 2026 : silence de queue retiré (0 ms)."
   },
   {
     "effect_id": "blade_swing",
@@ -531,13 +531,13 @@
     "effect_id": "enemy_ranged_shot",
     "candidate_id": "enemy_ranged_shot_b6_a",
     "file": "assets/audio/sfx/selected/enemy_ranged_shot.wav",
-    "sha256": "2d128dd98e0aed2be8547deb46a8c7acbc0277b9b13936acc11608b1e78a1f5b",
+    "sha256": "624f8ae2f06af5377eb5fd6223bd37da34b5753ede453c8fec237830e4d66125",
     "author": "rubberduck",
     "license": "CC0-1.0",
     "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
     "source_url": "https://opengameart.org/content/80-cc0-rpg-sfx",
     "attribution": "rubberduck — 80 CC0 RPG SFX — https://opengameart.org/content/80-cc0-rpg-sfx — CC0-1.0 (https://creativecommons.org/publicdomain/zero/1.0/). Adaptation : WAV PCM16 44,1 kHz. Traitement ffmpeg : aresample=44100,atrim=duration=0.5,asetpts=PTS-STARTPTS,lowpass=f=4200,afade=t=out:st=0.35:d=0.15,volume=12.00dB. Atténuation intentionnelle après équilibrage : 0 dB.",
-    "processing": "WAV PCM16 44,1 kHz. Traitement ffmpeg : aresample=44100,atrim=duration=0.5,asetpts=PTS-STARTPTS,lowpass=f=4200,afade=t=out:st=0.35:d=0.15,volume=12.00dB. Atténuation intentionnelle après équilibrage : 0 dB."
+    "processing": "WAV PCM16 44,1 kHz. Traitement ffmpeg : aresample=44100,atrim=duration=0.5,asetpts=PTS-STARTPTS,lowpass=f=4200,afade=t=out:st=0.35:d=0.15,volume=12.00dB. Atténuation intentionnelle après équilibrage : 0 dB. Revue de mix du 10 octobre 2026 : silence de tête retiré (23 ms)."
   },
   {
     "effect_id": "burrow_transition",
@@ -574,30 +574,6 @@
     "source_url": "https://opengameart.org/content/80-cc0-rpg-sfx",
     "attribution": "rubberduck — 80 CC0 RPG SFX — https://opengameart.org/content/80-cc0-rpg-sfx — CC0-1.0 (https://creativecommons.org/publicdomain/zero/1.0/). Adaptation : WAV PCM16 44,1 kHz. Traitement ffmpeg : aresample=44100,lowpass=f=4500,volume=2.20dB. Atténuation intentionnelle après équilibrage : 0 dB.",
     "processing": "WAV PCM16 44,1 kHz. Traitement ffmpeg : aresample=44100,lowpass=f=4500,volume=2.20dB. Atténuation intentionnelle après équilibrage : 0 dB."
-  },
-  {
-    "effect_id": "boss_enrage",
-    "candidate_id": "boss_enrage_b6_c",
-    "file": "assets/audio/sfx/selected/boss_enrage.wav",
-    "sha256": "ca98e5e94f87845cec90f3969eeb57bce8e0fbe07bdafce89bb123a3efc9bd97",
-    "author": "rubberduck",
-    "license": "CC0-1.0",
-    "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
-    "source_url": "https://opengameart.org/content/80-cc0-rpg-sfx",
-    "attribution": "rubberduck — 80 CC0 RPG SFX — https://opengameart.org/content/80-cc0-rpg-sfx — CC0-1.0 (https://creativecommons.org/publicdomain/zero/1.0/). Adaptation : WAV PCM16 44,1 kHz. Traitement ffmpeg : aresample=44100,asetrate=35280,aresample=44100,lowpass=f=4500,volume=4.50dB. Atténuation intentionnelle après équilibrage : 0 dB.",
-    "processing": "WAV PCM16 44,1 kHz. Traitement ffmpeg : aresample=44100,asetrate=35280,aresample=44100,lowpass=f=4500,volume=4.50dB. Atténuation intentionnelle après équilibrage : 0 dB."
-  },
-  {
-    "effect_id": "boss_death",
-    "candidate_id": "boss_death_b6_c",
-    "file": "assets/audio/sfx/selected/boss_death.wav",
-    "sha256": "37fe882911baec7736f8141ef955a2cc632ec74e89b4dcb6fd158da28476f131",
-    "author": "rubberduck",
-    "license": "CC0-1.0",
-    "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
-    "source_url": "https://opengameart.org/content/80-cc0-rpg-sfx",
-    "attribution": "rubberduck — 80 CC0 RPG SFX — https://opengameart.org/content/80-cc0-rpg-sfx — CC0-1.0 (https://creativecommons.org/publicdomain/zero/1.0/). Adaptation : WAV PCM16 44,1 kHz. Traitement ffmpeg : aresample=44100,asetrate=28665,aresample=44100,lowpass=f=3000,volume=-6.60dB. Atténuation intentionnelle après équilibrage : 0 dB.",
-    "processing": "WAV PCM16 44,1 kHz. Traitement ffmpeg : aresample=44100,asetrate=28665,aresample=44100,lowpass=f=3000,volume=-6.60dB. Atténuation intentionnelle après équilibrage : 0 dB."
   },
   {
     "effect_id": "weapon_chipped_blade",
@@ -996,7 +972,7 @@
     "effect_id": "weapon_sling",
     "candidate_id": "weapon_20261007_r2_sling_B",
     "file": "assets/audio/sfx/weapons/sling.wav",
-    "sha256": "6776eafb3af496d577ea987a136be218c6b208390c3793b1ba9b7f5c750cf0a5",
+    "sha256": "5e7000915c8c0b141a39df2f01316348648675d598012a815407ddd071b138dd",
     "author": "Joseph SARDIN",
     "license": "CC0-1.0",
     "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
@@ -1022,7 +998,8 @@
       "highpass_hz": 80,
       "attack_ms": 2,
       "release_ms": 40,
-      "normalization": "RMS actif −23 dBFS, crête au plus −8 dBFS"
+      "normalization": "RMS actif −23 dBFS, crête au plus −8 dBFS",
+      "mix_review_2026_10_10": "silence de tête retiré (54 ms)"
     },
     "sources": [
       {
@@ -1050,7 +1027,7 @@
     "effect_id": "weapon_sharpened_pipe",
     "candidate_id": "weapon_20261007_r2_sharpened_pipe_C",
     "file": "assets/audio/sfx/weapons/sharpened_pipe.wav",
-    "sha256": "d20291bfb6a8cdda25782750850c70918ebbb7976d1fd1f4731c6cc3c1ea3e5c",
+    "sha256": "6d40450b23e62674ba866a11939612f786e655f977f25a7780b587284cd2bec1",
     "author": "ValentinPetiteau",
     "license": "CC0-1.0",
     "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
@@ -1069,7 +1046,8 @@
       "highpass_hz": 80,
       "attack_ms": 2,
       "release_ms": 40,
-      "normalization": "RMS actif −23 dBFS, crête au plus −8 dBFS"
+      "normalization": "RMS actif −23 dBFS, crête au plus −8 dBFS",
+      "mix_review_2026_10_10": "silence de tête retiré (83 ms)"
     },
     "sources": [
       {
@@ -1089,7 +1067,7 @@
     "effect_id": "weapon_cleaver",
     "candidate_id": "weapon_20261007_r2_cleaver_A",
     "file": "assets/audio/sfx/weapons/cleaver.wav",
-    "sha256": "bd187e34d08728ecf32c473efebbd2f3d5e0d8849753a4937d0c38dfa0975567",
+    "sha256": "5bb2564fdc3ada312fa2519b37d7bf2a50f8719c0ca6a126cdeaa07a1bed52f2",
     "author": "Joseph SARDIN",
     "license": "CC0-1.0",
     "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
@@ -1108,7 +1086,8 @@
       "highpass_hz": 80,
       "attack_ms": 2,
       "release_ms": 40,
-      "normalization": "RMS actif −23 dBFS, crête au plus −8 dBFS"
+      "normalization": "RMS actif −23 dBFS, crête au plus −8 dBFS",
+      "mix_review_2026_10_10": "silence de tête retiré (73 ms)"
     },
     "sources": [
       {
@@ -1127,7 +1106,7 @@
     "effect_id": "weapon_whip",
     "candidate_id": "weapon_20261007_r2_whip_B",
     "file": "assets/audio/sfx/weapons/whip.wav",
-    "sha256": "4a3797166f82e819cb9cc897cb7c14884ad6a46fd4d1f52dc47de411829cd22c",
+    "sha256": "8fe24410d9c900a5c4ee0d6ce810132b1c8db674f5ac5d584484b308b9e95538",
     "author": "Xemptful",
     "license": "CC0-1.0",
     "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
@@ -1146,7 +1125,8 @@
       "highpass_hz": 80,
       "attack_ms": 2,
       "release_ms": 40,
-      "normalization": "RMS actif −23 dBFS, crête au plus −8 dBFS"
+      "normalization": "RMS actif −23 dBFS, crête au plus −8 dBFS",
+      "mix_review_2026_10_10": "silence de tête retiré (48 ms)"
     },
     "sources": [
       {
@@ -1319,7 +1299,7 @@
     "effect_id": "weapon_essence_staff",
     "candidate_id": "weapon_20261007_r2_essence_staff_A",
     "file": "assets/audio/sfx/weapons/essence_staff.wav",
-    "sha256": "1d099ae6aa30e9428f31f25bd8a08653e87d2ba7d43dc1f9ea03019beaf9cad9",
+    "sha256": "344f3aaf4f3e04da4bf3943546969a719fa90ffaf77f3e7447a12fe1c86e8807",
     "author": "Joseph SARDIN",
     "license": "CC0-1.0",
     "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
@@ -1338,7 +1318,8 @@
       "highpass_hz": 80,
       "attack_ms": 2,
       "release_ms": 40,
-      "normalization": "RMS actif −23 dBFS, crête au plus −8 dBFS"
+      "normalization": "RMS actif −23 dBFS, crête au plus −8 dBFS",
+      "mix_review_2026_10_10": "silence de tête retiré (66 ms)"
     },
     "sources": [
       {
@@ -1434,7 +1415,7 @@
     "effect_id": "weapon_last_broadcast",
     "candidate_id": "weapon_20261007_r2_last_broadcast_A",
     "file": "assets/audio/sfx/weapons/last_broadcast.wav",
-    "sha256": "993bd3ec049ee190eb9489e0b3f6abaee0cc5626cf02628a03f965599ee7a783",
+    "sha256": "d060c162d226e00995b3ed7c03cc1f5791c8bbd95761f3c18e70586fe88dd2db",
     "author": "Joseph SARDIN",
     "license": "CC0-1.0",
     "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
@@ -1460,7 +1441,8 @@
       "highpass_hz": 80,
       "attack_ms": 2,
       "release_ms": 40,
-      "normalization": "RMS actif −23 dBFS, crête au plus −8 dBFS"
+      "normalization": "RMS actif −23 dBFS, crête au plus −8 dBFS",
+      "mix_review_2026_10_10": "silence de tête retiré (47 ms)"
     },
     "sources": [
       {
@@ -1791,13 +1773,13 @@
     "effect_id": "barrier_fist_warning",
     "candidate_id": "barrier_fist_warning_v1",
     "file": "assets/audio/sfx/selected/barrier_fist_warning.wav",
-    "sha256": "b925abb5f44525a1757e32d0fc96784ccc0ffd660e574e874f21f4b01977591d",
+    "sha256": "ccd3f663f84d97826d056dbaea02ed0076be198d0cd1b5f5950c200c859f22b8",
     "author": "VESTIGES (montage) ; Joseph SARDIN / BigSoundBank",
     "license": "CC0-1.0",
     "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
     "source_url": "https://bigsoundbank.com/creaking-metallic-door-s0616.html ; https://bigsoundbank.com/medium-chain-2-s0361.html",
     "attribution": "Joseph SARDIN / BigSoundBank — creaking-metallic-door-s0616 — https://bigsoundbank.com/creaking-metallic-door-s0616.html — CC0-1.0 (licence BigSoundBank de type CC0) ; Joseph SARDIN / BigSoundBank — medium-chain-2-s0361 — https://bigsoundbank.com/medium-chain-2-s0361.html — CC0-1.0 (licence BigSoundBank de type CC0)",
-    "processing": "Porte de fer qui racle (BigSoundBank 0616, ×0,7) et chaîne qui glisse (BigSoundBank 0361, ×0,6), montée de 0,2 s. Graine 10102026 ; WAV PCM16 / 44,1 kHz stéréo. Script : prepare.py (plan 07, sons de la Barrière)."
+    "processing": "Porte de fer qui racle (BigSoundBank 0616, ×0,7) et chaîne qui glisse (BigSoundBank 0361, ×0,6), montée de 0,2 s. Graine 10102026 ; WAV PCM16 / 44,1 kHz stéréo. Script : prepare.py (plan 07, sons de la Barrière). Revue de mix du 10 octobre 2026 : silence de tête retiré (40 ms)."
   },
   {
     "effect_id": "barrier_fist_impact",
@@ -1815,13 +1797,13 @@
     "effect_id": "barrier_chain_warning",
     "candidate_id": "barrier_chain_warning_v1",
     "file": "assets/audio/sfx/selected/barrier_chain_warning.wav",
-    "sha256": "05fb5e611ed4a46dbc671ccfe7a23866ff3c0c74c97a126e5464edad9a1089c6",
+    "sha256": "aa47c53eca7de293bb6fbb26f91c214756a4de58d93228e9dcefeebe19bf5792",
     "author": "VESTIGES (montage) ; Joseph SARDIN / BigSoundBank, Kenney",
     "license": "CC0-1.0",
     "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
     "source_url": "https://bigsoundbank.com/detail-0359-heavy-chain.html ; https://kenney.nl/assets/rpg-audio",
     "attribution": "Joseph SARDIN / BigSoundBank — detail-0359-heavy-chain — https://bigsoundbank.com/detail-0359-heavy-chain.html — CC0-1.0 (licence BigSoundBank de type CC0) ; Kenney — RPG Audio — creak1.ogg — https://kenney.nl/assets/rpg-audio — CC0-1.0",
-    "processing": "Chaîne lourde qui se tend (BigSoundBank 0359, ×0,55) et gond qui grince (Kenney Creak, ×0,7). Graine 10102026 ; WAV PCM16 / 44,1 kHz stéréo. Script : prepare.py (plan 07, sons de la Barrière)."
+    "processing": "Chaîne lourde qui se tend (BigSoundBank 0359, ×0,55) et gond qui grince (Kenney Creak, ×0,7). Graine 10102026 ; WAV PCM16 / 44,1 kHz stéréo. Script : prepare.py (plan 07, sons de la Barrière). Revue de mix du 10 octobre 2026 : silence de tête retiré (192 ms)."
   },
   {
     "effect_id": "barrier_chain_sweep",
@@ -1839,13 +1821,13 @@
     "effect_id": "resurgence_accent",
     "candidate_id": "resurgence_accent_A_20261010",
     "file": "assets/audio/sfx/selected/resurgence_accent.wav",
-    "sha256": "64736e65cead668a3a98a082a0601bbfa742ecf0e1fd32a4c92cf2d45198b82e",
+    "sha256": "897f9b1f31884d8c5c0072fe48517c34fda761618b10367d36123f96cb2de626",
     "author": "VESTIGES",
     "license": "CC0-1.0",
     "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
     "source_url": "",
     "attribution": "VESTIGES — synthèse originale (prepare.py) — CC0-1.0",
-    "processing": "Copie à l’identique du candidat A choisi par Raphaël (sons-manquants-2026-10-10). Souffle inversé puis frappe grave (synthèse, 2,6 s). Recette et empreintes : archive hors dépôt, sons-manquants/manifest.json et prepare.py."
+    "processing": "Copie à l’identique du candidat A choisi par Raphaël (sons-manquants-2026-10-10). Souffle inversé puis frappe grave (synthèse, 2,6 s). Recette et empreintes : archive hors dépôt, sons-manquants/manifest.json et prepare.py. Revue de mix du 10 octobre 2026 : silence de tête retiré (441 ms)."
   },
   {
     "effect_id": "armor_parry",
@@ -1935,13 +1917,13 @@
     "effect_id": "steps_grass",
     "candidate_id": "steps_grass_A_20261010",
     "file": "assets/audio/sfx/selected/steps_grass.wav",
-    "sha256": "293c86dec0584246f281ba165c979a5bd8d2e09e0733879755bd61875df99fd2",
+    "sha256": "6e86ea16777811827c397afe5e07dfccdbaf5b82d43db3f33f18983efdc7a17a",
     "author": "Kenney",
     "license": "CC0-1.0",
     "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
     "source_url": "https://kenney.nl/assets/impact-sounds",
     "attribution": "Kenney — Impact Sounds — https://kenney.nl/assets/impact-sounds — CC0-1.0. Durée et hauteur originales. Gain constant -2.40 dB ; WAV PCM16 44,1 kHz. Aucune coupe.",
-    "processing": "Copie à l’identique du candidat A choisi par Raphaël (sons-manquants-2026-10-10). Le même, −6 dB. Recette et empreintes : archive hors dépôt, sons-manquants/manifest.json et prepare.py. Source antérieure conservée dans les crédits step_grass ; atténuation de 6 dB dans le WAV sélectionné, sans seconde atténuation dans la banque."
+    "processing": "Copie à l’identique du candidat A choisi par Raphaël (sons-manquants-2026-10-10). Le même, −6 dB. Recette et empreintes : archive hors dépôt, sons-manquants/manifest.json et prepare.py. Source antérieure conservée dans les crédits step_grass ; atténuation de 6 dB dans le WAV sélectionné, sans seconde atténuation dans la banque. Revue de mix du 10 octobre 2026 : passe-haut 60 Hz (infra-graves inaudibles), crête ramenée à -6.0 dBFS. Revue de mix du 10 octobre 2026 : silence de queue retiré (600 ms)."
   },
   {
     "effect_id": "impact_blade",
@@ -2031,13 +2013,13 @@
     "effect_id": "indicible_grab_warning",
     "candidate_id": "indicible_grab_warning_v1",
     "file": "assets/audio/sfx/selected/indicible_grab_warning.wav",
-    "sha256": "48a3dc98c673ae80badc986f37e6d82d4f2640e796f79ecee9e5fc571ec86d63",
+    "sha256": "b81674dc01fc2ec58e2771b6a6a04c0f8f614614636ee816c7a4e6acbbfcc3b4",
     "author": "VESTIGES (montage) ; Joseph SARDIN / BigSoundBank",
     "license": "CC0-1.0",
     "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
     "source_url": "https://bigsoundbank.com/steps-in-the-mud-s0495.html ; https://bigsoundbank.com/gurgling-sink-1-s1026.html",
     "attribution": "Joseph SARDIN / BigSoundBank — steps-in-the-mud-s0495 — https://bigsoundbank.com/steps-in-the-mud-s0495.html — CC0-1.0 (licence BigSoundBank de type CC0) ; Joseph SARDIN / BigSoundBank — gurgling-sink-1-s1026 — https://bigsoundbank.com/gurgling-sink-1-s1026.html — CC0-1.0 (licence BigSoundBank de type CC0)",
-    "processing": "Pas dans la boue (BigSoundBank 0495, ×0,6) et évier qui gargouille (BigSoundBank 1026, ×0,7), montée de 0,25 s, saturation douce. Graine 10102026 ; WAV PCM16 / 44,1 kHz stéréo. Script : prepare.py (plan 07 B5e, sons de l'Indicible)."
+    "processing": "Pas dans la boue (BigSoundBank 0495, ×0,6) et évier qui gargouille (BigSoundBank 1026, ×0,7), montée de 0,25 s, saturation douce. Graine 10102026 ; WAV PCM16 / 44,1 kHz stéréo. Script : prepare.py (plan 07 B5e, sons de l'Indicible). Revue de mix du 10 octobre 2026 : silence de tête retiré (64 ms)."
   },
   {
     "effect_id": "indicible_grab_impact",
@@ -2091,13 +2073,13 @@
     "effect_id": "indicible_wave_warning",
     "candidate_id": "indicible_wave_warning_v1",
     "file": "assets/audio/sfx/selected/indicible_wave_warning.wav",
-    "sha256": "148ae58f84467b9a472e25b931f1bf28fc5c332e391a747cc04640c1d01a7b82",
+    "sha256": "2e844505da90829c32ea4adabef4086e00ae0f18d5c52099ec136061047c5802",
     "author": "VESTIGES (montage) ; Joseph SARDIN / BigSoundBank",
     "license": "CC0-1.0",
     "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
     "source_url": "https://bigsoundbank.com/sea-of-the-beach-of-dellec-1-s2564.html",
     "attribution": "Joseph SARDIN / BigSoundBank — sea-of-the-beach-of-dellec-1-s2564 — https://bigsoundbank.com/sea-of-the-beach-of-dellec-1-s2564.html — CC0-1.0 (licence BigSoundBank de type CC0)",
-    "processing": "Vague qui monte (BigSoundBank 2564), en crescendo sur 1,1 s ; grondement synthétique. Graine 10102026 ; WAV PCM16 / 44,1 kHz stéréo. Script : prepare.py (plan 07 B5e, sons de l'Indicible)."
+    "processing": "Vague qui monte (BigSoundBank 2564), en crescendo sur 1,1 s ; grondement synthétique. Graine 10102026 ; WAV PCM16 / 44,1 kHz stéréo. Script : prepare.py (plan 07 B5e, sons de l'Indicible). Revue de mix du 10 octobre 2026 : silence de tête retiré (196 ms)."
   },
   {
     "effect_id": "indicible_wave_crash",

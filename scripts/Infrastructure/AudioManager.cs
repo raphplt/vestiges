@@ -15,15 +15,34 @@ public partial class AudioManager : Node
 	public static AudioManager Instance { get; private set; }
 
 	// --- Buses ---
+	private const string BusMaster   = "Master";
 	private const string BusMusic    = "Music";
 	private const string BusSfx      = "SFX";
+	// Sons du monde : sous-bus de SFX (même curseur), seul à être étouffé et compressé ; l'interface reste nette.
+	private const string BusWorld    = "World";
 	private const string BusAmbiance = "Ambiance";
 
 	// --- Monde assourdi (mort du joueur) ---
 	private const float MuffleOpenHz = 20000f;
 	private const float MuffleClosedHz = 500f;
-	private static readonly string[] MuffledBuses = { BusSfx, BusAmbiance };
+	private static readonly string[] MuffledBuses = { BusWorld, BusAmbiance };
 	private readonly List<AudioEffectLowPassFilter> _muffles = new();
+
+	// --- Ducking de la musique sur les grands moments (revue de mix, plan 15 X4) ---
+	private const float DuckAttackSec = 0.08f;
+	private const float DuckReleaseSec = 0.8f;
+	private AudioEffectAmplify _musicDuck;
+	private Tween _duckTween;
+	private float _duckHoldUntil;
+	private readonly Dictionary<string, (float Db, float Sec)> _soundDucks = new();
+
+	// --- Fondus des boucles : une boucle n'entre ni ne sort d'un coup ---
+	private const float LoopFadeInSec = 0.35f;
+	private const float LoopFadeOutSec = 0.5f;
+	private const float AmbianceFadeInSec = 1.2f;
+	private const float SilentDb = -60f;
+	private readonly Dictionary<AudioStreamPlayer, Tween> _loopFades = new();
+	private readonly Dictionary<AudioStreamPlayer, string> _loopSources = new();
 
 	// --- Musique (intention et fondus, plan 15 A1) ---
 	private MusicDirector _music;
@@ -35,6 +54,7 @@ public partial class AudioManager : Node
 	// --- Ambiance player ---
 	private AudioStreamPlayer _ambiancePlayer;
 	private Tween _ambianceFade;
+	private bool _ambianceFadingOut;
 	private string _ambianceKey = "";
 	private AudioStreamPlayer _ambianceOverlayPlayer;
 	private string _ambianceOverlayKey = "";
@@ -124,7 +144,9 @@ public partial class AudioManager : Node
 			_sfxMinIntervals[key] = (ulong)settings["min_interval_ms"].AsInt64();
 			_soundPriorities[key] = settings.ContainsKey("priority") ? settings["priority"].AsInt32() : 20;
 			_soundMaxVoices[key] = settings.ContainsKey("max_voices") ? Mathf.Max(1, settings["max_voices"].AsInt32()) : 2;
-			_soundBuses[key] = settings.ContainsKey("bus") ? settings["bus"].AsString() : BusSfx;
+			_soundBuses[key] = settings.ContainsKey("bus") ? settings["bus"].AsString() : BusWorld;
+			if (settings.ContainsKey("duck_music_db"))
+				_soundDucks[key] = ((float)settings["duck_music_db"].AsDouble(), (float)settings["duck_sec"].AsDouble());
 			if (settings.ContainsKey("biome"))
 				_soundBiomes[key] = settings["biome"].AsString();
 			if (settings.ContainsKey("variants"))
@@ -202,9 +224,9 @@ public partial class AudioManager : Node
 
 		_loopingSfxPlayer = new AudioStreamPlayer { Bus = BusSfx, Name = "LoopingSfx", ProcessMode = ProcessModeEnum.Always };
 		AddChild(_loopingSfxPlayer);
-		_lowHealthLoopPlayer = new AudioStreamPlayer { Bus = BusSfx, Name = "LowHealthLoop", ProcessMode = ProcessModeEnum.Always, VolumeDb = -10f };
+		_lowHealthLoopPlayer = new AudioStreamPlayer { Bus = BusWorld, Name = "LowHealthLoop", ProcessMode = ProcessModeEnum.Always, VolumeDb = -10f };
 		AddChild(_lowHealthLoopPlayer);
-		_borderWarningPlayer = new AudioStreamPlayer { Bus = BusSfx, Name = "BorderWarningLoop", ProcessMode = ProcessModeEnum.Always, VolumeDb = -12f };
+		_borderWarningPlayer = new AudioStreamPlayer { Bus = BusWorld, Name = "BorderWarningLoop", ProcessMode = ProcessModeEnum.Always, VolumeDb = -12f };
 		AddChild(_borderWarningPlayer);
 
 		_uiSfxPool = new AudioVoicePool(this, "UiSfx", UiSfxPoolSize, ProcessModeEnum.Always);
@@ -221,6 +243,9 @@ public partial class AudioManager : Node
 	public override void _ExitTree()
 	{
 		RemoveWorldMuffle();
+		// L'amplificateur vit sur le bus Music, au-delà de ce nœud : ne pas le laisser baissé.
+		if (_musicDuck != null)
+			ResetMusicDuck();
 		Instance = null;
 		Core.EventBus eventBus = GetNodeOrNull<Core.EventBus>("/root/EventBus");
 		if (eventBus != null)
@@ -278,14 +303,20 @@ public partial class AudioManager : Node
 		_muffles.Clear();
 	}
 
-	private static void EnsureAudioBuses()
+	private void EnsureAudioBuses()
 	{
-		EnsureBus(BusMusic,    -6f);
-		EnsureBus(BusSfx,      0f);
-		EnsureBus(BusAmbiance, -8f);
+		EnsureBus(BusMusic,    -6f, BusMaster);
+		EnsureBus(BusSfx,      0f, BusMaster);
+		EnsureBus(BusWorld,    0f, BusSfx);
+		EnsureBus(BusAmbiance, -8f, BusMaster);
+		_musicDuck = EnsureBusEffect(BusMusic, () => new AudioEffectAmplify());
+		// Compression douce du monde : une salve d'impacts et de coups ne saute pas au-dessus du reste.
+		EnsureBusEffect(BusWorld, () => new AudioEffectCompressor { Threshold = -18f, Ratio = 3f, AttackUs = 5000f, ReleaseMs = 150f });
+		// Plafond de sortie : la somme des voix ne sature jamais.
+		EnsureBusEffect(BusMaster, () => new AudioEffectHardLimiter { CeilingDb = -1f, Release = 0.1f });
 	}
 
-	private static void EnsureBus(string name, float defaultDb)
+	private static void EnsureBus(string name, float defaultDb, string send)
 	{
 		if (AudioServer.GetBusIndex(name) >= 0)
 			return;
@@ -293,7 +324,45 @@ public partial class AudioManager : Node
 		int idx = AudioServer.BusCount - 1;
 		AudioServer.SetBusName(idx, name);
 		AudioServer.SetBusVolumeDb(idx, defaultDb);
-		AudioServer.SetBusSend(idx, "Master");
+		AudioServer.SetBusSend(idx, send);
+	}
+
+	private static T EnsureBusEffect<T>(string bus, System.Func<T> create) where T : AudioEffect
+	{
+		int index = AudioServer.GetBusIndex(bus);
+		for (int i = 0; i < AudioServer.GetBusEffectCount(index); i++)
+		{
+			if (AudioServer.GetBusEffect(index, i) is T existing)
+				return existing;
+		}
+		T effect = create();
+		AudioServer.AddBusEffect(index, effect);
+		return effect;
+	}
+
+	/// <summary>Baisse la musique le temps d'un grand moment ; un second moment prolonge la baisse sans la creuser.</summary>
+	private void DuckMusic(float db, float holdSec)
+	{
+		float now = NowMsec / 1000f;
+		bool deeper = db < _musicDuck.VolumeDb - 0.01f;
+		if (!deeper && now + holdSec <= _duckHoldUntil)
+			return;
+		_duckHoldUntil = Mathf.Max(_duckHoldUntil, now + holdSec);
+		float target = Mathf.Min(db, _musicDuck.VolumeDb);
+		_duckTween?.Kill();
+		_duckTween = CreateTween().SetPauseMode(Tween.TweenPauseMode.Process).SetIgnoreTimeScale();
+		_duckTween.TweenProperty(_musicDuck, "volume_db", target, DuckAttackSec);
+		_duckTween.TweenInterval(_duckHoldUntil - now);
+		_duckTween.TweenProperty(_musicDuck, "volume_db", 0f, DuckReleaseSec);
+		_duckTween.TweenCallback(Callable.From(() => _duckHoldUntil = 0f));
+	}
+
+	private void ResetMusicDuck()
+	{
+		_duckTween?.Kill();
+		_duckTween = null;
+		_duckHoldUntil = 0f;
+		_musicDuck.VolumeDb = 0f;
 	}
 
 	// =========================================================
@@ -409,6 +478,8 @@ public partial class AudioManager : Node
 		player.PitchScale = _soundVariants.ContainsKey(key) ? 1f : basePitch + _rng.RandfRange(-pitchVariance, pitchVariance);
 		player.VolumeDb = volumeDb + _soundVolumes.GetValueOrDefault(key);
 		player.Play();
+		if (_soundDucks.TryGetValue(key, out (float Db, float Sec) duck))
+			DuckMusic(duck.Db, duck.Sec);
 	}
 
 	/// <summary>Joue un SFX UI qui fonctionne même en pause (level-up, coffre, etc.).</summary>
@@ -441,6 +512,8 @@ public partial class AudioManager : Node
 		player.PitchScale = _soundVariants.ContainsKey(key) ? 1f : 1f + _rng.RandfRange(-pitchVariance, pitchVariance);
 		player.VolumeDb = volumeDb + _soundVolumes.GetValueOrDefault(key);
 		player.Play();
+		if (_soundDucks.TryGetValue(key, out (float Db, float Sec) duck))
+			DuckMusic(duck.Db, duck.Sec);
 		return player;
 	}
 
@@ -486,9 +559,7 @@ public partial class AudioManager : Node
 		if (!_streams.TryGetValue(key, out AudioStream stream))
 			return;
 
-		_loopingSfxPlayer.Stream = CreateLoopableStream(stream);
-		_loopingSfxPlayer.VolumeDb = volumeDb + _soundVolumes.GetValueOrDefault(key);
-		_loopingSfxPlayer.Play();
+		StartLoop(_loopingSfxPlayer, key, stream, volumeDb + _soundVolumes.GetValueOrDefault(key));
 		_loopingSfxKey = key;
 	}
 
@@ -498,11 +569,7 @@ public partial class AudioManager : Node
 		Instance?.StopLoopingSfx();
 	}
 
-	public void StopLoopingSfx()
-	{
-		_loopingSfxPlayer.Stop();
-		_loopingSfxKey = "";
-	}
+	public void StopLoopingSfx() => StopLoopOnPlayer(_loopingSfxPlayer, ref _loopingSfxKey);
 
 	/// <summary>Relit l'intention musicale : à l'ouverture du jeu, aucun changement d'état n'annonce le Hub.</summary>
 	public void RefreshMusic() => _music.Refresh();
@@ -520,17 +587,22 @@ public partial class AudioManager : Node
 		if (_ambianceKey != key || !_ambiancePlayer.Playing)
 		{
 			_ambiancePlayer.Stream = CreateLoopableStream(stream);
+			_ambiancePlayer.VolumeDb = SilentDb;
 			_ambiancePlayer.Play();
 		}
 		_ambianceKey = key;
-		_ambiancePlayer.VolumeDb = _soundVolumes.GetValueOrDefault(key);
+		_ambianceFadingOut = false;
+		// Un retour pendant le fondu de sortie repart du niveau atteint.
+		_ambianceFade = CreateTween();
+		_ambianceFade.TweenProperty(_ambiancePlayer, "volume_db", _soundVolumes.GetValueOrDefault(key), AmbianceFadeInSec);
 	}
 
 	private void FadeOutAmbiance(float duration = 2f)
 	{
 		_ambianceFade?.Kill();
+		_ambianceFadingOut = true;
 		_ambianceFade = CreateTween();
-		_ambianceFade.TweenProperty(_ambiancePlayer, "volume_db", -60f, duration);
+		_ambianceFade.TweenProperty(_ambiancePlayer, "volume_db", SilentDb, duration);
 		_ambianceFade.TweenCallback(Callable.From(_ambiancePlayer.Stop));
 	}
 
@@ -652,7 +724,7 @@ public partial class AudioManager : Node
 			return;
 		if (_currentPhase == "Exploration" && IsSoundInCurrentBiome("sfx_ambiance_foret"))
 			PlayAmbiance("sfx_ambiance_foret");
-		else if (_ambiancePlayer.Playing && (_ambianceFade == null || !_ambianceFade.IsRunning()))
+		else if (_ambiancePlayer.Playing && !_ambianceFadingOut)
 			FadeOutAmbiance(0.5f);
 	}
 
@@ -762,8 +834,6 @@ public partial class AudioManager : Node
 	private void OnRandomEventTriggered(string eventId, string eventName)
 	{
 		_currentRandomEventId = eventId;
-		if (eventId is "resurgence" or "the_call")
-			PlaySfx("sfx_danger_building", 0f, -5f);
 		UpdateContextAmbiance();
 	}
 
@@ -803,14 +873,16 @@ public partial class AudioManager : Node
 		_currentRandomEventId = "";
 		_ambianceFade?.Kill();
 		_ambianceFade = null;
+		_ambianceFadingOut = false;
 		_ambiancePlayer.Stop();
 		_ambianceKey = "";
 		_sfxPool.Stop();
 		_uiSfxPool.Stop();
-		StopLoopingSfx();
-		StopLoopOnPlayer(_ambianceOverlayPlayer, ref _ambianceOverlayKey);
-		StopLoopOnPlayer(_lowHealthLoopPlayer, ref _lowHealthLoopKey);
-		StopLoopOnPlayer(_borderWarningPlayer, ref _borderWarningKey);
+		StopLoopNow(_loopingSfxPlayer, ref _loopingSfxKey);
+		StopLoopNow(_ambianceOverlayPlayer, ref _ambianceOverlayKey);
+		StopLoopNow(_lowHealthLoopPlayer, ref _lowHealthLoopKey);
+		StopLoopNow(_borderWarningPlayer, ref _borderWarningKey);
+		ResetMusicDuck();
 		_sfxLastPlayTime.Clear();
 		_uiLastPlayTime.Clear();
 	}
@@ -940,17 +1012,57 @@ public partial class AudioManager : Node
 		if (!_streams.TryGetValue(key, out AudioStream stream))
 			return;
 
-		player.Stream = CreateLoopableStream(stream);
-		player.VolumeDb = volumeDb + _soundVolumes.GetValueOrDefault(key);
-		player.Play();
+		StartLoop(player, key, stream, volumeDb + _soundVolumes.GetValueOrDefault(key));
 		currentKey = key;
 	}
 
+	/// <summary>Sortie en fondu ; appelée à chaque image tant que la boucle n'a pas lieu d'être, elle ne relance rien.</summary>
 	private void StopLoopOnPlayer(AudioStreamPlayer player, ref string currentKey)
 	{
-		if (player.Playing)
-			player.Stop();
+		if (currentKey.Length == 0)
+			return;
 		currentKey = "";
+		KillLoopFade(player);
+		if (!player.Playing)
+			return;
+		Tween fade = CreateLoopTween(player);
+		fade.TweenProperty(player, "volume_db", SilentDb, LoopFadeOutSec);
+		fade.TweenCallback(Callable.From(player.Stop));
+		_loopFades[player] = fade;
+	}
+
+	private void StopLoopNow(AudioStreamPlayer player, ref string currentKey)
+	{
+		KillLoopFade(player);
+		player.Stop();
+		currentKey = "";
+	}
+
+	/// <summary>Redemandée pendant son fondu de sortie, la même boucle remonte depuis le niveau atteint sans repartir du début.</summary>
+	private void StartLoop(AudioStreamPlayer player, string key, AudioStream stream, float targetDb)
+	{
+		KillLoopFade(player);
+		if (!player.Playing || _loopSources.GetValueOrDefault(player) != key)
+		{
+			player.Stream = CreateLoopableStream(stream);
+			player.VolumeDb = SilentDb;
+			player.Play();
+			_loopSources[player] = key;
+		}
+		Tween fade = CreateLoopTween(player);
+		fade.TweenProperty(player, "volume_db", targetDb, LoopFadeInSec);
+		_loopFades[player] = fade;
+	}
+
+	/// <summary>Les boucles d'interface et d'alerte jouent en pause : leur fondu aussi.</summary>
+	private static Tween CreateLoopTween(AudioStreamPlayer player) =>
+		player.CreateTween().SetIgnoreTimeScale().SetPauseMode(
+			player.ProcessMode == ProcessModeEnum.Always ? Tween.TweenPauseMode.Process : Tween.TweenPauseMode.Bound);
+
+	private void KillLoopFade(AudioStreamPlayer player)
+	{
+		if (_loopFades.Remove(player, out Tween fade))
+			fade.Kill();
 	}
 
 	private static AudioStream CreateLoopableStream(AudioStream stream)

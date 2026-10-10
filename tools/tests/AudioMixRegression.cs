@@ -52,9 +52,16 @@ public partial class AudioMixRegression : Node
             AudioStreamPlayer confirm = audio.PlayUiSfx("sfx_menu_confirmer");
             Check(confirm != null && confirm.CanProcess(), "confirmation audible pendant la pause");
             GetTree().Paused = false;
-            audio.PlayLoopingSfx("sfx_bow_release", -2f);
-            Check(Mathf.IsEqualApprox(audio.GetNode<AudioStreamPlayer>("LoopingSfx").VolumeDb, -16f), "gain de banque appliqué aux boucles");
+            AudioStreamPlayer loop = audio.GetNode<AudioStreamPlayer>("LoopingSfx");
+            audio.PlayLoopingSfx("sfx_level_up_loop", -2f);
+            Check(loop.Playing && loop.VolumeDb < -40f, "boucle : entrée en fondu, pas d'un coup");
+            await Frames(40);
+            Check(Mathf.IsEqualApprox(loop.VolumeDb, -8f), "gain de banque appliqué aux boucles au terme du fondu");
             audio.StopLoopingSfx();
+            Check(loop.Playing, "boucle : sortie en fondu, pas d'un coup");
+            await Frames(45);
+            Check(!loop.Playing, "boucle : arrêtée au terme du fondu de sortie");
+            await CheckMixBuses(audio);
 
             await CheckNoteVariants(audio);
 
@@ -97,6 +104,41 @@ public partial class AudioMixRegression : Node
         GetTree().Paused = false;
         GD.Print($"[AudioMixRegression] RESULT failures={_failures}");
         GetTree().Quit(_failures == 0 ? 0 : 1);
+    }
+
+    /// <summary>Revue de mix (plan 15 X1, X4) : limiteur, monde séparé de l'interface, ducking des grands moments.</summary>
+    private async Task CheckMixBuses(AudioManager audio)
+    {
+        int master = AudioServer.GetBusIndex("Master");
+        int world = AudioServer.GetBusIndex("World");
+        int music = AudioServer.GetBusIndex("Music");
+        Check(HasEffect<AudioEffectHardLimiter>(master), "Master : limiteur de sortie");
+        Check(world >= 0 && AudioServer.GetBusSend(world) == "SFX" && HasEffect<AudioEffectCompressor>(world),
+            "monde : sous-bus compressé des effets, réglé par le curseur Effets");
+        AudioManager.SetWorldMuffle(1f);
+        Check(HasEffect<AudioEffectLowPassFilter>(world) && !HasEffect<AudioEffectLowPassFilter>(AudioServer.GetBusIndex("SFX")),
+            "étouffement : le monde seulement, l'interface reste nette");
+        AudioManager.SetWorldMuffle(0f);
+        Check(!HasEffect<AudioEffectLowPassFilter>(world), "étouffement retiré");
+        AudioEffectAmplify duck = null;
+        for (int i = 0; i < AudioServer.GetBusEffectCount(music); i++)
+            duck ??= AudioServer.GetBusEffect(music, i) as AudioEffectAmplify;
+        AudioStreamPlayer reveal = audio.PlayUiSfx("sfx_chest_reveal");
+        await Frames(15);
+        Check(duck != null && Mathf.IsEqualApprox(duck.VolumeDb, -5f), "coffre révélé : musique baissée de 5 dB");
+        AudioManager.FadeOutUI(reveal, "sfx_chest_reveal", 0.01f);
+        await Frames(250);
+        Check(Mathf.IsEqualApprox(duck.VolumeDb, 0f), "ducking : la musique revient après le moment");
+    }
+
+    private static bool HasEffect<T>(int bus) where T : AudioEffect
+    {
+        for (int i = 0; i < AudioServer.GetBusEffectCount(bus); i++)
+        {
+            if (AudioServer.GetBusEffect(bus, i) is T)
+                return true;
+        }
+        return false;
     }
 
     private async Task CheckDeathAudio(AudioManager audio, AudioStreamWav stream)
@@ -197,6 +239,8 @@ public partial class AudioMixRegression : Node
             Check(!forest.Playing, $"{biome} : aucun démarrage du fond de forêt");
         }
         bus.EmitSignal(EventBus.SignalName.PlayerBiomeChanged, "forest_reclaimed");
+        Check(forest.Playing && forest.VolumeDb < -40f, "entrée en forêt : le fond entre en fondu");
+        await Frames(80);
         Check(forest.Playing && Mathf.IsEqualApprox(forest.VolumeDb, -2f), "entrée en forêt : fond complet à −2 dB");
         AudioStream unchanged = forest.Stream;
         const System.Reflection.BindingFlags flags = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic;
@@ -244,7 +288,7 @@ public partial class AudioMixRegression : Node
         bus.EmitSignal(EventBus.SignalName.PlayerBiomeChanged, "urban_ruins");
         await Frames(8);
         bus.EmitSignal(EventBus.SignalName.PlayerBiomeChanged, "forest_reclaimed");
-        await Frames(45);
+        await Frames(80);
         Check(forest.Playing && Mathf.IsEqualApprox(forest.VolumeDb, -2f), "retour rapide : l'ancien fondu ne coupe pas le fond");
         bus.EmitSignal(EventBus.SignalName.RandomEventTriggered, "storm", "Orage");
         bus.EmitSignal(EventBus.SignalName.PlayerBiomeChanged, "wild_fields");

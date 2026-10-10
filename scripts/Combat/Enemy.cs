@@ -14,6 +14,10 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 	private const float MeleeAttackCooldown = 0.75f;
 	// Un tir lointain reste muet : l'AudioManager n'est pas spatialisé, seul ce qui menace le joueur s'entend.
 	private const float RangedAttackAudioRadius = 650f;
+	// En deçà, plein niveau ; au-delà, le son s'efface jusqu'au rayon muet au lieu d'y tomber d'un coup.
+	private const float NearbyAudioFullRadius = 250f;
+	private const float NearbyAudioBaseDb = -7f;
+	private const float NearbyAudioFalloffDb = -14f;
 	private const float DeathTweenDuration = 0.3f;
 	private const float DissolveDuration = 0.6f;
 	private const float PlayerProximityRange = 80f;
@@ -795,11 +799,16 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 			ProcessPackBonus(delta);
 	}
 
-	/// <summary>Son d'une action de la créature, muet si elle est loin : l'AudioManager n'est pas spatialisé.</summary>
+	/// <summary>Son d'une action de la créature, plus faible avec la distance et muet au loin : l'AudioManager n'est pas spatialisé.</summary>
 	internal void PlayNearbyAudio(string key)
 	{
-		if (_player != null && IsInstanceValid(_player) && GlobalPosition.DistanceSquaredTo(_player.GlobalPosition) < RangedAttackAudioRadius * RangedAttackAudioRadius)
-			Infrastructure.AudioManager.Play(key, 0.06f, -7f);
+		if (_player == null || !IsInstanceValid(_player))
+			return;
+		float distance = GlobalPosition.DistanceTo(_player.GlobalPosition);
+		if (distance >= RangedAttackAudioRadius)
+			return;
+		float far = Mathf.SmoothStep(NearbyAudioFullRadius, RangedAttackAudioRadius, distance);
+		Infrastructure.AudioManager.Play(key, 0.06f, NearbyAudioBaseDb + NearbyAudioFalloffDb * far);
 	}
 
 	/// <summary>Sentinelle : immobile, tire à distance. Pilier organique ancré.</summary>

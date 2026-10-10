@@ -19,6 +19,8 @@ internal sealed class AudioStemRecorder : IDisposable
 {
     private const string StepsBus = "StemSteps";
     private const string StepsPrefix = "sfx_pas_";
+    // Les pas jouent sur le sous-bus du monde, envoyé vers SFX : les en sortir évite de les compter deux fois.
+    private const string WorldBus = "World";
     private static readonly (string Bus, string Stem)[] Stems = { ("Music", "music"), ("Ambiance", "ambiance"), ("SFX", "sfx"), (StepsBus, "steps") };
     private readonly string _output;
     private readonly List<(int Bus, int Effect, AudioEffectRecord Record)> _records = new();
@@ -36,7 +38,7 @@ internal sealed class AudioStemRecorder : IDisposable
         AudioServer.SetBusSend(steps, "Master");
         _soundBuses = (Dictionary<string, string>)typeof(AudioManager)
             .GetField("_soundBuses", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(AudioManager.Instance);
-        foreach (string key in _soundBuses.Keys.Where(key => key.StartsWith(StepsPrefix) && _soundBuses[key] == "SFX").ToList())
+        foreach (string key in _soundBuses.Keys.Where(key => key.StartsWith(StepsPrefix) && _soundBuses[key] == WorldBus).ToList())
         {
             _soundBuses[key] = StepsBus;
             _reroutedSteps.Add(key);
@@ -58,7 +60,7 @@ internal sealed class AudioStemRecorder : IDisposable
     public void Dispose()
     {
         foreach (string key in _reroutedSteps)
-            _soundBuses[key] = "SFX";
+            _soundBuses[key] = WorldBus;
         Godot.Collections.Dictionary manifest = new() { ["start_audio_s"] = _startSeconds };
         Godot.Collections.Dictionary stems = new();
         for (int i = 0; i < _records.Count; i++)
