@@ -33,7 +33,7 @@ Notes : marais 4/10, immeubles 5/10, forêt et petits décors urbains 6/10, cham
 | **U3** | Petits décors urbains : murs, débris, bureau renversé, poutres ; taille minimale et contraste sur le sol des ruines | Livré, voir §5 |
 | **U4** | Orphelins urbains : les trois murs supprimés avec leurs `.import`, accord de Raphaël | Livré |
 | **F1** | Forêt : les 18 modèles repris (23 PNG), arbres partagés avec les champs et la ferme ; galerie en jeu | Livré, voir §6 |
-| C1 | Champs et ferme : maisons de ferme (façades du kit urbain), grange endommagée vraiment différente, haies, verger | À faire |
+| **C1** | Champs et ferme : maisons de ferme (façades du kit urbain), grange endommagée vraiment différente, haies, verger, petits décors des champs | Livré, voir §7 |
 | Q1 | Carrière : panneau de danger, cristaux, petits décors lisibles | À faire |
 
 Forêt, champs et carrière ont été demandés après les lots urbains ([DECISIONS §84](DECISIONS.md)) : « je crois que sur les autres il y a moins de choses à revoir », d'où une reprise plus légère, un lot par biome.
@@ -136,3 +136,35 @@ Forêt, champs et carrière ont été demandés après les lots urbains ([DECISI
 | Voiture envahie | boules vertes, sucette | mousse peinte sur le toit et le capot, lierre en chapelets le long des portières, herbes aux roues, jeune arbre en grappes qui perce le toit |
 
 **Vérifications F1.** Aperçus ×2 sur les trois sols de la forêt (sol, sous-bois, terre) et ×5 isolés, quatre passes ; galerie en jeu (`--capture-prop-gallery forest_reclaimed`, seed 1002, 32 sprites cadrés) regardée : arbres à fourche et bouleaux se détachent du sous-bois, petits décors lisibles à côté du personnage. Réverbère, panneau, mur et voiture ne se posent que sur le béton de la forêt, absent des seeds 1002, 7 et 42 : vus en planche seulement. Tailles gardées dans leurs catégories (fleurs et champignons au-dessus du seuil de décalque comme avant, buisson et fougère sous le seuil de piétinement, souche toujours bloquante). Régénération de la forêt comparée octet par octet : identique ; marais régénéré après le passage de ses aides dans `_flora.py` : aucun fichier modifié.
+
+## 7. Compte rendu C1 — champs et ferme
+
+**Kit.** Les touffes d'herbe en brins (`_grass`) passent dans `_flora.py` et remplacent partout les boules vertes posées au pied des objets (tracteurs, silos, abreuvoir, pique-nique, tracteur embourbé). `_top_skin` ne prend plus les faces verticales qu'on longe en montant : la mousse du dessus restait accrochée aux flancs (mur en ruine et voiture de la forêt régénérés, plus nets). `tree` gagne deux réglages : `cluster` plafonne la taille des grappes d'une grande couronne (au-delà de ~6 px, une grappe à peine sortie de son cœur se lisait en œil sur l'arbre isolé), `blossom` sème la floraison sur toute la couronne au lieu d'un chapeau rose.
+
+**Maisons de ferme.** Elles sortent du même `building` que les immeubles : leurs PNG n'avaient pas été régénérés depuis U1. Ils le sont : enduit taché, coulures, briques à nu, volets, toit de tuiles moussu, lierre.
+
+**Décor par décor :**
+
+| Décor | Avant | Après |
+|---|---|---|
+| Arbre isolé | grappes en « œil » | grappes plafonnées, ombre plus franche |
+| Pommier en fleurs | chapeau rose posé sur le vert | fleurs semées sur toute la couronne |
+| Herbes hautes (×3) | pavés de bâtons | quinze brins fins en éventail, pied sombre, pointe claire ; épis pour le blé sauvage |
+| Fleurs des champs (×3) | taches | rosette, tiges, corolles tournées vers la caméra : coquelicots à cœur noir, bleuets, marguerites |
+| Murets (×3) | blocs lisses gris et gris foncé | moellons bosselés sur deux assises et couvertine de chant, lichen, mousse sur le dessus, herbe au pied ; pierres roulées sous la trouée |
+| Clôtures (×4) | bâtons lisses | bois veiné dans le sens du fil, lichen, herbe au pied des piquets |
+| Balles de foin | cylindre doré, boule verte | brins clairs, filet de liage, pied humide ; la pourrie brunit, s'affaisse, se couvre de mousse et d'herbe |
+| Épouvantail | de profil | de face : bras qui a lâché, veste rapiécée, paille aux manches et au col, chapeau mou |
+| Puits | margelle lisse | moellons appareillés, mousse, montants veinés, toit de planches moussu, corde et seau |
+| Menhir | œuf gris à points jaunes | pierre bosselée et fendue, lichens jaune pâle et gris, mousse au pied |
+| Charrue | barre brune illisible | poutre, trois versoirs d'acier décalés au bord usé clair, roue de jauge, rouille, herbe |
+| Tracteurs (×2) | blocs | calandre, garde-boue, toit de cabine, crampons, rouille en coulures |
+| Éolienne | pales en boules | lames minces vrillées, rouille par plaques, herbe aux pieds |
+| Silos (×2) | cylindres lisses, coulures en bâtons | tôle ondulée, coulures sous les cerclages ; le silo effondré a un sommet arraché en dents de scie et une déchirure |
+| Granges (×3) | rayures de sucre d'orge, toit à taches | planches jointes et veinées, peinture écaillée sur le bois gris, pied sali, rouille en coulures, mousse au bas des pans ; l'endommagée a le toit crevé sur ses chevrons, des planches arrachées, un battant tombé devant et la paille répandue |
+| Hangars (×2) | toit à taches | rouille dans le sens de la pente, poteaux veinés, paille piquée de brins clairs |
+| Haies (×4) | boudins vert sombre | grappes sombres au pied, plus claires au sommet ; aubépine blanche semée sur les fleuries |
+
+**Vérifications C1.** Aperçus ×2 sur trois sols des champs (herbe, blé, chaume) et ×5 isolés, plusieurs passes par famille ; planches de génération regardées ; galerie en jeu (`--capture-prop-gallery wild_fields`, seed 1002, 63 sprites cadrés, dont les fermes entières) : granges, maisons et hangars se lisent comme une ferme, la grange endommagée se distingue au premier coup d'œil, haies et petits décors se détachent de l'herbe. Décors inchangés (flaques, remorque, portails, poteau, linge, épouvantail aux corbeaux, arbres de verger en feuilles) : rendus identiques. Forêt : seuls le mur en ruine et la voiture changent (`_top_skin`), les arbres restent identiques. Régénération des champs et de la ferme comparée octet par octet : identique.
+
+**Question à Raphaël.** `assets/props/wild_fields/_wild_fields_hero_props.png` est la planche d'un ancien générateur (`scripts/generate_wild_fields_props.py`), importée par Godot mais chargée nulle part. La supprimer avec son `.import` ? Rien n'est supprimé sans son accord.

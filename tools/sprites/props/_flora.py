@@ -102,32 +102,42 @@ def _bounded(shape: Callable[[np.ndarray], np.ndarray], hull: Callable[[np.ndarr
 
 
 def _top_skin(shape: Callable[[np.ndarray], np.ndarray], thickness: float) -> Callable[[np.ndarray], np.ndarray]:
-    """Masque des faces tournées vers le ciel : négatif là où monter de `thickness` fait sortir du volume."""
+    """
+    Masque des faces tournées vers le ciel : négatif là où monter de `thickness` éloigne du volume d'au moins la
+    moitié de cette hauteur. Une face verticale, qu'on longe en montant, n'est pas prise.
+    """
     lift = np.array([0.0, thickness, 0.0])
-    return lambda p: -shape(p + lift)
+    return lambda p: thickness * 0.5 - shape(p + lift)
 
 
 def _leaf_mass(centers, radii, seed: int, per: int = 7, ratio: float = 0.5, spread: float = 0.62,
-               rough: float = 0.05 * M) -> Callable[[np.ndarray], np.ndarray]:
+               rough: float = 0.05 * M, cluster: float | None = None) -> Callable[[np.ndarray], np.ndarray]:
     """
     Feuillage en grappes : chaque touffe est un cœur ellipsoïde hérissé de `per` boules plus petites réparties sur sa
     surface. Chaque grappe prend sa propre lumière et se détache de ses voisines par une ligne interne : la lecture
     « feuille par paquet » du pixel art, sans bosses régulières. Un bruit fin (`rough`) froisse les grappes pour
-    qu'aucune ne se lise en bulle parfaite. Une sphère englobante par touffe évite d'évaluer les grappes loin d'elle.
+    qu'aucune ne se lise en bulle parfaite. `cluster` plafonne le rayon des grappes d'une grande couronne et en ajoute
+    d'autant : au-delà de ~6 px, une grappe à peine sortie de son cœur se lit en œil. Une sphère englobante par touffe
+    évite d'évaluer les grappes loin d'elle.
     """
     w = Weathering(seed)
     groups = []
     for center, radius in zip(centers, radii):
         center, radius = np.asarray(center, dtype=np.float64), np.asarray(radius, dtype=np.float64)
         size = float(np.mean(radius))
+        sub = size * ratio
+        count = per
+        if cluster is not None and sub > cluster:
+            count = int(round(per * (sub / cluster) ** 2))
+            sub = cluster
         subs = []
-        for k in range(per):
-            y = 1.0 - 2.0 * (k + 0.5) / per
+        for k in range(count):
+            y = 1.0 - 2.0 * (k + 0.5) / count
             ring = np.sqrt(max(0.0, 1.0 - y * y))
             a = k * 2.39996 + w.uniform(0, 2 * np.pi)
             subs.append((center + np.array([np.cos(a) * ring, y, np.sin(a) * ring]) * radius * spread,
-                         size * ratio * w.uniform(0.85, 1.15)))
-        reach = float(np.max(radius)) * spread + size * ratio * 1.15
+                         sub * w.uniform(0.85, 1.15)))
+        reach = float(np.max(radius)) * spread + sub * 1.15
         groups.append((center, radius * 0.8, max(reach, float(np.max(radius)) * 0.8), subs))
 
     def field(p: np.ndarray) -> np.ndarray:
@@ -149,3 +159,18 @@ def _leaf_mass(centers, radii, seed: int, per: int = 7, ratio: float = 0.5, spre
         return d
 
     return field
+
+
+def _grass(w: Weathering, spots: list[tuple[float, float]], blades: int = 5, height: float = 0.3 * M, ground: float = 0.0):
+    """
+    Touffes d'herbe au pied d'un objet : brins fins qui s'écartent en éventail, (x, z) de chaque touffe ; `ground`
+    les fait pousser plus haut (sur une balle pourrie, un toit).
+    """
+    pieces = []
+    for x, z in spots:
+        for index in range(blades):
+            angle = w.uniform(0, 2 * np.pi)
+            lean = w.uniform(0.25, 0.6)
+            tip = np.array([x + np.sin(angle) * lean * height * 0.6, ground + height * w.uniform(0.6, 1.0), z + np.cos(angle) * lean * height * 0.5])
+            pieces.append((np.array([x, ground, z]), tip))
+    return lambda p: _union(*(capsule(p, a, b, 0.03 * M, 0.012 * M) for a, b in pieces))

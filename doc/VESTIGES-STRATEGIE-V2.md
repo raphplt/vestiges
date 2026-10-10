@@ -871,6 +871,7 @@ Le script de post-processing doit inclure une vérification/correction de l'angl
 - [x] Plan 31 M0–M1 : les 25 décors du Marais repris (bois blanchi rainuré, pied mouillé, liseré d'eau, barbes de lichen, objets noyés lisibles), kit de détails de surface et générateur parallèle ; planches ×2/×5 sur les trois sols, galerie en jeu (`--capture-prop-gallery`) et régénération identique octet pour octet vérifiées (9 octobre 2026).
 - [x] Plan 31 U1–U3 : immeubles, église, ruines éventrées et petits décors des Ruines Urbaines repris (façades, fenêtres, toits, lierre, gravats, bureau renversé procédural) ; lignes internes des surfaces planes et détails sub-pixel corrigés dans le pipeline ; planches, galerie en jeu et régénération reproductible vérifiées (9 octobre 2026).
 - [x] Plan 31 F1 : les 18 décors de la Forêt Reconquise repris (arbres à fourche et feuillage en grappes, lierre en tiges, mousse peinte, sous-bois et vestiges envahis), kit végétal commun ; arbre isolé et verger des champs régénérés ; planches, galerie en jeu et régénération reproductible vérifiées (9 octobre 2026).
+- [x] Plan 31 C1 : décors des Champs Sauvages et des fermes repris (maisons aux façades du kit urbain, granges dont une vraiment endommagée, haies, verger, herbes, fleurs, murets, vestiges agricoles), touffes d'herbe en brins dans tout le biome ; planches, galerie en jeu et régénération reproductible vérifiées (10 octobre 2026).
 - [ ] Musiques adaptatives (5-6 tracks).
 - [ ] Sound design complet.
 

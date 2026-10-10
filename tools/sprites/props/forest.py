@@ -19,7 +19,7 @@ import numpy as np
 from ..palette import make_material
 from ..render import Part
 from ..sdf import capsule, cylinder, ellipsoid, rotation_x, rotation_y, rotation_z, rounded_box, sphere
-from ._flora import _align_y, _bounded, _branch_chain, _gnarled, _grooves, _leaf_mass, _shelves, _top_skin, _union
+from ._flora import _align_y, _bounded, _branch_chain, _gnarled, _grass, _grooves, _leaf_mass, _shelves, _top_skin, _union
 from ._kit import AXIS_X_YAW, AXIS_Y_YAW, M, PropModel, Weathering, box_footprint
 from ._surface import bands, both, bricks, cracks, either, noise_mask, painted, value_noise
 from .urban import car
@@ -65,18 +65,6 @@ def _point_at_height(chain: list[np.ndarray], y: float) -> np.ndarray:
     """Point d'une chaîne à peu près verticale (fût) à la hauteur y, par interpolation entre ses nœuds."""
     heights = np.array([point[1] for point in chain])
     return np.array([np.interp(y, heights, [point[k] for point in chain]) for k in range(3)])
-
-
-def _grass(w: Weathering, spots: list[tuple[float, float]], blades: int = 5, height: float = 0.3 * M):
-    """Touffes d'herbe au pied d'un objet : brins fins qui s'écartent en éventail, (x, z) de chaque touffe."""
-    pieces = []
-    for x, z in spots:
-        for index in range(blades):
-            angle = w.uniform(0, 2 * np.pi)
-            lean = w.uniform(0.25, 0.6)
-            tip = np.array([x + np.sin(angle) * lean * height * 0.6, height * w.uniform(0.6, 1.0), z + np.cos(angle) * lean * height * 0.5])
-            pieces.append((np.array([x, 0.0, z]), tip))
-    return lambda p: _union(*(capsule(p, a, b, 0.03 * M, 0.012 * M) for a, b in pieces))
 
 
 def _leaf_cluster(centers: list[np.ndarray], normals: list[np.ndarray], sizes: list[float]):
@@ -207,22 +195,29 @@ def _tree_base(stem: str, tree: _Tree, seed: int, bark: str, moss: bool, style: 
 
 
 def _tree_canopy(stem: str, tree: _Tree, seed: int, bark: str, leaf: str, leaf_top: str, shade: str,
-                 canvas: tuple[int, int]) -> PropModel:
-    SHADE, LEAF, LEAF_TOP, BRANCH = range(4)
+                 canvas: tuple[int, int], cluster: float | None, blossom: str | None) -> PropModel:
+    SHADE, LEAF, LEAF_TOP, BRANCH, BLOSSOM = range(5)
     materials = [make_material("leaf_shade", shade, contrast=0.9), make_material("leaf", leaf),
-                 make_material("leaf_top", leaf_top, contrast=0.9), make_material("branch", bark)]
+                 make_material("leaf_top", leaf_top, contrast=0.9), make_material("branch", bark),
+                 make_material("blossom", blossom or leaf_top, contrast=0.6)]
 
     def mass(indices: list[int], tier: int) -> Callable[[np.ndarray], np.ndarray]:
-        return _leaf_mass([tree.centers[i] for i in indices], [tree.radii[i] for i in indices], seed + 10 + tier)
+        return _leaf_mass([tree.centers[i] for i in indices], [tree.radii[i] for i in indices], seed + 10 + tier, cluster=cluster)
 
     def parts() -> list[Part]:
         limbs = tree.limb_shape()
-        return [
-            Part(mass(tree.lower, 0), SHADE),
-            Part(mass(tree.middle, 1), LEAF),
-            Part(mass(tree.upper, 2), LEAF_TOP),
+        tiers = [mass(tree.lower, 0), mass(tree.middle, 1), mass(tree.upper, 2)]
+        result = [
+            Part(tiers[0], SHADE),
+            Part(tiers[1], LEAF),
+            Part(tiers[2], LEAF_TOP),
             Part(lambda p: np.maximum(limbs(p), tree.floor + 0.2 * M - p[:, 1]), BRANCH),
         ]
+        if blossom:
+            # Floraison semée sur toute la couronne, plus dense en haut, en points d'un ou deux pixels.
+            for tier, coverage in ((1, 0.3), (2, 0.42)):
+                result.append(Part(painted(tiers[tier], noise_mask(0.09 * M, seed + 30 + tier, coverage), 0.02 * M), BLOSSOM, relief=False))
+        return result
 
     top = max(c[1] + r[1] for c, r in zip(tree.centers, tree.radii)) + 0.6 * M
     reach = max(np.hypot(c[0], c[2]) + r[0] for c, r in zip(tree.centers, tree.radii)) + 0.6 * M
@@ -231,10 +226,12 @@ def _tree_canopy(stem: str, tree: _Tree, seed: int, bark: str, leaf: str, leaf_t
 
 
 def tree(stem: str, seed: int, height: float, crown: float, trunk: float, clumps: int, bark: str, leaf: str,
-         leaf_top: str, moss: bool, canvas: tuple[int, int], style: str = "oak", shade: str = CANOPY_DARK) -> list[PropModel]:
+         leaf_top: str, moss: bool, canvas: tuple[int, int], style: str = "oak", shade: str = CANOPY_DARK,
+         cluster: float | None = None, blossom: str | None = None) -> list[PropModel]:
+    """`cluster` plafonne la taille des grappes d'une grande couronne ; `blossom` sème des fleurs sur le feuillage."""
     shape = _Tree(seed, height, crown, trunk, clumps, style)
     return [_tree_base(f"{stem}_base", shape, seed, bark, moss, style, canvas),
-            _tree_canopy(f"{stem}_canopy", shape, seed, bark, leaf, leaf_top, shade, canvas)]
+            _tree_canopy(f"{stem}_canopy", shape, seed, bark, leaf, leaf_top, shade, canvas, cluster, blossom)]
 
 
 def strangled_tree(stem: str, seed: int) -> PropModel:
