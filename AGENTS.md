@@ -76,7 +76,7 @@ vestiges/
 │   ├── Score/               # Calcul du score
 │   ├── UI/                  # HUD, Hub, level-up, paramètres, debug
 │   ├── Infrastructure/      # Loaders JSON, sauvegarde, audio, Steam, analytics, locale, input
-│   └── generate_*.py        # Générateurs de sprites historiques (à migrer vers tools/)
+│   └── generate_*.py        # Deux générateurs historiques restants, seules sources de leurs sprites : sang, Tisseuse
 ├── data/                    # JSON de gameplay (enemies, weapons, perks, biomes, props, scaling, events, world, ...)
 ├── assets/                  # Sprites, audio, fonts, shaders, traductions (par feature) ; props_manifest.json par dossier de décors
 ├── tools/

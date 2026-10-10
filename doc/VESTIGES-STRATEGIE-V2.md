@@ -744,6 +744,7 @@ Le script de post-processing doit inclure une vérification/correction de l'angl
 - [ ] Recette du lot D : comparer les variantes clavier/manette en combat, retenir timings et protection, vérifier le coût en combat dense et recalibrer le début de run (plan 03).
 - [x] Validation par Raphaël du dash commun livré (22 septembre 2026).
 - [ ] Refonte et validation d’au moins cinq à six personnages et de tous leurs sprites avant les mobilités spécifiques (06/08).
+- [x] Plan 32 : sprites des sept héros à venir (Éveillée, Facteur, Scaphandrière, Sonneur, Écolière, Photographe, Veilleuse, et l'Enfant du Bas-Port en variante) au gabarit des trois joués, écrits dans `assets/characters/` ; planches et animations regardées (10 octobre 2026). Leur validation par Raphaël reste la case ci-dessus.
 - [ ] Mobilités de personnages : prototypes et profils après casting et nouveaux sprites validés (plan 01 E).
 - [x] Micro-événements v1 (plan 12) : directeur calé autour des Résurgences, cinq événements (Souverain, Harde, Vestige tombé, Veille, Averse d'éclats), repères au sol, bandeau et flèche de bord, données JSON ; captures en vraie run (24 septembre 2026).
 - [x] Variantes renforcées data-driven (plan 12) : élites naturelles à affixe, Souverains, Aberrations et affixes de phase dans `_variants.json`.
@@ -870,6 +871,11 @@ Le script de post-processing doit inclure une vérification/correction de l'angl
 - [x] Plan 25 S7 : quatre fonds animés natifs, neuf habillages de menus et cinq sols de chargement branchés ; rendu nearest vérifié par captures. Correctif I7 : rotation continue des rayons à 8°/s, poussières scintillantes ; fond fixe I6 remplacé conformément à DECISIONS §43.
 - [x] Plan 25 S8 : 14 icônes de Réminiscences en Collection, neuf définitions raccordées aux interfaces ; les effets non implémentés restent « À venir ». Choix et inventaire capturés.
 - [x] Hub visuel (camp du Foyer vivant, validé par Raphaël le 26 septembre 2026, plan 04).
+- [x] Plan 31 M0–M1 : les 25 décors du Marais repris (bois blanchi rainuré, pied mouillé, liseré d'eau, barbes de lichen, objets noyés lisibles), kit de détails de surface et générateur parallèle ; planches ×2/×5 sur les trois sols, galerie en jeu (`--capture-prop-gallery`) et régénération identique octet pour octet vérifiées (9 octobre 2026).
+- [x] Plan 31 U1–U3 : immeubles, église, ruines éventrées et petits décors des Ruines Urbaines repris (façades, fenêtres, toits, lierre, gravats, bureau renversé procédural) ; lignes internes des surfaces planes et détails sub-pixel corrigés dans le pipeline ; planches, galerie en jeu et régénération reproductible vérifiées (9 octobre 2026).
+- [x] Plan 31 F1 : les 18 décors de la Forêt Reconquise repris (arbres à fourche et feuillage en grappes, lierre en tiges, mousse peinte, sous-bois et vestiges envahis), kit végétal commun ; arbre isolé et verger des champs régénérés ; planches, galerie en jeu et régénération reproductible vérifiées (9 octobre 2026).
+- [x] Plan 31 C1 : décors des Champs Sauvages et des fermes repris (maisons aux façades du kit urbain, granges dont une vraiment endommagée, haies, verger, herbes, fleurs, murets, vestiges agricoles), touffes d'herbe en brins dans tout le biome ; planches, galerie en jeu et régénération reproductible vérifiées (10 octobre 2026).
+- [x] Plan 31 Q1 : décors de la Carrière Effondrée repris (roches à strates et fissures, cristaux d'Essence en prismes facettés, panneau de danger, vestiaire, machines et baraques rouillées) ; planches, galerie en jeu et régénération reproductible vérifiées (10 octobre 2026).
 - [ ] Musiques adaptatives (5-6 tracks).
 - [ ] Sound design complet.
 

@@ -15,10 +15,12 @@ import numpy as np
 from ..palette import make_material
 from ..render import Part
 from ..sdf import capsule, cylinder, ellipsoid, rotation_x, rotation_y, rotation_z, rounded_box, sphere
+from ._flora import _clumps, _grass, _grooves, _leaf_mass, _union
 from ._kit import AXIS_X_YAW, AXIS_Y_YAW, M, PropModel, Weathering, box_footprint
-from .buildings import BUILDING_YAW, CELL_WIDTH, DEPTH_ROWS, ROW_DEPTH, BuildingSpec, building
+from ._surface import bands, both, noise_mask, painted, value_noise
+from .buildings import BUILDING_YAW, CELL_WIDTH, DEPTH_ROWS, ROW_DEPTH, BuildingSpec, _shade, building
 from .fields import FENCE, GRASS, GRASS_DARK, RUST, STRAW, stone_wall, tractor, wooden_fence
-from .forest import _clumps, _union, tree
+from .forest import tree
 
 BARN_RED = "#7E4032"
 BARN_GREY = "#7A6E62"
@@ -60,51 +62,65 @@ def _building_model(stem: str, parts, materials, half_w: float, half_d: float, t
 # ---------------------------------------------------------------------------------------------------------------------
 
 def barn(stem: str, seed: int, paint: str, damage: float, mirrored: bool) -> PropModel:
-    """Grange à pignon face à la caméra : bardage de planches, grande porte à croix, fenil, toit de tôle."""
-    PLANK, PLANK_DARK, ROOF, ROOF_DARK, DOOR, TRIM, BASE, INTERIOR, MOSS, HAY, RUST_M = range(11)
-    materials = [make_material("plank", paint), make_material("plank_dark", PLANK_SHADOW),
-                 make_material("roof", TIN), make_material("roof_dark", TIN_DARK),
-                 make_material("door", "#3E2E26", contrast=0.6), make_material("trim", WHITE_TRIM, contrast=0.7),
-                 make_material("base", STONE), make_material("interior", "#1E1A1D", contrast=0.4),
-                 make_material("moss", "#5A7A38"), make_material("hay", STRAW), make_material("rust", RUST)]
+    """
+    Grange à pignon face à la caméra : bardage de planches verticales jointes, veinées, dont la peinture s'écaille
+    sur le bois gris, pied sali ; grande porte à croix, fenil et sa paille, toit de tôle ondulée rouillée en
+    coulures, mousse au bas des pans. Endommagée, elle a perdu des pans de toit (chevrons à nu sur le noir de
+    l'intérieur), des planches de bardage et un battant de porte, tombé devant.
+    """
+    (PLANK, JOINT, GRAIN, BARE, GRIME, ROOF, ROOF_DARK, RUST_M, MOSS, DOOR, TRIM, BASE, INTERIOR, HAY, RAFTER) = range(15)
+    materials = [make_material("plank", paint), make_material("joint", PLANK_SHADOW, contrast=0.5),
+                 make_material("grain", _shade(paint, 0.82), contrast=0.6), make_material("bare", "#8A8072"),
+                 make_material("grime", _shade(paint, 0.62), contrast=0.7),
+                 make_material("roof", TIN), make_material("roof_dark", TIN_DARK), make_material("rust", RUST),
+                 make_material("moss", "#5A7A38"), make_material("door", "#3E2E26", contrast=0.6),
+                 make_material("trim", WHITE_TRIM, contrast=0.7), make_material("base", STONE),
+                 make_material("interior", "#1E1A1D", contrast=0.4), make_material("hay", STRAW), make_material("rafter", "#5A4632")]
     w = Weathering(seed)
+    damaged = damage > 0.4
     half_w = 3 * CELL_WIDTH * 0.46
     half_d = DEPTH_ROWS * ROW_DEPTH * 0.46
     wall_h = 3.4 * M
     ridge = 2.3 * M
     slope_norm = float(np.sqrt(1.0 + (ridge / half_w) ** 2))
-    holes = [(np.array([w.uniform(-0.6, 0.6) * half_w, wall_h + ridge * w.uniform(0.3, 0.6), w.uniform(-0.5, 0.6) * half_d]),
-              w.uniform(0.7, 1.1) * M) for _ in range(int(damage * 3))]
-    gaps = [(np.array([half_w * w.choice([-1.0, 1.0]), w.uniform(0.8, 2.6) * M, w.uniform(-0.6, 0.6) * half_d]),
-             w.uniform(0.3, 0.5) * M) for _ in range(int(damage * 4))]
-    rust = [np.array([w.uniform(-0.8, 0.8) * half_w, 0.0, w.uniform(-0.8, 0.9) * half_d]) for _ in range(3)]
-    moss = [np.array([w.uniform(-0.7, 0.7) * half_w, 0.0, w.uniform(-0.6, 0.8) * half_d]) for _ in range(2)]
+    # Endommagée : pans de toit arrachés (de grandes ellipses à plat sur la pente), planches manquantes en façade.
+    holes = [(np.array([side * w.uniform(0.35, 0.6) * half_w, 0.0, z * half_d]), w.uniform(1.0, 1.4) * M)
+             for side, z in ((-1.0, w.uniform(-0.2, 0.5)), (1.0, w.uniform(-0.6, 0.1)), (1.0, w.uniform(0.4, 0.7)))] if damaged else []
+    boards = [(w.uniform(-0.9, -0.35) * half_w + k * 0.33 * M, w.uniform(0.9, 2.2) * M) for k in range(3)] if damaged else []
+    boards += [(w.uniform(0.45, 0.85) * half_w + k * 0.33 * M, w.uniform(0.7, 1.6) * M) for k in range(2)] if damaged else []
 
     def gable(p: np.ndarray) -> np.ndarray:
         # Distance (signée, approchée) au plan des deux pans : négative sous le toit.
         return (p[:, 1] - wall_h - ridge + ridge * np.abs(p[:, 0]) / half_w) / slope_norm
 
-    def roof_height(x: np.ndarray) -> np.ndarray:
-        return wall_h + ridge * (1.0 - np.abs(x) / half_w)
-
-    def cuts(p: np.ndarray) -> np.ndarray:
-        if not holes and not gaps:
+    def roof_holes(p: np.ndarray) -> np.ndarray:
+        if not holes:
             return np.full(len(p), np.inf)
-        return _union(*(sphere(p, c, r) for c, r in holes + gaps))
+        # Trou découpé dans la tôle : une ellipse posée sur la pente, au niveau du toit.
+        ragged = (value_noise(p, 0.35 * M, seed + 6) - 0.5) * 0.7 * M
+        return _union(*(np.maximum(np.hypot((p[:, 0] - c[0]) * 0.9, p[:, 2] - c[2]) - r + ragged, np.abs(gable(p)) - 0.5 * M) for c, r in holes))
+
+    def missing_boards(p: np.ndarray) -> np.ndarray:
+        if not boards:
+            return np.full(len(p), np.inf)
+        return _union(*(_box(p, (x, h * 0.5 + 0.45 * M, half_d), (0.15 * M, h * 0.5, 0.3 * M)) for x, h in boards))
 
     def body(p: np.ndarray) -> np.ndarray:
         box = _box(p, (0, (wall_h + ridge) / 2, 0), (half_w, (wall_h + ridge) / 2, half_d))
         shell = np.maximum(box, gable(p))
         loft = _box(p, (0, wall_h + 0.55 * M, half_d), (0.55 * M, 0.5 * M, 0.3 * M))
-        return np.maximum(shell, -np.minimum(loft, cuts(p)))
-
-    def planks(p: np.ndarray, stripe: int) -> np.ndarray:
-        band = np.floor(p[:, 0] / (0.36 * M)).astype(np.int64) % 3
-        return np.where((band == 0) == (stripe == 1), body(p), np.inf)
+        return np.maximum(shell, -_union(loft, roof_holes(p), missing_boards(p)))
 
     def interior(p: np.ndarray) -> np.ndarray:
         inner = _box(p, (0, (wall_h + ridge) / 2, 0), (half_w - 0.15 * M, (wall_h + ridge) / 2, half_d - 0.15 * M))
-        return np.maximum(inner, gable(p) + 0.15 * M)
+        return np.maximum(inner, gable(p) + 0.35 * M)
+
+    def rafters(p: np.ndarray) -> np.ndarray:
+        if not damaged:
+            return np.full(len(p), np.inf)
+        beams = [capsule(p, (side * half_w, wall_h - 0.1 * M, z), (0.0, wall_h + ridge - 0.25 * M, z), 0.09 * M)
+                 for side in (-1.0, 1.0) for z in np.arange(-half_d + 0.4 * M, half_d, 0.7 * M)]
+        return np.maximum(_union(*beams), gable(p) + 0.12 * M)
 
     def roof(p: np.ndarray, stripe: int) -> np.ndarray:
         sheet = np.maximum(np.abs(gable(p) - 0.14 * M) - 0.08 * M, np.abs(p[:, 2]) - (half_d + 0.35 * M))
@@ -112,38 +128,62 @@ def barn(stem: str, seed: int, paint: str, damage: float, mirrored: bool) -> Pro
         # Tôle ondulée : une onde sur deux dans chaque teinte.
         band = np.floor(p[:, 2] / (0.28 * M)).astype(np.int64) % 2
         sheet = np.where(band == stripe, sheet, np.inf)
-        return np.maximum(sheet, -cuts(p))
-
-    def roof_patches(p: np.ndarray, spots, radius: float) -> np.ndarray:
-        sheet = np.maximum(np.abs(gable(p) - 0.2 * M) - 0.06 * M, np.abs(p[:, 2]) - (half_d + 0.3 * M))
-        blobs = _union(*(ellipsoid(p, (s[0], roof_height(np.array([s[0]]))[0], s[2]), (radius, 0.6 * M, radius * 0.8))
-                         for s in spots))
-        return np.maximum(np.maximum(sheet, blobs), -cuts(p))
+        return np.maximum(sheet, -roof_holes(p))
 
     def door(p: np.ndarray) -> np.ndarray:
+        if damaged:
+            # Le battant droit est tombé : il gît devant, à plat, la baie reste noire.
+            standing = _box(p, (-0.68 * M, 1.45 * M, half_d), (0.67 * M, 1.45 * M, 0.08 * M))
+            fallen = rounded_box(p, (0.9 * M, 0.08 * M, half_d + 1.3 * M), (0.67 * M, 0.06 * M, 1.4 * M), 0.02 * M, rotation_y(0.25))
+            return np.minimum(standing, fallen)
         return _box(p, (0, 1.45 * M, half_d), (1.35 * M, 1.45 * M, 0.08 * M))
+
+    def doorway(p: np.ndarray) -> np.ndarray:
+        if not damaged:
+            return np.full(len(p), np.inf)
+        return _box(p, (0.68 * M, 1.45 * M, half_d - 0.1 * M), (0.66 * M, 1.42 * M, 0.08 * M))
 
     def trim(p: np.ndarray) -> np.ndarray:
         z = half_d + 0.1 * M
         frame = np.maximum(_box(p, (0, 1.45 * M, z), (1.45 * M, 1.55 * M, 0.05 * M)),
                            -_box(p, (0, 1.45 * M, z), (1.3 * M, 1.4 * M, 0.2 * M)))
-        braces = _union(capsule(p, (-1.25 * M, 0.15 * M, z), (1.25 * M, 2.75 * M, z), 0.07 * M),
-                        capsule(p, (1.25 * M, 0.15 * M, z), (-1.25 * M, 2.75 * M, z), 0.07 * M),
-                        capsule(p, (0, 0.1 * M, z), (0, 2.8 * M, z), 0.05 * M))
+        if damaged:
+            braces = _union(capsule(p, (-1.25 * M, 0.15 * M, z), (-0.1 * M, 2.75 * M, z), 0.07 * M),
+                            capsule(p, (-0.1 * M, 0.15 * M, z), (-1.25 * M, 2.75 * M, z), 0.07 * M))
+        else:
+            braces = _union(capsule(p, (-1.25 * M, 0.15 * M, z), (1.25 * M, 2.75 * M, z), 0.07 * M),
+                            capsule(p, (1.25 * M, 0.15 * M, z), (-1.25 * M, 2.75 * M, z), 0.07 * M),
+                            capsule(p, (0, 0.1 * M, z), (0, 2.8 * M, z), 0.05 * M))
         return _union(frame, braces)
 
     def base(p: np.ndarray) -> np.ndarray:
         return _box(p, (0, 0.22 * M, 0), (half_w + 0.06 * M, 0.22 * M, half_d + 0.06 * M))
 
     def hay(p: np.ndarray) -> np.ndarray:
-        return _clumps([(0, wall_h + 0.2 * M, half_d - 0.1 * M)], [(0.5 * M, 0.35 * M, 0.3 * M)], 0.04 * M, 0.2 * M)(p)
+        bale = _clumps([(0, wall_h + 0.2 * M, half_d - 0.1 * M)], [(0.5 * M, 0.35 * M, 0.3 * M)], 0.04 * M, 0.2 * M)(p)
+        if damaged:
+            # Paille répandue sous le fenil et devant la porte.
+            spill = ellipsoid(p, (0.5 * M, 0.0, half_d + 0.6 * M), (1.1 * M, 0.12 * M, 0.5 * M))
+            return np.minimum(bale, spill)
+        return bale
 
     def parts() -> list[Part]:
+        joints = bands(0, 0.32 * M, 0.04 * M, frame=lambda q: np.stack([q[:, 0] + q[:, 2], q[:, 1], np.zeros(len(q))], axis=1))
+        sheet = lambda p: np.minimum(roof(p, 0), roof(p, 1))
+        grime = lambda p: p[:, 1] - 0.75 * M + (value_noise(p, 0.3 * M, seed + 4) - 0.5) * 0.5 * M
         return [
-            Part(interior, INTERIOR), Part(lambda p: planks(p, 0), PLANK), Part(lambda p: planks(p, 1), PLANK_DARK),
+            Part(interior, INTERIOR), Part(body, PLANK),
+            # Les bords d'un trou dans le toit restent dans le noir de l'intérieur.
+            Part(painted(body, lambda p: roof_holes(p) - 0.1 * M), INTERIOR, relief=False),
+            Part(painted(body, joints), JOINT, relief=False),
+            Part(painted(body, noise_mask(0.09 * M, seed + 1, 0.22, (1.0, 8.0, 1.0))), GRAIN, relief=False),
+            Part(painted(body, noise_mask(0.45 * M, seed + 2, 0.18 + damage * 0.3)), BARE, relief=False),
+            Part(painted(body, grime), GRIME, relief=False),
             Part(lambda p: roof(p, 0), ROOF), Part(lambda p: roof(p, 1), ROOF_DARK),
-            Part(lambda p: roof_patches(p, rust, 0.32 * M), RUST_M), Part(lambda p: roof_patches(p, moss, 0.3 * M), MOSS),
-            Part(door, DOOR), Part(trim, TRIM), Part(base, BASE), Part(hay, HAY),
+            Part(painted(sheet, noise_mask(0.16 * M, seed + 3, 0.08 + damage * 0.2, (4.0, 1.0, 1.0)), 0.015 * M), RUST_M, relief=False),
+            Part(painted(sheet, both(noise_mask(0.35 * M, seed + 5, 0.2), lambda p: p[:, 1] - wall_h - 0.9 * M)), MOSS, relief=False),
+            Part(rafters, RAFTER),
+            Part(door, DOOR), Part(doorway, INTERIOR), Part(trim, TRIM), Part(base, BASE), Part(hay, HAY),
         ]
 
     return _building_model(stem, parts, materials, half_w, half_d, wall_h + ridge + 1.2 * M, mirrored)
@@ -151,9 +191,10 @@ def barn(stem: str, seed: int, paint: str, damage: float, mirrored: bool) -> Pro
 
 def hangar(stem: str, seed: int, mirrored: bool) -> PropModel:
     """Hangar ouvert : poteaux, toit de tôle en appentis, bottes de paille empilées à l'abri."""
-    POST, ROOF, ROOF_DARK, BALE, BALE_DARK, RUST_M = range(6)
+    POST, ROOF, ROOF_DARK, BALE, BALE_DARK, RUST_M, POST_GRAIN, BALE_LIGHT = range(8)
     materials = [make_material("post", FENCE), make_material("roof", TIN), make_material("roof_dark", TIN_DARK),
-                 make_material("bale", STRAW), make_material("bale_dark", "#9A8448"), make_material("rust", RUST)]
+                 make_material("bale", STRAW), make_material("bale_dark", "#9A8448"), make_material("rust", RUST),
+                 make_material("post_grain", "#4A3E2E", contrast=0.6), make_material("bale_light", "#E0CE84", contrast=0.5)]
     w = Weathering(seed)
     half_w = 3 * CELL_WIDTH * 0.46
     half_d = 3 * ROW_DEPTH * 0.46
@@ -166,7 +207,6 @@ def hangar(stem: str, seed: int, mirrored: bool) -> PropModel:
             x = (-0.6 + column * 0.5) * half_w
             stacks.append(((x, (0.35 + layer * 0.7) * M, -0.3 * half_d), (0.55 * M, 0.35 * M, 0.4 * M),
                            w.uniform(-0.1, 0.1)))
-    rust = [(w.uniform(-0.8, 0.8) * half_w, w.uniform(-0.6, 0.6) * half_d) for _ in range(4)]
 
     def roof_y(z: float) -> float:
         return back_h + (front_h - back_h) * (z + half_d) / (2 * half_d)
@@ -178,10 +218,6 @@ def hangar(stem: str, seed: int, mirrored: bool) -> PropModel:
     def roof(p: np.ndarray, stripe: int) -> np.ndarray:
         band = np.floor(p[:, 0] / (0.3 * M)).astype(np.int64) % 2
         return np.where(band == stripe, sheet(p), np.inf)
-
-    def rust_part(p: np.ndarray) -> np.ndarray:
-        blobs = _union(*(ellipsoid(p, (x, roof_y(z) + 0.1 * M, z), (0.35 * M, 0.3 * M, 0.28 * M)) for x, z in rust))
-        return np.maximum(blobs, sheet(p) - 0.03 * M)
 
     def frame(p: np.ndarray) -> np.ndarray:
         uprights = [capsule(p, (x, 0, z), (x, roof_y(z), z), 0.11 * M) for x, z in posts]
@@ -196,21 +232,25 @@ def hangar(stem: str, seed: int, mirrored: bool) -> PropModel:
         return np.where(ties == dark, blocks, np.inf)
 
     def parts() -> list[Part]:
-        return [Part(frame, POST), Part(lambda p: roof(p, 0), ROOF), Part(lambda p: roof(p, 1), ROOF_DARK),
-                Part(rust_part, RUST_M), Part(lambda p: bales(p, False), BALE), Part(lambda p: bales(p, True), BALE_DARK)]
+        # Rouille en coulures dans le sens de la pente, paille piquée de brins clairs.
+        return [Part(frame, POST), Part(_grooves(frame, seed + 1, axis=1, period=0.08 * M, coverage=0.25), POST_GRAIN),
+                Part(lambda p: roof(p, 0), ROOF), Part(lambda p: roof(p, 1), ROOF_DARK),
+                Part(painted(sheet, noise_mask(0.18 * M, seed + 2, 0.16, (1.0, 1.0, 4.0)), 0.01 * M), RUST_M, relief=False),
+                Part(lambda p: bales(p, False), BALE), Part(lambda p: bales(p, True), BALE_DARK),
+                Part(painted(lambda p: bales(p, False), noise_mask(0.05 * M, seed + 3, 0.18)), BALE_LIGHT, relief=False)]
 
     return _building_model(stem, parts, materials, half_w, half_d, front_h + 1.0 * M, mirrored)
 
 
 def silo_intact(stem: str, seed: int) -> PropModel:
     """Silo à grain resté debout : tôle cerclée, toit conique, échelle, coulures de rouille."""
-    SHEET, BAND, ROOF, LADDER, RUST_M, GRASS_M = range(6)
+    SHEET, BAND, ROOF, LADDER, RUST_M, GRASS_M, RIDGE = range(7)
     materials = [make_material("sheet", "#A8A8A0"), make_material("band", "#6B6161"), make_material("roof", "#8E8A84"),
-                 make_material("ladder", "#4A4440"), make_material("rust", RUST), make_material("grass", GRASS)]
+                 make_material("ladder", "#4A4440"), make_material("rust", RUST), make_material("grass", GRASS, contrast=0.8),
+                 make_material("ridge", "#8E8E86", contrast=0.6)]
     w = Weathering(seed)
     radius, height, cone = 1.15 * M, 4.3 * M, 1.0 * M
-    rust = [(np.cos(a) * radius, y * M, np.sin(a) * radius) for a, y in zip(np.linspace(0.6, 2.6, 3), (3.4, 2.2, 3.4))]
-    tufts = [(np.cos(a) * 1.25 * M, 0.12 * M, np.sin(a) * 1.25 * M) for a in np.linspace(0.3, 3.0, 4)]
+    tufts = [(np.cos(a) * 1.25 * M, np.sin(a) * 1.25 * M) for a in np.linspace(0.3, 3.0, 4)]
     tilt = w.uniform(-0.02, 0.02)
 
     def roof(p: np.ndarray) -> np.ndarray:
@@ -226,12 +266,24 @@ def silo_intact(stem: str, seed: int) -> PropModel:
         return _union(*rails, *rungs)
 
     def parts() -> list[Part]:
+        shell = lambda p: cylinder(p @ rotation_z(tilt), (0, height / 2, 0), radius, height / 2, 0.05 * M)
+        # Tôle ondulée déroulée autour du fût ; coulures de rouille qui partent des cerclages.
+        flutes = bands(0, 0.16 * M, 0.06 * M, frame=lambda q: np.stack([np.arctan2(q[:, 2], q[:, 0]) * radius, q[:, 1], q[:, 2]], axis=1))
+
+        def under_bands(p: np.ndarray) -> np.ndarray:
+            d = np.full(len(p), 1.0 * M)
+            for y in (0.8, 2.0, 3.2):
+                drop = y * M - p[:, 1]
+                d = np.minimum(d, np.where(drop > 0, drop - 0.9 * M, 1.0 * M))
+            return d
+
         return [
-            Part(lambda p: cylinder(p @ rotation_z(tilt), (0, height / 2, 0), radius, height / 2, 0.05 * M), SHEET),
+            Part(shell, SHEET),
+            Part(painted(shell, flutes), RIDGE, relief=False),
+            Part(painted(shell, both(noise_mask(0.16 * M, seed + 1, 0.3, (1.0, 5.0, 1.0)), under_bands), 0.015 * M), RUST_M, relief=False),
             Part(lambda p: _union(*(cylinder(p, (0, y * M, 0), radius + 0.04 * M, 0.05 * M) for y in (0.8, 2.0, 3.2))), BAND),
             Part(roof, ROOF), Part(ladder, LADDER),
-            Part(lambda p: _union(*(ellipsoid(p, c, (0.08 * M, 0.55 * M, 0.08 * M)) for c in rust)), RUST_M),
-            Part(_clumps(tufts, [(0.3 * M, 0.2 * M, 0.3 * M)] * 4, 0.03 * M, 0.2 * M), GRASS_M),
+            Part(_grass(w, tufts, 6, 0.4 * M), GRASS_M),
         ]
 
     return PropModel(stem, parts, materials, AXIS_X_YAW, canvas=(100, 170), footprint=box_footprint(1.15 * M, 1.15 * M),
@@ -247,7 +299,7 @@ def trough(stem: str, seed: int) -> PropModel:
     STONE_M, WATER_M, MOSS = range(3)
     materials = [make_material("stone", STONE), make_material("water", WATER, contrast=0.5), make_material("moss", GRASS)]
     w = Weathering(seed)
-    tufts = [(w.uniform(-1.0, 1.0) * M, 0.08 * M, 0.45 * M) for _ in range(3)]
+    tufts = [(w.uniform(-1.0, 1.0) * M, 0.5 * M) for _ in range(3)]
 
     def basin(p: np.ndarray) -> np.ndarray:
         outer = rounded_box(p, (0, 0.35 * M, 0), (1.2 * M, 0.35 * M, 0.42 * M), 0.06 * M)
@@ -255,7 +307,8 @@ def trough(stem: str, seed: int) -> PropModel:
 
     def parts() -> list[Part]:
         return [Part(basin, STONE_M), Part(lambda p: _box(p, (0, 0.5 * M, 0), (1.06 * M, 0.03 * M, 0.29 * M)), WATER_M),
-                Part(_clumps(tufts, [(0.2 * M, 0.12 * M, 0.16 * M)] * 3, 0.02 * M, 0.2 * M), MOSS)]
+                Part(painted(basin, both(lambda p: p[:, 1] - 0.22 * M, noise_mask(0.25 * M, seed + 1, 0.45))), MOSS, relief=False),
+                Part(_grass(w, tufts, 5, 0.3 * M), MOSS)]
 
     return PropModel(stem, parts, materials, AXIS_X_YAW, canvas=(80, 50), footprint=box_footprint(1.2 * M, 0.42 * M))
 
@@ -344,28 +397,32 @@ def farm_gate(stem: str, seed: int, yaw: float) -> PropModel:
 # ---------------------------------------------------------------------------------------------------------------------
 
 def hedge(stem: str, seed: int, yaw: float, flowering: bool) -> PropModel:
-    """Haie bocagère d'une cellule de long : touffes serrées, un ou deux arbustes plus hauts, quelques fleurs."""
-    LEAF_DARK, LEAF, FLOWER = range(3)
+    """
+    Haie bocagère d'une cellule de long : grappes de feuilles sombres à la base, plus claires au sommet là où le
+    soleil tape, un ou deux arbustes qui dépassent ; la variante fleurie est piquée d'aubépine blanche. Plus claire que le sol à son sommet, plus sombre au pied : elle ne se fond plus dans l'herbe.
+    """
+    LEAF_DARK, LEAF, LEAF_TOP, FLOWER = range(4)
     materials = [make_material("leaf_dark", HEDGE_DARK), make_material("leaf", HEDGE),
-                 make_material("flower", "#D8D0B8", contrast=0.6)]
+                 make_material("leaf_top", "#7AAA4E", contrast=0.8), make_material("flower", "#E8E2D0", contrast=0.5)]
     w = Weathering(seed)
     lumps = []
     x = -1.75
     while x < 1.75:
-        height = w.uniform(0.5, 0.75) * (1.35 if w.uniform(0, 1) < 0.2 else 1.0)
-        lumps.append(((x * M, height * M, w.uniform(-0.12, 0.12) * M), (w.uniform(0.4, 0.55) * M, height * M, 0.45 * M)))
+        height = w.uniform(0.5, 0.72) * (1.35 if w.uniform(0, 1) < 0.2 else 1.0)
+        lumps.append((np.array([x * M, height * M, w.uniform(-0.12, 0.12) * M]), np.array([w.uniform(0.38, 0.5) * M, height * M * 0.9, 0.42 * M])))
         x += w.uniform(0.35, 0.55)
-    tops = [(c[0], c[1] + r[1] * 0.75, c[2] + 0.2 * M) for c, r in lumps[::2]]
-    blossoms = [(c[0] + w.uniform(-0.2, 0.2) * M, c[1] + w.uniform(-0.3, 0.2) * M, c[2] + 0.4 * M) for c, _ in lumps] \
-        if flowering else []
+    tops = [(c + np.array([0.0, r[1] * 0.55, 0.05 * M]), np.array([r[0] * 0.75, r[1] * 0.5, r[2] * 0.7])) for c, r in lumps[::2]]
 
     def parts() -> list[Part]:
+        body = _leaf_mass([c for c, _ in lumps], [r for _, r in lumps], seed, per=8, ratio=0.45)
+        crown = _leaf_mass([c for c, _ in tops], [r for _, r in tops], seed + 1, per=6, ratio=0.5)
         result = [
-            Part(_clumps([c for c, _ in lumps], [r for _, r in lumps], 0.06 * M, 0.5 * M), LEAF_DARK),
-            Part(_clumps(tops, [(0.35 * M, 0.2 * M, 0.3 * M)] * len(tops), 0.04 * M, 0.4 * M), LEAF),
+            Part(body, LEAF_DARK),
+            Part(crown, LEAF),
+            Part(painted(crown, lambda p: (value_noise(p, 0.2 * M, seed + 2) - 0.55) * 0.4 * M), LEAF_TOP, relief=False),
         ]
-        if blossoms:
-            result.append(Part(lambda p: _union(*(sphere(p, b, 0.07 * M) for b in blossoms)), FLOWER))
+        if flowering:
+            result.append(Part(painted(lambda p: np.minimum(body(p), crown(p)), noise_mask(0.08 * M, seed + 3, 0.16), 0.02 * M), FLOWER, relief=False))
         return result
 
     return PropModel(stem, parts, materials, yaw, canvas=(120, 70), footprint=box_footprint(1.8 * M, 0.45 * M))
@@ -382,7 +439,7 @@ def picnic(stem: str, seed: int) -> PropModel:
                  make_material("wicker", "#9A7A4A"), make_material("bottle", "#3E6A4E", contrast=0.6),
                  make_material("plate", "#C8C4BA", contrast=0.6), make_material("grass", GRASS)]
     w = Weathering(seed)
-    tufts = [(w.uniform(-1.2, 1.2) * M, 0.08 * M, w.uniform(-0.9, 0.9) * M) for _ in range(4)]
+    tufts = [(w.uniform(-1.2, 1.2) * M, w.uniform(-0.9, 0.9) * M) for _ in range(4)]
 
     def cloth(p: np.ndarray, check: int) -> np.ndarray:
         # Nappe posée au sol, un coin relevé par le vent ; carreaux en damier.
@@ -405,7 +462,7 @@ def picnic(stem: str, seed: int) -> PropModel:
             Part(lambda p: capsule(p, (0.2 * M, 0.12 * M, 0.3 * M), (0.65 * M, 0.1 * M, 0.1 * M), 0.08 * M, 0.04 * M), BOTTLE),
             Part(lambda p: _union(cylinder(p, (0.35 * M, 0.08 * M, -0.35 * M), 0.2 * M, 0.02 * M),
                                   cylinder(p, (-0.1 * M, 0.08 * M, 0.45 * M), 0.2 * M, 0.02 * M)), PLATE),
-            Part(_clumps(tufts, [(0.2 * M, 0.14 * M, 0.2 * M)] * 4, 0.03 * M, 0.2 * M), GRASS_M),
+            Part(_grass(w, tufts, 5, 0.3 * M), GRASS_M),
         ]
 
     return PropModel(stem, parts, materials, AXIS_Y_YAW, canvas=(90, 60))
@@ -504,7 +561,7 @@ def mired_tractor(stem: str, seed: int) -> PropModel:
     sink = 0.32 * M
     w = Weathering(seed + 3)
     splashes = [(w.uniform(-0.6, 0.6) * M, w.uniform(0.25, 0.8) * M, w.uniform(-1.0, 1.2) * M) for _ in range(7)]
-    tufts = [(w.uniform(-1.6, 1.6) * M, 0.08 * M, w.uniform(-2.6, 2.0) * M) for _ in range(5)]
+    tufts = [(w.uniform(-1.6, 1.6) * M, w.uniform(-2.6, 2.0) * M) for _ in range(5)]
 
     def sunk(distance):
         def evaluate(p: np.ndarray) -> np.ndarray:
@@ -531,7 +588,7 @@ def mired_tractor(stem: str, seed: int) -> PropModel:
         result += [
             Part(pool, MUD), Part(puddles, MUD_WET), Part(ruts, MUD_WET),
             Part(sunk(lambda q: _union(*(sphere(q, c, 0.14 * M) for c in splashes))), MUD),
-            Part(_clumps(tufts, [(0.22 * M, 0.16 * M, 0.22 * M)] * 5, 0.03 * M, 0.2 * M), GRASS_M),
+            Part(_grass(w, tufts, 6, 0.35 * M), GRASS_M),
         ]
         return result
 
@@ -573,5 +630,6 @@ def catalog() -> list[PropModel]:
     ]
     # Arbres de verger, plantés en rangs : bas et ronds, l'un en feuilles, l'autre encore en fleurs.
     models += tree("prop_orchard_tree", 791, 3.4 * M, 1.25 * M, 0.13 * M, 12, "#5E4A38", GRASS, "#8AC060", False, (80, 110))
-    models += tree("prop_orchard_tree_blossom", 792, 3.3 * M, 1.2 * M, 0.13 * M, 12, "#5E4A38", GRASS, "#EAD8D2", False, (80, 110))
+    models += tree("prop_orchard_tree_blossom", 792, 3.3 * M, 1.2 * M, 0.13 * M, 12, "#5E4A38", GRASS, "#8AC060", False, (80, 110),
+                   blossom="#EAD8D2")
     return models

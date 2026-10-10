@@ -66,10 +66,12 @@ def build(skeleton: Skeleton) -> list[Part]:
         Part(lambda p: capsule(p, s.on_torso("neck", (-2.4, -0.4, -1.6)), s.on_torso("chest", (-8.5 - 2.0 * d, -5.0, -4.0 - 2.0 * d)), 1.6, 0.7), SCARF),
         # Visage découvert, barbe courte, deux yeux sombres sous le bord du chapeau.
         Part(lambda p: sphere(p, h(0, -0.4, 0.4), 5.6 * k), SKIN),
-        Part(lambda p: np.maximum(ellipsoid(p, h(0, -3.0, 1.6), (4.6 * k, 3.2 * k, 4.0 * k), s.head),
-                                  -ellipsoid(p, h(0, -1.6, 6.0), (2.0 * k, 1.0 * k, 2.0 * k), s.head)), BEARD),
-        Part(lambda p: sphere(p, h(-2.0, 0.4, 5.0), 0.85 * k), EYES),
-        Part(lambda p: sphere(p, h(2.0, 0.4, 5.0), 0.85 * k), EYES),
+        # Barbe courte sous les pommettes : le haut du visage reste nu, les yeux s'y lisent.
+        Part(lambda p: np.maximum(ellipsoid(p, h(0, -3.6, 1.6), (4.6 * k, 2.6 * k, 4.0 * k), s.head),
+                                  -ellipsoid(p, h(0, -2.2, 6.0), (2.0 * k, 1.0 * k, 2.0 * k), s.head)), BEARD),
+        # Yeux en amande verticale : un rond d'un pixel se perd entre deux pixels du visage.
+        Part(lambda p: ellipsoid(p, h(-2.1, 0.2, 5.3), (1.0 * k, 1.6 * k, 0.9 * k), s.head), EYES),
+        Part(lambda p: ellipsoid(p, h(2.1, 0.2, 5.3), (1.0 * k, 1.6 * k, 0.9 * k), s.head), EYES),
         # Grand chapeau de route : calotte cabossée et large bord incliné vers l'avant.
         Part(lambda p: ellipsoid(p, h(0, 5.0, -0.6), (4.8 * k, 3.4 * k, 4.8 * k), s.head), HAT),
         Part(lambda p: cylinder(p, h(0, 3.8, -0.6), 7.6 * k, 0.5 * k, 0.4, s.head @ _BRIM_TILT), HAT),

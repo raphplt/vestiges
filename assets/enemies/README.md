@@ -23,4 +23,4 @@ Généré par `python3 tools/generate_enemy.py <id> [--sheet planche.png]` à pa
 
 ## Anciens sprites
 
-Les autres dossiers viennent d'anciens générateurs Pillow, à des densités hétérogènes (plan 08, audit du 23 septembre). Sans `sprite_feet_offset`, ils sont centrés et remontés de 35 % de leur hauteur. Ils seront remplacés par le pipeline après validation du pilote.
+Seule la Tisseuse vient encore d'un ancien générateur Pillow (`scripts/generate_tisseuse.py`, 4 directions, 64×64), à remplacer par un modèle du pipeline ; ce script sera alors retiré. Sans `sprite_feet_offset`, elle est centrée et remontée de 35 % de sa hauteur. Les anciens générateurs du Cracheur, du Rampant, de l'Ombre rampante et du Tréant sont retirés (10 octobre) : ces créatures viennent du pipeline.
