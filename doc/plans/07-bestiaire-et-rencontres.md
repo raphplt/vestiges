@@ -800,4 +800,34 @@ Piste écartée en cours de route : **la mer debout**, une vague dressée avec l
 
 **Constat commun** : la nuit les éteint. À l'intégration, la forme portera sa propre lumière (reflet de la lanterne, contour clair) pour se détacher du fond.
 
-**Question pour Raphaël** : quelle forme ? **Recommandation : C, l'œil.** C'est la seule qui se lit d'un coup d'œil comme un point à frapper, sans risquer le comique. Elle reprend les bras de A et dit le mieux ce qu'est l'Indicible : la chose que Vaulme a refusé de regarder.
+**Validé le 10 octobre (DECISIONS §95) : C, l'œil**, comme recommandé. Question posée : quelle forme ? **Recommandation : C, l'œil.** C'est la seule qui se lit d'un coup d'œil comme un point à frapper, sans risquer le comique. Elle reprend les bras de A et dit le mieux ce qu'est l'Indicible : la chose que Vaulme a refusé de regarder.
+
+### B5b et B5c livrés — 10 octobre 2026, soir (arrivée, tempête, marée)
+
+**Arrivée et tempête (B5b)** :
+- **La nuit tombe vraiment en mesure.** L'Indicible cherchait le `CanvasModulate` dans la scène courante ; en mesure, c'est la scène d'observation, et la nuit ne tombait pas. Il le cherche maintenant chez son parent, la scène de run. Toutes les captures B3 avaient été prises sans nuit.
+- **`Combat/IndicibleStorm`** tient la nuit image par image, sans tweens concurrents. Un éclair ouvre la nuit à l'arrivée. Des éclairs lointains l'ouvrent toutes les 5 à 11 s (40 % vers le jour). L'éclair qui frappe l'ouvre à 85 %, et elle se referme en 0,35 s. À la mort, le jour revient en 2,5 s : le boss reste dans l'arbre le temps du retour.
+- **Pluie** (`Combat/IndicibleRain`) : 340 gouttes au plus, dessinées à l'écran sur la couche 1 (au-dessus du monde, sous le HUD, couche 10), avec un éclat en couronne à l'arrivée au sol. Le vent de la tempête les incline. Il pleut moins à la marée puis à la vague (100, 75, 50 %). Il y a un tracé par image pour les gouttes et un pour les éclats, avec des tableaux alloués une fois ; la pluie s'arrête de calculer quand elle est sèche.
+- **Éclair qui frappe** (`Combat/IndicibleBolt`) : un trait brisé tombé de 640 px avec une branche, un halo d'impact au sol, deux claquements, et des étincelles pâles. Pendant l'annonce, l'air grésille dans le cercle.
+- **Mains** : elles sortent de terre par la région du sprite, avec un dépassement (`Combat/GroundReveal`, désormais partagé avec la levée de la Barrière). Celles qui attendent se balancent ; à l'annonce, le poing se ferme, tremble et replonge à moitié. Il ressort sèchement sur la position annoncée, puis replonge. Un trou au sol les accompagne (`Combat/IndicibleHandHole`) : terre retournée, ou remous dans l'eau. La terre gicle à la sortie, l'eau dans la marée.
+- Réglages : section `weather` de `data/scaling/indicible.json`, contrôlée au chargement (une part de pluie par phase).
+- Tirages visuels sur des flux à part (`indicible_storm`, `indicible_rain`, `indicible_bolt`, `indicible_hands`) : rien ne décale les tirages du jeu.
+
+**Marée (B5c)** : une seule surface d'eau dessinée par `assets/shaders/indicible_tide.gdshader` remplace les trois aplats.
+- Le bord lèche la côte, ondule et respire, frangé d'une écume déchirée.
+- L'eau peu profonde est claire, l'eau profonde sombre, avec une transition tramée.
+- Des vaguelettes viennent vers la côte, quelques reflets piquent le large, des remous entourent le joueur dans l'eau.
+- La bande annoncée luit d'eau qui affleure. Le front visible rattrape en 0,3 s le front du jeu, qui avance par bandes ; l'eau entre depuis le bord de l'écran et recule en s'effaçant.
+- Couleur d'écume : `tide.foam_color`.
+
+**Défaut trouvé : le rendu figeait quand la marée apparaissait.** La compilation d'un shader inconnu, synchrone en Compatibility sur macOS, figeait le rendu plusieurs secondes à son apparition : trois captures sur dix sont restées sur l'écran de chargement ou sur une image figée. Le shader est ajouté au préchauffage du chargement (`ShaderWarmup`, 20 shaders) ; captures suivantes sans gel.
+
+Captures : [tempête, main et pluie](../audits/boss-2026-10-10/b5/tempete-main-pluie.jpg), [éclair qui frappe](../audits/boss-2026-10-10/b5/eclair-frappe.jpg), [marée](../audits/boss-2026-10-10/b5/maree.jpg).
+Relecture `godot-reviewer` :
+- pose du poing appliquée dès le changement de texture ;
+- pluie arrêtée quand elle est sèche ;
+- éclair toujours rattaché à la scène.
+
+Signalé à tort par la relecture : la pluie passerait au-dessus du HUD (il est en couche 10).
+
+Suites : smoke, indicible, boss_parts : 3/3. Pas de banc : le banc dense ne fait pas venir l'Indicible, et la pluie coûte un seul nœud qui dessine.
