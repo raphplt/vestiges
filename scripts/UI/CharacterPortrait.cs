@@ -4,17 +4,17 @@ using Vestiges.Infrastructure;
 namespace Vestiges.UI;
 
 /// <summary>
-/// Portrait d'un personnage pour les menus : l'image soignée <c>portrait.png</c> de son dossier si elle existe (images
-/// promises par Raphaël, plan 06 §9.10), sinon les poses de repos du sprite de jeu, de face.
+/// Portrait d'un personnage pour les menus : l'illustration <c>portrait.webp</c> de son dossier si elle existe (images de
+/// Raphaël, plan 06 §9.10), sinon les poses de repos du sprite de jeu, de face.
 /// </summary>
 public static class CharacterPortrait
 {
     public const int IdleFrames = 6;
 
-    /// <summary>Image soignée du personnage, ou null tant qu'elle n'est pas fournie.</summary>
+    /// <summary>Illustration du personnage, ou null tant qu'elle n'est pas fournie.</summary>
     public static Texture2D Artwork(string characterId)
     {
-        string path = $"res://assets/characters/{Folder(characterId)}/portrait.png";
+        string path = $"res://assets/characters/{Folder(characterId)}/portrait.webp";
         return ResourceLoader.Exists(path) ? GD.Load<Texture2D>(path) : null;
     }
 

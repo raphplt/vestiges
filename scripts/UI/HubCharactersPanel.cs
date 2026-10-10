@@ -1,40 +1,22 @@
-using System.Collections.Generic;
 using Godot;
 using Vestiges.Infrastructure;
-using Vestiges.Progression;
 
 namespace Vestiges.UI;
 
 /// <summary>
-/// Page Personnages de l'accueil (plan 06 §9.10, lot Q3) : les six personnages, jouables, à débloquer ou à venir. À
-/// gauche la liste ; à droite le portrait agrandi (image soignée si elle existe, sinon le sprite de jeu au repos,
-/// animé) et la fiche : description, passif, arme de départ, statistiques, ou la quête qui le débloque.
+/// Page Personnages de l'accueil (plan 06 §9.10, lot Q3) : les personnages du jeu, jouables ou à débloquer ; ceux qui
+/// ne sont pas encore en jeu n'y figurent pas. À gauche la liste ; à droite le portrait agrandi (illustration si elle
+/// existe, sinon le sprite de jeu au repos, animé) et la fiche : description, passif, arme de départ, statistiques et
+/// la quête qui le débloque.
 /// </summary>
 public partial class HubCharactersPanel : MarginContainer
 {
     private const float RowWidth = 420f;
     private const float RowHeight = 96f;
-    private const float PortraitScale = 6f;
+    /// <summary>Côté du portrait : l'illustration carrée y tient entière, le sprite 48×64 y est agrandi ×6.</summary>
+    private const float PortraitSize = 432f;
     private const float IdleFps = 5f;
     private static readonly Color LockedTint = new(0.45f, 0.44f, 0.5f, 1f);
-
-    private readonly struct Entry
-    {
-        public readonly string Id;
-        public readonly string Name;
-        public readonly CharacterData Data;
-        public readonly bool Unlocked;
-
-        public Entry(string id, string name, CharacterData data, bool unlocked)
-        {
-            Id = id;
-            Name = name;
-            Data = data;
-            Unlocked = unlocked;
-        }
-
-        public bool Upcoming => Data == null;
-    }
 
     private Font _bodyFont;
     private Font _strongFont;
@@ -90,7 +72,7 @@ public partial class HubCharactersPanel : MarginContainer
         body.AddChild(frame);
         _portrait = new TextureRect
         {
-            CustomMinimumSize = new Vector2(48f * PortraitScale, 64f * PortraitScale),
+            CustomMinimumSize = new Vector2(PortraitSize, PortraitSize),
             ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
             StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
             TextureFilter = TextureFilterEnum.Nearest,
@@ -136,45 +118,28 @@ public partial class HubCharactersPanel : MarginContainer
         foreach (Node child in _list.GetChildren())
             child.QueueFree();
         Control focused = null;
-        Entry focusedEntry = default;
-        List<Entry> entries = Entries();
-        foreach (Entry entry in entries)
+        CharacterData focusedCharacter = null;
+        foreach (CharacterData character in CharacterDataLoader.GetAll())
         {
-            Button row = MakeRow(entry);
+            Button row = MakeRow(character);
             _list.AddChild(row);
-            if (focused == null || entry.Id == selectedCharacterId)
+            if (focused == null || character.Id == selectedCharacterId)
             {
                 focused = row;
-                focusedEntry = entry;
+                focusedCharacter = character;
             }
         }
-        if (focused != null)
-            ShowSheet(focusedEntry);
+        if (focusedCharacter != null)
+            ShowSheet(focusedCharacter);
         return focused;
     }
 
-    /// <summary>Les personnages du catalogue, puis ceux qu'une quête promet sans qu'ils soient encore jouables.</summary>
-    private static List<Entry> Entries()
-    {
-        List<Entry> entries = new();
-        HashSet<string> seen = new();
-        foreach (CharacterData character in CharacterDataLoader.GetAll())
-        {
-            seen.Add(character.Id);
-            entries.Add(new Entry(character.Id, character.Name, character, MetaSaveManager.IsCharacterUnlocked(character.Id)));
-        }
-        foreach (QuestDefinition quest in QuestDataLoader.GetAll())
-            foreach (QuestUnlock unlock in quest.Unlocks)
-                if (unlock.Kind == UnlockKind.Character && seen.Add(unlock.Id))
-                    entries.Add(new Entry(unlock.Id, QuestBook.UnlockName(unlock), null, MetaSaveManager.IsCharacterUnlocked(unlock.Id)));
-        return entries;
-    }
-
-    private Button MakeRow(Entry entry)
+    private Button MakeRow(CharacterData character)
     {
         Button row = new() { CustomMinimumSize = new Vector2(RowWidth, RowHeight), FocusMode = FocusModeEnum.All };
         row.TextureFilter = TextureFilterEnum.Nearest;
-        string skin = entry.Unlocked && !entry.Upcoming ? "ui_card_normal.png" : "ui_card_locked.png";
+        bool unlocked = MetaSaveManager.IsCharacterUnlocked(character.Id);
+        string skin = unlocked ? "ui_card_normal.png" : "ui_card_locked.png";
         StyleBoxTexture normal = UITheme.CreateNinePatch(UITheme.LoadTex(UITheme.MenusPath + skin), 4, 4, 4, 4);
         StyleBoxTexture lit = UITheme.CreateNinePatch(UITheme.LoadTex(UITheme.MenusPath + "ui_card_selected.png"), 4, 4, 4, 4);
         row.AddThemeStyleboxOverride("normal", normal);
@@ -185,81 +150,75 @@ public partial class HubCharactersPanel : MarginContainer
 
         row.AddChild(new TextureRect
         {
-            Texture = CharacterPortrait.Idle(entry.Id),
+            Texture = CharacterPortrait.Idle(character.Id),
             ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
             StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
             TextureFilter = TextureFilterEnum.Nearest,
             MouseFilter = MouseFilterEnum.Ignore,
             Position = new Vector2(10f, 6f),
             Size = new Vector2(63f, 84f),
-            SelfModulate = entry.Unlocked ? Colors.White : LockedTint,
+            SelfModulate = unlocked ? Colors.White : LockedTint,
         });
-        Label name = new() { Text = entry.Name, MouseFilter = MouseFilterEnum.Ignore, Position = new Vector2(92f, 18f) };
+        Label name = new() { Text = character.Name, MouseFilter = MouseFilterEnum.Ignore, Position = new Vector2(92f, 18f) };
         name.AddThemeFontOverride("font", _strongFont);
         UITheme.SetTextRole(name, TextRole.Heading);
-        name.AddThemeColorOverride("font_color", entry.Unlocked ? UITheme.TextLight : UITheme.TextDim);
+        name.AddThemeColorOverride("font_color", unlocked ? UITheme.TextLight : UITheme.TextDim);
         row.AddChild(name);
-        Label state = new() { Text = StateText(entry), MouseFilter = MouseFilterEnum.Ignore, Position = new Vector2(92f, 52f) };
+        Label state = new() { Text = StateText(unlocked), MouseFilter = MouseFilterEnum.Ignore, Position = new Vector2(92f, 52f) };
         state.AddThemeFontOverride("font", _bodyFont);
         UITheme.SetTextRole(state, TextRole.Body);
         state.AddThemeColorOverride("font_color", UITheme.TextDim);
         row.AddChild(state);
 
-        row.FocusEntered += () => ShowSheet(entry);
-        row.MouseEntered += () => ShowSheet(entry);
+        row.FocusEntered += () => ShowSheet(character);
+        row.MouseEntered += () => ShowSheet(character);
         UITheme.WireButtonAudio(row);
         return row;
     }
 
-    private static string StateText(Entry entry) =>
-        entry.Upcoming ? entry.Unlocked ? "Débloqué, jouable bientôt" : "À venir" : entry.Unlocked ? "Jouable" : "À débloquer";
+    private static string StateText(bool unlocked) => unlocked ? "Jouable" : "À débloquer";
 
-    private void ShowSheet(Entry entry)
+    private void ShowSheet(CharacterData character)
     {
-        LoadPortrait(entry);
-        _name.Text = entry.Name;
-        _state.Text = StateText(entry);
-        QuestDefinition quest = QuestDataLoader.FindUnlocking(UnlockKind.Character, entry.Id);
+        bool unlocked = MetaSaveManager.IsCharacterUnlocked(character.Id);
+        LoadPortrait(character.Id, unlocked);
+        _name.Text = character.Name;
+        _state.Text = StateText(unlocked);
+        QuestDefinition quest = QuestDataLoader.FindUnlocking(UnlockKind.Character, character.Id);
         bool questDone = quest != null && MetaSaveManager.HasCompletedQuest(quest.Id);
         _quest.Text = quest == null ? "" : questDone
             ? $"Débloqué par la quête « {quest.Name} »."
             : $"Quête « {quest.Name} » : {quest.Description}";
-
-        if (entry.Upcoming)
-        {
-            _description.Text = "Personnage à venir : son passif, sa mobilité et son arme arrivent avec lui.";
-            _passive.Text = "";
-            _weapon.Text = "";
-            _stats.Text = "";
-            return;
-        }
-        CharacterData data = entry.Data;
-        _description.Text = data.Description;
-        PerkData passive = PerkDataLoader.GetAll().Find(perk => perk.Id == data.PassivePerk);
+        _description.Text = character.Description;
+        PerkData passive = PerkDataLoader.GetAll().Find(perk => perk.Id == character.PassivePerk);
         _passive.Text = passive == null ? "" : $"Passif — {passive.Name} : {passive.Description}";
-        WeaponData weapon = WeaponDataLoader.Get(data.StartingWeaponId);
+        WeaponData weapon = WeaponDataLoader.Get(character.StartingWeaponId);
         _weapon.Text = weapon == null ? "" : $"Arme de départ — {weapon.Name} : {weapon.Summary}";
-        CharacterStats stats = data.BaseStats;
+        CharacterStats stats = character.BaseStats;
         _stats.Text = $"PV {stats.MaxHp:0} · vitesse {stats.Speed:0} · dégâts {stats.AttackDamage:0} · cadence ×{stats.AttackSpeed:0.0} · "
             + $"portée {stats.AttackRange:0} · régénération {stats.RegenRate:0.0}/s";
     }
 
-    private void LoadPortrait(Entry entry)
+    /// <summary>
+    /// L'illustration se lisse à la réduction ; le sprite de jeu, pixel art, s'agrandit sans flou et s'anime au repos.
+    /// </summary>
+    private void LoadPortrait(string characterId, bool unlocked)
     {
         _idleTime = 0f;
         _idleCount = 0;
-        Texture2D artwork = CharacterPortrait.Artwork(entry.Id);
+        Texture2D artwork = CharacterPortrait.Artwork(characterId);
         if (artwork == null)
         {
             for (int i = 0; i < _idle.Length; i++)
             {
-                Texture2D frame = CharacterPortrait.Idle(entry.Id, i + 1);
+                Texture2D frame = CharacterPortrait.Idle(characterId, i + 1);
                 if (frame == null)
                     break;
                 _idle[_idleCount++] = frame;
             }
         }
+        _portrait.TextureFilter = artwork != null ? TextureFilterEnum.Linear : TextureFilterEnum.Nearest;
         _portrait.Texture = artwork ?? (_idleCount > 0 ? _idle[0] : null);
-        _portrait.SelfModulate = entry.Unlocked ? Colors.White : LockedTint;
+        _portrait.SelfModulate = unlocked ? Colors.White : LockedTint;
     }
 }
