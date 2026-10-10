@@ -233,6 +233,16 @@ def _envelope() -> ProjectileModel:
     return ProjectileModel(materials, parts, (24, 24), 1, len(flutter), 10)
 
 
+def _letter() -> ProjectileModel:
+    """Lettre qui s'envole derrière le Facteur (élan de la Tournée) : l'enveloppe à moitié taille, plus pâle,
+    pour ne pas se confondre avec un tir."""
+    base = _envelope()
+
+    def parts(frame: int) -> Sequence[Part]:
+        return [Part(lambda p, part=part: part.distance(p / 0.55) * 0.55, part.material) for part in base.parts(frame)]
+
+    return ProjectileModel(base.materials, parts, (16, 16), 1, base.frames, 8, opacity=(220, 220, 220, 220))
+
 def _note() -> ProjectileModel:
     materials = (make_material("brass", "#D4A843", contrast=1.1),)
 
@@ -353,6 +363,7 @@ MODELS: dict[str, Callable[[], ProjectileModel]] = {
     "shard": _shard,
     "axe": _axe,
     "envelope": _envelope,
+    "letter": _letter,
     "stone": _stone,
     "orb_essence": _comet,
     "orb_fire": _flame,

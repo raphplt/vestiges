@@ -30,6 +30,12 @@ public partial class PerkManager : Node
                         player.ApplyPerkModifier(effect.Stat, effect.Modifier, effect.ModifierType);
             if (passive.Stat != null)
                 player.ApplyPerkModifier(passive.Stat, passive.Modifier, passive.ModifierType);
+            if (passive.Momentum != null)
+            {
+                RoundMomentum momentum = new() { Name = "RoundMomentum" };
+                momentum.Initialize(player, passive.Momentum);
+                player.AddChild(momentum);
+            }
             GD.Print($"[PerkManager] Applied passive: {passive.Name}");
         }
     }

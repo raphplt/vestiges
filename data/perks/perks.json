@@ -88,6 +88,12 @@
         "max_stacks": 1,
         "is_passive": true,
         "character_id": "facteur",
+        "momentum": {
+            "ramp_seconds": 4,
+            "speed_bonus": 0.25,
+            "attack_speed_bonus": 0.15,
+            "stop_grace_seconds": 0.5
+        },
         "tags": [
             "mobility",
             "attack_speed"

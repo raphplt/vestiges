@@ -22,6 +22,17 @@ public class PerkData
     public bool IsPassive { get; set; }
     public string CharacterId { get; set; }
     public List<PerkEffect> Effects { get; set; }
+    /// <summary>Élan d'une signature qui récompense le mouvement continu (Tournée du Facteur), sinon null.</summary>
+    public PerkMomentum Momentum { get; set; }
+}
+
+/// <summary>Réglages de l'élan : bonus au plein, temps pour l'atteindre, arrêt toléré avant la remise à zéro.</summary>
+public class PerkMomentum
+{
+    public float RampSeconds { get; set; }
+    public float SpeedBonus { get; set; }
+    public float AttackSpeedBonus { get; set; }
+    public float StopGraceSeconds { get; set; }
 }
 
 public static class PerkDataLoader
@@ -85,6 +96,7 @@ public static class PerkDataLoader
                 IsPassive = dict.ContainsKey("is_passive") && dict["is_passive"].AsBool(),
                 CharacterId = dict.ContainsKey("character_id") ? dict["character_id"].AsString() : null,
                 Effects = effects,
+                Momentum = dict.ContainsKey("momentum") ? ReadMomentum(dict["momentum"].AsGodotDictionary()) : null,
             };
             _allPerks.Add(perk);
         }
@@ -92,6 +104,14 @@ public static class PerkDataLoader
         _loaded = true;
         GD.Print($"[PerkDataLoader] Loaded {_allPerks.Count} character signatures");
     }
+
+    private static PerkMomentum ReadMomentum(Godot.Collections.Dictionary dict) => new()
+    {
+        RampSeconds = Mathf.Max(0.1f, (float)dict["ramp_seconds"].AsDouble()),
+        SpeedBonus = (float)dict["speed_bonus"].AsDouble(),
+        AttackSpeedBonus = (float)dict["attack_speed_bonus"].AsDouble(),
+        StopGraceSeconds = (float)dict["stop_grace_seconds"].AsDouble(),
+    };
 
     public static List<PerkData> GetAll()
     {

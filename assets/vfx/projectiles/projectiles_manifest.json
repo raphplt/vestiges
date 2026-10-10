@@ -115,6 +115,15 @@
     "frames": 4,
     "fps": 14
   },
+  "letter": {
+    "frame": [
+      16,
+      16
+    ],
+    "directions": 1,
+    "frames": 4,
+    "fps": 8
+  },
   "needle": {
     "frame": [
       32,

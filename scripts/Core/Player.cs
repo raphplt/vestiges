@@ -722,7 +722,7 @@ public partial class Player : CharacterBody2D
         return _worldSetup.Generator.GetTerrain(cell.X, cell.Y);
     }
 
-    private bool IsOnWater() => GetCurrentTerrain() == TerrainType.Water;
+    public bool IsOnWater() => GetCurrentTerrain() == TerrainType.Water;
 
     // --- Stat Modifiers ---
 
