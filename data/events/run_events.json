@@ -9,10 +9,12 @@
         "recent_memory": 2,
         "recent_weight_factor": 0.35,
         "progress_emit_interval_sec": 0.1,
-        "_doc_fixed_events": "Rendez-vous fixes (plan 30 T2, DECISIONS §84) : chaque entrée part à at_sec, ou dès que la run le permet (pas pendant une Résurgence, son annonce ni l'accalmie) ; le tirage ne lance rien qui les chevaucherait. Deux Souverains entre les Résurgences, comme les mini-boss de Megabonk (3:00 et 8:00). Un événement de poids 0 ne sort plus qu'à ses rendez-vous.",
+        "_doc_fixed_events": "Rendez-vous fixes (plan 30 T2, DECISIONS §84) : chaque entrée part à at_sec, ou dès que la run le permet (pas pendant une Résurgence, son annonce ni l'accalmie) ; le tirage ne lance rien qui les chevaucherait. Quatre Souverains entre les Résurgences sur 30 min (plan 33 §8, DECISIONS §108) : 4:00, 9:30, 21:00 et 27:00 ; jusqu'au 10 octobre, deux à 2:30 et 7:00. Un événement de poids 0 ne sort plus qu'à ses rendez-vous.",
         "fixed_events": [
-            { "id": "hunt", "at_sec": 150 },
-            { "id": "hunt", "at_sec": 420 }
+            { "id": "hunt", "at_sec": 240 },
+            { "id": "hunt", "at_sec": 570 },
+            { "id": "hunt", "at_sec": 1260 },
+            { "id": "hunt", "at_sec": 1620 }
         ]
     },
     "events": [

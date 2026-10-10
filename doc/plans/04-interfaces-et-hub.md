@@ -1,9 +1,11 @@
 # Plan 04 — Interfaces lisibles et vraie préparation d'exploration
 
-Statut : **clarté, sobriété et Collection validées ; maquettes proposées** · Priorité : P1 · Dépendances : cadrage 08, catégories 05/06.
+Statut : **socle livré ; étude des menus intérieurs au §7, réorientée après rejet des premières esquisses** · Priorité : P1 · Dépendances : cadrage 08, catégories 05/06.
 Références : V2 §15–18 ; Bible §9 ; [dossier](README.md).
 
 **Menus du Hub, 10 octobre 2026 :** la page Chroniques et son entrée sont supprimées à la demande de Raphaël. Menu actuel : Partir, Personnages, Quêtes, Collection, Paramètres, Quitter. Les quêtes accomplies utilisent une médaille pixel art originale ; le premier sceau est remplacé après le retour de Raphaël sur sa lisibilité, au [plan 06 Q3d](06-personnages-quetes-defis.md#q3d--lisibilité-de-licône-de-complétion--10-octobre-2026), décision §100.
+
+**Nouvelle demande du 10 octobre, précisée après les esquisses :** reprendre l'intérieur de Personnages, Quêtes, Collection et Paramètres, ainsi que la pause ; garder l'accueil actuel, apprécié, avec Paramètres et Quitter regroupés en bas. Les deux premières esquisses sont rejetées pour leur rendu trop web. Pierre et Effacement est une préférence de recherche, pas un visuel approuvé ([§7](#7-refonte-des-menus--étude-du-10-octobre-2026), [DECISIONS §106](DECISIONS.md)). Ce cadrage remplace les anciennes propositions de parcours du §3 pour le prochain chantier. Les comptes rendus B/C/R1–R8 restent l'historique de ce qui a été livré.
 
 ## 1. Résultat attendu
 
@@ -451,3 +453,138 @@ Les huit états passent sans débordement aux tailles réelles 1920 × 1080 et
 1280 × 720, même seed : `/tmp/vestiges-vitals-compact-1080` et
 `/tmp/vestiges-vitals-compact-720`. Build sans warning.
 Smoke 600 frames vert : `/tmp/vestiges-smoke.sJ507s`.
+
+## 7. Refonte des menus — étude du 10 octobre 2026
+
+**Périmètre après le retour sur les esquisses :** améliorer les parcours et la direction artistique de l'intérieur de Personnages, Quêtes, Collection, Paramètres et de la pause. **L'accueil actuel est conservé** : fond, logo, ambiance et composition générale. Raphaël apprécie le regroupement Paramètres / Quitter en bas ; c'est le seul ajustement de l'accueil retenu pour le plan. **Livrable : diagnostic, nouvelle étude illustrée et plan ; pas implémentation.** Les détails UX restent des propositions : Raphaël précise ne pas avoir lu tout le premier plan.
+
+Les premières esquisses accueil/pause, métal et pierre, sont **rejetées**, même si Pierre et Effacement est la piste préférée entre les deux. Leur vérification en navigateur ne constitue pas une validation de leur design. Le présent §7.3 remplace leur direction artistique ; le §7.5 remplace le découpage initial M0–M5.
+
+### 7.1 Diagnostic à partir du jeu actuel
+
+Lecture de la Stratégie V2, de la Charte, de la Bible §9–10, des décisions récentes et des scripts. Captures réellement ouvertes : accueil et quatre pages en profil dev à 1920×1080 ; profil neuf à 1280×720 ; pause chargée et paramètres depuis Main. Le scénario de pause injecte quatre armes et six objets après vingt secondes de combat : état de lecture dense, pas mesure d'équilibrage. Ses images sont sorties en **3840×2160**, malgré la résolution 1920×1080 demandée au lanceur ; elles ne constituent donc pas une recette native 1080p de la pause.
+
+Références hors dépôt : `/tmp/vestiges-menu-audit-20261010-hub`, `/tmp/vestiges-menu-audit-20261010-neuf`, `/tmp/vestiges-menu-audit-20261010-pause`. Ces chemins sont temporaires ; les constats et commandes sont consignés ici pour rester reproductibles.
+
+| Constat vérifié | Conséquence pour le joueur | Traitement proposé |
+|---|---|---|
+| L'accueil choisit le héros par le camp et gauche/droite ; `HubCharactersPanel` présente les fiches au focus/survol, sans action de sélection. | Le joueur étudie un héros puis doit revenir au camp pour le retrouver et le choisir. Le problème est une fonction répartie sur deux écrans, pas deux catalogues identiques. | Ajouter la confirmation du choix et le départ depuis Personnages ; synchroniser le héros avec le camp, dont le fonctionnement est conservé. |
+| `HubScreen.SetState` masque le menu principal sur chaque page ; chaque retour conduit à l'accueil. | Passer de Quêtes à Collection exige Retour puis Collection. | Navigation commune visible sur les pages secondaires ; une action pour changer de rubrique. |
+| Les conditions de déblocage sont du texte dans les fiches de personnages et de collection ; les récompenses sont montrées dans Quêtes sans lien vers leur fiche. | Le joueur mémorise un nom et recherche la même entrée ailleurs. | Liens ciblés « Voir la quête » et « Voir le personnage / l'arme / l'objet », avec retour à l'origine. |
+| Le fond de l'accueil comporte déjà feu, braises, dérive d'Effacement, yeux ponctuels et logo qui s'effrite. | Ajouter encore des particules ne donnera pas à lui seul une identité aux panneaux. | Construire la profondeur dans la matière des contrôles, les bords, la lumière et la composition. |
+| L'accueil a des entrées textuelles avec une braise ; les pages ont un voile sombre ; les fiches ont des cadres fins ; pause et paramètres utilisent les textures communes, visuellement presque plates. | Plusieurs traitements sans hiérarchie matérielle commune ; impression d'interface générique sur une illustration. | Une même famille de surfaces, avec trois intensités adaptées à leur rôle. |
+| La pause affiche une liste d'équipement longue et une fiche de stats séparée ; le stick droit / Page haut-bas défile les deux colonnes ensemble. | Même les six objets ne sont pas visibles en même temps dans la capture dense ; retrouver une règle exige du défilement. | Vue compacte du build, détail d'un élément sélectionné, statistiques regroupées ; défilement de la zone consultée seulement. |
+| Paramètres est déjà le même composant depuis le Hub et la pause, avec rendu du focus au bouton d'origine. | Cette réutilisation est utile ; deux accès contextuels ne sont pas un doublon à supprimer. | Conserver ce contrat ; revoir le cadre et l'organisation de ses catégories. |
+| « Retour au Hub » change directement de scène ; « Quitter » ferme le jeu. | Le libellé de retour masque le fait que la run est abandonnée. | « Abandonner la run » et « Quitter le jeu » ; confirmation expliquant les conséquences réelles, focus initial sur Annuler. |
+| Le solde de Vestiges est visible à l'accueil ; `SpendVestiges` n'a aucun appel dans les scripts actuels. | Une monnaie attire l'œil sans destination utilisable dans ce Hub. | Constat conservé pour mémoire ; sa suppression est reportée hors périmètre, puisque l'accueil est conservé. |
+
+Les quêtes et la collection ont un recouvrement légitime : **Quêtes = ce que je dois faire ; Collection = ce que fait le contenu.** Une même récompense peut apparaître dans les deux, à partir de la même source de disponibilité. Il faut relier ces deux vues, pas fusionner leurs rôles.
+
+La page Chroniques est déjà supprimée et ne revient pas. Le Journal des Souvenirs existe séparément en run (touche J) : il porte le lore, pas les objectifs de déblocage. Son accessibilité et ses retours entrent dans la recette ; un nouveau menu de lore au Hub demande un cadrage distinct et n'est pas ajouté ici.
+
+### 7.2 Parcours recommandé
+
+**Accueil :** garder son fond, son logo, ses effets, le camp et la sélection actuelle. Partir reste le départ rapide. Prévoir seulement Paramètres et Quitter côte à côte en bas, séparés des quatre entrées principales. Ni nouvelle composition du camp, ni remplacement du fond, ni nouvel écran de préparation obligatoire.
+
+**Pages secondaires :** navigation stable Personnages / Quêtes / Collection, accès à l'accueil et départ avec le héros confirmé. Titre, marges, pied de commandes et placement de l'action principale communs. Ne pas répéter la grande liste de l'accueil à côté d'une seconde barre de catégories : une seule navigation globale par écran.
+
+| Page | Responsabilité | Action principale |
+|---|---|---|
+| Personnages | Comparer les styles, comprendre passif/arme/mobilité, choisir le héros. Portrait dominant ; résumé court ; chiffres secondaires à la demande. | « Choisir » confirme sans quitter la page ; « Partir » est directement accessible après le choix. Héros verrouillé : « Voir la quête ». |
+| Quêtes | Toutes les quêtes visibles, progression et récompenses, filtres Toutes / En cours / Accomplies déjà demandés. | Consulter l'objectif ; ouvrir la fiche de chaque récompense. Pas de sélection de quête à équiper. |
+| Collection | Catalogue Armes / Objets / Réminiscences, comportement, valeurs de base, disponibilité et conditions. | Consulter ; ouvrir la quête de déblocage si elle existe. Aucun achat fictif. |
+| Paramètres | Audio / Affichage / Effets / Commandes ; langue et filtre daltonien groupés explicitement. | Modifier et revenir au contexte d'origine. L'emplacement exact de langue/accessibilité est à maquetter, sans ajouter de réglage. |
+| Pause | Reprendre, comprendre le build actuel, régler le jeu, abandonner ou quitter. | Reprendre. Le build effectif n'est pas le catalogue de la Collection. |
+
+**Contrat de navigation :** survol/focus = élément examiné ; validation = choix confirmé. Un héros examiné ne change jamais silencieusement le prochain départ. Les intitulés « Choisi », « Jouable », « À débloquer » distinguent l'état réel. Ne pas afficher « ??? » à la place du nom d'un héros déjà présenté dans le catalogue de déblocage.
+
+L'accueil conserve le dernier héros confirmé disponible ; un simple passage sur un héros verrouillé ne désactive pas Partir avec ce héros confirmé. Une fiche verrouillée a un objectif et un lien utiles, sans faux bouton de départ.
+
+Chaque page conserve élément sélectionné, filtre/onglet et position de défilement. Un lien Quêtes → Collection → Retour restaure la quête d'origine. Échap/B ferme d'abord le détail ou les paramètres, puis revient à l'origine ; dans la pause, il reprend seulement après fermeture du sous-écran. Afficher des indications correspondant au périphérique actif.
+
+**Cibles vérifiables de parcours :**
+- Accueil → run avec le héros confirmé : **1 action** d'activation.
+- Page Quêtes → Collection : **2 actions actuellement** (Retour, Collection) → **1 action** proposée.
+- Condition d'un contenu → quête correspondante : **1 lien ciblé**, sans recherche manuelle.
+- Fiche Personnages → confirmer ce héros → lancer : **2 actions**, sans retour au camp.
+- Paramètres → fermer : retour au même écran, même élément et même focus.
+
+La proposition initiale de déplacer la graine et de masquer le solde est **reportée hors de cette passe**, comme le remplacement du fond. Le mode dev ne dicte pas le design des menus distribués.
+
+### 7.3 Direction à explorer : pierre urbaine et traces effacées
+
+**Base narrative relue :** [VESTIGES-LORE v1.1](../VESTIGES-LORE.md), validée au §62 et remplaçant la cosmologie de la partie I de la Bible. Le monde garde les lieux et perd leurs chemins ; les oubliés ont des métiers, des vêtements et des objets ordinaires. La pierre vient des rues et des maisons. Le blanc marque ce qui ne tient plus. Cela donne un vocabulaire concret : enduit usé, arêtes de maçonnerie, empreintes, inscriptions partielles et contours qui se raréfient. Le menu reste une convention d'interface ; il ne transforme pas l'accueil en lieu canonique.
+
+Le lore doit se sentir dans la matière. Ne pas afficher les noms réels des personnages, les révélations ou de nouveaux slogans expliquant la mémoire. Les textes d'ambiance restent soumis au §10 du lore. Les libellés utiles restent simples : Personnages, Quêtes, Collection, Paramètres.
+
+**Références effectivement regardées :**
+- [Blasphemous, Collection](https://interfaceingame.com/screenshots/blasphemous-collectibles/) : illustration d'objet dominante, grille compacte, cadre périphérique et catégories communes. À retenir : une composition reconnaissable et des ornements dessinés ; son iconographie religieuse ne fait pas partie de Vestiges.
+- [Dead Cells, équipement — capture officielle](https://steamcommunity.com/games/588650/announcements/detail/3383909822377684032) : icônes nettes, coins de cadres spécifiques, repères de catégories et commandes en pied. À retenir : la précision des états et des assets ; sa densité de descriptions n'est pas la cible de la pause de Vestiges.
+
+Il s'agit d'une lecture graphique de ces captures, pas d'un constat mesuré de leur ergonomie. La proposition pour Vestiges est originale et reste à juger.
+
+**Construction des écrans :**
+1. **Un sujet dominant.** Le personnage, l'objet examiné ou le build donne sa composition à l'écran. Le portrait sort du rectangle de fiche ; l'objet est assez grand pour être reconnu. La navigation reste secondaire.
+2. **Des supports dessinés.** Quelques morceaux de mur et de pierre, une tranche éclairée en haut à gauche, une ombre franche en dessous, des angles réellement cassés. Les formes irrégulières entourent une zone intérieure calme. Ne pas mettre un bloc de pierre autour de chaque ligne.
+3. **Une profondeur par plans.** Fond éloigné, contenu posé au premier plan, quelques recouvrements et bords qui dépassent. Le décor ne concurrence pas les informations. Les pages intérieures peuvent avoir leur propre fond illustré sans changer l'image de lancement.
+4. **Un Effacement localisé.** Contours périphériques qui perdent des pixels et traces incomplètes dans la matière ; une brève recomposition au changement de fiche. Aucun effacement des noms utiles, chiffres, icônes de commande ou indicateurs de progression. Éviter le bruit uniforme sur toute la surface.
+5. **Des contrôles de jeu lisibles.** Repère de focus dessiné, petite encoche ou pointeur, tranche qui s'enfonce à la pression ; la marque du choix confirmé reste distincte du focus. Pas de pilules, de vitres floues ou de contour cyan générique appliqué partout. La surface cliquable reste régulière et assez grande même si le bord dessiné est cassé.
+
+Palette issue de la Charte : pierre gris chaud, ombres indigo, textes ivoire ; or et orange ponctuels sur le choix actif, blanc d'Effacement en bordure ; cyan réservé à son rôle d'Essence. Les valeurs de rareté gardent leur palette existante. Pas de temple médiéval, de runes ni de dorures décoratives systématiques.
+
+**Pixel art et texte :** dessiner les matériaux, coins, repères et icônes sur une grille cohérente ; agrandissement entier et contours nets. Préserver les sprites existants. Le texte reste rendu par Godot, avec Saira Semi Condensed pour les descriptions et les valeurs : il ne doit pas être intégré dans une image ni usé pour faire ancien. Une nouvelle forme de titre éventuelle doit être éprouvée avec les accents et les traductions. La planche illustrée n'autorise pas une modification du contrat de résolution de la Charte.
+
+**Déclinaison envisagée, à examiner :**
+
+| Écran | Composition propre | Matière et mouvement |
+|---|---|---|
+| Personnages | Galerie de petites silhouettes, grand personnage mis en scène, une fiche courte avec passif / arme / mobilité ; valeurs détaillées accessibles. | Fragment de rue et de mur ; bord du portrait qui se reconstitue au focus ; petite marque persistante sur le héros choisi. |
+| Quêtes | Conserver la grille demandée, ses filtres, la progression et les récompenses. Un détail lisible pour la quête examinée. | Un support collectif patiné, repères de progression et médailles dessinés ; quelques traces et attaches. Éviter une forêt de cartes toutes encadrées d'or et les faux documents narratifs qui dévoilent l'histoire. |
+| Collection | Grille dense d'icônes, grand objet examiné, une fiche ; Armes / Objets / Réminiscences clairement séparés. | Alvéoles discrètes dans un seul support, tranche et ombre de l'objet ; silhouette verrouillée reconnaissable, condition lisible et lien vers la quête. |
+| Paramètres | Catégories stables, lignes alignées, valeurs visibles et retour au contexte d'origine. | Un seul plan de matière sombre ; curseurs encochés et poignées dessinées, cases gravées. Pas de transformation des réglages en énigme diégétique. |
+| Pause | Actions courtes, build compact, détail examiné et statistiques regroupées (§7.4). | Même famille d'arêtes et de repères, décor beaucoup plus sobre ; conserver le lien visuel avec la run figée, sans rejouer l'illustration de Personnages. |
+
+**Effets à prototyper après accord sur l'image :** apparition courte de la tranche, lumière locale au focus, enfoncement à la pression, quelques pixels qui se détachent des marges. Durées d'essai 140–200 ms ; réponse à l'input immédiate, sans attendre l'animation. Effets réduits : garder matière, contraste et repères, réduire le mouvement décoratif. Respecter les sons UI déjà choisis.
+
+**Nouvelle étude illustrée :** [Personnages — pierre et Effacement, v2](planches/04-menus-personnages-pierre-v2.png), produite avec l'outil image_gen intégré à partir du portrait du Vagabond et du fond actuel comme références ([prompt exact](planches/04-menus-personnages-pierre-v2.prompt.json)). Elle montre la composition et les matières, **pas un écran Godot ni une direction validée**. L'accueil n'est pas redessiné.
+
+Limites de cette planche : petites vignettes secondaires générées à remplacer par les portraits réels ; dessin encore illustratif à reprendre sur la grille pixel des assets ; typographie indicative. Les valeurs visibles viennent du catalogue actuel, mais la fiche complète devra conserver ses statistiques secondaires. Le bouton « Choisir » ne doit plus solliciter de confirmation quand le héros affiché est déjà choisi ; le libellé et le focus de cet état restent à détailler. Aucun asset de production ne sera obtenu en découpant les textes de cette image.
+
+### 7.4 Pause : un build que l'on peut lire d'un regard
+
+Garder une colonne d'actions courte à gauche. Au centre, montrer simultanément **quatre armes, six objets et quatre emplacements de Réminiscences**, avec icône, nom court, niveau/état ; les emplacements vides restent discrets. Cette vue reprend les limites actuelles, elle n'en crée pas de nouvelles.
+
+Sous le build, un seul panneau de détail pour l'élément examiné : statistiques effectives de l'arme et dégâts infligés ; règle chiffrée et palier de l'objet ; effet et état actuel de la Réminiscence. Aucune description d'arme retirée au §44 n'est réintroduite. Le détail est lisible aussi au focus clavier/manette ; le survol seul ne suffit pas.
+
+À droite, statistiques du héros regroupées par survie, attaque et exploration, avec Oublis dans une section identifiée. Valeurs actuelles et bonus distingués ; pas de record ni de comparaison à une ancienne run. Déplier les groupes secondaires si la résolution l'exige, sans retirer les statistiques utiles. Le temps de run et le héros peuvent figurer dans l'en-tête ; éviter de répéter le HUD complet derrière le menu.
+
+Navigation explicite entre actions, grille et fiche ; stick droit/Page haut-bas agit sur la zone consultée. Reprendre toujours facile à retrouver. Les Paramètres remplacent temporairement le contenu de consultation ou en occupent un seul plan opaque : éviter deux cadres lisibles et deux voiles cumulés. L'état de pause est conservé à leur fermeture.
+
+Le traitement des gains lors d'un abandon doit être lu dans le contrat de fin de run avant rédaction de la confirmation : ne pas annoncer une sauvegarde ou une perte qui ne correspond pas au code, ni modifier score/récompenses comme effet caché de cette refonte.
+
+### 7.5 Lots proposés, un à la fois
+
+| Lot | Livrable limité et concret | Critère de sortie |
+|---|---|---|
+| **M0 — Recherche réorientée** | Captures actuelles, références de jeux, présent cadrage et étude illustrée Personnages. Après retour, préciser le kit de boutons / cadres et montrer une déclinaison Collection ou Paramètres avec ses vrais contenus. | Parti pris visuel et organisation examinés. Les premières esquisses rejetées ne servent plus de cible ; aucun lot de code engagé par cette étude. |
+| **M1 — Personnages, écran de référence** | Après accord sur la direction : produire les assets dessinés et leurs états, intégrer la composition, le choix confirmé et le départ depuis la fiche ; conserver la sélection du camp. | Écran abouti avec un héros choisi, un autre examiné et un verrouillé ; souris/clavier/manette, 720p/1080p/1440p, libellés longs ; aucun changement graphique de l'accueil. |
+| **M2 — Quêtes et Collection, parcours reliés** | Décliner la matière selon le rôle des pages ; navigation directe entre les trois rubriques, liens quête/récompense, retour d'origine et conservation des filtres/focus. | Parcours du §7.2 rejoués en profils neuf et avancé ; état verrouillé clair et récompense retrouvée sans recherche manuelle ; grilles et informations utiles conservées. |
+| **M3 — Paramètres et groupe utilitaire** | Décliner le kit sur les vrais contrôles et catégories ; composant commun accueil/pause ; regrouper Paramètres et Quitter côte à côte en bas de l'accueil. | Valeurs, focus et fermeture explicites ; retour au même contexte ; fond, logo, camp et autres commandes d'accueil conservés. |
+| **M4 — Pause** | Build compact sélectionnable, détail unique et statistiques regroupées ; matières sobres, paramètres sur un seul plan, abandon/quitter explicites. | Build dense visible sans défiler sa grille ; chaque détail atteignable à la manette ; fermer les paramètres ne reprend pas la run ; Annuler ne perd rien. Captures natives en run obligatoires. |
+| **M5 — Recette du périmètre** | Contrôler cohérence, traductions, focus et retours des cinq écrans ciblés ; nettoyer seulement les styles devenus inutilisés. | Accueil conservé → fiche héros → quête → récompense → retour → run → pause → paramètres → reprise → mort. Souris/clavier/manette, 720p à 1440p et écran large, effets réduits. |
+
+**Ordre : M0 → M1 → M2 → M3 → M4 → M5.** La priorité est de juger une vraie composition de menu intérieur, puis de finir un écran de référence avant de décliner le kit. M4 garde sa recette en run séparée du smoke Hub. Bilan, Journal, écrans de choix, graine et solde ne sont pas refondus automatiquement : leur éventuelle harmonisation est un chantier ultérieur. Les contrats existants doivent continuer à fonctionner.
+
+### 7.6 Cadre technique et validation
+
+Réutiliser `UITheme` pour polices, états et styles, les résolveurs de disponibilité pour quêtes/catalogue, et `SettingsScreen` pour les deux contextes. La navigation du Hub garde un état explicite et un contexte de retour ; un lien ciblé transporte un identifiant, sans faire dépendre directement un panneau de l'autre. Le kit de surfaces peut être un petit composant réutilisable : pas de refonte générale de l'architecture pour une peau de menu.
+
+Textures de matières chargées et partagées ; animation uniquement pour le contrôle actif et les éléments ambiants bornés. Aucun bruit procédural, chargement de ressource ou création de nœuds par frame. Le fond et ses particules doivent être suspendus quand entièrement cachés. L'abandon, le changement de scène et les écrans imbriqués doivent conserver un propriétaire cohérent de la pause.
+
+Pour chaque lot de code : `dotnet build` **zéro warning**, smoke si scènes/initialisation/rendu touchés, contrôles de focus et de retour adaptés au changement. Comparer les captures avec les mêmes profils, héros, résolution effective et état du build. Vérifier les dimensions des PNG, car le lanceur de run n'a pas garanti la résolution demandée pendant cette étude. Pour toute affirmation de coût ou d'optimisation, banc avant/après sur machine calme ; aucune conclusion de FPS tirée ici.
+
+**État après le retour :** accueil conservé et groupe Paramètres / Quitter en bas retenus pour le plan ; préférence de recherche pour Pierre et Effacement ; premières esquisses rejetées. Nouvelle planche intérieure produite, à examiner, et lots réorientés. Les détails UX restent proposés. Aucun menu de jeu modifié, aucune case de roadmap cochée. Les cases déjà cochées restent le constat des livraisons précédentes.
+
+**Vérifications de l'étude initiale :** les trois lanceurs de capture aboutissent, dont les inputs injectés du scénario pause ; `dotnet build --nologo` : **0 warning, 0 erreur**. Les contrôles navigateur des anciennes esquisses portaient sur leur fonctionnement, pas sur leur qualité artistique ; elles restent rejetées. La nouvelle planche est une image fixe examinée visuellement : elle ne vérifie ni les transitions, ni le focus réel, ni une manette physique. Aucun gain de performance revendiqué.
+
+**Vérification de la reprise :** `dotnet build --nologo` relancé, **0 warning, 0 erreur** ; `git diff --check` propre. Planche enregistrée en 1672×941 : format d'étude, pas capture à une résolution du jeu. Aucun script, scène, shader ou asset de production changé dans ce chantier ; smoke non relancé pour ces seules modifications documentaires.

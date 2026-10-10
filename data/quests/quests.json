@@ -258,13 +258,13 @@
         {
             "id": "against_the_clock",
             "name": "Contre la montre",
-            "description": "Atteindre le niveau 20 avant la 10ᵉ minute.",
+            "description": "Atteindre le niveau 30 avant la 10ᵉ minute.",
             "difficulty": 2,
             "scope": "run",
             "conditions": [
                 {
                     "stat": "level",
-                    "target": 20,
+                    "target": 30,
                     "before_sec": 600
                 }
             ],
@@ -488,13 +488,13 @@
         {
             "id": "grow",
             "name": "Grandir",
-            "description": "Atteindre le niveau 20.",
+            "description": "Atteindre le niveau 30.",
             "difficulty": 1,
             "scope": "run",
             "conditions": [
                 {
                     "stat": "level",
-                    "target": 20
+                    "target": 30
                 }
             ],
             "unlocks": [

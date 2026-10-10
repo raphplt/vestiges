@@ -1151,8 +1151,36 @@ Raphaël : « il y a un bug chiant quand la partie est fini (mort) les sons ne s
 
 **Appliqué et vérifié :** arrêt immédiat des sons de la run et blocage de leur relance pendant la mort et le bilan, puis réactivation à la prochaine run ; lot M7 du [plan 15](15-audio.md). L'audio dédié à la séquence de mort et à l'interface de bilan reste disponible. Régression avant/après, smoke/audio/musique et mort réelle après combat verts.
 
+## 105. Menus : organisation et direction visuelle à reprendre — 10 octobre 2026
+
+Raphaël demande de réfléchir à une amélioration globale des menus : possibles doublons, moins d'allers-retours, rôles clairs et séparés, finition d'un jeu professionnel. Il juge plusieurs écrans trop basiques et trop proches d'interfaces web, avec des fonds semi-transparents ou flous ; il souhaite davantage de profondeur et de direction visuelle dans les boutons, les encadrés et les effets. Il demande d'examiner aussi le fond du menu principal et inclut explicitement le menu pause.
+
+**Acquis :** préparer le diagnostic et un plan de correction UX/UI et artistique. Le retrait des Chroniques (§99 bis), la page Quêtes et la page Personnages dédiées (§90/97) restent le cadre courant.
+
+**Propositions de l'agent, à examiner :** navigation directe entre Personnages, Quêtes et Collection ; choix confirmé et départ depuis la fiche de héros ; liens ciblés entre récompense et quête ; pause avec build compact et détail sélectionné ; matière de métal patiné, comparée à une piste pierre/Effacement. Fond actuel conservé dans la première piste ; monnaie sans dépense et graine sortiraient de la hiérarchie principale. Diagnostic rendu, contrats de parcours et lots M0–M5 au [plan 04 §7](04-interfaces-et-hub.md#7-refonte-des-menus--étude-du-10-octobre-2026).
+
+**Non acquis :** une piste graphique retenue, le remplacement du fond, la suppression du solde/graine, les détails des nouveaux parcours et leur implémentation. Cette demande de conception ne coche aucune case de roadmap.
+
+## 106. Menus intérieurs : esquisses rejetées, accueil conservé — 10 octobre 2026
+
+Raphaël préfère, entre les deux pistes, « le truc avec la pierre et l'effacement », mais rejette nettement **les deux esquisses** : « ça fait beaucoup trop web ». Il demande de retrouver les codes visuels des menus de jeux, une patte forte, le pixel art et le thème de l'oubli ; il invite à relire le lore. Il précise ne pas avoir lu tout le plan proposé.
+
+**Acquis :** conserver pour l'instant le premier menu au lancement, qu'il apprécie ; réorienter la recherche vers l'intérieur de Personnages, Quêtes, Collection et Paramètres. La pause reste incluse par sa demande précédente. Regrouper Paramètres à côté de Quitter en bas lui plaît, à distance des entrées principales.
+
+**Préférence, sans validation du rendu :** explorer Pierre et Effacement. Le métal patiné n'est plus la recommandation. Aucune des anciennes esquisses ne devient une référence approuvée ; aucun accord global sur les parcours ou le découpage précédent ne se déduit de ce retour.
+
+**Étude révisée :** [plan 04 §7](04-interfaces-et-hub.md#7-refonte-des-menus--étude-du-10-octobre-2026), lecture du lore v1.1 validé, références de menus de jeux et [nouvelle planche Personnages](planches/04-menus-personnages-pierre-v2.png). Pierre de la ville, contours effacés, illustration dominante et contrôles dessinés ; lots centrés sur un écran intérieur de référence avant déclinaison. Le déplacement de la graine, le retrait du solde, le changement du fond et la refonte du bilan/Journal/choix sont sortis de cette passe. Cette planche et les propositions UX restent à examiner ; aucun code de jeu modifié ni item de roadmap coché.
+
 ## 107. Passe de mix : tout appliquer d'un coup — 10 octobre 2026, soir
 
 Raphaël demande d'abord de baisser les armes du joueur (« sur-mixé »), puis une grande revue du mix. La revue mesure la banque entière et une run enregistrée par familles ([plan 15](15-audio.md#revue-de-mix--10-octobre-soir)). Résultat : le « trop fort » venait surtout du coup de l'Ombre (presque tout le volume des effets), du critique et du coffre, pas des attaques d'armes, devenues inaudibles. Réponse de Raphaël : « tu as déjà bien identifié la plupart des problèmes que j'ai moi-même remarqués. Je valide 100 % de tes propositions et remarques. Fais les corrections directement […], juste éventuellement une passe finale. »
 
 **Acquis :** lots X1–X5 appliqués sans écoute intermédiaire. Limiteur Master ; bus World étouffé et compressé, hors interface ; ducking des grands moments déclaré dans la banque ; boucles en fondu ; atténuation à distance des sons d'ennemis. Gains recalés par famille sur la sonie mesurée : Ombre −10 dB, armes égalisées et remontées, critique +5 dB au-dessus de l'impact, pas homogènes, musiques à −16 LUFS (Résurgence et nuit à −15). Fichiers corrigés : silences de tête, phases, pas d'herbe ; sons morts retirés. Mesure : 140 → 0 échantillons saturés. **À juger en jouant :** mix plus calme de 4 dB, musique légèrement au-dessus des effets.
+
+## 108. Calendrier de 30 min jusqu'à l'Indicible, late game à étudier — 10 octobre 2026, nuit
+
+Raphaël, après Q1 : « remettre 50 hp de base pour le rodeur et 12 dégâts. aussi les 2 miniboss prévus dans les 10 min arrivent trop tôt […] il faut revoir le calendrier de la run. un truc qui tient en 30 min (moment de l'indicible) : après on sera dans le late game. dans ces 30 min il faut caler environ 4 résurgences, le boss intermédiaire (la barrière), 3/4 "miniboss", des élites. Avant tout ça tenait en 22 min je crois. Et le late game, que se passe-t-il ? » Calendrier à quatre Souverains choisi parmi trois. Phases : « pour moi le late game c'est ce qui se passe après l'indicible. après à partir de 20 min on est en mid-game et à 30 on est déjà au début du late game. mais je pensais plus au late game genre qu'est-ce qu'on prévoit quoi ? » ; étude du late game demandée tout de suite.
+
+**Appliqué, à jouer :** Rôdeur 50 PV et 12 dégâts. Calendrier : Souverains à 4:00, 9:30, 21:00, 27:00 ; Résurgences à 6:00, 12:00, 18:00, 24:00 ; Barrière à 15:00 ; Indicible avec la 5ᵉ Résurgence vers 30:00 ; late game à partir de lui. Effacement étiré d'autant, montée des PV adoucie après 8 min, réserve de la Barrière recalée sur 15 min, quêtes de niveau remises à 30. Détail et mesures : [plan 33 §8](33-equilibrage-ouverture.md#8-calendrier-de-30-min-jusquà-lindicible--10-octobre-2026-nuit).
+
+**Proposé, à trancher :** contenu du late game au [plan 34](34-late-game.md) (Profondeur, Marées, monde d'après, butin, sortie volontaire).

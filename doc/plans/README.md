@@ -1,5 +1,7 @@
 # VESTIGES — Dossier de plans à valider
 
+**10 octobre — menus intérieurs, étude réorientée (plan 04 §7) :** premières esquisses rejetées pour leur rendu trop web. Accueil actuel conservé ; Paramètres et Quitter regroupés en bas appréciés. Recherche Pierre et Effacement, ancrée dans le lore et le pixel art, pour Personnages, Quêtes, Collection, Paramètres et Pause. [Nouvelle planche Personnages](planches/04-menus-personnages-pierre-v2.png) et lots M0–M5 révisés, à examiner ; les détails UX restent proposés, aucun menu refait ([DECISIONS §106](DECISIONS.md)).
+
 **10 octobre — quêtes de déblocage (plan 06 §10, lots Q1–Q4) :** une seule famille de 36 quêtes qui débloquent personnages, armes et objets pour de bon ; profil neuf réduit à la réserve de départ (Vagabond, 8 armes, 15 objets). Suivi en run sans affichage, bandeau dès qu'une quête est accomplie, pages Quêtes et Personnages au Hub, seuils mesurés sur 7 runs (9 ajustés). À trancher : quêtes de critique et Recopier.
 
 **10 octobre — les deux boss en autonomie (plan 07, B1–B4, §89) :** parties de boss vues par toutes les armes (la mêlée frappe au bord), barre de boss en haut de l'écran (Souverains compris). La Barrière se lève à 10 min devant le joueur, l'arrête jusqu'à ce qu'il brise un battant, frappe l'immobile (poings) et le va-et-vient (chaîne, verrou), un coffre par battant. L'Indicible est refait en trois phases : tempête, marée, seconde vague à brèches, puis il se découvre. Premier réglage en vraie run longue. Planche B2a intégrée sans validation ; reste à jouer.

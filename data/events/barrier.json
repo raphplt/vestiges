@@ -1,17 +1,17 @@
 {
   "_doc": "La Barrière, boss intermédiaire (plan 07 B2, DECISIONS §84–85), lue par Infrastructure/BarrierConfig et contrôlée au début de la run : fichier invalide, la Barrière n'apparaît pas (message au chargement). Sprites et pas de la grille : assets/bosses/barrier (tools/generate_props.py barrier).",
   "name_key": "BOSS_BARRIER",
-  "appear_at_sec": 600,
+  "appear_at_sec": 900,
   "_doc_appear": "Une Résurgence, son annonce ou l’accalmie qui la suit repoussent l’apparition à leur fin, comme les rendez-vous des Souverains. Elle se lève à « distance_ahead » px devant le joueur, dans le champ : la vue fait 540 px de monde en hauteur et la barre de boss en couvre le haut.",
   "heading_window_sec": 3,
   "distance_ahead": 150,
   "leaves": {
-    "_doc": "Battants cadenassés, les seules parties à frapper : un, plus un par Mémorial ravivé dans la run, au plus « max ». PV d'un battant : « hp_base » partagé entre les battants, plus « hp_per_leaf » ; la réserve grandit donc avec les Mémoriaux sans qu'un seul battant ne tombe en quelques secondes (mesure du 10 octobre, build de référence, avec la préférence de ciblage des parties : un battant visé prend de 310 à 4 300 dégâts/s selon le build, médiane ~700 ; il suffit d'un battant pour passer, les autres sont la récompense). Rayon de touche borné par data/scaling/boss_parts.json et par le pas de la grille.",
+    "_doc": "Battants cadenassés, les seules parties à frapper : un, plus un par Mémorial ravivé dans la run, au plus « max ». PV d'un battant : « hp_base » partagé entre les battants, plus « hp_per_leaf » ; la réserve grandit donc avec les Mémoriaux sans qu'un seul battant ne tombe en quelques secondes (mesure du 10 octobre, build de référence, avec la préférence de ciblage des parties : un battant visé prend de 310 à 4 300 dégâts/s selon le build, médiane ~700 ; il suffit d'un battant pour passer, les autres sont la récompense). Réserve recalée le 10 octobre au soir sur la Barrière à 15 min (plan 33 §8) : foule de 70 à 200 créatures à moins de 300 px, environ 90 dégâts/s médians sur le battant ; 5 000 + 15 000 par battant le faisait tenir 2 à 9 min. Rayon de touche borné par data/scaling/boss_parts.json et par le pas de la grille.",
     "base": 1,
     "per_memorial": 1,
     "max": 5,
-    "hp_base": 5000,
-    "hp_per_leaf": 15000,
+    "hp_base": 2000,
+    "hp_per_leaf": 6000,
     "body_radius": 48,
     "damaged_below": 0.5
   },

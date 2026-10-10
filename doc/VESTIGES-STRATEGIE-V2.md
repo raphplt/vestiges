@@ -753,6 +753,7 @@ Le script de post-processing doit inclure une vérification/correction de l'angl
 - [x] Variantes renforcées data-driven (plan 12) : élites naturelles à affixe, Souverains, Aberrations et affixes de phase dans `_variants.json`.
 - [x] Recette humaine des micro-événements et des élites : cadence validée en l'état, élites bien dosées, événements appréciés (Raphaël, 25 septembre 2026). Détails à revoir plus tard ; le soin, peut-être trop rare, est reporté aux plans 13/03 (plan 12 §7).
 - [x] Ouverture rééquilibrée pour la mêlée (plan 33, 10 octobre 2026) : Cracheur en crachat en cloche avec flaque, raréfié et repoussé à 3 min ; Rôdeur, Brute et Tréant échelonnés ; courbe d'XP 15 / 1,4 ; élites dès 2:30. Mesuré au Vagabond en profil neuf : niveau 25 à 10 min (17,5 avant), éliminations +77 %, Cracheur 2 % des dégâts reçus (14 % avant).
+- [x] Calendrier de 30 min jusqu'à l'Indicible (plan 33 §8, 10 octobre 2026) : Souverains à 4:00, 9:30, 21:00 et 27:00, Résurgences à 6, 12, 18 et 24 min, Barrière à 15:00, Indicible avec la 5ᵉ Résurgence vers 30:00 et late game à partir de lui ; Effacement étiré d'autant. Mesuré sur 4 graines, à la minute près.
 - [ ] Ajuster le tempo : runs de 15-25 min en gameplay normal.
 - [ ] **PLAYTEST : est-ce que c'est fun ? Est-ce que l'Effacement crée de la tension ? Est-ce que le mouvement permanent fonctionne ?**
 

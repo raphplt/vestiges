@@ -222,3 +222,51 @@ Le Vagabond fait 77 % des éliminations du Traqueur (69 % avant). Le bot prend s
 - le Souverain de 2:45, désormais affronté avec plus de niveaux.
 
 C2 et C3 (avantage propre à la mêlée) restent en attente : l'écart avec le Traqueur est passé sous le seuil de 30 % fixé au §4.
+
+## 8. Calendrier de 30 min jusqu'à l'Indicible — 10 octobre 2026, nuit
+
+Raphaël, après Q1 : « remettre 50 hp de base pour le rodeur et 12 dégâts. aussi les 2 miniboss prévus dans les 10 min arrivent trop tôt […] il faut revoir le calendrier de la run. un truc qui tient en 30 min (moment de l'indicible) : après on sera dans le late game. dans ces 30 min il faut caler environ 4 résurgences, le boss intermédiaire (la barrière), 3/4 "miniboss", des élites » ; calendrier à 4 Souverains choisi ; « pour moi le late game c'est ce qui se passe après l'indicible […] à partir de 20 min on est en mid-game et à 30 on est déjà au début du late game » ([§108](DECISIONS.md)). Le late game a son étude propre : [plan 34](34-late-game.md).
+
+**Calendrier retenu et mesuré** (build de référence, graine 42 ; les autres graines à quelques secondes près) :
+
+| Heure visée | Mesuré | Événement |
+|---|---|---|
+| 0:00–2:30 | | Ouverture, élites dès 2:30 puis toutes les 50 à 75 s |
+| 4:00 | 4:00 | Souverain 1 |
+| 6:00 | 6:00 | Résurgence 1 (70 s) |
+| 9:30 | 9:30 | Souverain 2 |
+| 12:00 | 12:06 | Résurgence 2 |
+| 15:00 | 15:00 | **Barrière** |
+| 18:00 | 17:59 | Résurgence 3 (intensité 2) |
+| 21:00 | 20:58 | Souverain 3 |
+| 24:00 | 23:53 | Résurgence 4 (intensité 2) |
+| 27:00 | 26:57 | Souverain 4 |
+| 30:00 | 29:46 | Résurgence 5 et **Indicible** ; le late game commence |
+
+**Réglages (données) :**
+- `crises.json` : première Résurgence à 360 s, puis 290 ± 15 s après la fin de la précédente ; Indicible à la 5ᵉ ou à 1 800 s au plus tard ; late game à la 5ᵉ Résurgence ou à 90 % d'Effacement global (au lieu de 4 et 68 %), donc avec l'Indicible.
+- `run_events.json` : Souverains à 240, 570, 1 260 et 1 620 s (au lieu de 150 et 420).
+- `barrier.json` : levée à 900 s (au lieu de 600).
+- `erasure.json` : vitesse de base ×22/30 et accélération ×(22/30)² ; seuil de late game à 0,9.
+- `spawn_flow.json` : PV +13 % par minute après 8 min (au lieu de +17 %). À 1,17, les PV valaient ×46 à 22 min et auraient valu ×160 à 30 min ; à 1,13, ils valent ×74 à 30 min.
+- `rodeur.json` : 50 PV et 12 dégâts, comme demandé.
+- Quêtes de niveau remises à leur intention d'origine (plan 06 §9), que la nouvelle courbe d'XP rendait triviales : **Grandir** au niveau 30 (au lieu de 20), **Contre la montre** au niveau 30 avant 10 min (au lieu de 20). Au bot, la seconde n'est atteinte qu'une fois sur 8, comme le calibrage d'origine (1 sur 7).
+
+**Mesures sur 30 min** (Vagabond en profil neuf, bot mortel ; build de référence, bot invincible, jusqu'à 35 min ; 4 graines chacun) :
+
+| | Vagabond | Build de référence |
+|---|---|---|
+| Niveau à 10 min | 21–25 | 26–53 |
+| Niveau à 20 min | 34–46 | 42–103 |
+| Niveau à 30 min | 41–60 | 56–181 |
+
+| Minute | 5 | 10 | 15 | 20 | 25 | 30 |
+|---|---:|---:|---:|---:|---:|---:|
+| Mémoire du sol sous le joueur | 0,82 | 0,72 | 0,60 | 0,48 | 0,34 | 0,19 |
+| Effacement global | 0,10 | 0,23 | 0,37 | 0,53 | 0,69 | 0,86 |
+
+L'Effacement suit l'étirement voulu : sol Fragile vers 10 min, Effiloché vers 20, Effacé vers 27 (au lieu de 7, 14–15 et 20).
+
+**Boss :**
+- **Barrière à 15 min.** Avec l'ancienne réserve (5 000 + 15 000 par battant, réglée à 10 min), le battant tenait **2 à 9 min** au Vagabond (127, 183, 426 et 538 s) et 27 à 315 s au build. À 15 min, 70 à 200 créatures entourent le bot devant la grille, et la plupart des coups vont à la foule : environ 90 dégâts par seconde médians sur le battant. Réserve ramenée à **2 000 + 6 000 par battant** : 8 000 PV pour un battant, 20 000 pour trois, 32 000 pour cinq.
+- **Indicible à 30 min**, réserve inchangée (288 000 PV) : vaincu en 13 s et en 140 s dans deux graines du build ; dans les deux autres, il n'a pas perdu un tiers de sa réserve en 5 min. À 22 min, on mesurait 22, 56, 141 et plus de 240 s. Le bot ne va pas chercher les mains : la mesure ne départage pas, et le réglage se fera à la partie de Raphaël.
