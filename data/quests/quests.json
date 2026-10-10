@@ -93,8 +93,7 @@
             "unlocks": [
                 {
                     "type": "character",
-                    "id": "facteur",
-                    "name": "Le Facteur"
+                    "id": "facteur"
                 }
             ]
         },

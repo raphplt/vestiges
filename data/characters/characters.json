@@ -64,5 +64,27 @@
         "visual_color": [0.42, 0.42, 0.48, 1.0],
         "sprite_folder": "forgeuse",
         "sprite_feet_offset": 18
+    },
+    {
+        "id": "facteur",
+        "name": "Le Facteur",
+        "description": "Mobile et obstiné : plus il avance sans s'arrêter, plus il va vite.",
+        "starting_weapon": "letter_satchel",
+        "base_stats": {
+            "speed": 215,
+            "attack_damage": 8,
+            "attack_speed": 1.1,
+            "attack_range": 320,
+            "max_hp": 85,
+            "regen_rate": 0.8,
+            "shield": 0,
+            "interact_range": 60
+        },
+        "passive_perk": "facteur_round",
+        "exclusive_perks": [],
+        "score_multiplier": 1.05,
+        "visual_color": [0.36, 0.45, 0.58, 1.0],
+        "sprite_folder": "facteur",
+        "sprite_feet_offset": 18
     }
 ]

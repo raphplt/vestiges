@@ -330,3 +330,18 @@ Gardés, car atteints au rythme voulu : Mener la chasse (★, 5 runs sur 7), Red
 **Signalés à Raphaël :**
 - **Critiques.** Le joueur n'a aucune chance de critique de base ; dans la réserve de départ, seuls les bonus de coffre et une bénédiction en donnent (2 à 2,5 %). Les quatre quêtes de critique (Lire de près ★, Le détail, Geste précis, Annoter) sont donc bien plus dures que leurs étoiles, et la récompense de Lire de près (Lunettes de lecture) est justement la source de critique. De plus, les armes en arc (Faucille, Pelle à neige…) appliquent le critique en moyenne sans jamais tirer un coup critique : leurs éliminations ne comptent jamais. Choix à faire : critique de base, Lire de près plus bas ou en ★★, critique tiré pour les arcs.
 - **Recopier ★★★.** L'ascension demande une arme au niveau 50 ; le bot ne dépasse pas 3 armes au niveau 3. Deux ascensions dans une run paraissent hors d'atteinte : à jouer, ou à ramener à une.
+
+## 11. Lot P2 — Le Facteur, personnage complet — 10 octobre 2026
+
+Demande de Raphaël : intégrer les héros préparés au plan 32 un par un, en tranche verticale, en commençant par le Facteur ; portraits fournis (`~/Downloads/personnages/compressees`), passif unique raccord avec le lore, arme de départ existante si possible sinon créée, accès par quête, mobilité propre. Fiche de référence : [06-fiches-casting §3.5](06-fiches-casting.md), lore v1.1 §5 (Aimé Ribot, le facteur qui distribue encore le courrier du Bas-Port).
+
+Aucune arme existante ne porte le geste du Facteur (la seule chaîne, le Trousseau, est un coup instantané de mêlée) : la **Sacoche de lettres** est créée, comme prévu par la fiche.
+
+| Sous-lot | Contenu | Vérification |
+|---|---|---|
+| **P2a — Branchement** | Fiche dans `characters.json` (stats ci-dessous, couleur bleu postal délavé, sprites du plan 32) ; portrait de Raphaël (`facteur_solitaire.webp`, 864 px, WebP q85) ; passif « Tournée » déclaré dans `perks.json` ; la quête La tournée débloque le personnage et son arme ; ligne « Mobilité » dans la fiche du Hub. | Build, suites de quêtes, capture du Hub |
+| **P2b — Sacoche de lettres** | Nouveau motif d'attaque `bounce` : une enveloppe (vrai projectile) qui rebondit jusqu'à trois fois ; chaque rebond « cherche une adresse » : l'ennemi **le plus éloigné** à 150 px au sol, jamais deux fois le même. Stats `chain_*` existantes (rebonds, portée, baisse par rebond). Deux ascensions. Projectile enveloppe, icône, son. | Suite d'armes (rebonds, cible la plus éloignée, pool remis à zéro), galerie d'armes |
+| **P2c — Tournée** | Module d'élan propre au Facteur : tant qu'il avance, l'élan monte en 4 s jusqu'à +25 % de vitesse et +15 % de cadence ; arrêt de plus de 0,5 s, touche subie ou eau : retour à zéro. Jauge visible : lettres qui s'envolent derrière lui, plus nombreuses avec l'élan. | Test de l'élan (montée, arrêt, touche, eau), capture en run |
+| **P2d — Glissade sur patins** | Profils de mobilité en données (`dash` commun, `glide` du Facteur), même bouton : 0,4 s, virage limité, glisse le long des murs au lieu de s'arrêter, sortie contrôlable, compte comme mouvement pour l'élan. | Suite de mouvement (durée à 30/60/120 Hz, virage borné, mur, sortie), capture |
+
+**Stats de départ proposées** (valeurs d'essai) : vitesse 215, dégâts 8 (dégâts unitaires faibles, contrepartie de la fiche), cadence 1,1, portée 320, PV 85, régénération 0,8, multiplicateur de score 1,05.

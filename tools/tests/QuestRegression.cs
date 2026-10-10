@@ -100,7 +100,7 @@ public partial class QuestRegression : Node
             ("pièce débloquée deux fois", root => Unlock(root, 5)["id"] = "lighthouse_shard", "déjà débloqué par la quête"),
             ("pièce inconnue", root => Unlock(root, 18)["id"] = "parapluie_dore", "pièce inconnue"),
             ("nom d'un personnage connu", root => Unlock(root, 0)["name"] = "Le Traqueur", "déjà au catalogue"),
-            ("personnage inconnu sans nom", root => ((JsonObject)Quest(root, 3)["unlocks"]![0]!).Remove("name"), "inconnu sans name"),
+            ("personnage inconnu sans nom", root => ((JsonObject)Quest(root, 4)["unlocks"]![0]!).Remove("name"), "inconnu sans name"),
             ("difficulté hors bornes", root => Quest(root, 0)["difficulty"] = 4, "difficulty"),
             ("clé inconnue", root => Quest(root, 0)["reward"] = "souvenir", "clé « reward » inconnue"),
             ("id en double", root => Quest(root, 1)["id"] = "lead_the_hunt", "id en double"),
