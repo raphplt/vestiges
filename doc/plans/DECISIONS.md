@@ -1088,3 +1088,15 @@ Raphaël : « je ne veux pas que la portée d'une arme soit supérieure à ce qu
 
 **Acquis :** la touche d'un coup de mêlée se mesure sur l'ellipse de sa traînée, dont le bord passe à l'allonge, sans plafond ; allonge horizontale inchangée, verticale ÷ 1,35 ; détail au [plan 24 C2c](24-retours-du-1er-octobre.md#c2c-la-touche-sarrête-au-bord-du-coup-dessiné--10-octobre-2026). Sensation à confirmer en jouant.
 
+
+## 102. Les héros un par un, le Facteur d'abord — 10 octobre 2026
+
+Raphaël : « Rajoute-les dans characters.json, rajoute-leur un passif raccord avec leur lore / type de caractère (tous doivent avoir un passif unique) et pareil une arme de départ (prends des armes qui existent quand c'est possible sinon il faudra créer celles qui manquent). Le moyen de les débloquer se fera principalement par des quêtes. La mobilité propre : oui bien sûr. Donc pour ne pas rusher on va les faire un par un en mode vertical. Commence par le Facteur. »
+
+**Acquis :**
+- Chaque héros du plan 32 entre en jeu par un lot vertical complet : fiche, portrait, passif unique, arme de départ, quête, mobilité propre, tests et captures ([plan 06 §11](06-personnages-quetes-defis.md#11-lot-p2--le-facteur-personnage-complet--10-octobre-2026)).
+- Le Facteur est livré (P2a à P2d). Portrait retenu : l'illustration « solitaire » (moustache grise, manteau usé), plus proche du sprite que celle à roulettes, qui reste disponible (point laissé ouvert au §96).
+- Aucune arme existante ne portait le geste du Facteur : la Sacoche de lettres est créée, avec un nouveau motif d'attaque (rebond vers l'ennemi le plus éloigné).
+- Les mobilités propres passent par des profils en données (plan 01 E) ; la glissade du Facteur est le premier.
+
+**À juger en jouant :** valeurs d'essai (stats du Facteur, 2 rebonds à −15 %, élan +25 %/+15 % en 4 s, glissade 0,4 s à ×1,5 et 3 s de recharge) ; son provisoire de la Sacoche à auditionner.

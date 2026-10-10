@@ -82,7 +82,7 @@
     {
         "id": "facteur_round",
         "name": "Tournée",
-        "description": "Tant qu'il avance, l'élan monte en 4 s jusqu'à +25% de vitesse et +15% de cadence. S'arrêter, être touché ou entrer dans l'eau le remet à zéro.",
+        "description": "En avançant, jusqu'à +25% de vitesse et +15% de cadence en 4 s. Un arrêt, une touche ou l'eau remettent l'élan à zéro.",
         "category": "passive",
         "rarity": "passive",
         "max_stacks": 1,

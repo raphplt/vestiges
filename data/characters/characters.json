@@ -85,6 +85,7 @@
         "score_multiplier": 1.05,
         "visual_color": [0.36, 0.45, 0.58, 1.0],
         "sprite_folder": "facteur",
-        "sprite_feet_offset": 18
+        "sprite_feet_offset": 18,
+        "mobility": "glide"
     }
 ]
