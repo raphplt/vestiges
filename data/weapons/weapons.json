@@ -41,7 +41,7 @@
       "projectile_count": 1,
       "damage": 10,
       "attack_speed": 1.0,
-      "range": 70,
+      "range": 90,
       "arc_angle": 90,
       "knockback": 10
     },
@@ -93,7 +93,7 @@
       "projectile_count": 1,
       "damage": 16,
       "attack_speed": 0.65,
-      "range": 70,
+      "range": 90,
       "arc_angle": 120,
       "knockback": 40
     },
@@ -256,7 +256,7 @@
       "projectile_count": 1,
       "damage": 7,
       "attack_speed": 1.5,
-      "range": 65,
+      "range": 85,
       "knockback": 5
     },
     "source": "world",
@@ -362,7 +362,7 @@
       "projectile_count": 1,
       "damage": 18,
       "attack_speed": 0.8,
-      "range": 65,
+      "range": 85,
       "arc_angle": 160,
       "knockback": 25
     },
@@ -412,7 +412,7 @@
       "projectile_count": 1,
       "damage": 9,
       "attack_speed": 0.9,
-      "range": 80,
+      "range": 95,
       "arc_angle": 360,
       "knockback": 15
     },
@@ -507,7 +507,7 @@
       "projectile_count": 1,
       "damage": 25,
       "attack_speed": 0.5,
-      "range": 70,
+      "range": 90,
       "arc_angle": 100,
       "knockback": 45
     },
@@ -569,7 +569,7 @@
       "projectile_count": 1,
       "damage": 12,
       "attack_speed": 0.7,
-      "range": 100,
+      "range": 110,
       "arc_angle": 360,
       "knockback": 60
     },
@@ -624,7 +624,7 @@
       "projectile_count": 1,
       "damage": 6,
       "attack_speed": 2.5,
-      "range": 55,
+      "range": 80,
       "knockback": 0
     },
     "special_effect": {
@@ -784,7 +784,7 @@
     "stats": {
       "damage": 14,
       "attack_speed": 0.8,
-      "range": 65,
+      "range": 85,
       "chain_targets": 2,
       "chain_range": 100,
       "chain_damage_falloff": 0.8
@@ -979,7 +979,7 @@
       "projectile_count": 1,
       "damage": 15,
       "attack_speed": 1.8,
-      "range": 65,
+      "range": 85,
       "arc_angle": 70,
       "knockback": 0
     },
@@ -1087,7 +1087,7 @@
       "projectile_count": 1,
       "damage": 11,
       "attack_speed": 1.4,
-      "range": 60,
+      "range": 80,
       "arc_angle": 90,
       "knockback": 15
     },
@@ -1254,7 +1254,7 @@
       "projectile_count": 1,
       "damage": 35,
       "attack_speed": 0.35,
-      "range": 70,
+      "range": 90,
       "arc_angle": 140,
       "knockback": 50
     },

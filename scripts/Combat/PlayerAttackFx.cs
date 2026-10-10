@@ -14,6 +14,14 @@ public sealed class PlayerAttackFx
 {
     /// <summary>Hauteur du torse au-dessus du point au sol : les coups partent du buste, pas des pieds.</summary>
     private const float TorsoHeight = 11f;
+    /// <summary>
+    /// Part de l'allonge que l'arc dessiné couvre. À 0,7 sous un plafond de 64 px, la Faucille touchait à 70 px mais
+    /// son arc s'arrêtait à 49 : la mêlée paraissait plus courte qu'elle n'était.
+    /// </summary>
+    private const float MeleeReachFill = 0.9f;
+    /// <summary>Plafonds de taille d'un coup (arc, estoc), avant le grossissement par la zone : bornent les ascensions qui doublent la portée.</summary>
+    private const float MaxMeleeArcRadius = 120f;
+    private const float MaxThrustLength = 160f;
     /// <summary>Plafond de gerbes d'impact par frame : une zone qui touche 80 ennemis n'en dessine que quelques-unes.</summary>
     private const int MaxHitBurstsPerFrame = 10;
     /// <summary>Gerbes des coups secondaires et des objets : plafond à part, pour ne pas priver un coup direct de la sienne.</summary>
@@ -98,7 +106,7 @@ public sealed class PlayerAttackFx
             return;
         FxFamily family = FamilyOf(weapon);
         Vector2 torso = _owner.GlobalPosition + new Vector2(0f, -TorsoHeight);
-        float radius = Mathf.Clamp(range * 0.7f, 22f, 64f * sizeScale);
+        float radius = Mathf.Clamp(range * MeleeReachFill, 22f, MaxMeleeArcRadius * sizeScale);
         float halfArc = Mathf.DegToRad(Mathf.Clamp(arcAngle, 40f, 200f) * 0.5f);
 
         switch (weapon?.Fx.Style)
@@ -112,13 +120,14 @@ public sealed class PlayerAttackFx
                 PlaySmashImpact(_owner.GlobalPosition + direction * radius * 0.75f, family, radius);
                 break;
             case "thrust":
-                PlayThrust(torso, direction, Mathf.Clamp(range * 0.95f, 26f, 80f * sizeScale), family);
+                PlayThrust(torso, direction, Mathf.Clamp(range * 0.95f, 26f, MaxThrustLength * sizeScale), family);
                 break;
             case "whirl":
                 PlayArc(torso, direction, radius, radius * 0.3f, Mathf.Pi, family, 0.28f, squash: 1.6f);
                 break;
             case "bell":
-                PlayBell(family, radius);
+                // L'anneau extérieur, 1,35 fois le premier, marque l'allonge.
+                PlayBell(family, radius / 1.35f);
                 break;
             case "clock":
                 PlayArc(torso, direction, radius, radius * 0.42f, halfArc, family, 0.22f);

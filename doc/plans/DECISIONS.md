@@ -1076,3 +1076,9 @@ Raphaël fournit douze illustrations (`~/Downloads/personnages`, compressées en
 
 **Acquis :** le grand portrait de la page Personnages est l'illustration du personnage ; la page ne montre que les personnages en jeu. Deux illustrations du Facteur existent (à roulettes, solitaire) : celle qui servira reste à choisir quand il deviendra jouable.
 
+## 98. Portée des armes de mêlée, second relèvement — 10 octobre 2026
+
+Raphaël : « Je pense que la portée des armes corps à corps devrait être rehaussée. » Le premier relèvement (plan 24 L3, validé au §40) n'a pas suffi. Option retenue parmi trois : **+20 px, plancher 80** pour les arcs et les estocs, armes en cercle plus modérées (Rallonge 95, Cloche 110) ; le visuel du coup recalé sur l'allonge réelle (il n'en montrait que 70 %).
+
+**Acquis :** valeurs et visuel du [plan 24 C2b](24-retours-du-1er-octobre.md#c2b-second-relèvement--10-octobre-2026). Sensation à confirmer en jouant.
+

@@ -181,6 +181,22 @@ Plancher de portée de base à **65**, valeurs de départ :
 
 Et la portée personnelle de la Forgeuse ne réduit plus la mêlée (×0,83 aujourd'hui) : elle ne s'appliquerait qu'aux armes à distance, ou passerait à ×1. À vérifier contre le rayon de contact des créatures et au banc `tools/test_weapons.sh`.
 
+#### C2b. Second relèvement — 10 octobre 2026
+
+Après L3, Raphaël ([DECISIONS §98](DECISIONS.md#98-portée-des-armes-de-mêlée-second-relèvement--10-octobre-2026)) trouve encore la mêlée trop courte. Une créature frappe à 38 px ; l'écran montre 960 px de monde en largeur. Cause visuelle en plus des valeurs : l'arc dessiné ne couvrait que 70 % de l'allonge, plafonné à 64 px (`PlayerAttackFx`), donc la Faucille touchait à 70 px mais son arc s'arrêtait à 49.
+
+| Arme | Après L3 | Après C2b |
+|---|---|---|
+| Scalpel, Gants de boxe | 55, 60 | 80 |
+| Parapluie, Pelle, Trousseau, Gomme | 65 | 85 |
+| Faucille, Parcmètre, Râteau, Trotteuse | 70 | 90 |
+| Rallonge (cercle) | 80 | 95 |
+| Cloche (cercle) | 100 | 110 |
+
++20 px et plancher à 80 pour les arcs et les estocs ; les armes en cercle, qui touchent tout autour, montent moins. L'arc dessiné couvre désormais 90 % de l'allonge, plafond 120 px (estoc 160 px), avant le grossissement par la zone ; l'anneau extérieur de la Cloche marque l'allonge.
+
+**Vérifié :** `tools/test_weapons.sh` (`failures=0`) ; galerie `--capture-weapons` avant/après (Faucille, Parcmètre, Scalpel, Cloche, Pelle, Vagabond) : sur le cercle de cinq cibles à 55 et 80 px, l'arc arrive sur les créatures et en touche trois à cinq au lieu d'une ou deux. **À jouer :** sensation en partie, et écart avec les armes à distance.
+
 ### C3. Régénération et première Résurgence
 
 - **Régénération de base ×2** : Traqueur 0,6, Vagabond 1,0, Forgeuse 1,2 PV/s. Le Vagabond garde son +0,2.
