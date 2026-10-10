@@ -77,7 +77,6 @@ public partial class BarrierRise : Node
 			Sprite = sprite, Kind = kind, Core = core,
 			Start = _config.RiseOmenSec + sprite.Position.DistanceTo(_center) / _config.RiseWaveSpeed,
 		};
-		sprite.RegionEnabled = true;
 		Bury(piece, 1f);
 		_pieces.Add(piece);
 		float end = piece.Start + _config.RisePieceSec;
@@ -132,17 +131,12 @@ public partial class BarrierRise : Node
 			return;
 		}
 		// Sortie avec un dépassement : la pièce jaillit un peu trop haut puis se pose.
-		float p = progress - 1f;
-		float risen = 1f + (_config.RiseOvershoot * 10f + 1f) * p * p * p + _config.RiseOvershoot * 10f * p * p;
-		Bury(piece, 1f - risen);
+		Bury(piece, 1f - GroundReveal.EaseOutBack(progress, _config.RiseOvershoot));
 		// Tremblement au pixel pendant la sortie : la pièce force le sol.
 		piece.Sprite.Offset += new Vector2(Mathf.Sin((_time + piece.Start) * JitterHz) >= 0f ? 1f : -1f, 0f);
 	}
 
-	/// <summary>
-	/// Enfonce la pièce : <paramref name="sunk"/> 1 = sous terre, 0 = debout ; négatif = au-dessus de sa hauteur (le
-	/// dépassement). Seule la part sortie est dessinée, son bas restant au ras du sol.
-	/// </summary>
+	/// <summary>Enfonce la pièce (<see cref="GroundReveal.Show"/>) : 1 = sous terre, 0 = debout, négatif = dépassement.</summary>
 	private static void Bury(Piece piece, float sunk)
 	{
 		// Un battant peut être entamé pendant sa levée : taille et pivot suivent sa texture, relus à son changement seulement.
@@ -153,13 +147,7 @@ public partial class BarrierRise : Node
 			piece.Size = texture.GetSize();
 			piece.Pivot = World.PropManifest.TryGet(texture, out World.PropManifest.Entry entry) ? entry.Pivot : piece.Size * new Vector2(0.5f, 1f);
 		}
-		Vector2 size = piece.Size;
-		Vector2 pivot = piece.Pivot;
-		float hidden = Mathf.Clamp(sunk, 0f, 1f) * size.Y;
-		float lift = Mathf.Min(0f, sunk) * size.Y;
-		piece.Sprite.RegionRect = new Rect2(0f, 0f, size.X, size.Y - hidden);
-		piece.Sprite.Offset = new Vector2(-pivot.X, -pivot.Y + hidden + lift);
-		piece.Sprite.Visible = hidden < size.Y - 0.5f;
+		GroundReveal.Show(piece.Sprite, piece.Size, piece.Pivot, sunk);
 		piece.Sprite.Scale = Vector2.One;
 	}
 

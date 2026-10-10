@@ -1044,3 +1044,10 @@ Raphaël : « il faudrait implémenter ces personnages dans le jeu […] et auss
 - **Page Quêtes dédiée** dans les menus du Hub pour suivre l'avancée des quêtes.
 - **Page Personnages** : liste, fiche détaillée, sprite agrandi ; Raphaël fournira des images plus soignées.
 - **Revoir les menus devenus inutiles** (ceux qui suivent les anciennes quêtes, etc.).
+
+## 95. L'Indicible au niveau du jeu — 10 octobre 2026, soir
+
+Raphaël : « mais au delà des sons, le design, les animations, c'est fini ? c'est au niveau du jeu ? ». Constat : mécaniques finies, rendu au stade de maquette (Indicible jamais visible, arrivée sans mise en scène, tempête sans pluie ni éclair visible, marée et vague en aplats, mains sans animation, sons empruntés). Sur la proposition d'un lot B5 (planche de la forme découverte, puis arrivée et tempête, marée, vague et mort, dix sons) : « ouais ok ca me va. go planche ».
+- **Lot B5 ouvert** ([plan 07](07-bestiaire-et-rencontres.md#lot-b5--lindicible-au-niveau-du-jeu--découpage-proposé-10-octobre-2026-soir)), planche B5a d'abord.
+- **Seule la forme découverte attend sa validation** ; arrivée, tempête, marée, vague, mort et sons avancent sans attendre.
+- **Forme découverte : C, l'œil** (planche B5a), choisi par Raphaël comme recommandé : un œil immense ouvert dans le sol inondé, cils en bras de noyés, la lanterne en reflet dans l'iris, qui est la cible.

@@ -764,3 +764,70 @@ Pendant la levée, les battants sont enfouis : ni cibles ni vulnérables, les ti
 Suites : smoke, boss_parts, indicible, audio, weapons, enemy_abilities, movement-integration, catalogs, launchers : 9/9.
 
 **Mémoriaux jamais comptés (signalé par la session des personnages, corrigé le même soir)** : la Barrière écoutait `MemorialActivated`, que rien n'émet (déjà relevé au plan 18) ; elle avait donc toujours un seul battant en vraie run. Elle écoute maintenant `MemorialAwakened`, émis par `MemorialDirector`, et le signal mort est retiré de l'`EventBus`. Vérifié en vraie run (`--capture-memorial`) : un Mémorial ravivé, un Mémorial compté par la Barrière (0 auparavant).
+
+## Lot B5 — L'Indicible au niveau du jeu : découpage proposé (10 octobre 2026, soir)
+
+Raphaël : « mais au delà des sons, le design, les animations, c'est fini ? c'est au niveau du jeu ? », puis, sur le constat ci-dessous et la proposition d'un lot : « ouais ok ca me va. go planche ».
+
+**Constat** (captures B3a à B3c revues) : les mécaniques sont finies et mesurées, le rendu reste une maquette.
+- **On ne voit jamais l'Indicible.** La fenêtre découverte montre la même main de noyé, agrandie et teintée de violet.
+- **L'arrivée est un non-événement** : l'écran s'assombrit en 2,5 s. Sur une capture `--capture-endgame --phase 3`, la nuit est visible à 4 s puis absente aux images suivantes, alors que seul l'Indicible touche au `CanvasModulate` et ne le relève qu'à sa mort : **à diagnostiquer en B5b**.
+- **Tempête** : ni pluie, ni vent visible, ni éclair à l'écran ; l'annonce d'éclair est une ellipse plate.
+- **Marée** : un rectangle bleu translucide à bord droit, les décors visibles à travers comme sous un calque.
+- **Vague** : une bande sombre verticale, avec une colonne claire pour la brèche.
+- **Mains** : pas d'animation de sortie (sol qui se fend, gerbe d'eau) ; **mort** sans mise en scène vérifiée ; **sons** empruntés.
+
+| Sous-lot | Contenu | Vérification |
+|---|---|---|
+| **B5a — Planche de la forme découverte** | Trois pistes de ce qu'on voit quand l'Indicible se découvre. **Livrée, à valider** (ci-dessous). | Planche dans une vraie capture de nuit |
+| **B5b — Arrivée et tempête** | Nuit franche et durable (diagnostic ci-dessus) ; arrivée mise en scène (le ciel se ferme, la pluie et le vent arrivent) ; pluie et traînées de vent à l'écran, poolées ; éclairs visibles (annonce au sol retravaillée, trait, flash) ; sortie animée des mains (sol qui se fend, terre, retour sous terre) | Captures image par image ; banc dense (coût de la pluie) |
+| **B5c — Marée** | Eau dessinée : bord d'écume irrégulier qui avance, vaguelettes, reflets, décors à moitié immergés ; bande d'annonce qui se lit ; gerbes quand une main sort de l'eau | Captures ; banc (coût de l'eau) |
+| **B5d — Vague, forme découverte, mort** | Mur d'eau en volume (crête, embruns) ; brèches en lumière chaude ; forme retenue en B5a, avec apparition et retrait animés ; mise en scène de la mort (la mer se retire, la nuit se lève) | Captures ; suite `indicible` |
+| **B5e — Sons** | Dix sons propres, comme pour la Barrière, avec page d'écoute | Mesure (niveaux, écrêtage) ; écoute par Raphaël |
+
+B5b, B5c et B5e n'attendent pas la validation de la planche ; dans B5d, seule la forme découverte l'attend.
+
+### B5a — planche proposée — 10 octobre 2026
+
+[Planche](planches/07-b5a-indicible.png), modèles `tools/sprites/props/indicible_forms.py` (pas branchés à `generate_props.py`, rien d'écrit dans `assets/`). Chaque forme est posée dans une capture de run de nuit (teinte du `CanvasModulate`), à 110 px du joueur comme la fenêtre actuelle, à l'échelle du jeu.
+
+Le lore (§7) donne la règle : au premier regard un monstre géant, au fond la nuit du 14 qu'on ne dit pas. Les trois pistes gardent les mains de noyé des phases 1 et 2 et la lanterne en reflet.
+- **A. La grappe des trente et un** (220 × 158 px) : une grappe de bras de noyés se dresse d'un remous noir et se tend vers le haut. Monstre à tentacules ; au fond, les noyés de la Montée qui tendent encore les mains vers la barrière. La plus lisible en jeu ; la moins « trop grande pour l'écran ».
+- **B. La tête** (546 × 191 px) : une tête colossale sort de l'eau jusqu'aux yeux, cheveux étalés comme des algues, deux mains immenses agrippées au sol ; yeux vides de noyé où brille la lanterne. La plus démesurée ; mais un visage risque la lecture comique (premier essai aux yeux ronds : franchement comique) ou de désigner l'un des trente et un.
+- **C. L'œil** (296 × 174 px) : un œil immense s'ouvre dans le sol inondé, ses cils sont des bras de noyés, la lanterne brille en reflet dans l'iris. L'œil du monstre, point faible classique ; au fond, ce que la ville a refusé de voir, et qui la regarde. La plus forte en silhouette ; la cible (l'iris) est évidente.
+
+Piste écartée en cours de route : **la mer debout**, une vague dressée avec la lanterne au creux. Vue d'en haut à 30°, une vague sculptée ne montre que son dos lisse : quatre essais, quatre nuages ou dalles.
+
+**Constat commun** : la nuit les éteint. À l'intégration, la forme portera sa propre lumière (reflet de la lanterne, contour clair) pour se détacher du fond.
+
+**Validé le 10 octobre (DECISIONS §95) : C, l'œil**, comme recommandé. Question posée : quelle forme ? **Recommandation : C, l'œil.** C'est la seule qui se lit d'un coup d'œil comme un point à frapper, sans risquer le comique. Elle reprend les bras de A et dit le mieux ce qu'est l'Indicible : la chose que Vaulme a refusé de regarder.
+
+### B5b et B5c livrés — 10 octobre 2026, soir (arrivée, tempête, marée)
+
+**Arrivée et tempête (B5b)** :
+- **La nuit tombe vraiment en mesure.** L'Indicible cherchait le `CanvasModulate` dans la scène courante ; en mesure, c'est la scène d'observation, et la nuit ne tombait pas. Il le cherche maintenant chez son parent, la scène de run. Toutes les captures B3 avaient été prises sans nuit.
+- **`Combat/IndicibleStorm`** tient la nuit image par image, sans tweens concurrents. Un éclair ouvre la nuit à l'arrivée. Des éclairs lointains l'ouvrent toutes les 5 à 11 s (40 % vers le jour). L'éclair qui frappe l'ouvre à 85 %, et elle se referme en 0,35 s. À la mort, le jour revient en 2,5 s : le boss reste dans l'arbre le temps du retour.
+- **Pluie** (`Combat/IndicibleRain`) : 340 gouttes au plus, dessinées à l'écran sur la couche 1 (au-dessus du monde, sous le HUD, couche 10), avec un éclat en couronne à l'arrivée au sol. Le vent de la tempête les incline. Il pleut moins à la marée puis à la vague (100, 75, 50 %). Il y a un tracé par image pour les gouttes et un pour les éclats, avec des tableaux alloués une fois ; la pluie s'arrête de calculer quand elle est sèche.
+- **Éclair qui frappe** (`Combat/IndicibleBolt`) : un trait brisé tombé de 640 px avec une branche, un halo d'impact au sol, deux claquements, et des étincelles pâles. Pendant l'annonce, l'air grésille dans le cercle.
+- **Mains** : elles sortent de terre par la région du sprite, avec un dépassement (`Combat/GroundReveal`, désormais partagé avec la levée de la Barrière). Celles qui attendent se balancent ; à l'annonce, le poing se ferme, tremble et replonge à moitié. Il ressort sèchement sur la position annoncée, puis replonge. Un trou au sol les accompagne (`Combat/IndicibleHandHole`) : terre retournée, ou remous dans l'eau. La terre gicle à la sortie, l'eau dans la marée.
+- Réglages : section `weather` de `data/scaling/indicible.json`, contrôlée au chargement (une part de pluie par phase).
+- Tirages visuels sur des flux à part (`indicible_storm`, `indicible_rain`, `indicible_bolt`, `indicible_hands`) : rien ne décale les tirages du jeu.
+
+**Marée (B5c)** : une seule surface d'eau dessinée par `assets/shaders/indicible_tide.gdshader` remplace les trois aplats.
+- Le bord lèche la côte, ondule et respire, frangé d'une écume déchirée.
+- L'eau peu profonde est claire, l'eau profonde sombre, avec une transition tramée.
+- Des vaguelettes viennent vers la côte, quelques reflets piquent le large, des remous entourent le joueur dans l'eau.
+- La bande annoncée luit d'eau qui affleure. Le front visible rattrape en 0,3 s le front du jeu, qui avance par bandes ; l'eau entre depuis le bord de l'écran et recule en s'effaçant.
+- Couleur d'écume : `tide.foam_color`.
+
+**Défaut trouvé : le rendu figeait quand la marée apparaissait.** La compilation d'un shader inconnu, synchrone en Compatibility sur macOS, figeait le rendu plusieurs secondes à son apparition : trois captures sur dix sont restées sur l'écran de chargement ou sur une image figée. Le shader est ajouté au préchauffage du chargement (`ShaderWarmup`, 20 shaders) ; captures suivantes sans gel.
+
+Captures : [tempête, main et pluie](../audits/boss-2026-10-10/b5/tempete-main-pluie.jpg), [éclair qui frappe](../audits/boss-2026-10-10/b5/eclair-frappe.jpg), [marée](../audits/boss-2026-10-10/b5/maree.jpg).
+Relecture `godot-reviewer` :
+- pose du poing appliquée dès le changement de texture ;
+- pluie arrêtée quand elle est sèche ;
+- éclair toujours rattaché à la scène.
+
+Signalé à tort par la relecture : la pluie passerait au-dessus du HUD (il est en couche 10).
+
+Suites : smoke, indicible, boss_parts : 3/3. Pas de banc : le banc dense ne fait pas venir l'Indicible, et la pluie coûte un seul nœud qui dessine.
