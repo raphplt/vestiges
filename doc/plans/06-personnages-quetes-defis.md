@@ -1,6 +1,6 @@
 # Plan 06 — Personnages singuliers, quêtes variées et déblocages directs
 
-Version 0.4 · Statut : **quêtes indépendantes du lore et casting diversifié décidés ; liste complète des quêtes proposée au §9 (10 octobre), à valider**.
+Version 0.5 · Statut : **36 quêtes de déblocage validées comme base (§9, DECISIONS §90) ; lots Q1 à Q4 en cours de livraison (§10), personnages P1 à P3 ensuite**.
 Priorité : P0 pour le casting · Dépendances : 08 pour la refonte de tous les sprites ; 05/04/03 pour progression et intégration. Le casting validé précède désormais 01 E.
 Références : V2 §17/18/25 sous amendement ; [décisions](DECISIONS.md).
 
@@ -271,3 +271,17 @@ Ordre décidé (DECISIONS §90) : quêtes d'abord, personnages ensuite.
 | **Q3 — Menus du Hub et bilan** | **Page Quêtes dédiée** : les 36 quêtes, leur récompense, leur progression (cumul, ou meilleure valeur atteinte en une run), accomplies à part. **Page Personnages** : liste des six, fiche détaillée (passif, mobilité, arme de départ, stats, quête s'il est verrouillé) et **sprite agrandi** (images plus soignées fournies par Raphaël ; d'ici là, le sprite du jeu agrandi). **Revue des menus devenus inutiles** : sous-onglet Quêtes des Chroniques, réglage d'affichage des quêtes de run (Paramètres › Graphismes, `QuestDisplaySettings`), sceaux de quêtes du HUD (`RunQuestSeals`), touche `show_quests`, panneau de quêtes du bilan ; le reste des Chroniques et de la Collection relu avec Raphaël. Collection : chaque pièce verrouillée renvoie à sa quête. Bilan : quêtes accomplies pendant la run. | Captures du Hub (profil neuf, profil avancé) et du bilan |
 | **Q4 — Seuils mesurés** | `tools/measure_run.sh` sur plusieurs seeds : runs avant chaque ★, ajustement des seuils en données. | Tableau avant/après |
 | **P1 à P3 — Éveillée, Facteur, Scaphandrière** | Un personnage complet par lot (fiche du casting) : branchement des sprites, stats, passif, mobilité propre (plan 01 E), arme de départ (Sacoche de lettres et Fusil-harpon à créer), sons, quête. | Captures en run, suites de mouvement et d'armes |
+
+## 10. Lots Q1 à Q4 — 10 octobre 2026
+
+Travail fait dans un worktree séparé (`../vestiges-quetes`, branche `quetes-deblocage`) : une autre session modifiait en même temps le dossier principal (audio M4/M5), sans fichier de quêtes en commun.
+
+### Q1 livré — déblocages et données
+
+- **Catalogue :** `data/quests/quests.json` porte les 36 quêtes du §9 (difficulté 1 à 3, portée `run` ou `cumulative`, conditions et pièces débloquées). Chaque condition nomme un fait de run (`QuestStat`, 34 faits), une cible et, selon le fait, un réglage (`param` : rayon, fenêtre, part des PV, niveau) ou une arme. `QuestDataLoader` contrôle tout le fichier avant de le publier : fait inconnu, réglage manquant ou sans objet, cumul d'un maximum, pièce inconnue, pièce débloquée par deux quêtes, id en double. Les trois personnages à venir (Éveillée, Facteur, Scaphandrière) sont nommés dans le fichier tant qu'ils ne sont pas au catalogue.
+- **Réserve de départ :** elle se déduit du fichier ; une pièce qu'aucune quête ne garde est disponible. On retrouve exactement le §9.2 : Vagabond ; 8 armes ; 15 objets. Pas de liste séparée à tenir à jour.
+- **Règle unique :** `MetaSaveManager.IsUnlocked(kind, id)` (et ses raccourcis personnage, arme, objet), lue par l'offre de niveau (armes et désormais objets), le butin d'arme (petits lieux), le bilan, la Collection et l'accueil. Mode dev : tout ouvert.
+- **Sauvegarde :** les pièces débloquées se déduisent des quêtes accomplies (`completed_quests`) ; une pièce ajoutée plus tard à une quête accomplie est donc accordée. `quest_progress` retient par quête une valeur par condition : la meilleure d'une run, ou le cumul. `ClaimQuest` enregistre une quête en une écriture, une seule fois. Les anciennes quêtes et la liste `unlocked_characters` sont oubliées au chargement ; un catalogue refusé ne fait rien oublier (trouvé en relecture : sinon le profil était réécrit sans ses acquis).
+- **Retraits :** quêtes de run, leur panneau et leurs sceaux du HUD (scripts, cinq images et leur générateur), réglage Paramètres › Quêtes de run, touche `show_quests`, `requires_souvenir` et `drop_condition` des armes, `unlock_condition` des personnages, déblocages par Souvenir (`unlock_type`), récompenses Vestiges/Essence/XP/Souvenir des quêtes, `CheckUnlocks`. Le Journal des Souvenirs reste, sans effet sur le combat. Le sous-onglet Quêtes des Chroniques liste provisoirement les 36 quêtes (remplacé en Q3).
+- **Vérifié :** nouvelle suite `quests` (38 contrôles : catalogue, 12 fichiers refusés, réserve appliquée par l'offre de niveau et 300 tirages de butin, quête accomplie écrite aussitôt, sauvegarde rechargée et réécrite à l'identique). Validation complète 33/34 : le test des objets attendait 33 objets offerts en profil neuf, corrigé (15, tous paliers d'armes débloqués) ; puis `objects`, `saves`, `dev_mode`, `quests` verts. `MEASURE_PROFILE=normal tools/measure_run.sh` (nouvelle option : profil neuf sans mode dev), seeds 7, 42 et 1002, 600 s : 10 armes et 21 objets pris, tous dans la réserve (l'Arc est l'arme de départ du Traqueur, personnage du bot).
+

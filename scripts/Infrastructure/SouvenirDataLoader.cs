@@ -9,8 +9,6 @@ public class SouvenirData
     public string Name;
     public string ConstellationId;
     public string Text;
-    public string UnlockType;
-    public string UnlockId;
 }
 
 public class ConstellationData
@@ -141,9 +139,7 @@ public static class SouvenirDataLoader
                 Id = dict["id"].AsString(),
                 Name = dict["name"].AsString(),
                 ConstellationId = dict["constellation"].AsString(),
-                Text = dict["text"].AsString(),
-                UnlockType = dict.ContainsKey("unlock_type") ? dict["unlock_type"].AsString() : "",
-                UnlockId = dict.ContainsKey("unlock_id") ? dict["unlock_id"].AsString() : ""
+                Text = dict["text"].AsString()
             };
             _souvenirCache[data.Id] = data;
         }

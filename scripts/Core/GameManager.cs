@@ -50,10 +50,7 @@ public partial class GameManager : Node
     /// <summary>Vestiges gagnés lors de la dernière run.</summary>
     public int LastVestigesEarned { get; set; }
 
-    /// <summary>Personnages débloqués lors de la dernière run.</summary>
-    public List<string> LastUnlocks { get; set; }
-
-    /// <summary>Quêtes de progression validées lors de la dernière run.</summary>
+    /// <summary>Quêtes de déblocage accomplies pendant la dernière run (ids), montrées au bilan.</summary>
     public List<string> LastQuestCompletions { get; set; }
 
     /// <summary>Vide si la dernière fin de run est enregistrée ; sinon la raison, montrée au bilan.</summary>

@@ -62,7 +62,6 @@ public partial class HubScreen : Control
 		RunHistoryManager.Load();
 		MetaSaveManager.Load();
 		string repairError = RunSettlement.RepairPendingHistory();
-		QuestManager.ResolvePendingProgressionQuests(null, out SaveFile.WriteResult questsSaved);
 
 		GameManager gm = GetNode<GameManager>("/root/GameManager");
 		_selectedCharacterId = gm.SelectedCharacterId;
@@ -79,7 +78,7 @@ public partial class HubScreen : Control
 		DevelopmentBadge.AttachTo(this);
 
 		UpdateVestigesDisplay();
-		ShowSaveNotice(repairError.Length > 0 || !questsSaved.Succeeded);
+		ShowSaveNotice(repairError.Length > 0);
 		SetState(HubState.MainMenu);
 		PlayIntro();
 
@@ -571,7 +570,7 @@ public partial class HubScreen : Control
 		_enterVoidButton.QueueRedraw();
 		_nameLabel.Text = unlocked ? data?.Name ?? characterId : "???";
 		_nameLabel.AddThemeColorOverride("font_color", unlocked ? NameColor : Locked);
-		_taglineLabel.Text = unlocked ? data?.Description ?? "" : GetUnlockConditionText(data?.UnlockCondition);
+		_taglineLabel.Text = unlocked ? data?.Description ?? "" : QuestBook.LockText(UnlockKind.Character, characterId);
 
 		_nameplateTween?.Kill();
 		_nameplate.Modulate = new Color(1f, 1f, 1f, 0.2f);
@@ -619,7 +618,6 @@ public partial class HubScreen : Control
 		GameManager manager = GetNode<GameManager>("/root/GameManager");
 		manager.SelectedCharacterId = null;
 		manager.LastRunData = null;
-		manager.LastUnlocks = null;
 		manager.LastQuestCompletions = null;
 		manager.LastRunSaveError = "";
 		manager.LastRunHistoryPending = false;
@@ -700,15 +698,5 @@ public partial class HubScreen : Control
 	private void UpdateVestigesDisplay()
 	{
 		_vestigesLabel.Text = $"{MetaSaveManager.GetVestiges()}";
-	}
-
-	private static string GetUnlockConditionText(string condition)
-	{
-		return condition switch
-		{
-			"survive_12_minutes" => "Tenir 12 minutes pour s'en souvenir",
-			"kill_200_in_run" => "Abattre 200 créatures en une run pour s'en souvenir",
-			_ => "Un souvenir encore effacé"
-		};
 	}
 }

@@ -283,7 +283,7 @@ public partial class FragmentManager : Node
                     continue;
                 if (_banishedIds.Contains(weapon.Id))
                     continue;
-                if (!MetaSaveManager.IsWeaponUnlocked(weapon))
+                if (!MetaSaveManager.IsWeaponUnlocked(weapon.Id))
                     continue;
 
                 pool.Add(new FragmentOption(weapon.Id, "weapon_new", weapon.Name));
@@ -314,6 +314,8 @@ public partial class FragmentManager : Node
                 if (equippedPassiveIds.Contains(passive.Id))
                     continue;
                 if (_banishedIds.Contains(passive.Id))
+                    continue;
+                if (!MetaSaveManager.IsObjectUnlocked(passive.Id))
                     continue;
                 pool.Add(new FragmentOption(passive.Id, "passive_new", passive.Name));
             }

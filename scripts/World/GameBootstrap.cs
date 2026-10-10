@@ -248,9 +248,6 @@ public partial class GameBootstrap : Node
         // Collectes de la jeune génération rapprochées : pas de pause GC visible (plan 29).
         sceneRoot.AddChild(new GcPacer { Name = "GcPacer" });
 
-        QuestManager questManager = new() { Name = "QuestManager" };
-        sceneRoot.AddChild(questManager);
-
         hud.SetEssenceTracker(essenceTracker);
 
         InitializeCharacterAndRun(player, perkManager, scoreManager, runTracker);

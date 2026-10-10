@@ -691,8 +691,8 @@ Le script de post-processing doit inclure une vérification/correction de l'angl
 | **AltarSystem** | Spawn d'Autels, interaction, upgrades, reforge, soin, cooldowns | WeaponInstance, EssenceTracker |
 | **WeaponRaritySystem** | Raretés des armes, génération de stats, effets, comparaison | WeaponDataLoader |
 | **EssenceTracker** | Remplace l'inventaire complexe. Track l'Essence du joueur. | EventBus |
-| **QuestManager** | Quêtes de run (génération, tracking, complétion) et de progression | EventBus, MetaSaveManager |
-| **QuestDataLoader** | Charge les définitions de quêtes depuis JSON | — |
+| **QuestTracker** | Suit en run les conditions des quêtes de déblocage, enregistre une quête dès qu'elle est accomplie (plan 06 §9) | EventBus, MetaSaveManager |
+| **QuestDataLoader** | Charge et contrôle les 36 quêtes de déblocage ; la réserve de départ s'en déduit | — |
 | **EndgameManager** | Détecte la transition vers l'endgame, gère le boss/événement, scaling infini | ErasureManager, CrisisManager |
 
 ## 24. Systèmes à modifier
@@ -849,8 +849,8 @@ Le script de post-processing doit inclure une vérification/correction de l'angl
 
 - [x] Reprise visuelle du Traqueur : 152 frames déterministes, silhouettes comparées sur trois sols et animations capturées dans Main (plan 08 R5a). Approbation artistique humaine encore ouverte.
 
-- [x] Implémenter QuestManager + QuestDataLoader.
-- [ ] Quêtes de run (3-5 par run, générées dynamiquement).
+- [x] Implémenter QuestManager + QuestDataLoader. Remplacés le 10 octobre 2026 par les quêtes de déblocage (plan 06 §9 : QuestDataLoader, QuestTracker).
+- [ ] ~~Quêtes de run (3-5 par run, générées dynamiquement).~~ Abandonné le 10 octobre 2026 : une seule famille de quêtes, de déblocage (DECISIONS §90, plan 06 §9) ; retirées au lot Q1.
 - [ ] Quêtes de progression (déblocages de personnages et d'armes).
 - [ ] Rendre le système de déblocage fonctionnel.
 - [ ] S'assurer que 4 personnages sont jouables et équilibrés.

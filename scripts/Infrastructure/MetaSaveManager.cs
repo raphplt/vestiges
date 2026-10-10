@@ -15,17 +15,25 @@ public class MetaSaveData
     [JsonPropertyName("vestiges")]
     public int Vestiges { get; set; }
 
-    [JsonPropertyName("unlocked_characters")]
-    public List<string> UnlockedCharacters { get; set; } = new();
-
     [JsonPropertyName("stats")]
     public MetaStats Stats { get; set; } = new();
 
     [JsonPropertyName("discovered_souvenirs")]
     public List<string> DiscoveredSouvenirs { get; set; } = new();
 
+    /// <summary>
+    /// Quêtes de déblocage accomplies (plan 06 §9). Les pièces débloquées s'en déduisent : une pièce gardée par une
+    /// quête est disponible dès que cette quête figure ici, même si le catalogue lui ajoute une pièce plus tard.
+    /// </summary>
     [JsonPropertyName("completed_quests")]
     public List<string> CompletedQuests { get; set; } = new();
+
+    /// <summary>
+    /// Avancée de chaque quête non accomplie, une valeur par condition : la meilleure atteinte en une run, ou le cumul
+    /// de toutes les runs pour une quête de cumul.
+    /// </summary>
+    [JsonPropertyName("quest_progress")]
+    public Dictionary<string, List<float>> QuestProgress { get; set; } = new();
 
     /// <summary>Aides déjà montrées une fois au joueur (objectif d'un micro-événement, plan 24 A3).</summary>
     [JsonPropertyName("seen_hints")]
@@ -67,7 +75,6 @@ public static class MetaSaveManager
     private const int CurrentVersion = 2;
     private static string SavePath => DevelopmentMode.GetSavePath("meta_save.json");
     private static string LegacyArchivePath => DevelopmentMode.GetSavePath("meta_save_legacy_v1.json");
-    private const float SurviveUnlockDurationSec = 12f * 60f;
 
     private static MetaSaveData _data = new();
     private static bool _loaded;
@@ -81,8 +88,8 @@ public static class MetaSaveManager
 
     private readonly record struct ParsedMetaSave(MetaSaveData Data, string LegacyJson);
 
-    /// <summary>Résultat du règlement d'une run : déjà réglée, déblocages obtenus, issue de l'unique écriture.</summary>
-    public readonly record struct Settlement(bool AlreadySettled, List<string> Unlocks, SaveFile.WriteResult Write);
+    /// <summary>Résultat du règlement d'une run : déjà réglée, issue de l'unique écriture.</summary>
+    public readonly record struct Settlement(bool AlreadySettled, SaveFile.WriteResult Write);
 
     private const int SettledRunMemory = 20;
     private static int _batchDepth;
@@ -137,7 +144,7 @@ public static class MetaSaveManager
         NormalizeData();
         if (migrated)
             Save();
-        GD.Print($"[MetaSaveManager] Loaded — {_data.Vestiges} Vestiges, {_data.UnlockedCharacters.Count} characters unlocked");
+        GD.Print($"[MetaSaveManager] Loaded — {_data.Vestiges} Vestiges, {_data.CompletedQuests.Count} quests completed");
     }
 
     /// <summary>
@@ -190,25 +197,23 @@ public static class MetaSaveManager
     }
 
     /// <summary>
-    /// Engage les acquis d'une run en une écriture : Vestiges, statistiques, déblocages, identité de la run et relevé
-    /// en attente d'historique. Une run déjà réglée ne rapporte rien de plus.
+    /// Engage les acquis d'une run en une écriture : Vestiges, statistiques, identité de la run et relevé en attente
+    /// d'historique. Une run déjà réglée ne rapporte rien de plus. Les quêtes s'enregistrent en run, pas ici.
     /// </summary>
     public static Settlement SettleRun(RunRecord record, int vestiges)
     {
         Load();
         if (string.IsNullOrEmpty(record.RunId))
-            return new Settlement(false, new List<string>(), SaveFile.WriteResult.Failed("run sans identité"));
+            return new Settlement(false, SaveFile.WriteResult.Failed("run sans identité"));
         if (_data.SettledRuns.Contains(record.RunId))
-            return new Settlement(true, new List<string>(), SaveFile.WriteResult.Ok);
+            return new Settlement(true, SaveFile.WriteResult.Ok);
 
-        List<string> unlocks;
         SaveFile.WriteResult write;
         BeginBatch();
         try
         {
             _data.Vestiges += vestiges;
             UpdateStats(record);
-            unlocks = CheckUnlocks();
             _data.SettledRuns.Add(record.RunId);
             if (_data.SettledRuns.Count > SettledRunMemory)
                 _data.SettledRuns.RemoveRange(0, _data.SettledRuns.Count - SettledRunMemory);
@@ -220,7 +225,7 @@ public static class MetaSaveManager
             write = EndBatch();
         }
         GD.Print($"[MetaSaveManager] Run {record.RunId} settled: +{vestiges} Vestiges (total: {_data.Vestiges})");
-        return new Settlement(false, unlocks, write);
+        return new Settlement(false, write);
     }
 
     public static List<RunRecord> GetPendingHistory()
@@ -308,60 +313,73 @@ public static class MetaSaveManager
         return true;
     }
 
-    public static bool IsCharacterUnlocked(string characterId)
+    /// <summary>
+    /// Règle unique d'accès (plan 06 §9) : une pièce qu'aucune quête ne garde est disponible dès le départ, les autres
+    /// une fois leur quête accomplie. Le mode dev ouvre tout. Loot, offres de niveau, Collection et accueil la partagent.
+    /// </summary>
+    public static bool IsUnlocked(UnlockKind kind, string id)
     {
         Load();
-        return _data.UnlockedCharacters.Contains(characterId);
+        if (DevelopmentMode.IsEnabled)
+            return true;
+        QuestDefinition quest = QuestDataLoader.FindUnlocking(kind, id);
+        return quest == null || _data.CompletedQuests.Contains(quest.Id);
     }
 
-    public static void UnlockCharacter(string characterId)
+    public static bool IsCharacterUnlocked(string characterId) => IsUnlocked(UnlockKind.Character, characterId);
+    public static bool IsWeaponUnlocked(string weaponId) => IsUnlocked(UnlockKind.Weapon, weaponId);
+    public static bool IsObjectUnlocked(string objectId) => IsUnlocked(UnlockKind.Object, objectId);
+
+    /// <summary>
+    /// Accomplit une quête, ce qui débloque ses pièces : une seule écriture, aussitôt (plan 06 §9.8). Faux si elle
+    /// l'était déjà ; <paramref name="saved"/> rend l'issue de l'écriture.
+    /// </summary>
+    public static bool ClaimQuest(QuestDefinition quest, out SaveFile.WriteResult saved)
     {
         Load();
-        if (_data.UnlockedCharacters.Contains(characterId))
-            return;
-
-        _data.UnlockedCharacters.Add(characterId);
-        Save();
-        GD.Print($"[MetaSaveManager] Character unlocked: {characterId}");
-    }
-
-    public static List<string> GetUnlockedCharacters()
-    {
-        Load();
-        return new List<string>(_data.UnlockedCharacters);
-    }
-
-    public static List<string> CheckUnlocks()
-    {
-        Load();
-        CharacterDataLoader.Load();
-
-        List<string> newUnlocks = new();
-        foreach (CharacterData character in CharacterDataLoader.GetAll())
+        saved = SaveFile.WriteResult.Ok;
+        if (quest == null || _data.CompletedQuests.Contains(quest.Id))
+            return false;
+        BeginBatch();
+        try
         {
-            if (_data.UnlockedCharacters.Contains(character.Id))
-                continue;
-
-            bool shouldUnlock = character.UnlockCondition switch
-            {
-                "default" => true,
-                "survive_12_minutes" => _data.Stats.BestRunDurationSec >= SurviveUnlockDurationSec,
-                "kill_200_in_run" => _data.Stats.MaxKillsInRun >= 200,
-                _ => false
-            };
-
-            if (!shouldUnlock)
-                continue;
-
-            _data.UnlockedCharacters.Add(character.Id);
-            newUnlocks.Add(character.Id);
-            GD.Print($"[MetaSaveManager] New unlock: {character.Name} ({character.UnlockCondition})");
+            _data.CompletedQuests.Add(quest.Id);
+            _data.QuestProgress.Remove(quest.Id);
+            _batchDirty = true;
         }
+        finally
+        {
+            saved = EndBatch();
+        }
+        GD.Print($"[MetaSaveManager] Quest completed: {quest.Id}");
+        return true;
+    }
 
-        if (newUnlocks.Count > 0)
-            Save();
+    /// <summary>Avancée retenue d'une quête, une valeur par condition (vide si rien n'est retenu).</summary>
+    public static IReadOnlyList<float> GetQuestProgress(string questId)
+    {
+        Load();
+        return _data.QuestProgress.TryGetValue(questId, out List<float> values) ? values : Array.Empty<float>();
+    }
 
-        return newUnlocks;
+    /// <summary>
+    /// Retient l'avancée d'une run pour une quête non accomplie : la meilleure valeur par condition, ou l'ajout au
+    /// cumul. Seulement noté : l'appelant écrit par <see cref="Save"/> ou dans un lot.
+    /// </summary>
+    public static void RecordQuestProgress(QuestDefinition quest, IReadOnlyList<float> runValues)
+    {
+        Load();
+        if (quest == null || _data.CompletedQuests.Contains(quest.Id))
+            return;
+        if (!_data.QuestProgress.TryGetValue(quest.Id, out List<float> values))
+        {
+            values = new List<float>();
+            _data.QuestProgress[quest.Id] = values;
+        }
+        while (values.Count < quest.Conditions.Count)
+            values.Add(0f);
+        for (int i = 0; i < quest.Conditions.Count && i < runValues.Count; i++)
+            values[i] = quest.Scope == QuestScope.Cumulative ? values[i] + runValues[i] : Mathf.Max(values[i], runValues[i]);
     }
 
     public static void UpdateStats(RunRecord record)
@@ -392,15 +410,6 @@ public static class MetaSaveManager
         return IsSouvenirDiscovered(souvenirId);
     }
 
-    /// <summary>
-    /// Règle unique de disponibilité d'une arme (plan 04 C2) : loot, fragments de niveau et Collection la partagent.
-    /// Aujourd'hui, une arme liée à un Souvenir attend qu'il soit découvert.
-    /// </summary>
-    public static bool IsWeaponUnlocked(WeaponData weapon)
-    {
-        return string.IsNullOrEmpty(weapon.RequiresSouvenir) || HasSouvenir(weapon.RequiresSouvenir);
-    }
-
     public static void DiscoverSouvenir(string souvenirId)
     {
         Load();
@@ -422,18 +431,6 @@ public static class MetaSaveManager
     {
         Load();
         return _data.CompletedQuests.Contains(questId);
-    }
-
-    public static bool CompleteQuest(string questId)
-    {
-        Load();
-        if (string.IsNullOrWhiteSpace(questId) || _data.CompletedQuests.Contains(questId))
-            return false;
-
-        _data.CompletedQuests.Add(questId);
-        Save();
-        GD.Print($"[MetaSaveManager] Quest completed: {questId}");
-        return true;
     }
 
     /// <summary>Vrai la première fois que cette aide est demandée pour ce profil ; elle est alors retenue.</summary>
@@ -476,44 +473,32 @@ public static class MetaSaveManager
         _data ??= new MetaSaveData();
         _data.Version = CurrentVersion;
         _data.Stats ??= new MetaStats();
-        _data.UnlockedCharacters ??= new List<string>();
         _data.DiscoveredSouvenirs ??= new List<string>();
         _data.CompletedQuests ??= new List<string>();
+        _data.QuestProgress ??= new Dictionary<string, List<float>>();
         _data.SeenHints ??= new List<string>();
         _data.SettledRuns ??= new List<string>();
         _data.PendingHistory ??= new List<RunRecord>();
         _data.PendingHistory.RemoveAll(run => run == null || string.IsNullOrEmpty(run.RunId));
 
-        CharacterDataLoader.Load();
-        HashSet<string> supportedCharacters = CharacterDataLoader.GetAll()
-            .Select(character => character.Id)
-            .ToHashSet();
-
-        _data.UnlockedCharacters = _data.UnlockedCharacters
-            .Where(id => supportedCharacters.Contains(id))
-            .Distinct()
-            .ToList();
-
-        // Un profil neuf reçoit les personnages initiaux (unlock_condition « default » : le Vagabond, décision du
-        // 23 septembre). Un profil existant garde ses personnages, Traqueur compris.
-        if (_data.UnlockedCharacters.Count == 0)
-            _data.UnlockedCharacters.AddRange(CharacterDataLoader.GetAll()
-                .Where(character => character.UnlockCondition == "default")
-                .Select(character => character.Id));
-
-        // Les nouveaux contenus JSON deviennent disponibles sans remplir de fausses quêtes.
-        if (DevelopmentMode.IsEnabled)
+        // Seules restent les quêtes du catalogue actuel : les anciennes quêtes de progression ne débloquent plus rien
+        // (plan 06 §9.8). Un catalogue refusé ne fait rien oublier : le profil serait réécrit sans ses acquis.
+        _data.CompletedQuests = _data.CompletedQuests.Where(id => !string.IsNullOrWhiteSpace(id)).Distinct().ToList();
+        if (QuestDataLoader.TryLoad(out _))
         {
-            _data.UnlockedCharacters = CharacterDataLoader.GetAll().Select(character => character.Id).ToList();
-            _data.DiscoveredSouvenirs = SouvenirDataLoader.GetAll().Select(souvenir => souvenir.Id).ToList();
+            _data.CompletedQuests.RemoveAll(id => QuestDataLoader.Get(id) == null);
+            foreach (string questId in _data.QuestProgress.Keys.ToList())
+            {
+                if (QuestDataLoader.Get(questId) == null || _data.CompletedQuests.Contains(questId) || _data.QuestProgress[questId] == null)
+                    _data.QuestProgress.Remove(questId);
+            }
         }
 
-        _data.DiscoveredSouvenirs = _data.DiscoveredSouvenirs
-            .Where(id => !string.IsNullOrWhiteSpace(id))
-            .Distinct()
-            .ToList();
+        // Le Journal des Souvenirs se remplit en dev sans falsifier de quête ; les déblocages, eux, suivent IsUnlocked.
+        if (DevelopmentMode.IsEnabled)
+            _data.DiscoveredSouvenirs = SouvenirDataLoader.GetAll().Select(souvenir => souvenir.Id).ToList();
 
-        _data.CompletedQuests = _data.CompletedQuests
+        _data.DiscoveredSouvenirs = _data.DiscoveredSouvenirs
             .Where(id => !string.IsNullOrWhiteSpace(id))
             .Distinct()
             .ToList();
@@ -524,7 +509,6 @@ public static class MetaSaveManager
         MetaSaveData migrated = new()
         {
             Vestiges = TryGetInt(root, "vestiges"),
-            UnlockedCharacters = ReadStringList(root, "unlocked_characters"),
             DiscoveredSouvenirs = ReadStringList(root, "discovered_souvenirs"),
             Stats = new MetaStats()
         };

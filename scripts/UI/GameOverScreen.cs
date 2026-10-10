@@ -237,13 +237,10 @@ public partial class GameOverScreen : CanvasLayer
         GameManager gameManager = GetNode<GameManager>("/root/GameManager");
         gameManager.ChangeState(GameManager.GameState.Death);
         _scoreManager?.SaveEndOfRun();
-        gameManager.LastQuestCompletions = QuestManager.ResolvePendingProgressionQuests(gameManager.LastRunData, out SaveFile.WriteResult questsSaved);
-        if (!questsSaved.Succeeded && string.IsNullOrEmpty(gameManager.LastRunSaveError))
-            gameManager.LastRunSaveError = questsSaved.Error;
         _newWeapons.Clear();
         foreach (WeaponData weapon in WeaponDataLoader.GetAll())
         {
-            if (!_weaponsAtStart.Contains(weapon.Id) && MetaSaveManager.IsWeaponUnlocked(weapon))
+            if (!_weaponsAtStart.Contains(weapon.Id) && MetaSaveManager.IsWeaponUnlocked(weapon.Id))
                 _newWeapons.Add(weapon);
         }
     }
@@ -408,15 +405,12 @@ public partial class GameOverScreen : CanvasLayer
         int vestiges = _scoreManager?.VestigesEarned ?? 0;
         if (vestiges > 0)
             AddGainCard(string.Format(Tr("UI_END_VESTIGES"), vestiges), UITheme.GoldBright).SetCounter(Tr("UI_END_VESTIGES"), vestiges);
-        if (gm.LastQuestCompletions != null)
+        foreach (string questId in gm.LastQuestCompletions ?? new List<string>())
         {
-            foreach (string quest in gm.LastQuestCompletions)
-                AddGainCard(quest, UITheme.CyanEssence);
-        }
-        if (gm.LastUnlocks != null)
-        {
-            foreach (string id in gm.LastUnlocks)
-                AddGainCard(string.Format(Tr("UI_END_UNLOCK"), CharacterDataLoader.Get(id)?.Name ?? id), UITheme.GreenKit, flipSound: "sfx_souvenir_trouve");
+            QuestDefinition quest = QuestDataLoader.Get(questId);
+            if (quest != null)
+                AddGainCard(string.Format(Tr("UI_END_QUEST"), quest.Name, QuestBook.RewardSummary(quest)), UITheme.GreenKit,
+                    flipSound: "sfx_souvenir_trouve");
         }
         foreach (WeaponData weapon in _newWeapons)
             AddGainCard(string.Format(Tr("UI_END_NEW_WEAPON"), weapon.Name), UITheme.GoldBright, weapon.Sprite, "sfx_souvenir_trouve");
@@ -440,7 +434,7 @@ public partial class GameOverScreen : CanvasLayer
         MetaSaveManager.Load();
         foreach (WeaponData weapon in WeaponDataLoader.GetAll())
         {
-            if (MetaSaveManager.IsWeaponUnlocked(weapon))
+            if (MetaSaveManager.IsWeaponUnlocked(weapon.Id))
                 yield return weapon.Id;
         }
     }

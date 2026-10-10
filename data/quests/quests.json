@@ -1,135 +1,719 @@
-[
-    {
-        "id": "remember_the_flame",
-        "category": "progression",
-        "name": "La flamme se souvient",
-        "description": "Atteindre une meilleure run de 12 minutes.",
-        "objective_type": "best_run_duration_sec",
-        "target": 720,
-        "reward_type": "souvenir",
-        "reward_id": "memory_flame",
-        "reward_label": "Souvenir : Flamme mémorielle"
-    },
-    {
-        "id": "cut_through_the_void",
-        "category": "progression",
-        "name": "Fendre le vide",
-        "description": "Atteindre 200 kills sur une seule run.",
-        "objective_type": "max_kills_in_run",
-        "target": 200,
-        "reward_type": "vestiges",
-        "reward_amount": 150,
-        "reward_label": "+150 Vestiges"
-    },
-    {
-        "id": "count_the_crises",
-        "category": "progression",
-        "name": "Compter les Résurgences",
-        "description": "Survivre à 25 crises cumulées.",
-        "objective_type": "total_crises_survived",
-        "target": 25,
-        "reward_type": "souvenir",
-        "reward_id": "lantern_memory",
-        "reward_label": "Souvenir : Lanterne de mémoire"
-    },
-    {
-        "id": "name_the_unspeakable",
-        "category": "progression",
-        "name": "Nommer l'Indicible",
-        "description": "Vaincre l'Indicible une première fois.",
-        "objective_type": "defeat_boss",
-        "target": 1,
-        "reward_type": "souvenir",
-        "reward_id": "void_knowledge",
-        "reward_label": "Souvenir : Savoir du vide"
-    },
-    {
-        "id": "after_the_climax",
-        "category": "progression",
-        "name": "Au-delà du climax",
-        "description": "Atteindre l'Endgame.",
-        "objective_type": "reach_endgame",
-        "target": 1,
-        "reward_type": "souvenir",
-        "reward_id": "echo_fragment",
-        "reward_label": "Souvenir : Fragment d'echo"
-    },
-    {
-        "id": "run_kill_swarm",
-        "category": "run",
-        "name": "Casser l'élan",
-        "description": "Tuer 35 créatures.",
-        "objective_type": "kill_total",
-        "target": 35,
-        "reward_type": "essence",
-        "reward_amount": 12,
-        "reward_label": "+12 Essence"
-    },
-    {
-        "id": "run_survive_crises",
-        "category": "run",
-        "name": "Garder le cap",
-        "description": "Traverser 2 crises.",
-        "objective_type": "survive_crises",
-        "target": 2,
-        "reward_type": "essence",
-        "reward_amount": 18,
-        "reward_label": "+18 Essence"
-    },
-    {
-        "id": "run_search_the_map",
-        "enabled": false,
-        "category": "run",
-        "name": "Lire les traces",
-        "description": "Explorer 3 points d'intérêt.",
-        "objective_type": "explore_poi",
-        "target": 3,
-        "reward_type": "xp",
-        "reward_amount": 30,
-        "reward_label": "+30 XP"
-    },
-    {
-        "id": "run_open_cache",
-        "category": "run",
-        "name": "Forcer les cachettes",
-        "description": "Ouvrir 2 coffres.",
-        "objective_type": "open_chests",
-        "target": 2,
-        "reward_type": "essence",
-        "reward_amount": 15,
-        "reward_label": "+15 Essence"
-    },
-    {
-        "id": "run_reach_level",
-        "category": "run",
-        "name": "Se souvenir plus vite",
-        "description": "Atteindre le niveau 6.",
-        "objective_type": "reach_level",
-        "target": 6,
-        "reward_type": "xp",
-        "reward_amount": 40,
-        "reward_label": "+40 XP"
-    },
-    {
-        "id": "run_collect_essence",
-        "category": "run",
-        "name": "Boire l'oubli",
-        "description": "Accumuler 40 d'Essence pendant la run.",
-        "objective_type": "collect_essence",
-        "target": 40,
-        "reward_type": "essence",
-        "reward_amount": 20,
-        "reward_label": "+20 Essence"
-    },
-    {
-        "id": "run_survive_time",
-        "category": "run",
-        "name": "Tenir la cadence",
-        "description": "Survivre 8 minutes.",
-        "objective_type": "survive_duration_sec",
-        "target": 480,
-        "reward_type": "xp",
-        "reward_amount": 50,
-        "reward_label": "+50 XP"
-    }
-]
+{
+    "quests": [
+        {
+            "id": "lead_the_hunt",
+            "name": "Mener la chasse",
+            "description": "Vaincre un Souverain.",
+            "difficulty": 1,
+            "scope": "run",
+            "conditions": [
+                {
+                    "stat": "sovereign_kills",
+                    "target": 1
+                }
+            ],
+            "unlocks": [
+                {
+                    "type": "character",
+                    "id": "traqueur"
+                },
+                {
+                    "type": "weapon",
+                    "id": "makeshift_bow"
+                }
+            ]
+        },
+        {
+            "id": "straighten_the_grid",
+            "name": "Redresser la grille",
+            "description": "Abattre la Barrière.",
+            "difficulty": 2,
+            "scope": "run",
+            "conditions": [
+                {
+                    "stat": "barrier_defeated",
+                    "target": 1
+                }
+            ],
+            "unlocks": [
+                {
+                    "type": "character",
+                    "id": "forgeuse"
+                },
+                {
+                    "type": "weapon",
+                    "id": "heavy_hammer"
+                }
+            ]
+        },
+        {
+            "id": "hear_the_voices",
+            "name": "Entendre les voix",
+            "description": "Raviver trois Mémoriaux et survivre à deux Résurgences dans la même run.",
+            "difficulty": 2,
+            "scope": "run",
+            "conditions": [
+                {
+                    "stat": "memorials_revived",
+                    "target": 3
+                },
+                {
+                    "stat": "crises_survived",
+                    "target": 2
+                }
+            ],
+            "unlocks": [
+                {
+                    "type": "character",
+                    "id": "eveillee",
+                    "name": "L'Éveillée"
+                },
+                {
+                    "type": "weapon",
+                    "id": "essence_staff"
+                }
+            ]
+        },
+        {
+            "id": "the_round",
+            "name": "La tournée",
+            "description": "Parcourir 2 500 m et trouver cinq Repères différents dans la même run.",
+            "difficulty": 2,
+            "scope": "run",
+            "conditions": [
+                {
+                    "stat": "distance_m",
+                    "target": 2500
+                },
+                {
+                    "stat": "waymarks_found",
+                    "target": 5
+                }
+            ],
+            "unlocks": [
+                {
+                    "type": "character",
+                    "id": "facteur",
+                    "name": "Le Facteur"
+                }
+            ]
+        },
+        {
+            "id": "raise_the_bodies",
+            "name": "Remonter les corps",
+            "description": "Tuer 290 créatures en zone effilochée ou effacée dans une run.",
+            "difficulty": 3,
+            "scope": "run",
+            "conditions": [
+                {
+                    "stat": "erased_zone_kills",
+                    "target": 290
+                }
+            ],
+            "unlocks": [
+                {
+                    "type": "character",
+                    "id": "scaphandriere",
+                    "name": "La Scaphandrière"
+                }
+            ]
+        },
+        {
+            "id": "rake",
+            "name": "Ratisser",
+            "description": "Tuer 500 créatures avec des armes de mêlée dans une run.",
+            "difficulty": 1,
+            "scope": "run",
+            "conditions": [
+                {
+                    "stat": "melee_kills",
+                    "target": 500
+                }
+            ],
+            "unlocks": [
+                {
+                    "type": "weapon",
+                    "id": "nail_mace"
+                }
+            ]
+        },
+        {
+            "id": "guard_the_coast",
+            "name": "Garder la côte",
+            "description": "Tuer 500 créatures avec des armes à distance dans une run.",
+            "difficulty": 1,
+            "scope": "run",
+            "conditions": [
+                {
+                    "stat": "ranged_kills",
+                    "target": 500
+                }
+            ],
+            "unlocks": [
+                {
+                    "type": "weapon",
+                    "id": "lighthouse_shard"
+                }
+            ]
+        },
+        {
+            "id": "four_tunes",
+            "name": "Quatre airs",
+            "description": "Avoir quatre armes au niveau 10 ou plus en même temps.",
+            "difficulty": 1,
+            "scope": "run",
+            "conditions": [
+                {
+                    "stat": "weapons_at_level",
+                    "target": 4,
+                    "param": 10
+                }
+            ],
+            "unlocks": [
+                {
+                    "type": "weapon",
+                    "id": "music_box"
+                }
+            ]
+        },
+        {
+            "id": "develop",
+            "name": "Développer",
+            "description": "Réussir trois micro-événements dans la même run.",
+            "difficulty": 1,
+            "scope": "run",
+            "conditions": [
+                {
+                    "stat": "events_succeeded",
+                    "target": 3
+                }
+            ],
+            "unlocks": [
+                {
+                    "type": "weapon",
+                    "id": "photographers_flash"
+                }
+            ]
+        },
+        {
+            "id": "draw_the_map",
+            "name": "Dessiner la carte",
+            "description": "Découvrir 150 zones du brouillard dans une run.",
+            "difficulty": 1,
+            "scope": "run",
+            "conditions": [
+                {
+                    "stat": "zones_discovered",
+                    "target": 150
+                }
+            ],
+            "unlocks": [
+                {
+                    "type": "weapon",
+                    "id": "childs_drawing"
+                }
+            ]
+        },
+        {
+            "id": "every_door",
+            "name": "Toutes les portes",
+            "description": "Ouvrir 100 coffres, toutes runs confondues.",
+            "difficulty": 2,
+            "scope": "cumulative",
+            "conditions": [
+                {
+                    "stat": "chests_opened",
+                    "target": 100
+                }
+            ],
+            "unlocks": [
+                {
+                    "type": "weapon",
+                    "id": "chain_of_names"
+                }
+            ]
+        },
+        {
+            "id": "count_resurgences",
+            "name": "Compter les Résurgences",
+            "description": "Survivre à 15 Résurgences, toutes runs confondues.",
+            "difficulty": 2,
+            "scope": "cumulative",
+            "conditions": [
+                {
+                    "stat": "crises_survived",
+                    "target": 15
+                }
+            ],
+            "unlocks": [
+                {
+                    "type": "weapon",
+                    "id": "memory_lantern"
+                }
+            ]
+        },
+        {
+            "id": "against_the_clock",
+            "name": "Contre la montre",
+            "description": "Atteindre le niveau 30 avant la 12ᵉ minute.",
+            "difficulty": 2,
+            "scope": "run",
+            "conditions": [
+                {
+                    "stat": "level",
+                    "target": 30,
+                    "before_sec": 720
+                }
+            ],
+            "unlocks": [
+                {
+                    "type": "weapon",
+                    "id": "clock_hand"
+                }
+            ]
+        },
+        {
+            "id": "school_bell",
+            "name": "Sonner la récré",
+            "description": "Tuer 300 créatures ralenties dans une run.",
+            "difficulty": 2,
+            "scope": "run",
+            "conditions": [
+                {
+                    "stat": "slowed_kills",
+                    "target": 300
+                }
+            ],
+            "unlocks": [
+                {
+                    "type": "weapon",
+                    "id": "teachers_bell"
+                }
+            ]
+        },
+        {
+            "id": "precise_gesture",
+            "name": "Geste précis",
+            "description": "Tuer 10 élites d'un coup critique dans une run.",
+            "difficulty": 2,
+            "scope": "run",
+            "conditions": [
+                {
+                    "stat": "elite_crit_kills",
+                    "target": 10
+                }
+            ],
+            "unlocks": [
+                {
+                    "type": "weapon",
+                    "id": "surgeons_scalpel"
+                }
+            ]
+        },
+        {
+            "id": "name_unspeakable",
+            "name": "Nommer l'Indicible",
+            "description": "Vaincre l'Indicible.",
+            "difficulty": 3,
+            "scope": "run",
+            "conditions": [
+                {
+                    "stat": "indicible_defeated",
+                    "target": 1
+                }
+            ],
+            "unlocks": [
+                {
+                    "type": "weapon",
+                    "id": "void_edge"
+                }
+            ]
+        },
+        {
+            "id": "beyond_climax",
+            "name": "Au-delà du climax",
+            "description": "Survivre à une Résurgence après la chute de l'Indicible.",
+            "difficulty": 3,
+            "scope": "run",
+            "conditions": [
+                {
+                    "stat": "crises_after_indicible",
+                    "target": 1
+                }
+            ],
+            "unlocks": [
+                {
+                    "type": "weapon",
+                    "id": "echo_gauntlets"
+                }
+            ]
+        },
+        {
+            "id": "last_broadcast",
+            "name": "Dernière émission",
+            "description": "Porter quatre Oublis à la fois et survivre ainsi à une Résurgence.",
+            "difficulty": 3,
+            "scope": "run",
+            "conditions": [
+                {
+                    "stat": "oublis_through_crisis",
+                    "target": 4
+                }
+            ],
+            "unlocks": [
+                {
+                    "type": "weapon",
+                    "id": "last_broadcast"
+                }
+            ]
+        },
+        {
+            "id": "fever",
+            "name": "Fièvre",
+            "description": "Tuer 100 créatures en feu dans une run.",
+            "difficulty": 1,
+            "scope": "run",
+            "conditions": [
+                {
+                    "stat": "burning_kills",
+                    "target": 100
+                }
+            ],
+            "unlocks": [
+                {
+                    "type": "object",
+                    "id": "thermometre"
+                }
+            ]
+        },
+        {
+            "id": "hold_back",
+            "name": "Retenir",
+            "description": "Tuer 150 créatures ralenties dans une run.",
+            "difficulty": 1,
+            "scope": "run",
+            "conditions": [
+                {
+                    "stat": "slowed_kills",
+                    "target": 150
+                }
+            ],
+            "unlocks": [
+                {
+                    "type": "object",
+                    "id": "epingle_a_nourrice"
+                }
+            ]
+        },
+        {
+            "id": "read_closely",
+            "name": "Lire de près",
+            "description": "Tuer 150 créatures d'un coup critique dans une run.",
+            "difficulty": 1,
+            "scope": "run",
+            "conditions": [
+                {
+                    "stat": "crit_kills",
+                    "target": 150
+                }
+            ],
+            "unlocks": [
+                {
+                    "type": "object",
+                    "id": "oeil_critique"
+                }
+            ]
+        },
+        {
+            "id": "take_hits",
+            "name": "Encaisser",
+            "description": "Subir 1 000 dégâts dans une run.",
+            "difficulty": 1,
+            "scope": "run",
+            "conditions": [
+                {
+                    "stat": "damage_taken",
+                    "target": 1000
+                }
+            ],
+            "unlocks": [
+                {
+                    "type": "object",
+                    "id": "peau_dure"
+                }
+            ]
+        },
+        {
+            "id": "regain_strength",
+            "name": "Reprendre des forces",
+            "description": "Récupérer 1 000 PV par des soins dans une run.",
+            "difficulty": 1,
+            "scope": "run",
+            "conditions": [
+                {
+                    "stat": "hp_healed",
+                    "target": 1000
+                }
+            ],
+            "unlocks": [
+                {
+                    "type": "object",
+                    "id": "paille_tordue"
+                }
+            ]
+        },
+        {
+            "id": "in_the_crowd",
+            "name": "Dans la foule",
+            "description": "Tuer 200 créatures à moins de 120 px de toi dans une run.",
+            "difficulty": 1,
+            "scope": "run",
+            "conditions": [
+                {
+                    "stat": "close_kills",
+                    "target": 200,
+                    "param": 120
+                }
+            ],
+            "unlocks": [
+                {
+                    "type": "object",
+                    "id": "gilet_reflechissant"
+                }
+            ]
+        },
+        {
+            "id": "grow",
+            "name": "Grandir",
+            "description": "Atteindre le niveau 30.",
+            "difficulty": 1,
+            "scope": "run",
+            "conditions": [
+                {
+                    "stat": "level",
+                    "target": 30
+                }
+            ],
+            "unlocks": [
+                {
+                    "type": "object",
+                    "id": "boite_de_pansements"
+                }
+            ]
+        },
+        {
+            "id": "stand_still",
+            "name": "Pas bouger",
+            "description": "Tuer 300 créatures pendant que tu es immobile, dans une run.",
+            "difficulty": 2,
+            "scope": "run",
+            "conditions": [
+                {
+                    "stat": "still_kills",
+                    "target": 300
+                }
+            ],
+            "unlocks": [
+                {
+                    "type": "object",
+                    "id": "tabouret_de_camping"
+                }
+            ]
+        },
+        {
+            "id": "grand_finale",
+            "name": "Bouquet final",
+            "description": "Tuer 25 créatures en moins de 2 secondes.",
+            "difficulty": 2,
+            "scope": "run",
+            "conditions": [
+                {
+                    "stat": "kill_burst",
+                    "target": 25,
+                    "param": 2
+                }
+            ],
+            "unlocks": [
+                {
+                    "type": "object",
+                    "id": "petard_mouille"
+                }
+            ]
+        },
+        {
+            "id": "close_call",
+            "name": "De justesse",
+            "description": "Tuer 150 créatures en étant sous 35 % de tes PV, dans une run.",
+            "difficulty": 2,
+            "scope": "run",
+            "conditions": [
+                {
+                    "stat": "low_hp_kills",
+                    "target": 150,
+                    "param": 0.35
+                }
+            ],
+            "unlocks": [
+                {
+                    "type": "object",
+                    "id": "medaille_cabossee"
+                }
+            ]
+        },
+        {
+            "id": "keep_warm",
+            "name": "Bien au chaud",
+            "description": "Atteindre la 5ᵉ minute sans descendre sous 90 % de tes PV.",
+            "difficulty": 2,
+            "scope": "run",
+            "conditions": [
+                {
+                    "stat": "healthy_time",
+                    "target": 300,
+                    "param": 0.9
+                }
+            ],
+            "unlocks": [
+                {
+                    "type": "object",
+                    "id": "thermos"
+                }
+            ]
+        },
+        {
+            "id": "hold_the_fire",
+            "name": "Tenir le feu",
+            "description": "Traverser une Résurgence en perdant moins de 25 % de tes PV max.",
+            "difficulty": 2,
+            "scope": "run",
+            "conditions": [
+                {
+                    "stat": "clean_crises",
+                    "target": 1,
+                    "param": 0.25
+                }
+            ],
+            "unlocks": [
+                {
+                    "type": "object",
+                    "id": "carapace"
+                }
+            ]
+        },
+        {
+            "id": "save_up",
+            "name": "Économiser",
+            "description": "Garder 300 Essence en poche.",
+            "difficulty": 2,
+            "scope": "run",
+            "conditions": [
+                {
+                    "stat": "essence_held",
+                    "target": 300
+                }
+            ],
+            "unlocks": [
+                {
+                    "type": "object",
+                    "id": "porte_monnaie_use"
+                }
+            ]
+        },
+        {
+            "id": "call_the_pack",
+            "name": "Appeler la meute",
+            "description": "Atteindre Péril 5.",
+            "difficulty": 2,
+            "scope": "run",
+            "conditions": [
+                {
+                    "stat": "peril",
+                    "target": 5
+                }
+            ],
+            "unlocks": [
+                {
+                    "type": "object",
+                    "id": "sifflet_d_arbitre"
+                }
+            ]
+        },
+        {
+            "id": "the_detail",
+            "name": "Le détail",
+            "description": "Tuer 600 créatures d'un coup critique dans une run.",
+            "difficulty": 2,
+            "scope": "run",
+            "conditions": [
+                {
+                    "stat": "crit_kills",
+                    "target": 600
+                }
+            ],
+            "unlocks": [
+                {
+                    "type": "object",
+                    "id": "loupe_de_philateliste"
+                }
+            ]
+        },
+        {
+            "id": "annotate",
+            "name": "Annoter",
+            "description": "Tuer un Souverain d'un coup critique.",
+            "difficulty": 2,
+            "scope": "run",
+            "conditions": [
+                {
+                    "stat": "sovereign_crit_kills",
+                    "target": 1
+                }
+            ],
+            "unlocks": [
+                {
+                    "type": "object",
+                    "id": "stylo_quatre_couleurs"
+                }
+            ]
+        },
+        {
+            "id": "nail_down",
+            "name": "Clouer",
+            "description": "Tuer 400 créatures avec la Cloueuse dans une run.",
+            "difficulty": 1,
+            "scope": "run",
+            "conditions": [
+                {
+                    "stat": "weapon_kills",
+                    "target": 400,
+                    "weapon": "crossbow"
+                }
+            ],
+            "unlocks": [
+                {
+                    "type": "object",
+                    "id": "reflet_brise"
+                }
+            ]
+        },
+        {
+            "id": "copy_out",
+            "name": "Recopier",
+            "description": "Faire ascensionner deux armes dans la même run.",
+            "difficulty": 3,
+            "scope": "run",
+            "conditions": [
+                {
+                    "stat": "ascensions",
+                    "target": 2
+                }
+            ],
+            "unlocks": [
+                {
+                    "type": "object",
+                    "id": "souffle_du_neant"
+                }
+            ]
+        }
+    ]
+}

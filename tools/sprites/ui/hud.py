@@ -5,7 +5,6 @@ import math
 
 from PIL import Image, ImageDraw
 
-from .kit import strip
 
 GOLD = ("#8A5A1C", "#BD913C", "#F0C85C", "#FFF0B8")
 VOID = "#6B4FA0"
@@ -70,20 +69,6 @@ def burst(frame: int, size: int = 16) -> Image.Image:
     return image
 
 
-def seal(color: str, step: int) -> Image.Image:
-    image = Image.new("RGBA", (16, 16))
-    draw = ImageDraw.Draw(image)
-    draw.polygon([(3, 3), (8, 1), (12, 3), (14, 8), (12, 12), (8, 14), (3, 12), (1, 8)], fill="#2D1B3D")
-    draw.ellipse((3, 3, 12, 12), fill=color)
-    draw.line((5, 5, 9, 5), fill="#E8E0D4")
-    draw.line([(6, 7), (5, 9), (9, 10), (11, 7)], fill="#3A3535")
-    for index in range(8):
-        angle = -math.pi / 2 + index * math.tau / 8
-        x, y = round(7.5 + math.cos(angle) * 7), round(7.5 + math.sin(angle) * 7)
-        draw.rectangle((x, y, min(15, x + 1), min(15, y + 1)), fill=GOLD[2] if index < step else "#6B6161")
-    return image
-
-
 def assets() -> dict[str, Image.Image]:
     images = {"xp_frame": xp_frame()}
     for frame in range(4):
@@ -102,10 +87,4 @@ def assets() -> dict[str, Image.Image]:
                 "player": ("  l  ", " lll ", "lllll", "  l  ", "  l  ")}
     for name, rows in patterns.items():
         images[f"minimap_{name}"] = pattern(rows, {"s": "#6B6161", "l": "#F5F0EB", "o": "#C8C2B6"})
-    for name, color in (("red", "#C4432B"), ("green", "#4A8C3F"), ("blue", "#5A7A9A")):
-        images[f"quest_seal_{name}"] = strip([seal(color, step) for step in range(9)])
-    images["quest_seal_break"] = strip([burst(frame) for frame in range(5)])
-    complete = seal(GOLD[2], 8)
-    ImageDraw.Draw(complete).line([(5, 8), (7, 10), (11, 5)], fill=GOLD[0], width=1)
-    images["quest_seal_complete"] = complete
     return images

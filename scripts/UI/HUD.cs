@@ -418,9 +418,6 @@ public partial class HUD : CanvasLayer
         _essenceLabel.Size = new Vector2(ScorePlateWidth - 78, 15);
         _essenceLabel.HorizontalAlignment = HorizontalAlignment.Right;
         content.AddChild(_essenceLabel);
-
-        // Quêtes de run repliées en sceaux, sous la plaque (plan 24 A2).
-        anchor.AddChild(new RunQuestSeals { Name = "QuestSeals", Position = new Vector2(-PlateMargin, PlateMargin + 46f) });
     }
 
     private void BuildWeaponBar()
