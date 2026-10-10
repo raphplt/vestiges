@@ -730,6 +730,8 @@ Le script de post-processing doit inclure une vérification/correction de l'angl
 - [x] Implémenter CrisisManager (Résurgences toutes les 3-5 min, spawns en burst).
 - [x] Résurgences qui débordent le plafond de run (×1,4 pendant la crise, sans reflux) : la 2e crise passe de +2 % à +45–64 % de foule proche, mesuré sur 3 profils × 4 graines ([plan 30 T1](plans/30-temps-forts.md#t1-livré--9-octobre-2026)).
 - [x] Deux Souverains à heure fixe (2:30 et 7:00) entre les Résurgences, PV ×4, sans Tenace : combat de 5 à 58 s (médiane 24,5 s) avec le build de référence ([plan 30 T2](plans/30-temps-forts.md#t2-livré--9-octobre-2026)).
+- [x] Barre de boss en haut de l'écran (Souverains compris) et parties de boss vues par les 24 armes, mêlée comprise ; banc dense sans coût mesurable ([plan 07 B1](plans/07-bestiaire-et-rencontres.md#b1a-livré--10-octobre-2026), 10 octobre 2026).
+- [x] La Barrière, boss intermédiaire à 10 min : grille levée devant le joueur selon son cap, battants selon les Mémoriaux, ailes infranchissables, poings, chaîne et verrou annoncés, un coffre par battant ; mesurée en postures et en vraie run, réglage fin à faire en B4 ([plan 07 B2](plans/07-bestiaire-et-rencontres.md#b2-livré--10-octobre-2026-b2a-intégré-tel-que-proposé-b2b-b2c), 10 octobre 2026).
 - [x] Adapter SpawnManager (spawns liés à l'Effacement, plus proches, plus denses).
 - [x] Agrandir la map (doubler la taille pour tester, objectif final 4-5x).
 - [x] Revoir la génération : biomes contigus, pas concentriques.

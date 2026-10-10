@@ -1,0 +1,74 @@
+{
+  "_doc": "La Barrière, boss intermédiaire (plan 07 B2, DECISIONS §84–85), lue par Infrastructure/BarrierConfig et contrôlée au début de la run : fichier invalide, la Barrière n'apparaît pas (message au chargement). Sprites et pas de la grille : assets/bosses/barrier (tools/generate_props.py barrier).",
+  "name_key": "BOSS_BARRIER",
+  "appear_at_sec": 600,
+  "_doc_appear": "Une Résurgence, son annonce ou l’accalmie qui la suit repoussent l’apparition à leur fin, comme les rendez-vous des Souverains. Elle se lève à « distance_ahead » px devant le joueur, dans le champ : la vue fait 540 px de monde en hauteur et la barre de boss en couvre le haut.",
+  "heading_window_sec": 3,
+  "distance_ahead": 150,
+  "leaves": {
+    "_doc": "Battants cadenassés, les seules parties à frapper : un, plus un par Mémorial ravivé dans la run, au plus « max ». PV d'un battant : « hp_base » partagé entre les battants, plus « hp_per_leaf » ; la réserve grandit donc avec les Mémoriaux sans qu'un seul battant ne tombe en quelques secondes (mesure du 10 octobre, build de référence, 4 graines : un battant de 75 000 PV tombe en 64 et 109 s, tient plus de 98 et 170 s dans les deux autres ; réglage fin en B4). Rayon de touche borné par data/scaling/boss_parts.json et par le pas de la grille.",
+    "base": 1,
+    "per_memorial": 1,
+    "max": 5,
+    "hp_base": 30000,
+    "hp_per_leaf": 15000,
+    "body_radius": 48,
+    "damaged_below": 0.5
+  },
+  "layout": {
+    "_doc": "Travées fixes de part et d'autre des battants, puis ailes de chaînes intouchables (px à l'écran, de chaque côté). Décors masqués à moins de « clear_core » px du cœur de la grille et « clear_wings » px des ailes ; épaisseur du mur qui arrête le joueur.",
+    "fixed_spans_each_side": 2,
+    "wing_length": 3000,
+    "clear_core": 90,
+    "clear_wings": 36,
+    "wall_thickness": 16,
+    "rise_sec": 1.2
+  },
+  "fight": {
+    "_doc": "Densité de créatures visée pendant le combat (part de la normale). Le combat cesse quand le joueur, passé de l'autre côté, s'éloigne de la grille au-delà de « leave_distance » px ; du côté où il est arrivé, seulement au-delà de « lost_distance » (Faille, téléportation) : reculer ne l'évite pas.",
+    "crowd_density": 0.5,
+    "leave_distance": 900,
+    "lost_distance": 2500
+  },
+  "attacks": {
+    "_doc": "Chaque attaque est annoncée (DECISIONS §64 : une menace punit l'immobilité, l'autre le mouvement mécanique). Distances au sol en px (un écart vertical à l'écran compte double), durées en s, dégâts bruts au joueur.",
+    "first_delay_sec": 2.5,
+    "fx_family": "rust",
+    "fist": {
+      "_doc": "Poings : frappent la position du joueur à moins de « range » px de la grille, après « warning_sec ». Verrou : dès qu'un battant est tombé, un second poing suit « lock_delay_sec » plus tard sur la position anticipée à « lock_lead_sec ».",
+      "interval_sec": 2.2,
+      "warning_sec": 0.7,
+      "range": 260,
+      "radius": 40,
+      "hit_margin": 6,
+      "damage": 16,
+      "lock_delay_sec": 0.35,
+      "lock_lead_sec": 1.0
+    },
+    "chain": {
+      "_doc": "Chaîne : devant le battant le plus proche, un arc de « arc_deg » degrés et de « radius » px annoncé « warning_sec », balayé en « sweep_sec » d'un bord à l'autre ; touche à moins de « width_deg » / 2 de la chaîne. On sort de l'arc vers l'arrière, ou on franchit la chaîne au dash.",
+      "interval_sec": 6,
+      "warning_sec": 0.9,
+      "sweep_sec": 0.9,
+      "radius": 200,
+      "arc_deg": 150,
+      "width_deg": 18,
+      "damage": 14
+    }
+  },
+  "audio": {
+    "_doc": "Sons provisoires de la banque (plan 15 : à remplacer par des sons propres à la Barrière).",
+    "rise": "sfx_boss_enrage",
+    "leaf_broken": "sfx_shield_break",
+    "defeated": "sfx_boss_death",
+    "fist_warning": "sfx_omen_cast",
+    "fist_impact": "sfx_omen_impact",
+    "chain_warning": "sfx_pounce_windup",
+    "chain_sweep": "sfx_whip_snap"
+  },
+  "rewards": {
+    "_doc": "Un coffre par battant brisé, le dernier plus riche (DECISIONS §85).",
+    "chest": "chest_common",
+    "last_chest": "chest_rare"
+  }
+}

@@ -52,6 +52,8 @@ public static class EnemyGrammar
 	public const string FinalBossId = "indicible";
 	/// <summary>Fiche commune des parties de boss : le boss leur donne PV et rayon de touche.</summary>
 	public const string BossPartId = "boss_part";
+	/// <summary>Cause d'un coup porté par un boss fait de parties : préfixe suivi de la clé de traduction de son nom.</summary>
+	public const string BossCausePrefix = "boss:";
 
 	private static readonly (string Key, EnemyCombatType Value)[] CombatTypes =
 	{

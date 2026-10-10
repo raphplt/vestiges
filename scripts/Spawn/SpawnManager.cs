@@ -367,6 +367,9 @@ public partial class SpawnManager : Node2D
 
 	public float ElapsedSeconds => _elapsedTime;
 
+	/// <summary>Part de la foule locale visée pendant un combat de boss (la Barrière la réduit), 1 hors combat.</summary>
+	public float EncounterDensityMultiplier { get; set; } = 1f;
+
 	private void TrySpawnNaturalElite(float elapsedMinutes)
 	{
 		NaturalEliteConfig config = EnemyVariantDataLoader.NaturalElites;
@@ -409,7 +412,7 @@ public partial class SpawnManager : Node2D
 		float fullTarget = _dayLocalEnemyTargetBase + _dayLocalEnemyTargetGrowthPerMinute * elapsedMinutes;
 		float openingTarget = Mathf.Lerp(Mathf.Min(_openingLocalTargetStart, fullTarget), fullTarget, OpeningProgress);
 		int target = Mathf.RoundToInt(openingTarget * PerilDataLoader.EnemyCountMultiplier(PerilPoints(elapsedMinutes)) * zoneMemoryMult);
-		target = Mathf.RoundToInt(target * phaseMult);
+		target = Mathf.RoundToInt(target * phaseMult * EncounterDensityMultiplier);
 
 		int nearCount = CountActiveEnemiesNear(_player.GlobalPosition, _dayLocalEnemyRadius);
 		int missing = target - nearCount;

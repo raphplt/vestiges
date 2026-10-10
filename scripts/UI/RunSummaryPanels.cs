@@ -148,7 +148,9 @@ public static class RunSummaryPanels
         RunEventData runEvent = enemyId.StartsWith(Events.RunEvents.RunEventContext.DeathCausePrefix)
             ? RunEventOf(enemyId[Events.RunEvents.RunEventContext.DeathCausePrefix.Length..])
             : null;
-        EnemyData data = erasure || runEvent != null ? null : EnemyDataLoader.Get(enemyId);
+        // Un boss fait de parties (la Barrière) porte son nom traduit, sans portrait.
+        string bossKey = enemyId.StartsWith(EnemyGrammar.BossCausePrefix) ? enemyId[EnemyGrammar.BossCausePrefix.Length..] : null;
+        EnemyData data = erasure || runEvent != null || bossKey != null ? null : EnemyDataLoader.Get(enemyId);
 
         PanelContainer card = new() { MouseFilter = Control.MouseFilterEnum.Ignore };
         card.AddThemeStyleboxOverride("panel", new StyleBoxFlat
@@ -185,6 +187,7 @@ public static class RunSummaryPanels
         text.AddChild(Text(TranslationServer.Translate("UI_END_FELL_TO"), TextRole.Small, UITheme.TextDim));
         string name = erasure ? TranslationServer.Translate("UI_END_KILLER_ERASURE")
             : runEvent != null ? TranslationServer.Translate(runEvent.TitleKey)
+            : bossKey != null ? TranslationServer.Translate(bossKey)
             : data?.Name ?? enemyId;
         text.AddChild(Text(name, TextRole.Heading, UITheme.TextLight, weight: TextWeight.Strong));
         text.AddChild(Text(string.Format(TranslationServer.Translate("UI_END_AT_TIME"), FormatDuration(atSeconds)), TextRole.Small, UITheme.TextDim));

@@ -24,6 +24,7 @@ public partial class RunEventDirector : Node
     private EventBus _eventBus;
     private GameManager _gameManager;
     private CrisisManager _crisisManager;
+    private readonly HashSet<int> _bossEncounters = new();
     private RunEventContext _context;
     private RunEventSchedule _schedule;
     private RunEvent _active;
@@ -63,12 +64,16 @@ public partial class RunEventDirector : Node
         _nextEventAt = _context.Rng.RandfRange(_schedule.FirstEventMinSec, _schedule.FirstEventMaxSec);
         _eventBus.CrisisEnded += OnCrisisEnded;
         _eventBus.EventEnemyKilled += OnEventEnemyKilled;
+        _eventBus.BossEncounterStarted += OnBossEncounterStarted;
+        _eventBus.BossEncounterEnded += OnBossEncounterEnded;
     }
 
     public override void _ExitTree()
     {
         _eventBus.CrisisEnded -= OnCrisisEnded;
         _eventBus.EventEnemyKilled -= OnEventEnemyKilled;
+        _eventBus.BossEncounterStarted -= OnBossEncounterStarted;
+        _eventBus.BossEncounterEnded -= OnBossEncounterEnded;
         _active?.Cleanup();
         _active = null;
     }
@@ -125,6 +130,9 @@ public partial class RunEventDirector : Node
     /// <summary>La Résurgence reste le temps fort de sa fenêtre : pas d'événement pendant, pendant son annonce ni juste après.</summary>
     private bool IsBlockedByCrisis()
     {
+        // Un boss (la Barrière) est lui aussi le temps fort du moment : aucun événement ne s'y ajoute.
+        if (_bossEncounters.Count > 0)
+            return true;
         if (_elapsed < _calmUntil)
             return true;
         return _crisisManager != null && (_crisisManager.IsCrisisActive || _crisisManager.IsWarningActive);
@@ -268,6 +276,10 @@ public partial class RunEventDirector : Node
         _nextEventAt = _elapsed + _context.Rng.RandfRange(_schedule.GapMinSec, _schedule.GapMaxSec);
         _activeData = null;
     }
+
+    private void OnBossEncounterStarted(int encounterId, string bossName, float maxHp, int notches) => _bossEncounters.Add(encounterId);
+
+    private void OnBossEncounterEnded(int encounterId, bool defeated) => _bossEncounters.Remove(encounterId);
 
     private void OnCrisisEnded(int crisisNumber)
     {

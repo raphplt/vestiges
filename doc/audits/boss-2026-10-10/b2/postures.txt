@@ -1,0 +1,5 @@
+[BarrierMeasure] posture=immobile secondes=30 battants=3 pv=75000->71758 brises=0 fin_s=-1.0 poings=13 poings_portes=13 chaines=5 chaines_portees=4 distance_grille=120
+[BarrierMeasure] posture=va-et-vient secondes=30 battants=3 pv=75000->72713 brises=0 fin_s=-1.0 poings=13 poings_portes=1 chaines=2 chaines_portees=2 distance_grille=146
+[BarrierMeasure] posture=aller-retour secondes=30 battants=3 pv=75000->71732 brises=0 fin_s=-1.0 poings=7 poings_portes=2 chaines=0 chaines_portees=0 distance_grille=280
+[BarrierMeasure] posture=verrou secondes=30 battants=3 pv=50000->47672 brises=1 fin_s=-1.0 poings=26 poings_portes=9 chaines=2 chaines_portees=2 distance_grille=146
+[RunObservation] RESULT barrier-measure done dégâts_poing=16 dégâts_chaîne=14

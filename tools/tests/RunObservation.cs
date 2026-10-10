@@ -198,6 +198,10 @@ public partial class RunObservation : Node
                 await CheckOrbSleep();
             else if (Array.IndexOf(args, "--capture-weapon-pickup") >= 0)
                 await CaptureWeaponPickup();
+            else if (Array.IndexOf(args, "--measure-barrier") >= 0)
+                await MeasureBarrier(double.Parse(Argument(args, "--seconds", "30"), CultureInfo.InvariantCulture), int.Parse(Argument(args, "--memorials", "2"), CultureInfo.InvariantCulture));
+            else if (Array.IndexOf(args, "--capture-barrier") >= 0)
+                await CaptureBarrier(Argument(args, "--heading", "up"), int.Parse(Argument(args, "--memorials", "2"), CultureInfo.InvariantCulture));
             else if (Array.IndexOf(args, "--measure-boss-dummy") >= 0)
                 await MeasureBossDummy(Argument(args, "--weapons", null), double.Parse(Argument(args, "--seconds", "10"), CultureInfo.InvariantCulture),
                     float.Parse(Argument(args, "--distance", "120"), CultureInfo.InvariantCulture), float.Parse(Argument(args, "--radius", "50"), CultureInfo.InvariantCulture));
@@ -558,6 +562,7 @@ public partial class RunObservation : Node
         bool nomad = Array.IndexOf(OS.GetCmdlineUserArgs(), "--nomad") >= 0;
         float heading = rng.RandfRange(0f, Mathf.Tau);
         Vestiges.Events.RunEventDirector director = _world.GetNode<Vestiges.Events.RunEventDirector>("RunEventDirector");
+        Vestiges.Events.BarrierDirector barrierDirector = _world.GetNodeOrNull<Vestiges.Events.BarrierDirector>("BarrierDirector");
         PlayerProgressionAccessor progression = new(_player);
         ProcessMode = ProcessModeEnum.Always;
         Vector2 lastProgressPosition = _player.GlobalPosition;
@@ -631,6 +636,12 @@ public partial class RunObservation : Node
             // Comme un joueur, le bot suit la cible d'un micro-événement en cours (vestige, veille, Souverain).
             if (t >= eventDetourUntil && director.TryGetActiveTarget(out Vector2 eventTarget))
                 waypoint = eventTarget;
+            // Comme un joueur devant la Barrière : il va au battant debout le plus proche et le frappe de près.
+            if (barrierDirector?.Barrier is { IsEnded: false } barrier && barrier.NearestStandingLeaf(_player.GlobalPosition) is Vector2 leaf)
+            {
+                waypoint = leaf + barrier.NormalToward(_player.GlobalPosition) * 45f;
+                lastProgressTime = t;
+            }
             bool holding = _visitPlaces && !director.IsEventActive && places.Steer(t, _player, ref waypoint);
             // Tenir une interaction n'est pas un blocage : le cap et le point de passage restent ceux d'avant.
             if (holding)

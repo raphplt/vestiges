@@ -606,3 +606,49 @@ Raphaël : « avance en autonomie sur les deux boss (l'Indicible et celui à 10 
 - **Correction** : une partie de boss se frappe à son **bord** (`Enemy.StrikeMargin`, égal à son rayon, nul pour une créature : l'allonge des armes contre les créatures ne change pas). Appliquée à `FindEnemiesInArc` (mêlée, estoc, chaîne) et au cône continu, dont la recherche s'élargit de `Enemy.LargestPartRadius` (0 tant qu'aucune partie n'a été posée).
 - **Après, à 100 px** (bord à 50 px, à portée de toutes les armes ; [journal](../audits/boss-2026-10-10/b1c/mannequin-100px-apres.txt)) : **24 armes sur 24** entament le mannequin, à une partie comme en réserve commune (62 à 745 PV en 10 s). Le cône continu (`last_broadcast`) part où regarde le joueur, sans viser : la mesure tourne le joueur vers le mannequin.
 - **Coût** : banc dense avec et sans partie de 50 px (`--boss-part 50`, nouvelle option de `MovementDenseBenchmark`), quatre passes alternées : aucun écart au-delà de la dispersion (scripts physiques 0,28 contre 0,28 ms en 720p, 0,41 contre 0,40 ms en 1080p ; [tableau](../audits/boss-2026-10-10/b1c/banc-dense-partie-50px.md)). Machine chargée : les FPS ne valent qu'en ordre de grandeur.
+
+### Lot B3 — L'Indicible : découpage proposé (10 octobre 2026)
+
+Fiche du 4 octobre (§3 ci-dessus), validée au §70 ; déclenchement inchangé (5e Résurgence ou 22 min, `EndgameManager`). Il remplace `Combat/Indicible.cs` et `data/scaling/indicible.json`, sans les garder à côté. Construit sur B1 : les mains sont des parties de boss en **réserve commune** ; la barre de boss et la mort unique (`EnemyKilled` « indicible » pour le score, les succès et l'entrée en endgame) viennent de `BossHealth`.
+
+| Sous-lot | Contenu | Vérification |
+|---|---|---|
+| **B3a — Socle et tempête** | Nouveau `Indicible` : réserve commune, seuils de phase 2/3 et 1/3 ; réglages refaits et contrôlés au chargement (Q6b). **Tempête** : écran assombri (`CanvasModulate` de Main), vent qui fait dériver le joueur et change de sens, éclairs annoncés sur sa position (immobilité), **mains** qui sortent du sol à 80–150 px du joueur, vivent quelques secondes puis agrippent sa position (annonce). Sprite : la main grise de noyé de la planche B2a. | `IndicibleRegression` refait (réglages, réserve, phases, mort unique et récompense) ; mesure en postures (`--measure-indicible` refait) : PV perdus, coups reçus immobile et en mouvement ; captures |
+| **B3b — Marée** | L'eau monte d'un bord par bandes : eau profonde qui ralentit et blesse ; plus de mains, qui sortent de l'eau. | Mesure : temps passé dans l'eau, coups reçus selon la posture ; captures |
+| **B3c — Seconde vague et fenêtre** | Une vague traverse l'écran avec une ou deux brèches ; après chaque vague, l'Indicible **se découvre** quelques secondes au plus près du joueur : grande cible, dégâts accrus sur la réserve. | Mesure : vagues évitées par la brèche, part des PV pris dans la fenêtre ; captures de chaque phase ; coût au banc si l'eau et la vague coûtent |
+| **B4 — Réglage** | Durées et dégâts des deux boss sur leurs mesures (Barrière 60–90 s, Indicible 2–3 min avec le build de référence), puis partie de Raphaël. | Durées dans les fenêtres du §70 |
+
+### B2 livré — 10 octobre 2026 (B2a intégré tel que proposé, B2b, B2c)
+
+Raphaël n'avait pas validé la planche B2a ; il a demandé d'avancer en autonomie. Elle est intégrée telle que proposée, poing en **gantelet** ; tout reste révisable (DECISIONS §87).
+
+- **Sprites** : `tools/generate_props.py barrier` écrit `assets/bosses/barrier/` (18 sprites, manifeste) et `barrier_layout.json`, les pas écran entre piliers et entre bornes d'aile dans les deux orientations (113 px en horizontale ; 64 px en diagonale verticale, d'où deux fois plus de travées pour la même longueur au sol).
+- **Levée** (`Events/BarrierDirector`, créé par `GameBootstrap`) : à `appear_at_sec` 600, ou à la fin d'une Résurgence, de son annonce ou de son accalmie. Elle se lève **devant le joueur selon son cap des 3 dernières secondes**. Le cap ignore les sauts, Failles comprises. La grille est horizontale si le joueur va vers le haut ou le bas, diagonale sinon. Elle se pose à **150 px** : à 350, elle naissait hors de l'écran, la vue faisant 540 px de monde en hauteur. Si elle sortirait de la carte (marge de 400 px) ou tomberait dans l'eau, une autre direction est essayée. Battants : 1 + Mémoriaux ravivés, 5 au plus. Pendant le combat, la foule visée tombe à ×0,5 (`SpawnManager.EncounterDensityMultiplier`) et aucun micro-événement ne part.
+- **Grille** (`Combat/Barrier`) : travées fixes, piliers et ailes de chaînes de 3 000 px de chaque côté. Un mur (`StaticBody2D`, couche des décors) arrête le joueur, dash compris ; les créatures passent entre les barreaux. Chaque battant est une partie de boss à PV propres : il clignote quand il est frappé, passe « entamé » sous la moitié, puis s'ouvre en tombant. Son mur disparaît alors, et un coffre tombe du côté du joueur (le dernier rare). La grille entière compte une fois comme élimination de boss. Les décors sur la ligne sont retirés à la levée : invisibles, sans collision, hors du champ d'obstacles des créatures (`EnvironmentProp.Withdraw`, `ObstacleField.Remove`).
+- **Fin du combat** : tous les battants brisés, ou joueur parti à 900 px **de l'autre côté**. Du côté d'où il arrive, seulement au-delà de 2 500 px (Faille) : reculer n'évite pas la Barrière.
+- **Attaques** (`Combat/BarrierAttacks`), distances au sol :
+  - **poings** : sur la position du joueur à moins de 260 px de la grille, annonce de 0,7 s ;
+  - **chaîne** : arc de 150° et de 200 px devant le battant le plus proche, annonce de 0,9 s puis balayage de 0,9 s ; le dash la franchit sans dégâts ;
+  - **verrou** : dès qu'un battant est tombé, chaque poing est suivi, 0,35 s plus tard, d'un second sur la position anticipée à 1 s.
+
+  La mort par la Barrière s'affiche « La Barrière » au bilan (`boss:` + clé du nom).
+- **Réglages** `data/events/barrier.json` (`Infrastructure/BarrierConfig`), contrôlés au début de la run, sons et coffres compris. Sons provisoires de la banque.
+
+**Vérifié :**
+- `tools/test_boss_parts.sh` : réglages et 11 fichiers invalides refusés, battants selon les Mémoriaux, réserve, disposition des deux orientations.
+- Capture `--capture-barrier` dans les deux orientations ([haut](../audits/boss-2026-10-10/b2/barriere-up-1-devant.jpg), [battant entamé et brisé](../audits/boss-2026-10-10/b2/barriere-up-2-entame-brise.jpg), [verticale](../audits/boss-2026-10-10/b2/barriere-right-1-devant.jpg), [verticale brisée](../audits/boss-2026-10-10/b2/barriere-right-2-entame-brise.jpg)) : le joueur bute contre un battant fermé à pied (arrêté à 20 px de la grille) et au dash, puis passe par le battant brisé.
+- Mesure par postures `--measure-barrier`, 30 s chacune, trois battants ([journal](../audits/boss-2026-10-10/b2/postures.txt)) :
+
+| Posture | Poings portés / lancés | Chaînes portées / lancées |
+|---|---|---|
+| Immobile devant un battant | 13 / 13 | 4 / 5 |
+| Va-et-vient le long de la grille | 1 / 13 | 2 / 2 |
+| Aller-retour vers la grille | 2 / 7 | 0 / 0 |
+| Va-et-vient avec un battant brisé (verrou) | 9 / 26 | 2 / 2 |
+
+L'immobilité est punie par les poings, le va-et-vient régulier par la chaîne et le verrou ; qui varie ses déplacements passe.
+
+- **Vraie run** (build de référence du plan 30, `--timeline --nomad --visit --mortal --prefer …`, 4 graines jusqu'à 13 min ; [journal](../audits/boss-2026-10-10/b2/vraie-run-75000pv.txt)) : la Barrière se lève entre 610 et 682 s, toujours à un battant (le bot ne ravive pas de Mémorial). Le bot va au battant et le frappe de près, immobile. Avec 6 000 PV, le battant tombait en 3 à 7 s. Avec 75 000 PV, il tombe en 64 et 109 s dans deux graines (28 et 48 poings, 10 et 15 chaînes reçus) et tient plus de 98 et 170 s dans les deux autres. Les builds diffèrent beaucoup sur une cible unique : 350 à 3 400 dégâts par seconde au total, foule comprise. Réserve retenue : **30 000 + 15 000 par battant** (45 000 PV pour un battant, 75 000 pour trois, 105 000 pour cinq). Réglage fin en B4, avec des Mémoriaux ravivés.
+- Deux défauts trouvés par cette mesure et corrigés : la grille pouvait se lever **au bord de la carte**, battant hors d'atteinte (une autre direction est désormais essayée) ; un joueur qui **reculait** de 900 px mettait fin au combat (seul le passage de l'autre côté le fait).
+- Relecture `godot-reviewer` : un coup ignoré (invulnérabilité, palier d'objet) n'est plus compté ni ne consomme la chaîne ; retrait d'un obstacle indexé par décor (il parcourait les 10 000 obstacles à chaque décor masqué) ; décors masqués seulement une fois la grille posée.
+- Suites : smoke, boss_parts, enemy_abilities, weapons, objects, movement-integration, run_trace, run_phase, indicible, catalogs, launchers : 11/11.

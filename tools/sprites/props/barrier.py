@@ -16,7 +16,7 @@ import numpy as np
 from ..palette import make_emissive, make_material
 from ..render import Part
 from ..sdf import capsule, rounded_box, rotation_x, rotation_y, rotation_z, sphere
-from ._kit import M, PropModel, Weathering, box_footprint
+from ._kit import M, PropModel, Weathering, box_footprint, project_ground
 
 # Lacets des deux orientations. De profil exact, les barreaux se recouvrent en une seule masse : un léger
 # trois-quarts les sépare tout en gardant la grille presque verticale à l'écran.
@@ -289,3 +289,20 @@ def catalog() -> list[PropModel]:
         models.append(fist(f"barrier_fist_{variant}_e", variant, float(np.radians(90.0)), 705))
     models += [heavy_link("barrier_link_flat", False, 706), heavy_link("barrier_link_edge", True, 706)]
     return models
+
+
+def layout() -> dict:
+    """
+    Disposition lue par le jeu (Combat/Barrier) : pas écran d'un pilier au suivant, d'une borne d'aile à la suivante,
+    et du dernier pilier à la première borne, par orientation. Les sprites se posent à leur pivot le long de ces pas.
+    """
+    stride = SPAN_WIDTH + 2.0 * PILLAR_HALF
+    first_wing = PILLAR_HALF + 0.5 * M
+    result = {}
+    for suffix, yaw in (("h", YAW_HORIZONTAL), ("v", YAW_VERTICAL)):
+        result[suffix] = {
+            "pillar_stride": list(project_ground(stride, 0.0, yaw)),
+            "wing_stride": list(project_ground(WING_LENGTH, 0.0, yaw)),
+            "first_wing": list(project_ground(first_wing, 0.0, yaw)),
+        }
+    return result

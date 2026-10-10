@@ -13,7 +13,7 @@ namespace Vestiges.Tests;
 /// Plan 07 B1a : parties de boss. La fiche commune et ses réglages sont lus et contrôlés ; une partie à PV propres
 /// tombe seule et rend la main au boss une fois, sans élimination ; des parties en réserve commune partagent
 /// leurs PV, brûlure comprise ; les seuils de phase tombent une fois, dans l'ordre ; une partie ne bouge ni ne frappe.
-/// B1b : la barre de boss suit la réserve et ses rencontres successives.
+/// B1b : la barre de boss suit la réserve et ses rencontres successives. B2 : réglages et disposition de la Barrière.
 /// </summary>
 public partial class BossPartsRegression : Node2D
 {
@@ -47,6 +47,7 @@ public partial class BossPartsRegression : Node2D
             await CheckSharedReserve();
             await CheckPartStaysPut();
             await CheckBar();
+            CheckBarrierConfig();
         }
         catch (Exception ex)
         {
@@ -208,6 +209,40 @@ public partial class BossPartsRegression : Node2D
         foreach (Enemy gate in gates)
             gate.Vanish();
         bar.QueueFree();
+    }
+
+    /// <summary>B2 : réglages de la Barrière lus et contrôlés ; battants selon les Mémoriaux ; disposition des sprites.</summary>
+    private void CheckBarrierConfig()
+    {
+        Check(BarrierConfig.TryLoad(out BarrierConfig config, out string error), $"réglages de la Barrière chargés {error}");
+        Check(config.AppearAtSec == 600f && config.CrowdDensity == 0.5f, $"Barrière à {config.AppearAtSec} s, foule ×{config.CrowdDensity}");
+        Check(config.LeavesFor(0) == 1 && config.LeavesFor(2) == 3 && config.LeavesFor(9) == 5, "battants : 1, puis un par Mémorial, 5 au plus");
+        Check(config.LeafHpFor(1) == 45000f && config.LeafHpFor(3) * 3 == 75000f && config.LeafHpFor(5) * 5 == 105000f,
+            $"réserve : {config.LeafHpFor(1):F0}, {config.LeafHpFor(3) * 3:F0}, {config.LeafHpFor(5) * 5:F0} PV pour 1, 3 et 5 battants");
+        foreach (string suffix in new[] { "h", "v" })
+            Check(Barrier.TryReadLayout(suffix, out Vector2 stride, out Vector2 wing, out _) && stride.Length() > 30f && wing.Length() > 10f,
+                $"disposition {suffix} : pas de pilier {stride}, pas d'aile {wing}");
+        string valid = FileAccess.GetFileAsString("res://data/events/barrier.json");
+        (string Label, Action<JsonObject> Mutate, string Expected)[] cases =
+        {
+            ("section absente", root => root.Remove("attacks"), "section attacks absente"),
+            ("clé inconnue", root => root["leaves"]!["hp_max"] = 3, "inconnue"),
+            ("PV nuls", root => root["leaves"]!["hp_per_leaf"] = 0, "hp_per_leaf"),
+            ("rayon au-delà des parties", root => root["leaves"]!["body_radius"] = 80, "body_radius"),
+            ("max sous la base", root => root["leaves"]!["max"] = 0, "max"),
+            ("coffre inconnu", root => root["rewards"]!["last_chest"] = "chest_mythique", "chest_mythique"),
+            ("son absent", root => root["audio"]!["rise"] = "sfx_inexistant", "sfx_inexistant"),
+            ("famille inconnue", root => root["attacks"]!["fx_family"] = "plasma", "plasma"),
+            ("arc démesuré", root => root["attacks"]!["chain"]!["arc_deg"] = 270, "arc_deg"),
+            ("densité nulle", root => root["fight"]!["crowd_density"] = 0, "crowd_density"),
+        };
+        foreach ((string label, Action<JsonObject> mutate, string expected) in cases)
+        {
+            JsonObject root = JsonNode.Parse(valid)!.AsObject();
+            mutate(root);
+            bool rejected = !BarrierConfig.TryParse(root.ToJsonString(), 50f, out BarrierConfig parsed, out string reason);
+            Check(rejected && parsed == null && reason.Contains(expected), $"Barrière invalide refusée ({label}) : {reason}");
+        }
     }
 
     private Enemy SpawnPart(Vector2 position)

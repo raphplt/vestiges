@@ -22,6 +22,20 @@ public partial class EnvironmentProp : StaticBody2D
 	private static ShaderMaterial _forgetMaterial;
 	private static ShaderMaterial _trampleMaterial;
 
+	/// <summary>Plus grande distance du nœud à un point de son emprise au sol, en px écran.</summary>
+	public float GroundRadius { get; private set; }
+
+	/// <summary>
+	/// Retire le décor du monde sans le libérer (la Barrière se lève dessus) : il ne se voit plus et n'arrête plus
+	/// personne, joueur ni créatures.
+	/// </summary>
+	public void Withdraw()
+	{
+		Visible = false;
+		CollisionLayer = 0;
+		ObstacleField.Remove(this);
+	}
+
 	/// <summary>
 	/// Initialise le prop. La position courante est le centre de la cellule. Avec un manifeste, le pivot au sol
 	/// du sprite s'y pose ; sinon le nœud remonte au centre de l'emprise estimée et le sprite redescend d'autant.
@@ -65,6 +79,9 @@ public partial class EnvironmentProp : StaticBody2D
 			};
 		}
 		Position += new Vector2(0f, sortShift);
+		GroundRadius = 0f;
+		foreach (Vector2 point in ground)
+			GroundRadius = Mathf.Max(GroundRadius, point.Length());
 
 		if (_swayMaterial == null && ResourceLoader.Exists("res://assets/shaders/sway.gdshader"))
 		{

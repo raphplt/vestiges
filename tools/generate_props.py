@@ -1,6 +1,6 @@
 """
 Génère les décors d'un biome avec le pipeline procédural commun (plan 08, lots P0–P6).
-Biomes disponibles : urban, urban_buildings, forest, swamp, quarry, fields, fields_farm ; « chests » produit les coffres (plan 17, lot 0A), « landmarks » le Mémorial et la Faille (vague 3).
+Biomes disponibles : urban, urban_buildings, forest, swamp, quarry, fields, fields_farm ; « chests » produit les coffres (plan 17, lot 0A), « landmarks » le Mémorial et la Faille (vague 3), « barrier » la Barrière (plan 07 B2) et sa disposition (barrier_layout.json), « indicible » les mains de l'Indicible (B3).
 
 Usage :
     python3 tools/generate_props.py urban                        # écrit assets/props/urban_ruins/
@@ -40,6 +40,8 @@ QUARRY_TILES = ["assets/tiles/carriere/tile_carriere_sol_base.png", "assets/tile
                 "assets/tiles/carriere/tile_carriere_industriel_base.png"]
 BIOMES = {
     "chests": ("tools.sprites.props.chests", "assets/chests", FOREST_TILES),
+    "barrier": ("tools.sprites.props.barrier", "assets/bosses/barrier", URBAN_TILES),
+    "indicible": ("tools.sprites.props.indicible", "assets/bosses/indicible", FOREST_TILES),
     "landmarks": ("tools.sprites.props.landmarks", "assets/landmarks", FOREST_TILES),
     "fields": ("tools.sprites.props.fields", "assets/props/wild_fields", FIELDS_TILES),
     "fields_farm": ("tools.sprites.props.farm", "assets/props/wild_fields", FIELDS_TILES),
@@ -57,7 +59,14 @@ SCALE_REFERENCE = "assets/characters/vagabond/char_vagabond_SE_idle_01.png"
 
 def generate(biome: str, only: set[str], output: Path | None, sheet: Path | None, scale: int, editable: bool) -> None:
     module_name, folder, tiles = BIOMES[biome]
-    models = [m for m in importlib.import_module(module_name).catalog() if not only or m.stem in only]
+    module = importlib.import_module(module_name)
+    models = [m for m in module.catalog() if not only or m.stem in only]
+    # Un ensemble posé pièce à pièce (la Barrière) écrit aussi les pas qui alignent ses pièces.
+    if output is not None and hasattr(module, "layout"):
+        output.mkdir(parents=True, exist_ok=True)
+        layout_path = output / f"{biome}_layout.json"
+        layout_path.write_text(json.dumps(module.layout(), indent=2) + "\n")
+        print(f"[generate_props] disposition : {layout_path}")
     images: list[tuple[str, Image.Image]] = []
     manifest_entries: dict[str, dict] = {}
     for model in models:

@@ -215,6 +215,8 @@ public partial class GameBootstrap : Node
         EndgameManager endgameManager = new() { Name = "EndgameManager" };
         sceneRoot.AddChild(endgameManager);
 
+        sceneRoot.AddChild(new BarrierDirector { Name = "BarrierDirector" });
+
         ChoiceScreen choiceScreen = new() { Name = "ChoiceScreen" };
         sceneRoot.AddChild(choiceScreen);
 

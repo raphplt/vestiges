@@ -1,0 +1,18 @@
+seed 42 : [Barrier] 56 décor(s) masqué(s) sur la ligne
+seed 42 : [Barrier] Levée à (-8706.341, -1989.7488) (verticale), 1 battant(s) de 75000 PV
+seed 42 : [BarrierDirector] Barrière levée à 671 s, 0 Mémorial(aux) ravivé(s)
+seed 42 : [Barrier] Battant brisé (1/1)
+seed 42 : [Barrier] Fin du combat (brisée), 1/1 battant(s)
+seed 42 : [BarrierDirector] Combat fini à 780 s (brisée), 1/1 battant(s), coups reçus : 48 poing(s), 15 chaîne(s)
+seed 1002 : [Barrier] 55 décor(s) masqué(s) sur la ligne
+seed 1002 : [Barrier] Levée à (4620.349, 452.0319) (verticale), 1 battant(s) de 75000 PV
+seed 1002 : [BarrierDirector] Barrière levée à 610 s, 0 Mémorial(aux) ravivé(s)
+seed 7 : [Barrier] 56 décor(s) masqué(s) sur la ligne
+seed 7 : [Barrier] Levée à (-9923.036, -481.0941) (horizontale), 1 battant(s) de 75000 PV
+seed 7 : [BarrierDirector] Barrière levée à 682 s, 0 Mémorial(aux) ravivé(s)
+seed 123 : [Barrier] 64 décor(s) masqué(s) sur la ligne
+seed 123 : [Barrier] Levée à (-2531.0237, 3889.918) (verticale), 1 battant(s) de 75000 PV
+seed 123 : [BarrierDirector] Barrière levée à 655 s, 0 Mémorial(aux) ravivé(s)
+seed 123 : [Barrier] Battant brisé (1/1)
+seed 123 : [Barrier] Fin du combat (brisée), 1/1 battant(s)
+seed 123 : [BarrierDirector] Combat fini à 719 s (brisée), 1/1 battant(s), coups reçus : 28 poing(s), 10 chaîne(s)

@@ -33,6 +33,7 @@ public static class ObstacleField
 
 	private readonly struct Obstacle
 	{
+		/// <summary>Null une fois l'obstacle retiré : sa place dans la grille reste, sans effet.</summary>
 		public readonly Vector2[] Points;
 		public readonly Rect2 Bounds;
 
@@ -46,6 +47,8 @@ public static class ObstacleField
 	private static readonly List<Pending> PendingList = new();
 	private static readonly List<Obstacle> Obstacles = new();
 	private static readonly Dictionary<long, List<int>> Cells = new();
+	// Emprise de chaque décor (un décor en inscrit une seule), pour le retirer sans parcourir toute la carte.
+	private static readonly Dictionary<ulong, int> ByOwner = new();
 	private static ulong _flushedTick = ulong.MaxValue;
 
 	/// <summary>Oublie tous les décors : à appeler au début d'une run, avant que les siens ne s'inscrivent.</summary>
@@ -54,6 +57,7 @@ public static class ObstacleField
 		PendingList.Clear();
 		Obstacles.Clear();
 		Cells.Clear();
+		ByOwner.Clear();
 		_flushedTick = ulong.MaxValue;
 	}
 
@@ -72,6 +76,19 @@ public static class ObstacleField
 		if (hull.Length < 3 || Mathf.Abs(SignedArea(hull)) < 1f)
 			return;
 		PendingList.Add(new Pending(owner, hull, Engine.GetPhysicsFrames()));
+	}
+
+	/// <summary>Retire les emprises d'un décor (inscrites ou encore en attente) : il ne bloque plus les créatures.</summary>
+	public static void Remove(Node2D owner)
+	{
+		for (int i = PendingList.Count - 1; i >= 0; i--)
+		{
+			if (PendingList[i].Owner == owner)
+				PendingList.RemoveAt(i);
+		}
+		ulong id = owner.GetInstanceId();
+		if (ByOwner.Remove(id, out int index))
+			Obstacles[index] = new Obstacle(null, Obstacles[index].Bounds);
 	}
 
 	/// <summary>
@@ -99,7 +116,7 @@ public static class ObstacleField
 					foreach (int id in ids)
 					{
 						Obstacle obstacle = Obstacles[id];
-						if (!obstacle.Bounds.Grow(radius).HasPoint(position))
+						if (obstacle.Points == null || !obstacle.Bounds.Grow(radius).HasPoint(position))
 							continue;
 						if (PushOut(obstacle.Points, ref position, radius))
 							movedThisPass = true;
@@ -126,7 +143,7 @@ public static class ObstacleField
 			bool valid = GodotObject.IsInstanceValid(pending.Owner);
 			if (valid && pending.Owner.IsInsideTree())
 			{
-				Insert(pending.Owner.GlobalTransform, pending.LocalPoints);
+				Insert(pending.Owner.GlobalTransform, pending.LocalPoints, pending.Owner.GetInstanceId());
 				PendingList.RemoveAt(i);
 			}
 			else if (!valid || tick - pending.Since > PendingTicks)
@@ -136,7 +153,7 @@ public static class ObstacleField
 		}
 	}
 
-	private static void Insert(Transform2D transform, Vector2[] localPoints)
+	private static void Insert(Transform2D transform, Vector2[] localPoints, ulong ownerId)
 	{
 		Vector2[] points = new Vector2[localPoints.Length];
 		Rect2 bounds = new(transform * localPoints[0], Vector2.Zero);
@@ -147,6 +164,7 @@ public static class ObstacleField
 		}
 		int id = Obstacles.Count;
 		Obstacles.Add(new Obstacle(points, bounds));
+		ByOwner[ownerId] = id;
 		for (int cx = Cell(bounds.Position.X); cx <= Cell(bounds.End.X); cx++)
 		{
 			for (int cy = Cell(bounds.Position.Y); cy <= Cell(bounds.End.Y); cy++)

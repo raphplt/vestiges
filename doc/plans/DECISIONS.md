@@ -974,3 +974,14 @@ Raphaël : « je voudrais continuer le chantier audio ; go ». L'audio passe don
 - **Résurgence : V2 et accent d'entrée.** Annonce prise à 52 s de `mus_crepuscule`, crise à 34 s de `mus_nuit_vagues` ; un son d'accent court au début réel de la crise, à choisir sur planche.
 - **Ordre : mix → sons manquants → musique.** Le mix et les réglages de musique d'abord, puis les sons manquants et les impacts par matière (plan 27 V5) sur planches, enfin la recherche de nouvelles musiques.
 - **Tableau de bord §2 :** inchangé depuis le §85, pas reposé.
+
+## 87. Les deux boss en autonomie — 10 octobre 2026
+
+Raphaël, après la livraison des lots audio M1–M3 : « est-ce que tu peux avancer en autonomie sur un autre sujet stp comme les deux boss (l'Indicible et celui à 10 min) ». Les questions de design étaient toutes tranchées (§70, §84, §85) ; aucune question posée. Lots enchaînés : B1a, B1b, B1c, puis B2 (plan 07).
+
+Choix faits par Claude faute de validation de la planche B2a, **tous révisables** (sprites régénérables par `tools/generate_props.py barrier`, valeurs en données) :
+- **Planche B2a intégrée telle que proposée** : grille de fer forgé, piliers de pierre, ailes de bornes et de chaînes, diagonale en vertical (lacet 72°) ; **poing en gantelet de fer** (cohérent avec la chaîne de la Forgeuse ; la main de noyé reste générée, non utilisée).
+- **Distance de levée : 150 px** devant le joueur (et non ~350) : à 350, la grille naissait hors de l'écran (la vue fait 540 px de monde en hauteur).
+- **Ennemis qui traversent la grille** : la grille n'arrête que le joueur (les créatures, sans corps, passent entre les barreaux).
+- **Mêlée contre un boss** : une partie de boss se frappe à son bord (B1c) ; l'allonge contre les créatures ne change pas.
+- **Sons provisoires** pris dans la banque (levée, battant brisé, chute, poings, chaîne), en données, à remplacer au chantier audio.
