@@ -1150,3 +1150,9 @@ Raphaël : « ça me va que tu fasses les modifications dont on a parlé. Que ce
 Raphaël : « il y a un bug chiant quand la partie est fini (mort) les sons ne s'arretent pas il faudrait les stopper tous (surtout ceux des ennemis/armes) ».
 
 **Appliqué et vérifié :** arrêt immédiat des sons de la run et blocage de leur relance pendant la mort et le bilan, puis réactivation à la prochaine run ; lot M7 du [plan 15](15-audio.md). L'audio dédié à la séquence de mort et à l'interface de bilan reste disponible. Régression avant/après, smoke/audio/musique et mort réelle après combat verts.
+
+## 107. Passe de mix : tout appliquer d'un coup — 10 octobre 2026, soir
+
+Raphaël demande d'abord de baisser les armes du joueur (« sur-mixé »), puis une grande revue du mix. La revue mesure la banque entière et une run enregistrée par familles ([plan 15](15-audio.md#revue-de-mix--10-octobre-soir)). Résultat : le « trop fort » venait surtout du coup de l'Ombre (presque tout le volume des effets), du critique et du coffre, pas des attaques d'armes, devenues inaudibles. Réponse de Raphaël : « tu as déjà bien identifié la plupart des problèmes que j'ai moi-même remarqués. Je valide 100 % de tes propositions et remarques. Fais les corrections directement […], juste éventuellement une passe finale. »
+
+**Acquis :** lots X1–X5 appliqués sans écoute intermédiaire. Limiteur Master ; bus World étouffé et compressé, hors interface ; ducking des grands moments déclaré dans la banque ; boucles en fondu ; atténuation à distance des sons d'ennemis. Gains recalés par famille sur la sonie mesurée : Ombre −10 dB, armes égalisées et remontées, critique +5 dB au-dessus de l'impact, pas homogènes, musiques à −16 LUFS (Résurgence et nuit à −15). Fichiers corrigés : silences de tête, phases, pas d'herbe ; sons morts retirés. Mesure : 140 → 0 échantillons saturés. **À juger en jouant :** mix plus calme de 4 dB, musique légèrement au-dessus des effets.
