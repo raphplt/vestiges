@@ -374,3 +374,30 @@ Mesure, même outil des deux côtés (`tools/measure_run.sh`, `--nomad --visit -
 | Changements de musique sur la run | 6 | 9 à 12 |
 
 Les seuils sont fixés sur ce bot, qui ne joue pas comme un humain. **À écouter en jeu** : un combat qui part trop rarement ou trop souvent se règle dans `music.json`. `test_music` passe 27 contrôles (foule moyenne avec une élite : exploration ; Souverain : combat ; hystérésis après son départ ; points d'entrée). `validate.sh smoke audio music` vert, build sans avertissement.
+
+### M2 livré — page d'isolement du frottement
+
+- **Pistes séparées d'une même run.** `RunObservation --audio-stems` (`AudioStemRecorder`) pose un effet d'enregistrement en fin des bus Music, Ambiance et SFX ; les pas (`sfx_pas_*`) passent le temps de la mesure par un bus à eux, au volume des effets, sans changer le mixage. Les quatre WAV sont synchrones du mixage du Movie Maker ; `stems.json` donne leur début sur l'horloge sonore et le volume de chaque bus (l'effet passe avant le fader). Une seule run suffit : la rejouer avec des bus coupés divergerait.
+- **`tools/audio_stems.py <dossier>`** remet chaque piste à sa place et à son volume, l'encode, mesure niveau par seconde, plancher (10e centile), planéité spectrale et spectrogramme, puis écrit `index.html` : vidéo muette, mixage ou pistes à couper ou écouter seules, repères cliquables (annonce, crise, niveaux, coffres, changements de musique). `record_run_audio.sh` accepte `PYTHON` pour le rapport (NumPy et Pillow absents du Python du Mac : environnement isolé).
+- **Référence** : `~/.local/share/vestiges-audio/2026-10-10/frottement/`, seed 221092026, Traqueur, 240 s de jeu, `--crisis-at 70`, après M1.
+
+| Piste (au volume du bus) | Plancher | Médiane | Planéité | Audible |
+|---|---:|---:|---:|---:|
+| Mixage complet | −24,5 | −17,8 | 0,46 | 100 % |
+| Effets sans les pas | −38,6 | −19,0 | 0,46 | 91 % |
+| Pas | — | −35,9 | 0,23 | 79 % |
+| Musique | −70,4 | −31,1 | 0,11 | 89 % |
+| Ambiance (boucle de forêt) | −55,8 | −47,9 | 0,77 | 91 % |
+
+Suspects, **sans conclusion avant l'écoute de Raphaël** : (1) la nappe des effets de combat, bruitée et quasi continue dès la première minute (`sfx_hit_ennemi` 490 fois en 4 min 46, arc 340, tirs ennemis 299) ; (2) les pas, à 0 dB dans la banque, plus forts que la médiane de la musique et seuls à remplir les moments calmes (sur un essai de 25 s sans combat, ils forment le plancher du mixage, audibles 92 % du temps) ; (3) la boucle de forêt, bruit pur de 8 s, constante mais 30 dB sous le mixage. Rien n'est atténué tant qu'il n'a pas désigné la piste.
+
+### M3 livré — planche des sons manquants
+
+`~/.local/share/vestiges-audio/2026-10-10/sons-manquants/index.html` : 19 besoins, 57 candidats, choix gardés dans le navigateur et export `choix-sons-2026-10-10.json`. Page d'accueil des deux écoutes : `~/.local/share/vestiges-audio/2026-10-10/index.html`.
+
+- **Résurgence** : accent d'entrée. **Joueur** : soin, bouclier rechargé, coup paré ou ignoré, brûlure du Néant. **Créatures** : explosion de l'Instable, annonce du tir visé, surgissement du Rampant, tentacule de l'Indicible. **Monde** : réveil du Mémorial, réveil de la Faille (son actuel en référence), fragment rare. **Impacts par matière (plan 27 V5)** : lame, choc, verre, feu, papier, électrique, avec une répartition proposée des 24 armes et le son actuel en référence. **Mix** : pas dans l'herbe à −6 dB, à −10 dB, ou aigus coupés, au cas où le frottement viendrait d'eux.
+- Candidats au même niveau d'écoute (RMS maximal −20 dBFS, crête ≤ −8 dBFS), sauf les pas à leur niveau réel ; bouton « en rafale » à la cadence de jeu pour les impacts, la brûlure et les pas.
+- Sources : paquets Kenney CC0 (Impact, Sci-fi, RPG, Interface, Digital Audio) et BigSoundBank de Joseph SARDIN, CC0 (allumettes, essence, briquet, papier, soudure, terre), archivés avec leurs pages et empreintes dans `sources/` ; 17 synthèses originales (NumPy, graine fixe). `prepare.py` régénère les 57 fichiers à l'identique (vérifié : empreintes égales sur deux passes), `manifest.json` garde sources, licences et empreintes par candidat.
+- Contrôles par la mesure, pas par l'oreille : 57 empreintes distinctes, aucun écrêtage, attaque dans les 15 premières millisecondes sauf l'accent A, qui monte volontairement pendant 1 s ; les prises longues (allumettes, essence) sont coupées sur l'attaque voulue, situées par l'enveloppe. **Aucun son n'a été écouté par l'agent.**
+
+**Suite :** Raphaël désigne le frottement et exporte ses choix ; M4 intègre ensuite les sons retenus (clés, gains en contexte, déclencheurs : soin, recharge du bouclier, armure, tranche du Néant, Instable, visée, Rampant, tentacule, Mémorial, Faille, fragment rare, accent de crise, son d'impact par famille d'arme en données).

@@ -4,7 +4,8 @@
 # Bot nomade et invincible, profil neuf ; il visite les lieux et lit chaque écran de choix deux secondes.
 # Produit run.mp4 (images + son), audio.flac, la trace d'écoute (audio-*.csv) et rapport.md (tools/audio_report.py).
 # Usage : tools/record_run_audio.sh <répertoire> [secondes=360] [seed=221092026] [personnage=traqueur]
-# RECORD_EXTRA_ARGS : arguments ajoutés au banc ; RECORD_KEEP_AVI=1 garde la capture brute (≈ 8 Mo/s).
+# RECORD_EXTRA_ARGS : arguments ajoutés au banc (--audio-stems : pistes séparées, tools/audio_stems.py) ;
+# RECORD_KEEP_AVI=1 garde la capture brute (≈ 8 Mo/s) ; PYTHON : interpréteur du rapport (NumPy et Pillow requis).
 set -euo pipefail
 cd "$(dirname "$0")/.."
 source tools/lib/portable.sh
@@ -30,4 +31,4 @@ ffmpeg -hide_banner -loglevel error -y -i "$OUTPUT/raw.avi" -vf scale=1280:-2 -c
     -c:a aac -b:a 192k "$OUTPUT/run.mp4"
 ffmpeg -hide_banner -loglevel error -y -i "$OUTPUT/raw.avi" -vn -c:a flac "$OUTPUT/audio.flac"
 [[ "${RECORD_KEEP_AVI:-0}" == 1 ]] || rm -f "$OUTPUT/raw.avi"
-python3 tools/audio_report.py "$OUTPUT"
+"${PYTHON:-python3}" tools/audio_report.py "$OUTPUT"

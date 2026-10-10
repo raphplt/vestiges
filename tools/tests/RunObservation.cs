@@ -77,6 +77,7 @@ namespace Vestiges.Tests;
 /// --crisis-at S : pendant la mesure, première Résurgence à S secondes de jeu.
 /// --mute-buses A,B : pendant la mesure, bus audio coupés (Music, SFX, Ambiance), pour écouter le reste seul.
 /// --audio-trace : pendant la mesure, trace d'écoute (signaux, musique, sons) pour tools/record_run_audio.sh (AudioTraceProbe).
+/// --audio-stems : pendant la mesure, pistes musique, ambiance et effets synchrones du mixage (AudioStemRecorder).
 /// --nomad : pendant la mesure, le bot garde un cap (tiré de la seed) au lieu d'errer autour du départ,
 /// et en change quand il bute sur le bord du monde.
 /// --visit : pendant la mesure, le bot ratisse : il se détourne vers les lieux vus, ouvre, ravive et dépense
@@ -436,6 +437,7 @@ public partial class RunObservation : Node
         // --mute-buses Music,SFX,Ambiance : passe d'écoute d'une seule famille de sons (plan 15 A0).
         foreach (string bus in Argument(args, "--mute-buses", "").Split(',', StringSplitOptions.RemoveEmptyEntries))
             AudioServer.SetBusMute(AudioServer.GetBusIndex(bus), true);
+        using AudioStemRecorder stems = Array.IndexOf(args, "--audio-stems") >= 0 ? new AudioStemRecorder(_output) : null;
         RunTracker tracker = _world.GetNode<RunTracker>("RunTracker");
         int peril = int.Parse(Argument(OS.GetCmdlineUserArgs(), "--peril", "0"), CultureInfo.InvariantCulture);
         if (peril > 0)
