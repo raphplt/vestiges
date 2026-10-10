@@ -11,6 +11,8 @@ public partial class EventBus : Node
     // --- Game State ---
     [Signal] public delegate void GameStateChangedEventHandler(string oldState, string newState);
     [Signal] public delegate void RunPhaseChangedEventHandler(string oldPhase, string newPhase);
+    /// <summary>Biome où se tient le joueur ; vide lorsque sa position n'a pas encore de biome connu.</summary>
+    [Signal] public delegate void PlayerBiomeChangedEventHandler(string biomeId);
 
     // Contrats C# typés : aucune conversion Variant ni allocation par impact.
     public event System.Action<Combat.DamageResult> EnemyDamageResolved;

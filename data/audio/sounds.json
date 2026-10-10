@@ -35,11 +35,11 @@
     "min_interval_ms": 0
   },
   "sfx_pas_herbe": {
-    "path": "res://assets/audio/sfx/selected/step_grass.wav",
+    "path": "res://assets/audio/sfx/selected/steps_grass.wav",
     "volume_db": 0,
     "min_interval_ms": 120,
-    "effect_id": "step_grass",
-    "priority": 10,
+    "effect_id": "steps_grass",
+    "priority": 5,
     "max_voices": 1
   },
   "sfx_pas_eau": {
@@ -251,11 +251,12 @@
     "max_voices": 2
   },
   "sfx_rampant_surgissement": {
-    "path": "res://assets/audio/sfx/creatures/sfx_rampant_surgissement.wav",
-    "volume_db": 0,
-    "min_interval_ms": 90,
-    "priority": 30,
-    "max_voices": 2
+    "path": "res://assets/audio/sfx/selected/crawler_emerge.wav",
+    "volume_db": -10,
+    "min_interval_ms": 250,
+    "priority": 60,
+    "max_voices": 1,
+    "effect_id": "crawler_emerge"
   },
   "sfx_menu_clic": {
     "path": "res://assets/audio/sfx/selected/ui_click.wav",
@@ -299,7 +300,8 @@
   },
   "sfx_ambiance_foret": {
     "path": "res://assets/audio/sfx/ambiance/sfx_ambiance_foret.wav",
-    "volume_db": 0,
+    "volume_db": -2,
+    "biome": "forest_reclaimed",
     "min_interval_ms": 0,
     "priority": 30,
     "max_voices": 2
@@ -595,12 +597,12 @@
     "max_voices": 2
   },
   "sfx_boss_tentacle": {
-    "path": "res://assets/audio/sfx/selected/boss_tentacle.wav",
-    "volume_db": 0,
+    "path": "res://assets/audio/sfx/selected/indicible_tentacle.wav",
+    "volume_db": -10,
     "min_interval_ms": 250,
-    "effect_id": "boss_tentacle",
-    "priority": 30,
-    "max_voices": 2
+    "effect_id": "indicible_tentacle",
+    "priority": 65,
+    "max_voices": 1
   },
   "sfx_boss_enrage": {
     "path": "res://assets/audio/sfx/selected/boss_enrage.wav",
@@ -886,6 +888,102 @@
     "min_interval_ms": 250,
     "effect_id": "barrier_chain_sweep",
     "priority": 70,
+    "max_voices": 1
+  },
+  "sfx_resurgence_accent": {
+    "path": "res://assets/audio/sfx/selected/resurgence_accent.wav",
+    "volume_db": -6,
+    "min_interval_ms": 1000,
+    "effect_id": "resurgence_accent",
+    "priority": 90,
+    "max_voices": 1
+  },
+  "sfx_armor_parry": {
+    "path": "res://assets/audio/sfx/selected/armor_parry.wav",
+    "volume_db": -10,
+    "min_interval_ms": 180,
+    "effect_id": "armor_parry",
+    "priority": 70,
+    "max_voices": 1
+  },
+  "sfx_void_burn": {
+    "path": "res://assets/audio/sfx/selected/void_burn.wav",
+    "volume_db": -12,
+    "min_interval_ms": 500,
+    "effect_id": "void_burn",
+    "priority": 80,
+    "max_voices": 1
+  },
+  "sfx_unstable_explosion": {
+    "path": "res://assets/audio/sfx/selected/unstable_explosion.wav",
+    "volume_db": -8,
+    "min_interval_ms": 180,
+    "effect_id": "unstable_explosion",
+    "priority": 70,
+    "max_voices": 1
+  },
+  "sfx_memorial_wake": {
+    "path": "res://assets/audio/sfx/selected/memorial_wake.wav",
+    "volume_db": -8,
+    "min_interval_ms": 500,
+    "effect_id": "memorial_wake",
+    "priority": 70,
+    "max_voices": 1
+  },
+  "sfx_rare_fragment": {
+    "path": "res://assets/audio/sfx/selected/rare_fragment.wav",
+    "volume_db": -10,
+    "min_interval_ms": 300,
+    "effect_id": "rare_fragment",
+    "priority": 65,
+    "max_voices": 1
+  },
+  "sfx_impact_blade": {
+    "path": "res://assets/audio/sfx/selected/impact_blade.wav",
+    "volume_db": -10,
+    "min_interval_ms": 120,
+    "effect_id": "impact_blade",
+    "priority": 30,
+    "max_voices": 1
+  },
+  "sfx_impact_blunt": {
+    "path": "res://assets/audio/sfx/selected/impact_blunt.wav",
+    "volume_db": -10,
+    "min_interval_ms": 120,
+    "effect_id": "impact_blunt",
+    "priority": 30,
+    "max_voices": 1
+  },
+  "sfx_impact_glass": {
+    "path": "res://assets/audio/sfx/selected/impact_glass.wav",
+    "volume_db": -12,
+    "min_interval_ms": 120,
+    "effect_id": "impact_glass",
+    "priority": 30,
+    "max_voices": 1
+  },
+  "sfx_impact_fire": {
+    "path": "res://assets/audio/sfx/selected/impact_fire.wav",
+    "volume_db": -12,
+    "min_interval_ms": 120,
+    "effect_id": "impact_fire",
+    "priority": 30,
+    "max_voices": 1
+  },
+  "sfx_impact_paper": {
+    "path": "res://assets/audio/sfx/selected/impact_paper.wav",
+    "volume_db": -12,
+    "min_interval_ms": 120,
+    "effect_id": "impact_paper",
+    "priority": 30,
+    "max_voices": 1
+  },
+  "sfx_impact_electric": {
+    "path": "res://assets/audio/sfx/selected/impact_electric.wav",
+    "volume_db": -12,
+    "min_interval_ms": 120,
+    "effect_id": "impact_electric",
+    "priority": 30,
     "max_voices": 1
   },
   "sfx_indicible_rise": {

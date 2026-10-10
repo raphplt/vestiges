@@ -1,6 +1,6 @@
 # 15 — Audio
 
-Mis à jour le 7 octobre 2026. **Reprise autonome : mixage, identité des 24 armes, ambiances, menus et musique**, détaillée en fin de plan.
+Mis à jour le 10 octobre 2026. **24 armes sonorisées ; quinze choix de sons manquants intégrés (M4a/M4b), quatre besoins refusés à reprendre.** Fond de forêt conservé à la demande de Raphaël : boucle entière de 8 s (M5a), gain −2 dB et lecture seulement en Forêt Reconquise (M6). Huit sons de Barrière validés pour l'instant. La recette artistique du mix reste ouverte ; suite détaillée en fin de plan.
 
 ## État
 
@@ -401,3 +401,67 @@ Suspects, **sans conclusion avant l'écoute de Raphaël** : (1) la nappe des eff
 - Contrôles par la mesure, pas par l'oreille : 57 empreintes distinctes, aucun écrêtage, attaque dans les 15 premières millisecondes sauf l'accent A, qui monte volontairement pendant 1 s ; les prises longues (allumettes, essence) sont coupées sur l'attaque voulue, situées par l'enveloppe. **Aucun son n'a été écouté par l'agent.**
 
 **Suite :** Raphaël désigne le frottement et exporte ses choix ; M4 intègre ensuite les sons retenus (clés, gains en contexte, déclencheurs : soin, recharge du bouclier, armure, tranche du Néant, Instable, visée, Rampant, tentacule, Mémorial, Faille, fragment rare, accent de crise, son d'impact par famille d'arme en données).
+
+### M4 — retour et découpage du 10 octobre
+
+Export reçu : `~/Downloads/choix-sons-2026-10-10.json`, série `sons-manquants-2026-10-10`, quinze choix et quatre refus. Archiver l'original à l'identique dans le dossier d'écoute, sans prendre les textes des médias pour de nouvelles instructions.
+
+- **M4a — événements et pas.** Intégrer à l'identique accent de Résurgence A, parade A, brûlure du Néant A, explosion de l'Instable A, surgissement du Rampant A, tentacule de l'Indicible A, réveil du Mémorial B, fragment rare A et pas d'herbe A (−6 dB). Conserver les choix et crédits existants ; ne pas remplacer les sons des quatre besoins refusés (soin, bouclier plein, annonce du tir visé, réveil de la Faille). Le Néant ne joue que sur une perte de PV effectivement résolue, les retours de défense restent indépendants du réglage des particules. Régressions des déclencheurs, banque et musique, build/smoke puis enregistrement audible.
+- **M4b — impacts par matière (plan 27 V5).** Intégrer lame A, choc A, verre C, feu B, papier B et électrique A. Clé d'impact dans les données des 24 armes, résolue depuis la provenance du coup ; garder le critique distinct, le retour générique pour les dommages sans arme et la cadence des impacts continus. Vérifier les six familles, le silence des dégâts sans retour d'impact et les chemins d'armes existants ; galerie moteur et mêmes contrôles.
+- **Diagnostic d'ambiance, à côté de M4a.** Raphaël : « je crois que ca vient de l'ambiance ». Hypothèse de boucle de forêt, sans certitude acquise. Préparer une comparaison de la même prise avec et sans cette piste, puis traiter la boucle selon son retour. Les pas A sont un choix explicite indépendant de cette hypothèse. Ne pas annoncer le frottement résolu sur la seule base de mesures.
+
+M4a est livré et vérifié avant M4b. Les autres travaux locaux sur les boss sont préservés ; leurs sons dédiés en cours ne constituent pas des choix de cette planche.
+
+### M4a/M4b livrés — 10 octobre
+
+Les quinze WAV retenus sont copiés à l'identique dans `assets/audio/sfx/selected/` : empreintes conformes au manifeste d'audition, export original archivé sans modification sous `retours/`, sources et crédits conservés. Pour les pas A, la baisse de 6 dB est déjà dans le WAV ; la banque n'ajoute pas une seconde atténuation. Les soins, le bouclier plein et la visée restent sans nouveau son ; la Faille conserve son son actuel, aucun des candidats refusés n'est intégré.
+
+- **M4a :** l'accent joue au début réel de la Résurgence, la parade sur l'armure qui absorbe une part notable et sur un coup ignoré, l'Instable à son explosion proche ; nouveaux timbres au surgissement du Rampant et à la levée des mains de l'Indicible. Le Mémorial joue son réveil une fois, y compris si sa révélation est passée ; la Faille garde sa référence. La clé de fragment rare, déjà appelée par les choix, a désormais son fichier. La brûlure suit `PlayerDamageResolved` : seulement les PV réellement perdus au Néant, intervalle de 500 ms, aucun bruit de blessure ou accent critique associé. Les blessures de combat suivent aussi ce contrat, y compris le premier coup de la run ; un soin ou un bouclier ne déclenche pas une blessure.
+- **M4b / plan 27 V5 :** `impact_audio` dans les données de chacune des 24 armes, référence contrôlée au chargement, champ conservé par l'arme d'origine dans `AttackContext`. Six familles (lame, choc, verre, feu, papier, électrique) ; la Cloche et les Gants vont dans choc, la Lampe dans feu. Les critiques gardent leur son seul, les objets et dégâts sans arme leur impact générique ; la cadence visuelle des impacts continus borne toujours leur retour sonore. Les priorités et plafonds restent dans la banque JSON, sans chargement ni allocation ajoutés par impact.
+
+**Vérification technique :** `tools/validate.sh /tmp/vestiges-audio-m4a-20261010-02 smoke audio music enemy_abilities indicible` : 5/5 ; puis `tools/validate.sh /tmp/vestiges-audio-m4b-20261010-01 smoke audio music weapons enemy_abilities indicible` : 6/6, sources stables, build zéro avertissement/erreur. Banque : 121 effets chargeables (inclut les sons de Barrière des travaux locaux). Contrôles ajoutés : premier coup, bouclier/non-application, brûlure distincte et cadence réelle, accent absent de l'annonce puis présent au début, parade indépendante des particules ; 24 provenances dans six familles, critique, coup secondaire, objet passif, dommage sans arme, absence de son entre deux retours continus, référence d'impact invalide refusée.
+
+**Écoutes :** `~/.local/share/vestiges-audio/2026-10-10/integration-m4/index.html`. Run moteur de 85 s, seed 221092026, Traqueur, `--crisis-at 20 --audio-stems` ; les pauses font partie de l'enregistrement. La trace confirme un accent de crise, deux surgissements et 132 impacts de choc effectivement joués. Galerie distincte des six matières, musique et ambiance coupées, sons d'attaque conservés. Les sons non rencontrés dans cette courte run restent à écouter sur leur audition et dans leur situation de jeu ; ce banc ne vaut pas une recette de run complète.
+
+**Ambiance :** `comparaison-ambiance/index.html` fournit 45 s de la référence M2 recomposées depuis les pistes synchrones, avec ou sans la seule famille Ambiance. Musique, effets, pas et gains sont identiques, sans normalisation ; cette référence précède M4. Raphaël suspecte l'ambiance ; couper cette famille doit encore confirmer ou infirmer le frottement. Aucun remplacement artistique ni suppression de boucle n'est décidé sur la seule mesure. Aucun son n'a été écouté par l'agent.
+
+**Suite :** écouter le mix et confirmer la piste du frottement ; rechercher de nouveaux candidats pour les quatre refus (soin, recharge du bouclier, visée, Faille), puis reprendre les ambiances et nouvelles musiques. Les objectifs généraux « sound design cleanup », « musiques adaptatives » et « sound design complet » restent ouverts jusqu'à la recette artistique.
+
+### Sons de la Barrière validés pour l'instant — 10 octobre
+
+Raphaël valide les huit sons de la page `~/.local/share/vestiges-audio/2026-10-10/barriere/index.html` ([DECISIONS §92](DECISIONS.md)) : levée, verrou, battant brisé, chute de la grille, annonce et impact du poing, annonce et balayage de la chaîne. Tous sont déjà branchés dans la banque et les données de la Barrière (plan 07). Validation d'écoute provisoire, avec retouches possibles plus tard ; le frottement d'ambiance, les quatre refus et la recette du mix restent ouverts.
+
+### M5 — frottement confirmé, correction à comparer — 10 octobre
+
+Raphaël confirme que couper le seul bus Ambiance fait disparaître le frottement ([DECISIONS §93](DECISIONS.md)). Le bus est identifié ; la boucle précise reste à distinguer des oiseaux et des overlays météo avant traitement.
+
+- **M5a — durée de boucle, correction technique.** Diagnostic : les WAV importés en QOA sont traités comme du PCM16 pour calculer `LoopEnd` depuis la taille compressée. Forêt : 310 208 octets donnent 77 552 échantillons (1,616 s) au lieu des 384 000 échantillons du fichier de 8 s ; la référence M2 répète exactement ces 77 552 échantillons. Calculer la borne depuis la durée décodée et la fréquence du stream, préserver l'original partagé ; vérifier PCM8/16, QOA réel et boucle contexte/retour au Hub. Build, smoke, audio, musique et nouvel enregistrement avec pistes séparées ; comparer la période mesurée avant/après.
+- **M5b — audition du fond.** Retrouver un passage d'exploration sans oiseaux ni météo dans le nouvel enregistrement M5a et conserver les autres pistes ; préparer une version au bruit de fond filtré et une version sans cette seule boucle. Comparaison synchrone avec l'original, gains explicites, aucun ajustement automatique de volume du mix ; mesurer la réduction du bruit et vérifier que le reste est identique. Les oiseaux et overlays restent hors du traitement proposé. Les fichiers et le script de préparation restent hors dépôt, les assets de jeu attendent le choix à l'écoute. Suivi mis à jour à la livraison ; pas de case d'intégration cochée pour une audition.
+
+### M5a livré, M5b prêt à écouter — 10 octobre
+
+**Durée corrigée :** `CreateLoopableStream` utilise la durée décodée du WAV multipliée par sa fréquence ; il ne déduit plus le nombre d'échantillons des octets compressés. L'original préchargé reste intact. Les formats PCM8/16 mono/stéréo, le WAV QOA réel et les lecteurs forêt/tonnerre sont vérifiés ; arrêt au Hub et annulation des fondus restent verts.
+
+**Preuves :** `tools/validate.sh /tmp/vestiges-audio-m5a-20261010-05 smoke audio music` en copie isolée de HEAD avec les modifications audio : 3/3, zéro source modifiée, build sans avertissement/erreur. Les fichiers audio et de régression sont identiques à ceux du checkout principal. Le premier build principal rencontrait le chantier des quêtes en cours ; le build principal a ensuite réussi sans avertissement. Les trois suites du contrôle principal `...-06` passent aussi ; le lanceur signale toutefois une modification concurrente hors lot (`tools/sprites/props/indicible_forms.py`). La référence stable reste donc `...-05`.
+
+**Mesure moteur avant/après :** même seed 221092026 et même outil `record_run_audio.sh`, Traqueur. Référence M2 : période exacte de 77 552 échantillons (1,6157 s), corrélation 1 ; nouvelle prise de 45 s : 384 000 échantillons (8 s), corrélation 1. L'ancienne période ne se retrouve plus (corrélation 0,0117). Cette correction technique ne suffit pas à déclarer le frottement artistiquement résolu.
+
+**Écoute :** `~/.local/share/vestiges-audio/2026-10-10/correction-ambiance/index.html`. Même passage de 14,84 s à partir de 19,48 s de la nouvelle prise ; trace sans oiseaux, météo ni menus dans cet intervalle. **A** : fond actuel, durée corrigée ; **B** : passe-haut 80 Hz, passe-bas 900 Hz, baisse de 6 dB ; **C** : cette seule nappe de forêt absente, oiseaux et météo conservés dans le traitement envisagé en jeu. Musique, effets et pas identiques ; aucun ajustement de volume du mix. Boutons de comparaison à position constante, mode mix ou ambiance seule, boucle source et candidat de 8 s disponibles. Fond A : RMS −48,19 dBFS ; B : −68,50 dBFS (−20,31 dB au total ; bande ≥2 kHz : −29,09 dB). Script, empreintes, retour de diagnostic et manifeste hors dépôt. Aucun son n'a été écouté par l'agent.
+
+**Retour acquis :** Raphaël conserve le fond original avec une baisse de 1 à 2 dB, uniquement en forêt ; intégré en M6 ci-dessous. B/C restent des auditions archivées. Les quatre besoins refusés et la recherche musicale restent ouverts.
+
+### M6 — fond de forêt local et baisse légère — 10 octobre
+
+Retour acquis ([DECISIONS §94](DECISIONS.md)) : boucle complète conservée, baisse de 1 à 2 dB au plus, lecture seulement en forêt. Lot unique : gain −2 dB dans la banque, biome d'éligibilité en données ; notification du biome depuis la détection existante de `BiomeAtmosphere`, abonnement de l'audio via EventBus. Pas de nouveau parcours du monde par frame. Le fond et les oiseaux sont réservés à la Forêt Reconquise ; fondus de frontière annulables si le joueur revient rapidement, Résurgences et météo conservées. Biome inconnu au démarrage : silence du fond jusqu'à sa détection ; état local remis à zéro entre runs.
+
+Vérifier entrée/sortie des cinq biomes, retour rapide pendant le fondu, phase de crise et retour au Hub, gain et durée de huit secondes ; trace du biome et de l'état du lecteur dans un enregistrement moteur. Build sans avertissement, smoke/audio/musique et vérification en run, puis case de roadmap après livraison. Les WAV de M5b ne sont pas intégrés.
+
+### M6 livré — forêt seule, fond original à −2 dB — 10 octobre
+
+La banque réserve `sfx_ambiance_foret` à `forest_reclaimed` et fixe son gain à −2 dB. Le WAV source est inchangé (empreinte identique à celle du retour), la boucle entière corrigée en M5a est conservée. `BiomeAtmosphere` annonce les changements déjà détectés via EventBus ; le lecteur audio suit ce signal. À la sortie, fondu de 0,5 s ; un retour rapide annule l'arrêt en attente sans relancer le même stream. Traverser plusieurs biomes hors forêt ne prolonge pas ce fondu. Les oiseaux ne sont déclenchés qu'en forêt ; les overlays météo gardent leur fonctionnement. Le biome inconnu reste silencieux et l'état est remis à zéro au Hub et au début de chaque run.
+
+**Contrôles :** `tools/validate.sh /tmp/vestiges-audio-m6-20261010-02 smoke audio music` : 3/3, aucune source modifiée pendant la validation, build sans avertissement/erreur. Régressions : quatre autres biomes et biome inconnu silencieux, gain forêt −2 dB, oiseaux locaux, notifications répétées sans redémarrage, fondu non prolongé par des frontières successives, retour rapide sans coupure tardive, météo encore active hors forêt, cycle Hub/run et boucle de 8 s.
+
+**Enregistrement moteur :** `~/.local/share/vestiges-audio/2026-10-10/foret-biome/index.html` ; 85 s de jeu, seed 221092026, Traqueur, cinq biomes traversés. Les 169 observations confirment 10 états en forêt à −2 dB et 159 hors forêt avec lecteur arrêté. Entrée à 61,90 s de vidéo, sortie à 66,40 s ; le passage en forêt dure 4,5 s. La durée entière de boucle est vérifiée par la régression et la mesure M5a, pas par ce bref passage. Cette prise précède seulement le garde-fou contre le prolongement du fondu lors de frontières successives, vérifié ensuite dans la suite finale. Pistes synchrones et trace disponibles sur la page ; aucun son n'a été écouté par l'agent.
+
+**À valider ensuite :** confort du mix en jouant, nouveaux candidats pour soin, bouclier rechargé, annonce du tir visé et réveil de la Faille ; puis ambiances et nouvelles musiques. Le choix du fond de forêt et la validation provisoire des sons de Barrière sont acquis.

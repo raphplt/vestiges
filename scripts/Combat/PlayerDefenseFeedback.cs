@@ -6,8 +6,8 @@ namespace Vestiges.Combat;
 /// <summary>
 /// Retours de la défense et des soins du joueur (plan 27 V3c) : bouclier qui casse en éclats de verre (distinct d'un
 /// coup bloqué), bouclier de nouveau plein, armure qui pare une part notable d'un coup, coup ignoré dévié, soin qui
-/// monte en étincelles. Information pour le joueur, ni attaque ni menace : soumis au seul réglage « Particules ». Les
-/// sons (tintement, soin) restent à produire au plan 15. Classe simple possédée par le joueur, sans allocation.
+/// monte en étincelles. Les images suivent le réglage « Particules », la parade sonore reste indépendante.
+/// Les soins et la recharge attendent un timbre choisi (plan 15). Classe possédée par le joueur, sans allocation.
 /// </summary>
 public sealed class PlayerDefenseFeedback
 {
@@ -39,6 +39,7 @@ public sealed class PlayerDefenseFeedback
         float removed = damage - afterArmor;
         if (config == null || damage <= 0f || removed < config.ParryMinHp || removed / damage < config.ParryMinShare)
             return;
+        AudioManager.Play("sfx_armor_parry", 0f);
         Vector2 side = fromDirection == Vector2.Zero ? Vector2.Up : fromDirection;
         Vector2 point = feet + new Vector2(0f, -TorsoHeight) + side * 6f;
         Star(point, config.ParryFamily, 4f);
@@ -47,6 +48,7 @@ public sealed class PlayerDefenseFeedback
 
     public void Ignored(Vector2 feet)
     {
+        AudioManager.Play("sfx_armor_parry", 0f);
         Burst(feet + new Vector2(0f, -TorsoHeight), FxFamily.Stone, Vector2.Up, 3, 25f, 50f, 1, false);
     }
 

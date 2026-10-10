@@ -1044,7 +1044,8 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 		{
 			TriggerHitFeedback();
 			SpawnHitFlashSprite();
-			Infrastructure.AudioManager.Play(isCrit ? "sfx_hit_critique" : "sfx_hit_ennemi", 0.07f);
+			string impactAudio = source.IsWeaponWork ? source.Weapon.Base.ImpactAudio : null;
+			Infrastructure.AudioManager.Play(isCrit ? "sfx_hit_critique" : impactAudio ?? "sfx_hit_ennemi", 0.07f);
 		}
 
 		// Screen shake + hitstop selon l'intensité
@@ -1081,8 +1082,8 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 		_boss = boss;
 		_bossShared = shared;
 		_bodyRadius = bodyRadius;
-		LargestBodyRadius = Mathf.Max(LargestBodyRadius, _bodyRadius);
 		_targetBias = BossPartsConfig.TryLoad(out BossPartsConfig parts, out _) ? parts.TargetBias : 0f;
+		LargestBodyRadius = Mathf.Max(LargestBodyRadius, _bodyRadius);
 		LargestPartRadius = Mathf.Max(LargestPartRadius, _bodyRadius);
 		_maxHp = Mathf.Max(1f, maxHp);
 		_currentHp = hp;
@@ -1476,6 +1477,7 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 		// Explosive : AoE de dégâts à la mort
 		if (_mods.DeathExplosionRadius > 0f)
 		{
+			PlayNearbyAudio("sfx_unstable_explosion");
 			float explosionRadius = _mods.DeathExplosionRadius;
 			float explosionDamage = _damage * _mods.DeathExplosionDamageMult;
 

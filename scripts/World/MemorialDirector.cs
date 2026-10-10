@@ -207,7 +207,7 @@ public partial class MemorialDirector : Node
                 if (memorial.ShowRevival(progress, collected, shardTexture) && memorial.State != Memorial.MemorialState.Awake)
                 {
                     memorial.SetState(Memorial.MemorialState.Awake);
-                    AudioManager.PlayUI("sfx_souvenir_trouve");
+                    AudioManager.PlayUI("sfx_memorial_wake");
                 }
             },
             skipped =>
@@ -221,7 +221,10 @@ public partial class MemorialDirector : Node
     private void Awaken(Memorial memorial, bool animate)
     {
         if (memorial.State != Memorial.MemorialState.Awake)
+        {
             memorial.SetState(Memorial.MemorialState.Awake);
+            AudioManager.PlayUI("sfx_memorial_wake");
+        }
         EmitSparks(memorial.GlobalPosition + new Vector2(0f, -20f), 22);
         _eventBus.EmitSignal(EventBus.SignalName.MemorialAwakened, memorial.GlobalPosition);
         OpenBlessings(memorial, animate);

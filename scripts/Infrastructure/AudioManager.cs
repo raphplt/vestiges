@@ -68,6 +68,7 @@ public partial class AudioManager : Node
 	private readonly Dictionary<string, int> _soundPriorities = new();
 	private readonly Dictionary<string, int> _soundMaxVoices = new();
 	private readonly Dictionary<string, string> _soundBuses = new();
+	private readonly Dictionary<string, string> _soundBiomes = new();
 
 	// --- Horloge sonore sous Movie Maker (enregistrements d'écoute, plan 15 A0) ---
 	private static ulong _movieFps;
@@ -77,6 +78,7 @@ public partial class AudioManager : Node
 	private const int MovieFpsSampledFrames = 60;
 
 	private string _currentPhase = "";
+	private string _currentBiomeId = "";
 
 	// Tirages propres à l'audio : ils ne décalent pas ceux du gameplay (seed des bancs, avant/après d'écoute).
 	private readonly RandomNumberGenerator _rng = new();
@@ -121,6 +123,8 @@ public partial class AudioManager : Node
 			_soundPriorities[key] = settings.ContainsKey("priority") ? settings["priority"].AsInt32() : 20;
 			_soundMaxVoices[key] = settings.ContainsKey("max_voices") ? Mathf.Max(1, settings["max_voices"].AsInt32()) : 2;
 			_soundBuses[key] = settings.ContainsKey("bus") ? settings["bus"].AsString() : BusSfx;
+			if (settings.ContainsKey("biome"))
+				_soundBiomes[key] = settings["biome"].AsString();
 			if (settings.ContainsKey("variants"))
 			{
 				Godot.Collections.Array paths = settings["variants"].AsGodotArray();
@@ -536,7 +540,7 @@ public partial class AudioManager : Node
 			return;
 		float dt = (float)delta;
 
-		if (_currentPhase == "Exploration")
+		if (_currentPhase == "Exploration" && IsSoundInCurrentBiome("sfx_ambiance_foret"))
 		{
 			_birdTimer -= dt;
 			if (_birdTimer <= 0f)
@@ -558,13 +562,14 @@ public partial class AudioManager : Node
 	private void ConnectEventBus(Core.EventBus eb)
 	{
 		eb.RunPhaseChanged    += OnRunPhaseChanged;
+		eb.PlayerBiomeChanged += OnPlayerBiomeChanged;
 		eb.CrisisWarning      += OnCrisisWarning;
 		eb.CrisisStarted      += OnCrisisStarted;
 		eb.CrisisEnded        += OnCrisisEnded;
 		eb.EnemySpawned       += OnEnemySpawned;
 		eb.EnemyKilled        += OnEnemyKilled;
 		eb.PlayerDamaged      += OnPlayerDamaged;
-		eb.PlayerHitBy        += OnPlayerHitBy;
+		eb.PlayerDamageResolved += OnPlayerDamageResolved;
 		eb.PlayerShieldChanged += OnPlayerShieldChanged;
 		eb.SouvenirDiscovered += OnSouvenirDiscovered;
 		eb.ZoneDiscovered     += OnZoneDiscovered;
@@ -581,13 +586,14 @@ public partial class AudioManager : Node
 	private void DisconnectEventBus(Core.EventBus eb)
 	{
 		eb.RunPhaseChanged    -= OnRunPhaseChanged;
+		eb.PlayerBiomeChanged -= OnPlayerBiomeChanged;
 		eb.CrisisWarning      -= OnCrisisWarning;
 		eb.CrisisStarted      -= OnCrisisStarted;
 		eb.CrisisEnded        -= OnCrisisEnded;
 		eb.EnemySpawned       -= OnEnemySpawned;
 		eb.EnemyKilled        -= OnEnemyKilled;
 		eb.PlayerDamaged      -= OnPlayerDamaged;
-		eb.PlayerHitBy        -= OnPlayerHitBy;
+		eb.PlayerDamageResolved -= OnPlayerDamageResolved;
 		eb.PlayerShieldChanged -= OnPlayerShieldChanged;
 		eb.SouvenirDiscovered -= OnSouvenirDiscovered;
 		eb.ZoneDiscovered     -= OnZoneDiscovered;
@@ -609,7 +615,7 @@ public partial class AudioManager : Node
 		switch (newPhase)
 		{
 			case "Exploration":
-				PlayAmbiance("sfx_ambiance_foret");
+				UpdateBiomeAmbiance();
 				_birdTimer = _rng.RandfRange(5f, 15f);
 				break;
 			case "Crisis":
@@ -621,6 +627,27 @@ public partial class AudioManager : Node
 		UpdateContextAmbiance();
 	}
 
+	private bool IsSoundInCurrentBiome(string key) =>
+		!_soundBiomes.TryGetValue(key, out string biomeId) || biomeId == _currentBiomeId;
+
+	private void OnPlayerBiomeChanged(string biomeId)
+	{
+		if (_currentBiomeId == biomeId)
+			return;
+		_currentBiomeId = biomeId;
+		UpdateBiomeAmbiance();
+		if (_currentPhase == "Exploration" && IsSoundInCurrentBiome("sfx_ambiance_foret"))
+			_birdTimer = _rng.RandfRange(5f, 15f);
+	}
+
+	private void UpdateBiomeAmbiance()
+	{
+		if (_currentPhase == "Exploration" && IsSoundInCurrentBiome("sfx_ambiance_foret"))
+			PlayAmbiance("sfx_ambiance_foret");
+		else if (_ambiancePlayer.Playing && (_ambianceFade == null || !_ambianceFade.IsRunning()))
+			FadeOutAmbiance(0.5f);
+	}
+
 	private void OnCrisisWarning(int crisisNumber, float countdown)
 	{
 		PlaySfx("sfx_danger_building", 0f, -5f);
@@ -629,6 +656,7 @@ public partial class AudioManager : Node
 	private void OnCrisisStarted(int crisisNumber, int intensity)
 	{
 		_currentPhase = "Crisis";
+		PlaySfx("sfx_resurgence_accent", 0f);
 		FadeOutAmbiance(2f);
 	}
 
@@ -648,9 +676,7 @@ public partial class AudioManager : Node
 			PlaySfx("sfx_monde_dissolution", 0.08f, -6f);
 	}
 
-	private float _lastKnownHp = -1f;
-	/// <summary>Image de la dernière tranche du Néant : ses PV perdus ne rejouent pas le son d'un coup (plan 27 V3d).</summary>
-	private ulong _voidTickFrame = ulong.MaxValue;
+	private float _lastKnownMaxHp;
 	private float _lastKnownShield = -1f;
 
 	/// <summary>Le bouclier qui baisse a encaissé un coup : parade s'il tient, bris s'il tombe à zéro. Sa recharge reste muette.</summary>
@@ -663,29 +689,25 @@ public partial class AudioManager : Node
 	}
 
 
-	private void OnPlayerHitBy(string enemyId, float damage)
-	{
-		if (enemyId == "void")
-			_voidTickFrame = Engine.GetProcessFrames();
-	}
-
 	private void OnPlayerDamaged(float currentHp, float maxHp)
 	{
-		float damageTaken = _lastKnownHp >= 0f ? _lastKnownHp - currentHp : 0f;
-		bool isDamage = damageTaken > 0.01f;
-		_lastKnownHp = currentHp;
-		// Le Néant consume deux fois par seconde : son de brûlure à produire (plan 15), pas le son d'un coup en boucle.
-		if (isDamage && _voidTickFrame == Engine.GetProcessFrames())
+		_lastKnownMaxHp = maxHp;
+		UpdatePlayerWarnings();
+	}
+
+	/// <summary>La perte résolue distingue le Néant d'un coup, même sans signal préalable d'attaquant.</summary>
+	private void OnPlayerDamageResolved(PlayerDamageResult result)
+	{
+		if (!result.Applied || result.HpLost <= 0f)
+			return;
+		if (result.Kind == PlayerDamageKind.Erasure)
 		{
-			UpdatePlayerWarnings();
+			PlaySfx("sfx_void_burn", 0f);
 			return;
 		}
-		if (isDamage)
-			PlaySfx("sfx_hit_joueur");
-		if (damageTaken >= Mathf.Max(12f, maxHp * CriticalDamageThresholdRatio))
+		PlaySfx("sfx_hit_joueur");
+		if (result.HpLost >= Mathf.Max(12f, _lastKnownMaxHp * CriticalDamageThresholdRatio))
 			PlaySfx("sfx_degat_critique_recu", 0f, -1f);
-
-		UpdatePlayerWarnings();
 	}
 
 	private void OnSouvenirDiscovered(string souvenirId, string souvenirName, string constellationId)
@@ -739,6 +761,7 @@ public partial class AudioManager : Node
 		if (newState == "Hub")
 		{
 			_currentPhase = "";
+			_currentBiomeId = "";
 			_currentRandomEventId = "";
 			_ambianceFade?.Kill();
 			_ambiancePlayer.Stop();
@@ -751,10 +774,10 @@ public partial class AudioManager : Node
 		}
 		else if (newState == "Run")
 		{
-			_lastKnownHp = -1f;
+			_lastKnownMaxHp = 0f;
 			_lastKnownShield = -1f;
-			_voidTickFrame = ulong.MaxValue;
 			_currentPhase = "";
+			_currentBiomeId = "";
 			_currentRandomEventId = "";
 			// La première run d'une session commence déjà en exploration : aucun changement de phase ne
 			// l'annonce. La phase réelle est relue en fin d'image, après celui qu'émet un retour de mort.
@@ -904,14 +927,8 @@ public partial class AudioManager : Node
 		AudioStreamWav clone = (AudioStreamWav)wav.Duplicate();
 		clone.LoopMode = AudioStreamWav.LoopModeEnum.Forward;
 		clone.LoopBegin = 0;
-		int bytesPerFrame = clone.Format switch
-		{
-			AudioStreamWav.FormatEnum.Format8Bits => clone.Stereo ? 2 : 1,
-			AudioStreamWav.FormatEnum.Format16Bits => clone.Stereo ? 4 : 2,
-			_ => clone.Stereo ? 4 : 2
-		};
-		if (clone.Data != null && clone.Data.Length > 0)
-			clone.LoopEnd = clone.Data.Length / bytesPerFrame;
+		// Les octets QOA/ADPCM ne donnent pas le nombre d'échantillons décodés.
+		clone.LoopEnd = (int)System.Math.Round(wav.GetLength() * wav.MixRate);
 
 		return clone;
 	}

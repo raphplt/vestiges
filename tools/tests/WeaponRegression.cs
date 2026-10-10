@@ -49,6 +49,7 @@ public partial class WeaponRegression : Node2D
             CheckAscensions();
             CheckGrammarRejectsUnknownKeys();
             CheckContractRejectsBadData();
+            CheckImpactSounds();
             await CheckCountForAllWeapons();
             await CheckVolleyOnSingleTarget();
             CheckSustainedConeSound();
@@ -624,6 +625,7 @@ public partial class WeaponRegression : Node2D
             ("drapeau inconnu", w => Path(w)["flags"] = new Godot.Collections.Array { "orbit_pluse" }, "orbit_pluse"),
             ("réglage de drapeau absent", w => { Path(w)["flags"] = new Godot.Collections.Array { "orbit_pulse" }; Path(w)["params"] = new Godot.Collections.Dictionary { ["pulse_min"] = 0.6, ["pulse_max"] = 1.6 }; }, "pulse_period obligatoire"),
             ("son introuvable", w => w["attack_audio"] = "sfx_inexistant", "sfx_inexistant"),
+            ("son d'impact introuvable", w => w["impact_audio"] = "sfx_impact_inexistant", "sfx_impact_inexistant"),
             ("image introuvable", w => w["sprite"] = "assets/weapons/icons/inexistant.png", "inexistant.png"),
             ("style inconnu", w => w["fx"] = new Godot.Collections.Dictionary { ["style"] = "spin" }, "spin"),
             ("famille inconnue", w => w["fx"] = new Godot.Collections.Dictionary { ["family"] = "gold" }, "gold"),
@@ -641,8 +643,56 @@ public partial class WeaponRegression : Node2D
     }
 
     /// <summary>
-    /// La Boîte joue au contact, avec sa propre clé, et cesse de sonner après son retrait.
+    /// La matière vient du coup résolu, tandis que critiques et objets gardent leurs retours distincts.
     /// </summary>
+    private void CheckImpactSounds()
+    {
+        Enemy enemy = SpawnStill(new Vector2(500f, 0f));
+        enemy.ProcessMode = ProcessModeEnum.Disabled;
+        List<string> requests = new();
+        void OnSound(string key, AudioManager.SoundOutcome outcome) => requests.Add(key);
+        AudioManager.Instance.SoundRequested += OnSound;
+        try
+        {
+            HashSet<string> families = new();
+            bool followedSource = true;
+            foreach (WeaponData data in WeaponDataLoader.GetAll())
+            {
+                requests.Clear();
+                WeaponInstance held = new(data);
+                AttackContext source = new(_player.GetInstanceId(), held, 1, DamageKind.DirectWeapon);
+                enemy.TakeDamage(1f, source: source);
+                followedSource &= !string.IsNullOrEmpty(data.ImpactAudio) && requests.Count == 1
+                    && requests[0] == data.ImpactAudio;
+                families.Add(data.ImpactAudio);
+            }
+            Check(followedSource && families.Count == 6, "Impacts : les 24 armes suivent leur provenance dans six familles de matière");
+            WeaponInstance blade = new(WeaponDataLoader.Get("chipped_blade"));
+            AttackContext bladeSource = new(_player.GetInstanceId(), blade, 2, DamageKind.DirectWeapon);
+            requests.Clear();
+            enemy.TakeDamage(1f, isCrit: true, source: bladeSource);
+            Check(requests.Count == 1 && requests[0] == "sfx_hit_critique", "Impact critique : son distinct, sans superposer la matière");
+            requests.Clear();
+            enemy.TakeDamage(1f, source: bladeSource.As(DamageKind.SecondaryWeapon));
+            Check(requests.Count == 1 && requests[0] == blade.Base.ImpactAudio, "Impact secondaire : garde la matière de l'arme d'origine");
+            requests.Clear();
+            enemy.TakeDamage(1f, source: bladeSource.As(DamageKind.Passive));
+            Check(requests.Count == 1 && requests[0] == "sfx_hit_ennemi", "Objet passif : ne prend pas la matière d'une arme étrangère");
+            requests.Clear();
+            enemy.TakeDamage(1f);
+            Check(requests.Count == 1 && requests[0] == "sfx_hit_ennemi", "Dommage sans arme : impact générique conservé");
+            requests.Clear();
+            enemy.TakeDamage(1f, showImpact: false, source: bladeSource);
+            Check(requests.Count == 0, "Impact continu entre deux retours : reste silencieux");
+        }
+        finally
+        {
+            AudioManager.Instance.SoundRequested -= OnSound;
+            enemy.QueueFree();
+        }
+    }
+
+    /// <summary>La Boîte joue au contact avec sa propre clé et cesse de sonner après son retrait.</summary>
     private void CheckOrbitalSound()
     {
         Player player = GD.Load<PackedScene>("res://scenes/Player.tscn").Instantiate<Player>();

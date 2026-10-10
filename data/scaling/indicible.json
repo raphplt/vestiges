@@ -89,7 +89,7 @@
   "audio": {
     "_doc": "Sons propres à l'Indicible (plan 07 B5e) : tonnerre, mer de vives-eaux, boue, et le tocsin, étouffé sous l'eau à l'arrivée puis enfin sonné, clair, à la mort ; montage reproductible dans ~/.local/share/vestiges-audio/2026-10-10/indicible/prepare.py. L'apparition des mains garde le son choisi au §91. Niveaux dans la banque (data/audio/sounds.json) ; le code ne rejoue que l'arrivée, 3 dB plus bas, à chaque seuil.",
     "rise": "sfx_indicible_rise",
-    "hand_rise": "sfx_rampant_surgissement",
+    "hand_rise": "sfx_boss_tentacle",
     "grab_warning": "sfx_indicible_grab_warning",
     "grab_impact": "sfx_indicible_grab_impact",
     "lightning_warning": "sfx_indicible_lightning_warning",

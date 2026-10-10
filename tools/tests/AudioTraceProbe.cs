@@ -20,8 +20,10 @@ internal sealed class AudioTraceProbe : IDisposable
     private readonly EventBus _eventBus;
     private readonly Node _world;
     private readonly Player _player;
+    private readonly World.WorldSetup _worldSetup;
+    private readonly AudioStreamPlayer _forestAmbiance;
     private readonly List<string> _events = new() { "audio_s,game_s,kind,detail" };
-    private readonly List<string> _states = new() { "audio_s,game_s,phase,music,intent,alive,near600,elite600,champion600,aberration600,boss600" };
+    private readonly List<string> _states = new() { "audio_s,game_s,phase,music,intent,alive,near600,elite600,champion600,aberration600,boss600,biome,forest_playing,forest_db" };
     private readonly Dictionary<string, int[]> _sounds = new();
     private string _phase = "";
     private string _music = "";
@@ -35,9 +37,12 @@ internal sealed class AudioTraceProbe : IDisposable
         _world = world;
         _player = player;
         _audio = AudioManager.Instance ?? throw new InvalidOperationException("AudioManager absent.");
+        _worldSetup = world as World.WorldSetup;
+        _forestAmbiance = _audio.GetNode<AudioStreamPlayer>("Ambiance");
         _eventBus = world.GetNode<EventBus>("/root/EventBus");
         _audio.SoundRequested += OnSound;
         _eventBus.RunPhaseChanged += OnPhase;
+        _eventBus.PlayerBiomeChanged += OnBiome;
         _eventBus.CrisisWarning += OnWarning;
         _eventBus.CrisisStarted += OnStarted;
         _eventBus.CrisisEnded += OnEnded;
@@ -48,6 +53,7 @@ internal sealed class AudioTraceProbe : IDisposable
         _eventBus.RunEventStarted += OnRunEvent;
         _phase = world.GetNode<GameManager>("/root/GameManager").CurrentRunPhase.ToString();
         Add("trace", "start");
+        Add("biome", _worldSetup?.GetBiomeAt(_player.GlobalPosition)?.Id ?? "-");
     }
 
     private static double AudioSeconds => AudioManager.NowMsec / 1000.0;
@@ -69,6 +75,8 @@ internal sealed class AudioTraceProbe : IDisposable
         _phase = newPhase;
         Add("phase", $"{oldPhase}>{newPhase}");
     }
+
+    private void OnBiome(string biomeId) => Add("biome", biomeId.Length > 0 ? biomeId : "-");
 
     private void OnWarning(int crisis, float countdown) =>
         Add("crisis_warning", string.Create(CultureInfo.InvariantCulture, $"{crisis}:{countdown:F1}s"));
@@ -113,7 +121,7 @@ internal sealed class AudioTraceProbe : IDisposable
                 boss++;
         }
         _states.Add(string.Create(CultureInfo.InvariantCulture,
-            $"{AudioSeconds:F2},{_gameTime:F2},{_phase},{(_music.Length > 0 ? _music : "-")},{_audio.CurrentMusicIntent},{alive},{near},{elite},{champion},{aberration},{boss}"));
+            $"{AudioSeconds:F2},{_gameTime:F2},{_phase},{(_music.Length > 0 ? _music : "-")},{_audio.CurrentMusicIntent},{alive},{near},{elite},{champion},{aberration},{boss},{_worldSetup?.GetBiomeAt(_player.GlobalPosition)?.Id ?? "-"},{(_forestAmbiance.Playing ? 1 : 0)},{_forestAmbiance.VolumeDb:F2}"));
     }
 
     public void Dispose()
@@ -121,6 +129,7 @@ internal sealed class AudioTraceProbe : IDisposable
         Add("trace", "end");
         _audio.SoundRequested -= OnSound;
         _eventBus.RunPhaseChanged -= OnPhase;
+        _eventBus.PlayerBiomeChanged -= OnBiome;
         _eventBus.CrisisWarning -= OnWarning;
         _eventBus.CrisisStarted -= OnStarted;
         _eventBus.CrisisEnded -= OnEnded;

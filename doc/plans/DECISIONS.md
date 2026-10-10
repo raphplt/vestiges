@@ -1045,6 +1045,24 @@ Raphaël : « il faudrait implémenter ces personnages dans le jeu […] et auss
 - **Page Personnages** : liste, fiche détaillée, sprite agrandi ; Raphaël fournira des images plus soignées.
 - **Revoir les menus devenus inutiles** (ceux qui suivent les anciennes quêtes, etc.).
 
+## 91. Choix des sons manquants et piste d'ambiance — 10 octobre 2026
+
+Raphaël transmet `choix-sons-2026-10-10.json` et précise : « je crois que ca vient de l'ambiance ». La source du frottement reste une hypothèse à confirmer par la piste isolée ; ce retour ne valide ni un remplacement d'ambiance précis ni tout le mix.
+
+Quinze choix explicites : accent de Résurgence A, parade A, brûlure du Néant A, explosion de l'Instable A, surgissement du Rampant A, tentacule de l'Indicible A, Mémorial B, fragment rare A ; impacts lame A, choc A, verre C, feu B, papier B, électrique A ; pas d'herbe A (même son, −6 dB). Quatre refus (`aucun`) : soin, bouclier rechargé, annonce du tir visé, réveil de la Faille. Ils appellent une reprise de recherche, sans sélection automatique ni décision de supprimer un son actuel. Export original archivé hors dépôt ; découpage et intégration au plan 15 M4a/M4b.
+
+## 92. Sons de la Barrière validés pour l'instant — 10 octobre 2026
+
+Raphaël, dans le suivi audio et sur la page d'écoute de la Barrière : « pour l'instant je valide tout de la barrière ». Les huit sons sont validés pour l'instant : levée, verrou, battant brisé, chute de la grille, annonce et impact du poing, annonce et balayage de la chaîne. Les sons sont déjà intégrés ; cette validation d'écoute est consignée aux plans 15 et 07. Retouches possibles ultérieurement ; la recette du combat et du mix en run reste au suivi existant.
+
+## 93. Frottement confirmé sur le bus Ambiance — 10 octobre 2026
+
+À la question « Sur la page d’isolement, le frottement disparaît-il quand tu coupes uniquement “Ambiance” en laissant les autres pistes actives ? », Raphaël répond : « Oui, il disparaît ». Le diagnostic de famille est acquis : le frottement signalé vient du bus Ambiance. Préparer une correction comparable à l'original (plan 15 M5), en distinguant la boucle de fond des oiseaux et des effets météo. Ce retour ne choisit pas encore un nouveau timbre ni la suppression de toute l'ambiance.
+
+## 94. Fond de forêt conservé, réservé à son biome — 10 octobre 2026
+
+Raphaël : « le fond de la forêt, il est pas très dérangeant tant que c'est la boucle complète qui est jouée […] il faut que ça se joue que dans la forêt […] peut-être baisser un tout petit peu de 1 ou 2 décibels, pas plus ». Conserver le fichier et les huit secondes corrigées de M5a, sans le filtrage ni la suppression proposés en M5b. Baisser le gain de banque de 2 dB et réserver le fond au biome Forêt Reconquise ; les oiseaux qui l'accompagnent suivent ce biome. Météo et contexte de Résurgence gardent leur pilotage existant. Intégration et recette des passages de frontière au plan 15 M6.
+
 ## 95. L'Indicible au niveau du jeu — 10 octobre 2026, soir
 
 Raphaël : « mais au delà des sons, le design, les animations, c'est fini ? c'est au niveau du jeu ? ». Constat : mécaniques finies, rendu au stade de maquette (Indicible jamais visible, arrivée sans mise en scène, tempête sans pluie ni éclair visible, marée et vague en aplats, mains sans animation, sons empruntés). Sur la proposition d'un lot B5 (planche de la forme découverte, puis arrivée et tempête, marée, vague et mort, dix sons) : « ouais ok ca me va. go planche ».

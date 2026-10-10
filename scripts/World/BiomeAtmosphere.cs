@@ -1,4 +1,5 @@
 using Godot;
+using Vestiges.Core;
 using Vestiges.Infrastructure;
 
 namespace Vestiges.World;
@@ -13,6 +14,7 @@ public partial class BiomeAtmosphere : Node2D
 {
 	private Node2D _player;
 	private WorldSetup _worldSetup;
+	private EventBus _eventBus;
 	private GpuParticles2D _fogParticles;
 	private GpuParticles2D _swampSporeParticles;
 	private GpuParticles2D _swampGnatParticles;
@@ -35,6 +37,7 @@ public partial class BiomeAtmosphere : Node2D
 	public override void _Ready()
 	{
 		_worldSetup = GetParent<WorldSetup>();
+		_eventBus = GetNode<EventBus>("/root/EventBus");
 		CreateFogParticles();
 		CreateSwampAmbientParticles();
 		CreateSwampOverlay();
@@ -61,6 +64,7 @@ public partial class BiomeAtmosphere : Node2D
 		if (biomeId != _currentBiomeId)
 		{
 			_currentBiomeId = biomeId;
+			_eventBus.EmitSignal(EventBus.SignalName.PlayerBiomeChanged, biomeId);
 			UpdateAtmosphere(biome);
 		}
 

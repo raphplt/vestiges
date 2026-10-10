@@ -753,6 +753,7 @@ Pendant la levée, les battants sont enfouis : ni cibles ni vulnérables, les ti
 - **Les huit** : levée, verrou, battant brisé (le cadenas éclate, la chaîne se rompt, le vantail pivote), chute de la grille, annonce et coup des poings, annonce et balayage de la chaîne.
 - **Production** : script reproductible à l'octet près (graine fixe), `~/.local/share/vestiges-audio/2026-10-10/barriere/prepare.py`, avec sources, licences et page d'écoute (`index.html`).
 - **Vérifié par mesure** (niveaux, absence d'écrêtage, spectrogrammes), **pas à l'oreille**. Un premier souffle bourdonnait à 50 Hz (découpage par blocs) : refait en filtrage glissant, voir le [spectre](../audits/boss-2026-10-10/b2-finition/spectres-balayage-levee.jpg).
+- **Écoute validée pour l'instant par Raphaël** le 10 octobre : les huit sons de la page sont approuvés ([DECISIONS §92](DECISIONS.md)), avec retouches possibles plus tard.
 
 **Réglage avec des Mémoriaux** (3 et 5 battants forcés par `--barrier-memorials N`, 4 graines ; [mesures](../audits/boss-2026-10-10/b2-finition/mesures.txt)) :
 - **Constat** : sans spécialisation Convergence, chaque arme vise la créature la plus proche. Devant la grille, la foule passait avant le battant. Résultat : de 24 s à « jamais en 200 s » selon que la foule collait ou non au bot.

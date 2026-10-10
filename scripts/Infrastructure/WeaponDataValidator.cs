@@ -17,7 +17,7 @@ public static class WeaponDataValidator
 	{
 		"id", "name", "description", "sprite", "tier", "type", "damage_type", "attack_pattern",
 		"trigger_coefficient", "fx", "summary", "growth", "ascensions", "stats", "source", "lore_flavor", "attack_audio",
-		"count_name_key", "special_effect", "default_for", "on_hit_effect",
+		"count_name_key", "special_effect", "default_for", "on_hit_effect", "impact_audio",
 	};
 
 	private static readonly HashSet<string> AscensionKeys = new()
@@ -237,6 +237,9 @@ public static class WeaponDataValidator
 		string sound = Text(weapon, "attack_audio");
 		if (sound != null && !DataKeySets.TopLevelKeys(AudioManager.SoundBankPath).Contains(sound))
 			return $"{where}, attack_audio : son « {sound} » absent de la banque";
+		string impact = Text(weapon, "impact_audio");
+		if (impact != null && !DataKeySets.TopLevelKeys(AudioManager.SoundBankPath).Contains(impact))
+			return $"{where}, impact_audio : son « {impact} » absent de la banque";
 		string sprite = Text(weapon, "sprite");
 		if (sprite != null && !ResourceLoader.Exists("res://" + sprite))
 			return $"{where}, sprite : image « {sprite} » introuvable";
