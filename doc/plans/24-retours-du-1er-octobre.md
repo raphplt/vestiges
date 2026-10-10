@@ -209,7 +209,7 @@ Raphaël ([DECISIONS §99](DECISIONS.md#99-la-mêlée-ne-touche-pas-plus-loin-qu
 
 #### C2d. Largeur du coup — 10 octobre 2026
 
-Raphaël ([DECISIONS §100](DECISIONS.md#100-largeur-des-coups-de-mêlée--10-octobre-2026)) : traiter aussi la largeur. Quatre écarts mesurés dans le code :
+Raphaël ([DECISIONS §102](DECISIONS.md#102-largeur-des-coups-de-mêlée--10-octobre-2026)) : traiter aussi la largeur. Quatre écarts mesurés dans le code :
 
 1. Ouverture dessinée bornée à 200° alors que la touche monte à 360° avec la zone (voies en cercle comme Moisson dessinées en arc partiel).
 2. Ouverture mesurée en angles écran pour la touche, sur l'ellipse pour le dessin : Faucille (90°) vers la droite, traînée à ±36° à l'écran, touche à ±45° ; vers le bas, l'inverse.

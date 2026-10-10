@@ -1088,3 +1088,8 @@ Raphaël : « je ne veux pas que la portée d'une arme soit supérieure à ce qu
 
 **Acquis :** la touche d'un coup de mêlée se mesure sur l'ellipse de sa traînée, dont le bord passe à l'allonge, sans plafond ; allonge horizontale inchangée, verticale ÷ 1,35 ; détail au [plan 24 C2c](24-retours-du-1er-octobre.md#c2c-la-touche-sarrête-au-bord-du-coup-dessiné--10-octobre-2026). Sensation à confirmer en jouant.
 
+## 102. Largeur des coups de mêlée — 10 octobre 2026
+
+Raphaël, après §99 (portée de la mêlée) : « test la larguer dcp » (traiter aussi la largeur du coup). Appliqué sans autre arbitrage, dans l'esprit de §99 : la largeur de touche est celle du dessin. La forme suit l'attaque (trait pour l'attaque droite, traînée pour l'arc et l'onde), l'ouverture se mesure sur l'ellipse et se dessine jusqu'à 360°, l'estoc touche ce que son trait recouvre.
+
+**Acquis :** détail au [plan 24 C2d](24-retours-du-1er-octobre.md#c2d-largeur-du-coup--10-octobre-2026). Conséquence à juger en jouant : les estocs touchent en ligne, plus en cône de 60°.
