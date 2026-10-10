@@ -52,6 +52,7 @@ public partial class RunObservation
         // Le Néant passe esquive, bouclier et invulnérabilité ; un second souffle éventuel demande un deuxième coup.
         for (int attempt = 0; attempt < 4 && !_player.IsDead; attempt++)
             _player.TakeErasureDamage(100000f);
+        AssertDeathAudioStopped("mort");
         // Séquence de mort : impact, le joueur se défait, effacement naissant, à mi-course, écran couvert ; puis le bilan.
         // Puis les cartes de gain qui se retournent, le compteur de Vestiges, l'état final.
         double[] moments = { 0.08, 0.6, 1.2, 1.8, 2.4, 3.3, 5.2, 5.8, 8.0 };
@@ -77,6 +78,7 @@ public partial class RunObservation
             }
             if (wait > 0.0)
                 await Seconds(wait);
+            AssertDeathAudioStopped($"death-{shot}");
             Save($"death-{shot}.png");
             GD.Print($"[RunObservation] death-{shot} at {(Time.GetTicksMsec() - deathMsec) / 1000.0:0.00} s");
         }
@@ -94,6 +96,20 @@ public partial class RunObservation
         RunSample last = journey.Samples.Count > 0 ? journey.Samples[^1] : default;
         GD.Print($"[RunObservation] JOURNEY samples={journey.Samples.Count} last=({last.Time:0.0} s, niv. {last.Level}, {last.Kills} élim., {last.DistanceMeters:0} m) markers={System.Text.Json.JsonSerializer.Serialize(markers)}");
         GD.Print($"[RunObservation] RESULT death captured, killer={killer?.EnemyId ?? "none"}, dead={_player.IsDead}");
+    }
+
+    private void AssertDeathAudioStopped(string moment)
+    {
+        int playing = 0;
+        foreach (Node child in AudioManager.Instance.GetChildren())
+        {
+            if (child is AudioStreamPlayer player && player.Playing
+                && !player.Name.ToString().StartsWith("UiSfx", System.StringComparison.Ordinal))
+                playing++;
+        }
+        GD.Print($"[RunObservation] DEATH_AUDIO moment={moment} world_voices={playing} paused={GetTree().Paused}");
+        if (playing != 0)
+            throw new System.InvalidOperationException($"{playing} sons de run continuent après la mort ({moment}).");
     }
 
     private static void LoadHistoryFixture(string path)

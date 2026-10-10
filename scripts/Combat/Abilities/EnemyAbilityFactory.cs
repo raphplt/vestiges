@@ -16,6 +16,7 @@ public static class EnemyAbilityFactory
         EnemyAbilityKind.Burrow => new BurrowAbility(owner),
         EnemyAbilityKind.Cry => new CryAbility(owner),
         EnemyAbilityKind.AimedShot => new AimedShotAbility(owner),
+        EnemyAbilityKind.BileLob => new BileLobAbility(owner),
         _ => throw new System.ArgumentOutOfRangeException(nameof(kind), kind, "capacité sans classe"),
     };
 }

@@ -11,7 +11,8 @@
         "damage": 12,
         "xp_reward": 25,
         "perception": 380,
-        "leash": 700
+        "leash": 700,
+        "spawn_from_minute": 3
     },
     "abilities": {
         "charge": {

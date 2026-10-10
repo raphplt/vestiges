@@ -79,6 +79,8 @@ public partial class AudioManager : Node
 
 	private string _currentPhase = "";
 	private string _currentBiomeId = "";
+	// La scène continue au ralenti après la mort : ses appels audio restent refusés jusqu'à la prochaine run.
+	private bool _runAudioStopped;
 
 	// Tirages propres à l'audio : ils ne décalent pas ceux du gameplay (seed des bancs, avant/après d'écoute).
 	private readonly RandomNumberGenerator _rng = new();
@@ -382,7 +384,7 @@ public partial class AudioManager : Node
 
 	public void PlaySfx(string key, float pitchVariance = 0.05f, float volumeDb = 0f, float basePitch = 1f)
 	{
-		if (!_streams.TryGetValue(key, out AudioStream stream))
+		if (_runAudioStopped || !_streams.TryGetValue(key, out AudioStream stream))
 			return;
 
 		// Throttle: skip if same SFX was played too recently
@@ -476,6 +478,8 @@ public partial class AudioManager : Node
 
 	public void PlayLoopingSfx(string key, float volumeDb = 0f)
 	{
+		if (_runAudioStopped)
+			return;
 		if (_loopingSfxKey == key && _loopingSfxPlayer.Playing)
 			return;
 
@@ -536,7 +540,7 @@ public partial class AudioManager : Node
 
 	public override void _Process(double delta)
 	{
-		if (string.IsNullOrEmpty(_currentPhase))
+		if (_runAudioStopped || string.IsNullOrEmpty(_currentPhase))
 			return;
 		float dt = (float)delta;
 
@@ -609,6 +613,8 @@ public partial class AudioManager : Node
 
 	private void OnRunPhaseChanged(string oldPhase, string newPhase)
 	{
+		if (_runAudioStopped)
+			return;
 		_currentPhase = newPhase;
 
 		// La musique suit son propre pilotage (MusicDirector) ; la phase ne règle ici que l'ambiance.
@@ -642,6 +648,8 @@ public partial class AudioManager : Node
 
 	private void UpdateBiomeAmbiance()
 	{
+		if (_runAudioStopped)
+			return;
 		if (_currentPhase == "Exploration" && IsSoundInCurrentBiome("sfx_ambiance_foret"))
 			PlayAmbiance("sfx_ambiance_foret");
 		else if (_ambiancePlayer.Playing && (_ambianceFade == null || !_ambianceFade.IsRunning()))
@@ -655,6 +663,8 @@ public partial class AudioManager : Node
 
 	private void OnCrisisStarted(int crisisNumber, int intensity)
 	{
+		if (_runAudioStopped)
+			return;
 		_currentPhase = "Crisis";
 		PlaySfx("sfx_resurgence_accent", 0f);
 		FadeOutAmbiance(2f);
@@ -730,9 +740,17 @@ public partial class AudioManager : Node
 			PlaySfx("sfx_artefact_trouve", 0f, -3f);
 	}
 
-	private void OnWeaponEquipped(string weaponId, int slotIndex) => PlayUiSfx("sfx_weapon_equip", 0.03f);
+	private void OnWeaponEquipped(string weaponId, int slotIndex)
+	{
+		if (!_runAudioStopped)
+			PlayUiSfx("sfx_weapon_equip", 0.03f);
+	}
 
-	private void OnWeaponDropped(string weaponId) => PlayUiSfx("sfx_weapon_drop", 0.03f);
+	private void OnWeaponDropped(string weaponId)
+	{
+		if (!_runAudioStopped)
+			PlayUiSfx("sfx_weapon_drop", 0.03f);
+	}
 
 	private void OnPoiExplored(string poiId, string poiType)
 	{
@@ -758,22 +776,14 @@ public partial class AudioManager : Node
 
 	private void OnGameStateChanged(string oldState, string newState)
 	{
-		if (newState == "Hub")
+		if (newState is "Death" or "Hub")
 		{
-			_currentPhase = "";
-			_currentBiomeId = "";
-			_currentRandomEventId = "";
-			_ambianceFade?.Kill();
-			_ambiancePlayer.Stop();
-			_ambianceKey = "";
-			_sfxPool.Stop();
-			StopLoopingSfx();
-			StopLoopOnPlayer(_ambianceOverlayPlayer, ref _ambianceOverlayKey);
-			StopLoopOnPlayer(_lowHealthLoopPlayer, ref _lowHealthLoopKey);
-			StopLoopOnPlayer(_borderWarningPlayer, ref _borderWarningKey);
+			_runAudioStopped = true;
+			StopRunAudio();
 		}
 		else if (newState == "Run")
 		{
+			_runAudioStopped = false;
 			_lastKnownMaxHp = 0f;
 			_lastKnownShield = -1f;
 			_currentPhase = "";
@@ -783,6 +793,26 @@ public partial class AudioManager : Node
 			// l'annonce. La phase réelle est relue en fin d'image, après celui qu'émet un retour de mort.
 			Callable.From(SyncRunPhase).CallDeferred();
 		}
+	}
+
+	/// <summary>Arrêt réel des lecteurs : une pause ou un filtre de mort ne termine pas leurs sons.</summary>
+	private void StopRunAudio()
+	{
+		_currentPhase = "";
+		_currentBiomeId = "";
+		_currentRandomEventId = "";
+		_ambianceFade?.Kill();
+		_ambianceFade = null;
+		_ambiancePlayer.Stop();
+		_ambianceKey = "";
+		_sfxPool.Stop();
+		_uiSfxPool.Stop();
+		StopLoopingSfx();
+		StopLoopOnPlayer(_ambianceOverlayPlayer, ref _ambianceOverlayKey);
+		StopLoopOnPlayer(_lowHealthLoopPlayer, ref _lowHealthLoopKey);
+		StopLoopOnPlayer(_borderWarningPlayer, ref _borderWarningKey);
+		_sfxLastPlayTime.Clear();
+		_uiLastPlayTime.Clear();
 	}
 
 	private void SyncRunPhase()
@@ -797,6 +827,8 @@ public partial class AudioManager : Node
 
 	private void UpdateContextAmbiance()
 	{
+		if (_runAudioStopped)
+			return;
 		string targetKey = ResolveContextAmbianceKey();
 		if (string.IsNullOrEmpty(targetKey))
 		{
@@ -832,6 +864,8 @@ public partial class AudioManager : Node
 
 	private void UpdatePlayerWarnings()
 	{
+		if (_runAudioStopped)
+			return;
 		CachePlayer();
 		CacheErasureManager();
 		CacheWorldBounds();

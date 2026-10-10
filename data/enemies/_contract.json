@@ -13,7 +13,9 @@
     "pack_bonus_speed": { "default": 0.1, "min": 0 },
     "pack_radius": { "default": 120, "min": 0 },
     "web_slow_multiplier": { "default": 0.4, "min": 0, "max": 1, "_comment": "Comportement weaver : vitesse du joueur touché par un projectile." },
-    "web_slow_seconds": { "default": 2, "min": 0, "_comment": "Comportement weaver : durée du ralentissement." }
+    "web_slow_seconds": { "default": 2, "min": 0, "_comment": "Comportement weaver : durée du ralentissement." },
+    "ranged_cooldown": { "default": 1.5, "min": 0.1, "_comment": "Secondes entre deux tirs d'une créature à distance, divisées par son agressivité ; un tir annoncé y ajoute son annonce. 1,1 jusqu'au plan 33 (sortie du code)." },
+    "projectile_reach_margin": { "default": 120, "min": 0, "_comment": "Un projectile ennemi s'éteint après portée de tir + cette marge (plan 33) : avant, il volait 4 s, environ 740 px, quelle que soit la portée." }
   },
   "shapes": ["triangle", "square", "diamond", "boss"],
   "shakes": ["light", "medium", "heavy"],
@@ -95,6 +97,28 @@
         "reinforcement_id": { "kind": "enemy" },
         "fx_family": { "kind": "family", "default": "hostile" },
         "cry_audio": { "kind": "sound", "default": "" }
+      }
+    },
+    "bile_lob": {
+      "_comment": "Crachat en cloche (Cracheur, plan 33) : une goutte vole vers la place du joueur, annoncée au sol, puis laisse une flaque qui ralentit. On la contourne en se plaçant, sans esquive.",
+      "numbers": {
+        "cast_range": { "default": 260, "min": 0 },
+        "windup_seconds": { "default": 0.35, "min": 0.05 },
+        "flight_seconds": { "default": 0.9, "min": 0.2 },
+        "arc_height": { "default": 60, "min": 0 },
+        "radius": { "default": 36, "min": 0 },
+        "player_hit_margin": { "default": 6, "min": 0 },
+        "cooldown_seconds": { "default": 3.2, "min": 0 },
+        "damage_multiplier": { "default": 1, "min": 0 },
+        "puddle_seconds": { "default": 3, "min": 0 },
+        "puddle_slow_multiplier": { "default": 0.65, "min": 0, "max": 1 },
+        "max_simultaneous": { "default": 4, "min": 1, "max": 32, "integer": true },
+        "first_delay": { "optional": true, "min": 0, "_comment": "Absent : délai tiré entre 40 et 100 % de la recharge." }
+      },
+      "texts": {
+        "fx_family": { "kind": "family", "default": "rust" },
+        "cast_audio": { "kind": "sound", "default": "" },
+        "impact_audio": { "kind": "sound", "default": "" }
       }
     },
     "aimed_shot": {

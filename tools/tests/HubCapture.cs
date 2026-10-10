@@ -9,6 +9,7 @@ namespace Vestiges.Tests;
 /// <summary>
 /// Captures de l'écran d'accueil rendu : état initial, puis une capture par action rejouée.
 /// --output DIR, --actions ui_right,ui_accept (actions d'input envoyées une à une, capture après chacune).
+/// --capture-size WxH : taille réelle de la fenêtre et des images, également contrôlée dans les logs.
 /// --record N : après la dernière action, enregistre N frames d'affilée en vignettes (départ en run, chargement),
 /// avec le temps écoulé et la scène courante de chaque frame.
 /// --collection-focus ID : arrivée depuis le bilan, « Voir dans la Collection » sur l'arme ID.
@@ -42,6 +43,17 @@ public partial class HubCapture : Node
             GetTree().Root.AddChild(hub);
             GetTree().CurrentScene = hub;
             await Frames(150);
+            string resolution = Argument(args, "--capture-size", "");
+            if (resolution.Length > 0)
+            {
+                string[] dimensions = resolution.Split('x');
+                // Sous macOS, --resolution ne suffisait pas : imposer la taille après le démarrage du Hub.
+                GetWindow().Mode = Window.ModeEnum.Windowed;
+                await Frames(15);
+                GetWindow().Size = new Vector2I(int.Parse(dimensions[0], CultureInfo.InvariantCulture),
+                    int.Parse(dimensions[1], CultureInfo.InvariantCulture));
+                await Frames(30);
+            }
             string tab = Argument(args, "--collection-tab", "");
             if (tab.Length > 0)
             {
@@ -106,7 +118,7 @@ public partial class HubCapture : Node
         using Image image = GetViewport().GetTexture().GetImage();
         string path = $"{_output}/{name}.png";
         image.SavePng(path);
-        GD.Print($"[HubCapture] {path}");
+        GD.Print($"[HubCapture] {path} pixels={image.GetSize()} fenêtre={GetWindow().Size}");
     }
 
     private async Task Frames(int count)

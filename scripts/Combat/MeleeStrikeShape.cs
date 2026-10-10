@@ -5,7 +5,7 @@ using Vestiges.Infrastructure;
 namespace Vestiges.Combat;
 
 /// <summary>
-/// Forme de touche d'un coup de mêlée, la même que son dessin (DECISIONS §99, §100). L'attaque droite est un trait
+/// Forme de touche d'un coup de mêlée, la même que son dessin (DECISIONS §99, §102). L'attaque droite est un trait
 /// vers la cible : elle touche une créature dont le corps recouvre le trait. L'arc et l'onde sont des traînées
 /// aplaties (<see cref="Iso.SlashSquash"/>) : ils touchent jusqu'à leur bord, dans leur ouverture mesurée sur l'ellipse.
 /// </summary>

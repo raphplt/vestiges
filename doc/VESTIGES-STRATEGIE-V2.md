@@ -19,7 +19,7 @@ Les [décisions de Raphaël](plans/DECISIONS.md) et le [dossier de plans v0.6](p
 - **Priorité du 28 septembre :** refondre ensemble les objets et les **perks**. Après comparaison des formules, Raphaël choisit **B : quatre perks qualitatifs maximum, acquis une fois, sans niveaux ni raretés** ; les armes s'améliorent et les objets se cumulent sans plafond de slots/exemplaires. Le [catalogue de spécialisation](plans/05-perks-specialisations.md) fixe neuf règles validées pour une V1 extensible ; B0 (données, contrats), B1 (acquisition), B2 (cinq effets de combat et de survie) et B3 sans objets (Sillage, Seconde lecture) sont livrés et vérifiés ; Délestage, Habitude et les objets restent à implémenter. Les coefficients et paliers initiaux restent à éprouver ; le plafond 70/99 et la courbe ne sont pas arbitrés. Le [catalogue commun initial](plans/05-catalogue-objets-perks.md) conserve l'audit, pas une cible acquise de seize perks à dix niveaux.
 - Retour du 22 septembre : portée de mêlée trop faible, à augmenter dès les armes de base ; accroître la proportion d’armes à distance ; prévoir des objets/bonus de portée et de diamètre d’impact. Le [plan 05](plans/05-armes-objets-builds.md) distingue allonge et taille de zone et prévoit leur cohérence avec les dégâts et les visuels. Valeurs et ratio final restent à calibrer.
 - Quêtes variées et accès aux armes/objets/personnages **indépendants des Souvenirs**. Migrer les anciens droits sans les retirer. Le lore conserve sa progression narrative, ses constellations et les transformations du Hub ; les anciennes descriptions « Souvenir → accès gameplay » sont à remplacer.
-- Hub très clair et peu textuel ; **Collection armes/objets accessible directement depuis le menu principal**.
+- Hub très clair et peu textuel ; **Collection armes/objets accessible directement depuis le menu principal**. Pages Personnages et Quêtes dédiées ; page Chroniques supprimée à la demande de Raphaël le 10 octobre 2026 (DECISIONS §99 bis).
 - Casting plus diversifié et potentiellement décalé dans un univers cohérent ; nouvelles créatures demandées. Boss de familles, terrain amélioré et mécaniques originales sont détaillés dans les plans, avec variantes encore proposées.
 - Pixel art conservé, suffisamment détaillé et uniforme. Le contrat numérique et la méthode de production recommandés en plan 08 restent à valider sur un ensemble de référence avant modification de la Charte.
 
@@ -567,8 +567,8 @@ Liées aux 6 Constellations de la Bible. Trouver des Souvenirs spécifiques dans
 
 ### Menu quêtes
 
-- **Hub :** panneau "Chroniques" avec toutes les quêtes (run, progression, lore), leur avancement, leurs récompenses.
-- **In-game :** widget HUD avec les quêtes de run actives. Pas les quêtes de progression (trop de bruit).
+- **Hub :** page Quêtes dédiée avec les quêtes de déblocage, leur avancement et leurs récompenses ; grille commune et filtres de statut (plan 06 Q3b–Q3d). L'ancienne page Chroniques est supprimée (DECISIONS §99 bis).
+- **In-game :** aucune quête affichée en permanence ; notification dès la complétion (DECISIONS §90).
 
 ---
 
@@ -581,7 +581,7 @@ Le Foyer disparaît du gameplay in-run. Narrativement, le Hub DEVIENT le Foyer �
 **Ce que le Hub contient :**
 - **Le Miroir** : sélection de personnage. Chaque personnage débloqué est visible.
 - **Le Tableau** : choix de mutateurs de difficulté (multiplicateurs de score).
-- **Les Chroniques** : quêtes (progression + lore), journal de Souvenirs (organisé par constellation).
+- **Quêtes** : suivi des déblocages permanents (personnages, armes, objets). La page Chroniques a été supprimée le 10 octobre 2026 ; aucun écran de records/statistiques/endurance ne la remplace (DECISIONS §99 bis).
 - **L'Écho** : leaderboards, historique des runs, records.
 - **Le Passage** : lancer la run.
 
@@ -753,6 +753,7 @@ Le script de post-processing doit inclure une vérification/correction de l'angl
 - [x] Micro-événements v1 (plan 12) : directeur calé autour des Résurgences, cinq événements (Souverain, Harde, Vestige tombé, Veille, Averse d'éclats), repères au sol, bandeau et flèche de bord, données JSON ; captures en vraie run (24 septembre 2026).
 - [x] Variantes renforcées data-driven (plan 12) : élites naturelles à affixe, Souverains, Aberrations et affixes de phase dans `_variants.json`.
 - [x] Recette humaine des micro-événements et des élites : cadence validée en l'état, élites bien dosées, événements appréciés (Raphaël, 25 septembre 2026). Détails à revoir plus tard ; le soin, peut-être trop rare, est reporté aux plans 13/03 (plan 12 §7).
+- [x] Ouverture rééquilibrée pour la mêlée (plan 33, 10 octobre 2026) : Cracheur en crachat en cloche avec flaque, raréfié et repoussé à 3 min ; Rôdeur, Brute et Tréant échelonnés ; courbe d'XP 15 / 1,4 ; élites dès 2:30. Mesuré au Vagabond en profil neuf : niveau 25 à 10 min (17,5 avant), éliminations +77 %, Cracheur 2 % des dégâts reçus (14 % avant).
 - [ ] Ajuster le tempo : runs de 15-25 min en gameplay normal.
 - [ ] **PLAYTEST : est-ce que c'est fun ? Est-ce que l'Effacement crée de la tension ? Est-ce que le mouvement permanent fonctionne ?**
 
@@ -803,6 +804,7 @@ Le script de post-processing doit inclure une vérification/correction de l'angl
 - [x] Plan 15 M4b / plan 27 V5 : six impacts par matière choisis, liés aux 24 armes par les données et la provenance du coup ; critiques et dommages sans arme distincts, régressions et galerie moteur vérifiées (10 octobre 2026).
 - [x] Plan 15 M5a : durée entière des WAV compressés conservée en boucle (forêt 1,616 → 8 s), régressions PCM/QOA et lecteurs d'ambiance, smoke/audio/musique et période réelle vérifiés (10 octobre 2026) ; traitement du timbre en audition M5b.
 - [x] Plan 15 M6 : fond de forêt original conservé à −2 dB, réservé à la Forêt Reconquise par le biome du joueur ; oiseaux locaux, sorties et retours rapides vérifiés, cinq biomes traversés en run enregistrée, build et smoke/audio/musique verts (10 octobre 2026, §94).
+- [x] Plan 15 M7 : arrêt immédiat des sons de run à la mort, ambiances et boucles comprises ; relances tardives bloquées et deuxième run réactivée, régression avant/après (7 voix résiduelles → 0), mort réelle après combat et smoke/audio/musique vérifiés (10 octobre 2026, §104).
 - [x] Écran de mort reworké (transition visuelle + score détaillé + stats) : bilan en trois zones, première passe du plan 02 lot D (27 septembre 2026) ; séquence de mort dans le monde, lot M1 ; distance, éliminations par arme et frise relevées, lot M2 ; bilan en une page dense, lot M3 ; gains animés, lot M4 (28 septembre 2026). Recette en jeu de Raphaël attendue.
 
 ### Refonte objets et spécialisations — plan 05, 28 septembre 2026
@@ -860,7 +862,8 @@ Le script de post-processing doit inclure une vérification/correction de l'angl
 - [x] Quêtes de progression (déblocages de personnages et d'armes) : 36 quêtes de déblocage, suivies en run et notifiées aussitôt (plan 06 §10, Q1–Q2, 10 octobre 2026).
 - [x] Rendre le système de déblocage fonctionnel : réserve de départ, règle d'accès unique, sauvegarde (plan 06 §10, Q1).
 - [ ] S'assurer que 4 personnages sont jouables et équilibrés.
-- [x] Menu quêtes dans le Hub ("Chroniques").
+- [x] Page Quêtes dédiée dans le Hub : grille de quatre cartes, états mélangés et filtres Toutes/En cours/Accomplies, personnages repérables, textes allégés, médaille de complétion en pixel art ; captures 1080p/720p et navigation vérifiées (plan 06 Q3–Q3d, 10 octobre 2026).
+- [x] Suppression complète de la page Chroniques et de son entrée de menu, script et UID compris ; menu simplifié capturé, build sans warning, smoke et suite UI art verts (DECISIONS §99 bis, plan 06 Q3c, 10 octobre 2026).
 - [x] Notifications in-game de complétion de quête.
 
 ### Phase F — Art et polish (4+ semaines)

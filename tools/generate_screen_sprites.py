@@ -49,17 +49,24 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--sheets", type=Path, default=Path("doc/plans/planches"))
     parser.add_argument("--export", action="store_true")
+    parser.add_argument("--only", help="Exporter uniquement l'asset nommé.")
     args = parser.parse_args()
     images = assets()
+    exported = images
+    if args.only:
+        if args.only not in images:
+            parser.error(f"Asset inconnu : {args.only}")
+        exported = {args.only: images[args.only]}
     write_sheets(args.sheets, images)
     if args.export:
         output = Path("assets/ui/screens/plan25")
-        export(images, output, "generate_screen_sprites")
+        export(exported, output, "generate_screen_sprites")
         manifest = {"background": {"frame_size": list(SIZE), "frames": FRAMES, "animation": "rotating_rays_and_dust",
                                    "rotation_degrees_per_second": ROTATION_DEGREES_PER_SECOND, "tints": list(TINTS)},
                     "skin_margins": [4, 4, 4, 4], "loading_ground": {"size": [128, 32], "repeat_axis": "x", "biomes": list(BIOMES)},
                     "filter": "nearest"}
-        (output / "screens_manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
+        if not args.only:
+            (output / "screens_manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
     print(f"[generate_screen_sprites] trois planches dans {args.sheets}")
 
 

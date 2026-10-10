@@ -100,7 +100,7 @@ public partial class WeaponRegression : Node2D
     }
 
     /// <summary>
-    /// Forme de touche de la mêlée (DECISIONS §99, §100) : un coup ne touche pas hors de sa forme dessinée.
+    /// Forme de touche de la mêlée (DECISIONS §99, §102) : un coup ne touche pas hors de sa forme dessinée.
     /// Allonge : la traînée de la Faucille est aplatie (<see cref="Iso.SlashSquash"/>) ; à 0,9 allonge à l'horizontale
     /// et sous le joueur dans l'ellipse, la créature est touchée ; à 1,1 allonge sur l'ellipse en dessous (0,81 à
     /// l'écran, dans l'ancien cercle), elle ne l'est pas ; l'estoc du Scalpel touche à 0,9 allonge en dessous.

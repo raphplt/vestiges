@@ -1076,11 +1076,23 @@ Raphaël fournit douze illustrations (`~/Downloads/personnages`, compressées en
 
 **Acquis :** le grand portrait de la page Personnages est l'illustration du personnage ; la page ne montre que les personnages en jeu. Deux illustrations du Facteur existent (à roulettes, solitaire) : celle qui servira reste à choisir quand il deviendra jouable.
 
+## 97. Écran des quêtes — 10 octobre 2026
+
+Raphaël demande de revoir la page du menu : des cases en rangées de quatre ou cinq plutôt qu'une liste verticale ; ne plus présenter les quêtes en cours et accomplies dans deux tableaux séparés, tout en permettant de passer clairement des unes aux autres. Il signale des textes superflus : « En une seule run » répété et parfois inapproprié, « Meilleure run », les explications à côté des étoiles et le compteur « 0 / 36 », à déplacer ou supprimer. Il pense d'abord que les personnages manquent, puis constate leur présence après avoir joué : ce n'est pas une absence du catalogue.
+
+**Application au [plan 06 Q3b](06-personnages-quetes-defis.md#q3b--grille-de-quêtes-et-lecture-allégée--10-octobre-2026) :** grille commune de quatre cartes par rangée, toutes visibles par défaut, filtres de statut et distinction des cartes accomplies ; personnages repérables dès l'ouverture ; suppression des libellés répétitifs et du compteur global. Les restrictions utiles restent dans la description de chaque objectif.
+
 ## 98. Portée des armes de mêlée, second relèvement — 10 octobre 2026
 
 Raphaël : « Je pense que la portée des armes corps à corps devrait être rehaussée. » Le premier relèvement (plan 24 L3, validé au §40) n'a pas suffi. Option retenue parmi trois : **+20 px, plancher 80** pour les arcs et les estocs, armes en cercle plus modérées (Rallonge 95, Cloche 110) ; le visuel du coup recalé sur l'allonge réelle (il n'en montrait que 70 %).
 
 **Acquis :** valeurs et visuel du [plan 24 C2b](24-retours-du-1er-octobre.md#c2b-second-relèvement--10-octobre-2026). Sensation à confirmer en jouant.
+
+## 99 bis. Chroniques retirées et icône de complétion — 10 octobre 2026
+
+Raphaël : « l'écran chronique il sert à rien également […] le retirer totalement » ; il refuse la coche typographique des quêtes et demande « une icône custom en pixel art dans la DA du jeu à la place ».
+
+**Acquis :** supprimer entièrement la page Chroniques du Hub et son entrée de menu. Remplacer les coches visibles par une texture originale dans la direction artistique du jeu, sur les cartes accomplies et dans leur détail. Lot [06 Q3c](06-personnages-quetes-defis.md#q3c--retrait-des-chroniques-et-icône-de-complétion--10-octobre-2026).
 
 ## 99. La mêlée ne touche pas plus loin que son coup dessiné — 10 octobre 2026
 
@@ -1088,8 +1100,32 @@ Raphaël : « je ne veux pas que la portée d'une arme soit supérieure à ce qu
 
 **Acquis :** la touche d'un coup de mêlée se mesure sur l'ellipse de sa traînée, dont le bord passe à l'allonge, sans plafond ; allonge horizontale inchangée, verticale ÷ 1,35 ; détail au [plan 24 C2c](24-retours-du-1er-octobre.md#c2c-la-touche-sarrête-au-bord-du-coup-dessiné--10-octobre-2026). Sensation à confirmer en jouant.
 
+## 100. Icône de complétion à simplifier — 10 octobre 2026
 
-## 102. Les héros un par un, le Facteur d'abord — 10 octobre 2026
+Raphaël : « pas très joli / lisible le sceau je trouve ».
+
+**Application :** reprendre l'icône de complétion dans le [lot 06 Q3d](06-personnages-quetes-defis.md#q3d--lisibilité-de-licône-de-complétion--10-octobre-2026) : silhouette de médaille à deux rubans, moins de détails internes, contraste renforcé et captures à taille réelle. La demande d'une icône originale en pixel art, sans coche typographique, reste applicable. Nouvelle médaille ensuite validée par Raphaël : « top », avec demande de push sur `main`.
+
+
+## 101. Ouverture trop dure en mêlée — 10 octobre 2026, soir
+
+Raphaël, après des parties au Vagabond (retour dicté, extraits) : « avec le personnage de base […] qui a une arme de corps à corps, c'est vrai que le jeu est peut-être trop dur » ; « les ennemis qui tirent à distance sont trop embêtants […] ça oblige à faire des esquives tout le temps. Et c'est pas forcément le but d'un jeu bullet heaven […] le but de ce genre de jeu c'est de savoir contrôler la foule » ; « soit je supprimerai totalement l'ennemi ou je le modifierai pour qu'il ait un comportement différent » ; « certains ennemis ont trop de points de vie […] au tout début de partie, dans les premières minutes » ; régénération lente « normal », « pas le plus gros problème » ; « le format du jeu est peut-être un tout petit peu trop compressé avec un peu trop de choses qui se passent en 10 minutes » ; « la montée de niveau aussi se fait peut-être un peu lentement […] pas non plus que ça soit trop abusé » ; « prendre tout ça avec des pincettes […] pas direct appliquer des correctifs […] déjà cartographier ».
+
+**Suite :** diagnostic mesuré et leviers proposés au [plan 33](33-equilibrage-ouverture.md), rien d'appliqué. Ce retour l'emporte sur la demande de tirs en exploration du §50 (plan 21 E4), dans le sens du §44.
+
+**Arbitrage du même soir (questions du plan 33) :**
+- **Cracheur :** raréfié tout de suite (dès 3 min, poids 0,5, retiré des pools d'exploration de la forêt, des champs et de la carrière), puis transformé en crachat en cloche qui laisse une flaque au sol (A1 puis A2).
+- **Créatures solides :** entrées échelonnées (Rôdeur dès 1:30, Brute dès 3:00, Tréant dès 4:00) et Rôdeur allégé, 45 PV et 11 dégâts de base (B1 + B2).
+- **XP :** ouverture et courbe entière : majoration des niveaux 1 à 5 retirée, et `base_xp` 22 → 19 (D1 + D2), plutôt que l'ouverture seule recommandée.
+- **Tempo :** ouverture aérée, élites naturelles dès 2:30 et une toutes les 50 à 75 s, montée d'ouverture sur 120 s ; Souverains, Résurgences et Barrière gardent leur heure (E1).
+
+## 102. Largeur des coups de mêlée — 10 octobre 2026
+
+Raphaël, après §99 (portée de la mêlée) : « test la larguer dcp » (traiter aussi la largeur du coup). Appliqué sans autre arbitrage, dans l'esprit de §99 : la largeur de touche est celle du dessin. La forme suit l'attaque (trait pour l'attaque droite, traînée pour l'arc et l'onde), l'ouverture se mesure sur l'ellipse et se dessine jusqu'à 360°, l'estoc touche ce que son trait recouvre.
+
+**Acquis :** détail au [plan 24 C2d](24-retours-du-1er-octobre.md#c2d-largeur-du-coup--10-octobre-2026). Conséquence à juger en jouant : les estocs touchent en ligne, plus en cône de 60°.
+
+## 102 bis. Les héros un par un, le Facteur d'abord — 10 octobre 2026
 
 Raphaël : « Rajoute-les dans characters.json, rajoute-leur un passif raccord avec leur lore / type de caractère (tous doivent avoir un passif unique) et pareil une arme de départ (prends des armes qui existent quand c'est possible sinon il faudra créer celles qui manquent). Le moyen de les débloquer se fera principalement par des quêtes. La mobilité propre : oui bien sûr. Donc pour ne pas rusher on va les faire un par un en mode vertical. Commence par le Facteur. »
 
@@ -1102,3 +1138,17 @@ Raphaël : « Rajoute-les dans characters.json, rajoute-leur un passif raccord a
 **À juger en jouant :** valeurs d'essai (stats du Facteur, 2 rebonds à −15 %, élan +25 %/+15 % en 4 s, glissade 0,4 s à ×1,5 et 3 s de recharge) ; son provisoire de la Sacoche à auditionner.
 
 **Suite, l'Éveillée (même soir) :** Raphaël : « ok top. personnage suivant, stp ». L'Éveillée est livrée (plan 06 P3). Sa rémanence répète le prochain **tir** seulement : rejouer une mêlée loin du corps demanderait de refaire ses traînées, et l'Éveillée est un personnage de distance. À confirmer en jouant.
+
+**Intégration du 10 octobre :** Raphaël demande de débloquer la PR #4, dont GitHub laisse la vérification de fusion affichée. Trois conflits confirmés par API (traductions générées et décisions) ; lot de synchronisation P2e, sans nouvel arbitrage de gameplay.
+
+## 103. Équilibrage de l'ouverture : tout appliquer, viser le niveau 30 — 10 octobre 2026, soir
+
+Raphaël : « ça me va que tu fasses les modifications dont on a parlé. Que ce soit pour le crasher, pour la solidité des ennemis, pour l'XP, pour le rythme. Si tu vois d'autres choses, d'ailleurs, n'hésite pas à les implémenter aussi » ; XP : « être au niveau 15-20 à 10 minutes, c'est légèrement bas. Faudrait plus viser à peu près le niveau 30 […] si on fait une plutôt bonne run. Voire potentiellement même un peu plus si on fait une excellente run. Avec un bon build » ; méthode : « essaye de tout faire d'un bloc […] Fais tous les changements et lance éventuellement des tests à la fin ».
+
+**Appliqué, à valider en jouant :** lot Q1 du [plan 33](33-equilibrage-ouverture.md#7-q1-livré--10-octobre-2026-soir), avec trois ajouts de l'agent : pente des PV de 4 à 8 min adoucie, cadence des tirs ennemis en données et ralentie, portée de vol des tirs bornée. Cible d'XP retenue : environ 30 à 10 min pour une bonne run, davantage pour une excellente.
+
+## 104. Arrêter les sons à la mort — 10 octobre 2026
+
+Raphaël : « il y a un bug chiant quand la partie est fini (mort) les sons ne s'arretent pas il faudrait les stopper tous (surtout ceux des ennemis/armes) ».
+
+**Appliqué et vérifié :** arrêt immédiat des sons de la run et blocage de leur relance pendant la mort et le bilan, puis réactivation à la prochaine run ; lot M7 du [plan 15](15-audio.md). L'audio dédié à la séquence de mort et à l'interface de bilan reste disponible. Régression avant/après, smoke/audio/musique et mort réelle après combat verts.

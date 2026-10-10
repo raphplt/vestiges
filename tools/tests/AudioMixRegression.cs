@@ -6,7 +6,7 @@ using Vestiges.Infrastructure;
 
 namespace Vestiges.Tests;
 
-/// <summary>Régressions du mix : saturation, priorités, répétitions et réemploi d'une voix en fondu.</summary>
+/// <summary>Régressions du mix : priorités, fondus, biomes et arrêt des sons à la fin d'une run.</summary>
 public partial class AudioMixRegression : Node
 {
     private int _failures;
@@ -62,6 +62,7 @@ public partial class AudioMixRegression : Node
             await CheckBiomeAmbiance(audio);
 
             EventBus bus = GetNode<EventBus>("/root/EventBus");
+            bus.EmitSignal(EventBus.SignalName.GameStateChanged, "Hub", "Run");
             bus.EmitSignal(EventBus.SignalName.PlayerBiomeChanged, "forest_reclaimed");
             bus.EmitSignal(EventBus.SignalName.RunPhaseChanged, "Crisis", "Exploration");
             Check(audio.GetNode<AudioStreamPlayer>("Ambiance").Playing, "ambiance démarrée en exploration");
@@ -79,6 +80,8 @@ public partial class AudioMixRegression : Node
             Check(!audio.GetNode<AudioStreamPlayer>("Ambiance").Playing
                 && !audio.GetNode<AudioStreamPlayer>("AmbianceOverlay").Playing, "Hub : arrêt des ambiances de run");
 
+            await CheckDeathAudio(audio, stream);
+
             MusicDirector music = new() { Name = "GainProbe" };
             music.Initialize(MusicConfig.Load(), _ => stream, _ => -9f);
             AddChild(music);
@@ -94,6 +97,91 @@ public partial class AudioMixRegression : Node
         GetTree().Paused = false;
         GD.Print($"[AudioMixRegression] RESULT failures={_failures}");
         GetTree().Quit(_failures == 0 ? 0 : 1);
+    }
+
+    private async Task CheckDeathAudio(AudioManager audio, AudioStreamWav stream)
+    {
+        GameManager manager = GetNode<GameManager>("/root/GameManager");
+        EventBus bus = GetNode<EventBus>("/root/EventBus");
+        manager.RunSeed = 221092026;
+        manager.ChangeState(GameManager.GameState.Run);
+        await Frames(2);
+        bus.EmitSignal(EventBus.SignalName.PlayerBiomeChanged, "forest_reclaimed");
+        bus.EmitSignal(EventBus.SignalName.RandomEventTriggered, "storm", "Orage");
+        audio.PlaySfx("sfx_weapon_heavy_hammer", 0f);
+        audio.PlaySfx("sfx_enemy_ranged_shot", 0f);
+        audio.PlayLoopingSfx("sfx_level_up_loop");
+        AudioStreamPlayer runUi = audio.PlayUiSfx("sfx_chest_reveal");
+        Check(runUi != null && runUi.Playing && CountWorldVoices(audio) == 5,
+            "avant mort : arme, ennemi, forêt, météo et boucle de choix actifs");
+        AudioManager.FadeOutUI(runUi, "sfx_chest_reveal", 5f);
+        // Des queues longues et deux alertes en cours rendent le contrôle indépendant de la durée des assets.
+        foreach (Node child in audio.GetChildren())
+        {
+            if (child is AudioStreamPlayer player && (player.Playing || player.Name == "LowHealthLoop"
+                || player.Name == "BorderWarningLoop"))
+            {
+                player.Stream = stream;
+                player.Play();
+            }
+        }
+        int before = CountWorldVoices(audio);
+        manager.ChangeState(GameManager.GameState.Death);
+        int atDeath = CountWorldVoices(audio);
+        GD.Print($"[AudioMixRegression] DEATH seed={manager.RunSeed} before={before} at_death={atDeath}");
+        Check(before == 7 && atDeath == 0 && !runUi.Playing,
+            "mort : arrêt immédiat des sept voix de monde et du son UI engagé");
+
+        // Même image, puis bilan en pause : les attaques et événements retardés ne doivent pas relancer le monde.
+        audio.PlaySfx("sfx_weapon_sling", 0f);
+        audio.PlaySfx("sfx_rodeur_attaque", 0f);
+        audio.PlayLoopingSfx("sfx_level_up_loop");
+        bus.EmitSignal(EventBus.SignalName.WeaponEquipped, "heavy_hammer", 0);
+        bus.EmitSignal(EventBus.SignalName.WeaponDropped, "heavy_hammer");
+        Check(!audio.GetNode<AudioStreamPlayer>("UiSfx0").Playing,
+            "mort : événements d'équipement tardifs sans son d'interface");
+        bus.EmitSignal(EventBus.SignalName.PlayerBiomeChanged, "urban_ruins");
+        bus.EmitSignal(EventBus.SignalName.PlayerBiomeChanged, "forest_reclaimed");
+        bus.EmitSignal(EventBus.SignalName.CrisisStarted, 2, 2);
+        bus.EmitSignal(EventBus.SignalName.RandomEventTriggered, "storm", "Orage");
+        bus.EmitSignal(EventBus.SignalName.RunPhaseChanged, "Death", "Exploration");
+        audio._Process(30);
+        await Frames(2);
+        Check(CountWorldVoices(audio) == 0, "mort : demandes et événements tardifs restent muets");
+        GetTree().Paused = true;
+        audio.PlaySfx("sfx_weapon_makeshift_bow", 0f);
+        audio.PlayLoopingSfx("sfx_level_up_loop");
+        AudioStreamPlayer deathUi = audio.PlayUiSfx("sfx_monde_dissolution");
+        Check(CountWorldVoices(audio) == 0 && deathUi != null && deathUi.Playing && deathUi.CanProcess(),
+            "bilan en pause : monde silencieux, audio dédié disponible");
+        Check(audio.CurrentMusicIntent == MusicIntent.Death && audio.CurrentMusicKey == "mus_mort",
+            "la musique de mort garde son intention");
+        GetTree().Paused = false;
+        manager.ChangeState(GameManager.GameState.Hub);
+        Check(CountWorldVoices(audio) == 0, "retour au Hub : aucune voix de monde résiduelle");
+        manager.ChangeState(GameManager.GameState.Run);
+        await Frames(2);
+        audio.PlaySfx("sfx_weapon_heavy_hammer", 0f);
+        bus.EmitSignal(EventBus.SignalName.PlayerBiomeChanged, "forest_reclaimed");
+        audio.PlayLoopingSfx("sfx_level_up_loop");
+        Check(CountWorldVoices(audio) == 3 && audio.GetNode<AudioStreamPlayer>("Ambiance").Playing,
+            "deuxième run : sons et ambiance réactivés sans ancienne météo");
+        await Frames(135);
+        Check(audio.GetNode<AudioStreamPlayer>("Ambiance").Playing,
+            "deuxième run : aucun ancien fondu ne coupe l'ambiance");
+        manager.ChangeState(GameManager.GameState.Hub);
+    }
+
+    private static int CountWorldVoices(AudioManager audio)
+    {
+        int playing = 0;
+        foreach (Node child in audio.GetChildren())
+        {
+            if (child is AudioStreamPlayer player && player.Playing
+                && !player.Name.ToString().StartsWith("UiSfx", StringComparison.Ordinal))
+                playing++;
+        }
+        return playing;
     }
 
     private async Task CheckBiomeAmbiance(AudioManager audio)

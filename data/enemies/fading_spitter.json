@@ -6,15 +6,26 @@
         "hp": 15,
         "speed": 55,
         "damage": 8,
-        "attack_range": 275,
-        "xp_reward": 15
+        "attack_range": 240,
+        "xp_reward": 15,
+        "spawn_weight": 0.5,
+        "spawn_from_minute": 3
     },
     "abilities": {
-        "aimed_shot": {
-            "windup_seconds": 0.3,
-            "lane_length": 120,
-            "lane_width": 9,
-            "fx_family": "rust"
+        "bile_lob": {
+            "cast_range": 260,
+            "windup_seconds": 0.35,
+            "flight_seconds": 0.9,
+            "arc_height": 60,
+            "radius": 36,
+            "player_hit_margin": 6,
+            "cooldown_seconds": 3.2,
+            "damage_multiplier": 1.0,
+            "puddle_seconds": 3,
+            "puddle_slow_multiplier": 0.65,
+            "max_simultaneous": 4,
+            "fx_family": "rust",
+            "cast_audio": "sfx_enemy_ranged_shot"
         }
     },
     "visual": {

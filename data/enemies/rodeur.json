@@ -4,12 +4,13 @@
     "type": "melee",
     "attack_audio": "sfx_rodeur_attaque",
     "stats": {
-        "hp": 60,
+        "hp": 45,
         "speed": 30,
-        "damage": 15,
+        "damage": 11,
         "xp_reward": 20,
         "perception": 400,
-        "leash": 720
+        "leash": 720,
+        "spawn_from_minute": 1.5
     },
     "visual": {
         "color": "#7A6855",
