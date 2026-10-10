@@ -1009,4 +1009,9 @@ Choix faits par Claude faute de validation de la planche B2a, **tous révisables
   - **vague** à une ou deux brèches ;
   - fenêtre « découvert » rendue par le statut **Fragile** existant (+100 %).
 - **Premier réglage (B4)**, mesuré en vraie run longue, bot invincible : réserve de la Barrière **20 000 + 15 000 par battant**, Indicible **90 000 × 3,2**. L'écart entre builds est très grand : réglage fin à la partie de Raphaël.
+- **Finition de la Barrière** (« fait les points 2, 4 […] 5 : fait une vraie animation, prends le temps ») :
+  - levée en trois temps (fissure, surgissement en vague, verrouillage) ;
+  - huit sons propres (montages CC0 et synthèses) ;
+  - **préférence de ciblage des parties de boss** (100 px), sans laquelle la foule passait avant le battant ;
+  - réserve 5 000 + 15 000 par battant : un battant suffit pour passer, les autres sont la récompense.
 - **Fusion du 10 octobre** : un `git pull` est resté en conflit avec la PR #2 (décors, héros). Résolue à la demande de Raphaël (« règle les conflits stp ») en gardant les deux côtés. Les sections du 9 et 10 octobre se sont trouvées en double ; les sections distantes gardent leurs numéros (§86 décors, §87 héros), la reprise audio devient §88 et ce chantier des boss §89.

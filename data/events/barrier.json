@@ -6,11 +6,11 @@
   "heading_window_sec": 3,
   "distance_ahead": 150,
   "leaves": {
-    "_doc": "Battants cadenassés, les seules parties à frapper : un, plus un par Mémorial ravivé dans la run, au plus « max ». PV d'un battant : « hp_base » partagé entre les battants, plus « hp_per_leaf » ; la réserve grandit donc avec les Mémoriaux sans qu'un seul battant ne tombe en quelques secondes (mesure du 10 octobre, build de référence, 4 graines : un battant de 75 000 PV tombe en 64 et 109 s, tient plus de 98 et 170 s dans les deux autres ; réglage fin en B4). Rayon de touche borné par data/scaling/boss_parts.json et par le pas de la grille.",
+    "_doc": "Battants cadenassés, les seules parties à frapper : un, plus un par Mémorial ravivé dans la run, au plus « max ». PV d'un battant : « hp_base » partagé entre les battants, plus « hp_per_leaf » ; la réserve grandit donc avec les Mémoriaux sans qu'un seul battant ne tombe en quelques secondes (mesure du 10 octobre, build de référence, avec la préférence de ciblage des parties : un battant visé prend de 310 à 4 300 dégâts/s selon le build, médiane ~700 ; il suffit d'un battant pour passer, les autres sont la récompense). Rayon de touche borné par data/scaling/boss_parts.json et par le pas de la grille.",
     "base": 1,
     "per_memorial": 1,
     "max": 5,
-    "hp_base": 20000,
+    "hp_base": 5000,
     "hp_per_leaf": 15000,
     "body_radius": 48,
     "damaged_below": 0.5
@@ -21,8 +21,15 @@
     "wing_length": 3000,
     "clear_core": 90,
     "clear_wings": 36,
-    "wall_thickness": 16,
-    "rise_sec": 1.2
+    "wall_thickness": 16
+  },
+  "rise": {
+    "_doc": "Levée : le sol se fend pendant « omen_sec » (la fissure court à « crack_speed » px/s du centre vers les bords), puis chaque pièce sort de terre en « piece_sec », en vague du centre (« wave_speed » px/s), en dépassant sa hauteur de « overshoot » ; la grille se verrouille quand le cœur est debout.",
+    "omen_sec": 0.9,
+    "crack_speed": 760,
+    "wave_speed": 380,
+    "piece_sec": 0.7,
+    "overshoot": 0.16
   },
   "fight": {
     "_doc": "Densité de créatures visée pendant le combat (part de la normale). Le combat cesse quand le joueur, passé de l'autre côté, s'éloigne de la grille au-delà de « leave_distance » px ; du côté où il est arrivé, seulement au-delà de « lost_distance » (Faille, téléportation) : reculer ne l'évite pas.",
@@ -57,14 +64,15 @@
     }
   },
   "audio": {
-    "_doc": "Sons provisoires de la banque (plan 15 : à remplacer par des sons propres à la Barrière).",
-    "rise": "sfx_boss_enrage",
-    "leaf_broken": "sfx_shield_break",
-    "defeated": "sfx_boss_death",
-    "fist_warning": "sfx_omen_cast",
-    "fist_impact": "sfx_omen_impact",
-    "chain_warning": "sfx_pounce_windup",
-    "chain_sweep": "sfx_whip_snap"
+    "_doc": "Sons propres à la Barrière (10 octobre) : fer forgé, chaînes de geôle, pierre qui se fend ; montages CC0 et synthèses, reproductibles par ~/.local/share/vestiges-audio/2026-10-10/barriere/prepare.py, crédits dans assets/audio/CREDITS.json.",
+    "rise": "sfx_barrier_rise",
+    "lock": "sfx_barrier_lock",
+    "leaf_broken": "sfx_barrier_leaf_broken",
+    "defeated": "sfx_barrier_defeated",
+    "fist_warning": "sfx_barrier_fist_warning",
+    "fist_impact": "sfx_barrier_fist_impact",
+    "chain_warning": "sfx_barrier_chain_warning",
+    "chain_sweep": "sfx_barrier_chain_sweep"
   },
   "rewards": {
     "_doc": "Un coffre par battant brisé, le dernier plus riche (DECISIONS §85).",

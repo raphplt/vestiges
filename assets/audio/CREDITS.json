@@ -1738,5 +1738,101 @@
     "note": "la",
     "semitones": 9,
     "selection_date": "2026-10-07"
+  },
+  {
+    "effect_id": "barrier_rise",
+    "candidate_id": "barrier_rise_v1",
+    "file": "assets/audio/sfx/selected/barrier_rise.wav",
+    "sha256": "0f000c9b5d3233a442ad140a1c5c295149cd6b2833eceb2d1f9cb7d422ccdfca",
+    "author": "VESTIGES (montage) ; Joseph SARDIN / BigSoundBank, Kenney",
+    "license": "CC0-1.0",
+    "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source_url": "https://bigsoundbank.com/detail-0683-grinding-metal-gate.html ; https://bigsoundbank.com/detail-0359-heavy-chain.html ; https://kenney.nl/assets/impact-sounds ; https://kenney.nl/assets/impact-sounds",
+    "attribution": "Joseph SARDIN / BigSoundBank — detail-0683-grinding-metal-gate — https://bigsoundbank.com/detail-0683-grinding-metal-gate.html — CC0-1.0 (licence BigSoundBank de type CC0) ; Joseph SARDIN / BigSoundBank — detail-0359-heavy-chain — https://bigsoundbank.com/detail-0359-heavy-chain.html — CC0-1.0 (licence BigSoundBank de type CC0) ; Kenney — Impact Sounds — impactMining_000.ogg — https://kenney.nl/assets/impact-sounds — CC0-1.0 ; Kenney — Impact Sounds — impactMining_003.ogg — https://kenney.nl/assets/impact-sounds — CC0-1.0",
+    "processing": "Grondement synthétique enflé sur 1,8 s ; grille qui grince (BigSoundBank 0683, ×0,55) ; deux fissures de roche (Kenney Mining, ×0,8 et ×0,7) ; chaîne lourde qui se soulève (BigSoundBank 0359, ×0,6) ; salle de pierre 0,9 s. Graine 10102026 ; WAV PCM16 / 44,1 kHz stéréo. Script : prepare.py (plan 07, sons de la Barrière)."
+  },
+  {
+    "effect_id": "barrier_lock",
+    "candidate_id": "barrier_lock_v1",
+    "file": "assets/audio/sfx/selected/barrier_lock.wav",
+    "sha256": "48e5ab2194ec347f11cb28d5a96f620b457c32fbaae41b7a74774713d754d7bc",
+    "author": "VESTIGES (montage) ; Joseph SARDIN / BigSoundBank, Kenney",
+    "license": "CC0-1.0",
+    "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source_url": "https://kenney.nl/assets/rpg-audio ; https://kenney.nl/assets/rpg-audio ; https://kenney.nl/assets/impact-sounds ; https://bigsoundbank.com/medium-chain-2-s0361.html",
+    "attribution": "Kenney — RPG Audio — metalLatch.ogg — https://kenney.nl/assets/rpg-audio — CC0-1.0 ; Kenney — RPG Audio — metalClick.ogg — https://kenney.nl/assets/rpg-audio — CC0-1.0 ; Kenney — Impact Sounds — impactMetal_heavy_003.ogg — https://kenney.nl/assets/impact-sounds — CC0-1.0 ; Joseph SARDIN / BigSoundBank — medium-chain-2-s0361 — https://bigsoundbank.com/medium-chain-2-s0361.html — CC0-1.0 (licence BigSoundBank de type CC0)",
+    "processing": "Coup de fer (Kenney Metal heavy, ×0,55) ; deux loquets décalés de 40 ms (Kenney Latch, ×0,7) ; déclic (×0,6) ; chaîne qui se tend (BigSoundBank 0361, ×0,6) ; salle 0,5 s. Graine 10102026 ; WAV PCM16 / 44,1 kHz stéréo. Script : prepare.py (plan 07, sons de la Barrière)."
+  },
+  {
+    "effect_id": "barrier_leaf_broken",
+    "candidate_id": "barrier_leaf_broken_v1",
+    "file": "assets/audio/sfx/selected/barrier_leaf_broken.wav",
+    "sha256": "3e69fbf84b4c1c1cf0ec7ea96ce5ff65d338ebbe3b2bc9a74b6ef3e568d6132b",
+    "author": "VESTIGES (montage) ; Joseph SARDIN / BigSoundBank, Kenney",
+    "license": "CC0-1.0",
+    "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source_url": "https://kenney.nl/assets/impact-sounds ; https://kenney.nl/assets/impact-sounds ; https://kenney.nl/assets/impact-sounds ; https://bigsoundbank.com/small-metal-chain-4-s0358.html ; https://bigsoundbank.com/detail-0303-grinding-metal-gate-1.html",
+    "attribution": "Kenney — Impact Sounds — impactBell_heavy_000.ogg — https://kenney.nl/assets/impact-sounds — CC0-1.0 ; Kenney — Impact Sounds — impactMetal_heavy_000.ogg — https://kenney.nl/assets/impact-sounds — CC0-1.0 ; Kenney — Impact Sounds — impactPlate_heavy_000.ogg — https://kenney.nl/assets/impact-sounds — CC0-1.0 ; Joseph SARDIN / BigSoundBank — small-metal-chain-4-s0358 — https://bigsoundbank.com/small-metal-chain-4-s0358.html — CC0-1.0 (licence BigSoundBank de type CC0) ; Joseph SARDIN / BigSoundBank — detail-0303-grinding-metal-gate-1 — https://bigsoundbank.com/detail-0303-grinding-metal-gate-1.html — CC0-1.0 (licence BigSoundBank de type CC0)",
+    "processing": "Coup de fer et de tôle (Kenney, ×0,6 et ×0,7) ; cloche grave du cadenas (Kenney Bell heavy, ×0,75) ; chaîne qui se rompt (BigSoundBank 0358, ×0,7) ; vantail qui pivote (BigSoundBank 0303, ×0,8) ; coup sourd synthétique ; salle 0,8 s. Graine 10102026 ; WAV PCM16 / 44,1 kHz stéréo. Script : prepare.py (plan 07, sons de la Barrière)."
+  },
+  {
+    "effect_id": "barrier_defeated",
+    "candidate_id": "barrier_defeated_v1",
+    "file": "assets/audio/sfx/selected/barrier_defeated.wav",
+    "sha256": "84b547cfaacf5e0caf90794ef45e1d626ee7af7c14410ff8a70bd894e3cef6ea",
+    "author": "VESTIGES (montage) ; Joseph SARDIN / BigSoundBank, Kenney",
+    "license": "CC0-1.0",
+    "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source_url": "https://bigsoundbank.com/detail-0359-heavy-chain.html ; https://kenney.nl/assets/impact-sounds ; https://kenney.nl/assets/impact-sounds ; https://kenney.nl/assets/impact-sounds ; https://kenney.nl/assets/impact-sounds ; https://kenney.nl/assets/impact-sounds",
+    "attribution": "Joseph SARDIN / BigSoundBank — detail-0359-heavy-chain — https://bigsoundbank.com/detail-0359-heavy-chain.html — CC0-1.0 (licence BigSoundBank de type CC0) ; Kenney — Impact Sounds — impactBell_heavy_002.ogg — https://kenney.nl/assets/impact-sounds — CC0-1.0 ; Kenney — Impact Sounds — impactMetal_heavy_001.ogg — https://kenney.nl/assets/impact-sounds — CC0-1.0 ; Kenney — Impact Sounds — impactMetal_heavy_002.ogg — https://kenney.nl/assets/impact-sounds — CC0-1.0 ; Kenney — Impact Sounds — impactMetal_heavy_003.ogg — https://kenney.nl/assets/impact-sounds — CC0-1.0 ; Kenney — Impact Sounds — impactMetal_heavy_004.ogg — https://kenney.nl/assets/impact-sounds — CC0-1.0",
+    "processing": "Coup sourd et souffle grave synthétiques ; cloche grave (Kenney Bell heavy, ×0,6) ; quatre fers qui tombent en cascade (Kenney Metal heavy, ×0,5 à ×0,7) ; chaînes qui s'effondrent (BigSoundBank 0359, ×0,62) ; salle de pierre 1,3 s. Graine 10102026 ; WAV PCM16 / 44,1 kHz stéréo. Script : prepare.py (plan 07, sons de la Barrière)."
+  },
+  {
+    "effect_id": "barrier_fist_warning",
+    "candidate_id": "barrier_fist_warning_v1",
+    "file": "assets/audio/sfx/selected/barrier_fist_warning.wav",
+    "sha256": "b925abb5f44525a1757e32d0fc96784ccc0ffd660e574e874f21f4b01977591d",
+    "author": "VESTIGES (montage) ; Joseph SARDIN / BigSoundBank",
+    "license": "CC0-1.0",
+    "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source_url": "https://bigsoundbank.com/creaking-metallic-door-s0616.html ; https://bigsoundbank.com/medium-chain-2-s0361.html",
+    "attribution": "Joseph SARDIN / BigSoundBank — creaking-metallic-door-s0616 — https://bigsoundbank.com/creaking-metallic-door-s0616.html — CC0-1.0 (licence BigSoundBank de type CC0) ; Joseph SARDIN / BigSoundBank — medium-chain-2-s0361 — https://bigsoundbank.com/medium-chain-2-s0361.html — CC0-1.0 (licence BigSoundBank de type CC0)",
+    "processing": "Porte de fer qui racle (BigSoundBank 0616, ×0,7) et chaîne qui glisse (BigSoundBank 0361, ×0,6), montée de 0,2 s. Graine 10102026 ; WAV PCM16 / 44,1 kHz stéréo. Script : prepare.py (plan 07, sons de la Barrière)."
+  },
+  {
+    "effect_id": "barrier_fist_impact",
+    "candidate_id": "barrier_fist_impact_v1",
+    "file": "assets/audio/sfx/selected/barrier_fist_impact.wav",
+    "sha256": "f46e38f56b61f0dc7f7196fcb8ac27253ba421b8808b69301a9f263f3e9943f2",
+    "author": "VESTIGES (montage) ; Kenney",
+    "license": "CC0-1.0",
+    "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source_url": "https://kenney.nl/assets/impact-sounds ; https://kenney.nl/assets/impact-sounds ; https://kenney.nl/assets/impact-sounds",
+    "attribution": "Kenney — Impact Sounds — impactPunch_heavy_000.ogg — https://kenney.nl/assets/impact-sounds — CC0-1.0 ; Kenney — Impact Sounds — impactMetal_heavy_002.ogg — https://kenney.nl/assets/impact-sounds — CC0-1.0 ; Kenney — Impact Sounds — impactMining_001.ogg — https://kenney.nl/assets/impact-sounds — CC0-1.0",
+    "processing": "Coup sourd synthétique ; coup lourd (Kenney Punch heavy, ×0,75) ; fer (Kenney Metal heavy, ×0,6) ; terre projetée (Kenney Mining, ×0,9) ; salle 0,35 s. Graine 10102026 ; WAV PCM16 / 44,1 kHz stéréo. Script : prepare.py (plan 07, sons de la Barrière)."
+  },
+  {
+    "effect_id": "barrier_chain_warning",
+    "candidate_id": "barrier_chain_warning_v1",
+    "file": "assets/audio/sfx/selected/barrier_chain_warning.wav",
+    "sha256": "05fb5e611ed4a46dbc671ccfe7a23866ff3c0c74c97a126e5464edad9a1089c6",
+    "author": "VESTIGES (montage) ; Joseph SARDIN / BigSoundBank, Kenney",
+    "license": "CC0-1.0",
+    "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source_url": "https://bigsoundbank.com/detail-0359-heavy-chain.html ; https://kenney.nl/assets/rpg-audio",
+    "attribution": "Joseph SARDIN / BigSoundBank — detail-0359-heavy-chain — https://bigsoundbank.com/detail-0359-heavy-chain.html — CC0-1.0 (licence BigSoundBank de type CC0) ; Kenney — RPG Audio — creak1.ogg — https://kenney.nl/assets/rpg-audio — CC0-1.0",
+    "processing": "Chaîne lourde qui se tend (BigSoundBank 0359, ×0,55) et gond qui grince (Kenney Creak, ×0,7). Graine 10102026 ; WAV PCM16 / 44,1 kHz stéréo. Script : prepare.py (plan 07, sons de la Barrière)."
+  },
+  {
+    "effect_id": "barrier_chain_sweep",
+    "candidate_id": "barrier_chain_sweep_v1",
+    "file": "assets/audio/sfx/selected/barrier_chain_sweep.wav",
+    "sha256": "ef75d5d4a59cb53908de79621514f35c5ae1e899efd55dc3c778faa050706830",
+    "author": "VESTIGES (montage) ; Joseph SARDIN / BigSoundBank",
+    "license": "CC0-1.0",
+    "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source_url": "https://bigsoundbank.com/medium-chain-2-s0361.html",
+    "attribution": "Joseph SARDIN / BigSoundBank — medium-chain-2-s0361 — https://bigsoundbank.com/medium-chain-2-s0361.html — CC0-1.0 (licence BigSoundBank de type CC0)",
+    "processing": "Souffle synthétique en bande glissante (250 → 1 600 Hz) ; maillons (BigSoundBank 0361, ×0,65). Graine 10102026 ; WAV PCM16 / 44,1 kHz stéréo. Script : prepare.py (plan 07, sons de la Barrière)."
   }
 ]

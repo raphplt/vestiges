@@ -217,7 +217,7 @@ public partial class BossPartsRegression : Node2D
         Check(BarrierConfig.TryLoad(out BarrierConfig config, out string error), $"réglages de la Barrière chargés {error}");
         Check(config.AppearAtSec == 600f && config.CrowdDensity == 0.5f, $"Barrière à {config.AppearAtSec} s, foule ×{config.CrowdDensity}");
         Check(config.LeavesFor(0) == 1 && config.LeavesFor(2) == 3 && config.LeavesFor(9) == 5, "battants : 1, puis un par Mémorial, 5 au plus");
-        Check(config.LeafHpFor(1) == 35000f && config.LeafHpFor(3) * 3 == 65000f && config.LeafHpFor(5) * 5 == 95000f,
+        Check(config.LeafHpFor(1) == 20000f && Mathf.IsEqualApprox(config.LeafHpFor(3) * 3, 50000f) && Mathf.IsEqualApprox(config.LeafHpFor(5) * 5, 80000f),
             $"réserve : {config.LeafHpFor(1):F0}, {config.LeafHpFor(3) * 3:F0}, {config.LeafHpFor(5) * 5:F0} PV pour 1, 3 et 5 battants");
         foreach (string suffix in new[] { "h", "v" })
             Check(Barrier.TryReadLayout(suffix, out Vector2 stride, out Vector2 wing, out _) && stride.Length() > 30f && wing.Length() > 10f,

@@ -14,6 +14,7 @@ public sealed class BossPartsConfig
 	private static BossPartsConfig _cached;
 
 	public float MaxBodyRadius { get; private init; }
+	public float TargetBias { get; private init; }
 
 	/// <summary>Configuration du jeu, lue une fois, et fiche des parties présente ; faux avec la raison sinon.</summary>
 	public static bool TryLoad(out BossPartsConfig config, out string error)
@@ -55,10 +56,11 @@ public sealed class BossPartsConfig
 			JsonConfigReader reader = new(document.RootElement);
 			reader.AllowOnly(document.RootElement, "racine", "parts");
 			JsonElement parts = reader.Section("parts");
-			reader.AllowOnly(parts, "parts", "max_body_radius");
+			reader.AllowOnly(parts, "parts", "max_body_radius", "target_bias");
 			BossPartsConfig parsed = new()
 			{
 				MaxBodyRadius = reader.Positive(parts, "max_body_radius"),
+				TargetBias = reader.NonNegative(parts, "target_bias"),
 			};
 			error = reader.Error;
 			config = error == null ? parsed : null;

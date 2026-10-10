@@ -2147,7 +2147,7 @@ public partial class Player : CharacterBody2D
 
     private System.Collections.Generic.List<Node2D> FindNearestEnemies(int count, float maxRange)
     {
-        using CrowdQuery crowd = CrowdIndex.Near(GlobalPosition, maxRange);
+        using CrowdQuery crowd = CrowdIndex.Near(GlobalPosition, maxRange + Enemy.LargestPartRadius);
         System.Collections.Generic.List<(Node2D enemy, float dist)> inRange = new();
 
         foreach (Node node in crowd.Targets)
@@ -2156,8 +2156,13 @@ public partial class Player : CharacterBody2D
             if (node is not Node2D enemy || enemy is Enemy { IsActive: false } or Enemy { IsDying: true })
                 continue;
             float dist = GlobalPosition.DistanceTo(enemy.GlobalPosition);
-            if (dist < maxRange)
-                inRange.Add((enemy, dist));
+            // Une partie de boss se vise à son bord et passe devant la foule qui l'entoure (TargetBias).
+            Enemy creature = enemy as Enemy;
+            // Une partie encore sous terre (Barrière qui se lève) n'est pas une cible.
+            if (creature is { IsBurrowed: true } && creature.Boss != null)
+                continue;
+            if (dist - (creature?.StrikeMargin ?? 0f) < maxRange)
+                inRange.Add((enemy, dist - (creature?.TargetBias ?? 0f)));
         }
 
         inRange.Sort((a, b) => a.dist.CompareTo(b.dist));
@@ -2178,7 +2183,7 @@ public partial class Player : CharacterBody2D
 
         foreach (Node node in crowd.Targets)
         {
-            if (node is not Enemy { IsActive: true, IsDying: false } enemy)
+            if (node is not Enemy { IsActive: true, IsDying: false } enemy || enemy.IsBurrowed && enemy.Boss != null)
                 continue;
 
             Vector2 toEnemy = enemy.GlobalPosition - GlobalPosition;
@@ -2186,7 +2191,7 @@ public partial class Player : CharacterBody2D
             if (dist - enemy.StrikeMargin > maxRange || dist <= 0.001f)
                 continue;
 
-            candidates.Add((enemy, dist, toEnemy / dist));
+            candidates.Add((enemy, dist - enemy.TargetBias, toEnemy / dist));
         }
 
         if (candidates.Count == 0)

@@ -732,3 +732,33 @@ Build de référence du plan 30, bot invincible (pour atteindre le boss), 4 grai
   - médiane au-delà de 110 s, d'où la base ramenée à **20 000** : 35 000 PV pour un battant, 65 000 pour trois, 95 000 pour cinq.
 - **Défaut trouvé et corrigé :** à 10 min, le bot rôde près des bords déjà effacés. La pose ne vérifiait que les limites de la carte : dans une graine, le battant est tombé dans le Néant, hors d'atteinte pendant 750 s. Elle vérifie désormais sept points d'appui le long de la grille (sol de la carte, pas d'eau, pas de Néant de l'Effacement). Si aucune direction n'est parfaite, elle garde celle qui a le plus d'appuis.
 - Suites après ces réglages : smoke, boss_parts, indicible, catalogs, run_trace, launchers : 6/6.
+
+### Barrière : finition — 10 octobre 2026, fin d'après-midi
+
+Demande de Raphaël, en attendant de tester : « fait les points 2, 4 (essaie de créer ou trouver de nouveaux sons uniques et appropriés). 5 : fait une vraie animation, prends le temps ».
+
+**Animation de levée** (`Combat/BarrierRise`, `Combat/BarrierCrack`, section `rise` de `data/events/barrier.json`) :
+1. **Présage** (0,9 s) : le sol se fend le long de la future grille, du centre vers les bords (760 px/s). L'entaille a des lèvres de terre et un cœur vert-acide, la lumière des cadenas. Elle s'élargit sous la grille et lance quelques rameaux ; la terre gicle à son front tant qu'il est dans le champ.
+2. **Surgissement** : chaque pièce sort de terre par son bas en 0,7 s (seule la part émergée du sprite est dessinée, sans shader), en vague du centre vers les ailes (380 px/s). Elle dépasse sa hauteur de 16 % puis se pose, en tremblant au pixel ; pierre et terre jaillissent à son pied, et un pilier secoue l'écran.
+3. **Verrouillage**, quand le cœur est debout (~2,6 s pour trois battants) : les cadenas s'allument d'un éclair vert, les chaînes des ailes se tendent d'un rebond, le verrou claque. Les murs ne bloquent qu'à cet instant ; un joueur resté sur la ligne est rendu à son côté. Les attaques ne commencent qu'après.
+
+Pendant la levée, les battants sont enfouis : ni cibles ni vulnérables, les tirs ne les visent pas. Une fin de combat pendant la levée l'interrompt. La fissure reste ensuite comme une cicatrice à la lueur éteinte. Relecture `godot-reviewer`, corrigée :
+- taille et pivot des pièces en cache (plus de chaînes créées à chaque image) ;
+- fissure redessinée par crans de 14 px et seulement à 1 100 px du centre, sa lueur variant par l'opacité d'un nœud enfant ;
+- flash de verrou porté par le flash du battant, qu'un coup interrompt ;
+- pas de débris pour les ailes hors champ. Captures image par image : [horizontale](../audits/boss-2026-10-10/b2-finition/levee-up.jpg), [diagonale](../audits/boss-2026-10-10/b2-finition/levee-right.jpg), [détail](../audits/boss-2026-10-10/b2-finition/levee-detail.jpg). Le joueur bute toujours sur la grille fermée, dash compris, et passe par le battant brisé.
+
+**Sons propres à la Barrière** (8, dans `assets/audio/sfx/selected/barrier_*.wav`, banque `sfx_barrier_*`, crédits dans `assets/audio/CREDITS.json`) :
+- **Matière** : fer forgé, chaînes de geôle, pierre qui se fend. Montages de prises libres (Kenney CC0 ; BigSoundBank de Joseph SARDIN, licence de type CC0 : chaînes 0359, 0361 et 0358, grilles 0303 et 0683, porte de fer 0616), baissées d'environ une sixte pour alourdir le métal, et synthèses originales (grondement de terre, coup sourd, souffle à bande glissante).
+- **Les huit** : levée, verrou, battant brisé (le cadenas éclate, la chaîne se rompt, le vantail pivote), chute de la grille, annonce et coup des poings, annonce et balayage de la chaîne.
+- **Production** : script reproductible à l'octet près (graine fixe), `~/.local/share/vestiges-audio/2026-10-10/barriere/prepare.py`, avec sources, licences et page d'écoute (`index.html`).
+- **Vérifié par mesure** (niveaux, absence d'écrêtage, spectrogrammes), **pas à l'oreille**. Un premier souffle bourdonnait à 50 Hz (découpage par blocs) : refait en filtrage glissant, voir le [spectre](../audits/boss-2026-10-10/b2-finition/spectres-balayage-levee.jpg).
+
+**Réglage avec des Mémoriaux** (3 et 5 battants forcés par `--barrier-memorials N`, 4 graines ; [mesures](../audits/boss-2026-10-10/b2-finition/mesures.txt)) :
+- **Constat** : sans spécialisation Convergence, chaque arme vise la créature la plus proche. Devant la grille, la foule passait avant le battant. Résultat : de 24 s à « jamais en 200 s » selon que la foule collait ou non au bot.
+- **Préférence de ciblage des parties de boss** (`target_bias`, 100 px, dans `data/scaling/boss_parts.json`) : une partie à portée compte 100 px plus près qu'elle n'est. Les armes qui visent la frappent donc avant la foule ; zones, orbites et arcs continuent de frapper la foule autour. Les tirs comptent aussi le bord de la partie dans leur portée, comme la mêlée.
+- **Relevé du combat toutes les 5 s** : collé au battant, un build y fait de 310 à 4 300 dégâts par seconde selon la graine (médiane vers 700) ; encerclé par plus de 50 créatures, le bot reste à 150 px et n'en fait que 220.
+- **Réserve retenue, base 5 000 + 15 000 par battant** : 20 000 PV pour un battant, 50 000 pour trois, 80 000 pour cinq. Il suffit d'un battant pour passer, les autres sont la récompense ; au rythme médian, trois battants tombent en ~70 s.
+- **Bug trouvé et corrigé** : la somme flottante des PV perdus ne retombait pas toujours exactement à zéro, si bien qu'une grille aux trois battants brisés n'était pas déclarée vaincue. Elle l'est désormais dès que toutes ses parties à PV propres sont tombées.
+
+Suites : smoke, boss_parts, indicible, audio, weapons, enemy_abilities, movement-integration, catalogs, launchers : 9/9.

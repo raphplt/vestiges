@@ -21,6 +21,8 @@ public partial class Barrier : Node2D
 	public const string AssetFolder = "res://assets/bosses/barrier";
 	private const uint WallLayer = 4;
 	private const float HitFlashSec = 0.12f;
+	private const float LockFlashSec = 0.45f;
+	private static readonly Color LockColor = new(1.6f, 2.4f, 0.7f);
 
 	private sealed class Leaf
 	{
@@ -48,6 +50,8 @@ public partial class Barrier : Node2D
 	private Vector2 _coreEnd;
 	private bool _ended;
 	private BarrierAttacks _attacks;
+	private BarrierRise _rise;
+	private readonly List<StaticBody2D> _walls = new();
 	// Côté d'où vient le joueur : on ne laisse la Barrière derrière soi qu'en passant de l'autre côté.
 	private float _approachSide;
 
@@ -55,6 +59,8 @@ public partial class Barrier : Node2D
 	public BarrierAttacks Attacks => _attacks;
 	public bool IsHorizontal => _suffix == "h";
 	public bool IsEnded => _ended;
+	/// <summary>Levée finie : la grille arrête le joueur et attaque.</summary>
+	public bool IsLocked => _rise != null && _rise.IsLocked;
 	/// <summary>Direction de la grille à l'écran, normée.</summary>
 	public Vector2 Axis => _axis;
 	public IReadOnlyList<Vector2> LeafPositions
@@ -96,6 +102,12 @@ public partial class Barrier : Node2D
 		int wingCount = Mathf.CeilToInt(config.WingLength / wingStride.Length());
 		_lineStart = _coreStart - firstWing - wingStride * wingCount;
 		_lineEnd = _coreEnd + firstWing + wingStride * wingCount;
+		BarrierCrack crack = new() { Name = "Crack" };
+		AddChild(crack);
+		crack.Setup(_lineStart, _lineEnd, center);
+		_rise = new BarrierRise { Name = "Rise" };
+		AddChild(_rise);
+		_rise.Setup(config, crack, center, _axis, Mathf.Max(center.DistanceTo(_lineStart), center.DistanceTo(_lineEnd)), OnLocked);
 		Texture2D span = LoadTexture($"barrier_span_{_suffix}");
 		Texture2D intact = LoadTexture($"barrier_leaf_intact_{_suffix}");
 		Texture2D pillar = LoadTexture($"barrier_pillar_{_suffix}");
@@ -110,7 +122,7 @@ public partial class Barrier : Node2D
 		{
 			Vector2 middle = (pillars[j] + pillars[j + 1]) * 0.5f;
 			bool isLeaf = j >= config.FixedSpansEachSide && j < config.FixedSpansEachSide + leafCount;
-			Sprite2D sprite = AddPiece(isLeaf ? intact : span, middle);
+			Sprite2D sprite = AddPiece(isLeaf ? intact : span, middle, isLeaf ? BarrierRise.PieceKind.Leaf : BarrierRise.PieceKind.Span, true);
 			if (!isLeaf)
 				continue;
 			Enemy part = spawner.SpawnEventEnemy(EnemyGrammar.BossPartId, middle);
@@ -122,16 +134,18 @@ public partial class Barrier : Node2D
 				Wall = AddWall($"LeafWall{j}", pillars[j], pillars[j + 1], config.WallThickness),
 			};
 			_health.AddPart(part, radius, config.LeafHpFor(leafCount));
+			// Encore sous terre : ni cible ni coup avant le verrouillage.
+			part.SetBurrowed(true);
 			_leaves.Add(leaf);
 			_leafByPart[part] = leaf;
 		}
 		// Les piliers après les travées : à même hauteur (grille horizontale), ils se dessinent devant elles.
 		for (int k = 0; k <= spans; k++)
-			AddPiece(pillar, pillars[k]);
+			AddPiece(pillar, pillars[k], BarrierRise.PieceKind.Pillar, true);
 		for (int m = 0; m < wingCount; m++)
 		{
-			AddPiece(wing, _coreStart - firstWing - wingStride * (m + 1));
-			AddPiece(wing, _coreEnd + firstWing + wingStride * m);
+			AddPiece(wing, _coreStart - firstWing - wingStride * (m + 1), BarrierRise.PieceKind.Wing, false);
+			AddPiece(wing, _coreEnd + firstWing + wingStride * m, BarrierRise.PieceKind.Wing, false);
 		}
 
 		// Le mur fixe : ailes, travées fixes et piliers ; les battants ont chacun le leur, retiré à leur chute.
@@ -148,7 +162,8 @@ public partial class Barrier : Node2D
 		_health.ShowBar(_eventBus);
 		_approachSide = SideOf(player.GlobalPosition);
 		_attacks = new BarrierAttacks(this, config, _suffix);
-		Rise();
+		AudioManager.Play(config.RiseAudio, 0f);
+		ScreenShake.Instance?.ShakeMedium();
 		GD.Print($"[Barrier] Levée à {center} ({(horizontal ? "horizontale" : "verticale")}), {leafCount} battant(s) de {config.LeafHpFor(leafCount):F0} PV");
 		return true;
 	}
@@ -164,7 +179,9 @@ public partial class Barrier : Node2D
 			End(false);
 			return;
 		}
-		_attacks.Tick(_player, (float)delta, _health.BrokenPartCount > 0);
+		// La grille n'attaque qu'une fois levée et verrouillée.
+		if (_rise.IsLocked)
+			_attacks.Tick(_player, (float)delta, _health.BrokenPartCount > 0);
 	}
 
 	/// <summary>Distance au sol du point au cœur de la grille (battants et travées fixes), sans les ailes.</summary>
@@ -250,6 +267,7 @@ public partial class Barrier : Node2D
 	public void Discard()
 	{
 		_ended = true;
+		_rise?.Cancel();
 		foreach (Leaf leaf in _leaves)
 			if (leaf.Part.IsActive && !leaf.Part.IsDying)
 				leaf.Part.Vanish();
@@ -262,6 +280,7 @@ public partial class Barrier : Node2D
 		if (_ended)
 			return;
 		_ended = true;
+		_rise?.Cancel();
 		_attacks?.Stop();
 		foreach (Leaf leaf in _leaves)
 		{
@@ -273,20 +292,39 @@ public partial class Barrier : Node2D
 		Ended?.Invoke(defeated);
 	}
 
-	private void Rise()
+	/// <summary>
+	/// Le cœur de la grille est debout : ses murs arrêtent désormais le joueur. Un joueur resté sur la ligne pendant la
+	/// levée est rendu à son côté, pour ne pas naître dans un mur.
+	/// </summary>
+	private void OnLocked()
 	{
-		Modulate = Colors.Transparent;
-		Tween rise = CreateTween();
-		rise.TweenProperty(this, "modulate", Colors.White, _config.RiseSec);
-		AudioManager.Play(_config.RiseAudio, 0f);
-		ScreenShake.Instance?.ShakeMedium();
+		if (_ended)
+			return;
+		// Les cadenas s'allument et les battants se découvrent : ils deviennent des cibles.
+		foreach (Leaf leaf in _leaves)
+		{
+			if (leaf.Broken || !IsInstanceValid(leaf.Part))
+				continue;
+			leaf.Part.SetBurrowed(false);
+			leaf.Flash?.Kill();
+			leaf.Sprite.SelfModulate = LockColor;
+			leaf.Flash = CreateTween();
+			leaf.Flash.TweenProperty(leaf.Sprite, "self_modulate", Colors.White, LockFlashSec);
+		}
+		foreach (StaticBody2D wall in _walls)
+			if (IsInstanceValid(wall))
+				wall.CollisionLayer = WallLayer;
+		if (_player != null && IsInstanceValid(_player)
+			&& Iso.GroundDistanceToSegment(_player.GlobalPosition, _lineStart, _lineEnd) < _config.WallThickness + _player.BodyRadius)
+			_player.GlobalPosition += NormalToward(_player.GlobalPosition) * (_config.WallThickness + _player.BodyRadius);
 	}
 
-	private Sprite2D AddPiece(Texture2D texture, Vector2 position)
+	private Sprite2D AddPiece(Texture2D texture, Vector2 position, BarrierRise.PieceKind kind, bool core)
 	{
 		Sprite2D sprite = new() { Centered = false };
 		SetPiece(sprite, texture, position);
 		AddChild(sprite);
+		_rise.Add(sprite, kind, core);
 		return sprite;
 	}
 
@@ -300,7 +338,9 @@ public partial class Barrier : Node2D
 
 	private StaticBody2D AddWall(string name, Vector2 from, Vector2 to, float thickness)
 	{
-		StaticBody2D body = new() { Name = name, CollisionLayer = WallLayer, CollisionMask = 0 };
+		// Inactif pendant la levée : il ne bloque qu'au verrouillage (OnLocked).
+		StaticBody2D body = new() { Name = name, CollisionLayer = 0, CollisionMask = 0 };
+		_walls.Add(body);
 		Vector2 segment = to - from;
 		body.Position = (from + to) * 0.5f;
 		body.Rotation = segment.Angle();

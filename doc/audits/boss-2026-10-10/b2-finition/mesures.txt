@@ -1,0 +1,241 @@
+# Sans préférence de ciblage (3 et 5 battants, avant réglage)
+[Barrier] 58 décor(s) masqué(s) sur la ligne
+[Barrier] Levée à (10952.341, -1421.2206) (verticale), 3 battant(s) de 21667 PV
+[BarrierDirector] Barrière levée à 610 s, 2 Mémorial(aux) ravivé(s)
+[Barrier] Battant brisé (1/3)
+[Barrier] Battant brisé (2/3)
+[Barrier] Battant brisé (3/3)
+[Barrier] Fin du combat (brisée), 3/3 battant(s)
+[BarrierDirector] Combat fini à 737 s (brisée), 3/3 battant(s), coups reçus : 0 poing(s), 0 chaîne(s)
+[Barrier] 50 décor(s) masqué(s) sur la ligne
+[Barrier] Levée à (-7422.6885, -3329.2961) (verticale), 3 battant(s) de 21667 PV
+[BarrierDirector] Barrière levée à 671 s, 2 Mémorial(aux) ravivé(s)
+[Barrier] Battant brisé (1/3)
+[Barrier] 63 décor(s) masqué(s) sur la ligne
+[Barrier] Levée à (-3807.8196, -811.64874) (verticale), 3 battant(s) de 21667 PV
+[BarrierDirector] Barrière levée à 682 s, 2 Mémorial(aux) ravivé(s)
+[Barrier] 53 décor(s) masqué(s) sur la ligne
+[Barrier] Levée à (4054.6504, -318.25446) (verticale), 3 battant(s) de 21667 PV
+[BarrierDirector] Barrière levée à 655 s, 2 Mémorial(aux) ravivé(s)
+[Barrier] 73 décor(s) masqué(s) sur la ligne
+[Barrier] Levée à (-8292.516, 7.7949696) (verticale), 5 battant(s) de 19000 PV
+[BarrierDirector] Barrière levée à 671 s, 4 Mémorial(aux) ravivé(s)
+[Barrier] Battant brisé (1/5)
+[Barrier] Battant brisé (2/5)
+[Barrier] Battant brisé (3/5)
+[Barrier] Battant brisé (4/5)
+[Barrier] Battant brisé (5/5)
+[Barrier] Fin du combat (brisée), 5/5 battant(s)
+[BarrierDirector] Combat fini à 695 s (brisée), 5/5 battant(s), coups reçus : 0 poing(s), 0 chaîne(s)
+[Barrier] 64 décor(s) masqué(s) sur la ligne
+[Barrier] Levée à (9122.432, -2187.4316) (verticale), 5 battant(s) de 19000 PV
+[BarrierDirector] Barrière levée à 610 s, 4 Mémorial(aux) ravivé(s)
+[Barrier] 71 décor(s) masqué(s) sur la ligne
+[Barrier] Levée à (-6522.38, 2147.496) (verticale), 5 battant(s) de 19000 PV
+[BarrierDirector] Barrière levée à 655 s, 4 Mémorial(aux) ravivé(s)
+[Barrier] 62 décor(s) masqué(s) sur la ligne
+[Barrier] Levée à (-2470.0835, -5753.2686) (horizontale), 5 battant(s) de 19000 PV
+[BarrierDirector] Barrière levée à 682 s, 4 Mémorial(aux) ravivé(s)
+
+# Avec préférence (1, 3, 5 battants)
+mem 0 exit 0
+mem 2 exit 0
+mem 4 exit 0
+mem0 seed42 : levée 671 fin 691 brisée 1/1 
+mem0 seed1002 : levée 610 
+mem0 seed7 : levée 682 
+mem0 seed123 : levée 655 fin 771 brisée 1/1 
+mem2 seed42 : levée 671 fin 696 brisée 3/3 
+mem2 seed1002 : levée 610 fin 692 brisée 3/3 
+mem2 seed7 : levée 682 fin 837 laissée derrière 3/3 
+mem2 seed123 : levée 655 
+mem4 seed42 : levée 671 fin 726 brisée 5/5 
+mem4 seed1002 : levée 610 
+mem4 seed7 : levée 682 
+mem4 seed123 : levée 655 
+
+# Relevés du combat, 5 battants, graines 1002 et 7
+[Barrier] 73 décor(s) masqué(s) sur la ligne
+[Barrier] Levée à (-7324.7915, 2142.0537) (horizontale), 5 battant(s) de 19000 PV
+[BarrierDirector] Barrière levée à 682 s, 4 Mémorial(aux) ravivé(s)
+[BarrierFight] t=681 distance_battant=147 cote_arrivee=-1 reserve=95000/95000 brises=0 poings=0 foule300=14
+[BarrierFight] t=686 distance_battant=55 cote_arrivee=-1 reserve=80459/95000 brises=0 poings=0 foule300=42
+[BarrierFight] t=691 distance_battant=55 cote_arrivee=-1 reserve=65273/95000 brises=0 poings=0 foule300=49
+[BarrierFight] t=696 distance_battant=55 cote_arrivee=-1 reserve=50475/95000 brises=0 poings=0 foule300=54
+[Barrier] Battant brisé (1/5)
+[Barrier] Battant brisé (2/5)
+[BarrierFight] t=701 distance_battant=100 cote_arrivee=-1 reserve=42669/95000 brises=2 poings=0 foule300=42
+[BarrierFight] t=706 distance_battant=46 cote_arrivee=-1 reserve=35621/95000 brises=2 poings=0 foule300=43
+[BarrierFight] t=711 distance_battant=46 cote_arrivee=-1 reserve=27547/95000 brises=2 poings=0 foule300=46
+[Barrier] Battant brisé (3/5)
+[BarrierFight] t=716 distance_battant=46 cote_arrivee=-1 reserve=25371/95000 brises=3 poings=0 foule300=37
+[Barrier] Battant brisé (4/5)
+[BarrierFight] t=721 distance_battant=114 cote_arrivee=-1 reserve=13675/95000 brises=4 poings=0 foule300=56
+[BarrierFight] t=726 distance_battant=46 cote_arrivee=-1 reserve=5837/95000 brises=4 poings=0 foule300=51
+[Barrier] Battant brisé (5/5)
+[Barrier] Fin du combat (brisée), 5/5 battant(s)
+[BarrierDirector] Combat fini à 731 s (brisée), 5/5 battant(s), coups reçus : 0 poing(s), 0 chaîne(s)
+[Barrier] 33 décor(s) masqué(s) sur la ligne
+[Barrier] Levée à (5572.778, 5564.6494) (horizontale), 5 battant(s) de 19000 PV
+[BarrierDirector] Barrière levée à 610 s, 4 Mémorial(aux) ravivé(s)
+[BarrierFight] t=610 distance_battant=150 cote_arrivee=1 reserve=95000/95000 brises=0 poings=0 foule300=109
+[BarrierFight] t=615 distance_battant=150 cote_arrivee=1 reserve=94952/95000 brises=0 poings=0 foule300=85
+[BarrierFight] t=620 distance_battant=150 cote_arrivee=1 reserve=94787/95000 brises=0 poings=0 foule300=77
+[BarrierFight] t=625 distance_battant=150 cote_arrivee=1 reserve=94103/95000 brises=0 poings=0 foule300=71
+[BarrierFight] t=630 distance_battant=150 cote_arrivee=1 reserve=93183/95000 brises=0 poings=0 foule300=67
+[BarrierFight] t=635 distance_battant=150 cote_arrivee=1 reserve=92238/95000 brises=0 poings=0 foule300=65
+[BarrierFight] t=640 distance_battant=150 cote_arrivee=1 reserve=91270/95000 brises=0 poings=0 foule300=58
+[BarrierFight] t=645 distance_battant=150 cote_arrivee=1 reserve=90489/95000 brises=0 poings=0 foule300=54
+[BarrierFight] t=650 distance_battant=150 cote_arrivee=1 reserve=89554/95000 brises=0 poings=0 foule300=55
+[BarrierFight] t=655 distance_battant=150 cote_arrivee=1 reserve=88431/95000 brises=0 poings=0 foule300=53
+[BarrierFight] t=660 distance_battant=150 cote_arrivee=1 reserve=87469/95000 brises=0 poings=0 foule300=50
+[BarrierFight] t=665 distance_battant=150 cote_arrivee=1 reserve=86363/95000 brises=0 poings=0 foule300=56
+[BarrierFight] t=670 distance_battant=150 cote_arrivee=1 reserve=85288/95000 brises=0 poings=0 foule300=57
+[BarrierFight] t=675 distance_battant=150 cote_arrivee=1 reserve=84160/95000 brises=0 poings=0 foule300=57
+[BarrierFight] t=680 distance_battant=150 cote_arrivee=1 reserve=83149/95000 brises=0 poings=0 foule300=57
+[BarrierFight] t=685 distance_battant=150 cote_arrivee=1 reserve=81954/95000 brises=0 poings=0 foule300=57
+[BarrierFight] t=690 distance_battant=150 cote_arrivee=1 reserve=80886/95000 brises=0 poings=0 foule300=55
+[BarrierFight] t=695 distance_battant=150 cote_arrivee=1 reserve=79749/95000 brises=0 poings=0 foule300=57
+[BarrierFight] t=700 distance_battant=150 cote_arrivee=1 reserve=78651/95000 brises=0 poings=0 foule300=56
+[BarrierFight] t=705 distance_battant=150 cote_arrivee=1 reserve=77636/95000 brises=0 poings=0 foule300=53
+[BarrierFight] t=710 distance_battant=150 cote_arrivee=1 reserve=76468/95000 brises=0 poings=0 foule300=57
+[BarrierFight] t=715 distance_battant=150 cote_arrivee=1 reserve=75289/95000 brises=0 poings=0 foule300=63
+[BarrierFight] t=720 distance_battant=150 cote_arrivee=1 reserve=74162/95000 brises=0 poings=0 foule300=61
+[BarrierFight] t=725 distance_battant=150 cote_arrivee=1 reserve=73007/95000 brises=0 poings=0 foule300=64
+[BarrierFight] t=730 distance_battant=150 cote_arrivee=1 reserve=71925/95000 brises=0 poings=0 foule300=61
+[BarrierFight] t=735 distance_battant=150 cote_arrivee=1 reserve=70812/95000 brises=0 poings=0 foule300=59
+[BarrierFight] t=740 distance_battant=150 cote_arrivee=1 reserve=69651/95000 brises=0 poings=0 foule300=61
+[BarrierFight] t=745 distance_battant=150 cote_arrivee=1 reserve=68555/95000 brises=0 poings=0 foule300=60
+[BarrierFight] t=750 distance_battant=150 cote_arrivee=1 reserve=67319/95000 brises=0 poings=0 foule300=68
+[Barrier] Battant brisé (1/5)
+[BarrierFight] t=755 distance_battant=131 cote_arrivee=1 reserve=66275/95000 brises=1 poings=0 foule300=71
+
+# 3 battants à 100 000 PV
+[Barrier] 31 décor(s) masqué(s) sur la ligne
+[Barrier] Levée à (-11565.427, -1951.7719) (verticale), 3 battant(s) de 33333 PV
+[BarrierDirector] Barrière levée à 610 s, 2 Mémorial(aux) ravivé(s)
+[BarrierFight] t=610 distance_battant=147 cote_arrivee=-1 reserve=99933/100000 brises=0 poings=0 foule300=72
+[BarrierFight] t=615 distance_battant=51 cote_arrivee=-1 reserve=98514/100000 brises=0 poings=0 foule300=82
+[BarrierFight] t=620 distance_battant=51 cote_arrivee=-1 reserve=97526/100000 brises=0 poings=0 foule300=62
+[BarrierFight] t=625 distance_battant=51 cote_arrivee=-1 reserve=96159/100000 brises=0 poings=0 foule300=53
+[BarrierFight] t=630 distance_battant=51 cote_arrivee=-1 reserve=94124/100000 brises=0 poings=0 foule300=56
+[BarrierFight] t=635 distance_battant=51 cote_arrivee=-1 reserve=92110/100000 brises=0 poings=0 foule300=55
+[BarrierFight] t=640 distance_battant=51 cote_arrivee=-1 reserve=88573/100000 brises=0 poings=0 foule300=57
+[BarrierFight] t=645 distance_battant=51 cote_arrivee=-1 reserve=85130/100000 brises=0 poings=0 foule300=61
+[BarrierFight] t=650 distance_battant=51 cote_arrivee=-1 reserve=81414/100000 brises=0 poings=0 foule300=66
+[BarrierFight] t=655 distance_battant=51 cote_arrivee=-1 reserve=78986/100000 brises=0 poings=0 foule300=69
+[BarrierFight] t=660 distance_battant=51 cote_arrivee=-1 reserve=75631/100000 brises=0 poings=0 foule300=73
+[BarrierFight] t=665 distance_battant=51 cote_arrivee=-1 reserve=72943/100000 brises=0 poings=0 foule300=73
+[BarrierFight] t=670 distance_battant=51 cote_arrivee=-1 reserve=70201/100000 brises=0 poings=0 foule300=73
+[BarrierFight] t=675 distance_battant=51 cote_arrivee=-1 reserve=67380/100000 brises=0 poings=0 foule300=74
+[Barrier] Battant brisé (1/3)
+[BarrierFight] t=680 distance_battant=46 cote_arrivee=-1 reserve=64992/100000 brises=1 poings=0 foule300=72
+[BarrierFight] t=685 distance_battant=46 cote_arrivee=-1 reserve=61909/100000 brises=1 poings=0 foule300=75
+[BarrierFight] t=690 distance_battant=46 cote_arrivee=-1 reserve=59217/100000 brises=1 poings=0 foule300=76
+[BarrierFight] t=695 distance_battant=46 cote_arrivee=-1 reserve=56216/100000 brises=1 poings=0 foule300=78
+[BarrierFight] t=700 distance_battant=46 cote_arrivee=-1 reserve=53487/100000 brises=1 poings=0 foule300=77
+[BarrierFight] t=705 distance_battant=46 cote_arrivee=-1 reserve=50319/100000 brises=1 poings=0 foule300=80
+[BarrierFight] t=710 distance_battant=46 cote_arrivee=-1 reserve=48042/100000 brises=1 poings=0 foule300=78
+[BarrierFight] t=715 distance_battant=46 cote_arrivee=-1 reserve=45016/100000 brises=1 poings=0 foule300=77
+[BarrierFight] t=720 distance_battant=46 cote_arrivee=-1 reserve=42075/100000 brises=1 poings=0 foule300=82
+[BarrierFight] t=725 distance_battant=46 cote_arrivee=-1 reserve=40162/100000 brises=1 poings=0 foule300=78
+[BarrierFight] t=730 distance_battant=46 cote_arrivee=-1 reserve=37713/100000 brises=1 poings=0 foule300=78
+[BarrierFight] t=735 distance_battant=46 cote_arrivee=-1 reserve=34075/100000 brises=1 poings=0 foule300=82
+[Barrier] Battant brisé (2/3)
+[BarrierFight] t=740 distance_battant=46 cote_arrivee=-1 reserve=30565/100000 brises=2 poings=0 foule300=84
+[BarrierFight] t=745 distance_battant=46 cote_arrivee=-1 reserve=28755/100000 brises=2 poings=0 foule300=83
+[BarrierFight] t=750 distance_battant=46 cote_arrivee=-1 reserve=26897/100000 brises=2 poings=0 foule300=83
+[BarrierFight] t=755 distance_battant=46 cote_arrivee=-1 reserve=24778/100000 brises=2 poings=0 foule300=79
+[BarrierFight] t=760 distance_battant=46 cote_arrivee=-1 reserve=21534/100000 brises=2 poings=0 foule300=82
+[BarrierFight] t=765 distance_battant=46 cote_arrivee=-1 reserve=19003/100000 brises=2 poings=0 foule300=80
+[BarrierFight] t=770 distance_battant=46 cote_arrivee=-1 reserve=15974/100000 brises=2 poings=0 foule300=86
+[BarrierFight] t=775 distance_battant=46 cote_arrivee=-1 reserve=14902/100000 brises=2 poings=0 foule300=86
+[BarrierFight] t=780 distance_battant=46 cote_arrivee=-1 reserve=13440/100000 brises=2 poings=0 foule300=82
+[BarrierFight] t=785 distance_battant=46 cote_arrivee=-1 reserve=11466/100000 brises=2 poings=0 foule300=83
+[BarrierFight] t=790 distance_battant=46 cote_arrivee=-1 reserve=9994/100000 brises=2 poings=0 foule300=85
+[BarrierFight] t=795 distance_battant=46 cote_arrivee=-1 reserve=8347/100000 brises=2 poings=0 foule300=84
+[BarrierFight] t=800 distance_battant=46 cote_arrivee=-1 reserve=5123/100000 brises=2 poings=0 foule300=83
+[BarrierFight] t=806 distance_battant=46 cote_arrivee=-1 reserve=1615/100000 brises=2 poings=0 foule300=87
+[Barrier] Battant brisé (3/3)
+[Barrier] Fin du combat (brisée), 3/3 battant(s)
+[BarrierDirector] Combat fini à 809 s (brisée), 3/3 battant(s), coups reçus : 0 poing(s), 0 chaîne(s)
+[Barrier] 68 décor(s) masqué(s) sur la ligne
+[Barrier] Levée à (3245.0957, -1146.6263) (verticale), 3 battant(s) de 33333 PV
+[BarrierDirector] Barrière levée à 655 s, 2 Mémorial(aux) ravivé(s)
+[BarrierFight] t=655 distance_battant=147 cote_arrivee=1 reserve=100000/100000 brises=0 poings=0 foule300=72
+[BarrierFight] t=660 distance_battant=51 cote_arrivee=1 reserve=96484/100000 brises=0 poings=0 foule300=61
+[BarrierFight] t=665 distance_battant=51 cote_arrivee=1 reserve=92452/100000 brises=0 poings=0 foule300=57
+[BarrierFight] t=670 distance_battant=51 cote_arrivee=1 reserve=88318/100000 brises=0 poings=0 foule300=58
+[BarrierFight] t=675 distance_battant=51 cote_arrivee=1 reserve=84179/100000 brises=0 poings=0 foule300=58
+[BarrierFight] t=680 distance_battant=51 cote_arrivee=1 reserve=79968/100000 brises=0 poings=0 foule300=59
+[BarrierFight] t=685 distance_battant=51 cote_arrivee=1 reserve=75967/100000 brises=0 poings=0 foule300=60
+[BarrierFight] t=690 distance_battant=51 cote_arrivee=1 reserve=71742/100000 brises=0 poings=0 foule300=60
+[BarrierFight] t=695 distance_battant=51 cote_arrivee=1 reserve=67807/100000 brises=0 poings=0 foule300=61
+[BarrierFight] t=700 distance_battant=51 cote_arrivee=1 reserve=63871/100000 brises=0 poings=0 foule300=68
+[BarrierFight] t=705 distance_battant=51 cote_arrivee=1 reserve=59646/100000 brises=0 poings=0 foule300=67
+[Barrier] Battant brisé (1/3)
+[BarrierFight] t=710 distance_battant=46 cote_arrivee=1 reserve=55494/100000 brises=1 poings=0 foule300=69
+[BarrierFight] t=715 distance_battant=46 cote_arrivee=1 reserve=51061/100000 brises=1 poings=0 foule300=66
+[BarrierFight] t=720 distance_battant=46 cote_arrivee=1 reserve=46698/100000 brises=1 poings=0 foule300=66
+[BarrierFight] t=725 distance_battant=46 cote_arrivee=1 reserve=42257/100000 brises=1 poings=0 foule300=68
+[BarrierFight] t=730 distance_battant=46 cote_arrivee=1 reserve=37958/100000 brises=1 poings=0 foule300=74
+[BarrierFight] t=735 distance_battant=46 cote_arrivee=1 reserve=33689/100000 brises=1 poings=0 foule300=72
+[Barrier] Battant brisé (2/3)
+[BarrierFight] t=740 distance_battant=47 cote_arrivee=1 reserve=29576/100000 brises=2 poings=0 foule300=69
+[BarrierFight] t=745 distance_battant=47 cote_arrivee=1 reserve=25127/100000 brises=2 poings=0 foule300=64
+[BarrierFight] t=750 distance_battant=47 cote_arrivee=1 reserve=20478/100000 brises=2 poings=0 foule300=71
+[BarrierFight] t=755 distance_battant=47 cote_arrivee=1 reserve=15817/100000 brises=2 poings=0 foule300=71
+[BarrierFight] t=760 distance_battant=47 cote_arrivee=1 reserve=11056/100000 brises=2 poings=0 foule300=68
+[BarrierFight] t=765 distance_battant=47 cote_arrivee=1 reserve=6477/100000 brises=2 poings=0 foule300=70
+[BarrierFight] t=770 distance_battant=47 cote_arrivee=1 reserve=1911/100000 brises=2 poings=0 foule300=69
+[Barrier] Battant brisé (3/3)
+[Barrier] Fin du combat (brisée), 3/3 battant(s)
+[BarrierDirector] Combat fini à 773 s (brisée), 3/3 battant(s), coups reçus : 0 poing(s), 0 chaîne(s)
+[Barrier] 44 décor(s) masqué(s) sur la ligne
+[Barrier] Levée à (7364.0684, 4988.508) (horizontale), 3 battant(s) de 33333 PV
+[BarrierDirector] Barrière levée à 671 s, 2 Mémorial(aux) ravivé(s)
+[BarrierFight] t=671 distance_battant=150 cote_arrivee=1 reserve=100000/100000 brises=0 poings=0 foule300=84
+[BarrierFight] t=676 distance_battant=150 cote_arrivee=1 reserve=73024/100000 brises=0 poings=0 foule300=80
+[BarrierFight] t=681 distance_battant=150 cote_arrivee=1 reserve=47183/100000 brises=0 poings=0 foule300=73
+[Barrier] Battant brisé (1/3)
+[BarrierFight] t=686 distance_battant=119 cote_arrivee=1 reserve=22899/100000 brises=1 poings=0 foule300=54
+[Barrier] Battant brisé (2/3)
+[BarrierFight] t=691 distance_battant=200 cote_arrivee=1 reserve=8474/100000 brises=2 poings=0 foule300=49
+[Barrier] Battant brisé (3/3)
+[Barrier] Fin du combat (brisée), 3/3 battant(s)
+[BarrierDirector] Combat fini à 694 s (brisée), 3/3 battant(s), coups reçus : 0 poing(s), 0 chaîne(s)
+[Barrier] 55 décor(s) masqué(s) sur la ligne
+[Barrier] Levée à (6404.3945, -3817.1973) (verticale), 3 battant(s) de 33333 PV
+[BarrierDirector] Barrière levée à 682 s, 2 Mémorial(aux) ravivé(s)
+[BarrierFight] t=681 distance_battant=146 cote_arrivee=1 reserve=100000/100000 brises=0 poings=0 foule300=27
+[BarrierFight] t=686 distance_battant=51 cote_arrivee=1 reserve=98542/100000 brises=0 poings=0 foule300=46
+[BarrierFight] t=691 distance_battant=51 cote_arrivee=1 reserve=97245/100000 brises=0 poings=0 foule300=57
+[BarrierFight] t=696 distance_battant=51 cote_arrivee=1 reserve=95681/100000 brises=0 poings=0 foule300=63
+[BarrierFight] t=701 distance_battant=51 cote_arrivee=1 reserve=94524/100000 brises=0 poings=0 foule300=67
+[BarrierFight] t=706 distance_battant=51 cote_arrivee=1 reserve=92887/100000 brises=0 poings=0 foule300=60
+[BarrierFight] t=711 distance_battant=51 cote_arrivee=1 reserve=91384/100000 brises=0 poings=0 foule300=58
+[BarrierFight] t=716 distance_battant=51 cote_arrivee=1 reserve=89736/100000 brises=0 poings=0 foule300=55
+[BarrierFight] t=721 distance_battant=51 cote_arrivee=1 reserve=87940/100000 brises=0 poings=0 foule300=62
+[BarrierFight] t=726 distance_battant=51 cote_arrivee=1 reserve=86323/100000 brises=0 poings=0 foule300=66
+[BarrierFight] t=731 distance_battant=51 cote_arrivee=1 reserve=84954/100000 brises=0 poings=0 foule300=63
+[BarrierFight] t=736 distance_battant=51 cote_arrivee=1 reserve=83427/100000 brises=0 poings=0 foule300=57
+[BarrierFight] t=741 distance_battant=51 cote_arrivee=1 reserve=81601/100000 brises=0 poings=0 foule300=65
+[BarrierFight] t=746 distance_battant=51 cote_arrivee=1 reserve=79741/100000 brises=0 poings=0 foule300=64
+[BarrierFight] t=751 distance_battant=51 cote_arrivee=1 reserve=78007/100000 brises=0 poings=0 foule300=64
+[BarrierFight] t=756 distance_battant=51 cote_arrivee=1 reserve=75719/100000 brises=0 poings=0 foule300=68
+[BarrierFight] t=761 distance_battant=51 cote_arrivee=1 reserve=73738/100000 brises=0 poings=0 foule300=70
+[BarrierFight] t=766 distance_battant=51 cote_arrivee=1 reserve=72053/100000 brises=0 poings=0 foule300=73
+[BarrierFight] t=772 distance_battant=51 cote_arrivee=1 reserve=70303/100000 brises=0 poings=0 foule300=72
+[BarrierFight] t=777 distance_battant=51 cote_arrivee=1 reserve=69048/100000 brises=0 poings=0 foule300=73
+[BarrierFight] t=782 distance_battant=51 cote_arrivee=1 reserve=67549/100000 brises=0 poings=0 foule300=69
+[BarrierFight] t=787 distance_battant=51 cote_arrivee=1 reserve=66205/100000 brises=0 poings=0 foule300=68
+[BarrierFight] t=792 distance_battant=51 cote_arrivee=1 reserve=64093/100000 brises=0 poings=0 foule300=71
+[BarrierFight] t=797 distance_battant=51 cote_arrivee=1 reserve=62183/100000 brises=0 poings=0 foule300=72
+[BarrierFight] t=802 distance_battant=51 cote_arrivee=1 reserve=60236/100000 brises=0 poings=0 foule300=70
+[BarrierFight] t=807 distance_battant=51 cote_arrivee=1 reserve=58232/100000 brises=0 poings=0 foule300=75
+[BarrierFight] t=812 distance_battant=51 cote_arrivee=1 reserve=56282/100000 brises=0 poings=0 foule300=78
+[BarrierFight] t=817 distance_battant=51 cote_arrivee=1 reserve=54239/100000 brises=0 poings=0 foule300=81
+[BarrierFight] t=822 distance_battant=51 cote_arrivee=1 reserve=52462/100000 brises=0 poings=0 foule300=84
+[BarrierFight] t=827 distance_battant=51 cote_arrivee=1 reserve=50956/100000 brises=0 poings=0 foule300=87
+[BarrierFight] t=832 distance_battant=51 cote_arrivee=1 reserve=49323/100000 brises=0 poings=0 foule300=86
+[BarrierFight] t=837 distance_battant=51 cote_arrivee=1 reserve=47349/100000 brises=0 poings=0 foule300=90

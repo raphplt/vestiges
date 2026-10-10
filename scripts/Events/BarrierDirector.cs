@@ -175,6 +175,13 @@ public partial class BarrierDirector : Node
 	}
 
 #if TOOLS
+	/// <summary>Mesure : Mémoriaux comptés comme ravivés, pour une grille à plusieurs battants sans bot qui les ravive.</summary>
+	public void SetMemorialsForMeasure(int count)
+	{
+		DevelopmentMode.RequireTestAccess();
+		_memorials = count;
+	}
+
 	/// <summary>Mesure : une nouvelle Barrière peut être levée, la précédente retirée par l'appelant.</summary>
 	public void ResetForMeasure()
 	{
