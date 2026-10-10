@@ -762,3 +762,5 @@ Pendant la levée, les battants sont enfouis : ni cibles ni vulnérables, les ti
 - **Bug trouvé et corrigé** : la somme flottante des PV perdus ne retombait pas toujours exactement à zéro, si bien qu'une grille aux trois battants brisés n'était pas déclarée vaincue. Elle l'est désormais dès que toutes ses parties à PV propres sont tombées.
 
 Suites : smoke, boss_parts, indicible, audio, weapons, enemy_abilities, movement-integration, catalogs, launchers : 9/9.
+
+**Mémoriaux jamais comptés (signalé par la session des personnages, corrigé le même soir)** : la Barrière écoutait `MemorialActivated`, que rien n'émet (déjà relevé au plan 18) ; elle avait donc toujours un seul battant en vraie run. Elle écoute maintenant `MemorialAwakened`, émis par `MemorialDirector`, et le signal mort est retiré de l'`EventBus`. Vérifié en vraie run (`--capture-memorial`) : un Mémorial ravivé, un Mémorial compté par la Barrière (0 auparavant).

@@ -46,9 +46,6 @@ public partial class EventBus : Node
     // --- Score ---
     [Signal] public delegate void ScoreChangedEventHandler(int newScore);
 
-    // --- Mémorial ---
-    [Signal] public delegate void MemorialActivatedEventHandler();
-
     // --- Points d'Intérêt ---
     [Signal] public delegate void PoiDiscoveredEventHandler(string poiId, string poiType, Vector2 position);
     [Signal] public delegate void PoiExploredEventHandler(string poiId, string poiType);

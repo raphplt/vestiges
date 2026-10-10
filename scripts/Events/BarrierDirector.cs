@@ -52,7 +52,7 @@ public partial class BarrierDirector : Node
 		_spawner = GetParent().GetNode<SpawnManager>("SpawnManager");
 		_crisisManager = GetParent().GetNodeOrNull<CrisisManager>("CrisisManager");
 		_trail = new Vector2[Mathf.Max(2, Mathf.CeilToInt(_config.HeadingWindowSec / HeadingSampleSec) + 1)];
-		_eventBus.MemorialActivated += OnMemorialActivated;
+		_eventBus.MemorialAwakened += OnMemorialAwakened;
 		_eventBus.CrisisCalmChanged += OnCalmChanged;
 	}
 
@@ -60,7 +60,7 @@ public partial class BarrierDirector : Node
 	{
 		if (_eventBus == null)
 			return;
-		_eventBus.MemorialActivated -= OnMemorialActivated;
+		_eventBus.MemorialAwakened -= OnMemorialAwakened;
 		_eventBus.CrisisCalmChanged -= OnCalmChanged;
 	}
 
@@ -225,7 +225,7 @@ public partial class BarrierDirector : Node
 		return _lastHeading;
 	}
 
-	private void OnMemorialActivated() => _memorials++;
+	private void OnMemorialAwakened(Vector2 position) => _memorials++;
 
 	private void OnCalmChanged(bool active) => _calm = active;
 }

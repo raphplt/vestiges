@@ -104,6 +104,8 @@ public partial class RunObservation
         ChoiceScreen choices = _world.GetNode<ChoiceScreen>("ChoiceScreen");
         for (int wait = 0; wait < 30 && !choices.IsOpen; wait++)
             await ToSignal(GetTree().CreateTimer(0.1, processAlways: true), SceneTreeTimer.SignalName.Timeout);
+        // Chaque Mémorial ravivé ajoute un battant à la Barrière : le compte doit suivre (plan 07 B2).
+        GD.Print($"[RunObservation] Mémoriaux comptés par la Barrière : {_world.GetNode<Vestiges.Events.BarrierDirector>("BarrierDirector").MemorialsAwakened}");
         if (!choices.IsOpen)
             return 0;
         if (blessingsFrame != null)
