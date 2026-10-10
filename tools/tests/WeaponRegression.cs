@@ -39,6 +39,7 @@ public partial class WeaponRegression : Node2D
             await CheckOrbitalHits();
             await CheckTargetLockOneLife();
             await CheckBounceSeeksFarthest();
+            await CheckRemanenceEcho();
             await CheckHitEffectsFollowSource();
             CheckSingleLevel();
             CheckBanishUpgrade();
@@ -274,6 +275,129 @@ public partial class WeaponRegression : Node2D
         far.QueueFree();
         outOfRange.QueueFree();
         await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+    }
+
+    /// <summary>
+    /// Double de l'Éveillée (plan 06 P3b) : armée, la rémanence répète le prochain tir depuis son point, à la moitié
+    /// des dégâts, une seule fois ; elle attend un tir et ne répète pas la mêlée. Le module l'arme au départ d'une
+    /// mobilité, à l'endroit quitté, et la retire au bout de 1,5 s.
+    /// </summary>
+    private async Task CheckRemanenceEcho()
+    {
+        CombatPools pools = new() { Name = "CombatPools" };
+        AddChild(pools);
+        Player player = GD.Load<PackedScene>("res://scenes/Player.tscn").Instantiate<Player>();
+        AddChild(player);
+        player.InitializeCharacter(CharacterDataLoader.Get("eveillee"));
+        player.SetPhysicsProcess(false);
+        player.IsAIControlled = true;
+        player.ProcessMode = ProcessModeEnum.Disabled;
+        player.GlobalPosition = new Vector2(80000f, 80000f);
+        typeof(Player).GetField("_critChance", Private).SetValue(player, 0f);
+        MethodInfo attack = typeof(Player).GetMethod("OnWeaponAttackTimeout", Private);
+        FieldInfo shotDamage = typeof(Projectile).GetField("_damage", Private);
+        Enemy enemy = SpawnStill(Vector2.Zero);
+        enemy.GlobalPosition = player.GlobalPosition + new Vector2(60f, 60f);
+        Vector2 origin = player.GlobalPosition + new Vector2(0f, 120f);
+        Vector2? echoed = null;
+        player.AttackEchoed += at => echoed = at;
+        try
+        {
+            await ToSignal(GetTree(), SceneTree.SignalName.PhysicsFrame);
+            while (player.WeaponSlots.Count > 0)
+                player.RemoveWeapon(0);
+            player.AddWeapon(WeaponDataLoader.Get("makeshift_bow"));
+
+            List<(Vector2 From, float Damage)> Fire()
+            {
+                foreach (Node child in pools.GetChildren())
+                    if (child is Projectile old && old.ProcessMode != ProcessModeEnum.Disabled)
+                        old.StopTicking();
+                HashSet<Node> before = new();
+                foreach (Node child in pools.GetChildren())
+                    if (child is Projectile { Visible: true } flying && flying.ProcessMode != ProcessModeEnum.Disabled)
+                        before.Add(flying);
+                attack.Invoke(player, new object[] { 0 });
+                List<(Vector2, float)> shots = new();
+                foreach (Node child in pools.GetChildren())
+                    if (child is Projectile { Visible: true } shot && shot.ProcessMode != ProcessModeEnum.Disabled && !before.Contains(shot))
+                        shots.Add((shot.GlobalPosition, (float)shotDamage.GetValue(shot)));
+                return shots;
+            }
+
+            player.ArmAttackEcho(origin, 0.5f);
+            List<(Vector2 From, float Damage)> first = Fire();
+            (Vector2 From, float Damage) own = first.Find(shot => shot.From.IsEqualApprox(player.GlobalPosition));
+            (Vector2 From, float Damage) repeated = first.Find(shot => shot.From.IsEqualApprox(origin));
+            Check(first.Count == 2 && own.Damage > 0f && Mathf.IsEqualApprox(repeated.Damage, own.Damage * 0.5f)
+                    && echoed == origin && !player.HasAttackEcho,
+                $"Rémanence : le tir part aussi de la rémanence, à moitié des dégâts ({first.Count} tirs, {own.Damage:0.#} et {repeated.Damage:0.#})");
+            List<(Vector2 From, float Damage)> second = Fire();
+            Check(second.Count == 1, $"Rémanence : une seule fois ({second.Count} tir ensuite)");
+
+            echoed = null;
+            player.ArmAttackEcho(player.GlobalPosition + new Vector2(0f, 900f), 0.5f);
+            List<(Vector2 From, float Damage)> unreachable = Fire();
+            Check(unreachable.Count == 1 && player.HasAttackEcho && echoed == null,
+                "Rémanence : sans cible à sa portée, elle ne tire pas et reste armée");
+            player.DisarmAttackEcho();
+
+            // Rafale sur une cible seule : les flèches qui attendent leur tour partiront de la rémanence.
+            FieldInfo departureField = typeof(Projectile).GetField("_departureOrigin", Private);
+            player.WeaponSlots[0].ApplyUpgrade(new[] { new StatGain("projectile_count", 2f) });
+            player.ArmAttackEcho(origin, 0.5f);
+            HashSet<Node> earlier = new();
+            foreach (Node child in pools.GetChildren())
+                if (child is Projectile { ProcessMode: not ProcessModeEnum.Disabled } old)
+                    earlier.Add(old);
+            attack.Invoke(player, new object[] { 0 });
+            int waitingFromEcho = 0, waitingElsewhere = 0;
+            foreach (Node child in pools.GetChildren())
+            {
+                if (child is not Projectile { Visible: false } waiting || waiting.ProcessMode == ProcessModeEnum.Disabled
+                    || earlier.Contains(waiting))
+                    continue;
+                Vector2? from = (Vector2?)departureField.GetValue(waiting);
+                waitingFromEcho += from == origin ? 1 : 0;
+                waitingElsewhere += from == null ? 1 : 0;
+            }
+            Check(waitingFromEcho == 2 && waitingElsewhere == 2,
+                $"Rémanence : sa rafale attend son tour et partira de la rémanence ({waitingFromEcho} de la rémanence, {waitingElsewhere} du joueur)");
+
+            while (player.WeaponSlots.Count > 0)
+                player.RemoveWeapon(0);
+            player.AddWeapon(WeaponDataLoader.Get("chipped_blade"));
+            echoed = null;
+            player.ArmAttackEcho(origin, 0.5f);
+            attack.Invoke(player, new object[] { 0 });
+            Check(player.HasAttackEcho && echoed == null, "Rémanence : la mêlée n'est pas répétée, elle attend un tir");
+            player.DisarmAttackEcho();
+
+            RemanenceEcho module = new();
+            module.Initialize(player, PerkDataLoader.GetAll().Find(perk => perk.Id == "eveillee_double").Echo);
+            player.AddChild(module);
+            Vector2 departure = player.GlobalPosition;
+            module.Advance(1f / 60f);
+            player.Mobility.Request();
+            player.Mobility.Step(1f / 60f, Vector2.Right, 200f, 1f, true);
+            player.GlobalPosition += new Vector2(20f, 0f);
+            module.Advance(1f / 60f);
+            Vector2 armedAt = (Vector2)typeof(Player).GetField("_echoOrigin", Private).GetValue(player);
+            bool armedAtDeparture = player.HasAttackEcho && module.IsShown && armedAt == departure;
+            for (int tick = 0; tick < 30; tick++)
+                player.Mobility.Step(1f / 60f, Vector2.Zero, 200f, 1f, true);
+            for (int tick = 0; tick < 95; tick++)
+                module.Advance(1f / 60f);
+            Check(armedAtDeparture && !player.HasAttackEcho && !module.IsShown,
+                $"Rémanence : armée au départ de la mobilité, à l'endroit quitté ({armedAt}), retirée au bout de 1,5 s");
+        }
+        finally
+        {
+            enemy.QueueFree();
+            player.QueueFree();
+            pools.QueueFree();
+        }
+        await ToSignal(GetTree(), SceneTree.SignalName.PhysicsFrame);
     }
 
     private static float Lost(Enemy enemy) => (1f - enemy.HpRatio) * enemy.MaxHp;

@@ -1100,3 +1100,5 @@ Raphaël : « Rajoute-les dans characters.json, rajoute-leur un passif raccord a
 - Les mobilités propres passent par des profils en données (plan 01 E) ; la glissade du Facteur est le premier.
 
 **À juger en jouant :** valeurs d'essai (stats du Facteur, 2 rebonds à −15 %, élan +25 %/+15 % en 4 s, glissade 0,4 s à ×1,5 et 3 s de recharge) ; son provisoire de la Sacoche à auditionner.
+
+**Suite, l'Éveillée (même soir) :** Raphaël : « ok top. personnage suivant, stp ». L'Éveillée est livrée (plan 06 P3). Sa rémanence répète le prochain **tir** seulement : rejouer une mêlée loin du corps demanderait de refaire ses traînées, et l'Éveillée est un personnage de distance. À confirmer en jouant.

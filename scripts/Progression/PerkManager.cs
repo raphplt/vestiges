@@ -36,6 +36,12 @@ public partial class PerkManager : Node
                 momentum.Initialize(player, passive.Momentum);
                 player.AddChild(momentum);
             }
+            if (passive.Echo != null)
+            {
+                RemanenceEcho echo = new() { Name = "RemanenceEcho" };
+                echo.Initialize(player, passive.Echo);
+                player.AddChild(echo);
+            }
             GD.Print($"[PerkManager] Applied passive: {passive.Name}");
         }
     }
