@@ -1,6 +1,6 @@
 # Plan 06 — Personnages singuliers, quêtes variées et déblocages directs
 
-Version 0.3 · Statut : **quêtes indépendantes du lore et casting diversifié décidés ; contenu proposé**.
+Version 0.4 · Statut : **quêtes indépendantes du lore et casting diversifié décidés ; liste complète des quêtes proposée au §9 (10 octobre), à valider**.
 Priorité : P0 pour le casting · Dépendances : 08 pour la refonte de tous les sprites ; 05/04/03 pour progression et intégration. Le casting validé précède désormais 01 E.
 Références : V2 §17/18/25 sous amendement ; [décisions](DECISIONS.md).
 
@@ -141,3 +141,130 @@ Décision du 23 septembre (registre, « Personnage initial »), restée sans cod
 - Le personnage de secours de la run (aucun choix transmis) devient le Vagabond.
 - **Vérifié :** accueil en profil neuf capturé (« Le Vagabond », seul personnage) ; `test_dev_mode` vert après adaptation (le Traqueur y sert désormais de personnage verrouillé en profil normal) ; smoke test.
 - **Reste ouvert :** le choix de la condition du Traqueur est provisoire, les conditions du §5 n'étant pas validées.
+
+## 9. Une seule famille de quêtes : la liste complète — 10 octobre 2026 (proposition)
+
+Demande de Raphaël ([DECISIONS §90](DECISIONS.md)) : « il faut avoir une seule instance de quêtes : celles pour débloquer des armes, personnages, objets […] variées, de différents niveaux de difficulté, certaines imbriquées les unes dans les autres ». Les quêtes ne s'affichent pas en jeu ; une notification part **dès qu'une quête est accomplie**, sans attendre la fin de la run. Cette section **remplace les §4 et §5** : liste validée comme base le 10 octobre (« ça me va, très bonne base », DECISIONS §90), seuils à mesurer.
+
+### 9.1 Règles
+
+- **Une quête = un déblocage permanent** (personnage, arme ou objet). Plus de quêtes de run (Essence, XP), plus de Souvenirs comme clé, plus de Vestiges en récompense. Chaque pièce verrouillée a exactement une quête.
+- **La condition fait essayer le style que la récompense renforce** (Thermomètre : tuer des créatures en feu). Elle est atteignable avec la réserve de départ ; jamais avec la pièce qu'elle débloque.
+- **Trois difficultés.** ★ : une ou deux runs, en jouant normalement. ★★ : il faut le chercher (un boss, un style tenu toute une run). ★★★ : fin de run, risque ou maîtrise.
+- **Des quêtes en révèlent d'autres.** La colonne « Après » dit quelle quête en révèle une autre. Une quête révélée n'apparaît qu'une fois la précédente accomplie, et ne progresse qu'à partir de là. **Rien n'indique au joueur qu'une quête dépend d'une autre** (DECISIONS §90) : avant d'être révélée, la pièce figure dans la Collection comme verrouillée, sans condition affichée.
+- **Run ou cumul.** La plupart se font dans une seule run (on ne grind pas) ; quelques-unes se cumulent d'une run à l'autre.
+- **Notification immédiate** : bandeau court en jeu (« Quête accomplie : Thermomètre débloqué »), mis en file s'il en part plusieurs, retenu pendant un écran de choix. La pièce n'entre dans la run en cours qu'à la run suivante.
+- **Aucune quête ne s'affiche pendant la run.** Elles se consultent au Hub (Collection : chaque pièce verrouillée avec sa quête et sa progression).
+- **Un personnage débloqué apporte son arme de départ** dans la réserve commune.
+- **Impossible aujourd'hui, donc exclu :** POI et lore (désactivés), Reliquaire (n'existe pas), « finir une run » (une run ne finit qu'à la mort). Les trois objets « monde » (Presse-papier, Calendrier, Médaillon) attendent le Reliquaire.
+
+### 9.2 Réserve de départ (profil neuf)
+
+| | Disponible au départ | À débloquer |
+|---|---|---|
+| **Personnages** (6) | Vagabond | Traqueur, Forgeuse, Éveillée, Facteur, Scaphandrière |
+| **Armes** (24 + 2 nouvelles) | 8 : Faucille, Lance-billes, Parapluie, Cloueuse, Pelle à neige, Rallonge, Assiettes, Boussole (tous les gabarits : arc, ligne, salve, cercle, guidé) | 18 : 5 avec leur personnage (Arc du gymnase, Parcmètre, Baguette de sourcier, Sacoche de lettres, Fusil-harpon), 13 par quête |
+| **Objets** (33) | 15 : Ressort de sommier, Rondelle de cuivre, Mètre pliant, Pince à linge, Bouton de manteau, Bobine de fil, Lacet rouge, Aimant de frigo, Photo de classe, Jeton de fête foraine, Allumette humide, Glaçon dans un mouchoir, Dé à coudre, Semelle usée, Chewing-gum | 18 par quête |
+
+Total : **36 quêtes** (5 personnages, 13 armes, 18 objets).
+
+### 9.3 Personnages (5)
+
+| Quête | Condition | Portée | Diff. | Après | Débloque |
+|---|---|---|---|---|---|
+| Mener la chasse | Vaincre un Souverain | run | ★ | — | **Traqueur** (+ Arc du gymnase) |
+| Redresser la grille | Abattre la Barrière | run | ★★ | — | **Forgeuse** (+ Parcmètre) |
+| Entendre les voix | Raviver trois Mémoriaux et survivre à deux Résurgences, dans la même run | run | ★★ | — | **Éveillée** (+ Baguette de sourcier) |
+| La tournée | Parcourir 2 500 m et utiliser cinq Repères différents, dans la même run | run | ★★ | — | **Facteur** (+ Sacoche de lettres) |
+| Remonter les corps | Tuer 290 créatures en zone effilochée ou effacée, dans une run (les vingt-neuf corps du lore) | run | ★★★ | Entendre les voix | **Scaphandrière** (+ Fusil-harpon) |
+
+### 9.4 Armes (13)
+
+| Quête | Condition | Portée | Diff. | Après | Débloque |
+|---|---|---|---|---|---|
+| Ratisser | Tuer 500 créatures avec des armes de mêlée | run | ★ | — | Râteau |
+| Garder la côte | Tuer 500 créatures avec des armes à distance | run | ★ | — | Lentille de phare |
+| Quatre airs | Avoir quatre armes au niveau 10 ou plus en même temps | run | ★ | — | Boîte à musique |
+| Développer | Réussir trois micro-événements dans la même run | run | ★ | — | Polaroïd |
+| Dessiner la carte | Découvrir 150 zones du brouillard | run | ★ | — | Craies |
+| Toutes les portes | Ouvrir 100 coffres | cumul | ★★ | — | Trousseau |
+| Compter les Résurgences | Survivre à 15 Résurgences | cumul | ★★ | — | Lampe à pétrole |
+| Contre la montre | Atteindre le niveau 30 avant la 12ᵉ minute | run | ★★ | — | Chronomètre |
+| Sonner la récré | Tuer 300 créatures ralenties | run | ★★ | Retenir | Cloche d'école |
+| Geste précis | Tuer 10 élites d'un coup critique | run | ★★ | Lire de près | Scalpel |
+| Nommer l'Indicible | Vaincre l'Indicible | run | ★★★ | Redresser la grille | Gomme |
+| Au-delà du climax | Survivre à une Résurgence après la chute de l'Indicible | run | ★★★ | Nommer l'Indicible | Gants de boxe |
+| Dernière émission | Porter quatre Oublis à la fois et survivre à une Résurgence ainsi | run | ★★★ | Appeler la meute | Transistor |
+
+### 9.5 Objets (18)
+
+| Quête | Condition | Portée | Diff. | Après | Débloque |
+|---|---|---|---|---|---|
+| Fièvre | Tuer 100 créatures en feu | run | ★ | — | Thermomètre |
+| Retenir | Tuer 150 créatures ralenties | run | ★ | — | Épingle à nourrice |
+| Lire de près | Tuer 150 créatures d'un coup critique | run | ★ | — | Lunettes de lecture |
+| Encaisser | Subir 1 000 dégâts dans une run | run | ★ | — | Genouillère |
+| Reprendre des forces | Récupérer 1 000 PV par des soins | run | ★ | — | Paille tordue |
+| Dans la foule | Tuer 200 créatures à moins de 120 px de toi | run | ★ | — | Gilet réfléchissant |
+| Grandir | Atteindre le niveau 30 | run | ★ | — | Boîte de pansements |
+| Pas bouger | Tuer 300 créatures pendant que tu es immobile | run | ★★ | — | Tabouret de camping |
+| Bouquet final | Tuer 25 créatures en moins de 2 secondes | run | ★★ | — | Pétard mouillé |
+| De justesse | Tuer 150 créatures en étant sous 35 % de tes PV | run | ★★ | — | Médaille cabossée |
+| Bien au chaud | Atteindre la 5ᵉ minute sans être descendu sous 90 % de tes PV | run | ★★ | — | Thermos |
+| Tenir le feu | Traverser une Résurgence en perdant moins de 25 % de tes PV max | run | ★★ | — | Écusson de pompier |
+| Économiser | Garder 300 Essence en poche | run | ★★ | — | Porte-monnaie usé |
+| Appeler la meute | Atteindre Péril 5 | run | ★★ | — | Sifflet d'arbitre |
+| Le détail | Tuer 600 créatures d'un coup critique | run | ★★ | Lire de près | Loupe de philatéliste |
+| Annoter | Tuer un Souverain d'un coup critique | run | ★★ | Le détail | Stylo à quatre couleurs |
+| Clouer | Tuer 400 créatures avec la Cloueuse | run | ★ | — | Reflet brisé |
+| Recopier | Faire ascensionner deux armes dans la même run | run | ★★★ | — | Papier carbone |
+
+### 9.6 Quêtes qui en révèlent d'autres
+
+- **Critique :** Lire de près → Le détail → Annoter ; Lire de près → Geste précis.
+- **Froid :** Glaçon (départ) → Retenir → Sonner la récré. **Feu :** Allumette (départ) → Fièvre.
+- **Boss :** Redresser la grille (Barrière) → Nommer l'Indicible → Au-delà du climax.
+- **Risque :** Appeler la meute (Péril 5) → Dernière émission (quatre Oublis).
+- **Effacement :** Entendre les voix (Éveillée) → Remonter les corps (Scaphandrière).
+
+Répartition : 14 ★, 17 ★★, 5 ★★★ ; 33 en une run, 2 en cumul.
+
+### 9.7 Ce qu'il faudra compter (pour le lot de code)
+
+Déjà observable : éliminations (par arme, élites, Souverains), coffres, Résurgences, Mémoriaux ravivés, Failles, Péril, Oublis, Barrière et Indicible, endgame, niveau, Essence, dégâts subis, soins, distance, zones découvertes, micro-événements réussis, ascensions, état ralenti/en feu à la mort.
+À ajouter : coup critique dans le résultat de dégâts ; Repères utilisés (signal) ; phase d'Effacement au point de mort ; immobilité et distance au joueur à la mort ; PV au moment de l'élimination ; fenêtre d'éliminations sur 2 s ; PV perdus pendant une Résurgence.
+
+Tous les seuils sont des valeurs d'essai, à mesurer sur des runs (`tools/measure_run.sh`) avant de figer : un ★ doit tomber en une ou deux runs normales.
+
+### 9.8 Profils et ancien système
+
+- **Aucune préservation d'ancien profil** (DECISIONS §90) : le seul profil joué est le profil dev de Raphaël, qui a tout. Le chargement d'une ancienne sauvegarde ne plante pas et ne perd ni historique ni Souvenirs ; les nouveaux champs démarrent vides. Les garde-fous des lots B et A sur les droits acquis ne s'appliquent plus.
+- **Persistance exigée** : déblocages, quêtes révélées et compteurs cumulés passent par l'écriture atomique existante (Q2a/Q2b) ; une quête accomplie en run est enregistrée tout de suite, pas à la mort, pour survivre à un crash ou à un retour au camp par le menu.
+- Les quêtes de run (`run_*`), les récompenses Souvenir/Vestiges/Essence/XP des quêtes et `requires_souvenir` des armes disparaissent ; le Journal des Souvenirs reste, sans effet sur le combat.
+- Le mode dev ouvre tout, comme aujourd'hui.
+
+### 9.9 Backlog : quêtes d'exception
+
+Demande de Raphaël (DECISIONS §90) : des quêtes en plus pour des **objets légendaires ou des armes « pétées »**. Elles ne font pas partie du premier lot ; leurs récompenses sont à créer (plan 05). Idées, toutes à valider :
+
+| Exploit | Récompense envisagée |
+|---|---|
+| Ouvrir tous les coffres d'une carte en une run (39 placés) | Objet légendaire de butin |
+| Raviver les neuf Mémoriaux d'une carte en une run | Objet légendaire de survie |
+| Utiliser les treize types de Repères en une run | Arme d'exploration |
+| Tuer au moins une fois chaque créature du bestiaire, boss compris (cumul) | Arme « pétée » |
+| Vaincre l'Indicible à Péril 10 | Arme « pétée » |
+| Ascensionner quatre armes dans la même run | Objet légendaire de build |
+| Débloquer toutes les armes et tous les objets | Dernière pièce, la plus forte |
+
+### 9.10 Lots
+
+Ordre décidé (DECISIONS §90) : quêtes d'abord, personnages ensuite.
+
+| Lot | Contenu | Vérification |
+|---|---|---|
+| **Q1 — Déblocages et données** | Fichier des 36 quêtes (récompense typée, portée run/cumul, difficulté, quête qui la révèle) ; réserve de départ en données ; sauvegarde méta : personnages, armes et objets débloqués, quêtes accomplies et révélées, compteurs cumulés. Une seule règle d'accès lue par le loot, les offres de niveau, les Ateliers, la Collection et l'accueil. Retraits : quêtes de run et leur panneau, `requires_souvenir`, conditions de personnages en dur, récompenses Souvenir/Vestiges. Mode dev : tout ouvert. | Profil neuf : seule la réserve sort en 3 runs mesurées ; profil dev inchangé ; sauvegarde rechargée identique ; build, smoke, suites existantes |
+| **Q2 — Suivi en run et notification** | Suivi des 36 conditions sur l'EventBus ; compteurs manquants (§9.7) ; quête accomplie enregistrée aussitôt ; bandeau de notification en file. | Scène de régression qui rejoue les événements de chaque condition (seuil −1, seuil, après) ; capture du bandeau en vraie run |
+| **Q3 — Hub et bilan** | Collection : pièce verrouillée avec sa quête et sa progression si la quête est révélée, sans condition sinon ; quêtes accomplies au bilan. | Captures du Hub (profil neuf, profil avancé) |
+| **Q4 — Seuils mesurés** | `tools/measure_run.sh` sur plusieurs seeds : runs avant chaque ★, ajustement des seuils en données. | Tableau avant/après |
+| **P1 à P3 — Éveillée, Facteur, Scaphandrière** | Un personnage complet par lot (fiche du casting) : branchement des sprites, stats, passif, mobilité propre (plan 01 E), arme de départ (Sacoche de lettres et Fusil-harpon à créer), sons, quête. | Captures en run, suites de mouvement et d'armes |

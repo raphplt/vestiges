@@ -1015,3 +1015,24 @@ Choix faits par Claude faute de validation de la planche B2a, **tous révisables
   - **préférence de ciblage des parties de boss** (100 px), sans laquelle la foule passait avant le battant ;
   - réserve 5 000 + 15 000 par battant : un battant suffit pour passer, les autres sont la récompense.
 - **Fusion du 10 octobre** : un `git pull` est resté en conflit avec la PR #2 (décors, héros). Résolue à la demande de Raphaël (« règle les conflits stp ») en gardant les deux côtés. Les sections du 9 et 10 octobre se sont trouvées en double ; les sections distantes gardent leurs numéros (§86 décors, §87 héros), la reprise audio devient §88 et ce chantier des boss §89.
+
+## 90. Personnages à intégrer et quêtes de déblocage — 10 octobre 2026
+
+Raphaël : « il faudrait implémenter ces personnages dans le jeu […] et aussi faire ce système de quêtes qui permet de débloquer des objets, des armes, des personnages de manière permanente ». Inventaire fait (plan 06, plan 21 §10, fiches du casting) ; réponses aux questions :
+
+**Acquis :**
+- **Personnages à rendre jouables : l'Éveillée, le Facteur et la Scaphandrière** (sprites du plan 32 H1). Les autres héros du plan 32 attendent.
+- **Kit complet des fiches** ([06-fiches-casting](06-fiches-casting.md)) : passif, mobilité propre, arme de départ, y compris les nouvelles armes (Sacoche de lettres, Fusil-harpon).
+- **Quêtes d'abord, personnages ensuite** : le système de déblocages permanents (personnages, armes, objets) et ses quêtes précèdent le branchement des trois personnages, qui en seront des récompenses.
+
+**Non acquis (réglé plus bas) :** ce qui est verrouillé au départ pour un profil neuf.
+
+**Suite, même jour.** Raphaël : « il faut avoir une seule instance de quêtes : celles pour débloquer des armes, personnages, objets […] variées, de différents niveaux de difficultés, certaines imbriquées […] il ne faut pas que les quêtes soient affichées en permanence in game. par contre, il faut avoir la notif qu'on a complété une quête dès que c'est fait sans attendre la fin de la run ». Puis, sur la liste du [plan 06 §9](06-personnages-quetes-defis.md) : « J'ai tout lu, ça me va, très bonne base ».
+
+**Acquis :**
+- **Une seule famille de quêtes**, qui débloquent personnages, armes et objets de façon permanente. Plus de quêtes de run, plus de Souvenirs comme clé.
+- **Rien d'affiché en permanence en jeu** ; **notification dès qu'une quête est accomplie**, en pleine run.
+- **La liste des 36 quêtes et la réserve de départ du plan 06 §9 sont la base** ; les seuils restent à mesurer.
+- **Pas de « quête enchaînée » comme notion** : des quêtes en révèlent d'autres. Rien n'indique qu'une quête dépend d'une autre ; une quête révélée par une autre n'apparaît qu'une fois celle-ci accomplie, et le joueur fait le lien lui-même.
+- **Profils** : seul existe le profil dev de Raphaël, qui a tout ; aucune préservation des anciens profils à prévoir. Exigence : **les déblocages et la progression des quêtes sont bien persistants**.
+- **Backlog** : prévoir des quêtes d'exception pour des objets légendaires ou des armes « pétées » (exemple de Raphaël : ouvrir tous les coffres du jeu). Rattachées au plan 06 §9.9, pas dans le premier lot.
