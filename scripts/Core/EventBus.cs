@@ -136,6 +136,10 @@ public partial class EventBus : Node
     // --- Petits lieux (plan 22 C1 et C4) ---
     /// <summary>Un petit lieu vient de servir (Repères, plan 23 R9).</summary>
     [Signal] public delegate void SmallPlaceUsedEventHandler(string placeId, Vector2 position);
+    /// <summary>Premier usage d'un type de lieu dans la run : son Repère est gagné (Waymarks).</summary>
+    [Signal] public delegate void WaymarkFoundEventHandler(string placeType);
+    /// <summary>Quête de déblocage accomplie et déjà enregistrée (plan 06 §9) : notification et bilan.</summary>
+    [Signal] public delegate void QuestCompletedEventHandler(string questId);
     /// <summary>Relances et bannissements gratuits gagnés hors du level-up (Repère d'un Mémorial ou d'une Faille).</summary>
     [Signal] public delegate void ChoiceTokensGrantedEventHandler(int rerolls, int banishes);
 

@@ -171,6 +171,7 @@ public partial class HUD : CanvasLayer
         RunEventHud eventHud = new() { Name = "RunEventHud" };
         _hudRoot.AddChild(eventHud);
         _hudRoot.AddChild(new BossHealthBar { Name = "BossHealthBar" });
+        _hudRoot.AddChild(new QuestToast { Name = "QuestToast" });
     }
 
     public void SetHudScale(float scale) => HudScale = scale;

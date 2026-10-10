@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using System.Threading.Tasks;
 using System.Text.Json.Nodes;
 using Godot;
 using Vestiges.Core;
@@ -12,9 +13,9 @@ using Vestiges.World;
 namespace Vestiges.Tests;
 
 /// <summary>
-/// Quêtes de déblocage (plan 06 §9, lot Q1) dans un profil neuf et isolé : catalogue des 36 quêtes et fixtures
+/// Quêtes de déblocage (plan 06 §9) dans un profil neuf et isolé. Lot Q1 : catalogue des 36 quêtes et fixtures
 /// refusées, réserve de départ appliquée par l'offre de niveau et le butin, quête accomplie et avancée retenue
-/// identiques après rechargement.
+/// identiques après rechargement. Lot Q2 (<c>--tracking</c>) : suivi en run, voir QuestRegression.Tracking.
 /// </summary>
 public partial class QuestRegression : Node
 {
@@ -35,14 +36,20 @@ public partial class QuestRegression : Node
     private int _checks;
     private int _failures;
 
-    public override void _Ready()
+    public override async void _Ready()
     {
         try
         {
-            CheckCatalog();
-            CheckRefusals();
-            CheckStartingPool();
-            CheckClaimAndReload();
+            // Deux passages, chacun sur un profil neuf : déblocages (Q1), puis suivi en run de chaque quête (Q2).
+            if (Array.IndexOf(OS.GetCmdlineUserArgs(), "--tracking") >= 0)
+                await CheckTracking();
+            else
+            {
+                CheckCatalog();
+                CheckRefusals();
+                CheckStartingPool();
+                CheckClaimAndReload();
+            }
             GD.Print($"[QuestRegression] RESULT failures={_failures} checks={_checks}");
             if (_failures == 0)
                 GD.Print("[QuestRegression] PASS");

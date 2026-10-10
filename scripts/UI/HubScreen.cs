@@ -84,8 +84,6 @@ public partial class HubScreen : Control
 
 		if (gm.LastRunData != null)
 			gm.LastRunData = null;
-		if (gm.LastQuestCompletions != null)
-			gm.LastQuestCompletions = null;
 		// Depuis le bilan, « Voir dans la Collection » arrive directement sur l'arme débloquée.
 		if (!string.IsNullOrEmpty(gm.CollectionFocusWeaponId))
 		{
@@ -618,7 +616,6 @@ public partial class HubScreen : Control
 		GameManager manager = GetNode<GameManager>("/root/GameManager");
 		manager.SelectedCharacterId = null;
 		manager.LastRunData = null;
-		manager.LastQuestCompletions = null;
 		manager.LastRunSaveError = "";
 		manager.LastRunHistoryPending = false;
 		manager.LastVestigesEarned = 0;

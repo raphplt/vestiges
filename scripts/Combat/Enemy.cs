@@ -1033,7 +1033,7 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 		if (carriedDamage <= 0f)
 			carriedDamage = OverflowLedger.Take(source);
 		float taken = _fragileTimer > 0f ? _mods.DamageTakenMultiplier * (1f + _fragileBonus) : _mods.DamageTakenMultiplier;
-		DamageResult result = DamageResult.Resolve(Life, source, _currentHp, damage, carriedDamage, taken);
+		DamageResult result = DamageResult.Resolve(Life, source, _currentHp, damage, carriedDamage, taken) with { Critical = isCrit };
 		damage = result.NativeDamage + result.CarriedDamage;
 		_mods.NotifyDamaged();
 		LoseHp(damage);
@@ -1433,7 +1433,7 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 		// Capturer les contrôles avant leur nettoyage et avant les explosions de mort en cascade.
 		_eventBus.PublishEnemyKill(new EnemyKillResult(Life, _enemyId, GlobalPosition, damage, SlowControl, DisorientationControl,
 			new ControlState(_igniteDps, Mathf.Max(0f, _igniteTimer), _igniteSource, ControlOrigin.Unknown),
-			IsPriorityTarget || _tier is EnemyTier.Elite or EnemyTier.Miniboss or EnemyTier.Boss));
+			IsPriorityTarget || _tier is EnemyTier.Elite or EnemyTier.Miniboss or EnemyTier.Boss, VariantId == "champion"));
 		_killed = true;
 		_killedFrame = Engine.GetProcessFrames();
 		// Le corps se dissout : son contact avec le sol disparaît avec lui.

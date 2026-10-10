@@ -69,6 +69,7 @@ public partial class GameOverScreen : CanvasLayer
     // Armes disponibles au départ de la run : celles qui s'y ajoutent au bilan (Souvenir retrouvé) mènent à la Collection.
     private readonly HashSet<string> _weaponsAtStart = new();
     private readonly List<WeaponData> _newWeapons = new();
+    private readonly List<string> _questsDone = new();
     private readonly List<EndGainCard> _gainCards = new();
 
     private bool _showing;
@@ -97,6 +98,7 @@ public partial class GameOverScreen : CanvasLayer
         Layer = 50;
         _eventBus = GetNode<EventBus>("/root/EventBus");
         _eventBus.EntityDied += OnEntityDied;
+        _eventBus.QuestCompleted += OnQuestCompleted;
         _weaponsAtStart.UnionWith(AvailableWeaponIds());
         _bodyFont = UITheme.BodyFont;
         _strongFont = UITheme.StrongFont;
@@ -109,7 +111,10 @@ public partial class GameOverScreen : CanvasLayer
     public override void _ExitTree()
     {
         if (_eventBus != null)
+        {
             _eventBus.EntityDied -= OnEntityDied;
+            _eventBus.QuestCompleted -= OnQuestCompleted;
+        }
         // La fenêtre survit au rechargement de la scène : elle ne doit pas garder ce bilan libéré.
         GetViewport().SizeChanged -= FitToViewport;
     }
@@ -244,6 +249,8 @@ public partial class GameOverScreen : CanvasLayer
                 _newWeapons.Add(weapon);
         }
     }
+
+    private void OnQuestCompleted(string questId) => _questsDone.Add(questId);
 
     private static BuildSnapshot Snapshot(Player player)
     {
@@ -405,7 +412,7 @@ public partial class GameOverScreen : CanvasLayer
         int vestiges = _scoreManager?.VestigesEarned ?? 0;
         if (vestiges > 0)
             AddGainCard(string.Format(Tr("UI_END_VESTIGES"), vestiges), UITheme.GoldBright).SetCounter(Tr("UI_END_VESTIGES"), vestiges);
-        foreach (string questId in gm.LastQuestCompletions ?? new List<string>())
+        foreach (string questId in _questsDone)
         {
             QuestDefinition quest = QuestDataLoader.Get(questId);
             if (quest != null)
