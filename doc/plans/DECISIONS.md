@@ -1076,17 +1076,35 @@ Raphaël fournit douze illustrations (`~/Downloads/personnages`, compressées en
 
 **Acquis :** le grand portrait de la page Personnages est l'illustration du personnage ; la page ne montre que les personnages en jeu. Deux illustrations du Facteur existent (à roulettes, solitaire) : celle qui servira reste à choisir quand il deviendra jouable.
 
+## 97. Écran des quêtes — 10 octobre 2026
+
+Raphaël demande de revoir la page du menu : des cases en rangées de quatre ou cinq plutôt qu'une liste verticale ; ne plus présenter les quêtes en cours et accomplies dans deux tableaux séparés, tout en permettant de passer clairement des unes aux autres. Il signale des textes superflus : « En une seule run » répété et parfois inapproprié, « Meilleure run », les explications à côté des étoiles et le compteur « 0 / 36 », à déplacer ou supprimer. Il pense d'abord que les personnages manquent, puis constate leur présence après avoir joué : ce n'est pas une absence du catalogue.
+
+**Application au [plan 06 Q3b](06-personnages-quetes-defis.md#q3b--grille-de-quêtes-et-lecture-allégée--10-octobre-2026) :** grille commune de quatre cartes par rangée, toutes visibles par défaut, filtres de statut et distinction des cartes accomplies ; personnages repérables dès l'ouverture ; suppression des libellés répétitifs et du compteur global. Les restrictions utiles restent dans la description de chaque objectif.
+
 ## 98. Portée des armes de mêlée, second relèvement — 10 octobre 2026
 
 Raphaël : « Je pense que la portée des armes corps à corps devrait être rehaussée. » Le premier relèvement (plan 24 L3, validé au §40) n'a pas suffi. Option retenue parmi trois : **+20 px, plancher 80** pour les arcs et les estocs, armes en cercle plus modérées (Rallonge 95, Cloche 110) ; le visuel du coup recalé sur l'allonge réelle (il n'en montrait que 70 %).
 
 **Acquis :** valeurs et visuel du [plan 24 C2b](24-retours-du-1er-octobre.md#c2b-second-relèvement--10-octobre-2026). Sensation à confirmer en jouant.
 
+## 99 bis. Chroniques retirées et icône de complétion — 10 octobre 2026
+
+Raphaël : « l'écran chronique il sert à rien également […] le retirer totalement » ; il refuse la coche typographique des quêtes et demande « une icône custom en pixel art dans la DA du jeu à la place ».
+
+**Acquis :** supprimer entièrement la page Chroniques du Hub et son entrée de menu. Remplacer les coches visibles par une texture originale dans la direction artistique du jeu, sur les cartes accomplies et dans leur détail. Lot [06 Q3c](06-personnages-quetes-defis.md#q3c--retrait-des-chroniques-et-icône-de-complétion--10-octobre-2026).
+
 ## 99. La mêlée ne touche pas plus loin que son coup dessiné — 10 octobre 2026
 
 Raphaël : « je ne veux pas que la portée d'une arme soit supérieure à ce que le sprite affiche (ou pas trop quoi) ». Précisé : le problème concerne le corps à corps, pas les projectiles ; aucune arme n'est dessinée en main, le « sprite » d'un coup est sa traînée (arc, estoc, anneaux). Option retenue parmi trois : **la touche suit la traînée** (plutôt que dessiner les coups en cercle sans perspective, ou relever encore les portées).
 
 **Acquis :** la touche d'un coup de mêlée se mesure sur l'ellipse de sa traînée, dont le bord passe à l'allonge, sans plafond ; allonge horizontale inchangée, verticale ÷ 1,35 ; détail au [plan 24 C2c](24-retours-du-1er-octobre.md#c2c-la-touche-sarrête-au-bord-du-coup-dessiné--10-octobre-2026). Sensation à confirmer en jouant.
+
+## 100. Icône de complétion à simplifier — 10 octobre 2026
+
+Raphaël : « pas très joli / lisible le sceau je trouve ».
+
+**Application :** reprendre l'icône de complétion dans le [lot 06 Q3d](06-personnages-quetes-defis.md#q3d--lisibilité-de-licône-de-complétion--10-octobre-2026) : silhouette de médaille à deux rubans, moins de détails internes, contraste renforcé et captures à taille réelle. La demande d'une icône originale en pixel art, sans coche typographique, reste applicable. Nouvelle médaille ensuite validée par Raphaël : « top », avec demande de push sur `main`.
 
 ## 102. Largeur des coups de mêlée — 10 octobre 2026
 

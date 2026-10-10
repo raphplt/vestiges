@@ -8,14 +8,14 @@ namespace Vestiges.UI;
 
 /// <summary>
 /// Accueil entre les runs : le camp du Foyer, vivant, où veillent les personnages.
-/// Menu textuel à gauche, personnage choisi au feu (◀ ▶ ou clic pour changer), Collection et Chroniques en surimpression.
+/// Menu textuel à gauche, personnage choisi au feu (◀ ▶ ou clic pour changer), pages Personnages, Quêtes et Collection.
 /// Espace de conception 1920×1080, au grain ×4 de la peinture du camp ; texte en Saira (lisibilité, retour du 24 septembre).
 /// </summary>
 public partial class HubScreen : Control
 {
 	private const float MenuLeft = 96f;
 
-	private enum HubState { MainMenu, Characters, Quests, Collection, Chroniques }
+	private enum HubState { MainMenu, Characters, Quests, Collection }
 	private HubState _currentState = HubState.MainMenu;
 
 	private static readonly Color NameColor = new(0.91f, 0.88f, 0.83f);
@@ -31,7 +31,6 @@ public partial class HubScreen : Control
 	private HubCamp _camp;
 	private Control _mainMenuLayer;
 	private HubMenuButton _enterVoidButton;
-	private HubChroniquesPanel _chroniquesPanel;
 	private HubCollectionPanel _collectionPanel;
 	private HubQuestsPanel _questsPanel;
 	private HubCharactersPanel _charactersPanel;
@@ -224,7 +223,6 @@ public partial class HubScreen : Control
 		_openers[HubState.Characters] = AddMenuButton(menu, "Personnages", TextRole.Title, _bodyFont, () => OpenPage(HubState.Characters));
 		_openers[HubState.Quests] = AddMenuButton(menu, "Quêtes", TextRole.Title, _bodyFont, () => OpenPage(HubState.Quests));
 		_openers[HubState.Collection] = AddMenuButton(menu, "Collection", TextRole.Title, _bodyFont, () => OpenPage(HubState.Collection));
-		_openers[HubState.Chroniques] = AddMenuButton(menu, "Chroniques", TextRole.Title, _bodyFont, () => OpenPage(HubState.Chroniques));
 		AddMenuButton(menu, "Paramètres", TextRole.Title, _bodyFont, () =>
 		{
 			AudioManager.PlayUI("sfx_menu_confirmer");
@@ -399,8 +397,6 @@ public partial class HubScreen : Control
 		AddPage(HubState.Quests, "Quêtes", _questsPanel, 240f, -200f, -140f);
 		_collectionPanel = new HubCollectionPanel();
 		AddPage(HubState.Collection, "Collection", _collectionPanel, 320f, -240f, -140f);
-		_chroniquesPanel = new HubChroniquesPanel();
-		AddPage(HubState.Chroniques, "Chroniques", _chroniquesPanel, 320f, -320f, -120f);
 	}
 
 	private void AddPage(HubState state, string title, Control panel, float left, float right, float bottom)
@@ -477,8 +473,6 @@ public partial class HubScreen : Control
 			};
 			if (state == HubState.Collection)
 				_collectionFocus = null;
-			if (state == HubState.Chroniques)
-				_chroniquesPanel.Refresh(_selectedCharacterId);
 			if (first != null)
 				first.GrabFocus();
 			else
