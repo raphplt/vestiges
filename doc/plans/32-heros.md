@@ -101,3 +101,4 @@ Silhouettes, proportions et animations inchangées : seuls les visages, les lune
 
 **Vérifications.** Aperçus ×10 en quatre vues ; planche avant/après à l'échelle du jeu ; sprites régénérés (648 PNG, mêmes noms, aucun ajouté ni retiré, `.import` inchangés) ; captures en vraie run des trois (`--capture-character`, seed 1002) avant et après, regardées : la Forgeuse n'a plus les yeux rouges, pieds toujours calés sur la barre de vie.
 
+**Ménage associé (DECISIONS §85).** 19 scripts remplacés par le pipeline supprimés ; puis, avec l'accord de Raphaël, les 27 tuiles orphelines qu'ils avaient laissées (`assets/tiles/foret/`, `assets/tiles/champs/`) et leurs `.import`.

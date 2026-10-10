@@ -45,7 +45,6 @@ Le [registre](DECISIONS.md) garde les mots de Raphaël. Les plans gardent le dé
 | Audio, classement | 15, 09 | L'audio reprend après l'écoute de la planche ; mort et bilan validés pour l'instant (§62), retouches d'affichage possibles |
 | Steam | 26 Q3, Q12 | App ID du jeu à obtenir ([marche à suivre](../STEAM-MISE-EN-PLACE.md), §67) ; test réel des classements ensuite. |
 | Sprites des héros à venir | 32 | Valider les huit designs sur les planches ([casting](planches/32-casting.png), H1, H2, H3) ; l'Enfant du Bas-Port porte l'écharpe orange du Vagabond et le bonnet de sa sœur (proposition, pas dans le lore). Les yeux des trois joués sont repris (H4, accord du 10 octobre). |
-| Tuiles orphelines | 32 H4 | 27 images que plus rien ne charge, laissées par deux générateurs supprimés le 10 octobre : 20 dans `assets/tiles/foret/` (arbres, buissons, rochers, chemins, autoroute 1-2, herbe 1-3, terre 1-2, mur) et 7 dans `assets/tiles/champs/` (blé dense, chaume, fleurs, planche `_champs_field_variants.png`). Les supprimer avec leurs `.import` ? Recommandation : oui. |
 | Points à vérifier en jeu | `A-VERIFIER.md` | 51 cases non cochées ; Raphaël les coche en jouant (§64) ; quatre points tranchés retirés par N1 |
 
 ## 3. Validé, pas encore fait
