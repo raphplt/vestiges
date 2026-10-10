@@ -61,8 +61,6 @@ public partial class SouvenirManager : Node
 
         _eventBus.EmitSignal(EventBus.SignalName.SouvenirDiscovered, souvenirId, data.Name, data.ConstellationId);
 
-        ApplyUnlock(data);
-
         GD.Print($"[SouvenirManager] Discovered: {data.Name} ({data.ConstellationId})");
         return true;
     }
@@ -92,25 +90,4 @@ public partial class SouvenirManager : Node
 
     /// <summary>Nombre de souvenirs découverts cette run.</summary>
     public int DiscoveredThisRunCount => _discoveredThisRun.Count;
-
-    private void ApplyUnlock(SouvenirData data)
-    {
-        if (string.IsNullOrEmpty(data.UnlockType))
-            return;
-
-        switch (data.UnlockType)
-        {
-            case "character":
-                MetaSaveManager.UnlockCharacter(data.UnlockId);
-                GD.Print($"[SouvenirManager] Unlocked character: {data.UnlockId}");
-                break;
-            case "weapon":
-                // L'arme est gardée par requires_souvenir dans WeaponData : la découverte suffit à la débloquer.
-                GD.Print($"[SouvenirManager] Weapon unlocked: {data.UnlockId}");
-                break;
-            case "perk":
-                GD.Print($"[SouvenirManager] Perk unlocked: {data.UnlockId}");
-                break;
-        }
-    }
 }

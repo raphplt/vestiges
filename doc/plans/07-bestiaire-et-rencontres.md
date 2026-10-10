@@ -732,3 +732,102 @@ Build de référence du plan 30, bot invincible (pour atteindre le boss), 4 grai
   - médiane au-delà de 110 s, d'où la base ramenée à **20 000** : 35 000 PV pour un battant, 65 000 pour trois, 95 000 pour cinq.
 - **Défaut trouvé et corrigé :** à 10 min, le bot rôde près des bords déjà effacés. La pose ne vérifiait que les limites de la carte : dans une graine, le battant est tombé dans le Néant, hors d'atteinte pendant 750 s. Elle vérifie désormais sept points d'appui le long de la grille (sol de la carte, pas d'eau, pas de Néant de l'Effacement). Si aucune direction n'est parfaite, elle garde celle qui a le plus d'appuis.
 - Suites après ces réglages : smoke, boss_parts, indicible, catalogs, run_trace, launchers : 6/6.
+
+### Barrière : finition — 10 octobre 2026, fin d'après-midi
+
+Demande de Raphaël, en attendant de tester : « fait les points 2, 4 (essaie de créer ou trouver de nouveaux sons uniques et appropriés). 5 : fait une vraie animation, prends le temps ».
+
+**Animation de levée** (`Combat/BarrierRise`, `Combat/BarrierCrack`, section `rise` de `data/events/barrier.json`) :
+1. **Présage** (0,9 s) : le sol se fend le long de la future grille, du centre vers les bords (760 px/s). L'entaille a des lèvres de terre et un cœur vert-acide, la lumière des cadenas. Elle s'élargit sous la grille et lance quelques rameaux ; la terre gicle à son front tant qu'il est dans le champ.
+2. **Surgissement** : chaque pièce sort de terre par son bas en 0,7 s (seule la part émergée du sprite est dessinée, sans shader), en vague du centre vers les ailes (380 px/s). Elle dépasse sa hauteur de 16 % puis se pose, en tremblant au pixel ; pierre et terre jaillissent à son pied, et un pilier secoue l'écran.
+3. **Verrouillage**, quand le cœur est debout (~2,6 s pour trois battants) : les cadenas s'allument d'un éclair vert, les chaînes des ailes se tendent d'un rebond, le verrou claque. Les murs ne bloquent qu'à cet instant ; un joueur resté sur la ligne est rendu à son côté. Les attaques ne commencent qu'après.
+
+Pendant la levée, les battants sont enfouis : ni cibles ni vulnérables, les tirs ne les visent pas. Une fin de combat pendant la levée l'interrompt. La fissure reste ensuite comme une cicatrice à la lueur éteinte. Relecture `godot-reviewer`, corrigée :
+- taille et pivot des pièces en cache (plus de chaînes créées à chaque image) ;
+- fissure redessinée par crans de 14 px et seulement à 1 100 px du centre, sa lueur variant par l'opacité d'un nœud enfant ;
+- flash de verrou porté par le flash du battant, qu'un coup interrompt ;
+- pas de débris pour les ailes hors champ. Captures image par image : [horizontale](../audits/boss-2026-10-10/b2-finition/levee-up.jpg), [diagonale](../audits/boss-2026-10-10/b2-finition/levee-right.jpg), [détail](../audits/boss-2026-10-10/b2-finition/levee-detail.jpg). Le joueur bute toujours sur la grille fermée, dash compris, et passe par le battant brisé.
+
+**Sons propres à la Barrière** (8, dans `assets/audio/sfx/selected/barrier_*.wav`, banque `sfx_barrier_*`, crédits dans `assets/audio/CREDITS.json`) :
+- **Matière** : fer forgé, chaînes de geôle, pierre qui se fend. Montages de prises libres (Kenney CC0 ; BigSoundBank de Joseph SARDIN, licence de type CC0 : chaînes 0359, 0361 et 0358, grilles 0303 et 0683, porte de fer 0616), baissées d'environ une sixte pour alourdir le métal, et synthèses originales (grondement de terre, coup sourd, souffle à bande glissante).
+- **Les huit** : levée, verrou, battant brisé (le cadenas éclate, la chaîne se rompt, le vantail pivote), chute de la grille, annonce et coup des poings, annonce et balayage de la chaîne.
+- **Production** : script reproductible à l'octet près (graine fixe), `~/.local/share/vestiges-audio/2026-10-10/barriere/prepare.py`, avec sources, licences et page d'écoute (`index.html`).
+- **Vérifié par mesure** (niveaux, absence d'écrêtage, spectrogrammes), **pas à l'oreille**. Un premier souffle bourdonnait à 50 Hz (découpage par blocs) : refait en filtrage glissant, voir le [spectre](../audits/boss-2026-10-10/b2-finition/spectres-balayage-levee.jpg).
+
+**Réglage avec des Mémoriaux** (3 et 5 battants forcés par `--barrier-memorials N`, 4 graines ; [mesures](../audits/boss-2026-10-10/b2-finition/mesures.txt)) :
+- **Constat** : sans spécialisation Convergence, chaque arme vise la créature la plus proche. Devant la grille, la foule passait avant le battant. Résultat : de 24 s à « jamais en 200 s » selon que la foule collait ou non au bot.
+- **Préférence de ciblage des parties de boss** (`target_bias`, 100 px, dans `data/scaling/boss_parts.json`) : une partie à portée compte 100 px plus près qu'elle n'est. Les armes qui visent la frappent donc avant la foule ; zones, orbites et arcs continuent de frapper la foule autour. Les tirs comptent aussi le bord de la partie dans leur portée, comme la mêlée.
+- **Relevé du combat toutes les 5 s** : collé au battant, un build y fait de 310 à 4 300 dégâts par seconde selon la graine (médiane vers 700) ; encerclé par plus de 50 créatures, le bot reste à 150 px et n'en fait que 220.
+- **Réserve retenue, base 5 000 + 15 000 par battant** : 20 000 PV pour un battant, 50 000 pour trois, 80 000 pour cinq. Il suffit d'un battant pour passer, les autres sont la récompense ; au rythme médian, trois battants tombent en ~70 s.
+- **Bug trouvé et corrigé** : la somme flottante des PV perdus ne retombait pas toujours exactement à zéro, si bien qu'une grille aux trois battants brisés n'était pas déclarée vaincue. Elle l'est désormais dès que toutes ses parties à PV propres sont tombées.
+
+Suites : smoke, boss_parts, indicible, audio, weapons, enemy_abilities, movement-integration, catalogs, launchers : 9/9.
+
+**Mémoriaux jamais comptés (signalé par la session des personnages, corrigé le même soir)** : la Barrière écoutait `MemorialActivated`, que rien n'émet (déjà relevé au plan 18) ; elle avait donc toujours un seul battant en vraie run. Elle écoute maintenant `MemorialAwakened`, émis par `MemorialDirector`, et le signal mort est retiré de l'`EventBus`. Vérifié en vraie run (`--capture-memorial`) : un Mémorial ravivé, un Mémorial compté par la Barrière (0 auparavant).
+
+## Lot B5 — L'Indicible au niveau du jeu : découpage proposé (10 octobre 2026, soir)
+
+Raphaël : « mais au delà des sons, le design, les animations, c'est fini ? c'est au niveau du jeu ? », puis, sur le constat ci-dessous et la proposition d'un lot : « ouais ok ca me va. go planche ».
+
+**Constat** (captures B3a à B3c revues) : les mécaniques sont finies et mesurées, le rendu reste une maquette.
+- **On ne voit jamais l'Indicible.** La fenêtre découverte montre la même main de noyé, agrandie et teintée de violet.
+- **L'arrivée est un non-événement** : l'écran s'assombrit en 2,5 s. Sur une capture `--capture-endgame --phase 3`, la nuit est visible à 4 s puis absente aux images suivantes, alors que seul l'Indicible touche au `CanvasModulate` et ne le relève qu'à sa mort : **à diagnostiquer en B5b**.
+- **Tempête** : ni pluie, ni vent visible, ni éclair à l'écran ; l'annonce d'éclair est une ellipse plate.
+- **Marée** : un rectangle bleu translucide à bord droit, les décors visibles à travers comme sous un calque.
+- **Vague** : une bande sombre verticale, avec une colonne claire pour la brèche.
+- **Mains** : pas d'animation de sortie (sol qui se fend, gerbe d'eau) ; **mort** sans mise en scène vérifiée ; **sons** empruntés.
+
+| Sous-lot | Contenu | Vérification |
+|---|---|---|
+| **B5a — Planche de la forme découverte** | Trois pistes de ce qu'on voit quand l'Indicible se découvre. **Livrée, à valider** (ci-dessous). | Planche dans une vraie capture de nuit |
+| **B5b — Arrivée et tempête** | Nuit franche et durable (diagnostic ci-dessus) ; arrivée mise en scène (le ciel se ferme, la pluie et le vent arrivent) ; pluie et traînées de vent à l'écran, poolées ; éclairs visibles (annonce au sol retravaillée, trait, flash) ; sortie animée des mains (sol qui se fend, terre, retour sous terre) | Captures image par image ; banc dense (coût de la pluie) |
+| **B5c — Marée** | Eau dessinée : bord d'écume irrégulier qui avance, vaguelettes, reflets, décors à moitié immergés ; bande d'annonce qui se lit ; gerbes quand une main sort de l'eau | Captures ; banc (coût de l'eau) |
+| **B5d — Vague, forme découverte, mort** | Mur d'eau en volume (crête, embruns) ; brèches en lumière chaude ; forme retenue en B5a, avec apparition et retrait animés ; mise en scène de la mort (la mer se retire, la nuit se lève) | Captures ; suite `indicible` |
+| **B5e — Sons** | Dix sons propres, comme pour la Barrière, avec page d'écoute | Mesure (niveaux, écrêtage) ; écoute par Raphaël |
+
+B5b, B5c et B5e n'attendent pas la validation de la planche ; dans B5d, seule la forme découverte l'attend.
+
+### B5a — planche proposée — 10 octobre 2026
+
+[Planche](planches/07-b5a-indicible.png), modèles `tools/sprites/props/indicible_forms.py` (pas branchés à `generate_props.py`, rien d'écrit dans `assets/`). Chaque forme est posée dans une capture de run de nuit (teinte du `CanvasModulate`), à 110 px du joueur comme la fenêtre actuelle, à l'échelle du jeu.
+
+Le lore (§7) donne la règle : au premier regard un monstre géant, au fond la nuit du 14 qu'on ne dit pas. Les trois pistes gardent les mains de noyé des phases 1 et 2 et la lanterne en reflet.
+- **A. La grappe des trente et un** (220 × 158 px) : une grappe de bras de noyés se dresse d'un remous noir et se tend vers le haut. Monstre à tentacules ; au fond, les noyés de la Montée qui tendent encore les mains vers la barrière. La plus lisible en jeu ; la moins « trop grande pour l'écran ».
+- **B. La tête** (546 × 191 px) : une tête colossale sort de l'eau jusqu'aux yeux, cheveux étalés comme des algues, deux mains immenses agrippées au sol ; yeux vides de noyé où brille la lanterne. La plus démesurée ; mais un visage risque la lecture comique (premier essai aux yeux ronds : franchement comique) ou de désigner l'un des trente et un.
+- **C. L'œil** (296 × 174 px) : un œil immense s'ouvre dans le sol inondé, ses cils sont des bras de noyés, la lanterne brille en reflet dans l'iris. L'œil du monstre, point faible classique ; au fond, ce que la ville a refusé de voir, et qui la regarde. La plus forte en silhouette ; la cible (l'iris) est évidente.
+
+Piste écartée en cours de route : **la mer debout**, une vague dressée avec la lanterne au creux. Vue d'en haut à 30°, une vague sculptée ne montre que son dos lisse : quatre essais, quatre nuages ou dalles.
+
+**Constat commun** : la nuit les éteint. À l'intégration, la forme portera sa propre lumière (reflet de la lanterne, contour clair) pour se détacher du fond.
+
+**Validé le 10 octobre (DECISIONS §95) : C, l'œil**, comme recommandé. Question posée : quelle forme ? **Recommandation : C, l'œil.** C'est la seule qui se lit d'un coup d'œil comme un point à frapper, sans risquer le comique. Elle reprend les bras de A et dit le mieux ce qu'est l'Indicible : la chose que Vaulme a refusé de regarder.
+
+### B5b et B5c livrés — 10 octobre 2026, soir (arrivée, tempête, marée)
+
+**Arrivée et tempête (B5b)** :
+- **La nuit tombe vraiment en mesure.** L'Indicible cherchait le `CanvasModulate` dans la scène courante ; en mesure, c'est la scène d'observation, et la nuit ne tombait pas. Il le cherche maintenant chez son parent, la scène de run. Toutes les captures B3 avaient été prises sans nuit.
+- **`Combat/IndicibleStorm`** tient la nuit image par image, sans tweens concurrents. Un éclair ouvre la nuit à l'arrivée. Des éclairs lointains l'ouvrent toutes les 5 à 11 s (40 % vers le jour). L'éclair qui frappe l'ouvre à 85 %, et elle se referme en 0,35 s. À la mort, le jour revient en 2,5 s : le boss reste dans l'arbre le temps du retour.
+- **Pluie** (`Combat/IndicibleRain`) : 340 gouttes au plus, dessinées à l'écran sur la couche 1 (au-dessus du monde, sous le HUD, couche 10), avec un éclat en couronne à l'arrivée au sol. Le vent de la tempête les incline. Il pleut moins à la marée puis à la vague (100, 75, 50 %). Il y a un tracé par image pour les gouttes et un pour les éclats, avec des tableaux alloués une fois ; la pluie s'arrête de calculer quand elle est sèche.
+- **Éclair qui frappe** (`Combat/IndicibleBolt`) : un trait brisé tombé de 640 px avec une branche, un halo d'impact au sol, deux claquements, et des étincelles pâles. Pendant l'annonce, l'air grésille dans le cercle.
+- **Mains** : elles sortent de terre par la région du sprite, avec un dépassement (`Combat/GroundReveal`, désormais partagé avec la levée de la Barrière). Celles qui attendent se balancent ; à l'annonce, le poing se ferme, tremble et replonge à moitié. Il ressort sèchement sur la position annoncée, puis replonge. Un trou au sol les accompagne (`Combat/IndicibleHandHole`) : terre retournée, ou remous dans l'eau. La terre gicle à la sortie, l'eau dans la marée.
+- Réglages : section `weather` de `data/scaling/indicible.json`, contrôlée au chargement (une part de pluie par phase).
+- Tirages visuels sur des flux à part (`indicible_storm`, `indicible_rain`, `indicible_bolt`, `indicible_hands`) : rien ne décale les tirages du jeu.
+
+**Marée (B5c)** : une seule surface d'eau dessinée par `assets/shaders/indicible_tide.gdshader` remplace les trois aplats.
+- Le bord lèche la côte, ondule et respire, frangé d'une écume déchirée.
+- L'eau peu profonde est claire, l'eau profonde sombre, avec une transition tramée.
+- Des vaguelettes viennent vers la côte, quelques reflets piquent le large, des remous entourent le joueur dans l'eau.
+- La bande annoncée luit d'eau qui affleure. Le front visible rattrape en 0,3 s le front du jeu, qui avance par bandes ; l'eau entre depuis le bord de l'écran et recule en s'effaçant.
+- Couleur d'écume : `tide.foam_color`.
+
+**Défaut trouvé : le rendu figeait quand la marée apparaissait.** La compilation d'un shader inconnu, synchrone en Compatibility sur macOS, figeait le rendu plusieurs secondes à son apparition : trois captures sur dix sont restées sur l'écran de chargement ou sur une image figée. Le shader est ajouté au préchauffage du chargement (`ShaderWarmup`, 20 shaders) ; captures suivantes sans gel.
+
+Captures : [tempête, main et pluie](../audits/boss-2026-10-10/b5/tempete-main-pluie.jpg), [éclair qui frappe](../audits/boss-2026-10-10/b5/eclair-frappe.jpg), [marée](../audits/boss-2026-10-10/b5/maree.jpg).
+Relecture `godot-reviewer` :
+- pose du poing appliquée dès le changement de texture ;
+- pluie arrêtée quand elle est sèche ;
+- éclair toujours rattaché à la scène.
+
+Signalé à tort par la relecture : la pluie passerait au-dessus du HUD (il est en couche 10).
+
+Suites : smoke, indicible, boss_parts : 3/3. Pas de banc : le banc dense ne fait pas venir l'Indicible, et la pluie coûte un seul nœud qui dessine.

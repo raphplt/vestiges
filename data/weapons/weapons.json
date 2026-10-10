@@ -919,7 +919,6 @@
       "homing_strength": 0.85
     },
     "source": "world",
-    "requires_souvenir": "memory_flame",
     "lore_flavor": "Elle cherchait l'eau sous les champs. Elle trouve maintenant ce qui vit encore."
   },
   {
@@ -970,7 +969,6 @@
       "description": "Les ennemis tués n'ont pas d'animation de mort — ils disparaissent"
     },
     "source": "world",
-    "requires_souvenir": "void_knowledge",
     "lore_flavor": "Elle a effacé des fautes d'orthographe. Maintenant, elle efface le reste."
   },
   {
@@ -1026,7 +1024,6 @@
       "ground_radius": 30
     },
     "source": "world",
-    "requires_souvenir": "lantern_memory",
     "lore_flavor": "La flamme brûle un combustible qui n'existe pas. Elle se nourrit de ce qu'on se rappelle. Plus le souvenir est vif, plus la flamme est chaude."
   },
   {
@@ -1079,7 +1076,6 @@
       "echo_damage_percent": 0.6
     },
     "source": "world",
-    "requires_souvenir": "echo_fragment",
     "lore_flavor": "Le club a fermé. Chaque coup résonne encore dans la salle vide, avec un léger retard."
   },
   {
@@ -1136,7 +1132,6 @@
       "shape_visual": "crayon_drawn"
     },
     "source": "loot_legendary",
-    "drop_condition": "Coffre légendaire du Sanctuaire",
     "lore_flavor": "La pluie a lavé les dessins du trottoir. Les craies se souviennent de chaque forme."
   },
   {
@@ -1193,7 +1188,6 @@
       "visual": "radio_static_wave"
     },
     "source": "loot_legendary",
-    "drop_condition": "L'Indicible",
     "lore_flavor": "La dernière voix humaine diffusée sur les ondes. Personne ne l'a éteinte. Elle émet encore. Le message est incompréhensible — mais les créatures le comprennent, et ça les terrife."
   },
   {
@@ -1247,7 +1241,6 @@
       "slow_duration": 0.5
     },
     "source": "loot_legendary",
-    "drop_condition": "Coffre légendaire — Ruines urbaines uniquement",
     "lore_flavor": "Il a mesuré des milliers de tours de piste. On l'a arrêté une dernière fois ; le temps a obéi."
   }
 ]

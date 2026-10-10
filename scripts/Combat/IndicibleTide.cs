@@ -9,6 +9,9 @@ namespace Vestiges.Combat;
 /// monde. Le front avance vers le joueur puis le dépasse ; l'eau se retire et revient d'un autre bord. Peu profonde, elle
 /// ralentit ; profonde, elle ralentit plus et blesse chaque seconde. Elle punit qui reste et qui recule sans regarder :
 /// il faut garder du sec en se déplaçant de côté, sans fuir les mains qui en sortent.
+/// Rendu (B5c) : une seule surface d'eau dessinée par un shader (bord qui lèche la côte, écume, vaguelettes, remous
+/// autour du joueur, bande annoncée qui luit). Le front visible rattrape en une montée le front du jeu, qui avance par
+/// bandes ; à la retraite, l'eau recule en s'effaçant.
 /// </summary>
 public partial class IndicibleTide : Node2D
 {
@@ -16,16 +19,29 @@ public partial class IndicibleTide : Node2D
 	private const float RecedeSec = 0.6f;
 	private const float SlowRefreshSec = 0.15f;
 	private const float WarningPulseHz = 4f;
+	// Montée d'une bande à l'écran, et entrée de l'eau depuis le bord de l'écran.
+	private const float SurgeSec = 0.3f;
+	private const float EntryDistance = 260f;
+	private const float RetreatDistance = 140f;
+	// Le bord ondule de part et d'autre du front : la surface en déborde un peu.
+	private const float EdgeMargin = 40f;
+	private static readonly StringName AnchorParam = "anchor";
+	private static readonly StringName DirectionParam = "direction";
+	private static readonly StringName FrontParam = "front";
+	private static readonly StringName WarningParam = "warning";
+	private static readonly StringName FadeParam = "fade";
+	private static readonly StringName WaderParam = "wader";
+	private static readonly StringName WaderWetParam = "wader_wet";
 
 	private enum TideState { Idle, Rising, Receding }
 
 	private static readonly Vector2[] Directions = { Vector2.Up, Vector2.Right, Vector2.Down, Vector2.Left };
 
 	private IndicibleConfig _config;
-	private Polygon2D _shallow;
-	private Polygon2D _deep;
-	private Polygon2D _warning;
+	private Polygon2D _water;
+	private ShaderMaterial _material;
 	private readonly Vector2[] _quad = new Vector2[4];
+	private float _visualFront;
 	private TideState _state = TideState.Idle;
 	private Vector2 _anchor;
 	private Vector2 _direction;
@@ -46,9 +62,15 @@ public partial class IndicibleTide : Node2D
 		// Posée au sol, sous les corps et au-dessus des routes, comme l'overlay d'Effacement.
 		ZAsRelative = false;
 		ZIndex = -5;
-		_deep = MakeLayer(config.TideDeepColor, config.TideOpacity);
-		_shallow = MakeLayer(config.TideShallowColor, config.TideOpacity * 0.85f);
-		_warning = MakeLayer(config.TideShallowColor.Lightened(0.35f), config.TideOpacity * 0.5f);
+		_material = new ShaderMaterial { Shader = GD.Load<Shader>("res://assets/shaders/indicible_tide.gdshader") };
+		_material.SetShaderParameter("shallow_width", config.TideShallowWidth);
+		_material.SetShaderParameter("band_step", config.TideBandStep);
+		_material.SetShaderParameter("shallow_color", config.TideShallowColor);
+		_material.SetShaderParameter("deep_color", config.TideDeepColor);
+		_material.SetShaderParameter("foam_color", config.TideFoamColor);
+		_material.SetShaderParameter("opacity", config.TideOpacity);
+		_water = new Polygon2D { Name = "Water", Material = _material };
+		AddChild(_water);
 		_directionIndex = RunRandom.Behavior.RandiRange(0, Directions.Length - 1);
 	}
 
@@ -71,9 +93,15 @@ public partial class IndicibleTide : Node2D
 		if (_state == TideState.Idle)
 			return false;
 		_timer -= delta;
+		_visualFront = Mathf.MoveToward(_visualFront, _front, _config.TideBandStep / SurgeSec * delta
+			+ (_state == TideState.Rising ? Mathf.Abs(_visualFront - _front) * delta * 2f : 0f));
+		_material.SetShaderParameter(FrontParam, _visualFront);
+		_material.SetShaderParameter(WaderParam, player.GlobalPosition);
 		if (_state == TideState.Receding)
 		{
-			Modulate = Colors.White with { A = Mathf.Clamp(_timer / RecedeSec, 0f, 1f) };
+			_material.SetShaderParameter(FadeParam, Mathf.Clamp(_timer / RecedeSec, 0f, 1f));
+			_material.SetShaderParameter(WarningParam, 0f);
+			_material.SetShaderParameter(WaderWetParam, 0f);
 			if (_timer <= -_config.TideTurnPauseSec)
 			{
 				_directionIndex = (_directionIndex + RunRandom.Behavior.RandiRange(1, Directions.Length - 1)) % Directions.Length;
@@ -83,13 +111,12 @@ public partial class IndicibleTide : Node2D
 		}
 
 		bool warning = _timer <= _config.TideWarningSec;
-		_warning.Visible = warning;
-		if (warning)
-			_warning.Modulate = Colors.White with { A = 0.55f + 0.45f * Mathf.Sin(_timer * Mathf.Tau * WarningPulseHz) };
+		_material.SetShaderParameter(WarningParam, warning ? 0.65f + 0.35f * Mathf.Sin(_timer * Mathf.Tau * WarningPulseHz) : 0f);
 		if (_timer <= 0f)
 			Advance();
 
 		float depth = (player.GlobalPosition - _anchor).Dot(_direction) - _front;
+		_material.SetShaderParameter(WaderWetParam, depth >= 0f ? 1f : 0f);
 		if (depth < 0f)
 		{
 			_deepTimer = 0f;
@@ -139,51 +166,46 @@ public partial class IndicibleTide : Node2D
 		_direction = Directions[_directionIndex];
 		_anchor = playerPosition;
 		_front = _config.TideStartDistance;
+		// L'eau entre depuis le bord de l'écran, puis rattrape son front.
+		_visualFront = _front + EntryDistance;
 		_timer = _config.TideBandSec;
-		Modulate = Colors.White;
 		Visible = true;
-		_warning.Visible = false;
+		_material.SetShaderParameter(AnchorParam, _anchor);
+		_material.SetShaderParameter(DirectionParam, _direction);
+		_material.SetShaderParameter(FrontParam, _visualFront);
+		_material.SetShaderParameter(FadeParam, 1f);
+		_material.SetShaderParameter(WarningParam, 0f);
 		Redraw();
 	}
 
 	private void Advance()
 	{
 		_front -= _config.TideBandStep;
-		_warning.Visible = false;
 		if (_front < _config.TideEndDistance)
 		{
 			_state = TideState.Receding;
 			_timer = RecedeSec;
+			// Le front visible recule pendant que l'eau s'efface : la mer se retire.
+			_front += RetreatDistance;
 			return;
 		}
 		_timer = _config.TideBandSec;
 		Redraw();
 	}
 
+	/// <summary>
+	/// Surface d'eau, de la bande annoncée jusqu'au large, très large de côté : le shader y dessine l'eau au-delà du
+	/// front, la bande qui luit en deçà, rien ailleurs.
+	/// </summary>
 	private void Redraw()
 	{
-		SetBand(_warning, _front - _config.TideBandStep, _front);
-		SetBand(_shallow, _front, _front + _config.TideShallowWidth);
-		SetBand(_deep, _front + _config.TideShallowWidth, _front + Extent);
-	}
-
-	/// <summary>Bande d'eau entre deux distances au point d'ancrage, le long du sens de la marée, très large de côté.</summary>
-	private void SetBand(Polygon2D layer, float from, float to)
-	{
 		Vector2 side = _direction.Orthogonal() * Extent;
-		Vector2 near = _anchor + _direction * from;
-		Vector2 far = _anchor + _direction * to;
+		Vector2 near = _anchor + _direction * (_front - _config.TideBandStep - EdgeMargin);
+		Vector2 far = _anchor + _direction * (_front + Extent);
 		_quad[0] = near - side;
 		_quad[1] = near + side;
 		_quad[2] = far + side;
 		_quad[3] = far - side;
-		layer.Polygon = _quad;
-	}
-
-	private Polygon2D MakeLayer(Color color, float opacity)
-	{
-		Polygon2D layer = new() { Color = color with { A = opacity } };
-		AddChild(layer);
-		return layer;
+		_water.Polygon = _quad;
 	}
 }

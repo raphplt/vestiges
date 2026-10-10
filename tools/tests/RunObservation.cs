@@ -9,6 +9,7 @@ using Vestiges.Combat;
 using Vestiges.Combat.Abilities;
 using Vestiges.Core;
 using Vestiges.Infrastructure;
+using Vestiges.Progression;
 using Vestiges.Spawn;
 using Vestiges.World;
 
@@ -450,6 +451,10 @@ public partial class RunObservation : Node
             AudioServer.SetBusMute(AudioServer.GetBusIndex(bus), true);
         using AudioStemRecorder stems = Array.IndexOf(args, "--audio-stems") >= 0 ? new AudioStemRecorder(_output) : null;
         RunTracker tracker = _world.GetNode<RunTracker>("RunTracker");
+        // --barrier-memorials N : la Barrière compte N Mémoriaux ravivés (1 + N battants), le bot n'en ravivant pas.
+        int barrierMemorials = int.Parse(Argument(args, "--barrier-memorials", "-1"), CultureInfo.InvariantCulture);
+        if (barrierMemorials >= 0)
+            _world.GetNode<Vestiges.Events.BarrierDirector>("BarrierDirector").SetMemorialsForMeasure(barrierMemorials);
         int peril = int.Parse(Argument(OS.GetCmdlineUserArgs(), "--peril", "0"), CultureInfo.InvariantCulture);
         if (peril > 0)
             _world.GetNode<Vestiges.Progression.PerilManager>("PerilManager").AddPeril(peril);
@@ -580,6 +585,7 @@ public partial class RunObservation : Node
         bool showBonuses = Array.IndexOf(OS.GetCmdlineUserArgs(), "--show-bonuses") >= 0;
         EventBus.EssenceChangedEventHandler onEssence = places.OnEssence;
         double eventDetourUntil = 0;
+        double nextBarrierLog = 0;
         EventBus.RunEventStartedEventHandler onEvent = (_, _, _, _) => places.Events++;
         eventBus.EssenceChanged += onEssence;
         eventBus.RunEventStarted += onEvent;
@@ -645,6 +651,14 @@ public partial class RunObservation : Node
             {
                 waypoint = leaf + barrier.NormalToward(_player.GlobalPosition) * 45f;
                 lastProgressTime = t;
+                // Relevé du combat toutes les 5 s : distance au battant, réserve, coups reçus (bancs de réglage, plan 07 B4).
+                if (t >= nextBarrierLog)
+                {
+                    nextBarrierLog = t + 5.0;
+                    using Vestiges.Combat.CrowdQuery crowd = Vestiges.Combat.CrowdIndex.Near(_player.GlobalPosition, 300f);
+                    GD.Print(string.Create(CultureInfo.InvariantCulture,
+                        $"[BarrierFight] t={t:F0} distance_battant={_player.GlobalPosition.DistanceTo(leaf):F0} cote_arrivee={barrier.SideOf(_player.GlobalPosition)} reserve={barrier.Health.Current:F0}/{barrier.Health.Max:F0} brises={barrier.Health.BrokenPartCount} poings={barrier.Attacks.FistHits} foule300={crowd.Targets.Count}"));
+                }
             }
             bool holding = _visitPlaces && !director.IsEventActive && places.Steer(t, _player, ref waypoint);
             // Tenir une interaction n'est pas un blocage : le cap et le point de passage restent ceux d'avant.
@@ -794,7 +808,30 @@ public partial class RunObservation : Node
         AppendBalance(summary);
         foreach (KeyValuePair<int, double> entry in levelTimes)
             summary.Append(CultureInfo.InvariantCulture, $" L{entry.Key}={entry.Value:F0}s");
+        PrintQuestProgress();
         GD.Print($"[RunObservation] RESULT {summary}");
+    }
+
+    /// <summary>
+    /// Avancée de chaque quête de déblocage dans cette run, une valeur par condition (plan 06 Q4 : runs avant chaque
+    /// quête). Une quête accomplie pendant la run l'est déjà dans le journal du suivi, avec son heure.
+    /// </summary>
+    private void PrintQuestProgress()
+    {
+        QuestTracker tracker = _world.GetNodeOrNull<QuestTracker>("QuestTracker");
+        if (tracker == null)
+            return;
+        StringBuilder line = new("[RunObservation] QUESTS");
+        foreach (QuestDefinition quest in QuestDataLoader.GetAll())
+        {
+            float[] values = tracker.RunProgress(quest.Id);
+            if (values == null)
+                continue;
+            line.Append(' ').Append(quest.Id).Append('=');
+            for (int i = 0; i < values.Length; i++)
+                line.Append(CultureInfo.InvariantCulture, $"{(i > 0 ? "/" : "")}{values[i]:0.#}");
+        }
+        GD.Print(line.ToString());
     }
 
     /// <summary>Silhouettes des décors (fixes) : un décor masque un coffre s'il est dessiné devant lui.</summary>

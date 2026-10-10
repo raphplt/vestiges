@@ -38,6 +38,7 @@ Les plans 13 (butin) et 14 (anomalies) ne sont pas arbitrés : ne pas les implé
 - **Primitives SDF orientées** (`tools/sprites/sdf.py`) : `local = (p − centre) @ rotation`, donc un point local se place en monde par `rotation @ local`.
 - **Rappels C# par nœud** : Godot appelle le pont C# pour chaque nœud traité (`_Process`, `_PhysicsProcess`), ≈ 3 à 9 µs par appel, **même si la classe n'a pas la méthode** (`SetProcess(true)` sans `_Process`). Une entité nombreuse (créature, projectile) passe par un `TickRoster` (plan 29), jamais par son propre rappel.
 - **Profileur .NET** (`dotnet-trace`) : il impute au code managé le temps natif qui précède l'échantillon suivant. Pour attribuer un coût, chronométrer (`Stopwatch`) ou retirer par expérience ; le champ `frame_split_ms` du banc dense découpe l'image.
+- **Shader qui apparaît en cours de run** : l'ajouter à `ShaderWarmup` (chargement). Sinon sa compilation, synchrone en Compatibility sur macOS, peut figer le rendu plusieurs secondes à son apparition, sans message d'erreur (marée de l'Indicible, plan 07 B5c).
 - **Scènes de banc** (`tools/tests/`) : elles accèdent parfois à des champs privés par réflexion ; renommer un champ privé peut casser un banc sans erreur de compilation.
 
 ## Outillage Claude du projet

@@ -58,6 +58,7 @@ public partial class Waymarks : Node
     {
         if (_player == null || _player.IsDead || !_config.Rewards.TryGetValue(type, out WaymarkReward reward) || !_found.Add(type))
             return;
+        _eventBus.EmitSignal(EventBus.SignalName.WaymarkFound, type);
         string gain;
         if (reward.Stat != null)
         {

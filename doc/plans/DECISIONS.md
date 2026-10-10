@@ -1009,4 +1009,52 @@ Choix faits par Claude faute de validation de la planche B2a, **tous révisables
   - **vague** à une ou deux brèches ;
   - fenêtre « découvert » rendue par le statut **Fragile** existant (+100 %).
 - **Premier réglage (B4)**, mesuré en vraie run longue, bot invincible : réserve de la Barrière **20 000 + 15 000 par battant**, Indicible **90 000 × 3,2**. L'écart entre builds est très grand : réglage fin à la partie de Raphaël.
+- **Finition de la Barrière** (« fait les points 2, 4 […] 5 : fait une vraie animation, prends le temps ») :
+  - levée en trois temps (fissure, surgissement en vague, verrouillage) ;
+  - huit sons propres (montages CC0 et synthèses) ;
+  - **préférence de ciblage des parties de boss** (100 px), sans laquelle la foule passait avant le battant ;
+  - réserve 5 000 + 15 000 par battant : un battant suffit pour passer, les autres sont la récompense.
 - **Fusion du 10 octobre** : un `git pull` est resté en conflit avec la PR #2 (décors, héros). Résolue à la demande de Raphaël (« règle les conflits stp ») en gardant les deux côtés. Les sections du 9 et 10 octobre se sont trouvées en double ; les sections distantes gardent leurs numéros (§86 décors, §87 héros), la reprise audio devient §88 et ce chantier des boss §89.
+
+## 90. Personnages à intégrer et quêtes de déblocage — 10 octobre 2026
+
+Raphaël : « il faudrait implémenter ces personnages dans le jeu […] et aussi faire ce système de quêtes qui permet de débloquer des objets, des armes, des personnages de manière permanente ». Inventaire fait (plan 06, plan 21 §10, fiches du casting) ; réponses aux questions :
+
+**Acquis :**
+- **Personnages à rendre jouables : l'Éveillée, le Facteur et la Scaphandrière** (sprites du plan 32 H1). Les autres héros du plan 32 attendent.
+- **Kit complet des fiches** ([06-fiches-casting](06-fiches-casting.md)) : passif, mobilité propre, arme de départ, y compris les nouvelles armes (Sacoche de lettres, Fusil-harpon).
+- **Quêtes d'abord, personnages ensuite** : le système de déblocages permanents (personnages, armes, objets) et ses quêtes précèdent le branchement des trois personnages, qui en seront des récompenses.
+
+**Non acquis (réglé plus bas) :** ce qui est verrouillé au départ pour un profil neuf.
+
+**Suite, même jour.** Raphaël : « il faut avoir une seule instance de quêtes : celles pour débloquer des armes, personnages, objets […] variées, de différents niveaux de difficultés, certaines imbriquées […] il ne faut pas que les quêtes soient affichées en permanence in game. par contre, il faut avoir la notif qu'on a complété une quête dès que c'est fait sans attendre la fin de la run ». Puis, sur la liste du [plan 06 §9](06-personnages-quetes-defis.md) : « J'ai tout lu, ça me va, très bonne base ».
+
+**Acquis :**
+- **Une seule famille de quêtes**, qui débloquent personnages, armes et objets de façon permanente. Plus de quêtes de run, plus de Souvenirs comme clé.
+- **Rien d'affiché en permanence en jeu** ; **notification dès qu'une quête est accomplie**, en pleine run.
+- **La liste des 36 quêtes et la réserve de départ du plan 06 §9 sont la base** ; les seuils restent à mesurer.
+- ~~Des quêtes en révèlent d'autres~~ : mal compris, corrigé par la précision ci-dessous.
+- **Profils** : seul existe le profil dev de Raphaël, qui a tout ; aucune préservation des anciens profils à prévoir. Exigence : **les déblocages et la progression des quêtes sont bien persistants**.
+- **Backlog** : prévoir des quêtes d'exception pour des objets légendaires ou des armes « pétées » (exemple de Raphaël : ouvrir tous les coffres du jeu). Rattachées au plan 06 §9.9, pas dans le premier lot.
+
+**Précision, même jour.** Raphaël : « pour moi, toutes les quêtes doivent apparaître par défaut. Il ne faut pas qu'il y ait des quêtes cachées. C'est juste que il ne faut pas que les quêtes soient marquées bloquées parce que conditionnées par une autre […] il faut qu'il y ait dans les menus une page dédiée pour justement suivre les quêtes, l'avancée des quêtes […] intégrer une page qui liste les personnages, avec les détails, etc., et avec un affichage du sprite agrandi, ça je vais me débrouiller pour faire des images plus sympas […] il y a des menus qui servent à rien, genre qui suivent les quêtes, etc., il faudrait les revoir ».
+
+**Acquis (remplace le point « des quêtes en révèlent d'autres » ci-dessus) :**
+- **Toutes les quêtes sont visibles et ouvertes dès le départ** ; aucune quête cachée ni verrouillée par une autre. L'emboîtement vient du jeu lui-même (une récompense aide la quête suivante), jamais d'un verrou.
+- **Page Quêtes dédiée** dans les menus du Hub pour suivre l'avancée des quêtes.
+- **Page Personnages** : liste, fiche détaillée, sprite agrandi ; Raphaël fournira des images plus soignées.
+- **Revoir les menus devenus inutiles** (ceux qui suivent les anciennes quêtes, etc.).
+
+## 95. L'Indicible au niveau du jeu — 10 octobre 2026, soir
+
+Raphaël : « mais au delà des sons, le design, les animations, c'est fini ? c'est au niveau du jeu ? ». Constat : mécaniques finies, rendu au stade de maquette (Indicible jamais visible, arrivée sans mise en scène, tempête sans pluie ni éclair visible, marée et vague en aplats, mains sans animation, sons empruntés). Sur la proposition d'un lot B5 (planche de la forme découverte, puis arrivée et tempête, marée, vague et mort, dix sons) : « ouais ok ca me va. go planche ».
+- **Lot B5 ouvert** ([plan 07](07-bestiaire-et-rencontres.md#lot-b5--lindicible-au-niveau-du-jeu--découpage-proposé-10-octobre-2026-soir)), planche B5a d'abord.
+- **Seule la forme découverte attend sa validation** ; arrivée, tempête, marée, vague, mort et sons avancent sans attendre.
+- **Forme découverte : C, l'œil** (planche B5a), choisi par Raphaël comme recommandé : un œil immense ouvert dans le sol inondé, cils en bras de noyés, la lanterne en reflet dans l'iris, qui est la cible.
+
+## 96. Illustrations des personnages — 10 octobre 2026
+
+Raphaël fournit douze illustrations (`~/Downloads/personnages`, compressées en WebP) : « fait en sorte que les sprites en grand dans l'écran de déblocage soient ceux là. pour les persos pas en jeu, ne les affiche pas ».
+
+**Acquis :** le grand portrait de la page Personnages est l'illustration du personnage ; la page ne montre que les personnages en jeu. Deux illustrations du Facteur existent (à roulettes, solitaire) : celle qui servira reste à choisir quand il deviendra jouable.
+

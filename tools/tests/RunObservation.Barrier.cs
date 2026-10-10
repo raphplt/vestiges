@@ -36,9 +36,15 @@ public partial class RunObservation
 			return;
 		}
 		Barrier barrier = director.Barrier;
-		await Frames(20);
-		SaveScreen("barrier-0-levee");
-		await Frames(60);
+		// La levée, image par image toutes les 0,15 s : fissure, surgissement, verrouillage.
+		for (int shot = 0; shot < 30 && !barrier.IsLocked; shot++)
+		{
+			await Frames(9);
+			SaveScreen($"barrier-0-levee-{shot:00}");
+		}
+		for (int frame = 0; frame < 300 && !barrier.IsLocked; frame++)
+			await Frames(1);
+		await Frames(30);
 		SaveScreen("barrier-1-devant");
 
 		IReadOnlyList<Vector2> leaves = barrier.LeafPositions;

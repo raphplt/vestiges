@@ -19,8 +19,7 @@
         "score_multiplier": 1.1,
         "visual_color": [0.2, 0.7, 0.3, 1.0],
         "sprite_folder": "traqueur",
-        "sprite_feet_offset": 17,
-        "unlock_condition": "survive_12_minutes"
+        "sprite_feet_offset": 17
     },
     {
         "id": "vagabond",
@@ -42,8 +41,7 @@
         "score_multiplier": 1.0,
         "visual_color": [0.48, 0.36, 0.26, 1.0],
         "sprite_folder": "vagabond",
-        "sprite_feet_offset": 18,
-        "unlock_condition": "default"
+        "sprite_feet_offset": 18
     },
     {
         "id": "forgeuse",
@@ -65,7 +63,6 @@
         "score_multiplier": 1.0,
         "visual_color": [0.42, 0.42, 0.48, 1.0],
         "sprite_folder": "forgeuse",
-        "sprite_feet_offset": 18,
-        "unlock_condition": "kill_200_in_run"
+        "sprite_feet_offset": 18
     }
 ]

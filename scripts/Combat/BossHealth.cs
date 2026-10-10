@@ -108,6 +108,13 @@ public sealed class BossHealth
 		if (!shared)
 		{
 			BrokenPartCount++;
+			// Toutes les parties à PV propres sont tombées sans réserve commune : le boss est vaincu, même si la somme
+			// flottante des PV perdus n'est pas retombée exactement à zéro.
+			if (BrokenPartCount >= OwnPartCount && _sharedMax <= 0f)
+			{
+				Current = 0f;
+				IsDepleted = true;
+			}
 			PartBroken?.Invoke(part);
 		}
 		if (IsDepleted && !_depletedRaised)

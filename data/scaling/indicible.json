@@ -8,6 +8,21 @@
     "color": [0.42, 0.42, 0.62],
     "fade_sec": 2.5
   },
+  "weather": {
+    "_doc": "Ce qu'on voit de la nuit (plan 07 B5b), sans effet sur le combat. Pluie dessinée à l'écran, au-dessus du monde et sous l'interface : « rain_drops » gouttes au plus, à « rain_speed » px/s, longues de « rain_length » px, couvrant la part « rain_by_phase » de leur nombre selon la phase (tempête, marée, vague) ; le vent les incline de « wind_slant » par px/s de dérive. Le ciel s'éclaire d'un éclair lointain toutes les « sky_flash_sec » s ([min, max]) : la nuit s'ouvre de « sky_flash_strength » vers le jour, « strike_flash_strength » quand un éclair frappe, et se referme en « flash_fade_sec ». L'éclair qui frappe tombe de « bolt_height » px au-dessus de son point.",
+    "rain_drops": 340,
+    "rain_speed": 950,
+    "rain_length": 20,
+    "rain_color": [0.7, 0.78, 0.92],
+    "rain_opacity": 0.6,
+    "rain_by_phase": [1.0, 0.75, 0.5],
+    "wind_slant": 0.012,
+    "sky_flash_sec": [5, 11],
+    "sky_flash_strength": 0.4,
+    "strike_flash_strength": 0.85,
+    "flash_fade_sec": 0.35,
+    "bolt_height": 640
+  },
   "hands": {
     "_doc": "Mains qui sortent du sol près du joueur, vivent « life_sec », puis agrippent la position où il sera à la fin de l'annonce s'il garde son pas (elles punissent qui file droit). « max_alive » mains à la fois, plus « extra_per_phase » à chaque seuil franchi. Dégâts : ceux de la fiche × multiplicateur.",
     "max_alive": 3,
@@ -35,7 +50,7 @@
     "lightning_damage_multiplier": 1.0
   },
   "tide": {
-    "_doc": "Marée (phase 2, sous le premier seuil) : le vent et les éclairs tombent ; l'eau monte par bandes depuis un bord de l'écran, ancrée dans le monde. Chaque bande est annoncée « warning_sec » puis avance de « band_step » px toutes les « band_sec » s, du bord (« start_distance » px du joueur) jusqu'à « end_distance » (au-delà de lui) ; puis l'eau se retire et revient d'un autre bord après « turn_pause_sec ». Sur « shallow_width » px, l'eau est peu profonde et ralentit ; plus loin, elle ralentit plus et blesse chaque seconde (dégâts de la fiche × « deep_damage_multiplier »). Les mains sortent de préférence de l'eau, « extra_hands » de plus.",
+    "_doc": "Marée (phase 2, sous le premier seuil) : le vent et les éclairs tombent ; l'eau monte par bandes depuis un bord de l'écran, ancrée dans le monde. Chaque bande est annoncée « warning_sec » puis avance de « band_step » px toutes les « band_sec » s, du bord (« start_distance » px du joueur) jusqu'à « end_distance » (au-delà de lui) ; puis l'eau se retire et revient d'un autre bord après « turn_pause_sec ». Sur « shallow_width » px, l'eau est peu profonde et ralentit ; plus loin, elle ralentit plus et blesse chaque seconde (dégâts de la fiche × « deep_damage_multiplier »). Les mains sortent de préférence de l'eau, « extra_hands » de plus. Rendu : « shallow_color » et « deep_color » pour l'eau, « foam_color » pour l'écume du bord, les vaguelettes et les remous, à l'opacité « opacity ».",
     "band_sec": 2.4,
     "band_step": 45,
     "warning_sec": 0.8,
@@ -49,6 +64,7 @@
     "extra_hands": 2,
     "shallow_color": [0.16, 0.28, 0.42],
     "deep_color": [0.06, 0.12, 0.24],
+    "foam_color": [0.7, 0.8, 0.9],
     "opacity": 0.72
   },
   "wave": {

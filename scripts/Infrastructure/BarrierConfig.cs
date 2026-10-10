@@ -28,7 +28,12 @@ public sealed class BarrierConfig
 	public float ClearCore { get; private init; }
 	public float ClearWings { get; private init; }
 	public float WallThickness { get; private init; }
-	public float RiseSec { get; private init; }
+	public float RiseOmenSec { get; private init; }
+	public float RiseCrackSpeed { get; private init; }
+	public float RiseWaveSpeed { get; private init; }
+	public float RisePieceSec { get; private init; }
+	public float RiseOvershoot { get; private init; }
+	public string LockAudio { get; private init; }
 	public float CrowdDensity { get; private init; }
 	public float LeaveDistance { get; private init; }
 	public float LostDistance { get; private init; }
@@ -101,11 +106,13 @@ public sealed class BarrierConfig
 			using JsonDocument document = JsonDocument.Parse(json);
 			JsonElement root = document.RootElement;
 			JsonConfigReader reader = new(root);
-			reader.AllowOnly(root, "racine", "name_key", "appear_at_sec", "heading_window_sec", "distance_ahead", "leaves", "layout", "fight", "attacks", "audio", "rewards");
+			reader.AllowOnly(root, "racine", "name_key", "appear_at_sec", "heading_window_sec", "distance_ahead", "leaves", "layout", "rise", "fight", "attacks", "audio", "rewards");
 			JsonElement leaves = reader.Section("leaves");
 			reader.AllowOnly(leaves, "leaves", "base", "per_memorial", "max", "hp_base", "hp_per_leaf", "body_radius", "damaged_below");
 			JsonElement layout = reader.Section("layout");
-			reader.AllowOnly(layout, "layout", "fixed_spans_each_side", "wing_length", "clear_core", "clear_wings", "wall_thickness", "rise_sec");
+			reader.AllowOnly(layout, "layout", "fixed_spans_each_side", "wing_length", "clear_core", "clear_wings", "wall_thickness");
+			JsonElement rise = reader.Section("rise");
+			reader.AllowOnly(rise, "rise", "omen_sec", "crack_speed", "wave_speed", "piece_sec", "overshoot");
 			JsonElement fight = reader.Section("fight");
 			reader.AllowOnly(fight, "fight", "crowd_density", "leave_distance", "lost_distance");
 			JsonElement attacks = reader.Section("attacks");
@@ -115,7 +122,7 @@ public sealed class BarrierConfig
 			JsonElement chain = reader.Section(attacks, "chain");
 			reader.AllowOnly(chain, "attacks.chain", "interval_sec", "warning_sec", "sweep_sec", "radius", "arc_deg", "width_deg", "damage");
 			JsonElement audio = reader.Section("audio");
-			reader.AllowOnly(audio, "audio", "rise", "leaf_broken", "defeated", "fist_warning", "fist_impact", "chain_warning", "chain_sweep");
+			reader.AllowOnly(audio, "audio", "rise", "lock", "leaf_broken", "defeated", "fist_warning", "fist_impact", "chain_warning", "chain_sweep");
 			JsonElement rewards = reader.Section("rewards");
 			reader.AllowOnly(rewards, "rewards", "chest", "last_chest");
 			BarrierConfig parsed = new()
@@ -136,7 +143,12 @@ public sealed class BarrierConfig
 				ClearCore = reader.NonNegative(layout, "clear_core"),
 				ClearWings = reader.NonNegative(layout, "clear_wings"),
 				WallThickness = reader.Positive(layout, "wall_thickness"),
-				RiseSec = reader.Positive(layout, "rise_sec"),
+				RiseOmenSec = reader.NonNegative(rise, "omen_sec"),
+				RiseCrackSpeed = reader.Positive(rise, "crack_speed"),
+				RiseWaveSpeed = reader.Positive(rise, "wave_speed"),
+				RisePieceSec = reader.Positive(rise, "piece_sec"),
+				RiseOvershoot = reader.NonNegative(rise, "overshoot"),
+				LockAudio = reader.Text(audio, "lock"),
 				CrowdDensity = reader.Ratio(fight, "crowd_density"),
 				LeaveDistance = reader.Positive(fight, "leave_distance"),
 				LostDistance = reader.Positive(fight, "lost_distance"),
@@ -175,7 +187,7 @@ public sealed class BarrierConfig
 				reader.Fail($"attacks.chain.arc_deg : {parsed.ChainArcDeg} hors de ]0 ; 180]");
 			if (reader.Error == null && !EnemyContract.IsFamily(parsed.AttackFamily))
 				reader.Fail($"attacks.fx_family : famille « {parsed.AttackFamily} » inconnue");
-			foreach (string sound in new[] { parsed.RiseAudio, parsed.LeafBrokenAudio, parsed.DefeatedAudio, parsed.FistWarningAudio,
+			foreach (string sound in new[] { parsed.RiseAudio, parsed.LockAudio, parsed.LeafBrokenAudio, parsed.DefeatedAudio, parsed.FistWarningAudio,
 				parsed.FistImpactAudio, parsed.ChainWarningAudio, parsed.ChainSweepAudio })
 				if (reader.Error == null && !DataKeySets.TopLevelKeys(AudioManager.SoundBankPath).Contains(sound))
 					reader.Fail($"audio : son « {sound} » absent de la banque");

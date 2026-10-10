@@ -6,6 +6,7 @@
 # MEASURE_EXTRA_ARGS : arguments de RunObservation (ex. "--nomad", "--nomad --visit" pour un bot qui ratisse les
 # lieux vus) ; MEASURE_JOBS : seeds en parallèle (défaut 1). Le résumé donne aussi les lieux croisés et visités par
 # minute, les micro-événements, l'Essence gagnée et dépensée (plan 22, lot C0).
+# MEASURE_PROFILE=normal : profil neuf sans mode dev, armes et objets limités à la réserve de départ (plan 06 §9).
 set -euo pipefail
 cd "$(dirname "$0")/.."
 source tools/lib/validation.sh
@@ -15,6 +16,7 @@ export OUTPUT=$(abs_path "${1:?répertoire de sortie requis}")
 export RUN_SECONDS="${2:-180}"
 SEEDS="${3:-221092026 1002 7 42 20260926}"
 export MEASURE_EXTRA_ARGS="${MEASURE_EXTRA_ARGS:-}"
+export MEASURE_PROFILE="${MEASURE_PROFILE:-dev}"
 JOBS="${MEASURE_JOBS:-1}"
 if [[ ! "$RUN_SECONDS" =~ ^[1-9][0-9]*$ || ! "$JOBS" =~ ^[1-9][0-9]*$ ]]; then
     echo "Durée et nombre de jobs positifs requis." >&2; exit 1
@@ -44,10 +46,12 @@ run_seed() {
         isolate_godot_profile "$profile" || exit 1
         extra_args=()
         if [[ -n "$MEASURE_EXTRA_ARGS" ]]; then read -r -a extra_args <<< "$MEASURE_EXTRA_ARGS"; fi
+        profile_args=(--dev)
+        if [[ "$MEASURE_PROFILE" == normal ]]; then profile_args=(); fi
         validation_run "${VALIDATION_RUN_TIMEOUT:-$(( RUN_SECONDS > 900 ? RUN_SECONDS * 2 : 1800 ))}" \
             "$OUTPUT/seed-$seed.log" "^\[RunObservation\] RESULT seed=$seed seconds=$RUN_SECONDS( .*)?$" \
             "$GODOT" --headless --fixed-fps 60 --audio-driver Dummy --path . \
-            res://tools/tests/RunObservation.tscn -- --dev --density --seconds "$RUN_SECONDS" \
+            res://tools/tests/RunObservation.tscn -- ${profile_args[@]+"${profile_args[@]}"} --density --seconds "$RUN_SECONDS" \
             --seed "$seed" --output "$OUTPUT/seed-$seed" ${extra_args[@]+"${extra_args[@]}"}
     ) || exit_code=$?
     echo "$exit_code" > "$OUTPUT/seed-$seed.exit"

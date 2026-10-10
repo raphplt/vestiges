@@ -153,7 +153,7 @@ public static class LootRewards
         List<WeaponData> candidates = new();
         foreach (WeaponData weapon in WeaponDataLoader.GetAll())
         {
-            if (MetaSaveManager.IsWeaponUnlocked(weapon) && !Holds(holder, weapon.Id))
+            if (MetaSaveManager.IsWeaponUnlocked(weapon.Id) && !Holds(holder, weapon.Id))
                 candidates.Add(weapon);
         }
         return candidates.Count > 0 ? candidates[(int)(RunRandom.Loot.Randi() % candidates.Count)] : null;

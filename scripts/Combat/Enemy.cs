@@ -106,6 +106,7 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 	// Partie de boss (plan 07 B1) : ses PV vont à la réserve du boss, qui décide de sa récompense.
 	private BossHealth _boss;
 	private bool _bossShared;
+	private float _targetBias;
 	// Créature de mêlée arrêtée contre le joueur : elle reste tournée vers lui et garde son pas (plan 29 F2).
 	private bool _pressingPlayer;
 
@@ -229,6 +230,11 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 	/// Nul pour une créature, dont l'allonge des armes est réglée au centre.
 	/// </summary>
 	public float StrikeMargin => _boss != null ? _bodyRadius : 0f;
+	/// <summary>
+	/// Avance prise par une partie de boss dans le choix des cibles (px) : les armes qui visent la frappent avant la
+	/// foule qui l'entoure. Nulle pour une créature.
+	/// </summary>
+	public float TargetBias => _boss != null ? _targetBias : 0f;
 	public float HpRatio => _maxHp > 0 ? _currentHp / _maxHp : 0f;
 	public float MaxHp => _maxHp;
 	public EnemyModifiers Modifiers => _mods;
@@ -1027,7 +1033,7 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 		if (carriedDamage <= 0f)
 			carriedDamage = OverflowLedger.Take(source);
 		float taken = _fragileTimer > 0f ? _mods.DamageTakenMultiplier * (1f + _fragileBonus) : _mods.DamageTakenMultiplier;
-		DamageResult result = DamageResult.Resolve(Life, source, _currentHp, damage, carriedDamage, taken);
+		DamageResult result = DamageResult.Resolve(Life, source, _currentHp, damage, carriedDamage, taken) with { Critical = isCrit };
 		damage = result.NativeDamage + result.CarriedDamage;
 		_mods.NotifyDamaged();
 		LoseHp(damage);
@@ -1076,6 +1082,7 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 		_bossShared = shared;
 		_bodyRadius = bodyRadius;
 		LargestBodyRadius = Mathf.Max(LargestBodyRadius, _bodyRadius);
+		_targetBias = BossPartsConfig.TryLoad(out BossPartsConfig parts, out _) ? parts.TargetBias : 0f;
 		LargestPartRadius = Mathf.Max(LargestPartRadius, _bodyRadius);
 		_maxHp = Mathf.Max(1f, maxHp);
 		_currentHp = hp;
@@ -1426,7 +1433,7 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 		// Capturer les contrôles avant leur nettoyage et avant les explosions de mort en cascade.
 		_eventBus.PublishEnemyKill(new EnemyKillResult(Life, _enemyId, GlobalPosition, damage, SlowControl, DisorientationControl,
 			new ControlState(_igniteDps, Mathf.Max(0f, _igniteTimer), _igniteSource, ControlOrigin.Unknown),
-			IsPriorityTarget || _tier is EnemyTier.Elite or EnemyTier.Miniboss or EnemyTier.Boss));
+			IsPriorityTarget || _tier is EnemyTier.Elite or EnemyTier.Miniboss or EnemyTier.Boss, VariantId == "champion"));
 		_killed = true;
 		_killedFrame = Engine.GetProcessFrames();
 		// Le corps se dissout : son contact avec le sol disparaît avec lui.

@@ -29,7 +29,6 @@ public class WeaponData
 	public string DefaultFor { get; set; }
 	public string Sprite { get; set; }
 	public string Source { get; set; }
-	public string RequiresSouvenir { get; set; }
 	/// <summary>Ce que fait l'arme, en une phrase, sans chiffre (carte « Nouvelle » du level-up).</summary>
 	public string Summary { get; set; }
 	/// <summary>Une ligne sur l'ancien propriétaire de l'objet (pause, Collection).</summary>
@@ -244,7 +243,6 @@ public static class WeaponDataLoader
             DefaultFor = dict.ContainsKey("default_for") ? dict["default_for"].AsString() : null,
             Sprite = dict.ContainsKey("sprite") ? dict["sprite"].AsString() : null,
             Source = dict.ContainsKey("source") ? dict["source"].AsString() : null,
-            RequiresSouvenir = dict.ContainsKey("requires_souvenir") ? dict["requires_souvenir"].AsString() : null,
             Summary = dict.ContainsKey("summary") ? dict["summary"].AsString() : "",
             LoreFlavor = dict.ContainsKey("lore_flavor") ? dict["lore_flavor"].AsString() : "",
             CountNameKey = dict.ContainsKey("count_name_key") ? dict["count_name_key"].AsString() : null

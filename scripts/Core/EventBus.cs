@@ -46,9 +46,6 @@ public partial class EventBus : Node
     // --- Score ---
     [Signal] public delegate void ScoreChangedEventHandler(int newScore);
 
-    // --- Mémorial ---
-    [Signal] public delegate void MemorialActivatedEventHandler();
-
     // --- Points d'Intérêt ---
     [Signal] public delegate void PoiDiscoveredEventHandler(string poiId, string poiType, Vector2 position);
     [Signal] public delegate void PoiExploredEventHandler(string poiId, string poiType);
@@ -139,8 +136,10 @@ public partial class EventBus : Node
     // --- Petits lieux (plan 22 C1 et C4) ---
     /// <summary>Un petit lieu vient de servir (Repères, plan 23 R9).</summary>
     [Signal] public delegate void SmallPlaceUsedEventHandler(string placeId, Vector2 position);
-    /// <summary>Une quête de run a changé : rang, nom, part accomplie (0 à 1), remplie (plan 24 A2).</summary>
-    [Signal] public delegate void RunQuestUpdatedEventHandler(int index, string name, float progress, bool completed);
+    /// <summary>Premier usage d'un type de lieu dans la run : son Repère est gagné (Waymarks).</summary>
+    [Signal] public delegate void WaymarkFoundEventHandler(string placeType);
+    /// <summary>Quête de déblocage accomplie et déjà enregistrée (plan 06 §9) : notification et bilan.</summary>
+    [Signal] public delegate void QuestCompletedEventHandler(string questId);
     /// <summary>Relances et bannissements gratuits gagnés hors du level-up (Repère d'un Mémorial ou d'une Faille).</summary>
     [Signal] public delegate void ChoiceTokensGrantedEventHandler(int rerolls, int banishes);
 

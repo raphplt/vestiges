@@ -208,9 +208,9 @@ public partial class SaveFileRegression : Node
         string before = File.ReadAllText(meta);
         MetaSaveManager.BeginBatch();
         MetaSaveManager.AddVestiges(1);
-        MetaSaveManager.CompleteQuest("batch_fixture");
+        MetaSaveManager.ClaimQuest(QuestDataLoader.Get("rake"), out _);
         Check(File.ReadAllText(meta) == before, "lot : aucune écriture intermédiaire");
-        Check(MetaSaveManager.EndBatch().Succeeded && File.ReadAllText(meta).Contains("batch_fixture"), "lot : une écriture à la fin");
+        Check(MetaSaveManager.EndBatch().Succeeded && File.ReadAllText(meta).Contains("\"rake\""), "lot : une écriture à la fin");
 
         int vestiges = MetaSaveManager.GetVestiges();
         int runs = MetaSaveManager.GetStats().TotalRuns;

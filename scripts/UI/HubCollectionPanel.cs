@@ -8,9 +8,9 @@ namespace Vestiges.UI;
 /// <summary>
 /// Collection de l'accueil (plan 04 lot C2, première passe) : armes et souvenirs de run en grille d'icônes. Une case
 /// verrouillée n'est qu'une silhouette sombre ; le panneau de droite, seul à porter du texte, donne pour la case
-/// survolée ou sélectionnée son nom, son état, son effet, ses valeurs et, si elle est verrouillée, la condition directe.
-/// La disponibilité suit la même règle que le loot (<see cref="MetaSaveManager.IsWeaponUnlocked"/>). L'onglet choisi
-/// est conservé d'une ouverture à l'autre. Les objets du plan 05 rejoindront un troisième onglet quand ils existeront.
+/// survolée ou sélectionnée son nom, son état, son effet, ses valeurs et, si elle est verrouillée, la quête qui l'ouvre.
+/// La disponibilité suit la même règle que le loot (<see cref="MetaSaveManager.IsUnlocked"/>). L'onglet choisi est
+/// conservé d'une ouverture à l'autre.
 /// </summary>
 public partial class HubCollectionPanel : MarginContainer
 {
@@ -270,13 +270,8 @@ public partial class HubCollectionPanel : MarginContainer
         List<Entry> entries = new();
         foreach (WeaponData weapon in WeaponDataLoader.GetAll())
         {
-            bool unlocked = MetaSaveManager.IsWeaponUnlocked(weapon);
-            string condition = "";
-            if (!unlocked)
-            {
-                string souvenir = SouvenirDataLoader.Get(weapon.RequiresSouvenir)?.Name ?? weapon.RequiresSouvenir;
-                condition = $"Se débloque en retrouvant le Souvenir « {souvenir} ».";
-            }
+            bool unlocked = MetaSaveManager.IsWeaponUnlocked(weapon.Id);
+            string condition = unlocked ? "" : QuestBook.LockText(UnlockKind.Weapon, weapon.Id);
             entries.Add(new Entry(weapon.Id, weapon.Name, weapon.Sprite, weapon.Description, WeaponStats(weapon), unlocked, condition));
         }
         // Disponibles d'abord : la grille se lit comme « ce que j'ai », puis « ce qui reste à trouver ».
@@ -300,8 +295,11 @@ public partial class HubCollectionPanel : MarginContainer
         foreach (PassiveSouvenirData passive in PassiveSouvenirDataLoader.GetAll())
         {
             string stats = passive.MaxLevel > 1 ? $"Jusqu'au niveau {passive.MaxLevel}, cumulable en run" : "";
-            entries.Add(new Entry(passive.Id, passive.Name, passive.Icon, passive.RuleText(), stats, true, ""));
+            bool unlocked = MetaSaveManager.IsObjectUnlocked(passive.Id);
+            string condition = unlocked ? "" : QuestBook.LockText(UnlockKind.Object, passive.Id);
+            entries.Add(new Entry(passive.Id, passive.Name, passive.Icon, passive.RuleText(), stats, unlocked, condition));
         }
+        entries.Sort((a, b) => b.Unlocked.CompareTo(a.Unlocked));
         foreach (CollectionArtDataLoader.Entry art in CollectionArtDataLoader.Items)
             if (art.World)
                 entries.Add(new Entry(art.Id, art.Name, art.Icon, "Objet du monde", "", false,

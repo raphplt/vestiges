@@ -20,6 +20,18 @@ public partial class Indicible : Node2D
 	private const float SinkSec = 0.35f;
 	private const float StrikeFlashSec = 0.2f;
 	private const float FreeDelaySec = 1.2f;
+	// Une main sort avec un petit dépassement, ressort plus sèche quand elle frappe.
+	private const float RiseOvershoot = 0.18f;
+	private const float StrikeOvershoot = 0.25f;
+	private const float EruptSec = 0.1f;
+	// Balancement d'une main qui attend, tremblement de celle qui va frapper (radians d'inclinaison).
+	private const float SwayAngle = 0.05f;
+	private const float SwayHz = 0.26f;
+	private const float TrembleAngle = 0.07f;
+	private const float TrembleHz = 9f;
+	// Pendant la fin de l'annonce, la main replonge à moitié : elle va ressortir ailleurs.
+	private const float DiveShare = 0.4f;
+	private const float DiveDepth = 0.45f;
 	private static readonly NodePath SelfModulateProperty = "self_modulate";
 
 	private enum HandState { Rising, Waiting, Grabbing, Sinking }
@@ -28,7 +40,11 @@ public partial class Indicible : Node2D
 	{
 		public Enemy Part;
 		public Sprite2D Sprite;
+		public IndicibleHandHole Hole;
 		public GroundTelegraph Marker;
+		public bool InWater;
+		public float Age;
+		public float Seed;
 		public HandState State;
 		public float Timer;
 		public Vector2 Target;
@@ -42,8 +58,9 @@ public partial class Indicible : Node2D
 	private EventBus _eventBus;
 	private Player _player;
 	private SpawnManager _spawner;
-	private CanvasModulate _night;
-	private Color _dayColor;
+	private IndicibleStorm _storm;
+	// Flux à part pour le balancement des mains : le visuel ne décale aucun tirage du jeu.
+	private RandomNumberGenerator _visualRng;
 	private BossHealth _health;
 	private FxFamily _family;
 	private float _damage;
@@ -57,11 +74,12 @@ public partial class Indicible : Node2D
 	private GroundTelegraph _lightningMarker;
 	private Texture2D _openTexture;
 	private Texture2D _grabTexture;
+	private Vector2 _openPivot;
+	private Vector2 _grabPivot;
 	private bool _defeated;
 	private GameManager _gameManager;
 	private IndicibleTide _tide;
 	private IndicibleWave _wave;
-	private Tween _nightTween;
 
 	public BossHealth Health => _health;
 	public bool IsDefeated => _defeated;
@@ -89,6 +107,9 @@ public partial class Indicible : Node2D
 		_grabTexture = LoadTexture("indicible_hand_grab");
 		if (_openTexture == null || _grabTexture == null)
 			return false;
+		_openPivot = PivotOf(_openTexture);
+		_visualRng = RunRandom.Create("indicible_hands");
+		_grabPivot = PivotOf(_grabTexture);
 		_player = player;
 		_spawner = spawner;
 		_gameManager = GetNodeOrNull<GameManager>("/root/GameManager");
@@ -110,8 +131,11 @@ public partial class Indicible : Node2D
 		_wave = new IndicibleWave { Name = "Wave" };
 		AddChild(_wave);
 		_wave.Setup(_config, _health, spawner, _openTexture);
+		_storm = new IndicibleStorm { Name = "Storm" };
+		AddChild(_storm);
+		_storm.Setup(_config, GetParent());
 		ChangeWind();
-		FallNight();
+		_storm.Begin();
 		AudioManager.Play(_config.RiseAudio, 0f);
 		ScreenShake.Instance?.ShakeHeavy();
 		_eventBus.EmitSignal(EventBus.SignalName.EnemySpawned, EnemyGrammar.FinalBossId, hpScale, dmgScale);
@@ -151,26 +175,7 @@ public partial class Indicible : Node2D
 		}
 	}
 
-	// --- Tempête : nuit, vent, éclairs ---
-
-	private void FallNight()
-	{
-		_night = GetTree().CurrentScene?.GetNodeOrNull<CanvasModulate>("CanvasModulate");
-		if (_night == null)
-			return;
-		_dayColor = _night.Color;
-		_nightTween = _night.CreateTween();
-		_nightTween.TweenProperty(_night, "color", _dayColor * _config.DarkColor, _config.DarkFadeSec);
-	}
-
-	private void LiftNight()
-	{
-		if (_night == null || !IsInstanceValid(_night))
-			return;
-		_nightTween?.Kill();
-		_nightTween = _night.CreateTween();
-		_nightTween.TweenProperty(_night, "color", _dayColor, _config.DarkFadeSec);
-	}
+	// --- Tempête : vent, éclairs (la nuit et la pluie : IndicibleStorm) ---
 
 	private void TickWind(float delta)
 	{
@@ -184,6 +189,7 @@ public partial class Indicible : Node2D
 	{
 		_windTimer = RunRandom.Behavior.RandfRange(_config.WindChangeMinSec, _config.WindChangeMaxSec);
 		_wind = Vector2.FromAngle(RunRandom.Behavior.RandfRange(0f, Mathf.Tau)) * _config.WindSpeed;
+		_storm.SetWind(_wind);
 	}
 
 	private void TickLightning(float delta)
@@ -200,6 +206,7 @@ public partial class Indicible : Node2D
 		{
 			_lightningWarning -= delta;
 			_lightningMarker.SetProgress(1f - _lightningWarning / _config.LightningWarning);
+			_storm.Charge(_lightningCenter, _config.LightningRadius, delta);
 			if (_lightningWarning <= 0f)
 				StrikeLightning();
 			return;
@@ -221,7 +228,7 @@ public partial class Indicible : Node2D
 		_lightningMarker.SetFlash(1f);
 		AudioManager.Play(_config.LightningStrikeAudio, 0.06f, -2f);
 		ScreenShake.Instance?.ShakeLight();
-		CombatPools.Instance?.ShowHitFlash(_lightningCenter);
+		_storm.Strike(_lightningCenter);
 		float reach = _config.LightningRadius + _config.LightningHitMargin;
 		if (Iso.GroundDistanceSquared(_player.GlobalPosition, _lightningCenter) <= reach * reach
 			&& HitPlayer(_damage * _config.LightningDamageMultiplier, _lightningCenter))
@@ -241,7 +248,8 @@ public partial class Indicible : Node2D
 	private void RaiseHand()
 	{
 		// Pendant la marée, les mains sortent de l'eau quand elle est à portée.
-		if (!_tide.TryWaterPoint(_player.GlobalPosition, _config.HandDistanceMin, _config.HandDistanceMax, out Vector2 position))
+		bool water = _tide.TryWaterPoint(_player.GlobalPosition, _config.HandDistanceMin, _config.HandDistanceMax, out Vector2 position);
+		if (!water)
 		{
 			float angle = RunRandom.Behavior.RandfRange(0f, Mathf.Tau);
 			float distance = RunRandom.Behavior.RandfRange(_config.HandDistanceMin, _config.HandDistanceMax);
@@ -258,17 +266,50 @@ public partial class Indicible : Node2D
 		hand.Part = part;
 		hand.State = HandState.Rising;
 		hand.Timer = _config.HandRiseSec;
+		hand.InWater = water;
+		hand.Age = 0f;
+		hand.Seed = _visualRng.Randf();
 		hand.Sprite.Texture = _openTexture;
-		hand.Sprite.Offset = Pivot(_openTexture);
 		hand.Sprite.Position = position;
-		hand.Sprite.Scale = new Vector2(1f, 0f);
 		hand.Sprite.SelfModulate = Colors.White;
-		hand.Sprite.Visible = true;
+		Pose(hand, 1f, 0f);
+		hand.Hole.Place(position, water);
 		_hands.Add(hand);
 		_handByPart[part] = hand;
 		HandsRaised++;
 		AudioManager.Play(_config.HandRiseAudio, 0.1f, -8f);
-		CombatPools.Instance?.EmitKnockbackDust(position, Vector2.Up);
+		Erupt(position, water, false);
+	}
+
+	/// <summary>Pose de la main : enfoncée de <paramref name="sunk"/> (1 = sous terre), inclinée de <paramref name="lean"/>.</summary>
+	private void Pose(Hand hand, float sunk, float lean)
+	{
+		bool open = hand.Sprite.Texture == _openTexture;
+		GroundReveal.Show(hand.Sprite, (open ? _openTexture : _grabTexture).GetSize(), open ? _openPivot : _grabPivot, sunk);
+		// L'origine du sprite est son pied : l'inclinaison le fait plier depuis le sol.
+		hand.Sprite.Skew = lean;
+	}
+
+	/// <summary>Terre (ou eau) qui gicle au pied d'une main qui sort ; plus fort quand elle frappe.</summary>
+	private static void Erupt(Vector2 at, bool water, bool strike)
+	{
+		CombatPools.Instance?.EmitSparks(at, new SparkBurst
+		{
+			Family = water ? FxFamily.Glass : FxFamily.Stone,
+			Owner = FxOwner.World,
+			Count = strike ? 14 : 8,
+			Direction = Vector2.Up,
+			Spread = 1.4f,
+			SpeedMin = 35f,
+			SpeedMax = strike ? 130f : 80f,
+			LifeMin = 0.25f,
+			LifeMax = 0.55f,
+			Ballistic = true,
+			Size = strike ? 2 : 1,
+			Decorative = true,
+		});
+		if (!water)
+			CombatPools.Instance?.EmitKnockbackDust(at, Vector2.Up);
 	}
 
 	private Hand CreateHand()
@@ -276,8 +317,10 @@ public partial class Indicible : Node2D
 		Hand hand = new()
 		{
 			Sprite = new Sprite2D { Centered = false, Visible = false },
+			Hole = new IndicibleHandHole { Name = "HandHole" },
 			Marker = new GroundTelegraph { Name = "GrabMarker" },
 		};
+		AddChild(hand.Hole);
 		AddChild(hand.Sprite);
 		AddChild(hand.Marker);
 		return hand;
@@ -289,32 +332,52 @@ public partial class Indicible : Node2D
 		{
 			Hand hand = _hands[i];
 			hand.Timer -= delta;
+			hand.Age += delta;
+			float sway = SwayAngle * Mathf.Sin((hand.Age * SwayHz + hand.Seed) * Mathf.Tau);
 			switch (hand.State)
 			{
 				case HandState.Rising:
-					hand.Sprite.Scale = new Vector2(1f, Mathf.Clamp(1f - hand.Timer / _config.HandRiseSec, 0f, 1f));
+				{
+					float progress = 1f - hand.Timer / _config.HandRiseSec;
+					Pose(hand, 1f - GroundReveal.EaseOutBack(progress, RiseOvershoot), sway);
+					hand.Hole.Modulate = Colors.White with { A = Mathf.Clamp(progress * 3f, 0f, 1f) };
 					if (hand.Timer <= 0f)
 					{
 						hand.State = HandState.Waiting;
 						hand.Timer = _config.HandLifeSec;
 					}
 					break;
+				}
 				case HandState.Waiting:
+					Pose(hand, 0f, sway);
 					if (hand.Timer <= 0f)
 						BeginGrab(hand);
 					break;
 				case HandState.Grabbing:
-					hand.Marker.SetProgress(1f - hand.Timer / _config.GrabWarningSec);
+				{
+					float progress = 1f - hand.Timer / _config.GrabWarningSec;
+					hand.Marker.SetProgress(progress);
+					// Le poing tremble, puis replonge à moitié : il va ressortir sur l'annonce.
+					float dive = Mathf.Clamp((progress - (1f - DiveShare)) / DiveShare, 0f, 1f) * DiveDepth;
+					Pose(hand, dive, TrembleAngle * Mathf.Sin(hand.Age * TrembleHz * Mathf.Tau));
 					if (hand.Timer <= 0f)
 						ResolveGrab(hand);
 					break;
+				}
 				case HandState.Sinking:
-					hand.Sprite.Scale = new Vector2(1f, Mathf.Clamp(hand.Timer / SinkSec, 0f, 1f));
+				{
+					float elapsed = SinkSec + StrikeFlashSec - hand.Timer;
+					float sunk = elapsed < EruptSec ? 1f - GroundReveal.EaseOutBack(elapsed / EruptSec, StrikeOvershoot)
+						: elapsed < StrikeFlashSec ? 0f
+						: Mathf.Pow(Mathf.Clamp((elapsed - StrikeFlashSec) / SinkSec, 0f, 1f), 2f);
+					Pose(hand, sunk, 0f);
+					hand.Hole.Modulate = Colors.White with { A = 1f - Mathf.Clamp((elapsed - StrikeFlashSec) / SinkSec, 0f, 1f) };
 					if (hand.Timer <= StrikeFlashSec * 0.5f)
 						hand.Marker.HideMarker();
 					if (hand.Timer <= 0f)
 						Retire(hand, i);
 					break;
+				}
 			}
 		}
 	}
@@ -326,6 +389,8 @@ public partial class Indicible : Node2D
 		// La prise anticipe le pas du joueur (vent compris) : elle punit qui file droit, l'éclair punit qui reste.
 		hand.Target = _player.GlobalPosition + (_player.Velocity + _player.ExternalDrift) * _config.GrabWarningSec;
 		hand.Marker.ShowCircle(hand.Target, _config.GrabRadius, _family);
+		hand.Sprite.Texture = _grabTexture;
+		Pose(hand, 0f, 0f);
 		AudioManager.Play(_config.GrabWarningAudio, 0.08f, -6f);
 		Grabs++;
 	}
@@ -336,14 +401,16 @@ public partial class Indicible : Node2D
 		hand.State = HandState.Sinking;
 		hand.Timer = SinkSec + StrikeFlashSec;
 		hand.Marker.SetFlash(1f);
-		hand.Sprite.Texture = _grabTexture;
-		hand.Sprite.Offset = Pivot(_grabTexture);
 		hand.Sprite.Position = hand.Target;
+		hand.InWater = _tide.IsUnderWater(hand.Target);
+		hand.Hole.Place(hand.Target, hand.InWater);
+		hand.Hole.Modulate = Colors.White;
+		Pose(hand, 1f, 0f);
 		if (IsOwnHand(hand.Part))
 			hand.Part.GlobalPosition = hand.Target;
 		AudioManager.Play(_config.GrabImpactAudio, 0.08f, -3f);
 		ScreenShake.Instance?.ShakeLight();
-		CombatPools.Instance?.EmitKnockbackDust(hand.Target, Vector2.Up);
+		Erupt(hand.Target, hand.InWater, true);
 		float reach = _config.GrabRadius + _config.GrabHitMargin;
 		if (Iso.GroundDistanceSquared(_player.GlobalPosition, hand.Target) <= reach * reach
 			&& HitPlayer(_damage * _config.GrabDamageMultiplier, hand.Target))
@@ -354,6 +421,7 @@ public partial class Indicible : Node2D
 	{
 		hand.Flash?.Kill();
 		hand.Sprite.Visible = false;
+		hand.Hole.Visible = false;
 		hand.Marker.HideMarker();
 		_handByPart.Remove(hand.Part);
 		if (IsOwnHand(hand.Part))
@@ -381,6 +449,7 @@ public partial class Indicible : Node2D
 			_player.ExternalDrift = Vector2.Zero;
 			_lightningWarning = 0f;
 			_lightningMarker.HideMarker();
+			_storm.SetWind(Vector2.Zero);
 			_tide.Begin(_player.GlobalPosition);
 		}
 		else if (phase == 2)
@@ -389,6 +458,7 @@ public partial class Indicible : Node2D
 			_tide.Stop();
 			_wave.Begin();
 		}
+		_storm.SetPhase(phase);
 		AudioManager.Play(_config.RiseAudio, 0.04f, -3f);
 		ScreenShake.Instance?.ShakeMedium();
 		GD.Print($"[Indicible] Phase {phase + 1} ({_health.Ratio:P0} de la réserve)");
@@ -403,31 +473,30 @@ public partial class Indicible : Node2D
 		_lightningMarker.HideMarker();
 		for (int i = _hands.Count - 1; i >= 0; i--)
 			Retire(_hands[i], i);
-		LiftNight();
+		_storm.End();
 		AudioManager.Play(_config.DefeatedAudio, 0.02f);
 		ScreenShake.Instance?.ShakeHeavy();
 		ScreenShake.Instance?.Hitstop(0.08f);
 		// Mort unique : score, succès et entrée en endgame (EndgameManager) lisent cette élimination.
 		_eventBus.EmitSignal(EventBus.SignalName.EnemyKilled, EnemyGrammar.FinalBossId, _player.GlobalPosition);
 		GD.Print("[Indicible] Vaincu : le jour revient");
-		// Un tween meurt avec le nœud : une sortie de run dans l'intervalle ne libère rien deux fois.
+		// Un tween meurt avec le nœud : une sortie de run dans l'intervalle ne libère rien deux fois. Le boss reste le
+		// temps que le jour revienne (la nuit est tenue par son orage).
 		Tween free = CreateTween();
-		free.TweenInterval(FreeDelaySec);
+		free.TweenInterval(Mathf.Max(FreeDelaySec, _config.DarkFadeSec + 0.2f));
 		free.TweenCallback(Callable.From(QueueFree));
 	}
 
-	/// <summary>Retiré sans être vaincu (fin de run, mesure) : ses mains rentrent, le vent tombe, le jour revient.</summary>
+	/// <summary>
+	/// Retiré sans être vaincu (fin de run, mesure) : ses mains rentrent, le vent tombe ; son orage rend le jour en
+	/// sortant de l'arbre avec lui.
+	/// </summary>
 	public override void _ExitTree()
 	{
 		if (_player != null && IsInstanceValid(_player))
 			_player.ExternalDrift = Vector2.Zero;
 		for (int i = _hands.Count - 1; i >= 0; i--)
 			Retire(_hands[i], i);
-		if (!_defeated && _night != null && IsInstanceValid(_night))
-		{
-			_nightTween?.Kill();
-			_night.Color = _dayColor;
-		}
 		_health?.EndEncounter();
 	}
 
@@ -449,8 +518,8 @@ public partial class Indicible : Node2D
 		return true;
 	}
 
-	private static Vector2 Pivot(Texture2D texture) =>
-		World.PropManifest.TryGet(texture, out World.PropManifest.Entry entry) ? -entry.Pivot : -texture.GetSize() * new Vector2(0.5f, 1f);
+	private static Vector2 PivotOf(Texture2D texture) =>
+		World.PropManifest.TryGet(texture, out World.PropManifest.Entry entry) ? entry.Pivot : texture.GetSize() * new Vector2(0.5f, 1f);
 
 	private static Texture2D LoadTexture(string stem)
 	{

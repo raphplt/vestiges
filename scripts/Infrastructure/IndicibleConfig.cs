@@ -13,6 +13,8 @@ public sealed class IndicibleConfig
 	private const string ConfigPath = "res://data/scaling/indicible.json";
 	/// <summary>Mains à la fois : au-delà, l'écran ne se lit plus et la réserve fondrait sous les tirs de zone.</summary>
 	private const int MaxHands = 12;
+	/// <summary>Gouttes de pluie au plus : un seul tracé par image, mais l'écran doit rester lisible.</summary>
+	private const int MaxRainDrops = 600;
 	private static IndicibleConfig _cached;
 
 	public string NameKey { get; private init; }
@@ -20,6 +22,18 @@ public sealed class IndicibleConfig
 	public IReadOnlyList<float> PhaseThresholds { get; private init; }
 	public Color DarkColor { get; private init; }
 	public float DarkFadeSec { get; private init; }
+	public int RainDrops { get; private init; }
+	public float RainSpeed { get; private init; }
+	public float RainLength { get; private init; }
+	public Color RainColor { get; private init; }
+	public IReadOnlyList<float> RainByPhase { get; private init; }
+	public float WindSlant { get; private init; }
+	public float SkyFlashMinSec { get; private init; }
+	public float SkyFlashMaxSec { get; private init; }
+	public float SkyFlashStrength { get; private init; }
+	public float StrikeFlashStrength { get; private init; }
+	public float FlashFadeSec { get; private init; }
+	public float BoltHeight { get; private init; }
 	public int HandMaxAlive { get; private init; }
 	public int HandExtraPerPhase { get; private init; }
 	public float HandInterval { get; private init; }
@@ -53,6 +67,7 @@ public sealed class IndicibleConfig
 	public int TideExtraHands { get; private init; }
 	public Color TideShallowColor { get; private init; }
 	public Color TideDeepColor { get; private init; }
+	public Color TideFoamColor { get; private init; }
 	public float TideOpacity { get; private init; }
 	public float WaveInterval { get; private init; }
 	public float WaveWarningSec { get; private init; }
@@ -120,9 +135,12 @@ public sealed class IndicibleConfig
 			using JsonDocument document = JsonDocument.Parse(json);
 			JsonElement root = document.RootElement;
 			JsonConfigReader reader = new(root);
-			reader.AllowOnly(root, "racine", "name_key", "first_attack_sec", "phase_thresholds", "darkness", "hands", "storm", "tide", "wave", "fx_family", "audio");
+			reader.AllowOnly(root, "racine", "name_key", "first_attack_sec", "phase_thresholds", "darkness", "weather", "hands", "storm", "tide", "wave", "fx_family", "audio");
 			JsonElement darkness = reader.Section("darkness");
 			reader.AllowOnly(darkness, "darkness", "color", "fade_sec");
+			JsonElement weather = reader.Section("weather");
+			reader.AllowOnly(weather, "weather", "rain_drops", "rain_speed", "rain_length", "rain_color", "rain_opacity", "rain_by_phase",
+				"wind_slant", "sky_flash_sec", "sky_flash_strength", "strike_flash_strength", "flash_fade_sec", "bolt_height");
 			JsonElement hands = reader.Section("hands");
 			reader.AllowOnly(hands, "hands", "max_alive", "extra_per_phase", "interval_sec", "distance_min", "distance_max", "rise_sec",
 				"life_sec", "grab_warning_sec", "grab_radius", "hit_margin", "damage_multiplier", "body_radius");
@@ -131,7 +149,7 @@ public sealed class IndicibleConfig
 				"lightning_warning_sec", "lightning_radius", "lightning_hit_margin", "lightning_damage_multiplier");
 			JsonElement tide = reader.Section("tide");
 			reader.AllowOnly(tide, "tide", "band_sec", "band_step", "warning_sec", "start_distance", "end_distance", "turn_pause_sec",
-				"shallow_width", "shallow_slow", "deep_slow", "deep_damage_multiplier", "extra_hands", "shallow_color", "deep_color", "opacity");
+				"shallow_width", "shallow_slow", "deep_slow", "deep_damage_multiplier", "extra_hands", "shallow_color", "deep_color", "foam_color", "opacity");
 			JsonElement wave = reader.Section("wave");
 			reader.AllowOnly(wave, "wave", "interval_sec", "warning_sec", "speed", "half_length", "breach_min", "breach_max", "breach_width",
 				"breach_spread", "damage_multiplier", "window_sec", "window_distance", "window_radius", "window_bonus", "foam_color", "breach_color");
@@ -151,6 +169,19 @@ public sealed class IndicibleConfig
 				thresholds.Add(item.GetSingle());
 			}
 
+			// Une part de pluie par phase : la tempête, puis une après chaque seuil.
+			List<float> rainByPhase = new();
+			foreach (JsonElement item in reader.List(weather, "rain_by_phase", 1))
+			{
+				if (item.ValueKind != JsonValueKind.Number || item.GetSingle() < 0f || item.GetSingle() > 1f)
+				{
+					reader.Fail("weather.rain_by_phase : parts dans [0 ; 1] attendues");
+					break;
+				}
+				rainByPhase.Add(item.GetSingle());
+			}
+			(float skyFlashMin, float skyFlashMax) = reader.Range(weather, "sky_flash_sec", 0.5f);
+
 			IndicibleConfig parsed = new()
 			{
 				NameKey = reader.Text(root, "name_key"),
@@ -158,6 +189,18 @@ public sealed class IndicibleConfig
 				PhaseThresholds = thresholds,
 				DarkColor = reader.Rgb(darkness, "color"),
 				DarkFadeSec = reader.Positive(darkness, "fade_sec"),
+				RainDrops = reader.Count(weather, "rain_drops", MaxRainDrops),
+				RainSpeed = reader.Positive(weather, "rain_speed"),
+				RainLength = reader.Positive(weather, "rain_length"),
+				RainColor = reader.Rgb(weather, "rain_color") with { A = reader.Ratio(weather, "rain_opacity") },
+				RainByPhase = rainByPhase,
+				WindSlant = reader.NonNegative(weather, "wind_slant"),
+				SkyFlashMinSec = skyFlashMin,
+				SkyFlashMaxSec = skyFlashMax,
+				SkyFlashStrength = reader.Ratio(weather, "sky_flash_strength"),
+				StrikeFlashStrength = reader.Ratio(weather, "strike_flash_strength"),
+				FlashFadeSec = reader.Positive(weather, "flash_fade_sec"),
+				BoltHeight = reader.Positive(weather, "bolt_height"),
 				HandMaxAlive = reader.Count(hands, "max_alive", MaxHands),
 				HandExtraPerPhase = reader.Integer(hands, "extra_per_phase", 0, MaxHands),
 				HandInterval = reader.Positive(hands, "interval_sec"),
@@ -191,6 +234,7 @@ public sealed class IndicibleConfig
 				TideExtraHands = reader.Integer(tide, "extra_hands", 0, MaxHands),
 				TideShallowColor = reader.Rgb(tide, "shallow_color"),
 				TideDeepColor = reader.Rgb(tide, "deep_color"),
+				TideFoamColor = reader.Rgb(tide, "foam_color"),
 				TideOpacity = reader.Ratio(tide, "opacity"),
 				WaveInterval = reader.Positive(wave, "interval_sec"),
 				WaveWarningSec = reader.Positive(wave, "warning_sec"),
@@ -219,6 +263,8 @@ public sealed class IndicibleConfig
 				LightningStrikeAudio = reader.Text(audio, "lightning_strike"),
 				DefeatedAudio = reader.Text(audio, "defeated"),
 			};
+			if (reader.Error == null && parsed.RainByPhase.Count != parsed.PhaseThresholds.Count + 1)
+				reader.Fail($"weather.rain_by_phase : {parsed.PhaseThresholds.Count + 1} parts attendues, une par phase");
 			if (reader.Error == null && parsed.HandDistanceMax < parsed.HandDistanceMin)
 				reader.Fail($"hands.distance_max ({parsed.HandDistanceMax}) inférieur à distance_min ({parsed.HandDistanceMin})");
 			if (reader.Error == null && parsed.TideEndDistance >= parsed.TideStartDistance)

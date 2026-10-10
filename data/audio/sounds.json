@@ -823,5 +823,69 @@
       "res://assets/audio/sfx/weapons/music_box_7.wav",
       "res://assets/audio/sfx/weapons/music_box_9.wav"
     ]
+  },
+  "sfx_barrier_rise": {
+    "path": "res://assets/audio/sfx/selected/barrier_rise.wav",
+    "volume_db": 0,
+    "min_interval_ms": 250,
+    "effect_id": "barrier_rise",
+    "priority": 90,
+    "max_voices": 1
+  },
+  "sfx_barrier_lock": {
+    "path": "res://assets/audio/sfx/selected/barrier_lock.wav",
+    "volume_db": 0,
+    "min_interval_ms": 250,
+    "effect_id": "barrier_lock",
+    "priority": 85,
+    "max_voices": 1
+  },
+  "sfx_barrier_leaf_broken": {
+    "path": "res://assets/audio/sfx/selected/barrier_leaf_broken.wav",
+    "volume_db": 0,
+    "min_interval_ms": 250,
+    "effect_id": "barrier_leaf_broken",
+    "priority": 85,
+    "max_voices": 2
+  },
+  "sfx_barrier_defeated": {
+    "path": "res://assets/audio/sfx/selected/barrier_defeated.wav",
+    "volume_db": 0,
+    "min_interval_ms": 250,
+    "effect_id": "barrier_defeated",
+    "priority": 90,
+    "max_voices": 1
+  },
+  "sfx_barrier_fist_warning": {
+    "path": "res://assets/audio/sfx/selected/barrier_fist_warning.wav",
+    "volume_db": -4,
+    "min_interval_ms": 120,
+    "effect_id": "barrier_fist_warning",
+    "priority": 60,
+    "max_voices": 3
+  },
+  "sfx_barrier_fist_impact": {
+    "path": "res://assets/audio/sfx/selected/barrier_fist_impact.wav",
+    "volume_db": -2,
+    "min_interval_ms": 120,
+    "effect_id": "barrier_fist_impact",
+    "priority": 70,
+    "max_voices": 3
+  },
+  "sfx_barrier_chain_warning": {
+    "path": "res://assets/audio/sfx/selected/barrier_chain_warning.wav",
+    "volume_db": -3,
+    "min_interval_ms": 250,
+    "effect_id": "barrier_chain_warning",
+    "priority": 65,
+    "max_voices": 1
+  },
+  "sfx_barrier_chain_sweep": {
+    "path": "res://assets/audio/sfx/selected/barrier_chain_sweep.wav",
+    "volume_db": -2,
+    "min_interval_ms": 250,
+    "effect_id": "barrier_chain_sweep",
+    "priority": 70,
+    "max_voices": 1
   }
 }
