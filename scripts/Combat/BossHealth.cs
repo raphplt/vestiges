@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Godot;
+using Vestiges.Core;
 
 namespace Vestiges.Combat;
 
@@ -17,6 +18,7 @@ public sealed class BossHealth
 	private float _sharedMax;
 	private int _nextThreshold;
 	private bool _depletedRaised;
+	private BossBarFeed _bar;
 
 	public string Name { get; }
 	public float Max { get; private set; }
@@ -69,6 +71,17 @@ public sealed class BossHealth
 		part.BindBossPart(this, bodyRadius, shared ? SharedRemaining() : ownHp, shared ? _sharedMax : ownHp, shared);
 	}
 
+	/// <summary>Ouvre la barre de boss du haut de l'écran, un cran par partie à PV propres déjà rattachée.</summary>
+	public void ShowBar(EventBus bus)
+	{
+		_bar?.End(false);
+		_bar = new BossBarFeed(bus, Name, Max, OwnPartCount);
+		_bar.Update(Current, Max);
+	}
+
+	/// <summary>Le boss quitte la scène sans être vaincu (fin de run, retrait) : la barre se ferme.</summary>
+	public void EndEncounter() => _bar?.End(IsDepleted);
+
 	/// <summary>PV perdus par une partie (coup, brûlure, saignement), déjà bornés à ceux qui lui restaient.</summary>
 	internal void Absorb(Enemy part, float lost, bool shared)
 	{
@@ -77,6 +90,7 @@ public sealed class BossHealth
 		Current = Mathf.Max(0f, Current - lost);
 		if (shared)
 			SyncSharedParts();
+		_bar?.Update(Current, Max);
 		PartHit?.Invoke(part, lost);
 		while (_nextThreshold < _thresholds.Length && Current <= Max * _thresholds[_nextThreshold])
 		{
@@ -99,6 +113,7 @@ public sealed class BossHealth
 		if (IsDepleted && !_depletedRaised)
 		{
 			_depletedRaised = true;
+			_bar?.End(true);
 			Depleted?.Invoke();
 		}
 	}
@@ -114,6 +129,7 @@ public sealed class BossHealth
 		float restored = Mathf.Min(amount, _sharedMax - SharedRemaining());
 		Current += Mathf.Max(0f, restored);
 		SyncSharedParts();
+		_bar?.Update(Current, Max);
 	}
 
 	/// <summary>Réserve commune restante : le total moins les PV propres encore debout.</summary>

@@ -13,6 +13,7 @@ namespace Vestiges.Tests;
 /// Plan 07 B1a : parties de boss. La fiche commune et ses réglages sont lus et contrôlés ; une partie à PV propres
 /// tombe seule et rend la main au boss une fois, sans élimination ; des parties en réserve commune partagent
 /// leurs PV, brûlure comprise ; les seuils de phase tombent une fois, dans l'ordre ; une partie ne bouge ni ne frappe.
+/// B1b : la barre de boss suit la réserve et ses rencontres successives.
 /// </summary>
 public partial class BossPartsRegression : Node2D
 {
@@ -45,6 +46,7 @@ public partial class BossPartsRegression : Node2D
             await CheckOwnHpParts();
             await CheckSharedReserve();
             await CheckPartStaysPut();
+            await CheckBar();
         }
         catch (Exception ex)
         {
@@ -169,6 +171,43 @@ public partial class BossPartsRegression : Node2D
         part.Reset();
         Check(part.Boss == null && boss.Parts.Count == 0, "rendue au pool : détachée de son boss");
         part.QueueFree();
+    }
+
+    /// <summary>B1b : la barre suit la réserve, un cran par battant, et une fin tardive ne ferme pas la rencontre suivante.</summary>
+    private async Task CheckBar()
+    {
+        Vestiges.UI.BossHealthBar bar = new();
+        AddChild(bar);
+        BossHealth boss = new("Barrière d'essai", 0f);
+        Enemy[] gates = { SpawnPart(new Vector2(300f, 0f)), SpawnPart(new Vector2(400f, 0f)), SpawnPart(new Vector2(500f, 0f)) };
+        foreach (Enemy gate in gates)
+            boss.AddPart(gate, 40f, 100f);
+        int notches = -1;
+        EventBus.BossEncounterStartedEventHandler onStarted = (_, _, _, count) => notches = count;
+        _bus.BossEncounterStarted += onStarted;
+        boss.ShowBar(_bus);
+        _bus.BossEncounterStarted -= onStarted;
+        int first = bar.EncounterId;
+        Check(first != 0 && notches == 3 && bar.ShownRatio == 1f, $"barre ouverte : rencontre {first}, {notches} crans");
+        gates[0].TakeDamage(150f);
+        Check(Mathf.IsEqualApprox(bar.ShownRatio, 200f / 300f), $"battant brisé : barre à {bar.ShownRatio:0.000}");
+
+        BossBarFeed souverain = new(_bus, "Souverain d'essai", 400f);
+        Check(bar.EncounterId == souverain.Id && bar.ShownRatio == 1f, "une nouvelle rencontre prend la barre");
+        boss.EndEncounter();
+        Check(bar.EncounterId == souverain.Id, "la fin de la rencontre précédente ne la ferme pas");
+        souverain.Update(100f, 400f);
+        souverain.Update(100f, 400f);
+        Check(bar.ShownRatio == 0.25f, $"PV du Souverain : {bar.ShownRatio}");
+        souverain.End(true);
+        souverain.End(false);
+        Check(!souverain.IsOpen && bar.ShownRatio == 0f, "Souverain abattu : barre vidée, fermée une seule fois");
+        for (int i = 0; i < 70; i++)
+            await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+        Check(!bar.Visible && bar.EncounterId == 0, "barre retirée après son fondu");
+        foreach (Enemy gate in gates)
+            gate.Vanish();
+        bar.QueueFree();
     }
 
     private Enemy SpawnPart(Vector2 position)

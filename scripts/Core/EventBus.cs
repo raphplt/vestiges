@@ -95,6 +95,11 @@ public partial class EventBus : Node
     [Signal] public delegate void RunEventEndedEventHandler(string eventId, bool success, string summary);
     [Signal] public delegate void EventEnemyKilledEventHandler(int eventToken, Vector2 position);
 
+    // --- Boss (plan 07 B1b) : barre en haut de l'écran, nom et PV ; un cran par partie à PV propres ---
+    [Signal] public delegate void BossEncounterStartedEventHandler(int encounterId, string bossName, float maxHp, int notches);
+    [Signal] public delegate void BossHealthChangedEventHandler(int encounterId, float currentHp, float maxHp);
+    [Signal] public delegate void BossEncounterEndedEventHandler(int encounterId, bool defeated);
+
     // --- Variantes d'ennemis ---
     [Signal] public delegate void VariantEnemyKilledEventHandler(string displayName, string variantId, Vector2 position);
 

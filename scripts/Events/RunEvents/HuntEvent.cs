@@ -11,6 +11,7 @@ namespace Vestiges.Events.RunEvents;
 public sealed class HuntEvent : RunEvent
 {
     private Enemy _champion;
+    private BossBarFeed _bar;
     private string _objectiveTemplate;
 
     protected override void OnStart()
@@ -39,6 +40,7 @@ public sealed class HuntEvent : RunEvent
         Objective = string.Format(_objectiveTemplate, _champion.DisplayName);
         HasTarget = true;
         Target = origin;
+        _bar = new BossBarFeed(Context.EventBus, _champion.DisplayName, _champion.MaxHp);
     }
 
     protected override void OnTick(float delta)
@@ -47,6 +49,7 @@ public sealed class HuntEvent : RunEvent
             return;
         Target = _champion.GlobalPosition;
         Progress = 1f - _champion.HpRatio;
+        _bar.Update(_champion.CurrentHp, _champion.MaxHp);
     }
 
     public override void OnEnemyKilled(Vector2 position)
@@ -58,6 +61,7 @@ public sealed class HuntEvent : RunEvent
             Context.SpawnChest(Data.Text("late_reward_chest", "chest_epic"), position + new Vector2(24f, 0f));
         Progress = 1f;
         _champion = null;
+        _bar?.End(true);
         // Le coffre rare et l'Essence propres au Souverain tombent à sa mort (variante).
         int variantEssence = Infrastructure.EnemyVariantDataLoader.GetVariant("champion")?.BonusEssence ?? 0;
         Succeed(RewardLine(essence + variantEssence, true, false, true));
@@ -67,6 +71,7 @@ public sealed class HuntEvent : RunEvent
     {
         _champion?.Vanish();
         _champion = null;
+        _bar?.End(false);
         Fail(Tr("EVENT_FAIL_FADED"));
     }
 
@@ -75,5 +80,6 @@ public sealed class HuntEvent : RunEvent
         if (_champion != null && _champion.IsActive && !_champion.IsDying)
             _champion.Modifiers.IsEventBound = false;
         _champion = null;
+        _bar?.End(false);
     }
 }
