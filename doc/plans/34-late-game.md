@@ -1,6 +1,6 @@
 # Plan 34 — Le late game : après l'Indicible
 
-10 octobre 2026, nuit. Étude demandée par Raphaël au [§108](DECISIONS.md) : « pour moi le late game c'est ce qui se passe après l'Indicible […] à partir de 20 min on est en mid-game et à 30 on est déjà au début du late game. Mais je pensais plus au late game genre qu'est-ce qu'on prévoit, quoi ? ». **Rien n'est implémenté.** Ce plan dit ce qui existe, ce que les documents promettaient, et propose un contenu à trancher (§5).
+10 octobre 2026, nuit. Étude demandée par Raphaël au [§108](DECISIONS.md) : « pour moi le late game c'est ce qui se passe après l'Indicible […] à partir de 20 min on est en mid-game et à 30 on est déjà au début du late game. Mais je pensais plus au late game genre qu'est-ce qu'on prévoit, quoi ? ». **Rien n'est implémenté.** Ce plan dit ce qui existe, ce que les documents promettaient, et propose un contenu (§5). **Orientations de Raphaël du 11 octobre au §8** ; le butin, qui dépend de la refonte de l'inventaire, part au [plan 35](35-inventaire-du-joueur.md).
 
 ## 0. En bref
 
@@ -56,7 +56,7 @@ Le reste (pools de créatures, butin, coffres, lieux, événements) est identiqu
 ## 3. Repères dans le genre
 
 - **Vampire Survivors** : une fin dure à 30 min (la Faucheuse), le late game est la course jusqu'à elle ; des modes à part (Endless, Hurry) changent la durée.
-- **Megabonk** : des étapes courtes rythmées par des mini-boss, des nuées et un boss (plan 30 §4), avec une fin connue.
+- **Megabonk** : des étapes courtes rythmées par des mini-boss, des nuées et un boss (plan 30 §4), puis un late game **sans fin** fait de vagues d'ennemis qui reviennent en boucle, de plus en plus dures (correction de Raphaël, §109). Vestiges vise la même escalade, avec plus de relief.
 - **Brotato** : un nombre de vagues fixé, puis des niveaux de difficulté pour la rejouabilité.
 
 Vestiges a choisi une fin seulement à la mort (stratégie §7, « just one more run »). Le late game doit donc rendre chaque minute **différente de la précédente** et **mesurable** par le joueur.
@@ -129,3 +129,28 @@ En plus des Échos (L3), deux ou trois créatures nées du Néant (silhouettes b
 2. **Marées** : un reflux qui retire une part de la foule, ou seulement un plafond qui baisse et une foule qui s'use d'elle-même, comme aux Résurgences d'aujourd'hui ?
 3. **Monde d'après** : le Néant inoffensif en late game te va-t-il ? Les Échos des héros en ennemis respectent-ils le lore (plan 19) ?
 4. **Fin volontaire (L5)** : à garder dans le plan ou à écarter ?
+
+## 8. Retour de Raphaël — 11 octobre 2026 ([§109](DECISIONS.md))
+
+« ta proposition globale pour le late game tient. »
+
+| Proposition | Décision | Ce qui change |
+|---|---|---|
+| L1 Profondeur | **Oui, mais pas de compteur à part.** | Le **Péril** devient visible en permanence en run, sans pause. Aujourd'hui, le HUD ne l'affiche qu'au-dessus de 0 (`HUD.cs`, commit 09a2bc4a), donc presque jamais en début de run ; le détail n'est qu'en pause. En late game, il **monte tout seul**, continuellement. Les paliers nommés (« Profondeur 14 ») restent une idée à voir : un nom pour le niveau de Péril du late game, pas un second chiffre. |
+| L2 Marées | **Oui.** « Ça change des Résurgences classiques », et l'eau est revenue dans le lore. | Vagues de plus en plus dures, en boucle, comme Megabonk, mais avec reflux et relief. |
+| Écho-Souverain | **Oui, « pourquoi pas ».** | Un boss qui revient en continu pendant le late game. |
+| L3 Monde d'après | **Oui sur le fond**, « hyper bien », mais c'est un gros chantier visuel qui ne se fait pas à la va-vite. | Pas prioritaire. Le monde doit changer au fil du late game. |
+| L4 Butin | **Bloqué par l'inventaire.** Toutes les armes et tous les objets finissent au maximum ; Raphaël ne sait pas quoi en faire. | Sort du late game : refonte de l'inventaire au [plan 35](35-inventaire-du-joueur.md), progression permanente au [plan 36](36-progression-permanente.md). |
+| L5, L6 | Pas commentés. | Restent en option. |
+
+**Lots révisés :**
+
+| Lot | Contenu |
+|---|---|
+| **G0** | Péril affiché en permanence pendant la run (HUD), 0 compris, lisible d'un coup d'œil ; vaut pour toute la run, pas seulement le late game |
+| **G1** | Péril qui monte seul en late game : `time_peril_per_minute` réglé à partir de l'Indicible (aujourd'hui 0), effet sur le nombre de créatures d'abord ; paliers annoncés ; nom du niveau (« Profondeur ») à trancher en jouant |
+| **G2** | Marées et Écho-Souverain en boucle |
+| G3 | Butin du late game, après les plans 35 et 36 |
+| G4 | Monde d'après, en plusieurs temps, avec planches d'abord |
+
+Questions restantes : le Péril qui monte seul multiplie-t-il le score ? Le reflux des Marées retire-t-il une partie de la foule ?
