@@ -2122,5 +2122,17 @@
     "source_url": "https://bigsoundbank.com/suction-cup-on-window-s1262.html ; https://bigsoundbank.com/water-bubbles-s0150.html ; https://bigsoundbank.com/1-church-bell-s0830.html",
     "attribution": "Joseph SARDIN / BigSoundBank — suction-cup-on-window-s1262 — https://bigsoundbank.com/suction-cup-on-window-s1262.html — CC0-1.0 (licence BigSoundBank de type CC0) ; Joseph SARDIN / BigSoundBank — water-bubbles-s0150 — https://bigsoundbank.com/water-bubbles-s0150.html — CC0-1.0 (licence BigSoundBank de type CC0) ; Joseph SARDIN / BigSoundBank — 1-church-bell-s0830 — https://bigsoundbank.com/1-church-bell-s0830.html — CC0-1.0 (licence BigSoundBank de type CC0)",
     "processing": "Ventouse décollée (BigSoundBank 1262, ×0,45) ; bulles (BigSoundBank 0150, ×0,6) ; bourdon synthétique (55–164 Hz) ; cloche lointaine filtrée (BigSoundBank 0830, ×0,5) ; réverbération 0,9 s. Graine 10102026 ; WAV PCM16 / 44,1 kHz stéréo. Script : prepare.py (plan 07 B5e, sons de l'Indicible)."
+  },
+  {
+    "effect_id": "weapon_letter_satchel",
+    "candidate_id": "weapon_20261010_letter_satchel_A",
+    "file": "assets/audio/sfx/weapons/letter_satchel.wav",
+    "sha256": "4c568ba6ea53d42ee82cb0ae564f3496818ddc673116043d0f3e12799b2b7976",
+    "author": "artisticdude ; Kenney",
+    "license": "CC0-1.0",
+    "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source_url": "https://opengameart.org/content/swishes-sound-pack ; https://kenney.nl/assets/rpg-audio",
+    "attribution": "artisticdude — Swishes Sound Pack — CC0-1.0 ; Kenney — RPG Audio (bookPlace2.ogg) — CC0-1.0",
+    "processing": "Recette letter_satchel de tools/prepare_weapon_audio.py, variante A : throw_release à ×1,2 et impact_paper à ×1,15 (poids 0,4), 0,24 s, passe-bas 11 kHz, fondus, niveau actif −23 dBFS. Provisoire : à auditionner par Raphaël."
   }
 ]

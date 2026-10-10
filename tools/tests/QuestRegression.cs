@@ -81,10 +81,12 @@ public partial class QuestRegression : Node
         Check(difficulties[1] == 14 && difficulties[2] == 17 && difficulties[3] == 5,
             $"14 ★, 17 ★★, 5 ★★★ ({difficulties[1]}, {difficulties[2]}, {difficulties[3]})");
         Check(cumulative == 2, $"deux quêtes de cumul ({cumulative})");
-        Check(unlocks[UnlockKind.Character] == 5 && unlocks[UnlockKind.Weapon] == 16 && unlocks[UnlockKind.Object] == 18,
-            $"5 personnages, 16 armes (13 + 3 de départ de personnage), 18 objets ({unlocks[UnlockKind.Character]}, {unlocks[UnlockKind.Weapon]}, {unlocks[UnlockKind.Object]})");
+        Check(unlocks[UnlockKind.Character] == 5 && unlocks[UnlockKind.Weapon] == 17 && unlocks[UnlockKind.Object] == 18,
+            $"5 personnages, 17 armes (13 + 4 de départ de personnage), 18 objets ({unlocks[UnlockKind.Character]}, {unlocks[UnlockKind.Weapon]}, {unlocks[UnlockKind.Object]})");
         Check(QuestDataLoader.FindUnlocking(UnlockKind.Weapon, "makeshift_bow")?.Id == "lead_the_hunt",
             "l'arme de départ du Traqueur vient avec lui");
+        Check(QuestDataLoader.FindUnlocking(UnlockKind.Weapon, "letter_satchel")?.Id == "the_round",
+            "la Sacoche de lettres vient avec le Facteur");
     }
 
     private void CheckRefusals()
@@ -100,7 +102,7 @@ public partial class QuestRegression : Node
             ("pièce débloquée deux fois", root => Unlock(root, 5)["id"] = "lighthouse_shard", "déjà débloqué par la quête"),
             ("pièce inconnue", root => Unlock(root, 18)["id"] = "parapluie_dore", "pièce inconnue"),
             ("nom d'un personnage connu", root => Unlock(root, 0)["name"] = "Le Traqueur", "déjà au catalogue"),
-            ("personnage inconnu sans nom", root => ((JsonObject)Quest(root, 3)["unlocks"]![0]!).Remove("name"), "inconnu sans name"),
+            ("personnage inconnu sans nom", root => ((JsonObject)Quest(root, 4)["unlocks"]![0]!).Remove("name"), "inconnu sans name"),
             ("difficulté hors bornes", root => Quest(root, 0)["difficulty"] = 4, "difficulty"),
             ("clé inconnue", root => Quest(root, 0)["reward"] = "souvenir", "clé « reward » inconnue"),
             ("id en double", root => Quest(root, 1)["id"] = "lead_the_hunt", "id en double"),

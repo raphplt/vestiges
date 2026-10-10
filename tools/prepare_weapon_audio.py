@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Prépare une audition des 24 armes, sans modifier la banque ni les assets du jeu.
+"""Prépare une audition des armes, sans modifier la banque ni les assets du jeu.
 
 Sources : choix CC0 déjà présents, crédités et vérifiés par empreinte. Trois variantes par arme,
 avec écoute isolée et répétée au gain de jeu proposé. Exports et décisions restent hors dépôt.
@@ -43,6 +43,7 @@ RECIPES = {
     "childs_drawing": ("Frottement sec et petit éclat", .24, [("void_slash", 1.5, .7), ("shard_strike", 1.8, .2)]),
     "last_broadcast": ("Contact radio et souffle court", .45, [("lantern_fire", 1.8, .7), ("ui_click", .6, .4)]),
     "clock_hand": ("Échappement d'horlogerie", .3, [("clock_strike", 1.2, 1)]),
+    "letter_satchel": ("Lettre lancée, papier qui claque", .24, [("throw_release", 1.2, 1), ("impact_paper", 1.15, .4)]),
 }
 
 

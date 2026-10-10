@@ -246,6 +246,10 @@ public partial class Player : CharacterBody2D
         EmitShield();
         EquipStartingWeapon(data.StartingWeaponId);
         UpdateAttackSpeed();
+        // Mobilité propre au personnage (plan 01 E) ; un même profil garde le module et ses réglages.
+        MobilityConfig mobility = MobilityConfig.Load(data.MobilityProfile);
+        if (Mobility?.Config != mobility)
+            Mobility = new PlayerMobility(mobility);
 
         _visual.Color = data.VisualColor;
         _originalColor = data.VisualColor;
@@ -506,9 +510,10 @@ public partial class Player : CharacterBody2D
 
         Vector2 previousPosition = GlobalPosition;
         bool dashMovement = Mobility.IsDashStep;
+        Vector2 requested = Vector2.Zero;
         if (dashMovement)
         {
-            Vector2 requested = Velocity * dt;
+            requested = Velocity * dt;
             Vector2 permitted = ClampMobilityTravel(previousPosition, requested);
             if (!permitted.IsEqualApprox(requested))
                 Mobility.StopDash();
@@ -527,7 +532,9 @@ public partial class Player : CharacterBody2D
                 movementVelocity = Vector2.Zero;
                 Mobility.StopDash();
             }
-            if (GetSlideCollisionCount() > 0)
+            // Une glissade longe le mur ; seul un choc de face (moins d'un quart du trajet parcouru) l'arrête.
+            if (GetSlideCollisionCount() > 0 && (!Mobility.Config.SlidesAlongWalls
+                || traveled.LengthSquared() < requested.LengthSquared() * 0.0625f))
                 Mobility.StopDash();
         }
         else if (!IsOnWorldGround(GlobalPosition))
@@ -722,7 +729,7 @@ public partial class Player : CharacterBody2D
         return _worldSetup.Generator.GetTerrain(cell.X, cell.Y);
     }
 
-    private bool IsOnWater() => GetCurrentTerrain() == TerrainType.Water;
+    public bool IsOnWater() => GetCurrentTerrain() == TerrainType.Water;
 
     // --- Stat Modifiers ---
 
@@ -1955,6 +1962,11 @@ public partial class Player : CharacterBody2D
             float launchDelay = fanned ? 0f : VolleyDelay(i, targets.Count, aimedCount);
             Projectile proj = SpawnAimedProjectile(target, isHoming, homingStrength, baseDamage, projectileSpeed, range, totalPierce, offset,
                 launchDelay);
+
+            // Rebonds : stat entière fractionnaire, tirée pour chaque lettre (plan 23 R4).
+            if (proj != null && pattern == AttackPatternKind.Bounce)
+                proj.SetBounce(FractionalCount.Roll(GetWeaponStat("chain_targets"), RunRandom.Combat.Randf()),
+                    GetWeaponStat("chain_range"), GetWeaponStat("chain_damage_falloff"));
 
             // Ground fire : configurer le projectile pour spawner une zone au sol à l'impact
             WeaponSpecialEffect se = _equippedWeapon?.SpecialEffect;

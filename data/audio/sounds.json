@@ -803,6 +803,14 @@
     "priority": 10,
     "max_voices": 1
   },
+  "sfx_weapon_letter_satchel": {
+    "path": "res://assets/audio/sfx/weapons/letter_satchel.wav",
+    "volume_db": -14,
+    "min_interval_ms": 180,
+    "effect_id": "weapon_letter_satchel",
+    "priority": 10,
+    "max_voices": 1
+  },
   "sfx_weapon_teachers_bell": {
     "path": "res://assets/audio/sfx/weapons/teachers_bell.wav",
     "volume_db": -14,

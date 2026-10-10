@@ -41,6 +41,7 @@ public partial class PerkEffectsRegression : Node2D
             CheckInactiveAfterSwap();
             await CheckXpTrail();
             CheckCarriedChoice();
+            CheckRoundMomentum();
             GD.Print($"[PerkEffectsRegression] RESULT failures={_failures}");
             GetTree().Quit(_failures == 0 ? 0 : 1);
         }
@@ -245,7 +246,7 @@ public partial class PerkEffectsRegression : Node2D
         Check(Nearest(400f) == near, "Fouet (onde) : aucune priorité, recherche inchangée");
         SetEquipped(AddWeapon("chipped_blade"));
         List<Enemy> arc = (List<Enemy>)typeof(Player).GetMethod("FindEnemiesInArc", BindingFlags.Instance | BindingFlags.NonPublic)
-            .Invoke(_player, new object[] { 400f, 90f, null });
+            .Invoke(_player, new object[] { 400f, 90f, null, 1f });
         Check(arc.Count > 0 && arc[0] == closerElite && !arc.Contains(near), "Lame (arc) : l'attaque s'oriente vers l'élite");
 
         closerElite.TakeDamage(1e6f, source: _player.BeginAttack(_player.WeaponSlots[0], 1f));
@@ -547,6 +548,62 @@ public partial class PerkEffectsRegression : Node2D
         return _player.WeaponSlots[_player.WeaponSlots.Count - 1];
     }
 
+    /// <summary>
+    /// Tournée du Facteur (plan 06 P2c) : l'élan monte en avançant jusqu'au plein (+25 % de vitesse, +15 % de cadence),
+    /// tient un arrêt court, retombe à zéro après la tolérance ou sur une touche, que le bouclier l'absorbe ou non.
+    /// </summary>
+    private void CheckRoundMomentum()
+    {
+        Setup();
+        RemoveChild(_player);
+        _player.QueueFree();
+        _player = GD.Load<PackedScene>("res://scenes/Player.tscn").Instantiate<Player>();
+        AddChild(_player);
+        _player.InitializeCharacter(CharacterDataLoader.Get("facteur"));
+        _player.IsAIControlled = true;
+        _player.IsGodMode = false;
+        _player.SetPhysicsProcess(false);
+        _player.DisableDefenseForTests();
+        PerkManager perks = new();
+        AddChild(perks);
+        perks.ApplyPassivePerks("facteur");
+        RoundMomentum momentum = _player.GetNodeOrNull<RoundMomentum>("RoundMomentum");
+        Check(momentum != null, "Tournée : la signature du Facteur lui donne son élan");
+        if (momentum == null)
+            return;
+        momentum.SetProcess(false);
+        FieldInfo speedField = typeof(Player).GetField("_speedMultiplier", BindingFlags.Instance | BindingFlags.NonPublic);
+        FieldInfo attackField = typeof(Player).GetField("_attackSpeedMultiplier", BindingFlags.Instance | BindingFlags.NonPublic);
+        float baseSpeed = (float)speedField.GetValue(_player);
+        float baseAttack = (float)attackField.GetValue(_player);
+        void Run(float seconds, Vector2 velocity)
+        {
+            _player.Velocity = velocity;
+            for (float t = 0f; t < seconds - 0.0001f; t += 1f / 60f)
+                momentum.Advance(1f / 60f);
+        }
+
+        Run(2f, new Vector2(200f, 0f));
+        Check(Near(momentum.Momentum, 0.5f, 0.02f), $"Tournée : à mi-course, l'élan vaut la moitié ({momentum.Momentum:0.00})");
+        Run(2.1f, new Vector2(0f, 150f));
+        float speedRatio = (float)speedField.GetValue(_player) / baseSpeed;
+        float attackRatio = (float)attackField.GetValue(_player) / baseAttack;
+        Check(Near(momentum.Momentum, 1f) && Near(speedRatio, 1.25f, 0.001f) && Near(attackRatio, 1.15f, 0.001f),
+            $"Tournée : élan plein en 4 s, vitesse ×{speedRatio:0.000}, cadence ×{attackRatio:0.000}");
+        Run(0.4f, Vector2.Zero);
+        Check(Near(momentum.Momentum, 1f), "Tournée : un arrêt plus court que la tolérance garde l'élan");
+        Run(0.2f, Vector2.Zero);
+        speedRatio = (float)speedField.GetValue(_player) / baseSpeed;
+        attackRatio = (float)attackField.GetValue(_player) / baseAttack;
+        Check(Near(momentum.Momentum, 0f) && Near(speedRatio, 1f, 0.001f) && Near(attackRatio, 1f, 0.001f),
+            $"Tournée : arrêté plus de 0,5 s, l'élan retombe et les bonus partent (×{speedRatio:0.000}, ×{attackRatio:0.000})");
+
+        Run(3f, new Vector2(200f, 0f));
+        _player.TakeDamage(5f);
+        Check(Near(momentum.Momentum, 0f) && momentum.AppliedStep == 0, "Tournée : une touche remet l'élan à zéro");
+        _player.Heal(100f);
+    }
+
     private void Setup(params string[] perks)
     {
         if (_player != null)
@@ -590,6 +647,8 @@ public partial class PerkEffectsRegression : Node2D
     }
 
     private static bool Near(float a, float b) => Mathf.Abs(a - b) < 0.01f;
+
+    private static bool Near(float a, float b, float tolerance) => Mathf.Abs(a - b) < tolerance;
 
     private void Check(bool ok, string label)
     {

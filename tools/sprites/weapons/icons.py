@@ -734,7 +734,35 @@ def stopwatch() -> IconModel:
     return IconModel("weapon_icon_stopwatch", parts, materials, weapon_id="clock_hand")
 
 
+def letter_satchel() -> IconModel:
+    """Sacoche du Facteur : cuir jaune de sacoche, rabat à boucle de laiton, bandoulière, lettres qui débordent."""
+    LEATHER, FLAP, BRASS, PAPER, SEAL = range(5)
+    materials = [
+        make_material("leather", "#C9962E"),
+        make_material("flap", "#7A4E1C"),
+        make_material("brass", "#E8C25A", contrast=0.8),
+        make_material("paper", "#F5F0EB", contrast=0.6),
+        make_material("seal", "#B03A2E"),
+    ]
+    strap = _arc((0.0, 2.0), 15.0, 0.25, np.pi - 0.25, 13, z=-4.0)
+
+    def parts() -> list[Part]:
+        return [
+            Part(lambda p: rounded_box(_up(p), (0.0, -7.0, 0.0), (13.0, 8.0, 4.5), 2.2), LEATHER),
+            Part(lambda p: _union(rounded_box(_up(p), (0.0, -1.6, 4.2), (12.6, 3.0, 0.9), 0.8),
+                                  _chain(strap, 1.0, _up)(p)), FLAP),
+            Part(lambda p: rounded_box(_up(p), (0.0, -4.2, 5.2), (2.0, 1.6, 0.7), 0.3), BRASS),
+            Part(lambda p: _union(rounded_box(_up(p) @ rotation_z(-0.3), (-6.5, 6.5, 0.5), (4.6, 3.4, 0.4), 0.2),
+                                  rounded_box(_up(p) @ rotation_z(0.15), (2.0, 9.0, 1.5), (5.0, 3.6, 0.4), 0.2),
+                                  rounded_box(_up(p) @ rotation_z(-0.45), (9.5, 5.0, 0.0), (4.0, 3.0, 0.4), 0.2)), PAPER),
+            Part(lambda p: sphere(_up(p) @ rotation_z(0.15), (2.0, 9.0, 2.0), 1.4), SEAL),
+        ]
+
+    return IconModel("weapon_icon_letter_satchel", parts, materials, weapon_id="letter_satchel")
+
+
 def catalog() -> list[IconModel]:
     return [sickle(), parking_meter(), gym_bow(), slingshot(), umbrella(), nail_gun(), snow_shovel(), extension_cord(),
             plates(), leaf_rake(), school_bell(), scalpel(), lighthouse_lens(), music_box(), keyring(), compass(),
-            instant_camera(), dowsing_rod(), eraser(), oil_lamp(), boxing_gloves(), chalks(), transistor(), stopwatch()]
+            instant_camera(), dowsing_rod(), eraser(), oil_lamp(), boxing_gloves(), chalks(), transistor(), stopwatch(),
+            letter_satchel()]

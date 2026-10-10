@@ -1,4 +1,6 @@
 {
+  "name": "Dash",
+  "description": "Un bond court et vif dans la direction du mouvement.",
   "duration_seconds": 0.15,
   "speed_multiplier": 2.4,
   "cooldown_seconds": 2.5,
@@ -10,6 +12,19 @@
   "invulnerability_seconds": 0.0,
   "trial_invulnerability_seconds": 0.06,
   "water_speed_factor": 0.5,
+  "turn_rate_degrees": 0,
+  "slides_along_walls": false,
   "start_audio": "sfx_dash_start",
-  "end_audio": "sfx_dash_end"
+  "end_audio": "sfx_dash_end",
+  "profiles": {
+    "glide": {
+      "name": "Glissade sur patins",
+      "description": "Longue glissade qu'on oriente en route ; elle tourne large et longe les murs.",
+      "duration_seconds": 0.4,
+      "speed_multiplier": 1.5,
+      "cooldown_seconds": 3.0,
+      "turn_rate_degrees": 180,
+      "slides_along_walls": true
+    }
+  }
 }
