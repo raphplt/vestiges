@@ -77,3 +77,12 @@ Chaque lot : modèles, aperçus quatre vues et animations, planche avant/après 
 
 - **Veilleuse** (cadre 40×42) : voûtée, tête relevée ; robe noire de veuve qui tombe d'aplomb, tablier gris ; châle de laine vert bouteille (la couleur de sa porte, plus bleu que le vert du Traqueur) en capuche ronde et sur les épaules, franges ; mèches blanches ; lampe à pétrole qui pend d'aplomb sous la main gauche et suit le balancement du bras, flamme lumineuse ; canne dans la droite.
 - **Enfant du Bas-Port** (cadre 34×38, plus petit que l'Écolière) : ciré jaune de pêcheur trop grand, suroît à bord rabattu sur la nuque, bottes de caoutchouc ; écharpe orange du Vagabond, trop grande, dont le bout traîne ; le bonnet rouge à pompon de sa sœur dans la main gauche.
+
+## 9. Vérifications H1 à H3
+
+- Aperçus ×8 en cinq vues de chaque héros, regardés à chaque passe ; planches d'animations (SE et NW, idle, marche, dash, coup, mort) regardées.
+- Échelle du jeu à côté des trois joués et d'un Rôdeur ; aplats noirs : dix silhouettes distinctes (coiffes, cloche, réflecteur, casque, mèches, tailles d'enfant).
+- Sprites écrits : 216 PNG par héros (8 directions × 27 images), 1 728 au total ; smoke test vert, 1 728 `.import` créés, aucun fichier supprimé.
+- Régénération de l'Écolière et du Facteur comparée octet par octet : identique.
+- Non vérifié en jeu : aucun de ces héros n'est jouable. Au branchement : `sprite_feet_offset` = pivot moins la demi-hauteur du cadre (18 pour les cadres de 44, 19 pour le Sonneur, 17 pour la Veilleuse, 16 pour l'Écolière, 15 pour l'Enfant), captures en run.
+
