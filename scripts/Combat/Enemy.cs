@@ -14,7 +14,6 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 	private const float MeleeAttackCooldown = 0.75f;
 	// Un tir lointain reste muet : l'AudioManager n'est pas spatialisé, seul ce qui menace le joueur s'entend.
 	private const float RangedAttackAudioRadius = 650f;
-	private const float RangedAttackCooldown = 1.1f;
 	private const float DeathTweenDuration = 0.3f;
 	private const float DissolveDuration = 0.6f;
 	private const float PlayerProximityRange = 80f;
@@ -58,6 +57,8 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 	private float _attackTimer;
 	private float _meleeAttackCooldown;
 	private float _rangedAttackCooldown;
+	private float _baseRangedCooldown;
+	private float _projectileReach;
 	private float _playerProximityRange;
 	private float _spawnSpeedMultiplier = 1f;
 	private float _spawnAggressionMultiplier = 1f;
@@ -320,7 +321,9 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 		_killCredited = false;
 		_attackTimer = 0f;
 		_meleeAttackCooldown = MeleeAttackCooldown;
-		_rangedAttackCooldown = RangedAttackCooldown;
+		_baseRangedCooldown = data.GetStat("ranged_cooldown");
+		_rangedAttackCooldown = _baseRangedCooldown;
+		_projectileReach = _attackRange + data.GetStat("projectile_reach_margin");
 		_playerProximityRange = PlayerProximityRange;
 		_spawnSpeedMultiplier = 1f;
 		_spawnAggressionMultiplier = 1f;
@@ -375,7 +378,7 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 		_spawnAggressionMultiplier = Mathf.Clamp(aggressionMultiplier, 0.7f, 3f);
 		_speed = _baseSpeed * _spawnSpeedMultiplier;
 		_meleeAttackCooldown = MeleeAttackCooldown / _spawnAggressionMultiplier;
-		_rangedAttackCooldown = RangedAttackCooldown / _spawnAggressionMultiplier;
+		_rangedAttackCooldown = _baseRangedCooldown / _spawnAggressionMultiplier;
 		_playerProximityRange = PlayerProximityRange * (1f + (_spawnAggressionMultiplier - 1f) * 0.9f);
 		_damage *= 1f + (_spawnAggressionMultiplier - 1f) * 0.2f;
 	}
@@ -699,6 +702,8 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 
 		if (lostTrack)
 		{
+			// Une capacité n'est plus traitée pendant l'errance : son annonce ou sa goutte en vol tombe, sinon elle resterait figée.
+			CancelAbilities();
 			Velocity = _tracking.WanderDirection * _speed * _tracking.WanderSpeedFactor * MoveFactor;
 			UpdateSpriteAnimation(dt);
 			MoveWithKnockback(dt);
@@ -709,6 +714,7 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 
 		if (_mods.IsTraveling)
 		{
+			CancelAbilities();
 			ProcessTravel(distToPlayer, dt);
 			UpdateSpriteAnimation(dt);
 			MoveWithKnockback(dt);
@@ -996,7 +1002,7 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 		bool slows = _behavior == EnemyBehavior.Weaver;
 		CombatPools.Instance?.TakeEnemyProjectile()
 			.Launch(GlobalPosition, direction, _damage, _enemyId, _projectileSprite, _projectileFamily,
-				slows ? _webSlowMultiplier : 1f, slows ? _webSlowSeconds : 0f);
+				slows ? _webSlowMultiplier : 1f, slows ? _webSlowSeconds : 0f, _projectileReach);
 	}
 
 	private void PlayRangedAttackVfx(Vector2 direction)

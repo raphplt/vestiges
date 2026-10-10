@@ -57,6 +57,7 @@ public partial class EnemyAbilityRegression : Node2D
             await RunBurrowChecks();
             await RunCryChecks();
             await RunAimedShotChecks();
+            await RunBileLobChecks();
             await RunKnockbackChecks();
 
             GD.Print($"[EnemyAbilityRegression] RESULT failures={_failures}");
@@ -439,7 +440,7 @@ public partial class EnemyAbilityRegression : Node2D
     }
 
     /// <summary>
-    /// Tir annoncé (plan 07 lot B) : le Cracheur s'arrête et vise avant de tirer, dans la direction verrouillée au début
+    /// Tir annoncé (plan 07 lot B) : la Tisseuse s'arrête et vise avant de tirer, dans la direction verrouillée au début
     /// de l'annonce ; la Sentinelle montre sa portée au sol et ne vise qu'à l'intérieur, distance mesurée au sol.
     /// </summary>
     private async Task RunAimedShotChecks()
@@ -449,9 +450,9 @@ public partial class EnemyAbilityRegression : Node2D
         _player.AIInputOverride = Vector2.Zero;
         _player.Position = Vector2.Zero;
         await WaitHurtRecovery();
-        int windupTicks = Mathf.CeilToInt(EnemyDataLoader.Get("fading_spitter").Abilities[EnemyAbilityKind.AimedShot].Number("windup_seconds") / Dt);
+        int windupTicks = Mathf.CeilToInt(EnemyDataLoader.Get("tisseuse").Abilities[EnemyAbilityKind.AimedShot].Number("windup_seconds") / Dt);
 
-        Enemy spitter = await SpawnReady("fading_spitter", new Vector2(-150f, 0f));
+        Enemy spitter = await SpawnReady("tisseuse", new Vector2(-150f, 0f));
         GroundTelegraph lane = spitter.GetNode<GroundTelegraph>("AimMarker");
         ForceCooldown(spitter, EnemyAbilityKind.AimedShot);
         await Step(1);
@@ -503,9 +504,9 @@ public partial class EnemyAbilityRegression : Node2D
             && impact.GlobalPosition == new Vector2(120f, 60f) && impact.Texture == impactSet.Get(0, 0),
             "Impact : même nœud recyclé, position et première frame réinitialisées");
 
-        // Une capacité réutilisée ne doit pas transmettre la cadence du Hurleur au Cracheur suivant.
+        // Une capacité réutilisée ne doit pas transmettre la cadence du Hurleur à la Tisseuse suivante.
         Enemy recycled = await SpawnReady("hurleur", new Vector2(-150f, 0f));
-        recycled.Initialize(EnemyDataLoader.Get("fading_spitter"), 1000f, 1f);
+        recycled.Initialize(EnemyDataLoader.Get("tisseuse"), 1000f, 1f);
         recycled.SetTicking(false);
         var abilities = (Dictionary<EnemyAbilityKind, IEnemyAbility>)typeof(Enemy)
             .GetField("_abilityCache", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(recycled);
@@ -520,8 +521,79 @@ public partial class EnemyAbilityRegression : Node2D
             if (aiming && !recycledShot.IsActive)
                 launches++;
         }
-        Check(launches == 2, $"Tir recyclé Hurleur → Cracheur : cadence d'origine retrouvée ({launches} tirs en 3 s)");
+        Check(launches == 2, $"Tir recyclé Hurleur → Tisseuse : cadence d'origine retrouvée ({launches} tirs en 3 s)");
         Despawn(recycled);
+        pools.QueueFree();
+        await Step(1);
+    }
+
+    /// <summary>
+    /// Crachat en cloche (plan 33) : le Cracheur vise la place du joueur, la goutte vole au-dessus du sol sans projectile
+    /// ennemi, l'impact touche qui est resté et laisse une flaque qui ralentit puis s'efface ; qui avance n'est pas touché.
+    /// </summary>
+    private async Task RunBileLobChecks()
+    {
+        CombatPools pools = new() { Name = "CombatPools" };
+        AddChild(pools);
+        _player.AIInputOverride = Vector2.Zero;
+        _player.Position = Vector2.Zero;
+        await WaitHurtRecovery();
+        EnemyAbilityData lob = EnemyDataLoader.Get("fading_spitter").Abilities[EnemyAbilityKind.BileLob];
+        int windupTicks = Mathf.CeilToInt(lob.Number("windup_seconds") / Dt);
+        int flightTicks = Mathf.CeilToInt(lob.Number("flight_seconds") / Dt);
+        int puddleTicks = Mathf.CeilToInt(lob.Number("puddle_seconds") / Dt);
+        FieldInfo slowFactor = typeof(Player).GetField("_slowFactor", BindingFlags.NonPublic | BindingFlags.Instance);
+
+        Enemy spitter = await SpawnReady("fading_spitter", new Vector2(-150f, 0f));
+        GroundTelegraph target = spitter.GetNode<GroundTelegraph>("BileTarget");
+        GroundTelegraph puddle = spitter.GetNode<GroundTelegraph>("BilePuddle");
+        Sprite2D blob = spitter.GetNode<Sprite2D>("BileBlob");
+        ForceCooldown(spitter, EnemyAbilityKind.BileLob);
+        await Step(1);
+        Check(spitter.Velocity == Vector2.Zero && !target.Visible && !blob.Visible,
+            "Crachat : le Cracheur s'arrête pour son geste, rien n'est encore lancé");
+        await Step(windupTicks + 1);
+        Check(target.Visible && blob.Visible && blob.Texture != null && ActiveProjectiles(pools).Count == 0,
+            "Crachat : cercle au sol et goutte en vol, aucun projectile qui traverse l'écran");
+        Check(blob.GlobalPosition.Y < spitter.GlobalPosition.Y - Iso.FlightHeight,
+            "Crachat : la goutte monte en cloche au-dessus du trajet");
+        float hp = _player.CurrentHp;
+        await Step(flightTicks + 1);
+        Check(_player.CurrentHp < hp && puddle.Visible && !blob.Visible,
+            $"Crachat : le joueur resté sur place est touché ({hp:F0} → {_player.CurrentHp:F0}), une flaque reste");
+        await Step(2);
+        Check((float)slowFactor.GetValue(_player) < 1f, "Crachat : la flaque ralentit qui se tient dedans");
+        await Step(puddleTicks);
+        Check(!puddle.Visible && !target.Visible, "Crachat : flaque et cercle effacés après leur durée");
+
+        await WaitHurtRecovery();
+        _player.Position = Vector2.Zero;
+        ForceCooldown(spitter, EnemyAbilityKind.BileLob);
+        await Step(windupTicks + 2);
+        hp = _player.CurrentHp;
+        _player.AIInputOverride = Vector2.Down;
+        await Step(flightTicks + 2);
+        _player.AIInputOverride = Vector2.Zero;
+        Check(_player.CurrentHp >= hp && puddle.Visible, "Crachat : qui avance n'est pas touché, la flaque reste derrière lui");
+        // Joueur parti au loin pendant un vol : la goutte tombe et rend sa place au plafond partagé.
+        FieldInfo activeLobs = typeof(BileLobAbility).GetField("_activeLobs", BindingFlags.NonPublic | BindingFlags.Static);
+        await Step(Mathf.CeilToInt(lob.Number("puddle_seconds") / Dt));
+        ForceCooldown(spitter, EnemyAbilityKind.BileLob);
+        _player.Position = spitter.Position + new Vector2(150f, 0f);
+        await Step(windupTicks + 2);
+        bool flying = target.Visible && (int)activeLobs.GetValue(null) == 1;
+        _player.Position = spitter.Position + new Vector2(4000f, 0f);
+        await Step(3);
+        Check(flying && !target.Visible && (int)activeLobs.GetValue(null) == 0,
+            "Crachat : joueur perdu pendant le vol, goutte annulée et plafond rendu");
+        _player.Position = Vector2.Zero;
+        await WaitHurtRecovery();
+
+        // Sortie de l'arbre, comme au retour au pool : la flaque part avec son auteur.
+        _enemies.Remove(spitter);
+        RemoveChild(spitter);
+        Check(!puddle.Visible && !target.Visible, "Crachat : la flaque disparaît avec le Cracheur");
+        spitter.QueueFree();
         pools.QueueFree();
         await Step(1);
     }

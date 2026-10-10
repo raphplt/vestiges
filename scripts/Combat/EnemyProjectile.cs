@@ -26,6 +26,7 @@ public partial class EnemyProjectile : Node2D, ITicked
 	private float _slowDuration;
 	private float _slowFactor = 1f;
 	private float _age;
+	private float _reachLifetime;
 	private Sprite2D _visual;
 	// Ombre dessinée en lot par GroundShadowLayer : des centaines de tirs en vol en foule dense (plan 29 C2).
 	private readonly ShadowCaster _shadow;
@@ -60,7 +61,7 @@ public partial class EnemyProjectile : Node2D, ITicked
 	}
 
 	public void Launch(Vector2 position, Vector2 direction, float damage, string sourceEnemyId, string spriteId, FxFamily family,
-		float slowFactor = 1f, float slowDuration = 0f)
+		float slowFactor = 1f, float slowDuration = 0f, float maxDistance = 0f)
 	{
 		GlobalPosition = position;
 		_direction = direction.Normalized();
@@ -69,6 +70,8 @@ public partial class EnemyProjectile : Node2D, ITicked
 		_slowFactor = slowFactor;
 		_slowDuration = slowDuration;
 		_age = 0f;
+		// Une portée de vol bornée : le tir s'éteint un peu au-delà de la portée de son tireur (plan 33).
+		_reachLifetime = maxDistance > 0f ? maxDistance / Speed : float.MaxValue;
 		_isDespawning = false;
 		_family = family;
 		_spriteSet = ProjectileSprites.Get(spriteId) ?? ProjectileSprites.Get("spit");
@@ -130,7 +133,7 @@ public partial class EnemyProjectile : Node2D, ITicked
 			return;
 
 		_age += (float)delta;
-		if (_age >= MaxLifetime)
+		if (_age >= Mathf.Min(MaxLifetime, _reachLifetime))
 		{
 			// Différé comme à l'impact : le retour au pool et la désactivation doivent passer ensemble.
 			_isDespawning = true;

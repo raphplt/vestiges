@@ -46,9 +46,16 @@ public partial class EnemyAbilityRegression
         EnemyData weaver = EnemyDataLoader.Get("tisseuse");
         Check(weaver.GetStat("web_slow_multiplier") == 0.4f && weaver.GetStat("web_slow_seconds") == 2f,
             "Tisseuse : ralentissement 0,4 pendant 2 s (constantes d'avant Q6c, désormais au contrat)");
-        EnemyAbilityData shot = EnemyDataLoader.Get("fading_spitter").Abilities[EnemyAbilityKind.AimedShot];
-        Check(shot.Number("cooldown_multiplier") == 1f && shot.Number("show_range") == 0f && shot.Text("fx_family") == "rust",
-            "Cracheur : secours du contrat résolus (cooldown_multiplier 1, show_range 0), famille déclarée");
+        EnemyAbilityData shot = EnemyDataLoader.Get("tisseuse").Abilities[EnemyAbilityKind.AimedShot];
+        Check(shot.Number("cooldown_multiplier") == 1f && shot.Number("show_range") == 0f && shot.Text("fx_family") == "silk",
+            "Tisseuse : secours du contrat résolus (cooldown_multiplier 1, show_range 0), famille déclarée");
+        EnemyData spitter = EnemyDataLoader.Get("fading_spitter");
+        EnemyAbilityData lob = spitter.Abilities[EnemyAbilityKind.BileLob];
+        Check(!spitter.Abilities.ContainsKey(EnemyAbilityKind.AimedShot) && lob.Text("impact_audio") == ""
+            && lob.Number("cast_range") >= spitter.Stats.AttackRange && !lob.TryGetNumber("first_delay", out _),
+            "Cracheur : crachat en cloche sans tir annoncé, lancé dès sa portée de marche, impact muet par défaut");
+        Check(EnemyDataLoader.Get("hurleur").GetStat("ranged_cooldown") == 1.5f && EnemyDataLoader.Get("hurleur").GetStat("projectile_reach_margin") == 120f,
+            "Tireurs : cadence et portée de vol lues au contrat (1,5 s, portée + 120 px)");
 
         RunNegativeFixtures();
         RunContractFixtures();

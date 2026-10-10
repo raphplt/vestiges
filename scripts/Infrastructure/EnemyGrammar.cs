@@ -39,6 +39,7 @@ public enum EnemyAbilityKind
 	Burrow,
 	Cry,
 	AimedShot,
+	BileLob,
 }
 
 /// <summary>
@@ -75,6 +76,7 @@ public static class EnemyGrammar
 	{
 		("omen_strike", EnemyAbilityKind.OmenStrike), ("pounce", EnemyAbilityKind.Pounce), ("charge", EnemyAbilityKind.Charge),
 		("burrow", EnemyAbilityKind.Burrow), ("cry", EnemyAbilityKind.Cry), ("aimed_shot", EnemyAbilityKind.AimedShot),
+		("bile_lob", EnemyAbilityKind.BileLob),
 	};
 
 	public static bool TryParseCombatType(string key, out EnemyCombatType value) => TryParse(CombatTypes, key, out value);

@@ -94,9 +94,9 @@
         }
     },
     "natural_elites": {
-        "start_sec": 90,
-        "interval_min_sec": 35,
-        "interval_max_sec": 55,
+        "start_sec": 150,
+        "interval_min_sec": 50,
+        "interval_max_sec": 75,
         "max_alive": 2,
         "affix_pool": ["enraged", "armored", "regenerant", "explosive", "swift"]
     },

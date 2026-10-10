@@ -12,7 +12,7 @@ using Vestiges.Infrastructure;
 namespace Vestiges.Tests;
 
 /// <summary>
-/// Cadence isolée : six Hurleurs, deux Cracheurs fixes et une trajectoire périodique identique.
+/// Cadence isolée : six Hurleurs, deux Tisseuses fixes (le Cracheur crache en cloche depuis le plan 33) et une trajectoire périodique identique.
 /// Capacités et projectiles réels ; pas de morts, choix de build ou renforts qui changeraient la composition.
 /// Le cri est exécuté et compté ; sa création de renforts est couverte par EnemyAbilityRegression.
 /// </summary>
@@ -67,7 +67,7 @@ public partial class ProjectileCadenceBenchmark : Node2D
         {
             Enemy enemy = enemyScene.Instantiate<Enemy>();
             AddChild(enemy);
-            enemy.Initialize(EnemyDataLoader.Get(i < 6 ? "hurleur" : "fading_spitter"), 1000f, 1f);
+            enemy.Initialize(EnemyDataLoader.Get(i < 6 ? "hurleur" : "tisseuse"), 1000f, 1f);
             enemy.ApplySpawnTuning(1f, aggression);
             enemy.SetTicking(false);
             enemy.GlobalPosition = Vector2.FromAngle(Mathf.Tau * i / 8f) * 170f;
@@ -76,7 +76,7 @@ public partial class ProjectileCadenceBenchmark : Node2D
             Cooldown.SetValue(shot, 0.11f * i);
             _shooters.Add((enemy, shot, abilities.GetValueOrDefault(EnemyAbilityKind.Cry)));
         }
-        int howlerShots = 0, spitterShots = 0, cries = 0, occupiedTicks = 0, peak = 0;
+        int howlerShots = 0, weaverShots = 0, cries = 0, occupiedTicks = 0, peak = 0;
         double sum = 0, damage = 0;
         EventBus events = GetNode<EventBus>("/root/EventBus");
         EventBus.PlayerHitByEventHandler onHit = (_, amount) => damage += amount;
@@ -94,7 +94,7 @@ public partial class ProjectileCadenceBenchmark : Node2D
                 if (aiming && !shot.IsActive)
                 {
                     if (enemy.EnemyId == "hurleur") howlerShots++;
-                    else spitterShots++;
+                    else weaverShots++;
                 }
                 bool crying = cry?.IsActive ?? false;
                 cry?.Process(enemy, player, distance, Dt);
@@ -111,10 +111,10 @@ public partial class ProjectileCadenceBenchmark : Node2D
                 occupiedTicks++;
         }
         events.PlayerHitBy -= onHit;
-        if (howlerShots == 0 || spitterShots == 0 || cries == 0)
+        if (howlerShots == 0 || weaverShots == 0 || cries == 0)
             throw new InvalidOperationException("Le banc n'a pas exercé toutes les capacités.");
         GD.Print(string.Create(CultureInfo.InvariantCulture,
-            $"[ProjectileCadenceBenchmark] RESULT multiplier={multiplier} aggression={aggression} seconds={Ticks * Dt:F0} howler_shots={howlerShots} spitter_shots={spitterShots} cries={cries} mean={sum / Ticks:F3} peak={peak} occupied_pct={100.0 * occupiedTicks / Ticks:F2} hit_damage={damage:F0}"));
+            $"[ProjectileCadenceBenchmark] RESULT multiplier={multiplier} aggression={aggression} seconds={Ticks * Dt:F0} howler_shots={howlerShots} weaver_shots={weaverShots} cries={cries} mean={sum / Ticks:F3} peak={peak} occupied_pct={100.0 * occupiedTicks / Ticks:F2} hit_damage={damage:F0}"));
     }
 
     private static float ReadNumber(string key, float fallback)

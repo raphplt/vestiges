@@ -1106,6 +1106,19 @@ Raphaël : « pas très joli / lisible le sceau je trouve ».
 
 **Application :** reprendre l'icône de complétion dans le [lot 06 Q3d](06-personnages-quetes-defis.md#q3d--lisibilité-de-licône-de-complétion--10-octobre-2026) : silhouette de médaille à deux rubans, moins de détails internes, contraste renforcé et captures à taille réelle. La demande d'une icône originale en pixel art, sans coche typographique, reste applicable. Nouvelle médaille ensuite validée par Raphaël : « top », avec demande de push sur `main`.
 
+
+## 101. Ouverture trop dure en mêlée — 10 octobre 2026, soir
+
+Raphaël, après des parties au Vagabond (retour dicté, extraits) : « avec le personnage de base […] qui a une arme de corps à corps, c'est vrai que le jeu est peut-être trop dur » ; « les ennemis qui tirent à distance sont trop embêtants […] ça oblige à faire des esquives tout le temps. Et c'est pas forcément le but d'un jeu bullet heaven […] le but de ce genre de jeu c'est de savoir contrôler la foule » ; « soit je supprimerai totalement l'ennemi ou je le modifierai pour qu'il ait un comportement différent » ; « certains ennemis ont trop de points de vie […] au tout début de partie, dans les premières minutes » ; régénération lente « normal », « pas le plus gros problème » ; « le format du jeu est peut-être un tout petit peu trop compressé avec un peu trop de choses qui se passent en 10 minutes » ; « la montée de niveau aussi se fait peut-être un peu lentement […] pas non plus que ça soit trop abusé » ; « prendre tout ça avec des pincettes […] pas direct appliquer des correctifs […] déjà cartographier ».
+
+**Suite :** diagnostic mesuré et leviers proposés au [plan 33](33-equilibrage-ouverture.md), rien d'appliqué. Ce retour l'emporte sur la demande de tirs en exploration du §50 (plan 21 E4), dans le sens du §44.
+
+**Arbitrage du même soir (questions du plan 33) :**
+- **Cracheur :** raréfié tout de suite (dès 3 min, poids 0,5, retiré des pools d'exploration de la forêt, des champs et de la carrière), puis transformé en crachat en cloche qui laisse une flaque au sol (A1 puis A2).
+- **Créatures solides :** entrées échelonnées (Rôdeur dès 1:30, Brute dès 3:00, Tréant dès 4:00) et Rôdeur allégé, 45 PV et 11 dégâts de base (B1 + B2).
+- **XP :** ouverture et courbe entière : majoration des niveaux 1 à 5 retirée, et `base_xp` 22 → 19 (D1 + D2), plutôt que l'ouverture seule recommandée.
+- **Tempo :** ouverture aérée, élites naturelles dès 2:30 et une toutes les 50 à 75 s, montée d'ouverture sur 120 s ; Souverains, Résurgences et Barrière gardent leur heure (E1).
+
 ## 102. Largeur des coups de mêlée — 10 octobre 2026
 
 Raphaël, après §99 (portée de la mêlée) : « test la larguer dcp » (traiter aussi la largeur du coup). Appliqué sans autre arbitrage, dans l'esprit de §99 : la largeur de touche est celle du dessin. La forme suit l'attaque (trait pour l'attaque droite, traînée pour l'arc et l'onde), l'ouverture se mesure sur l'ellipse et se dessine jusqu'à 360°, l'estoc touche ce que son trait recouvre.
