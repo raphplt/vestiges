@@ -249,7 +249,7 @@ public partial class SmallPlaceDirector : Node
 	/// </summary>
 	private bool DropWeapon(SmallPlace place, Player player)
 	{
-		if (player.WeaponSlots.Count >= Player.MaxWeaponSlots)
+		if (!player.HasFreeWeaponSlot)
 			return false;
 		WeaponData data = LootRewards.PickRandomWeapon(player);
 		if (data == null)

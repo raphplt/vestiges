@@ -98,7 +98,7 @@ public static class PlayerSheet
     /// </summary>
     public static void AddCompactInventory(VBoxContainer container, Player player, int reminiscenceSlots)
     {
-        AddSectionTitle(container, $"{Tr("INVENTORY_WEAPONS")}  {player.WeaponSlots.Count}/{Player.MaxWeaponSlots}");
+        AddSectionTitle(container, $"{Tr("INVENTORY_WEAPONS")}  {player.WeaponSlots.Count}/{player.WeaponSlotLimit}");
         foreach (WeaponInstance weapon in player.WeaponSlots)
         {
             string name = weapon.Ascension != null ? $"{weapon.Name} · {weapon.Ascension.Name}" : weapon.Name;

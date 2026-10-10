@@ -53,10 +53,27 @@ public partial class Player : CharacterBody2D
 
     // Weapon inventory (max 4 weapons, all auto-attack in parallel)
     public const int MaxWeaponSlots = 4;
+
     private readonly List<WeaponInstance> _weaponSlots = new();
     private readonly List<Timer> _weaponTimers = new();
 
     private readonly WeaponLedger _weaponLedger = new();
+
+    /// <summary>
+    /// Emplacements d'armes de cette run (plan 36) : le Campement les fixe au départ, de 2 à <see cref="MaxWeaponSlots"/>.
+    /// Un joueur construit hors run, comme dans les tests, garde les quatre.
+    /// </summary>
+    public int WeaponSlotLimit { get; private set; } = MaxWeaponSlots;
+
+    public bool HasFreeWeaponSlot => _weaponSlots.Count < WeaponSlotLimit;
+
+    /// <summary>Fixe les emplacements de la run, bornés à [1 ; <see cref="MaxWeaponSlots"/>] ; les armes déjà portées restent.</summary>
+    public void SetWeaponSlotLimit(int limit)
+    {
+        WeaponSlotLimit = Mathf.Clamp(limit, 1, MaxWeaponSlots);
+        // Le HUD verrouille les cases au-delà de la limite.
+        _eventBus?.EmitSignal(EventBus.SignalName.WeaponInventoryChanged);
+    }
 
     private Vector2 _facingDirection = new(1f, 0f);
 
@@ -315,7 +332,7 @@ public partial class Player : CharacterBody2D
 
     public bool AddWeapon(WeaponInstance instance)
     {
-        if (instance == null || _weaponSlots.Count >= MaxWeaponSlots)
+        if (instance == null || !HasFreeWeaponSlot)
             return false;
 
         foreach (WeaponInstance existing in _weaponSlots)

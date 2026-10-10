@@ -161,3 +161,45 @@ C'est l'ordre de grandeur annoncé au §110 : environ une élimination pour un V
 - Le 4ᵉ emplacement (2 500) est le rang le plus utile et l'un des plus chers. Un joueur qui achète au moins cher l'aura tard (25 runs moyennes) ; s'il économise pour lui, il l'a très tôt. L'écran le montre en tête du rayon Capacités.
 - Un débutant (530 par run) met 170 runs à tout acheter. C'est voulu : il progresse en jouant, et ses runs s'allongent à mesure qu'il achète. Ce chiffre sera revu en M3 avec les gains d'un profil neuf à deux armes.
 
+## 10. Lot M1 livré : données, sauvegarde, application en run — 11 octobre 2026
+
+**Données.** `CampUpgradeDataLoader` lit `camp_upgrades.json` et le contrôle en entier au chargement, comme les autres contrats. Un fichier invalide est refusé avec sa raison, et la run ne se charge pas (`GameBootstrap`). Sont refusés :
+- un effet ou un rayon inconnu, une clé inconnue, un identifiant en double ;
+- une stat que le joueur ne lit pas avec ce modificateur ;
+- plus de 4 emplacements d'armes au total ;
+- un prix nul, ou plus bas que celui du rang précédent ;
+- une traduction absente.
+
+Le contrat des objets n'admet les PV qu'en additif ; le Campement les donne en pourcentage. Il garde donc sa propre liste des couples stat / modificateur que `Player.ApplyPerkModifier` applique.
+
+**Sauvegarde** (`meta_save.json`, sans changer de version) :
+- `camp_ranks` donne le rang acheté par amélioration ;
+- `camp_paid` garde les Vestiges versés pour chacune. Un remboursement rend donc ce qui a été payé, même si les prix ont changé depuis.
+- Achat, remboursement d'un rang et « tout rendre » passent par `MetaSaveManager`, en une seule écriture.
+- À la normalisation :
+  - une amélioration retirée du jeu disparaît et ses Vestiges sont rendus ;
+  - un rang est borné au maximum ;
+  - un montant négatif est ramené à 0.
+- Les profils existants gardent leurs Vestiges, et rien n'est acheté pour eux.
+
+**Emplacements d'armes.** `Player.MaxWeaponSlots` (4) reste le plafond absolu et la taille du HUD. La run fixe sa limite par `Player.WeaponSlotLimit` : 2 pour un profil neuf, +1 par rang du Râtelier. Un joueur construit hors run, comme dans les tests, garde 4. Tous les points d'ajout lisent la limite : `Player.AddWeapon`, l'arme au sol (`WeaponPickup`), le wagonnet (`SmallPlaceDirector`) et l'offre de niveau (`FragmentManager`). La fiche du joueur affiche « n/limite ».
+
+**Application** (`scripts/Meta/CampUpgrades.cs`). Elle se fait une fois, dans `GameBootstrap.InitializeCharacterAndRun`, juste après `InitializeCharacter` :
+- limite d'armes ;
+- relances et bannissements gratuits (`FragmentManager`, prêt à ce moment) ;
+- Essence de départ (`EssenceTracker.AddEssence`, sans compter comme Essence gagnée) ;
+- stats, par `ApplyPerkModifier`.
+
+**Mode dev : toujours 4 emplacements d'armes.** Les bancs, les captures et les builds de référence portent souvent quatre armes. Les autres rangs suivent la sauvegarde dev (`user://dev/`), qu'on peut remplir et vider au Campement.
+
+**Tests.** Nouvelle suite `camp` (`tools/test_camp.sh`, branchée dans `tools/validate.sh`) en trois passages, chacun sur un profil neuf :
+1. 57 contrôles :
+   - catalogue, et 13 fichiers refusés ;
+   - achat, refus faute de Vestiges, rang maximal, remboursement d'un rang et de tout, rechargement ;
+   - profil abîmé à la main, puis normalisé ;
+   - totaux et application au joueur : deux armes au plus en profil neuf, et avec tous les rangs PV ×1,25, dégâts ×1,2, cadence ×1,15, vitesse ×1,1, régénération +0,5, armure +5, Chance +0,15, attraction ×1,5, XP ×1,2, +3 relances, +3 bannissements, 100 Essence.
+2. Une vraie run (`Main`) en profil neuf : 2 emplacements, rien d'autre.
+3. Une vraie run avec le Campement plein acheté par la boutique : 4 emplacements, toutes les capacités et les dégâts.
+
+`RunObservation --camp-full` achète tout le Campement avant la run, pour les mesures à deux profils (M3).
+

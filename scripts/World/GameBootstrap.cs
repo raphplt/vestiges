@@ -136,6 +136,7 @@ public partial class GameBootstrap : Node
         RequireCatalog(SmallPlaceDataLoader.TryLoad(out string placesError), placesError);
         RequireCatalog(WaymarkDataLoader.TryLoad(out string waymarksError), waymarksError);
         RequireCatalog(BiomeDataLoader.TryLoad(out string biomesError), biomesError);
+        RequireCatalog(CampUpgradeDataLoader.TryLoad(out string campError), campError);
 
         // FragmentManager DOIT exister avant tout LevelUp —
         // certains nodes émettent XpGained/LevelUp pendant leur _Ready(),
@@ -253,7 +254,7 @@ public partial class GameBootstrap : Node
 
         hud.SetEssenceTracker(essenceTracker);
 
-        InitializeCharacterAndRun(player, perkManager, scoreManager, runTracker);
+        InitializeCharacterAndRun(player, perkManager, scoreManager, runTracker, fragmentManager, essenceTracker);
 
         if (progression.CurrentLevel > 1 && fragmentManager.PendingChoices.Count == 0)
         {
@@ -403,7 +404,7 @@ public partial class GameBootstrap : Node
     }
 
     private void InitializeCharacterAndRun(Player player, PerkManager perkManager,
-        ScoreManager scoreManager, RunTracker runTracker)
+        ScoreManager scoreManager, RunTracker runTracker, FragmentManager fragmentManager, EssenceTracker essenceTracker)
     {
         GameManager gm = GetNode<GameManager>("/root/GameManager");
         string characterId = gm.SelectedCharacterId;
@@ -418,6 +419,9 @@ public partial class GameBootstrap : Node
         }
 
         player.InitializeCharacter(data);
+        // Le Campement (plan 36) : ce qui a été acheté au Hub vaut pour toute la run. Le FragmentManager, ajouté en différé,
+        // a passé son _Ready (bannissements de base) lors des attentes du chargement : ses ajouts ne sont pas écrasés.
+        CampUpgrades.Apply(player, fragmentManager, essenceTracker, MetaSaveManager.GetCampRanks(), DevelopmentMode.IsEnabled);
         perkManager.ApplyPassivePerks(data.Id);
         scoreManager.SetCharacterMultiplier(data.ScoreMultiplier);
         scoreManager.SetRunTracker(runTracker);

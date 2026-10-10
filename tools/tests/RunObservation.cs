@@ -78,6 +78,7 @@ namespace Vestiges.Tests;
 /// --choice-delay S : pendant la mesure, le bot attend S secondes avant de choisir sur un écran qui fige la run.
 /// --music-config chemin : pendant la mesure, réglages de musique lus dans ce fichier (variantes d'écoute).
 /// --crisis-at S : pendant la mesure, première Résurgence à S secondes de jeu.
+/// --camp-full : le profil (isolé) achète tout le Campement avant la run (plan 36 M3) ; en mode dev, les armes restent à 4.
 /// --mute-buses A,B : pendant la mesure, bus audio coupés (Music, SFX, Ambiance), pour écouter le reste seul.
 /// --audio-trace : pendant la mesure, trace d'écoute (signaux, musique, sons) pour tools/record_run_audio.sh (AudioTraceProbe).
 /// --audio-stems : pendant la mesure, pistes musique, ambiance et effets synchrones du mixage (AudioStemRecorder).
@@ -259,6 +260,8 @@ public partial class RunObservation : Node
                 throw new ArgumentOutOfRangeException(nameof(howlerCooldown));
             EnemyDataLoader.Get("hurleur").Abilities[EnemyAbilityKind.AimedShot].Numbers["cooldown_multiplier"] = multiplier;
         }
+        if (Array.IndexOf(OS.GetCmdlineUserArgs(), "--camp-full") >= 0)
+            BuyFullCamp();
         GameManager manager = GetNode<GameManager>("/root/GameManager");
         manager.RunSeed = seed;
         manager.SelectedCharacterId = characterId;
@@ -288,6 +291,21 @@ public partial class RunObservation : Node
         _camera = _player.GetNode<Camera2D>("Camera");
         _player.IsGodMode = true;
         _player.IsAIControlled = true;
+    }
+
+    /// <summary>Le profil de mesure, isolé, gagne de quoi tout acheter au Campement et l'achète par la vraie boutique.</summary>
+    private static void BuyFullCamp()
+    {
+        int total = 0;
+        foreach (CampUpgradeData upgrade in CampUpgradeDataLoader.All)
+            foreach (int price in upgrade.Prices)
+                total += price;
+        MetaSaveManager.AddVestiges(total);
+        foreach (CampUpgradeData upgrade in CampUpgradeDataLoader.All)
+            while (MetaSaveManager.BuyCampRank(upgrade.Id, out _) == CampTransaction.Done) { }
+        if (MetaSaveManager.GetVestiges() != 0)
+            throw new InvalidOperationException($"Campement plein inachevé : {MetaSaveManager.GetVestiges()} Vestiges restants.");
+        GD.Print($"[RunObservation] Campement plein acheté ({total} Vestiges)");
     }
 
     private async Task CaptureAbilities()

@@ -265,9 +265,8 @@ public partial class FragmentManager : Node
     private List<FragmentOption> BuildFragmentPool()
     {
         List<FragmentOption> pool = new();
-        int weaponCount = _player.WeaponSlots.Count;
         int passiveCount = _player.PassiveSlots.Count;
-        bool weaponSlotsFull = weaponCount >= Player.MaxWeaponSlots;
+        bool weaponSlotsFull = !_player.HasFreeWeaponSlot;
         bool passiveSlotsFull = passiveCount >= Player.MaxPassiveSlots;
 
         // Armes nouvelles (si slots dispo) : toutes celles qui sont débloquées, au même poids, dès le premier niveau.

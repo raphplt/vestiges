@@ -426,3 +426,29 @@ MAP_LEGEND_WATER,Eau,Water
 MAP_LEGEND_VOID,Néant connu,Known void
 BOSS_BARRIER,La Barrière,The Barrier
 BOSS_INDICIBLE,L'Indicible,The Unspeakable
+CAMP_WEAPON_SLOTS,Râtelier,Weapon Rack
+CAMP_WEAPON_SLOTS_DESC,+{0} emplacement d'arme par rang,+{0} weapon slot per rank
+CAMP_REROLLS,Jeu de cartes,Deck of Cards
+CAMP_REROLLS_DESC,+{0} relance par run et par rang,+{0} reroll per run and per rank
+CAMP_BANISHES,Boîte d'allumettes,Box of Matches
+CAMP_BANISHES_DESC,+{0} bannissement gratuit par run et par rang,+{0} free banish per run and per rank
+CAMP_MAX_HP,Couverture de laine,Wool Blanket
+CAMP_MAX_HP_DESC,PV max +{0} par rang,Max HP +{0} per rank
+CAMP_DAMAGE,Pierre à aiguiser,Whetstone
+CAMP_DAMAGE_DESC,Dégâts +{0} par rang,Damage +{0} per rank
+CAMP_ATTACK_SPEED,Métronome,Metronome
+CAMP_ATTACK_SPEED_DESC,Cadence +{0} par rang,Attack speed +{0} per rank
+CAMP_SPEED,Bonnes chaussures,Good Boots
+CAMP_SPEED_DESC,Vitesse +{0} par rang,Speed +{0} per rank
+CAMP_REGEN,Gourde de bouillon,Broth Flask
+CAMP_REGEN_DESC,Régénération +{0} PV/s par rang,Regeneration +{0} HP/s per rank
+CAMP_ARMOR,Rembourrage,Padding
+CAMP_ARMOR_DESC,Armure +{0} par rang,Armor +{0} per rank
+CAMP_MAGNET,Aimant de frigo,Fridge Magnet
+CAMP_MAGNET_DESC,Attraction de l'XP +{0} par rang,XP pickup range +{0} per rank
+CAMP_XP,Carnet de notes,Notebook
+CAMP_XP_DESC,XP gagnée +{0} par rang,XP gained +{0} per rank
+CAMP_LUCK,Fer à cheval,Horseshoe
+CAMP_LUCK_DESC,Chance +{0} par rang,Luck +{0} per rank
+CAMP_START_ESSENCE,Bocal d'Essence,Essence Jar
+CAMP_START_ESSENCE_DESC,+{0} Essence au départ de chaque run par rang,+{0} Essence at the start of each run per rank

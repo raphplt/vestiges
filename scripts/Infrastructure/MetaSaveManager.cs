@@ -46,6 +46,27 @@ public class MetaSaveData
     /// <summary>Relevés de runs réglées dont l'historique n'est pas encore écrit ; chacun est retiré une fois inscrit.</summary>
     [JsonPropertyName("pending_history")]
     public List<RunRecord> PendingHistory { get; set; } = new();
+
+    /// <summary>Rangs achetés au Campement (plan 36), par amélioration.</summary>
+    [JsonPropertyName("camp_ranks")]
+    public Dictionary<string, int> CampRanks { get; set; } = new();
+
+    /// <summary>
+    /// Vestiges versés pour chaque amélioration du Campement : le remboursement rend ce qui a été payé, même si les prix
+    /// ont changé depuis, et une amélioration retirée du jeu rend tout.
+    /// </summary>
+    [JsonPropertyName("camp_paid")]
+    public Dictionary<string, int> CampPaid { get; set; } = new();
+}
+
+/// <summary>Issue d'un achat ou d'un remboursement au Campement.</summary>
+public enum CampTransaction
+{
+    Done,
+    Unknown,
+    MaxRank,
+    NotEnoughVestiges,
+    NothingToRefund,
 }
 
 public class MetaStats
@@ -313,6 +334,123 @@ public static class MetaSaveManager
         return true;
     }
 
+    /// <summary>Rang acheté d'une amélioration du Campement (0 si aucun).</summary>
+    public static int GetCampRank(string upgradeId)
+    {
+        Load();
+        return upgradeId != null && _data.CampRanks.TryGetValue(upgradeId, out int rank) ? rank : 0;
+    }
+
+    /// <summary>Copie des rangs achetés au Campement.</summary>
+    public static Dictionary<string, int> GetCampRanks()
+    {
+        Load();
+        return new Dictionary<string, int>(_data.CampRanks);
+    }
+
+    /// <summary>Achète le rang suivant d'une amélioration du Campement : Vestiges et rang changent en une seule écriture.</summary>
+    public static CampTransaction BuyCampRank(string upgradeId, out SaveFile.WriteResult saved)
+    {
+        Load();
+        saved = SaveFile.WriteResult.Ok;
+        CampUpgradeData upgrade = CampUpgradeDataLoader.Get(upgradeId);
+        if (upgrade == null)
+            return CampTransaction.Unknown;
+        int rank = GetCampRank(upgradeId);
+        if (rank >= upgrade.MaxRank)
+            return CampTransaction.MaxRank;
+        int price = upgrade.PriceOfRank(rank + 1);
+        if (_data.Vestiges < price)
+            return CampTransaction.NotEnoughVestiges;
+
+        BeginBatch();
+        try
+        {
+            _data.Vestiges -= price;
+            _data.CampRanks[upgradeId] = rank + 1;
+            _data.CampPaid[upgradeId] = _data.CampPaid.GetValueOrDefault(upgradeId) + price;
+            _batchDirty = true;
+        }
+        finally
+        {
+            saved = EndBatch();
+        }
+        GD.Print($"[MetaSaveManager] Campement : {upgradeId} rang {rank + 1} (−{price} Vestiges, reste {_data.Vestiges})");
+        return CampTransaction.Done;
+    }
+
+    /// <summary>
+    /// Rend le dernier rang d'une amélioration, gratuitement : son prix actuel, jamais plus que ce qui a été versé ; le
+    /// dernier rang rendu rend aussi le reste versé. Une seule écriture.
+    /// </summary>
+    public static CampTransaction RefundCampRank(string upgradeId, out SaveFile.WriteResult saved)
+    {
+        Load();
+        saved = SaveFile.WriteResult.Ok;
+        CampUpgradeData upgrade = CampUpgradeDataLoader.Get(upgradeId);
+        if (upgrade == null)
+            return CampTransaction.Unknown;
+        int rank = GetCampRank(upgradeId);
+        if (rank <= 0)
+            return CampTransaction.NothingToRefund;
+
+        int refund;
+        BeginBatch();
+        try
+        {
+            refund = RemoveCampRank(upgradeId, rank, upgrade.PriceOfRank(rank));
+            _batchDirty = true;
+        }
+        finally
+        {
+            saved = EndBatch();
+        }
+        GD.Print($"[MetaSaveManager] Campement : {upgradeId} rendu au rang {rank - 1} (+{refund} Vestiges)");
+        return CampTransaction.Done;
+    }
+
+    /// <summary>Rend tout le Campement en une écriture ; rend les Vestiges remboursés.</summary>
+    public static int RefundAllCamp(out SaveFile.WriteResult saved)
+    {
+        Load();
+        saved = SaveFile.WriteResult.Ok;
+        int refund = _data.CampPaid.Values.Sum();
+        if (_data.CampRanks.Count == 0 && refund == 0)
+            return 0;
+        BeginBatch();
+        try
+        {
+            _data.Vestiges += refund;
+            _data.CampRanks.Clear();
+            _data.CampPaid.Clear();
+            _batchDirty = true;
+        }
+        finally
+        {
+            saved = EndBatch();
+        }
+        GD.Print($"[MetaSaveManager] Campement entièrement rendu (+{refund} Vestiges)");
+        return refund;
+    }
+
+    private static int RemoveCampRank(string upgradeId, int rank, int price)
+    {
+        int paid = _data.CampPaid.GetValueOrDefault(upgradeId);
+        int refund = rank <= 1 ? paid : Math.Min(price, paid);
+        _data.Vestiges += refund;
+        if (rank <= 1)
+        {
+            _data.CampRanks.Remove(upgradeId);
+            _data.CampPaid.Remove(upgradeId);
+        }
+        else
+        {
+            _data.CampRanks[upgradeId] = rank - 1;
+            _data.CampPaid[upgradeId] = paid - refund;
+        }
+        return refund;
+    }
+
     /// <summary>
     /// Règle unique d'accès (plan 06 §9) : une pièce qu'aucune quête ne garde est disponible dès le départ, les autres
     /// une fois leur quête accomplie. Le mode dev ouvre tout. Loot, offres de niveau, Collection et accueil la partagent.
@@ -494,6 +632,8 @@ public static class MetaSaveManager
             }
         }
 
+        NormalizeCamp();
+
         // Le Journal des Souvenirs se remplit en dev sans falsifier de quête ; les déblocages, eux, suivent IsUnlocked.
         if (DevelopmentMode.IsEnabled)
             _data.DiscoveredSouvenirs = SouvenirDataLoader.GetAll().Select(souvenir => souvenir.Id).ToList();
@@ -502,6 +642,42 @@ public static class MetaSaveManager
             .Where(id => !string.IsNullOrWhiteSpace(id))
             .Distinct()
             .ToList();
+    }
+
+    /// <summary>
+    /// Rangs du Campement tenus dans le catalogue : une amélioration inconnue est retirée et ce qui a été versé rendu, un
+    /// rang est borné à [0 ; rang max], un montant versé jamais négatif. Un catalogue refusé ne fait rien rendre : le
+    /// profil serait réécrit sans ses achats.
+    /// </summary>
+    private static void NormalizeCamp()
+    {
+        _data.CampRanks ??= new Dictionary<string, int>();
+        _data.CampPaid ??= new Dictionary<string, int>();
+        _data.Vestiges = Math.Max(0, _data.Vestiges);
+        foreach (string id in _data.CampPaid.Keys.ToList())
+        {
+            if (_data.CampPaid[id] < 0)
+                _data.CampPaid[id] = 0;
+        }
+        if (!CampUpgradeDataLoader.TryLoad(out _))
+            return;
+
+        foreach (string id in _data.CampRanks.Keys.Union(_data.CampPaid.Keys).ToList())
+        {
+            CampUpgradeData upgrade = CampUpgradeDataLoader.Get(id);
+            int rank = _data.CampRanks.GetValueOrDefault(id);
+            if (upgrade == null || rank <= 0)
+            {
+                _data.Vestiges += _data.CampPaid.GetValueOrDefault(id);
+                _data.CampRanks.Remove(id);
+                _data.CampPaid.Remove(id);
+                continue;
+            }
+            if (rank > upgrade.MaxRank)
+                _data.CampRanks[id] = upgrade.MaxRank;
+            if (!_data.CampPaid.ContainsKey(id))
+                _data.CampPaid[id] = 0;
+        }
     }
 
     private static MetaSaveData MigrateLegacySave(JsonElement root)
