@@ -1144,3 +1144,9 @@ Raphaël : « Rajoute-les dans characters.json, rajoute-leur un passif raccord a
 Raphaël : « ça me va que tu fasses les modifications dont on a parlé. Que ce soit pour le crasher, pour la solidité des ennemis, pour l'XP, pour le rythme. Si tu vois d'autres choses, d'ailleurs, n'hésite pas à les implémenter aussi » ; XP : « être au niveau 15-20 à 10 minutes, c'est légèrement bas. Faudrait plus viser à peu près le niveau 30 […] si on fait une plutôt bonne run. Voire potentiellement même un peu plus si on fait une excellente run. Avec un bon build » ; méthode : « essaye de tout faire d'un bloc […] Fais tous les changements et lance éventuellement des tests à la fin ».
 
 **Appliqué, à valider en jouant :** lot Q1 du [plan 33](33-equilibrage-ouverture.md#7-q1-livré--10-octobre-2026-soir), avec trois ajouts de l'agent : pente des PV de 4 à 8 min adoucie, cadence des tirs ennemis en données et ralentie, portée de vol des tirs bornée. Cible d'XP retenue : environ 30 à 10 min pour une bonne run, davantage pour une excellente.
+
+## 104. Arrêter les sons à la mort — 10 octobre 2026
+
+Raphaël : « il y a un bug chiant quand la partie est fini (mort) les sons ne s'arretent pas il faudrait les stopper tous (surtout ceux des ennemis/armes) ».
+
+**Appliqué et vérifié :** arrêt immédiat des sons de la run et blocage de leur relance pendant la mort et le bilan, puis réactivation à la prochaine run ; lot M7 du [plan 15](15-audio.md). L'audio dédié à la séquence de mort et à l'interface de bilan reste disponible. Régression avant/après, smoke/audio/musique et mort réelle après combat verts.
