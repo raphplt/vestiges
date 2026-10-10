@@ -156,7 +156,7 @@ Trois créatures du début de run passent dans le pipeline, à la même densité
 - Matériaux émissifs (`make_emissive`) pour les yeux vert-acide : ils l'emportent sur un pixel dès un quart des échantillons, ne sont ni ombrés ni cernés. Un œil d'un pixel reste visible.
 - `tools/sprites/models.py` unifie personnages et créatures ; `tools/generate_enemy.py <id> [--sheet]` écrit 8 directions × idle/walk/attack/death (16 frames par direction) et remplace les anciens PNG du dossier.
 - Les anciens générateurs `scripts/generate_rodeur*.py` et `generate_charognard.py` sont retirés : ils auraient écrasé les nouveaux sprites.
-- Le 10 octobre (DECISIONS §85), même chose pour les autres générateurs remplacés : Cracheur, Rampant, Ombre rampante, Tréant et leurs aperçus, Traqueur (`scripts/` et cinq prototypes `tools/*tracker*`, `tools/process_generated_sprite.py`), décors urbains et des champs, tuiles de la forêt et des champs. Restent `scripts/generate_blood.py` et `scripts/generate_tisseuse.py`, seules sources de leurs sprites.
+- Le 10 octobre (DECISIONS §87), même chose pour les autres générateurs remplacés : Cracheur, Rampant, Ombre rampante, Tréant et leurs aperçus, Traqueur (`scripts/` et cinq prototypes `tools/*tracker*`, `tools/process_generated_sprite.py`), décors urbains et des champs, tuiles de la forêt et des champs. Restent `scripts/generate_blood.py` et `scripts/generate_tisseuse.py`, seules sources de leurs sprites.
 
 **Créatures :**
 | Créature | Cadre, pieds | Lecture recherchée |

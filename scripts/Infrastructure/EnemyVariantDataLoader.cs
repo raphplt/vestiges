@@ -22,6 +22,8 @@ public class EnemyVariantData
     public float Scale = 1f;
     public float XpMult = 1f;
     public int AffixCount;
+    /// <summary>Affixes propres à la variante (plan 30 T2 : pas de Tenace sur un Souverain qui doit tenir 30 s) ; vide = liste commune.</summary>
+    public List<string> AffixPool = new();
     public int BonusEssence;
     public string RewardChest;
     public float RewardChestChance;
@@ -169,7 +171,8 @@ public static class EnemyVariantDataLoader
             OutlineColor = Color.FromHtml(String(dict, "outline_color", "#D4A843")),
             DeathShake = String(dict, "death_shake", "medium"),
             Nameplate = dict.ContainsKey("nameplate") && dict["nameplate"].AsBool(),
-            AberrationShader = dict.ContainsKey("aberration_shader") && dict["aberration_shader"].AsBool()
+            AberrationShader = dict.ContainsKey("aberration_shader") && dict["aberration_shader"].AsBool(),
+            AffixPool = Strings(dict, "affix_pool")
         };
     }
 

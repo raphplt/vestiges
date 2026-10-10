@@ -1,6 +1,6 @@
 # Plan 31 — Décors un cran au-dessus
 
-9 octobre 2026 · Demandé par Raphaël ([DECISIONS §84](DECISIONS.md)) : « Je voudrais que tu améliore les sprites de certains décors. Fais d'abord un tour sur le repo pour lister et évaluer la qualité des décors ». Audit présenté, validé sans retour supplémentaire ; ordre choisi : **le marais d'abord, puis la partie urbaine**, « avec une attention maximale » sur chaque décor.
+9 octobre 2026 · Demandé par Raphaël ([DECISIONS §86](DECISIONS.md)) : « Je voudrais que tu améliore les sprites de certains décors. Fais d'abord un tour sur le repo pour lister et évaluer la qualité des décors ». Audit présenté, validé sans retour supplémentaire ; ordre choisi : **le marais d'abord, puis la partie urbaine**, « avec une attention maximale » sur chaque décor.
 
 ## 1. Audit du 9 octobre
 
@@ -36,7 +36,7 @@ Notes : marais 4/10, immeubles 5/10, forêt et petits décors urbains 6/10, cham
 | **C1** | Champs et ferme : maisons de ferme (façades du kit urbain), grange endommagée vraiment différente, haies, verger, petits décors des champs | Livré, voir §7 |
 | **Q1** | Carrière : roches, cristaux, panneau de danger, vestiaire, machines, petits décors lisibles | Livré, voir §8 |
 
-Forêt, champs et carrière ont été demandés après les lots urbains ([DECISIONS §84](DECISIONS.md)) : « je crois que sur les autres il y a moins de choses à revoir », d'où une reprise plus légère, un lot par biome.
+Forêt, champs et carrière ont été demandés après les lots urbains ([DECISIONS §86](DECISIONS.md)) : « je crois que sur les autres il y a moins de choses à revoir », d'où une reprise plus légère, un lot par biome.
 
 ## 3. Compte rendu M0–M1 — marais
 
@@ -167,7 +167,7 @@ Forêt, champs et carrière ont été demandés après les lots urbains ([DECISI
 
 **Vérifications C1.** Aperçus ×2 sur trois sols des champs (herbe, blé, chaume) et ×5 isolés, plusieurs passes par famille ; planches de génération regardées ; galerie en jeu (`--capture-prop-gallery wild_fields`, seed 1002, 63 sprites cadrés, dont les fermes entières) : granges, maisons et hangars se lisent comme une ferme, la grange endommagée se distingue au premier coup d'œil, haies et petits décors se détachent de l'herbe. Décors inchangés (flaques, remorque, portails, poteau, linge, épouvantail aux corbeaux, arbres de verger en feuilles) : rendus identiques. Forêt : seuls le mur en ruine et la voiture changent (`_top_skin`), les arbres restent identiques. Régénération des champs et de la ferme comparée octet par octet : identique.
 
-**Question à Raphaël.** `assets/props/wild_fields/_wild_fields_hero_props.png` est la planche d'un ancien générateur (`scripts/generate_wild_fields_props.py`), importée par Godot mais chargée nulle part. La supprimer avec son `.import` ? Rien n'est supprimé sans son accord. **Réponse le 10 octobre :** « Oui supprime la planche orpheline stp » ; supprimée. L'ancien générateur reste : relancé, il réécrirait sept décors de C1 (question au tableau de bord). Supprimé le 10 octobre avec les autres scripts devenus inutiles (« supprime generate_wild_fields_props (et tout autre script maintenant inutile) », DECISIONS §85).
+**Question à Raphaël.** `assets/props/wild_fields/_wild_fields_hero_props.png` est la planche d'un ancien générateur (`scripts/generate_wild_fields_props.py`), importée par Godot mais chargée nulle part. La supprimer avec son `.import` ? Rien n'est supprimé sans son accord. **Réponse le 10 octobre :** « Oui supprime la planche orpheline stp » ; supprimée. L'ancien générateur reste : relancé, il réécrirait sept décors de C1 (question au tableau de bord). Supprimé le 10 octobre avec les autres scripts devenus inutiles (« supprime generate_wild_fields_props (et tout autre script maintenant inutile) », DECISIONS §87).
 
 ## 8. Compte rendu Q1 — carrière
 

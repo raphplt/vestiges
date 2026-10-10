@@ -60,6 +60,8 @@ public partial class SpawnManager : Node2D
 	private float _sameTypeClusterSpacingMin;
 	private float _sameTypeClusterSpacingMax;
 	private float _crisisSpawnMultiplier = 1.65f;
+	// Plafond de run relevé pendant une Résurgence (plan 30 T1) : sans lui, la crise bute sur le plafond atteint dès 5 min.
+	private float _crisisCapMultiplier = 1f;
 	private int _crisisBurstBase = 8;
 	private int _crisisBurstPerIntensity = 4;
 	private float _lateGameSpawnMultiplier = 1.4f;
@@ -306,7 +308,7 @@ public partial class SpawnManager : Node2D
 			return;
 
 		_affixScratch.Clear();
-		_affixScratch.AddRange(EnemyVariantDataLoader.NaturalElites.AffixPool);
+		_affixScratch.AddRange(variant.AffixPool.Count > 0 ? variant.AffixPool : EnemyVariantDataLoader.NaturalElites.AffixPool);
 		_affixPick.Clear();
 		for (int i = 0; i < variant.AffixCount && _affixScratch.Count > 0; i++)
 		{
@@ -592,13 +594,15 @@ public partial class SpawnManager : Node2D
 	private int _activeEnemiesCeilingOverride;
 
 	/// <summary>
-	/// Plafond de créatures actives : celui de la run, relevé par le Péril, jamais au-delà du plafond de coût fixé au
-	/// banc (data/scaling/peril.json, plan 29).
+	/// Plafond de créatures actives : celui de la run, relevé par le Péril et pendant une Résurgence, jamais au-delà du
+	/// plafond de coût fixé au banc (data/scaling/peril.json, plan 29). À la fin de la crise il redescend sans retirer
+	/// personne : la foule en trop s'use d'elle-même (DECISIONS §84).
 	/// </summary>
 	private int GetCurrentMaxEnemies(float elapsedMinutes)
 	{
+		float crisisCap = _currentRunPhase == GameManager.RunPhase.Crisis ? _crisisCapMultiplier : 1f;
 		float scaled = (_maxEnemies + _maxEnemiesGrowthPerMinute * elapsedMinutes)
-			* PerilDataLoader.EnemyCountMultiplier(PerilPoints(elapsedMinutes));
+			* PerilDataLoader.EnemyCountMultiplier(PerilPoints(elapsedMinutes)) * crisisCap;
 		return Mathf.Clamp(Mathf.RoundToInt(scaled), 1, _activeEnemiesCeilingOverride > 0 ? _activeEnemiesCeilingOverride : PerilDataLoader.ActiveEnemiesCeiling);
 	}
 
@@ -860,6 +864,7 @@ public partial class SpawnManager : Node2D
 		_sameTypeClusterSpacingMin = dict.ContainsKey("same_type_cluster_spacing_min") ? (float)dict["same_type_cluster_spacing_min"].AsDouble() : 18f;
 		_sameTypeClusterSpacingMax = dict.ContainsKey("same_type_cluster_spacing_max") ? (float)dict["same_type_cluster_spacing_max"].AsDouble() : 46f;
 		_crisisSpawnMultiplier = dict.ContainsKey("crisis_spawn_multiplier") ? (float)dict["crisis_spawn_multiplier"].AsDouble() : _crisisSpawnMultiplier;
+		_crisisCapMultiplier = dict.ContainsKey("crisis_cap_multiplier") ? (float)dict["crisis_cap_multiplier"].AsDouble() : 1f;
 		_crisisBurstBase = dict.ContainsKey("crisis_burst_base") ? (int)dict["crisis_burst_base"].AsDouble() : _crisisBurstBase;
 		_crisisBurstPerIntensity = dict.ContainsKey("crisis_burst_per_intensity") ? (int)dict["crisis_burst_per_intensity"].AsDouble() : _crisisBurstPerIntensity;
 		_lateGameSpawnMultiplier = dict.ContainsKey("late_game_spawn_multiplier") ? (float)dict["late_game_spawn_multiplier"].AsDouble() : _lateGameSpawnMultiplier;
@@ -924,6 +929,7 @@ public partial class SpawnManager : Node2D
 		_sameTypeClusterSpacingMin = 16f;
 		_sameTypeClusterSpacingMax = 42f;
 		_crisisSpawnMultiplier = 1.65f;
+		_crisisCapMultiplier = 1f;
 		_crisisBurstBase = 8;
 		_crisisBurstPerIntensity = 4;
 		_lateGameSpawnMultiplier = 1.4f;
@@ -975,6 +981,7 @@ public partial class SpawnManager : Node2D
 				case "flat_hp_multiplier": _flatHpMultiplier = kv.Value; break;
 				case "flat_dmg_multiplier": _flatDmgMultiplier = kv.Value; break;
 				case "crisis_spawn_multiplier": _crisisSpawnMultiplier = kv.Value; break;
+				case "crisis_cap_multiplier": _crisisCapMultiplier = kv.Value; break;
 				case "crisis_burst_base": _crisisBurstBase = (int)kv.Value; break;
 				case "crisis_burst_per_intensity": _crisisBurstPerIntensity = (int)kv.Value; break;
 				case "crisis_hp_multiplier": _crisisHpMultiplier = kv.Value; break;

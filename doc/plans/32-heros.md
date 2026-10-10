@@ -1,6 +1,6 @@
 # Plan 32 — Sprites des héros à venir
 
-Version 0.1 · 10 octobre 2026 · Demande de Raphaël : « j'aimerai bien que tu prépares les sprites des prochaines héros. Base toi sur le lore et les éléments écrits » ([DECISIONS §85](DECISIONS.md)).
+Version 0.1 · 10 octobre 2026 · Demande de Raphaël : « j'aimerai bien que tu prépares les sprites des prochaines héros. Base toi sur le lore et les éléments écrits » ([DECISIONS §87](DECISIONS.md)).
 
 Références : [lore v1.1 §5](../VESTIGES-LORE.md#5-les-personnages-jouables) (qui ils sont, ce qu'ils ont fait la nuit du 14), [fiches du casting](06-fiches-casting.md) (silhouettes, accents), [plan 25 §8](25-sprites-et-design.md#8-personnages-joués-et-projectiles-du-joueur--3-octobre-2026-decisions-60) (proportions et animations des trois personnages joués), [charte §4](../CHARTE-GRAPHIQUE.md).
 
@@ -89,7 +89,7 @@ Chaque lot : modèles, aperçus quatre vues et animations, planche avant/après 
 
 ## 10. Compte rendu H4 — les trois joués repris (10 octobre)
 
-Demande : « oui stp reprend les 3 jouables et améliore les si tu peux pendant que tu y es » (DECISIONS §85). [Planche avant/après](planches/32-h4-joues.png), [captures en jeu](planches/32-h4-en-jeu.png) (une ligne avant, une ligne après, par personnage).
+Demande : « oui stp reprend les 3 jouables et améliore les si tu peux pendant que tu y es » (DECISIONS §87). [Planche avant/après](planches/32-h4-joues.png), [captures en jeu](planches/32-h4-en-jeu.png) (une ligne avant, une ligne après, par personnage).
 
 | Personnage | Avant | Repris |
 |---|---|---|
@@ -101,4 +101,4 @@ Silhouettes, proportions et animations inchangées : seuls les visages, les lune
 
 **Vérifications.** Aperçus ×10 en quatre vues ; planche avant/après à l'échelle du jeu ; sprites régénérés (648 PNG, mêmes noms, aucun ajouté ni retiré, `.import` inchangés) ; captures en vraie run des trois (`--capture-character`, seed 1002) avant et après, regardées : la Forgeuse n'a plus les yeux rouges, pieds toujours calés sur la barre de vie.
 
-**Ménage associé (DECISIONS §85).** 19 scripts remplacés par le pipeline supprimés ; puis, avec l'accord de Raphaël, les 27 tuiles orphelines qu'ils avaient laissées (`assets/tiles/foret/`, `assets/tiles/champs/`) et leurs `.import`.
+**Ménage associé (DECISIONS §87).** 19 scripts remplacés par le pipeline supprimés ; puis, avec l'accord de Raphaël, les 27 tuiles orphelines qu'ils avaient laissées (`assets/tiles/foret/`, `assets/tiles/champs/`) et leurs `.import`.

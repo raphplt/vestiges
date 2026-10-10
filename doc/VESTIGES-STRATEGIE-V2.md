@@ -728,6 +728,8 @@ Le script de post-processing doit inclure une vérification/correction de l'angl
 - [x] Calcul de l’Effacement limité aux cellules actives, état du Néant conservé et réactivation par les lieux : ordre des phases identique, recalculs −23,8 % sur le rejeu de 30 min, régressions/captures et Main prolongée vérifiées (plan 10, lot 6C, 1er octobre 2026).
 - [x] Préchauffage réellement rendu pendant le chargement : 16 shaders de run et particules d’XP, viewport libéré, audits GPU et Main vérifiés, banc d’intégration fiabilisé (26 assertions) (plan 10 5B1, 1er octobre 2026). Compilation froide et à-coups restent à mesurer en 5B2.
 - [x] Implémenter CrisisManager (Résurgences toutes les 3-5 min, spawns en burst).
+- [x] Résurgences qui débordent le plafond de run (×1,4 pendant la crise, sans reflux) : la 2e crise passe de +2 % à +45–64 % de foule proche, mesuré sur 3 profils × 4 graines ([plan 30 T1](plans/30-temps-forts.md#t1-livré--9-octobre-2026)).
+- [x] Deux Souverains à heure fixe (2:30 et 7:00) entre les Résurgences, PV ×4, sans Tenace : combat de 5 à 58 s (médiane 24,5 s) avec le build de référence ([plan 30 T2](plans/30-temps-forts.md#t2-livré--9-octobre-2026)).
 - [x] Adapter SpawnManager (spawns liés à l'Effacement, plus proches, plus denses).
 - [x] Agrandir la map (doubler la taille pour tester, objectif final 4-5x).
 - [x] Revoir la génération : biomes contigus, pas concentriques.

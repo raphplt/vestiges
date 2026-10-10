@@ -947,7 +947,26 @@ Raphaël valide explicitement « cloche b et boite a musique c » dans la série
 - Lot D revu : « avec ce que tu me dit on va garder les noeuds pour l'instant ». Lot D reporté ; le brief reste prêt si le besoin revient (entrée de gamme, foule plus grande). « on s'arrete là pour les optis je pense c'est déjà du bon travail » : chantier performance des foules clos pour l'instant.
 - Temps forts : « vampire survivor a plus de temps fort que nous (j'y joue en ce moment). megabonk aussi avec sur les premieres 10 minutes 2 mini boss qui spawnent, 2 vagues d'ennemis intenses, un boss au bout des 10 min, et des "élites" (qu'on a aussi pour le coup). donc ptet concretement que sur le jeu on pourrait étudier des pistes pour dynamiser un peu plus notre jeu. » Piste à étudier, rien de décidé.
 
-## 84. Décors un cran au-dessus — 9 octobre 2026
+## 84. Temps forts : réponses à l'étude — 9 octobre 2026
+
+Étude livrée au [plan 30](30-temps-forts.md) (chronologie mesurée des 15 premières minutes). Réponses de Raphaël aux quatre questions :
+- **Résurgence : « Pic sans reflux ».** Pendant la crise, le plafond de run monte (≈ ×1,6) pour que la vague s'ajoute à la foule au lieu de la remplacer ; à la fin, pas de retrait forcé : le plafond redescend et la foule en trop s'use d'elle-même (éliminations, créatures semées). La crise devient une marche plus haute, voulue.
+- **Souverains : deux rendez-vous fixes**, vers 2:45 et 7:00, entre les Résurgences ; annoncés, nommés, barre de PV, combat de 20 à 40 s avec le build de référence, coffre rare. Retirés du tirage des micro-événements.
+- **Barrière : à 10 min, à l'heure, en priorité.** Déclenchée vers 10:00 (après la deuxième Résurgence et son accalmie), et non plus après la troisième Résurgence (qui commence en fait entre 13:36 et 14:50). Remplace le déclenchement du §70. Les lots B1–B2 du plan 07 passent avant les pouvoirs des personnages.
+- **Nuées sans objectif (D) et respiration par minute (E) : après A, B et C**, si la run manque encore de contraste une fois ceux-ci joués.
+- Après l'étude : « ok ca me va go ». Lots engagés dans l'ordre proposé : T1 (Résurgence), T2 (Souverains), puis B1–B2 (Barrière).
+
+## 85. Barrière : questions de reprise — 9 octobre 2026, nuit
+
+Reprise des lots B1–B2 du plan 07 (§84). Réponses de Raphaël, toutes conformes à la recommandation :
+- **Contournement : ailes de chaînes.** Deux ailes de chaînes tendues, intouchables, prolongent la grille bien au-delà de l'écran ; on ne passe qu'en brisant un battant. L'Effacement continue d'avancer derrière : rester bloqué coûte.
+- **Orientation : selon le cap.** Horizontale à l'écran si le joueur va vers le haut ou le bas, verticale s'il va à gauche ou à droite (les deux trois-quarts des décors). Deux jeux de sprites.
+- **Récompense : un coffre par battant**, le dernier rare (comme le Souverain). Choix propre à la Barrière ; le plan 13 reste non arbitré.
+- **Barre de boss en haut de l'écran**, avec le nom, pour la Barrière, l'Indicible et aussi les deux Souverains ; un cran par battant pour la Barrière.
+- **Flux de créatures pendant le combat : densité visée ×0,5**, réglage en données.
+- **Tableau de bord §2 :** App ID Steam pas encore obtenu ; l'audio est « à faire bientôt » (à reprendre après B2). Le reste inchangé.
+
+## 86. Décors un cran au-dessus — 9 octobre 2026
 
 - Demande : « Je voudrais que tu améliore les sprites de certains décors. Fais d'abord un tour sur le repo pour lister et évaluer la qualité des décors (détails, cohérence globale ect). Je compléterai par mes propres retours. » Audit des 186 sprites présenté ([plan 31 §1](31-decors.md)).
 - Réponse à l'audit : « Je valide tes retours. j'ai rien à dire de plus honnetement. » Ordre : « commencer par le marais et ensuite la partie urbaine ok », « fais vraiment chaque décor avec une attention maximale et produit le meilleur résultat possible ». Chantier ouvert au [plan 31](31-decors.md) ; les questions du tableau de bord §2 sont toutes reportées par Raphaël ou de son ressort (App ID Steam, écoutes, recette en jeu) : rien à lui reposer avant ce chantier.
@@ -957,7 +976,7 @@ Raphaël valide explicitement « cloche b et boite a musique c » dans la série
 - « go carrière » (10 octobre) : lot Q1 livré ; les cinq biomes du plan 31 sont repris.
 - Planche orpheline des champs (10 octobre) : « Oui supprime la planche orpheline stp » : `_wild_fields_hero_props.png` supprimée avec son `.import`. L'ancien générateur qui la produisait (`scripts/generate_wild_fields_props.py`) réécrirait sept décors repris en C1 : question posée au tableau de bord.
 
-## 85. Sprites des héros à venir — 10 octobre 2026
+## 87. Sprites des héros à venir — 10 octobre 2026
 
 - Demande : « j'aimerai bien que tu prépares les sprites des prochaines héros. Base toi sur le lore et les éléments écrits ». Lu comme : les héros du lore (§5) qui n'ont pas de sprites au niveau des trois joués, sept plus une variante : l'Éveillée, le Facteur et la Scaphandrière (casting validé, prototypes anciens), le Sonneur, l'Écolière et la Photographe (ajouts du 4 octobre), la Veilleuse (cachée) et l'Enfant du Bas-Port (variante du Vagabond).
 - Plan [32](32-heros.md), lots H1 (Éveillée, Facteur, Scaphandrière), H2 (Sonneur, Écolière, Photographe), H3 (Veilleuse, Enfant) livrés : huit modèles procéduraux au gabarit des joués, signature tirée du lore pour chacun, sprites écrits dans `assets/characters/<id>/`. Rien n'est branché (aucun n'est dans `characters.json`) ; planches à valider par Raphaël.
