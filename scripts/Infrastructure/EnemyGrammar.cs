@@ -19,6 +19,8 @@ public enum EnemyBehavior
 	Sentinel,
 	Weaver,
 	Indicible,
+	/// <summary>Partie d'un boss (battant, main) : immobile, sans attaque ni récompense, ses PV vont au boss (plan 07 B1).</summary>
+	BossPart,
 }
 
 public enum EnemyTier
@@ -48,6 +50,8 @@ public static class EnemyGrammar
 {
 	/// <summary>Boss final, entité unique : seule créature nommée par le code.</summary>
 	public const string FinalBossId = "indicible";
+	/// <summary>Fiche commune des parties de boss : le boss leur donne PV et rayon de touche.</summary>
+	public const string BossPartId = "boss_part";
 
 	private static readonly (string Key, EnemyCombatType Value)[] CombatTypes =
 	{
@@ -58,6 +62,7 @@ public static class EnemyGrammar
 	{
 		("default", EnemyBehavior.Default), ("pack", EnemyBehavior.Pack), ("sentinel", EnemyBehavior.Sentinel),
 		("weaver", EnemyBehavior.Weaver), ("indicible", EnemyBehavior.Indicible),
+		("boss_part", EnemyBehavior.BossPart),
 	};
 
 	private static readonly (string Key, EnemyTier Value)[] Tiers =

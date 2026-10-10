@@ -1,0 +1,7 @@
+{
+  "_doc": "Réglages communs des boss faits de parties (plan 07 B1), lus par Infrastructure/BossPartsConfig. Une partie est une créature de la fiche data/enemies/boss_part.json, que toutes les armes voient ; son boss lui donne PV et rayon de touche. Fichier invalide : les boss à parties n'apparaissent pas, avec un message au début de la run.",
+  "parts": {
+    "_doc": "Rayon de touche au plus (px) : il élargit la recherche de cibles de tous les tirs tant que la run dure (Enemy.LargestBodyRadius).",
+    "max_body_radius": 50
+  }
+}

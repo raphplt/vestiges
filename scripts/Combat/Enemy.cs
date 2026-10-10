@@ -101,6 +101,9 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 	private float _bodyRadius = BaseBodyRadius;
 	/// <summary>Plus grand rayon de corps atteint (variantes comprises) : marge des requêtes de touche.</summary>
 	public static float LargestBodyRadius { get; private set; } = BaseBodyRadius;
+	// Partie de boss (plan 07 B1) : ses PV vont à la réserve du boss, qui décide de sa récompense.
+	private BossHealth _boss;
+	private bool _bossShared;
 	// Créature de mêlée arrêtée contre le joueur : elle reste tournée vers lui et garde son pas (plan 29 F2).
 	private bool _pressingPlayer;
 
@@ -215,6 +218,10 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 	public Vector2 CrowdPush { get; set; }
 	private bool _ticking;
 	public bool IsDying => _isDying;
+	internal float CurrentHp => _currentHp;
+	/// <summary>Partie de boss à PV propres (battant) : elle tombe seule, sans emporter la réserve commune.</summary>
+	internal bool IsBoundToOwnHp => _boss != null && !_bossShared;
+	public BossHealth Boss => _boss;
 	public float HpRatio => _maxHp > 0 ? _currentHp / _maxHp : 0f;
 	public float MaxHp => _maxHp;
 	public EnemyModifiers Modifiers => _mods;
@@ -256,7 +263,8 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 		if (IsInGroup("enemies"))
 		{
 			CrowdIndex.Register(this);
-			GroundShadowLayer.Add(_shadow);
+			if (_behavior != EnemyBehavior.BossPart)
+				GroundShadowLayer.Add(_shadow);
 		}
 	}
 
@@ -501,6 +509,9 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 		_killed = false;
 		_killCredited = false;
 		_guardTarget = null;
+		_boss?.Detach(this);
+		_boss = null;
+		_bossShared = false;
 		_tracking.Reset();
 		_isBurrowed = false;
 		_tier = EnemyTier.Normal;
@@ -619,6 +630,12 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 		float regen = _mods.TickRegen(dt, _maxHp);
 		if (regen > 0f)
 			_currentHp = Mathf.Min(_currentHp + regen, _maxHp);
+		// Une partie de boss ne bouge ni n'attaque : c'est le boss qui frappe.
+		if (_behavior == EnemyBehavior.BossPart)
+		{
+			Velocity = Vector2.Zero;
+			return;
+		}
 		// Gardiens, hardes et créatures d'événement ont leur propre logique de déplacement.
 		bool lostTrack = _guardTarget == null && !_mods.IsEventBound && !_mods.IsTraveling
 			&& _tracking.Tick(distToPlayerSq, dt);
@@ -1006,7 +1023,7 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 		DamageResult result = DamageResult.Resolve(Life, source, _currentHp, damage, carriedDamage, taken);
 		damage = result.NativeDamage + result.CarriedDamage;
 		_mods.NotifyDamaged();
-		_currentHp -= damage;
+		LoseHp(damage);
 		// La surcharge Span évite un tableau params par tick, tout en gardant le signal Godot synchrone.
 		_eventBus.EmitSignal(EventBus.SignalName.EntityDamaged, (System.ReadOnlySpan<Variant>)[this, damage]);
 		SpawnDamageNumber(damage, isCrit, result.CarriedDamage > 0f);
@@ -1032,6 +1049,37 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 		if (result.Fatal)
 			Die(result);
 		return result;
+	}
+
+	/// <summary>PV perdus, reportés au boss pour une partie : seuls ceux qu'il restait comptent, pas l'excès.</summary>
+	private void LoseHp(float damage)
+	{
+		float lost = Mathf.Min(damage, Mathf.Max(0f, _currentHp));
+		_currentHp -= damage;
+		_boss?.Absorb(this, lost, _bossShared);
+	}
+
+	/// <summary>
+	/// Fait de la créature, initialisée sur la fiche <c>boss_part</c>, une partie de <paramref name="boss"/> : rayon de
+	/// touche du boss, PV propres ou miroir de la réserve commune. Appelé par <see cref="BossHealth.AddPart"/>.
+	/// </summary>
+	internal void BindBossPart(BossHealth boss, float bodyRadius, float hp, float maxHp, bool shared)
+	{
+		_boss = boss;
+		_bossShared = shared;
+		_bodyRadius = bodyRadius;
+		LargestBodyRadius = Mathf.Max(LargestBodyRadius, _bodyRadius);
+		_maxHp = Mathf.Max(1f, maxHp);
+		_currentHp = hp;
+	}
+
+	/// <summary>Réserve commune entamée par une autre partie : la vie de celle-ci la suit.</summary>
+	internal void SyncSharedHp(float hp, float maxHp)
+	{
+		if (_isDying || !IsActive)
+			return;
+		_currentHp = hp;
+		_maxHp = Mathf.Max(1f, maxHp);
 	}
 
 	/// <summary>
@@ -1142,7 +1190,7 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 		EmitBurnEmbers(delta);
 		float igniteDamage = _igniteDps * delta * DamageOverTimeFactor(_igniteSource);
 		DamageResult result = DamageResult.Resolve(Life, _igniteSource, _currentHp, igniteDamage, 0f);
-		_currentHp -= igniteDamage;
+		LoseHp(igniteDamage);
 		_dotNumbers.Add(StatusKind.Burn, igniteDamage);
 		_eventBus.EmitSignal(EventBus.SignalName.EntityDamaged, this, igniteDamage);
 		_eventBus.PublishEnemyDamage(result);
@@ -1168,7 +1216,7 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 		_bleedTimer -= delta;
 		float bleedDamage = _bleedDps * delta * DamageOverTimeFactor(_bleedSource);
 		DamageResult result = DamageResult.Resolve(Life, _bleedSource, _currentHp, bleedDamage, 0f);
-		_currentHp -= bleedDamage;
+		LoseHp(bleedDamage);
 		_dotNumbers.Add(StatusKind.Bleed, bleedDamage);
 		_eventBus.EmitSignal(EventBus.SignalName.EntityDamaged, this, bleedDamage);
 		_eventBus.PublishEnemyDamage(result);
@@ -1453,17 +1501,24 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 		if (_guardTarget != null && IsInstanceValid(_guardTarget))
 			_guardTarget.OnGuardKilled();
 
-		_eventBus.EmitSignal(EventBus.SignalName.EnemyKilled, _enemyId, GlobalPosition);
-		if (_mods.EventToken != 0)
-			_eventBus.EmitSignal(EventBus.SignalName.EventEnemyKilled, _mods.EventToken, GlobalPosition);
+		// Une partie de boss ne compte pas comme une élimination : le boss entier l'émet une fois, à sa chute, et rend
+		// lui-même la récompense de chaque partie.
+		if (_boss != null)
+			_boss.NotifyBroken(this, _bossShared);
+		else
+		{
+			_eventBus.EmitSignal(EventBus.SignalName.EnemyKilled, _enemyId, GlobalPosition);
+			if (_mods.EventToken != 0)
+				_eventBus.EmitSignal(EventBus.SignalName.EventEnemyKilled, _mods.EventToken, GlobalPosition);
 
-		SpawnXpOrbs();
+			SpawnXpOrbs();
 
-		// Mini-boss : drop un coffre épique garanti
-		if (_tier == EnemyTier.Miniboss)
-			SpawnRewardChest("chest_epic");
-		if (_mods.IsVariant)
-			GrantVariantRewards();
+			// Mini-boss : drop un coffre épique garanti
+			if (_tier == EnemyTier.Miniboss)
+				SpawnRewardChest("chest_epic");
+			if (_mods.IsVariant)
+				GrantVariantRewards();
+		}
 
 		// Retour au néant : éclats sombres, nuage de dissolution et flaque irisée, recyclés (plan 02 J0).
 		bool miniboss = _tier == EnemyTier.Miniboss;
@@ -1565,7 +1620,11 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 		// Ombre proportionnelle à la créature : la variante (élite, Souverain) l'agrandit avec le reste du corps.
 		_shadow.Width = GroundShadow.SnapWidth(Mathf.Clamp(data.Visual.Size * 2f, 12f, 72f));
 		_shadow.Offset = Vector2.Zero;
-		GroundShadowLayer.Add(_shadow);
+		// Une partie de boss n'a ni corps ni ombre à elle : son boss la dessine.
+		bool drawn = data.Behavior != EnemyBehavior.BossPart;
+		_visual.Visible = drawn;
+		if (drawn)
+			GroundShadowLayer.Add(_shadow);
 		_visual.Color = data.Visual.Color;
 		_originalColor = data.Visual.Color;
 

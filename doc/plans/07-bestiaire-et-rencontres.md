@@ -579,3 +579,15 @@ Ce que B1 ne fait pas : rien de visible en run hors de la barre des Souverains. 
 - **Ailes** : bornes de fer et chaîne lourde, module répétable ; **maillons** à plat et de chant pour la chaîne qui balaie.
 
 À valider par Raphaël avant B2b : silhouette générale, hauteur, gantelet ou main, orientation verticale en diagonale.
+
+## Reprise des boss — 10 octobre 2026
+
+Raphaël : « avance en autonomie sur les deux boss (l'Indicible et celui à 10 min) ». Lots enchaînés dans l'ordre du découpage : B1a, B1b, B1c, puis B2.
+
+### B1a livré — 10 octobre 2026
+
+- **Fiche commune** `data/enemies/boss_part.json` : comportement `boss_part`, rang `boss`, sans vitesse, dégâts, XP ni poids de tirage. Une partie est une `Enemy` : les trente chemins de ciblage la voient sans changement, statuts compris.
+- **`Combat/BossHealth`** : réserve d'un boss. `AddPart(partie, rayon, PV propres)` : PV propres > 0, la partie tombe seule (battant) ; sinon elle reflète la réserve commune et la vide avec les autres (mains). Seuils de phase en parts de la réserve totale, franchis une fois et dans l'ordre. Événements `PartHit` (pour le flash du boss), `PartBroken`, `PhaseReached`, `Depleted` (levé à la mort de la partie qui vide la réserve, après la récompense de son battant).
+- **`Enemy`** : une partie ne bouge ni ne frappe (sortie du tick après les statuts), n'a ni corps dessiné ni ombre ; ses PV perdus (coup, brûlure, saignement) vont au boss, sans l'excès d'un coup fatal. Sa mort n'émet pas `EnemyKilled` et ne laisse ni XP ni coffre : le boss le fera une fois. Le recul, déjà ignoré au rang `boss`, ne la pousse pas.
+- **Rayon de touche** fixé par le boss, 50 px au plus (`data/scaling/boss_parts.json`, contrôlé au chargement par `Infrastructure/BossPartsConfig` avec la présence de la fiche). Il relève `Enemy.LargestBodyRadius`, donc la marge de recherche de tous les tirs, pour la suite de la run : coût à mesurer en B1c.
+- **Vérifié** : `tools/test_boss_parts.sh` (nouvelle suite `boss_parts` de `tools/validate.sh`), 28 contrôles : réglages et 5 fichiers invalides refusés, deux battants (excès ignoré, ordre des événements, pas d'élimination émise), trois mains en réserve commune (coup et brûlure reportés, seuils dans l'ordre, défaite unique), partie collée au joueur et poussée qui ne bouge ni ne frappe, détachement au retour au pool. Suites smoke, enemy_abilities, weapons, catalogs, indicible, objects, launchers : 8/8.

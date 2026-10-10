@@ -1,0 +1,19 @@
+{
+    "id": "boss_part",
+    "name": "Partie de boss",
+    "type": "boss",
+    "stats": {
+        "hp": 1,
+        "speed": 0,
+        "damage": 0,
+        "xp_reward": 0,
+        "spawn_weight": 0
+    },
+    "visual": {
+        "color": "#000000",
+        "shape": "boss",
+        "size": 1
+    },
+    "behavior": "boss_part",
+    "tier": "boss"
+}
