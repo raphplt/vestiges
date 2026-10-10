@@ -2024,7 +2024,8 @@ public partial class Player : CharacterBody2D
             AttackPatternKind.Linear => 60f,
             _ => Mathf.Min(360f, ZoneScale(GetWeaponStat("arc_angle")))
         };
-        float squash = PlayerAttackFx.StrikeSquash(_equippedWeapon?.Base);
+        float squash = MeleeStrikeShape.Squash(pattern);
+        bool thrust = MeleeStrikeShape.IsThrust(pattern);
 
         System.Collections.Generic.List<Enemy> enemies = FindEnemiesInArc(range, arcAngle, squash: squash);
         if (enemies.Count == 0)
@@ -2044,9 +2045,10 @@ public partial class Player : CharacterBody2D
         bool fullCircle = arcAngle >= 359f;
         float arcHalf = arcAngle * 0.5f;
 
-        SpawnMeleeSlashVisuals(attackDirection, range, arcAngle, strikeCount, spreadAngle);
+        SpawnMeleeSlashVisuals(pattern, attackDirection, range, arcAngle, strikeCount, spreadAngle);
 
-        float coverageArc = fullCircle ? 360f : Mathf.Clamp(arcAngle + spreadAngle, arcAngle, 360f);
+        // Estoc : les candidats sont tous ceux à portée, le trait de chaque frappe trie ensuite ceux qu'il recouvre.
+        float coverageArc = fullCircle || thrust ? 360f : Mathf.Clamp(arcAngle + spreadAngle, arcAngle, 360f);
         System.Collections.Generic.List<Enemy> strikeCandidates = FindEnemiesInArc(range, coverageArc, attackDirection, squash);
         if (strikeCandidates.Count == 0)
             return;
@@ -2059,13 +2061,10 @@ public partial class Player : CharacterBody2D
             if (!IsInstanceValid(enemy) || enemy.IsDying)
                 continue;
 
-            int firstHitIndex;
-            int lastHitIndex;
-
+            int hitCount;
             if (fullCircle)
             {
-                firstHitIndex = 0;
-                lastHitIndex = strikeCount - 1;
+                hitCount = strikeCount;
             }
             else
             {
@@ -2073,27 +2072,31 @@ public partial class Player : CharacterBody2D
                 if (toEnemy.LengthSquared() <= 0.0001f)
                     continue;
 
-                float enemyOffset = Mathf.RadToDeg(attackDirection.AngleTo(toEnemy.Normalized()));
-                if (step <= 0.0001f)
+                if (thrust)
                 {
-                    if (Mathf.Abs(enemyOffset - startOffset) > arcHalf)
-                        continue;
-
-                    firstHitIndex = 0;
-                    lastHitIndex = strikeCount - 1;
+                    hitCount = 0;
+                    for (int strike = 0; strike < strikeCount; strike++)
+                    {
+                        Vector2 line = attackDirection.Rotated(Mathf.DegToRad(startOffset + step * strike));
+                        if (MeleeStrikeShape.ThrustTouches(line, toEnemy, range, enemy.BodyRadius))
+                            hitCount++;
+                    }
+                }
+                else if (step <= 0.0001f)
+                {
+                    float enemyOffset = MeleeStrikeShape.OffsetDegrees(attackDirection, toEnemy, squash);
+                    hitCount = Mathf.Abs(enemyOffset - startOffset) > arcHalf ? 0 : strikeCount;
                 }
                 else
                 {
+                    float enemyOffset = MeleeStrikeShape.OffsetDegrees(attackDirection, toEnemy, squash);
                     float hitMin = (enemyOffset - arcHalf - startOffset) / step;
                     float hitMax = (enemyOffset + arcHalf - startOffset) / step;
-                    firstHitIndex = Mathf.Clamp(Mathf.CeilToInt(hitMin), 0, strikeCount - 1);
-                    lastHitIndex = Mathf.Clamp(Mathf.FloorToInt(hitMax), 0, strikeCount - 1);
-                    if (lastHitIndex < firstHitIndex)
-                        continue;
+                    int firstHitIndex = Mathf.Clamp(Mathf.CeilToInt(hitMin), 0, strikeCount - 1);
+                    int lastHitIndex = Mathf.Clamp(Mathf.FloorToInt(hitMax), 0, strikeCount - 1);
+                    hitCount = lastHitIndex - firstHitIndex + 1;
                 }
             }
-
-            int hitCount = lastHitIndex - firstHitIndex + 1;
             if (hitCount <= 0)
                 continue;
 
@@ -2105,20 +2108,20 @@ public partial class Player : CharacterBody2D
             OnAttackHit(enemy, totalDamage, rawDamage, hasCrit, _equippedWeapon, triggerCount: hitCount, context: hitContext);
         }
         if (_objectMilestones?.HasZoneEcho == true)
-            QueueMeleeEchoes(attackDirection, range, arcAngle, strikeCount, startOffset, step, baseDamage * critDamageFactor, context);
+            QueueMeleeEchoes(attackDirection, range, arcAngle, squash, strikeCount, startOffset, step, baseDamage * critDamageFactor, context);
     }
 
-    private void SpawnMeleeSlashVisuals(Vector2 baseDirection, float range, float arcAngle, int strikeCount, float spreadAngle)
+    private void SpawnMeleeSlashVisuals(AttackPatternKind pattern, Vector2 baseDirection, float range, float arcAngle, int strikeCount, float spreadAngle)
     {
         const int maxSlashVisuals = 7;
         int visualCount = Mathf.Min(strikeCount, maxSlashVisuals);
         // Onde en cercle (plan 21 G6g) : tourner l'onde ne la distingue pas ; chaque frappe en plus repart un peu après.
         if (arcAngle >= 359f)
         {
-            SpawnSlashEffect(baseDirection, range, arcAngle);
+            _attackFx.PlayMelee(_equippedWeapon?.Base, pattern, baseDirection, range, arcAngle);
             float interval = WeaponVisualConfig.Load().WaveInterval;
             for (int visualIndex = 1; visualIndex < visualCount; visualIndex++)
-                _attackFx.PlayMeleeLater(_equippedWeapon?.Base, baseDirection, range, arcAngle, visualIndex * interval);
+                _attackFx.PlayMeleeLater(_equippedWeapon?.Base, pattern, baseDirection, range, arcAngle, visualIndex * interval);
             return;
         }
         float visualStart = visualCount == 1 ? 0f : -spreadAngle * 0.5f;
@@ -2127,8 +2130,9 @@ public partial class Player : CharacterBody2D
         for (int visualIndex = 0; visualIndex < visualCount; visualIndex++)
         {
             float angleOffset = visualStart + (visualStep * visualIndex);
-            Vector2 visualDirection = baseDirection.Rotated(Mathf.DegToRad(angleOffset)).Normalized();
-            SpawnSlashEffect(visualDirection, range, arcAngle);
+            // Même rotation que la touche : sur l'ellipse de la traînée, à l'écran pour le trait (MeleeStrikeShape).
+            Vector2 visualDirection = MeleeStrikeShape.RotateOnSlash(baseDirection, angleOffset, MeleeStrikeShape.Squash(pattern));
+            _attackFx.PlayMelee(_equippedWeapon?.Base, pattern, visualDirection, range, arcAngle);
         }
     }
 
@@ -2190,8 +2194,8 @@ public partial class Player : CharacterBody2D
     }
 
     /// <summary>
-    /// Créatures à portée dans l'arc, la plus proche en tête. <paramref name="squash"/> mesure la portée sur l'ellipse
-    /// du coup dessiné (<see cref="PlayerAttackFx.StrikeSquash"/>) : la frappe ne touche pas plus loin que sa forme.
+    /// Créatures à portée dans l'arc, la plus proche en tête. <paramref name="squash"/> mesure portée et ouverture sur
+    /// l'ellipse du coup dessiné (<see cref="MeleeStrikeShape"/>) : la frappe ne touche pas hors de sa forme.
     /// </summary>
     private System.Collections.Generic.List<Enemy> FindEnemiesInArc(float maxRange, float arcAngle, Vector2? forwardOverride = null,
         float squash = 1f)
@@ -2204,15 +2208,14 @@ public partial class Player : CharacterBody2D
             if (node is not Enemy { IsActive: true, IsDying: false } enemy || enemy.IsBurrowed && enemy.Boss != null)
                 continue;
 
+            // Distance et direction mesurées sur l'ellipse du coup dessiné (squash 1 : cercle écran).
             Vector2 toEnemy = enemy.GlobalPosition - GlobalPosition;
-            float screenDist = toEnemy.Length();
-            if (screenDist <= 0.001f)
-                continue;
-            float dist = squash == 1f ? screenDist : Mathf.Sqrt(Iso.SlashDistanceSquared(toEnemy, squash));
-            if (dist - enemy.StrikeMargin > maxRange)
+            Vector2 measured = new(toEnemy.X, toEnemy.Y * squash);
+            float dist = measured.Length();
+            if (dist <= 0.001f || dist - enemy.StrikeMargin > maxRange)
                 continue;
 
-            candidates.Add((enemy, dist - enemy.TargetBias, toEnemy / screenDist));
+            candidates.Add((enemy, dist - enemy.TargetBias, measured / dist));
         }
 
         if (candidates.Count == 0)
@@ -2221,7 +2224,7 @@ public partial class Player : CharacterBody2D
         Vector2 forward;
         if (forwardOverride.HasValue && forwardOverride.Value.LengthSquared() > 0.0001f)
         {
-            forward = forwardOverride.Value.Normalized();
+            forward = new Vector2(forwardOverride.Value.X, forwardOverride.Value.Y * squash).Normalized();
         }
         else
         {
@@ -2341,11 +2344,6 @@ public partial class Player : CharacterBody2D
     private void SpawnMuzzleFlash(Vector2 direction)
     {
         _attackFx.PlayMuzzle(_equippedWeapon?.Base, direction);
-    }
-
-    private void SpawnSlashEffect(Vector2 direction, float range, float arcAngle)
-    {
-        _attackFx.PlayMelee(_equippedWeapon?.Base, direction, range, arcAngle);
     }
 
     private void UpdateAttackSpeed()

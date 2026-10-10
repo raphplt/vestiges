@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Godot;
 using Vestiges.Combat;
 using Vestiges.Core;
+using Vestiges.Infrastructure;
 
 namespace Vestiges.Progression;
 
@@ -97,24 +98,36 @@ public sealed class ZoneEchoes
         bool fullCircle = echo.ArcAngle >= 359f;
         float dotThreshold = fullCircle ? -1f : Mathf.Cos(Mathf.DegToRad(echo.ArcAngle * 0.5f));
         float radiusSq = echo.Radius * echo.Radius;
-        // Écho d'un coup de mêlée : il touche dans l'ellipse du coup qu'il redessine, pas plus loin.
-        float squash = echo.AroundPlayer ? PlayerAttackFx.StrikeSquash(echo.Weapon?.Base) : 1f;
+        // Écho d'un coup de mêlée : il touche dans la forme du coup qu'il redessine (MeleeStrikeShape), pas au-delà.
+        AttackPatternKind pattern = echo.Weapon?.AttackPattern ?? AttackPatternKind.Arc;
+        bool thrust = echo.AroundPlayer && MeleeStrikeShape.IsThrust(pattern);
+        float squash = echo.AroundPlayer ? MeleeStrikeShape.Squash(pattern) : 1f;
+        Vector2 forward = new Vector2(echo.Direction.X, echo.Direction.Y * squash).Normalized();
         using CrowdQuery crowd = CrowdIndex.Near(center, echo.Radius);
         foreach (Node node in crowd.Targets)
         {
             if (node is not Enemy { IsActive: true, IsDying: false } enemy)
                 continue;
             Vector2 toEnemy = enemy.GlobalPosition - center;
-            float distanceSq = toEnemy.LengthSquared();
-            if (Iso.SlashDistanceSquared(toEnemy, squash) > radiusSq || (!fullCircle && (distanceSq <= 0.0001f || echo.Direction.Dot(toEnemy.Normalized()) < dotThreshold)))
-                continue;
+            if (thrust)
+            {
+                if (!MeleeStrikeShape.ThrustTouches(echo.Direction, toEnemy, echo.Radius, enemy.BodyRadius))
+                    continue;
+            }
+            else
+            {
+                Vector2 measured = new(toEnemy.X, toEnemy.Y * squash);
+                float distanceSq = measured.LengthSquared();
+                if (distanceSq > radiusSq || (!fullCircle && (distanceSq <= 0.0001f || measured.Normalized().Dot(forward) < dotThreshold)))
+                    continue;
+            }
             enemy.TakeDamage(echo.Damage, source: echo.Source);
             _player.AttackFx.PlayHit(PlayerAttackFx.FamilyOf(echo.Weapon?.Base), enemy.GlobalPosition, false, center);
         }
         // Rondelle de cuivre, palier 15 : son icône s'élève quand la zone refrappe (plan 27 V2d).
         _player.ObjectProcs?.Show(AoeStat);
         if (echo.AroundPlayer)
-            _player.AttackFx.PlayMelee(echo.Weapon?.Base, echo.Direction, echo.Radius, echo.ArcAngle);
+            _player.AttackFx.PlayMelee(echo.Weapon?.Base, pattern, echo.Direction, echo.Radius, echo.ArcAngle);
         else
             _player.AttackFx.PlayObjectRing(center, PlayerAttackFx.FamilyOf(echo.Weapon?.Base), echo.Radius);
     }
