@@ -46,6 +46,7 @@ public partial class WeaponRegression : Node2D
             CheckUpgradeGains();
             CheckRangeAndZone();
             await CheckGroundFireOnGround();
+            await CheckMeleeReachFollowsSlash();
             CheckAscensions();
             CheckGrammarRejectsUnknownKeys();
             CheckContractRejectsBadData();
@@ -94,6 +95,55 @@ public partial class WeaponRegression : Node2D
             $"Flaque de feu mesurée au sol : à côté {(beside.IsBurning ? "brûle" : "intacte")}, en dessous {(below.IsBurning ? "brûle" : "intacte")}");
         beside.QueueFree();
         below.QueueFree();
+    }
+
+    /// <summary>
+    /// Allonge de mêlée (DECISIONS §99) : un coup ne touche pas plus loin que sa forme dessinée. La traînée de la
+    /// Faucille est aplatie (<see cref="Iso.SlashSquash"/>) : à 0,9 allonge à l'horizontale et sous le joueur dans
+    /// l'ellipse, la créature est touchée ; à 1,1 allonge sur l'ellipse en dessous (0,81 à l'écran, dans l'ancien
+    /// cercle), elle ne l'est pas. L'estoc du Scalpel, trait droit vers la cible, touche à 0,9 allonge en dessous.
+    /// </summary>
+    private async Task CheckMeleeReachFollowsSlash()
+    {
+        Player player = GD.Load<PackedScene>("res://scenes/Player.tscn").Instantiate<Player>();
+        AddChild(player);
+        player.InitializeCharacter(CharacterDataLoader.Get("vagabond"));
+        player.ProcessMode = ProcessModeEnum.Disabled;
+        player.GlobalPosition = new Vector2(90000f, 90000f);
+        MethodInfo attack = typeof(Player).GetMethod("OnWeaponAttackTimeout", Private);
+        try
+        {
+            async Task<bool> StrikeHits(string weaponId, Vector2 offset)
+            {
+                while (player.WeaponSlots.Count > 0)
+                    player.RemoveWeapon(0);
+                player.AddWeapon(WeaponDataLoader.Get(weaponId));
+                float reach = player.GetWeaponStatForDisplay(player.WeaponSlots[0], "range");
+                Enemy enemy = EnemyScene.Instantiate<Enemy>();
+                AddChild(enemy);
+                enemy.Initialize(EnemyDataLoader.Get("rodeur"), 100000f, 1f);
+                enemy.SetTicking(false);
+                enemy.GlobalPosition = player.GlobalPosition + offset * reach;
+                CrowdIndex.MarkMoved();
+                await ToSignal(GetTree(), SceneTree.SignalName.PhysicsFrame);
+                attack.Invoke(player, new object[] { 0 });
+                bool hit = enemy.HpRatio < 1f;
+                enemy.QueueFree();
+                return hit;
+            }
+
+            bool beside = await StrikeHits("chipped_blade", new Vector2(0.9f, 0f));
+            bool belowInside = await StrikeHits("chipped_blade", new Vector2(0f, 0.9f / Iso.SlashSquash));
+            bool belowOutside = await StrikeHits("chipped_blade", new Vector2(0f, 1.1f / Iso.SlashSquash));
+            bool thrustBelow = await StrikeHits("surgeons_scalpel", new Vector2(0f, 0.9f));
+            Check(beside && belowInside && !belowOutside && thrustBelow,
+                $"Mêlée : la touche s'arrête au bord du coup dessiné (à côté {beside}, dessous dans la traînée {belowInside}, "
+                + $"dessous hors traînée {belowOutside}, estoc dessous {thrustBelow})");
+        }
+        finally
+        {
+            player.QueueFree();
+        }
     }
 
     private void CheckOrbitalOnEquip()

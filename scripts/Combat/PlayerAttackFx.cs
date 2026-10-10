@@ -14,14 +14,6 @@ public sealed class PlayerAttackFx
 {
     /// <summary>Hauteur du torse au-dessus du point au sol : les coups partent du buste, pas des pieds.</summary>
     private const float TorsoHeight = 11f;
-    /// <summary>
-    /// Part de l'allonge que l'arc dessiné couvre. À 0,7 sous un plafond de 64 px, la Faucille touchait à 70 px mais
-    /// son arc s'arrêtait à 49 : la mêlée paraissait plus courte qu'elle n'était.
-    /// </summary>
-    private const float MeleeReachFill = 0.9f;
-    /// <summary>Plafonds de taille d'un coup (arc, estoc), avant le grossissement par la zone : bornent les ascensions qui doublent la portée.</summary>
-    private const float MaxMeleeArcRadius = 120f;
-    private const float MaxThrustLength = 160f;
     /// <summary>Plafond de gerbes d'impact par frame : une zone qui touche 80 ennemis n'en dessine que quelques-unes.</summary>
     private const int MaxHitBurstsPerFrame = 10;
     /// <summary>Gerbes des coups secondaires et des objets : plafond à part, pour ne pas priver un coup direct de la sienne.</summary>
@@ -44,7 +36,6 @@ public sealed class PlayerAttackFx
         public Vector2 Direction;
         public float Range;
         public float ArcAngle;
-        public float SizeScale;
         public float Delay;
     }
 
@@ -66,7 +57,7 @@ public sealed class PlayerAttackFx
     }
 
     /// <summary>Coup de mêlée rejoué après <paramref name="delay"/> secondes : ondes successives d'une frappe en cercle.</summary>
-    public void PlayMeleeLater(WeaponData weapon, Vector2 direction, float range, float arcAngle, float sizeScale, float delay)
+    public void PlayMeleeLater(WeaponData weapon, Vector2 direction, float range, float arcAngle, float delay)
     {
         _pendingMelee.Add(new PendingMelee
         {
@@ -74,7 +65,6 @@ public sealed class PlayerAttackFx
             Direction = direction,
             Range = range,
             ArcAngle = arcAngle,
-            SizeScale = sizeScale,
             Delay = delay,
         });
     }
@@ -92,38 +82,46 @@ public sealed class PlayerAttackFx
                 continue;
             }
             _pendingMelee.RemoveAt(i);
-            PlayMelee(pending.Weapon, pending.Direction, pending.Range, pending.ArcAngle, pending.SizeScale);
+            PlayMelee(pending.Weapon, pending.Direction, pending.Range, pending.ArcAngle);
         }
     }
 
     /// <summary>
-    /// Coup de mêlée : une forme par frappe (les frappes supplémentaires appellent plusieurs fois). La stat de taille
-    /// relève le plafond de l'allonge dessinée (<paramref name="sizeScale"/>, plan 21 G6e).
+    /// Aplatissement de la touche d'un coup de mêlée, celui de sa forme dessinée : 1 pour l'estoc, trait droit vers
+    /// la cible ; <see cref="Iso.SlashSquash"/> pour les traînées et les ondes. La touche s'arrête au bord du dessin.
     /// </summary>
-    public void PlayMelee(WeaponData weapon, Vector2 direction, float range, float arcAngle, float sizeScale = 1f)
+    public static float StrikeSquash(WeaponData weapon) => weapon?.Fx.Style == "thrust" ? 1f : Iso.SlashSquash;
+
+    /// <summary>
+    /// Coup de mêlée : une forme par frappe (les frappes supplémentaires appellent plusieurs fois). Le bord extérieur
+    /// de la forme passe à l'allonge (<paramref name="range"/>), sans plafond : la frappe ne touche jamais plus loin
+    /// que ce qui est dessiné (DECISIONS §99).
+    /// </summary>
+    public void PlayMelee(WeaponData weapon, Vector2 direction, float range, float arcAngle)
     {
         if (Pools == null || !CombatFxSettings.PlayerAttackFx)
             return;
         FxFamily family = FamilyOf(weapon);
+        // Les coups partent du buste et la touche se mesure aux pieds : le buste d'une cible est à la même distance.
         Vector2 torso = _owner.GlobalPosition + new Vector2(0f, -TorsoHeight);
-        float radius = Mathf.Clamp(range * MeleeReachFill, 22f, MaxMeleeArcRadius * sizeScale);
+        float radius = Mathf.Max(range, 22f);
         float halfArc = Mathf.DegToRad(Mathf.Clamp(arcAngle, 40f, 200f) * 0.5f);
 
         switch (weapon?.Fx.Style)
         {
             case "cleave":
-                PlayArc(torso, direction, radius * 1.1f, radius * 0.55f, halfArc * 1.15f, family, 0.26f);
+                PlayArc(torso, direction, radius, radius * 0.55f, halfArc * 1.15f, family, 0.26f);
                 EmitDebris(torso + direction * radius * 0.8f, direction, family, 5);
                 break;
             case "smash":
-                PlayArc(torso, direction, radius * 0.85f, radius * 0.5f, halfArc, family, 0.18f);
+                PlayArc(torso, direction, radius, radius * 0.5f, halfArc, family, 0.18f);
                 PlaySmashImpact(_owner.GlobalPosition + direction * radius * 0.75f, family, radius);
                 break;
             case "thrust":
-                PlayThrust(torso, direction, Mathf.Clamp(range * 0.95f, 26f, MaxThrustLength * sizeScale), family);
+                PlayThrust(torso, direction, Mathf.Max(range, 26f), family);
                 break;
             case "whirl":
-                PlayArc(torso, direction, radius, radius * 0.3f, Mathf.Pi, family, 0.28f, squash: 1.6f);
+                PlayArc(torso, direction, radius, radius * 0.3f, Mathf.Pi, family, 0.28f);
                 break;
             case "bell":
                 // L'anneau extérieur, 1,35 fois le premier, marque l'allonge.
@@ -134,7 +132,7 @@ public sealed class PlayerAttackFx
                 PlayGroundRing(_owner.GlobalPosition, family, radius * 0.8f, 3f, 0.32f);
                 break;
             case "void":
-                PlayArc(torso, direction, radius * 1.05f, radius * 0.5f, halfArc, FxFamily.Void, 0.24f);
+                PlayArc(torso, direction, radius, radius * 0.5f, halfArc, FxFamily.Void, 0.24f);
                 EmitSparks(torso + direction * radius * 0.7f, direction, FxFamily.Void, 6, 0.9f, 60f, 130f, 2);
                 break;
             default:
@@ -371,7 +369,7 @@ public sealed class PlayerAttackFx
     }
 
     private void PlayArc(Vector2 center, Vector2 direction, float radius, float thickness, float halfArc,
-                         FxFamily family, float duration, float squash = 1.35f)
+                         FxFamily family, float duration, float squash = Iso.SlashSquash)
     {
         PixelFxSpec spec = PixelFxSpec.Of(PixelFxShape.Arc, family, radius, thickness, duration);
         spec.Angle = GroundAngle(direction, squash);
@@ -402,8 +400,9 @@ public sealed class PlayerAttackFx
     private void PlayBell(FxFamily family, float radius)
     {
         Vector2 ground = _owner.GlobalPosition;
-        PlayGroundRing(ground, family, radius, 3f, 0.3f);
-        PlayGroundRing(ground, family, radius * 1.35f, 2f, 0.45f);
+        // Ondes aplaties comme les traînées : la Cloche touche dans la même ellipse (StrikeSquash).
+        PlayGroundRing(ground, family, radius, 3f, 0.3f, Iso.SlashSquash);
+        PlayGroundRing(ground, family, radius * 1.35f, 2f, 0.45f, Iso.SlashSquash);
         EmitSparks(ground + new Vector2(0f, -TorsoHeight), Vector2.Zero, family, 8, 0f, 50f, 110f, 1);
     }
 

@@ -97,6 +97,8 @@ public sealed class ZoneEchoes
         bool fullCircle = echo.ArcAngle >= 359f;
         float dotThreshold = fullCircle ? -1f : Mathf.Cos(Mathf.DegToRad(echo.ArcAngle * 0.5f));
         float radiusSq = echo.Radius * echo.Radius;
+        // Écho d'un coup de mêlée : il touche dans l'ellipse du coup qu'il redessine, pas plus loin.
+        float squash = echo.AroundPlayer ? PlayerAttackFx.StrikeSquash(echo.Weapon?.Base) : 1f;
         using CrowdQuery crowd = CrowdIndex.Near(center, echo.Radius);
         foreach (Node node in crowd.Targets)
         {
@@ -104,7 +106,7 @@ public sealed class ZoneEchoes
                 continue;
             Vector2 toEnemy = enemy.GlobalPosition - center;
             float distanceSq = toEnemy.LengthSquared();
-            if (distanceSq > radiusSq || (!fullCircle && (distanceSq <= 0.0001f || echo.Direction.Dot(toEnemy.Normalized()) < dotThreshold)))
+            if (Iso.SlashDistanceSquared(toEnemy, squash) > radiusSq || (!fullCircle && (distanceSq <= 0.0001f || echo.Direction.Dot(toEnemy.Normalized()) < dotThreshold)))
                 continue;
             enemy.TakeDamage(echo.Damage, source: echo.Source);
             _player.AttackFx.PlayHit(PlayerAttackFx.FamilyOf(echo.Weapon?.Base), enemy.GlobalPosition, false, center);

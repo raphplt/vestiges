@@ -2012,8 +2012,9 @@ public partial class Player : CharacterBody2D
             AttackPatternKind.Linear => 60f,
             _ => Mathf.Min(360f, ZoneScale(GetWeaponStat("arc_angle")))
         };
+        float squash = PlayerAttackFx.StrikeSquash(_equippedWeapon?.Base);
 
-        System.Collections.Generic.List<Enemy> enemies = FindEnemiesInArc(range, arcAngle);
+        System.Collections.Generic.List<Enemy> enemies = FindEnemiesInArc(range, arcAngle, squash: squash);
         if (enemies.Count == 0)
             return;
 
@@ -2034,7 +2035,7 @@ public partial class Player : CharacterBody2D
         SpawnMeleeSlashVisuals(attackDirection, range, arcAngle, strikeCount, spreadAngle);
 
         float coverageArc = fullCircle ? 360f : Mathf.Clamp(arcAngle + spreadAngle, arcAngle, 360f);
-        System.Collections.Generic.List<Enemy> strikeCandidates = FindEnemiesInArc(range, coverageArc, attackDirection);
+        System.Collections.Generic.List<Enemy> strikeCandidates = FindEnemiesInArc(range, coverageArc, attackDirection, squash);
         if (strikeCandidates.Count == 0)
             return;
 
@@ -2105,7 +2106,7 @@ public partial class Player : CharacterBody2D
             SpawnSlashEffect(baseDirection, range, arcAngle);
             float interval = WeaponVisualConfig.Load().WaveInterval;
             for (int visualIndex = 1; visualIndex < visualCount; visualIndex++)
-                _attackFx.PlayMeleeLater(_equippedWeapon?.Base, baseDirection, range, arcAngle, WeaponSizeScale, visualIndex * interval);
+                _attackFx.PlayMeleeLater(_equippedWeapon?.Base, baseDirection, range, arcAngle, visualIndex * interval);
             return;
         }
         float visualStart = visualCount == 1 ? 0f : -spreadAngle * 0.5f;
@@ -2176,7 +2177,12 @@ public partial class Player : CharacterBody2D
         return result;
     }
 
-    private System.Collections.Generic.List<Enemy> FindEnemiesInArc(float maxRange, float arcAngle, Vector2? forwardOverride = null)
+    /// <summary>
+    /// Créatures à portée dans l'arc, la plus proche en tête. <paramref name="squash"/> mesure la portée sur l'ellipse
+    /// du coup dessiné (<see cref="PlayerAttackFx.StrikeSquash"/>) : la frappe ne touche pas plus loin que sa forme.
+    /// </summary>
+    private System.Collections.Generic.List<Enemy> FindEnemiesInArc(float maxRange, float arcAngle, Vector2? forwardOverride = null,
+        float squash = 1f)
     {
         using CrowdQuery crowd = CrowdIndex.Near(GlobalPosition, maxRange + Enemy.LargestPartRadius);
         System.Collections.Generic.List<(Enemy enemy, float dist, Vector2 dir)> candidates = new();
@@ -2187,11 +2193,14 @@ public partial class Player : CharacterBody2D
                 continue;
 
             Vector2 toEnemy = enemy.GlobalPosition - GlobalPosition;
-            float dist = toEnemy.Length();
-            if (dist - enemy.StrikeMargin > maxRange || dist <= 0.001f)
+            float screenDist = toEnemy.Length();
+            if (screenDist <= 0.001f)
+                continue;
+            float dist = squash == 1f ? screenDist : Mathf.Sqrt(Iso.SlashDistanceSquared(toEnemy, squash));
+            if (dist - enemy.StrikeMargin > maxRange)
                 continue;
 
-            candidates.Add((enemy, dist - enemy.TargetBias, toEnemy / dist));
+            candidates.Add((enemy, dist - enemy.TargetBias, toEnemy / screenDist));
         }
 
         if (candidates.Count == 0)
@@ -2324,7 +2333,7 @@ public partial class Player : CharacterBody2D
 
     private void SpawnSlashEffect(Vector2 direction, float range, float arcAngle)
     {
-        _attackFx.PlayMelee(_equippedWeapon?.Base, direction, range, arcAngle, WeaponSizeScale);
+        _attackFx.PlayMelee(_equippedWeapon?.Base, direction, range, arcAngle);
     }
 
     private void UpdateAttackSpeed()

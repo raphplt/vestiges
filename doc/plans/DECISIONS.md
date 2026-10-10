@@ -1082,3 +1082,9 @@ Raphaël : « Je pense que la portée des armes corps à corps devrait être reh
 
 **Acquis :** valeurs et visuel du [plan 24 C2b](24-retours-du-1er-octobre.md#c2b-second-relèvement--10-octobre-2026). Sensation à confirmer en jouant.
 
+## 99. La mêlée ne touche pas plus loin que son coup dessiné — 10 octobre 2026
+
+Raphaël : « je ne veux pas que la portée d'une arme soit supérieure à ce que le sprite affiche (ou pas trop quoi) ». Précisé : le problème concerne le corps à corps, pas les projectiles ; aucune arme n'est dessinée en main, le « sprite » d'un coup est sa traînée (arc, estoc, anneaux). Option retenue parmi trois : **la touche suit la traînée** (plutôt que dessiner les coups en cercle sans perspective, ou relever encore les portées).
+
+**Acquis :** la touche d'un coup de mêlée se mesure sur l'ellipse de sa traînée, dont le bord passe à l'allonge, sans plafond ; allonge horizontale inchangée, verticale ÷ 1,35 ; détail au [plan 24 C2c](24-retours-du-1er-octobre.md#c2c-la-touche-sarrête-au-bord-du-coup-dessiné--10-octobre-2026). Sensation à confirmer en jouant.
+

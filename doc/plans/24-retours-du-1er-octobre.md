@@ -197,6 +197,16 @@ Après L3, Raphaël ([DECISIONS §98](DECISIONS.md#98-portée-des-armes-de-mêl�
 
 **Vérifié :** `tools/test_weapons.sh` (`failures=0`) ; galerie `--capture-weapons` avant/après (Faucille, Parcmètre, Scalpel, Cloche, Pelle, Vagabond) : sur le cercle de cinq cibles à 55 et 80 px, l'arc arrive sur les créatures et en touche trois à cinq au lieu d'une ou deux. **À jouer :** sensation en partie, et écart avec les armes à distance.
 
+#### C2c. La touche s'arrête au bord du coup dessiné — 10 octobre 2026
+
+Raphaël ([DECISIONS §99](DECISIONS.md#99-la-mêlée-ne-touche-pas-plus-loin-que-son-coup-dessiné--10-octobre-2026)) : la portée ne doit pas dépasser ce que le coup affiche. Constat après C2b : à l'horizontale c'était juste, mais la traînée est aplatie ×1,35 (perspective) alors que la touche était un cercle écran ; à la verticale, la Faucille touchait à 90 px pour une traînée de ~60 (+50 %). Cloche et Rallonge, aux anneaux aplatis ×2, touchaient deux fois plus loin que leur dessin en vertical. Seule la mêlée faisait exception à la règle du jeu (`Iso.GroundDistanceSquared` : feu, explosions, cône touchent sur l'ellipse dessinée).
+
+- **Touche :** `FindEnemiesInArc` mesure la portée sur l'ellipse du coup (`Iso.SlashSquash` = 1,35), choisie par `PlayerAttackFx.StrikeSquash` selon la forme dessinée : 1 pour l'estoc (trait droit vers la cible), 1,35 pour les traînées et les ondes. Les échos de la Rondelle de cuivre autour du joueur suivent la même règle.
+- **Dessin :** le bord extérieur de chaque forme passe à l'allonge (100 %), sans multiplicateur par style ni plafond (l'ancien plafond de 120 px aurait laissé une arme montée en portée toucher au-delà de sa traînée). Cloche et Rallonge aplaties comme les arcs.
+- **Effet :** allonge horizontale inchangée ; verticale ÷ 1,35 (Faucille 90 → 67 sous le joueur). Le buste de la cible est à la même distance que ses pieds : la traînée, partie du buste, arrive sur le buste d'une créature à l'allonge.
+- **Vérifié :** cas `Mêlée : la touche s'arrête au bord du coup dessiné` dans `tools/test_weapons.sh` (Faucille : à côté et dessous dans la traînée touchées, dessous à 0,81 allonge écran épargnée ; Scalpel : estoc dessous touché), `failures=0` ; galerie `--capture-weapons` (Faucille, Parcmètre, Cloche, Rallonge, Pelle).
+- **Reste, hors portée :** l'ouverture dessinée d'un arc est bornée à 200° (`PlayMelee`) alors que la touche peut aller jusqu'à 360° avec la zone ; l'estoc touche dans un cône de 60° autour de son trait.
+
 ### C3. Régénération et première Résurgence
 
 - **Régénération de base ×2** : Traqueur 0,6, Vagabond 1,0, Forgeuse 1,2 PV/s. Le Vagabond garde son +0,2.
