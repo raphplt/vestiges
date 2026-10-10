@@ -113,3 +113,51 @@ Au maximum, le profil plein a environ +25 % de PV, +20 % de dégâts et +15 % de
 - **Ordre** : juste après le Péril visible (plan 34 G0), avant la refonte de l'inventaire. Les Poches (sac d'objets) arrivent avec le plan 35.
 
 Dans tout ce plan, « l'Établi » se lit désormais « le Campement ».
+
+## 9. Lot M0 livré : prix et économie — 11 octobre 2026
+
+**La table des prix est dans les données** (`data/progression/camp_upgrades.json`), et `tools/camp_economy.py` la lit comme le jeu. Ce sont les prix proposés au §110, gardés tels quels :
+
+| Rayon | Amélioration | Effet par rang | Rangs | Prix par rang | Total |
+|---|---|---|---:|---|---:|
+| Capacités | Râtelier | +1 emplacement d'arme (2 → 4) | 2 | 400 / 2 500 | 2 900 |
+| Capacités | Jeu de cartes | +1 relance par run | 3 | 300 / 800 / 2 000 | 3 100 |
+| Capacités | Boîte d'allumettes | +1 bannissement gratuit par run | 3 | 300 / 800 / 2 000 | 3 100 |
+| Stats | Couverture de laine | PV max +5 % | 5 | 250 / 600 / 1 200 / 2 400 / 4 000 | 8 450 |
+| Stats | Pierre à aiguiser | dégâts +4 % | 5 | idem | 8 450 |
+| Stats | Métronome | cadence +3 % | 5 | idem | 8 450 |
+| Stats | Bonnes chaussures | vitesse +2 % | 5 | idem | 8 450 |
+| Stats | Gourde de bouillon | régénération +0,1 PV/s | 5 | idem | 8 450 |
+| Stats | Rembourrage | armure +1 | 5 | idem | 8 450 |
+| Stats | Aimant de frigo | attraction de l'XP +10 % | 5 | idem | 8 450 |
+| Stats | Carnet de notes | XP +4 % | 5 | idem | 8 450 |
+| Stats | Fer à cheval | Chance +3 % | 5 | idem | 8 450 |
+| Confort | Bocal d'Essence | +20 Essence au départ | 5 | 150 / 350 / 700 / 1 200 / 2 000 | 4 400 |
+| | **Campement plein** | | | | **89 550** |
+
+Les noms sont des objets du camp, dans l'esprit des Écussons (§110) : à valider. Un rang multiplicatif vaut 1 + pas × rang, sans composer. Au maximum : PV ×1,25, dégâts ×1,2, cadence ×1,15, vitesse ×1,1.
+
+**Ce que rapporte une run, mesuré.**
+- Méthode : Vagabond en profil neuf, bot mortel qui va vers les lieux (`--nomad --visit --mortal`), 4 graines (42, 1002, 7, 123), 30 min.
+- Le bot ne meurt pas : un coup fatal le remet à fond. Ce qu'il a gagné à la minute *d* est donc ce que gagne un joueur mort à cette minute.
+- La mesure est faite avant le M1 : quatre emplacements d'armes. Le score vient d'une nouvelle colonne `score` des CSV de `RunObservation`.
+
+| Minute | 5 | 10 | 15 | 20 | 25 | 30 |
+|---|---:|---:|---:|---:|---:|---:|
+| Vestiges gagnés, moyenne | 267 | 792 | 1 460 | 2 185 | 3 018 | 4 042 |
+| Écart entre graines | 202–340 | 638–965 | 943–2 153 | 1 365–3 177 | 1 824–4 047 | 2 668–5 255 |
+
+C'est l'ordre de grandeur annoncé au §110 : environ une élimination pour un Vestige, 500 à 1 000 pour une run courte, 3 000 à 5 000 pour 30 min.
+
+**Nombre de runs pour tout acheter** (`python3 tools/camp_economy.py <mesures>`). Deux façons d'acheter sont simulées : le moins cher d'abord, ou les emplacements d'armes d'abord.
+
+| Run type | Vestiges par run | Runs pour le Campement plein | 3ᵉ arme, après la run… | 4ᵉ arme, après la run… |
+|---|---:|---:|---|---|
+| Débutant (mort entre 5 et 10 min) | 530 | 170 | 1 (armes d'abord) ou 8 (moins cher d'abord) | 6 ou 102 |
+| Moyenne (15 à 25 min) | 2 221 | **41** | 1 ou 2 | 2 ou 25 |
+| Bonne (30 min) | 4 042 | 23 | 1 ou 1 | 1 ou 14 |
+
+**Conclusion : les prix tiennent la cible** (30 à 50 runs moyennes ; 41 mesurées). Rien n'est changé. Deux remarques pour Raphaël :
+- Le 4ᵉ emplacement (2 500) est le rang le plus utile et l'un des plus chers. Un joueur qui achète au moins cher l'aura tard (25 runs moyennes) ; s'il économise pour lui, il l'a très tôt. L'écran le montre en tête du rayon Capacités.
+- Un débutant (530 par run) met 170 runs à tout acheter. C'est voulu : il progresse en jouant, et ses runs s'allongent à mesure qu'il achète. Ce chiffre sera revu en M3 avec les gains d'un profil neuf à deux armes.
+
