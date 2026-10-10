@@ -1051,3 +1051,10 @@ Raphaël : « mais au delà des sons, le design, les animations, c'est fini ? c'
 - **Lot B5 ouvert** ([plan 07](07-bestiaire-et-rencontres.md#lot-b5--lindicible-au-niveau-du-jeu--découpage-proposé-10-octobre-2026-soir)), planche B5a d'abord.
 - **Seule la forme découverte attend sa validation** ; arrivée, tempête, marée, vague, mort et sons avancent sans attendre.
 - **Forme découverte : C, l'œil** (planche B5a), choisi par Raphaël comme recommandé : un œil immense ouvert dans le sol inondé, cils en bras de noyés, la lanterne en reflet dans l'iris, qui est la cible.
+
+## 96. Illustrations des personnages — 10 octobre 2026
+
+Raphaël fournit douze illustrations (`~/Downloads/personnages`, compressées en WebP) : « fait en sorte que les sprites en grand dans l'écran de déblocage soient ceux là. pour les persos pas en jeu, ne les affiche pas ».
+
+**Acquis :** le grand portrait de la page Personnages est l'illustration du personnage ; la page ne montre que les personnages en jeu. Deux illustrations du Facteur existent (à roulettes, solitaire) : celle qui servira reste à choisir quand il deviendra jouable.
+

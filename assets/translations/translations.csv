@@ -236,7 +236,7 @@ UI_END_KILLS,Éliminations,Kills
 UI_END_CRISES,Résurgences,Resurgences
 UI_END_FELL_TO,Dernier coup,Last hit
 UI_END_VESTIGES,+{0} Vestiges,+{0} Vestiges
-UI_END_UNLOCK,Revient au camp : {0},Returns to camp: {0}
+UI_END_QUEST,Quête accomplie : {0} — {1},Quest complete: {0} — {1}
 UI_END_SEED,Graine {0},Seed {0}
 UI_END_SAVE_FAILED,"Progression non enregistrée : la sauvegarde a échoué","Progress not saved: saving failed"
 UI_END_HISTORY_PENDING,"Progression enregistrée ; la run rejoindra les Chroniques au camp","Progress saved; the run will join the Chronicles at camp"
@@ -389,13 +389,7 @@ STAT_CROWD_DAMAGE,Dégâts par ennemi proche,Damage per nearby enemy
 STAT_HIGH_HP_DAMAGE,Dégâts à PV hauts,Damage at high health
 STAT_LOW_HP_DAMAGE,Dégâts à PV bas,Damage at low health
 STAT_ESSENCE_DAMAGE_CAP,Plafond des dégâts d'Essence,Essence damage cap
-QUESTS_RUN_TITLE,QUÊTES DE RUN,RUN QUESTS
 QUEST_DONE_TOAST,Quête accomplie : {0},Quest complete: {0}
-SETTINGS_QUESTS,Quêtes de run,Run quests
-SETTINGS_QUESTS_FOLDED,Sceaux,Seals
-SETTINGS_QUESTS_DETAILED,Détaillées,Detailed
-SETTINGS_QUESTS_HIDDEN,Masquées,Hidden
-UI_SHOW_QUESTS,Détail des quêtes,Quest details
 UI_SHOW_MAP,Carte,Map
 MAP_LEGEND_YOU,Toi,You
 MAP_LEGEND_CHEST,Coffre (couleur de sa rareté),Chest (rarity colour)

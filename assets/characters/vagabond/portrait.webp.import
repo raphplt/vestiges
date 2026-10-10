@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://qxawj7ncr4bh"
-path="res://.godot/imported/quest_seal_red.png-38311e791d15ea042915f77b9049dafa.ctex"
+uid="uid://dxth48g0c1klj"
+path="res://.godot/imported/portrait.webp-7b07df27f2d635b55edb93140b0fb433.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/ui/hud/plan25/quest_seal_red.png"
-dest_files=["res://.godot/imported/quest_seal_red.png-38311e791d15ea042915f77b9049dafa.ctex"]
+source_file="res://assets/characters/vagabond/portrait.webp"
+dest_files=["res://.godot/imported/portrait.webp-7b07df27f2d635b55edb93140b0fb433.ctex"]
 
 [params]
 

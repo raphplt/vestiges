@@ -1,12 +1,11 @@
 using System.Collections.Generic;
 using Godot;
 using Vestiges.Infrastructure;
-using Vestiges.Progression;
 
 namespace Vestiges.UI;
 
 /// <summary>
-/// Chroniques du Hub : records, statistiques par personnage, endurance et quêtes.
+/// Chroniques du Hub : records, statistiques par personnage et endurance. Les quêtes ont leur page (HubQuestsPanel).
 /// Reconstruit son contenu à chaque changement de sous-onglet.
 /// </summary>
 public partial class HubChroniquesPanel : MarginContainer
@@ -87,7 +86,6 @@ public partial class HubChroniquesPanel : MarginContainer
 		CreateChroniquesSubTab(subTabRow, "global", "Global");
 		CreateChroniquesSubTab(subTabRow, "personnage", "Personnages");
 		CreateChroniquesSubTab(subTabRow, "endurance", "Endurance");
-		CreateChroniquesSubTab(subTabRow, "quetes", "Quêtes");
 
 		vbox.AddChild(new ColorRect { Color = new Color(GoldDim, 0.45f), CustomMinimumSize = new Vector2(0f, 4f) });
 
@@ -113,9 +111,6 @@ public partial class HubChroniquesPanel : MarginContainer
 				break;
 			case "endurance":
 				BuildChroniquesEndurance(scrollContent);
-				break;
-			case "quetes":
-				BuildChroniquesQuetes(scrollContent);
 				break;
 		}
 
@@ -256,81 +251,6 @@ public partial class HubChroniquesPanel : MarginContainer
 			runLabel.AddThemeColorOverride("font_color", isCurrentChar ? GoldDim : TextDim);
 			container.AddChild(runLabel);
 		}
-	}
-
-	private void BuildChroniquesQuetes(VBoxContainer container)
-	{
-		List<QuestProgressSnapshot> progressionQuests = QuestManager.GetProgressionSnapshots();
-		int completedCount = 0;
-		foreach (QuestProgressSnapshot snapshot in progressionQuests)
-		{
-			if (snapshot.IsClaimed)
-				completedCount++;
-		}
-
-		Label summary = new()
-		{
-			Text = $"Progression : {completedCount}/{progressionQuests.Count} objectifs gravés dans la pierre",
-			HorizontalAlignment = HorizontalAlignment.Center
-		};
-		UITheme.SetTextRole(summary, TextRole.Heading);
-		summary.AddThemeColorOverride("font_color", GoldBright);
-		container.AddChild(summary);
-
-		container.AddChild(CreateQuestSectionTitle("Progression permanente"));
-		foreach (QuestProgressSnapshot snapshot in progressionQuests)
-		{
-			Label title = new()
-			{
-				Text = $"{(snapshot.IsClaimed ? "[Terminée]" : "[En cours]")} {snapshot.Definition.Name}"
-			};
-			UITheme.SetTextRole(title, TextRole.Lead);
-			title.AddThemeColorOverride("font_color", snapshot.IsClaimed ? GoldBright : TextColor);
-			container.AddChild(title);
-
-			Label details = new()
-			{
-				Text = $"{snapshot.Definition.Description}\nAvancement : {snapshot.ProgressLabel}  |  {snapshot.RewardLabel}",
-				AutowrapMode = TextServer.AutowrapMode.WordSmart
-			};
-			UITheme.SetTextRole(details, TextRole.Small);
-			details.AddThemeColorOverride("font_color", snapshot.IsClaimed ? GoldDim : TextDim);
-			container.AddChild(details);
-		}
-
-		container.AddChild(CreateQuestSectionTitle("Quêtes de run"));
-
-		Label intro = new()
-		{
-			Text = "Trois quêtes sont tirées au hasard au début de chaque run. Elles offrent un coup de pouce immédiat en Essence ou en XP.",
-			AutowrapMode = TextServer.AutowrapMode.WordSmart
-		};
-		UITheme.SetTextRole(intro, TextRole.Small);
-		intro.AddThemeColorOverride("font_color", TextDim);
-		container.AddChild(intro);
-
-		foreach (QuestDefinition definition in QuestDataLoader.GetByCategory("run"))
-		{
-			Label entry = new()
-			{
-				Text = $"{definition.Name} — {definition.Description}  |  {QuestManager.GetRewardSummary(definition)}",
-				AutowrapMode = TextServer.AutowrapMode.WordSmart
-			};
-			UITheme.SetTextRole(entry, TextRole.Body);
-			entry.AddThemeColorOverride("font_color", TextColor);
-			container.AddChild(entry);
-		}
-	}
-
-	private Label CreateQuestSectionTitle(string text)
-	{
-		Label label = new()
-		{
-			Text = text
-		};
-		UITheme.SetTextRole(label, TextRole.Lead);
-		label.AddThemeColorOverride("font_color", GoldDim);
-		return label;
 	}
 
 	private static string FormatDuration(float seconds)

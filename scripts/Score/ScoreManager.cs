@@ -130,7 +130,6 @@ public partial class ScoreManager : Node
         GameManager gm = GetNode<GameManager>("/root/GameManager");
         gm.LastRunData = record;
         gm.LastVestigesEarned = VestigesEarned;
-        gm.LastUnlocks = outcome.Unlocks;
         gm.LastRunSaveError = outcome.Saved ? "" : outcome.Error;
         gm.LastRunHistoryPending = outcome.HistoryPending;
 

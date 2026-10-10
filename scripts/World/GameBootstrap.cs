@@ -248,8 +248,8 @@ public partial class GameBootstrap : Node
         // Collectes de la jeune génération rapprochées : pas de pause GC visible (plan 29).
         sceneRoot.AddChild(new GcPacer { Name = "GcPacer" });
 
-        QuestManager questManager = new() { Name = "QuestManager" };
-        sceneRoot.AddChild(questManager);
+        // Quêtes de déblocage (plan 06 §9) : suivies sans rien afficher, enregistrées dès qu'elles sont accomplies.
+        sceneRoot.AddChild(new QuestTracker { Name = "QuestTracker" });
 
         hud.SetEssenceTracker(essenceTracker);
 

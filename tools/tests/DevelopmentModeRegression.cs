@@ -41,9 +41,9 @@ public partial class DevelopmentModeRegression : Node
             if (seed)
             {
                 MetaSaveManager.AddVestiges(37);
-                MetaSaveManager.UnlockCharacter("forgeuse");
+                Check(MetaSaveManager.ClaimQuest(QuestDataLoader.Get("straighten_the_grid"), out _), "Forgeuse débloquée par sa quête");
                 MetaSaveManager.DiscoverSouvenir("billet_de_train");
-                MetaSaveManager.CompleteQuest("profile_fixture");
+                Check(MetaSaveManager.ClaimQuest(QuestDataLoader.Get("rake"), out SaveFile.WriteResult claimed) && claimed.Succeeded, "quête accomplie et écrite");
             }
 
             if (dev)
@@ -53,7 +53,9 @@ public partial class DevelopmentModeRegression : Node
                 foreach (SouvenirData souvenir in SouvenirDataLoader.GetAll())
                     Check(MetaSaveManager.HasSouvenir(souvenir.Id), $"souvenir {souvenir.Id}");
                 foreach (WeaponData weapon in WeaponDataLoader.GetAll())
-                    Check(string.IsNullOrEmpty(weapon.RequiresSouvenir) || MetaSaveManager.HasSouvenir(weapon.RequiresSouvenir), $"accès arme {weapon.Id}");
+                    Check(MetaSaveManager.IsWeaponUnlocked(weapon.Id), $"accès arme {weapon.Id}");
+                foreach (PassiveSouvenirData item in PassiveSouvenirDataLoader.GetAll())
+                    Check(MetaSaveManager.IsObjectUnlocked(item.Id), $"accès objet {item.Id}");
                 Check(!SteamManager.IsActive, "Steam inactif");
                 Check(MetaSaveManager.GetCompletedQuests().Count == 0, "quêtes non falsifiées");
                 Check(MetaSaveManager.GetVestiges() == 0, "monnaie normale non importée");
@@ -66,7 +68,8 @@ public partial class DevelopmentModeRegression : Node
                 Check(MetaSaveManager.IsCharacterUnlocked("forgeuse"), "acquis normal conservé");
                 Check(!MetaSaveManager.IsCharacterUnlocked("traqueur"), "verrou normal conservé");
                 Check(MetaSaveManager.GetDiscoveredSouvenirs().Count == 1, "lore normal conservé");
-                Check(MetaSaveManager.HasCompletedQuest("profile_fixture"), "quête normale conservée");
+                Check(MetaSaveManager.HasCompletedQuest("rake") && MetaSaveManager.IsWeaponUnlocked("nail_mace"), "quête normale et son arme conservées");
+                Check(!MetaSaveManager.IsWeaponUnlocked("lighthouse_shard") && !MetaSaveManager.IsObjectUnlocked("thermometre"), "verrous de quête conservés");
                 Check(MetaSaveManager.GetVestiges() == (seed ? 37 : 47), "monnaie normale conservée");
             }
 

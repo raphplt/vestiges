@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bju1v4qiol7i4"
-path="res://.godot/imported/quest_seal_green.png-a3c88090bb677a284224ed8d375df0d4.ctex"
+uid="uid://bennxf7k1f601"
+path="res://.godot/imported/portrait.webp-4df56e2032ac5cc66c104824ca60d917.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/ui/hud/plan25/quest_seal_green.png"
-dest_files=["res://.godot/imported/quest_seal_green.png-a3c88090bb677a284224ed8d375df0d4.ctex"]
+source_file="res://assets/characters/forgeuse/portrait.webp"
+dest_files=["res://.godot/imported/portrait.webp-4df56e2032ac5cc66c104824ca60d917.ctex"]
 
 [params]
 

@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bb3fw1jkd7tp0"
-path="res://.godot/imported/quest_seal_blue.png-2bf3ce73e22ae9c94453f2f605c437d6.ctex"
+uid="uid://cnxfgaeoo40hh"
+path="res://.godot/imported/portrait.webp-f0ca9f0deca8cabc97cf73c01b79eb9d.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/ui/hud/plan25/quest_seal_blue.png"
-dest_files=["res://.godot/imported/quest_seal_blue.png-2bf3ce73e22ae9c94453f2f605c437d6.ctex"]
+source_file="res://assets/characters/traqueur/portrait.webp"
+dest_files=["res://.godot/imported/portrait.webp-f0ca9f0deca8cabc97cf73c01b79eb9d.ctex"]
 
 [params]
 

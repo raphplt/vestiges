@@ -17,7 +17,7 @@ public static class WeaponDataValidator
 	{
 		"id", "name", "description", "sprite", "tier", "type", "damage_type", "attack_pattern",
 		"trigger_coefficient", "fx", "summary", "growth", "ascensions", "stats", "source", "lore_flavor", "attack_audio",
-		"count_name_key", "special_effect", "requires_souvenir", "default_for", "on_hit_effect", "drop_condition",
+		"count_name_key", "special_effect", "default_for", "on_hit_effect",
 	};
 
 	private static readonly HashSet<string> AscensionKeys = new()

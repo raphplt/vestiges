@@ -30,6 +30,9 @@ public readonly record struct EnemyLife(ulong InstanceId, ulong Generation);
 public readonly record struct DamageResult(EnemyLife Target, AttackContext Source, float HpBefore,
     float NativeDamage, float CarriedDamage, float HpLost, bool Fatal, bool Applied)
 {
+    /// <summary>Coup critique : les quêtes de critique comptent les éliminations qu'il achève.</summary>
+    public bool Critical { get; init; }
+
     public float NativeOverkill => Applied && Fatal ? Mathf.Max(0f, NativeDamage - HpBefore) : 0f;
 
     public static DamageResult Resolve(EnemyLife target, AttackContext source, float hp,
@@ -52,7 +55,8 @@ public readonly record struct ControlState(float Strength, float Remaining, Atta
 }
 
 public readonly record struct EnemyKillResult(EnemyLife Target, string EnemyId, Vector2 Position,
-    DamageResult Damage, ControlState Slow, ControlState Disorientation, ControlState Burn = default, bool Elite = false);
+    DamageResult Damage, ControlState Slow, ControlState Disorientation, ControlState Burn = default, bool Elite = false,
+    bool Sovereign = false);
 
 public enum StatusKind { Burn, Bleed, Slow, Disorientation, Fragility }
 

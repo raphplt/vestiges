@@ -3,152 +3,114 @@
         "id": "billet_de_train",
         "name": "Billet de train",
         "constellation": "avant",
-        "text": "Ligne 7, station Mémoria vers station Ancrage. Prix : 2.40. Validité : un aller. Le papier est jauni mais le texte est net. Quelqu'un a fait ce trajet. Quelqu'un allait quelque part.",
-        "unlock_type": "",
-        "unlock_id": ""
+        "text": "Ligne 7, station Mémoria vers station Ancrage. Prix : 2.40. Validité : un aller. Le papier est jauni mais le texte est net. Quelqu'un a fait ce trajet. Quelqu'un allait quelque part."
     },
     {
         "id": "liste_de_courses",
         "name": "Liste de courses",
         "constellation": "avant",
-        "text": "Lait, pain, allumettes, sel de résonance. La dernière ligne est soulignée deux fois : ne pas oublier cette fois. Quelqu'un avait une routine. Quelqu'un oubliait déjà.",
-        "unlock_type": "",
-        "unlock_id": ""
+        "text": "Lait, pain, allumettes, sel de résonance. La dernière ligne est soulignée deux fois : ne pas oublier cette fois. Quelqu'un avait une routine. Quelqu'un oubliait déjà."
     },
     {
         "id": "photo_decoloree",
         "name": "Photo décolorée",
         "constellation": "avant",
-        "text": "Deux personnes sourient devant un bâtiment. L'inscription est illisible. Les visages sont flous — pas abîmés, flous. Comme si le souvenir lui-même hésitait.",
-        "unlock_type": "",
-        "unlock_id": ""
+        "text": "Deux personnes sourient devant un bâtiment. L'inscription est illisible. Les visages sont flous — pas abîmés, flous. Comme si le souvenir lui-même hésitait."
     },
     {
         "id": "journal_voisine",
         "name": "Journal intime, 14 mars",
         "constellation": "signes",
-        "text": "Ma voisine dit qu'il y a toujours eu un terrain vague en face. Mais je SAIS qu'il y avait quelque chose. Un magasin ? Une école ? Les murs de ma mémoire sont pleins de trous.",
-        "unlock_type": "",
-        "unlock_id": ""
+        "text": "Ma voisine dit qu'il y a toujours eu un terrain vague en face. Mais je SAIS qu'il y avait quelque chose. Un magasin ? Une école ? Les murs de ma mémoire sont pleins de trous."
     },
     {
         "id": "rapport_cartographie",
         "name": "Rapport de cartographie",
         "constellation": "signes",
-        "text": "Département de Cartographie Urbaine : incohérences entre relevés successifs. Des rues entières absentes du dernier scan. Hypothèse : erreur de calibration. Note marginale au stylo rouge : ce n'est pas une erreur.",
-        "unlock_type": "",
-        "unlock_id": ""
+        "text": "Département de Cartographie Urbaine : incohérences entre relevés successifs. Des rues entières absentes du dernier scan. Hypothèse : erreur de calibration. Note marginale au stylo rouge : ce n'est pas une erreur."
     },
     {
         "id": "graffiti_mur",
         "name": "Graffiti sur un mur",
         "constellation": "signes",
-        "text": "NE PAS OUBLIER. NE PAS OUBLIER. NE PAS OUBLIER. Les lettres sont de plus en plus grandes, de plus en plus tremblantes. La dernière ligne est à peine lisible, comme si la main avait déjà commencé à douter.",
-        "unlock_type": "",
-        "unlock_id": ""
+        "text": "NE PAS OUBLIER. NE PAS OUBLIER. NE PAS OUBLIER. Les lettres sont de plus en plus grandes, de plus en plus tremblantes. La dernière ligne est à peine lisible, comme si la main avait déjà commencé à douter."
     },
     {
         "id": "note_ponts",
         "name": "Note griffonnée",
         "constellation": "effacement",
-        "text": "Les ponts tiennent encore. Marie dit que c'est parce que tout le monde connaît les ponts. Ce qu'on oublie disparaît. Ce dont on se souvient reste. Si c'est vrai, alors il suffit de se souvenir.",
-        "unlock_type": "",
-        "unlock_id": ""
+        "text": "Les ponts tiennent encore. Marie dit que c'est parce que tout le monde connaît les ponts. Ce qu'on oublie disparaît. Ce dont on se souvient reste. Si c'est vrai, alors il suffit de se souvenir."
     },
     {
         "id": "radio_statique",
         "name": "Enregistrement radio",
         "constellation": "effacement",
-        "text": "...confirmons que les zones rurales sont les plus touchées. Répétons : restez dans les centres urbains. La densité de mémoire collective semble... [statique] ...facteur de protection. Ne restez pas seuls.",
-        "unlock_type": "",
-        "unlock_id": ""
+        "text": "...confirmons que les zones rurales sont les plus touchées. Répétons : restez dans les centres urbains. La densité de mémoire collective semble... [statique] ...facteur de protection. Ne restez pas seuls."
     },
     {
         "id": "journal_dernier",
         "name": "Journal, dernière entrée",
         "constellation": "effacement",
-        "text": "Je ne me souviens plus de mon nom. C'est étrange — je ne suis pas triste. C'est comme un mot sur le bout de la langue qui ne viendra jamais. Le reste tient encore. Pour combien de temps ?",
-        "unlock_type": "",
-        "unlock_id": ""
+        "text": "Je ne me souviens plus de mon nom. C'est étrange — je ne suis pas triste. C'est comme un mot sur le bout de la langue qui ne viendra jamais. Le reste tient encore. Pour combien de temps ?"
     },
     {
         "id": "notes_terrain",
         "name": "Notes de terrain, Jour 15",
         "constellation": "creatures",
-        "text": "L'ombre dans le gymnase a pris une forme. Quelque chose entre le félin et l'humain. Elle ne nous attaque pas — elle occupe l'espace. Comme si la matière avait horreur du vide.",
-        "unlock_type": "",
-        "unlock_id": ""
+        "text": "L'ombre dans le gymnase a pris une forme. Quelque chose entre le félin et l'humain. Elle ne nous attaque pas — elle occupe l'espace. Comme si la matière avait horreur du vide."
     },
     {
         "id": "dessin_enfant",
         "name": "Dessin d'enfant",
         "constellation": "creatures",
-        "text": "Un gribouillage au crayon. Des formes noires avec beaucoup d'yeux. En bas, une écriture maladroite : les gens de la nuit. Un enfant les a vus. Un enfant a essayé de comprendre.",
-        "unlock_type": "",
-        "unlock_id": ""
+        "text": "Un gribouillage au crayon. Des formes noires avec beaucoup d'yeux. En bas, une écriture maladroite : les gens de la nuit. Un enfant les a vus. Un enfant a essayé de comprendre."
     },
     {
         "id": "carnet_recherche_foyer",
         "name": "Carnet de recherche",
         "constellation": "foyer",
-        "text": "Hypothèse : le Foyer n'émet pas de lumière au sens physique. Il émet de la mémoire. Le rayon mesurable correspond exactement à la zone où les gens se souviennent encore de son existence.",
-        "unlock_type": "",
-        "unlock_id": ""
+        "text": "Hypothèse : le Foyer n'émet pas de lumière au sens physique. Il émet de la mémoire. Le rayon mesurable correspond exactement à la zone où les gens se souviennent encore de son existence."
     },
     {
         "id": "temoignage_irene",
         "name": "Témoignage d'Irène",
         "constellation": "foyer",
-        "text": "La vieille Irène a apporté la photo de son fils disparu au Foyer. Elle l'a posée près de la flamme et s'est endormie. Au matin, elle souriait. Elle ne se souvenait toujours pas de lui. Mais la flamme brûlait plus fort.",
-        "unlock_type": "",
-        "unlock_id": ""
+        "text": "La vieille Irène a apporté la photo de son fils disparu au Foyer. Elle l'a posée près de la flamme et s'est endormie. Au matin, elle souriait. Elle ne se souvenait toujours pas de lui. Mais la flamme brûlait plus fort."
     },
     {
         "id": "photo_laboratoire",
         "name": "Photo de laboratoire",
         "constellation": "joueur",
-        "text": "Quelqu'un qui pourrait être toi, dans un laboratoire. Tu ne reconnais ni le lieu ni la personne. Mais la blouse a ton nom. Ou un nom. Ça pourrait être n'importe qui. Ça pourrait être toi.",
-        "unlock_type": "",
-        "unlock_id": ""
+        "text": "Quelqu'un qui pourrait être toi, dans un laboratoire. Tu ne reconnais ni le lieu ni la personne. Mais la blouse a ton nom. Ou un nom. Ça pourrait être n'importe qui. Ça pourrait être toi."
     },
     {
         "id": "inscription_gravee",
         "name": "Inscription gravée",
         "constellation": "joueur",
-        "text": "SOUVIENS-TOI, ET LE MONDE RESTERA. Les lettres sont profondes dans la pierre. Quelqu'un a voulu que ces mots survivent à tout. Même à l'oubli. Surtout à l'oubli.",
-        "unlock_type": "",
-        "unlock_id": ""
+        "text": "SOUVIENS-TOI, ET LE MONDE RESTERA. Les lettres sont profondes dans la pierre. Quelqu'un a voulu que ces mots survivent à tout. Même à l'oubli. Surtout à l'oubli."
     },
     {
         "id": "memory_flame",
         "name": "Flamme de mémoire",
         "constellation": "foyer",
-        "text": "Un éclat de lumière capturé dans un cristal. Il pulse au rythme d'un cœur. Le cristal est froid, mais la lumière est chaude. Comme un souvenir qu'on refuse de lâcher. Comme une flamme qui brûle sans combustible.",
-        "unlock_type": "weapon",
-        "unlock_id": "essence_staff"
+        "text": "Un éclat de lumière capturé dans un cristal. Il pulse au rythme d'un cœur. Le cristal est froid, mais la lumière est chaude. Comme un souvenir qu'on refuse de lâcher. Comme une flamme qui brûle sans combustible."
     },
     {
         "id": "void_knowledge",
         "name": "Connaissance du Vide",
         "constellation": "creatures",
-        "text": "Un journal de recherche, pages couvertes de diagrammes. Les créatures ne VIENNENT pas du néant — elles SONT le néant qui prend forme. Comprendre le Vide, c'est pouvoir le trancher.",
-        "unlock_type": "weapon",
-        "unlock_id": "void_edge"
+        "text": "Un journal de recherche, pages couvertes de diagrammes. Les créatures ne VIENNENT pas du néant — elles SONT le néant qui prend forme. Comprendre le Vide, c'est pouvoir le trancher."
     },
     {
         "id": "lantern_memory",
         "name": "Mémoire de la Lanterne",
         "constellation": "effacement",
-        "text": "Plans détaillés d'un objet impossible : une lanterne qui brûle des souvenirs comme combustible. Plus on se souvient, plus elle brille. Le constructeur a noté en marge : fonctionne aussi avec les regrets.",
-        "unlock_type": "weapon",
-        "unlock_id": "lantern_of_names"
+        "text": "Plans détaillés d'un objet impossible : une lanterne qui brûle des souvenirs comme combustible. Plus on se souvient, plus elle brille. Le constructeur a noté en marge : fonctionne aussi avec les regrets."
     },
     {
         "id": "echo_fragment",
         "name": "Fragment d'écho",
         "constellation": "signes",
-        "text": "Un morceau de pierre qui vibre quand on le touche. Il répète le dernier son qu'il a entendu, en boucle, de plus en plus faiblement. Le son ressemble à un nom. Celui de quelqu'un qui n'existe plus.",
-        "unlock_type": "weapon",
-        "unlock_id": "resonance_hammer"
+        "text": "Un morceau de pierre qui vibre quand on le touche. Il répète le dernier son qu'il a entendu, en boucle, de plus en plus faiblement. Le son ressemble à un nom. Celui de quelqu'un qui n'existe plus."
     }
 ]

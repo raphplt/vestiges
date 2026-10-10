@@ -69,6 +69,7 @@ public partial class GameOverScreen : CanvasLayer
     // Armes disponibles au départ de la run : celles qui s'y ajoutent au bilan (Souvenir retrouvé) mènent à la Collection.
     private readonly HashSet<string> _weaponsAtStart = new();
     private readonly List<WeaponData> _newWeapons = new();
+    private readonly List<string> _questsDone = new();
     private readonly List<EndGainCard> _gainCards = new();
 
     private bool _showing;
@@ -97,6 +98,7 @@ public partial class GameOverScreen : CanvasLayer
         Layer = 50;
         _eventBus = GetNode<EventBus>("/root/EventBus");
         _eventBus.EntityDied += OnEntityDied;
+        _eventBus.QuestCompleted += OnQuestCompleted;
         _weaponsAtStart.UnionWith(AvailableWeaponIds());
         _bodyFont = UITheme.BodyFont;
         _strongFont = UITheme.StrongFont;
@@ -109,7 +111,10 @@ public partial class GameOverScreen : CanvasLayer
     public override void _ExitTree()
     {
         if (_eventBus != null)
+        {
             _eventBus.EntityDied -= OnEntityDied;
+            _eventBus.QuestCompleted -= OnQuestCompleted;
+        }
         // La fenêtre survit au rechargement de la scène : elle ne doit pas garder ce bilan libéré.
         GetViewport().SizeChanged -= FitToViewport;
     }
@@ -237,16 +242,15 @@ public partial class GameOverScreen : CanvasLayer
         GameManager gameManager = GetNode<GameManager>("/root/GameManager");
         gameManager.ChangeState(GameManager.GameState.Death);
         _scoreManager?.SaveEndOfRun();
-        gameManager.LastQuestCompletions = QuestManager.ResolvePendingProgressionQuests(gameManager.LastRunData, out SaveFile.WriteResult questsSaved);
-        if (!questsSaved.Succeeded && string.IsNullOrEmpty(gameManager.LastRunSaveError))
-            gameManager.LastRunSaveError = questsSaved.Error;
         _newWeapons.Clear();
         foreach (WeaponData weapon in WeaponDataLoader.GetAll())
         {
-            if (!_weaponsAtStart.Contains(weapon.Id) && MetaSaveManager.IsWeaponUnlocked(weapon))
+            if (!_weaponsAtStart.Contains(weapon.Id) && MetaSaveManager.IsWeaponUnlocked(weapon.Id))
                 _newWeapons.Add(weapon);
         }
     }
+
+    private void OnQuestCompleted(string questId) => _questsDone.Add(questId);
 
     private static BuildSnapshot Snapshot(Player player)
     {
@@ -408,15 +412,12 @@ public partial class GameOverScreen : CanvasLayer
         int vestiges = _scoreManager?.VestigesEarned ?? 0;
         if (vestiges > 0)
             AddGainCard(string.Format(Tr("UI_END_VESTIGES"), vestiges), UITheme.GoldBright).SetCounter(Tr("UI_END_VESTIGES"), vestiges);
-        if (gm.LastQuestCompletions != null)
+        foreach (string questId in _questsDone)
         {
-            foreach (string quest in gm.LastQuestCompletions)
-                AddGainCard(quest, UITheme.CyanEssence);
-        }
-        if (gm.LastUnlocks != null)
-        {
-            foreach (string id in gm.LastUnlocks)
-                AddGainCard(string.Format(Tr("UI_END_UNLOCK"), CharacterDataLoader.Get(id)?.Name ?? id), UITheme.GreenKit, flipSound: "sfx_souvenir_trouve");
+            QuestDefinition quest = QuestDataLoader.Get(questId);
+            if (quest != null)
+                AddGainCard(string.Format(Tr("UI_END_QUEST"), quest.Name, QuestBook.RewardSummary(quest)), UITheme.GreenKit,
+                    flipSound: "sfx_souvenir_trouve");
         }
         foreach (WeaponData weapon in _newWeapons)
             AddGainCard(string.Format(Tr("UI_END_NEW_WEAPON"), weapon.Name), UITheme.GoldBright, weapon.Sprite, "sfx_souvenir_trouve");
@@ -440,7 +441,7 @@ public partial class GameOverScreen : CanvasLayer
         MetaSaveManager.Load();
         foreach (WeaponData weapon in WeaponDataLoader.GetAll())
         {
-            if (MetaSaveManager.IsWeaponUnlocked(weapon))
+            if (MetaSaveManager.IsWeaponUnlocked(weapon.Id))
                 yield return weapon.Id;
         }
     }

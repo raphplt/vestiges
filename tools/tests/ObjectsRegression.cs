@@ -69,7 +69,6 @@ public partial class ObjectsRegression : Node2D
             CheckDashTrail();
             CheckStances();
             CheckChestStatBonus();
-            CheckRefundQuest();
             GD.Print($"[ObjectsRegression] RESULT failures={_failures}");
             GetTree().Quit(_failures == 0 ? 0 : 1);
         }
@@ -223,18 +222,24 @@ public partial class ObjectsRegression : Node2D
         typeof(FragmentManager).GetMethod("CachePlayer", Private).Invoke(fragments, null);
         typeof(FragmentManager).GetField("_currentLevel", Private).SetValue(fragments, 5);
         List<FragmentOption> pool = (List<FragmentOption>)typeof(FragmentManager).GetMethod("BuildFragmentPool", Private).Invoke(fragments, null);
+        // Profil neuf : seuls les objets de la réserve de départ sont offerts (plan 06 §9.2).
         int fresh = pool.FindAll(option => option.Type == "passive_new").Count;
+        int unlocked = PassiveSouvenirDataLoader.GetAll().FindAll(item => MetaSaveManager.IsObjectUnlocked(item.Id)).Count;
         bool noRetired = !pool.Exists(option => option.Id is "flamme_interieure" or "fragment_deternite");
-        Check(fresh == 33 && noRetired, $"Offre de niveau : {fresh} objets neufs possibles, aucun objet retiré");
+        Check(fresh == unlocked && fresh == 15 && noRetired, $"Offre de niveau : {fresh} objets neufs possibles (réserve de départ), aucun objet retiré");
 
         // Plus de paliers par niveau (DECISIONS §52) : dès le niveau 2, toutes les armes débloquées sont tirables.
         typeof(FragmentManager).GetField("_currentLevel", Private).SetValue(fragments, 2);
         pool = (List<FragmentOption>)typeof(FragmentManager).GetMethod("BuildFragmentPool", Private).Invoke(fragments, null);
         HashSet<int> tiers = new();
+        HashSet<int> unlockedTiers = new();
         foreach (FragmentOption option in pool)
             if (option.Type == "weapon_new")
                 tiers.Add(WeaponDataLoader.Get(option.Id).Tier);
-        Check(tiers.Contains(1) && tiers.Contains(3) && tiers.Contains(5), $"Offre au niveau 2 : armes neuves des paliers {string.Join(", ", tiers)}");
+        foreach (WeaponData weapon in WeaponDataLoader.GetAll())
+            if (MetaSaveManager.IsWeaponUnlocked(weapon.Id) && weapon.Id != _player.WeaponSlots[0].Id)
+                unlockedTiers.Add(weapon.Tier);
+        Check(tiers.SetEquals(unlockedTiers) && tiers.Count > 1, $"Offre au niveau 2 : armes neuves de tous les paliers débloqués ({string.Join(", ", tiers)})");
 
         foreach (string id in new[] { "memoire_vive", "resonance", "portee_etendue", "oeil_critique", "ancrage", "regeneration" })
             _player.AddOrUpgradePassive(id);
@@ -1001,20 +1006,6 @@ public partial class ObjectsRegression : Node2D
         Check(LootRewards.RollStatBonus("common") == null && Mathf.IsEqualApprox(afterRare / before, 1.16f)
               && Mathf.IsEqualApprox(_player.AttackSpeedMultiplier / afterRare, 1.24f) && Mathf.IsEqualApprox(_player.Armor - armor, 4f),
             $"Coffre : rien pour un commun, cadence ×1,16 (rare, « {rare.Label} ») puis ×1,24 (épique), armure +4 (rare)");
-    }
-
-    /// <summary>Plan 23 R9 : l'Essence rendue par le Porte-monnaie ne compte pas pour « Accumuler de l'Essence ».</summary>
-    private void CheckRefundQuest()
-    {
-        QuestManager quests = new() { Name = "QuestManager" };
-        AddChild(quests);
-        EventBus events = GetNode<EventBus>("/root/EventBus");
-        events.EmitSignal(EventBus.SignalName.LootReceived, "essence", ObjectStances.EssenceRefundEffect, 50);
-        events.EmitSignal(EventBus.SignalName.LootReceived, "essence", "run_event", 10);
-        int counted = (int)typeof(QuestManager).GetField("_essenceCollectedTotal", Private).GetValue(quests);
-        RemoveChild(quests);
-        quests.QueueFree();
-        Check(counted == 10, $"Quête d'Essence : 10 gagnés comptés, 50 rendus par le Porte-monnaie ignorés ({counted})");
     }
 
     private void CheckStances()
