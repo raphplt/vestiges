@@ -478,6 +478,21 @@ public partial class QuestTracker : Node
         return false;
     }
 
+    /// <summary>Valeurs de la run pour chaque condition d'une quête suivie, ou null (mesures des seuils, plan 06 Q4).</summary>
+    public float[] RunProgress(string questId)
+    {
+        foreach (Tracked tracked in _quests)
+        {
+            if (tracked.Quest.Id != questId)
+                continue;
+            float[] values = new float[tracked.Watches.Length];
+            for (int i = 0; i < values.Length; i++)
+                values[i] = tracked.Watches[i].Value;
+            return values;
+        }
+        return null;
+    }
+
     private Player CachePlayer()
     {
         if (_player == null || !IsInstanceValid(_player))

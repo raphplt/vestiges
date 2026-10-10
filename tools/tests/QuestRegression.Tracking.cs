@@ -59,7 +59,7 @@ public partial class QuestRegression
             tested++;
         }
         // Accomplies avant leur tour, et c'est voulu : Toutes les portes et Grandir (contrôles du cumul et du délai),
-        // Bien au chaud (12 minutes à PV pleins dans le contrôle du délai), Retenir (150 ralentis, en chemin vers les
+        // Bien au chaud (10 minutes à PV pleins dans le contrôle du délai), Retenir (150 ralentis, en chemin vers les
         // 300 de Sonner la récré). Les 32 autres l'ont été chacune par son propre jeu.
         Check(tested == 32, $"32 quêtes contrôlées une à une, aucune autre accomplie en chemin ({tested})");
         CheckToastQueue();
@@ -314,17 +314,17 @@ public partial class QuestRegression
     {
         QuestDefinition doors = QuestDataLoader.Get("every_door");
         StartRun();
-        for (int i = 0; i < 60; i++)
+        for (int i = 0; i < 30; i++)
             _bus.EmitSignal(EventBus.SignalName.ChestOpened, "chest", "common", Vector2.Zero);
         _bus.EmitSignal(EventBus.SignalName.GameStateChanged, "Run", nameof(GameManager.GameState.Death));
         EndRun();
-        Check(MetaSaveManager.GetQuestProgress(doors.Id) is { Count: 1 } stored && Mathf.IsEqualApprox(stored[0], 60f), "cumul retenu à la mort : 60 coffres");
+        Check(MetaSaveManager.GetQuestProgress(doors.Id) is { Count: 1 } stored && Mathf.IsEqualApprox(stored[0], 30f), "cumul retenu à la mort : 30 coffres");
         StartRun();
-        for (int i = 0; i < 39; i++)
+        for (int i = 0; i < 29; i++)
             _bus.EmitSignal(EventBus.SignalName.ChestOpened, "chest", "common", Vector2.Zero);
-        Check(!MetaSaveManager.HasCompletedQuest(doors.Id), "99 coffres en deux runs : pas encore");
+        Check(!MetaSaveManager.HasCompletedQuest(doors.Id), "59 coffres en deux runs : pas encore");
         _bus.EmitSignal(EventBus.SignalName.ChestOpened, "chest", "common", Vector2.Zero);
-        Check(MetaSaveManager.HasCompletedQuest(doors.Id), "100ᵉ coffre de la seconde run : Trousseau débloqué en pleine run");
+        Check(MetaSaveManager.HasCompletedQuest(doors.Id), "60ᵉ coffre, dans la seconde run : Trousseau débloqué en pleine run");
         EndRun();
 
         QuestDefinition round = QuestDataLoader.Get("the_round");
@@ -339,10 +339,10 @@ public partial class QuestRegression
     private void CheckDeadline()
     {
         StartRun();
-        _tracker._Process(721f);
-        _bus.EmitSignal(EventBus.SignalName.LevelUp, 30);
+        _tracker._Process(601f);
+        _bus.EmitSignal(EventBus.SignalName.LevelUp, 20);
         Check(!MetaSaveManager.HasCompletedQuest("against_the_clock") && MetaSaveManager.HasCompletedQuest("grow"),
-            "niveau 30 après la 12ᵉ minute : Grandir oui, Contre la montre non");
+            "niveau 20 après la 10ᵉ minute : Grandir oui, Contre la montre non");
         EndRun();
     }
 

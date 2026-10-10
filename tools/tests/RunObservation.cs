@@ -9,6 +9,7 @@ using Vestiges.Combat;
 using Vestiges.Combat.Abilities;
 using Vestiges.Core;
 using Vestiges.Infrastructure;
+using Vestiges.Progression;
 using Vestiges.Spawn;
 using Vestiges.World;
 
@@ -807,7 +808,30 @@ public partial class RunObservation : Node
         AppendBalance(summary);
         foreach (KeyValuePair<int, double> entry in levelTimes)
             summary.Append(CultureInfo.InvariantCulture, $" L{entry.Key}={entry.Value:F0}s");
+        PrintQuestProgress();
         GD.Print($"[RunObservation] RESULT {summary}");
+    }
+
+    /// <summary>
+    /// Avancée de chaque quête de déblocage dans cette run, une valeur par condition (plan 06 Q4 : runs avant chaque
+    /// quête). Une quête accomplie pendant la run l'est déjà dans le journal du suivi, avec son heure.
+    /// </summary>
+    private void PrintQuestProgress()
+    {
+        QuestTracker tracker = _world.GetNodeOrNull<QuestTracker>("QuestTracker");
+        if (tracker == null)
+            return;
+        StringBuilder line = new("[RunObservation] QUESTS");
+        foreach (QuestDefinition quest in QuestDataLoader.GetAll())
+        {
+            float[] values = tracker.RunProgress(quest.Id);
+            if (values == null)
+                continue;
+            line.Append(' ').Append(quest.Id).Append('=');
+            for (int i = 0; i < values.Length; i++)
+                line.Append(CultureInfo.InvariantCulture, $"{(i > 0 ? "/" : "")}{values[i]:0.#}");
+        }
+        GD.Print(line.ToString());
     }
 
     /// <summary>Silhouettes des décors (fixes) : un décor masque un coffre s'il est dessiné devant lui.</summary>

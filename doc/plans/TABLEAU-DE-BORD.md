@@ -48,6 +48,7 @@ Le [registre](DECISIONS.md) garde les mots de Raphaël. Les plans gardent le dé
 | Steam | 26 Q3, Q12 | App ID du jeu à obtenir ([marche à suivre](../STEAM-MISE-EN-PLACE.md), §67) ; test réel des classements ensuite. |
 | Sortie commerciale | [31](31-sortie-commerciale.md) | **Proposé le 10 octobre** : format (accès anticipé ou 1.0), sortie à l'automne 2027 après le Next Fest de juin, **nom à vérifier** (homonyme *Vestiges: Fallen Tribes* sur Steam), visage dans les vidéos, temps et budget, éditeur, démo (plan 31 §12). App ID en premier. |
 | Sprites des héros à venir | 32 | Valider les huit designs sur les planches ([casting](planches/32-casting.png), H1, H2, H3) ; l'Enfant du Bas-Port porte l'écharpe orange du Vagabond et le bonnet de sa sœur (proposition, pas dans le lore). Les yeux des trois joués sont repris (H4, accord du 10 octobre). |
+| Quêtes de déblocage | [06 §10](06-personnages-quetes-defis.md) | **Livrées le 10 octobre (Q1–Q4, branche `quetes-deblocage`), à jouer.** Trancher les quêtes de critique (aucun critique de base, les armes en arc ne marquent jamais de critique) et Recopier (deux ascensions, niveau 50). Relire le reste des Chroniques et de la Collection. Images soignées des personnages : `assets/characters/<id>/portrait.png`. |
 | Points à vérifier en jeu | `A-VERIFIER.md` | 51 cases non cochées ; Raphaël les coche en jouant (§64) ; quatre points tranchés retirés par N1 |
 
 ## 3. Validé, pas encore fait

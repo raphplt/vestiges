@@ -304,3 +304,29 @@ Travail fait dans un worktree séparé (`../vestiges-quetes`, branche `quetes-de
 - **Vérifié :** captures du Hub en vraie fenêtre (`tools/capture_hub.sh`), profil neuf et profil avancé (5 quêtes accomplies, avancées posées) : menu, page Personnages (Forgeuse verrouillée, Traqueur jouable, Éveillée débloquée à venir), page Quêtes (jauge d'Encaisser à 640/1000, onglet Accomplies). Validation complète 34/34.
 - **Non vérifié à l'image :** la carte de quête du bilan. La capture de mort (`--capture-death`) ne montre plus le bilan, déjà au commit de base `3792cc42` (même essai, même seed) : outil à réparer, pas une régression de ces lots.
 - **À relire avec Raphaël :** le reste des Chroniques (Global, Personnages, Endurance) et de la Collection ; la carte « Arme retrouvée » du bilan doublonne désormais la carte de quête qui débloque la même arme.
+
+### Q4 livré — seuils mesurés
+
+**Mesures.** `MEASURE_PROFILE=normal tools/measure_run.sh`, profil neuf (réserve de départ seule), bot mortel (`--mortal` : un coup fatal remet les PV et se compte), Traqueur. Série A : bot qui garde un cap (`--nomad`), seeds 221092026, 1002, 7, 42, 20 min. Série B : bot qui erre, seeds 221092026, 1002, 7, 15 min, avec des quêtes-sondes temporaires (cibles inatteignables, retirées ensuite) pour lire les faits déjà accomplis. La scène de mesure écrit désormais une ligne `QUESTS` (valeur de chaque condition en fin de run) ; le suivi journalise l'heure de chaque quête accomplie.
+
+**Ce que fait le bot en 15 à 20 min :** niveau 20 entre 9 et 16 min, jamais 30 ; 8,6 à 13,6 km parcourus ; 49 000 à 76 000 cases de brouillard découvertes (près de 2 000 dès l'apparition) ; au plus 3 armes au niveau 3 et 1 au niveau 5 ; 18 000 à 27 000 dégâts subis (il n'esquive pas) ; 600 à 1 060 PV soignés ; 750 à 810 éliminations proches ; 1 à 3 micro-événements réussis ; aucun coffre ouvert, aucun Mémorial ravivé, aucune Faille, aucune élimination critique.
+
+| Quête | Avant | Après | Mesure |
+|---|---|---|---|
+| Dessiner la carte ★ | 150 zones | **30 000 cases** | accomplie à 0 s ; 49 000–76 000 en 15 min |
+| La tournée ★★ | 2 500 m + 5 Repères | **6 000 m** + 5 Repères | 8 600–13 600 m ; Repères non mesurables (le bot n'utilise pas les lieux) |
+| Quatre airs ★ | 4 armes niv. 10 | **4 armes niv. 3** | jamais une arme au niveau 10 ; au plus 3 au niveau 3 |
+| Garder la côte ★ | 500 à distance | **400** | 149–499 |
+| Reprendre des forces ★ | 1 000 PV | **600 PV** | 600–1 060, alors que le bot encaisse bien plus qu'un joueur |
+| Grandir ★ | niveau 30 | **niveau 20** | niveau 30 jamais ; 20 atteint dans 5 runs sur 7 |
+| Contre la montre ★★ | niv. 30 avant 12 min | **niv. 20 avant 10 min** | 1 run sur 7 (niveau 20 à 9 min 7 s) |
+| Toutes les portes ★★ | 100 coffres (cumul) | **60** | 39 à 43 coffres par carte ; environ 6 runs à 10 coffres |
+| Clouer ★ | 400 à la Cloueuse | **250** | 126 avec une Cloueuse prise en milieu de run |
+
+Gardés, car atteints au rythme voulu : Mener la chasse (★, 5 runs sur 7), Redresser la grille (★★, 2 sur 4 en 20 min), Ratisser (★, 4 sur 7), Développer (★, 3 sur 7), Encaisser (★, toujours avant 3 min), Dans la foule (★, toujours), Pas bouger, Bouquet final, De justesse, Économiser (★★, 2 à 7 runs sur 7), Compter les Résurgences (★★, 3 à 4 par run, donc 4 à 5 runs), Remonter les corps (★★★, 3 à 152 sur 290).
+
+**Non mesurables avec le bot, laissés en l'état et à juger en jouant :** Entendre les voix (Mémoriaux), les Repères de La tournée, Bien au chaud (le bot perd des PV dès 15–25 s), Tenir le feu, Appeler la meute, Dernière émission, Fièvre, Retenir et Sonner la récré (selon les objets tirés), Nommer l'Indicible et Au-delà du climax (runs plus longues).
+
+**Signalés à Raphaël :**
+- **Critiques.** Le joueur n'a aucune chance de critique de base ; dans la réserve de départ, seuls les bonus de coffre et une bénédiction en donnent (2 à 2,5 %). Les quatre quêtes de critique (Lire de près ★, Le détail, Geste précis, Annoter) sont donc bien plus dures que leurs étoiles, et la récompense de Lire de près (Lunettes de lecture) est justement la source de critique. De plus, les armes en arc (Faucille, Pelle à neige…) appliquent le critique en moyenne sans jamais tirer un coup critique : leurs éliminations ne comptent jamais. Choix à faire : critique de base, Lire de près plus bas ou en ★★, critique tiré pour les arcs.
+- **Recopier ★★★.** L'ascension demande une arme au niveau 50 ; le bot ne dépasse pas 3 armes au niveau 3. Deux ascensions dans une run paraissent hors d'atteinte : à jouer, ou à ramener à une.

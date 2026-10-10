@@ -205,7 +205,7 @@ public partial class QuestRegression : Node
         Check(MetaSaveManager.Save().Succeeded && File.ReadAllText(meta) == before, "sauvegarde rechargée puis réécrite à l'identique");
         Check(MetaSaveManager.HasCompletedQuest("lead_the_hunt") && MetaSaveManager.IsWeaponUnlocked("makeshift_bow")
               && Near(MetaSaveManager.GetQuestProgress("every_door"), 55f), "déblocages et avancée retrouvés après rechargement");
-        Check(QuestBook.ProgressText(doors, MetaSaveManager.GetQuestProgress("every_door")) == "55 / 100", "avancée lisible");
+        Check(QuestBook.ProgressText(doors, MetaSaveManager.GetQuestProgress("every_door")) == "55 / 60", "avancée lisible");
     }
 
     private static bool Near(IReadOnlyList<float> values, params float[] expected)

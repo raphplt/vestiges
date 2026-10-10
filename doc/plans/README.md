@@ -1,6 +1,6 @@
 # VESTIGES — Dossier de plans à valider
 
-**10 octobre — quêtes de déblocage (plan 06 §10, lots Q1–Q4) :** une seule famille de 36 quêtes qui débloquent personnages, armes et objets pour de bon ; profil neuf réduit à la réserve de départ (Vagabond, 8 armes, 15 objets). Branche `quetes-deblocage` (worktree `../vestiges-quetes`), à fusionner après le travail audio en cours sur `main`.
+**10 octobre — quêtes de déblocage (plan 06 §10, lots Q1–Q4) :** une seule famille de 36 quêtes qui débloquent personnages, armes et objets pour de bon ; profil neuf réduit à la réserve de départ (Vagabond, 8 armes, 15 objets). Suivi en run sans affichage, bandeau dès qu'une quête est accomplie, pages Quêtes et Personnages au Hub, seuils mesurés sur 7 runs (9 ajustés). À trancher : quêtes de critique et Recopier.
 
 **10 octobre — les deux boss en autonomie (plan 07, B1–B4, §89) :** parties de boss vues par toutes les armes (la mêlée frappe au bord), barre de boss en haut de l'écran (Souverains compris). La Barrière se lève à 10 min devant le joueur, l'arrête jusqu'à ce qu'il brise un battant, frappe l'immobile (poings) et le va-et-vient (chaîne, verrou), un coffre par battant. L'Indicible est refait en trois phases : tempête, marée, seconde vague à brèches, puis il se découvre. Premier réglage en vraie run longue. Planche B2a intégrée sans validation ; reste à jouer.
 

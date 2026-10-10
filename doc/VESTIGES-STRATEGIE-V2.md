@@ -851,8 +851,8 @@ Le script de post-processing doit inclure une vérification/correction de l'angl
 
 - [x] Implémenter QuestManager + QuestDataLoader. Remplacés le 10 octobre 2026 par les quêtes de déblocage (plan 06 §9 : QuestDataLoader, QuestTracker).
 - [ ] ~~Quêtes de run (3-5 par run, générées dynamiquement).~~ Abandonné le 10 octobre 2026 : une seule famille de quêtes, de déblocage (DECISIONS §90, plan 06 §9) ; retirées au lot Q1.
-- [ ] Quêtes de progression (déblocages de personnages et d'armes).
-- [ ] Rendre le système de déblocage fonctionnel.
+- [x] Quêtes de progression (déblocages de personnages et d'armes) : 36 quêtes de déblocage, suivies en run et notifiées aussitôt (plan 06 §10, Q1–Q2, 10 octobre 2026).
+- [x] Rendre le système de déblocage fonctionnel : réserve de départ, règle d'accès unique, sauvegarde (plan 06 §10, Q1).
 - [ ] S'assurer que 4 personnages sont jouables et équilibrés.
 - [x] Menu quêtes dans le Hub ("Chroniques").
 - [x] Notifications in-game de complétion de quête.

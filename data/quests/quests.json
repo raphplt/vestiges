@@ -77,13 +77,13 @@
         {
             "id": "the_round",
             "name": "La tournée",
-            "description": "Parcourir 2 500 m et trouver cinq Repères différents dans la même run.",
+            "description": "Parcourir 6 000 m et trouver cinq Repères différents dans la même run.",
             "difficulty": 2,
             "scope": "run",
             "conditions": [
                 {
                     "stat": "distance_m",
-                    "target": 2500
+                    "target": 6000
                 },
                 {
                     "stat": "waymarks_found",
@@ -140,13 +140,13 @@
         {
             "id": "guard_the_coast",
             "name": "Garder la côte",
-            "description": "Tuer 500 créatures avec des armes à distance dans une run.",
+            "description": "Tuer 400 créatures avec des armes à distance dans une run.",
             "difficulty": 1,
             "scope": "run",
             "conditions": [
                 {
                     "stat": "ranged_kills",
-                    "target": 500
+                    "target": 400
                 }
             ],
             "unlocks": [
@@ -159,14 +159,14 @@
         {
             "id": "four_tunes",
             "name": "Quatre airs",
-            "description": "Avoir quatre armes au niveau 10 ou plus en même temps.",
+            "description": "Avoir quatre armes au niveau 3 ou plus en même temps.",
             "difficulty": 1,
             "scope": "run",
             "conditions": [
                 {
                     "stat": "weapons_at_level",
                     "target": 4,
-                    "param": 10
+                    "param": 3
                 }
             ],
             "unlocks": [
@@ -198,13 +198,13 @@
         {
             "id": "draw_the_map",
             "name": "Dessiner la carte",
-            "description": "Découvrir 150 zones du brouillard dans une run.",
+            "description": "Découvrir 30 000 cases du brouillard dans une run.",
             "difficulty": 1,
             "scope": "run",
             "conditions": [
                 {
                     "stat": "zones_discovered",
-                    "target": 150
+                    "target": 30000
                 }
             ],
             "unlocks": [
@@ -217,13 +217,13 @@
         {
             "id": "every_door",
             "name": "Toutes les portes",
-            "description": "Ouvrir 100 coffres, toutes runs confondues.",
+            "description": "Ouvrir 60 coffres, toutes runs confondues.",
             "difficulty": 2,
             "scope": "cumulative",
             "conditions": [
                 {
                     "stat": "chests_opened",
-                    "target": 100
+                    "target": 60
                 }
             ],
             "unlocks": [
@@ -255,14 +255,14 @@
         {
             "id": "against_the_clock",
             "name": "Contre la montre",
-            "description": "Atteindre le niveau 30 avant la 12ᵉ minute.",
+            "description": "Atteindre le niveau 20 avant la 10ᵉ minute.",
             "difficulty": 2,
             "scope": "run",
             "conditions": [
                 {
                     "stat": "level",
-                    "target": 30,
-                    "before_sec": 720
+                    "target": 20,
+                    "before_sec": 600
                 }
             ],
             "unlocks": [
@@ -446,13 +446,13 @@
         {
             "id": "regain_strength",
             "name": "Reprendre des forces",
-            "description": "Récupérer 1 000 PV par des soins dans une run.",
+            "description": "Récupérer 600 PV par des soins dans une run.",
             "difficulty": 1,
             "scope": "run",
             "conditions": [
                 {
                     "stat": "hp_healed",
-                    "target": 1000
+                    "target": 600
                 }
             ],
             "unlocks": [
@@ -485,13 +485,13 @@
         {
             "id": "grow",
             "name": "Grandir",
-            "description": "Atteindre le niveau 30.",
+            "description": "Atteindre le niveau 20.",
             "difficulty": 1,
             "scope": "run",
             "conditions": [
                 {
                     "stat": "level",
-                    "target": 30
+                    "target": 20
                 }
             ],
             "unlocks": [
@@ -679,13 +679,13 @@
         {
             "id": "nail_down",
             "name": "Clouer",
-            "description": "Tuer 400 créatures avec la Cloueuse dans une run.",
+            "description": "Tuer 250 créatures avec la Cloueuse dans une run.",
             "difficulty": 1,
             "scope": "run",
             "conditions": [
                 {
                     "stat": "weapon_kills",
-                    "target": 400,
+                    "target": 250,
                     "weapon": "crossbow"
                 }
             ],
