@@ -151,10 +151,10 @@ Demande de Raphaël ([DECISIONS §90](DECISIONS.md)) : « il faut avoir une seul
 - **Une quête = un déblocage permanent** (personnage, arme ou objet). Plus de quêtes de run (Essence, XP), plus de Souvenirs comme clé, plus de Vestiges en récompense. Chaque pièce verrouillée a exactement une quête.
 - **La condition fait essayer le style que la récompense renforce** (Thermomètre : tuer des créatures en feu). Elle est atteignable avec la réserve de départ ; jamais avec la pièce qu'elle débloque.
 - **Trois difficultés.** ★ : une ou deux runs, en jouant normalement. ★★ : il faut le chercher (un boss, un style tenu toute une run). ★★★ : fin de run, risque ou maîtrise.
-- **Des quêtes en révèlent d'autres.** La colonne « Après » dit quelle quête en révèle une autre. Une quête révélée n'apparaît qu'une fois la précédente accomplie, et ne progresse qu'à partir de là. **Rien n'indique au joueur qu'une quête dépend d'une autre** (DECISIONS §90) : avant d'être révélée, la pièce figure dans la Collection comme verrouillée, sans condition affichée.
+- **Toutes les quêtes sont visibles et ouvertes dès le départ** (DECISIONS §90, précision). Aucune quête cachée, aucune quête « bloquée par une autre ». L'emboîtement est naturel : la récompense d'une quête aide à en réussir une autre (les Lunettes de lecture rapprochent des quêtes de critique), ou une quête suppose d'aller plus loin dans la run (l'Indicible vient après la Barrière). La colonne « S'appuie sur » est une note de design : elle n'est jamais affichée et ne bloque rien.
 - **Run ou cumul.** La plupart se font dans une seule run (on ne grind pas) ; quelques-unes se cumulent d'une run à l'autre.
 - **Notification immédiate** : bandeau court en jeu (« Quête accomplie : Thermomètre débloqué »), mis en file s'il en part plusieurs, retenu pendant un écran de choix. La pièce n'entre dans la run en cours qu'à la run suivante.
-- **Aucune quête ne s'affiche pendant la run.** Elles se consultent au Hub (Collection : chaque pièce verrouillée avec sa quête et sa progression).
+- **Aucune quête ne s'affiche pendant la run.** Elles se suivent au Hub, sur une **page Quêtes dédiée** (§9.10, Q3) ; la Collection renvoie à la quête de chaque pièce verrouillée.
 - **Un personnage débloqué apporte son arme de départ** dans la réserve commune.
 - **Impossible aujourd'hui, donc exclu :** POI et lore (désactivés), Reliquaire (n'existe pas), « finir une run » (une run ne finit qu'à la mort). Les trois objets « monde » (Presse-papier, Calendrier, Médaillon) attendent le Reliquaire.
 
@@ -170,7 +170,7 @@ Total : **36 quêtes** (5 personnages, 13 armes, 18 objets).
 
 ### 9.3 Personnages (5)
 
-| Quête | Condition | Portée | Diff. | Après | Débloque |
+| Quête | Condition | Portée | Diff. | S'appuie sur | Débloque |
 |---|---|---|---|---|---|
 | Mener la chasse | Vaincre un Souverain | run | ★ | — | **Traqueur** (+ Arc du gymnase) |
 | Redresser la grille | Abattre la Barrière | run | ★★ | — | **Forgeuse** (+ Parcmètre) |
@@ -180,7 +180,7 @@ Total : **36 quêtes** (5 personnages, 13 armes, 18 objets).
 
 ### 9.4 Armes (13)
 
-| Quête | Condition | Portée | Diff. | Après | Débloque |
+| Quête | Condition | Portée | Diff. | S'appuie sur | Débloque |
 |---|---|---|---|---|---|
 | Ratisser | Tuer 500 créatures avec des armes de mêlée | run | ★ | — | Râteau |
 | Garder la côte | Tuer 500 créatures avec des armes à distance | run | ★ | — | Lentille de phare |
@@ -198,7 +198,7 @@ Total : **36 quêtes** (5 personnages, 13 armes, 18 objets).
 
 ### 9.5 Objets (18)
 
-| Quête | Condition | Portée | Diff. | Après | Débloque |
+| Quête | Condition | Portée | Diff. | S'appuie sur | Débloque |
 |---|---|---|---|---|---|
 | Fièvre | Tuer 100 créatures en feu | run | ★ | — | Thermomètre |
 | Retenir | Tuer 150 créatures ralenties | run | ★ | — | Épingle à nourrice |
@@ -219,7 +219,10 @@ Total : **36 quêtes** (5 personnages, 13 armes, 18 objets).
 | Clouer | Tuer 400 créatures avec la Cloueuse | run | ★ | — | Reflet brisé |
 | Recopier | Faire ascensionner deux armes dans la même run | run | ★★★ | — | Papier carbone |
 
-### 9.6 Quêtes qui en révèlent d'autres
+### 9.6 Quêtes qui s'emboîtent (sans verrou)
+
+Toutes ouvertes dès le départ ; l'ordre ci-dessous est celui dans lequel elles tombent naturellement.
+
 
 - **Critique :** Lire de près → Le détail → Annoter ; Lire de près → Geste précis.
 - **Froid :** Glaçon (départ) → Retenir → Sonner la récré. **Feu :** Allumette (départ) → Fièvre.
@@ -239,7 +242,7 @@ Tous les seuils sont des valeurs d'essai, à mesurer sur des runs (`tools/measur
 ### 9.8 Profils et ancien système
 
 - **Aucune préservation d'ancien profil** (DECISIONS §90) : le seul profil joué est le profil dev de Raphaël, qui a tout. Le chargement d'une ancienne sauvegarde ne plante pas et ne perd ni historique ni Souvenirs ; les nouveaux champs démarrent vides. Les garde-fous des lots B et A sur les droits acquis ne s'appliquent plus.
-- **Persistance exigée** : déblocages, quêtes révélées et compteurs cumulés passent par l'écriture atomique existante (Q2a/Q2b) ; une quête accomplie en run est enregistrée tout de suite, pas à la mort, pour survivre à un crash ou à un retour au camp par le menu.
+- **Persistance exigée** : déblocages, quêtes accomplies, meilleures valeurs des quêtes de run et compteurs cumulés passent par l'écriture atomique existante (Q2a/Q2b) ; une quête accomplie en run est enregistrée tout de suite, pas à la mort, pour survivre à un crash ou à un retour au camp par le menu.
 - Les quêtes de run (`run_*`), les récompenses Souvenir/Vestiges/Essence/XP des quêtes et `requires_souvenir` des armes disparaissent ; le Journal des Souvenirs reste, sans effet sur le combat.
 - Le mode dev ouvre tout, comme aujourd'hui.
 
@@ -263,8 +266,8 @@ Ordre décidé (DECISIONS §90) : quêtes d'abord, personnages ensuite.
 
 | Lot | Contenu | Vérification |
 |---|---|---|
-| **Q1 — Déblocages et données** | Fichier des 36 quêtes (récompense typée, portée run/cumul, difficulté, quête qui la révèle) ; réserve de départ en données ; sauvegarde méta : personnages, armes et objets débloqués, quêtes accomplies et révélées, compteurs cumulés. Une seule règle d'accès lue par le loot, les offres de niveau, les Ateliers, la Collection et l'accueil. Retraits : quêtes de run et leur panneau, `requires_souvenir`, conditions de personnages en dur, récompenses Souvenir/Vestiges. Mode dev : tout ouvert. | Profil neuf : seule la réserve sort en 3 runs mesurées ; profil dev inchangé ; sauvegarde rechargée identique ; build, smoke, suites existantes |
+| **Q1 — Déblocages et données** | Fichier des 36 quêtes (récompense typée, portée run/cumul, difficulté) ; réserve de départ en données ; sauvegarde méta : personnages, armes et objets débloqués, quêtes accomplies, meilleure valeur atteinte par quête de run, compteurs cumulés. Une seule règle d'accès lue par le loot, les offres de niveau, les Ateliers, la Collection et l'accueil. Retraits : quêtes de run et leur panneau, `requires_souvenir`, conditions de personnages en dur, récompenses Souvenir/Vestiges. Mode dev : tout ouvert. | Profil neuf : seule la réserve sort en 3 runs mesurées ; profil dev inchangé ; sauvegarde rechargée identique ; build, smoke, suites existantes |
 | **Q2 — Suivi en run et notification** | Suivi des 36 conditions sur l'EventBus ; compteurs manquants (§9.7) ; quête accomplie enregistrée aussitôt ; bandeau de notification en file. | Scène de régression qui rejoue les événements de chaque condition (seuil −1, seuil, après) ; capture du bandeau en vraie run |
-| **Q3 — Hub et bilan** | Collection : pièce verrouillée avec sa quête et sa progression si la quête est révélée, sans condition sinon ; quêtes accomplies au bilan. | Captures du Hub (profil neuf, profil avancé) |
+| **Q3 — Menus du Hub et bilan** | **Page Quêtes dédiée** : les 36 quêtes, leur récompense, leur progression (cumul, ou meilleure valeur atteinte en une run), accomplies à part. **Page Personnages** : liste des six, fiche détaillée (passif, mobilité, arme de départ, stats, quête s'il est verrouillé) et **sprite agrandi** (images plus soignées fournies par Raphaël ; d'ici là, le sprite du jeu agrandi). **Revue des menus devenus inutiles** : sous-onglet Quêtes des Chroniques, réglage d'affichage des quêtes de run (Paramètres › Graphismes, `QuestDisplaySettings`), sceaux de quêtes du HUD (`RunQuestSeals`), touche `show_quests`, panneau de quêtes du bilan ; le reste des Chroniques et de la Collection relu avec Raphaël. Collection : chaque pièce verrouillée renvoie à sa quête. Bilan : quêtes accomplies pendant la run. | Captures du Hub (profil neuf, profil avancé) et du bilan |
 | **Q4 — Seuils mesurés** | `tools/measure_run.sh` sur plusieurs seeds : runs avant chaque ★, ajustement des seuils en données. | Tableau avant/après |
 | **P1 à P3 — Éveillée, Facteur, Scaphandrière** | Un personnage complet par lot (fiche du casting) : branchement des sprites, stats, passif, mobilité propre (plan 01 E), arme de départ (Sacoche de lettres et Fusil-harpon à créer), sons, quête. | Captures en run, suites de mouvement et d'armes |

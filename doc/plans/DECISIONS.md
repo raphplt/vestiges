@@ -1033,6 +1033,14 @@ Raphaël : « il faudrait implémenter ces personnages dans le jeu […] et auss
 - **Une seule famille de quêtes**, qui débloquent personnages, armes et objets de façon permanente. Plus de quêtes de run, plus de Souvenirs comme clé.
 - **Rien d'affiché en permanence en jeu** ; **notification dès qu'une quête est accomplie**, en pleine run.
 - **La liste des 36 quêtes et la réserve de départ du plan 06 §9 sont la base** ; les seuils restent à mesurer.
-- **Pas de « quête enchaînée » comme notion** : des quêtes en révèlent d'autres. Rien n'indique qu'une quête dépend d'une autre ; une quête révélée par une autre n'apparaît qu'une fois celle-ci accomplie, et le joueur fait le lien lui-même.
+- ~~Des quêtes en révèlent d'autres~~ : mal compris, corrigé par la précision ci-dessous.
 - **Profils** : seul existe le profil dev de Raphaël, qui a tout ; aucune préservation des anciens profils à prévoir. Exigence : **les déblocages et la progression des quêtes sont bien persistants**.
 - **Backlog** : prévoir des quêtes d'exception pour des objets légendaires ou des armes « pétées » (exemple de Raphaël : ouvrir tous les coffres du jeu). Rattachées au plan 06 §9.9, pas dans le premier lot.
+
+**Précision, même jour.** Raphaël : « pour moi, toutes les quêtes doivent apparaître par défaut. Il ne faut pas qu'il y ait des quêtes cachées. C'est juste que il ne faut pas que les quêtes soient marquées bloquées parce que conditionnées par une autre […] il faut qu'il y ait dans les menus une page dédiée pour justement suivre les quêtes, l'avancée des quêtes […] intégrer une page qui liste les personnages, avec les détails, etc., et avec un affichage du sprite agrandi, ça je vais me débrouiller pour faire des images plus sympas […] il y a des menus qui servent à rien, genre qui suivent les quêtes, etc., il faudrait les revoir ».
+
+**Acquis (remplace le point « des quêtes en révèlent d'autres » ci-dessus) :**
+- **Toutes les quêtes sont visibles et ouvertes dès le départ** ; aucune quête cachée ni verrouillée par une autre. L'emboîtement vient du jeu lui-même (une récompense aide la quête suivante), jamais d'un verrou.
+- **Page Quêtes dédiée** dans les menus du Hub pour suivre l'avancée des quêtes.
+- **Page Personnages** : liste, fiche détaillée, sprite agrandi ; Raphaël fournira des images plus soignées.
+- **Revoir les menus devenus inutiles** (ceux qui suivent les anciennes quêtes, etc.).
