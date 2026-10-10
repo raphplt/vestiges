@@ -1173,7 +1173,7 @@ public partial class Player : CharacterBody2D
         // Application des dégâts aux ennemis dans le cône (uniquement visibles)
         Vector2 groundFacing = Iso.ToGround(_facingDirection).Normalized();
         // Rayon écran = portée au sol : la distance au sol n'est jamais plus courte (Iso.ToGround).
-        using CrowdQuery crowd = CrowdIndex.Near(GlobalPosition, _coneRange);
+        using CrowdQuery crowd = CrowdIndex.Near(GlobalPosition, _coneRange + Enemy.LargestPartRadius);
         foreach (Node node in crowd.Targets)
         {
             if (node is not Enemy enemy || !IsInstanceValid(enemy) || !enemy.IsActive || enemy.IsDying)
@@ -1182,7 +1182,7 @@ public partial class Player : CharacterBody2D
             // Cône posé au sol : portée et ouverture mesurées au sol, comme l'éventail dessiné.
             Vector2 toEnemy = Iso.ToGround(enemy.GlobalPosition - GlobalPosition);
             float dist = toEnemy.Length();
-            if (dist > _coneRange || dist <= 0.001f)
+            if (dist - enemy.StrikeMargin > _coneRange || dist <= 0.001f)
                 continue;
 
             Vector2 dirToEnemy = toEnemy / dist;
@@ -2162,7 +2162,7 @@ public partial class Player : CharacterBody2D
 
     private System.Collections.Generic.List<Enemy> FindEnemiesInArc(float maxRange, float arcAngle, Vector2? forwardOverride = null)
     {
-        using CrowdQuery crowd = CrowdIndex.Near(GlobalPosition, maxRange);
+        using CrowdQuery crowd = CrowdIndex.Near(GlobalPosition, maxRange + Enemy.LargestPartRadius);
         System.Collections.Generic.List<(Enemy enemy, float dist, Vector2 dir)> candidates = new();
 
         foreach (Node node in crowd.Targets)
@@ -2172,7 +2172,7 @@ public partial class Player : CharacterBody2D
 
             Vector2 toEnemy = enemy.GlobalPosition - GlobalPosition;
             float dist = toEnemy.Length();
-            if (dist > maxRange || dist <= 0.001f)
+            if (dist - enemy.StrikeMargin > maxRange || dist <= 0.001f)
                 continue;
 
             candidates.Add((enemy, dist, toEnemy / dist));

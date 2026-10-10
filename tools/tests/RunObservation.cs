@@ -198,6 +198,9 @@ public partial class RunObservation : Node
                 await CheckOrbSleep();
             else if (Array.IndexOf(args, "--capture-weapon-pickup") >= 0)
                 await CaptureWeaponPickup();
+            else if (Array.IndexOf(args, "--measure-boss-dummy") >= 0)
+                await MeasureBossDummy(Argument(args, "--weapons", null), double.Parse(Argument(args, "--seconds", "10"), CultureInfo.InvariantCulture),
+                    float.Parse(Argument(args, "--distance", "120"), CultureInfo.InvariantCulture), float.Parse(Argument(args, "--radius", "50"), CultureInfo.InvariantCulture));
             else if (Array.IndexOf(args, "--measure-indicible") >= 0)
                 await MeasureIndicible(double.Parse(Argument(args, "--seconds", "20"), CultureInfo.InvariantCulture));
             else if (Array.IndexOf(args, "--capture-endgame") >= 0)

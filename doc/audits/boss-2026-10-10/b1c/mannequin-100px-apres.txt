@@ -1,0 +1,25 @@
+[BossDummy] arme=chipped_blade famille=Arc portee=70 une_partie_pv=156 coups=13 reserve_commune_pv=312 coups=26
+[BossDummy] arme=heavy_hammer famille=Arc portee=70 une_partie_pv=154 coups=8 reserve_commune_pv=307 coups=16
+[BossDummy] arme=makeshift_bow famille=Linear portee=150 une_partie_pv=144 coups=15 reserve_commune_pv=144 coups=15
+[BossDummy] arme=sling famille=Burst portee=120 une_partie_pv=303 coups=63 reserve_commune_pv=332 coups=69
+[BossDummy] arme=sharpened_pipe famille=Linear portee=65 une_partie_pv=159 coups=19 reserve_commune_pv=159 coups=19
+[BossDummy] arme=crossbow famille=Linear portee=180 une_partie_pv=185 coups=7 reserve_commune_pv=185 coups=7
+[BossDummy] arme=cleaver famille=Arc portee=65 une_partie_pv=216 coups=10 reserve_commune_pv=476 coups=22
+[BossDummy] arme=whip famille=Circular portee=80 une_partie_pv=119 coups=11 reserve_commune_pv=357 coups=33
+[BossDummy] arme=throwing_axes famille=Burst portee=140 une_partie_pv=369 coups=28 reserve_commune_pv=369 coups=28
+[BossDummy] arme=nail_mace famille=Arc portee=70 une_partie_pv=212 coups=515 reserve_commune_pv=424 coups=1030
+[BossDummy] arme=teachers_bell famille=Circular portee=100 une_partie_pv=129 coups=9 reserve_commune_pv=388 coups=27
+[BossDummy] arme=surgeons_scalpel famille=Linear portee=55 une_partie_pv=237 coups=33 reserve_commune_pv=237 coups=33
+[BossDummy] arme=lighthouse_shard famille=Linear portee=250 une_partie_pv=180 coups=5 reserve_commune_pv=180 coups=5
+[BossDummy] arme=music_box famille=Orbital portee=90 une_partie_pv=134 coups=16 reserve_commune_pv=385 coups=46
+[BossDummy] arme=chain_of_names famille=Chain portee=65 une_partie_pv=168 coups=10 reserve_commune_pv=410 coups=30
+[BossDummy] arme=compass_needle famille=Homing portee=180 une_partie_pv=188 coups=12 reserve_commune_pv=188 coups=12
+[BossDummy] arme=photographers_flash famille=Burst portee=130 une_partie_pv=389 coups=18 reserve_commune_pv=584 coups=27
+[BossDummy] arme=essence_staff famille=Homing portee=200 une_partie_pv=168 coups=7 reserve_commune_pv=96 coups=4
+[BossDummy] arme=void_edge famille=Arc portee=65 une_partie_pv=414 coups=23 reserve_commune_pv=414 coups=23
+[BossDummy] arme=memory_lantern famille=Linear portee=170 une_partie_pv=62 coups=204 reserve_commune_pv=174 coups=487
+[BossDummy] arme=echo_gauntlets famille=Arc portee=60 une_partie_pv=372 coups=35 reserve_commune_pv=745 coups=70
+[BossDummy] arme=childs_drawing famille=Homing portee=200 une_partie_pv=420 coups=14 reserve_commune_pv=487 coups=22
+[BossDummy] arme=last_broadcast famille=Linear portee=250 une_partie_pv=145 coups=360 reserve_commune_pv=145 coups=360
+[BossDummy] arme=clock_hand famille=Arc portee=70 une_partie_pv=168 coups=4 reserve_commune_pv=336 coups=8
+[RunObservation] RESULT boss-dummy armes=24 distance=100 rayon=50 secondes=10 sans_degats_une_partie=0 sans_degats_reserve=0 aveugles=

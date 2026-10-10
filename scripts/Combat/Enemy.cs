@@ -101,6 +101,8 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 	private float _bodyRadius = BaseBodyRadius;
 	/// <summary>Plus grand rayon de corps atteint (variantes comprises) : marge des requêtes de touche.</summary>
 	public static float LargestBodyRadius { get; private set; } = BaseBodyRadius;
+	/// <summary>Plus grand rayon d'une partie de boss posée dans la run, 0 avant : marge des recherches de mêlée.</summary>
+	public static float LargestPartRadius { get; private set; }
 	// Partie de boss (plan 07 B1) : ses PV vont à la réserve du boss, qui décide de sa récompense.
 	private BossHealth _boss;
 	private bool _bossShared;
@@ -222,6 +224,11 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 	/// <summary>Partie de boss à PV propres (battant) : elle tombe seule, sans emporter la réserve commune.</summary>
 	internal bool IsBoundToOwnHp => _boss != null && !_bossShared;
 	public BossHealth Boss => _boss;
+	/// <summary>
+	/// Une partie de boss se frappe à son bord, pas à son centre : un coup de mêlée qui atteint le battant le touche.
+	/// Nul pour une créature, dont l'allonge des armes est réglée au centre.
+	/// </summary>
+	public float StrikeMargin => _boss != null ? _bodyRadius : 0f;
 	public float HpRatio => _maxHp > 0 ? _currentHp / _maxHp : 0f;
 	public float MaxHp => _maxHp;
 	public EnemyModifiers Modifiers => _mods;
@@ -1069,6 +1076,7 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 		_bossShared = shared;
 		_bodyRadius = bodyRadius;
 		LargestBodyRadius = Mathf.Max(LargestBodyRadius, _bodyRadius);
+		LargestPartRadius = Mathf.Max(LargestPartRadius, _bodyRadius);
 		_maxHp = Mathf.Max(1f, maxHp);
 		_currentHp = hp;
 	}

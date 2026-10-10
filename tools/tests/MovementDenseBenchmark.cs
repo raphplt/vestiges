@@ -181,6 +181,17 @@ public partial class MovementDenseBenchmark : Node
                     _player.AscendWeapon(held.Id, parts[1]);
                 }
             }
+            // --boss-part R : une partie de boss de rayon R posée hors du combat (plan 07 B1c) ; elle élargit la marge
+            // de recherche de tous les tirs et de la mêlée pour le reste de la run.
+            float bossPartRadius = float.Parse(Argument(args, "--boss-part", "0"), CultureInfo.InvariantCulture);
+            if (bossPartRadius > 0f)
+            {
+                Enemy part = pool.Get();
+                part.Position = _arena + new Vector2(1500f, 0f);
+                container.AddChild(part);
+                part.Initialize(EnemyDataLoader.Get(EnemyGrammar.BossPartId), 1f, 1f);
+                new BossHealth("Banc", 0f).AddPart(part, bossPartRadius, 1_000_000f);
+            }
             GD.Seed(Seed);
             for (int i = 0; i < _enemyCount; i++)
             {
